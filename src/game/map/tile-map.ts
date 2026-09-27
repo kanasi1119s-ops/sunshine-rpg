@@ -1,4 +1,4 @@
-import type { TileMapData } from "./types";
+import type { MapExit, TileMapData } from "./types";
 
 export interface TileMap {
   data: TileMapData;
@@ -46,4 +46,8 @@ export function isWalkable(map: TileMap, tileX: number, tileY: number): boolean 
     return true;
   }
   return collision[tileY * map.data.width + tileX] !== 1;
+}
+
+export function findExitAt(map: TileMap, tileX: number, tileY: number): MapExit | undefined {
+  return map.data.exits?.find((exit) => exit.tileX === tileX && exit.tileY === tileY);
 }

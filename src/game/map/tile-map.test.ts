@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createTileMap, getTileId, isWalkable } from "./tile-map";
+import { createTileMap, findExitAt, getTileId, isWalkable } from "./tile-map";
 import type { TileMapData } from "./types";
 
 function makeMapData(): TileMapData {
@@ -51,5 +51,19 @@ describe("isWalkable", () => {
     const map = createTileMap(makeMapData());
     expect(isWalkable(map, -1, 0)).toBe(false);
     expect(isWalkable(map, 3, 0)).toBe(false);
+  });
+});
+
+describe("findExitAt", () => {
+  it("出入り口が置かれたタイルでは対応する出口情報を返す", () => {
+    const data = makeMapData();
+    data.exits = [{ tileX: 0, tileY: 0, targetMapId: "room", targetTileX: 2, targetTileY: 2 }];
+    const map = createTileMap(data);
+    expect(findExitAt(map, 0, 0)).toEqual(data.exits[0]);
+  });
+
+  it("出入り口が無いタイルではundefined", () => {
+    const map = createTileMap(makeMapData());
+    expect(findExitAt(map, 0, 0)).toBeUndefined();
   });
 });

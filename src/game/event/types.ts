@@ -1,0 +1,21 @@
+export type Flags = Record<string, boolean>;
+
+export interface ChoiceOption {
+  label: string;
+  commands: EventCommand[];
+}
+
+export type EventCommand =
+  | { type: "message"; text: string; speaker?: string }
+  | { type: "choice"; text: string; options: ChoiceOption[] }
+  | { type: "setFlag"; flag: string; value: boolean }
+  | { type: "if"; flag: string; equals: boolean; then: EventCommand[]; else?: EventCommand[] }
+  | { type: "warp"; mapId: string; tileX: number; tileY: number };
+
+/** イベント実行中、画面表示側に「今これを見せて」と伝える1コマ。 */
+export type EventStep =
+  | { kind: "message"; text: string; speaker?: string }
+  | { kind: "choice"; text: string; labels: string[] };
+
+/** 画面表示側からイベント実行側へ「プレイヤーがこう操作した」を伝える。 */
+export type EventInput = { kind: "advance" } | { kind: "choose"; index: number };

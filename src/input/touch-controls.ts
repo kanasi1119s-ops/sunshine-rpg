@@ -1,3 +1,4 @@
+import type { ActionButton } from "./action-button";
 import type { Direction } from "./direction";
 import type { InputState } from "./input-state";
 
@@ -8,10 +9,11 @@ const LABELS: Record<Direction, string> = {
   right: "▶",
 };
 
-/** スマホ・タブレット用の画面上十字ボタンを作り、containerに追加する。 */
+/** スマホ・タブレット用の画面上十字ボタンと決定ボタンを作り、containerに追加する。 */
 export function createTouchControls(
   container: HTMLElement,
   input: InputState,
+  action: ActionButton,
 ): HTMLElement {
   const pad = document.createElement("div");
   pad.className = "touch-dpad";
@@ -40,5 +42,16 @@ export function createTouchControls(
   });
 
   container.appendChild(pad);
+
+  const actionButton = document.createElement("button");
+  actionButton.type = "button";
+  actionButton.className = "touch-action-button";
+  actionButton.textContent = "決定";
+  actionButton.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    action.press();
+  });
+  container.appendChild(actionButton);
+
   return pad;
 }

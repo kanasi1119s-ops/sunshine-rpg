@@ -20,6 +20,8 @@ npm run dev
 - `npm run build` — 本番用ビルド
 - `npm test` — 自動テスト
 
+操作方法や遊び方の詳細は [`docs/manual.md`](docs/manual.md) を参照してください。
+
 ## Claude Code で作り進める
 
 このリポジトリは Claude Code で作り進める前提で設定されています。
