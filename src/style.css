@@ -69,3 +69,19 @@ body {
 .touch-dpad__button--right {
   grid-area: right;
 }
+
+.touch-action-button {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(242, 193, 78, 0.85);
+  color: #2a1f00;
+  font-size: 0.85rem;
+  font-weight: bold;
+  touch-action: none;
+  user-select: none;
+}

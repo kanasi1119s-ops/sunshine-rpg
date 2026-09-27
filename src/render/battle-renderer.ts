@@ -1,0 +1,90 @@
+import { COMMANDS, type BattleUiState } from "../game/battle/battle-controller";
+import type { BattleState, Combatant } from "../game/battle/types";
+import { findCombatant } from "../game/battle/types";
+
+const LINE_HEIGHT = 12;
+
+function drawHpBar(
+  ctx: CanvasRenderingContext2D,
+  combatant: Combatant,
+  x: number,
+  y: number,
+  width: number,
+): void {
+  const ratio = combatant.maxHp > 0 ? combatant.hp / combatant.maxHp : 0;
+  ctx.fillStyle = "#333";
+  ctx.fillRect(x, y, width, 4);
+  ctx.fillStyle = ratio > 0.3 ? "#4caf50" : "#e05555";
+  ctx.fillRect(x, y, width * Math.max(0, ratio), 4);
+}
+
+export function renderBattle(
+  ctx: CanvasRenderingContext2D,
+  battleState: BattleState,
+  uiState: BattleUiState,
+  screenWidth: number,
+  screenHeight: number,
+): void {
+  ctx.fillStyle = "#1c1030";
+  ctx.fillRect(0, 0, screenWidth, screenHeight);
+
+  ctx.font = "10px monospace";
+  ctx.textBaseline = "top";
+
+  // 敵（仮のドット絵ができるまでは色付き四角）。
+  battleState.enemies.forEach((enemy, index) => {
+    const x = 60 + index * 90;
+    const y = 24;
+    ctx.fillStyle = enemy.hp > 0 ? "#8a4a4a" : "#333";
+    ctx.fillRect(x, y, 40, 40);
+    ctx.fillStyle = "#f0f0f0";
+    ctx.fillText(enemy.name, x, y + 44);
+    drawHpBar(ctx, enemy, x, y + 56, 40);
+  });
+
+  // 味方の状態一覧。
+  const partyY = screenHeight - 120;
+  battleState.party.forEach((member, index) => {
+    const y = partyY + index * LINE_HEIGHT * 2;
+    const isActing = uiState.kind === "command" && uiState.actorId === member.id;
+    ctx.fillStyle = isActing ? "#f2c14e" : "#f0f0f0";
+    ctx.fillText(`${member.name} HP:${member.hp}/${member.maxHp} MP:${member.mp}/${member.maxMp}`, 8, y);
+    drawHpBar(ctx, member, 8, y + LINE_HEIGHT, 100);
+  });
+
+  const boxY = screenHeight - 56;
+  ctx.fillStyle = "rgba(10, 10, 24, 0.92)";
+  ctx.fillRect(0, boxY, screenWidth, 56);
+  ctx.strokeStyle = "#f0f0f0";
+  ctx.strokeRect(0, boxY, screenWidth, 56);
+  ctx.fillStyle = "#f0f0f0";
+
+  if (uiState.kind === "command") {
+    const actor = findCombatant(battleState, uiState.actorId);
+    ctx.fillText(`${actor?.name ?? ""} の コマンド`, 8, boxY + 6);
+    COMMANDS.forEach((command, index) => {
+      const cursor = index === uiState.cursor ? "▶" : " ";
+      ctx.fillText(`${cursor} ${command.label}`, 16 + (index % 3) * 90, boxY + 20 + Math.floor(index / 3) * LINE_HEIGHT);
+    });
+    return;
+  }
+
+  if (uiState.kind === "target") {
+    ctx.fillText("だれに？", 8, boxY + 6);
+    uiState.candidateIds.forEach((id, index) => {
+      const target = findCombatant(battleState, id);
+      const cursor = index === uiState.cursor ? "▶" : " ";
+      ctx.fillText(`${cursor} ${target?.name ?? id}`, 16 + index * 90, boxY + 20);
+    });
+    return;
+  }
+
+  if (uiState.kind === "message") {
+    ctx.fillText(uiState.text, 8, boxY + 6);
+    return;
+  }
+
+  const outcomeText =
+    uiState.outcome === "won" ? "勝利した！" : uiState.outcome === "lost" ? "全滅してしまった…" : "逃げ出した";
+  ctx.fillText(outcomeText, 8, boxY + 6);
+}

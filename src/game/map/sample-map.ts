@@ -4,12 +4,14 @@ const GRASS = 1;
 const PATH = 2;
 const WATER = 3;
 const TREE = 4;
+const DOOR = 5;
 
 const TILE_COLORS: Record<number, string> = {
   [GRASS]: "#3f8f4f",
   [PATH]: "#c9a86a",
   [WATER]: "#3a6ea5",
   [TREE]: "#1f5c33",
+  [DOOR]: "#6b4a2b",
 };
 
 const NON_WALKABLE = new Set([WATER, TREE]);
@@ -57,6 +59,9 @@ export function createSampleMapData(): TileMapData {
     }
   }
 
+  // 縦の道の突き当たり（北の外周）に、建物へ入る扉を置く。
+  set(pathX, 0, DOOR);
+
   return {
     width,
     height,
@@ -65,6 +70,15 @@ export function createSampleMapData(): TileMapData {
     layers: [{ name: "ground", data: ground }],
     tileColors: TILE_COLORS,
     collision,
+    exits: [
+      {
+        tileX: pathX,
+        tileY: 0,
+        targetMapId: "sample-room",
+        targetTileX: Math.floor(8 / 2),
+        targetTileY: 4,
+      },
+    ],
   };
 }
 

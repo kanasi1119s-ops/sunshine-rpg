@@ -21,4 +21,14 @@ export interface TileMapData {
    * 省略した場合はすべて通行可能とみなす。
    */
   collision?: number[];
+  /** このタイルに乗ったら別マップへワープする出入り口。 */
+  exits?: MapExit[];
+}
+
+export interface MapExit {
+  tileX: number;
+  tileY: number;
+  targetMapId: string;
+  targetTileX: number;
+  targetTileY: number;
 }
