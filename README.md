@@ -10,7 +10,15 @@
 
 ## 遊び方
 
-（ゲームの基盤ができたら、ここに起動方法と説明書 `docs/manual.md` へのリンクを書きます）
+まだ画面表示だけの土台段階です（歩行や戦闘はこれから作ります）。
+
+```bash
+npm install
+npm run dev
+```
+
+- `npm run build` — 本番用ビルド
+- `npm test` — 自動テスト
 
 ## Claude Code で作り進める
 
