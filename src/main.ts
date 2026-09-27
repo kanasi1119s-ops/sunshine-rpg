@@ -21,16 +21,23 @@ import { SAMPLE_MAPS, SAMPLE_NPCS, SAMPLE_START } from "./game/world/sample-worl
 import { BattleController } from "./game/battle/battle-controller";
 import { renderBattle } from "./render/battle-renderer";
 import {
+  createInitialEquipment,
   createInitialHeroStats,
   createSampleEnemies,
   createSampleParty,
   SAMPLE_GROWTH,
   SAMPLE_ITEM,
+  SAMPLE_ITEMS_BY_ID,
   SAMPLE_SKILL,
 } from "./game/battle/sample-battle";
 import { createRng } from "./game/random";
 import { computeVictoryExp } from "./game/battle/battle-engine";
 import { gainExp } from "./game/growth/level-up";
+import { applyStatBonus, computeEquipmentBonus, type EquipmentSlots } from "./game/items/equipment";
+import { createInventory, type Inventory } from "./game/items/inventory";
+import { SAVE_VERSION, type SaveData } from "./game/save/types";
+import { loadFromSlot, saveToSlot } from "./game/save/storage";
+import { downloadSaveFile, readSaveFile } from "./io/save-file";
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) {
@@ -78,20 +85,95 @@ let lastDialogueDirection: Direction | null = null;
 let lastBattleDirection: Direction | null = null;
 let battle: BattleController | null = null;
 let heroStats = createInitialHeroStats();
+let heroEquipment: EquipmentSlots = createInitialEquipment();
+let inventory: Inventory = createInventory();
 let victoryExpApplied = false;
 let victoryMessage: string | null = null;
+let saveMessage: string | null = null;
+let saveMessageTimer = 0;
+
+function buildSaveData(): SaveData {
+  return {
+    version: SAVE_VERSION,
+    savedAt: new Date().toISOString(),
+    player: { mapId: currentMapId, tileX: player.x / map.data.tileWidth, tileY: player.y / map.data.tileHeight, direction: player.direction },
+    hero: { stats: heroStats, equipment: heroEquipment },
+    inventory,
+    flags,
+  };
+}
+
+function applySaveData(data: SaveData): void {
+  heroStats = data.hero.stats;
+  heroEquipment = data.hero.equipment;
+  inventory = data.inventory;
+  for (const key of Object.keys(flags)) {
+    delete flags[key];
+  }
+  Object.assign(flags, data.flags);
+  switchMap(data.player.mapId, data.player.tileX, data.player.tileY);
+  player = { ...player, direction: data.player.direction };
+}
+
+function autosave(): void {
+  saveToSlot(window.localStorage, "autosave", buildSaveData());
+}
+
+const fileInput = document.createElement("input");
+fileInput.type = "file";
+fileInput.accept = "application/json";
+fileInput.style.display = "none";
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files?.[0];
+  if (!file) {
+    return;
+  }
+  readSaveFile(file)
+    .then((data) => {
+      applySaveData(data);
+      saveMessage = "セーブデータを読み込みました";
+      saveMessageTimer = 2000;
+    })
+    .catch(() => {
+      saveMessage = "セーブデータを読み込めませんでした";
+      saveMessageTimer = 2000;
+    })
+    .finally(() => {
+      fileInput.value = "";
+    });
+});
+document.body.appendChild(fileInput);
 
 if (import.meta.env.DEV) {
   window.addEventListener("keydown", (event) => {
     if (event.key === "b" && !battle && !dialogue.isActive()) {
       victoryExpApplied = false;
       victoryMessage = null;
+      const equipmentBonus = computeEquipmentBonus(heroEquipment, SAMPLE_ITEMS_BY_ID);
+      const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
       battle = new BattleController(
-        createSampleParty(heroStats),
+        createSampleParty(heroStats.level, effectiveStats),
         createSampleEnemies(),
         createRng(Date.now()),
         { skill: SAMPLE_SKILL, item: SAMPLE_ITEM },
       );
+    } else if (event.key === "k" && !battle) {
+      saveToSlot(window.localStorage, "slot1", buildSaveData());
+      saveMessage = "スロット1にセーブしました";
+      saveMessageTimer = 2000;
+    } else if (event.key === "l" && !battle) {
+      const data = loadFromSlot(window.localStorage, "slot1");
+      if (data) {
+        applySaveData(data);
+        saveMessage = "スロット1から読み込みました";
+      } else {
+        saveMessage = "スロット1にセーブデータがありません";
+      }
+      saveMessageTimer = 2000;
+    } else if (event.key === "j" && !battle) {
+      downloadSaveFile(buildSaveData());
+    } else if (event.key === "u" && !battle) {
+      fileInput.click();
     }
   });
 }
@@ -112,10 +194,19 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
     result.levelsGained > 0
       ? `${expGained}の経験値を得た！ レベル${heroStats.level}に上がった！`
       : `${expGained}の経験値を得た！`;
+  autosave();
 }
 
 const loop = createGameLoop({
   update(dtMs) {
+    if (saveMessageTimer > 0) {
+      saveMessageTimer -= dtMs;
+      if (saveMessageTimer <= 0) {
+        saveMessageTimer = 0;
+        saveMessage = null;
+      }
+    }
+
     const actionPressed = actionButton.consume();
 
     if (battle) {
@@ -184,6 +275,7 @@ const loop = createGameLoop({
     const exit = findExitAt(map, centerTileX, centerTileY);
     if (exit) {
       switchMap(exit.targetMapId, exit.targetTileX, exit.targetTileY);
+      autosave();
       return;
     }
 
@@ -229,6 +321,11 @@ const loop = createGameLoop({
     ctx.font = "10px monospace";
     ctx.textBaseline = "top";
     ctx.fillText(GAME_TITLE, 4, 2);
+
+    if (saveMessage) {
+      ctx.fillStyle = "#f2c14e";
+      ctx.fillText(saveMessage, 4, 14);
+    }
 
     if (import.meta.env.DEV) {
       ctx.fillStyle = "#88ff88";
