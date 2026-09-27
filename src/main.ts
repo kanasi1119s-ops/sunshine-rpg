@@ -38,6 +38,8 @@ import { createInventory, type Inventory } from "./game/items/inventory";
 import { SAVE_VERSION, type SaveData } from "./game/save/types";
 import { loadFromSlot, saveToSlot } from "./game/save/storage";
 import { downloadSaveFile, readSaveFile } from "./io/save-file";
+import { AudioEngine } from "./audio/audio-engine";
+import { SAMPLE_BGM_LOOP, SAMPLE_CONFIRM_SE } from "./audio/sample-tracks";
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) {
@@ -80,6 +82,23 @@ const input = new InputState();
 const actionButton = new ActionButton();
 attachKeyboard(input, actionButton);
 createTouchControls(app, input, actionButton);
+
+const audio = new AudioEngine();
+let audioStarted = false;
+function startAudioOnFirstInteraction(): void {
+  if (audioStarted) {
+    return;
+  }
+  audioStarted = true;
+  audio.playBgm(SAMPLE_BGM_LOOP);
+}
+window.addEventListener("keydown", startAudioOnFirstInteraction, { once: true });
+window.addEventListener("pointerdown", startAudioOnFirstInteraction, { once: true });
+window.addEventListener("keydown", (event) => {
+  if (event.key === "m") {
+    audio.setMuted(!audio.isMuted());
+  }
+});
 
 let lastDialogueDirection: Direction | null = null;
 let lastBattleDirection: Direction | null = null;
@@ -208,6 +227,9 @@ const loop = createGameLoop({
     }
 
     const actionPressed = actionButton.consume();
+    if (actionPressed) {
+      audio.playSe(SAMPLE_CONFIRM_SE);
+    }
 
     if (battle) {
       const uiState = battle.getUiState();
