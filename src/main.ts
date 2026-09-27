@@ -40,6 +40,9 @@ import { loadFromSlot, saveToSlot } from "./game/save/storage";
 import { downloadSaveFile, readSaveFile } from "./io/save-file";
 import { AudioEngine } from "./audio/audio-engine";
 import { SAMPLE_BGM_LOOP, SAMPLE_CONFIRM_SE } from "./audio/sample-tracks";
+import { createDebugMenuState, moveMenuCursor, toggleMenu } from "./game/debug/debug-menu";
+import { renderDebugMenu, type DebugMenuRow } from "./render/debug-menu-renderer";
+import { expRequiredForLevel } from "./game/growth/exp-curve";
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) {
@@ -165,11 +168,16 @@ document.body.appendChild(fileInput);
 
 if (import.meta.env.DEV) {
   window.addEventListener("keydown", (event) => {
-    if (event.key === "b" && !battle && !dialogue.isActive()) {
+    if (event.key === "b" && !battle && !dialogue.isActive() && !debugMenu.open && !debugNoEncounter) {
       victoryExpApplied = false;
       victoryMessage = null;
       const equipmentBonus = computeEquipmentBonus(heroEquipment, SAMPLE_ITEMS_BY_ID);
       const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
+      if (debugInvincible) {
+        effectiveStats.maxHp = 99999;
+        effectiveStats.hp = 99999;
+        effectiveStats.defense = 999;
+      }
       battle = new BattleController(
         createSampleParty(heroStats.level, effectiveStats),
         createSampleEnemies(),
@@ -193,6 +201,67 @@ if (import.meta.env.DEV) {
       downloadSaveFile(buildSaveData());
     } else if (event.key === "u" && !battle) {
       fileInput.click();
+    }
+  });
+}
+
+let debugMenu = createDebugMenuState();
+let lastDebugDirection: Direction | null = null;
+let debugInvincible = false;
+let debugNoEncounter = false;
+
+interface DebugMenuRowWithAction extends DebugMenuRow {
+  action: () => void;
+}
+
+const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
+  {
+    label: () => "マップ: sample-field へワープ",
+    action: () => switchMap("sample-field", SAMPLE_START.tileX, SAMPLE_START.tileY),
+  },
+  {
+    label: () => "マップ: sample-room へワープ",
+    action: () => switchMap("sample-room", 4, 4),
+  },
+  {
+    label: () => `レベル +1（現在Lv${heroStats.level}）`,
+    action: () => {
+      heroStats = gainExp(createInitialHeroStats(), expRequiredForLevel(heroStats.level + 1), SAMPLE_GROWTH).stats;
+    },
+  },
+  {
+    label: () => `レベル -1（現在Lv${heroStats.level}）`,
+    action: () => {
+      const targetLevel = Math.max(1, heroStats.level - 1);
+      heroStats = gainExp(createInitialHeroStats(), expRequiredForLevel(targetLevel), SAMPLE_GROWTH).stats;
+    },
+  },
+  {
+    label: () => `無敵: ${debugInvincible ? "ON" : "OFF"}`,
+    action: () => {
+      debugInvincible = !debugInvincible;
+    },
+  },
+  {
+    label: () => `エンカウントなし: ${debugNoEncounter ? "ON" : "OFF"}`,
+    action: () => {
+      debugNoEncounter = !debugNoEncounter;
+    },
+  },
+  {
+    label: () => "フラグを全部クリア",
+    action: () => {
+      for (const key of Object.keys(flags)) {
+        delete flags[key];
+      }
+    },
+  },
+];
+
+if (import.meta.env.DEV) {
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "`") {
+      debugMenu = toggleMenu(debugMenu, DEBUG_MENU_ROWS.length);
     }
   });
 }
@@ -230,6 +299,23 @@ const loop = createGameLoop({
     if (actionPressed) {
       audio.playSe(SAMPLE_CONFIRM_SE);
     }
+
+    if (debugMenu.open) {
+      const direction = input.getDirection();
+      if (direction !== lastDebugDirection) {
+        if (direction === "up") {
+          debugMenu = moveMenuCursor(debugMenu, -1, DEBUG_MENU_ROWS.length);
+        } else if (direction === "down") {
+          debugMenu = moveMenuCursor(debugMenu, 1, DEBUG_MENU_ROWS.length);
+        }
+        lastDebugDirection = direction;
+      }
+      if (actionPressed) {
+        DEBUG_MENU_ROWS[debugMenu.cursor]?.action();
+      }
+      return;
+    }
+    lastDebugDirection = null;
 
     if (battle) {
       const uiState = battle.getUiState();
@@ -326,6 +412,7 @@ const loop = createGameLoop({
         ctx.font = "10px monospace";
         ctx.textBaseline = "top";
         ctx.fillText(`FPS: ${loop.getFps()}`, 4, LOGICAL_HEIGHT - 12);
+        renderDebugMenu(ctx, debugMenu, DEBUG_MENU_ROWS, LOGICAL_WIDTH, LOGICAL_HEIGHT);
       }
       return;
     }
@@ -352,6 +439,7 @@ const loop = createGameLoop({
     if (import.meta.env.DEV) {
       ctx.fillStyle = "#88ff88";
       ctx.fillText(`FPS: ${loop.getFps()}`, 4, LOGICAL_HEIGHT - 12);
+      renderDebugMenu(ctx, debugMenu, DEBUG_MENU_ROWS, LOGICAL_WIDTH, LOGICAL_HEIGHT);
     }
   },
 });
