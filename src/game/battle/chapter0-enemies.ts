@@ -1,4 +1,27 @@
 import type { BattleItem, Combatant, Skill } from "./types";
+import type { LeveledStats } from "../growth/types";
+
+/**
+ * 戦闘に出ているときのユーリ（装備ボーナス込みの実力を effectiveStats で渡す。
+ * 表示名のレベルは基本能力値=heroLevel を使う。`sample-battle.ts` の createSampleParty と同じ形）。
+ */
+export function createChapter0Party(heroLevel: number, effectiveStats: LeveledStats): Combatant[] {
+  return [
+    {
+      id: "hero",
+      name: `ユーリ Lv${heroLevel}`,
+      maxHp: effectiveStats.maxHp,
+      hp: effectiveStats.hp,
+      maxMp: effectiveStats.maxMp,
+      mp: effectiveStats.mp,
+      attack: effectiveStats.attack,
+      defense: effectiveStats.defense,
+      speed: effectiveStats.speed,
+      isEnemy: false,
+      guarding: false,
+    },
+  ];
+}
 
 /**
  * 序章のボス「灯里の歪み」（`docs/story/mystery.md` 序章の項、

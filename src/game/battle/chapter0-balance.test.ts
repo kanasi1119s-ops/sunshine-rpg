@@ -1,17 +1,23 @@
 import { describe, expect, it } from "vitest";
 import { createBattleState, checkOutcome, runTurn, chooseEnemyAction } from "./battle-engine";
-import type { BattleAction, Combatant } from "./types";
+import type { BattleAction } from "./types";
 import { createRng } from "../random";
-import { CHAPTER0_ITEM, CHAPTER0_SKILL, CHAPTER0_STARTING_ITEM_COUNT, createYugamiBoss } from "./chapter0-enemies";
+import {
+  CHAPTER0_ITEM,
+  CHAPTER0_SKILL,
+  CHAPTER0_STARTING_ITEM_COUNT,
+  createChapter0Party,
+  createYugamiBoss,
+} from "./chapter0-enemies";
 
 const HERO_ID = "hero";
 const BOSS_ID = "chapter0-yugami";
 
 /** 序章クリア時点を想定した、レベル1・剣装備込みのユーリ。`sample-battle.ts` の初期値と同じ。 */
-function createChapter0Hero(): Combatant {
-  return {
-    id: HERO_ID,
-    name: "ユーリ",
+function createChapter0Hero() {
+  return createChapter0Party(1, {
+    level: 1,
+    exp: 0,
     maxHp: 30,
     hp: 30,
     maxMp: 10,
@@ -19,9 +25,7 @@ function createChapter0Hero(): Combatant {
     attack: 16, // 素の12 + 剣の+4
     defense: 6,
     speed: 9,
-    isEnemy: false,
-    guarding: false,
-  };
+  })[0];
 }
 
 /**
