@@ -19,6 +19,7 @@ import { createTouchControls } from "./input/touch-controls";
 import type { Direction } from "./input/direction";
 import { CHAPTER0_OPENING_COMMANDS, CHAPTER0_START } from "./game/world/chapter0-world";
 import { CHAPTER1_OPENING_COMMANDS } from "./game/world/chapter1-world";
+import { CHAPTER2_OPENING_COMMANDS } from "./game/world/chapter2-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
 import { renderBattle } from "./render/battle-renderer";
@@ -33,7 +34,8 @@ import {
 } from "./game/battle/sample-battle";
 import { CHAPTER0_ITEM, CHAPTER0_SKILL, createChapter0Party, createYugamiBoss } from "./game/battle/chapter0-enemies";
 import { createMugikanoYugami } from "./game/battle/chapter1-enemies";
-import { COMPANIONS, createCompanionCombatant, MINA, RETO } from "./game/battle/companions";
+import { createGarasukoYugami } from "./game/battle/chapter2-enemies";
+import { COMPANIONS, createCompanionCombatant, GUIDE, MINA, RETO } from "./game/battle/companions";
 import type { Combatant, Skill } from "./game/battle/types";
 import type { LeveledStats } from "./game/growth/types";
 import { TOURI_TOWN_SPAWN } from "./game/map/chapter0/touri-town";
@@ -104,6 +106,9 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   if (mapId === "mugikano-village" && !flags["chapter1_intro_seen"]) {
     dialogue.start(CHAPTER1_OPENING_COMMANDS);
   }
+  if (mapId === "garasuko-town" && !flags["chapter2_intro_seen"]) {
+    dialogue.start(CHAPTER2_OPENING_COMMANDS);
+  }
 }
 
 /**
@@ -118,6 +123,10 @@ function mapBgmFor(mapId: string): Score {
   }
   if (mapId === "mugikano-village") {
     return CHAPTER1_VILLAGE_THEME;
+  }
+  if (mapId === "garasuko-town" || mapId === "garasuko-warehouse") {
+    // 第2章専用のBGMはroadmap 4-9で作曲するまで、第1章の曲を仮に流用する。
+    return mapId === "garasuko-town" ? CHAPTER1_VILLAGE_THEME : CHAPTER1_WATER_SOURCE_THEME;
   }
   return CHAPTER0_TOWN_THEME;
 }
@@ -158,6 +167,12 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
   "mugikano-yugami": {
     createEnemy: createMugikanoYugami,
     victoryFlag: "chapter1_yugami_defeated",
+    bgm: CHAPTER1_BOSS_THEME,
+  },
+  "garasuko-yugami": {
+    createEnemy: createGarasukoYugami,
+    victoryFlag: "chapter2_yugami_defeated",
+    // 第2章専用のボス戦BGMはroadmap 4-9で作曲するまで、第1章ボス戦の曲を仮に流用する。
     bgm: CHAPTER1_BOSS_THEME,
   },
 };
@@ -225,6 +240,7 @@ let inventory: Inventory = createInventory();
 const COMPANION_JOIN_FLAGS: { flag: string; companionId: string }[] = [
   { flag: "chapter0_reto_joined", companionId: RETO.id },
   { flag: "chapter1_mina_joined", companionId: MINA.id },
+  { flag: "chapter2_guide_joined", companionId: GUIDE.id },
 ];
 
 function syncCompanionsFromFlags(): void {
