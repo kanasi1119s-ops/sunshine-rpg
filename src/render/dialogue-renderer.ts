@@ -1,8 +1,10 @@
 import type { DialogueRenderState } from "../game/dialogue/dialogue-controller";
 import { wrapText } from "./text-wrap";
+import { PORTRAIT_PIXEL_WIDTH, renderPortraitByName } from "./portrait-renderer";
 
 const LINE_HEIGHT = 12;
 const PADDING = 6;
+const PORTRAIT_GAP = 4;
 
 export function renderDialogue(
   ctx: CanvasRenderingContext2D,
@@ -25,18 +27,22 @@ export function renderDialogue(
   ctx.fillStyle = "#f0f0f0";
 
   if (state.kind === "message") {
+    const hasPortrait = state.speaker !== undefined && renderPortraitByName(ctx, state.speaker, boxX + PADDING, boxY + PADDING);
+    const textIndent = hasPortrait ? PORTRAIT_PIXEL_WIDTH + PORTRAIT_GAP : 0;
+    const textX = boxX + PADDING + textIndent;
+
     let textY = boxY + PADDING;
     if (state.speaker) {
       ctx.fillStyle = "#f2c14e";
-      ctx.fillText(state.speaker, boxX + PADDING, textY);
+      ctx.fillText(state.speaker, textX, textY);
       textY += LINE_HEIGHT;
       ctx.fillStyle = "#f0f0f0";
     }
-    const lines = wrapText(state.visibleText, boxWidth - PADDING * 2, (segment) =>
+    const lines = wrapText(state.visibleText, boxWidth - PADDING * 2 - textIndent, (segment) =>
       ctx.measureText(segment).width,
     );
     lines.forEach((line, index) => {
-      ctx.fillText(line, boxX + PADDING, textY + index * LINE_HEIGHT);
+      ctx.fillText(line, textX, textY + index * LINE_HEIGHT);
     });
     if (state.fullyShown) {
       ctx.fillText("▼", boxX + boxWidth - PADDING - 8, boxY + boxHeight - LINE_HEIGHT - 2);
