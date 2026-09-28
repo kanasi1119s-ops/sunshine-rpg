@@ -41,6 +41,8 @@ import { TOURI_BRANCH_ENTRY } from "./game/map/chapter0/touri-branch";
 import { TOURI_OUTSKIRTS_ENTRY } from "./game/map/chapter0/touri-outskirts";
 import { MUGIKANO_VILLAGE_ENTRY } from "./game/map/chapter1/mugikano-village";
 import { MUGIKANO_WATER_SOURCE_ENTRY } from "./game/map/chapter1/mugikano-water-source";
+import { GARASUKO_TOWN_ENTRY } from "./game/map/chapter2/garasuko-town";
+import { GARASUKO_WAREHOUSE_ENTRY } from "./game/map/chapter2/garasuko-warehouse";
 import { createRng } from "./game/random";
 import { computeVictoryExp } from "./game/battle/battle-engine";
 import { gainExp } from "./game/growth/level-up";
@@ -387,6 +389,14 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
     label: () => "マップ: 麦香野・水源 へワープ",
     action: () =>
       switchMap("mugikano-water-source", MUGIKANO_WATER_SOURCE_ENTRY.tileX, MUGIKANO_WATER_SOURCE_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 硝子湖の町 へワープ",
+    action: () => switchMap("garasuko-town", GARASUKO_TOWN_ENTRY.tileX, GARASUKO_TOWN_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 硝子湖・密輸倉庫 へワープ",
+    action: () => switchMap("garasuko-warehouse", GARASUKO_WAREHOUSE_ENTRY.tileX, GARASUKO_WAREHOUSE_ENTRY.tileY),
   },
   {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,
