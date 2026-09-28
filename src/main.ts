@@ -43,7 +43,9 @@ import { SAVE_VERSION, type SaveData } from "./game/save/types";
 import { loadFromSlot, saveToSlot } from "./game/save/storage";
 import { downloadSaveFile, readSaveFile } from "./io/save-file";
 import { AudioEngine } from "./audio/audio-engine";
-import { SAMPLE_BGM_LOOP, SAMPLE_CONFIRM_SE } from "./audio/sample-tracks";
+import { SAMPLE_CONFIRM_SE } from "./audio/sample-tracks";
+import { CHAPTER0_BATTLE_THEME, CHAPTER0_BOSS_THEME, CHAPTER0_OUTSKIRTS_THEME, CHAPTER0_TOWN_THEME } from "./audio/chapter0-tracks";
+import type { Score } from "./audio/score";
 import { createDebugMenuState, moveMenuCursor, toggleMenu } from "./game/debug/debug-menu";
 import { renderDebugMenu, type DebugMenuRow } from "./render/debug-menu-renderer";
 import { expRequiredForLevel } from "./game/growth/exp-curve";
@@ -79,6 +81,25 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   map = createTileMap(data);
   npcs = CHAPTER0_NPCS[mapId] ?? [];
   player = { ...player, x: tileX * map.data.tileWidth, y: tileY * map.data.tileHeight };
+  playMapBgm(mapId);
+}
+
+/** マップごとのBGM（`docs/sound/tracks.md`）。同じ曲がすでに鳴っていれば鳴らし直さない。 */
+function mapBgmFor(mapId: string): Score {
+  return mapId === "touri-outskirts" ? CHAPTER0_OUTSKIRTS_THEME : CHAPTER0_TOWN_THEME;
+}
+
+let currentBgmTrack: Score | null = null;
+function playMapBgm(mapId: string): void {
+  if (!audioStarted) {
+    return;
+  }
+  const track = mapBgmFor(mapId);
+  if (track === currentBgmTrack) {
+    return;
+  }
+  currentBgmTrack = track;
+  audio.playBgm(track);
 }
 
 let pendingVictoryFlag: string | null = null;
@@ -108,6 +129,8 @@ function startChapter0Battle(battleId: string): void {
     createRng(Date.now()),
     { skill: CHAPTER0_SKILL, item: CHAPTER0_ITEM },
   );
+  currentBgmTrack = CHAPTER0_BOSS_THEME;
+  audio.playBgm(CHAPTER0_BOSS_THEME);
 }
 
 const input = new InputState();
@@ -122,7 +145,7 @@ function startAudioOnFirstInteraction(): void {
     return;
   }
   audioStarted = true;
-  audio.playBgm(SAMPLE_BGM_LOOP);
+  playMapBgm(currentMapId);
 }
 window.addEventListener("keydown", startAudioOnFirstInteraction, { once: true });
 window.addEventListener("pointerdown", startAudioOnFirstInteraction, { once: true });
@@ -213,6 +236,8 @@ if (import.meta.env.DEV) {
         createRng(Date.now()),
         { skill: SAMPLE_SKILL, item: SAMPLE_ITEM },
       );
+      currentBgmTrack = CHAPTER0_BATTLE_THEME;
+      audio.playBgm(CHAPTER0_BATTLE_THEME);
     } else if (event.key === "k" && !battle) {
       saveToSlot(window.localStorage, "slot1", buildSaveData());
       saveMessage = "スロット1にセーブしました";
@@ -375,6 +400,7 @@ const loop = createGameLoop({
       if (actionPressed) {
         if (uiState.kind === "finished") {
           battle = null;
+          playMapBgm(currentMapId);
         } else {
           battle.confirm();
         }
