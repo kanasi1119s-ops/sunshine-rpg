@@ -8,6 +8,7 @@ export interface WarpRequest {
 
 interface RunnerOptions {
   onWarp?: (warp: WarpRequest) => void;
+  onStartBattle?: (battleId: string) => void;
 }
 
 /**
@@ -57,6 +58,10 @@ function* runCommands(
           tileX: command.tileX,
           tileY: command.tileY,
         });
+        break;
+
+      case "startBattle":
+        options.onStartBattle?.(command.battleId);
         break;
     }
   }

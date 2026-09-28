@@ -17,7 +17,7 @@ import { ActionButton } from "./input/action-button";
 import { attachKeyboard } from "./input/keyboard";
 import { createTouchControls } from "./input/touch-controls";
 import type { Direction } from "./input/direction";
-import { SAMPLE_MAPS, SAMPLE_NPCS, SAMPLE_START } from "./game/world/sample-world";
+import { CHAPTER0_MAPS, CHAPTER0_NPCS, CHAPTER0_OPENING_COMMANDS, CHAPTER0_START } from "./game/world/chapter0-world";
 import { BattleController } from "./game/battle/battle-controller";
 import { renderBattle } from "./render/battle-renderer";
 import {
@@ -30,6 +30,10 @@ import {
   SAMPLE_ITEMS_BY_ID,
   SAMPLE_SKILL,
 } from "./game/battle/sample-battle";
+import { CHAPTER0_ITEM, CHAPTER0_SKILL, createChapter0Party, createYugamiBoss } from "./game/battle/chapter0-enemies";
+import { TOURI_TOWN_SPAWN } from "./game/map/chapter0/touri-town";
+import { TOURI_BRANCH_ENTRY } from "./game/map/chapter0/touri-branch";
+import { TOURI_OUTSKIRTS_ENTRY } from "./game/map/chapter0/touri-outskirts";
 import { createRng } from "./game/random";
 import { computeVictoryExp } from "./game/battle/battle-engine";
 import { gainExp } from "./game/growth/level-up";
@@ -57,29 +61,54 @@ window.addEventListener("resize", resize);
 const flags: Flags = {};
 const camera = createCamera(LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
-let currentMapId = SAMPLE_START.mapId;
-let map = createTileMap(SAMPLE_MAPS[currentMapId]);
-let npcs = SAMPLE_NPCS[currentMapId] ?? [];
+let currentMapId = CHAPTER0_START.mapId;
+let map = createTileMap(CHAPTER0_MAPS[currentMapId]);
+let npcs = CHAPTER0_NPCS[currentMapId] ?? [];
 let player = createPlayer(
-  SAMPLE_START.tileX * map.data.tileWidth,
-  SAMPLE_START.tileY * map.data.tileHeight,
+  CHAPTER0_START.tileX * map.data.tileWidth,
+  CHAPTER0_START.tileY * map.data.tileHeight,
 );
 let renderCamera = camera;
 
 function switchMap(mapId: string, tileX: number, tileY: number): void {
-  const data = SAMPLE_MAPS[mapId];
+  const data = CHAPTER0_MAPS[mapId];
   if (!data) {
     return;
   }
   currentMapId = mapId;
   map = createTileMap(data);
-  npcs = SAMPLE_NPCS[mapId] ?? [];
+  npcs = CHAPTER0_NPCS[mapId] ?? [];
   player = { ...player, x: tileX * map.data.tileWidth, y: tileY * map.data.tileHeight };
 }
 
+let pendingVictoryFlag: string | null = null;
+
 const dialogue = new DialogueController(flags, {
   onWarp: (warp) => switchMap(warp.mapId, warp.tileX, warp.tileY),
+  onStartBattle: (battleId) => startChapter0Battle(battleId),
 });
+
+function startChapter0Battle(battleId: string): void {
+  if (battleId !== "chapter0-yugami" || battle) {
+    return;
+  }
+  victoryExpApplied = false;
+  victoryMessage = null;
+  pendingVictoryFlag = "chapter0_yugami_defeated";
+  const equipmentBonus = computeEquipmentBonus(heroEquipment, SAMPLE_ITEMS_BY_ID);
+  const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
+  if (debugInvincible) {
+    effectiveStats.maxHp = 99999;
+    effectiveStats.hp = 99999;
+    effectiveStats.defense = 999;
+  }
+  battle = new BattleController(
+    createChapter0Party(heroStats.level, effectiveStats),
+    [createYugamiBoss()],
+    createRng(Date.now()),
+    { skill: CHAPTER0_SKILL, item: CHAPTER0_ITEM },
+  );
+}
 
 const input = new InputState();
 const actionButton = new ActionButton();
@@ -216,12 +245,16 @@ interface DebugMenuRowWithAction extends DebugMenuRow {
 
 const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
   {
-    label: () => "マップ: sample-field へワープ",
-    action: () => switchMap("sample-field", SAMPLE_START.tileX, SAMPLE_START.tileY),
+    label: () => "マップ: 灯里の町 へワープ",
+    action: () => switchMap("touri-town", TOURI_TOWN_SPAWN.tileX, TOURI_TOWN_SPAWN.tileY),
   },
   {
-    label: () => "マップ: sample-room へワープ",
-    action: () => switchMap("sample-room", 4, 4),
+    label: () => "マップ: 灯里支部（内部） へワープ",
+    action: () => switchMap("touri-branch", TOURI_BRANCH_ENTRY.tileX, TOURI_BRANCH_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 町外れ・歪みの発生地点 へワープ",
+    action: () => switchMap("touri-outskirts", TOURI_OUTSKIRTS_ENTRY.tileX, TOURI_OUTSKIRTS_ENTRY.tileY),
   },
   {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,
@@ -282,6 +315,10 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
     result.levelsGained > 0
       ? `${expGained}の経験値を得た！ レベル${heroStats.level}に上がった！`
       : `${expGained}の経験値を得た！`;
+  if (pendingVictoryFlag) {
+    flags[pendingVictoryFlag] = true;
+    pendingVictoryFlag = null;
+  }
   autosave();
 }
 
@@ -443,6 +480,10 @@ const loop = createGameLoop({
     }
   },
 });
+
+if (!flags["chapter0_intro_seen"]) {
+  dialogue.start(CHAPTER0_OPENING_COMMANDS);
+}
 
 function frame(nowMs: number): void {
   loop.tick(nowMs);

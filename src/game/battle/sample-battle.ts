@@ -21,7 +21,7 @@ export function createInitialHeroStats(): LeveledStats {
 
 export const SAMPLE_WEAPON: EquipmentItemData = {
   id: "sword",
-  name: "どうのつるぎ（仮）",
+  name: "使い込まれた鉄の剣",
   category: "weapon",
   price: 100,
   statBonus: { attack: 4 },

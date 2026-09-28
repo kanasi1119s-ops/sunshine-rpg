@@ -91,4 +91,16 @@ describe("DialogueController", () => {
     expect(warps).toEqual([{ mapId: "room" }]);
     expect(controller.isActive()).toBe(false);
   });
+
+  it("startBattleコマンドに達したらonStartBattleを呼び、UIは止めずに終了する", () => {
+    const startedBattles: string[] = [];
+    const controller = new DialogueController(
+      {},
+      { onStartBattle: (id) => startedBattles.push(id) },
+    );
+    controller.start([{ type: "startBattle", battleId: "chapter0-yugami" }]);
+
+    expect(startedBattles).toEqual(["chapter0-yugami"]);
+    expect(controller.isActive()).toBe(false);
+  });
 });
