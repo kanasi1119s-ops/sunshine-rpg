@@ -51,6 +51,7 @@ import { loadFromSlot, saveToSlot } from "./game/save/storage";
 import { downloadSaveFile, readSaveFile } from "./io/save-file";
 import { AudioEngine } from "./audio/audio-engine";
 import { CHAPTER0_BATTLE_THEME, CHAPTER0_BOSS_THEME, CHAPTER0_OUTSKIRTS_THEME, CHAPTER0_TOWN_THEME } from "./audio/chapter0-tracks";
+import { CHAPTER1_BOSS_THEME, CHAPTER1_VILLAGE_THEME, CHAPTER1_WATER_SOURCE_THEME } from "./audio/chapter1-tracks";
 import {
   CHAPTER0_CONFIRM_SE,
   CHAPTER0_CURSOR_SE,
@@ -105,11 +106,16 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
 
 /**
  * マップごとのBGM（`docs/sound/tracks.md`）。同じ曲がすでに鳴っていれば鳴らし直さない。
- * 第1章（麦香野）専用の曲はまだ無い（roadmap 4-4で作曲予定）ため、序章の曲を仮に流用する。
  */
 function mapBgmFor(mapId: string): Score {
-  if (mapId === "touri-outskirts" || mapId === "mugikano-water-source") {
+  if (mapId === "touri-outskirts") {
     return CHAPTER0_OUTSKIRTS_THEME;
+  }
+  if (mapId === "mugikano-water-source") {
+    return CHAPTER1_WATER_SOURCE_THEME;
+  }
+  if (mapId === "mugikano-village") {
+    return CHAPTER1_VILLAGE_THEME;
   }
   return CHAPTER0_TOWN_THEME;
 }
@@ -150,7 +156,7 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
   "mugikano-yugami": {
     createEnemy: createMugikanoYugami,
     victoryFlag: "chapter1_yugami_defeated",
-    bgm: CHAPTER0_BOSS_THEME,
+    bgm: CHAPTER1_BOSS_THEME,
   },
 };
 
