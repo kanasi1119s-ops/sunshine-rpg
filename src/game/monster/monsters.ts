@@ -94,4 +94,12 @@ export const MONSTERS: Record<string, MonsterSpec> = {
     spikeAmplitude: 0.3,
     baseRadiusRatio: 0.85,
   },
+  "garasuko-yugami": {
+    body: "#8a5a2f",
+    core: "#e0a84f",
+    eye: "#6adfd0",
+    spikeCount: 11,
+    spikeAmplitude: 0.4,
+    baseRadiusRatio: 0.9,
+  },
 };

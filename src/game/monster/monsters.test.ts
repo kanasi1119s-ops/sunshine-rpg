@@ -44,9 +44,10 @@ describe("buildMonsterCells", () => {
 });
 
 describe("MONSTERS", () => {
-  it("序章・第1章のボスが登録されている", () => {
+  it("序章・第1章・第2章のボスが登録されている", () => {
     expect(MONSTERS["chapter0-yugami"]).toBeDefined();
     expect(MONSTERS["mugikano-yugami"]).toBeDefined();
+    expect(MONSTERS["garasuko-yugami"]).toBeDefined();
   });
 
   it("登録されている敵は、みな異なる見た目になる（設定値が同一ではない）", () => {
