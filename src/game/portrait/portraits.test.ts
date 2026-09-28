@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildPortraitRows,
+  buildShadedCells,
   colorForCell,
   PORTRAIT_GRID_HEIGHT,
   PORTRAIT_GRID_WIDTH,
@@ -87,6 +88,49 @@ describe("colorForCell", () => {
 
   it("'.'は何も描かない（null）", () => {
     expect(colorForCell(spec, ".")).toBeNull();
+  });
+});
+
+describe("buildShadedCells", () => {
+  const spec: PortraitSpec = {
+    skin: "#a0a0a0",
+    hair: "#606060",
+    eyes: "#202020",
+    accent: "#808080",
+    hairStyle: "short",
+    accessory: "none",
+  };
+
+  it("'.'以外のマスの数だけ、描くセルを返す", () => {
+    const rows = buildPortraitRows(spec);
+    const nonEmptyCount = rows.reduce((sum, row) => sum + [...row].filter((c) => c !== ".").length, 0);
+    expect(buildShadedCells(spec)).toHaveLength(nonEmptyCount);
+  });
+
+  it("すべて有効な#rrggbb形式の色になる（陰影で形式が崩れない）", () => {
+    for (const cell of buildShadedCells(spec)) {
+      expect(cell.color).toMatch(/^#[0-9a-f]{6}$/);
+    }
+  });
+
+  it("同じマスの色は毎回同じ（時刻に依存しない）", () => {
+    const first = buildShadedCells(spec);
+    const second = buildShadedCells(spec);
+    expect(first).toEqual(second);
+  });
+
+  it("シルエットの輪郭（外側に接するマス）は、内側のマスより暗い色になる", () => {
+    function brightness(hex: string): number {
+      const v = parseInt(hex.slice(1), 16);
+      return ((v >> 16) & 0xff) + ((v >> 8) & 0xff) + (v & 0xff);
+    }
+    const cells = buildShadedCells(spec);
+    // row0はどのマスも外周（輪郭）、row2・col5は周りを髪・肌に囲まれた内側のマス。
+    const topHairEdge = cells.find((c) => c.row === 0 && c.col === 5);
+    const innerHair = cells.find((c) => c.row === 2 && c.col === 5);
+    expect(topHairEdge).toBeDefined();
+    expect(innerHair).toBeDefined();
+    expect(brightness(topHairEdge!.color)).toBeLessThan(brightness(innerHair!.color));
   });
 });
 

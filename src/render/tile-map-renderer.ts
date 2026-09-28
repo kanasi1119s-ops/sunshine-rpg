@@ -1,6 +1,7 @@
 import { getTileId, type TileMap } from "../game/map/tile-map";
 import type { Camera } from "./camera";
-import { hashCell, shadeColor } from "./color-utils";
+import { hashCell, shadeColor } from "../game/color-utils";
+import { buildTileArtCells, TILE_ART, TILE_ART_SIZE } from "../game/tile-art/tile-art";
 
 /**
  * 単色べた塗りだと平坦に見えるため、タイルごとに決まった模様（隅の陰影＋
@@ -51,6 +52,32 @@ function drawTileTexture(
   );
 }
 
+/**
+ * `tileArt`に地形カテゴリの指定があれば、ドット絵パターンで描く。
+ * 描けた場合はtrue、カテゴリが未登録の場合はfalse（呼び出し側は
+ * `drawTileTexture`にフォールバックする）。
+ */
+function drawTileArt(
+  ctx: CanvasRenderingContext2D,
+  categoryKey: string,
+  screenX: number,
+  screenY: number,
+  tileWidth: number,
+  tileHeight: number,
+): boolean {
+  const spec = TILE_ART[categoryKey];
+  if (!spec) {
+    return false;
+  }
+  const cellWidth = tileWidth / TILE_ART_SIZE;
+  const cellHeight = tileHeight / TILE_ART_SIZE;
+  for (const cell of buildTileArtCells(spec)) {
+    ctx.fillStyle = cell.color;
+    ctx.fillRect(screenX + cell.col * cellWidth, screenY + cell.row * cellHeight, cellWidth, cellHeight);
+  }
+  return true;
+}
+
 /** カメラに映る範囲のタイルだけを描画する。 */
 export function renderTileMap(
   ctx: CanvasRenderingContext2D,
@@ -81,16 +108,13 @@ export function renderTileMap(
         if (!color) {
           continue;
         }
-        drawTileTexture(
-          ctx,
-          color,
-          tileX * tileWidth - camera.x,
-          tileY * tileHeight - camera.y,
-          tileWidth,
-          tileHeight,
-          tileX,
-          tileY,
-        );
+        const screenX = tileX * tileWidth - camera.x;
+        const screenY = tileY * tileHeight - camera.y;
+        const artKey = map.data.tileArt?.[tileId];
+        if (artKey && drawTileArt(ctx, artKey, screenX, screenY, tileWidth, tileHeight)) {
+          continue;
+        }
+        drawTileTexture(ctx, color, screenX, screenY, tileWidth, tileHeight, tileX, tileY);
       }
     }
   }
