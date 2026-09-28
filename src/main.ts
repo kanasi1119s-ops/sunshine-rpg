@@ -25,13 +25,15 @@ import {
   createInitialEquipment,
   createInitialHeroStats,
   createSampleEnemies,
-  createSampleParty,
   SAMPLE_GROWTH,
   SAMPLE_ITEM,
   SAMPLE_ITEMS_BY_ID,
   SAMPLE_SKILL,
 } from "./game/battle/sample-battle";
 import { CHAPTER0_ITEM, CHAPTER0_SKILL, createChapter0Party, createYugamiBoss } from "./game/battle/chapter0-enemies";
+import { COMPANIONS, createCompanionCombatant, RETO } from "./game/battle/companions";
+import type { Skill } from "./game/battle/types";
+import type { LeveledStats } from "./game/growth/types";
 import { TOURI_TOWN_SPAWN } from "./game/map/chapter0/touri-town";
 import { TOURI_BRANCH_ENTRY } from "./game/map/chapter0/touri-branch";
 import { TOURI_OUTSKIRTS_ENTRY } from "./game/map/chapter0/touri-outskirts";
@@ -136,16 +138,19 @@ function startChapter0Battle(battleId: string): void {
   pendingVictoryFlag = "chapter0_yugami_defeated";
   const equipmentBonus = computeEquipmentBonus(heroEquipment, SAMPLE_ITEMS_BY_ID);
   const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
+  const party = buildActiveParty(effectiveStats);
   if (debugInvincible) {
-    effectiveStats.maxHp = 99999;
-    effectiveStats.hp = 99999;
-    effectiveStats.defense = 999;
+    for (const member of party) {
+      member.maxHp = 99999;
+      member.hp = 99999;
+      member.defense = 999;
+    }
   }
   battle = new BattleController(
-    createChapter0Party(heroStats.level, effectiveStats),
+    party,
     [createYugamiBoss()],
     createRng(Date.now()),
-    { skill: CHAPTER0_SKILL, item: CHAPTER0_ITEM },
+    { skills: buildSkillsMap(CHAPTER0_SKILL), item: CHAPTER0_ITEM },
   );
   currentBgmTrack = CHAPTER0_BOSS_THEME;
   audio.playBgm(CHAPTER0_BOSS_THEME);
@@ -178,7 +183,40 @@ let lastBattleDirection: Direction | null = null;
 let battle: BattleController | null = null;
 let heroStats = createInitialHeroStats();
 let heroEquipment: EquipmentSlots = createInitialEquipment();
+/** 仲間に加わったキャラクターのステータス（キャラクターIDをキーにする）。 */
+let companionStats: Record<string, LeveledStats> = {};
 let inventory: Inventory = createInventory();
+
+/** 加入フラグが立っているのに、まだパーティに反映していない仲間を反映する。 */
+const COMPANION_JOIN_FLAGS: { flag: string; companionId: string }[] = [
+  { flag: "chapter0_reto_joined", companionId: RETO.id },
+];
+
+function syncCompanionsFromFlags(): void {
+  for (const { flag, companionId } of COMPANION_JOIN_FLAGS) {
+    if (flags[flag] && !(companionId in companionStats)) {
+      companionStats[companionId] = COMPANIONS[companionId].createInitialStats();
+    }
+  }
+}
+
+/** 現在の実力（装備ボーナス込み）のユーリに、加入済みの仲間を加えた戦闘パーティ。 */
+function buildActiveParty(effectiveHeroStats: LeveledStats): ReturnType<typeof createChapter0Party> {
+  const party = createChapter0Party(heroStats.level, effectiveHeroStats);
+  for (const [id, stats] of Object.entries(companionStats)) {
+    party.push(createCompanionCombatant(COMPANIONS[id], stats));
+  }
+  return party;
+}
+
+/** ヒーローのとくぎ＋加入済み仲間のとくぎをまとめた、戦闘用のとくぎ一覧。 */
+function buildSkillsMap(heroSkill: Skill): Record<string, Skill> {
+  const skills: Record<string, Skill> = { hero: heroSkill };
+  for (const id of Object.keys(companionStats)) {
+    skills[id] = COMPANIONS[id].skill;
+  }
+  return skills;
+}
 let victoryExpApplied = false;
 let victoryMessage: string | null = null;
 let saveMessage: string | null = null;
@@ -190,6 +228,9 @@ function buildSaveData(): SaveData {
     savedAt: new Date().toISOString(),
     player: { mapId: currentMapId, tileX: player.x / map.data.tileWidth, tileY: player.y / map.data.tileHeight, direction: player.direction },
     hero: { stats: heroStats, equipment: heroEquipment },
+    companions: Object.fromEntries(
+      Object.entries(companionStats).map(([id, stats]) => [id, { stats }]),
+    ),
     inventory,
     flags,
   };
@@ -198,6 +239,9 @@ function buildSaveData(): SaveData {
 function applySaveData(data: SaveData): void {
   heroStats = data.hero.stats;
   heroEquipment = data.hero.equipment;
+  companionStats = Object.fromEntries(
+    Object.entries(data.companions).map(([id, entry]) => [id, entry.stats]),
+  );
   inventory = data.inventory;
   for (const key of Object.keys(flags)) {
     delete flags[key];
@@ -243,16 +287,19 @@ if (import.meta.env.DEV) {
       victoryMessage = null;
       const equipmentBonus = computeEquipmentBonus(heroEquipment, SAMPLE_ITEMS_BY_ID);
       const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
+      const party = buildActiveParty(effectiveStats);
       if (debugInvincible) {
-        effectiveStats.maxHp = 99999;
-        effectiveStats.hp = 99999;
-        effectiveStats.defense = 999;
+        for (const member of party) {
+          member.maxHp = 99999;
+          member.hp = 99999;
+          member.defense = 999;
+        }
       }
       battle = new BattleController(
-        createSampleParty(heroStats.level, effectiveStats),
+        party,
         createSampleEnemies(),
         createRng(Date.now()),
-        { skill: SAMPLE_SKILL, item: SAMPLE_ITEM },
+        { skills: buildSkillsMap(SAMPLE_SKILL), item: SAMPLE_ITEM },
       );
       currentBgmTrack = CHAPTER0_BATTLE_THEME;
       audio.playBgm(CHAPTER0_BATTLE_THEME);
@@ -371,9 +418,20 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
   const expGained = computeVictoryExp(finishedBattle.getState());
   const result = gainExp(heroStats, expGained, SAMPLE_GROWTH);
   heroStats = result.stats;
+  const levelUpNames: string[] = [];
+  if (result.levelsGained > 0) {
+    levelUpNames.push(`ユーリ（Lv${heroStats.level}）`);
+  }
+  for (const [id, stats] of Object.entries(companionStats)) {
+    const companionResult = gainExp(stats, expGained, COMPANIONS[id].growth);
+    companionStats[id] = companionResult.stats;
+    if (companionResult.levelsGained > 0) {
+      levelUpNames.push(`${COMPANIONS[id].name}（Lv${companionResult.stats.level}）`);
+    }
+  }
   victoryMessage =
-    result.levelsGained > 0
-      ? `${expGained}の経験値を得た！ レベル${heroStats.level}に上がった！`
+    levelUpNames.length > 0
+      ? `${expGained}の経験値を得た！ ${levelUpNames.join("、")}がレベルアップ！`
       : `${expGained}の経験値を得た！`;
   if (pendingVictoryFlag) {
     flags[pendingVictoryFlag] = true;
@@ -384,6 +442,8 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
 
 const loop = createGameLoop({
   update(dtMs) {
+    syncCompanionsFromFlags();
+
     if (saveMessageTimer > 0) {
       saveMessageTimer -= dtMs;
       if (saveMessageTimer <= 0) {

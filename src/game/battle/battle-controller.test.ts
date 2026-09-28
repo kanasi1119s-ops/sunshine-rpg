@@ -18,8 +18,10 @@ function makeCombatant(overrides: Partial<Combatant> & { id: string }): Combatan
   };
 }
 
-const skill = { id: "fire", name: "ファイア", mpCost: 3, powerMultiplier: 1.5 };
+const testSkill = { id: "test-skill", name: "とくぎ（テスト）", mpCost: 3, powerMultiplier: 1.5 };
 const item = { id: "herb", name: "やくそう", healAmount: 20 };
+/** テストで使う味方ID（hero / a / b）はすべて同じとくぎを持つことにする。 */
+const skills = { hero: testSkill, a: testSkill, b: testSkill };
 
 describe("BattleController", () => {
   it("最初はパーティ1人目のコマンド選択から始まる", () => {
@@ -27,7 +29,7 @@ describe("BattleController", () => {
       [makeCombatant({ id: "hero" })],
       [makeCombatant({ id: "slime", isEnemy: true, hp: 1000, speed: 1 })],
       () => 0.5,
-      { skill, item },
+      { skills, item },
     );
     expect(controller.getUiState()).toEqual({ kind: "command", actorId: "hero", cursor: 0 });
   });
@@ -37,7 +39,7 @@ describe("BattleController", () => {
       [makeCombatant({ id: "hero" })],
       [makeCombatant({ id: "slime", isEnemy: true, hp: 1000, speed: 1 })],
       () => 0.5,
-      { skill, item },
+      { skills, item },
     );
 
     expect(COMMANDS[0].kind).toBe("attack");
@@ -53,7 +55,7 @@ describe("BattleController", () => {
       [makeCombatant({ id: "a" }), makeCombatant({ id: "b" })],
       [makeCombatant({ id: "slime", isEnemy: true, hp: 1000, speed: 1 })],
       () => 0.5,
-      { skill, item },
+      { skills, item },
     );
 
     const defendIndex = COMMANDS.findIndex((c) => c.kind === "defend");
@@ -68,7 +70,7 @@ describe("BattleController", () => {
       [makeCombatant({ id: "hero", attack: 999, speed: 100 })],
       [makeCombatant({ id: "slime", isEnemy: true, hp: 1, defense: 0, speed: 1 })],
       () => 0.5,
-      { skill, item },
+      { skills, item },
     );
 
     controller.confirm(); // attack
@@ -90,7 +92,7 @@ describe("BattleController", () => {
       [makeCombatant({ id: "hero", hp: 1, defense: 0, speed: 1 })],
       [makeCombatant({ id: "slime", isEnemy: true, attack: 999, speed: 100 })],
       () => 0.5,
-      { skill, item },
+      { skills, item },
     );
 
     const defendIndex = COMMANDS.findIndex((c) => c.kind === "defend");
@@ -104,5 +106,41 @@ describe("BattleController", () => {
     }
 
     expect(controller.getUiState()).toMatchObject({ kind: "finished", outcome: "lost" });
+  });
+
+  it("味方ごとに別のとくぎを使える（複数人パーティ対応）", () => {
+    const skillA = { id: "skill-a", name: "とくぎA", mpCost: 3, powerMultiplier: 2 };
+    const skillB = { id: "skill-b", name: "とくぎB", mpCost: 3, powerMultiplier: 5 };
+    const controller = new BattleController(
+      [makeCombatant({ id: "a" }), makeCombatant({ id: "b" })],
+      [makeCombatant({ id: "slime", isEnemy: true, hp: 1000, defense: 0, speed: 1 })],
+      () => 0.5,
+      { skills: { a: skillA, b: skillB }, item },
+    );
+
+    const skillIndex = COMMANDS.findIndex((c) => c.kind === "skill");
+
+    // aのとくぎ（威力2倍）を選択→対象確定
+    controller.moveCursor(skillIndex);
+    controller.confirm();
+    controller.confirm();
+    // bのとくぎ（威力5倍）を選択→対象確定（ここでラウンドが解決される）
+    controller.moveCursor(skillIndex);
+    controller.confirm();
+    controller.confirm();
+
+    const messages: string[] = [];
+    let guard = 0;
+    while (controller.getUiState().kind === "message" && guard < 10) {
+      const state = controller.getUiState();
+      if (state.kind === "message") {
+        messages.push(state.text);
+      }
+      controller.confirm();
+      guard++;
+    }
+
+    expect(messages.some((m) => m.includes("とくぎA"))).toBe(true);
+    expect(messages.some((m) => m.includes("とくぎB"))).toBe(true);
   });
 });
