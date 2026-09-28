@@ -30,6 +30,9 @@ const INN_ORIGIN = { x: 15, y: 3 };
 
 const NORTH_GATE = { x: 11, y: 0 };
 const BRANCH_DOOR_POS = { x: 5, y: 5 };
+const mainStreetY = 8;
+/** 麦香野（第1章）へ続く街道の入り口。町の東端。 */
+const EAST_GATE = { x: WIDTH - 1, y: mainStreetY };
 
 /**
  * 序章の舞台、港町・灯里（`docs/story/bible.md`・`structure.md` 参照）。
@@ -51,14 +54,13 @@ export function createTouriTownData(): TileMapData {
   }
   for (let y = 0; y < HEIGHT; y++) {
     set(0, y, TREE);
-    set(WIDTH - 1, y, TREE);
+    set(WIDTH - 1, y, y === EAST_GATE.y ? PATH : TREE);
   }
 
-  // 町の中心を貫く道（縦の大通り＋横の大通り）。
+  // 町の中心を貫く道（縦の大通り＋横の大通り）。東の端は麦香野への街道の入り口。
   for (let y = 1; y < HEIGHT - 1; y++) {
     set(NORTH_GATE.x, y, PATH);
   }
-  const mainStreetY = 8;
   for (let x = 1; x < WIDTH - 1; x++) {
     set(x, mainStreetY, PATH);
   }
@@ -112,6 +114,14 @@ export function createTouriTownData(): TileMapData {
         targetMapId: "touri-branch",
         targetTileX: 4,
         targetTileY: 5,
+      },
+      {
+        // 麦香野（第1章）へ続く街道。
+        tileX: EAST_GATE.x,
+        tileY: EAST_GATE.y,
+        targetMapId: "mugikano-village",
+        targetTileX: 2,
+        targetTileY: 8,
       },
     ],
   };

@@ -24,8 +24,12 @@ export type BattleUiState =
   | { kind: "message"; text: string }
   | { kind: "finished"; outcome: BattleOutcome };
 
+/** 使える人がいない場合の最後の手段。何も設定し忘れたときに戦闘が壊れないようにするための保険。 */
+const FALLBACK_SKILL: Skill = { id: "fallback", name: "とくぎ", mpCost: 0, powerMultiplier: 1 };
+
 export interface BattleControllerOptions {
-  skill: Skill;
+  /** 味方1人ごとのとくぎ（キャラクターIDをキーにする）。複数人パーティでは各キャラが別のとくぎを持つ。 */
+  skills: Record<string, Skill>;
   item: BattleItem;
 }
 
@@ -36,7 +40,7 @@ export interface BattleControllerOptions {
 export class BattleController {
   private state: BattleState;
   private readonly rng: () => number;
-  private readonly skill: Skill;
+  private readonly skills: Record<string, Skill>;
   private readonly item: BattleItem;
 
   private pendingActions: BattleAction[] = [];
@@ -53,7 +57,7 @@ export class BattleController {
   ) {
     this.state = createBattleState(party, enemies);
     this.rng = rng;
-    this.skill = options.skill;
+    this.skills = options.skills;
     this.item = options.item;
     this.turnQueue = this.state.party.filter(isAlive).map((c) => c.id);
     this.phase = this.currentCommandPhase();
@@ -120,7 +124,8 @@ export class BattleController {
     if (commandKind === "attack") {
       this.pendingActions.push({ type: "attack", actorId, targetId });
     } else if (commandKind === "skill") {
-      this.pendingActions.push({ type: "skill", actorId, targetId, skill: this.skill });
+      const skill = this.skills[actorId] ?? FALLBACK_SKILL;
+      this.pendingActions.push({ type: "skill", actorId, targetId, skill });
     } else {
       this.pendingActions.push({ type: "item", actorId, targetId, item: this.item });
     }

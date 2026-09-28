@@ -11,6 +11,9 @@ function makeSaveData(): SaveData {
       stats: { level: 1, exp: 0, maxHp: 30, hp: 30, maxMp: 10, mp: 10, attack: 12, defense: 6, speed: 9 },
       equipment: { weapon: "sword" },
     },
+    companions: {
+      reto: { stats: { level: 1, exp: 0, maxHp: 26, hp: 26, maxMp: 6, mp: 6, attack: 13, defense: 7, speed: 11 } },
+    },
     inventory: [{ itemId: "herb", quantity: 3 }],
     flags: { met_villager: true },
   };

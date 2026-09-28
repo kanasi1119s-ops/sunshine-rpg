@@ -17,23 +17,30 @@ import { ActionButton } from "./input/action-button";
 import { attachKeyboard } from "./input/keyboard";
 import { createTouchControls } from "./input/touch-controls";
 import type { Direction } from "./input/direction";
-import { CHAPTER0_MAPS, CHAPTER0_NPCS, CHAPTER0_OPENING_COMMANDS, CHAPTER0_START } from "./game/world/chapter0-world";
+import { CHAPTER0_OPENING_COMMANDS, CHAPTER0_START } from "./game/world/chapter0-world";
+import { CHAPTER1_OPENING_COMMANDS } from "./game/world/chapter1-world";
+import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
 import { renderBattle } from "./render/battle-renderer";
 import {
   createInitialEquipment,
   createInitialHeroStats,
   createSampleEnemies,
-  createSampleParty,
   SAMPLE_GROWTH,
   SAMPLE_ITEM,
   SAMPLE_ITEMS_BY_ID,
   SAMPLE_SKILL,
 } from "./game/battle/sample-battle";
 import { CHAPTER0_ITEM, CHAPTER0_SKILL, createChapter0Party, createYugamiBoss } from "./game/battle/chapter0-enemies";
+import { createMugikanoYugami } from "./game/battle/chapter1-enemies";
+import { COMPANIONS, createCompanionCombatant, MINA, RETO } from "./game/battle/companions";
+import type { Combatant, Skill } from "./game/battle/types";
+import type { LeveledStats } from "./game/growth/types";
 import { TOURI_TOWN_SPAWN } from "./game/map/chapter0/touri-town";
 import { TOURI_BRANCH_ENTRY } from "./game/map/chapter0/touri-branch";
 import { TOURI_OUTSKIRTS_ENTRY } from "./game/map/chapter0/touri-outskirts";
+import { MUGIKANO_VILLAGE_ENTRY } from "./game/map/chapter1/mugikano-village";
+import { MUGIKANO_WATER_SOURCE_ENTRY } from "./game/map/chapter1/mugikano-water-source";
 import { createRng } from "./game/random";
 import { computeVictoryExp } from "./game/battle/battle-engine";
 import { gainExp } from "./game/growth/level-up";
@@ -70,8 +77,8 @@ const flags: Flags = {};
 const camera = createCamera(LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
 let currentMapId = CHAPTER0_START.mapId;
-let map = createTileMap(CHAPTER0_MAPS[currentMapId]);
-let npcs = CHAPTER0_NPCS[currentMapId] ?? [];
+let map = createTileMap(WORLD_MAPS[currentMapId]);
+let npcs = WORLD_NPCS[currentMapId] ?? [];
 let player = createPlayer(
   CHAPTER0_START.tileX * map.data.tileWidth,
   CHAPTER0_START.tileY * map.data.tileHeight,
@@ -79,23 +86,32 @@ let player = createPlayer(
 let renderCamera = camera;
 
 function switchMap(mapId: string, tileX: number, tileY: number): void {
-  const data = CHAPTER0_MAPS[mapId];
+  const data = WORLD_MAPS[mapId];
   if (!data) {
     return;
   }
   currentMapId = mapId;
   map = createTileMap(data);
-  npcs = CHAPTER0_NPCS[mapId] ?? [];
+  npcs = WORLD_NPCS[mapId] ?? [];
   player = { ...player, x: tileX * map.data.tileWidth, y: tileY * map.data.tileHeight };
   playMapBgm(mapId);
   if (audioStarted) {
     audio.playSe(CHAPTER0_DOOR_SE);
   }
+  if (mapId === "mugikano-village" && !flags["chapter1_intro_seen"]) {
+    dialogue.start(CHAPTER1_OPENING_COMMANDS);
+  }
 }
 
-/** マップごとのBGM（`docs/sound/tracks.md`）。同じ曲がすでに鳴っていれば鳴らし直さない。 */
+/**
+ * マップごとのBGM（`docs/sound/tracks.md`）。同じ曲がすでに鳴っていれば鳴らし直さない。
+ * 第1章（麦香野）専用の曲はまだ無い（roadmap 4-4で作曲予定）ため、序章の曲を仮に流用する。
+ */
 function mapBgmFor(mapId: string): Score {
-  return mapId === "touri-outskirts" ? CHAPTER0_OUTSKIRTS_THEME : CHAPTER0_TOWN_THEME;
+  if (mapId === "touri-outskirts" || mapId === "mugikano-water-source") {
+    return CHAPTER0_OUTSKIRTS_THEME;
+  }
+  return CHAPTER0_TOWN_THEME;
 }
 
 let currentBgmTrack: Score | null = null;
@@ -115,31 +131,55 @@ let pendingVictoryFlag: string | null = null;
 
 const dialogue = new DialogueController(flags, {
   onWarp: (warp) => switchMap(warp.mapId, warp.tileX, warp.tileY),
-  onStartBattle: (battleId) => startChapter0Battle(battleId),
+  onStartBattle: (battleId) => startStoryBattle(battleId),
 });
 
-function startChapter0Battle(battleId: string): void {
-  if (battleId !== "chapter0-yugami" || battle) {
+/** イベントの`startBattle`コマンドが指すボス戦のデータ（章が増えるたびここに追加する）。 */
+interface StoryBattleDef {
+  createEnemy: () => Combatant;
+  victoryFlag: string;
+  bgm: Score;
+}
+
+const STORY_BATTLES: Record<string, StoryBattleDef> = {
+  "chapter0-yugami": {
+    createEnemy: createYugamiBoss,
+    victoryFlag: "chapter0_yugami_defeated",
+    bgm: CHAPTER0_BOSS_THEME,
+  },
+  "mugikano-yugami": {
+    createEnemy: createMugikanoYugami,
+    victoryFlag: "chapter1_yugami_defeated",
+    bgm: CHAPTER0_BOSS_THEME,
+  },
+};
+
+function startStoryBattle(battleId: string): void {
+  const def = STORY_BATTLES[battleId];
+  if (!def || battle) {
     return;
   }
   victoryExpApplied = false;
   victoryMessage = null;
-  pendingVictoryFlag = "chapter0_yugami_defeated";
+  pendingVictoryFlag = def.victoryFlag;
   const equipmentBonus = computeEquipmentBonus(heroEquipment, SAMPLE_ITEMS_BY_ID);
   const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
+  const party = buildActiveParty(effectiveStats);
   if (debugInvincible) {
-    effectiveStats.maxHp = 99999;
-    effectiveStats.hp = 99999;
-    effectiveStats.defense = 999;
+    for (const member of party) {
+      member.maxHp = 99999;
+      member.hp = 99999;
+      member.defense = 999;
+    }
   }
   battle = new BattleController(
-    createChapter0Party(heroStats.level, effectiveStats),
-    [createYugamiBoss()],
+    party,
+    [def.createEnemy()],
     createRng(Date.now()),
-    { skill: CHAPTER0_SKILL, item: CHAPTER0_ITEM },
+    { skills: buildSkillsMap(CHAPTER0_SKILL), item: CHAPTER0_ITEM },
   );
-  currentBgmTrack = CHAPTER0_BOSS_THEME;
-  audio.playBgm(CHAPTER0_BOSS_THEME);
+  currentBgmTrack = def.bgm;
+  audio.playBgm(def.bgm);
 }
 
 const input = new InputState();
@@ -169,7 +209,41 @@ let lastBattleDirection: Direction | null = null;
 let battle: BattleController | null = null;
 let heroStats = createInitialHeroStats();
 let heroEquipment: EquipmentSlots = createInitialEquipment();
+/** 仲間に加わったキャラクターのステータス（キャラクターIDをキーにする）。 */
+let companionStats: Record<string, LeveledStats> = {};
 let inventory: Inventory = createInventory();
+
+/** 加入フラグが立っているのに、まだパーティに反映していない仲間を反映する。 */
+const COMPANION_JOIN_FLAGS: { flag: string; companionId: string }[] = [
+  { flag: "chapter0_reto_joined", companionId: RETO.id },
+  { flag: "chapter1_mina_joined", companionId: MINA.id },
+];
+
+function syncCompanionsFromFlags(): void {
+  for (const { flag, companionId } of COMPANION_JOIN_FLAGS) {
+    if (flags[flag] && !(companionId in companionStats)) {
+      companionStats[companionId] = COMPANIONS[companionId].createInitialStats();
+    }
+  }
+}
+
+/** 現在の実力（装備ボーナス込み）のユーリに、加入済みの仲間を加えた戦闘パーティ。 */
+function buildActiveParty(effectiveHeroStats: LeveledStats): ReturnType<typeof createChapter0Party> {
+  const party = createChapter0Party(heroStats.level, effectiveHeroStats);
+  for (const [id, stats] of Object.entries(companionStats)) {
+    party.push(createCompanionCombatant(COMPANIONS[id], stats));
+  }
+  return party;
+}
+
+/** ヒーローのとくぎ＋加入済み仲間のとくぎをまとめた、戦闘用のとくぎ一覧。 */
+function buildSkillsMap(heroSkill: Skill): Record<string, Skill> {
+  const skills: Record<string, Skill> = { hero: heroSkill };
+  for (const id of Object.keys(companionStats)) {
+    skills[id] = COMPANIONS[id].skill;
+  }
+  return skills;
+}
 let victoryExpApplied = false;
 let victoryMessage: string | null = null;
 let saveMessage: string | null = null;
@@ -181,6 +255,9 @@ function buildSaveData(): SaveData {
     savedAt: new Date().toISOString(),
     player: { mapId: currentMapId, tileX: player.x / map.data.tileWidth, tileY: player.y / map.data.tileHeight, direction: player.direction },
     hero: { stats: heroStats, equipment: heroEquipment },
+    companions: Object.fromEntries(
+      Object.entries(companionStats).map(([id, stats]) => [id, { stats }]),
+    ),
     inventory,
     flags,
   };
@@ -189,6 +266,9 @@ function buildSaveData(): SaveData {
 function applySaveData(data: SaveData): void {
   heroStats = data.hero.stats;
   heroEquipment = data.hero.equipment;
+  companionStats = Object.fromEntries(
+    Object.entries(data.companions).map(([id, entry]) => [id, entry.stats]),
+  );
   inventory = data.inventory;
   for (const key of Object.keys(flags)) {
     delete flags[key];
@@ -234,16 +314,19 @@ if (import.meta.env.DEV) {
       victoryMessage = null;
       const equipmentBonus = computeEquipmentBonus(heroEquipment, SAMPLE_ITEMS_BY_ID);
       const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
+      const party = buildActiveParty(effectiveStats);
       if (debugInvincible) {
-        effectiveStats.maxHp = 99999;
-        effectiveStats.hp = 99999;
-        effectiveStats.defense = 999;
+        for (const member of party) {
+          member.maxHp = 99999;
+          member.hp = 99999;
+          member.defense = 999;
+        }
       }
       battle = new BattleController(
-        createSampleParty(heroStats.level, effectiveStats),
+        party,
         createSampleEnemies(),
         createRng(Date.now()),
-        { skill: SAMPLE_SKILL, item: SAMPLE_ITEM },
+        { skills: buildSkillsMap(SAMPLE_SKILL), item: SAMPLE_ITEM },
       );
       currentBgmTrack = CHAPTER0_BATTLE_THEME;
       audio.playBgm(CHAPTER0_BATTLE_THEME);
@@ -289,6 +372,15 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
   {
     label: () => "マップ: 町外れ・歪みの発生地点 へワープ",
     action: () => switchMap("touri-outskirts", TOURI_OUTSKIRTS_ENTRY.tileX, TOURI_OUTSKIRTS_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 麦香野の村 へワープ",
+    action: () => switchMap("mugikano-village", MUGIKANO_VILLAGE_ENTRY.tileX, MUGIKANO_VILLAGE_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 麦香野・水源 へワープ",
+    action: () =>
+      switchMap("mugikano-water-source", MUGIKANO_WATER_SOURCE_ENTRY.tileX, MUGIKANO_WATER_SOURCE_ENTRY.tileY),
   },
   {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,
@@ -353,9 +445,20 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
   const expGained = computeVictoryExp(finishedBattle.getState());
   const result = gainExp(heroStats, expGained, SAMPLE_GROWTH);
   heroStats = result.stats;
+  const levelUpNames: string[] = [];
+  if (result.levelsGained > 0) {
+    levelUpNames.push(`ユーリ（Lv${heroStats.level}）`);
+  }
+  for (const [id, stats] of Object.entries(companionStats)) {
+    const companionResult = gainExp(stats, expGained, COMPANIONS[id].growth);
+    companionStats[id] = companionResult.stats;
+    if (companionResult.levelsGained > 0) {
+      levelUpNames.push(`${COMPANIONS[id].name}（Lv${companionResult.stats.level}）`);
+    }
+  }
   victoryMessage =
-    result.levelsGained > 0
-      ? `${expGained}の経験値を得た！ レベル${heroStats.level}に上がった！`
+    levelUpNames.length > 0
+      ? `${expGained}の経験値を得た！ ${levelUpNames.join("、")}がレベルアップ！`
       : `${expGained}の経験値を得た！`;
   if (pendingVictoryFlag) {
     flags[pendingVictoryFlag] = true;
@@ -366,6 +469,8 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
 
 const loop = createGameLoop({
   update(dtMs) {
+    syncCompanionsFromFlags();
+
     if (saveMessageTimer > 0) {
       saveMessageTimer -= dtMs;
       if (saveMessageTimer <= 0) {
