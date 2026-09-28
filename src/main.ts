@@ -45,6 +45,8 @@ import { MUGIKANO_VILLAGE_ENTRY } from "./game/map/chapter1/mugikano-village";
 import { MUGIKANO_WATER_SOURCE_ENTRY } from "./game/map/chapter1/mugikano-water-source";
 import { GARASUKO_TOWN_ENTRY } from "./game/map/chapter2/garasuko-town";
 import { GARASUKO_WAREHOUSE_ENTRY } from "./game/map/chapter2/garasuko-warehouse";
+import { TETSUKUSARI_TOWN_ENTRY } from "./game/map/chapter3/tetsukusari-town";
+import { TETSUKUSARI_MINE_ENTRY } from "./game/map/chapter3/tetsukusari-mine";
 import { createRng } from "./game/random";
 import { computeVictoryExp } from "./game/battle/battle-engine";
 import { gainExp } from "./game/growth/level-up";
@@ -415,6 +417,14 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
   {
     label: () => "マップ: 硝子湖・密輸倉庫 へワープ",
     action: () => switchMap("garasuko-warehouse", GARASUKO_WAREHOUSE_ENTRY.tileX, GARASUKO_WAREHOUSE_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 鉄鏈鉱山の町 へワープ",
+    action: () => switchMap("tetsukusari-town", TETSUKUSARI_TOWN_ENTRY.tileX, TETSUKUSARI_TOWN_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 鉄鏈鉱山・坑内 へワープ",
+    action: () => switchMap("tetsukusari-mine", TETSUKUSARI_MINE_ENTRY.tileX, TETSUKUSARI_MINE_ENTRY.tileY),
   },
   {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,
