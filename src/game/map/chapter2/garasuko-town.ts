@@ -16,6 +16,13 @@ const TILE_COLORS: Record<number, string> = {
   [DOCK]: "#8a6a45",
 };
 
+/** ドット絵パターン（`tile-art.ts`）を適用する地形カテゴリ。石畳の広場（GROUND）は該当パターンが無いため対象外。 */
+const TILE_ART_MAP: Record<number, string> = {
+  [PATH]: "path",
+  [WATER]: "water",
+  [TREE]: "treeCanopy",
+};
+
 const NON_WALKABLE = new Set([WATER, TREE, STALL_WALL]);
 
 const WIDTH = 22;
@@ -82,6 +89,7 @@ export function createGarasukoTownData(): TileMapData {
     tileHeight: 16,
     layers: [{ name: "ground", data: ground }],
     tileColors: TILE_COLORS,
+    tileArt: TILE_ART_MAP,
     collision,
     exits: [
       {
