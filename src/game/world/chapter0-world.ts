@@ -291,14 +291,19 @@ function retoCommands(): EventCommand[] {
             },
           ],
           else: [
-            { type: "message", text: "やるじゃないか。思ったよりちゃんとやれるみたいだな。", speaker: "レト" },
             {
-              type: "message",
-              text: "……悪い、ちょっと先走った。素直に言うよ。これからも、お前の調査に付き合わせてくれ。",
-              speaker: "レト",
+              type: "if",
+              flag: "chapter0_clue_c001_found",
+              equals: true,
+              then: reasoningQuizCommands(),
+              else: [
+                {
+                  type: "message",
+                  text: "戻ってきたか。……その前に、さっきの現場をもう一度見ておいで。何か気づくかもしれない。",
+                  speaker: "レト",
+                },
+              ],
             },
-            { type: "message", text: "はい、よろしくお願いします！", speaker: "ユーリ" },
-            { type: "setFlag", flag: "chapter0_reto_joined", value: true },
           ],
         },
       ],
@@ -325,6 +330,84 @@ function retoCommands(): EventCommand[] {
         },
       ],
     },
+  ];
+}
+
+/**
+ * 序章の推理パート（簡易版・チュートリアル）。`docs/story/mystery.md` 3の方針どおり、
+ * 手がかり（C-001、歪みの人為的な痕跡）を使った選択式の問いを1つ置く。
+ * 正解しなくても物語（レトの仲間加入）はそのまま進む。
+ */
+function reasoningQuizCommands(): EventCommand[] {
+  return [
+    {
+      type: "message",
+      text: "せっかくだから、一つ聞かせてくれ。あの歪み、どうしてこんな所に急に現れたと思う？",
+      speaker: "レト",
+    },
+    {
+      type: "choice",
+      text: "レトにどう答える？",
+      options: [
+        {
+          label: "誰かが意図して起こしたんだと思います",
+          commands: [
+            { type: "setFlag", flag: "chapter0_reasoning_correct", value: true },
+            {
+              type: "message",
+              text: "誰かが意図して起こしたんだと思います。あの焼け跡、あまりにも整いすぎていました。",
+              speaker: "ユーリ",
+            },
+          ],
+        },
+        {
+          label: "灯り石の力が、たまたま乱れただけだと思います",
+          commands: [
+            { type: "setFlag", flag: "chapter0_reasoning_correct", value: false },
+            {
+              type: "message",
+              text: "灯り石の力が、たまたま乱れただけだと思います。",
+              speaker: "ユーリ",
+            },
+          ],
+        },
+        {
+          label: "正直、まだ判断がつきません",
+          commands: [
+            { type: "setFlag", flag: "chapter0_reasoning_correct", value: false },
+            { type: "message", text: "正直、まだ判断がつきません……。", speaker: "ユーリ" },
+          ],
+        },
+      ],
+    },
+    {
+      type: "if",
+      flag: "chapter0_reasoning_correct",
+      equals: true,
+      then: [
+        { type: "message", text: "その通りだと思う。手がかりから考える、その調子だ。", speaker: "レト" },
+      ],
+      else: [
+        {
+          type: "message",
+          text: "……惜しいな。さっきの焼け跡、思い出してみろ。あんなにまっすぐな形、自然にできると思うか？",
+          speaker: "レト",
+        },
+        {
+          type: "message",
+          text: "手がかりは、ちゃんと見返せば答えに繋がってる。次は気づけるといいな。",
+          speaker: "レト",
+        },
+      ],
+    },
+    { type: "message", text: "やるじゃないか。思ったよりちゃんとやれるみたいだな。", speaker: "レト" },
+    {
+      type: "message",
+      text: "……悪い、ちょっと先走った。素直に言うよ。これからも、お前の調査に付き合わせてくれ。",
+      speaker: "レト",
+    },
+    { type: "message", text: "はい、よろしくお願いします！", speaker: "ユーリ" },
+    { type: "setFlag", flag: "chapter0_reto_joined", value: true },
   ];
 }
 
