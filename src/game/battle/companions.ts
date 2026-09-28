@@ -32,8 +32,28 @@ export const RETO: CompanionDefinition = {
   }),
 };
 
+/** ミナ（麦香野出身、水紋系の使い手）。第1章で仲間に加わる。 */
+export const MINA: CompanionDefinition = {
+  id: "mina",
+  name: "ミナ",
+  growth: { hpGrowth: 3, mpGrowth: 3, attackGrowth: 2, defenseGrowth: 2, speedGrowth: 2 },
+  skill: { id: "suimon-no-nami", name: "水紋ノ波", mpCost: 3, powerMultiplier: 1.5 },
+  createInitialStats: () => ({
+    level: 1,
+    exp: 0,
+    maxHp: 24,
+    hp: 24,
+    maxMp: 10,
+    mp: 10,
+    attack: 11,
+    defense: 6,
+    speed: 10,
+  }),
+};
+
 export const COMPANIONS: Record<string, CompanionDefinition> = {
   [RETO.id]: RETO,
+  [MINA.id]: MINA,
 };
 
 export function createCompanionCombatant(companion: CompanionDefinition, stats: LeveledStats): Combatant {

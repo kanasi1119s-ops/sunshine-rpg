@@ -18,6 +18,7 @@ import { attachKeyboard } from "./input/keyboard";
 import { createTouchControls } from "./input/touch-controls";
 import type { Direction } from "./input/direction";
 import { CHAPTER0_OPENING_COMMANDS, CHAPTER0_START } from "./game/world/chapter0-world";
+import { CHAPTER1_OPENING_COMMANDS } from "./game/world/chapter1-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
 import { renderBattle } from "./render/battle-renderer";
@@ -31,8 +32,9 @@ import {
   SAMPLE_SKILL,
 } from "./game/battle/sample-battle";
 import { CHAPTER0_ITEM, CHAPTER0_SKILL, createChapter0Party, createYugamiBoss } from "./game/battle/chapter0-enemies";
-import { COMPANIONS, createCompanionCombatant, RETO } from "./game/battle/companions";
-import type { Skill } from "./game/battle/types";
+import { createMugikanoYugami } from "./game/battle/chapter1-enemies";
+import { COMPANIONS, createCompanionCombatant, MINA, RETO } from "./game/battle/companions";
+import type { Combatant, Skill } from "./game/battle/types";
 import type { LeveledStats } from "./game/growth/types";
 import { TOURI_TOWN_SPAWN } from "./game/map/chapter0/touri-town";
 import { TOURI_BRANCH_ENTRY } from "./game/map/chapter0/touri-branch";
@@ -96,6 +98,9 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   if (audioStarted) {
     audio.playSe(CHAPTER0_DOOR_SE);
   }
+  if (mapId === "mugikano-village" && !flags["chapter1_intro_seen"]) {
+    dialogue.start(CHAPTER1_OPENING_COMMANDS);
+  }
 }
 
 /**
@@ -126,16 +131,37 @@ let pendingVictoryFlag: string | null = null;
 
 const dialogue = new DialogueController(flags, {
   onWarp: (warp) => switchMap(warp.mapId, warp.tileX, warp.tileY),
-  onStartBattle: (battleId) => startChapter0Battle(battleId),
+  onStartBattle: (battleId) => startStoryBattle(battleId),
 });
 
-function startChapter0Battle(battleId: string): void {
-  if (battleId !== "chapter0-yugami" || battle) {
+/** イベントの`startBattle`コマンドが指すボス戦のデータ（章が増えるたびここに追加する）。 */
+interface StoryBattleDef {
+  createEnemy: () => Combatant;
+  victoryFlag: string;
+  bgm: Score;
+}
+
+const STORY_BATTLES: Record<string, StoryBattleDef> = {
+  "chapter0-yugami": {
+    createEnemy: createYugamiBoss,
+    victoryFlag: "chapter0_yugami_defeated",
+    bgm: CHAPTER0_BOSS_THEME,
+  },
+  "mugikano-yugami": {
+    createEnemy: createMugikanoYugami,
+    victoryFlag: "chapter1_yugami_defeated",
+    bgm: CHAPTER0_BOSS_THEME,
+  },
+};
+
+function startStoryBattle(battleId: string): void {
+  const def = STORY_BATTLES[battleId];
+  if (!def || battle) {
     return;
   }
   victoryExpApplied = false;
   victoryMessage = null;
-  pendingVictoryFlag = "chapter0_yugami_defeated";
+  pendingVictoryFlag = def.victoryFlag;
   const equipmentBonus = computeEquipmentBonus(heroEquipment, SAMPLE_ITEMS_BY_ID);
   const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
   const party = buildActiveParty(effectiveStats);
@@ -148,12 +174,12 @@ function startChapter0Battle(battleId: string): void {
   }
   battle = new BattleController(
     party,
-    [createYugamiBoss()],
+    [def.createEnemy()],
     createRng(Date.now()),
     { skills: buildSkillsMap(CHAPTER0_SKILL), item: CHAPTER0_ITEM },
   );
-  currentBgmTrack = CHAPTER0_BOSS_THEME;
-  audio.playBgm(CHAPTER0_BOSS_THEME);
+  currentBgmTrack = def.bgm;
+  audio.playBgm(def.bgm);
 }
 
 const input = new InputState();
@@ -190,6 +216,7 @@ let inventory: Inventory = createInventory();
 /** 加入フラグが立っているのに、まだパーティに反映していない仲間を反映する。 */
 const COMPANION_JOIN_FLAGS: { flag: string; companionId: string }[] = [
   { flag: "chapter0_reto_joined", companionId: RETO.id },
+  { flag: "chapter1_mina_joined", companionId: MINA.id },
 ];
 
 function syncCompanionsFromFlags(): void {
