@@ -6,8 +6,10 @@ export interface Npc {
   id: string;
   tileX: number;
   tileY: number;
-  /** ドット絵ができるまでの仮の色。 */
+  /** 顔グラフィック（`spriteName`）が無いときの、仮の色。 */
   color: string;
+  /** `game/portrait/portraits.ts`のPORTRAITSに登録されている名前。あればマップ上もそのキャラクターのドット絵で表示する。 */
+  spriteName?: string;
   commands: EventCommand[];
 }
 

@@ -49,6 +49,7 @@ export const CHAPTER1_NPCS: Record<string, Npc[]> = {
       tileX: MUGIKANO_VILLAGE_LANDMARKS.mina.tileX,
       tileY: MUGIKANO_VILLAGE_LANDMARKS.mina.tileY,
       color: "#5a9ac9",
+      spriteName: "ミナ",
       commands: minaCommands(),
     },
   ],

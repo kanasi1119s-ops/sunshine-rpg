@@ -128,6 +128,7 @@ export const CHAPTER0_NPCS: Record<string, Npc[]> = {
       tileX: TOURI_BRANCH_LANDMARKS.kasen.tileX,
       tileY: TOURI_BRANCH_LANDMARKS.kasen.tileY,
       color: "#7a8fa6",
+      spriteName: "カセン",
       commands: kasenCommands(),
     },
     {
@@ -135,6 +136,7 @@ export const CHAPTER0_NPCS: Record<string, Npc[]> = {
       tileX: TOURI_BRANCH_LANDMARKS.reto.tileX,
       tileY: TOURI_BRANCH_LANDMARKS.reto.tileY,
       color: "#a65a5a",
+      spriteName: "レト",
       commands: retoCommands(),
     },
   ],
