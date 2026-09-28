@@ -1,9 +1,14 @@
 import type { PlayerState } from "../game/player";
 import type { Camera } from "./camera";
+import { PORTRAITS } from "../game/portrait/portraits";
+import { OVERWORLD_CELL_SIZE, renderPortrait } from "./portrait-renderer";
+
+const HERO_SPEC = PORTRAITS["ユーリ"];
 
 /**
- * ドット絵ができるまでの仮表示。向いている方向が分かるよう、
- * 進行方向側に小さな三角形を付けた色付き四角で表す。
+ * 主人公ユーリのドット絵（`game/portrait/portraits.ts`のグリッドを、
+ * 当たり判定サイズ（12×14）に合わせて等倍で描く）。向いている方向が
+ * 分かるよう、進行方向側に小さな三角形を重ねて表示する。
  */
 export function renderPlayer(
   ctx: CanvasRenderingContext2D,
@@ -13,12 +18,11 @@ export function renderPlayer(
   const screenX = player.x - camera.x;
   const screenY = player.y - camera.y;
 
-  ctx.fillStyle = "#f2c14e";
-  ctx.fillRect(screenX, screenY, player.width, player.height);
+  renderPortrait(ctx, HERO_SPEC, screenX, screenY, OVERWORLD_CELL_SIZE);
 
   const cx = screenX + player.width / 2;
   const cy = screenY + player.height / 2;
-  ctx.fillStyle = "#8a5a1e";
+  ctx.fillStyle = "#f2c14e";
   ctx.beginPath();
   switch (player.direction) {
     case "up":

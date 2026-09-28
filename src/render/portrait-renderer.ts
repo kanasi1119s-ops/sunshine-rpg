@@ -7,16 +7,24 @@ import {
   type PortraitSpec,
 } from "../game/portrait/portraits";
 
-/** 1ドットあたりの画面上のピクセル数。 */
+/** 会話欄で使う、1ドットあたりの画面上のピクセル数。 */
 export const PORTRAIT_CELL_SIZE = 3;
 export const PORTRAIT_PIXEL_WIDTH = PORTRAIT_GRID_WIDTH * PORTRAIT_CELL_SIZE;
 export const PORTRAIT_PIXEL_HEIGHT = PORTRAIT_GRID_HEIGHT * PORTRAIT_CELL_SIZE;
+
+/**
+ * マップ上のプレイヤー・NPC用に、1ドット＝1画面ピクセルで描く等倍サイズ。
+ * グリッドの幅・高さ（12×14）が、そのままプレイヤーの当たり判定サイズ
+ * （`createPlayer`の width=12, height=14）に一致するよう設計してある。
+ */
+export const OVERWORLD_CELL_SIZE = 1;
 
 export function renderPortrait(
   ctx: CanvasRenderingContext2D,
   spec: PortraitSpec,
   x: number,
   y: number,
+  cellSize: number = PORTRAIT_CELL_SIZE,
 ): void {
   const rows = buildPortraitRows(spec);
   for (let row = 0; row < rows.length; row++) {
@@ -26,7 +34,7 @@ export function renderPortrait(
         continue;
       }
       ctx.fillStyle = color;
-      ctx.fillRect(x + col * PORTRAIT_CELL_SIZE, y + row * PORTRAIT_CELL_SIZE, PORTRAIT_CELL_SIZE, PORTRAIT_CELL_SIZE);
+      ctx.fillRect(x + col * cellSize, y + row * cellSize, cellSize, cellSize);
     }
   }
 }
@@ -37,11 +45,12 @@ export function renderPortraitByName(
   speaker: string,
   x: number,
   y: number,
+  cellSize: number = PORTRAIT_CELL_SIZE,
 ): boolean {
   const spec = PORTRAITS[speaker];
   if (!spec) {
     return false;
   }
-  renderPortrait(ctx, spec, x, y);
+  renderPortrait(ctx, spec, x, y, cellSize);
   return true;
 }

@@ -1,5 +1,55 @@
 import { getTileId, type TileMap } from "../game/map/tile-map";
 import type { Camera } from "./camera";
+import { hashCell, shadeColor } from "./color-utils";
+
+/**
+ * 単色べた塗りだと平坦に見えるため、タイルごとに決まった模様（隅の陰影＋
+ * 斑点2つ）を重ねて、簡易的な質感を出す。`hashCell`はタイル座標だけから
+ * 決まるので、毎フレーム同じ模様になり（ちらつかない）、新しいタイル絵を
+ * 増やさなくても既存のマップ全体の見た目を底上げできる。
+ */
+function drawTileTexture(
+  ctx: CanvasRenderingContext2D,
+  color: string,
+  screenX: number,
+  screenY: number,
+  tileWidth: number,
+  tileHeight: number,
+  tileX: number,
+  tileY: number,
+): void {
+  ctx.fillStyle = color;
+  ctx.fillRect(screenX, screenY, tileWidth, tileHeight);
+
+  // 左上を少し明るく、右下を少し暗くして、立体感を出す。
+  const bevel = Math.max(1, Math.floor(Math.min(tileWidth, tileHeight) / 8));
+  ctx.fillStyle = shadeColor(color, 0.12);
+  ctx.fillRect(screenX, screenY, tileWidth, bevel);
+  ctx.fillRect(screenX, screenY, bevel, tileHeight);
+  ctx.fillStyle = shadeColor(color, -0.12);
+  ctx.fillRect(screenX, screenY + tileHeight - bevel, tileWidth, bevel);
+  ctx.fillRect(screenX + tileWidth - bevel, screenY, bevel, tileHeight);
+
+  // タイル固有の斑点を2つ置いて、単調な繰り返し感を減らす。
+  const hash = hashCell(tileX, tileY);
+  const speckleSize = Math.max(1, Math.floor(Math.min(tileWidth, tileHeight) / 6));
+  const maxOffsetX = Math.max(1, tileWidth - speckleSize);
+  const maxOffsetY = Math.max(1, tileHeight - speckleSize);
+  ctx.fillStyle = shadeColor(color, ((hash & 0xff) / 255) * 0.16 - 0.08);
+  ctx.fillRect(
+    screenX + ((hash >>> 8) % maxOffsetX),
+    screenY + ((hash >>> 16) % maxOffsetY),
+    speckleSize,
+    speckleSize,
+  );
+  ctx.fillStyle = shadeColor(color, (((hash >>> 24) & 0xff) / 255) * 0.16 - 0.08);
+  ctx.fillRect(
+    screenX + ((hash >>> 4) % maxOffsetX),
+    screenY + ((hash >>> 20) % maxOffsetY),
+    speckleSize,
+    speckleSize,
+  );
+}
 
 /** カメラに映る範囲のタイルだけを描画する。 */
 export function renderTileMap(
@@ -31,12 +81,15 @@ export function renderTileMap(
         if (!color) {
           continue;
         }
-        ctx.fillStyle = color;
-        ctx.fillRect(
+        drawTileTexture(
+          ctx,
+          color,
           tileX * tileWidth - camera.x,
           tileY * tileHeight - camera.y,
           tileWidth,
           tileHeight,
+          tileX,
+          tileY,
         );
       }
     }
