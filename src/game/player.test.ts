@@ -53,4 +53,27 @@ describe("updatePlayer", () => {
     expect(result.direction).toBe("right");
     expect(result.moving).toBe(false);
   });
+
+  it("動いている間、歩行アニメーション用の経過時間が進む", () => {
+    const player = createPlayer(80, 80);
+    const map = makeOpenMap();
+    const first = updatePlayer(player, "right", 100, map);
+    expect(first.animationMs).toBe(100);
+    const second = updatePlayer(first, "right", 50, map);
+    expect(second.animationMs).toBe(150);
+  });
+
+  it("止まると、歩行アニメーション用の経過時間が0に戻る", () => {
+    const player = { ...createPlayer(80, 80), animationMs: 200 };
+    const map = makeOpenMap();
+    const result = updatePlayer(player, null, 100, map);
+    expect(result.animationMs).toBe(0);
+  });
+
+  it("壁にぶつかって止まったときも、経過時間が0に戻る", () => {
+    const player = { ...createPlayer(5 * 16 - 12, 5 * 16), animationMs: 200 };
+    const map = makeWalledMap();
+    const result = updatePlayer(player, "right", 100, map);
+    expect(result.animationMs).toBe(0);
+  });
 });

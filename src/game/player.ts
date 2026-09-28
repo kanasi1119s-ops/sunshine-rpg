@@ -9,10 +9,12 @@ export interface PlayerState {
   height: number;
   direction: Direction;
   moving: boolean;
+  /** 歩行アニメーション用に、動いている間だけ進む経過時間（ms）。止まると0に戻る。 */
+  animationMs: number;
 }
 
 export function createPlayer(x: number, y: number): PlayerState {
-  return { x, y, width: 12, height: 14, direction: "down", moving: false };
+  return { x, y, width: 12, height: 14, direction: "down", moving: false, animationMs: 0 };
 }
 
 const DIRECTION_VECTOR: Record<Direction, { dx: number; dy: number }> = {
@@ -46,7 +48,7 @@ export function updatePlayer(
   map: TileMap,
 ): PlayerState {
   if (!direction) {
-    return { ...state, moving: false };
+    return { ...state, moving: false, animationMs: 0 };
   }
 
   const { dx, dy } = DIRECTION_VECTOR[direction];
@@ -55,8 +57,8 @@ export function updatePlayer(
   const nextY = state.y + dy * distance;
 
   if (!canMoveTo(map, nextX, nextY, state.width, state.height)) {
-    return { ...state, direction, moving: false };
+    return { ...state, direction, moving: false, animationMs: 0 };
   }
 
-  return { ...state, x: nextX, y: nextY, direction, moving: true };
+  return { ...state, x: nextX, y: nextY, direction, moving: true, animationMs: state.animationMs + dtMs };
 }

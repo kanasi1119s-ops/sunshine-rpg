@@ -1,6 +1,5 @@
 import {
-  buildPortraitRows,
-  colorForCell,
+  buildShadedCells,
   PORTRAIT_GRID_HEIGHT,
   PORTRAIT_GRID_WIDTH,
   PORTRAITS,
@@ -26,16 +25,9 @@ export function renderPortrait(
   y: number,
   cellSize: number = PORTRAIT_CELL_SIZE,
 ): void {
-  const rows = buildPortraitRows(spec);
-  for (let row = 0; row < rows.length; row++) {
-    for (let col = 0; col < rows[row].length; col++) {
-      const color = colorForCell(spec, rows[row][col]);
-      if (!color) {
-        continue;
-      }
-      ctx.fillStyle = color;
-      ctx.fillRect(x + col * cellSize, y + row * cellSize, cellSize, cellSize);
-    }
+  for (const cell of buildShadedCells(spec)) {
+    ctx.fillStyle = cell.color;
+    ctx.fillRect(x + cell.col * cellSize, y + cell.row * cellSize, cellSize, cellSize);
   }
 }
 

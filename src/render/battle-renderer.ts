@@ -1,6 +1,7 @@
 import { COMMANDS, type BattleUiState } from "../game/battle/battle-controller";
 import type { BattleState, Combatant } from "../game/battle/types";
 import { findCombatant } from "../game/battle/types";
+import { buildMonsterCells, MONSTER_GRID_SIZE, MONSTERS } from "../game/monster/monsters";
 
 const LINE_HEIGHT = 12;
 
@@ -18,6 +19,31 @@ function drawHpBar(
   ctx.fillRect(x, y, width * Math.max(0, ratio), 4);
 }
 
+/**
+ * `MONSTERS`に登録がある敵は、手続き的なドット絵で描く。未登録の敵
+ * （動作確認用の仮データなど）や、倒された敵は、これまで通り色付き
+ * 四角のままにする（倒れた・消えたことが一目で分かるように）。
+ */
+function drawEnemySprite(
+  ctx: CanvasRenderingContext2D,
+  enemy: Combatant,
+  x: number,
+  y: number,
+  size: number,
+): void {
+  const spec = enemy.hp > 0 ? MONSTERS[enemy.id] : undefined;
+  if (!spec) {
+    ctx.fillStyle = enemy.hp > 0 ? "#8a4a4a" : "#333";
+    ctx.fillRect(x, y, size, size);
+    return;
+  }
+  const cellSize = size / MONSTER_GRID_SIZE;
+  for (const cell of buildMonsterCells(spec)) {
+    ctx.fillStyle = cell.color;
+    ctx.fillRect(x + cell.col * cellSize, y + cell.row * cellSize, cellSize, cellSize);
+  }
+}
+
 export function renderBattle(
   ctx: CanvasRenderingContext2D,
   battleState: BattleState,
@@ -31,12 +57,10 @@ export function renderBattle(
   ctx.font = "10px monospace";
   ctx.textBaseline = "top";
 
-  // 敵（仮のドット絵ができるまでは色付き四角）。
   battleState.enemies.forEach((enemy, index) => {
     const x = 60 + index * 90;
     const y = 24;
-    ctx.fillStyle = enemy.hp > 0 ? "#8a4a4a" : "#333";
-    ctx.fillRect(x, y, 40, 40);
+    drawEnemySprite(ctx, enemy, x, y, 40);
     ctx.fillStyle = "#f0f0f0";
     ctx.fillText(enemy.name, x, y + 44);
     drawHpBar(ctx, enemy, x, y + 56, 40);

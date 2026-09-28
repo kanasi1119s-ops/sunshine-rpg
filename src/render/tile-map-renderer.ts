@@ -1,6 +1,6 @@
 import { getTileId, type TileMap } from "../game/map/tile-map";
 import type { Camera } from "./camera";
-import { hashCell, shadeColor } from "./color-utils";
+import { hashCell, shadeColor } from "../game/color-utils";
 
 /**
  * 単色べた塗りだと平坦に見えるため、タイルごとに決まった模様（隅の陰影＋

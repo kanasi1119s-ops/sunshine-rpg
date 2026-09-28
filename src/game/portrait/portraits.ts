@@ -7,6 +7,8 @@
  * 'A'=アクセント（服・小物の色）。
  */
 
+import { shadeColor } from "../color-utils";
+
 export type HairStyle = "short" | "long" | "twin" | "slick";
 export type PortraitAccessory = "none" | "headband" | "circlet" | "glasses";
 
@@ -128,6 +130,60 @@ export function colorForCell(spec: PortraitSpec, cell: string): string | null {
     default:
       return null;
   }
+}
+
+export interface ShadedCell {
+  row: number;
+  col: number;
+  color: string;
+}
+
+function clampShadeAmount(amount: number): number {
+  return Math.max(-0.4, Math.min(0.15, amount));
+}
+
+/** そのマスが、何も描かないマスや枠の外に接していれば true（輪郭線を付ける対象）。 */
+function isSilhouetteEdge(rows: string[], row: number, col: number): boolean {
+  const height = rows.length;
+  const width = rows[0].length;
+  const neighbors: [number, number][] = [
+    [row - 1, col],
+    [row + 1, col],
+    [row, col - 1],
+    [row, col + 1],
+  ];
+  return neighbors.some(([r, c]) => {
+    if (r < 0 || r >= height || c < 0 || c >= width) {
+      return true;
+    }
+    return rows[r][c] === ".";
+  });
+}
+
+/**
+ * 実際に描く色の一覧を作る。単なる単色塗りにせず、(1)左上から光が当たって
+ * いるような上→下の明暗、(2)シルエットの輪郭を1段暗くする縁取りを加えて、
+ * 単色四角より立体感・視認性のあるドット絵にする（`docs/decisions.md`
+ * 「ドット絵のクオリティを高める」方針）。
+ */
+export function buildShadedCells(spec: PortraitSpec): ShadedCell[] {
+  const rows = buildPortraitRows(spec);
+  const width = rows[0].length;
+  const cells: ShadedCell[] = [];
+  for (let row = 0; row < rows.length; row++) {
+    for (let col = 0; col < width; col++) {
+      const symbol = rows[row][col];
+      const baseColor = colorForCell(spec, symbol);
+      if (!baseColor) {
+        continue;
+      }
+      const lightFromLeft = col < width / 2 ? 0.05 : -0.02;
+      const gradient = clampShadeAmount(-0.018 * row + lightFromLeft);
+      const amount = isSilhouetteEdge(rows, row, col) ? Math.min(gradient, -0.3) : gradient;
+      cells.push({ row, col, color: shadeColor(baseColor, amount) });
+    }
+  }
+  return cells;
 }
 
 /**
