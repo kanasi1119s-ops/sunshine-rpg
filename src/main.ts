@@ -43,8 +43,14 @@ import { SAVE_VERSION, type SaveData } from "./game/save/types";
 import { loadFromSlot, saveToSlot } from "./game/save/storage";
 import { downloadSaveFile, readSaveFile } from "./io/save-file";
 import { AudioEngine } from "./audio/audio-engine";
-import { SAMPLE_CONFIRM_SE } from "./audio/sample-tracks";
 import { CHAPTER0_BATTLE_THEME, CHAPTER0_BOSS_THEME, CHAPTER0_OUTSKIRTS_THEME, CHAPTER0_TOWN_THEME } from "./audio/chapter0-tracks";
+import {
+  CHAPTER0_CONFIRM_SE,
+  CHAPTER0_CURSOR_SE,
+  CHAPTER0_DEFEAT_SE,
+  CHAPTER0_DOOR_SE,
+  CHAPTER0_VICTORY_SE,
+} from "./audio/chapter0-se";
 import type { Score } from "./audio/score";
 import { createDebugMenuState, moveMenuCursor, toggleMenu } from "./game/debug/debug-menu";
 import { renderDebugMenu, type DebugMenuRow } from "./render/debug-menu-renderer";
@@ -82,6 +88,9 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   npcs = CHAPTER0_NPCS[mapId] ?? [];
   player = { ...player, x: tileX * map.data.tileWidth, y: tileY * map.data.tileHeight };
   playMapBgm(mapId);
+  if (audioStarted) {
+    audio.playSe(CHAPTER0_DOOR_SE);
+  }
 }
 
 /** マップごとのBGM（`docs/sound/tracks.md`）。同じ曲がすでに鳴っていれば鳴らし直さない。 */
@@ -330,9 +339,17 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
   }
   victoryExpApplied = true;
   const outcome = finishedBattle.getUiState();
-  if (outcome.kind !== "finished" || outcome.outcome !== "won") {
+  if (outcome.kind !== "finished") {
     return;
   }
+  if (outcome.outcome === "lost") {
+    audio.playSe(CHAPTER0_DEFEAT_SE);
+    return;
+  }
+  if (outcome.outcome !== "won") {
+    return;
+  }
+  audio.playSe(CHAPTER0_VICTORY_SE);
   const expGained = computeVictoryExp(finishedBattle.getState());
   const result = gainExp(heroStats, expGained, SAMPLE_GROWTH);
   heroStats = result.stats;
@@ -359,7 +376,7 @@ const loop = createGameLoop({
 
     const actionPressed = actionButton.consume();
     if (actionPressed) {
-      audio.playSe(SAMPLE_CONFIRM_SE);
+      audio.playSe(CHAPTER0_CONFIRM_SE);
     }
 
     if (debugMenu.open) {
@@ -367,8 +384,10 @@ const loop = createGameLoop({
       if (direction !== lastDebugDirection) {
         if (direction === "up") {
           debugMenu = moveMenuCursor(debugMenu, -1, DEBUG_MENU_ROWS.length);
+          audio.playSe(CHAPTER0_CURSOR_SE);
         } else if (direction === "down") {
           debugMenu = moveMenuCursor(debugMenu, 1, DEBUG_MENU_ROWS.length);
+          audio.playSe(CHAPTER0_CURSOR_SE);
         }
         lastDebugDirection = direction;
       }
@@ -389,8 +408,10 @@ const loop = createGameLoop({
         if (direction !== lastBattleDirection) {
           if (direction === "up" || direction === "left") {
             battle.moveCursor(-1);
+            audio.playSe(CHAPTER0_CURSOR_SE);
           } else if (direction === "down" || direction === "right") {
             battle.moveCursor(1);
+            audio.playSe(CHAPTER0_CURSOR_SE);
           }
           lastBattleDirection = direction;
         }
@@ -417,8 +438,10 @@ const loop = createGameLoop({
         if (direction !== lastDialogueDirection) {
           if (direction === "up") {
             dialogue.moveChoice(-1);
+            audio.playSe(CHAPTER0_CURSOR_SE);
           } else if (direction === "down") {
             dialogue.moveChoice(1);
+            audio.playSe(CHAPTER0_CURSOR_SE);
           }
           lastDialogueDirection = direction;
         }
