@@ -29,6 +29,7 @@ const WIDTH = 22;
 const HEIGHT = 16;
 
 const WEST_GATE = { x: 0, y: 8 };
+const EAST_GATE = { x: WIDTH - 1, y: 8 };
 const SOUTH_GATE = { x: 11, y: HEIGHT - 1 };
 const DOCK_X = 11;
 const LAKE_Y = 10;
@@ -49,14 +50,14 @@ export function createGarasukoTownData(): TileMapData {
     collision[y * WIDTH + x] = NON_WALKABLE.has(tile) ? 1 : 0;
   };
 
-  // 外周を木で囲む。西は麦香野からの街道を開けておく。
+  // 外周を木で囲む。西は麦香野から、東は鉄鏈鉱山への街道を開けておく。
   for (let x = 0; x < WIDTH; x++) {
     set(x, 0, TREE);
     set(x, HEIGHT - 1, x === SOUTH_GATE.x ? DOCK : TREE);
   }
   for (let y = 0; y < HEIGHT; y++) {
     set(0, y, y === WEST_GATE.y ? PATH : TREE);
-    set(WIDTH - 1, y, TREE);
+    set(WIDTH - 1, y, y === EAST_GATE.y ? PATH : TREE);
   }
 
   // 町の南側は湖。桟橋だけが対岸（倉庫）まで続く。
@@ -101,6 +102,14 @@ export function createGarasukoTownData(): TileMapData {
         targetTileY: 8,
       },
       {
+        // 東の街道を進んで鉄鏈鉱山の町へ。
+        tileX: EAST_GATE.x,
+        tileY: EAST_GATE.y,
+        targetMapId: "tetsukusari-town",
+        targetTileX: 2,
+        targetTileY: 10,
+      },
+      {
         // 桟橋を渡って密輸倉庫へ。
         tileX: SOUTH_GATE.x,
         tileY: SOUTH_GATE.y,
@@ -114,6 +123,9 @@ export function createGarasukoTownData(): TileMapData {
 
 /** 麦香野からの街道を渡ってきたときの立ち位置。 */
 export const GARASUKO_TOWN_ENTRY = { tileX: WEST_GATE.x + 2, tileY: WEST_GATE.y };
+
+/** 鉄鏈鉱山の町から戻ってきたときの立ち位置。 */
+export const GARASUKO_TOWN_EAST_RETURN = { tileX: EAST_GATE.x - 2, tileY: EAST_GATE.y };
 
 /** 密輸倉庫から戻ってきたときの立ち位置。 */
 export const GARASUKO_TOWN_WAREHOUSE_RETURN = { tileX: SOUTH_GATE.x, tileY: SOUTH_GATE.y - 1 };
