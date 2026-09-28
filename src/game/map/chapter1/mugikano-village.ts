@@ -18,6 +18,14 @@ const TILE_COLORS: Record<number, string> = {
   [BRIDGE]: "#a97c4f",
 };
 
+/** ドット絵パターン（`tile-art.ts`）を適用する地形カテゴリ。 */
+const TILE_ART_MAP: Record<number, string> = {
+  [GRASS]: "grass",
+  [PATH]: "path",
+  [WATER]: "water",
+  [TREE]: "treeCanopy",
+};
+
 const NON_WALKABLE = new Set([WATER, TREE, MILL_WALL, HOUSE_WALL]);
 
 const WIDTH = 22;
@@ -90,6 +98,7 @@ export function createMugikanoVillageData(): TileMapData {
     tileHeight: 16,
     layers: [{ name: "ground", data: ground }],
     tileColors: TILE_COLORS,
+    tileArt: TILE_ART_MAP,
     collision,
     exits: [
       {

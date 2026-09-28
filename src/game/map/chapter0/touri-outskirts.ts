@@ -14,6 +14,13 @@ const TILE_COLORS: Record<number, string> = {
   [RIFT_GROUND]: "#5b3a7a",
 };
 
+/** ドット絵パターン（`tile-art.ts`）を適用する地形カテゴリ。 */
+const TILE_ART_MAP: Record<number, string> = {
+  [GRASS]: "grass",
+  [PATH]: "path",
+  [TREE]: "treeCanopy",
+};
+
 const NON_WALKABLE = new Set([TREE, ROCK]);
 
 const WIDTH = 18;
@@ -65,6 +72,7 @@ export function createTouriOutskirtsData(): TileMapData {
     tileHeight: 16,
     layers: [{ name: "ground", data: ground }],
     tileColors: TILE_COLORS,
+    tileArt: TILE_ART_MAP,
     collision,
     exits: [
       {

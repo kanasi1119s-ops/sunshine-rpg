@@ -17,6 +17,12 @@ export interface TileMapData {
    */
   tileColors: Record<number, string>;
   /**
+   * タイルIDごとの地形カテゴリ（`tile-art.ts`の`TILE_ART`のキー。例: "grass"）。
+   * 指定があれば、単色四角の代わりにそのカテゴリのドット絵模様で描く。
+   * 省略時・未対応カテゴリは、これまで通り`tileColors`の色で描く。
+   */
+  tileArt?: Record<number, string>;
+  /**
    * 通行判定レイヤー（長さ width*height）。1=通れない、0=通れる。
    * 省略した場合はすべて通行可能とみなす。
    */

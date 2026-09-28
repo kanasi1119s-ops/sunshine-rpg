@@ -18,6 +18,14 @@ const TILE_COLORS: Record<number, string> = {
   [INN_WALL]: "#8a5a3c",
 };
 
+/** ドット絵パターン（`tile-art.ts`）を適用する地形カテゴリ。 */
+const TILE_ART_MAP: Record<number, string> = {
+  [GRASS]: "grass",
+  [PATH]: "path",
+  [WATER]: "water",
+  [TREE]: "treeCanopy",
+};
+
 const NON_WALKABLE = new Set([WATER, TREE, BRANCH_WALL, INN_WALL]);
 
 const WIDTH = 22;
@@ -97,6 +105,7 @@ export function createTouriTownData(): TileMapData {
     tileHeight: 16,
     layers: [{ name: "ground", data: ground }],
     tileColors: TILE_COLORS,
+    tileArt: TILE_ART_MAP,
     collision,
     exits: [
       {
