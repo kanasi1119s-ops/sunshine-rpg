@@ -51,9 +51,29 @@ export const MINA: CompanionDefinition = {
   }),
 };
 
+/** ガイド（硝子湖の交易商人の息子、風唱系）。第2章で仲間に加わる。すばしっこく、風のとくぎで援護する。 */
+export const GUIDE: CompanionDefinition = {
+  id: "guide",
+  name: "ガイド",
+  growth: { hpGrowth: 3, mpGrowth: 2, attackGrowth: 3, defenseGrowth: 1, speedGrowth: 3 },
+  skill: { id: "shippu-no-ya", name: "疾風ノ矢", mpCost: 3, powerMultiplier: 1.6 },
+  createInitialStats: () => ({
+    level: 1,
+    exp: 0,
+    maxHp: 23,
+    hp: 23,
+    maxMp: 8,
+    mp: 8,
+    attack: 12,
+    defense: 5,
+    speed: 13,
+  }),
+};
+
 export const COMPANIONS: Record<string, CompanionDefinition> = {
   [RETO.id]: RETO,
   [MINA.id]: MINA,
+  [GUIDE.id]: GUIDE,
 };
 
 export function createCompanionCombatant(companion: CompanionDefinition, stats: LeveledStats): Combatant {

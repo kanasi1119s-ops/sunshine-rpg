@@ -32,6 +32,7 @@ const WIDTH = 22;
 const HEIGHT = 16;
 
 const WEST_GATE = { x: 0, y: 8 };
+const EAST_GATE = { x: WIDTH - 1, y: 8 };
 const NORTH_GATE = { x: 11, y: 0 };
 const CHANNEL_Y = 9;
 const BRIDGE_X = 11;
@@ -61,7 +62,7 @@ export function createMugikanoVillageData(): TileMapData {
   }
   for (let y = 0; y < HEIGHT; y++) {
     set(0, y, y === WEST_GATE.y ? PATH : TREE);
-    set(WIDTH - 1, y, TREE);
+    set(WIDTH - 1, y, y === EAST_GATE.y ? PATH : TREE);
   }
 
   // 村を東西に貫く水路。橋の下だけ渡れる。
@@ -117,6 +118,14 @@ export function createMugikanoVillageData(): TileMapData {
         targetTileX: 9,
         targetTileY: 12,
       },
+      {
+        // 東の街道、第2章の舞台・硝子湖へ。
+        tileX: EAST_GATE.x,
+        tileY: EAST_GATE.y,
+        targetMapId: "garasuko-town",
+        targetTileX: 2,
+        targetTileY: 8,
+      },
     ],
   };
 }
@@ -126,6 +135,9 @@ export const MUGIKANO_VILLAGE_ENTRY = { tileX: WEST_GATE.x + 2, tileY: WEST_GATE
 
 /** 水源から戻ってきたときの立ち位置。 */
 export const MUGIKANO_VILLAGE_WATER_SOURCE_RETURN = { tileX: NORTH_GATE.x, tileY: NORTH_GATE.y + 1 };
+
+/** 硝子湖から戻ってきたときの立ち位置。 */
+export const MUGIKANO_VILLAGE_GARASUKO_RETURN = { tileX: EAST_GATE.x - 1, tileY: EAST_GATE.y };
 
 /** 村人・ミナを置く座標（イベントデータ側で使う）。 */
 export const MUGIKANO_VILLAGE_LANDMARKS = {
