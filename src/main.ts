@@ -56,6 +56,7 @@ import { downloadSaveFile, readSaveFile } from "./io/save-file";
 import { AudioEngine } from "./audio/audio-engine";
 import { CHAPTER0_BATTLE_THEME, CHAPTER0_BOSS_THEME, CHAPTER0_OUTSKIRTS_THEME, CHAPTER0_TOWN_THEME } from "./audio/chapter0-tracks";
 import { CHAPTER1_BOSS_THEME, CHAPTER1_VILLAGE_THEME, CHAPTER1_WATER_SOURCE_THEME } from "./audio/chapter1-tracks";
+import { CHAPTER2_BOSS_THEME, CHAPTER2_TOWN_THEME, CHAPTER2_WAREHOUSE_THEME } from "./audio/chapter2-tracks";
 import {
   CHAPTER0_CONFIRM_SE,
   CHAPTER0_CURSOR_SE,
@@ -124,9 +125,11 @@ function mapBgmFor(mapId: string): Score {
   if (mapId === "mugikano-village") {
     return CHAPTER1_VILLAGE_THEME;
   }
-  if (mapId === "garasuko-town" || mapId === "garasuko-warehouse") {
-    // 第2章専用のBGMはroadmap 4-9で作曲するまで、第1章の曲を仮に流用する。
-    return mapId === "garasuko-town" ? CHAPTER1_VILLAGE_THEME : CHAPTER1_WATER_SOURCE_THEME;
+  if (mapId === "garasuko-town") {
+    return CHAPTER2_TOWN_THEME;
+  }
+  if (mapId === "garasuko-warehouse") {
+    return CHAPTER2_WAREHOUSE_THEME;
   }
   return CHAPTER0_TOWN_THEME;
 }
@@ -172,8 +175,7 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
   "garasuko-yugami": {
     createEnemy: createGarasukoYugami,
     victoryFlag: "chapter2_yugami_defeated",
-    // 第2章専用のボス戦BGMはroadmap 4-9で作曲するまで、第1章ボス戦の曲を仮に流用する。
-    bgm: CHAPTER1_BOSS_THEME,
+    bgm: CHAPTER2_BOSS_THEME,
   },
 };
 
