@@ -17,7 +17,8 @@ import { ActionButton } from "./input/action-button";
 import { attachKeyboard } from "./input/keyboard";
 import { createTouchControls } from "./input/touch-controls";
 import type { Direction } from "./input/direction";
-import { CHAPTER0_MAPS, CHAPTER0_NPCS, CHAPTER0_OPENING_COMMANDS, CHAPTER0_START } from "./game/world/chapter0-world";
+import { CHAPTER0_OPENING_COMMANDS, CHAPTER0_START } from "./game/world/chapter0-world";
+import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
 import { renderBattle } from "./render/battle-renderer";
 import {
@@ -34,6 +35,8 @@ import { CHAPTER0_ITEM, CHAPTER0_SKILL, createChapter0Party, createYugamiBoss } 
 import { TOURI_TOWN_SPAWN } from "./game/map/chapter0/touri-town";
 import { TOURI_BRANCH_ENTRY } from "./game/map/chapter0/touri-branch";
 import { TOURI_OUTSKIRTS_ENTRY } from "./game/map/chapter0/touri-outskirts";
+import { MUGIKANO_VILLAGE_ENTRY } from "./game/map/chapter1/mugikano-village";
+import { MUGIKANO_WATER_SOURCE_ENTRY } from "./game/map/chapter1/mugikano-water-source";
 import { createRng } from "./game/random";
 import { computeVictoryExp } from "./game/battle/battle-engine";
 import { gainExp } from "./game/growth/level-up";
@@ -70,8 +73,8 @@ const flags: Flags = {};
 const camera = createCamera(LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
 let currentMapId = CHAPTER0_START.mapId;
-let map = createTileMap(CHAPTER0_MAPS[currentMapId]);
-let npcs = CHAPTER0_NPCS[currentMapId] ?? [];
+let map = createTileMap(WORLD_MAPS[currentMapId]);
+let npcs = WORLD_NPCS[currentMapId] ?? [];
 let player = createPlayer(
   CHAPTER0_START.tileX * map.data.tileWidth,
   CHAPTER0_START.tileY * map.data.tileHeight,
@@ -79,13 +82,13 @@ let player = createPlayer(
 let renderCamera = camera;
 
 function switchMap(mapId: string, tileX: number, tileY: number): void {
-  const data = CHAPTER0_MAPS[mapId];
+  const data = WORLD_MAPS[mapId];
   if (!data) {
     return;
   }
   currentMapId = mapId;
   map = createTileMap(data);
-  npcs = CHAPTER0_NPCS[mapId] ?? [];
+  npcs = WORLD_NPCS[mapId] ?? [];
   player = { ...player, x: tileX * map.data.tileWidth, y: tileY * map.data.tileHeight };
   playMapBgm(mapId);
   if (audioStarted) {
@@ -93,9 +96,15 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   }
 }
 
-/** マップごとのBGM（`docs/sound/tracks.md`）。同じ曲がすでに鳴っていれば鳴らし直さない。 */
+/**
+ * マップごとのBGM（`docs/sound/tracks.md`）。同じ曲がすでに鳴っていれば鳴らし直さない。
+ * 第1章（麦香野）専用の曲はまだ無い（roadmap 4-4で作曲予定）ため、序章の曲を仮に流用する。
+ */
 function mapBgmFor(mapId: string): Score {
-  return mapId === "touri-outskirts" ? CHAPTER0_OUTSKIRTS_THEME : CHAPTER0_TOWN_THEME;
+  if (mapId === "touri-outskirts" || mapId === "mugikano-water-source") {
+    return CHAPTER0_OUTSKIRTS_THEME;
+  }
+  return CHAPTER0_TOWN_THEME;
 }
 
 let currentBgmTrack: Score | null = null;
@@ -289,6 +298,15 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
   {
     label: () => "マップ: 町外れ・歪みの発生地点 へワープ",
     action: () => switchMap("touri-outskirts", TOURI_OUTSKIRTS_ENTRY.tileX, TOURI_OUTSKIRTS_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 麦香野の村 へワープ",
+    action: () => switchMap("mugikano-village", MUGIKANO_VILLAGE_ENTRY.tileX, MUGIKANO_VILLAGE_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 麦香野・水源 へワープ",
+    action: () =>
+      switchMap("mugikano-water-source", MUGIKANO_WATER_SOURCE_ENTRY.tileX, MUGIKANO_WATER_SOURCE_ENTRY.tileY),
   },
   {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,
