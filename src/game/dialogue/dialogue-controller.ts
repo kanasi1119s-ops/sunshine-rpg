@@ -8,6 +8,7 @@ export type DialogueRenderState =
 
 export interface DialogueControllerOptions {
   onWarp?: (warp: WarpRequest) => void;
+  onStartBattle?: (battleId: string) => void;
   charsPerSecond?: number;
 }
 
@@ -34,7 +35,10 @@ export class DialogueController {
   }
 
   start(commands: EventCommand[]): void {
-    this.runner = createEventRunner(commands, this.flags, { onWarp: this.options.onWarp });
+    this.runner = createEventRunner(commands, this.flags, {
+      onWarp: this.options.onWarp,
+      onStartBattle: this.options.onStartBattle,
+    });
     this.advance(undefined);
   }
 

@@ -80,4 +80,20 @@ describe("createEventRunner", () => {
     expect(warps).toEqual([{ mapId: "room", tileX: 3, tileY: 4 }]);
     expect(step.step).toEqual({ kind: "message", text: "移動しました", speaker: undefined });
   });
+
+  it("startBattleコマンドはonStartBattleに戦闘IDを通知して終了する", () => {
+    const startedBattles: string[] = [];
+    const commands: EventCommand[] = [
+      { type: "message", text: "歪みが姿を現した！" },
+      { type: "startBattle", battleId: "chapter0-yugami" },
+    ];
+    const runner = createEventRunner(commands, {}, {
+      onStartBattle: (id) => startedBattles.push(id),
+    });
+
+    runner.next();
+    const afterBattleStart = runner.next({ kind: "advance" });
+    expect(startedBattles).toEqual(["chapter0-yugami"]);
+    expect(afterBattleStart.done).toBe(true);
+  });
 });
