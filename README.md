@@ -34,3 +34,7 @@ npm run dev
 - プロジェクトの決まりごと: [`CLAUDE.md`](CLAUDE.md)
 - 作業1回分の手順: [`.claude/skills/rpg-cycle/SKILL.md`](.claude/skills/rpg-cycle/SKILL.md)
 - 定期タスクの設定方法: [`docs/scheduled-task.md`](docs/scheduled-task.md)
+
+## 使用している外部素材（クレジット）
+
+- 地形のタイル絵の一部に、ぴぽや「フィールドマップセット１」（https://pipoya.net/ ）の無料素材を加工して使っています。規約と記録は [`docs/assets-credits.md`](docs/assets-credits.md) を参照してください。

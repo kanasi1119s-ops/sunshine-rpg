@@ -39,6 +39,9 @@ if (mode && mode !== "merge") {
 } else if (mode === "merge") {
   const all = {};
   for (const name of Object.keys(SETS)) Object.assign(all, JSON.parse(fs.readFileSync(`${tmpDir}/${name}.json`, "utf8")));
+  // ぴぽや素材（import-pipoya.mjs で作る pipoya-terrain.json）があれば、同名の地形テクスチャを置き換える
+  const pipoya = new URL("./pipoya-terrain.json", import.meta.url);
+  if (fs.existsSync(pipoya)) Object.assign(all, JSON.parse(fs.readFileSync(pipoya, "utf8")));
   const body = Object.entries(all).map(([k, v]) => `  ${JSON.stringify(k)}: { size: ${v.size}, palette: ${JSON.stringify(v.palette)}, rle: ${JSON.stringify(v.rle)} },`).join("\n");
   fs.writeFileSync(new URL("../../src/game/art/sprite-data.generated.ts", import.meta.url), `// 自動生成: tools/pixel-art/export-game-data.mjs（手で編集しない）
 import type { SpriteData } from "./sprite";
