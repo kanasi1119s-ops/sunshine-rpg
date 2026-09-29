@@ -13,7 +13,7 @@ const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromi
 for (const piece of list) {
   const g = piece.build();
   fs.writeFileSync(`${out}/${piece.name}.json`, JSON.stringify(g));
-  const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 }, ...(process.env.NOVIDEO ? {} : { recordVideo: { dir: `${out}/video-${piece.name}`, size: { width: 1600, height: 1000 } } }) });
+  const ctx = await browser.newContext({ viewport: { width: 1600, height: 1800 }, ...(process.env.NOVIDEO ? {} : { recordVideo: { dir: `${out}/video-${piece.name}`, size: { width: 1600, height: 1000 } } }) });
   const p = await ctx.newPage();
   await p.route(/fonts\./, (r) => r.abort());
   await p.goto("file://" + editorPath);
