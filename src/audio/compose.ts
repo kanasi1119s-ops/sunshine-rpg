@@ -7,7 +7,7 @@ import { REST, type Instrument, type NoteEvent, type Score, type Track, type Wav
  *
  * パターン文字（1文字が `step` 拍ぶん。コード1つにつき1小節ぶん。空白で区切ると小節ごとに変えられる）:
  *   R=根音  5=5度  O=1オクターブ上の根音  a〜d=コードの1〜4番目の音（大文字は1オクターブ上）
- *   x=打楽器の一打（`fixed`つきのパートだけ）  o=弱い一打（ゴーストノート）  -=前の音をのばす  .=休み
+ *   x=打楽器の一打（`fixed`つきのパートだけ）  o=弱い一打（ゴーストノート）  X=強いアクセント  -=前の音をのばす  .=休み
  */
 
 const KINDS = {
@@ -119,8 +119,9 @@ function renderBar(events: NoteEvent[], pattern: string, chord: Chord, spec: Par
       last.durationBeats += spec.step;
     } else if (ch === ".") {
       pushEvent(events, REST, spec.step);
-    } else if ((ch === "x" || ch === "o") && spec.fixed) {
-      events.push({ note: spec.fixed, durationBeats: spec.step, ...(ch === "o" ? { velocity: 0.5 } : {}) });
+    } else if ((ch === "x" || ch === "o" || ch === "X") && spec.fixed) {
+      // x=標準、o=弱い（ゴースト）、X=強いアクセント
+      events.push({ note: spec.fixed, durationBeats: spec.step, ...(ch === "o" ? { velocity: 0.5 } : ch === "X" ? { velocity: 1.25 } : {}) });
     } else {
       const offset = toneOffset(ch, chord.kind);
       if (offset === null) throw new Error(`不正なパターン文字です: ${ch}`);
@@ -131,7 +132,7 @@ function renderBar(events: NoteEvent[], pattern: string, chord: Chord, spec: Par
 
 /** 楽器ごとの標準の左右位置。同じ楽器のパートが複数あるときは、左右に振り分けて広がりを出す。 */
 const BASE_PAN: Partial<Record<Instrument, number>> = {
-  hihat: 0.3, crash: -0.25, crunch: -0.35, distGuitar: -0.3, guitar: 0.3, echoGuitar: 0.25, keys: -0.25, piano: -0.15,
+  hihat: 0.35, crash: -0.3, crunch: -0.5, distGuitar: -0.55, guitar: 0.3, echoGuitar: 0.25, keys: -0.25, piano: -0.15,
   harpsichord: -0.3, strings: 0, pad: 0, bell: 0.4, bird: 0.6, wind: -0.5, stream: 0.5, rain: 0, crickets: 0.4, chime: 0.3,
 };
 function assignPan(tracks: Track[]): void {
@@ -140,8 +141,8 @@ function assignPan(tracks: Track[]): void {
     if (!t.instrument || !(t.instrument in BASE_PAN)) continue;
     const n = seen.get(t.instrument) ?? 0;
     seen.set(t.instrument, n + 1);
-    const spread = n === 0 ? 0 : (n % 2 === 1 ? 1 : -1) * Math.ceil(n / 2) * 0.3;
-    t.pan = Math.max(-0.85, Math.min(0.85, (BASE_PAN[t.instrument] ?? 0) + spread));
+    const spread = n === 0 ? 0 : (n % 2 === 1 ? 1 : -1) * Math.ceil(n / 2) * (t.instrument === "distGuitar" || t.instrument === "crunch" ? 1.1 : 0.4);
+    t.pan = Math.max(-0.9, Math.min(0.9, (BASE_PAN[t.instrument] ?? 0) + spread));
   }
 }
 

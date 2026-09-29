@@ -45,32 +45,40 @@ function distortionCurve(drive: number): Float32Array<ArrayBuffer> {
 export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24): GainNode {
   // 最終段: 音が重なっても割れないようにする歯止め（リミッター）と、全体の音量の底上げ
   const limiter = ctx.createDynamicsCompressor();
-  limiter.threshold.value = -4;
+  limiter.threshold.value = -1.5;
   limiter.knee.value = 0;
   limiter.ratio.value = 20;
   limiter.attack.value = 0.002;
   limiter.release.value = 0.1;
   limiter.connect(destination);
   const makeup = ctx.createGain();
-  makeup.gain.value = 1.5;
+  makeup.gain.value = 1.75;
   makeup.connect(limiter);
   // 音の仕上げ: 低音とキラキラした高音を少し持ち上げる（現代的なゲーム音楽らしい厚みと抜けの良さ）
   const low = ctx.createBiquadFilter();
   low.type = "lowshelf";
-  low.frequency.value = 110;
-  low.gain.value = 2.5;
+  low.frequency.value = 95;
+  low.gain.value = 3.5;
+  // 3kHz付近を少し持ち上げて、旋律とアタックの輪郭をはっきりさせる
+  const presence = ctx.createBiquadFilter();
+  presence.type = "peaking";
+  presence.frequency.value = 3200;
+  presence.Q.value = 0.9;
+  presence.gain.value = 1.8;
   const high = ctx.createBiquadFilter();
   high.type = "highshelf";
-  high.frequency.value = 7500;
-  high.gain.value = 2.5;
-  low.connect(high);
+  high.frequency.value = 8500;
+  high.gain.value = 3.5;
+  low.connect(presence);
+  presence.connect(high);
   const comp = ctx.createDynamicsCompressor();
   high.connect(comp);
-  comp.threshold.value = -16;
-  comp.knee.value = 12;
-  comp.ratio.value = 4;
-  comp.attack.value = 0.004;
-  comp.release.value = 0.2;
+  // 打楽器のアタックは通し、全体の厚みは詰める（現代的なゲーム音楽の「太くてパンチのある」音）
+  comp.threshold.value = -20;
+  comp.knee.value = 10;
+  comp.ratio.value = 3.2;
+  comp.attack.value = 0.012;
+  comp.release.value = 0.16;
   comp.connect(makeup);
 
   const bus = ctx.createGain();
@@ -231,6 +239,7 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       out.push(noise(ctx, t, t + 1.5, hp));
       break;
     }
+    case "slap":
     case "bass": {
       const g = sustainGain(ctx, dest, t, d, v, 0.006, 0.07);
       const lp = filter(ctx, "lowpass", 720, g);
@@ -466,6 +475,23 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       gate.stop(t + dur + 0.7);
       offset.stop(t + dur + 0.7);
       out.push(osc(ctx, "sine", f, t, t + dur + 0.7, g, 1), gate, offset);
+      break;
+    }
+    case "pierce": {
+      // 鋭く刺さる高音: 明るいノコギリ波が一気に下がり、金属的な共鳴が短く残る（ダメージ音の後ろにつく）
+      const decay = Math.max(0.16, Math.min(d * 1.2, 0.5));
+      const g = pluckGain(ctx, dest, t, v, 0.001, decay);
+      const hp = filter(ctx, "highpass", 1400, g);
+      const bp = filter(ctx, "bandpass", f * 1.25, hp, 4.5);
+      const o = ctx.createOscillator();
+      o.type = "sawtooth";
+      o.frequency.setValueAtTime(f * 1.3, t);
+      o.frequency.exponentialRampToValueAtTime(f, t + 0.05);
+      o.connect(bp);
+      o.start(t);
+      o.stop(t + decay + 0.05);
+      out.push(o);
+      out.push(osc(ctx, "square", f * 2.01, t, t + 0.12, pluckGain(ctx, dest, t, v * 0.35, 0.001, 0.1)));
       break;
     }
     case "sub808": {

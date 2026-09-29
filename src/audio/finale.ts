@@ -10,7 +10,7 @@ import { CELLS_MAJOR, CELLS_MINOR, chordName, generateMelody, keyOf, makeRng, pi
  */
 
 type Meter = 3 | 4 | 7;
-type Texture = "motif" | "triumph" | "intro" | "nocturne" | "brahms" | "doom" | "riff" | "gallop" | "chorus" | "solo" | "breakdown" | "blast" | "void" | "coda";
+type Texture = "gsolo" | "bsolo" | "dsolo" | "motif" | "triumph" | "intro" | "nocturne" | "brahms" | "doom" | "riff" | "gallop" | "chorus" | "solo" | "breakdown" | "blast" | "void" | "coda";
 
 interface FSec {
   tex: Texture;
@@ -20,7 +20,7 @@ interface FSec {
   tonic?: string;
   minor?: boolean;
   /** 「motif」の進み方: fall=音が下がっていく、rise=上がっていく。 */
-  variant?: "fall" | "rise";
+  variant?: "fall" | "rise" | "fast";
 }
 export interface FinaleSpec {
   id: string;
@@ -41,7 +41,8 @@ const by = (m: Meter, p: { 3: string; 4: string; 7: string }): string => p[m];
 
 const KICK_HALF = { 3: "x...........", 4: "x.......x.......", 7: "x.......x.......x..........." };
 const KICK_PROG = { 3: "x.xx..x.x...", 4: "x.xx..x.x.xx..x.", 7: "x.xx..x.x.xx..x.x.xx..x.x..." };
-const SNARE_BACK = { 3: "....x.......", 4: "....x.......x...", 7: "....x.......x.......x......." };
+// スネアの裏拍にはアクセント（X）、その間にゴースト（o）を入れて、グルーブを出す
+const SNARE_BACK = { 3: "....x.......", 4: "..o.X.o...o.X..o", 7: "..o.X.o...o.X..o....x......." };
 const SNARE_HALF = { 3: "........x...", 4: "........x.......", 7: "........x.......x..........." };
 const CHUG = { 3: "R.RR.RR.R.RR", 4: "R.RR.RR.R.RR.RR.", 7: "R.RR.RR.R.RR.RR.R.RR.RR.R.RR" };
 const HIT = { 3: "R-------R---", 4: "R-------R---R---", 7: "R-------R---R---R-------R---" };
@@ -59,7 +60,34 @@ interface Look {
 const crashFirst = (m: Meter, bars: number): string => [`x${".".repeat(LEN[m] - 1)}`, ...Array(bars - 1).fill(".".repeat(LEN[m]))].join(" ");
 
 const MOTIF_CELL = "R--RR-R-"; // 「長・短・中・中」の短い動機（1.5拍・0.5拍・1拍・1拍）
+/** テクニカルなドラムソロ（8小節）。グルーブ→リニアなフレーズ→パラディドル→ツーバス→タムの回し→ストップタイムの順に展開する。 */
+const DRUM_SOLO = {
+  kick:  ["X..x..x..x.x....", "X..x..x.x..x.x..", "X..X....X.X.....", "X...............", "xxxxxxxxxxxxxxxx", "X..x..x..x..x..x", "............xxxx", "X.......X......."],
+  snare: ["....X..o.o..X..o", "....X..o.o..X.oX", "..o.X.o...o.X.o.", "X.o.X.o.........", "........X.......", "....X.......X...", "................", "....X.......X.XX"],
+  hat:   ["x.xxx.xxx.xxx.xx", "x.xxx.xxx.xxxoxx", "x.x.x.x.x.x.x.x.", "................", "x.x.x.x.x.x.x.x.", "xxxxxxxxxxxxxxxx", "................", "................"],
+  tomH:  ["................", "................", "................", "....X.o.X.o.....", "................", "................", "xxxx............", "................"],
+  tomM:  ["................", "................", "................", "........X.o.X.o.", "................", "................", "....xxxx........", "................"],
+  tomL:  ["................", "................", "................", "............X.oX", "................", "................", "........xxxx....", "................"],
+  crash: ["x...............", "................", "................", "................", "x...............", "................", "................", "x..............."],
+  bass:  ["R.....R...R.....", "R.....R.R.......", "R..R....R.R.....", "................", "R...............", "R..R..R..R..R..R", "................", "R.......R......."],
+};
+const bars8 = (a: string[], bars: number): string => Array.from({ length: bars }, (_, i) => a[i % a.length]).join(" ");
+
 const LOOKS: Record<Exclude<Texture, "void">, Look> = {
+  gsolo: {
+    // 遅いギターソロ: 長く伸ばす音とベンドで、泣くように歌う
+    parts: (m, bars) => ({ gtrs: hold("R", LEN[m]), bass: hold("R", LEN[m]), kick: by(m, KICK_HALF), snare: by(m, SNARE_HALF), crash: crashFirst(m, bars), pad: hold("a", LEN[m] / 2), s1: hold("b", LEN[m] / 2), s2: hold("c", LEN[m] / 2), pnL: cycle(LH, LEN[m] / 2) }),
+    mel: ["lead"], opts: { lo: 62, hi: 90, density: "sparse" },
+  },
+  bsolo: {
+    // ベースソロ: 低音の旋律を主役にして、ドラムはグルーブで支える。速い曲はスラップ、遅い曲は指弾き
+    parts: (m, bars) => ({ kick: by(m, KICK_PROG), snare: by(m, SNARE_BACK), hat: cycle("xo", LEN[m]), crash: crashFirst(m, bars), pad: hold("a", LEN[m] / 2), gtrs: hold("R", LEN[m]) }),
+    mel: ["bassm"], opts: { lo: 36, hi: 66, density: "fast" },
+  },
+  dsolo: {
+    parts: (_m, bars) => ({ kick: bars8(DRUM_SOLO.kick, bars), snare: bars8(DRUM_SOLO.snare, bars), hat: bars8(DRUM_SOLO.hat, bars), tomH: bars8(DRUM_SOLO.tomH, bars), tomM: bars8(DRUM_SOLO.tomM, bars), tomL: bars8(DRUM_SOLO.tomL, bars), crash: bars8(DRUM_SOLO.crash, bars), bass: bars8(DRUM_SOLO.bass, bars), pad: hold("a", 8) }),
+    mel: [], opts: { lo: 62, hi: 84, density: "normal" },
+  },
   motif: {
     // 運命に立ち向かう短い動機を、弦・低弦・ギター・ティンパニでそろえて叩きつける
     parts: (m, bars) => ({ cello: MOTIF_CELL, s1: MOTIF_CELL, s2: MOTIF_CELL.replace(/R/g, "c"), gtrs: "R-----R-R---R---", kick: "x.....x.x...x...", crash: crashFirst(m, bars), pad: hold("a", LEN[m] / 2) }),
@@ -132,6 +160,12 @@ const PARTS: Record<string, PartSpec> = {
   s3: { instrument: "strings", waveform: "sawtooth", volume: 0.08, octave: 4, step: 0.5 },
   pnL: { instrument: "piano", waveform: "triangle", volume: 0.12, octave: 2, step: 0.5 },
   pad: { instrument: "choir", waveform: "sine", volume: 0.09, octave: 3, step: 0.5 },
+  tomH: { instrument: "tom", waveform: "sine", volume: 0.26, octave: 2, step: 0.25, fixed: "D3" },
+  tomM: { instrument: "tom", waveform: "sine", volume: 0.26, octave: 2, step: 0.25, fixed: "B2" },
+  tomL: { instrument: "tom", waveform: "sine", volume: 0.28, octave: 2, step: 0.25, fixed: "G2" },
+  opn1: { instrument: "brass", waveform: "sawtooth", volume: 0.24, octave: 3, step: 0.5 },
+  opn2: { instrument: "strings", waveform: "sawtooth", volume: 0.16, octave: 3, step: 0.5 },
+  opn3: { instrument: "brass", waveform: "sawtooth", volume: 0.2, octave: 4, step: 0.5 },
 };
 const MELODIES: Record<string, MelodySpec> = {
   lead: { instrument: "leadGuitar", waveform: "sawtooth", volume: 0.17 },
@@ -140,6 +174,8 @@ const MELODIES: Record<string, MelodySpec> = {
   pnm: { instrument: "piano", waveform: "triangle", volume: 0.15 },
   w1: { instrument: "strings", waveform: "sawtooth", volume: 0.09 },
   b1: { instrument: "bell", waveform: "sine", volume: 0.1 },
+  slapm: { instrument: "slap", waveform: "triangle", volume: 0.34 },
+  bassm: { instrument: "bass", waveform: "triangle", volume: 0.34 },
   brass: { instrument: "brass", waveform: "sawtooth", volume: 0.17 },
 };
 
@@ -197,7 +233,11 @@ export function composeFinale(spec: FinaleSpec): Score {
     const tonic = sec.tonic ?? spec.tonic;
     const key = keyOf({ tonic, minor: sec.minor ?? (sec.tex !== "triumph") });
     if (sec.tex === "void") return voidSection(rng, key.tonic, meter, sec.bars);
-    const look = LOOKS[sec.tex];
+    const look0 = LOOKS[sec.tex];
+    // ベースソロは、速い曲ではスラップ、遅い曲では指弾き。曲の最初の区間には、駆け上がる出だしの音型をつける
+    const look: Look = sec.tex === "bsolo" ? { ...look0, mel: [sec.variant === "fast" ? "slapm" : "bassm"], opts: { ...look0.opts, density: sec.variant === "fast" ? "fast" : "normal" } } : look0;
+    const isFirst = spec.sections[0] === sec;
+    const melOpts: MelodyOpts = isFirst && sec.tex !== "motif" ? { ...look.opts, opening: "run" } : look.opts;
     const id = `${sec.tex}|${meter}|${tonic}|${sec.bars}|${sec.variant ?? ""}`;
     let entry = cache.get(id);
     if (!entry) {
@@ -212,16 +252,24 @@ export function composeFinale(spec: FinaleSpec): Score {
         const second = [...cell.slice(0, 3), pick(rng, [5, 4, cell[3]])];
         const degrees = [...cell, ...second, ...cell, ...second].slice(0, sec.bars);
         const chords = degrees.map((d) => chordName(key, d, false));
-        entry = { chords, melody: look.mel.length ? generateMelody(rng, key, chords, meter, look.opts) : "" };
+        entry = { chords, melody: look.mel.length ? generateMelody(rng, key, chords, meter, melOpts) : "" };
       }
       cache.set(id, entry);
     }
     const melody: Record<string, string> = {};
     for (const m of look.mel) melody[m] = entry.melody;
-    return { chords: entry.chords.join(" "), beatsPerBar: meter, parts: look.parts(meter, sec.bars), melody };
+    const parts = look.parts(meter, sec.bars);
+    if (isFirst) {
+      // 曲の頭の一撃（全員で和音を長く鳴らす）
+      const len = meter * 2;
+      const once = (ch: string): string => [ch + "-".repeat(len - 1), ...Array(sec.bars - 1).fill(".".repeat(len))].join(" ");
+      Object.assign(parts, { opn1: once("R"), opn2: once("5"), opn3: once("O") });
+    }
+    return { chords: entry.chords.join(" "), beatsPerBar: meter, parts, melody };
   });
   const score = arrange({ tempoBpm: spec.bpm, beatsPerBar: 4, sections, parts: PARTS, melodies: MELODIES });
   score.drumKit = spec.drumKit;
+  score.opening = true;
   return score;
 }
 
@@ -231,22 +279,22 @@ export const FINALES: FinaleSpec[] = [
   // ラスボス（速い）: 拍子を7/4と4/4で行き来し、間奏はブラームス風の3拍子、最後のサビは全音上へ転調
   {
     id: "boss-final", title: "終わりの灯", scene: "最終ボス戦（第1形態・速い）", bpm: 172, tonic: "E", seed: 201, drumKit: 16,
-    sections: [S("intro", 8), S("riff", 8, 7), S("riff", 8, 7), S("gallop", 8), S("chorus", 16), S("brahms", 8, 3), S("solo", 16), S("breakdown", 8, 7), S("gallop", 8), S("chorus", 16), S("chorus", 16, 4, { tonic: "F#" }), S("coda", 8)],
+    sections: [S("intro", 8), S("riff", 8, 7), S("riff", 8, 7), S("gallop", 8), S("chorus", 16), S("brahms", 8, 3), S("solo", 16), S("bsolo", 8, 4, { variant: "fast" }), S("dsolo", 8), S("breakdown", 8, 7), S("gallop", 8), S("chorus", 16), S("chorus", 16, 4, { tonic: "F#" }), S("coda", 8)],
   },
   // ラスボス（遅い・絶望）: ショパン風の夜想曲、ブラームス風の弦、ドゥーム調のギター
   {
     id: "boss-final-2", title: "灯の環、砕けるとき", scene: "最終ボス戦（第2形態・絶望）", bpm: 74, tonic: "C", seed: 202, drumKit: 48,
-    sections: [S("intro", 8), S("nocturne", 8), S("brahms", 8), S("doom", 8), S("brahms", 8, 3), S("doom", 8), S("breakdown", 8), S("nocturne", 8), S("coda", 8)],
+    sections: [S("intro", 8), S("nocturne", 8), S("brahms", 8), S("doom", 8), S("brahms", 8, 3), S("doom", 8), S("gsolo", 8), S("bsolo", 8), S("coda", 8)],
   },
   // 裏ボス（遅い・絶望）: 虚無の響きと、ロマン派のピアノ・弦
   {
     id: "secret-boss", title: "初源の歪み", scene: "裏ボス「初源の歪み」（絶望）", bpm: 66, tonic: "F#", seed: 203, drumKit: 48,
-    sections: [S("void", 8), S("nocturne", 8), S("doom", 8), S("void", 8), S("brahms", 8, 3), S("doom", 8), S("breakdown", 8), S("coda", 8)],
+    sections: [S("void", 8), S("nocturne", 8), S("doom", 8), S("bsolo", 8), S("brahms", 8, 3), S("doom", 8), S("gsolo", 8), S("coda", 8)],
   },
   // 裏ボス（速い）: ブラストビートと7拍子
   {
     id: "secret-boss-2", title: "歪みの深淵", scene: "裏ボス「初源の歪み」（速い）", bpm: 200, tonic: "D", seed: 204, drumKit: 16,
-    sections: [S("intro", 8), S("blast", 8), S("riff", 8, 7), S("blast", 8), S("chorus", 16), S("solo", 16), S("breakdown", 8, 7), S("riff", 8, 7), S("gallop", 8), S("chorus", 16), S("blast", 8), S("riff", 8, 7), S("gallop", 8), S("coda", 8)],
+    sections: [S("intro", 8), S("blast", 8), S("riff", 8, 7), S("blast", 8), S("chorus", 16), S("solo", 16), S("bsolo", 8, 4, { variant: "fast" }), S("dsolo", 8), S("breakdown", 8, 7), S("riff", 8, 7), S("gallop", 8), S("chorus", 16), S("blast", 8), S("riff", 8, 7), S("gallop", 8), S("coda", 8)],
   },
   // ラスト裏ボス「八神」（速い）: 8柱それぞれの区間で調が上がっていく
   {
@@ -254,13 +302,13 @@ export const FINALES: FinaleSpec[] = [
     sections: [
       S("intro", 8), S("riff", 8, 7, { tonic: "E" }), S("blast", 8, 4, { tonic: "F#" }), S("riff", 8, 7, { tonic: "G" }), S("gallop", 8, 4, { tonic: "A" }),
       S("riff", 8, 7, { tonic: "B" }), S("blast", 8, 4, { tonic: "C" }), S("riff", 8, 7, { tonic: "D" }), S("gallop", 8, 4, { tonic: "E" }),
-      S("chorus", 16), S("solo", 16), S("brahms", 8, 3), S("chorus", 16, 4, { tonic: "G" }), S("coda", 8),
+      S("chorus", 16), S("solo", 16), S("bsolo", 8, 4, { variant: "fast" }), S("dsolo", 8), S("brahms", 8, 3), S("chorus", 16, 4, { tonic: "G" }), S("coda", 8),
     ],
   },
   // ラスト裏ボス「八神」（遅い・絶望）
   {
     id: "eight-gods-2", title: "八神、沈黙", scene: "ラスト裏ボス「八神」（絶望）", bpm: 60, tonic: "B", seed: 206, drumKit: 48,
-    sections: [S("nocturne", 8), S("brahms", 8), S("doom", 8), S("brahms", 8, 3), S("doom", 8), S("void", 8), S("coda", 8)],
+    sections: [S("nocturne", 8), S("brahms", 8), S("doom", 8), S("brahms", 8, 3), S("gsolo", 8), S("bsolo", 8), S("coda", 8)],
   },
 ];
 
@@ -268,7 +316,7 @@ export const FINALES: FinaleSpec[] = [
 FINALES.push({
   id: "fate", title: "運命の扉", scene: "運命に立ち向かう場面・終盤の決意", bpm: 112, tonic: "C", seed: 207, drumKit: 48,
   sections: [
-    S("motif", 8), S("motif", 8, 4, { variant: "rise" }), S("riff", 8), S("brahms", 8, 3), S("gallop", 8), S("motif", 8, 4, { variant: "rise", tonic: "G" }),
+    S("motif", 8), S("motif", 8, 4, { variant: "rise" }), S("riff", 8), S("brahms", 8, 3), S("gallop", 8), S("solo", 8), S("bsolo", 8, 4, { variant: "fast" }), S("motif", 8, 4, { variant: "rise", tonic: "G" }),
     S("triumph", 16), S("triumph", 16, 4, { tonic: "D" }), S("triumph", 8),
   ],
 });

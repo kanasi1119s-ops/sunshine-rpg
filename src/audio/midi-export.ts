@@ -35,9 +35,11 @@ function velocityOf(volume: number, boost: number): number {
 }
 
 // 楽器ごとの強さの補正（録音音源は楽器によって元の大きさが違うため）
-const BOOST: Partial<Record<Instrument, number>> = { brass: 0.95, strings: 1.05, pad: 1.0, guitar: 1.0, crunch: 0.95, distGuitar: 0.9, leadGuitar: 0.95, lead: 0.9, bass: 1.05, sub808: 1.0, keys: 1.0, piano: 1.05, harpsichord: 1.05, bell: 1.0, kick: 1.0, snare: 1.0, hihat: 0.9, crash: 0.95 };
+const BOOST: Partial<Record<Instrument, number>> = { brass: 0.95, slap: 1.0, strings: 1.05, pad: 1.0, guitar: 1.0, crunch: 0.95, distGuitar: 0.9, leadGuitar: 0.95, lead: 0.9, bass: 1.05, sub808: 1.0, keys: 1.0, piano: 1.05, harpsichord: 1.05, bell: 1.0, kick: 1.0, snare: 1.0, hihat: 0.9, crash: 0.95 };
 // 残響の量（MIDIのCC91）
 const REVERB: Partial<Record<Instrument, number>> = { pad: 70, choir: 80, strings: 55, bell: 70, chime: 60, echoGuitar: 60, bird: 40, wind: 60, stream: 40, rain: 40, lead: 40, leadGuitar: 40, piano: 40, keys: 35, guitar: 35 };
+// コーラス（音を広げる揺らぎ）の量（MIDIのCC93）
+const CHORUS: Partial<Record<Instrument, number>> = { strings: 60, pad: 70, choir: 60, keys: 45, guitar: 40, echoGuitar: 40, crunch: 25, distGuitar: 20, bell: 25, harpsichord: 20 };
 const ECHO_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "cowbell", "bell", "keys"]);
 
 function channelKey(track: Track, program: number): string {
@@ -96,6 +98,9 @@ export function scoreToMidi(score: Score): Uint8Array {
         list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 7, Math.round(118 * gainBoost)] });
         list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 10, Math.max(0, Math.min(127, pan))] });
         list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 91, inst ? REVERB[inst] ?? 30 : 30] });
+        list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 93, inst ? CHORUS[inst] ?? 0 : 0] });
+        // 主旋律の楽器には、揺らぎ（ビブラート）を少し
+        if (inst === "leadGuitar" || inst === "lead" || inst === "brass") list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 1, 26] });
       }
       return { channel, list };
     };
@@ -113,6 +118,14 @@ export function scoreToMidi(score: Score): Uint8Array {
           if (at > 0) l.push({ tick: at - 6, order: 1, bytes: [0xb0 | c, 64, 0] });
           l.push({ tick: at, order: 1, bytes: [0xb0 | c, 64, 127] });
         }
+      }
+    }
+    // キックに合わせた音量の凹み（電子音楽風のポンプ感）。1拍ごとに、頭で凹んで、次の拍に向かって戻る
+    if (score.pump && (inst === "pad" || inst === "choir" || inst === "strings")) {
+      for (let at = 0; at < endTick; at += PPQ) {
+        list.push({ tick: at, order: 1, bytes: [0xb0 | channel, 11, 62] });
+        list.push({ tick: at + Math.round(PPQ * 0.3), order: 1, bytes: [0xb0 | channel, 11, 100] });
+        list.push({ tick: at + Math.round(PPQ * 0.65), order: 1, bytes: [0xb0 | channel, 11, 127] });
       }
     }
     const boost = inst ? BOOST[inst] ?? 1 : 1;
@@ -141,7 +154,9 @@ export function scoreToMidi(score: Score): Uint8Array {
       } else if (inst === "crash") {
         lenScale = 3;
       }
-      const velocity = velocityOf(vol, boost);
+      // 曲の頭の2拍は強く（聴き手をつかむ、最初の一撃）
+      const strike = score.opening && startBeat < 2 ? 1.22 : 1;
+      const velocity = Math.min(127, Math.round(velocityOf(vol, boost) * strike));
       const len = Math.max(20, Math.round(n.durationBeats * PPQ * lenScale));
       const push = (pitch: number, at: number, vel: number, length: number, target: { channel: number; list: Ev[] } = { channel, list }): void => {
         const p = Math.max(0, Math.min(127, pitch));
@@ -150,13 +165,28 @@ export function scoreToMidi(score: Score): Uint8Array {
       };
       if (drumKey !== undefined) {
         push(drumKey, tick, velocity, len);
+        // 厚みとパンチ: キックは別のバスドラムを重ね、スネアはポップ・ロック系のセットで手拍子を薄く重ねる
+        if (inst === "kick") push(35, tick, Math.round(velocity * 0.55), len);
+        if (inst === "snare" && [8, 16, 24, 25].includes(score.drumKit ?? 0)) push(39, tick, Math.round(velocity * 0.32), len);
         continue;
       }
       const pitch = noteNameToMidi(n.note);
+      // ギターの長い音は、下から音程を持ち上げて入る（ベンド）。ほかの音に影響しないよう、音の後で戻す
+      if ((inst === "leadGuitar" || inst === "guitar") && n.durationBeats >= 1 && startBeat > 0) {
+        const bendFrom = 0x2000 - 0x1000;
+        const setBend = (at: number, v: number): void => {
+          list.push({ tick: Math.max(0, at), order: 1, bytes: [0xe0 | channel, v & 0x7f, (v >> 7) & 0x7f] });
+        };
+        setBend(tick - 3, bendFrom);
+        setBend(tick + 16, 0x2000 - 0x800);
+        setBend(tick + 34, 0x2000);
+      }
       push(pitch, tick, velocity, len);
       if (layer && layerSpec) push(pitch, tick, Math.max(14, Math.round(velocity * layerSpec.gain)), len, layer);
       if (inst === "crunch" || inst === "distGuitar") push(pitch + 7, tick, velocity, len); // パワーコードの5度
       if (inst === "distGuitar") push(pitch + 12, tick, Math.round(velocity * 0.8), len);
+      // 重さ: ディストーションギターには、1オクターブ下の音を薄く重ねる
+      if ((inst === "distGuitar" || inst === "crunch") && pitch - 12 >= 28) push(pitch - 12, tick, Math.round(velocity * 0.55), len);
       // 主旋律のエコー（付点8分・付点4分）。テンポに合わせて、少しずつ小さく
       if (inst && ECHO_INSTRUMENTS.has(inst) && n.durationBeats >= 0.4) {
         for (const [beats, gain] of [[0.75, 0.42], [1.5, 0.22]] as const) {
@@ -170,6 +200,16 @@ export function scoreToMidi(score: Score): Uint8Array {
           if (at < endTick) push(pitch, at, Math.max(14, Math.round(velocity * gain)), Math.min(len, PPQ));
         }
       }
+    }
+  }
+
+  // 曲の頭の一撃: クラッシュとバスドラムを最大の強さで、同時に鳴らす（ループのたびに、聴き手をつかむ）
+  if (score.opening) {
+    const list = midiTrackFor(DRUM_CHANNEL);
+    if (!list.some((e) => e.bytes[0] === 0xc9)) list.push({ tick: 0, order: 0, bytes: [0xc9, score.drumKit ?? 0] });
+    for (const [note, vel, len] of [[49, 127, PPQ * 3], [36, 127, 200], [35, 110, 200], [38, 96, 200]] as const) {
+      list.push({ tick: 0, order: 2, bytes: [0x99, note, vel] });
+      list.push({ tick: Math.min(len, endTick), order: 0, bytes: [0x89, note, 0] });
     }
   }
 
