@@ -42,7 +42,7 @@ function distortionCurve(drive: number): Float32Array<ArrayBuffer> {
 }
 
 /** BGM全体の出口。ほのかな残響と、音が重なっても割れないようにするコンプレッサーを通す。 */
-export function createBgmBus(ctx: Ctx, destination: AudioNode): GainNode {
+export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24): GainNode {
   // 最終段: 音が重なっても割れないようにする歯止め（リミッター）と、全体の音量の底上げ
   const limiter = ctx.createDynamicsCompressor();
   limiter.threshold.value = -4;
@@ -54,7 +54,18 @@ export function createBgmBus(ctx: Ctx, destination: AudioNode): GainNode {
   const makeup = ctx.createGain();
   makeup.gain.value = 1.5;
   makeup.connect(limiter);
+  // 音の仕上げ: 低音とキラキラした高音を少し持ち上げる（現代的なゲーム音楽らしい厚みと抜けの良さ）
+  const low = ctx.createBiquadFilter();
+  low.type = "lowshelf";
+  low.frequency.value = 110;
+  low.gain.value = 2.5;
+  const high = ctx.createBiquadFilter();
+  high.type = "highshelf";
+  high.frequency.value = 7500;
+  high.gain.value = 2.5;
+  low.connect(high);
   const comp = ctx.createDynamicsCompressor();
+  high.connect(comp);
   comp.threshold.value = -16;
   comp.knee.value = 12;
   comp.ratio.value = 4;
@@ -66,26 +77,31 @@ export function createBgmBus(ctx: Ctx, destination: AudioNode): GainNode {
   const dry = ctx.createGain();
   dry.gain.value = 0.85;
   bus.connect(dry);
-  dry.connect(comp);
+  dry.connect(low);
 
   const seconds = 2.2;
   const length = Math.floor(ctx.sampleRate * seconds);
   const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
   let seed = 987;
+  const preDelay = Math.floor(ctx.sampleRate * 0.02);
   for (let ch = 0; ch < 2; ch++) {
     const data = impulse.getChannelData(ch);
-    for (let i = 0; i < length; i++) {
+    let lp = 0;
+    for (let i = preDelay; i < length; i++) {
       seed = (seed * 1664525 + 1013904223) >>> 0;
-      data[i] = (seed / 2147483648 - 1) * Math.pow(1 - i / length, 2.6);
+      // 尾の高音を少しずつ落として、自然な余韻にする
+      const k = 0.55 - 0.4 * (i / length);
+      lp += ((seed / 2147483648 - 1) - lp) * k;
+      data[i] = lp * Math.pow(1 - (i - preDelay) / (length - preDelay), 2.6) * 2.2;
     }
   }
   const convolver = ctx.createConvolver();
   convolver.buffer = impulse;
   const wet = ctx.createGain();
-  wet.gain.value = 0.24;
+  wet.gain.value = wetLevel;
   bus.connect(convolver);
   convolver.connect(wet);
-  wet.connect(comp);
+  wet.connect(low);
   return bus;
 }
 
@@ -179,12 +195,16 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       o.start(t);
       o.stop(t + 0.36);
       out.push(o);
+      // 頭のカチッとした打撃感
+      const click = filter(ctx, "highpass", 2800, pluckGain(ctx, dest, t, v * 0.5, 0.001, 0.012));
+      out.push(noise(ctx, t, t + 0.03, click));
       break;
     }
     case "snare": {
       const hp = filter(ctx, "highpass", 1400, pluckGain(ctx, dest, t, v * 0.9, 0.002, 0.17));
       out.push(noise(ctx, t, t + 0.22, hp));
       out.push(osc(ctx, "triangle", 190, t, t + 0.14, pluckGain(ctx, dest, t, v * 0.5, 0.002, 0.09)));
+      out.push(osc(ctx, "triangle", 330, t, t + 0.08, pluckGain(ctx, dest, t, v * 0.25, 0.002, 0.05)));
       break;
     }
     case "hihat": {
@@ -244,8 +264,10 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       const g = sustainGain(ctx, dest, t, d, v, 0.012, 0.09);
       const input = guitar ? distorted(ctx, g, 5, 4200) : filter(ctx, "lowpass", 5200, g);
       const stop = t + d + 0.1;
-      const a = osc(ctx, guitar ? "sawtooth" : "square", f, t, stop, input, 0.7);
-      const b = osc(ctx, "sawtooth", f, t, stop, input, 0.3, 7);
+      const a = osc(ctx, guitar ? "sawtooth" : "square", f, t, stop, input, 0.6);
+      const b = osc(ctx, "sawtooth", f, t, stop, input, 0.3, 9);
+      // もう1本、逆側にずらして重ねる（現代的な厚みのある主旋律）
+      const c = osc(ctx, "sawtooth", f, t, stop, input, 0.3, -9);
       // ビブラート（音程をゆらす）。音が伸びたところから、少しずつかかる
       const lfo = ctx.createOscillator();
       lfo.frequency.value = 5.4;
@@ -255,9 +277,10 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       lfo.connect(depth);
       depth.connect(a.detune);
       depth.connect(b.detune);
+      depth.connect(c.detune);
       lfo.start(t);
       lfo.stop(stop);
-      out.push(a, b, lfo);
+      out.push(a, b, c, lfo);
       break;
     }
     case "keys": {
@@ -474,7 +497,34 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
   return out;
 }
 
-/** 楽器の指定がある音を予約する。指定がなければ空の配列を返す（呼び出し側が従来の音を鳴らす）。 */
+const ECHO_INSTRUMENTS = new Set(["lead", "leadGuitar", "cowbell", "bell", "keys"]);
+
+/**
+ * 楽器の指定がある音を予約する。指定がなければ空の配列を返す（呼び出し側が従来の音を鳴らす）。
+ * 左右の位置（pan）と、主旋律向けの楽器のテンポに合わせたエコー（付点8分と付点4分）をここでかける。
+ */
 export function scheduleInstrumentNote(ctx: Ctx, destination: AudioNode, event: ScheduledNote, when: number): Source[] {
-  return event.instrument ? voice(ctx, destination, event, when) : [];
+  if (!event.instrument) {
+    return [];
+  }
+  const build = (target: AudioNode, ev: ScheduledNote, at: number, pan: number): Source[] => {
+    let node = target;
+    if (pan !== 0 && "createStereoPanner" in ctx) {
+      const panner = ctx.createStereoPanner();
+      panner.pan.value = Math.max(-1, Math.min(1, pan));
+      panner.connect(target);
+      node = panner;
+    }
+    return voice(ctx, node, ev, at);
+  };
+  const pan = event.pan ?? 0;
+  const out = build(destination, event, when, pan);
+  // 曲（ループするBGM）の主旋律だけにエコーをかける。効果音（1回きり）にはかけない
+  if (event.beatSec > 0 && ECHO_INSTRUMENTS.has(event.instrument) && event.durationSec >= event.beatSec * 0.4) {
+    const echoes: [number, number, number][] = [[0.75, 0.3, 0.45], [1.5, 0.13, -0.45]];
+    for (const [beats, gain, side] of echoes) {
+      out.push(...build(destination, { ...event, volume: event.volume * gain, durationSec: Math.min(event.durationSec, event.beatSec) }, when + beats * event.beatSec, pan * 0.5 + side));
+    }
+  }
+  return out;
 }

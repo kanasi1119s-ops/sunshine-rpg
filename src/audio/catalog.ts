@@ -44,31 +44,31 @@ export const CATALOG: CatalogEntry[] = [
   song("序章 灯里", "town-touri", "灯里の朝", "灯里の町・灯里支部", "folk", "G", false, 96, 102),
   song("序章 灯里", "outskirts", "町外れの風", "町外れ（歪みの発生地点）", "nature", "D", true, 70, 103),
   song("序章 灯里", "battle", "戦いの合図", "通常戦闘", "hardcore", "E", true, 184, 104),
-  song("序章 灯里", "boss-touri", "灯里の歪みとの決戦", "ボス戦「灯里の歪み」", "rock", "A", true, 148, 105),
+  song("序章 灯里", "boss-touri", "灯里の歪みとの決戦", "ボス戦「灯里の歪み」", "rock", "A", true, 172, 105, { drive: true }),
   // 第1章 麦香野
   song("第1章 麦香野", "town-mugikano", "麦香野の風車", "麦香野の村", "folk", "F", false, 104, 106),
   song("第1章 麦香野", "water-source", "涸れゆく水源", "水源（採掘跡）", "nature", "A", true, 64, 107),
-  song("第1章 麦香野", "boss-mugikano", "水涸れの歪み", "ボス戦「水涸れの歪み」", "electro", "D", true, 156, 108),
+  song("第1章 麦香野", "boss-mugikano", "水涸れの歪み", "ボス戦「水涸れの歪み」", "electro", "D", true, 176, 108, { drive: true }),
   // 第2章 硝子湖
   song("第2章 硝子湖", "town-garasuko", "硝子湖の港", "硝子湖の町", "jazz", "Bb", false, 112, 109),
   song("第2章 硝子湖", "warehouse", "夜の倉庫", "密輸倉庫", "rnb", "E", true, 84, 110),
-  song("第2章 硝子湖", "boss-garasuko", "積荷の歪み", "ボス戦「積荷の歪み」", "progmetal", "E", true, 132, 111),
+  song("第2章 硝子湖", "boss-garasuko", "積荷の歪み", "ボス戦「積荷の歪み」", "progmetal", "E", true, 152, 111, { drive: true }),
   // 第3章 鉄鏈鉱山
   song("第3章 鉄鏈鉱山", "town-tetsu", "鉄鏈の町", "鉄鏈鉱山の町", "rock", "D", false, 116, 112),
   song("第3章 鉄鏈鉱山", "mine", "坑道の奥", "坑内", "electro", "C", true, 100, 113),
-  song("第3章 鉄鏈鉱山", "boss-tetsu", "実験の歪み", "ボス戦「実験の歪み」", "deathmetal", "C", true, 210, 114),
+  song("第3章 鉄鏈鉱山", "boss-tetsu", "実験の歪み", "ボス戦「実験の歪み」", "deathmetal", "C", true, 214, 114, { drive: true }),
   // 第4章 砂音
   song("第4章 砂音", "town-sanone", "砂音の市場", "砂音の町", "samba", "G", false, 118, 115),
   song("第4章 砂音", "camp", "隊商の野営地", "隊商の野営地", "nature", "D", true, 76, 116),
-  song("第4章 砂音", "boss-sanone", "砂嵐の歪み", "ボス戦「砂嵐の歪み」", "metal", "D", true, 168, 117),
+  song("第4章 砂音", "boss-sanone", "砂嵐の歪み", "ボス戦「砂嵐の歪み」", "metal", "D", true, 186, 117, { drive: true }),
   // 第5章 霧断崖
   song("第5章 霧断崖", "town-kiri", "霧断崖の鐘", "霧断崖の町", "classic", "B", true, 84, 118),
   song("第5章 霧断崖", "archive", "記録の間", "記録の間", "mystery", "A", true, 88, 119),
-  song("第5章 霧断崖", "boss-kiri", "予言の歪み", "ボス戦「予言の歪み」", "progmetal", "A", true, 124, 120),
+  song("第5章 霧断崖", "boss-kiri", "予言の歪み", "ボス戦「予言の歪み」", "progmetal", "A", true, 148, 120, { drive: true }),
   // 第6章 霜原
   song("第6章 霜原", "town-shimo", "霜原の灯", "霜原の町", "space", "F#", true, 66, 121),
   song("第6章 霜原", "facility", "戦跡の施設", "戦跡の施設", "electro", "B", true, 108, 122),
-  song("第6章 霜原", "boss-shimo", "試作機の歪み", "ボス戦「試作機の歪み」", "epic", "G", true, 150, 123),
+  song("第6章 霜原", "boss-shimo", "試作機の歪み", "ボス戦「試作機の歪み」", "epic", "G", true, 176, 123, { drive: true }),
   // 手で書いた7曲
   hand("共通・フィールド", "field", "フィールド（町の外の道）", "rock-road"),
   hand("共通・戦闘", "elite", "強敵との戦闘", "metal-roar"),
@@ -80,13 +80,13 @@ export const CATALOG: CatalogEntry[] = [
   // 第7章 浮嶼 / 第8章 灯芯都 / 終章
   song("第7章 浮嶼", "town-ukishima", "浮嶼の空", "浮嶼の町", "nature", "C", false, 78, 131),
   song("第7章 浮嶼", "ruins-ukishima", "浮嶼の遺構", "浮嶼の遺構", "mystery", "F#", true, 92, 132),
-  song("第7章 浮嶼", "boss-ukishima", "浮嶼の主", "ボス戦（第7章）", "epic", "E", true, 156, 133),
+  song("第7章 浮嶼", "boss-ukishima", "浮嶼の主", "ボス戦（第7章）", "epic", "E", true, 180, 133, { drive: true }),
   song("第8章 灯芯都", "town-toushin", "灯芯都の光", "灯芯都の町", "electro", "A", false, 124, 134),
   song("第8章 灯芯都", "hall-gikai", "合議会堂", "合議会堂", "classic", "C", true, 84, 135, { beats: 3 }),
-  song("第8章 灯芯都", "boss-toushin", "灯芯都の番人", "ボス戦（第8章）", "progmetal", "D", true, 140, 136),
+  song("第8章 灯芯都", "boss-toushin", "灯芯都の番人", "ボス戦（第8章）", "progmetal", "D", true, 160, 136, { drive: true }),
   song("終章 虚灯宮", "kyoto-road", "虚灯宮への道", "虚灯宮（前半）", "space", "D", true, 70, 137),
-  song("終章 虚灯宮", "boss-final", "最終決戦", "最終ボス戦（第1形態）", "epic", "E", true, 168, 138),
-  song("終章 虚灯宮", "boss-final-2", "灯の環、砕けるとき", "最終ボス戦（第2形態）", "deathmetal", "E", true, 200, 139),
+  song("終章 虚灯宮", "boss-final", "最終決戦", "最終ボス戦（第1形態）", "epic", "E", true, 188, 138, { drive: true }),
+  song("終章 虚灯宮", "boss-final-2", "灯の環、砕けるとき", "最終ボス戦（第2形態）", "deathmetal", "E", true, 212, 139, { drive: true }),
   song("クリア後", "secret-boss", "初源の歪み", "裏ボス「初源の歪み」", "discord", "F", true, 72, 140),
   song("クリア後", "kyoto-deep", "虚灯宮・深部", "虚灯宮・深部", "mystery", "Bb", true, 84, 141),
   song("イベント", "opening", "旅立ちの朝", "オープニング（旅立ち）", "jpop", "G", false, 128, 142),
@@ -99,7 +99,7 @@ export const CATALOG: CatalogEntry[] = [
   song("イベント", "bond", "仲間のちから", "仲間との絆・決意の場面", "jpop", "E", false, 146, 149),
   song("イベント", "chase", "追われる夜", "追跡・逃走イベント", "phonk", "A", true, 140, 151),
   song("第8章 灯芯都", "alley-toushin", "灯芯都の裏通り", "灯芯都の路地・裏取引の場面", "phonk", "D", true, 132, 152),
-  song("クリア後", "eight-gods", "八神の試練", "裏ボス「八神」", "progmetal", "B", true, 160, 150),
+  song("クリア後", "eight-gods", "八神の試練", "裏ボス「八神」", "progmetal", "B", true, 178, 150, { drive: true }),
 ];
 
 const cache = new Map<string, Score>();

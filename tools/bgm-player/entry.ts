@@ -1,4 +1,6 @@
 // BGMプレイヤー用の入り口。ゲーム本体と同じ再生エンジン（AudioEngine）と曲データをそのまま使う。
+import soundfontUrl from "../../src/audio/soundfont/game.sf3?url";
+import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url";
 import { AudioEngine } from "../../src/audio/audio-engine";
 import { getScoreDurationSec, type Score } from "../../src/audio/score";
 import { CATALOG, getTrack } from "../../src/audio/catalog";
@@ -7,6 +9,22 @@ import { SE_LIBRARY } from "../../src/audio/se-library";
 interface Entry { group: string; title: string; score: Score; scene?: string; style?: string }
 const bgm: Entry[] = CATALOG.map((e) => ({ group: e.group, title: e.title, scene: e.scene, style: e.styleLabel, score: getTrack(e.id) }));
 const effects: Entry[] = SE_LIBRARY.map((e) => ({ group: e.group, title: e.name, score: e.score }));
+// 1ファイルのHTMLでは外部ファイルを読み込めないので、埋め込んだ素材（データURL）を、録音音源の再生に渡す
+function bytesOf(dataUrl: string): Uint8Array {
+  const bin = atob(dataUrl.slice(dataUrl.indexOf(",") + 1));
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+try {
+  globalThis.__sampledAssets = {
+    soundfont: bytesOf(soundfontUrl).buffer as ArrayBuffer,
+    // データURLのまま渡す（file:// で開いたときも読める。Blob URLだと読み込めないことがある）
+    processorUrl,
+  };
+} catch (error) {
+  console.warn("録音音源の埋め込みを読めませんでした:", error);
+}
 const engine = new AudioEngine();
 (window as unknown as { BGM: unknown }).BGM = {
   bgm: bgm.map((e) => ({ group: e.group, title: e.title, scene: e.scene, style: e.style, bpm: e.score.tempoBpm, sec: getScoreDurationSec(e.score) })),
@@ -16,4 +34,6 @@ const engine = new AudioEngine();
   stop: () => engine.stopBgm(),
   playSe: (i: number) => engine.playSe(effects[i].score),
   volume: (v: number) => engine.setBgmVolume(v),
+  synthOnly: (on: boolean) => engine.setSynthOnly(on),
+  sampled: () => engine.isSampledReady(),
 };

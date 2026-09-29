@@ -2,11 +2,12 @@ import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 /**
- * 本編一式（`dist/`、公開ビルド）が32メガビット（4MiB）の容量予算に収まっているかを確認する
+ * 本編一式（`dist/`、公開ビルド）が容量予算（現在64メガビット=8MiB。もとは32メガビット）に収まっているかを確認する
  * （`docs/decisions.md`・`.claude/skills/rpg-cycle/game-design.md` 2-4 参照）。
- * 1メガビット=128KiBとして、32メガビット=4MiB。
+ * 1メガビット=128KiBとして、64メガビット=8MiB。
  */
-const BUDGET_BYTES = 32 * 128 * 1024; // 32メガビット = 4MiB
+const BUDGET_MEGABITS = 64; // 2026-09-30 に人間の指示で 32 → 64 に拡大（録音音源の追加。docs/decisions.md）
+const BUDGET_BYTES = BUDGET_MEGABITS * 128 * 1024;
 const DIST_DIR = "dist";
 
 function totalSize(dir) {
@@ -29,9 +30,9 @@ const percent = ((used / BUDGET_BYTES) * 100).toFixed(1);
 
 if (used > BUDGET_BYTES) {
   console.error(
-    `[容量チェック] NG: ${DIST_DIR}/ が ${usedKiB}KiB で、32メガビット予算（${budgetKiB}KiB）を超えています。`,
+    `[容量チェック] NG: ${DIST_DIR}/ が ${usedKiB}KiB で、${BUDGET_MEGABITS}メガビット予算（${budgetKiB}KiB）を超えています。`,
   );
   process.exit(1);
 }
 
-console.log(`[容量チェック] OK: ${DIST_DIR}/ は ${usedKiB}KiB（32メガビット予算の${percent}%）。`);
+console.log(`[容量チェック] OK: ${DIST_DIR}/ は ${usedKiB}KiB（${BUDGET_MEGABITS}メガビット予算の${percent}%）。`);

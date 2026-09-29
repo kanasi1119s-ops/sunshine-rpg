@@ -8,7 +8,7 @@ const root = new URL("../../", import.meta.url).pathname;
 const out = path.resolve(process.argv[2] || root + "dist-bgm-player/index.html");
 const result = await build({
   root, configFile: false, logLevel: "warn",
-  build: { write: false, minify: true, lib: { entry: root + "tools/bgm-player/entry.ts", name: "BgmPlayer", formats: ["iife"], fileName: "bgm" } },
+  build: { write: false, assetsInlineLimit: 100_000_000, minify: true, lib: { entry: root + "tools/bgm-player/entry.ts", name: "BgmPlayer", formats: ["iife"], fileName: "bgm" } },
 });
 const output = (Array.isArray(result) ? result[0] : result).output.find((o) => o.type === "chunk");
 const js = output.code.replace(/<\/script/gi, "<\\/script");
