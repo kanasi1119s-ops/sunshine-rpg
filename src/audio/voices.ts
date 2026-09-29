@@ -43,13 +43,24 @@ function distortionCurve(drive: number): Float32Array<ArrayBuffer> {
 
 /** BGM全体の出口。ほのかな残響と、音が重なっても割れないようにするコンプレッサーを通す。 */
 export function createBgmBus(ctx: Ctx, destination: AudioNode): GainNode {
+  // 最終段: 音が重なっても割れないようにする歯止め（リミッター）と、全体の音量の底上げ
+  const limiter = ctx.createDynamicsCompressor();
+  limiter.threshold.value = -4;
+  limiter.knee.value = 0;
+  limiter.ratio.value = 20;
+  limiter.attack.value = 0.002;
+  limiter.release.value = 0.1;
+  limiter.connect(destination);
+  const makeup = ctx.createGain();
+  makeup.gain.value = 1.5;
+  makeup.connect(limiter);
   const comp = ctx.createDynamicsCompressor();
   comp.threshold.value = -16;
   comp.knee.value = 12;
   comp.ratio.value = 4;
   comp.attack.value = 0.004;
   comp.release.value = 0.2;
-  comp.connect(destination);
+  comp.connect(makeup);
 
   const bus = ctx.createGain();
   const dry = ctx.createGain();
@@ -336,6 +347,113 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       bp.frequency.exponentialRampToValueAtTime(f * 6, t + dur);
       bp.connect(sustainGain(ctx, dest, t, dur, v * 1.4, dur * 0.45, dur * 0.5));
       out.push(noise(ctx, t, t + dur + 0.1, bp));
+      break;
+    }
+    case "wind": {
+      // 風: ノイズの帯域がゆっくり上下し、吹き始めと吹き終わりがなめらか
+      const dur = Math.max(0.5, d);
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.Q.value = 0.9;
+      bp.frequency.setValueAtTime(f, t);
+      bp.frequency.linearRampToValueAtTime(f * 1.7, t + dur * 0.5);
+      bp.frequency.linearRampToValueAtTime(f * 1.1, t + dur);
+      bp.connect(sustainGain(ctx, dest, t, dur, v * 1.6, dur * 0.4, dur * 0.4));
+      out.push(noise(ctx, t, t + dur * 1.4 + 0.1, bp));
+      break;
+    }
+    case "rain": {
+      const dur = Math.max(0.5, d);
+      const hp = filter(ctx, "highpass", 2500, sustainGain(ctx, dest, t, dur, v * 0.9, 0.4, 0.5));
+      const lp = filter(ctx, "lowpass", 9000, hp);
+      out.push(noise(ctx, t, t + dur + 0.6, lp));
+      break;
+    }
+    case "stream": {
+      // せせらぎ: 2つの帯域を、速さの違うゆらぎ（LFO）で揺らす
+      const dur = Math.max(0.5, d);
+      const g = sustainGain(ctx, dest, t, dur, v, 0.5, 0.5);
+      [[1100, 6.3, 380], [2300, 9.1, 700]].forEach(([center, rate, depth]) => {
+        const bp = ctx.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.Q.value = 2.2;
+        bp.frequency.value = center;
+        bp.connect(g);
+        const lfo = ctx.createOscillator();
+        lfo.frequency.value = rate;
+        const amount = ctx.createGain();
+        amount.gain.value = depth;
+        lfo.connect(amount);
+        amount.connect(bp.frequency);
+        lfo.start(t);
+        lfo.stop(t + dur + 0.6);
+        out.push(noise(ctx, t, t + dur + 0.6, bp), lfo);
+      });
+      break;
+    }
+    case "bird": {
+      // 小鳥: 短い上昇音を3つ、ゆるいリズムで
+      [0, 0.13, 0.26].forEach((delay, n) => {
+        const start = t + delay;
+        const o = ctx.createOscillator();
+        o.type = "sine";
+        o.frequency.setValueAtTime(f * (n === 1 ? 1.25 : 1), start);
+        o.frequency.exponentialRampToValueAtTime(f * (n === 2 ? 1.9 : 1.5), start + 0.09);
+        o.connect(pluckGain(ctx, dest, start, v * 0.7, 0.005, 0.1));
+        o.start(start);
+        o.stop(start + 0.14);
+        out.push(o);
+      });
+      break;
+    }
+    case "crickets": {
+      // 虫の声: 高い音を、細かく断続させる
+      const dur = Math.max(0.5, d);
+      const g = ctx.createGain();
+      g.gain.value = 0;
+      const gate = ctx.createOscillator();
+      gate.type = "square";
+      gate.frequency.value = 14;
+      const gateDepth = ctx.createGain();
+      gateDepth.gain.value = v * 0.5;
+      const offset = ctx.createConstantSource();
+      offset.offset.value = v * 0.5;
+      gate.connect(gateDepth);
+      gateDepth.connect(g.gain);
+      offset.connect(g.gain);
+      const env = sustainGain(ctx, dest, t, dur, 1, 0.6, 0.6);
+      g.connect(env);
+      gate.start(t);
+      offset.start(t);
+      gate.stop(t + dur + 0.7);
+      offset.stop(t + dur + 0.7);
+      out.push(osc(ctx, "sine", f, t, t + dur + 0.7, g, 1), gate, offset);
+      break;
+    }
+    case "sub808": {
+      // 808の低音: 頭で少し音程が下がり、長く伸びる。倍音を足すために軽く歪ませる
+      const len = Math.max(0.2, d * 1.6);
+      const g = sustainGain(ctx, dest, t, len, v, 0.004, Math.min(0.15, len * 0.4));
+      const sh = ctx.createWaveShaper();
+      sh.curve = distortionCurve(2.2);
+      sh.connect(g);
+      const o = ctx.createOscillator();
+      o.type = "sine";
+      o.frequency.setValueAtTime(f * 1.6, t);
+      o.frequency.exponentialRampToValueAtTime(f, t + 0.06);
+      o.connect(sh);
+      o.start(t);
+      o.stop(t + len + 0.2);
+      out.push(o);
+      break;
+    }
+    case "cowbell": {
+      // カウベル: 少しずれた2つの四角波を、帯域を絞って短くはじく
+      const g = pluckGain(ctx, dest, t, v, 0.002, Math.max(0.12, Math.min(d * 0.9, 0.35)));
+      const bp = filter(ctx, "bandpass", f * 2.2, g, 1.6);
+      const stop = t + 0.45;
+      out.push(osc(ctx, "square", f, t, stop, bp, 0.6));
+      out.push(osc(ctx, "square", f * 1.504, t, stop, bp, 0.6));
       break;
     }
     case "chime": {

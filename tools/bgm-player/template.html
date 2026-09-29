@@ -24,14 +24,19 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 20px; margin: 0; 
 button { font: inherit; color: inherit; cursor: pointer; }
 .stop, .play { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 8px 14px; }
 .stop:focus-visible, .row:focus-visible, .se:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.meter { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
-.meter i { display: block; height: 100%; width: 0; background: var(--accent); }
+.seekrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.seekrow input { flex: 1 1 10em; min-width: 0; accent-color: var(--accent); }
+.small { padding: 6px 10px; font-size: 13px; }
+.time { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+button:disabled { opacity: .45; cursor: default; }
 .vol { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
 .vol input { flex: 1; max-width: 240px; accent-color: var(--accent); }
 h2 { font-family: var(--display); font-weight: 400; font-size: 16px; letter-spacing: .06em; margin: 26px 0 8px; color: var(--muted); }
 ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .row { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; }
 .row .t { flex: 1; min-width: 0; }
+.row .t { display: grid; gap: 2px; }
+.row .sc { color: var(--muted); font-size: 12px; }
 .row .m { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .row .ic { width: 1.2em; color: var(--accent); font-family: var(--display); }
 .row[aria-pressed="true"] { background: var(--now); border-color: var(--accent); }
@@ -42,13 +47,18 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 <div class="wrap">
   <div class="bar">
     <h1>サンシャインRPG BGMプレイヤー</h1>
-    <div class="now"><div class="name" id="name">曲を選ぶと再生します</div><div class="sub" id="sub"></div><button class="stop" id="stop" type="button">停止</button></div>
-    <div class="meter" aria-hidden="true"><i id="bar"></i></div>
+    <div class="now"><div class="name" id="name">曲を選ぶと再生します</div><div class="sub" id="sub"></div><button class="stop" id="pause" type="button" disabled>一時停止</button><button class="stop" id="stop" type="button">停止</button></div>
+    <div class="seekrow">
+      <button class="stop small" id="back" type="button" aria-label="10秒戻る" disabled>−10秒</button>
+      <input id="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="再生位置" disabled>
+      <button class="stop small" id="fwd" type="button" aria-label="10秒進む" disabled>+10秒</button>
+      <span class="time" id="time">0:00 / 0:00</span>
+    </div>
     <label class="vol">音量 <input id="vol" type="range" min="0" max="100" value="60"></label>
   </div>
   <div id="list"></div>
   <div id="fx"></div>
-  <p class="note">ゲーム本体と同じ再生エンジンと曲データで鳴らしています（曲は自動でくり返します）。曲名の一部は仮です。新曲は、どの場面で使うかまだ決まっていません。</p>
+  <p class="note">ゲーム本体と同じ再生エンジンと曲データで鳴らしています（曲は自動でくり返します）。曲名の一部は仮です。</p>
 </div>
 <script>/*BUNDLE*/</script>
 <script>
@@ -61,10 +71,11 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
     if (e.group !== group) { group = e.group; var h = document.createElement("h2"); h.textContent = group; list.appendChild(h); ul = document.createElement("ul"); list.appendChild(ul); }
     var li = document.createElement("li"), b = document.createElement("button");
     b.type = "button"; b.className = "row"; b.setAttribute("aria-pressed", "false");
-    b.innerHTML = '<span class="ic">▶</span><span class="t"></span><span class="m"></span>';
-    b.querySelector(".t").textContent = e.title;
+    b.innerHTML = '<span class="ic">▶</span><span class="t"><span class="tt"></span><small class="sc"></small></span><span class="m"></span>';
+    b.querySelector(".tt").textContent = e.title;
+    b.querySelector(".sc").textContent = e.scene + " ／ " + e.style;
     b.querySelector(".m").textContent = "♩" + e.bpm + "  " + mmss(e.sec);
-    b.addEventListener("click", function () { select(i); });
+    b.addEventListener("click", function () { select(i, 0); });
     li.appendChild(b); ul.appendChild(li); rows.push(b);
   });
   var fxGroup = "", fxBox = null;
@@ -78,23 +89,41 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
     b.addEventListener("click", function () { B.playSe(i); });
     fxBox.appendChild(b);
   });
-  function select(i) {
-    if (cur >= 0) { rows[cur].setAttribute("aria-pressed", "false"); rows[cur].querySelector(".ic").textContent = "▶"; }
-    cur = i; B.play(i); t0 = performance.now();
-    rows[i].setAttribute("aria-pressed", "true"); rows[i].querySelector(".ic").textContent = "♪";
+  var seek = document.getElementById("seek"), timeEl = document.getElementById("time"), dragging = false, paused = false, pausedPos = 0;
+  function enable(on) { ["pause", "back", "fwd"].forEach(function (id) { document.getElementById(id).disabled = !on; }); seek.disabled = !on; }
+  function setRowState(i, on) { rows[i].setAttribute("aria-pressed", on ? "true" : "false"); rows[i].querySelector(".ic").textContent = on ? "♪" : "▶"; }
+  function select(i, offset) {
+    if (cur >= 0) setRowState(cur, false);
+    cur = i; paused = false; document.getElementById("pause").textContent = "一時停止";
+    B.play(i, offset || 0); setRowState(i, true); enable(true);
+    seek.max = B.bgm[i].sec; seek.value = offset || 0;
     document.getElementById("name").textContent = B.bgm[i].title;
     document.getElementById("sub").textContent = B.bgm[i].group;
     cancelAnimationFrame(raf); tick();
   }
+  function show(pos) { timeEl.textContent = mmss(pos) + " / " + mmss(B.bgm[cur].sec); }
   function tick() {
-    var e = B.bgm[cur]; var p = ((performance.now() - t0) / 1000 % e.sec) / e.sec;
-    document.getElementById("bar").style.width = (p * 100).toFixed(1) + "%";
+    if (!dragging && !paused) { var pos = B.pos(); seek.value = pos; show(pos); }
     raf = requestAnimationFrame(tick);
   }
+  function jump(pos) {
+    var sec = B.bgm[cur].sec; pos = ((pos % sec) + sec) % sec;
+    if (paused) { pausedPos = pos; seek.value = pos; show(pos); } else { B.play(cur, pos); }
+  }
+  seek.addEventListener("input", function () { dragging = true; show(Number(seek.value)); });
+  seek.addEventListener("change", function () { dragging = false; jump(Number(seek.value)); });
+  document.getElementById("back").addEventListener("click", function () { jump((paused ? pausedPos : B.pos()) - 10); });
+  document.getElementById("fwd").addEventListener("click", function () { jump((paused ? pausedPos : B.pos()) + 10); });
+  document.getElementById("pause").addEventListener("click", function () {
+    if (cur < 0) return;
+    if (!paused) { pausedPos = B.pos(); B.stop(); paused = true; this.textContent = "再開"; }
+    else { B.play(cur, pausedPos); paused = false; this.textContent = "一時停止"; }
+  });
   document.getElementById("stop").addEventListener("click", function () {
-    B.stop(); cancelAnimationFrame(raf); document.getElementById("bar").style.width = "0";
-    if (cur >= 0) { rows[cur].setAttribute("aria-pressed", "false"); rows[cur].querySelector(".ic").textContent = "▶"; }
-    cur = -1; document.getElementById("name").textContent = "停止中"; document.getElementById("sub").textContent = "";
+    B.stop(); cancelAnimationFrame(raf); paused = false; document.getElementById("pause").textContent = "一時停止";
+    if (cur >= 0) setRowState(cur, false);
+    cur = -1; enable(false); seek.value = 0; timeEl.textContent = "0:00 / 0:00";
+    document.getElementById("name").textContent = "停止中"; document.getElementById("sub").textContent = "";
   });
   document.getElementById("vol").addEventListener("input", function (ev) { B.volume(ev.target.value / 100); });
   B.volume(0.6);

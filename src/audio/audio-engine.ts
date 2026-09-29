@@ -1,8 +1,8 @@
 import { createBgmBus, scheduleInstrumentNote, type Source } from "./voices";
 import { flattenScore, getScoreDurationSec, type Score, type ScheduledNote } from "./score";
 
-const SCHEDULE_AHEAD_SEC = 3;
-const SCHEDULE_INTERVAL_MS = 1000;
+const SCHEDULE_AHEAD_SEC = 2.5;
+const SCHEDULE_INTERVAL_MS = 250;
 
 /**
  * Web Audio APIでBGM・効果音を鳴らす。
@@ -19,9 +19,11 @@ export class AudioEngine {
   private muted = false;
 
   private bgmLoopHandle: number | null = null;
-  private activeBgmNodes: Source[] = [];
+  private activeBgmNodes = new Set<Source>();
   /** BGMだけに、ほんのり残響をかけるための入り口（`ensureContext`で用意する）。 */
   private bgmBus: GainNode | null = null;
+  private bgmLoopStart = 0;
+  private bgmDurationSec = 0;
 
   /** 最初のユーザー操作のタイミングで呼ぶ。AudioContextを用意し、一時停止も解除する。 */
   private ensureContext(): AudioContext {
@@ -103,7 +105,8 @@ export class AudioEngine {
     }
   }
 
-  playBgm(score: Score): void {
+  /** `offsetSec`: 曲の途中（この秒数の位置）から鳴らす。BGMプレイヤーの「聴きたい部分から再生」用。 */
+  playBgm(score: Score, offsetSec = 0): void {
     this.stopBgm();
     const ctx = this.ensureContext();
     const durationSec = getScoreDurationSec(score);
@@ -111,26 +114,54 @@ export class AudioEngine {
       return;
     }
 
-    let nextStart = ctx.currentTime + 0.05;
+    // 曲全体を一度に予約すると、長い曲では数千個の音を一気に作ってしまい、音が途切れたり出なくなる。
+    // そこで、先の数秒ぶんだけを少しずつ予約する（次の周回も同じ要領でつなぐ）。
+    const events = flattenScore(score).sort((x, y) => x.startSec - y.startSec);
+    const offset = Math.max(0, Math.min(offsetSec, durationSec - 0.01));
+    let loopStart = ctx.currentTime + 0.08 - offset;
+    let index = 0;
+    while (index < events.length && events[index].startSec < offset) {
+      index++;
+    }
+    this.bgmLoopStart = loopStart;
+    this.bgmDurationSec = durationSec;
 
     const scheduleAhead = (): void => {
-      while (nextStart < ctx.currentTime + SCHEDULE_AHEAD_SEC) {
-        const events = flattenScore(score);
-        for (const event of events) {
-          const nodes = this.scheduleNote(ctx, this.bgmBus!, event, nextStart + event.startSec, true);
-          this.activeBgmNodes.push(...nodes);
+      const horizon = ctx.currentTime + SCHEDULE_AHEAD_SEC;
+      for (;;) {
+        if (index >= events.length) {
+          if (!score.loop) {
+            return;
+          }
+          index = 0;
+          loopStart += durationSec;
+          this.bgmLoopStart = loopStart;
         }
-        nextStart += durationSec;
-        if (!score.loop) {
+        const event = events[index];
+        const when = loopStart + event.startSec;
+        if (when > horizon) {
           return;
         }
+        const nodes = this.scheduleNote(ctx, this.bgmBus!, event, Math.max(when, ctx.currentTime), true);
+        for (const node of nodes) {
+          this.activeBgmNodes.add(node);
+          node.onended = () => this.activeBgmNodes.delete(node);
+        }
+        index++;
       }
     };
 
     scheduleAhead();
-    if (score.loop) {
-      this.bgmLoopHandle = window.setInterval(scheduleAhead, SCHEDULE_INTERVAL_MS);
+    this.bgmLoopHandle = window.setInterval(scheduleAhead, SCHEDULE_INTERVAL_MS);
+  }
+
+  /** いま鳴っているBGMの、曲の中での位置（秒）。鳴っていなければ0。 */
+  getBgmPositionSec(): number {
+    if (!this.ctx || this.bgmLoopHandle === null || this.bgmDurationSec <= 0) {
+      return 0;
     }
+    const pos = this.ctx.currentTime - this.bgmLoopStart;
+    return Math.max(0, pos % this.bgmDurationSec);
   }
 
   stopBgm(): void {
@@ -145,7 +176,7 @@ export class AudioEngine {
         // すでに再生が終わっているノードは無視する。
       }
     }
-    this.activeBgmNodes = [];
+    this.activeBgmNodes.clear();
   }
 
   setBgmVolume(volume: number): void {
