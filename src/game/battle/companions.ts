@@ -70,10 +70,30 @@ export const GUIDE: CompanionDefinition = {
   }),
 };
 
+/** オルカ（鉄鏈鉱山出身、地固系の元鉱山労働者）。第3章で仲間に加わる。打たれ強く、重い一撃で押す。 */
+export const ORCA: CompanionDefinition = {
+  id: "orca",
+  name: "オルカ",
+  growth: { hpGrowth: 5, mpGrowth: 1, attackGrowth: 3, defenseGrowth: 3, speedGrowth: 1 },
+  skill: { id: "iwakudaki-no-ikki", name: "岩砕きの一撃", mpCost: 3, powerMultiplier: 1.7 },
+  createInitialStats: () => ({
+    level: 1,
+    exp: 0,
+    maxHp: 32,
+    hp: 32,
+    maxMp: 6,
+    mp: 6,
+    attack: 14,
+    defense: 9,
+    speed: 7,
+  }),
+};
+
 export const COMPANIONS: Record<string, CompanionDefinition> = {
   [RETO.id]: RETO,
   [MINA.id]: MINA,
   [GUIDE.id]: GUIDE,
+  [ORCA.id]: ORCA,
 };
 
 export function createCompanionCombatant(companion: CompanionDefinition, stats: LeveledStats): Combatant {
