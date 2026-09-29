@@ -797,6 +797,7 @@ nsBtn.onclick = () => {
 const ampBox = h("div", {});
 const AMP_TYPES: [AmpSetting["type"], string][] = [
   ["auto", "おまかせ（曲の設定どおり）"], ["clean", "クリーン"], ["overdrive", "オーバードライブ"], ["distortion", "ディストーション"], ["metal", "メタルゾーン"], ["prs", "なめらかなリード（PRS風）"], ["nam", "NAMのアンプモデル（実機を学習したもの）"],
+  ["jazz", "ジャズ（太く柔らかい）"], ["blues", "ブルース（浅く温かい歪み）"], ["funk", "ファンク（明るく歯切れよい）"], ["crunch", "クランチ（ざらっと浅い歪み）"], ["hardrock", "ハードロック（深い歪み）"], ["punk", "パンク（勢いのある歪み）"], ["fuzz", "ファズ（荒々しく不穏）"], ["shoegaze", "シューゲイザー（霞んだ音の壁）"], ["lofi", "ローファイ（古い録音）"], ["retro8bit", "レトロ8bit（粗い階段の音）"], ["radio", "ラジオ・電話（遠くの音）"],
 ];
 function slider(label: string, min: number, max: number, step: number, value: number, on: (v: number) => void): HTMLElement {
   const input = h("input", { type: "range", min: String(min), max: String(max), step: String(step), value: String(value) });

@@ -29,9 +29,15 @@ export type Instrument =
   // フォンク向け: 重く歪んだ低音（808）とカウベル
   | "sub808" | "cowbell";
 
+/**
+ * ジャンル別のアンプ（2026-09-30 追加）。ジャズ・ブルース・ファンク・クランチ・ハードロック・パンク・ファズ・
+ * シューゲイザー・ローファイ・レトロ8bit・ラジオ。作り方は `amp-rack.ts`、向いている場面は `docs/sound/composition-notes.md`。
+ */
+export type GenreAmpType = "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio";
+
 /** ギターなどの音づくり（アンプ）の設定。`auto`は、曲の音色（tone）と楽器から自動で選ぶ。 */
 export interface AmpSetting {
-  type: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "nam";
+  type: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "nam" | GenreAmpType;
   /** 歪みの深さの倍率（0.5〜2、既定1）。 */
   drive?: number;
   /** 高音の明るさ（dB。-6〜+6、既定0）。 */

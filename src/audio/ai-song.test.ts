@@ -55,4 +55,12 @@ describe("AIソング形式", () => {
     expect(AI_SONG_GUIDE).toMatch(/leadGuitar/);
     expect(AI_SONG_SCHEMA.properties.parts.items.properties.instrument.enum).toContain("kick");
   });
+  it("ジャンル別のアンプ（jazz など）を使える。知らない名前は注意を出して、おまかせにする", () => {
+    const withAmps = { ...song, autoAccompaniment: false, parts: [{ ...song.parts[0], amp: "jazz" }, { ...song.parts[0], amp: "tubescreamer" }] };
+    const { score, warnings } = aiSongToScore(withAmps);
+    expect(score.tracks[0].amp).toEqual({ type: "jazz" });
+    expect(score.tracks[1].amp).toBeUndefined();
+    expect(warnings.some((w) => w.includes("tubescreamer"))).toBe(true);
+    expect(AI_SONG_SCHEMA.properties.parts.items.properties.amp.enum).toContain("shoegaze");
+  });
 });
