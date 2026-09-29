@@ -213,7 +213,7 @@ editionSel.onchange = () => {
 const volIn = h("input", { type: "range", min: "0", max: "100", value: "60", "aria-label": "音量" });
 volIn.oninput = () => engine.setBgmVolume(Number(volIn.value) / 100);
 engine.setBgmVolume(0.6);
-const repeatChk = h("input", { type: "checkbox", checked: "" });
+
 ui.playBtn.onclick = () => play(0);
 ui.stopBtn.onclick = () => {
   engine.stopBgm();
@@ -738,6 +738,21 @@ wavBtn.onclick = () => {
     .finally(() => {
       wavBtn.disabled = false;
     });
+};
+
+// Claude Code の song.mjs（--wav）から、曲をWAVにするための入口
+(window as unknown as { __composer: unknown }).__composer = {
+  async renderWav(score: Score, edition: State["edition"]): Promise<string> {
+    if (!soundfontCopy) throw new Error("録音音源を読み込めていません");
+    const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
+    const buffer = await renderScoreOffline({ ...edited, loop: false }, { soundfont: soundfontCopy, processorUrl, edition, nam: namHost });
+    const channels = [buffer.getChannelData(0), buffer.getChannelData(1)];
+    normalizePeak(channels);
+    const bytes = encodeWav(channels, buffer.sampleRate);
+    let bin = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    return btoa(bin);
+  },
 };
 
 // ── ゲームの曲として登録（書き出したファイルを src/audio/songs/ に置くと、ゲームの曲一覧に入る） ──

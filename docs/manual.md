@@ -98,4 +98,5 @@ npm run dev
 - **ゲームの曲として登録**: 曲ID（英小文字・数字・`-`）と使う場面を入れて「登録用ファイルを書き出す」→ できた `〇〇.sunshine-song.json` を `src/audio/songs/` に置くと、ゲームの曲一覧（`allEntries()`。BGMプレイヤーにも出る）に入る。鳴らす場面は、ゲーム側の `bgmId` にそのIDを書いて決める。NAMモデルはゲームには入らない。
 - **新しい曲**: コード進行（例 `Am F C G`）・テンポ・拍子・雰囲気（ロック／ポップ／バラード）から、ドラム・ベース・ギター・ピアノ・弦の伴奏を作り、空のメロディのトラックを足す（`src/audio/newsong.ts`）。あとはピアノロールでメロディを書く。
 - **音づくり（アンプ）**: トラックごとに、アンプの種類（クリーン／オーバードライブ／ディストーション／メタルゾーン／PRS風）・歪みの深さ・高音の明るさ・出力を変えられる。無料のアンプシミュレーター NAM（Neural Amp Modeler）も入っていて、同梱のモデル3つ（ハイゲインアンプA・B、ベース用プリアンプ。NAM作者がMITライセンスで公開している見本）から選ぶか、`.nam` モデルを読み込むと、そのアンプの音になる（読み込むモデルの利用規約は利用者が確認する）。
+- **Claude Code から曲を作る（APIキー不要）**: Claude Code に「〇〇な曲を作って」と頼む（`/compose-song`）。Claude Code が「AIソング形式」のJSON（`assets-src/ai-songs/`）を書き、`node tools/composer/song.mjs build <曲.json> --wav` で、作曲ソフトのプロジェクト・MIDI・WAV（`dist-songs/`）を作る。`--register <曲ID> --scene "<場面>"` でゲームの曲として登録。形式の説明は `node tools/composer/song.mjs guide`、組み立ては `src/audio/ai-song.ts`。
 - 1つのトラックは1度に1音だけ鳴る（和音はトラックを重ねる）。編集の道具は `src/audio/edit.ts`（自動テストあり）。
