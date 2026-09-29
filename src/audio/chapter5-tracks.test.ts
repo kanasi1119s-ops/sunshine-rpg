@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { flattenScore, getScoreDurationSec, type Score } from "./score";
-import { CHAPTER5_BOSS_THEME, CHAPTER5_CAMP_THEME, CHAPTER5_TOWN_THEME } from "./chapter5-tracks";
+import { CHAPTER5_BOSS_THEME, CHAPTER5_ARCHIVE_THEME, CHAPTER5_TOWN_THEME } from "./chapter5-tracks";
 
 const SCORES: Record<string, Score> = {
   town: CHAPTER5_TOWN_THEME,
-  camp: CHAPTER5_CAMP_THEME,
+  archive: CHAPTER5_ARCHIVE_THEME,
   boss: CHAPTER5_BOSS_THEME,
 };
 
