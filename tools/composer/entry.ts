@@ -12,6 +12,7 @@ import { GM_PROGRAM } from "../../src/audio/gm-map";
 import { scoreToMidi } from "../../src/audio/midi-export";
 import { AMP_PRESETS, AMP_PRESET_NAMES, type AmpPresetName } from "../../src/audio/amp";
 import { NamHost } from "../../src/audio/nam/nam-host";
+import { AI_SONG_GUIDE, AI_SONG_SCHEMA, aiSongToScore } from "../../src/audio/ai-song";
 import { buildNewSong } from "../../src/audio/newsong";
 import { noteNameToMidi } from "../../src/audio/note";
 import { ps2Edition } from "../../src/audio/ps2-edition";
@@ -122,7 +123,7 @@ function play(offset = 0): void {
   engine.playBgm(effectiveScore(), offset);
   state.playing = true;
   state.paused = false;
-  ui.pauseBtn.textContent = "一時停止";
+  setPauseLook(false);
 }
 function restartHere(): void {
   if (state.playing && !state.paused) play(engine.getBgmPositionSec());
@@ -153,6 +154,13 @@ const ui = {
   info: h("div", { class: "muted" }),
 };
 
+/** 一時停止ボタンの見た目（記号だけにして、枠からはみ出さないようにする。意味は、ふきだしと読み上げで伝える）。 */
+function setPauseLook(paused: boolean): void {
+  ui.pauseBtn.textContent = paused ? "▶" : "❚❚";
+  ui.pauseBtn.title = paused ? "再開" : "一時停止";
+  ui.pauseBtn.setAttribute("aria-label", paused ? "再開" : "一時停止");
+  ui.pauseBtn.classList.toggle("on", paused);
+}
 function field(label: string, control: HTMLElement): HTMLElement {
   return h("label", { class: "f" }, label, control);
 }
@@ -220,7 +228,7 @@ ui.stopBtn.onclick = () => {
   engine.stopBgm();
   state.playing = false;
   state.paused = false;
-  ui.pauseBtn.textContent = "一時停止";
+  setPauseLook(false);
 };
 ui.pauseBtn.onclick = () => {
   if (!state.playing) return;
@@ -228,7 +236,7 @@ ui.pauseBtn.onclick = () => {
     state.pausedAt = engine.getBgmPositionSec();
     engine.stopBgm();
     state.paused = true;
-    ui.pauseBtn.textContent = "再開";
+    setPauseLook(true);
   } else {
     play(state.pausedAt);
   }
@@ -868,6 +876,89 @@ function renderAmp(): void {
   }
 }
 
+// ── AIに作曲してもらう（デスクトップ版だけ。APIキーはアプリ本体の側で暗号化して保存し、画面には渡さない） ──
+interface DesktopKeyStatus {
+  hasKey: boolean;
+  last4: string;
+  canSave: boolean;
+}
+interface DesktopApi {
+  keyStatus(): Promise<DesktopKeyStatus>;
+  setKey(key: string): Promise<DesktopKeyStatus>;
+  clearKey(): Promise<DesktopKeyStatus>;
+  compose(req: { model: string; effort: string; request: string; system: string; schema: unknown; continue: boolean }): Promise<{ text: string; usage: { input: number; output: number } }>;
+}
+const desktop = (window as unknown as { sunshineDesktop?: DesktopApi }).sunshineDesktop;
+const aiBox = h("div", {});
+function buildAiPanel(api: DesktopApi): void {
+  const keyIn = h("input", { type: "password", placeholder: "sk-ant-…", autocomplete: "off", style: "min-width:240px" });
+  const keySave = h("button", { type: "button" }, "キーを保存");
+  const keyClear = h("button", { type: "button" }, "キーを消す");
+  const keyInfo = h("span", { class: "muted" });
+  const modelSel = select([["claude-opus-5-5", "Claude Opus 5.5（いちばん上手）"], ["claude-sonnet-5-5", "Claude Sonnet 5.5（速い・安い）"]], "claude-opus-5-5");
+  const effortSel = select([["low", "さっと"], ["medium", "ふつう"], ["high", "じっくり"]], "medium");
+  const req = h("textarea", { rows: "3", style: "width:100%", placeholder: "例: 雪の降る港町の夜。やさしいピアノとストリングス、少しさみしいけれどあたたかい。70秒くらい。" });
+  const newBtn = h("button", { class: "primary", type: "button" }, "AIに新しい曲を作ってもらう");
+  const fixBtn = h("button", { type: "button", disabled: "" }, "この曲をAIに直してもらう");
+  const msg = h("div", { class: "muted", style: "margin-top:6px;white-space:pre-wrap" });
+  const show = (st: DesktopKeyStatus): void => {
+    keyInfo.textContent = st.hasKey ? `保存済み（末尾 …${st.last4}）${st.canSave ? "・OSの機能で暗号化" : "・このパソコンでは暗号化できないため、終了すると消えます"}` : "まだ入っていません";
+    keyClear.disabled = !st.hasKey;
+  };
+  void api.keyStatus().then(show);
+  keySave.onclick = () => {
+    const key = keyIn.value.trim();
+    keyIn.value = "";
+    void api.setKey(key).then(show).catch((e: unknown) => (msg.textContent = (e as Error).message.replace(/^Error invoking remote method '[^']+': (Error: )?/, "")));
+  };
+  keyClear.onclick = () => void api.clearKey().then(show);
+  let hasHistory = false;
+  const run = async (fix: boolean): Promise<void> => {
+    const request = req.value.trim();
+    if (!request) {
+      msg.textContent = fix ? "どう直したいかを書いてください（例: サビをもっと盛り上げて、テンポを少し速く）。" : "どんな曲がほしいかを書いてください。";
+      return;
+    }
+    newBtn.disabled = true;
+    fixBtn.disabled = true;
+    msg.textContent = "AIが作曲しています…（30秒〜数分かかります）";
+    const clean = (e: unknown): string => (e as Error).message.replace(/^Error invoking remote method '[^']+': (Error: )?/, "");
+    try {
+      let answer = await api.compose({ model: modelSel.value, effort: effortSel.value, request, system: AI_SONG_GUIDE, schema: AI_SONG_SCHEMA, continue: fix });
+      let used = { ...answer.usage };
+      let built;
+      try {
+        built = aiSongToScore(JSON.parse(answer.text));
+      } catch (first) {
+        // 形式のまちがいは、1回だけ理由を伝えて直してもらう
+        answer = await api.compose({ model: modelSel.value, effort: effortSel.value, request: `次のまちがいがありました。直した曲を、同じ形式でもう一度書いてください。\n${(first as Error).message}`, system: AI_SONG_GUIDE, schema: AI_SONG_SCHEMA, continue: true });
+        used = { input: used.input + answer.usage.input, output: used.output + answer.usage.output };
+        built = aiSongToScore(JSON.parse(answer.text));
+      }
+      hasHistory = true;
+      loadScore(built.score, built.song.title || "AIの曲");
+      msg.textContent = `できました: 「${built.song.title}」— ${built.song.description}\n使ったトークン: 入力 ${used.input}・出力 ${used.output}${built.warnings.length ? `\n注意: ${built.warnings.join(" / ")}` : ""}\n▶ で聴けます。ピアノロールで手直しもできます。`;
+    } catch (e) {
+      msg.textContent = clean(e);
+    } finally {
+      newBtn.disabled = false;
+      fixBtn.disabled = !hasHistory;
+    }
+  };
+  newBtn.onclick = () => void run(false);
+  fixBtn.onclick = () => void run(true);
+  aiBox.append(
+    h("div", { class: "row" }, field("Anthropic APIキー", keyIn), keySave, keyClear, keyInfo),
+    h("div", { class: "row", style: "margin-top:8px" }, field("モデル", modelSel), field("考える深さ", effortSel)),
+    h("div", { style: "margin-top:8px" }, req),
+    h("div", { class: "row", style: "margin-top:8px" }, newBtn, fixBtn),
+    msg,
+    h("div", { class: "muted", style: "margin-top:6px" }, "APIキーは、このパソコンの中だけに暗号化して保存し、Anthropic（api.anthropic.com）との通信にだけ使います。使った分の料金は、キーの持ち主にかかります（https://console.anthropic.com）。AIには、既存の曲をまねしないよう指示しています。"),
+  );
+}
+if (desktop) buildAiPanel(desktop);
+else aiBox.append(h("div", { class: "muted" }, "AI作曲（Anthropic APIキーを使う）は、デスクトップ版で使えます。Claude Code から作るときは、コネクタ（tools/mcp/server.mjs）か /compose-song を使ってください。"));
+
 // ── 画面を組み立てる ──
 function renderAll(): void {
   renderTracks();
@@ -895,10 +986,11 @@ const lcdLen = h("span", { class: "lcd-v" }, "0:00");
 const lcd = (label: string, value: HTMLElement): HTMLElement => h("div", { class: "lcd-cell" }, h("span", { class: "lcd-k" }, label), value);
 ui.playBtn.textContent = "▶";
 ui.playBtn.title = "再生（はじめから）";
-ui.pauseBtn.textContent = "❚❚";
-ui.pauseBtn.title = "一時停止・再開";
+ui.playBtn.setAttribute("aria-label", "再生（はじめから）");
+setPauseLook(false);
 ui.stopBtn.textContent = "■";
 ui.stopBtn.title = "停止";
+ui.stopBtn.setAttribute("aria-label", "停止");
 for (const b of [ui.playBtn, ui.pauseBtn, ui.stopBtn]) b.classList.add("tp");
 const panel = (code: string, title: string, ...kids: (Node | string)[]): HTMLElement =>
   h("section", { class: "panel" }, h("h2", {}, h("span", { class: "code" }, code), title), ...kids);
@@ -919,6 +1011,7 @@ app.append(
       h("div", { class: "muted", style: "margin-top:4px" }, "和音: 根音をいま選んでいるトラックに、ほかの音をすぐ下の同じ楽器のトラック（うすく表示。足りなければ自動で作る）に入れます。")),
   ),
   h("div", { class: "grid" },
+    panel("AI", "AIに作曲してもらう（Claude）", aiBox),
     panel("GEN", "自動作曲",
       h("div", { class: "row" }, field("曲名", nameIn), field("曲調", styleSel), field("調", tonicSel), field("長調・短調", modeSel)),
       h("div", { class: "row", style: "margin-top:8px" }, field("テンポ", bpmIn), field("乱数の種", h("div", { class: "row" }, seedIn, randomBtn)), field("長さ", secIn), field("拍子", beatsSel), field("疾走感（ボス戦向け）", driveChk)),

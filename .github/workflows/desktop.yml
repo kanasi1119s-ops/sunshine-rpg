@@ -1,0 +1,48 @@
+# サンシャイン作曲ソフト（デスクトップ版）のインストーラーを作る。
+# 手動で動かす（Actions → desktop → Run workflow）か、desktop-v で始まるタグを付けたときだけ動く。
+# できたファイルは、この実行の「Artifacts」から受け取れる（自動で公開・販売はしない）。
+# コード署名はしていない（署名の証明書は有料のため、人間の判断で追加する）。
+name: desktop
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["desktop-v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: win
+          - os: macos-latest
+            target: mac
+          - os: ubuntu-latest
+            target: linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm ci
+        working-directory: desktop
+      - run: npm run dist:${{ matrix.target }}
+        working-directory: desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sunshine-composer-${{ matrix.target }}
+          path: |
+            desktop/release/*.exe
+            desktop/release/*.zip
+            desktop/release/*.dmg
+            desktop/release/*.AppImage
+          if-no-files-found: error
