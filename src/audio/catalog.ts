@@ -26,7 +26,7 @@ export interface CatalogEntry {
   finale?: string;
 }
 
-const LABEL: Record<Style, string> = {
+export const STYLE_LABEL: Record<Style, string> = {
   rock: "ロック", metal: "メタル", classic: "クラシック", space: "空間系", cafe: "キーボード（カフェ）", discord: "不協和音", mystery: "不思議",
   epic: "オーケストラ風", folk: "フォーク（アコースティック）", baroque: "バロック協奏曲風", nature: "自然音楽", phonk: "フォンク", samba: "サンバ", jazz: "ジャズ", rnb: "R&B", electro: "エレクトリック",
   hardcore: "ハードコア", deathmetal: "デスメタル", progmetal: "プログレッシブメタル（7拍子）", jpop: "J-POP",
@@ -34,7 +34,7 @@ const LABEL: Record<Style, string> = {
 
 function song(group: string, id: string, title: string, scene: string, style: Style, tonic: string, minor: boolean, bpm: number, seed: number, extra: Partial<SongSpec> = {}): CatalogEntry {
   return {
-    id, title, scene, group, styleLabel: LABEL[style],
+    id, title, scene, group, styleLabel: STYLE_LABEL[style],
     spec: { id, title, scene, style, tonic, minor, bpm, seed, ...(style === "progmetal" ? { beats: 7 as const } : {}), ...extra },
   };
 }
