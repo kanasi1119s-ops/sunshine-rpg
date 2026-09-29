@@ -56,6 +56,8 @@ import { SANONE_TOWN_ENTRY } from "./game/map/chapter4/sanone-town";
 import { SANONE_CAMP_ENTRY } from "./game/map/chapter4/sanone-camp";
 import { KIRI_TOWN_ENTRY } from "./game/map/chapter5/kiri-town";
 import { KIRI_ARCHIVE_ENTRY } from "./game/map/chapter5/kiri-archive";
+import { SHIMOHARA_TOWN_ENTRY } from "./game/map/chapter6/shimohara-town";
+import { SHIMOHARA_FACILITY_ENTRY } from "./game/map/chapter6/shimohara-facility";
 import { TETSUKUSARI_MINE_ENTRY } from "./game/map/chapter3/tetsukusari-mine";
 import { createRng } from "./game/random";
 import { computeVictoryExp } from "./game/battle/battle-engine";
@@ -497,6 +499,14 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
   {
     label: () => "マップ: 霧断崖・記録の間 へワープ",
     action: () => switchMap("kiri-archive", KIRI_ARCHIVE_ENTRY.tileX, KIRI_ARCHIVE_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 霜原の町 へワープ",
+    action: () => switchMap("shimohara-town", SHIMOHARA_TOWN_ENTRY.tileX, SHIMOHARA_TOWN_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 霜原・戦跡の施設 へワープ",
+    action: () => switchMap("shimohara-facility", SHIMOHARA_FACILITY_ENTRY.tileX, SHIMOHARA_FACILITY_ENTRY.tileY),
   },
   {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,
