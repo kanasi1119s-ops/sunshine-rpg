@@ -4,7 +4,7 @@ import { createEventRunner } from "../event/event-runner";
 import type { Flags } from "../event/types";
 
 /**
- * 序章〜第4章の自動通しプレイ。各章のNPCを、プレイヤーが話しかける順（章の順、依頼→調査→ボス→報告）に
+ * 序章〜第5章の自動通しプレイ。各章のNPCを、プレイヤーが話しかける順（章の順、依頼→調査→ボス→報告）に
  * 何周か回し、選択肢は「引き受ける・仲間にする」側（0番目）を選ぶ。ボス戦は勝ったものとして勝利フラグを立てる。
  * 進行不能（必要なフラグが立たない・行き止まり）がないか、伏線の前後関係が守られているかを確かめる。
  */
@@ -14,6 +14,7 @@ const BATTLE_VICTORY_FLAG: Record<string, string> = {
   "garasuko-yugami": "chapter2_yugami_defeated",
   "tetsukusari-yugami": "chapter3_yugami_defeated",
   "sanone-yugami": "chapter4_yugami_defeated",
+  "kiri-yugami": "chapter5_yugami_defeated",
 };
 
 const CHAPTER_MAPS: string[][] = [
@@ -22,6 +23,7 @@ const CHAPTER_MAPS: string[][] = [
   ["garasuko-town", "garasuko-warehouse"],
   ["tetsukusari-town", "tetsukusari-mine"],
   ["sanone-town", "sanone-camp"],
+  ["kiri-town", "kiri-archive"],
 ];
 
 function recordingFlags(order: string[]): Flags {
@@ -56,7 +58,7 @@ function playAllNpcs(mapIds: string[], flags: Flags): void {
   }
 }
 
-describe("序章〜第4章の自動通しプレイ", () => {
+describe("序章〜第5章の自動通しプレイ", () => {
   const order: string[] = [];
   const flags = recordingFlags(order);
   CHAPTER_MAPS.forEach((maps) => playAllNpcs(maps, flags));
@@ -68,13 +70,14 @@ describe("序章〜第4章の自動通しプレイ", () => {
       "chapter2_yugami_defeated", "chapter2_guide_joined",
       "chapter3_yugami_defeated", "chapter3_orca_joined",
       "chapter4_yugami_defeated",
+      "chapter5_yugami_defeated",
     ]) {
       expect(flags[flag], `${flag} が立たない（進行不能の疑い）`).toBe(true);
     }
   });
 
   it("章の依頼は、その章のボス戦より先に受けている", () => {
-    for (const n of [0, 1, 2, 3, 4]) {
+    for (const n of [0, 1, 2, 3, 4, 5]) {
       const accepted = order.indexOf(`chapter${n}_quest_accepted`);
       const defeated = order.indexOf(`chapter${n}_yugami_defeated`);
       expect(accepted, `chapter${n}_quest_accepted`).toBeGreaterThanOrEqual(0);
@@ -97,6 +100,19 @@ describe("序章〜第4章の自動通しプレイ", () => {
     expect(flags["chapter4_guide_cleared"]).toBe(true);
     expect(flags["chapter4_rumor_heard"]).toBe(true);
     expect(flags["chapter4_sailcar_obtained"]).toBe(true);
+  });
+});
+
+describe("第5章の伏線", () => {
+  const order: string[] = [];
+  const flags = recordingFlags(order);
+  CHAPTER_MAPS.forEach((maps) => playAllNpcs(maps, flags));
+
+  it("改ざんの発見（C-010）が、祖父の名の発見（C-011）より先で、どちらもボス撃破・報告までに得られる", () => {
+    expect(order.indexOf("chapter5_record_found")).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf("chapter5_record_found")).toBeLessThan(order.indexOf("chapter5_ledger_found"));
+    expect(order.indexOf("chapter5_ledger_found")).toBeLessThan(order.indexOf("chapter5_yugami_defeated"));
+    expect(flags["chapter5_reported"]).toBe(true);
   });
 });
 

@@ -24,6 +24,8 @@ const WIDTH = 24;
 const HEIGHT = 16;
 
 const WEST_GATE = { x: 0, y: 10 };
+/** 東の砂丘の切れ目。断崖の宗教都市・霧断崖へ続く街道。 */
+const EAST_GATE = { x: WIDTH - 1, y: 10 };
 /** 町の南に開いた、隊商の野営地へ続く道。 */
 const CAMP_GATE_POS = { x: 12, y: HEIGHT - 1 };
 /** 隊商組合の大天幕（4x2）と、市場の天幕（3x2）。 */
@@ -52,7 +54,7 @@ export function createSanoneTownData(): TileMapData {
   }
   for (let y = 0; y < HEIGHT; y++) {
     set(0, y, y === WEST_GATE.y ? ROAD : DUNE);
-    set(WIDTH - 1, y, DUNE);
+    set(WIDTH - 1, y, y === EAST_GATE.y ? ROAD : DUNE);
   }
 
   // 西の門から東へのびる大通りと、南の門へ向かう道。
@@ -103,6 +105,14 @@ export function createSanoneTownData(): TileMapData {
         targetTileY: 10,
       },
       {
+        // 東の街道を進んで霧断崖へ。
+        tileX: EAST_GATE.x,
+        tileY: EAST_GATE.y,
+        targetMapId: "kiri-town",
+        targetTileX: 2,
+        targetTileY: 10,
+      },
+      {
         // 南の門から、隊商の野営地へ。
         tileX: CAMP_GATE_POS.x,
         tileY: CAMP_GATE_POS.y,
@@ -116,6 +126,9 @@ export function createSanoneTownData(): TileMapData {
 
 /** 鉄鏈鉱山からの街道を渡ってきたときの立ち位置。 */
 export const SANONE_TOWN_ENTRY = { tileX: WEST_GATE.x + 2, tileY: WEST_GATE.y };
+
+/** 霧断崖から街道を戻ってきたときの立ち位置。 */
+export const SANONE_TOWN_EAST_RETURN = { tileX: EAST_GATE.x - 2, tileY: EAST_GATE.y };
 
 /** 野営地から戻ってきたときの立ち位置。 */
 export const SANONE_TOWN_CAMP_RETURN = { tileX: CAMP_GATE_POS.x, tileY: CAMP_GATE_POS.y - 2 };
