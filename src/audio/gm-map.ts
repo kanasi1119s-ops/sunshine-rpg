@@ -6,6 +6,7 @@ import type { Instrument, Waveform } from "./score";
  */
 export const GM_PROGRAM: Partial<Record<Instrument, number>> = {
   bass: 33, // フィンガーベース
+  slap: 36, // スラップベース
   sub808: 38, // シンセベース
   guitar: 27, // クリーンギター
   echoGuitar: 27,
@@ -38,6 +39,7 @@ export const SE_GM_PROGRAMS = [8, 9, 11, 12, 14, 33, 44, 45, 46, 47, 48, 52, 53,
 export const GM_LAYER: Partial<Record<Instrument, { program: number; gain: number }>> = {
   keys: { program: 0, gain: 0.5 },
   pad: { program: 48, gain: 0.35 },
+  bass: { program: 38, gain: 0.3 },
 };
 
 /** ドラムセットの選び方（曲調ごと）。GMのドラムキット番号: 0=標準、8=ルーム、16=パワー、24=電子、25=TR-808、32=ジャズ、48=オーケストラ。 */

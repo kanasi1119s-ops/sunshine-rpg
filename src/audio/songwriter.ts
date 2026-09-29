@@ -128,6 +128,8 @@ const RHYTHM_SPARSE4 = [[4], [3, 1], [2, 2], [1, 3], [2, 1, 1]];
 const RHYTHM_FAST4 = [[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5, 1, 1], [0.25, 0.25, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.25, 0.25]];
 
 export interface MelodyOpts {
+  /** 曲の頭の1小節を、コードの音を駆け上がる速い音型（アルペジオ）にする（クラシックの勢いのある出だし）。 */
+  opening?: "run";
   /** 3拍子で、2小節を「2拍×3」でまとめる（ヘミオラ）。 */
   hemiola?: boolean;
   lo: number;
@@ -148,11 +150,29 @@ export function generateMelody(rng: Rng, key: Key, chords: string[], beats: numb
   const out: string[] = [];
   const rhythms: number[][] = [];
   const skip = new Set<number>();
+  const barTokens: string[][] = [];
   chords.forEach((chord, bar) => {
     if (skip.has(bar)) {
       return;
     }
+    const startLen = out.length;
+    // 耳に残るフレーズ: 2小節前と同じ拍の並びなら、音もそのまま繰り返すことがある（フック）
+    if (bar % 4 >= 2 && bar < chords.length - 1 && barTokens[bar - 2] && beats !== 7 && rng() < 0.5 && rhythms[bar - 2]?.reduce((a, b) => a + b, 0) === beats) {
+      out.push(...barTokens[bar - 2]);
+      rhythms.push(rhythms[bar - 2]);
+      barTokens[bar] = barTokens[bar - 2];
+      return;
+    }
     const tones = chordPitchClasses(chord);
+    if (opts.opening === "run" && bar === 0 && (beats === 4 || beats === 3)) {
+      // 勢いのある出だし: 和音の音を、下から一気に駆け上がる（16分音符）
+      const ascending = pool.filter((m) => tones.includes(m % 12)).slice(0, Math.max(6, beats * 4));
+      const notes = Array.from({ length: beats * 4 }, (_, i) => ascending[Math.min(ascending.length - 1, Math.floor((i * ascending.length) / (beats * 4)))]);
+      notes.forEach((m) => out.push(`${midiToName(m)}:0.25`));
+      cur = pool.indexOf(notes[notes.length - 1]);
+      rhythms.push([0.25]);
+      return;
+    }
     if (opts.hemiola && beats === 3 && bar % 2 === 0 && bar + 1 < chords.length - 1) {
       // ヘミオラ: 3拍子の2小節（6拍）を、2拍ずつの3つの音にまとめる
       skip.add(bar + 1);
@@ -214,6 +234,7 @@ export function generateMelody(rng: Rng, key: Key, chords: string[], beats: numb
       const rest = opts.restChance && n > 0 && rng() < opts.restChance && bar !== chords.length - 1;
       out.push(rest ? `R:${dur}` : `${midiToName(pool[cur])}:${dur}`);
     });
+    barTokens[bar] = out.slice(startLen);
   });
   return out.join(" ");
 }
@@ -880,6 +901,16 @@ function applyDrumRealism(kp: KindPlan, kind: Kind, bars: number, style: Style, 
   return { ...kp, parts };
 }
 
+/** 曲の頭に一撃を入れる曲調（クラシックの勢いのある出だしのように、聴き手をつかむ）。 */
+const OPENING_STYLES: Style[] = ["rock", "metal", "hardcore", "deathmetal", "progmetal", "epic", "electro", "jpop", "baroque", "classic"];
+const RUN_STYLES: Style[] = ["baroque", "classic", "epic"];
+/** 一撃の和音（ブラス・弦・低い根音）。曲の最初の小節だけ、全員で長く鳴らす。 */
+const STRIKE_PARTS: Record<string, PartSpec> = {
+  opn1: { instrument: "brass", waveform: "sawtooth", volume: 0.24, octave: 3, step: 0.5 },
+  opn2: { instrument: "strings", waveform: "sawtooth", volume: 0.16, octave: 3, step: 0.5 },
+  opn3: { instrument: "brass", waveform: "sawtooth", volume: 0.2, octave: 4, step: 0.5 },
+};
+
 const TOM_PARTS: Record<string, PartSpec> = {
   tomH: { instrument: "tom", waveform: "sine", volume: 0.24, octave: 2, step: 0.25, fixed: "D3" },
   tomM: { instrument: "tom", waveform: "sine", volume: 0.24, octave: 2, step: 0.25, fixed: "B2" },
@@ -943,7 +974,14 @@ export function composeSong(spec: SongSpec): Score {
   const sections: Section[] = plan.kinds.map((kind) => {
     const barsInSection = kind === "intro" ? 4 : 8;
     const base = applyDrive(tpl.plan(kind, beats), kind, tpl, spec.drive === true && beats === 4);
-    const kp = beats === 4 && spec.style !== "jazz" ? applyDrumRealism(base, kind, barsInSection, spec.style, tpl) : base;
+    const kp0 = beats === 4 && spec.style !== "jazz" ? applyDrumRealism(base, kind, barsInSection, spec.style, tpl) : base;
+    let kp = kp0;
+    if (kind === "intro" && OPENING_STYLES.includes(spec.style)) {
+      const len = beats * 2;
+      const once = (ch: string): string => [ch + "-".repeat(len - 1), ...Array(barsInSection - 1).fill(".".repeat(len))].join(" ");
+      kp = { ...kp0, parts: { ...kp0.parts, opn1: once("R"), opn2: once("5"), opn3: once("O") } };
+      if (RUN_STYLES.includes(spec.style)) kp = { ...kp, opts: { ...kp.opts, opening: "run" } };
+    }
     let entry = cache.get(kind);
     if (!entry) {
       const chords = chordsFor(kind);
@@ -955,7 +993,9 @@ export function composeSong(spec: SongSpec): Score {
     return { chords: entry.chords.join(" "), parts: kp.parts, melody };
   });
   const hasFills = beats === 4 && spec.style !== "jazz" && tpl.parts.snare?.step === 0.25;
-  const score = arrange({ tempoBpm: spec.bpm, beatsPerBar: beats, sections, parts: { ...tpl.parts, ...driveParts, ...(hasFills ? TOM_PARTS : {}) }, melodies: tpl.melodies });
+  const score = arrange({ tempoBpm: spec.bpm, beatsPerBar: beats, sections, parts: { ...tpl.parts, ...driveParts, ...(hasFills ? TOM_PARTS : {}), ...(OPENING_STYLES.includes(spec.style) ? STRIKE_PARTS : {}) }, melodies: tpl.melodies });
   score.drumKit = DRUM_KIT[spec.style] ?? 0;
+  if (spec.style === "electro" || spec.style === "jpop") score.pump = true;
+  if (OPENING_STYLES.includes(spec.style)) score.opening = true;
   return score;
 }

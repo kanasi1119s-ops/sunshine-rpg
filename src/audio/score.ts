@@ -25,7 +25,7 @@ export type Instrument =
   // 効果音向け: 音程が滑る（sfxDown＝下がる／sfxUp＝上がる）、ノイズの衝撃音（impact）、風を切る音（swoosh）、金属的な鈴（chime）
   | "sfxDown" | "sfxUp" | "impact" | "swoosh" | "chime"
   // 自然音（風・雨・せせらぎ・鳥・虫）。音の高さは、風の吹く高さ・鳥の声の高さなど音色の目安として使う
-  | "wind" | "rain" | "stream" | "bird" | "crickets"
+  | "pierce" | "slap" | "wind" | "rain" | "stream" | "bird" | "crickets"
   // フォンク向け: 重く歪んだ低音（808）とカウベル
   | "sub808" | "cowbell";
 
@@ -47,6 +47,10 @@ export interface Track {
 export interface Score {
   /** 録音音源で鳴らすときのドラムセット（GMのドラムキット番号。0=標準、16=パワー、24=電子、25=TR-808、32=ジャズ）。省略時は0。 */
   drumKit?: number;
+  /** trueなら、パッド・弦・合唱の音量をキックに合わせて周期的に凹ませる（電子音楽風のポンプ感）。 */
+  pump?: boolean;
+  /** trueなら、曲の頭に強い一撃（全楽器の強いアタック、クラッシュ、バスドラム）を入れる。ループのたびに聴き手をつかむ。 */
+  opening?: boolean;
   tempoBpm: number;
   loop: boolean;
   tracks: Track[];

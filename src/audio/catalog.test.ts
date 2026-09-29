@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CATALOG, getTrack } from "./catalog";
+import { FINALES } from "./finale";
 import { flattenScore, getScoreDurationSec } from "./score";
 
 describe("BGMカタログ（55曲）", () => {
@@ -43,5 +44,31 @@ describe("現代的な音づくり・ボス戦の疾走感", () => {
     expect(pans.size).toBeGreaterThan(2);
     const vols = new Set(flattenScore(score).filter((e) => e.instrument === "bass").map((e) => e.volume.toFixed(4)));
     expect(vols.size).toBeGreaterThan(3);
+  });
+});
+
+describe("特別曲のソロと、曲の頭の一撃", () => {
+  it("特別曲には、ベースソロとギターソロが入り、速い曲にはテクニカルなドラムソロも入る", () => {
+    for (const f of FINALES) {
+      const tex = f.sections.map((x) => x.tex);
+      expect(tex, `${f.id} のベースソロ`).toContain("bsolo");
+      expect(tex.includes("gsolo") || tex.includes("solo"), `${f.id} のギターソロ`).toBe(true);
+      if (f.bpm >= 170) expect(tex, `${f.id} のドラムソロ`).toContain("dsolo");
+    }
+  });
+  it("ドラムソロには、ツーバス・タムの回し・ゴースト/アクセントのグルーブが入っている", () => {
+    const score = getTrack("boss-final");
+    const names = new Set(score.tracks.filter((t) => t.instrument === "tom").map((t) => t.instrument));
+    expect(names.has("tom")).toBe(true);
+    const velocities = new Set(score.tracks.filter((t) => t.instrument === "snare").flatMap((t) => t.notes.map((n) => n.velocity ?? 1)));
+    expect(velocities.has(0.5)).toBe(true); // ゴースト
+    expect(velocities.has(1.25)).toBe(true); // アクセント
+  });
+  it("勢いのある曲（ロック・メタル・クラシック・バロックなど）と特別曲は、曲の頭に一撃が入る", () => {
+    for (const id of ["boss-touri", "opening", "town-kiri", "boss-final", "fate", "eight-gods-2", "title"]) {
+      expect(getTrack(id).opening, id).toBe(true);
+    }
+    // 静かな曲（自然音楽・空間系など）は入れない
+    expect(getTrack("outskirts").opening).toBeUndefined();
   });
 });
