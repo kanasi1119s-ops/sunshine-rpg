@@ -1,3 +1,4 @@
+import type { AmpPresetName } from "./amp";
 import { noteNameToFrequency } from "./note";
 
 /** 音を鳴らさない拍（休符）。 */
@@ -17,6 +18,11 @@ export interface Track {
   /** 0〜1。 */
   volume: number;
   notes: NoteEvent[];
+  /**
+   * アンプシミュレーター（`amp.ts`）のプリセット名。指定するとそのパートだけ、
+   * アンプを通したような歪み・音色になる。省略すると、これまでどおり素の音のまま。
+   */
+  amp?: AmpPresetName;
 }
 
 export interface Score {
@@ -31,6 +37,8 @@ export interface ScheduledNote {
   durationSec: number;
   waveform: Waveform;
   volume: number;
+  /** アンプのプリセット名（パートに指定があるときだけ入る）。 */
+  amp?: AmpPresetName;
 }
 
 function trackDurationBeats(track: Track): number {
@@ -57,6 +65,7 @@ function flattenTrack(track: Track, tempoBpm: number): ScheduledNote[] {
         durationSec,
         waveform: track.waveform,
         volume: track.volume,
+        ...(track.amp !== undefined ? { amp: track.amp } : {}),
       });
     }
     t += durationSec;

@@ -69,6 +69,8 @@ import { createInventory, type Inventory } from "./game/items/inventory";
 import { SAVE_VERSION, type SaveData } from "./game/save/types";
 import { loadFromSlot, saveToSlot } from "./game/save/storage";
 import { downloadSaveFile, readSaveFile } from "./io/save-file";
+import { AMP_PRESETS, AMP_PRESET_NAMES } from "./audio/amp";
+import { AMP_DEMO_SCORES } from "./audio/amp-demo";
 import { AudioEngine } from "./audio/audio-engine";
 import { CHAPTER0_BATTLE_THEME, CHAPTER0_BOSS_THEME, CHAPTER0_OUTSKIRTS_THEME, CHAPTER0_TOWN_THEME } from "./audio/chapter0-tracks";
 import { CHAPTER1_BOSS_THEME, CHAPTER1_VILLAGE_THEME, CHAPTER1_WATER_SOURCE_THEME } from "./audio/chapter1-tracks";
@@ -184,6 +186,8 @@ function mapBgmFor(mapId: string): Score {
 }
 
 let currentBgmTrack: Score | null = null;
+/** 開発用のアンプ試聴（`a`キー）で、今どのプリセットか。 */
+let ampDemoIndex = -1;
 function playMapBgm(mapId: string): void {
   if (!audioStarted) {
     return;
@@ -428,6 +432,14 @@ if (import.meta.env.DEV) {
       );
       currentBgmTrack = CHAPTER0_BATTLE_THEME;
       audio.playBgm(CHAPTER0_BATTLE_THEME);
+    } else if (event.key === "a" && !battle && !dialogue.isActive() && !debugMenu.open) {
+      // 開発用: アンプシミュレーターのジャンル別プリセットを、押すたびに次へ切り替えて試聴する。
+      ampDemoIndex = (ampDemoIndex + 1) % AMP_PRESET_NAMES.length;
+      const name = AMP_PRESET_NAMES[ampDemoIndex];
+      currentBgmTrack = AMP_DEMO_SCORES[name];
+      audio.playBgm(AMP_DEMO_SCORES[name]);
+      saveMessage = `アンプ試聴: ${AMP_PRESETS[name].label}（${AMP_PRESETS[name].genre}）`;
+      saveMessageTimer = 3000;
     } else if (event.key === "k" && !battle) {
       saveToSlot(window.localStorage, "slot1", buildSaveData());
       saveMessage = "スロット1にセーブしました";

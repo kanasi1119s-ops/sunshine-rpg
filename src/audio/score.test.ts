@@ -59,4 +59,18 @@ describe("flattenScore", () => {
     });
     expect(flattenScore(score)).toHaveLength(3);
   });
+
+  it("パートにアンプの指定があるときだけ、音の一覧にもアンプ名が入る", () => {
+    const score = makeScore();
+    score.tracks[0].amp = "rock";
+    score.tracks.push({
+      waveform: "triangle",
+      volume: 0.3,
+      notes: [{ note: "C3", durationBeats: 1 }],
+    });
+    const events = flattenScore(score);
+    expect(events.filter((e) => e.amp === "rock")).toHaveLength(2);
+    const plain = events.find((e) => e.waveform === "triangle")!;
+    expect("amp" in plain).toBe(false);
+  });
 });
