@@ -1,5 +1,10 @@
 import { SAVE_VERSION, type SaveData } from "./types";
 
+/** version 2（ジョブが無い頃）のセーブデータの形。 */
+interface SaveDataV2 extends Omit<SaveData, "version" | "jobs"> {
+  version: 2;
+}
+
 /** version 1（仲間データが無い頃）のセーブデータの形。 */
 interface SaveDataV1 {
   version: 1;
@@ -10,11 +15,16 @@ interface SaveDataV1 {
   flags: SaveData["flags"];
 }
 
-function migrateV1ToV2(data: SaveDataV1): SaveData {
+function migrateV1ToV2(data: SaveDataV1): SaveDataV2 {
   // v1のセーブには仲間の概念が無かったため、空の状態から始める
   // （仲間の加入フラグ自体は flags 側に残っているので、会話上の扱いに支障はない。
   // 　戦闘に参加させ直す場合、仲間はレベル1から再スタートになる）。
   return { ...data, version: 2, companions: {} };
+}
+
+function migrateV2ToV3(data: SaveDataV2): SaveData {
+  // v2のセーブにはジョブの概念が無かったため、全員ジョブ未装備・熟練度0から始める。
+  return { ...data, version: 3, jobs: {} };
 }
 
 /**
@@ -30,6 +40,10 @@ export function migrateSaveData(data: unknown): SaveData {
 
   if (current.version === 1) {
     current = migrateV1ToV2(current as unknown as SaveDataV1);
+  }
+
+  if (current.version === 2) {
+    current = migrateV2ToV3(current as unknown as SaveDataV2);
   }
 
   if (current.version === SAVE_VERSION) {

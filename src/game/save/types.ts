@@ -3,12 +3,13 @@ import type { Flags } from "../event/types";
 import type { LeveledStats } from "../growth/types";
 import type { EquipmentSlots } from "../items/equipment";
 import type { Inventory } from "../items/inventory";
+import type { JobState } from "../job/types";
 
 /**
  * セーブデータの構造バージョン。構造を変えるときは1つ上げて、
  * `migrateSaveData` に「古いバージョン → 新しいバージョン」の変換を追加する。
  */
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export interface SaveData {
   version: typeof SAVE_VERSION;
@@ -25,6 +26,8 @@ export interface SaveData {
   };
   /** 仲間に加わったキャラクターのステータス（キャラクターIDをキーにする。version 2で追加）。 */
   companions: Record<string, { stats: LeveledStats }>;
+  /** ジョブの装備・熟練度（キャラクターIDをキーにする。主人公は "hero"。version 3で追加）。 */
+  jobs: Record<string, JobState>;
   inventory: Inventory;
   flags: Flags;
 }
