@@ -25,3 +25,21 @@ describe("BGMカタログ（52曲）", () => {
     expect(a.length).toBeGreaterThan(1000);
   });
 });
+
+describe("現代的な音づくり・ボス戦の疾走感", () => {
+  it("ボス戦の曲は速め（BPM148以上）で、4拍子の曲には16分の刻みが入る", () => {
+    for (const id of ["boss-touri", "boss-mugikano", "boss-tetsu", "boss-sanone", "boss-shimo", "boss-ukishima", "boss-final", "boss-final-2"]) {
+      const score = getTrack(id);
+      expect(score.tempoBpm, id).toBeGreaterThanOrEqual(148);
+    }
+    const four = getTrack("boss-touri");
+    expect(four.tracks.some((t) => t.notes.some((n) => n.durationBeats === 0.25 && n.note !== "R"))).toBe(true);
+  });
+  it("楽器の音は左右に振り分けられ、音の強さにゆらぎがつく", () => {
+    const score = getTrack("boss-touri");
+    const pans = new Set(score.tracks.map((t) => t.pan).filter((p) => p !== undefined));
+    expect(pans.size).toBeGreaterThan(2);
+    const vols = new Set(flattenScore(score).filter((e) => e.instrument === "bass").map((e) => e.volume.toFixed(4)));
+    expect(vols.size).toBeGreaterThan(3);
+  });
+});

@@ -1,6 +1,9 @@
+import { SampledBgm } from "./sampled-engine";
 import { createBgmBus, scheduleInstrumentNote, type Source } from "./voices";
 import { flattenScore, getScoreDurationSec, type Score, type ScheduledNote } from "./score";
 
+/** `?synth` をつけて開くと、録音音源を使わず合成音だけで鳴らす（音の比較・不具合の切り分け用）。 */
+const SYNTH_ONLY_FROM_URL = typeof location !== "undefined" && new URLSearchParams(location.search).has("synth");
 const SCHEDULE_AHEAD_SEC = 2.5;
 const SCHEDULE_INTERVAL_MS = 250;
 
@@ -22,6 +25,11 @@ export class AudioEngine {
   private activeBgmNodes = new Set<Source>();
   /** BGMだけに、ほんのり残響をかけるための入り口（`ensureContext`で用意する）。 */
   private bgmBus: GainNode | null = null;
+  /** 録音音源（サウンドフォント）のBGM再生。準備ができるまでは合成音で鳴らす。 */
+  private sampled = new SampledBgm();
+  private sampledBus: GainNode | null = null;
+  private currentBgm: Score | null = null;
+  private synthOnly = SYNTH_ONLY_FROM_URL;
   private bgmLoopStart = 0;
   private bgmDurationSec = 0;
 
@@ -33,6 +41,16 @@ export class AudioEngine {
       this.bgmGain.gain.value = this.muted ? 0 : this.bgmVolume;
       this.bgmGain.connect(this.ctx.destination);
       this.bgmBus = createBgmBus(this.ctx, this.bgmGain);
+      // 録音音源は、ほんの少しだけ残響を足して、同じ出口（音量・仕上げ）を通す
+      this.sampledBus = createBgmBus(this.ctx, this.bgmGain, 0.1);
+      if (!this.synthOnly) {
+        void this.sampled.load(this.ctx, this.sampledBus).then((ok) => {
+          if (ok && this.currentBgm && this.bgmLoopHandle !== null) {
+            // 準備ができたら、いま合成音で鳴っている曲を、同じ位置から録音音源に切り替える
+            this.playBgm(this.currentBgm, this.getBgmPositionSec());
+          }
+        });
+      }
 
       this.seGain = this.ctx.createGain();
       this.seGain.gain.value = this.muted ? 0 : this.seVolume;
@@ -113,6 +131,12 @@ export class AudioEngine {
     if (durationSec <= 0) {
       return;
     }
+    this.currentBgm = score;
+    if (this.sampled.isReady() && !this.synthOnly) {
+      this.sampled.play(score, offsetSec);
+      this.bgmLoopHandle = -1; // 「鳴っている」印（録音音源はシーケンサーが自分でループする）
+      return;
+    }
 
     // 曲全体を一度に予約すると、長い曲では数千個の音を一気に作ってしまい、音が途切れたり出なくなる。
     // そこで、先の数秒ぶんだけを少しずつ予約する（次の周回も同じ要領でつなぐ）。
@@ -155,8 +179,27 @@ export class AudioEngine {
     this.bgmLoopHandle = window.setInterval(scheduleAhead, SCHEDULE_INTERVAL_MS);
   }
 
+  /** true にすると、録音音源を使わず合成音だけで鳴らす（音の聴き比べ用）。鳴っている曲は同じ位置から切り替える。 */
+  setSynthOnly(value: boolean): void {
+    if (this.synthOnly === value) {
+      return;
+    }
+    this.synthOnly = value;
+    if (this.currentBgm && this.bgmLoopHandle !== null) {
+      this.playBgm(this.currentBgm, this.getBgmPositionSec());
+    }
+  }
+
+  /** 録音音源の準備ができているか（BGMプレイヤーの表示用）。 */
+  isSampledReady(): boolean {
+    return this.sampled.isReady();
+  }
+
   /** いま鳴っているBGMの、曲の中での位置（秒）。鳴っていなければ0。 */
   getBgmPositionSec(): number {
+    if (this.sampled.isPlaying()) {
+      return this.sampled.positionSec();
+    }
     if (!this.ctx || this.bgmLoopHandle === null || this.bgmDurationSec <= 0) {
       return 0;
     }
@@ -165,8 +208,11 @@ export class AudioEngine {
   }
 
   stopBgm(): void {
+    this.sampled.stop();
     if (this.bgmLoopHandle !== null) {
-      window.clearInterval(this.bgmLoopHandle);
+      if (this.bgmLoopHandle >= 0) {
+        window.clearInterval(this.bgmLoopHandle);
+      }
       this.bgmLoopHandle = null;
     }
     for (const node of this.activeBgmNodes) {

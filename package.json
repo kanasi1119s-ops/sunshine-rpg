@@ -13,5 +13,9 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.1",
     "vitest": "^5.0.2"
+  },
+  "dependencies": {
+    "spessasynth_core": "^4.3.22",
+    "spessasynth_lib": "^4.3.14"
   }
 }

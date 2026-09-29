@@ -8,6 +8,8 @@ export interface NoteEvent {
   note: string;
   /** 何拍分の長さか（4分音符=1、8分音符=0.5など）。 */
   durationBeats: number;
+  /** 強さ（1が標準。ゴーストノートなど弱い音は0.5など）。省略時は1。 */
+  velocity?: number;
 }
 
 export type Waveform = "square" | "triangle" | "sawtooth" | "sine";
@@ -31,12 +33,16 @@ export interface Track {
   waveform: Waveform;
   /** 楽器の音色（省略時は`waveform`のまま）。 */
   instrument?: Instrument;
+  /** 左右の位置（-1=左、0=中央、1=右）。省略時は中央。 */
+  pan?: number;
   /** 0〜1。 */
   volume: number;
   notes: NoteEvent[];
 }
 
 export interface Score {
+  /** 録音音源で鳴らすときのドラムセット（GMのドラムキット番号。0=標準、16=パワー、24=電子、25=TR-808、32=ジャズ）。省略時は0。 */
+  drumKit?: number;
   tempoBpm: number;
   loop: boolean;
   tracks: Track[];
@@ -49,6 +55,9 @@ export interface ScheduledNote {
   waveform: Waveform;
   instrument?: Instrument;
   volume: number;
+  pan?: number;
+  /** 1拍の長さ（秒）。テンポに合わせたエコーなどに使う。 */
+  beatSec: number;
 }
 
 function trackDurationBeats(track: Track): number {
@@ -62,7 +71,13 @@ export function getScoreDurationSec(score: Score): number {
   return longestBeats * secPerBeat;
 }
 
-function flattenTrack(track: Track, tempoBpm: number): ScheduledNote[] {
+/** 同じ入力なら同じ結果になる、ごく小さな強さのゆらぎ（機械的な均一さをやわらげる）。 */
+export function humanize(startSec: number): number {
+  const x = Math.sin(startSec * 12.9898 + 78.233) * 43758.5453;
+  return 0.93 + 0.14 * (x - Math.floor(x));
+}
+
+function flattenTrack(track: Track, tempoBpm: number, loop: boolean): ScheduledNote[] {
   const secPerBeat = 60 / tempoBpm;
   let t = 0;
   const events: ScheduledNote[] = [];
@@ -75,7 +90,9 @@ function flattenTrack(track: Track, tempoBpm: number): ScheduledNote[] {
         durationSec,
         waveform: track.waveform,
         instrument: track.instrument,
-        volume: track.volume,
+        volume: track.volume * (noteEvent.velocity ?? 1) * (loop && track.instrument ? humanize(t) : 1),
+        pan: track.pan,
+        beatSec: secPerBeat,
       });
     }
     t += durationSec;
@@ -85,5 +102,5 @@ function flattenTrack(track: Track, tempoBpm: number): ScheduledNote[] {
 
 /** 曲を「いつ・どの高さ・どれくらいの長さで鳴らすか」の一覧に変換する。 */
 export function flattenScore(score: Score): ScheduledNote[] {
-  return score.tracks.flatMap((track) => flattenTrack(track, score.tempoBpm));
+  return score.tracks.flatMap((track) => flattenTrack(track, score.tempoBpm, score.loop));
 }

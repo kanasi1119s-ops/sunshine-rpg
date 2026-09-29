@@ -13,12 +13,15 @@
 | 素材名 | 入手元 | 入手日 | 使った場所 | 規約の要点 | クレジット |
 |---|---|---|---|---|---|
 | ぴぽや「フィールドマップセット１」「同 追加パーツ」（`pipo-map001.zip`・`pipo-map001plus.zip`） | https://pipoya.net/sozai/assets/map-chip_tileset32/ | 2026-09-30 | 取得・規約確認済み、元ファイルは `assets-src/pipoya/`。**ゲームに反映済み（2026-09-30）**: 地形テクスチャ5点（草A・草B・土の道・水面・深い森。128×128）に、自動タイルの中央の1枚を並べ、色を24色に減らして使用（`tools/pixel-art/import-pipoya.mjs` → `pipoya-terrain.json` → `export-game-data.mjs` → `src/game/art/sprite-data.generated.ts`）。建物・城・山などの他の絵は未使用 | 無料素材利用規約（https://pipoya.net/sozai/terms-of-use/ ）と同梱の readme を確認。商用利用可、加工可、無償の再配布可（規約とともに）、ゲームへの組み込み・販売可。禁止は素材としての販売（転売）。要点は `assets-src/pipoya/LICENSE-pipoya.md` | 不要（お礼として README・ゲーム内クレジットに「ぴぽや https://pipoya.net/」と書く予定） |
+| FluidR3 Mono GM サウンドフォント（`FluidR3Mono_GM.sf3`。npm `@librescore/sf3` 0.8.0 に同梱） | https://www.npmjs.com/package/@librescore/sf3 （原典: Frank Wen「Fluid (R3) GM」、Michael Cowgill による Mono 版） | 2026-09-30 | BGMの録音音源。ゲームで使う楽器（GMの17種＋ドラム6セット）だけを `tools/soundfont/trim-soundfont.mjs` で切り出し、`src/audio/soundfont/game.sf3`（約3.3MB）としてゲームに同梱。元ファイルは `assets-src/soundfont/` | MITライセンス（`assets-src/soundfont/LICENSE-FluidR3.md`）。商用利用・改変・再配布・ゲームへの組み込みは可。**著作権表示と許諾文を配布物に含める条件**あり（`public/licenses/FluidR3-GM-MIT.txt` をゲームに同梱、README にも表記）。同梱のサンプルは、パブリックドメインの素材と作者本人の録音、Ethan Winer 氏・Michael Schorsch 氏の提供分 | 必要（README・ゲーム内クレジットに「Fluid (R3) GM SoundFont © Frank Wen / Mono版 © Michael Cowgill（MIT）」と書く） |
+| spessasynth_lib / spessasynth_core（サウンドフォント再生ライブラリ。npm） | https://github.com/spessasus/spessasynth_lib | 2026-09-30 | BGMの再生（`src/audio/sampled-engine.ts`） | Apache-2.0。商用利用・改変・再配布は可。ライセンス文を同梱する条件あり（`public/licenses/spessasynth-Apache-2.0.txt`） | 必要（README に表記） |
 
 ## 素材の置き場
 - 元ファイル: `assets-src/`（規約の写しも一緒に置く）
 - ゲームに読み込む形（色番号のRLEなど）に変換したもの: `src/game/art/`
 
 ## メモ
+- 2026-09-30: BGMを録音音源で鳴らすため、サウンドフォントを探した。**GeneralUser GS**（ライセンスは商用利用可だが、作者自身が「サンプルの出どころは100%確認できていない」と明記）は、出どころが不明確なため使わなかった。**MuseScore General**（MIT・一部CC0/PD、出どころが明記）は40MBで大きすぎたため見送り。**FluidR3 Mono GM**（MIT、出どころの明記あり）を採用した。より高品質にしたくなったら、MuseScore General Lite（約40MB）への差し替えを検討する（容量予算は人間が拡大を許可済み）。
 - 2026-09-29: 人間から「ぴぽや倉庫（https://pipoya.net/sozai/ ）の無料素材を使う、または参考にする」との指示があった。ただし、この作業環境のネットワークからはpipoya.netに接続できず、素材の取得も規約の確認もできなかった。人間が素材をダウンロードして `assets-src/pipoya/` に置いた時点で、規約（素材に付属のreadmeなど）を確認し、上の表に記録する。
 - 2026-09-30: パソコンのClaude Code＋Chrome拡張で、ぴぽや倉庫の規約ページと素材ページを確認し、上の2点を取得した（ダウンロード・展開とも人間の承認済み）。
 - 2026-09-30: ぴぽや素材の、生成AI・AI学習・AIが作った作品での利用についての記述を確認した。**結果: 記述なし**（禁止も制限も、許可の明記もない）。

@@ -25,6 +25,8 @@ export interface SongSpec {
   seed: number;
   /** 1小節の拍数（既定4。クラシック調の3拍子などで3）。 */
   beats?: 3 | 4 | 7;
+  /** 疾走感を出す（ボス戦向け）。16分の刻み・アルペジオ・8分のキックを足す。4拍子の曲だけ。 */
+  drive?: boolean;
   /** 曲の長さの目安（秒。既定75）。 */
   targetSec?: number;
 }
@@ -794,6 +796,21 @@ function mysteryScore(spec: SongSpec, rng: Rng, key: Key, kinds: Kind[]): Score 
   });
 }
 
+/**
+ * 疾走感（ボス戦向け）: 16分音符の低音の刻み、16分のアルペジオ、8分のキック、16分のハイハットを足す。
+ * 静かな導入（intro）にはかけない。
+ */
+function applyDrive(kp: KindPlan, kind: Kind, tpl: Template, on: boolean): KindPlan {
+  if (!on || kind === "intro") return kp;
+  const parts: Record<string, string> = { ...kp.parts };
+  delete parts.bass;
+  parts.drvbass = kind === "bridge" ? "R.R.R.R.R.R.R.R." : "R.RRR.RRR.RRR.RR";
+  parts.drv = kind === "chorus" || kind === "solo" || kind === "outro" ? "abcdabcdabcdabcd" : "a.b.c.b.a.b.c.b.";
+  if ("kick" in tpl.parts && tpl.parts.kick.step === 0.25) parts.kick = "x.x.x.x.x.x.x.x.";
+  if ("hat" in tpl.parts && tpl.parts.hat.step === 0.25) parts.hat = kind === "bridge" ? "x.x.x.x.x.x.x.x." : "xoxoxoxoxoxoxoxo";
+  return { ...kp, parts };
+}
+
 /** 設計図から曲を作る。 */
 export function composeSong(spec: SongSpec): Score {
   const rng = makeRng(spec.seed);
@@ -819,8 +836,14 @@ export function composeSong(spec: SongSpec): Score {
     if (kind === "outro" || kind === "chorus") degrees = [...degrees.slice(0, degrees.length - 1), 1];
     return deg(degrees);
   };
+  const driveParts: Record<string, PartSpec> = spec.drive && beats === 4
+    ? {
+        drvbass: { instrument: "bass", waveform: "sawtooth", volume: 0.24, octave: 2, step: 0.25 },
+        drv: { instrument: "lead", waveform: "square", volume: 0.06, octave: 4, step: 0.25 },
+      }
+    : {};
   const sections: Section[] = plan.kinds.map((kind) => {
-    const kp = tpl.plan(kind, beats);
+    const kp = applyDrive(tpl.plan(kind, beats), kind, tpl, spec.drive === true && beats === 4);
     let entry = cache.get(kind);
     if (!entry) {
       const chords = chordsFor(kind);
@@ -831,5 +854,5 @@ export function composeSong(spec: SongSpec): Score {
     for (const m of kp.mel) melody[m] = entry.melody;
     return { chords: entry.chords.join(" "), parts: kp.parts, melody };
   });
-  return arrange({ tempoBpm: spec.bpm, beatsPerBar: beats, sections, parts: tpl.parts, melodies: tpl.melodies });
+  return arrange({ tempoBpm: spec.bpm, beatsPerBar: beats, sections, parts: { ...tpl.parts, ...driveParts }, melodies: tpl.melodies });
 }
