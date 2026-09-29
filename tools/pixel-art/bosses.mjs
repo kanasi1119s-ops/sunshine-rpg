@@ -58,164 +58,235 @@ function shard(g, cx, cy, w, h, ramp, edge) {
 }
 const shadowUnder = (g, cx, cy, rx, ry, k) => ell(g, cx, cy, rx, ry, (r, c, nx, ny, d) => (d < 0.55 || hash(c, r) < 0.75 ? k : null));
 
-// ======== 1. 水涸れの歪み（第1章）: 干からびた粘土の巨体、割れ目に水がにじみ、逆流する渦がまとわりつく ========
-// pal: 0縁 1-5粘土(暗→明) 6割れ目の暗 7-10水(暗→明) 11水の光 12-14歪み紫(暗中明) 15影 16目の光
+
+/** 先が細くなる管（触手・角・爪）。r0が根もと、r1が先の半径。 */
+function taper(g, pts, r0, r1, ramp, edge = 0) {
+  const n = pts.length - 1;
+  for (let s = 0; s < n; s++) {
+    const [x0, y0] = pts[s], [x1, y1] = pts[s + 1], m = Math.max(2, Math.ceil(Math.hypot(x1 - x0, y1 - y0)));
+    for (let i = 0; i <= m; i++) {
+      const t = (s + i / m) / n, rad = r0 + (r1 - r0) * t, cx = x0 + (x1 - x0) * i / m, cy = y0 + (y1 - y0) * i / m;
+      ell(g, cx, cy, rad, rad, (r, c, nx, ny, d, lum) => (d > 0.8 ? edge : ramp[toneIdx(ramp.length, lum, c, r, 0.05)]));
+    }
+  }
+}
+/** 牙（下向き dir=1 / 上向き dir=-1 の三角）。 */
+function fang(g, x, y, w, h, dir, ramp, edge = 0) {
+  for (let i = 0; i <= h; i++) { const half = w * (1 - i / h) / 2; for (let c = -Math.ceil(half); c <= Math.ceil(half); c++) { const r = y + dir * i; const k = i === h || Math.abs(c) > half - 0.6 ? edge : c < 0 ? ramp[2] : ramp[1]; px(g, r, x + c, i < 2 && Math.abs(c) < half - 1 ? ramp[3] : k); } }
+}
+/** 縦に細い瞳孔の目（不気味な光る目）。 */
+function eye(g, cx, cy, rx, ry, glow, tilt = 0) {
+  ell(g, cx, cy, rx + 2, ry + 2, (r, c, nx, ny, d) => (d > 0.6 ? 0 : 1));
+  ell(g, cx, cy, rx, ry, (r, c, nx, ny, d, lum) => { const t = d < 0.25 ? 3 : d < 0.55 ? 2 : d < 0.85 ? 1 : 0; return glow[Math.min(glow.length - 1, t + (lum > 0.4 ? 1 : 0))]; });
+  for (let r = -ry; r <= ry; r++) { const w = Math.max(0, Math.round((1 - Math.abs(r) / ry) * rx * 0.28)); for (let c = -w; c <= w; c++) px(g, cy + r, cx + c + Math.round(r * tilt), 0); }
+  px(g, cy - ry * 0.4, cx - rx * 0.4, 15);                       // 目の照り返し
+}
+/** 外周に、ゆらめく毒気（歪みのもや）を散らす。 */
+function miasma(g, ramp, reach, density, skip) {
+  const has = (r, c) => r >= 0 && r < W && c >= 0 && c < W && g[r][c] !== -1 && !skip.includes(g[r][c]);
+  const put = [];
+  for (let r = 0; r < W; r++) for (let c = 0; c < W; c++) {
+    if (g[r][c] !== -1 && !skip.includes(g[r][c])) continue;
+    for (let d = 1; d <= reach; d++) {
+      if ([[d, 0], [-d, 0], [0, d], [0, -d], [d, d], [-d, d], [d, -d], [-d, -d]].some(([a, b]) => has(r + a, c + b))) {
+        const wisp = hash(Math.floor(c / 3), Math.floor((r + d * 2) / 3));
+        if (hash(c, r) < density * (1 - d / (reach + 1)) * (0.4 + wisp)) put.push([r, c, d < reach / 3 ? ramp[2] : d < reach * 0.66 ? ramp[1] : ramp[0]]);
+        break;
+      }
+    }
+  }
+  for (const [r, c, k] of put) g[r][c] = k;
+}
+function outlineAll(g, skip) {
+  const has = (r, c) => r >= 0 && r < W && c >= 0 && c < W && g[r][c] !== -1 && !skip.includes(g[r][c]);
+  const add = []; for (let r = 0; r < W; r++) for (let c = 0; c < W; c++) if ((g[r][c] === -1 || skip.includes(g[r][c])) && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => has(r + a, c + b))) add.push([r, c]);
+  for (const [r, c] of add) g[r][c] = 0;
+}
+
+/** 背後の禍々しい光輪（暗い環に、とげと呪印の刻み）。 */
+function halo(g, cx, cy, R, ramp) {
+  for (let a = 0; a < 6.2832; a += 0.003) for (let t = -3; t <= 3; t += 0.7) { const rr = R + t; px(g, cy + Math.sin(a) * rr, cx + Math.cos(a) * rr, Math.abs(t) > 2 ? ramp[0] : ramp[1]); }
+  for (let i = 0; i < 24; i++) { const a = i / 24 * 6.2832 + 0.1; const long = i % 3 === 0; const len = long ? 18 : 8; for (let k = 4; k < len; k++) { const rr = R + k, w = Math.max(0, (long ? 3.2 : 2) * (1 - k / len)); for (let d = -w; d <= w; d += 0.6) px(g, cy + Math.sin(a) * rr + Math.cos(a) * d, cx + Math.cos(a) * rr - Math.sin(a) * d, ramp[k < len * 0.5 ? 1 : 0]); } }
+  for (let i = 0; i < 36; i++) { const a = i / 36 * 6.2832; const rr = R - 9; for (let k = 0; k < 4; k++) px(g, cy + Math.sin(a) * (rr - k), cx + Math.cos(a) * (rr - k), i % 2 ? ramp[1] : ramp[2]); }      // 呪印の刻み
+}
+/** 小さな目の群れ（気味悪さ）。 */
+function eyeCluster(g, cx, cy, n, spread, glow, seed) {
+  for (let i = 0; i < n; i++) { const a = hash(seed, i) * 6.2832, d = Math.sqrt(hash(seed + 9, i)) * spread; const x = cx + Math.cos(a) * d, y = cy + Math.sin(a) * d * 0.8, rr = 3 + Math.floor(hash(seed + 3, i) * 3); eye(g, Math.round(x), Math.round(y), rr, rr - 1, glow, (hash(seed, i + 40) - 0.5) * 0.6); }
+}
+/** 右・下の縁を明るくして、背後の光に照らされたように見せる。 */
+function rimLight(g, skip, col, bright) {
+  const bg = (r, c) => r < 0 || r >= W || c < 0 || c >= W || g[r][c] === -1 || skip.includes(g[r][c]);
+  const put = [];
+  for (let r = 0; r < W; r++) for (let c = 0; c < W; c++) { const k = g[r][c]; if (k === -1 || k === 0 || skip.includes(k)) continue; if (bg(r, c + 2) || bg(r, c + 1)) put.push([r, c, hash(c, r) < 0.85 ? col : bright]); else if (bg(r + 2, c + 1) && hash(c, r) < 0.5) put.push([r, c, col]); }
+  for (const [r, c, k] of put) g[r][c] = k;
+}
+/** 牙と牙のあいだに垂れるよだれの糸。 */
+function slime(g, xs, y0, y1, col) { for (const x of xs) for (let r = y0; r < y1; r++) if ((r + x) % 5 !== 0) px(g, r, x, col); }
+
+// ======== 1. 水涸れの歪み（第1章）: 干からびた骸（むくろ）の巨体。胸は空洞で、暗い水が逆流する ========
+// pal: 0縁 1-5灰の粘土(暗→明) 6割れ目の暗 7-9紫の光(暗→明) 10-13骨(暗→明) 14洞の闇 15白 16-18目の赤紫(暗→明) 19黒い水 20黒い水の光 21影 22毒気暗 23毒気
 const boss1 = () => {
   const g = makeGrid();
-  const CL = [1, 2, 3, 4, 5], WT = [7, 8, 9, 10];
-  shadowUnder(g, 128, 240, 100, 11, 15);
+  const CL = [1, 2, 3, 4, 5], BN = [10, 11, 12, 13], EYE = [16, 17, 18];
+  shadowUnder(g, 128, 241, 104, 11, 21);
+  halo(g, 128, 112, 112, [22, 24, 25]);
+  // 黒い水の触手（地面から）
+  for (const [x0, x1, y1, cx] of [[40, 8, 150, 4], [216, 250, 156, 254], [86, 66, 190, 40], [170, 192, 190, 226]]) taper(g, curve([x0, 244], [cx, 205], [x1, y1]), 9, 2, [19, 19, 20], 0);
   const clay = (r, c, nx, ny, d, lum) => {
-    const [d1, d2] = worley(c, r * 1.1, 24, 3);
-    const edge = d2 - d1;
-    if (edge < 0.05) return hash(c, r) < 0.85 ? 9 : 11;              // 割れ目の奥に水が光る
-    if (edge < 0.10) return 6;                                        // 割れ目の縁は暗く
-    let t = toneIdx(5, lum, c, r, 0.13);
-    if (d1 > 0.62) t = Math.max(0, t - 1);                             // 乾いた板の中心は少し暗く
-    if (hash(c >> 2, r >> 2) < 0.12) t = clamp(t + 1, 0, 4);
+    const [d1, d2] = worley(c, r * 1.1, 20, 3); const edge = d2 - d1;
+    if (edge < 0.05) return hash(c, r) < 0.7 ? 8 : 9;                  // 割れ目から漏れる紫の光
+    if (edge < 0.11) return 6;
+    let t = toneIdx(5, lum - 0.12, c, r, 0.14); if (d1 > 0.6) t = Math.max(0, t - 1);
     return CL[t];
   };
-  // 腕（後ろ）→ 胴 → 肩 → 頭
-  ell(g, 36, 168, 27, 56, clay); ell(g, 220, 168, 27, 56, clay);
-  ell(g, 30, 226, 24, 20, clay); ell(g, 226, 226, 24, 20, clay);
-  ell(g, 128, 152, 86, 88, clay);
-  ell(g, 54, 118, 36, 32, clay); ell(g, 202, 118, 36, 32, clay);
-  ell(g, 128, 80, 46, 42, clay);
-  // 逆流する水の渦（胴にまとわりつく螺旋）
-  for (let r = 60; r < 240; r++) for (let c = 30; c < 226; c++) {
-    const dx = c - 128, dy = (r - 158) * 1.05, rad = Math.hypot(dx, dy); if (rad > 84 || rad < 10) continue;
-    const ang = Math.atan2(dy, dx), s = Math.sin(ang * 2 - rad * 0.11);
-    if (s < 0.78) continue;
-    const nx = dx / 90, ny = dy / 90, lum = lumOf(nx, ny, nx * nx + ny * ny);
-    const t = s > 0.95 ? 3 : toneIdx(4, lum, c, r, 0.08);
-    if (r < 230 && Math.hypot(c - 128, r - 152) <= 86.5) px(g, r, c, s > 0.97 ? 11 : WT[t]);
-  }
-  // 目と口（洞のような暗い穴に、水色の光）
-  for (const ex of [111, 145]) { ell(g, ex, 80, 11, 8, (r, c, nx, ny, d) => (d > 0.5 ? 0 : 6)); ell(g, ex, 81, 6, 4, (r, c, nx, ny, d) => (d > 0.45 ? 10 : 16)); }
-  for (let c = 104; c <= 152; c++) { const r = 104 + Math.round(Math.sin(c * 0.9) * 2.4); px(g, r, c, 0); px(g, r + 1, c, c % 3 === 0 ? 16 : 6); if (c % 5 === 0) { px(g, r + 2, c, 0); px(g, r + 3, c, 0); } }
-  // したたる水（腕・手から）
-  for (const [x, y0] of [[22, 244], [34, 246], [214, 244], [232, 246], [70, 230], [186, 232], [110, 236], [146, 236]]) for (let i = 0; i < 12; i++) px(g, y0 + i * 0.6, x, i > 9 ? 11 : WT[Math.min(3, 1 + (i > 4 ? 1 : 0) + (i > 8 ? 1 : 0))]);
-  // 歪みの結晶（紫）が宙に浮かぶ
-  for (const [x, y, w, h] of [[14, 58, 8, 16], [242, 64, 9, 18], [26, 22, 6, 12], [232, 26, 6, 12], [128, 10, 7, 14], [92, 30, 5, 9], [166, 32, 5, 9], [12, 130, 5, 10]]) shard(g, x, y, w, h, [12, 13, 14], 0);
-  // 外周の縁取り
-  const has = (r, c) => r >= 0 && r < W && c >= 0 && c < W && g[r][c] !== -1 && g[r][c] !== 15;
-  const add = []; for (let r = 0; r < W; r++) for (let c = 0; c < W; c++) if ((g[r][c] === -1 || g[r][c] === 15) && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => has(r + a, c + b))) add.push([r, c]);
-  for (const [r, c] of add) g[r][c] = 0;
+  // 腕: 右（向かって左）は巨大で長い爪、左は細く垂れる
+  // 左腕は高く振り上げ、鉤爪を開く（力強い輪郭）。右腕は重く垂れる
+  for (const [x, y] of curve([58, 136], [10, 118], [24, 62], 40)) { const rad = 28 - 11 * (136 - y) / 74 * 0 - (136 - y) / 74 * 11; ell(g, x, y, rad, rad, clay); }
+  ell(g, 26, 52, 22, 20, clay);
+  for (const [x, dx] of [[8, -6], [18, -2], [30, 3], [42, 8]]) taper(g, curve([x + 2, 42], [x + dx, 22], [x + dx * 1.6 + 2, 2]), 5, 1, BN, 0);
+  ell(g, 232, 160, 22, 56, clay);
+  for (const [x, dx] of [[222, 1], [232, 3], [242, 5]]) taper(g, curve([x, 208], [x + dx, 226], [x + dx * 2, 244]), 4, 1, BN, 0);
+  // 胴（空洞の胸: 肋骨と、暗い洞、脈動する紫の核）
+  ell(g, 128, 156, 82, 84, clay);
+  ell(g, 128, 150, 46, 56, (r, c, nx, ny, d) => (d > 0.9 ? 0 : d > 0.7 ? 6 : 14));
+  for (let i = 0; i < 5; i++) { const y = 118 + i * 17; for (let c = 92; c <= 164; c++) { const nx = (c - 128) / 38, yy = y + Math.round((nx * nx) * 12 - 10); const lum = -nx * 0.4 + 0.3; px(g, yy, c, BN[toneIdx(4, lum, c, yy, 0.05)]); px(g, yy + 1, c, BN[toneIdx(4, lum - 0.3, c, yy, 0.05)]); px(g, yy + 2, c, 0); } }
+  ell(g, 128, 160, 17, 20, (r, c, nx, ny, d) => (d > 0.85 ? 8 : d > 0.5 ? 9 : 15));
+  // 胸の洞から黒い水の触手が這い出す（先端に目）
+  for (const [pts, ex, ey] of [[curve([112, 176], [80, 212], [44, 196]), 44, 196], [curve([146, 178], [186, 222], [214, 198]), 214, 198], [curve([128, 190], [124, 226], [100, 240]), 100, 240]]) { taper(g, pts, 8, 3, [19, 19, 20]); eye(g, ex, ey, 5, 4, EYE, 0); }
+  // 肩のとげ・背中のとげ
+  for (const [x, y, w, h, dir] of [[60, 96, 16, 34, -1], [90, 80, 12, 30, -1], [196, 96, 16, 34, -1], [166, 80, 12, 30, -1]]) fang(g, x, y, w, h, dir, BN);
+  // 頭（髑髏）: 大きく裂けた口と二重の牙、空洞の眼窩に赤紫の目
+  ell(g, 128, 68, 46, 44, clay);
+  ell(g, 128, 108, 32, 18, (r, c, nx, ny, d, lum) => (ny < 0 ? null : (d > 0.8 ? 0 : CL[toneIdx(5, lum, c, r, 0.1)])));
+  for (const ex of [108, 148]) { ell(g, ex, 66, 15, 14, (r, c, nx, ny, d) => (d > 0.8 ? 0 : 14)); }
+  eyeCluster(g, 62, 168, 7, 24, EYE, 11); eyeCluster(g, 194, 176, 6, 22, EYE, 12);
+  eye(g, 108, 67, 9, 8, EYE, -0.2); eye(g, 148, 67, 9, 8, EYE, 0.2); eye(g, 128, 46, 6, 6, EYE, 0);          // 額にも第三の目
+  ell(g, 128, 94, 30, 12, (r, c, nx, ny, d) => (d > 0.75 ? 0 : 14));                                          // 口の闇
+  for (let i = 0; i < 9; i++) { const x = 100 + i * 7; fang(g, x, 84, 6, 10 + (i % 2) * 5, 1, BN); fang(g, x + 3, 104, 6, 9 + (i % 2) * 4, -1, BN); }
+  slime(g, [102, 112, 122, 134, 144, 154], 96, 105, 13);
+  // 角（曲がった骨）
+  taper(g, curve([94, 44], [76, 20], [88, 4]), 7, 1, BN); taper(g, curve([162, 44], [182, 20], [170, 4]), 7, 1, BN);
+  // したたる黒い水
+  for (const [x, y] of [[100, 112], [128, 116], [156, 112], [40, 236], [230, 216], [120, 230], [150, 236]]) for (let i = 0; i < 16; i++) px(g, y + i, x, i > 12 ? 20 : 19);
+  // 歪みの結晶（紫）
+  for (const [x, y, w, h] of [[16, 60, 8, 18], [242, 70, 8, 18], [30, 20, 6, 12], [224, 24, 6, 13], [128, 12, 6, 12]]) shard(g, x, y, w, h, [7, 8, 9], 0);
+  outlineAll(g, [21, 22, 23, 24, 25]);
+  rimLight(g, [21, 22, 23, 24, 25], 9, 15);
+  miasma(g, [22, 22, 23], 12, 0.75, [21, 22, 23, 24, 25]);
   return g;
 };
-const pal1 = [["縁", "#150c0e"], ["粘土1", "#4a2a1c"], ["粘土2", "#6e4128"], ["粘土3", "#95603a"], ["粘土4", "#bd8853"], ["粘土5", "#e2b47a"], ["割れ目", "#241009"], ["水1", "#0a3352"], ["水2", "#115a7a"], ["水3", "#2792a8"], ["水4", "#5cc8c8"], ["水の光", "#c4f4ee"], ["歪み暗", "#2a1450"], ["歪み", "#5b2fa0"], ["歪み明", "#a884f0"], ["影", "#1d2a1c"], ["目の光", "#f0fffa"]];
+const pal1 = [["縁", "#0a0610"], ["粘土1", "#241c26"], ["粘土2", "#3c3040"], ["粘土3", "#584a5c"], ["粘土4", "#7a6a78"], ["粘土5", "#a09096"], ["割れ目", "#160a20"], ["紫光1", "#4a1a80"], ["紫光2", "#8a3ad8"], ["紫光3", "#d8a4ff"], ["骨1", "#3a3026"], ["骨2", "#66584a"], ["骨3", "#a49480"], ["骨4", "#dcccb0"], ["洞の闇", "#0a0410"], ["白", "#ffffff"], ["目1", "#7a0a3a"], ["目2", "#e0206a"], ["目3", "#ff9ac0"], ["黒水", "#0a0e1c"], ["黒水光", "#3a4a80"], ["影", "#1a1424"], ["毒気1", "#2a1450"], ["毒気2", "#5b2fa0"], ["光輪暗", "#6a0c26"], ["光輪明", "#c8285a"]];
 
-// ======== 2. 積荷の歪み（第2章）: 木箱と灯り石が崩れて混ざった巨体 ========
-// pal: 0縁 1-5木(暗→明) 6金具暗 7金具明 8-11灯り石(暗→明) 12-14歪み紫(暗中明) 15影 16縄
+// ======== 2. 積荷の歪み（第2章）: 大口を開けた木箱の化け物。牙は割れた板、舌は縄、目は灯り石 ========
+// pal: 0縁 1-5暗い木(暗→明) 6金具暗 7金具明 8-11血の赤〜琥珀(暗→明) 12洞の闇 13-15牙の板(暗→明) 16縄 17黒い染み 18-20目(暗→明) 21影 22毒気暗 23毒気
 const boss2 = () => {
   const g = makeGrid();
-  const WD = [1, 2, 3, 4, 5], AM = [8, 9, 10, 11];
-  shadowUnder(g, 128, 242, 104, 10, 15);
-  function crate(x, y, w, h, seed, broken = false) {
+  const WD = [1, 2, 3, 4, 5], GL = [8, 9, 10, 11], TH = [13, 14, 15], EY = [18, 19, 20];
+  shadowUnder(g, 128, 242, 106, 10, 21);
+  halo(g, 128, 118, 118, [22, 24, 25]);
+  function crate(x, y, w, h, seed) {
     for (let r = y; r < y + h; r++) for (let c = x; c < x + w; c++) {
-      const u = (c - x) / w, v = (r - y) / h;
-      const plank = Math.floor((r - y) / 11), inP = (r - y) % 11;
-      const lum = (-(u - 0.5) * 0.9 - (v - 0.5) * 0.9) * 0.6 + 0.1;
-      let t = toneIdx(5, lum, c, r, 0.05);
-      if (inP === 0) t = Math.max(0, t - 2); else if (inP === 10) t = Math.max(0, t - 1); else if (inP === 1) t = Math.min(4, t + 1);
-      if (hash(plank + seed, 7) < 0.3) t = clamp(t - 1, 0, 4);                     // 板ごとの色の違い
-      if (hash(Math.floor((c + plank * 13) / 9), plank + seed) < 0.05 && inP > 1) t = Math.max(0, t - 1);
-      if ((c - x) < 5 || (c - x) >= w - 5 || (r - y) < 5 || (r - y) >= h - 5) t = clamp(((c - x) < 5 || (r - y) < 5 ? 4 : 1), 0, 4); // 枠
+      const u = (c - x) / w, v = (r - y) / h, plank = Math.floor((r - y) / 11), inP = (r - y) % 11;
+      const lum = (-(u - 0.5) * 0.9 - (v - 0.5) * 0.9) * 0.6 - 0.05; let t = toneIdx(5, lum, c, r, 0.06);
+      if (inP === 0) t = Math.max(0, t - 2); else if (inP === 10) t = Math.max(0, t - 1);
+      if (hash(plank + seed, 7) < 0.35) t = clamp(t - 1, 0, 4);
+      if (hash(Math.floor((c + plank * 13) / 9), plank + seed) < 0.06 && inP > 1) t = 0;                      // 腐った黒ずみ
+      if ((c - x) < 4 || (c - x) >= w - 4 || (r - y) < 4 || (r - y) >= h - 4) t = clamp(((c - x) < 4 || (r - y) < 4 ? 3 : 1), 0, 4);
       px(g, r, c, WD[t]);
     }
-    for (const [cx0, cy0] of [[x + 2, y + 2], [x + w - 4, y + 2], [x + 2, y + h - 4], [x + w - 4, y + h - 4]]) for (let i = 0; i < 9; i++) for (let j = 0; j < 9; j++) if (i < 3 || j < 3 || (i + j) < 2) px(g, cy0 + (cy0 === y + 2 ? j : -j + 2), cx0 + (cx0 === x + 2 ? i : -i + 2), i === 0 || j === 0 ? 7 : 6);
-    for (const [nx2, ny2] of [[x + 8, y + 8], [x + w - 9, y + 8], [x + 8, y + h - 9], [x + w - 9, y + h - 9]]) { px(g, ny2, nx2, 7); px(g, ny2 + 1, nx2, 6); }
-    // 縁取り
-    for (let c = x; c < x + w; c++) { px(g, y, c, 0); px(g, y + h - 1, c, 0); }
-    for (let r = y; r < y + h; r++) { px(g, r, x, 0); px(g, r, x + w - 1, 0); }
-    if (broken) { // 板が割れて灯り石が見える
-      const bx = x + w * 0.3, by = y + h * 0.35;
-      for (let r = 0; r < h * 0.4; r++) for (let c = 0; c < w * 0.4; c++) { const dd = (c - w * 0.2) ** 2 / (w * 0.2) ** 2 + (r - h * 0.2) ** 2 / (h * 0.2) ** 2; if (dd < 1) px(g, by + r, bx + c, dd < 0.25 ? 11 : dd < 0.55 ? 10 : 9); }
-    }
+    for (let c = x; c < x + w; c++) { px(g, y, c, 0); px(g, y + h - 1, c, 0); } for (let r = y; r < y + h; r++) { px(g, r, x, 0); px(g, r, x + w - 1, 0); }
+    for (const [ax, ay] of [[x + 6, y + 6], [x + w - 8, y + 6], [x + 6, y + h - 8], [x + w - 8, y + h - 8]]) { px(g, ay, ax, 7); px(g, ay + 1, ax, 6); px(g, ay, ax + 1, 6); }
   }
-  // 灯り石の結晶（六角の柱。琥珀色に光る）
-  function stone(cx, cy, w, h) {
-    for (let r = -h; r <= h; r++) for (let c = -w; c <= w; c++) {
-      const top = r < -h * 0.4, edge = Math.abs(c) / w;
-      const inside = top ? Math.abs(c) <= w * (1 - (-h * 0.4 - r) / (h * 0.6) * 0.6) : true; if (!inside) continue;
-      let k = c < -w * 0.3 ? 10 : c < w * 0.35 ? 11 : 9; if (top) k = r < -h * 0.85 ? 11 : 10; if (edge > 0.88 || r === h) k = 8; if (hash(c, r) < 0.05) k = 11;
-      px(g, cy + r, cx + c, k);
-    }
-  }
-  // 後ろの箱 → 前の箱（下から積み上がる）
-  crate(6, 118, 44, 100, 1); crate(206, 112, 44, 106, 2, true);                       // 腕の箱
-  crate(30, 168, 92, 76, 3); crate(120, 172, 100, 72, 4, true); crate(88, 150, 84, 46, 5);   // 下段
-  crate(48, 100, 82, 70, 6, true); crate(128, 94, 84, 74, 7);                                 // 中段
-  crate(88, 26, 80, 72, 8);                                                                   // 頭の箱
-  // 隙間からもれる灯り石
-  for (const [x, y, w, h] of [[80, 140, 9, 15], [170, 150, 8, 14], [128, 168, 10, 18], [58, 206, 8, 12], [196, 210, 9, 13], [128, 90, 7, 11]]) stone(x, y, w, h);
-  // 目（灯り石）と口（割れた板）
-  for (const ex of [108, 148]) { for (let r = 46; r < 60; r++) for (let c = ex - 9; c < ex + 9; c++) { const dd = (c - ex) ** 2 / 81 + (r - 53) ** 2 / 49; if (dd < 1) px(g, r, c, dd < 0.2 ? 11 : dd < 0.5 ? 10 : dd < 0.8 ? 9 : 0); } }
-  for (let c = 102; c <= 156; c++) { const r = 76 + Math.round(Math.abs(Math.sin((c - 102) * 0.5)) * 5); px(g, r, c, 0); px(g, r + 1, c, c % 4 === 0 ? 11 : 8); px(g, r + 2, c, 0); }
-  // 縄と鎖（斜めに巻く）
-  for (let i = 0; i < 200; i++) { const c = 36 + i * 0.86, r = 110 + i * 0.5 + Math.sin(i / 6) * 2; px(g, r, c, 16); px(g, r + 1, c, i % 6 < 3 ? 16 : 1); }
-  // 歪みのもや（外周の紫）と結晶
-  const has = (r, c) => r >= 0 && r < W && c >= 0 && c < W && g[r][c] !== -1 && g[r][c] !== 15;
-  const haze = []; for (let r = 0; r < W; r++) for (let c = 0; c < W; c++) { if (g[r][c] === -1 || g[r][c] === 15) { for (let d = 1; d <= 7; d++) { if ([[d, 0], [-d, 0], [0, d], [0, -d]].some(([a, b]) => has(r + a, c + b))) { if (hash(c, r) < 0.42 - d * 0.05) haze.push([r, c, d < 3 ? 13 : 12]); break; } } } }
-  for (const [r, c, k] of haze) g[r][c] = k;
-  for (const [x, y, w, h] of [[16, 40, 7, 15], [238, 44, 8, 17], [30, 82, 5, 10], [226, 90, 5, 10], [128, 8, 6, 12]]) shard(g, x, y, w, h, [12, 13, 14], 0);
-  const add = []; for (let r = 0; r < W; r++) for (let c = 0; c < W; c++) if ((g[r][c] === -1 || g[r][c] === 15) && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => { const rr = r + a, cc = c + b; return rr >= 0 && rr < W && cc >= 0 && cc < W && g[rr][cc] !== -1 && g[rr][cc] !== 15 && g[rr][cc] !== 12 && g[rr][cc] !== 13; })) add.push([r, c]);
-  for (const [r, c] of add) g[r][c] = 0;
+  // 腕: 割れた板でできた長い爪
+  crate(4, 120, 46, 96, 1); crate(206, 112, 46, 104, 2);
+  for (const [x, y] of [[8, 214], [20, 216], [32, 214], [44, 212]]) taper(g, curve([x, y], [x - 2, y + 14], [x - 6, y + 30]), 4, 1, TH);
+  for (const [x, y] of [[212, 214], [224, 216], [236, 214], [248, 212]]) taper(g, curve([x, y], [x + 2, y + 14], [x + 6, y + 30]), 4, 1, TH);
+  // 胴の箱
+  crate(28, 168, 94, 78, 3); crate(122, 172, 102, 74, 4); crate(86, 138, 84, 56, 5);
+  crate(46, 96, 84, 66, 6); crate(126, 92, 86, 70, 7);
+  // 頭の箱: 巨大な口
+  crate(84, 18, 92, 82, 8);
+  ell(g, 130, 66, 40, 22, (r, c, nx, ny, d) => (d > 0.86 ? 0 : d > 0.55 ? 8 : 12));
+  for (let i = 0; i < 9; i++) { const x = 96 + i * 8; fang(g, x, 50, 7, 13 + (i % 3) * 3, 1, TH); fang(g, x + 4, 82, 7, 11 + (i % 2) * 4, -1, TH); }
+  slime(g, [98, 108, 118, 138, 148, 158], 63, 82, 15);
+  eyeCluster(g, 34, 176, 6, 20, EY, 21); eyeCluster(g, 222, 172, 6, 20, EY, 22); eyeCluster(g, 128, 226, 5, 24, EY, 23);
+  // 舌（縄）が垂れ、よだれ
+  taper(g, curve([128, 70], [150, 108], [122, 138]), 6, 3, [16, 16, 5]);
+  for (const [x, y] of [[104, 84], [156, 84], [122, 92]]) for (let i = 0; i < 14; i++) px(g, y + i, x, i > 10 ? 10 : 17);
+  // 目（灯り石）をあちこちに
+  eye(g, 106, 34, 8, 7, EY, -0.2); eye(g, 154, 34, 8, 7, EY, 0.2);
+  eye(g, 68, 132, 6, 5, EY, 0); eye(g, 186, 128, 7, 6, EY, 0.1); eye(g, 90, 206, 6, 5, EY, 0); eye(g, 178, 210, 6, 5, EY, -0.1);
+  // 割れ目から漏れる血色の灯り
+  for (const [x, y, w, h] of [[80, 158, 8, 14], [170, 162, 7, 13], [126, 186, 9, 16], [52, 224, 7, 12], [200, 228, 8, 12]]) for (let r = -h; r <= h; r++) for (let c = -w; c <= w; c++) { const d = (c / w) ** 2 + (r / h) ** 2; if (d < 1) px(g, y + r, x + c, d < 0.2 ? 11 : d < 0.5 ? 10 : d < 0.8 ? 9 : 8); }
+  // 縄・鎖の触手が暴れる
+  taper(g, curve([60, 176], [12, 150], [4, 100]), 4, 1.5, [16, 16, 5]); taper(g, curve([196, 176], [246, 150], [252, 96]), 4, 1.5, [16, 16, 5]);
+  taper(g, curve([90, 244], [40, 246], [10, 226]), 4, 1.5, [17, 17, 6]);
+  // 歪みの結晶
+  for (const [x, y, w, h] of [[16, 60, 7, 16], [240, 52, 8, 17], [30, 22, 5, 11], [224, 20, 5, 12]]) shard(g, x, y, w, h, [22, 22, 23], 0);
+  outlineAll(g, [21, 22, 23, 24, 25]);
+  rimLight(g, [21, 22, 23, 24, 25], 10, 11);
+  miasma(g, [22, 22, 23], 12, 0.7, [21, 22, 23, 24, 25]);
   return g;
 };
-const pal2 = [["縁", "#160c08"], ["木1", "#3a2210"], ["木2", "#5e3a1c"], ["木3", "#855628"], ["木4", "#ab7a3c"], ["木5", "#d2a05a"], ["金具暗", "#3a3a44"], ["金具明", "#9a9aa8"], ["灯り石1", "#8a4a10"], ["灯り石2", "#d88a1c"], ["灯り石3", "#ffc94a"], ["灯り石4", "#fff4b0"], ["歪み暗", "#2a1450"], ["歪み", "#5b2fa0"], ["歪み明", "#a884f0"], ["影", "#1d2a1c"], ["縄", "#c8b078"]];
+const pal2 = [["縁", "#0a0606"], ["木1", "#1e1410"], ["木2", "#382418"], ["木3", "#563820"], ["木4", "#7a5230"], ["木5", "#a07444"], ["金具暗", "#2a2a32"], ["金具明", "#7a7a88"], ["赤1", "#5a0a10"], ["赤2", "#b01a20"], ["赤3", "#ff5a20"], ["琥珀", "#ffc040"], ["洞の闇", "#100404"], ["牙1", "#5a5040"], ["牙2", "#b0a488"], ["牙3", "#f0e8cc"], ["縄", "#8a7448"], ["黒い染み", "#0c0808"], ["目1", "#7a1000"], ["目2", "#ff4010"], ["目3", "#ffe080"], ["影", "#1a1418"], ["毒気1", "#2a1450"], ["毒気2", "#5b2fa0"], ["光輪暗", "#6a0c26"], ["光輪明", "#c8285a"]];
 
-// ======== 3. 実験の歪み（第3章）: 実験装置が暴走した機械の巨体。中心の灯り石の核が光る ========
-// pal: 0縁 1-6鋼(暗→明) 7-10真鍮(暗→明) 11-15光(暗→白) 16-18歪み紫 19影 20蒸気
+// ======== 3. 実験の歪み（第3章）: 実験装置が生き物のように蠢く。巨大な一つ目、歯車の顎、血管のような管 ========
+// pal: 0縁 1-6錆びた鋼(暗→明) 7-9錆(暗→明) 10-13目の白目〜赤(暗→明) 14-16虹彩(暗→明) 17歯の鋼 18血管の赤 19-21紫の脈(暗→明) 22影 23毒気暗 24毒気
 const boss3 = () => {
   const g = makeGrid();
-  const ST = [1, 2, 3, 4, 5, 6], BR = [7, 8, 9, 10], GL = [11, 12, 13, 14, 15];
-  shadowUnder(g, 128, 244, 108, 9, 19);
-  // 土台（重い板と脚）
-  const plate = (x, y, w, h) => { for (let r = y; r < y + h; r++) for (let c = x; c < x + w; c++) { const lum = -((c - x) / w - 0.5) * 0.6 - ((r - y) / h - 0.5) * 1.2 + 0.1; let t = toneIdx(6, lum, c, r, 0.05); if (r === y) t = 5; if (r === y + h - 1) t = 0; px(g, r, c, ST[t]); } for (let i = 0; i < w / 14; i++) { px(g, y + 5, x + 8 + i * 14, 5); px(g, y + 6, x + 8 + i * 14, 1); } };
-  plate(24, 216, 208, 26); plate(52, 200, 152, 18);
-  // 脚（ピストン）
-  for (const x of [58, 198]) { tube(g, [[x, 150], [x, 205]], 11, ST); for (let r = 158; r < 200; r += 8) for (let c = x - 12; c <= x + 12; c++) px(g, r, c, c < x - 4 ? 6 : c < x + 4 ? 4 : 2); }
-  // 歯車（左右と上）
+  const ST = [1, 2, 3, 4, 5, 6], RS = [7, 8, 9], IR = [14, 15, 16];
+  shadowUnder(g, 128, 244, 108, 9, 22);
+  halo(g, 128, 112, 116, [23, 25, 24]);
+  // 鎖（上から垂れる）
+  for (const x0 of [50, 206]) for (let i = 0; i < 44; i++) { const y = 6 + i * 3.6, x = x0 + Math.sin(i * 0.5) * 3; ell(g, x, y, 2.6, 3.4, (r, c, nx, ny, d) => (d > 0.6 ? 2 : i % 2 ? 4 : 3)); }
+  // 土台と脚
+  const plate = (x, y, w, h) => { for (let r = y; r < y + h; r++) for (let c = x; c < x + w; c++) { const lum = -((c - x) / w - 0.5) * 0.6 - ((r - y) / h - 0.5) * 1.2 - 0.1; let t = toneIdx(6, lum, c, r, 0.08); if (r === y) t = 4; if (r === y + h - 1) t = 0; if (hash(c >> 1, r >> 1) < 0.1) t = 0; px(g, r, c, ST[t]); if (hash(c, r) < 0.06) px(g, r, c, RS[1]); } };
+  plate(20, 218, 216, 26); plate(48, 202, 160, 18);
+  for (let i = 0; i < 12; i++) fang(g, 26 + i * 18, 218, 10, 12, -1, [1, 2, 3, 4]);           // 土台のとげ
+  // 血管のような管（触手）: 紫の脈が光る
+  const vein = (pts, r0, r1) => { taper(g, pts, r0, r1, ST); const n = pts.length; for (let i = 3; i < n - 2; i += 3) { const [x, y] = pts[i]; px(g, y, x, 21); px(g, y + 1, x, 20); px(g, y, x + 1, 20); } };
+  vein(curve([60, 200], [8, 190], [12, 120], 32), 10, 3); vein(curve([196, 200], [248, 190], [244, 116], 32), 10, 3);
+  vein(curve([70, 100], [20, 96], [16, 40], 30), 8, 3); vein(curve([186, 100], [236, 96], [240, 36], 30), 8, 3);
+  vein(curve([100, 214], [60, 246], [24, 236], 26), 7, 2); vein(curve([156, 214], [196, 246], [232, 236], 26), 7, 2);
+  // 歯車の顎（下の口）: 大きな歯車の上半分が、牙のように上を向く
+  ell(g, 128, 186, 78, 40, (r, c, nx, ny, d) => (d > 0.85 ? 0 : 14));                       // 口の闇（赤黒い）
+  for (let i = 0; i < 12; i++) { const x = 66 + i * 11.6, hh = 20 + (i % 2) * 6; fang(g, x, 218 - 30, 10, hh, -1, [2, 3, 4, 5]); }
+  for (let i = 0; i < 11; i++) { const x = 72 + i * 11.6, hh = 14 + (i % 2) * 5; fang(g, x, 150, 9, hh, 1, [2, 3, 4, 5]); }
+  // 頭部の装甲と巨大な一つ目
+  ell(g, 128, 112, 68, 66, (r, c, nx, ny, d, lum) => (d > 0.9 ? 0 : ST[toneIdx(6, lum - 0.2, c, r, 0.12)]));
+  for (let i = 0; i < 14; i++) { const a = i / 14 * 6.283; px(g, 112 + Math.sin(a) * 62, 128 + Math.cos(a) * 62, 6); px(g, 112 + Math.sin(a) * 62 + 1, 128 + Math.cos(a) * 62, 1); }   // リベット
+  ell(g, 128, 112, 46, 44, (r, c, nx, ny, d, lum) => { if (d > 0.9) return 0; let t = d < 0.5 ? 3 : d < 0.8 ? 2 : 1; if (lum > 0.5) t += 0; return 10 + Math.min(3, t); });      // 白目（濁った黄と赤）
+  for (let n = 0; n < 14; n++) { let a = hash(n, 5) * 6.283, rr = 44; for (let i = 0; i < 26; i++) { rr -= 1.2; a += (hash(n, i + 9) - 0.5) * 0.28; px(g, 112 + Math.sin(a) * rr, 128 + Math.cos(a) * rr, 18); } }    // 充血した血管
+  ell(g, 128, 114, 26, 26, (r, c, nx, ny, d, lum) => (d > 0.9 ? 0 : IR[toneIdx(3, lum + 0.2 - d * 0.5, c, r, 0.1)]));    // 虹彩
+  for (let r = 96; r <= 132; r++) { const w = Math.round((1 - Math.abs(r - 114) / 19) * 6); for (let c = -w; c <= w; c++) px(g, r, 128 + c, 0); }     // 縦の瞳孔
+  px(g, 104, 118, 15); px(g, 105, 118, 15); px(g, 104, 119, 15);
+  // まぶた（金属の板）
+  ell(g, 128, 70, 60, 26, (r, c, nx, ny, d, lum) => (ny > 0.35 ? null : d > 0.88 ? 0 : ST[toneIdx(6, lum - 0.15, c, r, 0.1)]));
+  ell(g, 128, 158, 52, 16, (r, c, nx, ny, d, lum) => (ny < -0.2 ? null : d > 0.85 ? 0 : ST[toneIdx(6, lum - 0.25, c, r, 0.1)]));
+  // 上の歯車と横の歯車（回転する刃）
   function gear(cx, cy, R, teeth, spin) {
     for (let r = Math.floor(cy - R * 1.15); r <= cy + R * 1.15; r++) for (let c = Math.floor(cx - R * 1.15); c <= cx + R * 1.15; c++) {
       const dx = c - cx, dy = r - cy, rad = Math.hypot(dx, dy), ang = Math.atan2(dy, dx) + spin;
-      const outer = R * (Math.sin(teeth * ang) > 0.1 ? 1.0 : 0.86); if (rad > outer) continue;
-      const lum = (-dx * 0.55 - dy * 0.65) / R * 0.7 + 0.15;
-      let t = toneIdx(6, lum, c, r, 0.05);
-      if (rad > outer - 3) t = Math.max(0, t - 2);                                     // 歯の縁
-      else if (Math.abs(rad - R * 0.62) < 2) t = Math.max(0, t - 2);                   // 溝
-      else if (rad < R * 0.28) t = clamp(t + (rad < R * 0.12 ? -2 : 1), 0, 5);         // 軸
-      else if (rad < R * 0.62 && Math.sin(6 * ang) > 0.55) t = 0;                       // 肉抜きの穴
-      px(g, r, c, ST[t]);
+      const tooth = Math.max(0, Math.sin(teeth * ang)); const outer = R * (0.82 + 0.26 * Math.pow(tooth, 0.6)); if (rad > outer) continue;      // 鋭い刃の歯
+      const lum = (-dx * 0.55 - dy * 0.65) / R * 0.7 - 0.05; let t = toneIdx(6, lum, c, r, 0.08);
+      if (rad > outer - 3) t = 0; else if (Math.abs(rad - R * 0.6) < 2) t = 0; else if (rad < R * 0.24) t = clamp(t + (rad < R * 0.1 ? -2 : 1), 0, 5); else if (rad < R * 0.6 && Math.sin(5 * ang) > 0.6) t = 0;
+      if (hash(c, r) < 0.05) { px(g, r, c, RS[1]); continue; } px(g, r, c, ST[t]);
     }
   }
-  gear(46, 118, 46, 12, 0.1); gear(210, 118, 46, 12, 0.35); gear(128, 46, 34, 10, 0.2);
-  // 管（歯車と核をつなぐ）
-  tube(g, curve([70, 150], [80, 200], [110, 196]), 7, BR);
-  tube(g, curve([186, 150], [176, 200], [146, 196]), 7, BR);
-  tube(g, curve([70, 84], [96, 66], [104, 96]), 6, ST);
-  tube(g, curve([186, 84], [160, 66], [152, 96]), 6, ST);
-  // 排気口と蒸気
-  for (const x of [98, 158]) { for (let r = 172; r < 186; r++) for (let c = x - 9; c <= x + 9; c++) px(g, r, c, ST[c < x - 3 ? 4 : c < x + 3 ? 3 : 1]); for (let i = 0; i < 26; i++) { const ex = x + Math.sin(i * 0.7) * 5 + (x < 128 ? -1 : 1) * i * 0.3, ey = 170 - i * 3.6; ell(g, ex, ey, 6 + i * 0.35, 4 + i * 0.25, (r, c, nx, ny, d) => (hash(c, r) < 0.5 - d * 0.35 ? 20 : null)); } }
-  // 核を囲む輪（後ろ半分）
-  function ring(cx, cy, rx, ry, thick, front) {
-    for (let a = 0; a < 6.283; a += 0.004) { const isFront = Math.sin(a) > 0; if (isFront !== front) continue; for (let t2 = -thick; t2 <= thick; t2 += 0.6) { const c = cx + (rx + t2) * Math.cos(a), r = cy + (ry + t2 * ry / rx) * Math.sin(a); const lum = -Math.cos(a) * 0.4 - Math.sin(a) * 0.3 - Math.abs(t2) / thick * 0.5 + 0.5; px(g, r, c, BR[clamp(Math.floor(lum * 4), 0, 3)]); } }
-  }
-  ring(128, 128, 62, 24, 5, false);
-  // 核（灯り石。中心ほど白く光る）
-  ell(g, 128, 128, 46, 46, (r, c, nx, ny, d, lum) => { if (d > 0.93) return 0; const t = d < 0.06 ? 4 : d < 0.22 ? 3 : d < 0.45 ? 2 : d < 0.7 ? 1 : 0; const tt = clamp(t + (hash(c, r) < 0.1 ? 1 : 0), 0, 4); return GL[tt]; });
-  // 核を囲むかご（縦の枠）
-  for (const a of [-0.9, -0.3, 0.3, 0.9]) for (let t = -1; t <= 1; t += 0.004) { const ang = t * 1.2; const x = 128 + Math.sin(a * 2.2) * 46 * Math.cos(ang) * 0 + Math.sin(ang) * 48 * Math.cos(a), y = 128 - Math.cos(ang) * 48; px(g, y, x, ST[a < 0 ? 4 : 2]); px(g, y, x + 1, ST[a < 0 ? 3 : 1]); }
-  ring(128, 128, 62, 24, 5, true);
-  // 稲妻状の歪み（紫）が核から走る
-  for (const [ax, ay, bx, by] of [[128, 96, 168, 30], [128, 96, 90, 22], [170, 120, 240, 80], [86, 122, 14, 70], [128, 160, 200, 244], [128, 160, 54, 246]]) { let x = ax, y = ay; const n = 34; for (let i = 0; i < n; i++) { x += (bx - x) / (n - i) + (hash(i, ax) - 0.5) * 8; y += (by - y) / (n - i) + (hash(i, ay) - 0.5) * 5; px(g, y, x, 17); px(g, y, x + 1, 18); if (i % 4 === 0) px(g, y - 1, x - 1, 16); } }
-  for (const [x, y, w, h] of [[14, 40, 7, 15], [240, 40, 8, 16], [14, 190, 6, 12], [242, 190, 7, 13]]) shard(g, x, y, w, h, [16, 17, 18], 0);
-  const has = (r, c) => r >= 0 && r < W && c >= 0 && c < W && g[r][c] !== -1 && g[r][c] !== 19 && g[r][c] !== 20;
-  const add = []; for (let r = 0; r < W; r++) for (let c = 0; c < W; c++) if ((g[r][c] === -1 || g[r][c] === 19) && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => has(r + a, c + b))) add.push([r, c]);
-  for (const [r, c] of add) g[r][c] = 0;
+  // 怒った眉のような装甲板（目を斜めにいからせる）
+  for (const sg of [-1, 1]) for (let i = 0; i < 46; i++) { const x = 128 + sg * (12 + i), y = 74 - i * 0.28 * -1 + (i > 30 ? (i - 30) * -1.2 : 0) - 6; for (let t = -5; t <= 5; t++) px(g, y + t + (sg > 0 ? 0 : 0), x, t < -3 ? 5 : t < 1 ? 3 : t < 4 ? 2 : 0); }
+  for (let i = 0; i < 7; i++) fang(g, 74 + i * 18, 44, 9, 18 + (i % 2) * 8, -1, [2, 3, 4, 5]);     // 頭上の冠のとげ
+  gear(128, 34, 30, 12, 0.2);
+  slime(g, [72, 88, 104, 120, 136, 152, 168, 184], 156, 176, 17);
+  // 紫の稲妻
+  for (const [ax, ay, bx, by] of [[128, 112, 24, 60], [128, 112, 236, 70], [128, 190, 8, 240], [128, 190, 248, 236]]) { let x = ax, y = ay; const n = 30; for (let i = 0; i < n; i++) { x += (bx - x) / (n - i) + (hash(i, ax) - 0.5) * 9; y += (by - y) / (n - i) + (hash(i, ay) - 0.5) * 6; px(g, y, x, 20); px(g, y, x + 1, 19); if (i % 3 === 0) px(g, y - 1, x - 1, 21); } }
+  for (const [x, y, w, h] of [[14, 60, 7, 16], [242, 56, 8, 17], [30, 22, 5, 11], [224, 24, 5, 12]]) shard(g, x, y, w, h, [19, 20, 21], 0);
+  outlineAll(g, [22, 23, 24, 25]);
+  rimLight(g, [22, 23, 24, 25], 21, 6);
+  miasma(g, [23, 23, 24], 12, 0.7, [22, 23, 24, 25]);
   return g;
 };
-const pal3 = [["縁", "#0c1018"], ["鋼1", "#1e2632"], ["鋼2", "#323f52"], ["鋼3", "#4c5e78"], ["鋼4", "#6f86a4"], ["鋼5", "#9db4ce"], ["鋼6", "#d0e0f0"], ["真鍮1", "#5a3c12"], ["真鍮2", "#8a5f1c"], ["真鍮3", "#c08a2c"], ["真鍮4", "#f0c452"], ["光1", "#a04a10"], ["光2", "#e88a20"], ["光3", "#ffc84a"], ["光4", "#fff0a0"], ["光5", "#ffffff"], ["歪み暗", "#2a1450"], ["歪み", "#7a3fd0"], ["歪み明", "#c0a0ff"], ["影", "#1d2a1c"], ["蒸気", "#dfe8f0"]];
+const pal3 = [["縁", "#080810"], ["鋼1", "#16161c"], ["鋼2", "#26262e"], ["鋼3", "#3c3c48"], ["鋼4", "#585868"], ["鋼5", "#7c7c8c"], ["鋼6", "#a8a8b8"], ["錆1", "#3a1a0a"], ["錆2", "#6a3010"], ["錆3", "#a05a20"], ["白目1", "#3a2a1a"], ["白目2", "#6a5024"], ["白目3", "#a08a42"], ["白目4", "#d4c470"], ["虹彩1", "#5a0a10"], ["虹彩2", "#d02010"], ["虹彩3", "#ff7a18"], ["歯", "#c8c8d0"], ["血管", "#9a1020"], ["紫1", "#3a1070"], ["紫2", "#8a3ad8"], ["紫3", "#d8a8ff"], ["影", "#14101a"], ["毒気1", "#2a1450"], ["毒気2", "#5b2fa0"], ["光輪赤", "#a01a40"]];
 
 export const PIECES = [
   { name: "B1-水涸れの歪み", pal: pal1, build: boss1 },
