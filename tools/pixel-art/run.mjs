@@ -2,7 +2,7 @@
 // ドット絵エディタ（Artifact）をヘッドレスブラウザで開き、実際にマウスで描いて動画・画像・書き出しデータを残す。
 import { chromium } from "playwright-core";
 import fs from "fs";
-import { PIECES } from "./pieces.mjs";
+const { PIECES } = await import(process.env.PIECESET === "terrain" ? "./terrain.mjs" : "./pieces.mjs");
 import { N } from "./lib.mjs";
 
 const [editorPath, out, ...only] = process.argv.slice(2);
@@ -13,14 +13,14 @@ const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromi
 for (const piece of list) {
   const g = piece.build();
   fs.writeFileSync(`${out}/${piece.name}.json`, JSON.stringify(g));
-  const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 }, recordVideo: { dir: `${out}/video-${piece.name}`, size: { width: 1600, height: 1000 } } });
+  const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 }, ...(process.env.NOVIDEO ? {} : { recordVideo: { dir: `${out}/video-${piece.name}`, size: { width: 1600, height: 1000 } } }) });
   const p = await ctx.newPage();
   await p.route(/fonts\./, (r) => r.abort());
   await p.goto("file://" + editorPath);
   await p.selectOption("#templateSelect", "blank"); await p.click("#loadTemplateBtn");
   await p.fill("#gridW", String(N)); await p.fill("#gridH", String(N)); await p.click("#resizeBtn");
   await p.uncheck("#symmetry"); await p.uncheck("#showShading");
-  await p.evaluate(() => { const z = document.getElementById("zoom"); z.value = 8; z.dispatchEvent(new Event("input", { bubbles: true })); });
+  await p.evaluate(() => { const z = document.getElementById("zoom"); z.value = 4; z.dispatchEvent(new Event("input", { bubbles: true })); });
   for (let i = 0; i < piece.pal.length - 4; i++) await p.click("#addSymbolBtn");
   const ci = await p.$$("#symbolList input[type=color]"), li = await p.$$("#symbolList input.label");
   for (let i = 0; i < piece.pal.length; i++) {
