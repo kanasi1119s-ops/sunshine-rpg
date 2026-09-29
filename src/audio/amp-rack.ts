@@ -6,6 +6,7 @@
  */
 
 import type { AmpSetting } from "./score";
+import { AMP_PRESETS, makeDistortionCurve } from "./amp";
 import type { NamHost } from "./nam/nam-host";
 
 export type Tone = "rock" | "metal" | "prs";
@@ -14,7 +15,7 @@ export interface ChannelAmp {
   amp: AmpSetting;
   pan: number;
 }
-type Role = "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru";
+type Role = "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru";
 
 const CURVES = new Map<string, Float32Array<ArrayBuffer>>();
 /** 真空管アンプのように、少し非対称にクリップする波形。drive が大きいほど深く歪む。 */
@@ -86,6 +87,7 @@ export class AmpRack {
 
   private roleFromType(type: AmpSetting["type"], program: number | undefined, tone: Tone): Role {
     if (type === "nam") return this.nam ? "nam" : this.roleOf(program, tone);
+    if (type === "genre") return "genre";
     if (type === "clean" || type === "overdrive" || type === "distortion" || type === "metal" || type === "prs") return type;
     return this.roleOf(program, tone);
   }
@@ -140,6 +142,19 @@ export class AmpRack {
     switch (role) {
       case "nam":
         return this.buildNam(input, override!);
+      case "genre": {
+        // ジャンル別アンプ（amp.ts）: 入力の増幅 → 歪み → 低音・中音・高音 → キャビネット（低域・高域カット） → 出力
+        const p = AMP_PRESETS[override?.amp.preset ?? "rock"] ?? AMP_PRESETS.rock;
+        const shaper = this.ctx.createWaveShaper();
+        shaper.curve = makeDistortionCurve(p.shape, p.hardness, p.asymmetry);
+        shaper.oversample = "4x";
+        // 録音音源の1チャンネルの音は小さめなので、合成音のときより少し強めに入れる
+        return this.chain(input, tail([
+          this.gain(Math.max(1, p.drive * 1.6) * d), shaper,
+          this.filter("lowshelf", 200, p.bassDb), this.filter("peaking", p.midHz, p.midDb, 0.9), this.filter("highshelf", 3000, p.trebleDb),
+          this.filter("highpass", p.highpassHz, 0, 0.7), this.filter("lowpass", p.lowpassHz, 0, 0.7), this.gain(p.level * (p.drive > 1.5 ? 0.6 : 0.95)),
+        ]));
+      }
       case "overdrive":
         // オーバードライブ: ゆるく歪み、弾き方の強弱が音に残る。中域（900Hz付近）が前に出る
         return this.chain(input, tail([this.filter("highpass", 85), this.filter("peaking", 900, 4.5, 0.8), this.gain(3.4 * d), this.shaper(3.4 * d, 0.09), this.filter("peaking", 2400, 2, 1), this.filter("lowpass", 5600, 0, 0.9), this.gain(0.5)]));

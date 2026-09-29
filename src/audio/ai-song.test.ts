@@ -7,8 +7,8 @@ const song = {
   title: "テストの曲", description: "テスト", bpm: 120, beats: 4, chords: "Am F C G", barsPerChord: 1, repeats: 2,
   autoAccompaniment: true, feel: "rock", tone: "rock",
   parts: [
-    { instrument: "leadGuitar", role: "メロディ", volume: 0.25, pan: 0, amp: "prs", notes: "A4:1 C5:1 E5:2 R:4 D5:0.5 C5:0.5 B4:1 A4:2" },
-    { instrument: "kick", role: "キック", volume: 0.3, pan: 0, amp: "auto", notes: "x:1 R:1 x:1 R:1" },
+    { instrument: "leadGuitar", role: "メロディ", volume: 0.25, pan: 0, amp: "prs", ampPreset: "none", notes: "A4:1 C5:1 E5:2 R:4 D5:0.5 C5:0.5 B4:1 A4:2" },
+    { instrument: "kick", role: "キック", volume: 0.3, pan: 0, amp: "auto", ampPreset: "none", notes: "x:1 R:1 x:1 R:1" },
   ],
 };
 
@@ -23,6 +23,11 @@ describe("AIソング形式", () => {
     expect(lead.amp).toEqual({ type: "prs" });
     const kick = score.tracks[score.tracks.length - 1];
     expect(kick.notes.filter((n) => n.note !== REST).length).toBe(16);
+  });
+  it("ジャンル別アンプを指定できる", () => {
+    const { score } = aiSongToScore({ ...song, parts: [{ ...song.parts[0], ampPreset: "shoegaze" }] });
+    expect(score.tracks[score.tracks.length - 1].amp).toEqual({ type: "genre", preset: "shoegaze" });
+    expect(() => aiSongToScore({ ...song, parts: [{ ...song.parts[0], ampPreset: "xyz" }] })).toThrow(/ampPreset/);
   });
   it("伴奏なしにもできる", () => {
     expect(aiSongToScore({ ...song, autoAccompaniment: false }).score.tracks.length).toBe(2);

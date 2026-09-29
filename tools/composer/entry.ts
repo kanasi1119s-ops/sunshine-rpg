@@ -10,6 +10,7 @@ import { addNotes, copyNotes, moveNotes, notesInRange, notesToEvents, noteStartA
 import { composeFinale, FINALES } from "../../src/audio/finale";
 import { GM_PROGRAM } from "../../src/audio/gm-map";
 import { scoreToMidi } from "../../src/audio/midi-export";
+import { AMP_PRESETS, AMP_PRESET_NAMES, type AmpPresetName } from "../../src/audio/amp";
 import { NamHost } from "../../src/audio/nam/nam-host";
 import { buildNewSong } from "../../src/audio/newsong";
 import { noteNameToMidi } from "../../src/audio/note";
@@ -796,7 +797,7 @@ nsBtn.onclick = () => {
 // ── 音づくり（トラックごとのアンプ・NAM） ──
 const ampBox = h("div", {});
 const AMP_TYPES: [AmpSetting["type"], string][] = [
-  ["auto", "おまかせ（曲の設定どおり）"], ["clean", "クリーン"], ["overdrive", "オーバードライブ"], ["distortion", "ディストーション"], ["metal", "メタルゾーン"], ["prs", "なめらかなリード（PRS風）"], ["nam", "NAMのアンプモデル（実機を学習したもの）"],
+  ["auto", "おまかせ（曲の設定どおり）"], ["clean", "クリーン"], ["overdrive", "オーバードライブ"], ["distortion", "ディストーション"], ["metal", "メタルゾーン"], ["prs", "なめらかなリード（PRS風）"], ["genre", "ジャンル別アンプ（14種）"], ["nam", "NAMのアンプモデル（実機を学習したもの）"],
 ];
 function slider(label: string, min: number, max: number, step: number, value: number, on: (v: number) => void): HTMLElement {
   const input = h("input", { type: "range", min: String(min), max: String(max), step: String(step), value: String(value) });
@@ -820,7 +821,8 @@ function renderAmp(): void {
   };
   const typeSel = select(AMP_TYPES.map(([k, l]) => [k, l] as [string, string]), amp.type);
   typeSel.onchange = () => {
-    change({ ...amp, type: typeSel.value as AmpSetting["type"] });
+    const type = typeSel.value as AmpSetting["type"];
+    change({ ...amp, type, ...(type === "genre" && !amp.preset ? { preset: "rock" as AmpPresetName } : {}) });
     renderAmp();
   };
   const row = h("div", { class: "row" }, field(`「${instLabel(t.instrument)}」のアンプ`, typeSel),
@@ -828,6 +830,12 @@ function renderAmp(): void {
     slider("高音の明るさ(dB)", -6, 6, 0.5, amp.tone ?? 0, (v) => change({ ...(t.amp ?? amp), tone: v })),
     slider("出力の大きさ", 0.5, 1.5, 0.05, amp.level ?? 1, (v) => change({ ...(t.amp ?? amp), level: v })));
   ampBox.append(row);
+  if (amp.type === "genre") {
+    const presetSel = select(AMP_PRESET_NAMES.map((k) => [k, `${AMP_PRESETS[k].label}（${AMP_PRESETS[k].genre}）`] as [string, string]), amp.preset ?? "rock");
+    presetSel.onchange = () => change({ ...(t.amp ?? amp), type: "genre", preset: presetSel.value as AmpPresetName });
+    ampBox.append(h("div", { class: "row", style: "margin-top:8px" }, field("ジャンル", presetSel)),
+      h("div", { class: "muted", style: "margin-top:4px" }, "ジャンルごとに、歪み・低音／中音／高音・キャビネットを組み合わせたアンプです（ブラウザの音の部品だけで作った無料のもの。実在の機材の再現ではありません）。ギター以外（ピアノ・シンセ・声など）にもかけられます。"));
+  }
   if (amp.type === "nam") {
     const file = h("input", { type: "file", accept: ".nam,application/json", hidden: "" });
     file.onchange = () => {

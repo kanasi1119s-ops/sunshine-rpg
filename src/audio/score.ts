@@ -1,3 +1,4 @@
+import type { AmpPresetName } from "./amp";
 import { noteNameToFrequency } from "./note";
 
 /** 音を鳴らさない拍（休符）。 */
@@ -31,7 +32,9 @@ export type Instrument =
 
 /** ギターなどの音づくり（アンプ）の設定。`auto`は、曲の音色（tone）と楽器から自動で選ぶ。 */
 export interface AmpSetting {
-  type: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "nam";
+  type: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "nam" | "genre";
+  /** type=genre のとき、ジャンル別アンプ（amp.ts の14種）のプリセット名。 */
+  preset?: AmpPresetName;
   /** 歪みの深さの倍率（0.5〜2、既定1）。 */
   drive?: number;
   /** 高音の明るさ（dB。-6〜+6、既定0）。 */
