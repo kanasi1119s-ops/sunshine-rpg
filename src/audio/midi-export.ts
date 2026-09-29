@@ -1,3 +1,4 @@
+import { timeSignatureOf } from "./time-signature";
 import { GM_DEFAULT_BY_WAVE, GM_DRUM_NOTE, GM_LAYER, GM_PROGRAM, METAL_LEAD, SYNTH_LEAD, SYNTH_PAD } from "./gm-map";
 import { noteNameToMidi } from "./note";
 import { humanize, REST, type AmpSetting, type Instrument, type Score, type Track } from "./score";
@@ -60,6 +61,9 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
   const endTick = Math.round(totalBeats * PPQ);
   const usecPerBeat = Math.round(60_000_000 / score.tempoBpm);
   const conductor: number[] = [0, 0xff, 0x51, 0x03, (usecPerBeat >> 16) & 255, (usecPerBeat >> 8) & 255, usecPerBeat & 255];
+  // 拍子（例: 7/8 → 分子7・分母は2の3乗）
+  const sig = timeSignatureOf(score);
+  conductor.push(0, 0xff, 0x58, 0x04, sig.num, Math.round(Math.log2(sig.den)), 24, 8);
   // ループの始まりと終わり（曲の頭から最後の拍まで、ぴったりくり返す）
   const marker = (text: string): number[] => [0xff, 0x06, text.length, ...[...text].map((c) => c.charCodeAt(0))];
   conductor.push(0, ...marker("loopstart"));

@@ -1,6 +1,7 @@
 import { BasicMIDI } from "spessasynth_core";
 import { WorkletSynthesizer } from "spessasynth_lib";
 import { AmpRack } from "./amp-rack";
+import { configureAudioRack, decodeClip, scheduleAudioTracks } from "./audio-clips";
 import { scoreToMidiInfo } from "./midi-export";
 import type { NamHost } from "./nam/nam-host";
 import { getScoreDurationSec, type Score } from "./score";
@@ -25,7 +26,10 @@ export interface OfflineRenderOptions {
  */
 export async function renderScoreOffline(score: Score, options: OfflineRenderOptions): Promise<AudioBuffer> {
   const sampleRate = options.sampleRate ?? 44100;
-  const seconds = getScoreDurationSec(score) + (options.tailSec ?? 2.5);
+  // 録音した音が曲より長ければ、その終わりまで描き出す
+  const spb = 60 / score.tempoBpm;
+  const clipEnd = Math.max(0, ...(score.audioTracks ?? []).flatMap((t) => t.clips.map((c) => c.startBeat * spb + c.seconds)));
+  const seconds = Math.max(getScoreDurationSec(score), clipEnd) + (options.tailSec ?? 2.5);
   const ctx = new OfflineAudioContext(2, Math.ceil(seconds * sampleRate), sampleRate);
   await ctx.audioWorklet.addModule(options.processorUrl);
 
@@ -54,8 +58,17 @@ export async function renderScoreOffline(score: Score, options: OfflineRenderOpt
   const { midi, programs, amps } = scoreToMidiInfo(score);
   const rack = new AmpRack(ctx, bus);
   rack.setNam(options.nam ?? null);
-  rack.configure(programs, score.tone ?? "rock", 9, amps, score.namModels ?? {});
+  rack.configure(programs, score.tone ?? "rock", 9, amps, score.namModels ?? {}, score.ampPlugins ?? {});
   await rack.whenReady();
+  // 録音トラック（実際の楽器・声）: 別のアンプラックを通して、曲の頭から予約する
+  if (score.audioTracks?.length) {
+    const audioRack = new AmpRack(ctx, bus);
+    audioRack.setNam(options.nam ?? null);
+    configureAudioRack(audioRack, score);
+    await audioRack.whenReady();
+    for (const t of score.audioTracks) for (const c of t.clips) await decodeClip(ctx, c);
+    await scheduleAudioTracks(ctx, score, audioRack, 0, 0);
+  }
 
   const synth = new WorkletSynthesizer(ctx);
   for (let ch = 0; ch < 16; ch++) {

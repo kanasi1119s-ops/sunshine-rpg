@@ -6,6 +6,8 @@
  */
 
 import type { AmpSetting, GenreAmpType } from "./score";
+import { AMP_PRESETS, makeDistortionCurve } from "./amp";
+import { buildAmpPlugin, type AmpPluginDef } from "./amp-plugins";
 import type { NamHost } from "./nam/nam-host";
 
 export type Tone = "rock" | "metal" | "prs";
@@ -14,7 +16,7 @@ export interface ChannelAmp {
   amp: AmpSetting;
   pan: number;
 }
-type Role = "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru" | GenreAmpType;
+type Role = "plugin" | "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru" | GenreAmpType;
 
 /** ジャンル別のアンプの種類（`score.ts` の `GenreAmpType` と同じ並び）。 */
 export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio"];
@@ -32,6 +34,18 @@ export function stepCurve(levels: number): Float32Array<ArrayBuffer> {
     STEP_CURVES.set(levels, c);
   }
   return c;
+}
+
+/**
+ * amp.ts のプリセット（type=genre）を、実際に鳴らす種類にする。
+ * 同じジャンルの直接の種類（jazz など。実ブラウザで音量をそろえたもの）があれば、そちらで鳴らす。rock だけは amp.ts の組み立てで鳴らす。
+ */
+function genreToType(amp: AmpSetting): AmpSetting["type"] {
+  if (amp.type !== "genre") return amp.type;
+  const p = amp.preset ?? "rock";
+  if ((GENRE_AMP_TYPES as string[]).includes(p)) return p as GenreAmpType;
+  if (p === "clean" || p === "metal") return p;
+  return "genre";
 }
 
 const CURVES = new Map<string, Float32Array<ArrayBuffer>>();
@@ -59,6 +73,7 @@ export class AmpRack {
   private built: AudioNode[][] = [];
   private nam: NamHost | null = null;
   private models: Record<string, string> = {};
+  private plugins: Record<string, AmpPluginDef> = {};
   private generation = 0;
   private pending: Promise<unknown>[] = [];
 
@@ -86,9 +101,10 @@ export class AmpRack {
   }
 
   /** 曲が変わるたびに、各チャンネルの楽器（GMの番号）と曲の音色に合わせて、機材をつなぎ直す。 */
-  configure(programs: Record<number, number>, tone: Tone, drumChannel = 9, amps: Record<number, ChannelAmp> = {}, models: Record<string, string> = {}): void {
+  configure(programs: Record<number, number>, tone: Tone, drumChannel = 9, amps: Record<number, ChannelAmp> = {}, models: Record<string, string> = {}, plugins: Record<string, AmpPluginDef> = {}): void {
     this.generation++;
     this.models = models;
+    this.plugins = plugins;
     this.pending = [];
     for (let ch = 0; ch < 16; ch++) {
       const input = this.inputs[ch];
@@ -96,7 +112,7 @@ export class AmpRack {
       for (const node of this.built[ch]) node.disconnect();
       this.built[ch] = [];
       const override = ch === drumChannel ? undefined : amps[ch];
-      const role = override && override.amp.type !== "auto" ? this.roleFromType(override.amp.type, ch === drumChannel ? -1 : programs[ch], tone) : this.roleOf(ch === drumChannel ? -1 : programs[ch], tone);
+      const role = override && override.amp.type !== "auto" ? this.roleFromType(genreToType(override.amp), ch === drumChannel ? -1 : programs[ch], tone) : this.roleOf(ch === drumChannel ? -1 : programs[ch], tone);
       const nodes = this.build(role, input, override);
       this.built[ch] = nodes;
     }
@@ -104,6 +120,8 @@ export class AmpRack {
 
   private roleFromType(type: AmpSetting["type"], program: number | undefined, tone: Tone): Role {
     if (type === "nam") return this.nam ? "nam" : this.roleOf(program, tone);
+    if (type === "genre") return "genre";
+    if (type === "plugin") return "plugin";
     if (type === "clean" || type === "overdrive" || type === "distortion" || type === "metal" || type === "prs") return type;
     if ((GENRE_AMP_TYPES as string[]).includes(type)) return type as GenreAmpType;
     return this.roleOf(program, tone);
@@ -159,6 +177,21 @@ export class AmpRack {
     switch (role) {
       case "nam":
         return this.buildNam(input, override!);
+      case "plugin":
+        return this.buildPlugin(input, override!);
+      case "genre": {
+        // ジャンル別アンプ（amp.ts）: 入力の増幅 → 歪み → 低音・中音・高音 → キャビネット（低域・高域カット） → 出力
+        const p = AMP_PRESETS[override?.amp.preset ?? "rock"] ?? AMP_PRESETS.rock;
+        const shaper = this.ctx.createWaveShaper();
+        shaper.curve = makeDistortionCurve(p.shape, p.hardness, p.asymmetry);
+        shaper.oversample = "4x";
+        // 録音音源の1チャンネルの音は小さめなので、合成音のときより少し強めに入れる
+        return this.chain(input, tail([
+          this.gain(Math.max(1, p.drive * 1.6) * d), shaper,
+          this.filter("lowshelf", 200, p.bassDb), this.filter("peaking", p.midHz, p.midDb, 0.9), this.filter("highshelf", 3000, p.trebleDb),
+          this.filter("highpass", p.highpassHz, 0, 0.7), this.filter("lowpass", p.lowpassHz, 0, 0.7), this.gain(p.level * (p.drive > 1.5 ? 0.6 : 0.95)),
+        ]));
+      }
       case "overdrive":
         // オーバードライブ: ゆるく歪み、弾き方の強弱が音に残る。中域（900Hz付近）が前に出る
         return this.chain(input, tail([this.filter("highpass", 85), this.filter("peaking", 900, 4.5, 0.8), this.gain(3.4 * d), this.shaper(3.4 * d, 0.09), this.filter("peaking", 2400, 2, 1), this.filter("lowpass", 5600, 0, 0.9), this.gain(0.5)]));
@@ -277,6 +310,41 @@ export class AmpRack {
       this.built[this.built.findIndex((list) => list.includes(dry))]?.push(node, pre, tone, cab, panner, out);
     });
     this.pending.push(done.catch((error: unknown) => console.warn("NAMのアンプを用意できませんでした:", error)));
+    return nodes;
+  }
+
+  /**
+   * 追加したアンプ（アンプ定義ファイル）: 用意ができるまでは元の音を通し、できたら、その場でつなぎ替える。
+   * 定義が見つからない・読み込めないときは、元の音のまま。
+   */
+  private buildPlugin(input: AudioNode, override: ChannelAmp): AudioNode[] {
+    const dry = this.gain(1);
+    input.connect(dry);
+    dry.connect(this.destination);
+    const nodes: AudioNode[] = [dry];
+    const def = override.amp.plugin ? this.plugins[override.amp.plugin] : undefined;
+    if (!def) return nodes;
+    const generation = this.generation;
+    const done = buildAmpPlugin(this.ctx, def, { nam: this.nam }).then((chain) => {
+      if (generation !== this.generation) {
+        for (const n of chain) n.disconnect();
+        return;
+      }
+      const drive = this.gain(override.amp.drive ?? 1);
+      const tone = this.filter("highshelf", 3500, override.amp.tone ?? 0);
+      const panner = this.ctx.createStereoPanner();
+      panner.pan.value = Math.max(-1, Math.min(1, override.pan));
+      const out = this.gain(override.amp.level ?? 1);
+      input.connect(drive);
+      drive.connect(chain[0]);
+      chain[chain.length - 1].connect(tone);
+      tone.connect(panner);
+      panner.connect(out);
+      out.connect(this.destination);
+      dry.disconnect();
+      this.built[this.built.findIndex((list) => list.includes(dry))]?.push(drive, ...chain, tone, panner, out);
+    });
+    this.pending.push(done.catch((error: unknown) => console.warn("追加したアンプを用意できませんでした:", error)));
     return nodes;
   }
 

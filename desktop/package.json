@@ -1,0 +1,68 @@
+{
+  "name": "sunshine-composer",
+  "productName": "Sunshine Composer",
+  "version": "1.0.0",
+  "description": "サンシャイン作曲ソフト（デスクトップ版）",
+  "author": "サンシャインソフトウェア",
+  "private": true,
+  "main": "main.cjs",
+  "scripts": {
+    "prepare-app": "node ../tools/composer/build.mjs app/index.html --desktop && node copy-licenses.mjs",
+    "start": "npm run prepare-app && electron .",
+    "dist": "npm run prepare-app && electron-builder --publish never",
+    "dist:win": "npm run prepare-app && electron-builder --win --publish never",
+    "dist:mac": "npm run prepare-app && electron-builder --mac --publish never",
+    "dist:linux": "npm run prepare-app && electron-builder --linux --publish never"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "jp.sunshine-software.composer",
+    "productName": "Sunshine Composer",
+    "copyright": "© サンシャインソフトウェア",
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "ai.cjs",
+      "app/**",
+      "licenses/**",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "サンシャイン作曲ソフト"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.music",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "楽器（オーディオインターフェース）やマイクの音を録音するために使います。"
+      }
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Audio"
+    },
+    "publish": null
+  }
+}
