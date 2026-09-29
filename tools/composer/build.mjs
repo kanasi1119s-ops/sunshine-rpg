@@ -33,10 +33,16 @@ const result = await build({
 });
 const output = (Array.isArray(result) ? result[0] : result).output.find((o) => o.type === "chunk");
 const js = output.code.replace(/<\/script/gi, "<\\/script");
-let html = fs.readFileSync(root + "tools/composer/template.html", "utf8").replace("/*BUNDLE*/", () => js);
+// アイコン（desktop/build/icon.svg）を、左上のロゴに使う
+const icon = "data:image/svg+xml;base64," + fs.readFileSync(root + "desktop/build/icon.svg").toString("base64");
+let html = fs.readFileSync(root + "tools/composer/template.html", "utf8").replace("/*ICON*/", () => `'${icon}'`).replace("/*BUNDLE*/", () => js);
 if (desktop) {
   // デスクトップ版: 外への通信は画面からはしない（AIとのやりとりは本体の側）。読み込めるものを、埋め込んだ部品と文字のフォントだけにする
-  const csp = "default-src 'none'; script-src 'unsafe-inline' data: 'wasm-unsafe-eval'; worker-src data: blob:; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src data: blob:; media-src data: blob:; connect-src data: blob:";
+  const csp = "default-src 'none'; script-src 'unsafe-inline' data: 'wasm-unsafe-eval'; worker-src data: blob:; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; media-src data: blob:; connect-src data: blob:";
+  // 文字のフォントは、外から読み込まずに同梱する（OFLライセンス）。日本語はパソコンに入っている文字（游ゴシック・ヒラギノなど）を使う
+  const face = (family, pkg, file, weight) => `@font-face{font-family:"${family}";font-weight:${weight};font-style:normal;font-display:swap;src:url(data:font/woff2;base64,${fs.readFileSync(root + "node_modules/@fontsource/" + pkg + "/files/" + file).toString("base64")}) format("woff2")}`;
+  const fonts = [face("Orbitron", "orbitron", "orbitron-latin-500-normal.woff2", 500), face("Orbitron", "orbitron", "orbitron-latin-700-normal.woff2", 700), face("Orbitron", "orbitron", "orbitron-latin-800-normal.woff2", 800), face("JetBrains Mono", "jetbrains-mono", "jetbrains-mono-latin-400-normal.woff2", 400), face("JetBrains Mono", "jetbrains-mono", "jetbrains-mono-latin-600-normal.woff2", 600)].join("");
+  html = html.replace(/<link rel="stylesheet" href="https:\/\/fonts\.googleapis\.com[^>]*>/, () => `<style>${fonts}</style>`);
   html = html.replace('<meta charset="utf-8">', `<meta charset="utf-8">\n<meta http-equiv="Content-Security-Policy" content="${csp}">`);
 }
 fs.mkdirSync(path.dirname(out), { recursive: true });

@@ -13,7 +13,7 @@
   --bg: #05080e; --bg2: #0a111c; --panel: rgba(12, 20, 33, 0.86); --panel-edge: rgba(0, 229, 255, 0.16); --fg: #e4f1ff; --muted: #7d91ab; --line: #1b2a3e;
   --accent: #00e5ff; --accent2: #ff2fd0; --accent-fg: #021016; --warn: #ffb020; --ok: #37f59b; --now: rgba(0, 229, 255, 0.08);
   --roll-bg: #060b13; --roll-alt: #0a1220; --roll-black: #09111d; --roll-beat: #122033; --roll-bar: #1f4a63; --note: #19d9ff; --note-edge: #b8f6ff; --note-sel: #ffb020; --note-sel-edge: #ffe6a8; --playhead: #ff2fd0;
-  --display: "Orbitron", "Zen Kaku Gothic New", sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace; --body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --display: "Orbitron", "Zen Kaku Gothic New", sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace; --body: "Zen Kaku Gothic New", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Yu Gothic", "Meiryo", "Noto Sans JP", sans-serif;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -37,8 +37,7 @@ body {
   border-bottom: 1px solid var(--panel-edge); box-shadow: 0 1px 0 rgba(0, 229, 255, 0.25), 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 .brand { display: flex; gap: 12px; align-items: center; }
-.logo { width: 34px; height: 34px; border-radius: 8px; background: conic-gradient(from 210deg, var(--accent), var(--accent2), var(--warn), var(--accent)); box-shadow: 0 0 18px rgba(0, 229, 255, 0.45); position: relative; }
-.logo::after { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: var(--bg); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.85); }
+.logo { width: 38px; height: 38px; border-radius: 9px; background: url(/*ICON*/) center / cover no-repeat; box-shadow: 0 0 18px rgba(0, 229, 255, 0.35); }
 h1 { font-family: var(--display); font-weight: 800; font-size: 17px; letter-spacing: 0.14em; margin: 0; line-height: 1.1; }
 h1 b { color: var(--accent); font-weight: 500; text-shadow: 0 0 12px rgba(0, 229, 255, 0.6); }
 .sub { font-size: 11px; color: var(--muted); letter-spacing: 0.08em; }
