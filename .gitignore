@@ -21,3 +21,4 @@ dist-ssr
 tools/pixel-art/node_modules
 dist-bgm-player/
 dist-composer/
+dist-songs/

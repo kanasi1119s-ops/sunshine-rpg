@@ -93,3 +93,70 @@ export function noteStartAt(track: Track, start: number): number | null {
   const hit = trackToNotes(track).find((n) => n.start <= start + EPS && start < n.start + n.dur - EPS);
   return hit ? hit.start : null;
 }
+
+/** 音を足す（上書き）: 足す音と重なっている元の音は消してから入れる。 */
+export function addNotes(track: Track, added: RollNote[], totalBeats: number): Track {
+  const overlaps = (a: RollNote, b: RollNote): boolean => a.start < b.start + b.dur - EPS && b.start < a.start + a.dur - EPS;
+  const kept = trackToNotes(track).filter((n) => !added.some((a) => overlaps(a, n)));
+  return { ...track, notes: notesToEvents([...kept, ...added], totalBeats) };
+}
+
+/** 始まりの位置が starts に入っている音を消す。 */
+export function removeNotes(track: Track, starts: number[]): Track {
+  const total = trackTotalBeats(track);
+  const notes = trackToNotes(track).filter((n) => !starts.some((s) => Math.abs(s - n.start) < EPS));
+  return { ...track, notes: notesToEvents(notes, total) };
+}
+
+/** 範囲（拍 b0〜b1、音の高さ m0〜m1）にかかる音の、始まりの位置の一覧。音の高さを見ないときは m0,m1 を省く。 */
+export function notesInRange(track: Track, b0: number, b1: number, m0 = -Infinity, m1 = Infinity, pitchOf: (note: string) => number = () => 0): number[] {
+  const [lo, hi] = b0 <= b1 ? [b0, b1] : [b1, b0];
+  const [plo, phi] = m0 <= m1 ? [m0, m1] : [m1, m0];
+  return trackToNotes(track)
+    .filter((n) => n.start < hi + EPS && n.start + n.dur > lo - EPS)
+    .filter((n) => {
+      const p = pitchOf(n.note);
+      return p >= plo && p <= phi;
+    })
+    .map((n) => n.start);
+}
+
+/**
+ * 選んだ音（始まりの位置 starts）を、dBeat 拍・dSemi 半音 動かす。曲の外へ出る音は、はみ出さないところで止める。
+ * 返す値は、新しいトラックと、動かしたあとの始まりの位置の一覧。
+ */
+export function moveNotes(track: Track, starts: number[], dBeat: number, dSemi: number, transpose: (note: string, semi: number) => string): { track: Track; starts: number[] } {
+  const total = trackTotalBeats(track);
+  const all = trackToNotes(track);
+  const picked = all.filter((n) => starts.some((s) => Math.abs(s - n.start) < EPS));
+  if (picked.length === 0) return { track, starts: [] };
+  const first = Math.min(...picked.map((n) => n.start));
+  const last = Math.max(...picked.map((n) => n.start + n.dur));
+  const shift = Math.max(-first, Math.min(total - last, dBeat));
+  const moved = picked.map((n) => ({ ...n, start: round(n.start + shift), note: dSemi ? transpose(n.note, dSemi) : n.note }));
+  const rest = all.filter((n) => !picked.includes(n));
+  const base = { ...track, notes: notesToEvents(rest, total) };
+  return { track: addNotes(base, moved, total), starts: moved.map((n) => n.start) };
+}
+
+/** 選んだ音を取り出す（コピー用）。位置は、いちばん早い音を0とした相対の位置にする。 */
+export function copyNotes(track: Track, starts: number[]): RollNote[] {
+  const picked = trackToNotes(track).filter((n) => starts.some((s) => Math.abs(s - n.start) < EPS));
+  if (picked.length === 0) return [];
+  const first = Math.min(...picked.map((n) => n.start));
+  return picked.map((n) => ({ ...n, start: round(n.start - first) }));
+}
+
+/** コピーした音を、at 拍の位置に貼り付ける（曲の外にはみ出す音は切る）。返す値は、新しいトラックと、貼った音の始まりの位置。 */
+export function pasteNotes(track: Track, clip: RollNote[], at: number): { track: Track; starts: number[] } {
+  const total = trackTotalBeats(track);
+  const placed = clip.map((n) => ({ ...n, start: round(n.start + at) })).filter((n) => n.start < total - EPS).map((n) => ({ ...n, dur: Math.min(n.dur, total - n.start) }));
+  return { track: addNotes(track, placed, total), starts: placed.map((n) => n.start) };
+}
+
+/** 選んだ音の長さを、すべて dur 拍にそろえる。 */
+export function setNotesLength(track: Track, starts: number[], dur: number): Track {
+  const total = trackTotalBeats(track);
+  const notes = trackToNotes(track).map((n) => (starts.some((s) => Math.abs(s - n.start) < EPS) ? { ...n, dur } : n));
+  return { ...track, notes: notesToEvents(notes, total) };
+}

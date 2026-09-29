@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { noteStartAt, notesToEvents, resizeNote, toggleNote, trackToNotes, trackTotalBeats } from "./edit";
+import { addNotes, copyNotes, moveNotes, noteStartAt, notesInRange, notesToEvents, pasteNotes, removeNotes, resizeNote, setNotesLength, toggleNote, trackToNotes, trackTotalBeats } from "./edit";
 import type { Track } from "./score";
 
 const base: Track = { waveform: "triangle", volume: 0.2, notes: [{ note: "C4", durationBeats: 1 }, { note: "R", durationBeats: 1 }, { note: "E4", durationBeats: 2 }] };
@@ -43,5 +43,35 @@ describe("ピアノロールの編集道具", () => {
   it("位置を覆っている音の始まりを返す", () => {
     expect(noteStartAt(base, 3)).toBe(2);
     expect(noteStartAt(base, 1.5)).toBeNull();
+  });
+});
+
+describe("複数の音の選択と編集", () => {
+  const mk = (): Track => ({ waveform: "sine", volume: 0.2, notes: notesToEvents([{ start: 0, dur: 1, note: "C4" }, { start: 1, dur: 1, note: "D4" }, { start: 2, dur: 1, note: "E4" }], 8) });
+  const up = (n: string, s: number): string => ({ C4: "D4", D4: "E4", E4: "F#4" } as Record<string, string>)[n] ?? (s ? n : n);
+  it("範囲で選べる（音の高さでもしぼれる）", () => {
+    expect(notesInRange(mk(), 0.5, 1.5)).toEqual([0, 1]);
+    const pitch = (n: string): number => ({ C4: 60, D4: 62, E4: 64 } as Record<string, number>)[n];
+    expect(notesInRange(mk(), 0, 8, 61, 70, pitch)).toEqual([1, 2]);
+  });
+  it("選んだ音を動かせる（曲の外へははみ出さない）", () => {
+    const r = moveNotes(mk(), [1, 2], 2, 2, up);
+    expect(trackToNotes(r.track)).toEqual([{ start: 0, dur: 1, note: "C4" }, { start: 3, dur: 1, note: "E4" }, { start: 4, dur: 1, note: "F#4" }]);
+    expect(r.starts).toEqual([3, 4]);
+    expect(moveNotes(mk(), [2], 100, 0, up).starts).toEqual([7]);
+    expect(moveNotes(mk(), [0], -3, 0, up).starts).toEqual([0]);
+  });
+  it("コピーと貼り付け・長さをそろえる・消す", () => {
+    const clip = copyNotes(mk(), [1, 2]);
+    expect(clip).toEqual([{ start: 0, dur: 1, note: "D4" }, { start: 1, dur: 1, note: "E4" }]);
+    const p = pasteNotes(mk(), clip, 6.5);
+    expect(trackToNotes(p.track).slice(3)).toEqual([{ start: 6.5, dur: 1, note: "D4" }, { start: 7.5, dur: 0.5, note: "E4" }]);
+    expect(trackTotalBeats(p.track)).toBe(8);
+    expect(trackToNotes(setNotesLength(mk(), [0], 0.5))[0].dur).toBe(0.5);
+    expect(trackToNotes(removeNotes(mk(), [0, 2])).map((n) => n.note)).toEqual(["D4"]);
+  });
+  it("足す音と重なる元の音は、上書きされる", () => {
+    const t = addNotes(mk(), [{ start: 0.5, dur: 1, note: "G4" }], 8);
+    expect(trackToNotes(t)).toEqual([{ start: 0.5, dur: 1, note: "G4" }, { start: 2, dur: 1, note: "E4" }]);
   });
 });

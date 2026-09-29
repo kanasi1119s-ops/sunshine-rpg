@@ -39,9 +39,8 @@ export class NamHost {
       numberOfInputs: 1,
       numberOfOutputs: 1,
       outputChannelCount: [2],
-      processorOptions: { wasmBinary: assets.wasm.slice(0) },
+      processorOptions: { wasmBinary: assets.wasm.slice(0), modelJson },
     });
-    node.port.postMessage({ type: "loadModel", modelJson });
     return node;
   }
 }

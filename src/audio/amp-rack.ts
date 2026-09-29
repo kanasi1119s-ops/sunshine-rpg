@@ -42,6 +42,7 @@ export class AmpRack {
   private nam: NamHost | null = null;
   private models: Record<string, string> = {};
   private generation = 0;
+  private pending: Promise<unknown>[] = [];
 
   constructor(private ctx: BaseAudioContext, private destination: AudioNode) {
     this.inputs = Array.from({ length: 16 }, () => ctx.createGain());
@@ -57,6 +58,11 @@ export class AmpRack {
     this.nam = host;
   }
 
+  /** NAMのアンプの準備（モデルの読み込み）が終わるのを待つ。WAVの書き出し（オフライン）用。 */
+  async whenReady(): Promise<void> {
+    await Promise.all(this.pending);
+  }
+
   input(channel: number): AudioNode {
     return this.inputs[channel];
   }
@@ -65,6 +71,7 @@ export class AmpRack {
   configure(programs: Record<number, number>, tone: Tone, drumChannel = 9, amps: Record<number, ChannelAmp> = {}, models: Record<string, string> = {}): void {
     this.generation++;
     this.models = models;
+    this.pending = [];
     for (let ch = 0; ch < 16; ch++) {
       const input = this.inputs[ch];
       input.disconnect();
@@ -187,7 +194,7 @@ export class AmpRack {
     if (!this.nam || !modelJson) {
       return nodes;
     }
-    void this.nam.createAmp(this.ctx, modelJson).then((node) => {
+    const done = this.nam.createAmp(this.ctx, modelJson).then((node) => {
       if (generation !== this.generation) {
         node.disconnect();
         return;
@@ -196,15 +203,21 @@ export class AmpRack {
       panner.pan.value = Math.max(-1, Math.min(1, override.pan));
       const out = this.gain((override.amp.level ?? 1) * Math.pow(10, 0 / 20));
       const tone = this.filter("highshelf", 3500, override.amp.tone ?? 0);
-      input.connect(node);
+      // 入力の大きさ（歪みの深さ）と、耳に痛い高音を丸めるキャビネットのかわりのフィルター
+      const pre = this.gain(override.amp.drive ?? 1);
+      const cab = this.filter("lowpass", 7000, 0);
+      input.connect(pre);
+      pre.connect(node);
       node.connect(tone);
-      tone.connect(panner);
+      tone.connect(cab);
+      cab.connect(panner);
       panner.connect(out);
       out.connect(this.destination);
       // 音が出はじめたら、元の音（ドライ）を切る
       dry.disconnect();
-      this.built[this.built.findIndex((list) => list.includes(dry))]?.push(node, tone, panner, out);
+      this.built[this.built.findIndex((list) => list.includes(dry))]?.push(node, pre, tone, cab, panner, out);
     });
+    this.pending.push(done.catch((error: unknown) => console.warn("NAMのアンプを用意できませんでした:", error)));
     return nodes;
   }
 
