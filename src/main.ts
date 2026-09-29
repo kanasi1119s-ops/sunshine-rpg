@@ -66,6 +66,7 @@ import { computeVictoryExp } from "./game/battle/battle-engine";
 import { gainExp } from "./game/growth/level-up";
 import { applyStatBonus, computeEquipmentBonus, type EquipmentSlots } from "./game/items/equipment";
 import { createInventory, type Inventory } from "./game/items/inventory";
+import type { JobState } from "./game/job/types";
 import { SAVE_VERSION, type SaveData } from "./game/save/types";
 import { loadFromSlot, saveToSlot } from "./game/save/storage";
 import { downloadSaveFile, readSaveFile } from "./io/save-file";
@@ -331,6 +332,9 @@ let victoryMessage: string | null = null;
 let saveMessage: string | null = null;
 let saveMessageTimer = 0;
 
+/** ジョブの状態（キャラクターIDごと。主人公は "hero"）。ジョブ画面・戦闘への接続は今後の作業。 */
+let jobStates: Record<string, JobState> = {};
+
 function buildSaveData(): SaveData {
   return {
     version: SAVE_VERSION,
@@ -340,6 +344,7 @@ function buildSaveData(): SaveData {
     companions: Object.fromEntries(
       Object.entries(companionStats).map(([id, stats]) => [id, { stats }]),
     ),
+    jobs: jobStates,
     inventory,
     flags,
   };
@@ -351,6 +356,7 @@ function applySaveData(data: SaveData): void {
   companionStats = Object.fromEntries(
     Object.entries(data.companions).map(([id, entry]) => [id, entry.stats]),
   );
+  jobStates = data.jobs;
   inventory = data.inventory;
   for (const key of Object.keys(flags)) {
     delete flags[key];
