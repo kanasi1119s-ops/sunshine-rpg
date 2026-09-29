@@ -80,6 +80,8 @@ export const CATALOG: CatalogEntry[] = [
   // 手で書いた7曲
   hand("共通・フィールド", "field", "フィールド（町の外の道）", "rock-road"),
   hand("共通・戦闘", "elite", "強敵との戦闘", "metal-roar"),
+  finaleEntry("共通・戦闘", "poly-1", "ポリメトリック（重量級のプログレッシブ）・特別曲"),
+  finaleEntry("共通・戦闘", "prog-1", "プログレッシブ（変拍子・ユニゾン・鍵盤ソロ）・特別曲"),
   hand("共通・町", "castle", "城・王宮・議場", "classic-palace"),
   hand("共通・ダンジョン", "ruins", "遺跡・星空の場面", "space-corridor"),
   hand("共通・町", "inn", "宿屋・食堂・酒場", "keys-cafe"),

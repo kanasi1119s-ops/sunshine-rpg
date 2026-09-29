@@ -9,8 +9,9 @@ import { CELLS_MAJOR, CELLS_MINOR, chordName, generateMelody, keyOf, makeRng, pi
  * これらは作風・書き方の参考にとどめ、特定の作品の旋律・進行はなぞっていない（`CLAUDE.md` 1-1）。
  */
 
-type Meter = 3 | 4 | 7;
-type Texture = "gsolo" | "bsolo" | "dsolo" | "motif" | "triumph" | "intro" | "nocturne" | "brahms" | "doom" | "riff" | "gallop" | "chorus" | "solo" | "breakdown" | "blast" | "void" | "coda";
+/** 1小節の拍数（4分音符の数）。3.5=7/8拍子、4.5=9/8拍子、5=5/4拍子など。 */
+type Meter = 3 | 3.5 | 4 | 4.5 | 5 | 7;
+type Texture = "poly" | "unison" | "ksolo" | "oddriff" | "gsolo" | "bsolo" | "dsolo" | "motif" | "triumph" | "intro" | "nocturne" | "brahms" | "doom" | "riff" | "gallop" | "chorus" | "solo" | "breakdown" | "blast" | "void" | "coda";
 
 interface FSec {
   tex: Texture;
@@ -21,6 +22,8 @@ interface FSec {
   minor?: boolean;
   /** 「motif」の進み方: fall=音が下がっていく、rise=上がっていく。 */
   variant?: "fall" | "rise" | "fast";
+  /** 「poly」のリフの長さ（16分音符の数。5・7・9・11・13）。1小節（4/4なら16）とずれて、小節をまたいで回り続ける。 */
+  cycle?: number;
 }
 export interface FinaleSpec {
   id: string;
@@ -34,10 +37,11 @@ export interface FinaleSpec {
   sections: FSec[];
 }
 
-const LEN: Record<Meter, number> = { 3: 12, 4: 16, 7: 28 };
+const LEN: Record<Meter, number> = { 3: 12, 3.5: 14, 4: 16, 4.5: 18, 5: 20, 7: 28 };
 const cycle = (pat: string, n: number): string => pat.repeat(Math.ceil(n / pat.length)).slice(0, n);
 const hold = (ch: string, n: number): string => ch + "-".repeat(n - 1);
-const by = (m: Meter, p: { 3: string; 4: string; 7: string }): string => p[m];
+/** 拍子ごとに決めたパターンがあればそれを、なければ4/4のパターンを繰り返して、小節の長さに合わせる。 */
+const by = (m: Meter, p: { 3: string; 4: string; 7: string }): string => (p as Record<number, string>)[m] ?? cycle(p[4], LEN[m]);
 
 const KICK_HALF = { 3: "x...........", 4: "x.......x.......", 7: "x.......x.......x..........." };
 const KICK_PROG = { 3: "x.xx..x.x...", 4: "x.xx..x.x.xx..x.", 7: "x.xx..x.x.xx..x.x.xx..x.x..." };
@@ -50,7 +54,7 @@ const GALLOP = { 3: "R.RRR.RRR.RR", 4: "R.RRR.RRR.RRR.RR", 7: "R.RRR.RRR.RRR.RRR
 const LH = "acdbdcdb"; // ピアノの左手の分散和音（和音の1・3・5・7番目の音を行き来する）
 
 interface Look {
-  parts: (m: Meter, bars: number) => Record<string, string>;
+  parts: (m: Meter, bars: number, cycleLen?: number) => Record<string, string>;
   mel: string[];
   opts: MelodyOpts;
   minor?: boolean;
@@ -73,7 +77,42 @@ const DRUM_SOLO = {
 };
 const bars8 = (a: string[], bars: number): string => Array.from({ length: bars }, (_, i) => a[i % a.length]).join(" ");
 
+/** ポリメトリック（ずれて回るリフ）用の、16分音符のリフ。北欧の重量級プログレッシブ・メタルのような「拍とずれて聞こえる」刻み。 */
+const POLY_RIFFS: Record<number, string> = { 5: "R.RR.", 7: "R.RR.R.", 9: "R..R.RR.R", 11: "R.R..RR.R..", 13: "R..R.R.RR.R.." };
+function polyParts(m: Meter, bars: number, cycleLen: number): Record<string, string> {
+  const q = LEN[m];
+  const riff = POLY_RIFFS[cycleLen] ?? POLY_RIFFS[7];
+  const n = riff.length;
+  const seq = Array.from({ length: q * bars }, (_, i) => riff[i % n]);
+  const slices = (chars: string[]): string => Array.from({ length: bars }, (_, b) => chars.slice(b * q, (b + 1) * q).join("")).join(" ");
+  // キックはリフの音のうち1つおきにそろえる（ギターとキックが噛み合って、重く歩く）
+  let ordinal = 0;
+  const kick = seq.map((c) => (c === "R" ? (ordinal++ % 2 === 0 ? "x" : ".") : "."));
+  const snare = Array.from({ length: q * bars }, (_, i) => (i % q) % 8 === 4 ? "X" : ".");
+  return { gtrs: slices(seq), gtrs2: slices(seq), bass: slices(seq), kick: slices(kick), snare: slices(snare), hat: cycle("x.", q), crash: crashFirst(m, bars) };
+}
+
 const LOOKS: Record<Exclude<Texture, "void">, Look> = {
+  poly: {
+    // ポリメトリック: ギター・ベース・キックが、小節の長さと違う長さのリフを回し続け、スネアだけが拍を守る
+    parts: (m, bars, cycleLen) => polyParts(m, bars, cycleLen ?? 7),
+    mel: ["lead"], opts: { lo: 66, hi: 88, density: "sparse" },
+  },
+  oddriff: {
+    // 変拍子のリフ: 3+3+2 の区切りで刻み、キックがそれに噛み合う
+    parts: (m, bars) => ({ gtrs: cycle("R..R..R.", LEN[m]), gtrs2: cycle("R..R..R.", LEN[m]), bass: cycle("R..R..R.", LEN[m]), kick: cycle("x..x..x.", LEN[m]), snare: cycle("....X...", LEN[m]), hat: cycle("x.", LEN[m]), crash: crashFirst(m, bars) }),
+    mel: ["synth"], opts: { lo: 62, hi: 86, density: "normal" },
+  },
+  unison: {
+    // ギターと鍵盤が、速い旋律を同じ音でそろえて弾く（複雑なユニゾン）
+    parts: (m, bars) => ({ gtrs: cycle("R.RR.RR.", LEN[m]), gtrs2: cycle("R.RR.RR.", LEN[m]), bass: cycle("R.", LEN[m]), kick: cycle("x..x..x.", LEN[m]), snare: cycle("....X...", LEN[m]), hat: cycle("xo", LEN[m]), crash: crashFirst(m, bars), s1: hold("a", LEN[m] / 2), pnL: cycle(LH, LEN[m] / 2) }),
+    mel: ["lead", "synth"], opts: { lo: 64, hi: 94, density: "fast" },
+  },
+  ksolo: {
+    // 鍵盤ソロ: シンセの速いフレーズを、ピアノの分散和音とリズム隊が支える
+    parts: (m, bars) => ({ gtrs: cycle("R.RR.RR.", LEN[m]), bass: cycle("R.", LEN[m]), kick: cycle("x..x..x.", LEN[m]), snare: cycle("....X...", LEN[m]), hat: cycle("xo", LEN[m]), crash: crashFirst(m, bars), pnL: cycle(LH, LEN[m] / 2), pad: hold("a", LEN[m] / 2) }),
+    mel: ["synth", "pnm"], opts: { lo: 66, hi: 96, density: "fast" },
+  },
   gsolo: {
     // 遅いギターソロ: 長く伸ばす音とベンドで、泣くように歌う
     parts: (m, bars) => ({ gtrs: hold("R", LEN[m]), bass: hold("R", LEN[m]), kick: by(m, KICK_HALF), snare: by(m, SNARE_HALF), crash: crashFirst(m, bars), pad: hold("a", LEN[m] / 2), s1: hold("b", LEN[m] / 2), s2: hold("c", LEN[m] / 2), pnL: cycle(LH, LEN[m] / 2) }),
@@ -217,6 +256,19 @@ function voidSection(rng: Rng, tonic: number, meter: Meter, bars: number): Secti
   };
 }
 
+/** 冷たい旋律: 半音・減5度・短6度をまぜた、まばらな高音（休みも多い）。 */
+function coldMelody(rng: Rng, tonic: number, total: number): string {
+  const out: string[] = [];
+  let cursor = 0;
+  while (cursor < total) {
+    const len = Math.min(total - cursor, pick(rng, [1, 1.5, 2, 3, 4]));
+    if (rng() < 0.3) out.push(`R:${len}`);
+    else out.push(`${NAMES[(tonic + pick(rng, [0, 1, 3, 6, 7, 8, 10, 11])) % 12]}${pick(rng, [5, 5, 6])}:${len}`);
+    cursor += len;
+  }
+  return out.join(" ");
+}
+
 /** 動機（長・短・中・中）を、度数 d の和音の上に1小節ぶん書く。 */
 function motifBar(key: Key, d: number): string {
   const semi = (i: number): number => key.scale[i % 7] + 12 * Math.floor(i / 7);
@@ -238,10 +290,16 @@ export function composeFinale(spec: FinaleSpec): Score {
     const look: Look = sec.tex === "bsolo" ? { ...look0, mel: [sec.variant === "fast" ? "slapm" : "bassm"], opts: { ...look0.opts, density: sec.variant === "fast" ? "fast" : "normal" } } : look0;
     const isFirst = spec.sections[0] === sec;
     const melOpts: MelodyOpts = isFirst && sec.tex !== "motif" ? { ...look.opts, opening: "run" } : look.opts;
-    const id = `${sec.tex}|${meter}|${tonic}|${sec.bars}|${sec.variant ?? ""}`;
+    const id = `${sec.tex}|${meter}|${tonic}|${sec.bars}|${sec.variant ?? ""}|${sec.cycle ?? ""}`;
     let entry = cache.get(id);
     if (!entry) {
-      if (sec.tex === "motif") {
+      if (sec.tex === "poly") {
+        // 根音を保ち、ときどき半音上・下の和音に落ちる（重く単調で、冷たい）
+        const seq = [1, 1, 1, 1, 1, 1, 6, 1];
+        const degrees = Array.from({ length: sec.bars }, (_, i) => seq[i % seq.length]);
+        const chords = degrees.map((d) => chordName(key, d, false));
+        entry = { chords, melody: coldMelody(rng, key.tonic, sec.bars * meter) };
+      } else if (sec.tex === "motif") {
         // 動機を1小節ごとに、音が下がる（または上がる）順序で移していく
         const seq = sec.variant === "rise" ? [1, 2, 3, 4, 5, 5, 5, 5] : [1, 1, 7, 7, 6, 6, 5, 5];
         const degrees = Array.from({ length: sec.bars }, (_, i) => seq[i % seq.length]);
@@ -258,7 +316,7 @@ export function composeFinale(spec: FinaleSpec): Score {
     }
     const melody: Record<string, string> = {};
     for (const m of look.mel) melody[m] = entry.melody;
-    const parts = look.parts(meter, sec.bars);
+    const parts = look.parts(meter, sec.bars, sec.cycle);
     if (isFirst) {
       // 曲の頭の一撃（全員で和音を長く鳴らす）
       const len = meter * 2;
@@ -279,7 +337,7 @@ export const FINALES: FinaleSpec[] = [
   // ラスボス（速い）: 拍子を7/4と4/4で行き来し、間奏はブラームス風の3拍子、最後のサビは全音上へ転調
   {
     id: "boss-final", title: "終わりの灯", scene: "最終ボス戦（第1形態・速い）", bpm: 172, tonic: "E", seed: 201, drumKit: 16,
-    sections: [S("intro", 8), S("riff", 8, 7), S("riff", 8, 7), S("gallop", 8), S("chorus", 16), S("brahms", 8, 3), S("solo", 16), S("bsolo", 8, 4, { variant: "fast" }), S("dsolo", 8), S("breakdown", 8, 7), S("gallop", 8), S("chorus", 16), S("chorus", 16, 4, { tonic: "F#" }), S("coda", 8)],
+    sections: [S("intro", 8), S("riff", 8, 7), S("poly", 8, 4, { cycle: 7 }), S("gallop", 8), S("chorus", 16), S("brahms", 8, 3), S("unison", 8, 3.5), S("solo", 16), S("bsolo", 8, 4, { variant: "fast" }), S("dsolo", 8), S("breakdown", 8, 7), S("gallop", 8), S("chorus", 16), S("chorus", 16, 4, { tonic: "F#" }), S("coda", 8)],
   },
   // ラスボス（遅い・絶望）: ショパン風の夜想曲、ブラームス風の弦、ドゥーム調のギター
   {
@@ -294,15 +352,15 @@ export const FINALES: FinaleSpec[] = [
   // 裏ボス（速い）: ブラストビートと7拍子
   {
     id: "secret-boss-2", title: "歪みの深淵", scene: "裏ボス「初源の歪み」（速い）", bpm: 200, tonic: "D", seed: 204, drumKit: 16,
-    sections: [S("intro", 8), S("blast", 8), S("riff", 8, 7), S("blast", 8), S("chorus", 16), S("solo", 16), S("bsolo", 8, 4, { variant: "fast" }), S("dsolo", 8), S("breakdown", 8, 7), S("riff", 8, 7), S("gallop", 8), S("chorus", 16), S("blast", 8), S("riff", 8, 7), S("gallop", 8), S("coda", 8)],
+    sections: [S("intro", 8), S("blast", 8), S("riff", 8, 7), S("poly", 8, 4, { cycle: 9 }), S("chorus", 16), S("solo", 16), S("bsolo", 8, 4, { variant: "fast" }), S("dsolo", 8), S("breakdown", 8, 7), S("riff", 8, 7), S("gallop", 8), S("chorus", 16), S("blast", 8), S("riff", 8, 7), S("gallop", 8), S("coda", 8)],
   },
   // ラスト裏ボス「八神」（速い）: 8柱それぞれの区間で調が上がっていく
   {
     id: "eight-gods", title: "八神の試練", scene: "ラスト裏ボス「八神」（速い）", bpm: 184, tonic: "E", seed: 205, drumKit: 16,
     sections: [
-      S("intro", 8), S("riff", 8, 7, { tonic: "E" }), S("blast", 8, 4, { tonic: "F#" }), S("riff", 8, 7, { tonic: "G" }), S("gallop", 8, 4, { tonic: "A" }),
+      S("intro", 8), S("riff", 8, 7, { tonic: "E" }), S("poly", 8, 4, { tonic: "F#", cycle: 11 }), S("riff", 8, 7, { tonic: "G" }), S("gallop", 8, 4, { tonic: "A" }),
       S("riff", 8, 7, { tonic: "B" }), S("blast", 8, 4, { tonic: "C" }), S("riff", 8, 7, { tonic: "D" }), S("gallop", 8, 4, { tonic: "E" }),
-      S("chorus", 16), S("solo", 16), S("bsolo", 8, 4, { variant: "fast" }), S("dsolo", 8), S("brahms", 8, 3), S("chorus", 16, 4, { tonic: "G" }), S("coda", 8),
+      S("chorus", 16), S("ksolo", 8, 3.5), S("solo", 16), S("bsolo", 8, 4, { variant: "fast" }), S("dsolo", 8), S("brahms", 8, 3), S("chorus", 16, 4, { tonic: "G" }), S("coda", 8),
     ],
   },
   // ラスト裏ボス「八神」（遅い・絶望）
@@ -320,6 +378,25 @@ FINALES.push({
     S("triumph", 16), S("triumph", 16, 4, { tonic: "D" }), S("triumph", 8),
   ],
 });
+
+// 難関のボス・強敵向けの、プログレッシブな長い曲。(1)夢幻回廊: 変拍子（7/8・5/4・9/8）の行き来、ギターと鍵盤の複雑なユニゾン、鍵盤ソロ、ギターソロ、叙情的な3拍子の間奏、大きなサビ。
+// (2)歯車の咆哮: ポリメトリック（小節と違う長さのリフが、ずれながら回り続ける）、重く冷たい刻み、ドゥーム調の重い間奏。
+FINALES.push(
+  {
+    id: "prog-1", title: "夢幻回廊", scene: "難関ダンジョンのボス（変拍子・ユニゾン・鍵盤ソロ）", bpm: 150, tonic: "D", seed: 208, drumKit: 16,
+    sections: [
+      S("intro", 8), S("oddriff", 8, 3.5), S("oddriff", 8, 5), S("unison", 8), S("chorus", 16), S("ksolo", 16, 3.5), S("solo", 16), S("bsolo", 8, 4, { variant: "fast" }), S("dsolo", 8), S("unison", 8, 4.5),
+      S("nocturne", 8, 3), S("oddriff", 8, 3.5), S("chorus", 16), S("coda", 8),
+    ],
+  },
+  {
+    id: "poly-1", title: "歯車の咆哮", scene: "強敵との戦闘（ポリメトリック・重量級）", bpm: 138, tonic: "F", seed: 209, drumKit: 16,
+    sections: [
+      S("intro", 8), S("poly", 8, 4, { cycle: 7 }), S("poly", 8, 4, { cycle: 9 }), S("poly", 8, 4, { cycle: 5 }), S("poly", 8, 4, { cycle: 13 }), S("doom", 8),
+      S("poly", 8, 4, { cycle: 7 }), S("poly", 8, 4, { cycle: 11 }), S("solo", 16), S("bsolo", 8, 4, { variant: "fast" }), S("poly", 16, 4, { cycle: 9 }), S("doom", 8), S("coda", 8),
+    ],
+  },
+);
 
 /** `midiToName` を再輸出（未使用警告の回避）。 */
 export { midiToName };

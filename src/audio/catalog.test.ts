@@ -3,11 +3,11 @@ import { CATALOG, getTrack } from "./catalog";
 import { FINALES } from "./finale";
 import { flattenScore, getScoreDurationSec } from "./score";
 
-describe("BGMカタログ（55曲）", () => {
-  it("55曲そろっていて、IDと曲名が重複しない", () => {
-    expect(CATALOG.length).toBe(55);
-    expect(new Set(CATALOG.map((e) => e.id)).size).toBe(55);
-    expect(new Set(CATALOG.map((e) => e.title)).size).toBe(55);
+describe("BGMカタログ（57曲）", () => {
+  it("57曲そろっていて、IDと曲名が重複しない", () => {
+    expect(CATALOG.length).toBe(57);
+    expect(new Set(CATALOG.map((e) => e.id)).size).toBe(57);
+    expect(new Set(CATALOG.map((e) => e.title)).size).toBe(57);
   });
   it.each(CATALOG.map((e) => [e.id, e] as const))("%s: 1分〜1分半・パートの長さがそろう・音名が読める", (id) => {
     const score = getTrack(id);

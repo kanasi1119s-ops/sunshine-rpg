@@ -1,7 +1,8 @@
 import { Sequencer, WorkletSynthesizer } from "spessasynth_lib";
 import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url";
 import soundfontUrl from "./soundfont/game.sf3?url";
-import { scoreToMidi } from "./midi-export";
+import { AmpRack } from "./amp-rack";
+import { scoreToMidiInfo } from "./midi-export";
 import type { Score } from "./score";
 
 /**
@@ -22,6 +23,7 @@ declare global {
 
 export class SampledBgm {
   private synth: WorkletSynthesizer | null = null;
+  private rack: AmpRack | null = null;
   private seq: Sequencer | null = null;
   private loading: Promise<boolean> | null = null;
   private ready = false;
@@ -62,7 +64,14 @@ export class SampledBgm {
     this.buffer = buffer.slice(0);
     this.ctx = ctx;
     const synth = new WorkletSynthesizer(ctx);
-    synth.connect(destination);
+    // 各チャンネルの出力を取り出し、楽器ごとのアンプ・ミキサー（AmpRack）を通してから、出口へ。
+    // 出力0は、録音音源の残響・コーラスの戻りなので、そのまま出口へつなぐ。
+    const rack = new AmpRack(ctx, destination);
+    for (let ch = 0; ch < 16; ch++) {
+      synth.connectChannel(rack.input(ch), ch);
+    }
+    (synth as unknown as { worklet: AudioWorkletNode }).worklet.connect(destination, 0);
+    this.rack = rack;
     await synth.soundBankManager.addSoundBank(buffer, "main");
     await synth.isReady;
     const seq = new Sequencer(synth);
@@ -98,7 +107,8 @@ export class SampledBgm {
     if (!this.seq) {
       return;
     }
-    const midi = scoreToMidi(score);
+    const { midi, programs } = scoreToMidiInfo(score);
+    this.rack?.configure(programs, score.tone ?? "rock");
     this.pendingOffset = offsetSec;
     this.playing = true;
     const binary = midi.buffer.slice(midi.byteOffset, midi.byteOffset + midi.byteLength) as ArrayBuffer;

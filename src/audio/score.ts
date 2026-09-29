@@ -49,6 +49,8 @@ export interface Score {
   drumKit?: number;
   /** trueなら、パッド・弦・合唱の音量をキックに合わせて周期的に凹ませる（電子音楽風のポンプ感）。 */
   pump?: boolean;
+  /** 楽器の音色の傾向。rock=オーバードライブ・温かいドラム、metal=メタルゾーンのギター・重低音のベース・締まったドラム。 */
+  tone?: "rock" | "metal";
   /** trueなら、曲の頭に強い一撃（全楽器の強いアタック、クラッシュ、バスドラム）を入れる。ループのたびに聴き手をつかむ。 */
   opening?: boolean;
   tempoBpm: number;

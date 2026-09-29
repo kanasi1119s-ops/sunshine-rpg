@@ -47,6 +47,12 @@ function channelKey(track: Track, program: number): string {
 }
 
 export function scoreToMidi(score: Score): Uint8Array {
+  return scoreToMidiInfo(score).midi;
+}
+
+/** MIDIと、チャンネルごとの楽器（GMの番号）。機材（アンプ・ドラムの仕上げ）を選ぶために使う。 */
+export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Record<number, number> } {
+  const programs: Record<number, number> = {};
   const tracksBytes: number[][] = [];
   // 指揮者トラック（テンポと曲の長さ）
   const totalBeats = Math.max(...score.tracks.map((t) => t.notes.reduce((s, n) => s + n.durationBeats, 0)));
@@ -106,9 +112,11 @@ export function scoreToMidi(score: Score): Uint8Array {
     };
     const main = setupChannel(program, channelKey(track, program), 1);
     const channel = main.channel;
+    if (channel !== DRUM_CHANNEL) programs[channel] = program;
     const list = main.list;
     const layerSpec = inst ? GM_LAYER[inst] : undefined;
     const layer = layerSpec ? setupChannel(layerSpec.program, `${channelKey(track, layerSpec.program)}|layer`, 1) : null;
+    if (layer && layer.channel !== DRUM_CHANNEL) programs[layer.channel] = layerSpec!.program;
     // ピアノ系は、およそ1小節ごとにペダルを踏み替えて、音をつなげる
     if (inst === "piano" || inst === "keys") {
       const totalTicks = endTick;
@@ -167,7 +175,7 @@ export function scoreToMidi(score: Score): Uint8Array {
         push(drumKey, tick, velocity, len);
         // 厚みとパンチ: キックは別のバスドラムを重ね、スネアはポップ・ロック系のセットで手拍子を薄く重ねる
         if (inst === "kick") push(35, tick, Math.round(velocity * 0.55), len);
-        if (inst === "snare" && [8, 16, 24, 25].includes(score.drumKit ?? 0)) push(39, tick, Math.round(velocity * 0.32), len);
+        if (inst === "snare" && [8, 16, 24, 25].includes(score.drumKit ?? 0)) push(score.tone === "metal" ? 40 : 39, tick, Math.round(velocity * (score.tone === "metal" ? 0.55 : 0.32)), len);
         continue;
       }
       const pitch = noteNameToMidi(n.note);
@@ -185,6 +193,8 @@ export function scoreToMidi(score: Score): Uint8Array {
       if (layer && layerSpec) push(pitch, tick, Math.max(14, Math.round(velocity * layerSpec.gain)), len, layer);
       if (inst === "crunch" || inst === "distGuitar") push(pitch + 7, tick, velocity, len); // パワーコードの5度
       if (inst === "distGuitar") push(pitch + 12, tick, Math.round(velocity * 0.8), len);
+      // 重低音: メタルのベースには、1オクターブ下の音を重ねる
+      if (score.tone === "metal" && (inst === "bass" || inst === "slap") && pitch - 12 >= 23) push(pitch - 12, tick, Math.round(velocity * 0.6), len);
       // 重さ: ディストーションギターには、1オクターブ下の音を薄く重ねる
       if ((inst === "distGuitar" || inst === "crunch") && pitch - 12 >= 28) push(pitch - 12, tick, Math.round(velocity * 0.55), len);
       // 主旋律のエコー（付点8分・付点4分）。テンポに合わせて、少しずつ小さく
@@ -227,5 +237,5 @@ export function scoreToMidi(score: Score): Uint8Array {
 
   const out: number[] = [0x4d, 0x54, 0x68, 0x64, ...u32(6), ...u16(1), ...u16(tracksBytes.length), ...u16(PPQ)];
   for (const t of tracksBytes) out.push(0x4d, 0x54, 0x72, 0x6b, ...u32(t.length), ...t);
-  return Uint8Array.from(out);
+  return { midi: Uint8Array.from(out), programs };
 }
