@@ -5,7 +5,7 @@
  * ドラム: ロックは温かい厚み、メタルは低音の重さと3〜5kHzのアタックを強調
  */
 
-import type { AmpSetting } from "./score";
+import type { AmpSetting, GenreAmpType } from "./score";
 import type { NamHost } from "./nam/nam-host";
 
 export type Tone = "rock" | "metal" | "prs";
@@ -14,7 +14,25 @@ export interface ChannelAmp {
   amp: AmpSetting;
   pan: number;
 }
-type Role = "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru";
+type Role = "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru" | GenreAmpType;
+
+/** ジャンル別のアンプの種類（`score.ts` の `GenreAmpType` と同じ並び）。 */
+export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio"];
+
+const STEP_CURVES = new Map<number, Float32Array<ArrayBuffer>>();
+/** 波形を階段状にする（ビットを落としたような粗い音）。levels は片側の段数。 */
+export function stepCurve(levels: number): Float32Array<ArrayBuffer> {
+  let c = STEP_CURVES.get(levels);
+  if (!c) {
+    c = new Float32Array(4097);
+    for (let i = 0; i < c.length; i++) {
+      const x = (i / (c.length - 1)) * 2 - 1;
+      c[i] = Math.round(x * levels) / levels;
+    }
+    STEP_CURVES.set(levels, c);
+  }
+  return c;
+}
 
 const CURVES = new Map<string, Float32Array<ArrayBuffer>>();
 /** 真空管アンプのように、少し非対称にクリップする波形。drive が大きいほど深く歪む。 */
@@ -87,6 +105,7 @@ export class AmpRack {
   private roleFromType(type: AmpSetting["type"], program: number | undefined, tone: Tone): Role {
     if (type === "nam") return this.nam ? "nam" : this.roleOf(program, tone);
     if (type === "clean" || type === "overdrive" || type === "distortion" || type === "metal" || type === "prs") return type;
+    if ((GENRE_AMP_TYPES as string[]).includes(type)) return type as GenreAmpType;
     return this.roleOf(program, tone);
   }
 
@@ -174,9 +193,49 @@ export class AmpRack {
       case "drumsMetal":
         // メタルのドラム: キックの重さ（60〜80Hz）と、3〜5kHzのアタックの立ち上がりを強く出し、箱鳴りの帯域を削って締める。強くつぶして密度を上げる
         return this.chain(input, [this.filter("lowshelf", 80, 4.5), this.filter("peaking", 320, -4, 1.1), this.filter("peaking", 4200, 5, 1), this.filter("highshelf", 10000, 3), this.compressor(-20, 5, 0.006, 0.1), this.gain(1.2)]);
+      // ── ジャンル別（2026-09-30 追加）。特定の機材や製品の音を写したものではなく、ジャンルの一般的な音の性格に合わせた ──
+      case "jazz":
+        // ジャズ: ほぼ歪ませず、低音を少し足して高音を大きく丸める（太く柔らかい、指で弾いたような音）
+        return this.chain(input, tail([this.filter("highpass", 70), this.filter("lowshelf", 200, 3), this.filter("peaking", 800, -2, 0.9), this.shaper(1.3, 0.02), this.filter("highshelf", 3000, -6), this.filter("lowpass", 4500, 0, 0.7), this.gain(0.7)]));
+      case "blues":
+        // ブルース: 浅い歪みを上下で非対称にして（温かい倍音）、中域（900Hz）を前に出す。弾き方の強弱が残る
+        return this.chain(input, tail([this.filter("highpass", 90), this.filter("peaking", 900, 4, 0.8), this.gain(2.4 * d), this.shaper(2.8 * d, 0.12), this.filter("peaking", 2200, 1, 1), this.filter("lowpass", 5200, 0, 0.8), this.gain(0.55)]));
+      case "funk":
+        // ファンク: 低音を削って高音を明るく、強く圧縮して粒をそろえる（歯切れのよいカッティング向き）
+        return this.chain(input, tail([this.filter("highpass", 140), this.filter("lowshelf", 200, -3), this.filter("peaking", 1800, 2, 1), this.filter("highshelf", 3000, 5), this.compressor(-22, 4, 0.003, 0.1), this.gain(1.6 * d), this.shaper(1.6 * d, 0.02), this.filter("lowpass", 7500, 0, 0.8), this.gain(0.7)]));
+      case "crunch":
+        // クランチ: オーバードライブより少し浅い、ざらっとした歪み。和音の1音1音が聞き分けられる
+        return this.chain(input, tail([this.filter("highpass", 100), this.filter("peaking", 1000, 3, 0.9), this.gain(3 * d), this.shaper(3 * d, 0.08), this.filter("peaking", 2500, 2, 1), this.filter("lowpass", 6200, 0, 0.8), this.gain(0.52)]));
+      case "hardrock":
+        // ハードロック: ディストーションとメタルの間。深く歪ませ、低音と高音（3kHz）を少し足す
+        return this.chain(input, tail([this.filter("highpass", 110), this.filter("peaking", 900, 3, 0.9), this.gain(4 * d), this.shaper(6.5 * d, 0.05), this.filter("lowshelf", 110, 3), this.filter("peaking", 3000, 3, 1), this.filter("lowpass", 5000, 0, 0.8), this.gain(0.38)]));
+      case "punk":
+        // パンク: 対称に角を立てて強く歪ませ、中高域（1.5kHz）を押し出す。低音は締める（勢いで押す音）
+        return this.chain(input, tail([this.filter("highpass", 150), this.filter("peaking", 1500, 4, 0.9), this.gain(4.2 * d), this.shaper(7 * d, 0), this.filter("highshelf", 3000, 3), this.filter("lowpass", 6200, 0, 0.8), this.gain(0.4)]));
+      case "fuzz":
+        // ファズ: 非常に深く、上下の非対称も大きく歪ませる。低音を太く、中域を少しえぐり、高音は丸める（荒々しく不穏）
+        return this.chain(input, tail([this.filter("highpass", 70), this.gain(6 * d), this.shaper(14 * d, 0.2), this.filter("lowshelf", 150, 5), this.filter("peaking", 600, -3, 0.9), this.filter("lowpass", 3800, 0, 0.7), this.gain(0.24)]));
+      case "shoegaze":
+        // シューゲイザー: 深く歪ませたうえで高音を大きく落とし、圧縮で音の壁のように平らにする（霞んだ音）
+        return this.chain(input, tail([this.filter("highpass", 90), this.gain(4.5 * d), this.shaper(8 * d, 0.15), this.filter("peaking", 1400, 1, 0.9), this.filter("highshelf", 3000, -5), this.filter("lowpass", 3600, 0, 0.7), this.compressor(-24, 3, 0.02, 0.3), this.gain(0.8)]));
+      case "lofi":
+        // ローファイ: 音域を狭め（120Hz〜3.2kHz）、波形を細かい階段にして粗くする（古い録音・眠たげな音）
+        return this.chain(input, tail([this.filter("highpass", 120), this.filter("lowpass", 3200, 0, 0.7), this.shaper(1.5, 0), this.stepper(24), this.filter("highshelf", 3000, -8), this.gain(0.7)]));
+      case "retro8bit":
+        // レトロ8bit: 波形を粗い階段にする（昔のゲーム機のような、ざらついた音）。音域は広いまま
+        return this.chain(input, tail([this.filter("highpass", 60), this.stepper(8), this.filter("highshelf", 3000, 2), this.filter("lowpass", 9000, 0, 0.7), this.gain(0.85)]));
+      case "radio":
+        // ラジオ・電話: 400Hz〜3kHzだけを通し、中域を持ち上げて軽く歪ませる（遠くの・機械ごしの音）
+        return this.chain(input, tail([this.filter("highpass", 400, 0, 0.8), this.filter("lowpass", 3000, 0, 0.8), this.filter("peaking", 1500, 6, 1), this.gain(2 * d), this.shaper(3 * d, 0), this.gain(0.55)]));
       default:
         return this.chain(input, []);
     }
+  }
+
+  private stepper(levels: number): WaveShaperNode {
+    const s = this.ctx.createWaveShaper();
+    s.curve = stepCurve(levels);
+    return s;
   }
 
   /**
