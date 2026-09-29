@@ -43,7 +43,8 @@ const engine = new AudioEngine();
 (window as unknown as { BGM: unknown }).BGM = {
   bgm: bgm.map((e) => ({ group: e.group, title: e.title, bpm: e.score.tempoBpm, sec: getScoreDurationSec(e.score) })),
   effects: effects.map((e) => ({ group: e.group, title: e.title })),
-  play: (i: number) => engine.playBgm(bgm[i].score),
+  play: (i: number, offset = 0) => engine.playBgm(bgm[i].score, offset),
+  pos: () => engine.getBgmPositionSec(),
   stop: () => engine.stopBgm(),
   playSe: (i: number) => engine.playSe(effects[i].score),
   volume: (v: number) => engine.setBgmVolume(v),
