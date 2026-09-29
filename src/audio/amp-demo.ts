@@ -5,6 +5,7 @@ import { REST, type NoteEvent, type Score } from "./score";
  * アンプシミュレーターの試聴用デモ。ジャンル別プリセットを聞き比べるための、短い16拍のフレーズ。
  * フレーズは全プリセットで同じ（音色の違いだけを聞き比べるため）。マイナー・ペンタトニックの
  * 音を並べただけのオリジナルの練習フレーズで、既存曲のメロディではない（CLAUDE.md 1-1）。
+ * ドラム（`drums.ts`）も重ねてある。
  * 本編の曲ではないので、ゲーム内のどこにも自動では使われない（開発中の `a` キーで試聴できる）。
  */
 
@@ -32,6 +33,20 @@ const RIFF_FIFTH =
 /** 低音（アンプは通さない）。 */
 const BASS = "A1:2 A1:2 A1:2 R:1 A1:1 A1:2 A1:2 A1:2 A1:2";
 
+/** ドラム: キック・スネア（合計16拍。最後の小節はタムの「おかず」）。 */
+const DRUM_KICK_SNARE =
+  "K:1 S:1 K:0.5 K:0.5 S:1 " +
+  "K:1 S:1 K:0.5 K:0.5 S:1 " +
+  "K:1 S:1 K:0.5 K:0.5 S:1 " +
+  "K:1 S:1 T:0.25 T:0.25 L:0.25 L:0.25 S:0.5 S:0.5";
+
+/** ドラム: ハイハット・シンバル（合計16拍。頭にクラッシュ）。 */
+const DRUM_HATS =
+  "C:1 H:0.5 H:0.5 H:0.5 H:0.5 O:1 " +
+  "H:0.5 H:0.5 H:0.5 H:0.5 H:0.5 H:0.5 O:1 " +
+  "H:0.5 H:0.5 H:0.5 H:0.5 H:0.5 H:0.5 O:1 " +
+  "H:0.5 H:0.5 H:0.5 H:0.5 R:2";
+
 export function makeAmpDemoScore(amp: AmpPresetName): Score {
   return {
     tempoBpm: 112,
@@ -40,6 +55,8 @@ export function makeAmpDemoScore(amp: AmpPresetName): Score {
       { waveform: "sawtooth", volume: 0.2, notes: notes(RIFF_ROOT), amp },
       { waveform: "sawtooth", volume: 0.2, notes: notes(RIFF_FIFTH), amp },
       { waveform: "triangle", volume: 0.2, notes: notes(BASS) },
+      { waveform: "noise", volume: 0.2, notes: notes(DRUM_KICK_SNARE) },
+      { waveform: "noise", volume: 0.12, notes: notes(DRUM_HATS) },
     ],
   };
 }

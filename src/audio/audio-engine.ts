@@ -5,6 +5,7 @@ import {
   makeDistortionCurve,
   type AmpPresetName,
 } from "./amp";
+import { CLAP_BURST_GAP_SEC, DRUM_SETTINGS, drumTailSec, makeWhiteNoise } from "./drums";
 import { flattenScore, getScoreDurationSec, type Score, type ScheduledNote } from "./score";
 
 const SCHEDULE_AHEAD_SEC = 3;
@@ -82,9 +83,82 @@ export class AudioEngine {
   private muted = false;
 
   private bgmLoopHandle: number | null = null;
-  private activeBgmNodes: OscillatorNode[] = [];
+  private activeBgmNodes: AudioScheduledSourceNode[] = [];
   /** 今のBGMが使っているアンプ（曲を止めるときに切り離す）。 */
   private activeBgmAmps: AmpChain[] = [];
+
+  /** ドラム用のノイズの素（1秒分）。最初に使うときに1度だけ作る。 */
+  private noiseBuffer: AudioBuffer | null = null;
+
+  private getNoiseBuffer(ctx: AudioContext): AudioBuffer {
+    if (!this.noiseBuffer) {
+      const length = ctx.sampleRate;
+      const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+      buffer.copyToChannel(makeWhiteNoise(length), 0);
+      this.noiseBuffer = buffer;
+    }
+    return this.noiseBuffer;
+  }
+
+  /**
+   * ドラムを1打鳴らす（`drums.ts` の設定に沿う）。
+   * ノイズ→フィルター→音量の減衰、と、キック・タム用の「音程が急に下がるサイン波」を重ねる。
+   */
+  private scheduleDrum(
+    ctx: AudioContext,
+    destination: AudioNode,
+    event: ScheduledNote,
+    when: number,
+  ): AudioScheduledSourceNode[] {
+    const s = DRUM_SETTINGS[event.drum!];
+    const sources: AudioScheduledSourceNode[] = [];
+    const end = when + drumTailSec(event.drum!) + 0.02;
+    const silent = 0.0001;
+
+    if (s.noiseGain > 0) {
+      const src = ctx.createBufferSource();
+      src.buffer = this.getNoiseBuffer(ctx);
+      const filter = ctx.createBiquadFilter();
+      filter.type = s.noiseFilter;
+      filter.frequency.value = s.noiseFilterHz;
+      filter.Q.value = s.noiseQ;
+      const gain = ctx.createGain();
+      const peak = event.volume * s.noiseGain;
+      gain.gain.setValueAtTime(silent, when);
+      // クラップは、ごく短い間隔で数回打ち直してから減衰させる。
+      for (let i = 0; i < s.bursts; i++) {
+        const t = when + i * CLAP_BURST_GAP_SEC;
+        gain.gain.setValueAtTime(peak, t);
+        if (i < s.bursts - 1) {
+          gain.gain.exponentialRampToValueAtTime(peak * 0.2, t + CLAP_BURST_GAP_SEC * 0.9);
+        }
+      }
+      const decayStart = when + (s.bursts - 1) * CLAP_BURST_GAP_SEC;
+      gain.gain.exponentialRampToValueAtTime(silent, decayStart + s.noiseDecaySec);
+      src.connect(filter);
+      filter.connect(gain);
+      gain.connect(destination);
+      src.start(when);
+      src.stop(end);
+      sources.push(src);
+    }
+
+    if (s.toneGain > 0) {
+      const osc = ctx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(s.toneStartHz, when);
+      osc.frequency.exponentialRampToValueAtTime(s.toneEndHz, when + s.toneDecaySec);
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(event.volume * s.toneGain, when);
+      gain.gain.exponentialRampToValueAtTime(silent, when + s.toneDecaySec);
+      osc.connect(gain);
+      gain.connect(destination);
+      osc.start(when);
+      osc.stop(end);
+      sources.push(osc);
+    }
+    return sources;
+  }
 
   /** 最初のユーザー操作のタイミングで呼ぶ。AudioContextを用意し、一時停止も解除する。 */
   private ensureContext(): AudioContext {
@@ -127,7 +201,10 @@ export class AudioEngine {
     destination: AudioNode,
     event: ScheduledNote,
     when: number,
-  ): OscillatorNode {
+  ): AudioScheduledSourceNode[] {
+    if (event.waveform === "noise") {
+      return this.scheduleDrum(ctx, destination, event, when);
+    }
     const osc = ctx.createOscillator();
     osc.type = event.waveform;
     osc.frequency.value = event.frequency;
@@ -144,7 +221,7 @@ export class AudioEngine {
     gain.connect(destination);
     osc.start(when);
     osc.stop(when + event.durationSec + 0.02);
-    return osc;
+    return [osc];
   }
 
   playSe(score: Score): void {
@@ -173,8 +250,8 @@ export class AudioEngine {
         const events = flattenScore(score);
         for (const event of events) {
           const destination = this.destinationFor(ctx, amps, event, this.bgmGain!);
-          const node = this.scheduleNote(ctx, destination, event, nextStart + event.startSec);
-          this.activeBgmNodes.push(node);
+          const nodes = this.scheduleNote(ctx, destination, event, nextStart + event.startSec);
+          this.activeBgmNodes.push(...nodes);
         }
         nextStart += durationSec;
         this.activeBgmAmps = [...amps.values()];

@@ -7,6 +7,11 @@ class FakeParam {
   value = 0;
   setValueAtTime(): void {}
   linearRampToValueAtTime(): void {}
+  exponentialRampToValueAtTime(target: number): void {
+    if (!(target > 0)) {
+      throw new Error("exponentialRampToValueAtTime には正の値が必要");
+    }
+  }
 }
 
 class FakeNode {
@@ -19,6 +24,7 @@ class FakeNode {
   Q = new FakeParam();
   type = "";
   curve: Float32Array | null = null;
+  buffer: unknown = null;
   oversample = "none";
   constructor(kind: string) {
     this.kind = kind;
@@ -53,6 +59,13 @@ class FakeAudioContext {
   }
   createBiquadFilter(): FakeNode {
     return new FakeNode("biquad");
+  }
+  sampleRate = 8000;
+  createBuffer(): { copyToChannel: () => void } {
+    return { copyToChannel: () => {} };
+  }
+  createBufferSource(): FakeNode {
+    return new FakeNode("buffersource");
   }
 }
 
@@ -148,6 +161,61 @@ describe("AudioEngine のアンプ接続", () => {
   it("効果音（playSe）でもアンプを通せる", () => {
     const engine = new AudioEngine();
     engine.playSe(makeScore(true));
+    expect(FakeNode.all.filter((n) => n.kind === "waveshaper")).toHaveLength(1);
+  });
+
+  it("ドラムのパートは、ノイズの素を鳴らす（キックはピッチの落ちるサイン波も重ねる）", () => {
+    const engine = new AudioEngine();
+    engine.playBgm({
+      tempoBpm: 120,
+      loop: false,
+      tracks: [
+        {
+          waveform: "noise",
+          volume: 0.2,
+          notes: [
+            { note: "H", durationBeats: 1 },
+            { note: "K", durationBeats: 1 },
+          ],
+        },
+      ],
+    });
+    // H: ノイズ1つ。K: ノイズ1つ＋サイン波1つ。
+    expect(FakeNode.all.filter((n) => n.kind === "buffersource")).toHaveLength(2);
+    const osc = FakeNode.all.filter((n) => n.kind === "oscillator");
+    expect(osc).toHaveLength(1);
+    expect(osc[0].type).toBe("sine");
+    const src = FakeNode.all.find((n) => n.kind === "buffersource")!;
+    expect(src.buffer).not.toBeNull();
+    // ノイズ → フィルター → 音量 → BGM音量
+    expect(src.outputs[0].kind).toBe("biquad");
+    expect(src.outputs[0].outputs[0].kind).toBe("gain");
+  });
+
+  it("すべての打楽器を、エラーなく鳴らせる", () => {
+    const engine = new AudioEngine();
+    expect(() =>
+      engine.playBgm({
+        tempoBpm: 120,
+        loop: false,
+        tracks: [
+          {
+            waveform: "noise",
+            volume: 0.2,
+            notes: ["K", "S", "H", "O", "C", "T", "L", "P", "R2"].map((note) => ({ note, durationBeats: 0.5 })),
+          },
+        ],
+      }),
+    ).not.toThrow();
+  });
+
+  it("ドラムにもアンプを通せる（ローファイなど）", () => {
+    const engine = new AudioEngine();
+    engine.playBgm({
+      tempoBpm: 120,
+      loop: false,
+      tracks: [{ waveform: "noise", volume: 0.2, amp: "lofi", notes: [{ note: "S", durationBeats: 1 }] }],
+    });
     expect(FakeNode.all.filter((n) => n.kind === "waveshaper")).toHaveLength(1);
   });
 });
