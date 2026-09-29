@@ -104,7 +104,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     const isDrum = drumNote !== undefined;
     let program = track.program ?? (inst ? GM_PROGRAM[inst] ?? GM_DEFAULT_BY_WAVE[track.waveform] : GM_DEFAULT_BY_WAVE[track.waveform]);
     // リードとパッド: 電子音楽では電子的な音色、メタル調ではオーバードライブのギター、それ以外は生楽器に近い音色
-    if (inst === "lead" && track.program === undefined) program = score.synth ? SYNTH_LEAD : score.tone === "metal" ? METAL_LEAD : program;
+    if (inst === "lead" && track.program === undefined) program = score.synth ? SYNTH_LEAD : score.tone === "metal" || score.tone === "prs" ? METAL_LEAD : program;
     if (inst === "pad" && score.synth && track.program === undefined) program = SYNTH_PAD;
     const setupChannel = (prog: number, key: string, gainBoost: number): { channel: number; list: Ev[] } => {
       const channel = isDrum ? DRUM_CHANNEL : allocate(key);
@@ -119,7 +119,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 91, inst ? REVERB[inst] ?? 30 : 30] });
         list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 93, inst ? CHORUS[inst] ?? 0 : 0] });
         // 主旋律の楽器には、揺らぎ（ビブラート）を少し
-        if (inst === "leadGuitar" || inst === "lead" || inst === "brass") list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 1, 26] });
+        if (inst === "leadGuitar" || inst === "lead" || inst === "brass") list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 1, score.tone === "prs" ? 40 : 26] });
       }
       return { channel, list };
     };
@@ -180,7 +180,9 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       }
       // 曲の頭の2拍は強く（聴き手をつかむ、最初の一撃）
       const strike = score.opening && startBeat < 2 ? 1.22 : 1;
-      const velocity = Math.min(127, Math.round(velocityOf(vol, boost) * strike));
+      // 特別曲用（prs）の刻みギターは、強すぎないよう控えめに
+      const rhythmSoft = score.tone === "prs" && (inst === "distGuitar" || inst === "crunch") ? 0.78 : 1;
+      const velocity = Math.min(127, Math.round(velocityOf(vol, boost) * strike * rhythmSoft));
       const len = Math.max(20, Math.round(n.durationBeats * PPQ * lenScale));
       const push = (pitch: number, at: number, vel: number, length: number, target: { channel: number; list: Ev[] } = { channel, list }): void => {
         const p = Math.max(0, Math.min(127, pitch));
@@ -191,7 +193,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         push(drumKey, tick, velocity, len);
         // 厚みとパンチ: キックは別のバスドラムを重ね、スネアはポップ・ロック系のセットで手拍子を薄く重ねる
         if (inst === "kick") push(35, tick, Math.round(velocity * 0.55), len);
-        if (inst === "snare" && [8, 16, 24, 25].includes(score.drumKit ?? 0)) push(score.tone === "metal" ? 40 : 39, tick, Math.round(velocity * (score.tone === "metal" ? 0.55 : 0.32)), len);
+        if (inst === "snare" && [8, 16, 24, 25].includes(score.drumKit ?? 0)) push(score.tone === "metal" || score.tone === "prs" ? 40 : 39, tick, Math.round(velocity * (score.tone === "metal" || score.tone === "prs" ? 0.55 : 0.32)), len);
         continue;
       }
       const pitch = noteNameToMidi(n.note);
@@ -208,11 +210,11 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       push(pitch, tick, velocity, len);
       if (layer && layerSpec) push(pitch, tick, Math.max(14, Math.round(velocity * layerSpec.gain)), len, layer);
       if (inst === "crunch" || inst === "distGuitar") push(pitch + 7, tick, velocity, len); // パワーコードの5度
-      if (inst === "distGuitar") push(pitch + 12, tick, Math.round(velocity * 0.45), len);
+      if (inst === "distGuitar" && score.tone !== "prs") push(pitch + 12, tick, Math.round(velocity * 0.45), len);
       // 重低音: メタルのベースには、1オクターブ下の音を重ねる
-      if (score.tone === "metal" && (inst === "bass" || inst === "slap") && pitch - 12 >= 23) push(pitch - 12, tick, Math.round(velocity * 0.6), len);
+      if (score.tone !== "rock" && score.tone !== undefined && (inst === "bass" || inst === "slap") && pitch - 12 >= 23) push(pitch - 12, tick, Math.round(velocity * 0.6), len);
       // 重さ: ディストーションギターには、1オクターブ下の音を薄く重ねる
-      if ((inst === "distGuitar" || inst === "crunch") && pitch - 12 >= 28) push(pitch - 12, tick, Math.round(velocity * 0.45), len);
+      if ((inst === "distGuitar" || inst === "crunch") && pitch - 12 >= 28) push(pitch - 12, tick, Math.round(velocity * (score.tone === "prs" ? 0.25 : 0.45)), len);
       // 主旋律のエコー（付点8分・付点4分）。テンポに合わせて、少しずつ小さく
       if (inst && ECHO_INSTRUMENTS.has(inst) && n.durationBeats >= 0.4) {
         for (const [beats, gain] of [[0.75, 0.42], [1.5, 0.22]] as const) {

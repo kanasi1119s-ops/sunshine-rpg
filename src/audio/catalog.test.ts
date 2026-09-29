@@ -115,3 +115,10 @@ describe("実楽器版（バンド・オーケストラ・楽器の音色）", (
     expect(lead?.program).toBe(65); // ジャズ=サックス
   });
 });
+
+describe("特別曲のギター音色（PRS系のなめらかで歌うギター）", () => {
+  it("特別曲は、prsの音色（刻みを控えめに、澄んだ歪み）で鳴る", () => {
+    for (const f of FINALES) expect(getTrack(f.id).tone, f.id).toBe("prs");
+    expect(getTrack("boss-touri").tone).toBe("rock");
+  });
+});

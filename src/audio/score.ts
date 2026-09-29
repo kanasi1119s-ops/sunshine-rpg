@@ -57,8 +57,8 @@ export interface Score {
   edition?: "modern" | "ps2" | "real";
   /** 曲調（rock・classic・jazz など）。実楽器版で、楽器の割り当てを決めるために使う。 */
   style?: string;
-  /** 楽器の音色の傾向。rock=オーバードライブ・温かいドラム、metal=メタルゾーンのギター・重低音のベース・締まったドラム。 */
-  tone?: "rock" | "metal";
+  /** 楽器の音色の傾向。rock=オーバードライブ・温かいドラム、metal=メタルゾーンのギター・重低音のベース・締まったドラム、prs=特別曲用。粒立ちがよく歌うような、なめらかで澄んだギター（メタルの重さは保つ）。 */
+  tone?: "rock" | "metal" | "prs";
   /** trueなら、曲の頭に強い一撃（全楽器の強いアタック、クラッシュ、バスドラム）を入れる。ループのたびに聴き手をつかむ。 */
   opening?: boolean;
   tempoBpm: number;
