@@ -7,6 +7,7 @@
 
 import type { AmpSetting } from "./score";
 import { AMP_PRESETS, makeDistortionCurve } from "./amp";
+import { buildAmpPlugin, type AmpPluginDef } from "./amp-plugins";
 import type { NamHost } from "./nam/nam-host";
 
 export type Tone = "rock" | "metal" | "prs";
@@ -15,7 +16,7 @@ export interface ChannelAmp {
   amp: AmpSetting;
   pan: number;
 }
-type Role = "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru";
+type Role = "plugin" | "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru";
 
 const CURVES = new Map<string, Float32Array<ArrayBuffer>>();
 /** 真空管アンプのように、少し非対称にクリップする波形。drive が大きいほど深く歪む。 */
@@ -42,6 +43,7 @@ export class AmpRack {
   private built: AudioNode[][] = [];
   private nam: NamHost | null = null;
   private models: Record<string, string> = {};
+  private plugins: Record<string, AmpPluginDef> = {};
   private generation = 0;
   private pending: Promise<unknown>[] = [];
 
@@ -69,9 +71,10 @@ export class AmpRack {
   }
 
   /** 曲が変わるたびに、各チャンネルの楽器（GMの番号）と曲の音色に合わせて、機材をつなぎ直す。 */
-  configure(programs: Record<number, number>, tone: Tone, drumChannel = 9, amps: Record<number, ChannelAmp> = {}, models: Record<string, string> = {}): void {
+  configure(programs: Record<number, number>, tone: Tone, drumChannel = 9, amps: Record<number, ChannelAmp> = {}, models: Record<string, string> = {}, plugins: Record<string, AmpPluginDef> = {}): void {
     this.generation++;
     this.models = models;
+    this.plugins = plugins;
     this.pending = [];
     for (let ch = 0; ch < 16; ch++) {
       const input = this.inputs[ch];
@@ -88,6 +91,7 @@ export class AmpRack {
   private roleFromType(type: AmpSetting["type"], program: number | undefined, tone: Tone): Role {
     if (type === "nam") return this.nam ? "nam" : this.roleOf(program, tone);
     if (type === "genre") return "genre";
+    if (type === "plugin") return "plugin";
     if (type === "clean" || type === "overdrive" || type === "distortion" || type === "metal" || type === "prs") return type;
     return this.roleOf(program, tone);
   }
@@ -142,6 +146,8 @@ export class AmpRack {
     switch (role) {
       case "nam":
         return this.buildNam(input, override!);
+      case "plugin":
+        return this.buildPlugin(input, override!);
       case "genre": {
         // ジャンル別アンプ（amp.ts）: 入力の増幅 → 歪み → 低音・中音・高音 → キャビネット（低域・高域カット） → 出力
         const p = AMP_PRESETS[override?.amp.preset ?? "rock"] ?? AMP_PRESETS.rock;
@@ -233,6 +239,41 @@ export class AmpRack {
       this.built[this.built.findIndex((list) => list.includes(dry))]?.push(node, pre, tone, cab, panner, out);
     });
     this.pending.push(done.catch((error: unknown) => console.warn("NAMのアンプを用意できませんでした:", error)));
+    return nodes;
+  }
+
+  /**
+   * 追加したアンプ（アンプ定義ファイル）: 用意ができるまでは元の音を通し、できたら、その場でつなぎ替える。
+   * 定義が見つからない・読み込めないときは、元の音のまま。
+   */
+  private buildPlugin(input: AudioNode, override: ChannelAmp): AudioNode[] {
+    const dry = this.gain(1);
+    input.connect(dry);
+    dry.connect(this.destination);
+    const nodes: AudioNode[] = [dry];
+    const def = override.amp.plugin ? this.plugins[override.amp.plugin] : undefined;
+    if (!def) return nodes;
+    const generation = this.generation;
+    const done = buildAmpPlugin(this.ctx, def, { nam: this.nam }).then((chain) => {
+      if (generation !== this.generation) {
+        for (const n of chain) n.disconnect();
+        return;
+      }
+      const drive = this.gain(override.amp.drive ?? 1);
+      const tone = this.filter("highshelf", 3500, override.amp.tone ?? 0);
+      const panner = this.ctx.createStereoPanner();
+      panner.pan.value = Math.max(-1, Math.min(1, override.pan));
+      const out = this.gain(override.amp.level ?? 1);
+      input.connect(drive);
+      drive.connect(chain[0]);
+      chain[chain.length - 1].connect(tone);
+      tone.connect(panner);
+      panner.connect(out);
+      out.connect(this.destination);
+      dry.disconnect();
+      this.built[this.built.findIndex((list) => list.includes(dry))]?.push(drive, ...chain, tone, panner, out);
+    });
+    this.pending.push(done.catch((error: unknown) => console.warn("追加したアンプを用意できませんでした:", error)));
     return nodes;
   }
 

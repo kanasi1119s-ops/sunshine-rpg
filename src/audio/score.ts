@@ -1,4 +1,5 @@
 import type { AmpPresetName } from "./amp";
+import type { AmpPluginDef } from "./amp-plugins";
 import { noteNameToFrequency } from "./note";
 
 /** 音を鳴らさない拍（休符）。 */
@@ -32,7 +33,9 @@ export type Instrument =
 
 /** ギターなどの音づくり（アンプ）の設定。`auto`は、曲の音色（tone）と楽器から自動で選ぶ。 */
 export interface AmpSetting {
-  type: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "nam" | "genre";
+  type: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "nam" | "genre" | "plugin";
+  /** type=plugin のとき、使うアンプ定義のID（`Score.ampPlugins` のキー）。 */
+  plugin?: string;
   /** type=genre のとき、ジャンル別アンプ（amp.ts の14種）のプリセット名。 */
   preset?: AmpPresetName;
   /** 歪みの深さの倍率（0.5〜2、既定1）。 */
@@ -67,6 +70,8 @@ export interface Track {
 export interface Score {
   /** 読み込んだNAMモデル（.namファイルの中身）。名前 → JSON文字列。 */
   namModels?: Record<string, string>;
+  /** 追加したアンプ（アンプ定義ファイルの中身）。ID → 定義。 */
+  ampPlugins?: Record<string, AmpPluginDef>;
   /** 録音音源で鳴らすときのドラムセット（GMのドラムキット番号。0=標準、16=パワー、24=電子、25=TR-808、32=ジャズ）。省略時は0。 */
   drumKit?: number;
   /** trueなら、パッド・弦・合唱の音量をキックに合わせて周期的に凹ませる（電子音楽風のポンプ感）。 */
@@ -82,6 +87,8 @@ export interface Score {
   /** trueなら、曲の頭に強い一撃（全楽器の強いアタック、クラッシュ、バスドラム）を入れる。ループのたびに聴き手をつかむ。 */
   opening?: boolean;
   tempoBpm: number;
+  /** 拍子（例: 4/4、3/4、7/8、5/4）。省略時は4/4。音の長さ（拍）は、いつも4分音符=1拍で数える。 */
+  timeSig?: { num: number; den: number };
   loop: boolean;
   tracks: Track[];
 }

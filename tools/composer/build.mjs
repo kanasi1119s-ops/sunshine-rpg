@@ -18,12 +18,16 @@ const namWasm = fs.readFileSync(root + "node_modules/@opendaw/nam-wasm/dist/nam.
 // 同梱のNAMモデル（MIT。assets-src/nam-models/README.md）
 const NAM_MODELS = { "builtin:highgain-a": ["ハイゲインアンプA", "highgain-a.nam"], "builtin:highgain-b": ["ハイゲインアンプB", "highgain-b.nam"], "builtin:bass-preamp": ["ベース用プリアンプ", "bass-preamp.nam"] };
 const namModels = Object.fromEntries(Object.entries(NAM_MODELS).map(([k, [label, file]]) => [k, { label, json: fs.readFileSync(root + "assets-src/nam-models/" + file, "utf8") }]));
+// 見本のアンプ定義（assets-src/amp-plugins/）
+const ampDir = root + "assets-src/amp-plugins/";
+const ampSamples = fs.readdirSync(ampDir).filter((f) => f.endsWith(".sunshine-amp.json")).map((f) => JSON.parse(fs.readFileSync(ampDir + f, "utf8")));
 const result = await build({
   root, configFile: false, logLevel: "warn",
   define: {
     __NAM_PROCESSOR__: JSON.stringify("data:text/javascript;base64," + Buffer.from(namCode).toString("base64")),
     __NAM_WASM__: JSON.stringify(namWasm.toString("base64")),
     __NAM_MODELS__: JSON.stringify(namModels),
+    __AMP_SAMPLES__: JSON.stringify(ampSamples),
   },
   build: { write: false, assetsInlineLimit: 100_000_000, minify: true, lib: { entry: root + "tools/composer/entry.ts", name: "Composer", formats: ["iife"], fileName: "bgm" } },
 });

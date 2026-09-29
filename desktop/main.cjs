@@ -3,12 +3,14 @@
 // - キーは、OSの暗号化のしくみ（Windows の DPAPI・macOS のキーチェーンなど、Electron の safeStorage）で暗号化して保存する
 // - 画面の側には、キーそのものを返さない（「保存してあるか」と、末尾4文字だけ）
 // - AIとのやりとりは、この本体から api.anthropic.com へ直接行う
-const { app, BrowserWindow, ipcMain, safeStorage, shell, Menu, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, safeStorage, shell, Menu, dialog, session } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { composeWithClaude } = require("./ai.cjs");
 
 const keyFile = () => path.join(app.getPath("userData"), "anthropic-key.bin");
+/** アンプの追加フォルダ。ここに置いた .sunshine-amp.json を、起動時に読み込む。 */
+const ampFolder = () => path.join(app.getPath("userData"), "amp-plugins");
 let memoryKey = null; // 暗号化が使えない環境では、保存せず、起動中だけ覚える
 
 /** 本当にOSの機能で暗号化できるか（Linux で鍵の保管庫がないときの「basic_text」は、暗号化と見なさない）。 */
@@ -54,10 +56,48 @@ function buildMenu() {
       submenu: [
         { label: "このソフトについて", click: () => void dialog.showMessageBox({ type: "info", title: "サンシャイン作曲ソフト", message: `サンシャイン作曲ソフト ${app.getVersion()}`, detail: "© サンシャインソフトウェア\n\n使っている部品のライセンスは、「ヘルプ」→「ライセンス」で見られます。" }) },
         { label: "ライセンス", click: () => void shell.openPath(licenses) },
+        { label: "アンプの追加フォルダを開く", click: () => openAmpFolder() },
       ],
     },
   ]));
 }
+
+function openAmpFolder() {
+  fs.mkdirSync(ampFolder(), { recursive: true });
+  void shell.openPath(ampFolder());
+}
+
+// 保存: 「名前を付けて保存」の画面で場所を選んでもらい、そこへ書く
+const FILTERS = { wav: "WAV", flac: "FLAC", opus: "Ogg Opus", mid: "MIDI", musicxml: "MusicXML", csv: "CSV", json: "JSON" };
+ipcMain.handle("file:save", async (e, name, data) => {
+  if (typeof name !== "string" || !(data instanceof Uint8Array)) throw new Error("保存するデータが違います");
+  const ext = path.extname(name).slice(1).toLowerCase();
+  const win = BrowserWindow.fromWebContents(e.sender);
+  const r = await dialog.showSaveDialog(win, {
+    defaultPath: path.join(app.getPath("documents"), path.basename(name)),
+    filters: [{ name: FILTERS[ext] ?? ext.toUpperCase(), extensions: [ext] }, { name: "すべてのファイル", extensions: ["*"] }],
+  });
+  if (r.canceled || !r.filePath) return null;
+  fs.writeFileSync(r.filePath, data);
+  return r.filePath;
+});
+
+// アンプの追加フォルダの中身（アンプ定義ファイル）を返す。形のチェックは画面の側で行う
+ipcMain.handle("amp:list", () => {
+  fs.mkdirSync(ampFolder(), { recursive: true });
+  const out = [];
+  for (const f of fs.readdirSync(ampFolder())) {
+    if (!f.endsWith(".sunshine-amp.json")) continue;
+    try {
+      const text = fs.readFileSync(path.join(ampFolder(), f), "utf8");
+      if (text.length < 20_000_000) out.push({ file: f, text });
+    } catch {
+      // 読めないファイルはとばす
+    }
+  }
+  return out;
+});
+ipcMain.handle("amp:open-folder", () => openAmpFolder());
 
 ipcMain.handle("key:status", () => {
   const key = readKey();
@@ -98,6 +138,9 @@ ipcMain.handle("ai:compose", async (e, req) => {
 });
 
 app.whenReady().then(() => {
+  // MIDIキーボード（MIDI機器からの入力）だけは使ってよい。そのほかの許可（カメラ・マイク・位置など）は出さない
+  session.defaultSession.setPermissionRequestHandler((_wc, permission, cb) => cb(permission === "midi"));
+  session.defaultSession.setPermissionCheckHandler((_wc, permission) => permission === "midi");
   buildMenu();
   createWindow();
   app.on("activate", () => {

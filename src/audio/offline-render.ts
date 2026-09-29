@@ -54,7 +54,7 @@ export async function renderScoreOffline(score: Score, options: OfflineRenderOpt
   const { midi, programs, amps } = scoreToMidiInfo(score);
   const rack = new AmpRack(ctx, bus);
   rack.setNam(options.nam ?? null);
-  rack.configure(programs, score.tone ?? "rock", 9, amps, score.namModels ?? {});
+  rack.configure(programs, score.tone ?? "rock", 9, amps, score.namModels ?? {}, score.ampPlugins ?? {});
   await rack.whenReady();
 
   const synth = new WorkletSynthesizer(ctx);
