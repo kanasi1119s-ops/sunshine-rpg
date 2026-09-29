@@ -30,7 +30,7 @@ for (const piece of list) {
   }
   let box = await p.locator("#gridCanvas").boundingBox(); let cw = box.width / N;
   const cell = (r, c) => [box.x + c * cw + cw / 2, box.y + r * cw + cw / 2];
-  const pick = async (k) => { const s = await p.$$("#symbolList .sym"); await s[k + 1].click(); box = await p.locator("#gridCanvas").boundingBox(); cw = box.width / N; };
+  const pick = async (k) => { let s = await p.$$("#symbolList .sym"); if (!s[k + 1]) { console.log("symbols:", s.length, "k:", k); await p.waitForTimeout(500); s = await p.$$("#symbolList .sym"); } await s[k + 1].click(); box = await p.locator("#gridCanvas").boundingBox(); cw = box.width / N; };
   for (let k = 0; k < piece.pal.length; k++) {
     let started = false;
     for (let r = 0; r < N; r++) {
