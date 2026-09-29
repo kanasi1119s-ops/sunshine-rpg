@@ -2,6 +2,7 @@ import { Sequencer, WorkletSynthesizer } from "spessasynth_lib";
 import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url";
 import soundfontUrl from "./soundfont/game.sf3?url";
 import { AmpRack } from "./amp-rack";
+import type { NamHost } from "./nam/nam-host";
 import { scoreToMidiInfo } from "./midi-export";
 import type { Score } from "./score";
 
@@ -24,6 +25,7 @@ declare global {
 export class SampledBgm {
   private synth: WorkletSynthesizer | null = null;
   private rack: AmpRack | null = null;
+  private namHost: NamHost | null = null;
   private seq: Sequencer | null = null;
   private loading: Promise<boolean> | null = null;
   private ready = false;
@@ -72,6 +74,9 @@ export class SampledBgm {
     }
     (synth as unknown as { worklet: AudioWorkletNode }).worklet.connect(destination, 0);
     this.rack = rack;
+    if (this.namHost) {
+      rack.setNam(this.namHost);
+    }
     await synth.soundBankManager.addSoundBank(buffer, "main");
     await synth.isReady;
     const seq = new Sequencer(synth);
@@ -103,13 +108,19 @@ export class SampledBgm {
     return synth;
   }
 
+  /** NAM（実際のアンプを学習したモデル）を使えるようにする（作曲ソフトだけ）。 */
+  setNam(host: NamHost | null): void {
+    this.rack?.setNam(host);
+    this.namHost = host;
+  }
+
   /** 曲を鳴らす。`offsetSec` の位置から始められる。 */
   play(score: Score, offsetSec = 0): void {
     if (!this.seq) {
       return;
     }
-    const { midi, programs } = scoreToMidiInfo(score);
-    this.rack?.configure(programs, score.tone ?? "rock");
+    const { midi, programs, amps } = scoreToMidiInfo(score);
+    this.rack?.configure(programs, score.tone ?? "rock", 9, amps, score.namModels ?? {});
     this.pendingOffset = offsetSec;
     this.playing = true;
     const binary = midi.buffer.slice(midi.byteOffset, midi.byteOffset + midi.byteLength) as ArrayBuffer;

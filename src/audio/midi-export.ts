@@ -1,6 +1,6 @@
 import { GM_DEFAULT_BY_WAVE, GM_DRUM_NOTE, GM_LAYER, GM_PROGRAM, METAL_LEAD, SYNTH_LEAD, SYNTH_PAD } from "./gm-map";
 import { noteNameToMidi } from "./note";
-import { humanize, REST, type Instrument, type Score, type Track } from "./score";
+import { humanize, REST, type AmpSetting, type Instrument, type Score, type Track } from "./score";
 
 /**
  * 曲（Score）を、録音音源（サウンドフォント）で鳴らすための標準MIDIファイル（SMF）に変換する。
@@ -51,8 +51,9 @@ export function scoreToMidi(score: Score): Uint8Array {
 }
 
 /** MIDIと、チャンネルごとの楽器（GMの番号）。機材（アンプ・ドラムの仕上げ）を選ぶために使う。 */
-export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Record<number, number> } {
+export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Record<number, number>; amps: Record<number, { amp: AmpSetting; pan: number }> } {
   const programs: Record<number, number> = {};
+  const amps: Record<number, { amp: AmpSetting; pan: number }> = {};
   const tracksBytes: number[][] = [];
   // 指揮者トラック（テンポと曲の長さ）
   const totalBeats = Math.max(...score.tracks.map((t) => t.notes.reduce((s, n) => s + n.durationBeats, 0)));
@@ -126,6 +127,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     const main = setupChannel(program, channelKey(track, program), 1);
     const channel = main.channel;
     if (channel !== DRUM_CHANNEL) programs[channel] = program;
+    if (channel !== DRUM_CHANNEL && track.amp) amps[channel] = { amp: track.amp, pan: track.pan ?? 0 };
     const list = main.list;
     const layerSpec = inst ? GM_LAYER[inst] : undefined;
     const layer = layerSpec ? setupChannel(layerSpec.program, `${channelKey(track, layerSpec.program)}|layer`, 1) : null;
@@ -255,5 +257,5 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
 
   const out: number[] = [0x4d, 0x54, 0x68, 0x64, ...u32(6), ...u16(1), ...u16(tracksBytes.length), ...u16(PPQ)];
   for (const t of tracksBytes) out.push(0x4d, 0x54, 0x72, 0x6b, ...u32(t.length), ...t);
-  return { midi: Uint8Array.from(out), programs };
+  return { midi: Uint8Array.from(out), programs, amps };
 }

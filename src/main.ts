@@ -72,6 +72,7 @@ import { loadFromSlot, saveToSlot } from "./game/save/storage";
 import { downloadSaveFile, readSaveFile } from "./io/save-file";
 import { AudioEngine } from "./audio/audio-engine";
 import { getTrackEdition, type Edition } from "./audio/catalog";
+import "./audio/user-songs";
 import { SE_LIBRARY } from "./audio/se-library";
 import type { Score } from "./audio/score";
 import { createDebugMenuState, moveMenuCursor, toggleMenu } from "./game/debug/debug-menu";

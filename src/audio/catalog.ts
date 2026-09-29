@@ -117,12 +117,19 @@ export const CATALOG: CatalogEntry[] = [
   song("第8章 灯芯都", "alley-toushin", "灯芯都の裏通り", "灯芯都の路地・裏取引の場面", "phonk", "D", true, 132, 152),
 ];
 
+/** 作曲ソフトで作って登録した曲（user-songs.ts が読み込み時に入れる）。 */
+export const EXTRA_ENTRIES: CatalogEntry[] = [];
+/** 組み込みの曲＋登録した曲。 */
+export function allEntries(): CatalogEntry[] {
+  return [...CATALOG, ...EXTRA_ENTRIES];
+}
+
 const cache = new Map<string, Score>();
 /** 曲のデータを取り出す（初めて使うときに作って、以後は使い回す）。 */
 export function getTrack(id: string): Score {
   let score = cache.get(id);
   if (!score) {
-    const entry = CATALOG.find((e) => e.id === id);
+    const entry = allEntries().find((e) => e.id === id);
     if (!entry) throw new Error(`曲がありません: ${id}`);
     score = entry.handmade ?? (entry.finale ? composeFinale(FINALES.find((f) => f.id === entry.finale)!) : composeSong(entry.spec!));
     cache.set(id, score);
