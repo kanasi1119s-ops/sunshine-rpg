@@ -1,6 +1,8 @@
 import { COMMANDS, type BattleUiState } from "../game/battle/battle-controller";
 import type { BattleState, Combatant } from "../game/battle/types";
 import { findCombatant } from "../game/battle/types";
+import { SPRITE_DATA } from "../game/art/sprite-data.generated";
+import { getSpriteCanvas } from "../game/art/sprite";
 import { buildMonsterCells, MONSTER_GRID_SIZE, MONSTERS } from "../game/monster/monsters";
 
 const LINE_HEIGHT = 12;
@@ -44,6 +46,27 @@ function drawEnemySprite(
   }
 }
 
+/** ボスの大きな絵（256×256）。あれば画面の中央に大きく描く。描けたら true。 */
+function drawBossSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, screenWidth: number): boolean {
+  if (enemy.hp <= 0) {
+    return false;
+  }
+  const canvas = getSpriteCanvas(`boss:${enemy.id}`, SPRITE_DATA);
+  if (!canvas) {
+    return false;
+  }
+  // 右寄りに大きく描き、名前とHPは左上に置く（味方の一覧と重ならない）
+  const size = 150;
+  const x = screenWidth - size - 20;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(canvas, x, 4, size, size);
+  ctx.fillStyle = "#f0f0f0";
+  ctx.fillText(enemy.name, 12, 10);
+  drawHpBar(ctx, enemy, 12, 24, 110);
+  return true;
+}
+
 export function renderBattle(
   ctx: CanvasRenderingContext2D,
   battleState: BattleState,
@@ -58,6 +81,9 @@ export function renderBattle(
   ctx.textBaseline = "top";
 
   battleState.enemies.forEach((enemy, index) => {
+    if (drawBossSprite(ctx, enemy, screenWidth)) {
+      return;
+    }
     const x = 60 + index * 90;
     const y = 24;
     drawEnemySprite(ctx, enemy, x, y, 40);

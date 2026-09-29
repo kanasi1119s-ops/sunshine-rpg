@@ -1,6 +1,8 @@
 import { getTileId, type TileMap } from "../game/map/tile-map";
 import type { Camera } from "./camera";
 import { hashCell, shadeColor } from "../game/color-utils";
+import { SPRITE_DATA } from "../game/art/sprite-data.generated";
+import { getSpriteCanvas } from "../game/art/sprite";
 import { buildTileArtCells, TILE_ART, TILE_ART_SIZE, TILE_VARIANTS, type TileArtCell } from "../game/tile-art/tile-art";
 
 /**
@@ -57,6 +59,43 @@ function drawTileTexture(
  * 描けた場合はtrue、カテゴリが未登録の場合はfalse（呼び出し側は
  * `drawTileTexture`にフォールバックする）。
  */
+/** 地形カテゴリ → 128×128の地形テクスチャ（`sprite-data.generated.ts`）。草だけは2種を128マスごとに切り替えて繰り返しを減らす。 */
+const TERRAIN_TEXTURE: Record<string, string[]> = {
+  grass: ["terrain:grass-a", "terrain:grass-b"],
+  water: ["terrain:water"],
+  path: ["terrain:dirt"],
+  treeCanopy: ["terrain:forest"],
+};
+const TEXTURE_SIZE = 128;
+
+/** 大きな地形テクスチャがあれば、そのタイル位置にあたる16×16の窓を切り出して描く（隣のタイルと絵がつながる）。 */
+function drawTerrainTexture(
+  ctx: CanvasRenderingContext2D,
+  categoryKey: string,
+  screenX: number,
+  screenY: number,
+  tileWidth: number,
+  tileHeight: number,
+  tileX: number,
+  tileY: number,
+): boolean {
+  const keys = TERRAIN_TEXTURE[categoryKey];
+  if (!keys) {
+    return false;
+  }
+  const perSide = TEXTURE_SIZE / TILE_ART_SIZE;
+  const block = hashCell(Math.floor(tileX / perSide), Math.floor(tileY / perSide));
+  const canvas = getSpriteCanvas(keys[block % keys.length], SPRITE_DATA);
+  if (!canvas) {
+    return false;
+  }
+  const sx = (((tileX * TILE_ART_SIZE) % TEXTURE_SIZE) + TEXTURE_SIZE) % TEXTURE_SIZE;
+  const sy = (((tileY * TILE_ART_SIZE) % TEXTURE_SIZE) + TEXTURE_SIZE) % TEXTURE_SIZE;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(canvas, sx, sy, TILE_ART_SIZE, TILE_ART_SIZE, screenX, screenY, tileWidth, tileHeight);
+  return true;
+}
+
 const cellCache = new Map<string, TileArtCell[]>();
 
 /** 地形カテゴリ×見た目の揺らぎごとに、描画データを一度だけ作って使い回す。 */
@@ -84,6 +123,9 @@ function drawTileArt(
   tileX: number,
   tileY: number,
 ): boolean {
+  if (drawTerrainTexture(ctx, categoryKey, screenX, screenY, tileWidth, tileHeight, tileX, tileY)) {
+    return true;
+  }
   const cells = cellsFor(categoryKey, hashCell(tileX, tileY) % TILE_VARIANTS);
   if (!cells) {
     return false;
