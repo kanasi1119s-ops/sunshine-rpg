@@ -407,14 +407,18 @@ function drawRoll(): void {
   }
   ctx.globalAlpha = 1;
   const sel = new Set(state.picked);
+  // 音は、ほのかに光らせる
+  ctx.shadowBlur = 6;
   for (const n of trackToNotes(t)) {
     const y = isDrum(t) ? 0 : (hi - noteNameToMidi(n.note)) * ROW;
     const chosen = sel.has(n.start);
     ctx.fillStyle = chosen ? css("--note-sel") : css("--note");
+    ctx.shadowColor = ctx.fillStyle;
     ctx.strokeStyle = chosen ? css("--note-sel-edge") : css("--note-edge");
     ctx.fillRect(n.start * PX, y + 1, Math.max(3, n.dur * PX - 1), ROW - 2);
     ctx.strokeRect(n.start * PX + 0.5, y + 1.5, Math.max(3, n.dur * PX - 1) - 1, ROW - 3);
   }
+  ctx.shadowBlur = 0;
   if (box) {
     ctx.strokeStyle = css("--note-sel-edge");
     ctx.setLineDash([4, 3]);
@@ -862,6 +866,9 @@ function renderAll(): void {
   renderAmp();
   drawRoll();
   ui.status.textContent = `${state.name}｜${state.score.tracks.length}トラック｜${mmss(getScoreDurationSec(state.score))}｜テンポ ${state.score.tempoBpm}`;
+  lcdTempo.textContent = String(state.score.tempoBpm);
+  lcdTracks.textContent = String(state.score.tracks.length).padStart(2, "0");
+  lcdLen.textContent = mmss(getScoreDurationSec(state.score));
 }
 const composeBtn = h("button", { class: "primary", type: "button" }, "自動作曲");
 composeBtn.onclick = composeAuto;
@@ -874,39 +881,60 @@ saveBtn.onclick = exportProject;
 const loadBtn = h("button", { type: "button" }, "プロジェクトを読み込む");
 loadBtn.onclick = () => fileIn.click();
 
+const lcdTempo = h("span", { class: "lcd-v" }, "120");
+const lcdTracks = h("span", { class: "lcd-v" }, "0");
+const lcdLen = h("span", { class: "lcd-v" }, "0:00");
+const lcd = (label: string, value: HTMLElement): HTMLElement => h("div", { class: "lcd-cell" }, h("span", { class: "lcd-k" }, label), value);
+ui.playBtn.textContent = "▶";
+ui.playBtn.title = "再生（はじめから）";
+ui.pauseBtn.textContent = "❚❚";
+ui.pauseBtn.title = "一時停止・再開";
+ui.stopBtn.textContent = "■";
+ui.stopBtn.title = "停止";
+for (const b of [ui.playBtn, ui.pauseBtn, ui.stopBtn]) b.classList.add("tp");
+const panel = (code: string, title: string, ...kids: (Node | string)[]): HTMLElement =>
+  h("section", { class: "panel" }, h("h2", {}, h("span", { class: "code" }, code), title), ...kids);
+
 app.append(
-  h("div", {}, h("h1", {}, "サンシャイン作曲ソフト"), h("div", { class: "muted" }, "自動で曲を作り、ピアノロールで直して、実楽器の音（ギターアンプ・ドラムの仕上げつき）で聴けます。")),
+  h("header", { class: "topbar" },
+    h("div", { class: "brand" }, h("div", { class: "logo", "aria-hidden": "true" }), h("div", {}, h("h1", {}, "SUNSHINE", h("b", {}, " COMPOSER")), h("div", { class: "sub" }, "サンシャイン作曲ソフト ・ 実楽器エンジン"))),
+    h("div", { class: "transport" }, ui.playBtn, ui.pauseBtn, ui.stopBtn),
+    h("div", { class: "lcd" }, h("div", { class: "lcd-time" }, ui.time), lcd("BPM", lcdTempo), lcd("TRK", lcdTracks), lcd("LEN", lcdLen)),
+    h("div", { class: "seekwrap" }, ui.seek),
+    h("div", { class: "row topopts" }, field("サウンド", editionSel), field("マスター音量", volIn)),
+  ),
+  h("div", { class: "daw" },
+    panel("TRK", "トラック", ui.trackBox, h("div", { class: "row", style: "margin-top:8px" }, addTrackBtn),
+      h("div", { class: "muted", style: "margin-top:4px" }, "1つのトラックは1度に1音だけ鳴ります（和音は、トラックを重ねて作ります）。")),
+    panel("ROLL", "ピアノロール",
+      h("div", { class: "row", style: "margin-bottom:8px" }, field("道具", toolSel), field("和音で足す", chordSel), field("クリックの間隔", gridSel), field("足す音の長さ", lenSel), clearBtn), selTools, h("div", { class: "info" }, ui.info), ui.rollBox,
+      h("div", { class: "muted", style: "margin-top:4px" }, "和音: 根音をいま選んでいるトラックに、ほかの音をすぐ下の同じ楽器のトラック（うすく表示。足りなければ自動で作る）に入れます。")),
+  ),
   h("div", { class: "grid" },
-    h("div", { class: "panel" }, h("h2", {}, "自動作曲"),
+    panel("GEN", "自動作曲",
       h("div", { class: "row" }, field("曲名", nameIn), field("曲調", styleSel), field("調", tonicSel), field("長調・短調", modeSel)),
       h("div", { class: "row", style: "margin-top:8px" }, field("テンポ", bpmIn), field("乱数の種", h("div", { class: "row" }, seedIn, randomBtn)), field("長さ", secIn), field("拍子", beatsSel), field("疾走感（ボス戦向け）", driveChk)),
       h("div", { class: "row", style: "margin-top:10px" }, composeBtn),
       h("div", { class: "row", style: "margin-top:10px" }, field("特別曲の型", finaleSel), specialBtn, h("label", { class: "row muted" }, useFieldsChk, "上の調・テンポ・種を使う")),
       h("div", { class: "muted", style: "margin-top:6px" }, "同じ設定（乱数の種）からは、いつも同じ曲ができます。気に入らなければ🎲で種を変えてください。特別曲は、型ごとの調・テンポ・種で作ります（「上の調・テンポ・種を使う」で変えられます）。")),
-    h("div", { class: "panel" }, h("h2", {}, "再生と書き出し"),
-      h("div", { class: "row" }, ui.playBtn, ui.pauseBtn, ui.stopBtn, field("サウンド", editionSel), field("音量", volIn)),
-      h("div", { class: "row", style: "margin-top:10px" }, ui.seek, ui.time),
-      h("div", { class: "row", style: "margin-top:10px" }, wavBtn, midiBtn, saveBtn, loadBtn, fileIn),
+    panel("CHD", "新しい曲（コード進行から）",
+      h("div", { class: "row" }, field("コード進行（空白でくぎる）", nsChords), field("テンポ", nsBpm), field("拍子", nsBeats), field("1コードの長さ", nsBars), field("くり返し", nsRepeat), field("伴奏の雰囲気", nsFeel), field("メロディの楽器", nsLead)),
+      h("div", { class: "row", style: "margin-top:8px" }, nsBtn),
+      h("div", { class: "muted", style: "margin-top:4px" }, "ドラム・ベース・ギター・ピアノ・弦の伴奏を作り、最後に空のメロディのトラックを足します。ピアノロールでメロディを書き込んでください。読めるコード: C・Am・F#m7・Bbmaj7・Csus4・Gdim・Eaug など。")),
+    panel("AMP", "音づくり（アンプ）", ampBox),
+    panel("OUT", "書き出し",
+      h("div", { class: "row" }, wavBtn, midiBtn, saveBtn, loadBtn, fileIn),
       h("div", { class: "row", style: "margin-top:10px" }, field("ゲーム用の曲ID", gameIdIn), field("使う場面", gameSceneIn), gameBtn),
-      h("div", { class: "muted", style: "margin-top:6px" }, "MIDIは、いま選んでいるサウンドの編成で書き出します。プロジェクトは、あとで続きから編集できます（このブラウザにも自動保存します）。"),
-      ui.status)),
-  h("div", { class: "panel" }, h("h2", {}, "トラック"), ui.trackBox, h("div", { class: "row", style: "margin-top:8px" }, addTrackBtn),
-    h("div", { class: "muted", style: "margin-top:4px" }, "1つのトラックは1度に1音だけ鳴ります（和音は、トラックを重ねて作ります）。")),
-  h("div", { class: "panel" }, h("h2", {}, "新しい曲（コード進行から）"),
-    h("div", { class: "row" }, field("コード進行（空白でくぎる）", nsChords), field("テンポ", nsBpm), field("拍子", nsBeats), field("1コードの長さ", nsBars), field("くり返し", nsRepeat), field("伴奏の雰囲気", nsFeel), field("メロディの楽器", nsLead)),
-    h("div", { class: "row", style: "margin-top:8px" }, nsBtn),
-    h("div", { class: "muted", style: "margin-top:4px" }, "ドラム・ベース・ギター・ピアノ・弦の伴奏を作り、最後に空のメロディのトラックを足します。ピアノロールでメロディを書き込んでください。読めるコード: C・Am・F#m7・Bbmaj7・Csus4・Gdim・Eaug など。")),
-  h("div", { class: "panel" }, h("h2", {}, "音づくり（アンプ）"), ampBox),
-  h("div", { class: "panel" }, h("h2", {}, "ピアノロール"),
-    h("div", { class: "row", style: "margin-bottom:8px" }, field("道具", toolSel), field("和音で足す", chordSel), field("クリックの間隔", gridSel), field("足す音の長さ", lenSel), clearBtn), selTools, h("div", { style: "margin-bottom:6px" }, ui.info), ui.rollBox,
-    h("div", { class: "muted", style: "margin-top:4px" }, "和音: 根音をいま選んでいるトラックに、ほかの音をすぐ下の同じ楽器のトラック（うすく表示。足りなければ自動で作る）に入れます。")),
+      h("div", { class: "muted", style: "margin-top:6px" }, "MIDIとWAVは、いま選んでいるサウンドの編成で書き出します。プロジェクトは、あとで続きから編集できます（このブラウザにも自動保存します）。")),
+  ),
+  h("footer", { class: "statusbar" }, h("span", { class: "led", "aria-hidden": "true" }), ui.status),
 );
 ui.rollBox.append(ui.canvas);
 restore();
 renderAll();
 
 // 再生位置の表示と、ピアノロールの再生位置の線（描き直さず、スクロールだけ追う）
-const playhead = h("div", { style: "position:absolute;top:0;bottom:0;width:2px;background:var(--playhead);pointer-events:none;display:none" });
+const playhead = h("div", { class: "playhead", style: "display:none" });
 ui.rollBox.style.position = "relative";
 ui.rollBox.append(playhead);
 function tick(): void {
