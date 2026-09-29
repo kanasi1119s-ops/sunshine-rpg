@@ -42,7 +42,7 @@ function distortionCurve(drive: number): Float32Array<ArrayBuffer> {
 }
 
 /** BGM全体の出口。ほのかな残響と、音が重なっても割れないようにするコンプレッサーを通す。 */
-export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24): GainNode {
+export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, reverbSec = 2.2): GainNode {
   // 最終段: 音が重なっても割れないようにする歯止め（リミッター）と、全体の音量の底上げ
   const limiter = ctx.createDynamicsCompressor();
   limiter.threshold.value = -1.5;
@@ -87,7 +87,7 @@ export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24):
   bus.connect(dry);
   dry.connect(low);
 
-  const seconds = 2.2;
+  const seconds = reverbSec;
   const length = Math.floor(ctx.sampleRate * seconds);
   const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
   let seed = 987;

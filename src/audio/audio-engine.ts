@@ -62,8 +62,8 @@ export class AudioEngine {
       this.seGain = this.ctx.createGain();
       this.seGain.gain.value = this.muted ? 0 : this.seVolume;
       this.seGain.connect(this.ctx.destination);
-      // 効果音にも、余韻（残響）と仕上げをかける。2〜4秒の余韻が自然に消えていく
-      this.seBus = createBgmBus(this.ctx, this.seGain, 0.34);
+      // 効果音にも仕上げをかける。残響は短く軽く（間延びせず、鋭く聞こえるように）
+      this.seBus = createBgmBus(this.ctx, this.seGain, 0.16, 1.0);
     }
     if (this.ctx.state === "suspended") {
       void this.ctx.resume();

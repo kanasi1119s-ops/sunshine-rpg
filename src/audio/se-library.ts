@@ -39,8 +39,25 @@ const syn = (instrument: Instrument, waveform: Waveform, volume: number, spec: s
 const k = (n: number): string => midiToName(n);
 /** 全体の長さ（秒）を決める無音のパート。余韻（残響）が消えるまでを含める。 */
 const spacer = (secs: number): Track => ({ waveform: "sine", volume: 0, notes: [{ note: "R", durationBeats: secs * 4 }] });
+/** 余韻を引きずる音（合唱・パッド・ビブラフォン・弦・水晶・風など）の楽器番号。 */
+const LINGERING = new Set([11, 44, 48, 52, 53, 89, 91, 98, 99, 100, 101, 119, 122]);
+/**
+ * 間延びを防ぐ整え: 余韻を引きずる音は3拍（0.75秒）までに切り、その分だけ音量を下げる。
+ * 合成音の風・パッドの長い尾も同様。打撃・旋律など、発音の輪郭になる音はそのまま。
+ */
+function tighten(track: Track): Track {
+  const lingering = (track.gm !== undefined && !track.gmDrum && LINGERING.has(track.gm)) || track.instrument === "wind" || track.instrument === "pad";
+  if (!lingering) {
+    return track;
+  }
+  const notes = track.notes.map((n) => (n.note !== "R" && n.durationBeats > 3 ? { ...n, durationBeats: 3 } : n));
+  const capped = notes.some((n, i) => n.durationBeats !== track.notes[i].durationBeats);
+  return { ...track, volume: track.volume * (capped ? 0.7 : 1), notes };
+}
 function E(id: string, group: string, name: string, secs: number, ...tracks: Track[]): SeEntry {
-  return { id, group, name, score: { tempoBpm: 240, loop: false, tracks: [...tracks, spacer(secs)] } };
+  // 音の中身は短く鋭く、全体の長さ（余韻を含む枠）は2〜3.6秒に収める
+  const total = Math.max(2, Math.min(secs, 3.6));
+  return { id, group, name, score: { tempoBpm: 240, loop: false, tracks: [...tracks.map(tighten), spacer(total)] } };
 }
 
 export interface SeEntry {
@@ -109,7 +126,7 @@ export const SE_LIBRARY: SeEntry[] = [
   E("level-up", "戦闘", "レベルアップ", 3.6, gm(46, 0.24, "E4:0.5 B4:0.5 E5:0.5 G#5:0.5 B5:0.5 E6:2.5"), gm(61, 0.16, "R:2.5 B5:1 E6:5"), gm(8, 0.16, "R:1 E6:0.5 G#6:0.5 B6:0.5 E7:3"), gm(47, 0.22, "E2:0.5 R:1.5 B2:0.5 R:0.5 E3:3"), dr(0.16, "crash", `R:2.5 ${CRASH}:1`), gm(11, 0.06, "B5:14")),
   // 勝利: 拍を刻む太鼓のうなり → 低く始まる金管の上昇（二度の駆け上がり）→ 高い音で長く伸ばし、ハープが駆け上がって合唱とシンバルが開く。
   // 「同じ音の連打で始まって短い下降で受ける」型を避け、D長調（ミクソリディアからの上昇）で作った完全に独自の楽句
-  E("victory", "戦闘", "勝利のファンファーレ", 4.0, gm(47, 0.24, "D2:0.5 D2:0.5 D2:0.5 D2:0.5 D2:0.5 D2:0.5 D2:0.5 D2:0.5 A2:1 D3:3"), gm(61, 0.22, "R:1 D5:1 F#5:1 A5:1 F#5:1 G5:1 B5:1 D6:5"), gm(56, 0.14, "R:1 B4:1 D5:1 F#5:1 D5:1 E5:1 G5:1 B5:5"), gm(46, 0.2, "R:8 D5:0.25 F#5:0.25 A5:0.25 D6:0.25 F#6:0.25 A6:0.25 D7:2"), dr(0.22, "crash", `R:8 ${CRASH}:1`), gm(52, 0.1, "R:8 D4:8"), gm(9, 0.1, "R:9 A6:0.5 D7:0.5 F#7:3")),
+  E("victory", "戦闘", "勝利のファンファーレ", 3.2, gm(47, 0.24, "D2:0.5 D2:0.5 D2:0.5 D2:0.5 A2:1 D3:2"), gm(61, 0.22, "R:1 D5:0.5 F#5:0.5 A5:0.5 F#5:0.5 G5:0.5 B5:0.5 D6:3"), gm(56, 0.14, "R:1 B4:0.5 D5:0.5 F#5:0.5 D5:0.5 E5:0.5 G5:0.5 B5:3"), gm(46, 0.2, "R:4.5 D5:0.25 F#5:0.25 A5:0.25 D6:0.25 F#6:0.25 A6:0.25 D7:1.5"), dr(0.22, "crash", `R:4.5 ${CRASH}:1`), gm(52, 0.1, "R:4.5 D4:3"), gm(9, 0.1, "R:5 A6:0.5 D7:0.5 F#7:1.5")),
   E("defeat", "戦闘", "全滅", 4.0, gm(48, 0.2, "E3:2 D3:2 C3:2 B2:8"), gm(47, 0.22, "E2:1 R:1 D2:1 R:1 C2:1 R:1 B1:5"), gm(53, 0.08, "E4:2 D4:2 C4:2 B3:8"), syn("sfxDown", "sawtooth", 0.08, "R:3 E3:8")),
   E("exp-gain", "戦闘", "経験値・お金を得る", 2.4, gm(9, 0.2, "E6:0.25 E6:0.25 E6:0.25 E6:0.25 E6:0.25 G6:1.5"), gm(11, 0.06, "G6:6")),
 ];
