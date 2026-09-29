@@ -47,9 +47,8 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
     <label class="vol">音量 <input id="vol" type="range" min="0" max="100" value="60"></label>
   </div>
   <div id="list"></div>
-  <h2>効果音</h2>
-  <div class="fx" id="fx"></div>
-  <p class="note">ゲーム本体と同じ再生エンジンと曲データで鳴らしています（曲は自動でくり返します）。曲名の一部は仮です。</p>
+  <div id="fx"></div>
+  <p class="note">ゲーム本体と同じ再生エンジンと曲データで鳴らしています（曲は自動でくり返します）。曲名の一部は仮です。新曲は、どの場面で使うかまだ決まっていません。</p>
 </div>
 <script>/*BUNDLE*/</script>
 <script>
@@ -68,10 +67,16 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
     b.addEventListener("click", function () { select(i); });
     li.appendChild(b); ul.appendChild(li); rows.push(b);
   });
+  var fxGroup = "", fxBox = null;
   B.effects.forEach(function (e, i) {
+    if (e.group !== fxGroup) {
+      fxGroup = e.group;
+      var h = document.createElement("h2"); h.textContent = "効果音 ／ " + fxGroup; document.getElementById("fx").appendChild(h);
+      fxBox = document.createElement("div"); fxBox.className = "fx"; document.getElementById("fx").appendChild(fxBox);
+    }
     var b = document.createElement("button"); b.type = "button"; b.className = "se"; b.textContent = e.title;
     b.addEventListener("click", function () { B.playSe(i); });
-    document.getElementById("fx").appendChild(b);
+    fxBox.appendChild(b);
   });
   function select(i) {
     if (cur >= 0) { rows[cur].setAttribute("aria-pressed", "false"); rows[cur].querySelector(".ic").textContent = "▶"; }

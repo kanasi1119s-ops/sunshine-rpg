@@ -8,7 +8,8 @@ import * as c3 from "../../src/audio/chapter3-tracks";
 import * as c4 from "../../src/audio/chapter4-tracks";
 import * as c5 from "../../src/audio/chapter5-tracks";
 import * as c6 from "../../src/audio/chapter6-tracks";
-import * as se from "../../src/audio/chapter0-se";
+import { STYLE_TRACKS } from "../../src/audio/style-tracks";
+import { SE_LIBRARY } from "../../src/audio/se-library";
 
 interface Entry { group: string; title: string; score: Score }
 const bgm: Entry[] = [
@@ -36,18 +37,12 @@ const bgm: Entry[] = [
   { group: "第6章 霜原", title: "戦跡の施設", score: c6.CHAPTER6_FACILITY_THEME },
   { group: "第6章 霜原", title: "ボス戦「試作機の歪み」", score: c6.CHAPTER6_BOSS_THEME },
 ];
-const effects: Entry[] = [
-  { group: "効果音", title: "決定", score: se.CHAPTER0_CONFIRM_SE },
-  { group: "効果音", title: "カーソル", score: se.CHAPTER0_CURSOR_SE },
-  { group: "効果音", title: "扉", score: se.CHAPTER0_DOOR_SE },
-  { group: "効果音", title: "勝利", score: se.CHAPTER0_VICTORY_SE },
-  { group: "効果音", title: "全滅", score: se.CHAPTER0_DEFEAT_SE },
-  { group: "効果音", title: "攻撃", score: se.CHAPTER0_ATTACK_SE },
-];
+bgm.push(...STYLE_TRACKS.map((t) => ({ group: "新曲・スタイル別", title: `${t.title}（${t.style}）`, score: t.score })));
+const effects: Entry[] = SE_LIBRARY.map((e) => ({ group: e.group, title: e.name, score: e.score }));
 const engine = new AudioEngine();
 (window as unknown as { BGM: unknown }).BGM = {
   bgm: bgm.map((e) => ({ group: e.group, title: e.title, bpm: e.score.tempoBpm, sec: getScoreDurationSec(e.score) })),
-  effects: effects.map((e) => ({ title: e.title })),
+  effects: effects.map((e) => ({ group: e.group, title: e.title })),
   play: (i: number) => engine.playBgm(bgm[i].score),
   stop: () => engine.stopBgm(),
   playSe: (i: number) => engine.playSe(effects[i].score),

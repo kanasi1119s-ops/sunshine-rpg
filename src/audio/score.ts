@@ -12,8 +12,21 @@ export interface NoteEvent {
 
 export type Waveform = "square" | "triangle" | "sawtooth" | "sine";
 
+/**
+ * 楽器の音色。指定がなければ、`waveform`の波形をそのまま鳴らす（従来の音）。
+ * 打楽器（kick・snare・hihat・crash）は音の高さを使わない（音名は何でもよい）。
+ */
+export type Instrument =
+  | "kick" | "snare" | "hihat" | "crash"
+  | "bass" | "guitar" | "echoGuitar" | "crunch" | "distGuitar" | "leadGuitar"
+  | "keys" | "piano" | "harpsichord" | "strings" | "pad" | "bell" | "lead"
+  // 効果音向け: 音程が滑る（sfxDown＝下がる／sfxUp＝上がる）、ノイズの衝撃音（impact）、風を切る音（swoosh）、金属的な鈴（chime）
+  | "sfxDown" | "sfxUp" | "impact" | "swoosh" | "chime";
+
 export interface Track {
   waveform: Waveform;
+  /** 楽器の音色（省略時は`waveform`のまま）。 */
+  instrument?: Instrument;
   /** 0〜1。 */
   volume: number;
   notes: NoteEvent[];
@@ -30,6 +43,7 @@ export interface ScheduledNote {
   startSec: number;
   durationSec: number;
   waveform: Waveform;
+  instrument?: Instrument;
   volume: number;
 }
 
@@ -56,6 +70,7 @@ function flattenTrack(track: Track, tempoBpm: number): ScheduledNote[] {
         startSec: t,
         durationSec,
         waveform: track.waveform,
+        instrument: track.instrument,
         volume: track.volume,
       });
     }
