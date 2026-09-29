@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildTileArtCells, TILE_ART, TILE_ART_SIZE, type TileArtSpec } from "./tile-art";
+import { buildTileArtCells, TILE_ART, TILE_ART_SIZE, TILE_VARIANTS, type TileArtSpec } from "./tile-art";
 
 describe("buildTileArtCells", () => {
   it("すべてのパターンで、有効な#rrggbb形式の色だけを返す", () => {
@@ -46,3 +46,23 @@ describe("buildTileArtCells", () => {
     expect(() => buildTileArtCells(spec)).not.toThrow();
   });
 });
+
+describe("見た目の揺らぎ（variant）", () => {
+  it("草・水・道は、揺らぎごとに違う模様になり、並べても単調にならない", () => {
+    for (const key of ["grass", "water", "path"] as const) {
+      const patterns = new Set<string>();
+      for (let variant = 0; variant < TILE_VARIANTS; variant++) {
+        patterns.add(JSON.stringify(buildTileArtCells(TILE_ART[key], variant)));
+      }
+      expect(patterns.size, `${key} の揺らぎが同じ`).toBeGreaterThan(1);
+    }
+  });
+
+  it("草・水は5階調前後の色を使う（SFC後期風の陰影）", () => {
+    for (const key of ["grass", "water"] as const) {
+      const colors = new Set(buildTileArtCells(TILE_ART[key]).map((c) => c.color));
+      expect(colors.size, `${key} の色数`).toBeGreaterThanOrEqual(4);
+    }
+  });
+});
+
