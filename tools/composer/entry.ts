@@ -5,7 +5,8 @@ import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url"
 import { AudioEngine } from "../../src/audio/audio-engine";
 import { STYLE_LABEL } from "../../src/audio/catalog";
 import { midiToName } from "../../src/audio/compose";
-import { notesToEvents, noteStartAt, resizeNote, toggleNote, trackToNotes, trackTotalBeats } from "../../src/audio/edit";
+import { CHORD_SHAPES, chordIntervals } from "../../src/audio/chord-input";
+import { addNotes, copyNotes, moveNotes, notesInRange, notesToEvents, noteStartAt, pasteNotes, removeNotes, resizeNote, setNotesLength, trackToNotes, trackTotalBeats, type RollNote } from "../../src/audio/edit";
 import { composeFinale, FINALES } from "../../src/audio/finale";
 import { GM_PROGRAM } from "../../src/audio/gm-map";
 import { scoreToMidi } from "../../src/audio/midi-export";
@@ -17,6 +18,7 @@ import { realEdition } from "../../src/audio/real-edition";
 import { getScoreDurationSec, REST, type AmpSetting, type Instrument, type Score, type Track } from "../../src/audio/score";
 import { composeSong, type Style } from "../../src/audio/songwriter";
 import { encodeWav } from "../../src/audio/wav";
+import { normalizePeak, renderScoreOffline } from "../../src/audio/offline-render";
 
 // 1ファイルのHTMLでは外部ファイルを読み込めないので、埋め込んだ素材（データURL）を録音音源の再生に渡す
 function bytesOf(dataUrl: string): Uint8Array {
@@ -25,22 +27,30 @@ function bytesOf(dataUrl: string): Uint8Array {
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;
 }
+let soundfontCopy: ArrayBuffer | null = null;
 try {
-  globalThis.__sampledAssets = { soundfont: bytesOf(soundfontUrl).buffer as ArrayBuffer, processorUrl };
+  // 再生エンジンは読み込み時にデータを使い切るので、WAVの書き出し用に控えを別に持つ
+  soundfontCopy = bytesOf(soundfontUrl).buffer as ArrayBuffer;
+  globalThis.__sampledAssets = { soundfont: soundfontCopy.slice(0), processorUrl };
 } catch (error) {
   console.warn("録音音源の埋め込みを読めませんでした:", error);
 }
 // 無料のアンプシミュレーター（NAM）: ビルドのときに埋め込んだワークレットとWASMを渡す
 declare const __NAM_PROCESSOR__: string;
 declare const __NAM_WASM__: string;
+declare const __NAM_MODELS__: Record<string, { label: string; json: string }>;
 const engine = new AudioEngine();
+let namHost: NamHost | null = null;
+/** 同梱のNAMモデル（NAM作者のリポジトリにMITライセンスで入っている見本。docs/assets-credits.md）。キーは "builtin:〇〇"。 */
+const BUILTIN_NAM: Record<string, { label: string; json: string }> = typeof __NAM_MODELS__ === "object" ? __NAM_MODELS__ : {};
 try {
   if (typeof __NAM_PROCESSOR__ === "string" && typeof __NAM_WASM__ === "string") {
     const bin = atob(__NAM_WASM__);
     const wasm = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) wasm[i] = bin.charCodeAt(i);
     globalThis.__namAssets = { processorUrl: __NAM_PROCESSOR__, wasm: wasm.buffer as ArrayBuffer };
-    engine.setNamHost(new NamHost());
+    namHost = new NamHost();
+    engine.setNamHost(namHost);
   }
 } catch (error) {
   console.warn("アンプシミュレーター（NAM）を読み込めませんでした:", error);
@@ -68,8 +78,14 @@ interface State {
   paused: boolean;
   pausedAt: number;
   repeatOff: boolean;
+  tool: "pen" | "select";
+  chord: string;
+  /** 選んでいる音（始まりの位置）。 */
+  picked: number[];
+  /** 最後にクリックした位置（貼り付け先）。 */
+  cursor: number;
 }
-const state: State = { score: composeSong({ id: "new", title: "新しい曲", scene: "", style: "rock", tonic: "E", minor: true, bpm: 132, seed: 1 }), name: "新しい曲", edition: "real", selected: 0, grid: 0.25, noteLen: 0.5, muted: new Set(), solo: new Set(), playing: false, paused: false, pausedAt: 0, repeatOff: false };
+const state: State = { score: composeSong({ id: "new", title: "新しい曲", scene: "", style: "rock", tonic: "E", minor: true, bpm: 132, seed: 1 }), name: "新しい曲", edition: "real", selected: 0, grid: 0.25, noteLen: 0.5, muted: new Set(), solo: new Set(), playing: false, paused: false, pausedAt: 0, repeatOff: false, tool: "pen", chord: "none", picked: [], cursor: 0 };
 
 // ── 小さなDOM道具 ──
 function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Record<string, string> = {}, ...kids: (Node | string)[]): HTMLElementTagNameMap[K] {
@@ -96,6 +112,9 @@ function effectiveScore(): Score {
   const soloOn = state.solo.size > 0;
   const tracks = state.score.tracks.map((t, i) => ({ t, i })).filter(({ i }) => !state.muted.has(i) && (!soloOn || state.solo.has(i))).map(({ t }) => t);
   const base: Score = { ...state.score, tracks: tracks.length > 0 ? tracks : [{ waveform: "sine", volume: 0, notes: [{ note: REST, durationBeats: trackTotalBeats(state.score.tracks[0]) }] }] };
+  // 同梱のNAMモデルは、プロジェクトには入れず、鳴らすときにだけ渡す
+  const used = new Set(base.tracks.map((t) => t.amp?.model).filter((m): m is string => !!m && m in BUILTIN_NAM));
+  if (used.size) base.namModels = { ...(base.namModels ?? {}), ...Object.fromEntries([...used].map((k) => [k, BUILTIN_NAM[k].json])) };
   return state.edition === "ps2" ? ps2Edition(base) : state.edition === "real" ? realEdition(base) : base;
 }
 function play(offset = 0): void {
@@ -161,6 +180,7 @@ function loadScore(score: Score, name: string): void {
   state.score = score;
   state.name = name;
   state.selected = 0;
+  state.picked = [];
   state.muted.clear();
   state.solo.clear();
   nameIn.value = name;
@@ -260,6 +280,7 @@ function renderTracks(): void {
     const nm = h("div", { class: "nm", title: "クリックでピアノロールに表示" }, `${i + 1}. ${instLabel(t.instrument)}`);
     nm.onclick = () => {
       state.selected = i;
+      state.picked = [];
       renderTracks();
       renderAmp();
       drawRoll();
@@ -338,10 +359,22 @@ function rollRange(t: Track): { lo: number; hi: number } {
   const hi = Math.max(...notes, 72) + 4;
   return { lo: Math.max(12, Math.min(lo, hi - 24)), hi: Math.min(108, Math.max(hi, lo + 24)) };
 }
+/** 和音の相手のトラック: 選んだトラックのすぐ後ろに続く、同じ楽器のトラック。 */
+function companions(index: number): number[] {
+  const tracks = state.score.tracks;
+  const inst = tracks[index]?.instrument;
+  const out: number[] = [];
+  for (let k = index + 1; k < tracks.length && tracks[k].instrument === inst; k++) out.push(k);
+  return out;
+}
+const isDrum = (t: Track): boolean => t.instrument !== undefined && DRUMS.has(t.instrument);
+const transpose = (note: string, semi: number): string => midiToName(Math.max(12, Math.min(108, noteNameToMidi(note) + semi)));
+
 function drawRoll(): void {
   const t = state.score.tracks[state.selected];
   const total = trackTotalBeats(t);
-  const { lo, hi } = rollRange(t);
+  const ghosts = isDrum(t) ? [] : companions(state.selected).map((k) => state.score.tracks[k]);
+  const { lo, hi } = rollRange({ ...t, notes: [...t.notes, ...ghosts.flatMap((g) => g.notes)] });
   const rows = hi - lo + 1;
   const canvas = ui.canvas;
   canvas.width = Math.ceil(total * PX);
@@ -366,19 +399,40 @@ function drawRoll(): void {
     ctx.fillStyle = b % beatsPerBar === 0 ? css("--roll-bar") : css("--roll-beat");
     ctx.fillRect(Math.round(b * PX), 0, 1, canvas.height);
   }
+  // 和音の相手のトラックの音は、うすく描く
+  ctx.globalAlpha = 0.35;
   ctx.fillStyle = css("--note");
-  ctx.strokeStyle = css("--note-edge");
+  for (const g of ghosts) {
+    for (const n of trackToNotes(g)) ctx.fillRect(n.start * PX, (hi - noteNameToMidi(n.note)) * ROW + 1, Math.max(3, n.dur * PX - 1), ROW - 2);
+  }
+  ctx.globalAlpha = 1;
+  const sel = new Set(state.picked);
   for (const n of trackToNotes(t)) {
-    const y = (hi - noteNameToMidi(n.note)) * ROW;
+    const y = isDrum(t) ? 0 : (hi - noteNameToMidi(n.note)) * ROW;
+    const chosen = sel.has(n.start);
+    ctx.fillStyle = chosen ? css("--note-sel") : css("--note");
+    ctx.strokeStyle = chosen ? css("--note-sel-edge") : css("--note-edge");
     ctx.fillRect(n.start * PX, y + 1, Math.max(3, n.dur * PX - 1), ROW - 2);
     ctx.strokeRect(n.start * PX + 0.5, y + 1.5, Math.max(3, n.dur * PX - 1) - 1, ROW - 3);
   }
-  ui.info.textContent = `${instLabel(t.instrument)}（${trackToNotes(t).length}音・${Math.round(total)}拍）｜クリックで音を足す／音の上をクリックで消す／音の右はしをドラッグで長さを変える`;
+  if (box) {
+    ctx.strokeStyle = css("--note-sel-edge");
+    ctx.setLineDash([4, 3]);
+    ctx.strokeRect(Math.min(box.x0, box.x1) + 0.5, Math.min(box.y0, box.y1) + 0.5, Math.abs(box.x1 - box.x0), Math.abs(box.y1 - box.y0));
+    ctx.setLineDash([]);
+  }
+  const help = state.tool === "select"
+    ? "ドラッグで囲んで選ぶ／音をクリックで選ぶ（Shiftで追加）／選んだ音をドラッグで移動／Delete・矢印・Ctrl+C・Ctrl+V・Ctrl+D"
+    : "クリックで音を足す／音の上をクリックで消す／音の右はしをドラッグで長さを変える";
+  const chordInfo = ghosts.length > 0 ? `｜和音の相手: ${companions(state.selected).map((k) => k + 1).join("・")}番` : "";
+  ui.info.textContent = `${instLabel(t.instrument)}（${trackToNotes(t).length}音・${Math.round(total)}拍${state.picked.length ? `・${state.picked.length}音を選択中` : ""}）${chordInfo}｜${help}`;
   (canvas as HTMLCanvasElement & { __hi?: number }).__hi = hi;
 }
 const EDGE_PX = 6;
 let resizing: { start: number } | null = null;
-let downAt: { x: number; y: number } | null = null;
+let downAt: { x: number; y: number; shift: boolean } | null = null;
+let box: { x0: number; y0: number; x1: number; y1: number } | null = null;
+let dragging2: { x0: number; y0: number; orig: Track; starts: number[] } | null = null;
 function rollPoint(ev: MouseEvent): { x: number; y: number; hi: number } {
   const rect = ui.canvas.getBoundingClientRect();
   const hi = (ui.canvas as HTMLCanvasElement & { __hi?: number }).__hi ?? 84;
@@ -386,12 +440,19 @@ function rollPoint(ev: MouseEvent): { x: number; y: number; hi: number } {
 }
 /** 音の右のはしの近くなら、その音の始まりの位置を返す（長さの変更用）。 */
 function edgeHit(t: Track, x: number, y: number, hi: number): number | null {
-  const drum = t.instrument !== undefined && DRUMS.has(t.instrument);
   for (const n of trackToNotes(t)) {
-    const row = drum ? 0 : hi - noteNameToMidi(n.note);
-    const yTop = drum ? 0 : row * ROW;
+    const yTop = isDrum(t) ? 0 : (hi - noteNameToMidi(n.note)) * ROW;
     const end = (n.start + n.dur) * PX;
-    if (Math.abs(x - end) <= EDGE_PX && x >= n.start * PX && (drum || (y >= yTop && y < yTop + ROW))) return n.start;
+    if (Math.abs(x - end) <= EDGE_PX && x >= n.start * PX && (isDrum(t) || (y >= yTop && y < yTop + ROW))) return n.start;
+  }
+  return null;
+}
+/** その点にある音（始まりの位置）。 */
+function noteHit(t: Track, x: number, y: number, hi: number): number | null {
+  const beat = x / PX;
+  for (const n of trackToNotes(t)) {
+    const yTop = isDrum(t) ? 0 : (hi - noteNameToMidi(n.note)) * ROW;
+    if (beat >= n.start && beat < n.start + n.dur && (isDrum(t) || (y >= yTop && y < yTop + ROW))) return n.start;
   }
   return null;
 }
@@ -399,6 +460,12 @@ function commitTrack(next: Track): void {
   state.score.tracks[state.selected] = next;
   drawRoll();
   renderTracks();
+}
+function edited(): void {
+  drawRoll();
+  renderTracks();
+  restartSoon();
+  save();
 }
 ui.canvas.onmousemove = (ev) => {
   const t = state.score.tracks[state.selected];
@@ -408,42 +475,208 @@ ui.canvas.onmousemove = (ev) => {
     commitTrack(resizeNote(t, resizing.start, dur, trackTotalBeats(t)));
     return;
   }
-  ui.canvas.style.cursor = edgeHit(t, x, y, hi) !== null ? "ew-resize" : "crosshair";
+  if (dragging2) {
+    const dBeat = Math.round((x - dragging2.x0) / PX / state.grid) * state.grid;
+    const dSemi = isDrum(t) ? 0 : -Math.round((y - dragging2.y0) / ROW);
+    const r = moveNotes(dragging2.orig, dragging2.starts, dBeat, dSemi, transpose);
+    state.picked = r.starts;
+    commitTrack(r.track);
+    return;
+  }
+  if (box) {
+    box.x1 = x;
+    box.y1 = y;
+    drawRoll();
+    return;
+  }
+  ui.canvas.style.cursor = edgeHit(t, x, y, hi) !== null ? "ew-resize" : state.tool === "select" ? (noteHit(t, x, y, hi) !== null ? "move" : "default") : "crosshair";
 };
 ui.canvas.onmousedown = (ev) => {
+  ui.rollBox.focus();
   const t = state.score.tracks[state.selected];
   const { x, y, hi } = rollPoint(ev);
-  downAt = { x, y };
+  downAt = { x, y, shift: ev.shiftKey };
   const edge = edgeHit(t, x, y, hi);
-  if (edge !== null) resizing = { start: edge };
+  if (edge !== null) {
+    resizing = { start: edge };
+    return;
+  }
+  if (state.tool !== "select") return;
+  const hit = noteHit(t, x, y, hi);
+  if (hit !== null) {
+    if (ev.shiftKey) {
+      state.picked = state.picked.includes(hit) ? state.picked.filter((s) => s !== hit) : [...state.picked, hit];
+    } else if (!state.picked.includes(hit)) {
+      state.picked = [hit];
+    }
+    dragging2 = { x0: x, y0: y, orig: t, starts: [...state.picked] };
+    drawRoll();
+  } else {
+    box = { x0: x, y0: y, x1: x, y1: y };
+  }
 };
 window.addEventListener("mouseup", (ev) => {
-  if (resizing) {
-    resizing = null;
-    downAt = null;
-    restartSoon();
-    save();
-    return;
-  }
-  if (!downAt || ev.target !== ui.canvas) {
-    downAt = null;
-    return;
-  }
+  const down = downAt;
   downAt = null;
+  if (resizing || dragging2) {
+    resizing = null;
+    dragging2 = null;
+    edited();
+    return;
+  }
+  if (box) {
+    const t = state.score.tracks[state.selected];
+    const hi = (ui.canvas as HTMLCanvasElement & { __hi?: number }).__hi ?? 84;
+    const b = box;
+    box = null;
+    const found = notesInRange(t, b.x0 / PX, b.x1 / PX, hi - b.y0 / ROW + 1, hi - b.y1 / ROW, isDrum(t) ? () => 0 : noteNameToMidi);
+    const inRange = isDrum(t) ? notesInRange(t, b.x0 / PX, b.x1 / PX) : found;
+    state.picked = down?.shift ? [...new Set([...state.picked, ...inRange])] : inRange;
+    state.cursor = Math.floor(Math.min(b.x0, b.x1) / PX / state.grid) * state.grid;
+    drawRoll();
+    return;
+  }
+  if (!down || ev.target !== ui.canvas || state.tool !== "pen") return;
   const t = state.score.tracks[state.selected];
   const { x, y, hi } = rollPoint(ev);
   const beat = Math.floor(x / PX / state.grid) * state.grid;
-  const midi = t.instrument && DRUMS.has(t.instrument) ? hi : hi - Math.floor(y / ROW);
-  const noteName = midiToName(midi);
-  const total = trackTotalBeats(t);
-  // 長さを変えるドラッグ（音の上でボタンを押して、はしをつかむ）は上で済んでいる。ここは、ふつうのクリック
-  const covered = noteStartAt(t, beat) !== null;
-  const next = toggleNote(t, beat, noteName, state.noteLen, total);
-  commitTrack(next);
-  if (!covered) auditionNote(next, noteName);
-  restartSoon();
-  save();
+  const midi = isDrum(t) ? hi : hi - Math.floor(y / ROW);
+  state.cursor = beat;
+  penClick(beat, midi);
 });
+
+/** ペンの1クリック: 単音なら足す／消す。和音なら、根音をこのトラックに、ほかの音を和音の相手のトラックに入れる（なければ作る）。 */
+function penClick(beat: number, midi: number): void {
+  const index = state.selected;
+  const t = state.score.tracks[index];
+  const total = trackTotalBeats(t);
+  const at = noteStartAt(t, beat);
+  const shape = isDrum(t) ? [0] : chordIntervals(state.chord);
+  if (at !== null) {
+    // 消す（和音のときは、相手のトラックの、同じ位置から始まる音も消す）
+    state.score.tracks[index] = removeNotes(t, [at]);
+    if (shape.length > 1) for (const k of companions(index)) state.score.tracks[k] = removeNotes(state.score.tracks[k], [at]);
+    state.picked = [];
+    edited();
+    return;
+  }
+  const names = shape.map((iv) => midiToName(Math.min(108, midi + iv)));
+  state.score.tracks[index] = addNotes(t, [{ start: beat, dur: state.noteLen, note: names[0] }], total);
+  if (names.length > 1) {
+    let partners = companions(index);
+    while (partners.length < names.length - 1) {
+      const insertAt = index + partners.length + 1;
+      state.score.tracks.splice(insertAt, 0, { ...t, amp: t.amp ? { ...t.amp } : undefined, volume: Math.max(0.06, t.volume * 0.8), notes: [{ note: REST, durationBeats: total }] });
+      state.muted.clear();
+      state.solo.clear();
+      partners = companions(index);
+    }
+    names.slice(1).forEach((name, k) => {
+      const idx = partners[k];
+      state.score.tracks[idx] = addNotes(state.score.tracks[idx], [{ start: beat, dur: state.noteLen, note: name }], total);
+    });
+  }
+  edited();
+  auditionChord(state.score.tracks[index], names);
+}
+function auditionChord(track: Track, names: string[]): void {
+  for (const n of names) auditionNote(track, n);
+}
+
+// 選んだ音の操作
+function withPicked(fn: (t: Track, starts: number[]) => { track: Track; starts: number[] } | Track): void {
+  if (state.picked.length === 0) return;
+  const r = fn(state.score.tracks[state.selected], state.picked);
+  if ("track" in r) {
+    state.score.tracks[state.selected] = r.track;
+    state.picked = r.starts;
+  } else {
+    state.score.tracks[state.selected] = r;
+  }
+  edited();
+}
+let clipboard: RollNote[] = [];
+const ops = {
+  del: (): void => withPicked((t, s) => {
+    const next = removeNotes(t, s);
+    state.picked = [];
+    return next;
+  }),
+  move: (dBeat: number, dSemi: number): void => withPicked((t, s) => moveNotes(t, s, dBeat, isDrum(t) ? 0 : dSemi, transpose)),
+  copy: (): void => {
+    clipboard = copyNotes(state.score.tracks[state.selected], state.picked);
+    if (clipboard.length) ui.status.textContent = `${clipboard.length}音をコピーしました。`;
+  },
+  paste: (at: number): void => {
+    if (clipboard.length === 0) return;
+    const r = pasteNotes(state.score.tracks[state.selected], clipboard, at);
+    state.score.tracks[state.selected] = r.track;
+    state.picked = r.starts;
+    edited();
+  },
+  pickedEnd: (): number => {
+    const notes = trackToNotes(state.score.tracks[state.selected]).filter((n) => state.picked.includes(n.start));
+    return notes.length ? Math.max(...notes.map((n) => n.start + n.dur)) : state.cursor;
+  },
+  duplicate: (): void => {
+    ops.copy();
+    ops.paste(ops.pickedEnd());
+  },
+  length: (dur: number): void => withPicked((t, s) => setNotesLength(t, s, dur)),
+  all: (): void => {
+    state.picked = trackToNotes(state.score.tracks[state.selected]).map((n) => n.start);
+    drawRoll();
+  },
+};
+ui.rollBox.addEventListener("keydown", (ev) => {
+  const ctrl = ev.ctrlKey || ev.metaKey;
+  const key = ev.key.toLowerCase();
+  let handled = true;
+  if (key === "delete" || key === "backspace") ops.del();
+  else if (key === "arrowleft") ops.move(-state.grid, 0);
+  else if (key === "arrowright") ops.move(state.grid, 0);
+  else if (key === "arrowup") ops.move(0, ev.shiftKey ? 12 : 1);
+  else if (key === "arrowdown") ops.move(0, ev.shiftKey ? -12 : -1);
+  else if (ctrl && key === "c") ops.copy();
+  else if (ctrl && key === "v") ops.paste(state.picked.length ? ops.pickedEnd() : state.cursor);
+  else if (ctrl && key === "d") ops.duplicate();
+  else if (ctrl && key === "a") ops.all();
+  else if (key === "escape") {
+    state.picked = [];
+    drawRoll();
+  } else handled = false;
+  if (handled) ev.preventDefault();
+});
+const toolSel = select([["pen", "ペン（足す・消す）"], ["select", "選択（囲む・動かす）"]], "pen");
+toolSel.onchange = () => {
+  state.tool = toolSel.value as State["tool"];
+  drawRoll();
+};
+const chordSel = select(CHORD_SHAPES.map(([k, l]) => [k, l] as [string, string]), "none");
+chordSel.onchange = () => (state.chord = chordSel.value);
+function opBtn(label: string, title: string, fn: () => void): HTMLButtonElement {
+  const b = h("button", { type: "button", title }, label);
+  b.onclick = () => {
+    fn();
+    ui.rollBox.focus();
+  };
+  return b;
+}
+const selTools = h("div", { class: "row", style: "margin-bottom:8px" },
+  h("span", { class: "muted" }, "選んだ音:"),
+  opBtn("すべて選ぶ", "Ctrl+A", ops.all),
+  opBtn("消す", "Delete", ops.del),
+  opBtn("←", "左へ（←）", () => ops.move(-state.grid, 0)),
+  opBtn("→", "右へ（→）", () => ops.move(state.grid, 0)),
+  opBtn("半音↑", "↑", () => ops.move(0, 1)),
+  opBtn("半音↓", "↓", () => ops.move(0, -1)),
+  opBtn("1オクターブ↑", "Shift+↑", () => ops.move(0, 12)),
+  opBtn("1オクターブ↓", "Shift+↓", () => ops.move(0, -12)),
+  opBtn("コピー", "Ctrl+C", ops.copy),
+  opBtn("貼り付け", "Ctrl+V（選んだ音のすぐ後ろ、または最後にクリックした位置）", () => ops.paste(state.picked.length ? ops.pickedEnd() : state.cursor)),
+  opBtn("複製", "Ctrl+D（すぐ後ろにくり返す）", ops.duplicate),
+  opBtn("長さをそろえる", "「足す音の長さ」にそろえる", () => ops.length(state.noteLen)),
+);
 const gridSel = select([["1", "1拍"], ["0.5", "1/2拍"], ["0.25", "1/4拍"]], "0.25");
 gridSel.onchange = () => (state.grid = Number(gridSel.value));
 const lenSel = select([["0.25", "1/4拍"], ["0.5", "1/2拍"], ["1", "1拍"], ["2", "2拍"], ["4", "4拍"]], "0.5");
@@ -485,34 +718,26 @@ function restore(): void {
   }
 }
 
-// ── WAVで書き出す（実際に鳴らしながら録音する。曲の頭から1周ぶん） ──
+// ── WAVで書き出す（実時間より速く、オフラインで描き出す。曲の頭から1周＋余韻） ──
 const wavBtn = h("button", { type: "button" }, "WAVで書き出す");
-let exporting = false;
 wavBtn.onclick = () => {
-  if (exporting) return;
-  exporting = true;
+  if (!soundfontCopy || wavBtn.disabled) return;
   wavBtn.disabled = true;
-  const total = getScoreDurationSec(state.score);
-  const stop = engine.startCapture();
-  play(0);
+  ui.status.textContent = "WAVを作っています…";
   const started = performance.now();
-  const timer = window.setInterval(() => {
-    const left = total - (performance.now() - started) / 1000;
-    ui.status.textContent = `WAVを録音中… あと${Math.max(0, Math.ceil(left))}秒（この間は、ほかの操作をしないでください）`;
-    if (left > 0) return;
-    window.clearInterval(timer);
-    const { channels, sampleRate } = stop();
-    engine.stopBgm();
-    state.playing = false;
-    state.paused = false;
-    // 再生の立ち上がりの無音をのぞいて、曲の長さぶんを切り出す
-    let first = 0;
-    while (first < channels[0].length && Math.abs(channels[0][first]) < 1e-4 && Math.abs(channels[1][first]) < 1e-4) first++;
-    download(`${state.name || "song"}.wav`, encodeWav(channels, sampleRate, first, first + Math.round(total * sampleRate)) as BlobPart, "audio/wav");
-    ui.status.textContent = "WAVを書き出しました。";
-    exporting = false;
-    wavBtn.disabled = false;
-  }, 250);
+  void renderScoreOffline({ ...effectiveScore(), loop: false }, { soundfont: soundfontCopy, processorUrl, edition: state.edition, nam: namHost })
+    .then((buffer) => {
+      const channels = [buffer.getChannelData(0), buffer.getChannelData(1)];
+      normalizePeak(channels);
+      download(`${state.name || "song"}.wav`, encodeWav(channels, buffer.sampleRate) as BlobPart, "audio/wav");
+      ui.status.textContent = `WAVを書き出しました（${mmss(buffer.duration)}の曲を${((performance.now() - started) / 1000).toFixed(1)}秒で作成）。`;
+    })
+    .catch((e: unknown) => {
+      ui.status.textContent = `WAVを作れませんでした: ${(e as Error).message}`;
+    })
+    .finally(() => {
+      wavBtn.disabled = false;
+    });
 };
 
 // ── ゲームの曲として登録（書き出したファイルを src/audio/songs/ に置くと、ゲームの曲一覧に入る） ──
@@ -552,7 +777,7 @@ nsBtn.onclick = () => {
 // ── 音づくり（トラックごとのアンプ・NAM） ──
 const ampBox = h("div", {});
 const AMP_TYPES: [AmpSetting["type"], string][] = [
-  ["auto", "おまかせ（曲の設定どおり）"], ["clean", "クリーン"], ["overdrive", "オーバードライブ"], ["distortion", "ディストーション"], ["metal", "メタルゾーン"], ["prs", "なめらかなリード（PRS風）"], ["nam", "NAMのアンプモデル（読み込み）"],
+  ["auto", "おまかせ（曲の設定どおり）"], ["clean", "クリーン"], ["overdrive", "オーバードライブ"], ["distortion", "ディストーション"], ["metal", "メタルゾーン"], ["prs", "なめらかなリード（PRS風）"], ["nam", "NAMのアンプモデル（実機を学習したもの）"],
 ];
 function slider(label: string, min: number, max: number, step: number, value: number, on: (v: number) => void): HTMLElement {
   const input = h("input", { type: "range", min: String(min), max: String(max), step: String(step), value: String(value) });
@@ -603,10 +828,16 @@ function renderAmp(): void {
         renderAmp();
       });
     };
-    const load = h("button", { type: "button" }, "NAMモデル（.nam）を読み込む");
+    const load = h("button", { type: "button" }, "ほかのモデル（.nam）を読み込む");
     load.onclick = () => file.click();
-    ampBox.append(h("div", { class: "row", style: "margin-top:8px" }, load, file, h("span", { class: "muted" }, amp.model ? `使用中: ${amp.model}` : "まだ読み込んでいません（そのあいだは、ふつうのアンプの音）")),
-      h("div", { class: "muted", style: "margin-top:4px" }, "NAMは、実際のアンプを学習した無料のアンプシミュレーターです。モデル（.nam）は、配布元の利用規約（商用利用・再配布）を確認してから使ってください。ゲームには、NAMモデルは入れません（ふつうのアンプの音になります）。"));
+    const models: [string, string][] = [["", "（モデルを選ぶ）"], ...Object.entries(BUILTIN_NAM).map(([k, v]) => [k, `同梱: ${v.label}`] as [string, string]), ...Object.keys(state.score.namModels ?? {}).map((k) => [k, `読み込んだモデル: ${k}`] as [string, string])];
+    const modelSel = select(models, amp.model ?? "");
+    modelSel.onchange = () => {
+      change({ ...(t.amp ?? amp), type: "nam", model: modelSel.value || undefined });
+      renderAmp();
+    };
+    ampBox.append(h("div", { class: "row", style: "margin-top:8px" }, field("NAMのモデル", modelSel), load, file, h("span", { class: "muted" }, amp.model ? "" : "モデルを選ぶまでは、元の音のまま")),
+      h("div", { class: "muted", style: "margin-top:4px" }, "NAMは、実際のアンプを学習した無料のアンプシミュレーターです。同梱のモデルは、NAMの作者がMITライセンスで公開している見本です。ほかのモデル（.nam）は、配布元の利用規約（商用利用・再配布）を確認してから使ってください。「歪みの深さ」はモデルへ入る音の大きさになります。ゲームには、NAMモデルは入れません（ふつうのアンプの音になります）。"));
   }
 }
 
@@ -652,7 +883,8 @@ app.append(
     h("div", { class: "muted", style: "margin-top:4px" }, "ドラム・ベース・ギター・ピアノ・弦の伴奏を作り、最後に空のメロディのトラックを足します。ピアノロールでメロディを書き込んでください。読めるコード: C・Am・F#m7・Bbmaj7・Csus4・Gdim・Eaug など。")),
   h("div", { class: "panel" }, h("h2", {}, "音づくり（アンプ）"), ampBox),
   h("div", { class: "panel" }, h("h2", {}, "ピアノロール"),
-    h("div", { class: "row", style: "margin-bottom:8px" }, field("クリックの間隔", gridSel), field("足す音の長さ", lenSel), clearBtn, ui.info), ui.rollBox),
+    h("div", { class: "row", style: "margin-bottom:8px" }, field("道具", toolSel), field("和音で足す", chordSel), field("クリックの間隔", gridSel), field("足す音の長さ", lenSel), clearBtn), selTools, h("div", { style: "margin-bottom:6px" }, ui.info), ui.rollBox,
+    h("div", { class: "muted", style: "margin-top:4px" }, "和音: 根音をいま選んでいるトラックに、ほかの音をすぐ下の同じ楽器のトラック（うすく表示。足りなければ自動で作る）に入れます。")),
 );
 ui.rollBox.append(ui.canvas);
 restore();

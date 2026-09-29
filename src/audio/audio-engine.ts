@@ -234,42 +234,6 @@ export class AudioEngine {
     this.sampled.setNam(host);
   }
 
-  /**
-   * 鳴っている曲の音（BGMの出口）を録音する。作曲ソフトのWAV書き出し用。
-   * 返す関数を呼ぶと録音を止め、左右2チャンネルの音の並びとサンプルレートを返す。
-   */
-  startCapture(): () => { channels: Float32Array[]; sampleRate: number } {
-    const ctx = this.ensureContext();
-    const node = ctx.createScriptProcessor(4096, 2, 2);
-    const left: Float32Array[] = [];
-    const right: Float32Array[] = [];
-    node.onaudioprocess = (e) => {
-      left.push(new Float32Array(e.inputBuffer.getChannelData(0)));
-      right.push(new Float32Array(e.inputBuffer.getChannelData(e.inputBuffer.numberOfChannels > 1 ? 1 : 0)));
-    };
-    this.bgmGain!.connect(node);
-    const mute = ctx.createGain();
-    mute.gain.value = 0;
-    node.connect(mute);
-    mute.connect(ctx.destination);
-    return () => {
-      this.bgmGain!.disconnect(node);
-      node.disconnect();
-      mute.disconnect();
-      node.onaudioprocess = null;
-      const join = (parts: Float32Array[]): Float32Array => {
-        const out = new Float32Array(parts.reduce((n, p) => n + p.length, 0));
-        let at = 0;
-        for (const p of parts) {
-          out.set(p, at);
-          at += p.length;
-        }
-        return out;
-      };
-      return { channels: [join(left), join(right)], sampleRate: ctx.sampleRate };
-    };
-  }
-
   /** 版に合わせて、高音の丸めとホール残響の量を切り替える。 */
   private applyEdition(edition: "modern" | "ps2" | "real"): void {
     if (!this.ctx || !this.profileLp || !this.hallSend) {

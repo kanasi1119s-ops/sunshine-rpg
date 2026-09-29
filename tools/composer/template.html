@@ -4,15 +4,15 @@
 /* 配置: 上に操作パネル（自動作曲・再生・書き出し）、下にトラック一覧とピアノロール。 */
 :root {
   --bg: #f3f1f6; --panel: #ffffff; --fg: #1d1a26; --muted: #6a6478; --line: #ddd8e6; --accent: #5a3fd1; --accent-fg: #fff;
-  --now: #ece7fb; --roll-bg: #faf9fc; --roll-alt: #f1eef7; --roll-black: #e7e2f1; --roll-beat: #d9d3e6; --roll-bar: #b9b0cf; --note: #5a3fd1; --note-edge: #3b27a0; --playhead: #d1345b;
+  --now: #ece7fb; --roll-bg: #faf9fc; --roll-alt: #f1eef7; --roll-black: #e7e2f1; --roll-beat: #d9d3e6; --roll-bar: #b9b0cf; --note: #5a3fd1; --note-edge: #3b27a0; --note-sel: #e08a1e; --note-sel-edge: #9a5a08; --playhead: #d1345b;
   --display: "DotGothic16", "Zen Kaku Gothic New", sans-serif; --body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #14121b; --panel: #1e1b28; --fg: #ece9f4; --muted: #9c95ae; --line: #322d40; --accent: #a892ff; --accent-fg: #14121b; --now: #2a2445;
-  --roll-bg: #191623; --roll-alt: #1f1b2b; --roll-black: #211d2e; --roll-beat: #322d40; --roll-bar: #4a4360; --note: #a892ff; --note-edge: #d9ccff; --playhead: #ff6b8e; color-scheme: dark; } }
+  --roll-bg: #191623; --roll-alt: #1f1b2b; --roll-black: #211d2e; --roll-beat: #322d40; --roll-bar: #4a4360; --note: #a892ff; --note-edge: #d9ccff; --note-sel: #ffb347; --note-sel-edge: #ffe0b0; --playhead: #ff6b8e; color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #14121b; --panel: #1e1b28; --fg: #ece9f4; --muted: #9c95ae; --line: #322d40; --accent: #a892ff; --accent-fg: #14121b; --now: #2a2445;
-  --roll-bg: #191623; --roll-alt: #1f1b2b; --roll-black: #211d2e; --roll-beat: #322d40; --roll-bar: #4a4360; --note: #a892ff; --note-edge: #d9ccff; --playhead: #ff6b8e; color-scheme: dark; }
+  --roll-bg: #191623; --roll-alt: #1f1b2b; --roll-black: #211d2e; --roll-beat: #322d40; --roll-bar: #4a4360; --note: #a892ff; --note-edge: #d9ccff; --note-sel: #ffb347; --note-sel-edge: #ffe0b0; --playhead: #ff6b8e; color-scheme: dark; }
 body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 14px; line-height: 1.5; }
 .wrap { max-width: 1200px; margin: 0 auto; padding-inline: 16px; padding-block: 12px 40px; display: grid; gap: 14px; }
 h1 { font-family: var(--display); font-weight: 400; font-size: 22px; margin: 0; letter-spacing: .04em; }
