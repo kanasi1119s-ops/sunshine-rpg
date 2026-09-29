@@ -112,7 +112,7 @@ export class AmpRack {
         return this.chain(input, [
           this.filter("highpass", 130, 0, 0.8), this.filter("peaking", 750, 5, 0.8), this.gain(4.6), this.shaper(9.5, 0.06),
           this.filter("lowpass", 5200, 0, 0.7), this.gain(1.9), this.shaper(3.8, 0.04),
-          this.filter("peaking", 480, -4, 1), this.filter("peaking", 2600, 1.2, 0.9), this.filter("lowshelf", 110, 4), this.filter("lowpass", 3700, 0, 0.7), this.filter("highshelf", 3000, -2), this.gain(0.4),
+          this.filter("peaking", 480, -4, 1), this.filter("peaking", 3400, 3, 1), this.filter("lowshelf", 110, 4), this.filter("lowpass", 4700, 0, 0.8), this.gain(0.34),
         ]);
       case "clean":
         return this.chain(input, [this.filter("highpass", 70), this.filter("peaking", 3500, 2.5, 0.9), this.filter("highshelf", 8000, 2), this.gain(0.95)]);

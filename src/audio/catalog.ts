@@ -1,6 +1,7 @@
 import type { Score } from "./score";
 import { composeFinale, FINALES } from "./finale";
 import { ps2Edition } from "./ps2-edition";
+import { realEdition } from "./real-edition";
 import { composeSong, type SongSpec, type Style } from "./songwriter";
 import { STYLE_TRACKS } from "./style-tracks";
 
@@ -129,16 +130,16 @@ export function getTrack(id: string): Score {
   return score;
 }
 
-export type Edition = "modern" | "ps2";
-/** 曲を、指定した版で取り出す。ps2版は、同じ曲をPS2世代のサウンド（オーケストラの重ね・ホール残響）で作り直したもの。 */
+export type Edition = "modern" | "ps2" | "real";
+/** 曲を、指定した版で取り出す。ps2版は、同じ曲をPS2世代のサウンド（オーケストラの重ね・ホール残響）で、real版は、実際のバンド・オーケストラ・楽器の音色で作り直したもの。 */
 export function getTrackEdition(id: string, edition: Edition): Score {
   if (edition === "modern") {
     return getTrack(id);
   }
-  const key = `${id}|ps2`;
+  const key = `${id}|${edition}`;
   let score = cache.get(key);
   if (!score) {
-    score = ps2Edition(getTrack(id));
+    score = edition === "real" ? realEdition(getTrack(id)) : ps2Edition(getTrack(id));
     cache.set(key, score);
   }
   return score;

@@ -229,13 +229,14 @@ export class AudioEngine {
   }
 
   /** 版に合わせて、高音の丸めとホール残響の量を切り替える。 */
-  private applyEdition(edition: "modern" | "ps2"): void {
+  private applyEdition(edition: "modern" | "ps2" | "real"): void {
     if (!this.ctx || !this.profileLp || !this.hallSend) {
       return;
     }
     const t = this.ctx.currentTime;
-    this.profileLp.frequency.setTargetAtTime(edition === "ps2" ? 15500 : 22000, t, 0.02);
-    this.hallSend.gain.setTargetAtTime(edition === "ps2" ? 0.34 : 0, t, 0.02);
+    this.profileLp.frequency.setTargetAtTime(edition === "ps2" ? 15500 : edition === "real" ? 19000 : 22000, t, 0.02);
+    // 実楽器版は、自然なホール（生のオーケストラやバンドの録音のような響き）を薄く
+    this.hallSend.gain.setTargetAtTime(edition === "ps2" ? 0.34 : edition === "real" ? 0.15 : 0, t, 0.02);
   }
 
   /** true にすると、録音音源を使わず合成音だけで鳴らす（音の聴き比べ用）。鳴っている曲は同じ位置から切り替える。 */

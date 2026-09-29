@@ -102,10 +102,10 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     const inst = track.instrument;
     const drumNote = inst ? GM_DRUM_NOTE[inst] : undefined;
     const isDrum = drumNote !== undefined;
-    let program = inst ? GM_PROGRAM[inst] ?? GM_DEFAULT_BY_WAVE[track.waveform] : GM_DEFAULT_BY_WAVE[track.waveform];
+    let program = track.program ?? (inst ? GM_PROGRAM[inst] ?? GM_DEFAULT_BY_WAVE[track.waveform] : GM_DEFAULT_BY_WAVE[track.waveform]);
     // リードとパッド: 電子音楽では電子的な音色、メタル調ではオーバードライブのギター、それ以外は生楽器に近い音色
-    if (inst === "lead") program = score.synth ? SYNTH_LEAD : score.tone === "metal" ? METAL_LEAD : program;
-    if (inst === "pad" && score.synth) program = SYNTH_PAD;
+    if (inst === "lead" && track.program === undefined) program = score.synth ? SYNTH_LEAD : score.tone === "metal" ? METAL_LEAD : program;
+    if (inst === "pad" && score.synth && track.program === undefined) program = SYNTH_PAD;
     const setupChannel = (prog: number, key: string, gainBoost: number): { channel: number; list: Ev[] } => {
       const channel = isDrum ? DRUM_CHANNEL : allocate(key);
       const list = midiTrackFor(channel);
@@ -157,7 +157,9 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       if (n.note === REST) continue;
       const secStart = (startBeat * 60) / score.tempoBpm;
       // 手で弾いたような、ごくわずかなタイミングのずれ（鍵盤・ギター・ベース）
-      const looseness = inst && ["keys", "piano", "guitar", "echoGuitar", "bass", "harpsichord", "strings", "lead", "leadGuitar", "brass", "crunch", "distGuitar"].includes(inst) ? 70 : inst && ["kick", "snare", "hihat", "tom", "crash"].includes(inst) ? 45 : 0;
+      // 実楽器版は、人が演奏するように、タイミングのずれを大きめに
+      const human = score.edition === "real" ? 1.6 : 1;
+      const looseness = human * (inst && ["keys", "piano", "guitar", "echoGuitar", "bass", "harpsichord", "strings", "lead", "leadGuitar", "brass", "crunch", "distGuitar"].includes(inst) ? 70 : inst && ["kick", "snare", "hihat", "tom", "crash"].includes(inst) ? 45 : 0);
       const jitter = looseness > 0 && startBeat > 0 ? Math.round((humanize(secStart + 3.7) - 1) * looseness) : 0;
       const tick = Math.max(0, Math.round(startBeat * PPQ) + jitter);
       let vol = track.volume * (n.velocity ?? 1) * (inst ? humanize(secStart) : 1);

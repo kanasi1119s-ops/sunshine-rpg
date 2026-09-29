@@ -55,6 +55,9 @@ export const SYNTH_PAD = 89;
 /** メタル調では、リードの声部にオーバードライブのギターを使う。 */
 export const METAL_LEAD = 29;
 
+/** 実楽器版で使うGMの楽器番号（バイオリン・チェロ・オーボエ・サックス・アコースティックギターなど）。 */
+export const REAL_GM_PROGRAMS = [24, 34, 40, 42, 60, 65, 68, 71, 73];
+
 export const USED_GM_PROGRAMS: number[] = [
-  ...new Set([...Object.values(GM_PROGRAM), ...Object.values(GM_DEFAULT_BY_WAVE), ...Object.values(GM_LAYER).map((l) => l.program), ...SE_GM_PROGRAMS, SYNTH_LEAD, SYNTH_PAD, METAL_LEAD]),
+  ...new Set([...Object.values(GM_PROGRAM), ...Object.values(GM_DEFAULT_BY_WAVE), ...Object.values(GM_LAYER).map((l) => l.program), ...SE_GM_PROGRAMS, SYNTH_LEAD, SYNTH_PAD, METAL_LEAD, ...REAL_GM_PROGRAMS]),
 ].sort((a, b) => a - b);

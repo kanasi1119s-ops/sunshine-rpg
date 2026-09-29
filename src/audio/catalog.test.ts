@@ -90,3 +90,28 @@ describe("PS2世代サウンド版", () => {
     expect(getTrackEdition("boss-touri", "ps2").tracks.length).toBeGreaterThan(getTrackEdition("boss-touri", "modern").tracks.length);
   });
 });
+
+describe("実楽器版（バンド・オーケストラ・楽器の音色）", () => {
+  it("全曲を、同じ長さのまま、実楽器の音色に置き換えたreal版として作れ、MIDIの楽器は用意した音色の範囲に収まる", async () => {
+    const { getTrackEdition } = await import("./catalog");
+    const { scoreToMidiInfo } = await import("./midi-export");
+    const { USED_GM_PROGRAMS } = await import("./gm-map");
+    for (const e of CATALOG) {
+      const modern = getTrackEdition(e.id, "modern");
+      const real = getTrackEdition(e.id, "real");
+      expect(real.edition).toBe("real");
+      expect(getScoreDurationSec(real)).toBeCloseTo(getScoreDurationSec(modern), 6);
+      const info = scoreToMidiInfo(real);
+      for (const p of Object.values(info.programs)) expect(USED_GM_PROGRAMS, `${e.id}: ${p}`).toContain(p);
+    }
+  });
+  it("リードは、ロック=オーバードライブのギター、クラシック=オーボエ、ジャズ=サックスなどに置き換わり、電子音楽は電子音色のまま", async () => {
+    const { getTrackEdition } = await import("./catalog");
+    const programOf = (id: string, inst: string): number | undefined => getTrackEdition(id, "real").tracks.find((t) => t.instrument === inst)?.program;
+    expect(programOf("boss-touri", "bass")).toBe(34); // ロック=ピック弾きのベース
+    expect(programOf("town-garasuko", "bass")).toBe(32); // ジャズ=ウッドベース
+    expect(programOf("boss-mugikano", "bass")).toBeUndefined(); // 電子音楽はそのまま
+    const lead = getTrackEdition("town-garasuko", "real").tracks.find((t) => t.instrument === "lead");
+    expect(lead?.program).toBe(65); // ジャズ=サックス
+  });
+});

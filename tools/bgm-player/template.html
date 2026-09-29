@@ -70,7 +70,12 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
         <span class="time" id="abtxt">A —  B —</span>
       </span>
     </div>
-    <label class="vol"><input id="ps2" type="checkbox"> PS2世代のサウンド版で鳴らす（オーケストラの重ね・ホール残響）</label>
+    <div class="rep" role="group" aria-label="サウンドの版">
+      <span class="time">サウンド</span>
+      <label><input type="radio" name="ed" value="modern" checked> 現代的</label>
+      <label><input type="radio" name="ed" value="ps2"> PS2世代</label>
+      <label><input type="radio" name="ed" value="real"> 実楽器（バンド・オーケストラ）</label>
+    </div>
     <label class="vol"><input id="synth" type="checkbox"> 合成音で鳴らす（録音音源と聴き比べ）<span id="sf" class="time"></span></label>
     <label class="vol">音量 <input id="vol" type="range" min="0" max="100" value="60"></label>
   </div>
@@ -168,10 +173,12 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
     cur = -1; enable(false); seek.value = 0; timeEl.textContent = "0:00 / 0:00";
     document.getElementById("name").textContent = "停止中"; document.getElementById("sub").textContent = "";
   });
-  document.getElementById("ps2").addEventListener("change", function () {
-    var pos = cur >= 0 && !paused ? B.pos() : 0;
-    B.ps2(this.checked);
-    if (cur >= 0 && !paused) B.play(cur, pos);
+  document.querySelectorAll('input[name="ed"]').forEach(function (r) {
+    r.addEventListener("change", function () {
+      var pos = cur >= 0 && !paused ? B.pos() : 0;
+      B.setEdition(this.value);
+      if (cur >= 0 && !paused) B.play(cur, pos);
+    });
   });
   document.getElementById("synth").addEventListener("change", function () { B.synthOnly(this.checked); });
   setInterval(function () { document.getElementById("sf").textContent = B.sampled() ? "録音音源: 使用中" : "録音音源: 準備中…"; }, 500);

@@ -2,11 +2,11 @@ import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 /**
- * 本編一式（`dist/`、公開ビルド）が容量予算（現在64メガビット=8MiB。もとは32メガビット）に収まっているかを確認する
+ * 本編一式（`dist/`、公開ビルド）が容量予算（現在128メガビット=16MiB。もとは32メガビット）に収まっているかを確認する
  * （`docs/decisions.md`・`.claude/skills/rpg-cycle/game-design.md` 2-4 参照）。
- * 1メガビット=128KiBとして、64メガビット=8MiB。
+ * 1メガビット=128KiBとして、128メガビット=16MiB。
  */
-const BUDGET_MEGABITS = 64; // 2026-09-30 に人間の指示で 32 → 64 に拡大（録音音源の追加。docs/decisions.md）
+const BUDGET_MEGABITS = 128; // 2026-09-30 に人間の指示（「容量が足りなくなったら増やしてよい」）で 32 → 64 → 128 に拡大（録音音源・実楽器版の追加。docs/decisions.md）
 const BUDGET_BYTES = BUDGET_MEGABITS * 128 * 1024;
 const DIST_DIR = "dist";
 
