@@ -24,6 +24,7 @@ const WIDTH = 24;
 const HEIGHT = 16;
 
 const WEST_GATE = { x: 0, y: 10 };
+const EAST_GATE = { x: WIDTH - 1, y: 10 };
 /** 町の北、崖の岩肌に掘られた記録の間（古文書庫）への入口。 */
 const ARCHIVE_GATE_POS = { x: 12, y: 0 };
 /** 環の聖堂（4x2）と、巡礼者の宿坊（3x2）。 */
@@ -50,7 +51,7 @@ export function createKiriTownData(): TileMapData {
   }
   for (let y = 0; y < HEIGHT; y++) {
     set(0, y, y === WEST_GATE.y ? PATH : CLIFF);
-    set(WIDTH - 1, y, CLIFF);
+    set(WIDTH - 1, y, y === EAST_GATE.y ? PATH : CLIFF);
   }
   // 南の断崖の縁（霧で足元が見えない）。
   for (let x = 1; x < WIDTH - 1; x++) {
@@ -99,6 +100,14 @@ export function createKiriTownData(): TileMapData {
         targetTileY: 10,
       },
       {
+        // 東の街道を渡って、第6章の霜原へ。
+        tileX: EAST_GATE.x,
+        tileY: EAST_GATE.y,
+        targetMapId: "shimohara-town",
+        targetTileX: 2,
+        targetTileY: 10,
+      },
+      {
         // 北の岩壁の入口から、記録の間へ。
         tileX: ARCHIVE_GATE_POS.x,
         tileY: ARCHIVE_GATE_POS.y,
@@ -112,6 +121,9 @@ export function createKiriTownData(): TileMapData {
 
 /** 砂音から街道を渡ってきたときの立ち位置。 */
 export const KIRI_TOWN_ENTRY = { tileX: WEST_GATE.x + 2, tileY: WEST_GATE.y };
+
+/** 霜原から街道を戻ってきたときの立ち位置。 */
+export const KIRI_TOWN_EAST_RETURN = { tileX: EAST_GATE.x - 2, tileY: EAST_GATE.y };
 
 /** 記録の間から戻ってきたときの立ち位置。 */
 export const KIRI_TOWN_ARCHIVE_RETURN = { tileX: ARCHIVE_GATE_POS.x, tileY: ARCHIVE_GATE_POS.y + 2 };

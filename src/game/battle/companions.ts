@@ -89,11 +89,31 @@ export const ORCA: CompanionDefinition = {
   }),
 };
 
+/** アヤメ（霜原の案内人、光断系）。第6章で仲間に加わる。すばやく、鋭い一閃で急所を突く。 */
+export const AYAME: CompanionDefinition = {
+  id: "ayame",
+  name: "アヤメ",
+  growth: { hpGrowth: 3, mpGrowth: 2, attackGrowth: 3, defenseGrowth: 2, speedGrowth: 3 },
+  skill: { id: "koudan-no-issen", name: "光断ノ一閃", mpCost: 3, powerMultiplier: 1.7 },
+  createInitialStats: () => ({
+    level: 1,
+    exp: 0,
+    maxHp: 25,
+    hp: 25,
+    maxMp: 9,
+    mp: 9,
+    attack: 13,
+    defense: 6,
+    speed: 12,
+  }),
+};
+
 export const COMPANIONS: Record<string, CompanionDefinition> = {
   [RETO.id]: RETO,
   [MINA.id]: MINA,
   [GUIDE.id]: GUIDE,
   [ORCA.id]: ORCA,
+  [AYAME.id]: AYAME,
 };
 
 export function createCompanionCombatant(companion: CompanionDefinition, stats: LeveledStats): Combatant {
