@@ -17,6 +17,8 @@ export const GM_PROGRAM: Partial<Record<Instrument, number>> = {
   harpsichord: 6,
   strings: 48,
   pad: 89, // ウォームパッド
+  choir: 52, // 合唱
+  brass: 61, // ブラスセクション
   bell: 9, // グロッケン
   chime: 11, // ビブラフォン
   lead: 80, // 矩形波リード
@@ -29,8 +31,22 @@ export const GM_PROGRAM: Partial<Record<Instrument, number>> = {
 };
 export const GM_DEFAULT_BY_WAVE: Record<Waveform, number> = { square: 80, triangle: 4, sawtooth: 80, sine: 89 };
 
+/** 効果音（`se-library.ts`）で使うGMの楽器番号。 */
+export const SE_GM_PROGRAMS = [8, 9, 11, 12, 14, 33, 44, 45, 46, 47, 48, 52, 53, 55, 56, 61, 89, 91, 98, 100, 101, 115, 116, 119, 120, 122, 126];
+
+/** 重ねて鳴らす楽器（実際の演奏に近づけるため）。例: エレピにピアノを薄く重ねる。 */
+export const GM_LAYER: Partial<Record<Instrument, { program: number; gain: number }>> = {
+  keys: { program: 0, gain: 0.5 },
+  pad: { program: 48, gain: 0.35 },
+};
+
+/** ドラムセットの選び方（曲調ごと）。GMのドラムキット番号: 0=標準、8=ルーム、16=パワー、24=電子、25=TR-808、32=ジャズ、48=オーケストラ。 */
+export const DRUM_KITS = [0, 8, 16, 24, 25, 32, 48];
+
 /** 打楽器 → GMドラムのノート番号。 */
-export const GM_DRUM_NOTE: Partial<Record<Instrument, number>> = { kick: 36, snare: 38, hihat: 42, crash: 49 };
+export const GM_DRUM_NOTE: Partial<Record<Instrument, number>> = { kick: 36, snare: 38, hihat: 42, crash: 49, tom: 47 };
 
 /** 使うGMの楽器番号の一覧（サウンドフォントを切り出すときの指定に使う）。 */
-export const USED_GM_PROGRAMS: number[] = [...new Set([...Object.values(GM_PROGRAM), ...Object.values(GM_DEFAULT_BY_WAVE)])].sort((a, b) => a - b);
+export const USED_GM_PROGRAMS: number[] = [
+  ...new Set([...Object.values(GM_PROGRAM), ...Object.values(GM_DEFAULT_BY_WAVE), ...Object.values(GM_LAYER).map((l) => l.program), ...SE_GM_PROGRAMS]),
+].sort((a, b) => a - b);

@@ -76,6 +76,8 @@ export interface MelodySpec {
 export interface Section {
   /** 1小節に1つのコード。 */
   chords: string;
+  /** この区間だけの1小節の拍数（拍子の変わり目。省略時は曲全体の拍数）。 */
+  beatsPerBar?: number;
   /** パート名 → パターン。書かなかったパートは、この区間は休み。 */
   parts?: Record<string, string>;
   /** 旋律パート名 → "音名:拍数 ..." の列（区間の拍数とぴったり一致させる）。 */
@@ -153,20 +155,21 @@ export function arrange(a: Arrangement): Score {
     const events: NoteEvent[] = [];
     for (const section of a.sections) {
       const chords = parseChords(section.chords);
+      const bpb = section.beatsPerBar ?? a.beatsPerBar;
       const pattern = section.parts?.[key];
       if (!pattern) {
-        pushEvent(events, REST, chords.length * a.beatsPerBar);
+        pushEvent(events, REST, chords.length * bpb);
         continue;
       }
       const bars = pattern.split(" ");
-      chords.forEach((chord, i) => renderBar(events, bars[i % bars.length], chord, spec, a.beatsPerBar));
+      chords.forEach((chord, i) => renderBar(events, bars[i % bars.length], chord, spec, bpb));
     }
     build(spec, events);
   }
   for (const [key, spec] of Object.entries(a.melodies)) {
     const events: NoteEvent[] = [];
     a.sections.forEach((section, index) => {
-      const beats = parseChords(section.chords).length * a.beatsPerBar;
+      const beats = parseChords(section.chords).length * (section.beatsPerBar ?? a.beatsPerBar);
       const notes = section.melody?.[key];
       if (!notes) {
         pushEvent(events, REST, beats);

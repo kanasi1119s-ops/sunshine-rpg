@@ -28,6 +28,8 @@ export class SampledBgm {
   private failed = false;
   private pendingOffset = 0;
   private playing = false;
+  private buffer: ArrayBuffer | null = null;
+  private ctx: AudioContext | null = null;
 
   isReady(): boolean {
     return this.ready;
@@ -56,6 +58,9 @@ export class SampledBgm {
     const workletUrl = embedded ? embedded.processorUrl : processorUrl;
     await ctx.audioWorklet.addModule(workletUrl);
     const buffer = embedded ? embedded.soundfont : await (await fetch(soundfontUrl)).arrayBuffer();
+    // addSoundBank は渡したデータを使い切る（転送する）ので、効果音用のシンセサイザーのために、控えを取っておく
+    this.buffer = buffer.slice(0);
+    this.ctx = ctx;
     const synth = new WorkletSynthesizer(ctx);
     synth.connect(destination);
     await synth.soundBankManager.addSoundBank(buffer, "main");
@@ -73,6 +78,19 @@ export class SampledBgm {
     this.seq = seq;
     this.ready = true;
     return true;
+  }
+
+  /** 効果音用の、もう1つのシンセサイザー（同じ録音音源を使う）。BGMとは別に鳴らすため。 */
+  async createExtraSynth(destination: AudioNode): Promise<WorkletSynthesizer | null> {
+    if (!this.ready || !this.buffer || !this.ctx) {
+      return null;
+    }
+    const synth = new WorkletSynthesizer(this.ctx);
+    synth.connect(destination);
+    // 読み込みのたびに元のデータが消費されることがあるので、コピーを渡す
+    await synth.soundBankManager.addSoundBank(this.buffer.slice(0), "main");
+    await synth.isReady;
+    return synth;
   }
 
   /** 曲を鳴らす。`offsetSec` の位置から始められる。 */
@@ -98,5 +116,54 @@ export class SampledBgm {
 
   positionSec(): number {
     return this.seq && this.playing ? this.seq.currentTime : 0;
+  }
+}
+
+/** 効果音を録音音源で鳴らす。MIDIのイベントを、タイマーで少しずつ送る（効果音は数秒なので、これで十分）。 */
+export class SampledSe {
+  private synth: WorkletSynthesizer | null = null;
+  private starting = false;
+  private nextChannel = 0;
+
+  isReady(): boolean {
+    return this.synth !== null;
+  }
+
+  async load(bgm: SampledBgm, destination: AudioNode): Promise<void> {
+    if (this.synth || this.starting) {
+      return;
+    }
+    this.starting = true;
+    try {
+      this.synth = await bgm.createExtraSynth(destination);
+    } catch (error) {
+      console.warn("効果音の録音音源の準備に失敗しました。合成音で鳴らします:", error);
+    }
+  }
+
+  /**
+   * 1音を予約する。`delaySec`後に鳴らし、`lengthSec`後に離す。
+   * 同じ音源を使う効果音どうしが重なっても楽器が入れ替わらないよう、音の直前に楽器を指定し、使うチャンネルを順番に変える。
+   */
+  note(program: number, drum: boolean, midiNote: number, velocity: number, delaySec: number, lengthSec: number): void {
+    const synth = this.synth;
+    if (!synth) {
+      return;
+    }
+    const channel = drum ? 9 : this.pickChannel();
+    window.setTimeout(() => {
+      if (!drum) {
+        synth.programChange(channel, program);
+      }
+      synth.noteOn(channel, midiNote, velocity);
+      window.setTimeout(() => synth.noteOff(channel, midiNote), Math.max(30, lengthSec * 1000));
+    }, Math.max(0, delaySec * 1000));
+  }
+
+  private pickChannel(): number {
+    const channels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15];
+    const channel = channels[this.nextChannel % channels.length];
+    this.nextChannel++;
+    return channel;
   }
 }

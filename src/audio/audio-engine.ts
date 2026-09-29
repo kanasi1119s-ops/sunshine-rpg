@@ -1,5 +1,6 @@
-import { SampledBgm } from "./sampled-engine";
+import { SampledBgm, SampledSe } from "./sampled-engine";
 import { createBgmBus, scheduleInstrumentNote, type Source } from "./voices";
+import { noteNameToMidi } from "./note";
 import { flattenScore, getScoreDurationSec, type Score, type ScheduledNote } from "./score";
 
 /** `?synth` をつけて開くと、録音音源を使わず合成音だけで鳴らす（音の比較・不具合の切り分け用）。 */
@@ -28,6 +29,9 @@ export class AudioEngine {
   /** 録音音源（サウンドフォント）のBGM再生。準備ができるまでは合成音で鳴らす。 */
   private sampled = new SampledBgm();
   private sampledBus: GainNode | null = null;
+  /** 効果音: 残響の出口と、録音音源のシンセサイザー。 */
+  private seBus: GainNode | null = null;
+  private sampledSe = new SampledSe();
   private currentBgm: Score | null = null;
   private synthOnly = SYNTH_ONLY_FROM_URL;
   private bgmLoopStart = 0;
@@ -44,7 +48,10 @@ export class AudioEngine {
       // 録音音源は、ほんの少しだけ残響を足して、同じ出口（音量・仕上げ）を通す
       this.sampledBus = createBgmBus(this.ctx, this.bgmGain, 0.1);
       if (!this.synthOnly) {
-        void this.sampled.load(this.ctx, this.sampledBus).then((ok) => {
+        void this.sampled.load(this.ctx, this.sampledBus).then(async (ok) => {
+          if (ok && this.ctx && this.seBus) {
+            await this.sampledSe.load(this.sampled, this.seBus);
+          }
           if (ok && this.currentBgm && this.bgmLoopHandle !== null) {
             // 準備ができたら、いま合成音で鳴っている曲を、同じ位置から録音音源に切り替える
             this.playBgm(this.currentBgm, this.getBgmPositionSec());
@@ -55,6 +62,8 @@ export class AudioEngine {
       this.seGain = this.ctx.createGain();
       this.seGain.gain.value = this.muted ? 0 : this.seVolume;
       this.seGain.connect(this.ctx.destination);
+      // 効果音にも、余韻（残響）と仕上げをかける。2〜4秒の余韻が自然に消えていく
+      this.seBus = createBgmBus(this.ctx, this.seGain, 0.34);
     }
     if (this.ctx.state === "suspended") {
       void this.ctx.resume();
@@ -115,11 +124,32 @@ export class AudioEngine {
     return oscillators;
   }
 
+  /**
+   * 効果音を鳴らす。`gm`つきのパートは録音音源で、それ以外（と、録音音源の準備前）は合成音で鳴らす。
+   * 音の始まりの時刻（startSec）どおりに、順番に鳴らす。
+   */
   playSe(score: Score): void {
     const ctx = this.ensureContext();
-    const events = flattenScore(score);
-    for (const event of events) {
-      this.scheduleNote(ctx, this.seGain!, event, ctx.currentTime);
+    const secPerBeat = 60 / score.tempoBpm;
+    const synthTracks: Score["tracks"] = [];
+    for (const track of score.tracks) {
+      if (track.gm !== undefined && this.sampledSe.isReady() && !this.synthOnly) {
+        let beat = 0;
+        for (const n of track.notes) {
+          if (n.note !== "R") {
+            const midi = noteNameToMidi(n.note);
+            const velocity = Math.max(18, Math.min(127, Math.round(34 + track.volume * (n.velocity ?? 1) * 430)));
+            this.sampledSe.note(track.gm, track.gmDrum === true, midi, velocity, beat * secPerBeat, n.durationBeats * secPerBeat);
+          }
+          beat += n.durationBeats;
+        }
+      } else {
+        synthTracks.push(track);
+      }
+    }
+    const bus = this.seBus ?? this.seGain!;
+    for (const event of flattenScore({ ...score, tracks: synthTracks })) {
+      this.scheduleNote(ctx, bus, event, ctx.currentTime + event.startSec);
     }
   }
 

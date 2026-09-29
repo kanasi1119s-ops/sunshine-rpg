@@ -1,4 +1,5 @@
 import type { Score } from "./score";
+import { composeFinale, FINALES } from "./finale";
 import { composeSong, type SongSpec, type Style } from "./songwriter";
 import { STYLE_TRACKS } from "./style-tracks";
 
@@ -19,11 +20,13 @@ export interface CatalogEntry {
   group: string;
   spec?: SongSpec;
   handmade?: Score;
+  /** 3〜4分の特別な曲（ラスボス・裏ボスなど）の設計図のID。 */
+  finale?: string;
 }
 
 const LABEL: Record<Style, string> = {
   rock: "ロック", metal: "メタル", classic: "クラシック", space: "空間系", cafe: "キーボード（カフェ）", discord: "不協和音", mystery: "不思議",
-  epic: "オーケストラ風", folk: "フォーク（アコースティック）", nature: "自然音楽", phonk: "フォンク", samba: "サンバ", jazz: "ジャズ", rnb: "R&B", electro: "エレクトリック",
+  epic: "オーケストラ風", folk: "フォーク（アコースティック）", baroque: "バロック協奏曲風", nature: "自然音楽", phonk: "フォンク", samba: "サンバ", jazz: "ジャズ", rnb: "R&B", electro: "エレクトリック",
   hardcore: "ハードコア", deathmetal: "デスメタル", progmetal: "プログレッシブメタル（7拍子）", jpop: "J-POP",
 };
 
@@ -36,6 +39,11 @@ function song(group: string, id: string, title: string, scene: string, style: St
 function hand(group: string, id: string, scene: string, handId: string): CatalogEntry {
   const t = STYLE_TRACKS.find((x) => x.id === handId)!;
   return { id, title: t.title, scene, group, styleLabel: t.style, handmade: t.score };
+}
+
+function finaleEntry(group: string, id: string, styleLabel: string): CatalogEntry {
+  const f = FINALES.find((x) => x.id === id)!;
+  return { id, title: f.title, scene: f.scene, group, styleLabel, finale: id };
 }
 
 export const CATALOG: CatalogEntry[] = [
@@ -84,12 +92,16 @@ export const CATALOG: CatalogEntry[] = [
   song("第8章 灯芯都", "town-toushin", "灯芯都の光", "灯芯都の町", "electro", "A", false, 124, 134),
   song("第8章 灯芯都", "hall-gikai", "合議会堂", "合議会堂", "classic", "C", true, 84, 135, { beats: 3 }),
   song("第8章 灯芯都", "boss-toushin", "灯芯都の番人", "ボス戦（第8章）", "progmetal", "D", true, 160, 136, { drive: true }),
+  finaleEntry("終章 虚灯宮", "boss-final", "メタル×プログレッシブ（7拍子・転調）・速い・特別曲"),
+  finaleEntry("終章 虚灯宮", "boss-final-2", "ロマン派×ドゥーム・遅い（絶望）・特別曲"),
+  finaleEntry("クリア後", "secret-boss", "虚無×ロマン派・遅い（絶望）・特別曲"),
+  finaleEntry("クリア後", "secret-boss-2", "デスメタル×プログレッシブ・速い・特別曲"),
+  finaleEntry("クリア後", "eight-gods", "プログレッシブメタル（8柱で転調）・速い・特別曲"),
+  finaleEntry("クリア後", "eight-gods-2", "ロマン派×ドゥーム・遅い（絶望）・特別曲"),
+  finaleEntry("イベント", "fate", "オーケストラ×メタル・短調から長調の勝利へ・特別曲"),
   song("終章 虚灯宮", "kyoto-road", "虚灯宮への道", "虚灯宮（前半）", "space", "D", true, 70, 137),
-  song("終章 虚灯宮", "boss-final", "最終決戦", "最終ボス戦（第1形態）", "epic", "E", true, 188, 138, { drive: true }),
-  song("終章 虚灯宮", "boss-final-2", "灯の環、砕けるとき", "最終ボス戦（第2形態）", "deathmetal", "E", true, 212, 139, { drive: true }),
-  song("クリア後", "secret-boss", "初源の歪み", "裏ボス「初源の歪み」", "discord", "F", true, 72, 140),
   song("クリア後", "kyoto-deep", "虚灯宮・深部", "虚灯宮・深部", "mystery", "Bb", true, 84, 141),
-  song("イベント", "opening", "旅立ちの朝", "オープニング（旅立ち）", "jpop", "G", false, 128, 142),
+  song("イベント", "opening", "旅立ちの朝", "オープニング（旅立ち）", "baroque", "G", false, 132, 142),
   song("イベント", "sad", "別れの雨", "悲しい場面・別れ", "classic", "A", true, 60, 143),
   song("イベント", "deduction", "真相にたどりつく", "推理パート・真相の場面", "jazz", "D", true, 100, 144),
   song("イベント", "memory", "追憶の灯", "回想・思い出の場面", "folk", "A", false, 72, 145),
@@ -99,7 +111,6 @@ export const CATALOG: CatalogEntry[] = [
   song("イベント", "bond", "仲間のちから", "仲間との絆・決意の場面", "jpop", "E", false, 146, 149),
   song("イベント", "chase", "追われる夜", "追跡・逃走イベント", "phonk", "A", true, 140, 151),
   song("第8章 灯芯都", "alley-toushin", "灯芯都の裏通り", "灯芯都の路地・裏取引の場面", "phonk", "D", true, 132, 152),
-  song("クリア後", "eight-gods", "八神の試練", "裏ボス「八神」", "progmetal", "B", true, 178, 150, { drive: true }),
 ];
 
 const cache = new Map<string, Score>();
@@ -109,7 +120,7 @@ export function getTrack(id: string): Score {
   if (!score) {
     const entry = CATALOG.find((e) => e.id === id);
     if (!entry) throw new Error(`曲がありません: ${id}`);
-    score = entry.handmade ?? composeSong(entry.spec!);
+    score = entry.handmade ?? (entry.finale ? composeFinale(FINALES.find((f) => f.id === entry.finale)!) : composeSong(entry.spec!));
     cache.set(id, score);
   }
   return score;

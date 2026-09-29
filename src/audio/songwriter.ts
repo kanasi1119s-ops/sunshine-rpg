@@ -9,7 +9,7 @@ import type { Score } from "./score";
 
 export type Style =
   | "rock" | "metal" | "classic" | "space" | "cafe" | "discord" | "mystery" | "epic" | "folk"
-  | "nature" | "phonk" | "samba" | "jazz" | "rnb" | "electro" | "hardcore" | "deathmetal" | "progmetal" | "jpop";
+  | "baroque" | "nature" | "phonk" | "samba" | "jazz" | "rnb" | "electro" | "hardcore" | "deathmetal" | "progmetal" | "jpop";
 
 export interface SongSpec {
   id: string;
@@ -32,7 +32,7 @@ export interface SongSpec {
 }
 
 // ── 乱数（同じ種なら同じ結果） ──
-function makeRng(seed: number): () => number {
+export function makeRng(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
@@ -42,8 +42,8 @@ function makeRng(seed: number): () => number {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-type Rng = () => number;
-const pick = <T,>(rng: Rng, xs: readonly T[]): T => xs[Math.floor(rng() * xs.length)];
+export type Rng = () => number;
+export const pick = <T,>(rng: Rng, xs: readonly T[]): T => xs[Math.floor(rng() * xs.length)];
 
 // ── 調・和音 ──
 const NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -51,18 +51,18 @@ const PC: Record<string, number> = { C: 0, "C#": 1, Db: 1, D: 2, "D#": 3, Eb: 3,
 const MAJOR = [0, 2, 4, 5, 7, 9, 11];
 const MINOR = [0, 2, 3, 5, 7, 8, 10];
 
-interface Key {
+export interface Key {
   tonic: number;
   scale: number[];
   minor: boolean;
 }
-function keyOf(spec: SongSpec): Key {
+export function keyOf(spec: { tonic: string; minor: boolean }): Key {
   return { tonic: PC[spec.tonic], scale: spec.minor ? MINOR : MAJOR, minor: spec.minor };
 }
 const degreeSemis = (k: Key, i: number): number => k.scale[i % 7] + 12 * Math.floor(i / 7);
 
 /** 度数（1〜7）の和音の名前（"Am"・"G7"・"Fmaj7" など）。 */
-function chordName(k: Key, degree: number, sevenths: boolean, opts?: { leadingDim?: boolean }): string {
+export function chordName(k: Key, degree: number, sevenths: boolean, opts?: { leadingDim?: boolean }): string {
   const i = degree - 1;
   if (opts?.leadingDim && degree === 7 && k.minor) {
     return `${NAMES[(k.tonic + 11) % 12]}dim`;
@@ -93,8 +93,8 @@ function chordPitchClasses(name: string): number[] {
 }
 
 // 定番のコード進行の型（度数）。4小節ずつ。
-const CELLS_MAJOR = [[1, 5, 6, 4], [1, 6, 4, 5], [6, 4, 1, 5], [1, 4, 5, 1], [2, 5, 1, 6], [1, 3, 4, 5], [4, 5, 3, 6], [1, 4, 6, 5], [1, 5, 4, 5], [6, 5, 4, 5]];
-const CELLS_MINOR = [[1, 6, 3, 7], [1, 4, 7, 3], [1, 7, 6, 7], [1, 4, 5, 1], [6, 7, 1, 1], [1, 6, 7, 1], [4, 7, 1, 5], [1, 3, 7, 6], [1, 4, 6, 5], [1, 7, 4, 5]];
+export const CELLS_MAJOR = [[1, 5, 6, 4], [1, 6, 4, 5], [6, 4, 1, 5], [1, 4, 5, 1], [2, 5, 1, 6], [1, 3, 4, 5], [4, 5, 3, 6], [1, 4, 6, 5], [1, 5, 4, 5], [6, 5, 4, 5]];
+export const CELLS_MINOR = [[1, 6, 3, 7], [1, 4, 7, 3], [1, 7, 6, 7], [1, 4, 5, 1], [6, 7, 1, 1], [1, 6, 7, 1], [4, 7, 1, 5], [1, 3, 7, 6], [1, 4, 6, 5], [1, 7, 4, 5]];
 
 type Kind = "intro" | "verse" | "bridge" | "chorus" | "solo" | "outro";
 
@@ -127,14 +127,16 @@ const RHYTHM7 = [[2, 2, 3], [1.5, 1.5, 2, 2], [3, 2, 2], [1, 1, 1, 1, 3], [2, 1,
 const RHYTHM_SPARSE4 = [[4], [3, 1], [2, 2], [1, 3], [2, 1, 1]];
 const RHYTHM_FAST4 = [[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5, 1, 1], [0.25, 0.25, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.25, 0.25]];
 
-interface MelodyOpts {
+export interface MelodyOpts {
+  /** 3拍子で、2小節を「2拍×3」でまとめる（ヘミオラ）。 */
+  hemiola?: boolean;
   lo: number;
   hi: number;
   density: "normal" | "sparse" | "fast";
   restChance?: number;
 }
 
-function generateMelody(rng: Rng, key: Key, chords: string[], beats: number, opts: MelodyOpts): string {
+export function generateMelody(rng: Rng, key: Key, chords: string[], beats: number, opts: MelodyOpts): string {
   const pool: number[] = [];
   for (let m = opts.lo; m <= opts.hi; m++) {
     if (key.scale.includes(((m - key.tonic) % 12 + 12) % 12)) pool.push(m);
@@ -145,14 +147,41 @@ function generateMelody(rng: Rng, key: Key, chords: string[], beats: number, opt
   const rhythmFor = (): number[] => pick(rng, tables[0]);
   const out: string[] = [];
   const rhythms: number[][] = [];
+  const skip = new Set<number>();
   chords.forEach((chord, bar) => {
+    if (skip.has(bar)) {
+      return;
+    }
     const tones = chordPitchClasses(chord);
+    if (opts.hemiola && beats === 3 && bar % 2 === 0 && bar + 1 < chords.length - 1) {
+      // ヘミオラ: 3拍子の2小節（6拍）を、2拍ずつの3つの音にまとめる
+      skip.add(bar + 1);
+      rhythms[bar] = [2, 2, 2];
+      rhythms[bar + 1] = [2, 2, 2];
+      const arch = mid + Math.sin(((bar % 8) / 8) * Math.PI) * ((opts.hi - opts.lo) * 0.28);
+      [chord, chord, chords[bar + 1]].forEach((c, n) => {
+        const t = chordPitchClasses(c);
+        let best = cur;
+        let bestScore = Infinity;
+        for (let i = Math.max(0, cur - 4); i <= Math.min(pool.length - 1, cur + 4); i++) {
+          if (!t.includes(pool[i] % 12) && n !== 1) continue;
+          const score = Math.abs(i - cur) + Math.abs(pool[i] - arch) * 0.08 + rng() * 1.2;
+          if (score < bestScore) {
+            bestScore = score;
+            best = i;
+          }
+        }
+        cur = best;
+        out.push(`${midiToName(pool[cur])}:2`);
+      });
+      return;
+    }
     let rhythm: number[];
     if (bar === chords.length - 1) {
       rhythm = [1, beats - 1];
     } else if (bar % 4 === 3) {
       rhythm = beats === 3 ? [1, 2] : beats === 7 ? [1, 1, 5] : opts.density === "fast" ? rhythmFor() : [1, 1, 2];
-    } else if (bar % 4 >= 2 && rng() < 0.65) {
+    } else if (bar % 4 >= 2 && rng() < 0.65 && rhythms[bar - 2]?.reduce((a, b) => a + b, 0) === beats) {
       rhythm = rhythms[bar - 2];
     } else {
       rhythm = rhythmFor();
@@ -210,6 +239,33 @@ const ROCK_C = { kick: "x.....x.x.x...x.", snare: "....x.......x...", hat: "xxxx
 const KEYS3 = { k1: "a-------", k2: "b-------", k3: "c-------" };
 
 const TEMPLATES: Record<Exclude<Style, "discord" | "mystery">, Template> = {
+  baroque: {
+    // バロック協奏曲風: 速い弦の音型、チェンバロの通奏低音、5度で下がる進行の反復。特定の曲の旋律は使っていない
+    sevenths: false,
+    parts: {
+      cello: { instrument: "strings", waveform: "sawtooth", volume: 0.16, octave: 2, step: 0.5 },
+      hpsi: { instrument: "harpsichord", waveform: "sawtooth", volume: 0.1, octave: 4, step: 0.25 },
+      vf: { instrument: "strings", waveform: "sawtooth", volume: 0.07, octave: 4, step: 0.25 },
+      v2: { instrument: "strings", waveform: "sawtooth", volume: 0.06, octave: 4, step: 0.5 },
+      v3: { instrument: "strings", waveform: "sawtooth", volume: 0.06, octave: 4, step: 0.5 },
+    },
+    melodies: { violin: { instrument: "strings", waveform: "sawtooth", volume: 0.15 }, hpsi2: { instrument: "harpsichord", waveform: "sawtooth", volume: 0.14 } },
+    plan: (kind) => {
+      const walk = "RcbcRcbc";
+      const arp = "abcbabcbabcbabcb";
+      const fig = "acbcacbcacbcacbc";
+      const inner = { v2: "b-------", v3: "c-------" };
+      const rest: Record<Kind, KindPlan> = {
+        intro: { parts: { cello: walk, hpsi: arp, ...inner }, mel: ["violin"], opts: { lo: 67, hi: 88, density: "fast" } },
+        verse: { parts: { cello: walk, hpsi: arp }, mel: ["violin"], opts: { lo: 64, hi: 86, density: "normal" } },
+        bridge: { parts: { cello: walk, hpsi: arp, vf: fig }, mel: ["violin"], opts: { lo: 66, hi: 90, density: "fast" } },
+        chorus: { parts: { cello: walk, hpsi: arp, vf: fig, ...inner }, mel: ["violin"], opts: { lo: 69, hi: 91, density: "fast" } },
+        solo: { parts: { cello: walk, hpsi: arp, vf: fig }, mel: ["hpsi2"], opts: { lo: 67, hi: 93, density: "fast" } },
+        outro: { parts: { cello: walk, hpsi: arp, vf: fig, ...inner }, mel: ["violin"], opts: { lo: 67, hi: 89, density: "fast" } },
+      };
+      return rest[kind];
+    },
+  },
   nature: {
     sevenths: true,
     parts: {
@@ -796,6 +852,40 @@ function mysteryScore(spec: SongSpec, rng: Rng, key: Key, kinds: Kind[]): Score 
   });
 }
 
+/** 曲調ごとのドラムセット（GMのドラムキット番号）。 */
+const DRUM_KIT: Partial<Record<Style, number>> = {
+  rock: 16, metal: 16, hardcore: 16, deathmetal: 16, progmetal: 16, epic: 48, jazz: 32, electro: 24, phonk: 25, rnb: 8, cafe: 8, samba: 8, jpop: 8, folk: 8,
+};
+
+// フィル（8小節のまとまりの最後の小節で、タムを回して次へつなぐ）
+const FILL = { kick: "x.......x.......", snare: "....x.x.x.......", hat: "x.x.x.x.x.......", tomH: "..........x.x...", tomM: "..............x.", tomL: "...............x" };
+const GHOST_STEPS = [2, 10, 15];
+
+/** 8小節の区間の最後の小節をフィルにし、スネアにゴーストノート（弱い一打）を足す。 */
+function applyDrumRealism(kp: KindPlan, kind: Kind, bars: number, style: Style, tpl: Template): KindPlan {
+  const p = kp.parts;
+  const snare = tpl.parts.snare;
+  if (kind === "intro" || bars < 8 || !snare || snare.step !== 0.25 || !p.snare || p.snare.includes(" ")) return kp;
+  const parts: Record<string, string> = { ...p };
+  const withFill = (normal: string, fill: string): string => [...Array(bars - 1).fill(normal), fill].join(" ");
+  if (["rock", "jpop", "cafe", "rnb", "samba", "folk"].includes(style) && (kind === "verse" || kind === "bridge")) {
+    parts.snare = [...p.snare].map((ch, i) => (ch === "." && GHOST_STEPS.includes(i) ? "o" : ch)).join("");
+  }
+  parts.snare = withFill(parts.snare, FILL.snare);
+  if (p.kick && p.kick.length === 16 && !p.kick.includes(" ")) parts.kick = withFill(p.kick, FILL.kick);
+  if (p.hat && p.hat.length === 16 && !p.hat.includes(" ")) parts.hat = withFill(p.hat, FILL.hat);
+  parts.tomH = withFill("................", FILL.tomH);
+  parts.tomM = withFill("................", FILL.tomM);
+  parts.tomL = withFill("................", FILL.tomL);
+  return { ...kp, parts };
+}
+
+const TOM_PARTS: Record<string, PartSpec> = {
+  tomH: { instrument: "tom", waveform: "sine", volume: 0.24, octave: 2, step: 0.25, fixed: "D3" },
+  tomM: { instrument: "tom", waveform: "sine", volume: 0.24, octave: 2, step: 0.25, fixed: "B2" },
+  tomL: { instrument: "tom", waveform: "sine", volume: 0.26, octave: 2, step: 0.25, fixed: "G2" },
+};
+
 /**
  * 疾走感（ボス戦向け）: 16分音符の低音の刻み、16分のアルペジオ、8分のキック、16分のハイハットを足す。
  * 静かな導入（intro）にはかけない。
@@ -827,6 +917,14 @@ export function composeSong(spec: SongSpec): Score {
   const chorusCells = [pick(rng, cells), pick(rng, cells)];
   const chordsFor = (kind: Kind): string[] => {
     const deg = (cell: number[]): string[] => cell.map((d) => chordName(key, d, tpl.sevenths));
+    if (spec.style === "baroque") {
+      // 5度ずつ下がる進行（I IV vii° iii vi ii V I）を軸にする
+      const fifths = [1, 4, 7, 3, 6, 2, 5, 1];
+      const other = [6, 2, 5, 1, 4, 5, 1, 1];
+      const cad = [1, 6, 2, 5, 1, 4, 5, 1];
+      const table: Record<Kind, number[]> = { intro: fifths.slice(0, 4), verse: fifths, bridge: other, chorus: cad, solo: fifths, outro: cad };
+      return deg(table[kind]);
+    }
     const variation = (cell: number[]): number[] => [...cell.slice(0, 3), pick(rng, [5, 4, cell[3]])];
     let degrees: number[];
     if (kind === "verse") degrees = [...verseCell, ...variation(verseCell)];
@@ -843,7 +941,9 @@ export function composeSong(spec: SongSpec): Score {
       }
     : {};
   const sections: Section[] = plan.kinds.map((kind) => {
-    const kp = applyDrive(tpl.plan(kind, beats), kind, tpl, spec.drive === true && beats === 4);
+    const barsInSection = kind === "intro" ? 4 : 8;
+    const base = applyDrive(tpl.plan(kind, beats), kind, tpl, spec.drive === true && beats === 4);
+    const kp = beats === 4 && spec.style !== "jazz" ? applyDrumRealism(base, kind, barsInSection, spec.style, tpl) : base;
     let entry = cache.get(kind);
     if (!entry) {
       const chords = chordsFor(kind);
@@ -854,5 +954,8 @@ export function composeSong(spec: SongSpec): Score {
     for (const m of kp.mel) melody[m] = entry.melody;
     return { chords: entry.chords.join(" "), parts: kp.parts, melody };
   });
-  return arrange({ tempoBpm: spec.bpm, beatsPerBar: beats, sections, parts: { ...tpl.parts, ...driveParts }, melodies: tpl.melodies });
+  const hasFills = beats === 4 && spec.style !== "jazz" && tpl.parts.snare?.step === 0.25;
+  const score = arrange({ tempoBpm: spec.bpm, beatsPerBar: beats, sections, parts: { ...tpl.parts, ...driveParts, ...(hasFills ? TOM_PARTS : {}) }, melodies: tpl.melodies });
+  score.drumKit = DRUM_KIT[spec.style] ?? 0;
+  return score;
 }
