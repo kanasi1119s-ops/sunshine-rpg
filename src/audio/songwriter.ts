@@ -1001,6 +1001,7 @@ export function composeSong(spec: SongSpec): Score {
   score.drumKit = DRUM_KIT[spec.style] ?? 0;
   if (spec.style === "electro" || spec.style === "jpop") score.pump = true;
   if (OPENING_STYLES.includes(spec.style)) score.opening = true;
+  score.style = spec.style;
   score.tone = METAL_STYLES.includes(spec.style) ? "metal" : "rock";
   if (["electro", "phonk", "progmetal"].includes(spec.style)) score.synth = true;
   return score;

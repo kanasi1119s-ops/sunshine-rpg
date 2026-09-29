@@ -79,9 +79,10 @@ import { renderDebugMenu, type DebugMenuRow } from "./render/debug-menu-renderer
 import { expRequiredForLevel } from "./game/growth/exp-curve";
 
 /**
- * BGMの版。既定は現代的な音（modern）。`?edition=ps2` をつけて開くと、PS2世代のサウンド版（オーケストラの重ね・ホール残響）で鳴る。
+ * BGMの版。既定は現代的な音（modern）。`?edition=ps2`（PS2世代のサウンド版）や `?edition=real`（実際のバンド・オーケストラ・楽器の音色の版）をつけて開くと、その版で鳴る。
  */
-const BGM_EDITION: Edition = new URLSearchParams(window.location.search).get("edition") === "ps2" ? "ps2" : "modern";
+const EDITION_PARAM = new URLSearchParams(window.location.search).get("edition");
+const BGM_EDITION: Edition = EDITION_PARAM === "ps2" ? "ps2" : EDITION_PARAM === "real" ? "real" : "modern";
 function getTrack(id: string): Score {
   return getTrackEdition(id, BGM_EDITION);
 }

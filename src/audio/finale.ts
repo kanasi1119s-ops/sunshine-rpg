@@ -329,6 +329,7 @@ export function composeFinale(spec: FinaleSpec): Score {
   score.drumKit = spec.drumKit;
   score.opening = true;
   score.tone = "metal";
+  score.style = "finale";
   score.synth = true;
   return score;
 }

@@ -35,6 +35,8 @@ export interface Track {
   instrument?: Instrument;
   /** 左右の位置（-1=左、0=中央、1=右）。省略時は中央。 */
   pan?: number;
+  /** 録音音源で鳴らすときの、GMの楽器番号の指定（省略時は`instrument`から決める）。実楽器版で使う。 */
+  program?: number;
   /** 効果音用: 録音音源（GMの楽器番号）で鳴らす。準備ができていないときは、`instrument`・`waveform`の合成音で鳴らす。 */
   gm?: number;
   /** 効果音用: trueなら、音名は「GMドラムのキー番号」を表す（例: 36=C2=バスドラム）。 */
@@ -52,7 +54,9 @@ export interface Score {
   /** trueなら、リードとパッドを電子的な音色にする（電子音楽向け）。省略時は生楽器に近い音色。 */
   synth?: boolean;
   /** 音の版。modern=現代的な音（既定）、ps2=PS2世代のゲーム音楽（オーケストラの重ね・豊かなホール残響・高音をやや丸めた音）。 */
-  edition?: "modern" | "ps2";
+  edition?: "modern" | "ps2" | "real";
+  /** 曲調（rock・classic・jazz など）。実楽器版で、楽器の割り当てを決めるために使う。 */
+  style?: string;
   /** 楽器の音色の傾向。rock=オーバードライブ・温かいドラム、metal=メタルゾーンのギター・重低音のベース・締まったドラム。 */
   tone?: "rock" | "metal";
   /** trueなら、曲の頭に強い一撃（全楽器の強いアタック、クラッシュ、バスドラム）を入れる。ループのたびに聴き手をつかむ。 */
