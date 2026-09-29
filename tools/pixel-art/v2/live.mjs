@@ -2,16 +2,25 @@
 // ドット絵エディタを実際に起動し、マウス操作で描いていく途中の画面を、一定の筆数ごとに撮る（録画ではなく画面写真）。
 import { chromium } from "playwright-core";
 import fs from "fs";
-const [editorPath, mod, out] = process.argv.slice(2);
+// 自分のパソコンで「描いている様子」を見るとき:  HEADED=1 node live.mjs   （引数を省くと、同梱の editor.html と akari.mjs を使う）
+import { fileURLToPath, pathToFileURL } from "url";
+const here = (f) => fileURLToPath(new URL(f, import.meta.url));
+const [a1, a2, a3] = process.argv.slice(2);
+const editorPath = a1 ?? here("../editor.html"), mod = a2 ?? here("./akari.mjs"), out = a3 ?? here("./live-out");
+const HEADED = process.env.HEADED === "1";
 fs.mkdirSync(out, { recursive: true });
 const { PIECES } = await import(mod);
 const piece = PIECES[0], g = piece.build(), N = g.length;
 fs.writeFileSync(`${out}/grid.json`, JSON.stringify(g));
-const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
+const launchOpts = HEADED
+  ? { headless: false, slowMo: Number(process.env.SLOWMO || 0), ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : { channel: "chrome" }) }
+  : { executablePath: process.env.CHROME_PATH || "/opt/pw-browsers/chromium" };
+const browser = await chromium.launch(launchOpts);
 const ctx = await browser.newContext({ viewport: { width: 1500, height: 1150 } });
+const PACE = Number(process.env.PACE || 0); // 1筆ごとの待ち時間(ms)。見やすくしたいときは 5〜20
 const p = await ctx.newPage();
 await p.route(/fonts\./, (r) => r.abort());
-await p.goto("file://" + editorPath);
+await p.goto(pathToFileURL(editorPath).href);
 await p.selectOption("#templateSelect", "blank");
 await p.click("#loadTemplateBtn");
 await p.fill("#gridW", String(N));
@@ -54,7 +63,8 @@ for (const k of order) {
         await p.mouse.up();
         c = e + 1;
         strokes++;
-        if (strokes % 1200 === 0) await snap(`${strokes}筆目（色${piece.pal[k][0]}）`);
+        if (PACE) await p.waitForTimeout(PACE);
+        if (strokes % (HEADED ? 100000 : 1200) === 0) await snap(`${strokes}筆目（色${piece.pal[k][0]}）`);
       } else c++;
     }
   }
