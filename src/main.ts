@@ -20,6 +20,7 @@ import type { Direction } from "./input/direction";
 import { CHAPTER0_OPENING_COMMANDS, CHAPTER0_START } from "./game/world/chapter0-world";
 import { CHAPTER1_OPENING_COMMANDS } from "./game/world/chapter1-world";
 import { CHAPTER2_OPENING_COMMANDS } from "./game/world/chapter2-world";
+import { CHAPTER3_OPENING_COMMANDS } from "./game/world/chapter3-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
 import { renderBattle } from "./render/battle-renderer";
@@ -35,7 +36,8 @@ import {
 import { CHAPTER0_ITEM, CHAPTER0_SKILL, createChapter0Party, createYugamiBoss } from "./game/battle/chapter0-enemies";
 import { createMugikanoYugami } from "./game/battle/chapter1-enemies";
 import { createGarasukoYugami } from "./game/battle/chapter2-enemies";
-import { COMPANIONS, createCompanionCombatant, GUIDE, MINA, RETO } from "./game/battle/companions";
+import { createTetsukusariYugami } from "./game/battle/chapter3-enemies";
+import { COMPANIONS, createCompanionCombatant, GUIDE, MINA, ORCA, RETO } from "./game/battle/companions";
 import type { Combatant, Skill } from "./game/battle/types";
 import type { LeveledStats } from "./game/growth/types";
 import { TOURI_TOWN_SPAWN } from "./game/map/chapter0/touri-town";
@@ -112,6 +114,9 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   if (mapId === "garasuko-town" && !flags["chapter2_intro_seen"]) {
     dialogue.start(CHAPTER2_OPENING_COMMANDS);
   }
+  if (mapId === "tetsukusari-town" && !flags["chapter3_intro_seen"]) {
+    dialogue.start(CHAPTER3_OPENING_COMMANDS);
+  }
 }
 
 /**
@@ -177,6 +182,12 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
   "garasuko-yugami": {
     createEnemy: createGarasukoYugami,
     victoryFlag: "chapter2_yugami_defeated",
+    bgm: CHAPTER2_BOSS_THEME,
+  },
+  "tetsukusari-yugami": {
+    createEnemy: createTetsukusariYugami,
+    victoryFlag: "chapter3_yugami_defeated",
+    // 4-14で専用曲ができるまで、第2章のボス曲を仮に流用する。
     bgm: CHAPTER2_BOSS_THEME,
   },
 };
@@ -245,6 +256,7 @@ const COMPANION_JOIN_FLAGS: { flag: string; companionId: string }[] = [
   { flag: "chapter0_reto_joined", companionId: RETO.id },
   { flag: "chapter1_mina_joined", companionId: MINA.id },
   { flag: "chapter2_guide_joined", companionId: GUIDE.id },
+  { flag: "chapter3_orca_joined", companionId: ORCA.id },
 ];
 
 function syncCompanionsFromFlags(): void {
