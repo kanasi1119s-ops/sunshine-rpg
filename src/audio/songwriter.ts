@@ -124,6 +124,9 @@ function planSections(bpm: number, beats: number, targetSec: number): Plan {
 const RHYTHM4 = [[2, 2], [1, 1, 2], [1, 1, 1, 1], [1.5, 0.5, 1, 1], [2, 1, 1], [1, 2, 1], [0.5, 0.5, 1, 2], [1, 1, 0.5, 0.5, 1], [3, 1], [1, 0.5, 0.5, 2], [0.5, 0.5, 0.5, 0.5, 2], [1.5, 1.5, 1]];
 const RHYTHM3 = [[3], [2, 1], [1, 2], [1, 1, 1], [1.5, 0.5, 1], [1, 0.5, 0.5, 1], [2, 0.5, 0.5]];
 const RHYTHM7 = [[2, 2, 3], [1.5, 1.5, 2, 2], [3, 2, 2], [1, 1, 1, 1, 3], [2, 1, 1, 3]];
+const RHYTHM35 = [[1.5, 1, 1], [1, 1, 1, 0.5], [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], [2, 1.5], [0.5, 0.5, 1, 1, 0.5]];
+const RHYTHM45 = [[1.5, 1.5, 1.5], [1, 1, 1, 1, 0.5], [2, 2, 0.5], [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], [1, 0.5, 1, 0.5, 1.5]];
+const RHYTHM5 = [[2, 3], [1.5, 1.5, 2], [1, 1, 1, 1, 1], [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], [2, 1, 2]];
 const RHYTHM_SPARSE4 = [[4], [3, 1], [2, 2], [1, 3], [2, 1, 1]];
 const RHYTHM_FAST4 = [[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5, 1, 1], [0.25, 0.25, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.25, 0.25]];
 
@@ -145,7 +148,7 @@ export function generateMelody(rng: Rng, key: Key, chords: string[], beats: numb
   }
   const mid = (opts.lo + opts.hi) / 2;
   let cur = pool.reduce((best, m, i) => (Math.abs(m - mid) < Math.abs(pool[best] - mid) ? i : best), 0);
-  const tables = beats === 7 ? [RHYTHM7] : beats === 3 ? [RHYTHM3] : opts.density === "sparse" ? [RHYTHM_SPARSE4] : opts.density === "fast" && beats === 4 ? [RHYTHM_FAST4] : [beats === 3 ? RHYTHM3 : RHYTHM4];
+  const tables = beats === 7 ? [RHYTHM7] : beats === 3.5 ? [RHYTHM35] : beats === 4.5 ? [RHYTHM45] : beats === 5 ? [RHYTHM5] : beats === 3 ? [RHYTHM3] : opts.density === "sparse" ? [RHYTHM_SPARSE4] : opts.density === "fast" && beats === 4 ? [RHYTHM_FAST4] : [beats === 3 ? RHYTHM3 : RHYTHM4];
   const rhythmFor = (): number[] => pick(rng, tables[0]);
   const out: string[] = [];
   const rhythms: number[][] = [];
@@ -200,7 +203,7 @@ export function generateMelody(rng: Rng, key: Key, chords: string[], beats: numb
     if (bar === chords.length - 1) {
       rhythm = [1, beats - 1];
     } else if (bar % 4 === 3) {
-      rhythm = beats === 3 ? [1, 2] : beats === 7 ? [1, 1, 5] : opts.density === "fast" ? rhythmFor() : [1, 1, 2];
+      rhythm = beats === 3 ? [1, 2] : beats !== 4 ? [1, 1, beats - 2] : opts.density === "fast" ? rhythmFor() : [1, 1, 2];
     } else if (bar % 4 >= 2 && rng() < 0.65 && rhythms[bar - 2]?.reduce((a, b) => a + b, 0) === beats) {
       rhythm = rhythms[bar - 2];
     } else {
@@ -902,6 +905,7 @@ function applyDrumRealism(kp: KindPlan, kind: Kind, bars: number, style: Style, 
 }
 
 /** 曲の頭に一撃を入れる曲調（クラシックの勢いのある出だしのように、聴き手をつかむ）。 */
+const METAL_STYLES: Style[] = ["metal", "hardcore", "deathmetal", "progmetal"];
 const OPENING_STYLES: Style[] = ["rock", "metal", "hardcore", "deathmetal", "progmetal", "epic", "electro", "jpop", "baroque", "classic"];
 const RUN_STYLES: Style[] = ["baroque", "classic", "epic"];
 /** 一撃の和音（ブラス・弦・低い根音）。曲の最初の小節だけ、全員で長く鳴らす。 */
@@ -997,5 +1001,6 @@ export function composeSong(spec: SongSpec): Score {
   score.drumKit = DRUM_KIT[spec.style] ?? 0;
   if (spec.style === "electro" || spec.style === "jpop") score.pump = true;
   if (OPENING_STYLES.includes(spec.style)) score.opening = true;
+  score.tone = METAL_STYLES.includes(spec.style) ? "metal" : "rock";
   return score;
 }
