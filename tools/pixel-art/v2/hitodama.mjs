@@ -9,7 +9,7 @@ export function build() {
   const pal = createPalette();
   const OUT = pal.rgb("縁", "#120810"), RIM = pal.rgb("縁明", "#4a1a26"), SHD = pal.rgb("影", "#1a0f1c");
   const SOOT = pal.ramp("煤", 305, 0.26, 4, 0.08, 0.28, 30);
-  const FIRE = pal.ramp("炎", 16, 0.9, 6, 0.2, 0.84, 30);
+  const FIRE = [...pal.ramp("炎", 12, 1.0, 4, 0.16, 0.6, 30), pal.rgb("炎黄", "#ffc83a"), pal.rgb("炎芯", "#fff0a0")];
   const EYE = pal.ramp("目", 188, 0.8, 3, 0.45, 0.86, 10);
   const g = makeGrid();
   const cx = 128;
@@ -23,7 +23,9 @@ export function build() {
       if (r > 1.2) parts.push({ cx: x, cy: y, rx: r, ry: r * 1.05, h: 1 });
     }
   };
-  spine([128, 200], [150, 165], [104, 130], [116, 84], 47, 40);      // 主たる炎（先が左へ曲がる）
+  spine([128, 200], [158, 168], [96, 128], [104, 80], 47, 40);
+  spine([112, 150], [96, 138], [90, 122], [80, 108], 9, 12, 0.9);   // 主炎の左の小さな舌
+  spine([150, 140], [166, 130], [166, 116], [158, 100], 8, 12, 0.9); // 主炎の右の小さな舌      // 主たる炎（先が左へ曲がる）
   spine([92, 196], [70, 176], [72, 150], [64, 124], 17, 18, 0.7);    // 左の小さな舌
   spine([166, 198], [188, 180], [184, 156], [194, 130], 19, 18, 0.7); // 右の舌
   spine([128, 214], [118, 222], [136, 226], [150, 214], 14, 10, 0.9);  // 足もとのゆらぎ
@@ -43,34 +45,36 @@ export function build() {
     // 上へ行くほど煤けて暗くなる（炎の先は黒ずむ）
     v -= smoothstep(150, 90, y) * 0.16;
     // 芯を下寄りに（炎の根もとが最も熱い）
-    v += smoothstep(120, 200, y) * 0.07;
+    v += smoothstep(120, 200, y) * 0.04 - 0.12 + (vnoise(x * 1.6, y * 0.45, 6) - 0.5) * 0.16; // 縦に流れる筋
     let k;
     const soot = vnoise(x + 31, y + 7, 11);
     if (v < 0.13) k = SOOT[v < 0.05 ? 0 : v < 0.09 ? 1 : 2];
-    else if (v < 0.3) k = soot > 0.62 && v < 0.24 ? SOOT[3] : FIRE[0];
+    else if (v < 0.32) k = soot > 0.62 && v < 0.24 ? SOOT[3] : FIRE[0];
     else if (v < 0.5) k = FIRE[1];
     else if (v < 0.66) k = FIRE[2];
     else if (v < 0.8) k = FIRE[3];
-    else if (v < 0.92) k = FIRE[4];
+    else if (v < 0.93) k = FIRE[4];
     else k = FIRE[5];
     // 大きな煤のよごれ（右下の外炎に重なる）
-    if (v < 0.58 && soot > 0.7 && x > cx - 10) k = v < 0.4 ? SOOT[1] : FIRE[0];
+    if (v < 0.62 && soot > 0.6 && x > cx - 30) k = v < 0.4 ? SOOT[1] : FIRE[0];
     put(g, y, x, k);
   }
 
   // ---- 顔: 煤の仮面と、小さな青白い目 ----
-  for (let y = 146; y <= 190; y++) for (let x = 78; x <= 180; x++) {
-    if (g[y][x] < 0) continue;
-    const nx = (x - 129) / 43, ny = (y - 168 + Math.abs(x - 129) * 0.16 * -1 + (x < 129 ? 0 : 0)) / 15;
-    const d = nx * nx + ny * ny;
+  // 目のくぼみ（斜めの暗い楕円。眉が怒って見える）
+  for (const [ex, ey, sg] of [[112, 168, 1], [146, 166, -1]]) for (let y = ey - 16; y <= ey + 16; y++) for (let x = ex - 20; x <= ex + 20; x++) {
+    if (g[y]?.[x] === undefined || g[y][x] < 0) continue;
+    const u = (x - ex) * Math.cos(0.5 * sg) + (y - ey) * Math.sin(0.5 * sg), w = -(x - ex) * Math.sin(0.5 * sg) + (y - ey) * Math.cos(0.5 * sg);
+    const d = (u / 16) ** 2 + (w / 10.5) ** 2;
     if (d < 1) g[y][x] = d < 0.6 ? SOOT[0] : d < 0.85 ? SOOT[1] : SOOT[2];
   }
   eye(g, 112, 168, 6, 8, EYE, SOOT[0], 0.16);
   eye(g, 146, 166, 6, 8, EYE, SOOT[0], -0.16);
-  // 怒った眉（暗い煤の斜め線）
-  for (let i = 0; i < 16; i++) { put(g, 150 - Math.round(i * 0.55), 104 + i, SOOT[0]); put(g, 151 - Math.round(i * 0.55), 104 + i, SOOT[1]); put(g, 145 + Math.round(i * 0.55) , 146 + i, SOOT[0]); put(g, 146 + Math.round(i * 0.55), 146 + i, SOOT[1]); }
-  // 小さな口（熱い裂け目）
-  for (let x = 118; x <= 140; x++) { const y = 186 + Math.round(Math.abs(x - 129) * 0.22); if (g[y][x] >= 0) { put(g, y, x, FIRE[5]); put(g, y - 1, x, SOOT[0]); } }
+  // ギザギザの熱い口
+  for (let x = 110; x <= 148; x++) {
+    const t = (x - 129) / 19, y = 187 + Math.round(6 * (1 - t * t)); if (Math.abs(t) > 1 || g[y][x] < 0) continue;
+    const tooth = (x % 5) === 0; put(g, y - 1, x, SOOT[0]); put(g, y, x, tooth ? SOOT[0] : FIRE[5]); put(g, y + 1, x, tooth ? FIRE[4] : FIRE[4]); put(g, y + 2, x, SOOT[1]);
+  }
 
   // ---- 舞い上がる火の粉（2〜3ドットのかたまり。孤立させない） ----
   for (const [sx, sy, s] of [[70, 100, 2], [152, 76, 2], [200, 104, 3]]) for (let r = 0; r < s; r++) for (let c = 0; c < s; c++) put(g, sy + r, sx + c, r + c === 0 ? FIRE[5] : FIRE[3]);

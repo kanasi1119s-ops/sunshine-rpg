@@ -4,10 +4,26 @@ import { createPalette, makeGrid, heightField, paintField, ellipsoid, limb, bezi
 
 const vnoise = (x, y, s) => { const fx = x / s, fy = y / s, ix = Math.floor(fx), iy = Math.floor(fy), tx = fx - ix, ty = fy - iy; const a = hash(ix, iy), b = hash(ix + 1, iy), c = hash(ix, iy + 1), d = hash(ix + 1, iy + 1); const sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty); return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy; };
 
+const inPoly = (poly, x, y) => { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c; } return c; };
+/** 多角形の板を、左上が明るい面として塗る（縁の左上は明るく、右下は暗く）。 */
+function slab(g, poly, ramp, { bias = 0, seam = null } = {}) {
+  const xs = poly.map((p) => p[0]), ys = poly.map((p) => p[1]); const x0 = Math.floor(Math.min(...xs)), x1 = Math.ceil(Math.max(...xs)), y0 = Math.floor(Math.min(...ys)), y1 = Math.ceil(Math.max(...ys));
+  const n = ramp.length;
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    if (!inPoly(poly, x + 0.5, y + 0.5)) continue;
+    const u = ((x - x0) / Math.max(1, x1 - x0)) * 0.55 + ((y - y0) / Math.max(1, y1 - y0)) * 0.75; // 0(左上)〜1.3(右下)
+    let l = 1 - u / 1.3; let v = l * (n - 1.2) + bias;
+    const ul = !inPoly(poly, x - 0.5, y - 0.5) || !inPoly(poly, x + 0.5, y - 1.5) && false; const tl = !inPoly(poly, x - 1 + 0.5, y + 0.5) || !inPoly(poly, x + 0.5, y - 1 + 0.5);
+    const br = !inPoly(poly, x + 1 + 0.5, y + 0.5) || !inPoly(poly, x + 0.5, y + 1 + 0.5);
+    if (br) v -= 1.2; else if (tl) v += 1.1;
+    if (seam && seam(x, y)) v -= 1;
+    put(g, y, x, ramp[clamp(Math.round(v), 0, n - 1)]);
+  }
+}
 export function build() {
   const pal = createPalette();
   const OUT = pal.rgb("縁", "#0a0810"), RIM = pal.rgb("縁明", "#2c2a44"), SHD = pal.rgb("影", "#110e1a");
-  const IRON = pal.ramp("鉄", 228, 0.2, 5, 0.1, 0.66);
+  const IRON = pal.ramp("鉄", 228, 0.22, 5, 0.09, 0.56);
   const RUST = pal.ramp("錆", 22, 0.5, 4, 0.14, 0.5);
   const CORE = pal.ramp("核", 168, 0.85, 4, 0.32, 0.82);
   const FLESH = pal.ramp("肉", 335, 0.36, 3, 0.16, 0.42);
@@ -68,25 +84,35 @@ export function build() {
   // ---- 頭（鉄仮面）と排気管 ----
   limb(g, bezier([112, 40], [96, 24], [84, 14], 14), 7, 4, RUST, { ambient: 0.25 });
   limb(g, bezier([146, 42], [160, 26], [172, 20], 14), 7, 4, RUST, { ambient: 0.25 });
-  const head = heightField([{ cx, cy: 48, rx: 32, ry: 27, h: 1 }, { cx, cy: 40, rx: 22, ry: 24, h: 0.9 }, { cx, cy: 66, rx: 20, ry: 11, h: 0.8 }], 5);
-  paintField(g, head, IRON, { ambient: 0.28, tex: (x, y) => (Math.abs(x - cx) < 1 ? -0.25 : 0) });
-  // 目の溝と、光る目（大きな左目・小さな右目）
-  for (let y = 44; y <= 58; y++) for (let x = 100; x <= 156; x++) { const a = (x - cx) / 28, b = (y - 51) / 7; if (a * a + b * b < 1) put(g, y, x, OUT); }
-  const glowEye = (ex, ey, rx, ry) => { for (let y = -ry; y <= ry; y++) for (let x = -rx; x <= rx; x++) { const d = (x / rx) ** 2 + (y / ry) ** 2; if (d <= 1) put(g, ey + y, ex + x, CORE[d < 0.25 ? 3 : d < 0.6 ? 2 : 1]); } };
-  glowEye(118, 51, 9, 5); glowEye(142, 52, 6, 4);
-  // 口の格子（歯の板）
-  for (let x = 114; x <= 142; x += 4) for (let y = 62; y <= 72; y++) put(g, y, x, y > 68 ? IRON[1] : OUT);
-  for (let x = 112; x <= 144; x++) put(g, 62, x, OUT);
-  // 頭の鋲・縁
-  for (const [x, y] of [[104, 36], [152, 36], [110, 60], [146, 60]]) { put(g, y, x, IRON[4]); put(g, y + 1, x, IRON[1]); put(g, y, x + 1, IRON[2]); }
+  const HEAD = [[110, 22], [146, 22], [162, 40], [158, 62], [148, 78], [128, 86], [108, 78], [98, 62], [94, 40]];
+  slab(g, HEAD, IRON, { bias: -0.1, seam: (x, y) => x === cx || x === cx - 1 && y < 44 });
+  // 額の板（重なり）と、右半分を暗くする
+  for (let y = 22; y <= 86; y++) for (let x = cx + 2; x <= 162; x++) if (inPoly(HEAD, x + 0.5, y + 0.5) && ((x * 7 + y * 3) % 11) < 5 && g[y][x] >= 0 && IRON.includes(g[y][x]) && IRON.indexOf(g[y][x]) > 0) g[y][x] = IRON[IRON.indexOf(g[y][x]) - 1];
+  slab(g, [[100, 34], [156, 34], [152, 42], [104, 42]], IRON, { bias: -0.3 });
+  // 目の溝（つり上がった斜めの目）と、光る目
+  const eyeSlot = (pts) => { for (let y = 40; y <= 64; y++) for (let x = 96; x <= 160; x++) if (inPoly(pts, x + 0.5, y + 0.5)) put(g, y, x, OUT); };
+  eyeSlot([[102, 50], [126, 54], [126, 62], [104, 58]]); eyeSlot([[130, 54], [154, 50], [152, 58], [130, 62]]);
+  const glowPoly = (pts) => { const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]); for (let y = Math.min(...ys); y <= Math.max(...ys); y++) for (let x = Math.min(...xs); x <= Math.max(...xs); x++) if (inPoly(pts, x + 0.5, y + 0.5)) { const d = (y - Math.min(...ys)) / (Math.max(...ys) - Math.min(...ys) + 1); put(g, y, x, CORE[d < 0.35 ? 3 : d < 0.7 ? 2 : 1]); } };
+  glowPoly([[106, 52], [124, 55], [124, 60], [107, 57]]); glowPoly([[132, 55], [150, 52], [149, 57], [132, 60]]);
+  // 鼻筋の割れ目と光
+  for (let y = 62; y < 76; y++) { put(g, y, cx - 1 + (y % 3 === 0 ? 1 : 0), OUT); }
+  // あご板（少し開いて、中から核の光がのぞく）
+  slab(g, [[108, 84], [148, 84], [140, 100], [128, 104], [116, 100]], IRON, { bias: -0.4 });
+  for (let y = 86; y <= 96; y++) for (let x = 112; x <= 144; x++) if (inPoly([[108, 84], [148, 84], [140, 100], [128, 104], [116, 100]], x + 0.5, y + 0.5) && (x - 112) % 6 < 2) put(g, y, x, OUT);
+  for (let x = 112; x <= 144; x += 6) { put(g, 86, x, CORE[1]); put(g, 87, x + 1, CORE[1]); }
+  // 頭の鋲・冠のとげ
+  for (const [x, y] of [[104, 30], [152, 30], [100, 66], [156, 66]]) { put(g, y, x, IRON[4]); put(g, y + 1, x, IRON[1]); put(g, y, x + 1, IRON[2]); }
+  for (const [sx, h] of [[116, 12], [128, 18], [140, 12]]) for (let i = 0; i < h; i++) { const w = Math.round((h - i) / 4); for (let t = -w; t <= w; t++) put(g, 22 - i, sx + t, IRON[t < 0 ? 3 : t === 0 ? 2 : 1]); }
 
   // ---- 肩（大きな鉄の塊）と首の配管 ----
-  const shoulderL = heightField([{ cx: 66, cy: 96, rx: 27, ry: 19, h: 1 }, { cx: 62, cy: 90, rx: 20, ry: 14, h: 0.9 }], 5);
-  const shoulderR = heightField([{ cx: 190, cy: 96, rx: 27, ry: 19, h: 1 }, { cx: 186, cy: 90, rx: 20, ry: 14, h: 0.9 }], 5);
-  paintField(g, shoulderL, IRON, { ambient: 0.26, tex: (x, y) => ((x + y) % 13 === 0 ? -0.18 : 0) });
-  paintField(g, shoulderR, IRON, { ambient: 0.26, tex: (x, y) => ((x + y) % 13 === 0 ? -0.18 : 0) });
+  const SL = [[34, 106], [46, 80], [72, 68], [98, 80], [100, 112], [78, 124], [46, 122]];
+  const SR = [[222, 106], [210, 80], [184, 68], [158, 80], [156, 112], [178, 124], [210, 122]];
+  slab(g, SL, IRON, { seam: (x, y) => (x + y * 2) % 17 === 0 });
+  slab(g, SR, IRON, { bias: -0.5, seam: (x, y) => (x - y * 2 + 400) % 17 === 0 });
+  slab(g, [[44, 84], [72, 74], [92, 84], [70, 92]], IRON, { bias: 0.4 });
+  slab(g, [[212, 84], [184, 74], [164, 84], [186, 92]], IRON, { bias: -0.2 });
   limb(g, bezier([104, 72], [128, 82], [152, 72], 16), 6, 6, RUST, { ambient: 0.22 });
-  for (const [x, y] of [[54, 86], [70, 100], [178, 86], [194, 100], [62, 108], [186, 108]]) { put(g, y, x, IRON[4]); put(g, y + 1, x, IRON[1]); put(g, y, x + 1, IRON[2]); put(g, y + 1, x + 1, IRON[0]); }
+  for (const [x, y] of [[52, 100], [80, 108], [204, 100], [176, 108], [66, 116], [190, 116]]) { put(g, y, x, IRON[4]); put(g, y + 1, x, IRON[1]); put(g, y, x + 1, IRON[2]); put(g, y + 1, x + 1, IRON[0]); }
 
   // ---- 鎖 ----
   const chain = (pts, size, ramp, skip0 = 0) => {
@@ -118,15 +144,19 @@ export function build() {
   chain(bezier([104, 66], [82, 78], [80, 104], 10), 3.6, CHAIN);
   chain(bezier([152, 66], [176, 78], [178, 104], 10), 3.6, CHAIN);
   // 腕の先の重り（左は鉄塊、右は鉤つきの錘）
-  const wL = heightField([{ cx: 36, cy: 212, rx: 20, ry: 17, h: 1 }, { cx: 32, cy: 206, rx: 13, ry: 11, h: 0.9 }], 5);
-  paintField(g, wL, IRON, { ambient: 0.26, tex: (x, y) => ((y - 200) % 9 === 0 ? -0.2 : 0) });
-  for (let a = 0; a < 6; a++) { const sx = 22 + a * 5; for (let t = 0; t < 5 - Math.abs(2 - a) * 1; t++) put(g, 226 + t, sx, IRON[t < 2 ? 3 : 1]); }
-  const wR = heightField([{ cx: 220, cy: 206, rx: 18, ry: 16, h: 1 }, { cx: 216, cy: 200, rx: 12, ry: 10, h: 0.9 }], 5);
-  paintField(g, wR, IRON, { ambient: 0.26, tex: (x, y) => ((y - 196) % 9 === 0 ? -0.2 : 0) });
-  limb(g, bezier([222, 218], [236, 232], [222, 244], 10), 5, 3, CHAIN, { ambient: 0.25 });
+  const star = (cx0, cy0, ro, ri, n, rot) => Array.from({ length: n * 2 }, (_, i) => { const r = i % 2 ? ri : ro, t = rot + (i * Math.PI) / n; return [cx0 + Math.cos(t) * r, cy0 + Math.sin(t) * r]; });
+  slab(g, star(36, 212, 23, 15, 7, 0.3), IRON, { bias: -0.2 });
+  ellipsoid(g, 34, 210, 12, 12, IRON, { ambient: 0.3 });
+  slab(g, star(220, 206, 21, 14, 6, 0.1), IRON, { bias: -0.4 });
+  ellipsoid(g, 218, 204, 11, 11, IRON, { ambient: 0.3 });
+  limb(g, bezier([222, 222], [238, 236], [222, 248], 10), 5, 3, CHAIN, { ambient: 0.25 });
   // 錘の中にも核と同じ光の割れ目
   for (const [wx, wy] of [[26, 204], [216, 196]]) for (let i = 0; i < 16; i++) { const x = wx + Math.round(i * 0.6 + (hash(i, wx) < 0.4 ? 1 : 0)), y = wy + i; if (g[y]?.[x] >= 0 && inIron(g[y][x])) { put(g, y, x, CORE[3]); put(g, y, x + 1, CORE[1]); } }
 
+  // 排気管の口（つば）
+  slab(g, [[76, 10], [94, 6], [96, 14], [80, 18]], IRON, { bias: -0.3 }); slab(g, [[164, 14], [182, 10], [180, 20], [164, 22]], IRON, { bias: -0.3 });
+  // 核の光が土台に落ちる
+  for (let y = 200; y < 236; y++) for (let x = 70; x < 190; x++) { const d = ((x - cx) / 46) ** 2 + ((y - 214) / 12) ** 2; const i = IRON.indexOf(g[y][x]); if (d < 1 && i >= 0 && y > 203 && ((x + y) % 2 === 0 || d < 0.12)) g[y][x] = CORE[d < 0.12 ? 1 : 0]; }
   // ---- 錆の染み（鉄の上に、まとまった塊で） ----
   for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const k = g[y][x]; const i = IRON.indexOf(k); if (i < 0) continue; const n = vnoise(x, y, 9) * 0.65 + vnoise(x, y, 4) * 0.35; if (n > 0.66 && y > 120) g[y][x] = RUST[Math.min(i, 3)]; }
   // ---- ひび割れ（核の光が漏れる） ----
