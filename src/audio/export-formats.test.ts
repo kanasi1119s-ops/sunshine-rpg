@@ -44,3 +44,13 @@ describe("いろいろな形式での書き出し", () => {
     expect(scoreToCsv(score).split("\n")[2]).toBe("1,piano,2,2.5,F#4,66,1");
   });
 });
+
+describe("FLAC（モノラル）", () => {
+  it("1チャンネルなら、モノラルのFLACになる", () => {
+    const f = encodeFlac([new Float32Array(5000).map((_, i) => Math.sin(i / 10) * 0.5)], 48000);
+    // STREAMINFO: サンプリング周波数(20)・チャンネル数-1(3)・ビット-1(5) が 18バイト目から
+    const b = f.slice(18, 21);
+    const channelsMinus1 = (b[2] >> 1) & 0x7;
+    expect(channelsMinus1).toBe(0);
+  });
+});

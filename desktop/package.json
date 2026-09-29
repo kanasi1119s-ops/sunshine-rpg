@@ -52,7 +52,10 @@
       "target": [
         "dmg"
       ],
-      "category": "public.app-category.music"
+      "category": "public.app-category.music",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "楽器（オーディオインターフェース）やマイクの音を録音するために使います。"
+      }
     },
     "linux": {
       "target": [

@@ -28,6 +28,8 @@ import { realEdition } from "../../src/audio/real-edition";
 import { getScoreDurationSec, REST, type AmpSetting, type Instrument, type Score, type Track } from "../../src/audio/score";
 import { composeSong, type Style } from "../../src/audio/songwriter";
 import { encodeWav, type WavBits } from "../../src/audio/wav";
+import { bytesToBase64, type AudioTrack } from "../../src/audio/audio-clips";
+import { ClipPlayer, listInputs, openInput, startRecording, type InputMode, type LiveInput, type Recording } from "./audio-rec";
 import { normalizePeak, renderScoreOffline } from "../../src/audio/offline-render";
 
 // 1ファイルのHTMLでは外部ファイルを読み込めないので、埋め込んだ素材（データURL）を録音音源の再生に渡す
@@ -157,8 +159,11 @@ function effectiveScore(): Score {
   if (used.size) base.namModels = { ...(base.namModels ?? {}), ...Object.fromEntries([...used].map((k) => [k, BUILTIN_NAM[k].json])) };
   return state.edition === "ps2" ? ps2Edition(base) : state.edition === "real" ? realEdition(base) : base;
 }
+const clipPlayer = new ClipPlayer(() => engine.audioContext(), () => engine.clipDestination(), () => engine.getBgmPositionSec(), () => namHost);
 function play(offset = 0): void {
-  engine.playBgm(effectiveScore(), offset);
+  const score = effectiveScore();
+  engine.playBgm(score, offset);
+  clipPlayer.start(score);
   state.playing = true;
   state.paused = false;
   setPauseLook(false);
@@ -786,11 +791,19 @@ clearBtn.onclick = () => {
 };
 
 // ── 保存（このブラウザに自動保存） ──
+let warnedBig = false;
 function save(): void {
   try {
     window.localStorage.setItem("sunshine-composer", JSON.stringify({ name: state.name, edition: state.edition, score: state.score }));
   } catch {
-    // 保存できなくても、操作は続けられる
+    // 録音した音は大きいので、ブラウザの自動保存に入りきらないことがある。そのときは録音をのぞいて保存する
+    try {
+      window.localStorage.setItem("sunshine-composer", JSON.stringify({ name: state.name, edition: state.edition, score: { ...state.score, audioTracks: undefined } }));
+      if (!warnedBig) ui.status.textContent = "録音した音は大きいため、自動保存には入りません。「プロジェクトを保存」で残してください。";
+      warnedBig = true;
+    } catch {
+      // 保存できなくても、操作は続けられる
+    }
   }
 }
 function restore(): void {
@@ -1310,9 +1323,214 @@ if (desktop) {
 }
 else aiBox.append(h("div", { class: "muted" }, "AI作曲（Anthropic APIキーを使う）は、デスクトップ版で使えます。Claude Code から作るときは、コネクタ（tools/mcp/server.mjs）か /compose-song を使ってください。"));
 
+// ── 実際の楽器を録る（オーディオインターフェース） ──
+const recDevSel = h("select", { style: "max-width:260px" }, h("option", { value: "" }, "（「使う」を押してください）"));
+const recUseBtn = h("button", { type: "button" }, "オーディオインターフェースを使う");
+const recModeSel = select([["in1", "入力1（左）だけ・モノラル"], ["in2", "入力2（右）だけ・モノラル"], ["stereo", "ステレオ（入力1・2）"]], "in1");
+const recTargetSel = h("select", {});
+const recMonitor = h("input", { type: "checkbox" });
+const recLatency = h("input", { type: "number", min: "-500", max: "1000", value: "", placeholder: "自動", style: "width:80px" });
+const recBtn = h("button", { class: "primary", type: "button", disabled: "" }, "● 録音");
+const recStopBtn = h("button", { type: "button", disabled: "" }, "■ 録音を止める");
+const recInfo = h("div", { class: "muted", style: "margin-top:6px;white-space:pre-wrap" }, "ギター・ベースはライン（楽器の端子）で入力1へ、声やアコースティック楽器はマイクで。録音は、ピアノロールで最後にクリックした位置から始まります。");
+const audioBox = h("div", { class: "tracks", style: "margin-top:8px;max-height:280px" });
+let liveInput: LiveInput | null = null;
+let recording: { rec: Recording; startCtx: number; songStartAt: number | null; startBeat: number; target: number } | null = null;
+
+function audioTracks(): AudioTrack[] {
+  state.score.audioTracks ??= [];
+  return state.score.audioTracks;
+}
+function renderRecTargets(): void {
+  const keep = recTargetSel.value;
+  recTargetSel.replaceChildren(h("option", { value: "new" }, "新しい録音トラック"), ...audioTracks().map((t, i) => h("option", { value: String(i) }, `${i + 1}. ${t.name}`)));
+  recTargetSel.value = [...recTargetSel.options].some((o) => o.value === keep) ? keep : "new";
+}
+const AUDIO_AMPS = (): [string, string][] => [
+  ["auto", "アンプなし（そのまま）"], ["clean", "クリーン"], ["overdrive", "オーバードライブ"], ["distortion", "ディストーション"], ["metal", "メタルゾーン"], ["prs", "なめらかなリード"],
+  ...AMP_PRESET_NAMES.map((k) => [`genre:${k}`, `ジャンル: ${AMP_PRESETS[k].label}`] as [string, string]),
+  ...[...ampLibrary.values()].map((d) => [`plugin:${d.id}`, `追加: ${d.label}`] as [string, string]),
+  ...Object.keys(BUILTIN_NAM).map((k) => [`nam:${k}`, `NAM: ${BUILTIN_NAM[k].label}`] as [string, string]),
+];
+function ampToKey(a?: AmpSetting): string {
+  if (!a || a.type === "auto") return "auto";
+  if (a.type === "genre") return `genre:${a.preset ?? "rock"}`;
+  if (a.type === "plugin") return `plugin:${a.plugin}`;
+  if (a.type === "nam") return `nam:${a.model}`;
+  return a.type;
+}
+function keyToAmp(k: string): AmpSetting | undefined {
+  if (k === "auto") return undefined;
+  const [type, rest] = k.split(":");
+  if (type === "genre") return { type: "genre", preset: rest as AmpPresetName };
+  if (type === "plugin") {
+    const def = ampLibrary.get(rest);
+    if (def) state.score.ampPlugins = { ...(state.score.ampPlugins ?? {}), [def.id]: def };
+    return { type: "plugin", plugin: rest };
+  }
+  if (type === "nam") return { type: "nam", model: rest };
+  return { type: type as AmpSetting["type"] };
+}
+function renderAudioTracks(): void {
+  audioBox.replaceChildren();
+  audioTracks().forEach((t, i) => {
+    const name = h("input", { type: "text", value: t.name, style: "width:120px" });
+    name.onchange = () => {
+      t.name = name.value || `録音 ${i + 1}`;
+      renderRecTargets();
+      save();
+    };
+    const vol = h("input", { type: "range", min: "0", max: "150", value: String(Math.round(t.volume * 100)), title: "音量" });
+    vol.oninput = () => {
+      t.volume = Number(vol.value) / 100;
+      restartSoon();
+      save();
+    };
+    const pan = h("input", { type: "range", min: "-100", max: "100", value: String(Math.round(t.pan * 100)), title: "左右の位置" });
+    pan.oninput = () => {
+      t.pan = Number(pan.value) / 100;
+      restartSoon();
+      save();
+    };
+    const amp = select(AUDIO_AMPS(), ampToKey(t.amp));
+    amp.onchange = () => {
+      t.amp = keyToAmp(amp.value);
+      if (liveInput && recMonitor.checked && recTargetSel.value === String(i)) liveInput.setMonitor(true, t.amp, effectiveScore());
+      restartSoon();
+      save();
+    };
+    const mute = h("button", { type: "button", class: t.muted ? "on" : "", title: "ミュート" }, "M");
+    mute.onclick = () => {
+      t.muted = !t.muted;
+      renderAudioTracks();
+      restartSoon();
+      save();
+    };
+    const undo = h("button", { type: "button", title: "最後の録音を消す" }, "↶");
+    undo.onclick = () => {
+      t.clips.pop();
+      renderAudioTracks();
+      restartSoon();
+      save();
+    };
+    const del = h("button", { type: "button", title: "この録音トラックを消す" }, "✕");
+    del.onclick = () => {
+      if (!window.confirm(`録音トラック「${t.name}」を消しますか？（元に戻せません）`)) return;
+      audioTracks().splice(i, 1);
+      renderAudioTracks();
+      renderRecTargets();
+      restartSoon();
+      save();
+    };
+    const secs = t.clips.reduce((sum, c) => sum + c.seconds, 0);
+    audioBox.append(h("div", { class: "trk", title: `${t.clips.length}回の録音・合計${secs.toFixed(1)}秒` }, h("div", { class: "nm" }, name, h("span", { class: "muted" }, ` ${t.clips.length}回・${secs.toFixed(1)}秒`)), amp, h("div", { class: "bt" }, mute, undo, del), vol, pan));
+  });
+  if (audioTracks().length === 0) audioBox.append(h("div", { class: "muted" }, "録音トラックはまだありません。"));
+}
+recUseBtn.onclick = () => {
+  void listInputs().then((list) => {
+    recDevSel.replaceChildren(...list.map((d) => h("option", { value: d.id }, d.label)));
+    recBtn.disabled = list.length === 0;
+    recInfo.textContent = list.length ? `${list.length}個の入力が見つかりました。入力を選んで「● 録音」を押してください。ヘッドホンで聞いてください（スピーカーだと、音がマイクに回りこみます）。` : "入力が見つかりません。オーディオインターフェースをつないでから、もう一度押してください。";
+  }).catch((e: unknown) => (recInfo.textContent = `使えませんでした: ${(e as Error).message}`));
+};
+async function ensureInput(): Promise<LiveInput> {
+  const ctx = engine.audioContext();
+  const key = `${recDevSel.value}|${recModeSel.value}`;
+  if (liveInput && (liveInput as LiveInput & { key?: string }).key === key) return liveInput;
+  liveInput?.close();
+  liveInput = await openInput(ctx, recDevSel.value, recModeSel.value as InputMode, engine.clipDestination(), namHost);
+  (liveInput as LiveInput & { key?: string }).key = key;
+  return liveInput;
+}
+const targetAmp = (): AmpSetting | undefined => (recTargetSel.value === "new" ? undefined : audioTracks()[Number(recTargetSel.value)]?.amp);
+recMonitor.onchange = () => {
+  void ensureInput().then((inp) => inp.setMonitor(recMonitor.checked, targetAmp(), effectiveScore())).catch((e: unknown) => (recInfo.textContent = (e as Error).message));
+};
+recDevSel.onchange = recModeSel.onchange = () => {
+  liveInput?.close();
+  liveInput = null;
+  if (recMonitor.checked) recMonitor.onchange?.(new Event("change"));
+};
+recTargetSel.onchange = () => {
+  if (recMonitor.checked && liveInput) liveInput.setMonitor(true, targetAmp(), effectiveScore());
+};
+recBtn.onclick = () => {
+  void (async () => {
+    const ctx = engine.audioContext();
+    const input = await ensureInput();
+    if (recMonitor.checked) input.setMonitor(true, targetAmp(), effectiveScore());
+    let target = recTargetSel.value === "new" ? -1 : Number(recTargetSel.value);
+    if (target < 0) {
+      audioTracks().push({ name: `録音 ${audioTracks().length + 1}`, volume: 1, pan: 0, clips: [] });
+      target = audioTracks().length - 1;
+      renderRecTargets();
+      recTargetSel.value = String(target);
+    }
+    const rec = await startRecording(ctx, input);
+    const startBeat = state.cursor;
+    recording = { rec, startCtx: ctx.currentTime, songStartAt: null, startBeat, target };
+    play((startBeat * 60) / state.score.tempoBpm);
+    recBtn.disabled = true;
+    recStopBtn.disabled = false;
+    recInfo.textContent = "● 録音中… 弾き終わったら「■ 録音を止める」。";
+  })().catch((e: unknown) => (recInfo.textContent = `録音を始められませんでした: ${(e as Error).message}`));
+};
+recStopBtn.onclick = () => {
+  const r = recording;
+  if (!r) return;
+  recording = null;
+  recStopBtn.disabled = true;
+  void (async () => {
+    const { channels, sampleRate } = await r.rec.stop();
+    engine.stopBgm();
+    state.playing = false;
+    const ctx = engine.audioContext();
+    // 録音の頭が、曲のどこにあたるか: （録音を始めた時刻 − 曲の頭の時刻 − 入出力の遅れ）
+    const auto = (ctx.baseLatency ?? 0) + ((ctx as AudioContext & { outputLatency?: number }).outputLatency ?? 0);
+    const latency = recLatency.value === "" ? auto : Number(recLatency.value) / 1000;
+    const songStartAt = r.songStartAt ?? r.startCtx;
+    let startSec = r.startCtx - songStartAt - latency;
+    let skip = 0;
+    if (startSec < 0) {
+      skip = Math.round(-startSec * sampleRate);
+      startSec = 0;
+    }
+    const songSec = getScoreDurationSec(state.score);
+    const keepFrames = Math.max(0, Math.min(channels[0].length - skip, Math.round((songSec - startSec) * sampleRate)));
+    if (keepFrames < sampleRate * 0.05) {
+      recInfo.textContent = `録音が短すぎるので、捨てました（録れた長さ ${(channels[0].length / sampleRate).toFixed(2)}秒）。`;
+      recBtn.disabled = false;
+      return;
+    }
+    const trimmed = channels.map((c) => c.subarray(skip, skip + keepFrames));
+    const flac = encodeFlac(trimmed, sampleRate);
+    const track = audioTracks()[r.target];
+    track.clips.push({ id: `c${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, startBeat: (startSec * state.score.tempoBpm) / 60, flac: bytesToBase64(flac), seconds: keepFrames / sampleRate });
+    renderAudioTracks();
+    save();
+    recInfo.textContent = `録音しました（${(keepFrames / sampleRate).toFixed(1)}秒・${channels.length === 2 ? "ステレオ" : "モノラル"}・ずれの補正 ${Math.round(latency * 1000)}ミリ秒）。▶ で聴けます。ずれて聞こえるときは「ずれの補正」を変えて録り直してください。`;
+    recBtn.disabled = false;
+  })().catch((e: unknown) => {
+    recInfo.textContent = `録音を止められませんでした: ${(e as Error).message}`;
+    recBtn.disabled = false;
+  });
+};
+// 曲の頭の時刻（録音のずれの計算用）を、再生が始まった瞬間に記録する
+function watchRecordingStart(): void {
+  if (recording && recording.songStartAt === null && state.playing) {
+    const pos = engine.getBgmPositionSec();
+    if (pos > 0.02) recording.songStartAt = engine.audioContext().currentTime - pos;
+  }
+  requestAnimationFrame(watchRecordingStart);
+}
+watchRecordingStart();
+
 // ── 画面を組み立てる ──
 function renderAll(): void {
   renderTracks();
+  renderAudioTracks();
+  renderRecTargets();
   renderAmp();
   drawRoll();
   ui.status.textContent = `${state.name}｜${state.score.tracks.length}トラック｜${mmss(getScoreDurationSec(state.score))}｜テンポ ${state.score.tempoBpm}`;
@@ -1369,6 +1587,12 @@ app.append(
       h("div", { class: "row", style: "margin-top:8px" }, blankBtn, applySigBtn),
       h("div", { class: "row", style: "margin-top:10px" }, openFileBtn),
       h("div", { class: "muted", style: "margin-top:6px" }, "拍子は自由に選べます（例: 4/4・3/4・6/8・7/8・5/4・13/16）。ゲームの曲は、開いて手直ししても、ゲームの元の曲は変わりません（保存・書き出し・ゲームへの登録で使えます）。")),
+    panel("REC", "実際の楽器を録る（オーディオインターフェース）",
+      h("div", { class: "row" }, recUseBtn, field("入力", recDevSel), field("入力のチャンネル", recModeSel)),
+      h("div", { class: "row", style: "margin-top:8px" }, field("録音先", recTargetSel), h("label", { class: "row muted" }, recMonitor, "モニター（アンプを通した音を聞きながら録る）"), field("ずれの補正（ミリ秒）", recLatency)),
+      h("div", { class: "row", style: "margin-top:8px" }, recBtn, recStopBtn),
+      recInfo,
+      audioBox),
     panel("KEY", "MIDIキーボード",
       h("div", { class: "row" }, midiConnectBtn, field("キーボード", midiDevSel), field("入力のしかた", midiModeSel)),
       midiInfo,
@@ -1400,6 +1624,7 @@ const playhead = h("div", { class: "playhead", style: "display:none" });
 ui.rollBox.style.position = "relative";
 ui.rollBox.append(playhead);
 function tick(): void {
+  clipPlayer.tick(state.playing && !state.paused);
   const total = getScoreDurationSec(state.score);
   ui.seek.setAttribute("max", String(total));
   if (state.playing && !state.paused && !dragging) {

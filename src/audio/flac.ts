@@ -1,5 +1,5 @@
 /**
- * FLAC（音質が落ちない圧縮）の書き出し。16ビット・ステレオ。
+ * FLAC（音質が落ちない圧縮）の書き出し。16ビット・モノラルかステレオ（channels の数で決まる）。
  * 各ブロックで、固定の予測（0〜4次）のうちいちばん小さくなるものを選び、残りをライス符号で詰める。
  */
 class BitWriter {
@@ -139,6 +139,7 @@ function utf8Number(n: number): number[] {
 }
 
 export function encodeFlac(channels: Float32Array[], sampleRate: number): Uint8Array {
+  const nch = channels.length >= 2 ? 2 : 1;
   const left = channels[0];
   const right = channels[1] ?? channels[0];
   const frames = left.length;
@@ -154,7 +155,7 @@ export function encodeFlac(channels: Float32Array[], sampleRate: number): Uint8A
   w.write(0, 24);
   w.write(0, 24);
   w.write(sampleRate, 20);
-  w.write(1, 3); // 2チャンネル
+  w.write(nch - 1, 3); // チャンネルの数 - 1
   w.write(15, 5); // 16ビット
   w.write(Math.floor(frames / 2 ** 32), 4);
   w.write(frames >>> 0, 32);
@@ -173,14 +174,14 @@ export function encodeFlac(channels: Float32Array[], sampleRate: number): Uint8A
     w.write(0, 1); // 固定のブロックの大きさ
     w.write(n === BLOCK ? 12 : 7, 4); // 4096 か、最後に16ビットで書く
     w.write(0, 4); // サンプリング周波数は STREAMINFO のとおり
-    w.write(1, 4); // 左右が別々
+    w.write(nch - 1, 4); // モノラル、または左右が別々
     w.write(4, 3); // 16ビット
     w.write(0, 1);
     for (const b of utf8Number(index)) w.write(b, 8);
     if (n !== BLOCK) w.write(n - 1, 16);
     w.write(crc8(w.bytes(start)), 8);
     writeSubframe(w, L.subarray(0, n), 16);
-    writeSubframe(w, R.subarray(0, n), 16);
+    if (nch === 2) writeSubframe(w, R.subarray(0, n), 16);
     w.align();
     w.write(crc16(w.bytes(start)), 16);
   }

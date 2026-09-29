@@ -138,9 +138,16 @@ ipcMain.handle("ai:compose", async (e, req) => {
 });
 
 app.whenReady().then(() => {
-  // MIDIキーボード（MIDI機器からの入力）だけは使ってよい。そのほかの許可（カメラ・マイク・位置など）は出さない
-  session.defaultSession.setPermissionRequestHandler((_wc, permission, cb) => cb(permission === "midi"));
-  session.defaultSession.setPermissionCheckHandler((_wc, permission) => permission === "midi");
+  // 使ってよいのは、MIDIキーボードと、音の入力（オーディオインターフェース・マイク）だけ。カメラ・位置などは出さない
+  session.defaultSession.setPermissionRequestHandler((_wc, permission, cb, details) => {
+    if (permission === "midi") return cb(true);
+    if (permission === "media") {
+      const types = (details && details.mediaTypes) || [];
+      return cb(types.length > 0 && types.every((t) => t === "audio"));
+    }
+    cb(false);
+  });
+  session.defaultSession.setPermissionCheckHandler((_wc, permission, _origin, details) => permission === "midi" || (permission === "media" && (!details || !details.mediaType || details.mediaType === "audio")));
   buildMenu();
   createWindow();
   app.on("activate", () => {

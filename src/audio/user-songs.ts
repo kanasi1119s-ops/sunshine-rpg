@@ -28,6 +28,8 @@ export function songFileToEntry(data: unknown, taken: Set<string>): CatalogEntry
   }
   const score: Score = { ...f.score };
   delete score.namModels;
+  // 録音トラック（実際の楽器の音）は大きいので、ゲームには入れない
+  delete score.audioTracks;
   score.tracks = score.tracks.map((t) => {
     if (t.amp?.type === "nam") {
       const amp = { ...t.amp, type: "auto" as const };
