@@ -70,24 +70,21 @@ import { SAVE_VERSION, type SaveData } from "./game/save/types";
 import { loadFromSlot, saveToSlot } from "./game/save/storage";
 import { downloadSaveFile, readSaveFile } from "./io/save-file";
 import { AudioEngine } from "./audio/audio-engine";
-import { CHAPTER0_BATTLE_THEME, CHAPTER0_BOSS_THEME, CHAPTER0_OUTSKIRTS_THEME, CHAPTER0_TOWN_THEME } from "./audio/chapter0-tracks";
-import { CHAPTER1_BOSS_THEME, CHAPTER1_VILLAGE_THEME, CHAPTER1_WATER_SOURCE_THEME } from "./audio/chapter1-tracks";
-import { CHAPTER3_BOSS_THEME, CHAPTER3_MINE_THEME, CHAPTER3_TOWN_THEME } from "./audio/chapter3-tracks";
-import { CHAPTER6_BOSS_THEME, CHAPTER6_FACILITY_THEME, CHAPTER6_TOWN_THEME } from "./audio/chapter6-tracks";
-import { CHAPTER5_ARCHIVE_THEME, CHAPTER5_BOSS_THEME, CHAPTER5_TOWN_THEME } from "./audio/chapter5-tracks";
-import { CHAPTER4_BOSS_THEME, CHAPTER4_CAMP_THEME, CHAPTER4_TOWN_THEME } from "./audio/chapter4-tracks";
-import { CHAPTER2_BOSS_THEME, CHAPTER2_TOWN_THEME, CHAPTER2_WAREHOUSE_THEME } from "./audio/chapter2-tracks";
-import {
-  CHAPTER0_CONFIRM_SE,
-  CHAPTER0_CURSOR_SE,
-  CHAPTER0_DEFEAT_SE,
-  CHAPTER0_DOOR_SE,
-  CHAPTER0_VICTORY_SE,
-} from "./audio/chapter0-se";
+import { getTrack } from "./audio/catalog";
+import { SE_LIBRARY } from "./audio/se-library";
 import type { Score } from "./audio/score";
 import { createDebugMenuState, moveMenuCursor, toggleMenu } from "./game/debug/debug-menu";
 import { renderDebugMenu, type DebugMenuRow } from "./render/debug-menu-renderer";
 import { expRequiredForLevel } from "./game/growth/exp-curve";
+
+/** 効果音ライブラリ（`src/audio/se-library.ts`）から、IDで効果音を取り出す。 */
+function seOf(id: string): Score {
+  const entry = SE_LIBRARY.find((e) => e.id === id);
+  if (!entry) {
+    throw new Error(`効果音がありません: ${id}`);
+  }
+  return entry.score;
+}
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) {
@@ -122,7 +119,7 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   player = { ...player, x: tileX * map.data.tileWidth, y: tileY * map.data.tileHeight };
   playMapBgm(mapId);
   if (audioStarted) {
-    audio.playSe(CHAPTER0_DOOR_SE);
+    audio.playSe(seOf("door"));
   }
   if (mapId === "mugikano-village" && !flags["chapter1_intro_seen"]) {
     dialogue.start(CHAPTER1_OPENING_COMMANDS);
@@ -147,47 +144,25 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
 /**
  * マップごとのBGM（`docs/sound/tracks.md`）。同じ曲がすでに鳴っていれば鳴らし直さない。
  */
+const MAP_BGM_ID: Record<string, string> = {
+  "touri-town": "town-touri",
+  "touri-branch": "town-touri",
+  "touri-outskirts": "outskirts",
+  "mugikano-village": "town-mugikano",
+  "mugikano-water-source": "water-source",
+  "garasuko-town": "town-garasuko",
+  "garasuko-warehouse": "warehouse",
+  "tetsukusari-town": "town-tetsu",
+  "tetsukusari-mine": "mine",
+  "sanone-town": "town-sanone",
+  "sanone-camp": "camp",
+  "kiri-town": "town-kiri",
+  "kiri-archive": "archive",
+  "shimohara-town": "town-shimo",
+  "shimohara-facility": "facility",
+};
 function mapBgmFor(mapId: string): Score {
-  if (mapId === "touri-outskirts") {
-    return CHAPTER0_OUTSKIRTS_THEME;
-  }
-  if (mapId === "mugikano-water-source") {
-    return CHAPTER1_WATER_SOURCE_THEME;
-  }
-  if (mapId === "mugikano-village") {
-    return CHAPTER1_VILLAGE_THEME;
-  }
-  if (mapId === "garasuko-town") {
-    return CHAPTER2_TOWN_THEME;
-  }
-  if (mapId === "garasuko-warehouse") {
-    return CHAPTER2_WAREHOUSE_THEME;
-  }
-  if (mapId === "tetsukusari-town") {
-    return CHAPTER3_TOWN_THEME;
-  }
-  if (mapId === "tetsukusari-mine") {
-    return CHAPTER3_MINE_THEME;
-  }
-  if (mapId === "sanone-town") {
-    return CHAPTER4_TOWN_THEME;
-  }
-  if (mapId === "sanone-camp") {
-    return CHAPTER4_CAMP_THEME;
-  }
-  if (mapId === "kiri-town") {
-    return CHAPTER5_TOWN_THEME;
-  }
-  if (mapId === "kiri-archive") {
-    return CHAPTER5_ARCHIVE_THEME;
-  }
-  if (mapId === "shimohara-town") {
-    return CHAPTER6_TOWN_THEME;
-  }
-  if (mapId === "shimohara-facility") {
-    return CHAPTER6_FACILITY_THEME;
-  }
-  return CHAPTER0_TOWN_THEME;
+  return getTrack(MAP_BGM_ID[mapId] ?? "town-touri");
 }
 
 let currentBgmTrack: Score | null = null;
@@ -214,44 +189,44 @@ const dialogue = new DialogueController(flags, {
 interface StoryBattleDef {
   createEnemy: () => Combatant;
   victoryFlag: string;
-  bgm: Score;
+  bgmId: string;
 }
 
 const STORY_BATTLES: Record<string, StoryBattleDef> = {
   "chapter0-yugami": {
     createEnemy: createYugamiBoss,
     victoryFlag: "chapter0_yugami_defeated",
-    bgm: CHAPTER0_BOSS_THEME,
+    bgmId: "boss-touri",
   },
   "mugikano-yugami": {
     createEnemy: createMugikanoYugami,
     victoryFlag: "chapter1_yugami_defeated",
-    bgm: CHAPTER1_BOSS_THEME,
+    bgmId: "boss-mugikano",
   },
   "garasuko-yugami": {
     createEnemy: createGarasukoYugami,
     victoryFlag: "chapter2_yugami_defeated",
-    bgm: CHAPTER2_BOSS_THEME,
+    bgmId: "boss-garasuko",
   },
   "tetsukusari-yugami": {
     createEnemy: createTetsukusariYugami,
     victoryFlag: "chapter3_yugami_defeated",
-    bgm: CHAPTER3_BOSS_THEME,
+    bgmId: "boss-tetsu",
   },
   "sanone-yugami": {
     createEnemy: createSanoneSunaarashiYugami,
     victoryFlag: "chapter4_yugami_defeated",
-    bgm: CHAPTER4_BOSS_THEME,
+    bgmId: "boss-sanone",
   },
   "kiri-yugami": {
     createEnemy: createKiriYogenYugami,
     victoryFlag: "chapter5_yugami_defeated",
-    bgm: CHAPTER5_BOSS_THEME,
+    bgmId: "boss-kiri",
   },
   "shimohara-yugami": {
     createEnemy: createShimoharaShisakukiYugami,
     victoryFlag: "chapter6_yugami_defeated",
-    bgm: CHAPTER6_BOSS_THEME,
+    bgmId: "boss-shimo",
   },
 };
 
@@ -279,8 +254,11 @@ function startStoryBattle(battleId: string): void {
     createRng(Date.now()),
     { skills: buildSkillsMap(CHAPTER0_SKILL), item: CHAPTER0_ITEM },
   );
-  currentBgmTrack = def.bgm;
-  audio.playBgm(def.bgm);
+  currentBgmTrack = getTrack(def.bgmId);
+  if (audioStarted) {
+    audio.playSe(seOf("battle-start"));
+  }
+  audio.playBgm(currentBgmTrack);
 }
 
 const input = new InputState();
@@ -432,8 +410,9 @@ if (import.meta.env.DEV) {
         createRng(Date.now()),
         { skills: buildSkillsMap(SAMPLE_SKILL), item: SAMPLE_ITEM },
       );
-      currentBgmTrack = CHAPTER0_BATTLE_THEME;
-      audio.playBgm(CHAPTER0_BATTLE_THEME);
+      currentBgmTrack = getTrack("battle");
+      audio.playSe(seOf("encounter"));
+      audio.playBgm(currentBgmTrack);
     } else if (event.key === "k" && !battle) {
       saveToSlot(window.localStorage, "slot1", buildSaveData());
       saveMessage = "スロット1にセーブしました";
@@ -579,13 +558,13 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
     return;
   }
   if (outcome.outcome === "lost") {
-    audio.playSe(CHAPTER0_DEFEAT_SE);
+    audio.playSe(seOf("defeat"));
     return;
   }
   if (outcome.outcome !== "won") {
     return;
   }
-  audio.playSe(CHAPTER0_VICTORY_SE);
+  audio.playSe(seOf("victory"));
   const expGained = computeVictoryExp(finishedBattle.getState());
   const result = gainExp(heroStats, expGained, SAMPLE_GROWTH);
   heroStats = result.stats;
@@ -599,6 +578,9 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
     if (companionResult.levelsGained > 0) {
       levelUpNames.push(`${COMPANIONS[id].name}（Lv${companionResult.stats.level}）`);
     }
+  }
+  if (levelUpNames.length > 0) {
+    window.setTimeout(() => audio.playSe(seOf("level-up")), 1800);
   }
   victoryMessage =
     levelUpNames.length > 0
@@ -625,7 +607,7 @@ const loop = createGameLoop({
 
     const actionPressed = actionButton.consume();
     if (actionPressed) {
-      audio.playSe(CHAPTER0_CONFIRM_SE);
+      audio.playSe(seOf("confirm"));
     }
 
     if (debugMenu.open) {
@@ -633,10 +615,10 @@ const loop = createGameLoop({
       if (direction !== lastDebugDirection) {
         if (direction === "up") {
           debugMenu = moveMenuCursor(debugMenu, -1, DEBUG_MENU_ROWS.length);
-          audio.playSe(CHAPTER0_CURSOR_SE);
+          audio.playSe(seOf("cursor"));
         } else if (direction === "down") {
           debugMenu = moveMenuCursor(debugMenu, 1, DEBUG_MENU_ROWS.length);
-          audio.playSe(CHAPTER0_CURSOR_SE);
+          audio.playSe(seOf("cursor"));
         }
         lastDebugDirection = direction;
       }
@@ -657,10 +639,10 @@ const loop = createGameLoop({
         if (direction !== lastBattleDirection) {
           if (direction === "up" || direction === "left") {
             battle.moveCursor(-1);
-            audio.playSe(CHAPTER0_CURSOR_SE);
+            audio.playSe(seOf("cursor"));
           } else if (direction === "down" || direction === "right") {
             battle.moveCursor(1);
-            audio.playSe(CHAPTER0_CURSOR_SE);
+            audio.playSe(seOf("cursor"));
           }
           lastBattleDirection = direction;
         }
@@ -687,10 +669,10 @@ const loop = createGameLoop({
         if (direction !== lastDialogueDirection) {
           if (direction === "up") {
             dialogue.moveChoice(-1);
-            audio.playSe(CHAPTER0_CURSOR_SE);
+            audio.playSe(seOf("cursor"));
           } else if (direction === "down") {
             dialogue.moveChoice(1);
-            audio.playSe(CHAPTER0_CURSOR_SE);
+            audio.playSe(seOf("cursor"));
           }
           lastDialogueDirection = direction;
         }

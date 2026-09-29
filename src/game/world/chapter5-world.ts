@@ -7,7 +7,7 @@ import type { Npc } from "../npc";
 /**
  * 第5章（霧断崖）の世界。`docs/story/structure.md`「第5章（霧断崖）」・`docs/story/mystery.md`を反映。
  * 伏線 C-010（静まりの年に要人が失脚・失踪した記録）と C-011（記録の中のユーリの祖父の名）を実装（roadmap 4-22）。
- * 敵データ・バランスは4-23、専用BGMは4-24（`src/audio/chapter5-tracks.ts`）。
+ * 敵データ・バランスは4-23、専用BGMは`src/audio/catalog.ts`（town-kiri・archive・boss-kiri）。
  */
 export const CHAPTER5_MAPS: Record<string, TileMapData> = {
   "kiri-town": createKiriTownData(),

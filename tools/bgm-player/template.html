@@ -35,6 +35,8 @@ h2 { font-family: var(--display); font-weight: 400; font-size: 16px; letter-spac
 ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .row { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; }
 .row .t { flex: 1; min-width: 0; }
+.row .t { display: grid; gap: 2px; }
+.row .sc { color: var(--muted); font-size: 12px; }
 .row .m { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .row .ic { width: 1.2em; color: var(--accent); font-family: var(--display); }
 .row[aria-pressed="true"] { background: var(--now); border-color: var(--accent); }
@@ -56,7 +58,7 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
   </div>
   <div id="list"></div>
   <div id="fx"></div>
-  <p class="note">ゲーム本体と同じ再生エンジンと曲データで鳴らしています（曲は自動でくり返します）。曲名の一部は仮です。新曲は、どの場面で使うかまだ決まっていません。</p>
+  <p class="note">ゲーム本体と同じ再生エンジンと曲データで鳴らしています（曲は自動でくり返します）。曲名の一部は仮です。</p>
 </div>
 <script>/*BUNDLE*/</script>
 <script>
@@ -69,8 +71,9 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
     if (e.group !== group) { group = e.group; var h = document.createElement("h2"); h.textContent = group; list.appendChild(h); ul = document.createElement("ul"); list.appendChild(ul); }
     var li = document.createElement("li"), b = document.createElement("button");
     b.type = "button"; b.className = "row"; b.setAttribute("aria-pressed", "false");
-    b.innerHTML = '<span class="ic">▶</span><span class="t"></span><span class="m"></span>';
-    b.querySelector(".t").textContent = e.title;
+    b.innerHTML = '<span class="ic">▶</span><span class="t"><span class="tt"></span><small class="sc"></small></span><span class="m"></span>';
+    b.querySelector(".tt").textContent = e.title;
+    b.querySelector(".sc").textContent = e.scene + " ／ " + e.style;
     b.querySelector(".m").textContent = "♩" + e.bpm + "  " + mmss(e.sec);
     b.addEventListener("click", function () { select(i, 0); });
     li.appendChild(b); ul.appendChild(li); rows.push(b);

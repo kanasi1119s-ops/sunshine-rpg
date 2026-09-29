@@ -21,7 +21,11 @@ export type Instrument =
   | "bass" | "guitar" | "echoGuitar" | "crunch" | "distGuitar" | "leadGuitar"
   | "keys" | "piano" | "harpsichord" | "strings" | "pad" | "bell" | "lead"
   // 効果音向け: 音程が滑る（sfxDown＝下がる／sfxUp＝上がる）、ノイズの衝撃音（impact）、風を切る音（swoosh）、金属的な鈴（chime）
-  | "sfxDown" | "sfxUp" | "impact" | "swoosh" | "chime";
+  | "sfxDown" | "sfxUp" | "impact" | "swoosh" | "chime"
+  // 自然音（風・雨・せせらぎ・鳥・虫）。音の高さは、風の吹く高さ・鳥の声の高さなど音色の目安として使う
+  | "wind" | "rain" | "stream" | "bird" | "crickets"
+  // フォンク向け: 重く歪んだ低音（808）とカウベル
+  | "sub808" | "cowbell";
 
 export interface Track {
   waveform: Waveform;

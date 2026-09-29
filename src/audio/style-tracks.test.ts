@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { flattenScore, getScoreDurationSec, type Instrument } from "./score";
 import { STYLE_TRACKS } from "./style-tracks";
 
-const KNOWN: Instrument[] = ["kick", "snare", "hihat", "crash", "bass", "guitar", "echoGuitar", "crunch", "distGuitar", "leadGuitar", "keys", "piano", "harpsichord", "strings", "pad", "bell", "lead", "sfxDown", "sfxUp", "impact", "swoosh", "chime"];
+const KNOWN: Instrument[] = ["kick", "snare", "hihat", "crash", "bass", "guitar", "echoGuitar", "crunch", "distGuitar", "leadGuitar", "keys", "piano", "harpsichord", "strings", "pad", "bell", "lead", "sfxDown", "sfxUp", "impact", "swoosh", "chime", "wind", "rain", "stream", "bird", "crickets", "sub808", "cowbell"];
 
 describe.each(STYLE_TRACKS.map((t) => [t.title, t] as const))("新曲: %s", (_name, t) => {
   it("長さが1分〜1分半", () => {
