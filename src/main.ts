@@ -48,6 +48,8 @@ import { MUGIKANO_WATER_SOURCE_ENTRY } from "./game/map/chapter1/mugikano-water-
 import { GARASUKO_TOWN_ENTRY } from "./game/map/chapter2/garasuko-town";
 import { GARASUKO_WAREHOUSE_ENTRY } from "./game/map/chapter2/garasuko-warehouse";
 import { TETSUKUSARI_TOWN_ENTRY } from "./game/map/chapter3/tetsukusari-town";
+import { SANONE_TOWN_ENTRY } from "./game/map/chapter4/sanone-town";
+import { SANONE_CAMP_ENTRY } from "./game/map/chapter4/sanone-camp";
 import { TETSUKUSARI_MINE_ENTRY } from "./game/map/chapter3/tetsukusari-mine";
 import { createRng } from "./game/random";
 import { computeVictoryExp } from "./game/battle/battle-engine";
@@ -443,6 +445,14 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
   {
     label: () => "マップ: 鉄鏈鉱山・坑内 へワープ",
     action: () => switchMap("tetsukusari-mine", TETSUKUSARI_MINE_ENTRY.tileX, TETSUKUSARI_MINE_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 砂音の町 へワープ",
+    action: () => switchMap("sanone-town", SANONE_TOWN_ENTRY.tileX, SANONE_TOWN_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 砂音・隊商の野営地 へワープ",
+    action: () => switchMap("sanone-camp", SANONE_CAMP_ENTRY.tileX, SANONE_CAMP_ENTRY.tileY),
   },
   {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,

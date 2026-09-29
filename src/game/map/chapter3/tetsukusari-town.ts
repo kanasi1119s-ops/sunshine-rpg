@@ -28,6 +28,8 @@ const WIDTH = 22;
 const HEIGHT = 16;
 
 const WEST_GATE = { x: 0, y: 10 };
+/** 東の崖の切れ目。砂漠の隊商都市・砂音へ続く街道。 */
+const EAST_GATE = { x: WIDTH - 1, y: 10 };
 /** 町の北の崖に開いた坑道の入口（鉱山の内部へ続く）。 */
 const MINE_GATE_POS = { x: 11, y: 0 };
 /** 組合の詰め所（3x2）と、鉱山会社の事務所（3x2）。 */
@@ -54,7 +56,7 @@ export function createTetsukusariTownData(): TileMapData {
   }
   for (let y = 0; y < HEIGHT; y++) {
     set(0, y, y === WEST_GATE.y ? PATH : TREE);
-    set(WIDTH - 1, y, ROCK);
+    set(WIDTH - 1, y, y === EAST_GATE.y ? PATH : ROCK);
   }
 
   // 西の街道から広場まで、広場から坑道の入口までの道。
@@ -97,6 +99,14 @@ export function createTetsukusariTownData(): TileMapData {
         targetTileY: 8,
       },
       {
+        // 東の街道を進んで砂音の町へ。
+        tileX: EAST_GATE.x,
+        tileY: EAST_GATE.y,
+        targetMapId: "sanone-town",
+        targetTileX: 2,
+        targetTileY: 10,
+      },
+      {
         // 坑道の入口から、鉱山の内部へ。
         tileX: MINE_GATE_POS.x,
         tileY: MINE_GATE_POS.y,
@@ -110,6 +120,9 @@ export function createTetsukusariTownData(): TileMapData {
 
 /** 硝子湖からの街道を渡ってきたときの立ち位置。 */
 export const TETSUKUSARI_TOWN_ENTRY = { tileX: WEST_GATE.x + 2, tileY: WEST_GATE.y };
+
+/** 砂音の町から街道を戻ってきたときの立ち位置。 */
+export const TETSUKUSARI_TOWN_EAST_RETURN = { tileX: EAST_GATE.x - 2, tileY: EAST_GATE.y };
 
 /** 鉱山の内部から戻ってきたときの立ち位置。 */
 export const TETSUKUSARI_TOWN_MINE_RETURN = { tileX: MINE_GATE_POS.x, tileY: MINE_GATE_POS.y + 2 };
