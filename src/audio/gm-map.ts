@@ -17,12 +17,12 @@ export const GM_PROGRAM: Partial<Record<Instrument, number>> = {
   piano: 0,
   harpsichord: 6,
   strings: 48,
-  pad: 89, // ウォームパッド
+  pad: 52, // 合唱（電子的なパッドではなく、生の声に近い響き）
   choir: 52, // 合唱
   brass: 61, // ブラスセクション
   bell: 9, // グロッケン
   chime: 11, // ビブラフォン
-  lead: 80, // 矩形波リード
+  lead: 73, // フルート（電子的なリードではなく、自然な旋律楽器。電子音楽では下のSYNTH_LEADに切り替える）
   cowbell: 9,
   wind: 122, // 海岸（風・波の音）
   stream: 122,
@@ -39,7 +39,7 @@ export const SE_GM_PROGRAMS = [8, 9, 11, 12, 14, 33, 44, 45, 46, 47, 48, 52, 53,
 export const GM_LAYER: Partial<Record<Instrument, { program: number; gain: number }>> = {
   keys: { program: 0, gain: 0.5 },
   pad: { program: 48, gain: 0.35 },
-  bass: { program: 38, gain: 0.3 },
+  bass: { program: 32, gain: 0.3 },
 };
 
 /** ドラムセットの選び方（曲調ごと）。GMのドラムキット番号: 0=標準、8=ルーム、16=パワー、24=電子、25=TR-808、32=ジャズ、48=オーケストラ。 */
@@ -49,6 +49,12 @@ export const DRUM_KITS = [0, 8, 16, 24, 25, 32, 48];
 export const GM_DRUM_NOTE: Partial<Record<Instrument, number>> = { kick: 36, snare: 38, hihat: 42, crash: 49, tom: 47 };
 
 /** 使うGMの楽器番号の一覧（サウンドフォントを切り出すときの指定に使う）。 */
+/** 電子音楽（エレクトリック・フォンク・プログレッシブなど）では、リードとパッドを電子的な音色にする（楽器番号）。 */
+export const SYNTH_LEAD = 80;
+export const SYNTH_PAD = 89;
+/** メタル調では、リードの声部にオーバードライブのギターを使う。 */
+export const METAL_LEAD = 29;
+
 export const USED_GM_PROGRAMS: number[] = [
-  ...new Set([...Object.values(GM_PROGRAM), ...Object.values(GM_DEFAULT_BY_WAVE), ...Object.values(GM_LAYER).map((l) => l.program), ...SE_GM_PROGRAMS]),
+  ...new Set([...Object.values(GM_PROGRAM), ...Object.values(GM_DEFAULT_BY_WAVE), ...Object.values(GM_LAYER).map((l) => l.program), ...SE_GM_PROGRAMS, SYNTH_LEAD, SYNTH_PAD, METAL_LEAD]),
 ].sort((a, b) => a - b);

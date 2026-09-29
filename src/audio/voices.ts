@@ -58,21 +58,26 @@ export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, 
   const low = ctx.createBiquadFilter();
   low.type = "lowshelf";
   low.frequency.value = 95;
-  low.gain.value = 3.5;
+  low.gain.value = 3;
   // 3kHz付近を少し持ち上げて、旋律とアタックの輪郭をはっきりさせる
   const presence = ctx.createBiquadFilter();
   presence.type = "peaking";
   presence.frequency.value = 3200;
   presence.Q.value = 0.9;
-  presence.gain.value = 1.8;
+  presence.gain.value = 0.7;
   const high = ctx.createBiquadFilter();
   high.type = "highshelf";
-  high.frequency.value = 8500;
-  high.gain.value = 3.5;
+  high.frequency.value = 8000;
+  high.gain.value = 1.2;
   low.connect(presence);
   presence.connect(high);
+  // アナログ機材のような、ごくわずかな飽和（デジタルの硬さをやわらげる）
+  const warmth = ctx.createWaveShaper();
+  warmth.curve = distortionCurve(1.15);
+  warmth.oversample = "2x";
   const comp = ctx.createDynamicsCompressor();
-  high.connect(comp);
+  high.connect(warmth);
+  warmth.connect(comp);
   // 打楽器のアタックは通し、全体の厚みは詰める（現代的なゲーム音楽の「太くてパンチのある」音）
   comp.threshold.value = -20;
   comp.knee.value = 10;

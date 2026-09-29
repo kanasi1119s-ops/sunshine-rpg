@@ -37,6 +37,7 @@ const bgmPs2 = bgm.map((e) => ps2Edition(e.score));
     ps2 = on;
   },
   pos: () => engine.getBgmPositionSec(),
+  seek: (sec: number) => engine.seekBgm(sec),
   stop: () => engine.stopBgm(),
   playSe: (i: number) => engine.playSe(effects[i].score),
   volume: (v: number) => engine.setBgmVolume(v),

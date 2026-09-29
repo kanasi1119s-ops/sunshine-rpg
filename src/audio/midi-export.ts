@@ -1,4 +1,4 @@
-import { GM_DEFAULT_BY_WAVE, GM_DRUM_NOTE, GM_LAYER, GM_PROGRAM } from "./gm-map";
+import { GM_DEFAULT_BY_WAVE, GM_DRUM_NOTE, GM_LAYER, GM_PROGRAM, METAL_LEAD, SYNTH_LEAD, SYNTH_PAD } from "./gm-map";
 import { noteNameToMidi } from "./note";
 import { humanize, REST, type Instrument, type Score, type Track } from "./score";
 
@@ -39,7 +39,7 @@ const BOOST: Partial<Record<Instrument, number>> = { brass: 0.95, slap: 1.0, str
 // 残響の量（MIDIのCC91）
 const REVERB: Partial<Record<Instrument, number>> = { pad: 70, choir: 80, strings: 55, bell: 70, chime: 60, echoGuitar: 60, bird: 40, wind: 60, stream: 40, rain: 40, lead: 40, leadGuitar: 40, piano: 40, keys: 35, guitar: 35 };
 // コーラス（音を広げる揺らぎ）の量（MIDIのCC93）
-const CHORUS: Partial<Record<Instrument, number>> = { strings: 60, pad: 70, choir: 60, keys: 45, guitar: 40, echoGuitar: 40, crunch: 25, distGuitar: 20, bell: 25, harpsichord: 20 };
+const CHORUS: Partial<Record<Instrument, number>> = { strings: 30, pad: 35, choir: 30, keys: 22, guitar: 20, echoGuitar: 20, crunch: 12, distGuitar: 8, bell: 12, harpsichord: 10 };
 const ECHO_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "cowbell", "bell", "keys"]);
 
 function channelKey(track: Track, program: number): string {
@@ -59,7 +59,11 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
   const endTick = Math.round(totalBeats * PPQ);
   const usecPerBeat = Math.round(60_000_000 / score.tempoBpm);
   const conductor: number[] = [0, 0xff, 0x51, 0x03, (usecPerBeat >> 16) & 255, (usecPerBeat >> 8) & 255, usecPerBeat & 255];
-  conductor.push(...vlq(endTick), 0xff, 0x2f, 0x00);
+  // ループの始まりと終わり（曲の頭から最後の拍まで、ぴったりくり返す）
+  const marker = (text: string): number[] => [0xff, 0x06, text.length, ...[...text].map((c) => c.charCodeAt(0))];
+  conductor.push(0, ...marker("loopstart"));
+  conductor.push(...vlq(endTick), ...marker("loopend"));
+  conductor.push(0, 0xff, 0x2f, 0x00);
   tracksBytes.push(conductor);
 
   const channelOf = new Map<string, number>();
@@ -98,7 +102,10 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     const inst = track.instrument;
     const drumNote = inst ? GM_DRUM_NOTE[inst] : undefined;
     const isDrum = drumNote !== undefined;
-    const program = inst ? GM_PROGRAM[inst] ?? GM_DEFAULT_BY_WAVE[track.waveform] : GM_DEFAULT_BY_WAVE[track.waveform];
+    let program = inst ? GM_PROGRAM[inst] ?? GM_DEFAULT_BY_WAVE[track.waveform] : GM_DEFAULT_BY_WAVE[track.waveform];
+    // リードとパッド: 電子音楽では電子的な音色、メタル調ではオーバードライブのギター、それ以外は生楽器に近い音色
+    if (inst === "lead") program = score.synth ? SYNTH_LEAD : score.tone === "metal" ? METAL_LEAD : program;
+    if (inst === "pad" && score.synth) program = SYNTH_PAD;
     const setupChannel = (prog: number, key: string, gainBoost: number): { channel: number; list: Ev[] } => {
       const channel = isDrum ? DRUM_CHANNEL : allocate(key);
       const list = midiTrackFor(channel);
@@ -150,7 +157,8 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       if (n.note === REST) continue;
       const secStart = (startBeat * 60) / score.tempoBpm;
       // 手で弾いたような、ごくわずかなタイミングのずれ（鍵盤・ギター・ベース）
-      const jitter = inst && ["keys", "piano", "guitar", "echoGuitar", "bass", "harpsichord", "strings"].includes(inst) && startBeat > 0 ? Math.round((humanize(secStart + 3.7) - 1) * 70) : 0;
+      const looseness = inst && ["keys", "piano", "guitar", "echoGuitar", "bass", "harpsichord", "strings", "lead", "leadGuitar", "brass", "crunch", "distGuitar"].includes(inst) ? 70 : inst && ["kick", "snare", "hihat", "tom", "crash"].includes(inst) ? 45 : 0;
+      const jitter = looseness > 0 && startBeat > 0 ? Math.round((humanize(secStart + 3.7) - 1) * looseness) : 0;
       const tick = Math.max(0, Math.round(startBeat * PPQ) + jitter);
       let vol = track.volume * (n.velocity ?? 1) * (inst ? humanize(secStart) : 1);
       let drumKey = drumNote;
@@ -198,11 +206,11 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       push(pitch, tick, velocity, len);
       if (layer && layerSpec) push(pitch, tick, Math.max(14, Math.round(velocity * layerSpec.gain)), len, layer);
       if (inst === "crunch" || inst === "distGuitar") push(pitch + 7, tick, velocity, len); // パワーコードの5度
-      if (inst === "distGuitar") push(pitch + 12, tick, Math.round(velocity * 0.8), len);
+      if (inst === "distGuitar") push(pitch + 12, tick, Math.round(velocity * 0.45), len);
       // 重低音: メタルのベースには、1オクターブ下の音を重ねる
       if (score.tone === "metal" && (inst === "bass" || inst === "slap") && pitch - 12 >= 23) push(pitch - 12, tick, Math.round(velocity * 0.6), len);
       // 重さ: ディストーションギターには、1オクターブ下の音を薄く重ねる
-      if ((inst === "distGuitar" || inst === "crunch") && pitch - 12 >= 28) push(pitch - 12, tick, Math.round(velocity * 0.55), len);
+      if ((inst === "distGuitar" || inst === "crunch") && pitch - 12 >= 28) push(pitch - 12, tick, Math.round(velocity * 0.45), len);
       // 主旋律のエコー（付点8分・付点4分）。テンポに合わせて、少しずつ小さく
       if (inst && ECHO_INSTRUMENTS.has(inst) && n.durationBeats >= 0.4) {
         for (const [beats, gain] of [[0.75, 0.42], [1.5, 0.22]] as const) {
