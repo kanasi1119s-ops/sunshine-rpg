@@ -1,3 +1,5 @@
+import { SPRITE_DATA } from "../game/art/sprite-data.generated";
+import { getSpriteCanvas } from "../game/art/sprite";
 import {
   buildShadedCells,
   PORTRAIT_GRID_HEIGHT,
@@ -39,6 +41,16 @@ export function renderPortraitByName(
   y: number,
   cellSize: number = PORTRAIT_CELL_SIZE,
 ): boolean {
+  // 大きな立ち絵（256×256）がある人物は、頭のあたりを切り出して顔グラフィックにする。
+  const full = getSpriteCanvas(`char:${speaker}`, SPRITE_DATA);
+  if (full) {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.fillStyle = "#2a2140";
+    ctx.fillRect(x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
+    ctx.drawImage(full, 90, 8, 76, 90, x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
+    return true;
+  }
   const spec = PORTRAITS[speaker];
   if (!spec) {
     return false;
