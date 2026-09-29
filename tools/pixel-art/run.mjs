@@ -2,7 +2,7 @@
 // ドット絵エディタ（Artifact）をヘッドレスブラウザで開き、実際にマウスで描いて動画・画像・書き出しデータを残す。
 import { chromium } from "playwright-core";
 import fs from "fs";
-const { PIECES } = await import(process.env.PIECESET === "terrain" ? "./terrain.mjs" : "./pieces.mjs");
+const { PIECES } = await import(process.env.PIECESET === "terrain" ? "./terrain.mjs" : process.env.PIECESET === "boss" ? "./bosses.mjs" : "./pieces.mjs");
 import { N } from "./lib.mjs";
 
 const [editorPath, out, ...only] = process.argv.slice(2);
