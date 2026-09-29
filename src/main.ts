@@ -60,6 +60,7 @@ import { downloadSaveFile, readSaveFile } from "./io/save-file";
 import { AudioEngine } from "./audio/audio-engine";
 import { CHAPTER0_BATTLE_THEME, CHAPTER0_BOSS_THEME, CHAPTER0_OUTSKIRTS_THEME, CHAPTER0_TOWN_THEME } from "./audio/chapter0-tracks";
 import { CHAPTER1_BOSS_THEME, CHAPTER1_VILLAGE_THEME, CHAPTER1_WATER_SOURCE_THEME } from "./audio/chapter1-tracks";
+import { CHAPTER3_BOSS_THEME, CHAPTER3_MINE_THEME, CHAPTER3_TOWN_THEME } from "./audio/chapter3-tracks";
 import { CHAPTER2_BOSS_THEME, CHAPTER2_TOWN_THEME, CHAPTER2_WAREHOUSE_THEME } from "./audio/chapter2-tracks";
 import {
   CHAPTER0_CONFIRM_SE,
@@ -138,6 +139,12 @@ function mapBgmFor(mapId: string): Score {
   if (mapId === "garasuko-warehouse") {
     return CHAPTER2_WAREHOUSE_THEME;
   }
+  if (mapId === "tetsukusari-town") {
+    return CHAPTER3_TOWN_THEME;
+  }
+  if (mapId === "tetsukusari-mine") {
+    return CHAPTER3_MINE_THEME;
+  }
   return CHAPTER0_TOWN_THEME;
 }
 
@@ -187,8 +194,7 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
   "tetsukusari-yugami": {
     createEnemy: createTetsukusariYugami,
     victoryFlag: "chapter3_yugami_defeated",
-    // 4-14で専用曲ができるまで、第2章のボス曲を仮に流用する。
-    bgm: CHAPTER2_BOSS_THEME,
+    bgm: CHAPTER3_BOSS_THEME,
   },
 };
 
