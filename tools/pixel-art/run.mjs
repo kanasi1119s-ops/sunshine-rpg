@@ -2,7 +2,7 @@
 // ドット絵エディタ（Artifact）をヘッドレスブラウザで開き、実際にマウスで描いて動画・画像・書き出しデータを残す。
 import { chromium } from "playwright-core";
 import fs from "fs";
-const { PIECES } = await import(process.env.PIECESET === "terrain" ? "./terrain.mjs" : process.env.PIECESET === "boss" ? "./bosses.mjs" : "./pieces.mjs");
+const { PIECES } = await import(process.env.PIECESET === "terrain" ? "./terrain.mjs" : process.env.PIECESET === "boss" ? "./bosses.mjs" : process.env.PIECESET === "chars" ? "./characters.mjs" : "./pieces.mjs");
 import { N } from "./lib.mjs";
 
 const [editorPath, out, ...only] = process.argv.slice(2);
@@ -22,6 +22,7 @@ for (const piece of list) {
   await p.uncheck("#symmetry"); await p.uncheck("#showShading");
   await p.evaluate(() => { const z = document.getElementById("zoom"); z.value = 4; z.dispatchEvent(new Event("input", { bubbles: true })); });
   for (let i = 0; i < piece.pal.length - 4; i++) await p.click("#addSymbolBtn");
+  await p.waitForFunction((n) => document.querySelectorAll("#symbolList .sym").length >= n, piece.pal.length + 1);
   const ci = await p.$$("#symbolList input[type=color]"), li = await p.$$("#symbolList input.label");
   for (let i = 0; i < piece.pal.length; i++) {
     await ci[i].evaluate((el, v) => { el.value = v; el.dispatchEvent(new Event("input", { bubbles: true })); }, piece.pal[i][1]);
