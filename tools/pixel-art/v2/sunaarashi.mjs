@@ -22,7 +22,7 @@ export function build() {
   const pal = createPalette();
   const OUT = pal.rgb("縁", "#0d0810"), RIM = pal.rgb("縁明", "#3a2434"), SHD = pal.rgb("影", "#1a1018");
   const SAND = pal.ramp("砂", 32, 0.46, 5, 0.09, 0.6);
-  const CLOTH = pal.ramp("布", 350, 0.42, 4, 0.1, 0.4);
+  const CLOTH = pal.ramp("布", 352, 0.32, 4, 0.08, 0.38);
   const BONE = pal.ramp("骨", 40, 0.34, 5, 0.16, 0.86);
   const VIO = pal.ramp("光", 285, 0.85, 4, 0.34, 0.8);
   const ROCK = pal.ramp("瓦礫", 24, 0.16, 4, 0.12, 0.5);
@@ -55,8 +55,8 @@ export function build() {
     ambient: 0.14, gain: 0.9, thr: 0.03,
     tex: (x, y) => {
       const t = (y - 40) / 192, half = 84 * Math.pow(1 - clamp(t, 0, 1), 0.85) + 16, u = (x - cx) / half;
-      const ph = y * 0.115 + asin(u) * 2.2 + Math.sin(y * 0.05) * 1.5, s = Math.sin(ph);
-      return (s > 0.6 ? 0.2 : s < -0.3 ? -0.2 : 0) + (hash(x >> 1, y >> 1) < 0.07 ? -0.08 : 0);
+      const ph = y * 0.15 + asin(u) * 2.6 + Math.sin(y * 0.05) * 1.5, s = Math.sin(ph) + (u > 0.35 ? -0.4 * (u - 0.35) : 0);
+      return (s > 0.6 ? 0.2 : s < -0.35 ? -0.22 : 0) + (Math.abs(s - 0.6) < 0.12 && (x + y) % 2 === 0 ? 0.12 : 0) + (Math.abs(s + 0.35) < 0.12 && (x + y) % 2 === 0 ? -0.12 : 0) + (hash(x >> 1, y >> 1) < 0.07 ? -0.08 : 0);
     },
   });
   // 渦の筋（明るい細い帯が巻き付く）
@@ -78,7 +78,7 @@ export function build() {
   for (let y = 116; y <= 196; y++) for (let x = 102; x <= 152; x++) { if (g[y][x] < 0) continue; if (VIO.includes(g[y][x]) || BONE.includes(g[y][x])) continue; if ([[1, 0], [0, 1], [-1, 0], [0, -1], [1, 1], [-1, -1]].some(([a, b]) => VIO.includes(g[y + a]?.[x + b]))) put(g, y, x, CLOTH[x < 124 ? 1 : 0]); }
 
   // ---- 外套の肩・フード ----
-  slab(g, [[84, 66], [104, 40], [128, 34], [154, 40], [174, 66], [186, 108], [176, 128], [168, 144], [154, 130], [148, 152], [134, 132], [124, 148], [112, 130], [100, 146], [92, 128], [76, 138], [72, 106]], CLOTH, { bias: -0.3, seam: (x, y) => (x + y * 2) % 21 === 0 });
+  slab(g, [[84, 66], [104, 40], [128, 34], [154, 40], [174, 66], [186, 108], [176, 128], [168, 144], [154, 130], [148, 152], [134, 132], [124, 148], [112, 130], [100, 146], [92, 128], [76, 138], [72, 106]], CLOTH, { bias: -0.3, seam: (x, y) => (x + y * 2) % 21 === 0 || (x * 2 - y + 700) % 17 === 0 });
   // ぼろの裾（フードのふち）: 布の細片
 
   // ---- 仮面（浮かぶ。まわりは空洞） ----
@@ -103,8 +103,8 @@ export function build() {
   slab(g, [[104, 52], [108, 30], [116, 52]], BONE, { bias: -0.2 }); slab(g, [[140, 52], [148, 26], [152, 52]], BONE, { bias: -0.5 });
 
   // ---- 腕（布に包まれた腕と骨の手） ----
-  limb(g, bezier([82, 112], [56, 100], [36, 98], 16), 10, 6, CLOTH, { ambient: 0.22 });
-  limb(g, bezier([176, 114], [204, 118], [222, 132], 16), 10, 6, CLOTH, { ambient: 0.22 });
+  limb(g, bezier([82, 118], [40, 140], [34, 102], 20), 11, 6, CLOTH, { ambient: 0.22 });
+  limb(g, bezier([176, 120], [222, 128], [224, 138], 20), 11, 6, CLOTH, { ambient: 0.22 });
   ellipsoid(g, 30, 98, 8, 7, BONE, { ambient: 0.3 }); ellipsoid(g, 226, 134, 8, 7, BONE, { ambient: 0.3 });
   for (const [hx, hy, dirs] of [[30, 98, [[-10, -12], [-16, -4], [-16, 6], [-8, 14]]], [[226], 134, [[10, -8], [17, 0], [16, 10], [8, 17]]]].map((a) => [Array.isArray(a[0]) ? a[0][0] : a[0], a[1], a[2]])) for (const [dx, dy] of dirs) limb(g, bezier([hx, hy], [hx + dx * 0.5 + 1, hy + dy * 0.5 - 1], [hx + dx, hy + dy], 6), 2.6, 1.2, BONE, { ambient: 0.35 });
 
