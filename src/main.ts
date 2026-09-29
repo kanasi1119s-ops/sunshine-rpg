@@ -71,12 +71,20 @@ import { SAVE_VERSION, type SaveData } from "./game/save/types";
 import { loadFromSlot, saveToSlot } from "./game/save/storage";
 import { downloadSaveFile, readSaveFile } from "./io/save-file";
 import { AudioEngine } from "./audio/audio-engine";
-import { getTrack } from "./audio/catalog";
+import { getTrackEdition, type Edition } from "./audio/catalog";
 import { SE_LIBRARY } from "./audio/se-library";
 import type { Score } from "./audio/score";
 import { createDebugMenuState, moveMenuCursor, toggleMenu } from "./game/debug/debug-menu";
 import { renderDebugMenu, type DebugMenuRow } from "./render/debug-menu-renderer";
 import { expRequiredForLevel } from "./game/growth/exp-curve";
+
+/**
+ * BGMの版。既定は現代的な音（modern）。`?edition=ps2` をつけて開くと、PS2世代のサウンド版（オーケストラの重ね・ホール残響）で鳴る。
+ */
+const BGM_EDITION: Edition = new URLSearchParams(window.location.search).get("edition") === "ps2" ? "ps2" : "modern";
+function getTrack(id: string): Score {
+  return getTrackEdition(id, BGM_EDITION);
+}
 
 /** 効果音ライブラリ（`src/audio/se-library.ts`）から、IDで効果音を取り出す。 */
 function seOf(id: string): Score {

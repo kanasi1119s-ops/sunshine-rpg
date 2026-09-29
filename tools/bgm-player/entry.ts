@@ -4,6 +4,7 @@ import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url"
 import { AudioEngine } from "../../src/audio/audio-engine";
 import { getScoreDurationSec, type Score } from "../../src/audio/score";
 import { CATALOG, getTrack } from "../../src/audio/catalog";
+import { ps2Edition } from "../../src/audio/ps2-edition";
 import { SE_LIBRARY } from "../../src/audio/se-library";
 
 interface Entry { group: string; title: string; score: Score; scene?: string; style?: string }
@@ -26,10 +27,15 @@ try {
   console.warn("録音音源の埋め込みを読めませんでした:", error);
 }
 const engine = new AudioEngine();
+let ps2 = false;
+const bgmPs2 = bgm.map((e) => ps2Edition(e.score));
 (window as unknown as { BGM: unknown }).BGM = {
   bgm: bgm.map((e) => ({ group: e.group, title: e.title, scene: e.scene, style: e.style, bpm: e.score.tempoBpm, sec: getScoreDurationSec(e.score) })),
   effects: effects.map((e) => ({ group: e.group, title: e.title })),
-  play: (i: number, offset = 0) => engine.playBgm(bgm[i].score, offset),
+  play: (i: number, offset = 0) => engine.playBgm(ps2 ? bgmPs2[i] : bgm[i].score, offset),
+  ps2: (on: boolean) => {
+    ps2 = on;
+  },
   pos: () => engine.getBgmPositionSec(),
   stop: () => engine.stopBgm(),
   playSe: (i: number) => engine.playSe(effects[i].score),

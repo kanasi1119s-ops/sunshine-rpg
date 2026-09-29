@@ -1,5 +1,5 @@
 import { SampledBgm, SampledSe } from "./sampled-engine";
-import { createBgmBus, scheduleInstrumentNote, type Source } from "./voices";
+import { createBgmBus, createHallImpulse, scheduleInstrumentNote, type Source } from "./voices";
 import { noteNameToMidi } from "./note";
 import { flattenScore, getScoreDurationSec, type Score, type ScheduledNote } from "./score";
 
@@ -33,6 +33,9 @@ export class AudioEngine {
   private seBus: GainNode | null = null;
   private sampledSe = new SampledSe();
   private currentBgm: Score | null = null;
+  /** 版（modern/ps2）に応じた、高音の丸めとホール残響の段。 */
+  private profileLp: BiquadFilterNode | null = null;
+  private hallSend: GainNode | null = null;
   private synthOnly = SYNTH_ONLY_FROM_URL;
   private bgmLoopStart = 0;
   private bgmDurationSec = 0;
@@ -46,7 +49,22 @@ export class AudioEngine {
       this.bgmGain.connect(this.ctx.destination);
       this.bgmBus = createBgmBus(this.ctx, this.bgmGain);
       // 録音音源は、ほんの少しだけ残響を足して、同じ出口（音量・仕上げ）を通す
-      this.sampledBus = createBgmBus(this.ctx, this.bgmGain, 0.1);
+      // 録音音源の出口には「版」の段を挟む: 高音を丸める低域通過フィルターと、ホール残響（PS2世代の音）
+      const lp = this.ctx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = 22000;
+      lp.Q.value = 0.6;
+      lp.connect(this.bgmGain);
+      const hall = this.ctx.createConvolver();
+      hall.buffer = createHallImpulse(this.ctx);
+      const send = this.ctx.createGain();
+      send.gain.value = 0;
+      lp.connect(send);
+      send.connect(hall);
+      hall.connect(this.bgmGain);
+      this.profileLp = lp;
+      this.hallSend = send;
+      this.sampledBus = createBgmBus(this.ctx, lp, 0.1);
       if (!this.synthOnly) {
         void this.sampled.load(this.ctx, this.sampledBus).then(async (ok) => {
           if (ok && this.ctx && this.seBus) {
@@ -162,6 +180,7 @@ export class AudioEngine {
       return;
     }
     this.currentBgm = score;
+    this.applyEdition(score.edition ?? "modern");
     if (this.sampled.isReady() && !this.synthOnly) {
       this.sampled.play(score, offsetSec);
       this.bgmLoopHandle = -1; // 「鳴っている」印（録音音源はシーケンサーが自分でループする）
@@ -207,6 +226,16 @@ export class AudioEngine {
 
     scheduleAhead();
     this.bgmLoopHandle = window.setInterval(scheduleAhead, SCHEDULE_INTERVAL_MS);
+  }
+
+  /** 版に合わせて、高音の丸めとホール残響の量を切り替える。 */
+  private applyEdition(edition: "modern" | "ps2"): void {
+    if (!this.ctx || !this.profileLp || !this.hallSend) {
+      return;
+    }
+    const t = this.ctx.currentTime;
+    this.profileLp.frequency.setTargetAtTime(edition === "ps2" ? 15500 : 22000, t, 0.02);
+    this.hallSend.gain.setTargetAtTime(edition === "ps2" ? 0.34 : 0, t, 0.02);
   }
 
   /** true にすると、録音音源を使わず合成音だけで鳴らす（音の聴き比べ用）。鳴っている曲は同じ位置から切り替える。 */
