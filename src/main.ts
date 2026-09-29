@@ -41,7 +41,9 @@ import { createGarasukoYugami } from "./game/battle/chapter2-enemies";
 import { createTetsukusariYugami } from "./game/battle/chapter3-enemies";
 import { createSanoneSunaarashiYugami } from "./game/battle/chapter4-enemies";
 import { createKiriYogenYugami } from "./game/battle/chapter5-enemies";
-import { COMPANIONS, createCompanionCombatant, GUIDE, MINA, ORCA, RETO } from "./game/battle/companions";
+import { createShimoharaShisakukiYugami } from "./game/battle/chapter6-enemies";
+import { CHAPTER6_OPENING_COMMANDS } from "./game/world/chapter6-world";
+import { AYAME, COMPANIONS, createCompanionCombatant, GUIDE, MINA, ORCA, RETO } from "./game/battle/companions";
 import type { Combatant, Skill } from "./game/battle/types";
 import type { LeveledStats } from "./game/growth/types";
 import { TOURI_TOWN_SPAWN } from "./game/map/chapter0/touri-town";
@@ -135,6 +137,9 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   }
   if (mapId === "kiri-town" && !flags["chapter5_intro_seen"]) {
     dialogue.start(CHAPTER5_OPENING_COMMANDS);
+  }
+  if (mapId === "shimohara-town" && !flags["chapter6_intro_seen"]) {
+    dialogue.start(CHAPTER6_OPENING_COMMANDS);
   }
 }
 
@@ -236,6 +241,12 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
     victoryFlag: "chapter5_yugami_defeated",
     bgm: CHAPTER5_BOSS_THEME,
   },
+  "shimohara-yugami": {
+    createEnemy: createShimoharaShisakukiYugami,
+    victoryFlag: "chapter6_yugami_defeated",
+    // 専用BGMは4-29で追加する。それまでは第5章のボス曲を仮に流用する。
+    bgm: CHAPTER5_BOSS_THEME,
+  },
 };
 
 function startStoryBattle(battleId: string): void {
@@ -303,6 +314,7 @@ const COMPANION_JOIN_FLAGS: { flag: string; companionId: string }[] = [
   { flag: "chapter1_mina_joined", companionId: MINA.id },
   { flag: "chapter2_guide_joined", companionId: GUIDE.id },
   { flag: "chapter3_orca_joined", companionId: ORCA.id },
+  { flag: "chapter6_ayame_joined", companionId: AYAME.id },
 ];
 
 function syncCompanionsFromFlags(): void {
