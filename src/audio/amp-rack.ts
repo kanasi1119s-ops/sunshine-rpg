@@ -103,16 +103,16 @@ export class AmpRack {
     switch (role) {
       case "overdrive":
         // オーバードライブ: ゆるく歪み、弾き方の強弱が音に残る。中域（900Hz付近）が前に出る
-        return this.chain(input, [this.filter("highpass", 85), this.filter("peaking", 900, 4, 0.8), this.gain(2.6), this.shaper(2.4, 0.08), this.filter("peaking", 2400, 2, 1), this.filter("lowpass", 5600, 0, 0.9), this.gain(0.5)]);
+        return this.chain(input, [this.filter("highpass", 85), this.filter("peaking", 900, 4.5, 0.8), this.gain(3.4), this.shaper(3.4, 0.09), this.filter("peaking", 2400, 2, 1), this.filter("lowpass", 5600, 0, 0.9), this.gain(0.5)]);
       case "distortion":
         // ディストーション: 深く歪み、音が伸びる。低音は少し締める
-        return this.chain(input, [this.filter("highpass", 110), this.filter("peaking", 1100, 3.5, 0.9), this.gain(4.5), this.shaper(6.5, 0.06), this.filter("peaking", 3200, 2.5, 1), this.filter("lowpass", 4800, 0, 1.1), this.gain(0.42)]);
+        return this.chain(input, [this.filter("highpass", 110), this.filter("peaking", 1100, 3, 0.9), this.gain(3.6), this.shaper(5, 0.06), this.filter("peaking", 3000, 1, 0.9), this.filter("lowpass", 4200, 0, 0.8), this.gain(0.46)]);
       case "metal":
         // メタルゾーン: 前段で低音をしっかり削って音を「締め」、中域を持ち上げて強く歪ませ（2段）、後段で中域をえぐって、高音の刺さりと重い低音を足す
         return this.chain(input, [
-          this.filter("highpass", 140, 0, 0.9), this.filter("peaking", 800, 6, 0.9), this.gain(5.5), this.shaper(11, 0.05),
-          this.filter("lowpass", 6500), this.gain(2.2), this.shaper(5, 0.03),
-          this.filter("peaking", 480, -6, 1.1), this.filter("peaking", 3600, 4.5, 1.2), this.filter("lowshelf", 110, 4.5), this.filter("lowpass", 4400, 0, 1.2), this.gain(0.34),
+          this.filter("highpass", 130, 0, 0.8), this.filter("peaking", 750, 5, 0.8), this.gain(4.6), this.shaper(9.5, 0.06),
+          this.filter("lowpass", 5200, 0, 0.7), this.gain(1.9), this.shaper(3.8, 0.04),
+          this.filter("peaking", 480, -4, 1), this.filter("peaking", 2600, 1.2, 0.9), this.filter("lowshelf", 110, 4), this.filter("lowpass", 3700, 0, 0.7), this.filter("highshelf", 3000, -2), this.gain(0.4),
         ]);
       case "clean":
         return this.chain(input, [this.filter("highpass", 70), this.filter("peaking", 3500, 2.5, 0.9), this.filter("highshelf", 8000, 2), this.gain(0.95)]);

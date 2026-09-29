@@ -27,6 +27,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .seekrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .seekrow input { flex: 1 1 10em; min-width: 0; accent-color: var(--accent); }
 .small { padding: 6px 10px; font-size: 13px; }
+.rep { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 14px; }
+.rep label { display: inline-flex; align-items: center; gap: 4px; }
+.ab { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .time { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 button:disabled { opacity: .45; cursor: default; }
 .vol { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
@@ -53,6 +56,19 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
       <input id="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="再生位置" disabled>
       <button class="stop small" id="fwd" type="button" aria-label="10秒進む" disabled>+10秒</button>
       <span class="time" id="time">0:00 / 0:00</span>
+    </div>
+    <div class="rep" role="group" aria-label="リピート">
+      <span class="time">リピート</span>
+      <label><input type="radio" name="rep" value="one" checked> 1曲</label>
+      <label><input type="radio" name="rep" value="all"> 全曲</label>
+      <label><input type="radio" name="rep" value="off"> なし</label>
+      <label><input type="radio" name="rep" value="ab"> 区間</label>
+      <span class="ab" id="abbox" hidden>
+        <button class="stop small" id="seta" type="button">A地点</button>
+        <button class="stop small" id="setb" type="button">B地点</button>
+        <button class="stop small" id="clrab" type="button">解除</button>
+        <span class="time" id="abtxt">A —  B —</span>
+      </span>
     </div>
     <label class="vol"><input id="ps2" type="checkbox"> PS2世代のサウンド版で鳴らす（オーケストラの重ね・ホール残響）</label>
     <label class="vol"><input id="synth" type="checkbox"> 合成音で鳴らす（録音音源と聴き比べ）<span id="sf" class="time"></span></label>
@@ -97,15 +113,40 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
   function select(i, offset) {
     if (cur >= 0) setRowState(cur, false);
     cur = i; paused = false; document.getElementById("pause").textContent = "一時停止";
-    B.play(i, offset || 0); setRowState(i, true); enable(true);
+    B.play(i, offset || 0); setRowState(i, true); enable(true); lastPos = offset || 0; pointA = null; pointB = null; document.getElementById("abtxt").textContent = abText();
     seek.max = B.bgm[i].sec; seek.value = offset || 0;
     document.getElementById("name").textContent = B.bgm[i].title;
     document.getElementById("sub").textContent = B.bgm[i].group;
     cancelAnimationFrame(raf); tick();
   }
   function show(pos) { timeEl.textContent = mmss(pos) + " / " + mmss(B.bgm[cur].sec); }
+  // リピート: 1曲（既定）／全曲／なし／区間（A地点〜B地点）
+  var repMode = "one", pointA = null, pointB = null, lastPos = 0;
+  try { var saved = window.localStorage.getItem("bgmRepeat"); if (saved) repMode = saved; } catch (e) {}
+  function setRep(mode) {
+    repMode = mode;
+    try { window.localStorage.setItem("bgmRepeat", mode); } catch (e) {}
+    document.querySelectorAll('input[name="rep"]').forEach(function (r) { r.checked = r.value === mode; });
+    document.getElementById("abbox").hidden = mode !== "ab";
+  }
+  function abText() { return "A " + (pointA === null ? "—" : mmss(pointA)) + "  B " + (pointB === null ? "—" : mmss(pointB)); }
+  document.querySelectorAll('input[name="rep"]').forEach(function (r) { r.addEventListener("change", function () { setRep(this.value); }); });
+  document.getElementById("seta").addEventListener("click", function () { if (cur < 0) return; pointA = paused ? pausedPos : B.pos(); if (pointB !== null && pointB <= pointA) pointB = null; document.getElementById("abtxt").textContent = abText(); });
+  document.getElementById("setb").addEventListener("click", function () { if (cur < 0) return; var p = paused ? pausedPos : B.pos(); if (pointA === null) pointA = 0; if (p > pointA + 0.5) pointB = p; document.getElementById("abtxt").textContent = abText(); });
+  document.getElementById("clrab").addEventListener("click", function () { pointA = null; pointB = null; document.getElementById("abtxt").textContent = abText(); });
+  setRep(repMode);
   function tick() {
-    if (!dragging && !paused) { var pos = B.pos(); seek.value = pos; show(pos); }
+    if (!dragging && !paused) {
+      var pos = B.pos(); seek.value = pos; show(pos);
+      var sec = B.bgm[cur].sec;
+      if (repMode === "ab" && pointA !== null && pointB !== null && pos >= pointB) { B.seek(pointA); }
+      else if (pos < lastPos - 1 && lastPos > sec * 0.5) {
+        // 曲の最後まで来て、頭に戻った瞬間
+        if (repMode === "off") { document.getElementById("stop").click(); return; }
+        if (repMode === "all") { lastPos = 0; select((cur + 1) % B.bgm.length, 0); return; }
+      }
+      lastPos = pos;
+    }
     raf = requestAnimationFrame(tick);
   }
   function jump(pos) {

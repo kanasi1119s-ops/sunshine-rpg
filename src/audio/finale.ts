@@ -328,6 +328,8 @@ export function composeFinale(spec: FinaleSpec): Score {
   const score = arrange({ tempoBpm: spec.bpm, beatsPerBar: 4, sections, parts: PARTS, melodies: MELODIES });
   score.drumKit = spec.drumKit;
   score.opening = true;
+  score.tone = "metal";
+  score.synth = true;
   return score;
 }
 

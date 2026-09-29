@@ -75,7 +75,8 @@ export class SampledBgm {
     await synth.soundBankManager.addSoundBank(buffer, "main");
     await synth.isReady;
     const seq = new Sequencer(synth);
-    seq.loopCount = -1;
+    // 0=ループしない、Infinity=くり返し続ける（-1 ではくり返さず、1回で止まってしまう）
+    seq.loopCount = Infinity;
     seq.eventHandler.addEvent("songChange", "sampled-bgm", () => {
       if (this.pendingOffset > 0) {
         seq.currentTime = this.pendingOffset;
@@ -121,6 +122,13 @@ export class SampledBgm {
     if (this.seq) {
       this.seq.pause();
       this.synth?.stopAll(true);
+    }
+  }
+
+  /** 再生中の曲を、指定位置へ移す。 */
+  seek(sec: number): void {
+    if (this.seq && this.playing) {
+      this.seq.currentTime = sec;
     }
   }
 

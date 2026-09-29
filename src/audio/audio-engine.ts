@@ -254,6 +254,17 @@ export class AudioEngine {
     return this.sampled.isReady();
   }
 
+  /** いま鳴っているBGMを、曲の中の指定位置へ移す（曲の頭に戻さず、その場で移動）。区間リピートなどに使う。 */
+  seekBgm(sec: number): void {
+    if (this.sampled.isPlaying()) {
+      this.sampled.seek(sec);
+      return;
+    }
+    if (this.currentBgm && this.bgmLoopHandle !== null) {
+      this.playBgm(this.currentBgm, sec);
+    }
+  }
+
   /** いま鳴っているBGMの、曲の中での位置（秒）。鳴っていなければ0。 */
   getBgmPositionSec(): number {
     if (this.sampled.isPlaying()) {
