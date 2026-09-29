@@ -12,4 +12,6 @@ contextBridge.exposeInMainWorld("sunshineDesktop", {
   /** アンプの追加フォルダにある、アンプ定義ファイルの一覧 [{ file, text }]。 */
   listAmpPlugins: () => ipcRenderer.invoke("amp:list"),
   openAmpFolder: () => ipcRenderer.invoke("amp:open-folder"),
+  /** MP3 に変換する（デスクトップ版だけ。LAME を使う）。 */
+  encodeMp3: (channels, sampleRate, kbps) => ipcRenderer.invoke("mp3:encode", channels, sampleRate, kbps),
 });

@@ -832,6 +832,9 @@ const EXPORTS: [string, string][] = [
   ["mid", "データ: MIDI（ほかの作曲ソフトへ）"], ["musicxml", "データ: MusicXML（楽譜ソフトへ）"], ["csv", "データ: CSV（音の一覧・表計算ソフトへ）"],
   ["project", "データ: プロジェクト（この作曲ソフトで続きを編集）"],
 ];
+const desktopMp3 = (window as unknown as { sunshineDesktop?: { encodeMp3?(c: Float32Array[], sr: number, kbps: number): Promise<Uint8Array> } }).sunshineDesktop?.encodeMp3;
+// MP3 は、デスクトップ版だけ（LAME の部品を別のファイルとして入れているため）
+if (desktopMp3) EXPORTS.splice(3, 0, ["mp3", "音声: MP3（256kbps・どこでも再生できる）"]);
 const exportSel = select(EXPORTS, "wav16");
 const exportBtn = h("button", { class: "primary", type: "button" }, "書き出す");
 const safeName = (): string => (state.name || "song").replace(/[\\/:*?"<>|]+/g, "_");
@@ -883,6 +886,7 @@ async function doExport(kind: string): Promise<void> {
   if (kind.startsWith("wav")) download(`${name}.wav`, encodeWav(channels, buffer.sampleRate, 0, undefined, Number(kind.slice(3)) as WavBits) as BlobPart, "audio/wav");
   else if (kind === "flac") download(`${name}.flac`, encodeFlac(channels, buffer.sampleRate) as BlobPart, "audio/flac");
   else if (kind === "opus") download(`${name}.opus`, (await encodeOpus(buffer)) as BlobPart, "audio/ogg");
+  else if (kind === "mp3" && desktopMp3) download(`${name}.mp3`, (await desktopMp3(channels.map((c) => new Float32Array(c)), buffer.sampleRate, 256)) as BlobPart, "audio/mpeg");
   ui.status.textContent = `書き出しました（${mmss(buffer.duration)}の曲を${((performance.now() - started) / 1000).toFixed(1)}秒で作成）。`;
 }
 exportBtn.onclick = () => {
@@ -1235,6 +1239,7 @@ interface DesktopApi {
   clearKey(): Promise<DesktopKeyStatus>;
   compose(req: { model: string; effort: string; request: string; system: string; schema: unknown; continue: boolean }): Promise<{ text: string; usage: { input: number; output: number } }>;
   listAmpPlugins(): Promise<{ file: string; text: string }[]>;
+  encodeMp3?(channels: Float32Array[], sampleRate: number, kbps: number): Promise<Uint8Array>;
   openAmpFolder(): Promise<void>;
 }
 const desktop = (window as unknown as { sunshineDesktop?: DesktopApi }).sunshineDesktop;

@@ -7,6 +7,7 @@ const { app, BrowserWindow, ipcMain, safeStorage, shell, Menu, dialog, session }
 const fs = require("fs");
 const path = require("path");
 const { composeWithClaude } = require("./ai.cjs");
+const { encodeMp3 } = require("./mp3.cjs");
 
 const keyFile = () => path.join(app.getPath("userData"), "anthropic-key.bin");
 /** アンプの追加フォルダ。ここに置いた .sunshine-amp.json を、起動時に読み込む。 */
@@ -45,7 +46,9 @@ function createWindow() {
 }
 
 function buildMenu() {
-  const licenses = path.join(__dirname, "licenses");
+  // 配布物では、ライセンス文と規約は resources の下（OSのファイル画面で開けるよう、アーカイブの外）に置く
+  const res = (name) => (app.isPackaged ? path.join(process.resourcesPath, name) : path.join(__dirname, name));
+  const licenses = res("licenses");
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     ...(process.platform === "darwin" ? [{ role: "appMenu" }] : []),
     { label: "ファイル", submenu: [{ role: "quit", label: "終了" }] },
@@ -56,6 +59,8 @@ function buildMenu() {
       submenu: [
         { label: "このソフトについて", click: () => void dialog.showMessageBox({ type: "info", title: "サンシャイン作曲ソフト", message: `サンシャイン作曲ソフト ${app.getVersion()}`, detail: "© サンシャインソフトウェア\n\n使っている部品のライセンスは、「ヘルプ」→「ライセンス」で見られます。" }) },
         { label: "ライセンス", click: () => void shell.openPath(licenses) },
+        { label: "利用規約", click: () => void shell.openPath(path.join(res("legal"), "terms-ja.md")) },
+        { label: "プライバシーポリシー", click: () => void shell.openPath(path.join(res("legal"), "privacy-ja.md")) },
         { label: "アンプの追加フォルダを開く", click: () => openAmpFolder() },
       ],
     },
@@ -68,7 +73,7 @@ function openAmpFolder() {
 }
 
 // 保存: 「名前を付けて保存」の画面で場所を選んでもらい、そこへ書く
-const FILTERS = { wav: "WAV", flac: "FLAC", opus: "Ogg Opus", mid: "MIDI", musicxml: "MusicXML", csv: "CSV", json: "JSON" };
+const FILTERS = { mp3: "MP3", wav: "WAV", flac: "FLAC", opus: "Ogg Opus", mid: "MIDI", musicxml: "MusicXML", csv: "CSV", json: "JSON" };
 ipcMain.handle("file:save", async (e, name, data) => {
   if (typeof name !== "string" || !(data instanceof Uint8Array)) throw new Error("保存するデータが違います");
   const ext = path.extname(name).slice(1).toLowerCase();
@@ -98,6 +103,12 @@ ipcMain.handle("amp:list", () => {
   return out;
 });
 ipcMain.handle("amp:open-folder", () => openAmpFolder());
+
+// MP3 に変換する（LAME は本体の側で、別のファイルのまま使う）
+ipcMain.handle("mp3:encode", async (_e, channels, sampleRate, kbps) => {
+  if (!Array.isArray(channels) || !channels.every((c) => c instanceof Float32Array) || typeof sampleRate !== "number") throw new Error("変換するデータが違います");
+  return encodeMp3(channels, sampleRate, kbps);
+});
 
 ipcMain.handle("key:status", () => {
   const key = readKey();
