@@ -12,7 +12,7 @@
 
 | 素材名 | 入手元 | 入手日 | 使った場所 | 規約の要点 | クレジット |
 |---|---|---|---|---|---|
-| ぴぽや「フィールドマップセット１」「同 追加パーツ」（`pipo-map001.zip`・`pipo-map001plus.zip`） | https://pipoya.net/sozai/assets/map-chip_tileset32/ | 2026-09-30 | 取得・規約確認済み、元ファイルは `assets-src/pipoya/`。**ゲームへの反映はまだ**（地形テクスチャへの変換を作業中） | 無料素材利用規約（https://pipoya.net/sozai/terms-of-use/ ）と同梱の readme を確認。商用利用可、加工可、無償の再配布可（規約とともに）、ゲームへの組み込み・販売可。禁止は素材としての販売（転売）。要点は `assets-src/pipoya/LICENSE-pipoya.md` | 不要（お礼として README・ゲーム内クレジットに「ぴぽや https://pipoya.net/」と書く予定） |
+| ぴぽや「フィールドマップセット１」「同 追加パーツ」（`pipo-map001.zip`・`pipo-map001plus.zip`） | https://pipoya.net/sozai/assets/map-chip_tileset32/ | 2026-09-30 | 取得・規約確認済み、元ファイルは `assets-src/pipoya/`。**ゲームに反映済み（2026-09-30）**: 地形テクスチャ5点（草A・草B・土の道・水面・深い森。128×128）に、自動タイルの中央の1枚を並べ、色を24色に減らして使用（`tools/pixel-art/import-pipoya.mjs` → `pipoya-terrain.json` → `export-game-data.mjs` → `src/game/art/sprite-data.generated.ts`）。建物・城・山などの他の絵は未使用 | 無料素材利用規約（https://pipoya.net/sozai/terms-of-use/ ）と同梱の readme を確認。商用利用可、加工可、無償の再配布可（規約とともに）、ゲームへの組み込み・販売可。禁止は素材としての販売（転売）。要点は `assets-src/pipoya/LICENSE-pipoya.md` | 不要（お礼として README・ゲーム内クレジットに「ぴぽや https://pipoya.net/」と書く予定） |
 
 ## 素材の置き場
 - 元ファイル: `assets-src/`（規約の写しも一緒に置く）
