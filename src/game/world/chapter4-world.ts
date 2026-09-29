@@ -7,7 +7,7 @@ import type { Npc } from "../npc";
 /**
  * 第4章（砂音）の世界。`docs/story/structure.md`「第4章（砂音）」・`docs/story/mystery.md`を反映。
  * 伏線 C-005（ガイドの潔白）の回収と C-008（合議会関係者の噂）を実装（roadmap 4-17）。
- * ボス戦・専用BGMは4-18・4-19で追加する（この時点でドルンは戦わずに立ち去る）。
+ * ボス戦は4-18で追加（専用BGMは4-19まで、第3章のボス曲を仮に流用）。
  */
 export const CHAPTER4_MAPS: Record<string, TileMapData> = {
   "sanone-town": createSanoneTownData(),
@@ -92,7 +92,7 @@ function guildMasterCommands(): EventCommand[] {
           then: [
             {
               type: "if",
-              flag: "chapter4_dorun_met",
+              flag: "chapter4_yugami_defeated",
               equals: true,
               then: [
                 { type: "message", text: "……野営地で、あの男に会ったのか。詳しく聞かせてくれ。", speaker: "組合長" },
@@ -253,7 +253,7 @@ function dorunCommands(): EventCommand[] {
   return [
     {
       type: "if",
-      flag: "chapter4_dorun_met",
+      flag: "chapter4_yugami_defeated",
       equals: true,
       then: [{ type: "message", text: "男の姿はもうない。砂の上に、足跡だけが残っている。" }],
       else: [
@@ -275,8 +275,12 @@ function dorunCommands(): EventCommand[] {
               text: "それは言えません。ただ、私の上にも、さらに上の方がいる。とだけ申し上げておきましょう。",
               speaker: "ドルン",
             },
-            { type: "message", text: "ドルンは砂けむりにまぎれて、野営地の闇へ消えた。" },
+            {
+              type: "message",
+              text: "ドルンが荷の灯り石を蹴り砕くと、砂が渦を巻いて立ち上がり、歪みの姿になった！",
+            },
             { type: "setFlag", flag: "chapter4_dorun_met", value: true },
+            { type: "startBattle", battleId: "sanone-yugami" },
           ],
           else: [{ type: "message", text: "焚き火のそばで、見慣れない男が背を向けて座っている。今は話しかけづらい雰囲気だ。" }],
         },

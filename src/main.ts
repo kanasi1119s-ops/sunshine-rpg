@@ -38,6 +38,7 @@ import { CHAPTER0_ITEM, CHAPTER0_SKILL, createChapter0Party, createYugamiBoss } 
 import { createMugikanoYugami } from "./game/battle/chapter1-enemies";
 import { createGarasukoYugami } from "./game/battle/chapter2-enemies";
 import { createTetsukusariYugami } from "./game/battle/chapter3-enemies";
+import { createSanoneSunaarashiYugami } from "./game/battle/chapter4-enemies";
 import { COMPANIONS, createCompanionCombatant, GUIDE, MINA, ORCA, RETO } from "./game/battle/companions";
 import type { Combatant, Skill } from "./game/battle/types";
 import type { LeveledStats } from "./game/growth/types";
@@ -200,6 +201,12 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
   "tetsukusari-yugami": {
     createEnemy: createTetsukusariYugami,
     victoryFlag: "chapter3_yugami_defeated",
+    bgm: CHAPTER3_BOSS_THEME,
+  },
+  // 専用BGMは4-19で追加する（それまで第3章のボス曲を仮に流用）。
+  "sanone-yugami": {
+    createEnemy: createSanoneSunaarashiYugami,
+    victoryFlag: "chapter4_yugami_defeated",
     bgm: CHAPTER3_BOSS_THEME,
   },
 };

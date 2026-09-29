@@ -30,7 +30,10 @@ function runScripted(
   return texts;
 }
 
-const KNOWN_BATTLE_IDS = new Set(["chapter0-yugami", "mugikano-yugami", "garasuko-yugami", "tetsukusari-yugami"]);
+const KNOWN_BATTLE_IDS = new Set(["chapter0-yugami", "mugikano-yugami", "garasuko-yugami", "tetsukusari-yugami", "sanone-yugami"]);
+
+/** main.ts側（戦闘勝利）で立てられるフラグ。 */
+const EXTERNALLY_SET_FLAGS = new Set(["chapter4_yugami_defeated"]);
 
 function allNpcCommands() {
   return Object.values(CHAPTER4_NPCS).flatMap((npcs) => npcs.flatMap((npc) => npc.commands));
@@ -62,6 +65,9 @@ describe("第4章のイベントデータの整合性", () => {
     const allCommands = [...CHAPTER4_OPENING_COMMANDS, ...allNpcCommands()];
     const setFlags = collectSetFlags(allCommands);
     for (const flag of collectReferencedFlags(allCommands)) {
+      if (EXTERNALLY_SET_FLAGS.has(flag)) {
+        continue;
+      }
       expect(setFlags.has(flag), `フラグ "${flag}" がどこにも setFlag されていない`).toBe(true);
     }
   });
@@ -107,6 +113,11 @@ describe("第4章の依頼と調査", () => {
     expect(texts.join("")).toContain("さらに上の方");
   });
 
+  it("ドルンの場面は戦闘「砂嵐の歪み」につながる", () => {
+    const dorun = npcById("sanone-camp", "sanone-dorun");
+    expect(collectBattleIds(dorun.commands)).toEqual(new Set(["sanone-yugami"]));
+  });
+
   it("情報屋から合議会関係者の噂を聞ける（C-008）", () => {
     const flags: Flags = {};
     const texts = runScripted(npcById("sanone-town", "sanone-informant").commands, flags);
@@ -116,15 +127,15 @@ describe("第4章の依頼と調査", () => {
 });
 
 describe("第4章の報告と章の引き", () => {
-  it("ドルンと会う前に報告しても、章は進まない", () => {
+  it("ボスを倒す前に報告しても、章は進まない", () => {
     const flags: Flags = { chapter4_quest_accepted: true };
     runScripted(guild().commands, flags);
     expect(flags.chapter4_reported).toBeUndefined();
     expect(flags.chapter4_guide_cleared).toBeUndefined();
   });
 
-  it("ドルンと会った後の報告で、ガイドの潔白（C-005回収）・帆走車入手・使者の登場まで進む", () => {
-    const flags: Flags = { chapter4_quest_accepted: true, chapter4_dorun_met: true };
+  it("ボスを倒した後の報告で、ガイドの潔白（C-005回収）・帆走車入手・使者の登場まで進む", () => {
+    const flags: Flags = { chapter4_quest_accepted: true, chapter4_dorun_met: true, chapter4_yugami_defeated: true };
     const texts = runScripted(guild().commands, flags).join("");
     expect(flags.chapter4_guide_cleared).toBe(true);
     expect(flags.chapter4_sailcar_obtained).toBe(true);
