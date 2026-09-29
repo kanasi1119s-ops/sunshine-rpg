@@ -22,6 +22,7 @@ import { CHAPTER1_OPENING_COMMANDS } from "./game/world/chapter1-world";
 import { CHAPTER2_OPENING_COMMANDS } from "./game/world/chapter2-world";
 import { CHAPTER3_OPENING_COMMANDS } from "./game/world/chapter3-world";
 import { CHAPTER4_OPENING_COMMANDS } from "./game/world/chapter4-world";
+import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
 import { renderBattle } from "./render/battle-renderer";
@@ -39,6 +40,7 @@ import { createMugikanoYugami } from "./game/battle/chapter1-enemies";
 import { createGarasukoYugami } from "./game/battle/chapter2-enemies";
 import { createTetsukusariYugami } from "./game/battle/chapter3-enemies";
 import { createSanoneSunaarashiYugami } from "./game/battle/chapter4-enemies";
+import { createKiriYogenYugami } from "./game/battle/chapter5-enemies";
 import { COMPANIONS, createCompanionCombatant, GUIDE, MINA, ORCA, RETO } from "./game/battle/companions";
 import type { Combatant, Skill } from "./game/battle/types";
 import type { LeveledStats } from "./game/growth/types";
@@ -52,6 +54,8 @@ import { GARASUKO_WAREHOUSE_ENTRY } from "./game/map/chapter2/garasuko-warehouse
 import { TETSUKUSARI_TOWN_ENTRY } from "./game/map/chapter3/tetsukusari-town";
 import { SANONE_TOWN_ENTRY } from "./game/map/chapter4/sanone-town";
 import { SANONE_CAMP_ENTRY } from "./game/map/chapter4/sanone-camp";
+import { KIRI_TOWN_ENTRY } from "./game/map/chapter5/kiri-town";
+import { KIRI_ARCHIVE_ENTRY } from "./game/map/chapter5/kiri-archive";
 import { TETSUKUSARI_MINE_ENTRY } from "./game/map/chapter3/tetsukusari-mine";
 import { createRng } from "./game/random";
 import { computeVictoryExp } from "./game/battle/battle-engine";
@@ -65,6 +69,7 @@ import { AudioEngine } from "./audio/audio-engine";
 import { CHAPTER0_BATTLE_THEME, CHAPTER0_BOSS_THEME, CHAPTER0_OUTSKIRTS_THEME, CHAPTER0_TOWN_THEME } from "./audio/chapter0-tracks";
 import { CHAPTER1_BOSS_THEME, CHAPTER1_VILLAGE_THEME, CHAPTER1_WATER_SOURCE_THEME } from "./audio/chapter1-tracks";
 import { CHAPTER3_BOSS_THEME, CHAPTER3_MINE_THEME, CHAPTER3_TOWN_THEME } from "./audio/chapter3-tracks";
+import { CHAPTER5_ARCHIVE_THEME, CHAPTER5_BOSS_THEME, CHAPTER5_TOWN_THEME } from "./audio/chapter5-tracks";
 import { CHAPTER4_BOSS_THEME, CHAPTER4_CAMP_THEME, CHAPTER4_TOWN_THEME } from "./audio/chapter4-tracks";
 import { CHAPTER2_BOSS_THEME, CHAPTER2_TOWN_THEME, CHAPTER2_WAREHOUSE_THEME } from "./audio/chapter2-tracks";
 import {
@@ -126,6 +131,9 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   if (mapId === "sanone-town" && !flags["chapter4_intro_seen"]) {
     dialogue.start(CHAPTER4_OPENING_COMMANDS);
   }
+  if (mapId === "kiri-town" && !flags["chapter5_intro_seen"]) {
+    dialogue.start(CHAPTER5_OPENING_COMMANDS);
+  }
 }
 
 /**
@@ -158,6 +166,12 @@ function mapBgmFor(mapId: string): Score {
   }
   if (mapId === "sanone-camp") {
     return CHAPTER4_CAMP_THEME;
+  }
+  if (mapId === "kiri-town") {
+    return CHAPTER5_TOWN_THEME;
+  }
+  if (mapId === "kiri-archive") {
+    return CHAPTER5_ARCHIVE_THEME;
   }
   return CHAPTER0_TOWN_THEME;
 }
@@ -214,6 +228,11 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
     createEnemy: createSanoneSunaarashiYugami,
     victoryFlag: "chapter4_yugami_defeated",
     bgm: CHAPTER4_BOSS_THEME,
+  },
+  "kiri-yugami": {
+    createEnemy: createKiriYogenYugami,
+    victoryFlag: "chapter5_yugami_defeated",
+    bgm: CHAPTER5_BOSS_THEME,
   },
 };
 
@@ -470,6 +489,14 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
   {
     label: () => "マップ: 砂音・隊商の野営地 へワープ",
     action: () => switchMap("sanone-camp", SANONE_CAMP_ENTRY.tileX, SANONE_CAMP_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 霧断崖の町 へワープ",
+    action: () => switchMap("kiri-town", KIRI_TOWN_ENTRY.tileX, KIRI_TOWN_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 霧断崖・記録の間 へワープ",
+    action: () => switchMap("kiri-archive", KIRI_ARCHIVE_ENTRY.tileX, KIRI_ARCHIVE_ENTRY.tileY),
   },
   {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,
