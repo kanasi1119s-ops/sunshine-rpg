@@ -1,7 +1,7 @@
 import { getTileId, type TileMap } from "../game/map/tile-map";
 import type { Camera } from "./camera";
 import { hashCell, shadeColor } from "../game/color-utils";
-import { buildTileArtCells, TILE_ART, TILE_ART_SIZE } from "../game/tile-art/tile-art";
+import { buildTileArtCells, TILE_ART, TILE_ART_SIZE, TILE_VARIANTS, type TileArtCell } from "../game/tile-art/tile-art";
 
 /**
  * 単色べた塗りだと平坦に見えるため、タイルごとに決まった模様（隅の陰影＋
@@ -57,6 +57,23 @@ function drawTileTexture(
  * 描けた場合はtrue、カテゴリが未登録の場合はfalse（呼び出し側は
  * `drawTileTexture`にフォールバックする）。
  */
+const cellCache = new Map<string, TileArtCell[]>();
+
+/** 地形カテゴリ×見た目の揺らぎごとに、描画データを一度だけ作って使い回す。 */
+function cellsFor(categoryKey: string, variant: number): TileArtCell[] | null {
+  const spec = TILE_ART[categoryKey];
+  if (!spec) {
+    return null;
+  }
+  const key = `${categoryKey}:${variant}`;
+  let cells = cellCache.get(key);
+  if (!cells) {
+    cells = buildTileArtCells(spec, variant);
+    cellCache.set(key, cells);
+  }
+  return cells;
+}
+
 function drawTileArt(
   ctx: CanvasRenderingContext2D,
   categoryKey: string,
@@ -64,14 +81,16 @@ function drawTileArt(
   screenY: number,
   tileWidth: number,
   tileHeight: number,
+  tileX: number,
+  tileY: number,
 ): boolean {
-  const spec = TILE_ART[categoryKey];
-  if (!spec) {
+  const cells = cellsFor(categoryKey, hashCell(tileX, tileY) % TILE_VARIANTS);
+  if (!cells) {
     return false;
   }
   const cellWidth = tileWidth / TILE_ART_SIZE;
   const cellHeight = tileHeight / TILE_ART_SIZE;
-  for (const cell of buildTileArtCells(spec)) {
+  for (const cell of cells) {
     ctx.fillStyle = cell.color;
     ctx.fillRect(screenX + cell.col * cellWidth, screenY + cell.row * cellHeight, cellWidth, cellHeight);
   }
@@ -111,7 +130,7 @@ export function renderTileMap(
         const screenX = tileX * tileWidth - camera.x;
         const screenY = tileY * tileHeight - camera.y;
         const artKey = map.data.tileArt?.[tileId];
-        if (artKey && drawTileArt(ctx, artKey, screenX, screenY, tileWidth, tileHeight)) {
+        if (artKey && drawTileArt(ctx, artKey, screenX, screenY, tileWidth, tileHeight, tileX, tileY)) {
           continue;
         }
         drawTileTexture(ctx, color, screenX, screenY, tileWidth, tileHeight, tileX, tileY);
