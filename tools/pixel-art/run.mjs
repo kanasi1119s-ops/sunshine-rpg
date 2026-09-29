@@ -13,14 +13,14 @@ const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromi
 for (const piece of list) {
   const g = piece.build();
   fs.writeFileSync(`${out}/${piece.name}.json`, JSON.stringify(g));
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 1000 }, recordVideo: { dir: `${out}/video-${piece.name}`, size: { width: 1280, height: 1000 } } });
+  const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 }, recordVideo: { dir: `${out}/video-${piece.name}`, size: { width: 1600, height: 1000 } } });
   const p = await ctx.newPage();
   await p.route(/fonts\./, (r) => r.abort());
   await p.goto("file://" + editorPath);
   await p.selectOption("#templateSelect", "blank"); await p.click("#loadTemplateBtn");
   await p.fill("#gridW", String(N)); await p.fill("#gridH", String(N)); await p.click("#resizeBtn");
   await p.uncheck("#symmetry"); await p.uncheck("#showShading");
-  await p.evaluate(() => { const z = document.getElementById("zoom"); z.value = 12; z.dispatchEvent(new Event("input", { bubbles: true })); });
+  await p.evaluate(() => { const z = document.getElementById("zoom"); z.value = 8; z.dispatchEvent(new Event("input", { bubbles: true })); });
   for (let i = 0; i < piece.pal.length - 4; i++) await p.click("#addSymbolBtn");
   const ci = await p.$$("#symbolList input[type=color]"), li = await p.$$("#symbolList input.label");
   for (let i = 0; i < piece.pal.length; i++) {
