@@ -14,11 +14,11 @@ describe("効果音ライブラリ", () => {
       expect(ids).toContain(id);
     }
   });
-  it.each(SE_LIBRARY.map((e) => [e.id, e] as const))("%s: 読めて、0.02〜6秒で、ループしない", (_id, e) => {
+  it.each(SE_LIBRARY.map((e) => [e.id, e] as const))("%s: 読めて、2〜4秒で、ループしない", (_id, e) => {
     expect(() => flattenScore(e.score)).not.toThrow();
     const sec = getScoreDurationSec(e.score);
-    expect(sec).toBeGreaterThanOrEqual(0.02);
-    expect(sec).toBeLessThanOrEqual(6);
+    expect(sec).toBeGreaterThanOrEqual(2);
+    expect(sec).toBeLessThanOrEqual(4);
     expect(e.score.loop).toBe(false);
   });
 });

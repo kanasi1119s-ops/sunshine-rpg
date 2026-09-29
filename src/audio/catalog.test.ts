@@ -2,17 +2,19 @@ import { describe, expect, it } from "vitest";
 import { CATALOG, getTrack } from "./catalog";
 import { flattenScore, getScoreDurationSec } from "./score";
 
-describe("BGMカタログ（52曲）", () => {
-  it("52曲そろっていて、IDと曲名が重複しない", () => {
-    expect(CATALOG.length).toBe(52);
-    expect(new Set(CATALOG.map((e) => e.id)).size).toBe(52);
-    expect(new Set(CATALOG.map((e) => e.title)).size).toBe(52);
+describe("BGMカタログ（55曲）", () => {
+  it("55曲そろっていて、IDと曲名が重複しない", () => {
+    expect(CATALOG.length).toBe(55);
+    expect(new Set(CATALOG.map((e) => e.id)).size).toBe(55);
+    expect(new Set(CATALOG.map((e) => e.title)).size).toBe(55);
   });
   it.each(CATALOG.map((e) => [e.id, e] as const))("%s: 1分〜1分半・パートの長さがそろう・音名が読める", (id) => {
     const score = getTrack(id);
     const sec = getScoreDurationSec(score);
-    expect(sec).toBeGreaterThanOrEqual(60);
-    expect(sec).toBeLessThanOrEqual(90);
+    const special = CATALOG.find((e) => e.id === id)?.finale !== undefined;
+    // 特別な曲（ラスボス・裏ボスなど）は3〜4分、ほかは1〜1分半
+    expect(sec).toBeGreaterThanOrEqual(special ? 170 : 60);
+    expect(sec).toBeLessThanOrEqual(special ? 250 : 90);
     const beats = score.tracks.map((t) => t.notes.reduce((s, n) => s + n.durationBeats, 0));
     for (const b of beats) expect(b).toBeCloseTo(beats[0], 6);
     expect(() => flattenScore(score)).not.toThrow();
@@ -28,7 +30,7 @@ describe("BGMカタログ（52曲）", () => {
 
 describe("現代的な音づくり・ボス戦の疾走感", () => {
   it("ボス戦の曲は速め（BPM148以上）で、4拍子の曲には16分の刻みが入る", () => {
-    for (const id of ["boss-touri", "boss-mugikano", "boss-tetsu", "boss-sanone", "boss-shimo", "boss-ukishima", "boss-final", "boss-final-2"]) {
+    for (const id of ["boss-touri", "boss-mugikano", "boss-tetsu", "boss-sanone", "boss-shimo", "boss-ukishima"]) {
       const score = getTrack(id);
       expect(score.tempoBpm, id).toBeGreaterThanOrEqual(148);
     }

@@ -213,6 +213,19 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       out.push(noise(ctx, t, t + (open ? 0.3 : 0.08), hp));
       break;
     }
+    case "tom": {
+      // タム: 音程が下がる太鼓（音の高さがそのまま太鼓の高さ）
+      const g = pluckGain(ctx, dest, t, v * 1.1, 0.002, 0.3);
+      const o = ctx.createOscillator();
+      o.type = "sine";
+      o.frequency.setValueAtTime(f * 1.6, t);
+      o.frequency.exponentialRampToValueAtTime(f, t + 0.08);
+      o.connect(g);
+      o.start(t);
+      o.stop(t + 0.36);
+      out.push(o);
+      break;
+    }
     case "crash": {
       const hp = filter(ctx, "highpass", 5000, pluckGain(ctx, dest, t, v * 0.6, 0.003, 1.4));
       out.push(noise(ctx, t, t + 1.5, hp));
@@ -259,6 +272,7 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       break;
     }
     case "leadGuitar":
+    case "brass":
     case "lead": {
       const guitar = e.instrument === "leadGuitar";
       const g = sustainGain(ctx, dest, t, d, v, 0.012, 0.09);
@@ -318,6 +332,7 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       out.push(osc(ctx, "triangle", f, t, stop, lp, 0.4));
       break;
     }
+    case "choir":
     case "pad": {
       const g = sustainGain(ctx, dest, t, d, v, Math.min(0.9, d * 0.4), 1.0);
       const lp = filter(ctx, "lowpass", 1400, g);
