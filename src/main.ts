@@ -21,6 +21,7 @@ import { CHAPTER0_OPENING_COMMANDS, CHAPTER0_START } from "./game/world/chapter0
 import { CHAPTER1_OPENING_COMMANDS } from "./game/world/chapter1-world";
 import { CHAPTER2_OPENING_COMMANDS } from "./game/world/chapter2-world";
 import { CHAPTER3_OPENING_COMMANDS } from "./game/world/chapter3-world";
+import { CHAPTER4_OPENING_COMMANDS } from "./game/world/chapter4-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
 import { renderBattle } from "./render/battle-renderer";
@@ -119,6 +120,9 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   }
   if (mapId === "tetsukusari-town" && !flags["chapter3_intro_seen"]) {
     dialogue.start(CHAPTER3_OPENING_COMMANDS);
+  }
+  if (mapId === "sanone-town" && !flags["chapter4_intro_seen"]) {
+    dialogue.start(CHAPTER4_OPENING_COMMANDS);
   }
 }
 
