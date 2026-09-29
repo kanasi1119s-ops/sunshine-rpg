@@ -1,0 +1,45 @@
+<title>サンシャイン作曲ソフト</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+<style>
+/* 配置: 上に操作パネル（自動作曲・再生・書き出し）、下にトラック一覧とピアノロール。 */
+:root {
+  --bg: #f3f1f6; --panel: #ffffff; --fg: #1d1a26; --muted: #6a6478; --line: #ddd8e6; --accent: #5a3fd1; --accent-fg: #fff;
+  --now: #ece7fb; --roll-bg: #faf9fc; --roll-alt: #f1eef7; --roll-black: #e7e2f1; --roll-beat: #d9d3e6; --roll-bar: #b9b0cf; --note: #5a3fd1; --note-edge: #3b27a0; --playhead: #d1345b;
+  --display: "DotGothic16", "Zen Kaku Gothic New", sans-serif; --body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #14121b; --panel: #1e1b28; --fg: #ece9f4; --muted: #9c95ae; --line: #322d40; --accent: #a892ff; --accent-fg: #14121b; --now: #2a2445;
+  --roll-bg: #191623; --roll-alt: #1f1b2b; --roll-black: #211d2e; --roll-beat: #322d40; --roll-bar: #4a4360; --note: #a892ff; --note-edge: #d9ccff; --playhead: #ff6b8e; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #14121b; --panel: #1e1b28; --fg: #ece9f4; --muted: #9c95ae; --line: #322d40; --accent: #a892ff; --accent-fg: #14121b; --now: #2a2445;
+  --roll-bg: #191623; --roll-alt: #1f1b2b; --roll-black: #211d2e; --roll-beat: #322d40; --roll-bar: #4a4360; --note: #a892ff; --note-edge: #d9ccff; --playhead: #ff6b8e; color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-inline: 16px; padding-block: 12px 40px; display: grid; gap: 14px; }
+h1 { font-family: var(--display); font-weight: 400; font-size: 22px; margin: 0; letter-spacing: .04em; }
+h2 { font-family: var(--display); font-weight: 400; font-size: 16px; margin: 0 0 8px; letter-spacing: .05em; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+.row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+label.f { display: grid; gap: 2px; font-size: 12px; color: var(--muted); }
+select, input[type="number"], input[type="text"] { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+button { font: inherit; color: inherit; cursor: pointer; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 12px; }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 700; }
+button:focus-visible, select:focus-visible, input:focus-visible, canvas:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:disabled { opacity: .45; cursor: default; }
+button.on { background: var(--now); border-color: var(--accent); }
+.muted { color: var(--muted); font-size: 12px; }
+.time { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+input[type="range"] { accent-color: var(--accent); min-width: 0; }
+#seek { flex: 1 1 200px; }
+.tracks { display: grid; gap: 6px; max-height: 340px; overflow: auto; padding-right: 4px; }
+.trk { display: grid; grid-template-columns: minmax(90px, 1.1fr) minmax(110px, 1.2fr) minmax(70px, 1fr) minmax(70px, 1fr) auto; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; background: var(--bg); }
+.trk.sel { border-color: var(--accent); background: var(--now); }
+.trk .nm { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.trk .bt { display: inline-flex; gap: 4px; }
+.trk .bt button { padding: 3px 8px; }
+.rollbox { overflow: auto; max-height: 440px; border: 1px solid var(--line); border-radius: 6px; background: var(--roll-bg); }
+canvas { display: block; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+</style>
+<div class="wrap" id="app"></div>
+<script>/*BUNDLE*/</script>

@@ -20,3 +20,4 @@ dist-ssr
 *.sw?
 tools/pixel-art/node_modules
 dist-bgm-player/
+dist-composer/
