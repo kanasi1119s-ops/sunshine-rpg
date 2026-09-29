@@ -1,3 +1,4 @@
+import { createBgmBus, scheduleInstrumentNote, type Source } from "./voices";
 import { flattenScore, getScoreDurationSec, type Score, type ScheduledNote } from "./score";
 
 const SCHEDULE_AHEAD_SEC = 3;
@@ -18,7 +19,7 @@ export class AudioEngine {
   private muted = false;
 
   private bgmLoopHandle: number | null = null;
-  private activeBgmNodes: OscillatorNode[] = [];
+  private activeBgmNodes: Source[] = [];
   /** BGMだけに、ほんのり残響をかけるための入り口（`ensureContext`で用意する）。 */
   private bgmBus: GainNode | null = null;
 
@@ -29,7 +30,7 @@ export class AudioEngine {
       this.bgmGain = this.ctx.createGain();
       this.bgmGain.gain.value = this.muted ? 0 : this.bgmVolume;
       this.bgmGain.connect(this.ctx.destination);
-      this.bgmBus = this.createReverbBus(this.ctx, this.bgmGain);
+      this.bgmBus = createBgmBus(this.ctx, this.bgmGain);
 
       this.seGain = this.ctx.createGain();
       this.seGain.gain.value = this.muted ? 0 : this.seVolume;
@@ -39,36 +40,6 @@ export class AudioEngine {
       void this.ctx.resume();
     }
     return this.ctx;
-  }
-
-  /**
-   * 残響つきの出力口を作る。残響の響き（インパルス）は、減衰するノイズから計算で作る（音声ファイルは使わない）。
-   * 乾いた音（dry）7：残響（wet）に少し、の割合で混ぜる。
-   */
-  private createReverbBus(ctx: AudioContext, destination: GainNode): GainNode {
-    const bus = ctx.createGain();
-    const dry = ctx.createGain();
-    dry.gain.value = 0.85;
-    bus.connect(dry);
-    dry.connect(destination);
-
-    const seconds = 1.6;
-    const length = Math.floor(ctx.sampleRate * seconds);
-    const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
-    for (let ch = 0; ch < 2; ch++) {
-      const data = impulse.getChannelData(ch);
-      for (let i = 0; i < length; i++) {
-        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.5);
-      }
-    }
-    const convolver = ctx.createConvolver();
-    convolver.buffer = impulse;
-    const wet = ctx.createGain();
-    wet.gain.value = 0.22;
-    bus.connect(convolver);
-    convolver.connect(wet);
-    wet.connect(destination);
-    return bus;
   }
 
   /**
@@ -82,7 +53,11 @@ export class AudioEngine {
     event: ScheduledNote,
     when: number,
     rich = false,
-  ): OscillatorNode[] {
+  ): Source[] {
+    const instrumental = scheduleInstrumentNote(ctx, destination, event, when);
+    if (instrumental.length > 0) {
+      return instrumental;
+    }
     const gain = ctx.createGain();
     const attack = rich ? 0.012 : 0.005;
     const release = Math.min(rich ? 0.12 : 0.05, event.durationSec * 0.3);

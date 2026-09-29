@@ -1,0 +1,102 @@
+<title>サンシャインRPG BGMプレイヤー</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+<style>
+/* 配置: 左に曲リスト（章ごと）、上に固定の再生バー。スマホでは1列。 */
+:root {
+  --bg: #f3f1f6; --panel: #ffffff; --fg: #1d1a26; --muted: #6a6478; --line: #ddd8e6;
+  --accent: #5a3fd1; --accent-fg: #ffffff; --now: #ece7fb;
+  --display: "DotGothic16", "Zen Kaku Gothic New", sans-serif;
+  --body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #14121b; --panel: #1e1b28; --fg: #ece9f4; --muted: #9c95ae; --line: #322d40;
+  --accent: #a892ff; --accent-fg: #14121b; --now: #2a2445; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #14121b; --panel: #1e1b28; --fg: #ece9f4; --muted: #9c95ae; --line: #322d40;
+  --accent: #a892ff; --accent-fg: #14121b; --now: #2a2445; color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.6; }
+.wrap { max-width: 760px; margin: 0 auto; padding-inline: 16px; padding-block: 0 48px; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg); padding-block: 14px 12px; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+h1 { font-family: var(--display); font-weight: 400; font-size: 20px; margin: 0; letter-spacing: .04em; text-wrap: balance; }
+.now { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.now .name { flex: 1 1 12em; min-width: 0; font-weight: 700; }
+.now .sub { color: var(--muted); font-size: 13px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.stop, .play { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 8px 14px; }
+.stop:focus-visible, .row:focus-visible, .se:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.meter { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.meter i { display: block; height: 100%; width: 0; background: var(--accent); }
+.vol { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+.vol input { flex: 1; max-width: 240px; accent-color: var(--accent); }
+h2 { font-family: var(--display); font-weight: 400; font-size: 16px; letter-spacing: .06em; margin: 26px 0 8px; color: var(--muted); }
+ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.row { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; }
+.row .t { flex: 1; min-width: 0; }
+.row .m { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.row .ic { width: 1.2em; color: var(--accent); font-family: var(--display); }
+.row[aria-pressed="true"] { background: var(--now); border-color: var(--accent); }
+.fx { display: flex; flex-wrap: wrap; gap: 8px; }
+.se { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 8px 16px; }
+.note { color: var(--muted); font-size: 13px; margin-top: 28px; }
+</style>
+<div class="wrap">
+  <div class="bar">
+    <h1>サンシャインRPG BGMプレイヤー</h1>
+    <div class="now"><div class="name" id="name">曲を選ぶと再生します</div><div class="sub" id="sub"></div><button class="stop" id="stop" type="button">停止</button></div>
+    <div class="meter" aria-hidden="true"><i id="bar"></i></div>
+    <label class="vol">音量 <input id="vol" type="range" min="0" max="100" value="60"></label>
+  </div>
+  <div id="list"></div>
+  <div id="fx"></div>
+  <p class="note">ゲーム本体と同じ再生エンジンと曲データで鳴らしています（曲は自動でくり返します）。曲名の一部は仮です。新曲は、どの場面で使うかまだ決まっていません。</p>
+</div>
+<script>/*BUNDLE*/</script>
+<script>
+(function () {
+  var B = window.BGM, cur = -1, t0 = 0, raf = 0;
+  var list = document.getElementById("list"), rows = [];
+  var group = "", ul = null;
+  function mmss(s) { s = Math.round(s); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+  B.bgm.forEach(function (e, i) {
+    if (e.group !== group) { group = e.group; var h = document.createElement("h2"); h.textContent = group; list.appendChild(h); ul = document.createElement("ul"); list.appendChild(ul); }
+    var li = document.createElement("li"), b = document.createElement("button");
+    b.type = "button"; b.className = "row"; b.setAttribute("aria-pressed", "false");
+    b.innerHTML = '<span class="ic">▶</span><span class="t"></span><span class="m"></span>';
+    b.querySelector(".t").textContent = e.title;
+    b.querySelector(".m").textContent = "♩" + e.bpm + "  " + mmss(e.sec);
+    b.addEventListener("click", function () { select(i); });
+    li.appendChild(b); ul.appendChild(li); rows.push(b);
+  });
+  var fxGroup = "", fxBox = null;
+  B.effects.forEach(function (e, i) {
+    if (e.group !== fxGroup) {
+      fxGroup = e.group;
+      var h = document.createElement("h2"); h.textContent = "効果音 ／ " + fxGroup; document.getElementById("fx").appendChild(h);
+      fxBox = document.createElement("div"); fxBox.className = "fx"; document.getElementById("fx").appendChild(fxBox);
+    }
+    var b = document.createElement("button"); b.type = "button"; b.className = "se"; b.textContent = e.title;
+    b.addEventListener("click", function () { B.playSe(i); });
+    fxBox.appendChild(b);
+  });
+  function select(i) {
+    if (cur >= 0) { rows[cur].setAttribute("aria-pressed", "false"); rows[cur].querySelector(".ic").textContent = "▶"; }
+    cur = i; B.play(i); t0 = performance.now();
+    rows[i].setAttribute("aria-pressed", "true"); rows[i].querySelector(".ic").textContent = "♪";
+    document.getElementById("name").textContent = B.bgm[i].title;
+    document.getElementById("sub").textContent = B.bgm[i].group;
+    cancelAnimationFrame(raf); tick();
+  }
+  function tick() {
+    var e = B.bgm[cur]; var p = ((performance.now() - t0) / 1000 % e.sec) / e.sec;
+    document.getElementById("bar").style.width = (p * 100).toFixed(1) + "%";
+    raf = requestAnimationFrame(tick);
+  }
+  document.getElementById("stop").addEventListener("click", function () {
+    B.stop(); cancelAnimationFrame(raf); document.getElementById("bar").style.width = "0";
+    if (cur >= 0) { rows[cur].setAttribute("aria-pressed", "false"); rows[cur].querySelector(".ic").textContent = "▶"; }
+    cur = -1; document.getElementById("name").textContent = "停止中"; document.getElementById("sub").textContent = "";
+  });
+  document.getElementById("vol").addEventListener("input", function (ev) { B.volume(ev.target.value / 100); });
+  B.volume(0.6);
+})();
+</script>

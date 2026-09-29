@@ -19,3 +19,4 @@ dist-ssr
 *.sln
 *.sw?
 tools/pixel-art/node_modules
+dist-bgm-player/
