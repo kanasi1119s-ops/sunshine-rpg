@@ -19,6 +19,8 @@ export class AudioEngine {
 
   private bgmLoopHandle: number | null = null;
   private activeBgmNodes: OscillatorNode[] = [];
+  /** BGMだけに、ほんのり残響をかけるための入り口（`ensureContext`で用意する）。 */
+  private bgmBus: GainNode | null = null;
 
   /** 最初のユーザー操作のタイミングで呼ぶ。AudioContextを用意し、一時停止も解除する。 */
   private ensureContext(): AudioContext {
@@ -27,6 +29,7 @@ export class AudioEngine {
       this.bgmGain = this.ctx.createGain();
       this.bgmGain.gain.value = this.muted ? 0 : this.bgmVolume;
       this.bgmGain.connect(this.ctx.destination);
+      this.bgmBus = this.createReverbBus(this.ctx, this.bgmGain);
 
       this.seGain = this.ctx.createGain();
       this.seGain.gain.value = this.muted ? 0 : this.seVolume;
@@ -38,29 +41,83 @@ export class AudioEngine {
     return this.ctx;
   }
 
+  /**
+   * 残響つきの出力口を作る。残響の響き（インパルス）は、減衰するノイズから計算で作る（音声ファイルは使わない）。
+   * 乾いた音（dry）7：残響（wet）に少し、の割合で混ぜる。
+   */
+  private createReverbBus(ctx: AudioContext, destination: GainNode): GainNode {
+    const bus = ctx.createGain();
+    const dry = ctx.createGain();
+    dry.gain.value = 0.85;
+    bus.connect(dry);
+    dry.connect(destination);
+
+    const seconds = 1.6;
+    const length = Math.floor(ctx.sampleRate * seconds);
+    const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = impulse.getChannelData(ch);
+      for (let i = 0; i < length; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.5);
+      }
+    }
+    const convolver = ctx.createConvolver();
+    convolver.buffer = impulse;
+    const wet = ctx.createGain();
+    wet.gain.value = 0.22;
+    bus.connect(convolver);
+    convolver.connect(wet);
+    wet.connect(destination);
+    return bus;
+  }
+
+  /**
+   * 音を1つ予約する。`rich`（BGM用）のときは、少しだけ音程をずらした2つ目の音を重ねて厚みを出し、
+   * 立ち上がりに軽いアタック、鳴っている間にゆるやかな減衰をつけて、電子音の平らさをやわらげる。
+   * 効果音は従来どおり（`rich`なし）。
+   */
   private scheduleNote(
     ctx: AudioContext,
-    destination: GainNode,
+    destination: AudioNode,
     event: ScheduledNote,
     when: number,
-  ): OscillatorNode {
-    const osc = ctx.createOscillator();
-    osc.type = event.waveform;
-    osc.frequency.value = event.frequency;
-
+    rich = false,
+  ): OscillatorNode[] {
     const gain = ctx.createGain();
-    const attack = 0.005;
-    const release = Math.min(0.05, event.durationSec * 0.3);
+    const attack = rich ? 0.012 : 0.005;
+    const release = Math.min(rich ? 0.12 : 0.05, event.durationSec * 0.3);
+    const peak = event.volume;
     gain.gain.setValueAtTime(0, when);
-    gain.gain.linearRampToValueAtTime(event.volume, when + attack);
-    gain.gain.setValueAtTime(event.volume, Math.max(when + attack, when + event.durationSec - release));
+    gain.gain.linearRampToValueAtTime(peak, when + attack);
+    if (rich) {
+      // 鳴らし始めは少し強く、すぐ7割ほどに落ち着く（ゆるやかな減衰）
+      gain.gain.linearRampToValueAtTime(peak * 0.72, when + Math.min(0.18, event.durationSec * 0.5));
+    }
+    const holdLevel = rich ? peak * 0.72 : peak;
+    gain.gain.setValueAtTime(holdLevel, Math.max(when + attack, when + event.durationSec - release));
     gain.gain.linearRampToValueAtTime(0, when + event.durationSec);
-
-    osc.connect(gain);
     gain.connect(destination);
-    osc.start(when);
-    osc.stop(when + event.durationSec + 0.02);
-    return osc;
+
+    const detunes = rich && event.waveform !== "sine" ? [-6, 6] : [0];
+    const oscillators: OscillatorNode[] = [];
+    for (const cents of detunes) {
+      const osc = ctx.createOscillator();
+      osc.type = event.waveform;
+      osc.frequency.value = event.frequency;
+      osc.detune.value = cents;
+      if (detunes.length > 1) {
+        const half = ctx.createGain();
+        half.gain.value = 0.5;
+        osc.connect(half);
+        half.connect(gain);
+      } else {
+        osc.connect(gain);
+      }
+      osc.start(when);
+      osc.stop(when + event.durationSec + 0.02);
+      oscillators.push(osc);
+    }
+    return oscillators;
   }
 
   playSe(score: Score): void {
@@ -85,8 +142,8 @@ export class AudioEngine {
       while (nextStart < ctx.currentTime + SCHEDULE_AHEAD_SEC) {
         const events = flattenScore(score);
         for (const event of events) {
-          const node = this.scheduleNote(ctx, this.bgmGain!, event, nextStart + event.startSec);
-          this.activeBgmNodes.push(node);
+          const nodes = this.scheduleNote(ctx, this.bgmBus!, event, nextStart + event.startSec, true);
+          this.activeBgmNodes.push(...nodes);
         }
         nextStart += durationSec;
         if (!score.loop) {
