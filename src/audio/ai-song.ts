@@ -1,4 +1,3 @@
-import { AMP_PRESETS, AMP_PRESET_NAMES, type AmpPresetName } from "./amp";
 import { noteNameToMidi } from "./note";
 import { buildNewSong } from "./newsong";
 import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, type Track } from "./score";
@@ -18,9 +17,7 @@ export interface AiPart {
   /** 左右の位置 -1（左）〜1（右）。 */
   pan: number;
   /** アンプ（ギター・ベース向け）。"auto" なら曲の音色から自動。 */
-  amp: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs";
-  /** ジャンル別アンプ（14種）。"none" 以外なら amp より優先する。 */
-  ampPreset: "none" | AmpPresetName;
+  amp: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio";
   /**
    * 音の並び。「音名:拍」を空白でくぎる（例 "E5:1 D5:0.5 R:0.5 C5:2"）。R は休み。
    * ドラム（kick/snare/hihat/crash/tom）は音名のかわりに x（打つ）か R（休み）。
@@ -59,6 +56,8 @@ export const AI_INSTRUMENTS: Record<string, string> = {
   piano: "ピアノ（A0〜C8）", keys: "エレピ（C2〜C6）", harpsichord: "チェンバロ（C2〜C6）", strings: "弦楽（C2〜C7）", pad: "パッド（C2〜C6）", choir: "合唱（C3〜C6）", brass: "ブラス（E2〜C6）", lead: "シンセリード（C3〜C7）", bell: "鐘（C4〜C7）",
 };
 const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom"]);
+/** AIソング形式で使えるアンプの名前（`AI_SONG_SCHEMA` の amp と同じ）。 */
+const AI_AMPS = new Set(["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio"]);
 
 /** 構造化出力（JSONスキーマ）。 */
 export const AI_SONG_SCHEMA = {
@@ -87,8 +86,7 @@ export const AI_SONG_SCHEMA = {
           role: { type: "string" },
           volume: { type: "number" },
           pan: { type: "number" },
-          amp: { type: "string", enum: ["auto", "clean", "overdrive", "distortion", "metal", "prs"] },
-          ampPreset: { type: "string", enum: ["none", ...AMP_PRESET_NAMES] },
+          amp: { type: "string", enum: ["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio"] },
           notes: { type: "string" },
         },
       },
@@ -113,9 +111,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - tone: ギターの音色の方向（rock / metal / prs＝なめらかなリード）。
 - parts: 自分で書くパート。1曲に1〜8パート。
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。
-  - volume: 0.1〜0.35 くらい（メロディ 0.22〜0.3、伴奏 0.1〜0.2）。pan: -1〜1。amp: ギター・ベースのアンプ（auto / clean / overdrive / distortion / metal / prs）。ほかの楽器は auto。
-  - ampPreset: ジャンル別アンプ（none なら使わない）。none 以外を選ぶと amp より優先。ギター以外（シンセ・ピアノなど）にもかけられる。
-${AMP_PRESET_NAMES.map((k) => `    - ${k}: ${AMP_PRESETS[k].label}（${AMP_PRESETS[k].genre}）`).join("\n")}
+  - volume: 0.1〜0.35 くらい（メロディ 0.22〜0.3、伴奏 0.1〜0.2）。pan: -1〜1。amp: ギター・ベースのアンプ（auto / clean / overdrive / distortion / metal / prs、ジャンル別: jazz / blues / funk / crunch / hardrock / punk / fuzz / shoegaze / lofi / retro8bit / radio）。ほかの楽器は auto。
   - notes: 「音名:拍」を空白でくぎる。例 "E5:1 D5:0.5 R:0.5 C5:2"。R は休み。音名は C4（ド）〜B4 のように、シャープは #、フラットは b（例 F#4, Bb3）。拍は 0.25（16分音符）・0.5・0.75・1・1.5・2・3・4 など。
   - ドラムのパートは、音名のかわりに x（打つ）か R（休み）。例 kick "x:1 R:1 x:0.5 x:0.5 R:1"。
   - notes の合計の拍が曲の長さより短いときは、くり返して埋める（ドラムの1〜2小節の型やリフを短く書ける）。メロディは曲全体ぶん書くのがよい（Aメロ・Bメロ・サビのように変化をつける）。
@@ -214,9 +210,8 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     const events = parseNotes(String(p.notes ?? ""), drum, errors, where);
     const length = events.reduce((s, e) => s + e.durationBeats, 0);
     if (length > total + 1e-6) warnings.push(`${where}: 曲の長さ（${total}拍）より長いので、${length}拍のうち後ろを切りました`);
-    const preset = p.ampPreset && p.ampPreset !== "none" ? p.ampPreset : undefined;
-    if (preset && !(preset in AMP_PRESETS)) errors.push(`${where}: ampPreset が一覧にありません（${preset}）`);
-    const amp: AmpSetting | undefined = preset && preset in AMP_PRESETS ? { type: "genre", preset } : p.amp && p.amp !== "auto" ? { type: p.amp } : undefined;
+    if (p.amp && !AI_AMPS.has(p.amp)) warnings.push(`${where}: アンプ「${p.amp}」は使えないので、おまかせ（auto）にしました`);
+    const amp: AmpSetting | undefined = p.amp && p.amp !== "auto" && AI_AMPS.has(p.amp) ? { type: p.amp } : undefined;
     parts.push({
       waveform: drum ? "square" : "sawtooth",
       instrument: p.instrument,

@@ -29,8 +29,7 @@ server.registerTool("song_guide", {
   inputSchema: {},
 }, async () => {
   const k = await kit();
-  const presets = await k.ampPresets();
-  return text(`${await k.guide()}\n\n## ジャンル別アンプ（ampPreset）\n${presets.map((p) => `- ${p.id}: ${p.label}（${p.genre}）`).join("\n")}\n\n## 見本\n${fs.readFileSync(path.join(ROOT, "assets-src/ai-songs/harbor-night.json"), "utf8")}`);
+  return text(`${await k.guide()}\n\n## 見本\n${fs.readFileSync(path.join(ROOT, "assets-src/ai-songs/harbor-night.json"), "utf8")}`);
 });
 
 server.registerTool("compose_song", {
