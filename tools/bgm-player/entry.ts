@@ -3,13 +3,14 @@ import soundfontUrl from "../../src/audio/soundfont/game.sf3?url";
 import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url";
 import { AudioEngine } from "../../src/audio/audio-engine";
 import { getScoreDurationSec, type Score } from "../../src/audio/score";
-import { CATALOG, getTrack } from "../../src/audio/catalog";
+import { allEntries, getTrack } from "../../src/audio/catalog";
+import "../../src/audio/user-songs";
 import { ps2Edition } from "../../src/audio/ps2-edition";
 import { realEdition } from "../../src/audio/real-edition";
 import { SE_LIBRARY } from "../../src/audio/se-library";
 
 interface Entry { group: string; title: string; score: Score; scene?: string; style?: string }
-const bgm: Entry[] = CATALOG.map((e) => ({ group: e.group, title: e.title, scene: e.scene, style: e.styleLabel, score: getTrack(e.id) }));
+const bgm: Entry[] = allEntries().map((e) => ({ group: e.group, title: e.title, scene: e.scene, style: e.styleLabel, score: getTrack(e.id) }));
 const effects: Entry[] = SE_LIBRARY.map((e) => ({ group: e.group, title: e.name, score: e.score }));
 // 1ファイルのHTMLでは外部ファイルを読み込めないので、埋め込んだ素材（データURL）を、録音音源の再生に渡す
 function bytesOf(dataUrl: string): Uint8Array {

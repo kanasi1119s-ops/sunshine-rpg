@@ -40,3 +40,5 @@ npm run dev
 - 地形のタイル絵の一部に、ぴぽや「フィールドマップセット１」（https://pipoya.net/ ）の無料素材を加工して使っています。規約と記録は [`docs/assets-credits.md`](docs/assets-credits.md) を参照してください。
 
 - BGMの録音音源に、Fluid (R3) GM SoundFont（© 2000-2002 Frank Wen、Mono版 © 2014-2017 Michael Cowgill、MITライセンス）から、ゲームで使う楽器だけを切り出して使っています。再生には spessasynth（Apache-2.0）を使っています。ライセンス文は `public/licenses/` にあります。
+
+- 作曲ソフト（`tools/composer/`）のアンプシミュレーターに、Neural Amp Modeler Core（© 2023 Steven Atkinson、MITライセンス）を使っています（ゲーム本体には入っていません）。

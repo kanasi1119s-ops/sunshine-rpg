@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { notesToEvents, toggleNote, trackToNotes, trackTotalBeats } from "./edit";
+import { noteStartAt, notesToEvents, resizeNote, toggleNote, trackToNotes, trackTotalBeats } from "./edit";
 import type { Track } from "./score";
 
 const base: Track = { waveform: "triangle", volume: 0.2, notes: [{ note: "C4", durationBeats: 1 }, { note: "R", durationBeats: 1 }, { note: "E4", durationBeats: 2 }] };
@@ -30,5 +30,18 @@ describe("ピアノロールの編集道具", () => {
     expect(trackTotalBeats(c)).toBe(4);
     const d = notesToEvents([{ start: 0, dur: 4, note: "A4" }, { start: 3, dur: 1, note: "B4" }], 4);
     expect(d.map((e) => [e.note, e.durationBeats])).toEqual([["A4", 3], ["B4", 1]]);
+  });
+
+  it("音の長さを変えられる（のばす・縮める）。全体の長さはそろったまま", () => {
+    const longer = resizeNote(base, 0, 2, 4);
+    expect(longer.notes.map((e) => [e.note, e.durationBeats])).toEqual([["C4", 2], ["E4", 2]]);
+    const shorter = resizeNote(base, 2, 0.5, 4);
+    expect(shorter.notes.map((e) => [e.note, e.durationBeats])).toEqual([["C4", 1], ["R", 1], ["E4", 0.5], ["R", 1.5]]);
+    expect(trackTotalBeats(shorter)).toBe(4);
+    expect(resizeNote(base, 1, 2, 4)).toBe(base);
+  });
+  it("位置を覆っている音の始まりを返す", () => {
+    expect(noteStartAt(base, 3)).toBe(2);
+    expect(noteStartAt(base, 1.5)).toBeNull();
   });
 });

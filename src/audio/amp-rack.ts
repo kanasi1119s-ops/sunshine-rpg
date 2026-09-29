@@ -5,8 +5,16 @@
  * ドラム: ロックは温かい厚み、メタルは低音の重さと3〜5kHzのアタックを強調
  */
 
+import type { AmpSetting } from "./score";
+import type { NamHost } from "./nam/nam-host";
+
 export type Tone = "rock" | "metal" | "prs";
-type Role = "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru";
+/** チャンネルごとの、音づくりの上書き（トラックの`amp`と、左右の位置）。 */
+export interface ChannelAmp {
+  amp: AmpSetting;
+  pan: number;
+}
+type Role = "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru";
 
 const CURVES = new Map<string, Float32Array<ArrayBuffer>>();
 /** 真空管アンプのように、少し非対称にクリップする波形。drive が大きいほど深く歪む。 */
@@ -31,6 +39,9 @@ const BASS_PROGRAMS = new Set([32, 33, 34, 35, 36, 37, 38, 39]);
 export class AmpRack {
   private inputs: GainNode[];
   private built: AudioNode[][] = [];
+  private nam: NamHost | null = null;
+  private models: Record<string, string> = {};
+  private generation = 0;
 
   constructor(private ctx: BaseAudioContext, private destination: AudioNode) {
     this.inputs = Array.from({ length: 16 }, () => ctx.createGain());
@@ -41,21 +52,35 @@ export class AmpRack {
     }
   }
 
+  /** NAM（実際のアンプを学習したモデル）を使えるようにする（作曲ソフトだけ）。 */
+  setNam(host: NamHost | null): void {
+    this.nam = host;
+  }
+
   input(channel: number): AudioNode {
     return this.inputs[channel];
   }
 
   /** 曲が変わるたびに、各チャンネルの楽器（GMの番号）と曲の音色に合わせて、機材をつなぎ直す。 */
-  configure(programs: Record<number, number>, tone: Tone, drumChannel = 9): void {
+  configure(programs: Record<number, number>, tone: Tone, drumChannel = 9, amps: Record<number, ChannelAmp> = {}, models: Record<string, string> = {}): void {
+    this.generation++;
+    this.models = models;
     for (let ch = 0; ch < 16; ch++) {
       const input = this.inputs[ch];
       input.disconnect();
       for (const node of this.built[ch]) node.disconnect();
       this.built[ch] = [];
-      const role = this.roleOf(ch === drumChannel ? -1 : programs[ch], tone);
-      const nodes = this.build(role, input);
+      const override = ch === drumChannel ? undefined : amps[ch];
+      const role = override && override.amp.type !== "auto" ? this.roleFromType(override.amp.type, ch === drumChannel ? -1 : programs[ch], tone) : this.roleOf(ch === drumChannel ? -1 : programs[ch], tone);
+      const nodes = this.build(role, input, override);
       this.built[ch] = nodes;
     }
+  }
+
+  private roleFromType(type: AmpSetting["type"], program: number | undefined, tone: Tone): Role {
+    if (type === "nam") return this.nam ? "nam" : this.roleOf(program, tone);
+    if (type === "clean" || type === "overdrive" || type === "distortion" || type === "metal" || type === "prs") return type;
+    return this.roleOf(program, tone);
   }
 
   private roleOf(program: number | undefined, tone: Tone): Role {
@@ -99,29 +124,36 @@ export class AmpRack {
     return nodes;
   }
 
-  private build(role: Role, input: AudioNode): AudioNode[] {
+  private build(role: Role, input: AudioNode, override?: ChannelAmp): AudioNode[] {
+    const d = override?.amp.drive ?? 1;
+    const toneDb = override?.amp.tone ?? 0;
+    const level = override?.amp.level ?? 1;
+    // 音づくりの上書き（歪みの深さ・高音・出力）がある歪み系のギターは、最後に高音の調整と出力の段を足す
+    const tail = (nodes: AudioNode[]): AudioNode[] => (override ? [...nodes, this.filter("highshelf", 3500, toneDb), this.gain(level)] : nodes);
     switch (role) {
+      case "nam":
+        return this.buildNam(input, override!);
       case "overdrive":
         // オーバードライブ: ゆるく歪み、弾き方の強弱が音に残る。中域（900Hz付近）が前に出る
-        return this.chain(input, [this.filter("highpass", 85), this.filter("peaking", 900, 4.5, 0.8), this.gain(3.4), this.shaper(3.4, 0.09), this.filter("peaking", 2400, 2, 1), this.filter("lowpass", 5600, 0, 0.9), this.gain(0.5)]);
+        return this.chain(input, tail([this.filter("highpass", 85), this.filter("peaking", 900, 4.5, 0.8), this.gain(3.4 * d), this.shaper(3.4 * d, 0.09), this.filter("peaking", 2400, 2, 1), this.filter("lowpass", 5600, 0, 0.9), this.gain(0.5)]));
       case "distortion":
         // ディストーション: 深く歪み、音が伸びる。低音は少し締める
-        return this.chain(input, [this.filter("highpass", 110), this.filter("peaking", 1100, 3, 0.9), this.gain(3.6), this.shaper(5, 0.06), this.filter("peaking", 3000, 1, 0.9), this.filter("lowpass", 4200, 0, 0.8), this.gain(0.46)]);
+        return this.chain(input, tail([this.filter("highpass", 110), this.filter("peaking", 1100, 3, 0.9), this.gain(3.6 * d), this.shaper(5 * d, 0.06), this.filter("peaking", 3000, 1, 0.9), this.filter("lowpass", 4200, 0, 0.8), this.gain(0.46)]));
       case "metal":
         // メタルゾーン: 前段で低音をしっかり削って音を「締め」、中域を持ち上げて強く歪ませ（2段）、後段で中域をえぐって、高音の刺さりと重い低音を足す
-        return this.chain(input, [
-          this.filter("highpass", 130, 0, 0.8), this.filter("peaking", 750, 5, 0.8), this.gain(4.6), this.shaper(9.5, 0.06),
+        return this.chain(input, tail([
+          this.filter("highpass", 130, 0, 0.8), this.filter("peaking", 750, 5, 0.8), this.gain(4.6 * d), this.shaper(9.5 * d, 0.06),
           this.filter("lowpass", 5200, 0, 0.7), this.gain(1.9), this.shaper(3.8, 0.04),
           this.filter("peaking", 480, -4, 1), this.filter("peaking", 3400, 3, 1), this.filter("lowshelf", 110, 4), this.filter("lowpass", 4700, 0, 0.8), this.gain(0.34),
-        ]);
+        ]));
       case "prs":
         // 粒立ちがよく歌う、なめらかなギター（PRS系のような澄んだ倍音）: 深すぎない歪みで、弾き方の強弱と1弦ずつの輪郭が残る。
         // 中域（1.2kHz）で「歌う」芯を出し、3.8kHzの輝きは足しつつ、6.5kHz付近のジャリつきを抑え、低音は締めすぎず丸く
-        return this.chain(input, [
-          this.filter("highpass", 95, 0, 0.8), this.filter("peaking", 1200, 3, 0.9), this.gain(2.8), this.shaper(4.4, 0.07),
+        return this.chain(input, tail([
+          this.filter("highpass", 95, 0, 0.8), this.filter("peaking", 1200, 3, 0.9), this.gain(2.8 * d), this.shaper(4.4 * d, 0.07),
           this.filter("peaking", 220, 1.5, 0.9), this.filter("peaking", 3800, 1.8, 0.9), this.filter("peaking", 6500, -2.5, 1), this.filter("lowpass", 6000, 0, 0.6), this.filter("lowshelf", 120, 1.5),
           this.compressor(-18, 2.2, 0.02, 0.2), this.gain(0.5),
-        ]);
+        ]));
       case "clean":
         return this.chain(input, [this.filter("highpass", 70), this.filter("peaking", 3500, 2.5, 0.9), this.filter("highshelf", 8000, 2), this.gain(0.95)]);
       case "bass":
@@ -138,6 +170,42 @@ export class AmpRack {
       default:
         return this.chain(input, []);
     }
+  }
+
+  /**
+   * NAMのアンプ: 入力 →（モデルを読み込んだワークレット）→ 左右の位置 → 出力。モデルが準備できるまでは、そのまま通す。
+   * 準備できたら、その場でつなぎ替える（曲の再生は止めない）。
+   */
+  private buildNam(input: AudioNode, override: ChannelAmp): AudioNode[] {
+    const dry = this.gain(1);
+    const hub = this.gain(1);
+    input.connect(dry);
+    dry.connect(this.destination);
+    const nodes: AudioNode[] = [dry, hub];
+    const modelJson = override.amp.model ? this.models[override.amp.model] : undefined;
+    const generation = this.generation;
+    if (!this.nam || !modelJson) {
+      return nodes;
+    }
+    void this.nam.createAmp(this.ctx, modelJson).then((node) => {
+      if (generation !== this.generation) {
+        node.disconnect();
+        return;
+      }
+      const panner = this.ctx.createStereoPanner();
+      panner.pan.value = Math.max(-1, Math.min(1, override.pan));
+      const out = this.gain((override.amp.level ?? 1) * Math.pow(10, 0 / 20));
+      const tone = this.filter("highshelf", 3500, override.amp.tone ?? 0);
+      input.connect(node);
+      node.connect(tone);
+      tone.connect(panner);
+      panner.connect(out);
+      out.connect(this.destination);
+      // 音が出はじめたら、元の音（ドライ）を切る
+      dry.disconnect();
+      this.built[this.built.findIndex((list) => list.includes(dry))]?.push(node, tone, panner, out);
+    });
+    return nodes;
   }
 
   private compressor(threshold: number, ratio: number, attack: number, release: number): DynamicsCompressorNode {

@@ -29,12 +29,27 @@ export type Instrument =
   // フォンク向け: 重く歪んだ低音（808）とカウベル
   | "sub808" | "cowbell";
 
+/** ギターなどの音づくり（アンプ）の設定。`auto`は、曲の音色（tone）と楽器から自動で選ぶ。 */
+export interface AmpSetting {
+  type: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "nam";
+  /** 歪みの深さの倍率（0.5〜2、既定1）。 */
+  drive?: number;
+  /** 高音の明るさ（dB。-6〜+6、既定0）。 */
+  tone?: number;
+  /** 出力の大きさの倍率（0.5〜1.5、既定1）。 */
+  level?: number;
+  /** type=nam のとき、使うNAMモデルの名前（`Score.namModels`のキー）。 */
+  model?: string;
+}
+
 export interface Track {
   waveform: Waveform;
   /** 楽器の音色（省略時は`waveform`のまま）。 */
   instrument?: Instrument;
   /** 左右の位置（-1=左、0=中央、1=右）。省略時は中央。 */
   pan?: number;
+  /** 音づくり（アンプ）の設定。省略時は自動。 */
+  amp?: AmpSetting;
   /** 録音音源で鳴らすときの、GMの楽器番号の指定（省略時は`instrument`から決める）。実楽器版で使う。 */
   program?: number;
   /** 効果音用: 録音音源（GMの楽器番号）で鳴らす。準備ができていないときは、`instrument`・`waveform`の合成音で鳴らす。 */
@@ -47,6 +62,8 @@ export interface Track {
 }
 
 export interface Score {
+  /** 読み込んだNAMモデル（.namファイルの中身）。名前 → JSON文字列。 */
+  namModels?: Record<string, string>;
   /** 録音音源で鳴らすときのドラムセット（GMのドラムキット番号。0=標準、16=パワー、24=電子、25=TR-808、32=ジャズ）。省略時は0。 */
   drumKit?: number;
   /** trueなら、パッド・弦・合唱の音量をキックに合わせて周期的に凹ませる（電子音楽風のポンプ感）。 */

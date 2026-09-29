@@ -76,3 +76,20 @@ export function toggleNote(track: Track, start: number, note: string, dur: numbe
   }
   return { ...track, notes: notesToEvents(notes, totalBeats) };
 }
+
+/** 音の長さを変える: start の位置から始まる音の長さを dur（拍）にする。音がなければ元のまま。 */
+export function resizeNote(track: Track, start: number, dur: number, totalBeats: number): Track {
+  const notes = trackToNotes(track);
+  const hit = notes.find((n) => Math.abs(n.start - start) < EPS);
+  if (!hit || dur <= EPS) {
+    return track;
+  }
+  hit.dur = dur;
+  return { ...track, notes: notesToEvents(notes, totalBeats) };
+}
+
+/** その位置（start）を覆っている音の、始まりの位置を返す。なければ null。 */
+export function noteStartAt(track: Track, start: number): number | null {
+  const hit = trackToNotes(track).find((n) => n.start <= start + EPS && start < n.start + n.dur - EPS);
+  return hit ? hit.start : null;
+}

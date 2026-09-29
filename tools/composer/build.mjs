@@ -6,8 +6,19 @@ import path from "path";
 
 const root = new URL("../../", import.meta.url).pathname;
 const out = path.resolve(process.argv[2] || root + "dist-composer/index.html");
+// 無料のアンプシミュレーター（NAM）のワークレットとWASMを、データURLにして埋め込む
+const nam = await build({
+  root, configFile: false, logLevel: "silent",
+  build: { write: false, minify: true, lib: { entry: root + "src/audio/nam/nam-processor.ts", name: "NamProcessor", formats: ["es"], fileName: "nam" } },
+});
+const namCode = (Array.isArray(nam) ? nam[0] : nam).output.find((o) => o.type === "chunk").code;
+const namWasm = fs.readFileSync(root + "node_modules/@opendaw/nam-wasm/dist/nam.wasm");
 const result = await build({
   root, configFile: false, logLevel: "warn",
+  define: {
+    __NAM_PROCESSOR__: JSON.stringify("data:text/javascript;base64," + Buffer.from(namCode).toString("base64")),
+    __NAM_WASM__: JSON.stringify(namWasm.toString("base64")),
+  },
   build: { write: false, assetsInlineLimit: 100_000_000, minify: true, lib: { entry: root + "tools/composer/entry.ts", name: "Composer", formats: ["iife"], fileName: "bgm" } },
 });
 const output = (Array.isArray(result) ? result[0] : result).output.find((o) => o.type === "chunk");
