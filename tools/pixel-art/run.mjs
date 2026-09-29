@@ -13,7 +13,7 @@ const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromi
 for (const piece of list) {
   const g = piece.build();
   fs.writeFileSync(`${out}/${piece.name}.json`, JSON.stringify(g));
-  const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 }, ...(process.env.NOVIDEO ? {} : { recordVideo: { dir: `${out}/video-${piece.name}`, size: { width: 1600, height: 1000 } } }) });
+  const ctx = await browser.newContext({ viewport: { width: 1600, height: 1800 }, ...(process.env.NOVIDEO ? {} : { recordVideo: { dir: `${out}/video-${piece.name}`, size: { width: 1600, height: 1000 } } }) });
   const p = await ctx.newPage();
   await p.route(/fonts\./, (r) => r.abort());
   await p.goto("file://" + editorPath);
@@ -30,7 +30,7 @@ for (const piece of list) {
   }
   let box = await p.locator("#gridCanvas").boundingBox(); let cw = box.width / N;
   const cell = (r, c) => [box.x + c * cw + cw / 2, box.y + r * cw + cw / 2];
-  const pick = async (k) => { const s = await p.$$("#symbolList .sym"); await s[k + 1].click(); box = await p.locator("#gridCanvas").boundingBox(); cw = box.width / N; };
+  const pick = async (k) => { let s = await p.$$("#symbolList .sym"); if (!s[k + 1]) { console.log("symbols:", s.length, "k:", k); await p.waitForTimeout(500); s = await p.$$("#symbolList .sym"); } await s[k + 1].click(); box = await p.locator("#gridCanvas").boundingBox(); cw = box.width / N; };
   for (let k = 0; k < piece.pal.length; k++) {
     let started = false;
     for (let r = 0; r < N; r++) {
