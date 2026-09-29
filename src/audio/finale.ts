@@ -190,8 +190,8 @@ const PARTS: Record<string, PartSpec> = {
   snare: { instrument: "snare", waveform: "sine", volume: 0.27, octave: 2, step: 0.25, fixed: "C3" },
   hat: { instrument: "hihat", waveform: "sine", volume: 0.11, octave: 2, step: 0.25, fixed: "C6" },
   crash: { instrument: "crash", waveform: "sine", volume: 0.18, octave: 2, step: 0.25, fixed: "C5" },
-  gtrs: { instrument: "distGuitar", waveform: "sawtooth", volume: 0.2, octave: 2, step: 0.25 },
-  gtrs2: { instrument: "distGuitar", waveform: "sawtooth", volume: 0.16, octave: 2, step: 0.25 },
+  gtrs: { instrument: "distGuitar", waveform: "sawtooth", volume: 0.17, octave: 2, step: 0.25 },
+  gtrs2: { instrument: "distGuitar", waveform: "sawtooth", volume: 0.11, octave: 2, step: 0.25 },
   bass: { instrument: "bass", waveform: "triangle", volume: 0.3, octave: 2, step: 0.25 },
   cello: { instrument: "strings", waveform: "sawtooth", volume: 0.16, octave: 2, step: 0.5 },
   s1: { instrument: "strings", waveform: "sawtooth", volume: 0.08, octave: 4, step: 0.5 },
@@ -328,7 +328,7 @@ export function composeFinale(spec: FinaleSpec): Score {
   const score = arrange({ tempoBpm: spec.bpm, beatsPerBar: 4, sections, parts: PARTS, melodies: MELODIES });
   score.drumKit = spec.drumKit;
   score.opening = true;
-  score.tone = "metal";
+  score.tone = "prs";
   score.style = "finale";
   score.synth = true;
   return score;

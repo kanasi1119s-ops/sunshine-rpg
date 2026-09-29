@@ -5,8 +5,8 @@
  * ドラム: ロックは温かい厚み、メタルは低音の重さと3〜5kHzのアタックを強調
  */
 
-export type Tone = "rock" | "metal";
-type Role = "overdrive" | "distortion" | "metal" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru";
+export type Tone = "rock" | "metal" | "prs";
+type Role = "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru";
 
 const CURVES = new Map<string, Float32Array<ArrayBuffer>>();
 /** 真空管アンプのように、少し非対称にクリップする波形。drive が大きいほど深く歪む。 */
@@ -59,12 +59,12 @@ export class AmpRack {
   }
 
   private roleOf(program: number | undefined, tone: Tone): Role {
-    if (program === -1) return tone === "metal" ? "drumsMetal" : "drumsRock";
+    if (program === -1) return tone !== "rock" ? "drumsMetal" : "drumsRock";
     if (program === undefined) return "thru";
     if (program === GUITAR_PROGRAMS.overdrive) return "overdrive";
-    if (program === GUITAR_PROGRAMS.distortion) return tone === "metal" ? "metal" : "distortion";
+    if (program === GUITAR_PROGRAMS.distortion) return tone === "metal" ? "metal" : tone === "prs" ? "prs" : "distortion";
     if (program === GUITAR_PROGRAMS.clean) return "clean";
-    if (BASS_PROGRAMS.has(program)) return tone === "metal" ? "bassMetal" : "bass";
+    if (BASS_PROGRAMS.has(program)) return tone !== "rock" ? "bassMetal" : "bass";
     return "thru";
   }
 
@@ -113,6 +113,14 @@ export class AmpRack {
           this.filter("highpass", 130, 0, 0.8), this.filter("peaking", 750, 5, 0.8), this.gain(4.6), this.shaper(9.5, 0.06),
           this.filter("lowpass", 5200, 0, 0.7), this.gain(1.9), this.shaper(3.8, 0.04),
           this.filter("peaking", 480, -4, 1), this.filter("peaking", 3400, 3, 1), this.filter("lowshelf", 110, 4), this.filter("lowpass", 4700, 0, 0.8), this.gain(0.34),
+        ]);
+      case "prs":
+        // 粒立ちがよく歌う、なめらかなギター（PRS系のような澄んだ倍音）: 深すぎない歪みで、弾き方の強弱と1弦ずつの輪郭が残る。
+        // 中域（1.2kHz）で「歌う」芯を出し、3.8kHzの輝きは足しつつ、6.5kHz付近のジャリつきを抑え、低音は締めすぎず丸く
+        return this.chain(input, [
+          this.filter("highpass", 95, 0, 0.8), this.filter("peaking", 1200, 3, 0.9), this.gain(2.8), this.shaper(4.4, 0.07),
+          this.filter("peaking", 220, 1.5, 0.9), this.filter("peaking", 3800, 1.8, 0.9), this.filter("peaking", 6500, -2.5, 1), this.filter("lowpass", 6000, 0, 0.6), this.filter("lowshelf", 120, 1.5),
+          this.compressor(-18, 2.2, 0.02, 0.2), this.gain(0.5),
         ]);
       case "clean":
         return this.chain(input, [this.filter("highpass", 70), this.filter("peaking", 3500, 2.5, 0.9), this.filter("highshelf", 8000, 2), this.gain(0.95)]);
