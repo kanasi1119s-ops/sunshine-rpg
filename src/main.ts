@@ -69,6 +69,7 @@ import { AudioEngine } from "./audio/audio-engine";
 import { CHAPTER0_BATTLE_THEME, CHAPTER0_BOSS_THEME, CHAPTER0_OUTSKIRTS_THEME, CHAPTER0_TOWN_THEME } from "./audio/chapter0-tracks";
 import { CHAPTER1_BOSS_THEME, CHAPTER1_VILLAGE_THEME, CHAPTER1_WATER_SOURCE_THEME } from "./audio/chapter1-tracks";
 import { CHAPTER3_BOSS_THEME, CHAPTER3_MINE_THEME, CHAPTER3_TOWN_THEME } from "./audio/chapter3-tracks";
+import { CHAPTER5_ARCHIVE_THEME, CHAPTER5_BOSS_THEME, CHAPTER5_TOWN_THEME } from "./audio/chapter5-tracks";
 import { CHAPTER4_BOSS_THEME, CHAPTER4_CAMP_THEME, CHAPTER4_TOWN_THEME } from "./audio/chapter4-tracks";
 import { CHAPTER2_BOSS_THEME, CHAPTER2_TOWN_THEME, CHAPTER2_WAREHOUSE_THEME } from "./audio/chapter2-tracks";
 import {
@@ -166,9 +167,11 @@ function mapBgmFor(mapId: string): Score {
   if (mapId === "sanone-camp") {
     return CHAPTER4_CAMP_THEME;
   }
-  // 第5章の専用曲は4-24で追加する。それまで第4章の町の曲を仮に流用。
-  if (mapId === "kiri-town" || mapId === "kiri-archive") {
-    return CHAPTER4_TOWN_THEME;
+  if (mapId === "kiri-town") {
+    return CHAPTER5_TOWN_THEME;
+  }
+  if (mapId === "kiri-archive") {
+    return CHAPTER5_ARCHIVE_THEME;
   }
   return CHAPTER0_TOWN_THEME;
 }
@@ -229,7 +232,7 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
   "kiri-yugami": {
     createEnemy: createKiriYogenYugami,
     victoryFlag: "chapter5_yugami_defeated",
-    bgm: CHAPTER4_BOSS_THEME,
+    bgm: CHAPTER5_BOSS_THEME,
   },
 };
 
