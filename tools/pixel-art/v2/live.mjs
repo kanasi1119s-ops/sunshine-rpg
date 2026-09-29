@@ -9,7 +9,7 @@ const [a1, a2, a3] = process.argv.slice(2);
 const editorPath = a1 ?? here("../editor.html"), mod = a2 ?? here("./akari.mjs"), out = a3 ?? here("./live-out");
 const HEADED = process.env.HEADED === "1";
 fs.mkdirSync(out, { recursive: true });
-const { PIECES } = await import(mod);
+const { PIECES } = await import(pathToFileURL(mod).href);
 const piece = PIECES[0], g = piece.build(), N = g.length;
 fs.writeFileSync(`${out}/grid.json`, JSON.stringify(g));
 const launchOpts = HEADED
