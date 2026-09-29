@@ -1,0 +1,108 @@
+import { describe, expect, it } from "vitest";
+import { WORLD_NPCS } from "./world";
+import { createEventRunner } from "../event/event-runner";
+import type { Flags } from "../event/types";
+
+/**
+ * 序章〜第4章の自動通しプレイ。各章のNPCを、プレイヤーが話しかける順（章の順、依頼→調査→ボス→報告）に
+ * 何周か回し、選択肢は「引き受ける・仲間にする」側（0番目）を選ぶ。ボス戦は勝ったものとして勝利フラグを立てる。
+ * 進行不能（必要なフラグが立たない・行き止まり）がないか、伏線の前後関係が守られているかを確かめる。
+ */
+const BATTLE_VICTORY_FLAG: Record<string, string> = {
+  "chapter0-yugami": "chapter0_yugami_defeated",
+  "mugikano-yugami": "chapter1_yugami_defeated",
+  "garasuko-yugami": "chapter2_yugami_defeated",
+  "tetsukusari-yugami": "chapter3_yugami_defeated",
+  "sanone-yugami": "chapter4_yugami_defeated",
+};
+
+const CHAPTER_MAPS: string[][] = [
+  ["touri-town", "touri-branch", "touri-outskirts"],
+  ["mugikano-village", "mugikano-water-source"],
+  ["garasuko-town", "garasuko-warehouse"],
+  ["tetsukusari-town", "tetsukusari-mine"],
+  ["sanone-town", "sanone-camp"],
+];
+
+function recordingFlags(order: string[]): Flags {
+  return new Proxy({} as Flags, {
+    set(target, key: string, value: boolean) {
+      if (value && !target[key]) {
+        order.push(key);
+      }
+      target[key] = value;
+      return true;
+    },
+  });
+}
+
+function playAllNpcs(mapIds: string[], flags: Flags): void {
+  const npcs = mapIds.flatMap((id) => WORLD_NPCS[id] ?? []);
+  for (let pass = 0; pass < 12; pass++) {
+    for (const npc of npcs) {
+      const runner = createEventRunner(npc.commands, flags, {
+        onStartBattle: (battleId) => {
+          const victory = BATTLE_VICTORY_FLAG[battleId];
+          expect(victory, `戦闘ID ${battleId} の勝利フラグが未登録`).toBeDefined();
+          flags[victory] = true;
+        },
+      });
+      let result = runner.next();
+      let guard = 0;
+      while (!result.done && guard++ < 500) {
+        result = runner.next(result.step?.kind === "choice" ? { kind: "choose", index: 0 } : { kind: "advance" });
+      }
+    }
+  }
+}
+
+describe("序章〜第4章の自動通しプレイ", () => {
+  const order: string[] = [];
+  const flags = recordingFlags(order);
+  CHAPTER_MAPS.forEach((maps) => playAllNpcs(maps, flags));
+
+  it("各章のボスに勝てて、仲間が順に加わる", () => {
+    for (const flag of [
+      "chapter0_yugami_defeated", "chapter0_reto_joined",
+      "chapter1_yugami_defeated", "chapter1_mina_joined",
+      "chapter2_yugami_defeated", "chapter2_guide_joined",
+      "chapter3_yugami_defeated", "chapter3_orca_joined",
+      "chapter4_yugami_defeated",
+    ]) {
+      expect(flags[flag], `${flag} が立たない（進行不能の疑い）`).toBe(true);
+    }
+  });
+
+  it("章の依頼は、その章のボス戦より先に受けている", () => {
+    for (const n of [0, 1, 2, 3, 4]) {
+      const accepted = order.indexOf(`chapter${n}_quest_accepted`);
+      const defeated = order.indexOf(`chapter${n}_yugami_defeated`);
+      expect(accepted, `chapter${n}_quest_accepted`).toBeGreaterThanOrEqual(0);
+      expect(accepted, `第${n}章の依頼受注がボス撃破より後`).toBeLessThan(defeated);
+    }
+  });
+
+  it("伏線の前後関係: 第3章の装置の発見（C-006）が、指示書の発見（C-007）より先", () => {
+    expect(order.indexOf("chapter3_machine_found")).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf("chapter3_machine_found")).toBeLessThan(order.indexOf("chapter3_clue_c007_found"));
+  });
+
+  it("伏線の前後関係: 各章の手がかりは、その章のボス撃破より前か、撃破後の調査で得られる", () => {
+    for (const flag of ["chapter0_clue_c001_found", "chapter1_clue_c002_found", "chapter2_clue_c003_found", "chapter2_clue_c004_found", "chapter3_clue_c007_found"]) {
+      expect(flags[flag], `${flag} が得られない`).toBe(true);
+    }
+  });
+
+  it("第4章: ガイドの潔白（C-005の回収）と、エドレアの使者による章の引きに進める", () => {
+    expect(flags["chapter4_guide_cleared"]).toBe(true);
+    expect(flags["chapter4_rumor_heard"]).toBe(true);
+    expect(flags["chapter4_sailcar_obtained"]).toBe(true);
+  });
+});
+
+describe("NPCの登録", () => {
+  it("全マップでNPCのidが重複しない", () => {
+    const ids = Object.values(WORLD_NPCS).flatMap((npcs) => npcs.map((n) => n.id));
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+});
