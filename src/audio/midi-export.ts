@@ -68,10 +68,16 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     let ch = channelOf.get(key);
     if (ch === undefined) {
       if (nextChannel === DRUM_CHANNEL) nextChannel++;
-      ch = Math.min(nextChannel, 15);
-      if (ch === DRUM_CHANNEL) ch = 14;
+      if (nextChannel > 15) {
+        // チャンネルが足りないときは、同じ楽器（GMの番号）のチャンネルを使い回す（別の楽器と混ざらないように）
+        const program = key.split("|")[0];
+        const same = [...channelOf.entries()].find(([k]) => k.split("|")[0] === program);
+        ch = same ? same[1] : 15;
+      } else {
+        ch = nextChannel;
+        nextChannel++;
+      }
       channelOf.set(key, ch);
-      nextChannel++;
     }
     return ch;
   };

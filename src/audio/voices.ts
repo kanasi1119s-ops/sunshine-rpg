@@ -569,3 +569,23 @@ export function scheduleInstrumentNote(ctx: Ctx, destination: AudioNode, event: 
   }
   return out;
 }
+
+/** PS2世代のゲーム機にあった「ホール」の残響のような、密で長い響き（約2.8秒、少し暗い）。 */
+export function createHallImpulse(ctx: Ctx): AudioBuffer {
+  const seconds = 2.8;
+  const length = Math.floor(ctx.sampleRate * seconds);
+  const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
+  const preDelay = Math.floor(ctx.sampleRate * 0.03);
+  let seed = 4242;
+  for (let ch = 0; ch < 2; ch++) {
+    const data = impulse.getChannelData(ch);
+    let lp = 0;
+    for (let i = preDelay; i < length; i++) {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      const k = 0.5 - 0.42 * (i / length);
+      lp += ((seed / 2147483648 - 1) - lp) * k;
+      data[i] = lp * Math.pow(1 - (i - preDelay) / (length - preDelay), 1.9) * 2.4;
+    }
+  }
+  return impulse;
+}

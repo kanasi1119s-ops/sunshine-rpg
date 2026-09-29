@@ -72,3 +72,21 @@ describe("特別曲のソロと、曲の頭の一撃", () => {
     expect(getTrack("outskirts").opening).toBeUndefined();
   });
 });
+
+describe("PS2世代サウンド版", () => {
+  it("全曲を、同じ長さのまま、別編成（弦の重ね）のps2版として作れる", async () => {
+    const { getTrackEdition } = await import("./catalog");
+    const { scoreToMidiInfo } = await import("./midi-export");
+    for (const e of CATALOG) {
+      const modern = getTrackEdition(e.id, "modern");
+      const ps2 = getTrackEdition(e.id, "ps2");
+      expect(ps2.edition).toBe("ps2");
+      expect(modern.edition).toBeUndefined();
+      expect(getScoreDurationSec(ps2)).toBeCloseTo(getScoreDurationSec(modern), 6);
+      expect(ps2.tracks.length, e.id).toBeGreaterThanOrEqual(modern.tracks.length);
+      expect(() => scoreToMidiInfo(ps2), e.id).not.toThrow();
+    }
+    // 主旋律やベースがある曲では、弦の重ねが増えている
+    expect(getTrackEdition("boss-touri", "ps2").tracks.length).toBeGreaterThan(getTrackEdition("boss-touri", "modern").tracks.length);
+  });
+});
