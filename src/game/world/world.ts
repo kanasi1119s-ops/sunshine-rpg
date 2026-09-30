@@ -9,6 +9,7 @@ import { CHAPTER7_MAPS, CHAPTER7_NPCS } from "./chapter7-world";
 import { CHAPTER8_MAPS, CHAPTER8_NPCS } from "./chapter8-world";
 import { CHAPTER9_MAPS, CHAPTER9_NPCS } from "./chapter9-world";
 import { CHAPTER10_MAPS, CHAPTER10_NPCS } from "./chapter10-world";
+import { CHAPTER11_MAPS, CHAPTER11_NPCS } from "./chapter11-world";
 import { SIDE_STORY_NPCS } from "./side-stories";
 import type { TileMapData } from "../map/types";
 import type { Npc } from "../npc";
@@ -30,26 +31,32 @@ export const WORLD_MAPS: Record<string, TileMapData> = {
   ...CHAPTER8_MAPS,
   ...CHAPTER9_MAPS,
   ...CHAPTER10_MAPS,
+  ...CHAPTER11_MAPS,
 };
 
-const CHAPTER_NPCS: Record<string, Npc[]> = {
-  ...CHAPTER0_NPCS,
-  ...CHAPTER1_NPCS,
-  ...CHAPTER2_NPCS,
-  ...CHAPTER3_NPCS,
-  ...CHAPTER4_NPCS,
-  ...CHAPTER5_NPCS,
-  ...CHAPTER6_NPCS,
-  ...CHAPTER7_NPCS,
-  ...CHAPTER8_NPCS,
-  ...CHAPTER9_NPCS,
-  ...CHAPTER10_NPCS,
-};
+const NPC_SOURCES: Record<string, Npc[]>[] = [
+  CHAPTER0_NPCS,
+  CHAPTER1_NPCS,
+  CHAPTER2_NPCS,
+  CHAPTER3_NPCS,
+  CHAPTER4_NPCS,
+  CHAPTER5_NPCS,
+  CHAPTER6_NPCS,
+  CHAPTER7_NPCS,
+  CHAPTER8_NPCS,
+  CHAPTER9_NPCS,
+  CHAPTER10_NPCS,
+  CHAPTER11_NPCS,
+  SIDE_STORY_NPCS,
+];
 
-/** 章のNPCに、サブストーリーの依頼人・調べる場所を足したもの。 */
-export const WORLD_NPCS: Record<string, Npc[]> = Object.fromEntries(
-  [...new Set([...Object.keys(CHAPTER_NPCS), ...Object.keys(SIDE_STORY_NPCS)])].map((mapId) => [
-    mapId,
-    [...(CHAPTER_NPCS[mapId] ?? []), ...(SIDE_STORY_NPCS[mapId] ?? [])],
-  ]),
-);
+/** 章のNPC・サブストーリーの依頼人・8神の禁域の入口などを、地図ごとに1つにまとめたもの。 */
+export const WORLD_NPCS: Record<string, Npc[]> = (() => {
+  const merged: Record<string, Npc[]> = {};
+  for (const source of NPC_SOURCES) {
+    for (const [mapId, npcs] of Object.entries(source)) {
+      (merged[mapId] ??= []).push(...npcs);
+    }
+  }
+  return merged;
+})();

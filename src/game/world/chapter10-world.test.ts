@@ -34,7 +34,10 @@ function runScripted(
 const KNOWN_BATTLE_IDS = new Set(["deep3-yugami", "deep-yugami"]);
 
 /** main.ts側（戦闘勝利）で立てられるフラグ。 */
-const EXTERNALLY_SET_FLAGS = new Set(["deep3_yugami_defeated", "deep_yugami_defeated"]);
+const EXTERNALLY_SET_FLAGS = new Set([
+  "deep3_yugami_defeated", "deep_yugami_defeated",
+  ...Array.from({ length: 8 }, (_, i) => `god${i + 1}_fragment`), // 8神の禁域（chapter11-world.ts）で立つ
+]);
 
 function allNpcCommands() {
   return Object.values(CHAPTER10_NPCS).flatMap((npcs) => npcs.flatMap((npc) => npc.commands));
