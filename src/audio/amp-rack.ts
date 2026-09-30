@@ -224,7 +224,9 @@ export class AmpRack {
           this.compressor(-18, 2.2, 0.02, 0.2), this.gain(0.5),
         ]));
       case "clean":
-        return this.chain(input, [this.filter("highpass", 70), this.filter("peaking", 3500, 2.5, 0.9), this.filter("highshelf", 8000, 2), this.gain(0.95)]);
+        // クリーン: 速い連打刻みが粒立ってきれいに聞こえるように、ピックの当たり（3.5kHz）は残しつつ高音の出しすぎを下げ、
+        // ゆるい圧縮で1音ずつの音量をそろえる（2026-09-30 調整。以前は 3.5kHz +2.5dB・8kHz +2dB で、速い刻みが耳に刺さった）
+        return this.chain(input, [this.filter("highpass", 70), this.filter("peaking", 3500, 1.5, 0.9), this.filter("highshelf", 6500, -1.5), this.compressor(-22, 2.5, 0.004, 0.12), this.gain(1.0)]);
       case "bass":
         return this.chain(input, [this.filter("lowshelf", 80, 4), this.filter("peaking", 750, 2.5, 1), this.gain(1.05)]);
       case "bassMetal":
