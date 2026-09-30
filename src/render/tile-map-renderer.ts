@@ -3,7 +3,7 @@ import type { Camera } from "./camera";
 import { hashCell, shadeColor } from "../game/color-utils";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
-import { buildTileArtCells, TILE_ART, TILE_ART_SIZE, TILE_VARIANTS, type TileArtCell } from "../game/tile-art/tile-art";
+import { buildTileArtCells, TILE_ART, TILE_ART_SIZE, TILE_VARIANTS, TINT_PREFIX, tintedSpec, type TilePatternKind, type TileArtCell } from "../game/tile-art/tile-art";
 
 /**
  * 単色べた塗りだと平坦に見えるため、タイルごとに決まった模様（隅の陰影＋
@@ -99,12 +99,15 @@ function drawTerrainTexture(
 const cellCache = new Map<string, TileArtCell[]>();
 
 /** 地形カテゴリ×見た目の揺らぎごとに、描画データを一度だけ作って使い回す。 */
-function cellsFor(categoryKey: string, variant: number): TileArtCell[] | null {
-  const spec = TILE_ART[categoryKey];
+function cellsFor(categoryKey: string, variant: number, tileColor: string): TileArtCell[] | null {
+  // `tint:<模様>` は、そのタイルの色を基本色にして模様を重ねる。
+  const spec = categoryKey.startsWith(TINT_PREFIX)
+    ? tintedSpec(categoryKey.slice(TINT_PREFIX.length) as TilePatternKind, tileColor)
+    : TILE_ART[categoryKey];
   if (!spec) {
     return null;
   }
-  const key = `${categoryKey}:${variant}`;
+  const key = categoryKey.startsWith(TINT_PREFIX) ? `${categoryKey}:${tileColor}:${variant}` : `${categoryKey}:${variant}`;
   let cells = cellCache.get(key);
   if (!cells) {
     cells = buildTileArtCells(spec, variant);
@@ -122,13 +125,21 @@ function drawTileArt(
   tileHeight: number,
   tileX: number,
   tileY: number,
+  tileColor: string,
 ): boolean {
   if (drawTerrainTexture(ctx, categoryKey, screenX, screenY, tileWidth, tileHeight, tileX, tileY)) {
     return true;
   }
-  const cells = cellsFor(categoryKey, hashCell(tileX, tileY) % TILE_VARIANTS);
+  const cells = cellsFor(categoryKey, hashCell(tileX, tileY) % TILE_VARIANTS, tileColor);
   if (!cells) {
     return false;
+  }
+  // ブラウザでは、模様を一度だけ小さなキャンバスに描いておき、画像として貼る（1タイルにつき256回の塗りを避ける）。
+  const cached = tileCanvasFor(categoryKey, hashCell(tileX, tileY) % TILE_VARIANTS, tileColor, cells);
+  if (cached) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(cached, screenX, screenY, tileWidth, tileHeight);
+    return true;
   }
   const cellWidth = tileWidth / TILE_ART_SIZE;
   const cellHeight = tileHeight / TILE_ART_SIZE;
@@ -137,6 +148,32 @@ function drawTileArt(
     ctx.fillRect(screenX + cell.col * cellWidth, screenY + cell.row * cellHeight, cellWidth, cellHeight);
   }
   return true;
+}
+
+const tileCanvasCache = new Map<string, HTMLCanvasElement>();
+
+/** 模様の描画データから、16×16の小さなキャンバスを作って使い回す。ブラウザ以外（自動テスト）では null。 */
+function tileCanvasFor(categoryKey: string, variant: number, tileColor: string, cells: TileArtCell[]): HTMLCanvasElement | null {
+  if (typeof document === "undefined") {
+    return null;
+  }
+  const key = categoryKey.startsWith(TINT_PREFIX) ? `${categoryKey}:${tileColor}:${variant}` : `${categoryKey}:${variant}`;
+  let canvas = tileCanvasCache.get(key);
+  if (!canvas) {
+    canvas = document.createElement("canvas");
+    canvas.width = TILE_ART_SIZE;
+    canvas.height = TILE_ART_SIZE;
+    const c = canvas.getContext("2d");
+    if (!c) {
+      return null;
+    }
+    for (const cell of cells) {
+      c.fillStyle = cell.color;
+      c.fillRect(cell.col, cell.row, 1, 1);
+    }
+    tileCanvasCache.set(key, canvas);
+  }
+  return canvas;
 }
 
 /** カメラに映る範囲のタイルだけを描画する。 */
@@ -172,7 +209,7 @@ export function renderTileMap(
         const screenX = tileX * tileWidth - camera.x;
         const screenY = tileY * tileHeight - camera.y;
         const artKey = map.data.tileArt?.[tileId];
-        if (artKey && drawTileArt(ctx, artKey, screenX, screenY, tileWidth, tileHeight, tileX, tileY)) {
+        if (artKey && drawTileArt(ctx, artKey, screenX, screenY, tileWidth, tileHeight, tileX, tileY, color)) {
           continue;
         }
         drawTileTexture(ctx, color, screenX, screenY, tileWidth, tileHeight, tileX, tileY);
