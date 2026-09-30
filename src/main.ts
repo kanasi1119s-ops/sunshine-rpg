@@ -61,6 +61,8 @@ import { KIRI_TOWN_ENTRY } from "./game/map/chapter5/kiri-town";
 import { KIRI_ARCHIVE_ENTRY } from "./game/map/chapter5/kiri-archive";
 import { SHIMOHARA_TOWN_ENTRY } from "./game/map/chapter6/shimohara-town";
 import { SHIMOHARA_FACILITY_ENTRY } from "./game/map/chapter6/shimohara-facility";
+import { FUSHIMA_TOWN_ENTRY } from "./game/map/chapter7/fushima-town";
+import { FUSHIMA_BASE_ENTRY } from "./game/map/chapter7/fushima-base";
 import { TETSUKUSARI_MINE_ENTRY } from "./game/map/chapter3/tetsukusari-mine";
 import { createRng } from "./game/random";
 import { computeVictoryExp } from "./game/battle/battle-engine";
@@ -565,6 +567,14 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
   {
     label: () => "マップ: 霜原・戦跡の施設 へワープ",
     action: () => switchMap("shimohara-facility", SHIMOHARA_FACILITY_ENTRY.tileX, SHIMOHARA_FACILITY_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 浮嶼の町 へワープ",
+    action: () => switchMap("fushima-town", FUSHIMA_TOWN_ENTRY.tileX, FUSHIMA_TOWN_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 浮嶼・隠れ拠点 へワープ",
+    action: () => switchMap("fushima-base", FUSHIMA_BASE_ENTRY.tileX, FUSHIMA_BASE_ENTRY.tileY),
   },
   {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,

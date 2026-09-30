@@ -5,6 +5,7 @@ import { CHAPTER3_MAPS, CHAPTER3_NPCS } from "./chapter3-world";
 import { CHAPTER4_MAPS, CHAPTER4_NPCS } from "./chapter4-world";
 import { CHAPTER5_MAPS, CHAPTER5_NPCS } from "./chapter5-world";
 import { CHAPTER6_MAPS, CHAPTER6_NPCS } from "./chapter6-world";
+import { CHAPTER7_MAPS, CHAPTER7_NPCS } from "./chapter7-world";
 import type { TileMapData } from "../map/types";
 import type { Npc } from "../npc";
 
@@ -21,6 +22,7 @@ export const WORLD_MAPS: Record<string, TileMapData> = {
   ...CHAPTER4_MAPS,
   ...CHAPTER5_MAPS,
   ...CHAPTER6_MAPS,
+  ...CHAPTER7_MAPS,
 };
 
 export const WORLD_NPCS: Record<string, Npc[]> = {
@@ -31,4 +33,5 @@ export const WORLD_NPCS: Record<string, Npc[]> = {
   ...CHAPTER4_NPCS,
   ...CHAPTER5_NPCS,
   ...CHAPTER6_NPCS,
+  ...CHAPTER7_NPCS,
 };
