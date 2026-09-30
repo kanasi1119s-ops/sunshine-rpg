@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { CHAPTER7_MAPS, CHAPTER7_NPCS, CHAPTER7_OPENING_COMMANDS } from "./chapter7-world";
+import { WORLD_MAPS } from "./world";
+import { AIRSHIP_DESTINATIONS, CHAPTER7_MAPS, CHAPTER7_NPCS, CHAPTER7_OPENING_COMMANDS } from "./chapter7-world";
 import { collectBattleIds, collectReferencedFlags, collectSetFlags, collectWarpTargets } from "../event/inspect";
 import { createTileMap, isWalkable } from "../map/tile-map";
 import { createEventRunner } from "../event/event-runner";
@@ -75,10 +76,34 @@ describe("第7章のイベントデータの整合性", () => {
 
   it("warpの移動先は実在し、startBattleの戦闘IDは登録済み", () => {
     for (const mapId of collectWarpTargets(allNpcCommands())) {
-      expect(CHAPTER7_MAPS[mapId]).toBeDefined();
+      expect(WORLD_MAPS[mapId]).toBeDefined();
     }
     for (const battleId of collectBattleIds(allNpcCommands())) {
       expect(KNOWN_BATTLE_IDS.has(battleId)).toBe(true);
+    }
+  });
+});
+
+describe("空の乗り物での移動（4-35）", () => {
+  const ferryman = () => CHAPTER7_NPCS["fushima-town"].find((n) => n.id === "fushima-ferryman")!;
+
+  it("入手前は行き先の選択肢が出ない", () => {
+    const texts = runScripted(ferryman().commands, {}, [0, 0]);
+    expect(texts.some((t) => t.includes("向かいます"))).toBe(false);
+  });
+
+  it("入手後は、選んだ町へ向かうと知らせる。「やめる」なら何も起きない", () => {
+    const flags: Flags = { chapter7_airship_obtained: true };
+    expect(runScripted(ferryman().commands, flags, [1, 1]).some((t) => t.includes("砂音の町へ向かいます"))).toBe(true);
+    expect(runScripted(ferryman().commands, flags, [3]).some((t) => t.includes("向かいます"))).toBe(false);
+  });
+
+  it("行き先のwarpは、すべて実在する地図で歩ける場所を指す", () => {
+    const targets = collectWarpTargets(ferryman().commands);
+    expect(targets.size).toBe(7);
+    for (const town of AIRSHIP_DESTINATIONS.flatMap((a) => a.towns)) {
+      const map = createTileMap(WORLD_MAPS[town.mapId]);
+      expect(isWalkable(map, town.tileX, town.tileY)).toBe(true);
     }
   });
 });
