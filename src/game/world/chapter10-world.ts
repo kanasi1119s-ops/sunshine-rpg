@@ -77,7 +77,7 @@ function fragmentsCheck(): EventCommand[] {
     { type: "setFlag", flag: "tower_gate_open", value: true },
     {
       type: "choice",
-      text: "芯環塔へ転移しますか?",
+      text: "芯環塔へ転移しますか？",
       options: [
         { label: "転移する", commands: [{ type: "warp", mapId: "tower-1", tileX: 10, tileY: 11 }] },
         { label: "まだ準備する", commands: [] },

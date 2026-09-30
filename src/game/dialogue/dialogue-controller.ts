@@ -11,6 +11,7 @@ export interface DialogueControllerOptions {
   onStartBattle?: (battleId: string) => void;
   onGiveGold?: (amount: number) => void;
   onOpenShop?: (shopId: string) => void;
+  onStaffRoll?: () => void;
   charsPerSecond?: number;
 }
 
@@ -42,6 +43,7 @@ export class DialogueController {
       onStartBattle: this.options.onStartBattle,
       onGiveGold: this.options.onGiveGold,
       onOpenShop: this.options.onOpenShop,
+      onStaffRoll: this.options.onStaffRoll,
     });
     this.advance(undefined);
   }

@@ -27,10 +27,10 @@ export const SHOP_NPCS: Record<string, Npc[]> = Object.fromEntries(
         tileY: town.tileY,
         color: "#d0a050",
         commands: [
-          say(town.keeper, "いらっしゃい。旅の装備をそろえていくかい?"),
+          say(town.keeper, "いらっしゃい。旅の装備をそろえていくかい？"),
           {
             type: "choice" as const,
-            text: "買い物をしますか?",
+            text: "買い物をしますか？",
             options: [
               { label: "買い物をする", commands: [{ type: "shop" as const, shopId: `tier-${town.tier}` }] },
               { label: "やめておく", commands: [say(town.keeper, "また来てくれよ。")] },

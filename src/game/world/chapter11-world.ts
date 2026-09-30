@@ -129,7 +129,7 @@ function entranceCommands(no: number, shrine: GodShrine): EventCommand[] {
             say(undefined, shrine.entranceText),
             {
               type: "choice",
-              text: `${god.kind}の禁域へ入りますか?`,
+              text: `${god.kind}の禁域へ入りますか？`,
               options: [
                 { label: "入る", commands: [{ type: "warp", mapId: shrineMapId(no), tileX: SHRINE_ENTRY.tileX, tileY: SHRINE_ENTRY.tileY }] },
                 { label: "やめておく", commands: [] },

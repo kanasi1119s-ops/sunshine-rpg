@@ -11,6 +11,7 @@ interface RunnerOptions {
   onStartBattle?: (battleId: string) => void;
   onGiveGold?: (amount: number) => void;
   onOpenShop?: (shopId: string) => void;
+  onStaffRoll?: () => void;
 }
 
 /**
@@ -72,6 +73,10 @@ function* runCommands(
 
       case "shop":
         options.onOpenShop?.(command.shopId);
+        break;
+
+      case "staffRoll":
+        options.onStaffRoll?.();
         break;
     }
   }

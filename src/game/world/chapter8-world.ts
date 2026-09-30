@@ -131,7 +131,7 @@ function clerkCommands(): EventCommand[] {
             },
             {
               type: "choice",
-              text: "審問で証言しますか?",
+              text: "審問で証言しますか？",
               options: [
                 {
                   label: "証言します",
@@ -205,7 +205,7 @@ function chairCommands(): EventCommand[] {
         { type: "message", text: "エドレアは虚灯宮へ去った。合議会は、あなた方の旅を全力で支えよう。", speaker: "議長セイラン" },
         {
           type: "choice",
-          text: "虚灯宮へ向かいますか?",
+          text: "虚灯宮へ向かいますか？",
           options: [
             {
               label: "向かう",
@@ -265,7 +265,7 @@ function hearingCommands(): EventCommand[] {
     { type: "message", text: "灯りの相談所の方々か。これより、各地の歪みについての審問を始める。", speaker: "議長セイラン" },
     { type: "message", text: "代表エドレアも、席についている。……では、証言を聞かせてもらおう。", speaker: "議長セイラン" },
     quizQuestion(
-      "各地で起きた歪みは、いったい誰の指示で起きていたのでしょう?",
+      "各地で起きた歪みは、いったい誰の指示で起きていたのでしょう？",
       "浮嶼の帳簿に、計画の印と代表の署名の跡があった",
       "chapter7_ledger_found",
       "chapter8_q1_ok",
@@ -273,7 +273,7 @@ function hearingCommands(): EventCommand[] {
       ["ドルンがひとりで企んだことだ", "各地の村人の逆恨みだ"],
     ),
     quizQuestion(
-      "「静まりの年」に合議会の要人が消えたのは、なぜでしょう?",
+      "「静まりの年」に合議会の要人が消えたのは、なぜでしょう？",
       "記録が書き換えられ、失踪の事実が隠されていた",
       "chapter5_record_found",
       "chapter8_q2_ok",
@@ -343,7 +343,7 @@ function edreaCommands(): EventCommand[] {
               text: "ソウイチ殿に会いたければ、虚灯宮へいらっしゃい。あの方は、いまも奥で眠っておられる。二十年前と同じ姿で。",
               speaker: "エドレア",
             },
-            { type: "message", text: "おじいちゃんは……生きてるの!?", speaker: "ユーリ" },
+            { type: "message", text: "おじいちゃんは……生きてるの！?", speaker: "ユーリ" },
             { type: "message", text: "エドレアは煙のように姿を消した。あとには、紋章の書き付けが一枚。書かれているのは「虚灯宮」の三文字だった。" },
             { type: "setFlag", flag: "chapter8_edrea_fled", value: true },
           ],
@@ -375,7 +375,7 @@ function edreaCommands(): EventCommand[] {
                   text: "灯り石をめぐる争いが再燃すれば、大乱期の炎がまた大陸を焼く。争いの芽になる人を、先に表から消す。それが、いちばん血の流れない平和でした。",
                   speaker: "エドレア",
                 },
-                { type: "message", text: "そんなの、平和じゃない! 人を消して、村を壊して……!", speaker: "ミナ" },
+                { type: "message", text: "そんなの、平和じゃない！ 人を消して、村を壊して……！", speaker: "ミナ" },
                 { type: "message", text: "あなたのやり方は、争いの種を自分でまいていただけだ。", speaker: "アヤメ" },
                 {
                   type: "message",

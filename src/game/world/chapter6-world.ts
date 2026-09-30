@@ -128,7 +128,7 @@ function watchmanCommands(): EventCommand[] {
             },
             {
               type: "choice",
-              text: "地下の施設を調べますか?",
+              text: "地下の施設を調べますか？",
               options: [
                 {
                   label: "調べます",
@@ -202,7 +202,7 @@ function ayameCommands(): EventCommand[] {
             { type: "message", text: "それでも、あなたのおじいさんも同じ三人の一人だ。……目的は、同じだよ。", speaker: "ユーリ" },
             {
               type: "choice",
-              text: "アヤメの申し出にどう答える?",
+              text: "アヤメの申し出にどう答える？",
               options: [
                 {
                   label: "一緒に来てほしい",
@@ -303,7 +303,7 @@ function dorunCommands(): EventCommand[] {
             },
             { type: "message", text: "……ここまでですか。あなた方は、思ったより厄介だ。", speaker: "ドルン" },
             { type: "message", text: "これ以上は、あの方の領分だ。私の出る幕じゃない。", speaker: "ドルン" },
-            { type: "message", text: "待て! 「あの方」って、誰のことだ!", speaker: "ユーリ" },
+            { type: "message", text: "待て！ 「あの方」って、誰のことだ！", speaker: "ユーリ" },
             { type: "message", text: "ドルンは灯り石を砕き、白い光の中に姿を消した。" },
             { type: "setFlag", flag: "chapter6_dorun_farewell", value: true },
           ],
@@ -316,10 +316,10 @@ function dorunCommands(): EventCommand[] {
           equals: true,
           then: [
             { type: "message", text: "「おや、あなたたちでしたか。ちょうどいい、少し道を空けてもらえますか」――ドルンが装置の前で振り向いた。" },
-            { type: "message", text: "ドルン! この装置は、お前が動かしていたのか!", speaker: "ユーリ" },
+            { type: "message", text: "ドルン！ この装置は、お前が動かしていたのか！", speaker: "ユーリ" },
             {
               type: "message",
-              text: "動かしていた? 少し違いますね。私は「整備」を任されているだけです。壊れかけの試作機を、もう一度だけ。",
+              text: "動かしていた？ 少し違いますね。私は「整備」を任されているだけです。壊れかけの試作機を、もう一度だけ。",
               speaker: "ドルン",
             },
             {

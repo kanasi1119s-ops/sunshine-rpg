@@ -120,7 +120,7 @@ export const CHAPTER9_NPCS: Record<string, Npc[]> = {
           equals: true,
           then: [
             say(undefined, "祭壇の裏の階段が、深部へ続いている。冷たい光が、下から昇ってくる。"),
-            { type: "choice", text: "虚灯宮・深部へ降りますか?", options: [
+            { type: "choice", text: "虚灯宮・深部へ降りますか？", options: [
               { label: "降りる", commands: [{ type: "warp", mapId: "deep-1", tileX: 10, tileY: 11 }] },
               { label: "やめておく", commands: [] },
             ] },
@@ -186,7 +186,7 @@ function edreaCommands(): EventCommand[] {
               text: "わたしは、この宮の「静めの間」を、大陸全体に開こうとしています。争いを望む者の記憶を、すべて眠りの中へ。もう二度と、大乱期は来ない。",
               speaker: "エドレア",
             },
-            { type: "message", text: "そんなの、みんなを二十年前のおじいちゃんと同じ目にあわせるってことじゃないか!", speaker: "ユーリ" },
+            { type: "message", text: "そんなの、みんなを二十年前のおじいちゃんと同じ目にあわせるってことじゃないか！", speaker: "ユーリ" },
             { type: "message", text: "わたしの平和を、止められるものなら止めてごらんなさい。", speaker: "エドレア" },
             { type: "setFlag", flag: "chapter9_edrea_told", value: true },
             { type: "message", text: "エドレアが杖をかかげると、虚灯宮の光が渦を巻き、その身にまとわりついた！" },
@@ -235,10 +235,11 @@ function grandfatherCommands(): EventCommand[] {
             { type: "message", text: "★ メインストーリーをクリアしました！（虚灯宮の奥に、クリア後の道が開いた）" },
             { type: "setFlag", flag: "chapter9_cleared", value: true },
             { type: "setFlag", flag: "chapter9_secret_open", value: true },
+            { type: "staffRoll" },
           ],
           else: [
             { type: "message", text: "寝台の上で、老人が静かに眠っている。手首には、ユーリの腕輪とそっくりな灯り石の腕輪。" },
-            { type: "message", text: "おじいちゃん……! 起きて、ねえ、おじいちゃん!", speaker: "ユーリ" },
+            { type: "message", text: "おじいちゃん……！ 起きて、ねえ、おじいちゃん！", speaker: "ユーリ" },
             { type: "message", text: "呼びかけても、目を覚まさない。腕輪の光が、眠りを封じているようだ。まず、この宮の主と話をつけなければ。" },
           ],
         },

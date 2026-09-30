@@ -135,7 +135,7 @@ function guildMasterCommands(): EventCommand[] {
                 },
                 {
                   type: "message",
-                  text: "……合議会の代表が、僕たちに? 何のために……。",
+                  text: "……合議会の代表が、僕たちに？ 何のために……。",
                   speaker: "ユーリ",
                 },
                 {
@@ -168,7 +168,7 @@ function guildMasterCommands(): EventCommand[] {
             },
             {
               type: "choice",
-              text: "野営地の荷馬車列を調べますか?",
+              text: "野営地の荷馬車列を調べますか？",
               options: [
                 {
                   label: "調べます",
@@ -199,7 +199,7 @@ function merchantCommands(): EventCommand[] {
       equals: true,
       then: [{ type: "message", text: "帆走車かい。風をつかまえるコツは、帆を欲張らないことさ。", speaker: "商人" }],
       else: [
-        { type: "message", text: "いらっしゃい! 砂漠の香辛料に、干した果物、なんでもあるよ。", speaker: "商人" },
+        { type: "message", text: "いらっしゃい！ 砂漠の香辛料に、干した果物、なんでもあるよ。", speaker: "商人" },
         {
           type: "message",
           text: "ただ最近、荷の数が帳面と合わなくてねえ。隊商のあいだで、みんな疑心暗鬼さ。",
@@ -224,7 +224,7 @@ function informantCommands(): EventCommand[] {
           text: "隊商の抜け荷を仕切ってる男の後ろに、もっと上の依頼主がいる、って噂だ。それも、灯芯都の合議会に近い人物らしい。",
           speaker: "情報屋",
         },
-        { type: "message", text: "合議会の……? まさか。", speaker: "レト" },
+        { type: "message", text: "合議会の……？ まさか。", speaker: "レト" },
         { type: "message", text: "あくまで噂だよ。名前までは、わたしの耳にも入らない。", speaker: "情報屋" },
         { type: "setFlag", flag: "chapter4_rumor_heard", value: true },
       ],
@@ -241,7 +241,7 @@ function wagonCommands(): EventCommand[] {
       then: [{ type: "message", text: "荷馬車の帳面は、預かった。組合長に見せよう。" }],
       else: [
         { type: "message", text: "野営地の荷馬車の底に、二重の板が仕込まれている。中から、灯り石の木箱が出てきた。" },
-        { type: "message", text: "帳面には、組合の印が押してある。でも、この印……少し歪んでないか?", speaker: "ミナ" },
+        { type: "message", text: "帳面には、組合の印が押してある。でも、この印……少し歪んでないか？", speaker: "ミナ" },
         { type: "message", text: "偽の印だ。隊商のせいにして、荷を流している者がいる。", speaker: "ユーリ" },
         { type: "setFlag", flag: "chapter4_wagon_found", value: true },
       ],
@@ -263,13 +263,13 @@ function dorunCommands(): EventCommand[] {
           equals: true,
           then: [
             { type: "message", text: "「おや、荷馬車の底を見つけましたか。さすがですね」――ドルンが、天幕の陰から現れた。" },
-            { type: "message", text: "また君か! 今度は何を企んでいる!", speaker: "レト" },
+            { type: "message", text: "また君か！ 今度は何を企んでいる！", speaker: "レト" },
             {
               type: "message",
               text: "隊商の荷に別の荷を混ぜる。簡単な仕事ですよ。私は、頼まれた仕事をこなしているだけです。",
               speaker: "ドルン",
             },
-            { type: "message", text: "頼まれた……? 誰に頼まれた!", speaker: "ユーリ" },
+            { type: "message", text: "頼まれた……？ 誰に頼まれた！", speaker: "ユーリ" },
             {
               type: "message",
               text: "それは言えません。ただ、私の上にも、さらに上の方がいる。とだけ申し上げておきましょう。",
