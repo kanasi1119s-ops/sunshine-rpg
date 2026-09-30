@@ -29,7 +29,7 @@ build({
     { id: 'pf', instrument: 'piano', role: 'メロディ', volume: 0.26, pan: 0.05 },
     { id: 'gtr', instrument: 'guitar', role: 'クリーンギター（指弾き）', volume: 0.17, pan: -0.4, amp: 'clean', base: 43 },
     { id: 'echo', instrument: 'echoGuitar', role: '対旋律', volume: 0.1, pan: 0.45, amp: 'clean', base: 60 },
-    { id: 'str', instrument: 'strings', role: 'うす い弦', volume: 0.1, pan: -0.15, base: 48 },
+    { id: 'str', instrument: 'strings', role: 'うすい弦', volume: 0.1, pan: -0.15, base: 48 },
     { id: 'bass', instrument: 'bass', role: 'ベース', volume: 0.2, base: 28 },
     { id: 'kick', instrument: 'kick', role: 'キック', volume: 0.2 },
     { id: 'snare', instrument: 'snare', role: 'スネア', volume: 0.16 },
