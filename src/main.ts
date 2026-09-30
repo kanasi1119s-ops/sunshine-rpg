@@ -279,6 +279,16 @@ const input = new InputState();
 const actionButton = new ActionButton();
 attachKeyboard(input, actionButton);
 createTouchControls(app, input, actionButton);
+/** スマホ用: ジョブ画面を開く／閉じるボタン（キーボードの C／X と同じ動き）。 */
+const jobButton = document.createElement("button");
+jobButton.type = "button";
+jobButton.className = "touch-job-button";
+jobButton.textContent = "ジョブ";
+jobButton.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  window.dispatchEvent(new KeyboardEvent("keydown", { key: jobMenu.open ? "x" : "c" }));
+});
+app.appendChild(jobButton);
 
 const audio = new AudioEngine();
 let audioStarted = false;
