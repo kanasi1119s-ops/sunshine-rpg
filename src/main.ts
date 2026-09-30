@@ -430,6 +430,7 @@ if (import.meta.env.DEV) {
     startNew: () => {
       title = { ...title, open: false };
     },
+    startBattle: (battleId: string) => startStoryBattle(battleId),
   };
 }
 

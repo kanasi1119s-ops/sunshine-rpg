@@ -85,6 +85,16 @@ export function renderBattle(
     if (drawBossSprite(ctx, enemy, screenWidth)) {
       return;
     }
+    // 1体だけの強敵（ボス・神など、体力が大きい敵）は、中央に大きく描く。
+    if (battleState.enemies.length === 1 && enemy.maxHp >= 250 && enemy.hp > 0 && MONSTERS[enemy.id]) {
+      const size = 80;
+      const bx = Math.round(screenWidth / 2 - size / 2 - 40);
+      drawEnemySprite(ctx, enemy, bx, 6, size);
+      ctx.fillStyle = "#f0f0f0";
+      ctx.fillText(enemy.name, bx + size + 12, 30);
+      drawHpBar(ctx, enemy, bx + size + 12, 46, 110);
+      return;
+    }
     const x = 60 + index * 90;
     const y = 24;
     drawEnemySprite(ctx, enemy, x, y, 40);
