@@ -38,6 +38,8 @@ await p.locator("#gridCanvas").screenshot({ path: path.join(outDir, `${name}.png
 const tEnd = (Date.now() - t00) / 1000;
 const video = p.video(); await ctx.close(); const raw = await video.path(); await b.close();
 const mp4 = path.join(outDir, `${name}.mp4`);
-execFileSync(FFMPEG, ["-y", "-hide_banner", "-loglevel", "error", "-ss", String(Math.max(0, tStart - 1)), "-t", String(tEnd - tStart + 3), "-i", raw, "-vf", `setpts=PTS/${SPEED},fps=30,scale=1080:1920:flags=neighbor`, "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-an", mp4]);
-const secs = ((tEnd - tStart + 3) / SPEED).toFixed(1);
+// 録画ファイルの時間は、壁時計の時間と合わないことがある（CPUが忙しいとコマが間引かれる）。開始・終了の位置は壁時計に頼らず、最初の3秒を除いて最後までを使い、最後の完成した絵を3秒見せる。
+let rawSec = 0; try { execFileSync(FFMPEG, ["-hide_banner", "-i", raw], { stdio: ["ignore", "pipe", "pipe"] }); } catch (e) { const m = /Duration: (\d+):(\d+):(\d+\.?\d*)/.exec(String(e.stderr ?? "")); if (m) rawSec = +m[1] * 3600 + +m[2] * 60 + +m[3]; }
+execFileSync(FFMPEG, ["-y", "-hide_banner", "-loglevel", "error", "-ss", "3", "-i", raw, "-vf", `setpts=PTS/${SPEED},fps=30,scale=1080:1920:flags=neighbor,tpad=stop_mode=clone:stop_duration=3`, "-c:v", "libx264", "-crf", "20", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-an", mp4]);
+const secs = (Math.max(0, rawSec - 3) / SPEED + 3).toFixed(1);
 console.log(`${name}: ${strokes}筆, 撮影${(tEnd - tStart).toFixed(0)}秒 → ${SPEED}倍速で約${secs}秒, ${mp4}`);
