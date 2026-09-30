@@ -8,6 +8,7 @@ import { CHAPTER6_MAPS, CHAPTER6_NPCS } from "./chapter6-world";
 import { CHAPTER7_MAPS, CHAPTER7_NPCS } from "./chapter7-world";
 import { CHAPTER8_MAPS, CHAPTER8_NPCS } from "./chapter8-world";
 import { CHAPTER9_MAPS, CHAPTER9_NPCS } from "./chapter9-world";
+import { SIDE_STORY_NPCS } from "./side-stories";
 import type { TileMapData } from "../map/types";
 import type { Npc } from "../npc";
 
@@ -29,7 +30,7 @@ export const WORLD_MAPS: Record<string, TileMapData> = {
   ...CHAPTER9_MAPS,
 };
 
-export const WORLD_NPCS: Record<string, Npc[]> = {
+const CHAPTER_NPCS: Record<string, Npc[]> = {
   ...CHAPTER0_NPCS,
   ...CHAPTER1_NPCS,
   ...CHAPTER2_NPCS,
@@ -41,3 +42,11 @@ export const WORLD_NPCS: Record<string, Npc[]> = {
   ...CHAPTER8_NPCS,
   ...CHAPTER9_NPCS,
 };
+
+/** 章のNPCに、サブストーリーの依頼人・調べる場所を足したもの。 */
+export const WORLD_NPCS: Record<string, Npc[]> = Object.fromEntries(
+  [...new Set([...Object.keys(CHAPTER_NPCS), ...Object.keys(SIDE_STORY_NPCS)])].map((mapId) => [
+    mapId,
+    [...(CHAPTER_NPCS[mapId] ?? []), ...(SIDE_STORY_NPCS[mapId] ?? [])],
+  ]),
+);
