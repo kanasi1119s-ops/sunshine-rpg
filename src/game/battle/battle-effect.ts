@@ -21,6 +21,12 @@ const DURATIONS: Record<BattleEffectKind, number> = {
 
 export function battleEffectFor(text: string, partyNames: string[]): BattleEffect | null {
   const make = (kind: BattleEffectKind): BattleEffect => ({ kind, duration: DURATIONS[kind] });
+  if (/の(こうげき|しゅび|すばやさ)が上がった$/.test(text)) {
+    return make("heal");
+  }
+  if (/の(こうげき|しゅび|すばやさ)が下がった$/.test(text) || text.includes("は眠ってしまった")) {
+    return make("hit");
+  }
   if (text.includes("のHPが") && text.includes("回復した")) {
     return make("heal");
   }

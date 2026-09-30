@@ -13,7 +13,29 @@ export interface Combatant {
   guarding: boolean;
   /** 倒したとき、パーティ全員が入手する経験値（敵のみ使用）。 */
   expReward?: number;
+  /** 強化・弱体（能力ごとの倍率と残りターン）。ターンの終わりに1ずつ減り、0で消える。 */
+  mods?: Partial<Record<StatKey, StatMod>>;
+  /** 眠っている残りターン。眠っているあいだは行動できない。 */
+  sleep?: number;
 }
+
+export type StatKey = "attack" | "defense" | "speed";
+
+export interface StatMod {
+  /** 倍率（1.3＝3割アップ、0.7＝3割ダウン）。 */
+  mult: number;
+  turns: number;
+}
+
+export const STAT_LABELS: Record<StatKey, string> = { attack: "こうげき", defense: "しゅび", speed: "すばやさ" };
+
+/** 強化・弱体を反映した能力値。 */
+export function effectiveStat(combatant: Combatant, stat: StatKey): number {
+  const mod = combatant.mods?.[stat];
+  return Math.max(1, Math.round(combatant[stat] * (mod && mod.turns > 0 ? mod.mult : 1)));
+}
+
+export type SkillEffect = "multi" | "damageAll" | "heal" | "healAll" | "buff" | "buffAll" | "debuff" | "debuffAll" | "sleep";
 
 export interface Skill {
   id: string;
@@ -23,9 +45,10 @@ export interface Skill {
   powerMultiplier: number;
   /**
    * 効果の種類。省略は「敵1体にダメージ」。
-   * multi=敵1体に`hits`回、damageAll=敵全体にダメージ、heal=味方1人のHPを回復、healAll=味方全体のHPを回復。
+   * multi=敵1体に`hits`回、damageAll=敵全体にダメージ、heal=味方1人のHPを回復、healAll=味方全体のHPを回復、
+   * buff=味方1人の能力アップ、buffAll=味方全体、debuff=敵1体の能力ダウン、debuffAll=敵全体、sleep=敵1体を眠らせる。
    */
-  effect?: "multi" | "damageAll" | "heal" | "healAll";
+  effect?: SkillEffect;
   /** multi の回数。 */
   hits?: number;
   /** 回復の量（使った人のこうげき × この値）。heal・healAll。 */
@@ -34,6 +57,12 @@ export interface Skill {
   hpCost?: number;
   /** 敵1体を、このチャンス（0〜1）で一撃で倒す。体力が大きい敵（最大HP500超）には効かない。 */
   koChance?: number;
+  /** buff・debuff の対象の能力と倍率・続くターン数。 */
+  stat?: StatKey;
+  mult?: number;
+  turns?: number;
+  /** debuff・sleep が効く確率（0〜1。省略は1）。体力が大きい敵（最大HP500超）には眠りが効かない。 */
+  chance?: number;
 }
 
 export interface BattleItem {

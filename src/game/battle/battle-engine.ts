@@ -1,6 +1,6 @@
 import { computeDamage, computeFleeChance } from "./formulas";
 import type { BattleAction, BattleState, Combatant, Skill } from "./types";
-import { findCombatant, isAlive } from "./types";
+import { effectiveStat, findCombatant, isAlive, STAT_LABELS } from "./types";
 
 export function createBattleState(party: Combatant[], enemies: Combatant[]): BattleState {
   return {
@@ -31,7 +31,7 @@ export function resolveTurnOrder(combatants: Combatant[], rng: () => number): Co
   return [...combatants]
     .filter(isAlive)
     .map((c) => ({ c, tiebreak: rng() }))
-    .sort((a, b) => b.c.speed - a.c.speed || b.tiebreak - a.tiebreak)
+    .sort((a, b) => effectiveStat(b.c, "speed") - effectiveStat(a.c, "speed") || b.tiebreak - a.tiebreak)
     .map(({ c }) => c);
 }
 
@@ -45,7 +45,7 @@ function averageSpeed(combatants: Combatant[]): number {
 
 /** 1体にダメージを与え、ログに書く（防御中は半分）。倒したらそのログも書く。 */
 function dealDamage(next: BattleState, actor: Combatant, target: Combatant, skillName: string, powerMultiplier: number, rng: () => number): void {
-  const { amount, critical } = computeDamage(actor.attack, target.defense, powerMultiplier, rng);
+  const { amount, critical } = computeDamage(effectiveStat(actor, "attack"), effectiveStat(target, "defense"), powerMultiplier, rng);
   const finalAmount = target.guarding ? Math.ceil(amount / 2) : amount;
   target.hp = Math.max(0, target.hp - finalAmount);
   next.log.push(`${actor.name} の ${skillName}！ ${critical ? "会心の一撃！ " : ""}${target.name} に ${finalAmount} のダメージ`);
@@ -62,7 +62,33 @@ function healOne(next: BattleState, actor: Combatant, target: Combatant, skill: 
   next.log.push(`${actor.name} の ${skill.name}！ ${target.name} のHPが ${target.hp - before} 回復した`);
 }
 
-/** 効果つきの特技（複数回・敵全体・回復）を適用する。MPが足りない・対象がいないときは何も起きない。 */
+/** 能力の強化・弱体をかけ、ログに書く。同じ能力にかけ直すと、上書きする。 */
+function applyMod(next: BattleState, actor: Combatant, target: Combatant, skill: Skill): void {
+  const stat = skill.stat ?? "attack";
+  const mult = skill.mult ?? 1.3;
+  target.mods = { ...target.mods, [stat]: { mult, turns: skill.turns ?? 3 } };
+  next.log.push(`${actor.name} の ${skill.name}！ ${target.name} の${STAT_LABELS[stat]}が${mult >= 1 ? "上がった" : "下がった"}`);
+}
+
+/** ターンの終わりに、強化・弱体と眠りの残りターンを1ずつ減らす（0になったら消える）。 */
+function tickStatuses(state: BattleState): void {
+  for (const c of [...state.party, ...state.enemies]) {
+    if (c.mods) {
+      const mods: NonNullable<Combatant["mods"]> = {};
+      for (const [key, mod] of Object.entries(c.mods) as [keyof typeof STAT_LABELS, { mult: number; turns: number }][]) {
+        if (mod.turns > 1) {
+          mods[key] = { mult: mod.mult, turns: mod.turns - 1 };
+        }
+      }
+      c.mods = Object.keys(mods).length > 0 ? mods : undefined;
+    }
+    if (c.sleep) {
+      c.sleep = c.sleep > 1 ? c.sleep - 1 : undefined;
+    }
+  }
+}
+
+/** 効果つきの特技（複数回・敵全体・回復・強化・弱体・眠り）を適用する。MPが足りない・対象がいないときは何も起きない。 */
 function applyEffectSkill(next: BattleState, actor: Combatant, skill: Skill, targetId: string, rng: () => number): BattleState {
   const allies = actor.isEnemy ? next.enemies : next.party;
   const foes = actor.isEnemy ? next.party : next.enemies;
@@ -107,6 +133,48 @@ function applyEffectSkill(next: BattleState, actor: Combatant, skill: Skill, tar
       actor.mp -= skill.mpCost;
       for (const ally of allies.filter(isAlive)) {
         healOne(next, actor, ally, skill);
+      }
+      return next;
+    }
+    case "buff":
+    case "buffAll": {
+      const targets = skill.effect === "buffAll" ? allies.filter(isAlive) : allies.filter((c) => c.id === targetId && isAlive(c));
+      if (targets.length === 0) {
+        return next;
+      }
+      actor.mp -= skill.mpCost;
+      for (const ally of targets) {
+        applyMod(next, actor, ally, skill);
+      }
+      return next;
+    }
+    case "debuff":
+    case "debuffAll": {
+      const targets = skill.effect === "debuffAll" ? foes.filter(isAlive) : foes.filter((c) => c.id === targetId && isAlive(c));
+      if (targets.length === 0) {
+        return next;
+      }
+      actor.mp -= skill.mpCost;
+      for (const foe of targets) {
+        if (rng() < (skill.chance ?? 1)) {
+          applyMod(next, actor, foe, skill);
+        } else {
+          next.log.push(`${actor.name} の ${skill.name}！ ${foe.name} には効かなかった`);
+        }
+      }
+      return next;
+    }
+    case "sleep": {
+      const target = foes.find((c) => c.id === targetId);
+      if (!target || !isAlive(target)) {
+        return next;
+      }
+      actor.mp -= skill.mpCost;
+      if (target.maxHp > 500 || rng() >= (skill.chance ?? 0.6)) {
+        next.log.push(`${actor.name} の ${skill.name}！ ${target.name} には効かなかった`);
+      } else {
+        target.sleep = skill.turns ?? 2;
+        next.log.push(`${actor.name} の ${skill.name}！ ${target.name} は眠ってしまった`);
       }
       return next;
     }
@@ -163,8 +231,8 @@ export function applyAction(state: BattleState, action: BattleAction, rng: () =>
         nextActor.mp -= action.skill.mpCost;
       }
       const { amount, critical } = computeDamage(
-        nextActor.attack,
-        target.defense,
+        effectiveStat(nextActor, "attack"),
+        effectiveStat(target, "defense"),
         powerMultiplier,
         rng,
       );
@@ -241,8 +309,13 @@ export function runTurn(
     if (!livingActor || !isAlive(livingActor)) {
       continue;
     }
+    if (livingActor.sleep) {
+      current.log.push(`${livingActor.name} は眠っている`);
+      continue;
+    }
     current = applyAction(current, action, rng);
   }
+  tickStatuses(current);
 
   return current;
 }

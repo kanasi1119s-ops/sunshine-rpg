@@ -19,6 +19,12 @@ export function battleSeFor(text: string, partyNames: string[]): string | null {
   if (text.includes("のHPが") && text.includes("回復した")) {
     return "heal";
   }
+  if (/の(こうげき|しゅび|すばやさ)が上がった$/.test(text)) {
+    return "buff";
+  }
+  if (/の(こうげき|しゅび|すばやさ)が下がった$/.test(text) || text.includes("は眠ってしまった")) {
+    return "debuff";
+  }
   if (text.includes("HPを支払った")) {
     return "debuff";
   }
