@@ -4,6 +4,13 @@ import { findCombatant } from "../game/battle/types";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
 import { wrapText } from "./text-wrap";
+import { shakeOffset, type BattleEffect } from "../game/battle/battle-effect";
+
+/** 進行中の演出（種類と経過ミリ秒）。 */
+export interface BattleEffectView {
+  effect: BattleEffect;
+  elapsedMs: number;
+}
 import { buildMonsterCells, MONSTER_GRID_SIZE, MONSTERS } from "../game/monster/monsters";
 
 const LINE_HEIGHT = 12;
@@ -68,15 +75,19 @@ function drawBossSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, screenW
   return true;
 }
 
-export function renderBattle(
+function renderBattleBody(
   ctx: CanvasRenderingContext2D,
   battleState: BattleState,
   uiState: BattleUiState,
   screenWidth: number,
   screenHeight: number,
+  effectView?: BattleEffectView | null,
 ): void {
   ctx.fillStyle = "#1c1030";
   ctx.fillRect(0, 0, screenWidth, screenHeight);
+
+  const progress = effectView ? effectView.elapsedMs / effectView.effect.duration : 1;
+  const active = effectView && progress < 1 ? effectView.effect.kind : null;
 
   ctx.font = "10px monospace";
   ctx.textBaseline = "top";
@@ -102,6 +113,15 @@ export function renderBattle(
     ctx.fillText(enemy.name, x, y + 44);
     drawHpBar(ctx, enemy, x, y + 56, 40);
   });
+
+  // 敵への命中・会心・撃破・回復の光（敵のいる上の部分だけ）。
+  if (active && active !== "shake") {
+    const fade = 1 - progress;
+    const color = active === "heal" ? "80, 220, 120" : active === "crit" ? "255, 210, 90" : "255, 255, 255";
+    const alpha = (active === "down" ? 0.25 : active === "heal" ? 0.22 : 0.35) * fade;
+    ctx.fillStyle = `rgba(${color}, ${alpha})`;
+    ctx.fillRect(0, 0, screenWidth, screenHeight - 56);
+  }
 
   // 味方の状態一覧。4人以上のときは2列に並べる（6人でもコマンド欄に重ならない）。
   const boxTop = screenHeight - 56;
@@ -173,4 +193,21 @@ export function renderBattle(
   const outcomeText =
     uiState.outcome === "won" ? "勝利した！" : uiState.outcome === "lost" ? "全滅してしまった…" : "逃げ出した";
   ctx.fillText(outcomeText, 8, boxY + 6);
+}
+
+/** 戦闘画面を描く。味方がダメージを受けたときは画面全体をゆらす。 */
+export function renderBattle(
+  ctx: CanvasRenderingContext2D,
+  battleState: BattleState,
+  uiState: BattleUiState,
+  screenWidth: number,
+  screenHeight: number,
+  effectView?: BattleEffectView | null,
+): void {
+  ctx.save();
+  if (effectView && effectView.effect.kind === "shake") {
+    ctx.translate(shakeOffset(effectView.elapsedMs / effectView.effect.duration, effectView.elapsedMs), 0);
+  }
+  renderBattleBody(ctx, battleState, uiState, screenWidth, screenHeight, effectView);
+  ctx.restore();
 }
