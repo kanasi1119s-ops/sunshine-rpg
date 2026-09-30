@@ -1,4 +1,4 @@
-import { levelForExp } from "./exp-curve";
+import { expRequiredForLevel, levelForExp } from "./exp-curve";
 import type { GrowthProfile, LeveledStats } from "./types";
 
 export interface GainExpResult {
@@ -31,4 +31,12 @@ export function gainExp(stats: LeveledStats, amount: number, growth: GrowthProfi
     result = applyOneLevelUp(result, growth);
   }
   return { stats: result, levelsGained };
+}
+
+/** 初期能力値から、指定のレベルまで成長させた能力値（仲間が途中加入したときの追いつき・バランス調整のシミュレーションに使う）。 */
+export function statsAtLevel(initial: LeveledStats, growth: GrowthProfile, level: number): LeveledStats {
+  if (level <= initial.level) {
+    return initial;
+  }
+  return gainExp(initial, expRequiredForLevel(level) - initial.exp, growth).stats;
 }

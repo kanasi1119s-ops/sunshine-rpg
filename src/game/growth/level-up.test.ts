@@ -42,3 +42,19 @@ describe("gainExp", () => {
     expect(result.stats.attack).toBe(8 + 3 * 3);
   });
 });
+
+import { statsAtLevel } from "./level-up";
+describe("statsAtLevel（指定のレベルまで成長させる）", () => {
+  const growth = { hpGrowth: 5, mpGrowth: 2, attackGrowth: 2, defenseGrowth: 1, speedGrowth: 1 };
+  const initial = { level: 1, exp: 0, maxHp: 30, hp: 30, maxMp: 10, mp: 10, attack: 12, defense: 6, speed: 9 };
+  it("レベルNでは、初期値に(N-1)回ぶんの伸びを足した値になる", () => {
+    const result = statsAtLevel(initial, growth, 10);
+    expect(result.level).toBe(10);
+    expect(result.maxHp).toBe(30 + 5 * 9);
+    expect(result.attack).toBe(12 + 2 * 9);
+    expect(result.defense).toBe(6 + 9);
+  });
+  it("いまのレベル以下を指定しても、そのまま", () => {
+    expect(statsAtLevel(initial, growth, 1)).toEqual(initial);
+  });
+});
