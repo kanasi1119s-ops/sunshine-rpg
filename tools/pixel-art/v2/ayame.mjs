@@ -48,7 +48,7 @@ export function build() {
   const pal = createPalette();
   const OUT = pal.rgb("縁", "#0b0913"), RIM = pal.rgb("縁明", "#31304a");
   const SKIN = pal.ramp("肌", 18, 0.42, 4, 0.44, 0.88, 22);
-  const HAIR = pal.ramp("髪", 246, 0.34, 4, 0.07, 0.42, 26);
+  const HAIR = pal.ramp("髪", 240, 0.3, 4, 0.05, 0.33, 22);
   const IND = pal.ramp("藍", 230, 0.4, 4, 0.16, 0.5, 24);
   const CLK = pal.ramp("外套", 208, 0.16, 4, 0.34, 0.92, 22);
   const RED = pal.ramp("朱", 352, 0.8, 3, 0.28, 0.56, 14);
@@ -89,12 +89,13 @@ export function build() {
   for (let y = 146; y < 162; y++) for (let x = 96; x <= 160; x++) { const half = 21 + (y - 146) * 0.25; if (Math.abs(x - cx) > half) continue; put(g, y, x, y < 148 ? RED[2] : y < 154 ? RED[1] : RED[0]); }
   for (let x = 108; x <= 148; x += 1) put(g, 146, x, RED[2]);
   // 帯じめの組みひも（金の留め）
-  ell(g, cx, 154, 4, 5, [RED[0], GOLD, WHITE], { ambient: 0.4 });
+  for (let y = 148; y <= 160; y++) for (let x = cx - 3; x <= cx + 3; x++) put(g, y, x, x === cx - 3 || y === 148 ? RED[2] : x === cx + 3 || y === 160 ? RED[0] : RED[1]);
+  put(g, 149, cx - 2, WHITE);
   // ひもの垂れ
   line(g, 150, 158, 152, 188, RED[1]); line(g, 151, 158, 153, 188, RED[0]); line(g, 148, 158, 148, 184, RED[1]);
   ell(g, 152, 192, 3.4, 4.6, RED, { ambient: 0.3 });
   // 腰の細身の刀（左腰から右下がりに。さや・つば・朱の巻き）
-  tube(g, [[112, 156, 3.6], [100, 186, 3.2], [92, 214, 2.6]], HAIR, { ambient: 0.2, gain: 1.2 });
+  tube(g, [[112, 156, 3.8], [100, 186, 3.4], [90, 214, 2.8]], CLK, { ambient: 0.12, gain: 1.2, tex: () => -0.32 });
   for (let t = 0; t < 4; t++) { const yy = 164 + t * 6, xx = 112 - (yy - 156) * 0.4; put(g, yy, Math.round(xx) - 1, RED[2]); put(g, yy, Math.round(xx), RED[1]); put(g, yy, Math.round(xx) + 1, RED[0]); }
   ell(g, 111, 157, 5, 3, [CLK[0], CLK[2], CLK[3]], { ambient: 0.5 }); // つば
   line(g, 91, 214, 89, 220, CLK[3]);
@@ -144,7 +145,7 @@ export function build() {
   const tri = (v) => Math.abs((v % 1 + 1) % 1 - 0.5) * 2;
   const fringe = (x) => 49 + Math.round(tri((x - 96) / 8.5) * 1.6) + (Math.abs(x - cx) < 6 ? 1 : 0) - Math.round(Math.max(0, Math.abs(x - cx) - 24) * 0.5);
   const hairMask = (x, y) => { const dx = Math.abs(x - cx); if (dx > 35) return false; if (y < fringe(x)) return true; if (dx > 24 && y < 96) return true; return false; };
-  vol(g, [{ cx, cy: 48, rx: 36, ry: 36 }, { cx, cy: 74, rx: 38, ry: 28, h: 0.9 }], HAIR, { box: [84, 4, 172, 110], mask: hairMask, ambient: 0.14, gain: 1.4, tex: (x, y) => { const band = 24 + ((x - cx - 3) / 34) ** 2 * 20; const d = Math.abs(y - band); return (d < 1.6 && x < cx + 26 ? 0.34 : 0) + (Math.sin(x * 0.75 + 0.8) > 0.93 ? 0.06 : 0) - (d >= 1.6 && d < 3 && x < cx + 26 ? 0.0 : 0); } });
+  vol(g, [{ cx, cy: 48, rx: 36, ry: 36 }, { cx, cy: 74, rx: 38, ry: 28, h: 0.9 }], HAIR, { box: [84, 4, 172, 110], mask: hairMask, ambient: 0.14, gain: 1.4, tex: (x, y) => { const band = 24 + ((x - cx - 3) / 34) ** 2 * 20; const d = Math.abs(y - band); return (d < 1.6 && x < cx + 26 ? 0.55 : 0) + (Math.sin(x * 0.75 + 0.8) > 0.93 ? 0.06 : 0) - (d >= 1.6 && d < 3 && x < cx + 26 ? 0.0 : 0); } });
   // 左右に垂れる長い房（前へ）
   const lock = (pts) => tube(g, pts, HAIR, { ambient: 0.14, gain: 1.4, tex: (x, y) => (Math.sin(x * 0.8) > 0.9 ? 0.08 : 0) });
   lock([[98, 66, 8], [95, 96, 8], [96, 124, 6], [100, 146, 2.4]]);
@@ -152,12 +153,13 @@ export function build() {
   // 房の内側のすきま（顔と髪のさかいの影）
   for (let y = 52; y < 88; y++) for (const s of [-1, 1]) { const x = cx + s * (27 - Math.max(0, (y - 70)) * 0.9); if (SKIN.includes(g[y][Math.round(x)])) put(g, y, Math.round(x), SKIN[0]); }
   // 前髪の下の影
-  for (let x = 98; x <= 158; x++) { const y = fringe(x); if (SKIN.includes(g[y + 1]?.[x])) put(g, y + 1, x, SKIN[1]); if (SKIN.includes(g[y + 2]?.[x]) && x % 2 === 0) put(g, y + 2, x, SKIN[2]); }
+  for (let x = 98; x <= 158; x++) { const y = fringe(x); if (SKIN.includes(g[y + 1]?.[x])) put(g, y + 1, x, SKIN[1]); }
   // 髪かざり（銀の花と金のしずく）と、左の房の朱のひも
   for (const [dx, dy] of [[0, -5], [5, -1], [-5, -1], [-3, 4], [3, 4]]) ell(g, 152 + dx, 30 + dy, 3.6, 3.6, [CLK[1], CLK[2], CLK[3]], { ambient: 0.4 });
   ell(g, 152, 30, 2.4, 2.4, [RED[0], RED[1], RED[2]], { ambient: 0.5 });
   line(g, 152, 38, 152, 44, GOLD); put(g, 45, 152, GOLD); put(g, 46, 152, WHITE);
-  for (let y = 100; y < 104; y++) for (let x = 90; x <= 103; x++) if (HAIR.includes(g[y][x])) put(g, y, x, y === 100 ? RED[2] : y === 101 ? RED[1] : RED[0]);
+  for (let y = 122; y < 126; y++) for (let x = 91; x <= 101; x++) if (HAIR.includes(g[y][x])) put(g, y, x, y === 122 ? RED[2] : y === 123 ? RED[1] : RED[0]);
+  for (let y = 122; y < 126; y++) for (let x = 155; x <= 165; x++) if (HAIR.includes(g[y][x])) put(g, y, x, y === 122 ? RED[2] : y === 123 ? RED[1] : RED[0]);
 
   despeckle(g, 2);
   outline(g, OUT, RIM);
