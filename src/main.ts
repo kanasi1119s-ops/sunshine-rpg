@@ -48,6 +48,9 @@ import { createFushimaKanshitakuYugami } from "./game/battle/chapter7-enemies";
 import { CHAPTER7_OPENING_COMMANDS } from "./game/world/chapter7-world";
 import { createToushinBanninYugami } from "./game/battle/chapter8-enemies";
 import { CHAPTER8_OPENING_COMMANDS } from "./game/world/chapter8-world";
+import { createKyotoukyuEdreaYugami } from "./game/battle/chapter9-enemies";
+import { CHAPTER9_OPENING_COMMANDS } from "./game/world/chapter9-world";
+import { KYOTOUKYU_CORRIDOR_ENTRY, KYOTOUKYU_COURT_ENTRY, KYOTOUKYU_SANCTUM_ENTRY } from "./game/map/chapter9/kyotoukyu-maps";
 import { AYAME, COMPANIONS, createCompanionCombatant, GUIDE, MINA, ORCA, RETO } from "./game/battle/companions";
 import type { Combatant, Skill } from "./game/battle/types";
 import type { LeveledStats } from "./game/growth/types";
@@ -167,6 +170,9 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   if (mapId === "toushin-town" && !flags["chapter8_intro_seen"]) {
     dialogue.start(CHAPTER8_OPENING_COMMANDS);
   }
+  if (mapId === "kyotoukyu-court" && !flags["chapter9_intro_seen"]) {
+    dialogue.start(CHAPTER9_OPENING_COMMANDS);
+  }
 }
 
 /**
@@ -192,6 +198,9 @@ const MAP_BGM_ID: Record<string, string> = {
   "fushima-base": "ruins-ukishima",
   "toushin-town": "town-toushin",
   "toushin-hall": "hall-gikai",
+  "kyotoukyu-court": "ruins",
+  "kyotoukyu-corridor": "puzzle",
+  "kyotoukyu-sanctum": "unease",
 };
 function mapBgmFor(mapId: string): Score {
   return getTrack(MAP_BGM_ID[mapId] ?? "town-touri");
@@ -269,6 +278,11 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
     createEnemy: createToushinBanninYugami,
     victoryFlag: "chapter8_yugami_defeated",
     bgmId: "boss-toushin",
+  },
+  "kyotoukyu-yugami": {
+    createEnemy: createKyotoukyuEdreaYugami,
+    victoryFlag: "chapter9_yugami_defeated",
+    bgmId: "boss-final",
   },
 };
 
@@ -609,6 +623,18 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
   {
     label: () => "マップ: 灯芯都・合議会堂 へワープ",
     action: () => switchMap("toushin-hall", TOUSHIN_HALL_ENTRY.tileX, TOUSHIN_HALL_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 虚灯宮・外庭 へワープ",
+    action: () => switchMap("kyotoukyu-court", KYOTOUKYU_COURT_ENTRY.tileX, KYOTOUKYU_COURT_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 虚灯宮・環の回廊 へワープ",
+    action: () => switchMap("kyotoukyu-corridor", KYOTOUKYU_CORRIDOR_ENTRY.tileX, KYOTOUKYU_CORRIDOR_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 虚灯宮・奥の間 へワープ",
+    action: () => switchMap("kyotoukyu-sanctum", KYOTOUKYU_SANCTUM_ENTRY.tileX, KYOTOUKYU_SANCTUM_ENTRY.tileY),
   },
   {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,

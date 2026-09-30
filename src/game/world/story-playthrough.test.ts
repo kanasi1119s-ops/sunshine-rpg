@@ -4,7 +4,7 @@ import { createEventRunner } from "../event/event-runner";
 import type { Flags } from "../event/types";
 
 /**
- * 序章〜第8章の自動通しプレイ。各章のNPCを、プレイヤーが話しかける順（章の順、依頼→調査→ボス→報告）に
+ * 序章〜終章の自動通しプレイ。各章のNPCを、プレイヤーが話しかける順（章の順、依頼→調査→ボス→報告）に
  * 何周か回し、選択肢は「引き受ける・仲間にする」側（0番目）を選ぶ。ボス戦は勝ったものとして勝利フラグを立てる。
  * 進行不能（必要なフラグが立たない・行き止まり）がないか、伏線の前後関係が守られているかを確かめる。
  */
@@ -18,6 +18,7 @@ const BATTLE_VICTORY_FLAG: Record<string, string> = {
   "shimohara-yugami": "chapter6_yugami_defeated",
   "fushima-yugami": "chapter7_yugami_defeated",
   "toushin-yugami": "chapter8_yugami_defeated",
+  "kyotoukyu-yugami": "chapter9_yugami_defeated",
 };
 
 const CHAPTER_MAPS: string[][] = [
@@ -30,6 +31,7 @@ const CHAPTER_MAPS: string[][] = [
   ["shimohara-town", "shimohara-facility"],
   ["fushima-town", "fushima-base"],
   ["toushin-town", "toushin-hall"],
+  ["kyotoukyu-court", "kyotoukyu-corridor", "kyotoukyu-sanctum"],
 ];
 
 function recordingFlags(order: string[]): Flags {
@@ -64,7 +66,7 @@ function playAllNpcs(mapIds: string[], flags: Flags): void {
   }
 }
 
-describe("序章〜第8章の自動通しプレイ", () => {
+describe("序章〜終章の自動通しプレイ", () => {
   const order: string[] = [];
   const flags = recordingFlags(order);
   CHAPTER_MAPS.forEach((maps) => playAllNpcs(maps, flags));
@@ -80,6 +82,7 @@ describe("序章〜第8章の自動通しプレイ", () => {
       "chapter6_yugami_defeated", "chapter6_ayame_joined",
       "chapter7_yugami_defeated", "chapter7_airship_obtained",
       "chapter8_yugami_defeated", "chapter8_kyotoukyu_open",
+      "chapter9_yugami_defeated", "chapter9_grandfather_rescued", "chapter9_cleared", "chapter9_secret_open",
     ]) {
       expect(flags[flag], `${flag} が立たない（進行不能の疑い）`).toBe(true);
     }
@@ -162,6 +165,20 @@ describe("第8章の伏線", () => {
     expect(order.indexOf("chapter8_yugami_defeated")).toBeLessThan(order.indexOf("chapter8_edrea_fled"));
     expect(order.indexOf("chapter8_edrea_fled")).toBeLessThan(order.indexOf("chapter8_reported"));
     expect(flags["chapter8_kyotoukyu_open"]).toBe(true);
+  });
+});
+
+describe("終章の伏線", () => {
+  const order: string[] = [];
+  const flags = recordingFlags(order);
+  CHAPTER_MAPS.forEach((maps) => playAllNpcs(maps, flags));
+
+  it("壁画で真相がつながる→最終決戦→エドレアの投降→祖父の救出（C-017）→クリア、の順に進む", () => {
+    expect(order.indexOf("chapter9_truth_known")).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf("chapter9_edrea_told")).toBeLessThan(order.indexOf("chapter9_yugami_defeated"));
+    expect(order.indexOf("chapter9_yugami_defeated")).toBeLessThan(order.indexOf("chapter9_edrea_surrendered"));
+    expect(order.indexOf("chapter9_edrea_surrendered")).toBeLessThan(order.indexOf("chapter9_grandfather_rescued"));
+    expect(order.indexOf("chapter9_grandfather_rescued")).toBeLessThan(order.indexOf("chapter9_cleared"));
   });
 });
 
