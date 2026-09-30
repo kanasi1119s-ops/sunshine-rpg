@@ -7,7 +7,7 @@ import { hashCell, shadeColor } from "../color-utils";
  * ジャンルでよく使われる技法（草のディザリング、水の波模様、道の踏み跡、
  * 木の樹冠＋幹）を適用する。既存の特定作品のタイルセットは参照していない。
  */
-export type TilePatternKind = "grass" | "water" | "path" | "treeCanopy" | "flagstone" | "brick" | "sand" | "snow" | "plank" | "cloud";
+export type TilePatternKind = "grass" | "water" | "path" | "treeCanopy" | "flagstone" | "brick" | "sand" | "snow" | "plank" | "cloud" | "roof" | "crate";
 
 export interface TileArtSpec {
   base: string;
@@ -176,6 +176,28 @@ const PATTERNS: Record<TilePatternKind, PatternFn> = {
     const h = hashCell(col + variant * 9, row);
     if (localX === 0 && h % 3 !== 0) return ramp[3];
     return h % 7 === 0 ? ramp[3] : h % 11 === 0 ? ramp[1] : ramp[2];
+  },
+  // 屋根: 段ごとに半分ずらした、丸みのある瓦。段の下の縁が暗く、上が明るい。
+  roof: (ramp, row, col, variant) => {
+    const band = Math.floor(row / 4);
+    const localY = row % 4;
+    const localX = (col + (band % 2) * 4) % 8;
+    // 瓦の下の縁は、真ん中がふくらんだ曲線（両端が1段高い）
+    const edge = localX === 0 || localX === 7 ? 2 : 3;
+    if (localY === edge) return ramp[0];
+    if (localY > edge) return ramp[1];
+    if (localY === 0) return ramp[3];
+    const h = hashCell(col + variant * 7, row + band * 5);
+    return h % 9 === 0 ? ramp[1] : h % 13 === 0 ? ramp[3] : ramp[2];
+  },
+  // 木箱: 外枠と、斜めの補強板。
+  crate: (ramp, row, col, variant) => {
+    if (row === 0 || col === 0 || row === TILE_ART_SIZE - 1 || col === TILE_ART_SIZE - 1) return ramp[0];
+    if (row === 1 || col === 1) return ramp[3];
+    if (row === TILE_ART_SIZE - 2 || col === TILE_ART_SIZE - 2) return ramp[1];
+    if (row === col || row + col === TILE_ART_SIZE - 1) return ramp[1];
+    const h = hashCell(col + variant * 3, row * 5);
+    return h % 7 === 0 ? ramp[3] : ramp[2];
   },
   // 雲・霧: やわらかなふくらみ。
   cloud: (ramp, row, col, variant) => {
