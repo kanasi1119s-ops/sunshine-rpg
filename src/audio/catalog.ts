@@ -26,7 +26,9 @@ export interface CatalogEntry {
   finale?: string;
 }
 
+import { MODERN_STYLE_LABEL } from "./genres";
 export const STYLE_LABEL: Record<Style, string> = {
+  ...MODERN_STYLE_LABEL,
   rock: "ロック", metal: "メタル", classic: "クラシック", space: "空間系", cafe: "キーボード（カフェ）", discord: "不協和音", mystery: "不思議",
   epic: "オーケストラ風", folk: "フォーク（アコースティック）", baroque: "バロック協奏曲風", nature: "自然音楽", phonk: "フォンク", samba: "サンバ", jazz: "ジャズ", rnb: "R&B", electro: "エレクトリック",
   hardcore: "ハードコア", deathmetal: "デスメタル", progmetal: "プログレッシブメタル（7拍子）", jpop: "J-POP",

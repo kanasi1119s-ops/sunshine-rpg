@@ -1,5 +1,6 @@
 import type { NamHost } from "./nam/nam-host";
 import { SampledBgm, SampledSe } from "./sampled-engine";
+import { MasterFx } from "./master-fx";
 import { createBgmBus, createHallImpulse, scheduleInstrumentNote, type Source } from "./voices";
 import { noteNameToMidi } from "./note";
 import { flattenScore, getScoreDurationSec, type Score, type ScheduledNote } from "./score";
@@ -35,6 +36,7 @@ export class AudioEngine {
   private sampledSe = new SampledSe();
   private currentBgm: Score | null = null;
   /** 版（modern/ps2）に応じた、高音の丸めとホール残響の段。 */
+  private masterFx: MasterFx | null = null;
   private profileLp: BiquadFilterNode | null = null;
   private hallSend: GainNode | null = null;
   private synthOnly = SYNTH_ONLY_FROM_URL;
@@ -65,7 +67,9 @@ export class AudioEngine {
       hall.connect(this.bgmGain);
       this.profileLp = lp;
       this.hallSend = send;
-      this.sampledBus = createBgmBus(this.ctx, lp, 0.1);
+      this.masterFx = new MasterFx(this.ctx);
+      this.masterFx.output.connect(lp);
+      this.sampledBus = createBgmBus(this.ctx, this.masterFx.input, 0.1);
       if (!this.synthOnly) {
         void this.sampled.load(this.ctx, this.sampledBus).then(async (ok) => {
           if (ok && this.ctx && this.seBus) {
@@ -182,6 +186,7 @@ export class AudioEngine {
     }
     this.currentBgm = score;
     this.applyEdition(score.edition ?? "modern");
+    this.masterFx?.configure(score.fx, score.tempoBpm);
     if (this.sampled.isReady() && !this.synthOnly) {
       this.sampled.play(score, offsetSec);
       // シーケンサーが位置を返せないとき（音が1つもない曲など）のための、目安の時計

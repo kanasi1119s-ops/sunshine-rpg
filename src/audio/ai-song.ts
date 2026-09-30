@@ -1,5 +1,6 @@
 import { noteNameToMidi } from "./note";
 import { buildNewSong } from "./newsong";
+import { sanitizeFx, type MasterFxSettings } from "./master-fx";
 import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, type Track } from "./score";
 
 /**
@@ -48,6 +49,8 @@ export interface AiSong {
   pump?: boolean | "all";
   /** true＝リードとパッドを電子的なシンセの音色にする（DJ・EDM向け）。 */
   synth?: boolean;
+  /** マスターエフェクト（曲全体）。bitcrush（4〜12ビット）・tape（0〜1）・tremolo {periodBeats, depth}・filter {type, hz}・delay {beats, feedback, mix}・chorus（0〜1）。 */
+  fx?: MasterFxSettings;
   /** ドラムセット（0=標準、16=パワー、24=電子、25=TR-808、32=ジャズ）。DJ・EDMは 24 か 25。 */
   drumKit?: number;
   /** AIが書くパート（メロディ・対旋律・ベースライン・ドラムなど）。 */
@@ -84,6 +87,7 @@ export const AI_SONG_SCHEMA = {
     tone: { type: "string", enum: ["rock", "metal", "prs"] },
     pump: { anyOf: [{ type: "boolean" }, { type: "string", enum: ["all"] }] },
     synth: { type: "boolean" },
+    fx: { type: "object" },
     drumKit: { type: "integer", enum: [0, 16, 24, 25, 32] },
     parts: {
       type: "array",
@@ -119,7 +123,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - barsPerChord: 1コードの小節数（1か2）。repeats: 進行のくり返し回数。
 - autoAccompaniment: true なら、コード進行から伴奏（ドラム・ベース・ギター・ピアノ・弦）を自動で足す。自分でドラムやベースを書くときは false にしてよい。feel: 自動の伴奏の雰囲気（rock / pop / ballad）。
 - tone: ギターの音色の方向（rock / metal / prs＝なめらかなリード）。
-- （DJ・クラブ・EDM向けの任意の設定）pump: true でパッド・弦・合唱を、"all" でリード・エレピ・ブラス・鐘・ピアノ・クリーンギターも、キックに合わせて凹ませる（サイドチェーン）。synth: true でリードとパッドを電子的なシンセの音色に。drumKit: 24（電子）か 25（TR-808）。DJらしい音は、clap（2・4拍）・openhat（裏拍）・scratch（つなぎや合いの手）・riser（ドロップ前の8〜16拍の長い音で盛り上げ）・kick の4つ打ち・snare のロールで作る。
+- （DJ・クラブ・EDM向けの任意の設定）pump: true でパッド・弦・合唱を、"all" でリード・エレピ・ブラス・鐘・ピアノ・クリーンギターも、キックに合わせて凹ませる（サイドチェーン）。synth: true でリードとパッドを電子的なシンセの音色に。drumKit: 24（電子）か 25（TR-808）。fx（曲全体の効果。すべて任意）: {"bitcrush": 10, "tape": 0.5, "tremolo": {"periodBeats": 0.5, "depth": 0.4}, "filter": {"type": "lowpass", "hz": 6000}, "delay": {"beats": 0.75, "feedback": 0.4, "mix": 0.25}, "chorus": 0.4}。ローファイは tape と chorus、ヴェイパーウェイブは chorus と delay、ハイパーポップは軽い bitcrush が合う。DJらしい音は、clap（2・4拍）・openhat（裏拍）・scratch（つなぎや合いの手）・riser（ドロップ前の8〜16拍の長い音で盛り上げ）・kick の4つ打ち・snare のロールで作る。
 - parts: 自分で書くパート。1曲に1〜8パート。
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。
   - volume: 0.1〜0.35 くらい（メロディ 0.22〜0.3、伴奏 0.1〜0.2）。pan: -1〜1。amp: ギター・ベースのアンプ（auto / clean / overdrive / distortion / metal / prs、ジャンル別: jazz / blues / funk / crunch / hardrock / punk / fuzz / shoegaze / lofi / retro8bit / radio）。ほかの楽器は auto。
@@ -241,6 +245,6 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   if (errors.length) throw new Error(errors.join("\n"));
   if (parts.length === 0 && accompaniment.length === 0) throw new Error("パートがありません");
   const tracks = [...accompaniment, ...parts];
-  const score: Score = { tempoBpm: bpm, loop: true, drumKit: base.drumKit, tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock", tracks, ...(song.pump ? { pump: true } : {}), ...(song.pump === "all" ? { pumpAll: true } : {}), ...(song.synth ? { synth: true } : {}), ...([0, 16, 24, 25, 32].includes(Number(song.drumKit)) ? { drumKit: Number(song.drumKit) } : {}) };
+  const score: Score = { tempoBpm: bpm, loop: true, drumKit: base.drumKit, tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock", tracks, ...(song.pump ? { pump: true } : {}), ...(song.pump === "all" ? { pumpAll: true } : {}), ...(song.synth ? { synth: true } : {}), ...(sanitizeFx(song.fx) ? { fx: sanitizeFx(song.fx) } : {}), ...([0, 16, 24, 25, 32].includes(Number(song.drumKit)) ? { drumKit: Number(song.drumKit) } : {}) };
   return { score, song, warnings };
 }

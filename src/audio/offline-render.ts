@@ -5,6 +5,7 @@ import { configureAudioRack, decodeClip, scheduleAudioTracks } from "./audio-cli
 import { scoreToMidiInfo } from "./midi-export";
 import type { NamHost } from "./nam/nam-host";
 import { getScoreDurationSec, type Score } from "./score";
+import { MasterFx } from "./master-fx";
 import { createBgmBus, createHallImpulse } from "./voices";
 
 export interface OfflineRenderOptions {
@@ -52,7 +53,10 @@ export async function renderScoreOffline(score: Score, options: OfflineRenderOpt
     send.connect(hall);
     hall.connect(out);
   }
-  const bus = createBgmBus(ctx, lp, 0.1);
+  const masterFx = new MasterFx(ctx);
+  masterFx.configure(score.fx, score.tempoBpm);
+  masterFx.output.connect(lp);
+  const bus = createBgmBus(ctx, masterFx.input, 0.1);
 
   // アンプ（NAMのモデルの読み込みを含む）を先に用意してから、シンセサイザーを作って描き出しを始める
   const { midi, programs, amps } = scoreToMidiInfo(score);

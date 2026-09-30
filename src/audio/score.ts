@@ -6,6 +6,8 @@ import { noteNameToFrequency } from "./note";
 /** 音を鳴らさない拍（休符）。 */
 export const REST = "R";
 
+import type { MasterFxSettings } from "./master-fx";
+
 export interface NoteEvent {
   /** "C4" のような音名、または休符（REST）。 */
   note: string;
@@ -93,6 +95,8 @@ export interface Score {
   pump?: boolean;
   /** trueなら、pump をキーボード・リード・ブラス・鐘・ピアノ・クリーンギターにもかける（DJ・EDMのサイドチェーン）。 */
   pumpAll?: boolean;
+  /** マスターエフェクト（曲全体にかける）。ビットクラッシュ・テープの飽和・トレモロ・フィルター・ディレイ・コーラス。 */
+  fx?: MasterFxSettings;
   /** trueなら、リードとパッドを電子的な音色にする（電子音楽向け）。省略時は生楽器に近い音色。 */
   synth?: boolean;
   /** 音の版。modern=現代的な音（既定）、ps2=PS2世代のゲーム音楽（オーケストラの重ね・豊かなホール残響・高音をやや丸めた音）。 */

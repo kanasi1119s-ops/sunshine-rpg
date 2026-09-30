@@ -28,11 +28,28 @@ export async function openSongKit() {
     const { ps2Edition } = await load("/src/audio/ps2-edition.ts");
     const { getScoreDurationSec } = await load("/src/audio/score.ts");
     const { score, song, warnings } = aiSongToScore(songData);
+    return finish(score, song.title, song.description, warnings, { name, edition, outDir, wav });
+  }
+
+  /** 最新ジャンルの曲（genres.ts）を、型から組み立てて書き出す。 */
+  async function buildGenre(spec, { name, edition = "real", outDir, wav = false } = {}) {
+    const { composeSong } = await load("/src/audio/songwriter.ts");
+    const { STYLE_LABEL } = await load("/src/audio/catalog.ts");
+    if (!STYLE_LABEL[spec.style]) throw new Error(`知らない曲調です: ${spec.style}（${Object.keys(STYLE_LABEL).join(" / ")}）`);
+    const score = composeSong({ id: name, title: spec.title ?? STYLE_LABEL[spec.style], scene: "", tonic: "C", minor: true, bpm: 0, seed: 1, ...spec });
+    return finish(score, spec.title ?? STYLE_LABEL[spec.style], `${STYLE_LABEL[spec.style]}（型から組み立てた曲）`, [], { name, edition, outDir, wav });
+  }
+
+  async function finish(score, title, description, warnings, { name, edition, outDir, wav }) {
+    const { scoreToMidi } = await load("/src/audio/midi-export.ts");
+    const { realEdition } = await load("/src/audio/real-edition.ts");
+    const { ps2Edition } = await load("/src/audio/ps2-edition.ts");
+    const { getScoreDurationSec } = await load("/src/audio/score.ts");
     applyBandAmp(score, name); // アンプの指定と、曲ごとの音づくりの上書き（SONG_TWEAKS）を、WAVにも反映する
     const out = path.resolve(outDir ?? path.join(ROOT, "dist-songs"));
     fs.mkdirSync(out, { recursive: true });
     const files = { project: path.join(out, `${name}.sunshine-song.json`), midi: path.join(out, `${name}.mid`) };
-    fs.writeFileSync(files.project, JSON.stringify({ format: "sunshine-song", version: 1, name: song.title, edition, score }));
+    fs.writeFileSync(files.project, JSON.stringify({ format: "sunshine-song", version: 1, name: title, edition, score }));
     const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
     fs.writeFileSync(files.midi, scoreToMidi(edited));
     if (wav) {
@@ -40,7 +57,7 @@ export async function openSongKit() {
       await renderWav(score, edition, files.wav);
     }
     const sec = getScoreDurationSec(score);
-    return { title: song.title, description: song.description, tracks: score.tracks.length, seconds: Math.round(sec * 10) / 10, bpm: score.tempoBpm, warnings, files, score };
+    return { title, description, tracks: score.tracks.length, seconds: Math.round(sec * 10) / 10, bpm: score.tempoBpm, warnings, files, score };
   }
 
   /** 作った曲を、ゲームの曲として登録する（src/audio/songs/<id>.sunshine-song.json）。 */
@@ -69,7 +86,7 @@ export async function openSongKit() {
     return Object.entries(AMP_PRESETS).map(([id, p]) => ({ id, label: p.label, genre: p.genre }));
   }
 
-  return { guide, build, register, listGameSongs, ampPresets, close: () => server.close() };
+  return { guide, build, buildGenre, register, listGameSongs, ampPresets, close: () => server.close() };
 }
 
 async function loadPlaywright() {

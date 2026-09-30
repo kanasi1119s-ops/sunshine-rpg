@@ -24,6 +24,7 @@ import { AI_SONG_GUIDE, AI_SONG_SCHEMA, aiSongToScore } from "../../src/audio/ai
 import { buildNewSong } from "../../src/audio/newsong";
 import { noteNameToMidi } from "../../src/audio/note";
 import { ps2Edition } from "../../src/audio/ps2-edition";
+import { sanitizeFx, type MasterFxSettings } from "../../src/audio/master-fx";
 import { realEdition } from "../../src/audio/real-edition";
 import { getScoreDurationSec, REST, type AmpSetting, type Instrument, type Score, type Track } from "../../src/audio/score";
 import { composeSong, type Style } from "../../src/audio/songwriter";
@@ -69,11 +70,11 @@ try {
 }
 
 const INSTRUMENTS: [Instrument, string][] = [
-  ["kick", "バスドラム"], ["snare", "スネア"], ["hihat", "ハイハット"], ["crash", "クラッシュ"], ["tom", "タム"],
+  ["kick", "バスドラム"], ["snare", "スネア"], ["hihat", "ハイハット"], ["crash", "クラッシュ"], ["tom", "タム"], ["clap", "クラップ"], ["openhat", "オープンハット"], ["scratch", "スクラッチ"], ["riser", "ライザー"],
   ["bass", "ベース"], ["slap", "スラップベース"], ["guitar", "クリーンギター"], ["crunch", "クランチギター"], ["distGuitar", "ディストーションギター"], ["leadGuitar", "リードギター"], ["echoGuitar", "エコーギター"],
   ["keys", "エレピ"], ["piano", "ピアノ"], ["harpsichord", "チェンバロ"], ["strings", "弦楽"], ["pad", "パッド"], ["choir", "合唱"], ["brass", "ブラス"], ["lead", "リード"], ["bell", "鐘"],
 ];
-const DRUMS = new Set<string>(["kick", "snare", "hihat", "crash", "tom"]);
+const DRUMS = new Set<string>(["kick", "snare", "hihat", "crash", "tom", "clap", "openhat", "scratch"]);
 const instLabel = (i?: Instrument): string => INSTRUMENTS.find(([k]) => k === i)?.[1] ?? "音色なし";
 const TONICS = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 
@@ -236,6 +237,7 @@ function loadScore(score: Score, name: string): void {
   state.muted.clear();
   state.solo.clear();
   nameIn.value = name;
+  syncFxControls();
   renderAll();
   save();
 }
@@ -262,6 +264,44 @@ editionSel.onchange = () => {
   restartHere();
   save();
 };
+
+// マスターエフェクト（曲全体。無料のWeb Audioだけで作った効果）
+const fxRange = (label: string): HTMLInputElement => h("input", { type: "range", min: "0", max: "100", value: "0", "aria-label": label }) as HTMLInputElement;
+const fxTape = fxRange("テープの飽和"), fxChorus = fxRange("コーラス"), fxDelayMix = fxRange("ディレイの量"), fxTremDepth = fxRange("トレモロの深さ");
+const fxDelayBeats = select([["0.25", "16分"], ["0.5", "8分"], ["0.75", "付点8分"], ["1", "4分"]], "0.75");
+const fxCrush = select([["0", "なし"], ["12", "12ビット（軽い）"], ["10", "10ビット"], ["8", "8ビット（ザラザラ）"], ["6", "6ビット"], ["4", "4ビット（ローファイの極み）"]], "0");
+const fxTremPeriod = select([["0.25", "16分"], ["0.5", "8分"], ["1", "4分"], ["2", "2分"]], "0.5");
+const fxFilter = select([["0", "なし"], ["lp-8000", "ローパス 8kHz（まるく）"], ["lp-3000", "ローパス 3kHz（こもらせる）"], ["hp-200", "ハイパス 200Hz（低音を削る）"], ["hp-800", "ハイパス 800Hz（電話ふう）"]], "0");
+function readFx(): MasterFxSettings | undefined {
+  const fx: Record<string, unknown> = {};
+  if (Number(fxCrush.value) > 0) fx.bitcrush = Number(fxCrush.value);
+  if (Number(fxTape.value) > 0) fx.tape = Number(fxTape.value) / 100;
+  if (Number(fxTremDepth.value) > 0) fx.tremolo = { periodBeats: Number(fxTremPeriod.value), depth: Number(fxTremDepth.value) / 100 };
+  if (fxFilter.value !== "0") { const [t, hz] = fxFilter.value.split("-"); fx.filter = { type: t === "lp" ? "lowpass" : "highpass", hz: Number(hz) }; }
+  if (Number(fxDelayMix.value) > 0) fx.delay = { beats: Number(fxDelayBeats.value), feedback: 0.4, mix: Number(fxDelayMix.value) / 100 };
+  if (Number(fxChorus.value) > 0) fx.chorus = Number(fxChorus.value) / 100;
+  return sanitizeFx(fx);
+}
+function syncFxControls(): void {
+  const fx = state.score.fx ?? {};
+  fxCrush.value = String(fx.bitcrush ?? 0); fxTape.value = String(Math.round((fx.tape ?? 0) * 100)); fxChorus.value = String(Math.round((fx.chorus ?? 0) * 100));
+  fxDelayMix.value = String(Math.round((fx.delay?.mix ?? 0) * 100)); if (fx.delay) fxDelayBeats.value = String(fx.delay.beats);
+  fxTremDepth.value = String(Math.round((fx.tremolo?.depth ?? 0) * 100)); if (fx.tremolo) fxTremPeriod.value = String(fx.tremolo.periodBeats);
+  fxFilter.value = fx.filter ? `${fx.filter.type === "lowpass" ? "lp" : "hp"}-${fx.filter.hz}` : "0";
+}
+function applyFx(): void {
+  const fx = readFx();
+  if (fx) state.score.fx = fx; else delete state.score.fx;
+  restartSoon();
+  save();
+}
+for (const el of [fxTape, fxChorus, fxDelayMix, fxTremDepth, fxDelayBeats, fxCrush, fxTremPeriod, fxFilter]) el.onchange = applyFx;
+for (const el of [fxTape, fxChorus, fxDelayMix, fxTremDepth]) el.oninput = applyFx;
+const fxBox = h("details", { class: "fxbox" }, h("summary", {}, "エフェクト（曲全体）"),
+  h("div", { class: "row", style: "margin-top:6px" }, field("テープの飽和", fxTape), field("コーラス", fxChorus), field("ビットクラッシュ", fxCrush)),
+  h("div", { class: "row", style: "margin-top:6px" }, field("ディレイの量", fxDelayMix), field("ディレイの間隔", fxDelayBeats), field("フィルター", fxFilter)),
+  h("div", { class: "row", style: "margin-top:6px" }, field("トレモロの深さ", fxTremDepth), field("トレモロの周期", fxTremPeriod)),
+  h("div", { class: "muted", style: "margin-top:4px" }, "どれも無料のWeb Audioだけで作った効果です。WAVの書き出しにも同じ設定がかかります。"));
 const volIn = h("input", { type: "range", min: "0", max: "100", value: "60", "aria-label": "音量" });
 volIn.oninput = () => engine.setBgmVolume(Number(volIn.value) / 100);
 engine.setBgmVolume(0.6);
@@ -1577,6 +1617,7 @@ app.append(
     h("div", { class: "lcd" }, h("div", { class: "lcd-time" }, ui.time), lcd("BPM", lcdTempo), lcd("TRK", lcdTracks), lcd("LEN", lcdLen)),
     h("div", { class: "seekwrap" }, ui.seek),
     h("div", { class: "row topopts" }, field("サウンド", editionSel), field("マスター音量", volIn)),
+    fxBox,
   ),
   h("div", { class: "daw" },
     panel("TRK", "トラック", ui.trackBox, h("div", { class: "row", style: "margin-top:8px" }, addTrackBtn),

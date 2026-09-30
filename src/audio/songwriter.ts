@@ -1,4 +1,5 @@
 import { arrange, midiToName, type Arrangement, type MelodySpec, type PartSpec, type Section } from "./compose";
+import { genreScore, isModernStyle, type ModernStyle } from "./genres";
 import type { Score } from "./score";
 
 /**
@@ -7,9 +8,11 @@ import type { Score } from "./score";
  * 特定の既存曲の旋律・進行をなぞらない（`CLAUDE.md` 1-1）。曲の良し悪しは耳で聴いて設計図（種など）を調整する。
  */
 
-export type Style =
+export type LegacyStyle =
   | "rock" | "metal" | "classic" | "space" | "cafe" | "discord" | "mystery" | "epic" | "folk"
   | "baroque" | "nature" | "phonk" | "samba" | "jazz" | "rnb" | "electro" | "hardcore" | "deathmetal" | "progmetal" | "jpop";
+/** 2020年代の最新ジャンルを含む、曲の種類。最新ジャンルは `genres.ts` で組み立てる。 */
+export type Style = LegacyStyle | ModernStyle;
 
 export interface SongSpec {
   id: string;
@@ -262,7 +265,7 @@ const ROCK_V = { kick: "x.......x.x.....", snare: "....x.......x...", hat: "x.x.
 const ROCK_C = { kick: "x.....x.x.x...x.", snare: "....x.......x...", hat: "xxxxxxxxxxxxxxxx" };
 const KEYS3 = { k1: "a-------", k2: "b-------", k3: "c-------" };
 
-const TEMPLATES: Record<Exclude<Style, "discord" | "mystery">, Template> = {
+const TEMPLATES: Record<Exclude<LegacyStyle, "discord" | "mystery">, Template> = {
   baroque: {
     // バロック協奏曲風: 速い弦の音型、チェンバロの通奏低音、5度で下がる進行の反復。特定の曲の旋律は使っていない
     sevenths: false,
@@ -938,6 +941,7 @@ function applyDrive(kp: KindPlan, kind: Kind, tpl: Template, on: boolean): KindP
 
 /** 設計図から曲を作る。 */
 export function composeSong(spec: SongSpec): Score {
+  if (isModernStyle(spec.style)) return genreScore(spec);
   const rng = makeRng(spec.seed);
   const key = keyOf(spec);
   const beats = spec.beats ?? 4;
