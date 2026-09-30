@@ -63,6 +63,8 @@
 | `docs/playtime-budget.md` | 章ごとのプレイ時間の予算と見積もり |
 | `docs/story/` | 世界観・キャラクター・物語の構成・謎の真相・伏線台帳・サブストーリー・裏ボス |
 | `docs/design/` | 戦闘・成長・呪文・装備などのしくみ |
+| `docs/assets-credits.md` | 外部素材の規約・クレジット・使わないと決めた素材（素材を使う前に必ず読む。ドット絵世界の素材は `docs/design/yms-dotworld-catalog.md` の条件を守る） |
+| `assets-src/` | 素材の元ファイル（ドット絵ライブラリ・参考素材・ぴぽや・音源など） |
 | `docs/sound/tracks.md` | 曲の一覧 |
 | `docs/manual.md` | プレイヤー向けの説明書（遊び方） |
 | `docs/debug-log.md` | テストの記録 |
