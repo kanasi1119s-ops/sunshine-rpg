@@ -892,6 +892,15 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
     },
   },
   {
+    label: () => "仲間5人を加える（ジョブ画面も使える）",
+    action: () => {
+      for (const { flag } of COMPANION_JOIN_FLAGS) {
+        flags[flag] = true;
+      }
+      debugMenu = { ...debugMenu, open: false };
+    },
+  },
+  {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,
     action: () => {
       heroStats = gainExp(createInitialHeroStats(), expRequiredForLevel(heroStats.level + 1), SAMPLE_GROWTH).stats;
