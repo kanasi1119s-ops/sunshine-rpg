@@ -9,6 +9,8 @@ export interface WarpRequest {
 interface RunnerOptions {
   onWarp?: (warp: WarpRequest) => void;
   onStartBattle?: (battleId: string) => void;
+  onGiveGold?: (amount: number) => void;
+  onOpenShop?: (shopId: string) => void;
 }
 
 /**
@@ -62,6 +64,14 @@ function* runCommands(
 
       case "startBattle":
         options.onStartBattle?.(command.battleId);
+        break;
+
+      case "giveGold":
+        options.onGiveGold?.(command.amount);
+        break;
+
+      case "shop":
+        options.onOpenShop?.(command.shopId);
         break;
     }
   }

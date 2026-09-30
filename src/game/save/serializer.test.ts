@@ -16,6 +16,7 @@ function makeSaveData(): SaveData {
       reto: { stats: { level: 1, exp: 0, maxHp: 26, hp: 26, maxMp: 6, mp: 6, attack: 13, defense: 7, speed: 11 } },
     },
     inventory: [{ itemId: "herb", quantity: 3 }],
+    gold: 120,
     flags: { met_villager: true },
   };
 }

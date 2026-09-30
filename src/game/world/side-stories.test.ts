@@ -120,7 +120,7 @@ describe("サブストーリーの進行", () => {
       });
       const texts = story.steps.length === 0 ? first : run(giver.commands, flags, 0).join("");
       expect(flags[`side_${story.key}_done`], `${story.id} を完了できない`).toBe(true);
-      expect(texts).toContain("ごほうび（仮）");
+      expect(texts).toContain("ごほうび");
     }
   });
 
@@ -141,6 +141,35 @@ describe("サブストーリーの進行", () => {
     const flags: Flags = {};
     run(npc(`side-${story.key}-step1`).commands, flags);
     expect(flags[`side_${story.key}_step1`]).toBeUndefined();
+  });
+
+  it("灯貨のごほうびは、完了のときに1度だけ手に入る（S-001は60灯貨）", () => {
+    const story = SIDE_STORIES.find((s) => s.id === "S-001")!;
+    let earned = 0;
+    const flags: Flags = { chapter0_yugami_defeated: true };
+    const play = (commands: EventCommand[]) => {
+      const runner = createEventRunner(commands, flags, { onGiveGold: (n) => (earned += n) });
+      let result = runner.next();
+      while (!result.done) {
+        result = runner.next(result.step?.kind === "choice" ? { kind: "choose", index: 0 } : { kind: "advance" });
+      }
+    };
+    play(npc("side-s001-giver").commands);
+    story.steps.forEach((_, i) => play(npc(`side-s001-step${i + 1}`).commands));
+    play(npc("side-s001-giver").commands);
+    play(npc("side-s001-giver").commands);
+    expect(earned).toBe(60);
+  });
+
+  it("すべてのサブストーリー（S-028を除く）に、灯貨のごほうびがある。章が進むほど増える", () => {
+    for (const story of SIDE_STORIES) {
+      if (story.id !== "S-028") {
+        expect(story.gold, `${story.id} の灯貨`).toBeGreaterThan(0);
+      }
+    }
+    const gold = (id: string) => SIDE_STORIES.find((s) => s.id === id)!.gold!;
+    expect(gold("S-003")).toBeGreaterThan(gold("S-001"));
+    expect(gold("S-027")).toBeGreaterThan(gold("S-024"));
   });
 
   it("S-013は、選んだ道によってフラグが分かれる", () => {

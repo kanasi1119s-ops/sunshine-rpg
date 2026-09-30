@@ -1,7 +1,12 @@
 import { SAVE_VERSION, type SaveData } from "./types";
 
+/** version 3（灯貨が無い頃）のセーブデータの形。 */
+interface SaveDataV3 extends Omit<SaveData, "version" | "gold"> {
+  version: 3;
+}
+
 /** version 2（ジョブが無い頃）のセーブデータの形。 */
-interface SaveDataV2 extends Omit<SaveData, "version" | "jobs"> {
+interface SaveDataV2 extends Omit<SaveData, "version" | "jobs" | "gold"> {
   version: 2;
 }
 
@@ -22,9 +27,14 @@ function migrateV1ToV2(data: SaveDataV1): SaveDataV2 {
   return { ...data, version: 2, companions: {} };
 }
 
-function migrateV2ToV3(data: SaveDataV2): SaveData {
+function migrateV2ToV3(data: SaveDataV2): SaveDataV3 {
   // v2のセーブにはジョブの概念が無かったため、全員ジョブ未装備・熟練度0から始める。
   return { ...data, version: 3, jobs: {} };
+}
+
+function migrateV3ToV4(data: SaveDataV3): SaveData {
+  // v3のセーブには灯貨の概念が無かったため、0から始める。
+  return { ...data, version: 4, gold: 0 };
 }
 
 /**
@@ -44,6 +54,10 @@ export function migrateSaveData(data: unknown): SaveData {
 
   if (current.version === 2) {
     current = migrateV2ToV3(current as unknown as SaveDataV2);
+  }
+
+  if (current.version === 3) {
+    current = migrateV3ToV4(current as unknown as SaveDataV3);
   }
 
   if (current.version === SAVE_VERSION) {

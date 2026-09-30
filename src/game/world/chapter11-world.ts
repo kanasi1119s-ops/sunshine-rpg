@@ -185,6 +185,8 @@ function altarCommands(no: number, shrine: GodShrine): EventCommand[] {
           then: [
             ...shrine.defeat.map((t) => say(`${god.kind}「${god.name}」`, t)),
             say(undefined, `環の欠片（${no}つ目）を手に入れた！`),
+            { type: "giveGold", amount: 6000 },
+            say(undefined, "【ごほうび】灯貨6000を手に入れた！"),
             say(undefined, `【ごほうび（仮）】${shrine.reward}`),
             { type: "setFlag", flag: `god${no}_fragment`, value: true },
           ],

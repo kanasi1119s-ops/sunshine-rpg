@@ -2,6 +2,10 @@ import "./style.css";
 import { GAME_TITLE } from "./core/status";
 import { backTitle, confirmTitle, createTitleState, moveTitleCursor } from "./game/title/title-menu";
 import { renderTitle } from "./render/title-renderer";
+import { addGold, computeVictoryGold } from "./game/economy/gold";
+import { ALL_ITEMS_BY_ID, buyItem } from "./game/economy/shop";
+import { closeShopMenu, createShopMenuState, moveShopCursor, openShopMenu, withShopMessage } from "./game/economy/shop-menu";
+import { renderShop } from "./render/shop-renderer";
 import { backPauseMenu, confirmPauseMenu, createPauseMenuState, movePauseCursor, openPauseMenu } from "./game/menu/pause-menu";
 import { renderPauseMenu, type StatusRow } from "./render/pause-menu-renderer";
 import { expToNextLevel } from "./game/growth/exp-curve";
@@ -38,7 +42,6 @@ import {
   createSampleEnemies,
   SAMPLE_GROWTH,
   SAMPLE_ITEM,
-  SAMPLE_ITEMS_BY_ID,
   SAMPLE_SKILL,
 } from "./game/battle/sample-battle";
 import { CHAPTER0_ITEM, CHAPTER0_SKILL, createChapter0Party, createYugamiBoss } from "./game/battle/chapter0-enemies";
@@ -246,6 +249,12 @@ let pendingVictoryFlag: string | null = null;
 const dialogue = new DialogueController(flags, {
   onWarp: (warp) => switchMap(warp.mapId, warp.tileX, warp.tileY),
   onStartBattle: (battleId) => startStoryBattle(battleId),
+  onGiveGold: (amount) => {
+    gold = addGold(gold, amount);
+  },
+  onOpenShop: (shopId) => {
+    shopMenu = openShopMenu(shopId);
+  },
 });
 
 /** イベントの`startBattle`コマンドが指すボス戦のデータ（章が増えるたびここに追加する）。 */
@@ -344,7 +353,7 @@ function startRandomBattle(enemies: Combatant[]): void {
   victoryExpApplied = false;
   victoryMessage = null;
   pendingVictoryFlag = null;
-  const equipmentBonus = computeEquipmentBonus(heroEquipment, SAMPLE_ITEMS_BY_ID);
+  const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
   const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
   const party = buildActiveParty(effectiveStats);
   if (debugInvincible) {
@@ -375,7 +384,7 @@ function startStoryBattle(battleId: string): void {
   victoryExpApplied = false;
   victoryMessage = null;
   pendingVictoryFlag = def.victoryFlag;
-  const equipmentBonus = computeEquipmentBonus(heroEquipment, SAMPLE_ITEMS_BY_ID);
+  const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
   const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
   const party = buildActiveParty(effectiveStats);
   if (debugInvincible) {
@@ -473,7 +482,7 @@ window.addEventListener("keydown", (event) => {
 
 /** つよさ画面に出す、ユーリ＋仲間の現在の能力値（装備ボーナス込み）。 */
 function statusRows(): StatusRow[] {
-  const equipmentBonus = computeEquipmentBonus(heroEquipment, SAMPLE_ITEMS_BY_ID);
+  const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
   const rows: StatusRow[] = [];
   const add = (name: string, stats: LeveledStats): void => {
     rows.push({
@@ -509,6 +518,16 @@ let heroEquipment: EquipmentSlots = createInitialEquipment();
 /** 仲間に加わったキャラクターのステータス（キャラクターIDをキーにする）。 */
 let companionStats: Record<string, LeveledStats> = {};
 let inventory: Inventory = createInventory();
+/** 所持している灯貨（お金）。 */
+let gold = 0;
+/** お店の画面（町の武具屋で開く）。 */
+let shopMenu = createShopMenuState();
+let lastShopDirection: Direction | null = null;
+window.addEventListener("keydown", (event) => {
+  if ((event.key === "x" || event.key === "Escape") && shopMenu.open) {
+    shopMenu = closeShopMenu(shopMenu);
+  }
+});
 
 /** 加入フラグが立っているのに、まだパーティに反映していない仲間を反映する。 */
 const COMPANION_JOIN_FLAGS: { flag: string; companionId: string }[] = [
@@ -578,6 +597,7 @@ function buildSaveData(): SaveData {
     ),
     jobs: jobStates,
     inventory,
+    gold,
     flags,
   };
 }
@@ -590,6 +610,7 @@ function applySaveData(data: SaveData): void {
   );
   jobStates = data.jobs;
   inventory = data.inventory;
+  gold = data.gold ?? 0;
   for (const key of Object.keys(flags)) {
     delete flags[key];
   }
@@ -605,6 +626,7 @@ function resetToNewGame(): void {
   companionStats = {};
   jobStates = {};
   inventory = createInventory();
+  gold = 0;
   for (const key of Object.keys(flags)) {
     delete flags[key];
   }
@@ -646,7 +668,7 @@ if (import.meta.env.DEV) {
     if (event.key === "b" && !battle && !dialogue.isActive() && !debugMenu.open && !debugNoEncounter) {
       victoryExpApplied = false;
       victoryMessage = null;
-      const equipmentBonus = computeEquipmentBonus(heroEquipment, SAMPLE_ITEMS_BY_ID);
+      const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
       const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
       const party = buildActiveParty(effectiveStats);
       if (debugInvincible) {
@@ -824,6 +846,19 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
     action: () => switchMap("kanou-4", 10, 11),
   },
   {
+    label: () => `灯貨 +1000（現在${gold}）`,
+    action: () => {
+      gold = addGold(gold, 1000);
+    },
+  },
+  {
+    label: () => "お店を開く（3段目）",
+    action: () => {
+      shopMenu = openShopMenu("tier-3");
+      debugMenu = { ...debugMenu, open: false };
+    },
+  },
+  {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,
     action: () => {
       heroStats = gainExp(createInitialHeroStats(), expRequiredForLevel(heroStats.level + 1), SAMPLE_GROWTH).stats;
@@ -903,10 +938,12 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
   if (levelUpNames.length > 0) {
     window.setTimeout(() => audio.playSe(seOf("level-up")), 1800);
   }
+  const goldGained = computeVictoryGold(finishedBattle.getState());
+  gold = addGold(gold, goldGained);
   victoryMessage =
     levelUpNames.length > 0
-      ? `${expGained}の経験値を得た！ ${levelUpNames.join("、")}がレベルアップ！`
-      : `${expGained}の経験値を得た！`;
+      ? `${expGained}の経験値と${goldGained}灯貨を得た！ ${levelUpNames.join("、")}がレベルアップ！`
+      : `${expGained}の経験値と${goldGained}灯貨を得た！`;
   if (pendingVictoryFlag) {
     flags[pendingVictoryFlag] = true;
     pendingVictoryFlag = null;
@@ -999,6 +1036,34 @@ const loop = createGameLoop({
       return;
     }
     lastPauseDirection = null;
+
+    if (shopMenu.open) {
+      const direction = input.getDirection();
+      if (direction !== lastShopDirection) {
+        if (direction === "up") {
+          shopMenu = moveShopCursor(shopMenu, -1);
+          audio.playSe(seOf("cursor"));
+        } else if (direction === "down") {
+          shopMenu = moveShopCursor(shopMenu, 1);
+          audio.playSe(seOf("cursor"));
+        }
+        lastShopDirection = direction;
+      }
+      if (actionPressed) {
+        const item = shopMenu.items[shopMenu.cursor];
+        if (item) {
+          const result = buyItem(item.id, gold, heroEquipment);
+          if (result.ok) {
+            gold = result.gold;
+            heroEquipment = result.equipment;
+            autosave();
+          }
+          shopMenu = withShopMessage(shopMenu, result.message);
+        }
+      }
+      return;
+    }
+    lastShopDirection = null;
 
     if (debugMenu.open) {
       const direction = input.getDirection();
@@ -1183,13 +1248,17 @@ const loop = createGameLoop({
     ctx.font = "10px monospace";
     ctx.textBaseline = "top";
     ctx.fillText(GAME_TITLE, 4, 2);
+    ctx.textAlign = "right";
+    ctx.fillText(`灯貨 ${gold}`, LOGICAL_WIDTH - 4, 2);
+    ctx.textAlign = "left";
 
     if (saveMessage) {
       ctx.fillStyle = "#f2c14e";
       ctx.fillText(saveMessage, 4, 14);
     }
     renderJobMenu(ctx, jobMenu, jobMenuMembers(), jobStates, LOGICAL_WIDTH, LOGICAL_HEIGHT);
-    renderPauseMenu(ctx, pauseMenu, pauseMenu.screen === "status" ? statusRows() : [], pauseMessage, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    renderShop(ctx, shopMenu, gold, heroEquipment, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    renderPauseMenu(ctx, pauseMenu, pauseMenu.screen === "status" ? statusRows() : [], pauseMessage, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
     if (import.meta.env.DEV) {
       ctx.fillStyle = "#88ff88";
