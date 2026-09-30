@@ -422,6 +422,17 @@ function startStoryBattle(battleId: string): void {
   audio.playBgm(currentBgmTrack);
 }
 
+if (import.meta.env.DEV) {
+  // 開発用: ブラウザの自動確認（全地図の見た目・エラーの点検）から、地図を切り替えるための入口。
+  (window as unknown as { __sunshine: unknown }).__sunshine = {
+    mapIds: Object.keys(WORLD_MAPS),
+    warp: (mapId: string, tileX: number, tileY: number) => switchMap(mapId, tileX, tileY),
+    startNew: () => {
+      title = { ...title, open: false };
+    },
+  };
+}
+
 const input = new InputState();
 const actionButton = new ActionButton();
 attachKeyboard(input, actionButton);
