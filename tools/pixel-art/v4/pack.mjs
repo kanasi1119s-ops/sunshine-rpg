@@ -21,7 +21,7 @@ for (const it of items) { const [dir, jp] = CAT[it.category] ?? ["others", "そ�
 for (const dir of Object.keys(counts)) save(path.join(out, dir, "_sheet.png"), await sheet(items.filter((i) => i.dir === dir), 4, 10));
 await b.close();
 fs.writeFileSync(path.join(out, "index.csv"), bom + csv.join("\r\n") + "\r\n", "utf8");
-const readme = `sunshine-rpg ドット絵 ${items.length}点（32×32・2.5頭身の人物など）
+const readme = `sunshine-rpg ドット絵 ${items.length}点（32×32・人物は2頭身）
 作成: サンシャインソフトウェア（Claude Code）  作成日: ${new Date().toISOString().slice(0, 10)}
 
 【フォルダの中身】
@@ -35,7 +35,7 @@ const readme = `sunshine-rpg ドット絵 ${items.length}点（32×32・2.5頭�
   index.csv  一覧表（ID・カテゴリ・日本語の名前・色数）。UTF-8（BOMつき）なので、Excelでも文字化けしません
 
 【決まり】
-  ・人物は2.5頭身。目には必ず白いハイライトを入れています
+  ・人物は2頭身（胴は細め）。目には必ず白いハイライトを入れています
   ・完全オリジナルのデザインです（既存作品の絵・キャラクターは写していません）
   ・ファイル名は、文字化けを防ぐため、半角の英小文字・数字・ハイフンだけです
   ・ゲームには、まだ入れていません（人間の判断待ち）

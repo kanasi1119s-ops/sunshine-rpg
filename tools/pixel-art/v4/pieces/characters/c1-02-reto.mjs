@@ -4,7 +4,7 @@ import { hs, st, face, mass, rs, finish } from "../../c1-kit.mjs";
 export const name = "レト（先輩調査員）"; export const category = "character";
 export const pal = {
   p: "#222a3c", "1": "#3e4a68", "2": "#62729a", "3": "#8fa0c4", "4": "#c2cee6",
-  r: "#0e3438", J: "#1a4a50", j: "#2a7878", k: "#48a49c", K: "#8ad4c0", C: "#efe3c8",
+  r: "#123c40", J: "#1e5a5e", j: "#2e8888", k: "#54b4a8", K: "#98e0cc", C: "#efe3c8",
   Q: "#4a5a6a", P: "#343e52", s: "#241c26", t: "#a02838", T: "#e05860", o: "#701c2c", i: "#7a94b8", e: "#2a2438", M: "#c4c4d4",
 };
 const raw = overrides(charBase({ hair: 0 }), [
