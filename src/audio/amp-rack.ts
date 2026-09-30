@@ -16,6 +16,9 @@ export interface ChannelAmp {
   amp: AmpSetting;
   pan: number;
 }
+/** ギターの歪みの深さに掛ける倍率（1で変更なし）。全曲共通。0.8で、深さを2割ほど下げる。 */
+export const GUITAR_DRIVE_TRIM = 0.8;
+
 type Role = "plugin" | "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru" | GenreAmpType;
 
 /** ジャンル別のアンプの種類（`score.ts` の `GenreAmpType` と同じ並び）。 */
@@ -169,7 +172,8 @@ export class AmpRack {
   }
 
   private build(role: Role, input: AudioNode, override?: ChannelAmp): AudioNode[] {
-    const d = override?.amp.drive ?? 1;
+    // 全曲共通で、ギターの歪みをほんの少し抑える（人間の指示 2026-09-30「歪が強すぎる」「すべての曲」）。曲ごとの drive の倍率に、さらに掛ける。
+    const d = (override?.amp.drive ?? 1) * GUITAR_DRIVE_TRIM;
     const toneDb = override?.amp.tone ?? 0;
     const level = override?.amp.level ?? 1;
     // 音づくりの上書き（歪みの深さ・高音・出力）がある歪み系のギターは、最後に高音の調整と出力の段を足す
