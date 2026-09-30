@@ -2,6 +2,9 @@ import "./style.css";
 import { GAME_TITLE } from "./core/status";
 import { backTitle, confirmTitle, createTitleState, moveTitleCursor } from "./game/title/title-menu";
 import { renderTitle } from "./render/title-renderer";
+import { backPauseMenu, confirmPauseMenu, createPauseMenuState, movePauseCursor, openPauseMenu } from "./game/menu/pause-menu";
+import { renderPauseMenu, type StatusRow } from "./render/pause-menu-renderer";
+import { expToNextLevel } from "./game/growth/exp-curve";
 import { createGameLoop } from "./core/game-loop";
 import { createGameCanvas, LOGICAL_WIDTH, LOGICAL_HEIGHT } from "./render/canvas";
 import { createCamera, centerCameraOn } from "./render/camera";
@@ -409,6 +412,16 @@ jobButton.addEventListener("pointerdown", (event) => {
   window.dispatchEvent(new KeyboardEvent("keydown", { key: jobMenu.open ? "x" : "c" }));
 });
 app.appendChild(jobButton);
+/** スマホ用: ゲーム中のメニュー（つよさ・セーブ・タイトルへ）を開くボタン（キーボードの Tab と同じ動き）。 */
+const menuButton = document.createElement("button");
+menuButton.type = "button";
+menuButton.className = "touch-menu-button";
+menuButton.textContent = "メニュー";
+menuButton.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  window.dispatchEvent(new KeyboardEvent("keydown", { key: pauseMenu.open ? "x" : "Tab" }));
+});
+app.appendChild(menuButton);
 
 const audio = new AudioEngine();
 let audioStarted = false;
@@ -434,6 +447,46 @@ function hasAutosave(): boolean {
   }
 }
 let title = createTitleState(hasAutosave());
+
+/** ゲーム中のメニュー（Tab／Escape、スマホは「メニュー」ボタン）。 */
+let pauseMenu = createPauseMenuState();
+let lastPauseDirection: Direction | null = null;
+let pauseMessage: string | null = null;
+let pauseMessageTimer = 0;
+let jobMenuWasOpen = false;
+window.addEventListener("keydown", () => { jobMenuWasOpen = jobMenu.open; }, true);
+window.addEventListener("keydown", (event) => {
+  if (pauseMenu.open) {
+    if (event.key === "x" || event.key === "Escape") {
+      pauseMenu = backPauseMenu(pauseMenu);
+    }
+    return;
+  }
+  if ((event.key === "Tab" || event.key === "Escape") && !jobMenuWasOpen) {
+    event.preventDefault();
+    if (!title.open && !battle && !dialogue.isActive() && !debugMenu.open && !jobMenu.open) {
+      pauseMenu = openPauseMenu();
+      pauseMessage = null;
+    }
+  }
+});
+
+/** つよさ画面に出す、ユーリ＋仲間の現在の能力値（装備ボーナス込み）。 */
+function statusRows(): StatusRow[] {
+  const equipmentBonus = computeEquipmentBonus(heroEquipment, SAMPLE_ITEMS_BY_ID);
+  const rows: StatusRow[] = [];
+  const add = (name: string, stats: LeveledStats): void => {
+    rows.push({
+      name, level: stats.level, hp: stats.hp, maxHp: stats.maxHp, mp: stats.mp, maxMp: stats.maxMp,
+      attack: stats.attack, defense: stats.defense, speed: stats.speed, expToNext: expToNextLevel(stats.exp),
+    });
+  };
+  add("ユーリ", applyStatBonus(heroStats, equipmentBonus));
+  for (const [id, stats] of Object.entries(companionStats)) {
+    add(COMPANIONS[id].name, stats);
+  }
+  return rows;
+}
 let lastTitleDirection: Direction | null = null;
 window.addEventListener("keydown", (event) => {
   if ((event.key === "x" || event.key === "Escape") && title.open) {
@@ -543,6 +596,20 @@ function applySaveData(data: SaveData): void {
   Object.assign(flags, data.flags);
   switchMap(data.player.mapId, data.player.tileX, data.player.tileY);
   player = { ...player, direction: data.player.direction };
+}
+
+/** 「はじめから」: これまでの進み具合を初期状態に戻し、序章の開始地点に立つ。 */
+function resetToNewGame(): void {
+  heroStats = createInitialHeroStats();
+  heroEquipment = createInitialEquipment();
+  companionStats = {};
+  jobStates = {};
+  inventory = createInventory();
+  for (const key of Object.keys(flags)) {
+    delete flags[key];
+  }
+  encounterState = createEncounterState(Math.random);
+  switchMap(CHAPTER0_START.mapId, CHAPTER0_START.tileX, CHAPTER0_START.tileY);
 }
 
 function autosave(): void {
@@ -888,6 +955,7 @@ const loop = createGameLoop({
           }
           playMapBgm(currentMapId);
         } else if (result.action === "new") {
+          resetToNewGame();
           dialogue.start(CHAPTER0_OPENING_COMMANDS);
           playMapBgm(currentMapId);
         }
@@ -895,6 +963,42 @@ const loop = createGameLoop({
       return;
     }
     lastTitleDirection = null;
+
+    if (pauseMessageTimer > 0) {
+      pauseMessageTimer -= dtMs;
+      if (pauseMessageTimer <= 0) {
+        pauseMessage = null;
+      }
+    }
+    if (pauseMenu.open) {
+      const direction = input.getDirection();
+      if (direction !== lastPauseDirection) {
+        if (direction === "up") {
+          pauseMenu = movePauseCursor(pauseMenu, -1);
+          audio.playSe(seOf("cursor"));
+        } else if (direction === "down") {
+          pauseMenu = movePauseCursor(pauseMenu, 1);
+          audio.playSe(seOf("cursor"));
+        }
+        lastPauseDirection = direction;
+      }
+      if (actionPressed) {
+        const result = confirmPauseMenu(pauseMenu);
+        pauseMenu = result.state;
+        if (result.action === "save") {
+          autosave();
+          pauseMessage = "セーブしました";
+          pauseMessageTimer = 2000;
+        } else if (result.action === "title") {
+          autosave();
+          title = createTitleState(hasAutosave());
+          currentBgmTrack = getTrack("title");
+          audio.playBgm(currentBgmTrack);
+        }
+      }
+      return;
+    }
+    lastPauseDirection = null;
 
     if (debugMenu.open) {
       const direction = input.getDirection();
@@ -1085,6 +1189,7 @@ const loop = createGameLoop({
       ctx.fillText(saveMessage, 4, 14);
     }
     renderJobMenu(ctx, jobMenu, jobMenuMembers(), jobStates, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    renderPauseMenu(ctx, pauseMenu, pauseMenu.screen === "status" ? statusRows() : [], pauseMessage, LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
     if (import.meta.env.DEV) {
       ctx.fillStyle = "#88ff88";
