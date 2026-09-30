@@ -4,7 +4,7 @@ import { createEventRunner } from "../event/event-runner";
 import type { Flags } from "../event/types";
 
 /**
- * 序章〜第7章の自動通しプレイ。各章のNPCを、プレイヤーが話しかける順（章の順、依頼→調査→ボス→報告）に
+ * 序章〜第8章の自動通しプレイ。各章のNPCを、プレイヤーが話しかける順（章の順、依頼→調査→ボス→報告）に
  * 何周か回し、選択肢は「引き受ける・仲間にする」側（0番目）を選ぶ。ボス戦は勝ったものとして勝利フラグを立てる。
  * 進行不能（必要なフラグが立たない・行き止まり）がないか、伏線の前後関係が守られているかを確かめる。
  */
@@ -17,6 +17,7 @@ const BATTLE_VICTORY_FLAG: Record<string, string> = {
   "kiri-yugami": "chapter5_yugami_defeated",
   "shimohara-yugami": "chapter6_yugami_defeated",
   "fushima-yugami": "chapter7_yugami_defeated",
+  "toushin-yugami": "chapter8_yugami_defeated",
 };
 
 const CHAPTER_MAPS: string[][] = [
@@ -28,6 +29,7 @@ const CHAPTER_MAPS: string[][] = [
   ["kiri-town", "kiri-archive"],
   ["shimohara-town", "shimohara-facility"],
   ["fushima-town", "fushima-base"],
+  ["toushin-town", "toushin-hall"],
 ];
 
 function recordingFlags(order: string[]): Flags {
@@ -62,7 +64,7 @@ function playAllNpcs(mapIds: string[], flags: Flags): void {
   }
 }
 
-describe("序章〜第7章の自動通しプレイ", () => {
+describe("序章〜第8章の自動通しプレイ", () => {
   const order: string[] = [];
   const flags = recordingFlags(order);
   CHAPTER_MAPS.forEach((maps) => playAllNpcs(maps, flags));
@@ -77,13 +79,14 @@ describe("序章〜第7章の自動通しプレイ", () => {
       "chapter5_yugami_defeated",
       "chapter6_yugami_defeated", "chapter6_ayame_joined",
       "chapter7_yugami_defeated", "chapter7_airship_obtained",
+      "chapter8_yugami_defeated", "chapter8_kyotoukyu_open",
     ]) {
       expect(flags[flag], `${flag} が立たない（進行不能の疑い）`).toBe(true);
     }
   });
 
   it("章の依頼は、その章のボス戦より先に受けている", () => {
-    for (const n of [0, 1, 2, 3, 4, 5, 6, 7]) {
+    for (const n of [0, 1, 2, 3, 4, 5, 6, 7, 8]) {
       const accepted = order.indexOf(`chapter${n}_quest_accepted`);
       const defeated = order.indexOf(`chapter${n}_yugami_defeated`);
       expect(accepted, `chapter${n}_quest_accepted`).toBeGreaterThanOrEqual(0);
@@ -145,6 +148,20 @@ describe("第7章の伏線", () => {
     expect(order.indexOf("chapter7_ledger_found")).toBeLessThan(order.indexOf("chapter7_yugami_defeated"));
     expect(order.indexOf("chapter7_edrea_appeared")).toBeLessThan(order.indexOf("chapter7_reported"));
     expect(flags["chapter7_airship_obtained"]).toBe(true);
+  });
+});
+
+describe("第8章の伏線", () => {
+  const order: string[] = [];
+  const flags = recordingFlags(order);
+  CHAPTER_MAPS.forEach((maps) => playAllNpcs(maps, flags));
+
+  it("審問→エドレアの告白→番人戦→逃亡（C-016）→報告の順に進み、虚灯宮への道が開く", () => {
+    expect(order.indexOf("chapter8_hearing_done")).toBeLessThan(order.indexOf("chapter8_edrea_revealed"));
+    expect(order.indexOf("chapter8_edrea_revealed")).toBeLessThan(order.indexOf("chapter8_yugami_defeated"));
+    expect(order.indexOf("chapter8_yugami_defeated")).toBeLessThan(order.indexOf("chapter8_edrea_fled"));
+    expect(order.indexOf("chapter8_edrea_fled")).toBeLessThan(order.indexOf("chapter8_reported"));
+    expect(flags["chapter8_kyotoukyu_open"]).toBe(true);
   });
 });
 

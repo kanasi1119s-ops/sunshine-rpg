@@ -1,5 +1,6 @@
 import { createFushimaBaseData, FUSHIMA_BASE_LANDMARKS } from "../map/chapter7/fushima-base";
 import { createFushimaTownData, FUSHIMA_TOWN_LANDMARKS } from "../map/chapter7/fushima-town";
+import { TOUSHIN_TOWN_ENTRY } from "../map/chapter8/toushin-town";
 import { TOURI_TOWN_SPAWN } from "../map/chapter0/touri-town";
 import { MUGIKANO_VILLAGE_ENTRY } from "../map/chapter1/mugikano-village";
 import { GARASUKO_TOWN_ENTRY } from "../map/chapter2/garasuko-town";
@@ -40,6 +41,10 @@ export const AIRSHIP_DESTINATIONS: { area: string; towns: { label: string; mapId
       { label: "霧断崖の町", mapId: "kiri-town", ...KIRI_TOWN_ENTRY },
       { label: "霜原の町", mapId: "shimohara-town", ...SHIMOHARA_TOWN_ENTRY },
     ],
+  },
+  {
+    area: "中央の空（灯芯都）",
+    towns: [{ label: "灯芯都", mapId: "toushin-town", ...TOUSHIN_TOWN_ENTRY }],
   },
 ];
 
