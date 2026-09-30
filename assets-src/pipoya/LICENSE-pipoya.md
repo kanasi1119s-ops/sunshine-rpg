@@ -11,6 +11,8 @@
 |---|---|
 | `pipo-map001.zip`（展開したもの: `pipo-map001/`） | https://pipoya.net/sozai/assets/map-chip_tileset32/ 「フィールドマップセット１」 |
 | `pipo-map001plus.zip`（展開したもの: `pipo-map001plus/`） | 同上「フィールドマップセット１追加パーツ」 |
+| `charachip/`（`pipo-charachip002`・`005`・`011`・`019`・`020`・`021`・`022`・`026`・`027` の9枚と `readme.txt`） | https://pipoya.net/sozai/assets/charachip/character-chip-1/ 「RPGキャラ基本セット」（キャラチップ.zip）から9枚を選んで取り出したもの。32×32ドット、4方向×3コマ（020 は魔物ボス4体分） |
+| `simpleenemy/`（`pipo-simpleenemy01a.png` と `readme.txt`） | 同ページ「シンプルエネミーシンボル32×32キャラチップ」（pipo-simpleenemy01.zip の「4方向」フォルダ）から1枚 |
 
 ## 規約の要点（無料素材）
 
