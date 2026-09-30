@@ -2,6 +2,7 @@ import "./style.css";
 import { GAME_TITLE } from "./core/status";
 import { backTitle, confirmTitle, createTitleState, moveTitleCursor } from "./game/title/title-menu";
 import { renderTitle } from "./render/title-renderer";
+import { battleSeFor } from "./game/battle/battle-se";
 import { createStaffRollState, skipStaffRoll, startStaffRoll, updateStaffRoll } from "./game/title/staff-roll";
 import { renderStaffRoll } from "./render/staff-roll-renderer";
 import { addGold, computeVictoryGold } from "./game/economy/gold";
@@ -255,6 +256,9 @@ const dialogue = new DialogueController(flags, {
   onStartBattle: (battleId) => startStoryBattle(battleId),
   onGiveGold: (amount) => {
     gold = addGold(gold, amount);
+    if (audioStarted) {
+      audio.playSe(seOf("item-get"));
+    }
   },
   onOpenShop: (shopId) => {
     shopMenu = openShopMenu(shopId);
@@ -487,6 +491,9 @@ window.addEventListener("keydown", (event) => {
     if (!title.open && !battle && !dialogue.isActive() && !debugMenu.open && !jobMenu.open) {
       pauseMenu = openPauseMenu();
       pauseMessage = null;
+      if (audioStarted) {
+        audio.playSe(seOf("menu-open"));
+      }
     }
   }
 });
@@ -523,6 +530,8 @@ window.addEventListener("keydown", (event) => {
 
 let lastDialogueDirection: Direction | null = null;
 let lastBattleDirection: Direction | null = null;
+/** 直前に効果音を鳴らした戦闘メッセージ（同じメッセージで2度鳴らさない）。 */
+let lastBattleMessage: string | null = null;
 let battle: BattleController | null = null;
 let heroStats = createInitialHeroStats();
 let heroEquipment: EquipmentSlots = createInitialEquipment();
@@ -1056,6 +1065,7 @@ const loop = createGameLoop({
         pauseMenu = result.state;
         if (result.action === "save") {
           autosave();
+          audio.playSe(seOf("save"));
           pauseMessage = "セーブしました";
           pauseMessageTimer = 2000;
         } else if (result.action === "title") {
@@ -1089,6 +1099,9 @@ const loop = createGameLoop({
             gold = result.gold;
             heroEquipment = result.equipment;
             autosave();
+            audio.playSe(seOf("buy"));
+          } else {
+            audio.playSe(seOf("error"));
           }
           shopMenu = withShopMessage(shopMenu, result.message);
         }
@@ -1144,6 +1157,18 @@ const loop = createGameLoop({
 
     if (battle) {
       const uiState = battle.getUiState();
+      // 戦闘のメッセージが出るたびに、その内容に合った効果音を1回鳴らす（斬撃・ダメージ・回復・倒したなど）。
+      if (uiState.kind === "message") {
+        if (uiState.text !== lastBattleMessage) {
+          lastBattleMessage = uiState.text;
+          const se = battleSeFor(uiState.text, battle.getState().party.map((c) => c.name));
+          if (se && audioStarted) {
+            audio.playSe(seOf(se));
+          }
+        }
+      } else {
+        lastBattleMessage = null;
+      }
       if (uiState.kind === "finished") {
         applyVictoryExpIfNeeded(battle);
       }
@@ -1168,6 +1193,7 @@ const loop = createGameLoop({
           playMapBgm(currentMapId);
         } else {
           battle.confirm();
+          lastBattleMessage = null;
         }
       }
       return;
