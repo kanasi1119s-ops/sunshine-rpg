@@ -122,7 +122,7 @@ describe("8神の禁域の進行", () => {
       const texts = run(npc(`${god.id}-altar`).commands, flags).join("");
       expect(flags[`god${god.no}_fragment`]).toBe(true);
       expect(texts).toContain("環の欠片");
-      expect(texts).toContain("ごほうび（仮）");
+      expect(texts).toContain("ごほうび");
     }
   });
 });

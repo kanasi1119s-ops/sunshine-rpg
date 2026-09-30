@@ -17,7 +17,12 @@ export type JobId =
   | "stream-sage"
   | "gale-dancer"
   | "immovable-guardian"
-  | "many-faced-artist";
+  | "many-faced-artist"
+  // 天神・悪神ジョブ（8神を倒すと解放。一点特化で、必ず弱点がある）
+  | "goddess-shaman"
+  | "pure-paladin"
+  | "demon-breaker"
+  | "bug-curser";
 
 export interface JobSkill {
   /** 特技名（オリジナル。既存作品の特技名とは一致させない）。 */
@@ -27,13 +32,15 @@ export interface JobSkill {
   /** 一言の効果説明（戦闘への接続は今後の作業）。 */
   description: string;
   /** 戦闘で使える特技だけが持つ。効果の種類は `Skill.effect`（複数回・全体攻撃・回復）。強化・弱体・状態異常は未対応。 */
-  battle?: { mpCost: number; powerMultiplier: number; effect?: "multi" | "damageAll" | "heal" | "healAll"; hits?: number; healRatio?: number };
+  battle?: { mpCost: number; powerMultiplier: number; effect?: "multi" | "damageAll" | "heal" | "healAll"; hits?: number; healRatio?: number; hpCost?: number; koChance?: number };
 }
 
 export interface JobData {
   id: JobId;
   /** 上級ジョブだけが持つ。この初期ジョブを最大の☆まで育てると解放される。 */
   baseJob?: JobId;
+  /** 天神・悪神ジョブだけが持つ。このフラグが立つ（その神を倒す）と、だれでも装備できる。 */
+  unlockFlag?: string;
   name: string;
   reading: string;
   role: string;

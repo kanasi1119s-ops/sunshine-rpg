@@ -728,7 +728,7 @@ let lastJobDirection: Direction | null = null;
 function selectableJobIds(): JobId[] {
   const memberId = jobMenuMembers()[jobMenu.memberCursor]?.id;
   const state = (memberId && jobStates[memberId]) || createJobState();
-  return availableJobs((id) => starsOf(state, id)).map((job) => job.id);
+  return availableJobs((id) => starsOf(state, id), flags).map((job) => job.id);
 }
 function jobMenuMembers(): { id: string; name: string }[] {
   return [

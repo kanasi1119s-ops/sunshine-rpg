@@ -190,18 +190,64 @@ export const ADVANCED_JOBS: JobData[] = [
   },
 ];
 
+/**
+ * 天神ジョブ2種・悪神ジョブ2種（`docs/design/jobs.md` 5章）。8神のうち特に対照的な4柱を倒すと、だれでも装備できる。
+ * 「上級ジョブより強い」のではなく、「上級ジョブにはない役割と、必ず弱点がある」形（同6章）。数値は仮。
+ * - 天神: 女神の巫覡（最高クラスの回復。攻撃は弱い）、純神の聖騎士（最高クラスの守り。攻撃は控えめ）
+ * - 悪神: 鬼神の破戒者（最高クラスの攻撃。使うたびにHPを支払う）、蟲神の呪術師（一撃で倒すチャンス。強敵には効かず、確実性がない）
+ */
+export const DIVINE_JOBS: JobData[] = [
+  {
+    id: "goddess-shaman", unlockFlag: "god1_defeated", name: "女神の巫覡", reading: "めがみのふげき", role: "最高クラスの回復。ただし攻撃は弱い",
+    statBonus: { maxMp: 20, defense: 2, attack: -4 }, bonusPerStar: { maxMp: 5 },
+    skills: [
+      { name: "恵みの光", requiredStars: 2, description: "味方1人のHPを、たっぷり回復する", battle: { mpCost: 6, powerMultiplier: 0, effect: "heal", healRatio: 3.0 } },
+      { name: "命の雨", requiredStars: 5, description: "味方全体のHPを回復する", battle: { mpCost: 12, powerMultiplier: 0, effect: "healAll", healRatio: 2.0 } },
+      { name: "女神の祝福", requiredStars: 9, description: "味方全体のHPを、大きく回復する", battle: { mpCost: 18, powerMultiplier: 0, effect: "healAll", healRatio: 3.5 } },
+    ],
+  },
+  {
+    id: "pure-paladin", unlockFlag: "god5_defeated", name: "純神の聖騎士", reading: "じゅんしんのせいきし", role: "最高クラスの守りと反撃。攻撃の伸びは控えめ",
+    statBonus: { defense: 10, maxHp: 30, attack: -2 }, bonusPerStar: { defense: 2, maxHp: 6 },
+    skills: [
+      { name: "聖なる反撃", requiredStars: 2, description: "守りの構えから、敵1体を打つ", battle: { mpCost: 4, powerMultiplier: 2.0 } },
+      { name: "誓いの一閃", requiredStars: 5, description: "誓いをこめた一撃で、敵1体を斬る", battle: { mpCost: 7, powerMultiplier: 2.6 } },
+      { name: "純白の裁き", requiredStars: 9, description: "白い光で敵全体を裁く", battle: { mpCost: 11, powerMultiplier: 1.8, effect: "damageAll" } },
+    ],
+  },
+  {
+    id: "demon-breaker", unlockFlag: "god3_defeated", name: "鬼神の破戒者", reading: "きしんのはかいしゃ", role: "最高クラスの攻撃力。ただし、使うたびに自分のHPを支払う",
+    statBonus: { attack: 14, defense: -3 }, bonusPerStar: { attack: 3 },
+    skills: [
+      { name: "破戒の一撃", requiredStars: 2, description: "HPを支払って、敵1体に強烈な一撃", battle: { mpCost: 3, powerMultiplier: 2.8, hpCost: 0.1 } },
+      { name: "鬼哭", requiredStars: 5, description: "HPを支払って、敵全体に叫びをぶつける", battle: { mpCost: 6, powerMultiplier: 2.0, effect: "damageAll", hpCost: 0.12 } },
+      { name: "修羅の滅", requiredStars: 9, description: "大きくHPを支払って、敵1体を打ち砕く", battle: { mpCost: 8, powerMultiplier: 4.5, hpCost: 0.2 } },
+    ],
+  },
+  {
+    id: "bug-curser", unlockFlag: "god2_defeated", name: "蟲神の呪術師", reading: "ちゅうしんのじゅじゅつし", role: "一撃で倒すチャンスを持つ。ただし強敵には効かず、確実ではない",
+    statBonus: { maxMp: 14, speed: 6, defense: -2 }, bonusPerStar: { maxMp: 3, speed: 1 },
+    skills: [
+      { name: "蟲の囁き", requiredStars: 2, description: "小さな蟲の毒で、敵1体を弱らせる", battle: { mpCost: 3, powerMultiplier: 1.6 } },
+      { name: "理不尽の羽音", requiredStars: 5, description: "理由もなく命を刈る羽音。敵1体を、ときどき一撃で倒す（強敵には効かない）", battle: { mpCost: 8, powerMultiplier: 1.0, koChance: 0.18 } },
+      { name: "蟲の大群", requiredStars: 9, description: "蟲の群れで敵全体を襲う", battle: { mpCost: 12, powerMultiplier: 2.0, effect: "damageAll" } },
+    ],
+  },
+];
+
 export const JOBS_BY_ID: Record<JobId, JobData> = Object.fromEntries(
-  [...INITIAL_JOBS, ...ADVANCED_JOBS].map((job) => [job.id, job]),
+  [...INITIAL_JOBS, ...ADVANCED_JOBS, ...DIVINE_JOBS].map((job) => [job.id, job]),
 ) as Record<JobId, JobData>;
 
 /**
  * そのキャラクターがいま装備できるジョブ（初期ジョブ8種と、初期ジョブを最大の☆まで育てて解放した上級ジョブ）。
- * 上級ジョブは、初期ジョブの直後に並ぶ。
+ * 上級ジョブは初期ジョブの直後、天神・悪神ジョブ（8神を倒すと解放）はその後ろに並ぶ。
  */
-export function availableJobs(masteryStars: (jobId: JobId) => number): JobData[] {
+export function availableJobs(masteryStars: (jobId: JobId) => number, flags: Record<string, boolean | undefined> = {}): JobData[] {
   return [
     ...INITIAL_JOBS,
     ...ADVANCED_JOBS.filter((job) => job.baseJob !== undefined && masteryStars(job.baseJob) >= MAX_STARS),
+    ...DIVINE_JOBS.filter((job) => job.unlockFlag !== undefined && flags[job.unlockFlag] === true),
   ];
 }
 

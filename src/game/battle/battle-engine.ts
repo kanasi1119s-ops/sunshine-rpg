@@ -70,6 +70,11 @@ function applyEffectSkill(next: BattleState, actor: Combatant, skill: Skill, tar
     next.log.push(`${actor.name} はMPが足りず ${skill.name} を使えなかった`);
     return next;
   }
+  if (skill.hpCost) {
+    const cost = Math.min(Math.round(actor.maxHp * skill.hpCost), Math.max(0, actor.hp - 1));
+    actor.hp -= cost;
+    next.log.push(`${actor.name} は ${cost} のHPを支払った`);
+  }
   switch (skill.effect) {
     case "multi": {
       const target = findCombatant(next, targetId);
@@ -105,8 +110,22 @@ function applyEffectSkill(next: BattleState, actor: Combatant, skill: Skill, tar
       }
       return next;
     }
-    default:
+    default: {
+      // 効果の種類が無い特技（HPを支払う・一撃で倒すチャンスつき）は、敵1体を狙う。
+      const target = findCombatant(next, targetId);
+      if (!target || !isAlive(target)) {
+        return next;
+      }
+      actor.mp -= skill.mpCost;
+      if (skill.koChance && target.maxHp <= 500 && rng() < skill.koChance) {
+        target.hp = 0;
+        next.log.push(`${actor.name} の ${skill.name}！ ${target.name} は一撃で倒れた`);
+        next.log.push(`${target.name} を倒した！`);
+        return next;
+      }
+      dealDamage(next, actor, target, skill.name, skill.powerMultiplier, rng);
       return next;
+    }
   }
 }
 
@@ -128,7 +147,7 @@ export function applyAction(state: BattleState, action: BattleAction, rng: () =>
   switch (action.type) {
     case "attack":
     case "skill": {
-      if (action.type === "skill" && action.skill.effect) {
+      if (action.type === "skill" && (action.skill.effect || action.skill.hpCost || action.skill.koChance)) {
         return applyEffectSkill(next, nextActor, action.skill, action.targetId, rng);
       }
       const target = findCombatant(next, action.targetId);

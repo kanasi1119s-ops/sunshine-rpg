@@ -30,6 +30,10 @@ export interface Skill {
   hits?: number;
   /** 回復の量（使った人のこうげき × この値）。heal・healAll。 */
   healRatio?: number;
+  /** 使うたびに、使った人の最大HPのこの割合（0〜1）を支払う（HPは1より下がらない）。悪神ジョブのリスク。 */
+  hpCost?: number;
+  /** 敵1体を、このチャンス（0〜1）で一撃で倒す。体力が大きい敵（最大HP500超）には効かない。 */
+  koChance?: number;
 }
 
 export interface BattleItem {

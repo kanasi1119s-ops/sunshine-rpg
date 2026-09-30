@@ -127,3 +127,32 @@ describe("上級ジョブ", () => {
     }
   });
 });
+
+import { DIVINE_JOBS } from "./jobs";
+
+describe("天神・悪神ジョブ", () => {
+  it("4種あり、対応する神を倒したフラグで、だれでも選べるようになる", () => {
+    expect(DIVINE_JOBS.map((j) => j.id).sort()).toEqual(["bug-curser", "demon-breaker", "goddess-shaman", "pure-paladin"]);
+    expect(availableJobs(() => 1)).toHaveLength(8);
+    const withGods = availableJobs(() => 1, { god1_defeated: true, god3_defeated: true });
+    expect(withGods.map((j) => j.id)).toEqual(expect.arrayContaining(["goddess-shaman", "demon-breaker"]));
+    expect(withGods).toHaveLength(10);
+    expect(availableJobs(() => MAX, { god1_defeated: true, god2_defeated: true, god3_defeated: true, god5_defeated: true })).toHaveLength(20);
+  });
+
+  it("どのジョブにも弱点がある（能力値ボーナスに負の値がある）。特技はすべて戦闘で使える", () => {
+    for (const job of DIVINE_JOBS) {
+      expect(Object.values(job.statBonus).some((v) => (v ?? 0) < 0), `${job.name} に弱点が無い`).toBe(true);
+      for (const skill of job.skills) {
+        expect(skill.battle, `${job.name} の ${skill.name}`).toBeDefined();
+      }
+    }
+  });
+
+  it("鬼神の破戒者の特技はHPを支払い、蟲神の呪術師には一撃で倒すチャンスがある", () => {
+    const demon = DIVINE_JOBS.find((j) => j.id === "demon-breaker")!;
+    expect(demon.skills.every((s) => (s.battle?.hpCost ?? 0) > 0)).toBe(true);
+    const bug = DIVINE_JOBS.find((j) => j.id === "bug-curser")!;
+    expect(bug.skills.some((s) => (s.battle?.koChance ?? 0) > 0)).toBe(true);
+  });
+});
