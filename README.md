@@ -35,6 +35,10 @@ npm run dev
 - 作業1回分の手順: [`.claude/skills/rpg-cycle/SKILL.md`](.claude/skills/rpg-cycle/SKILL.md)
 - 定期タスクの設定方法: [`docs/scheduled-task.md`](docs/scheduled-task.md)
 
+## 遊び方
+
+起動するとタイトル画面が出ます（「はじめから」「つづきから」「あそびかた」「クレジット」）。進み具合は自動でセーブされます。詳しい遊び方は [`docs/manual.md`](docs/manual.md) を参照してください。ゲーム内の「あそびかた」「クレジット」からも読めます。
+
 ## 使用している外部素材（クレジット）
 
 - 地形のタイル絵の一部に、ぴぽや「フィールドマップセット１」（https://pipoya.net/ ）の無料素材を加工して使っています。規約と記録は [`docs/assets-credits.md`](docs/assets-credits.md) を参照してください。

@@ -1,5 +1,7 @@
 import "./style.css";
 import { GAME_TITLE } from "./core/status";
+import { backTitle, confirmTitle, createTitleState, moveTitleCursor } from "./game/title/title-menu";
+import { renderTitle } from "./render/title-renderer";
 import { createGameLoop } from "./core/game-loop";
 import { createGameCanvas, LOGICAL_WIDTH, LOGICAL_HEIGHT } from "./render/canvas";
 import { createCamera, centerCameraOn } from "./render/camera";
@@ -415,8 +417,29 @@ function startAudioOnFirstInteraction(): void {
     return;
   }
   audioStarted = true;
+  if (title.open) {
+    currentBgmTrack = getTrack("title");
+    audio.playBgm(currentBgmTrack);
+    return;
+  }
   playMapBgm(currentMapId);
 }
+
+/** タイトル画面（起動時に開く）。自動セーブがあれば「つづきから」が選べる。 */
+function hasAutosave(): boolean {
+  try {
+    return loadFromSlot(window.localStorage, "autosave") !== null;
+  } catch {
+    return false;
+  }
+}
+let title = createTitleState(hasAutosave());
+let lastTitleDirection: Direction | null = null;
+window.addEventListener("keydown", (event) => {
+  if ((event.key === "x" || event.key === "Escape") && title.open) {
+    title = backTitle(title);
+  }
+});
 window.addEventListener("keydown", startAudioOnFirstInteraction, { once: true });
 window.addEventListener("pointerdown", startAudioOnFirstInteraction, { once: true });
 window.addEventListener("keydown", (event) => {
@@ -841,6 +864,38 @@ const loop = createGameLoop({
       audio.playSe(seOf("confirm"));
     }
 
+    if (title.open) {
+      const direction = input.getDirection();
+      if (direction !== lastTitleDirection) {
+        if (direction === "up") {
+          title = moveTitleCursor(title, -1);
+          audio.playSe(seOf("cursor"));
+        } else if (direction === "down") {
+          title = moveTitleCursor(title, 1);
+          audio.playSe(seOf("cursor"));
+        }
+        lastTitleDirection = direction;
+      }
+      if (actionPressed) {
+        const result = confirmTitle(title);
+        title = result.state;
+        if (result.action === "continue") {
+          const data = loadFromSlot(window.localStorage, "autosave");
+          if (data) {
+            applySaveData(data);
+          } else {
+            dialogue.start(CHAPTER0_OPENING_COMMANDS);
+          }
+          playMapBgm(currentMapId);
+        } else if (result.action === "new") {
+          dialogue.start(CHAPTER0_OPENING_COMMANDS);
+          playMapBgm(currentMapId);
+        }
+      }
+      return;
+    }
+    lastTitleDirection = null;
+
     if (debugMenu.open) {
       const direction = input.getDirection();
       if (direction !== lastDebugDirection) {
@@ -988,6 +1043,11 @@ const loop = createGameLoop({
     ctx.fillStyle = "#101018";
     ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
+    if (title.open) {
+      renderTitle(ctx, title, GAME_TITLE, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+      return;
+    }
+
     if (battle) {
       renderBattle(ctx, battle.getState(), battle.getUiState(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
       if (victoryMessage && battle.getUiState().kind === "finished") {
@@ -1034,9 +1094,6 @@ const loop = createGameLoop({
   },
 });
 
-if (!flags["chapter0_intro_seen"]) {
-  dialogue.start(CHAPTER0_OPENING_COMMANDS);
-}
 
 function frame(nowMs: number): void {
   loop.tick(nowMs);
