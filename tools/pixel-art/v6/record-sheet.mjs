@@ -34,6 +34,9 @@ let strokes = 0;
 for (let k = 0; k < order.length; k++) { await pick(k);
   for (let r = 0; r < NH; r++) { let c = 0; while (c < NW) { if (rows[r][c] === order[k]) { let e = c; while (e + 1 < NW && rows[r][e + 1] === order[k]) e++; const [x0, y0] = cell(r, c), [x1] = cell(r, e); await p.mouse.move(x0, y0); await p.mouse.down(); if (e > c) await p.mouse.move(x1, y0, { steps: (e - c + 1) * 3 }); await p.mouse.up(); c = e + 1; strokes++; if (PACE) await p.waitForTimeout(PACE); } else c++; } } }
 await p.waitForTimeout(2500);
+// 描き終えた絵が、元の絵と一致するかを、エディタの書き出しで確かめる
+let diff = -1; try { const syms = await p.$$eval("#symbolList .sym", (els) => els.map((e) => e.textContent.trim())).then((x) => x.slice(1)); const back = { ".": "." }; order.forEach((c, i) => (back[syms[i]] = c)); const exp = JSON.parse((await p.inputValue("#exportRows")).replace(/,\s*\]/, "]")); diff = exp.reduce((sum, r, y) => sum + [...r].filter((ch, x) => (back[ch] ?? "?") !== rows[y][x]).length, 0); } catch (e) { console.log("一致の確認に失敗:", String(e).split("\n")[0]); }
+console.log(diff === 0 ? "エディタの書き出しと元の絵が一致しました" : `エディタの書き出しと元の絵が ${diff} マス違います`);
 await p.locator("#gridCanvas").screenshot({ path: path.join(outDir, `${name}.png`) });
 const tEnd = (Date.now() - t00) / 1000;
 const video = p.video(); await ctx.close(); const raw = await video.path(); await b.close();
