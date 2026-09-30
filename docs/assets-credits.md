@@ -63,3 +63,10 @@
 | Stalagmite monster | https://opengameart.org/content/stalagmite-monster | 既存のTRPGの魔物を元にしたと書かれている |
 | Dungeon Crawl の32×32タイル | https://opengameart.org/content/dungeon-crawl-32x32-tiles-supplemental ほか | 既存のゲームの絵そのもの |
 | RotMG Enemy | https://opengameart.org/content/rotmg-enemy | 既存のゲームの絵 |
+
+## 使わないと決めた素材（2026-09-30、BGM）
+
+| 素材 | URL | 外した理由 |
+|---|---|---|
+| Shade さんの無料曲「RoughEdge20240822」 | https://booth.pm/en/items/6038821 | 規約が「常識の範囲内でお楽しみください」だけで、ゲームへの使用・再配布・学習に使ってよいかが不明 |
+| Shade BGM 素材集 VOL1・VOL2 | https://booth.pm/ja/items/1185169 ・ https://booth.pm/ja/items/1185182 | 有料（人間の承認が必要）。再配布の可否は同梱の規約を読まないと分からない。調べた内容は `docs/sound/reference-shade-bgm.md` |
