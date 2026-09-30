@@ -13,6 +13,10 @@ export interface NoteEvent {
   durationBeats: number;
   /** 強さ（1が標準。ゴーストノートなど弱い音は0.5など）。省略時は1。 */
   velocity?: number;
+  /** チョーキング（ギター）: 音を出してから、この半音数だけ音程を持ち上げる（0.5〜2。ピッチベンド±2半音の範囲）。 */
+  bend?: number;
+  /** タッピング（ギター）: 右手のハンマリング・プリングで弾く、粒のそろったなめらかな音。ピックのアタックが弱く、音がつながる。 */
+  tap?: boolean;
 }
 
 export type Waveform = "square" | "triangle" | "sawtooth" | "sine";

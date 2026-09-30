@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AI_SONG_GUIDE, AI_SONG_SCHEMA, aiSongToScore, fitToLength } from "./ai-song";
+import { AI_SONG_GUIDE, AI_SONG_SCHEMA, aiSongToScore, fitToLength, parseNotes } from "./ai-song";
 import { trackTotalBeats } from "./edit";
 import { REST } from "./score";
 
@@ -62,5 +62,22 @@ describe("AIソング形式", () => {
     expect(score.tracks[1].amp).toBeUndefined();
     expect(warnings.some((w) => w.includes("tubescreamer"))).toBe(true);
     expect(AI_SONG_SCHEMA.properties.parts.items.properties.amp.enum).toContain("shoegaze");
+  });
+});
+
+describe("ギターの奏法（チョーキング・タッピング）", () => {
+  it("音名のあとの +半音数 と @ を読み取る", () => {
+    const errors: string[] = [];
+    const notes = parseNotes("E5+2:1 B4@:0.25 A4:1 G4+0.5@:0.5", false, errors, "test");
+    expect(errors).toEqual([]);
+    expect(notes[0]).toMatchObject({ note: "E5", bend: 2 });
+    expect(notes[1]).toMatchObject({ note: "B4", tap: true });
+    expect(notes[2].bend).toBeUndefined();
+    expect(notes[3]).toMatchObject({ note: "G4", bend: 0.5, tap: true });
+  });
+  it("範囲外のチョーキングはエラーにする", () => {
+    const errors: string[] = [];
+    parseNotes("E5+3:1", false, errors, "test");
+    expect(errors.length).toBe(1);
   });
 });

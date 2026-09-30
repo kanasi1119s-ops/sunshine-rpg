@@ -112,7 +112,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - parts: 自分で書くパート。1曲に1〜8パート。
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。
   - volume: 0.1〜0.35 くらい（メロディ 0.22〜0.3、伴奏 0.1〜0.2）。pan: -1〜1。amp: ギター・ベースのアンプ（auto / clean / overdrive / distortion / metal / prs、ジャンル別: jazz / blues / funk / crunch / hardrock / punk / fuzz / shoegaze / lofi / retro8bit / radio）。ほかの楽器は auto。
-  - notes: 「音名:拍」を空白でくぎる。例 "E5:1 D5:0.5 R:0.5 C5:2"。R は休み。音名は C4（ド）〜B4 のように、シャープは #、フラットは b（例 F#4, Bb3）。拍は 0.25（16分音符）・0.5・0.75・1・1.5・2・3・4 など。
+  - notes: 「音名:拍」を空白でくぎる。ギター（leadGuitar など）は、音名のあとに +半音数（0.5〜2）でチョーキング（例 E5+2:1＝音を出してから2半音持ち上げる）、@ でタッピング（例 E5@:0.25＝ハンマリング・プリングのなめらかな音）を書ける。例 "E5:1 D5:0.5 R:0.5 C5:2"。R は休み。音名は C4（ド）〜B4 のように、シャープは #、フラットは b（例 F#4, Bb3）。拍は 0.25（16分音符）・0.5・0.75・1・1.5・2・3・4 など。
   - ドラムのパートは、音名のかわりに x（打つ）か R（休み）。例 kick "x:1 R:1 x:0.5 x:0.5 R:1"。
   - notes の合計の拍が曲の長さより短いときは、くり返して埋める（ドラムの1〜2小節の型やリフを短く書ける）。メロディは曲全体ぶん書くのがよい（Aメロ・Bメロ・サビのように変化をつける）。
 
@@ -147,11 +147,17 @@ export function parseNotes(text: string, drum: boolean, errors: string[], where:
       out.push({ note: "C2", durationBeats: beats, ...(name === "X" ? { velocity: 120 } : {}) });
     } else {
       try {
-        const midi = noteNameToMidi(name);
+        // 奏法の書き方: 音名のあとに +半音数（チョーキング。例 E5+2）、@（タッピング。例 E5@）を付けられる
+        const m = /^([A-Ga-g][#b]?-?\d)(?:\+(\d+(?:\.\d+)?))?(@)?$/.exec(name);
+        if (!m) throw new Error("name");
+        const bend = m[2] === undefined ? undefined : Number(m[2]);
+        if (bend !== undefined && !(bend > 0 && bend <= 2)) throw new Error("bend");
+        const base = m[1];
+        const midi = noteNameToMidi(base);
         if (midi < 12 || midi > 108) throw new Error("range");
-        out.push({ note: name, durationBeats: beats });
+        out.push({ note: base, durationBeats: beats, ...(bend !== undefined ? { bend } : {}), ...(m[3] ? { tap: true } : {}) });
       } catch {
-        errors.push(`${where}: 音名が読めません「${token}」（例 C4, F#3, Bb5）`);
+        errors.push(`${where}: 音名が読めません「${token}」（例 C4, F#3, Bb5。ギターは E5+2＝2半音のチョーキング、E5@＝タッピング）`);
       }
     }
   }

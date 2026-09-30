@@ -193,7 +193,10 @@ export function scoreToMidiInfo(score: Score, opts: { cleanGuitarSamples?: boole
       const strike = score.opening && startBeat < 2 ? 1.22 : 1;
       // 特別曲用（prs）の刻みギターは、強すぎないよう控えめに
       const rhythmSoft = score.tone === "prs" && (inst === "distGuitar" || inst === "crunch") ? 0.78 : 1;
-      const velocity = Math.min(127, Math.round(velocityOf(vol, boost) * strike * rhythmSoft));
+      // タッピング: ピックのアタックが弱く、粒がそろって、音がつながる
+      const tapped = n.tap === true && (inst === "leadGuitar" || inst === "guitar" || inst === "echoGuitar");
+      if (tapped) lenScale = 1.06;
+      const velocity = Math.min(127, Math.round(velocityOf(vol, boost) * strike * rhythmSoft * (tapped ? 0.74 : 1)));
       const len = Math.max(20, Math.round(n.durationBeats * PPQ * lenScale));
       const push = (pitch: number, at: number, vel: number, length: number, target: { channel: number; list: Ev[] } = { channel, list }): void => {
         const p = Math.max(0, Math.min(127, pitch));
@@ -209,7 +212,17 @@ export function scoreToMidiInfo(score: Score, opts: { cleanGuitarSamples?: boole
       }
       const pitch = noteNameToMidi(n.note);
       // ギターの長い音は、下から音程を持ち上げて入る（ベンド）。ほかの音に影響しないよう、音の後で戻す
-      if ((inst === "leadGuitar" || inst === "guitar") && n.durationBeats >= 1 && startBeat > 0) {
+      if (n.bend !== undefined && (inst === "leadGuitar" || inst === "guitar" || inst === "echoGuitar")) {
+        // チョーキング: 音を出してから、指定の半音数（ピッチベンド±2半音）だけゆっくり持ち上げ、音の後で戻す
+        const amount = Math.min(0x1fff, Math.round((n.bend / 2) * 0x2000));
+        const setB = (at: number, v: number): void => {
+          list.push({ tick: Math.max(0, at), order: 1, bytes: [0xe0 | channel, v & 0x7f, (v >> 7) & 0x7f] });
+        };
+        setB(tick - 3, 0x2000);
+        const steps = 6, rise = Math.max(1, Math.round(len * 0.55)), start = Math.round(len * 0.12);
+        for (let k = 1; k <= steps; k++) setB(tick + start + Math.round((rise * k) / steps), 0x2000 + Math.round((amount * k) / steps));
+        setB(tick + len + 2, 0x2000);
+      } else if ((inst === "leadGuitar" || inst === "guitar") && n.durationBeats >= 1 && startBeat > 0 && !tapped) {
         const bendFrom = 0x2000 - 0x1000;
         const setBend = (at: number, v: number): void => {
           list.push({ tick: Math.max(0, at), order: 1, bytes: [0xe0 | channel, v & 0x7f, (v >> 7) & 0x7f] });
