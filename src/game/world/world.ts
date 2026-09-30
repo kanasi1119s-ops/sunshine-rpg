@@ -13,6 +13,7 @@ import { CHAPTER11_MAPS, CHAPTER11_NPCS } from "./chapter11-world";
 import { CHAPTER12_MAPS, CHAPTER12_NPCS } from "./chapter12-world";
 import { SIDE_STORY_NPCS } from "./side-stories";
 import { SHOP_NPCS } from "./shops-world";
+import { AMBIENT_NPCS } from "./ambient-world";
 import type { TileMapData } from "../map/types";
 import type { Npc } from "../npc";
 
@@ -53,6 +54,7 @@ const NPC_SOURCES: Record<string, Npc[]>[] = [
   CHAPTER12_NPCS,
   SIDE_STORY_NPCS,
   SHOP_NPCS,
+  AMBIENT_NPCS,
 ];
 
 /** 章のNPC・サブストーリーの依頼人・8神の禁域の入口などを、地図ごとに1つにまとめたもの。 */
