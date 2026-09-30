@@ -24,6 +24,7 @@ export const GM_PROGRAM: Partial<Record<Instrument, number>> = {
   chime: 11, // ビブラフォン
   lead: 73, // フルート（電子的なリードではなく、自然な旋律楽器。電子音楽では下のSYNTH_LEADに切り替える）
   cowbell: 9,
+  riser: 119, // 逆再生シンバル（盛り上げのライザー）
   wind: 122, // 海岸（風・波の音）
   stream: 122,
   rain: 96, // FX 雨
@@ -46,7 +47,7 @@ export const GM_LAYER: Partial<Record<Instrument, { program: number; gain: numbe
 export const DRUM_KITS = [0, 8, 16, 24, 25, 32, 48];
 
 /** 打楽器 → GMドラムのノート番号。 */
-export const GM_DRUM_NOTE: Partial<Record<Instrument, number>> = { kick: 36, snare: 38, hihat: 42, crash: 49, tom: 47 };
+export const GM_DRUM_NOTE: Partial<Record<Instrument, number>> = { kick: 36, snare: 38, hihat: 42, crash: 49, tom: 47, clap: 39, openhat: 46, scratch: 29 };
 
 /** 使うGMの楽器番号の一覧（サウンドフォントを切り出すときの指定に使う）。 */
 /** 電子音楽（エレクトリック・フォンク・プログレッシブなど）では、リードとパッドを電子的な音色にする（楽器番号）。 */

@@ -178,8 +178,11 @@ function round(x: number): number {
 
 function drumInstrument(pitch: number): Instrument {
   if (pitch === 35 || pitch === 36) return "kick";
-  if (pitch >= 37 && pitch <= 40) return "snare";
-  if (pitch === 42 || pitch === 44 || pitch === 46) return "hihat";
+  if (pitch === 39) return "clap";
+  if (pitch === 29 || pitch === 30) return "scratch";
+  if (pitch === 46) return "openhat";
+  if (pitch === 37 || pitch === 38 || pitch === 40) return "snare";
+  if (pitch === 42 || pitch === 44) return "hihat";
   if ([41, 43, 45, 47, 48, 50].includes(pitch)) return "tom";
   return "crash";
 }

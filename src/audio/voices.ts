@@ -239,6 +239,50 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       out.push(o);
       break;
     }
+    case "clap": {
+      // ハンドクラップ: ごく短い間隔のノイズの3連打（帯域は中高域）
+      [0, 0.011, 0.022].forEach((off, n) => {
+        const bp = filter(ctx, "bandpass", 1600, pluckGain(ctx, dest, t + off, v * 0.75, 0.001, n === 2 ? 0.14 : 0.03), 1.1);
+        out.push(noise(ctx, t + off, t + off + 0.2, bp));
+      });
+      break;
+    }
+    case "openhat": {
+      const hp = filter(ctx, "highpass", 7000, pluckGain(ctx, dest, t, v * 0.5, 0.001, 0.32));
+      out.push(noise(ctx, t, t + 0.4, hp));
+      break;
+    }
+    case "scratch": {
+      // レコードのスクラッチ: ノコギリ波の音程を素早く上下させ、こすれるノイズを重ねる
+      const g = pluckGain(ctx, dest, t, v * 0.5, 0.004, 0.16);
+      const bp = filter(ctx, "bandpass", 1800, g, 2.2);
+      const o = ctx.createOscillator();
+      o.type = "sawtooth";
+      o.frequency.setValueAtTime(f * 3, t);
+      o.frequency.exponentialRampToValueAtTime(f * 0.7, t + 0.12);
+      o.connect(bp);
+      o.start(t);
+      o.stop(t + 0.22);
+      out.push(o);
+      out.push(noise(ctx, t, t + 0.2, filter(ctx, "highpass", 3000, pluckGain(ctx, dest, t, v * 0.25, 0.003, 0.12))));
+      break;
+    }
+    case "riser": {
+      // ライザー: ノイズのフィルターを開きながら音量を上げていく（音の長さ全体で盛り上がる）
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, v * 0.55), t + Math.max(0.1, d));
+      g.gain.linearRampToValueAtTime(0, t + Math.max(0.1, d) + 0.05);
+      g.connect(dest);
+      const hp = ctx.createBiquadFilter();
+      hp.type = "highpass";
+      hp.Q.value = 3;
+      hp.frequency.setValueAtTime(400, t);
+      hp.frequency.exponentialRampToValueAtTime(9000, t + Math.max(0.1, d));
+      hp.connect(g);
+      out.push(noise(ctx, t, t + Math.max(0.1, d) + 0.1, hp));
+      break;
+    }
     case "crash": {
       const hp = filter(ctx, "highpass", 5000, pluckGain(ctx, dest, t, v * 0.6, 0.003, 1.4));
       out.push(noise(ctx, t, t + 1.5, hp));

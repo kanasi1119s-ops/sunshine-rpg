@@ -44,6 +44,12 @@ export interface AiSong {
   feel: "rock" | "pop" | "ballad";
   /** ギターの音色の方向。 */
   tone: "rock" | "metal" | "prs";
+  /** サイドチェーン（キックに合わせた音量の凹み）。true＝パッド・弦・合唱、"all"＝リード・キーボード・ブラス・鐘・ピアノ・クリーンギターにも。DJ・EDM向け。 */
+  pump?: boolean | "all";
+  /** true＝リードとパッドを電子的なシンセの音色にする（DJ・EDM向け）。 */
+  synth?: boolean;
+  /** ドラムセット（0=標準、16=パワー、24=電子、25=TR-808、32=ジャズ）。DJ・EDMは 24 か 25。 */
+  drumKit?: number;
   /** AIが書くパート（メロディ・対旋律・ベースライン・ドラムなど）。 */
   parts: AiPart[];
 }
@@ -51,11 +57,12 @@ export interface AiSong {
 /** AIが使える楽器（キー → 説明）。 */
 export const AI_INSTRUMENTS: Record<string, string> = {
   kick: "バスドラム（ドラム）", snare: "スネア（ドラム）", hihat: "ハイハット（ドラム）", crash: "クラッシュシンバル（ドラム）", tom: "タム（ドラム）",
+  clap: "ハンドクラップ（ドラム。DJ・クラブ向け）", openhat: "オープンハイハット（ドラム。裏拍に）", scratch: "レコードのスクラッチ（ドラム。プッシュとプルが交互に鳴る）", riser: "ライザー（盛り上げの逆再生シンバル。長い音で書く。音名はC4など）",
   bass: "エレキベース（E1〜G3）", slap: "スラップベース（E1〜G3）", sub808: "808の重低音（C1〜C3）",
   guitar: "クリーンギター（E2〜E5）", crunch: "クランチギター（E2〜E5）", distGuitar: "ディストーションギター・刻み（E2〜E4）", leadGuitar: "リードギター・ソロ（E3〜E6）", echoGuitar: "エコーギター（E3〜E6）",
   piano: "ピアノ（A0〜C8）", keys: "エレピ（C2〜C6）", harpsichord: "チェンバロ（C2〜C6）", strings: "弦楽（C2〜C7）", pad: "パッド（C2〜C6）", choir: "合唱（C3〜C6）", brass: "ブラス（E2〜C6）", lead: "シンセリード（C3〜C7）", bell: "鐘（C4〜C7）",
 };
-const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom"]);
+const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom", "clap", "openhat", "scratch"]);
 /** AIソング形式で使えるアンプの名前（`AI_SONG_SCHEMA` の amp と同じ）。 */
 const AI_AMPS = new Set(["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio"]);
 
@@ -75,6 +82,9 @@ export const AI_SONG_SCHEMA = {
     autoAccompaniment: { type: "boolean" },
     feel: { type: "string", enum: ["rock", "pop", "ballad"] },
     tone: { type: "string", enum: ["rock", "metal", "prs"] },
+    pump: { anyOf: [{ type: "boolean" }, { type: "string", enum: ["all"] }] },
+    synth: { type: "boolean" },
+    drumKit: { type: "integer", enum: [0, 16, 24, 25, 32] },
     parts: {
       type: "array",
       items: {
@@ -109,6 +119,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - barsPerChord: 1コードの小節数（1か2）。repeats: 進行のくり返し回数。
 - autoAccompaniment: true なら、コード進行から伴奏（ドラム・ベース・ギター・ピアノ・弦）を自動で足す。自分でドラムやベースを書くときは false にしてよい。feel: 自動の伴奏の雰囲気（rock / pop / ballad）。
 - tone: ギターの音色の方向（rock / metal / prs＝なめらかなリード）。
+- （DJ・クラブ・EDM向けの任意の設定）pump: true でパッド・弦・合唱を、"all" でリード・エレピ・ブラス・鐘・ピアノ・クリーンギターも、キックに合わせて凹ませる（サイドチェーン）。synth: true でリードとパッドを電子的なシンセの音色に。drumKit: 24（電子）か 25（TR-808）。DJらしい音は、clap（2・4拍）・openhat（裏拍）・scratch（つなぎや合いの手）・riser（ドロップ前の8〜16拍の長い音で盛り上げ）・kick の4つ打ち・snare のロールで作る。
 - parts: 自分で書くパート。1曲に1〜8パート。
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。
   - volume: 0.1〜0.35 くらい（メロディ 0.22〜0.3、伴奏 0.1〜0.2）。pan: -1〜1。amp: ギター・ベースのアンプ（auto / clean / overdrive / distortion / metal / prs、ジャンル別: jazz / blues / funk / crunch / hardrock / punk / fuzz / shoegaze / lofi / retro8bit / radio）。ほかの楽器は auto。
@@ -230,6 +241,6 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   if (errors.length) throw new Error(errors.join("\n"));
   if (parts.length === 0 && accompaniment.length === 0) throw new Error("パートがありません");
   const tracks = [...accompaniment, ...parts];
-  const score: Score = { tempoBpm: bpm, loop: true, drumKit: base.drumKit, tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock", tracks };
+  const score: Score = { tempoBpm: bpm, loop: true, drumKit: base.drumKit, tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock", tracks, ...(song.pump ? { pump: true } : {}), ...(song.pump === "all" ? { pumpAll: true } : {}), ...(song.synth ? { synth: true } : {}), ...([0, 16, 24, 25, 32].includes(Number(song.drumKit)) ? { drumKit: Number(song.drumKit) } : {}) };
   return { score, song, warnings };
 }

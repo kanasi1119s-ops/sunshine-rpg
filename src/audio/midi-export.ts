@@ -153,7 +153,7 @@ export function scoreToMidiInfo(score: Score, opts: { cleanGuitarSamples?: boole
       }
     }
     // キックに合わせた音量の凹み（電子音楽風のポンプ感）。1拍ごとに、頭で凹んで、次の拍に向かって戻る
-    if (score.pump && (inst === "pad" || inst === "choir" || inst === "strings")) {
+    if (score.pump && (inst === "pad" || inst === "choir" || inst === "strings" || (score.pumpAll === true && (inst === "keys" || inst === "lead" || inst === "brass" || inst === "bell" || inst === "piano" || inst === "guitar")))) {
       for (let at = 0; at < endTick; at += PPQ) {
         list.push({ tick: at, order: 1, bytes: [0xb0 | channel, 11, 62] });
         list.push({ tick: at + Math.round(PPQ * 0.3), order: 1, bytes: [0xb0 | channel, 11, 100] });
@@ -162,6 +162,7 @@ export function scoreToMidiInfo(score: Score, opts: { cleanGuitarSamples?: boole
     }
     const boost = inst ? BOOST[inst] ?? 1 : 1;
     let beat = 0;
+    let scratchToggle = 0;
     for (const n of track.notes) {
       const startBeat = beat;
       beat += n.durationBeats;
@@ -204,6 +205,8 @@ export function scoreToMidiInfo(score: Score, opts: { cleanGuitarSamples?: boole
         target.list.push({ tick: Math.min(at + length, endTick), order: 0, bytes: [0x80 | target.channel, p, 0] });
       };
       if (drumKey !== undefined) {
+        // スクラッチは、プッシュ（29）とプル（30）を交互に鳴らす
+        if (inst === "scratch") drumKey = scratchToggle++ % 2 === 0 ? 29 : 30;
         push(drumKey, tick, velocity, len);
         // 厚みとパンチ: キックは別のバスドラムを重ね、スネアはポップ・ロック系のセットで手拍子を薄く重ねる
         if (inst === "kick") push(35, tick, Math.round(velocity * 0.55), len);

@@ -81,3 +81,22 @@ describe("ギターの奏法（チョーキング・タッピング）", () => {
     expect(errors.length).toBe(1);
   });
 });
+
+describe("DJ・クラブ向けの楽器と設定", () => {
+  it("clap・openhat・scratch はドラム、riser は音名で書ける。pump・synth・drumKit が曲に反映される", () => {
+    const song = {
+      title: "t", description: "", bpm: 128, beats: 4, chords: "Fm Db", barsPerChord: 1, repeats: 1, autoAccompaniment: false, feel: "pop", tone: "prs", pump: "all", synth: true, drumKit: 24,
+      parts: [
+        { instrument: "clap", role: "c", volume: 0.2, pan: 0, amp: "auto", notes: "R:1 x:1 R:1 x:1" },
+        { instrument: "scratch", role: "s", volume: 0.2, pan: 0, amp: "auto", notes: "x:0.5 x:0.5 R:3" },
+        { instrument: "riser", role: "r", volume: 0.2, pan: 0, amp: "auto", notes: "C5:8" },
+      ],
+    };
+    const { score } = aiSongToScore(song);
+    expect(score.pump).toBe(true);
+    expect(score.pumpAll).toBe(true);
+    expect(score.synth).toBe(true);
+    expect(score.drumKit).toBe(24);
+    expect(score.tracks.map((t) => t.instrument)).toEqual(["clap", "scratch", "riser"]);
+  });
+});

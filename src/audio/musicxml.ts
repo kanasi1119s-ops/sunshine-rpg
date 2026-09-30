@@ -16,7 +16,7 @@ const NAMES: Partial<Record<Instrument, string>> = {
   guitar: "Clean Guitar", crunch: "Crunch Guitar", distGuitar: "Distortion Guitar", leadGuitar: "Lead Guitar", echoGuitar: "Echo Guitar",
   keys: "E.Piano", piano: "Piano", harpsichord: "Harpsichord", strings: "Strings", pad: "Pad", choir: "Choir", brass: "Brass", bell: "Bells", lead: "Lead",
 };
-const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom"]);
+const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom", "clap", "openhat", "scratch"]);
 const esc = (s: string): string => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 /** 長さ（分割の数）を、ふつうの音符の並びに分ける。 */

@@ -19,7 +19,7 @@ const TEMPLATES: Record<BlankTemplate, [Instrument, number, number][]> = {
   orchestra: [["strings", 0.16, -0.35], ["strings", 0.14, 0], ["strings", 0.14, 0.35], ["brass", 0.16, 0.2], ["choir", 0.12, -0.15], ["piano", 0.16, 0.1], ["tom", 0.2, 0]],
   electronic: [["kick", 0.3, 0], ["snare", 0.2, 0], ["hihat", 0.12, 0.3], ["sub808", 0.3, 0], ["pad", 0.12, -0.2], ["lead", 0.22, 0.1]],
 };
-const DRUMS = new Set<Instrument>(["kick", "snare", "hihat", "crash", "tom"]);
+const DRUMS = new Set<Instrument>(["kick", "snare", "hihat", "crash", "tom", "clap", "openhat", "scratch"]);
 
 /** 空の曲（休みだけ）を作る。長さ = 小節の数 × 1小節の拍。 */
 export function createBlankScore(opts: { bpm: number; sig: TimeSignature; bars: number; template: BlankTemplate }): Score {
