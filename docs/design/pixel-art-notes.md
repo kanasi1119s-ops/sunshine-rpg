@@ -234,3 +234,5 @@
 2回目に選んだ別の500枚は `assets-src/pixel-library-2/`（使い方の注意は同じ）。
 
 描き方の参考用に集めた1000点（アイテムのアイコン、キャラを組み立てる部品など）は `assets-src/pixel-reference/`。
+
+ドット絵世界（http://yms.main.jp 、32×32のタイルセット・町・洞窟・森など）の素材の一覧と使い方の条件は `docs/design/yms-dotworld-catalog.md`。元の画像はリポジトリに置かない（二次配布禁止のため）。

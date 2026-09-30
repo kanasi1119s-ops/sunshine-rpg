@@ -24,6 +24,12 @@
 | Electron（デスクトップ版の土台）・Anthropic TypeScript SDK（AI作曲の通信）・Model Context Protocol SDK（コネクタ。開発用） | https://www.electronjs.org/ ・ https://github.com/anthropics/anthropic-sdk-typescript ・ https://github.com/modelcontextprotocol/typescript-sdk | 2026-09-30 | デスクトップ版（`desktop/`）とコネクタ（`tools/mcp/`）。ゲーム本体には入れない | すべて MIT（Electron に同梱の Chromium は、各部品のライセンスが `LICENSES.chromium.html` として配布物に入る）。商用利用・再配布は可。ライセンス文を配布物に含める（`desktop/copy-licenses.mjs` が `licenses/` にそろえる） | 必要（デスクトップ版の「ヘルプ」→「ライセンス」） |
 | LAME（lamejs、npm `@breezystack/lamejs` 1.2.7）・文字フォント Orbitron と JetBrains Mono（npm `@fontsource`） | https://lame.sourceforge.net/ ・ https://github.com/shijinyu/lamejs ・ https://fonts.google.com/specimen/Orbitron ・ https://www.jetbrains.com/lp/mono/ | 2026-09-30 | デスクトップ版だけ（MP3 の書き出し・画面の英数字の文字）。ゲーム本体には入れない | LAME: LGPL-3.0。商用可。条件（部品の説明による）: 本体と別ファイルで使う・LAME を使っていることと入手先を示す・改変したら公開する（改変していない）。LGPL/GPL の本文と表示を `licenses/` に同梱。フォント: SIL OFL 1.1（商用・同梱可。フォント単体の販売は不可。ライセンス文を同梱） | 必要（「ヘルプ」→「ライセンス」） |
 
+## 条件つきで使える素材（元の画像はリポジトリに置かない）
+
+| 素材名 | 入手元 | 確認日 | 置き場 | 規約の要点 | クレジット |
+|---|---|---|---|---|---|
+| ドット絵世界（Pixel Art World）のタイルセット・キャラ素材（ツクール用の表記がないもの） | http://yms.main.jp （規約: https://yms.main.jp/page-s1/terms.html ） | 2026-09-30 | **リポジトリには元の画像を置かない**（公開リポジトリに置くと「そのままの素材を配る」ことになるため）。素材の一覧・URL・判定は `docs/design/yms-dotworld-catalog.md`。**まだゲームには反映していない** | 編集可、商用可、二次配布は禁止。ツクール用の表記がある素材はツクールでの制作専用なので使えない。サンプルマップは使用NG。作者さんへの問い合わせの答え（2026-09-30、旭さん経由）: ツクールの素材以外は使ってよい、商用のゲームとして配るのは「配る」に含まれない、ダメなのは素材をそのままの形で配ること。→ 使うときは作者のサイトから取得し、加工したものだけをゲームに組み込む | **必要**（配布するときはスタッフロールなど1か所に「ドット絵世界 http://yms.main.jp」） |
+
 ## 素材の置き場
 - 元ファイル: `assets-src/`（規約の写しも一緒に置く）
 - ゲームに読み込む形（色番号のRLEなど）に変換したもの: `src/game/art/`
