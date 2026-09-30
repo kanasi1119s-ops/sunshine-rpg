@@ -15,7 +15,7 @@ export const INITIAL_JOBS: JobData[] = [
     skills: [
       { name: "踏み込み斬り", requiredStars: 2, description: "一歩踏み込んで敵1体を強く斬る", battle: { mpCost: 2, powerMultiplier: 1.5 } },
       { name: "受け流し", requiredStars: 5, description: "3ターンのあいだ自分の守りを上げる", battle: { mpCost: 2, powerMultiplier: 0, effect: "buff", stat: "defense", mult: 1.4, turns: 3 } },
-      { name: "守りの構え斬り", requiredStars: 9, description: "防御を保ったまま反撃する" },
+      { name: "守りの構え斬り", requiredStars: 9, description: "守りを固めたまま、敵1体を斬る", battle: { mpCost: 4, powerMultiplier: 2.0 } },
     ],
   },
   {
@@ -41,7 +41,7 @@ export const INITIAL_JOBS: JobData[] = [
     skills: [
       { name: "狙い撃ち", requiredStars: 2, description: "当たりやすく、会心が出やすい一射", battle: { mpCost: 2, powerMultiplier: 1.4 } },
       { name: "足止めの矢", requiredStars: 5, description: "敵1体のすばやさを下げる", battle: { mpCost: 3, powerMultiplier: 0, effect: "debuff", stat: "speed", mult: 0.7, turns: 3, chance: 0.85 } },
-      { name: "急所の一矢", requiredStars: 9, description: "会心が出やすい強力な一射" },
+      { name: "急所の一矢", requiredStars: 9, description: "急所をねらう強力な一射で、敵1体を撃つ", battle: { mpCost: 6, powerMultiplier: 2.4 } },
     ],
   },
   {
