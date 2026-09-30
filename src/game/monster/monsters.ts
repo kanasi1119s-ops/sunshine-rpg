@@ -1,4 +1,5 @@
 import { shadeColor } from "../color-utils";
+import { encounterMonsterSpecs } from "../encounter/encounter";
 
 /**
  * 戦闘中の敵グラフィック（ドット絵）。`docs/decisions.md`（ドット絵の
@@ -103,3 +104,47 @@ export const MONSTERS: Record<string, MonsterSpec> = {
     baseRadiusRatio: 0.9,
   },
 };
+
+/** 色相と、とげの数から、敵の絵の設計を作る（第3章以降のボスなど、絵の設計が未登録の敵に使う）。 */
+function bossSpec(hue: number, spikes: number, ratio = 0.85): MonsterSpec {
+  const hsl = (h: number, sat: number, l: number): string => {
+    const k = (n: number): number => (n + h / 30) % 12;
+    const a = sat * Math.min(l, 1 - l);
+    const f = (n: number): number => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    const hex = (v: number): string => Math.round(v * 255).toString(16).padStart(2, "0");
+    return `#${hex(f(0))}${hex(f(8))}${hex(f(4))}`;
+  };
+  return { body: hsl(hue, 0.5, 0.3), core: hsl(hue, 0.55, 0.65), eye: "#fff2a0", spikeCount: spikes, spikeAmplitude: 0.35, baseRadiusRatio: ratio };
+}
+
+/** ボス・裏ボス・8神など、これまでに絵の設計が無かった敵（仮の絵。色とぎざぎざだけを変えた歪みの姿）。 */
+const EXTRA_BOSS_SPECS: Record<string, MonsterSpec> = {
+  "tetsukusari-yugami": bossSpec(15, 8),
+  "sanone-yugami": bossSpec(45, 10),
+  "kiri-yugami": bossSpec(170, 9),
+  "shimohara-yugami": bossSpec(195, 12),
+  "fushima-yugami": bossSpec(235, 11),
+  "toushin-yugami": bossSpec(220, 13),
+  "kyotoukyu-yugami": bossSpec(275, 14, 0.9),
+  "deep3-yugami": bossSpec(300, 10),
+  "deep-yugami": bossSpec(260, 15, 0.92),
+  "god-1": bossSpec(110, 8),
+  "god-2": bossSpec(80, 16),
+  "god-3": bossSpec(10, 9),
+  "god-4": bossSpec(40, 7),
+  "god-5": bossSpec(200, 6),
+  "god-6": bossSpec(215, 10),
+  "god-7": bossSpec(265, 12),
+  "god-8": bossSpec(250, 5),
+  "tower2-guard": bossSpec(210, 9),
+  "tower3-guard": bossSpec(50, 11),
+  "kanou3-guard": bossSpec(320, 10),
+  zenkan: bossSpec(280, 6, 0.95),
+};
+
+for (const [id, spec] of Object.entries({ ...EXTRA_BOSS_SPECS, ...encounterMonsterSpecs() })) {
+  if (!(id in MONSTERS)) {
+    MONSTERS[id] = spec;
+  }
+}
+
