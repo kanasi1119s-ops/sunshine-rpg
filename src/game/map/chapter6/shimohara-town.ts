@@ -24,6 +24,7 @@ const WIDTH = 24;
 const HEIGHT = 16;
 
 const WEST_GATE = { x: 0, y: 10 };
+const EAST_GATE = { x: WIDTH - 1, y: 10 };
 /** 町の北、雪原の戦跡に口を開けた施設への入口。 */
 const FACILITY_GATE_POS = { x: 12, y: 0 };
 /** 番所（4x2）と、宿屋（3x2）。 */
@@ -50,7 +51,7 @@ export function createShimoharaTownData(): TileMapData {
   }
   for (let y = 0; y < HEIGHT; y++) {
     set(0, y, y === WEST_GATE.y ? ROAD : PINE);
-    set(WIDTH - 1, y, PINE);
+    set(WIDTH - 1, y, y === EAST_GATE.y ? ROAD : PINE);
   }
 
   // 西の街道から広場へ、広場から施設へ。
@@ -101,6 +102,14 @@ export function createShimoharaTownData(): TileMapData {
         targetTileY: 10,
       },
       {
+        // 東の街道を渡って、第7章の浮嶼へ。
+        tileX: EAST_GATE.x,
+        tileY: EAST_GATE.y,
+        targetMapId: "fushima-town",
+        targetTileX: 2,
+        targetTileY: 10,
+      },
+      {
         // 北の雪原の入口から、戦跡の施設へ。
         tileX: FACILITY_GATE_POS.x,
         tileY: FACILITY_GATE_POS.y,
@@ -114,6 +123,9 @@ export function createShimoharaTownData(): TileMapData {
 
 /** 霧断崖から街道を渡ってきたときの立ち位置。 */
 export const SHIMOHARA_TOWN_ENTRY = { tileX: WEST_GATE.x + 2, tileY: WEST_GATE.y };
+
+/** 浮嶼から街道を戻ってきたときの立ち位置。 */
+export const SHIMOHARA_TOWN_EAST_RETURN = { tileX: EAST_GATE.x - 2, tileY: EAST_GATE.y };
 
 /** 施設から戻ってきたときの立ち位置。 */
 export const SHIMOHARA_TOWN_FACILITY_RETURN = { tileX: FACILITY_GATE_POS.x, tileY: FACILITY_GATE_POS.y + 2 };

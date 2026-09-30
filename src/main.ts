@@ -44,6 +44,8 @@ import { createSanoneSunaarashiYugami } from "./game/battle/chapter4-enemies";
 import { createKiriYogenYugami } from "./game/battle/chapter5-enemies";
 import { createShimoharaShisakukiYugami } from "./game/battle/chapter6-enemies";
 import { CHAPTER6_OPENING_COMMANDS } from "./game/world/chapter6-world";
+import { createFushimaKanshitakuYugami } from "./game/battle/chapter7-enemies";
+import { CHAPTER7_OPENING_COMMANDS } from "./game/world/chapter7-world";
 import { AYAME, COMPANIONS, createCompanionCombatant, GUIDE, MINA, ORCA, RETO } from "./game/battle/companions";
 import type { Combatant, Skill } from "./game/battle/types";
 import type { LeveledStats } from "./game/growth/types";
@@ -61,6 +63,8 @@ import { KIRI_TOWN_ENTRY } from "./game/map/chapter5/kiri-town";
 import { KIRI_ARCHIVE_ENTRY } from "./game/map/chapter5/kiri-archive";
 import { SHIMOHARA_TOWN_ENTRY } from "./game/map/chapter6/shimohara-town";
 import { SHIMOHARA_FACILITY_ENTRY } from "./game/map/chapter6/shimohara-facility";
+import { FUSHIMA_TOWN_ENTRY } from "./game/map/chapter7/fushima-town";
+import { FUSHIMA_BASE_ENTRY } from "./game/map/chapter7/fushima-base";
 import { TETSUKUSARI_MINE_ENTRY } from "./game/map/chapter3/tetsukusari-mine";
 import { createRng } from "./game/random";
 import { computeVictoryExp } from "./game/battle/battle-engine";
@@ -153,6 +157,9 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   if (mapId === "shimohara-town" && !flags["chapter6_intro_seen"]) {
     dialogue.start(CHAPTER6_OPENING_COMMANDS);
   }
+  if (mapId === "fushima-town" && !flags["chapter7_intro_seen"]) {
+    dialogue.start(CHAPTER7_OPENING_COMMANDS);
+  }
 }
 
 /**
@@ -174,6 +181,9 @@ const MAP_BGM_ID: Record<string, string> = {
   "kiri-archive": "archive",
   "shimohara-town": "town-shimo",
   "shimohara-facility": "facility",
+  // 第7章の専用BGMは4-34で作る（それまで仮に他の章の曲を流用）。
+  "fushima-town": "town-shimo",
+  "fushima-base": "facility",
 };
 function mapBgmFor(mapId: string): Score {
   return getTrack(MAP_BGM_ID[mapId] ?? "town-touri");
@@ -240,6 +250,11 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
   "shimohara-yugami": {
     createEnemy: createShimoharaShisakukiYugami,
     victoryFlag: "chapter6_yugami_defeated",
+    bgmId: "boss-shimo",
+  },
+  "fushima-yugami": {
+    createEnemy: createFushimaKanshitakuYugami,
+    victoryFlag: "chapter7_yugami_defeated",
     bgmId: "boss-shimo",
   },
 };
@@ -565,6 +580,14 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
   {
     label: () => "マップ: 霜原・戦跡の施設 へワープ",
     action: () => switchMap("shimohara-facility", SHIMOHARA_FACILITY_ENTRY.tileX, SHIMOHARA_FACILITY_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 浮嶼の町 へワープ",
+    action: () => switchMap("fushima-town", FUSHIMA_TOWN_ENTRY.tileX, FUSHIMA_TOWN_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 浮嶼・隠れ拠点 へワープ",
+    action: () => switchMap("fushima-base", FUSHIMA_BASE_ENTRY.tileX, FUSHIMA_BASE_ENTRY.tileY),
   },
   {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,
