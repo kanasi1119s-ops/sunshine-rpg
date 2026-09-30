@@ -30,11 +30,13 @@ export function drawFront(o, f) {
   if (o.hair === "twin") { g.rect(2, 8 + B, 3, 14 + B, "H"); g.rect(12, 8 + B, 13, 14 + B, "H"); g.px([[2, 15 + B], [13, 15 + B]], "h"); g.px([[3, 7 + B], [12, 7 + B]], "T"); }
   if (o.hair === "bob") { g.rect(3, 6 + B, 3, 11 + B, "H"); g.rect(12, 6 + B, 12, 11 + B, "H"); g.rect(4, 11 + B, 4, 11 + B, "h"); g.rect(11, 11 + B, 11, 11 + B, "h"); }
   // ---- 脚
-  const skirt = o.outfit === "robe" || o.outfit === "dress" || o.outfit === "coat";
+  const skirt = o.outfit === "robe" || o.outfit === "dress" || o.outfit === "coat" || o.outfit === "gown", wide = o.outfit === "gown";
   if (skirt) {
     const c1 = o.outfit === "coat" ? "P" : "C";
-    g.rect(4, 17 + B, 11, 20, c1); g.rect(4, 17 + B, 4, 20, "k"); g.rect(11, 17 + B, 11, 20, "c"); g.row(20, 4, 11, "c");
-    if (o.outfit !== "coat") { g.px([[3, 20], [12, 20]], "c"); }
+    const x0 = wide ? 3 : 4, x1 = wide ? 12 : 11;
+    g.rect(x0, 17 + B, x1, 20, c1); g.rect(x0, 17 + B, x0, 20, "k"); g.rect(x1, 17 + B, x1, 20, "c"); g.row(20, x0, x1, "c");
+    if (wide) { g.row(20, x0, x1, "T"); g.px([[6, 18 + B], [9, 19], [5, 19], [10, 18 + B]], "k"); g.rect(x0 + 1, 19, x0 + 1, 19, "k"); }
+    if (o.outfit !== "coat" && !wide) { g.px([[3, 20], [12, 20]], "c"); }
     g.px([[6, 21], [7, 21], [8, 21], [9, 21]], "F");
     g.px(lift === "L" ? [[5, 21]] : [[5, 22]], "F"); g.px(lift === "R" ? [[10, 21]] : [[10, 22]], "F");
     g.px(lift === "L" ? [[6, 22]] : lift === "R" ? [[9, 22]] : [[6, 22], [9, 22]], "F");
@@ -95,6 +97,7 @@ export function drawFront(o, f) {
 }
 function accFront(g, a, B, o) {
   if (a === "hat") { g.rect(2, 1 + B, 13, 2 + B, "a"); g.rect(5, -0 + B, 10, 0 + B, "a"); g.rect(2, 2 + B, 13, 2 + B, "A"); g.rect(4, 1 + B, 11, 1 + B, "a"); g.rect(5, 1 + B, 5, 1 + B, "A"); }
+  if (a === "crown") { g.px([[5, B], [7, B], [8, B], [10, B]], "A"); g.row(1 + B, 5, 10, "A"); g.px([[7, 1 + B], [8, 1 + B]], "J"); g.px([[6, 1 + B], [9, 1 + B]], "X"); }
   if (a === "cap") { g.rect(4, 1 + B, 11, 3 + B, "a"); g.row(3 + B, 4, 11, "A"); g.row(1 + B, 5, 10, "a"); }
   if (a === "hood") { g.rect(3, 1 + B, 12, 3 + B, "a"); g.rect(3, 4 + B, 4, 9 + B, "a"); g.rect(11, 4 + B, 12, 9 + B, "a"); g.row(1 + B, 5, 10, "A"); }
   if (a === "band") { g.row(3 + B, 4, 11, "A"); g.px([[12, 3 + B], [12, 4 + B]], "A"); }
@@ -107,12 +110,14 @@ function accFront(g, a, B, o) {
 
 export function drawBack(o, f) {
   const g = new G(), { bob, lift } = frameShape(f), B = bob;
-  const skirt = o.outfit === "robe" || o.outfit === "dress" || o.outfit === "coat";
+  const skirt = o.outfit === "robe" || o.outfit === "dress" || o.outfit === "coat" || o.outfit === "gown", wide = o.outfit === "gown";
   const hairLong = ["long", "twin", "bob", "pony"].includes(o.hair);
   if (o.acc.includes("cape")) { g.rect(3, 12 + B, 12, 20, "a"); g.rect(3, 12 + B, 3, 20, "A"); g.rect(12, 12 + B, 12, 20, "a"); g.row(20, 3, 12, "a"); }
   if (skirt) {
     const c1 = o.outfit === "coat" ? "P" : "C";
-    g.rect(4, 17 + B, 11, 20, c1); g.rect(4, 17 + B, 4, 20, "k"); g.rect(11, 17 + B, 11, 20, "c"); g.row(20, 4, 11, "c");
+    const x0 = wide ? 3 : 4, x1 = wide ? 12 : 11;
+    g.rect(x0, 17 + B, x1, 20, c1); g.rect(x0, 17 + B, x0, 20, "k"); g.rect(x1, 17 + B, x1, 20, "c"); g.row(20, x0, x1, wide ? "T" : "c");
+    if (wide) g.px([[7, 18 + B], [8, 19], [9, 18 + B]], "k");
     g.px(lift === "L" ? [[5, 21]] : [[5, 22]], "F"); g.px(lift === "R" ? [[10, 21]] : [[10, 22]], "F"); g.px(lift === "L" ? [[6, 22]] : lift === "R" ? [[9, 22]] : [[6, 22], [9, 22]], "F"); g.px([[6, 21], [9, 21]], "F");
   } else {
     const legTop = 18 + B; g.rect(5, legTop, 10, 20, "P"); g.rect(8, legTop, 8, 20, "p"); g.rect(7, legTop, 7, 20, "p");
@@ -132,7 +137,7 @@ export function drawBack(o, f) {
   if (o.acc.includes("bag")) { g.rect(6, 13 + B, 9, 17 + B, "A"); g.rect(6, 13 + B, 9, 13 + B, "T"); g.rect(9, 14 + B, 9, 17 + B, "T"); }
   // 頭（後ろ）
   const hr = { 1: [5, 10], 2: [4, 11], 3: [4, 11], 4: [4, 11], 5: [4, 11], 6: [4, 11], 7: [4, 11], 8: [4, 11], 9: [4, 11], 10: [5, 10] };
-  if (o.hair === "long") { g.rect(3, 5 + B, 12, 15 + B, "H"); g.rect(3, 5 + B, 3, 15 + B, "g"); g.rect(12, 5 + B, 12, 15 + B, "h"); g.row(15 + B, 4, 11, "h"); g.px([[7, 13 + B], [8, 13 + B], [7, 10 + B], [8, 11 + B]], "h"); }
+  if (o.hair === "long") { g.rect(3, 5 + B, 12, 12 + B, "H"); g.rect(4, 13 + B, 11, 14 + B, "H"); g.rect(3, 5 + B, 3, 12 + B, "g"); g.rect(12, 5 + B, 12, 12 + B, "h"); g.row(14 + B, 4, 11, "h"); g.px([[7, 12 + B], [8, 12 + B], [7, 10 + B], [8, 11 + B]], "h"); }
   for (const [y, [a, b]] of Object.entries(hr)) g.row(+y + B, a, b, o.hair === "bald" ? "S" : "H");
   if (o.hair !== "bald") { g.row(1 + B, 5, 10, "g"); g.row(2 + B, 5, 8, "g"); g.rect(11, 3 + B, 11, 9 + B, "h"); g.row(10 + B, 5, 10, "h"); g.px([[7, 6 + B], [8, 7 + B], [6, 8 + B], [9, 8 + B]], "h"); }
   else { g.row(10 + B, 5, 10, "s"); g.row(1 + B, 5, 10, "g"); }
@@ -148,6 +153,7 @@ export function drawBack(o, f) {
   return g.rows();
 }
 function accBack(g, a, B) {
+  if (a === "crown") { g.px([[5, B], [7, B], [8, B], [10, B]], "A"); g.row(1 + B, 5, 10, "A"); g.px([[7, 1 + B], [8, 1 + B]], "J"); }
   if (a === "hat") { g.rect(2, 1 + B, 13, 2 + B, "a"); g.rect(5, 0 + B, 10, 0 + B, "a"); g.rect(2, 2 + B, 13, 2 + B, "A"); g.rect(4, 1 + B, 11, 1 + B, "a"); }
   if (a === "cap") { g.rect(4, 1 + B, 11, 4 + B, "a"); g.row(4 + B, 4, 11, "A"); }
   if (a === "hood") { g.rect(3, 1 + B, 12, 10 + B, "a"); g.row(1 + B, 5, 10, "A"); g.row(10 + B, 4, 11, "A"); }
@@ -156,7 +162,7 @@ function accBack(g, a, B) {
 }
 export function drawSide(o, f) {   // 左向き
   const g = new G(), { bob, lift } = frameShape(f), B = bob;
-  const skirt = o.outfit === "robe" || o.outfit === "dress" || o.outfit === "coat";
+  const skirt = o.outfit === "robe" || o.outfit === "dress" || o.outfit === "coat" || o.outfit === "gown", wide = o.outfit === "gown";
   const hairLong = ["long", "twin", "bob", "pony"].includes(o.hair);
   // 奥の腕（体の後ろ）
   const swing = f === 0 ? 1 : f === 2 ? -1 : 0;   // + なら手前の腕が前
@@ -170,7 +176,9 @@ export function drawSide(o, f) {   // 左向き
   // 脚
   if (skirt) {
     const c1 = o.outfit === "coat" ? "P" : "C";
-    g.rect(5, 17 + B, 10, 20, c1); g.rect(5, 17 + B, 5, 20, "k"); g.rect(10, 17 + B, 10, 20, "c"); g.row(20, 5, 10, "c");
+    const x0 = wide ? 4 : 5, x1 = wide ? 11 : 10;
+    g.rect(x0, 17 + B, x1, 20, c1); g.rect(x0, 17 + B, x0, 20, "k"); g.rect(x1, 17 + B, x1, 20, "c"); g.row(20, x0, x1, wide ? "T" : "c");
+    if (wide) g.px([[6, 18 + B], [8, 19], [9, 18 + B]], "k");
     const fx = f === 0 ? [4, 5] : f === 2 ? [8, 9] : [6, 7]; g.rect(fx[0], 21, fx[1] + 1, 22, "F"); g.rect(f === 1 ? 8 : (f === 0 ? 9 : 5), 21, f === 1 ? 9 : (f === 0 ? 10 : 6), f === 1 ? 22 : 21, "F");
   } else {
     const legTop = 18 + B;
@@ -209,6 +217,7 @@ export function drawSide(o, f) {   // 左向き
   return g.rows();
 }
 function accSide(g, a, B) {
+  if (a === "crown") { g.px([[5, B], [7, B], [8, B], [10, B]], "A"); g.row(1 + B, 5, 10, "A"); g.px([[6, 1 + B]], "J"); g.px([[9, 1 + B]], "X"); }
   if (a === "hat") { g.rect(2, 1 + B, 13, 2 + B, "a"); g.rect(5, 0 + B, 10, 0 + B, "a"); g.rect(2, 2 + B, 13, 2 + B, "A"); g.rect(4, 1 + B, 11, 1 + B, "a"); }
   if (a === "cap") { g.rect(4, 1 + B, 11, 3 + B, "a"); g.rect(2, 3 + B, 6, 3 + B, "A"); g.row(3 + B, 7, 11, "A"); }
   if (a === "hood") { g.rect(4, 1 + B, 12, 4 + B, "a"); g.rect(8, 5 + B, 12, 10 + B, "a"); g.row(1 + B, 5, 10, "A"); }
@@ -231,6 +240,6 @@ export function palFrom(p) {
   const pal = {};
   const map = { O: p.outline ?? "#1c1426", D: p.shadow ?? "#2a1f3a", S: p.skin[1], s: p.skin[0], E: p.eye ?? "#2a1e3a", W: "#ffffff", n: p.mouth ?? "#a04a4a", B: p.blush ?? p.skin[2] ?? "#f08a8a",
     h: p.hair[0], H: p.hair[1], g: p.hair[2], c: p.cloth[0], C: p.cloth[1], k: p.cloth[2], T: p.trim ?? "#e0c070", p: p.pants[0], P: p.pants[1], f: p.boots[0], F: p.boots[1],
-    A: p.accent ?? "#d08a28", a: p.accent2 ?? p.cloth[0], M: "#8a90a0", N: "#c4c8d4", m: "#5a6070" };
+    A: p.accent ?? "#d08a28", a: p.accent2 ?? p.cloth[0], J: p.jewel ?? "#d04060", X: p.gold2 ?? "#ffe89a", M: "#8a90a0", N: "#c4c8d4", m: "#5a6070" };
   return { ...map, w: p.apron ?? "#c8c0b0", W: "#ffffff", ...(p.apronMain ? {} : {}), };
 }
