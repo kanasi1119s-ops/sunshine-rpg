@@ -121,7 +121,21 @@ export const CATALOG: CatalogEntry[] = [
 export const EXTRA_ENTRIES: CatalogEntry[] = [];
 /** 組み込みの曲＋登録した曲。 */
 export function allEntries(): CatalogEntry[] {
-  return [...CATALOG, ...EXTRA_ENTRIES];
+  // 作曲ソフトで作った曲（バンド版）が、組み込みの曲と同じIDなら、ゲームではバンド版を鳴らす。
+  // 従来の曲は消さず、「<ID>-old」という別のIDで一覧に残す（BGMプレイヤーで聴き比べられる）。
+  const extraById = new Map(EXTRA_ENTRIES.map((e) => [e.id, e]));
+  const out: CatalogEntry[] = [];
+  for (const e of CATALOG) {
+    const x = extraById.get(e.id);
+    if (x) {
+      out.push({ ...x, group: e.group, scene: e.scene, styleLabel: "バンド版" });
+      out.push({ ...e, id: `${e.id}-old`, title: `${e.title}（従来版）` });
+    } else {
+      out.push(e);
+    }
+  }
+  const builtin = new Set(CATALOG.map((e) => e.id));
+  return [...out, ...EXTRA_ENTRIES.filter((e) => !builtin.has(e.id))];
 }
 
 const cache = new Map<string, Score>();

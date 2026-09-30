@@ -1,4 +1,4 @@
-import { CATALOG, EXTRA_ENTRIES, type CatalogEntry } from "./catalog";
+import { EXTRA_ENTRIES, type CatalogEntry } from "./catalog";
 import type { Score } from "./score";
 
 /** 作曲ソフトが書き出す「ゲームの曲」のファイル形式。 */
@@ -44,7 +44,8 @@ export function songFileToEntry(data: unknown, taken: Set<string>): CatalogEntry
 const files = import.meta.glob("./songs/*.sunshine-song.json", { eager: true, import: "default" }) as Record<string, unknown>;
 
 function loadAll(): CatalogEntry[] {
-  const taken = new Set(CATALOG.map((e) => e.id));
+  // 組み込みの曲と同じIDは「バンド版への差し替え」として認める（catalog.ts の allEntries が差し替える）。ファイルどうしの重なりだけを弾く。
+  const taken = new Set<string>();
   const out: CatalogEntry[] = [];
   for (const [path, data] of Object.entries(files).sort(([a], [b]) => a.localeCompare(b))) {
     try {
