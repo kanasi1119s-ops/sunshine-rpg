@@ -50,6 +50,8 @@ import { createToushinBanninYugami } from "./game/battle/chapter8-enemies";
 import { CHAPTER8_OPENING_COMMANDS } from "./game/world/chapter8-world";
 import { createKyotoukyuEdreaYugami } from "./game/battle/chapter9-enemies";
 import { CHAPTER9_OPENING_COMMANDS } from "./game/world/chapter9-world";
+import { createDeepEchoYugami, createShogenYugami } from "./game/battle/chapter10-enemies";
+import { DEEP_ENTRY } from "./game/map/chapter10/deep-maps";
 import { KYOTOUKYU_CORRIDOR_ENTRY, KYOTOUKYU_COURT_ENTRY, KYOTOUKYU_SANCTUM_ENTRY } from "./game/map/chapter9/kyotoukyu-maps";
 import { AYAME, COMPANIONS, createCompanionCombatant, GUIDE, MINA, ORCA, RETO } from "./game/battle/companions";
 import type { Combatant, Skill } from "./game/battle/types";
@@ -198,9 +200,13 @@ const MAP_BGM_ID: Record<string, string> = {
   "fushima-base": "ruins-ukishima",
   "toushin-town": "town-toushin",
   "toushin-hall": "hall-gikai",
-  "kyotoukyu-court": "ruins",
-  "kyotoukyu-corridor": "puzzle",
+  "kyotoukyu-court": "kyoto-road",
+  "kyotoukyu-corridor": "kyoto-road",
   "kyotoukyu-sanctum": "unease",
+  "deep-1": "kyoto-deep",
+  "deep-2": "kyoto-deep",
+  "deep-3": "kyoto-deep",
+  "deep-4": "kyoto-deep",
 };
 function mapBgmFor(mapId: string): Score {
   return getTrack(MAP_BGM_ID[mapId] ?? "town-touri");
@@ -283,6 +289,16 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
     createEnemy: createKyotoukyuEdreaYugami,
     victoryFlag: "chapter9_yugami_defeated",
     bgmId: "boss-final",
+  },
+  "deep3-yugami": {
+    createEnemy: createDeepEchoYugami,
+    victoryFlag: "deep3_yugami_defeated",
+    bgmId: "elite",
+  },
+  "deep-yugami": {
+    createEnemy: createShogenYugami,
+    victoryFlag: "deep_yugami_defeated",
+    bgmId: "secret-boss",
   },
 };
 
@@ -635,6 +651,10 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
   {
     label: () => "マップ: 虚灯宮・奥の間 へワープ",
     action: () => switchMap("kyotoukyu-sanctum", KYOTOUKYU_SANCTUM_ENTRY.tileX, KYOTOUKYU_SANCTUM_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 虚灯宮・深部 第1階層 へワープ",
+    action: () => switchMap("deep-1", DEEP_ENTRY.tileX, DEEP_ENTRY.tileY),
   },
   {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,

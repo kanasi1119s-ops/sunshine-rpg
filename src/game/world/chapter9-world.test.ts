@@ -34,7 +34,7 @@ function runScripted(
 const KNOWN_BATTLE_IDS = new Set(["kyotoukyu-yugami"]);
 
 /** main.ts側（戦闘勝利）で立てられるフラグ。 */
-const EXTERNALLY_SET_FLAGS = new Set(["chapter9_yugami_defeated"]);
+const EXTERNALLY_SET_FLAGS = new Set(["chapter9_yugami_defeated", "side_s028_done"]);
 
 function allNpcCommands() {
   return Object.values(CHAPTER9_NPCS).flatMap((npcs) => npcs.flatMap((npc) => npc.commands));

@@ -8,6 +8,7 @@ import { CHAPTER6_MAPS, CHAPTER6_NPCS } from "./chapter6-world";
 import { CHAPTER7_MAPS, CHAPTER7_NPCS } from "./chapter7-world";
 import { CHAPTER8_MAPS, CHAPTER8_NPCS } from "./chapter8-world";
 import { CHAPTER9_MAPS, CHAPTER9_NPCS } from "./chapter9-world";
+import { CHAPTER10_MAPS, CHAPTER10_NPCS } from "./chapter10-world";
 import { SIDE_STORY_NPCS } from "./side-stories";
 import type { TileMapData } from "../map/types";
 import type { Npc } from "../npc";
@@ -28,6 +29,7 @@ export const WORLD_MAPS: Record<string, TileMapData> = {
   ...CHAPTER7_MAPS,
   ...CHAPTER8_MAPS,
   ...CHAPTER9_MAPS,
+  ...CHAPTER10_MAPS,
 };
 
 const CHAPTER_NPCS: Record<string, Npc[]> = {
@@ -41,6 +43,7 @@ const CHAPTER_NPCS: Record<string, Npc[]> = {
   ...CHAPTER7_NPCS,
   ...CHAPTER8_NPCS,
   ...CHAPTER9_NPCS,
+  ...CHAPTER10_NPCS,
 };
 
 /** 章のNPCに、サブストーリーの依頼人・調べる場所を足したもの。 */
