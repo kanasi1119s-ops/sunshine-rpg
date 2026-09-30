@@ -12,6 +12,7 @@
   "parts": [
     {
       "instrument": "kick",
+      "role": "kick",
       "volume": 0.2,
       "pan": 0,
       "amp": "auto",
@@ -19,6 +20,7 @@
     },
     {
       "instrument": "snare",
+      "role": "snare",
       "volume": 0.1,
       "pan": 0,
       "amp": "auto",
@@ -26,6 +28,7 @@
     },
     {
       "instrument": "hihat",
+      "role": "hihat",
       "volume": 0.09,
       "pan": 0,
       "amp": "auto",
@@ -33,6 +36,7 @@
     },
     {
       "instrument": "tom",
+      "role": "tom",
       "volume": 0.14,
       "pan": 0,
       "amp": "auto",
@@ -40,6 +44,7 @@
     },
     {
       "instrument": "crash",
+      "role": "crash",
       "volume": 0.12,
       "pan": 0,
       "amp": "auto",
@@ -47,6 +52,7 @@
     },
     {
       "instrument": "bass",
+      "role": "bass",
       "volume": 0.2,
       "pan": -0.1,
       "amp": "clean",
@@ -54,6 +60,7 @@
     },
     {
       "instrument": "guitar",
+      "role": "guitar",
       "volume": 0.14,
       "pan": -0.4,
       "amp": "clean",
@@ -61,10 +68,11 @@
     },
     {
       "instrument": "strings",
+      "role": "strings",
       "volume": 0.1,
       "pan": 0.3,
       "amp": "auto",
-      "notes": "R:48 C4:4 B3:8 C4:12 B3:4 C4:12 B3:4 C4:8 B3:4 C4:4 B3:4"
+      "notes": "R:32 R:16 C4:4 B3:8 C4:12 B3:4 C4:12 B3:4 C4:8 B3:4 C4:4 B3:4"
     },
     {
       "instrument": "leadGuitar",
@@ -80,7 +88,7 @@
       "volume": 0.15,
       "pan": 0.35,
       "amp": "auto",
-      "notes": "R:1 E5:0.5 G5:0.5 B5:1.5 G5:0.5 A5:1.5 G5:0.5 E5:1 D5:1 C5:0.5 E5:0.5 A5:1.5 G5:0.5 F5:1 D5:1 G5:1 B5:1.5 R:48.5 C5:1 R:1 F5:1 R:1 E5:1 R:1 C5:1 R:1 B4:1 R:1 D5:1 R:1 E5:1 R:1 A4:1 R:1 C5:1 R:1 F5:1 R:1 G4:1 R:1 E5:1 R:1 B4:1 R:1 D5:1 R:1 E5:2 G5:2 R:1 E5:0.5 G5:0.5 B5:1.5 G5:0.5 A5:1.5 G5:0.5 E5:1 D5:1 C5:0.5 E5:0.5 A5:1.5 G5:0.5 F5:1 D5:1 G5:1 D6:2"
+      "notes": "R:1 E5:0.5 G5:0.5 B5:1.5 G5:0.5 A5:1.5 G5:0.5 E5:1 D5:1 C5:0.5 E5:0.5 A5:1.5 G5:0.5 F5:1 D5:1 G5:1 B5:1.5 R:32 R:16.5 C5:1 R:1 F5:1 R:1 E5:1 R:1 C5:1 R:1 B4:1 R:1 D5:1 R:1 E5:1 R:1 A4:1 R:1 C5:1 R:1 F5:1 R:1 G4:1 R:1 E5:1 R:1 B4:1 R:1 D5:1 R:1 E5:2 G5:2 R:1 E5:0.5 G5:0.5 B5:1.5 G5:0.5 A5:1.5 G5:0.5 E5:1 D5:1 C5:0.5 E5:0.5 A5:1.5 G5:0.5 F5:1 D5:1 G5:1 D6:2"
     }
   ]
 }

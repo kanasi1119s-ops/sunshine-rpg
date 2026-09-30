@@ -46,7 +46,8 @@ export async function openSongKit() {
     const { allEntries } = await load("/src/audio/catalog.ts");
     const { songFileToEntry } = await load("/src/audio/user-songs.ts");
     const target = path.join(ROOT, "src/audio/songs", `${id}.sunshine-song.json`);
-    const taken = new Set(allEntries().map((e) => e.id).filter((x) => !(x === id && fs.existsSync(target))));
+    // 組み込みの曲と同じIDは、バンド版への差し替えとして認める（catalog.ts の allEntries が差し替える）。ほかの曲との重なりだけを弾く。
+    const taken = new Set(allEntries().map((e) => e.id).filter((x) => x !== id));
     const data = { format: "sunshine-game-song", version: 1, id, title, scene, score };
     songFileToEntry(data, taken);
     fs.writeFileSync(target, JSON.stringify(data));
