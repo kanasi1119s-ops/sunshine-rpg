@@ -1,5 +1,5 @@
 import { charBase, overrides } from "../../lib4.mjs";
-import { hs, st, face, mass, rs } from "../../c1-kit.mjs";
+import { hs, st, face, mass, rs, finish } from "../../c1-kit.mjs";
 // レト（灯里支部の先輩調査員。皮肉屋）。灰青の乱れ髪（前髪が右へ流れる）・赤いマフラー（片方の端が長く垂れる）・すそ長の青緑のコート。
 export const name = "レト（先輩調査員）"; export const category = "character";
 export const pal = {
@@ -7,7 +7,7 @@ export const pal = {
   r: "#0e3438", J: "#1a4a50", j: "#2a7878", k: "#48a49c", K: "#8ad4c0", C: "#efe3c8",
   Q: "#4a5a6a", P: "#343e52", s: "#241c26", t: "#a02838", T: "#e05860", o: "#701c2c", i: "#7a94b8", e: "#2a2438", M: "#c4c4d4",
 };
-export const rows = overrides(charBase({ hair: 0 }), [
+const raw = overrides(charBase({ hair: 0 }), [
   // 髪: 乱れた塊と、はねた毛先
   ...mass(1, rs("11-20", "9-22", "8-24", "8-23", "8-23", "8-23"), "43221", { out: "p", strand: [1, 4] }),
   ...st(0, ["10|pp", "9|p3p", "22|pp"]), ...st(0, ["19|p"]), ...st(0, ["14|p", "13|p3p"]),
@@ -27,3 +27,4 @@ export const rows = overrides(charBase({ hair: 0 }), [
   ...face({ eye: "sleepy", mouth: "flat", ic: "i" }),
   // ふくらはぎ（コートのすその下）
 ]);
+export const rows = finish(raw, pal);

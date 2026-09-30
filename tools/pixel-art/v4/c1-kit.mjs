@@ -1,3 +1,4 @@
+import { DEFAULT_PAL } from "./lib4.mjs";
 // 担当C1（主要・物語の人物）用の小さな道具。lib4.mjs は変えず、その外に置く。
 // hs(): 左半分（x0〜15）の絵を書くと、右半分は鏡写し＋ひと段暗い色（光は左上）で自動で置く。
 // st(): 左右非対称の絵を、x座標つきで置く。行の形式は "x|文字列"（文字列の各文字が x, x+1, … の点。空白は「触らない」、'.' は透明）。
@@ -34,7 +35,7 @@ export function face(o = {}) {
   if (mouth === "flat") p.push([14, 11, "n"], [15, 11, "n"], [16, 11, "n"], [17, 11, "n"]);
   if (mouth === "open") p.push([15, 10, "n"], [16, 10, "n"], [15, 11, "e"], [16, 11, "e"]);
   if (mouth === "frown") p.push([14, 12 - 1, "n"], [15, 11, "n"], [16, 11, "n"], [17, 11, "n"]);
-  if (blush) p.push([10, 10, "B"], [21, 10, "B"]);
+  if (blush) p.push([10, 10, "B"], [21, 10, "B"]); else p.push([10, 10, "c"], [21, 10, "b"]);
   return p;
 }
 /** 光が左上から当たる「塊」を、輪郭つきで塗る。y0: 最初の行, sp: 行ごとの [x0,x1] の配列（null で空行）, ramp: 明→暗の文字列（例 "4321"）。
@@ -52,7 +53,7 @@ export function mass(y0, sp, ramp, o = {}) {
       if (rt || dn) { pts.push([x, y, outD]); continue; }
       const u = (x - xs0) / Math.max(1, xs1 - xs0), v = i / Math.max(1, sp.length - 1);
       const sv = Math.min(1, (u * 0.65 + v * 0.35) * bias); let t = sv < 0.12 ? 0 : 1 + Math.min(n - 2, Math.floor(((sv - 0.12) / 0.88) * (n - 1)));
-      if (strand && (x * strand[0] + y) % strand[1] === 0 && t > 0) t = Math.min(n - 1, t + 1);
+      if (strand && (x * strand[0] + Math.floor(y / 3)) % strand[1] === 0 && t > 0) t = Math.min(n - 1, t + 1);
       if (o.folds && o.folds.some(([fx, fy0, fy1]) => x === fx && y >= fy0 && y <= fy1) && t > 0) t = Math.min(n - 1, t + 1);
       t = Math.max(0, Math.min(n - 1, t));
       pts.push([x, y, ramp[t]]);
@@ -61,3 +62,16 @@ export function mass(y0, sp, ramp, o = {}) {
 }
 /** 行ごとの範囲を、[中心, 半幅…] ではなく手で書くための短縮: rs("8-23", "7-24") → [[8,23],[7,24]] */
 export const rs = (...a) => a.map((s) => (s ? s.split("-").map(Number) : null));
+
+const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const dist = (a, b) => { const A = rgb(a), B = rgb(b); return Math.hypot(A[0] - B[0], (A[1] - B[1]) * 1.2, A[2] - B[2]); };
+/** 仕上げ: (1) 色の文字が max 種類を超えたら、使う点の少ない文字を、いちばん近い色の文字にまとめる (2) 孤立した点が target 個を超えたら、まわりの色との差が小さい点から、まわりに溶かす。
+ * 目のハイライト w・口 n・ほお B・keep に指定した文字は溶かさない。 */
+export function finish(rows, palIn = {}, o = {}) {
+  const P = { ...DEFAULT_PAL, ...palIn }; const { max = 26, target = 30, keep = "wBn" } = o; let g = rows.map((r) => [...r]);
+  const count = () => { const c = {}; for (const r of g) for (const ch of r) if (ch !== ".") c[ch] = (c[ch] ?? 0) + 1; return c; };
+  for (;;) { const c = count(); const ks = Object.keys(c); if (ks.length <= max) break; ks.sort((a, b) => c[a] - c[b]); const from = ks.find((k) => !"w".includes(k)) ; let best = null, bd = 1e9; for (const k of ks) if (k !== from && !(k === "w") && dist(P[from], P[k]) < bd) { bd = dist(P[from], P[k]); best = k; } g = g.map((r) => r.map((ch) => (ch === from ? best : ch))); }
+  const isolated = () => { const l = []; for (let y = 1; y < 31; y++) for (let x = 1; x < 31; x++) { const ch = g[y][x]; if (ch !== "." && g[y - 1][x] !== ch && g[y + 1][x] !== ch && g[y][x - 1] !== ch && g[y][x + 1] !== ch) l.push([x, y, ch]); } return l; };
+  for (let it = 0; it < 6; it++) { const l = isolated(); if (l.length <= target) break; const cand = []; for (const [x, y, ch] of l) { if (keep.includes(ch)) continue; const nb = [g[y - 1][x], g[y + 1][x], g[y][x - 1], g[y][x + 1]].filter((k) => k !== "." && k !== ch); if (!nb.length) continue; const m = {}; nb.forEach((k) => (m[k] = (m[k] ?? 0) + 1)); const maj = Object.keys(m).sort((a, b) => m[b] - m[a])[0]; cand.push({ x, y, maj, d: dist(P[ch], P[maj]) }); } cand.sort((a, b) => a.d - b.d); const need = l.length - target; for (const cd of cand.slice(0, need)) g[cd.y][cd.x] = cd.maj; }
+  return g.map((r) => r.join(""));
+}

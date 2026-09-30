@@ -1,5 +1,5 @@
 import { charBase, overrides } from "../../lib4.mjs";
-import { hs, st, face, mass, rs } from "../../c1-kit.mjs";
+import { hs, st, face, mass, rs, finish } from "../../c1-kit.mjs";
 // アヤメ（霜原の案内人）。藍がかった黒髪のぱっつん前髪と長い髪・銀の花かざり・白い襟の藍の着物・朱の帯（右に結び目）・すそが足もとまである細身のシルエット・ふくらんだ長い袖。
 export const name = "アヤメ（霜原の案内人）"; export const category = "character";
 export const pal = {
@@ -7,7 +7,7 @@ export const pal = {
   r: "#182858", J: "#2c4488", j: "#4468b8", k: "#6a90dc", K: "#a8c4f8", C: "#f4f0e8",
   t: "#b02c24", T: "#e8583c", o: "#7a1c1c", M: "#eef2fa", m: "#9aa4bc", i: "#3a4a90", s: "#2a2a44",
 };
-export const rows = overrides(charBase({ hair: 0 }), [
+const raw = overrides(charBase({ hair: 0 }), [
   // うしろの長い髪
   ...mass(7, rs("6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-9", "6-8"), "2211", { out: "p", strand: [1, 5] }),
   ...mass(7, rs("22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "22-25", "23-25"), "1111", { out: "p", strand: [1, 5] }),
@@ -32,3 +32,4 @@ export const rows = overrides(charBase({ hair: 0 }), [
   // 足もと
   ...st(29, ["10|ss", "13|s"]), ...st(29, ["19|ss"]),
 ]);
+export const rows = finish(raw, pal);

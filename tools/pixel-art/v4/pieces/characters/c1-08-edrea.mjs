@@ -1,5 +1,5 @@
 import { charBase, overrides } from "../../lib4.mjs";
-import { hs, st, face, mass, rs } from "../../c1-kit.mjs";
+import { hs, st, face, mass, rs, finish } from "../../c1-kit.mjs";
 // エドレア（灯芯都の合議会代表）。銀の長髪・紫紺の長いローブと金の縁の肩かけ・立ち襟・胸の金の留め具。まっすぐ立つ、細く背の高いシルエット。
 export const name = "エドレア（合議会代表）"; export const category = "character";
 export const pal = {
@@ -7,7 +7,7 @@ export const pal = {
   r: "#1c1040", J: "#2c1a66", j: "#46309a", k: "#6a52c0", K: "#a48ce8", C: "#efe8f8",
   A: "#e0a830", X: "#ffe89a", o: "#a8741c", i: "#7a5ac0", s: "#241a3a", B: "#e8a0b0",
 };
-export const rows = overrides(charBase({ hair: 0 }), [
+const raw = overrides(charBase({ hair: 0 }), [
   // うしろの長い銀髪
   ...mass(7, rs(...Array(16).fill("5-9"), "5-9", "6-9", "6-9", "7-9", "7-8", "7-8"), "3221", { out: "p", strand: [1, 5] }), ...mass(7, rs(...Array(16).fill("22-26"), "22-26", "22-25", "22-25", "22-24", "23-24", "23-24"), "1111", { out: "p", strand: [1, 5] }),
   // ローブの袖
@@ -29,3 +29,4 @@ export const rows = overrides(charBase({ hair: 0 }), [
   ...face({ eye: "narrow", brow: "2", mouth: "flat", ic: "i" }),
   ...st(2, ["14|AXXA"]),
 ]);
+export const rows = finish(raw, pal);

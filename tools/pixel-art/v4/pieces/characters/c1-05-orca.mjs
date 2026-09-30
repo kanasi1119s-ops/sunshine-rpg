@@ -1,5 +1,5 @@
 import { charBase, overrides } from "../../lib4.mjs";
-import { hs, st, face, mass, rs } from "../../c1-kit.mjs";
+import { hs, st, face, mass, rs, finish } from "../../c1-kit.mjs";
 // オルカ（元鉱夫）。大柄でがっしり。白髪まじりの短髪・頬の傷・橙の首巻き・革のベスト・むき出しの太い腕・つるはしを肩にかつぐ。
 export const name = "オルカ（元鉱夫）"; export const category = "character";
 export const pal = {
@@ -7,7 +7,7 @@ export const pal = {
   r: "#2a1a18", J: "#402a20", j: "#5e3e2a", k: "#7a5638", K: "#a07850", W: "#9aa8b8", S: "#586a86", m: "#7a7a92", M: "#d0d0e0",
   O: "#ffb060", o: "#e07820", t: "#a04a18", Q: "#6a7080", P: "#4a4e5a", y: "#9a7448", i: "#5a6a60", s: "#2a2224", A: "#d8a840",
 };
-export const rows = overrides(charBase({ hair: 0 }), [
+const raw = overrides(charBase({ hair: 0 }), [
   // つるはし（柄と、さきの尖った鉄の頭）
   ...mass(7, rs(...Array(21).fill("27-28")), "yyyQ", { out: "J", noTop: true }),
   ...st(4, ["26|mMMMMm", "24|mMMMMMMm", "24|mmmmmmmm"]), [24, 7, "m"], [31, 7, "m"], [24, 8, "m"],
@@ -31,8 +31,9 @@ export const rows = overrides(charBase({ hair: 0 }), [
   ...st(22, ["9|PPQQPPP", "9|PPQQPPP"]),
   ...st(22, ["17|PPQQPPP", "17|PPQQPPP"]),
   ...st(28, ["9|ssssss", "9|ssssss"]), ...st(28, ["17|ssssss", "17|ssssss"]),
-  ...face({ eye: "narrow", brow: "p", mouth: "flat", blush: false, ic: "i" }),
+  ...face({ eye: "narrow", brow: null, mouth: "flat", blush: false, ic: "i" }),
   [22, 6, "q"], [21, 7, "q"], [22, 8, "q"], [21, 9, "q"], [22, 10, "q"],
   [11, 12, "a"], [13, 12, "a"], [18, 12, "a"], [20, 12, "a"],
   // つるはしを持つ手
 ]);
+export const rows = finish(raw, pal);

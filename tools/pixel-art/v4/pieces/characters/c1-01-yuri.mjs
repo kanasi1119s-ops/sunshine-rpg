@@ -1,5 +1,5 @@
 import { charBase, overrides } from "../../lib4.mjs";
-import { hs, st, face, mass, rs } from "../../c1-kit.mjs";
+import { hs, st, face, mass, rs, finish } from "../../c1-kit.mjs";
 // ユーリ（16歳の新人調査員）。栗色のはね髪とあほ毛・藍の上着（前があいて生成りのシャツが見える）・腰の革帯と小さなポーチ・右手首の灯り石の腕輪。
 export const name = "ユーリ（16歳の新人調査員）"; export const category = "character";
 export const pal = {
@@ -7,7 +7,7 @@ export const pal = {
   r: "#141a48", J: "#232a6a", j: "#34489a", k: "#5670c8", K: "#8eaaf0", C: "#efe3c8",
   Q: "#7a6a62", P: "#544a5c", s: "#2a1c24", A: "#d08a28", X: "#ffe89a", y: "#8a5a38", i: "#4a78c8", O: "#f0c060", o: "#a86a2c",
 };
-export const rows = overrides(charBase({ hair: 0 }), [
+const raw = overrides(charBase({ hair: 0 }), [
   // 髪（はね髪）
   ...mass(1, rs("12-19", "9-22", "7-24", "7-24", "8-23", "8-23"), "43221", { out: "p", outB: "1", strand: [1, 4] }),
   ...st(0, ["9|p", "13|p", "18|p", "22|p"]), ...st(0, ["15|pp"]), ...st(1, ["14|p33p"]),
@@ -30,3 +30,4 @@ export const rows = overrides(charBase({ hair: 0 }), [
   // ズボンのひざ
   [12, 25, "P"], [18, 25, "Q"],
 ]);
+export const rows = finish(raw, pal);

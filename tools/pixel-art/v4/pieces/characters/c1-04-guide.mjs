@@ -1,5 +1,5 @@
 import { charBase, overrides } from "../../lib4.mjs";
-import { hs, st, face, mass, rs } from "../../c1-kit.mjs";
+import { hs, st, face, mass, rs, finish } from "../../c1-kit.mjs";
 // ガイド（硝子湖の交易商人の息子）。砂色の流した髪・青緑のマフラー（右肩へ流れる）・らくだ色のベスト・腰の金貨ぶくろ・右手で金貨をかざす。ずんぐりした体つき。
 export const name = "ガイド（商人の息子）"; export const category = "character";
 export const pal = {
@@ -7,7 +7,7 @@ export const pal = {
   r: "#4a2e20", J: "#7a5030", j: "#a4743c", k: "#c89a58", K: "#e8c890", C: "#f6ecd0", y: "#d8c8a0", Q: "#56706a", P: "#3a4a48",
   T: "#7ad8c8", t: "#2a9a90", o: "#166068", A: "#ffb830", X: "#fff0b0", s: "#3a2a2a", i: "#4a9060",
 };
-export const rows = overrides(charBase({ hair: 0 }), [
+const raw = overrides(charBase({ hair: 0 }), [
   // 髪（右へ流した前髪）
   ...mass(1, rs("12-19", "9-22", "8-23", "8-23", "8-23", "8-23"), "43221", { out: "p", outB: "1", strand: [1, 4] }),
   ...st(0, ["16|pp", "14|p"]), ...st(6, ["10|c", "12|c", "15|1 c"]), ...st(6, ["19|c"]), ...st(7, ["8|p2", "8|p1"]), ...st(7, ["22|1", "22|p"]), ...st(7, ["15|21"]),
@@ -29,3 +29,4 @@ export const rows = overrides(charBase({ hair: 0 }), [
   ...st(16, ["27|AA", "26|AXXA", "26|AXAA", "27|AA"]),
   ...face({ eye: "std", brow: "1", mouth: "smile", ic: "i" }),
 ]);
+export const rows = finish(raw, pal);

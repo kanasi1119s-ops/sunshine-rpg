@@ -1,5 +1,5 @@
 import { charBase, overrides } from "../../lib4.mjs";
-import { hs, st, face, mass, rs } from "../../c1-kit.mjs";
+import { hs, st, face, mass, rs, finish } from "../../c1-kit.mjs";
 // 砂音の隊商長。ぐるぐる巻いた生成りのターバン（しっぽが垂れる）・日焼けした肌・ゆったりした黄土色の長衣と広い袖・青緑の腰帯・左手に鈴のついたつえ。
 export const name = "砂音の隊商長"; export const category = "character";
 export const pal = {
@@ -8,7 +8,7 @@ export const pal = {
   a: "#98603e", b: "#c4865c", c: "#dea474", d: "#f0c896", q: "#5a2e22", n: "#7a3a3a", B: "#d88a6a",
   T: "#7ad8c8", t: "#2a9a90", o: "#166068", A: "#e8b030", X: "#fff0a8", y: "#c8a870", Q: "#7a5a3a", P: "#4a3a2a", s: "#3a2a20", i: "#3a2a20",
 };
-export const rows = overrides(charBase({ hair: 0 }), [
+const raw = overrides(charBase({ hair: 0 }), [
   // つえ（左）と鈴
   ...mass(9, rs(...Array(21).fill("4-5")), "yQQP", { out: "P", noTop: true }),
   ...mass(4, rs("3-6", "2-7", "2-7", "2-7", "3-6"), "XAAo", { out: "o" }), ...st(8, ["3|AA"]), [4, 7, "o"],
@@ -34,3 +34,4 @@ export const rows = overrides(charBase({ hair: 0 }), [
   ...face({ eye: "sharp", brow: "p", mouth: "smile", ic: "i" }),
   [12, 12, "a"], [14, 12, "a"], [17, 12, "a"], [19, 12, "a"],
 ]);
+export const rows = finish(raw, pal);

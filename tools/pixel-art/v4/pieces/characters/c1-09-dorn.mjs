@@ -1,5 +1,5 @@
 import { charBase, overrides } from "../../lib4.mjs";
-import { hs, st, face, mass, rs } from "../../c1-kit.mjs";
+import { hs, st, face, mass, rs, finish } from "../../c1-kit.mjs";
 // ドルン（各地の事件で暗躍する仲介人）。つばの広い黒い帽子（赤い帯）・片眼鏡と鎖・黒い外套（高い立ち襟・すそがひらく）・細い銀のつえ。片方の口の端だけ上がる。
 export const name = "ドルン（暗躍する仲介人）"; export const category = "character";
 export const pal = {
@@ -8,7 +8,7 @@ export const pal = {
   Q: "#34344a", P: "#22222e", t: "#a02830", T: "#d8505a", o: "#6a1420", A: "#e0b848", X: "#fff0a8", M: "#dcdcec", m: "#8a8aa0",
   a: "#b8907c", b: "#dcb49e", c: "#efd0b8", i: "#c8a838", n: "#8a4450",
 };
-export const rows = overrides(charBase({ hair: 0 }), [
+const raw = overrides(charBase({ hair: 0 }), [
   // つえ（左手＝画面左）
   ...mass(13, rs(...Array(17).fill("4-5")), "MmP", { out: "P", noTop: true }), ...st(11, ["3|MMMM", "3|MAAM", "4|MM"]),
   // 外套の腕
@@ -33,3 +33,4 @@ export const rows = overrides(charBase({ hair: 0 }), [
   // 足もと
   ...st(28, ["9|ssssss"]),
 ]);
+export const rows = finish(raw, pal);

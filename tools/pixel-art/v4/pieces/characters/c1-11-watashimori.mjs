@@ -1,5 +1,5 @@
 import { charBase, overrides } from "../../lib4.mjs";
-import { hs, st, face, mass, rs } from "../../c1-kit.mjs";
+import { hs, st, face, mass, rs, finish } from "../../c1-kit.mjs";
 // 硝子湖の渡し守。水色の頭巾（結び目が右うしろに出る）・海の青灰のうわっぱり・縄の帯・ズボンをまくって素足にわらじ・右にたてた長いかい（オール）・腰の小さなガラスの灯り。
 export const name = "硝子湖の渡し守"; export const category = "character";
 export const pal = {
@@ -7,7 +7,7 @@ export const pal = {
   r: "#1a3440", J: "#2c5462", j: "#4a8090", k: "#78b0b8", K: "#b8e0dc", C: "#f0eee0", y: "#c8b48c", Q: "#9a7248", P: "#6a4a30",
   W: "#8cc8f0", S: "#3a8ac8", u: "#1e4a82", X: "#fff0a8", A: "#e8b030", s: "#3a2a24", i: "#3a5a70", M: "#c8dcf0",
 };
-export const rows = overrides(charBase({ hair: 0 }), [
+const raw = overrides(charBase({ hair: 0 }), [
   // かい（オール）: 水かきの部分は上、柄は長く
   ...mass(9, rs(...Array(21).fill("27-28")), "yQQP", { out: "P", noTop: true }),
   ...mass(1, rs("28-29", "26-30", "26-30", "26-30", "26-30", "26-30", "27-29", "27-29"), "yyQP", { out: "P", strand: [1, 5] }),
@@ -35,3 +35,4 @@ export const rows = overrides(charBase({ hair: 0 }), [
   // ひげのそりあと
   [12, 11, "a"], [14, 12, "a"], [17, 12, "a"], [19, 11, "a"],
 ]);
+export const rows = finish(raw, pal);

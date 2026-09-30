@@ -189,9 +189,9 @@ export const despeckle = (rows, keep = "w") => { const g = rows.map((r) => [...r
  * 人物の胴（y13〜30）を、横にせまくする（人間の指示 2026-09-30「胴が横に大きいので、少し細く」）。
  * 各行の左右の端の間を、factor 倍に縮める（中心はそのまま。最近傍で取るので、色は増えない）。人物（category "character"）にだけ、読み込み時にかける。
  */
-export function slimBody(rows, factor = 0.8) {
+export function slimBody(rows, factor = 0.8, fromY = 13) {
   const out = rows.map((r) => r);
-  for (let y = 13; y < rows.length; y++) {
+  for (let y = fromY; y < rows.length; y++) {
     const r = rows[y]; let lo = r.length, hi = -1;
     for (let x = 0; x < r.length; x++) if (r[x] !== ".") { if (x < lo) lo = x; hi = x; }
     if (hi < 0) continue;
@@ -203,8 +203,26 @@ export function slimBody(rows, factor = 0.8) {
   }
   return out;
 }
-/** 絵のモジュールから、実際に使う rows を取り出す（人物は胴を細くする）。 */
-export function pieceRows(m) { return m.category === "character" ? slimBody(m.rows) : m.rows; }
+/**
+ * 頭身を変える（人間の指示 2026-09-30「人物を全部2頭身で作ろう」。もとは2.5頭身）。
+ * 頭の部分（y0〜12）を縦に伸ばし、体の部分（y13〜29）を縮めて、頭÷全体を 1/heads にする。最近傍で取るので、色は増えない。
+ */
+export function chibiHeads(rows, heads = 2) {
+  if (heads >= 2.5) return rows;
+  const total = 28, headH = Math.round(total / heads), bodyH = total - headH;    // 例: 2頭身 → 頭14・体14
+  const out = rows.map((r) => r), srcHead = 13, srcBody = 17;
+  for (let j = 0; j < headH + bodyH; j++) out[j] = j < headH ? rows[Math.min(srcHead - 1, Math.floor(((j + 0.5) * srcHead) / headH))] : rows[13 + Math.min(srcBody - 1, Math.floor(((j - headH + 0.5) * srcBody) / bodyH))];
+  out[headH + bodyH] = rows[30];                                                  // 地面の影は、足の下に
+  for (let j = headH + bodyH + 1; j < rows.length; j++) out[j] = ".".repeat(rows[0].length);
+  return out;
+}
+export const CHAR_HEADS = 2;
+/** 絵のモジュールから、実際に使う rows を取り出す（人物は、頭身を変えて、胴を細くする）。 */
+export function pieceRows(m) {
+  if (m.category !== "character") return m.rows;
+  const chibi = chibiHeads(m.rows, CHAR_HEADS);
+  return slimBody(chibi, 0.8, chibi === m.rows ? 13 : Math.round(28 / CHAR_HEADS) + 2);
+}
 
 /**
  * 仕上げ: 色数を max 色以内にまとめ（似た色へ寄せる。目のハイライト w は守る）、孤立した点を iso 個以内に減らす。

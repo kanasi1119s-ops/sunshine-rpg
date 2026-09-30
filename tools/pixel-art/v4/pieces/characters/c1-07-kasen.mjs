@@ -1,5 +1,5 @@
 import { charBase, overrides } from "../../lib4.mjs";
-import { hs, st, face, mass, rs } from "../../c1-kit.mjs";
+import { hs, st, face, mass, rs, finish } from "../../c1-kit.mjs";
 // カセン（灯里支部長）。丸眼鏡・低い位置のまとめ髪（おだんご）・えんじ色のジャケット（腰でふわっと広がる）・灯りのブローチ・左手に帳面。世話焼きで温かい大人の女性。
 export const name = "カセン（灯里支部長）"; export const category = "character";
 export const pal = {
@@ -7,7 +7,7 @@ export const pal = {
   r: "#3c0e1c", J: "#661a30", j: "#922a44", k: "#bc4a5c", K: "#e08088", C: "#f6ecdc", y: "#d8c8b0",
   Q: "#6a5468", P: "#4a3a4a", A: "#e0a830", X: "#fff0b0", g: "#3a6a4a", G: "#6aa06a", s: "#2a1e26", i: "#5a4a3a", m: "#c8a040",
 };
-export const rows = overrides(charBase({ hair: 0 }), [
+const raw = overrides(charBase({ hair: 0 }), [
   // おだんご
   ...mass(0, rs("14-17", "13-18", "13-18", "14-17"), "3221", { out: "p", strand: [1, 3] }),
   // 髪（中わけ、横になでつける）
@@ -32,3 +32,4 @@ export const rows = overrides(charBase({ hair: 0 }), [
   ...st(6, ["18|mmm"]), ...st(10, ["18|mmm"]), ...st(7, ["17|m", "17|m", "17|m"]), ...st(7, ["21|m", "21|m", "21|m"]),
   [10, 10, "B"], [21, 10, "B"],
 ]);
+export const rows = finish(raw, pal);

@@ -1,5 +1,5 @@
 import { charBase, overrides } from "../../lib4.mjs";
-import { hs, st, face, mass, rs } from "../../c1-kit.mjs";
+import { hs, st, face, mass, rs, finish } from "../../c1-kit.mjs";
 // 麦香野の村長。大きな麦わら帽子・真っ白なまゆ毛と長いひげ・麦の穂を挿した若草色のうわっぱり・縄の帯・木のつえ。少し小柄でまるい老人。
 export const name = "麦香野の村長"; export const category = "character";
 export const pal = {
@@ -7,7 +7,7 @@ export const pal = {
   r: "#3e4a1c", J: "#5e7028", j: "#88983c", k: "#b0c060", K: "#dce890", C: "#fbf8ee", y: "#c8b890", Q: "#8a5a34", P: "#5a3a22",
   A: "#e8b838", X: "#fff0a8", i: "#4a6a48", s: "#3a2a1e", W: "#e8e4dc", m: "#b8b0a0",
 };
-export const rows = overrides(charBase({ hair: 0 }), [
+const raw = overrides(charBase({ hair: 0 }), [
   // つえ（右手＝画面右）
   ...mass(12, rs(...Array(18).fill("27-28")), "yQQP", { out: "P", noTop: true }), ...st(10, ["26|QQQ", "26|yQQ"]),
   // 腕
@@ -33,3 +33,4 @@ export const rows = overrides(charBase({ hair: 0 }), [
   ...st(7, ["8|p", "8|p"]), ...st(7, ["23|p", "23|p"]),
   ...face({ eye: "narrow", brow: "W", mouth: "none", ic: "i", blush: false }).filter(([x, y]) => y >= 6 && y <= 9),
 ]);
+export const rows = finish(raw, pal);
