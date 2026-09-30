@@ -71,6 +71,33 @@ describe("効果つきの特技（エンジン）", () => {
   });
 });
 
+describe("HPを支払う特技・一撃で倒すチャンスつきの特技", () => {
+  const breaker: Skill = { id: "b", name: "破戒の一撃", mpCost: 3, powerMultiplier: 2.5, hpCost: 0.1 };
+  const bug: Skill = { id: "k", name: "羽音", mpCost: 8, powerMultiplier: 1.0, koChance: 0.5 };
+
+  it("HPを支払ってから、強くダメージを与える。HPは1より下がらない", () => {
+    const state = createBattleState([make({ id: "hero", hp: 100 })], [make({ id: "e", isEnemy: true })]);
+    const after = applyAction(state, { type: "skill", actorId: "hero", targetId: "e", skill: breaker }, rng);
+    expect(after.party[0].hp).toBe(90);
+    expect(after.enemies[0].hp).toBeLessThan(100 - 30);
+    const low = createBattleState([make({ id: "hero", hp: 5 })], [make({ id: "e", isEnemy: true })]);
+    const lowAfter = applyAction(low, { type: "skill", actorId: "hero", targetId: "e", skill: breaker }, rng);
+    expect(lowAfter.party[0].hp).toBe(1);
+  });
+
+  it("一撃で倒すチャンス: 乱数が当たりなら倒れ、外れなら普通のダメージ。強敵（最大HP500超）には効かない", () => {
+    const state = createBattleState([make({ id: "hero" })], [make({ id: "e", isEnemy: true })]);
+    const hit = applyAction(state, { type: "skill", actorId: "hero", targetId: "e", skill: bug }, () => 0.1);
+    expect(hit.enemies[0].hp).toBe(0);
+    const miss = applyAction(state, { type: "skill", actorId: "hero", targetId: "e", skill: bug }, () => 0.9);
+    expect(miss.enemies[0].hp).toBeGreaterThan(0);
+    expect(miss.enemies[0].hp).toBeLessThan(100);
+    const boss = createBattleState([make({ id: "hero" })], [make({ id: "boss", isEnemy: true, maxHp: 800, hp: 800 })]);
+    const immune = applyAction(boss, { type: "skill", actorId: "hero", targetId: "boss", skill: bug }, () => 0.1);
+    expect(immune.enemies[0].hp).toBeGreaterThan(0);
+  });
+});
+
 describe("効果つきの特技（コマンド選択）", () => {
   const skills = { hero: { id: "base", name: "とくぎ", mpCost: 1, powerMultiplier: 1.2 } };
   const item = { id: "i", name: "薬", healAmount: 10 };
