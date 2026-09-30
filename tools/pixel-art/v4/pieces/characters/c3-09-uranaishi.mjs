@@ -1,11 +1,11 @@
-import { charBase, overrides, sym, rect, hline, vline, dress, disc } from "../../lib4.mjs";
+import { charBase, overrides, sym, rect, hline, vline, dress, disc, despeckle } from "../../lib4.mjs";
 export const name = "占い師"; export const category = "character";
 // むらさきのフードと口もとのベール、星をちりばめた長いローブ。水晶玉を両手でささげ持つ。
 export const pal = {
   p: "#241a3a", "1": "#3a2a5a", "2": "#563a86", "3": "#7a56b0", "4": "#a882d8", q: "#7a4a44", a: "#c48a76", b: "#e6ac90", c: "#f6d0b4",
   i: "#c060d0", r: "#1a1040", J: "#3a2a7a", j: "#5a44a8", k: "#7a66c8", K: "#a898e8", A: "#ffc040", X: "#fff0a0", S: "#3a8ac8", W: "#a8e0ff",
 };
-export const rows = overrides(charBase({ hair: 5, sideHair: 8 }), [
+export const rows = despeckle(overrides(charBase({ hair: 5, sideHair: 8 }), [
   ...hline(10, 21, 1, "r"), ...sym([[9, 2, "r"], [8, 3, "r"], [7, 4, "r"], [6, 5, "r"], [6, 6, "r"], [6, 7, "r"], [6, 8, "r"], [6, 9, "r"], [6, 10, "r"], [6, 11, "r"], [6, 12, "r"], [6, 13, "r"], [7, 13, "r"],
     [7, 5, "k"], [7, 6, "k"], [7, 7, "j"], [7, 8, "j"], [7, 9, "j"], [7, 10, "j"], [7, 11, "j"], [7, 12, "J"], [8, 4, "k"], [9, 3, "K"], [10, 2, "K"]]),
   ...rect(9, 11, 22, 11, "j"), ...rect(9, 10, 22, 10, "k"), ...hline(11, 20, 12, "A"), [8, 10, "j"], [23, 10, "J"], ...hline(10, 21, 10, "k"), ...hline(11, 20, 11, "j"),
@@ -14,4 +14,4 @@ export const rows = overrides(charBase({ hair: 5, sideHair: 8 }), [
   [11, 24, "X"], [20, 26, "X"], [14, 27, "X"], [18, 23, "X"], [9, 27, "A"], [22, 24, "A"],
   ...rect(10, 19, 12, 21, "c"), ...rect(19, 19, 21, 21, "b"),
   ...disc(15.5, 18.5, 3.5, "S"), ...disc(15.5, 18.5, 2.5, "W"), [14, 17, "w"], [15, 17, "w"], [17, 20, "S"], ...hline(12, 19, 22, "A"), ...hline(13, 18, 23, "A"),
-]);
+]), "wXA");

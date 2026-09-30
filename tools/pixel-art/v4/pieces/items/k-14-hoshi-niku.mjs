@@ -1,4 +1,4 @@
-import { kNew, kPoly, kRect, kPut, kOutline, kRows, kLine } from "../../lib4.mjs";
+import { kNew, kPoly, kRect, kPut, kOutline, kRows, kLine, kClean } from "../../lib4.mjs";
 // 干し肉: 骨つきの干し肉を、ひもで吊るしたところ。白いあぶらの筋。
 export const name = "干し肉";
 export const category = "item";
@@ -22,4 +22,4 @@ for (let x = 5; x <= 15; x++) for (let y = 0; y < 12; y++) { const d = ((x - 10)
 kRect(g, 20, 17, 21, 24, "s"); kRect(g, 22, 17, 22, 24, "S");
 const r0 = kOutline(g, { H: "D", R: "D", M: "D", D: "D", s: "S", S: "S", e: "E", E: "E" }, "o");
 for (const [x, y, c] of [[9, 11, "w"], [8, 12, "F"], [10, 10, "F"], [7, 15, "F"], [27, 26, "w"]]) kPut(r0, x, y, c);
-export const rows = kRows(r0);
+export const rows = kClean(kRows(r0));

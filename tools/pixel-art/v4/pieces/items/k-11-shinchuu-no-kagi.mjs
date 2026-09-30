@@ -1,4 +1,4 @@
-import { kNew, kEll, kRect, kPut, kOutline, kRows, kLine } from "../../lib4.mjs";
+import { kNew, kEll, kRect, kPut, kOutline, kRows, kLine, kClean } from "../../lib4.mjs";
 // 真鍮の鍵: 三つ葉の飾りの持ち手と、ななめの軸。
 export const name = "真鍮の鍵";
 export const category = "item";
@@ -20,4 +20,4 @@ kRect(g, 25, 27, 28, 29, "a"); kRect(g, 25, 27, 26, 27, "A"); kRect(g, 27, 28, 2
 kPut(g, 21, 29, "b"); kPut(g, 20, 29, "b");
 const r0 = kOutline(g, { X: "b", A: "d", a: "d", b: "d" }, "o");
 for (const [x, y, c] of [[6, 5, "w"], [7, 4, "w"], [5, 6, "w"], [15, 3, "w"], [3, 15, "w"], [15, 15, "X"]]) kPut(r0, x, y, c);
-export const rows = kRows(r0);
+export const rows = kClean(kRows(r0));

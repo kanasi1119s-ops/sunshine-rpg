@@ -1,4 +1,4 @@
-import { kNew, kEll, kRect, kPoly, kPut, kOutline, kRows, kLine } from "../../lib4.mjs";
+import { kNew, kEll, kRect, kPoly, kPut, kOutline, kRows, kLine, kClean } from "../../lib4.mjs";
 // 水筒: 革でできた平たい丸い水筒。コルクせんとかけひも。
 export const name = "水筒";
 export const category = "item";
@@ -19,4 +19,4 @@ kRect(g, 14, 7, 19, 10, "M"); kRect(g, 14, 7, 15, 10, "L"); kRect(g, 19, 7, 19, 
 kRect(g, 14, 3, 19, 6, "c"); kRect(g, 19, 3, 19, 6, "C"); kRect(g, 14, 6, 19, 6, "C"); kRect(g, 14, 3, 15, 3, "s");
 const r0 = kOutline(g, { c: "C", C: "C", t: "C", H: "D", L: "D", M: "D", D: "D" }, "o");
 for (const [x, y, c] of [[9, 17, "s"], [10, 15, "s"], [11, 14, "s"], [9, 18, "H"]]) kPut(r0, x, y, c);
-export const rows = kRows(r0);
+export const rows = kClean(kRows(r0));

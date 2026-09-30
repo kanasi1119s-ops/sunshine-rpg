@@ -19,6 +19,7 @@ const hub = [16, 10];
 const arm = (dx, dy) => { const L = 12; const ex = hub[0] + dx * L, ey = hub[1] + dy * L; const px = -dy, py = dx; const s = 0.42; p.poly([[hub[0] + dx * 3, hub[1] + dy * 3], [ex, ey], [ex + px * 4.6, ey + py * 4.6], [hub[0] + dx * 3 + px * 3.4, hub[1] + dy * 3 + py * 3.4]], "c"); p.poly([[hub[0] + dx * 3 + px * 3.4, hub[1] + dy * 3 + py * 3.4], [ex + px * 4.6, ey + py * 4.6], [ex + px * 3.6, ey + py * 3.6], [hub[0] + dx * 3 + px * 2.4, hub[1] + dy * 3 + py * 2.4]], "d"); p.line(hub[0], hub[1], Math.round(ex), Math.round(ey), "t"); };
 const k = Math.SQRT1_2; arm(-k, -k); arm(k, -k); arm(-k, k); arm(k, k);
 p.rect(15, 9, 17, 11, "T"); p.put(16, 10, "u"); p.put(15, 9, "c");
+p.despeckle();
 p.outline("o");
 p.shadow(20, 29, 12, 1.6, "S");
 export const rows = p.rows();

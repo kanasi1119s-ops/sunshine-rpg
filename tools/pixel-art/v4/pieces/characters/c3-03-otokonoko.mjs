@@ -1,4 +1,4 @@
-import { charBase, overrides, sym, rect, hline, vline, disc } from "../../lib4.mjs";
+import { charBase, overrides, sym, rect, hline, vline, disc, despeckle } from "../../lib4.mjs";
 export const name = "町の男の子"; export const category = "character";
 // 短パン・しましまシャツ・ボールを持つ元気な子。ドットを詰めて背を低くしてある。
 export const pal = {
@@ -13,4 +13,4 @@ const g = overrides(charBase({ hair: 4, fringe: "spiky" }), [
   ...disc(26, 22, 2.5, "t"), [25, 21, "T"], [25, 22, "T"], ...vline(26, 20, 24, "T"),
   [12, 10, "a"], [19, 10, "a"], [19, 11, "a"],
 ]);
-export const rows = [...Array(2).fill(".".repeat(32)), ...g.slice(0, 18), ...g.slice(20)];
+export const rows = despeckle([...Array(2).fill(".".repeat(32)), ...g.slice(0, 18), ...g.slice(20)], "wBeinT");

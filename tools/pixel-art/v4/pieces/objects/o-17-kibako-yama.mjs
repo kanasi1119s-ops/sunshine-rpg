@@ -12,7 +12,7 @@ const crate = (x0, y0, x1, y1, th, brace) => { // 前面 (x0..x1, y0..y1) と上
   else { for (let y = y0 + 4; y < y1 - 1; y += 3) p.rect(x0 + 2, y, x1 - 2, y, "d"); } };
 crate(2, 19, 14, 27, 3, true);
 crate(16, 21, 27, 27, 3, false);
-crate(5, 11, 12, 18, 3, true);
+crate(5, 11, 12, 18, 3, false);
 // 荷ひもの袋
 p.blob(22, 18, 4, 3, ["z", "r", "R"]); p.rect(20, 15, 23, 16, "r"); p.pts([[21, 15], [22, 15]], "z"); p.rect(21, 16, 22, 16, "b");
 p.outline("o");

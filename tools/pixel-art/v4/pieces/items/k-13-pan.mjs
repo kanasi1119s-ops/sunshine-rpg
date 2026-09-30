@@ -1,4 +1,4 @@
-import { kNew, kEll, kRect, kPoly, kPut, kOutline, kRows, kLine } from "../../lib4.mjs";
+import { kNew, kEll, kRect, kPoly, kPut, kOutline, kRows, kLine, kClean } from "../../lib4.mjs";
 // パン: 焼きたての丸いパン。切れ目が3本。
 export const name = "パン";
 export const category = "item";
@@ -19,4 +19,4 @@ for (const [x, y] of [[8, 14], [11, 17], [24, 15]]) kPut(g, x, y, "L");
 for (const [x, y] of [[13, 8], [19, 9]]) kPut(g, x, y, "f");
 const r0 = kOutline(g, { H: "D", L: "d", M: "d", D: "d" }, "o");
 for (const [x, y, c] of [[9, 9, "w"], [10, 8, "w"], [8, 10, "H"], [11, 8, "H"]]) kPut(r0, x, y, c);
-export const rows = kRows(r0);
+export const rows = kClean(kRows(r0));

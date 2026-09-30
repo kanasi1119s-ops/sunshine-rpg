@@ -1,4 +1,4 @@
-import { kNew, kEll, kRect, kPut, kOutline, kRows, kLine, kPoly } from "../../lib4.mjs";
+import { kNew, kEll, kRect, kPut, kOutline, kRows, kLine, kPoly, kClean } from "../../lib4.mjs";
 // 目覚めの香: 小さな香炉にお香を3本。先が赤くともり、けむりがゆれる。
 export const name = "目覚めの香";
 export const category = "item";
@@ -22,4 +22,4 @@ kRect(g, 7, 21, 25, 21, "S"); kRect(g, 7, 21, 9, 21, "s");
 const r0 = kOutline(g, { A: "b", a: "d", b: "d", n: "N", N: "N", s: "v", S: "v", v: "v" }, "o");
 // 灰の上のお香の根もと
 for (const [x, y, c] of [[9, 10, "T"], [10, 10, "t"], [14, 10, "T"], [15, 10, "t"], [20, 9, "T"], [21, 9, "t"], [8, 22, "w"], [9, 23, "w"], [24, 25, "a"], [16, 24, "e"], [15, 25, "e"], [17, 25, "e"], [16, 23, "e"]]) kPut(r0, x, y, c);
-export const rows = kRows(r0);
+export const rows = kClean(kRows(r0));

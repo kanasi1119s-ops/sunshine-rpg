@@ -1,4 +1,4 @@
-import { charBase, overrides, sym, rect, hline, vline, disc, line } from "../../lib4.mjs";
+import { charBase, overrides, sym, rect, hline, vline, disc, line, remap, despeckle } from "../../lib4.mjs";
 export const name = "料理人"; export const category = "character";
 // 赤いバンダナ・ひげ面・たくましい腕。右手にフライパン、腰にふきん。
 export const pal = {
@@ -6,7 +6,7 @@ export const pal = {
   r: "#1a2a1a", J: "#2e5a3a", j: "#4a8a50", k: "#78b070", K: "#b0d890", g: "#2e5a3a", G: "#4a8a50", P: "#3a3a4a", Q: "#585868",
   t: "#c02838", T: "#f06a6a", m: "#8a8a98", M: "#d8d8e8", s: "#1a1418", C: "#f0ecf4",
 };
-export const rows = overrides(charBase({ hair: 5, fringe: "spiky" }), [
+export const rows = despeckle(remap(overrides(charBase({ hair: 5, fringe: "spiky" }), [
   ...hline(11, 20, 2, "t"), ...hline(9, 22, 3, "t"), ...hline(8, 23, 4, "t"), ...hline(8, 23, 5, "T"), [8, 5, "t"], [23, 5, "t"],
   ...hline(12, 19, 3, "T"), ...hline(10, 21, 4, "t"), ...rect(24, 3, 27, 5, "t"), [26, 2, "t"], [27, 6, "t"], [24, 6, "t"], [28, 7, "t"], [25, 4, "T"], ...hline(9, 22, 5, "t"),
   ...hline(9, 22, 5, "t"), [11, 5, "T"], [15, 5, "T"],
@@ -16,4 +16,4 @@ export const rows = overrides(charBase({ hair: 5, fringe: "spiky" }), [
   ...rect(10, 20, 11, 23, "C"), [10, 23, "M"],
   ...hline(11, 12, 11, "1"), ...hline(19, 20, 11, "1"), ...hline(13, 18, 12, "1"), [12, 10, "2"], [19, 10, "2"], [14, 11, "n"], [15, 11, "n"], [16, 11, "n"], [17, 11, "n"],
   ...disc(27, 16, 3, "m"), ...disc(27, 16, 2, "s"), [26, 15, "m"], ...line(24, 21, 26, 18, "s"), ...line(25, 21, 26, 19, "s"),
-]);
+]), {"M": "m", "p": "1"}), "wBein");

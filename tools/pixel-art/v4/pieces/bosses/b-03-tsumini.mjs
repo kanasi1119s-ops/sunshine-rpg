@@ -28,4 +28,4 @@ for (const [x, y] of [[9, 13], [22, 13]]) { c.put(x, y, "e"); c.put(x + 1, y, "e
 box(c, 5, 27, 12, 30, WOOD); box(c, 19, 27, 26, 30, WOOD);
 // はみ出す歪み
 for (const [x, y] of [[2, 6], [1, 9], [29, 5], [30, 9], [7, 1], [24, 1]]) { c.put(x, y, "V"); c.put(x, y + 1, "v"); }
-export const rows = c.rows();
+export const rows = c.rows("wiIeET");

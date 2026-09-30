@@ -1,7 +1,7 @@
 import { blank, toRows, W } from "./lib4.mjs";
 // ---- ボス・大きな絵用の描画部品（担当B追記）。ramp は「暗→明」の文字列（先頭が縁の色）。光は左上。 ----
 /** 描画用のキャンバス。 */
-export function cv() { const g = blank(); const put = (x, y, c) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && x < W && y >= 0 && y < W) g[y][x] = c; }; const get = (x, y) => (x >= 0 && x < W && y >= 0 && y < W ? g[y][x] : "."); return { g, put, get, rows: (keep = "w") => toRows(despeckle(g, keep)) }; }
+export function cv() { const g = blank(); const put = (x, y, c) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && x < W && y >= 0 && y < W) g[y][x] = c; }; const get = (x, y) => (x >= 0 && x < W && y >= 0 && y < W ? g[y][x] : "."); return { g, put, get, rows: (keep = "wiIeE") => toRows(despeckle(g, keep)) }; }
 /** 立体的に陰影をつけた楕円（左上から光）。o.top/o.bot: 上半分・下半分だけ描く。o.flat: 陰影を弱める。 */
 export function ell(c, cx, cy, rx, ry, ramp, o = {}) {
   const n = ramp.length; const ins = (x, y) => { const dx = (x - cx) / (rx + 0.5), dy = (y - cy) / (ry + 0.5); return dx * dx + dy * dy <= 1 && (!o.top || y <= cy) && (!o.bot || y >= cy); };

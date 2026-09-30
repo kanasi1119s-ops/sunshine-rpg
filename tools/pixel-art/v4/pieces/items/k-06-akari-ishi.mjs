@@ -1,4 +1,4 @@
-import { kNew, kPoly, kPut, kOutline, kRows, kLine } from "../../lib4.mjs";
+import { kNew, kPoly, kPut, kOutline, kRows, kLine, kClean } from "../../lib4.mjs";
 // 灯り石: 青くやさしく光る、六角柱の大きな結晶。
 export const name = "灯り石";
 export const category = "item";
@@ -18,4 +18,4 @@ const r0 = kOutline(g, { h: "z", b: "D", B: "D", d: "D" }, "o");
 for (let y = 5; y <= 24; y++) if (r0[y][16] === "b") r0[y][16] = "h";
 for (const [x, y, c] of [[16, 3, "W"], [12, 8, "w"], [12, 9, "w"], [12, 10, "W"], [13, 12, "h"], [14, 17, "W"], [8, 14, "h"], [7, 13, "h"], [17, 24, "d"], [20, 24, "D"],
   [16, 15, "s"], [16, 14, "w"], [16, 16, "w"], [15, 15, "w"], [17, 15, "w"]]) kPut(r0, x, y, c);
-export const rows = kRows(r0);
+export const rows = kClean(kRows(r0));

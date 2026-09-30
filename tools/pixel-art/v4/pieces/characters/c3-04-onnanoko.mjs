@@ -1,4 +1,4 @@
-import { charBase, overrides, sym, rect, hline, vline } from "../../lib4.mjs";
+import { charBase, overrides, sym, rect, hline, vline, remap } from "../../lib4.mjs";
 export const name = "町の女の子"; export const category = "character";
 // ふたつ結びのリボン・ピンクのワンピースにエプロン・花たば。ドットを詰めて背を低くしてある。
 export const pal = {
@@ -12,4 +12,5 @@ const g = overrides(charBase({ hair: 5, sideHair: 8, skirt: true }), [
   ...rect(12, 15, 19, 21, "C"), ...vline(12, 15, 21, "y"), ...hline(12, 19, 21, "y"), ...rect(14, 17, 17, 18, "K"),
   [4, 15, "T"], [5, 15, "T"], [3, 16, "O"], [4, 16, "t"], [5, 16, "T"], [6, 17, "O"], [4, 17, "G"], [5, 17, "g"], [5, 18, "g"], [6, 19, "g"], [6, 20, "g"],
 ]);
-export const rows = [...Array(2).fill(".".repeat(32)), ...g.slice(0, 18), ...g.slice(20)];
+const h = [...Array(2).fill(".".repeat(32)), ...g.slice(0, 18), ...g.slice(20)];
+export const rows = remap(h, {"G": "g", "B": "T", "n": "t", "O": "T"});

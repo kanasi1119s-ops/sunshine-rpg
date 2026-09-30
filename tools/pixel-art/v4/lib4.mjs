@@ -90,7 +90,7 @@ export function kEll(g, cx, cy, rx, ry, ramp) {
 }
 /** 多角形（点 [x,y] の並び）を塗る */
 export function kPoly(g, pts, c) {
-  const ys = pts.map((p) => p[1]); const y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const ys = pts.map((p) => p[1]); const y0 = Math.ceil(Math.min(...ys)), y1 = Math.floor(Math.max(...ys));
   for (let y = y0; y <= y1; y++) { const xs = []; for (let i = 0; i < pts.length; i++) { const [ax, ay] = pts[i], [bx, by] = pts[(i + 1) % pts.length]; if ((ay <= y && by > y) || (by <= y && ay > y)) xs.push(ax + ((y + 0.5 - ay) * (bx - ax)) / (by - ay)); }
     xs.sort((a, b) => a - b); for (let i = 0; i + 1 < xs.length; i += 2) for (let x = Math.round(xs[i]); x < Math.round(xs[i + 1]); x++) kPut(g, x, y, c); }
 }
@@ -164,9 +164,23 @@ export function painter() {
   const blob = (cx, cy, rx, ry, tones, bias = 0) => { const n = tones.length; for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1) { const t = ((x - cx) / rx) * 0.55 + ((y - cy) / ry) * 0.75; const l = 0.5 - t / 2.4 + bias; put(x, y, tones[Math.max(0, Math.min(n - 1, Math.floor(l * n)))]); } };
   const poly = (pts, c) => { const ys = pts.map((p) => p[1]); const y0 = Math.floor(Math.min(...ys)), y1 = Math.ceil(Math.max(...ys)); for (let y = y0; y <= y1; y++) { const yy = y + 0.5, xs = []; for (let i = 0; i < pts.length; i++) { const [ax, ay] = pts[i], [bx, by] = pts[(i + 1) % pts.length]; if ((ay <= yy && by > yy) || (by <= yy && ay > yy)) xs.push(ax + ((yy - ay) / (by - ay)) * (bx - ax)); } xs.sort((a, b) => a - b); for (let i = 0; i + 1 < xs.length; i += 2) for (let x = Math.round(xs[i]); x < Math.round(xs[i + 1]); x++) put(x, y, c); } };
   /** すでに描いた物の外側に1ドットの縁を付ける。 */
-  const outline = (c) => { const l = []; for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (g[y][x] === "." && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => get(x + a, y + b) !== ".")) l.push([x, y]); for (const [x, y] of l) g[y][x] = c; };
+  const outline = (c, diag = false) => { const l = []; const D = diag ? [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]] : [[1, 0], [-1, 0], [0, 1], [0, -1]]; for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (g[y][x] === "." && D.some(([a, b]) => get(x + a, y + b) !== ".")) l.push([x, y]); for (const [x, y] of l) g[y][x] = c; };
   /** 空いている所だけに落ち影の楕円を置く（輪郭のあとに呼ぶ）。 */
   const shadow = (cx, cy, rx, ry, c) => { for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1 && get(x, y) === ".") put(x, y, c); };
   const pts = (list, c) => list.forEach(([x, y]) => put(x, y, c));
-  return { g, put, get, rect, line, ell, blob, poly, outline, shadow, pts, rows: () => toRows(g) };
+  /** 上下左右に同じ色が無い孤立ドットを、まわりに2つ以上ある色へなじませる（protect の色は残す）。 */
+  const despeckle = (protect = "") => { const ch = []; for (let y = 1; y < W - 1; y++) for (let x = 1; x < W - 1; x++) { const c = g[y][x]; if (c === "." || protect.includes(c)) continue; const nb = [g[y - 1][x], g[y + 1][x], g[y][x - 1], g[y][x + 1]]; if (nb.includes(c)) continue; const cnt = {}; for (const k of nb) if (k !== ".") cnt[k] = (cnt[k] || 0) + 1; const best = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0]; if (best && best[1] >= 2) ch.push([x, y, best[0]]); } for (const [x, y, k] of ch) g[y][x] = k; };
+  return { g, put, get, rect, line, ell, blob, poly, outline, shadow, pts, despeckle, rows: () => toRows(g) };
 }
+/** 孤立した1点（上下左右に同じ色が無い）を、まわりでいちばん多い色にならす。keep の文字（きらめきの白など）は残す。 */
+export function kClean(rows, keep = "wWXs") {
+  const g = rows.map((r) => [...r]);
+  for (let y = 1; y < 31; y++) for (let x = 1; x < 31; x++) { const c = rows[y][x]; if (c === "." || keep.includes(c)) continue;
+    const ns = [rows[y - 1][x], rows[y + 1][x], rows[y][x - 1], rows[y][x + 1]]; if (ns.includes(c)) continue;
+    const cnt = {}; for (const n of ns) if (n !== ".") cnt[n] = (cnt[n] ?? 0) + 1; const best = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0]; if (best && best[1] >= 2) g[y][x] = best[0]; }
+  return g.map((r) => r.join(""));
+}
+/** 色の文字を別の文字にまとめる（色数を減らす用）。例: remap(rows, { A: "O", t: "T" }） */
+export const remap = (rows, m) => rows.map((r) => [...r].map((c) => m[c] ?? c).join(""));
+/** 孤立した1ドット（上下左右に同じ色が無い点）を、まわりでいちばん多い色にそろえる。keep に入れた文字（目のハイライトなど）は残す。 */
+export const despeckle = (rows, keep = "w") => { const g = rows.map((r) => [...r]); for (let y = 1; y < W - 1; y++) for (let x = 1; x < W - 1; x++) { const c = rows[y][x]; if (c === "." || keep.includes(c)) continue; const n = [rows[y - 1][x], rows[y + 1][x], rows[y][x - 1], rows[y][x + 1]]; if (n.includes(c)) continue; const cnt = {}; for (const k of n) if (k !== ".") cnt[k] = (cnt[k] || 0) + 1; const best = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0]; if (best) g[y][x] = best[0]; } return g.map((r) => r.join("")); };
