@@ -34,3 +34,7 @@ npm run dev
 - プロジェクトの決まりごと: [`CLAUDE.md`](CLAUDE.md)
 - 作業1回分の手順: [`.claude/skills/rpg-cycle/SKILL.md`](.claude/skills/rpg-cycle/SKILL.md)
 - 定期タスクの設定方法: [`docs/scheduled-task.md`](docs/scheduled-task.md)
+
+## 素材のクレジット
+
+- 地形（草・道・水・森）のドット絵は、**ぴぽや倉庫**（https://pipoya.net/ ）の無料素材「フィールドマップセット１」を、規約の範囲で加工して使っています。出典・規約の記録は [`docs/assets-credits.md`](docs/assets-credits.md) にあります。

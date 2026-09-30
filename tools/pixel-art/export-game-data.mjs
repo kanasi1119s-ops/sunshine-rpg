@@ -14,6 +14,16 @@ async function build(setName, scale, keyMap) {
   }
   return out;
 }
+async function buildPipoya() {
+  const { buildPipoyaTextures } = await import("./import-pipoya.mjs");
+  const out = {};
+  for (const [key, t] of Object.entries(buildPipoyaTextures())) {
+    const g = [];
+    for (let y = 0; y < t.size; y++) g.push(t.cells.slice(y * t.size, (y + 1) * t.size));
+    out[key] = { size: t.size, palette: t.palette, rle: encode(g) };
+  }
+  return out;
+}
 /** 色番号A〜Z＋透明(_)を、続く同じ値の数（36進数の小文字）つきで並べる。1個のときは数を省く。 */
 function encode(g) {
   let s = "", prev = null, n = 0;
@@ -29,13 +39,14 @@ function encode(g) {
 const SETS = {
   terrain: [2, { "T1-草地A": "terrain:grass-a", "T7-草地B": "terrain:grass-b", "T2-土の道": "terrain:dirt", "T3-水面": "terrain:water", "T5-深い森": "terrain:forest", "T4-崖の壁": "terrain:cliff", "T6-岸辺": "terrain:bank" }],
   bosses: [4, { "B1-水涸れの歪み": "boss:mugikano-yugami", "B2-積荷の歪み": "boss:garasuko-yugami", "B3-実験の歪み": "boss:tetsukusari-yugami" }],
+  pipoya: [1, null], // ぴぽやの素材から作る地形（import-pipoya.mjs）。自作の草・水・道・森を置き換える
   characters: [4, { "C1-ユーリ": "char:ユーリ", "C2-レト": "char:レト", "C3-ミナ": "char:ミナ", "C4-ガイド": "char:ガイド", "C5-オルカ": "char:オルカ" }],
 };
 // 倍率（SCALE）はモジュールの読み込み時に決まるため、セットごとに別のプロセスで実行する（node export-game-data.mjs → 自動で分けて実行）。
 const [mode, tmpDir] = process.argv.slice(2);
 if (mode && mode !== "merge") {
   const [scale, keyMap] = SETS[mode];
-  fs.writeFileSync(`${tmpDir}/${mode}.json`, JSON.stringify(await build(mode, scale, keyMap)));
+  fs.writeFileSync(`${tmpDir}/${mode}.json`, JSON.stringify(mode === "pipoya" ? await buildPipoya() : await build(mode, scale, keyMap)));
 } else if (mode === "merge") {
   const all = {};
   for (const name of Object.keys(SETS)) Object.assign(all, JSON.parse(fs.readFileSync(`${tmpDir}/${name}.json`, "utf8")));
