@@ -31,14 +31,15 @@ SR = 44100
 BANDS = [(20, 60), (60, 250), (250, 1000), (1000, 4000), (4000, 8000), (8000, 16000)]
 BAND_NAMES = ["sub", "bass", "lowmid", "mid", "presence", "air"]
 
-# 参考（日本一フリーBGM 37曲）の中央値と、きれいに聞こえる範囲の目安。docs/sound/reference-nihonichi-bgm.md を参照
+# 参考（日本一フリーBGM 1000曲）の下位10%〜上位10%をもとにした、きれいに聞こえる範囲の目安。
+# docs/sound/reference-nihonichi-bgm.md と reference-nihonichi-bgm-1000.md を参照
 TARGET = {
     "I": (-15.5, -12.5),
     "TP": (-2.0, -0.8),
     "crest_dB": (12.5, 17.5),
-    "LRA": (3.0, 9.0),
-    "corr": (0.45, 0.8),
-    "intro_vs_max_dB": (-12.0, -3.0),
+    "LRA": (2.3, 9.0),
+    "corr": (0.4, 0.88),
+    "intro_vs_max_dB": (-13.0, -2.0),
 }
 
 
