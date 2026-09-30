@@ -47,12 +47,16 @@ function channelKey(track: Track, program: number): string {
   return `${program}|${(track.pan ?? 0).toFixed(2)}|${track.instrument ?? track.waveform}`;
 }
 
+/** MIDIファイルとして書き出す（DAWなどで開く用）。ギターの音色は、曲の指定どおり（歪みのギターは歪みの番号）のままにする。 */
 export function scoreToMidi(score: Score): Uint8Array {
-  return scoreToMidiInfo(score).midi;
+  return scoreToMidiInfo(score, { cleanGuitarSamples: false }).midi;
 }
 
 /** MIDIと、チャンネルごとの楽器（GMの番号）。機材（アンプ・ドラムの仕上げ）を選ぶために使う。 */
-export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Record<number, number>; amps: Record<number, { amp: AmpSetting; pan: number }> } {
+export function scoreToMidiInfo(score: Score, opts: { cleanGuitarSamples?: boolean } = {}): { midi: Uint8Array; programs: Record<number, number>; amps: Record<number, { amp: AmpSetting; pan: number }> } {
+  // アンプで歪ませるギターは、すでに歪んだ録音音源（GMの29・30番）ではなく、クリーンの音源（27番）で鳴らし、歪みをアンプだけにする。
+  // 歪んだ音源にさらに歪みをかけると、二重の歪みで音が汚く、ジャリジャリになるため（2026-09-30）。プログラム番号（programs）は元のまま残し、アンプの種類の判断には元の番号を使う。
+  const cleanSamples = opts.cleanGuitarSamples ?? true;
   const programs: Record<number, number> = {};
   const amps: Record<number, { amp: AmpSetting; pan: number }> = {};
   const tracksBytes: number[][] = [];
@@ -128,7 +132,8 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       }
       return { channel, list };
     };
-    const main = setupChannel(program, channelKey(track, program), 1);
+    const soundProgram = cleanSamples && (program === 29 || program === 30) ? 27 : program;
+    const main = setupChannel(soundProgram, channelKey(track, program), 1);
     const channel = main.channel;
     if (channel !== DRUM_CHANNEL) programs[channel] = program;
     if (channel !== DRUM_CHANNEL && track.amp) amps[channel] = { amp: track.amp, pan: track.pan ?? 0 };
