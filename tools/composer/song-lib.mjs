@@ -1,6 +1,7 @@
 // 作曲ソフトの「曲を組み立てる・書き出す」部分。コマンド（song.mjs）とコネクタ（tools/mcp/server.mjs）の両方が使う。
 // ゲームと同じ TypeScript のコードを、vite で読み込んで使う。標準出力には何も書かない（コネクタの通信をこわさないため）。
 import { createServer } from "vite";
+import { applyBandAmp } from "./band-amp.mjs";
 import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
@@ -48,7 +49,7 @@ export async function openSongKit() {
     const target = path.join(ROOT, "src/audio/songs", `${id}.sunshine-song.json`);
     // 組み込みの曲と同じIDは、バンド版への差し替えとして認める（catalog.ts の allEntries が差し替える）。ほかの曲との重なりだけを弾く。
     const taken = new Set(allEntries().map((e) => e.id).filter((x) => x !== id));
-    const data = { format: "sunshine-game-song", version: 1, id, title, scene, score };
+    const data = { format: "sunshine-game-song", version: 1, id, title, scene, score: applyBandAmp(score) };
     songFileToEntry(data, taken);
     fs.writeFileSync(target, JSON.stringify(data));
     return target;
