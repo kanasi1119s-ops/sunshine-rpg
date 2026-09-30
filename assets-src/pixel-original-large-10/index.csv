@@ -1,0 +1,11 @@
+﻿ID,種類,名前,大きさ(縦×横),色数,ファイル
+b1-lampwarden-dragon,ボス（256×256）,"灯守りの竜",256×256,24,png_4x/b1-lampwarden-dragon.png
+b2-blackrobe-king,ボス（256×256）,"黒衣の王",256×256,25,png_4x/b2-blackrobe-king.png
+l1-crystal-behemoth,大型（128〜192）,"紫晶の巨獣",160×160,24,png_4x/l1-crystal-behemoth.png
+l2-rustiron-colossus,大型（128〜192）,"錆鉄の巨兵",176×176,21,png_4x/l2-rustiron-colossus.png
+l3-mist-serpent,大型（128〜192）,"霧の大蛇",192×192,24,png_4x/l3-mist-serpent.png
+m1-rockshell-beast,中型（96〜128）,"岩殻ゴロ",96×96,25,png_4x/m1-rockshell-beast.png
+m2-marsh-fishman,中型（96〜128）,"沼うお",96×96,24,png_4x/m2-marsh-fishman.png
+m3-bonefang-wolf,大型（128〜192）,"骨牙狼",128×128,17,png_4x/m3-bonefang-wolf.png
+s1-lantern-slime,小型（64）,"灯苔スライム",64×64,20,png_4x/s1-lantern-slime.png
+s2-needle-wing-beetle,小型（64）,"針翅ムシ",64×64,20,png_4x/s2-needle-wing-beetle.png
