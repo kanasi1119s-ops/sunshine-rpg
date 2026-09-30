@@ -51,6 +51,31 @@ const TEXTS: string[] = (() => {
   return out;
 })();
 
+/** 話者つきの文（一人称のぶれを調べる用） */
+const SPEAKER_TEXTS: Array<{ speaker: string; text: string }> = (() => {
+  const out: Array<{ speaker: string; text: string }> = [];
+  const walk = (commands: EventCommand[]): void => {
+    for (const command of commands) {
+      if (command.type === "message" && command.speaker) {
+        out.push({ speaker: command.speaker, text: command.text });
+      } else if (command.type === "choice") {
+        for (const option of command.options) {
+          walk(option.commands);
+        }
+      } else if (command.type === "if") {
+        walk(command.then);
+        walk(command.else ?? []);
+      }
+    }
+  };
+  for (const npcs of Object.values(WORLD_NPCS)) {
+    for (const npc of npcs) {
+      walk(npc.commands);
+    }
+  }
+  return out;
+})();
+
 const FORBIDDEN = ["ドラゴンクエスト", "ドラクエ", "空の軌跡", "英雄伝説", "ファイナルファンタジー", "ゼルダ", "ポケモン", "ホイミ", "メラ", "ベホマ", "ザオラル"];
 
 describe("会話文の表記チェック", () => {
@@ -75,5 +100,18 @@ describe("会話文の表記チェック", () => {
 
   it("空の文がない", () => {
     expect(TEXTS.filter((t) => t.trim() === "")).toEqual([]);
+  });
+
+  it("仲間の一人称がぶれていない（口調の統一）", () => {
+    const expected: Record<string, string> = { オルカ: "俺", ガイド: "俺", ミナ: "わたし", アヤメ: "わたし" };
+    const bad = SPEAKER_TEXTS.filter(({ speaker, text }) => {
+      const want = expected[speaker];
+      if (!want) {
+        return false;
+      }
+      const used = text.match(/(俺|僕|私|わたし|あたし)(?=[はがのをにもとで、])/g) ?? [];
+      return used.some((p) => p !== want);
+    });
+    expect(bad.slice(0, 5)).toEqual([]);
   });
 });
