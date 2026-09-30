@@ -92,14 +92,22 @@ export function renderBattle(
     drawHpBar(ctx, enemy, x, y + 56, 40);
   });
 
-  // 味方の状態一覧。
-  const partyY = screenHeight - 120;
+  // 味方の状態一覧。4人以上のときは2列に並べる（6人でもコマンド欄に重ならない）。
+  const boxTop = screenHeight - 56;
+  const columns = battleState.party.length > 3 ? 2 : 1;
+  const rowsPerColumn = Math.ceil(battleState.party.length / columns);
+  const partyY = boxTop - rowsPerColumn * LINE_HEIGHT * 2 - 4;
+  const columnWidth = Math.floor((screenWidth - 16) / columns);
   battleState.party.forEach((member, index) => {
-    const y = partyY + index * LINE_HEIGHT * 2;
+    const column = Math.floor(index / rowsPerColumn);
+    const row = index % rowsPerColumn;
+    const x = 8 + column * columnWidth;
+    const y = partyY + row * LINE_HEIGHT * 2;
     const isActing = uiState.kind === "command" && uiState.actorId === member.id;
     ctx.fillStyle = isActing ? "#f2c14e" : "#f0f0f0";
-    ctx.fillText(`${member.name} HP:${member.hp}/${member.maxHp} MP:${member.mp}/${member.maxMp}`, 8, y);
-    drawHpBar(ctx, member, 8, y + LINE_HEIGHT, 100);
+    const text = columns === 2 ? `${member.name} HP${member.hp}/${member.maxHp} MP${member.mp}` : `${member.name} HP:${member.hp}/${member.maxHp} MP:${member.mp}/${member.maxMp}`;
+    ctx.fillText(text, x, y);
+    drawHpBar(ctx, member, x, y + LINE_HEIGHT, columns === 2 ? columnWidth - 12 : 100);
   });
 
   const boxY = screenHeight - 56;
