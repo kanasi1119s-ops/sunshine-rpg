@@ -17,8 +17,8 @@ export interface JobSkill {
   requiredStars: number;
   /** 一言の効果説明（戦闘への接続は今後の作業）。 */
   description: string;
-  /** 戦闘で使える特技だけが持つ。今の戦闘は「敵1体にダメージ」の特技のみ対応（効果つきの特技は今後）。 */
-  battle?: { mpCost: number; powerMultiplier: number };
+  /** 戦闘で使える特技だけが持つ。効果の種類は `Skill.effect`（複数回・全体攻撃・回復）。強化・弱体・状態異常は未対応。 */
+  battle?: { mpCost: number; powerMultiplier: number; effect?: "multi" | "damageAll" | "heal" | "healAll"; hits?: number; healRatio?: number };
 }
 
 export interface JobData {

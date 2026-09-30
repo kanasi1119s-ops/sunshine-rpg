@@ -1,5 +1,5 @@
 import { computeDamage, computeFleeChance } from "./formulas";
-import type { BattleAction, BattleState, Combatant } from "./types";
+import type { BattleAction, BattleState, Combatant, Skill } from "./types";
 import { findCombatant, isAlive } from "./types";
 
 export function createBattleState(party: Combatant[], enemies: Combatant[]): BattleState {
@@ -43,6 +43,73 @@ function averageSpeed(combatants: Combatant[]): number {
   return alive.reduce((sum, c) => sum + c.speed, 0) / alive.length;
 }
 
+/** 1体にダメージを与え、ログに書く（防御中は半分）。倒したらそのログも書く。 */
+function dealDamage(next: BattleState, actor: Combatant, target: Combatant, skillName: string, powerMultiplier: number, rng: () => number): void {
+  const { amount, critical } = computeDamage(actor.attack, target.defense, powerMultiplier, rng);
+  const finalAmount = target.guarding ? Math.ceil(amount / 2) : amount;
+  target.hp = Math.max(0, target.hp - finalAmount);
+  next.log.push(`${actor.name} の ${skillName}！ ${critical ? "会心の一撃！ " : ""}${target.name} に ${finalAmount} のダメージ`);
+  if (!isAlive(target)) {
+    next.log.push(`${target.name} を倒した！`);
+  }
+}
+
+/** 味方のHPを回復し、ログに書く。 */
+function healOne(next: BattleState, actor: Combatant, target: Combatant, skill: Skill): void {
+  const amount = Math.max(1, Math.round(actor.attack * (skill.healRatio ?? 1)));
+  const before = target.hp;
+  target.hp = Math.min(target.maxHp, target.hp + amount);
+  next.log.push(`${actor.name} の ${skill.name}！ ${target.name} のHPが ${target.hp - before} 回復した`);
+}
+
+/** 効果つきの特技（複数回・敵全体・回復）を適用する。MPが足りない・対象がいないときは何も起きない。 */
+function applyEffectSkill(next: BattleState, actor: Combatant, skill: Skill, targetId: string, rng: () => number): BattleState {
+  const allies = actor.isEnemy ? next.enemies : next.party;
+  const foes = actor.isEnemy ? next.party : next.enemies;
+  if (actor.mp < skill.mpCost) {
+    next.log.push(`${actor.name} はMPが足りず ${skill.name} を使えなかった`);
+    return next;
+  }
+  switch (skill.effect) {
+    case "multi": {
+      const target = findCombatant(next, targetId);
+      if (!target || !isAlive(target)) {
+        return next;
+      }
+      actor.mp -= skill.mpCost;
+      for (let i = 0; i < (skill.hits ?? 2) && isAlive(target); i++) {
+        dealDamage(next, actor, target, skill.name, skill.powerMultiplier, rng);
+      }
+      return next;
+    }
+    case "damageAll": {
+      actor.mp -= skill.mpCost;
+      for (const foe of foes.filter(isAlive)) {
+        dealDamage(next, actor, foe, skill.name, skill.powerMultiplier, rng);
+      }
+      return next;
+    }
+    case "heal": {
+      const target = allies.find((c) => c.id === targetId);
+      if (!target || !isAlive(target)) {
+        return next;
+      }
+      actor.mp -= skill.mpCost;
+      healOne(next, actor, target, skill);
+      return next;
+    }
+    case "healAll": {
+      actor.mp -= skill.mpCost;
+      for (const ally of allies.filter(isAlive)) {
+        healOne(next, actor, ally, skill);
+      }
+      return next;
+    }
+    default:
+      return next;
+  }
+}
+
 /** 1つの行動を適用し、更新後の状態を返す（元の状態は変更しない）。 */
 export function applyAction(state: BattleState, action: BattleAction, rng: () => number): BattleState {
   const actor = findCombatant(state, action.actorId);
@@ -61,6 +128,9 @@ export function applyAction(state: BattleState, action: BattleAction, rng: () =>
   switch (action.type) {
     case "attack":
     case "skill": {
+      if (action.type === "skill" && action.skill.effect) {
+        return applyEffectSkill(next, nextActor, action.skill, action.targetId, rng);
+      }
       const target = findCombatant(next, action.targetId);
       if (!target || !isAlive(target)) {
         return next;
