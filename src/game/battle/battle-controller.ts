@@ -109,8 +109,9 @@ export class BattleController {
       const skill = this.phase.skills[this.phase.cursor];
       const actorId = this.phase.actorId;
       // 敵全体・味方全体に効く特技は、対象を選ばずに決まる。
-      if (skill.effect === "damageAll" || skill.effect === "healAll") {
-        const anyTarget = skill.effect === "damageAll" ? this.state.enemies.find(isAlive)?.id : actorId;
+      if (skill.effect === "damageAll" || skill.effect === "debuffAll" || skill.effect === "healAll" || skill.effect === "buffAll") {
+        const towardEnemies = skill.effect === "damageAll" || skill.effect === "debuffAll";
+        const anyTarget = towardEnemies ? this.state.enemies.find(isAlive)?.id : actorId;
         if (anyTarget) {
           this.pushAction(actorId, "skill", anyTarget, skill);
           this.phase = this.advanceAfterAction();
@@ -156,7 +157,7 @@ export class BattleController {
 
   private targetPhase(actorId: string, commandKind: "attack" | "skill" | "item", skill?: Skill): BattleUiState {
     const candidateIds =
-      commandKind === "item" || skill?.effect === "heal"
+      commandKind === "item" || skill?.effect === "heal" || skill?.effect === "buff"
         ? this.state.party.filter(isAlive).map((c) => c.id)
         : this.state.enemies.filter(isAlive).map((c) => c.id);
     return { kind: "target", actorId, commandKind, candidateIds, cursor: 0, skill };

@@ -14,7 +14,7 @@ export const INITIAL_JOBS: JobData[] = [
     bonusPerStar: { attack: 1, defense: 1 },
     skills: [
       { name: "踏み込み斬り", requiredStars: 2, description: "一歩踏み込んで敵1体を強く斬る", battle: { mpCost: 2, powerMultiplier: 1.5 } },
-      { name: "受け流し", requiredStars: 5, description: "1ターンのあいだ受けるダメージを減らす" },
+      { name: "受け流し", requiredStars: 5, description: "3ターンのあいだ自分の守りを上げる", battle: { mpCost: 2, powerMultiplier: 0, effect: "buff", stat: "defense", mult: 1.4, turns: 3 } },
       { name: "守りの構え斬り", requiredStars: 9, description: "防御を保ったまま反撃する" },
     ],
   },
@@ -27,7 +27,7 @@ export const INITIAL_JOBS: JobData[] = [
     bonusPerStar: { attack: 1, speed: 1 },
     skills: [
       { name: "二連打", requiredStars: 2, description: "敵1体に2回続けて殴る", battle: { mpCost: 3, powerMultiplier: 1.0, effect: "multi", hits: 2 } },
-      { name: "足さばき", requiredStars: 5, description: "自分のすばやさを少し上げる" },
+      { name: "足さばき", requiredStars: 5, description: "自分のすばやさを少し上げる", battle: { mpCost: 2, powerMultiplier: 0, effect: "buff", stat: "speed", mult: 1.3, turns: 3 } },
       { name: "乱れ打ち", requiredStars: 9, description: "敵1体に3回続けて殴る", battle: { mpCost: 7, powerMultiplier: 1.1, effect: "multi", hits: 3 } },
     ],
   },
@@ -40,7 +40,7 @@ export const INITIAL_JOBS: JobData[] = [
     bonusPerStar: { attack: 1, speed: 1 },
     skills: [
       { name: "狙い撃ち", requiredStars: 2, description: "当たりやすく、会心が出やすい一射", battle: { mpCost: 2, powerMultiplier: 1.4 } },
-      { name: "足止めの矢", requiredStars: 5, description: "敵1体のすばやさを下げる" },
+      { name: "足止めの矢", requiredStars: 5, description: "敵1体のすばやさを下げる", battle: { mpCost: 3, powerMultiplier: 0, effect: "debuff", stat: "speed", mult: 0.7, turns: 3, chance: 0.85 } },
       { name: "急所の一矢", requiredStars: 9, description: "会心が出やすい強力な一射" },
     ],
   },
@@ -66,7 +66,7 @@ export const INITIAL_JOBS: JobData[] = [
     bonusPerStar: { maxMp: 3 },
     skills: [
       { name: "水紋の癒し", requiredStars: 2, description: "味方1人のHPを回復する", battle: { mpCost: 3, powerMultiplier: 0, effect: "heal", healRatio: 1.6 } },
-      { name: "水紋の膜", requiredStars: 5, description: "味方1人の守りを上げる" },
+      { name: "水紋の膜", requiredStars: 5, description: "味方1人の守りを上げる", battle: { mpCost: 4, powerMultiplier: 0, effect: "buff", stat: "defense", mult: 1.4, turns: 3 } },
       { name: "水紋の慈雨", requiredStars: 9, description: "味方全体のHPを少し回復する", battle: { mpCost: 8, powerMultiplier: 0, effect: "healAll", healRatio: 1.0 } },
     ],
   },
@@ -78,8 +78,8 @@ export const INITIAL_JOBS: JobData[] = [
     statBonus: { maxMp: 6, speed: 3 },
     bonusPerStar: { maxMp: 2, speed: 1 },
     skills: [
-      { name: "風唱の追い風", requiredStars: 2, description: "味方1人のすばやさを上げる" },
-      { name: "風唱の眠り唄", requiredStars: 5, description: "敵1体を眠らせることがある" },
+      { name: "風唱の追い風", requiredStars: 2, description: "味方1人のすばやさを上げる", battle: { mpCost: 3, powerMultiplier: 0, effect: "buff", stat: "speed", mult: 1.3, turns: 3 } },
+      { name: "風唱の眠り唄", requiredStars: 5, description: "敵1体を眠らせることがある（体力の大きい敵には効かない）", battle: { mpCost: 5, powerMultiplier: 0, effect: "sleep", chance: 0.6, turns: 2 } },
       { name: "風唱の刃", requiredStars: 9, description: "風の刃で敵全体を切る", battle: { mpCost: 8, powerMultiplier: 1.2, effect: "damageAll" } },
     ],
   },
@@ -91,9 +91,9 @@ export const INITIAL_JOBS: JobData[] = [
     statBonus: { maxHp: 10, defense: 3 },
     bonusPerStar: { maxHp: 4, defense: 1 },
     skills: [
-      { name: "地固の壁", requiredStars: 2, description: "自分の守りを大きく上げる" },
+      { name: "地固の壁", requiredStars: 2, description: "自分の守りを大きく上げる", battle: { mpCost: 3, powerMultiplier: 0, effect: "buff", stat: "defense", mult: 1.6, turns: 3 } },
       { name: "かばう", requiredStars: 5, description: "1ターンのあいだ、仲間の代わりに攻撃を受ける" },
-      { name: "地固の縛り", requiredStars: 9, description: "敵1体の動きを止めることがある" },
+      { name: "地固の縛り", requiredStars: 9, description: "敵1体の動きを止めることがある（体力の大きい敵には効かない）", battle: { mpCost: 6, powerMultiplier: 0, effect: "sleep", chance: 0.5, turns: 2 } },
     ],
   },
   {
@@ -104,9 +104,9 @@ export const INITIAL_JOBS: JobData[] = [
     statBonus: { maxHp: 6, maxMp: 4, speed: 1 },
     bonusPerStar: { maxHp: 2, maxMp: 1 },
     skills: [
-      { name: "はやし立て", requiredStars: 2, description: "味方全体の攻撃を少し上げる" },
+      { name: "はやし立て", requiredStars: 2, description: "味方全体の攻撃を少し上げる", battle: { mpCost: 6, powerMultiplier: 0, effect: "buffAll", stat: "attack", mult: 1.25, turns: 3 } },
       { name: "びっくり箱", requiredStars: 5, description: "何が起きるか分からない。良いことも悪いことも起きる" },
-      { name: "目くらまし", requiredStars: 9, description: "敵全体の命中を下げる" },
+      { name: "目くらまし", requiredStars: 9, description: "敵全体の攻撃を下げる", battle: { mpCost: 8, powerMultiplier: 0, effect: "debuffAll", stat: "attack", mult: 0.75, turns: 3, chance: 0.8 } },
     ],
   },
 ];

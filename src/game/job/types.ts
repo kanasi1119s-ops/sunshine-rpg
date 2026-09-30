@@ -1,4 +1,5 @@
 import type { StatBonus } from "../items/equipment";
+import type { Skill } from "../battle/types";
 
 export type JobId =
   | "sword-guard"
@@ -33,8 +34,8 @@ export interface JobSkill {
   requiredStars: number;
   /** 一言の効果説明（戦闘への接続は今後の作業）。 */
   description: string;
-  /** 戦闘で使える特技だけが持つ。効果の種類は `Skill.effect`（複数回・全体攻撃・回復）。強化・弱体・状態異常は未対応。 */
-  battle?: { mpCost: number; powerMultiplier: number; effect?: "multi" | "damageAll" | "heal" | "healAll"; hits?: number; healRatio?: number; hpCost?: number; koChance?: number };
+  /** 戦闘で使える特技だけが持つ。効果の種類は `Skill.effect`（複数回・全体攻撃・回復・強化・弱体・眠り）。 */
+  battle?: Pick<Skill, "effect" | "hits" | "healRatio" | "hpCost" | "koChance" | "stat" | "mult" | "turns" | "chance"> & { mpCost: number; powerMultiplier: number };
 }
 
 export interface JobData {
