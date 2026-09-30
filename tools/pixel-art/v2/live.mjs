@@ -59,7 +59,7 @@ for (const k of order) {
         const [x0, y0] = cell(r, c), [x1] = cell(r, e);
         await p.mouse.move(x0, y0);
         await p.mouse.down();
-        if (e > c) await p.mouse.move(x1, y0, { steps: 2 });
+        if (e > c) await p.mouse.move(x1, y0, { steps: (e - c + 1) * 3 });
         await p.mouse.up();
         c = e + 1;
         strokes++;
