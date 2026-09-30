@@ -3,6 +3,7 @@ import type { BattleState, Combatant } from "../game/battle/types";
 import { findCombatant } from "../game/battle/types";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
+import { wrapText } from "./text-wrap";
 import { buildMonsterCells, MONSTER_GRID_SIZE, MONSTERS } from "../game/monster/monsters";
 
 const LINE_HEIGHT = 12;
@@ -128,10 +129,15 @@ export function renderBattle(
   }
 
   if (uiState.kind === "skillList") {
-    ctx.fillText("どのとくぎ？", 8, boxY + 6);
-    uiState.skills.forEach((skill, index) => {
+    // 覚えた特技が多いときは、6つ（2列×3行）ずつのページに分けて見せる。
+    const perPage = 6;
+    const page = Math.floor(uiState.cursor / perPage);
+    const pages = Math.ceil(uiState.skills.length / perPage);
+    ctx.fillText(pages > 1 ? `どのとくぎ？（${page + 1}/${pages}）` : "どのとくぎ？", 8, boxY + 6);
+    uiState.skills.slice(page * perPage, (page + 1) * perPage).forEach((skill, i) => {
+      const index = page * perPage + i;
       const cursor = index === uiState.cursor ? "▶" : " ";
-      ctx.fillText(`${cursor} ${skill.name} MP${skill.mpCost}`, 16 + (index % 2) * 140, boxY + 20 + Math.floor(index / 2) * LINE_HEIGHT);
+      ctx.fillText(`${cursor} ${skill.name} MP${skill.mpCost}`, 16 + (i % 2) * 140, boxY + 20 + Math.floor(i / 2) * LINE_HEIGHT);
     });
     return;
   }
@@ -141,13 +147,16 @@ export function renderBattle(
     uiState.candidateIds.forEach((id, index) => {
       const target = findCombatant(battleState, id);
       const cursor = index === uiState.cursor ? "▶" : " ";
-      ctx.fillText(`${cursor} ${target?.name ?? id}`, 16 + index * 90, boxY + 20);
+      // 6人ぶんでも入るよう、3列×2行に並べる。
+      ctx.fillText(`${cursor} ${target?.name ?? id}`, 16 + (index % 3) * 125, boxY + 20 + Math.floor(index / 3) * LINE_HEIGHT);
     });
     return;
   }
 
   if (uiState.kind === "message") {
-    ctx.fillText(uiState.text, 8, boxY + 6);
+    // 長いメッセージ（長い名前・特技名）は、コマンド欄の幅で折り返す（最大4行）。
+    const lines = wrapText(uiState.text, screenWidth - 16, (segment) => ctx.measureText(segment).width);
+    lines.slice(0, 4).forEach((line, i) => ctx.fillText(line, 8, boxY + 6 + i * LINE_HEIGHT));
     return;
   }
 
