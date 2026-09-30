@@ -160,3 +160,5 @@
 - [WaveShaperNode（MDN）](https://developer.mozilla.org/en-US/docs/Web/API/WaveShaperNode)・[Web Audio for Electric Guitar: Cabinet Emulation（Bobrov Dev）](https://bobrov.dev/blog/web-audio-for-electric-guitar-cabinet-emulation/)（ジャンル別アンプの部品のつなぎ方）
 
 > 「かっこいい戦闘曲の作り方」（wingless-seraph.net）は、取得時にリダイレクトが解決できず、本文を読めなかったため、内容を反映していない。
+
+> 音の仕上げ（音量・左右の広がり・帯域のバランス・残響・曲の起伏）は、フリーBGM 37曲を数値で測った `docs/sound/reference-nihonichi-bgm.md` にまとめた（2026-09-30）。
