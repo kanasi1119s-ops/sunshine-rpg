@@ -23,14 +23,14 @@ async function paint(file) {
     await p.selectOption("#templateSelect", "blank"); await p.click("#loadTemplateBtn");
     await p.fill("#gridW", String(NW)); await p.fill("#gridH", String(NH)); await p.click("#resizeBtn");
     await p.uncheck("#symmetry"); await p.uncheck("#showShading");
-    await p.evaluate((ZOOM) => { const z = document.getElementById("zoom"); z.value = ZOOM; z.dispatchEvent(new Event("input", { bubbles: true })); }, Math.max(3, Math.min(16, Math.floor(860 / Math.max(NW, NH)))));
+    await p.evaluate((ZOOM) => { const z = document.getElementById("zoom"); z.value = ZOOM; z.dispatchEvent(new Event("input", { bubbles: true })); }, Math.max(3, Math.min(16, Math.floor(780 / Math.max(NW, NH)))));
     for (let i = 0; i < used.length - 4; i++) await p.click("#addSymbolBtn");
     await p.waitForFunction((n) => document.querySelectorAll("#symbolList .sym").length >= n, used.length + 1);
     const syms = await p.$$eval("#symbolList .sym", (els) => els.map((e) => e.textContent.trim())).then((a) => a.slice(1));
     const ci = await p.$$("#symbolList input[type=color]"), li = await p.$$("#symbolList input.label");
     for (let i = 0; i < used.length; i++) { await ci[i].evaluate((el, v) => { el.value = v; el.dispatchEvent(new Event("input", { bubbles: true })); }, PAL[used[i]]); await li[i].fill(used[i]); }
-    let box = await p.locator("#gridCanvas").boundingBox(), cw = box.width / NW; const cell = (r, c) => [box.x + c * cw + cw / 2, box.y + r * cw + cw / 2];
-    const pick = async (k) => { const s = await p.$$("#symbolList .sym"); await s[k + 1].click(); await p.evaluate(() => document.getElementById("gridCanvas").scrollIntoView({ block: "center" })); box = await p.locator("#gridCanvas").boundingBox(); cw = box.width / NW; };
+    let box = await p.locator("#gridCanvas").boundingBox(), cw = (box.width - 2) / NW; const cell = (r, c) => [box.x + 1 + c * cw + cw / 2, box.y + 1 + r * ((box.height - 2) / NH) + (box.height - 2) / NH / 2];
+    const pick = async (k) => { const s = await p.$$("#symbolList .sym"); await s[k + 1].click(); await p.evaluate(() => document.getElementById("gridCanvas").scrollIntoView({ block: "center" })); box = await p.locator("#gridCanvas").boundingBox(); cw = (box.width - 2) / NW; };
     for (let k = 0; k < used.length; k++) { await pick(k); for (let r = 0; r < NH; r++) { let c = 0; while (c < NW) { if (rows[r][c] === used[k]) { let e = c; while (e + 1 < NW && rows[r][e + 1] === used[k]) e++; const [x0, y0] = cell(r, c), [x1] = cell(r, e); await p.mouse.move(x0, y0); await p.mouse.down(); if (e > c) await p.mouse.move(x1, y0, { steps: Math.ceil((e - c + 1) * 1.3) + 1 }); await p.mouse.up(); c = e + 1; } else c++; } } }
     await p.waitForTimeout(150);
     const exp = JSON.parse((await p.inputValue("#exportRows")).replace(/,\s*\]/, "]")); const back = { ".": "." }; used.forEach((c, i) => (back[syms[i]] = c));
