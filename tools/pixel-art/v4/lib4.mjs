@@ -72,3 +72,42 @@ export function charBase(o = {}) {
   for (let x = 9; x <= 22; x++) put(x, 30, "D");
   return toRows(g);
 }
+
+// ---- 小物（アイテム）用の描画部品（k- 系の絵が使う。追記のみ） ----
+export const kNew = () => blank();
+export const kPut = (g, x, y, c) => { if (x >= 0 && x < W && y >= 0 && y < W) g[y][x] = c; };
+/** 長方形を塗る */
+export const kRect = (g, x0, y0, x1, y1, c) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) kPut(g, x, y, c); };
+/** 線（1ドット幅） */
+export function kLine(g, x0, y0, x1, y1, c) { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1); for (let i = 0; i <= n; i++) kPut(g, Math.round(x0 + ((x1 - x0) * i) / n), Math.round(y0 + ((y1 - y0) * i) / n), c); }
+/** 楕円を塗る。ramp は明→暗の色の並び（文字の配列）。光は左上。ramp が1つなら単色。 */
+export function kEll(g, cx, cy, rx, ry, ramp) {
+  const r = Array.isArray(ramp) ? ramp : [ramp];
+  for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
+    const dx = (x - cx) / rx, dy = (y - cy) / ry; if (dx * dx + dy * dy > 1) continue;
+    const t = Math.max(0, Math.min(0.999, (dx * 0.55 + dy * 0.55 + 0.75) / 1.5)); kPut(g, x, y, r[Math.floor(t * r.length)]);
+  }
+}
+/** 多角形（点 [x,y] の並び）を塗る */
+export function kPoly(g, pts, c) {
+  const ys = pts.map((p) => p[1]); const y0 = Math.min(...ys), y1 = Math.max(...ys);
+  for (let y = y0; y <= y1; y++) { const xs = []; for (let i = 0; i < pts.length; i++) { const [ax, ay] = pts[i], [bx, by] = pts[(i + 1) % pts.length]; if ((ay <= y && by > y) || (by <= y && ay > y)) xs.push(ax + ((y + 0.5 - ay) * (bx - ax)) / (by - ay)); }
+    xs.sort((a, b) => a - b); for (let i = 0; i + 1 < xs.length; i += 2) for (let x = Math.round(xs[i]); x < Math.round(xs[i + 1]); x++) kPut(g, x, y, c); }
+}
+/** 縁取り: 透明のマスで、上下左右のどれかが絵になっているものを、隣の色に応じた暗い色にする。map: {隣の文字: 縁の文字}, def: 既定 */
+export function kOutline(g, map, def) {
+  const o = g.map((r) => [...r]);
+  for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { if (g[y][x] !== ".") continue; let c = null;
+    for (const [dx, dy] of [[0, 1], [1, 0], [-1, 0], [0, -1]]) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= W) continue; const n = g[ny][nx]; if (n !== "." && !c) c = map[n] ?? def; }
+    if (c) o[y][x] = c; }
+  return o;
+}
+export const kRows = (g) => g.map((r) => r.join(""));
+
+// ---- 追記（担当C3）: 円・線・すそ広がりの服 ----
+/** 中心(cx,cy)・半径rの塗りつぶした円（上書き用の点）。 */
+export const disc = (cx, cy, r, c) => { const o = []; for (let y = Math.floor(cy - r); y <= Math.ceil(cy + r); y++) for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x++) if ((x - cx) ** 2 + (y - cy) ** 2 <= r * r + 0.3) o.push([x, y, c]); return o; };
+/** (x0,y0)から(x1,y1)への線（上書き用の点）。 */
+export const line = (x0, y0, x1, y1, c) => { const o = []; const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)); for (let i = 0; i <= n; i++) o.push([Math.round(x0 + ((x1 - x0) * i) / (n || 1)), Math.round(y0 + ((y1 - y0) * i) / (n || 1)), c]); return o; };
+/** 中央(15.5)から左右に広がる服（すそ）。y0の半幅w0からy1の半幅w1へ。edge=輪郭 l=明 m=中 d=影 hem=すその線（最下段）。 */
+export const dress = (y0, y1, w0, w1, { edge = "r", l = "k", m = "j", d = "J", hem = null } = {}) => { const o = []; for (let y = y0; y <= y1; y++) { const w = Math.round(w0 + ((w1 - w0) * (y - y0)) / Math.max(1, y1 - y0)); for (let x = 16 - w; x <= 15 + w; x++) { const k = x - (16 - w), e = k === 0 || x === 15 + w; let c = e ? edge : k < Math.max(2, w * 0.5) ? l : k < w * 1.25 ? m : d; if (!e && hem && y === y1) c = hem; o.push([x, y, c]); } } return o; };
