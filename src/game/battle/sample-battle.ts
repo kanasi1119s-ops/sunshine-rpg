@@ -62,7 +62,7 @@ export function createSampleEnemies(): Combatant[] {
   return [
     {
       id: "slime-1",
-      name: "スライム（仮）",
+      name: "ゆらぎ玉（仮）",
       maxHp: 18,
       hp: 18,
       maxMp: 0,
