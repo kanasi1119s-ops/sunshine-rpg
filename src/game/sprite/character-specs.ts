@@ -46,3 +46,50 @@ export function spriteSpecForNpc(npc: { id: string; color: string; spriteName?: 
     headband: h(5) % 6 === 0,
   };
 }
+
+/** 人ではなく、物・仕掛け・敵として描くNPCのIDの単語（`-` で区切ったとき）。 */
+const OBJECT_WORDS = new Set([
+  "scorch", "excavation", "crate", "machine", "wagon", "record", "ledger", "log", "panel", "console", "mural", "stairs",
+  "pedestal", "tablet", "gate", "echo", "circle", "lore", "chest", "truth", "fork", "altar", "entrance", "yugami", "boss",
+]);
+/** 敵（ボス・強敵）として描くもの。 */
+const MONSTER_WORDS = new Set(["yugami", "boss"]);
+
+interface NpcLike {
+  id: string;
+  commands: import("../event/types").EventCommand[];
+}
+
+function firstSpeaker(commands: import("../event/types").EventCommand[]): { found: boolean; speaker?: string } {
+  for (const c of commands) {
+    if (c.type === "message") {
+      return { found: true, speaker: c.speaker };
+    }
+    const nested = c.type === "choice" ? c.options.flatMap((o) => o.commands) : c.type === "if" ? [...c.then, ...(c.else ?? [])] : [];
+    const r = firstSpeaker(nested);
+    if (r.found) {
+      return r;
+    }
+  }
+  return { found: false };
+}
+
+export type NpcLook = "person" | "object" | "monster";
+
+/**
+ * NPCの見た目の種類。IDに「台・扉・宝箱・壁画」などの単語が入るものは物、「歪み・ボス・強敵」は敵、
+ * サブストーリーの調べる場所は、最初の会話に話す人がいなければ物、それ以外は人（16×32の人のドット絵）。
+ */
+export function npcLook(npc: NpcLike): NpcLook {
+  const words = npc.id.split("-");
+  if (/^(tower|kanou)\d-guard$/.test(npc.id) || words.some((w) => MONSTER_WORDS.has(w))) {
+    return "monster";
+  }
+  if (words.some((w) => OBJECT_WORDS.has(w))) {
+    return "object";
+  }
+  if (npc.id.startsWith("side-") && words.some((w) => /^step\d+$/.test(w))) {
+    return firstSpeaker(npc.commands).speaker ? "person" : "object";
+  }
+  return "person";
+}
