@@ -3,7 +3,7 @@ import { chromium } from "playwright-core";
 import fs from "fs";
 const out = process.argv[2];
 fs.mkdirSync(out, { recursive: true });
-const { PIECES } = await import(process.env.PIECESET === "terrain" ? "./terrain.mjs" : process.env.PIECESET === "boss" ? "./bosses.mjs" : process.env.PIECESET === "chars" ? "./characters.mjs" : "./pieces.mjs");
+const { PIECES } = await import(process.env.PIECESET === "terrain" ? "./terrain.mjs" : process.env.PIECESET === "boss" ? "./bosses.mjs" : process.env.PIECESET === "guard" ? "./guardians.mjs" : process.env.PIECESET === "chars" ? "./characters.mjs" : "./pieces.mjs");
 const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 const page = await b.newPage();
 for (const p of PIECES) {
