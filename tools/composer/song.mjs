@@ -3,6 +3,8 @@
 //
 //   node tools/composer/song.mjs guide
 //       AIソング形式の説明（楽器の一覧・書き方・よい曲にするコツ）を表示する。曲を書く前に読む。
+//   node tools/composer/song.mjs catalog <曲ID> [--out <フォルダ>] [--edition real|ps2|modern] [--wav]
+//       ゲームの曲（組み込み・登録済み・「<ID>-clean」のきれいな版）をIDで指定して書き出す。
 //   node tools/composer/song.mjs genre <曲調> [--key F] [--major] [--bpm 140] [--seed 1] [--name <英小文字>] [--out <フォルダ>] [--edition real|ps2|modern] [--wav] [--register <曲ID> --scene "<場面>"]
 //       最新ジャンル（trap・drill・lofi・futurebass・hyperpop・synthwave・citypop・house・techno・trance・dnb・dubstep・ukgarage・amapiano・reggaeton・vaporwave・hardstyle・jerseyclub・poppunk・bedroompop・nudisco・trailer）の曲を、型から組み立てて書き出す。
 //   node tools/composer/song.mjs build <曲.json> [--out <フォルダ>] [--edition real|ps2|modern] [--wav] [--register <曲ID> --scene "<場面>"]
@@ -24,6 +26,12 @@ try {
   if (args[0] === "guide") {
     console.log(await kit.guide());
     console.log("\n## 見本\nassets-src/ai-songs/ にある .json を見てください。");
+  } else if (args[0] === "catalog" && args[1]) {
+    try {
+      const r = await kit.buildCatalog(args[1], { edition: opt("--edition") ?? "real", outDir: opt("--out"), wav: args.includes("--wav") });
+      console.log(`○ 「${r.title}」 ${r.tracks}トラック・${Math.floor(r.seconds / 60)}分${Math.round(r.seconds % 60)}秒・テンポ${r.bpm}`);
+      console.log("  プロジェクト:", r.files.project); console.log("  MIDI:", r.files.midi); if (r.files.wav) console.log("  WAV:", r.files.wav);
+    } catch (e) { console.error("× " + e.message); process.exitCode = 1; }
   } else if (args[0] === "genre" && args[1]) {
     try {
       const style = args[1];

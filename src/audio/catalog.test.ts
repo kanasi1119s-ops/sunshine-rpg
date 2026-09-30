@@ -122,3 +122,17 @@ describe("特別曲のギター音色（PRS系のなめらかで歌うギター�
     expect(getTrack("boss-touri").tone).toBe("rock");
   });
 });
+
+describe("きれいな版（クリーントーン）", () => {
+  it("元の曲ごとに「-clean」の版があり、歪んだギターを使わない", async () => {
+    const { allEntries, getTrack } = await import("./catalog");
+    const all = allEntries();
+    const ids = new Set(all.map((e) => e.id));
+    expect(ids.size).toBe(all.length);
+    const base = all.filter((e) => !e.derive && !/-(old|clean|cleanpick|space)$/.test(e.id));
+    for (const e of base) expect(ids.has(`${e.id}-clean`)).toBe(true);
+    const clean = getTrack("boss-final-clean");
+    expect(clean.tracks.some((t) => t.instrument === "distGuitar" || t.instrument === "crunch")).toBe(false);
+    expect(getTrack("boss-final").tracks.some((t) => t.instrument === "distGuitar" || t.instrument === "crunch")).toBe(true);
+  });
+});

@@ -40,6 +40,15 @@ export async function openSongKit() {
     return finish(score, spec.title ?? STYLE_LABEL[spec.style], `${STYLE_LABEL[spec.style]}（型から組み立てた曲）`, [], { name, edition, outDir, wav });
   }
 
+  /** ゲームの曲（組み込み・登録済み・きれいな版）を、IDで指定して書き出す。 */
+  async function buildCatalog(id, { name, edition = "real", outDir, wav = false } = {}) {
+    const { getTrack, allEntries } = await load("/src/audio/catalog.ts");
+    await load("/src/audio/user-songs.ts");
+    const e = allEntries().find((x) => x.id === id);
+    if (!e) throw new Error(`曲がありません: ${id}`);
+    return finish(structuredClone(getTrack(id)), e.title, `${e.styleLabel}（${e.scene}）`, [], { name: name ?? id, edition, outDir, wav });
+  }
+
   async function finish(score, title, description, warnings, { name, edition, outDir, wav }) {
     const { scoreToMidi } = await load("/src/audio/midi-export.ts");
     const { realEdition } = await load("/src/audio/real-edition.ts");
@@ -86,7 +95,7 @@ export async function openSongKit() {
     return Object.entries(AMP_PRESETS).map(([id, p]) => ({ id, label: p.label, genre: p.genre }));
   }
 
-  return { guide, build, buildGenre, register, listGameSongs, ampPresets, close: () => server.close() };
+  return { guide, build, buildGenre, buildCatalog, register, listGameSongs, ampPresets, close: () => server.close() };
 }
 
 async function loadPlaywright() {

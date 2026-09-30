@@ -24,8 +24,11 @@ export interface CatalogEntry {
   handmade?: Score;
   /** 3〜4分の特別な曲（ラスボス・裏ボスなど）の設計図のID。 */
   finale?: string;
+  /** 別の曲から作る版（きれいな版＝歪みを使わないクリーントーン）。元の曲のID。 */
+  derive?: { from: string; kind: "clean" };
 }
 
+import { cleanEdition } from "./clean-edition";
 import { MODERN_STYLE_LABEL } from "./genres";
 export const STYLE_LABEL: Record<Style, string> = {
   ...MODERN_STYLE_LABEL,
@@ -137,7 +140,12 @@ export function allEntries(): CatalogEntry[] {
     }
   }
   const builtin = new Set(CATALOG.map((e) => e.id));
-  return [...out, ...EXTRA_ENTRIES.filter((e) => !builtin.has(e.id))];
+  const base = [...out, ...EXTRA_ENTRIES.filter((e) => !builtin.has(e.id))];
+  // すべての曲に、「きれいな版」（歪みを使わないクリーントーン）を、別のIDで足す。すでにきれいな版・従来版・クリーン連打版・空間版は、さらには作らない。
+  const skip = (id: string): boolean => /-(old|clean|cleanpick|space)$/.test(id);
+  const cleans: CatalogEntry[] = base.filter((e) => !skip(e.id)).map((e) => ({ id: `${e.id}-clean`, title: `${e.title}（きれいな版）`, scene: e.scene, styleLabel: "きれいな版（クリーントーン）", group: e.group, derive: { from: e.id, kind: "clean" as const } }));
+  const taken = new Set(base.map((e) => e.id));
+  return [...base, ...cleans.filter((e) => !taken.has(e.id))];
 }
 
 const cache = new Map<string, Score>();
@@ -147,7 +155,7 @@ export function getTrack(id: string): Score {
   if (!score) {
     const entry = allEntries().find((e) => e.id === id);
     if (!entry) throw new Error(`曲がありません: ${id}`);
-    score = entry.handmade ?? (entry.finale ? composeFinale(FINALES.find((f) => f.id === entry.finale)!) : composeSong(entry.spec!));
+    score = entry.derive ? cleanEdition(getTrack(entry.derive.from)) : entry.handmade ?? (entry.finale ? composeFinale(FINALES.find((f) => f.id === entry.finale)!) : composeSong(entry.spec!));
     cache.set(id, score);
   }
   return score;
