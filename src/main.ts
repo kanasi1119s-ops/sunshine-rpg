@@ -25,7 +25,7 @@ import { CHAPTER4_OPENING_COMMANDS } from "./game/world/chapter4-world";
 import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
-import { awardVictoryMastery, changeJob, isJobSystemUnlocked, withJobBonus } from "./game/job/party-job";
+import { awardVictoryMastery, changeJob, isJobSystemUnlocked, battleSkillsOf, withJobBonus } from "./game/job/party-job";
 import { renderBattle } from "./render/battle-renderer";
 import {
   createInitialEquipment,
@@ -266,7 +266,7 @@ function startStoryBattle(battleId: string): void {
     party,
     [def.createEnemy()],
     createRng(Date.now()),
-    { skills: buildSkillsMap(CHAPTER0_SKILL), item: CHAPTER0_ITEM },
+    { skills: buildSkillsMap(CHAPTER0_SKILL), item: CHAPTER0_ITEM, extraSkills: buildExtraSkillsMap() },
   );
   currentBgmTrack = getTrack(def.bgmId);
   if (audioStarted) {
@@ -279,6 +279,16 @@ const input = new InputState();
 const actionButton = new ActionButton();
 attachKeyboard(input, actionButton);
 createTouchControls(app, input, actionButton);
+/** スマホ用: ジョブ画面を開く／閉じるボタン（キーボードの C／X と同じ動き）。 */
+const jobButton = document.createElement("button");
+jobButton.type = "button";
+jobButton.className = "touch-job-button";
+jobButton.textContent = "ジョブ";
+jobButton.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  window.dispatchEvent(new KeyboardEvent("keydown", { key: jobMenu.open ? "x" : "c" }));
+});
+app.appendChild(jobButton);
 
 const audio = new AudioEngine();
 let audioStarted = false;
@@ -340,6 +350,15 @@ function buildSkillsMap(heroSkill: Skill): Record<string, Skill> {
     skills[id] = COMPANIONS[id].skill;
   }
   return skills;
+}
+/** ジョブで覚えた戦闘用の特技（ユーリと加入済みの仲間）。機能が解禁前なら空。 */
+function buildExtraSkillsMap(): Record<string, Skill[]> {
+  const unlocked = isJobSystemUnlocked(flags);
+  const result: Record<string, Skill[]> = {};
+  for (const id of ["hero", ...Object.keys(companionStats)]) {
+    result[id] = battleSkillsOf(jobStates[id], unlocked);
+  }
+  return result;
 }
 let victoryExpApplied = false;
 let victoryMessage: string | null = null;
@@ -428,7 +447,7 @@ if (import.meta.env.DEV) {
         party,
         createSampleEnemies(),
         createRng(Date.now()),
-        { skills: buildSkillsMap(SAMPLE_SKILL), item: SAMPLE_ITEM },
+        { skills: buildSkillsMap(SAMPLE_SKILL), item: SAMPLE_ITEM, extraSkills: buildExtraSkillsMap() },
       );
       currentBgmTrack = getTrack("battle");
       audio.playSe(seOf("encounter"));
@@ -705,7 +724,7 @@ const loop = createGameLoop({
       if (uiState.kind === "finished") {
         applyVictoryExpIfNeeded(battle);
       }
-      if (uiState.kind === "command" || uiState.kind === "target") {
+      if (uiState.kind === "command" || uiState.kind === "skillList" || uiState.kind === "target") {
         const direction = input.getDirection();
         if (direction !== lastBattleDirection) {
           if (direction === "up" || direction === "left") {

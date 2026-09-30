@@ -119,6 +119,15 @@ export function renderBattle(
     return;
   }
 
+  if (uiState.kind === "skillList") {
+    ctx.fillText("どのとくぎ？", 8, boxY + 6);
+    uiState.skills.forEach((skill, index) => {
+      const cursor = index === uiState.cursor ? "▶" : " ";
+      ctx.fillText(`${cursor} ${skill.name} MP${skill.mpCost}`, 16 + (index % 2) * 140, boxY + 20 + Math.floor(index / 2) * LINE_HEIGHT);
+    });
+    return;
+  }
+
   if (uiState.kind === "target") {
     ctx.fillText("だれに？", 8, boxY + 6);
     uiState.candidateIds.forEach((id, index) => {

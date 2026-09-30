@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createInitialHeroStats } from "../battle/sample-battle";
-import { awardVictoryMastery, changeJob, isJobSystemUnlocked, masteryFromVictoryExp, withJobBonus } from "./party-job";
+import { battleSkillsOf, awardVictoryMastery, changeJob, isJobSystemUnlocked, masteryFromVictoryExp, withJobBonus } from "./party-job";
 import { createJobState, equipJob, starsOf } from "./mastery";
 
 describe("ジョブの戦闘への接続", () => {
@@ -42,5 +42,15 @@ describe("ジョブの戦闘への接続", () => {
   it("changeJob は状態のないキャラクターにも装備させる", () => {
     const states = changeJob({}, "mina", "ripple-mage");
     expect(states.mina.equipped).toBe("ripple-mage");
+  });
+
+  it("習得済みで戦闘に使える特技だけが、戦闘用の特技になる", () => {
+    const learned = { equipped: "flame-mage" as const, mastery: { "flame-mage": 100000 } };
+    const names = battleSkillsOf(learned, true).map((x) => x.name);
+    expect(names).toContain("火照の灯");
+    expect(names).not.toContain("火照の波");
+    expect(battleSkillsOf(learned, false)).toEqual([]);
+    expect(battleSkillsOf(undefined, true)).toEqual([]);
+    expect(battleSkillsOf(createJobState(), true)).toEqual([]);
   });
 });
