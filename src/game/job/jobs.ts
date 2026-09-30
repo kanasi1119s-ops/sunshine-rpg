@@ -10,7 +10,7 @@ export const INITIAL_JOBS: JobData[] = [
     statBonus: { attack: 3, defense: 3 },
     bonusPerStar: { attack: 1, defense: 1 },
     skills: [
-      { name: "踏み込み斬り", requiredStars: 2, description: "一歩踏み込んで敵1体を強く斬る" },
+      { name: "踏み込み斬り", requiredStars: 2, description: "一歩踏み込んで敵1体を強く斬る", battle: { mpCost: 2, powerMultiplier: 1.5 } },
       { name: "受け流し", requiredStars: 5, description: "1ターンのあいだ受けるダメージを減らす" },
       { name: "守りの構え斬り", requiredStars: 9, description: "防御を保ったまま反撃する" },
     ],
@@ -36,7 +36,7 @@ export const INITIAL_JOBS: JobData[] = [
     statBonus: { attack: 3, speed: 2 },
     bonusPerStar: { attack: 1, speed: 1 },
     skills: [
-      { name: "狙い撃ち", requiredStars: 2, description: "当たりやすく、会心が出やすい一射" },
+      { name: "狙い撃ち", requiredStars: 2, description: "当たりやすく、会心が出やすい一射", battle: { mpCost: 2, powerMultiplier: 1.4 } },
       { name: "足止めの矢", requiredStars: 5, description: "敵1体のすばやさを下げる" },
       { name: "急所の一矢", requiredStars: 9, description: "会心が出やすい強力な一射" },
     ],
@@ -49,9 +49,9 @@ export const INITIAL_JOBS: JobData[] = [
     statBonus: { maxMp: 8, attack: 1 },
     bonusPerStar: { maxMp: 3 },
     skills: [
-      { name: "火照の灯", requiredStars: 2, description: "小さな火で敵1体を焼く" },
+      { name: "火照の灯", requiredStars: 2, description: "小さな火で敵1体を焼く", battle: { mpCost: 2, powerMultiplier: 1.5 } },
       { name: "火照の波", requiredStars: 5, description: "熱の波で敵全体を焼く" },
-      { name: "火照の奔流", requiredStars: 9, description: "強い火で敵1体を焼き尽くす" },
+      { name: "火照の奔流", requiredStars: 9, description: "強い火で敵1体を焼き尽くす", battle: { mpCost: 8, powerMultiplier: 2.6 } },
     ],
   },
   {

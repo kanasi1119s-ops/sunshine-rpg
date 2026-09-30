@@ -143,4 +143,41 @@ describe("BattleController", () => {
     expect(messages.some((m) => m.includes("とくぎA"))).toBe(true);
     expect(messages.some((m) => m.includes("とくぎB"))).toBe(true);
   });
+  it("ジョブの特技があると、とくぎで一覧が出て、選んだ特技が使われる", () => {
+    const jobSkill = { id: "job:x", name: "踏み込み斬り", mpCost: 2, powerMultiplier: 2 };
+    const controller = new BattleController(
+      [makeCombatant({ id: "hero" })],
+      [makeCombatant({ id: "slime", isEnemy: true, hp: 1000, speed: 1 })],
+      () => 0.5,
+      { skills, item, extraSkills: { hero: [jobSkill] } },
+    );
+    controller.moveCursor(1);
+    controller.confirm();
+    const list = controller.getUiState();
+    expect(list.kind).toBe("skillList");
+    if (list.kind !== "skillList") return;
+    expect(list.skills.map((x) => x.name)).toEqual(["とくぎ（テスト）", "踏み込み斬り"]);
+    controller.moveCursor(1);
+    controller.confirm();
+    controller.confirm();
+    let text = "";
+    for (let i = 0; i < 6; i++) {
+      const ui = controller.getUiState();
+      if (ui.kind === "message") text += ui.text;
+      controller.confirm();
+    }
+    expect(text).toContain("踏み込み斬り");
+  });
+
+  it("ジョブの特技がなければ、従来どおりすぐ対象選択になる", () => {
+    const controller = new BattleController(
+      [makeCombatant({ id: "hero" })],
+      [makeCombatant({ id: "slime", isEnemy: true, hp: 1000, speed: 1 })],
+      () => 0.5,
+      { skills, item, extraSkills: { hero: [] } },
+    );
+    controller.moveCursor(1);
+    controller.confirm();
+    expect(controller.getUiState().kind).toBe("target");
+  });
 });

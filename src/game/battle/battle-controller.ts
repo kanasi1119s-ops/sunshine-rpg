@@ -20,7 +20,16 @@ export const COMMANDS: { kind: CommandKind; label: string }[] = [
 
 export type BattleUiState =
   | { kind: "command"; actorId: string; cursor: number }
-  | { kind: "target"; actorId: string; commandKind: "attack" | "skill" | "item"; candidateIds: string[]; cursor: number }
+  | { kind: "skillList"; actorId: string; skills: Skill[]; cursor: number }
+  | {
+      kind: "target";
+      actorId: string;
+      commandKind: "attack" | "skill" | "item";
+      candidateIds: string[];
+      cursor: number;
+      /** 「とくぎ」のとき、選んだ特技。 */
+      skill?: Skill;
+    }
   | { kind: "message"; text: string }
   | { kind: "finished"; outcome: BattleOutcome };
 
@@ -31,6 +40,8 @@ export interface BattleControllerOptions {
   /** 味方1人ごとのとくぎ（キャラクターIDをキーにする）。複数人パーティでは各キャラが別のとくぎを持つ。 */
   skills: Record<string, Skill>;
   item: BattleItem;
+  /** ジョブで覚えた特技（キャラクターIDをキーにする）。あれば「とくぎ」を選んだとき一覧が出る。 */
+  extraSkills?: Record<string, Skill[]>;
 }
 
 /**
@@ -42,6 +53,7 @@ export class BattleController {
   private readonly rng: () => number;
   private readonly skills: Record<string, Skill>;
   private readonly item: BattleItem;
+  private readonly extraSkills: Record<string, Skill[]>;
 
   private pendingActions: BattleAction[] = [];
   /** このターンでまだコマンドを選んでいない、生きている味方のID一覧。先頭が今選んでいる人。 */
@@ -59,6 +71,7 @@ export class BattleController {
     this.rng = rng;
     this.skills = options.skills;
     this.item = options.item;
+    this.extraSkills = options.extraSkills ?? {};
     this.turnQueue = this.state.party.filter(isAlive).map((c) => c.id);
     this.phase = this.currentCommandPhase();
   }
@@ -75,6 +88,9 @@ export class BattleController {
     if (this.phase.kind === "command") {
       const count = COMMANDS.length;
       this.phase = { ...this.phase, cursor: (this.phase.cursor + delta + count) % count };
+    } else if (this.phase.kind === "skillList") {
+      const count = this.phase.skills.length;
+      this.phase = { ...this.phase, cursor: (this.phase.cursor + delta + count) % count };
     } else if (this.phase.kind === "target") {
       const count = this.phase.candidateIds.length;
       if (count === 0) {
@@ -89,12 +105,17 @@ export class BattleController {
       this.confirmCommand(this.phase.actorId, COMMANDS[this.phase.cursor].kind);
       return;
     }
+    if (this.phase.kind === "skillList") {
+      const skill = this.phase.skills[this.phase.cursor];
+      this.phase = this.targetPhase(this.phase.actorId, "skill", skill);
+      return;
+    }
     if (this.phase.kind === "target") {
       const targetId = this.phase.candidateIds[this.phase.cursor];
       if (!targetId) {
         return;
       }
-      this.pushAction(this.phase.actorId, this.phase.commandKind, targetId);
+      this.pushAction(this.phase.actorId, this.phase.commandKind, targetId, this.phase.skill);
       this.phase = this.advanceAfterAction();
       return;
     }
@@ -112,19 +133,35 @@ export class BattleController {
       return;
     }
 
+    if (commandKind === "skill") {
+      const extras = this.extraSkills[actorId] ?? [];
+      if (extras.length > 0) {
+        const base = this.skills[actorId] ?? FALLBACK_SKILL;
+        this.phase = { kind: "skillList", actorId, skills: [base, ...extras], cursor: 0 };
+        return;
+      }
+    }
+    this.phase = this.targetPhase(actorId, commandKind);
+  }
+
+  private targetPhase(actorId: string, commandKind: "attack" | "skill" | "item", skill?: Skill): BattleUiState {
     const candidateIds =
       commandKind === "item"
         ? this.state.party.filter(isAlive).map((c) => c.id)
         : this.state.enemies.filter(isAlive).map((c) => c.id);
-
-    this.phase = { kind: "target", actorId, commandKind, candidateIds, cursor: 0 };
+    return { kind: "target", actorId, commandKind, candidateIds, cursor: 0, skill };
   }
 
-  private pushAction(actorId: string, commandKind: "attack" | "skill" | "item", targetId: string): void {
+  private pushAction(
+    actorId: string,
+    commandKind: "attack" | "skill" | "item",
+    targetId: string,
+    chosenSkill?: Skill,
+  ): void {
     if (commandKind === "attack") {
       this.pendingActions.push({ type: "attack", actorId, targetId });
     } else if (commandKind === "skill") {
-      const skill = this.skills[actorId] ?? FALLBACK_SKILL;
+      const skill = chosenSkill ?? this.skills[actorId] ?? FALLBACK_SKILL;
       this.pendingActions.push({ type: "skill", actorId, targetId, skill });
     } else {
       this.pendingActions.push({ type: "item", actorId, targetId, item: this.item });

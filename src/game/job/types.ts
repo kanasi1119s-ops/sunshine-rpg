@@ -17,6 +17,8 @@ export interface JobSkill {
   requiredStars: number;
   /** 一言の効果説明（戦闘への接続は今後の作業）。 */
   description: string;
+  /** 戦闘で使える特技だけが持つ。今の戦闘は「敵1体にダメージ」の特技のみ対応（効果つきの特技は今後）。 */
+  battle?: { mpCost: number; powerMultiplier: number };
 }
 
 export interface JobData {

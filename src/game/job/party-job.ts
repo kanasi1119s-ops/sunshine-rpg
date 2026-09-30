@@ -1,6 +1,7 @@
 import { applyStatBonus } from "../items/equipment";
 import type { LeveledStats } from "../growth/types";
-import { computeJobBonus, equipJob, gainMastery, createJobState } from "./mastery";
+import type { Skill } from "../battle/types";
+import { computeJobBonus, equipJob, gainMastery, createJobState, learnedSkills } from "./mastery";
 import type { JobId, JobState } from "./types";
 
 /** このフラグが立つと、ジョブチェンジ機能が使える（第6章でアヤメが仲間に加わったとき）。 */
@@ -51,4 +52,16 @@ export function changeJob(
   jobId: JobId,
 ): Record<string, JobState> {
   return { ...states, [memberId]: equipJob(states[memberId] ?? createJobState(), jobId) };
+}
+
+/** 習得済みの特技のうち、戦闘で使えるものを戦闘用の形にして返す。機能が未解禁なら空。 */
+export function battleSkillsOf(state: JobState | undefined, unlocked: boolean): Skill[] {
+  if (!unlocked || !state) {
+    return [];
+  }
+  return learnedSkills(state).flatMap((skill) =>
+    skill.battle
+      ? [{ id: `job:${skill.name}`, name: skill.name, mpCost: skill.battle.mpCost, powerMultiplier: skill.battle.powerMultiplier }]
+      : [],
+  );
 }
