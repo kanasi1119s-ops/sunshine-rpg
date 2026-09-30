@@ -1,12 +1,13 @@
 // バンド版の曲の、アンプシミュレーター設定をそろえる。
 // ・アンプの指定が空のギター・ベースに、楽器に合うアンプを入れる（作曲ソフトのアンプシミュレーターで鳴らす）
-// ・歪み系のギターは、歪みの深さ(drive)を0.9倍にして、ほんの少しだけ抑える（人間の指示 2026-09-30「ほんのほんの少し抑えて」）
+// ・歪み系のギターは、歪みの深さ(drive)をBAND_DRIVE倍にして、ほんの少しだけ抑える（人間の指示 2026-09-30「ほんのほんの少し抑えて」）
 // 使い方: node tools/composer/band-amp.mjs        → src/audio/songs/*.sunshine-song.json をすべて処理（何度実行しても同じ結果）
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-export const BAND_DRIVE = 0.9;
+/** 歪み系ギターの歪みの深さの倍率。0.9（2026-09-30 最初の調整）→ 0.8（同日、「もう少しほんの少しクリーンに」）。 */
+export const BAND_DRIVE = 0.8;
 const GUITARS = new Set(["guitar", "crunch", "distGuitar", "leadGuitar", "echoGuitar"]);
 const BASSES = new Set(["bass", "slap", "sub808"]);
 /** 歪ませる種類のアンプ（ここだけ drive を下げる。クリーン・ジャズ・ブルース・ファンク・ローファイ・シューゲイザーは触らない）。 */
@@ -21,7 +22,7 @@ export function applyBandAmp(score) {
       else if (inst === "bass") t.amp = { type: "clean" };
       else if (inst === "slap") t.amp = { type: "funk" };
     }
-    if (GUITARS.has(inst) && t.amp && DISTORTING.has(t.amp.type) && t.amp.drive === undefined) t.amp = { ...t.amp, drive: BAND_DRIVE };
+    if (GUITARS.has(inst) && t.amp && DISTORTING.has(t.amp.type)) t.amp = { ...t.amp, drive: BAND_DRIVE };
   }
   return score;
 }
