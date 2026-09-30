@@ -19,10 +19,16 @@ export const CHAPTER10_MAPS: Record<string, TileMapData> = {
 
 const L = DEEP_LANDMARKS;
 
+/** 階層番号（数字なら深部の階層、文字列ならそのままの接頭辞）から、フラグ名の接頭辞を作る。 */
+function flagPrefix(floor: number | string): string {
+  return typeof floor === "number" ? `deep${floor}` : floor;
+}
+
 /** 灯り石の台。調べると点灯し、2つともらすと `deep<層>_lit` が立つ。 */
-function pedestal(floor: number, which: "a" | "b", text: string): EventCommand[] {
-  const own = `deep${floor}_pedestal_${which}`;
-  const other = `deep${floor}_pedestal_${which === "a" ? "b" : "a"}`;
+export function pedestal(floor: number | string, which: "a" | "b", text: string): EventCommand[] {
+  const prefix = flagPrefix(floor);
+  const own = `${prefix}_pedestal_${which}`;
+  const other = `${prefix}_pedestal_${which === "a" ? "b" : "a"}`;
   return [
     {
       type: "if",
@@ -38,7 +44,7 @@ function pedestal(floor: number, which: "a" | "b", text: string): EventCommand[]
           equals: true,
           then: [
             say(undefined, "ふたつの灯りがそろった。北の封印の扉が、静かに軋んで、開く準備を整えた。"),
-            { type: "setFlag", flag: `deep${floor}_lit`, value: true },
+            { type: "setFlag", flag: `${prefix}_lit`, value: true },
           ],
           else: [say(undefined, "もうひとつの台も、灯さなければ、扉は開かないようだ。")],
         },
@@ -48,11 +54,11 @@ function pedestal(floor: number, which: "a" | "b", text: string): EventCommand[]
 }
 
 /** 北の封印の扉。灯り石を2つともらしていれば、次の階層へ進む。 */
-function gate(floor: number, nextMapId: string, nextTile: { tileX: number; tileY: number }): EventCommand[] {
+export function gate(floor: number | string, nextMapId: string, nextTile: { tileX: number; tileY: number }): EventCommand[] {
   return [
     {
       type: "if",
-      flag: `deep${floor}_lit`,
+      flag: `${flagPrefix(floor)}_lit`,
       equals: true,
       then: [
         say(undefined, "封印の扉が開いた。冷たい光が、奥から流れてくる。"),
@@ -67,8 +73,16 @@ function gate(floor: number, nextMapId: string, nextTile: { tileX: number; tileY
 function fragmentsCheck(): EventCommand[] {
   let inner: EventCommand[] = [
     say(undefined, "八つの環の欠片が、ひとつに共鳴して、転移陣が強く光った。渦の塔への道が、開かれようとしている。"),
-    say(undefined, "★ 転移陣が起動した！（芯環塔は、まだ準備中）"),
+    say(undefined, "★ 転移陣が起動した！"),
     { type: "setFlag", flag: "tower_gate_open", value: true },
+    {
+      type: "choice",
+      text: "芯環塔へ転移しますか?",
+      options: [
+        { label: "転移する", commands: [{ type: "warp", mapId: "tower-1", tileX: 10, tileY: 11 }] },
+        { label: "まだ準備する", commands: [] },
+      ],
+    },
   ];
   for (let no = 8; no >= 1; no--) {
     inner = [{ type: "if", flag: `god${no}_fragment`, equals: true, then: inner, else: [say(undefined, "環の欠片は、まだ足りない。八柱の神を鎮めて、欠片を集めよう。")] }];
