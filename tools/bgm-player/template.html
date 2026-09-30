@@ -34,6 +34,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
 button:disabled { opacity: .45; cursor: default; }
 .vol { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
 .vol input { flex: 1; max-width: 240px; accent-color: var(--accent); }
+details.ch { margin: 12px 0; }
+details.ch > summary { cursor: pointer; list-style: none; display: flex; align-items: baseline; gap: 10px; padding: 8px 4px; border-bottom: 1px solid var(--line); }
+details.ch > summary::-webkit-details-marker { display: none; }
+details.ch > summary::before { content: "▸"; color: var(--accent); }
+details.ch[open] > summary::before { content: "▾"; }
+details.ch > summary h2 { margin: 0; }
+details.ch > summary .n { color: var(--muted); font-size: 12px; }
+details.ch > ul { margin-top: 10px; }
+#chnav { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 6px; }
+#chnav button { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 5px 12px; font-size: 12px; }
+#chnav .ctl { border-style: dashed; color: var(--muted); }
 h2 { font-family: var(--display); font-weight: 400; font-size: 16px; letter-spacing: .06em; margin: 26px 0 8px; color: var(--muted); }
 ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .row { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; }
@@ -88,10 +99,16 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 (function () {
   var B = window.BGM, cur = -1, t0 = 0, raf = 0;
   var list = document.getElementById("list"), rows = [];
-  var group = "", ul = null;
+  var group = "", ul = null, chNav = document.createElement("div"); chNav.id = "chnav"; var chBoxes = [];
   function mmss(s) { s = Math.round(s); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
   B.bgm.forEach(function (e, i) {
-    if (e.group !== group) { group = e.group; var h = document.createElement("h2"); h.textContent = group; list.appendChild(h); ul = document.createElement("ul"); list.appendChild(ul); }
+    if (e.group !== group) {
+      group = e.group;
+      var det = document.createElement("details"); det.className = "ch"; det.id = "ch" + chBoxes.length;
+      var sum = document.createElement("summary"), h = document.createElement("h2"); h.textContent = group; var cnt = document.createElement("span"); cnt.className = "n"; sum.appendChild(h); sum.appendChild(cnt);
+      det.appendChild(sum); ul = document.createElement("ul"); det.appendChild(ul); list.appendChild(det); det._cnt = cnt; det._n = 0; chBoxes.push(det);
+    }
+    chBoxes[chBoxes.length - 1]._n++; chBoxes[chBoxes.length - 1]._cnt.textContent = chBoxes[chBoxes.length - 1]._n + "曲";
     var li = document.createElement("li"), b = document.createElement("button");
     b.type = "button"; b.className = "row"; b.setAttribute("aria-pressed", "false");
     b.innerHTML = '<span class="ic">▶</span><span class="t"><span class="tt"></span><small class="sc"></small></span><span class="m"></span>';
@@ -101,6 +118,15 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
     b.addEventListener("click", function () { select(i, 0); });
     li.appendChild(b); ul.appendChild(li); rows.push(b);
   });
+  // 章の一覧（押すとその章へ移動して開く）と、すべて開く／閉じる
+  var allOpen = document.createElement("button"); allOpen.type = "button"; allOpen.className = "ctl"; allOpen.textContent = "すべて開く";
+  allOpen.addEventListener("click", function () { chBoxes.forEach(function (d) { d.open = true; }); });
+  var allClose = document.createElement("button"); allClose.type = "button"; allClose.className = "ctl"; allClose.textContent = "すべて閉じる";
+  allClose.addEventListener("click", function () { chBoxes.forEach(function (d) { d.open = false; }); });
+  chNav.appendChild(allOpen); chNav.appendChild(allClose);
+  chBoxes.forEach(function (d) { var c = document.createElement("button"); c.type = "button"; c.textContent = d.querySelector("h2").textContent; c.addEventListener("click", function () { d.open = true; d.scrollIntoView({ behavior: "smooth", block: "start" }); }); chNav.appendChild(c); });
+  list.insertBefore(chNav, list.firstChild);
+  if (chBoxes.length) chBoxes[0].open = true;
   var fxGroup = "", fxBox = null;
   B.effects.forEach(function (e, i) {
     if (e.group !== fxGroup) {
@@ -117,6 +143,7 @@ ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
   function setRowState(i, on) { rows[i].setAttribute("aria-pressed", on ? "true" : "false"); rows[i].querySelector(".ic").textContent = on ? "♪" : "▶"; }
   function select(i, offset) {
     if (cur >= 0) setRowState(cur, false);
+    var dd = rows[i].closest("details"); if (dd) dd.open = true;
     cur = i; paused = false; document.getElementById("pause").textContent = "一時停止";
     B.play(i, offset || 0); setRowState(i, true); enable(true); lastPos = offset || 0; pointA = null; pointB = null; document.getElementById("abtxt").textContent = abText();
     seek.max = B.bgm[i].sec; seek.value = offset || 0;
