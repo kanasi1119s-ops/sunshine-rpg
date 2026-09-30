@@ -7,6 +7,7 @@ import {
   KYOTOUKYU_SANCTUM_LANDMARKS,
 } from "../map/chapter9/kyotoukyu-maps";
 import type { TileMapData } from "../map/types";
+import { say } from "./side-story";
 import type { EventCommand } from "../event/types";
 import type { Npc } from "../npc";
 
@@ -106,6 +107,27 @@ export const CHAPTER9_NPCS: Record<string, Npc[]> = {
       color: "#b8a8c8",
       spriteName: "ソウイチ",
       commands: grandfatherCommands(),
+    },
+    {
+      id: "kyotoukyu-deep-stairs",
+      tileX: 15,
+      tileY: 3,
+      color: "#a8d4e8",
+      commands: [
+        {
+          type: "if",
+          flag: "side_s028_done",
+          equals: true,
+          then: [
+            say(undefined, "祭壇の裏の階段が、深部へ続いている。冷たい光が、下から昇ってくる。"),
+            { type: "choice", text: "虚灯宮・深部へ降りますか?", options: [
+              { label: "降りる", commands: [{ type: "warp", mapId: "deep-1", tileX: 10, tileY: 11 }] },
+              { label: "やめておく", commands: [] },
+            ] },
+          ],
+          else: [say(undefined, "祭壇の裏の床は、ただの石だ。今は、何も起きない。")],
+        },
+      ],
     },
     {
       id: "kyotoukyu-edrea",

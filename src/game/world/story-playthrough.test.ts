@@ -19,6 +19,8 @@ const BATTLE_VICTORY_FLAG: Record<string, string> = {
   "fushima-yugami": "chapter7_yugami_defeated",
   "toushin-yugami": "chapter8_yugami_defeated",
   "kyotoukyu-yugami": "chapter9_yugami_defeated",
+  "deep3-yugami": "deep3_yugami_defeated",
+  "deep-yugami": "deep_yugami_defeated",
 };
 
 const CHAPTER_MAPS: string[][] = [
@@ -32,6 +34,7 @@ const CHAPTER_MAPS: string[][] = [
   ["fushima-town", "fushima-base"],
   ["toushin-town", "toushin-hall"],
   ["kyotoukyu-court", "kyotoukyu-corridor", "kyotoukyu-sanctum"],
+  ["deep-1", "deep-2", "deep-3", "deep-4"],
 ];
 
 function recordingFlags(order: string[]): Flags {
@@ -179,6 +182,37 @@ describe("終章の伏線", () => {
     expect(order.indexOf("chapter9_yugami_defeated")).toBeLessThan(order.indexOf("chapter9_edrea_surrendered"));
     expect(order.indexOf("chapter9_edrea_surrendered")).toBeLessThan(order.indexOf("chapter9_grandfather_rescued"));
     expect(order.indexOf("chapter9_grandfather_rescued")).toBeLessThan(order.indexOf("chapter9_cleared"));
+  });
+});
+
+describe("クリア後（サブストーリー・虚灯宮・深部）", () => {
+  const order: string[] = [];
+  const flags = recordingFlags(order);
+  // 各章の「到着したときの場面つなぎ」（main.tsが流す）で立つフラグは、ここでは到着したものとして先に立てる。
+  for (let n = 0; n <= 9; n++) {
+    flags[`chapter${n}_intro_seen`] = true;
+  }
+  CHAPTER_MAPS.forEach((maps) => playAllNpcs(maps, flags));
+  // 本編クリア後に、もう一度すべての地図を回る（サブストーリーの解放条件が、章の順ではそろわないものがあるため）。
+  playAllNpcs(CHAPTER_MAPS.flat(), flags);
+  playAllNpcs(CHAPTER_MAPS.flat(), flags);
+
+  it("S-027→S-028で深部への階段が開き、4階層の仕掛けと裏ボスを越えて、転移陣の刻印まで進める", () => {
+    for (const flag of [
+      "side_s027_done", "side_s028_done",
+      "deep1_lit", "deep2_lit", "deep3_lit", "deep3_yugami_defeated", "deep4_lit",
+      "deep_yugami_defeated", "deep_cleared",
+    ]) {
+      expect(flags[flag], `${flag} が立たない（進行不能の疑い）`).toBe(true);
+    }
+  });
+
+  it("すべてのサブストーリーが完了できる", () => {
+    for (const flag of Object.keys(flags).filter((f) => /^side_s\d+_accepted$/.test(f))) {
+      expect(flags[flag.replace("_accepted", "_done")], `${flag} のあとに完了しない`).toBe(true);
+    }
+    const doneKeys = Object.keys(flags).filter((f) => /^side_s\d+_done$/.test(f));
+    expect(doneKeys.length, `完了 ${doneKeys.join(",")}`).toBe(32);
   });
 });
 
