@@ -21,6 +21,7 @@ const BATTLE_VICTORY_FLAG: Record<string, string> = {
   "kyotoukyu-yugami": "chapter9_yugami_defeated",
   "deep3-yugami": "deep3_yugami_defeated",
   "deep-yugami": "deep_yugami_defeated",
+  ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`god-${i + 1}`, `god${i + 1}_defeated`])),
 };
 
 const CHAPTER_MAPS: string[][] = [
@@ -35,6 +36,7 @@ const CHAPTER_MAPS: string[][] = [
   ["toushin-town", "toushin-hall"],
   ["kyotoukyu-court", "kyotoukyu-corridor", "kyotoukyu-sanctum"],
   ["deep-1", "deep-2", "deep-3", "deep-4"],
+  ...Array.from({ length: 8 }, (_, i) => [`god-shrine-${i + 1}`]),
 ];
 
 function recordingFlags(order: string[]): Flags {
@@ -202,6 +204,8 @@ describe("クリア後（サブストーリー・虚灯宮・深部）", () => {
       "side_s027_done", "side_s028_done",
       "deep1_lit", "deep2_lit", "deep3_lit", "deep3_yugami_defeated", "deep4_lit",
       "deep_yugami_defeated", "deep_cleared",
+      ...Array.from({ length: 8 }, (_, i) => `god${i + 1}_fragment`),
+      "tower_gate_open",
     ]) {
       expect(flags[flag], `${flag} が立たない（進行不能の疑い）`).toBe(true);
     }

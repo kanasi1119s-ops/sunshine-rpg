@@ -52,6 +52,7 @@ import { createKyotoukyuEdreaYugami } from "./game/battle/chapter9-enemies";
 import { CHAPTER9_OPENING_COMMANDS } from "./game/world/chapter9-world";
 import { createDeepEchoYugami, createShogenYugami } from "./game/battle/chapter10-enemies";
 import { DEEP_ENTRY } from "./game/map/chapter10/deep-maps";
+import { createGodYugami, GODS } from "./game/battle/chapter11-enemies";
 import { KYOTOUKYU_CORRIDOR_ENTRY, KYOTOUKYU_COURT_ENTRY, KYOTOUKYU_SANCTUM_ENTRY } from "./game/map/chapter9/kyotoukyu-maps";
 import { AYAME, COMPANIONS, createCompanionCombatant, GUIDE, MINA, ORCA, RETO } from "./game/battle/companions";
 import type { Combatant, Skill } from "./game/battle/types";
@@ -207,6 +208,7 @@ const MAP_BGM_ID: Record<string, string> = {
   "deep-2": "kyoto-deep",
   "deep-3": "kyoto-deep",
   "deep-4": "kyoto-deep",
+  ...Object.fromEntries(GODS.map((god) => [`god-shrine-${god.no}`, "kyoto-deep"])),
 };
 function mapBgmFor(mapId: string): Score {
   return getTrack(MAP_BGM_ID[mapId] ?? "town-touri");
@@ -300,6 +302,10 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
     victoryFlag: "deep_yugami_defeated",
     bgmId: "secret-boss",
   },
+  // 8神（roadmap 6-4〜6-7）。
+  ...Object.fromEntries(
+    GODS.map((god) => [god.id, { createEnemy: () => createGodYugami(god), victoryFlag: `god${god.no}_defeated`, bgmId: "eight-gods" }]),
+  ),
 };
 
 function startStoryBattle(battleId: string): void {
@@ -655,6 +661,10 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
   {
     label: () => "マップ: 虚灯宮・深部 第1階層 へワープ",
     action: () => switchMap("deep-1", DEEP_ENTRY.tileX, DEEP_ENTRY.tileY),
+  },
+  {
+    label: () => "マップ: 8神の禁域（女神） へワープ",
+    action: () => switchMap("god-shrine-1", 8, 9),
   },
   {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,

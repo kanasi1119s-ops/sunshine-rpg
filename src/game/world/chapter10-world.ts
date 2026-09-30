@@ -63,6 +63,19 @@ function gate(floor: number, nextMapId: string, nextTile: { tileX: number; tileY
   ];
 }
 
+/** 環の欠片（8神を倒すと1つずつ手に入る）が8つそろっていれば、転移陣が起動する。 */
+function fragmentsCheck(): EventCommand[] {
+  let inner: EventCommand[] = [
+    say(undefined, "八つの環の欠片が、ひとつに共鳴して、転移陣が強く光った。渦の塔への道が、開かれようとしている。"),
+    say(undefined, "★ 転移陣が起動した！（芯環塔は、まだ準備中）"),
+    { type: "setFlag", flag: "tower_gate_open", value: true },
+  ];
+  for (let no = 8; no >= 1; no--) {
+    inner = [{ type: "if", flag: `god${no}_fragment`, equals: true, then: inner, else: [say(undefined, "環の欠片は、まだ足りない。八柱の神を鎮めて、欠片を集めよう。")] }];
+  }
+  return inner;
+}
+
 const ENTRY_TILE = { tileX: 10, tileY: 11 };
 
 export const CHAPTER10_NPCS: Record<string, Npc[]> = {
@@ -172,7 +185,8 @@ export const CHAPTER10_NPCS: Record<string, Npc[]> = {
             say(undefined, "「八柱の神を鎮め、八つの環の欠片をここに捧げよ。さすれば、渦の塔への道が開かれる」"),
             say("ユーリ", "八柱の神と、八つの欠片……。まだ、何かが、眠ってる。おじいちゃんが言ったのは、このことか。"),
             { type: "setFlag", flag: "deep_cleared", value: true },
-            say(undefined, "★ 裏ボス「初源の歪み」を鎮めた！（この先の道は、まだ準備中）"),
+            say(undefined, "★ 裏ボス「初源の歪み」を鎮めた！"),
+            ...fragmentsCheck(),
           ],
           else: [say(undefined, "奥の扉は閉ざされている。初源の歪みを、鎮めなければ、進めない。")],
         },
