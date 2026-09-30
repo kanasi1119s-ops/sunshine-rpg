@@ -21,6 +21,10 @@ const BATTLE_VICTORY_FLAG: Record<string, string> = {
   "kyotoukyu-yugami": "chapter9_yugami_defeated",
   "deep3-yugami": "deep3_yugami_defeated",
   "deep-yugami": "deep_yugami_defeated",
+  "tower2-guard": "tower2_guard_defeated",
+  "tower3-guard": "tower3_guard_defeated",
+  "kanou3-guard": "kanou3_guard_defeated",
+  zenkan: "zenkan_defeated",
   ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`god-${i + 1}`, `god${i + 1}_defeated`])),
 };
 
@@ -36,6 +40,7 @@ const CHAPTER_MAPS: string[][] = [
   ["toushin-town", "toushin-hall"],
   ["kyotoukyu-court", "kyotoukyu-corridor", "kyotoukyu-sanctum"],
   ["deep-1", "deep-2", "deep-3", "deep-4"],
+  ["tower-1", "tower-2", "tower-3", "kanou-1", "kanou-2", "kanou-3", "kanou-4"],
   ...Array.from({ length: 8 }, (_, i) => [`god-shrine-${i + 1}`]),
 ];
 
@@ -206,6 +211,9 @@ describe("クリア後（サブストーリー・虚灯宮・深部）", () => {
       "deep_yugami_defeated", "deep_cleared",
       ...Array.from({ length: 8 }, (_, i) => `god${i + 1}_fragment`),
       "tower_gate_open",
+      "tower1_treasure", "tower2_treasure", "tower3_treasure", "tower_truth_known",
+      "kanou1_lit", "kanou2_lit", "kanou3_lit", "kanou3_guard_defeated", "kanou4_lit",
+      "zenkan_defeated", "epilogue_all_seen",
     ]) {
       expect(flags[flag], `${flag} が立たない（進行不能の疑い）`).toBe(true);
     }

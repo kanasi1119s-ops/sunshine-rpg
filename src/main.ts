@@ -53,6 +53,7 @@ import { CHAPTER9_OPENING_COMMANDS } from "./game/world/chapter9-world";
 import { createDeepEchoYugami, createShogenYugami } from "./game/battle/chapter10-enemies";
 import { DEEP_ENTRY } from "./game/map/chapter10/deep-maps";
 import { createGodYugami, GODS } from "./game/battle/chapter11-enemies";
+import { createDungeonEnemy, DUNGEON_ENEMIES } from "./game/battle/chapter12-enemies";
 import { KYOTOUKYU_CORRIDOR_ENTRY, KYOTOUKYU_COURT_ENTRY, KYOTOUKYU_SANCTUM_ENTRY } from "./game/map/chapter9/kyotoukyu-maps";
 import { AYAME, COMPANIONS, createCompanionCombatant, GUIDE, MINA, ORCA, RETO } from "./game/battle/companions";
 import type { Combatant, Skill } from "./game/battle/types";
@@ -209,6 +210,13 @@ const MAP_BGM_ID: Record<string, string> = {
   "deep-3": "kyoto-deep",
   "deep-4": "kyoto-deep",
   ...Object.fromEntries(GODS.map((god) => [`god-shrine-${god.no}`, "kyoto-deep"])),
+  "tower-1": "ruins",
+  "tower-2": "ruins",
+  "tower-3": "ruins",
+  "kanou-1": "unease",
+  "kanou-2": "unease",
+  "kanou-3": "unease",
+  "kanou-4": "unease",
 };
 function mapBgmFor(mapId: string): Score {
   return getTrack(MAP_BGM_ID[mapId] ?? "town-touri");
@@ -302,6 +310,17 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
     victoryFlag: "deep_yugami_defeated",
     bgmId: "secret-boss",
   },
+  // 芯環塔・環奥（roadmap 6-8〜6-11）。ラスト裏ボス「全環」は特別曲。
+  ...Object.fromEntries(
+    DUNGEON_ENEMIES.map((enemy) => [
+      enemy.id,
+      {
+        createEnemy: () => createDungeonEnemy(enemy),
+        victoryFlag: enemy.id === "zenkan" ? "zenkan_defeated" : `${enemy.id.replace("-guard", "")}_guard_defeated`,
+        bgmId: enemy.id === "zenkan" ? "secret-boss-2" : "elite",
+      },
+    ]),
+  ),
   // 8神（roadmap 6-4〜6-7）。
   ...Object.fromEntries(
     GODS.map((god) => [god.id, { createEnemy: () => createGodYugami(god), victoryFlag: `god${god.no}_defeated`, bgmId: "eight-gods" }]),
@@ -665,6 +684,14 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
   {
     label: () => "マップ: 8神の禁域（女神） へワープ",
     action: () => switchMap("god-shrine-1", 8, 9),
+  },
+  {
+    label: () => "マップ: 芯環塔・根の階 へワープ",
+    action: () => switchMap("tower-1", 10, 11),
+  },
+  {
+    label: () => "マップ: 環奥・全環の間 へワープ",
+    action: () => switchMap("kanou-4", 10, 11),
   },
   {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,

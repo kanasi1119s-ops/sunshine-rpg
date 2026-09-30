@@ -6,7 +6,7 @@ const BLOCK = 3;
 const DOOR = 4;
 const GLOW = 5;
 
-interface Palette {
+export interface Palette {
   floor: string;
   wall: string;
   block: string;
@@ -19,13 +19,13 @@ const SOUTH = { x: 10, y: H - 1 };
 /** 北の封印の扉（NPCが立つ。灯り石を2つともらすと通れる）。 */
 export const DEEP_GATE = { tileX: 10, tileY: 2 };
 
-interface DeepExit {
+export interface DeepExit {
   targetMapId: string;
   targetTileX: number;
   targetTileY: number;
 }
 
-function buildFloor(palette: Palette, blocks: [number, number][], southExit: DeepExit): TileMapData {
+export function buildFloor(palette: Palette, blocks: [number, number][], southExit: DeepExit): TileMapData {
   const ground: number[] = new Array(W * H).fill(FLOOR);
   const collision: number[] = new Array(W * H).fill(0);
   const set = (x: number, y: number, tile: number): void => {
@@ -67,7 +67,7 @@ function buildFloor(palette: Palette, blocks: [number, number][], southExit: Dee
 
 const ENTRY = { tileX: SOUTH.x, tileY: SOUTH.y - 2 };
 /** 各階層の、北の扉のすぐ手前（次の階から戻ってきたときの立ち位置）。 */
-const BEFORE_GATE = { tileX: DEEP_GATE.tileX, tileY: DEEP_GATE.tileY + 2 };
+export const BEFORE_GATE = { tileX: DEEP_GATE.tileX, tileY: DEEP_GATE.tileY + 2 };
 
 export const DEEP_ENTRY = ENTRY;
 export const DEEP_LANDMARKS = {

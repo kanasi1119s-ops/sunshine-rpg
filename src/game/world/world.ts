@@ -10,6 +10,7 @@ import { CHAPTER8_MAPS, CHAPTER8_NPCS } from "./chapter8-world";
 import { CHAPTER9_MAPS, CHAPTER9_NPCS } from "./chapter9-world";
 import { CHAPTER10_MAPS, CHAPTER10_NPCS } from "./chapter10-world";
 import { CHAPTER11_MAPS, CHAPTER11_NPCS } from "./chapter11-world";
+import { CHAPTER12_MAPS, CHAPTER12_NPCS } from "./chapter12-world";
 import { SIDE_STORY_NPCS } from "./side-stories";
 import type { TileMapData } from "../map/types";
 import type { Npc } from "../npc";
@@ -32,6 +33,7 @@ export const WORLD_MAPS: Record<string, TileMapData> = {
   ...CHAPTER9_MAPS,
   ...CHAPTER10_MAPS,
   ...CHAPTER11_MAPS,
+  ...CHAPTER12_MAPS,
 };
 
 const NPC_SOURCES: Record<string, Npc[]>[] = [
@@ -47,6 +49,7 @@ const NPC_SOURCES: Record<string, Npc[]>[] = [
   CHAPTER9_NPCS,
   CHAPTER10_NPCS,
   CHAPTER11_NPCS,
+  CHAPTER12_NPCS,
   SIDE_STORY_NPCS,
 ];
 
