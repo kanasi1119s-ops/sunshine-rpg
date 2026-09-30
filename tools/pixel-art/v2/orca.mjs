@@ -71,6 +71,7 @@ export function build() {
   for (const s of [-1, 1]) {
     tube(g, [[cx + s * 15, 164, 14], [cx + s * 16, 205, 12.5], [cx + s * 16, 230, 11]], STL, { ambient: 0.14, gain: 1.2 });
   }
+  for (let y = 150; y < 236; y++) for (let x = 90; x < 170; x++) { const i = STL.indexOf(g[y][x]); if (i > 0 && y < 228) g[y][x] = STL[i - 1]; }
   // ひざ当て
   for (const s of [-1, 1]) { ell(g, cx + s * 16, 203, 9, 9, LEA, { ambient: 0.22, gain: 1.1 }); for (let a = 0; a < 6.3; a += 0.4) put(g, 203 + Math.sin(a) * 6, cx + s * 16 + Math.cos(a) * 6, a < 3.2 ? LEA[3] : LEA[0]); }
   for (const s of [-1, 1]) {
@@ -133,7 +134,7 @@ export function build() {
   put(g, 71, 96, SKIN[0]); put(g, 72, 160, SKIN[0]);
   vol(g, [{ cx, cy: 55, rx: 32, ry: 32 }, { cx, cy: 72, rx: 29, ry: 17, h: 0.95 }], SKIN, { box: [90, 14, 168, 96], ambient: 0.32, gain: 1.25, k: 6 });
   // ひたいのしわ・かたい頬のかげ
-  for (let x = -12; x <= 12; x++) if (x % 5 !== 0) put(g, 46, cx + x, SKIN[1]);
+  for (let x = -10; x <= 10; x++) put(g, 47 - (Math.abs(x) > 6 ? 1 : 0), cx + x, SKIN[1]);
   // 目（小さく細く、するどい）
   eyeF(g, cx - 14, 65, 4, 3, C, -1); eyeF(g, cx + 14, 65, 4, 3, C, 1);
   // 太い眉（内側がさがる）
