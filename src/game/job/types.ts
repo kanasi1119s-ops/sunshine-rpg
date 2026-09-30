@@ -22,7 +22,9 @@ export type JobId =
   | "goddess-shaman"
   | "pure-paladin"
   | "demon-breaker"
-  | "bug-curser";
+  | "bug-curser"
+  // レジェンドジョブ（主人公専用）
+  | "torch-heir";
 
 export interface JobSkill {
   /** 特技名（オリジナル。既存作品の特技名とは一致させない）。 */
@@ -41,6 +43,10 @@ export interface JobData {
   baseJob?: JobId;
   /** 天神・悪神ジョブだけが持つ。このフラグが立つ（その神を倒す）と、だれでも装備できる。 */
   unlockFlag?: string;
+  /** レジェンドジョブだけが持つ。ここに並ぶフラグがすべて立つと解放される。 */
+  unlockFlags?: string[];
+  /** 主人公（ユーリ）だけが装備できる。 */
+  heroOnly?: boolean;
   name: string;
   reading: string;
   role: string;

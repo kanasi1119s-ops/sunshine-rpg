@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { WORLD_NPCS } from "./world";
+import { availableJobs, LEGEND_UNLOCK_FLAGS } from "../job/jobs";
 import { createEventRunner } from "../event/event-runner";
 import type { Flags } from "../event/types";
 
@@ -217,6 +218,13 @@ describe("クリア後（サブストーリー・虚灯宮・深部）", () => {
     ]) {
       expect(flags[flag], `${flag} が立たない（進行不能の疑い）`).toBe(true);
     }
+  });
+
+  it("レジェンドジョブ「灯心継承者」の解放条件（本編クリア・仲間の寄り道・カセンの手紙）が、通しプレイでそろう", () => {
+    for (const flag of LEGEND_UNLOCK_FLAGS) {
+      expect(flags[flag], `${flag} が立たない`).toBe(true);
+    }
+    expect(availableJobs(() => 1, flags, "hero").map((j) => j.id)).toContain("torch-heir");
   });
 
   it("すべてのサブストーリーが完了できる", () => {

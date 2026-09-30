@@ -235,19 +235,53 @@ export const DIVINE_JOBS: JobData[] = [
   },
 ];
 
+/**
+ * レジェンドジョブ「灯心継承者」（主人公専用、`docs/design/jobs.md` 4章）。5系統すべてを、やや高いMPで扱える「何でも屋」。
+ * 1点特化の強さは無く、上級ジョブを陳腐化させない。
+ * 解放条件: 本編クリア後、仲間4人（レト・ミナ・ガイド・オルカ）との絆（それぞれの寄り道サブストーリー）がそろい、カセンの手紙（S-025）を読んでいる。
+ * （信頼度の数値は作らず、サブストーリーの完了で数える。`docs/decisions.md`）
+ */
+export const LEGEND_UNLOCK_FLAGS: string[] = [
+  "chapter9_cleared",
+  "side_s002_done", // レト
+  "side_s004_done", "side_s010_done", // ミナ（幼なじみ前編・後編）
+  "side_s006_done", "side_s007_done", // ガイド
+  "side_s009_done", "side_s011_done", // オルカ
+  "side_s025_done", // カセンの手紙
+];
+
+export const LEGEND_JOBS: JobData[] = [
+  {
+    id: "torch-heir", unlockFlags: LEGEND_UNLOCK_FLAGS, heroOnly: true, name: "灯心継承者", reading: "とうしんけいしょうしゃ", role: "五系統の呪文をやや高いMPで扱う何でも屋",
+    statBonus: { maxHp: 10, maxMp: 12, attack: 5, defense: 4, speed: 3 }, bonusPerStar: { maxHp: 2, maxMp: 3, attack: 1, defense: 1, speed: 1 },
+    skills: [
+      { name: "灯の一閃", requiredStars: 2, description: "灯りをまとった一撃で敵1体を斬る", battle: { mpCost: 5, powerMultiplier: 1.9 } },
+      { name: "灯の癒し", requiredStars: 4, description: "灯りで味方1人のHPを回復する", battle: { mpCost: 8, powerMultiplier: 0, effect: "heal", healRatio: 2.0 } },
+      { name: "灯の波", requiredStars: 6, description: "灯りの波で敵全体を打つ", battle: { mpCost: 10, powerMultiplier: 1.3, effect: "damageAll" } },
+      { name: "灯の慈雨", requiredStars: 8, description: "灯りの雨で味方全体を癒す", battle: { mpCost: 14, powerMultiplier: 0, effect: "healAll", healRatio: 1.3 } },
+      { name: "灯心の共鳴", requiredStars: 10, description: "五つの系統を重ねて、敵1体に放つ", battle: { mpCost: 16, powerMultiplier: 3.2 } },
+    ],
+  },
+];
+
 export const JOBS_BY_ID: Record<JobId, JobData> = Object.fromEntries(
-  [...INITIAL_JOBS, ...ADVANCED_JOBS, ...DIVINE_JOBS].map((job) => [job.id, job]),
+  [...INITIAL_JOBS, ...ADVANCED_JOBS, ...DIVINE_JOBS, ...LEGEND_JOBS].map((job) => [job.id, job]),
 ) as Record<JobId, JobData>;
 
 /**
  * そのキャラクターがいま装備できるジョブ（初期ジョブ8種と、初期ジョブを最大の☆まで育てて解放した上級ジョブ）。
- * 上級ジョブは初期ジョブの直後、天神・悪神ジョブ（8神を倒すと解放）はその後ろに並ぶ。
+ * 上級ジョブは初期ジョブの直後、天神・悪神ジョブ（8神を倒すと解放）、レジェンドジョブ（主人公だけ）はその後ろに並ぶ。
  */
-export function availableJobs(masteryStars: (jobId: JobId) => number, flags: Record<string, boolean | undefined> = {}): JobData[] {
+export function availableJobs(
+  masteryStars: (jobId: JobId) => number,
+  flags: Record<string, boolean | undefined> = {},
+  memberId?: string,
+): JobData[] {
   return [
     ...INITIAL_JOBS,
     ...ADVANCED_JOBS.filter((job) => job.baseJob !== undefined && masteryStars(job.baseJob) >= MAX_STARS),
     ...DIVINE_JOBS.filter((job) => job.unlockFlag !== undefined && flags[job.unlockFlag] === true),
+    ...LEGEND_JOBS.filter((job) => (!job.heroOnly || memberId === "hero") && (job.unlockFlags ?? []).every((f) => flags[f] === true)),
   ];
 }
 
