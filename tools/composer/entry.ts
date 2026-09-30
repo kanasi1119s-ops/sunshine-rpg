@@ -1099,12 +1099,12 @@ const nsBpm = h("input", { type: "number", min: "50", max: "240", value: "110" }
 const nsBeats = select([["4", "4拍子"], ["3", "3拍子"], ["6", "6拍子"], ["7", "7拍子"]], "4");
 const nsBars = select([["1", "1小節"], ["2", "2小節"]], "1");
 const nsRepeat = select([["2", "2回"], ["4", "4回"], ["6", "6回"], ["8", "8回"]], "4");
-const nsFeel = select([["rock", "ロック"], ["pop", "ポップ"], ["ballad", "バラード"]], "rock");
+const nsFeel = select([["rock", "ロック"], ["pop", "ポップ"], ["ballad", "バラード"], ["dance", "ダンス（きれい・現代的）"]], "rock");
 const nsLead = select(INSTRUMENTS.filter(([k]) => !DRUMS.has(k)).map(([k, l]) => [k, l] as [string, string]), "leadGuitar");
 const nsBtn = h("button", { class: "primary", type: "button" }, "この進行で新しい曲を作る");
 nsBtn.onclick = () => {
   try {
-    const score = buildNewSong({ bpm: Number(nsBpm.value) || 110, beats: Number(nsBeats.value), chords: nsChords.value, barsPerChord: Number(nsBars.value), repeats: Number(nsRepeat.value), feel: nsFeel.value as "rock" | "pop" | "ballad", leadInstrument: nsLead.value as Instrument });
+    const score = buildNewSong({ bpm: Number(nsBpm.value) || 110, beats: Number(nsBeats.value), chords: nsChords.value, barsPerChord: Number(nsBars.value), repeats: Number(nsRepeat.value), feel: nsFeel.value as "rock" | "pop" | "ballad" | "dance", leadInstrument: nsLead.value as Instrument });
     loadScore(score, nameIn.value || "新しい曲");
     state.selected = score.tracks.length - 1;
     renderAll();

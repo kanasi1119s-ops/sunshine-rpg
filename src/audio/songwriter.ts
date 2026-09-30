@@ -1,5 +1,6 @@
 import { arrange, midiToName, type Arrangement, type MelodySpec, type PartSpec, type Section } from "./compose";
-import type { Score } from "./score";
+import { noteNameToMidi } from "./note";
+import { REST, type NoteEvent, type Score } from "./score";
 
 /**
  * 曲の設計図（調・速さ・曲調・乱数の種）から、1〜1分半のオリジナル曲を組み立てる「作曲エンジン」。
@@ -9,7 +10,8 @@ import type { Score } from "./score";
 
 export type Style =
   | "rock" | "metal" | "classic" | "space" | "cafe" | "discord" | "mystery" | "epic" | "folk"
-  | "baroque" | "nature" | "phonk" | "samba" | "jazz" | "rnb" | "electro" | "hardcore" | "deathmetal" | "progmetal" | "jpop";
+  | "baroque" | "nature" | "phonk" | "samba" | "jazz" | "rnb" | "electro" | "hardcore" | "deathmetal" | "progmetal" | "jpop"
+  | "dancerock" | "cleandance";
 
 export interface SongSpec {
   id: string;
@@ -254,6 +256,10 @@ interface Template {
   melodies: Record<string, MelodySpec>;
   sevenths: boolean;
   plan: (kind: Kind, bpb: number) => KindPlan;
+  /** パートごとの左右の位置（書いたパートだけ、自動の振り分けを上書きする）。 */
+  pans?: Record<string, number>;
+  /** ベースをメロディのように動かす（小節の最後の音を、次の小節の最初の音へ向かう経過音にする）パート。 */
+  walkingBass?: string;
 }
 
 const drum = (instrument: "kick" | "snare" | "hihat" | "crash", volume: number, fixed: string): PartSpec => ({ instrument, waveform: "sine", volume, octave: 2, step: 0.25, fixed });
@@ -707,6 +713,82 @@ const TEMPLATES: Record<Exclude<Style, "discord" | "mystery">, Template> = {
       return rest[kind];
     },
   },
+  dancerock: {
+    // ダンス×ロック: 4つ打ちのキックと裏拍のハイハット・16分のシンセのアルペジオ（ダンス）に、
+    // 左右に分けた歪んだギター・リードギター・バックビートのスネア（ロック）、弦・合唱・ブラス（壮大さ）を重ねる。
+    // 「間奏（solo）」はドラムを抜いてピアノだけにし、曲の途中で一度引く（docs/sound/reference-nihonichi-bgm.md 4-5）
+    sevenths: false,
+    parts: {
+      kick: drum("kick", 0.28, "C2"), snare: drum("snare", 0.2, "C3"), hat: drum("hihat", 0.09, "C6"), crash: drum("crash", 0.11, "C5"),
+      bass: { instrument: "bass", waveform: "sawtooth", volume: 0.2, octave: 2, step: 0.5 },
+      gtrL: { instrument: "distGuitar", waveform: "sawtooth", volume: 0.018, octave: 3, step: 0.5 },
+      gtrR: { instrument: "distGuitar", waveform: "sawtooth", volume: 0.018, octave: 3, step: 0.5 },
+      arp: { instrument: "lead", waveform: "square", volume: 0.028, octave: 4, step: 0.25 },
+      str: { instrument: "strings", waveform: "sawtooth", volume: 0.1, octave: 4, step: 0.5 },
+      choir: { instrument: "choir", waveform: "sine", volume: 0.08, octave: 4, step: 0.5 },
+      brass: { instrument: "brass", waveform: "sawtooth", volume: 0.1, octave: 3, step: 0.5 },
+    },
+    melodies: {
+      syn: { instrument: "lead", waveform: "sawtooth", volume: 0.1 },
+      gtr: { instrument: "leadGuitar", waveform: "sawtooth", volume: 0.11 },
+      strm: { instrument: "strings", waveform: "sawtooth", volume: 0.08 },
+      pno: { instrument: "piano", waveform: "triangle", volume: 0.16 },
+    },
+    pans: { hat: 0.3, crash: -0.3, gtrL: -0.9, gtrR: 0.9, arp: 0.55, str: -0.6, choir: 0.35, brass: -0.4, syn: 0.05, gtr: 0.1, strm: -0.2, pno: 0.15 },
+    walkingBass: "bass",
+    plan: (kind) => {
+      const four = { kick: "x...x...x...x...", hat: "..x...x...x...x." };
+      const back = "....x.......x...";
+      const arp = "abcOabcOabcOabcO";
+      const bed = { str: "b-------", choir: "a-------" };
+      const rest: Record<Kind, KindPlan> = {
+        intro: { parts: { arp, ...bed, hat: four.hat }, mel: [], opts: { lo: 67, hi: 86, density: "sparse" } },
+        verse: { parts: { ...four, snare: back, bass: "R-5OB-R-", gtrL: "RRRRRRRR", gtrR: "55555555", arp, str: bed.str }, mel: ["syn"], opts: { lo: 64, hi: 83, density: "normal" } },
+        bridge: { parts: { kick: four.kick, hat: "x.x.x.x.x.x.x.x.", snare: back, bass: "R-R-5-O-", gtrL: "R-------", gtrR: "5-------", arp, ...bed }, mel: ["syn"], opts: { lo: 67, hi: 87, density: "normal" } },
+        chorus: { parts: { ...four, hat: "xoxoxoxoxoxoxoxo", snare: back, crash: CRASH4, bass: "ROROBO5-", gtrL: "R-.RR-R.", gtrR: "5-.55-5.", arp, ...bed, brass: "R...R.R." }, mel: ["gtr", "strm"], opts: { lo: 69, hi: 90, density: "normal" } },
+        solo: { parts: { bass: "R-------", ...bed }, mel: ["pno"], opts: { lo: 64, hi: 84, density: "sparse" } },
+        outro: { parts: { ...four, hat: "xoxoxoxoxoxoxoxo", snare: back, crash: CRASH4, bass: "ROROBO5-", gtrL: "R-.RR-R.", gtrR: "5-.55-5.", arp, ...bed, brass: "R...R.R." }, mel: ["gtr", "strm"], opts: { lo: 69, hi: 90, density: "normal" } },
+      };
+      return rest[kind];
+    },
+  },
+  cleandance: {
+    // きれいで現代的なダンス: やわらかい4つ打ちに、ピアノの分散和音・付点8分のエコーギター・弦・パッド・合唱を
+    // 左右に広げて重ねる。歪んだギターとシンセのリードは使わない。旋律はピアノ（Aメロ）と弦＋鐘（サビ）。
+    // ベースはメロディのように動く。「間奏（solo）」はドラムを抜いて一度引く（docs/sound/reference-nihonichi-bgm.md）
+    sevenths: false,
+    parts: {
+      kick: drum("kick", 0.2, "C2"), snare: drum("snare", 0.14, "C3"), hat: drum("hihat", 0.075, "C6"), crash: drum("crash", 0.09, "C5"),
+      bass: { instrument: "bass", waveform: "triangle", volume: 0.17, octave: 2, step: 0.5 },
+      parp: { instrument: "piano", waveform: "triangle", volume: 0.09, octave: 4, step: 0.25 },
+      egtr: { instrument: "echoGuitar", waveform: "triangle", volume: 0.08, octave: 4, step: 0.25 },
+      strl: { instrument: "strings", waveform: "sawtooth", volume: 0.1, octave: 3, step: 0.5 },
+      pad: { instrument: "pad", waveform: "sine", volume: 0.07, octave: 4, step: 0.5 },
+      choir: { instrument: "choir", waveform: "sine", volume: 0.08, octave: 4, step: 0.5 },
+    },
+    melodies: {
+      pmel: { instrument: "piano", waveform: "triangle", volume: 0.17 },
+      smel: { instrument: "strings", waveform: "sawtooth", volume: 0.15 },
+      bell: { instrument: "bell", waveform: "sine", volume: 0.05 },
+    },
+    pans: { hat: 0.3, crash: -0.3, parp: -0.6, egtr: 0.75, strl: -0.75, pad: 0.8, choir: -0.3, pmel: 0.05, smel: 0.15, bell: 0.5 },
+    walkingBass: "bass",
+    plan: (kind) => {
+      const four = { kick: "x...x...x...x...", hat: "..x...x...x...x." };
+      const back = "....x.......x...";
+      const parp = "abcAcbcAabcAcbcA";
+      const egtr = "c..b..a.c..b..a.";
+      const rest: Record<Kind, KindPlan> = {
+        intro: { parts: { parp, pad: "c-------", choir: "a-------" }, mel: [], opts: { lo: 67, hi: 86, density: "sparse" } },
+        verse: { parts: { ...four, bass: "R-5OB-R-", parp, egtr, strl: "b-------" }, mel: ["pmel"], opts: { lo: 64, hi: 83, density: "normal" } },
+        bridge: { parts: { ...four, hat: "x.x.x.x.x.x.x.x.", snare: back, bass: "R-R-5-O-", parp, egtr, strl: "b-------", pad: "c-------" }, mel: ["pmel"], opts: { lo: 67, hi: 87, density: "normal" } },
+        chorus: { parts: { ...four, hat: "xoxoxoxoxoxoxoxo", snare: back, crash: CRASH4, bass: "R-.5OB5-", parp, egtr, strl: "b-------", pad: "c-------", choir: "a-------" }, mel: ["smel", "bell"], opts: { lo: 69, hi: 88, density: "normal" } },
+        solo: { parts: { bass: "R-------", pad: "c-------", choir: "a-------" }, mel: ["pmel"], opts: { lo: 64, hi: 84, density: "sparse" } },
+        outro: { parts: { ...four, hat: "xoxoxoxoxoxoxoxo", snare: back, crash: CRASH4, bass: "R-.5OB5-", parp, egtr, strl: "b-------", pad: "c-------", choir: "a-------" }, mel: ["smel", "bell"], opts: { lo: 69, hi: 88, density: "normal" } },
+      };
+      return rest[kind];
+    },
+  },
   epic: {
     sevenths: false,
     parts: {
@@ -879,6 +961,7 @@ function mysteryScore(spec: SongSpec, rng: Rng, key: Key, kinds: Kind[]): Score 
 /** 曲調ごとのドラムセット（GMのドラムキット番号）。 */
 const DRUM_KIT: Partial<Record<Style, number>> = {
   rock: 16, metal: 16, hardcore: 16, deathmetal: 16, progmetal: 16, epic: 48, jazz: 32, electro: 24, phonk: 25, rnb: 8, cafe: 8, samba: 8, jpop: 8, folk: 8,
+  dancerock: 16, cleandance: 8,
 };
 
 // フィル（8小節のまとまりの最後の小節で、タムを回して次へつなぐ）
@@ -934,6 +1017,48 @@ function applyDrive(kp: KindPlan, kind: Kind, tpl: Template, on: boolean): KindP
   if ("kick" in tpl.parts && tpl.parts.kick.step === 0.25) parts.kick = "x.x.x.x.x.x.x.x.";
   if ("hat" in tpl.parts && tpl.parts.hat.step === 0.25) parts.hat = kind === "bridge" ? "x.x.x.x.x.x.x.x." : "xoxoxoxoxoxoxoxo";
   return { ...kp, parts };
+}
+
+/**
+ * ベースをメロディのように動かす: 各小節の最後の音（1拍以内）を、次の小節の最初の音へ1音ずつ近づく経過音にする。
+ * 経過音は調の音階から選び、その小節の和音の音と半音でぶつかる音は避ける（例: 短調の属和音の3度の半音下）。
+ * あわせて、ベースの音域（E1〜G3）に収める。
+ */
+export function walkBass(notes: NoteEvent[], barChords: string[], beats: number, key: Key): NoteEvent[] {
+  const LOW = 28, HIGH = 55;
+  const fold = (m: number): number => {
+    let x = m;
+    while (x > HIGH) x -= 12;
+    while (x < LOW) x += 12;
+    return x;
+  };
+  const out = notes.map((n) => (n.note === REST ? { ...n } : { ...n, note: midiToName(fold(noteNameToMidi(n.note))) }));
+  const starts: number[] = [];
+  let t = 0;
+  for (const n of out) {
+    starts.push(t);
+    t += n.durationBeats;
+  }
+  const scalePcs = key.scale.map((s) => (key.tonic + s) % 12);
+  for (let bar = 0; bar < barChords.length; bar++) {
+    const end = (bar + 1) * beats;
+    const lastIdx = out.findIndex((n, i) => Math.abs(starts[i] + n.durationBeats - end) < 1e-9 && starts[i] >= bar * beats - 1e-9);
+    const nextIdx = out.findIndex((_, i) => Math.abs(starts[i] - end) < 1e-9);
+    if (lastIdx <= 0 || nextIdx < 0) continue;
+    const last = out[lastIdx], prev = out[lastIdx - 1], next = out[nextIdx];
+    if (last.note === REST || prev.note === REST || next.note === REST || last.durationBeats > 1 + 1e-9 || starts[lastIdx - 1] < bar * beats - 1e-9) continue;
+    const chord = chordPitchClasses(barChords[bar]);
+    const clash = (pc: number): boolean => !chord.includes(pc) && chord.some((c) => (pc - c + 12) % 12 === 1 || (c - pc + 12) % 12 === 1);
+    const allowed = scalePcs.filter((pc) => !clash(pc)).concat(chord);
+    const target = noteNameToMidi(next.note);
+    const from = noteNameToMidi(prev.note);
+    const dir = from < target ? -1 : 1;
+    // 前の音の側から近づく音を探し、見つからなければ反対側から（例: 導音で主音へ）
+    const found = [dir, -dir].flatMap((dd) => [1, 2, 3].map((d) => target + dd * d))
+      .find((m) => allowed.includes(((m % 12) + 12) % 12) && m >= LOW && m <= HIGH && m !== from);
+    if (found !== undefined) out[lastIdx] = { ...last, note: midiToName(found) };
+  }
+  return out;
 }
 
 /** 設計図から曲を作る。 */
@@ -997,9 +1122,22 @@ export function composeSong(spec: SongSpec): Score {
     return { chords: entry.chords.join(" "), parts: kp.parts, melody };
   });
   const hasFills = beats === 4 && spec.style !== "jazz" && tpl.parts.snare?.step === 0.25;
-  const score = arrange({ tempoBpm: spec.bpm, beatsPerBar: beats, sections, parts: { ...tpl.parts, ...driveParts, ...(hasFills ? TOM_PARTS : {}), ...(OPENING_STYLES.includes(spec.style) ? STRIKE_PARTS : {}) }, melodies: tpl.melodies });
+  const allParts = { ...tpl.parts, ...driveParts, ...(hasFills ? TOM_PARTS : {}), ...(OPENING_STYLES.includes(spec.style) ? STRIKE_PARTS : {}) };
+  const score = arrange({ tempoBpm: spec.bpm, beatsPerBar: beats, sections, parts: allParts, melodies: tpl.melodies });
+  // 曲調ごとの左右の位置と、メロディのように動くベース
+  const trackKeys = [...Object.keys(allParts), ...Object.keys(tpl.melodies)];
+  if (tpl.pans) {
+    trackKeys.forEach((k, i) => {
+      if (tpl.pans![k] !== undefined && score.tracks[i]) score.tracks[i].pan = tpl.pans![k];
+    });
+  }
+  if (tpl.walkingBass) {
+    const i = trackKeys.indexOf(tpl.walkingBass);
+    const barChords = sections.flatMap((s) => s.chords.split(/\s+/).filter(Boolean));
+    if (i >= 0 && score.tracks[i]) score.tracks[i].notes = walkBass(score.tracks[i].notes, barChords, beats, key);
+  }
   score.drumKit = DRUM_KIT[spec.style] ?? 0;
-  if (spec.style === "electro" || spec.style === "jpop") score.pump = true;
+  if (spec.style === "electro" || spec.style === "jpop" || spec.style === "dancerock") score.pump = true;
   if (OPENING_STYLES.includes(spec.style)) score.opening = true;
   score.style = spec.style;
   score.tone = METAL_STYLES.includes(spec.style) ? "metal" : "rock";
