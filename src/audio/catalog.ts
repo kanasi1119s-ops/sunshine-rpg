@@ -30,6 +30,7 @@ export const STYLE_LABEL: Record<Style, string> = {
   rock: "ロック", metal: "メタル", classic: "クラシック", space: "空間系", cafe: "キーボード（カフェ）", discord: "不協和音", mystery: "不思議",
   epic: "オーケストラ風", folk: "フォーク（アコースティック）", baroque: "バロック協奏曲風", nature: "自然音楽", phonk: "フォンク", samba: "サンバ", jazz: "ジャズ", rnb: "R&B", electro: "エレクトリック",
   hardcore: "ハードコア", deathmetal: "デスメタル", progmetal: "プログレッシブメタル（7拍子）", jpop: "J-POP",
+  dancerock: "ダンス×ロック（壮大）", cleandance: "きれいなダンス（現代的）",
 };
 
 function song(group: string, id: string, title: string, scene: string, style: Style, tonic: string, minor: boolean, bpm: number, seed: number, extra: Partial<SongSpec> = {}): CatalogEntry {

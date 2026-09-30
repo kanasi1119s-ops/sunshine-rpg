@@ -41,7 +41,7 @@ export interface AiSong {
   /** true なら、コード進行から自動の伴奏（ドラム・ベース・ギター・ピアノ・弦）を足す。 */
   autoAccompaniment: boolean;
   /** 自動の伴奏の雰囲気。 */
-  feel: "rock" | "pop" | "ballad";
+  feel: "rock" | "pop" | "ballad" | "dance";
   /** ギターの音色の方向。 */
   tone: "rock" | "metal" | "prs";
   /** AIが書くパート（メロディ・対旋律・ベースライン・ドラムなど）。 */
@@ -73,7 +73,7 @@ export const AI_SONG_SCHEMA = {
     barsPerChord: { type: "integer", enum: [1, 2] },
     repeats: { type: "integer" },
     autoAccompaniment: { type: "boolean" },
-    feel: { type: "string", enum: ["rock", "pop", "ballad"] },
+    feel: { type: "string", enum: ["rock", "pop", "ballad", "dance"] },
     tone: { type: "string", enum: ["rock", "metal", "prs"] },
     parts: {
       type: "array",
@@ -107,7 +107,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - bpm: テンポ（50〜220）。beats: 1小節の拍（3・4・6・7）。
 - chords: コード進行（空白でくぎる。C・Am・F#m7・Bbmaj7・Csus4・Gdim・Eaug・D7 など）。
 - barsPerChord: 1コードの小節数（1か2）。repeats: 進行のくり返し回数。
-- autoAccompaniment: true なら、コード進行から伴奏（ドラム・ベース・ギター・ピアノ・弦）を自動で足す。自分でドラムやベースを書くときは false にしてよい。feel: 自動の伴奏の雰囲気（rock / pop / ballad）。
+- autoAccompaniment: true なら、コード進行から伴奏（ドラム・ベース・ギター・ピアノ・弦）を自動で足す。自分でドラムやベースを書くときは false にしてよい。feel: 自動の伴奏の雰囲気（rock / pop / ballad / dance＝4つ打ち・メロディのように動くベース・ピアノの分散和音・エコーギターの、きれいで現代的な伴奏）。
 - tone: ギターの音色の方向（rock / metal / prs＝なめらかなリード）。
 - parts: 自分で書くパート。1曲に1〜8パート。
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。
@@ -123,7 +123,9 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
 - メロディは、コードの音（根音・3度・5度）を拍の頭に置き、間を音階の音でつなぐ。跳躍のあとは反対向きに戻る。
 - 動機（2〜4音の短い形）をくり返し、少しずつ変える。サビは音域を上げ、長い音を使う。
 - ベースは根音を中心に、コードの変わり目の前に経過音を入れる。ドラムは、キック・スネア・ハイハットの基本の型に、4小節や8小節ごとのフィル（タムやスネアの連打）とクラッシュを入れる。
-- RPGの場面（町・フィールド・ダンジョン・戦闘・ボス・悲しい場面など）に合った速さと調（明るい=長調、暗い=短調）を選ぶ。`;
+- RPGの場面（町・フィールド・ダンジョン・戦闘・ボス・悲しい場面など）に合った速さと調（明るい=長調、暗い=短調）を選ぶ。
+- きれいで現代的な音にするには（フリーBGM 1000曲を測って分かったこと）: キック・ベース・メロディは真ん中（pan 0前後）、和音の楽器・弦・パッド・ギターは左右に大きく振る（-0.9〜0.9）。歪んだギターは音量を小さめ（0.05〜0.1）にし、低音と響きの楽器（弦・パッド・合唱）で厚みを出す。
+- 曲は小さく始め（前奏は楽器を減らす）、途中で一度ドラムを抜いて静かにしてから、最後のサビで全部を戻す。ベースは根音だけでなく、5度・オクターブ・10度を行き来し、小節の最後で次のコードへ向かう音を入れると、メロディのように動く。`;
 
 const DUR_RULE = /^\d+(\.\d+)?$/;
 
@@ -189,7 +191,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   if (!Array.isArray(song.parts)) errors.push("parts がありません");
   if (errors.length) throw new Error(errors.join("\n"));
 
-  const feel = ["rock", "pop", "ballad"].includes(song.feel) ? song.feel : "pop";
+  const feel = ["rock", "pop", "ballad", "dance"].includes(song.feel) ? song.feel : "pop";
   let base: Score;
   try {
     base = buildNewSong({ bpm, beats: Number(song.beats), chords: song.chords, barsPerChord: song.barsPerChord === 2 ? 2 : 1, repeats, feel, leadInstrument: "lead" });
