@@ -108,3 +108,39 @@ export function eye(g, cx, cy, rx, ry, glow, dark, tilt = 0) {
   put(g, cy - Math.round(ry * 0.45), cx - Math.round(rx * 0.4), glow[2]);
 }
 export function toPieceFile(pal, name, g) { return { name, pal: pal.colors.map((h, i) => [pal.names[i], h]), build: () => g }; }
+
+// ================= 人物向けの追記（既存の関数は変えていない） =================
+/** 多角形の内外判定。 */
+export function pip(poly, x, y) { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c; } return c; }
+/** 通過点をなめらかにつなぐ曲線（Catmull-Rom）。closed=true で閉じた輪郭。 */
+export function spline(pts, closed = false, n = 6) {
+  const out = [], m = pts.length, at = (i) => (closed ? pts[((i % m) + m) % m] : pts[Math.max(0, Math.min(m - 1, i))]), segs = closed ? m : m - 1;
+  for (let i = 0; i < segs; i++) {
+    const p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
+    for (let s = 0; s < n; s++) { const t = s / n, t2 = t * t, t3 = t2 * t; out.push([0, 1].map((k) => 0.5 * (2 * p1[k] + (-p0[k] + p2[k]) * t + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * t2 + (-p0[k] + 3 * p1[k] - 3 * p2[k] + p3[k]) * t3))); }
+  }
+  if (!closed) out.push(pts[m - 1]);
+  return out;
+}
+/** 直線（1ドット幅）。 */
+export function line(g, x0, y0, x1, y1, k) { x0 = Math.round(x0); y0 = Math.round(y0); x1 = Math.round(x1); y1 = Math.round(y1); const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let e = dx + dy; for (;;) { put(g, y0, x0, k); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy) { e += dy; x0 += sx; } if (e2 <= dx) { e += dx; y0 += sy; } } }
+/** 多角形を「ぼかした高さ」で立体的に塗る。光は左上。R=丸みの大きさ、gain=陰影の強さ、clip=塗ってよい場所、tex=質感の補正。 */
+export function paintShape(g, poly, ramp, { R = 4, gain = 1, ambient = 0.28, bias = 0, tex = null, clip = null } = {}) {
+  const xs = poly.map((p) => p[0]), ys = poly.map((p) => p[1]), pad = R * 2 + 2;
+  const x0 = Math.floor(Math.min(...xs)) - pad, y0 = Math.floor(Math.min(...ys)) - pad, w = Math.ceil(Math.max(...xs)) + pad - x0 + 1, h = Math.ceil(Math.max(...ys)) + pad - y0 + 1;
+  const m = new Float32Array(w * h); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) m[y * w + x] = pip(poly, x0 + x + 0.5, y0 + y + 0.5) ? 1 : 0;
+  let a = m.slice();
+  const blur = (src) => { const t = new Float32Array(w * h), o = new Float32Array(w * h), d = 2 * R + 1;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { let s = 0; for (let i = -R; i <= R; i++) { const xx = x + i; if (xx >= 0 && xx < w) s += src[y * w + xx]; } t[y * w + x] = s / d; }
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { let s = 0; for (let i = -R; i <= R; i++) { const yy = y + i; if (yy >= 0 && yy < h) s += t[yy * w + x]; } o[y * w + x] = s / d; }
+    return o; };
+  a = blur(blur(a));
+  const Lv = [-0.5, -0.62, 0.6], ln = Math.hypot(...Lv), Lx = Lv[0] / ln, Ly = Lv[1] / ln, Lz = Lv[2] / ln;
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+    if (!m[y * w + x]) continue; const X = x0 + x, Y = y0 + y; if (clip && !clip(X, Y)) continue;
+    const dx = (a[y * w + x + 1] - a[y * w + x - 1]) / 2, dy = (a[(y + 1) * w + x] - a[(y - 1) * w + x]) / 2, k = 10 * gain;
+    const nz = 1 / Math.hypot(dx * k, dy * k, 1), nx = -dx * k * nz, ny = -dy * k * nz;
+    let lum = ambient + (1 - ambient) * clamp(nx * Lx + ny * Ly + nz * Lz, 0, 1) + bias; if (tex) lum += tex(X, Y, lum);
+    put(g, Y, X, ramp[clamp(Math.floor(lum * ramp.length), 0, ramp.length - 1)]);
+  }
+}
