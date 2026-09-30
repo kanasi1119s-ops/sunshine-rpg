@@ -111,3 +111,35 @@ export const disc = (cx, cy, r, c) => { const o = []; for (let y = Math.floor(cy
 export const line = (x0, y0, x1, y1, c) => { const o = []; const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)); for (let i = 0; i <= n; i++) o.push([Math.round(x0 + ((x1 - x0) * i) / (n || 1)), Math.round(y0 + ((y1 - y0) * i) / (n || 1)), c]); return o; };
 /** 中央(15.5)から左右に広がる服（すそ）。y0の半幅w0からy1の半幅w1へ。edge=輪郭 l=明 m=中 d=影 hem=すその線（最下段）。 */
 export const dress = (y0, y1, w0, w1, { edge = "r", l = "k", m = "j", d = "J", hem = null } = {}) => { const o = []; for (let y = y0; y <= y1; y++) { const w = Math.round(w0 + ((w1 - w0) * (y - y0)) / Math.max(1, y1 - y0)); for (let x = 16 - w; x <= 15 + w; x++) { const k = x - (16 - w), e = k === 0 || x === 15 + w; let c = e ? edge : k < Math.max(2, w * 0.5) ? l : k < w * 1.25 ? m : d; if (!e && hem && y === y1) c = hem; o.push([x, y, c]); } } return o; };
+
+// ---- モンスター用の描画道具（M1 追記）。光は左上、面は暗→明の階調で塗る。 ----
+const hx = (s) => [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16));
+const toHex = (a) => "#" + a.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+/** R("abcd", 暗色, 明色): 文字ごとに暗→明の色を割り当てた pal の断片を返す。 */
+export function R(chars, dark, light) { const a = hx(dark), b = hx(light), n = chars.length; const o = {}; [...chars].forEach((c, i) => { const t = n === 1 ? 0 : i / (n - 1); o[c] = toHex(a.map((v, k) => v + (b[k] - v) * t)); }); return o; }
+export const rng = (seed) => { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; };
+export class Cv {
+  constructor() { this.g = blank(); }
+  px(x, y, c) { x = Math.round(x); y = Math.round(y); if (x >= 0 && x < W && y >= 0 && y < W) this.g[y][x] = c; }
+  list(l) { for (const [x, y, c] of l) this.px(x, y, c); return this; }
+  /** pred(x,y) が真の場所を ramp（[0]=縁・[1..]=暗→明）で塗る。 */
+  shape(pred, x0, y0, x1, y1, ramp, o = {}) {
+    const inside = (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1 && pred(x, y);
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, rx = (x1 - x0 + 1) / 2, ry = (y1 - y0 + 1) / 2, n = ramp.length - 1; const lx = o.lx ?? 0.4, ly = o.ly ?? 0.5;
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { if (!inside(x, y)) continue;
+      const edge = !inside(x - 1, y) || !inside(x + 1, y) || !inside(x, y - 1) || !inside(x, y + 1);
+      if (edge && o.outline !== false) { this.px(x, y, ramp[0]); continue; }
+      const t = 0.55 - lx * ((x - cx) / rx) - ly * ((y - cy) / ry) + (((x + y) & 1) && o.dither ? 0.07 : 0);
+      this.px(x, y, ramp[1 + Math.max(0, Math.min(n - 1, Math.floor(t * n)))]); }
+    return this; }
+  ell(cx, cy, rx, ry, ramp, o = {}) { return this.shape((x, y) => ((x - cx) / (rx + 0.5)) ** 2 + ((y - cy) / (ry + 0.5)) ** 2 <= 1, Math.floor(cx - rx), Math.floor(cy - ry), Math.ceil(cx + rx), Math.ceil(cy + ry), ramp, o); }
+  box(x0, y0, x1, y1, ramp, o = {}) { return this.shape(() => true, x0, y0, x1, y1, ramp, o); }
+  poly(pts, ramp, o = {}) { const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]); const pred = (x, y) => { let c = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c; } return c; };
+    return this.shape(pred, Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys), ramp, o); }
+  line(x0, y0, x1, y1, c, th = 1) { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1); for (let i = 0; i <= n; i++) { const x = x0 + ((x1 - x0) * i) / n, y = y0 + ((y1 - y0) * i) / n; this.px(x, y, c); if (th > 1) { this.px(x + 1, y, c); } if (th > 2) this.px(x, y + 1, c); } return this; }
+  /** 影（地面の暗い1行）。 */
+  shadow(cx, y, hw, c) { for (let x = cx - hw; x <= cx + hw; x++) this.px(x, y, c); return this; }
+  /** 目: (x,y) が左上。2×2 で左上が白いハイライト。 */
+  eye(x, y, c, hi = "w") { this.px(x, y, hi); this.px(x + 1, y, c); this.px(x, y + 1, c); this.px(x + 1, y + 1, c); return this; }
+  rows() { return toRows(this.g); }
+}
