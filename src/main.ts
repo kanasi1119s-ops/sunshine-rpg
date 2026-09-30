@@ -3,6 +3,7 @@ import { GAME_TITLE } from "./core/status";
 import { backTitle, confirmTitle, createTitleState, moveTitleCursor } from "./game/title/title-menu";
 import { renderTitle } from "./render/title-renderer";
 import { battleSeFor } from "./game/battle/battle-se";
+import { battleEffectFor, type BattleEffect } from "./game/battle/battle-effect";
 import { createStaffRollState, skipStaffRoll, startStaffRoll, updateStaffRoll } from "./game/title/staff-roll";
 import { renderStaffRoll } from "./render/staff-roll-renderer";
 import { addGold, computeVictoryGold } from "./game/economy/gold";
@@ -543,6 +544,7 @@ window.addEventListener("keydown", (event) => {
 let lastDialogueDirection: Direction | null = null;
 let lastBattleDirection: Direction | null = null;
 /** 直前に効果音を鳴らした戦闘メッセージ（同じメッセージで2度鳴らさない）。 */
+let battleEffect: { effect: BattleEffect; startedAt: number } | null = null;
 let lastBattleMessage: string | null = null;
 let battle: BattleController | null = null;
 let heroStats = createInitialHeroStats();
@@ -1182,6 +1184,8 @@ const loop = createGameLoop({
       if (uiState.kind === "message") {
         if (uiState.text !== lastBattleMessage) {
           lastBattleMessage = uiState.text;
+          const effect = battleEffectFor(uiState.text, battle.getState().party.map((c) => c.name));
+          battleEffect = effect ? { effect, startedAt: performance.now() } : null;
           const se = battleSeFor(uiState.text, battle.getState().party.map((c) => c.name));
           if (se && audioStarted) {
             audio.playSe(seOf(se));
@@ -1301,7 +1305,14 @@ const loop = createGameLoop({
     }
 
     if (battle) {
-      renderBattle(ctx, battle.getState(), battle.getUiState(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
+      renderBattle(
+        ctx,
+        battle.getState(),
+        battle.getUiState(),
+        LOGICAL_WIDTH,
+        LOGICAL_HEIGHT,
+        battleEffect ? { effect: battleEffect.effect, elapsedMs: performance.now() - battleEffect.startedAt } : null,
+      );
       if (victoryMessage && battle.getUiState().kind === "finished") {
         ctx.fillStyle = "#f2c14e";
         ctx.font = "10px monospace";
