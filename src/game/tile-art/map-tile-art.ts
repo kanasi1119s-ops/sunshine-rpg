@@ -8,6 +8,8 @@ import type { TileMapData } from "../map/types";
 const T = (pattern: string): string => `tint:${pattern}`;
 
 const DUNGEON = { 1: T("flagstone"), 2: T("brick"), 3: T("brick") };
+/** 虚灯宮の内部: 3=柱、4=虚（何もない暗がり）、6=光る石。 */
+const KYOTOUKYU = { ...DUNGEON, 3: T("pillar"), 4: T("void"), 6: T("crystal") };
 
 export const MAP_TILE_ART: Record<string, Record<number, string>> = {
   // 町の建物（壁・屋根・扉・橋・木箱）。屋根は瓦、扉・橋・板壁は板張り、石造りは煉瓦。
@@ -19,20 +21,20 @@ export const MAP_TILE_ART: Record<string, Record<number, string>> = {
   "tetsukusari-town": { 1: T("flagstone"), 3: T("flagstone"), 5: T("brick"), 6: T("brick") },
   "touri-branch": { 1: T("plank"), 2: T("brick"), 3: T("plank") },
   "garasuko-warehouse": { 1: T("plank"), 2: T("brick"), 3: T("crate"), 4: T("plank") },
-  "tetsukusari-mine": { 1: T("flagstone"), 2: T("brick"), 4: T("plank"), 5: T("plank") },
+  "tetsukusari-mine": { 1: T("flagstone"), 2: T("brick"), 3: T("crystal"), 4: T("plank"), 5: T("plank"), 6: T("machine") },
   "sanone-town": { 1: T("sand"), 2: T("sand"), 3: T("sand"), 4: "treeCanopy", 5: T("roof"), 6: "water", 7: T("plank") },
   "sanone-camp": { 1: T("sand"), 2: T("sand"), 3: T("crate"), 4: T("plank"), 5: T("sand"), 6: T("plank") },
   "kiri-town": { 1: T("flagstone"), 2: T("flagstone"), 3: T("brick"), 4: T("cloud"), 5: T("brick"), 6: T("brick"), 7: T("plank") },
   "kiri-archive": { 1: T("flagstone"), 2: T("brick"), 3: T("plank"), 4: T("plank"), 5: T("plank") },
   "shimohara-town": { 1: T("snow"), 2: T("flagstone"), 3: T("snow"), 4: "treeCanopy", 5: T("roof"), 6: T("brick"), 7: T("plank") },
-  "shimohara-facility": { 1: T("flagstone"), 2: T("brick"), 5: T("plank") },
+  "shimohara-facility": { 1: T("flagstone"), 2: T("brick"), 3: T("machine"), 4: T("pipe"), 5: T("plank") },
   "fushima-town": { 1: T("plank"), 2: T("cloud"), 3: T("plank"), 4: T("plank"), 5: T("plank"), 6: T("crate") },
-  "fushima-base": { 1: T("flagstone"), 2: T("brick"), 5: T("plank") },
+  "fushima-base": { 1: T("flagstone"), 2: T("brick"), 3: T("machine"), 4: T("pipe"), 5: T("plank") },
   "toushin-town": { 1: T("flagstone"), 2: T("brick"), 3: T("roof"), 4: T("plank"), 5: "water", 6: "grass", 7: T("plank") },
-  "toushin-hall": { 1: T("flagstone"), 2: T("brick"), 3: T("flagstone"), 4: T("plank"), 5: T("plank") },
-  "kyotoukyu-court": DUNGEON,
-  "kyotoukyu-corridor": DUNGEON,
-  "kyotoukyu-sanctum": DUNGEON,
+  "toushin-hall": { 1: T("flagstone"), 2: T("brick"), 3: T("flagstone"), 4: T("plank"), 5: T("plank"), 6: T("carpet") },
+  "kyotoukyu-court": KYOTOUKYU,
+  "kyotoukyu-corridor": KYOTOUKYU,
+  "kyotoukyu-sanctum": KYOTOUKYU,
   ...Object.fromEntries(["deep-1", "deep-2", "deep-3", "deep-4", "tower-1", "tower-2", "tower-3", "kanou-1", "kanou-2", "kanou-3", "kanou-4"].map((id) => [id, DUNGEON])),
   ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`god-shrine-${i + 1}`, DUNGEON])),
 };
