@@ -1,0 +1,38 @@
+// 守りの腕輪（ドット絵・アイテム）。完全オリジナルの絵。光は左上。
+export const name = "守りの腕輪";
+export const category = "item";
+export const pal = { E: "#164e6a", e: "#2a8ca8", g: "#6e3e1c", h: "#b8741c", i: "#f0b83c", j: "#ffe68a", k: "#341c14", u: "#2c3c88", v: "#4a68c2", w: "#ffffff", y: "#ccf8f0" };
+export const rows = [
+  "................................",
+  "................................",
+  "................................",
+  "................................",
+  "................................",
+  "................................",
+  "............gggggggk............",
+  ".........gggjjjjjjjgkgk.........",
+  "........gjjjggggggggjjgk........",
+  ".......gjiggggggggggggigk.......",
+  "......gjjggggggggggggggigk......",
+  ".....gjiggggggkkkkggggggigk.....",
+  "....gjiggggkkk....kkkgggjigk....",
+  "...gjiwgggk..........kgggiigk...",
+  "...gjigggk............kggjigk...",
+  "...gjiggk..............kgjigk...",
+  "..gjihhgk..............gjihhgk..",
+  "..gjihhggk............kgjihhgk..",
+  "..kgihhhggk..........kgjihhhgk..",
+  "...kjihvujgkgkkkkkgggjjivuhgk...",
+  "...gjiguuiijjgggggjjjiihuuhgk...",
+  "...kgihhhhhiiiyjyEiiihhhhhhgk...",
+  "....kgihhhhhhyweeeEhhhhhhhgk....",
+  ".....kgihhhjjyeeeeEhhhhhhgk.....",
+  "......kgighjjyeeeeEhhhghgk......",
+  ".......kgihhhEeeeeEhhhhgk.......",
+  "........kggghhEhEEhhgggk........",
+  ".........kkkggggggggkkk.........",
+  "............kkkkkkkk............",
+  "................................",
+  "................................",
+  "................................",
+];

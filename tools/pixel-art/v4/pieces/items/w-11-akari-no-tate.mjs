@@ -1,0 +1,38 @@
+// 灯りの盾（ドット絵・アイテム）。完全オリジナルの絵。光は左上。
+export const name = "灯りの盾";
+export const category = "item";
+export const pal = { E: "#164e6a", e: "#2a8ca8", f: "#6cd6e2", g: "#6e3e1c", h: "#b8741c", j: "#ffe68a", k: "#341c14", t: "#1a1e4c", u: "#2c3c88", v: "#4a68c2", w: "#ffffff", x: "#86a8ee", y: "#ccf8f0" };
+export const rows = [
+  "................................",
+  "................................",
+  "............gggggggk............",
+  "..........ggjjjjjjjgkk..........",
+  "........ggjjhhhhhhhhjgkk........",
+  ".......gjjhhhhhhhhhhhhjgk.......",
+  "......gjhhhhxxxxxxtthhhhgk......",
+  ".....gjhhhxxvvvvfvvvtthhhgk.....",
+  ".....gjhhwvvvvyyyEvvvtthhgk.....",
+  "....gjhhwvvvyyeeeeyEvvtthhgk....",
+  "....gjhxvvuyewEEEEeeEuvtthgk....",
+  "...gjhhxvvyeeEuuuuEeeEutthhgk...",
+  "...gjhxvvuyeEuuuuuuEeEuutthgk...",
+  "...gjhxvvuyEuuujjuuuyEuutthgk...",
+  "...gjhtvvuyEuujjjjuuyEuutthgk...",
+  "..kghhtvvuyEuuujjuuuyEuutthhgk..",
+  "...kjhhtvvyeEuuuuuuyeEutthhgk...",
+  "...kghhttvEeeEuuuuyeeEutthhgk...",
+  "....kghhtvvEeeyyyyeeEutthhgk....",
+  ".....kjhhtvvEEeeeeEEutthhgk.....",
+  ".....kghhtvvuuEEEEuuutthhgk.....",
+  "......kghhtvvuuufuuutthhgk......",
+  ".......kjhttvuuyfuuutthgk.......",
+  ".......kghhttvuufuutthhgk.......",
+  "........kghhttvufutthhgk........",
+  ".........kghhttvftthhgk.........",
+  "..........kghhtttthhgk..........",
+  "...........kghhtthhgk...........",
+  "............kghhhhgk............",
+  ".............kggggk.............",
+  "..............kkkk..............",
+  "................................",
+];

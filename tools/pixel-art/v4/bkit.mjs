@@ -1,7 +1,7 @@
 import { blank, toRows, W } from "./lib4.mjs";
 // ---- ボス・大きな絵用の描画部品（担当B追記）。ramp は「暗→明」の文字列（先頭が縁の色）。光は左上。 ----
 /** 描画用のキャンバス。 */
-export function cv() { const g = blank(); const put = (x, y, c) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && x < W && y >= 0 && y < W) g[y][x] = c; }; const get = (x, y) => (x >= 0 && x < W && y >= 0 && y < W ? g[y][x] : "."); return { g, put, get, rows: () => toRows(g) }; }
+export function cv() { const g = blank(); const put = (x, y, c) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && x < W && y >= 0 && y < W) g[y][x] = c; }; const get = (x, y) => (x >= 0 && x < W && y >= 0 && y < W ? g[y][x] : "."); return { g, put, get, rows: (keep = "w") => toRows(despeckle(g, keep)) }; }
 /** 立体的に陰影をつけた楕円（左上から光）。o.top/o.bot: 上半分・下半分だけ描く。o.flat: 陰影を弱める。 */
 export function ell(c, cx, cy, rx, ry, ramp, o = {}) {
   const n = ramp.length; const ins = (x, y) => { const dx = (x - cx) / (rx + 0.5), dy = (y - cy) / (ry + 0.5); return dx * dx + dy * dy <= 1 && (!o.top || y <= cy) && (!o.bot || y >= cy); };
@@ -43,3 +43,10 @@ export const hole = (c, cx, cy, rx, ry) => fillEll(c, cx, cy, rx, ry, ".");
 export const ground = (c, cx, cy, rx, ry, ch) => fillEll(c, cx, cy, rx, ry, ch);
 /** 目（外側 out・白目 sc・虹彩 ir・瞳 pu・ハイライト w）。中心 cx,cy、横 rx・縦 ry。 */
 export function eye(c, cx, cy, rx, ry, out, sc, ir, pu, w) { fillEll(c, cx, cy, rx, ry, out); fillEll(c, cx, cy, rx - 1, ry - 1, sc); const r2 = Math.max(1, Math.min(rx, ry) - 1); fillEll(c, cx, cy + 0.3, r2 - 0.5, ry - 1, ir); c.put(cx, cy, pu); c.put(cx, cy + 1, pu); if (rx > 2) c.put(cx + 1, cy, pu); c.put(cx - 1, cy - 1, w); }
+
+/** 孤立した1ドット（同じ色の上下左右が無い点）を、まわりの多い色にそろえてざらつきを減らす。keep の文字（ハイライトなど）は残す。 */
+export function despeckle(g, keep = "w") {
+  const get = (x, y) => (x >= 0 && x < W && y >= 0 && y < W ? g[y][x] : ".");
+  for (let pass = 0; pass < 2; pass++) { const chg = []; for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const ch = g[y][x]; if (ch === "." || keep.includes(ch)) continue; const nb = [get(x - 1, y), get(x + 1, y), get(x, y - 1), get(x, y + 1)]; if (nb.includes(ch)) continue; const op = nb.filter((k) => k !== "."); if (op.length < 2) continue; const cnt = {}; for (const k of op) cnt[k] = (cnt[k] || 0) + 1; const best = Object.entries(cnt).sort((a, b) => b[1] - a[1] || nb.indexOf(a[0]) - nb.indexOf(b[0]))[0][0]; chg.push([x, y, best]); } for (const [x, y, k] of chg) g[y][x] = k; }
+  return g;
+}

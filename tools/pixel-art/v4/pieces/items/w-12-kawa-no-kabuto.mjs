@@ -1,0 +1,38 @@
+// 革の兜（ドット絵・アイテム）。完全オリジナルの絵。光は左上。
+export const name = "革の兜";
+export const category = "item";
+export const pal = { i: "#f0b83c", n: "#b8844a", p: "#341a24", q: "#66342e", r: "#98523a", s: "#c8805a" };
+export const rows = [
+  "................................",
+  "................................",
+  "................................",
+  "............qqqqqqqq............",
+  "..........qqsssssssqpq..........",
+  "........qqssrrrqqrrrsqpq........",
+  ".......qssrrsrrrrrrrrrsqp.......",
+  "......qsrrrnrrrqqrrrrrrrqp......",
+  ".....qsrrrnrrrrrrrrrrrrrrqp.....",
+  ".....qsrrrrrrrrqqrrrrrrrrqp.....",
+  "....qsrrrrrrrrrrrrrrrrrrrrqp....",
+  "....qsrrrrrrrrrqqrrrrrrrrrqp....",
+  "....qsrrrrrrrrrrrrrrrrrrrrqp....",
+  "...qsrrirrrrrrriiqqqqqqqiqqqp...",
+  "...qsqqqqqqqqqqqqqqqqqqqqqqqp...",
+  "...qsrrrrrrrrrrrrrrrrrrrrrrqp...",
+  "...qsrrrrrrrrrrrrrrrrrrrrrrqp...",
+  "...qsrrrrrrrrrrrrrrrrrrrrrrqp...",
+  "...qsrrrrrrrrrrrrrrrrrrrrrrqp...",
+  "...qsrrrrrrrrrrrrrrrrrrrrrrqp...",
+  "...qsrrrrrqqqqqqqqqqqqrrrrrqp...",
+  "...qsrrrrqpqqqqqqqqqqpqrrrrqp...",
+  "...qsrrrrqpqqqqqqqqqqpqrrrrqp...",
+  "...qsrrrrqpppppppppppqqrrrrqp...",
+  "...qsrrrrqpppppppppppqqrrrrqp...",
+  "...qsrrrrqpppppppppppqqrrrrqp...",
+  "...qsrirrqpppppppppppqqrrirqp...",
+  "...qqqqqqqqqqqqqqqqqqqqqqqqqp...",
+  "....pppppppppppppppppppppppp....",
+  "................................",
+  "................................",
+  "................................",
+];

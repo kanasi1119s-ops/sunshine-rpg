@@ -1,0 +1,14 @@
+import { painter } from "../../lib4.mjs";
+export const name = "広葉樹";
+export const category = "object";
+export const pal = { o: "#16301f", e: "#22432a", d: "#2f5c2c", m: "#4a8a34", l: "#78b446", h: "#b4dc74", t: "#7a4c2c", T: "#a06a3a", u: "#4a2c1e", S: "#26301f" };
+const p = painter();
+p.rect(13, 21, 18, 27, "t"); p.rect(13, 21, 14, 27, "T"); p.rect(18, 21, 18, 27, "u"); p.rect(12, 26, 19, 27, "t"); p.put(12, 27, "T"); p.put(19, 27, "u"); p.rect(15, 24, 15, 25, "u");
+const tn = ["e", "d", "m", "l", "h"];
+p.blob(21, 17, 7, 6, tn); p.blob(10, 17, 7, 6, tn); p.blob(16, 9, 9, 7, tn); p.blob(16, 17, 10, 6, tn, -0.05);
+p.pts([[11, 6], [12, 6], [9, 10], [10, 10], [7, 15], [8, 15], [14, 4], [15, 4]], "h");
+p.pts([[19, 12], [20, 12], [23, 15], [24, 15], [15, 19], [16, 19], [21, 20]], "d");
+p.rect(11, 22, 12, 22, "e"); p.rect(19, 22, 21, 22, "e");
+p.outline("o");
+p.shadow(19, 28, 9, 2, "S");
+export const rows = p.rows();

@@ -1,0 +1,38 @@
+// 木の盾（ドット絵・アイテム）。完全オリジナルの絵。光は左上。
+export const name = "木の盾";
+export const category = "item";
+export const pal = { "1": "#3c4862", "3": "#a2b4d0", "4": "#dcecfa", g: "#6e3e1c", h: "#b8741c", i: "#f0b83c", j: "#ffe68a", k: "#341c14", l: "#5a361f", m: "#87572f", n: "#b8844a", o: "#1c2236", w: "#ffffff" };
+export const rows = [
+  "................................",
+  "................................",
+  "................................",
+  "............111g111o............",
+  "..........11444j4441oo..........",
+  "........11441111111141oo........",
+  ".......14411mmlmmmml1141o.......",
+  "......1431mmmmlmmmmlmm131o......",
+  ".....1431lmmnmlmmnmlmmn131o.....",
+  ".....141mlmmmmlmmmmlmmmm11o.....",
+  "....141mmlmmmmlmmmmlmmmml11o....",
+  "....o1nmmlmmmmlmmmmlmmmmll1o....",
+  "...141mmmlmmmmjjjgmlmmmmlm41o...",
+  "...141nmmlmmnjiiiiglmmnmlm11o...",
+  "...o1nmmmlmmjiwhhhigmmmmlml1o...",
+  "...o1nmmmlmmjihhhhhgmmmmlml1o...",
+  "..o1jmmmmlmmjihhhhhgmmmmlmmj1o..",
+  "...o1nmmmlmmjihhhhhgmmmmlml1o...",
+  "...o1nnmmlmmgihhhhhgmmnmlml1o...",
+  "...141mmmlmmmgihhhglmmmmlm41o...",
+  "...o11mmmlmmmmggggmlmmmmlm41o...",
+  "....o1nmmlmmmmlmmmmlmmmmll1o....",
+  "....o11mmlmmmmlmmmmlmmmml41o....",
+  ".....o41mlmmnmlmmnmlmmnm41o.....",
+  ".....o131lmmmmlmmmmlmmm431o.....",
+  "......o131mmmmlmmmmlmm431o......",
+  ".......o1141mmlmmmml4411o.......",
+  "........oo114444444411oo........",
+  "..........oo111j1111oo..........",
+  "............oookoooo............",
+  "................................",
+  "................................",
+];

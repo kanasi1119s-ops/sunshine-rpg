@@ -1,0 +1,38 @@
+// とんがり帽子（ドット絵・アイテム）。完全オリジナルの絵。光は左上。
+export const name = "とんがり帽子";
+export const category = "item";
+export const pal = { P: "#26183e", Q: "#4a2c80", R: "#7a58c0", S: "#b496f2", a: "#421222", b: "#8a2434", d: "#f08484", g: "#6e3e1c", i: "#f0b83c", j: "#ffe68a", k: "#341c14" };
+export const rows = [
+  "................................",
+  ".......................QQ.......",
+  "......................QSQP......",
+  "....................QQSRQP......",
+  "...................QSSRRQP......",
+  "..................QSRRRQP.......",
+  ".................QSRRRRQP.......",
+  "................SSRRRRRQP.......",
+  "...............QSjRRRRRQP.......",
+  ".............gQSRRRRRRRQP.......",
+  "............giSRRRRRRRRQP.......",
+  "...........gijiRRRRRRRRQP.......",
+  "............kiRRRRRRRRRQP.......",
+  "...........giRiRRRRRRRRQP.......",
+  "..........QSRRRRRRRRRRRQP.......",
+  "..........QSRRRRRRiRRRRQP.......",
+  ".........QSRSRRRRRRRRRRQP.......",
+  "........QSRRRRRRRRRRRRRQP.......",
+  "........QSRRRRRRRRRRRRRQP.......",
+  ".......bddddddjiiiddddda........",
+  "....QQQRdbbbbbiggibbbbbbaQQ.....",
+  "...QRRRdbbbbbbiggibbbbbbaRRP....",
+  "..QRQQQaaaaaaaiiiiaaaaaaaQQQP...",
+  ".QRQQQQSRRRRRRRRRRRRRRRRQQQQQP..",
+  ".QRQQQSRRRRRRRRRRRRRRRRRRQQQQP..",
+  "..PQQQQQQQQQQQQQQQQQQQQQQQQQQP..",
+  "...PQQQQQQQQQQQQQQQQQQQQQQQQP...",
+  "....PPPQQQQQQQQQQQQQQQQQQPPP....",
+  ".......PPPPPQQQQQQQQPPPPP.......",
+  "............PPPPPPPP............",
+  "................................",
+  "................................",
+];

@@ -27,7 +27,7 @@ export function face(o = {}) {
     if (eye === "narrow") p.push([x0, 7, E], [x0 + 1, 7, E], [x0 + 2, 7, E], [x0, 8, "w"], [x0 + 1, 8, I], [x0 + 2, 8, E], [x0, 9, "c"], [x0 + 1, 9, "c"], [x0 + 2, 9, "c"]);
     if (eye === "sleepy") p.push([x0, 7, "c"], [x0 + 1, 7, "c"], [x0 + 2, 7, "c"], [x0, 8, E], [x0 + 1, 8, E], [x0 + 2, 8, E], [x0, 9, "w"], [x0 + 1, 9, I], [x0 + 2, 9, I]);
     if (eye === "sharp") { p.push([x0, 8, E], [x0 + 1, 8, E], [x0 + 2, 8, E], [x0, 9, "w"], [x0 + 1, 9, I], [x0 + 2, 9, E]); p.push(right ? [x0 + 3, 7, E] : [x0 - 1, 7, E]); p.push([x0 + 1, 7, "c"], right ? [x0, 7, "c"] : [x0 + 2, 7, "c"]); p.push(right ? [x0 + 2, 7, E] : [x0, 7, E]); }
-    if (brow) { for (let k = 0; k < 4; k++) { const bx = right ? x0 - 1 + k : x0 - 1 + k; p.push([bx, 6 - (browTilt > 0 ? (right ? (3 - k >= 2 ? 0 : 1) * 0 : 0) : 0), brow]); } }
+    if (brow) for (let k = 0; k < 3; k++) p.push([x0 + k, 6, brow]);
   }
   if (mouth === "small") p.push([15, 11, "n"], [16, 11, "n"]);
   if (mouth === "smile") p.push([14, 11, "n"], [15, 11, "n"], [16, 11, "n"], [17, 11, "n"], [13, 10, "n"], [18, 10, "n"]);
@@ -37,3 +37,27 @@ export function face(o = {}) {
   if (blush) p.push([10, 10, "B"], [21, 10, "B"]);
   return p;
 }
+/** 光が左上から当たる「塊」を、輪郭つきで塗る。y0: 最初の行, sp: 行ごとの [x0,x1] の配列（null で空行）, ramp: 明→暗の文字列（例 "4321"）。
+ * o.out: 左と上の輪郭の色  o.outD: 右と下の輪郭の色（既定は out）  o.strand: [a,b] で (x*a+y)%b==0 の点を1段暗く（髪の房・服のしわ）  o.bias: 暗くなる速さ(既定1)  o.noTop: true で最上段を輪郭にしない */
+export function mass(y0, sp, ramp, o = {}) {
+  const { out = ramp[ramp.length - 1], strand = null, bias = 1 } = o; const outD = o.outD ?? out; const pts = [];
+  const xs0 = Math.min(...sp.filter(Boolean).map((s) => s[0])), xs1 = Math.max(...sp.filter(Boolean).map((s) => s[1])); const n = ramp.length;
+  const has = (i, x) => sp[i] && x >= sp[i][0] && x <= sp[i][1];
+  sp.forEach((s, i) => { if (!s) return; const y = y0 + i;
+    for (let x = s[0]; x <= s[1]; x++) {
+      const up = !has(i - 1, x), dn = !has(i + 1, x), lf = x === s[0], rt = x === s[1];
+      if (up && !o.noTop) { pts.push([x, y, lf ? out : out]); continue; }
+      if (lf) { pts.push([x, y, out]); continue; }
+      if (dn && !rt) { pts.push([x, y, o.outB ?? outD]); continue; }
+      if (rt || dn) { pts.push([x, y, outD]); continue; }
+      const u = (x - xs0) / Math.max(1, xs1 - xs0), v = i / Math.max(1, sp.length - 1);
+      const sv = Math.min(1, (u * 0.65 + v * 0.35) * bias); let t = sv < 0.12 ? 0 : 1 + Math.min(n - 2, Math.floor(((sv - 0.12) / 0.88) * (n - 1)));
+      if (strand && (x * strand[0] + y) % strand[1] === 0 && t > 0) t = Math.min(n - 1, t + 1);
+      if (o.folds && o.folds.some(([fx, fy0, fy1]) => x === fx && y >= fy0 && y <= fy1) && t > 0) t = Math.min(n - 1, t + 1);
+      t = Math.max(0, Math.min(n - 1, t));
+      pts.push([x, y, ramp[t]]);
+    } });
+  return pts;
+}
+/** 行ごとの範囲を、[中心, 半幅…] ではなく手で書くための短縮: rs("8-23", "7-24") → [[8,23],[7,24]] */
+export const rs = (...a) => a.map((s) => (s ? s.split("-").map(Number) : null));

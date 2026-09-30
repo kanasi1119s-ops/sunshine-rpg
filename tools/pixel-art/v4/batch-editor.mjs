@@ -34,6 +34,7 @@ async function paint(file) {
     await p.waitForTimeout(150);
     const exp = JSON.parse((await p.inputValue("#exportRows")).replace(/,\s*\]/, "]")); const back = { ".": "." }; used.forEach((c, i) => (back[syms[i]] = c));
     const got = exp.map((r) => [...r].map((s) => back[s] ?? "?").join("")); const diff = got.reduce((s, r, y) => s + [...r].filter((ch, x) => ch !== rows[y][x]).length, 0);
+    if (process.env.SHOT) { await p.evaluate(() => window.scrollTo(0, 0)); await p.screenshot({ path: path.join(out, base + "-page.png") }); }
     await p.locator("#gridCanvas").screenshot({ path: path.join(out, base + ".png") });
     fs.writeFileSync(path.join(out, base + ".txt"), (m.name ? `# ${m.name}\n` : "") + exp.join("\n") + "\n", "utf8");
     return { base, ok: diff === 0, why: diff ? `エディタの書き出しと ${diff} マス違う` : "", colors: used.length };

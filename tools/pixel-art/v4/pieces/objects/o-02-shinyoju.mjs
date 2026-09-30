@@ -1,0 +1,13 @@
+import { painter } from "../../lib4.mjs";
+export const name = "針葉樹";
+export const category = "object";
+export const pal = { o: "#10282c", e: "#1c4038", d: "#2a5c48", m: "#3e8058", l: "#68a870", h: "#a8d090", t: "#6a4428", u: "#402618", S: "#1c2c2a" };
+const p = painter();
+p.rect(14, 25, 17, 28, "t"); p.rect(17, 25, 17, 28, "u");
+const tier = (top, bot, hw) => { for (let y = top; y <= bot; y++) { const w = Math.round(hw * (y - top + 1) / (bot - top + 1)); for (let x = 16 - w; x < 16 + w; x++) { const rel = (x - 16) / Math.max(w, 1); let c = rel < -0.35 ? "l" : rel < 0.25 ? "m" : "d"; if (y > bot - 2) c = rel < 0 ? "m" : "e"; else if (y > bot - 3 && rel > 0) c = "e"; p.put(x, y, c); } } };
+tier(2, 10, 6); tier(7, 17, 9); tier(13, 25, 12);
+p.pts([[15, 4], [14, 6], [13, 9], [12, 11], [10, 15], [8, 19], [6, 22], [11, 20], [13, 15]], "h");
+p.pts([[16, 3], [15, 5]], "h");
+p.outline("o");
+p.shadow(19, 28, 8, 2, "S");
+export const rows = p.rows();

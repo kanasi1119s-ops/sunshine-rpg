@@ -1,0 +1,38 @@
+// 旅装束（ドット絵・アイテム）。完全オリジナルの絵。光は左上。
+export const name = "旅装束";
+export const category = "item";
+export const pal = { A: "#1a3422", B: "#2e6438", C: "#4c9a4c", D: "#8cc86c", L: "#6a5a4c", M: "#b4a27e", N: "#e2d4a6", g: "#6e3e1c", i: "#f0b83c", j: "#ffe68a", p: "#341a24", q: "#66342e", r: "#98523a", s: "#c8805a" };
+export const rows = [
+  "................................",
+  "................................",
+  "................................",
+  "..............AAAA..............",
+  "..........BBMAAAAAAMB...........",
+  ".......BBBDDNMAAAAMNBABB........",
+  "......BDDDCCCNMssMNCCDDBA.......",
+  "......BDBCDCCCMssMNCCCCBBA......",
+  ".....BDCBCCCCCNMMNCCCCCBCBA.....",
+  "....BDDCBCCCCCCNNCCCCCCBCCBA....",
+  "...BDCCCBCCCCCCCCCCCCCCBCCCBA...",
+  "..BDCCCCBCCCCCCCCCCCCCCBCCCBA...",
+  "..BDCCBCCBCCCCCCCCCCCCBCCCCCBA..",
+  "..BDCCBCCBCCCCCCCCCCCCBCCCCCBA..",
+  "..BDCBCCCBCCCCCCCCCCCCBCCCCCBA..",
+  "..BDCBCCCBCCCCCCCCCCCCBCCCCCBA..",
+  ".BDCCBCCCBCCCCCCCCCCCCBCCCCCBA..",
+  ".BDCCBCCCCCCCCCCCCCCCCBCCCCCCBA.",
+  ".BDCBCCCCCCCCCCCCCCCCBADCCCCCBA.",
+  ".BDCBCCCCCCCCCjiiiCCCBADCCCCCBA.",
+  ".BDCCCCCCrrrrriggiqqqqqDCCCCCBA.",
+  "BBNCCCCCCqqqqqiggiqqqqqDCCCCCBA.",
+  "MNNNNNNNBCCCCCiiiiCCCBpDMMMMMMML",
+  "MNNNNNNNADCCBCCCCCCBCCDBMMMMMMML",
+  ".LLLLLLLBDCCBCCCCCCBCCBALLLLLLL.",
+  ".......BDCCCBCCCCCCBCCCBA.......",
+  ".......BDCCBCCCCCCCCBCCBA.......",
+  "......BDCCCBCCCCCCCCBCCCBA......",
+  "......BBBBBBBBBBBBBBBBBBBA......",
+  ".......AAAAAAAAAAAAAAAAAA.......",
+  "................................",
+  "................................",
+];

@@ -1,0 +1,38 @@
+// ローブ（ドット絵・アイテム）。完全オリジナルの絵。光は左上。
+export const name = "ローブ";
+export const category = "item";
+export const pal = { P: "#26183e", Q: "#4a2c80", R: "#7a58c0", S: "#b496f2", a: "#421222", b: "#8a2434", c: "#c4444c", g: "#6e3e1c", h: "#b8741c", i: "#f0b83c", j: "#ffe68a", k: "#341c14" };
+export const rows = [
+  "................................",
+  "................................",
+  "................................",
+  "...........QQPPPPPPQ............",
+  ".........QQSSPPPPPPQPQ..........",
+  "........QSSRRPPPPPPRSQP.........",
+  ".......QSQSRRRRRRRRRRRQP........",
+  "......QSRQRRRRRRRRRRRRQQP.......",
+  ".....QSRRQRRRRRjiRRRRRQRQP......",
+  "....QSRRRQRRRRRjhRRRRRRQRQP.....",
+  "....QSRSQQRRRRRjhRRRRRRQRRQP....",
+  "....QSRRQQRRRRRjhRRRRRRQRRQP....",
+  "....QSRRQQRRRRRjhRRRRRRQRRQP....",
+  "...QSRRRQQRRRRRjhRRRRRRRQRRQP...",
+  "...QSRRQRQRRRRRjhRRRRQRRQRRQP...",
+  "...QSRRQRQccccccbbbbbbRRQRRQP...",
+  "..QSRRRRRQbbbbbbbbbbbbRRRRRRQP..",
+  "..QSRRRRRQbbbbbbbaaabbRRRRRRQP..",
+  "..QSRRQRRQRRbbbjhaaaRRRRRRRRQP..",
+  ".QSRRRQRRQRRbbbjhaaaRRRRRRRRQP..",
+  ".QSRRRQRRQRRbbbjhaaaRRRRRRRRQP..",
+  ".QSRRQRRRQRRRRRjhRRRRRRRRRRRQP..",
+  ".QSRRQRRRQRQRRRjhRRRRQRRRRRRQP..",
+  ".QSRRQRRRQRQRRRjhRRRRQRRRRRRQP..",
+  ".gjjjjjjjiSQRRRjhRRRRQhhhhhhhhk.",
+  ".giiiiiiiiSQRRRjhRRRRQQhhhhhhhk.",
+  "..kkkkkkkSQRRRRjhRRRRQQkkkkkkk..",
+  ".......QSRQRRRRjhRRRRRQP........",
+  ".....gQSRRQRRRRjhRRRRRQQPgg.....",
+  "....gjjjjjjjjjjjiiiiiiiiiiik....",
+  "....giiiiiiiiiiiiiiiiiiiiiik....",
+  ".....kkkkkkkkkkkkkkkkkkkkkk.....",
+];

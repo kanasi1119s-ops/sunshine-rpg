@@ -116,7 +116,7 @@ export const dress = (y0, y1, w0, w1, { edge = "r", l = "k", m = "j", d = "J", h
 const hx = (s) => [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16));
 const toHex = (a) => "#" + a.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
 /** R("abcd", 暗色, 明色): 文字ごとに暗→明の色を割り当てた pal の断片を返す。 */
-export function R(chars, dark, light) { const a = hx(dark), b = hx(light), n = chars.length; const o = {}; [...chars].forEach((c, i) => { const t = n === 1 ? 0 : i / (n - 1); o[c] = toHex(a.map((v, k) => v + (b[k] - v) * t)); }); return o; }
+export function R(chars, dark, light, mid) { const a = hx(dark), b = hx(light), m = mid ? hx(mid) : null, n = chars.length; const o = {}; [...chars].forEach((c, i) => { const t = n === 1 ? 0 : i / (n - 1); if (m) { o[c] = t < 0.5 ? toHex(a.map((v, k) => v + (m[k] - v) * t * 2)) : toHex(m.map((v, k) => v + (b[k] - v) * (t - 0.5) * 2)); } else o[c] = toHex(a.map((v, k) => v + (b[k] - v) * t)); }); return o; }
 export const rng = (seed) => { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; };
 export class Cv {
   constructor() { this.g = blank(); }
@@ -141,5 +141,32 @@ export class Cv {
   shadow(cx, y, hw, c) { for (let x = cx - hw; x <= cx + hw; x++) this.px(x, y, c); return this; }
   /** 目: (x,y) が左上。2×2 で左上が白いハイライト。 */
   eye(x, y, c, hi = "w") { this.px(x, y, hi); this.px(x + 1, y, c); this.px(x, y + 1, c); this.px(x + 1, y + 1, c); return this; }
-  rows() { return toRows(this.g); }
+  /** 何かが塗られた場所のすぐ外側（上下左右）を c で縁取る。 */
+  outlineAround(c) { const o = []; for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (this.g[y][x] === "." && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => this.g[y + dy]?.[x + dx] && this.g[y + dy][x + dx] !== ".")) o.push([x, y]); for (const [x, y] of o) this.g[y][x] = c; return this; }
+  /** 孤立した点（上下左右に同じ色が無い点）のうち、まわりに絵がある点をまわりの多数の色になじませる。w（ハイライト）は残す。 */
+  despeckle(keep = "w") { const src = this.g.map((r) => [...r]); for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const ch = src[y][x]; if (ch === "." || keep.includes(ch)) continue; const nb = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => src[y + dy]?.[x + dx]).filter((v) => v && v !== "."); if (nb.includes(ch) || nb.length < 2) continue; const cnt = {}; for (const v of nb) cnt[v] = (cnt[v] ?? 0) + 1; this.g[y][x] = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0][0]; } return this; }
+  rows() { this.despeckle(); return toRows(this.g); }
+}
+
+/** ASCII の小さな絵を (x, y) から貼る。空白は「そのまま」、"." は透明、ほかの文字はその色。 */
+export function patch(rows, x, y, lines) { const g = rows.map((r) => [...r]); lines.forEach((ln, dy) => [...ln].forEach((ch, dx) => { const X = x + dx, Y = y + dy; if (ch !== " " && X >= 0 && X < W && Y >= 0 && Y < W) g[Y][X] = ch; })); return g.map((r) => r.join("")); }
+
+// ---- 追記（担当O: マップ上の物用の描画道具）----
+/** 32×32の絵を「点・長方形・線・楕円・多角形・陰影つきの塊・輪郭・落ち影」で描くための道具。 */
+export function painter() {
+  const g = blank();
+  const put = (x, y, c) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && x < W && y >= 0 && y < W) g[y][x] = c; };
+  const get = (x, y) => (x >= 0 && x < W && y >= 0 && y < W ? g[y][x] : ".");
+  const rect = (x0, y0, x1, y1, c) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) put(x, y, c); };
+  const line = (x0, y0, x1, y1, c) => { let dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, e = dx + dy; for (;;) { put(x0, y0, c); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy) { e += dy; x0 += sx; } if (e2 <= dx) { e += dx; y0 += sy; } } };
+  const ell = (cx, cy, rx, ry, c) => { for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1) put(x, y, c); };
+  /** 楕円の塊。tones は暗→明の文字の並び。光は左上。 */
+  const blob = (cx, cy, rx, ry, tones, bias = 0) => { const n = tones.length; for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1) { const t = ((x - cx) / rx) * 0.55 + ((y - cy) / ry) * 0.75; const l = 0.5 - t / 2.4 + bias; put(x, y, tones[Math.max(0, Math.min(n - 1, Math.floor(l * n)))]); } };
+  const poly = (pts, c) => { const ys = pts.map((p) => p[1]); const y0 = Math.floor(Math.min(...ys)), y1 = Math.ceil(Math.max(...ys)); for (let y = y0; y <= y1; y++) { const yy = y + 0.5, xs = []; for (let i = 0; i < pts.length; i++) { const [ax, ay] = pts[i], [bx, by] = pts[(i + 1) % pts.length]; if ((ay <= yy && by > yy) || (by <= yy && ay > yy)) xs.push(ax + ((yy - ay) / (by - ay)) * (bx - ax)); } xs.sort((a, b) => a - b); for (let i = 0; i + 1 < xs.length; i += 2) for (let x = Math.round(xs[i]); x < Math.round(xs[i + 1]); x++) put(x, y, c); } };
+  /** すでに描いた物の外側に1ドットの縁を付ける。 */
+  const outline = (c) => { const l = []; for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (g[y][x] === "." && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => get(x + a, y + b) !== ".")) l.push([x, y]); for (const [x, y] of l) g[y][x] = c; };
+  /** 空いている所だけに落ち影の楕円を置く（輪郭のあとに呼ぶ）。 */
+  const shadow = (cx, cy, rx, ry, c) => { for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1 && get(x, y) === ".") put(x, y, c); };
+  const pts = (list, c) => list.forEach(([x, y]) => put(x, y, c));
+  return { g, put, get, rect, line, ell, blob, poly, outline, shadow, pts, rows: () => toRows(g) };
 }

@@ -1,0 +1,38 @@
+// マント（ドット絵・アイテム）。完全オリジナルの絵。光は左上。
+export const name = "マント";
+export const category = "item";
+export const pal = { L: "#6a5a4c", M: "#b4a27e", N: "#e2d4a6", O: "#f8f0cc", a: "#421222", b: "#8a2434", c: "#c4444c", d: "#f08484", g: "#6e3e1c", h: "#b8741c", i: "#f0b83c", j: "#ffe68a" };
+export const rows = [
+  "................................",
+  "................................",
+  "..........MMMMMMMMMMMM..........",
+  ".........MOOOOOONNNNNNL.........",
+  ".......bbdNNNNNNNNNNNNLb........",
+  "......bdLOMMMMMMMMMMMMLba.......",
+  "......bdcOMMMMMMMMMMMMLcba......",
+  ".....bdccOMMMMjjjgMMMMLcba......",
+  ".....bddbLLLMMjjhgMLLLdbcba.....",
+  "....bdcdbccdLijhhghbccdbcba.....",
+  "....bdddbccdbiggggdhccdbccba....",
+  "...bdccdbccdicccccdhccdbccba....",
+  "...bdccdbccdbcccccdbccdbcccba...",
+  "...bdcdbccdbcccccccdbccdbccba...",
+  "...bdcdbccdbcccccccdbccdbccba...",
+  "...bdcdbccdbcccccccdbccdbccba...",
+  "..bdccdbccdbcccccccdbccdbcccba..",
+  "..bdccdbccdbcccccccdbccdbcccba..",
+  "..bdccdbccdbcccccccdbccdbcccba..",
+  "..bdccdbccdbcccccccdbccdbcccba..",
+  ".bdcccdbccdbcccccccdbccdbcccba..",
+  ".bdccdbccdbcccccccccdbccdbccba..",
+  ".bdccdbccdbcccccccccdbccdbccba..",
+  ".bdccdbccdbcccccccccdbccdbccba..",
+  ".bdccdbccdbcccccccccdbccdbccba..",
+  ".bdccdbccdbcccccccccdbccdbccba..",
+  ".bdccdbccdbcccccccccdbccdbccba..",
+  ".bdccdbccdbccccbccccdbccdbccba..",
+  ".bbbcccbbdbcccbabbccdbbbbcccba..",
+  "..aabbbaaabbbba.aabbbaaaabbba...",
+  "....aaa...aaaa....aaa....aaa....",
+  "................................",
+];

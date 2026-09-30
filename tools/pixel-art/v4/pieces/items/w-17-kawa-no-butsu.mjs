@@ -1,0 +1,38 @@
+// 革のブーツ（ドット絵・アイテム）。完全オリジナルの絵。光は左上。
+export const name = "革のブーツ";
+export const category = "item";
+export const pal = { L: "#6a5a4c", M: "#b4a27e", N: "#e2d4a6", O: "#f8f0cc", g: "#6e3e1c", i: "#f0b83c", j: "#ffe68a", k: "#341c14", p: "#341a24", q: "#66342e", r: "#98523a", s: "#c8805a" };
+export const rows = [
+  "..MMMMMMMM......................",
+  ".MOOOOOOOML.....................",
+  ".MONNNNNNML.....................",
+  ".MONNNNNNML.....................",
+  ".MMMMMMMMML.....................",
+  ".qsrrrrrrqp....MMMMMMMM.........",
+  ".qsrrrrrrqp...MOOOOOOOML........",
+  ".qsrrrrrrqp...MONNNNNNML........",
+  ".qsrrjiirqp...MONNNNNNML........",
+  ".qsrrigiqqp...MMMMMMMMML........",
+  ".qsqqiiiqqp...qsrrrrrrqp........",
+  ".qsrriiirqp...qsrrrrrrqp........",
+  ".qssrrrrrqp...qsrrrrrrqp........",
+  ".qsrrrrrrqp...qsrrjiirqp........",
+  ".qssrrrrrqp...qsrrigiqqp........",
+  ".qsrrrrrrqp...qsqqiiiqqp........",
+  ".qssrrrrrqpqq.qsrriiirqp........",
+  ".qsrrrrrrrssqpqssrrrrrqp........",
+  ".qsrrrrrrrrrrqpsrrrrrrqp........",
+  ".qsrrrrrrrrrrrqssrrrrrqp........",
+  ".qsrrrrrrrrqqqqqrrrrrrqp........",
+  ".qsrrrrrrrrrrrrqsrrrrrqpqq......",
+  ".qsrrrrrrrrqqqqqrrrrrrrssqp.....",
+  "..kkkkpppppppppprrrrrrrrrrqp....",
+  "..kkkkpppppppppprrrrrrrrrrrqp...",
+  "..............qsrrrrrrrrqqqqqp..",
+  "..............qsrrrrrrrrrrrrqp..",
+  "..............qsrrrrrrrrqqqqqp..",
+  "...............kkkkpppppppppp...",
+  "...............kkkkpppppppppp...",
+  "................................",
+  "................................",
+];
