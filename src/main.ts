@@ -54,6 +54,7 @@ import { createDeepEchoYugami, createShogenYugami } from "./game/battle/chapter1
 import { DEEP_ENTRY } from "./game/map/chapter10/deep-maps";
 import { createGodYugami, GODS } from "./game/battle/chapter11-enemies";
 import { createDungeonEnemy, DUNGEON_ENEMIES } from "./game/battle/chapter12-enemies";
+import { createEncounterState, stepEncounter, type EncounterState } from "./game/encounter/encounter";
 import { KYOTOUKYU_CORRIDOR_ENTRY, KYOTOUKYU_COURT_ENTRY, KYOTOUKYU_SANCTUM_ENTRY } from "./game/map/chapter9/kyotoukyu-maps";
 import { AYAME, COMPANIONS, createCompanionCombatant, GUIDE, MINA, ORCA, RETO } from "./game/battle/companions";
 import type { Combatant, Skill } from "./game/battle/types";
@@ -326,6 +327,40 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
     GODS.map((god) => [god.id, { createEnemy: () => createGodYugami(god), victoryFlag: `god${god.no}_defeated`, bgmId: "eight-gods" }]),
   ),
 };
+
+/** ランダムエンカウント（歩数のカウント）。地図を移ると数え直す。 */
+let encounterState: EncounterState = createEncounterState(Math.random);
+let lastStepTile: { x: number; y: number; mapId: string } | null = null;
+
+function startRandomBattle(enemies: Combatant[]): void {
+  if (battle) {
+    return;
+  }
+  victoryExpApplied = false;
+  victoryMessage = null;
+  pendingVictoryFlag = null;
+  const equipmentBonus = computeEquipmentBonus(heroEquipment, SAMPLE_ITEMS_BY_ID);
+  const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
+  const party = buildActiveParty(effectiveStats);
+  if (debugInvincible) {
+    for (const member of party) {
+      member.maxHp = 99999;
+      member.hp = 99999;
+      member.defense = 999;
+    }
+  }
+  battle = new BattleController(
+    party,
+    enemies,
+    createRng(Date.now()),
+    { skills: buildSkillsMap(CHAPTER0_SKILL), item: CHAPTER0_ITEM, extraSkills: buildExtraSkillsMap() },
+  );
+  currentBgmTrack = getTrack("battle");
+  if (audioStarted) {
+    audio.playSe(seOf("encounter"));
+  }
+  audio.playBgm(currentBgmTrack);
+}
 
 function startStoryBattle(battleId: string): void {
   const def = STORY_BATTLES[battleId];
@@ -919,6 +954,21 @@ const loop = createGameLoop({
       switchMap(exit.targetMapId, exit.targetTileX, exit.targetTileY);
       autosave();
       return;
+    }
+
+    // 歩くたびに、ランダムエンカウントの歩数を進める（タイルが変わったときだけ数える）。
+    if (!lastStepTile || lastStepTile.mapId !== currentMapId) {
+      lastStepTile = { x: centerTileX, y: centerTileY, mapId: currentMapId };
+    } else if (lastStepTile.x !== centerTileX || lastStepTile.y !== centerTileY) {
+      lastStepTile = { x: centerTileX, y: centerTileY, mapId: currentMapId };
+      if (!debugNoEncounter) {
+        const stepped = stepEncounter(encounterState, currentMapId, Math.random);
+        encounterState = stepped.state;
+        if (stepped.enemies) {
+          startRandomBattle(stepped.enemies);
+          return;
+        }
+      }
     }
 
     if (actionPressed) {
