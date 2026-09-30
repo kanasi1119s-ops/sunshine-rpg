@@ -7,7 +7,7 @@ import { hashCell, shadeColor } from "../color-utils";
  * ジャンルでよく使われる技法（草のディザリング、水の波模様、道の踏み跡、
  * 木の樹冠＋幹）を適用する。既存の特定作品のタイルセットは参照していない。
  */
-export type TilePatternKind = "grass" | "water" | "path" | "treeCanopy";
+export type TilePatternKind = "grass" | "water" | "path" | "treeCanopy" | "flagstone" | "brick" | "sand" | "snow" | "plank" | "cloud";
 
 export interface TileArtSpec {
   base: string;
@@ -128,6 +128,64 @@ const PATTERNS: Record<TilePatternKind, PatternFn> = {
     if (hashCell(col + variant, row) % 9 === 0) k = Math.max(1, k - 1);
     return ramp[k];
   },
+
+  // 石畳: 段ごとに半分ずらした敷石。縁が暗く、左上が明るい。
+  flagstone: (ramp, row, col, variant) => {
+    const band = Math.floor(row / 5);
+    const localX = (col + (band % 2) * 4 + (variant % 2) * 2) % 8;
+    const localY = row % 5;
+    if (localY === 4 || localX === 7) return ramp[1];
+    if (localY === 0 || localX === 0) return ramp[3];
+    const h = hashCell(col + variant * 5, row + band * 3);
+    return h % 9 === 0 ? ramp[1] : h % 7 === 0 ? ramp[3] : ramp[2];
+  },
+  // 煉瓦・切り石の壁: 段ごとに半分ずらした長方形。継ぎ目が暗く、上の縁が明るい。
+  brick: (ramp, row, col, variant) => {
+    const band = Math.floor(row / 4);
+    const localX = (col + (band % 2) * 4) % 8;
+    const localY = row % 4;
+    if (localY === 3 || localX === 7) return ramp[0];
+    if (localY === 0) return ramp[3];
+    const h = hashCell(col + variant * 3, row + band);
+    return h % 8 === 0 ? ramp[1] : h % 11 === 0 ? ramp[3] : ramp[2];
+  },
+  // 砂: 風のさざ波の斜めの筋と、細かな粒。
+  sand: (ramp, row, col, variant) => {
+    const wave = (col + row * 2 + variant * 3) % 9;
+    const h = hashCell(col + variant * 11, row + variant * 3);
+    if (wave < 2) return ramp[3];
+    if (wave === 5) return ramp[1];
+    if (h % 23 === 0) return ramp[4];
+    if (h % 17 === 0) return ramp[1];
+    return ramp[2];
+  },
+  // 雪・氷: ほぼ白で、やわらかな影のかたまりと、まれなきらめき。
+  snow: (ramp, row, col, variant) => {
+    const blotch = hashCell(Math.floor(col / 3) + variant * 3, Math.floor(row / 3)) % 6;
+    const h = hashCell(col + variant * 7, row + variant * 13);
+    if (h % 37 === 0) return ramp[4];
+    if (blotch === 0) return ramp[1];
+    if (blotch === 1) return ramp[3];
+    return ramp[2];
+  },
+  // 板張り: 縦の板。継ぎ目・木目・板の端の継ぎ目。
+  plank: (ramp, row, col, variant) => {
+    const localX = col % 4;
+    if (localX === 3) return ramp[1];
+    if ((row + (hashCell(Math.floor(col / 4), variant) % 16)) % 16 === 0) return ramp[1];
+    const h = hashCell(col + variant * 9, row);
+    if (localX === 0 && h % 3 !== 0) return ramp[3];
+    return h % 7 === 0 ? ramp[3] : h % 11 === 0 ? ramp[1] : ramp[2];
+  },
+  // 雲・霧: やわらかなふくらみ。
+  cloud: (ramp, row, col, variant) => {
+    const blotch = hashCell(Math.floor(col / 4) + variant, Math.floor(row / 4)) % 4;
+    const h = hashCell(col + variant * 5, row + variant * 3);
+    if (h % 19 === 0) return ramp[4];
+    if (blotch === 0) return ramp[3];
+    if (blotch === 3) return ramp[1];
+    return ramp[2];
+  },
 };
 
 /** 指定したタイル模様の、実際に描く色の一覧を作る（タイル座標だけで決まり、時刻に依存しない）。 */
@@ -156,3 +214,13 @@ export const TILE_ART: Record<string, TileArtSpec> = {
   path: { base: "#b3853f", accentLight: "#d8b060", accentDark: "#85552a", pattern: "path" },
   treeCanopy: { base: "#2b8022", accentLight: "#5fbb31", accentDark: "#185019", pattern: "treeCanopy" },
 };
+
+/**
+ * 「地図のタイルの色」を基本色にして、模様だけを重ねる指定（`tileArt` の値を `tint:<模様>` にする）。
+ * 例: `tint:flagstone`。地方ごとに色が違う石畳・壁・砂・雪などを、同じ模様の作りで描くための仕組み。
+ */
+export const TINT_PREFIX = "tint:";
+
+export function tintedSpec(pattern: TilePatternKind, base: string): TileArtSpec {
+  return { base, accentLight: shadeColor(base, 0.22), accentDark: shadeColor(base, -0.28), pattern };
+}
