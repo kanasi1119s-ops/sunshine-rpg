@@ -233,4 +233,4 @@
 
 2回目に選んだ別の500枚は `assets-src/pixel-library-2/`（使い方の注意は同じ）。
 
-描き方の参考用に集めた1000点（アイテムのアイコン、キャラを組み立てる部品など）は `assets-src/pixel-reference-1000/`。
+描き方の参考用に集めた1000点（アイテムのアイコン、キャラを組み立てる部品など）は `assets-src/pixel-reference/`。
