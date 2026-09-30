@@ -1,4 +1,5 @@
 import { buildSideStoryNpcs, say, type SideStory } from "./side-story";
+import { SIDE_STORIES_LATE } from "./side-stories-late";
 import type { Npc } from "../npc";
 
 /**
@@ -6,6 +7,7 @@ import type { Npc } from "../npc";
  * 仮: 報酬（灯貨・品物・信頼度）は「ごほうび（仮）」の会話のみ。セリフは簡易。
  */
 export const SIDE_STORIES: SideStory[] = [
+  ...SIDE_STORIES_LATE,
   // ===== 序章（灯里）=====
   {
     id: "S-001",
