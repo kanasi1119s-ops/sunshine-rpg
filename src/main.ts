@@ -25,6 +25,7 @@ import { CHAPTER4_OPENING_COMMANDS } from "./game/world/chapter4-world";
 import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
+import { awardVictoryMastery, changeJob, isJobSystemUnlocked, withJobBonus } from "./game/job/party-job";
 import { renderBattle } from "./render/battle-renderer";
 import {
   createInitialEquipment,
@@ -76,6 +77,8 @@ import "./audio/user-songs";
 import { SE_LIBRARY } from "./audio/se-library";
 import type { Score } from "./audio/score";
 import { createDebugMenuState, moveMenuCursor, toggleMenu } from "./game/debug/debug-menu";
+import { cancelJobMenu, confirmJobMenu, createJobMenuState, moveJobMenu, openJobMenu } from "./game/job/job-menu";
+import { renderJobMenu } from "./render/job-menu-renderer";
 import { renderDebugMenu, type DebugMenuRow } from "./render/debug-menu-renderer";
 import { expRequiredForLevel } from "./game/growth/exp-curve";
 
@@ -322,9 +325,10 @@ function syncCompanionsFromFlags(): void {
 
 /** 現在の実力（装備ボーナス込み）のユーリに、加入済みの仲間を加えた戦闘パーティ。 */
 function buildActiveParty(effectiveHeroStats: LeveledStats): ReturnType<typeof createChapter0Party> {
-  const party = createChapter0Party(heroStats.level, effectiveHeroStats);
+  const unlocked = isJobSystemUnlocked(flags);
+  const party = createChapter0Party(heroStats.level, withJobBonus(effectiveHeroStats, jobStates.hero, unlocked));
   for (const [id, stats] of Object.entries(companionStats)) {
-    party.push(createCompanionCombatant(COMPANIONS[id], stats));
+    party.push(createCompanionCombatant(COMPANIONS[id], withJobBonus(stats, jobStates[id], unlocked)));
   }
   return party;
 }
@@ -451,6 +455,28 @@ if (import.meta.env.DEV) {
 }
 
 let debugMenu = createDebugMenuState();
+
+/** ジョブ画面（Cキーで開く。アヤメが仲間に加わるまでは開けない）。 */
+let jobMenu = createJobMenuState();
+let lastJobDirection: Direction | null = null;
+function jobMenuMembers(): { id: string; name: string }[] {
+  return [
+    { id: "hero", name: "ユーリ" },
+    ...Object.keys(companionStats).map((id) => ({ id, name: COMPANIONS[id].name })),
+  ];
+}
+window.addEventListener("keydown", (event) => {
+  if (event.key === "c" && !battle && !dialogue.isActive() && !debugMenu.open && !jobMenu.open) {
+    if (isJobSystemUnlocked(flags)) {
+      jobMenu = openJobMenu();
+    } else {
+      saveMessage = "ジョブチェンジは、まだ使えない";
+      saveMessageTimer = 2000;
+    }
+  } else if ((event.key === "x" || event.key === "Escape") && jobMenu.open) {
+    jobMenu = cancelJobMenu(jobMenu);
+  }
+});
 let lastDebugDirection: Direction | null = null;
 let debugInvincible = false;
 let debugNoEncounter = false;
@@ -595,6 +621,9 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
       levelUpNames.push(`${COMPANIONS[id].name}（Lv${companionResult.stats.level}）`);
     }
   }
+  if (isJobSystemUnlocked(flags)) {
+    jobStates = awardVictoryMastery(jobStates, ["hero", ...Object.keys(companionStats)], expGained);
+  }
   if (levelUpNames.length > 0) {
     window.setTimeout(() => audio.playSe(seOf("level-up")), 1800);
   }
@@ -644,6 +673,32 @@ const loop = createGameLoop({
       return;
     }
     lastDebugDirection = null;
+
+    if (jobMenu.open) {
+      const members = jobMenuMembers();
+      const direction = input.getDirection();
+      if (direction !== lastJobDirection) {
+        if (direction === "up") {
+          jobMenu = moveJobMenu(jobMenu, -1, members.length);
+          audio.playSe(seOf("cursor"));
+        } else if (direction === "down") {
+          jobMenu = moveJobMenu(jobMenu, 1, members.length);
+          audio.playSe(seOf("cursor"));
+        }
+        lastJobDirection = direction;
+      }
+      if (actionPressed) {
+        const memberId = members[jobMenu.memberCursor]?.id;
+        const result = confirmJobMenu(jobMenu);
+        jobMenu = result.state;
+        if (result.chosen && memberId) {
+          jobStates = changeJob(jobStates, memberId, result.chosen);
+          autosave();
+        }
+      }
+      return;
+    }
+    lastJobDirection = null;
 
     if (battle) {
       const uiState = battle.getUiState();
@@ -768,6 +823,7 @@ const loop = createGameLoop({
       ctx.fillStyle = "#f2c14e";
       ctx.fillText(saveMessage, 4, 14);
     }
+    renderJobMenu(ctx, jobMenu, jobMenuMembers(), jobStates, LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
     if (import.meta.env.DEV) {
       ctx.fillStyle = "#88ff88";
