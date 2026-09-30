@@ -181,9 +181,8 @@ const MAP_BGM_ID: Record<string, string> = {
   "kiri-archive": "archive",
   "shimohara-town": "town-shimo",
   "shimohara-facility": "facility",
-  // 第7章の専用BGMは4-34で作る（それまで仮に他の章の曲を流用）。
-  "fushima-town": "town-shimo",
-  "fushima-base": "facility",
+  "fushima-town": "town-ukishima",
+  "fushima-base": "ruins-ukishima",
 };
 function mapBgmFor(mapId: string): Score {
   return getTrack(MAP_BGM_ID[mapId] ?? "town-touri");
@@ -255,7 +254,7 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
   "fushima-yugami": {
     createEnemy: createFushimaKanshitakuYugami,
     victoryFlag: "chapter7_yugami_defeated",
-    bgmId: "boss-shimo",
+    bgmId: "boss-ukishima",
   },
 };
 

@@ -1,5 +1,12 @@
 import { createFushimaBaseData, FUSHIMA_BASE_LANDMARKS } from "../map/chapter7/fushima-base";
 import { createFushimaTownData, FUSHIMA_TOWN_LANDMARKS } from "../map/chapter7/fushima-town";
+import { TOURI_TOWN_SPAWN } from "../map/chapter0/touri-town";
+import { MUGIKANO_VILLAGE_ENTRY } from "../map/chapter1/mugikano-village";
+import { GARASUKO_TOWN_ENTRY } from "../map/chapter2/garasuko-town";
+import { TETSUKUSARI_TOWN_ENTRY } from "../map/chapter3/tetsukusari-town";
+import { SANONE_TOWN_ENTRY } from "../map/chapter4/sanone-town";
+import { KIRI_TOWN_ENTRY } from "../map/chapter5/kiri-town";
+import { SHIMOHARA_TOWN_ENTRY } from "../map/chapter6/shimohara-town";
 import type { TileMapData } from "../map/types";
 import type { EventCommand } from "../event/types";
 import type { Npc } from "../npc";
@@ -8,8 +15,34 @@ import type { Npc } from "../npc";
  * 第7章（浮嶼）の世界。`docs/story/structure.md`「第7章（浮嶼）」・`docs/story/mystery.md`を反映。
  * 伏線 C-014（各地の事件が黒幕の拠点につながる）と C-015（黒幕が姿を見せ、灯芯都で待つと告げる）を実装（roadmap 4-32）。
  * ボス「監視卓の歪み」は4-33（`src/game/battle/chapter7-enemies.ts`）。専用BGMは4-34で追加予定（それまで霜原などの曲を仮に流用）。
- * 空の乗り物は入手フラグ（`chapter7_airship_obtained`）のみ。移動の効果は未実装（仮）。
+ * 空の乗り物（`chapter7_airship_obtained`）を手に入れると、渡し守に頼んで訪れた町へ飛べる（roadmap 4-35。町を選ぶ簡易な移動で、フィールド上の操縦は無い）。
  */
+/** 空の乗り物で飛べる町。3つの方面に分けて、二段階の選択肢で選ぶ。 */
+export const AIRSHIP_DESTINATIONS: { area: string; towns: { label: string; mapId: string; tileX: number; tileY: number }[] }[] = [
+  {
+    area: "西の空（灯里・麦香野・硝子湖）",
+    towns: [
+      { label: "灯里の町", mapId: "touri-town", ...TOURI_TOWN_SPAWN },
+      { label: "麦香野の村", mapId: "mugikano-village", ...MUGIKANO_VILLAGE_ENTRY },
+      { label: "硝子湖の町", mapId: "garasuko-town", ...GARASUKO_TOWN_ENTRY },
+    ],
+  },
+  {
+    area: "中ほどの空（鉄鏈・砂音）",
+    towns: [
+      { label: "鉄鏈鉱山の町", mapId: "tetsukusari-town", ...TETSUKUSARI_TOWN_ENTRY },
+      { label: "砂音の町", mapId: "sanone-town", ...SANONE_TOWN_ENTRY },
+    ],
+  },
+  {
+    area: "東の空（霧断崖・霜原）",
+    towns: [
+      { label: "霧断崖の町", mapId: "kiri-town", ...KIRI_TOWN_ENTRY },
+      { label: "霜原の町", mapId: "shimohara-town", ...SHIMOHARA_TOWN_ENTRY },
+    ],
+  },
+];
+
 export const CHAPTER7_MAPS: Record<string, TileMapData> = {
   "fushima-town": createFushimaTownData(),
   "fushima-base": createFushimaBaseData(),
@@ -109,7 +142,7 @@ function elderCommands(): EventCommand[] {
                   text: "奪われた空の上に、まだ奪うものがあったとはな。……礼として、島に一隻だけ残っていた空の乗り物を、あなた方に託そう。",
                   speaker: "雲海衆の長老",
                 },
-                { type: "message", text: "空の乗り物を手に入れた！（移動の効果は、まだ仮のもの）" },
+                { type: "message", text: "空の乗り物を手に入れた！（浮嶼の渡し守に頼むと、これまで訪れた町へ飛べる）" },
                 { type: "setFlag", flag: "chapter7_airship_obtained", value: true },
                 { type: "setFlag", flag: "chapter7_reported", value: true },
               ],
@@ -180,10 +213,44 @@ function ferrymanCommands(): EventCommand[] {
       type: "if",
       flag: "chapter7_airship_obtained",
       equals: true,
-      then: [{ type: "message", text: "空の乗り物は、島々を結ぶ道です。行きたい所へ、風が連れて行ってくれますよ。", speaker: "渡し守" }],
+      then: [
+        { type: "message", text: "空の乗り物は、島々を結ぶ道です。行きたい所へ、風が連れて行ってくれますよ。", speaker: "渡し守" },
+        ...airshipDestinationCommands(),
+      ],
       else: [
         { type: "message", text: "島と島の間は、綱と小舟で渡っています。北の整備区画のほうは、昔から誰も近づきません。", speaker: "渡し守" },
         { type: "message", text: "でも最近、夜になると、あそこから青白い光がのぞくんです。", speaker: "渡し守" },
+      ],
+    },
+  ];
+}
+
+function airshipDestinationCommands(): EventCommand[] {
+  return [
+    {
+      type: "choice",
+      text: "どちらの空へ行きますか?",
+      options: [
+        ...AIRSHIP_DESTINATIONS.map((area) => ({
+          label: area.area,
+          commands: [
+            {
+              type: "choice" as const,
+              text: "どの町へ降りますか?",
+              options: [
+                ...area.towns.map((town) => ({
+                  label: town.label,
+                  commands: [
+                    { type: "message" as const, text: `${town.label}へ向かいます。しっかりつかまって!`, speaker: "渡し守" },
+                    { type: "warp" as const, mapId: town.mapId, tileX: town.tileX, tileY: town.tileY },
+                  ],
+                })),
+                { label: "やめる", commands: [] },
+              ],
+            },
+          ],
+        })),
+        { label: "やめる", commands: [] },
       ],
     },
   ];
