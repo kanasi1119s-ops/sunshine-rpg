@@ -100,3 +100,20 @@ body {
   touch-action: none;
   user-select: none;
 }
+
+.touch-menu-button {
+  position: absolute;
+  right: 84px;
+  bottom: 62px;
+  width: 56px;
+  height: 40px;
+  white-space: nowrap;
+  padding: 0;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 0.75rem;
+  touch-action: none;
+  user-select: none;
+}
