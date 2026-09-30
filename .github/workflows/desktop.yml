@@ -1,0 +1,92 @@
+# サンシャイン作曲ソフト（デスクトップ版）のインストーラーを作る。
+# 手動で動かす（Actions → desktop → Run workflow）か、desktop-v で始まるタグを付けたときだけ動く。
+# できたファイルは、この実行の「Artifacts」から受け取れる（自動で公開・販売はしない）。
+#
+# 署名（docs/sales/README.md）: リポジトリの Secrets に次を入れると、自動で署名する。入れていなければ、署名なしで作る。
+#   Windows: WIN_CSC_LINK（証明書 .pfx を base64 にしたもの）・WIN_CSC_KEY_PASSWORD
+#   Mac:     MAC_CSC_LINK（Developer ID Application の .p12 を base64）・MAC_CSC_KEY_PASSWORD・APPLE_ID・APPLE_APP_SPECIFIC_PASSWORD・APPLE_TEAM_ID（公証）
+#   Microsoft Store 向け（appx）: STORE_IDENTITY_NAME・STORE_PUBLISHER（Partner Center の値）。store を選んだときだけ作る
+name: desktop
+
+on:
+  workflow_dispatch:
+    inputs:
+      store:
+        description: "Microsoft Store 向けの appx も作る"
+        type: boolean
+        default: false
+  push:
+    tags: ["desktop-v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: win
+          - os: macos-latest
+            target: mac
+          - os: ubuntu-latest
+            target: linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm ci
+        working-directory: desktop
+      - name: 署名の準備（Secrets があるときだけ）
+        shell: bash
+        env:
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          MAC_CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          MAC_CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+        run: |
+          if [ "${{ matrix.target }}" = "win" ] && [ -n "$WIN_CSC_LINK" ]; then
+            echo "CSC_LINK=$WIN_CSC_LINK" >> "$GITHUB_ENV"; echo "CSC_KEY_PASSWORD=$WIN_CSC_KEY_PASSWORD" >> "$GITHUB_ENV"; echo "SIGNED=1" >> "$GITHUB_ENV"
+          elif [ "${{ matrix.target }}" = "mac" ] && [ -n "$MAC_CSC_LINK" ]; then
+            echo "CSC_LINK=$MAC_CSC_LINK" >> "$GITHUB_ENV"; echo "CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD" >> "$GITHUB_ENV"; echo "SIGNED=1" >> "$GITHUB_ENV"
+            if [ -n "$APPLE_ID" ]; then echo "NOTARIZE=1" >> "$GITHUB_ENV"; fi
+          else
+            echo "CSC_IDENTITY_AUTO_DISCOVERY=false" >> "$GITHUB_ENV"
+            echo "署名の Secrets がないので、署名なしで作ります"
+          fi
+      - name: インストーラーを作る
+        working-directory: desktop
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ "$NOTARIZE" = "1" ]; then
+            npm run prepare-app && npx electron-builder --mac --publish never -c.mac.notarize=true
+          else
+            npm run dist:${{ matrix.target }}
+          fi
+      - name: Microsoft Store 向け（appx）
+        if: matrix.target == 'win' && inputs.store
+        working-directory: desktop
+        env:
+          STORE_IDENTITY_NAME: ${{ secrets.STORE_IDENTITY_NAME }}
+          STORE_PUBLISHER: ${{ secrets.STORE_PUBLISHER }}
+        run: npx electron-builder --win appx --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sunshine-composer-${{ matrix.target }}
+          path: |
+            desktop/release/*.exe
+            desktop/release/*.zip
+            desktop/release/*.dmg
+            desktop/release/*.AppImage
+            desktop/release/*.appx
+          if-no-files-found: error

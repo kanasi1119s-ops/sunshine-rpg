@@ -1,4 +1,5 @@
 // Claude Code から作曲ソフトを使うための道具（APIキーはいらない。曲は Claude Code 自身が書く）。
+// 同じことは、コネクタ（MCPサーバー、tools/mcp/server.mjs）からもできる。
 //
 //   node tools/composer/song.mjs guide
 //       AIソング形式の説明（楽器の一覧・書き方・よい曲にするコツ）を表示する。曲を書く前に読む。
@@ -6,31 +7,34 @@
 //       AIソング形式のJSONを確かめて、作曲ソフトで開けるプロジェクト（.sunshine-song.json）とMIDIを書き出す。
 //       --wav: 作曲ソフトと同じ音（録音音源・アンプ・仕上げ）でWAVも作る（Playwright と Chromium が必要）。
 //       --register: ゲームの曲として src/audio/songs/<曲ID>.sunshine-song.json に登録する。
-import { createServer } from "vite";
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
+import { openSongKit } from "./song-lib.mjs";
 
-const root = new URL("../../", import.meta.url).pathname;
 const args = process.argv.slice(2);
-const cmd = args[0];
 const opt = (name) => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
 };
 
-const server = await createServer({ root, configFile: false, logLevel: "silent", server: { middlewareMode: true, hmr: false }, appType: "custom" });
-const load = (p) => server.ssrLoadModule(p);
+const kit = await openSongKit();
 try {
-  if (cmd === "guide") {
-    const { AI_SONG_GUIDE } = await load("/src/audio/ai-song.ts");
-    console.log(AI_SONG_GUIDE);
+  if (args[0] === "guide") {
+    console.log(await kit.guide());
     console.log("\n## 見本\nassets-src/ai-songs/ にある .json を見てください。");
-  } else if (cmd === "build" && args[1]) {
+  } else if (args[0] === "build" && args[1]) {
     try {
-      await buildSong(args[1]);
+      const name = path.basename(args[1]).replace(/\.json$/i, "").toLowerCase().replace(/[^a-z0-9-]+/g, "-");
+      const r = await kit.build(JSON.parse(fs.readFileSync(args[1], "utf8")), { name, edition: opt("--edition") ?? "real", outDir: opt("--out"), wav: args.includes("--wav") });
+      for (const w of r.warnings) console.warn("注意:", w);
+      console.log(`○ 「${r.title}」 ${r.tracks}トラック・${Math.floor(r.seconds / 60)}分${Math.round(r.seconds % 60)}秒・テンポ${r.bpm}`);
+      console.log("  プロジェクト:", r.files.project, "（作曲ソフトの「プロジェクトを読み込む」で開ける）");
+      console.log("  MIDI:", r.files.midi);
+      if (r.files.wav) console.log("  WAV:", r.files.wav);
+      const id = opt("--register");
+      if (id) console.log("  ゲームに登録:", await kit.register(r.score, { id, title: r.title, scene: opt("--scene") ?? "" }));
     } catch (e) {
-      console.error("× " + e.message);
+      console.error("× 曲を組み立てられませんでした。直してから、もう一度 build してください:\n" + e.message);
       process.exitCode = 1;
     }
   } else {
@@ -38,90 +42,5 @@ try {
     process.exitCode = 1;
   }
 } finally {
-  await server.close();
-}
-
-async function buildSong(file) {
-  const { aiSongToScore } = await load("/src/audio/ai-song.ts");
-  const { scoreToMidi } = await load("/src/audio/midi-export.ts");
-  const { realEdition } = await load("/src/audio/real-edition.ts");
-  const { ps2Edition } = await load("/src/audio/ps2-edition.ts");
-  const { getScoreDurationSec } = await load("/src/audio/score.ts");
-  const edition = opt("--edition") ?? "real";
-  if (!["real", "ps2", "modern"].includes(edition)) throw new Error("--edition は real・ps2・modern のどれか");
-  let result;
-  try {
-    result = aiSongToScore(JSON.parse(fs.readFileSync(file, "utf8")));
-  } catch (e) {
-    console.error("× 曲を組み立てられませんでした。直してから、もう一度 build してください:\n" + e.message);
-    process.exitCode = 1;
-    return;
-  }
-  const { score, song, warnings } = result;
-  for (const w of warnings) console.warn("注意:", w);
-  const base = path.basename(file).replace(/\.json$/i, "");
-  const out = path.resolve(opt("--out") ?? root + "dist-songs");
-  fs.mkdirSync(out, { recursive: true });
-  const project = path.join(out, `${base}.sunshine-song.json`);
-  fs.writeFileSync(project, JSON.stringify({ format: "sunshine-song", version: 1, name: song.title, edition, score }));
-  const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
-  fs.writeFileSync(path.join(out, `${base}.mid`), scoreToMidi(edited));
-  const sec = getScoreDurationSec(score);
-  console.log(`○ 「${song.title}」 ${score.tracks.length}トラック・${Math.floor(sec / 60)}分${Math.round(sec % 60)}秒・テンポ${score.tempoBpm}`);
-  console.log("  プロジェクト:", project, "（作曲ソフトの「プロジェクトを読み込む」で開ける）");
-  console.log("  MIDI:", path.join(out, `${base}.mid`));
-
-  const id = opt("--register");
-  if (id) {
-    const { allEntries } = await load("/src/audio/catalog.ts");
-    const { songFileToEntry } = await load("/src/audio/user-songs.ts");
-    const target = path.join(root, "src/audio/songs", `${id}.sunshine-song.json`);
-    const taken = new Set(allEntries().map((e) => e.id).filter((x) => !(x === id && fs.existsSync(target))));
-    const data = { format: "sunshine-game-song", version: 1, id, title: song.title, scene: opt("--scene") ?? "", score };
-    songFileToEntry(data, taken);
-    fs.writeFileSync(target, JSON.stringify(data));
-    console.log("  ゲームに登録:", target);
-  }
-  if (args.includes("--wav")) {
-    const wav = path.join(out, `${base}.wav`);
-    await renderWav(score, edition, wav);
-    console.log("  WAV:", wav);
-  }
-}
-
-async function loadPlaywright() {
-  const tries = ["playwright", "@playwright/test"];
-  try {
-    tries.push(path.join(execSync("npm root -g", { encoding: "utf8" }).trim(), "playwright/index.mjs"));
-  } catch {
-    // npm が見つからなければ、ほかの場所だけ試す
-  }
-  for (const t of tries) {
-    try {
-      return await import(t);
-    } catch {
-      // 次を試す
-    }
-  }
-  throw new Error("WAVを作るには Playwright が必要です（npx playwright install chromium）。作曲ソフトでプロジェクトを開いて「WAVで書き出す」でも作れます。");
-}
-
-async function renderWav(score, edition, file) {
-  const html = root + "dist-composer/index.html";
-  const stale = !fs.existsSync(html) || fs.statSync(html).mtimeMs < fs.statSync(root + "tools/composer/entry.ts").mtimeMs;
-  if (stale) {
-    console.log("  作曲ソフトをビルドしています…");
-    execSync(`node ${JSON.stringify(root + "tools/composer/build.mjs")}`, { stdio: "ignore" });
-  }
-  const { chromium } = await loadPlaywright();
-  const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required"] });
-  try {
-    const page = await browser.newPage();
-    await page.goto("file://" + html);
-    await page.waitForFunction(() => "__composer" in window);
-    const b64 = await page.evaluate(([s, e]) => window.__composer.renderWav(s, e), [score, edition]);
-    fs.writeFileSync(file, Buffer.from(b64, "base64"));
-  } finally {
-    await browser.close();
-  }
+  await kit.close();
 }

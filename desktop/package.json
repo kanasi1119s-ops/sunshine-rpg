@@ -1,0 +1,106 @@
+{
+  "name": "sunshine-composer",
+  "productName": "Sunshine Composer",
+  "version": "1.0.0",
+  "description": "サンシャイン作曲ソフト（デスクトップ版）",
+  "author": "サンシャインソフトウェア",
+  "private": true,
+  "main": "main.cjs",
+  "scripts": {
+    "prepare-app": "node ../tools/composer/build.mjs app/index.html --desktop && node copy-licenses.mjs",
+    "start": "npm run prepare-app && electron .",
+    "dist": "npm run prepare-app && electron-builder --publish never",
+    "dist:win": "npm run prepare-app && electron-builder --win --publish never",
+    "dist:mac": "npm run prepare-app && electron-builder --mac --publish never",
+    "dist:linux": "npm run prepare-app && electron-builder --linux --publish never",
+    "dist:store": "npm run prepare-app && electron-builder --win appx --publish never"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0",
+    "@breezystack/lamejs": "^1.2.7"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "jp.sunshine-software.composer",
+    "productName": "Sunshine Composer",
+    "copyright": "© サンシャインソフトウェア",
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "ai.cjs",
+      "mp3.cjs",
+      "app/**",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "サンシャイン作曲ソフト",
+      "license": "legal/eula-installer-ja.txt"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.music",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "楽器（オーディオインターフェース）やマイクの音を録音するために使います。"
+      },
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "icon": "build/icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Audio",
+      "icon": "build/icon.png"
+    },
+    "publish": null,
+    "asarUnpack": [
+      "node_modules/@breezystack/lamejs/**"
+    ],
+    "appx": {
+      "displayName": "サンシャイン作曲ソフト",
+      "publisherDisplayName": "サンシャインソフトウェア",
+      "applicationId": "SunshineComposer",
+      "backgroundColor": "#05080e",
+      "languages": [
+        "ja-JP"
+      ],
+      "identityName": "${env.STORE_IDENTITY_NAME}",
+      "publisher": "${env.STORE_PUBLISHER}"
+    },
+    "extraResources": [
+      {
+        "from": "licenses",
+        "to": "licenses"
+      },
+      {
+        "from": "legal",
+        "to": "legal",
+        "filter": [
+          "*.md",
+          "*.txt"
+        ]
+      }
+    ]
+  }
+}

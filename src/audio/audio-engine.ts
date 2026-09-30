@@ -184,6 +184,9 @@ export class AudioEngine {
     this.applyEdition(score.edition ?? "modern");
     if (this.sampled.isReady() && !this.synthOnly) {
       this.sampled.play(score, offsetSec);
+      // シーケンサーが位置を返せないとき（音が1つもない曲など）のための、目安の時計
+      this.bgmLoopStart = ctx.currentTime - offsetSec;
+      this.bgmDurationSec = durationSec;
       this.bgmLoopHandle = -1; // 「鳴っている」印（録音音源はシーケンサーが自分でループする）
       return;
     }
@@ -202,6 +205,12 @@ export class AudioEngine {
 
     const scheduleAhead = (): void => {
       const horizon = ctx.currentTime + SCHEDULE_AHEAD_SEC;
+      if (events.length === 0) {
+        // 音が1つもない曲（1から作りはじめた曲など）: 位置だけ進める
+        while (score.loop && ctx.currentTime > loopStart + durationSec) loopStart += durationSec;
+        this.bgmLoopStart = loopStart;
+        return;
+      }
       for (;;) {
         if (index >= events.length) {
           if (!score.loop) {
@@ -232,6 +241,17 @@ export class AudioEngine {
   /** NAM（実際のアンプを学習したモデル）を使えるようにする（作曲ソフトだけ）。 */
   setNamHost(host: NamHost | null): void {
     this.sampled.setNam(host);
+  }
+
+  /** 作曲ソフト用: 音の場（AudioContext）。録音トラックの再生や録音に使う。 */
+  audioContext(): AudioContext {
+    return this.ensureContext();
+  }
+
+  /** 作曲ソフト用: 録音トラックの出口（録音音源と同じ仕上げ・版の段・BGMの音量を通る）。 */
+  clipDestination(): AudioNode {
+    this.ensureContext();
+    return this.sampledBus!;
   }
 
   /** 版に合わせて、高音の丸めとホール残響の量を切り替える。 */
@@ -275,7 +295,8 @@ export class AudioEngine {
   /** いま鳴っているBGMの、曲の中での位置（秒）。鳴っていなければ0。 */
   getBgmPositionSec(): number {
     if (this.sampled.isPlaying()) {
-      return this.sampled.positionSec();
+      const p = this.sampled.positionSec();
+      if (Number.isFinite(p) && p >= 0) return p;
     }
     if (!this.ctx || this.bgmLoopHandle === null || this.bgmDurationSec <= 0) {
       return 0;

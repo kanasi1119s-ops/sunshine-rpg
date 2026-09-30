@@ -1,5 +1,6 @@
 import { midiToName } from "./compose";
 import { REST, type Instrument, type NoteEvent, type Score, type Track } from "./score";
+import { barBeats, type TimeSignature } from "./time-signature";
 
 /** 作曲ソフトの「新しい曲」: コード進行から、バンド編成の伴奏（と、空のメロディのトラック）を作る。 */
 export interface NewSongSpec {
@@ -14,6 +15,8 @@ export interface NewSongSpec {
   repeats: number;
   /** 伴奏の雰囲気。 */
   feel: "rock" | "ballad" | "pop";
+  /** 拍子（指定すると beats より優先。例: 7/8）。 */
+  sig?: TimeSignature;
   /** 空にしておくメロディのトラックの楽器。 */
   leadInstrument: Instrument;
 }
@@ -41,7 +44,7 @@ export function buildNewSong(spec: NewSongSpec): Score {
   const bad = chords.find((c) => !c.chord);
   if (chords.length === 0) throw new Error("コード進行を入力してください");
   if (bad) throw new Error(`読めないコードがあります: ${bad.name}`);
-  const beats = Math.max(2, Math.min(12, Math.round(spec.beats)));
+  const beats = spec.sig ? barBeats(spec.sig) : Math.max(2, Math.min(12, Math.round(spec.beats)));
   const bars: { root: number; intervals: number[]; bar: number }[] = [];
   for (let r = 0; r < Math.max(1, spec.repeats); r++) {
     for (const c of chords) {
@@ -100,5 +103,5 @@ export function buildNewSong(spec: NewSongSpec): Score {
   });
   const total = bars.length * beats;
   const lead: Track = { waveform: "square", instrument: spec.leadInstrument, volume: 0.22, pan: 0, notes: [rest(total)] };
-  return { tempoBpm: spec.bpm, loop: true, drumKit: rock ? 16 : 0, tone: "rock", tracks: [...drums, bass, guitar, piano, padVoice(0), padVoice(1), padVoice(2), lead] };
+  return { tempoBpm: spec.bpm, timeSig: spec.sig ?? { num: beats, den: 4 }, loop: true, drumKit: rock ? 16 : 0, tone: "rock", tracks: [...drums, bass, guitar, piano, padVoice(0), padVoice(1), padVoice(2), lead] };
 }

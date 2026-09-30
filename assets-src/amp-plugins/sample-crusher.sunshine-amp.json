@@ -1,0 +1,28 @@
+{
+  "format": "sunshine-amp",
+  "version": 1,
+  "id": "sample-crusher",
+  "label": "見本: ビットクラッシャー（プログラムつき）",
+  "description": "自分で書いた音の処理（AudioWorklet）を組み込む見本。",
+  "author": "サンシャインソフトウェア",
+  "license": "このソフトの一部（自作）",
+  "stages": [
+    {
+      "type": "worklet",
+      "name": "sample-crusher",
+      "code": "// 見本: 音を粗くする（ビットクラッシャー）。bits の値で粗さが変わる\nclass SampleCrusher extends AudioWorkletProcessor {\n  static get parameterDescriptors() { return [{ name: \"bits\", defaultValue: 6, minValue: 1, maxValue: 16 }]; }\n  process(inputs, outputs, parameters) {\n    const input = inputs[0], output = outputs[0];\n    const step = Math.pow(0.5, parameters.bits[0]);\n    for (let ch = 0; ch < output.length; ch++) {\n      const src = input[ch] || input[0];\n      if (!src) continue;\n      for (let i = 0; i < output[ch].length; i++) output[ch][i] = step * Math.round(src[i] / step);\n    }\n    return true;\n  }\n}\nregisterProcessor(\"sample-crusher\", SampleCrusher);\n",
+      "params": {
+        "bits": 5
+      }
+    },
+    {
+      "type": "eq",
+      "kind": "lowpass",
+      "freq": 6000
+    },
+    {
+      "type": "gain",
+      "value": 0.9
+    }
+  ]
+}

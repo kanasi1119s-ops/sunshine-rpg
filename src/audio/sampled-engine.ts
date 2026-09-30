@@ -120,7 +120,7 @@ export class SampledBgm {
       return;
     }
     const { midi, programs, amps } = scoreToMidiInfo(score);
-    this.rack?.configure(programs, score.tone ?? "rock", 9, amps, score.namModels ?? {});
+    this.rack?.configure(programs, score.tone ?? "rock", 9, amps, score.namModels ?? {}, score.ampPlugins ?? {});
     this.pendingOffset = offsetSec;
     this.playing = true;
     const binary = midi.buffer.slice(midi.byteOffset, midi.byteOffset + midi.byteLength) as ArrayBuffer;
