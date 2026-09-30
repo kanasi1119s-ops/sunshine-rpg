@@ -18,6 +18,10 @@ export interface ChannelAmp {
 }
 /** ギターの歪みの深さに掛ける倍率（1で変更なし）。全曲共通。0.8で、深さを2割ほど下げる。 */
 export const GUITAR_DRIVE_TRIM = 0.8;
+/** 歪み系ギターの、耳に痛い高音のおさえ。3kHz付近を下げる量（dB。マイナス）、5.5kHz付近はさらに1.5dB多く下げる。 */
+export const HARSH_CUT_DB = -3.5;
+/** 歪み系ギターの最後のローパス（Hz）。これより上の高音をなだらかに落とす。 */
+export const HARSH_LOWPASS_HZ = 4500;
 
 type Role = "plugin" | "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru" | GenreAmpType;
 
@@ -177,7 +181,9 @@ export class AmpRack {
     const toneDb = override?.amp.tone ?? 0;
     const level = override?.amp.level ?? 1;
     // 音づくりの上書き（歪みの深さ・高音・出力）がある歪み系のギターは、最後に高音の調整と出力の段を足す
-    const tail = (nodes: AudioNode[]): AudioNode[] => (override ? [...nodes, this.filter("highshelf", 3500, toneDb), this.gain(level)] : nodes);
+    // 耳に痛い高音（3kHz付近の「ガジャガジャ」した刺さりと、5kHz以上のジャリつき）を、全曲共通でおさえる（人間の指示 2026-09-30）。
+    const soften = (nodes: AudioNode[]): AudioNode[] => [...nodes, this.filter("peaking", 3000, HARSH_CUT_DB, 0.8), this.filter("peaking", 5500, HARSH_CUT_DB - 1.5, 0.8), this.filter("lowpass", HARSH_LOWPASS_HZ, 0, 0.6)];
+    const tail = (nodes: AudioNode[]): AudioNode[] => soften(override ? [...nodes, this.filter("highshelf", 3500, toneDb), this.gain(level)] : nodes);
     switch (role) {
       case "nam":
         return this.buildNam(input, override!);

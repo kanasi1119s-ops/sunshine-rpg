@@ -91,7 +91,10 @@ async function loadPlaywright() {
 /** 作曲ソフト（1ファイルのHTML）をヘッドレスのブラウザで開き、作曲ソフトと同じ音でWAVを作る。 */
 export async function renderWav(score, edition, file) {
   const html = path.join(ROOT, "dist-composer/index.html");
-  const newest = Math.max(...["tools/composer/entry.ts", "tools/composer/template.html"].map((f) => fs.statSync(path.join(ROOT, f)).mtimeMs));
+  // 作曲ソフトの元（entry.ts・template.html）か、音のエンジン（src/audio の .ts）が新しければ作り直す（古いままの音で書き出さないため）
+  const audioDir = path.join(ROOT, "src/audio");
+  const audioFiles = fs.readdirSync(audioDir).filter((f) => f.endsWith(".ts") && !f.endsWith(".test.ts")).map((f) => path.join("src/audio", f));
+  const newest = Math.max(...["tools/composer/entry.ts", "tools/composer/template.html", ...audioFiles].map((f) => fs.statSync(path.join(ROOT, f)).mtimeMs));
   if (!fs.existsSync(html) || fs.statSync(html).mtimeMs < newest) {
     execSync(`node ${JSON.stringify(path.join(ROOT, "tools/composer/build.mjs"))}`, { stdio: "ignore" });
   }
