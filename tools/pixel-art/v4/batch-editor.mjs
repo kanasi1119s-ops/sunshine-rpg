@@ -1,7 +1,7 @@
 // 使い方: node batch-editor.mjs <フォルダ or モジュール...> <出力フォルダ> [並列数(既定3)]
 // 絵のモジュールを、ドット絵エディタ（../editor.html）に1つずつマウスで描き込み、エディタの書き出しが元の絵と一致するかを確かめて、
 // エディタで描いたキャンバスの画像（<名前>.png）と、書き出し（<名前>.txt。UTF-8）を出力する。
-import fs from "fs"; import path from "path"; import { pathToFileURL, fileURLToPath } from "url"; import { chromium } from "playwright-core"; import { DEFAULT_PAL } from "./lib4.mjs";
+import fs from "fs"; import path from "path"; import { pathToFileURL, fileURLToPath } from "url"; import { chromium } from "playwright-core"; import { DEFAULT_PAL, pieceRows } from "./lib4.mjs";
 const args = process.argv.slice(2); const nums = args.filter((a) => /^\d+$/.test(a)).map(Number); const rest = args.filter((a) => !/^\d+$/.test(a)); const out = rest.pop(); const CONC = nums[0] ?? 3;
 const files = rest.flatMap((a) => (fs.statSync(a).isDirectory() ? fs.readdirSync(a).filter((f) => f.endsWith(".mjs")).sort().map((f) => path.join(a, f)) : [a]));
 fs.mkdirSync(out, { recursive: true });
@@ -10,7 +10,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH 
 const report = []; let next = 0;
 async function paint(file) {
   const base = path.basename(file, ".mjs"); const m = await import(pathToFileURL(path.resolve(file)).href + "?t=" + Date.now());
-  const rows = m.rows, N = rows.length, PAL = { ...DEFAULT_PAL, ...(m.pal ?? {}) };
+  const rows = pieceRows(m), N = rows.length, PAL = { ...DEFAULT_PAL, ...(m.pal ?? {}) };
   const count = new Map(); for (const r of rows) for (const c of r) if (c !== ".") count.set(c, (count.get(c) || 0) + 1);
   const used = [...count.keys()].sort((a, b) => count.get(b) - count.get(a));
   const miss = used.filter((c) => !PAL[c]); if (miss.length) return { base, ok: false, why: "色が未定義の文字: " + miss.join("") };

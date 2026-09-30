@@ -184,3 +184,48 @@ export function kClean(rows, keep = "wWXs") {
 export const remap = (rows, m) => rows.map((r) => [...r].map((c) => m[c] ?? c).join(""));
 /** 孤立した1ドット（上下左右に同じ色が無い点）を、まわりでいちばん多い色にそろえる。keep に入れた文字（目のハイライトなど）は残す。 */
 export const despeckle = (rows, keep = "w") => { const g = rows.map((r) => [...r]); for (let y = 1; y < W - 1; y++) for (let x = 1; x < W - 1; x++) { const c = rows[y][x]; if (c === "." || keep.includes(c)) continue; const n = [rows[y - 1][x], rows[y + 1][x], rows[y][x - 1], rows[y][x + 1]]; if (n.includes(c)) continue; const cnt = {}; for (const k of n) if (k !== ".") cnt[k] = (cnt[k] || 0) + 1; const best = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0]; if (best) g[y][x] = best[0]; } return g.map((r) => r.join("")); };
+
+/**
+ * 人物の胴（y13〜30）を、横にせまくする（人間の指示 2026-09-30「胴が横に大きいので、少し細く」）。
+ * 各行の左右の端の間を、factor 倍に縮める（中心はそのまま。最近傍で取るので、色は増えない）。人物（category "character"）にだけ、読み込み時にかける。
+ */
+export function slimBody(rows, factor = 0.8) {
+  const out = rows.map((r) => r);
+  for (let y = 13; y < rows.length; y++) {
+    const r = rows[y]; let lo = r.length, hi = -1;
+    for (let x = 0; x < r.length; x++) if (r[x] !== ".") { if (x < lo) lo = x; hi = x; }
+    if (hi < 0) continue;
+    const seg = r.slice(lo, hi + 1), w = seg.length, nw = Math.max(4, Math.round(w * factor));
+    if (nw >= w) continue;
+    const center = (lo + hi) / 2, start = Math.round(center - (nw - 1) / 2);
+    let line = ".".repeat(r.length).split(""); for (let i = 0; i < nw; i++) line[start + i] = seg[Math.min(w - 1, Math.floor(((i + 0.5) * w) / nw))];
+    out[y] = line.join("");
+  }
+  return out;
+}
+/** 絵のモジュールから、実際に使う rows を取り出す（人物は胴を細くする）。 */
+export function pieceRows(m) { return m.category === "character" ? slimBody(m.rows) : m.rows; }
+
+/**
+ * 仕上げ: 色数を max 色以内にまとめ（似た色へ寄せる。目のハイライト w は守る）、孤立した点を iso 個以内に減らす。
+ * 使い方: export const rows = finish(r, pal);  （pal は絵ごとの上書き。DEFAULT_PAL は中で合わせる）
+ */
+export function finish(rows, pal = {}, max = 26, iso = 34) {
+  const P = { ...DEFAULT_PAL, ...pal }; const g = rows.map((r) => [...r]);
+  const rgb = (c) => { const h = P[c]; return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); };
+  const dist = (a, b) => { const x = rgb(a), y = rgb(b); const rm = (x[0] + y[0]) / 2; return Math.sqrt((2 + rm / 256) * (x[0] - y[0]) ** 2 + 4 * (x[1] - y[1]) ** 2 + (2 + (255 - rm) / 256) * (x[2] - y[2]) ** 2); };
+  const keep = new Set(["w"]);
+  for (;;) {
+    const cnt = {}; for (const r of g) for (const c of r) if (c !== ".") cnt[c] = (cnt[c] || 0) + 1; const cs = Object.keys(cnt); if (cs.length <= max) break;
+    let best = null; for (const a of cs) { if (keep.has(a)) continue; for (const b of cs) { if (a === b) continue; const cost = cnt[a] * dist(a, b) + (a === "e" || a === "i" ? 9999 : 0); if (!best || cost < best.cost) best = { a, b, cost }; } }
+    for (const r of g) for (let x = 0; x < W; x++) if (r[x] === best.a) r[x] = best.b;
+  }
+  const prot = new Set(["w", "e", "i", "n", "B", "A", "X"]);
+  for (let pass = 0; pass < 6; pass++) {
+    const list = []; for (let y = 1; y < 31; y++) for (let x = 1; x < 31; x++) { const c = g[y][x]; if (c === "." || g[y - 1][x] === c || g[y + 1][x] === c || g[y][x - 1] === c || g[y][x + 1] === c) continue; list.push([x, y, c]); }
+    if (list.length <= iso) break;
+    const cand = list.filter(([, , c]) => !prot.has(c)).map(([x, y, c]) => { const ns = [g[y - 1][x], g[y + 1][x], g[y][x - 1], g[y][x + 1]].filter((n) => n !== "."); const m = {}; ns.forEach((n) => (m[n] = (m[n] || 0) + 1)); const t = Object.keys(m).sort((a, b) => m[b] - m[a])[0]; return { x, y, t, d: t ? dist(c, t) : 1e9 }; }).filter((o) => o.t).sort((a, b) => a.d - b.d);
+    for (const o of cand.slice(0, list.length - iso)) g[o.y][o.x] = o.t;
+  }
+  return g.map((r) => r.join(""));
+}

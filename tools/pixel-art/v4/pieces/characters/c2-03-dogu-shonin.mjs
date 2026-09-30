@@ -1,4 +1,4 @@
-import { charBase, overrides, patch, rect, hline, vline, sym } from "../../lib4.mjs";
+import { charBase, overrides, patch, rect, hline, vline, sym, finish } from "../../lib4.mjs";
 export const name = "道具屋の商人"; export const category = "character";
 export const pal = { p: "#1c1a2a", "1": "#2c2a3e", "2": "#4a4460", "3": "#6a6488", "4": "#8c86ac",
   q: "#4a2418", a: "#8c5038", b: "#b87a52", c: "#d49a70", d: "#f0be94", B: "#e07868", n: "#8a3a3a", e: "#1c1428", i: "#3a2a20",
@@ -33,4 +33,4 @@ r = overrides(r, [
   // 手と回復薬のびん
   ...rect(5, 18, 6, 20, "W"), ...hline(5, 6, 17, "y"), [5, 18, "d"], [6, 20, "S"], ...rect(5, 19, 6, 20, "T"), [5, 19, "t"],
 ]);
-export const rows = r;
+export const rows = finish(r, pal);

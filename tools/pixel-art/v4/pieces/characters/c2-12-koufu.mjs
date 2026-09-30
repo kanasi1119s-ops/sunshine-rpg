@@ -1,4 +1,4 @@
-import { charBase, overrides, patch, rect, hline, vline, sym } from "../../lib4.mjs";
+import { charBase, overrides, patch, rect, hline, vline, sym, finish } from "../../lib4.mjs";
 export const name = "鉱夫"; export const category = "character";
 export const pal = { p: "#2a2214", "1": "#4a3a24", "2": "#7a6238", "3": "#a88a4c", "4": "#d0b070",
   q: "#603630", a: "#a4685a", b: "#d49676", c: "#eeb894", d: "#fcd8b4", B: "#dc7a70", n: "#803838", e: "#1c1620",
@@ -32,4 +32,4 @@ r = overrides(r, [
   ...vline(26, 8, 24, "o"), ...vline(27, 8, 24, "1"), [26, 8, "o"], [22, 7, "m"], [23, 6, "m"], [24, 5, "M"], [25, 4, "M"], [26, 4, "M"], [27, 4, "M"], [28, 5, "M"], [29, 6, "m"], [30, 7, "m"], [31, 8, "m"], [23, 7, "m"], [24, 6, "m"], [25, 5, "m"], [26, 5, "m"], [27, 5, "m"], [28, 6, "m"], [29, 7, "m"], [22, 8, "m"], [30, 8, "m"], [26, 6, "o"], [27, 6, "1"], [26, 7, "o"], [27, 7, "1"],
   [24, 20, "1"], [25, 21, "p"],
 ]);
-export const rows = r;
+export const rows = finish(r, pal);

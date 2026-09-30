@@ -2,11 +2,11 @@
 //   <出力>/README.txt・index.csv（UTF-8・BOMつき＝WindowsやExcelでも文字化けしない）
 //   <出力>/<カテゴリ>/png_1x/<ID>.png（32×32・透明）  png_8x/<ID>.png（256×256・透明）  editor/<ID>.png（エディタで描いた画面）  rows/<ID>.txt（UTF-8）  _sheet.png（一覧）
 // ファイル名は、文字化けしないよう、半角の英小文字・数字・ハイフンだけ。日本語の名前は index.csv と README.txt に書く。
-import fs from "fs"; import path from "path"; import { pathToFileURL } from "url"; import { chromium } from "playwright-core"; import { DEFAULT_PAL } from "./lib4.mjs";
+import fs from "fs"; import path from "path"; import { pathToFileURL } from "url"; import { chromium } from "playwright-core"; import { DEFAULT_PAL, pieceRows } from "./lib4.mjs";
 const [out, editorDir] = process.argv.slice(2); const root = path.dirname(new URL(import.meta.url).pathname); const piecesDir = process.env.PIECES ?? path.join(root, "pieces");
 const CAT = { character: ["characters", "人物"], monster: ["monsters", "敵"], boss: ["bosses", "ボス"], item: ["items", "アイテム"], object: ["objects", "マップの物"], icon: ["icons", "アイコン"] };
 const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : e.name.endsWith(".mjs") ? [path.join(d, e.name)] : []));
-const items = []; for (const f of walk(piecesDir).sort()) { const m = await import(pathToFileURL(f).href + "?t=" + Date.now()); if (!m.rows) continue; const id = path.basename(f, ".mjs"); items.push({ id, name: m.name ?? id, category: m.category ?? "object", rows: m.rows, pal: { ...DEFAULT_PAL, ...(m.pal ?? {}) } }); }
+const items = []; for (const f of walk(piecesDir).sort()) { const m = await import(pathToFileURL(f).href + "?t=" + Date.now()); if (!m.rows) continue; const id = path.basename(f, ".mjs"); items.push({ id, name: m.name ?? id, category: m.category ?? "object", rows: pieceRows(m), pal: { ...DEFAULT_PAL, ...(m.pal ?? {}) } }); }
 fs.rmSync(out, { recursive: true, force: true }); const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" }); const page = await b.newPage();
 const draw = (it, Z, sheetCols) => it; // 参照用
 const png = (rows, pal, Z) => page.evaluate(({ rows, pal, Z }) => { const c = document.createElement("canvas"); c.width = 32 * Z; c.height = 32 * Z; const x = c.getContext("2d"); rows.forEach((r, y) => [...r].forEach((k, xx) => { if (pal[k]) { x.fillStyle = pal[k]; x.fillRect(xx * Z, y * Z, Z, Z); } })); return c.toDataURL("image/png"); }, { rows, pal, Z });

@@ -1,4 +1,4 @@
-import { charBase, overrides, patch, rect, hline, vline, sym } from "../../lib4.mjs";
+import { charBase, overrides, patch, rect, hline, vline, sym, finish } from "../../lib4.mjs";
 export const name = "修道女"; export const category = "character";
 export const pal = { p: "#1c1830", "1": "#3c2a20", "2": "#8a5a38", "3": "#b88050", "4": "#d8a870",
   q: "#7a4a4a", a: "#c8867a", b: "#f0b09a", c: "#fcd8be", d: "#fff2e2", B: "#f4988e", n: "#b05860", i: "#6a7ec8",
@@ -31,4 +31,4 @@ r = overrides(r, [
   // 小さなろうそく
   ...vline(27, 16, 20, "C"), ...vline(28, 16, 20, "y"), [27, 14, "X"], [28, 14, "X"], [27, 15, "T"], [28, 15, "A"], [27, 13, "X"], ...hline(26, 29, 21, "A"), [26, 20, "y"], [24, 20, "c"], [25, 20, "c"],
 ]);
-export const rows = r;
+export const rows = finish(r, pal);
