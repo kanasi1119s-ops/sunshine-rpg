@@ -156,3 +156,31 @@ describe("天神・悪神ジョブ", () => {
     expect(bug.skills.some((s) => (s.battle?.koChance ?? 0) > 0)).toBe(true);
   });
 });
+
+import { LEGEND_JOBS, LEGEND_UNLOCK_FLAGS } from "./jobs";
+
+describe("レジェンドジョブ「灯心継承者」", () => {
+  const all = Object.fromEntries(LEGEND_UNLOCK_FLAGS.map((f) => [f, true]));
+
+  it("主人公だけが、条件（本編クリア・仲間4人の寄り道・カセンの手紙）がそろうと選べる", () => {
+    expect(availableJobs(() => 1, all, "hero").map((j) => j.id)).toContain("torch-heir");
+    expect(availableJobs(() => 1, all, "reto").map((j) => j.id)).not.toContain("torch-heir");
+    expect(availableJobs(() => 1, all).map((j) => j.id)).not.toContain("torch-heir");
+    for (const missing of LEGEND_UNLOCK_FLAGS) {
+      const partial = { ...all, [missing]: false };
+      expect(availableJobs(() => 1, partial, "hero").map((j) => j.id), `${missing} が無いのに解放された`).not.toContain("torch-heir");
+    }
+  });
+
+  it("上級ジョブより1点特化の強さは無い（能力値の合計が、上級ジョブの最大より小さい）。5つの特技はすべて戦闘で使える", () => {
+    const total = (b: Record<string, number | undefined>) => Object.values(b).reduce<number>((a, v) => a + (v ?? 0), 0);
+    const legend = LEGEND_JOBS[0];
+    expect(legend.skills).toHaveLength(5);
+    for (const skill of legend.skills) {
+      expect(skill.battle).toBeDefined();
+    }
+    const maxSpecialist = Math.max(...ADVANCED_JOBS.map((j) => Math.max(...Object.values(j.statBonus).map((v) => v ?? 0))));
+    expect(Math.max(...Object.values(legend.statBonus).map((v) => v ?? 0))).toBeLessThan(maxSpecialist);
+    expect(total(legend.statBonus)).toBeGreaterThan(0);
+  });
+});
