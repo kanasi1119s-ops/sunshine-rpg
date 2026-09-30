@@ -8,7 +8,16 @@ export type JobId =
   | "ripple-mage"
   | "wind-mage"
   | "earth-guard"
-  | "wanderer";
+  | "wanderer"
+  // 上級ジョブ（各初期ジョブを☆15まで育てると解放）
+  | "sword-saint"
+  | "sky-fist"
+  | "hundred-archer"
+  | "inferno-guide"
+  | "stream-sage"
+  | "gale-dancer"
+  | "immovable-guardian"
+  | "many-faced-artist";
 
 export interface JobSkill {
   /** 特技名（オリジナル。既存作品の特技名とは一致させない）。 */
@@ -23,6 +32,8 @@ export interface JobSkill {
 
 export interface JobData {
   id: JobId;
+  /** 上級ジョブだけが持つ。この初期ジョブを最大の☆まで育てると解放される。 */
+  baseJob?: JobId;
   name: string;
   reading: string;
   role: string;

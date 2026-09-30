@@ -93,7 +93,9 @@ import { computeVictoryExp } from "./game/battle/battle-engine";
 import { gainExp, statsAtLevel } from "./game/growth/level-up";
 import { applyStatBonus, computeEquipmentBonus, type EquipmentSlots } from "./game/items/equipment";
 import { createInventory, type Inventory } from "./game/items/inventory";
-import type { JobState } from "./game/job/types";
+import type { JobId, JobState } from "./game/job/types";
+import { availableJobs } from "./game/job/jobs";
+import { createJobState, starsOf } from "./game/job/mastery";
 import { SAVE_VERSION, type SaveData } from "./game/save/types";
 import { loadFromSlot, saveToSlot } from "./game/save/storage";
 import { downloadSaveFile, readSaveFile } from "./io/save-file";
@@ -722,6 +724,12 @@ let debugMenu = createDebugMenuState();
 /** ジョブ画面（Cキーで開く。アヤメが仲間に加わるまでは開けない）。 */
 let jobMenu = createJobMenuState();
 let lastJobDirection: Direction | null = null;
+/** いま選ばれている仲間が、選べるジョブ（初期ジョブ8種＋育てて解放した上級ジョブ）。 */
+function selectableJobIds(): JobId[] {
+  const memberId = jobMenuMembers()[jobMenu.memberCursor]?.id;
+  const state = (memberId && jobStates[memberId]) || createJobState();
+  return availableJobs((id) => starsOf(state, id)).map((job) => job.id);
+}
 function jobMenuMembers(): { id: string; name: string }[] {
   return [
     { id: "hero", name: "ユーリ" },
@@ -1113,17 +1121,17 @@ const loop = createGameLoop({
       const direction = input.getDirection();
       if (direction !== lastJobDirection) {
         if (direction === "up") {
-          jobMenu = moveJobMenu(jobMenu, -1, members.length);
+          jobMenu = moveJobMenu(jobMenu, -1, members.length, selectableJobIds().length);
           audio.playSe(seOf("cursor"));
         } else if (direction === "down") {
-          jobMenu = moveJobMenu(jobMenu, 1, members.length);
+          jobMenu = moveJobMenu(jobMenu, 1, members.length, selectableJobIds().length);
           audio.playSe(seOf("cursor"));
         }
         lastJobDirection = direction;
       }
       if (actionPressed) {
         const memberId = members[jobMenu.memberCursor]?.id;
-        const result = confirmJobMenu(jobMenu);
+        const result = confirmJobMenu(jobMenu, selectableJobIds());
         jobMenu = result.state;
         if (result.chosen && memberId) {
           jobStates = changeJob(jobStates, memberId, result.chosen);
@@ -1284,7 +1292,7 @@ const loop = createGameLoop({
       ctx.fillStyle = "#f2c14e";
       ctx.fillText(saveMessage, 4, 14);
     }
-    renderJobMenu(ctx, jobMenu, jobMenuMembers(), jobStates, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    renderJobMenu(ctx, jobMenu, jobMenuMembers(), jobStates, selectableJobIds(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
     renderShop(ctx, shopMenu, gold, heroEquipment, LOGICAL_WIDTH, LOGICAL_HEIGHT);
     renderPauseMenu(ctx, pauseMenu, pauseMenu.screen === "status" ? statusRows() : [], pauseMessage, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
 

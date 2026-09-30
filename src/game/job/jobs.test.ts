@@ -92,3 +92,38 @@ describe("熟練度", () => {
     }
   });
 });
+
+import { ADVANCED_JOBS, availableJobs, INITIAL_JOBS as INITIAL, JOBS_BY_ID as JOBS, MAX_STARS as MAX } from "./jobs";
+
+describe("上級ジョブ", () => {
+  it("初期ジョブ8種に対応する上級ジョブが8種あり、名前・IDが重ならない", () => {
+    expect(ADVANCED_JOBS).toHaveLength(8);
+    const ids = [...INITIAL, ...ADVANCED_JOBS].map((j) => j.id);
+    expect(new Set(ids).size).toBe(16);
+    expect(new Set([...INITIAL, ...ADVANCED_JOBS].map((j) => j.name)).size).toBe(16);
+    for (const job of ADVANCED_JOBS) {
+      expect(INITIAL.map((j) => j.id)).toContain(job.baseJob);
+      expect(JOBS[job.id]).toBe(job);
+    }
+  });
+
+  it("初期ジョブを最大の☆まで育てると、対応する上級ジョブだけが選べるようになる", () => {
+    expect(availableJobs(() => 1)).toHaveLength(8);
+    expect(availableJobs((id) => (id === "sword-guard" ? MAX : 1)).map((j) => j.id)).toContain("sword-saint");
+    expect(availableJobs((id) => (id === "sword-guard" ? MAX : 1))).toHaveLength(9);
+    expect(availableJobs(() => MAX)).toHaveLength(16);
+    expect(availableJobs((id) => (id === "sword-guard" ? MAX - 1 : 1))).toHaveLength(8);
+  });
+
+  it("上級ジョブは、同じ方向性の初期ジョブより能力値ボーナスが大きく、特技はすべて戦闘で使える", () => {
+    for (const job of ADVANCED_JOBS) {
+      const base = JOBS[job.baseJob!];
+      const total = (b: Record<string, number | undefined>) => Object.values(b).reduce<number>((a, v) => a + (v ?? 0), 0);
+      expect(total(job.statBonus)).toBeGreaterThan(total(base.statBonus));
+      expect(job.skills.length).toBe(3);
+      for (const skill of job.skills) {
+        expect(skill.battle, `${job.name} の ${skill.name}`).toBeDefined();
+      }
+    }
+  });
+});
