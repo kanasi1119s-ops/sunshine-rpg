@@ -19,7 +19,7 @@ import type { Npc } from "../npc";
  * 空の乗り物（`chapter7_airship_obtained`）を手に入れると、渡し守に頼んで訪れた町へ飛べる（roadmap 4-35。町を選ぶ簡易な移動で、フィールド上の操縦は無い）。
  */
 /** 空の乗り物で飛べる町。3つの方面に分けて、二段階の選択肢で選ぶ。 */
-export const AIRSHIP_DESTINATIONS: { area: string; towns: { label: string; mapId: string; tileX: number; tileY: number }[] }[] = [
+export const AIRSHIP_DESTINATIONS: { area: string; towns: { label: string; mapId: string; tileX: number; tileY: number; gate?: string }[] }[] = [
   {
     area: "西の空（灯里・麦香野・硝子湖）",
     towns: [
@@ -45,6 +45,10 @@ export const AIRSHIP_DESTINATIONS: { area: string; towns: { label: string; mapId
   {
     area: "中央の空（灯芯都）",
     towns: [{ label: "灯芯都", mapId: "toushin-town", ...TOUSHIN_TOWN_ENTRY }],
+  },
+  {
+    area: "最果ての空（虚灯宮）",
+    towns: [{ label: "虚灯宮", mapId: "kyotoukyu-court", tileX: 12, tileY: 13, gate: "chapter8_kyotoukyu_open" }],
   },
 ];
 
@@ -230,6 +234,22 @@ function ferrymanCommands(): EventCommand[] {
   ];
 }
 
+/** 行き先に開放の条件（フラグ）があるとき、満たしていなければ断る。 */
+function gated(flag: string | undefined, commands: EventCommand[]): EventCommand[] {
+  if (!flag) {
+    return commands;
+  }
+  return [
+    {
+      type: "if",
+      flag,
+      equals: true,
+      then: commands,
+      else: [{ type: "message", text: "あそこへの空路は、まだ開かれていません。合議会の許しが要ります。", speaker: "渡し守" }],
+    },
+  ];
+}
+
 function airshipDestinationCommands(): EventCommand[] {
   return [
     {
@@ -245,10 +265,10 @@ function airshipDestinationCommands(): EventCommand[] {
               options: [
                 ...area.towns.map((town) => ({
                   label: town.label,
-                  commands: [
+                  commands: gated(town.gate, [
                     { type: "message" as const, text: `${town.label}へ向かいます。しっかりつかまって!`, speaker: "渡し守" },
                     { type: "warp" as const, mapId: town.mapId, tileX: town.tileX, tileY: town.tileY },
-                  ],
+                  ]),
                 })),
                 { label: "やめる", commands: [] },
               ],

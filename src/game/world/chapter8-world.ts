@@ -203,6 +203,20 @@ function chairCommands(): EventCommand[] {
       equals: true,
       then: [
         { type: "message", text: "エドレアは虚灯宮へ去った。合議会は、あなた方の旅を全力で支えよう。", speaker: "議長セイラン" },
+        {
+          type: "choice",
+          text: "虚灯宮へ向かいますか?",
+          options: [
+            {
+              label: "向かう",
+              commands: [
+                { type: "message", text: "船の用意はできている。……どうか、ご無事で。", speaker: "議長セイラン" },
+                { type: "warp", mapId: "kyotoukyu-court", tileX: 12, tileY: 13 },
+              ],
+            },
+            { label: "まだ準備する", commands: [] },
+          ],
+        },
       ],
       else: [
         {

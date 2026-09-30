@@ -34,7 +34,7 @@ function runScripted(
 const KNOWN_BATTLE_IDS = new Set(["fushima-yugami"]);
 
 /** main.ts側（戦闘勝利）で立てられるフラグ。 */
-const EXTERNALLY_SET_FLAGS = new Set(["chapter7_yugami_defeated"]);
+const EXTERNALLY_SET_FLAGS = new Set(["chapter7_yugami_defeated", "chapter8_kyotoukyu_open"]);
 
 function allNpcCommands() {
   return Object.values(CHAPTER7_NPCS).flatMap((npcs) => npcs.flatMap((npc) => npc.commands));
@@ -95,12 +95,12 @@ describe("空の乗り物での移動（4-35）", () => {
   it("入手後は、選んだ町へ向かうと知らせる。「やめる」なら何も起きない", () => {
     const flags: Flags = { chapter7_airship_obtained: true };
     expect(runScripted(ferryman().commands, flags, [1, 1]).some((t) => t.includes("砂音の町へ向かいます"))).toBe(true);
-    expect(runScripted(ferryman().commands, flags, [4]).some((t) => t.includes("向かいます"))).toBe(false);
+    expect(runScripted(ferryman().commands, flags, [5]).some((t) => t.includes("向かいます"))).toBe(false);
   });
 
   it("行き先のwarpは、すべて実在する地図で歩ける場所を指す", () => {
     const targets = collectWarpTargets(ferryman().commands);
-    expect(targets.size).toBe(8);
+    expect(targets.size).toBe(9);
     for (const town of AIRSHIP_DESTINATIONS.flatMap((a) => a.towns)) {
       const map = createTileMap(WORLD_MAPS[town.mapId]);
       expect(isWalkable(map, town.tileX, town.tileY)).toBe(true);
