@@ -4,19 +4,19 @@
 import { hash, makeGrid, putNative } from "./lib.mjs";
 
 const W = 256;
-const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-const px = (g, r, c, k) => putNative(g, Math.round(r), Math.round(c), k);
+export const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+export const px = (g, r, c, k) => putNative(g, Math.round(r), Math.round(c), k);
 const LV = (() => { const v = [-0.55, -0.6, 0.58]; const n = Math.hypot(...v); return v.map((x) => x / n); })();
 /** 楕円体の表面の明るさ（-1〜1）。 */
 const lumOf = (nx, ny, d) => nx * LV[0] + ny * LV[1] + Math.sqrt(Math.max(0, 1 - d)) * LV[2];
 /** 明るさから階調番号（0〜len-1）を決める。少しだけ揺らぎを混ぜる。 */
-function toneIdx(len, lum, c, r, jit = 0.1) {
+export function toneIdx(len, lum, c, r, jit = 0.1) {
   let t = Math.floor(clamp((lum + 0.45) / 1.35 * len, 0, len - 0.001));
   if (hash(c, r) < jit) t += hash(r, c) < 0.5 ? -1 : 1;
   return clamp(t, 0, len - 1);
 }
 /** 楕円体を描く。fn(r,c,nx,ny,d,lum) が色番号か null（描かない）を返す。 */
-function ell(g, cx, cy, rx, ry, fn) {
+export function ell(g, cx, cy, rx, ry, fn) {
   for (let r = Math.floor(cy - ry); r <= Math.ceil(cy + ry); r++) for (let c = Math.floor(cx - rx); c <= Math.ceil(cx + rx); c++) {
     const nx = (c - cx) / rx, ny = (r - cy) / ry, d = nx * nx + ny * ny;
     if (d > 1) continue;
@@ -25,7 +25,7 @@ function ell(g, cx, cy, rx, ry, fn) {
   }
 }
 /** 回り込まない距離ノイズ（ひび割れ・セル模様用）。 */
-function worley(x, y, cell, seed = 0) {
+export function worley(x, y, cell, seed = 0) {
   const cx = Math.floor(x / cell), cy = Math.floor(y / cell);
   let d1 = 9, d2 = 9;
   for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
@@ -37,7 +37,7 @@ function worley(x, y, cell, seed = 0) {
   return [d1, d2];
 }
 /** 太さのある管（曲線に沿って円柱の陰影をつける）。 */
-function tube(g, pts, rad, ramp, jit = 0.06) {
+export function tube(g, pts, rad, ramp, jit = 0.06) {
   for (let s = 0; s < pts.length - 1; s++) {
     const [x0, y0] = pts[s], [x1, y1] = pts[s + 1], n = Math.ceil(Math.hypot(x1 - x0, y1 - y0));
     for (let i = 0; i <= n; i++) {
@@ -46,9 +46,9 @@ function tube(g, pts, rad, ramp, jit = 0.06) {
     }
   }
 }
-function curve(p0, p1, p2, steps = 24) { return Array.from({ length: steps + 1 }, (_, i) => { const t = i / steps; return [(1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0], (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1]]; }); }
+export function curve(p0, p1, p2, steps = 24) { return Array.from({ length: steps + 1 }, (_, i) => { const t = i / steps; return [(1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0], (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1]]; }); }
 /** 歪みの結晶（ひし形の破片）。 */
-function shard(g, cx, cy, w, h, ramp, edge) {
+export function shard(g, cx, cy, w, h, ramp, edge) {
   for (let r = -h; r <= h; r++) for (let c = -w; c <= w; c++) {
     const d = Math.abs(c) / w + Math.abs(r) / h; if (d > 1) continue;
     let k = c < 0 ? (r < 0 ? ramp[2] : ramp[1]) : (r < 0 ? ramp[1] : ramp[0]);
@@ -56,11 +56,11 @@ function shard(g, cx, cy, w, h, ramp, edge) {
     px(g, cy + r, cx + c, k);
   }
 }
-const shadowUnder = (g, cx, cy, rx, ry, k) => ell(g, cx, cy, rx, ry, (r, c, nx, ny, d) => (d < 0.55 || hash(c, r) < 0.75 ? k : null));
+export const shadowUnder = (g, cx, cy, rx, ry, k) => ell(g, cx, cy, rx, ry, (r, c, nx, ny, d) => (d < 0.55 || hash(c, r) < 0.75 ? k : null));
 
 
 /** 先が細くなる管（触手・角・爪）。r0が根もと、r1が先の半径。 */
-function taper(g, pts, r0, r1, ramp, edge = 0) {
+export function taper(g, pts, r0, r1, ramp, edge = 0) {
   const n = pts.length - 1;
   for (let s = 0; s < n; s++) {
     const [x0, y0] = pts[s], [x1, y1] = pts[s + 1], m = Math.max(2, Math.ceil(Math.hypot(x1 - x0, y1 - y0)));
@@ -71,18 +71,18 @@ function taper(g, pts, r0, r1, ramp, edge = 0) {
   }
 }
 /** 牙（下向き dir=1 / 上向き dir=-1 の三角）。 */
-function fang(g, x, y, w, h, dir, ramp, edge = 0) {
+export function fang(g, x, y, w, h, dir, ramp, edge = 0) {
   for (let i = 0; i <= h; i++) { const half = w * (1 - i / h) / 2; for (let c = -Math.ceil(half); c <= Math.ceil(half); c++) { const r = y + dir * i; const k = i === h || Math.abs(c) > half - 0.6 ? edge : c < 0 ? ramp[2] : ramp[1]; px(g, r, x + c, i < 2 && Math.abs(c) < half - 1 ? ramp[3] : k); } }
 }
 /** 縦に細い瞳孔の目（不気味な光る目）。 */
-function eye(g, cx, cy, rx, ry, glow, tilt = 0) {
+export function eye(g, cx, cy, rx, ry, glow, tilt = 0) {
   ell(g, cx, cy, rx + 2, ry + 2, (r, c, nx, ny, d) => (d > 0.6 ? 0 : 1));
   ell(g, cx, cy, rx, ry, (r, c, nx, ny, d, lum) => { const t = d < 0.25 ? 3 : d < 0.55 ? 2 : d < 0.85 ? 1 : 0; return glow[Math.min(glow.length - 1, t + (lum > 0.4 ? 1 : 0))]; });
   for (let r = -ry; r <= ry; r++) { const w = Math.max(0, Math.round((1 - Math.abs(r) / ry) * rx * 0.28)); for (let c = -w; c <= w; c++) px(g, cy + r, cx + c + Math.round(r * tilt), 0); }
   px(g, cy - ry * 0.4, cx - rx * 0.4, 15);                       // 目の照り返し
 }
 /** 外周に、ゆらめく毒気（歪みのもや）を散らす。 */
-function miasma(g, ramp, reach, density, skip) {
+export function miasma(g, ramp, reach, density, skip) {
   const has = (r, c) => r >= 0 && r < W && c >= 0 && c < W && g[r][c] !== -1 && !skip.includes(g[r][c]);
   const put = [];
   for (let r = 0; r < W; r++) for (let c = 0; c < W; c++) {
@@ -97,31 +97,31 @@ function miasma(g, ramp, reach, density, skip) {
   }
   for (const [r, c, k] of put) g[r][c] = k;
 }
-function outlineAll(g, skip) {
+export function outlineAll(g, skip) {
   const has = (r, c) => r >= 0 && r < W && c >= 0 && c < W && g[r][c] !== -1 && !skip.includes(g[r][c]);
   const add = []; for (let r = 0; r < W; r++) for (let c = 0; c < W; c++) if ((g[r][c] === -1 || skip.includes(g[r][c])) && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => has(r + a, c + b))) add.push([r, c]);
   for (const [r, c] of add) g[r][c] = 0;
 }
 
 /** 背後の禍々しい光輪（暗い環に、とげと呪印の刻み）。 */
-function halo(g, cx, cy, R, ramp) {
+export function halo(g, cx, cy, R, ramp) {
   for (let a = 0; a < 6.2832; a += 0.003) for (let t = -3; t <= 3; t += 0.7) { const rr = R + t; px(g, cy + Math.sin(a) * rr, cx + Math.cos(a) * rr, Math.abs(t) > 2 ? ramp[0] : ramp[1]); }
   for (let i = 0; i < 24; i++) { const a = i / 24 * 6.2832 + 0.1; const long = i % 3 === 0; const len = long ? 18 : 8; for (let k = 4; k < len; k++) { const rr = R + k, w = Math.max(0, (long ? 3.2 : 2) * (1 - k / len)); for (let d = -w; d <= w; d += 0.6) px(g, cy + Math.sin(a) * rr + Math.cos(a) * d, cx + Math.cos(a) * rr - Math.sin(a) * d, ramp[k < len * 0.5 ? 1 : 0]); } }
   for (let i = 0; i < 36; i++) { const a = i / 36 * 6.2832; const rr = R - 9; for (let k = 0; k < 4; k++) px(g, cy + Math.sin(a) * (rr - k), cx + Math.cos(a) * (rr - k), i % 2 ? ramp[1] : ramp[2]); }      // 呪印の刻み
 }
 /** 小さな目の群れ（気味悪さ）。 */
-function eyeCluster(g, cx, cy, n, spread, glow, seed) {
+export function eyeCluster(g, cx, cy, n, spread, glow, seed) {
   for (let i = 0; i < n; i++) { const a = hash(seed, i) * 6.2832, d = Math.sqrt(hash(seed + 9, i)) * spread; const x = cx + Math.cos(a) * d, y = cy + Math.sin(a) * d * 0.8, rr = 3 + Math.floor(hash(seed + 3, i) * 3); eye(g, Math.round(x), Math.round(y), rr, rr - 1, glow, (hash(seed, i + 40) - 0.5) * 0.6); }
 }
 /** 右・下の縁を明るくして、背後の光に照らされたように見せる。 */
-function rimLight(g, skip, col, bright) {
+export function rimLight(g, skip, col, bright) {
   const bg = (r, c) => r < 0 || r >= W || c < 0 || c >= W || g[r][c] === -1 || skip.includes(g[r][c]);
   const put = [];
   for (let r = 0; r < W; r++) for (let c = 0; c < W; c++) { const k = g[r][c]; if (k === -1 || k === 0 || skip.includes(k)) continue; if (bg(r, c + 2) || bg(r, c + 1)) put.push([r, c, hash(c, r) < 0.85 ? col : bright]); else if (bg(r + 2, c + 1) && hash(c, r) < 0.5) put.push([r, c, col]); }
   for (const [r, c, k] of put) g[r][c] = k;
 }
 /** 牙と牙のあいだに垂れるよだれの糸。 */
-function slime(g, xs, y0, y1, col) { for (const x of xs) for (let r = y0; r < y1; r++) if ((r + x) % 5 !== 0) px(g, r, x, col); }
+export function slime(g, xs, y0, y1, col) { for (const x of xs) for (let r = y0; r < y1; r++) if ((r + x) % 5 !== 0) px(g, r, x, col); }
 
 // ======== 1. 水涸れの歪み（第1章）: 干からびた骸（むくろ）の巨体。胸は空洞で、暗い水が逆流する ========
 // pal: 0縁 1-5灰の粘土(暗→明) 6割れ目の暗 7-9紫の光(暗→明) 10-13骨(暗→明) 14洞の闇 15白 16-18目の赤紫(暗→明) 19黒い水 20黒い水の光 21影 22毒気暗 23毒気
