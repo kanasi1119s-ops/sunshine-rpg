@@ -21,6 +21,15 @@ export interface Skill {
   mpCost: number;
   /** たたかう（威力倍率1.0）を基準にした威力倍率。 */
   powerMultiplier: number;
+  /**
+   * 効果の種類。省略は「敵1体にダメージ」。
+   * multi=敵1体に`hits`回、damageAll=敵全体にダメージ、heal=味方1人のHPを回復、healAll=味方全体のHPを回復。
+   */
+  effect?: "multi" | "damageAll" | "heal" | "healAll";
+  /** multi の回数。 */
+  hits?: number;
+  /** 回復の量（使った人のこうげき × この値）。heal・healAll。 */
+  healRatio?: number;
 }
 
 export interface BattleItem {

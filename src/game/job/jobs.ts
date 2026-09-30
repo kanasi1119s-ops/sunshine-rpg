@@ -23,9 +23,9 @@ export const INITIAL_JOBS: JobData[] = [
     statBonus: { attack: 2, speed: 4 },
     bonusPerStar: { attack: 1, speed: 1 },
     skills: [
-      { name: "二連打", requiredStars: 2, description: "敵1体に2回続けて殴る" },
+      { name: "二連打", requiredStars: 2, description: "敵1体に2回続けて殴る", battle: { mpCost: 3, powerMultiplier: 1.0, effect: "multi", hits: 2 } },
       { name: "足さばき", requiredStars: 5, description: "自分のすばやさを少し上げる" },
-      { name: "乱れ打ち", requiredStars: 9, description: "敵1体に3回続けて殴る" },
+      { name: "乱れ打ち", requiredStars: 9, description: "敵1体に3回続けて殴る", battle: { mpCost: 7, powerMultiplier: 1.1, effect: "multi", hits: 3 } },
     ],
   },
   {
@@ -50,7 +50,7 @@ export const INITIAL_JOBS: JobData[] = [
     bonusPerStar: { maxMp: 3 },
     skills: [
       { name: "火照の灯", requiredStars: 2, description: "小さな火で敵1体を焼く", battle: { mpCost: 2, powerMultiplier: 1.5 } },
-      { name: "火照の波", requiredStars: 5, description: "熱の波で敵全体を焼く" },
+      { name: "火照の波", requiredStars: 5, description: "熱の波で敵全体を焼く", battle: { mpCost: 5, powerMultiplier: 1.0, effect: "damageAll" } },
       { name: "火照の奔流", requiredStars: 9, description: "強い火で敵1体を焼き尽くす", battle: { mpCost: 8, powerMultiplier: 2.6 } },
     ],
   },
@@ -62,9 +62,9 @@ export const INITIAL_JOBS: JobData[] = [
     statBonus: { maxMp: 8, defense: 1 },
     bonusPerStar: { maxMp: 3 },
     skills: [
-      { name: "水紋の癒し", requiredStars: 2, description: "味方1人のHPを回復する" },
+      { name: "水紋の癒し", requiredStars: 2, description: "味方1人のHPを回復する", battle: { mpCost: 3, powerMultiplier: 0, effect: "heal", healRatio: 1.6 } },
       { name: "水紋の膜", requiredStars: 5, description: "味方1人の守りを上げる" },
-      { name: "水紋の慈雨", requiredStars: 9, description: "味方全体のHPを少し回復する" },
+      { name: "水紋の慈雨", requiredStars: 9, description: "味方全体のHPを少し回復する", battle: { mpCost: 8, powerMultiplier: 0, effect: "healAll", healRatio: 1.0 } },
     ],
   },
   {
@@ -77,7 +77,7 @@ export const INITIAL_JOBS: JobData[] = [
     skills: [
       { name: "風唱の追い風", requiredStars: 2, description: "味方1人のすばやさを上げる" },
       { name: "風唱の眠り唄", requiredStars: 5, description: "敵1体を眠らせることがある" },
-      { name: "風唱の刃", requiredStars: 9, description: "風の刃で敵全体を切る" },
+      { name: "風唱の刃", requiredStars: 9, description: "風の刃で敵全体を切る", battle: { mpCost: 8, powerMultiplier: 1.2, effect: "damageAll" } },
     ],
   },
   {

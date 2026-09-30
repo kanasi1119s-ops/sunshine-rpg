@@ -61,7 +61,7 @@ export function battleSkillsOf(state: JobState | undefined, unlocked: boolean): 
   }
   return learnedSkills(state).flatMap((skill) =>
     skill.battle
-      ? [{ id: `job:${skill.name}`, name: skill.name, mpCost: skill.battle.mpCost, powerMultiplier: skill.battle.powerMultiplier }]
+      ? [{ id: `job:${skill.name}`, name: skill.name, ...skill.battle }]
       : [],
   );
 }
