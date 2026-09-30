@@ -1,0 +1,10 @@
+// 使い方: node render6.mjs <モジュール...> <出力PNG> [倍率] — 人物の12コマのシート（下・左・右・上 × 3コマ）を並べて画像にする
+import fs from "fs"; import path from "path"; import { pathToFileURL } from "url"; import { chromium } from "playwright-core";
+const args = process.argv.slice(2); const out = args.find((a) => a.endsWith(".png")); const rest = args.filter((a) => a !== out && !/^\d+$/.test(a)); const Z = Number(args.find((a) => /^\d+$/.test(a)) ?? 8);
+const files = rest.flatMap((a) => (fs.statSync(a).isDirectory() ? fs.readdirSync(a).filter((f) => f.endsWith(".mjs")).sort().map((f) => path.join(a, f)) : [a]));
+const items = []; for (const f of files) { const m = await import(pathToFileURL(path.resolve(f)).href + "?t=" + Date.now()); items.push({ file: path.basename(f, ".mjs"), name: m.name, rows: m.rows, pal: m.pal }); }
+const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" }); const p = await b.newPage();
+const d = await p.evaluate(({ items, Z }) => { const sw = 48 * Z, sh = 96 * Z, cols = Math.max(1, Math.min(items.length, Math.floor(1800 / (sw + 16)))), rowsN = Math.ceil(items.length / cols); const c = document.createElement("canvas"); c.width = cols * (sw + 16); c.height = rowsN * (sh + 30); const x = c.getContext("2d"); x.fillStyle = "#7a9a58"; x.fillRect(0, 0, c.width, c.height); x.font = "13px sans-serif";
+  items.forEach((it, k) => { const ox = (k % cols) * (sw + 16) + 8, oy = Math.floor(k / cols) * (sh + 30) + 4; x.fillStyle = "#6a8a4c"; for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) if ((i + j) % 2) x.fillRect(ox + j * 16 * Z, oy + i * 24 * Z, 16 * Z, 24 * Z); it.rows.forEach((r, yy) => [...r].forEach((kk, xx) => { if (it.pal[kk]) { x.fillStyle = it.pal[kk]; x.fillRect(ox + xx * Z, oy + yy * Z, Z, Z); } else if (kk !== ".") { x.fillStyle = "#f0f"; x.fillRect(ox + xx * Z, oy + yy * Z, Z, Z); } })); x.fillStyle = "#fff"; x.fillText(it.file, ox, oy + sh + 16); });
+  return c.toDataURL("image/png"); }, { items, Z });
+fs.writeFileSync(out, Buffer.from(d.split(",")[1], "base64")); await b.close(); console.log(items.length, "人 →", out);
