@@ -140,8 +140,6 @@
 | `oga-tiny-rpg-char-b.png` | 小さなRPGキャラ（歩き）B | 288×192 | [Tiny RPG CC0 Characters and Portraits](https://opengameart.org/content/tiny-rpg-cc0-characters-and-portraits) | tiopalada | CC0 1.0 |  |
 | `oga-npc-and-enemies.png` | 町の人と敵の一覧（小さめ） | 126×414 | [NPC and Enemies](https://opengameart.org/content/npc-and-enemies-0) | Refo | CC0 1.0 |  |
 | `oga-bushly-princess.png` | 小さな王女と相棒 | 224×176 | [Bushly and Princess Sera](https://opengameart.org/content/bushly-and-princess-sera) | GrafxKid | CC0 1.0 |  |
-| `oga-gnome-soldier.png` | ノームの兵士（24×32、4方向） | 72×128 | [Gnomes](https://opengameart.org/content/gnomes) | AntumDeluge | CC0 1.0 |  |
-| `oga-gnome-green-hat.png` | ノーム（24×32、4方向） | 72×128 | [Gnomes](https://opengameart.org/content/gnomes) | AntumDeluge | CC0 1.0 |  |
 | `oga-rpg-portraits.png` | 会話用の顔グラフィック集 | 328×112 | [RPG portraits](https://opengameart.org/content/rpg-portraits) | Buch | CC0 1.0 |  |
 | `oga-human-character.gif` | 人間キャラ（戦闘アニメ付き） | 100×80 | [Human RPG Character](https://opengameart.org/content/human-rpg-character) | Shepardskin | CC0 1.0 |  |
 | `oga-gb-portrait.png` | ゲームボーイ風4色の顔グラフィック | 160×144 | [gb mini pixel world](https://opengameart.org/content/gb-mini-pixel-world) | pebonius | CC0 1.0 |  |
@@ -167,6 +165,8 @@
 | `pipoya2-catfolk-tabby.png` | 猫にん・茶トラ。32×32 | 96×128 | [ぴぽやキャラチップ32出力素材（ぴぽや32×32 出力画像＋α）](https://pipoya.net/sozai/assets/charachip/character-chip-2/) | ぴぽや | ぴぽや 無料素材利用規約 |  |
 | `pipoya2-catfolk-strawhat.png` | 猫にん・麦わら猫。32×32 | 96×128 | [ぴぽやキャラチップ32出力素材（ぴぽや32×32 出力画像＋α）](https://pipoya.net/sozai/assets/charachip/character-chip-2/) | ぴぽや | ぴぽや 無料素材利用規約 |  |
 | `pipoya2-catfolk-winged-bear.png` | 猫にん・翼クマ。32×32 | 96×128 | [ぴぽやキャラチップ32出力素材（ぴぽや32×32 出力画像＋α）](https://pipoya.net/sozai/assets/charachip/character-chip-2/) | ぴぽや | ぴぽや 無料素材利用規約 |  |
+| `pipoya2-catfolk-spotted.png` | 猫にん・ぶち猫。32×32 | 96×128 | [ぴぽやキャラチップ32出力素材（ぴぽや32×32 出力画像＋α）](https://pipoya.net/sozai/assets/charachip/character-chip-2/) | ぴぽや | ぴぽや 無料素材利用規約 |  |
+| `pipoya2-catfolk-tortoiseshell.png` | 猫にん・サビ猫。32×32 | 96×128 | [ぴぽやキャラチップ32出力素材（ぴぽや32×32 出力画像＋α）](https://pipoya.net/sozai/assets/charachip/character-chip-2/) | ぴぽや | ぴぽや 無料素材利用規約 |  |
 
 ## モンスター（`02-monsters/`、101枚）
 
@@ -243,7 +243,6 @@
 | `oga-raven.png` | カラス | 96×96 | [Pixel Raven](https://opengameart.org/content/pixel-raven) | tbbk | CC0 1.0 |  |
 | `oga-winter-birds.png` | 冬の小鳥 | 48×48 | [Winter Birds](https://opengameart.org/content/winter-birds) | Refuzzle | CC0 1.0 |  |
 | `oga-tiny-creatures.png` | 小さな生き物180種（16×16） | 160×288 | [Tiny Creatures](https://opengameart.org/content/tiny-creatures) | Clint Bellanger ほか: Kenney | CC0 1.0 |  |
-| `oga-eye-of-sender.png` | 目玉の魔物8色 | 288×256 | [Eye Of Sender animated](https://opengameart.org/content/eye-of-sender-animated) | ImogiaGames | CC0 1.0 |  |
 | `oga-skeleton-8dir.png` | 骸骨（8方向） | 128×256 | [Skeleton and friends (8 directional)](https://opengameart.org/content/skeleton-and-friends-8-directional) | patvanmackelberg | CC0 1.0 |  |
 | `oga-shade-8dir.png` | 影の魔物（8方向） | 128×256 | [Skeleton and friends (8 directional)](https://opengameart.org/content/skeleton-and-friends-8-directional) | patvanmackelberg | CC0 1.0 |  |
 | `oga-fire-skull.png` | 炎のドクロ | 256×64 | [Skeleton and friends (8 directional)](https://opengameart.org/content/skeleton-and-friends-8-directional) | patvanmackelberg | CC0 1.0 |  |
@@ -252,7 +251,6 @@
 | `oga-zombie-slime.png` | スライム（歩き） | 32×32 | [Zombie RPG sprites](https://opengameart.org/content/zombie-rpg-sprites) | Curt | CC0 1.0 |  |
 | `oga-dregbin.png` | ゴミ箱の魔物 | 333×150 | [dregbin](https://opengameart.org/content/dregbin) | surt | CC0 1.0 |  |
 | `oga-komodo.png` | 大トカゲ | 64×128 | [Komodo](https://opengameart.org/content/komodo) | teasloth | CC0 1.0 |  |
-| `oga-big-slime-nes.png` | 大きなスライム（ファミコン風の色数） | 128×64 | [8Bit NES - Big Slime Monster](https://opengameart.org/content/8bit-nes-big-slime-monster) | ImogiaGames | CC0 1.0 |  |
 | `mw-yeti.png` | MiniWorld: 雪男 | 96×128 | [MiniWorld Sprites](https://opengameart.org/content/miniworld-sprites) | Shade | CC0 1.0 |  |
 | `mw-wendigo.png` | MiniWorld: 雪の魔獣 | 96×128 | [MiniWorld Sprites](https://opengameart.org/content/miniworld-sprites) | Shade | CC0 1.0 |  |
 | `mw-slime-blue.png` | MiniWorld: スライム（青） | 96×64 | [MiniWorld Sprites](https://opengameart.org/content/miniworld-sprites) | Shade | CC0 1.0 |  |
@@ -273,6 +271,8 @@
 | `mw-goblin-bomber.png` | MiniWorld: 爆弾ゴブリン | 80×160 | [MiniWorld Sprites](https://opengameart.org/content/miniworld-sprites) | Shade | CC0 1.0 |  |
 | `mw-goblin-farmer.png` | MiniWorld: 農民ゴブリン | 80×112 | [MiniWorld Sprites](https://opengameart.org/content/miniworld-sprites) | Shade | CC0 1.0 |  |
 | `mw-pirate-gunner.png` | MiniWorld: 海賊の砲手 | 80×128 | [MiniWorld Sprites](https://opengameart.org/content/miniworld-sprites) | Shade | CC0 1.0 |  |
+| `oga-forest-redling.png` | 森の丸い魔物（34×34） | 34×34 | [Forestredling](https://opengameart.org/content/forestredling) | marionline | CC0 1.0 |  |
+| `oga-plant-mushroom-enemies.png` | 植物とキノコの魔物8種（歩き。48×48） | 576×384 | [Plant and Mushroom Enemies charset and battlers](https://opengameart.org/content/plant-and-mushroom-enemies-charset-and-battlers) | NettySvit | CC0 1.0 |  |
 
 ## ボス（`03-bosses/`、37枚）
 
@@ -475,7 +475,6 @@
 | `oga-chaffton-inside.png` | 村の家の中のタイル | 128×128 | [Village of Chaffton](https://opengameart.org/content/village-of-chaffton) | Spring Spring | CC0 1.0 |  |
 | `oga-desert-town.png` | 砂漠の町 | 246×360 | [Desert village](https://opengameart.org/content/desert-village) | Skab | CC0 1.0 |  |
 | `oga-haunted-house-items.png` | 古い屋敷の家具 | 288×160 | [Misc household items and more! >:)](https://opengameart.org/content/misc-household-items-and-more) | NaRNeRZz | CC0 1.0 |  |
-| `oga-barrels.png` | たる | 128×64 | [Barrels (Mage City Arcanos remix)](https://opengameart.org/content/barrels-mage-city-arcanos-remix) | AntumDeluge | CC0 1.0 |  |
 | `oga-mushroom-village.png` | キノコの村（16×16） | 288×256 | [Mushroom Village tileset](https://opengameart.org/content/mushroom-village-tileset) | NettySvit | CC0 1.0 |  |
 | `oga-simple-broad-tiles.png` | 何にでも使える簡単なタイル集 | 800×1280 | [Simple broad-purpose tileset](https://opengameart.org/content/simple-broad-purpose-tileset) | surt ほか: Sharm, vk | CC0 1.0 |  |
 | `mw-keep.png` | MiniWorld: とりで | 96×64 | [MiniWorld Sprites](https://opengameart.org/content/miniworld-sprites) | Shade | CC0 1.0 |  |
@@ -490,6 +489,7 @@
 | `mw-workshops.png` | MiniWorld: 工房 | 48×48 | [MiniWorld Sprites](https://opengameart.org/content/miniworld-sprites) | Shade | CC0 1.0 |  |
 | `mw-tower-2.png` | MiniWorld: 塔 | 48×96 | [MiniWorld Sprites](https://opengameart.org/content/miniworld-sprites) | Shade | CC0 1.0 |  |
 | `mw-resources.png` | MiniWorld: 資材置き場 | 48×80 | [MiniWorld Sprites](https://opengameart.org/content/miniworld-sprites) | Shade | CC0 1.0 |  |
+| `oga-nats-house-tiles.png` | 8×8の家のタイル | 56×80 | [Nat's 8x8 Starter Pack](https://opengameart.org/content/nats-8x8-starter-pack) | nateonus | CC0 1.0 |  |
 
 ## 小物・アイテム・乗り物（`08-objects-items/`、48枚）
 

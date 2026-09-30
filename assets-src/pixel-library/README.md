@@ -6,6 +6,7 @@ RPGを作るときに使える・参考にできるドット絵を500枚集め�
 - 1枚ずつの出典・作者・規約: [`MANIFEST.md`](MANIFEST.md)（表）と `manifest.csv`（同じ内容の表計算用）
 - 縮小一覧（どんな絵かを一目で見る用。素材ではない）: `_preview/`
 - 規約の写し: `LICENSES/`（ぴぽやの readme、Kenney の License.txt）
+- 2回目に選んだ別の500枚: `../pixel-library-2/`
 - この一覧に入れていない、先に取り込んだぴぽやの10枚: `../pipoya/charachip/`・`../pipoya/simpleenemy/`（同じ絵を2つ置かないため、こちらには入れていない）
 
 ## 分類と枚数
@@ -22,7 +23,7 @@ RPGを作るときに使える・参考にできるドット絵を500枚集め�
 | `08-objects-items/` | 宝箱・光・炎・影・乗り物（飛空艇・船）・アイテム・武器 | 48 |
 | 合計 | | **500** |
 
-配布元の内訳: ぴぽや倉庫 233枚、OpenGameArt（CC0）252枚、Kenney（CC0）15枚。配布元の素材セットは148種類。
+配布元の内訳: ぴぽや倉庫 235枚、OpenGameArt（CC0）250枚、Kenney（CC0）15枚。
 
 ## 規約（すべて無料・商用利用可・ゲームへの組み込み可）
 
@@ -37,7 +38,8 @@ RPGを作るときに使える・参考にできるドット絵を500枚集め�
 2. 既存作品のまね（`CLAUDE.md` 1-1）: 説明文の全文を読み、既存のゲーム名・「〜風」「〜にインスパイア」などを検索した。**次のものは外した**: 既存作品に寄せたと書かれたもの（有名RPGに影響を受けたタイルなど）、**作者の公開済みゲームで使われた絵**（1-1 を厳しめに解釈）、既存のTRPGの魔物を元にしたもの、ツクールの標準素材を含むもの、有名ゲームの画像そのもの（Dungeon Crawl の画像など）。
 3. AI: 説明文に生成AI・画像変換AI（例: DeepStyle）を使ったとあるものは外した。
 4. ドット絵か: 色数・半透明の割合を数え、縮小一覧を目で見て、なめらかな絵（3D風・絵の具風）、透かし文字・ロゴ・説明の文字が入ったもの、単色だけの帯を外した。
-5. 重複: 同じ中身のファイルは1つにした（既存の `assets-src/` とも比べた）。色違いが多いセット（ぴぽやの魔物・シンボルエネミー・オートタイルなど）は間引いた。
+5. 2026-09-30 の見直し（2回目の500枚を選ぶときに説明文を読み直した）: 既存のゲーム（Stendhal）のために作られた絵（ノーム2枚・たる1枚）と、既存のゲームの品物の名前をもじった絵（Eye of Sender）の計4枚と、元の作者でない人が上げた絵（大きなスライム。由来があいまい）1枚を外し、ぴぽや2枚・OpenGameArt 3枚に差し替えた。
+6. 重複: 同じ中身のファイルは1つにした（既存の `assets-src/` とも比べた）。色違いが多いセット（ぴぽやの魔物・シンボルエネミー・オートタイルなど）は間引いた。
 
 ## 手を加えたもの（ほかはすべて配布元のファイルのまま、名前だけ変えた）
 
@@ -61,7 +63,7 @@ RPGを作るときに使える・参考にできるドット絵を500枚集め�
 |---|---|---|---|---|
 | ぴぽや倉庫 | [RPGキャラ基本セット（キャラチップ.zip）](https://pipoya.net/sozai/assets/charachip/character-chip-1/) | ぴぽや | ぴぽや 無料素材利用規約 | 51 |
 | ぴぽや倉庫 | [その他キャラチップ（キャラチップ＋.zip）](https://pipoya.net/sozai/assets/charachip/character-chip-1/) | ぴぽや | ぴぽや 無料素材利用規約 | 12 |
-| ぴぽや倉庫 | [ぴぽやキャラチップ32出力素材（ぴぽや32×32 出力画像＋α）](https://pipoya.net/sozai/assets/charachip/character-chip-2/) | ぴぽや | ぴぽや 無料素材利用規約 | 99 |
+| ぴぽや倉庫 | [ぴぽやキャラチップ32出力素材（ぴぽや32×32 出力画像＋α）](https://pipoya.net/sozai/assets/charachip/character-chip-2/) | ぴぽや | ぴぽや 無料素材利用規約 | 101 |
 | ぴぽや倉庫 | [ウディタ２用マップセット（ウディタ2_32x32mapchip_20210215.zip）](https://pipoya.net/sozai/assets/map-chip_tileset32/) | ぴぽや | ぴぽや 無料素材利用規約 | 38 |
 | ぴぽや倉庫 | [シンプルエネミーシンボル32×32キャラチップ（pipo-simpleenemy01.zip の「４方向」）](https://pipoya.net/sozai/assets/charachip/character-chip-1/) | ぴぽや | ぴぽや 無料素材利用規約 | 5 |
 | ぴぽや倉庫 | [ハロウィン向け32×32キャラチップ26種セット（halloweenchara2016.zip）](https://pipoya.net/sozai/assets/charachip/character-chip-1/) | ぴぽや | ぴぽや 無料素材利用規約 | 24 |
@@ -91,12 +93,10 @@ RPGを作るときに使える・参考にできるドット絵を500枚集め�
 | OpenGameArt | [4 Colour Interior Tileset](https://opengameart.org/content/4-colour-interior-tileset) | stealthix | CC0 1.0 | 1 |
 | OpenGameArt | [4 Colour Overworld Tileset](https://opengameart.org/content/4-colour-overworld-tileset) | stealthix | CC0 1.0 | 1 |
 | OpenGameArt | [8-bit JRPG tilesets](https://opengameart.org/content/8-bit-jrpg-tilesets) | Hollyhart1 | CC0 1.0 | 2 |
-| OpenGameArt | [8Bit NES - Big Slime Monster](https://opengameart.org/content/8bit-nes-big-slime-monster) | ImogiaGames | CC0 1.0 | 1 |
 | OpenGameArt | [8bit rpg hero](https://opengameart.org/content/8bit-rpg-hero) | danbu | CC0 1.0 | 1 |
 | OpenGameArt | [8x8 8-bit Styled Desert Tileset](https://opengameart.org/content/8x8-8-bit-styled-desert-tileset) | ImpossibleRealms | CC0 1.0 | 1 |
 | OpenGameArt | [8x8 Critter Pack](https://opengameart.org/content/8x8-critter-pack) | patvanmackelberg | CC0 1.0 | 1 |
 | OpenGameArt | [a many-eyed monster](https://opengameart.org/content/a-many-eyed-monster) | ArVexi1050 | CC0 1.0 | 1 |
-| OpenGameArt | [Barrels (Mage City Arcanos remix)](https://opengameart.org/content/barrels-mage-city-arcanos-remix) | AntumDeluge | CC0 1.0 | 1 |
 | OpenGameArt | [Bountiful Bits 10x10 Top-Down RPG Tiles](https://opengameart.org/content/bountiful-bits-10x10-top-down-rpg-tiles) | VEXED | CC0 1.0 | 1 |
 | OpenGameArt | [bushes](https://opengameart.org/content/bushes-2) | SpiderDave | CC0 1.0 | 1 |
 | OpenGameArt | [Bushly and Princess Sera](https://opengameart.org/content/bushly-and-princess-sera) | GrafxKid | CC0 1.0 | 1 |
@@ -118,7 +118,6 @@ RPGを作るときに使える・参考にできるドット絵を500枚集め�
 | OpenGameArt | [Dragons](https://opengameart.org/content/dragons) | Blarumyrran | CC0 1.0 | 3 |
 | OpenGameArt | [dregbin](https://opengameart.org/content/dregbin) | surt | CC0 1.0 | 1 |
 | OpenGameArt | [Dungeon Tileset](https://opengameart.org/content/dungeon-tileset-4) | HorusKDI | CC0 1.0 | 1 |
-| OpenGameArt | [Eye Of Sender animated](https://opengameart.org/content/eye-of-sender-animated) | ImogiaGames | CC0 1.0 | 1 |
 | OpenGameArt | [Filthy Ectoplasm](https://opengameart.org/content/filthy-ectoplasm) | Winternaut | CC0 1.0 | 1 |
 | OpenGameArt | [Fire Golem](https://opengameart.org/content/fire-golem) | teasloth | CC0 1.0 | 1 |
 | OpenGameArt | [Flame creature](https://opengameart.org/content/flame-creature) | takeshi | CC0 1.0 | 1 |
@@ -126,11 +125,11 @@ RPGを作るときに使える・参考にできるドット絵を500枚集め�
 | OpenGameArt | [Floating Eyeball](https://opengameart.org/content/floating-eyeball-0) | OwlishMedia | CC0 1.0 | 1 |
 | OpenGameArt | [Flowers](https://opengameart.org/content/flowers) | SpiderDave | CC0 1.0 | 1 |
 | OpenGameArt | [Forest Tiles](https://opengameart.org/content/forest-tiles) | surt | CC0 1.0 | 1 |
+| OpenGameArt | [Forestredling](https://opengameart.org/content/forestredling) | marionline | CC0 1.0 | 1 |
 | OpenGameArt | [Free CC0 Top Down Tileset Template Pixel Art](https://opengameart.org/content/free-cc0-top-down-tileset-template-pixel-art) | rgsdev | CC0 1.0 | 4 |
 | OpenGameArt | [gb mini pixel world](https://opengameart.org/content/gb-mini-pixel-world) | pebonius | CC0 1.0 | 2 |
 | OpenGameArt | [Gem Heart(Animated)](https://opengameart.org/content/gem-heartanimated) | AliHamieh | CC0 1.0 | 1 |
 | OpenGameArt | [Ghost monster](https://opengameart.org/content/ghost-monster) | ImogiaGames | CC0 1.0 | 1 |
-| OpenGameArt | [Gnomes](https://opengameart.org/content/gnomes) | AntumDeluge | CC0 1.0 | 2 |
 | OpenGameArt | [Goblin Caves](https://opengameart.org/content/goblin-caves) | Hyptosis | CC0 1.0 | 2 |
 | OpenGameArt | [Golems](https://opengameart.org/content/golems) | zwonky ほか: Ragewortt | CC0 1.0 | 2 |
 | OpenGameArt | [Green Drake](https://opengameart.org/content/green-drake) | teasloth | CC0 1.0 | 1 |
@@ -150,6 +149,7 @@ RPGを作るときに使える・参考にできるドット絵を500枚集め�
 | OpenGameArt | [Monochromatic Cemetery Undead Ghosts Simple Pixel Art](https://opengameart.org/content/monochromatic-cemetery-undead-ghosts-simple-pixel-art) | Eduardo Martinelli | CC0 1.0 | 1 |
 | OpenGameArt | [monster plant](https://opengameart.org/content/monster-plant) | ArVexi1050 | CC0 1.0 | 1 |
 | OpenGameArt | [Mushroom Village tileset](https://opengameart.org/content/mushroom-village-tileset) | NettySvit | CC0 1.0 | 1 |
+| OpenGameArt | [Nat's 8x8 Starter Pack](https://opengameart.org/content/nats-8x8-starter-pack) | nateonus | CC0 1.0 | 1 |
 | OpenGameArt | [Nestor tileset](https://opengameart.org/content/nestor-tileset) | Demetrius | CC0 1.0 | 1 |
 | OpenGameArt | [NPC and Enemies](https://opengameart.org/content/npc-and-enemies-0) | Refo | CC0 1.0 | 1 |
 | OpenGameArt | [Outside tileset](https://opengameart.org/content/outside-tileset) | Buch | CC0 1.0 | 1 |
@@ -168,6 +168,7 @@ RPGを作るときに使える・参考にできるドット絵を500枚集め�
 | OpenGameArt | [Pixel Potion Set 16x16](https://opengameart.org/content/pixel-potion-set-16x16) | yafarida | CC0 1.0 | 1 |
 | OpenGameArt | [Pixel Raven](https://opengameart.org/content/pixel-raven) | tbbk | CC0 1.0 | 1 |
 | OpenGameArt | [Plagueking [48x48]](https://opengameart.org/content/plagueking-48x48) | One Man Army | CC0 1.0 | 1 |
+| OpenGameArt | [Plant and Mushroom Enemies charset and battlers](https://opengameart.org/content/plant-and-mushroom-enemies-charset-and-battlers) | NettySvit | CC0 1.0 | 1 |
 | OpenGameArt | [potion](https://opengameart.org/content/potion-1) | kotnaszynce | CC0 1.0 | 1 |
 | OpenGameArt | [Puny Characters](https://opengameart.org/content/puny-characters) | Shade | CC0 1.0 | 7 |
 | OpenGameArt | [RogueDB32](https://opengameart.org/content/roguedb32) | SpiderDave | CC0 1.0 | 1 |
