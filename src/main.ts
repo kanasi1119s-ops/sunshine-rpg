@@ -16,7 +16,7 @@ import { createGameCanvas, LOGICAL_WIDTH, LOGICAL_HEIGHT } from "./render/canvas
 import { createCamera, centerCameraOn } from "./render/camera";
 import { renderTileMap } from "./render/tile-map-renderer";
 import { renderPlayer } from "./render/player-renderer";
-import { renderNpcs } from "./render/npc-renderer";
+import { npcFeetY, renderNpcs } from "./render/npc-renderer";
 import { renderDialogue } from "./render/dialogue-renderer";
 import { createTileMap, findExitAt } from "./game/map/tile-map";
 import { createPlayer, updatePlayer } from "./game/player";
@@ -1272,8 +1272,11 @@ const loop = createGameLoop({
     }
 
     renderTileMap(ctx, map, renderCamera);
-    renderNpcs(ctx, npcs, map, renderCamera);
+    // 奥にいる人を先に、手前にいる人をあとに描く（足元の位置の順）。
+    const playerFeetY = player.y + player.height;
+    renderNpcs(ctx, npcs, map, renderCamera, (npc) => npcFeetY(npc, map.data.tileHeight) <= playerFeetY);
     renderPlayer(ctx, player, renderCamera);
+    renderNpcs(ctx, npcs, map, renderCamera, (npc) => npcFeetY(npc, map.data.tileHeight) > playerFeetY);
 
     const dialogueState = dialogue.getRenderState();
     if (dialogueState) {
