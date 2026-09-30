@@ -1,0 +1,10 @@
+// 使い方: node render-sheet.mjs <フォルダ or モジュール...> <出力PNG> [倍率(既定6)] [列数(既定6)] — 絵の一覧表（名前つき）を1枚のPNGにする（目で確かめる用）
+import fs from "fs"; import path from "path"; import { pathToFileURL } from "url"; import { chromium } from "playwright-core"; import { DEFAULT_PAL } from "./lib4.mjs";
+const args = process.argv.slice(2); const out = args.find((a) => a.endsWith(".png")); const rest = args.filter((a) => a !== out && !/^\d+$/.test(a)); const nums = args.filter((a) => /^\d+$/.test(a)).map(Number); const Z = nums[0] ?? 6, COLS = nums[1] ?? 6;
+const files = rest.flatMap((a) => (fs.statSync(a).isDirectory() ? fs.readdirSync(a).filter((f) => f.endsWith(".mjs")).sort().map((f) => path.join(a, f)) : [a]));
+const items = []; for (const f of files) { try { const m = await import(pathToFileURL(path.resolve(f)).href + "?t=" + Date.now()); if (m.rows) items.push({ name: m.name ?? path.basename(f, ".mjs"), file: path.basename(f, ".mjs"), rows: m.rows, pal: { ...DEFAULT_PAL, ...(m.pal ?? {}) } }); } catch (e) { console.log("読み込めない:", f, String(e).split("\n")[0]); } }
+const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" }); const p = await b.newPage();
+const d = await p.evaluate(({ items, Z, COLS }) => { const cw = 32 * Z + 12, ch = 32 * Z + 34, rows = Math.ceil(items.length / COLS); const c = document.createElement("canvas"); c.width = COLS * cw; c.height = rows * ch; const x = c.getContext("2d"); x.fillStyle = "#3d3160"; x.fillRect(0, 0, c.width, c.height); x.font = "12px sans-serif";
+  items.forEach((it, n) => { const ox = (n % COLS) * cw + 6, oy = Math.floor(n / COLS) * ch + 4; x.fillStyle = "#4a3d75"; x.fillRect(ox - 3, oy - 2, cw - 6, ch - 4); it.rows.forEach((r, yy) => [...r].forEach((k, xx) => { if (it.pal[k]) { x.fillStyle = it.pal[k]; x.fillRect(ox + xx * Z, oy + yy * Z, Z, Z); } })); x.fillStyle = "#fff"; x.fillText(it.file, ox, oy + 32 * Z + 14); });
+  return c.toDataURL("image/png"); }, { items, Z, COLS });
+fs.writeFileSync(out, Buffer.from(d.split(",")[1], "base64")); await b.close(); console.log(items.length, "点 →", out);
