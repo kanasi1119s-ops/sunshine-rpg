@@ -28,7 +28,7 @@ const ENTRY = { tileX: 10, tileY: 11 };
 const GUARD = { tileX: 10, tileY: 6 };
 
 /** 宝箱（伝説の装備アイテム。仮）。 */
-function chest(id: string, flag: string, text: string): Npc {
+function chest(id: string, flag: string, text: string, gold: number): Npc {
   return {
     id,
     ...CHEST,
@@ -39,7 +39,13 @@ function chest(id: string, flag: string, text: string): Npc {
         flag,
         equals: true,
         then: [say(undefined, "宝箱は、すでに空だ。")],
-        else: [say(undefined, text), say(undefined, "【ごほうび（仮）】伝説の装備アイテムを手に入れた。"), { type: "setFlag", flag, value: true }],
+        else: [
+          say(undefined, text),
+          { type: "giveGold", amount: gold },
+          say(undefined, `【ごほうび】灯貨${gold}を手に入れた！`),
+          say(undefined, "【ごほうび（仮）】伝説の装備アイテムも眠っていた。（装備の仕組みは、お店の装備のみ）"),
+          { type: "setFlag", flag, value: true },
+        ],
       },
     ],
   };
@@ -69,14 +75,14 @@ export const CHAPTER12_NPCS: Record<string, Npc[]> = {
     { id: "tower1-pedestal-a", ...L.pedestalA, color: "#9ad0ff", commands: pedestal("tower1", "a", "青白い鉱脈に触れると、灯り石の台が、遠い海鳴りのような音を立てて灯った。") },
     { id: "tower1-pedestal-b", ...L.pedestalB, color: "#9ad0ff", commands: pedestal("tower1", "b", "岩肌の割れ目から、青い光が滲み出して、二つ目の台をともした。") },
     { id: "tower1-lore", ...L.echo, color: "#607080", commands: [say(undefined, "灯り石に似ているが、違う。青白い鉱脈は、まるで塔全体の血管のように、壁いっぱいに走っている。"), say("レト", "嵐の音が、遠くで鳴ってる。ここは、塔のいちばん下の、根っこの部分なんだ。")] },
-    chest("tower1-chest", "tower1_treasure", "岩陰の宝箱を開けた。中には、青白く輝く伝説の装備が眠っていた。"),
+    chest("tower1-chest", "tower1_treasure", "岩陰の宝箱を開けた。中には、青白く輝く伝説の装備が眠っていた。", 4000),
     { id: "tower1-gate", ...L.gate, color: "#9ad0ff", commands: gate("tower1", "tower-2", ENTRY) },
   ],
   "tower-2": [
     { id: "tower2-pedestal-a", ...L.pedestalA, color: "#ffffff", commands: pedestal("tower2", "a", "霧に隠れた足場を、灯りを頼りに渡った。台の灯り石が、白くまたたく。") },
     { id: "tower2-pedestal-b", ...L.pedestalB, color: "#ffffff", commands: pedestal("tower2", "b", "雲海の見える裂け目のそばで、二つ目の台をともした。風が、耳元でうなる。") },
     guard("tower2-guard", "tower2-guard", "tower2_guard_defeated", ["雲海の裂け目から、光の結晶でできた獣が、音もなく現れた！"], "結晶獣は砕けて、光の粒になった。道が静まっている。"),
-    chest("tower2-chest", "tower2_treasure", "雲のかかった宝箱を開けた。中には、雲のように軽い伝説の装備があった。"),
+    chest("tower2-chest", "tower2_treasure", "雲のかかった宝箱を開けた。中には、雲のように軽い伝説の装備があった。", 6000),
     { id: "tower2-gate", ...L.gate, color: "#ffffff", commands: gate("tower2", "tower-3", ENTRY) },
   ],
   "tower-3": [
@@ -112,7 +118,7 @@ export const CHAPTER12_NPCS: Record<string, Npc[]> = {
       ],
     },
     guard("tower3-guard", "tower3-guard", "tower3_guard_defeated", ["広間の奥の暗がりで、光の結晶が、ひときわ大きく輝いた。宝の番人が目を覚ます！"], "宝の番人は、静かに崩れ去った。"),
-    chest("tower3-chest", "tower3_treasure", "広間の隅の宝箱を開けた。中には、環の紋様が刻まれた、最上位の伝説の装備が眠っていた。"),
+    chest("tower3-chest", "tower3_treasure", "広間の隅の宝箱を開けた。中には、環の紋様が刻まれた、最上位の伝説の装備が眠っていた。", 9000),
     { id: "tower3-gate", ...L.gate, color: "#fff0a0", commands: gate("tower3", "kanou-1", ENTRY) },
   ],
   // ===== 環奥 =====
@@ -148,14 +154,14 @@ export const CHAPTER12_NPCS: Record<string, Npc[]> = {
     { id: "kanou2-pedestal-a", ...L.pedestalA, color: "#b0f0d8", commands: pedestal("kanou2", "a", "静かな広間の台に、灯り石をそっと置いた。柔らかな緑の光が広がる。") },
     { id: "kanou2-pedestal-b", ...L.pedestalB, color: "#b0f0d8", commands: pedestal("kanou2", "b", "誰かが座っていたような跡のそばの台を灯した。……ここには、確かに、誰かが、いた。") },
     { id: "kanou2-lore", ...L.echo, color: "#587068", commands: [say(undefined, "音のない広間に、人影とも、光ともつかない気配が、ゆらめいている。"), say("ミナ", "……悲しい場所じゃないの。ただ、すごく、静か。ずっと待っていた人たちの、気配みたい。")] },
-    chest("kanou2-chest", "kanou2_treasure", "気配の足元の宝箱を開けた。中には、静けさを閉じ込めたような伝説の装備が眠っていた。"),
+    chest("kanou2-chest", "kanou2_treasure", "気配の足元の宝箱を開けた。中には、静けさを閉じ込めたような伝説の装備が眠っていた。", 12000),
     { id: "kanou2-gate", ...L.gate, color: "#b0f0d8", commands: gate("kanou2", "kanou-3", ENTRY) },
   ],
   "kanou-3": [
     { id: "kanou3-pedestal-a", ...L.pedestalA, color: "#f0b0d8", commands: pedestal("kanou3", "a", "境目の薄い庭の台を灯すと、ふたつの世界の景色が、重なって見えた。") },
     { id: "kanou3-pedestal-b", ...L.pedestalB, color: "#f0b0d8", commands: pedestal("kanou3", "b", "花のような光をまとった台を灯した。ここは、こんなにも、きれいな場所だったのか。") },
     guard("kanou3-guard", "kanou3-guard", "kanou3_guard_defeated", ["庭の奥から、境目を守る、光の守り手が、静かに立ちふさがった！"], "守り手は、安らかな光となって、庭の花に溶けていった。"),
-    chest("kanou3-chest", "kanou3_treasure", "花の陰の宝箱を開けた。中には、ゲーム最強クラスの伝説の装備が眠っていた。"),
+    chest("kanou3-chest", "kanou3_treasure", "花の陰の宝箱を開けた。中には、ゲーム最強クラスの伝説の装備が眠っていた。", 16000),
     { id: "kanou3-gate", ...L.gate, color: "#f0b0d8", commands: gate("kanou3", "kanou-4", ENTRY) },
   ],
   "kanou-4": [

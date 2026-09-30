@@ -40,8 +40,10 @@ export interface SideStory {
   steps: SideStoryStep[];
   /** すべて調べ終わって報告したときの会話。 */
   complete: EventCommand[];
-  /** 「ごほうび」の一文（仮）。 */
+  /** 「ごほうび」の一文（品物など、まだ仕組みが無いものの説明。仮）。 */
   reward: string;
+  /** 手に入る灯貨（本物のごほうび。`side-stories.ts` の表で章ごとに決める）。 */
+  gold?: number;
   /** 完了後の会話。 */
   after: EventCommand[];
 }
@@ -59,6 +61,19 @@ function whenAll(flags: string[], then: EventCommand[], otherwise: EventCommand[
   }
   const [first, ...rest] = flags;
   return [{ type: "if", flag: first, equals: true, then: whenAll(rest, then, otherwise), else: otherwise }];
+}
+
+/** 完了のごほうび: 灯貨（本物）と、品物などの説明（仮）。 */
+function rewardCommands(story: SideStory): EventCommand[] {
+  const commands: EventCommand[] = [];
+  if (story.gold) {
+    commands.push({ type: "giveGold", amount: story.gold }, say(undefined, `【ごほうび】灯貨${story.gold}を手に入れた！`));
+  }
+  // 「灯貨をもらった。」だけの説明は、上の本物の灯貨と重なるので出さない。
+  if (!story.gold || !/^灯貨(をもらった|の入った)/.test(story.reward)) {
+    commands.push(say(undefined, `【ごほうび（仮）】${story.reward}`));
+  }
+  return commands;
 }
 
 function giverCommands(story: SideStory): EventCommand[] {
@@ -88,7 +103,7 @@ function giverCommands(story: SideStory): EventCommand[] {
           label: story.acceptLabel,
           commands: [
             ...story.complete,
-            say(undefined, `【ごほうび（仮）】${story.reward}`),
+            ...rewardCommands(story),
             { type: "setFlag", flag: flag(key, "accepted"), value: true },
             { type: "setFlag", flag: flag(key, "done"), value: true },
           ],
@@ -99,7 +114,7 @@ function giverCommands(story: SideStory): EventCommand[] {
   }
   const report: EventCommand[] = [
     ...story.complete,
-    say(undefined, `【ごほうび（仮）】${story.reward}`),
+    ...rewardCommands(story),
     { type: "setFlag", flag: flag(key, "done"), value: true },
   ];
   return [

@@ -14,6 +14,7 @@ function makeSaveData(): SaveData {
     jobs: {},
     companions: {},
     inventory: [],
+    gold: 0,
     flags: {},
   };
 }

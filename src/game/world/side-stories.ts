@@ -394,4 +394,18 @@ export const SIDE_STORIES: SideStory[] = [
   },
 ];
 
+/** サブストーリーの灯貨（章が進むほど多い）。 */
+const GOLD_BY_ID: Record<string, number> = {
+  "S-001": 60, "S-002": 60, "S-003": 120, "S-004": 120, "S-005": 120, "S-006": 200, "S-007": 200, "S-008": 200,
+  "S-009": 320, "S-010": 320, "S-011": 320, "S-012": 480, "S-013": 480,
+  "S-015": 700, "S-016": 700, "S-017": 700, "S-029": 700, "S-030": 900,
+  "S-018": 1000, "S-019": 1000, "S-020": 1000,
+  "S-021": 1400, "S-022": 1400, "S-023": 1400, "S-031": 1500, "S-033": 1600,
+  "S-024": 1900, "S-025": 1900, "S-026": 1900, "S-032": 2200,
+  "S-027": 2500,
+};
+for (const story of SIDE_STORIES) {
+  story.gold = GOLD_BY_ID[story.id];
+}
+
 export const SIDE_STORY_NPCS: Record<string, Npc[]> = buildSideStoryNpcs(SIDE_STORIES);

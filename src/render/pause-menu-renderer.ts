@@ -19,6 +19,7 @@ export function renderPauseMenu(
   state: PauseMenuState,
   rows: StatusRow[],
   message: string | null,
+  gold: number,
   screenWidth: number,
   screenHeight: number,
 ): void {
@@ -55,6 +56,7 @@ export function renderPauseMenu(
   ctx.font = "10px monospace";
   ctx.fillStyle = "#f2c14e";
   ctx.fillText("つよさ（決定またはXでもどる）", 12, 10);
+  ctx.fillText(`灯貨 ${gold}`, screenWidth - 90, 10);
   rows.forEach((row, i) => {
     const y = 26 + i * 30;
     ctx.fillStyle = "#f0f0f0";

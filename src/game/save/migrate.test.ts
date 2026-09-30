@@ -30,9 +30,17 @@ describe("migrateSaveData", () => {
   it("version 2（ジョブが無い）のセーブを、jobsが空のversion 3に変換する", () => {
     const { companions: _c, ...rest } = makeV1Data() as Record<string, unknown>;
     const migrated = migrateSaveData({ ...rest, version: 2, companions: { reto: { stats: makeV1Data().hero.stats } } });
-    expect(migrated.version).toBe(3);
+    expect(migrated.version).toBe(SAVE_VERSION);
     expect(migrated.jobs).toEqual({});
+    expect(migrated.gold).toBe(0);
     expect(Object.keys(migrated.companions)).toEqual(["reto"]);
+  });
+
+  it("version 3（灯貨が無い）のセーブを、灯貨0の最新バージョンに変換する", () => {
+    const { gold: _g, ...v4 } = migrateSaveData(makeV1Data());
+    const migrated = migrateSaveData({ ...v4, version: 3 });
+    expect(migrated.version).toBe(SAVE_VERSION);
+    expect(migrated.gold).toBe(0);
   });
 
   it("すでに今のバージョンのデータはそのまま返す", () => {
