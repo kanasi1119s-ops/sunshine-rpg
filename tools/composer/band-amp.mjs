@@ -14,7 +14,16 @@ const BASSES = new Set(["bass", "slap", "sub808"]);
 const DISTORTING = new Set(["overdrive", "distortion", "metal", "prs", "crunch", "hardrock", "punk", "fuzz"]);
 const DEFAULT_GUITAR_AMP = { guitar: "clean", crunch: "crunch", distGuitar: "metal", leadGuitar: "prs", echoGuitar: "clean" };
 
-export function applyBandAmp(score) {
+/**
+ * 曲ごとの音づくりの上書き（歪みの深さ drive・高音 tone[dB]）。特定の曲の「ジャリつき」を抑えるときに使う。
+ * 全曲共通の抑えは src/audio/amp-rack.ts（GUITAR_DRIVE_TRIM・HARSH_CUT_DB）にある。
+ */
+export const SONG_TWEAKS = {
+  "scarlet-chapter": { leadGuitar: { drive: 0.7, tone: -3 }, distGuitar: { drive: 0.65, tone: -4 } },
+  "scarlet-chapter-space": { leadGuitar: { drive: 0.7, tone: -3 }, distGuitar: { drive: 0.65, tone: -4 }, echoGuitar: { drive: 0.8, tone: -3 } },
+};
+
+export function applyBandAmp(score, id) {
   for (const t of score.tracks) {
     const inst = t.instrument;
     if (!t.amp || t.amp.type === "auto") {
@@ -22,10 +31,8 @@ export function applyBandAmp(score) {
       else if (inst === "bass") t.amp = { type: "clean" };
       else if (inst === "slap") t.amp = { type: "funk" };
     }
-    if (GUITARS.has(inst) && t.amp && DISTORTING.has(t.amp.type) && t.amp.drive !== undefined) {
-      const { drive: _drive, ...rest } = t.amp;
-      t.amp = rest;
-    }
+    const tw = SONG_TWEAKS[id]?.[inst];
+    if (tw && t.amp) t.amp = { ...t.amp, ...tw };
   }
   return score;
 }
@@ -36,7 +43,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   for (const f of fs.readdirSync(dir).filter((x) => x.endsWith(".sunshine-song.json"))) {
     const p = path.join(dir, f), d = JSON.parse(fs.readFileSync(p, "utf8"));
     if (!d.score) continue;
-    fs.writeFileSync(p, JSON.stringify({ ...d, score: applyBandAmp(d.score) })); n++;
+    fs.writeFileSync(p, JSON.stringify({ ...d, score: applyBandAmp(d.score, d.id) })); n++;
   }
   console.log("アンプ設定をそろえた曲:", n);
 }

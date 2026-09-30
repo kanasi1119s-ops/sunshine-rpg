@@ -28,6 +28,7 @@ export async function openSongKit() {
     const { ps2Edition } = await load("/src/audio/ps2-edition.ts");
     const { getScoreDurationSec } = await load("/src/audio/score.ts");
     const { score, song, warnings } = aiSongToScore(songData);
+    applyBandAmp(score, name); // アンプの指定と、曲ごとの音づくりの上書き（SONG_TWEAKS）を、WAVにも反映する
     const out = path.resolve(outDir ?? path.join(ROOT, "dist-songs"));
     fs.mkdirSync(out, { recursive: true });
     const files = { project: path.join(out, `${name}.sunshine-song.json`), midi: path.join(out, `${name}.mid`) };
@@ -49,7 +50,7 @@ export async function openSongKit() {
     const target = path.join(ROOT, "src/audio/songs", `${id}.sunshine-song.json`);
     // 組み込みの曲と同じIDは、バンド版への差し替えとして認める（catalog.ts の allEntries が差し替える）。ほかの曲との重なりだけを弾く。
     const taken = new Set(allEntries().map((e) => e.id).filter((x) => x !== id));
-    const data = { format: "sunshine-game-song", version: 1, id, title, scene, score: applyBandAmp(score) };
+    const data = { format: "sunshine-game-song", version: 1, id, title, scene, score: applyBandAmp(score, id) };
     songFileToEntry(data, taken);
     fs.writeFileSync(target, JSON.stringify(data));
     return target;
