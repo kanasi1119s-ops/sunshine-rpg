@@ -28,7 +28,7 @@ function encode(g) {
 
 const SETS = {
   terrain: [2, { "T1-草地A": "terrain:grass-a", "T7-草地B": "terrain:grass-b", "T2-土の道": "terrain:dirt", "T3-水面": "terrain:water", "T5-深い森": "terrain:forest", "T4-崖の壁": "terrain:cliff", "T6-岸辺": "terrain:bank" }],
-  bosses: [4, { "B1-水涸れの歪み": "boss:mugikano-yugami", "B2-積荷の歪み": "boss:garasuko-yugami", "B3-実験の歪み": "boss:tetsukusari-yugami", "B4-砂嵐の歪み": "boss:sanone-yugami", "B5-予言の歪み": "boss:kiri-yugami", "B6-試作機の歪み": "boss:shimohara-yugami" }],
+  bosses: [4, { "B1-水涸れの歪み": "boss:mugikano-yugami", "B2-積荷の歪み": "boss:garasuko-yugami", "B3-実験の歪み": "boss:tetsukusari-yugami", "B4-砂嵐の歪み": "boss:sanone-yugami", "B5-予言の歪み": "boss:kiri-yugami", "B6-試作機の歪み": "boss:shimohara-yugami", "B7-浮嶼の歪み": "boss:fushima-yugami", "B8-灯芯都の歪み": "boss:toushin-yugami", "B9-虚灯宮の歪み": "boss:kyotoukyu-yugami" }],
   characters: [4, { "C1-ユーリ": "char:ユーリ", "C2-レト": "char:レト", "C3-ミナ": "char:ミナ", "C4-ガイド": "char:ガイド", "C5-オルカ": "char:オルカ" }],
 };
 // 倍率（SCALE）はモジュールの読み込み時に決まるため、セットごとに別のプロセスで実行する（node export-game-data.mjs → 自動で分けて実行）。

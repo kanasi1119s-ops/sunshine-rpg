@@ -18,7 +18,7 @@ describe("書き出されたドット絵データ（sprite-data.generated.ts）"
   const keys = Object.keys(SPRITE_DATA);
 
   it("地形・ボス・登場人物が入っている", () => {
-    for (const key of ["terrain:grass-a", "terrain:water", "boss:mugikano-yugami", "boss:garasuko-yugami", "boss:tetsukusari-yugami", "boss:sanone-yugami", "boss:kiri-yugami", "boss:shimohara-yugami", "char:ユーリ", "char:オルカ"]) {
+    for (const key of ["terrain:grass-a", "terrain:water", "boss:mugikano-yugami", "boss:garasuko-yugami", "boss:tetsukusari-yugami", "boss:sanone-yugami", "boss:kiri-yugami", "boss:shimohara-yugami", "boss:fushima-yugami", "boss:toushin-yugami", "boss:kyotoukyu-yugami", "char:ユーリ", "char:オルカ"]) {
       expect(keys, key).toContain(key);
     }
   });
