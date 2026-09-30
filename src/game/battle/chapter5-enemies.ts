@@ -10,15 +10,15 @@ export function createKiriYogenYugami(): Combatant {
   return {
     id: "kiri-yugami",
     name: "予言の歪み",
-    maxHp: 270,
-    hp: 270,
+    maxHp: 2210,
+    hp: 2210,
     maxMp: 0,
     mp: 0,
-    attack: 27,
-    defense: 11,
-    speed: 12,
+    attack: 55,
+    defense: 19,
+    speed: 19,
     isEnemy: true,
     guarding: false,
-    expReward: 160,
+    expReward: 3722,
   };
 }

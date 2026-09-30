@@ -12,16 +12,16 @@ export function createDeepEchoYugami(): Combatant {
   return {
     id: "deep3-yugami",
     name: "歪みの残響",
-    maxHp: 302,
-    hp: 302,
+    maxHp: 4930,
+    hp: 4930,
     maxMp: 0,
     mp: 0,
-    attack: 27,
-    defense: 12,
-    speed: 13,
+    attack: 84,
+    defense: 28,
+    speed: 25,
     isEnemy: true,
     guarding: false,
-    expReward: 300,
+    expReward: 8546,
   };
 }
 
@@ -30,15 +30,15 @@ export function createShogenYugami(): Combatant {
   return {
     id: "deep-yugami",
     name: "初源の歪み",
-    maxHp: 320,
-    hp: 320,
+    maxHp: 6306,
+    hp: 6306,
     maxMp: 0,
     mp: 0,
-    attack: 29,
-    defense: 12,
-    speed: 14,
+    attack: 91,
+    defense: 29,
+    speed: 26,
     isEnemy: true,
     guarding: false,
-    expReward: 800,
+    expReward: 9657,
   };
 }

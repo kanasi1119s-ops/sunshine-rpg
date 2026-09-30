@@ -3,7 +3,7 @@ import {
   createEncounterState,
   ENCOUNTER_ZONES,
   encounterMonsterSpecs,
-  enemyStatsForTier,
+  enemyStatsForLevel,
   MAX_STEPS,
   MIN_STEPS,
   stepEncounter,
@@ -11,6 +11,7 @@ import {
 import { MONSTERS } from "../monster/monsters";
 import { WORLD_MAPS } from "../world/world";
 import { createRng } from "../random";
+import { partyAtLevel, winRate } from "../battle/balance-helpers";
 
 describe("ランダムエンカウント", () => {
   it("エンカウントのある地図は、すべて実在する", () => {
@@ -71,19 +72,30 @@ describe("ランダムエンカウント", () => {
     expect(run()).toEqual(run());
   });
 
-  it("地方が進むほど、敵の体力・攻撃・経験値は大きくなる", () => {
-    for (let tier = 1; tier < 10; tier++) {
-      const a = enemyStatsForTier(tier);
-      const b = enemyStatsForTier(tier + 1);
+  it("想定レベルが上がるほど、敵の体力・攻撃・経験値は大きくなる", () => {
+    for (let level = 2; level < 36; level += 2) {
+      const a = enemyStatsForLevel(level);
+      const b = enemyStatsForLevel(level + 2);
       expect(b.maxHp).toBeGreaterThan(a.maxHp);
       expect(b.attack).toBeGreaterThan(a.attack);
       expect(b.expReward).toBeGreaterThan(a.expReward);
     }
   });
 
-  it("雑魚の敵は、同じ地方のボスより十分に弱い（体力が半分以下）", () => {
-    // 各章のボスの体力は約310前後。tier10でも、雑魚1体は体力176。
-    expect(enemyStatsForTier(10).maxHp).toBeLessThan(310 / 1.5);
+  it("各地の敵は、その場所の想定レベルのパーティが、1〜3体の一団に高い確率で勝てる強さ（最悪の3体の一団でも90%以上）", () => {
+    for (const [mapId, zone] of Object.entries(ENCOUNTER_ZONES)) {
+      const companions = zone.level <= 5 ? 1 : zone.level <= 7 ? 2 : zone.level <= 9 ? 3 : zone.level <= 15 ? 4 : 5;
+      const party = partyAtLevel(zone.level, companions);
+      const stats = enemyStatsForLevel(zone.level);
+      const group = (n: number) => () =>
+        Array.from({ length: n }, (_, i) => ({
+          id: `e${i}`, name: `e${i}`, maxHp: stats.maxHp, hp: stats.maxHp, maxMp: 0, mp: 0,
+          attack: stats.attack, defense: stats.defense, speed: stats.speed, isEnemy: true, guarding: false,
+        }));
+      const worst = winRate(party, group(zone.level <= 6 ? 2 : 3), 100);
+      expect(worst.rate, `${mapId}（Lv${zone.level}）の勝率 ${(worst.rate * 100).toFixed(0)}%`).toBeGreaterThanOrEqual(0.9);
+      expect(worst.hpRatio, `${mapId} の戦闘後の残りHP ${(worst.hpRatio * 100).toFixed(0)}%`).toBeLessThanOrEqual(0.9);
+    }
   });
 
   it("出てくる敵の絵は、すべて登録されている", () => {

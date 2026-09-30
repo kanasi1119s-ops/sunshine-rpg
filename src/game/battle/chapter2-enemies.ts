@@ -11,15 +11,15 @@ export function createGarasukoYugami(): Combatant {
   return {
     id: "garasuko-yugami",
     name: "積荷の歪み",
-    maxHp: 155,
-    hp: 155,
+    maxHp: 453,
+    hp: 453,
     maxMp: 0,
     mp: 0,
-    attack: 24,
-    defense: 9,
-    speed: 10,
+    attack: 36,
+    defense: 14,
+    speed: 15,
     isEnemy: true,
     guarding: false,
-    expReward: 95,
+    expReward: 1542,
   };
 }

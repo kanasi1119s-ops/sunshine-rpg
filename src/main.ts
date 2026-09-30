@@ -80,7 +80,7 @@ import { TOUSHIN_HALL_ENTRY } from "./game/map/chapter8/toushin-hall";
 import { TETSUKUSARI_MINE_ENTRY } from "./game/map/chapter3/tetsukusari-mine";
 import { createRng } from "./game/random";
 import { computeVictoryExp } from "./game/battle/battle-engine";
-import { gainExp } from "./game/growth/level-up";
+import { gainExp, statsAtLevel } from "./game/growth/level-up";
 import { applyStatBonus, computeEquipmentBonus, type EquipmentSlots } from "./game/items/equipment";
 import { createInventory, type Inventory } from "./game/items/inventory";
 import type { JobState } from "./game/job/types";
@@ -446,7 +446,12 @@ const COMPANION_JOIN_FLAGS: { flag: string; companionId: string }[] = [
 function syncCompanionsFromFlags(): void {
   for (const { flag, companionId } of COMPANION_JOIN_FLAGS) {
     if (flags[flag] && !(companionId in companionStats)) {
-      companionStats[companionId] = COMPANIONS[companionId].createInitialStats();
+      // 途中加入の仲間は、ユーリのレベルより1つ下まで追いついた状態で加わる（Lv1のまま置いていかれないように）。
+      companionStats[companionId] = statsAtLevel(
+        COMPANIONS[companionId].createInitialStats(),
+        COMPANIONS[companionId].growth,
+        Math.max(1, heroStats.level - 1),
+      );
     }
   }
 }

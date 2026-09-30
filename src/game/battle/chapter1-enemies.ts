@@ -9,15 +9,15 @@ export function createMugikanoYugami(): Combatant {
   return {
     id: "mugikano-yugami",
     name: "水涸れの歪み",
-    maxHp: 95,
-    hp: 95,
+    maxHp: 179,
+    hp: 179,
     maxMp: 0,
     mp: 0,
-    attack: 19,
-    defense: 6,
-    speed: 9,
+    attack: 32,
+    defense: 12,
+    speed: 14,
     isEnemy: true,
     guarding: false,
-    expReward: 70,
+    expReward: 968,
   };
 }

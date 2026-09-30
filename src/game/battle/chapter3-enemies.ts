@@ -11,15 +11,15 @@ export function createTetsukusariYugami(): Combatant {
   return {
     id: "tetsukusari-yugami",
     name: "実験の歪み",
-    maxHp: 200,
-    hp: 200,
+    maxHp: 1112,
+    hp: 1112,
     maxMp: 0,
     mp: 0,
-    attack: 25,
-    defense: 10,
-    speed: 11,
+    attack: 40,
+    defense: 16,
+    speed: 16,
     isEnemy: true,
     guarding: false,
-    expReward: 120,
+    expReward: 2196,
   };
 }

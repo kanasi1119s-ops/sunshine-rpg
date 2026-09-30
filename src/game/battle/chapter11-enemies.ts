@@ -21,14 +21,14 @@ export interface GodData {
 }
 
 export const GODS: GodData[] = [
-  { no: 1, id: "god-1", kind: "女神", name: "恵みの残照", maxHp: 343, attack: 27, defense: 12, speed: 13 },
-  { no: 2, id: "god-2", kind: "蟲神", name: "理不尽の羽音", maxHp: 281, attack: 30, defense: 11, speed: 16 },
-  { no: 3, id: "god-3", kind: "鬼神", name: "坩堝の顎", maxHp: 289, attack: 29, defense: 12, speed: 13 },
-  { no: 4, id: "god-4", kind: "無神", name: "在らざる歌", maxHp: 336, attack: 27, defense: 12, speed: 15 },
-  { no: 5, id: "god-5", kind: "純神", name: "透き徹る誓い", maxHp: 333, attack: 27, defense: 13, speed: 13 },
-  { no: 6, id: "god-6", kind: "武神", name: "不敗の咎人", maxHp: 295, attack: 29, defense: 12, speed: 14 },
-  { no: 7, id: "god-7", kind: "異神", name: "境界を見ぬ者", maxHp: 314, attack: 28, defense: 12, speed: 16 },
-  { no: 8, id: "god-8", kind: "冥神", name: "無音の弔鐘", maxHp: 296, attack: 29, defense: 12, speed: 14 },
+  { no: 1, id: "god-1", kind: "女神", name: "恵みの残照", maxHp: 6371, attack: 100, defense: 32, speed: 28 },
+  { no: 2, id: "god-2", kind: "蟲神", name: "理不尽の羽音", maxHp: 6452, attack: 100, defense: 32, speed: 28 },
+  { no: 3, id: "god-3", kind: "鬼神", name: "坩堝の顎", maxHp: 6499, attack: 100, defense: 32, speed: 28 },
+  { no: 4, id: "god-4", kind: "無神", name: "在らざる歌", maxHp: 6371, attack: 100, defense: 32, speed: 28 },
+  { no: 5, id: "god-5", kind: "純神", name: "透き徹る誓い", maxHp: 6426, attack: 100, defense: 32, speed: 28 },
+  { no: 6, id: "god-6", kind: "武神", name: "不敗の咎人", maxHp: 6650, attack: 100, defense: 32, speed: 28 },
+  { no: 7, id: "god-7", kind: "異神", name: "境界を見ぬ者", maxHp: 6452, attack: 100, defense: 32, speed: 28 },
+  { no: 8, id: "god-8", kind: "冥神", name: "無音の弔鐘", maxHp: 6689, attack: 100, defense: 32, speed: 28 },
 ];
 
 export function createGodYugami(god: GodData): Combatant {
@@ -44,6 +44,6 @@ export function createGodYugami(god: GodData): Combatant {
     speed: god.speed,
     isEnemy: true,
     guarding: false,
-    expReward: 500,
+    expReward: 9000,
   };
 }

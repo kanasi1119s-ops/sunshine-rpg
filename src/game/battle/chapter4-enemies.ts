@@ -10,15 +10,15 @@ export function createSanoneSunaarashiYugami(): Combatant {
   return {
     id: "sanone-yugami",
     name: "砂嵐の歪み",
-    maxHp: 260,
-    hp: 260,
+    maxHp: 1891,
+    hp: 1891,
     maxMp: 0,
     mp: 0,
-    attack: 27,
-    defense: 11,
-    speed: 12,
+    attack: 49,
+    defense: 17,
+    speed: 18,
     isEnemy: true,
     guarding: false,
-    expReward: 150,
+    expReward: 2925,
   };
 }
