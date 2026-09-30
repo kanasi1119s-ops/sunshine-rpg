@@ -2,6 +2,8 @@ import "./style.css";
 import { GAME_TITLE } from "./core/status";
 import { backTitle, confirmTitle, createTitleState, moveTitleCursor } from "./game/title/title-menu";
 import { renderTitle } from "./render/title-renderer";
+import { createStaffRollState, skipStaffRoll, startStaffRoll, updateStaffRoll } from "./game/title/staff-roll";
+import { renderStaffRoll } from "./render/staff-roll-renderer";
 import { addGold, computeVictoryGold } from "./game/economy/gold";
 import { ALL_ITEMS_BY_ID, buyItem } from "./game/economy/shop";
 import { closeShopMenu, createShopMenuState, moveShopCursor, openShopMenu, withShopMessage } from "./game/economy/shop-menu";
@@ -255,7 +257,14 @@ const dialogue = new DialogueController(flags, {
   onOpenShop: (shopId) => {
     shopMenu = openShopMenu(shopId);
   },
+  onStaffRoll: () => {
+    staffRoll = startStaffRoll();
+    currentBgmTrack = getTrack("staff-roll");
+    audio.playBgm(currentBgmTrack);
+  },
 });
+/** エンディングのスタッフロール。 */
+let staffRoll = createStaffRollState();
 
 /** イベントの`startBattle`コマンドが指すボス戦のデータ（章が増えるたびここに追加する）。 */
 interface StoryBattleDef {
@@ -859,6 +868,13 @@ const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
     },
   },
   {
+    label: () => "スタッフロールを流す",
+    action: () => {
+      debugMenu = { ...debugMenu, open: false };
+      staffRoll = startStaffRoll();
+    },
+  },
+  {
     label: () => `レベル +1（現在Lv${heroStats.level}）`,
     action: () => {
       heroStats = gainExp(createInitialHeroStats(), expRequiredForLevel(heroStats.level + 1), SAMPLE_GROWTH).stats;
@@ -1000,6 +1016,14 @@ const loop = createGameLoop({
       return;
     }
     lastTitleDirection = null;
+
+    if (staffRoll.open) {
+      staffRoll = actionPressed ? skipStaffRoll() : updateStaffRoll(staffRoll, dtMs, LOGICAL_HEIGHT);
+      if (!staffRoll.open) {
+        playMapBgm(currentMapId);
+      }
+      return;
+    }
 
     if (pauseMessageTimer > 0) {
       pauseMessageTimer -= dtMs;
@@ -1214,6 +1238,10 @@ const loop = createGameLoop({
 
     if (title.open) {
       renderTitle(ctx, title, GAME_TITLE, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+      return;
+    }
+    if (staffRoll.open) {
+      renderStaffRoll(ctx, staffRoll, LOGICAL_WIDTH, LOGICAL_HEIGHT);
       return;
     }
 

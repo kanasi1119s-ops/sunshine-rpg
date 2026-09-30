@@ -85,15 +85,15 @@ function guideCommands(): EventCommand[] {
               then: [
                 {
                   type: "message",
-                  text: "次はどっちへ行く? 案内なら任せてくれよ。",
+                  text: "次はどっちへ行く？ 案内なら任せてくれよ。",
                   speaker: "ガイド",
                 },
               ],
               else: [
-                { type: "message", text: "……なあ、さっきの男、名前くらいは知ってるんだろ?", speaker: "レト" },
+                { type: "message", text: "……なあ、さっきの男、名前くらいは知ってるんだろ？", speaker: "レト" },
                 {
                   type: "message",
-                  text: "え? いや、あんな怪しい奴、知り合うわけないだろ。……知らないよ、本当に。",
+                  text: "え？ いや、あんな怪しい奴、知り合うわけないだろ。……知らないよ、本当に。",
                   speaker: "ガイド",
                 },
                 {
@@ -119,7 +119,7 @@ function guideCommands(): EventCommand[] {
             },
             {
               type: "choice",
-              text: "ガイドの申し出にどう答える?",
+              text: "ガイドの申し出にどう答える？",
               options: [
                 {
                   label: "一緒に来てほしい",
@@ -161,7 +161,7 @@ function guideCommands(): EventCommand[] {
             },
           ],
           else: [
-            { type: "message", text: "見ない顔だな。旅の調査員か何かか?", speaker: "ガイド" },
+            { type: "message", text: "見ない顔だな。旅の調査員か何かか？", speaker: "ガイド" },
             {
               type: "message",
               text: "実は、湖の向こう、桟橋の先の倉庫で妙な動きがあってな。灯り石が絡んでるらしいって噂を聞いて、放っておけなくてさ。",
@@ -174,7 +174,7 @@ function guideCommands(): EventCommand[] {
             },
             {
               type: "choice",
-              text: "一緒に倉庫を調べますか?",
+              text: "一緒に倉庫を調べますか？",
               options: [
                 {
                   label: "調べます",
@@ -239,7 +239,7 @@ function dorunCommands(): EventCommand[] {
           speaker: "ドルン",
         },
         { type: "setFlag", flag: "chapter2_clue_c003_found", value: true },
-        { type: "message", text: "灯り石をこんなに集めて、一体何をするつもりだ?", speaker: "レト" },
+        { type: "message", text: "灯り石をこんなに集めて、一体何をするつもりだ？", speaker: "レト" },
         {
           type: "message",
           text: "さあね。……っと、そろそろお暇するとしよう。荷物の始末は、こいつに任せた。",

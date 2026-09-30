@@ -147,7 +147,7 @@ function priestCommands(): EventCommand[] {
             },
             {
               type: "choice",
-              text: "記録の間を調べますか?",
+              text: "記録の間を調べますか？",
               options: [
                 {
                   label: "調べます",
@@ -203,7 +203,7 @@ function scribeCommands(): EventCommand[] {
           text: "ただ、ここ数年、古い巻物の一部が「修復」の名目で、灯芯都から来た方に預けられているのです。",
           speaker: "書記",
         },
-        { type: "message", text: "灯芯都から……?", speaker: "レト" },
+        { type: "message", text: "灯芯都から……？", speaker: "レト" },
       ],
     },
   ];
@@ -228,7 +228,7 @@ function recordCommands(): EventCommand[] {
           text: "削られた跡から、元の文字がうっすら読める。「この年、合議会の要人、四名が職を退き、うち三名は行方を絶つ」……。",
           speaker: "ユーリ",
         },
-        { type: "message", text: "合議会の要人が、一度に失踪した……? それを隠したい誰かが、書き換えたんだ。", speaker: "レト" },
+        { type: "message", text: "合議会の要人が、一度に失踪した……？ それを隠したい誰かが、書き換えたんだ。", speaker: "レト" },
         { type: "setFlag", flag: "chapter5_record_found", value: true },
       ],
     },
@@ -284,7 +284,7 @@ function keeperCommands(): EventCommand[] {
             { type: "message", text: "「……原本を見つけてしまいましたか」――黒いローブの男が、書架の陰から振り向いた。" },
             {
               type: "message",
-              text: "碑文を書き換えたのは、あなたですね。誰の命令で、こんなことを!",
+              text: "碑文を書き換えたのは、あなたですね。誰の命令で、こんなことを！",
               speaker: "ユーリ",
             },
             {

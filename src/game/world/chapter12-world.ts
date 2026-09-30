@@ -137,7 +137,7 @@ export const CHAPTER12_NPCS: Record<string, Npc[]> = {
           then: [
             {
               type: "choice",
-              text: "分かれ道だ。どの通路へ進みますか?",
+              text: "分かれ道だ。どの通路へ進みますか？",
               options: [
                 { label: "光が照らす東の通路", commands: [say(undefined, "灯り石の光をたどると、通路の景色が、少しずつ、静かに変わっていった。"), { type: "warp", mapId: "kanou-2", tileX: ENTRY.tileX, tileY: ENTRY.tileY }] },
                 { label: "暗い西の通路", commands: [say(undefined, "歩いても、歩いても、同じ場所に戻ってきてしまう。灯り石の光を、頼りにしよう。")] },

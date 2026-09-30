@@ -114,7 +114,7 @@ function orcaCommands(): EventCommand[] {
             },
             {
               type: "choice",
-              text: "オルカの申し出にどう答える?",
+              text: "オルカの申し出にどう答える？",
               options: [
                 {
                   label: "一緒に来てほしい",
@@ -159,7 +159,7 @@ function orcaCommands(): EventCommand[] {
             },
             {
               type: "choice",
-              text: "坑道の奥を調べますか?",
+              text: "坑道の奥を調べますか？",
               options: [
                 {
                   label: "調べます",
@@ -262,13 +262,13 @@ function dorunCommands(): EventCommand[] {
       then: [{ type: "message", text: "男の姿はもうない。足跡だけが、坑道の奥の闇へ消えている。" }],
       else: [
         { type: "message", text: "「やあ、また会ったね」――見覚えのある声が、坑道に響いた。" },
-        { type: "message", text: "……ドルン! 硝子湖の倉庫にいた男だな。", speaker: "ユーリ" },
+        { type: "message", text: "……ドルン！ 硝子湖の倉庫にいた男だな。", speaker: "ユーリ" },
         {
           type: "message",
           text: "労働争議は、いい煙幕だったよ。みんな会社と組合の喧嘩に気を取られて、奥で何をしているか、誰も見ない。",
           speaker: "ドルン",
         },
-        { type: "message", text: "この装置で何をしている! 答えろ!", speaker: "レト" },
+        { type: "message", text: "この装置で何をしている！ 答えろ！", speaker: "レト" },
         {
           type: "message",
           text: "調整だよ、ただの。……でも、今日はここまでだ。後始末は、装置に任せよう。",

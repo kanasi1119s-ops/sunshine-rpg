@@ -178,7 +178,7 @@ function elderCommands(): EventCommand[] {
             },
             {
               type: "choice",
-              text: "整備区画を調べますか?",
+              text: "整備区画を調べますか？",
               options: [
                 {
                   label: "調べます",
@@ -210,7 +210,7 @@ function innkeeperCommands(): EventCommand[] {
       then: [{ type: "message", text: "雲の上の朝焼けは格別ですよ。ゆっくり休んでいってください。", speaker: "宿屋の主人" }],
       else: [
         { type: "message", text: "ようこそ、浮嶼へ。風が強い日は、板の通りが少し揺れますが、慣れれば心地いいものです。", speaker: "宿屋の主人" },
-        { type: "message", text: "遠くの空に、いつも黒い雲が渦を巻いているでしょう? あれは嵐雲ですよ。昔からああです。", speaker: "宿屋の主人" },
+        { type: "message", text: "遠くの空に、いつも黒い雲が渦を巻いているでしょう？ あれは嵐雲ですよ。昔からああです。", speaker: "宿屋の主人" },
       ],
     },
   ];
@@ -254,19 +254,19 @@ function airshipDestinationCommands(): EventCommand[] {
   return [
     {
       type: "choice",
-      text: "どちらの空へ行きますか?",
+      text: "どちらの空へ行きますか？",
       options: [
         ...AIRSHIP_DESTINATIONS.map((area) => ({
           label: area.area,
           commands: [
             {
               type: "choice" as const,
-              text: "どの町へ降りますか?",
+              text: "どの町へ降りますか？",
               options: [
                 ...area.towns.map((town) => ({
                   label: town.label,
                   commands: gated(town.gate, [
-                    { type: "message" as const, text: `${town.label}へ向かいます。しっかりつかまって!`, speaker: "渡し守" },
+                    { type: "message" as const, text: `${town.label}へ向かいます。しっかりつかまって！`, speaker: "渡し守" },
                     { type: "warp" as const, mapId: town.mapId, tileX: town.tileX, tileY: town.tileY },
                   ]),
                 })),
@@ -355,7 +355,7 @@ function edreaCommands(): EventCommand[] {
               text: "見事な戦いでした。ここまで辿り着く人は、そう多くありません。",
               speaker: "エドレア",
             },
-            { type: "message", text: "合議会代表の……エドレア! あなたが、これを?", speaker: "ユーリ" },
+            { type: "message", text: "合議会代表の……エドレア！ あなたが、これを？", speaker: "ユーリ" },
             {
               type: "message",
               text: "わたしの言葉を信じるかどうかは、あなた方次第です。ただ、ここで多くを語るつもりはありません。",

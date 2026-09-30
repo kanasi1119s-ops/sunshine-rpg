@@ -15,7 +15,9 @@ export type EventCommand =
   /** 灯貨（お金）を手に入れる。 */
   | { type: "giveGold"; amount: number }
   /** お店の画面を開く（`src/game/economy/shop.ts` の店ID）。 */
-  | { type: "shop"; shopId: string };
+  | { type: "shop"; shopId: string }
+  /** スタッフロール（エンディングの演出）を流す。 */
+  | { type: "staffRoll" };
 
 /** イベント実行中、画面表示側に「今これを見せて」と伝える1コマ。 */
 export type EventStep =
