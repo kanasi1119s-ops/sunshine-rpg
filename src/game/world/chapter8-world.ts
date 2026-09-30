@@ -164,7 +164,7 @@ function quizQuestion(
 ): EventCommand {
   const wrong = (label: string): ChoiceOption => ({
     label,
-    commands: [{ type: "message", text: `それを裏づける記録は、ありませんな。（${hint}）`, speaker: "議長ヨルハ" }],
+    commands: [{ type: "message", text: `それを裏づける記録は、ありませんな。（${hint}）`, speaker: "議長セイラン" }],
   });
   const options: ChoiceOption[] = [
     {
@@ -175,14 +175,14 @@ function quizQuestion(
           flag: requiredFlag,
           equals: true,
           then: [
-            { type: "message", text: "議場がどよめいた。示された証拠は、たしかに筋が通っている。", speaker: "議長ヨルハ" },
+            { type: "message", text: "議場がどよめいた。示された証拠は、たしかに筋が通っている。", speaker: "議長セイラン" },
             { type: "setFlag", flag: okFlag, value: true },
           ],
           else: [
             {
               type: "message",
               text: `その証拠は、まだ手元にない。（${hint}）`,
-              speaker: "議長ヨルハ",
+              speaker: "議長セイラン",
             },
           ],
         },
@@ -202,7 +202,7 @@ function chairCommands(): EventCommand[] {
       flag: "chapter8_reported",
       equals: true,
       then: [
-        { type: "message", text: "エドレアは虚灯宮へ去った。合議会は、あなた方の旅を全力で支えよう。", speaker: "議長ヨルハ" },
+        { type: "message", text: "エドレアは虚灯宮へ去った。合議会は、あなた方の旅を全力で支えよう。", speaker: "議長セイラン" },
       ],
       else: [
         {
@@ -210,13 +210,13 @@ function chairCommands(): EventCommand[] {
           flag: "chapter8_edrea_fled",
           equals: true,
           then: [
-            { type: "message", text: "代表席に、灯芯都の紋章の書き付けが残されていたと聞いた。……虚灯宮、か。", speaker: "議長ヨルハ" },
+            { type: "message", text: "代表席に、灯芯都の紋章の書き付けが残されていたと聞いた。……虚灯宮、か。", speaker: "議長セイラン" },
             {
               type: "message",
               text: "あの場所は、統暦の初めから閉ざされた伝承の地。だが、行き方は合議会の古い記録に残っている。あとはわたしが手配しよう。",
-              speaker: "議長ヨルハ",
+              speaker: "議長セイラン",
             },
-            { type: "message", text: "ユーリ、君の祖父を取り戻してくれ。それは、合議会からの依頼でもある。", speaker: "議長ヨルハ" },
+            { type: "message", text: "ユーリ、君の祖父を取り戻してくれ。それは、合議会からの依頼でもある。", speaker: "議長セイラン" },
             { type: "message", text: "虚灯宮への道が開かれた！（次の章へ進めるようになった）" },
             { type: "setFlag", flag: "chapter8_kyotoukyu_open", value: true },
             { type: "setFlag", flag: "chapter8_reported", value: true },
@@ -226,7 +226,7 @@ function chairCommands(): EventCommand[] {
               type: "if",
               flag: "chapter8_hearing_done",
               equals: true,
-              then: [{ type: "message", text: "審問は続いている。エドレア代表の言葉を、最後まで聞こう。", speaker: "議長ヨルハ" }],
+              then: [{ type: "message", text: "審問は続いている。エドレア代表の言葉を、最後まで聞こう。", speaker: "議長セイラン" }],
               else: [
                 {
                   type: "if",
@@ -234,7 +234,7 @@ function chairCommands(): EventCommand[] {
                   equals: true,
                   then: hearingCommands(),
                   else: [
-                    { type: "message", text: "議長のヨルハだ。審問の証人になる方は、まず広場の議事官に声をかけてほしい。", speaker: "議長ヨルハ" },
+                    { type: "message", text: "議長のセイランだ。審問の証人になる方は、まず広場の議事官に声をかけてほしい。", speaker: "議長セイラン" },
                   ],
                 },
               ],
@@ -248,8 +248,8 @@ function chairCommands(): EventCommand[] {
 
 function hearingCommands(): EventCommand[] {
   return [
-    { type: "message", text: "灯りの相談所の方々か。これより、各地の歪みについての審問を始める。", speaker: "議長ヨルハ" },
-    { type: "message", text: "代表エドレアも、席についている。……では、証言を聞かせてもらおう。", speaker: "議長ヨルハ" },
+    { type: "message", text: "灯りの相談所の方々か。これより、各地の歪みについての審問を始める。", speaker: "議長セイラン" },
+    { type: "message", text: "代表エドレアも、席についている。……では、証言を聞かせてもらおう。", speaker: "議長セイラン" },
     quizQuestion(
       "各地で起きた歪みは、いったい誰の指示で起きていたのでしょう?",
       "浮嶼の帳簿に、計画の印と代表の署名の跡があった",
@@ -276,17 +276,17 @@ function hearingCommands(): EventCommand[] {
           flag: "chapter8_q2_ok",
           equals: true,
           then: [
-            { type: "message", text: "二つの証拠は、どちらも動かない。議場のだれもが、代表席のエドレアへ目を向けた。", speaker: "議長ヨルハ" },
+            { type: "message", text: "二つの証拠は、どちらも動かない。議場のだれもが、代表席のエドレアへ目を向けた。", speaker: "議長セイラン" },
             { type: "setFlag", flag: "chapter8_quiz_perfect", value: true },
           ],
-          else: [{ type: "message", text: "帳簿の証拠は確かだ。だが、「静まりの年」のことは、まだ霧の中だな。", speaker: "議長ヨルハ" }],
+          else: [{ type: "message", text: "帳簿の証拠は確かだ。だが、「静まりの年」のことは、まだ霧の中だな。", speaker: "議長セイラン" }],
         },
       ],
       else: [
         {
           type: "message",
           text: "決め手には欠けるが……。代表、あなたからも、話を聞かせてもらおうか。",
-          speaker: "議長ヨルハ",
+          speaker: "議長セイラン",
         },
       ],
     },
