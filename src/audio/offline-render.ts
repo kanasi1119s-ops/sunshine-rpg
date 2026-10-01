@@ -55,10 +55,10 @@ export async function renderScoreOffline(score: Score, options: OfflineRenderOpt
   const bus = createBgmBus(ctx, lp, 0.1);
 
   // アンプ（NAMのモデルの読み込みを含む）を先に用意してから、シンセサイザーを作って描き出しを始める
-  const { midi, programs, amps } = scoreToMidiInfo(score);
+  const { midi, programs, amps, drums } = scoreToMidiInfo(score, { splitDrums: true });
   const rack = new AmpRack(ctx, bus);
   rack.setNam(options.nam ?? null);
-  rack.configure(programs, score.tone ?? "rock", 9, amps, score.namModels ?? {}, score.ampPlugins ?? {});
+  rack.configure(programs, score.tone ?? "rock", 9, amps, score.namModels ?? {}, score.ampPlugins ?? {}, drums);
   await rack.whenReady();
   // 録音トラック（実際の楽器・声）: 別のアンプラックを通して、曲の頭から予約する
   if (score.audioTracks?.length) {

@@ -132,6 +132,24 @@ export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, 
     split.connect(outR, 1);
     addL.connect(outL);
     addR.connect(outR);
+    // 低音は真ん中に: 約140Hz より下の「左右の差」を打ち消す（低音は左右に振っても聞こえず、位相の打ち消しが起きやすい）
+    const lowSide = ctx.createGain(); // (L-R)/2
+    lowSide.gain.value = 0.5;
+    const lowSideInv = ctx.createGain();
+    lowSideInv.gain.value = -1;
+    const lowSideLp = ctx.createBiquadFilter();
+    lowSideLp.type = "lowpass";
+    lowSideLp.frequency.value = 140;
+    lowSideLp.Q.value = 0.7;
+    const cancelL = ctx.createGain();
+    cancelL.gain.value = -1;
+    split.connect(lowSide, 0);
+    split.connect(lowSideInv, 1);
+    lowSideInv.connect(lowSide);
+    lowSide.connect(lowSideLp);
+    lowSideLp.connect(cancelL);
+    cancelL.connect(outL);
+    lowSideLp.connect(outR);
     outL.connect(merge, 0, 0);
     outR.connect(merge, 0, 1);
     merge.connect(makeup);
@@ -143,7 +161,13 @@ export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, 
   const dry = ctx.createGain();
   dry.gain.value = 0.85;
   bus.connect(dry);
-  dry.connect(low);
+  // 直流カット（20Hz 以下を切る）: 非対称な歪みで生じる波形の偏りは、余裕（ヘッドルーム）を食い、プチッという音の元になる
+  const dcBlock = ctx.createBiquadFilter();
+  dcBlock.type = "highpass";
+  dcBlock.frequency.value = 20;
+  dcBlock.Q.value = 0.7;
+  dcBlock.connect(low);
+  dry.connect(dcBlock);
 
   const seconds = reverbSec;
   const length = Math.floor(ctx.sampleRate * seconds);
@@ -178,7 +202,7 @@ export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, 
   convolver.connect(wet);
   wet.connect(returnHp);
   returnHp.connect(returnLp);
-  returnLp.connect(low);
+  returnLp.connect(dcBlock);
   return bus;
 }
 

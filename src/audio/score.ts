@@ -94,7 +94,15 @@ export function grooveOffsetBeats(swing: number | undefined, push: number | unde
   return off;
 }
 
+/** 曲ごとの音量補正（dB）を、聴き分けられる範囲に収めて、掛け算の倍率にする。省略・おかしな値は1（補正なし）。 */
+export function trimGain(trimDb: number | undefined): number {
+  if (typeof trimDb !== "number" || !Number.isFinite(trimDb)) return 1;
+  return Math.pow(10, Math.max(-12, Math.min(6, trimDb)) / 20);
+}
+
 export interface Score {
+  /** 曲ごとの音量補正（dB。-12〜+6）。曲どうしの音量差（ラウドメタルと静かな曲など）をそろえるために、聴いて決める。省略時は0。 */
+  trimDb?: number;
   /** 裏拍を遅らせる量（0〜1）。省略時は0（ずらさない）。 */
   swing?: number;
   /** 読み込んだNAMモデル（.namファイルの中身）。名前 → JSON文字列。 */

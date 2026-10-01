@@ -2,7 +2,7 @@ import type { NamHost } from "./nam/nam-host";
 import { SampledBgm, SampledSe } from "./sampled-engine";
 import { createBgmBus, createHallImpulse, scheduleInstrumentNote, type Source } from "./voices";
 import { noteNameToMidi } from "./note";
-import { flattenScore, getScoreDurationSec, type Score, type ScheduledNote } from "./score";
+import { flattenScore, getScoreDurationSec, trimGain, type Score, type ScheduledNote } from "./score";
 
 /** `?synth` をつけて開くと、録音音源を使わず合成音だけで鳴らす（音の比較・不具合の切り分け用）。 */
 const SYNTH_ONLY_FROM_URL = typeof location !== "undefined" && new URLSearchParams(location.search).has("synth");
@@ -17,6 +17,8 @@ const SCHEDULE_INTERVAL_MS = 250;
 export class AudioEngine {
   private ctx: AudioContext | null = null;
   private bgmGain: GainNode | null = null;
+  /** いま鳴らしている曲の音量補正（倍率）。 */
+  private bgmTrim = 1;
   private seGain: GainNode | null = null;
 
   private bgmVolume = 0.6;
@@ -46,7 +48,7 @@ export class AudioEngine {
     if (!this.ctx) {
       this.ctx = new AudioContext();
       this.bgmGain = this.ctx.createGain();
-      this.bgmGain.gain.value = this.muted ? 0 : this.bgmVolume;
+      this.bgmGain.gain.value = this.muted ? 0 : this.bgmVolume * this.bgmTrim;
       this.bgmGain.connect(this.ctx.destination);
       this.bgmBus = createBgmBus(this.ctx, this.bgmGain);
       // 録音音源は、ほんの少しだけ残響を足して、同じ出口（音量・仕上げ）を通す
@@ -181,6 +183,8 @@ export class AudioEngine {
       return;
     }
     this.currentBgm = score;
+    this.bgmTrim = trimGain(score.trimDb);
+    if (this.bgmGain) this.bgmGain.gain.value = this.muted ? 0 : this.bgmVolume * this.bgmTrim;
     this.applyEdition(score.edition ?? "modern");
     if (this.sampled.isReady() && !this.synthOnly) {
       this.sampled.play(score, offsetSec);
@@ -326,7 +330,7 @@ export class AudioEngine {
   setBgmVolume(volume: number): void {
     this.bgmVolume = volume;
     if (this.bgmGain) {
-      this.bgmGain.gain.value = this.muted ? 0 : volume;
+      this.bgmGain.gain.value = this.muted ? 0 : volume * this.bgmTrim;
     }
   }
 
@@ -340,7 +344,7 @@ export class AudioEngine {
   setMuted(muted: boolean): void {
     this.muted = muted;
     if (this.bgmGain) {
-      this.bgmGain.gain.value = muted ? 0 : this.bgmVolume;
+      this.bgmGain.gain.value = muted ? 0 : this.bgmVolume * this.bgmTrim;
     }
     if (this.seGain) {
       this.seGain.gain.value = muted ? 0 : this.seVolume;

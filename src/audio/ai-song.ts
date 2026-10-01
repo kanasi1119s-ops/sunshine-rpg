@@ -52,6 +52,8 @@ export interface AiSong {
   swing?: number;
   /** true なら、キックに合わせて、パッド・和音・ベース・リードの音量が1拍ごとに凹む（サイドチェイン風。ダンス・ハウス向け）。省略は false。 */
   pump?: boolean;
+  /** この曲の音量補正（dB。-12〜+6）。ほかの曲と並べて聴いて、大きすぎ・小さすぎを直す。省略は0。 */
+  trimDb?: number;
   /** AIが書くパート（メロディ・対旋律・ベースライン・ドラムなど）。 */
   parts: AiPart[];
 }
@@ -87,6 +89,7 @@ export const AI_SONG_SCHEMA = {
     tone: { type: "string", enum: ["rock", "metal", "prs"] },
     swing: { type: "number" },
     pump: { type: "boolean" },
+    trimDb: { type: "number" },
     parts: {
       type: "array",
       items: {
@@ -145,10 +148,11 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
 - ダンスミュージックにするには: bpm 120〜132、feel は dance（自動伴奏で4つ打ちキック・オフビートのハイハット・動くベースが付く）。自分で書くなら、kick は毎拍 "x:1"、hihat は裏拍 "R:0.5 x:0.5"、snare（クラップ）は2・4拍、ベースは sub808 か bass で8分音符の刻み（根音とオクターブ）、リードは lead、アルペジオは keys や bell。8小節ごとに、ドラムを抜く「ブレイク」を作り、直前に snare の16分の連打（0.25拍）でせり上げ、次の小節でキックを全部戻す。音量は kick 0.2・ベース 0.17・リード 0.1 前後。
 - ヒップホップにするには: bpm 78〜95（ハーフタイムなら140〜160）、kick は1拍目と「3拍目の手前（2.5拍）」などで間を作り、snare は2・4拍、hihat は8分か16分で、ところどころ 0.25 拍の連打（トラップ風）。ベースは sub808 の長い音（C1〜C2）を、キックに合わせて置く。メロディは keys・piano・bell・pad の短い反復（2小節のループ）で、コードは 7th を使うと雰囲気が出る。サンプリングは使わず、音は自分で書く。
 - ジャンルは自由に選んでよい（レトロな音に限らない）: ジャズ（swing・7thコード・ウォーキングベース・amp: jazz）、オーケストラ（strings・brass・harp・choir・tom、amp は auto）、アンビエント（pad・choir・bell・wind を長い音で。ドラムなし）、フォーク・カントリー（guitar・banjo・fiddle）、ボサノバ（guitar・ゆるいハイハット）、R&B・ソウル（keys・slap・amp: funk）、EDM・ハウス・トランス（上のダンス）、ロック・パンク・メタル（amp: hardrock / punk / loudmetal / loudrock）。曲の場面と合うジャンルを先に決めてから、テンポ・音階・楽器・アンプをそろえる。
+- 曲どうしの音量差: ラウドな曲と静かな曲を並べると差が大きい。ほかの曲と聴き比べて、曲の trimDb（-12〜+6dB）で直す（ラウド系は -3〜-6 から試す）。
 - サイドチェイン風（ダンス・ハウス）: 曲の pump を true にすると、キックの拍に合わせて、パッド・和音・ベース・リードの音量が凹んで戻る（ポンプ感）。キックを毎拍置く曲に使う。
 - グルーブ（ノリ）: 音符を機械的に並べるだけだとノリが出ない。曲の swing（0〜1）で裏拍を遅らせ（ジャズ・ブルース・ファンク 0.5〜0.7、ヒップホップ・ローファイ 0.2〜0.4、ロック・ダンス 0）、パートの push（-0.1〜0.1拍）でタイミングをずらす（スネア +0.02〜0.04＝あと乗りで重く、ハイハット -0.01〜-0.02＝前のめりで軽く、ベースはキックに合わせて 0）。ドラムは強弱が命: グリッド記法（g:x...）で X＝強、x＝ふつう、o＝弱い（ゴーストノート）を書き分け、ハイハットは表拍を強く裏拍を弱く、スネアの間に o を入れる。ビートの型は docs/sound/drum-patterns.md。
 - 繊細な音にするには: amp は delicate か clean、volume は 0.04〜0.12、ピアノ・ハープ・鐘・オルゴール系で細かい音符（0.25〜0.5拍）を、拍の強弱をつけず低めの音域でゆっくり。ドラムは入れないか、ハイハットだけ小さく。パッドと合唱を薄く敷く。
-- 音割れを避ける: 全パートの volume を足した値が大きすぎないようにする（歪みギター2本＋ドラム＋ベースで合計 0.7 前後まで）。出口に安全装置（リミッターと最後のソフトクリップ）はあるが、頼りすぎず、書き出した WAV のピークが -1dBFS 以下であることを確かめる。
+- 音割れを避ける: 全パートの volume を足した値が大きいと、出口のリミッターが働きすぎて音が詰まり（ピークと平均の差が縮み）、疲れる音になる。歪み系（メタル・ロック）の曲は、全パートの合計を 0.4〜0.6 くらいにする（例: 歪みギター2本 0.034 ずつ、ベース 0.068、キック 0.08、スネア 0.06）。音量は小さく見えても、書き出しで最大にそろうので問題ない。出口に安全装置（リミッターと最後のソフトクリップ）はあるが、頼りすぎず、書き出した WAV のピークが -1dBFS 以下であることを確かめる。
 - 曲は小さく始め（前奏は楽器を減らす）、途中で一度ドラムを抜いて静かにしてから、最後のサビで全部を戻す。ベースは根音だけでなく、5度・オクターブ・10度を行き来し、小節の最後で次のコードへ向かう音を入れると、メロディのように動く。`;
 
 const DUR_RULE = /^\d+(\.\d+)?$/;
@@ -270,6 +274,6 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   if (errors.length) throw new Error(errors.join("\n"));
   if (parts.length === 0 && accompaniment.length === 0) throw new Error("パートがありません");
   const tracks = [...accompaniment, ...parts];
-  const score: Score = { tempoBpm: bpm, loop: true, drumKit: base.drumKit, tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock", ...(song.pump === true ? { pump: true } : {}), ...(Number(song.swing) > 0 ? { swing: Math.min(1, Number(song.swing)) } : {}), tracks };
+  const score: Score = { tempoBpm: bpm, loop: true, drumKit: base.drumKit, tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock", ...(song.pump === true ? { pump: true } : {}), ...(Number(song.trimDb) ? { trimDb: Math.max(-12, Math.min(6, Number(song.trimDb))) } : {}), ...(Number(song.swing) > 0 ? { swing: Math.min(1, Number(song.swing)) } : {}), tracks };
   return { score, song, warnings };
 }

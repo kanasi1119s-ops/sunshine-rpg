@@ -37,4 +37,5 @@ parts=[
  P("leadGuitar","リード",0.12,0.1,"loudrock",lead),
  P("strings","弦",0.11,-0.5,"auto",{k:strings_ for k in['intro','verse','pre','chorus','break','outro']}),
  P("choir","合唱",0.09,0.4,"auto",{'chorus':choir})]
+for _p in parts: _p['volume']=round(_p['volume']*0.4,4)  # 全パートの合計音量が大きいと、出口のリミッターが働きすぎて詰まる（crest 7.6→9.4dB）
 build('assets-src/ai-songs/boss-crimson-gate.json',dict(title="紅蓮の門（ボス戦）",description="ラウドメタルのボス戦曲。ギャロップのリフ、サビで開く和音、間奏のブレイクとソロ。最後は導入に戻ってループできる",bpm=150,chords="Em Em C D Em Em G D",feel="rock",tone="metal"),S,parts)

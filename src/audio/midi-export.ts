@@ -1,6 +1,7 @@
 import { timeSignatureOf } from "./time-signature";
 import { GM_DEFAULT_BY_WAVE, GM_DRUM_NOTE, GM_LAYER, GM_PROGRAM, METAL_LEAD, SYNTH_LEAD, SYNTH_PAD } from "./gm-map";
 import { noteNameToMidi } from "./note";
+import type { DrumPiece } from "./amp-rack";
 import { grooveOffsetBeats, humanize, REST, type AmpSetting, type Instrument, type Score, type Track } from "./score";
 
 /**
@@ -56,7 +57,35 @@ export function scoreToMidi(score: Score): Uint8Array {
 }
 
 /** MIDIと、チャンネルごとの楽器（GMの番号）。機材（アンプ・ドラムの仕上げ）を選ぶために使う。 */
-export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Record<number, number>; amps: Record<number, { amp: AmpSetting; pan: number }> } {
+/** ドラムの太鼓ごとの分け方（楽器 → 役割）。 */
+const DRUM_PIECE: Partial<Record<Instrument, DrumPiece>> = { kick: "kick", snare: "snare", hihat: "hat", crash: "cym", tom: "cym" };
+/** 太鼓ごとに割り当てるチャンネル（メロディの楽器は使わない）。 */
+const DRUM_PIECE_CHANNELS: Record<DrumPiece, number> = { kick: 15, snare: 14, hat: 13, cym: 12 };
+
+/** GSの SysEx: 指定したチャンネルをドラムパートにする（ドラムキットはプログラムチェンジで選ぶ）。 */
+function gsDrumPartSysex(channel: number): number[] {
+  const block = channel === 9 ? 0x10 : channel < 9 ? 0x11 + channel : 0x10 + channel;
+  const body = [0x40, block, 0x15, 0x01];
+  const checksum = (128 - (body.reduce((a, b) => a + b, 0) % 128)) % 128;
+  const data = [0x41, 0x10, 0x42, 0x12, ...body, checksum, 0xf7];
+  return [0xf0, data.length, ...data];
+}
+
+/**
+ * MIDIと、チャンネルごとの楽器（GMの番号）。機材（アンプ・ドラムの仕上げ）を選ぶために使う。
+ * `splitDrums`: true なら、キック・スネア・ハイハット・シンバル/タムを別のチャンネル（GSのドラムパート）に分けて、
+ * 太鼓ごとに別のEQ・圧縮をかけられるようにする（`drums` に役割を返す）。書き出す .mid ファイルでは使わない（GM機器で鳴らすと別の楽器になるため）。
+ */
+export function scoreToMidiInfo(score: Score, opts: { splitDrums?: boolean } = {}): { midi: Uint8Array; programs: Record<number, number>; amps: Record<number, { amp: AmpSetting; pan: number }>; drums: Record<number, DrumPiece> } {
+  const drums: Record<number, DrumPiece> = {};
+  const split = opts.splitDrums === true;
+  const reserved = new Set<number>();
+  if (split) {
+    for (const t of score.tracks) {
+      const piece = t.instrument ? DRUM_PIECE[t.instrument] : undefined;
+      if (piece) reserved.add(DRUM_PIECE_CHANNELS[piece]);
+    }
+  }
   const programs: Record<number, number> = {};
   const amps: Record<number, { amp: AmpSetting; pan: number }> = {};
   const tracksBytes: number[][] = [];
@@ -80,12 +109,12 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
   const allocate = (key: string): number => {
     let ch = channelOf.get(key);
     if (ch === undefined) {
-      if (nextChannel === DRUM_CHANNEL) nextChannel++;
+      while (nextChannel === DRUM_CHANNEL || reserved.has(nextChannel)) nextChannel++;
       if (nextChannel > 15) {
         // チャンネルが足りないときは、同じ楽器（GMの番号）のチャンネルを使い回す（別の楽器と混ざらないように）
         const program = key.split("|")[0];
         const same = [...channelOf.entries()].find(([k]) => k.split("|")[0] === program);
-        ch = same ? same[1] : 15;
+        ch = same ? same[1] : reserved.has(15) ? 11 : 15;
       } else {
         ch = nextChannel;
         nextChannel++;
@@ -118,11 +147,20 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     // 歪みの二重がけを避ける: 歪ませるアンプを指定したギターは、録音がすでに歪んだ音色（オーバードライブ29・ディストーション30）ではなく、
     // クリーン（27）を元にして、歪みはアンプだけでかける
     if (track.amp && (program === 29 || program === 30) && track.program === undefined && !CLEAN_AMP_TYPES.has(track.amp.type)) program = 27;
+    const piece = split && inst ? DRUM_PIECE[inst] : undefined;
     const setupChannel = (prog: number, key: string, gainBoost: number): { channel: number; list: Ev[] } => {
-      const channel = isDrum ? DRUM_CHANNEL : allocate(key);
+      const channel = isDrum ? (piece ? DRUM_PIECE_CHANNELS[piece] : DRUM_CHANNEL) : allocate(key);
       const list = midiTrackFor(channel);
-      if (channel === DRUM_CHANNEL) {
-        if (!list.some((e) => e.bytes[0] === 0xc9)) list.push({ tick: 0, order: 0, bytes: [0xc9, score.drumKit ?? 0] });
+      if (isDrum) {
+        if (!list.some((e) => e.bytes[0] === (0xc0 | channel))) {
+          if (piece) {
+            list.push({ tick: 0, order: 0, bytes: gsDrumPartSysex(channel) });
+            drums[channel] = piece;
+            // 太鼓ごとの左右の位置（曲のパートの pan）
+            list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 10, Math.max(0, Math.min(127, Math.round(64 + (track.pan ?? 0) * 63)))] });
+          }
+          list.push({ tick: 0, order: 0, bytes: [0xc0 | channel, score.drumKit ?? 0] });
+        }
       } else if (!list.some((e) => e.bytes[0] === (0xc0 | channel))) {
         const pan = Math.round(64 + (track.pan ?? 0) * 63);
         list.push({ tick: 0, order: 0, bytes: [0xc0 | channel, prog] });
@@ -137,8 +175,8 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     };
     const main = setupChannel(program, channelKey(track, program), 1);
     const channel = main.channel;
-    if (channel !== DRUM_CHANNEL) programs[channel] = program;
-    if (channel !== DRUM_CHANNEL && track.amp) amps[channel] = { amp: track.amp, pan: track.pan ?? 0 };
+    if (!isDrum) programs[channel] = program;
+    if (!isDrum && track.amp) amps[channel] = { amp: track.amp, pan: track.pan ?? 0 };
     const list = main.list;
     const layerSpec = inst ? GM_LAYER[inst] : undefined;
     const layer = layerSpec ? setupChannel(layerSpec.program, `${channelKey(track, layerSpec.program)}|layer`, 1) : null;
@@ -269,5 +307,5 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
 
   const out: number[] = [0x4d, 0x54, 0x68, 0x64, ...u32(6), ...u16(1), ...u16(tracksBytes.length), ...u16(PPQ)];
   for (const t of tracksBytes) out.push(0x4d, 0x54, 0x72, 0x6b, ...u32(t.length), ...t);
-  return { midi: Uint8Array.from(out), programs, amps };
+  return { midi: Uint8Array.from(out), programs, amps, drums };
 }

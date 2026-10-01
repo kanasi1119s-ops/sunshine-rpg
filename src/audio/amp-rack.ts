@@ -16,9 +16,12 @@ export interface ChannelAmp {
   amp: AmpSetting;
   pan: number;
 }
-type Role = "plugin" | "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru" | GenreAmpType;
+type Role = "plugin" | "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "kick" | "snare" | "hat" | "cym" | "thru" | GenreAmpType;
 
 /** ジャンル別のアンプの種類（`score.ts` の `GenreAmpType` と同じ並び）。 */
+/** ドラムを太鼓ごとに分けたときの、チャンネルの役割。 */
+export type DrumPiece = "kick" | "snare" | "hat" | "cym";
+
 export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate"];
 
 const STEP_CURVES = new Map<number, Float32Array<ArrayBuffer>>();
@@ -76,8 +79,18 @@ export class AmpRack {
   private plugins: Record<string, AmpPluginDef> = {};
   private generation = 0;
   private pending: Promise<unknown>[] = [];
+  private tone: Tone = "rock";
+  /** 太鼓ごとの経路の出口。ここで、原音＋強く圧縮した音（パラレルコンプ）に分けて、まとめて出口へ送る。 */
+  private drumBus: GainNode;
 
   constructor(private ctx: BaseAudioContext, private destination: AudioNode) {
+    this.drumBus = ctx.createGain();
+    this.drumBus.connect(destination);
+    const wetComp = this.compressor(-26, 8, 0.01, 0.08);
+    const wetGain = this.gain(0.3);
+    this.drumBus.connect(wetComp);
+    wetComp.connect(wetGain);
+    wetGain.connect(destination);
     this.inputs = Array.from({ length: 16 }, () => ctx.createGain());
     this.built = Array.from({ length: 16 }, () => []);
     for (let ch = 0; ch < 16; ch++) {
@@ -101,8 +114,9 @@ export class AmpRack {
   }
 
   /** 曲が変わるたびに、各チャンネルの楽器（GMの番号）と曲の音色に合わせて、機材をつなぎ直す。 */
-  configure(programs: Record<number, number>, tone: Tone, drumChannel = 9, amps: Record<number, ChannelAmp> = {}, models: Record<string, string> = {}, plugins: Record<string, AmpPluginDef> = {}): void {
+  configure(programs: Record<number, number>, tone: Tone, drumChannel = 9, amps: Record<number, ChannelAmp> = {}, models: Record<string, string> = {}, plugins: Record<string, AmpPluginDef> = {}, drums: Record<number, DrumPiece> = {}): void {
     this.generation++;
+    this.tone = tone;
     this.models = models;
     this.plugins = plugins;
     this.pending = [];
@@ -111,8 +125,8 @@ export class AmpRack {
       input.disconnect();
       for (const node of this.built[ch]) node.disconnect();
       this.built[ch] = [];
-      const override = ch === drumChannel ? undefined : amps[ch];
-      const role = override && override.amp.type !== "auto" ? this.roleFromType(genreToType(override.amp), ch === drumChannel ? -1 : programs[ch], tone) : this.roleOf(ch === drumChannel ? -1 : programs[ch], tone);
+      const override = ch === drumChannel || drums[ch] ? undefined : amps[ch];
+      const role: Role = drums[ch] ? drums[ch] : override && override.amp.type !== "auto" ? this.roleFromType(genreToType(override.amp), ch === drumChannel ? -1 : programs[ch], tone) : this.roleOf(ch === drumChannel ? -1 : programs[ch], tone);
       const nodes = this.build(role, input, override);
       this.built[ch] = nodes;
     }
@@ -158,13 +172,13 @@ export class AmpRack {
   }
 
   /** ノードを順番につないで、最後を出口につなぐ。 */
-  private chain(input: AudioNode, nodes: AudioNode[]): AudioNode[] {
+  private chain(input: AudioNode, nodes: AudioNode[], dest: AudioNode = this.destination): AudioNode[] {
     let prev: AudioNode = input;
     for (const n of nodes) {
       prev.connect(n);
       prev = n;
     }
-    prev.connect(this.destination);
+    prev.connect(dest);
     return nodes;
   }
 
@@ -240,6 +254,23 @@ export class AmpRack {
           [this.filter("highpass", 35, 0, 0.7), this.filter("lowshelf", 80, 4.5), this.filter("peaking", 320, -4, 1.1), this.filter("peaking", 4200, 5, 1), this.filter("highshelf", 10000, 3), this.compressor(-18, 4, 0.012, 0.1)],
           [this.filter("highpass", 35, 0, 0.7), this.filter("peaking", 320, -3, 1.1), this.compressor(-32, 12, 0.006, 0.07), this.gain(0.45)],
         ], [this.gain(1.15)]);
+      // ── 太鼓ごとの経路（2026-10-02）。調べた定石（docs/sound/guitar-bass-drums-sound-design.md）に沿って、1つずつ仕上げる ──
+      case "kick": {
+        // キック: 足元の不要な低音（30Hz以下）を切り、60〜80Hzで重さ、200〜400Hzのこもりを削り、3〜5kHzで「カチッ」を出す。アタック25msで3〜5dB圧縮
+        const metal = this.tone !== "rock";
+        return this.chain(input, [this.filter("highpass", 30, 0, 0.7), this.filter("lowshelf", 70, metal ? 4.5 : 3), this.filter("peaking", 320, metal ? -4.5 : -3.5, 1.1), this.filter("peaking", 4000, metal ? 5 : 3, 1), this.compressor(-18, 4, 0.025, 0.1), this.gain(1.1)], this.drumBus);
+      }
+      case "snare": {
+        // スネア: 500Hz〜1kHzの箱鳴りを削り、3〜5kHzで打撃の立ち上がり、8kHz以上の持ち上げで抜けをよくする。速めのアタックでパンチを少し整える
+        const metal = this.tone !== "rock";
+        return this.chain(input, [this.filter("highpass", 80, 0, 0.7), this.filter("peaking", 220, 1.5, 1), this.filter("peaking", 750, metal ? -4 : -3, 1), this.filter("peaking", 4000, metal ? 4.5 : 3.5, 1), this.filter("highshelf", 9000, 2), this.compressor(-20, 3, 0.012, 0.1), this.gain(1.1)], this.drumBus);
+      }
+      case "hat":
+        // ハイハット: 200〜300Hz以下は切り、1〜2kHzの金属的な刺さりを削り、8kHz以上で空気感。耳に痛い高域は14kHzで丸める。圧縮はしない
+        return this.chain(input, [this.filter("highpass", 300, 0, 0.7), this.filter("peaking", 1500, -2.5, 1), this.filter("highshelf", 9000, 1.5), this.filter("lowpass", 14000, 0, 0.7), this.gain(0.9)], this.drumBus);
+      case "cym":
+        // シンバル・タム: タムは胴鳴り（350Hz）を少し削り、シンバルは低い所（250Hz以下）を切って、10kHz以上を持ち上げて広げる。圧縮はしない
+        return this.chain(input, [this.filter("highpass", 60, 0, 0.7), this.filter("peaking", 350, -3, 1), this.filter("highshelf", 10000, 1.2), this.gain(1)], this.drumBus);
       // ── ジャンル別（2026-09-30 追加）。特定の機材や製品の音を写したものではなく、ジャンルの一般的な音の性格に合わせた ──
       case "jazz":
         // ジャズ: ほぼ歪ませず、低音を少し足して高音を大きく丸める（太く柔らかい、指で弾いたような音）
