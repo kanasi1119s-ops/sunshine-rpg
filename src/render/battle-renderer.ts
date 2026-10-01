@@ -92,6 +92,10 @@ function renderBattleBody(
   ctx.font = "10px monospace";
   ctx.textBaseline = "top";
 
+  // 会心の一撃のときは、敵だけを短く小きざみにゆらす。
+  const enemyShake = active === "crit" && effectView ? shakeOffset(progress, effectView.elapsedMs) : 0;
+  ctx.save();
+  ctx.translate(enemyShake, 0);
   battleState.enemies.forEach((enemy, index) => {
     if (drawBossSprite(ctx, enemy, screenWidth)) {
       return;
@@ -114,7 +118,14 @@ function renderBattleBody(
     drawHpBar(ctx, enemy, x, y + 56, 40);
   });
 
+  ctx.restore();
+
   // 敵への命中・会心・撃破・回復の光（敵のいる上の部分だけ）。
+  // 味方がダメージを受けたときは、画面のふちを赤くする（ゆれに重ねる）。
+  if (active === "shake") {
+    ctx.fillStyle = `rgba(220, 40, 40, ${0.18 * (1 - progress)})`;
+    ctx.fillRect(0, 0, screenWidth, screenHeight - 56);
+  }
   if (active && active !== "shake") {
     const fade = 1 - progress;
     const color = active === "heal" ? "80, 220, 120" : active === "crit" ? "255, 210, 90" : "255, 255, 255";
