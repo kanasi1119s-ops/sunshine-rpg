@@ -6,3 +6,4 @@
   - メトロポリタン美術館 Open Access: https://www.metmuseum.org/about-the-met/policies-and-documents/open-access
   - ナショナル・ギャラリー・オブ・アート（米国）Open Access: https://www.nga.gov/open-access-images.html
   - クリーブランド美術館 Open Access: https://www.clevelandart.org/open-access
+  - デンマーク国立美術館（SMK）オープン: https://open.smk.dk/ （パブリックドメインの作品の画像は自由に使える）
