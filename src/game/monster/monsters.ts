@@ -22,7 +22,43 @@ export interface MonsterSpec {
   spikeAmplitude: number;
   /** グリッドに対する基本半径の割合（0〜1）。 */
   baseRadiusRatio: number;
+  /** 輪郭の形。省略時は従来の「いびつな塊（blob）」。雑魚は名前に合わせて変える。 */
+  shape?: MonsterShape;
 }
+
+/** blob=いびつな塊、bat=羽ばたく影、beetle=足のある虫、shard=結晶、drop=しずく。 */
+export type MonsterShape = "blob" | "bat" | "beetle" | "shard" | "drop";
+
+/** 形ごとの輪郭。u・vは中心を0とし、-1〜1に正規化した座標（vは下が正）。 */
+function insideShape(shape: MonsterShape, u: number, v: number): boolean {
+  const au = Math.abs(u);
+  switch (shape) {
+    case "bat": {
+      if (au < 0.28) return Math.abs(v + 0.05) < 0.5 * Math.sqrt(1 - (au / 0.28) ** 2 * 0.6);
+      const top = -0.55 + 0.6 * (au - 0.28);
+      const bottom = 0.2 + 0.28 * Math.cos((au - 0.28) * 11);
+      return au <= 0.95 && v >= top && v <= bottom;
+    }
+    case "beetle": {
+      if ((u / 0.78) ** 2 + ((v + 0.1) / 0.5) ** 2 <= 1) return true;
+      return v > 0.3 && v < 0.85 && [0.3, 0.55, 0.8].some((x) => Math.abs(au - x) < 0.07 + (v < 0.5 ? 0.05 : 0));
+    }
+    case "shard":
+      return au / 0.62 + Math.abs(v) / 0.92 <= 1 && !(au < 0.08 && v > 0.55);
+    case "drop":
+      return v < 0.1 ? v > -0.92 && au < 0.62 * ((v + 0.92) / 1.02) ** 1.3 : (u / 0.66) ** 2 + ((v - 0.1) / 0.7) ** 2 <= 1;
+    default:
+      return true;
+  }
+}
+
+/** 形ごとの目の位置（vは中心から。uは左右の間隔）。 */
+const EYE_POS: Record<Exclude<MonsterShape, "blob">, { v: number; u: number }> = {
+  bat: { v: -0.12, u: 0.13 },
+  beetle: { v: -0.22, u: 0.25 },
+  shard: { v: -0.12, u: 0.2 },
+  drop: { v: 0.12, u: 0.25 },
+};
 
 export const MONSTER_GRID_SIZE = 20;
 
@@ -42,6 +78,9 @@ export function buildMonsterCells(spec: MonsterSpec): MonsterCell[] {
   const maxRadius = size / 2;
   const baseRadius = maxRadius * spec.baseRadiusRatio;
   const cells: MonsterCell[] = [];
+  if (spec.shape && spec.shape !== "blob") {
+    return buildShapedCells(spec, spec.shape);
+  }
 
   for (let row = 0; row < size; row++) {
     for (let col = 0; col < size; col++) {
@@ -74,6 +113,40 @@ export function buildMonsterCells(spec: MonsterSpec): MonsterCell[] {
     }
   }
 
+  return cells;
+}
+
+/** blob以外の形。輪郭の1マス内側を暗く縁取り、中心ほど明るくして立体感を出す。 */
+function buildShapedCells(spec: MonsterSpec, shape: Exclude<MonsterShape, "blob">): MonsterCell[] {
+  const size = MONSTER_GRID_SIZE;
+  const half = size / 2;
+  const inside = (row: number, col: number): boolean =>
+    row >= 0 && row < size && col >= 0 && col < size && insideShape(shape, (col + 0.5 - half) / half, (row + 0.5 - half) / half);
+  const eyePos = EYE_POS[shape];
+  const cells: MonsterCell[] = [];
+  for (let row = 0; row < size; row++) {
+    for (let col = 0; col < size; col++) {
+      if (!inside(row, col)) continue;
+      const u = (col + 0.5 - half) / half;
+      const v = (row + 0.5 - half) / half;
+      const edge = !inside(row - 1, col) || !inside(row + 1, col) || !inside(row, col - 1) || !inside(row, col + 1);
+      let color: string;
+      if (edge) {
+        color = shadeColor(spec.body, -0.35);
+      } else {
+        const lit = 0.18 - 0.2 * (u + v + 1) / 2 - 0.18 * Math.min(1, Math.hypot(u, v));
+        color = shadeColor(Math.hypot(u, v) < 0.38 ? spec.core : spec.body, lit);
+      }
+      cells.push({ row, col, color });
+    }
+  }
+  const eyeRow = Math.round(half + eyePos.v * half - 0.5);
+  const eyeOffset = Math.max(1, Math.round(eyePos.u * half));
+  for (const cell of cells) {
+    if (cell.row === eyeRow && (cell.col === Math.round(half - 0.5 - eyeOffset) || cell.col === Math.round(half - 0.5 + eyeOffset))) {
+      cell.color = spec.eye;
+    }
+  }
   return cells;
 }
 

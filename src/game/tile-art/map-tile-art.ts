@@ -7,14 +7,14 @@ import type { TileMapData } from "../map/types";
  */
 const T = (pattern: string): string => `tint:${pattern}`;
 
-const DUNGEON = { 1: T("flagstone"), 2: T("brick"), 3: T("brick") };
+const DUNGEON = { 1: T("flagstone"), 2: T("brick"), 3: T("brick"), 4: T("gate"), 5: T("crystal") };
 /** 虚灯宮の内部: 3=柱、4=虚（何もない暗がり）、6=光る石。 */
-const KYOTOUKYU = { ...DUNGEON, 3: T("pillar"), 4: T("void"), 6: T("crystal") };
+const KYOTOUKYU = { ...DUNGEON, 3: T("pillar"), 4: T("void"), 5: T("gate"), 6: T("crystal"), 7: T("mural"), 8: T("bed") };
 
 export const MAP_TILE_ART: Record<string, Record<number, string>> = {
   // 町の建物（壁・屋根・扉・橋・木箱）。屋根は瓦、扉・橋・板壁は板張り、石造りは煉瓦。
   "touri-town": { 5: T("brick"), 6: T("plank"), 7: T("roof") },
-  "touri-outskirts": { 5: T("flagstone") },
+  "touri-outskirts": { 5: T("flagstone"), 6: T("rift") },
   "mugikano-village": { 5: T("plank"), 6: T("roof"), 7: T("plank") },
   "mugikano-water-source": { 5: T("flagstone"), 6: T("sand") },
   "garasuko-town": { 1: T("flagstone"), 5: T("roof"), 6: T("plank") },

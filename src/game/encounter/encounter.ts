@@ -1,6 +1,6 @@
 import type { Combatant } from "../battle/types";
 import { expRequiredForLevel } from "../growth/exp-curve";
-import type { MonsterSpec } from "../monster/monsters";
+import type { MonsterShape, MonsterSpec } from "../monster/monsters";
 
 /**
  * フィールド・ダンジョンでのランダムエンカウント（歩いていると、ときどき「歪みのかけら」に出くわす）。
@@ -149,6 +149,16 @@ function hslToHex(h: number, s: number, l: number): string {
   return `#${hex(f(0))}${hex(f(8))}${hex(f(4))}`;
 }
 
+/** 名前の言葉から、敵の形を決める（当てはまる言葉が無いときは、種類ごとに塊としずくを使い分ける）。 */
+export function shapeForName(name: string, variant: number): MonsterShape {
+  const has = (words: string[]): boolean => words.some((w) => name.includes(w));
+  if (has(["こうもり", "羽", "風", "雲", "霧", "ささやき", "気配"])) return "bat";
+  if (has(["虫", "ねずみ", "サソリ", "かじり", "砂ぬけ", "足あと", "紙魚"])) return "beetle";
+  if (has(["結晶", "石", "機械", "兵", "剣", "鉱脈", "番兵", "かけら", "目", "断片", "箱"])) return "shard";
+  if (has(["しずく", "花", "光", "悲しみ", "涙", "香"])) return "drop";
+  return variant === 1 ? "drop" : "blob";
+}
+
 /** 敵の絵（手続き的なドット絵）の設計。3種の名前ごとに、とげの数・大きさを少しずつ変える。 */
 export function encounterMonsterSpec(zone: EncounterZone, variant: number): MonsterSpec {
   return {
@@ -158,6 +168,7 @@ export function encounterMonsterSpec(zone: EncounterZone, variant: number): Mons
     spikeCount: 6 + variant * 2 + (zone.level % 3),
     spikeAmplitude: 0.25 + variant * 0.06,
     baseRadiusRatio: 0.7 + Math.min(0.2, zone.level * 0.006) + variant * 0.03,
+    shape: shapeForName(zone.names[variant], variant),
   };
 }
 
