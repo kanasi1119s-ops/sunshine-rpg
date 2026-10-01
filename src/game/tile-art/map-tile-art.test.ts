@@ -3,7 +3,7 @@ import { MAP_TILE_ART } from "./map-tile-art";
 import { buildTileArtCells, TILE_ART, TILE_ART_SIZE, TILE_VARIANTS, tintedSpec, type TilePatternKind } from "./tile-art";
 import { WORLD_MAPS } from "../world/world";
 
-const NEW_PATTERNS: TilePatternKind[] = ["flagstone", "brick", "sand", "snow", "plank", "cloud", "roof", "crate", "pillar", "machine", "pipe", "carpet", "crystal", "void"];
+const NEW_PATTERNS: TilePatternKind[] = ["flagstone", "brick", "sand", "snow", "plank", "cloud", "roof", "crate", "pillar", "machine", "pipe", "carpet", "crystal", "void", "gate", "mural", "bed", "rift"];
 
 describe("タイルの模様（石畳・壁・砂・雪・板張り・雲）", () => {
   it("どの模様も、16×16のタイルを埋め、色数は5階調以内で、揺らぎの種類ごとに絵が違う", () => {

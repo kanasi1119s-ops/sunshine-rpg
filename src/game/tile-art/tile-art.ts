@@ -7,7 +7,7 @@ import { hashCell, shadeColor } from "../color-utils";
  * ジャンルでよく使われる技法（草のディザリング、水の波模様、道の踏み跡、
  * 木の樹冠＋幹）を適用する。既存の特定作品のタイルセットは参照していない。
  */
-export type TilePatternKind = "grass" | "water" | "path" | "treeCanopy" | "flagstone" | "brick" | "sand" | "snow" | "plank" | "cloud" | "roof" | "crate" | "pillar" | "machine" | "pipe" | "carpet" | "crystal" | "void";
+export type TilePatternKind = "grass" | "water" | "path" | "treeCanopy" | "flagstone" | "brick" | "sand" | "snow" | "plank" | "cloud" | "roof" | "crate" | "pillar" | "machine" | "pipe" | "carpet" | "crystal" | "void" | "gate" | "mural" | "bed" | "rift";
 
 export interface TileArtSpec {
   base: string;
@@ -258,6 +258,42 @@ const PATTERNS: Record<TilePatternKind, PatternFn> = {
     if (h % 61 === 0) return ramp[4];
     if (h % 23 === 0) return ramp[3];
     return h % 5 === 0 ? ramp[1] : ramp[0];
+  },
+  // 扉: 縦に板を並べ、四辺に金具のふちどり。中央に合わせ目と取っ手。
+  gate: (ramp, row, col, variant) => {
+    const last = TILE_ART_SIZE - 1;
+    if (row === 0 || col === 0) return ramp[4];
+    if (row === last || col === last) return ramp[0];
+    if (row === 1 || row === last - 1 || col === 1 || col === last - 1) return ramp[1];
+    if (col === 7 || col === 8) return ramp[0];
+    if ((col === 5 || col === 10) && row >= 6 && row <= 9) return ramp[4];
+    const h = hashCell(col + variant * 11, row);
+    return col % 4 === 2 ? ramp[3] : h % 9 === 0 ? ramp[1] : ramp[2];
+  },
+  // 壁画: 暗い下地に、ふちの帯と、線で描いた渦（意味のある絵ではなく模様）。
+  mural: (ramp, row, col, variant) => {
+    if (row <= 1 || row >= TILE_ART_SIZE - 2) return row % 2 === 0 ? ramp[3] : ramp[1];
+    const dx = col - CENTER, dy = row - CENTER;
+    const ring = Math.round(Math.hypot(dx, dy * 1.2) + (variant % 2) * 0.5);
+    if (ring === 3 || ring === 6) return ramp[4];
+    if (ring === 4) return ramp[3];
+    return hashCell(col + variant, row) % 6 === 0 ? ramp[1] : ramp[2];
+  },
+  // 寝台: 上半分が枕と掛け布、下に木の枠。
+  bed: (ramp, row, col, variant) => {
+    if (row >= TILE_ART_SIZE - 3) return row === TILE_ART_SIZE - 1 ? ramp[0] : ramp[1];
+    if (row <= 1 || col <= 1 || col >= TILE_ART_SIZE - 2) return ramp[1];
+    if (row >= 2 && row <= 5 && col >= 3 && col <= TILE_ART_SIZE - 4) return row === 2 ? ramp[4] : ramp[3];
+    if (row === 6) return ramp[0];
+    return (row + col + variant) % 7 === 0 ? ramp[3] : ramp[2];
+  },
+  // 歪みの地面: ひび割れた地面から、紫の光がにじむ。
+  rift: (ramp, row, col, variant) => {
+    const h = hashCell(col + variant * 7, row + variant * 3);
+    const crack = (col + 2 * Math.floor(row / 3) * (variant % 2 ? -1 : 1) + 32) % 9;
+    if (crack === 0) return h % 3 === 0 ? ramp[4] : ramp[3];
+    if (crack === 1 || crack === 8) return ramp[0];
+    return h % 5 === 0 ? ramp[1] : h % 13 === 0 ? ramp[3] : ramp[2];
   },
   // 雲・霧: やわらかなふくらみ。
   cloud: (ramp, row, col, variant) => {
