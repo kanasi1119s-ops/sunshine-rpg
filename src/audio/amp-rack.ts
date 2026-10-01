@@ -216,16 +216,30 @@ export class AmpRack {
       case "clean":
         return this.chain(input, [this.filter("highpass", 70), this.filter("peaking", 3500, 2.5, 0.9), this.filter("highshelf", 8000, 2), this.gain(0.95)]);
       case "bass":
-        return this.chain(input, [this.filter("lowshelf", 80, 4), this.filter("peaking", 750, 2.5, 1), this.gain(1.05)]);
+        // ベース: 30Hz以下の不要な低音を切り、60〜120Hzで重さ、250〜400Hzの濁りを少し削り、700Hz〜1kHzで輪郭を出す。
+        // 弾いた瞬間（ピック・指のアタック）を残すため、アタックを遅め（25ms）にして軽く圧縮し、音量をそろえる
+        return this.chain(input, [this.filter("highpass", 32, 0, 0.7), this.filter("lowshelf", 80, 4), this.filter("peaking", 320, -2, 1), this.filter("peaking", 750, 2.5, 1), this.compressor(-20, 3, 0.025, 0.12), this.gain(1.05)]);
       case "bassMetal":
-        // メタルのベース: 重低音（60〜80Hz）を強く持ち上げ、軽く歪ませて弦の輪郭（700Hz〜1.5kHz）を出す
-        return this.chain(input, [this.filter("lowshelf", 75, 8.5), this.filter("peaking", 65, 3, 1.1), this.shaper(2.2, 0.04), this.filter("peaking", 900, 3.5, 1), this.filter("peaking", 2200, 2, 1), this.filter("lowpass", 5200), this.gain(0.95)]);
+        // メタルのベース: 低音と高音で道を分ける（約200Hz）。低い側は歪ませず重く（60〜80Hz）、高い側だけ軽く歪ませて弦の輪郭（700Hz〜2kHz）を出す。
+        // 低音まで歪ませると濁るので、歪みは上の帯域だけにかける。最後にアタック遅めで軽く圧縮
+        return this.parallel(input, [
+          [this.filter("highpass", 32, 0, 0.7), this.filter("lowpass", 200, 0, 0.7), this.filter("lowshelf", 75, 6), this.filter("peaking", 65, 3, 1.1)],
+          [this.filter("highpass", 200, 0, 0.7), this.shaper(2.4, 0.04), this.filter("peaking", 900, 3.5, 1), this.filter("peaking", 2200, 2, 1), this.filter("lowpass", 5200, 0, 0.8), this.gain(0.9)],
+        ], [this.compressor(-20, 3, 0.025, 0.12), this.gain(0.95)]);
       case "drumsRock":
-        // ロックのドラム: 太鼓の胴鳴りと部屋の響きが感じられる、温かく厚い音
-        return this.chain(input, [this.filter("lowshelf", 90, 3), this.filter("peaking", 380, -2, 1), this.filter("peaking", 3000, 2.5, 0.9), this.filter("highshelf", 9500, 2), this.compressor(-16, 3, 0.012, 0.14), this.gain(1.1)]);
+        // ロックのドラム: 太鼓の胴鳴りと部屋の響きが感じられる、温かく厚い音。足元の不要な低音（35Hz以下）は切る。
+        // 原音に、強く圧縮した音を混ぜて（パラレルコンプ）、アタックを残したまま厚みを足す
+        return this.parallel(input, [
+          [this.filter("highpass", 35, 0, 0.7), this.filter("lowshelf", 90, 3), this.filter("peaking", 380, -2, 1), this.filter("peaking", 3000, 2.5, 0.9), this.filter("highshelf", 9500, 2), this.compressor(-16, 3, 0.02, 0.14)],
+          [this.filter("highpass", 35, 0, 0.7), this.compressor(-30, 10, 0.008, 0.08), this.gain(0.4)],
+        ], [this.gain(1.1)]);
       case "drumsMetal":
-        // メタルのドラム: キックの重さ（60〜80Hz）と、3〜5kHzのアタックの立ち上がりを強く出し、箱鳴りの帯域を削って締める。強くつぶして密度を上げる
-        return this.chain(input, [this.filter("lowshelf", 80, 4.5), this.filter("peaking", 320, -4, 1.1), this.filter("peaking", 4200, 5, 1), this.filter("highshelf", 10000, 3), this.compressor(-20, 5, 0.006, 0.1), this.gain(1.2)]);
+        // メタルのドラム: キックの重さ（60〜80Hz）と、3〜5kHzのアタックの立ち上がりを強く出し、箱鳴りの帯域（200〜400Hz）を削って締める。
+        // 原音のアタックを残しつつ、強く圧縮した音を混ぜて（パラレルコンプ）密度を上げる
+        return this.parallel(input, [
+          [this.filter("highpass", 35, 0, 0.7), this.filter("lowshelf", 80, 4.5), this.filter("peaking", 320, -4, 1.1), this.filter("peaking", 4200, 5, 1), this.filter("highshelf", 10000, 3), this.compressor(-18, 4, 0.012, 0.1)],
+          [this.filter("highpass", 35, 0, 0.7), this.filter("peaking", 320, -3, 1.1), this.compressor(-32, 12, 0.006, 0.07), this.gain(0.45)],
+        ], [this.gain(1.15)]);
       // ── ジャンル別（2026-09-30 追加）。特定の機材や製品の音を写したものではなく、ジャンルの一般的な音の性格に合わせた ──
       case "jazz":
         // ジャズ: ほぼ歪ませず、低音を少し足して高音を大きく丸める（太く柔らかい、指で弾いたような音）
@@ -363,6 +377,29 @@ export class AmpRack {
     });
     this.pending.push(done.catch((error: unknown) => console.warn("追加したアンプを用意できませんでした:", error)));
     return nodes;
+  }
+
+  /** 入力を複数の道に分けて同時に通し、足し合わせて、あとの段（tail）を通して出口へつなぐ（分けた道・足し合わせ・あとの段のノードを全部返す）。 */
+  private parallel(input: AudioNode, paths: AudioNode[][], tail: AudioNode[]): AudioNode[] {
+    const sum = this.gain(1);
+    const all: AudioNode[] = [sum];
+    for (const path of paths) {
+      let prev: AudioNode = input;
+      for (const n of path) {
+        prev.connect(n);
+        prev = n;
+        all.push(n);
+      }
+      prev.connect(sum);
+    }
+    let prev: AudioNode = sum;
+    for (const n of tail) {
+      prev.connect(n);
+      prev = n;
+      all.push(n);
+    }
+    prev.connect(this.destination);
+    return all;
   }
 
   private compressor(threshold: number, ratio: number, attack: number, release: number): DynamicsCompressorNode {
