@@ -42,7 +42,7 @@ function distortionCurve(drive: number): Float32Array<ArrayBuffer> {
 }
 
 /** BGM全体の出口。ほのかな残響と、音が重なっても割れないようにするコンプレッサーを通す。 */
-export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, reverbSec = 2.2): GainNode {
+export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, reverbSec = 2.2, widen = 1.6): GainNode {
   // 最終段: 音が重なっても割れないようにする歯止め（リミッター）と、全体の音量の底上げ
   const limiter = ctx.createDynamicsCompressor();
   limiter.threshold.value = -0.5;
@@ -84,7 +84,41 @@ export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, 
   comp.ratio.value = 1.4;
   comp.attack.value = 0.03;
   comp.release.value = 0.16;
-  comp.connect(makeup);
+  // 左右の広がり（S-2）: 250Hz より上の「左右の差」（S=(L-R)/2）の成分だけを持ち上げる。低音（キック・ベース）は真ん中のまま、
+  // 和音・弦・パッド・残響が左右に広がる。左右を足したモノラル再生では差の成分は消えるので、音は変わらない
+  if (widen > 1 && typeof ctx.createChannelSplitter === "function") {
+    const split = ctx.createChannelSplitter(2);
+    const merge = ctx.createChannelMerger(2);
+    const side = ctx.createGain(); // S = (L-R)/2
+    side.gain.value = 0.5 * (widen - 1);
+    const sideInv = ctx.createGain();
+    sideInv.gain.value = -1;
+    const sideHp = ctx.createBiquadFilter();
+    sideHp.type = "highpass";
+    sideHp.frequency.value = 250;
+    comp.connect(split);
+    split.connect(side, 0);
+    split.connect(sideInv, 1);
+    sideInv.connect(side);
+    side.connect(sideHp);
+    // 左 = 元の左 + 足した差、右 = 元の右 - 足した差
+    const addL = ctx.createGain();
+    const addR = ctx.createGain();
+    addR.gain.value = -1;
+    sideHp.connect(addL);
+    sideHp.connect(addR);
+    const outL = ctx.createGain();
+    const outR = ctx.createGain();
+    split.connect(outL, 0);
+    split.connect(outR, 1);
+    addL.connect(outL);
+    addR.connect(outR);
+    outL.connect(merge, 0, 0);
+    outR.connect(merge, 0, 1);
+    merge.connect(makeup);
+  } else {
+    comp.connect(makeup);
+  }
 
   const bus = ctx.createGain();
   const dry = ctx.createGain();
@@ -96,7 +130,7 @@ export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, 
   const length = Math.floor(ctx.sampleRate * seconds);
   const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
   let seed = 987;
-  const preDelay = Math.floor(ctx.sampleRate * 0.02);
+  const preDelay = Math.floor(ctx.sampleRate * 0.03);
   for (let ch = 0; ch < 2; ch++) {
     const data = impulse.getChannelData(ch);
     let lp = 0;
