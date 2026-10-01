@@ -56,3 +56,37 @@ describe("MONSTERS", () => {
     expect(unique.size).toBe(specs.length);
   });
 });
+
+describe("形つきの敵（雑魚）", () => {
+  const SHAPES = ["bat", "beetle", "shard", "drop"] as const;
+
+  it("どの形も、範囲内で、ある程度の広さの塊になり、目の色を含む", () => {
+    for (const shape of SHAPES) {
+      const cells = buildMonsterCells({ ...SAMPLE_SPEC, shape });
+      const total = MONSTER_GRID_SIZE * MONSTER_GRID_SIZE;
+      expect(cells.length, shape).toBeGreaterThan(total * 0.12);
+      expect(cells.length, shape).toBeLessThan(total * 0.8);
+      expect(cells.some((c) => c.color.toLowerCase() === SAMPLE_SPEC.eye.toLowerCase()), `${shape} の目`).toBe(true);
+      for (const c of cells) {
+        expect(c.row).toBeGreaterThanOrEqual(0);
+        expect(c.row).toBeLessThan(MONSTER_GRID_SIZE);
+        expect(c.col).toBeGreaterThanOrEqual(0);
+        expect(c.col).toBeLessThan(MONSTER_GRID_SIZE);
+        expect(c.color).toMatch(/^#[0-9a-f]{6}$/i);
+      }
+    }
+  });
+
+  it("形が違えば、輪郭（マスの並び）も違う", () => {
+    const sets = (["blob", ...SHAPES] as const).map((shape) => JSON.stringify(buildMonsterCells({ ...SAMPLE_SPEC, shape }).map((c) => [c.row, c.col])));
+    expect(new Set(sets).size).toBe(sets.length);
+  });
+
+  it("エンカウントの敵は、地方ごとに複数の形が使われ、すべての形が1回は登場する", () => {
+    const used = new Set<string>();
+    for (const [id, spec] of Object.entries(MONSTERS)) {
+      if (id.startsWith("enc-")) used.add(spec.shape ?? "blob");
+    }
+    for (const shape of ["blob", ...SHAPES]) expect(used.has(shape), shape).toBe(true);
+  });
+});
