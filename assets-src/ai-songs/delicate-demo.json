@@ -1,0 +1,38 @@
+{
+ "title": "繊細の見本",
+ "description": "ハープとオルゴールのような小さな音が、やわらかく並ぶ曲",
+ "bpm": 72,
+ "beats": 4,
+ "chords": "Am F C G",
+ "barsPerChord": 1,
+ "repeats": 4,
+ "autoAccompaniment": false,
+ "feel": "rock",
+ "tone": "rock",
+ "parts": [
+  {
+   "instrument": "harp",
+   "role": "ハープ",
+   "volume": 0.1,
+   "pan": -0.4,
+   "amp": "delicate",
+   "notes": "A3:0.5 C4:0.5 E4:0.5 A4:0.5 F3:0.5 A3:0.5 C4:0.5 F4:0.5 C4:0.5 E4:0.5 G4:0.5 C5:0.5 G3:0.5 B3:0.5 D4:0.5 G4:0.5"
+  },
+  {
+   "instrument": "kalimba",
+   "role": "カリンバ",
+   "volume": 0.07,
+   "pan": 0.5,
+   "amp": "delicate",
+   "notes": "E5:1 R:1 C5:1 R:1 D5:2 B4:2"
+  },
+  {
+   "instrument": "pad",
+   "role": "パッド",
+   "volume": 0.05,
+   "pan": 0.8,
+   "amp": "auto",
+   "notes": "A3:8 C4:8"
+  }
+ ]
+}

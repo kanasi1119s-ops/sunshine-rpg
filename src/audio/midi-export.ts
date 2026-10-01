@@ -1,7 +1,7 @@
 import { timeSignatureOf } from "./time-signature";
 import { GM_DEFAULT_BY_WAVE, GM_DRUM_NOTE, GM_LAYER, GM_PROGRAM, METAL_LEAD, SYNTH_LEAD, SYNTH_PAD } from "./gm-map";
 import { noteNameToMidi } from "./note";
-import { humanize, REST, type AmpSetting, type Instrument, type Score, type Track } from "./score";
+import { grooveOffsetBeats, humanize, REST, type AmpSetting, type Instrument, type Score, type Track } from "./score";
 
 /**
  * 曲（Score）を、録音音源（サウンドフォント）で鳴らすための標準MIDIファイル（SMF）に変換する。
@@ -41,6 +41,8 @@ const BOOST: Partial<Record<Instrument, number>> = { brass: 0.95, slap: 1.0, str
 const REVERB: Partial<Record<Instrument, number>> = { pad: 70, choir: 80, strings: 55, bell: 70, chime: 60, echoGuitar: 60, bird: 40, wind: 60, stream: 40, rain: 40, lead: 40, leadGuitar: 40, piano: 40, keys: 35, guitar: 35 };
 // コーラス（音を広げる揺らぎ）の量（MIDIのCC93）
 const CHORUS: Partial<Record<Instrument, number>> = { strings: 30, pad: 35, choir: 30, keys: 22, guitar: 20, echoGuitar: 20, crunch: 12, distGuitar: 8, bell: 12, harpsichord: 10 };
+/** 歪ませないアンプ（これらのときは、元の音色をそのまま使う）。 */
+const CLEAN_AMP_TYPES = new Set<string>(["clean", "jazz", "funk", "lofi", "retro8bit", "radio", "delicate"]);
 const ECHO_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "cowbell", "bell", "keys"]);
 
 function channelKey(track: Track, program: number): string {
@@ -111,6 +113,9 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     // リードとパッド: 電子音楽では電子的な音色、メタル調ではオーバードライブのギター、それ以外は生楽器に近い音色
     if (inst === "lead" && track.program === undefined) program = score.synth ? SYNTH_LEAD : score.tone === "metal" || score.tone === "prs" ? METAL_LEAD : program;
     if (inst === "pad" && score.synth && track.program === undefined) program = SYNTH_PAD;
+    // 歪みの二重がけを避ける: 歪ませるアンプを指定したギターは、録音がすでに歪んだ音色（オーバードライブ29・ディストーション30）ではなく、
+    // クリーン（27）を元にして、歪みはアンプだけでかける
+    if (track.amp && (program === 29 || program === 30) && track.program === undefined && !CLEAN_AMP_TYPES.has(track.amp.type)) program = 27;
     const setupChannel = (prog: number, key: string, gainBoost: number): { channel: number; list: Ev[] } => {
       const channel = isDrum ? DRUM_CHANNEL : allocate(key);
       const list = midiTrackFor(channel);
@@ -167,7 +172,8 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       const human = score.edition === "real" ? 1.6 : 1;
       const looseness = human * (inst && ["keys", "piano", "guitar", "echoGuitar", "bass", "harpsichord", "strings", "lead", "leadGuitar", "brass", "crunch", "distGuitar"].includes(inst) ? 70 : inst && ["kick", "snare", "hihat", "tom", "crash"].includes(inst) ? 45 : 0);
       const jitter = looseness > 0 && startBeat > 0 ? Math.round((humanize(secStart + 3.7) - 1) * looseness) : 0;
-      const tick = Math.max(0, Math.round(startBeat * PPQ) + jitter);
+      const grooveTicks = Math.round(grooveOffsetBeats(score.swing, track.push, startBeat) * PPQ);
+      const tick = Math.max(0, Math.round(startBeat * PPQ) + jitter + grooveTicks);
       let vol = track.volume * (n.velocity ?? 1) * (inst ? humanize(secStart) : 1);
       let drumKey = drumNote;
       let lenScale = drumNote !== undefined ? 0.5 : 0.97;
@@ -189,7 +195,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       // 特別曲用（prs）の刻みギターは、強すぎないよう控えめに
       const rhythmSoft = score.tone === "prs" && (inst === "distGuitar" || inst === "crunch") ? 0.78 : 1;
       const velocity = Math.min(127, Math.round(velocityOf(vol, boost) * strike * rhythmSoft));
-      const len = Math.max(20, Math.round(n.durationBeats * PPQ * lenScale));
+      const len = Math.max(20, Math.round(n.durationBeats * PPQ * lenScale * (drumNote === undefined ? n.gate ?? 1 : 1)));
       const push = (pitch: number, at: number, vel: number, length: number, target: { channel: number; list: Ev[] } = { channel, list }): void => {
         const p = Math.max(0, Math.min(127, pitch));
         target.list.push({ tick: at, order: 2, bytes: [0x90 | target.channel, p, vel] });
