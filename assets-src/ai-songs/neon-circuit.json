@@ -5,6 +5,7 @@
  "chords": "Am Am F F C C G G",
  "feel": "dance",
  "tone": "rock",
+ "pump": true,
  "repeats": 12,
  "barsPerChord": 1,
  "beats": 4,

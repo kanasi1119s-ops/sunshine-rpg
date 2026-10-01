@@ -43,6 +43,8 @@ const REVERB: Partial<Record<Instrument, number>> = { pad: 70, choir: 80, string
 const CHORUS: Partial<Record<Instrument, number>> = { strings: 30, pad: 35, choir: 30, keys: 22, guitar: 20, echoGuitar: 20, crunch: 12, distGuitar: 8, bell: 12, harpsichord: 10 };
 /** 歪ませないアンプ（これらのときは、元の音色をそのまま使う）。 */
 const CLEAN_AMP_TYPES = new Set<string>(["clean", "jazz", "funk", "lofi", "retro8bit", "radio", "delicate"]);
+/** キックに合わせて音量が凹む（サイドチェイン風）楽器。和音・パッド・ベース・リード。キックとドラムは凹まない。 */
+const PUMP_INSTRUMENTS = new Set<Instrument>(["pad", "choir", "strings", "keys", "lead", "bell", "sub808", "bass", "echoGuitar", "harp"]);
 const ECHO_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "cowbell", "bell", "keys"]);
 
 function channelKey(track: Track, program: number): string {
@@ -153,7 +155,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       }
     }
     // キックに合わせた音量の凹み（電子音楽風のポンプ感）。1拍ごとに、頭で凹んで、次の拍に向かって戻る
-    if (score.pump && (inst === "pad" || inst === "choir" || inst === "strings")) {
+    if (score.pump && inst && PUMP_INSTRUMENTS.has(inst)) {
       for (let at = 0; at < endTick; at += PPQ) {
         list.push({ tick: at, order: 1, bytes: [0xb0 | channel, 11, 62] });
         list.push({ tick: at + Math.round(PPQ * 0.3), order: 1, bytes: [0xb0 | channel, 11, 100] });

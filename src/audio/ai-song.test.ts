@@ -117,3 +117,11 @@ describe("出口の安全装置", () => {
     for (let i = 1; i < c.length; i++) expect(c[i]).toBeGreaterThanOrEqual(c[i - 1]);
   });
 });
+
+describe("サイドチェイン風（pump）", () => {
+  it("pump: true で曲の pump が立ち、指定しなければ立たない", () => {
+    const b = { title: "t", description: "", bpm: 120, beats: 4, chords: "Am", barsPerChord: 1, repeats: 1, autoAccompaniment: false, feel: "dance", tone: "rock", parts: [{ instrument: "kick", role: "k", volume: 0.2, pan: 0, amp: "auto", notes: "x:1" }] };
+    expect(aiSongToScore({ ...b, pump: true } as never).score.pump).toBe(true);
+    expect(aiSongToScore(b as never).score.pump).toBeUndefined();
+  });
+});

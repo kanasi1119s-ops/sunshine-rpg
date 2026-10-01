@@ -26,4 +26,4 @@ parts=[
  P("bell","きらめき",0.05,-0.6,"auto",{k:bell for k in['intro','break','bridge','outro']},sustain=1.5),
  P("pad","パッド",0.05,0.8,"auto",{k:pad for k in['intro','break','build','bridge','drop','outro']}),
 ]
-build('assets-src/ai-songs/neon-circuit.json',dict(title="ネオン回路",description="4つ打ちのダンス曲。ビルド→ドロップ→ブレイクをくり返し、最後は導入に戻ってループできる",bpm=126,chords="Am Am F F C C G G",feel="dance",tone="rock"),S,parts)
+build('assets-src/ai-songs/neon-circuit.json',dict(title="ネオン回路",description="4つ打ちのダンス曲。ビルド→ドロップ→ブレイクをくり返し、最後は導入に戻ってループできる",bpm=126,chords="Am Am F F C C G G",feel="dance",tone="rock",pump=True),S,parts)

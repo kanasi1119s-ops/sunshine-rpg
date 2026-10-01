@@ -165,9 +165,20 @@ export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, 
   convolver.buffer = impulse;
   const wet = ctx.createGain();
   wet.gain.value = wetLevel;
+  // 残響の戻りの音を整える: 低音（約250Hz未満）を切って濁りを防ぎ、高音（約9kHz以上）を落として耳に痛い響きを避ける
+  const returnHp = ctx.createBiquadFilter();
+  returnHp.type = "highpass";
+  returnHp.frequency.value = 250;
+  returnHp.Q.value = 0.7;
+  const returnLp = ctx.createBiquadFilter();
+  returnLp.type = "lowpass";
+  returnLp.frequency.value = 9000;
+  returnLp.Q.value = 0.7;
   bus.connect(convolver);
   convolver.connect(wet);
-  wet.connect(low);
+  wet.connect(returnHp);
+  returnHp.connect(returnLp);
+  returnLp.connect(low);
   return bus;
 }
 
@@ -610,15 +621,20 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       const g = sustainGain(ctx, dest, t, d, v, k === "shakuhachi" ? 0.09 : 0.05, 0.12);
       const lp = filter(ctx, "lowpass", k === "ocarina" ? 2400 : 3400, g);
       const stop = t + d + 0.15;
-      out.push(osc(ctx, "sine", f, t, stop, lp, 0.9));
-      out.push(osc(ctx, "triangle", f * 2, t, stop, lp, k === "ocarina" ? 0.06 : 0.16));
+      const tone1 = osc(ctx, "sine", f, t, stop, lp, 0.9);
+      const tone2 = osc(ctx, "triangle", f * 2, t, stop, lp, k === "ocarina" ? 0.06 : 0.16);
+      out.push(tone1, tone2);
+      // 息の音（ノイズ）: 尺八は多め、パンフルートはふつう、オカリナは少なめ。笛の音程の2倍の高さを中心に、細く混ぜる
+      const breath = filter(ctx, "bandpass", Math.min(f * 2.2, 7000), pluckGain(ctx, dest, t, v * (k === "shakuhachi" ? 0.2 : k === "panflute" ? 0.14 : 0.05), Math.min(0.06, d * 0.3), d + 0.1), 1.2);
+      out.push(noise(ctx, t, stop, breath));
       // 息の揺れ（ゆっくりしたビブラート）
       const lfo = ctx.createOscillator();
       lfo.frequency.value = k === "shakuhachi" ? 4.6 : 5.2;
       const depth = ctx.createGain();
       depth.gain.value = k === "shakuhachi" ? 12 : 7;
       lfo.connect(depth);
-      for (const o of out.slice(-2)) if ("detune" in o) depth.connect((o as OscillatorNode).detune);
+      depth.connect(tone1.detune);
+      depth.connect(tone2.detune);
       lfo.start(t);
       lfo.stop(stop);
       out.push(lfo);
