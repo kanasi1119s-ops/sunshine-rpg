@@ -45,14 +45,14 @@ function distortionCurve(drive: number): Float32Array<ArrayBuffer> {
 export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, reverbSec = 2.2): GainNode {
   // 最終段: 音が重なっても割れないようにする歯止め（リミッター）と、全体の音量の底上げ
   const limiter = ctx.createDynamicsCompressor();
-  limiter.threshold.value = -1.5;
+  limiter.threshold.value = -0.5;
   limiter.knee.value = 0;
-  limiter.ratio.value = 20;
+  limiter.ratio.value = 12;
   limiter.attack.value = 0.002;
   limiter.release.value = 0.1;
   limiter.connect(destination);
   const makeup = ctx.createGain();
-  makeup.gain.value = 1.75;
+  makeup.gain.value = 1.0;
   makeup.connect(limiter);
   // 音の仕上げ: 低音とキラキラした高音を少し持ち上げる（現代的なゲーム音楽らしい厚みと抜けの良さ）
   const low = ctx.createBiquadFilter();
@@ -79,10 +79,10 @@ export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, 
   high.connect(warmth);
   warmth.connect(comp);
   // 打楽器のアタックは通し、全体の厚みは詰める（現代的なゲーム音楽の「太くてパンチのある」音）
-  comp.threshold.value = -20;
+  comp.threshold.value = -10;
   comp.knee.value = 10;
-  comp.ratio.value = 3.2;
-  comp.attack.value = 0.012;
+  comp.ratio.value = 1.4;
+  comp.attack.value = 0.03;
   comp.release.value = 0.16;
   comp.connect(makeup);
 
