@@ -1,0 +1,64 @@
+{
+ "title": "民族音楽の見本",
+ "description": "琉球風の5音音階（C E F G B）に、ドローンと琴・笛・カリンバを重ねた曲",
+ "bpm": 84,
+ "beats": 4,
+ "chords": "C C C C",
+ "barsPerChord": 1,
+ "repeats": 4,
+ "autoAccompaniment": false,
+ "feel": "rock",
+ "tone": "rock",
+ "parts": [
+  {
+   "instrument": "sitar",
+   "role": "ドローン",
+   "volume": 0.08,
+   "pan": 0,
+   "amp": "delicate",
+   "notes": "C3:4 G3:4"
+  },
+  {
+   "instrument": "koto",
+   "role": "琴",
+   "volume": 0.12,
+   "pan": -0.5,
+   "amp": "delicate",
+   "notes": "C4:0.5 E4:0.5 G4:1 F4:0.5 E4:0.5 C4:1 E4:0.5 F4:0.5 G4:1 B4:1",
+   "sustain": 2
+  },
+  {
+   "instrument": "shakuhachi",
+   "role": "笛",
+   "volume": 0.12,
+   "pan": 0.3,
+   "amp": "delicate",
+   "notes": "G4:2 B4:1 C5:1 B4:1 G4:1 F4:2 E4:4 R:2"
+  },
+  {
+   "instrument": "kalimba",
+   "role": "カリンバ",
+   "volume": 0.09,
+   "pan": 0.6,
+   "amp": "delicate",
+   "notes": "C5:0.5 G5:0.5 E5:0.5 G5:0.5 F5:0.5 G5:0.5 E5:0.5 G5:0.5",
+   "sustain": 2
+  },
+  {
+   "instrument": "tom",
+   "role": "太鼓",
+   "volume": 0.1,
+   "pan": 0,
+   "amp": "auto",
+   "notes": "x:1 R:1 x:0.5 R:0.5 x:1"
+  },
+  {
+   "instrument": "pad",
+   "role": "パッド",
+   "volume": 0.06,
+   "pan": 0.8,
+   "amp": "auto",
+   "notes": "C3:8 G3:8"
+  }
+ ]
+}

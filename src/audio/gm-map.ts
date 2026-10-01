@@ -24,6 +24,9 @@ export const GM_PROGRAM: Partial<Record<Instrument, number>> = {
   chime: 11, // ビブラフォン
   lead: 73, // フルート（電子的なリードではなく、自然な旋律楽器。電子音楽では下のSYNTH_LEADに切り替える）
   cowbell: 9,
+  // 民族楽器（GM）
+  sitar: 104, banjo: 105, shamisen: 106, koto: 107, kalimba: 108, bagpipe: 109, fiddle: 110,
+  harp: 46, panflute: 75, shakuhachi: 77, ocarina: 79,
   wind: 122, // 海岸（風・波の音）
   stream: 122,
   rain: 96, // FX 雨

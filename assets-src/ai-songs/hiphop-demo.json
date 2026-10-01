@@ -1,0 +1,66 @@
+{
+ "title": "ヒップホップの見本",
+ "description": "ゆったりしたビートと長い808の低音、短いコードの反復",
+ "bpm": 88,
+ "beats": 4,
+ "chords": "Am7 Dm7 G7 Cmaj7",
+ "barsPerChord": 1,
+ "repeats": 4,
+ "autoAccompaniment": false,
+ "feel": "rock",
+ "tone": "rock",
+ "parts": [
+  {
+   "instrument": "kick",
+   "role": "キック",
+   "volume": 0.2,
+   "pan": 0,
+   "amp": "auto",
+   "notes": "g:X.....o...X..o.."
+  },
+  {
+   "instrument": "snare",
+   "role": "スネア",
+   "volume": 0.15,
+   "pan": 0,
+   "amp": "auto",
+   "notes": "g:....X.......X...",
+   "push": 0.03
+  },
+  {
+   "instrument": "hihat",
+   "role": "ハイハット",
+   "volume": 0.07,
+   "pan": 0.3,
+   "amp": "auto",
+   "notes": "g:XoxoXoxoXoxoXoxo",
+   "push": -0.01
+  },
+  {
+   "instrument": "sub808",
+   "role": "808",
+   "volume": 0.17,
+   "pan": 0,
+   "amp": "auto",
+   "notes": "A1:2 R:1 A1:1 D1:2 R:2 G1:2 R:1 G1:1 C2:3 R:1",
+   "sustain": 1.2
+  },
+  {
+   "instrument": "keys",
+   "role": "コード",
+   "volume": 0.1,
+   "pan": -0.5,
+   "amp": "auto",
+   "notes": "A3:1 C4:1 E4:1 G4:1 D3:1 F3:1 A3:1 C4:1 G3:1 B3:1 D4:1 F4:1 C4:1 E4:1 G4:1 B4:1"
+  },
+  {
+   "instrument": "bell",
+   "role": "メロディ",
+   "volume": 0.07,
+   "pan": 0.5,
+   "amp": "auto",
+   "notes": "E5:1 R:1 C5:2 D5:1 R:1 A4:2 B4:1 R:1 D5:2 E5:4"
+  }
+ ],
+ "swing": 0.3
+}

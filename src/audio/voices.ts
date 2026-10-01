@@ -41,6 +41,19 @@ function distortionCurve(drive: number): Float32Array<ArrayBuffer> {
   return curve;
 }
 
+/** 入力が knee 以下はそのまま、それより上は ceiling に向けてなめらかに近づく（超えない）カーブ。 */
+export function ceilingCurve(knee: number, ceiling: number, samples = 2049): Float32Array<ArrayBuffer> {
+  const curve = new Float32Array(new ArrayBuffer(samples * 4));
+  const range = ceiling - knee;
+  for (let i = 0; i < samples; i++) {
+    const x = (i * 2) / (samples - 1) - 1;
+    const a = Math.abs(x);
+    const y = a <= knee ? a : knee + range * Math.tanh((a - knee) / range);
+    curve[i] = Math.sign(x) * y;
+  }
+  return curve;
+}
+
 /** BGM全体の出口。ほのかな残響と、音が重なっても割れないようにするコンプレッサーを通す。 */
 export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, reverbSec = 2.2, widen = 1.6): GainNode {
   // 最終段: 音が重なっても割れないようにする歯止め（リミッター）と、全体の音量の底上げ
@@ -50,7 +63,13 @@ export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, 
   limiter.ratio.value = 12;
   limiter.attack.value = 0.002;
   limiter.release.value = 0.1;
-  limiter.connect(destination);
+  // 最後の安全装置: リミッターが追いつかなかった瞬間のピークだけをなめらかに丸め、出力が ±0.98 を超えない（音割れしない）ようにする。
+  // 0.7 より小さい音はほぼそのまま通す
+  const guard = ctx.createWaveShaper();
+  guard.curve = ceilingCurve(0.7, 0.98);
+  guard.oversample = "4x";
+  limiter.connect(guard);
+  guard.connect(destination);
   const makeup = ctx.createGain();
   makeup.gain.value = 1.0;
   makeup.connect(limiter);
@@ -557,6 +576,63 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       const stop = t + 0.45;
       out.push(osc(ctx, "square", f, t, stop, bp, 0.6));
       out.push(osc(ctx, "square", f * 1.504, t, stop, bp, 0.6));
+      break;
+    }
+    // ── 民族楽器（2026-10-02）。録音音源がない環境のための簡易な合成。刺さらないよう、どれも高域を丸める ──
+    case "sitar":
+    case "koto":
+    case "shamisen":
+    case "banjo":
+    case "harp":
+    case "kalimba": {
+      const k = e.instrument as string;
+      const ringy = k === "harp" || k === "kalimba" || k === "koto";
+      const decay = Math.max(0.3, Math.min(d * (ringy ? 1.8 : 1.1), ringy ? 1.8 : 1.0));
+      const g = pluckGain(ctx, dest, t, v, k === "shamisen" || k === "banjo" ? 0.001 : 0.003, decay);
+      const bright = k === "sitar" ? 3600 : k === "shamisen" ? 3200 : k === "banjo" ? 3000 : k === "koto" ? 2600 : 2200;
+      const lp = filter(ctx, "lowpass", bright, g);
+      const stop = t + decay + 0.05;
+      if (k === "kalimba") {
+        out.push(osc(ctx, "sine", f, t, stop, lp, 0.8));
+        out.push(osc(ctx, "sine", f * 5.4, t, t + 0.15, lp, 0.18));
+      } else {
+        out.push(osc(ctx, k === "harp" ? "triangle" : "sawtooth", f, t, stop, lp, 0.6));
+        out.push(osc(ctx, "square", f * 2, t, stop, lp, k === "sitar" ? 0.35 : 0.18));
+        // シタールの「ビヨーン」: 少しずれた共鳴弦
+        if (k === "sitar") out.push(osc(ctx, "sawtooth", f * 1.5, t, stop, lp, 0.18, 7));
+      }
+      break;
+    }
+    case "panflute":
+    case "shakuhachi":
+    case "ocarina": {
+      const k = e.instrument as string;
+      const g = sustainGain(ctx, dest, t, d, v, k === "shakuhachi" ? 0.09 : 0.05, 0.12);
+      const lp = filter(ctx, "lowpass", k === "ocarina" ? 2400 : 3400, g);
+      const stop = t + d + 0.15;
+      out.push(osc(ctx, "sine", f, t, stop, lp, 0.9));
+      out.push(osc(ctx, "triangle", f * 2, t, stop, lp, k === "ocarina" ? 0.06 : 0.16));
+      // 息の揺れ（ゆっくりしたビブラート）
+      const lfo = ctx.createOscillator();
+      lfo.frequency.value = k === "shakuhachi" ? 4.6 : 5.2;
+      const depth = ctx.createGain();
+      depth.gain.value = k === "shakuhachi" ? 12 : 7;
+      lfo.connect(depth);
+      for (const o of out.slice(-2)) if ("detune" in o) depth.connect((o as OscillatorNode).detune);
+      lfo.start(t);
+      lfo.stop(stop);
+      out.push(lfo);
+      break;
+    }
+    case "fiddle":
+    case "bagpipe": {
+      const pipe = e.instrument === "bagpipe";
+      const g = sustainGain(ctx, dest, t, d, v, pipe ? 0.03 : 0.06, 0.1);
+      const lp = filter(ctx, "lowpass", pipe ? 2200 : 2800, g);
+      const stop = t + d + 0.12;
+      out.push(osc(ctx, "sawtooth", f, t, stop, lp, 0.5, pipe ? 0 : -6));
+      out.push(osc(ctx, "sawtooth", f, t, stop, lp, 0.4, pipe ? 3 : 6));
+      if (pipe) out.push(osc(ctx, "square", f * 0.5, t, stop, lp, 0.18));
       break;
     }
     case "chime": {

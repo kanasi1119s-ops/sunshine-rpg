@@ -19,7 +19,7 @@ export interface ChannelAmp {
 type Role = "plugin" | "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru" | GenreAmpType;
 
 /** ジャンル別のアンプの種類（`score.ts` の `GenreAmpType` と同じ並び）。 */
-export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio"];
+export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate"];
 
 const STEP_CURVES = new Map<number, Float32Array<ArrayBuffer>>();
 /** 波形を階段状にする（ビットを落としたような粗い音）。levels は片側の段数。 */
@@ -260,6 +260,23 @@ export class AmpRack {
       case "radio":
         // ラジオ・電話: 400Hz〜3kHzだけを通し、中域を持ち上げて軽く歪ませる（遠くの・機械ごしの音）
         return this.chain(input, tail([this.filter("highpass", 400, 0, 0.8), this.filter("lowpass", 3000, 0, 0.8), this.filter("peaking", 1500, 6, 1), this.gain(2 * d), this.shaper(3 * d, 0), this.gain(0.55)]));
+      // ── ラウド系・繊細系（2026-10-02）。出口は音割れしないよう小さめ。歪みは2段で、段の間で高音を落とし、ざらつきを抑える ──
+      case "loudmetal":
+        // ラウドメタル: 前段で低音（130Hz未満）を削って刻みを締め、2段で強く歪ませ、後段で中域（600Hz）をえぐって低音（90Hz）と存在感（3kHz）を足す。刺さる高域（5kHz〜）は落とす
+        return this.chain(input, tail([
+          this.filter("highpass", 130, 0, 0.8), this.filter("peaking", 800, 4, 0.8), this.gain(4.2 * d), this.shaper(8 * d, 0.03),
+          this.filter("lowpass", 5000, 0, 0.7), this.gain(1.6), this.shaper(3, 0.02),
+          this.filter("peaking", 600, -4.5, 1), this.filter("peaking", 3000, 2.5, 1), this.filter("lowshelf", 90, 3.5), this.filter("lowpass", 4600, 0, 0.8), this.gain(0.3),
+        ]));
+      case "loudrock":
+        // ラウドロック: 中域（1kHz）が厚い太い歪み。上下を少し非対称にして温かみを残し、軽く圧縮して壁のように平らにする
+        return this.chain(input, tail([
+          this.filter("highpass", 105, 0, 0.8), this.filter("peaking", 1000, 4, 0.8), this.gain(3.6 * d), this.shaper(6 * d, 0.1),
+          this.filter("lowshelf", 120, 2.5), this.filter("peaking", 2800, 2, 1), this.filter("lowpass", 5400, 0, 0.8), this.compressor(-20, 2.5, 0.01, 0.15), this.gain(0.36),
+        ]));
+      case "delicate":
+        // 繊細: 歪ませない。強弱をそのまま残し、低音は軽く削り、高音（4kHz〜）をやわらかく丸める。ごく弱い圧縮で小さな音の粒をそろえる
+        return this.chain(input, tail([this.filter("highpass", 90, 0, 0.7), this.filter("peaking", 2200, 1, 0.9), this.filter("highshelf", 4000, -2), this.filter("lowpass", 7000, 0, 0.7), this.compressor(-30, 1.6, 0.02, 0.25), this.gain(1.0)]));
       default:
         return this.chain(input, []);
     }

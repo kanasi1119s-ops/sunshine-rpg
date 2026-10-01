@@ -13,6 +13,8 @@ export interface NoteEvent {
   durationBeats: number;
   /** 強さ（1が標準。ゴーストノートなど弱い音は0.5など）。省略時は1。 */
   velocity?: number;
+  /** 音の伸び（鳴らす長さの倍率。1が標準、0.3は短く切る、2は次の音まで余韻を重ねる）。次の音の始まりは変わらない。省略時は1。 */
+  gate?: number;
 }
 
 export type Waveform = "square" | "triangle" | "sawtooth" | "sine";
@@ -30,13 +32,15 @@ export type Instrument =
   // 自然音（風・雨・せせらぎ・鳥・虫）。音の高さは、風の吹く高さ・鳥の声の高さなど音色の目安として使う
   | "pierce" | "slap" | "wind" | "rain" | "stream" | "bird" | "crickets"
   // フォンク向け: 重く歪んだ低音（808）とカウベル
-  | "sub808" | "cowbell";
+  | "sub808" | "cowbell"
+  // 民族楽器（2026-10-02）: 撥弦（sitar・koto・shamisen・banjo・harp・kalimba）、息の楽器（panflute・shakuhachi・ocarina）、擦弦・リード（fiddle・bagpipe）
+  | "sitar" | "koto" | "shamisen" | "banjo" | "harp" | "kalimba" | "panflute" | "shakuhachi" | "ocarina" | "fiddle" | "bagpipe";
 
 /**
  * ジャンル別のアンプ（2026-09-30 追加）。ジャズ・ブルース・ファンク・クランチ・ハードロック・パンク・ファズ・
  * シューゲイザー・ローファイ・レトロ8bit・ラジオ。作り方は `amp-rack.ts`、向いている場面は `docs/sound/composition-notes.md`。
  */
-export type GenreAmpType = "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio";
+export type GenreAmpType = "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate";
 
 /** ギターなどの音づくり（アンプ）の設定。`auto`は、曲の音色（tone）と楽器から自動で選ぶ。 */
 export interface AmpSetting {
@@ -71,10 +75,28 @@ export interface Track {
   gmDrum?: boolean;
   /** 0〜1。 */
   volume: number;
+  /** タイミングのずれ（拍。-0.1〜0.1）。プラス＝あと乗り（少し遅らせる。スネアやバックビートに）、マイナス＝前のめり（少し早める。ハイハットに）。省略時は0。 */
+  push?: number;
   notes: NoteEvent[];
 }
 
+/**
+ * グルーブ（ノリ）による、音の始まりのずれ（拍）。`swing`＝裏拍を遅らせる量（0〜1。0.5くらいで三連寄りのはね）、`push`＝パートごとのずれ。
+ * 8分の裏拍（0.5拍目）は swing/6 拍、16分の裏（0.25・0.75拍目）は swing/12 拍遅れる。
+ */
+export function grooveOffsetBeats(swing: number | undefined, push: number | undefined, startBeat: number): number {
+  let off = push ?? 0;
+  if (swing) {
+    const frac = Math.round((startBeat - Math.floor(startBeat)) * 1000) / 1000;
+    if (frac === 0.5) off += swing / 6;
+    else if (frac === 0.25 || frac === 0.75) off += swing / 12;
+  }
+  return off;
+}
+
 export interface Score {
+  /** 裏拍を遅らせる量（0〜1）。省略時は0（ずらさない）。 */
+  swing?: number;
   /** 読み込んだNAMモデル（.namファイルの中身）。名前 → JSON文字列。 */
   namModels?: Record<string, string>;
   /** 録音したトラック（オーディオインターフェースから録った、実際の楽器・声）。作曲ソフトで鳴る（ゲーム本体では鳴らさない）。 */
@@ -131,17 +153,18 @@ export function humanize(startSec: number): number {
   return 0.93 + 0.14 * (x - Math.floor(x));
 }
 
-function flattenTrack(track: Track, tempoBpm: number, loop: boolean): ScheduledNote[] {
+function flattenTrack(track: Track, tempoBpm: number, loop: boolean, swing?: number): ScheduledNote[] {
   const secPerBeat = 60 / tempoBpm;
   let t = 0;
   const events: ScheduledNote[] = [];
   for (const noteEvent of track.notes) {
     const durationSec = noteEvent.durationBeats * secPerBeat;
     if (noteEvent.note !== REST) {
+      const soundSec = durationSec * (noteEvent.gate ?? 1);
       events.push({
         frequency: noteNameToFrequency(noteEvent.note),
-        startSec: t,
-        durationSec,
+        startSec: Math.max(0, t + grooveOffsetBeats(swing, track.push, t / secPerBeat) * secPerBeat),
+        durationSec: soundSec,
         waveform: track.waveform,
         instrument: track.instrument,
         volume: track.volume * (noteEvent.velocity ?? 1) * (loop && track.instrument ? humanize(t) : 1),
@@ -156,5 +179,5 @@ function flattenTrack(track: Track, tempoBpm: number, loop: boolean): ScheduledN
 
 /** 曲を「いつ・どの高さ・どれくらいの長さで鳴らすか」の一覧に変換する。 */
 export function flattenScore(score: Score): ScheduledNote[] {
-  return score.tracks.flatMap((track) => flattenTrack(track, score.tempoBpm, score.loop));
+  return score.tracks.flatMap((track) => flattenTrack(track, score.tempoBpm, score.loop, score.swing));
 }

@@ -38,7 +38,10 @@ export type AmpPresetName =
   | "shoegaze"
   | "lofi"
   | "retro8bit"
-  | "radio";
+  | "radio"
+  | "loudmetal"
+  | "loudrock"
+  | "delicate";
 
 export interface AmpSettings {
   /** 日本語の呼び名。 */
@@ -171,6 +174,28 @@ export const AMP_PRESETS: Record<AmpPresetName, AmpSettings> = {
     drive: 5, shape: "soft", hardness: 3, asymmetry: 0,
     bassDb: -12, midDb: 6, midHz: 1500, trebleDb: -10,
     highpassHz: 400, lowpassHz: 3000, level: 0.9,
+  },
+  // ── ラウド系・繊細系（2026-10-02 追加）。出力は音割れしないよう、歪みの量のわりに小さめにそろえてある ──
+  loudmetal: {
+    label: "ラウドメタル",
+    genre: "ラウドメタル・モダンメタル・ボス戦・重くて密度の高い場面（低音は締め、中域をえぐり、高音は刺さらせない）",
+    drive: 26, shape: "hard", hardness: 6, asymmetry: 0,
+    bassDb: 3, midDb: -5, midHz: 650, trebleDb: 2,
+    highpassHz: 120, lowpassHz: 4800, level: 0.6,
+  },
+  loudrock: {
+    label: "ラウドロック",
+    genre: "ラウドロック・ヘヴィロック・オルタナ・太くて前に出る、歌のある激しい場面（中域が厚く、サビで壁になる）",
+    drive: 16, shape: "soft", hardness: 7, asymmetry: 0.12,
+    bassDb: 2, midDb: 3, midHz: 1000, trebleDb: 2,
+    highpassHz: 105, lowpassHz: 5400, level: 0.7,
+  },
+  delicate: {
+    label: "繊細",
+    genre: "繊細なアルペジオ・静かな回想・祈り・弱い音の粒が聞こえる場面（歪ませず、高音はやわらかく、細かな強弱が残る）",
+    drive: 1, shape: "soft", hardness: 0.8, asymmetry: 0,
+    bassDb: -1, midDb: 1, midHz: 2200, trebleDb: -1,
+    highpassHz: 90, lowpassHz: 7000, level: 1,
   },
 };
 

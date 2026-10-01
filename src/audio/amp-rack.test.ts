@@ -68,9 +68,9 @@ describe("stepCurve（階段状の波形）", () => {
 });
 
 describe("ジャンル別のアンプ", () => {
-  it("11種類ある", () => {
-    expect(GENRE_AMP_TYPES).toHaveLength(11);
-    expect(new Set(GENRE_AMP_TYPES).size).toBe(11);
+  it("14種類ある", () => {
+    expect(GENRE_AMP_TYPES).toHaveLength(14);
+    expect(new Set(GENRE_AMP_TYPES).size).toBe(14);
   });
 
   it.each(GENRE_AMP_TYPES)("%s: 入口から出口（最終出力）までつながり、素通しではない", (type: GenreAmpType) => {
@@ -81,7 +81,7 @@ describe("ジャンル別のアンプ", () => {
   });
 
   it("歪ませるジャンルは歪みの部品（ウェーブシェイパー）を通り、4倍オーバーサンプリングで濁りを抑える", () => {
-    for (const type of ["blues", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "radio"] as const) {
+    for (const type of ["blues", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "radio", "loudmetal", "loudrock"] as const) {
       const shapers = rackWith(type).path.filter((n) => n.kind === "waveshaper");
       expect(shapers.length, type).toBeGreaterThanOrEqual(1);
       expect(shapers[0].oversample, type).toBe("4x");

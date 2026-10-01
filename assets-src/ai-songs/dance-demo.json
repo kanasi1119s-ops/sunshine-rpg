@@ -1,0 +1,71 @@
+{
+ "title": "ダンスの見本",
+ "description": "4つ打ちキックと動くベース、せり上がりとブレイクのある曲",
+ "bpm": 126,
+ "beats": 4,
+ "chords": "Am F C G",
+ "barsPerChord": 1,
+ "repeats": 4,
+ "autoAccompaniment": false,
+ "feel": "rock",
+ "tone": "rock",
+ "parts": [
+  {
+   "instrument": "kick",
+   "role": "キック",
+   "volume": 0.2,
+   "pan": 0,
+   "amp": "auto",
+   "notes": "g:X...X...X...X..."
+  },
+  {
+   "instrument": "hihat",
+   "role": "ハイハット",
+   "volume": 0.07,
+   "pan": 0.3,
+   "amp": "auto",
+   "notes": "g:..x...x...x...x."
+  },
+  {
+   "instrument": "snare",
+   "role": "クラップ",
+   "volume": 0.14,
+   "pan": 0,
+   "amp": "auto",
+   "notes": "g:....X.......X..."
+  },
+  {
+   "instrument": "sub808",
+   "role": "ベース",
+   "volume": 0.17,
+   "pan": 0,
+   "amp": "auto",
+   "notes": "A1:0.5 A2:0.5 A1:0.5 A2:0.5 A1:0.5 A2:0.5 A1:0.5 A2:0.5 F1:0.5 F2:0.5 F1:0.5 F2:0.5 F1:0.5 F2:0.5 F1:0.5 F2:0.5"
+  },
+  {
+   "instrument": "lead",
+   "role": "リード",
+   "volume": 0.1,
+   "pan": 0,
+   "amp": "auto",
+   "notes": "A4:0.5 C5:0.5 E5:1 D5:0.5 C5:0.5 A4:1 F4:0.5 A4:0.5 C5:1 B4:1 G4:1"
+  },
+  {
+   "instrument": "keys",
+   "role": "アルペジオ",
+   "volume": 0.09,
+   "pan": 0.7,
+   "amp": "auto",
+   "notes": "A3:0.25 C4:0.25 E4:0.25 A4:0.25",
+   "sustain": 0.5
+  },
+  {
+   "instrument": "bell",
+   "role": "きらめき",
+   "volume": 0.05,
+   "pan": -0.6,
+   "amp": "auto",
+   "notes": "E6:2 R:2"
+  }
+ ]
+}
