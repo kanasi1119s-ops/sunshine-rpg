@@ -1,4 +1,4 @@
-// 使い方: node tools/audio-check/render-catalog.mjs <出力フォルダ> [曲ID ...]
+// 使い方: node tools/audio-check/render-catalog.mjs [--raw] <出力フォルダ> [曲ID ...]   （--raw: ピークをそろえず、ゲーム内の実際の大きさのまま書き出す）
 // ゲームのBGM一覧（catalog＋src/audio/songs）の曲を、作曲ソフトと同じ音（実楽器版）でWAVに書き出す。IDを省略すると全曲。
 // 書き出したWAVは `python3 tools/audio-check/analyze.py フォルダ/*.wav` で測れる。事前に `node tools/composer/build.mjs`（作曲ソフトの再ビルド）。
 import { createServer } from "vite";
@@ -7,7 +7,9 @@ import path from "path";
 import { execSync } from "child_process";
 
 const ROOT = path.resolve(new URL("../../", import.meta.url).pathname);
-const [outDir, ...ids] = process.argv.slice(2);
+const argv = process.argv.slice(2);
+const raw = argv.includes("--raw");
+const [outDir, ...ids] = argv.filter((a) => a !== "--raw");
 if (!outDir) {
   console.error("使い方: node tools/audio-check/render-catalog.mjs <出力フォルダ> [曲ID ...]");
   process.exit(1);
@@ -33,7 +35,7 @@ try {
   for (const [id, score] of scores) {
     const file = path.join(outDir, `${id}.wav`);
     if (fs.existsSync(file)) continue;
-    const b64 = await page.evaluate(([s, e]) => window.__composer.renderWav(s, e), [score, "real"]);
+    const b64 = await page.evaluate(([s, e, o]) => window.__composer.renderWav(s, e, o), [score, "real", { raw }]);
     fs.writeFileSync(file, Buffer.from(b64, "base64"));
     console.log("書き出し:", id);
   }

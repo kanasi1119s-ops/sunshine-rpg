@@ -1066,12 +1066,13 @@ function addAmpPlugin(data: unknown, announce: boolean): AmpPluginDef | null {
 
 // Claude Code の song.mjs（--wav）から、曲をWAVにするための入口
 (window as unknown as { __composer: unknown }).__composer = {
-  async renderWav(score: Score, edition: State["edition"]): Promise<string> {
+  /** `raw: true`: ピークをそろえずに書き出す（ゲーム内の実際の大きさを測るとき。`tools/audio-check/render-catalog.mjs --raw`）。 */
+  async renderWav(score: Score, edition: State["edition"], opts?: { raw?: boolean }): Promise<string> {
     if (!soundfontCopy) throw new Error("録音音源を読み込めていません");
     const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
     const buffer = await renderScoreOffline({ ...edited, loop: false }, { soundfont: soundfontCopy, processorUrl, edition, nam: namHost });
     const channels = [buffer.getChannelData(0), buffer.getChannelData(1)];
-    normalizePeak(channels);
+    if (!opts?.raw) normalizePeak(channels);
     const bytes = encodeWav(channels, buffer.sampleRate);
     let bin = "";
     for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
