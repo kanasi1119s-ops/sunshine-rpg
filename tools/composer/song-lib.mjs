@@ -27,6 +27,8 @@ export async function openSongKit() {
     const { ps2Edition } = await load("/src/audio/ps2-edition.ts");
     const { getScoreDurationSec } = await load("/src/audio/score.ts");
     const { score, song, warnings } = aiSongToScore(songData);
+    const { lintAiSong } = await load("/src/audio/ai-song-lint.ts");
+    const lint = lintAiSong(songData);
     const out = path.resolve(outDir ?? path.join(ROOT, "dist-songs"));
     fs.mkdirSync(out, { recursive: true });
     const files = { project: path.join(out, `${name}.sunshine-song.json`), midi: path.join(out, `${name}.mid`) };
@@ -38,7 +40,7 @@ export async function openSongKit() {
       await renderWav(score, edition, files.wav);
     }
     const sec = getScoreDurationSec(score);
-    return { title: song.title, description: song.description, tracks: score.tracks.length, seconds: Math.round(sec * 10) / 10, bpm: score.tempoBpm, warnings, files, score };
+    return { title: song.title, description: song.description, tracks: score.tracks.length, seconds: Math.round(sec * 10) / 10, bpm: score.tempoBpm, warnings, lint, files, score };
   }
 
   /** 作った曲を、ゲームの曲として登録する（src/audio/songs/<id>.sunshine-song.json）。 */

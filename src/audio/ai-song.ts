@@ -7,6 +7,10 @@ import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, typ
  * 作曲ソフトの「AIに作曲してもらう」（APIキーで Claude を呼ぶ）と、Claude Code から使う
  * `node tools/composer/song.mjs`（`.claude/skills/compose-song/`）の両方が、この形式を使う。
  */
+/** AIソング形式で選べる曲調（`real-edition.ts` の楽器の割り当てに使われる）。 */
+export const AI_STYLES = ["rock", "metal", "folk", "nature", "jazz", "cafe", "rnb", "classic", "baroque", "epic", "mystery", "space", "jpop"] as const;
+export type AiStyle = (typeof AI_STYLES)[number];
+
 export interface AiPart {
   /** 楽器（AI_INSTRUMENTS のキー）。 */
   instrument: Instrument;
@@ -50,6 +54,12 @@ export interface AiSong {
   tone: "rock" | "metal" | "prs";
   /** 裏拍を遅らせる量（0〜1。省略は0）。ジャズ・ブルース・ヒップホップ・ファンクのノリに。 */
   swing?: number;
+  /**
+   * 実楽器版（書き出し・ゲーム）で、lead・bass・pad・guitar の音色を決める曲調。省略は rock（lead＝オーバードライブのギター、bass＝ピック弾き、pad＝弦）。
+   * folk・nature＝フルートのlead・ウッドベース、jazz・cafe・rnb＝サックスのlead、classic・baroque＝オーボエのlead、epic＝トランペットのlead、mystery＝ビブラフォン、space＝合唱。
+   * synth: true のときは無視される（電子音色）。
+   */
+  style?: AiStyle;
   /** true なら、lead をシンセリード、pad をシンセパッドの音色にする（省略は false＝lead はフルート、pad は合唱に近い生楽器寄りの音色）。ダンス・電子音楽向け。 */
   synth?: boolean;
   /** true なら、曲の最初の1/8（最大4小節）を小さく始めて上げ、真ん中あたりで一度引いて戻す（曲の起伏。省略は false）。 */
@@ -126,6 +136,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - barsPerChord: 1コードの小節数（1か2）。repeats: 進行のくり返し回数。
 - autoAccompaniment: true なら、コード進行から伴奏（ドラム・ベース・ギター・ピアノ・弦）を自動で足す。自分でドラムやベースを書くときは false にしてよい。feel: 自動の伴奏の雰囲気（rock / pop / ballad / dance＝4つ打ち・メロディのように動くベース・ピアノの分散和音・エコーギターの、きれいで現代的な伴奏）。
 - tone: ギターの音色の方向（rock / metal / prs＝なめらかなリード）。
+- style: 実楽器版（書き出し・ゲーム）での楽器の割り当て。省略（rock）だと lead はオーバードライブのギター、bass はピック弾き、pad は弦。folk・nature＝フルートの lead とウッドベース・ガットギター、jazz・cafe・rnb＝サックスの lead、classic・baroque＝オーボエの lead、epic＝トランペットの lead、mystery＝ビブラフォンの lead、space＝合唱の lead。生楽器の曲（フォーク・ジャズ・クラシックなど）は、場面に合う style を必ず選ぶ。
 - synth: true にすると、lead（シンセリード）と pad が電子的なシンセの音色になる。省略（false）だと lead はフルート、pad は合唱に近い生楽器寄りの音色で鳴る（tone が metal / prs の lead はオーバードライブのギター）。ダンス・電子音楽のアルペジオやリードには true にする。
 - dynamics: true にすると、曲の出だし（最初の1/8、最大4小節）を小さく始めて上げ、中盤で一度引いてから戻す（曲の起伏）。同じ音量で続く曲を避けたいときに使う。
 - parts: 自分で書くパート。1曲に1〜8パート。
@@ -153,6 +164,9 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
 - グルーブ（ノリ）: 音符を機械的に並べるだけだとノリが出ない。曲の swing（0〜1）で裏拍を遅らせ（ジャズ・ブルース・ファンク 0.5〜0.7、ヒップホップ・ローファイ 0.2〜0.4、ロック・ダンス 0）、パートの push（-0.1〜0.1拍）でタイミングをずらす（スネア +0.02〜0.04＝あと乗りで重く、ハイハット -0.01〜-0.02＝前のめりで軽く、ベースはキックに合わせて 0）。ドラムは強弱が命: グリッド記法（g:x...）で X＝強、x＝ふつう、o＝弱い（ゴーストノート）を書き分け、ハイハットは表拍を強く裏拍を弱く、スネアの間に o を入れる。ビートの型は docs/sound/drum-patterns.md。
 - 繊細な音にするには: amp は delicate か clean、volume は 0.04〜0.12、ピアノ・ハープ・鐘・オルゴール系で細かい音符（0.25〜0.5拍）を、拍の強弱をつけず低めの音域でゆっくり。ドラムは入れないか、ハイハットだけ小さく。パッドと合唱を薄く敷く。
 - 音割れを避ける: 全パートの volume を足した値が大きすぎないようにする（歪みギター2本＋ドラム＋ベースで合計 0.7 前後まで）。出口に安全装置（リミッターと最後のソフトクリップ）はあるが、頼りすぎず、書き出した WAV のピークが -1dBFS 以下であることを確かめる。
+- つぶれと濁りを避ける（実験と調査で分かったこと。docs/sound/mixing-guide.md）: つぶれ（PLR＝ピークと平均の差が小さい）の主因は出口でなく編曲で、とくに**歪みギターの volume**。歪みギター2本は 0.03〜0.05 まで下げて測る（0.075 では大きすぎる曲が多い）。低域はキック（60〜70Hz）とベース（80〜120Hz以上）で分け、250〜500Hz に重なる持続音（弦・パッド・合唱・ピアノ・歪みギター）は音域をずらすか音数を減らす。ベースは短め（sustain 0.3〜0.6）にしてキックの隙間に入れる。リード（主旋律）の帯域 1〜4kHz は効果音と争うので、歪みギターや弦で埋めない。
+- 構成と起伏（docs/sound/music-knowledge.md）: 同時に鳴らす楽器数は イントロ2〜3／ヴァース3〜4／ビルド4〜5／サビ5〜7／ブレイク1〜2 が目安。ドロップ（サビ）の直前に **1拍の無音**。2周目は同じ小節数のまま、対旋律・オクターブ・ドラムの型のどれかを変える。ループ曲は最初と最後のコードを同じにする。旋律は 順次65〜75%・3度15〜20%・4度以上10%以下、音域は1オクターブ前後、最高音は1フレーズに1回。
+- 書いたら点検する: node tools/audio-check/score-check.mjs 曲.json（楽理）、node tools/audio-check/qa-song.mjs 曲.json（書き出し・測定・聴取依頼文）、node tools/audio-check/melody-similarity.mjs 曲.json assets-src/ai-songs/*.json（旋律の類似）。数値は PLR 9以上・左右の相関 0.4〜0.88・LRA 2.3〜9・True Peak -1dBTP以下が目安。
 - 曲は小さく始め（前奏は楽器を減らす）、途中で一度ドラムを抜いて静かにしてから、最後のサビで全部を戻す。ベースは根音だけでなく、5度・オクターブ・10度を行き来し、小節の最後で次のコードへ向かう音を入れると、メロディのように動く。`;
 
 const DUR_RULE = /^\d+(\.\d+)?$/;
@@ -295,7 +309,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     tempoBpm: bpm, loop: true, drumKit: base.drumKit, tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock",
     ...(Number(song.swing) > 0 ? { swing: Math.min(1, Number(song.swing)) } : {}),
     // synth: lead／pad をシンセ音色にする。style "electro" は、実楽器版（real-edition.ts）が電子音楽の音色を生楽器に置き換えないための印
-    ...(song.synth === true ? { synth: true, style: "electro" } : {}),
+    ...(song.synth === true ? { synth: true, style: "electro" } : (AI_STYLES as readonly string[]).includes(song.style as string) && song.style !== "rock" ? { style: song.style } : {}),
     tracks,
   };
   return { score, song, warnings };
