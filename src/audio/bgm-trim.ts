@@ -100,6 +100,7 @@ export const BGM_TRIM_DB: Record<string, number> = {
   "scarlet-chapter": -8.5,
   "scarlet-chapter-clean": -4.2,
   "scarlet-chapter-space": -7.4,
+  "scarlet-chapter-space-long": -8.8,
   "secret-boss": -5.1,
   "secret-boss-2": -7.4,
   "secret-boss-2-cleanpick": -5.8,
