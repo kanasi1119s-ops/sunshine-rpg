@@ -143,3 +143,5 @@
 - 測定: I -7.1 LUFS、ピーク -1.0dBTP、crest 9.9dB、左右の相関 0.55（範囲内）、LRA 9.6（頭は最大より約-11dB＝小さく始まる）。音量とつぶれは、ほかのロック系と同じく目安より外れる（S-1）。
 - 聴いた感想はまだない。気に入ればゲームに登録できる（`--register`）。
 - **2026-10-02 ゲームの曲として登録**（ID `neon-dawn-road`、`src/audio/songs/neon-dawn-road.sunshine-song.json`）。BGMプレイヤーの曲一覧に出る。鳴らす場面（`bgmId`）はまだ決めていない。仮。
+
+- 一般知識の調査メモ: `docs/sound/music-knowledge.md`（2026-10-02。作曲・編曲・ミックス・ラウドネス・ゲームBGMの作法と、うちとの比べ）
