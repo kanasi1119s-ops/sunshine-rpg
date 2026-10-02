@@ -107,6 +107,16 @@ def analyze(path):
     env = 10 * np.log10(loud / loud.max() + 1e-12)
     out["tail_s"] = round(float((np.where(env > -50)[0].max() - np.where(env > -20)[0].max()) * hop / SR), 2)
     out["dur_s"] = round(len(mid) / SR, 1)
+    # ループの継ぎ目の点検（2026-10-02 追加）: 両端の無音の長さと、端の値の飛び（クリック）
+    amp = np.max(np.abs(x), axis=1)
+    loud_idx = np.where(amp > 10 ** (-60 / 20))[0]
+    if len(loud_idx):
+        out["head_silence_ms"] = round(float(loud_idx[0] / SR * 1000), 1)
+        out["tail_silence_ms"] = round(float((len(amp) - 1 - loud_idx[-1]) / SR * 1000), 1)
+    else:
+        out["head_silence_ms"] = out["tail_silence_ms"] = round(float(len(amp) / SR * 1000), 1)
+    out["edge_level_start"] = round(float(np.max(np.abs(x[:64]))), 4)   # 先頭64サンプルの最大値（0に近いほどクリックが出にくい）
+    out["edge_level_end"] = round(float(np.max(np.abs(x[-64:]))), 4)
     return out
 
 
