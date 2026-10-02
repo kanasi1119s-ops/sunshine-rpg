@@ -214,3 +214,6 @@
 - 全58曲の統合ラウドネス: **-26.2〜-3.8 LUFS、差 22.4dB**（中央値 -14.4）。データ: `docs/sound/bgm-loudness-raw.json`。
 - 静かな曲: archive -26.2、puzzle -26.0、ruins-ukishima -26.0、kyoto-deep -25.8、camp -22.3。大きい曲: boss-tetsu -3.8、battle -4.0、boss-sanone -4.4、boss-kiri -5.1、boss-toushin -5.2、boss-touri -5.2。
 - **対応**: 曲ごとの音量補正を実装（`src/audio/bgm-trim.ts`、`docs/decisions.md` 参照）。表は `tools/audio-check/make-bgm-trim.py` で作る。
+
+## BGMプレイヤーへの全曲登録（2026-10-02）
+`assets-src/ai-songs/` の見本・試作9曲（ダンス・繊細・民族音楽・港町の夜灯り・ヒップホップ・ラウドメタル・ラウドロック・天をつらぬく鼓動＋きれいな版）を `src/audio/songs/` に登録した。BGMプレイヤーの曲は計66曲（「オリジナル追加曲」10曲を含む）。いずれも仮・試聴用で、ゲームの場面にはまだ割り当てていない。
