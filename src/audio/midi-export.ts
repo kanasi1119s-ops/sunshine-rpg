@@ -32,7 +32,14 @@ const u16 = (n: number): number[] => [(n >>> 8) & 255, n & 255];
 
 /** 音の強さ（0〜127）。トラックの音量0〜0.3ほどを、MIDIの強さへ。 */
 function velocityOf(volume: number, boost: number): number {
-  return Math.max(18, Math.min(127, Math.round((34 + volume * 430) * boost)));
+  return softVelocity((34 + volume * 430) * boost);
+}
+/** 強さの上限（127）で頭打ちにすると、キック・スネア・ベースが常に127になり、強弱・揺らぎが消える。
+ *  96 を超えた分はなだらかに縮めて、127 に近づくだけにする（大小の差を残す）。 */
+function softVelocity(v: number): number {
+  const knee = 96;
+  const x = v <= knee ? v : knee + 31 * (1 - Math.exp(-(v - knee) / 45));
+  return Math.max(18, Math.min(127, Math.round(x)));
 }
 
 // 楽器ごとの強さの補正（録音音源は楽器によって元の大きさが違うため）
@@ -43,7 +50,8 @@ const REVERB: Partial<Record<Instrument, number>> = { pad: 70, choir: 80, string
 const CHORUS: Partial<Record<Instrument, number>> = { strings: 30, pad: 35, choir: 30, keys: 22, guitar: 20, echoGuitar: 20, crunch: 12, distGuitar: 8, bell: 12, harpsichord: 10 };
 /** 歪ませないアンプ（これらのときは、元の音色をそのまま使う）。 */
 const CLEAN_AMP_TYPES = new Set<string>(["clean", "jazz", "funk", "lofi", "retro8bit", "radio", "delicate"]);
-const ECHO_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "cowbell", "bell", "keys"]);
+// 鍵盤（keys）の伴奏にはエコーをかけない（和音が次の和音に重なって、にごるため）
+const ECHO_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "cowbell", "bell"]);
 
 function channelKey(track: Track, program: number): string {
   return `${program}|${(track.pan ?? 0).toFixed(2)}|${track.instrument ?? track.waveform}`;
@@ -54,7 +62,7 @@ export function scoreToMidi(score: Score): Uint8Array {
 }
 
 /** MIDIと、チャンネルごとの楽器（GMの番号）。機材（アンプ・ドラムの仕上げ）を選ぶために使う。 */
-export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Record<number, number>; amps: Record<number, { amp: AmpSetting; pan: number }>; instruments: Record<number, string> } {
+export function scoreToMidiInfo(score: Score, opts: { ampsApplied?: boolean } = {}): { midi: Uint8Array; programs: Record<number, number>; amps: Record<number, { amp: AmpSetting; pan: number }>; instruments: Record<number, string> } {
   const programs: Record<number, number> = {};
   /** チャンネルごとの、楽器の音色の名前（パート別ミックスの振り分けに使う）。 */
   const instruments: Record<number, string> = {};
@@ -117,7 +125,9 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     if (inst === "pad" && score.synth && track.program === undefined) program = SYNTH_PAD;
     // 歪みの二重がけを避ける: 歪ませるアンプを指定したギターは、録音がすでに歪んだ音色（オーバードライブ29・ディストーション30）ではなく、
     // クリーン（27）を元にして、歪みはアンプだけでかける
-    if (track.amp && (program === 29 || program === 30) && track.program === undefined && !CLEAN_AMP_TYPES.has(track.amp.type)) program = 27;
+    // ただし、アンプをかけない描き方（ブラウザなしの render-node.mjs）では、クリーンのままだと歪まないので、歪んだ音色のままにする
+    const ampsApplied = opts.ampsApplied ?? true;
+    if (ampsApplied && track.amp && (program === 29 || program === 30) && track.program === undefined && !CLEAN_AMP_TYPES.has(track.amp.type)) program = 27;
     const setupChannel = (prog: number, key: string, gainBoost: number): { channel: number; list: Ev[] } => {
       const channel = isDrum ? DRUM_CHANNEL : allocate(key);
       const list = midiTrackFor(channel);
@@ -198,7 +208,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       const strike = score.opening && startBeat < 2 ? 1.22 : 1;
       // 特別曲用（prs）の刻みギターは、強すぎないよう控えめに
       const rhythmSoft = score.tone === "prs" && (inst === "distGuitar" || inst === "crunch") ? 0.78 : 1;
-      const velocity = Math.min(127, Math.round(velocityOf(vol, boost) * strike * rhythmSoft));
+      const velocity = softVelocity(velocityOf(vol, boost) * strike * rhythmSoft);
       const len = Math.max(20, Math.round(n.durationBeats * PPQ * lenScale * (drumNote === undefined ? n.gate ?? 1 : 1)));
       const push = (pitch: number, at: number, vel: number, length: number, target: { channel: number; list: Ev[] } = { channel, list }): void => {
         const p = Math.max(0, Math.min(127, pitch));

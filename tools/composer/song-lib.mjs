@@ -65,7 +65,8 @@ export async function openSongKit() {
     const { getScoreDurationSec } = await load("/src/audio/score.ts");
     const mix = await load("/src/audio/mix-plan.ts");
     const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
-    const info = scoreToMidiInfo(edited);
+    // render-node.mjs はギターのアンプ（歪み）をかけないので、歪んだ音色（29・30）をクリーンに替えないようにする
+    const info = scoreToMidiInfo(edited, { ampsApplied: false });
     return { ...info, seconds: getScoreDurationSec(edited), tempoBpm: edited.tempoBpm, mix };
   }
 

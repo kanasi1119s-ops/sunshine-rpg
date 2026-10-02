@@ -224,7 +224,8 @@ export async function renderMix(kit, score, { edition = "real", outWav, soundfon
     inputs.push("-i", path.join(work, "ir.wav"));
     const fxIndex = active.length + 1;
     inputs.push("-i", path.join(work, "fx.wav"));
-    flt.push(`[${fxIndex}:a]volume=0.8[fx]`);
+    // 音源そのものの残響・コーラス。畳み込みの残響・ディレイと重なって音がにじむので、控えめに（0.8→0.35）
+    flt.push(`[${fxIndex}:a]volume=0.35[fx]`);
     const mixIn = [...dry, "[fx]"];
     flt.push(`${dry.join("")}amix=inputs=${dry.length}:normalize=0:dropout_transition=0[drymix]`);
     const wet = [];
@@ -239,7 +240,7 @@ export async function renderMix(kit, score, { edition = "real", outWav, soundfon
       wet.push("[dlret]");
     }
     void mixIn;
-    flt.push(`[drymix]${wet.join("")}[fx]amix=inputs=${2 + wet.length}:normalize=0:dropout_transition=0,acompressor=threshold=0.16:ratio=2:attack=30:release=250:makeup=1,alimiter=limit=0.95:level=disabled[out]`);
+    flt.push(`[drymix]${wet.join("")}[fx]amix=inputs=${2 + wet.length}:normalize=0:dropout_transition=0,treble=g=1.5:f=11000:t=s:w=0.7,acompressor=threshold=0.16:ratio=2:attack=30:release=250:makeup=1,alimiter=limit=0.95:level=disabled[out]`);
     const outFile = outWav ?? path.join(work, "mix.wav");
     const r = spawnSync("ffmpeg", ["-y", "-v", "error", ...inputs, "-filter_complex", flt.join(";"), "-map", "[out]", "-ar", String(SR), "-c:a", "pcm_s16le", outFile], { encoding: "utf8" });
     if (r.status !== 0) throw new Error("ffmpeg の合成に失敗しました:\n" + (r.stderr ?? "").slice(-900));

@@ -56,11 +56,23 @@ describe("メロディを歌にする", () => {
     ]);
   });
 
-  it("歌のメロディを足しても、楽器の曲は変わらない。同じ設計図なら同じメロディ", () => {
-    const a = JSON.stringify(composeSong(spec({ vocal: false })));
+  it("歌を足すと、楽器の主旋律だけが歌の区間で休み、ほかのパートは変わらない。同じ設計図なら同じメロディ", () => {
+    const a = composeSong(spec({ vocal: false }));
     const out1: { vocal?: VocalSection[] } = {};
     const out2: { vocal?: VocalSection[] } = {};
-    expect(JSON.stringify(composeSong(spec(), out1))).toBe(a);
+    const b = composeSong(spec(), out1);
+    expect(b.tracks.length).toBe(a.tracks.length);
+    const sounding = (t: (typeof a.tracks)[number]): number => t.notes.filter((n) => n.note !== "R").reduce((s, n) => s + n.durationBeats, 0);
+    let changed = 0;
+    a.tracks.forEach((t, i) => {
+      if (JSON.stringify(t) === JSON.stringify(b.tracks[i])) return;
+      changed++;
+      // 変わったのは主旋律（歌の区間で休むので、鳴っている長さが短くなる）だけ
+      expect(sounding(b.tracks[i])).toBeLessThan(sounding(t));
+    });
+    expect(changed).toBeGreaterThan(0);
+    expect(changed).toBeLessThanOrEqual(3);
+    expect(JSON.stringify(composeSong(spec(), {}))).toBe(JSON.stringify(b));
     composeSong(spec(), out2);
     expect(out1.vocal?.length).toBeGreaterThan(5);
     expect(JSON.stringify(out1.vocal)).toBe(JSON.stringify(out2.vocal));

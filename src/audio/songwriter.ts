@@ -1075,7 +1075,7 @@ function applyDrive(kp: KindPlan, kind: Kind, tpl: Template, on: boolean): KindP
  * 経過音は調の音階から選び、その小節の和音の音と半音でぶつかる音は避ける（例: 短調の属和音の3度の半音下）。
  * あわせて、ベースの音域（E1〜G3）に収める。
  */
-export function walkBass(notes: NoteEvent[], barChords: string[], beats: number, key: Key): NoteEvent[] {
+export function walkBass(notes: NoteEvent[], barChords: string[], beats: number, key: Key, barKeys?: Key[]): NoteEvent[] {
   const LOW = 28, HIGH = 55;
   const fold = (m: number): number => {
     let x = m;
@@ -1090,8 +1090,9 @@ export function walkBass(notes: NoteEvent[], barChords: string[], beats: number,
     starts.push(t);
     t += n.durationBeats;
   }
-  const scalePcs = key.scale.map((s) => (key.tonic + s) % 12);
   for (let bar = 0; bar < barChords.length; bar++) {
+    const bk = barKeys?.[bar] ?? key;
+    const scalePcs = bk.scale.map((s) => (bk.tonic + s) % 12);
     const end = (bar + 1) * beats;
     const lastIdx = out.findIndex((n, i) => Math.abs(starts[i] + n.durationBeats - end) < 1e-9 && starts[i] >= bar * beats - 1e-9);
     const nextIdx = out.findIndex((_, i) => Math.abs(starts[i] - end) < 1e-9);
@@ -1294,7 +1295,10 @@ export function composeSong(spec: SongSpec, extra?: { vocal?: VocalSection[]; se
       cache.set(cacheKey, entry);
     }
     const melody: Record<string, string> = {};
-    for (const m of kp.mel) melody[m] = entry.melody;
+    // 歌がある区間では、楽器の主旋律を休ませる（歌と別の旋律が同時に鳴ると、ぶつかって聞き取りにくい）。
+    // 楽器の主旋律は、前奏・間奏（ソロ）・後奏で鳴らす
+    const vocalHere = spec.vocal === true && (kind === "verse" || kind === "bridge" || kind === "chorus");
+    if (!vocalHere) for (const m of kp.mel) melody[m] = entry.melody;
     if (spec.vocal && extra && (kind === "verse" || kind === "bridge" || kind === "chorus")) {
       let vm = vcache.get(cacheKey);
       if (vm === undefined) {
@@ -1321,7 +1325,9 @@ export function composeSong(spec: SongSpec, extra?: { vocal?: VocalSection[]; se
   if (tpl.walkingBass) {
     const i = trackKeys.indexOf(tpl.walkingBass);
     const barChords = sections.flatMap((s) => s.chords.split(/\s+/).filter(Boolean));
-    if (i >= 0 && score.tracks[i]) score.tracks[i].notes = walkBass(score.tracks[i].notes, barChords, beats, key);
+    // 転調した区間（ラスサビ）では、転調後のキーで経過音を選ぶ
+    const barKeys = plan.kinds.flatMap((kind, si) => Array(kind === "intro" ? 4 : 8).fill(modulate && si >= lastChorus ? keyUp : key) as Key[]);
+    if (i >= 0 && score.tracks[i]) score.tracks[i].notes = walkBass(score.tracks[i].notes, barChords, beats, key, barKeys);
   }
   applyDynamics(score, plan.kinds, beats);
   if (longForm && beats === 4) applyTransitions(score, plan.kinds, beats);
