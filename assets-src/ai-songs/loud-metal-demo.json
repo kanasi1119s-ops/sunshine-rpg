@@ -1,87 +1,87 @@
 {
- "title": "ラウドメタルの見本",
- "description": "低く刻むギター2本と速いキックの、重く密度の高い曲（音割れ・耳の痛さの確認用）",
- "dynamics": true,
- "bpm": 150,
- "beats": 4,
- "chords": "Em Em C D",
- "barsPerChord": 1,
- "repeats": 4,
- "autoAccompaniment": false,
- "feel": "rock",
- "tone": "metal",
- "parts": [
-  {
-   "instrument": "distGuitar",
-   "role": "刻み（左）",
-   "volume": 0.09,
-   "pan": -0.9,
-   "amp": "loudmetal",
-   "notes": "E3:0.25 E3:0.25 E3:0.5 E3:0.25 E3:0.25 G3:0.5 E3:0.25 E3:0.25 E3:0.5 F3:0.25 F3:0.25 F#3:0.5"
-  },
-  {
-   "instrument": "distGuitar",
-   "role": "刻み（右）",
-   "volume": 0.09,
-   "pan": 0.9,
-   "amp": "loudmetal",
-   "notes": "E3:0.25 E3:0.25 E3:0.5 E3:0.25 E3:0.25 G3:0.5 E3:0.25 E3:0.25 E3:0.5 F3:0.25 F3:0.25 F#3:0.5"
-  },
-  {
-   "instrument": "bass",
-   "role": "ベース",
-   "volume": 0.17,
-   "pan": 0,
-   "amp": "auto",
-   "notes": "E2:0.25 E2:0.25 E2:0.5 E2:0.25 E2:0.25 G2:0.5 E2:0.25 E2:0.25 E2:0.5 F2:0.25 F2:0.25 F#2:0.5"
-  },
-  {
-   "instrument": "kick",
-   "role": "キック",
-   "volume": 0.22,
-   "pan": 0,
-   "amp": "auto",
-   "notes": "g:XxXxXxXxXxXxXxXx"
-  },
-  {
-   "instrument": "snare",
-   "role": "スネア",
-   "volume": 0.16,
-   "pan": 0,
-   "amp": "auto",
-   "notes": "g:....X.......X..."
-  },
-  {
-   "instrument": "hihat",
-   "role": "ハイハット",
-   "volume": 0.07,
-   "pan": 0.3,
-   "amp": "auto",
-   "notes": "g:x.x.x.x.x.x.x.x."
-  },
-  {
-   "instrument": "crash",
-   "role": "クラッシュ",
-   "volume": 0.08,
-   "pan": -0.3,
-   "amp": "auto",
-   "notes": "x:4 R:4 R:8"
-  },
-  {
-   "instrument": "leadGuitar",
-   "role": "リード",
-   "volume": 0.12,
-   "pan": 0.1,
-   "amp": "loudrock",
-   "notes": "E5:1 G5:1 B5:2 A5:1 G5:1 E5:2 D5:1 E5:1 F#5:2 G5:4"
-  },
-  {
-   "instrument": "strings",
-   "role": "弦",
-   "volume": 0.12,
-   "pan": -0.6,
-   "amp": "auto",
-   "notes": "E3:4 C3:4 D3:4 D3:4"
-  }
- ]
+  "title": "ラウドメタルの見本",
+  "description": "低く刻むギター2本と速いキックの、重く密度の高い曲（音割れ・耳の痛さの確認用）",
+  "dynamics": true,
+  "bpm": 150,
+  "beats": 4,
+  "chords": "Em Em C D",
+  "barsPerChord": 1,
+  "repeats": 4,
+  "autoAccompaniment": false,
+  "feel": "rock",
+  "tone": "metal",
+  "parts": [
+    {
+      "instrument": "distGuitar",
+      "role": "刻み（左）",
+      "volume": 0.09,
+      "pan": -0.9,
+      "amp": "loudmetal",
+      "notes": "R:0.25 R:0.25 R:0.5 R:0.25 R:0.25 R:0.5 R:0.25 R:0.25 R:0.5 R:0.25 R:0.25 R:0.5"
+    },
+    {
+      "instrument": "distGuitar",
+      "role": "刻み（右）",
+      "volume": 0.09,
+      "pan": 0.9,
+      "amp": "loudmetal",
+      "notes": "R:0.25 R:0.25 R:0.5 R:0.25 R:0.25 R:0.5 R:0.25 R:0.25 R:0.5 R:0.25 R:0.25 R:0.5"
+    },
+    {
+      "instrument": "bass",
+      "role": "ベース",
+      "volume": 0.17,
+      "pan": 0,
+      "amp": "auto",
+      "notes": "E2:0.25 E2:0.25 E2:0.5 E2:0.25 E2:0.25 G2:0.5 E2:0.25 E2:0.25 E2:0.5 F2:0.25 F2:0.25 F#2:0.5"
+    },
+    {
+      "instrument": "kick",
+      "role": "キック",
+      "volume": 0.22,
+      "pan": 0,
+      "amp": "auto",
+      "notes": "g:XxXxXxXxXxXxXxXx"
+    },
+    {
+      "instrument": "snare",
+      "role": "スネア",
+      "volume": 0.16,
+      "pan": 0,
+      "amp": "auto",
+      "notes": "g:....X.......X..."
+    },
+    {
+      "instrument": "hihat",
+      "role": "ハイハット",
+      "volume": 0.07,
+      "pan": 0.3,
+      "amp": "auto",
+      "notes": "g:x.x.x.x.x.x.x.x."
+    },
+    {
+      "instrument": "crash",
+      "role": "クラッシュ",
+      "volume": 0.08,
+      "pan": -0.3,
+      "amp": "auto",
+      "notes": "x:4 R:4 R:8"
+    },
+    {
+      "instrument": "leadGuitar",
+      "role": "リード",
+      "volume": 0.12,
+      "pan": 0.1,
+      "amp": "loudrock",
+      "notes": "R:1 R:1 R:2 R:1 R:1 R:2 D5:1 E5:1 F#5:2 G5:4"
+    },
+    {
+      "instrument": "strings",
+      "role": "弦",
+      "volume": 0.12,
+      "pan": -0.6,
+      "amp": "auto",
+      "notes": "E3:4 C3:4 D3:4 D3:4"
+    }
+  ]
 }
