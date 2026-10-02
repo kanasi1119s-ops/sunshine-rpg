@@ -2,7 +2,7 @@
 // APIキーはいらない。有料サービスも使わない。同じ文章・同じ種からは、いつも同じ曲ができる。
 //
 //   node tools/composer/make.mjs one --title "曲名" --prompt "melodic metal, twin guitars, 150 BPM, E minor"
-//        [--length 270] [--seed 7] [--variations 3] [--lyrics 歌詞.txt] [--out <フォルダ>] [--edition real|ps2|modern] [--wav]
+//        [--length 270] [--seed 7] [--variations 3] [--lyrics 歌詞.txt] [--out <フォルダ>] [--edition real|ps2|modern] [--wav [--engine node|browser]]
 //       1曲を作る。--variations N: 種を変えた別バージョンを N 個作る（Sunoの「2曲出る」と同じ。聴いて選ぶ）。
 //
 //   node tools/composer/make.mjs batch songs.json [--only 1 3 5] [--length 270] [--variations 1] [--out <フォルダ>] [--wav]
@@ -14,10 +14,11 @@
 //   すると曲ごとに <名前>.vocal.json（歌声用の楽譜）も書き出す。声にするのはPC側の vocal_tool.py（VOICEVOX）。
 //
 //   出力（--out、既定は dist-songs/<日付>/）: 曲ごとに プロジェクト(.sunshine-song.json)・MIDI(.mid)・歌詞(.lyrics.txt)・
-//   報告(.report.json)、全体の一覧(index.md)。--wav を付けると WAV も作る（Playwright と Chromium が必要。なければ警告を出して続ける）。
+//   報告(.report.json)、全体の一覧(index.md)。--wav を付けると WAV も作る。既定（--engine node）はブラウザ不要の高品質レンダラー（パート別ミックス。FFmpeg が必要）。--engine browser は従来の Playwright + Chromium。失敗したら警告を出して続ける。
 import fs from "fs";
 import path from "path";
 import { openSongKit } from "./song-lib.mjs";
+import { analyzeWav } from "./audio-report.mjs";
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
@@ -48,7 +49,7 @@ function hashSeed(text) {
 const mmss = (sec) => `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, "0")}`;
 const today = () => new Date().toISOString().slice(0, 10);
 
-async function makeOne(kit, m, item, { index, length, seedBase, variations, outDir, edition, wav }) {
+async function makeOne(kit, m, item, { index, length, seedBase, variations, outDir, edition, wav, wavEngine }) {
   const lines = [];
   const results = [];
   const choice = m.parseStylePrompt(item.prompt ?? "", { bpm: item.bpm, keyScale: item.key_scale, timeSignature: item.time_signature });
@@ -82,11 +83,16 @@ async function makeOne(kit, m, item, { index, length, seedBase, variations, outD
     const name = `song-${base}`;
     let built;
     try {
-      built = await kit.buildFromScore(score, { name, title: item.title, description: item.prompt ?? "", edition, outDir, wav });
+      built = await kit.buildFromScore(score, { name, title: item.title, description: item.prompt ?? "", edition, outDir, wav, wavEngine, flavors: choice.flavors });
     } catch (e) {
       // WAV だけ失敗したら、プロジェクトとMIDIだけで続ける
       warnings.push(`WAVを作れませんでした: ${e.message.split("\n")[0]}`);
       built = await kit.buildFromScore(score, { name, title: item.title, description: item.prompt ?? "", edition, outDir, wav: false });
+    }
+    let audio = null;
+    if (built.files.wav && fs.existsSync(built.files.wav)) {
+      audio = analyzeWav(built.files.wav);
+      for (const w of audio.warnings) warnings.push(`音: ${w}`);
     }
     let vocal = null;
     if (wantVocal) {
@@ -114,6 +120,8 @@ async function makeOne(kit, m, item, { index, length, seedBase, variations, outD
       tracks: built.tracks,
       files: Object.fromEntries(Object.entries(built.files).map(([k, f]) => [k, path.basename(f)])),
       vocal,
+      audio: audio && audio.ok ? { lufs: audio.lufs, lra: audio.lra, truePeak: audio.truePeak, bands: audio.bands } : undefined,
+      mix: built.mixInfo ? Object.fromEntries(Object.entries(built.mixInfo.groups).map(([g, v]) => [g, v.gain === null ? null : Math.round(v.gain * 10) / 10])) : undefined,
       warnings,
     };
     fs.writeFileSync(path.join(outDir, `${name}.report.json`), JSON.stringify(report, null, 2) + "\n", "utf8");
@@ -136,7 +144,7 @@ try {
   const mode = args[0];
   const outDir = path.resolve(opt("--out", path.join("dist-songs", today())));
   fs.mkdirSync(outDir, { recursive: true });
-  const common = { length: opt("--length"), variations: Math.max(1, Number(opt("--variations", 1))), outDir, edition: opt("--edition", "real"), wav: flag("--wav") };
+  const common = { length: opt("--length"), variations: Math.max(1, Number(opt("--variations", 1))), outDir, edition: opt("--edition", "real"), wav: flag("--wav"), wavEngine: opt("--engine", "node") };
   if (mode === "one") {
     const title = opt("--title");
     const prompt = opt("--prompt");

@@ -11,6 +11,7 @@ export const ROOT = path.resolve(fileURLToPath(new URL("../../", import.meta.url
 const EDITIONS = ["real", "ps2", "modern"];
 
 export async function openSongKit() {
+  let self;
   const server = await createServer({ root: ROOT, configFile: false, logLevel: "silent", server: { middlewareMode: true, hmr: false }, appType: "custom" });
   const load = (p) => server.ssrLoadModule(p);
 
@@ -28,7 +29,7 @@ export async function openSongKit() {
   }
 
   /** 譜面（Score）から、プロジェクト・MIDI（・WAV）を書き出す。自動作曲（composeSong）の曲もこれで書き出す。 */
-  async function buildFromScore(score, { name, title, description = "", edition = "real", outDir, wav = false } = {}) {
+  async function buildFromScore(score, { name, title, description = "", edition = "real", outDir, wav = false, wavEngine = "node", flavors = [] } = {}) {
     if (!EDITIONS.includes(edition)) throw new Error("edition は real・ps2・modern のどれか");
     if (!/^[a-z0-9][a-z0-9-]*$/.test(name ?? "")) throw new Error(`name は英小文字・数字・「-」だけ（${name}）`);
     const { scoreToMidi } = await load("/src/audio/midi-export.ts");
@@ -37,16 +38,35 @@ export async function openSongKit() {
     const { getScoreDurationSec } = await load("/src/audio/score.ts");
     const out = path.resolve(outDir ?? path.join(ROOT, "dist-songs"));
     fs.mkdirSync(out, { recursive: true });
+    let mixInfo = null;
     const files = { project: path.join(out, `${name}.sunshine-song.json`), midi: path.join(out, `${name}.mid`) };
     fs.writeFileSync(files.project, JSON.stringify({ format: "sunshine-song", version: 1, name: title, edition, score }));
     const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
     fs.writeFileSync(files.midi, scoreToMidi(edited));
     if (wav) {
       files.wav = path.join(out, `${name}.wav`);
-      await renderWav(score, edition, files.wav);
+      if (wavEngine === "browser") await renderWav(score, edition, files.wav);
+      else {
+        // ブラウザなしの高品質レンダラー（パート別ミックス）。既定。
+        const { renderMix } = await import("./render-node.mjs");
+        const r = await renderMix(self, score, { edition, outWav: files.wav, flavors });
+        mixInfo = { groups: r.groups, timing: r.timing };
+      }
     }
     const sec = getScoreDurationSec(score);
-    return { title, description, tracks: score.tracks.length, seconds: Math.round(sec * 10) / 10, bpm: score.tempoBpm, warnings: [], files, score };
+    return { title, description, tracks: score.tracks.length, seconds: Math.round(sec * 10) / 10, bpm: score.tempoBpm, warnings: [], files, score, mixInfo };
+  }
+
+  /** パート別ミックス用の部品（MIDI・チャンネルごとの楽器・ミックス設計）。ブラウザなしで音にする render-node.mjs が使う。 */
+  async function mixKit(score, edition = "real") {
+    const { scoreToMidiInfo } = await load("/src/audio/midi-export.ts");
+    const { realEdition } = await load("/src/audio/real-edition.ts");
+    const { ps2Edition } = await load("/src/audio/ps2-edition.ts");
+    const { getScoreDurationSec } = await load("/src/audio/score.ts");
+    const mix = await load("/src/audio/mix-plan.ts");
+    const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
+    const info = scoreToMidiInfo(edited);
+    return { ...info, seconds: getScoreDurationSec(edited), tempoBpm: edited.tempoBpm, mix };
   }
 
   /** 自動作曲・スタイル指定の読み取りなど、曲を作る側の部品を読み込む。 */
@@ -83,7 +103,8 @@ export async function openSongKit() {
     return Object.entries(AMP_PRESETS).map(([id, p]) => ({ id, label: p.label, genre: p.genre }));
   }
 
-  return { guide, build, buildFromScore, maker, register, listGameSongs, ampPresets, close: () => server.close() };
+  self = { guide, build, buildFromScore, maker, mixKit, register, listGameSongs, ampPresets, close: () => server.close() };
+  return self;
 }
 
 async function loadPlaywright() {

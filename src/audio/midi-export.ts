@@ -54,8 +54,10 @@ export function scoreToMidi(score: Score): Uint8Array {
 }
 
 /** MIDIと、チャンネルごとの楽器（GMの番号）。機材（アンプ・ドラムの仕上げ）を選ぶために使う。 */
-export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Record<number, number>; amps: Record<number, { amp: AmpSetting; pan: number }> } {
+export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Record<number, number>; amps: Record<number, { amp: AmpSetting; pan: number }>; instruments: Record<number, string> } {
   const programs: Record<number, number> = {};
+  /** チャンネルごとの、楽器の音色の名前（パート別ミックスの振り分けに使う）。 */
+  const instruments: Record<number, string> = {};
   const amps: Record<number, { amp: AmpSetting; pan: number }> = {};
   const tracksBytes: number[][] = [];
   // 指揮者トラック（テンポと曲の長さ）
@@ -136,11 +138,13 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     const main = setupChannel(program, channelKey(track, program), 1);
     const channel = main.channel;
     if (channel !== DRUM_CHANNEL) programs[channel] = program;
+    instruments[channel] = inst ?? "synth";
     if (channel !== DRUM_CHANNEL && track.amp) amps[channel] = { amp: track.amp, pan: track.pan ?? 0 };
     const list = main.list;
     const layerSpec = inst ? GM_LAYER[inst] : undefined;
     const layer = layerSpec ? setupChannel(layerSpec.program, `${channelKey(track, layerSpec.program)}|layer`, 1) : null;
     if (layer && layer.channel !== DRUM_CHANNEL) programs[layer.channel] = layerSpec!.program;
+    if (layer) instruments[layer.channel] = inst ?? "synth";
     // ピアノ系は、およそ1小節ごとにペダルを踏み替えて、音をつなげる
     if (inst === "piano" || inst === "keys") {
       const totalTicks = endTick;
@@ -267,5 +271,5 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
 
   const out: number[] = [0x4d, 0x54, 0x68, 0x64, ...u32(6), ...u16(1), ...u16(tracksBytes.length), ...u16(PPQ)];
   for (const t of tracksBytes) out.push(0x4d, 0x54, 0x72, 0x6b, ...u32(t.length), ...t);
-  return { midi: Uint8Array.from(out), programs, amps };
+  return { midi: Uint8Array.from(out), programs, amps, instruments };
 }
