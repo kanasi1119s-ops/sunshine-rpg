@@ -43,6 +43,20 @@ const REVERB: Partial<Record<Instrument, number>> = { pad: 70, choir: 80, string
 const CHORUS: Partial<Record<Instrument, number>> = { strings: 30, pad: 35, choir: 30, keys: 22, guitar: 20, echoGuitar: 20, crunch: 12, distGuitar: 8, bell: 12, harpsichord: 10 };
 /** 歪ませないアンプ（これらのときは、元の音色をそのまま使う）。 */
 const CLEAN_AMP_TYPES = new Set<string>(["clean", "jazz", "funk", "lofi", "retro8bit", "radio", "delicate"]);
+/** 録音音源のうち、すでに歪んでいる音色（GM 29 オーバードライブ・30 ディストーション）。 */
+const DISTORTED_PROGRAMS = new Set([29, 30]);
+/** 歪みの基本の音色（クリーン）。歪みはアンプだけでかけるときに、元にする音色。 */
+const CLEAN_GUITAR_PROGRAM = 27;
+
+/**
+ * そのアンプの設定は、歪ませるか。省略（auto）のとき、機材（amp-rack.ts）は録音音源の番号（29・30）から歪ませる機材を選ぶので「歪ませる」。
+ * 歪ませないと分かっているのは、CLEAN_AMP_TYPES か、プリセットがそれのときだけ。
+ */
+export function ampDistorts(amp: AmpSetting | undefined, program: number): boolean {
+  if (!amp || amp.type === "auto") return DISTORTED_PROGRAMS.has(program);
+  if (amp.type === "genre") return !CLEAN_AMP_TYPES.has(amp.preset ?? "rock");
+  return !CLEAN_AMP_TYPES.has(amp.type);
+}
 const ECHO_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "cowbell", "bell", "keys"]);
 
 function channelKey(track: Track, program: number): string {
@@ -113,9 +127,18 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     // リードとパッド: 電子音楽では電子的な音色、メタル調ではオーバードライブのギター、それ以外は生楽器に近い音色
     if (inst === "lead" && track.program === undefined) program = score.synth ? SYNTH_LEAD : score.tone === "metal" || score.tone === "prs" ? METAL_LEAD : program;
     if (inst === "pad" && score.synth && track.program === undefined) program = SYNTH_PAD;
-    // 歪みの二重がけを避ける: 歪ませるアンプを指定したギターは、録音がすでに歪んだ音色（オーバードライブ29・ディストーション30）ではなく、
-    // クリーン（27）を元にして、歪みはアンプだけでかける
-    if (track.amp && (program === 29 || program === 30) && track.program === undefined && !CLEAN_AMP_TYPES.has(track.amp.type)) program = 27;
+    // **歪みは必ず1回だけ**（二重がけ禁止。人間の指示 2026-10-02）: 録音音源の29・30はすでに歪んでいるので、その上にアンプで歪ませると二重になる。
+    // 歪ませるアンプ（省略の auto も、29・30 なら歪ませる機材が選ばれるので含む）を通すギターは、クリーン（27）を元にして、歪みはアンプだけでかける。
+    // 歪ませないアンプ（clean・jazz など）を明示したときだけ、録音の歪みをそのまま使う。
+    let ampForChannel: AmpSetting | undefined = track.amp;
+    if (DISTORTED_PROGRAMS.has(program) && ampDistorts(track.amp, program)) {
+      if (!track.amp || track.amp.type === "auto") {
+        // 機材が選ぶはずだった歪み（機材の選び方 amp-rack.ts roleOf と同じ）を、アンプの指定として明示する
+        const type = program === 29 ? "overdrive" : score.tone === "metal" ? "metal" : score.tone === "prs" ? "prs" : "distortion";
+        ampForChannel = { ...(track.amp ?? {}), type } as AmpSetting;
+      }
+      program = CLEAN_GUITAR_PROGRAM;
+    }
     const setupChannel = (prog: number, key: string, gainBoost: number): { channel: number; list: Ev[] } => {
       const channel = isDrum ? DRUM_CHANNEL : allocate(key);
       const list = midiTrackFor(channel);
@@ -136,7 +159,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     const main = setupChannel(program, channelKey(track, program), 1);
     const channel = main.channel;
     if (channel !== DRUM_CHANNEL) programs[channel] = program;
-    if (channel !== DRUM_CHANNEL && track.amp) amps[channel] = { amp: track.amp, pan: track.pan ?? 0 };
+    if (channel !== DRUM_CHANNEL && ampForChannel) amps[channel] = { amp: ampForChannel, pan: track.pan ?? 0 };
     const list = main.list;
     const layerSpec = inst ? GM_LAYER[inst] : undefined;
     const layer = layerSpec ? setupChannel(layerSpec.program, `${channelKey(track, layerSpec.program)}|layer`, 1) : null;
