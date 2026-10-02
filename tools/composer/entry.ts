@@ -5,6 +5,7 @@ import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url"
 import { AudioEngine } from "../../src/audio/audio-engine";
 import { allEntries, getTrack, STYLE_LABEL } from "../../src/audio/catalog";
 import "../../src/audio/user-songs";
+import "../../src/audio/archive-songs";
 import { BLANK_TEMPLATES, createBlankScore, type BlankTemplate } from "../../src/audio/blank-song";
 import { midiToScore } from "../../src/audio/midi-import";
 import { scoreToCsv, scoreToMusicXml } from "../../src/audio/musicxml";
