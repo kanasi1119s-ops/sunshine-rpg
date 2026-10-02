@@ -34,7 +34,7 @@ export const BGM_TRIM_DB: Record<string, number> = {
   "kyoto-road": 7.2,
   "memory": 1.7,
   "mine": -0.1,
-  "neon-dawn-road": -6.8,
+  "neon-dawn-road": -2.8,
   "opening": 4.2,
   "outskirts": 7.6,
   "poly-1": -7.1,
