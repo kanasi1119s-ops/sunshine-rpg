@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getScoreDurationSec } from "./score";
-import { composeSong, planKinds, type Flavor, type SongSpec, type Style } from "./songwriter";
+import { composeSong, planKinds, type Flavor, type SectionInfo, type SongSpec, type Style } from "./songwriter";
 
 const STYLES: Style[] = [
   "rock", "metal", "classic", "space", "cafe", "discord", "mystery", "epic", "folk", "baroque", "nature", "phonk",
@@ -120,5 +120,36 @@ describe("味つけ（flavor）", () => {
         expect(lens.size, `${style}+${flavor}`).toBe(1);
       }
     }
+  });
+});
+
+describe("ラスサビの転調・Bメロの終わり", () => {
+  const sectionsOf = (over: Partial<SongSpec>): SectionInfo[] => {
+    const extra: { sections: SectionInfo[] } = { sections: [] };
+    composeSong(base({ bpm: 132, targetSec: 270, seed: 11, ...over }), extra);
+    return extra.sections;
+  };
+
+  it("ポップ・ロック系の長い曲は、最後のサビ（とアウトロ）が全音上がる。前の区間は上がらない", () => {
+    for (const style of ["jpop", "rock", "dancerock", "epic"] as const) {
+      const secs = sectionsOf({ style });
+      const last = secs.map((s) => s.kind).lastIndexOf("chorus");
+      const t0 = secs[0].tonic;
+      expect(secs.filter((s) => s.kind === "chorus").length, style).toBeGreaterThanOrEqual(3);
+      secs.forEach((s, i) => expect(s.tonic, `${style} ${i}`).toBe(i >= last ? (t0 + 2) % 12 : t0));
+    }
+  });
+
+  it("メタル・ハードコア・フォンクなど、転調しない曲調は主音が変わらない", () => {
+    for (const style of ["metal", "hardcore", "deathmetal", "phonk", "classic"] as const) {
+      const secs = sectionsOf({ style });
+      expect(new Set(secs.map((s) => s.tonic)).size, style).toBe(1);
+    }
+  });
+
+  it("長尺のBメロは、5（属和音）で終わる。サビは主和音で終わる", () => {
+    const secs = sectionsOf({ style: "jpop", tonic: "C", minor: false });
+    for (const s of secs.filter((x) => x.kind === "bridge")) expect(s.chords.split(" ").pop()).toMatch(/^(G|D)(7)?$/);
+    for (const s of secs.filter((x) => x.kind === "chorus")) expect(s.chords.split(" ").pop()).toMatch(/^(C|D)(maj7)?$/);
   });
 });

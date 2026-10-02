@@ -1,4 +1,6 @@
 import { arrange, midiToName, type Arrangement, type MelodySpec, type PartSpec, type Section } from "./compose";
+import { generateMotifMelody } from "./melody-motif";
+import { applyTransitions } from "./transitions";
 import { noteNameToMidi } from "./note";
 import { REST, type NoteEvent, type Score } from "./score";
 
@@ -45,6 +47,9 @@ export interface VocalSection {
   /** "C4:1 R:0.5 …"（音名:拍）の並び。 */
   melody: string;
 }
+
+/** ラスサビで転調（全音上げ）する曲調。 */
+const MODULATE_STYLES: readonly string[] = ["jpop", "rock", "dancerock", "electro", "cleandance", "epic"];
 
 const VOCAL_RANGE = { verse: { lo: 60, hi: 74 }, bridge: { lo: 62, hi: 77 }, chorus: { lo: 65, hi: 79 } } as const;
 
@@ -1202,7 +1207,15 @@ export function applyDynamics(score: Score, kinds: readonly Kind[], beats: numbe
   }
 }
 
-export function composeSong(spec: SongSpec, extra?: { vocal?: VocalSection[] }): Score {
+/** 区間ごとの情報（確認・報告用）。composeSong の extra.sections に入れてもらうには、空の配列を渡す。 */
+export interface SectionInfo {
+  kind: string;
+  /** 主音（0〜11）。ラスサビの転調では、前の区間より2高くなる。 */
+  tonic: number;
+  chords: string;
+}
+
+export function composeSong(spec: SongSpec, extra?: { vocal?: VocalSection[]; sections?: SectionInfo[] }): Score {
   const rng = makeRng(spec.seed);
   const key = keyOf(spec);
   const beats = spec.beats ?? 4;
@@ -1218,8 +1231,8 @@ export function composeSong(spec: SongSpec, extra?: { vocal?: VocalSection[] }):
   const verseCell = pick(rng, cells);
   const bridgeCells = [pick(rng, cells), pick(rng, cells)];
   const chorusCells = [pick(rng, cells), pick(rng, cells)];
-  const chordsFor = (kind: Kind): string[] => {
-    const deg = (cell: number[]): string[] => cell.map((d) => chordName(key, d, tpl.sevenths));
+  const chordsFor = (kind: Kind, k: Key = key): string[] => {
+    const deg = (cell: number[]): string[] => cell.map((d) => chordName(k, d, tpl.sevenths));
     if (spec.style === "baroque") {
       // 5度ずつ下がる進行（I IV vii° iii vi ii V I）を軸にする
       const fifths = [1, 4, 7, 3, 6, 2, 5, 1];
@@ -1231,7 +1244,7 @@ export function composeSong(spec: SongSpec, extra?: { vocal?: VocalSection[] }):
     const variation = (cell: number[]): number[] => [...cell.slice(0, 3), pick(rng, [5, 4, cell[3]])];
     let degrees: number[];
     if (kind === "verse") degrees = [...verseCell, ...variation(verseCell)];
-    else if (kind === "bridge") degrees = [...bridgeCells[0], ...bridgeCells[1]];
+    else if (kind === "bridge") degrees = longForm ? [...bridgeCells[0], ...bridgeCells[1].slice(0, 3), 5] : [...bridgeCells[0], ...bridgeCells[1]]; // 長尺のBメロは、属和音（5）で終えて、サビへ向かう緊張を作る
     else if (kind === "intro") degrees = verseCell;
     else degrees = [...chorusCells[0], ...chorusCells[1]];
     if (kind === "outro" || kind === "chorus") degrees = [...degrees.slice(0, degrees.length - 1), 1];
@@ -1243,11 +1256,16 @@ export function composeSong(spec: SongSpec, extra?: { vocal?: VocalSection[] }):
         drv: { instrument: "lead", waveform: "square", volume: 0.06, octave: 4, step: 0.25 },
       }
     : {};
+  // ラスサビの転調: 最後のサビ（とアウトロ）を全音上げる。長尺で、サビが3回以上ある明るい・ポップ寄りの曲調だけ
+  const lastChorus = plan.kinds.lastIndexOf("chorus");
+  const modulate = longForm && MODULATE_STYLES.includes(spec.style) && plan.kinds.filter((x) => x === "chorus").length >= 3 && lastChorus > 0;
+  const keyUp: Key = { ...key, tonic: (key.tonic + 2) % 12 };
   // 歌のメロディは、楽器の乱数とは別の乱数で作る（vocal を付けても、楽器の曲は変わらない）
   const vrng = makeRng((spec.seed ^ 0x5eed1234) >>> 0);
   const vcache = new Map<string, string>();
   let barCursor = 0;
-  const sections: Section[] = plan.kinds.map((kind) => {
+  const sections: Section[] = plan.kinds.map((kind, sectionIndex) => {
+    const sk = modulate && sectionIndex >= lastChorus ? keyUp : key;
     const barsInSection = kind === "intro" ? 4 : 8;
     const sectionStartBar = barCursor;
     barCursor += barsInSection;
@@ -1264,12 +1282,15 @@ export function composeSong(spec: SongSpec, extra?: { vocal?: VocalSection[] }):
     seen.set(kind, occurrence + 1);
     // 長尺では、Aは3種類・B／間奏は2種類の旋律を順にまわして、くり返しの単調さを減らす（サビは同じ旋律のまま＝耳に残す）
     const variant = longForm ? (kind === "verse" ? occurrence % 3 : kind === "bridge" || kind === "solo" ? occurrence % 2 : 0) : 0;
-    const cacheKey = `${kind}:${variant}`;
+    const cacheKey = `${kind}:${variant}:${sk === keyUp ? "up" : "base"}`;
     if (beats === 4) for (const f of flavors) if (f !== "loud") kp = { ...kp, parts: { ...kp.parts, ...FLAVOR_PLANS[f](kind) } };
     let entry = cache.get(cacheKey);
     if (!entry) {
-      const chords = chordsFor(kind);
-      entry = { chords, melody: kp.mel.length ? generateMelody(rng, key, chords, beats, kp.opts) : "" };
+      const chords = chordsFor(kind, sk);
+      // 長尺では、モチーフを発展させる旋律（A→A'→B→終止）。短い曲（ゲームのBGM）は、従来の旋律のまま
+      const motif = longForm && !kp.opts.opening && !kp.opts.hemiola;
+      const melody = !kp.mel.length ? "" : motif ? generateMotifMelody(rng, sk.scale, sk.tonic, chords, beats, { lo: kp.opts.lo, hi: kp.opts.hi, role: kind, density: kp.opts.density }) : generateMelody(rng, key, chords, beats, kp.opts);
+      entry = { chords, melody };
       cache.set(cacheKey, entry);
     }
     const melody: Record<string, string> = {};
@@ -1277,11 +1298,12 @@ export function composeSong(spec: SongSpec, extra?: { vocal?: VocalSection[] }):
     if (spec.vocal && extra && (kind === "verse" || kind === "bridge" || kind === "chorus")) {
       let vm = vcache.get(cacheKey);
       if (vm === undefined) {
-        vm = generateMelody(vrng, key, entry.chords, beats, { ...VOCAL_RANGE[kind], density: "normal" });
+        vm = generateMotifMelody(vrng, sk.scale, sk.tonic, entry.chords, beats, { ...VOCAL_RANGE[kind], role: kind, singable: true, density: "normal" });
         vcache.set(cacheKey, vm);
       }
       (extra.vocal ??= []).push({ kind, startBeat: sectionStartBar * beats, melody: vm });
     }
+    extra?.sections?.push({ kind, tonic: sk.tonic, chords: entry.chords.join(" ") });
     return { chords: entry.chords.join(" "), parts: kp.parts, melody };
   });
   const hasFills = beats === 4 && spec.style !== "jazz" && tpl.parts.snare?.step === 0.25;
@@ -1302,6 +1324,7 @@ export function composeSong(spec: SongSpec, extra?: { vocal?: VocalSection[] }):
     if (i >= 0 && score.tracks[i]) score.tracks[i].notes = walkBass(score.tracks[i].notes, barChords, beats, key);
   }
   applyDynamics(score, plan.kinds, beats);
+  if (longForm && beats === 4) applyTransitions(score, plan.kinds, beats);
   score.drumKit = DRUM_KIT[spec.style] ?? 0;
   if (spec.style === "electro" || spec.style === "jpop" || spec.style === "dancerock") score.pump = true;
   if (OPENING_STYLES.includes(spec.style)) score.opening = true;
