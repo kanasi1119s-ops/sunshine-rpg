@@ -1,6 +1,6 @@
 // 使い方: node preview.mjs <出力PNG> — 10点を並べた一覧画像を作る（エディタで描く前の確認用）。
 import { chromium } from "playwright-core";
-const { PIECES } = await import(process.env.PIECESET === "terrain" ? "./terrain.mjs" : process.env.PIECESET === "boss" ? "./bosses.mjs" : process.env.PIECESET === "chars" ? "./characters.mjs" : "./pieces.mjs");
+const { PIECES } = await import(process.env.PIECESET === "terrain" ? "./terrain.mjs" : process.env.PIECESET === "boss" ? "./bosses.mjs" : process.env.PIECESET === "chars" ? "./characters.mjs" : process.env.PIECESET === "mobs" ? "./mobs.mjs" : "./pieces.mjs");
 const out = process.argv[2];
 const D = 64 * Number(process.env.SCALE || 1);
 const data = PIECES.map((p) => ({ name: p.name, pal: p.pal.map((x) => x[1]), g: p.build() }));

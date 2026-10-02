@@ -66,7 +66,7 @@ import { createDeepEchoYugami, createShogenYugami } from "./game/battle/chapter1
 import { DEEP_ENTRY } from "./game/map/chapter10/deep-maps";
 import { createGodYugami, GODS } from "./game/battle/chapter11-enemies";
 import { createDungeonEnemy, DUNGEON_ENEMIES } from "./game/battle/chapter12-enemies";
-import { createEncounterState, stepEncounter, type EncounterState } from "./game/encounter/encounter";
+import { createEncounterEnemies, createEncounterState, ENCOUNTER_ZONES, stepEncounter, type EncounterState } from "./game/encounter/encounter";
 import { KYOTOUKYU_CORRIDOR_ENTRY, KYOTOUKYU_COURT_ENTRY, KYOTOUKYU_SANCTUM_ENTRY } from "./game/map/chapter9/kyotoukyu-maps";
 import { AYAME, COMPANIONS, createCompanionCombatant, GUIDE, MINA, ORCA, RETO } from "./game/battle/companions";
 import type { Combatant, Skill } from "./game/battle/types";
@@ -432,6 +432,13 @@ if (import.meta.env.DEV) {
       title = { ...title, open: false };
     },
     startBattle: (battleId: string) => startStoryBattle(battleId),
+    /** 開発用: 指定した地図のランダムエンカウントの敵と戦う（敵の絵の確認用）。 */
+    startEncounter: (mapId: string) => {
+      const zone = ENCOUNTER_ZONES[mapId];
+      if (zone) {
+        startRandomBattle(createEncounterEnemies(mapId, zone, Math.random));
+      }
+    },
   };
 }
 

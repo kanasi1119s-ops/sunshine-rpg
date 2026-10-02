@@ -30,6 +30,7 @@ const SETS = {
   terrain: [2, { "T1-草地A": "terrain:grass-a", "T7-草地B": "terrain:grass-b", "T2-土の道": "terrain:dirt", "T3-水面": "terrain:water", "T5-深い森": "terrain:forest", "T4-崖の壁": "terrain:cliff", "T6-岸辺": "terrain:bank" }],
   bosses: [4, { "B1-水涸れの歪み": "boss:mugikano-yugami", "B2-積荷の歪み": "boss:garasuko-yugami", "B3-実験の歪み": "boss:tetsukusari-yugami", "B4-砂嵐の歪み": "boss:sanone-yugami", "B5-予言の歪み": "boss:kiri-yugami", "B6-試作機の歪み": "boss:shimohara-yugami", "B7-浮嶼の歪み": "boss:fushima-yugami", "B8-灯芯都の歪み": "boss:toushin-yugami", "B9-虚灯宮の歪み": "boss:kyotoukyu-yugami" }],
   guardians: [4, { "G1-恵みの残照": "boss:god-1", "G2-理不尽の羽音": "boss:god-2", "G3-坩堝の顎": "boss:god-3", "G4-在らざる歌": "boss:god-4", "G5-透き徹る誓い": "boss:god-5", "G6-不敗の咎人": "boss:god-6", "G7-境界を見ぬ者": "boss:god-7", "G8-無音の弔鐘": "boss:god-8", "M1-塔の守り（2層）": "boss:tower2-guard", "M2-塔の守り（3層）": "boss:kanou3-guard", "M3-灯りの番人": "boss:tower3-guard", "M4-深部3層の歪み": "boss:deep3-yugami", "M5-全観": "boss:zenkan" }],
+  mobs: [1, { "MB1-こうもり": "mob:bat", "MB2-虫": "mob:beetle", "MB3-結晶": "mob:shard", "MB4-しずく": "mob:drop", "MB5-かげ": "mob:ghost", "MB6-ねずみ": "mob:rat", "MB7-サソリ": "mob:scorpion", "MB8-め": "mob:eye" }],
   characters: [4, { "C1-ユーリ": "char:ユーリ", "C2-レト": "char:レト", "C3-ミナ": "char:ミナ", "C4-ガイド": "char:ガイド", "C5-オルカ": "char:オルカ" }],
 };
 // 倍率（SCALE）はモジュールの読み込み時に決まるため、セットごとに別のプロセスで実行する（node export-game-data.mjs → 自動で分けて実行）。

@@ -124,3 +124,6 @@
 | Brackeys game jam pack / Gude Jump n Run / Pink Knight / Horde Corp ほか | https://opengameart.org/content/brackeys-game-jam-20221-pack ほか | 公開済みゲーム・ゲームジャム作品・既存作品に着想を得たと書かれたゲームの絵 |
 | Slime (slime-4) | https://opengameart.org/content/slime-4 | 元の作者でない人が上げた絵で、元の規約が確かめられない |
 | Procedural sword/potion icons / Planet surface skyboxes | https://opengameart.org/content/procedural-sword-icons ほか | 手で描いた絵ではなく、プログラムで生成した絵 |
+
+## ドット絵の練習で見た参考素材（2026-10-03）
+練習（模写・なぞり）で見た絵は、すべて `assets-src/pixel-reference/` の無料素材（CC0・ぴぽや）。**練習の成果（`assets-src/pixel-practice/` の模写・なぞり）はゲームに入れていない**。ゲームに入れた雑魚の敵8体（`tools/pixel-art/mobs.mjs`）は一から描いた自作で、参考素材の絵は写していない。

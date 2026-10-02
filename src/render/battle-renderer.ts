@@ -3,6 +3,7 @@ import type { BattleState, Combatant } from "../game/battle/types";
 import { findCombatant } from "../game/battle/types";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
+import { hueOfHex, mobPalette } from "../game/art/mob-palette";
 import { wrapText } from "./text-wrap";
 import { shakeOffset, type BattleEffect } from "../game/battle/battle-effect";
 
@@ -52,6 +53,21 @@ function drawEnemySprite(
     ctx.fillStyle = cell.color;
     ctx.fillRect(x + cell.col * cellSize, y + cell.row * cellSize, cellSize, cellSize);
   }
+}
+
+/** 雑魚の敵の絵（64×64。形ごとの手描きの絵を、地方の色相で塗る）。描けたら true。 */
+function drawMobSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, x: number, y: number, size = 64): boolean {
+  const spec = enemy.hp > 0 ? MONSTERS[enemy.id] : undefined;
+  if (!spec?.shape || spec.shape === "blob") {
+    return false;
+  }
+  const canvas = getSpriteCanvas(`mob:${spec.shape}`, SPRITE_DATA, mobPalette(hueOfHex(spec.body)));
+  if (!canvas) {
+    return false;
+  }
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(canvas, x, y, size, size);
+  return true;
 }
 
 /** ボスの大きな絵（256×256）。あれば画面の中央に大きく描く。描けたら true。 */
@@ -104,6 +120,13 @@ function renderBattleBody(
     if (battleState.enemies.length === 1 && enemy.maxHp >= 250 && enemy.hp > 0 && MONSTERS[enemy.id]) {
       const size = 80;
       const bx = Math.round(screenWidth / 2 - size / 2 - 40);
+      // 手描きの絵がある形は、2倍（128）で大きく描く（きれいに拡大できる整数倍）
+      if (drawMobSprite(ctx, enemy, bx - 24, 0, 128)) {
+        ctx.fillStyle = "#f0f0f0";
+        ctx.fillText(enemy.name, bx + size + 32, 30);
+        drawHpBar(ctx, enemy, bx + size + 32, 46, 110);
+        return;
+      }
       drawEnemySprite(ctx, enemy, bx, 6, size);
       ctx.fillStyle = "#f0f0f0";
       ctx.fillText(enemy.name, bx + size + 12, 30);
@@ -111,6 +134,12 @@ function renderBattleBody(
       return;
     }
     const x = 60 + index * 90;
+    if (drawMobSprite(ctx, enemy, x - 12, 4)) {
+      ctx.fillStyle = "#f0f0f0";
+      ctx.fillText(enemy.name, x - 12, 70);
+      drawHpBar(ctx, enemy, x - 12, 82, 64);
+      return;
+    }
     const y = 24;
     drawEnemySprite(ctx, enemy, x, y, 40);
     ctx.fillStyle = "#f0f0f0";

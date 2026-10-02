@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  shapeForName,
   createEncounterState,
   ENCOUNTER_ZONES,
   encounterMonsterSpecs,
@@ -105,5 +106,24 @@ describe("ランダムエンカウント", () => {
     for (const id of ["god-1", "god-8", "zenkan", "deep-yugami", "toushin-yugami"]) {
       expect(MONSTERS[id], `${id} の絵が無い`).toBeDefined();
     }
+  });
+});
+
+describe("雑魚の絵の形（名前の言葉から決まる）", () => {
+  it("言葉に合う形になる", () => {
+    expect(shapeForName("監視の目", 0)).toBe("eye");
+    expect(shapeForName("砂サソリの影", 0)).toBe("scorpion");
+    expect(shapeForName("野ねずみの影", 0)).toBe("rat");
+    expect(shapeForName("採掘跡のこうもり", 0)).toBe("bat");
+    expect(shapeForName("灯り石の虫", 0)).toBe("beetle");
+    expect(shapeForName("光の結晶", 0)).toBe("shard");
+    expect(shapeForName("水のしずく影", 0)).toBe("drop");
+    expect(shapeForName("たゆたう影", 0)).toBe("ghost");
+  });
+
+  it("どの地方の敵の名前も、手描きの絵がある形（blob以外）に決まる、または理由のあるblob", () => {
+    const names = Object.values(ENCOUNTER_ZONES).flatMap((z) => z.names.map((n, i) => shapeForName(n, i)));
+    const withArt = names.filter((shape) => shape !== "blob").length;
+    expect(withArt / names.length).toBeGreaterThan(0.85);
   });
 });
