@@ -1,6 +1,7 @@
 {
  "title": "ラウドメタルの見本",
  "description": "低く刻むギター2本と速いキックの、重く密度の高い曲（音割れ・耳の痛さの確認用）",
+ "dynamics": true,
  "bpm": 150,
  "beats": 4,
  "chords": "Em Em C D",

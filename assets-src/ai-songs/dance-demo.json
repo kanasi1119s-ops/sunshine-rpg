@@ -1,6 +1,7 @@
 {
  "title": "ダンスの見本",
  "description": "4つ打ちキックと動くベース、せり上がりとブレイクのある曲",
+ "dynamics": true,
  "bpm": 126,
  "beats": 4,
  "chords": "Am F C G",

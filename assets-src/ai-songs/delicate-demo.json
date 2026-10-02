@@ -1,6 +1,7 @@
 {
  "title": "繊細の見本",
  "description": "ハープとオルゴールのような小さな音が、やわらかく並ぶ曲",
+ "dynamics": true,
  "bpm": 72,
  "beats": 4,
  "chords": "Am F C G",

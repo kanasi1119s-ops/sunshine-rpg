@@ -1,6 +1,7 @@
 {
  "title": "ヒップホップの見本",
  "description": "ゆったりしたビートと長い808の低音、短いコードの反復",
+ "dynamics": true,
  "bpm": 88,
  "beats": 4,
  "chords": "Am7 Dm7 G7 Cmaj7",

@@ -1,6 +1,7 @@
 {
   "title": "港町の夜灯り",
   "description": "（見本）夜の港町。ピアノのメロディに弦とベルがそっと寄りそう、少しさみしくてあたたかいバラード。",
+  "dynamics": true,
   "bpm": 84,
   "beats": 4,
   "chords": "Am F C G Am F E E",

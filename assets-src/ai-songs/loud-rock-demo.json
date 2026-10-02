@@ -1,6 +1,7 @@
 {
  "title": "ラウドロックの見本",
  "description": "太い中域のギターと歌うメロディの、サビで壁になる曲",
+ "dynamics": true,
  "bpm": 132,
  "beats": 4,
  "chords": "Am F C G",
