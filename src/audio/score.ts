@@ -109,6 +109,8 @@ export interface Score {
   pump?: boolean;
   /** trueなら、リードとパッドを電子的な音色にする（電子音楽向け）。省略時は生楽器に近い音色。 */
   synth?: boolean;
+  /** ゲームで鳴らすときの、曲ごとの音量補正（dB）。曲どうしの音量差をそろえる（`bgm-trim.ts`）。省略は0。 */
+  trimDb?: number;
   /** 音の版。modern=現代的な音（既定）、ps2=PS2世代のゲーム音楽（オーケストラの重ね・豊かなホール残響・高音をやや丸めた音）。 */
   edition?: "modern" | "ps2" | "real";
   /** 曲調（rock・classic・jazz など）。実楽器版で、楽器の割り当てを決めるために使う。 */

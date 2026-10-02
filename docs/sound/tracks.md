@@ -179,3 +179,8 @@
 
 ## 実験記録: 残響の返しのEQ（2026-10-02）
 出口バス（`createBgmBus`）の残響の返しに、ハイパス300Hz・ローパス9kHz（ミックスの定石）を足して「夜明けのネオン街道」を測った。結果: 帯域の量（sub/bass/lowmid/mid/presence/air）・PLR・左右の相関・音の重心はほぼ変わらず（lowmid -3.4 のまま、I -8.4→-8.3）。**出口バスの残響は量が小さい（wet 0.1）ので、EQを足しても効かない**。濁りの元は残響ではなく、編曲（低中域に重なる持続音）にある。元に戻した（コード変更なし）。
+
+## ゲーム内の実際の音量差（ピークをそろえない書き出し。2026-10-02）
+- 全58曲の統合ラウドネス: **-26.2〜-3.8 LUFS、差 22.4dB**（中央値 -14.4）。データ: `docs/sound/bgm-loudness-raw.json`。
+- 静かな曲: archive -26.2、puzzle -26.0、ruins-ukishima -26.0、kyoto-deep -25.8、camp -22.3。大きい曲: boss-tetsu -3.8、battle -4.0、boss-sanone -4.4、boss-kiri -5.1、boss-toushin -5.2、boss-touri -5.2。
+- **対応**: 曲ごとの音量補正を実装（`src/audio/bgm-trim.ts`、`docs/decisions.md` 参照）。表は `tools/audio-check/make-bgm-trim.py` で作る。
