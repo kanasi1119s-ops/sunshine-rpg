@@ -194,9 +194,138 @@ function drop() {
   return g;
 }
 
+// 5. かげ（幽霊の影）: フードのようなぼろ布の体。顔は闇で、細い光る目だけが浮かぶ。裾はちぎれて、地面から少し浮く
+function ghost() {
+  const g = makeGrid();
+  // 地面の影（浮いているので小さく薄い）
+  for (let c = 18; c <= 46; c++) if ((c + 55) % 2 === 0) px(g, 58, c, 11);
+  for (let c = 22; c <= 42; c++) px(g, 59, c, 11);
+  // 体: 上は丸いフード、下へ広がり、裾は不揃いなぼろ（波）
+  for (let r = 6; r <= 54; r++) {
+    const t = (r - 6) / 48;
+    const w = t < 0.35 ? 17 * Math.sqrt(1 - ((0.35 - t) / 0.35) ** 2) : 17 + (t - 0.35) * 16;
+    const hem = 54 + Math.round(Math.sin((r + 3) * 0.0) * 0);
+    for (let c = Math.round(32 - w); c <= Math.round(32 + w); c++) {
+      const nx = (c + 0.5 - 32) / w;
+      const bottom = 50 + Math.round(3 * Math.sin(c * 0.9) + 2 * Math.sin(c * 0.37 + 1));
+      if (r > bottom) continue;
+      const lum = -nx * 0.6 - (t - 0.3) * 0.5 + 0.2;
+      let tone = Math.floor(Math.max(0, Math.min(0.999, (lum + 0.25) / 1.0)) * 5);
+      // ぼろ布の縦のひだ
+      if (Math.sin(c * 0.55 + t * 3) > 0.7 && t > 0.4) tone = Math.max(0, tone - 1);
+      if (hash(c, r) < 0.05) tone = Math.max(0, Math.min(4, tone + (hash(r, c) < 0.5 ? -1 : 1)));
+      px(g, r, c, BODY[tone]);
+    }
+  }
+  // 顔の闇（フードの奥）と、細い光る目
+  for (let r = 16; r <= 32; r++) for (let c = 20; c <= 44; c++) {
+    const nx = (c + 0.5 - 32) / 11, ny = (r + 0.5 - 24) / 8.5;
+    if (nx * nx + ny * ny <= 1) px(g, r, c, 0);
+  }
+  for (const [x, dir] of [[24, 1], [36, -1]]) for (let i = 0; i < 7; i++) {
+    px(g, 22 + Math.round(i * 0.35 * dir * -1) + (dir > 0 ? 0 : 0) + (i > 3 ? 0 : 0), x + i * (dir > 0 ? 1 : 1) - 0, 8);
+  }
+  // 目: 斜めに釣り上がった光（差し色の明るい色＋中心の白）
+  for (const [x0, dir] of [[23, 1], [35, -1]]) for (let i = 0; i < 6; i++) { const y = 23 + (dir > 0 ? -Math.floor(i / 3) + 1 : -(2 - Math.floor(i / 3))) + 0; px(g, y, x0 + i, 8); px(g, y + 1, x0 + i, 7); }
+  px(g, 24, 25, 12); px(g, 24, 38, 12);
+  // 裾からのびる細い手（ぼろ布の切れ端）
+  for (const [x, y] of [[14, 40], [13, 44], [50, 38], [51, 43]]) { px(g, y, x, BODY[1]); px(g, y + 1, x - 1, BODY[2]); px(g, y + 2, x - 1, BODY[1]); }
+  edge(g, [11]);
+  return g;
+}
+
+// 6. ねずみ（横向き・左向き）: 丸い背中、大きな耳、とがった鼻、細く長い尾
+function rat() {
+  const g = makeGrid();
+  shadow(g, 30, 53, 24, 3);
+  // 尾: 右へ長くS字
+  for (let i = 0; i <= 30; i++) { const x = 44 + i * 0.62, y = 45 - Math.sin(i * 0.22) * 6 - i * 0.18; px(g, y, x, BODY[1]); px(g, y + 1, x, 0); }
+  ball(g, 36, 40, 16, 11, BODY);                              // 胴
+  ball(g, 20, 37, 9, 8, BODY);                                // 頭
+  poly(g, [[12, 39], [3, 43], [12, 44]], (r, c) => BODY[c < 8 ? 3 : 2]);    // 鼻先（とがる）
+  px(g, 41, 4, 0); px(g, 41, 3, 0);                           // 鼻
+  poly(g, [[20, 31], [19, 21], [28, 29]], (r, c) => BODY[2]); // 耳（外）
+  poly(g, [[21, 29], [20, 24], [26, 28]], () => ACC[1]);      // 耳（内側は差し色）
+  eye(g, 16, 33, 5, 5, -1);
+  // 前歯と髭
+  px(g, 45, 10, 9); px(g, 46, 10, 9); px(g, 45, 12, 9); px(g, 46, 12, 9);
+  for (const [dy, len] of [[-2, 7], [0, 8], [2, 7]]) for (let i = 0; i < len; i++) px(g, 42 + dy + i * dy * 0.12, 8 - i, i % 3 === 2 ? 2 : 1);
+  // 脚（短い4本）と足先
+  for (const x of [26, 31, 42, 47]) { for (let r = 49; r <= 53; r++) px(g, r, x, r > 51 ? BODY[1] : BODY[2]); px(g, 53, x - 1, BODY[3]); px(g, 53, x + 1, BODY[1]); }
+  // 背中の毛のけば立ち（右上に短い線）
+  for (let i = 0; i < 6; i++) px(g, 29 + (i % 2), 28 + i * 3, BODY[4]);
+  edge(g, [11]);
+  return g;
+}
+
+// 7. サソリ（横向き・左向き）: 節のある胴、大きなはさみ、背中へ反り返る尾と針
+function scorpion() {
+  const g = makeGrid();
+  shadow(g, 33, 55, 24, 3);
+  const ox = 8;
+  // 脚（下に4本。外へ開いて先で曲がる）
+  for (const x of [25, 31, 38, 44]) { let cx = x + ox - 6, cy = 44; const dir = x < 36 ? -1 : 1; for (let i = 0; i < 10; i++) { cx += dir * (i < 5 ? 0.6 : 0.25); cy += 1; px(g, cy, cx, BODY[1]); px(g, cy, cx + 1, 0); } }
+  // 胴（3つの節）
+  ball(g, 24 + ox, 40, 9, 7.5, BODY);
+  ball(g, 34 + ox, 41, 7, 6.5, BODY);
+  ball(g, 42 + ox, 42, 5.5, 5, BODY);
+  for (const x of [29 + ox, 38 + ox]) for (let r = 34; r <= 48; r++) if (get(g, r, x) !== -1) px(g, r, x, BODY[0]);
+  // 尾: 胴の後ろから上へ反り、背中の上を前へ曲がって針（3次ベジェ曲線）
+  const tail = [];
+  for (let i = 0; i <= 24; i++) {
+    const t = i / 24, u = 1 - t;
+    const P = [[54, 39], [63, 24], [52, 3], [33, 13]];
+    tail.push([u ** 3 * P[0][0] + 3 * u * u * t * P[1][0] + 3 * u * t * t * P[2][0] + t ** 3 * P[3][0], u ** 3 * P[0][1] + 3 * u * u * t * P[1][1] + 3 * u * t * t * P[2][1] + t ** 3 * P[3][1]]);
+  }
+  tail.forEach(([x, y], i) => { const rr = 3.4 - i * 0.08; for (let dy = -rr; dy <= rr; dy++) for (let dx = -rr; dx <= rr; dx++) if (dx * dx + dy * dy <= rr * rr) { const lum = -dx * 0.5 - dy * 0.7; px(g, y + dy, x + dx, BODY[lum > 1 ? 4 : lum > -0.5 ? 3 : 1]); } });
+  const [sx, sy] = tail[tail.length - 1];
+  for (let i = 0; i < 5; i++) { px(g, sy + i * 1.0, sx - 0.4 - i * 0.5, ACC[2]); px(g, sy + i * 1.0, sx + 0.6 - i * 0.5, ACC[1]); }
+  // 頭とはさみ
+  ball(g, 14 + ox, 40, 5.5, 5, BODY);
+  eye(g, 12 + ox, 37, 4, 4, -1);
+  for (const dy of [-1, 1]) {
+    const y0 = 40 + dy * 5;
+    for (let i = 0; i < 5; i++) { px(g, y0 + dy * (i * 0.15), 10 + ox - i, BODY[2]); px(g, y0 + 1 + dy * (i * 0.15), 10 + ox - i, BODY[1]); }
+  }
+  ball(g, 5 + ox, 36, 4.2, 4.8, BODY); ball(g, 5 + ox, 46, 4.2, 4.8, BODY);
+  px(g, 36, 1 + ox, 0); px(g, 37, 1 + ox, 0); px(g, 45, 1 + ox, 0); px(g, 46, 1 + ox, 0);
+  edge(g, [11]);
+  return g;
+}
+
+// 8. め（監視の目）: 宙に浮く大きな目玉。白目に血管のような筋、虹彩は差し色、まわりを細い環が回り、下へ細いコードが垂れる
+function eyeball() {
+  const g = makeGrid();
+  for (let c = 20; c <= 44; c++) if ((c + 57) % 2 === 0) px(g, 58, c, 11);
+  // 垂れるコード（左右に揺れる3本）
+  for (const [x0, ph] of [[24, 0], [32, 1.2], [40, 2.1]]) for (let r = 46; r <= 56; r++) { const x = x0 + Math.sin((r - 46) * 0.7 + ph) * 2; px(g, r, x, BODY[r > 52 ? 1 : 2]); px(g, r, x + 1, 0); }
+  // 白目の球
+  ball(g, 32, 28, 22, 20, [BODY[0], BODY[1], BODY[2], BODY[3], 9], 0.03);
+  for (let r = 10; r < 48; r++) for (let c = 10; c < 54; c++) {
+    const k = get(g, r, c);
+    if (k === 9) { const lum = (c - 32) * 0.4 + (r - 28) * 0.55; if (lum > 7) px(g, r, c, BODY[4]); else if (lum > 3) px(g, r, c, 5 + 0 === 5 ? BODY[4] : 9); }
+  }
+  // 血管（細い枝分かれ）
+  const vein = (x, y, dx, dy, n) => { for (let i = 0; i < n; i++) { if (get(g, y, x) !== -1) px(g, y, x, ACC[0]); x += dx + (hash(i, n) < 0.3 ? 1 : 0) * Math.sign(dx || 1); y += dy + (hash(n, i) < 0.3 ? 1 : 0) * Math.sign(dy || 1); } };
+  vein(14, 24, 1, 1, 6); vein(15, 36, 1, -1, 5); vein(50, 22, -1, 1, 6); vein(49, 38, -1, -1, 5); vein(32, 9, 1, 1, 4);
+  // 虹彩（差し色の同心円）と瞳孔、照り
+  for (let r = 14; r <= 42; r++) for (let c = 18; c <= 46; c++) {
+    const d = Math.hypot(c + 0.5 - 32, r + 0.5 - 28);
+    if (d <= 11) px(g, r, c, d <= 5 ? 10 : d <= 7.5 ? ACC[0] : d <= 9.5 ? ACC[1] : ACC[2]);
+  }
+  for (let a = 0; a < 16; a++) { const x = 32 + Math.cos(a * 0.39) * 8.6, y = 28 + Math.sin(a * 0.39) * 8.6; if (a % 2) px(g, y, x, ACC[2]); }
+  px(g, 24, 28, 12); px(g, 24, 29, 12); px(g, 25, 28, 12); px(g, 22, 27, 12);
+  edge(g, [11]);
+  return g;
+}
+
 export const PIECES = [
   { name: "MB1-こうもり", pal: previewPalette(262), build: bat },
   { name: "MB2-虫", pal: previewPalette(28), build: beetle },
   { name: "MB3-結晶", pal: previewPalette(190), build: shard },
   { name: "MB4-しずく", pal: previewPalette(150), build: drop },
+  { name: "MB5-かげ", pal: previewPalette(250), build: ghost },
+  { name: "MB6-ねずみ", pal: previewPalette(30), build: rat },
+  { name: "MB7-サソリ", pal: previewPalette(40), build: scorpion },
+  { name: "MB8-め", pal: previewPalette(200), build: eyeball },
 ];

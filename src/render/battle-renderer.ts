@@ -56,7 +56,7 @@ function drawEnemySprite(
 }
 
 /** 雑魚の敵の絵（64×64。形ごとの手描きの絵を、地方の色相で塗る）。描けたら true。 */
-function drawMobSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, x: number, y: number): boolean {
+function drawMobSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, x: number, y: number, size = 64): boolean {
   const spec = enemy.hp > 0 ? MONSTERS[enemy.id] : undefined;
   if (!spec?.shape || spec.shape === "blob") {
     return false;
@@ -66,7 +66,7 @@ function drawMobSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, x: numbe
     return false;
   }
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(canvas, x, y, 64, 64);
+  ctx.drawImage(canvas, x, y, size, size);
   return true;
 }
 
@@ -120,6 +120,13 @@ function renderBattleBody(
     if (battleState.enemies.length === 1 && enemy.maxHp >= 250 && enemy.hp > 0 && MONSTERS[enemy.id]) {
       const size = 80;
       const bx = Math.round(screenWidth / 2 - size / 2 - 40);
+      // 手描きの絵がある形は、2倍（128）で大きく描く（きれいに拡大できる整数倍）
+      if (drawMobSprite(ctx, enemy, bx - 24, 0, 128)) {
+        ctx.fillStyle = "#f0f0f0";
+        ctx.fillText(enemy.name, bx + size + 32, 30);
+        drawHpBar(ctx, enemy, bx + size + 32, 46, 110);
+        return;
+      }
       drawEnemySprite(ctx, enemy, bx, 6, size);
       ctx.fillStyle = "#f0f0f0";
       ctx.fillText(enemy.name, bx + size + 12, 30);

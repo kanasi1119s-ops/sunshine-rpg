@@ -26,11 +26,27 @@ export interface MonsterSpec {
   shape?: MonsterShape;
 }
 
-/** blob=いびつな塊、bat=羽ばたく影、beetle=足のある虫、shard=結晶、drop=しずく。 */
-export type MonsterShape = "blob" | "bat" | "beetle" | "shard" | "drop";
+/**
+ * blob=いびつな塊、bat=羽ばたく影、beetle=足のある虫、shard=結晶、drop=しずく（水の玉）、
+ * ghost=かげ（ぼろ布の幽霊）、rat=ねずみ、scorpion=サソリ、eye=め（宙に浮く目玉）。
+ * 戦闘画面では64×64の手描きの絵（`mob:*`）で描く。手描きの絵が出せない場面では、20×20の手続き的な絵に代える。
+ */
+export type MonsterShape = "blob" | "bat" | "beetle" | "shard" | "drop" | "ghost" | "rat" | "scorpion" | "eye";
+
+/** 手続き的な絵の形（`insideShape`）。手描きだけの形は、近い形で代用する。 */
+const PROCEDURAL_SHAPE: Record<Exclude<MonsterShape, "blob">, "bat" | "beetle" | "shard" | "drop"> = {
+  bat: "bat",
+  beetle: "beetle",
+  shard: "shard",
+  drop: "drop",
+  ghost: "drop",
+  rat: "beetle",
+  scorpion: "beetle",
+  eye: "shard",
+};
 
 /** 形ごとの輪郭。u・vは中心を0とし、-1〜1に正規化した座標（vは下が正）。 */
-function insideShape(shape: MonsterShape, u: number, v: number): boolean {
+function insideShape(shape: "bat" | "beetle" | "shard" | "drop", u: number, v: number): boolean {
   const au = Math.abs(u);
   switch (shape) {
     case "bat": {
@@ -53,7 +69,7 @@ function insideShape(shape: MonsterShape, u: number, v: number): boolean {
 }
 
 /** 形ごとの目の位置（vは中心から。uは左右の間隔）。 */
-const EYE_POS: Record<Exclude<MonsterShape, "blob">, { v: number; u: number }> = {
+const EYE_POS: Record<"bat" | "beetle" | "shard" | "drop", { v: number; u: number }> = {
   bat: { v: -0.12, u: 0.13 },
   beetle: { v: -0.22, u: 0.25 },
   shard: { v: -0.12, u: 0.2 },
@@ -79,7 +95,7 @@ export function buildMonsterCells(spec: MonsterSpec): MonsterCell[] {
   const baseRadius = maxRadius * spec.baseRadiusRatio;
   const cells: MonsterCell[] = [];
   if (spec.shape && spec.shape !== "blob") {
-    return buildShapedCells(spec, spec.shape);
+    return buildShapedCells(spec, PROCEDURAL_SHAPE[spec.shape]);
   }
 
   for (let row = 0; row < size; row++) {
@@ -117,7 +133,7 @@ export function buildMonsterCells(spec: MonsterSpec): MonsterCell[] {
 }
 
 /** blob以外の形。輪郭の1マス内側を暗く縁取り、中心ほど明るくして立体感を出す。 */
-function buildShapedCells(spec: MonsterSpec, shape: Exclude<MonsterShape, "blob">): MonsterCell[] {
+function buildShapedCells(spec: MonsterSpec, shape: "bat" | "beetle" | "shard" | "drop"): MonsterCell[] {
   const size = MONSTER_GRID_SIZE;
   const half = size / 2;
   const inside = (row: number, col: number): boolean =>

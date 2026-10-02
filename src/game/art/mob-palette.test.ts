@@ -28,8 +28,8 @@ describe("雑魚の敵の色づけ", () => {
     expect(hueOfHex("#808080")).toBe(0);
   });
 
-  it("4つの形の絵は、色番号がどれも13色の範囲内", () => {
-    for (const key of ["mob:bat", "mob:beetle", "mob:shard", "mob:drop"]) {
+  it("8つの形の絵は、色番号がどれも13色の範囲内", () => {
+    for (const key of ["mob:bat", "mob:beetle", "mob:shard", "mob:drop", "mob:ghost", "mob:rat", "mob:scorpion", "mob:eye"]) {
       const cells = decodeSprite(SPRITE_DATA[key]);
       expect(Math.max(...Array.from(cells)), key).toBeLessThan(13);
     }

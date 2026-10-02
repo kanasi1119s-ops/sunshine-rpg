@@ -152,10 +152,14 @@ function hslToHex(h: number, s: number, l: number): string {
 /** 名前の言葉から、敵の形を決める（当てはまる言葉が無いときは、種類ごとに塊としずくを使い分ける）。 */
 export function shapeForName(name: string, variant: number): MonsterShape {
   const has = (words: string[]): boolean => words.some((w) => name.includes(w));
-  if (has(["こうもり", "羽", "風", "雲", "霧", "ささやき", "気配"])) return "bat";
-  if (has(["虫", "ねずみ", "サソリ", "かじり", "砂ぬけ", "足あと", "紙魚"])) return "beetle";
-  if (has(["結晶", "石", "機械", "兵", "剣", "鉱脈", "番兵", "かけら", "目", "断片", "箱"])) return "shard";
+  if (has(["監視の目"])) return "eye";
+  if (has(["サソリ"])) return "scorpion";
+  if (has(["ねずみ"])) return "rat";
+  if (has(["こうもり", "羽", "風", "雲", "霧"])) return "bat";
+  if (has(["虫", "かじり", "砂ぬけ", "足あと", "紙魚"])) return "beetle";
+  if (has(["結晶", "石", "機械", "兵", "剣", "鉱脈", "番兵", "かけら", "断片", "箱"])) return "shard";
   if (has(["しずく", "花", "光", "悲しみ", "涙", "香"])) return "drop";
+  if (has(["影", "残響", "気配", "ささやき", "揺らぎ", "記憶", "消えた"])) return "ghost";
   return variant === 1 ? "drop" : "blob";
 }
 
