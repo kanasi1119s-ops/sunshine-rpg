@@ -24,6 +24,12 @@ describe("AIソング形式", () => {
     const kick = score.tracks[score.tracks.length - 1];
     expect(kick.notes.filter((n) => n.note !== REST).length).toBe(16);
   });
+  it("synth: true で lead／pad が電子的な音色になる（省略時は生楽器寄り）", () => {
+    expect(aiSongToScore(song).score.synth).toBeUndefined();
+    expect(aiSongToScore({ ...song, synth: true }).score.synth).toBe(true);
+    expect(aiSongToScore({ ...song, synth: true }).score.style).toBe("electro"); // 実楽器版が電子音色を置き換えない印
+    expect(AI_SONG_SCHEMA.properties.synth).toEqual({ type: "boolean" });
+  });
   it("伴奏なしにもできる", () => {
     expect(aiSongToScore({ ...song, autoAccompaniment: false }).score.tracks.length).toBe(2);
   });

@@ -1,4 +1,4 @@
-// 使い方: node tools/audio-check/score-check.mjs <曲.json> [...]
+// 使い方: node tools/audio-check/score-check.mjs <曲.json> [...]   （PARSONS=1 を付けると旋律の Parsons code も出す）
 // AIソング形式のJSON（音符データ）を、WAVにする前に楽理の面から点検する（docs/sound/music-knowledge.md の 17）。
 // 数値の目安は一般的な作曲の知見で、良し悪しの最終判断は耳で。警告が出ても、わざとなら直さなくてよい。
 import fs from "fs";
@@ -105,7 +105,23 @@ function check(file) {
       }
     }
     const stepRate = ints ? step / ints : 0;
+    // 音程の配分（2026-10-02 追加。目安: 順次65〜75%・3度15〜20%・4度以上10%以下、最大跳躍6度まで）
+    let thirds = 0, bigger = 0, maxLeap = 0;
+    for (let i = 1; i < s.length; i++) {
+      const a = Math.abs(s[i].pitch - s[i - 1].pitch);
+      if (a >= 3 && a <= 4) thirds++;
+      else if (a >= 5) bigger++;
+      maxLeap = Math.max(maxLeap, a);
+    }
+    lines.push(`  ・音程の配分: 順次 ${(stepRate * 100) | 0}% / 3度 ${ints ? ((thirds / ints) * 100) | 0 : 0}% / 4度以上 ${ints ? ((bigger / ints) * 100) | 0 : 0}%（最大 ${maxLeap}半音）`);
     warn(stepRate >= 0.55, `旋律「${p.role}」の順次進行 ${(stepRate * 100) | 0}%`, `旋律「${p.role}」の順次進行が ${(stepRate * 100) | 0}%（目安 6〜7割以上）`);
+    warn(!ints || bigger / ints <= 0.2, "4度以上の跳躍は2割以下", `旋律「${p.role}」の4度以上の跳躍が ${((bigger / ints) * 100) | 0}%（目安 1割前後）`);
+    // 類似の確認用: 上がる U・同じ R・下がる D の記号（Parsons code）。Musipedia などでの検索や、手元の旋律集との照合に使う
+    if (process.env.PARSONS) {
+      let code = "*";
+      for (let i = 1; i < s.length; i++) code += s[i].pitch > s[i - 1].pitch ? "U" : s[i].pitch < s[i - 1].pitch ? "D" : "R";
+      lines.push(`  ・Parsons code「${p.role}」: ${code.slice(0, 80)}${code.length > 80 ? "…" : ""}（全${code.length}音）`);
+    }
     if (bigLeaps) warn(false, "", `旋律「${p.role}」にオクターブ超の跳躍が ${bigLeaps}回`);
     if (leaps) warn(noReturn / leaps <= 0.5, `大きな跳躍のあとの戻り OK`, `旋律「${p.role}」: 5度以上の跳躍${leaps}回のうち${noReturn}回が戻らず同じ向き`);
     // 強拍（小節の1拍目と3拍目）のコード外音

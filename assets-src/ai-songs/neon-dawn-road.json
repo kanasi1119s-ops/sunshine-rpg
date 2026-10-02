@@ -9,6 +9,7 @@
  "autoAccompaniment": false,
  "feel": "dance",
  "tone": "rock",
+ "synth": true,
  "parts": [
   {
    "instrument": "kick",
