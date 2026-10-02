@@ -53,6 +53,7 @@ export async function renderScoreOffline(score: Score, options: OfflineRenderOpt
     hall.connect(out);
   }
   const bus = createBgmBus(ctx, lp, 0.1);
+  bus.gain.value = Math.pow(10, (score.preDb ?? 0) / 20);
 
   // アンプ（NAMのモデルの読み込みを含む）を先に用意してから、シンセサイザーを作って描き出しを始める
   const { midi, programs, amps } = scoreToMidiInfo(score);

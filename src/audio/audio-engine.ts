@@ -180,6 +180,7 @@ export class AudioEngine {
     this.bgmTrim = Math.pow(10, (score.trimDb ?? 0) / 20);
     this.applyBgmGain();
     const ctx = this.ensureContext();
+    if (this.bgmBus) this.bgmBus.gain.value = Math.pow(10, (score.preDb ?? 0) / 20);
     const durationSec = getScoreDurationSec(score);
     if (durationSec <= 0) {
       return;
