@@ -5,7 +5,7 @@
 //       AIソング形式の説明（楽器の一覧・書き方・よい曲にするコツ）を表示する。曲を書く前に読む。
 //   node tools/composer/song.mjs build <曲.json> [--out <フォルダ>] [--edition real|ps2|modern] [--wav] [--register <曲ID> --scene "<場面>"]
 //       AIソング形式のJSONを確かめて、作曲ソフトで開けるプロジェクト（.sunshine-song.json）とMIDIを書き出す。
-//       --wav: 作曲ソフトと同じ音（録音音源・アンプ・仕上げ）でWAVも作る（Playwright と Chromium が必要）。
+//       --wav: 作曲ソフトと同じ音（録音音源・アンプ・仕上げ）でWAVも作る（ブラウザ不要。FFmpeg が必要。パート別のミックス付き）。
 //       --register: ゲームの曲として src/audio/songs/<曲ID>.sunshine-song.json に登録する。
 import fs from "fs";
 import path from "path";
