@@ -29,9 +29,14 @@ export interface SongSpec {
   beats?: 3 | 4 | 7;
   /** 疾走感を出す（ボス戦向け）。16分の刻み・アルペジオ・8分のキックを足す。4拍子の曲だけ。 */
   drive?: boolean;
-  /** 曲の長さの目安（秒。既定75）。 */
+  /** 曲の長さの目安（秒。既定75）。90秒を超えると「長尺モード」（イントロ→A→サビ→間奏→ラストサビ→アウトロ）で組む。 */
   targetSec?: number;
+  /** 曲調に重ねる味つけ（ラウド＝ギターを左右に倍にして専用アンプ／オーケストラ＝弦・ブラス・合唱・ティンパニ／和楽器＝琴・三味線・尺八・太鼓）。 */
+  flavor?: Flavor | Flavor[];
 }
+
+/** 曲調（Style）に重ねる味つけ。 */
+export type Flavor = "loud" | "orchestra" | "wagakki";
 
 // ── 乱数（同じ種なら同じ結果） ──
 export function makeRng(seed: number): () => number {
@@ -104,6 +109,7 @@ interface Plan {
   kinds: Kind[];
 }
 function planSections(bpm: number, beats: number, targetSec: number): Plan {
+  if (targetSec > 90) return { kinds: longKinds(bpm, beats, targetSec) };
   const barsWanted = (targetSec * bpm) / 60 / beats;
   let k = Math.round((barsWanted - 4) / 8);
   k = Math.max(2, Math.min(8, k));
@@ -120,6 +126,33 @@ function planSections(bpm: number, beats: number, targetSec: number): Plan {
     8: ["verse", "verse", "bridge", "chorus", "verse", "bridge", "chorus", "outro"],
   }[k] as Kind[];
   return { kinds: ["intro", ...body] };
+}
+
+/**
+ * 長尺モード（targetSec > 90）の構成。イントロ（4小節）のあとに、8小節ずつの区間を k 個並べる（最後はアウトロ）。
+ * 流れ: A, A, B, サビ → A, B, サビ（くり返し）→ 間奏（ソロ）→ サビ, サビ（ラストは2回続けて盛り上げる）→ アウトロ。
+ * k は目標の長さに最も近くなるように決める（最短6区間）。
+ */
+function longKinds(bpm: number, beats: number, targetSec: number): Kind[] {
+  const barsWanted = (targetSec * bpm) / 60 / beats;
+  const k = Math.max(6, Math.round((barsWanted - 4) / 8));
+  const n = k - 1; // アウトロの前までの区間数
+  const first: Kind[] = ["verse", "verse", "bridge", "chorus"];
+  const cycle: Kind[] = ["verse", "bridge", "chorus"];
+  const body: Kind[] = Array.from({ length: n }, (_, i) => (i < first.length ? first[i] : cycle[(i - first.length) % cycle.length]));
+  if (n >= 7) body[Math.round(n * 0.62)] = "solo";
+  if (n >= 8) {
+    body[n - 1] = "chorus";
+    body[n - 2] = "chorus";
+    // サビが3回続かないようにする。直前がBなら、Aを挟む（B・Bと同じ区間が並ばないようにする）
+    if (body[n - 3] === "chorus") body[n - 3] = body[n - 4] === "bridge" ? "verse" : "bridge";
+  }
+  return ["intro", ...body, "outro"];
+}
+
+/** 曲の構成（区間の並び）。テストや外部ツールが、長さと構成を確かめるために使う。 */
+export function planKinds(bpm: number, beats: number, targetSec: number): string[] {
+  return planSections(bpm, beats, targetSec).kinds;
 }
 
 // ── 旋律 ──
@@ -1061,6 +1094,71 @@ export function walkBass(notes: NoteEvent[], barChords: string[], beats: number,
   return out;
 }
 
+// ── 味つけ（flavor）: 曲調に重ねる ──
+// 4拍子（1小節＝16マス）のパターン。a・b・c＝コードの1・2・3番目の音、R＝根音、5＝5度、x＝打つ、-＝のばす、.＝休み。
+const L1 = (c: string): string => c + "---------------";
+const FLAVOR_PARTS: Record<"orchestra" | "wagakki", Record<string, PartSpec>> = {
+  orchestra: {
+    os1: { instrument: "strings", waveform: "sawtooth", volume: 0.1, octave: 3, step: 0.25 },
+    os2: { instrument: "strings", waveform: "sawtooth", volume: 0.1, octave: 4, step: 0.25 },
+    os3: { instrument: "strings", waveform: "sawtooth", volume: 0.09, octave: 4, step: 0.25 },
+    obr: { instrument: "brass", waveform: "sawtooth", volume: 0.11, octave: 3, step: 0.25 },
+    och: { instrument: "choir", waveform: "sine", volume: 0.1, octave: 4, step: 0.25 },
+    otp: { instrument: "tom", waveform: "sine", volume: 0.2, octave: 2, step: 0.25, fixed: "D2" },
+  },
+  wagakki: {
+    wko: { instrument: "koto", waveform: "triangle", volume: 0.16, octave: 4, step: 0.25 },
+    wsh: { instrument: "shamisen", waveform: "sawtooth", volume: 0.14, octave: 3, step: 0.25 },
+    wsk: { instrument: "shakuhachi", waveform: "sine", volume: 0.13, octave: 4, step: 0.25 },
+    wtk: { instrument: "tom", waveform: "sine", volume: 0.22, octave: 2, step: 0.25, fixed: "A1" },
+  },
+};
+const FLAVOR_PLANS: Record<"orchestra" | "wagakki", (kind: Kind) => Record<string, string>> = {
+  orchestra: (kind) => {
+    const timpHit = "x...............";
+    const timpDrive = "x.......x.x.x...";
+    const table: Record<Kind, Record<string, string>> = {
+      intro: { os1: L1("R"), os2: L1("a"), otp: timpHit },
+      verse: { os1: L1("R"), os2: L1("a") },
+      bridge: { os1: L1("R"), os2: L1("a"), os3: L1("c"), och: L1("b") },
+      chorus: { os1: "R-------R-------", os2: L1("a"), os3: L1("c"), obr: "R-------R---R---", och: L1("b"), otp: timpDrive },
+      solo: { os1: L1("R"), os2: L1("a"), obr: "R-------R---R---", otp: timpDrive },
+      outro: { os1: L1("R"), os2: L1("a"), och: L1("b"), otp: timpHit },
+    };
+    return table[kind];
+  },
+  wagakki: (kind) => {
+    const arpS = "a.b.c.b.a.b.c.b.";
+    const arpF = "abcbabcbabcbabcb";
+    const table: Record<Kind, Record<string, string>> = {
+      intro: { wsk: L1("a"), wtk: "x...............", wko: arpS },
+      verse: { wko: arpS, wsh: "R...R...R.R....." },
+      bridge: { wko: arpF, wsk: "a-------b-------" },
+      chorus: { wko: arpF, wsh: "R..R..R.R..R..R.", wsk: L1("c"), wtk: "x.......x.x.x..." },
+      solo: { wko: arpF, wsh: "R..R..R.R..R..R.", wtk: "x.......x.x.x..." },
+      outro: { wsk: L1("a"), wko: "a...b...c...b...", wtk: "x..............." },
+    };
+    return table[kind];
+  },
+};
+
+/**
+ * ラウド: リズムギター（ディストーション／クランチ）を同じ刻みで2本に倍にして、左右いっぱい（-0.9／0.9）に振り、
+ * ラウド専用のアンプ（メタル系は loudmetal、ロック系は loudrock）を通す。歪みギターは音割れしやすいので、1本ずつの音量は小さく抑える。
+ */
+function applyLoud(score: Score): void {
+  const amp = score.tone === "metal" ? "loudmetal" : "loudrock";
+  const out: Score["tracks"] = [];
+  for (const t of score.tracks) {
+    if (t.instrument === "distGuitar" || t.instrument === "crunch") {
+      const volume = Math.min(t.volume, 0.1);
+      out.push({ ...t, volume, pan: -0.9, amp: { type: amp }, notes: t.notes.map((n) => ({ ...n })) });
+      out.push({ ...t, volume, pan: 0.9, amp: { type: amp }, notes: t.notes.map((n) => ({ ...n })) });
+    } else out.push(t);
+  }
+  score.tracks = out;
+}
+
 /** 設計図から曲を作る。 */
 /**
  * 曲の起伏: 出だしは小さく始めて少しずつ上げ、間奏では一度引き、サビで元の大きさに戻す。
@@ -1100,7 +1198,10 @@ export function composeSong(spec: SongSpec): Score {
   if (spec.style === "mystery") return mysteryScore(spec, rng, key, plan.kinds);
   const tpl = TEMPLATES[spec.style];
   const cells = key.minor ? CELLS_MINOR : CELLS_MAJOR;
-  const cache = new Map<Kind, { chords: string[]; melody: string }>();
+  const cache = new Map<string, { chords: string[]; melody: string }>();
+  const longForm = (spec.targetSec ?? 75) > 90;
+  const flavors: Flavor[] = ([] as Flavor[]).concat(spec.flavor ?? []);
+  const seen = new Map<Kind, number>();
   const verseCell = pick(rng, cells);
   const bridgeCells = [pick(rng, cells), pick(rng, cells)];
   const chorusCells = [pick(rng, cells), pick(rng, cells)];
@@ -1140,18 +1241,26 @@ export function composeSong(spec: SongSpec): Score {
       kp = { ...kp0, parts: { ...kp0.parts, opn1: once("R"), opn2: once("5"), opn3: once("O") } };
       if (RUN_STYLES.includes(spec.style)) kp = { ...kp, opts: { ...kp.opts, opening: "run" } };
     }
-    let entry = cache.get(kind);
+    const occurrence = seen.get(kind) ?? 0;
+    seen.set(kind, occurrence + 1);
+    // 長尺では、Aは3種類・B／間奏は2種類の旋律を順にまわして、くり返しの単調さを減らす（サビは同じ旋律のまま＝耳に残す）
+    const variant = longForm ? (kind === "verse" ? occurrence % 3 : kind === "bridge" || kind === "solo" ? occurrence % 2 : 0) : 0;
+    const cacheKey = `${kind}:${variant}`;
+    if (beats === 4) for (const f of flavors) if (f !== "loud") kp = { ...kp, parts: { ...kp.parts, ...FLAVOR_PLANS[f](kind) } };
+    let entry = cache.get(cacheKey);
     if (!entry) {
       const chords = chordsFor(kind);
       entry = { chords, melody: kp.mel.length ? generateMelody(rng, key, chords, beats, kp.opts) : "" };
-      cache.set(kind, entry);
+      cache.set(cacheKey, entry);
     }
     const melody: Record<string, string> = {};
     for (const m of kp.mel) melody[m] = entry.melody;
     return { chords: entry.chords.join(" "), parts: kp.parts, melody };
   });
   const hasFills = beats === 4 && spec.style !== "jazz" && tpl.parts.snare?.step === 0.25;
-  const allParts = { ...tpl.parts, ...driveParts, ...(hasFills ? TOM_PARTS : {}), ...(OPENING_STYLES.includes(spec.style) ? STRIKE_PARTS : {}) };
+  const flavorParts: Record<string, PartSpec> = {};
+  if (beats === 4) for (const f of flavors) if (f !== "loud") Object.assign(flavorParts, FLAVOR_PARTS[f]);
+  const allParts = { ...tpl.parts, ...driveParts, ...flavorParts, ...(hasFills ? TOM_PARTS : {}), ...(OPENING_STYLES.includes(spec.style) ? STRIKE_PARTS : {}) };
   const score = arrange({ tempoBpm: spec.bpm, beatsPerBar: beats, sections, parts: allParts, melodies: tpl.melodies });
   // 曲調ごとの左右の位置と、メロディのように動くベース
   const trackKeys = [...Object.keys(allParts), ...Object.keys(tpl.melodies)];
@@ -1171,6 +1280,7 @@ export function composeSong(spec: SongSpec): Score {
   if (OPENING_STYLES.includes(spec.style)) score.opening = true;
   score.style = spec.style;
   score.tone = METAL_STYLES.includes(spec.style) ? "metal" : "rock";
+  if (flavors.includes("loud")) applyLoud(score);
   if (["electro", "phonk", "progmetal"].includes(spec.style)) score.synth = true;
   return score;
 }

@@ -26,3 +26,11 @@ APIキーは使わない。曲は、あなた（Claude Code）が「AIソング�
 ## 注意
 - 仮の曲は、`description` と `docs/progress.md` に「仮」と書く（CLAUDE.md 1-4）。
 - 言語はすべて日本語（曲名・説明・報告）。
+
+## 文章から4〜5分の曲を自動で作る（Suno式）
+手書きでなく、スタイル指定の文章から自動で作りたいとき（毎日10曲など）は `tools/composer/make.mjs` を使う。詳しくは `docs/sound/suno-style.md`。
+
+- `node tools/composer/make.mjs one --title "曲名" --prompt "melodic metal, 160 BPM, E minor" --variations 3 --wav`
+- `node tools/composer/make.mjs batch songs.json --wav`（形式は `assets-src/songs-example.json`）
+- 自動作曲は規則から旋律を作るので、**ボーカルはなく、旋律の出来は耳で確かめる**。気に入った曲は、出力の `.sunshine-song.json` を作曲ソフトで開いて直せる。
+- 手書きのほうが良い曲（ゲームの主題曲など）は、これまでどおり上の手順で書く。
