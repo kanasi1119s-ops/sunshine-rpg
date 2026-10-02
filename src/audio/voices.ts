@@ -54,6 +54,15 @@ export function ceilingCurve(knee: number, ceiling: number, samples = 2049): Flo
   return curve;
 }
 
+/** 楽器ごとの残響の送り先（S-4）。`dryIn` は残響を通さず直接出口へ、`wetIn` は残響にだけ足す。 */
+const busSends = new WeakMap<AudioNode, { dryIn: AudioNode; wetIn: AudioNode }>();
+
+/** 残響を少なくする楽器（低音とリズム）と、多くする楽器（弦・パッド・ピアノなど）。 */
+const DRY_INSTRUMENTS = new Set(["kick", "snare", "hihat", "tom", "bass", "slap", "sub808"]);
+const WET_INSTRUMENTS = new Set(["strings", "pad", "choir", "piano", "harp", "chime", "bell"]);
+/** 多めの楽器が残響へ余分に送る量 */
+const EXTRA_WET_SEND = 0.5;
+
 /** BGM全体の出口。ほのかな残響と、音が重なっても割れないようにするコンプレッサーを通す。 */
 export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, reverbSec = 2.2, widen = 1.6): GainNode {
   // 最終段: 音が重なっても割れないようにする歯止め（リミッター）と、全体の音量の底上げ
@@ -168,6 +177,12 @@ export function createBgmBus(ctx: Ctx, destination: AudioNode, wetLevel = 0.24, 
   bus.connect(convolver);
   convolver.connect(wet);
   wet.connect(low);
+  // 楽器ごとの送り量（S-4）: 低音・ドラムは残響を通さず、弦・パッド・ピアノは残響へ余分に送る
+  const dryIn = ctx.createGain();
+  dryIn.connect(dry);
+  const wetIn = ctx.createGain();
+  wetIn.connect(convolver);
+  busSends.set(bus, { dryIn, wetIn });
   return bus;
 }
 
@@ -674,7 +689,23 @@ export function scheduleInstrumentNote(ctx: Ctx, destination: AudioNode, event: 
     return voice(ctx, node, ev, at);
   };
   const pan = event.pan ?? 0;
-  const out = build(destination, event, when, pan);
+  // 残響の送り量を楽器ごとに変える。出口（createBgmBus）以外へつなぐときは従来どおり
+  const sends = busSends.get(destination);
+  let target = destination;
+  if (sends && event.beatSec > 0) {
+    if (DRY_INSTRUMENTS.has(event.instrument)) {
+      target = sends.dryIn;
+    } else if (WET_INSTRUMENTS.has(event.instrument)) {
+      const tee = ctx.createGain();
+      const extra = ctx.createGain();
+      extra.gain.value = EXTRA_WET_SEND;
+      tee.connect(destination);
+      tee.connect(extra);
+      extra.connect(sends.wetIn);
+      target = tee;
+    }
+  }
+  const out = build(target, event, when, pan);
   // 曲（ループするBGM）の主旋律だけにエコーをかける。効果音（1回きり）にはかけない
   if (event.beatSec > 0 && ECHO_INSTRUMENTS.has(event.instrument) && event.durationSec >= event.beatSec * 0.4) {
     const echoes: [number, number, number][] = [[0.75, 0.3, 0.45], [1.5, 0.13, -0.45]];
