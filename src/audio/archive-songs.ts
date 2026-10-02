@@ -1,4 +1,4 @@
-import { EXTRA_ENTRIES, type CatalogEntry } from "./catalog";
+import { CATALOG, EXTRA_ENTRIES, type CatalogEntry } from "./catalog";
 import { songFileToEntry, USER_SONGS } from "./user-songs";
 
 /**
@@ -9,7 +9,7 @@ import { songFileToEntry, USER_SONGS } from "./user-songs";
 const files = import.meta.glob("./songs-archive/*.sunshine-song.json", { eager: true, import: "default" }) as Record<string, unknown>;
 
 function loadAll(): CatalogEntry[] {
-  const taken = new Set(EXTRA_ENTRIES.map((e) => e.id));
+  const taken = new Set([...CATALOG, ...EXTRA_ENTRIES].map((e) => e.id));
   for (const e of USER_SONGS) taken.add(e.id);
   const out: CatalogEntry[] = [];
   for (const [path, data] of Object.entries(files).sort(([a], [b]) => a.localeCompare(b))) {
