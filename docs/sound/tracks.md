@@ -168,3 +168,19 @@
 - 修正: 曲に `synth: true` を書けるようにした（`src/audio/ai-song.ts`。`score.synth` と、実楽器版が電子音色を置き換えないための `style: "electro"` を付ける）。手引き（`song.mjs guide`）にも説明を追加。`neon-dawn-road.json` は `synth: true`（lead＝GM80 シンセリード、pad＝GM89 ウォームパッド）。
 - 測定（夜明けのネオン街道、前→後）: 音の重心 1174→623Hz、PLR 6.1→7.4、LRA 9.6→14.5、左右の相関 0.55→0.39、I -7.1→-8.4。**音色が変わったので、聴いて確かめてほしい**（リードが細い・うるさいなどがあれば調整する）。
 - 注意: 既存の `sky-piercing-pulse-clean.json`（feel: dance）などは `synth` を付けていないので変わっていない。シンセにしたい曲は JSON に `"synth": true` を足す。
+
+## ゲームBGM全58曲の測定（2026-10-02、実楽器版・`render-catalog.mjs`＋`analyze.py`）
+数値は `docs/sound/bgm-loudness.json`。WAVはピークを-1dBにそろえて書き出されるので、**I（LUFS）は曲どうしの相対的な大きさ**（ゲーム内のBGM音量とは別）。
+- **曲どうしの音量差が大きい**: I は -17.6〜-3.6 LUFS（差 14.0dB、中央値 -12.6）。いちばん静かな曲は opening（-17.6）・unease（-17.1）、いちばん大きい曲は boss-tetsu（-3.6）・battle（-4.0）。ゲーム内で曲が切り替わるたびに、最大約14dB の音量差が出る。
+- **メタル系の戦闘曲がつぶれている**: PLR は 2.6〜16.6（中央値 11.7）。9未満が58曲中 23曲。最も低いのは boss-tetsu 2.6、battle 3.0、boss-sanone 3.2、boss-kiri 3.6、boss-garasuko 3.8、boss-touri 3.9（目安は9以上）。
+- **起伏が少ない曲が多い**: LRA が2.3未満の曲が11曲、曲の頭が最大とほぼ同じ音量（intro_vs_max が-2dB超）の曲が20曲。左右の相関が0.88超（真ん中寄り）の曲が25曲。
+- **提案（未実施・耳での確認が必要）**: (1) 曲ごとの音量を一定に近づける「曲ごとの音量補正」の表を作り、再生時に掛ける（目安は全曲 約-16 LUFS＝ゲームのBGM基準 -16〜-14、効果音と重なる前提）。補正量は `bgm-loudness.json` の I から計算できる（例: opening +1.6dB、boss-tetsu -12.4dB。大きい曲を下げるのが安全）。(2) メタル系戦闘曲は、出口でなく編曲の密度（持続音の層）を減らす／ドラムバスのクリップを入れる（実験の結果は上の「実験記録」）。
+- **注意（測定のずれ）**: 上の表の I は、書き出しWAVがピークを-1dBにそろえてあるため、**ゲーム内の実際の音量差とは違う**。ゲーム内の大きさを測るには `node tools/audio-check/render-catalog.mjs --raw 出力先` で、ピークをそろえずに書き出して測る（2026-10-02 追加。作曲ソフトの `__composer.renderWav` に `raw` を追加）。結果は次の節。
+
+## 実験記録: 残響の返しのEQ（2026-10-02）
+出口バス（`createBgmBus`）の残響の返しに、ハイパス300Hz・ローパス9kHz（ミックスの定石）を足して「夜明けのネオン街道」を測った。結果: 帯域の量（sub/bass/lowmid/mid/presence/air）・PLR・左右の相関・音の重心はほぼ変わらず（lowmid -3.4 のまま、I -8.4→-8.3）。**出口バスの残響は量が小さい（wet 0.1）ので、EQを足しても効かない**。濁りの元は残響ではなく、編曲（低中域に重なる持続音）にある。元に戻した（コード変更なし）。
+
+## ゲーム内の実際の音量差（ピークをそろえない書き出し。2026-10-02）
+- 全58曲の統合ラウドネス: **-26.2〜-3.8 LUFS、差 22.4dB**（中央値 -14.4）。データ: `docs/sound/bgm-loudness-raw.json`。
+- 静かな曲: archive -26.2、puzzle -26.0、ruins-ukishima -26.0、kyoto-deep -25.8、camp -22.3。大きい曲: boss-tetsu -3.8、battle -4.0、boss-sanone -4.4、boss-kiri -5.1、boss-toushin -5.2、boss-touri -5.2。
+- **対応**: 曲ごとの音量補正を実装（`src/audio/bgm-trim.ts`、`docs/decisions.md` 参照）。表は `tools/audio-check/make-bgm-trim.py` で作る。

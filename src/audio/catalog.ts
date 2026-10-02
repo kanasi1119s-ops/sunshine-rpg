@@ -1,6 +1,7 @@
 import type { Score } from "./score";
 import { composeFinale, FINALES } from "./finale";
 import { ps2Edition } from "./ps2-edition";
+import { BGM_TRIM_DB } from "./bgm-trim";
 import { realEdition } from "./real-edition";
 import { composeSong, type SongSpec, type Style } from "./songwriter";
 import { STYLE_TRACKS } from "./style-tracks";
@@ -133,6 +134,9 @@ export function getTrack(id: string): Score {
     const entry = allEntries().find((e) => e.id === id);
     if (!entry) throw new Error(`曲がありません: ${id}`);
     score = entry.handmade ?? (entry.finale ? composeFinale(FINALES.find((f) => f.id === entry.finale)!) : composeSong(entry.spec!));
+    // 曲ごとの音量補正（曲どうしの音量差をそろえる）。元の曲データは書き換えない
+    const trim = BGM_TRIM_DB[id];
+    if (trim) score = { ...score, trimDb: trim };
     cache.set(id, score);
   }
   return score;

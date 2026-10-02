@@ -20,6 +20,8 @@ export class AudioEngine {
   private seGain: GainNode | null = null;
 
   private bgmVolume = 0.6;
+  /** 曲ごとの音量補正（倍率。`Score.trimDb` から。曲を鳴らすたびに更新）。 */
+  private bgmTrim = 1;
   private seVolume = 0.8;
   private muted = false;
 
@@ -46,7 +48,7 @@ export class AudioEngine {
     if (!this.ctx) {
       this.ctx = new AudioContext();
       this.bgmGain = this.ctx.createGain();
-      this.bgmGain.gain.value = this.muted ? 0 : this.bgmVolume;
+      this.applyBgmGain();
       this.bgmGain.connect(this.ctx.destination);
       this.bgmBus = createBgmBus(this.ctx, this.bgmGain);
       // 録音音源は、ほんの少しだけ残響を足して、同じ出口（音量・仕上げ）を通す
@@ -175,6 +177,8 @@ export class AudioEngine {
   /** `offsetSec`: 曲の途中（この秒数の位置）から鳴らす。BGMプレイヤーの「聴きたい部分から再生」用。 */
   playBgm(score: Score, offsetSec = 0): void {
     this.stopBgm();
+    this.bgmTrim = Math.pow(10, (score.trimDb ?? 0) / 20);
+    this.applyBgmGain();
     const ctx = this.ensureContext();
     const durationSec = getScoreDurationSec(score);
     if (durationSec <= 0) {
@@ -323,10 +327,17 @@ export class AudioEngine {
     this.activeBgmNodes.clear();
   }
 
+  /** BGMの音量（プレイヤーが決めた音量 × 曲ごとの補正。ミュート中は0）を反映する。 */
+  private applyBgmGain(): void {
+    if (this.bgmGain) {
+      this.bgmGain.gain.value = this.muted ? 0 : this.bgmVolume * this.bgmTrim;
+    }
+  }
+
   setBgmVolume(volume: number): void {
     this.bgmVolume = volume;
     if (this.bgmGain) {
-      this.bgmGain.gain.value = this.muted ? 0 : volume;
+      this.applyBgmGain();
     }
   }
 
@@ -339,9 +350,7 @@ export class AudioEngine {
 
   setMuted(muted: boolean): void {
     this.muted = muted;
-    if (this.bgmGain) {
-      this.bgmGain.gain.value = muted ? 0 : this.bgmVolume;
-    }
+    this.applyBgmGain();
     if (this.seGain) {
       this.seGain.gain.value = muted ? 0 : this.seVolume;
     }
