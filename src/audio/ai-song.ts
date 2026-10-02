@@ -26,6 +26,8 @@ export interface AiPart {
   push?: number;
   /** アンプ（ギター・ベース向け）。"auto" なら曲の音色から自動。 */
   amp: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate";
+  /** アンプの出力の大きさの倍率（0.2〜1.5、省略は1。amp が auto 以外のとき）。強く歪ませたギターは volume を下げても大きさがあまり変わらないので、小さくしたいときはこちらで下げる。 */
+  ampLevel?: number;
   /**
    * 音の並び。「音名:拍」を空白でくぎる（例 "E5:1 D5:0.5 R:0.5 C5:2"）。R は休み。
    * ドラム（kick/snare/hihat/crash/tom）は音名のかわりに x（打つ）か R（休み）。
@@ -114,6 +116,7 @@ export const AI_SONG_SCHEMA = {
           sustain: { type: "number" },
           push: { type: "number" },
           amp: { type: "string", enum: ["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate"] },
+          ampLevel: { type: "number" },
           notes: { type: "string" },
         },
       },
@@ -156,7 +159,7 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
 - ベースは根音を中心に、コードの変わり目の前に経過音を入れる。ドラムは、キック・スネア・ハイハットの基本の型に、4小節や8小節ごとのフィル（タムやスネアの連打）とクラッシュを入れる。
 - RPGの場面（町・フィールド・ダンジョン・戦闘・ボス・悲しい場面など）に合った速さと調（明るい=長調、暗い=短調）を選ぶ。
 - きれいで現代的な音にするには（フリーBGM 1000曲を測って分かったこと）: キック・ベース・メロディは真ん中（pan 0前後）、和音の楽器・弦・パッド・ギターは左右に大きく振る（-0.9〜0.9）。歪んだギターは音量を小さめ（0.05〜0.1）にし、低音と響きの楽器（弦・パッド・合唱）で厚みを出す。
-- ラウドメタル・ラウドロックにするには: tone を "metal"（ロックなら "rock"）にし、リズムギターは amp を loudmetal（ロックは loudrock）にして左右に振る（-0.9 と 0.9 の2本を同じ刻みで）。キックは速い連打（0.25拍）、ベースは amp を auto にして根音を刻みギターに合わせる。歪みギターの volume は 0.05〜0.12 まで（大きくすると音割れの元）。壁のような厚みは、ギターを重ねるより弦・合唱・ブラスの低い響きで足す。サビ前はドラムとギターを一度止め（R）、サビで全部を戻す。
+- ラウドメタル・ラウドロックにするには: tone を "metal"（ロックなら "rock"）にし、リズムギターは amp を loudmetal（ロックは loudrock）にして左右に振る（-0.9 と 0.9 の2本を同じ刻みで）。キックは速い連打（0.25拍）、ベースは amp を auto にして根音を刻みギターに合わせる。歪みギターの volume は 0.05〜0.12 まで（大きくすると音割れの元）。強く歪むアンプは volume を下げても大きさがあまり変わらない（歪みが頭を揃える）ので、ギターが大きすぎて曲がつぶれる（PLRが低い）ときは、パートの ampLevel（0.2〜1.5）で下げる。壁のような厚みは、ギターを重ねるより弦・合唱・ブラスの低い響きで足す。サビ前はドラムとギターを一度止め（R）、サビで全部を戻す。
 - 民族音楽にするには: 国・地域の「音階」で notes を書く（例: 琉球風＝C・E・F・G・B、日本の陰旋法＝C・D・Eb・G・Ab、インド風＝C・Db・E・F・G・Ab・B で、ドローンの低い持続音を1パート足す、中東風＝C・Db・E・F・G・Ab・B の増2度、アイルランド風＝Dドリアン、ケルト・北欧風＝ペンタトニック）。和音は少なく、ドローン（根音と5度の長い音）にすると雰囲気が出る。楽器は sitar・koto・shamisen・kalimba・panflute・shakuhachi・ocarina・fiddle・bagpipe・harp・banjo。打楽器は tom と hihat を、小さな音量で不規則なリズムに。**実在する民謡・曲のメロディは使わない**（CLAUDE.md 1-1）。
 - ダンスミュージックにするには: bpm 120〜132、feel は dance（自動伴奏で4つ打ちキック・オフビートのハイハット・動くベースが付く）。自分で書くなら、kick は毎拍 "x:1"、hihat は裏拍 "R:0.5 x:0.5"、snare（クラップ）は2・4拍、ベースは sub808 か bass で8分音符の刻み（根音とオクターブ）、リードは lead、アルペジオは keys や bell。8小節ごとに、ドラムを抜く「ブレイク」を作り、直前に snare の16分の連打（0.25拍）でせり上げ、次の小節でキックを全部戻す。音量は kick 0.2・ベース 0.17・リード 0.1 前後。
 - ヒップホップにするには: bpm 78〜95（ハーフタイムなら140〜160）、kick は1拍目と「3拍目の手前（2.5拍）」などで間を作り、snare は2・4拍、hihat は8分か16分で、ところどころ 0.25 拍の連打（トラップ風）。ベースは sub808 の長い音（C1〜C2）を、キックに合わせて置く。メロディは keys・piano・bell・pad の短い反復（2小節のループ）で、コードは 7th を使うと雰囲気が出る。サンプリングは使わず、音は自分で書く。
@@ -290,7 +293,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     const length = events.reduce((s, e) => s + e.durationBeats, 0);
     if (length > total + 1e-6) warnings.push(`${where}: 曲の長さ（${total}拍）より長いので、${length}拍のうち後ろを切りました`);
     if (p.amp && !AI_AMPS.has(p.amp)) warnings.push(`${where}: アンプ「${p.amp}」は使えないので、おまかせ（auto）にしました`);
-    const amp: AmpSetting | undefined = p.amp && p.amp !== "auto" && AI_AMPS.has(p.amp) ? { type: p.amp } : undefined;
+    const amp: AmpSetting | undefined = p.amp && p.amp !== "auto" && AI_AMPS.has(p.amp) ? { type: p.amp, ...(typeof p.ampLevel === "number" && p.ampLevel !== 1 ? { level: Math.min(1.5, Math.max(0.2, p.ampLevel)) } : {}) } : undefined;
     parts.push({
       waveform: drum ? "square" : "sawtooth",
       instrument: p.instrument,

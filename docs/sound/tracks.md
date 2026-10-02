@@ -258,3 +258,9 @@
 - `night-drift-phonk`: ベル・ハイハットを右へ広げた。相関 0.91→0.889（目安 0.88 にわずかに届かない。サブベースを中央に置くジャンルの性格なので許容）。
 - 直していないもの: 楽理の警告（順次進行の割合・動機の再利用など）は作曲上の判断で、聴いてから。`harbor-night`（古い曲。LRA 0.7・頭から最大）と、重心が高い `groove-street-funk`・`sky-voyage-orch` は耳の確認待ち。リバーブの余韻による末尾の無音（0.5〜0.9秒）はループの余韻として残した。
 - MP3（`dist-songs/listen/`、git対象外）は作り直し済み。
+
+## 記録: 保存してある曲すべての調整（2026-10-02）
+- **ゲームの58曲**（元の57曲＋登録した neon-dawn-road）: 入口の音量補正（`preDb`）を足して、PLR 9未満の曲が 21→0（戦闘 4.2→9.3 など）。詳細は docs/decisions.md。測定値: `bgm-loudness-raw.json`（補正前）、`bgm-loudness-after-pre.json`（入口補正後）。
+- **assets-src/ai-songs の曲**: 前の記録のとおり neon-dawn-road・sky-piercing-pulse・night-drift-phonk を調整。今回さらに `dance-demo`（全体を0.7倍。PLR 8.1→9.7）、`loud-rock-demo`（歪みギターの `ampLevel` 0.5。5.4→9.6）、`loud-metal-demo`（`ampLevel` 0.22。3.6→8.1。ジャンルの性格上、9には届かず）。
+- 新しい書き方 `ampLevel`（パートごとのアンプ出力の倍率）: 強く歪ませたギターは volume を下げても大きさがあまり変わらない（レイヤー分析でも volume 0.015 でほぼ同じ）。つぶれの主因が歪みギターなら `ampLevel` で下げる。
+- 直していない: デモ曲の「曲の頭が最大に近い・起伏が少ない」（28〜55秒の短い試し曲なので）、`harbor-night`（古い曲）、旋律の楽理の警告。**すべて耳での確認は未実施（仮）。**
