@@ -44,12 +44,12 @@ export async function openSongKit() {
   }
 
   /** 作った曲を、ゲームの曲として登録する（src/audio/songs/<id>.sunshine-song.json）。 */
-  async function register(score, { id, title, scene = "" }) {
+  async function register(score, { id, title, scene = "", group }) {
     const { allEntries } = await load("/src/audio/catalog.ts");
     const { songFileToEntry } = await load("/src/audio/user-songs.ts");
     const target = path.join(ROOT, "src/audio/songs", `${id}.sunshine-song.json`);
     const taken = new Set(allEntries().map((e) => e.id).filter((x) => !(x === id && fs.existsSync(target))));
-    const data = { format: "sunshine-game-song", version: 1, id, title, scene, score };
+    const data = { format: "sunshine-game-song", version: 1, id, title, scene, ...(group ? { group } : {}), score };
     songFileToEntry(data, taken);
     fs.writeFileSync(target, JSON.stringify(data));
     return target;

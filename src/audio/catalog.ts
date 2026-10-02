@@ -123,7 +123,20 @@ export const CATALOG: CatalogEntry[] = [
 export const EXTRA_ENTRIES: CatalogEntry[] = [];
 /** 組み込みの曲＋登録した曲。 */
 export function allEntries(): CatalogEntry[] {
-  return [...CATALOG, ...EXTRA_ENTRIES];
+  return sortByChapter([...CATALOG, ...EXTRA_ENTRIES]);
+}
+
+/** 曲の並び順: 序章→第1章→…→第8章→終章→クリア後→共通（フィールド・町・ダンジョン・戦闘）→イベント→試作・見本。同じ分類の中は、登録した順。 */
+const GROUP_ORDER = [
+  "序章 灯里", "第1章 麦香野", "第2章 硝子湖", "第3章 鉄鏈鉱山", "第4章 砂音", "第5章 霧断崖", "第6章 霜原", "第7章 浮嶼", "第8章 灯芯都", "終章 虚灯宮", "クリア後",
+  "共通・フィールド", "共通・町", "共通・ダンジョン", "共通・戦闘", "イベント",
+];
+function groupRank(group: string): number {
+  const i = GROUP_ORDER.indexOf(group);
+  return i >= 0 ? i : GROUP_ORDER.length; // 並び順にない分類（試作・見本など）は最後
+}
+export function sortByChapter(entries: CatalogEntry[]): CatalogEntry[] {
+  return entries.map((e, i) => ({ e, i })).sort((a, b) => groupRank(a.e.group) - groupRank(b.e.group) || a.i - b.i).map((x) => x.e);
 }
 
 const cache = new Map<string, Score>();

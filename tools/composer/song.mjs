@@ -3,7 +3,7 @@
 //
 //   node tools/composer/song.mjs guide
 //       AIソング形式の説明（楽器の一覧・書き方・よい曲にするコツ）を表示する。曲を書く前に読む。
-//   node tools/composer/song.mjs build <曲.json> [--out <フォルダ>] [--edition real|ps2|modern] [--wav] [--register <曲ID> --scene "<場面>"]
+//   node tools/composer/song.mjs build <曲.json> [--out <フォルダ>] [--edition real|ps2|modern] [--wav] [--register <曲ID> --scene "<場面>" [--group "<章・分類>"]]
 //       AIソング形式のJSONを確かめて、作曲ソフトで開けるプロジェクト（.sunshine-song.json）とMIDIを書き出す。
 //       --wav: 作曲ソフトと同じ音（録音音源・アンプ・仕上げ）でWAVも作る（Playwright と Chromium が必要）。
 //       --register: ゲームの曲として src/audio/songs/<曲ID>.sunshine-song.json に登録する。
@@ -33,7 +33,7 @@ try {
       console.log("  MIDI:", r.files.midi);
       if (r.files.wav) console.log("  WAV:", r.files.wav);
       const id = opt("--register");
-      if (id) console.log("  ゲームに登録:", await kit.register(r.score, { id, title: r.title, scene: opt("--scene") ?? "" }));
+      if (id) console.log("  ゲームに登録:", await kit.register(r.score, { id, title: r.title, scene: opt("--scene") ?? "", group: opt("--group") }));
     } catch (e) {
       console.error("× 曲を組み立てられませんでした。直してから、もう一度 build してください:\n" + e.message);
       process.exitCode = 1;
