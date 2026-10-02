@@ -33,7 +33,20 @@ export interface SongSpec {
   targetSec?: number;
   /** 曲調に重ねる味つけ（ラウド＝ギターを左右に倍にして専用アンプ／オーケストラ＝弦・ブラス・合唱・ティンパニ／和楽器＝琴・三味線・尺八・太鼓）。 */
   flavor?: Flavor | Flavor[];
+  /** trueなら、歌（ボーカル）のメロディも作る（composeSong の第2引数 extra.vocal に入る）。楽器の曲は変わらない。 */
+  vocal?: boolean;
 }
+
+/** 歌のメロディ（Aメロ・Bメロ・サビだけ）。声に合わせて、女声の歌いやすい高さ（D4〜G5）にする。 */
+export interface VocalSection {
+  kind: "verse" | "bridge" | "chorus";
+  /** 曲の頭から、この区間の頭までの拍。 */
+  startBeat: number;
+  /** "C4:1 R:0.5 …"（音名:拍）の並び。 */
+  melody: string;
+}
+
+const VOCAL_RANGE = { verse: { lo: 60, hi: 74 }, bridge: { lo: 62, hi: 77 }, chorus: { lo: 65, hi: 79 } } as const;
 
 /** 曲調（Style）に重ねる味つけ。 */
 export type Flavor = "loud" | "orchestra" | "wagakki";
@@ -1189,7 +1202,7 @@ export function applyDynamics(score: Score, kinds: readonly Kind[], beats: numbe
   }
 }
 
-export function composeSong(spec: SongSpec): Score {
+export function composeSong(spec: SongSpec, extra?: { vocal?: VocalSection[] }): Score {
   const rng = makeRng(spec.seed);
   const key = keyOf(spec);
   const beats = spec.beats ?? 4;
@@ -1230,8 +1243,14 @@ export function composeSong(spec: SongSpec): Score {
         drv: { instrument: "lead", waveform: "square", volume: 0.06, octave: 4, step: 0.25 },
       }
     : {};
+  // 歌のメロディは、楽器の乱数とは別の乱数で作る（vocal を付けても、楽器の曲は変わらない）
+  const vrng = makeRng((spec.seed ^ 0x5eed1234) >>> 0);
+  const vcache = new Map<string, string>();
+  let barCursor = 0;
   const sections: Section[] = plan.kinds.map((kind) => {
     const barsInSection = kind === "intro" ? 4 : 8;
+    const sectionStartBar = barCursor;
+    barCursor += barsInSection;
     const base = applyDrive(tpl.plan(kind, beats), kind, tpl, spec.drive === true && beats === 4);
     const kp0 = beats === 4 && spec.style !== "jazz" ? applyDrumRealism(base, kind, barsInSection, spec.style, tpl) : base;
     let kp = kp0;
@@ -1255,6 +1274,14 @@ export function composeSong(spec: SongSpec): Score {
     }
     const melody: Record<string, string> = {};
     for (const m of kp.mel) melody[m] = entry.melody;
+    if (spec.vocal && extra && (kind === "verse" || kind === "bridge" || kind === "chorus")) {
+      let vm = vcache.get(cacheKey);
+      if (vm === undefined) {
+        vm = generateMelody(vrng, key, entry.chords, beats, { ...VOCAL_RANGE[kind], density: "normal" });
+        vcache.set(cacheKey, vm);
+      }
+      (extra.vocal ??= []).push({ kind, startBeat: sectionStartBar * beats, melody: vm });
+    }
     return { chords: entry.chords.join(" "), parts: kp.parts, melody };
   });
   const hasFills = beats === 4 && spec.style !== "jazz" && tpl.parts.snare?.step === 0.25;

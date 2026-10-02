@@ -32,5 +32,5 @@ APIキーは使わない。曲は、あなた（Claude Code）が「AIソング�
 
 - `node tools/composer/make.mjs one --title "曲名" --prompt "melodic metal, 160 BPM, E minor" --variations 3 --wav`
 - `node tools/composer/make.mjs batch songs.json --wav`（形式は `assets-src/songs-example.json`）
-- 自動作曲は規則から旋律を作るので、**ボーカルはなく、旋律の出来は耳で確かめる**。気に入った曲は、出力の `.sunshine-song.json` を作曲ソフトで開いて直せる。
+- 自動作曲は規則から旋律を作るので、**旋律の出来は耳で確かめる**。歌入りにしたいときは、曲に `lyrics_kana`（ひらがな）を書く（`docs/sound/vocal.md`）。声にするのは PC 側の VOICEVOX。気に入った曲は、出力の `.sunshine-song.json` を作曲ソフトで開いて直せる。
 - 手書きのほうが良い曲（ゲームの主題曲など）は、これまでどおり上の手順で書く。

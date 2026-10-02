@@ -9,6 +9,10 @@
 //       songs.json（マスタープロンプトが出す形式）の全曲をまとめて作る。
 //       songs.json: [{"title","prompt","lyrics","bpm","key_scale","time_signature","audio_duration"}, ...]
 //
+//   歌入りにするには、songs.json の曲に "lyrics_kana"（ひらがな・カタカナの歌詞。[verse] [bridge] [chorus] の見出しで区切る）を書く。
+//   任意: "voice"（歌い手。既定 波音リツ）、"transpose"（移調。半音の数）、"vocal_gain_db"（声の大きさの微調整。dB）、"vocal": false（歌なしにする）。
+//   すると曲ごとに <名前>.vocal.json（歌声用の楽譜）も書き出す。声にするのはPC側の vocal_tool.py（VOICEVOX）。
+//
 //   出力（--out、既定は dist-songs/<日付>/）: 曲ごとに プロジェクト(.sunshine-song.json)・MIDI(.mid)・歌詞(.lyrics.txt)・
 //   報告(.report.json)、全体の一覧(index.md)。--wav を付けると WAV も作る（Playwright と Chromium が必要。なければ警告を出して続ける）。
 import fs from "fs";
@@ -50,6 +54,8 @@ async function makeOne(kit, m, item, { index, length, seedBase, variations, outD
   const choice = m.parseStylePrompt(item.prompt ?? "", { bpm: item.bpm, keyScale: item.key_scale, timeSignature: item.time_signature });
   const targetSec = Number(length ?? item.audio_duration ?? 270);
   const drive = ["hardcore", "deathmetal", "metal"].includes(choice.style) && choice.beats === 4;
+  const kanaText = item.lyrics_kana ?? (item.vocal === true ? item.lyrics : undefined);
+  const wantVocal = item.vocal !== false && typeof kanaText === "string" && kanaText.trim() !== "";
   for (let v = 0; v < variations; v++) {
     const seed = (seedBase ?? hashSeed(`${item.title}|${item.prompt}`)) + v;
     const spec = {
@@ -65,8 +71,10 @@ async function makeOne(kit, m, item, { index, length, seedBase, variations, outD
       targetSec,
       ...(choice.flavors.length ? { flavor: choice.flavors } : {}),
       ...(drive ? { drive: true } : {}),
+      ...(wantVocal ? { vocal: true } : {}),
     };
-    const score = m.composeSong(spec);
+    const extra = {};
+    const score = m.composeSong(spec, extra);
     const sec = m.getScoreDurationSec(score);
     const warnings = [...choice.warnings];
     if (sec < MIN_SEC || sec > MAX_SEC) warnings.push(`長さが4:00〜5:00から外れています（${mmss(sec)}）。テンポか目標の長さを調整してください。`);
@@ -80,6 +88,20 @@ async function makeOne(kit, m, item, { index, length, seedBase, variations, outD
       warnings.push(`WAVを作れませんでした: ${e.message.split("\n")[0]}`);
       built = await kit.buildFromScore(score, { name, title: item.title, description: item.prompt ?? "", edition, outDir, wav: false });
     }
+    let vocal = null;
+    if (wantVocal) {
+      const transpose = Number(item.transpose ?? 0);
+      const plan = m.buildVocalPlan(extra.vocal ?? [], kanaText, choice.bpm, transpose);
+      const voice = item.voice ?? "波音リツ";
+      fs.writeFileSync(
+        path.join(outDir, `${name}.vocal.json`),
+        JSON.stringify({ title: item.title, bpm: choice.bpm, framerate: 93.75, voice, credit: `VOICEVOX:${voice}`, ...(item.vocal_gain_db !== undefined ? { gain_db: Number(item.vocal_gain_db) } : {}), chunks: plan.chunks }, null, 1) + "\n",
+        "utf8",
+      );
+      vocal = { voice, chunks: plan.chunks.length, moras: plan.chunks.reduce((n, c) => n + c.moraCount, 0), notes: plan.chunks.reduce((n, c) => n + c.noteCount, 0) };
+      warnings.push(...plan.warnings);
+      if (!plan.chunks.length) warnings.push("歌う区間がありません（歌詞の見出しと曲の構成が合っているか確認してください）");
+    }
     if (item.lyrics) fs.writeFileSync(path.join(outDir, `${name}.lyrics.txt`), item.lyrics.endsWith("\n") ? item.lyrics : item.lyrics + "\n", "utf8");
     const report = {
       title: item.title,
@@ -91,19 +113,20 @@ async function makeOne(kit, m, item, { index, length, seedBase, variations, outD
       seconds: built.seconds,
       tracks: built.tracks,
       files: Object.fromEntries(Object.entries(built.files).map(([k, f]) => [k, path.basename(f)])),
+      vocal,
       warnings,
     };
     fs.writeFileSync(path.join(outDir, `${name}.report.json`), JSON.stringify(report, null, 2) + "\n", "utf8");
     results.push(report);
-    lines.push(`  ${name}: ${choice.style}${choice.flavors.length ? "+" + choice.flavors.join("+") : ""} ${choice.bpm}BPM ${report.decided.key} ${report.duration} ${built.tracks}トラック${warnings.length ? " ⚠ " + warnings.join(" / ") : ""}`);
+    lines.push(`  ${name}: ${choice.style}${choice.flavors.length ? "+" + choice.flavors.join("+") : ""} ${choice.bpm}BPM ${report.decided.key} ${report.duration} ${built.tracks}トラック${vocal ? ` 歌:${vocal.voice}(${vocal.chunks}区間)` : ""}${warnings.length ? " ⚠ " + warnings.join(" / ") : ""}`);
   }
   console.log(`[${index}] ${item.title}\n${lines.join("\n")}`);
   return results;
 }
 
 function writeIndex(outDir, all) {
-  const rows = all.map((r, i) => `| ${i + 1} | ${r.title.replace(/\|/g, "/")} | ${r.decided.style}${r.decided.flavors.length ? "+" + r.decided.flavors.join("+") : ""} | ${r.decided.bpm} | ${r.decided.key} | ${r.duration} | ${r.files.wav ?? r.files.midi} | ${r.warnings.join(" / ")} |`);
-  const md = ["# 今日の曲の一覧", "", "| # | 曲名 | 曲調 | BPM | 調 | 長さ | ファイル | 注意 |", "|---|---|---|---|---|---|---|---|", ...rows, ""].join("\n");
+  const rows = all.map((r, i) => `| ${i + 1} | ${r.title.replace(/\|/g, "/")} | ${r.decided.style}${r.decided.flavors.length ? "+" + r.decided.flavors.join("+") : ""} | ${r.decided.bpm} | ${r.decided.key} | ${r.duration} | ${r.vocal ? r.vocal.voice : "—"} | ${r.files.wav ?? r.files.midi} | ${r.warnings.join(" / ")} |`);
+  const md = ["# 今日の曲の一覧", "", "| # | 曲名 | 曲調 | BPM | 調 | 長さ | 歌 | ファイル | 注意 |", "|---|---|---|---|---|---|---|---|---|", ...rows, ""].join("\n");
   fs.writeFileSync(path.join(outDir, "index.md"), md, "utf8");
 }
 

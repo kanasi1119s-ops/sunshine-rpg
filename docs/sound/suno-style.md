@@ -45,7 +45,7 @@ node tools/composer/make.mjs batch songs.json --only 3 5        # 3曲目と5曲
 ## 何ができて、何ができないか（正直なところ）
 
 - できる: 4〜5分の長さ・構成、10ジャンルの作り分け、歌詞ファイルの保存、10曲の一括生成、結果の自動確認（長さ・構成・警告）。
-- **ボーカル（歌声）はない。** 歌詞は `.lyrics.txt` に保存するだけで、歌わない。歌声が必要な曲は、ほかの音楽生成サービスか、ローカルの歌声合成を別に使う。
+- **歌声**: 曲に `lyrics_kana`（ひらがなの歌詞）を書くと、歌のメロディと歌声用の楽譜も作る。声にするのは PC 側の VOICEVOX（女声・波音リツが既定）。詳しくは `docs/sound/vocal.md`。`lyrics_kana` がない曲は歌わない。グロウル・シャウトはできない。
 - 旋律は規則（コードの音を軸に音階を歩く）から作る。Sunoのような学習済みモデルの音楽とは別物で、**同じ曲調でも似た雰囲気になりやすい**。Aメロは3種類、B・間奏は2種類の旋律をまわして単調さを減らしているが、サビは同じ旋律のくり返し。
 - 音の良し悪しは**耳で確かめる**。この文書の数値（長さ・構成）は、曲が聴ける状態かどうかを保証しない。
 - 既存の曲のメロディ・コード進行は使わない（CLAUDE.md 1-1）。文章に実在のアーティスト名・曲名を書かない。
@@ -54,4 +54,5 @@ node tools/composer/make.mjs batch songs.json --only 3 5        # 3曲目と5曲
 
 - 曲の書き方（手書きの曲）: `.claude/skills/compose-song/SKILL.md`、`node tools/composer/song.mjs guide`
 - 自動作曲の中身: `src/audio/songwriter.ts`（`SongSpec.targetSec` が90秒を超えると長尺モード、`SongSpec.flavor` で味つけ）
-- テスト: `src/audio/songwriter-long.test.ts`、`src/audio/style-prompt.test.ts`
+- テスト: `src/audio/songwriter-long.test.ts`、`src/audio/style-prompt.test.ts`、`src/audio/vocal-score.test.ts`
+- 歌声: `docs/sound/vocal.md`

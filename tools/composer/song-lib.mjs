@@ -54,7 +54,8 @@ export async function openSongKit() {
     const { composeSong, planKinds } = await load("/src/audio/songwriter.ts");
     const { parseStylePrompt } = await load("/src/audio/style-prompt.ts");
     const { getScoreDurationSec } = await load("/src/audio/score.ts");
-    return { composeSong, planKinds, parseStylePrompt, getScoreDurationSec };
+    const { buildVocalPlan } = await load("/src/audio/vocal-score.ts");
+    return { composeSong, planKinds, parseStylePrompt, getScoreDurationSec, buildVocalPlan };
   }
 
   /** 作った曲を、ゲームの曲として登録する（src/audio/songs/<id>.sunshine-song.json）。 */
