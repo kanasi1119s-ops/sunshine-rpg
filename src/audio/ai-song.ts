@@ -52,6 +52,8 @@ export interface AiSong {
   swing?: number;
   /** true なら、lead をシンセリード、pad をシンセパッドの音色にする（省略は false＝lead はフルート、pad は合唱に近い生楽器寄りの音色）。ダンス・電子音楽向け。 */
   synth?: boolean;
+  /** true なら、曲の最初の1/8（最大4小節）を小さく始めて上げ、真ん中あたりで一度引いて戻す（曲の起伏。省略は false）。 */
+  dynamics?: boolean;
   /** AIが書くパート（メロディ・対旋律・ベースライン・ドラムなど）。 */
   parts: AiPart[];
 }
@@ -87,6 +89,7 @@ export const AI_SONG_SCHEMA = {
     tone: { type: "string", enum: ["rock", "metal", "prs"] },
     swing: { type: "number" },
     synth: { type: "boolean" },
+    dynamics: { type: "boolean" },
     parts: {
       type: "array",
       items: {
@@ -124,6 +127,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - autoAccompaniment: true なら、コード進行から伴奏（ドラム・ベース・ギター・ピアノ・弦）を自動で足す。自分でドラムやベースを書くときは false にしてよい。feel: 自動の伴奏の雰囲気（rock / pop / ballad / dance＝4つ打ち・メロディのように動くベース・ピアノの分散和音・エコーギターの、きれいで現代的な伴奏）。
 - tone: ギターの音色の方向（rock / metal / prs＝なめらかなリード）。
 - synth: true にすると、lead（シンセリード）と pad が電子的なシンセの音色になる。省略（false）だと lead はフルート、pad は合唱に近い生楽器寄りの音色で鳴る（tone が metal / prs の lead はオーバードライブのギター）。ダンス・電子音楽のアルペジオやリードには true にする。
+- dynamics: true にすると、曲の出だし（最初の1/8、最大4小節）を小さく始めて上げ、中盤で一度引いてから戻す（曲の起伏）。同じ音量で続く曲を避けたいときに使う。
 - parts: 自分で書くパート。1曲に1〜8パート。
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。
   - sustain: 音の伸び（0.2〜3、省略は1）。0.3〜0.6＝スタッカート（歯切れよく。ピアノ・ギターの刻み・シンセの刻み）、1＝ふつう、1.5〜3＝余韻を残す（ハープ・鐘・パッド・琴・アルペジオ）。長くした音は次の音に重なる。
@@ -221,6 +225,22 @@ export function applySustain(events: NoteEvent[], sustain: number): NoteEvent[] 
 }
 
 /** AIソングを確かめて、曲（Score）に組み立てる。おかしなところがあれば、全部まとめてエラーにする。 */
+/** 曲の起伏: 出だしを小さく始め、中盤で一度引いてから戻す。 */
+export function applyArc(tracks: Track[], total: number, beats: number): Track[] {
+  const intro = Math.min(beats * 4, total / 8);
+  const duckFrom = total * 0.5;
+  const duckTo = total * 0.625;
+  const gain = (pos: number): number => {
+    if (pos < intro) return 0.55 + 0.45 * (pos / intro);
+    if (pos >= duckFrom && pos < duckTo) return 0.75;
+    return 1;
+  };
+  return tracks.map((t) => {
+    let pos = 0;
+    return { ...t, notes: t.notes.map((n) => { const out = { ...n, velocity: (n.velocity ?? 1) * gain(pos) }; pos += n.durationBeats; return out; }) };
+  });
+}
+
 export function aiSongToScore(input: unknown): { score: Score; song: AiSong; warnings: string[] } {
   const song = input as AiSong;
   const errors: string[] = [];
@@ -269,7 +289,8 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   });
   if (errors.length) throw new Error(errors.join("\n"));
   if (parts.length === 0 && accompaniment.length === 0) throw new Error("パートがありません");
-  const tracks = [...accompaniment, ...parts];
+  const all = [...accompaniment, ...parts];
+  const tracks = song.dynamics === true ? applyArc(all, total, Number(song.beats)) : all;
   const score: Score = {
     tempoBpm: bpm, loop: true, drumKit: base.drumKit, tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock",
     ...(Number(song.swing) > 0 ? { swing: Math.min(1, Number(song.swing)) } : {}),
