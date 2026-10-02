@@ -5,6 +5,7 @@ import { AudioEngine } from "../../src/audio/audio-engine";
 import { getScoreDurationSec, type Score } from "../../src/audio/score";
 import { allEntries, getTrack } from "../../src/audio/catalog";
 import "../../src/audio/user-songs";
+import "../../src/audio/archive-songs";
 import { ps2Edition } from "../../src/audio/ps2-edition";
 import { realEdition } from "../../src/audio/real-edition";
 import { SE_LIBRARY } from "../../src/audio/se-library";
