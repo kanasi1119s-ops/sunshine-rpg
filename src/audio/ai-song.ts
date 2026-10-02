@@ -50,6 +50,8 @@ export interface AiSong {
   tone: "rock" | "metal" | "prs";
   /** 裏拍を遅らせる量（0〜1。省略は0）。ジャズ・ブルース・ヒップホップ・ファンクのノリに。 */
   swing?: number;
+  /** true なら、lead をシンセリード、pad をシンセパッドの音色にする（省略は false＝lead はフルート、pad は合唱に近い生楽器寄りの音色）。ダンス・電子音楽向け。 */
+  synth?: boolean;
   /** AIが書くパート（メロディ・対旋律・ベースライン・ドラムなど）。 */
   parts: AiPart[];
 }
@@ -84,6 +86,7 @@ export const AI_SONG_SCHEMA = {
     feel: { type: "string", enum: ["rock", "pop", "ballad", "dance"] },
     tone: { type: "string", enum: ["rock", "metal", "prs"] },
     swing: { type: "number" },
+    synth: { type: "boolean" },
     parts: {
       type: "array",
       items: {
@@ -120,6 +123,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - barsPerChord: 1コードの小節数（1か2）。repeats: 進行のくり返し回数。
 - autoAccompaniment: true なら、コード進行から伴奏（ドラム・ベース・ギター・ピアノ・弦）を自動で足す。自分でドラムやベースを書くときは false にしてよい。feel: 自動の伴奏の雰囲気（rock / pop / ballad / dance＝4つ打ち・メロディのように動くベース・ピアノの分散和音・エコーギターの、きれいで現代的な伴奏）。
 - tone: ギターの音色の方向（rock / metal / prs＝なめらかなリード）。
+- synth: true にすると、lead（シンセリード）と pad が電子的なシンセの音色になる。省略（false）だと lead はフルート、pad は合唱に近い生楽器寄りの音色で鳴る（tone が metal / prs の lead はオーバードライブのギター）。ダンス・電子音楽のアルペジオやリードには true にする。
 - parts: 自分で書くパート。1曲に1〜8パート。
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。
   - sustain: 音の伸び（0.2〜3、省略は1）。0.3〜0.6＝スタッカート（歯切れよく。ピアノ・ギターの刻み・シンセの刻み）、1＝ふつう、1.5〜3＝余韻を残す（ハープ・鐘・パッド・琴・アルペジオ）。長くした音は次の音に重なる。
@@ -266,6 +270,12 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   if (errors.length) throw new Error(errors.join("\n"));
   if (parts.length === 0 && accompaniment.length === 0) throw new Error("パートがありません");
   const tracks = [...accompaniment, ...parts];
-  const score: Score = { tempoBpm: bpm, loop: true, drumKit: base.drumKit, tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock", ...(Number(song.swing) > 0 ? { swing: Math.min(1, Number(song.swing)) } : {}), tracks };
+  const score: Score = {
+    tempoBpm: bpm, loop: true, drumKit: base.drumKit, tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock",
+    ...(Number(song.swing) > 0 ? { swing: Math.min(1, Number(song.swing)) } : {}),
+    // synth: lead／pad をシンセ音色にする。style "electro" は、実楽器版（real-edition.ts）が電子音楽の音色を生楽器に置き換えないための印
+    ...(song.synth === true ? { synth: true, style: "electro" } : {}),
+    tracks,
+  };
   return { score, song, warnings };
 }
