@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { allEntries, getTrack } from "./catalog";
 import "./user-songs";
+import "./archive-songs";
 import { BGM_TRIM_DB } from "./bgm-trim";
 
 describe("曲ごとの音量補正", () => {

@@ -18,6 +18,7 @@ fs.mkdirSync(outDir, { recursive: true });
 const server = await createServer({ root: ROOT, configFile: false, logLevel: "silent", server: { middlewareMode: true, hmr: false }, appType: "custom" });
 const { allEntries, getTrack } = await server.ssrLoadModule("/src/audio/catalog.ts");
 await server.ssrLoadModule("/src/audio/user-songs.ts");
+await server.ssrLoadModule("/src/audio/archive-songs.ts");
 const targets = ids.length ? ids : allEntries().map((e) => e.id);
 const scores = targets.map((id) => [id, getTrack(id)]);
 await server.close();
