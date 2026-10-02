@@ -1,0 +1,60 @@
+{
+ "title": "霧の社",
+ "description": "（仮・試作）霧の立つ山の社（やしろ）の曲。日本の陰旋法（都節 D・E♭・G・A・B♭）、66BPM、ドローンの上に尺八の旋律と琴・三味線・小さな太鼓を置き、間（ま）を大切にした和風の曲。音を減らす静かな区間をはさみ、最初と最後は同じ形でループする。",
+ "bpm": 66,
+ "beats": 4,
+ "chords": "Dm Dm Gm Dm",
+ "barsPerChord": 1,
+ "repeats": 7,
+ "autoAccompaniment": false,
+ "feel": "ballad",
+ "tone": "rock",
+ "style": "nature",
+ "dynamics": false,
+ "parts": [
+  {
+   "instrument": "pad",
+   "role": "ドローン（低い持続音 D）",
+   "volume": 0.07,
+   "pan": 0,
+   "amp": "delicate",
+   "notes": "D3:16 D3:16 D3:16 D3:16 D3:16 D3:16 D3:16",
+   "sustain": 3
+  },
+  {
+   "instrument": "koto",
+   "role": "琴（まばらな分散）",
+   "volume": 0.15,
+   "pan": -0.5,
+   "amp": "delicate",
+   "notes": "D4:2 R:2 A4:2 R:2 D5:2 R:2 A4:2 R:2 D4:1 A4:1 R:2 G4:1 D5:1 R:2 D4:1 A4:1 R:2 Bb4:1 A4:1 R:2 D4:1 A4:1 R:2 G4:1 D5:1 R:2 D4:1 A4:1 R:2 Bb4:1 A4:1 R:2 D4:0.5 A4:0.5 D5:0.5 A4:0.5 G4:0.5 A4:0.5 D5:0.5 A4:0.5 G4:0.5 D5:0.5 G5:0.5 D5:0.5 Eb5:0.5 D5:0.5 Bb4:0.5 D5:0.5 D4:0.5 A4:0.5 D5:0.5 A4:0.5 G4:0.5 A4:0.5 D5:0.5 A4:0.5 D4:0.5 A4:0.5 D5:2 R:1 R:4 D5:2 R:2 A4:4 R:4 D4:1 A4:1 R:2 G4:1 D5:1 R:2 D4:1 A4:1 R:2 Bb4:1 A4:1 R:2 D4:2 R:2 A4:2 R:2 D5:2 R:2 A4:2 R:2",
+   "sustain": 2.5
+  },
+  {
+   "instrument": "shakuhachi",
+   "role": "尺八（主旋律）",
+   "volume": 0.26,
+   "pan": 0.1,
+   "amp": "delicate",
+   "notes": "R:16 A4:2 Bb4:1 A4:1 G4:3 R:1 A4:2 Bb4:1 D5:1 A4:3 R:1 D5:2 Eb5:1 D5:1 A4:3 R:1 Bb4:2 A4:1 G4:1 A4:4 D5:2 Eb5:1 D5:1 G5:2 Eb5:1 D5:1 Eb5:2 D5:1 Bb4:1 A4:3 R:1 R:8 A4:6 R:2 A4:2 Bb4:1 A4:1 G4:3 R:1 D5:2 Eb5:1 D5:1 D4:4 R:16",
+   "sustain": 1
+  },
+  {
+   "instrument": "shamisen",
+   "role": "三味線（まばらな合いの手）",
+   "volume": 0.12,
+   "pan": 0.6,
+   "amp": "delicate",
+   "notes": "R:16 R:16 D3:0.5 R:1.5 A3:0.5 R:1.5 D3:0.5 R:1.5 A3:0.5 R:1.5 D3:0.5 R:1.5 A3:0.5 R:1.5 D3:0.5 R:1.5 A3:0.5 R:1.5 D3:0.5 R:1.5 A3:0.5 R:1.5 D3:0.5 R:1.5 A3:0.5 R:1.5 D3:0.5 R:1.5 A3:0.5 R:1.5 D3:0.5 R:1.5 A3:0.5 R:1.5 R:16 D3:0.5 R:1.5 A3:0.5 R:1.5 D3:0.5 R:1.5 A3:0.5 R:1.5 D3:0.5 R:1.5 A3:0.5 R:1.5 D3:0.5 R:1.5 A3:0.5 R:1.5 R:16",
+   "sustain": 0.5
+  },
+  {
+   "instrument": "tom",
+   "role": "太鼓（小さく）",
+   "volume": 0.09,
+   "pan": 0,
+   "amp": "auto",
+   "notes": "R:16 R:16 R:16 x:2 R:2 o:1 R:1 x:1 R:1 x:2 R:2 o:1 R:1 x:1 R:1 R:16 x:1 R:3 x:1 R:3 x:1 R:3 x:1 R:3 R:16"
+  }
+ ]
+}

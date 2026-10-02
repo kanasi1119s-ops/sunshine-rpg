@@ -1,0 +1,89 @@
+{
+ "title": "雨の夜の宿屋",
+ "description": "（仮・試作）雨の夜、宿屋の部屋でのんびり過ごす拠点の曲。変ホ長調・80BPM・36小節（約108秒）・ゆるいスウィング。エレピが主役で、ギターの小さな分散和音、丸いベース、やわらかいドラム。ギターとエレピだけで静かに始まり、ベースとビートが入り、中ほどで一度引いてから戻る。最初と最後は Ebmaj7 でループにつなぐ。雨の音の楽器は無いため、雨は音では表さず曲の雰囲気だけで描く。",
+ "bpm": 80,
+ "beats": 4,
+ "chords": "Ebmaj7 Cm7 Abmaj7 Bb7 Fm7 Ebmaj7",
+ "barsPerChord": 2,
+ "repeats": 3,
+ "autoAccompaniment": false,
+ "feel": "ballad",
+ "tone": "rock",
+ "style": "cafe",
+ "swing": 0.3,
+ "dynamics": false,
+ "parts": [
+  {
+   "instrument": "keys",
+   "role": "エレピ（主旋律）",
+   "volume": 0.3,
+   "pan": 0.05,
+   "amp": "auto",
+   "notes": "R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:1 Ab4:0.5 Bb4:0.5 C5:1.5 Bb4:0.5 Ab4:1 G4:1 F4:2 G4:1 Bb4:0.5 C5:0.5 D5:1.5 Bb4:0.5 Bb4:1 G4:2 R:1 R:1 Bb4:0.5 C5:0.5 D5:1.5 C5:0.5 Bb4:1 G4:1 R:2 R:1 C5:0.5 D5:0.5 Eb5:1.5 D5:0.5 C5:1 Bb4:1 R:2 R:1 C5:0.5 D5:0.5 Eb5:1.5 C5:0.5 Ab4:2 G4:1 R:1 R:1 D5:0.5 Eb5:0.5 F5:1.5 Eb5:0.5 D5:1 C5:1 Bb4:2 R:1 Ab4:0.5 Bb4:0.5 C5:1.5 Bb4:0.5 Ab4:1 G4:1 F4:2 G4:1 Bb4:0.5 C5:0.5 D5:1.5 Bb4:0.5 Bb4:1 G4:2 R:1 R:4 R:4 R:4 R:4 R:1 Eb5:0.5 D5:0.5 C5:1.5 Eb5:0.5 G5:2 F5:1 Eb5:1 R:1 F5:0.5 Eb5:0.5 D5:1.5 C5:0.5 Bb4:1 Ab4:1 R:2 R:1 Ab4:0.5 Bb4:0.5 C5:1.5 Eb5:0.5 Ab4:2 G4:1 R:1 Bb4:0.5 C5:0.5 D5:1 Bb4:1 G4:1 Eb5:3 R:1",
+   "sustain": 1.2,
+   "push": 0.01
+  },
+  {
+   "instrument": "keys",
+   "role": "エレピ（コード・下）",
+   "volume": 0.13,
+   "pan": -0.6,
+   "amp": "auto",
+   "notes": "G3:3 R:1 R:1.5 G3:2 R:0.5 Bb3:3 R:1 R:1.5 Bb3:2 R:0.5 C4:3 R:1 R:1.5 C4:2 R:0.5 D4:3 R:1 R:1.5 D4:2 R:0.5 Ab3:3 R:1 R:1.5 Ab3:2 R:0.5 G3:3 R:1 R:1.5 G3:2 R:0.5 G3:3 R:1 R:1.5 G3:2 R:0.5 Bb3:3 R:1 R:1.5 Bb3:2 R:0.5 C4:3 R:1 R:1.5 C4:2 R:0.5 D4:3 R:1 R:1.5 D4:2 R:0.5 Ab3:3 R:1 R:1.5 Ab3:2 R:0.5 G3:3 R:1 R:1.5 G3:2 R:0.5 G3:3 R:1 R:1.5 G3:2 R:0.5 Bb3:3 R:1 R:1.5 Bb3:2 R:0.5 C4:3 R:1 R:1.5 C4:2 R:0.5 D4:3 R:1 R:1.5 D4:2 R:0.5 Ab3:3 R:1 R:1.5 Ab3:2 R:0.5 G3:3 R:1 R:1.5 G3:2 R:0.5",
+   "sustain": 1.4
+  },
+  {
+   "instrument": "keys",
+   "role": "エレピ（コード・上）",
+   "volume": 0.12,
+   "pan": 0.6,
+   "amp": "auto",
+   "notes": "D4:3 R:1 R:1.5 D4:2 R:0.5 D4:3 R:1 R:1.5 D4:2 R:0.5 G4:3 R:1 R:1.5 G4:2 R:0.5 Ab4:3 R:1 R:1.5 Ab4:2 R:0.5 Eb4:3 R:1 R:1.5 Eb4:2 R:0.5 D4:3 R:1 R:1.5 D4:2 R:0.5 D4:3 R:1 R:1.5 D4:2 R:0.5 D4:3 R:1 R:1.5 D4:2 R:0.5 G4:3 R:1 R:1.5 G4:2 R:0.5 Ab4:3 R:1 R:1.5 Ab4:2 R:0.5 Eb4:3 R:1 R:1.5 Eb4:2 R:0.5 D4:3 R:1 R:1.5 D4:2 R:0.5 D4:3 R:1 R:1.5 D4:2 R:0.5 D4:3 R:1 R:1.5 D4:2 R:0.5 G4:3 R:1 R:1.5 G4:2 R:0.5 Ab4:3 R:1 R:1.5 Ab4:2 R:0.5 Eb4:3 R:1 R:1.5 Eb4:2 R:0.5 D4:3 R:1 R:1.5 D4:2 R:0.5",
+   "sustain": 1.4
+  },
+  {
+   "instrument": "guitar",
+   "role": "ギター（小さな分散和音）",
+   "volume": 0.12,
+   "pan": -0.35,
+   "amp": "clean",
+   "notes": "Eb3:0.5 Bb3:0.5 D4:1 Bb3:0.5 G4:0.5 D4:1 Eb3:0.5 D4:0.5 G4:1 D4:0.5 Bb3:0.5 R:1 Eb3:0.5 G3:0.5 Bb3:1 G3:0.5 D4:0.5 Bb3:1 Eb3:0.5 Bb3:0.5 D4:1 Bb3:0.5 G3:0.5 R:1 Eb3:0.5 G3:0.5 C4:1 G3:0.5 Eb4:0.5 C4:1 Eb3:0.5 C4:0.5 Eb4:1 C4:0.5 G3:0.5 R:1 F3:0.5 Ab3:0.5 D4:1 Ab3:0.5 F4:0.5 D4:1 F3:0.5 D4:0.5 F4:1 D4:0.5 Ab3:0.5 R:1 Ab3:0.5 C4:0.5 Eb4:1 C4:0.5 G4:0.5 Eb4:1 Ab3:0.5 Eb4:0.5 G4:1 Eb4:0.5 C4:0.5 R:1 Eb3:0.5 Bb3:0.5 D4:1 Bb3:0.5 G4:0.5 D4:1 Eb3:0.5 D4:0.5 G4:1 D4:0.5 Bb3:0.5 R:1 Eb3:0.5 Bb3:0.5 D4:1 Bb3:0.5 G4:0.5 D4:1 Eb3:0.5 D4:0.5 G4:1 D4:0.5 Bb3:0.5 R:1 Eb3:0.5 G3:0.5 Bb3:1 G3:0.5 D4:0.5 Bb3:1 Eb3:0.5 Bb3:0.5 D4:1 Bb3:0.5 G3:0.5 R:1 Eb3:0.5 G3:0.5 C4:1 G3:0.5 Eb4:0.5 C4:1 Eb3:0.5 C4:0.5 Eb4:1 C4:0.5 G3:0.5 R:1 F3:0.5 Ab3:0.5 D4:1 Ab3:0.5 F4:0.5 D4:1 F3:0.5 D4:0.5 F4:1 D4:0.5 Ab3:0.5 R:1 Ab3:0.5 C4:0.5 Eb4:1 C4:0.5 G4:0.5 Eb4:1 Ab3:0.5 Eb4:0.5 G4:1 Eb4:0.5 C4:0.5 R:1 Eb3:0.5 Bb3:0.5 D4:1 Bb3:0.5 G4:0.5 D4:1 Eb3:0.5 D4:0.5 G4:1 D4:0.5 Bb3:0.5 R:1 Eb3:0.5 Bb3:0.5 D4:1 Bb3:0.5 G4:0.5 D4:1 Eb3:0.5 D4:0.5 G4:1 D4:0.5 Bb3:0.5 R:1 Eb3:0.5 G3:0.5 Bb3:1 G3:0.5 D4:0.5 Bb3:1 Eb3:0.5 Bb3:0.5 D4:1 Bb3:0.5 G3:0.5 R:1 Eb3:0.5 G3:0.5 C4:1 G3:0.5 Eb4:0.5 C4:1 Eb3:0.5 C4:0.5 Eb4:1 C4:0.5 G3:0.5 R:1 F3:0.5 Ab3:0.5 D4:1 Ab3:0.5 F4:0.5 D4:1 F3:0.5 D4:0.5 F4:1 D4:0.5 Ab3:0.5 R:1 Ab3:0.5 C4:0.5 Eb4:1 C4:0.5 G4:0.5 Eb4:1 Ab3:0.5 Eb4:0.5 G4:1 Eb4:0.5 C4:0.5 R:1 Eb3:0.5 Bb3:0.5 D4:1 Bb3:0.5 G4:0.5 D4:1 Eb3:0.5 D4:0.5 G4:1 D4:0.5 Bb3:0.5 R:1",
+   "sustain": 1.4
+  },
+  {
+   "instrument": "bass",
+   "role": "ベース（丸い音）",
+   "volume": 0.24,
+   "pan": 0,
+   "amp": "auto",
+   "notes": "R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 F2:1.5 R:0.5 C3:1 R:1 F2:1.5 R:0.5 F3:0.5 C3:0.5 R:1 Eb2:1.5 R:0.5 Bb2:1 R:1 Eb2:1.5 R:0.5 Eb3:0.5 Bb2:0.5 R:1 Eb2:1.5 R:0.5 Bb2:1 R:1 Eb2:1.5 R:0.5 Eb3:0.5 Bb2:0.5 R:1 C3:1.5 R:0.5 G3:1 R:1 C3:1.5 R:0.5 C3:0.5 G3:0.5 R:1 Ab2:1.5 R:0.5 Eb3:1 R:1 Ab2:1.5 R:0.5 Ab2:0.5 Eb3:0.5 R:1 Bb2:1.5 R:0.5 F3:1 R:1 Bb2:1.5 R:0.5 Bb2:0.5 F3:0.5 R:1 F2:1.5 R:0.5 C3:1 R:1 F2:1.5 R:0.5 F3:0.5 C3:0.5 R:1 Eb2:1.5 R:0.5 Bb2:1 R:1 Eb2:1.5 R:0.5 Eb3:0.5 Bb2:0.5 R:1 R:4 R:4 R:4 R:4 Ab2:1.5 R:0.5 Eb3:1 R:1 Ab2:1.5 R:0.5 Ab2:0.5 Eb3:0.5 R:1 Bb2:1.5 R:0.5 F3:1 R:1 Bb2:1.5 R:0.5 Bb2:0.5 F3:0.5 R:1 F2:1.5 R:0.5 C3:1 R:1 F2:1.5 R:0.5 F3:0.5 C3:0.5 R:1 Eb2:1.5 R:0.5 Bb2:1 R:1 Eb2:1.5 R:0.5 Eb3:0.5 Bb2:0.5 R:1",
+   "sustain": 0.7
+  },
+  {
+   "instrument": "kick",
+   "role": "やわらかいキック",
+   "volume": 0.14,
+   "pan": 0,
+   "amp": "auto",
+   "notes": "R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. R:4 R:4 R:4 R:4 g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. g:X.....o.....x.o. R:4 R:4"
+  },
+  {
+   "instrument": "snare",
+   "role": "ソフトなスネア",
+   "volume": 0.09,
+   "pan": 0.15,
+   "amp": "auto",
+   "notes": "R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 g:....X.o.....X... g:....X.o.....X... g:....X.o.....X... g:....X.o.....X... g:....X.o.....X... g:....X.o.....X... g:....X.o.....X... g:....X.o.....X... g:....X.o.....X... g:....X.o.....X... g:....X.o.....X... g:....X.o.....X.oo R:4 R:4 R:4 R:4 g:....X.o.....X... g:....X.o.....X... g:....X.o.....X... g:....X.o.....X... g:....X.o.....X... g:....X.o.....X... R:4 R:4",
+   "push": 0.03
+  },
+  {
+   "instrument": "hihat",
+   "role": "ハイハット（8分）",
+   "volume": 0.055,
+   "pan": 0.3,
+   "amp": "auto",
+   "notes": "R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. R:4 R:4 R:4 R:4 g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o. g:X.o.x.o.X.o.x.o.",
+   "push": -0.01
+  }
+ ]
+}
