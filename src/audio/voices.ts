@@ -318,6 +318,8 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       const lp = filter(ctx, "lowpass", 720, g);
       out.push(osc(ctx, "triangle", f, t, t + d + 0.1, lp));
       out.push(osc(ctx, "square", f, t, t + d + 0.1, lp, 0.35));
+      // 60Hz未満の「床」を足す（1オクターブ下の正弦波。40Hz以上に収まる音だけ）
+      if (f * 0.5 >= 40) out.push(osc(ctx, "sine", f * 0.5, t, t + d + 0.1, lp, 0.3));
       break;
     }
     case "guitar":
@@ -391,9 +393,11 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
     case "piano": {
       const decay = Math.max(0.6, Math.min(d * 1.6, 2.2));
       const stop = t + decay + 0.05;
-      out.push(osc(ctx, "triangle", f, t, stop, pluckGain(ctx, dest, t, v, 0.003, decay)));
-      out.push(osc(ctx, "sine", f * 2, t, stop, pluckGain(ctx, dest, t, v * 0.4, 0.003, decay * 0.6)));
-      out.push(osc(ctx, "sine", f * 3, t, t + 0.6, pluckGain(ctx, dest, t, v * 0.18, 0.003, 0.3)));
+      // フェルトピアノ風: 高い音ほど上の倍音を丸め、きつく聞こえるのを防ぐ
+      const felt = filter(ctx, "lowpass", Math.max(1800, Math.min(f * 5, 4200)), dest);
+      out.push(osc(ctx, "triangle", f, t, stop, pluckGain(ctx, felt, t, v, 0.003, decay)));
+      out.push(osc(ctx, "sine", f * 2, t, stop, pluckGain(ctx, felt, t, v * 0.4, 0.003, decay * 0.6)));
+      out.push(osc(ctx, "sine", f * 3, t, t + 0.6, pluckGain(ctx, felt, t, v * 0.18, 0.003, 0.3)));
       break;
     }
     case "harpsichord": {
