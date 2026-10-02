@@ -115,7 +115,7 @@ export function enemyStatsForLevel(level: number): { maxHp: number; attack: numb
 }
 
 /** 出会うのは1〜3体（tierが低いうちは少なめ）。 */
-function createEncounterEnemies(mapId: string, zone: EncounterZone, rng: () => number): Combatant[] {
+export function createEncounterEnemies(mapId: string, zone: EncounterZone, rng: () => number): Combatant[] {
   const maxCount = zone.level <= 6 ? 2 : 3;
   const count = 1 + Math.floor(rng() * maxCount);
   const stats = enemyStatsForLevel(zone.level);

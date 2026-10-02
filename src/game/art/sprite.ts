@@ -1,5 +1,5 @@
 /**
- * 大きなドット絵（地形128×128、ボス・登場人物256×256）のデータ形式と読み込み。
+ * 大きなドット絵（地形128×128、ボス・登場人物256×256、雑魚の敵64×64）のデータ形式と読み込み。
  * 色は「色番号A〜Z（透明は_）＋続く個数（36進数の小文字。1個なら省略）」の並び（RLE）で持ち、
  * 元データは tools/pixel-art/ で作る。容量を抑えるため、画像ファイルは使わない。
  */
@@ -34,11 +34,16 @@ export function decodeSprite(data: SpriteData): Int8Array {
 const canvasCache = new Map<string, HTMLCanvasElement>();
 
 /** 画面に描くためのキャンバスを作って使い回す（ブラウザ以外では null）。 */
-export function getSpriteCanvas(key: string, table: Record<string, SpriteData>): HTMLCanvasElement | null {
+export function getSpriteCanvas(
+  key: string,
+  table: Record<string, SpriteData>,
+  paletteOverride?: string[],
+): HTMLCanvasElement | null {
   if (typeof document === "undefined") {
     return null;
   }
-  const cached = canvasCache.get(key);
+  const cacheKey = paletteOverride ? `${key}|${paletteOverride.join("")}` : key;
+  const cached = canvasCache.get(cacheKey);
   if (cached) {
     return cached;
   }
@@ -55,7 +60,7 @@ export function getSpriteCanvas(key: string, table: Record<string, SpriteData>):
     return null;
   }
   const image = ctx.createImageData(data.size, data.size);
-  const rgb = data.palette.map((hex) => {
+  const rgb = (paletteOverride ?? data.palette).map((hex) => {
     const v = parseInt(hex.slice(1), 16);
     return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
   });
@@ -70,6 +75,6 @@ export function getSpriteCanvas(key: string, table: Record<string, SpriteData>):
     image.data[n * 4 + 3] = 255;
   }
   ctx.putImageData(image, 0, 0);
-  canvasCache.set(key, canvas);
+  canvasCache.set(cacheKey, canvas);
   return canvas;
 }

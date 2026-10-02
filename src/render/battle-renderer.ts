@@ -3,6 +3,7 @@ import type { BattleState, Combatant } from "../game/battle/types";
 import { findCombatant } from "../game/battle/types";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
+import { hueOfHex, mobPalette } from "../game/art/mob-palette";
 import { wrapText } from "./text-wrap";
 import { shakeOffset, type BattleEffect } from "../game/battle/battle-effect";
 
@@ -52,6 +53,21 @@ function drawEnemySprite(
     ctx.fillStyle = cell.color;
     ctx.fillRect(x + cell.col * cellSize, y + cell.row * cellSize, cellSize, cellSize);
   }
+}
+
+/** 雑魚の敵の絵（64×64。形ごとの手描きの絵を、地方の色相で塗る）。描けたら true。 */
+function drawMobSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, x: number, y: number): boolean {
+  const spec = enemy.hp > 0 ? MONSTERS[enemy.id] : undefined;
+  if (!spec?.shape || spec.shape === "blob") {
+    return false;
+  }
+  const canvas = getSpriteCanvas(`mob:${spec.shape}`, SPRITE_DATA, mobPalette(hueOfHex(spec.body)));
+  if (!canvas) {
+    return false;
+  }
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(canvas, x, y, 64, 64);
+  return true;
 }
 
 /** ボスの大きな絵（256×256）。あれば画面の中央に大きく描く。描けたら true。 */
@@ -111,6 +127,12 @@ function renderBattleBody(
       return;
     }
     const x = 60 + index * 90;
+    if (drawMobSprite(ctx, enemy, x - 12, 4)) {
+      ctx.fillStyle = "#f0f0f0";
+      ctx.fillText(enemy.name, x - 12, 70);
+      drawHpBar(ctx, enemy, x - 12, 82, 64);
+      return;
+    }
     const y = 24;
     drawEnemySprite(ctx, enemy, x, y, 40);
     ctx.fillStyle = "#f0f0f0";
