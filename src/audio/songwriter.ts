@@ -1062,6 +1062,35 @@ export function walkBass(notes: NoteEvent[], barChords: string[], beats: number,
 }
 
 /** 設計図から曲を作る。 */
+/**
+ * 曲の起伏: 出だしは小さく始めて少しずつ上げ、間奏では一度引き、サビで元の大きさに戻す。
+ * 小節ごとに全パートの強さ（velocity）へ倍率をかける。
+ */
+export function applyDynamics(score: Score, kinds: readonly Kind[], beats: number): void {
+  const bars: number[] = [];
+  for (const kind of kinds) {
+    const n = kind === "intro" ? 4 : 8;
+    for (let i = 0; i < n; i++) {
+      const t = i / Math.max(1, n - 1);
+      let g = 1;
+      if (kind === "intro") g = 0.55 + 0.3 * t; // 約-5dB → -1.5dB
+      else if (kind === "verse") g = 0.82 + 0.1 * t;
+      else if (kind === "bridge") g = 0.9 + 0.1 * t;
+      else if (kind === "solo") g = i < 4 ? 0.72 : 0.72 + 0.28 * ((i - 3) / 4); // 引いてから戻す
+      else if (kind === "outro") g = 1 - 0.3 * t;
+      bars.push(g);
+    }
+  }
+  for (const track of score.tracks) {
+    let pos = 0;
+    for (const ev of track.notes) {
+      const bar = Math.min(bars.length - 1, Math.floor(pos / beats));
+      if (bars.length) ev.velocity = (ev.velocity ?? 1) * bars[bar];
+      pos += ev.durationBeats;
+    }
+  }
+}
+
 export function composeSong(spec: SongSpec): Score {
   const rng = makeRng(spec.seed);
   const key = keyOf(spec);
@@ -1136,6 +1165,7 @@ export function composeSong(spec: SongSpec): Score {
     const barChords = sections.flatMap((s) => s.chords.split(/\s+/).filter(Boolean));
     if (i >= 0 && score.tracks[i]) score.tracks[i].notes = walkBass(score.tracks[i].notes, barChords, beats, key);
   }
+  applyDynamics(score, plan.kinds, beats);
   score.drumKit = DRUM_KIT[spec.style] ?? 0;
   if (spec.style === "electro" || spec.style === "jpop" || spec.style === "dancerock") score.pump = true;
   if (OPENING_STYLES.includes(spec.style)) score.opening = true;
