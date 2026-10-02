@@ -1,0 +1,53 @@
+[
+  {
+    "title": "炎の行進",
+    "prompt": "melodic metal, twin guitar harmonies, galloping riffs, 160 BPM, E minor",
+    "lyrics": "[Verse 1]\n（歌詞はここに）",
+    "audio_duration": 270
+  },
+  {
+    "title": "歪んだ時計",
+    "prompt": "progressive metal, odd meter 7/8, complex riffs",
+    "audio_duration": 270
+  },
+  {
+    "title": "Street Fire",
+    "prompt": "old school hardcore, gang vocals, breakdown, 180 BPM",
+    "audio_duration": 240
+  },
+  {
+    "title": "Grave Engine",
+    "prompt": "technical death metal, blast beats, growl vocals",
+    "audio_duration": 270
+  },
+  {
+    "title": "重力崩壊",
+    "prompt": "loud metal, heavy low end, screamed and clean vocals, 150 BPM",
+    "audio_duration": 270
+  },
+  {
+    "title": "空を裂く声",
+    "prompt": "ラウドロック、シャウトと歌の切り替え",
+    "audio_duration": 260
+  },
+  {
+    "title": "Neon Pulse",
+    "prompt": "dance rock, four on the floor, synth bass, 128 BPM",
+    "audio_duration": 270
+  },
+  {
+    "title": "Midnight Drift",
+    "prompt": "drift phonk, cowbell, distorted 808, 140 BPM",
+    "audio_duration": 240
+  },
+  {
+    "title": "Crown of Strings",
+    "prompt": "rock x orchestra, strings brass timpani choir, D minor",
+    "audio_duration": 280
+  },
+  {
+    "title": "夜桜と太鼓",
+    "prompt": "ロック×和楽器、尺八と三味線と和太鼓、A minor",
+    "audio_duration": 270
+  }
+]
