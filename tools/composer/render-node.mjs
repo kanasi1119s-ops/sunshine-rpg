@@ -10,6 +10,7 @@ import { fileURLToPath } from "url";
 import { openGuitarSampler, humanizeNotes } from "./guitar-sampler.mjs";
 import { openMetalSampler } from "./metal-sampler.mjs";
 import { renderRealRhythm } from "./real-rhythm.mjs";
+import { renderRealKeys } from "./real-keys.mjs";
 
 const ROOT = path.resolve(fileURLToPath(new URL("../../", import.meta.url)));
 
@@ -182,6 +183,14 @@ export async function renderMix(kit, score, { edition = "real", outWav, soundfon
   }
   // ドラムとベースも、本物の録音があればそれで鳴らす（real-rhythm.mjs）。ドラムは キック・スネア・タム・シンバル を別のパートに
   const rhythm = renderRealRhythm({ midi, instruments: k.instruments, style: score.style, total });
+  // 鍵盤とシンセ（real-keys.mjs）: ピアノは本物の録音、エレクトリックピアノ・リード・パッド・シンセベース・808 は専用のシンセ
+  const keysR = renderRealKeys({ midi, instruments: k.instruments, programs: k.programs, style: score.style, total, groupOfChannel, skip: new Set([...rhythm.muted, ...sampledCh]) });
+  for (const [g, buf] of Object.entries(keysR.parts)) {
+    if (rhythm.parts[g]) for (let i = 0; i < total; i++) (rhythm.parts[g].L[i] += buf.L[i]), (rhythm.parts[g].R[i] += buf.R[i]);
+    else rhythm.parts[g] = buf;
+  }
+  for (const c of keysR.muted) rhythm.muted.add(c);
+  rhythm.used.push(...keysR.used);
   for (const [g, buf] of Object.entries(rhythm.parts)) {
     if (!sampledL[g]) (sampledL[g] = buf.L), (sampledR[g] = buf.R);
     else for (let i = 0; i < total; i++) (sampledL[g][i] += buf.L[i]), (sampledR[g][i] += buf.R[i]);
