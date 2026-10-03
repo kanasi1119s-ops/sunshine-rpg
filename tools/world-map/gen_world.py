@@ -42,9 +42,13 @@ def blob(cx, cy, rx, ry, amp, glyph, only=None):
                 T[y][x] = glyph
 
 # ---- 4つの大陸と小島 ----
-blob(60, 108, 52, 44, 1.05, "P")          # A 西の灯里大陸
-blob(172, 42, 50, 30, 1.05, "P")          # B 北東の霧霜大陸
-blob(182, 148, 46, 36, 1.05, "P")         # D 南東の灯芯大陸
+blob(60, 108, 52, 44, 1.3, "P")          # A 西の灯里大陸
+blob(172, 42, 50, 30, 1.3, "P")          # B 北東の霧霜大陸
+blob(182, 148, 46, 36, 1.3, "P")         # D 南東の灯芯大陸
+# 半島と入り江（海岸線を入り組ませる）
+blob(24, 150, 16, 11, 1.3, "P"); blob(110, 70, 12, 9, 1.3, "P"); blob(100, 150, 14, 10, 1.3, "P")   # A の半島
+blob(215, 30, 14, 10, 1.3, "P"); blob(130, 22, 12, 8, 1.3, "P"); blob(150, 70, 14, 12, 1.3, "P")    # B の半島
+blob(228, 180, 14, 8, 1.3, "P"); blob(150, 178, 16, 8, 1.3, "P"); blob(140, 120, 10, 8, 1.3, "P")   # D の半島
 for cx, cy, r in ((226, 90, 8), (239, 100, 6), (229, 106, 6), (216, 99, 5)):   # C 空の浮島群（雲の島）
     for y in range(H):
         for x in range(W):
@@ -58,6 +62,12 @@ for _id, cx, cy, nm in ISLETS:
 for y in range(H):
     for x in range(W):
         if math.hypot((x-124)/5.2, (y-152)/4.4) < 1.15 and T[y][x] == "P": T[y][x] = "D"
+# 入り江: 海岸の近くの、等高線ぞいの細い溝を海にする（海岸線が入り組む）
+_coast = [[T[y][x] == "P" and any(0 <= y+dy < H and 0 <= x+dx < W and T[y+dy][x+dx] == "O" for dy in range(-4, 5) for dx in range(-4, 5)) for x in range(W)] for y in range(H)]
+for y in range(H):
+    for x in range(W):
+        if _coast[y][x] and abs(n3[y, x] - 0.52) < 0.018 and not any(abs(x-cx) < 9 and abs(y-cy) < 8 for _i, cx, cy, _n in ISLETS):
+            T[y][x] = "O"
 # 芯環塔の島（海のまんなか）
 TOWER = (125, 95)
 for y in range(H):

@@ -56,6 +56,19 @@ export function openVortexChannel(data: TileMapData): boolean {
   return changed;
 }
 
+/** 「はじめから」などで航路が閉じた状態に戻るとき、切れ目（海）を渦の輪（14）に戻す。変えたら true。 */
+export function closeVortexChannel(data: TileMapData): boolean {
+  let changed = false;
+  for (const [x, y] of WORLD_CHANNEL) {
+    const i = y * data.width + x;
+    if (data.layers[0].data[i] !== 14) {
+      data.layers[0].data[i] = 14;
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 /** 着陸できる地形か。 */
 export function canLandOn(groundId: number): boolean {
   return WALKABLE_GROUND.has(groundId);
