@@ -1,4 +1,5 @@
 import type { TileMapData } from "../types";
+import { addCornerGroves } from "../organic";
 
 const GRASS = 1;
 const PATH = 2;
@@ -91,6 +92,9 @@ export function createMugikanoVillageData(): TileMapData {
       set(HOUSE_ORIGIN.x + dx, HOUSE_ORIGIN.y + dy, HOUSE_WALL);
     }
   }
+
+  // 四隅に木のかたまりを食い込ませて、森のふちをぎざぎざにする（道には置かない）。
+  addCornerGroves(WIDTH, HEIGHT, (x, y) => set(x, y, TREE), (x, y) => ground[y * WIDTH + x] !== GRASS, true);
 
   return {
     width: WIDTH,

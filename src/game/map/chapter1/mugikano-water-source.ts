@@ -1,4 +1,5 @@
 import type { TileMapData } from "../types";
+import { addCornerGroves } from "../organic";
 
 const GRASS = 1;
 const PATH = 2;
@@ -66,6 +67,9 @@ export function createMugikanoWaterSourceData(): TileMapData {
   set(SOURCE_CENTER.x + 1, SOURCE_CENTER.y, ROCK);
   set(SOURCE_CENTER.x, SOURCE_CENTER.y, DUG_EARTH);
   set(SOURCE_CENTER.x, SOURCE_CENTER.y + 1, DUG_EARTH);
+
+  // 四隅に木のかたまりを食い込ませて、森のふちをぎざぎざにする（道には置かない）。
+  addCornerGroves(WIDTH, HEIGHT, (x, y) => set(x, y, TREE), (x, y) => ground[y * WIDTH + x] !== GRASS, false);
 
   return {
     width: WIDTH,
