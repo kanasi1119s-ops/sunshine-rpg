@@ -49,4 +49,34 @@ describe("マップの飾り（木・家）", () => {
       }
     }
   });
+
+  it("飾りを置いても、出入り口とNPCの隣のマスへ歩いてたどり着ける", () => {
+    for (const mapId of Object.keys(MAP_PROPS)) {
+      const d = WORLD_MAPS[mapId];
+      const { width: w, height: h } = d;
+      const blocked = (x: number, y: number): boolean => !!d.collision?.[y * w + x];
+      const start = d.exits![0];
+      const seen = new Set<number>([start.tileY * w + start.tileX]);
+      const stack: Array<[number, number]> = [[start.tileX, start.tileY]];
+      const around: Array<[number, number]> = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      while (stack.length) {
+        const [x, y] = stack.pop()!;
+        for (const [dx, dy] of around) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h || blocked(nx, ny) || seen.has(ny * w + nx)) {
+            continue;
+          }
+          seen.add(ny * w + nx);
+          stack.push([nx, ny]);
+        }
+      }
+      for (const e of d.exits!) {
+        expect(seen.has(e.tileY * w + e.tileX), `${mapId} の出入り口 (${e.tileX},${e.tileY})`).toBe(true);
+      }
+      for (const n of WORLD_NPCS[mapId] ?? []) {
+        expect(around.some(([dx, dy]) => seen.has((n.tileY + dy) * w + n.tileX + dx)), `${mapId} の ${n.id}`).toBe(true);
+      }
+    }
+  });
 });

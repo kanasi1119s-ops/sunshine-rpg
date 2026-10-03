@@ -57,6 +57,14 @@ export const MAP_PROPS: Record<string, MapProp[]> = {
     { kind: "bush", tileX: 4, tileY: 11 }, { kind: "bush", tileX: 19, tileY: 11 },
     { kind: "tree", tileX: 2, tileY: 13 }, { kind: "tree", tileX: 21, tileY: 13 }, { kind: "tree", tileX: 22, tileY: 5 },
   ],
+  "touri-outskirts": [
+    { kind: "tree", tileX: 2, tileY: 5 }, { kind: "tree", tileX: 15, tileY: 5 }, { kind: "tree", tileX: 3, tileY: 10 }, { kind: "tree", tileX: 14, tileY: 11 },
+    { kind: "bush", tileX: 6, tileY: 8 }, { kind: "rock", tileX: 12, tileY: 9 },
+  ],
+  "mugikano-water-source": [
+    { kind: "tree", tileX: 2, tileY: 6 }, { kind: "tree", tileX: 15, tileY: 4 }, { kind: "tree", tileX: 3, tileY: 11 }, { kind: "tree", tileX: 15, tileY: 10 },
+    { kind: "rock", tileX: 5, tileY: 9 }, { kind: "bush", tileX: 13, tileY: 8 },
+  ],
   "shimohara-town": [
     { kind: "house-blue", tileX: 18, tileY: 5 }, { kind: "rock", tileX: 4, tileY: 12 }, { kind: "rock", tileX: 12, tileY: 14 },
     { kind: "tree", tileX: 2, tileY: 14 }, { kind: "tree", tileX: 21, tileY: 14 }, { kind: "tree", tileX: 22, tileY: 5 },
