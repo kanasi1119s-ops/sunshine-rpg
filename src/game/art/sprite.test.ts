@@ -14,6 +14,13 @@ describe("decodeSprite", () => {
   });
 });
 
+describe("decodeSprite（色が27色以上の形式）", () => {
+  it("「~」で始まる「色番号:続く数」の並びを読める（透明は -1）", () => {
+    const data: SpriteData = { size: 2, palette: ["#000000", "#111111"], rle: "~-1:1,30:2,1:1" };
+    expect(Array.from(decodeSprite(data))).toEqual([-1, 30, 30, 1]);
+  });
+});
+
 describe("書き出されたドット絵データ（sprite-data.generated.ts）", () => {
   const keys = Object.keys(SPRITE_DATA);
 
@@ -34,9 +41,9 @@ describe("書き出されたドット絵データ（sprite-data.generated.ts）"
     }
   });
 
-  it("地形は128×128、雑魚の敵は64×64、ボスと登場人物は256×256", () => {
+  it("地形は128×128、雑魚の敵は64×64、飾りは48・80、登場人物は104×104、ボスは256×256", () => {
     for (const key of keys) {
-      const expected = key.startsWith("terrain:") ? 128 : key.startsWith("mob:") ? 64 : key.startsWith("prop:manor") ? 80 : key.startsWith("prop:") ? 48 : 256;
+      const expected = key.startsWith("terrain:") ? 128 : key.startsWith("mob:") ? 64 : key.startsWith("prop:manor") ? 80 : key.startsWith("prop:") ? 48 : key.startsWith("char:") ? 104 : 256;
       expect(SPRITE_DATA[key].size, key).toBe(expected);
     }
   });

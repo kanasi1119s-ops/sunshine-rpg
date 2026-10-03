@@ -85,7 +85,7 @@ function guideCommands(): EventCommand[] {
               then: [
                 {
                   type: "message",
-                  text: "次はどっちへ行く？ 案内なら任せてくれよ。",
+                  text: "次はどっちへ行く？ 案内なら任せてよ。",
                   speaker: "ガイド",
                 },
               ],
@@ -93,7 +93,7 @@ function guideCommands(): EventCommand[] {
                 { type: "message", text: "……なあ、さっきの男、名前くらいは知ってるんだろ？", speaker: "レト" },
                 {
                   type: "message",
-                  text: "え？ いや、あんな怪しい奴、知り合うわけないだろ。……知らないよ、本当に。",
+                  text: "え？ いや、あんな怪しい奴、知り合うわけないでしょ。……知らないよ、本当に。",
                   speaker: "ガイド",
                 },
                 {
@@ -106,15 +106,15 @@ function guideCommands(): EventCommand[] {
             },
           ],
           else: [
-            { type: "message", text: "……あの怪しい男、まんまと逃げられたか。悔しいな。", speaker: "ガイド" },
+            { type: "message", text: "……あの怪しい男、まんまと逃げられたか。悔しいなあ。", speaker: "ガイド" },
             {
               type: "message",
-              text: "でも、倉庫の灯り石は片付いた。これで湖の商売も、少しは落ち着くはずだ。ありがとう、助かったよ。",
+              text: "でも、倉庫の灯り石は片付いた。これで湖の商売も、少しは落ち着くはず。ありがとう、助かったよ。",
               speaker: "ガイド",
             },
             {
               type: "message",
-              text: "俺も、家業のためにずっとこの件を追ってたんだ。……正直、一人じゃここまで来られなかった。",
+              text: "あたしも、家業のためにずっとこの件を追ってたの。……正直、一人じゃここまで来られなかった。",
               speaker: "ガイド",
             },
             {
@@ -137,7 +137,7 @@ function guideCommands(): EventCommand[] {
                   commands: [
                     {
                       type: "message",
-                      text: "……そうか。まあ、気が変わったらいつでも声をかけてくれ。桟橋のあたりにいるから。",
+                      text: "……そうか。まあ、気が変わったらいつでも声をかけて。桟橋のあたりにいるから。",
                       speaker: "ガイド",
                     },
                   ],
@@ -156,20 +156,20 @@ function guideCommands(): EventCommand[] {
           then: [
             {
               type: "message",
-              text: "頼んだぞ。桟橋の先の倉庫だ、気をつけてな。",
+              text: "頼んだよ。桟橋の先の倉庫だから、気をつけてね。",
               speaker: "ガイド",
             },
           ],
           else: [
-            { type: "message", text: "見ない顔だな。旅の調査員か何かか？", speaker: "ガイド" },
+            { type: "message", text: "見ない顔だね。旅の調査員か何か？", speaker: "ガイド" },
             {
               type: "message",
-              text: "実は、湖の向こう、桟橋の先の倉庫で妙な動きがあってな。灯り石が絡んでるらしいって噂を聞いて、放っておけなくてさ。",
+              text: "実は、湖の向こう、桟橋の先の倉庫で妙な動きがあってね。灯り石が絡んでるらしいって噂を聞いて、放っておけなくて。",
               speaker: "ガイド",
             },
             {
               type: "message",
-              text: "うちは代々、この湖で交易をやってる家でね。おかしな噂が立つのは商売の邪魔なんだよ。",
+              text: "うちは代々、この湖で交易をやってる家でね。おかしな噂が立つのは商売の邪魔なのよ。",
               speaker: "ガイド",
             },
             {
@@ -183,7 +183,7 @@ function guideCommands(): EventCommand[] {
                     { type: "message", text: "わかった。見てくる。", speaker: "ユーリ" },
                     {
                       type: "message",
-                      text: "助かる。俺は町の用があるから、ここで待ってるよ。",
+                      text: "助かる。あたしは町の用があるから、ここで待ってるね。",
                       speaker: "ガイド",
                     },
                   ],
@@ -193,7 +193,7 @@ function guideCommands(): EventCommand[] {
                   commands: [
                     {
                       type: "message",
-                      text: "急がなくてもいいけど、あんまり長引くと湖の連中が困るんだ。頼むよ。",
+                      text: "急がなくてもいいけど、あんまり長引くと湖の人たちが困るの。頼むよ。",
                       speaker: "ガイド",
                     },
                   ],

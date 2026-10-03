@@ -13,6 +13,17 @@ export interface SpriteData {
 export function decodeSprite(data: SpriteData): Int8Array {
   const total = data.size * data.size;
   const cells = new Int8Array(total).fill(-1);
+  if (data.rle.startsWith("~")) {
+    // 色が27色以上の絵: 「色番号:続く数」をカンマでつないだ形式
+    let pos = 0;
+    for (const token of data.rle.slice(1).split(",")) {
+      const [value, count] = token.split(":").map(Number);
+      for (let k = 0; k < count && pos < total; k++) {
+        cells[pos++] = value;
+      }
+    }
+    return cells;
+  }
   let pos = 0;
   let i = 0;
   const s = data.rle;

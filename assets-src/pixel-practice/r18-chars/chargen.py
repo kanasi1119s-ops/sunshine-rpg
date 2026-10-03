@@ -62,7 +62,12 @@ def render(im, ramps, edges, seps=(), thresholds=None, dither=False):
     W, H = im.w, im.h
     colors = []; idx = {}
     def key(c):
-        if c not in idx: idx[c] = len(colors); colors.append(c)
+        if c in idx: return idx[c]
+        def rgb(h): return tuple(int(h[i:i+2], 16) for i in (1, 3, 5))
+        r0 = rgb(c)
+        for e in colors:      # ほぼ同じ色は1色にまとめる（色数を減らす）
+            if sum(abs(a-b) for a, b in zip(r0, rgb(e))) <= 30: idx[c] = idx[e]; return idx[c]
+        idx[c] = len(colors); colors.append(c)
         return idx[c]
     grid = [[None]*W for _ in range(H)]
     for y in range(H):

@@ -10,12 +10,19 @@ async function build(setName, scale, keyMap) {
     const key = keyMap[p.name];
     if (!key) continue;
     const g = p.build();
-    out[key] = { size: g.length, palette: p.pal.map((x) => x[1]), rle: encode(g) };
+    out[key] = { size: g.length, palette: p.pal.map((x) => x[1]), rle: encode(g, p.pal.length > 26) };
   }
   return out;
 }
 /** 色番号A〜Z＋透明(_)を、続く同じ値の数（36進数の小文字）つきで並べる。1個のときは数を省く。 */
-function encode(g) {
+function encode(g, wide = false) {
+  if (wide) {
+    // 色が27色以上のとき: 「色番号:続く数」をカンマでつなぐ。先頭の「~」が目印（透明は -1）
+    const toks = []; let prev = null, n = 0;
+    for (const row of g) for (const k of row) { const v = k < 0 || Number.isNaN(k) ? -1 : k; if (v === prev) n++; else { if (prev !== null) toks.push(prev + ":" + n); prev = v; n = 1; } }
+    if (prev !== null) toks.push(prev + ":" + n);
+    return "~" + toks.join(",");
+  }
   let s = "", prev = null, n = 0;
   const flush = () => { if (prev === null) return; s += prev + (n > 1 ? n.toString(36) : ""); };
   for (const row of g) for (const k of row) {
@@ -32,7 +39,7 @@ const SETS = {
   guardians: [4, { "G1-恵みの残照": "boss:god-1", "G2-理不尽の羽音": "boss:god-2", "G3-坩堝の顎": "boss:god-3", "G4-在らざる歌": "boss:god-4", "G5-透き徹る誓い": "boss:god-5", "G6-不敗の咎人": "boss:god-6", "G7-境界を見ぬ者": "boss:god-7", "G8-無音の弔鐘": "boss:god-8", "M1-塔の守り（2層）": "boss:tower2-guard", "M2-塔の守り（3層）": "boss:kanou3-guard", "M3-灯りの番人": "boss:tower3-guard", "M4-深部3層の歪み": "boss:deep3-yugami", "M5-全観": "boss:zenkan" }],
   mobs: [1, { "MB1-こうもり": "mob:bat", "MB2-虫": "mob:beetle", "MB3-結晶": "mob:shard", "MB4-しずく": "mob:drop", "MB5-かげ": "mob:ghost", "MB6-ねずみ": "mob:rat", "MB7-サソリ": "mob:scorpion", "MB8-め": "mob:eye" }],
   props: [1, { "P1-木": "prop:tree", "P2-家": "prop:house", "P3-家青": "prop:house-blue", "P4-家緑": "prop:house-green", "P5-岩": "prop:rock", "P6-茂み": "prop:bush", "P7-屋敷": "prop:manor", "P8-屋敷青": "prop:manor-blue", "P9-屋敷緑": "prop:manor-green" }],
-  characters: [4, { "C1-ユーリ": "char:ユーリ", "C2-レト": "char:レト", "C3-ミナ": "char:ミナ", "C4-ガイド": "char:ガイド", "C5-オルカ": "char:オルカ" }],
+  party: [1, { "C1-ユーリ": "char:ユーリ", "C2-レト": "char:レト", "C3-ミナ": "char:ミナ", "C4-ガイド": "char:ガイド", "C5-オルカ": "char:オルカ" }],
 };
 // 倍率（SCALE）はモジュールの読み込み時に決まるため、セットごとに別のプロセスで実行する（node export-game-data.mjs → 自動で分けて実行）。
 const [mode, tmpDir] = process.argv.slice(2);

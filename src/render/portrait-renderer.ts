@@ -48,7 +48,9 @@ export function renderPortraitByName(
     ctx.imageSmoothingQuality = "high";
     ctx.fillStyle = "#2a2140";
     ctx.fillRect(x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
-    ctx.drawImage(full, 90, 8, 76, 90, x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
+    // 104×104の立ち絵: 頭は中央上（x 32〜72、y 0〜46）。256×256の古い絵は頭の位置が違う
+    const crop = full.width === 104 ? [32, 0, 40, 46] : [90, 8, 76, 90];
+    ctx.drawImage(full, crop[0], crop[1], crop[2], crop[3], x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
     return true;
   }
   const spec = PORTRAITS[speaker];

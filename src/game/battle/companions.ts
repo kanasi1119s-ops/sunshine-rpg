@@ -51,7 +51,7 @@ export const MINA: CompanionDefinition = {
   }),
 };
 
-/** ガイド（硝子湖の交易商人の息子、風唱系）。第2章で仲間に加わる。すばしっこく、風のとくぎで援護する。 */
+/** ガイド（硝子湖の交易商人の娘、風唱系）。第2章で仲間に加わる。すばしっこく、風のとくぎで援護する。 */
 export const GUIDE: CompanionDefinition = {
   id: "guide",
   name: "ガイド",

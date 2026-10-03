@@ -83,7 +83,7 @@ export const CHAPTER9_NPCS: Record<string, Npc[]> = {
         },
         {
           type: "message",
-          text: "二十年前の「静まりの年」に、要人たちが記憶を失って消えたのは、これのせいか。エドレアは、合議会の古い封印の記録から、この仕組みを知ったんだ。",
+          text: "二十年前の「静まりの年」に、要人たちが記憶を失って消えたのは、これのせいか。エドレアは、合議会の古い封印の記録から、この仕組みを知ったのね。",
           speaker: "オルカ",
         },
         { type: "setFlag", flag: "chapter9_mural_right", value: true },

@@ -113,7 +113,7 @@ function guildMasterCommands(): EventCommand[] {
                 },
                 {
                   type: "message",
-                  text: "……そうか。よかった。ずっと胸につかえていたんだ。",
+                  text: "……そうか。よかった。ずっと胸につかえていたの。",
                   speaker: "ガイド",
                 },
                 { type: "message", text: "（これで、疑いは晴れたんだね）", speaker: "ミナ" },
