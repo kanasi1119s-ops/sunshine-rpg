@@ -1,0 +1,492 @@
+[
+ {
+  "kind": "weapon",
+  "name": "sword",
+  "label": "剣",
+  "use": "灯り鉄の剣・水鏡の剣など、剣の系統の標準アイコン（武器の種類=剣）",
+  "colors": 9
+ },
+ {
+  "kind": "weapon",
+  "name": "sword-holy",
+  "label": "聖剣",
+  "use": "灯芯の聖剣（最終武器）など、特別な剣。幅広の金色の刃と青い宝石",
+  "colors": 10
+ },
+ {
+  "kind": "weapon",
+  "name": "dagger",
+  "label": "短剣",
+  "use": "短い刃の剣。素早い仲間・盗賊系の武器、「短剣」の系統",
+  "colors": 9
+ },
+ {
+  "kind": "weapon",
+  "name": "scimitar",
+  "label": "曲刀",
+  "use": "砂風の曲刀など、反りのある刃",
+  "colors": 10
+ },
+ {
+  "kind": "weapon",
+  "name": "spear",
+  "label": "槍",
+  "use": "槍の系統（突く武器）。穂先と長い柄",
+  "colors": 10
+ },
+ {
+  "kind": "weapon",
+  "name": "axe",
+  "label": "斧",
+  "use": "斧の系統。重い一撃の武器",
+  "colors": 9
+ },
+ {
+  "kind": "weapon",
+  "name": "staff",
+  "label": "杖",
+  "use": "杖の系統。術士・癒し手の武器。先に青い玉",
+  "colors": 10
+ },
+ {
+  "kind": "weapon",
+  "name": "bow",
+  "label": "弓",
+  "use": "弓の系統。弓術士の武器。矢をつがえた形",
+  "colors": 10
+ },
+ {
+  "kind": "weapon",
+  "name": "shield",
+  "label": "盾",
+  "use": "盾の系統（装備は防具の扱いでもよい）。青地に金のふち",
+  "colors": 6
+ },
+ {
+  "kind": "weapon",
+  "name": "knuckle",
+  "label": "拳具",
+  "use": "拳闘士用のこぶし武器（鉄の拳当て）。革の拳に鉄の板",
+  "colors": 7
+ },
+ {
+  "kind": "armor",
+  "name": "light",
+  "label": "軽装",
+  "use": "灯編みの服・麦藁の外套など、布や革の軽い服",
+  "colors": 9
+ },
+ {
+  "kind": "armor",
+  "name": "heavy",
+  "label": "重装",
+  "use": "坑夫の胸当て・雲糸の鎧など、金属の重い鎧",
+  "colors": 7
+ },
+ {
+  "kind": "armor",
+  "name": "robe",
+  "label": "ローブ",
+  "use": "霧絹の衣など、術士の長い服。裾が広がる",
+  "colors": 7
+ },
+ {
+  "kind": "armor",
+  "name": "helm",
+  "label": "兜",
+  "use": "兜・頭防具の系統。目の細い鉄かぶと、赤い羽根飾り",
+  "colors": 10
+ },
+ {
+  "kind": "armor",
+  "name": "gloves",
+  "label": "手袋",
+  "use": "手袋・籠手の系統。革の手袋に鉄の留め金",
+  "colors": 9
+ },
+ {
+  "kind": "armor",
+  "name": "boots",
+  "label": "靴",
+  "use": "靴の系統。毛皮の縁がついた革のブーツ",
+  "colors": 8
+ },
+ {
+  "kind": "armor",
+  "name": "necklace",
+  "label": "首飾り",
+  "use": "水滴の首飾り・霧の飾りなど、首にかける飾り（装身具）",
+  "colors": 7
+ },
+ {
+  "kind": "armor",
+  "name": "ring",
+  "label": "指輪",
+  "use": "砂の指輪など、指輪の系統（装身具）。金の輪に青い石",
+  "colors": 7
+ },
+ {
+  "kind": "armor",
+  "name": "bracelet",
+  "label": "腕輪",
+  "use": "灯りの腕飾り・雲の腕輪など、腕につける輪（装身具）",
+  "colors": 10
+ },
+ {
+  "kind": "item",
+  "name": "potion-s",
+  "label": "回復薬(小)",
+  "use": "HPを少し回復するどうぐ。小さな丸びん・赤",
+  "colors": 9
+ },
+ {
+  "kind": "item",
+  "name": "potion-m",
+  "label": "回復薬(中)",
+  "use": "HPをかなり回復するどうぐ。ふつうの丸びん・赤",
+  "colors": 9
+ },
+ {
+  "kind": "item",
+  "name": "potion-l",
+  "label": "回復薬(大)",
+  "use": "HPを大きく回復するどうぐ。大びん・赤。首に金の帯",
+  "colors": 9
+ },
+ {
+  "kind": "item",
+  "name": "potion-mp",
+  "label": "魔力の薬",
+  "use": "MPを回復するどうぐ。青い液体のびん",
+  "colors": 8
+ },
+ {
+  "kind": "item",
+  "name": "antidote",
+  "label": "毒消し",
+  "use": "毒を治すどうぐ。緑の液体のびんに、白いラベル",
+  "colors": 9
+ },
+ {
+  "kind": "item",
+  "name": "revive",
+  "label": "復活の薬",
+  "use": "戦闘不能の仲間を起こすどうぐ。金色の液体と白い羽根",
+  "colors": 9
+ },
+ {
+  "kind": "item",
+  "name": "herb",
+  "label": "薬草",
+  "use": "HPを少し回復する草。やくそうの束",
+  "colors": 7
+ },
+ {
+  "kind": "item",
+  "name": "light-stone",
+  "label": "灯り石",
+  "use": "暗い所を照らす石。金色に光る結晶（ダンジョンの道具）",
+  "colors": 6
+ },
+ {
+  "kind": "item",
+  "name": "map",
+  "label": "地図",
+  "use": "行き先を調べる地図。折りたたんだ紙に道と×じるし",
+  "colors": 7
+ },
+ {
+  "kind": "item",
+  "name": "key",
+  "label": "鍵",
+  "use": "扉を開ける鍵。金色の輪っかの頭と、ぎざぎざの先",
+  "colors": 4
+ },
+ {
+  "kind": "item",
+  "name": "letter",
+  "label": "手紙",
+  "use": "イベントで受け取る手紙。赤いろうの封印つき",
+  "colors": 7
+ },
+ {
+  "kind": "coin",
+  "name": "one",
+  "label": "灯貨1枚",
+  "use": "お金の少ない額（1枚）を表す。灯のしるしがある金貨",
+  "colors": 4
+ },
+ {
+  "kind": "coin",
+  "name": "few",
+  "label": "灯貨数枚",
+  "use": "お金の中くらいの額（数枚）を表す。3枚の重なり",
+  "colors": 4
+ },
+ {
+  "kind": "coin",
+  "name": "bag",
+  "label": "灯貨の袋",
+  "use": "お金の多い額（袋）を表す。口をしばった革袋と金貨",
+  "colors": 8
+ },
+ {
+  "kind": "job",
+  "name": "sword-guard",
+  "label": "剣衛士",
+  "use": "初期ジョブ。攻守バランスの近接アタッカー兼盾役。剣の紋",
+  "colors": 9
+ },
+ {
+  "kind": "job",
+  "name": "fist-fighter",
+  "label": "拳闘士",
+  "use": "初期ジョブ。連続攻撃の高速アタッカー。包帯を巻いた拳の紋",
+  "colors": 10
+ },
+ {
+  "kind": "job",
+  "name": "archer",
+  "label": "弓術士",
+  "use": "初期ジョブ。会心率の高い遠距離アタッカー。弓と矢の紋",
+  "colors": 9
+ },
+ {
+  "kind": "job",
+  "name": "flame-mage",
+  "label": "火照術士",
+  "use": "初期ジョブ。攻撃呪文特化（火照系）。炎の紋",
+  "colors": 10
+ },
+ {
+  "kind": "job",
+  "name": "ripple-mage",
+  "label": "水紋術士",
+  "use": "初期ジョブ。回復・防御呪文特化（水紋系）。波紋の紋",
+  "colors": 8
+ },
+ {
+  "kind": "job",
+  "name": "wind-mage",
+  "label": "風唱術士",
+  "use": "初期ジョブ。すばやさ強化と状態異常（風唱系）。渦の紋",
+  "colors": 7
+ },
+ {
+  "kind": "job",
+  "name": "earth-guard",
+  "label": "地固衛士",
+  "use": "初期ジョブ。防御・拘束特化（地固系）。山の紋",
+  "colors": 9
+ },
+ {
+  "kind": "job",
+  "name": "wanderer",
+  "label": "旅芸人",
+  "use": "初期ジョブ。バフ・デバフ・不確定な効果。道化の帽子の紋",
+  "colors": 10
+ },
+ {
+  "kind": "job",
+  "name": "sword-saint",
+  "label": "剛剣聖",
+  "use": "上級ジョブ（剣衛士の上）。攻防とも強い主力。交差した2本の剣の紋",
+  "colors": 8
+ },
+ {
+  "kind": "job",
+  "name": "sky-fist",
+  "label": "天翔拳士",
+  "use": "上級ジョブ（拳闘士の上）。最速の乱れ撃ち。風を切る速い線と拳の紋",
+  "colors": 10
+ },
+ {
+  "kind": "job",
+  "name": "hundred-archer",
+  "label": "百矢の射手",
+  "use": "上級ジョブ（弓術士の上）。範囲攻撃。降りそそぐ3本の矢の紋",
+  "colors": 9
+ },
+ {
+  "kind": "job",
+  "name": "inferno-guide",
+  "label": "業火導師",
+  "use": "上級ジョブ（火照術士の上）。範囲攻撃呪文。三つに燃え上がる大きな炎の紋",
+  "colors": 10
+ },
+ {
+  "kind": "job",
+  "name": "stream-sage",
+  "label": "清流賢者",
+  "use": "上級ジョブ（水紋術士の上）。全体回復。流れる波の紋",
+  "colors": 9
+ },
+ {
+  "kind": "job",
+  "name": "gale-dancer",
+  "label": "疾風の舞手",
+  "use": "上級ジョブ（風唱術士の上）。風の刃と舞い。風の筋と木の葉の紋",
+  "colors": 9
+ },
+ {
+  "kind": "job",
+  "name": "immovable-guardian",
+  "label": "不動の守人",
+  "use": "上級ジョブ（地固衛士の上）。かばう・半減の構え。石の盾の紋",
+  "colors": 9
+ },
+ {
+  "kind": "job",
+  "name": "many-faced-artist",
+  "label": "千変の遊芸師",
+  "use": "上級ジョブ（旅芸人の上）。何が出るか分からない芸。仮面の紋",
+  "colors": 10
+ },
+ {
+  "kind": "job",
+  "name": "goddess-shaman",
+  "label": "女神の巫覡",
+  "use": "天神ジョブ。最高クラスの回復。月と星の紋",
+  "colors": 7
+ },
+ {
+  "kind": "job",
+  "name": "pure-paladin",
+  "label": "純神の聖騎士",
+  "use": "天神ジョブ。最高クラスの守り。翼のある白い剣の紋",
+  "colors": 10
+ },
+ {
+  "kind": "job",
+  "name": "demon-breaker",
+  "label": "鬼神の破戒者",
+  "use": "悪神ジョブ。最高の攻撃力とHPの代償。角のある鬼の顔の紋",
+  "colors": 10
+ },
+ {
+  "kind": "job",
+  "name": "bug-curser",
+  "label": "蟲神の呪術師",
+  "use": "悪神ジョブ。呪いと一撃のチャンス。羽ばたく蟲の紋",
+  "colors": 7
+ },
+ {
+  "kind": "job",
+  "name": "torch-heir",
+  "label": "灯心継承者",
+  "use": "レジェンドジョブ（主人公専用）。五系統を扱う。灯心に火のともる油つぼの紋",
+  "colors": 9
+ },
+ {
+  "kind": "job",
+  "name": "star",
+  "label": "熟練度の星",
+  "use": "ジョブ熟練度（☆1〜15）を数える金の星。ジョブ画面の☆表示用",
+  "colors": 4
+ },
+ {
+  "kind": "skill",
+  "name": "fire",
+  "label": "炎",
+  "use": "火照系の攻撃呪文・火の技。炎の形（赤〜橙〜黄の3段）",
+  "colors": 5
+ },
+ {
+  "kind": "skill",
+  "name": "water",
+  "label": "水",
+  "use": "水紋系の呪文・水の技。しずくの形（青の3段）",
+  "colors": 4
+ },
+ {
+  "kind": "skill",
+  "name": "wind",
+  "label": "風",
+  "use": "風唱系の呪文・風の技。ぐるりと巻く風の渦（水色の3段）",
+  "colors": 4
+ },
+ {
+  "kind": "skill",
+  "name": "earth",
+  "label": "土",
+  "use": "地固系の呪文・土の技。地面から突き出る岩のとげ",
+  "colors": 8
+ },
+ {
+  "kind": "skill",
+  "name": "light",
+  "label": "光",
+  "use": "光断系の呪文・聖なる技。光を放つ太陽（金の3段）",
+  "colors": 5
+ },
+ {
+  "kind": "skill",
+  "name": "dark",
+  "label": "闇",
+  "use": "闇の呪文・呪い・悪神の技。もやをまとった黒い玉（紫の3段）",
+  "colors": 5
+ },
+ {
+  "kind": "skill",
+  "name": "heal",
+  "label": "回復",
+  "use": "水紋系の回復呪文・癒しの技。四つ葉（緑の3段）",
+  "colors": 4
+ },
+ {
+  "kind": "skill",
+  "name": "buff",
+  "label": "強化",
+  "use": "味方の能力を上げる技。上向きの矢（橙の3段）",
+  "colors": 5
+ },
+ {
+  "kind": "skill",
+  "name": "debuff",
+  "label": "弱体",
+  "use": "敵の能力を下げる技。下向きの矢（紫の3段）",
+  "colors": 4
+ },
+ {
+  "kind": "skill",
+  "name": "sleep",
+  "label": "眠り",
+  "use": "敵を眠らせる技（風唱の眠り唄など）。大小のZ（青の3段）",
+  "colors": 4
+ },
+ {
+  "kind": "skill",
+  "name": "poison",
+  "label": "毒",
+  "use": "毒の技・毒状態。どくろと、したたる緑のしずく",
+  "colors": 8
+ },
+ {
+  "kind": "skill",
+  "name": "all",
+  "label": "全体攻撃",
+  "use": "敵全体に当たる技（波・雨矢・大地の怒りなど）。とげのある爆発",
+  "colors": 5
+ },
+ {
+  "kind": "skill",
+  "name": "slash",
+  "label": "斬る",
+  "use": "物理の斬撃（剣・刃の技）。振りぬいた刃の三日月",
+  "colors": 4
+ },
+ {
+  "kind": "skill",
+  "name": "pierce",
+  "label": "突く",
+  "use": "物理の刺突（槍・矢の技）。鋭いとげと、走る線",
+  "colors": 7
+ },
+ {
+  "kind": "skill",
+  "name": "guard",
+  "label": "守り",
+  "use": "物理の防御・かばう・守りの構え。木の丸盾に鉄のふち",
+  "colors": 7
+ }
+]

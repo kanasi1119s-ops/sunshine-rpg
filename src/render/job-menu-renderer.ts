@@ -3,6 +3,7 @@ import { starsOf } from "../game/job/mastery";
 import type { JobMenuState } from "../game/job/job-menu";
 import type { JobId, JobState } from "../game/job/types";
 import { drawWindow } from "./ui-frame";
+import { drawIcon, iconForJob } from "./icon-renderer";
 
 /** 一度に見せるジョブの行数（多いときは、カーソルのまわりを見せる）。 */
 const MAX_VISIBLE_JOBS = 12;
@@ -61,7 +62,9 @@ export function renderJobMenu(
     const stars = mState ? starsOf(mState, job.id) : 1;
     const now = mState?.equipped === job.id ? "（装備中）" : "";
     ctx.fillStyle = i === state.jobCursor ? "#f2c14e" : "#f0f0f0";
-    ctx.fillText(`${i === state.jobCursor ? "▶" : " "} ${job.name} ☆${stars}${now}`, x + PAD, y + PAD + LINE * (row + 1));
+    ctx.fillText(`${i === state.jobCursor ? "▶" : " "}`, x + PAD, y + PAD + LINE * (row + 1));
+    drawIcon(ctx, iconForJob(job.id), x + PAD + 9, y + PAD + LINE * (row + 1) - 1, 12);
+    ctx.fillText(`${job.name} ☆${stars}${now}`, x + PAD + 24, y + PAD + LINE * (row + 1));
   });
   const cur = JOBS_BY_ID[jobIds[state.jobCursor]];
   const shown = Math.min(jobIds.length, MAX_VISIBLE_JOBS);

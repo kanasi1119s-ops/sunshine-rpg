@@ -21,18 +21,18 @@ const TOWN_ICON: Record<string, MapProp["kind"]> = {
  * 各町の南の門とつなぐ）。地形は `tools/world-map/gen_world.py` で作った `world-map.generated.ts`。
  * 山・海・湖は通れない。道は、町と町をつなぐ（山脈は道だけが越える）。
  */
-const GLYPH_TO_ID: Record<string, number> = { O: 1, P: 2, F: 3, M: 4, D: 5, S: 6, R: 7, H: 8, L: 9, C: 10, W: 11, T: 12, V: 13, Q: 14 };
+const GLYPH_TO_ID: Record<string, number> = { O: 1, P: 2, F: 3, M: 4, D: 5, S: 6, R: 7, H: 8, L: 9, C: 10, W: 11, T: 12, V: 13, Q: 14, N: 15, X: 16 };
 
 const TILE_COLORS: Record<number, string> = {
-  1: "#1e5a96", 2: "#4a9a3a", 3: "#2f7a2a", 4: "#857c74", 5: "#d9bf82", 6: "#e8eef2", 7: "#b3853f", 8: "#5a9a40", 9: "#2f6fb0", 10: "#cfe3f2", 11: "#5a4a6a", 12: "#3a6a50", 13: "#143a78", 14: "#143a78",
+  1: "#1e5a96", 2: "#4a9a3a", 3: "#2f7a2a", 4: "#857c74", 5: "#d9bf82", 6: "#e8eef2", 7: "#b3853f", 8: "#5a9a40", 9: "#2f6fb0", 10: "#cfe3f2", 11: "#5a4a6a", 12: "#3a6a50", 13: "#143a78", 14: "#143a78", 15: "#6a6068", 16: "#3a2c3a",
 };
 
 const TILE_ART_MAP: Record<number, string> = {
-  1: "water", 2: "grass", 3: "worldforest", 4: "mountain", 5: "tint:sand", 6: "tint:snow", 7: "path", 8: "hills", 9: "water", 10: "tint:cloud", 11: "tint:flagstone", 12: "snowforest", 13: "water", 14: "water",
+  1: "water", 2: "grass", 3: "worldforest", 4: "mountain", 5: "tint:sand", 6: "tint:snow", 7: "path", 8: "hills", 9: "water", 10: "tint:cloud", 11: "tint:flagstone", 12: "snowforest", 13: "water", 14: "water", 15: "peaks", 16: "chasm",
 };
 
 /** 通れない地形: 海・山・湖。 */
-const BLOCKED = new Set([1, 4, 9, 13, 14]);
+const BLOCKED = new Set([1, 4, 9, 13, 14, 15, 16]);
 
 export function createWorldMapData(): TileMapData {
   const ground = new Array(WORLD_WIDTH * WORLD_HEIGHT).fill(1);

@@ -42,9 +42,9 @@ def blob(cx, cy, rx, ry, amp, glyph, only=None):
                 T[y][x] = glyph
 
 # ---- 4つの大陸と小島 ----
-blob(60, 108, 52, 44, 0.70, "P")          # A 西の灯里大陸
-blob(172, 42, 50, 30, 0.70, "P")          # B 北東の霧霜大陸
-blob(182, 148, 46, 36, 0.70, "P")         # D 南東の灯芯大陸
+blob(60, 108, 52, 44, 1.05, "P")          # A 西の灯里大陸
+blob(172, 42, 50, 30, 1.05, "P")          # B 北東の霧霜大陸
+blob(182, 148, 46, 36, 1.05, "P")         # D 南東の灯芯大陸
 for cx, cy, r in ((226, 90, 8), (239, 100, 6), (229, 106, 6), (216, 99, 5)):   # C 空の浮島群（雲の島）
     for y in range(H):
         for x in range(W):
@@ -110,6 +110,57 @@ def river(x0, y0, x1, y1):
         if 0 <= x < W and 0 <= y < H and T[y][x] in "PFHDS": T[y][x] = "L"
 river(62, 96, 52, 150); river(150, 36, 160, 60); river(176, 120, 170, 160)
 
+# ---- 複雑な地形: 山脈（ノイズの等高線）で大陸を区切る。尾根は細く長く、ところどころで途切れ、峠になる ----
+TOWN_PTS0 = [(18, 108), (40, 114), (62, 100), (86, 80), (72, 138), (150, 44), (190, 22), (226, 92), (168, 140), (212, 150)]
+def far_from_towns(x, y, d=8): return all(abs(x-a) + abs(y-b) >= d for a, b in TOWN_PTS0)
+for y in range(H):
+    for x in range(W):
+        if T[y][x] in "PFHDST" and far_from_towns(x, y):
+            if abs(n2[y, x] - 0.50) < 0.030 and n1[y, x] > 0.38:
+                T[y][x] = "M"
+            elif abs(n3[y, x] - 0.44) < 0.022 and n2[y, x] > 0.45:
+                T[y][x] = "M"
+# 山塊の内部は、ごつごつした高峰（N）にする
+for y in range(1, H-1):
+    for x in range(1, W-1):
+        if T[y][x] == "M" and all(T[y+dy][x+dx] in "MN" for dx, dy in ((1,0),(-1,0),(0,1),(0,-1))):
+            T[y][x] = "N"
+# ---- 水系: 山から海へ、低いほうへ流れる川（枝わかれあり）。海までの距離から、流れる向きを決める ----
+from collections import deque
+dist = [[9999]*W for _ in range(H)]
+dq = deque()
+for y in range(H):
+    for x in range(W):
+        if T[y][x] == "O":
+            dist[y][x] = 0; dq.append((x, y))
+while dq:
+    x, y = dq.popleft()
+    for dx, dy in ((1,0),(-1,0),(0,1),(0,-1)):
+        nx, ny = x+dx, y+dy
+        if 0 <= nx < W and 0 <= ny < H and dist[ny][nx] > dist[y][x]+1:
+            dist[ny][nx] = dist[y][x]+1; dq.append((nx, ny))
+rr2 = np.random.default_rng(4242)
+starts = [(x, y) for y in range(H) for x in range(W) if T[y][x] in "MN" and 12 < dist[y][x] < 60]
+rr2.shuffle(starts)
+rivers_made = 0
+for (sx0, sy0) in starts:
+    if rivers_made >= 14: break
+    x, y = sx0, sy0
+    path = []
+    for _ in range(160):
+        cand = [(x+dx, y+dy) for dx, dy in ((1,0),(-1,0),(0,1),(0,-1)) if 0 <= x+dx < W and 0 <= y+dy < H]
+        cand.sort(key=lambda c: dist[c[1]][c[0]] + rr2.random()*1.6)
+        nx, ny = cand[0]
+        if dist[ny][nx] >= dist[y][x] + 1 and rr2.random() < 0.7: nx, ny = cand[1]
+        x, y = nx, ny
+        path.append((x, y))
+        if T[y][x] == "O": break
+    else:
+        continue
+    for (px, py) in path:
+        if T[py][px] in "PFHDSTM" and far_from_towns(px, py, 6): T[py][px] = "L"
+    rivers_made += 1
+
 TOWNS = {  # マップID: (x, y, 名前)
     "touri-town": (18, 108, "灯里"), "mugikano-village": (40, 114, "麦香野"), "garasuko-town": (62, 100, "硝子湖"),
     "tetsukusari-town": (86, 80, "鉄鏈鉱山"), "sanone-town": (72, 138, "砂音"),
@@ -124,9 +175,9 @@ for mid, (tx, ty, _n) in TOWNS.items():
     for y in range(ty-2, ty+3):
         for x in range(tx-2, tx+3):
             if 0 <= x < W and 0 <= y < H and (abs(x-tx)+abs(y-ty) <= 3) and not (mid != "fushima-town" and T[y][x] == "O" and False):
-                if T[y][x] in "OLMF" or mid in ("fushima-town",): T[y][x] = base
+                if T[y][x] in "OLMNF" or mid in ("fushima-town",): T[y][x] = base
 
-COST = {"T": 2.2, "P": 1.0, "F": 2.2, "D": 1.4, "S": 1.8, "H": 2.0, "M": 9.0, "R": 0.4, "W": 1.2, "C": 1.0, "L": 6.0, "O": 99999, "V": 99999, "Q": 99999}
+COST = {"X": 99999, "N": 13.0, "T": 2.2, "P": 1.0, "F": 2.2, "D": 1.4, "S": 1.8, "H": 2.0, "M": 9.0, "R": 0.4, "W": 1.2, "C": 1.0, "L": 6.0, "O": 99999, "V": 99999, "Q": 99999}
 def astar(a, b):
     (ax, ay), (bx, by) = a, b
     pq = [(0, ax, ay)]; best = {(ax, ay): 0}; prev = {}
@@ -154,26 +205,40 @@ def pos(mid): return TOWNS[mid][:2]
 for a, b in (("touri-town", "mugikano-village"), ("mugikano-village", "garasuko-town"), ("garasuko-town", "tetsukusari-town"),
              ("tetsukusari-town", "sanone-town"), ("kiri-town", "shimohara-town"), ("toushin-town", "kyotoukyu-court")):
     carve_road(pos(a), pos(b))
+# ---- 深い谷（通れない裂け目 X）: 険しい土地に、短い谷。道と町のまわりには作らない ----
+road_pts = [(x, y) for y in range(H) for x in range(W) if T[y][x] == "R"]
+road_set = set(road_pts)
+def near_road(x, y, d=4): return any((x+dx, y+dy) in road_set for dx in range(-d, d+1) for dy in range(-d, d+1))
+for y in range(H):
+    for x in range(W):
+        if T[y][x] in "PFHD" and abs(n3[y, x] - 0.60) < 0.012 and n1[y, x] > 0.46 and far_from_towns(x, y, 10) and not near_road(x, y):
+            T[y][x] = "X"
 # 小島の入口（島の中心）、塔の入口（塔の島の中心）は、道のタイルにする
 for _id, cx, cy, nm in ISLETS:
     for dy in (0, 1):
         T[cy+dy][cx] = "R"
 for dy in (0, 1): T[TOWER[1]+dy][TOWER[0]] = "R"
 
-# ---- 渦の輪（海のまんなか）: 半径7〜11。南向きの切れ目（Q）は、航路が開くまで通れない ----
+# ---- 塔を覆う地形（海のまんなか）: 内側から、塔の島 → 静かな内海 → 岩礁の外輪（岩の山。南だけ切れ目） → 渦の輪（嵐。南に切れ目 Q） ----
 CHANNEL = []
 for y in range(H):
     for x in range(W):
         d = math.hypot(x-TOWER[0], y-TOWER[1])
-        if 7.0 <= d <= 11.6 and T[y][x] == "O":
-            ang = math.degrees(math.atan2(y-TOWER[1], x-TOWER[0]))
-            if 72 <= ang <= 108:
+        if T[y][x] != "O":
+            continue
+        ang = math.degrees(math.atan2(y-TOWER[1], x-TOWER[0]))
+        south = 70 <= ang <= 110
+        # 岩礁の外輪（半径5.2〜7.6）。ぎざぎざにゆらがせる。南は、船の通り道があく
+        if 5.2 <= d + (n2[y, x]-0.5)*2.2 <= 7.6 and not south:
+            T[y][x] = "M"
+        elif 8.6 <= d <= 12.6:
+            if south:
                 T[y][x] = "Q"; CHANNEL.append((x, y))
             else:
                 T[y][x] = "V"
 
 # ---- 検査 ----
-LANDWALK = "PFDSRHCWT"
+LANDWALK = "PFDSRHCWT"   # M N X L V Q は通れない
 def flood(sx, sy, walk):
     seen = {(sx, sy)}; st = [(sx, sy)]
     while st:
@@ -279,7 +344,7 @@ ts = ["// 自動生成: tools/world-map/gen_world.py（手で編集しない）�
 os.makedirs("/home/user/sunshine-rpg/src/game/map/world", exist_ok=True)
 open("/home/user/sunshine-rpg/src/game/map/world/world-map.generated.ts", "w").write("\n".join(ts) + "\n")
 
-col = {"O": (30, 90, 150), "P": (96, 170, 70), "F": (40, 110, 50), "M": (130, 120, 120), "D": (220, 190, 120), "S": (240, 244, 250), "R": (190, 150, 90), "H": (130, 170, 80), "L": (60, 130, 200), "C": (225, 235, 245), "W": (90, 70, 110), "T": (200, 225, 235), "V": (20, 50, 110), "Q": (40, 70, 130)}
+col = {"O": (30, 90, 150), "P": (96, 170, 70), "F": (40, 110, 50), "M": (130, 120, 120), "D": (220, 190, 120), "S": (240, 244, 250), "R": (190, 150, 90), "H": (130, 170, 80), "L": (60, 130, 200), "C": (225, 235, 245), "W": (90, 70, 110), "T": (200, 225, 235), "V": (20, 50, 110), "Q": (40, 70, 130), "N": (92, 84, 92), "X": (50, 36, 56)}
 im = Image.new("RGB", (W*4, H*4))
 for y in range(H):
     for x in range(W):
