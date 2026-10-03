@@ -4,8 +4,8 @@
  * ここは計算とデータだけ（音を出す処理は tools/composer/render-node.mjs）。
  */
 
-export type Group = "drums" | "bass" | "gtrRhythm" | "gtrLead" | "gtrClean" | "keys" | "orch" | "pad" | "lead" | "ethnic" | "perc" | "ambience";
-export const GROUPS: readonly Group[] = ["drums", "bass", "gtrRhythm", "gtrLead", "gtrClean", "keys", "orch", "pad", "lead", "ethnic", "perc", "ambience"];
+export type Group = "drums" | "drumKick" | "drumSnare" | "drumToms" | "drumCym" | "bass" | "gtrRhythm" | "gtrLead" | "gtrClean" | "keys" | "orch" | "pad" | "lead" | "ethnic" | "perc" | "ambience";
+export const GROUPS: readonly Group[] = ["drums", "drumKick", "drumSnare", "drumToms", "drumCym", "bass", "gtrRhythm", "gtrLead", "gtrClean", "keys", "orch", "pad", "lead", "ethnic", "perc", "ambience"];
 
 /** 楽器の音色（Instrument）→ パートの種類。 */
 export function groupOf(instrument: string | undefined): Group {
@@ -147,7 +147,17 @@ const BASE: Record<Group, GroupMix> = {
   ethnic:    { target: -26, hp: 150, lp: 12000, eq: [{ f: 350, g: -2, q: 1 }], comp: { threshold: -26, ratio: 2, attack: 15, release: 140 }, reverb: 0.25, delay: 0, warmth: 0, width: 1.1 },
   perc:      { target: -30, hp: 300, lp: 12000, eq: [], comp: null, reverb: 0.1, delay: 0, warmth: 0, width: 1 },
   ambience:  { target: -34, hp: 100, lp: 10000, eq: [], comp: null, reverb: 0.3, delay: 0, warmth: 0, width: 1.4 },
+  // 本物のドラムの録音（sfz-player.mjs）を使うときは、キック・スネア・タム・シンバル（ハイハット含む）を別々にととのえる。
+  // キック: 低い押し出し（60Hz）を足し、こもり（350Hz）を削り、ビーターの当たり（4kHz）を足す。速めに強く圧縮して粒をそろえる
+  drumKick:  { target: -21, hp: 28,  lp: 12000, eq: [{ f: 60, g: 3, q: 1 }, { f: 350, g: -4, q: 1.2 }, { f: 4000, g: 3, q: 1 }], comp: { threshold: -20, ratio: 4, attack: 8, release: 90 }, reverb: 0.02, delay: 0, warmth: 0.1, width: 0 },
+  // スネア: 胴鳴り（200Hz）を少し、箱っぽさ（500Hz）を削り、響き線の張り（5kHz）を足す。少し部屋の響きを
+  drumSnare: { target: -22, hp: 80,  lp: 16000, eq: [{ f: 200, g: 2, q: 1 }, { f: 500, g: -2.5, q: 1.2 }, { f: 5000, g: 3, q: 0.9 }], comp: { threshold: -22, ratio: 4, attack: 5, release: 100 }, reverb: 0.15, delay: 0, warmth: 0.1, width: 0.6 },
+  // タム: こもり（400Hz）を削り、当たり（4kHz）を少し
+  drumToms:  { target: -25, hp: 60,  lp: 14000, eq: [{ f: 400, g: -3, q: 1 }, { f: 4000, g: 2, q: 1 }], comp: { threshold: -22, ratio: 3, attack: 10, release: 150 }, reverb: 0.12, delay: 0, warmth: 0, width: 1 },
+  // シンバル・ハイハット: 低い音は切り（300Hz）、耳に刺さる 2.5kHz を少し削り、空気感（10kHz）を足す。圧縮はしない（余韻をつぶさない）
+  drumCym:   { target: -27, hp: 300, lp: 18000, eq: [{ f: 2500, g: -2, q: 1 }, { f: 10000, g: 2, q: 0.7 }], comp: null, reverb: 0.08, delay: 0, warmth: 0, width: 1.1 },
 };
+const DRUM_PARTS: readonly Group[] = ["drumKick", "drumSnare", "drumToms", "drumCym"];
 
 /** 曲調ごとの、パートの音量の補正（dB）。重い曲調ではギターとドラムを前に、静かな曲調ではやわらかく。 */
 const STYLE_OFFSET: Partial<Record<string, Partial<Record<Group, number>>>> = {
@@ -174,7 +184,18 @@ export function mixPlan(style: string | undefined, flavors: readonly string[] = 
   const plan = {} as Record<Group, GroupMix>;
   for (const g of GROUPS) plan[g] = { ...BASE[g], eq: BASE[g].eq.map((e) => ({ ...e })), comp: BASE[g].comp ? { ...BASE[g].comp! } : null };
   const off = (style && STYLE_OFFSET[style]) || {};
-  for (const g of GROUPS) plan[g].target += off[g] ?? 0;
+  for (const g of GROUPS) plan[g].target += off[g] ?? (DRUM_PARTS.includes(g) ? off.drums ?? 0 : 0);
+  // メタル系: キックはビーターの当たりをさらに、スネアは張りをさらに（速い刻みの中でも1打ずつ聞こえるように）
+  if (style && ["metal", "deathmetal", "hardcore", "progmetal"].includes(style)) {
+    plan.drumKick.eq = [{ f: 60, g: 2, q: 1 }, { f: 350, g: -5, q: 1.2 }, { f: 4500, g: 5, q: 1 }];
+    plan.drumSnare.eq = [{ f: 220, g: 2, q: 1 }, { f: 500, g: -3, q: 1.2 }, { f: 5500, g: 4, q: 0.9 }];
+  }
+  // ジャズ・カフェ: 圧縮は軽く、響きを多めに（生の強弱を残す）
+  if (style && ["jazz", "cafe"].includes(style)) {
+    for (const g of DRUM_PARTS) if (plan[g].comp) plan[g].comp = { ...plan[g].comp!, ratio: 2 };
+    plan.drumSnare.reverb = 0.25;
+    plan.drumCym.reverb = 0.15;
+  }
   // 味つけ: ラウド＝ギターを太く前に、オーケストラ＝弦とブラスを前に、和楽器＝和楽器を前に
   if (flavors.includes("loud")) {
     plan.gtrRhythm.target += 1.5;

@@ -7,8 +7,9 @@ import path from "path";
 import { spawnSync } from "child_process";
 import { BasicMIDI, SoundBankLoader, SpessaSynthProcessor, SpessaSynthSequencer } from "spessasynth_core";
 import { fileURLToPath } from "url";
-import { openGuitarSampler } from "./guitar-sampler.mjs";
+import { openGuitarSampler, humanizeNotes } from "./guitar-sampler.mjs";
 import { openMetalSampler } from "./metal-sampler.mjs";
+import { renderRealRhythm } from "./real-rhythm.mjs";
 
 const ROOT = path.resolve(fileURLToPath(new URL("../../", import.meta.url)));
 
@@ -123,19 +124,25 @@ export async function renderMix(kit, score, { edition = "real", outWav, soundfon
   }
   const total = Math.ceil((k.seconds + tailSec) * SR);
   // 歪みギター（クリーンで鳴らすパート）は、本物のギターの録音があれば、それで鳴らす（guitar-sampler.mjs）
-  const sampled = {};
+  const sampledL = {};
+  const sampledR = {};
   const sampledCh = new Set();
+  const realDouble = new Set();
   // メタル系の曲はメタル用のギター音源（METAL-GTX）、それ以外は Black And Green Guitars。なければ、もう片方か、従来の音源
   const metalTone = score.tone === "metal" || score.tone === "prs";
   const sampler = (metalTone ? openMetalSampler() : null) ?? openGuitarSampler();
   if (sampler) {
     const gtrCh = Object.keys(k.instruments).map(Number).filter((ch) => ch !== 9 && ["crunch", "distGuitar", "leadGuitar"].includes(k.instruments[ch]) && k.programs[ch] === 27);
+    // リズムギターが1本だけなら、左右に2回弾いたように置く。ラウドのように最初から左右に2本あるなら、それぞれの位置のまま
+    const rhythmCount = gtrCh.filter((c) => groupOfChannel(c) === "gtrRhythm").length;
     for (const ch of gtrCh) {
       const notes = [];
       const open = new Map();
+      let pan = 64;
       for (const tr of midi.tracks) {
         for (const ev of tr.events) {
           const type = ev.statusByte & 0xf0;
+          if ((ev.statusByte & 0x0f) === ch && type === 0xb0 && ev.data[0] === 10) pan = ev.data[1];
           if ((ev.statusByte & 0x0f) !== ch || (type !== 0x90 && type !== 0x80)) continue;
           const key = ev.data[0], vel = ev.data[1];
           const t = midi.midiTicksToSeconds(ev.ticks);
@@ -150,12 +157,43 @@ export async function renderMix(kit, score, { edition = "real", outWav, soundfon
       }
       if (!notes.length) continue;
       const g = groupOfChannel(ch);
-      const buf = sampler.render(notes, total, { beatSec: 60 / (score.tempoBpm || 120) });
-      if (!sampled[g]) sampled[g] = new Float32Array(total);
-      for (let i = 0; i < total; i++) sampled[g][i] += buf[i];
+      const opt = { beatSec: 60 / (score.tempoBpm || 120) };
+      if (!sampledL[g]) (sampledL[g] = new Float32Array(total)), (sampledR[g] = new Float32Array(total));
+      const add = (buf, gl0, gr0) => {
+        for (let i = 0; i < total; i++) {
+          sampledL[g][i] += buf[i] * gl0;
+          sampledR[g][i] += buf[i] * gr0;
+        }
+      };
+      if (g === "gtrRhythm" && rhythmCount === 1) {
+        // リズムギターは、本当に2回弾いたように: 左と右で、別の録り分け・別のわずかなずれ（±8ms・強さ±6）で鳴らす
+        add(sampler.render(humanizeNotes(notes, { ms: 8, vel: 6, seed: ch * 2 + 1 }), total, opt), 1, 0);
+        add(sampler.render(humanizeNotes(notes, { ms: 8, vel: 6, seed: ch * 2 + 2 }), total, opt), 0, 1);
+        realDouble.add(g);
+      } else {
+        // 左右の位置（パン）は、楽譜の位置のまま（等パワー）。左右に1本ずつあるラウドのギターは、それぞれ別のずれで
+        const p = (pan / 127) * (Math.PI / 2);
+        add(sampler.render(humanizeNotes(notes, { ms: 5, vel: 4, seed: ch + 11 }), total, opt), Math.cos(p) * Math.SQRT2, Math.sin(p) * Math.SQRT2);
+        if (g === "gtrRhythm" && Math.abs(pan - 64) >= 20) realDouble.add(g);
+      }
       sampledCh.add(ch);
       synth.midiChannels[ch].setSystemParameter("isMuted", true);
     }
+  }
+  // ドラムとベースも、本物の録音があればそれで鳴らす（real-rhythm.mjs）。ドラムは キック・スネア・タム・シンバル を別のパートに
+  const rhythm = renderRealRhythm({ midi, instruments: k.instruments, style: score.style, total });
+  for (const [g, buf] of Object.entries(rhythm.parts)) {
+    if (!sampledL[g]) (sampledL[g] = buf.L), (sampledR[g] = buf.R);
+    else for (let i = 0; i < total; i++) (sampledL[g][i] += buf.L[i]), (sampledR[g][i] += buf.R[i]);
+    if (!present.includes(g)) {
+      present.push(g);
+      writers[g] = new StemWriter(path.join(work, `${g}.wav`));
+      stats[g] = { acc: 0, n: 0, sum: 0, count: 0 };
+    }
+  }
+  for (const ch of rhythm.muted) {
+    synth.midiChannels[ch].setSystemParameter("isMuted", true);
+    sampledCh.add(ch);
   }
   const outs = Array.from({ length: 16 }, () => [new Float32Array(BLOCK), new Float32Array(BLOCK)]);
   const fxL = new Float32Array(BLOCK);
@@ -195,13 +233,12 @@ export async function renderMix(kit, score, { edition = "real", outWav, soundfon
       gl[g].fill(0);
       gr[g].fill(0);
     }
-    for (const g of Object.keys(sampled)) {
+    for (const g of Object.keys(sampledL)) {
       if (!gl[g]) continue;
-      const src = sampled[g];
+      const L = sampledL[g], R = sampledR[g];
       for (let i = 0; i < n; i++) {
-        const v = src[done + i] ?? 0;
-        gl[g][i] += v;
-        gr[g][i] += v;
+        gl[g][i] += L[done + i] ?? 0;
+        gr[g][i] += R[done + i] ?? 0;
       }
     }
     for (let ch = 0; ch < 16; ch++) {
@@ -225,6 +262,8 @@ export async function renderMix(kit, score, { edition = "real", outWav, soundfon
   const dbOf = (st) => (st.count ? 10 * Math.log10(st.sum / st.count) : null);
 
   const plan = mix.mixPlan(score.style, flavors);
+  // 本当に2回弾いた左右のギターがあるときは、片方を遅らせて広げる処理（double）はいらない（左右の差を消してしまうため）
+  for (const g of realDouble) if (plan[g]) plan[g].double = false;
   const groups = {};
   for (const g of present) {
     const db = dbOf(stats[g]);
@@ -297,5 +336,5 @@ export async function renderMix(kit, score, { edition = "real", outWav, soundfon
   }
   if (keepDir) fs.cpSync(work, keepDir, { recursive: true });
   fs.rmSync(work, { recursive: true, force: true });
-  return { wav: outWav, groups, seconds: k.seconds, ffmpeg, fxDb, peak, timing: { synthMs: tSynth, totalMs: Date.now() - T0 } };
+  return { wav: outWav, realSamples: rhythm.used, groups, seconds: k.seconds, ffmpeg, fxDb, peak, timing: { synthMs: tSynth, totalMs: Date.now() - T0 } };
 }

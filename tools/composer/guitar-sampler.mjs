@@ -17,6 +17,27 @@ const SR = 44100;
 /** これより短い音（秒）は、短く切った弾き方の録音を使う。 */
 const SHORT_SEC = 0.13;
 
+/** 人が弾いたような、ごくわずかなずれ（同じ種からは同じずれ）。2回弾いたギターを左右に置くときに、左右で別のずれにする。 */
+export function humanizeNotes(notes, { ms = 0, vel = 0, seed = 1 } = {}) {
+  if (!ms && !vel) return notes;
+  let a = seed >>> 0;
+  const rnd = () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  // 同じ和音（30ms以内に始まる音）は、同じだけずらす（和音の中の順番は崩さない）
+  let lastStart = -1, shift = 0;
+  return [...notes].sort((x, y) => x.start - y.start).map((n) => {
+    if (n.start - lastStart > 0.03) shift = (rnd() * 2 - 1) * ms / 1000;
+    lastStart = n.start;
+    const v = Math.max(1, Math.min(127, Math.round(n.vel + (rnd() * 2 - 1) * vel)));
+    return { ...n, start: Math.max(0, n.start + shift), end: Math.max(n.start + shift + 0.01, n.end + shift), vel: v };
+  });
+}
+
 export function guitarSampleDir() {
   const cands = [process.env.SUNSHINE_GUITAR_SFZ, path.join(os.homedir(), "Music", "guitar-samples")].filter(Boolean);
   return cands.find((d) => fs.existsSync(path.join(d, "Programs", "modules", "maps_green", "ord.sfz"))) ?? null;
