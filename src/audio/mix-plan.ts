@@ -129,7 +129,8 @@ export function ampChain(a: AmpFx): string {
   f.push(`equalizer=f=3000:t=o:w=1:g=${f2a(a.presenceDb)}`);
   // スピーカーの箱: 低域の山（約110Hz）・中低域のくぼみ（約400Hz）・高域を急に落とす（4次）・耳ざわりな 7kHz 付近をさらに下げる
   f.push("highpass=f=75:p=2", "equalizer=f=110:t=q:w=1.4:g=2.5", "equalizer=f=400:t=q:w=1.2:g=-3");
-  f.push(`lowpass=f=${f2a(a.cabHz)}:p=2`, `lowpass=f=${f2a(a.cabHz * 1.15)}:p=2`, "equalizer=f=7200:t=q:w=2:g=-6");
+  // 高域は落としすぎるとこもる。5〜6kHz の少し上から2段で落とし、ざらつきの出る 7kHz 付近は軽く下げるだけ
+  f.push(`lowpass=f=${f2a(a.cabHz * 1.2)}:p=2`, `lowpass=f=${f2a(a.cabHz * 1.6)}:p=2`, "equalizer=f=7200:t=q:w=2:g=-3");
   return f.join(",");
 }
 

@@ -7,6 +7,7 @@ import path from "path";
 import { spawnSync } from "child_process";
 import { BasicMIDI, SoundBankLoader, SpessaSynthProcessor, SpessaSynthSequencer } from "spessasynth_core";
 import { fileURLToPath } from "url";
+import { openGuitarSampler } from "./guitar-sampler.mjs";
 
 const ROOT = path.resolve(fileURLToPath(new URL("../../", import.meta.url)));
 
@@ -120,6 +121,39 @@ export async function renderMix(kit, score, { edition = "real", outWav, soundfon
     stats[g] = { acc: 0, n: 0, sum: 0, count: 0 };
   }
   const total = Math.ceil((k.seconds + tailSec) * SR);
+  // 歪みギター（クリーンで鳴らすパート）は、本物のギターの録音があれば、それで鳴らす（guitar-sampler.mjs）
+  const sampled = {};
+  const sampledCh = new Set();
+  const sampler = openGuitarSampler();
+  if (sampler) {
+    const gtrCh = Object.keys(k.instruments).map(Number).filter((ch) => ch !== 9 && ["crunch", "distGuitar", "leadGuitar"].includes(k.instruments[ch]) && k.programs[ch] === 27);
+    for (const ch of gtrCh) {
+      const notes = [];
+      const open = new Map();
+      for (const tr of midi.tracks) {
+        for (const ev of tr.events) {
+          const type = ev.statusByte & 0xf0;
+          if ((ev.statusByte & 0x0f) !== ch || (type !== 0x90 && type !== 0x80)) continue;
+          const key = ev.data[0], vel = ev.data[1];
+          const t = midi.midiTicksToSeconds(ev.ticks);
+          if (type === 0x90 && vel > 0) {
+            if (!open.has(key)) open.set(key, []);
+            open.get(key).push({ start: t, key, vel });
+          } else {
+            const n = open.get(key)?.shift();
+            if (n) notes.push({ ...n, end: t });
+          }
+        }
+      }
+      if (!notes.length) continue;
+      const g = groupOfChannel(ch);
+      const buf = sampler.render(notes, total);
+      if (!sampled[g]) sampled[g] = new Float32Array(total);
+      for (let i = 0; i < total; i++) sampled[g][i] += buf[i];
+      sampledCh.add(ch);
+      synth.midiChannels[ch].setSystemParameter("isMuted", true);
+    }
+  }
   const outs = Array.from({ length: 16 }, () => [new Float32Array(BLOCK), new Float32Array(BLOCK)]);
   const fxL = new Float32Array(BLOCK);
   const fxR = new Float32Array(BLOCK);
@@ -158,7 +192,17 @@ export async function renderMix(kit, score, { edition = "real", outWav, soundfon
       gl[g].fill(0);
       gr[g].fill(0);
     }
+    for (const g of Object.keys(sampled)) {
+      if (!gl[g]) continue;
+      const src = sampled[g];
+      for (let i = 0; i < n; i++) {
+        const v = src[done + i] ?? 0;
+        gl[g][i] += v;
+        gr[g][i] += v;
+      }
+    }
     for (let ch = 0; ch < 16; ch++) {
+      if (sampledCh.has(ch)) continue;
       const g = groupOfChannel(ch);
       if (!gl[g]) continue;
       for (let i = 0; i < n; i++) {
