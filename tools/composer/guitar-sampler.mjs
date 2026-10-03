@@ -135,6 +135,7 @@ export function openGuitarSampler(dir = guitarSampleDir()) {
     for (let i = 0; i < sorted.length; i++) {
       const n = sorted[i];
       const next = sorted.find((m, j) => j > i && m.start > n.start + 0.03);
+      n.choked = !!next && next.start + 0.004 < n.end;
       n.stop = Math.min(n.end, next ? next.start + 0.004 : n.end);
     }
     for (const n of sorted) {
@@ -145,7 +146,9 @@ export function openGuitarSampler(dir = guitarSampleDir()) {
       const smp = load(pk.region.sample);
       const ratio = Math.pow(2, pk.semis / 12) * (smp.rate / SR);
       const start = Math.round(n.start * SR);
-      const release = short ? 0.035 : 0.09; // 弦を押さえて止める速さ
+      // 消え方は指数カーブ（最初は速く、あとはゆっくり）。弾き直しは時定数35ms、手を離したときは50ms（短い音は25ms）
+      const tau = short ? 0.025 : n.choked ? 0.035 : 0.05;
+      const release = tau * 5;
       const endS = Math.round((n.stop + release) * SR);
       const relS = Math.round(n.stop * SR);
       const gain = 0.35 + 0.65 * Math.pow(n.vel / 127, 1.3);
@@ -156,7 +159,7 @@ export function openGuitarSampler(dir = guitarSampleDir()) {
         const fr = pos - i;
         let v = smp.data[i] * (1 - fr) + smp.data[i + 1] * fr;
         if (t < start + 44) v *= (t - start) / 44; // 1ms で立ち上げる（プチッという音を防ぐ）
-        if (t > relS) v *= Math.max(0, 1 - (t - relS) / (endS - relS));
+        if (t > relS) v *= Math.exp(-(t - relS) / SR / tau);
         out[t] += v * gain;
       }
     }

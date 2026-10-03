@@ -187,6 +187,8 @@ export function mixPlan(style: string | undefined, flavors: readonly string[] = 
   plan.gtrRhythm.warmth = 0; // 歪みはアンプでかけるので、二重にしない
   plan.gtrRhythm.double = !flavors.includes("loud"); // ラウドは楽譜の段階で左右2本にしてある
   plan.gtrLead.amp = AMP_LEAD;
+  // ギターの音の終わりが、ぷつっと切れて聞こえないよう、短い部屋の響きを少し（リズムギター 0.05→0.12）
+  plan.gtrRhythm.reverb = Math.max(plan.gtrRhythm.reverb, 0.12);
   plan.gtrLead.warmth = 0;
   if (flavors.includes("orchestra")) {
     plan.orch.target += 3;

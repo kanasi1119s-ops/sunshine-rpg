@@ -83,6 +83,10 @@ export function openMetalSampler(dir = metalGtxDir()) {
   if (!dir) return null;
   const patch = (n) => parseSfz(path.join(dir, "Programs", "Individual Patchs", "METAL-GTX_Full", `${n}.sfz`), path.join(dir, "Programs"));
   const sets = { susD: patch("Sus_Down"), susU: patch("Sus_Up"), muteD: patch("Mute_Down"), muteU: patch("Mute_Up") };
+  // 弦から手を離したときの音（リリースの録音。音源の初期設定 CC24=13 の「Basic」= Release1）
+  const rel = { susD: patch("Release1_Sus_Down"), susU: patch("Release1_Sus_Up"), muteD: patch("Release1_Mute_Down"), muteU: patch("Release1_Mute_Up") };
+  // 音源の初期設定（volume=-110 + 110×CC25(108)/127）で、元の音より約16.5dB小さく重ねる
+  const REL_GAIN = Math.pow(10, -16.5 / 20);
   if (!sets.susD.length || !sets.muteD.length) return null;
   const cache = new Map();
   const load = (f) => {
@@ -129,6 +133,7 @@ export function openMetalSampler(dir = metalGtxDir()) {
     for (let i = 0; i < sorted.length; i++) {
       const n = sorted[i];
       const next = sorted.find((m, j) => j > i && m.start > n.start + 0.03);
+      n.choked = !!next && next.start + 0.004 < n.end;
       n.stop = Math.min(n.end, next ? next.start + 0.004 : n.end);
     }
     for (const n of sorted) {
@@ -145,7 +150,11 @@ export function openMetalSampler(dir = metalGtxDir()) {
       const ratio = Math.pow(2, pk.semis / 12);
       const start = Math.round(n.start * SR);
       const relS = Math.round(n.stop * SR);
-      const endS = relS + Math.round(0.1 * SR); // ampeg_release=0.1
+      // 音の消え方（指数カーブ。最初は速く、あとはゆっくり）:
+      //   次の和音で弾き直されたとき … 弦はピックに触れてから少しずつ止まる（時定数 35ms、約0.15秒かけて消える）。新しい音と重なる
+      //   手を離して止めたとき     … 時定数 50ms、約0.25秒。リリースの録音（手を離す音）も重ねる
+      const tau = n.choked ? 0.035 : 0.05;
+      const endS = relS + Math.round((n.choked ? 0.15 : 0.25) * SR);
       const len = Math.min(endS - start, Math.floor((smp.length - 2) / ratio));
       if (len <= 0) continue;
       const note = new Float32Array(len);
@@ -159,9 +168,29 @@ export function openMetalSampler(dir = metalGtxDir()) {
       for (let t = 0; t < len; t++) {
         const sec = t / SR;
         let env = Math.min(1, sec / 0.001);
-        if (muted) env *= sec < 0.4 ? 1 - 0.9 * (sec / 0.4) : 0.1; // decay 0.4秒で 10% に
-        if (start + t > relS) env *= Math.max(0, 1 - (start + t - relS) / (endS - relS));
+        // パームミュート: 0.4秒で 10% になる速さで、指数カーブで減っていく（音源の decay=0.4・sustain=0.1 に相当）
+        if (muted) env *= Math.exp(-sec / 0.174);
+        if (start + t > relS) env *= Math.exp(-(start + t - relS) / SR / tau);
         if (start + t < total) out[start + t] += note[t] * env * vol;
+      }
+      // 手を離す音（リリースの録音）。弾き直しで止まったときは小さめに
+      const rset = muted ? (up ? rel.muteU : rel.muteD) : up ? rel.susU : rel.susD;
+      const rk = rset.length ? pick(rset, n.key) : null;
+      if (rk) {
+        const rs = load(rk.r.sample);
+        const rr2 = Math.pow(2, rk.semis / 12);
+        const rlen = Math.min(Math.floor((rs.length - 2) / rr2), total - relS);
+        if (rlen > 0) {
+          const rb = new Float32Array(rlen);
+          let rp = 0;
+          for (let t = 0; t < rlen; t++, rp += rr2) {
+            const i = Math.floor(rp), fr = rp - i;
+            rb[t] = rs[i] * (1 - fr) + rs[i + 1] * fr;
+          }
+          lowpass(rb, 30 * Math.pow(2, (8 * n.vel) / 127));
+          const g = REL_GAIN * (n.choked ? 0.5 : 1);
+          for (let t = 0; t < rlen; t++) out[relS + t] += rb[t] * g * Math.min(1, t / 44);
+        }
       }
     }
     return out;
