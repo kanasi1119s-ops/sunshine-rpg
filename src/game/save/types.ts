@@ -32,4 +32,6 @@ export interface SaveData {
   /** 所持している灯貨（お金。version 4で追加）。 */
   gold: number;
   flags: Flags;
+  /** 世界地図の乗り物（船・飛空艇の置き場所と、いま乗っているもの）。古いセーブには無い（オプション）。 */
+  vehicles?: { mode: "foot" | "ship" | "air"; ship: { x: number; y: number }; airship: { x: number; y: number } };
 }

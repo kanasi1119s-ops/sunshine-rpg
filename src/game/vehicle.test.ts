@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { WORLD_MAPS } from "./world/world";
 import { WORLD_CHANNEL, WORLD_SHIP_DOCK, WORLD_SHIP_START, WORLD_TOWER, WORLD_AIRSHIP_START, WORLD_ISLETS } from "./map/world/world-map.generated";
-import { buildVehicleCollision, canLandOn, groundIdAt, openVortexChannel } from "./vehicle";
+import { buildVehicleCollision, canLandOn, closeVortexChannel, groundIdAt, openVortexChannel } from "./vehicle";
 
 const world = WORLD_MAPS["world-map"];
 const W = world.width;
@@ -56,6 +56,10 @@ describe("乗り物（船・飛空艇）", () => {
     let touch = false;
     for (let dy = -4; dy <= 4 && !touch; dy++) for (let dx = -4; dx <= 4; dx++) if (after.has((WORLD_TOWER.y + dy) * W + WORLD_TOWER.x + dx)) { touch = true; break; }
     expect(touch).toBe(true);
+    // 「はじめから」で航路が閉じた状態に戻せる
+    expect(closeVortexChannel(copy)).toBe(true);
+    expect(closeVortexChannel(copy)).toBe(false);
+    expect(copy.layers[0].data).toEqual(world.layers[0].data);
   });
 
   it("飛空艇は、山や海の上も飛べるが、渦の輪の嵐は越えられない。着陸は歩ける地形だけ", () => {

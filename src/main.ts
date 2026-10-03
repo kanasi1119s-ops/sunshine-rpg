@@ -22,7 +22,7 @@ import { npcFeetY, renderNpcs } from "./render/npc-renderer";
 import { faceNpc, opposite, updateWander } from "./game/npc-wander";
 import { PartyTrail } from "./game/party-trail";
 import { worldEntryProblems } from "./game/world/world-map-world";
-import { buildVehicleCollision, canLandOn, groundIdAt, OCEAN, openVortexChannel, VEHICLE_SPEED, type Vehicle } from "./game/vehicle";
+import { buildVehicleCollision, canLandOn, groundIdAt, OCEAN, closeVortexChannel, openVortexChannel, VEHICLE_SPEED, type Vehicle } from "./game/vehicle";
 import { WORLD_AIRSHIP_START, WORLD_SHIP_START } from "./game/map/world/world-map.generated";
 import { drawAirship, drawShip } from "./render/vehicle-renderer";
 import { renderStorm, renderVortex } from "./render/vortex-renderer";
@@ -202,6 +202,12 @@ function syncWorldState(): void {
   if (flags["vortex_route_open"] && !channelOpened) {
     channelOpened = true;
     if (openVortexChannel(data)) {
+      vehicleMaps = null;
+    }
+  } else if (!flags["vortex_route_open"] && channelOpened) {
+    // 「はじめから」やロードで、航路が開く前の状態に戻った
+    channelOpened = false;
+    if (closeVortexChannel(data)) {
       vehicleMaps = null;
     }
   }
@@ -558,6 +564,12 @@ if (import.meta.env.DEV) {
       title = { ...title, open: false };
     },
     startBattle: (battleId: string) => startStoryBattle(battleId),
+    /** 開発用: いまの状態を保存データにして、すぐ読み込み直す（乗り物の保存の確認用）。保存した乗り物の情報を返す。 */
+    saveLoadRoundtrip: () => {
+      const saved = buildSaveData();
+      applySaveData(JSON.parse(JSON.stringify(saved)) as SaveData);
+      return { saved: saved.vehicles, mode: vehicle };
+    },
     /** 開発用: 仲間の加入フラグを立てて、隊列（後ろをついてくる姿）を確かめる。 */
     /** 開発用: 船と飛空艇を手に入れた状態にする。 */
     giveVehicles: () => {
@@ -792,6 +804,12 @@ function buildSaveData(): SaveData {
     inventory,
     gold,
     flags,
+    vehicles: {
+      mode: vehicle,
+      // 船に乗っている間は、船は自分のいる場所にある
+      ship: vehicle === "ship" ? { x: Math.floor((player.x + player.width / 2) / map.data.tileWidth), y: Math.floor((player.y + player.height / 2) / map.data.tileHeight) } : { ...shipPos },
+      airship: { ...airshipPos },
+    },
   };
 }
 
@@ -808,8 +826,23 @@ function applySaveData(data: SaveData): void {
     delete flags[key];
   }
   Object.assign(flags, data.flags);
+  resetVehicles(data.vehicles);
   switchMap(data.player.mapId, data.player.tileX, data.player.tileY);
   player = { ...player, direction: data.player.direction };
+  // 船・飛空艇に乗ったまま保存したときは、乗ったまま再開する（海の上で動けなくならないように）
+  if (data.vehicles && data.vehicles.mode !== "foot" && data.player.mapId === "world-map") {
+    vehicle = data.vehicles.mode;
+    lastOceanTile = { x: data.player.tileX, y: data.player.tileY };
+    prevWorldTile = { x: data.player.tileX, y: data.player.tileY };
+  }
+}
+
+/** 船・飛空艇の置き場所を、セーブの内容（無ければ初期位置）にそろえる。 */
+function resetVehicles(saved?: SaveData["vehicles"]): void {
+  shipPos = saved ? { ...saved.ship } : { x: WORLD_SHIP_START.x, y: WORLD_SHIP_START.y };
+  airshipPos = saved ? { ...saved.airship } : { x: WORLD_AIRSHIP_START.x, y: WORLD_AIRSHIP_START.y };
+  lastOceanTile = { ...shipPos };
+  vehicle = "foot";
 }
 
 /** 「はじめから」: これまでの進み具合を初期状態に戻し、序章の開始地点に立つ。 */
@@ -824,6 +857,7 @@ function resetToNewGame(): void {
     delete flags[key];
   }
   encounterState = createEncounterState(Math.random);
+  resetVehicles();
   switchMap(CHAPTER0_START.mapId, CHAPTER0_START.tileX, CHAPTER0_START.tileY);
 }
 
