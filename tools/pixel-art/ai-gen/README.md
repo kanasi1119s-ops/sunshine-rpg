@@ -50,3 +50,16 @@ python3 tools/pixel-art/ai-gen/pixelize.py --size 64 --colors 16 --rembg raw/*.p
 - 入れ方: `pip install --break-system-packages rembg onnxruntime`。初回にモデル（約180MB）を GitHub から自動で取得する。
 - **メモリに注意**: 7GBほどの環境では、絵の生成（generate.py）と同時に動かすとメモリ不足で止まる。生成が終わってから仕上げる。
 - 減色は「見える画素」だけで色を選ぶように直した（背景の色でパレットをむだにしない）。外周に1ドットの余白を残す。
+
+## 重厚な敵グラフィック（96×96）の作り方（2026-10-03 追加）
+
+手順と注意は `docs/design/heavy-enemy-workflow.md`。
+
+```sh
+MODEL=stable-diffusion-v1-5/stable-diffusion-v1-5 VARIANT=fp16 STYLE=painterly python3 tools/pixel-art/ai-gen/generate.py tools/pixel-art/ai-gen/example-jobs-painterly.json
+python3 tools/pixel-art/ai-gen/sfcize.py raw/p3_golem_0.png out/golem 96 20   # → golem.png / golem.txt / golem.json
+python3 tools/pixel-art/ai-gen/edits.py out/golem 編集.json                     # 目・顔などの手直し → golem_fix.*
+EDITOR=エディタのindex.html node tools/pixel-practice/editor-draw.mjs out/golem_fix.txt out/golem_fix.json golem-editor.png --zoom 6
+```
+
+- `sfcize.py` と同じ処理は、ドット絵エディタの「画像から作る（重厚な敵）」でもできる（ブラウザの中なので、AIの切り抜きだけは使えない）。
