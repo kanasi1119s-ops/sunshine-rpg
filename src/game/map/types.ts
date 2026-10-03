@@ -27,6 +27,8 @@ export interface TileMapData {
    * 省略した場合はすべて通行可能とみなす。
    */
   collision?: number[];
+  /** 飾り（木・家）。ドット絵を足元のマスにそろえて描き、足元のマスは通れなくする（`map-props.ts`）。 */
+  props?: MapProp[];
   /** このタイルに乗ったら別マップへワープする出入り口。 */
   exits?: MapExit[];
 }
@@ -37,4 +39,11 @@ export interface MapExit {
   targetMapId: string;
   targetTileX: number;
   targetTileY: number;
+}
+
+/** 地図の飾り。(tileX, tileY) は、絵の「足元・中央」のマス。 */
+export interface MapProp {
+  kind: "tree" | "house";
+  tileX: number;
+  tileY: number;
 }

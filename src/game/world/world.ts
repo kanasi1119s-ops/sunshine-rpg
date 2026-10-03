@@ -15,6 +15,7 @@ import { SIDE_STORY_NPCS } from "./side-stories";
 import { SHOP_NPCS } from "./shops-world";
 import { AMBIENT_NPCS } from "./ambient-world";
 import { applyMapTileArt } from "../tile-art/map-tile-art";
+import { applyMapProps } from "../map/map-props";
 import type { TileMapData } from "../map/types";
 import type { Npc } from "../npc";
 
@@ -40,6 +41,7 @@ export const WORLD_MAPS: Record<string, TileMapData> = {
 };
 
 applyMapTileArt(WORLD_MAPS);
+applyMapProps(WORLD_MAPS);
 
 const NPC_SOURCES: Record<string, Npc[]>[] = [
   CHAPTER0_NPCS,
