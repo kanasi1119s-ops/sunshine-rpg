@@ -62,7 +62,12 @@ export function scoreToMidi(score: Score): Uint8Array {
 }
 
 /** MIDIと、チャンネルごとの楽器（GMの番号）。機材（アンプ・ドラムの仕上げ）を選ぶために使う。 */
-export function scoreToMidiInfo(score: Score, opts: { ampsApplied?: boolean } = {}): { midi: Uint8Array; programs: Record<number, number>; amps: Record<number, { amp: AmpSetting; pan: number }>; instruments: Record<number, string> } {
+/**
+ * ampsApplied: アンプ（歪み）を後でかける描き方か（ブラウザの作曲ソフト＝true）。
+ * cleanGuitars: 歪みギター（crunch・distGuitar・leadGuitar）を、クリーンのギター（27）で鳴らす。
+ *   ブラウザなしの render-node.mjs が、あとから FFmpeg でアンプとキャビネットをかけるときに使う（生の音に近づけるため）。
+ */
+export function scoreToMidiInfo(score: Score, opts: { ampsApplied?: boolean; cleanGuitars?: boolean } = {}): { midi: Uint8Array; programs: Record<number, number>; amps: Record<number, { amp: AmpSetting; pan: number }>; instruments: Record<number, string> } {
   const programs: Record<number, number> = {};
   /** チャンネルごとの、楽器の音色の名前（パート別ミックスの振り分けに使う）。 */
   const instruments: Record<number, string> = {};
@@ -128,6 +133,8 @@ export function scoreToMidiInfo(score: Score, opts: { ampsApplied?: boolean } = 
     // ただし、アンプをかけない描き方（ブラウザなしの render-node.mjs）では、クリーンのままだと歪まないので、歪んだ音色のままにする
     const ampsApplied = opts.ampsApplied ?? true;
     if (ampsApplied && track.amp && (program === 29 || program === 30) && track.program === undefined && !CLEAN_AMP_TYPES.has(track.amp.type)) program = 27;
+    const cleanGtr = opts.cleanGuitars === true && (inst === "crunch" || inst === "distGuitar" || inst === "leadGuitar") && track.program === undefined;
+    if (cleanGtr) program = 27;
     const setupChannel = (prog: number, key: string, gainBoost: number): { channel: number; list: Ev[] } => {
       const channel = isDrum ? DRUM_CHANNEL : allocate(key);
       const list = midiTrackFor(channel);
@@ -232,6 +239,19 @@ export function scoreToMidiInfo(score: Score, opts: { ampsApplied?: boolean } = 
         setBend(tick - 3, bendFrom);
         setBend(tick + 16, 0x2000 - 0x800);
         setBend(tick + 34, 0x2000);
+      }
+      if (cleanGtr && (inst === "crunch" || inst === "distGuitar")) {
+        // 生のギターに近づける: 低い弦から順に、ほんの少しずつ遅れて鳴らす（ピックで弦をなでる＝ストローク）。
+        // 短い刻みは手のひらで弦を押さえた音（ブリッジミュート）にする: 短く、少し弱く。
+        const ms = (x: number): number => Math.round((x / 1000) * (score.tempoBpm / 60) * PPQ);
+        const muted = n.durationBeats <= 0.5;
+        const mLen = muted ? Math.max(20, Math.round(len * 0.55)) : len;
+        const mVel = muted ? Math.round(velocity * 0.88) : velocity;
+        const strum = ms(muted ? 3 : 7);
+        push(pitch, tick, mVel, mLen);
+        push(pitch + 7, tick + strum, Math.round(mVel * 0.92), Math.max(20, mLen - strum));
+        if (!muted && inst === "distGuitar") push(pitch + 12, tick + strum * 2, Math.round(mVel * 0.7), Math.max(20, mLen - strum * 2));
+        continue;
       }
       push(pitch, tick, velocity, len);
       if (layer && layerSpec) push(pitch, tick, Math.max(14, Math.round(velocity * layerSpec.gain)), len, layer);

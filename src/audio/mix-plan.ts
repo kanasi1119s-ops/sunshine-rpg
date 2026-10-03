@@ -72,6 +72,65 @@ export interface GroupMix {
   warmth: number;
   /** 左右の広がり（1が元のまま、1.3で広く、0で中央に寄せる）。 */
   width: number;
+  /** ギターのアンプとキャビネット（クリーンのギターに、FFmpeg で歪みと箱鳴りをつける）。なければ null。 */
+  amp?: AmpFx | null;
+  /** 2回弾いて左右に置いたように聞かせる（片方を少し遅らせ、音色を少し変える）。 */
+  double?: boolean;
+}
+
+/**
+ * アンプとキャビネットの設定（FFmpeg のフィルターで作る。実在の機材のまねではない）。
+ * 流れ: 低域を締める → 中域を押し出す（歪みの前） → 増幅して2段で丸く歪ませる（折り返しノイズを減らすため4倍で処理）
+ *   → トーン（低・中・高） → スピーカーの箱（4発の箱のような低域の山・中低域のくぼみ・5kHzから上を急に落とす）
+ */
+export interface AmpFx {
+  /** 歪ませる前に、低い音を切る（Hz。大きいほど締まった歪み）。 */
+  tightHz: number;
+  /** 歪ませる前に押し出す中域（Hz）と量（dB）。 */
+  pushHz: number;
+  pushDb: number;
+  /** 増幅の量（dB。大きいほど強く歪む）。 */
+  driveDb: number;
+  /** 歪みの段数（1〜2）。 */
+  stages: number;
+  bassDb: number;
+  midHz: number;
+  midDb: number;
+  /** 張り（2.5〜3.5kHz）の増減（dB）。 */
+  presenceDb: number;
+  /** 箱の高域の落ち始め（Hz）。 */
+  cabHz: number;
+}
+
+/** 曲調ごとのアンプ（リズムギター）。 */
+const AMP_BY_STYLE: Record<string, AmpFx> = {
+  metal:      { tightHz: 130, pushHz: 800, pushDb: 6, driveDb: 30, stages: 2, bassDb: 3, midHz: 650, midDb: -5, presenceDb: 3, cabHz: 5200 },
+  deathmetal: { tightHz: 140, pushHz: 850, pushDb: 7, driveDb: 33, stages: 2, bassDb: 3, midHz: 600, midDb: -6, presenceDb: 3, cabHz: 5000 },
+  hardcore:   { tightHz: 130, pushHz: 900, pushDb: 6, driveDb: 30, stages: 2, bassDb: 2, midHz: 700, midDb: -4, presenceDb: 3, cabHz: 5200 },
+  progmetal:  { tightHz: 125, pushHz: 800, pushDb: 5, driveDb: 27, stages: 2, bassDb: 2, midHz: 700, midDb: -3, presenceDb: 2, cabHz: 5500 },
+  rock:       { tightHz: 100, pushHz: 1000, pushDb: 4, driveDb: 22, stages: 2, bassDb: 1, midHz: 1000, midDb: 2, presenceDb: 2, cabHz: 5800 },
+  dancerock:  { tightHz: 110, pushHz: 1200, pushDb: 3, driveDb: 14, stages: 1, bassDb: -1, midHz: 1200, midDb: 2, presenceDb: 2, cabHz: 6500 },
+  jpop:       { tightHz: 110, pushHz: 1100, pushDb: 3, driveDb: 16, stages: 1, bassDb: 0, midHz: 1100, midDb: 2, presenceDb: 2, cabHz: 6200 },
+};
+/** ソロ・主旋律のギター（よくのびるように、中域を押し出して強めに歪ませる）。 */
+const AMP_LEAD: AmpFx = { tightHz: 150, pushHz: 900, pushDb: 7, driveDb: 28, stages: 2, bassDb: -1, midHz: 1100, midDb: 3, presenceDb: 2, cabHz: 5600 };
+
+const f2a = (n: number): string => (Math.round(n * 100) / 100).toString();
+/** アンプとキャビネットの FFmpeg フィルター。 */
+export function ampChain(a: AmpFx): string {
+  const f: string[] = [];
+  f.push(`highpass=f=${f2a(a.tightHz)}:p=2`);
+  f.push(`equalizer=f=${f2a(a.pushHz)}:t=o:w=1.2:g=${f2a(a.pushDb)}`);
+  const per = a.driveDb / a.stages;
+  for (let i = 0; i < a.stages; i++) f.push(`volume=${f2a(per)}dB`, "asoftclip=type=tanh:oversample=4");
+  f.push(`volume=${f2a(-11)}dB`); // 歪ませると音が詰まって大きく聞こえるので、ほかのパートとの釣り合いに戻す
+  f.push(`equalizer=f=110:t=o:w=1:g=${f2a(a.bassDb)}`);
+  f.push(`equalizer=f=${f2a(a.midHz)}:t=o:w=1.4:g=${f2a(a.midDb)}`);
+  f.push(`equalizer=f=3000:t=o:w=1:g=${f2a(a.presenceDb)}`);
+  // スピーカーの箱: 低域の山（約110Hz）・中低域のくぼみ（約400Hz）・高域を急に落とす（4次）・耳ざわりな 7kHz 付近をさらに下げる
+  f.push("highpass=f=75:p=2", "equalizer=f=110:t=q:w=1.4:g=2.5", "equalizer=f=400:t=q:w=1.2:g=-3");
+  f.push(`lowpass=f=${f2a(a.cabHz)}:p=2`, `lowpass=f=${f2a(a.cabHz * 1.15)}:p=2`, "equalizer=f=7200:t=q:w=2:g=-6");
+  return f.join(",");
 }
 
 const BASE: Record<Group, GroupMix> = {
@@ -121,6 +180,13 @@ export function mixPlan(style: string | undefined, flavors: readonly string[] = 
     plan.gtrRhythm.warmth = Math.min(1, plan.gtrRhythm.warmth + 0.2);
     plan.drums.target += 1;
   }
+  // ギター: クリーンで鳴らした音に、曲調に合うアンプとキャビネットをかける。リズムギターは左右に2本あるように
+  const amp = (style && AMP_BY_STYLE[style]) || AMP_BY_STYLE.rock;
+  plan.gtrRhythm.amp = flavors.includes("loud") ? { ...amp, driveDb: amp.driveDb + 3 } : amp;
+  plan.gtrRhythm.warmth = 0; // 歪みはアンプでかけるので、二重にしない
+  plan.gtrRhythm.double = !flavors.includes("loud"); // ラウドは楽譜の段階で左右2本にしてある
+  plan.gtrLead.amp = AMP_LEAD;
+  plan.gtrLead.warmth = 0;
   if (flavors.includes("orchestra")) {
     plan.orch.target += 3;
     plan.pad.target += 1;
@@ -135,6 +201,11 @@ const dbToLin = (db: number): number => Math.pow(10, db / 20);
 /** 1パートぶんの FFmpeg フィルター（音をととのえる部分）。入力と出力のラベルは呼び出し側がつける。 */
 export function dryChain(m: GroupMix): string {
   const f: string[] = [];
+  if (m.amp) f.push(ampChain(m.amp));
+  if (m.double) {
+    // 2回弾いたように: いったん真ん中にまとめ、右だけ 14ms 遅らせ、左右で音色を少し変える
+    f.push("pan=stereo|c0=0.5*c0+0.5*c1|c1=0.5*c0+0.5*c1", "adelay=delays=0|14", "anequalizer=c0 f=2400 w=900 g=1.5 t=0|c1 f=1600 w=700 g=1.5 t=0");
+  }
   f.push(`highpass=f=${f2(m.hp)}`);
   f.push(`lowpass=f=${f2(m.lp)}`);
   for (const e of m.eq) f.push(`equalizer=f=${f2(e.f)}:t=q:w=${f2(e.q)}:g=${f2(e.g)}`);
