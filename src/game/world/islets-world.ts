@@ -1,5 +1,7 @@
 import { BEFORE_GATE, buildFloor, DEEP_ENTRY, DEEP_LANDMARKS } from "../map/chapter10/deep-maps";
 import { WORLD_ISLETS } from "../map/world/world-map.generated";
+import { describeBonus } from "../economy/shop";
+import { TREASURE_ITEMS } from "../economy/treasure";
 import { CHEST } from "../map/chapter12/dungeons";
 import type { EventCommand } from "../event/types";
 import type { TileMapData } from "../map/types";
@@ -10,7 +12,7 @@ import { say } from "./side-story";
 /**
  * 隠しダンジョンの小島（世界地図の海に浮かぶ4つの島）。それぞれ2階層（灯り石の台2つ→封印の扉→宝の間）。
  * 島へ渡るには、船・飛空艇と、物語の進み具合の条件が要る（`ISLET_REQUIREMENTS`）。
- * 仮: 宝箱は「灯貨と、ごほうび（仮）」の会話のみ。ボスは置いていない。
+ * 宝箱には灯貨と、ここでしか手に入らない装備（`economy/treasure.ts`）が入っている。仮: ボスは置いていない。
  */
 interface Islet {
   name: string;
@@ -145,6 +147,7 @@ export const ISLET_MAPS: Record<string, TileMapData> = Object.fromEntries(
 
 function chest(n: number, islet: Islet): Npc {
   const flag = `islet${n}_treasure`;
+  const treasure = TREASURE_ITEMS[n - 1];
   const commands: EventCommand[] = [
     {
       type: "if",
@@ -155,7 +158,8 @@ function chest(n: number, islet: Islet): Npc {
         say(undefined, islet.chestText),
         { type: "giveGold", amount: islet.gold },
         say(undefined, `【ごほうび】灯貨${islet.gold}を手に入れた！`),
-        say(undefined, "【ごほうび（仮）】伝説級の装備も眠っていた。（装備の仕組みは、お店の装備のみ）"),
+        { type: "giveEquipment", itemId: treasure.id },
+        say(undefined, `【ごほうび】${treasure.name}を手に入れた！（${describeBonus(treasure)}）強ければ、その場で身につけた。`),
         { type: "setFlag", flag, value: true },
       ],
     },

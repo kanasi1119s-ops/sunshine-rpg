@@ -7,7 +7,7 @@ import { battleEffectFor, type BattleEffect } from "./game/battle/battle-effect"
 import { createStaffRollState, skipStaffRoll, startStaffRoll, updateStaffRoll } from "./game/title/staff-roll";
 import { renderStaffRoll } from "./render/staff-roll-renderer";
 import { addGold, computeVictoryGold } from "./game/economy/gold";
-import { ALL_ITEMS_BY_ID, buyItem } from "./game/economy/shop";
+import { ALL_ITEMS_BY_ID, buyItem, receiveTreasure } from "./game/economy/shop";
 import { closeShopMenu, createShopMenuState, moveShopCursor, openShopMenu, withShopMessage } from "./game/economy/shop-menu";
 import { renderShop } from "./render/shop-renderer";
 import { backPauseMenu, confirmPauseMenu, createPauseMenuState, movePauseCursor, openPauseMenu } from "./game/menu/pause-menu";
@@ -384,6 +384,13 @@ const dialogue = new DialogueController(flags, {
   onStartBattle: (battleId) => startStoryBattle(battleId),
   onGiveGold: (amount) => {
     gold = addGold(gold, amount);
+    if (audioStarted) {
+      audio.playSe(seOf("item-get"));
+    }
+  },
+  onGiveEquipment: (itemId) => {
+    const result = receiveTreasure(itemId, heroEquipment);
+    heroEquipment = result.equipment;
     if (audioStarted) {
       audio.playSe(seOf("item-get"));
     }

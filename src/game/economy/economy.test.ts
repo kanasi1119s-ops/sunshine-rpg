@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { addGold, computeVictoryGold, goldForEnemy, spendGold } from "./gold";
-import { ALL_ITEMS_BY_ID, buyItem, describeBonus, shopStock, SHOP_ITEMS_BY_ID } from "./shop";
+import { ALL_ITEMS_BY_ID, buyItem, describeBonus, receiveTreasure, shopStock, SHOP_ITEMS_BY_ID } from "./shop";
+import { TREASURE_ITEMS } from "./treasure";
 import { closeShopMenu, moveShopCursor, openShopMenu } from "./shop-menu";
 import { createInitialEquipment } from "../battle/sample-battle";
 import { computeEquipmentBonus, createEquipmentSlots } from "../items/equipment";
@@ -83,5 +84,24 @@ describe("お店の画面", () => {
     expect(state.cursor).toBe(5);
     expect(closeShopMenu(state).open).toBe(false);
     expect(openShopMenu("nothing").open).toBe(false);
+  });
+});
+
+describe("小島の宝の装備", () => {
+  it("宝の品はすべて ALL_ITEMS_BY_ID にあり、店では売っていない", () => {
+    for (const item of TREASURE_ITEMS) {
+      expect(ALL_ITEMS_BY_ID[item.id]).toBeDefined();
+      expect(SHOP_ITEMS_BY_ID[item.id]).toBeUndefined();
+    }
+  });
+
+  it("いまの装備より強ければ装備し、弱ければそのまま", () => {
+    const weak = receiveTreasure("treasure-6", { weapon: "weapon-1" });
+    expect(weak.equipped).toBe(true);
+    expect(weak.equipment.weapon).toBe("treasure-6");
+    const keep = receiveTreasure("treasure-4", { weapon: "treasure-6" });
+    expect(keep.equipped).toBe(false);
+    expect(keep.equipment.weapon).toBe("treasure-6");
+    expect(receiveTreasure("nothing", {}).equipped).toBe(false);
   });
 });

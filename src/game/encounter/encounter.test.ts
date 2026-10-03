@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { baseEnemyId } from "../battle/types";
 import {
+  createEncounterEnemies,
   shapeForName,
   createEncounterState,
   ENCOUNTER_ZONES,
@@ -162,5 +164,19 @@ describe("世界地図のエンカウント", () => {
       met = !!r.enemies;
     }
     expect(met).toBe(true);
+  });
+});
+
+describe("一団の敵のID", () => {
+  it("同じ種類が複数体出ても、IDは重複しない（重複すると2体目を狙えなくなる）", () => {
+    for (const [mapId, zone] of Object.entries({ ...ENCOUNTER_ZONES, ...WORLD_ENCOUNTER_ZONES })) {
+      for (let seed = 0; seed < 50; seed++) {
+        const ids = createEncounterEnemies(mapId, zone, createRng(seed)).map((e) => e.id);
+        expect(new Set(ids).size, mapId).toBe(ids.length);
+        for (const id of ids) {
+          expect(baseEnemyId(id).startsWith(`enc-${mapId}-`)).toBe(true);
+        }
+      }
+    }
   });
 });

@@ -2,6 +2,7 @@ import { equip, type EquipmentSlots } from "../items/equipment";
 import type { EquipmentItemData, ItemData } from "../items/types";
 import { SAMPLE_ITEMS_BY_ID } from "../battle/sample-battle";
 import { spendGold } from "./gold";
+import { TREASURE_ITEMS_BY_ID } from "./treasure";
 
 /**
  * 町のお店（武具屋）で買える装備。町の順（第0章の灯里〜灯芯都）に1段ずつ強くなり、
@@ -44,7 +45,7 @@ export const SHOP_ITEMS_BY_ID: Record<string, EquipmentItemData> = Object.fromEn
 );
 
 /** 戦闘・つよさ画面で使う、すべての品物（最初の剣＋店の装備）。 */
-export const ALL_ITEMS_BY_ID: Record<string, ItemData> = { ...SAMPLE_ITEMS_BY_ID, ...SHOP_ITEMS_BY_ID };
+export const ALL_ITEMS_BY_ID: Record<string, ItemData> = { ...SAMPLE_ITEMS_BY_ID, ...SHOP_ITEMS_BY_ID, ...TREASURE_ITEMS_BY_ID };
 
 /** 店ID: `tier-1`〜`tier-9`。並ぶ品は、その段とひとつ前の段（1段目は、その段の3品だけ）。 */
 export function shopStock(shopId: string): EquipmentItemData[] {
@@ -89,4 +90,18 @@ export function buyItem(itemId: string, gold: number, equipment: EquipmentSlots)
 export function describeBonus(item: EquipmentItemData): string {
   const names: Record<string, string> = { attack: "こうげき", defense: "ぼうぎょ", speed: "すばやさ", maxHp: "HP", maxMp: "MP" };
   return Object.entries(item.statBonus).map(([k, v]) => `${names[k] ?? k}+${v}`).join(" ");
+}
+
+/** 宝の装備を受け取る。いまの装備より強ければその場で装備し、そうでなければ装備はそのまま。 */
+export function receiveTreasure(itemId: string, equipment: EquipmentSlots): { equipment: EquipmentSlots; equipped: boolean } {
+  const item = TREASURE_ITEMS_BY_ID[itemId];
+  if (!item) {
+    return { equipment, equipped: false };
+  }
+  const currentId = equipment[item.category];
+  const current = currentId ? ALL_ITEMS_BY_ID[currentId] : undefined;
+  if (current && current.category !== "consumable" && bonusTotal(current) >= bonusTotal(item)) {
+    return { equipment, equipped: false };
+  }
+  return { equipment: equip(equipment, item), equipped: true };
 }

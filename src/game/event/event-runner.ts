@@ -10,6 +10,7 @@ interface RunnerOptions {
   onWarp?: (warp: WarpRequest) => void;
   onStartBattle?: (battleId: string) => void;
   onGiveGold?: (amount: number) => void;
+  onGiveEquipment?: (itemId: string) => void;
   onOpenShop?: (shopId: string) => void;
   onStaffRoll?: () => void;
 }
@@ -69,6 +70,10 @@ function* runCommands(
 
       case "giveGold":
         options.onGiveGold?.(command.amount);
+        break;
+
+      case "giveEquipment":
+        options.onGiveEquipment?.(command.itemId);
         break;
 
       case "shop":
