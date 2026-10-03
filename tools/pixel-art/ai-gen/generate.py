@@ -5,15 +5,23 @@
   出力は raw/<name>.png（512×512）。続けて pixelize.py で本物のドット絵に仕上げる。
 モデル: PublicPrompts/All-In-One-Pixel-Model（CreativeML OpenRAIL-M）＋ latent-consistency/lcm-lora-sdv1-5（openrail++）。
 CPU（2コア）で1枚約56秒。GPU があれば速い。必要なもの: torch（CPU版で可）、diffusers、transformers、accelerate、safetensors、peft。
+絵画風の下絵（重厚な敵グラフィック用、2026-10-03 追加）:
+  MODEL=stable-diffusion-v1-5/stable-diffusion-v1-5 VARIANT=fp16 STYLE=painterly python3 generate.py example-jobs-painterly.json
+  （CreativeML OpenRAIL-M。続けて sfcize.py でドット絵にする。手順は docs/design/heavy-enemy-workflow.md）
+**メモリ7GBほどの環境では、生成と同時に rembg やブラウザ（エディタ）を動かさない（メモリ不足で止まる）。**
 **作った絵は、既存作品に似ていないかを必ず目で確かめる（CLAUDE.md 1-1）。ゲームに入れる前に人間の確認を受ける。**
 """
 import torch,time,sys,json,os
 from diffusers import StableDiffusionPipeline, LCMScheduler
 torch.set_num_threads(2)
-pipe=StableDiffusionPipeline.from_pretrained(os.environ.get("MODEL","PublicPrompts/All-In-One-Pixel-Model"),torch_dtype=torch.float32,safety_checker=None,requires_safety_checker=False)
+kw=dict(variant=os.environ["VARIANT"],torch_dtype=torch.float16) if os.environ.get("VARIANT") else dict(torch_dtype=torch.float32)
+pipe=StableDiffusionPipeline.from_pretrained(os.environ.get("MODEL","PublicPrompts/All-In-One-Pixel-Model"),safety_checker=None,requires_safety_checker=False,**kw)
+pipe=pipe.to(torch.float32)  # CPUでは float32 で計算する
 pipe.load_lora_weights("latent-consistency/lcm-lora-sdv1-5"); pipe.fuse_lora()
 pipe.scheduler=LCMScheduler.from_config(pipe.scheduler.config)
-NEG="drop shadow, blurry, 3d, anti aliasing, gradient, textures, depth of field, anime style, modern cartoon, skewed, perspective, text, watermark, photo, realistic"
+NEG_PIXEL="drop shadow, blurry, 3d, anti aliasing, gradient, textures, depth of field, anime style, modern cartoon, skewed, perspective, text, watermark, photo, realistic"
+NEG_PAINT="photo, 3d render, anime, cartoon, chibi, text, watermark, frame, border, multiple creatures, cropped, blurry"
+NEG=os.environ.get("NEG") or (NEG_PAINT if os.environ.get("STYLE")=="painterly" else NEG_PIXEL)
 jobs=json.load(open(sys.argv[1]))
 os.makedirs('raw',exist_ok=True)
 for j in jobs:
