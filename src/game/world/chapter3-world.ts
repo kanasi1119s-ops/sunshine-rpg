@@ -87,7 +87,7 @@ function orcaCommands(): EventCommand[] {
               type: "if",
               flag: "chapter3_orca_hint_seen",
               equals: true,
-              then: [{ type: "message", text: "……行くぞ。立ち止まっている暇はない。", speaker: "オルカ" }],
+              then: [{ type: "message", text: "……行くよ。立ち止まっている暇はない。", speaker: "オルカ" }],
               else: [
                 { type: "message", text: "オルカさん、坑道の入口をずっと見てましたね。", speaker: "ミナ" },
                 { type: "message", text: "……昔、あそこで落盤があった。それだけだ。", speaker: "オルカ" },
@@ -99,17 +99,17 @@ function orcaCommands(): EventCommand[] {
           else: [
             {
               type: "message",
-              text: "……話は聞いた。装置も、あの紙切れも。組合の仲間が、こんなものに使われていたとはな。",
+              text: "……話は聞いた。装置も、あの紙切れも。組合の仲間が、こんなものに使われていたなんて。",
               speaker: "オルカ",
             },
             {
               type: "message",
-              text: "会社との言い争いは、目くらましだったのか。……俺が気づくべきだった。",
+              text: "会社との言い争いは、目くらましだったのか。……私が気づくべきだった。",
               speaker: "オルカ",
             },
             {
               type: "message",
-              text: "礼を言う。それと、頼みがある。この件の続きを追うなら、俺も連れていけ。",
+              text: "礼を言う。それと、頼みがある。この件の続きを追うなら、私も連れていって。",
               speaker: "オルカ",
             },
             {
@@ -119,7 +119,7 @@ function orcaCommands(): EventCommand[] {
                 {
                   label: "一緒に来てほしい",
                   commands: [
-                    { type: "message", text: "……俺がやる。足は引っ張らん。", speaker: "オルカ" },
+                    { type: "message", text: "……私がやる。足は引っ張らない。", speaker: "オルカ" },
                     { type: "setFlag", flag: "chapter3_orca_joined", value: true },
                   ],
                 },
@@ -128,7 +128,7 @@ function orcaCommands(): EventCommand[] {
                   commands: [
                     {
                       type: "message",
-                      text: "……そうか。気が変わったら、詰め所に来い。",
+                      text: "……そうか。気が変わったら、詰め所に来て。",
                       speaker: "オルカ",
                     },
                   ],
@@ -144,7 +144,7 @@ function orcaCommands(): EventCommand[] {
           type: "if",
           flag: "chapter3_quest_accepted",
           equals: true,
-          then: [{ type: "message", text: "坑道は北の崖だ。奥に、見慣れない装置があるらしい。気をつけろ。", speaker: "オルカ" }],
+          then: [{ type: "message", text: "坑道は北の崖だ。奥に、見慣れない装置があるらしい。気をつけて。", speaker: "オルカ" }],
           else: [
             { type: "message", text: "……調査員か。組合の代表のオルカだ。", speaker: "オルカ" },
             {
@@ -154,7 +154,7 @@ function orcaCommands(): EventCommand[] {
             },
             {
               type: "message",
-              text: "夜になると、坑道の奥から妙な光と唸り声がする。組合の者も、何人か入ったきり戻らん。",
+              text: "夜になると、坑道の奥から妙な光と唸り声がする。組合の者も、何人か入ったきり戻らない。",
               speaker: "オルカ",
             },
             {

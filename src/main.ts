@@ -433,6 +433,8 @@ if (import.meta.env.DEV) {
       title = { ...title, open: false };
     },
     startBattle: (battleId: string) => startStoryBattle(battleId),
+    /** 開発用: 話者の顔グラフィックを会話欄で見る（絵の確認用）。 */
+    startTestDialogue: (speaker: string) => dialogue.start([{ type: "message", speaker, text: "顔グラフィックの確認です。" }]),
     /** 開発用: 指定した地図のランダムエンカウントの敵と戦う（敵の絵の確認用）。 */
     startEncounter: (mapId: string) => {
       const zone = ENCOUNTER_ZONES[mapId];
