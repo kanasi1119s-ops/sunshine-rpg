@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { partyAtLevel, winRate } from "../battle/balance-helpers";
 import { createRng } from "../random";
-import { createEncounterEnemies, WORLD_ENCOUNTER_ZONES } from "./encounter";
+import { createEncounterEnemies, ENCOUNTER_ZONES, WORLD_ENCOUNTER_ZONES } from "./encounter";
 
 /**
  * 世界地図の敵のバランス（roadmap 7-0s の申し送り）。想定レベルのパーティが、一団に勝てるかを300回シミュレーションして確かめる。
@@ -34,6 +34,22 @@ describe("世界地図の敵のバランス（300回のシミュレーション�
     it(`${id}（想定Lv${zone.level}）`, () => {
       expect(rateAt(id, zone.level)).toBeGreaterThanOrEqual(0.95);
       expect(rateAt(id, Math.max(1, zone.level - 4))).toBeGreaterThanOrEqual(0.4);
+    });
+  }
+});
+
+/** 通常のダンジョン（ENCOUNTER_ZONES）。仲間の人数は encounter.test.ts と同じ決め方。 */
+function dungeonRateAt(id: string, level: number): number {
+  const zone = ENCOUNTER_ZONES[id];
+  const companions = zone.level <= 5 ? 1 : zone.level <= 7 ? 2 : zone.level <= 9 ? 3 : zone.level <= 15 ? 4 : 5;
+  let n = 0;
+  return winRate(partyAtLevel(level, companions), () => createEncounterEnemies(id, zone, createRng(n++ * 7 + 1)), 300).rate;
+}
+
+describe("ダンジョンの敵のバランス（想定より4レベル低くても詰まらない）", () => {
+  for (const [id, zone] of Object.entries(ENCOUNTER_ZONES)) {
+    it(`${id}（想定Lv${zone.level}）`, () => {
+      expect(dungeonRateAt(id, Math.max(1, zone.level - 4))).toBeGreaterThanOrEqual(0.4);
     });
   }
 });
