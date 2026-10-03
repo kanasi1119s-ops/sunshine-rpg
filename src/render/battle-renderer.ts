@@ -6,6 +6,10 @@ import { getSpriteCanvas } from "../game/art/sprite";
 import { hueOfHex, mobPalette } from "../game/art/mob-palette";
 import { getBackdropCanvas, type Biome } from "./battle-backdrop";
 import { drawWindow } from "./ui-frame";
+import { PORTRAITS } from "../game/portrait/portraits";
+import { spriteSpecFromPortrait } from "../game/sprite/character-specs";
+import { drawSprite } from "./sprite-renderer";
+import { frameAt } from "../game/sprite/overworld-sprite";
 
 let currentBiome: Biome = "grass";
 /** これから始まる戦闘の背景（場所）を決める。 */
@@ -79,6 +83,23 @@ function drawMobSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, x: numbe
 }
 
 /** ボスの大きな絵（256×256）。あれば画面の中央に大きく描く。描けたら true。 */
+/** 戦闘画面の左右: 敵が右、味方が左（`ENEMIES_ON_RIGHT` を false にすると逆になる）。 */
+const ENEMIES_ON_RIGHT = true;
+
+/** 敵の側の、絵の左端x（絵の幅 w。画面の端から余白を空ける）。 */
+function enemySideX(screenWidth: number, w: number): number {
+  return ENEMIES_ON_RIGHT ? screenWidth - w - 16 : 16;
+}
+
+const partySpecCache = new Map<string, ReturnType<typeof spriteSpecFromPortrait> | null>();
+function partySpecFor(name: string): ReturnType<typeof spriteSpecFromPortrait> | null {
+  if (!partySpecCache.has(name)) {
+    const portrait = PORTRAITS[name];
+    partySpecCache.set(name, portrait ? spriteSpecFromPortrait(portrait, name) : null);
+  }
+  return partySpecCache.get(name) ?? null;
+}
+
 function drawBossSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, screenWidth: number): boolean {
   if (enemy.hp <= 0) {
     return false;
@@ -87,15 +108,15 @@ function drawBossSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, screenW
   if (!canvas) {
     return false;
   }
-  // 右寄りに大きく描き、名前とHPは左上に置く（味方の一覧と重ならない）
-  const size = 150;
-  const x = screenWidth - size - 20;
+  // 敵の側（右）に大きく描き、名前とHPは絵の下に置く
+  const size = 132;
+  const x = enemySideX(screenWidth, size);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(canvas, x, 4, size, size);
+  ctx.drawImage(canvas, x, 2, size, size);
   ctx.fillStyle = "#f0f0f0";
-  shadowText(ctx, enemy.name, 12, 10);
-  drawHpBar(ctx, enemy, 12, 24, 110);
+  shadowText(ctx, enemy.name, x, 136);
+  drawHpBar(ctx, enemy, x, 150, size);
   return true;
 }
 
@@ -128,35 +149,38 @@ function renderBattleBody(
     if (drawBossSprite(ctx, enemy, screenWidth)) {
       return;
     }
-    // 1体だけの強敵（ボス・神など、体力が大きい敵）は、中央に大きく描く。
+    // 1体だけの強敵（ボス・神など、体力が大きい敵）は、敵の側に大きく描く。
     if (battleState.enemies.length === 1 && enemy.maxHp >= 250 && enemy.hp > 0 && MONSTERS[enemy.id]) {
       const size = 80;
-      const bx = Math.round(screenWidth / 2 - size / 2 - 40);
+      const bx = enemySideX(screenWidth, 128);
       // 手描きの絵がある形は、2倍（128）で大きく描く（きれいに拡大できる整数倍）
-      if (drawMobSprite(ctx, enemy, bx - 24, 0, 128)) {
+      if (drawMobSprite(ctx, enemy, bx, 2, 128)) {
         ctx.fillStyle = "#f0f0f0";
-        shadowText(ctx, enemy.name, bx + size + 32, 30);
-        drawHpBar(ctx, enemy, bx + size + 32, 46, 110);
+        shadowText(ctx, enemy.name, bx, 134);
+        drawHpBar(ctx, enemy, bx, 148, 110);
         return;
       }
-      drawEnemySprite(ctx, enemy, bx, 6, size);
+      drawEnemySprite(ctx, enemy, bx + 24, 10, size);
       ctx.fillStyle = "#f0f0f0";
-      shadowText(ctx, enemy.name, bx + size + 12, 30);
-      drawHpBar(ctx, enemy, bx + size + 12, 46, 110);
+      shadowText(ctx, enemy.name, bx, 134);
+      drawHpBar(ctx, enemy, bx, 148, 110);
       return;
     }
-    const x = 60 + index * 90;
-    if (drawMobSprite(ctx, enemy, x - 12, 4)) {
+    // ふつうの敵は、敵の側に、少しずらして縦に並べる（名前とHPは絵の内側＝画面の中央がわ）
+    const stagger = (index % 2) * 34;
+    const sx = ENEMIES_ON_RIGHT ? screenWidth - 64 - 14 - stagger : 14 + stagger;
+    const sy = 4 + index * 48;
+    const labelX = ENEMIES_ON_RIGHT ? sx - 70 : sx + 68;
+    if (drawMobSprite(ctx, enemy, sx, sy)) {
       ctx.fillStyle = "#f0f0f0";
-      shadowText(ctx, enemy.name, x - 12, 70);
-      drawHpBar(ctx, enemy, x - 12, 82, 64);
+      shadowText(ctx, enemy.name, labelX, sy + 20);
+      drawHpBar(ctx, enemy, labelX, sy + 34, 64);
       return;
     }
-    const y = 24;
-    drawEnemySprite(ctx, enemy, x, y, 40);
+    drawEnemySprite(ctx, enemy, sx + 12, sy + 10, 40);
     ctx.fillStyle = "#f0f0f0";
-    shadowText(ctx, enemy.name, x, y + 44);
-    drawHpBar(ctx, enemy, x, y + 56, 40);
+    shadowText(ctx, enemy.name, labelX, sy + 20);
+    drawHpBar(ctx, enemy, labelX, sy + 34, 40);
   });
 
   ctx.restore();
@@ -175,22 +199,25 @@ function renderBattleBody(
     ctx.fillRect(0, 0, screenWidth, screenHeight - 56);
   }
 
-  // 味方の状態一覧。4人以上のときは2列に並べる（6人でもコマンド欄に重ならない）。
-  const boxTop = screenHeight - 56;
-  const columns = battleState.party.length > 3 ? 2 : 1;
-  const rowsPerColumn = Math.ceil(battleState.party.length / columns);
-  const partyY = boxTop - rowsPerColumn * LINE_HEIGHT * 2 - 4;
-  const columnWidth = Math.floor((screenWidth - 16) / columns);
+  // 味方は、味方の側（左）に縦に並べる。歩く絵（右向き）と、名前・HP・MP。6人でもコマンド欄に重ならない間隔にする。
+  const count = battleState.party.length;
+  const rowH = Math.min(30, Math.floor((screenHeight - 56 - 6) / Math.max(1, count)));
+  const nowMs = typeof performance !== "undefined" ? performance.now() : 0;
   battleState.party.forEach((member, index) => {
-    const column = Math.floor(index / rowsPerColumn);
-    const row = index % rowsPerColumn;
-    const x = 8 + column * columnWidth;
-    const y = partyY + row * LINE_HEIGHT * 2;
+    const y = 4 + index * rowH;
+    const spriteX = ENEMIES_ON_RIGHT ? 6 : screenWidth - 22;
+    const textX = ENEMIES_ON_RIGHT ? 26 : screenWidth - 22 - 118;
     const isActing = uiState.kind === "command" && uiState.actorId === member.id;
+    const spec = partySpecFor(member.name.split(/[\s　]/)[0]);
+    if (spec && member.hp > 0) {
+      // 順番が回ってきた人は、一歩前でゆれる
+      const step = isActing ? frameAt(true, nowMs) : 0;
+      drawSprite(ctx, spec, ENEMIES_ON_RIGHT ? "right" : "left", step, spriteX + (isActing ? 3 : 0), y - 1);
+    }
     ctx.fillStyle = isActing ? "#f2c14e" : "#f0f0f0";
-    const text = columns === 2 ? `${member.name} HP${member.hp}/${member.maxHp} MP${member.mp}` : `${member.name} HP:${member.hp}/${member.maxHp} MP:${member.mp}/${member.maxMp}`;
-    shadowText(ctx, text, x, y);
-    drawHpBar(ctx, member, x, y + LINE_HEIGHT, columns === 2 ? columnWidth - 12 : 100);
+    shadowText(ctx, `${member.name} HP${member.hp}/${member.maxHp}`, textX, y);
+    shadowText(ctx, `MP${member.mp}`, textX + 86, y + LINE_HEIGHT);
+    drawHpBar(ctx, member, textX, y + LINE_HEIGHT, 80);
   });
 
   const boxY = screenHeight - 56;
