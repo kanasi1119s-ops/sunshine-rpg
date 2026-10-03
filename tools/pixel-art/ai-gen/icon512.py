@@ -4,7 +4,9 @@
 6) 左上から光が当たる縁にハイライト 7) 全体を最終の色数に再減色（エディタの上限26色以内）
 出力: PNG と、エディタで描くための文字グリッド(.txt)・パレット(.json)
 顔のアイコン用（正方形の構図のまま、頭の上の余白を残す。胸の下の切れ目は縁取りしない）。sfcize.py をもとにした。
-使い方: python3 tools/pixel-art/ai-gen/icon512.py 切り抜き.png 出力名 512 32
+使い方: python3 tools/pixel-art/ai-gen/icon512.py 切り抜き.png 出力名 512 32 [--crop x,y,一辺]
+  --crop: 切り抜き画像から正方形を切り出してから作る（顔に寄せる。頭のてっぺんの上に少し余白、あごの下に首元が少し入る大きさ）。
+  128×128 も同じ構図で: icon512.py 切り抜き.png 出力名 128 24 --crop ...
 （出力名.png・出力名.txt（エディタ用の文字グリッド）・出力名.json（パレット）ができる。エディタで描くときは tools/pixel-practice/editor-draw.mjs）
 """
 import sys, json
@@ -15,9 +17,12 @@ from skimage import color as skc
 from sklearn.cluster import KMeans
 
 
+CROP = None
+if "--crop" in sys.argv:
+    k = sys.argv.index("--crop"); CROP = [int(v) for v in sys.argv[k + 1].split(",")]; del sys.argv[k:k + 2]
 src, out = sys.argv[1], sys.argv[2]
-SIZE = int(sys.argv[3]) if len(sys.argv) > 3 else 96
-NCOL = int(sys.argv[4]) if len(sys.argv) > 4 else 20
+SIZE = int(sys.argv[3]) if len(sys.argv) > 3 else 512
+NCOL = int(sys.argv[4]) if len(sys.argv) > 4 else 32
 
 
 def kmeans_lab(rgb, k, seed=0):
@@ -28,6 +33,9 @@ def kmeans_lab(rgb, k, seed=0):
 
 
 im = Image.open(src).convert("RGBA")  # 切り抜き済み
+if CROP:
+    x0, y0, side = CROP
+    sq = Image.new("RGBA", (side, side), (0, 0, 0, 0)); sq.paste(im.crop((x0, y0, x0 + side, y0 + side)), (0, 0)); im = sq
 # アイコン: 正方形の構図のまま（頭の上の余白を残す）
 rgb = im.convert("RGB").filter(ImageFilter.UnsharpMask(radius=2, percent=80, threshold=2))
 rgb = ImageEnhance.Contrast(rgb).enhance(1.12)
