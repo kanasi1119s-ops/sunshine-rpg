@@ -39,6 +39,28 @@ export const ENCOUNTER_ZONES: Record<string, EncounterZone> = {
   "kanou-4": { level: 36, names: ["全環のかけら", "白い揺らぎ", "環の残響"], hue: 280 },
 };
 
+/** 世界地図の、地方ごとのエンカウント（道の上では出会わない）。想定レベルは、そこから向かう町の少し手前。 */
+export const WORLD_ENCOUNTER_ZONES: Record<string, EncounterZone> = {
+  "world-1": { level: 3, names: ["野の虫", "街道の影", "野ねずみの影"], hue: 120 },
+  "world-2": { level: 7, names: ["峠の影", "湖畔のこうもり", "石の歪み"], hue: 190 },
+  "world-3": { level: 11, names: ["砂ぬけ", "熱風の影", "砂サソリの影"], hue: 45 },
+  "world-4": { level: 15, names: ["氷の兵の影", "霜の歪み", "白い影"], hue: 195 },
+};
+
+/** 世界地図の地形（タイルID。道=7、砂漠=5、雪=6・12）と位置から、エンカウントの地方を決める。道の上は null（出会わない）。 */
+export function worldZoneIdAt(tileId: number, tileX: number): string | null {
+  if (tileId === 7 || tileId === 10) {
+    return null;
+  }
+  if (tileId === 5) {
+    return "world-3";
+  }
+  if (tileId === 6 || tileId === 12) {
+    return "world-4";
+  }
+  return tileX < 24 ? "world-1" : tileX < 40 ? "world-2" : "world-3";
+}
+
 /** 何歩目で出会うかのふれ幅。 */
 export const MIN_STEPS = 12;
 export const MAX_STEPS = 26;
@@ -57,7 +79,7 @@ function nextThreshold(rng: () => number): number {
 
 /** 1歩ぶん進める。出会うとき（歩数が尽きた、かつエンカウントのある地図）は敵の一団を返し、次の歩数を決め直す。 */
 export function stepEncounter(state: EncounterState, mapId: string, rng: () => number): { state: EncounterState; enemies: Combatant[] | null } {
-  const zone = ENCOUNTER_ZONES[mapId];
+  const zone = ENCOUNTER_ZONES[mapId] ?? WORLD_ENCOUNTER_ZONES[mapId];
   if (!zone) {
     return { state, enemies: null };
   }
@@ -179,7 +201,7 @@ export function encounterMonsterSpec(zone: EncounterZone, variant: number): Mons
 /** `MONSTERS`（敵の絵の一覧）に足す、ランダムエンカウントの敵の絵。 */
 export function encounterMonsterSpecs(): Record<string, MonsterSpec> {
   const specs: Record<string, MonsterSpec> = {};
-  for (const [mapId, zone] of Object.entries(ENCOUNTER_ZONES)) {
+  for (const [mapId, zone] of Object.entries({ ...ENCOUNTER_ZONES, ...WORLD_ENCOUNTER_ZONES })) {
     for (let variant = 0; variant < zone.names.length; variant++) {
       specs[`enc-${mapId}-${variant}`] = encounterMonsterSpec(zone, variant);
     }

@@ -6,8 +6,10 @@ import math, heapq, sys
 import numpy as np
 from PIL import Image
 
-W, H = 72, 54
+S = 3.5   # 大きさの倍率（ドラクエ5のような広い大陸にする）
+W, H = int(72*S), int(54*S)
 rng = np.random.default_rng(20261003)
+def sc(v): return int(round(v*S))
 
 def value_noise(w, h, scale, seed):
     r = np.random.default_rng(seed)
@@ -26,83 +28,99 @@ def value_noise(w, h, scale, seed):
     return out
 
 def fbm(w, h, seed, base=12):
-    return value_noise(w, h, base, seed)*0.55 + value_noise(w, h, base/2, seed+1)*0.3 + value_noise(w, h, base/4, seed+2)*0.15
+    # 大きなうねり（base）に、タイル数で決まった細かいゆらぎ（12・6・3マス）を重ねる（広くしても、海岸線や森の形が細かくなる）
+    return (value_noise(w, h, base, seed)*0.40 + value_noise(w, h, base/2, seed+1)*0.22 + value_noise(w, h, 12, seed+2)*0.17
+            + value_noise(w, h, 6, seed+3)*0.13 + value_noise(w, h, 3, seed+4)*0.08)/1.0
 
-n1 = fbm(W, H, 11); n2 = fbm(W, H, 23, 9); n3 = fbm(W, H, 37, 7)
+n1 = fbm(W, H, 11, 12*S); n2 = fbm(W, H, 23, 9*S); n3 = fbm(W, H, 37, 7*S)
 T = [["O"]*W for _ in range(H)]
 
 # 大陸の陸地: 東西に長いだ円を、ノイズでぎざぎざに
 for y in range(H):
     for x in range(W):
-        d = math.hypot((x-36)/32.0, (y-27)/21.0)
+        d = math.hypot((x-36*S)/(32.0*S), (y-27*S)/(21.0*S))
         if d + (n1[y, x]-0.5)*0.75 < 0.98:
             T[y][x] = "P"
 # 北東の浮島（浮嶼）
-for cx, cy, r in ((64, 20, 3.6), (68, 25, 3.0), (62, 26, 2.6)):
+for cx, cy, r in ((64*S, 20*S, 3.6*S), (68*S, 25*S, 3.0*S), (62*S, 26*S, 2.6*S)):
     for y in range(H):
         for x in range(W):
-            if math.hypot(x-cx, (y-cy)*1.1) + (n2[y, x]-0.5)*3 < r:
+            if math.hypot(x-cx, (y-cy)*1.1) + (n2[y, x]-0.5)*3*S < r:
                 T[y][x] = "C"
 # 虚灯宮の半島（東の海岸）
 for y in range(H):
     for x in range(W):
-        if math.hypot((x-67)/5.0, (y-37)/6.0) + (n2[y, x]-0.5)*0.6 < 1.0:
+        if math.hypot((x-67*S)/(5.0*S), (y-37*S)/(6.0*S)) + (n2[y, x]-0.5)*0.6 < 1.0:
             T[y][x] = "W"
 
 def land(x, y): return T[y][x] not in "O"
 
 # 山脈（分水嶺）: x=29〜33の南北の帯。北の端から南の端まで、ノイズで幅を変える
-for y in range(5, 46):
-    cx = 30 + math.sin(y*0.22)*2.5
-    wid = 2.2 + n2[y, int(cx)%W]*2.2
+for y in range(sc(5), sc(46)):
+    cx = 30*S + math.sin(y*0.22/S)*2.5*S
+    wid = (2.2 + n2[y, int(cx)%W]*2.2)*S
     for x in range(W):
         if abs(x-cx) < wid and T[y][x] == "P":
             T[y][x] = "M"
 # 霧断崖のあたり（北東の断崖）
 for y in range(H):
     for x in range(W):
-        if math.hypot((x-53)/5.5, (y-18)/5.0) + (n3[y, x]-0.5)*0.9 < 1.0 and T[y][x] == "P":
+        if math.hypot((x-53*S)/(5.5*S), (y-18*S)/(5.0*S)) + (n3[y, x]-0.5)*0.9 < 1.0 and T[y][x] == "P":
             T[y][x] = "M" if n1[y, x] > 0.45 else "H"
 # 雪原（北）
 for y in range(H):
     for x in range(W):
-        if y <= 13 and T[y][x] in "PH" and x > 40:
+        if y <= 13*S + (n1[y, x]-0.5)*9*S and T[y][x] in "PH" and x > 40*S - (n3[y, x]-0.5)*6*S:
             T[y][x] = "S"
         if y <= 10 and T[y][x] == "M":
             T[y][x] = "M"
 # 砂漠（中南東）
 for y in range(H):
     for x in range(W):
-        if math.hypot((x-46)/9.0, (y-36)/6.5) + (n3[y, x]-0.5)*0.7 < 1.0 and T[y][x] == "P":
+        if math.hypot((x-46*S)/(9.0*S), (y-36*S)/(6.5*S)) + (n3[y, x]-0.5)*0.7 < 1.0 and T[y][x] == "P":
             T[y][x] = "D"
 # 森（ノイズの高いところ）と丘
 for y in range(H):
     for x in range(W):
         if T[y][x] == "P":
-            if n1[y, x] > 0.60 and n3[y, x] > 0.45: T[y][x] = "F"
-            elif n2[y, x] > 0.66: T[y][x] = "H"
+            if n1[y, x] > 0.53 and n3[y, x] > 0.43: T[y][x] = "F"
+            elif n2[y, x] > 0.57: T[y][x] = "H"
+# 小さな山地（あちこちに）と、そのふもとの丘
+for y in range(H):
+    for x in range(W):
+        if T[y][x] == "P" and n2[y, x] > 0.70 and n3[y, x] > 0.5 and abs(x-30*S) > 6*S:
+            T[y][x] = "M"
+for y in range(1, H-1):
+    for x in range(1, W-1):
+        if T[y][x] == "P" and any(T[y+dy][x+dx] == "M" for dx, dy in ((1,0),(-1,0),(0,1),(0,-1))) and n1[y, x] > 0.4:
+            T[y][x] = "H"
 # 雪原の針葉樹林（T）
 for y in range(H):
     for x in range(W):
         if T[y][x] == "S" and n1[y, x] > 0.56 and n3[y, x] > 0.42:
             T[y][x] = "T"
+# 小さな湖（あちこちに）
+for y in range(H):
+    for x in range(W):
+        if T[y][x] in "PFH" and n3[y, x] > 0.80 and n1[y, x] > 0.5:
+            T[y][x] = "L"
 # 湖（硝子湖）と川
 for y in range(H):
     for x in range(W):
-        if math.hypot((x-22)/5.2, (y-22)/3.8) + (n3[y, x]-0.5)*0.7 < 1.0 and land(x, y):
+        if math.hypot((x-22*S)/(5.2*S), (y-22*S)/(3.8*S)) + (n3[y, x]-0.5)*0.7 < 1.0 and land(x, y):
             T[y][x] = "L"
 def river(x0, y0, x1, y1):
     n = max(abs(x1-x0), abs(y1-y0))*2
     for i in range(n+1):
         t = i/n
-        x = int(round(x0+(x1-x0)*t + math.sin(t*9+x0)*1.6)); y = int(round(y0+(y1-y0)*t))
+        x = int(round(x0+(x1-x0)*t + math.sin(t*9*S/2+x0)*1.6*S/1.5)); y = int(round(y0+(y1-y0)*t))
         if 0 <= x < W and 0 <= y < H and T[y][x] in "PFHDS": T[y][x] = "L"
-river(22, 25, 20, 40); river(38, 8, 41, 22); river(44, 24, 47, 30)
+river(sc(22), sc(25), sc(20), sc(40)); river(sc(38), sc(8), sc(41), sc(22)); river(sc(44), sc(24), sc(47), sc(30))
 
 TOWNS = {  # マップID: (x, y, 名前)
-    "touri-town": (7, 30, "灯里"), "mugikano-village": (15, 31, "麦香野"), "garasuko-town": (22, 27, "硝子湖"),
-    "tetsukusari-town": (31, 17, "鉄鏈鉱山"), "toushin-town": (38, 25, "灯芯都"), "sanone-town": (45, 35, "砂音"),
-    "kiri-town": (52, 21, "霧断崖"), "shimohara-town": (58, 10, "霜原"), "fushima-town": (64, 21, "浮嶼"), "kyotoukyu-court": (67, 37, "虚灯宮"),
+    "touri-town": (24, 105, "灯里"), "mugikano-village": (52, 108, "麦香野"), "garasuko-town": (77, 94, "硝子湖"),
+    "tetsukusari-town": (108, 60, "鉄鏈鉱山"), "toushin-town": (133, 88, "灯芯都"), "sanone-town": (158, 122, "砂音"),
+    "kiri-town": (182, 74, "霧断崖"), "shimohara-town": (203, 35, "霜原"), "fushima-town": (224, 74, "浮嶼"), "kyotoukyu-court": (234, 130, "虚灯宮"),
 }
 # 町のまわり（半径2）は、通れる地面にならす
 for mid, (tx, ty, _n) in TOWNS.items():
@@ -136,22 +154,24 @@ def astar(a, b):
 
 def carve_road(a, b, bridge=True):
     for (x, y) in astar(a, b):
-        if T[y][x] not in "CW": T[y][x] = "R"
+        if T[y][x] not in "CW": T[y][x] = "R"   # 海・川の上は、そのまま橋・堤道になる
 
 def pos(mid): return TOWNS[mid][:2]
 # 川をわたる橋のために、川も通れる道を許す: 道を引くときだけ川（L）に高いが有限の費用を付けて通す
 COST["L"] = 6.0
+COST["O"] = 25.0   # 小さな入り江などは、道（堤道）でわたれる
 for a, b in (("touri-town", "mugikano-village"), ("mugikano-village", "garasuko-town"), ("garasuko-town", "tetsukusari-town"),
              ("garasuko-town", "toushin-town"), ("toushin-town", "sanone-town"), ("toushin-town", "kiri-town"),
              ("kiri-town", "shimohara-town"), ("sanone-town", "kyotoukyu-court"), ("kiri-town", "fushima-town")):
     carve_road(pos(a), pos(b))
 COST["L"] = 99999
+COST["O"] = 99999
 # 浮嶼への雲の橋: 霧断崖から浮島へ、雲のタイルでつなぐ
 x0, y0 = pos("kiri-town"); x1, y1 = pos("fushima-town")
 n = max(abs(x1-x0), abs(y1-y0))*2
 for i in range(n+1):
     t = i/n
-    x = int(round(x0+(x1-x0)*t)); y = int(round(y0+(y1-y0)*t + math.sin(t*5)*1.2))
+    x = int(round(x0+(x1-x0)*t)); y = int(round(y0+(y1-y0)*t + math.sin(t*5)*1.2*S))
     if T[y][x] in "OLM": T[y][x] = "C"
     elif T[y][x] != "R": pass
 
@@ -188,14 +208,14 @@ assert len(BEACONS) == 8
 
 # 渡し場（虚灯宮の南の海岸）: 海に接する通れるマス
 FERRY = None
-for y in range(44, 30, -1):
-    for x in range(60, 71):
-        if T[y][x] in "PFDHW" and (x, y) in seen and any(0 <= y+dy < H and 0 <= x+dx < W and T[y+dy][x+dx] == "O" for dx, dy in ((1,0),(-1,0),(0,1),(0,-1))) and abs(x-67)+abs(y-37) > 3:
+for y in range(sc(44), sc(30), -1):
+    for x in range(sc(60), sc(71)):
+        if T[y][x] in "PFDHW" and (x, y) in seen and any(0 <= y+dy < H and 0 <= x+dx < W and T[y+dy][x+dx] == "O" for dx, dy in ((1,0),(-1,0),(0,1),(0,-1))) and abs(x-67*S)+abs(y-37*S) > 3*S:
             FERRY = (x, y); break
     if FERRY: break
 assert FERRY, "渡し場を置けない"
 # 渦（大渦）: 南東の沖
-VORTEX = (66, 49)
+VORTEX = (sc(66), sc(49))
 
 rows = ["".join(r) for r in T]
 ts = ["// 自動生成: tools/world-map/gen_world.py（手で編集しない）。大陸アルテシアの地形。1文字=1マス。",
@@ -212,15 +232,15 @@ os.makedirs("/home/user/sunshine-rpg/src/game/map/world", exist_ok=True)
 open("/home/user/sunshine-rpg/src/game/map/world/world-map.generated.ts", "w").write("\n".join(ts) + "\n")
 
 col = {"O": (30, 90, 150), "P": (96, 170, 70), "F": (40, 110, 50), "M": (130, 120, 120), "D": (220, 190, 120), "S": (240, 244, 250), "R": (190, 150, 90), "H": (130, 170, 80), "L": (60, 130, 200), "C": (225, 235, 245), "W": (90, 70, 110), "T": (200, 225, 235)}
-im = Image.new("RGB", (W*8, H*8))
+im = Image.new("RGB", (W*4, H*4))
 for y in range(H):
     for x in range(W):
-        for dy in range(8):
-            for dx in range(8): im.putpixel((x*8+dx, y*8+dy), col[T[y][x]])
+        for dy in range(4):
+            for dx in range(4): im.putpixel((x*4+dx, y*4+dy), col[T[y][x]])
 from PIL import ImageDraw
 d = ImageDraw.Draw(im)
-for mid, (x, y, nm) in TOWNS.items(): d.rectangle((x*8-2, y*8-2, x*8+9, y*8+9), outline=(255, 0, 0), width=2)
-for i, (x, y) in enumerate(BEACONS): d.ellipse((x*8, y*8, x*8+8, y*8+8), fill=(255, 220, 0))
-d.rectangle((FERRY[0]*8, FERRY[1]*8, FERRY[0]*8+8, FERRY[1]*8+8), fill=(0, 0, 0))
+for mid, (x, y, nm) in TOWNS.items(): d.rectangle((x*4-3, y*4-3, x*4+6, y*4+6), outline=(255, 0, 0), width=2)
+for i, (x, y) in enumerate(BEACONS): d.ellipse((x*4, y*4, x*4+5, y*4+5), fill=(255, 220, 0))
+d.rectangle((FERRY[0]*4, FERRY[1]*4, FERRY[0]*4+5, FERRY[1]*4+5), fill=(0, 0, 0))
 im.save("/tmp/claude-0-s/world-preview.png")
 print("OK", W, H, "towns", len(TOWNS), "beacons", BEACONS, "ferry", FERRY)

@@ -75,7 +75,7 @@ import { createDeepEchoYugami, createShogenYugami } from "./game/battle/chapter1
 import { DEEP_ENTRY } from "./game/map/chapter10/deep-maps";
 import { createGodYugami, GODS } from "./game/battle/chapter11-enemies";
 import { createDungeonEnemy, DUNGEON_ENEMIES } from "./game/battle/chapter12-enemies";
-import { createEncounterEnemies, createEncounterState, ENCOUNTER_ZONES, stepEncounter, type EncounterState } from "./game/encounter/encounter";
+import { createEncounterEnemies, createEncounterState, ENCOUNTER_ZONES, stepEncounter, WORLD_ENCOUNTER_ZONES, worldZoneIdAt, type EncounterState } from "./game/encounter/encounter";
 import { KYOTOUKYU_CORRIDOR_ENTRY, KYOTOUKYU_COURT_ENTRY, KYOTOUKYU_SANCTUM_ENTRY } from "./game/map/chapter9/kyotoukyu-maps";
 import { AYAME, COMPANIONS, createCompanionCombatant, GUIDE, MINA, ORCA, RETO } from "./game/battle/companions";
 import type { Combatant, Skill } from "./game/battle/types";
@@ -388,11 +388,14 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
 let encounterState: EncounterState = createEncounterState(Math.random);
 let lastStepTile: { x: number; y: number; mapId: string } | null = null;
 
+/** 世界地図で、いま立っている地形の戦闘の背景。 */
+let worldBattleBiome: "grass" | "desert" | "snow" = "grass";
+
 function startRandomBattle(enemies: Combatant[]): void {
   if (battle) {
     return;
   }
-  setBattleBiome(biomeForMap(currentMapId));
+  setBattleBiome(currentMapId === "world-map" ? worldBattleBiome : biomeForMap(currentMapId));
   victoryExpApplied = false;
   victoryMessage = null;
   pendingVictoryFlag = null;
@@ -471,7 +474,7 @@ if (import.meta.env.DEV) {
     startTestDialogue: (speaker: string) => dialogue.start([{ type: "message", speaker, text: "顔グラフィックの確認です。" }]),
     /** 開発用: 指定した地図のランダムエンカウントの敵と戦う（敵の絵の確認用）。 */
     startEncounter: (mapId: string) => {
-      const zone = ENCOUNTER_ZONES[mapId];
+      const zone = ENCOUNTER_ZONES[mapId] ?? WORLD_ENCOUNTER_ZONES[mapId];
       if (zone) {
         startRandomBattle(createEncounterEnemies(mapId, zone, Math.random));
       }
@@ -1335,7 +1338,14 @@ const loop = createGameLoop({
     } else if (lastStepTile.x !== centerTileX || lastStepTile.y !== centerTileY) {
       lastStepTile = { x: centerTileX, y: centerTileY, mapId: currentMapId };
       if (!debugNoEncounter) {
-        const stepped = stepEncounter(encounterState, currentMapId, Math.random);
+        // 世界地図では、足もとの地形で出会う敵と戦闘の背景を決める（道の上では出会わない）。
+        let encounterMapId: string | null = currentMapId;
+        if (currentMapId === "world-map") {
+          const tileId = map.data.layers[0].data[centerTileY * map.data.width + centerTileX];
+          encounterMapId = worldZoneIdAt(tileId, centerTileX);
+          worldBattleBiome = tileId === 5 ? "desert" : tileId === 6 || tileId === 12 ? "snow" : "grass";
+        }
+        const stepped = encounterMapId ? stepEncounter(encounterState, encounterMapId, Math.random) : { state: encounterState, enemies: null };
         encounterState = stepped.state;
         if (stepped.enemies) {
           startRandomBattle(stepped.enemies);
