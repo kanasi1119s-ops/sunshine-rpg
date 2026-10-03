@@ -1,10 +1,10 @@
 import sys, json; sys.path.insert(0,"../../../tools/pixel-practice")
 from shapes import Canvas
 def sword(ver):
-    c=Canvas(40,40)
+    c=Canvas(46,44)
     W=9
     # 刃: 45度。行yごとに x=y+a .. y+a+W-1。先端は細くなる
-    a=-4
+    a=0
     for y in range(1,30):
         taper = 0
         if y<7: taper=(7-y)           # 先端: 上ほど細い
@@ -13,23 +13,23 @@ def sword(ver):
             i=x-(y+a)               # 刃の幅方向の位置 0..8
             edge_l = (i==0+taper//2)
             k = {0:'1',1:'2',2:'3',3:'3',4:'f',5:'4',6:'4',7:'5',8:'6'}.get(min(8,max(0,i)),'4')
-            if x+y<=19+27+1: c.put(x,y,k)           # 鍔の線より先（右下）は刃を出さない
+            if x+y<=31+27+1: c.put(x,y,k)           # 鍔の線より先（右下）は刃を出さない
     # 刃の細部（版が上がるほど増える）
     if ver>=2:
         for y in range(8,25):                       # 溝（フラー）の内側に細い明線
-            c.put(y-4+5,y,'g') if y%3==0 else None
+            c.put(y+5,y,'g') if y%3==0 else None
         for y in range(9,26,4):                     # 刃こぼれ・傷のような短い暗点
-            c.put(y-4+7,y,'6')
-        for y in range(3,10): c.put(y-4+1,y,'W')      # 切っ先の白い光（左の縁）
+            c.put(y+7,y,'6')
+        for y in range(3,10): c.put(y+1,y,'W')      # 切っ先の白い光（左の縁）
     if ver>=3:
-        for y in range(10,26,2): c.put(y-4+2,y,'W') if y%4==0 else None   # 研いだ縁のきらめき
-        c.put(3,2,'W'); c.put(4,3,'W')
+        for y in range(10,26,2): c.put(y+2,y,'W') if y%4==0 else None   # 研いだ縁のきらめき
+        c.put(1,2,'W'); c.put(2,3,'W')
     # 鍔（刃に直角、反り返る）
     def bar(cx,cy,half,w,fn):
         for t in range(-half,half+1):
             for k in range(w):
                 c.put(cx+t+(k//2), cy-t+(k-(k//2)), fn(t,k))
-    gx,gy=19,27
+    gx,gy=31,27
     bar(gx,gy,9,4,lambda t,k:'Y' if (k==0 and t%3==0) else 'G' if k==0 else 'O' if k in (1,2) else 'D')
     if ver>=2:
         for t in (-9,-8,9,8): c.put(gx+t,gy-t-1,'G'); c.put(gx+t,gy-t-2,'O')       # 鍔の先端を少し反らせる
@@ -39,7 +39,7 @@ def sword(ver):
         for t in (-5,-3,3,5): c.put(gx+t,gy-t,'Y')
     # 柄（細く、巻き革の縞）
     for t in range(1,8):
-        x=gx+t+1; y=gy+t+1
+        x=gx+t; y=gy+t
         for k in (-1,0,1):
             kk='L' if (t%2==0) else 'l'
             if k==-1: kk='M' if t%2==0 else 'L'
@@ -47,7 +47,7 @@ def sword(ver):
             c.put(x+k,y-k,kk)
             if ver>=2: c.put(x+k+1,y-k,kk)
     # 柄頭
-    px,py=gx+10,gy+10
+    px,py=gx+9,gy+9
     for dx in range(-2,3):
         for dy in range(-2,3):
             if dx*dx+dy*dy<=5: c.put(px+dx,py+dy,'G' if dx+dy<0 else 'D' if dx+dy>1 else 'O')
