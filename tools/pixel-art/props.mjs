@@ -29,4 +29,12 @@ export const PIECES = [
   piece("P7-屋敷", "r17-polish", "manor4.txt", "pal-manor4.json", {}, 80),
   piece("P8-屋敷青", "r17-polish", "manor4.txt", "pal-manor4-blue.json", {}, 80),
   piece("P9-屋敷緑", "r17-polish", "manor4.txt", "pal-manor4-green.json", {}, 80),
+  // 雪の地方の飾り（r17-polish/snow.py で、既存の木・岩・茂みを雪化／枯れ木は一から）
+  piece("P10-雪の木", "r17-polish", "tree-snow.txt", "pal-tree-snow.json"),
+  piece("P11-枯れ木", "r17-polish", "tree-dead.txt", "pal-tree-dead.json"),
+  piece("P12-雪の岩", "r17-polish", "rock-snow.txt", "pal-rock-snow.json"),
+  piece("P13-雪の茂み", "r17-polish", "bush-snow.txt", "pal-bush-snow.json"),
+  // 砂漠の飾り（r17-polish/desert.py で一から）
+  piece("P14-ヤシ", "r17-polish", "palm.txt", "pal-palm.json"),
+  piece("P15-サボテン", "r17-polish", "cactus.txt", "pal-cactus.json"),
 ];

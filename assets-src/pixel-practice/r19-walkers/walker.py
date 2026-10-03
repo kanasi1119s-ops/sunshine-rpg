@@ -11,6 +11,10 @@ CHARS={
  "ガイド":dict(hair=('#7a5a14','#c8982c','#fff0a0'),skin=('#d49a76','#f0c49c','#ffdcbc'),top=('#d8d0c0','#f4ecdc','#ffffff'),bottom=('#2a5a3a','#3a8a50','#6ac088'),boot=('#3a2418','#5a3a24','#7a5238'),acc=('#1c6a3c','#34a45c','#8af0a8'),eye='#2a6a40',style='twin',skirt=True,goggle=True,vest=('#4a2c14','#6a4222','#9a6c3c')),
  "オルカ":dict(hair=('#2a1c14','#4a3020','#7a5a40'),skin=('#b07850','#d49a70','#eab890'),top=('#a84a0c','#e07a20','#ffb048'),bottom=('#4a2c1a','#6a4228','#8a5c38'),boot=('#2a1a12','#4a2c1a','#6a4228'),acc=('#586070','#8890a0','#d8e0ec'),eye='#4a3820',style='helmet',vestorange=True,shirt=('#4a4e5a','#6a707e','#9aa0b0')),
 }
+def eye_light(h):
+    # 目のハイライトは白ではなく、目の色を35%だけ明るくした近い色にする
+    r,g,b=[int(h[i:i+2],16) for i in (1,3,5)]
+    return '#%02x%02x%02x'%tuple(int(v+(255-v)*0.35) for v in (r,g,b))
 def S(i): return '#10%02x%02x'%(16+i,16+i)   # 役割色（実行時に置き換える目印）
 ARCH_BASE=dict(hair=(S(0),S(1),S(2)),skin=(S(3),S(4),S(5)),top=(S(6),S(7),S(8)),bottom=(S(9),S(10),S(11)),boot=(S(12),S(13),S(14)),acc=(S(15),S(16),S(17)),eye='#1a1420')
 CHARS['素体-short']=dict(ARCH_BASE,style='spiky')
@@ -19,10 +23,10 @@ CHARS['素体-twin']=dict(ARCH_BASE,style='twin',skirt=True)
 def mats(c):
     R={}
     R['hair']=ramp3(*c['hair']); R['skin']=ramp3(*c['skin']); R['top']=ramp3(*c['top']); R['bottom']=ramp3(*c['bottom']); R['boot']=ramp3(*c['boot']); R['acc']=ramp3(*c['acc'])
-    R['eye']=[c['eye']]*4; R['dark']=['#1a1420']*4; R['white']=['#ffffff']*4; R['gold']=ramp3('#a8701c','#e0a830','#fff0a0')
+    R['eye']=[c['eye']]*4; R['dark']=['#1a1420']*4; R['white']=['#ffffff']*4; R['gold']=ramp3('#a8701c','#e0a830','#e0a830')
     if 'vest' in c: R['vest']=ramp3(*c['vest'])
     if 'shirt' in c: R['shirt']=ramp3(*c['shirt'])
-    R['steel']=ramp3('#586070','#8890a0','#d8e0ec')
+    R['steel']=ramp3('#586070','#8890a0','#8890a0')
     return R
 def draw(name,dr,fr):
     c=CHARS[name]; im=Img(W,H)
@@ -30,21 +34,23 @@ def draw(name,dr,fr):
     cx=8
     # 歩きの揺れ: 0=立ち、1=右足前、2=左足前。体が1ドット上下する
     bob = 0 if fr==0 else -1 if False else 0
-    legL = 0 if fr==0 else (-2 if fr==1 else 2)
-    legR = 0 if fr==0 else (2 if fr==1 else -2)
+    legL = 0 if fr==0 else (-3 if fr==1 else 3)
+    legR = 0 if fr==0 else (3 if fr==1 else -3)
     # 脚
     if not side:
         for sx,off in ((-1,legL),(1,legR)):
             x=cx+sx*2.3
-            capsule(im,(x,23.5),(x,26+max(0,-off)*0),2.2,1.9,'bottom','leg%d'%sx)
-            # 足を前後に（正面/背面は上下にずらす: 前の足が1ドット低く）
-            y1=27+(1 if off>0 else 0)-(1 if off<0 else 0)
+            # 歩きのコマ: 前に出す足は1ドット長く踏み出し、もう一方は膝を曲げて2ドット持ち上げる
+            lift = 2 if off<0 else 0
+            capsule(im,(x+(0.4*sx if lift else 0),23.5),(x,26-lift+(1 if off>0 else 0)),2.2,1.9,'bottom','leg%d'%sx)
+            y1=27+(1 if off>0 else 0)-lift
             poly(im,[(x-2.3,y1-1),(x+2.3,y1-1),(x+2.6,y1+2),(x-2.6,y1+2)],'boot','boot%d'%sx)
     else:
         for k,(off,z) in enumerate(((legL,'a'),(legR,'b'))):
-            x=cx+off*0.9
-            capsule(im,(cx,23.5),(x,27),2.4,2.0,'bottom','legS'+z)
-            poly(im,[(x-2.2+ (sgn*0.8),26),(x+2.6*sgn+ (0),26),(x+3.2*sgn,29.5),(x-2.6,29.5)] if sgn>0 else [(x+2.2,26),(x-2.6,26),(x-3.2,29.5),(x+2.6,29.5)],'boot','bootS'+z)
+            x=cx+off*sgn*1.0
+            up = 1 if off*sgn<0 else 0      # 後ろへ蹴り出す足は1ドット持ち上がる
+            capsule(im,(cx,23.5),(x,27-up),2.4,2.0,'bottom','legS'+z)
+            poly(im,[(x-2.2+ (sgn*0.8),26-up),(x+2.6*sgn+ (0),26-up),(x+3.2*sgn,29.5-up),(x-2.6,29.5-up)] if sgn>0 else [(x+2.2,26-up),(x-2.6,26-up),(x-3.2,29.5-up),(x+2.6,29.5-up)],'boot','bootS'+z)
     # 胴
     if name=="ミナ":
         poly(im,[(4.5,15),(11.5,15),(12.5,26),(3.5,26)],'top','body',shade=lambda x,y,nx,ny:-nx*0.35-ny*0.25+0.3)
@@ -73,15 +79,15 @@ def draw(name,dr,fr):
         for x in range(4,12): im.set(x,22 if not c.get('coat') else 22,'dark',-1,'belt')
     # 腕
     if not side:
-        swing={0:(0,0),1:(1,-1),2:(-1,1)}[fr]
+        swing={0:(0,0),1:(2,-2),2:(-2,2)}[fr]
         for sx,sw in ((-1,swing[0]),(1,swing[1])):
             x=cx+sx*5.6
-            capsule(im,(x,16),(x+sx*0.4,22+sw*0.8),1.7,1.5,'top','arm%d'%sx)
-            ellipse(im,x+sx*0.4,23.2+sw*0.8,1.5,1.5,'skin','hand%d'%sx)
+            capsule(im,(x,16),(x+sx*0.4,22+sw*0.9),1.7,1.5,'top','arm%d'%sx)
+            ellipse(im,x+sx*0.4,23.2+sw*0.9,1.5,1.5,'skin','hand%d'%sx)
     else:
-        sw={0:0,1:2,2:-2}[fr]
-        capsule(im,(cx,16),(cx+sw*sgn*0.9,22.5),1.9,1.6,'top','armS')
-        ellipse(im,cx+sw*sgn*0.9,23.6,1.5,1.5,'skin','handS')
+        sw={0:0,1:3,2:-3}[fr]
+        capsule(im,(cx,16),(cx+sw*sgn*1.0,22.5-abs(sw)*0.25),1.9,1.6,'top','armS')
+        ellipse(im,cx+sw*sgn*1.0,23.6-abs(sw)*0.25,1.5,1.5,'skin','handS')
     # 小物（スカーフ・ストール）
     if c.get('scarf') and dr in ('down','up'):
         poly(im,[(4.5,14),(11.5,14),(11,17),(5,17)],'acc','scarf')
@@ -90,19 +96,21 @@ def draw(name,dr,fr):
         poly(im,[(5,14),(11,14),(10.5,17),(5.5,17)],'acc','scarf')
     if name=="ガイド" and dr in ('down','up'): poly(im,[(5,14),(11,14),(10.5,17),(5.5,17)],'acc','scarf')
     # 頭
-    ellipse(im,cx,8.2,6.3,6.4,'skin','head',light_bias=0.2)
+    # 頭: 丸すぎる球ではなく、角を落とした四角（上は平ら、ほおが張り、あごは少し細い）。王道RPGの頭の作りを参考にした。
+    poly(im,[(3.6,2.2),(12.4,2.2),(14.0,3.6),(14.5,8.5),(13.6,12.2),(11.4,14.4),(4.6,14.4),(2.4,12.2),(1.5,8.5),(2.0,3.6)],'skin','head',
+         shade=lambda x,y,nx,ny:(nx*LIGHT[0]+ny*LIGHT[1])*-0.6+0.45)
     style=c['style']
     if dr=='down':
         # 顔: 目2×2、口
         for ex in (5,9):
             im.fixed(ex,9,'eyeC','eye'); im.fixed(ex+1,9,'eyeC','eye'); im.fixed(ex,10,'eyeC','eye'); im.fixed(ex+1,10,'eyeC','eye')
-            im.fixed(ex,9,'white','eye')
+            im.fixed(ex,9,'eyeL','eye')
         im.fixed(7,12,'mouth','mouth'); im.fixed(8,12,'mouth','mouth')
         for x in (4,11): im.fixed(x,11,'blush','blush')
     elif dr!='up':
         ex = 10 if dr=='right' else 5
         im.fixed(ex,9,'eyeC','eye'); im.fixed(ex,10,'eyeC','eye'); im.fixed(ex+(1 if dr=='right' else -1),9,'eyeC','eye') if False else None
-        im.fixed(ex+(-1 if dr=='right' else 1),9,'white','eye')
+        im.fixed(ex+(-1 if dr=='right' else 1),9,'eyeL','eye')
         im.fixed(ex+(1 if dr=='right' else -1),12,'mouth','mouth')
     # 髪
     def hs(x,y,nx,ny): return -nx*0.4-ny*0.5+0.25+(0.2 if (x*3+y)%5==0 else 0)
@@ -155,11 +163,20 @@ def draw(name,dr,fr):
             capsule(im,(8,12),(8.5,22),1.8,1.4,'hair','braid')
         if side:
             capsule(im,(7 if sgn>0 else 9,11),(5 if sgn>0 else 11,20),1.8,1.4,'hair','braidS')
+    if fr != 0:
+        bob_shift(im)   # 歩きのコマは、腰を1ドット落とす（体と頭が1ドット下がる）
     return im
+def bob_shift(im):
+    for y in range(24, 0, -1):
+        for x in range(W):
+            if y <= 22 or im.mat[y-1][x] is not None:
+                im.mat[y][x] = im.mat[y-1][x]; im.lum[y][x] = im.lum[y-1][x]; im.part[y][x] = im.part[y-1][x]; im.ink[y][x] = im.ink[y-1][x]
+    for x in range(W):
+        im.mat[0][x] = None; im.part[0][x] = None; im.ink[0][x] = None
 def render_sprite(name,dr,fr):
     im=draw(name,dr,fr); c=CHARS[name]
     R=mats(c)
-    R['eyeC']=[c['eye']]*4; R['mouth']=['#b0584c']*4; R['blush']=['#f4a898']*4; R['lens']=['#58b0e8']*4
+    R['eyeC']=[c['eye']]*4; R['eyeL']=[eye_light(c['eye'])]*4; R['mouth']=['#b0584c']*4; R['blush']=['#f4a898']*4; R['lens']=['#58b0e8']*4
     EDGE={'hair':'#2a1410','skin':'#7a4a3a','top':'#1a1424','bottom':'#1a1424','boot':'#140c08','acc':'#3a1010','steel':'#2a3040','gold':'#6a4010','vest':'#2a1608','shirt':'#2a2e3a','dark':'#1a1420'}
     if name.startswith('素体'): EDGE.update({'hair':S(18),'skin':S(19),'top':S(20),'bottom':S(21),'boot':S(22),'acc':S(23)})
     out,colors=render(im,R,EDGE,[('head','hairMass'),('head','hairMassS'),('head','hairBack'),('head','helmet'),('head','band'),('body','scarf'),('legS','legS')],merge=not name.startswith('素体'))

@@ -3,7 +3,8 @@ import type { TileMap } from "../game/map/tile-map";
 import type { Camera } from "./camera";
 import { npcLook, spriteSpecForNpc } from "../game/sprite/character-specs";
 import { shadeColor } from "../game/color-utils";
-import { SPRITE_FEET_ROW } from "../game/sprite/overworld-sprite";
+import { frameAt, SPRITE_FEET_ROW } from "../game/sprite/overworld-sprite";
+import { wanderStateOf } from "../game/npc-wander";
 import { drawSprite } from "./sprite-renderer";
 
 /** NPCの足元のy（ワールド座標）。プレイヤーとの前後（奥のものを先に描く）を決めるのに使う。 */
@@ -28,11 +29,19 @@ export function renderNpcs(
     if (!filter(npc)) {
       continue;
     }
-    const x = npc.tileX * tileWidth - camera.x;
-    const feetY = npcFeetY(npc, tileHeight) - camera.y;
+    // ぶらぶら歩き中の人は、前のマスから今のマスへ、なめらかに動かす。
+    const walk = wanderStateOf(npc.id);
+    const moving = !!walk && walk.moving;
+    const fromX = moving ? walk.fromX : npc.tileX;
+    const fromY = moving ? walk.fromY : npc.tileY;
+    const k = moving ? walk.t : 1;
+    const visX = fromX + (npc.tileX - fromX) * k;
+    const visY = fromY + (npc.tileY - fromY) * k;
+    const x = Math.round(visX * tileWidth - camera.x);
+    const feetY = Math.round(visY * tileHeight + tileHeight - camera.y);
     const look = npcLook(npc);
     if (look === "person") {
-      drawSprite(ctx, spriteSpecForNpc(npc), "down", 0, x + (tileWidth - 16) / 2, feetY - SPRITE_FEET_ROW - 1);
+      drawSprite(ctx, spriteSpecForNpc(npc), walk ? walk.dir : "down", moving ? frameAt(true, walk.animMs) : 0, x + (tileWidth - 16) / 2, feetY - SPRITE_FEET_ROW - 1);
     } else {
       drawMarker(ctx, npc.color, look === "monster", x, feetY - tileHeight, tileWidth, tileHeight);
     }

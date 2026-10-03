@@ -8,16 +8,18 @@ import { hashCell, shadeColor } from "../game/color-utils";
  *  - 材質ごとに5階調の色（暗→明）を持ち、石畳は面取り（左上が明るく右下が暗い）、土は小石とひび、岩は欠けた塊で描く。
  * タイル座標だけから決まるので、毎フレーム同じ絵になる。ブラウザ以外（自動テスト）では何も描かず false を返す。
  */
-export type DungeonTheme = "tower" | "mine" | "ruins" | "facility";
+export type DungeonTheme = "tower" | "mine" | "ruins" | "facility" | "interior" | "archive";
 
 interface ThemeSpec {
-  floorKind: "slab" | "dirt" | "cobble";
-  wallKind: "brick" | "rock";
+  floorKind: "slab" | "dirt" | "cobble" | "plank";
+  wallKind: "brick" | "rock" | "plaster";
   floor: string[];
   wall: string[];
   cap: string[];
   moss: boolean;
   glint: string | null;
+  /** 屋内の家具（板張りのタイル）の描き方。 */
+  furniture?: "table" | "shelf";
 }
 
 const THEMES: Record<DungeonTheme, ThemeSpec> = {
@@ -45,7 +47,20 @@ const THEMES: Record<DungeonTheme, ThemeSpec> = {
     wall: ["#1a2228", "#26323a", "#364650", "#4c606c", "#6c8492"],
     cap: ["#0e1418", "#151d22", "#1e282e"],
   },
+  interior: {
+  floorKind: "plank", wallKind: "plaster", moss: false, glint: null, furniture: "table",
+  floor: ["#2e1c10", "#4a2f1a", "#68452a", "#84603a", "#a07a4c"],
+  wall: ["#2a1e16", "#4a3a2c", "#d8ccb0", "#c0b294", "#e8dec6"],
+  cap: ["#1e140e", "#2c1e14", "#3a281a"],
+  },
+  archive: {
+  floorKind: "plank", wallKind: "plaster", moss: false, glint: null, furniture: "shelf",
+  floor: ["#2e1c10", "#4a2f1a", "#68452a", "#84603a", "#a07a4c"],
+  wall: ["#2a1e16", "#4a3a2c", "#d8ccb0", "#c0b294", "#e8dec6"],
+  cap: ["#1e140e", "#2c1e14", "#3a281a"],
+  },
 };
+
 
 const MOSS = ["#3a5a32", "#52743e", "#6e8e50"];
 const SIZE = 16;
@@ -135,6 +150,108 @@ function floorCobble(t: ThemeSpec, variant: number, tx: number, ty: number): Pai
         const my = (hashCell(i, ty + 4) % 3) * 5;
         put(mx, my, MOSS[i % 3]);
         if (i % 2 === 0) put(mx + 1, my, MOSS[0]);
+      }
+    }
+  };
+}
+
+/** 板張りの床（横に長い板。段ごとに継ぎ目の位置をずらし、板ごとに色を少し変え、木目の筋とくぎを入れる）。 */
+function floorPlank(t: ThemeSpec, variant: number, tx: number, ty: number): Painter {
+  return (_x, _y, put) => {
+    for (let y = 0; y < SIZE; y++) {
+      const board = Math.floor(y / 4);
+      const ly = y % 4;
+      const joint = (hashCell(board + variant * 3, tx + 5) % 12) + 2;
+      for (let x = 0; x < SIZE; x++) {
+        const seg = x < joint ? 0 : 1;
+        const tone = hashCell(board * 2 + seg + variant, ty + tx * 3) % 5;
+        const base = tone === 0 ? shadeColor(t.floor[2], 0.08) : tone === 1 ? shadeColor(t.floor[2], -0.08) : t.floor[2];
+        let c = base;
+        if (ly === 3) c = t.floor[1];
+        else if (ly === 0) c = shadeColor(base, 0.12);
+        if (x === joint && ly !== 3) c = t.floor[0];
+        if ((ly === 1 || ly === 2) && hashCell(x * 5 + board * 3 + variant, ly + tx) % 9 === 0) c = shadeColor(base, -0.12);
+        put(x, y, c);
+      }
+    }
+    for (let board = 0; board < 4; board++) {
+      const joint = (hashCell(board + variant * 3, tx + 5) % 12) + 2;
+      put(Math.min(15, joint + 2), board * 4 + 1, t.floor[0]);
+    }
+  };
+}
+
+/** しっくいの壁の正面: 上にのき飾り、白い壁、下に腰板（羽目板）と幅木。 */
+function wallFrontPlaster(t: ThemeSpec, variant: number, tx: number): Painter {
+  const wood = ["#2c1e14", "#4a321e", "#6a4828", "#845c34"];
+  return (_x, _y, put) => {
+    for (let y = 0; y < SIZE; y++) {
+      for (let x = 0; x < SIZE; x++) {
+        let c: string;
+        if (y === 0) c = wood[3];
+        else if (y === 1) c = wood[2];
+        else if (y === 2) c = wood[0];
+        else if (y < 9) {
+          const n = hashCell(x * 3 + variant, y * 7 + tx);
+          c = n % 11 === 0 ? t.wall[3] : t.wall[2];
+          if (y === 3) c = t.wall[3];
+        } else if (y === 9) c = wood[3];
+        else if (y < 14) {
+          const panel = x % 8;
+          c = panel === 0 || panel === 7 ? wood[0] : y === 10 ? wood[3] : y === 13 ? wood[1] : wood[2];
+        } else c = y === 14 ? wood[0] : t.cap[0];
+        put(x, y, c);
+      }
+    }
+  };
+}
+
+/** 机・カウンター: 上から見た天板（木目）と、手前の側面（暗い羽目板）と、足元の影。 */
+function furnitureTable(_t: ThemeSpec, variant: number, tx: number, below: boolean): Painter {
+  const wood = ["#2c1e14", "#4a321e", "#6a4828", "#8a6238", "#a67a48"];
+  return (put0, _y, put) => {
+    for (let y = 0; y < SIZE; y++) {
+      for (let x = 0; x < SIZE; x++) {
+        let c: string;
+        if (y < 9) {
+          c = y === 0 ? wood[4] : (hashCell(x * 5 + variant, y * 3 + tx) % 7 === 0 ? wood[2] : (y % 3 === 1 ? wood[3] : wood[3]));
+          if (y === 8) c = wood[1];
+        } else if (y < 14) {
+          c = (x % 8 === 0 || x % 8 === 7) ? wood[0] : y === 9 ? wood[1] : wood[2];
+        } else {
+          c = below ? wood[0] : "rgba(0,0,0,0)";
+          if (!below && y === 14) c = wood[0];
+        }
+        if (c !== "rgba(0,0,0,0)") put(x, y, c);
+      }
+    }
+    void put0;
+  };
+}
+
+/** 本棚: 木の枠に、色とりどりの本の背（縦の線）を段ごとに並べる。 */
+function furnitureShelf(_t: ThemeSpec, variant: number, tx: number): Painter {
+  const wood = ["#2c1e14", "#4a321e", "#6a4828", "#8a6238"];
+  const spines = ["#8a2a2a", "#2a5a8a", "#2a7a4a", "#c8a030", "#6a3a8a", "#d8d0b8", "#a8581e"];
+  return (_x, _y, put) => {
+    for (let y = 0; y < SIZE; y++) {
+      for (let x = 0; x < SIZE; x++) {
+        let c = wood[1];
+        if (x === 0 || x === 15) c = wood[3] === undefined ? wood[2] : (x === 0 ? wood[3] : wood[0]);
+        else if (y === 0) c = wood[3];
+        else if (y === 15) c = wood[0];
+        else {
+          const row = y < 8 ? 0 : 1;
+          const ry = y < 8 ? y - 1 : y - 8;
+          if (ry === 6) c = wood[2];
+          else {
+            const bookW = 2 + (hashCell(Math.floor(x / 2) + row * 5, variant + tx) % 2);
+            const idx = hashCell(Math.floor(x / bookW) + row * 7, variant) % spines.length;
+            const hgt = 3 + (hashCell(Math.floor(x / bookW), row + variant) % 3);
+            c = ry >= 6 - hgt ? (x % bookW === 0 ? shadeColor(spines[idx], -0.3) : spines[idx]) : wood[0];
+          }
+        }
+        put(x, y, c);
       }
     }
   };
@@ -314,7 +431,7 @@ export function drawDungeonTile(
     const left = isWall(map, tx - 1, ty);
     const right = isWall(map, tx + 1, ty);
     if (!below) {
-      const front = t.wallKind === "brick" ? wallFrontBrick(t, variant, tx % 3) : wallFrontRock(t, variant, tx % 3);
+      const front = t.wallKind === "brick" ? wallFrontBrick(t, variant, tx % 3) : t.wallKind === "plaster" ? wallFrontPlaster(t, variant, tx % 3) : wallFrontRock(t, variant, tx % 3);
       canvas = canvasFor(`${themeName}|front|${variant}|${tx % 3}`, front);
     } else {
       const mask = `${above ? 1 : 0}${left ? 1 : 0}${right ? 1 : 0}`;
@@ -335,12 +452,12 @@ export function drawDungeonTile(
         }
       });
     }
-  } else if (isFloor(art)) {
+  } else if (isFloor(art) || ((themeName === "interior" || themeName === "archive") && tileId === 1)) {
     const above = isWall(map, tx, ty - 1);
     const left = isWall(map, tx - 1, ty);
     const right = isWall(map, tx + 1, ty);
     const mask = `${above ? 1 : 0}${left ? 1 : 0}${right ? 1 : 0}`;
-    const paint = t.floorKind === "slab" ? floorSlab(t, variant, tx % 3, ty % 3) : t.floorKind === "cobble" ? floorCobble(t, variant, tx % 3, ty % 3) : floorDirt(t, variant, tx % 3, ty % 3);
+    const paint = t.floorKind === "slab" ? floorSlab(t, variant, tx % 3, ty % 3) : t.floorKind === "plank" ? floorPlank(t, variant, tx % 3, ty % 3) : t.floorKind === "cobble" ? floorCobble(t, variant, tx % 3, ty % 3) : floorDirt(t, variant, tx % 3, ty % 3);
     canvas = canvasFor(`${themeName}|floor|${variant}|${mask}|${tx % 3}${ty % 3}`, paint, (c) => {
       if (above) {
         [0.55, 0.36, 0.2, 0.09].forEach((a, i) => {
@@ -360,10 +477,71 @@ export function drawDungeonTile(
       }
     });
   }
+  if (!canvas && t.furniture && art === "tint:plank" && tileId !== 1) {
+    const belowSame = map.data.tileArt?.[getTileId(map, 0, tx, ty + 1)] === "tint:plank" && getTileId(map, 0, tx, ty + 1) !== 1;
+    canvas = t.furniture === "shelf"
+      ? canvasFor(`${themeName}|shelf|${variant}|${tx % 3}`, furnitureShelf(t, variant, tx % 3))
+      : canvasFor(`${themeName}|table|${variant}|${belowSame ? 1 : 0}`, furnitureTable(t, variant, tx % 3, belowSame));
+    // 家具の下は、板張りの床を先に敷いてから重ねる
+    if (canvas) {
+      const floor = canvasFor(`${themeName}|floor|${variant}|000|${tx % 3}${ty % 3}`, floorPlank(t, variant, tx % 3, ty % 3));
+      if (floor) {
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(floor, screenX, screenY, map.data.tileWidth, map.data.tileHeight);
+      }
+    }
+  }
   if (!canvas) {
     return false;
   }
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(canvas, screenX, screenY, map.data.tileWidth, map.data.tileHeight);
   return true;
+}
+
+/** 壁のたいまつ: ところどころの壁に、ゆれる炎とまわりの光（床と壁を明るく照らす）を重ねる。時刻でゆらぐ。 */
+export function renderDungeonLights(ctx: CanvasRenderingContext2D, map: TileMap, camera: { x: number; y: number; viewportWidth: number; viewportHeight: number }, nowMs: number): void {
+  const themeName = map.data.theme as DungeonTheme | undefined;
+  if (!themeName || themeName === "interior" || themeName === "archive" || !THEMES[themeName]) {
+    return;
+  }
+  const s = map.data.tileWidth;
+  const startX = Math.max(0, Math.floor(camera.x / s) - 2);
+  const endX = Math.min(map.data.width - 1, Math.floor((camera.x + camera.viewportWidth) / s) + 2);
+  const startY = Math.max(0, Math.floor(camera.y / s) - 2);
+  const endY = Math.min(map.data.height - 1, Math.floor((camera.y + camera.viewportHeight) / s) + 3);
+  for (let ty = startY; ty <= endY; ty++) {
+    for (let tx = startX; tx <= endX; tx++) {
+      const id = getTileId(map, 0, tx, ty);
+      const torchAt = (x: number): boolean => hashCell(x * 7 + 3, ty * 5) % 9 === 0 && x % 2 === 0;
+      if (map.data.tileArt?.[id] !== "tint:brick" || isWall(map, tx, ty + 1) || !torchAt(tx) || torchAt(tx - 2) || torchAt(tx + 2)) {
+        continue;
+      }
+      const x = tx * s - camera.x;
+      const y = ty * s - camera.y;
+      const flick = Math.sin(nowMs / 90 + tx * 2.1 + ty) * 0.5 + Math.sin(nowMs / 37 + tx) * 0.3;
+      // 光（足元の床まで届く丸い明かり）
+      const g = ctx.createRadialGradient(x + 8, y + 8, 2, x + 8, y + 14, 44 + flick * 5);
+      g.addColorStop(0, `rgba(255,190,90,${0.26 + flick * 0.05})`);
+      g.addColorStop(1, "rgba(255,150,60,0)");
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = g;
+      ctx.fillRect(x - 40, y - 36, s + 80, s + 90);
+      ctx.restore();
+      // たいまつ本体: 受け金具、棒、炎（外は赤、中は橙、芯は黄）
+      ctx.fillStyle = "#1a1210";
+      ctx.fillRect(x + 6, y + 9, 4, 1);
+      ctx.fillStyle = "#4a3220";
+      ctx.fillRect(x + 7, y + 6, 2, 5);
+      const lean = flick > 0.3 ? 1 : flick < -0.3 ? -1 : 0;
+      const fh = 4 + (flick > 0 ? 1 : 0);
+      ctx.fillStyle = "#c8381c";
+      ctx.fillRect(x + 6 + lean, y + 6 - fh, 4, fh);
+      ctx.fillStyle = "#f08a24";
+      ctx.fillRect(x + 7 + lean, y + 6 - fh + 1, 2, fh - 1);
+      ctx.fillStyle = "#ffe070";
+      ctx.fillRect(x + 7 + lean, y + 6 - Math.max(2, fh - 2), 2, Math.max(2, fh - 2));
+    }
+  }
 }

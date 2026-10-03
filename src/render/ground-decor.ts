@@ -75,6 +75,24 @@ function waterEdge(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: num
   }
 }
 
+/** 水面のきらめき: 細い光の筋が、ゆっくり現れては消える（時刻でゆらぐ）。 */
+function waterShimmer(ctx: CanvasRenderingContext2D, ox: number, oy: number, tx: number, ty: number, nowMs: number): void {
+  for (let n = 0; n < 2; n++) {
+    const h = hashCell(tx * 13 + n * 5, ty * 29 + n);
+    const phase = nowMs / 650 + (h % 628) / 100;
+    const a = Math.sin(phase);
+    if (a <= 0.2) {
+      continue;
+    }
+    const x = 1 + (h % 11) + (Math.floor(phase / 6.28) % 2);
+    const y = 2 + ((h >> 8) % 12);
+    ctx.fillStyle = `rgba(235,248,255,${(a * 0.5).toFixed(2)})`;
+    ctx.fillRect(ox + x, oy + y, 3, 1);
+    ctx.fillStyle = `rgba(235,248,255,${(a * 0.25).toFixed(2)})`;
+    ctx.fillRect(ox + x + 3, oy + y, 1, 1);
+  }
+}
+
 /** 木の下（南どなりの草地）に落ちる影。市松でなじませる。 */
 function treeShadow(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: number, tx: number, ty: number): void {
   for (let i = 0; i < s; i++) {
@@ -85,6 +103,44 @@ function treeShadow(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: nu
         continue;
       }
       dot(ctx, ox + i, oy + d, SHADOW);
+    }
+  }
+}
+
+/** なめらかな値ノイズ（0〜1）。ワールド座標で決まるので、タイルをまたいでつながり、繰り返しに見えない。 */
+function smoothNoise(wx: number, wy: number): number {
+  const sp = 28;
+  const gx = Math.floor(wx / sp), gy = Math.floor(wy / sp);
+  const fx = (wx / sp - gx), fy = (wy / sp - gy);
+  const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+  const v = (a: number, b: number): number => (hashCell(a + 101, b + 57) % 1000) / 1000;
+  const top = v(gx, gy) * (1 - sx) + v(gx + 1, gy) * sx;
+  const bottom = v(gx, gy + 1) * (1 - sx) + v(gx + 1, gy + 1) * sx;
+  return top * (1 - sy) + bottom * sy;
+}
+
+/** 草地の色むら: 明るい日なた・暗い日かげを、4ドット単位のうすい色で重ねる（広い草原の単調さをなくす）。 */
+function grassPatches(ctx: CanvasRenderingContext2D, ox: number, oy: number, tx: number, ty: number): void {
+  for (let by = 0; by < 4; by++) {
+    for (let bx = 0; bx < 4; bx++) {
+      const n = smoothNoise(tx * 16 + bx * 4 + 2, ty * 16 + by * 4 + 2) - 0.5;
+      const a = Math.round(Math.abs(n) * 0.5 * 100) / 100;
+      if (a < 0.035) continue;
+      ctx.fillStyle = n > 0 ? `rgba(190,226,96,${a})` : `rgba(8,44,28,${a})`;
+      ctx.fillRect(ox + bx * 4, oy + by * 4, 4, 4);
+    }
+  }
+}
+
+/** 雪の地方の木のタイル: 枝の上に雪がのる（上のとなりが木でなければ、てっぺんに厚く）。 */
+function snowOnTree(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: number, tx: number, ty: number, topEdge: boolean): void {
+  for (let y = 0; y < s; y++) {
+    for (let x = 0; x < s; x++) {
+      const n = hashCell(tx * 16 + x, ty * 16 + y);
+      const limit = topEdge ? (y < 4 ? 90 : y < 8 ? 45 : 22) : y < 8 ? 26 : 14;
+      if (n % 100 < limit) {
+        dot(ctx, ox + x, oy + y, n % 3 === 0 ? "#dbe7f5" : "#f6faff");
+      }
     }
   }
 }
@@ -138,6 +194,7 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
   const startY = Math.max(0, Math.floor(camera.y / s));
   const endX = Math.min(map.data.width - 1, Math.floor((camera.x + camera.viewportWidth) / s));
   const endY = Math.min(map.data.height - 1, Math.floor((camera.y + camera.viewportHeight) / s));
+  const nowMs = typeof performance !== "undefined" ? performance.now() : 0;
   for (let ty = startY; ty <= endY; ty++) {
     for (let tx = startX; tx <= endX; tx++) {
       const kind = kindAt(map, tx, ty);
@@ -147,10 +204,18 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
       const ox = tx * s - camera.x;
       const oy = ty * s - camera.y;
       if (kind === "grass") {
+        grassPatches(ctx, ox, oy, tx, ty);
         grassDecor(ctx, ox, oy, s, tx, ty);
         if (kindAt(map, tx, ty - 1) === "tree") {
           treeShadow(ctx, ox, oy, s, tx, ty);
         }
+        continue;
+      }
+      if (kind === "water") {
+        waterShimmer(ctx, ox, oy, tx, ty, nowMs);
+      }
+      if (kind === "tree" && map.data.snowy) {
+        snowOnTree(ctx, ox, oy, s, tx, ty, kindAt(map, tx, ty - 1) !== "tree");
         continue;
       }
       if (kind !== "path" && kind !== "water") {

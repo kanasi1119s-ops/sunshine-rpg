@@ -11,6 +11,8 @@ export interface BuildingStyle {
   walls: number[];
   roof: string;
   plaster: string;
+  /** true なら、屋根と壁ではなく、しま模様の布のテント（隊商の町）として描く。 */
+  tent?: boolean;
 }
 
 const SIZE = 16;
@@ -85,6 +87,32 @@ function wallTile(style: BuildingStyle, variant: number, tx: number, ty: number,
   };
 }
 
+/** テント: 縦じまの布。上の段は屋根の勾配（ひだと棟の縄）、下の段は垂れ布のすそ（波形）と地面の影。 */
+function tentTile(style: BuildingStyle, top: boolean, tx: number, left: boolean, right: boolean): (put: Put) => void {
+  return (put) => {
+    for (let y = 0; y < SIZE; y++) {
+      for (let x = 0; x < SIZE; x++) {
+        const stripe = Math.floor((x + tx * 16) / 4) % 2 === 0;
+        let c = stripe ? style.roof : style.plaster;
+        const fold = (x + tx * 16) % 4;
+        if (fold === 0) c = shadeColor(c, 0.1);
+        else if (fold === 3) c = shadeColor(c, -0.18);
+        if (top) {
+          if (y < 2) c = shadeColor(style.plaster, -0.25);
+          if (y === 2) c = shadeColor(c, -0.3);
+          if (y > 12) c = shadeColor(c, -0.14 * (y - 12));
+        } else {
+          const hem = 11 + (Math.floor((x + tx * 16) / 4) % 2 === 0 ? 2 : 0);
+          if (y > hem) c = y === hem + 1 ? shadeColor(c, -0.45) : "rgba(0,0,0,0)";
+        }
+        if (c !== "rgba(0,0,0,0)") put(x, y, c);
+      }
+    }
+    if (!left) for (let y = 0; y < SIZE; y++) put(0, y, shadeColor(style.roof, -0.5));
+    if (!right) for (let y = 0; y < SIZE; y++) put(SIZE - 1, y, shadeColor(style.roof, -0.5));
+  };
+}
+
 function canvasFor(key: string, paint: (put: Put) => void): HTMLCanvasElement | null {
   if (typeof document === "undefined") {
     return null;
@@ -126,7 +154,12 @@ export function drawBuildingTile(
   const above = isB(tx, ty - 1), below = isB(tx, ty + 1), left = isB(tx - 1, ty), right = isB(tx + 1, ty);
   const variant = hashCell(tx, ty) % 3;
   const key = `${style.roof}|${style.plaster}|${above ? "w" : "r"}${below ? 1 : 0}${left ? 1 : 0}${right ? 1 : 0}|${variant}|${(tx + ty) % 2}|${tx % 3}`;
-  const canvas = canvasFor(key, above ? wallTile(style, variant, tx, ty, below, left, right, false) : roofTile(style, variant, left, right, below));
+  const paint = style.tent
+    ? tentTile(style, !above, tx, left, right)
+    : above
+      ? wallTile(style, variant, tx, ty, below, left, right, false)
+      : roofTile(style, variant, left, right, below);
+  const canvas = canvasFor(`${style.tent ? "t" : ""}${key}`, paint);
   if (!canvas) {
     return false;
   }

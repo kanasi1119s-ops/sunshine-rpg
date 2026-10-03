@@ -1,7 +1,7 @@
 import { getTileId, type TileMap } from "../game/map/tile-map";
 import type { Camera } from "./camera";
 import { renderGroundDecor } from "./ground-decor";
-import { drawDungeonTile } from "./dungeon-tiles";
+import { drawDungeonTile, renderDungeonLights } from "./dungeon-tiles";
 import { drawBuildingTile } from "./building-tiles";
 import { hashCell, shadeColor } from "../game/color-utils";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
@@ -226,4 +226,7 @@ export function renderTileMap(
     }
   }
   renderGroundDecor(ctx, map, camera);
+  if (map.data.theme && typeof performance !== "undefined") {
+    renderDungeonLights(ctx, map, camera, performance.now());
+  }
 }

@@ -39,19 +39,26 @@ export const MAP_TILE_ART: Record<string, Record<number, string>> = {
   ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`god-shrine-${i + 1}`, DUNGEON])),
 };
 
+/** 雪の地方の地図（木のタイルに雪をのせる）。 */
+const SNOWY_MAPS = new Set(["shimohara-town"]);
+
 /** 床と壁の描き方（`render/dungeon-tiles.ts`）を使う地図。 */
 const MAP_THEME: Record<string, string> = {
   "tetsukusari-mine": "mine",
   "shimohara-facility": "facility",
   "fushima-base": "facility",
-  "kiri-archive": "tower",
+  "kiri-archive": "archive",
+  "touri-branch": "interior",
+  "garasuko-warehouse": "interior",
+  "toushin-hall": "interior",
   ...Object.fromEntries(["tower-1", "tower-2", "tower-3"].map((id) => [id, "tower"])),
   ...Object.fromEntries(["deep-1", "deep-2", "deep-3", "deep-4", "kanou-1", "kanou-2", "kanou-3", "kanou-4"].map((id) => [id, "ruins"])),
   ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`god-shrine-${i + 1}`, "ruins"])),
 };
 
 /** 町の建物を屋根と壁で描く地図（壁のタイルID、屋根の色、壁の色）。 */
-const MAP_BUILDING: Record<string, { walls: number[]; roof: string; plaster: string }> = {
+const MAP_BUILDING: Record<string, { walls: number[]; roof: string; plaster: string; tent?: boolean }> = {
+  "sanone-town": { walls: [5], roof: "#b4503c", plaster: "#eadcbc", tent: true },
   "touri-town": { walls: [5, 7], roof: "#b4533c", plaster: "#e6d8bc" },
   "mugikano-village": { walls: [5, 6], roof: "#8a6a3a", plaster: "#e8dcb8" },
   "garasuko-town": { walls: [5], roof: "#3a6a8a", plaster: "#d8d4c4" },
@@ -68,6 +75,9 @@ export function applyMapTileArt(maps: Record<string, TileMapData>): void {
     const data = maps[mapId];
     if (data) {
       data.tileArt = { ...art, ...data.tileArt };
+      if (SNOWY_MAPS.has(mapId)) {
+        data.snowy = true;
+      }
       if (MAP_BUILDING[mapId]) {
         data.building = MAP_BUILDING[mapId];
       }
