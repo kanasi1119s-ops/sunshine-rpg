@@ -39,12 +39,26 @@ export const MAP_TILE_ART: Record<string, Record<number, string>> = {
   ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`god-shrine-${i + 1}`, DUNGEON])),
 };
 
+/** 床と壁の描き方（`render/dungeon-tiles.ts`）を使う地図。 */
+const MAP_THEME: Record<string, string> = {
+  "tetsukusari-mine": "mine",
+  "shimohara-facility": "facility",
+  "fushima-base": "facility",
+  "kiri-archive": "tower",
+  ...Object.fromEntries(["tower-1", "tower-2", "tower-3"].map((id) => [id, "tower"])),
+  ...Object.fromEntries(["deep-1", "deep-2", "deep-3", "deep-4", "kanou-1", "kanou-2", "kanou-3", "kanou-4"].map((id) => [id, "ruins"])),
+  ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`god-shrine-${i + 1}`, "ruins"])),
+};
+
 /** 地図データに、模様の指定を足す（すでにある指定は残す）。 */
 export function applyMapTileArt(maps: Record<string, TileMapData>): void {
   for (const [mapId, art] of Object.entries(MAP_TILE_ART)) {
     const data = maps[mapId];
     if (data) {
       data.tileArt = { ...art, ...data.tileArt };
+      if (MAP_THEME[mapId]) {
+        data.theme = MAP_THEME[mapId];
+      }
     }
   }
 }
