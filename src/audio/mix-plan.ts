@@ -164,7 +164,7 @@ const BASE: Record<Group, GroupMix> = {
   // キック: 低い押し出し（60Hz）を足し、こもり（350Hz）を削り、ビーターの当たり（4kHz）を足す。速めに強く圧縮して粒をそろえる
   drumKick:  { target: -24, hp: 28,  lp: 12000, eq: [{ f: 60, g: 3, q: 1 }, { f: 350, g: -4, q: 1.2 }, { f: 4000, g: 3, q: 1 }], comp: { threshold: -20, ratio: 3, attack: 15, release: 120 }, reverb: 0.04, delay: 0, warmth: 0.1, width: 0 },
   // スネア: 胴鳴り（200Hz）を少し、箱っぽさ（500Hz）を削り、響き線の張り（5kHz）を足す。少し部屋の響きを
-  drumSnare: { target: -25, hp: 80,  lp: 16000, eq: [{ f: 200, g: 2, q: 1 }, { f: 500, g: -2.5, q: 1.2 }, { f: 5000, g: 3, q: 0.9 }], comp: { threshold: -22, ratio: 2.5, attack: 20, release: 150 }, reverb: 0.18, delay: 0, warmth: 0.1, width: 0.6 },
+  drumSnare: { target: -25, hp: 80,  lp: 16000, eq: [{ f: 200, g: 2, q: 1 }, { f: 500, g: -2.5, q: 1.2 }, { f: 5000, g: 1.5, q: 0.9 }], comp: { threshold: -22, ratio: 2.5, attack: 20, release: 150 }, reverb: 0.18, delay: 0, warmth: 0.1, width: 0.6 },
   // タム: こもり（400Hz）を削り、当たり（4kHz）を少し
   drumToms:  { target: -28, hp: 60,  lp: 14000, eq: [{ f: 400, g: -3, q: 1 }, { f: 4000, g: 2, q: 1 }], comp: { threshold: -22, ratio: 2, attack: 25, release: 200 }, reverb: 0.15, delay: 0, warmth: 0, width: 1 },
   // シンバル・ハイハット: 低い音は切り（300Hz）、耳に刺さる 2.5kHz を少し削り、空気感（10kHz）を足す。圧縮はしない（余韻をつぶさない）
@@ -201,7 +201,7 @@ export function mixPlan(style: string | undefined, flavors: readonly string[] = 
   // メタル系: キックはビーターの当たりをさらに、スネアは張りをさらに（速い刻みの中でも1打ずつ聞こえるように）
   if (style && ["metal", "deathmetal", "hardcore", "progmetal"].includes(style)) {
     plan.drumKick.eq = [{ f: 60, g: 2, q: 1 }, { f: 350, g: -5, q: 1.2 }, { f: 4500, g: 5, q: 1 }];
-    plan.drumSnare.eq = [{ f: 220, g: 2, q: 1 }, { f: 500, g: -3, q: 1.2 }, { f: 5500, g: 4, q: 0.9 }];
+    plan.drumSnare.eq = [{ f: 220, g: 2, q: 1 }, { f: 500, g: -3, q: 1.2 }, { f: 5500, g: 2.5, q: 0.9 }];
   }
   // ジャズ・カフェ: ドラムは小さく（約4dB下げる）、圧縮はほぼかけず、部屋の響きを多めに（そっと叩いた強弱と余韻を残す）。
   // ライドは「チーン」の芯（4kHz）と輝き（10kHz）を少し足して、小さくても聞こえるように

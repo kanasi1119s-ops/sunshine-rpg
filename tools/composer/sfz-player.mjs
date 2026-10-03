@@ -84,7 +84,8 @@ export function loadSfz(file, { replace = {}, cc: ccOverride = {} } = {}) {
       const target = level === "region" ? cur : level === "group" ? group : level === "master" ? master : level === "control" ? control : global;
       if (!target) continue;
       target[k] = v;
-      if (level === "control" && /^set_cc\d+$/.test(k)) cc[Number(k.slice(6))] = Number(v);
+      // CC の初期値（set_ccN）は <control> 以外に書かれていることもある（含めたファイルの中など）。最初に書かれた値を使う
+      if (/^set_cc\d+$/.test(k) && !(Number(k.slice(6)) in cc)) cc[Number(k.slice(6))] = Number(v);
     }
   }
   flush();
@@ -113,6 +114,17 @@ export function loadSfz(file, { replace = {}, cc: ccOverride = {} } = {}) {
       if (lc) conds.push({ cc: Number(lc[1]), lo: Number(v) });
       if (hc) conds.push({ cc: Number(hc[1]), hi: Number(v) });
     }
+    // CC で値を足す設定の合計（初期値の決まっている CC だけ）
+    const ccSum = (reg, re) => {
+      let add = 0;
+      for (const [k, v] of Object.entries(reg)) {
+        const m2 = k.match(re);
+        if (!m2) continue;
+        const val = cc[Number(m2[1])];
+        if (val !== undefined) add += Number(v) * (val / 127);
+      }
+      return add;
+    };
     // エンベロープを CC で変える設定（ampeg_decay_onccN など）: 初期値の決まっている CC だけ、値の割合（CC/127）を足す
     const envMod = (stage) => {
       let add = 0;
@@ -140,7 +152,8 @@ export function loadSfz(file, { replace = {}, cc: ccOverride = {} } = {}) {
       veltrack: num(r.amp_veltrack, 100), curve,
       attack: num(r.ampeg_attack, 0) + envMod("attack"), hold: num(r.ampeg_hold, 0) + envMod("hold"), decay: num(r.ampeg_decay, 0) + envMod("decay"),
       sustain: Math.min(100, num(r.ampeg_sustain, 100) + envMod("sustain")), release: num(r.ampeg_release, 0.001) + envMod("release"),
-      offset: num(r.offset, 0), oneShot: r.loop_mode === "one_shot",
+      // 再生の開始位置。マイクごとのタイミング合わせ（offset_ccN: CC/127 × 値 のサンプル数）も足す。合わせないと、マイク同士の音が打ち消し合って粗く聞こえる
+      offset: num(r.offset, 0) + ccSum(r, /^offset_(?:on)?cc(\d+)$/), oneShot: r.loop_mode === "one_shot",
       conds,
     });
   }
@@ -189,6 +202,11 @@ function velGain(r, vel) {
 export function openSfz(file, opts = {}) {
   if (!file || !fs.existsSync(file)) return null;
   const { regions, cc } = loadSfz(file, opts);
+  // ファイルの場所で、音量と波の向きを変える（例: スネアの下のマイクは、上のマイクと波の向きが逆なので反転して小さく）。
+  // opts.pathGain: [{ match: 正規表現, gain: 倍率（マイナスなら波の向きを反転） }]
+  for (const r of regions) {
+    for (const pg of opts.pathGain ?? []) if (r.sample && pg.match.test(r.sample)) r.amplitude *= pg.gain;
+  }
   const ccOk = (r) => r.conds.every((c) => (c.lo === undefined || (cc[c.cc] ?? 0) >= c.lo) && (c.hi === undefined || (cc[c.cc] ?? 0) <= c.hi));
   const usable = regions.filter(ccOk);
   if (!usable.length) return null;
@@ -245,7 +263,7 @@ export function openSfz(file, opts = {}) {
       if (!a) continue;
       const r = v.r;
       const ratio = Math.pow(2, ((v.key - r.center) * (r.keytrack / 100) + r.transpose + r.tune / 100) / 12);
-      const gain = Math.pow(10, r.volume / 20) * (r.amplitude / 100) * velGain(r, v.vel);
+      const gain = Math.pow(10, r.volume / 20) * (r.amplitude / 100) * velGain(r, v.vel); // amplitude がマイナスなら波の向きを反転
       const p = ((Math.max(-100, Math.min(100, r.pan)) + 100) / 200) * (Math.PI / 2);
       const gl = Math.cos(p) * Math.SQRT2, gr = Math.sin(p) * Math.SQRT2;
       const s0 = Math.round(v.start * SR);

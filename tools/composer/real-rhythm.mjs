@@ -39,7 +39,9 @@ function drumKitFor(style, lib) {
     rideFile: style === "jazz" ? unruly("01-kit-sticks.sfz") : null,
     file: path.join(lib, "karoryfer.unruly-drums", "karoryfer.unruly-drums-main", "Programs", SOFT.has(style) ? "02-kit-brushes.sfz" : "01-kit-sticks.sfz"),
     // 46 のハイハットは CC4 で開き具合が決まる（127=開く）。41・43 は「22インチのスネアをタムとして」なので、ふつうのタムへ。52 は止める音なのでクラッシュへ
-    opts: { cc: { 4: 127 } },
+    // スネアの下のマイク（btm）は、上のマイクと波の向きが逆（測ると相関 -0.3〜-0.7）。そのまま足すと打ち消し合って細く粗くなるので、
+    // 波の向きを反転し、上より約8dB小さく（響き線のシャリッという音を少し足すくらい）
+    opts: { cc: { 4: 127 }, pathGain: [{ match: /[\\/]btm[\\/]/, gain: -0.4 }] },
     map: { 35: 36, 41: 45, 43: 45, 48: 47, 50: 47, 52: 49 },
   };
 }
