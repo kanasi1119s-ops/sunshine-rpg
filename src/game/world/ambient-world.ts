@@ -147,6 +147,7 @@ export const AMBIENT_NPCS: Record<string, Npc[]> = Object.fromEntries(
         tileX: town.guide.tileX,
         tileY: town.guide.tileY,
         color: "#e0e0a0",
+        wander: true,
         commands: guideCommands(town, town.guide.name),
       },
       ...town.locals.map((local, i) => ({
@@ -154,6 +155,7 @@ export const AMBIENT_NPCS: Record<string, Npc[]> = Object.fromEntries(
         tileX: local.tileX,
         tileY: local.tileY,
         color: local.color,
+        wander: true,
         commands: local.lines.map((text) => say(local.name, text)),
       })),
     ],

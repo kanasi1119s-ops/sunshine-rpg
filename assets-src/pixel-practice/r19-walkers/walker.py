@@ -34,21 +34,23 @@ def draw(name,dr,fr):
     cx=8
     # 歩きの揺れ: 0=立ち、1=右足前、2=左足前。体が1ドット上下する
     bob = 0 if fr==0 else -1 if False else 0
-    legL = 0 if fr==0 else (-2 if fr==1 else 2)
-    legR = 0 if fr==0 else (2 if fr==1 else -2)
+    legL = 0 if fr==0 else (-3 if fr==1 else 3)
+    legR = 0 if fr==0 else (3 if fr==1 else -3)
     # 脚
     if not side:
         for sx,off in ((-1,legL),(1,legR)):
             x=cx+sx*2.3
-            capsule(im,(x,23.5),(x,26+max(0,-off)*0),2.2,1.9,'bottom','leg%d'%sx)
-            # 足を前後に（正面/背面は上下にずらす: 前の足が1ドット低く）
-            y1=27+(1 if off>0 else 0)-(1 if off<0 else 0)
+            # 歩きのコマ: 前に出す足は1ドット長く踏み出し、もう一方は膝を曲げて2ドット持ち上げる
+            lift = 2 if off<0 else 0
+            capsule(im,(x+(0.4*sx if lift else 0),23.5),(x,26-lift+(1 if off>0 else 0)),2.2,1.9,'bottom','leg%d'%sx)
+            y1=27+(1 if off>0 else 0)-lift
             poly(im,[(x-2.3,y1-1),(x+2.3,y1-1),(x+2.6,y1+2),(x-2.6,y1+2)],'boot','boot%d'%sx)
     else:
         for k,(off,z) in enumerate(((legL,'a'),(legR,'b'))):
-            x=cx+off*0.9
-            capsule(im,(cx,23.5),(x,27),2.4,2.0,'bottom','legS'+z)
-            poly(im,[(x-2.2+ (sgn*0.8),26),(x+2.6*sgn+ (0),26),(x+3.2*sgn,29.5),(x-2.6,29.5)] if sgn>0 else [(x+2.2,26),(x-2.6,26),(x-3.2,29.5),(x+2.6,29.5)],'boot','bootS'+z)
+            x=cx+off*sgn*1.0
+            up = 1 if off*sgn<0 else 0      # 後ろへ蹴り出す足は1ドット持ち上がる
+            capsule(im,(cx,23.5),(x,27-up),2.4,2.0,'bottom','legS'+z)
+            poly(im,[(x-2.2+ (sgn*0.8),26-up),(x+2.6*sgn+ (0),26-up),(x+3.2*sgn,29.5-up),(x-2.6,29.5-up)] if sgn>0 else [(x+2.2,26-up),(x-2.6,26-up),(x-3.2,29.5-up),(x+2.6,29.5-up)],'boot','bootS'+z)
     # 胴
     if name=="ミナ":
         poly(im,[(4.5,15),(11.5,15),(12.5,26),(3.5,26)],'top','body',shade=lambda x,y,nx,ny:-nx*0.35-ny*0.25+0.3)
@@ -77,15 +79,15 @@ def draw(name,dr,fr):
         for x in range(4,12): im.set(x,22 if not c.get('coat') else 22,'dark',-1,'belt')
     # 腕
     if not side:
-        swing={0:(0,0),1:(1,-1),2:(-1,1)}[fr]
+        swing={0:(0,0),1:(2,-2),2:(-2,2)}[fr]
         for sx,sw in ((-1,swing[0]),(1,swing[1])):
             x=cx+sx*5.6
-            capsule(im,(x,16),(x+sx*0.4,22+sw*0.8),1.7,1.5,'top','arm%d'%sx)
-            ellipse(im,x+sx*0.4,23.2+sw*0.8,1.5,1.5,'skin','hand%d'%sx)
+            capsule(im,(x,16),(x+sx*0.4,22+sw*0.9),1.7,1.5,'top','arm%d'%sx)
+            ellipse(im,x+sx*0.4,23.2+sw*0.9,1.5,1.5,'skin','hand%d'%sx)
     else:
-        sw={0:0,1:2,2:-2}[fr]
-        capsule(im,(cx,16),(cx+sw*sgn*0.9,22.5),1.9,1.6,'top','armS')
-        ellipse(im,cx+sw*sgn*0.9,23.6,1.5,1.5,'skin','handS')
+        sw={0:0,1:3,2:-3}[fr]
+        capsule(im,(cx,16),(cx+sw*sgn*1.0,22.5-abs(sw)*0.25),1.9,1.6,'top','armS')
+        ellipse(im,cx+sw*sgn*1.0,23.6-abs(sw)*0.25,1.5,1.5,'skin','handS')
     # 小物（スカーフ・ストール）
     if c.get('scarf') and dr in ('down','up'):
         poly(im,[(4.5,14),(11.5,14),(11,17),(5,17)],'acc','scarf')
@@ -159,7 +161,16 @@ def draw(name,dr,fr):
             capsule(im,(8,12),(8.5,22),1.8,1.4,'hair','braid')
         if side:
             capsule(im,(7 if sgn>0 else 9,11),(5 if sgn>0 else 11,20),1.8,1.4,'hair','braidS')
+    if fr != 0:
+        bob_shift(im)   # 歩きのコマは、腰を1ドット落とす（体と頭が1ドット下がる）
     return im
+def bob_shift(im):
+    for y in range(24, 0, -1):
+        for x in range(W):
+            if y <= 22 or im.mat[y-1][x] is not None:
+                im.mat[y][x] = im.mat[y-1][x]; im.lum[y][x] = im.lum[y-1][x]; im.part[y][x] = im.part[y-1][x]; im.ink[y][x] = im.ink[y-1][x]
+    for x in range(W):
+        im.mat[0][x] = None; im.part[0][x] = None; im.ink[0][x] = None
 def render_sprite(name,dr,fr):
     im=draw(name,dr,fr); c=CHARS[name]
     R=mats(c)

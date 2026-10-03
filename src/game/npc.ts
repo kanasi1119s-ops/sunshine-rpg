@@ -11,6 +11,8 @@ export interface Npc {
   /** `game/portrait/portraits.ts`のPORTRAITSに登録されている名前。あればマップ上もそのキャラクターのドット絵で表示する。 */
   spriteName?: string;
   commands: EventCommand[];
+  /** true なら、家の近くをぶらぶら歩く（`npc-wander.ts`）。町の人だけ。 */
+  wander?: boolean;
 }
 
 const FACING_OFFSET: Record<Direction, { dx: number; dy: number }> = {

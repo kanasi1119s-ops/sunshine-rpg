@@ -19,6 +19,7 @@ import { createCamera, centerCameraOn } from "./render/camera";
 import { renderTileMap } from "./render/tile-map-renderer";
 import { renderPlayer } from "./render/player-renderer";
 import { npcFeetY, renderNpcs } from "./render/npc-renderer";
+import { faceNpc, opposite, updateWander } from "./game/npc-wander";
 import { propFeetY, renderProps } from "./render/prop-renderer";
 import { renderDialogue } from "./render/dialogue-renderer";
 import { createTileMap, findExitAt } from "./game/map/tile-map";
@@ -1240,6 +1241,7 @@ const loop = createGameLoop({
 
     if (dialogue.isActive()) {
       dialogue.update(dtMs);
+      updateWander(npcs, map, { x: -1, y: -1 }, dtMs, true, Math.random);
       const state = dialogue.getRenderState();
       if (state?.kind === "choice") {
         const direction = input.getDirection();
@@ -1264,6 +1266,14 @@ const loop = createGameLoop({
     lastDialogueDirection = null;
 
     player = updatePlayer(player, input.getDirection(), dtMs, map);
+    updateWander(
+      npcs,
+      map,
+      { x: Math.floor((player.x + player.width / 2) / map.data.tileWidth), y: Math.floor((player.y + player.height / 2) / map.data.tileHeight) },
+      dtMs,
+      false,
+      Math.random,
+    );
     renderCamera = centerCameraOn(
       camera,
       player.x + player.width / 2,
@@ -1300,6 +1310,7 @@ const loop = createGameLoop({
       const facing = getFacingTile(player, map.data.tileWidth, map.data.tileHeight);
       const npc = findNpcAt(npcs, facing.tileX, facing.tileY);
       if (npc) {
+        faceNpc(npc, opposite(player.direction));
         dialogue.start(npc.commands);
       }
     }
