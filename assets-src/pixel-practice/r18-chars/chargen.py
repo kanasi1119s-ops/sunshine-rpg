@@ -80,6 +80,7 @@ def render(im, ramps, edges, seps=(), thresholds=None, dither=False):
             if n != 4: t = [(-0.45+0.15*i+0.0) for i in range(n-1)]
             lum = im.lum[y][x]
             level = sum(1 for th in t if lum > th)
+            if n >= 4 and m not in ('eye',): level = min(level, n-2)   # ハイライト（一番明るい段）は使わない
             grid[y][x] = key(r[min(level, n-1)])
     out = [row[:] for row in grid]
     # 外周の縁取り（素材ごとの暗色）。外側に1ドット足す

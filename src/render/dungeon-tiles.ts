@@ -11,7 +11,7 @@ import { hashCell, shadeColor } from "../game/color-utils";
 export type DungeonTheme = "tower" | "mine" | "ruins" | "facility";
 
 interface ThemeSpec {
-  floorKind: "slab" | "dirt";
+  floorKind: "slab" | "dirt" | "cobble";
   wallKind: "brick" | "rock";
   floor: string[];
   wall: string[];
@@ -28,13 +28,13 @@ const THEMES: Record<DungeonTheme, ThemeSpec> = {
     cap: ["#12141f", "#1a1d2e", "#262a40"],
   },
   mine: {
-    floorKind: "dirt", wallKind: "rock", moss: false, glint: "#7ad8f0",
+    floorKind: "cobble", wallKind: "rock", moss: false, glint: "#7ad8f0",
     floor: ["#2e2418", "#433422", "#5a4630", "#745c40", "#927650"],
     wall: ["#1a130e", "#2a1f16", "#3e2e22", "#584432", "#7a6048"],
     cap: ["#0e0a07", "#16100b", "#20170f"],
   },
   ruins: {
-    floorKind: "slab", wallKind: "brick", moss: true, glint: null,
+    floorKind: "cobble", wallKind: "brick", moss: true, glint: null,
     floor: ["#2c2842", "#3a3558", "#4a446c", "#5e5886", "#7e78a8"],
     wall: ["#181428", "#262040", "#38305a", "#4c4474", "#6c6498"],
     cap: ["#0c0a16", "#14101f", "#1c1830"],
@@ -91,6 +91,48 @@ function floorSlab(t: ThemeSpec, variant: number, tx: number, ty: number): Paint
       for (let i = 0; i < 7; i++) {
         const mx = (hashCell(i + variant, tx) % 14) + 1;
         const my = i % 2 === 0 ? 1 : 8 + (hashCell(i, ty) % 2);
+        put(mx, my, MOSS[i % 3]);
+        if (i % 2 === 0) put(mx + 1, my, MOSS[0]);
+      }
+    }
+  };
+}
+
+/** 丸みのある不ぞろいな敷石（洞窟・遺跡の床）。段ごとに石の幅を変え、角を落とし、左上を明るく、すき間を暗く。 */
+function stoneGrid(pal: string[], variant: number, tx: number, ty: number, put: (x: number, y: number, c: string) => void, gap: string): void {
+  const bands = [0, 5, 10, 16];
+  for (let b = 0; b < 3; b++) {
+    const y0 = bands[b], y1 = bands[b + 1];
+    let x = -((hashCell(b + variant, tx + 3) % 5));
+    while (x < SIZE) {
+      const w = 4 + (hashCell(x + b * 7 + variant, ty + b) % 3);
+      const tone = hashCell(x * 3 + b + variant, tx * 5 + ty) % 4;
+      const base = tone === 0 ? shadeColor(pal[2], 0.09) : tone === 1 ? shadeColor(pal[2], -0.08) : pal[2];
+      for (let yy = y0; yy < y1; yy++) {
+        for (let xx = x; xx < x + w; xx++) {
+          if (xx < 0 || xx >= SIZE) continue;
+          const lx = xx - x, ly = yy - y0, sw = w, sh = y1 - y0;
+          let c = base;
+          if (lx === 0 || ly === 0) c = gap;
+          else if ((lx === 1 && ly === 1) || (lx === sw - 1 && ly === sh - 1) || (lx === sw - 1 && ly === 1) || (lx === 1 && ly === sh - 1)) c = shadeColor(gap, 0.25);
+          else if (lx === 1 || ly === 1) c = shadeColor(base, 0.2);
+          else if (lx === sw - 1 || ly === sh - 1) c = shadeColor(base, -0.2);
+          else if (hashCell(xx * 7 + variant, yy * 3 + tx) % 17 === 0) c = shadeColor(base, -0.1);
+          put(xx, yy, c);
+        }
+      }
+      x += w;
+    }
+  }
+}
+
+function floorCobble(t: ThemeSpec, variant: number, tx: number, ty: number): Painter {
+  return (_x, _y, put) => {
+    stoneGrid(t.floor, variant, tx, ty, put, shadeColor(t.floor[0], -0.2));
+    if (t.moss && variant >= 2) {
+      for (let i = 0; i < 6; i++) {
+        const mx = hashCell(i + variant, tx + 9) % 15;
+        const my = (hashCell(i, ty + 4) % 3) * 5;
         put(mx, my, MOSS[i % 3]);
         if (i % 2 === 0) put(mx + 1, my, MOSS[0]);
       }
@@ -164,37 +206,30 @@ function wallFrontBrick(t: ThemeSpec, variant: number, tx: number): Painter {
 
 function wallFrontRock(t: ThemeSpec, variant: number, tx: number): Painter {
   return (_x, _y, put) => {
-    for (let y = 0; y < SIZE; y++) {
-      for (let x = 0; x < SIZE; x++) {
-        let c: string;
-        if (y === 0) {
-          c = t.wall[4];
-        } else if (y === 1) {
-          c = t.wall[3];
-        } else if (y >= 14) {
-          c = y === 14 ? t.wall[0] : t.cap[0];
-        } else {
-          const cell = hashCell((x + (y >> 2) * 2) >> 2, (y >> 2) + variant * 4 + tx);
-          const lx = (x + (y >> 2) * 2) % 4;
-          const ly = y % 4;
-          c = cell % 3 === 0 ? t.wall[1] : cell % 3 === 1 ? t.wall[2] : t.wall[3];
-          if (lx === 3 || ly === 3) c = t.wall[0];
-          else if (lx === 0 || ly === 0) c = c === t.wall[1] ? t.wall[2] : t.wall[3];
-        }
-        put(x, y, c);
+    // 下の段は、石組みの壁（敷石と同じ作りの暗い色）
+    stoneGrid(t.wall, variant, tx, 7, put, t.wall[0]);
+    // 上は、ぎざぎざに垂れる岩の天井（つらら状の岩のへり）
+    for (let x = 0; x < SIZE; x++) {
+      const depth = 4 + (hashCell((x >> 1) + variant * 3, tx + 11) % 5);
+      for (let y = 0; y < depth; y++) {
+        const edge = y === depth - 1;
+        put(x, y, edge ? t.wall[0] : y === 0 ? t.wall[4] : y < depth - 2 ? (hashCell(x + y, tx) % 4 === 0 ? t.wall[2] : t.wall[3]) : t.wall[1]);
       }
+    }
+    for (let y = 14; y < SIZE; y++) {
+      for (let x = 0; x < SIZE; x++) put(x, y, y === 14 ? t.wall[0] : t.cap[0]);
     }
     // 光る鉱石のかけら
     if (t.glint && variant === 2) {
-      put(5, 7, t.glint);
-      put(6, 7, "#d8f8ff");
-      put(5, 8, "#3a9ac0");
-      put(10, 10, t.glint);
-      put(10, 11, "#3a9ac0");
+      put(5, 9, t.glint);
+      put(6, 9, "#d8f8ff");
+      put(5, 10, "#3a9ac0");
+      put(10, 11, t.glint);
+      put(10, 12, "#3a9ac0");
     }
     // 木の補強（縦の支柱）
     if (t.glint && variant === 0) {
-      for (let y = 2; y < 14; y++) {
+      for (let y = 1; y < 14; y++) {
         put(7, y, "#6a4a2a");
         put(8, y, "#8a6238");
         put(9, y, "#4a3220");
@@ -305,7 +340,7 @@ export function drawDungeonTile(
     const left = isWall(map, tx - 1, ty);
     const right = isWall(map, tx + 1, ty);
     const mask = `${above ? 1 : 0}${left ? 1 : 0}${right ? 1 : 0}`;
-    const paint = t.floorKind === "slab" ? floorSlab(t, variant, tx % 3, ty % 3) : floorDirt(t, variant, tx % 3, ty % 3);
+    const paint = t.floorKind === "slab" ? floorSlab(t, variant, tx % 3, ty % 3) : t.floorKind === "cobble" ? floorCobble(t, variant, tx % 3, ty % 3) : floorDirt(t, variant, tx % 3, ty % 3);
     canvas = canvasFor(`${themeName}|floor|${variant}|${mask}|${tx % 3}${ty % 3}`, paint, (c) => {
       if (above) {
         [0.55, 0.36, 0.2, 0.09].forEach((a, i) => {

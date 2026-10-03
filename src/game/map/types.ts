@@ -24,6 +24,8 @@ export interface TileMapData {
   tileArt?: Record<number, string>;
   /** ダンジョン・塔・洞窟などの床と壁の描き方（`dungeon-tiles.ts`）。省略時は従来どおり。 */
   theme?: string;
+  /** 町の建物（壁タイルのかたまり）を屋根と壁で描くときの指定（`building-tiles.ts`）。 */
+  building?: { walls: number[]; roof: string; plaster: string };
   /**
    * 通行判定レイヤー（長さ width*height）。1=通れない、0=通れる。
    * 省略した場合はすべて通行可能とみなす。

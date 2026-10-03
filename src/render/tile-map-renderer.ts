@@ -2,6 +2,7 @@ import { getTileId, type TileMap } from "../game/map/tile-map";
 import type { Camera } from "./camera";
 import { renderGroundDecor } from "./ground-decor";
 import { drawDungeonTile } from "./dungeon-tiles";
+import { drawBuildingTile } from "./building-tiles";
 import { hashCell, shadeColor } from "../game/color-utils";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
@@ -210,6 +211,9 @@ export function renderTileMap(
         }
         const screenX = tileX * tileWidth - camera.x;
         const screenY = tileY * tileHeight - camera.y;
+        if (map.data.building && drawBuildingTile(ctx, map, tileId, tileX, tileY, screenX, screenY)) {
+          continue;
+        }
         if (map.data.theme && drawDungeonTile(ctx, map, tileId, tileX, tileY, screenX, screenY)) {
           continue;
         }

@@ -14,7 +14,7 @@ def face(im, cx=32, cy=24, iris=('iris1','iris2','iris3','iris4'), brow='brow', 
                 xx=int(ex-2+dx); yy=int(cy+1+dy); nx=(dx-1.5)/2.1; ny=(dy-2)/2.6
                 if nx*nx+ny*ny<=1.0: im.fixed(xx,yy,iris[0] if dy<2 else iris[1] if dy<4 else iris[2],'eye')
         for dy in (cy+2,cy+3,cy+4): im.fixed(int(ex-0.5),int(dy),'pupil','eye')
-        im.fixed(int(ex-1.5),int(cy+1),'white','eye'); im.fixed(int(ex-1.5),int(cy+2),'white','eye'); im.fixed(int(ex+0.5),int(cy+4),iris[3],'eye')
+        im.fixed(int(ex-1.5),int(cy+1),'iris1','eye'); im.fixed(int(ex-1.5),int(cy+2),'iris1','eye'); im.fixed(int(ex+0.5),int(cy+4),iris[3],'eye')
         for dx in range(-3,3): im.fixed(int(ex-0.5+dx),int(cy-1),lash,'eye')
         if lashes: im.fixed(int(ex-3.5 if sign>0 else ex+2.5),int(cy),lash,'eye')
     for k in range(5): im.fixed(int(cx-8+k),int(cy-3-(1 if k>=3 else 0)),brow,'brow'); im.fixed(int(cx+4+k),int(cy-3-(1 if k<=1 else 0)),brow,'brow')
