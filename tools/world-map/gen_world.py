@@ -11,6 +11,11 @@ from PIL import Image, ImageDraw
 W, H = 252, 189
 S = 3.5
 
+def hashCell_py(a, b):
+    h = (int(a) * 374761393 + int(b) * 668265263) & 0xFFFFFFFF
+    h = ((h ^ (h >> 13)) * 1274126177) & 0xFFFFFFFF
+    return (h ^ (h >> 16)) & 0xFFFFFFFF
+
 def value_noise(w, h, scale, seed):
     r = np.random.default_rng(seed)
     gw, gh = int(w/scale)+3, int(h/scale)+3
@@ -446,7 +451,7 @@ def near_any(x, y, pts, d): return any(abs(x-a) + abs(y-b) < d for a, b in pts)
 town_pts = [(v[0], v[1]) for v in TOWNS.values()]
 taken = list(town_pts) + [(v[1], v[2]) for v in VILLAGES] + BEACONS + [(cx, cy) for _i, cx, cy, _n in ISLETS] + [TOWER]
 rr = np.random.default_rng(777)
-spec = [("ruin", "PDWH", 7), ("shrine", "PH", 6), ("cave", "PFDH", 6), ("stones", "H", 6), ("bigtree", "F", 7)]
+spec = [("ruin", "PDWH", 12), ("shrine", "PH", 10), ("cave", "PFDH", 10), ("stones", "H", 10), ("bigtree", "F", 12)]
 for kind, ground, count in spec:
     placed = 0
     tries = 0
@@ -485,6 +490,76 @@ for r in range(5, 14):
             if max(abs(dx), abs(dy)) == r and 0 <= x < W and 0 <= y < H and T[y][x] in "PS" and (x, y) in seen and AIRSHIP is None:
                 AIRSHIP = (x, y)
 assert AIRSHIP
+
+# ======== 仕上げ: 川に浅瀬をつくり、陸を切る細い海をふさぎ、広さを2倍（面積）にする ========
+# 川（1マス幅の通れない水）は、陸を切ってしまう。ところどころを浅瀬（平原）にして、渡れるようにする
+LW = "PFDSRHTWA"
+for y in range(2, H-2):
+    for x in range(2, W-2):
+        if T[y][x] != "L": continue
+        if (T[y][x-1] in LW and T[y][x+1] in LW) or (T[y-1][x] in LW and T[y+1][x] in LW):
+            if hashCell_py(x, y) % 6 == 0: T[y][x] = "P"
+# 陸のあいだの細い海（幅1〜2マスの切れ目）は、陸でふさぐ。塔のまわり・小島のまわり・渦の輪はそのまま
+def _near_special(x, y):
+    return math.hypot(x-TOWER[0], y-TOWER[1]) < 20 or any(abs(x-cx) < 12 and abs(y-cy) < 10 for _i, cx, cy, _n in ISLETS)
+_fill = []
+for y in range(3, H-3):
+    for x in range(3, W-3):
+        if T[y][x] != "O" or _near_special(x, y): continue
+        h2 = any(T[y][x-a] in LW + "MN" for a in (1, 2)) and any(T[y][x+a] in LW + "MN" for a in (1, 2))
+        v2 = any(T[y-a][x] in LW + "MN" for a in (1, 2)) and any(T[y+a][x] in LW + "MN" for a in (1, 2))
+        if h2 or v2: _fill.append((x, y))
+for x, y in _fill: T[y][x] = "P"
+
+K = math.sqrt(2.0)                       # 面積を2倍にするための、縦横の倍率
+W0, H0, G = W, H, T
+W, H = int(round(W0*K)), int(round(H0*K))
+def Q(x, y): return (int(math.floor(x*K + K/2)), int(math.floor(y*K + K/2)))
+_wr = np.random.default_rng(99)
+_wx = value_noise(W, H, 7.0, 501); _wy = value_noise(W, H, 7.0, 502)
+T = [["O"]*W for _ in range(H)]
+for Y in range(H):
+    for X in range(W):
+        ox = (X + 0.5)/K + (_wx[Y, X]-0.5)*1.5
+        oy = (Y + 0.5)/K + (_wy[Y, X]-0.5)*1.5
+        T[Y][X] = G[min(H0-1, max(0, int(oy)))][min(W0-1, max(0, int(ox)))]
+# 町・村・小島・塔・環灯台・船・飛空艇のまわり（5×5）は、元の絵をそのまま貼る
+def _stamp(x, y, r=2):
+    nx, ny = Q(x, y)
+    for dy in range(-r, r+1):
+        for dx in range(-r, r+1):
+            if 0 <= y+dy < H0 and 0 <= x+dx < W0 and 0 <= ny+dy < H and 0 <= nx+dx < W:
+                T[ny+dy][nx+dx] = G[y+dy][x+dx]
+for _k, (x, y, _n) in TOWNS.items(): _stamp(x, y)
+for v in VILLAGES: _stamp(v[1], v[2])
+for _i, cx, cy, _n in ISLETS: _stamp(cx, cy)
+_stamp(*TOWER, r=3)
+for x, y in BEACONS: _stamp(x, y, 1)
+for kind, x, y in LANDMARKS: _stamp(x, y, 1)
+for x, y in (SHIP_DOCK, SHIP_SEA, AIRSHIP): _stamp(x, y, 1)
+# 座標を新しい地図へ
+TOWNS = {k: (*Q(v[0], v[1]), v[2]) for k, v in TOWNS.items()}
+VILLAGES = [(v[0], *Q(v[1], v[2]), v[3], v[4], v[5]) for v in VILLAGES]
+ISLETS = [(i, *Q(cx, cy), n) for i, cx, cy, n in ISLETS]
+TOWER = Q(*TOWER)
+BEACONS = [Q(x, y) for x, y in BEACONS]
+LANDMARKS = [(k, *Q(x, y)) for k, x, y in LANDMARKS]
+SHIP_DOCK, SHIP_SEA, AIRSHIP = Q(*SHIP_DOCK), Q(*SHIP_SEA), Q(*AIRSHIP)
+CHANNEL = [(x, y) for y in range(H) for x in range(W) if T[y][x] == "Q"]
+# 大陸ごとに、町どうしが歩いてつながっているか確かめ、切れていたら地峡・浅瀬でつなぐ
+def _land_connect():
+    for cont, towns in (("A", [k for k, c in CONTINENT.items() if c == "A"]), ("B", [k for k, c in CONTINENT.items() if c == "B"]), ("D", [k for k, c in CONTINENT.items() if c == "D"])):
+        base = flood(*TOWNS[towns[0]][:2], lambda x, y: T[y][x] in LANDWALK)
+        for k in towns[1:]:
+            tx, ty = TOWNS[k][:2]
+            if (tx, ty) in base: continue
+            bx, by = min(base, key=lambda p: (p[0]-tx)**2 + (p[1]-ty)**2)
+            n = max(abs(bx-tx), abs(by-ty))
+            for i in range(n+1):
+                x = round(tx + (bx-tx)*i/n); y = round(ty + (by-ty)*i/n)
+                if T[y][x] in "OLMNXVQZ": T[y][x] = "P"
+            base = flood(*TOWNS[towns[0]][:2], lambda x, y: T[y][x] in LANDWALK)
+_land_connect()
 
 rows = ["".join(r) for r in T]
 ts = ["// 自動生成: tools/world-map/gen_world.py（手で編集しない）。大陸アルテシアの地形。1文字=1マス。",

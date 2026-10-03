@@ -76,13 +76,13 @@ export function worldZoneIdAt(tileId: number, tileX: number, tileY = 0): string 
   if (tileId === 6 || tileId === 12) {
     return "world-4";
   }
-  if (tileX < 45) {
+  if (tileX < 64) {
     return "world-1";
   }
-  if (tileX < 112) {
+  if (tileX < 158) {
     return "world-2";
   }
-  return tileY < 90 ? "world-4" : "world-6";
+  return tileY < 127 ? "world-4" : "world-6";
 }
 
 /** 何歩目で出会うかのふれ幅。 */

@@ -40,7 +40,7 @@ describe("乗り物（船・飛空艇）", () => {
       for (let y = y0; y <= y1 && !found; y++) for (let x = x0; x <= x1; x++) if (seen.has(y * W + x)) { found = true; break; }
       expect(found, `${name} の海岸へ船で行ける`).toBe(true);
     }
-    for (const islet of WORLD_ISLETS) {
+    for (const islet of WORLD_ISLETS.slice(0, 5)) { // 6つ目の火口の迷宮は、灯芯大陸の内陸（歩いて行く）
       let near = false;
       for (let dy = -6; dy <= 6 && !near; dy++) for (let dx = -6; dx <= 6; dx++) if (seen.has((islet.y + dy) * W + islet.x + dx)) { near = true; break; }
       expect(near, `${islet.name} へ船で行ける`).toBe(true);
