@@ -26,6 +26,8 @@ export interface TileMapData {
   theme?: string;
   /** 雪の地方か。木のタイルに雪をのせる（`ground-decor.ts`）。 */
   snowy?: boolean;
+  /** 海岸のある地図（世界地図）。陸が水に接するところに砂浜を描く（`ground-decor.ts`）。 */
+  coastal?: boolean;
   /** 町の建物（壁タイルのかたまり）を屋根と壁で描くときの指定（`building-tiles.ts`）。 */
   building?: { walls: number[]; roof: string; plaster: string; tent?: boolean };
   /**
