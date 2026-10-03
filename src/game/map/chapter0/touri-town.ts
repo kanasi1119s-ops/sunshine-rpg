@@ -65,12 +65,29 @@ export function createTouriTownData(): TileMapData {
     set(WIDTH - 1, y, y === EAST_GATE.y ? PATH : TREE);
   }
 
-  // 町の中心を貫く道（縦の大通り＋横の大通り）。東の端は麦香野への街道の入り口。
+  // 町の中心を貫く道。まっすぐにせず、ゆるくうねらせる（北の通りは東へ1マス寄り、大通りは中ほどで1マス南へ下がる）。
+  // 東の端は麦香野への街道の入り口。
   for (let y = 1; y < HEIGHT - 1; y++) {
-    set(NORTH_GATE.x, y, PATH);
+    set(y >= 4 && y <= 6 ? NORTH_GATE.x + 1 : NORTH_GATE.x, y, PATH);
   }
-  for (let x = 1; x < WIDTH - 1; x++) {
+  set(NORTH_GATE.x + 1, 4, PATH);
+  set(NORTH_GATE.x, 4, PATH);
+  set(NORTH_GATE.x + 1, 7, PATH);
+  set(NORTH_GATE.x, 7, PATH);
+  for (let x = 1; x <= 8; x++) {
     set(x, mainStreetY, PATH);
+  }
+  for (let x = 8; x <= 15; x++) {
+    set(x, mainStreetY + 1, PATH);
+  }
+  for (let x = 15; x < WIDTH - 1; x++) {
+    set(x, mainStreetY, PATH);
+  }
+  // 交差点の小さな広場。
+  for (let x = NORTH_GATE.x - 1; x <= NORTH_GATE.x + 1; x++) {
+    for (let y = mainStreetY; y <= mainStreetY + 2; y++) {
+      set(x, y, PATH);
+    }
   }
 
   // 灯りの相談所 灯里支部（建物）と、支部前から大通りへの脇道。
@@ -91,11 +108,19 @@ export function createTouriTownData(): TileMapData {
     }
   }
 
-  // 小さな入り江（港町らしさを出す池）。
-  for (let y = 11; y <= 12; y++) {
-    for (let x = 2; x <= 3; x++) {
-      set(x, y, WATER);
-    }
+  // 港の入り江。四角ではなく、岸がでこぼこの形にする（南西）。
+  const HARBOR: Array<[number, number]> = [
+    [2, 11], [3, 11], [4, 11], [1, 12], [2, 12], [3, 12], [4, 12], [5, 12], [1, 13], [2, 13], [3, 13], [4, 13], [2, 14], [3, 14],
+  ];
+  for (const [x, y] of HARBOR) {
+    set(x, y, WATER);
+  }
+  // 東南の木立（まばらな縁と、こい中心）。
+  const GROVE: Array<[number, number]> = [
+    [17, 11], [18, 11], [16, 12], [17, 12], [18, 12], [19, 12], [20, 12], [17, 13], [18, 13], [19, 13], [20, 13], [18, 14], [19, 14], [20, 14],
+  ];
+  for (const [x, y] of GROVE) {
+    set(x, y, TREE);
   }
 
   return {
