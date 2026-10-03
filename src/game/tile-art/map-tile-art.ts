@@ -57,7 +57,8 @@ const MAP_THEME: Record<string, string> = {
 };
 
 /** 町の建物を屋根と壁で描く地図（壁のタイルID、屋根の色、壁の色）。 */
-const MAP_BUILDING: Record<string, { walls: number[]; roof: string; plaster: string }> = {
+const MAP_BUILDING: Record<string, { walls: number[]; roof: string; plaster: string; tent?: boolean }> = {
+  "sanone-town": { walls: [5], roof: "#b4503c", plaster: "#eadcbc", tent: true },
   "touri-town": { walls: [5, 7], roof: "#b4533c", plaster: "#e6d8bc" },
   "mugikano-village": { walls: [5, 6], roof: "#8a6a3a", plaster: "#e8dcb8" },
   "garasuko-town": { walls: [5], roof: "#3a6a8a", plaster: "#d8d4c4" },
