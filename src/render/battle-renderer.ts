@@ -1,6 +1,6 @@
 import { COMMANDS, type BattleUiState } from "../game/battle/battle-controller";
 import type { BattleState, Combatant } from "../game/battle/types";
-import { findCombatant } from "../game/battle/types";
+import { baseEnemyId, findCombatant } from "../game/battle/types";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
 import { hueOfHex, mobPalette } from "../game/art/mob-palette";
@@ -54,7 +54,7 @@ function drawEnemySprite(
   y: number,
   size: number,
 ): void {
-  const spec = enemy.hp > 0 ? MONSTERS[enemy.id] : undefined;
+  const spec = enemy.hp > 0 ? MONSTERS[baseEnemyId(enemy.id)] : undefined;
   if (!spec) {
     ctx.fillStyle = enemy.hp > 0 ? "#8a4a4a" : "#333";
     ctx.fillRect(x, y, size, size);
@@ -69,7 +69,7 @@ function drawEnemySprite(
 
 /** 雑魚の敵の絵（64×64。形ごとの手描きの絵を、地方の色相で塗る）。描けたら true。 */
 function drawMobSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, x: number, y: number, size = 64): boolean {
-  const spec = enemy.hp > 0 ? MONSTERS[enemy.id] : undefined;
+  const spec = enemy.hp > 0 ? MONSTERS[baseEnemyId(enemy.id)] : undefined;
   if (!spec?.shape || spec.shape === "blob") {
     return false;
   }
@@ -104,7 +104,7 @@ function drawBossSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, screenW
   if (enemy.hp <= 0) {
     return false;
   }
-  const canvas = getSpriteCanvas(`boss:${enemy.id}`, SPRITE_DATA);
+  const canvas = getSpriteCanvas(`boss:${baseEnemyId(enemy.id)}`, SPRITE_DATA);
   if (!canvas) {
     return false;
   }
@@ -150,7 +150,7 @@ function renderBattleBody(
       return;
     }
     // 1体だけの強敵（ボス・神など、体力が大きい敵）は、敵の側に大きく描く。
-    if (battleState.enemies.length === 1 && enemy.maxHp >= 250 && enemy.hp > 0 && MONSTERS[enemy.id]) {
+    if (battleState.enemies.length === 1 && enemy.maxHp >= 250 && enemy.hp > 0 && MONSTERS[baseEnemyId(enemy.id)]) {
       const size = 80;
       const bx = enemySideX(screenWidth, 128);
       // 手描きの絵がある形は、2倍（128）で大きく描く（きれいに拡大できる整数倍）

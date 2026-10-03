@@ -92,3 +92,8 @@ export function isAlive(combatant: Combatant): boolean {
 export function findCombatant(state: BattleState, id: string): Combatant | undefined {
   return [...state.party, ...state.enemies].find((c) => c.id === id);
 }
+
+/** 一団の中で同じ種類の敵を区別するための「#番号」を取り除いた、絵・データ用のID。 */
+export function baseEnemyId(id: string): string {
+  return id.replace(/#\d+$/, "");
+}

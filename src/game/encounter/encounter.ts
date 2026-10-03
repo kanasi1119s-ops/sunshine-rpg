@@ -169,7 +169,8 @@ export function createEncounterEnemies(mapId: string, zone: EncounterZone, rng: 
   for (let i = 0; i < count; i++) {
     const variant = Math.floor(rng() * zone.names.length);
     enemies.push({
-      id: `enc-${mapId}-${variant}`,
+      // 同じ種類が2体以上出ても、戦闘で別々に狙えるよう、IDに何体目かを付ける（絵の指定は `baseEnemyId` で元に戻す）
+      id: `enc-${mapId}-${variant}#${i}`,
       name: count > 1 ? `${zone.names[variant]}${String.fromCharCode(65 + i)}` : zone.names[variant],
       maxHp: stats.maxHp,
       hp: stats.maxHp,
