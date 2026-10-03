@@ -81,6 +81,15 @@ def render(im, ramps, edges, seps=(), thresholds=None, dither=False):
             lum = im.lum[y][x]
             level = sum(1 for th in t if lum > th)
             if n >= 4 and m not in ('eye',): level = min(level, n-2)   # ハイライト（一番明るい段）は使わない
+            if m == 'skin' and not im.ink[y][x]:
+                # 髪の下の額には、髪の影（1ドット上に髪があれば一番暗く、2ドット上なら1段暗く）。あごの下の首にもあご影。
+                up1 = im.mat[y-1][x] if y >= 1 else None
+                up2 = im.mat[y-2][x] if y >= 2 else None
+                if up1 and str(up1).startswith('hair') and im.part[y][x] == 'head': level = 0
+                elif up2 and str(up2).startswith('hair') and im.part[y][x] == 'head': level = max(0, level-1)
+                if im.part[y][x] == 'neck':
+                    above = [im.part[y-k][x] for k in (1, 2, 3) if y-k >= 0]
+                    if 'head' in above: level = 0
             grid[y][x] = key(r[min(level, n-1)])
     out = [row[:] for row in grid]
     # 外周の縁取り（素材ごとの暗色）。外側に1ドット足す
