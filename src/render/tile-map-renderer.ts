@@ -99,6 +99,28 @@ function drawTerrainTexture(
   return true;
 }
 
+/** 128×128の地形テクスチャ（キーを直接指定）から、そのタイル位置の16×16を切り出して描く。 */
+function drawTextureWindow(
+  ctx: CanvasRenderingContext2D,
+  key: string,
+  screenX: number,
+  screenY: number,
+  tileWidth: number,
+  tileHeight: number,
+  tileX: number,
+  tileY: number,
+): boolean {
+  const canvas = getSpriteCanvas(key, SPRITE_DATA);
+  if (!canvas) {
+    return false;
+  }
+  const sx = (((tileX * TILE_ART_SIZE) % TEXTURE_SIZE) + TEXTURE_SIZE) % TEXTURE_SIZE;
+  const sy = (((tileY * TILE_ART_SIZE) % TEXTURE_SIZE) + TEXTURE_SIZE) % TEXTURE_SIZE;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(canvas, sx, sy, TILE_ART_SIZE, TILE_ART_SIZE, screenX, screenY, tileWidth, tileHeight);
+  return true;
+}
+
 const cellCache = new Map<string, TileArtCell[]>();
 
 /** 地形カテゴリ×見た目の揺らぎごとに、描画データを一度だけ作って使い回す。 */
@@ -215,6 +237,10 @@ export function renderTileMap(
           continue;
         }
         if (map.data.theme && drawDungeonTile(ctx, map, tileId, tileX, tileY, screenX, screenY)) {
+          continue;
+        }
+        const texKey = map.data.tileTexture?.[tileId];
+        if (texKey && drawTextureWindow(ctx, texKey, screenX, screenY, tileWidth, tileHeight, tileX, tileY)) {
           continue;
         }
         const artKey = map.data.tileArt?.[tileId];

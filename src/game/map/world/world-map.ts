@@ -31,6 +31,11 @@ const TILE_ART_MAP: Record<number, string> = {
   1: "water", 2: "grass", 3: "worldforest", 4: "mountain", 5: "tint:sand", 6: "tint:snow", 7: "path", 8: "hills", 9: "water", 10: "tint:cloud", 11: "tint:flagstone", 12: "snowforest", 13: "water", 14: "water", 15: "peaks", 16: "chasm", 17: "lava", 18: "tint:sand",
 };
 
+/** 全体フィールドの地形テクスチャ（`tools/pixel-art/ai-gen/world_tiles.py` で作り、エディタで描いて確かめたもの。2026-10-04）。 */
+const TILE_TEXTURE: Record<number, string> = {
+  1: "terrain:w-sea", 2: "terrain:w-grass", 3: "terrain:w-forest", 4: "terrain:w-mountain", 5: "terrain:w-sand", 6: "terrain:w-snow", 7: "terrain:w-road", 8: "terrain:w-hills", 9: "terrain:w-lake", 10: "terrain:w-cloud", 11: "terrain:w-waste", 12: "terrain:w-snowforest", 13: "terrain:w-sea", 14: "terrain:w-sea", 15: "terrain:w-peaks", 16: "terrain:w-chasm", 17: "terrain:w-lava", 18: "terrain:w-ash",
+};
+
 /** 通れない地形: 海・山・湖。 */
 const BLOCKED = new Set([1, 4, 9, 13, 14, 15, 16, 17]);
 
@@ -52,6 +57,7 @@ export function createWorldMapData(): TileMapData {
     layers: [{ name: "ground", data: ground }],
     tileColors: TILE_COLORS,
     tileArt: TILE_ART_MAP,
+    tileTexture: TILE_TEXTURE,
     collision,
     exits: [],
     coastal: true,
