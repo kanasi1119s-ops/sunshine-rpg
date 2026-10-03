@@ -37,6 +37,7 @@ const KNOWN_BATTLE_IDS = new Set(["deep3-yugami", "deep-yugami"]);
 const EXTERNALLY_SET_FLAGS = new Set([
   "deep3_yugami_defeated", "deep_yugami_defeated",
   ...Array.from({ length: 8 }, (_, i) => `god${i + 1}_fragment`), // 8神の禁域（chapter11-world.ts）で立つ
+  "vortex_route_open", // 8つの環灯台をともすと立つ（world-map-world.ts）
 ]);
 
 function allNpcCommands() {

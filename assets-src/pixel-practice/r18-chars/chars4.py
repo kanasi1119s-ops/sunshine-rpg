@@ -60,13 +60,13 @@ def orca():
              {'iris1':'#4a3820','iris2':'#7a5a30','iris3':'#c09860','iris4':'#f0e0b8','brow':'#2a1c14','lash':'#1c1008','mouth':'#9a4a44','blush':'#d89078'},{'hairO':'#140c08','helmet':'#2c323c','vestO':'#6a2c08','stripe':'#6a6458','shirtO':'#262a32','lamp':'#6a4a10','pick':'#2a160c','steel':'#2c323c','glove':'#241208','scar':'#7a4a3c'})
     im=Img(72,104)
     # 背中のつるはし
-    capsule(im,(57,22),(58,98),2.0,2.0,'pick','pickShaft')
-    poly(im,[(48,18),(58,14),(67,20),(65,24),(58,19),(50,23)],'steel','pickHead',shade=lambda x,y,nx,ny:(ny*-0.6+0.3))
+    capsule(im,(61,22),(62,98),2.0,2.0,'pick','pickShaft')
+    poly(im,[(52,18),(62,14),(71,20),(69,24),(62,19),(54,23)],'steel','pickHead',shade=lambda x,y,nx,ny:(ny*-0.6+0.3))
     # 三つ編み（右肩から胸へ）
-    pts=[(48,30),(51,40),(50,52),(52,62),(51,72)]
-    for i in range(len(pts)-1): capsule(im,pts[i],pts[i+1],3.6-i*0.3,3.4-i*0.3,'hairO','braid%d'%i,bulge=0.4)
-    for (px,py) in ((51,40),(50,52),(52,62)): ellipse(im,px,py,4.0,1.5,'vestO','knot%d'%py)
-    ellipse(im,51,75,2.6,3.0,'hairO','btip')
+    pts=[(47,22),(50,31),(51,42),(50,54),(52,64),(51,74)]
+    for i in range(len(pts)-1): capsule(im,pts[i],pts[i+1],4.0-i*0.25,3.8-i*0.25,'hairO','braid%d'%i,bulge=0.4)
+    for (px,py) in ((50,31),(51,44),(50,56),(52,66)): ellipse(im,px,py,4.2,1.5,'vestO','knot%d'%py)
+    ellipse(im,51,77,2.8,3.2,'hairO','btip')
     legs(im,mat='pants',xs=((29.5,29,28.5),(42.5,43,43.5)),r=(4.9,4.1,3.3),hip_y=66)
     poly(im,[(23,90),(34,90),(35,98),(37,101),(22,101),(22.5,96)],'boots','bootL'); poly(im,[(37,90),(48,90),(49.5,96),(50,101),(35,101),(36.5,98)],'boots','bootR')
     for x in range(22,38): im.set(x,101,'boots',-1.0,'bootL')
@@ -74,22 +74,22 @@ def orca():
     for x in range(24,34): im.set(x,91,'leather',0.6,'cuffL'); im.set(x,92,'leather',-0.2,'cuffL')
     for x in range(38,47): im.set(x,91,'leather',0.6,'cuffR'); im.set(x,92,'leather',-0.2,'cuffR')
     # 腕（たくましい。手袋）
-    capsule(im,(49,44),(56,57),4.4,3.8,'shirtO','armR',bulge=0.6); capsule(im,(56,57),(55,67),3.8,3.3,'shirtO','armR2')
+    capsule(im,(48,44),(55,57),3.8,3.3,'shirtO','armR',bulge=0.5); capsule(im,(55,57),(54,67),3.3,2.9,'shirtO','armR2')
     ellipse(im,55,70,3.6,3.6,'glove','handR')
-    capsule(im,(23,44),(16,57),4.4,3.8,'shirtO','armL',bulge=0.6); capsule(im,(16,57),(17,67),3.8,3.3,'shirtO','armL2')
+    capsule(im,(24,44),(17,57),3.8,3.3,'shirtO','armL',bulge=0.5); capsule(im,(17,57),(18,67),3.3,2.9,'shirtO','armL2')
     poly(im,[(12.5,63),(20.5,63),(20.5,67),(12.5,67)],'leather','cuffA')
     ellipse(im,17,70,3.6,3.6,'glove','handL')
     # 胴: 広い肩、はっきりしたくびれ、オレンジのベスト＋反射の帯
-    poly(im,[(22,41),(50,41),(49.5,52),(46.5,62),(25.5,62),(22.5,52)],'shirtO','torso',shade=lambda x,y,nx,ny:(nx*LIGHT[0]+ny*LIGHT[1])*-0.7+0.28)
-    poly(im,[(23,41),(49,41),(48.5,52),(45.5,62),(26.5,62),(23.5,52)],'vestO','vest',shade=lambda x,y,nx,ny:(nx*LIGHT[0]+ny*LIGHT[1])*-0.7+0.3)
+    poly(im,[(23,41),(49,41),(47.5,50),(44.5,55),(47,62),(25,62),(27.5,55),(24.5,50)],'shirtO','torso',shade=lambda x,y,nx,ny:(nx*LIGHT[0]+ny*LIGHT[1])*-0.7+0.28)
+    poly(im,[(24,41),(48,41),(46.5,50),(43.5,55),(46,62),(26,62),(28.5,55),(25.5,50)],'vestO','vest',shade=lambda x,y,nx,ny:(nx*LIGHT[0]+ny*LIGHT[1])*-0.7+0.3)
     for yy in (49,56):
         for x in range(23,49):
             if im.part[yy][x]=='vest': im.set(x,yy,'stripe',0.8,'vest'); im.set(x,yy+1,'stripe',0.1,'vest')
     for y in range(41,62): im.set(36,y,'vestO',-1.0,'vest')
-    poly(im,[(24,60),(48,60),(49,74),(23,74)],'pants','skirt',shade=lambda x,y,nx,ny:(nx*LIGHT[0])*-0.6+0.15)
+    poly(im,[(25,60),(47,60),(50,76),(22,76)],'pants','skirt',shade=lambda x,y,nx,ny:(nx*LIGHT[0])*-0.6+0.15)
     poly(im,[(24,59),(48,59),(48,62.5),(24,62.5)],'leather','belt',shade=lambda x,y,nx,ny:(ny*-0.5+0.3))
     ellipse(im,36,60.7,2.6,2.2,'steel','buckle')
-    capsule(im,(36,32),(36,41),3.2,3.8,'skin','neck')
+    capsule(im,(36,32),(36,41),2.5,3.1,'skin','neck')
     head(im,cx=36,cy=24,rx=10.8,ry=11.2)
     # ヘルメット（小さめ）とランプ、ひさし
     poly(im,[(24,19),(25,10),(30,3.5),(36,2),(42,3.5),(47,10),(48,19),(45,16.5),(27,16.5)],'helmet','helmet',shade=lambda x,y,nx,ny:(nx*LIGHT[0]+ny*LIGHT[1])*-0.7+0.35)
@@ -98,11 +98,12 @@ def orca():
     for x in range(27,46): im.set(x,10,'helmet',0.9,'helmet') if x%3 else None
     # 前髪（ヘルメットの下に短く）
     sh=hairshade_factory(cx=36,cy=17,hx=30,hy=12)
-    poly(im,[(25,19.5),(33,19.5),(31,25),(27,27),(24.5,23)],'hairO','fringeL',shade=sh)
-    poly(im,[(47,19.5),(39,19.5),(41,25),(45,27),(47.5,23)],'hairO','fringeR',shade=sh)
-    poly(im,[(33,19.5),(39,19.5),(38,22.5),(34,22.5)],'hairO','fringeM',shade=sh)
+    # 前髪: 額の上半分をおおう（ヘルメットの下で、まん中分け）。耳の前から顔のわきへ、髪を下ろす。
+    poly(im,[(24,17.5),(35.5,17.5),(34,26),(30,29),(26,28),(23.5,23)],'hairO','fringeL',shade=sh)
+    poly(im,[(48,17.5),(36.5,17.5),(38,26),(42,29),(46,28),(48.5,23)],'hairO','fringeR',shade=sh)
+    poly(im,[(34,17.5),(38,17.5),(37.5,23),(34.5,23)],'hairO','fringeM',shade=sh)
     for sx in (-1,1):
-        capsule(im,(36+sx*11.5,20),(36+sx*12,33),2.4,1.6,'hairO','side'+str(sx),bulge=0.3)
+        capsule(im,(36+sx*11.3,22),(36+sx*10.6,33),1.7,1.2,'hairO','side'+str(sx),bulge=0.2)
     face(im,cx=36,iris=('iris1','iris2','iris3','iris4'),smile=False,blush=True)
     for k in range(7): im.fixed(26+k,21,'brow','brow'); im.fixed(40+k,21,'brow','brow')
     # 頬の傷（右）

@@ -37,4 +37,30 @@ export const PIECES = [
   // 砂漠の飾り（r17-polish/desert.py で一から）
   piece("P14-ヤシ", "r17-polish", "palm.txt", "pal-palm.json"),
   piece("P15-サボテン", "r17-polish", "cactus.txt", "pal-cactus.json"),
+  // 町の小さな飾り（r17-polish/townprops.py で一から）
+  piece("P16-樽", "r17-polish", "barrel.txt", "pal-barrel.json"),
+  piece("P17-街灯", "r17-polish", "lamp.txt", "pal-lamp.json"),
+  piece("P18-井戸", "r17-polish", "well.txt", "pal-well.json"),
+  piece("P19-道しるべ", "r17-polish", "signpost.txt", "pal-signpost.json"),
+  piece("P20-木箱の山", "r17-polish", "crates.txt", "pal-crates.json"),
+  piece("P21-花壇", "r17-polish", "flowerbed.txt", "pal-flowerbed.json"),
+  // 世界地図の町のアイコン（r17-polish/worldicons.py で一から）
+  piece("P22-アイコンport", "r17-polish", "icon-port.txt", "pal-icon-port.json"),
+  piece("P23-アイコンvillage", "r17-polish", "icon-village.txt", "pal-icon-village.json"),
+  piece("P24-アイコンlake", "r17-polish", "icon-lake.txt", "pal-icon-lake.json"),
+  piece("P25-アイコンmine", "r17-polish", "icon-mine.txt", "pal-icon-mine.json"),
+  piece("P26-アイコンcastle", "r17-polish", "icon-castle.txt", "pal-icon-castle.json"),
+  piece("P27-アイコンtents", "r17-polish", "icon-tents.txt", "pal-icon-tents.json"),
+  piece("P28-アイコンtemple", "r17-polish", "icon-temple.txt", "pal-icon-temple.json"),
+  piece("P29-アイコンsnowtown", "r17-polish", "icon-snowtown.txt", "pal-icon-snowtown.json"),
+  piece("P30-アイコンsky", "r17-polish", "icon-sky.txt", "pal-icon-sky.json"),
+  piece("P31-アイコンpalace", "r17-polish", "icon-palace.txt", "pal-icon-palace.json"),
 ];
+
+// 町・遺跡の飾り33点（assets-src/pixel-practice/r20-props/、エージェントが一から作成）。大きさが48を超えるものは64の枠。
+export const R20_NAMES = fs.readdirSync(new URL("r20-props/", ROOT)).filter((f) => f.endsWith(".txt")).map((f) => f.replace(".txt", "")).sort();
+for (const n of R20_NAMES) {
+  const rows = fs.readFileSync(new URL(`r20-props/${n}.txt`, ROOT), "utf8").split("\n").filter((l) => l !== "");
+  const big = Math.max(rows.length, ...rows.map((r) => r.length)) > 48;
+  PIECES.push(piece(`R20-${n}`, "r20-props", `${n}.txt`, `pal-${n}.json`, {}, big ? 64 : 48));
+}

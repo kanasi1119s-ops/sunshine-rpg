@@ -8,6 +8,8 @@ import {
   MAX_STEPS,
   MIN_STEPS,
   stepEncounter,
+  WORLD_ENCOUNTER_ZONES,
+  worldZoneIdAt,
 } from "./encounter";
 import { MONSTERS } from "../monster/monsters";
 import { WORLD_MAPS } from "../world/world";
@@ -125,5 +127,38 @@ describe("雑魚の絵の形（名前の言葉から決まる）", () => {
     const names = Object.values(ENCOUNTER_ZONES).flatMap((z) => z.names.map((n, i) => shapeForName(n, i)));
     const withArt = names.filter((shape) => shape !== "blob").length;
     expect(withArt / names.length).toBeGreaterThan(0.85);
+  });
+});
+
+describe("世界地図のエンカウント", () => {
+  it("道の上では出会わず、地形と位置で地方が決まる", () => {
+    expect(worldZoneIdAt(7, 10)).toBeNull();
+    expect(worldZoneIdAt(2, 10)).toBe("world-1");
+    expect(worldZoneIdAt(2, 30)).toBe("world-2");
+    expect(worldZoneIdAt(2, 60)).toBe("world-3");
+    expect(worldZoneIdAt(5, 10)).toBe("world-3");
+    expect(worldZoneIdAt(6, 10)).toBe("world-4");
+  });
+
+  it("世界地図の敵も、手描きの絵がある形で、絵の一覧に入る", () => {
+    const specs = encounterMonsterSpecs();
+    for (const [id, zone] of Object.entries(WORLD_ENCOUNTER_ZONES)) {
+      for (let v = 0; v < zone.names.length; v++) {
+        expect(specs[`enc-${id}-${v}`], `${id}-${v}`).toBeDefined();
+        expect(shapeForName(zone.names[v], v)).not.toBe("blob");
+      }
+    }
+  });
+
+  it("世界地図の地方でも、歩いていれば出会う", () => {
+    const rng = createRng(5);
+    let state = createEncounterState(rng);
+    let met = false;
+    for (let i = 0; i < MAX_STEPS + 2 && !met; i++) {
+      const r = stepEncounter(state, "world-2", rng);
+      state = r.state;
+      met = !!r.enemies;
+    }
+    expect(met).toBe(true);
   });
 });

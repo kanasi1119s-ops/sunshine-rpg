@@ -21,6 +21,9 @@ import { renderPlayer } from "./render/player-renderer";
 import { npcFeetY, renderNpcs } from "./render/npc-renderer";
 import { faceNpc, opposite, updateWander } from "./game/npc-wander";
 import { PartyTrail } from "./game/party-trail";
+import { WORLD_ENTRY_FLAG } from "./game/world/world-map-world";
+import { setLitBeacons } from "./render/object-markers";
+import { renderWorldOverview } from "./render/world-overview";
 import { renderFollowers } from "./render/follower-renderer";
 import { spriteSpecFromPortrait } from "./game/sprite/character-specs";
 import { PORTRAITS } from "./game/portrait/portraits";
@@ -73,7 +76,7 @@ import { createDeepEchoYugami, createShogenYugami } from "./game/battle/chapter1
 import { DEEP_ENTRY } from "./game/map/chapter10/deep-maps";
 import { createGodYugami, GODS } from "./game/battle/chapter11-enemies";
 import { createDungeonEnemy, DUNGEON_ENEMIES } from "./game/battle/chapter12-enemies";
-import { createEncounterEnemies, createEncounterState, ENCOUNTER_ZONES, stepEncounter, type EncounterState } from "./game/encounter/encounter";
+import { createEncounterEnemies, createEncounterState, ENCOUNTER_ZONES, stepEncounter, WORLD_ENCOUNTER_ZONES, worldZoneIdAt, type EncounterState } from "./game/encounter/encounter";
 import { KYOTOUKYU_CORRIDOR_ENTRY, KYOTOUKYU_COURT_ENTRY, KYOTOUKYU_SANCTUM_ENTRY } from "./game/map/chapter9/kyotoukyu-maps";
 import { AYAME, COMPANIONS, createCompanionCombatant, GUIDE, MINA, ORCA, RETO } from "./game/battle/companions";
 import type { Combatant, Skill } from "./game/battle/types";
@@ -224,6 +227,7 @@ const MAP_BGM_ID: Record<string, string> = {
   "touri-town": "town-touri",
   "touri-branch": "town-touri",
   "touri-outskirts": "outskirts",
+  "world-map": "field",
   "mugikano-village": "town-mugikano",
   "mugikano-water-source": "water-source",
   "garasuko-town": "town-garasuko",
@@ -385,11 +389,14 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
 let encounterState: EncounterState = createEncounterState(Math.random);
 let lastStepTile: { x: number; y: number; mapId: string } | null = null;
 
+/** 世界地図で、いま立っている地形の戦闘の背景。 */
+let worldBattleBiome: "grass" | "desert" | "snow" = "grass";
+
 function startRandomBattle(enemies: Combatant[]): void {
   if (battle) {
     return;
   }
-  setBattleBiome(biomeForMap(currentMapId));
+  setBattleBiome(currentMapId === "world-map" ? worldBattleBiome : biomeForMap(currentMapId));
   victoryExpApplied = false;
   victoryMessage = null;
   pendingVictoryFlag = null;
@@ -468,7 +475,7 @@ if (import.meta.env.DEV) {
     startTestDialogue: (speaker: string) => dialogue.start([{ type: "message", speaker, text: "顔グラフィックの確認です。" }]),
     /** 開発用: 指定した地図のランダムエンカウントの敵と戦う（敵の絵の確認用）。 */
     startEncounter: (mapId: string) => {
-      const zone = ENCOUNTER_ZONES[mapId];
+      const zone = ENCOUNTER_ZONES[mapId] ?? WORLD_ENCOUNTER_ZONES[mapId];
       if (zone) {
         startRandomBattle(createEncounterEnemies(mapId, zone, Math.random));
       }
@@ -581,6 +588,18 @@ window.addEventListener("keydown", (event) => {
     audio.setMuted(!audio.isMuted());
   }
 });
+/** 世界地図の全体図（Vキー）。世界地図にいて、会話・戦闘・メニューなどを開いていないときだけ。 */
+let worldOverviewOpen = false;
+window.addEventListener("keydown", (event) => {
+  if (worldOverviewOpen && (event.key === "v" || event.key === "x" || event.key === "Escape" || event.key === "Enter" || event.key === " " || event.key === "z")) {
+    worldOverviewOpen = false;
+    event.preventDefault();
+    return;
+  }
+  if (event.key === "v" && currentMapId === "world-map" && !title.open && !battle && !dialogue.isActive() && !pauseMenu.open && !jobMenu.open && !debugMenu.open) {
+    worldOverviewOpen = true;
+  }
+}, true);
 
 let lastDialogueDirection: Direction | null = null;
 let lastBattleDirection: Direction | null = null;
@@ -1292,6 +1311,9 @@ const loop = createGameLoop({
     }
     lastDialogueDirection = null;
 
+    if (worldOverviewOpen) {
+      return;
+    }
     player = updatePlayer(player, input.getDirection(), dtMs, map);
     partyTrail.update(player, dtMs, followerSpecs().length);
     updateWander(
@@ -1314,6 +1336,13 @@ const loop = createGameLoop({
     const centerTileY = Math.floor((player.y + player.height / 2) / map.data.tileHeight);
     const exit = findExitAt(map, centerTileX, centerTileY);
     if (exit) {
+      // 世界地図から町へ入るには、前の章を終えている必要がある（物語の順を守る）。
+      const needFlag = currentMapId === "world-map" ? WORLD_ENTRY_FLAG[exit.targetMapId] : undefined;
+      if (needFlag && !flags[needFlag]) {
+        player = { ...player, y: player.y + map.data.tileHeight, moving: false };
+        dialogue.start([{ type: "message", text: "まだ、この先へ進む時ではない気がする。いまの町で、やるべきことを終えてから来よう。" }]);
+        return;
+      }
       switchMap(exit.targetMapId, exit.targetTileX, exit.targetTileY);
       autosave();
       return;
@@ -1325,7 +1354,14 @@ const loop = createGameLoop({
     } else if (lastStepTile.x !== centerTileX || lastStepTile.y !== centerTileY) {
       lastStepTile = { x: centerTileX, y: centerTileY, mapId: currentMapId };
       if (!debugNoEncounter) {
-        const stepped = stepEncounter(encounterState, currentMapId, Math.random);
+        // 世界地図では、足もとの地形で出会う敵と戦闘の背景を決める（道の上では出会わない）。
+        let encounterMapId: string | null = currentMapId;
+        if (currentMapId === "world-map") {
+          const tileId = map.data.layers[0].data[centerTileY * map.data.width + centerTileX];
+          encounterMapId = worldZoneIdAt(tileId, centerTileX);
+          worldBattleBiome = tileId === 5 ? "desert" : tileId === 6 || tileId === 12 ? "snow" : "grass";
+        }
+        const stepped = encounterMapId ? stepEncounter(encounterState, encounterMapId, Math.random) : { state: encounterState, enemies: null };
         encounterState = stepped.state;
         if (stepped.enemies) {
           startRandomBattle(stepped.enemies);
@@ -1381,15 +1417,29 @@ const loop = createGameLoop({
       return;
     }
 
+    setLitBeacons(new Set([1, 2, 3, 4, 5, 6, 7, 8].filter((n) => flags[`beacon${n}_lit`])));
+    if (worldOverviewOpen) {
+      renderWorldOverview(
+        ctx,
+        map,
+        { x: Math.floor((player.x + player.width / 2) / map.data.tileWidth), y: Math.floor((player.y + player.height / 2) / map.data.tileHeight) },
+        new Set([1, 2, 3, 4, 5, 6, 7, 8].filter((n) => flags[`beacon${n}_lit`])),
+        LOGICAL_WIDTH,
+        LOGICAL_HEIGHT,
+        performance.now(),
+      );
+      return;
+    }
     renderTileMap(ctx, map, renderCamera);
     // 奥にいる人を先に、手前にいる人をあとに描く（足元の位置の順）。
     const playerFeetY = player.y + player.height;
     renderProps(ctx, map.data, renderCamera, (prop) => propFeetY(prop, map.data.tileHeight) <= playerFeetY);
     renderNpcs(ctx, npcs, map, renderCamera, (npc) => npcFeetY(npc, map.data.tileHeight) <= playerFeetY);
     const followers = followerSpecs();
-    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY <= playerFeetY);
-    renderPlayer(ctx, player, renderCamera);
-    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY > playerFeetY);
+    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY <= playerFeetY, currentMapId === "world-map" ? 0.6 : 1);
+    const heroScale = currentMapId === "world-map" ? 0.6 : 1;
+    renderPlayer(ctx, player, renderCamera, heroScale);
+    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY > playerFeetY, currentMapId === "world-map" ? 0.6 : 1);
     renderNpcs(ctx, npcs, map, renderCamera, (npc) => npcFeetY(npc, map.data.tileHeight) > playerFeetY);
     renderProps(ctx, map.data, renderCamera, (prop) => propFeetY(prop, map.data.tileHeight) > playerFeetY);
 

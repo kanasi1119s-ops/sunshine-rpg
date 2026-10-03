@@ -72,15 +72,28 @@ export function gate(floor: number | string, nextMapId: string, nextTile: { tile
 /** 環の欠片（8神を倒すと1つずつ手に入る）が8つそろっていれば、転移陣が起動する。 */
 function fragmentsCheck(): EventCommand[] {
   let inner: EventCommand[] = [
-    say(undefined, "八つの環の欠片が、ひとつに共鳴して、転移陣が強く光った。渦の塔への道が、開かれようとしている。"),
-    say(undefined, "★ 転移陣が起動した！"),
-    { type: "setFlag", flag: "tower_gate_open", value: true },
+    say(undefined, "八つの環の欠片が、ひとつに共鳴して、転移陣が強く光った。"),
     {
-      type: "choice",
-      text: "芯環塔へ転移しますか？",
-      options: [
-        { label: "転移する", commands: [{ type: "warp", mapId: "tower-1", tileX: 10, tileY: 11 }] },
-        { label: "まだ準備する", commands: [] },
+      type: "if",
+      flag: "vortex_route_open",
+      equals: true,
+      then: [
+        say(undefined, "八つの環灯台の光が、陣の上で重なった。渦の塔への道が、開かれようとしている。"),
+        say(undefined, "★ 転移陣が起動した！"),
+        { type: "setFlag", flag: "tower_gate_open", value: true },
+        {
+          type: "choice",
+          text: "芯環塔へ転移しますか？",
+          options: [
+            { label: "転移する", commands: [{ type: "warp", mapId: "tower-1", tileX: 10, tileY: 11 }] },
+            { label: "まだ準備する", commands: [] },
+          ],
+        },
+      ],
+      else: [
+        say(undefined, "だが、陣は、ふるえるだけで起動しない。渦を覆う常嵐が、転移を阻んでいるようだ。"),
+        say(undefined, "陣の刻印が、浮かび上がる。「八つの環灯台に、欠片の光をともせ。さすれば、嵐は道をあける」"),
+        say(undefined, "大陸の各地方にある古い灯台（世界地図の海辺）に、欠片の光をともそう。"),
       ],
     },
   ];

@@ -7,7 +7,7 @@ import { hashCell, shadeColor } from "../color-utils";
  * ジャンルでよく使われる技法（草のディザリング、水の波模様、道の踏み跡、
  * 木の樹冠＋幹）を適用する。既存の特定作品のタイルセットは参照していない。
  */
-export type TilePatternKind = "grass" | "water" | "path" | "treeCanopy" | "flagstone" | "brick" | "sand" | "snow" | "plank" | "cloud" | "roof" | "crate" | "pillar" | "machine" | "pipe" | "carpet" | "crystal" | "void" | "gate" | "mural" | "bed" | "rift";
+export type TilePatternKind = "grass" | "water" | "path" | "treeCanopy" | "flagstone" | "brick" | "sand" | "snow" | "plank" | "cloud" | "roof" | "crate" | "pillar" | "machine" | "pipe" | "carpet" | "crystal" | "void" | "gate" | "mural" | "bed" | "rift" | "mountain" | "worldforest" | "hills";
 
 export interface TileArtSpec {
   base: string;
@@ -174,6 +174,7 @@ const PATTERNS: Record<TilePatternKind, PatternFn> = {
   },
   // 雪・氷: ほぼ白。まるい吹きだまりのくぼみ（淡い影）を2つ置き、縁は市松でなじませる。まれに小さなきらめき。
   snow: (ramp, row, col, variant) => {
+    const soft = shadeColor(ramp[2], -0.07);
     const h = hashCell(col + variant * 7, row + variant * 13);
     if (h % 53 === 0) return ramp[4];
     for (let n = 0; n < 2; n++) {
@@ -185,10 +186,8 @@ const PATTERNS: Record<TilePatternKind, PatternFn> = {
       const dx = Math.min(Math.abs(col - cx), TILE_ART_SIZE - Math.abs(col - cx)) / rx;
       const dy = Math.min(Math.abs(row - cy), TILE_ART_SIZE - Math.abs(row - cy)) / ry;
       const d = dx * dx + dy * dy;
-      if (d < 0.55) return ramp[1];
-      if (d < 1 && (col + row) % 2 === 0) return ramp[1];
-      // 影の反対側（右下側）に、うっすら明るい縁
-      if (d < 1.5 && col > cx && row > cy && (col + row) % 2 === 1) return ramp[3];
+      if (d < 0.5) return soft;
+      if (d < 1 && (col + row) % 2 === 0) return soft;
     }
     return ramp[2];
   },
@@ -328,6 +327,81 @@ const PATTERNS: Record<TilePatternKind, PatternFn> = {
     if (blotch === 3) return ramp[1];
     return ramp[2];
   },
+  // 世界地図の山: 2つの峰。左の面が明るく右の面が暗い。てっぺんは雪。峰のまわりは暗い縁取り、足元は岩の地面。
+  mountain: (ramp, row, col, variant) => {
+    const peaks = [
+      { x: 4 + (variant % 3), y: 3 + (variant % 2) * 2, slope: 1.15 },
+      { x: 11 + (variant % 2) - 1, y: 6 + ((variant >> 1) % 2) * 2, slope: 1.0 },
+    ];
+    const topAt = (c: number): { y: number; peak: number } => {
+      let best = { y: 99, peak: -1 };
+      peaks.forEach((p, i) => {
+        const y = p.y + Math.abs(c - p.x) * p.slope;
+        if (y < best.y) best = { y, peak: i };
+      });
+      return best;
+    };
+    const inside = (r: number, c: number): { peak: number; depth: number } | null => {
+      if (c < 0 || c >= TILE_ART_SIZE || r > 14) return null;
+      const t = topAt(c);
+      return r >= t.y ? { peak: t.peak, depth: r - t.y } : null;
+    };
+    const here = inside(row, col);
+    if (here) {
+      const p = peaks[here.peak];
+      if (here.depth < 3.2 && Math.abs(col - p.x) < 4) return col <= p.x ? ramp[4] : ramp[3]; // 雪
+      if (col === p.x) return ramp[2]; // 稜線
+      const crack = hashCell(col + variant * 7, row) % 11 === 0;
+      if (col < p.x) return crack ? ramp[2] : ramp[3];
+      return crack ? ramp[0] : ramp[1];
+    }
+    const edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dr, dc]) => inside(row + dr, col + dc));
+    if (edge) return ramp[0];
+    return row >= 14 ? ramp[0] : hashCell(col + variant * 3, row) % 7 === 0 ? ramp[2] : ramp[1];
+  },
+  // 世界地図の森: 小さな樹冠が4つ。塊ごとに左上が明るく、すき間は暗い。
+  worldforest: (ramp, row, col, variant) => {
+    const crowns: [number, number, number][] = [
+      [4 + (variant % 2), 4 + ((variant >> 1) % 2), 4.3],
+      [11, 5 + (variant % 3 === 0 ? 1 : 0), 4.3],
+      [5, 11, 4.4],
+      [12 - (variant % 2), 12, 4.2],
+    ];
+    let best = -9;
+    let covered = false;
+    for (const [bx, by, br] of crowns) {
+      const d2 = ((col - bx) ** 2 + (row - by) ** 2) / (br * br);
+      if (d2 <= 1) {
+        covered = true;
+        const light = (-(col - bx) * 0.6 - (row - by) * 0.8) / br;
+        if (light > best) best = light;
+      }
+    }
+    if (!covered) {
+      const near = crowns.some(([bx, by, br]) => ((col - bx) ** 2 + (row - by) ** 2) / (br * br) <= 1.5);
+      return near ? ramp[0] : shadeColor(ramp[0], -0.2);
+    }
+    const k = best > 0.3 ? 3 : best > -0.1 ? 2 : 1;
+    return hashCell(col + variant * 5, row) % 13 === 0 ? ramp[Math.max(1, k - 1)] : ramp[k];
+  },
+  // 世界地図の丘: 草の地面に、なだらかな盛り上がりが2つ（左上が明るく、下の縁に影）。
+  hills: (ramp, row, col, variant) => {
+    const mounds = [
+      { x: 5 + (variant % 4), y: 8, rx: 6.2, ry: 4.2 },
+      { x: 12 - (variant % 3), y: 12, rx: 5.2, ry: 3.2 },
+    ];
+    for (const m of mounds) {
+      const nx = (col - m.x) / m.rx;
+      const ny = (row - m.y) / m.ry;
+      const d = nx * nx + ny * ny;
+      if (d <= 1) {
+        if (ny > 0.55) return ramp[1];
+        return nx * 0.7 + ny * 0.9 < -0.25 ? ramp[3] : ramp[2];
+      }
+    }
+    const h = hashCell(col + variant * 7, row + variant * 3);
+    return h % 17 === 0 ? ramp[3] : h % 13 === 0 ? ramp[1] : ramp[2];
+  },
 };
 
 /** 指定したタイル模様の、実際に描く色の一覧を作る（タイル座標だけで決まり、時刻に依存しない）。 */
@@ -355,6 +429,10 @@ export const TILE_ART: Record<string, TileArtSpec> = {
   water: { base: "#1a6d8c", accentLight: "#3fa5b0", accentDark: "#0f4468", pattern: "water" },
   path: { base: "#b3853f", accentLight: "#d8b060", accentDark: "#85552a", pattern: "path" },
   treeCanopy: { base: "#2b8022", accentLight: "#5fbb31", accentDark: "#185019", pattern: "treeCanopy" },
+  mountain: { base: "#857c74", accentLight: "#b8b0a2", accentDark: "#4e4640", pattern: "mountain" },
+  worldforest: { base: "#3a8a30", accentLight: "#7cd048", accentDark: "#1c5a24", pattern: "worldforest" },
+  snowforest: { base: "#3a6a50", accentLight: "#eef4f8", accentDark: "#1c3c3c", pattern: "worldforest" },
+  hills: { base: "#5a9a40", accentLight: "#82bc58", accentDark: "#3a7032", pattern: "hills" },
 };
 
 /**

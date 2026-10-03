@@ -26,6 +26,8 @@ export interface TileMapData {
   theme?: string;
   /** 雪の地方か。木のタイルに雪をのせる（`ground-decor.ts`）。 */
   snowy?: boolean;
+  /** 海岸のある地図（世界地図）。陸が水に接するところに砂浜を描く（`ground-decor.ts`）。 */
+  coastal?: boolean;
   /** 町の建物（壁タイルのかたまり）を屋根と壁で描くときの指定（`building-tiles.ts`）。 */
   building?: { walls: number[]; roof: string; plaster: string; tent?: boolean };
   /**
@@ -55,4 +57,5 @@ export interface MapProp {
 }
 
 /** 飾りの種類。`prop:<種類>` のドット絵がある。 */
-export type MapPropKind = "tree" | "house" | "house-blue" | "house-green" | "manor" | "manor-blue" | "manor-green" | "rock" | "bush" | "tree-snow" | "tree-dead" | "rock-snow" | "bush-snow" | "palm" | "cactus";
+export type MapPropKind = "tree" | "house" | "house-blue" | "house-green" | "manor" | "manor-blue" | "manor-green" | "rock" | "bush" | "tree-snow" | "tree-dead" | "rock-snow" | "bush-snow" | "palm" | "cactus" | "barrel" | "lamp" | "well" | "signpost" | "crates" | "flowerbed" | "icon-port" | "icon-village" | "icon-lake" | "icon-mine" | "icon-castle" | "icon-tents" | "icon-temple" | "icon-snowtown" | "icon-sky" | "icon-palace"
+  | "fountain" | "stall" | "haystack" | "cart" | "laundry" | "fence" | "fence-end" | "bench" | "statue-traveler" | "grave-cross" | "grave-round" | "noticeboard" | "brazier" | "shrine" | "pillar" | "pillar-broken" | "statue-soldier" | "statue-winged" | "banner-purple" | "banner-red" | "bones" | "cobweb" | "candelabra" | "coffin" | "barrel-broken" | "box-broken" | "crystal-blue" | "crystal-red" | "mushrooms" | "chest-closed" | "chest-open" | "chains" | "jail-bars";

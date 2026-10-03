@@ -16,6 +16,9 @@ import { SHOP_NPCS } from "./shops-world";
 import { AMBIENT_NPCS } from "./ambient-world";
 import { applyMapTileArt } from "../tile-art/map-tile-art";
 import { applyMapProps } from "../map/map-props";
+import { createWorldMapData } from "../map/world/world-map";
+import { connectWorldMap, WORLD_MAP_NPCS } from "./world-map-world";
+import { applyAutoDecor } from "../map/auto-decor";
 import type { TileMapData } from "../map/types";
 import type { Npc } from "../npc";
 
@@ -38,6 +41,7 @@ export const WORLD_MAPS: Record<string, TileMapData> = {
   ...CHAPTER10_MAPS,
   ...CHAPTER11_MAPS,
   ...CHAPTER12_MAPS,
+  "world-map": createWorldMapData(),
 };
 
 applyMapTileArt(WORLD_MAPS);
@@ -57,6 +61,7 @@ const NPC_SOURCES: Record<string, Npc[]>[] = [
   CHAPTER10_NPCS,
   CHAPTER11_NPCS,
   CHAPTER12_NPCS,
+  WORLD_MAP_NPCS,
   SIDE_STORY_NPCS,
   SHOP_NPCS,
   AMBIENT_NPCS,
@@ -72,3 +77,6 @@ export const WORLD_NPCS: Record<string, Npc[]> = (() => {
   }
   return merged;
 })();
+
+connectWorldMap(WORLD_MAPS, WORLD_NPCS);
+applyAutoDecor(WORLD_MAPS, WORLD_NPCS);

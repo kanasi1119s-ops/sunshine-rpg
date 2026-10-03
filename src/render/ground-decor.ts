@@ -9,9 +9,12 @@ import type { Camera } from "./camera";
  *  3. 何もない草地にも、小さな草・花・小石をまばらに散らして、「何もない」感じをなくす。
  * どれもタイル座標だけから決まるので、毎フレーム同じ絵になる（ちらつかない）。マップのデータは変えない。
  */
-type Kind = "grass" | "path" | "water" | "tree" | "other";
+type Kind = "grass" | "path" | "water" | "tree" | "land" | "other";
 
-const KIND_BY_ART: Record<string, Kind> = { grass: "grass", path: "path", water: "water", treeCanopy: "tree" };
+const KIND_BY_ART: Record<string, Kind> = {
+  grass: "grass", hills: "grass", path: "path", water: "water", treeCanopy: "tree", worldforest: "tree", snowforest: "tree",
+  mountain: "land", "tint:sand": "land", "tint:snow": "land", "tint:cloud": "land", "tint:flagstone": "land",
+};
 
 const GRASS_DARK = "#3f7a35";
 const GRASS_MID = "#5f9f46";
@@ -61,11 +64,11 @@ function pathEdge(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: numb
 }
 
 /** 池の縁: 隣が陸なら、岸の線と、水側の浅瀬・あわ。 */
-function waterEdge(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: number, tx: number, ty: number, side: number): void {
+function waterEdge(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: number, tx: number, ty: number, side: number, coastal: boolean): void {
   for (let i = 0; i < s; i++) {
     const h = hashCell(tx * 29 + i + side * 5, ty * 13 + side);
     const [bx, by] = SIDES[side].at(i, 0, s);
-    dot(ctx, ox + bx, oy + by, BANK);
+    dot(ctx, ox + bx, oy + by, coastal ? FOAM : BANK);
     const [sx, sy] = SIDES[side].at(i, 1, s);
     dot(ctx, ox + sx, oy + sy, h % 3 === 0 ? FOAM : SHALLOW);
     if (h % 4 === 0) {
@@ -90,6 +93,18 @@ function waterShimmer(ctx: CanvasRenderingContext2D, ox: number, oy: number, tx:
     ctx.fillRect(ox + x, oy + y, 3, 1);
     ctx.fillStyle = `rgba(235,248,255,${(a * 0.25).toFixed(2)})`;
     ctx.fillRect(ox + x + 3, oy + y, 1, 1);
+  }
+}
+
+/** 海岸の砂浜: 水に接する陸のふちに、不ぞろいな砂のおびと、水ぎわの濡れた砂。 */
+function beachEdge(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: number, tx: number, ty: number, side: number): void {
+  for (let i = 0; i < s; i++) {
+    const h = hashCell(tx * 37 + i + side * 11, ty * 19 + side);
+    const depth = 2 + (h % 3 === 0 ? 1 : 0) + (h % 7 === 0 ? 1 : 0);
+    for (let d = 0; d < depth; d++) {
+      const [px, py] = SIDES[side].at(i, d, s);
+      dot(ctx, ox + px, oy + py, d === 0 ? "#b89c68" : d === depth - 1 && depth > 2 ? "#e8d9a8" : "#dccb92");
+    }
   }
 }
 
@@ -205,13 +220,38 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
       const oy = ty * s - camera.y;
       if (kind === "grass") {
         grassPatches(ctx, ox, oy, tx, ty);
-        grassDecor(ctx, ox, oy, s, tx, ty);
+        if (!map.data.coastal || hashCell(tx * 3 + 1, ty * 7 + 2) % 4 === 0) {
+          grassDecor(ctx, ox, oy, s, tx, ty);
+        }
         if (kindAt(map, tx, ty - 1) === "tree") {
           treeShadow(ctx, ox, oy, s, tx, ty);
+        }
+        if (map.data.coastal) {
+          SIDES.forEach((side, index) => {
+            if (kindAt(map, tx + side.dx, ty + side.dy) === "water") {
+              beachEdge(ctx, ox, oy, s, tx, ty, index);
+            }
+          });
         }
         continue;
       }
       if (kind === "water") {
+        // 岸から離れるほど、水の色が濃く（深く）なる
+        let near = 4;
+        for (let r = 1; r <= 3 && near === 4; r++) {
+          for (let dy = -r; dy <= r && near === 4; dy++) {
+            for (let dx = -r; dx <= r; dx++) {
+              if (Math.max(Math.abs(dx), Math.abs(dy)) === r && kindAt(map, tx + dx, ty + dy) !== "water") {
+                near = r;
+                break;
+              }
+            }
+          }
+        }
+        if (near >= 2) {
+          ctx.fillStyle = `rgba(6,24,64,${near === 2 ? 0.1 : near === 3 ? 0.18 : 0.26})`;
+          ctx.fillRect(ox, oy, s, s);
+        }
         waterShimmer(ctx, ox, oy, tx, ty, nowMs);
       }
       if (kind === "tree" && map.data.snowy) {
@@ -225,8 +265,8 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
         const n = kindAt(map, tx + side.dx, ty + side.dy);
         if (kind === "path" && n === "grass") {
           pathEdge(ctx, ox, oy, s, tx, ty, index);
-        } else if (kind === "water" && (n === "grass" || n === "path")) {
-          waterEdge(ctx, ox, oy, s, tx, ty, index);
+        } else if (kind === "water" && (n === "grass" || n === "path" || n === "land" || n === "tree")) {
+          waterEdge(ctx, ox, oy, s, tx, ty, index, !!map.data.coastal);
         }
       });
     }
