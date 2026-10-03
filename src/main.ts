@@ -21,6 +21,8 @@ import { renderPlayer } from "./render/player-renderer";
 import { npcFeetY, renderNpcs } from "./render/npc-renderer";
 import { faceNpc, opposite, updateWander } from "./game/npc-wander";
 import { PartyTrail } from "./game/party-trail";
+import { WORLD_ENTRY_FLAG } from "./game/world/world-map-world";
+import { setLitBeacons } from "./render/object-markers";
 import { renderFollowers } from "./render/follower-renderer";
 import { spriteSpecFromPortrait } from "./game/sprite/character-specs";
 import { PORTRAITS } from "./game/portrait/portraits";
@@ -224,6 +226,7 @@ const MAP_BGM_ID: Record<string, string> = {
   "touri-town": "town-touri",
   "touri-branch": "town-touri",
   "touri-outskirts": "outskirts",
+  "world-map": "field",
   "mugikano-village": "town-mugikano",
   "mugikano-water-source": "water-source",
   "garasuko-town": "town-garasuko",
@@ -1314,6 +1317,13 @@ const loop = createGameLoop({
     const centerTileY = Math.floor((player.y + player.height / 2) / map.data.tileHeight);
     const exit = findExitAt(map, centerTileX, centerTileY);
     if (exit) {
+      // 世界地図から町へ入るには、前の章を終えている必要がある（物語の順を守る）。
+      const needFlag = currentMapId === "world-map" ? WORLD_ENTRY_FLAG[exit.targetMapId] : undefined;
+      if (needFlag && !flags[needFlag]) {
+        player = { ...player, y: player.y + map.data.tileHeight, moving: false };
+        dialogue.start([{ type: "message", text: "まだ、この先へ進む時ではない気がする。いまの町で、やるべきことを終えてから来よう。" }]);
+        return;
+      }
       switchMap(exit.targetMapId, exit.targetTileX, exit.targetTileY);
       autosave();
       return;
@@ -1381,15 +1391,17 @@ const loop = createGameLoop({
       return;
     }
 
+    setLitBeacons(new Set([1, 2, 3, 4, 5, 6, 7, 8].filter((n) => flags[`beacon${n}_lit`])));
     renderTileMap(ctx, map, renderCamera);
     // 奥にいる人を先に、手前にいる人をあとに描く（足元の位置の順）。
     const playerFeetY = player.y + player.height;
     renderProps(ctx, map.data, renderCamera, (prop) => propFeetY(prop, map.data.tileHeight) <= playerFeetY);
     renderNpcs(ctx, npcs, map, renderCamera, (npc) => npcFeetY(npc, map.data.tileHeight) <= playerFeetY);
     const followers = followerSpecs();
-    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY <= playerFeetY);
-    renderPlayer(ctx, player, renderCamera);
-    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY > playerFeetY);
+    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY <= playerFeetY, currentMapId === "world-map" ? 0.6 : 1);
+    const heroScale = currentMapId === "world-map" ? 0.6 : 1;
+    renderPlayer(ctx, player, renderCamera, heroScale);
+    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY > playerFeetY, currentMapId === "world-map" ? 0.6 : 1);
     renderNpcs(ctx, npcs, map, renderCamera, (npc) => npcFeetY(npc, map.data.tileHeight) > playerFeetY);
     renderProps(ctx, map.data, renderCamera, (prop) => propFeetY(prop, map.data.tileHeight) > playerFeetY);
 

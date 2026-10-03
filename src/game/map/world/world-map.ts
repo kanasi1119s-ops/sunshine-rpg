@@ -1,5 +1,20 @@
 import type { TileMapData } from "../types";
-import { WORLD_HEIGHT, WORLD_ROWS, WORLD_WIDTH } from "./world-map.generated";
+import { WORLD_HEIGHT, WORLD_ROWS, WORLD_TOWNS, WORLD_WIDTH } from "./world-map.generated";
+import type { MapProp } from "../types";
+
+/** 町のアイコンの絵（町ごと）。 */
+const TOWN_ICON: Record<string, MapProp["kind"]> = {
+  "touri-town": "icon-port",
+  "mugikano-village": "icon-village",
+  "garasuko-town": "icon-lake",
+  "tetsukusari-town": "icon-mine",
+  "toushin-town": "icon-castle",
+  "sanone-town": "icon-tents",
+  "kiri-town": "icon-temple",
+  "shimohara-town": "icon-snowtown",
+  "fushima-town": "icon-sky",
+  "kyotoukyu-court": "icon-palace",
+};
 
 /**
  * 世界地図（大陸アルテシア）。上から見た大陸を歩く。町・遺跡のアイコンの上に乗ると、その場所へ入る（出入り口は `world.ts` で、
@@ -40,5 +55,6 @@ export function createWorldMapData(): TileMapData {
     collision,
     exits: [],
     coastal: true,
+    props: Object.entries(WORLD_TOWNS).map(([id, pos]) => ({ kind: TOWN_ICON[id], tileX: pos.x, tileY: pos.y })),
   };
 }

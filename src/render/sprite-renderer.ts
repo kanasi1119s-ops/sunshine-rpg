@@ -23,3 +23,28 @@ export function drawSprite(ctx: CanvasRenderingContext2D, spec: SpriteSpec, dir:
 }
 
 export { SPRITE_HEIGHT, SPRITE_WIDTH };
+
+let scratch: HTMLCanvasElement | null = null;
+
+/** 縮小して描く（世界地図では、主人公・仲間を小さく見せる）。ドットがにじまないよう、いったん別の小さなキャンバスに描いてから、補間なしで縮める。 */
+export function drawSpriteScaled(ctx: CanvasRenderingContext2D, spec: SpriteSpec, dir: SpriteDir, frame: SpriteFrame, feetX: number, feetY: number, scale: number): void {
+  if (scale >= 1 || typeof document === "undefined") {
+    drawSprite(ctx, spec, dir, frame, feetX - SPRITE_WIDTH / 2, feetY - SPRITE_HEIGHT + 1);
+    return;
+  }
+  if (!scratch) {
+    scratch = document.createElement("canvas");
+    scratch.width = SPRITE_WIDTH;
+    scratch.height = SPRITE_HEIGHT;
+  }
+  const c = scratch.getContext("2d");
+  if (!c) {
+    return;
+  }
+  c.clearRect(0, 0, SPRITE_WIDTH, SPRITE_HEIGHT);
+  drawSprite(c, spec, dir, frame, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  const w = Math.round(SPRITE_WIDTH * scale);
+  const h = Math.round(SPRITE_HEIGHT * scale);
+  ctx.drawImage(scratch, 0, 0, SPRITE_WIDTH, SPRITE_HEIGHT, Math.round(feetX - w / 2), Math.round(feetY - h + 1), w, h);
+}

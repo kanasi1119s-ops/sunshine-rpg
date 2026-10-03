@@ -26,10 +26,20 @@ export const PROP_FOOTPRINT: Record<MapProp["kind"], { left: number; right: numb
   signpost: { left: 0, right: 0, up: 0 },
   crates: { left: 0, right: 0, up: 0 },
   flowerbed: { left: 0, right: 0, up: 0 },
+  "icon-port": { left: 0, right: 0, up: 0 },
+  "icon-village": { left: 0, right: 0, up: 0 },
+  "icon-lake": { left: 0, right: 0, up: 0 },
+  "icon-mine": { left: 0, right: 0, up: 0 },
+  "icon-castle": { left: 0, right: 0, up: 0 },
+  "icon-tents": { left: 0, right: 0, up: 0 },
+  "icon-temple": { left: 0, right: 0, up: 0 },
+  "icon-snowtown": { left: 0, right: 0, up: 0 },
+  "icon-sky": { left: 0, right: 0, up: 0 },
+  "icon-palace": { left: 0, right: 0, up: 0 },
 };
 
 /** 絵の高さ（ピクセル）。岩・茂みは低く、家・木は枠いっぱい。 */
-export const PROP_HEIGHT: Record<MapProp["kind"], number> = { tree: 48, house: 56, "house-blue": 56, "house-green": 56, manor: 80, "manor-blue": 80, "manor-green": 80, rock: 20, bush: 18, "tree-snow": 48, "tree-dead": 48, "rock-snow": 20, "bush-snow": 18, palm: 48, cactus: 48, barrel: 26, lamp: 48, well: 44, signpost: 40, crates: 36, flowerbed: 12 };
+export const PROP_HEIGHT: Record<MapProp["kind"], number> = { tree: 48, house: 56, "house-blue": 56, "house-green": 56, manor: 80, "manor-blue": 80, "manor-green": 80, rock: 20, bush: 18, "tree-snow": 48, "tree-dead": 48, "rock-snow": 20, "bush-snow": 18, palm: 48, cactus: 48, barrel: 26, lamp: 48, well: 44, signpost: 40, crates: 36, flowerbed: 12, "icon-port": 48, "icon-village": 48, "icon-lake": 48, "icon-mine": 48, "icon-castle": 48, "icon-tents": 48, "icon-temple": 48, "icon-snowtown": 48, "icon-sky": 48, "icon-palace": 48 };
 
 export const isHouse = (kind: MapProp["kind"]): boolean => kind.startsWith("house") || kind.startsWith("manor");
 
@@ -95,6 +105,10 @@ export const MAP_PROPS: Record<string, MapProp[]> = {
 
 /** 飾りが覆うマス（足元のマスを基準に、通れなくするマス）。 */
 export function propFootprintTiles(prop: MapProp): Array<{ x: number; y: number }> {
+  // 世界地図の町のアイコンは、乗っても通れる（その上が出入り口）。
+  if (prop.kind.startsWith("icon-")) {
+    return [];
+  }
   const f = PROP_FOOTPRINT[prop.kind];
   const tiles: Array<{ x: number; y: number }> = [];
   for (let y = prop.tileY - f.up; y <= prop.tileY; y++) {

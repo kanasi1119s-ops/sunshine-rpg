@@ -2,7 +2,7 @@ import type { Camera } from "./camera";
 import type { PartyTrail } from "../game/party-trail";
 import type { SpriteSpec } from "../game/sprite/overworld-sprite";
 import { frameAt, SPRITE_FEET_ROW, SPRITE_WIDTH } from "../game/sprite/overworld-sprite";
-import { drawSprite } from "./sprite-renderer";
+import { drawSprite, drawSpriteScaled } from "./sprite-renderer";
 
 /** 主人公の当たり判定（12×14）と同じ大きさのものとして、足元をそろえる。 */
 const BODY_W = 12;
@@ -15,7 +15,7 @@ export function followerFeetY(trail: PartyTrail, i: number): number {
 }
 
 /** ついてくる仲間を描く。`filter` で足元のyによって、主人公より奥・手前に分けて描ける。 */
-export function renderFollowers(ctx: CanvasRenderingContext2D, trail: PartyTrail, specs: SpriteSpec[], camera: Camera, filter: (feetY: number) => boolean = () => true): void {
+export function renderFollowers(ctx: CanvasRenderingContext2D, trail: PartyTrail, specs: SpriteSpec[], camera: Camera, filter: (feetY: number) => boolean = () => true, scale = 1): void {
   for (let i = trail.count - 1; i >= 0; i--) {
     const f = trail.followerAt(i);
     const spec = specs[i];
@@ -24,6 +24,10 @@ export function renderFollowers(ctx: CanvasRenderingContext2D, trail: PartyTrail
     }
     const feetX = f.x + BODY_W / 2 - camera.x;
     const feetY = f.y + BODY_H - camera.y;
-    drawSprite(ctx, spec, f.dir, frameAt(f.moving, f.animMs), feetX - SPRITE_WIDTH / 2, feetY - SPRITE_FEET_ROW - 1);
+    if (scale < 1) {
+      drawSpriteScaled(ctx, spec, f.dir, frameAt(f.moving, f.animMs), feetX, feetY + 1, scale);
+    } else {
+      drawSprite(ctx, spec, f.dir, frameAt(f.moving, f.animMs), feetX - SPRITE_WIDTH / 2, feetY - SPRITE_FEET_ROW - 1);
+    }
   }
 }

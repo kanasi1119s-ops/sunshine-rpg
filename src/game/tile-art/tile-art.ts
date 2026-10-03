@@ -382,8 +382,8 @@ const PATTERNS: Record<TilePatternKind, PatternFn> = {
       const near = crowns.some(([bx, by, br]) => ((col - bx) ** 2 + (row - by) ** 2) / (br * br) <= 1.5);
       return near ? ramp[0] : shadeColor(ramp[0], -0.2);
     }
-    const k = best > 0.45 ? 3 : best > 0.0 ? 2 : 1;
-    return hashCell(col + variant * 5, row) % 9 === 0 ? ramp[Math.max(1, k - 1)] : ramp[k];
+    const k = best > 0.3 ? 3 : best > -0.1 ? 2 : 1;
+    return hashCell(col + variant * 5, row) % 13 === 0 ? ramp[Math.max(1, k - 1)] : ramp[k];
   },
   // 世界地図の丘: 草の地面に、なだらかな盛り上がりが2つ（左上が明るく、下の縁に影）。
   hills: (ramp, row, col, variant) => {
@@ -431,7 +431,7 @@ export const TILE_ART: Record<string, TileArtSpec> = {
   path: { base: "#b3853f", accentLight: "#d8b060", accentDark: "#85552a", pattern: "path" },
   treeCanopy: { base: "#2b8022", accentLight: "#5fbb31", accentDark: "#185019", pattern: "treeCanopy" },
   mountain: { base: "#857c74", accentLight: "#b8b0a2", accentDark: "#4e4640", pattern: "mountain" },
-  worldforest: { base: "#2f7a2a", accentLight: "#5cb43a", accentDark: "#1a4a22", pattern: "worldforest" },
+  worldforest: { base: "#3a8a30", accentLight: "#7cd048", accentDark: "#1c5a24", pattern: "worldforest" },
   hills: { base: "#5a9a40", accentLight: "#82bc58", accentDark: "#3a7032", pattern: "hills" },
 };
 

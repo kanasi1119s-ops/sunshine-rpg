@@ -43,6 +43,7 @@ const CHAPTER_MAPS: string[][] = [
   ["deep-1", "deep-2", "deep-3", "deep-4"],
   ["tower-1", "tower-2", "tower-3", "kanou-1", "kanou-2", "kanou-3", "kanou-4"],
   ...Array.from({ length: 8 }, (_, i) => [`god-shrine-${i + 1}`]),
+  ["world-map"],
 ];
 
 function recordingFlags(order: string[]): Flags {
@@ -211,6 +212,8 @@ describe("クリア後（サブストーリー・虚灯宮・深部）", () => {
       "deep1_lit", "deep2_lit", "deep3_lit", "deep3_yugami_defeated", "deep4_lit",
       "deep_yugami_defeated", "deep_cleared",
       ...Array.from({ length: 8 }, (_, i) => `god${i + 1}_fragment`),
+      ...Array.from({ length: 8 }, (_, i) => `beacon${i + 1}_lit`),
+      "vortex_route_open",
       "tower_gate_open",
       "tower1_treasure", "tower2_treasure", "tower3_treasure", "tower_truth_known",
       "kanou1_lit", "kanou2_lit", "kanou3_lit", "kanou3_guard_defeated", "kanou4_lit",

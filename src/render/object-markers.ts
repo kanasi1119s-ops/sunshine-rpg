@@ -4,11 +4,13 @@ import { shadeColor } from "../game/color-utils";
  * マップ上の「物」（宝箱・木箱・階段・石碑・機械・祭壇・焦げ跡・荷馬車）の絵。1マス（16×16）に、
  * 縁取り・地の色・影の2〜3段で描く（ハイライトなし、光は左上）。種類は、物のIDに含まれる言葉で決める（`character-specs.ts`の OBJECT_WORDS）。
  */
-export type ObjectKind = "chest" | "crate" | "stairs" | "tablet" | "machine" | "altar" | "scorch" | "wagon" | "generic";
+export type ObjectKind = "beacon" | "boat" | "chest" | "crate" | "stairs" | "tablet" | "machine" | "altar" | "scorch" | "wagon" | "generic";
 
 export function objectKindOf(id: string): ObjectKind {
   const words = id.split("-");
   const has = (...ws: string[]): boolean => words.some((w) => ws.includes(w));
+  if (has("beacon")) return "beacon";
+  if (has("ferry")) return "boat";
   if (has("chest")) return "chest";
   if (has("crate")) return "crate";
   if (has("stairs", "entrance")) return "stairs";
@@ -22,6 +24,12 @@ export function objectKindOf(id: string): ObjectKind {
 
 const INK = "#1c1410";
 
+/** 光がともっている環灯台の番号（`main.ts` が、毎フレーム、フラグから入れる）。 */
+let litBeacons = new Set<number>();
+export function setLitBeacons(lit: Set<number>): void {
+  litBeacons = lit;
+}
+
 function r(ctx: CanvasRenderingContext2D, c: string, x: number, y: number, w: number, h: number): void {
   ctx.fillStyle = c;
   ctx.fillRect(x, y, w, h);
@@ -31,13 +39,52 @@ function ground(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, 
   r(ctx, "rgba(0,0,0,0.28)", x + 2, y + h - 3, w - 4, 2);
 }
 
-export function drawObjectMarker(ctx: CanvasRenderingContext2D, kind: ObjectKind, color: string, x: number, y: number, w: number, h: number): boolean {
+export function drawObjectMarker(ctx: CanvasRenderingContext2D, kind: ObjectKind, color: string, x: number, y: number, w: number, h: number, id = ""): boolean {
   if (kind === "generic") {
     return false;
   }
   ground(ctx, x, y, w, h);
   const top = y + h - 14;
   switch (kind) {
+    case "beacon": {
+      // 環灯台: 石の塔（左が地・右が影）と、てっぺんの火皿。ともると、神の色の炎と光が灯る。
+      const no = Number(id.split("-").pop());
+      const lit = litBeacons.has(no);
+      const tx = x + 4;
+      const ty = y - 10;
+      r(ctx, INK, tx - 1, ty + 8, 10, 18);
+      r(ctx, "#a8a8b4", tx, ty + 9, 4, 16);
+      r(ctx, "#7a7a88", tx + 4, ty + 9, 4, 16);
+      for (let k = 0; k < 4; k++) r(ctx, "#5a5a68", tx, ty + 12 + k * 4, 8, 1);
+      r(ctx, INK, tx - 2, ty + 4, 12, 5);
+      r(ctx, "#6a6a78", tx - 1, ty + 5, 10, 3);
+      r(ctx, lit ? shadeColor(color, -0.2) : "#3a3a44", tx + 1, ty + 2, 6, 3);
+      if (lit) {
+        const t = typeof performance !== "undefined" ? performance.now() : 0;
+        const flick = Math.sin(t / 110 + no) > 0 ? 1 : 0;
+        r(ctx, color, tx + 2, ty - 2 - flick, 4, 5 + flick);
+        r(ctx, "#fff8d0", tx + 3, ty - 0, 2, 3);
+        const g = ctx.createRadialGradient(tx + 4, ty, 2, tx + 4, ty, 26);
+        g.addColorStop(0, `${color}88`);
+        g.addColorStop(1, `${color}00`);
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.fillStyle = g;
+        ctx.fillRect(tx - 24, ty - 26, 56, 56);
+        ctx.restore();
+      }
+      return true;
+    }
+    case "boat": {
+      // 渡し場の小舟と桟橋
+      r(ctx, "#6a4a2a", x, y + h - 5, w, 2);
+      r(ctx, INK, x + 1, y + h - 9, 14, 6);
+      r(ctx, "#a0723c", x + 2, y + h - 8, 12, 4);
+      r(ctx, "#74502a", x + 8, y + h - 8, 6, 4);
+      r(ctx, "#e8dcc0", x + 7, y + h - 15, 1, 6);
+      r(ctx, "#f4f0e0", x + 8, y + h - 15, 4, 4);
+      return true;
+    }
     case "chest": {
       r(ctx, INK, x + 1, top + 3, w - 2, 11);
       r(ctx, "#8a5a2c", x + 2, top + 8, w - 4, 5);   // 胴

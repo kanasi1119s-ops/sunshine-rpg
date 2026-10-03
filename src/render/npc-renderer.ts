@@ -44,7 +44,7 @@ export function renderNpcs(
     if (look === "person") {
       drawSprite(ctx, spriteSpecForNpc(npc), walk ? walk.dir : "down", moving ? frameAt(true, walk.animMs) : 0, x + (tileWidth - 16) / 2, feetY - SPRITE_FEET_ROW - 1);
     } else {
-      if (look === "monster" || !drawObjectMarker(ctx, objectKindOf(npc.id), npc.color, x, feetY - tileHeight, tileWidth, tileHeight)) {
+      if (look === "monster" || !drawObjectMarker(ctx, objectKindOf(npc.id), npc.color, x, feetY - tileHeight, tileWidth, tileHeight, npc.id)) {
         drawMarker(ctx, npc.color, look === "monster", x, feetY - tileHeight, tileWidth, tileHeight);
       }
     }

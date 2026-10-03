@@ -44,4 +44,15 @@ export const PIECES = [
   piece("P19-道しるべ", "r17-polish", "signpost.txt", "pal-signpost.json"),
   piece("P20-木箱の山", "r17-polish", "crates.txt", "pal-crates.json"),
   piece("P21-花壇", "r17-polish", "flowerbed.txt", "pal-flowerbed.json"),
+  // 世界地図の町のアイコン（r17-polish/worldicons.py で一から）
+  piece("P22-アイコンport", "r17-polish", "icon-port.txt", "pal-icon-port.json"),
+  piece("P23-アイコンvillage", "r17-polish", "icon-village.txt", "pal-icon-village.json"),
+  piece("P24-アイコンlake", "r17-polish", "icon-lake.txt", "pal-icon-lake.json"),
+  piece("P25-アイコンmine", "r17-polish", "icon-mine.txt", "pal-icon-mine.json"),
+  piece("P26-アイコンcastle", "r17-polish", "icon-castle.txt", "pal-icon-castle.json"),
+  piece("P27-アイコンtents", "r17-polish", "icon-tents.txt", "pal-icon-tents.json"),
+  piece("P28-アイコンtemple", "r17-polish", "icon-temple.txt", "pal-icon-temple.json"),
+  piece("P29-アイコンsnowtown", "r17-polish", "icon-snowtown.txt", "pal-icon-snowtown.json"),
+  piece("P30-アイコンsky", "r17-polish", "icon-sky.txt", "pal-icon-sky.json"),
+  piece("P31-アイコンpalace", "r17-polish", "icon-palace.txt", "pal-icon-palace.json"),
 ];
