@@ -1,43 +1,71 @@
 [
  {
   "id": "enc-touri-outskirts-0",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a small crooked four-legged critter with grey stone skin, one big amber eye, glowing amber cracks on its back",
+  "status": "done",
   "key": "enemy:enc-touri-outskirts-0",
   "kind": "mob",
   "name": "ちいさな歪み",
   "zone": "touri-outskirts",
-  "level": 2
+  "level": 2,
+  "shape": "ground",
+  "tone": [
+   120,
+   112,
+   104
+  ],
+  "draft": "enc-touri-outskirts-0_0"
  },
  {
   "id": "enc-touri-outskirts-1",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a floating shadow wisp creature with a ragged smoky violet body, two glowing amber eyes, wavering edges",
+  "status": "done",
   "key": "enemy:enc-touri-outskirts-1",
   "kind": "mob",
   "name": "ゆらぎの影",
   "zone": "touri-outskirts",
-  "level": 2
+  "level": 2,
+  "shape": "float",
+  "tone": [
+   96,
+   82,
+   122
+  ],
+  "draft": "enc-touri-outskirts-1_1"
  },
  {
   "id": "enc-touri-outskirts-2",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a large wild field rat beast with shaggy dark brown fur, long tail, glowing amber eyes, small stone growths on its back",
+  "status": "done",
   "key": "enemy:enc-touri-outskirts-2",
   "kind": "mob",
   "name": "野ねずみの影",
   "zone": "touri-outskirts",
-  "level": 2
+  "level": 2,
+  "shape": "ground",
+  "tone": [
+   104,
+   80,
+   62
+  ],
+  "draft": "enc-touri-outskirts-2_0"
  },
  {
   "id": "enc-touri-outskirts-3",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a big green grasshopper beast with leaf-shaped wings, mossy armor plates, sharp mandibles, glowing amber spots",
+  "status": "done",
   "key": "enemy:enc-touri-outskirts-3",
   "kind": "mob",
   "name": "草むらの虫",
   "zone": "touri-outskirts",
-  "level": 2
+  "level": 2,
+  "shape": "ground",
+  "tone": [
+   96,
+   124,
+   72
+  ],
+  "draft": "enc-touri-outskirts-3_0 mirror"
  },
  {
   "id": "enc-touri-outskirts-4",

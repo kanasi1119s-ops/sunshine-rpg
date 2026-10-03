@@ -19,15 +19,35 @@ kw=dict(variant=os.environ["VARIANT"],torch_dtype=torch.float16) if os.environ.g
 pipe=StableDiffusionPipeline.from_pretrained(os.environ.get("MODEL","PublicPrompts/All-In-One-Pixel-Model"),safety_checker=None,requires_safety_checker=False,**kw)
 pipe=pipe.to(torch.float32)  # CPUでは float32 で計算する
 pipe.enable_attention_slicing(1); pipe.vae.enable_slicing(); pipe.vae.enable_tiling()  # メモリを節約（縦長 512×768 でも止まらないように）
-pipe.load_lora_weights("latent-consistency/lcm-lora-sdv1-5"); pipe.fuse_lora()
-pipe.scheduler=LCMScheduler.from_config(pipe.scheduler.config)
+# QUALITY=real: 速く描く設定（LCM）を使わず、ふつうの描き方（DPM++ 22歩・cfg 7）で描く。1枚 約4分（CPU）。
+# 人間の指示「もっとリアルな下絵がいい」（2026-10-04）。LCM（6〜9歩・cfg 1.5）では細かさと、指示文の「リアル」「避ける言葉」がほとんど効かず、
+# クリップアートのような平らな絵になっていた。敵・ボスの下絵はこちらを使う（monster_batch.py は既定で QUALITY=real）。
+REAL=os.environ.get("QUALITY")=="real"
+if REAL:
+  from diffusers import DPMSolverMultistepScheduler
+  pipe.scheduler=DPMSolverMultistepScheduler.from_config(pipe.scheduler.config,use_karras_sigmas=True)
+else:
+  pipe.load_lora_weights("latent-consistency/lcm-lora-sdv1-5"); pipe.fuse_lora()
+  pipe.scheduler=LCMScheduler.from_config(pipe.scheduler.config)
 NEG_PIXEL="drop shadow, blurry, 3d, anti aliasing, gradient, textures, depth of field, anime style, modern cartoon, skewed, perspective, text, watermark, photo, realistic"
 NEG_PAINT="photo, 3d render, anime, cartoon, chibi, text, watermark, frame, border, multiple creatures, cropped, blurry"
 NEG=os.environ.get("NEG") or (NEG_PAINT if os.environ.get("STYLE")=="painterly" else NEG_PIXEL)
 jobs=json.load(open(sys.argv[1]))
 os.makedirs('raw',exist_ok=True)
+# "layout" のある指示は、置き場所の下書き（layouts.py の影絵）から描く（img2img）。全身が絵に入るようにするため（2026-10-04）
+img2img=None
+if any('layout' in j for j in jobs):
+  from diffusers import StableDiffusionImg2ImgPipeline
+  sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
+  from layouts import make_layout
+  img2img=StableDiffusionImg2ImgPipeline(**pipe.components)
 for j in jobs:
   t=time.time()
   g=torch.Generator().manual_seed(j['seed'])
-  im=pipe(prompt=j['prompt'],negative_prompt=j.get('neg',NEG),num_inference_steps=j.get('steps',6),guidance_scale=j.get('cfg',1.5),width=j.get('w',512),height=j.get('h',512),generator=g).images[0]
+  if 'layout' in j:
+    L=j['layout']; init=make_layout(L.get('shape','ground'),tuple(L.get('tone',(110,100,95))),j['seed'])
+    init.save(f"raw/{j['name']}.layout.png")
+    im=img2img(prompt=j['prompt'],negative_prompt=j.get('neg',NEG),image=init,strength=L.get('strength',0.9),num_inference_steps=j.get('steps_real',24) if REAL else j.get('steps_layout',9),guidance_scale=j.get('cfg_real',7.0) if REAL else j.get('cfg',1.5),generator=g).images[0]
+  else:
+    im=pipe(prompt=j['prompt'],negative_prompt=j.get('neg',NEG),num_inference_steps=j.get('steps_real',22) if REAL else j.get('steps',6),guidance_scale=j.get('cfg_real',7.0) if REAL else j.get('cfg',1.5),width=j.get('w',512),height=j.get('h',512),generator=g).images[0]
   im.save(f"raw/{j['name']}.png"); print(j['name'],round(time.time()-t,1),flush=True)

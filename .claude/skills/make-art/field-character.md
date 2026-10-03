@@ -82,4 +82,4 @@ EDITOR=<保存したエディタのindex.html> node tools/pixel-practice/editor-
 
 ## 6. ゲームへ
 
-`out/<名前>.walker.json` が `WalkerData` の形。`src/game/sprite/walker-data.generated.ts` の `WALKERS` に人物名をキーにして加え、`character-specs.ts` の `handKey` でその人物に結びつける（`walker-data.generated.ts` は今は `assets-src/pixel-practice/r19-walkers/export_walkers.py` が書き出しているので、加え方を変えるときは `docs/decisions.md` に書く）。SKILL.md の4・5も守る。
+`out/<名前>.walker.json` が `WalkerData` の形。`src/game/sprite/walker-data.generated.ts` の `WALKERS` に人物名をキーにして加え、`character-specs.ts` の `handKey` でその人物に結びつける（`walker-data.generated.ts` は今は `assets-src/pixel-practice/r19-walkers/export_walkers.py` が書き出しているので、加え方を変えるときは `docs/decisions.md` に書く）。SKILL.md の5・6も守る。

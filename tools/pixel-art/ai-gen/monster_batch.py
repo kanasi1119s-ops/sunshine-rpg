@@ -2,13 +2,18 @@
 
 手順は make-art の monster.md と同じ「AIの下絵 → ドット絵化 → 手直し → エディタで描く」。顔は右向き（戦闘画面では敵が左、味方が右）、全身が入る構図。
 名簿: tools/pixel-art/ai-gen/monster-roster.json（id・名前・種類・地方・英語の指示文 prompt・状態 status）。
+  全身が入るように、名簿に shape（形: ground / float / tall / long / winged / big。layouts.py）と tone（体のおおまかな色 [r,g,b]）も書く。
+  下絵は、白い背景のまん中に置いた影絵から描く（img2img）ので、体が端で切れにくい。描いたあと fullbody.py で全身が入っているかを調べる。
   status: todo（未着手）→ draft（下絵あり）→ picked（ドット絵化した）→ done（手直しとエディタの確認まで済み）
 
 使い方（リポジトリの最上位で）:
   python3 tools/pixel-art/ai-gen/monster_batch.py roster            名簿を作る・ゲームの敵の増減を反映する（状態は残す）
   python3 tools/pixel-art/ai-gen/monster_batch.py next 4            次に作る4体（prompt が空なら、先に英語の指示文を名簿に書く）
-  python3 tools/pixel-art/ai-gen/monster_batch.py draft ID...       下絵を3枚ずつ描く → 作業フォルダ/draft-<ID>.png（見比べ用）
-  python3 tools/pixel-art/ai-gen/monster_batch.py pick ID 番号 [--mirror]   選んだ下絵をドット絵に（左向きなら --mirror で右向きに）
+  python3 tools/pixel-art/ai-gen/monster_batch.py draft ID... [--seeds 4]   下絵を4枚ずつ描き、全身が入っているかを調べる（fullbody.py）
+       → 作業フォルダ/draft-<ID>.png（見比べ用。各下絵の上に「全身OK」か「切れ:上下」などが出る）
+  python3 tools/pixel-art/ai-gen/monster_batch.py extend ID 番号      端で切れた下絵の外側を描き足す → 番号 x<番号>（例: x2）として選べる
+  python3 tools/pixel-art/ai-gen/monster_batch.py pick ID 番号 [--mirror] [--force]   選んだ下絵をドット絵に（左向きなら --mirror で右向きに）
+       全身が入っていない下絵は選べない（人間の指示「全身が入るように」。どうしても使うときだけ --force）
        → assets-src/monsters/<ID>/<ID>.{txt,json,png}。手直しは edits.py、エディタは editor-draw.mjs で行い、
          仕上げた絵を assets-src/monsters/<ID>/final.{txt,json} に置く
   python3 tools/pixel-art/ai-gen/monster_batch.py done ID           仕上げの確認（大きさ・色数）をして done にする
@@ -79,7 +84,38 @@ def cmd_next(n):
         print(e["id"], e["kind"], e["name"], e.get("zone"), "| prompt:", e["prompt"] or "（未記入。英語で書く）")
 
 
-def cmd_draft(ids):
+def font(size=18):
+    from PIL import ImageFont
+    for f in ("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", "/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc", "/usr/share/fonts/opentype/noto/NotoSerifCJK-Bold.ttc", "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+              "/usr/share/fonts/opentype/ipafont-gothic/ipagp.ttf", "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf"):
+        if os.path.exists(f):
+            return ImageFont.truetype(f, size)
+    return ImageFont.load_default()
+
+
+def make_sheet(i):
+    """見比べ用の1枚。下絵ごとに番号と、全身チェックの結果（緑＝全身OK、赤＝切れ など）を書く"""
+    from PIL import Image, ImageDraw
+    sys.path.insert(0, AI)
+    from fullbody import label
+    names = sorted(f[len(i) + 1:-4] for f in os.listdir(f"{WORK}/raw") if f.startswith(i + "_") and f.endswith(".png") and not f.endswith(".layout.png"))
+    sheet = Image.new("RGB", (max(1, len(names)) * 260, 290), "white"); d = ImageDraw.Draw(sheet); fnt = font()
+    for n, k in enumerate(names):
+        p = f"{WORK}/raw/{i}_{k}.png"
+        sheet.paste(Image.open(p).convert("RGB").resize((256, 256)), (n * 260, 0))
+        res = json.load(open(p + ".check.json")) if os.path.exists(p + ".check.json") else None
+        txt = f"{k}  " + (label(res) if res else "未チェック")
+        d.text((n * 260 + 4, 262), txt, fill=(0, 130, 0) if res and res["ok"] else (200, 0, 0), font=fnt)
+    sheet.save(f"{WORK}/draft-{i}.png")
+    return f"{WORK}/draft-{i}.png"
+
+
+def run_check(paths):
+    # 生成（generate.py）が終わってから、別のプロセスで調べる（同時に動かすとメモリが足りない）
+    subprocess.run(["python3", f"{AI}/fullbody.py", "check", *paths], cwd=AI, check=True)
+
+
+def cmd_draft(ids, seeds=4):
     r = load(); by = {e["id"]: e for e in r}
     os.makedirs(f"{WORK}/raw", exist_ok=True)
     jobs = []
@@ -87,25 +123,42 @@ def cmd_draft(ids):
         e = by[i]
         assert e["prompt"], f"{i}: 名簿の prompt（英語の指示文）を先に書く"
         kind = "boss" if e["kind"] == "boss" else "monster"
-        subprocess.run(["python3", f"{AI}/make_jobs.py", kind, f"{WORK}/j.json", f"{i}:{e['prompt']}, side view facing right, whole body in frame", "--seeds", "3"], check=True, cwd=WORK)
-        jobs += json.load(open(f"{WORK}/j.json"))
+        desc = e["prompt"] if "facing right" in e["prompt"] else e["prompt"] + ", facing right"
+        subprocess.run(["python3", f"{AI}/make_jobs.py", kind, f"{WORK}/j.json", f"{i}:{desc}", "--seeds", str(seeds)], check=True, cwd=WORK)
+        js = json.load(open(f"{WORK}/j.json"))
+        # 置き場所の下書き（layouts.py）から描く: 名簿の shape（形）と tone（体のおおまかな色）を使う
+        for j in js:
+            j["layout"] = {"shape": e.get("shape") or ("big" if e["kind"] == "boss" else "ground"),
+                           "tone": e.get("tone") or [110, 100, 95], "strength": e.get("strength", 0.9)}
+        jobs += js
     json.dump(jobs, open(f"{WORK}/jobs.json", "w"))
-    env = dict(os.environ, MODEL="stable-diffusion-v1-5/stable-diffusion-v1-5", VARIANT="fp16", STYLE="painterly")
+    env = dict(os.environ, MODEL="stable-diffusion-v1-5/stable-diffusion-v1-5", VARIANT="fp16", STYLE="painterly", QUALITY=os.environ.get("QUALITY", "real"))  # リアルな下絵（1枚 約5分）
     subprocess.run(["python3", f"{AI}/generate.py", "jobs.json"], cwd=WORK, env=env, check=True)
-    from PIL import Image, ImageDraw
+    run_check([f"{WORK}/raw/{j['name']}.png" for j in jobs])
     for i in ids:
-        sheet = Image.new("RGB", (3 * 260, 260), "white"); d = ImageDraw.Draw(sheet)
-        for k in range(3):
-            p = f"{WORK}/raw/{i}_{k}.png"
-            if os.path.exists(p):
-                sheet.paste(Image.open(p).resize((256, 256)), (k * 260, 0)); d.text((k * 260 + 4, 4), str(k), fill="red")
-        sheet.save(f"{WORK}/draft-{i}.png"); by[i]["status"] = "draft"
-        print("見比べ:", f"{WORK}/draft-{i}.png")
+        by[i]["status"] = "draft"
+        print("見比べ:", make_sheet(i))
     save(r)
 
 
-def cmd_pick(i, k, mirror=False):
+def cmd_extend(i, k):
+    """端で切れた下絵の外側を描き足して、x<番号> として足す"""
+    e = {x["id"]: x for x in load()}[i]
+    src, dst = f"{WORK}/raw/{i}_{k}.png", f"{WORK}/raw/{i}_x{k}.png"
+    subprocess.run(["python3", f"{AI}/fullbody.py", "extend", src, dst, e["prompt"]], cwd=AI, check=True)
+    run_check([dst])
+    print("見比べ:", make_sheet(i))
+
+
+def cmd_pick(i, k, mirror=False, force=False):
     r = load(); by = {e["id"]: e for e in r}; e = by[i]
+    chk = f"{WORK}/raw/{i}_{k}.png.check.json"
+    if not force:
+        if not os.path.exists(chk):
+            run_check([f"{WORK}/raw/{i}_{k}.png"])
+        res = json.load(open(chk))
+        if not res["ok"]:
+            sys.exit(f"{i}_{k}: 全身が入っていません（{res.get('cut')}・かたまり{res.get('parts')}）。ほかの下絵を選ぶか、extend で描き足す（どうしても使うときは --force）")
     size, ncol = (128, 24) if e["kind"] == "boss" else (96, 20)
     d = f"{ART}/{i}"; os.makedirs(d, exist_ok=True)
     subprocess.run(["python3", f"{AI}/sfcize.py", f"{WORK}/raw/{i}_{k}.png", f"{d}/{i}", str(size), str(ncol)], check=True, cwd=WORK)
@@ -173,7 +226,10 @@ if __name__ == "__main__":
     c = a[0]
     if c == "roster": cmd_roster()
     elif c == "next": cmd_next(a[1] if len(a) > 1 else 4)
-    elif c == "draft": cmd_draft(a[1:])
-    elif c == "pick": cmd_pick(a[1], a[2], "--mirror" in a)
+    elif c == "draft":
+        n = int(a[a.index("--seeds") + 1]) if "--seeds" in a else 4
+        cmd_draft([x for j, x in enumerate(a[1:], 1) if not x.startswith("--") and (j < 2 or a[j - 1] != "--seeds")], n)
+    elif c == "extend": cmd_extend(a[1], a[2])
+    elif c == "pick": cmd_pick(a[1], a[2], "--mirror" in a, "--force" in a)
     elif c == "done": cmd_done(a[1])
     elif c == "export": cmd_export()
