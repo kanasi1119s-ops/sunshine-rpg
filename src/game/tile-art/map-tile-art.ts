@@ -47,7 +47,7 @@ const MAP_THEME: Record<string, string> = {
   "tetsukusari-mine": "mine",
   "shimohara-facility": "facility",
   "fushima-base": "facility",
-  "kiri-archive": "interior",
+  "kiri-archive": "archive",
   "touri-branch": "interior",
   "garasuko-warehouse": "interior",
   "toushin-hall": "interior",
