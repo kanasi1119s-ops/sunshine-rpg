@@ -22,6 +22,8 @@ export interface TileMapData {
    * 省略時・未対応カテゴリは、これまで通り`tileColors`の色で描く。
    */
   tileArt?: Record<number, string>;
+  /** タイルid → 128×128の地形テクスチャのキー（`sprite-data.generated.ts` の `terrain:*`）。あれば `tileArt` より先に使う（全体フィールド用、2026-10-04）。 */
+  tileTexture?: Record<number, string>;
   /** ダンジョン・塔・洞窟などの床と壁の描き方（`dungeon-tiles.ts`）。省略時は従来どおり。 */
   theme?: string;
   /** 雪の地方か。木のタイルに雪をのせる（`ground-decor.ts`）。 */

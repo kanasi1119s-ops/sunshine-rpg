@@ -1,3 +1,4 @@
+import { WORLD_TOWNS } from "./game/map/world/world-map.generated";
 import "./style.css";
 import { GAME_TITLE } from "./core/status";
 import { backTitle, confirmTitle, createTitleState, moveTitleCursor } from "./game/title/title-menu";
@@ -992,6 +993,10 @@ interface DebugMenuRowWithAction extends DebugMenuRow {
 }
 
 const DEBUG_MENU_ROWS: DebugMenuRowWithAction[] = [
+  {
+    label: () => "マップ: 全体フィールド（灯里の近く） へワープ",
+    action: () => switchMap("world-map", WORLD_TOWNS["touri-town"].x, WORLD_TOWNS["touri-town"].y + 1),
+  },
   {
     label: () => "マップ: 灯里の町 へワープ",
     action: () => switchMap("touri-town", TOURI_TOWN_SPAWN.tileX, TOURI_TOWN_SPAWN.tileY),

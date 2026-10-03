@@ -450,7 +450,7 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
       const ox = tx * s - camera.x;
       const oy = ty * s - camera.y;
       const artHere = map.data.tileArt[getTileId(map, 0, tx, ty)] ?? "";
-      if ((artHere === "mountain" || artHere === "peaks") && !map.data.theme) {
+      if ((artHere === "mountain" || artHere === "peaks") && !map.data.theme && !map.data.tileTexture) {   // 地形テクスチャのある地図（全体フィールド）は、テクスチャの岩山をそのまま見せる
         const tile = mountainTile(map, tx, ty, artHere === "peaks");
         if (tile) {
           ctx.drawImage(tile, ox, oy);

@@ -1,6 +1,8 @@
 import type { TileMap } from "../game/map/tile-map";
 import { WORLD_BEACONS, WORLD_TOWNS } from "../game/map/world/world-map.generated";
 import { BEACON_COLORS } from "../game/world/world-map-world";
+import { WORLD_OVERVIEW } from "../game/map/world/world-overview.generated";
+import { decodeSprite } from "../game/art/sprite";
 
 let cached: { canvas: HTMLCanvasElement; w: number; h: number } | null = null;
 
@@ -19,6 +21,22 @@ function overviewCanvas(map: TileMap): HTMLCanvasElement | null {
   const c = canvas.getContext("2d");
   if (!c) {
     return null;
+  }
+  // 全体フィールドの見本の絵をトレースした全体図（地図と同じ大きさのとき）。なければ地形の色で描く。
+  if (WORLD_OVERVIEW.width === w && WORLD_OVERVIEW.height === h) {
+    const size = Math.max(w, h);
+    const cells = decodeSprite({ size, palette: WORLD_OVERVIEW.palette, rle: WORLD_OVERVIEW.rle });
+    const img = c.createImageData(w, h);
+    for (let n = 0; n < w * h; n++) {
+      const v = parseInt(WORLD_OVERVIEW.palette[cells[n]]?.slice(1) ?? "000000", 16);
+      img.data[n * 4] = (v >> 16) & 255;
+      img.data[n * 4 + 1] = (v >> 8) & 255;
+      img.data[n * 4 + 2] = v & 255;
+      img.data[n * 4 + 3] = 255;
+    }
+    c.putImageData(img, 0, 0);
+    cached = { canvas, w, h };
+    return canvas;
   }
   const ground = map.data.layers[0].data;
   for (let y = 0; y < h; y++) {
