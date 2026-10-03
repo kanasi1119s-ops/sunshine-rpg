@@ -120,9 +120,9 @@ def lattice(rng, dx, dy, jit):
 
 def forest():
     rng = random.Random(3)
-    t = Tex("#1f5a22")
-    speckle(t, rng, ["#184a1c"], 400, 2)
-    crowns(t, rng, lattice(rng, 9, 7, 1), 5, ["#2c7a2c", "#3c9636", "#58b244", "#7ccc58"], "#143c18")
+    t = Tex("#123a16")
+    speckle(t, rng, ["#0e3012"], 400, 2)
+    crowns(t, rng, lattice(rng, 9, 7, 1), 5, ["#1c5a22", "#28742a", "#3a9034", "#62b04a"], "#0c2a10")
     return t
 
 
@@ -236,7 +236,22 @@ def sand(base="#e6d29a", light="#f6e8bc", dark="#cdb47c", seed=8):
 
 
 def ash():
-    return sand("#6a6266", "#857a7e", "#4e4648", 17)
+    """灰の大地（虚灯宮のまわり）: 見本の絵では、暗い紫の渦。渦の腕を、つなぎ目なしでくり返す。"""
+    rng = random.Random(17)
+    t = Tex("#24102e")
+    speckle(t, rng, ["#1a0a22", "#2e163a"], 900, 2)
+    for (cx, cy) in [(32, 32), (96, 96), (96, 32), (32, 96)]:
+        for arm in range(3):
+            for k in range(140):
+                a = k * 0.09 + arm * 2.094
+                r = 2 + k * 0.2
+                x, y = cx + r * math.cos(a), cy + r * math.sin(a)
+                c = "#7a3a8c" if k % 9 < 5 else "#4e2260"
+                if k > 110:
+                    c = "#3a1848"
+                t.put(int(x), int(y), c)
+                t.put(int(x) + 1, int(y), "#9a5ab0" if k < 40 else c)
+    return t
 
 
 def snow():
@@ -318,7 +333,7 @@ def lava():
 TEXTURES = {
     "w-grass": grass, "w-hills": hills, "w-forest": forest, "w-mountain": mountain, "w-peaks": peaks,
     "w-sea": sea, "w-lake": lake, "w-sand": sand, "w-snow": snow, "w-snowforest": snowforest,
-    "w-road": road, "w-cloud": cloud, "w-waste": waste, "w-chasm": chasm, "w-lava": lava, "w-ash": ash,
+    "w-road": road, "w-cloud": cloud, "w-waste": waste, "w-chasm": chasm, "w-lava": lava, "w-ash": ash, "w-pyramids": pyramids,
 }
 NAMES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
