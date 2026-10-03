@@ -3,20 +3,23 @@ import type { MapProp, TileMapData } from "./types";
 /** 飾りの絵（`prop:*`）は48×48の枠。足元・中央のマスにそろえる。 */
 export const PROP_SIZE = 48;
 
-/** 足元のマスから見た、通れなくするマスの範囲（左・右・上へ何マスか）。木は幹の1マス、家は横3マス×縦2マス。 */
+/** 足元のマスから見た、通れなくするマスの範囲（左・右・上へ何マスか）。木は幹の1マス、家は横3マス×縦2マス、屋敷は横5マス×縦2マス。 */
 export const PROP_FOOTPRINT: Record<MapProp["kind"], { left: number; right: number; up: number }> = {
   tree: { left: 0, right: 0, up: 0 },
   house: { left: 1, right: 1, up: 1 },
   "house-blue": { left: 1, right: 1, up: 1 },
   "house-green": { left: 1, right: 1, up: 1 },
+  manor: { left: 2, right: 2, up: 1 },
+  "manor-blue": { left: 2, right: 2, up: 1 },
+  "manor-green": { left: 2, right: 2, up: 1 },
   rock: { left: 0, right: 0, up: 0 },
   bush: { left: 0, right: 0, up: 0 },
 };
 
 /** 絵の高さ（ピクセル）。岩・茂みは低く、家・木は枠いっぱい。 */
-export const PROP_HEIGHT: Record<MapProp["kind"], number> = { tree: 48, house: 48, "house-blue": 48, "house-green": 48, rock: 20, bush: 18 };
+export const PROP_HEIGHT: Record<MapProp["kind"], number> = { tree: 48, house: 48, "house-blue": 48, "house-green": 48, manor: 80, "manor-blue": 80, "manor-green": 80, rock: 20, bush: 18 };
 
-export const isHouse = (kind: MapProp["kind"]): boolean => kind.startsWith("house");
+export const isHouse = (kind: MapProp["kind"]): boolean => kind.startsWith("house") || kind.startsWith("manor");
 
 /** 絵の上端が、足元のマスより上へ何マスぶんはみ出すか（NPCや出入り口と重ねないための確認に使う）。 */
 export function propOverhangTiles(kind: MapProp["kind"], tileHeight: number): number {
@@ -30,18 +33,18 @@ export function propOverhangTiles(kind: MapProp["kind"], tileHeight: number): nu
  */
 export const MAP_PROPS: Record<string, MapProp[]> = {
   "touri-town": [
-    { kind: "house", tileX: 16, tileY: 4 },
+    { kind: "manor", tileX: 17, tileY: 4 },
     { kind: "tree", tileX: 1, tileY: 14 }, { kind: "tree", tileX: 9, tileY: 14 }, { kind: "tree", tileX: 14, tileY: 13 },
     { kind: "tree", tileX: 19, tileY: 12 }, { kind: "tree", tileX: 20, tileY: 5 },
     { kind: "bush", tileX: 7, tileY: 13 }, { kind: "rock", tileX: 12, tileY: 14 },
   ],
   "mugikano-village": [
-    { kind: "house-green", tileX: 6, tileY: 4 }, { kind: "house", tileX: 15, tileY: 4 },
+    { kind: "house-green", tileX: 6, tileY: 4 }, { kind: "manor-green", tileX: 16, tileY: 4 },
     { kind: "tree", tileX: 2, tileY: 12 }, { kind: "tree", tileX: 19, tileY: 11 }, { kind: "tree", tileX: 5, tileY: 14 }, { kind: "tree", tileX: 17, tileY: 14 },
     { kind: "bush", tileX: 3, tileY: 10 }, { kind: "rock", tileX: 20, tileY: 13 },
   ],
   "garasuko-town": [
-    { kind: "house-blue", tileX: 6, tileY: 4 }, { kind: "house", tileX: 15, tileY: 4 },
+    { kind: "manor-blue", tileX: 5, tileY: 4 }, { kind: "house", tileX: 15, tileY: 4 },
     { kind: "tree", tileX: 2, tileY: 9 }, { kind: "tree", tileX: 19, tileY: 9 }, { kind: "tree", tileX: 20, tileY: 5 },
     { kind: "bush", tileX: 3, tileY: 8 }, { kind: "rock", tileX: 18, tileY: 9 },
   ],

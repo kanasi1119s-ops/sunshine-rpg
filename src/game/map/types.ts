@@ -49,4 +49,4 @@ export interface MapProp {
 }
 
 /** 飾りの種類。`prop:<種類>` のドット絵がある。 */
-export type MapPropKind = "tree" | "house" | "house-blue" | "house-green" | "rock" | "bush";
+export type MapPropKind = "tree" | "house" | "house-blue" | "house-green" | "manor" | "manor-blue" | "manor-green" | "rock" | "bush";
