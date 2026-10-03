@@ -74,19 +74,19 @@ def orca():
     for x in range(24,34): im.set(x,91,'leather',0.6,'cuffL'); im.set(x,92,'leather',-0.2,'cuffL')
     for x in range(38,47): im.set(x,91,'leather',0.6,'cuffR'); im.set(x,92,'leather',-0.2,'cuffR')
     # 腕（たくましい。手袋）
-    capsule(im,(49,44),(56,57),4.4,3.8,'shirtO','armR',bulge=0.6); capsule(im,(56,57),(55,67),3.8,3.3,'shirtO','armR2')
+    capsule(im,(48,44),(55,57),3.8,3.3,'shirtO','armR',bulge=0.5); capsule(im,(55,57),(54,67),3.3,2.9,'shirtO','armR2')
     ellipse(im,55,70,3.6,3.6,'glove','handR')
-    capsule(im,(23,44),(16,57),4.4,3.8,'shirtO','armL',bulge=0.6); capsule(im,(16,57),(17,67),3.8,3.3,'shirtO','armL2')
+    capsule(im,(24,44),(17,57),3.8,3.3,'shirtO','armL',bulge=0.5); capsule(im,(17,57),(18,67),3.3,2.9,'shirtO','armL2')
     poly(im,[(12.5,63),(20.5,63),(20.5,67),(12.5,67)],'leather','cuffA')
     ellipse(im,17,70,3.6,3.6,'glove','handL')
     # 胴: 広い肩、はっきりしたくびれ、オレンジのベスト＋反射の帯
-    poly(im,[(22,41),(50,41),(49.5,52),(46.5,62),(25.5,62),(22.5,52)],'shirtO','torso',shade=lambda x,y,nx,ny:(nx*LIGHT[0]+ny*LIGHT[1])*-0.7+0.28)
-    poly(im,[(23,41),(49,41),(48.5,52),(45.5,62),(26.5,62),(23.5,52)],'vestO','vest',shade=lambda x,y,nx,ny:(nx*LIGHT[0]+ny*LIGHT[1])*-0.7+0.3)
+    poly(im,[(23,41),(49,41),(47.5,50),(44.5,55),(47,62),(25,62),(27.5,55),(24.5,50)],'shirtO','torso',shade=lambda x,y,nx,ny:(nx*LIGHT[0]+ny*LIGHT[1])*-0.7+0.28)
+    poly(im,[(24,41),(48,41),(46.5,50),(43.5,55),(46,62),(26,62),(28.5,55),(25.5,50)],'vestO','vest',shade=lambda x,y,nx,ny:(nx*LIGHT[0]+ny*LIGHT[1])*-0.7+0.3)
     for yy in (49,56):
         for x in range(23,49):
             if im.part[yy][x]=='vest': im.set(x,yy,'stripe',0.8,'vest'); im.set(x,yy+1,'stripe',0.1,'vest')
     for y in range(41,62): im.set(36,y,'vestO',-1.0,'vest')
-    poly(im,[(24,60),(48,60),(49,74),(23,74)],'pants','skirt',shade=lambda x,y,nx,ny:(nx*LIGHT[0])*-0.6+0.15)
+    poly(im,[(25,60),(47,60),(50,76),(22,76)],'pants','skirt',shade=lambda x,y,nx,ny:(nx*LIGHT[0])*-0.6+0.15)
     poly(im,[(24,59),(48,59),(48,62.5),(24,62.5)],'leather','belt',shade=lambda x,y,nx,ny:(ny*-0.5+0.3))
     ellipse(im,36,60.7,2.6,2.2,'steel','buckle')
     capsule(im,(36,32),(36,41),3.2,3.8,'skin','neck')

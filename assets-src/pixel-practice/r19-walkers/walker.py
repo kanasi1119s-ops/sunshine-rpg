@@ -64,10 +64,13 @@ def draw(name,dr,fr):
     elif c.get('coat'):
         poly(im,[(4.5,15),(11.5,15),(12,27),(4,27)],'top','body',shade=lambda x,y,nx,ny:-nx*0.35+0.25)
         for y in range(15,27): im.set(8,y,'dark',-1,'body') if dr=='down' else None
+    elif name=="オルカ":
+        # 女性らしく: 肩はやや細め、ウエストをくびれさせ、腰でふくらむ
+        poly(im,[(4.8,15),(11.2,15),(10.8,19),(10.2,21.5),(11.8,24.5),(4.2,24.5),(5.8,21.5),(5.2,19)],'top','body',shade=lambda x,y,nx,ny:-nx*0.4-ny*0.2+0.3)
     else:
         poly(im,[(4.5,15),(11.5,15),(12,24),(4,24)],'top','body',shade=lambda x,y,nx,ny:-nx*0.4-ny*0.2+0.3)
     if name=="オルカ":
-        poly(im,[(5,15.5),(11,15.5),(11,23.5),(5,23.5)],'top','vest')
+        poly(im,[(5.3,15.5),(10.7,15.5),(10.3,20),(11,23.5),(5,23.5),(5.7,20)],'top','vest')
         for y in (18,21):
             for x in range(5,11): im.set(x,y,'white',0.8,'vest')
         if side:
@@ -157,7 +160,10 @@ def draw(name,dr,fr):
         poly(im,[(1.5,8),(2,4),(5,1),(11,1),(14,4),(14.5,7.5),(15,8.2),(1,8.2)],'steel','helmet',shade=lambda x,y,nx,ny:-nx*0.4-ny*0.5+0.3)
         im.set(8,2,'gold',1.0,'lamp'); im.set(7,2,'gold',0.5,'lamp'); im.set(9,2,'gold',0.5,'lamp')
         if dr=='down':
-            for x in (2,13): im.set(x,10,'hair',0.1,'hairside')   # 耳の前に、ひと筋だけ後れ毛
+            # 顔の両わきに、長めの髪（ヘルメットの下から胸へ）。目にはまつ毛。
+            for sx in (0,1):
+                capsule(im,(2.4+sx*11.2,9),(2.8+sx*10.4,17),1.5,1.1,'hair','sidelock%d'%sx)
+            for ex in (5,9): im.fixed(ex,8,'lashC','eye'); im.fixed(ex+1,8,'lashC','eye')
         if dr=='up':
             poly(im,[(3,9),(13,9),(12,14),(4,14)],'hair','hairBack',shade=hs)
             capsule(im,(8,12),(8.5,22),1.8,1.4,'hair','braid')
@@ -176,7 +182,7 @@ def bob_shift(im):
 def render_sprite(name,dr,fr):
     im=draw(name,dr,fr); c=CHARS[name]
     R=mats(c)
-    R['eyeC']=[c['eye']]*4; R['eyeL']=[eye_light(c['eye'])]*4; R['mouth']=['#b0584c']*4; R['blush']=['#f4a898']*4; R['lens']=['#58b0e8']*4
+    R['eyeC']=[c['eye']]*4; R['lashC']=['#2a1410']*4; R['eyeL']=[eye_light(c['eye'])]*4; R['mouth']=['#b0584c']*4; R['blush']=['#f4a898']*4; R['lens']=['#58b0e8']*4
     EDGE={'hair':'#2a1410','skin':'#7a4a3a','top':'#1a1424','bottom':'#1a1424','boot':'#140c08','acc':'#3a1010','steel':'#2a3040','gold':'#6a4010','vest':'#2a1608','shirt':'#2a2e3a','dark':'#1a1420'}
     if name.startswith('素体'): EDGE.update({'hair':S(18),'skin':S(19),'top':S(20),'bottom':S(21),'boot':S(22),'acc':S(23)})
     out,colors=render(im,R,EDGE,[('head','hairMass'),('head','hairMassS'),('head','hairBack'),('head','helmet'),('head','band'),('body','scarf'),('legS','legS')],merge=not name.startswith('素体'))
