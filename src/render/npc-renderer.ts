@@ -6,6 +6,7 @@ import { shadeColor } from "../game/color-utils";
 import { frameAt, SPRITE_FEET_ROW } from "../game/sprite/overworld-sprite";
 import { wanderStateOf } from "../game/npc-wander";
 import { drawSprite } from "./sprite-renderer";
+import { drawObjectMarker, objectKindOf } from "./object-markers";
 
 /** NPCの足元のy（ワールド座標）。プレイヤーとの前後（奥のものを先に描く）を決めるのに使う。 */
 export function npcFeetY(npc: Npc, tileHeight: number): number {
@@ -43,7 +44,9 @@ export function renderNpcs(
     if (look === "person") {
       drawSprite(ctx, spriteSpecForNpc(npc), walk ? walk.dir : "down", moving ? frameAt(true, walk.animMs) : 0, x + (tileWidth - 16) / 2, feetY - SPRITE_FEET_ROW - 1);
     } else {
-      drawMarker(ctx, npc.color, look === "monster", x, feetY - tileHeight, tileWidth, tileHeight);
+      if (look === "monster" || !drawObjectMarker(ctx, objectKindOf(npc.id), npc.color, x, feetY - tileHeight, tileWidth, tileHeight)) {
+        drawMarker(ctx, npc.color, look === "monster", x, feetY - tileHeight, tileWidth, tileHeight);
+      }
     }
   }
 }

@@ -154,10 +154,10 @@ def draw(name,dr,fr):
             if dr=='down':
                 for x in (4,5,10,11): im.set(x,4,'lens',0.8,'goggle')
     elif style=='helmet':
-        poly(im,[(1.5,8),(2,4),(5,1),(11,1),(14,4),(14.5,8),(15,9),(1,9)],'steel','helmet',shade=lambda x,y,nx,ny:-nx*0.4-ny*0.5+0.3)
+        poly(im,[(1.5,8),(2,4),(5,1),(11,1),(14,4),(14.5,7.5),(15,8.2),(1,8.2)],'steel','helmet',shade=lambda x,y,nx,ny:-nx*0.4-ny*0.5+0.3)
         im.set(8,2,'gold',1.0,'lamp'); im.set(7,2,'gold',0.5,'lamp'); im.set(9,2,'gold',0.5,'lamp')
         if dr=='down':
-            for x in (3,4,11,12): im.set(x,10,'hair',0.1,'hairside'); im.set(x,11,'hair',0.1,'hairside')
+            for x in (2,13): im.set(x,10,'hair',0.1,'hairside')   # 耳の前に、ひと筋だけ後れ毛
         if dr=='up':
             poly(im,[(3,9),(13,9),(12,14),(4,14)],'hair','hairBack',shade=hs)
             capsule(im,(8,12),(8.5,22),1.8,1.4,'hair','braid')
