@@ -8,8 +8,8 @@ B b 下（ズボン・スカート）／K k Y 靴（地・影・折り返し）�
 色は field_sprite.py が、AIのデザイン画（または手で決めた色）から当てはめる。
 髪型: spiky（とがった短髪）・short（ふつうの短髪）・long（長い髪）・hood（フード）
 ひげ: beard=True（年配の人物）
-飾り: decos=('band','cape','backsword','sword','shield','helmet','staff')（はちまき・マント・背中の剣・手に剣・盾・兜・杖）。服には、V字の襟・袖口・金のバックル・靴の折り返しが最初からつく
-服: tunic（上着＋ズボン）・dress（ワンピース。下の色）・robe（ローブ。上着の色）
+飾り: decos=('band','cape','backsword','sword','shield','helmet','staff','scarf','goggles','twintails')（はちまき・マント・背中の剣・手に剣・盾・兜・杖・マフラー・ゴーグル・ふたつ結び）。服には、V字の襟・袖口・金のバックル・靴の折り返しが最初からつく
+服: tunic（上着＋ズボン）・coat（ひざまでの長い上着）・dress（ワンピース。下の色）・robe（ローブ。上着の色）
 コマ: 0=立ち、1=画面の左の足を出す、2=右の足を出す（歩きは 0→1→0→2 または 1→0→2→0）。
 """
 def M(half): return [r+r[::-1] for r in half]
@@ -131,7 +131,7 @@ def light_left(g):
             elif ch=='U': g[y][x]='T'
             elif ch in SHADE and x+1<16 and g[y][x+1]=='O': g[y][x]=SHADE[ch]
     return [''.join(r) for r in g]
-DECOS=('band','cape','backsword','sword','shield','helmet','staff')
+DECOS=('band','cape','backsword','sword','shield','helmet','staff','scarf','goggles','twintails')
 def _decorate(g,view,decos):
     """飾り（view: down / up / side＝右向き）。g は文字の2次元リスト。"""
     H=set('HhL')
@@ -174,6 +174,38 @@ def _decorate(g,view,decos):
         else:
             for (y,x,ch) in ((15,2,'O'),(16,1,'O'),(16,2,'G'),(16,3,'O'),(17,2,'g'),(18,2,'O')):
                 if g[y][x] in '.O': g[y][x]=ch
+    if 'twintails' in decos:   # 左右に結んだ髪
+        for y in range(11,20):
+            sides=(0,15) if view in ('down','up') else (0,)
+            for x0 in sides:
+                inner=1 if x0==0 else 14
+                g[y][x0]='O'; g[y][inner]='H' if x0==0 else 'h'
+        for x0 in ((1,14) if view in ('down','up') else (1,)):
+            g[20][x0]='O'; g[11][x0]='A'
+    if 'scarf' in decos:       # 首に巻いた布（目印の色）。端が後ろへなびく
+        if view in ('down','up'):
+            for x in range(4,12): g[18][x]='A'
+            for x in range(3,13):
+                if g[19][x] not in '.O': g[19][x]='a' if x>=10 else 'A'
+            if view=='down':
+                for y in (20,21): g[y][10]='a'
+                g[22][10]='O'
+        else:
+            for x in range(5,11): g[18][x]='A'
+            for (y,x) in ((19,4),(19,3),(20,3),(20,2),(21,2)): g[y][x]='a'
+            for (y,x) in ((18,3),(18,2),(19,2),(20,1),(21,1),(22,2)):
+                if g[y][x]=='.': g[y][x]='O'
+    if 'goggles' in decos:     # 額の上のゴーグル
+        if view=='down':
+            for (x,ch) in ((3,'G'),(4,'Q'),(5,'Q'),(6,'G'),(9,'G'),(10,'Q'),(11,'Q'),(12,'G')): g[9][x]=ch
+            for x in (4,5,10,11): g[10][x]='G'
+        elif view=='up':
+            for x in range(2,14):
+                if g[10][x] in 'HhL': g[10][x]='g'
+        else:
+            for (x,ch) in ((9,'G'),(10,'Q'),(11,'Q'),(12,'G')): g[9][x]=ch
+            for x in range(3,9):
+                if g[9][x] in 'HhL': g[9][x]='g'
     if 'helmet' in decos:  # 兜（金属。ふちに金の帯）
         for y in range(0,6):
             for x in range(16):
@@ -240,7 +272,20 @@ def frame(dr,f,style='spiky',outfit='tunic',beard=False,decos=()):
     if beard and dr!='up':
         g=overlay(g,BEARD['side' if side else 'down'])
     g=[list(r) for r in g]
-    if outfit=='tunic': g=_boot_cuffs(g)
+    if outfit in ('tunic','coat'): g=_boot_cuffs(g)
+    if outfit=='coat':   # 長い上着（すそがひざまで）
+        if not side:
+            for y in range(24,28):
+                for x in (3,4): g[y][x]='T' if x==3 else 't'
+                for x in (11,12): g[y][x]='t'
+                g[y][2]='O'; g[y][13]='O'
+            for x in range(2,14):
+                if g[28][x] in '.': pass
+            g[28][3]='O'; g[28][4]='O'; g[28][11]='O'; g[28][12]='O'
+        else:
+            for y in range(24,28):
+                g[y][4]='O'; g[y][5]='T'
+            g[28][5]='O'
     _decorate.frame=f
     g=_decorate(g,'side' if side else dr,decos)
     g=[''.join(r) for r in g]
@@ -250,5 +295,5 @@ def frame(dr,f,style='spiky',outfit='tunic',beard=False,decos=()):
     return g
 
 def all_frames(style='spiky', outfit='tunic', beard=False, decos=()):
-    """{"down0": [...32行], ...} の12コマ。decos: band（はちまき）・cape（マント）・backsword（背中の剣）・sword（手に剣）・shield（盾）・helmet（兜）・staff（杖）"""
+    """{"down0": [...32行], ...} の12コマ。decos: band（はちまき）・cape（マント）・backsword（背中の剣）・sword（手に剣）・shield（盾）・helmet（兜）・staff（杖）・scarf（マフラー）・goggles（ゴーグル）・twintails（ふたつ結び）"""
     return {f"{d}{f}": frame(d, f, style, outfit, beard, decos) for d in ('down', 'up', 'left', 'right') for f in (0, 1, 2)}
