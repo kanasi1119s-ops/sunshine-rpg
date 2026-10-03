@@ -75,6 +75,24 @@ function waterEdge(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: num
   }
 }
 
+/** 水面のきらめき: 細い光の筋が、ゆっくり現れては消える（時刻でゆらぐ）。 */
+function waterShimmer(ctx: CanvasRenderingContext2D, ox: number, oy: number, tx: number, ty: number, nowMs: number): void {
+  for (let n = 0; n < 2; n++) {
+    const h = hashCell(tx * 13 + n * 5, ty * 29 + n);
+    const phase = nowMs / 650 + (h % 628) / 100;
+    const a = Math.sin(phase);
+    if (a <= 0.2) {
+      continue;
+    }
+    const x = 1 + (h % 11) + (Math.floor(phase / 6.28) % 2);
+    const y = 2 + ((h >> 8) % 12);
+    ctx.fillStyle = `rgba(235,248,255,${(a * 0.5).toFixed(2)})`;
+    ctx.fillRect(ox + x, oy + y, 3, 1);
+    ctx.fillStyle = `rgba(235,248,255,${(a * 0.25).toFixed(2)})`;
+    ctx.fillRect(ox + x + 3, oy + y, 1, 1);
+  }
+}
+
 /** 木の下（南どなりの草地）に落ちる影。市松でなじませる。 */
 function treeShadow(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: number, tx: number, ty: number): void {
   for (let i = 0; i < s; i++) {
@@ -176,6 +194,7 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
   const startY = Math.max(0, Math.floor(camera.y / s));
   const endX = Math.min(map.data.width - 1, Math.floor((camera.x + camera.viewportWidth) / s));
   const endY = Math.min(map.data.height - 1, Math.floor((camera.y + camera.viewportHeight) / s));
+  const nowMs = typeof performance !== "undefined" ? performance.now() : 0;
   for (let ty = startY; ty <= endY; ty++) {
     for (let tx = startX; tx <= endX; tx++) {
       const kind = kindAt(map, tx, ty);
@@ -191,6 +210,9 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
           treeShadow(ctx, ox, oy, s, tx, ty);
         }
         continue;
+      }
+      if (kind === "water") {
+        waterShimmer(ctx, ox, oy, tx, ty, nowMs);
       }
       if (kind === "tree" && map.data.snowy) {
         snowOnTree(ctx, ox, oy, s, tx, ty, kindAt(map, tx, ty - 1) !== "tree");
