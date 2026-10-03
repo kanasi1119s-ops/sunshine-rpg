@@ -78,6 +78,93 @@ function waterEdge(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: num
   }
 }
 
+/** 大きな塊（森・山）の外ふちを、まっすぐにしない: 角を丸め、辺を波うたせて、となりの地面の色を食い込ませる。 */
+const MASS_ART = new Set(["worldforest", "snowforest", "mountain", "peaks"]);
+const NEIGHBOR_COLOR: Partial<Record<Kind, string>> = { grass: "#5a9040", path: "#a87c3c" };
+
+function artAt(map: TileMap, x: number, y: number): string | undefined {
+  if (x < 0 || y < 0 || x >= map.data.width || y >= map.data.height) return undefined;
+  const id = getTileId(map, 0, x, y);
+  return id ? map.data.tileArt?.[id] : undefined;
+}
+
+function erodeMass(ctx: CanvasRenderingContext2D, map: TileMap, ox: number, oy: number, s: number, tx: number, ty: number): void {
+  const art = artAt(map, tx, ty);
+  const isMass = (x: number, y: number): boolean => MASS_ART.has(artAt(map, x, y) ?? "");
+  const colorOf = (x: number, y: number): string | null => {
+    const k = kindAt(map, x, y);
+    if (k === "water" || k === "other") return null;
+    if (MASS_ART.has(artAt(map, x, y) ?? "")) return null;
+    const id = getTileId(map, 0, x, y);
+    return NEIGHBOR_COLOR[k] ?? (id ? map.data.tileColors?.[id] ?? null : null);
+  };
+  const forest = art === "worldforest" || art === "snowforest";
+  // 同じ模様のくり返しに見えないよう、塊の内側の明暗を、タイルごとに少しゆらす
+  const tone = hashCell(tx * 5 + 1, ty * 11 + 3) % 6;
+  if (tone === 0) {
+    ctx.fillStyle = "rgba(0,0,0,0.13)";
+    ctx.fillRect(ox, oy, s, s);
+  } else if (tone === 1 && !forest) {
+    ctx.fillStyle = "rgba(255,255,255,0.07)";
+    ctx.fillRect(ox, oy, s, s);
+  }
+  // 辺: 外側に隣が地面のとき、1〜2ドットの波を削る
+  const sides: Array<[number, number, (i: number, d: number) => [number, number]]> = [
+    [0, -1, (i, d) => [i, d]], [0, 1, (i, d) => [i, s - 1 - d]], [-1, 0, (i, d) => [d, i]], [1, 0, (i, d) => [s - 1 - d, i]],
+  ];
+  sides.forEach(([dx, dy, at], si) => {
+    const c = colorOf(tx + dx, ty + dy);
+    if (!c) return;
+    for (let i = 0; i < s; i++) {
+      const h = hashCell(tx * 31 + i + si * 7, ty * 17 + si);
+      const depth = h % 7 === 0 ? 3 : h % 4 === 0 ? 2 : h % 2 === 0 ? 1 : 0;
+      for (let d = 0; d < depth; d++) {
+        const [px, py] = at(i, d);
+        dot(ctx, ox + px, oy + py, c);
+      }
+      // 森は、削ったすぐ内側に暗い縁（樹冠の影）を引く
+      if (forest && depth > 0) {
+        const [px, py] = at(i, depth);
+        dot(ctx, ox + px, oy + py, "rgba(10,40,20,0.55)");
+      }
+    }
+  });
+  // 角: 両どなりが外なら、丸く削る（半径4〜6）
+  const corners: Array<[number, number, number, number]> = [[-1, -1, 0, 0], [1, -1, s - 1, 0], [-1, 1, 0, s - 1], [1, 1, s - 1, s - 1]];
+  corners.forEach(([dx, dy, cx, cy], ci) => {
+    if (isMass(tx + dx, ty) || isMass(tx, ty + dy)) return;
+    const c = colorOf(tx + dx, ty) ?? colorOf(tx, ty + dy);
+    if (!c) return;
+    const r = 6 + (hashCell(tx * 13 + ci, ty * 29) % 3);
+    for (let y = 0; y < r; y++) {
+      for (let x = 0; x < r; x++) {
+        const px = cx === 0 ? x : s - 1 - x;
+        const py = cy === 0 ? y : s - 1 - y;
+        if (x + y < r - 1 || (x + y === r - 1 && (x + y + tx) % 2 === 0)) dot(ctx, ox + px, oy + py, c);
+      }
+    }
+  });
+}
+
+/** 山・森のふもとの影（光は左上。塊の下と右の地面に落ちる）と、山すその小石。 */
+function massShadow(ctx: CanvasRenderingContext2D, map: TileMap, ox: number, oy: number, s: number, tx: number, ty: number): void {
+  const above = artAt(map, tx, ty - 1) ?? "";
+  const left = artAt(map, tx - 1, ty) ?? "";
+  if (MASS_ART.has(above)) {
+    const peak = above === "mountain" || above === "peaks";
+    for (let i = 0; i < s; i++) {
+      const depth = (peak ? 4 : 3) + (hashCell(tx * 19 + i, ty * 7) % 2);
+      for (let d = 0; d < depth; d++) dot(ctx, ox + i, oy + d, `rgba(14,30,20,${(0.3 - d * 0.06).toFixed(2)})`);
+    }
+    if (peak && hashCell(tx, ty) % 3 === 0) dot(ctx, ox + 3 + (hashCell(tx, ty + 1) % 10), oy + 6, "#7a7068", 2, 1);
+  }
+  if (MASS_ART.has(left)) {
+    for (let i = 0; i < s; i++) {
+      for (let d = 0; d < 2; d++) dot(ctx, ox + d, oy + i, `rgba(14,30,20,${(0.2 - d * 0.08).toFixed(2)})`);
+    }
+  }
+}
+
 /** 水面のきらめき: 細い光の筋が、ゆっくり現れては消える（時刻でゆらぐ）。 */
 function waterShimmer(ctx: CanvasRenderingContext2D, ox: number, oy: number, tx: number, ty: number, nowMs: number): void {
   for (let n = 0; n < 2; n++) {
@@ -231,6 +318,11 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
       }
       const ox = tx * s - camera.x;
       const oy = ty * s - camera.y;
+      if (MASS_ART.has(map.data.tileArt[getTileId(map, 0, tx, ty)] ?? "")) {
+        erodeMass(ctx, map, ox, oy, s, tx, ty);
+      } else if (kind === "grass" || kind === "path" || (kind === "land" && map.data.coastal)) {
+        massShadow(ctx, map, ox, oy, s, tx, ty);
+      }
       if (map.data.tileArt[getTileId(map, 0, tx, ty)] === "lava") {
         lavaGlow(ctx, ox, oy, tx, ty, nowMs);
         continue;
