@@ -23,6 +23,7 @@ import { faceNpc, opposite, updateWander } from "./game/npc-wander";
 import { PartyTrail } from "./game/party-trail";
 import { WORLD_ENTRY_FLAG } from "./game/world/world-map-world";
 import { setLitBeacons } from "./render/object-markers";
+import { renderWorldOverview } from "./render/world-overview";
 import { renderFollowers } from "./render/follower-renderer";
 import { spriteSpecFromPortrait } from "./game/sprite/character-specs";
 import { PORTRAITS } from "./game/portrait/portraits";
@@ -587,6 +588,18 @@ window.addEventListener("keydown", (event) => {
     audio.setMuted(!audio.isMuted());
   }
 });
+/** 世界地図の全体図（Vキー）。世界地図にいて、会話・戦闘・メニューなどを開いていないときだけ。 */
+let worldOverviewOpen = false;
+window.addEventListener("keydown", (event) => {
+  if (worldOverviewOpen && (event.key === "v" || event.key === "x" || event.key === "Escape" || event.key === "Enter" || event.key === " " || event.key === "z")) {
+    worldOverviewOpen = false;
+    event.preventDefault();
+    return;
+  }
+  if (event.key === "v" && currentMapId === "world-map" && !title.open && !battle && !dialogue.isActive() && !pauseMenu.open && !jobMenu.open && !debugMenu.open) {
+    worldOverviewOpen = true;
+  }
+}, true);
 
 let lastDialogueDirection: Direction | null = null;
 let lastBattleDirection: Direction | null = null;
@@ -1298,6 +1311,9 @@ const loop = createGameLoop({
     }
     lastDialogueDirection = null;
 
+    if (worldOverviewOpen) {
+      return;
+    }
     player = updatePlayer(player, input.getDirection(), dtMs, map);
     partyTrail.update(player, dtMs, followerSpecs().length);
     updateWander(
@@ -1402,6 +1418,18 @@ const loop = createGameLoop({
     }
 
     setLitBeacons(new Set([1, 2, 3, 4, 5, 6, 7, 8].filter((n) => flags[`beacon${n}_lit`])));
+    if (worldOverviewOpen) {
+      renderWorldOverview(
+        ctx,
+        map,
+        { x: Math.floor((player.x + player.width / 2) / map.data.tileWidth), y: Math.floor((player.y + player.height / 2) / map.data.tileHeight) },
+        new Set([1, 2, 3, 4, 5, 6, 7, 8].filter((n) => flags[`beacon${n}_lit`])),
+        LOGICAL_WIDTH,
+        LOGICAL_HEIGHT,
+        performance.now(),
+      );
+      return;
+    }
     renderTileMap(ctx, map, renderCamera);
     // 奥にいる人を先に、手前にいる人をあとに描く（足元の位置の順）。
     const playerFeetY = player.y + player.height;
