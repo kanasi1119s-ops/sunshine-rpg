@@ -2,7 +2,7 @@ import sys, json, math
 sys.path.insert(0,".")
 from chargen import *
 W,H=16,32
-def ramp3(d,m,l): return [d,m,l,l]
+def ramp3(d,m,l): return [d,m,m,m]   # つや消し: 影と地の2段だけ（ハイライトなし）
 # キャラごとの設定: 色・髪型・小物
 CHARS={
  "ユーリ":dict(hair=('#5a2e18','#8a4a24','#c0782c'),skin=('#d49a76','#f0c49c','#ffdcbc'),top=('#1c5058','#2a7c88','#58bcc0'),bottom=('#4a2c1a','#6a4228','#8a5c38'),boot=('#2a1a12','#4a2c1a','#6a4228'),acc=('#a8480c','#e07a20','#ffb048'),eye='#1c7a50',style='spiky',scarf=True,band=True),
