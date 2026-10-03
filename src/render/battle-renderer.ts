@@ -9,7 +9,7 @@ import { drawWindow } from "./ui-frame";
 import { PORTRAITS } from "../game/portrait/portraits";
 import { spriteSpecFromPortrait } from "../game/sprite/character-specs";
 import { drawSprite } from "./sprite-renderer";
-import { frameAt } from "../game/sprite/overworld-sprite";
+import { frameAt, SPRITE_FEET_ROW } from "../game/sprite/overworld-sprite";
 
 let currentBiome: Biome = "grass";
 /** これから始まる戦闘の背景（場所）を決める。 */
@@ -199,26 +199,39 @@ function renderBattleBody(
     ctx.fillRect(0, 0, screenWidth, screenHeight - 56);
   }
 
-  // 味方は、味方の側（左）に縦に並べる。歩く絵（右向き）と、名前・HP・MP。6人でもコマンド欄に重ならない間隔にする。
+  // 味方は、味方の側（右）の地面の上に、2列にずらして立つ。名前・HP・MPは上に小さく並べる。
   const count = battleState.party.length;
-  const rowH = Math.min(30, Math.floor((screenHeight - 56 - 6) / Math.max(1, count)));
   const nowMs = typeof performance !== "undefined" ? performance.now() : 0;
+  const SPR = 2; // 歩く絵（16×32）を2倍で描く
+  const groundY = screenHeight - 56 - 4; // 手前の列の足元
+  const textX = ENEMIES_ON_RIGHT ? 8 : screenWidth - 128;
   battleState.party.forEach((member, index) => {
-    const y = 4 + index * rowH;
-    const spriteX = ENEMIES_ON_RIGHT ? 6 : screenWidth - 22;
-    const textX = ENEMIES_ON_RIGHT ? 26 : screenWidth - 22 - 118;
     const isActing = uiState.kind === "command" && uiState.actorId === member.id;
-    const spec = partySpecFor(member.name.split(/[\s　]/)[0]);
-    if (spec && member.hp > 0) {
-      // 順番が回ってきた人は、一歩前でゆれる
-      const step = isActing ? frameAt(true, nowMs) : 0;
-      drawSprite(ctx, spec, ENEMIES_ON_RIGHT ? "right" : "left", step, spriteX + (isActing ? 3 : 0), y - 1);
-    }
+    // 状態表示（1人1行）
+    const ty = 2 + index * 12;
     ctx.fillStyle = isActing ? "#f2c14e" : "#f0f0f0";
-    shadowText(ctx, `${member.name} HP${member.hp}/${member.maxHp}`, textX, y);
-    shadowText(ctx, `MP${member.mp}`, textX + 86, y + LINE_HEIGHT);
-    drawHpBar(ctx, member, textX, y + LINE_HEIGHT, 80);
+    shadowText(ctx, `${member.name.split(/[\s　]/)[0]} ${member.hp}/${member.maxHp} MP${member.mp}`, textX, ty);
+    drawHpBar(ctx, member, textX, ty + 9, 118);
+    // 地面に立つ姿
+    const spec = partySpecFor(member.name.split(/[\s　]/)[0]);
+    if (!spec || member.hp <= 0) {
+      return;
+    }
+    const row = index % 2;
+    const col = Math.floor(index / 2);
+    const feetY = groundY - row * 20;
+    const leftX = ENEMIES_ON_RIGHT ? 20 + col * 56 + row * 22 : screenWidth - 52 - col * 56 - row * 22;
+    const x = leftX + (isActing ? (ENEMIES_ON_RIGHT ? 6 : -6) : 0);
+    const step = isActing ? frameAt(true, nowMs) : 0;
+    ctx.fillStyle = "rgba(0,0,0,0.28)";
+    ctx.fillRect(x + 3, feetY - 2, 26, 4); // 足元の影
+    ctx.save();
+    ctx.translate(x, feetY - SPR * (SPRITE_FEET_ROW + 1));
+    ctx.scale(SPR, SPR);
+    drawSprite(ctx, spec, ENEMIES_ON_RIGHT ? "right" : "left", step, 0, 0);
+    ctx.restore();
   });
+  void count;
 
   const boxY = screenHeight - 56;
   drawWindow(ctx, 2, boxY, screenWidth - 4, 54);
