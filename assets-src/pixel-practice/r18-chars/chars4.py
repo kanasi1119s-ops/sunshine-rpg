@@ -89,7 +89,7 @@ def orca():
     poly(im,[(25,60),(47,60),(50,76),(22,76)],'pants','skirt',shade=lambda x,y,nx,ny:(nx*LIGHT[0])*-0.6+0.15)
     poly(im,[(24,59),(48,59),(48,62.5),(24,62.5)],'leather','belt',shade=lambda x,y,nx,ny:(ny*-0.5+0.3))
     ellipse(im,36,60.7,2.6,2.2,'steel','buckle')
-    capsule(im,(36,32),(36,41),3.2,3.8,'skin','neck')
+    capsule(im,(36,32),(36,41),2.5,3.1,'skin','neck')
     head(im,cx=36,cy=24,rx=10.8,ry=11.2)
     # ヘルメット（小さめ）とランプ、ひさし
     poly(im,[(24,19),(25,10),(30,3.5),(36,2),(42,3.5),(47,10),(48,19),(45,16.5),(27,16.5)],'helmet','helmet',shade=lambda x,y,nx,ny:(nx*LIGHT[0]+ny*LIGHT[1])*-0.7+0.35)
