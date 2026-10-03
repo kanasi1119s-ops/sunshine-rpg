@@ -37,4 +37,11 @@ export const PIECES = [
   // 砂漠の飾り（r17-polish/desert.py で一から）
   piece("P14-ヤシ", "r17-polish", "palm.txt", "pal-palm.json"),
   piece("P15-サボテン", "r17-polish", "cactus.txt", "pal-cactus.json"),
+  // 町の小さな飾り（r17-polish/townprops.py で一から）
+  piece("P16-樽", "r17-polish", "barrel.txt", "pal-barrel.json"),
+  piece("P17-街灯", "r17-polish", "lamp.txt", "pal-lamp.json"),
+  piece("P18-井戸", "r17-polish", "well.txt", "pal-well.json"),
+  piece("P19-道しるべ", "r17-polish", "signpost.txt", "pal-signpost.json"),
+  piece("P20-木箱の山", "r17-polish", "crates.txt", "pal-crates.json"),
+  piece("P21-花壇", "r17-polish", "flowerbed.txt", "pal-flowerbed.json"),
 ];
