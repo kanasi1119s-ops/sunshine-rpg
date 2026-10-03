@@ -1,4 +1,4 @@
-import { WORLD_AIRSHIP_START, WORLD_BEACONS, WORLD_ISLETS, WORLD_SHIP_DOCK, WORLD_TOWER, WORLD_TOWNS } from "../map/world/world-map.generated";
+import { WORLD_AIRSHIP_START, WORLD_BEACONS, WORLD_ISLETS, WORLD_SHIP_DOCK, WORLD_TOWER, WORLD_TOWNS, WORLD_VILLAGES } from "../map/world/world-map.generated";
 import { DEEP_ENTRY } from "../map/chapter10/deep-maps";
 import { isletRequirementHint } from "./islets-world";
 import { GODS } from "../battle/chapter11-enemies";
@@ -301,12 +301,16 @@ export function connectWorldMap(maps: Record<string, TileMapData>, npcsByMap: Re
   if (!world) {
     return;
   }
-  for (const [townId, pos] of Object.entries(WORLD_TOWNS)) {
+  const places: Array<[string, { x: number; y: number }]> = [...Object.entries(WORLD_TOWNS), ...WORLD_VILLAGES.map((v) => [v.id, v] as [string, { x: number; y: number }])];
+  for (const [townId, pos] of places) {
     const data = maps[townId];
     if (!data) {
       continue;
     }
-    const gate = findSouthGate(data, npcsByMap[townId] ?? []);
+    // 村の仮の出入り口（行き先 0,0）は、歩ける範囲を調べる出発点にだけ使い、門ができたら取り除く
+    const start = data.exits?.[0];
+    data.exits = (data.exits ?? []).filter((e) => !(e.targetMapId === "world-map" && e.targetTileX === 0 && e.targetTileY === 0));
+    const gate = findSouthGate(data, npcsByMap[townId] ?? [], start);
     if (!gate) {
       continue;
     }
@@ -326,12 +330,12 @@ export function connectWorldMap(maps: Record<string, TileMapData>, npcsByMap: Re
   world.exits = [...(world.exits ?? []), { tileX: WORLD_TOWER.x, tileY: WORLD_TOWER.y, targetMapId: "tower-1", targetTileX: 10, targetTileY: 11 }];
 }
 
-function findSouthGate(data: TileMapData, npcs: Npc[]): { x: number; y: number } | null {
+function findSouthGate(data: TileMapData, npcs: Npc[], first?: { tileX: number; tileY: number }): { x: number; y: number } | null {
   const { width: w, height: h } = data;
   const collision = data.collision ?? [];
   const exitAt = (x: number, yy: number): boolean => (data.exits ?? []).some((e) => e.tileX === x && e.tileY === yy);
   // 出入り口（最初のもの）から歩いて行ける場所だけを候補にする
-  const start = data.exits?.[0];
+  const start = first ?? data.exits?.[0];
   const reachable = new Set<number>();
   if (start) {
     const stack: Array<[number, number]> = [[start.tileX, start.tileY]];

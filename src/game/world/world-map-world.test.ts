@@ -29,9 +29,9 @@ describe("世界地図の入場条件（章は順番に進む）", () => {
     expect(worldEntryProblems("tower-1", { vortex_route_open: true })).toEqual([]);
   });
 
-  it("世界地図の出入り口は、町10か所（虚灯宮を含む）・小島4つ・芯環塔1つ", () => {
+  it("世界地図の出入り口は、町10か所（虚灯宮を含む）・村8つ・小島4つ・芯環塔1つ", () => {
     const targets = (WORLD_MAPS["world-map"].exits ?? []).map((e) => e.targetMapId);
-    expect(targets.length).toBe(15);
+    expect(targets.length).toBe(23);
     expect(targets).toContain("tower-1");
     expect(targets.filter((t) => t.startsWith("islet-")).length).toBe(4);
   });

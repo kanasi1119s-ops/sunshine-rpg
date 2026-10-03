@@ -213,6 +213,44 @@ for y in range(H):
     for x in range(W):
         if T[y][x] in "PFHD" and abs(n3[y, x] - 0.60) < 0.012 and n1[y, x] > 0.46 and far_from_towns(x, y, 10) and not near_road(x, y):
             T[y][x] = "X"
+
+# ---- 小さな町・村（8か所）: 各大陸の、広い平地に。いちばん近い町へ道をつなぐ ----
+VILLAGE_DEFS = [  # (マップID, 名前, 大陸, 範囲(x0,y0,x1,y1), 地形, アイコン)
+    ("village-namioto", "波音の浜", "A", (12, 85, 40, 135), "P", "port"),
+    ("village-kazami", "風見の丘", "A", (36, 70, 62, 92), "P", "village"),
+    ("village-tomoshimori", "灯守りの宿場", "A", (55, 100, 88, 125), "P", "village"),
+    ("village-samori", "砂守のいずみ", "A", (60, 128, 90, 150), "D", "tents"),
+    ("village-kirima", "霧間の集落", "B", (125, 25, 165, 60), "P", "village"),
+    ("village-yukimachi", "雪待ちの小屋町", "B", (168, 14, 215, 34), "S", "snowtown"),
+    ("village-minori", "実り野", "D", (140, 120, 190, 175), "P", "village"),
+    ("village-arano", "荒野の市", "D", (190, 118, 228, 175), "P", "tents"),
+]
+VILLAGES = []
+vr = np.random.default_rng(31415)
+main_pts = [(v[0], v[1]) for v in TOWNS.values()]
+def flat_ok(x, y, ground):
+    for dy in range(-2, 3):
+        for dx in range(-2, 3):
+            if not (0 <= x+dx < W and 0 <= y+dy < H) or T[y+dy][x+dx] not in ground + "R": return False
+    return True
+for vid, nm, cont, (x0, y0, x1, y1), ground, icon in VILLAGE_DEFS:
+    spot = None
+    for _ in range(6000):
+        x = int(vr.integers(x0, x1)); y = int(vr.integers(y0, y1))
+        if not flat_ok(x, y, "PFHD" if ground != "S" else "SPT"): continue
+        if any(abs(x-a) + abs(y-b) < 20 for a, b in main_pts + [(v[1], v[2]) for v in VILLAGES]): continue
+        spot = (x, y); break
+    assert spot, f"{nm} を置けない"
+    x, y = spot
+    for yy in range(y-2, y+3):
+        for xx in range(x-2, x+3):
+            if T[yy][xx] in "FHLMNX": T[yy][xx] = "D" if ground == "D" else "S" if ground == "S" else "P"
+    # いちばん近い町（同じ大陸）へ道
+    same = [k for k, c in CONTINENT.items() if c == cont]
+    near = min(same, key=lambda k: abs(TOWNS[k][0]-x) + abs(TOWNS[k][1]-y))
+    carve_road((x, y+1), (TOWNS[near][0], TOWNS[near][1]))
+    VILLAGES.append((vid, x, y, nm, cont, icon))
+
 # 小島の入口（島の中心）、塔の入口（塔の島の中心）は、道のタイルにする
 for _id, cx, cy, nm in ISLETS:
     for dy in (0, 1):
@@ -280,7 +318,7 @@ assert len(BEACONS) == 8
 LANDMARKS = []
 def near_any(x, y, pts, d): return any(abs(x-a) + abs(y-b) < d for a, b in pts)
 town_pts = [(v[0], v[1]) for v in TOWNS.values()]
-taken = list(town_pts) + BEACONS + [(cx, cy) for _i, cx, cy, _n in ISLETS] + [TOWER]
+taken = list(town_pts) + [(v[1], v[2]) for v in VILLAGES] + BEACONS + [(cx, cy) for _i, cx, cy, _n in ISLETS] + [TOWER]
 rr = np.random.default_rng(777)
 spec = [("ruin", "PDWH", 7), ("shrine", "PH", 6), ("cave", "PFDH", 6), ("stones", "H", 6), ("bigtree", "F", 7)]
 for kind, ground, count in spec:
@@ -331,6 +369,7 @@ ts = ["// 自動生成: tools/world-map/gen_world.py（手で編集しない）�
       *[f'  "{k}": {{ x: {v[0]}, y: {v[1]}, name: "{v[2]}", continent: "{CONTINENT[k]}" }},' for k, v in TOWNS.items()], "};",
       "/** 環灯台（8神の欠片をささげる灯台）。番号は神の番号（1=女神…8=冥神）。 */",
       "export const WORLD_BEACONS: Array<{ x: number; y: number }> = [", *[f"  {{ x: {x}, y: {y} }}," for x, y in BEACONS], "];",
+      "export const WORLD_VILLAGES: Array<{ id: string; x: number; y: number; name: string; continent: string; icon: string }> = [", *[f'  {{ id: "{i}", x: {x}, y: {y}, name: "{n}", continent: "{c}", icon: "{ic}" }},' for i, x, y, n, c, ic in VILLAGES], "];",
       "/** 飾りの名所（入れない目印）。 */",
       "export const WORLD_LANDMARKS: Array<{ kind: string; x: number; y: number }> = [", *[f'  {{ kind: "{k}", x: {x}, y: {y} }},' for k, x, y in LANDMARKS], "];",
       "/** 隠しダンジョンの小島（入口は島の中心のマス）。 */",
@@ -352,6 +391,7 @@ for y in range(H):
             for dx in range(4): im.putpixel((x*4+dx, y*4+dy), col[T[y][x]])
 d = ImageDraw.Draw(im)
 for mid, (x, y, nm) in TOWNS.items(): d.rectangle((x*4-3, y*4-3, x*4+6, y*4+6), outline=(255, 0, 0), width=2)
+for _v in VILLAGES: d.rectangle((_v[1]*4-2, _v[2]*4-2, _v[1]*4+5, _v[2]*4+5), outline=(255, 160, 0), width=1)
 for i, (x, y) in enumerate(BEACONS): d.ellipse((x*4, y*4, x*4+5, y*4+5), fill=(255, 220, 0))
 for _id, cx, cy, nm in ISLETS: d.rectangle((cx*4-3, cy*4-3, cx*4+6, cy*4+6), outline=(255, 0, 255), width=2)
 d.rectangle((TOWER[0]*4-3, TOWER[1]*4-3, TOWER[0]*4+6, TOWER[1]*4+6), outline=(255, 255, 0), width=2)

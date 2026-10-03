@@ -1,5 +1,5 @@
 import type { TileMapData } from "../types";
-import { WORLD_HEIGHT, WORLD_ISLETS, WORLD_LANDMARKS, WORLD_ROWS, WORLD_TOWER, WORLD_TOWNS, WORLD_WIDTH } from "./world-map.generated";
+import { WORLD_HEIGHT, WORLD_ISLETS, WORLD_LANDMARKS, WORLD_VILLAGES, WORLD_ROWS, WORLD_TOWER, WORLD_TOWNS, WORLD_WIDTH } from "./world-map.generated";
 import type { MapProp } from "../types";
 
 /** 町のアイコンの絵（町ごと）。 */
@@ -57,6 +57,7 @@ export function createWorldMapData(): TileMapData {
     coastal: true,
     props: [
       ...Object.entries(WORLD_TOWNS).map(([id, pos]) => ({ kind: TOWN_ICON[id], tileX: pos.x, tileY: pos.y })),
+      ...WORLD_VILLAGES.map((v) => ({ kind: `icon-${v.icon}` as MapProp["kind"], tileX: v.x, tileY: v.y })),
       ...WORLD_ISLETS.map((islet, i) => ({ kind: (["icon-islet-ruin", "icon-islet-cave", "icon-islet-shrine", "icon-islet-fort"] as const)[i], tileX: islet.x, tileY: islet.y })),
       ...WORLD_LANDMARKS.map((m) => ({ kind: `icon-${m.kind}` as MapProp["kind"], tileX: m.x, tileY: m.y })),
       { kind: "icon-spire" as const, tileX: WORLD_TOWER.x, tileY: WORLD_TOWER.y },

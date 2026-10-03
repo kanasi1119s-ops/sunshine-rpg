@@ -19,6 +19,7 @@ import { applyMapProps } from "../map/map-props";
 import { createWorldMapData } from "../map/world/world-map";
 import { connectWorldMap, SHIP_PART_NPCS, WORLD_MAP_NPCS } from "./world-map-world";
 import { ISLET_MAPS, ISLET_NPCS } from "./islets-world";
+import { VILLAGE_MAPS, VILLAGE_NPCS } from "./villages-world";
 import { applyAutoDecor } from "../map/auto-decor";
 import type { TileMapData } from "../map/types";
 import type { Npc } from "../npc";
@@ -44,6 +45,7 @@ export const WORLD_MAPS: Record<string, TileMapData> = {
   ...CHAPTER12_MAPS,
   "world-map": createWorldMapData(),
   ...ISLET_MAPS,
+  ...VILLAGE_MAPS,
 };
 
 applyMapTileArt(WORLD_MAPS);
@@ -66,6 +68,7 @@ const NPC_SOURCES: Record<string, Npc[]>[] = [
   WORLD_MAP_NPCS,
   SHIP_PART_NPCS,
   ISLET_NPCS,
+  VILLAGE_NPCS,
   SIDE_STORY_NPCS,
   SHOP_NPCS,
   AMBIENT_NPCS,
