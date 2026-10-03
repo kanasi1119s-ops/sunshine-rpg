@@ -14,6 +14,7 @@ B b 下（ズボン・スカート）／K k Y 靴（地・影・折り返し）�
 歩きのコマでは、出した足と反対の腕が前に振れ（手が1ドット上がる）、もう一方の腕は後ろに振れる（手が1ドット下がる）。
 物を持った手（剣・杖・ランタン・つるはし・盾）は振らない。髪の先（長い髪・ふたつ結び・ポニーテール・横向きの後ろ髪）と、
 はちまきの端・マフラーの端・マントのすそも、歩きのコマで1ドット揺れる（人間の指示 2026-10-03）。
+男性の人物は髪を揺らさない（hair_sway=False、field_sprite.py の --still-hair。人間の指示 2026-10-04）。布の揺れと腕の振りはそのまま。
 """
 def M(half): return [r+r[::-1] for r in half]
 E8="........"
@@ -134,11 +135,11 @@ def light_left(g):
             elif ch=='U': g[y][x]='T'
             elif ch in SHADE and x+1<16 and g[y][x+1]=='O': g[y][x]=SHADE[ch]
     return [''.join(r) for r in g]
-DECOS=('lantern','bow','band','cape','backsword','sword','shield','helmet','staff','scarf','goggles','twintails')
+DECOS=('backpick','lantern','bow','band','cape','backsword','sword','shield','helmet','staff','scarf','goggles','twintails')
 def _decorate(g,view,decos):
     """飾り（view: down / up / side＝右向き）。g は文字の2次元リスト。"""
     H=set('HhL')
-    f=getattr(_decorate,'frame',0); armdy=getattr(_decorate,'armdy',{2:0,13:0})
+    f=getattr(_decorate,'frame',0); hf=getattr(_decorate,'hairf',f); armdy=getattr(_decorate,'armdy',{2:0,13:0})
     if 'band' in decos:   # はちまき（額の高さの髪を目印の色に）
         y=11 if view!='up' else 10
         for x in range(16):
@@ -186,8 +187,8 @@ def _decorate(g,view,decos):
         sides=(0,15) if view in ('down','up') else (0,)
         for x0 in sides:
             inner=1 if x0==0 else 14
-            d=0 if f==0 else ((-1 if x0==0 else 1) if f==1 else (1 if x0==0 else -1))
-            if view=='side': d=(-1 if f==1 else 1) if f else 0
+            d=0 if hf==0 else ((-1 if x0==0 else 1) if hf==1 else (1 if x0==0 else -1))
+            if view=='side': d=(-1 if hf==1 else 1) if hf else 0
             for y in range(11,20+d):
                 g[y][x0]='O'; g[y][inner]='H' if x0==0 else 'h'
             g[20+d][inner]='O'; g[11][inner]='A'
@@ -220,17 +221,17 @@ def _decorate(g,view,decos):
     if 'ponytail' in decos:    # 後ろで結んだ髪
         if view=='up':   # 歩きのコマで、房の先（下の半分）が左右に揺れる
             for y in range(11,20):
-                d=0 if (f==0 or y<15) else (-1 if f==1 else 1)
+                d=0 if (hf==0 or y<15) else (-1 if hf==1 else 1)
                 for x in (7,8): g[y][x+d]='H' if x==7 else 'h'
                 g[y][6+d]='O'; g[y][9+d]='O'
-            d=0 if f==0 else (-1 if f==1 else 1)
+            d=0 if hf==0 else (-1 if hf==1 else 1)
             g[20][7+d]='O'; g[20][8+d]='O'; g[11][7]='A'; g[11][8]='A'
         elif view=='side':   # 後ろへなびく（コマ1は大きく、コマ2は小さく）
             for y in range(9,17):
-                d=-1 if (f==1 and y>=12) or (f==2 and y>=14) else 0
+                d=-1 if (hf==1 and y>=12) or (hf==2 and y>=14) else 0
                 g[y][1+d]='O'; g[y][2+d]='H'
                 if d: g[y][2]='O' if g[y][3] in 'SsO' else g[y][2]
-            d=-1 if f else 0
+            d=-1 if hf else 0
             g[17][2+d]='O'; g[9][2]='A'
         else:
             for x in (7,8): g[3][x]='H'
@@ -272,7 +273,12 @@ def _decorate(g,view,decos):
         for k,row in enumerate(pat):
             for j,ch in enumerate(row):
                 if ch!=' ': px2(y0+k,x0+j,ch)
-    if 'bow' in decos:         # 背中の弓（後ろ向きと横向きで見える）
+    if 'bow' in decos:         # 背中の弓（後ろ向きと横向きで見える。正面では肩の後ろと腰の横に先がのぞく）
+        if view=='down':
+            for (y,x) in ((14,14),(15,14),(16,15),(17,15),(18,15),(24,15),(25,15),(26,14),(27,14)):
+                if g[y][x]=='.': g[y][x]='D'
+            for (y,x) in ((13,14),(28,14)):
+                if g[y][x]=='.': g[y][x]='O'
         if view=='up':
             for k in range(10): px2(13+k,3+(1 if 2<k<7 else 0),'D')
             for y in range(13,23): px2(y,6,'N')
@@ -300,12 +306,29 @@ def _decorate(g,view,decos):
         for k,row in enumerate(pat):
             for x,ch in enumerate(row):
                 if ch not in ' .' and 0<=y0+k<32 and 0<=x0+x<16: g[y0+k][x0+x]=ch
-    if 'staff' in decos:   # 杖（木の柄と、先に光る玉。玉は中心が白く光る）
+    if 'staff' in decos:   # 杖（木の柄と、先に光る玉。玉は中心が白く光る）。歩くと、持った手といっしょに上下する
         col={'down':1,'up':14}.get(view,12)
-        for y in range(13,29): g[y][col]='D' if y%3 else 'd'
-        g[29][col]='O'
+        sd={'down':armdy[2],'up':armdy[13]}.get(view,{0:0,1:-1,2:1}[f])
+        for y in range(13+sd,29+sd): g[y][col]='D' if y%3 else 'd'
+        px2(29+sd,col,'O')
+        if sd<0: px2(29,col,'.')
         for (dy,dx,ch) in ((-5,0,'O'),(-4,-1,'O'),(-4,0,'Q'),(-4,1,'O'),(-3,-1,'Q'),(-3,0,'W'),(-3,1,'Q'),(-2,-1,'O'),(-2,0,'Q'),(-2,1,'O'),(-1,0,'O')):
-            px2(13+dy,col+dx,ch)
+            px2(13+sd+dy,col+dx,ch)
+    if 'backpick' in decos:    # 背中に背負ったつるはし（柄は右肩から左の腰へ斜め。頭は右肩の上）
+        def behind(y,x,ch):
+            if 0<=y<32 and 0<=x<16 and g[y][x]=='.': g[y][x]=ch
+        if view=='up':
+            for k in range(12):
+                y,x=13+k,12-k
+                if 0<=x<16: g[y][x]='D' if k%3 else 'd'
+            for (y,x) in ((11,11),(11,12),(11,13),(11,14),(12,14),(12,15),(10,11),(12,10)): px2(y,x,'M' if (x+y)%3 else 'm')
+        elif view=='down':
+            for (y,x) in ((13,14),(13,15),(14,15),(12,13),(12,14),(14,13),(15,13)): behind(y,x,'M' if (x+y)%3 else 'm')
+            for (y,x) in ((25,1),(26,1)): behind(y,x,'D')
+        else:   # 右向き: 背中（左）に柄、頭は肩の上
+            for y in range(19,26): behind(y,2,'D' if y%3 else 'd')          # 柄（背中の後ろ）
+            for (y,x,ch) in ((17,0,'O'),(17,1,'M'),(17,2,'M'),(17,3,'M'),(18,0,'m'),(18,1,'m'),(18,2,'M'),(16,1,'O'),(16,2,'O'),(16,3,'O'),(19,0,'O'),(19,1,'O')):
+                behind(y,x,ch)                                               # 頭（背中から後ろへ突き出る）
     if 'pickaxe' in decos:     # 肩にかついだつるはし
         col={'down':1,'up':14}.get(view,3)
         for y in range(6,24): g[y][col]='D' if y%3 else 'd'
@@ -393,7 +416,7 @@ def _hair_sway(ov,view,style,f):
     elif style in ('spiky','short'): ov=_shift(ov,14 if f==1 else 15,16,-1,0,6)
     elif style=='hood': ov=_shift(ov,16 if f==1 else 17,19,-1,0,6)
     return ov
-HELD=('sword','staff','lantern','pickaxe')
+HELD=('sword','lantern','pickaxe')   # 杖は腕といっしょに振る（人間の指示 2026-10-04）
 def _arm_swing(g,view,f,decos):
     """正面・後ろの腕振り。手の位置のずれ（{2:dy,13:dy}）を返す。"""
     dys={2:0,13:0}
@@ -415,11 +438,12 @@ def _arm_swing(g,view,f,decos):
             if g[25][col] in '.BbTt': g[25][col]='O'
             dys[col]=1
     return dys
-def frame(dr,f,style='spiky',outfit='tunic',beard=False,decos=()):
-    if dr=='down': g=FRONT_TOP+LEGS_F[f]; g=overlay(g,_hair_sway(HAIR[style]['down'],'down',style,f))
-    elif dr=='up': g=BACK_TOP+LEGS_F[f]; g=overlay(g,_hair_sway(HAIR[style]['up'],'up',style,f))
+def frame(dr,f,style='spiky',outfit='tunic',beard=False,decos=(),hair_sway=True):
+    hf=f if hair_sway else 0   # 髪を揺らさない人物（男性、人間の指示 2026-10-04）
+    if dr=='down': g=FRONT_TOP+LEGS_F[f]; g=overlay(g,_hair_sway(HAIR[style]['down'],'down',style,hf))
+    elif dr=='up': g=BACK_TOP+LEGS_F[f]; g=overlay(g,_hair_sway(HAIR[style]['up'],'up',style,hf))
     else:
-        g=SIDE_TOP+LEGS_S[f]; g=overlay(g,_hair_sway(HAIR[style]['side'],'side',style,f))
+        g=SIDE_TOP+LEGS_S[f]; g=overlay(g,_hair_sway(HAIR[style]['side'],'side',style,hf))
         g=[list(r) for r in g]
         for (y,x,ch) in SIDE_ARM[f]: g[y][x]=ch
         g=[''.join(r) for r in g]
@@ -447,7 +471,7 @@ def frame(dr,f,style='spiky',outfit='tunic',beard=False,decos=()):
             g[28][5]='O'
     g=_details(g,'side' if side else dr)
     _decorate.armdy=_arm_swing(g,'side' if side else dr,f,decos)
-    _decorate.frame=f
+    _decorate.frame=f; _decorate.hairf=hf
     g=_decorate(g,'side' if side else dr,decos)
     g=[''.join(r) for r in g]
     if dr=='left': g=[r[::-1] for r in g]
@@ -455,6 +479,6 @@ def frame(dr,f,style='spiky',outfit='tunic',beard=False,decos=()):
     assert len(g)==32 and all(len(r)==16 for r in g),(dr,f,[len(r) for r in g])
     return g
 
-def all_frames(style='spiky', outfit='tunic', beard=False, decos=()):
+def all_frames(style='spiky', outfit='tunic', beard=False, decos=(), hair_sway=True):
     """{"down0": [...32行], ...} の12コマ。decos: band（はちまき）・cape（マント）・backsword（背中の剣）・sword（手に剣）・shield（盾）・helmet（兜）・staff（杖）・scarf（マフラー）・goggles（ゴーグル）・twintails（ふたつ結び）・ponytail（ポニーテール）・circlet（額の飾り）・bracelet（光る腕輪）・pickaxe（つるはし）"""
-    return {f"{d}{f}": frame(d, f, style, outfit, beard, decos) for d in ('down', 'up', 'left', 'right') for f in (0, 1, 2)}
+    return {f"{d}{f}": frame(d, f, style, outfit, beard, decos, hair_sway) for d in ('down', 'up', 'left', 'right') for f in (0, 1, 2)}
