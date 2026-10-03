@@ -121,5 +121,6 @@ describe("出口の安全装置", () => {
     expect(at(1)).toBeLessThanOrEqual(0.98);
     expect(Math.max(...Array.from(c).map(Math.abs))).toBeLessThanOrEqual(0.98);
     for (let i = 1; i < c.length; i++) expect(c[i]).toBeGreaterThanOrEqual(c[i - 1]);
-  });
+    // voices の読み込みは重く、ほかのテストと同時に動かすと5秒を超えることがあるため、待ち時間を長めに
+  }, 20000);
 });
