@@ -5,9 +5,9 @@
  *
  * 本体に組み込むには tools/backdrop-preview/README.md を読むこと。
  */
-export type ExtraBiome = "forest" | "swamp" | "coast" | "sky" | "lava" | "shrine";
+export type ExtraBiome = "forest" | "swamp" | "coast" | "sky" | "lava" | "shrine" | "deep";
 
-export const EXTRA_BIOMES: ExtraBiome[] = ["forest", "swamp", "coast", "sky", "lava", "shrine"];
+export const EXTRA_BIOMES: ExtraBiome[] = ["forest", "swamp", "coast", "sky", "lava", "shrine", "deep"];
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -859,6 +859,80 @@ function shrineBackdrop(ctx: Ctx, w: number, h: number): void {
   }
 }
 
+// ---------------------------------------------------------------- 海底
+
+function seaweed(ctx: Ctx, x: number, by: number, hgt: number, seed: number, light: string, dark: string): void {
+  for (let i = 0; i < hgt; i++) {
+    const sway = Math.round(Math.sin(i * 0.45 + seed) * 2);
+    px(ctx, x + sway, by - i, i % 3 === 0 ? dark : light, 2, 1);
+    if (i % 5 === 3) px(ctx, x + sway + (seed % 2 === 0 ? 2 : -1), by - i, light, 1, 1);
+  }
+}
+
+function coral(ctx: Ctx, cx: number, by: number, s: number, seed: number, light: string, mid: string, dark: string): void {
+  for (let b = -2; b <= 2; b++) {
+    const bh = Math.round(s * (0.55 + hash(seed, b) * 0.6));
+    const bx = cx + b * Math.round(s * 0.28);
+    for (let i = 0; i < bh; i++) {
+      const spread = Math.round(Math.sin(i * 0.5 + b) * 1.2) + Math.round(b * i * 0.12);
+      px(ctx, bx + spread, by - i, i > bh * 0.7 ? light : i % 4 === 0 ? dark : mid, 2, 1);
+    }
+  }
+}
+
+function deepBackdrop(ctx: Ctx, w: number, h: number): void {
+  // 水の色: 上は明るい青緑、下へいくほど濃い群青（奥ほど淡く、手前ほど濃く）
+  bands(ctx, w, 0, h, ["#3a8aa8", "#2f7a9c", "#276a90", "#1e5a82", "#164a72", "#103a60", "#0b2c4c", "#071e3a"]);
+  // 左上からさしこむ光の筋（市松でなじませる）
+  for (let k = 0; k < 5; k++) {
+    const x0 = 20 + k * 78 + Math.round(hash(k, 3) * 14);
+    for (let y = 0; y < 150; y++) {
+      const half = 6 + Math.round(y * 0.1);
+      const sx = x0 + Math.round(y * 0.35);
+      dither(ctx, sx - half, y, half * 2, 1, y < 60 ? "#6ab8c8" : y < 110 ? "#4a9ab8" : "#3a86a8");
+    }
+  }
+  // 遠くの沈んだ神殿の柱（淡い影）
+  for (let i = 0; i < 7; i++) {
+    const x = 30 + i * 52 + Math.round(hash(i, 9) * 18);
+    const hgt = 38 + Math.round(hash(i, 4) * 40);
+    const top = 150 - hgt;
+    for (let y = top; y < 152; y++) {
+      px(ctx, x, y, "#1a4a72", 7, 1);
+      px(ctx, x + 5, y, "#143c60", 2, 1);
+    }
+    px(ctx, x - 2, top, "#215a80", 11, 3);
+    if (i % 3 === 1) for (let y = top - 6; y < top; y++) px(ctx, x + 1 + (top - y) % 3, y, "#1a4a72", 3, 1);
+  }
+  // 海底の砂地（なだらかな起伏。上の縁を明るく）
+  hills(ctx, w, h, 160, 8, 5, "#7a8a78", "#a8b496", "#5a6a60");
+  hills(ctx, w, h, 182, 7, 11, "#5a6a62", "#84927c", "#3e4c48");
+  ctx.fillStyle = "#34423e";
+  ctx.fillRect(0, 205, w, h - 205);
+  // 砂のさざ波
+  for (let y = 168; y < 205; y += 4) {
+    for (let x = (y * 7) % 11; x < w; x += 11) px(ctx, x, y, y < 185 ? "#6a7a6a" : "#46544e", 5, 1);
+  }
+  // 海藻と珊瑚
+  for (let i = 0; i < 12; i++) {
+    seaweed(ctx, 14 + i * 34 + Math.round(hash(i, 1) * 12), 190 + Math.round(hash(i, 2) * 8), 22 + Math.round(hash(i, 6) * 26), i, "#3a9a5a", "#1e6a3e");
+  }
+  coral(ctx, 70, 196, 30, 3, "#f08a7a", "#c85a6a", "#8a3a52");
+  coral(ctx, 200, 200, 24, 8, "#f0c070", "#c88a4a", "#8a5a34");
+  coral(ctx, 330, 196, 32, 5, "#b08ae8", "#8a5ac8", "#5a3a8a");
+  // 泡
+  for (let i = 0; i < 26; i++) {
+    const x = 10 + Math.round(hash(i, 7) * (w - 20));
+    const y = 20 + Math.round(hash(i, 8) * 150);
+    const r = hash(i, 5) > 0.7 ? 2 : 1;
+    px(ctx, x, y, "#a8e0ea", r, r);
+    if (r === 2) px(ctx, x + 1, y + 1, "#6ab8c8", 1, 1);
+  }
+  // 手前を暗くして、奥行きを出す
+  glow(ctx, 0, h, 90, "4,16,32", 0.55);
+  glow(ctx, w, h, 90, "4,16,32", 0.55);
+}
+
 // ---------------------------------------------------------------- 入口
 
 /** 追加の背景を描く。w×h は戦闘の背景と同じ 400×225 を想定（座標は固定値）。 */
@@ -871,5 +945,6 @@ export function paintExtraBackdrop(kind: ExtraBiome, ctx: CanvasRenderingContext
     case "sky": skyBackdrop(ctx, w, h); break;
     case "lava": lavaBackdrop(ctx, w, h); break;
     case "shrine": shrineBackdrop(ctx, w, h); break;
+    case "deep": deepBackdrop(ctx, w, h); break;
   }
 }

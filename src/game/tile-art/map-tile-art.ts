@@ -37,6 +37,7 @@ export const MAP_TILE_ART: Record<string, Record<number, string>> = {
   "kyotoukyu-sanctum": KYOTOUKYU,
   ...Object.fromEntries(["deep-1", "deep-2", "deep-3", "deep-4", "tower-1", "tower-2", "tower-3", "kanou-1", "kanou-2", "kanou-3", "kanou-4"].map((id) => [id, DUNGEON])),
   ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`god-shrine-${i + 1}`, DUNGEON])),
+  ...Object.fromEntries([1, 2, 3, 4, 5, 6].flatMap((n) => [`islet-${n}-1`, `islet-${n}-2`].map((id) => [id, DUNGEON]))),
 };
 
 /** 雪の地方の地図（木のタイルに雪をのせる）。 */
@@ -54,6 +55,10 @@ const MAP_THEME: Record<string, string> = {
   ...Object.fromEntries(["tower-1", "tower-2", "tower-3"].map((id) => [id, "tower"])),
   ...Object.fromEntries(["deep-1", "deep-2", "deep-3", "deep-4", "kanou-1", "kanou-2", "kanou-3", "kanou-4"].map((id) => [id, "ruins"])),
   ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`god-shrine-${i + 1}`, "ruins"])),
+  // 隠しダンジョンの小島: 月影・砦=遺跡、井戸・火口=火山、古灯台=塔、青い穴=海底
+  ...Object.fromEntries(
+    ([[1, "ruins"], [2, "volcano"], [3, "tower"], [4, "ruins"], [5, "seabed"], [6, "volcano"]] as const).flatMap(([n, theme]) => [`islet-${n}-1`, `islet-${n}-2`].map((id) => [id, theme])),
+  ),
 };
 
 /** 町の建物を屋根と壁で描く地図（壁のタイルID、屋根の色、壁の色）。 */

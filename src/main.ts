@@ -1483,8 +1483,8 @@ const loop = createGameLoop({
             encounterMapId = "world-air";
             worldBattleBiome = "sky";
           } else {
-            encounterMapId = worldZoneIdAt(tileId, centerTileX);
-            worldBattleBiome = tileId === 5 ? "desert" : tileId === 6 || tileId === 12 ? "snow" : "grass";
+            encounterMapId = worldZoneIdAt(tileId, centerTileX, centerTileY);
+            worldBattleBiome = tileId === 18 ? "lava" : tileId === 5 ? "desert" : tileId === 6 || tileId === 12 ? "snow" : "grass";
           }
         }
         const stepped = encounterMapId ? stepEncounter(encounterState, encounterMapId, Math.random) : { state: encounterState, enemies: null };

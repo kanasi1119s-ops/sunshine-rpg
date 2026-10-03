@@ -37,6 +37,13 @@ export const ENCOUNTER_ZONES: Record<string, EncounterZone> = {
   "kanou-2": { level: 34, names: ["静かな影", "待ち人の気配", "緑の光"], hue: 150 },
   "kanou-3": { level: 35, names: ["裂け目の花", "重なる景色", "薄い境目"], hue: 320 },
   "kanou-4": { level: 36, names: ["全環のかけら", "白い揺らぎ", "環の残響"], hue: 280 },
+  // 隠しダンジョンの小島（1階。2階は宝の間）。条件の章を終えた頃より、少しだけ手ごわい
+  "islet-1-1": { level: 16, names: ["月影の残響", "庭の石像の影", "苔むした断片"], hue: 220 },
+  "islet-2-1": { level: 18, names: ["熱の影", "溶けた石", "火の粉の虫"], hue: 20 },
+  "islet-3-1": { level: 20, names: ["潮風の影", "灯台のかけら", "波間の虫"], hue: 55 },
+  "islet-4-1": { level: 22, names: ["旗の影", "砦の兵の影", "雲のかけら"], hue: 280 },
+  "islet-5-1": { level: 23, names: ["沈んだ影", "珊瑚の石", "海ほたるの虫"], hue: 195 },
+  "islet-6-1": { level: 25, names: ["溶岩の影", "焦げた石", "火の粉のこうもり"], hue: 10 },
 };
 
 /** 世界地図の、地方ごとのエンカウント（道の上では出会わない）。想定レベルは、そこから向かう町の少し手前。 */
@@ -45,15 +52,23 @@ export const WORLD_ENCOUNTER_ZONES: Record<string, EncounterZone> = {
   "world-2": { level: 7, names: ["峠の影", "湖畔のこうもり", "石の歪み"], hue: 190 },
   "world-3": { level: 11, names: ["砂ぬけ", "熱風の影", "砂サソリの影"], hue: 45 },
   "world-4": { level: 15, names: ["氷の兵の影", "霜の歪み", "白い影"], hue: 195 },
+  "world-5": { level: 24, names: ["火の粉の影", "溶岩の歪み", "灰かぶりの影"], hue: 15 },
+  "world-6": { level: 18, names: ["荒野の影", "灯の消えた歪み", "古い機械の虫"], hue: 30 },
   // 船で海を進むとき・飛空艇で空を飛ぶときの敵（船は砂音のあと、飛空艇は霜原のあとに手に入る）
   "world-sea": { level: 12, names: ["波間の影", "潮の石", "海ほたるの虫"], hue: 200 },
   "world-air": { level: 17, names: ["風の羽の影", "雲のかけら", "雷雲の影"], hue: 235 },
 };
 
-/** 世界地図の地形（タイルID。道=7、砂漠=5、雪=6・12）と位置から、エンカウントの地方を決める。道の上は null（出会わない）。 */
-export function worldZoneIdAt(tileId: number, tileX: number): string | null {
+/**
+ * 世界地図の地形（タイルID。道=7、砂漠=5、雪=6・12、火山の灰=18）と位置から、エンカウントの地方を決める。道の上は null（出会わない）。
+ * 平地は大陸ごと: 西の灯里大陸（x<45 は序盤の草原、そのさきは峠・湖）、北東の霧霜大陸、南東の灯芯大陸。
+ */
+export function worldZoneIdAt(tileId: number, tileX: number, tileY = 0): string | null {
   if (tileId === 7 || tileId === 10) {
     return null;
+  }
+  if (tileId === 18) {
+    return "world-5";
   }
   if (tileId === 5) {
     return "world-3";
@@ -61,7 +76,13 @@ export function worldZoneIdAt(tileId: number, tileX: number): string | null {
   if (tileId === 6 || tileId === 12) {
     return "world-4";
   }
-  return tileX < 24 ? "world-1" : tileX < 40 ? "world-2" : "world-3";
+  if (tileX < 45) {
+    return "world-1";
+  }
+  if (tileX < 112) {
+    return "world-2";
+  }
+  return tileY < 90 ? "world-4" : "world-6";
 }
 
 /** 何歩目で出会うかのふれ幅。 */

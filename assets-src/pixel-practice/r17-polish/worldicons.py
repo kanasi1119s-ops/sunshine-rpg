@@ -195,7 +195,44 @@ def icon_vortex():
     # 渦の中心にそびえる塔のかげ
     rect(g, 22, 12, 26, 28, "Q"); rect(g, 25, 12, 26, 28, "q"); rect(g, 21, 10, 27, 12, "Q"); rect(g, 23, 6, 25, 10, "Q"); g[5][24] = "Y"
     return g
-ICONS = {"port": icon_port, "village": icon_village, "lake": icon_lake, "mine": icon_mine, "castle": icon_castle, "tents": icon_tents, "temple": icon_temple, "snowtown": icon_snowtown, "sky": icon_sky, "palace": icon_palace, "ruin": icon_ruin, "shrine": icon_shrine, "cave": icon_cave, "stones": icon_stones, "bigtree": icon_bigtree, "vortex": icon_vortex}
+def icon_volcano():
+    g = blank()
+    # 火山: 裾の広い黒い山。頂きに火口、赤い溶岩のすじ、けむり
+    for y in range(14, 43):
+        half = 6 + (y-14)*0.72
+        for x in range(int(24-half), int(24+half)+1):
+            if 0 <= x < W: g[y][x] = "Q" if x < 24 else "q"
+    for y in range(14, 17):
+        for x in range(18, 31):
+            if abs(x-24) <= 5 - (y-14)//2 + 1: g[y][x] = "O" if y > 14 else "Y"
+    for (x0, y0, ln) in ((22, 17, 12), (27, 17, 9), (19, 24, 8)):
+        for k in range(ln):
+            x = x0 + (k//4)*(1 if x0 > 23 else -1); g[y0+k][x] = "O" if k % 5 else "Y"
+    for (cx, cy, r) in ((22, 8, 3), (27, 4, 3), (24, 1, 2)):
+        for y in range(cy-r, cy+r+1):
+            for x in range(cx-r, cx+r+1):
+                if 0 <= y < H and (x-cx)**2+(y-cy)**2 <= r*r and g[y][x] == ".": g[y][x] = "T" if (x+y) % 2 else "t"
+    return g
+def icon_dive():
+    g = blank()
+    # 潜り場: 青い渦と、立ちのぼる泡。まんなかに暗い穴
+    for y in range(18, 44):
+        for x in range(4, 44):
+            dx, dy = (x-24)/20.0, (y-31)/12.0
+            d = math.hypot(dx, dy)
+            if d > 1.0: continue
+            ang = math.atan2(dy, dx)
+            band = (d*4.0 + ang/(2*math.pi)*2.0) % 1.0
+            g[y][x] = "C" if band < 0.12 else "B" if band < 0.4 else "L" if band < 0.75 else "l"
+    for y in range(28, 35):
+        for x in range(19, 30):
+            if math.hypot((x-24)/5.0, (y-31)/3.2) <= 1.0: g[y][x] = "q"
+    for (x, y, r) in ((24, 22, 2), (28, 15, 2), (21, 10, 1), (26, 6, 1), (23, 3, 1)):
+        for yy in range(y-r, y+r+1):
+            for xx in range(x-r, x+r+1):
+                if (xx-x)**2+(yy-y)**2 <= r*r: g[yy][xx] = "C" if (xx+yy) % 2 else "c"
+    return g
+ICONS = {"port": icon_port, "village": icon_village, "lake": icon_lake, "mine": icon_mine, "castle": icon_castle, "tents": icon_tents, "temple": icon_temple, "snowtown": icon_snowtown, "sky": icon_sky, "palace": icon_palace, "ruin": icon_ruin, "shrine": icon_shrine, "cave": icon_cave, "stones": icon_stones, "bigtree": icon_bigtree, "vortex": icon_vortex, "volcano": icon_volcano, "dive": icon_dive}
 if __name__ == "__main__":
     for n, fn in ICONS.items():
         g = outline(fn())

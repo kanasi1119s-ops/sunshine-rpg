@@ -7,7 +7,7 @@ import { hashCell, shadeColor } from "../color-utils";
  * ジャンルでよく使われる技法（草のディザリング、水の波模様、道の踏み跡、
  * 木の樹冠＋幹）を適用する。既存の特定作品のタイルセットは参照していない。
  */
-export type TilePatternKind = "grass" | "water" | "path" | "treeCanopy" | "flagstone" | "brick" | "sand" | "snow" | "plank" | "cloud" | "roof" | "crate" | "pillar" | "machine" | "pipe" | "carpet" | "crystal" | "void" | "gate" | "mural" | "bed" | "rift" | "mountain" | "worldforest" | "hills" | "peaks" | "chasm";
+export type TilePatternKind = "grass" | "water" | "path" | "treeCanopy" | "flagstone" | "brick" | "sand" | "snow" | "plank" | "cloud" | "roof" | "crate" | "pillar" | "machine" | "pipe" | "carpet" | "crystal" | "void" | "gate" | "mural" | "bed" | "rift" | "mountain" | "worldforest" | "hills" | "peaks" | "chasm" | "lava";
 
 export interface TileArtSpec {
   base: string;
@@ -388,6 +388,14 @@ const PATTERNS: Record<TilePatternKind, PatternFn> = {
     if (d < 4.6) return h % 3 === 0 ? ramp[3] : ramp[2];
     return h % 11 === 0 ? ramp[3] : h % 5 === 0 ? ramp[1] : ramp[2];
   },
+  // 火山の溶岩（通れない）: 暗い冷えた殻が割れて、明るい流れが筋になって見える。
+  lava: (ramp, row, col, variant) => {
+    const v = Math.sin(col * 0.55 + row * 0.32 + variant * 2.1) + Math.sin(col * 0.28 - row * 0.62 + variant * 1.3) + Math.sin((col + row) * 0.9 + variant) * 0.35;
+    const h = hashCell(col + variant * 5, row * 3 + variant);
+    if (v > 1.15) return h % 4 === 0 ? ramp[4] : ramp[3];
+    if (v > 0.55) return ramp[2];
+    return h % 7 === 0 ? ramp[2] : h % 3 === 0 ? ramp[1] : ramp[0];
+  },
   // 世界地図の森: 小さな樹冠が4つ。塊ごとに左上が明るく、すき間は暗い。
   worldforest: (ramp, row, col, variant) => {
     const crowns: [number, number, number][] = [
@@ -461,6 +469,7 @@ export const TILE_ART: Record<string, TileArtSpec> = {
   mountain: { base: "#857c74", accentLight: "#b8b0a2", accentDark: "#4e4640", pattern: "mountain" },
   peaks: { base: "#7a7078", accentLight: "#aaa2ac", accentDark: "#3a343c", pattern: "peaks" },
   chasm: { base: "#5a4a5a", accentLight: "#8a7a86", accentDark: "#2a2230", pattern: "chasm" },
+  lava: { base: "#a03812", accentLight: "#ffc050", accentDark: "#3a1008", pattern: "lava" },
   worldforest: { base: "#3a8a30", accentLight: "#7cd048", accentDark: "#1c5a24", pattern: "worldforest" },
   snowforest: { base: "#3a6a50", accentLight: "#eef4f8", accentDark: "#1c3c3c", pattern: "worldforest" },
   hills: { base: "#5a9a40", accentLight: "#82bc58", accentDark: "#3a7032", pattern: "hills" },

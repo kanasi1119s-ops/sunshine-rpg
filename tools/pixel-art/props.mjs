@@ -63,7 +63,9 @@ PIECES.push(
   piece("P42-アイコンcave", "r17-polish", "icon-cave.txt", "pal-icon-cave.json"),
   piece("P43-アイコンstones", "r17-polish", "icon-stones.txt", "pal-icon-stones.json"),
   piece("P44-アイコンbigtree", "r17-polish", "icon-bigtree.txt", "pal-icon-bigtree.json"),
-  piece("P45-アイコンvortex", "r17-polish", "icon-vortex.txt", "pal-icon-vortex.json")
+  piece("P45-アイコンvortex", "r17-polish", "icon-vortex.txt", "pal-icon-vortex.json"),
+  piece("P46-アイコンvolcano", "r17-polish", "icon-volcano.txt", "pal-icon-volcano.json"),
+  piece("P47-アイコンdive", "r17-polish", "icon-dive.txt", "pal-icon-dive.json")
 );
 
 // 町・遺跡の飾り33点（assets-src/pixel-practice/r20-props/、エージェントが一から作成）。大きさが48を超えるものは64の枠。

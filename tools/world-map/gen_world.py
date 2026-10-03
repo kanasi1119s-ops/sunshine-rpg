@@ -49,11 +49,15 @@ for cx, cy, r in ((226, 90, 8), (239, 100, 6), (229, 106, 6), (216, 99, 5)):   #
     for y in range(H):
         for x in range(W):
             if math.hypot(x-cx, (y-cy)*1.1) + (n2[y, x]-0.5)*5 < r: T[y][x] = "C"
-ISLETS = [("islet-1", 30, 40, "月影の島"), ("islet-2", 96, 176, "底なしの井戸の島"), ("islet-3", 116, 22, "古灯台の島"), ("islet-4", 243, 62, "忘れられた砦の島")]
+ISLETS = [("islet-1", 30, 40, "月影の島"), ("islet-2", 96, 176, "底なしの井戸の島"), ("islet-3", 116, 22, "古灯台の島"), ("islet-4", 243, 62, "忘れられた砦の島"), ("islet-5", 124, 152, "青い穴の洲")]
 for _id, cx, cy, nm in ISLETS:
     for y in range(H):
         for x in range(W):
             if math.hypot((x-cx)/5.2, (y-cy)/4.4) + (n2[y, x]-0.5)*0.9 < 1.0 and T[y][x] == "O": T[y][x] = "P"
+# 青い穴の洲（海底への入口）は、白い砂の洲にする
+for y in range(H):
+    for x in range(W):
+        if math.hypot((x-124)/5.2, (y-152)/4.4) < 1.15 and T[y][x] == "P": T[y][x] = "D"
 # 芯環塔の島（海のまんなか）
 TOWER = (125, 95)
 for y in range(H):
@@ -177,7 +181,7 @@ for mid, (tx, ty, _n) in TOWNS.items():
             if 0 <= x < W and 0 <= y < H and (abs(x-tx)+abs(y-ty) <= 3) and not (mid != "fushima-town" and T[y][x] == "O" and False):
                 if T[y][x] in "OLMNF" or mid in ("fushima-town",): T[y][x] = base
 
-COST = {"X": 99999, "N": 13.0, "T": 2.2, "P": 1.0, "F": 2.2, "D": 1.4, "S": 1.8, "H": 2.0, "M": 9.0, "R": 0.4, "W": 1.2, "C": 1.0, "L": 6.0, "O": 99999, "V": 99999, "Q": 99999}
+COST = {"X": 99999, "N": 13.0, "T": 2.2, "P": 1.0, "F": 2.2, "D": 1.4, "S": 1.8, "H": 2.0, "M": 9.0, "R": 0.4, "W": 1.2, "C": 1.0, "L": 6.0, "O": 99999, "V": 99999, "Q": 99999, "A": 1.3, "Z": 99999}
 def astar(a, b):
     (ax, ay), (bx, by) = a, b
     pq = [(0, ax, ay)]; best = {(ax, ay): 0}; prev = {}
@@ -211,8 +215,41 @@ road_set = set(road_pts)
 def near_road(x, y, d=4): return any((x+dx, y+dy) in road_set for dx in range(-d, d+1) for dy in range(-d, d+1))
 for y in range(H):
     for x in range(W):
-        if T[y][x] in "PFHD" and abs(n3[y, x] - 0.60) < 0.012 and n1[y, x] > 0.46 and far_from_towns(x, y, 10) and not near_road(x, y):
+        if T[y][x] in "PFHD" and abs(n3[y, x] - 0.60) < 0.012 and n1[y, x] > 0.46 and far_from_towns(x, y, 10) and not near_road(x, y) and not any(abs(x-cx) < 8 and abs(y-cy) < 7 for _i, cx, cy, _n in ISLETS):
             T[y][x] = "X"
+
+# ---- 火山（灯芯大陸の南東）: 火口の溶岩Z → 山の本体N（通れない）→ 灰の大地A。溶岩の川が三すじ流れ出る。入口は山の南のふもと ----
+vbest = None
+for vy0 in range(120, 178):
+    for vx0 in range(150, 224):
+        if not all(0 <= vy0+dy < H and 0 <= vx0+dx < W and T[vy0+dy][vx0+dx] not in "OL" for dx in range(-11, 12, 2) for dy in range(-11, 12, 2)): continue
+        if min(math.hypot(vx0-a, vy0-b) for a, b, _n in TOWNS.values()) < 26: continue
+        sc = math.hypot(vx0-208, vy0-170)
+        if vbest is None or sc < vbest[0]: vbest = (sc, vx0, vy0)
+assert vbest, "火山を置けない"
+VOLCANO = (vbest[1], vbest[2])
+vx, vy = VOLCANO
+streams = [math.radians(a) for a in (200, 330, 20)]
+for y in range(max(0, vy-14), min(H, vy+15)):
+    for x in range(max(0, vx-14), min(W, vx+15)):
+        d = math.hypot(x-vx, y-vy) + (n2[y, x]-0.5)*2.4
+        if T[y][x] == "O": continue
+        if d < 2.7: T[y][x] = "Z"
+        elif d < 5.6: T[y][x] = "N"
+        elif d < 12.5:
+            T[y][x] = "A" if (n1[y, x] > 0.30 or d < 9) else T[y][x]
+            if d > 9.5 and n3[y, x] > 0.62: T[y][x] = "M"
+for ang in streams:
+    for k in range(5, 13):
+        x = int(round(vx + math.cos(ang)*k + math.sin(k*0.9)*0.8)); y = int(round(vy + math.sin(ang)*k + math.cos(k*0.7)*0.8))
+        if 0 <= x < W and 0 <= y < H and T[y][x] not in "O": T[y][x] = "Z"
+# 入口（山の南のふもとの灰の道）。入口の周りは通れる地面にそろえる
+for yy in range(vy+5, vy+9):
+    for xx in range(vx-2, vx+3):
+        if T[yy][xx] not in "O": T[yy][xx] = "A"
+VOLCANO_ENTRY = (vx, vy+6)
+carve_road((vx, vy+9), pos("kyotoukyu-court"))
+ISLETS.append(("islet-6", VOLCANO_ENTRY[0], VOLCANO_ENTRY[1], "火口の迷宮"))
 
 # ---- 小さな町・村（8か所）: 各大陸の、広い平地に。いちばん近い町へ道をつなぐ ----
 VILLAGE_DEFS = [  # (マップID, 名前, 大陸, 範囲(x0,y0,x1,y1), 地形, アイコン)
@@ -276,7 +313,7 @@ for y in range(H):
                 T[y][x] = "V"
 
 # ---- 検査 ----
-LANDWALK = "PFDSRHCWT"   # M N X L V Q は通れない
+LANDWALK = "PFDSRHCWTA"   # M N X L V Q は通れない
 def flood(sx, sy, walk):
     seen = {(sx, sy)}; st = [(sx, sy)]
     while st:
@@ -362,7 +399,7 @@ assert AIRSHIP
 
 rows = ["".join(r) for r in T]
 ts = ["// 自動生成: tools/world-map/gen_world.py（手で編集しない）。大陸アルテシアの地形。1文字=1マス。",
-      "// O=海 P=平原 F=森 T=雪の森 M=山 D=砂漠 S=雪原 R=道 H=丘 L=湖・川 C=雲 W=荒れ地 V=渦の輪 Q=渦の輪の切れ目",
+      "// O=海 P=平原 F=森 T=雪の森 M=山 D=砂漠 S=雪原 R=道 H=丘 L=湖・川 C=雲 W=荒れ地 A=灰の大地（火山） Z=溶岩 V=渦の輪 Q=渦の輪の切れ目",
       f"export const WORLD_WIDTH = {W};", f"export const WORLD_HEIGHT = {H};",
       "export const WORLD_ROWS: string[] = [", *[f'  "{r}",' for r in rows], "];",
       "export const WORLD_TOWNS: Record<string, { x: number; y: number; name: string; continent: string }> = {",
@@ -383,7 +420,7 @@ ts = ["// 自動生成: tools/world-map/gen_world.py（手で編集しない）�
 os.makedirs("/home/user/sunshine-rpg/src/game/map/world", exist_ok=True)
 open("/home/user/sunshine-rpg/src/game/map/world/world-map.generated.ts", "w").write("\n".join(ts) + "\n")
 
-col = {"O": (30, 90, 150), "P": (96, 170, 70), "F": (40, 110, 50), "M": (130, 120, 120), "D": (220, 190, 120), "S": (240, 244, 250), "R": (190, 150, 90), "H": (130, 170, 80), "L": (60, 130, 200), "C": (225, 235, 245), "W": (90, 70, 110), "T": (200, 225, 235), "V": (20, 50, 110), "Q": (40, 70, 130), "N": (92, 84, 92), "X": (50, 36, 56)}
+col = {"O": (30, 90, 150), "P": (96, 170, 70), "F": (40, 110, 50), "M": (130, 120, 120), "D": (220, 190, 120), "S": (240, 244, 250), "R": (190, 150, 90), "H": (130, 170, 80), "L": (60, 130, 200), "C": (225, 235, 245), "W": (90, 70, 110), "T": (200, 225, 235), "V": (20, 50, 110), "Q": (40, 70, 130), "N": (92, 84, 92), "X": (50, 36, 56), "A": (74, 66, 68), "Z": (230, 90, 30)}
 im = Image.new("RGB", (W*4, H*4))
 for y in range(H):
     for x in range(W):

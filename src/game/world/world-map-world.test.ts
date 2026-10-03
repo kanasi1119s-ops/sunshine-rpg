@@ -22,6 +22,11 @@ describe("世界地図の入場条件（章は順番に進む）", () => {
     expect(isletRequirementHint("islet-1-1", { has_ship: true, chapter5_reported: true })).toEqual([]);
     expect(isletRequirementHint("islet-4-1", { has_ship: true, chapter8_reported: true }).length).toBe(1);
     expect(isletRequirementHint("islet-4-1", { has_airship: true, chapter8_reported: true })).toEqual([]);
+    // 海底は古灯台の島の宝、火山は底なしの井戸の島の宝が要る
+    expect(isletRequirementHint("islet-5-1", { has_ship: true, chapter7_reported: true }).length).toBe(1);
+    expect(isletRequirementHint("islet-5-1", { has_ship: true, chapter7_reported: true, islet3_treasure: true })).toEqual([]);
+    expect(isletRequirementHint("islet-6-1", { chapter8_reported: true }).length).toBe(1);
+    expect(isletRequirementHint("islet-6-1", { chapter8_reported: true, islet2_treasure: true })).toEqual([]);
   });
 
   it("芯環塔は、渦の航路が開くまで入れない", () => {
@@ -29,10 +34,10 @@ describe("世界地図の入場条件（章は順番に進む）", () => {
     expect(worldEntryProblems("tower-1", { vortex_route_open: true })).toEqual([]);
   });
 
-  it("世界地図の出入り口は、町10か所（虚灯宮を含む）・村8つ・小島4つ・芯環塔1つ", () => {
+  it("世界地図の出入り口は、町10か所（虚灯宮を含む）・村8つ・小島6つ（海底・火山を含む）・芯環塔1つ", () => {
     const targets = (WORLD_MAPS["world-map"].exits ?? []).map((e) => e.targetMapId);
-    expect(targets.length).toBe(23);
+    expect(targets.length).toBe(25);
     expect(targets).toContain("tower-1");
-    expect(targets.filter((t) => t.startsWith("islet-")).length).toBe(4);
+    expect(targets.filter((t) => t.startsWith("islet-")).length).toBe(6);
   });
 });
