@@ -45,6 +45,9 @@ export const WORLD_ENCOUNTER_ZONES: Record<string, EncounterZone> = {
   "world-2": { level: 7, names: ["峠の影", "湖畔のこうもり", "石の歪み"], hue: 190 },
   "world-3": { level: 11, names: ["砂ぬけ", "熱風の影", "砂サソリの影"], hue: 45 },
   "world-4": { level: 15, names: ["氷の兵の影", "霜の歪み", "白い影"], hue: 195 },
+  // 船で海を進むとき・飛空艇で空を飛ぶときの敵（船は砂音のあと、飛空艇は霜原のあとに手に入る）
+  "world-sea": { level: 12, names: ["波間の影", "潮の石", "海ほたるの虫"], hue: 200 },
+  "world-air": { level: 17, names: ["風の羽の影", "雲のかけら", "雷雲の影"], hue: 235 },
 };
 
 /** 世界地図の地形（タイルID。道=7、砂漠=5、雪=6・12）と位置から、エンカウントの地方を決める。道の上は null（出会わない）。 */

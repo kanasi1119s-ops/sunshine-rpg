@@ -57,8 +57,8 @@ export function createWorldMapData(): TileMapData {
     coastal: true,
     props: [
       ...Object.entries(WORLD_TOWNS).map(([id, pos]) => ({ kind: TOWN_ICON[id], tileX: pos.x, tileY: pos.y })),
-      ...WORLD_ISLETS.map((islet, i) => ({ kind: (["icon-ruin", "icon-cave", "icon-shrine", "icon-stones"] as const)[i], tileX: islet.x, tileY: islet.y })),
-      { kind: "icon-vortex" as const, tileX: WORLD_TOWER.x, tileY: WORLD_TOWER.y },
+      ...WORLD_ISLETS.map((islet, i) => ({ kind: (["icon-islet-ruin", "icon-islet-cave", "icon-islet-shrine", "icon-islet-fort"] as const)[i], tileX: islet.x, tileY: islet.y })),
+      { kind: "icon-spire" as const, tileX: WORLD_TOWER.x, tileY: WORLD_TOWER.y },
     ],
   };
 }

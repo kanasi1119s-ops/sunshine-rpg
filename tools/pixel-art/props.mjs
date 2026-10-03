@@ -73,3 +73,11 @@ for (const n of R20_NAMES) {
   const big = Math.max(rows.length, ...rows.map((r) => r.length)) > 48;
   PIECES.push(piece(`R20-${n}`, "r20-props", `${n}.txt`, `pal-${n}.json`, {}, big ? 64 : 48));
 }
+
+// 船・飛空艇・芯環塔・隠しダンジョンの小島（assets-src/pixel-practice/r22-vehicles/、エージェントが一から作成）。絵は枠の下そろえ（足元の位置を保つ）。
+export const R22_NAMES = fs.readdirSync(new URL("r22-vehicles/", ROOT)).filter((f) => f.endsWith(".txt") && !f.startsWith("whirlpool")).map((f) => f.replace(".txt", "")).sort();
+for (const n of R22_NAMES) {
+  const rows = fs.readFileSync(new URL(`r22-vehicles/${n}.txt`, ROOT), "utf8").split("\n").filter((l) => l !== "");
+  const big = Math.max(rows.length, ...rows.map((r) => r.length));
+  PIECES.push(piece(`R22-${n}`, "r22-vehicles", `${n}.txt`, `pal-${n}.json`, {}, big > 48 ? 112 : 48));
+}

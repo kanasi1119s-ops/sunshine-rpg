@@ -45,6 +45,9 @@ for (const [i, n] of ["ruin", "shrine", "cave", "stones", "bigtree", "vortex"].e
 for (const n of fs.readdirSync(new URL("../../assets-src/pixel-practice/r20-props/", import.meta.url)).filter((f) => f.endsWith(".txt")).map((f) => f.replace(".txt", ""))) {
   SETS.props[1][`R20-${n}`] = `prop:${n}`;
 }
+for (const n of fs.readdirSync(new URL("../../assets-src/pixel-practice/r22-vehicles/", import.meta.url)).filter((f) => f.endsWith(".txt") && !f.startsWith("whirlpool")).map((f) => f.replace(".txt", ""))) {
+  SETS.props[1][`R22-${n}`] = n === "spire" || n.startsWith("islet-") ? `prop:icon-${n}` : `prop:${n}`;
+}
 // 倍率（SCALE）はモジュールの読み込み時に決まるため、セットごとに別のプロセスで実行する（node export-game-data.mjs → 自動で分けて実行）。
 const [mode, tmpDir] = process.argv.slice(2);
 if (mode && mode !== "merge") {
