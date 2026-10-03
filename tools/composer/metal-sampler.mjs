@@ -133,8 +133,8 @@ export function openMetalSampler(dir = metalGtxDir()) {
     }
     for (const n of sorted) {
       const dur = n.stop - n.start;
-      // 楽譜でミュートにした刻みは、拍の 0.4 くらいの長さで来る（midi-export.ts）。0.6拍より短ければパームミュート
-      const muted = dur < beatSec * 0.6;
+      // 楽譜でミュートにした刻み（16分）は、拍の 0.2 くらいの長さで来る（midi-export.ts）。0.35拍より短ければパームミュート。8分は鳴らしたまま
+      const muted = dur < beatSec * 0.35;
       // 16分の裏（拍の 1/4・3/4 の位置）はアップピッキング
       const frac = ((n.start / beatSec) % 1 + 1) % 1;
       const up = Math.abs(frac - 0.25) < 0.08 || Math.abs(frac - 0.75) < 0.08;

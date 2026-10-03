@@ -242,10 +242,10 @@ export function scoreToMidiInfo(score: Score, opts: { ampsApplied?: boolean; cle
       }
       if (cleanGtr && (inst === "crunch" || inst === "distGuitar")) {
         // 生のギターに近づける: 低い弦から順に、ほんの少しずつ遅れて鳴らす（ピックで弦をなでる＝ストローク）。
-        // 手のひらで弦を押さえる刻み（ブリッジミュート）は、メタル系の速い刻み（8分以下）と、ほかの曲調の16分の刻みだけ。
-        // ロック・ポップの8分は、ふつう弦を鳴らしたまま弾く（全部をミュートすると、詰まった音に聞こえる）
+        // 手のひらで弦を押さえる刻み（ブリッジミュート）は、16分の速い刻みだけ（メタル系も同じ）。
+        // 8分は弦を鳴らしたまま弾く（8分までミュートすると、詰まった音に聞こえる。2026-10-03 に耳で確かめて変更）
         const ms = (x: number): number => Math.round((x / 1000) * (score.tempoBpm / 60) * PPQ);
-        const muted = score.tone === "metal" || score.tone === "prs" ? n.durationBeats <= 0.5 : n.durationBeats <= 0.25;
+        const muted = n.durationBeats <= 0.25;
         const mLen = muted ? Math.max(20, Math.round(len * 0.8)) : len;
         const mVel = muted ? Math.round(velocity * 0.88) : velocity;
         const strum = ms(muted ? 3 : 7);
