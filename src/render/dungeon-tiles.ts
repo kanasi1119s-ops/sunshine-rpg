@@ -8,11 +8,11 @@ import { hashCell, shadeColor } from "../game/color-utils";
  *  - 材質ごとに5階調の色（暗→明）を持ち、石畳は面取り（左上が明るく右下が暗い）、土は小石とひび、岩は欠けた塊で描く。
  * タイル座標だけから決まるので、毎フレーム同じ絵になる。ブラウザ以外（自動テスト）では何も描かず false を返す。
  */
-export type DungeonTheme = "tower" | "mine" | "ruins" | "facility";
+export type DungeonTheme = "tower" | "mine" | "ruins" | "facility" | "interior";
 
 interface ThemeSpec {
-  floorKind: "slab" | "dirt" | "cobble";
-  wallKind: "brick" | "rock";
+  floorKind: "slab" | "dirt" | "cobble" | "plank";
+  wallKind: "brick" | "rock" | "plaster";
   floor: string[];
   wall: string[];
   cap: string[];
@@ -45,7 +45,14 @@ const THEMES: Record<DungeonTheme, ThemeSpec> = {
     wall: ["#1a2228", "#26323a", "#364650", "#4c606c", "#6c8492"],
     cap: ["#0e1418", "#151d22", "#1e282e"],
   },
+  interior: {
+  floorKind: "plank", wallKind: "plaster", moss: false, glint: null,
+  floor: ["#2e1c10", "#4a2f1a", "#68452a", "#84603a", "#a07a4c"],
+  wall: ["#2a1e16", "#4a3a2c", "#d8ccb0", "#c0b294", "#e8dec6"],
+  cap: ["#1e140e", "#2c1e14", "#3a281a"],
+  },
 };
+
 
 const MOSS = ["#3a5a32", "#52743e", "#6e8e50"];
 const SIZE = 16;
@@ -135,6 +142,57 @@ function floorCobble(t: ThemeSpec, variant: number, tx: number, ty: number): Pai
         const my = (hashCell(i, ty + 4) % 3) * 5;
         put(mx, my, MOSS[i % 3]);
         if (i % 2 === 0) put(mx + 1, my, MOSS[0]);
+      }
+    }
+  };
+}
+
+/** 板張りの床（横に長い板。段ごとに継ぎ目の位置をずらし、板ごとに色を少し変え、木目の筋とくぎを入れる）。 */
+function floorPlank(t: ThemeSpec, variant: number, tx: number, ty: number): Painter {
+  return (_x, _y, put) => {
+    for (let y = 0; y < SIZE; y++) {
+      const board = Math.floor(y / 4);
+      const ly = y % 4;
+      const joint = (hashCell(board + variant * 3, tx + 5) % 12) + 2;
+      for (let x = 0; x < SIZE; x++) {
+        const seg = x < joint ? 0 : 1;
+        const tone = hashCell(board * 2 + seg + variant, ty + tx * 3) % 5;
+        const base = tone === 0 ? shadeColor(t.floor[2], 0.08) : tone === 1 ? shadeColor(t.floor[2], -0.08) : t.floor[2];
+        let c = base;
+        if (ly === 3) c = t.floor[1];
+        else if (ly === 0) c = shadeColor(base, 0.12);
+        if (x === joint && ly !== 3) c = t.floor[0];
+        if ((ly === 1 || ly === 2) && hashCell(x * 5 + board * 3 + variant, ly + tx) % 9 === 0) c = shadeColor(base, -0.12);
+        put(x, y, c);
+      }
+    }
+    for (let board = 0; board < 4; board++) {
+      const joint = (hashCell(board + variant * 3, tx + 5) % 12) + 2;
+      put(Math.min(15, joint + 2), board * 4 + 1, t.floor[0]);
+    }
+  };
+}
+
+/** しっくいの壁の正面: 上にのき飾り、白い壁、下に腰板（羽目板）と幅木。 */
+function wallFrontPlaster(t: ThemeSpec, variant: number, tx: number): Painter {
+  const wood = ["#2c1e14", "#4a321e", "#6a4828", "#845c34"];
+  return (_x, _y, put) => {
+    for (let y = 0; y < SIZE; y++) {
+      for (let x = 0; x < SIZE; x++) {
+        let c: string;
+        if (y === 0) c = wood[3];
+        else if (y === 1) c = wood[2];
+        else if (y === 2) c = wood[0];
+        else if (y < 9) {
+          const n = hashCell(x * 3 + variant, y * 7 + tx);
+          c = n % 11 === 0 ? t.wall[3] : t.wall[2];
+          if (y === 3) c = t.wall[3];
+        } else if (y === 9) c = wood[3];
+        else if (y < 14) {
+          const panel = x % 8;
+          c = panel === 0 || panel === 7 ? wood[0] : y === 10 ? wood[3] : y === 13 ? wood[1] : wood[2];
+        } else c = y === 14 ? wood[0] : t.cap[0];
+        put(x, y, c);
       }
     }
   };
@@ -314,7 +372,7 @@ export function drawDungeonTile(
     const left = isWall(map, tx - 1, ty);
     const right = isWall(map, tx + 1, ty);
     if (!below) {
-      const front = t.wallKind === "brick" ? wallFrontBrick(t, variant, tx % 3) : wallFrontRock(t, variant, tx % 3);
+      const front = t.wallKind === "brick" ? wallFrontBrick(t, variant, tx % 3) : t.wallKind === "plaster" ? wallFrontPlaster(t, variant, tx % 3) : wallFrontRock(t, variant, tx % 3);
       canvas = canvasFor(`${themeName}|front|${variant}|${tx % 3}`, front);
     } else {
       const mask = `${above ? 1 : 0}${left ? 1 : 0}${right ? 1 : 0}`;
@@ -335,12 +393,12 @@ export function drawDungeonTile(
         }
       });
     }
-  } else if (isFloor(art)) {
+  } else if (isFloor(art) || (themeName === "interior" && tileId === 1)) {
     const above = isWall(map, tx, ty - 1);
     const left = isWall(map, tx - 1, ty);
     const right = isWall(map, tx + 1, ty);
     const mask = `${above ? 1 : 0}${left ? 1 : 0}${right ? 1 : 0}`;
-    const paint = t.floorKind === "slab" ? floorSlab(t, variant, tx % 3, ty % 3) : t.floorKind === "cobble" ? floorCobble(t, variant, tx % 3, ty % 3) : floorDirt(t, variant, tx % 3, ty % 3);
+    const paint = t.floorKind === "slab" ? floorSlab(t, variant, tx % 3, ty % 3) : t.floorKind === "plank" ? floorPlank(t, variant, tx % 3, ty % 3) : t.floorKind === "cobble" ? floorCobble(t, variant, tx % 3, ty % 3) : floorDirt(t, variant, tx % 3, ty % 3);
     canvas = canvasFor(`${themeName}|floor|${variant}|${mask}|${tx % 3}${ty % 3}`, paint, (c) => {
       if (above) {
         [0.55, 0.36, 0.2, 0.09].forEach((a, i) => {

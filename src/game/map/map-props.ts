@@ -14,10 +14,14 @@ export const PROP_FOOTPRINT: Record<MapProp["kind"], { left: number; right: numb
   "manor-green": { left: 2, right: 2, up: 1 },
   rock: { left: 0, right: 0, up: 0 },
   bush: { left: 0, right: 0, up: 0 },
+  "tree-snow": { left: 0, right: 0, up: 0 },
+  "tree-dead": { left: 0, right: 0, up: 0 },
+  "rock-snow": { left: 0, right: 0, up: 0 },
+  "bush-snow": { left: 0, right: 0, up: 0 },
 };
 
 /** 絵の高さ（ピクセル）。岩・茂みは低く、家・木は枠いっぱい。 */
-export const PROP_HEIGHT: Record<MapProp["kind"], number> = { tree: 48, house: 56, "house-blue": 56, "house-green": 56, manor: 80, "manor-blue": 80, "manor-green": 80, rock: 20, bush: 18 };
+export const PROP_HEIGHT: Record<MapProp["kind"], number> = { tree: 48, house: 56, "house-blue": 56, "house-green": 56, manor: 80, "manor-blue": 80, "manor-green": 80, rock: 20, bush: 18, "tree-snow": 48, "tree-dead": 48, "rock-snow": 20, "bush-snow": 18 };
 
 export const isHouse = (kind: MapProp["kind"]): boolean => kind.startsWith("house") || kind.startsWith("manor");
 
@@ -69,8 +73,9 @@ export const MAP_PROPS: Record<string, MapProp[]> = {
     { kind: "rock", tileX: 5, tileY: 9 }, { kind: "bush", tileX: 13, tileY: 8 },
   ],
   "shimohara-town": [
-    { kind: "house-blue", tileX: 18, tileY: 5 }, { kind: "rock", tileX: 4, tileY: 12 }, { kind: "rock", tileX: 12, tileY: 14 },
-    { kind: "tree", tileX: 2, tileY: 14 }, { kind: "tree", tileX: 21, tileY: 14 }, { kind: "tree", tileX: 22, tileY: 5 },
+    { kind: "house-blue", tileX: 18, tileY: 5 }, { kind: "rock-snow", tileX: 4, tileY: 12 }, { kind: "rock-snow", tileX: 12, tileY: 14 },
+    { kind: "tree-snow", tileX: 2, tileY: 14 }, { kind: "tree-dead", tileX: 21, tileY: 14 }, { kind: "tree-snow", tileX: 22, tileY: 5 },
+    { kind: "tree-dead", tileX: 7, tileY: 13 }, { kind: "bush-snow", tileX: 15, tileY: 12 }, { kind: "tree-snow", tileX: 9, tileY: 14 },
   ],
 };
 

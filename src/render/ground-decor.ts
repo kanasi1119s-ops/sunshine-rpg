@@ -114,6 +114,19 @@ function grassPatches(ctx: CanvasRenderingContext2D, ox: number, oy: number, tx:
   }
 }
 
+/** 雪の地方の木のタイル: 枝の上に雪がのる（上のとなりが木でなければ、てっぺんに厚く）。 */
+function snowOnTree(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: number, tx: number, ty: number, topEdge: boolean): void {
+  for (let y = 0; y < s; y++) {
+    for (let x = 0; x < s; x++) {
+      const n = hashCell(tx * 16 + x, ty * 16 + y);
+      const limit = topEdge ? (y < 4 ? 90 : y < 8 ? 45 : 22) : y < 8 ? 26 : 14;
+      if (n % 100 < limit) {
+        dot(ctx, ox + x, oy + y, n % 3 === 0 ? "#dbe7f5" : "#f6faff");
+      }
+    }
+  }
+}
+
 /** 草地にまばらに散らす小さな草・花・小石。 */
 function grassDecor(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: number, tx: number, ty: number): void {
   const h = hashCell(tx * 73 + 5, ty * 91 + 11);
@@ -177,6 +190,10 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
         if (kindAt(map, tx, ty - 1) === "tree") {
           treeShadow(ctx, ox, oy, s, tx, ty);
         }
+        continue;
+      }
+      if (kind === "tree" && map.data.snowy) {
+        snowOnTree(ctx, ox, oy, s, tx, ty, kindAt(map, tx, ty - 1) !== "tree");
         continue;
       }
       if (kind !== "path" && kind !== "water") {

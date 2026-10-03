@@ -24,6 +24,8 @@ export interface TileMapData {
   tileArt?: Record<number, string>;
   /** ダンジョン・塔・洞窟などの床と壁の描き方（`dungeon-tiles.ts`）。省略時は従来どおり。 */
   theme?: string;
+  /** 雪の地方か。木のタイルに雪をのせる（`ground-decor.ts`）。 */
+  snowy?: boolean;
   /** 町の建物（壁タイルのかたまり）を屋根と壁で描くときの指定（`building-tiles.ts`）。 */
   building?: { walls: number[]; roof: string; plaster: string };
   /**
@@ -53,4 +55,4 @@ export interface MapProp {
 }
 
 /** 飾りの種類。`prop:<種類>` のドット絵がある。 */
-export type MapPropKind = "tree" | "house" | "house-blue" | "house-green" | "manor" | "manor-blue" | "manor-green" | "rock" | "bush";
+export type MapPropKind = "tree" | "house" | "house-blue" | "house-green" | "manor" | "manor-blue" | "manor-green" | "rock" | "bush" | "tree-snow" | "tree-dead" | "rock-snow" | "bush-snow";
