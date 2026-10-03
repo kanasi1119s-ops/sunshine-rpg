@@ -39,10 +39,17 @@ const SETS = {
   guardians: [4, { "G1-恵みの残照": "boss:god-1", "G2-理不尽の羽音": "boss:god-2", "G3-坩堝の顎": "boss:god-3", "G4-在らざる歌": "boss:god-4", "G5-透き徹る誓い": "boss:god-5", "G6-不敗の咎人": "boss:god-6", "G7-境界を見ぬ者": "boss:god-7", "G8-無音の弔鐘": "boss:god-8", "M1-塔の守り（2層）": "boss:tower2-guard", "M2-塔の守り（3層）": "boss:kanou3-guard", "M3-灯りの番人": "boss:tower3-guard", "M4-深部3層の歪み": "boss:deep3-yugami", "M5-全観": "boss:zenkan" }],
   mobs: [1, { "MB1-こうもり": "mob:bat", "MB2-虫": "mob:beetle", "MB3-結晶": "mob:shard", "MB4-しずく": "mob:drop", "MB5-かげ": "mob:ghost", "MB6-ねずみ": "mob:rat", "MB7-サソリ": "mob:scorpion", "MB8-め": "mob:eye" }],
   props: [1, { "P1-木": "prop:tree", "P2-家": "prop:house", "P3-家青": "prop:house-blue", "P4-家緑": "prop:house-green", "P5-岩": "prop:rock", "P6-茂み": "prop:bush", "P7-屋敷": "prop:manor", "P8-屋敷青": "prop:manor-blue", "P9-屋敷緑": "prop:manor-green", "P10-雪の木": "prop:tree-snow", "P11-枯れ木": "prop:tree-dead", "P12-雪の岩": "prop:rock-snow", "P13-雪の茂み": "prop:bush-snow", "P14-ヤシ": "prop:palm", "P15-サボテン": "prop:cactus", "P16-樽": "prop:barrel", "P17-街灯": "prop:lamp", "P18-井戸": "prop:well", "P19-道しるべ": "prop:signpost", "P20-木箱の山": "prop:crates", "P21-花壇": "prop:flowerbed", "P22-アイコンport": "prop:icon-port", "P23-アイコンvillage": "prop:icon-village", "P24-アイコンlake": "prop:icon-lake", "P25-アイコンmine": "prop:icon-mine", "P26-アイコンcastle": "prop:icon-castle", "P27-アイコンtents": "prop:icon-tents", "P28-アイコンtemple": "prop:icon-temple", "P29-アイコンsnowtown": "prop:icon-snowtown", "P30-アイコンsky": "prop:icon-sky", "P31-アイコンpalace": "prop:icon-palace" }],
+  icons: [1, Object.fromEntries(fs.readdirSync(new URL("../../assets-src/pixel-practice/r21-icons/", import.meta.url)).filter((f) => f.endsWith(".txt")).map((f) => f.replace(".txt", "")).map((n) => [`I-${n}`, `icon:${n}`]))],
   party: [1, { "C1-ユーリ": "char:ユーリ", "C2-レト": "char:レト", "C3-ミナ": "char:ミナ", "C4-ガイド": "char:ガイド", "C5-オルカ": "char:オルカ" }],
 };
+for (const [i, n] of ["ruin", "shrine", "cave", "stones", "bigtree", "vortex"].entries()) SETS.props[1][`P${40 + i}-アイコン${n}`] = `prop:icon-${n}`;
+SETS.props[1]["P46-アイコンvolcano"] = "prop:icon-volcano";
+SETS.props[1]["P47-アイコンdive"] = "prop:icon-dive";
 for (const n of fs.readdirSync(new URL("../../assets-src/pixel-practice/r20-props/", import.meta.url)).filter((f) => f.endsWith(".txt")).map((f) => f.replace(".txt", ""))) {
   SETS.props[1][`R20-${n}`] = `prop:${n}`;
+}
+for (const n of fs.readdirSync(new URL("../../assets-src/pixel-practice/r22-vehicles/", import.meta.url)).filter((f) => f.endsWith(".txt") && !f.startsWith("whirlpool")).map((f) => f.replace(".txt", ""))) {
+  SETS.props[1][`R22-${n}`] = n === "spire" || n.startsWith("islet-") ? `prop:icon-${n}` : `prop:${n}`;
 }
 // 倍率（SCALE）はモジュールの読み込み時に決まるため、セットごとに別のプロセスで実行する（node export-game-data.mjs → 自動で分けて実行）。
 const [mode, tmpDir] = process.argv.slice(2);

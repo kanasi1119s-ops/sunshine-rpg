@@ -1,4 +1,6 @@
-import { WORLD_BEACONS, WORLD_FERRY, WORLD_TOWNS } from "../map/world/world-map.generated";
+import { WORLD_AIRSHIP_START, WORLD_BEACONS, WORLD_ISLETS, WORLD_SHIP_DOCK, WORLD_TOWER, WORLD_TOWNS, WORLD_VILLAGES } from "../map/world/world-map.generated";
+import { DEEP_ENTRY } from "../map/chapter10/deep-maps";
+import { isletRequirementHint } from "./islets-world";
 import { GODS } from "../battle/chapter11-enemies";
 import type { EventCommand } from "../event/types";
 import type { TileMapData } from "../map/types";
@@ -12,7 +14,7 @@ import { say } from "./side-story";
  *  - 虚灯宮・深部の転移陣（`chapter10-world.ts`）は、欠片8つに加えて、この航路が開いていないと起動しない。
  */
 
-/** 世界地図から町へ入るために、前の章を終えている必要があるフラグ（なければ入れない）。 */
+/** 世界地図から町へ入るために、前の章を終えている必要があるフラグ（なければ入れない）。章は、この順に進む。 */
 export const WORLD_ENTRY_FLAG: Record<string, string> = {
   "mugikano-village": "chapter0_reported_to_kasen",
   "garasuko-town": "chapter1_reported_to_elder",
@@ -24,6 +26,24 @@ export const WORLD_ENTRY_FLAG: Record<string, string> = {
   "toushin-town": "chapter7_reported",
   "kyotoukyu-court": "chapter8_reported",
 };
+
+/**
+ * 世界地図の出入り口に入るための条件が足りないとき、そのヒント（複数）を返す。空なら入れる。
+ *  - 町: 前の章を終えていること（章は順番に進む）。
+ *  - 霧断崖・霜原（北東の大陸）: 船が要る／浮嶼（空の島々）: 飛空艇が要る（行き方そのものが、乗り物を要求する）。
+ *  - 隠しダンジョンの小島: 乗り物と、物語の進み具合（`islets-world.ts`）。
+ *  - 芯環塔: 8つの環灯台がともり、渦の嵐が割れていること。
+ */
+export function worldEntryProblems(targetMapId: string, flags: Record<string, boolean>): string[] {
+  if (targetMapId.startsWith("islet-")) {
+    return isletRequirementHint(targetMapId, flags);
+  }
+  if (targetMapId === "tower-1") {
+    return flags["vortex_route_open"] ? [] : ["渦を覆う嵐が、行く手をふさいでいる。8つの環灯台に、光をともさなければ。"];
+  }
+  const need = WORLD_ENTRY_FLAG[targetMapId];
+  return need && !flags[need] ? ["まだ、この先へ進む時ではない気がする。いまの町で、やるべきことを終えてから来よう。"] : [];
+}
 
 /** 環灯台の番号（神の番号）と、置かれる地方。 */
 const BEACON_REGIONS = ["麦香野", "硝子湖", "鉄鏈鉱山", "砂音", "霧断崖", "霜原", "浮嶼", "灯芯都"];
@@ -107,47 +127,56 @@ function beacon(no: number, pos: { x: number; y: number }): Npc {
   };
 }
 
-function ferryman(): Npc {
+/** 船大工。船の部品（帆・舵）がそろい、砂音の件が終わっていれば、帆走船「渡り鳥号」を渡してくれる。 */
+function shipwright(): Npc {
   return {
-    id: "world-ferry",
-    tileX: WORLD_FERRY.x,
-    tileY: WORLD_FERRY.y,
+    id: "world-shipwright",
+    tileX: WORLD_SHIP_DOCK.x,
+    tileY: WORLD_SHIP_DOCK.y,
     color: "#8a6a40",
     commands: [
       {
         type: "if",
-        flag: "vortex_route_open",
+        flag: "has_ship",
         equals: true,
-        then: [
-          say("渡し守", "ほう、八つの灯りがそろったか。海が、こんなに静かなのは、初めて見る。"),
-          {
-            type: "choice",
-            text: "渦の塔へ、船で渡りますか？",
-            options: [
-              {
-                label: "渡る",
-                commands: [
-                  say("渡し守", "しっかりつかまっていな。渦の縁は、少し揺れるぞ。"),
-                  say(undefined, "船は、光の道をたどって沖へ出た。やがて、空と海を巻きこむ大渦が、目の前に口を開ける。"),
-                  say(undefined, "渦の中心に、雲の上までそびえる塔が見えた。船は、渦の目へ、静かに滑りこんでいく。"),
-                  { type: "setFlag", flag: "tower_gate_open", value: true },
-                  { type: "warp", mapId: "tower-1", tileX: 10, tileY: 11 },
-                ],
-              },
-              { label: "まだ準備する", commands: [say("渡し守", "いつでも言いな。灯りが消えない限り、船は出せる。")] },
-            ],
-          },
-        ],
+        then: [say("船大工", "渡り鳥号は、桟橋につないである。海へ出るなら、船のところまで歩いていきな。海岸ぞいに着けば、自分で降りられる。")],
         else: [
           {
             type: "if",
-            flag: "deep_yugami_defeated",
+            flag: "chapter4_reported",
             equals: true,
             then: [
-              say("渡し守", "沖に、いつも嵐雲が見えるだろう。あの下に、大渦がある。常嵐が割れない限り、船は出せないよ。"),
-              say("渡し守", "昔から言い伝えがある。大陸のあちこちにある古い灯台に、光をともせば、嵐が道をあける、とな。"),
+              {
+                type: "if",
+                flag: "ship_sail",
+                equals: true,
+                then: [
+                  {
+                    type: "if",
+                    flag: "ship_helm",
+                    equals: true,
+                    then: [
+                      say("船大工", "おお、砂音の帆と、鉄鏈の舵か。……ぴったりだ。これで、わしの船が、また海に出られる。"),
+                      say(undefined, "古い帆走船が、桟橋で、ゆっくり帆を広げた。環の輪の紋様が、風をはらむ。"),
+                      say("船大工", "名前は『渡り鳥号』。陸のあちこちへ、渡ってゆけ。海には、陸とは違う魔物もいる。気をつけな。"),
+                      say(undefined, "★ 船を手に入れた！ 桟橋のとなりの海で、船にのれる。船は、海と、海ぞいの陸を行ける。"),
+                      { type: "setFlag", flag: "has_ship", value: true },
+                    ],
+                    else: [say("船大工", "帆はそろったが、舵がない。鉄鏈鉱山の鍛冶屋が、舵を打てると聞いた。会ってきてくれ。")],
+                  },
+                ],
+                else: [
+                  {
+                    type: "if",
+                    flag: "ship_helm",
+                    equals: true,
+                    then: [say("船大工", "舵はそろったな。あとは、帆だ。砂音の帆職人なら、砂漠の風で鍛えた丈夫な帆を縫える。")],
+                    else: [say("船大工", "船は直せる。だが、帆と舵がない。帆は砂音の帆職人、舵は鉄鏈鉱山の鍛冶屋を訪ねてくれ。")],
+                  },
+                ],
+              },
             ],
-            else: [say("渡し守", "沖の嵐雲は、いつもああさ。近づく者はいないよ。")],
+            else: [say("船大工", "古い船が1隻ある。直せば海に出られるが、部品を集めるあてがなくてな。……砂音の件が片づいたら、また来てくれ。")],
           },
         ],
       },
@@ -155,8 +184,112 @@ function ferryman(): Npc {
   };
 }
 
+/** 飛空艇の技師。霜原の件が終わり、船を手に入れていれば、飛空艇を渡してくれる。 */
+function airshipEngineer(): Npc {
+  return {
+    id: "world-airship-engineer",
+    tileX: WORLD_AIRSHIP_START.x - 1,
+    tileY: WORLD_AIRSHIP_START.y,
+    color: "#7a8aa0",
+    commands: [
+      {
+        type: "if",
+        flag: "has_airship",
+        equals: true,
+        then: [say("技師", "『風切り号』は、いつでも飛べる。空では、上昇するのも降りるのも、船より自由だ。降りたいところで、決定ボタンを押せばいい。")],
+        else: [
+          {
+            type: "if",
+            flag: "chapter6_reported",
+            equals: true,
+            then: [
+              {
+                type: "if",
+                flag: "has_ship",
+                equals: true,
+                then: [
+                  say("技師", "霜原の施設で見つけた浮力の石を、この船体に組みこんでみた。海を渡ってきたあんたたちなら、乗りこなせるだろう。"),
+                  say(undefined, "雪原に、翼のある船が横たわっている。灯の環の輪が、機体に刻まれている。"),
+                  say("技師", "名前は『風切り号』。空を行けば、浮嶼にも渡れる。嵐のそばは、まだ危ない。気をつけな。"),
+                  say(undefined, "★ 飛空艇を手に入れた！ 地図の飛空艇に乗って、決定ボタンで着陸できる。空には、空の魔物がいる。"),
+                  { type: "setFlag", flag: "has_airship", value: true },
+                ],
+                else: [say("技師", "浮力の石を組みこんだ船体はできた。だが、海を越える経験のない者に、空は任せられん。まず、船で海を渡ってこい。")],
+              },
+            ],
+            else: [say("技師", "雪原の施設の奥から、不思議な石が見つかってな。この船体に使えそうなんだが、まだ誰にも任せられない。霜原の件が片づいたら、また来てくれ。")],
+          },
+        ],
+      },
+    ],
+  };
+}
+
+/** 砂音の帆職人・鉄鏈鉱山の鍛冶屋（船の部品をくれる人）。町の地図に足す。 */
+export const SHIP_PART_NPCS: Record<string, Npc[]> = {
+  "sanone-town": [
+    {
+      id: "sanone-sailmaker",
+      tileX: 4,
+      tileY: 9,
+      color: "#d8c890",
+      commands: [
+        {
+          type: "if",
+          flag: "ship_sail",
+          equals: true,
+          then: [say("帆職人", "帆は渡したね。風をつかむ帆だよ。海でも、きっと丈夫さ。")],
+          else: [
+            {
+              type: "if",
+              flag: "chapter4_reported",
+              equals: true,
+              then: [
+                say("帆職人", "船大工が、帆を探している？ ……そうかい、あの古い船が、また海へ出るのかい。"),
+                say("帆職人", "砂嵐に何度も耐えた布で縫った、とっておきの帆がある。持っていきな。船乗りが、帆に力を借りるのを、昔はよく見たもんだ。"),
+                say(undefined, "★ 帆を手に入れた！（船の部品 1/2）"),
+                { type: "setFlag", flag: "ship_sail", value: true },
+              ],
+              else: [say("帆職人", "砂漠の風は、気まぐれだよ。この町の件が、落ち着いたら、また話を聞かせておくれ。")],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+  "tetsukusari-town": [
+    {
+      id: "tetsukusari-helmsmith",
+      tileX: 17,
+      tileY: 9,
+      color: "#9a7a5a",
+      commands: [
+        {
+          type: "if",
+          flag: "ship_helm",
+          equals: true,
+          then: [say("鍛冶屋", "舵は渡したな。鉄鏈でも錆びない鉄で打った、自慢の舵だ。")],
+          else: [
+            {
+              type: "if",
+              flag: "chapter4_reported",
+              equals: true,
+              then: [
+                say("鍛冶屋", "船の舵？ ……この鉱山の鉄で、か。いい仕事だ。灯り石の粉を混ぜて、海の塩にも負けないように打ってある。持っていけ。"),
+                say(undefined, "★ 舵を手に入れた！（船の部品 2/2）"),
+                { type: "setFlag", flag: "ship_helm", value: true },
+              ],
+              else: [say("鍛冶屋", "いまは、鉱山の騒ぎで手がいっぱいだ。砂音の件が片づいてからなら、舵くらい打ってやる。")],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
 export const WORLD_MAP_NPCS: Record<string, Npc[]> = {
-  "world-map": [...WORLD_BEACONS.map((pos, i) => beacon(i + 1, pos)), ferryman()],
+  "world-map": [...WORLD_BEACONS.map((pos, i) => beacon(i + 1, pos)), shipwright(), airshipEngineer()],
 };
 
 /**
@@ -168,12 +301,16 @@ export function connectWorldMap(maps: Record<string, TileMapData>, npcsByMap: Re
   if (!world) {
     return;
   }
-  for (const [townId, pos] of Object.entries(WORLD_TOWNS)) {
+  const places: Array<[string, { x: number; y: number }]> = [...Object.entries(WORLD_TOWNS), ...WORLD_VILLAGES.map((v) => [v.id, v] as [string, { x: number; y: number }])];
+  for (const [townId, pos] of places) {
     const data = maps[townId];
     if (!data) {
       continue;
     }
-    const gate = findSouthGate(data, npcsByMap[townId] ?? []);
+    // 村の仮の出入り口（行き先 0,0）は、歩ける範囲を調べる出発点にだけ使い、門ができたら取り除く
+    const start = data.exits?.[0];
+    data.exits = (data.exits ?? []).filter((e) => !(e.targetMapId === "world-map" && e.targetTileX === 0 && e.targetTileY === 0));
+    const gate = findSouthGate(data, npcsByMap[townId] ?? [], start);
     if (!gate) {
       continue;
     }
@@ -186,15 +323,19 @@ export function connectWorldMap(maps: Record<string, TileMapData>, npcsByMap: Re
     // 世界地図の側: 町のアイコンの上が出入り口
     world.exits = [...(world.exits ?? []), { tileX: pos.x, tileY: pos.y, targetMapId: townId, targetTileX: gate.x, targetTileY: gate.y - 1 }];
   }
+  // 隠しダンジョンの小島の入口（島の中心）と、海のまんなかの芯環塔の入口
+  for (const islet of WORLD_ISLETS) {
+    world.exits = [...(world.exits ?? []), { tileX: islet.x, tileY: islet.y, targetMapId: `${islet.id}-1`, targetTileX: DEEP_ENTRY.tileX, targetTileY: DEEP_ENTRY.tileY }];
+  }
+  world.exits = [...(world.exits ?? []), { tileX: WORLD_TOWER.x, tileY: WORLD_TOWER.y, targetMapId: "tower-1", targetTileX: 10, targetTileY: 11 }];
 }
 
-function findSouthGate(data: TileMapData, npcs: Npc[]): { x: number; y: number } | null {
+function findSouthGate(data: TileMapData, npcs: Npc[], first?: { tileX: number; tileY: number }): { x: number; y: number } | null {
   const { width: w, height: h } = data;
   const collision = data.collision ?? [];
-  const y = h - 1;
   const exitAt = (x: number, yy: number): boolean => (data.exits ?? []).some((e) => e.tileX === x && e.tileY === yy);
   // 出入り口（最初のもの）から歩いて行ける場所だけを候補にする
-  const start = data.exits?.[0];
+  const start = first ?? data.exits?.[0];
   const reachable = new Set<number>();
   if (start) {
     const stack: Array<[number, number]> = [[start.tileX, start.tileY]];
@@ -209,10 +350,21 @@ function findSouthGate(data: TileMapData, npcs: Npc[]): { x: number; y: number }
       }
     }
   }
+  // 歩ける場所の、いちばん下の「広い段」（3マス以上つながる段）のすぐ下に、門を開ける
+  let broadRow = -1;
+  for (let yy = 0; yy < h; yy++) {
+    let n = 0;
+    for (let xx = 0; xx < w; xx++) if (reachable.has(yy * w + xx)) n++;
+    if (n >= 3) broadRow = yy;
+  }
+  const y = broadRow + 1;
+  if (broadRow < 0 || y >= h) {
+    return null;
+  }
   const order = Array.from({ length: w - 2 }, (_, i) => i + 1).sort((a, b) => Math.abs(a - w / 2) - Math.abs(b - w / 2));
   for (const x of order) {
     const clear = (cx: number, cy: number): boolean => !npcs.some((n) => Math.abs(n.tileX - cx) <= 1 && Math.abs(n.tileY - cy) <= 1);
-    if (reachable.has((y - 1) * w + x) && collision[y * w + x] === 1 && !exitAt(x, y) && !exitAt(x, y - 1) && clear(x, y - 1) && clear(x, y - 2)) {
+    if (reachable.has((y - 1) * w + x) && !exitAt(x, y) && !exitAt(x, y - 1) && clear(x, y - 1) && clear(x, y - 2)) {
       return { x, y };
     }
   }

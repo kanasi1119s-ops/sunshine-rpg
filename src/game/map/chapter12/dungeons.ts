@@ -1,5 +1,6 @@
 import { BEFORE_GATE, buildFloor, type Palette } from "../chapter10/deep-maps";
 import type { TileMapData } from "../types";
+import { WORLD_TOWER } from "../world/world-map.generated";
 
 /**
  * 芯環塔（全3階層、roadmap 6-8）と環奥（異界の迷宮、全4区画、roadmap 6-10）。
@@ -27,7 +28,8 @@ const BLOCKS: [number, number][][] = [
 
 /** 各階層の南の出入り口が戻る先（塔・環奥の1階層目だけは、それぞれの入口の外へ戻る）。 */
 const TOWER_BACK = [
-  { targetMapId: "deep-4", targetTileX: 10, targetTileY: 6 },
+  // 芯環塔の根の階から南へ出ると、海のまんなかの塔の島（世界地図）に戻る
+  { targetMapId: "world-map", targetTileX: WORLD_TOWER.x, targetTileY: WORLD_TOWER.y + 1 },
   { targetMapId: "tower-1", ...{ targetTileX: BEFORE_GATE.tileX, targetTileY: BEFORE_GATE.tileY } },
   { targetMapId: "tower-2", ...{ targetTileX: BEFORE_GATE.tileX, targetTileY: BEFORE_GATE.tileY } },
 ];

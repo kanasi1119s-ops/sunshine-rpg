@@ -2,11 +2,13 @@
  * 戦闘画面の背景（場所ごと）。画像ファイルは使わず、小さな絵を一度だけ描いて使い回す。
  * 空・遠景・近景の層（ディザでなじませた帯、雲、丘、木、洞窟の石筍と水晶、砂丘、雪の松、遺跡の柱）で奥行きを出す。
  */
-export type Biome = "grass" | "cave" | "desert" | "snow" | "ruins";
+import { EXTRA_BIOMES, paintExtraBackdrop, type ExtraBiome } from "./battle-backdrop-extra";
+
+export type Biome = "grass" | "cave" | "desert" | "snow" | "ruins" | ExtraBiome;
 
 const BIOME_BY_PREFIX: Array<[string, Biome]> = [
-  ["tetsukusari-mine", "cave"], ["deep-", "ruins"], ["tower-", "ruins"], ["kanou-", "ruins"], ["kyotoukyu", "ruins"],
-  ["god-shrine", "ruins"], ["shimohara", "snow"], ["sanone", "desert"], ["garasuko-warehouse", "cave"],
+  ["tetsukusari-mine", "cave"], ["deep-", "ruins"], ["kyotoukyu", "ruins"],
+  ["god-shrine", "shrine"], ["tower-", "shrine"], ["kanou-", "shrine"], ["islet-1", "shrine"], ["islet-2", "lava"], ["islet-3", "coast"], ["islet-4", "sky"], ["islet-5", "deep"], ["islet-6", "lava"], ["shimohara", "snow"], ["sanone", "desert"], ["garasuko-warehouse", "cave"],
   ["kiri-archive", "ruins"], ["fushima-base", "ruins"], ["toushin", "ruins"], ["mugikano-water", "cave"],
 ];
 
@@ -373,7 +375,13 @@ export function getBackdropCanvas(biome: Biome, w: number, h: number): HTMLCanva
     case "desert": desertBackdrop(ctx, w, h); break;
     case "snow": snowBackdrop(ctx, w, h); break;
     case "ruins": ruinsBackdrop(ctx, w, h); break;
-    default: grassBackdrop(ctx, w, h); break;
+    default:
+      if (EXTRA_BIOMES.includes(biome as ExtraBiome)) {
+        paintExtraBackdrop(biome as ExtraBiome, ctx, w, h);
+      } else {
+        grassBackdrop(ctx, w, h);
+      }
+      break;
   }
   cache.set(key, canvas);
   return canvas;

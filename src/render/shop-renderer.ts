@@ -2,6 +2,7 @@ import { describeBonus } from "../game/economy/shop";
 import type { ShopMenuState } from "../game/economy/shop-menu";
 import type { EquipmentSlots } from "../game/items/equipment";
 import { drawWindow } from "./ui-frame";
+import { drawIcon, iconForItem } from "./icon-renderer";
 
 /** お店の画面。所持金・品物（値段と効果）・買ったかどうか。 */
 export function renderShop(
@@ -26,9 +27,12 @@ export function renderShop(
     const y = 30 + i * 22;
     const owned = equipment[item.category] === item.id;
     ctx.fillStyle = i === state.cursor ? "#f2c14e" : "#f0f0f0";
-    ctx.fillText(`${i === state.cursor ? "▶" : "　"} ${item.name}${owned ? "（装備中）" : ""}`, 14, y);
+    ctx.fillText(`${i === state.cursor ? "▶" : "　"}`, 14, y);
+    drawIcon(ctx, iconForItem(item.id), 26, y - 2, 16);
+    ctx.fillStyle = i === state.cursor ? "#f2c14e" : "#f0f0f0";
+    ctx.fillText(`${item.name}${owned ? "（装備中）" : ""}`, 46, y);
     ctx.fillStyle = gold >= item.price ? "#c8e8c8" : "#a08080";
-    ctx.fillText(`　　${describeBonus(item)}　${item.price}灯貨`, 14, y + 10);
+    ctx.fillText(`${describeBonus(item)}　${item.price}灯貨`, 46, y + 10);
   });
   if (state.message) {
     ctx.fillStyle = "#88ff88";

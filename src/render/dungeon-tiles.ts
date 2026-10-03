@@ -8,7 +8,7 @@ import { hashCell, shadeColor } from "../game/color-utils";
  *  - 材質ごとに5階調の色（暗→明）を持ち、石畳は面取り（左上が明るく右下が暗い）、土は小石とひび、岩は欠けた塊で描く。
  * タイル座標だけから決まるので、毎フレーム同じ絵になる。ブラウザ以外（自動テスト）では何も描かず false を返す。
  */
-export type DungeonTheme = "tower" | "mine" | "ruins" | "facility" | "interior" | "archive";
+export type DungeonTheme = "tower" | "mine" | "ruins" | "facility" | "interior" | "archive" | "seabed" | "volcano";
 
 interface ThemeSpec {
   floorKind: "slab" | "dirt" | "cobble" | "plank";
@@ -46,6 +46,20 @@ const THEMES: Record<DungeonTheme, ThemeSpec> = {
     floor: ["#2e3a40", "#3c4a52", "#4e5e68", "#64767f", "#8498a2"],
     wall: ["#1a2228", "#26323a", "#364650", "#4c606c", "#6c8492"],
     cap: ["#0e1418", "#151d22", "#1e282e"],
+  },
+  // 海底の神殿: 青緑の石に、海藻の苔と、水のきらめき。
+  seabed: {
+    floorKind: "slab", wallKind: "brick", moss: true, glint: "#a0f0ff",
+    floor: ["#10303e", "#1a4658", "#26607a", "#3a7c98", "#6aa8c0"],
+    wall: ["#08141f", "#0e2434", "#183a52", "#26567a", "#4a86a8"],
+    cap: ["#050c14", "#08121c", "#0e1c2a"],
+  },
+  // 火山の迷宮: 焦げた赤黒い岩に、熱の火花。
+  volcano: {
+    floorKind: "cobble", wallKind: "rock", moss: false, glint: "#ff9030",
+    floor: ["#2a1210", "#3c1c16", "#52281c", "#70382a", "#96503a"],
+    wall: ["#140806", "#22100c", "#341a14", "#4c261c", "#6c382a"],
+    cap: ["#0a0403", "#120806", "#1c0e0a"],
   },
   interior: {
   floorKind: "plank", wallKind: "plaster", moss: false, glint: null, furniture: "table",

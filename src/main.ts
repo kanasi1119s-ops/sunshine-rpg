@@ -21,7 +21,11 @@ import { renderPlayer } from "./render/player-renderer";
 import { npcFeetY, renderNpcs } from "./render/npc-renderer";
 import { faceNpc, opposite, updateWander } from "./game/npc-wander";
 import { PartyTrail } from "./game/party-trail";
-import { WORLD_ENTRY_FLAG } from "./game/world/world-map-world";
+import { worldEntryProblems } from "./game/world/world-map-world";
+import { buildVehicleCollision, canLandOn, groundIdAt, OCEAN, openVortexChannel, VEHICLE_SPEED, type Vehicle } from "./game/vehicle";
+import { WORLD_AIRSHIP_START, WORLD_SHIP_START } from "./game/map/world/world-map.generated";
+import { drawAirship, drawShip } from "./render/vehicle-renderer";
+import { renderStorm, renderVortex } from "./render/vortex-renderer";
 import { setLitBeacons } from "./render/object-markers";
 import { renderWorldOverview } from "./render/world-overview";
 import { renderFollowers } from "./render/follower-renderer";
@@ -49,7 +53,7 @@ import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
 import { awardVictoryMastery, changeJob, isJobSystemUnlocked, battleSkillsOf, withJobBonus } from "./game/job/party-job";
 import { renderBattle, setBattleBiome } from "./render/battle-renderer";
-import { biomeForMap } from "./render/battle-backdrop";
+import { biomeForMap, type Biome } from "./render/battle-backdrop";
 import {
   createInitialEquipment,
   createInitialHeroStats,
@@ -164,6 +168,94 @@ let renderCamera = camera;
 
 const partyTrail = new PartyTrail();
 
+// ===== 乗り物（船・飛空艇）。世界地図だけ。 =====
+let vehicle: Vehicle = "foot";
+/** 停泊中の船（海のマス）・着陸中の飛空艇（陸のマス）の位置。 */
+let shipPos = { x: WORLD_SHIP_START.x, y: WORLD_SHIP_START.y };
+let airshipPos = { x: WORLD_AIRSHIP_START.x, y: WORLD_AIRSHIP_START.y };
+let lastOceanTile = { x: WORLD_SHIP_START.x, y: WORLD_SHIP_START.y };
+let prevWorldTile = { x: -1, y: -1 };
+let vehicleMaps: { ship: ReturnType<typeof createTileMap>; air: ReturnType<typeof createTileMap> } | null = null;
+let channelOpened = false;
+let parkedShipIndex = -1;
+let vehicleHint: { text: string; ms: number } | null = null;
+
+function worldMapData() {
+  return WORLD_MAPS["world-map"];
+}
+
+/** 乗り物の通行判定の地図（航路が開いたら作り直す）。 */
+function getVehicleMaps() {
+  const data = worldMapData();
+  if (!vehicleMaps) {
+    vehicleMaps = {
+      ship: createTileMap({ ...data, collision: buildVehicleCollision(data, "ship") }),
+      air: createTileMap({ ...data, collision: buildVehicleCollision(data, "air") }),
+    };
+  }
+  return vehicleMaps;
+}
+
+/** 世界地図の状態をフラグにそろえる: 航路が開いたら渦の切れ目を海にし、停泊中の船のマスは、歩いて乗れるよう通れるようにする。 */
+function syncWorldState(): void {
+  const data = worldMapData();
+  if (flags["vortex_route_open"] && !channelOpened) {
+    channelOpened = true;
+    if (openVortexChannel(data)) {
+      vehicleMaps = null;
+    }
+  }
+  const want = flags["has_ship"] && vehicle !== "ship" ? shipPos.y * data.width + shipPos.x : -1;
+  if (want !== parkedShipIndex) {
+    if (parkedShipIndex >= 0 && data.collision) {
+      data.collision[parkedShipIndex] = 1;
+    }
+    if (want >= 0 && data.collision) {
+      data.collision[want] = 0;
+    }
+    parkedShipIndex = want;
+  }
+}
+
+/** 歩いたあとの乗り降り。決定ボタンを使ったら true。 */
+function updateVehicleAfterMove(tile: { x: number; y: number }, actionPressed: boolean): boolean {
+  const data = worldMapData();
+  const ground = groundIdAt(data, tile.x, tile.y);
+  const entering = prevWorldTile.x !== tile.x || prevWorldTile.y !== tile.y;
+  let usedAction = false;
+  if (vehicle === "foot") {
+    if (entering && flags["has_ship"] && tile.x === shipPos.x && tile.y === shipPos.y) {
+      vehicle = "ship";
+      lastOceanTile = { x: tile.x, y: tile.y };
+      vehicleHint = { text: "船にのった。海を進める（海岸に近づくと、自動で降りる）。", ms: 3200 };
+      if (audioStarted) audio.playSe(seOf("door"));
+    } else if (entering && flags["has_airship"] && tile.x === airshipPos.x && tile.y === airshipPos.y) {
+      vehicle = "air";
+      vehicleHint = { text: "飛空艇にのった。決定ボタンで着陸できる。", ms: 3200 };
+      if (audioStarted) audio.playSe(seOf("door"));
+    }
+  } else if (vehicle === "ship") {
+    if (ground === OCEAN) {
+      lastOceanTile = { x: tile.x, y: tile.y };
+    } else {
+      vehicle = "foot";
+      shipPos = { ...lastOceanTile };
+      vehicleHint = { text: "船を降りた。船は海岸にとめてある。", ms: 2800 };
+    }
+  } else if (vehicle === "air" && actionPressed) {
+    usedAction = true;
+    if (canLandOn(ground) && !findExitAt(map, tile.x, tile.y)) {
+      vehicle = "foot";
+      airshipPos = { x: tile.x, y: tile.y };
+      vehicleHint = { text: "着陸した。", ms: 2000 };
+    } else {
+      vehicleHint = { text: "ここには着陸できない。", ms: 1800 };
+    }
+  }
+  prevWorldTile = { x: tile.x, y: tile.y };
+  return usedAction;
+}
+
 /** ついてくる仲間（加入済みの仲間）の、マップ用の絵の設計。加入した順。 */
 function followerSpecs(): ReturnType<typeof spriteSpecFromPortrait>[] {
   const specs: ReturnType<typeof spriteSpecFromPortrait>[] = [];
@@ -187,6 +279,8 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   npcs = WORLD_NPCS[mapId] ?? [];
   player = { ...player, x: tileX * map.data.tileWidth, y: tileY * map.data.tileHeight };
   partyTrail.reset(player);
+  vehicle = "foot";
+  prevWorldTile = { x: -1, y: -1 };
   playMapBgm(mapId);
   if (audioStarted) {
     audio.playSe(seOf("door"));
@@ -390,7 +484,7 @@ let encounterState: EncounterState = createEncounterState(Math.random);
 let lastStepTile: { x: number; y: number; mapId: string } | null = null;
 
 /** 世界地図で、いま立っている地形の戦闘の背景。 */
-let worldBattleBiome: "grass" | "desert" | "snow" = "grass";
+let worldBattleBiome: Biome = "grass";
 
 function startRandomBattle(enemies: Combatant[]): void {
   if (battle) {
@@ -465,6 +559,11 @@ if (import.meta.env.DEV) {
     },
     startBattle: (battleId: string) => startStoryBattle(battleId),
     /** 開発用: 仲間の加入フラグを立てて、隊列（後ろをついてくる姿）を確かめる。 */
+    /** 開発用: 船と飛空艇を手に入れた状態にする。 */
+    giveVehicles: () => {
+      flags["has_ship"] = true;
+      flags["has_airship"] = true;
+    },
     joinAll: () => {
       for (const { flag } of COMPANION_JOIN_FLAGS) {
         flags[flag] = true;
@@ -1314,7 +1413,23 @@ const loop = createGameLoop({
     if (worldOverviewOpen) {
       return;
     }
-    player = updatePlayer(player, input.getDirection(), dtMs, map);
+    const onWorld = currentMapId === "world-map";
+    if (onWorld) {
+      syncWorldState();
+    }
+    const moveMap = onWorld && vehicle === "ship" ? getVehicleMaps().ship : onWorld && vehicle === "air" ? getVehicleMaps().air : map;
+    player = updatePlayer(player, input.getDirection(), dtMs * (onWorld ? VEHICLE_SPEED[vehicle] : 1), moveMap);
+    let actionUsed = false;
+    if (onWorld) {
+      actionUsed = updateVehicleAfterMove(
+        { x: Math.floor((player.x + player.width / 2) / map.data.tileWidth), y: Math.floor((player.y + player.height / 2) / map.data.tileHeight) },
+        actionPressed,
+      );
+      if (vehicleHint) {
+        vehicleHint.ms -= dtMs;
+        if (vehicleHint.ms <= 0) vehicleHint = null;
+      }
+    }
     partyTrail.update(player, dtMs, followerSpecs().length);
     updateWander(
       npcs,
@@ -1334,14 +1449,17 @@ const loop = createGameLoop({
 
     const centerTileX = Math.floor((player.x + player.width / 2) / map.data.tileWidth);
     const centerTileY = Math.floor((player.y + player.height / 2) / map.data.tileHeight);
-    const exit = findExitAt(map, centerTileX, centerTileY);
+    const exit = vehicle === "foot" ? findExitAt(map, centerTileX, centerTileY) : undefined;
     if (exit) {
-      // 世界地図から町へ入るには、前の章を終えている必要がある（物語の順を守る）。
-      const needFlag = currentMapId === "world-map" ? WORLD_ENTRY_FLAG[exit.targetMapId] : undefined;
-      if (needFlag && !flags[needFlag]) {
+      // 世界地図から入る場所には、条件がある（章の順・乗り物・クリア後の航路など）。足りなければ、ヒントを出して押し戻す。
+      const problems = currentMapId === "world-map" ? worldEntryProblems(exit.targetMapId, flags) : [];
+      if (problems.length > 0) {
         player = { ...player, y: player.y + map.data.tileHeight, moving: false };
-        dialogue.start([{ type: "message", text: "まだ、この先へ進む時ではない気がする。いまの町で、やるべきことを終えてから来よう。" }]);
+        dialogue.start(problems.map((text) => ({ type: "message" as const, text })));
         return;
+      }
+      if (exit.targetMapId === "tower-1") {
+        flags["tower_gate_open"] = true;
       }
       switchMap(exit.targetMapId, exit.targetTileX, exit.targetTileY);
       autosave();
@@ -1358,8 +1476,16 @@ const loop = createGameLoop({
         let encounterMapId: string | null = currentMapId;
         if (currentMapId === "world-map") {
           const tileId = map.data.layers[0].data[centerTileY * map.data.width + centerTileX];
-          encounterMapId = worldZoneIdAt(tileId, centerTileX);
-          worldBattleBiome = tileId === 5 ? "desert" : tileId === 6 || tileId === 12 ? "snow" : "grass";
+          if (vehicle === "ship") {
+            encounterMapId = "world-sea";
+            worldBattleBiome = "coast";
+          } else if (vehicle === "air") {
+            encounterMapId = "world-air";
+            worldBattleBiome = "sky";
+          } else {
+            encounterMapId = worldZoneIdAt(tileId, centerTileX, centerTileY);
+            worldBattleBiome = tileId === 18 ? "lava" : tileId === 5 ? "desert" : tileId === 6 || tileId === 12 ? "snow" : "grass";
+          }
         }
         const stepped = encounterMapId ? stepEncounter(encounterState, encounterMapId, Math.random) : { state: encounterState, enemies: null };
         encounterState = stepped.state;
@@ -1370,7 +1496,7 @@ const loop = createGameLoop({
       }
     }
 
-    if (actionPressed) {
+    if (actionPressed && !actionUsed && vehicle === "foot") {
       const facing = getFacingTile(player, map.data.tileWidth, map.data.tileHeight);
       const npc = findNpcAt(npcs, facing.tileX, facing.tileY);
       if (npc) {
@@ -1436,12 +1562,58 @@ const loop = createGameLoop({
     renderProps(ctx, map.data, renderCamera, (prop) => propFeetY(prop, map.data.tileHeight) <= playerFeetY);
     renderNpcs(ctx, npcs, map, renderCamera, (npc) => npcFeetY(npc, map.data.tileHeight) <= playerFeetY);
     const followers = followerSpecs();
-    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY <= playerFeetY, currentMapId === "world-map" ? 0.6 : 1);
-    const heroScale = currentMapId === "world-map" ? 0.6 : 1;
-    renderPlayer(ctx, player, renderCamera, heroScale);
-    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY > playerFeetY, currentMapId === "world-map" ? 0.6 : 1);
+    const onWorldMap = currentMapId === "world-map";
+    const riding = onWorldMap && vehicle !== "foot";
+    const nowMs = performance.now();
+    if (onWorldMap) {
+      renderVortex(ctx, map, renderCamera, nowMs);
+      // 停泊中の船・着陸中の飛空艇
+      const ts = map.data.tileWidth;
+      if (flags["has_ship"] && vehicle !== "ship") {
+        drawShip(ctx, shipPos.x * ts + ts / 2 - renderCamera.x, shipPos.y * ts + ts - renderCamera.y, "right", true);
+      }
+      if (flags["has_airship"] && vehicle !== "air") {
+        drawAirship(ctx, airshipPos.x * ts + ts / 2 - renderCamera.x, airshipPos.y * ts + ts - renderCamera.y, "down", nowMs, false);
+      }
+    }
+    if (!riding) {
+      renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY <= playerFeetY, onWorldMap ? 0.6 : 1);
+      renderPlayer(ctx, player, renderCamera, onWorldMap ? 0.6 : 1);
+      renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY > playerFeetY, onWorldMap ? 0.6 : 1);
+    } else {
+      const fx = player.x + player.width / 2 - renderCamera.x;
+      const fy = player.y + player.height - renderCamera.y;
+      if (vehicle === "ship") {
+        drawShip(ctx, fx, fy, player.direction);
+      } else {
+        drawAirship(ctx, fx, fy, player.direction, nowMs, true);
+      }
+    }
     renderNpcs(ctx, npcs, map, renderCamera, (npc) => npcFeetY(npc, map.data.tileHeight) > playerFeetY);
     renderProps(ctx, map.data, renderCamera, (prop) => propFeetY(prop, map.data.tileHeight) > playerFeetY);
+    if (onWorldMap) {
+      if (!flags["vortex_route_open"]) {
+        renderStorm(ctx, map, renderCamera, nowMs);
+      }
+      if (vehicleHint) {
+        ctx.font = "9px monospace";
+        ctx.textBaseline = "top";
+        ctx.textAlign = "left";
+        const w = Math.min(LOGICAL_WIDTH - 8, vehicleHint.text.length * 9 + 10);
+        ctx.fillStyle = "rgba(10,14,34,0.8)";
+        ctx.fillRect(4, LOGICAL_HEIGHT - 22, w, 14);
+        ctx.fillStyle = "#f2c14e";
+        ctx.fillText(vehicleHint.text, 8, LOGICAL_HEIGHT - 19);
+      } else if (vehicle === "air") {
+        ctx.font = "9px monospace";
+        ctx.textBaseline = "top";
+        ctx.textAlign = "left";
+        ctx.fillStyle = "rgba(10,14,34,0.6)";
+        ctx.fillRect(4, LOGICAL_HEIGHT - 20, 120, 12);
+        ctx.fillStyle = "#dfe8f4";
+        ctx.fillText("決定ボタンで着陸", 8, LOGICAL_HEIGHT - 18);
+      }
+    }
 
     const dialogueState = dialogue.getRenderState();
     if (dialogueState) {

@@ -13,7 +13,7 @@ type Kind = "grass" | "path" | "water" | "tree" | "land" | "other";
 
 const KIND_BY_ART: Record<string, Kind> = {
   grass: "grass", hills: "grass", path: "path", water: "water", treeCanopy: "tree", worldforest: "tree", snowforest: "tree",
-  mountain: "land", "tint:sand": "land", "tint:snow": "land", "tint:cloud": "land", "tint:flagstone": "land",
+  mountain: "land", peaks: "land", chasm: "land", lava: "land", "tint:sand": "land", "tint:snow": "land", "tint:cloud": "land", "tint:flagstone": "land",
 };
 
 const GRASS_DARK = "#3f7a35";

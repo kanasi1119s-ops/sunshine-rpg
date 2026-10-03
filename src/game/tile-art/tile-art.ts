@@ -7,7 +7,7 @@ import { hashCell, shadeColor } from "../color-utils";
  * ジャンルでよく使われる技法（草のディザリング、水の波模様、道の踏み跡、
  * 木の樹冠＋幹）を適用する。既存の特定作品のタイルセットは参照していない。
  */
-export type TilePatternKind = "grass" | "water" | "path" | "treeCanopy" | "flagstone" | "brick" | "sand" | "snow" | "plank" | "cloud" | "roof" | "crate" | "pillar" | "machine" | "pipe" | "carpet" | "crystal" | "void" | "gate" | "mural" | "bed" | "rift" | "mountain" | "worldforest" | "hills";
+export type TilePatternKind = "grass" | "water" | "path" | "treeCanopy" | "flagstone" | "brick" | "sand" | "snow" | "plank" | "cloud" | "roof" | "crate" | "pillar" | "machine" | "pipe" | "carpet" | "crystal" | "void" | "gate" | "mural" | "bed" | "rift" | "mountain" | "worldforest" | "hills" | "peaks" | "chasm" | "lava";
 
 export interface TileArtSpec {
   base: string;
@@ -359,6 +359,43 @@ const PATTERNS: Record<TilePatternKind, PatternFn> = {
     if (edge) return ramp[0];
     return row >= 14 ? ramp[0] : hashCell(col + variant * 3, row) % 7 === 0 ? ramp[2] : ramp[1];
   },
+  // 世界地図の高い山（ごつごつした主峰）: 1タイルに大きな峰ひとつ。左の面は明るく右は暗く、岩の筋が斜めに走り、てっぺんに雪。足元は黒い岩。
+  peaks: (ramp, row, col, variant) => {
+    const apexX = 7 + ((variant % 3) - 1);
+    const apexY = 0;
+    const half = (r: number): number => 1.5 + r * 0.55 + (hashCell(r + variant * 3, 7) % 3) * 0.3;
+    const inside = (r: number, c: number): boolean => r >= apexY && r <= 14 && Math.abs(c - apexX) <= half(r - apexY);
+    if (inside(row, col)) {
+      const left = col <= apexX;
+      if (row < 5 && Math.abs(col - apexX) < half(row) - 0.5) return left ? ramp[4] : ramp[3]; // 雪
+      const strata = (col * 2 + row * 3 + variant * 5) % 11 === 0;
+      if (col === apexX) return ramp[2];
+      if (left) return strata ? ramp[2] : hashCell(col + variant, row * 3) % 9 === 0 ? ramp[2] : ramp[3];
+      return strata ? ramp[0] : hashCell(col * 5 + variant, row) % 7 === 0 ? ramp[0] : ramp[1];
+    }
+    const edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dr, dc]) => inside(row + dr, col + dc));
+    if (edge) return shadeColor(ramp[0], -0.3);
+    return hashCell(col + variant * 3, row * 7) % 6 === 0 ? ramp[1] : ramp[0];
+  },
+  // 世界地図の深い谷（通れない裂け目）: 黒い底に、ぎざぎざの割れ目。縁は明るい岩肌。
+  chasm: (ramp, row, col, variant) => {
+    const crack = Math.sin(col * 0.9 + variant * 2.3) * 2.2 + 8 + Math.sin(col * 2.1 + row * 0.3 + variant) * 0.9;
+    const d = Math.abs(row - crack);
+    if (d < 1.2) return shadeColor(ramp[0], -0.6);
+    if (d < 2.6) return ramp[0];
+    if (d < 3.4) return ramp[1];
+    const h = hashCell(col + variant * 7, row + variant * 5);
+    if (d < 4.6) return h % 3 === 0 ? ramp[3] : ramp[2];
+    return h % 11 === 0 ? ramp[3] : h % 5 === 0 ? ramp[1] : ramp[2];
+  },
+  // 火山の溶岩（通れない）: 暗い冷えた殻が割れて、明るい流れが筋になって見える。
+  lava: (ramp, row, col, variant) => {
+    const v = Math.sin(col * 0.55 + row * 0.32 + variant * 2.1) + Math.sin(col * 0.28 - row * 0.62 + variant * 1.3) + Math.sin((col + row) * 0.9 + variant) * 0.35;
+    const h = hashCell(col + variant * 5, row * 3 + variant);
+    if (v > 1.15) return h % 4 === 0 ? ramp[4] : ramp[3];
+    if (v > 0.55) return ramp[2];
+    return h % 7 === 0 ? ramp[2] : h % 3 === 0 ? ramp[1] : ramp[0];
+  },
   // 世界地図の森: 小さな樹冠が4つ。塊ごとに左上が明るく、すき間は暗い。
   worldforest: (ramp, row, col, variant) => {
     const crowns: [number, number, number][] = [
@@ -430,6 +467,9 @@ export const TILE_ART: Record<string, TileArtSpec> = {
   path: { base: "#b3853f", accentLight: "#d8b060", accentDark: "#85552a", pattern: "path" },
   treeCanopy: { base: "#2b8022", accentLight: "#5fbb31", accentDark: "#185019", pattern: "treeCanopy" },
   mountain: { base: "#857c74", accentLight: "#b8b0a2", accentDark: "#4e4640", pattern: "mountain" },
+  peaks: { base: "#7a7078", accentLight: "#aaa2ac", accentDark: "#3a343c", pattern: "peaks" },
+  chasm: { base: "#5a4a5a", accentLight: "#8a7a86", accentDark: "#2a2230", pattern: "chasm" },
+  lava: { base: "#a03812", accentLight: "#ffc050", accentDark: "#3a1008", pattern: "lava" },
   worldforest: { base: "#3a8a30", accentLight: "#7cd048", accentDark: "#1c5a24", pattern: "worldforest" },
   snowforest: { base: "#3a6a50", accentLight: "#eef4f8", accentDark: "#1c3c3c", pattern: "worldforest" },
   hills: { base: "#5a9a40", accentLight: "#82bc58", accentDark: "#3a7032", pattern: "hills" },

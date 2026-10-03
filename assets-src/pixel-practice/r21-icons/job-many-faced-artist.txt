@@ -1,0 +1,16 @@
+....yyyyyyyy....
+...yGGGGGGHHy...
+..yGGGGGGHHHHy..
+.yGGGuuuuuuHHHy.
+yGGGuFFFFFFuHHHy
+yGGuFFFFFFFfuHHy
+yGGuFAAFFAAfuHJy
+yGGuFAAFFAAfuJJy
+yGGuFRFFFFRfvJJy
+yGHuFAFFFFAfvJJy
+yHHuuFAAAAfvvJJy
+yHHHuuffffvvJJJy
+.yHHHuuuvvvJJJy.
+..yHHHHJJJJJJy..
+...yHHJJJJJJy...
+....yyyyyyyy....
