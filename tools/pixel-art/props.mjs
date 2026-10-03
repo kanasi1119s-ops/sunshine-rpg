@@ -19,11 +19,11 @@ function piece(name, dir, grid, palFile, recolor = {}) {
   };
 }
 export const PIECES = [
-  piece("P1-木", "r07-tree", "scratch1.txt", "pal-scratch1.json"),
-  piece("P2-家", "r08-house", "scratch2.txt", "pal-scratch2.json"),
-  // 家の色違い（屋根の5色だけ差し替え）
-  piece("P3-家青", "r08-house", "scratch2.txt", "pal-scratch2.json", { R: "#4a78c8", r: "#3a60a8", Y: "#2c4a88", Z: "#1c2a58", H: "#78a4e8" }),
-  piece("P4-家緑", "r08-house", "scratch2.txt", "pal-scratch2.json", { R: "#4a9a58", r: "#3a7a46", Y: "#2c5c38", Z: "#183a28", H: "#7ac888" }),
-  piece("P5-岩", "r13-props", "rock.txt", "pal-rock.json"),
-  piece("P6-茂み", "r13-props", "bush.txt", "pal-bush.json"),
+  // 磨き直した版（assets-src/pixel-practice/r17-polish/。生成の元は tree.py・house.py・smallprops.py）
+  piece("P1-木", "r17-polish", "tree4.txt", "pal-tree.json"),
+  piece("P2-家", "r17-polish", "house2.txt", "pal-house.json"),
+  piece("P3-家青", "r17-polish", "house2.txt", "pal-house-blue.json"),
+  piece("P4-家緑", "r17-polish", "house2.txt", "pal-house-green.json"),
+  piece("P5-岩", "r17-polish", "rock2.txt", "pal-rock2.json"),
+  piece("P6-茂み", "r17-polish", "bush2.txt", "pal-bush2.json"),
 ];

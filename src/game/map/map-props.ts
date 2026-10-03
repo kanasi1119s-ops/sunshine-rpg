@@ -14,7 +14,7 @@ export const PROP_FOOTPRINT: Record<MapProp["kind"], { left: number; right: numb
 };
 
 /** 絵の高さ（ピクセル）。岩・茂みは低く、家・木は枠いっぱい。 */
-export const PROP_HEIGHT: Record<MapProp["kind"], number> = { tree: 46, house: 46, "house-blue": 46, "house-green": 46, rock: 18, bush: 16 };
+export const PROP_HEIGHT: Record<MapProp["kind"], number> = { tree: 48, house: 48, "house-blue": 48, "house-green": 48, rock: 20, bush: 18 };
 
 export const isHouse = (kind: MapProp["kind"]): boolean => kind.startsWith("house");
 
@@ -43,7 +43,7 @@ export const MAP_PROPS: Record<string, MapProp[]> = {
   "garasuko-town": [
     { kind: "house-blue", tileX: 6, tileY: 4 }, { kind: "house", tileX: 15, tileY: 4 },
     { kind: "tree", tileX: 2, tileY: 9 }, { kind: "tree", tileX: 19, tileY: 9 }, { kind: "tree", tileX: 20, tileY: 5 },
-    { kind: "bush", tileX: 3, tileY: 7 }, { kind: "rock", tileX: 18, tileY: 9 },
+    { kind: "bush", tileX: 3, tileY: 8 }, { kind: "rock", tileX: 18, tileY: 9 },
   ],
   "tetsukusari-town": [
     { kind: "house-blue", tileX: 5, tileY: 5 }, { kind: "house-green", tileX: 16, tileY: 5 },
