@@ -1,0 +1,14 @@
+..............
+.......AAAAA..
+....AAABCCCCA.
+...ADDEECCBDA.
+..AEDFEEBEDDA.
+.AFEDFFBDEEA..
+.AEBAGFBAFEA..
+.ABAAGGBAGFA..
+.ABAAEGAAGGA..
+.AA.AEEAAEGA..
+....ACEAAAEEA.
+.....ACCA.AAA.
+......AAA.....
+..............
