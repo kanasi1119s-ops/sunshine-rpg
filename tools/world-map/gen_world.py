@@ -31,20 +31,34 @@ def fbm(seed, base):
     return (value_noise(W, H, base, seed)*0.40 + value_noise(W, H, base/2, seed+1)*0.22 + value_noise(W, H, 12, seed+2)*0.17
             + value_noise(W, H, 6, seed+3)*0.13 + value_noise(W, H, 3, seed+4)*0.08)
 
-n1 = fbm(11, 12*S); n2 = fbm(23, 9*S); n3 = fbm(37, 7*S)
+n1 = fbm(11, 12*S); n2 = fbm(23, 9*S); n3 = fbm(37, 7*S); n4 = fbm(53, 3.5*S)
 T = [["O"]*W for _ in range(H)]
 
-def blob(cx, cy, rx, ry, amp, glyph, only=None):
+def blob(cx, cy, rx, ry, amp, glyph, only=None, rough=0.0):
     for y in range(H):
         for x in range(W):
             d = math.hypot((x-cx)/rx, (y-cy)/ry)
-            if d + (n1[y, x]-0.5)*amp < 1.0 and (only is None or T[y][x] in only):
+            if d + (n1[y, x]-0.5)*amp + (n4[y, x]-0.5)*rough < 1.0 and (only is None or T[y][x] in only):
                 T[y][x] = glyph
 
 # ---- 4つの大陸と小島 ----
-blob(60, 108, 52, 44, 1.3, "P")          # A 西の灯里大陸
-blob(172, 42, 50, 30, 1.3, "P")          # B 北東の霧霜大陸
-blob(182, 148, 46, 36, 1.3, "P")         # D 南東の灯芯大陸
+blob(60, 108, 52, 44, 1.3, "P", rough=1.1)          # A 西の灯里大陸
+blob(172, 42, 50, 30, 1.3, "P", rough=1.1)          # B 北東の霧霜大陸
+blob(182, 148, 46, 36, 1.3, "P", rough=1.1)         # D 南東の灯芯大陸
+# 長い半島（細くのびる陸）: 小さな円をつないで、ゆるく曲げる
+def tail(x0, y0, x1, y1, r, wob):
+    n = int(math.hypot(x1-x0, y1-y0) / (r*0.8)) + 1
+    for i in range(n+1):
+        t = i / n
+        cx = x0 + (x1-x0)*t + math.sin(t*5.0 + wob) * r * 1.4
+        cy = y0 + (y1-y0)*t + math.cos(t*4.0 + wob) * r * 1.2
+        blob(cx, cy, r*(1.2-0.5*t), r*(1.2-0.5*t), 0.6, "P", rough=0.5)
+tail(40, 150, 14, 176, 4.0, 0.3)     # A 南西へ
+tail(40, 80, 24, 56, 3.5, 1.1)       # A 北西へ
+tail(215, 28, 238, 8, 3.5, 2.0)      # B 北東へ
+tail(215, 60, 240, 80, 3.2, 0.7)     # B 東南へ
+tail(195, 178, 168, 186, 3.2, 1.6)   # D 南へ
+tail(226, 130, 240, 112, 3.2, 0.4)   # D 北東へ
 # 半島と入り江（海岸線を入り組ませる）
 blob(24, 150, 16, 11, 1.3, "P"); blob(110, 70, 12, 9, 1.3, "P"); blob(100, 150, 14, 10, 1.3, "P")   # A の半島
 blob(215, 30, 14, 10, 1.3, "P"); blob(130, 22, 12, 8, 1.3, "P"); blob(150, 70, 14, 12, 1.3, "P")    # B の半島
@@ -68,6 +82,24 @@ for y in range(H):
     for x in range(W):
         if _coast[y][x] and abs(n3[y, x] - 0.52) < 0.018 and not any(abs(x-cx) < 9 and abs(y-cy) < 8 for _i, cx, cy, _n in ISLETS):
             T[y][x] = "O"
+# 塔のまわり（渦の輪まで）は、必ず海にあける
+for y in range(H):
+    for x in range(W):
+        if math.hypot(x-125, y-95) < 17 and T[y][x] == "P": T[y][x] = "O"
+# 小さなちりのような陸（12マス未満）を消す
+_seen = set()
+for y0 in range(H):
+    for x0 in range(W):
+        if T[y0][x0] != "P" or (x0, y0) in _seen: continue
+        comp = [(x0, y0)]; _seen.add((x0, y0)); i = 0
+        while i < len(comp):
+            cx, cy = comp[i]; i += 1
+            for dx, dy in ((1,0),(-1,0),(0,1),(0,-1)):
+                nx, ny = cx+dx, cy+dy
+                if 0 <= nx < W and 0 <= ny < H and T[ny][nx] == "P" and (nx, ny) not in _seen:
+                    _seen.add((nx, ny)); comp.append((nx, ny))
+        if len(comp) < 12:
+            for cx, cy in comp: T[cy][cx] = "O"
 # 芯環塔の島（海のまんなか）
 TOWER = (125, 95)
 for y in range(H):
@@ -175,6 +207,28 @@ for (sx0, sy0) in starts:
         if T[py][px] in "PFHDSTM" and far_from_towns(px, py, 6): T[py][px] = "L"
     rivers_made += 1
 
+# ---- 平原の変化づけ: 何もない広い平地に、林・丘・小さな池・岩山を点々とちらす ----
+vg = np.random.default_rng(2468)
+def _plain(x, y, r):
+    return all(0 <= y+dy < H and 0 <= x+dx < W and T[y+dy][x+dx] == "P" for dx in range(-r, r+1) for dy in range(-r, r+1))
+_placed = 0
+for _ in range(9000):
+    if _placed >= 330: break
+    x = int(vg.integers(4, W-4)); y = int(vg.integers(4, H-4))
+    if T[y][x] != "P" or not far_from_towns(x, y, 9) or not _plain(x, y, 3): continue
+    kind = vg.choice(["F", "F", "F", "H", "H", "L", "M"])
+    rx = float(vg.uniform(1.8, 4.6)); ry = float(vg.uniform(1.6, 3.8))
+    if kind == "L": rx, ry = rx*0.6, ry*0.6
+    for yy in range(y-6, y+7):
+        for xx in range(x-7, x+8):
+            if not (0 <= yy < H and 0 <= xx < W) or T[yy][xx] != "P": continue
+            d = math.hypot((xx-x)/rx, (yy-y)/ry) + (n4[yy, xx]-0.5)*0.9
+            if d < 1.0:
+                T[yy][xx] = kind
+            elif kind == "M" and d < 1.6:
+                T[yy][xx] = "H"
+    _placed += 1
+
 TOWNS = {  # マップID: (x, y, 名前)
     "touri-town": (18, 108, "灯里"), "mugikano-village": (40, 114, "麦香野"), "garasuko-town": (62, 100, "硝子湖"),
     "tetsukusari-town": (86, 80, "鉄鏈鉱山"), "sanone-town": (72, 138, "砂音"),
@@ -191,6 +245,31 @@ for mid, (tx, ty, _n) in TOWNS.items():
             if 0 <= x < W and 0 <= y < H and (abs(x-tx)+abs(y-ty) <= 3) and not (mid != "fushima-town" and T[y][x] == "O" and False):
                 if T[y][x] in "OLMNF" or mid in ("fushima-town",): T[y][x] = base
 
+# ---- 同じ大陸の町が海でとぎれないよう、細い地峡で陸をつなぐ ----
+def _flood_land(sx, sy):
+    seen = {(sx, sy)}; st = [(sx, sy)]
+    while st:
+        x, y = st.pop()
+        for dx, dy in ((1,0),(-1,0),(0,1),(0,-1)):
+            nx, ny = x+dx, y+dy
+            if 0 <= nx < W and 0 <= ny < H and (nx, ny) not in seen and T[ny][nx] != "O":
+                seen.add((nx, ny)); st.append((nx, ny))
+    return seen
+for _cont in "ABD":
+    _towns = [k for k, c in CONTINENT.items() if c == _cont]
+    _main = _flood_land(*TOWNS[_towns[0]][:2])
+    for _k in _towns[1:]:
+        tx, ty = TOWNS[_k][:2]
+        if (tx, ty) in _main:
+            continue
+        # いちばん近い、つながった陸まで、まっすぐ地峡をつくる
+        bx, by = min(_main, key=lambda p: (p[0]-tx)**2 + (p[1]-ty)**2)
+        steps = max(abs(bx-tx), abs(by-ty))
+        for i in range(steps+1):
+            x = round(tx + (bx-tx)*i/steps); y = round(ty + (by-ty)*i/steps)
+            for ddx, ddy in ((0,0),(1,0),(0,1)):
+                if 0 <= x+ddx < W and 0 <= y+ddy < H and T[y+ddy][x+ddx] == "O": T[y+ddy][x+ddx] = "P"
+        _main = _flood_land(*TOWNS[_towns[0]][:2])
 COST = {"X": 99999, "N": 13.0, "T": 2.2, "P": 1.0, "F": 2.2, "D": 1.4, "S": 1.8, "H": 2.0, "M": 9.0, "R": 0.4, "W": 1.2, "C": 1.0, "L": 6.0, "O": 99999, "V": 99999, "Q": 99999, "A": 1.3, "Z": 99999}
 def astar(a, b):
     (ax, ay), (bx, by) = a, b
