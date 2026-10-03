@@ -8,6 +8,7 @@ import { spawnSync } from "child_process";
 import { BasicMIDI, SoundBankLoader, SpessaSynthProcessor, SpessaSynthSequencer } from "spessasynth_core";
 import { fileURLToPath } from "url";
 import { openGuitarSampler } from "./guitar-sampler.mjs";
+import { openMetalSampler } from "./metal-sampler.mjs";
 
 const ROOT = path.resolve(fileURLToPath(new URL("../../", import.meta.url)));
 
@@ -124,7 +125,9 @@ export async function renderMix(kit, score, { edition = "real", outWav, soundfon
   // 歪みギター（クリーンで鳴らすパート）は、本物のギターの録音があれば、それで鳴らす（guitar-sampler.mjs）
   const sampled = {};
   const sampledCh = new Set();
-  const sampler = openGuitarSampler();
+  // メタル系の曲はメタル用のギター音源（METAL-GTX）、それ以外は Black And Green Guitars。なければ、もう片方か、従来の音源
+  const metalTone = score.tone === "metal" || score.tone === "prs";
+  const sampler = (metalTone ? openMetalSampler() : null) ?? openGuitarSampler();
   if (sampler) {
     const gtrCh = Object.keys(k.instruments).map(Number).filter((ch) => ch !== 9 && ["crunch", "distGuitar", "leadGuitar"].includes(k.instruments[ch]) && k.programs[ch] === 27);
     for (const ch of gtrCh) {
@@ -147,7 +150,7 @@ export async function renderMix(kit, score, { edition = "real", outWav, soundfon
       }
       if (!notes.length) continue;
       const g = groupOfChannel(ch);
-      const buf = sampler.render(notes, total);
+      const buf = sampler.render(notes, total, { beatSec: 60 / (score.tempoBpm || 120) });
       if (!sampled[g]) sampled[g] = new Float32Array(total);
       for (let i = 0; i < total; i++) sampled[g][i] += buf[i];
       sampledCh.add(ch);
