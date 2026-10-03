@@ -54,6 +54,7 @@
 |---|---|---|---|
 | ドット絵の試作7体（スライム・ゴースト・ゴーレム・竜の子・コウモリの悪魔・スケルトン騎士・小悪魔） | `assets-src/ai-generated/trial-2026-10-03/` | PublicPrompts/All-In-One-Pixel-Model（CreativeML OpenRAIL-M）＋ latent-consistency/lcm-lora-sdv1-5（openrail++） | **ゲームには入れていない**。入れる前に、既存作品に似ていないかの確認と人間の確認が要る。1体（キノコ）は有名なキャラを連想させたので外した |
 | RPGの戦闘の敵らしいドット絵の試作12体（牙オオカミ・よろいトカゲ兵・フードの亡霊・水晶ゴーレム・紫の怪鳥・亡者の王・呪われた騎士・大ダコ・赤衣の魔術師・翼の魔像・黒い大グモ・沼の獣。64×64・16色） | `assets-src/ai-generated/trial-2026-10-03-rpg/` | 同上。背景の切り抜きに rembg（MIT）＋ isnet-general-use（Apache-2.0）を使用 | **ゲームには入れていない**。入れる前に、既存作品に似ていないかの確認と人間の確認が要る。3枚（火のサラマンダー2枚・角のある緑の怪物1枚）は有名なキャラを連想させるおそれがあるので外した |
+| `/make-art` の見本（フィールド用キャラ5人・登場人物の全身の絵3人） | `assets-src/ai-generated/2026-10-03-make-art-examples/` | 全身の絵: stable-diffusion-v1-5（CreativeML OpenRAIL-M）＋ LCM-LoRA（openrail++）、切り抜きに rembg（MIT）＋ isnet-general-use（Apache-2.0）。フィールド用キャラは手描きの型に色を当てはめたもの（AIはデザイン画の色の参考だけ） | **ゲームには入れていない**（見本）。名前は仮 |
 
 ## 素材の置き場
 - 元ファイル: `assets-src/`（規約の写しも一緒に置く）

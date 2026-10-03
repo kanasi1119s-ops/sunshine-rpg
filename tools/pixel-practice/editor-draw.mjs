@@ -13,7 +13,7 @@ const pal = JSON.parse(fs.readFileSync(palPath, "utf8"));
 const H = rows.length, W = Math.max(...rows.map((r) => r.length));
 const syms = Object.keys(pal);
 const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
-const p = await (await browser.newContext({ viewport: { width: 1500, height: 1400 } })).newPage();
+const p = await (await browser.newContext({ viewport: { width: 1500, height: 2000 } })).newPage();
 await p.route(/fonts\./, (r) => r.abort());
 await p.goto("file://" + process.env.EDITOR);
 await p.evaluate(() => localStorage.clear());
@@ -32,7 +32,11 @@ for (let i = 0; i < syms.length; i++) {
   await li[i].fill(syms[i]);
 }
 if (ref) { await p.setInputFiles("#refFile", ref); await p.waitForTimeout(300); await p.evaluate(() => { const o = document.getElementById("refOpacity"); o.value = 45; o.dispatchEvent(new Event("input", { bubbles: true })); }); }
-const box = await p.locator("#gridCanvas").boundingBox(); const cw = box.width / W;
+// 色を選ぶと、ページがスクロールしてキャンバスの位置が変わることがある（縦に長い絵で食い違いが出た）。
+// そのため、色を選ぶたびにキャンバスを画面に入れ直し、位置を測り直す
+let box = null, cw = 0;
+const measure = async () => { await p.locator("#gridCanvas").scrollIntoViewIfNeeded(); box = await p.locator("#gridCanvas").boundingBox(); cw = box.width / W; };
+await measure();
 const cell = (r, c) => [box.x + c * cw + cw / 2, box.y + r * cw + cw / 2];
 const symRows = await p.$$("#symbolList .symbol-row");
 for (const ch of syms) {
@@ -42,7 +46,7 @@ for (const ch of syms) {
     while (c < W) {
       if (rows[r][c] === ch) {
         let e = c; while (e + 1 < W && rows[r][e + 1] === ch) e++;
-        if (!started) { await (await p.$$("#symbolList .symbol-row .sym"))[syms.indexOf(ch) + 1].click(); started = true; }
+        if (!started) { await (await p.$$("#symbolList .symbol-row .sym"))[syms.indexOf(ch) + 1].click(); await measure(); started = true; }
         const [x0, y0] = cell(r, c), [x1] = cell(r, e);
         await p.mouse.move(x0, y0); await p.mouse.down(); if (e > c) await p.mouse.move(x1, y0, { steps: (e - c) * 2 + 2 }); await p.mouse.up(); c = e + 1;
       } else c++;
@@ -50,6 +54,29 @@ for (const ch of syms) {
   }
 }
 await p.waitForTimeout(300);
+// 直し描き: 書き出しと文字グリッドを比べ、違うマスだけ1マスずつ塗り直す（最大3回）。
+// 縦に長い絵などで、マウスの位置が1マスずれることがあるため
+const readBack = async () => JSON.parse((await p.$eval("#exportRows", (t) => t.value)).replace(/,\s*\]/, "]"));
+for (let pass = 0; pass < 3; pass++) {
+  const cur = await readBack();
+  const fixes = [];
+  for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
+    const wantCh = (rows[r][c] ?? ".") === " " ? "." : (rows[r][c] ?? ".");
+    const wantSym = wantCh === "." ? "." : map[wantCh];
+    if (cur[r][c] !== wantSym) fixes.push([r, c, wantCh]);
+  }
+  if (!fixes.length) break;
+  for (const ch of [...new Set(fixes.map((f) => f[2]))]) {
+    const rowsSym = await p.$$("#symbolList .symbol-row .sym");
+    await (ch === "." ? rowsSym[0] : rowsSym[syms.indexOf(ch) + 1]).click();
+    await measure();
+    for (const [r, c] of fixes.filter((f) => f[2] === ch)) {
+      const [x, y] = cell(r, c);
+      await p.mouse.move(x, y); await p.mouse.down(); await p.mouse.up();
+    }
+  }
+  await p.waitForTimeout(200);
+}
 if (ref) await p.locator("#gridCanvas").screenshot({ path: out.replace(/\.png$/, "-trace.png") });
 await p.click("#refClearBtn");
 await p.waitForTimeout(150);
