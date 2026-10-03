@@ -1,5 +1,6 @@
 // ドット絵エディタ（Artifact「ドット絵エディタ」の index.html を手元に保存したもの）を、ヘッドレスブラウザで実際にマウス操作して絵を描く。
-// 使い方: EDITOR=<editor.html> node editor-draw.mjs <絵.txt> <パレット.json> <出力PNG> [--ref 下絵.png] [--zoom 16] [--wide]
+// 使い方: EDITOR=<editor.html> node editor-draw.mjs <絵.txt> <パレット.json> <出力PNG> [--ref 下絵.png] [--zoom 16] [--wide] [--import]
+//   --import: マウスで塗る代わりに、エディタの「貼り付けて読み込む」で読み込む（大きな絵向け。直し描きは同じように行う）
 //   --wide: 256×256 など大きな絵のとき（画面を広くし、エディタの並びの幅の上限を外す）。--zoom は6以上にする
 //   絵.txt: 1文字=1ドットの文字グリッド（'.'は透明）。パレットJSON: {"文字":"#rrggbb"}
 //   --ref を付けると下絵（トレース用）としてエディタに読み込み、下絵を重ねた画面も <出力>-trace.png に残す。
@@ -8,7 +9,7 @@ import { chromium } from "playwright-core";
 import fs from "fs";
 const [txt, palPath, out, ...rest] = process.argv.slice(2);
 const opt = (k, d) => (rest.includes(k) ? rest[rest.indexOf(k) + 1] : d);
-const ref = opt("--ref", null), zoom = Number(opt("--zoom", 16)), wide = rest.includes("--wide");
+const ref = opt("--ref", null), zoom = Number(opt("--zoom", 16)), wide = rest.includes("--wide"), viaImport = rest.includes("--import");
 const rows = fs.readFileSync(txt, "utf8").split("\n").filter((l) => l.trim() !== "" && !l.startsWith("#"));
 const pal = JSON.parse(fs.readFileSync(palPath, "utf8"));
 const H = rows.length, W = Math.max(...rows.map((r) => r.length));
@@ -41,8 +42,16 @@ let box = null, cw = 0;
 const measure = async () => { await p.locator("#gridCanvas").scrollIntoViewIfNeeded(); box = await p.locator("#gridCanvas").boundingBox(); cw = box.width / W; };
 await measure();
 const cell = (r, c) => [box.x + c * cw + cw / 2, box.y + r * cw + cw / 2];
+// --import: 大きな絵は、1ドットずつのマウス操作だと非常に時間がかかる（256×256で1枚30分以上）。
+// そのときは、エディタの「貼り付けて読み込む」に配列を入れて読み込ませる（色はパレット欄で設定済み）。
+if (viaImport) {
+  const edRows = rows.map((r) => [...r.padEnd(W, ".")].map((ch) => (ch === "." || ch === " " ? "." : map[ch])).join(""));
+  await p.fill("#importRows", JSON.stringify(edRows));
+  await p.click("#importBtn");
+  await p.waitForTimeout(500);
+}
 const symRows = await p.$$("#symbolList .symbol-row");
-for (const ch of syms) {
+for (const ch of (viaImport ? [] : syms)) {
   let started = false;
   for (let r = 0; r < H; r++) {
     let c = 0;

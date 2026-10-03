@@ -43,6 +43,7 @@ python3 tools/pixel-art/ai-gen/sfcize.py raw/swordswoman_0.png out/swordswoman 1
 EDITOR=<保存したエディタのindex.html> node tools/pixel-practice/editor-draw.mjs out/swordswoman_fix.txt out/swordswoman_fix.json out/swordswoman-editor.png --zoom 6
 ```
 「食い違い 0 マス」を確かめる。128×128 は `--zoom 6`（キャンバスが画面に入る倍率）で描く。
+- 256×256 など大きな絵は、マウスで1マスずつ塗ると30分以上かかる。`--import --wide` を付けると、エディタの「貼り付けて読み込む」で読み込み（20秒ほど）、同じように「食い違い 0 マス」を確かめられる。128×128 も `--import` で速くなる。
 
 ## 6. 記録・ゲームへ
 
