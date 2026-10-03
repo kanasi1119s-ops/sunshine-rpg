@@ -1,5 +1,4 @@
 import type { MapProp, TileMapData } from "../game/map/types";
-import { PROP_SIZE } from "../game/map/map-props";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
 import type { Camera } from "./camera";
@@ -28,8 +27,8 @@ export function renderProps(
     if (!canvas) {
       continue;
     }
-    const x = prop.tileX * data.tileWidth + data.tileWidth / 2 - PROP_SIZE / 2 - camera.x;
-    const y = propFeetY(prop, data.tileHeight) - PROP_SIZE - camera.y;
+    const x = prop.tileX * data.tileWidth + data.tileWidth / 2 - canvas.width / 2 - camera.x;
+    const y = propFeetY(prop, data.tileHeight) - canvas.height - camera.y;
     ctx.drawImage(canvas, Math.round(x), Math.round(y));
   }
 }

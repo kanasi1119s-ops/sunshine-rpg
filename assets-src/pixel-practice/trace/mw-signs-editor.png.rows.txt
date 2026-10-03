@@ -1,0 +1,11 @@
+............................................................
+..AAAAAAAA........AAAAAAAA........AAAAAAAA........AAAAAAAA..
+.ABBBBBBBBA......ABBBBBBBBA......ABBBBBBBBA......ABBBBBBBBA.
+.ACDDDDDDCA......AECCCCCCEA......ACDDDDDDCA......AECCCCCCEA.
+.ADDDDDDDDA......ADDDDDDDDA......ADDDDDDDDA......ADDDDDDDDA.
+.ADDDDDDDDA......AECCCCCCEA......ADDDDDDDDA......AECCCCCCEA.
+.ACDDDDDDCA......ADDDDDDDDA......ACDDDDDDCA......ADDDDDDDDA.
+..AAAEEAAA........AAAEEAAA........AEAAAAEA........AEAAAAEA..
+....FCCF............FCCF..........FCF..FCF........FCF..FCF..
+....FCCF............FCCF..........FCF..FCF........FCF..FCF..
+............................................................
