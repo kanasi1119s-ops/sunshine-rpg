@@ -72,7 +72,7 @@ for cx, cy, r in ((226, 90, 8), (239, 100, 6), (229, 106, 6), (216, 99, 5)):   #
     for y in range(H):
         for x in range(W):
             if math.hypot(x-cx, (y-cy)*1.1) + (n2[y, x]-0.5)*5 < r: T[y][x] = "C"
-ISLETS = [("islet-1", 30, 40, "月影の島"), ("islet-2", 96, 176, "底なしの井戸の島"), ("islet-3", 116, 22, "古灯台の島"), ("islet-4", 243, 62, "忘れられた砦の島"), ("islet-5", 124, 152, "青い穴の洲")]
+ISLETS = [("islet-1", 30, 40, "月影の島"), ("islet-2", 96, 176, "底なしの井戸の島"), ("islet-3", 116, 22, "古灯台の島"), ("islet-4", 234, 62, "忘れられた砦の島"), ("islet-5", 124, 152, "青い穴の洲")]
 for _id, cx, cy, nm in ISLETS:
     for y in range(H):
         for x in range(W):
@@ -560,6 +560,29 @@ def _land_connect():
                 if T[y][x] in "OLMNXVQZ": T[y][x] = "P"
             base = flood(*TOWNS[towns[0]][:2], lambda x, y: T[y][x] in LANDWALK)
 _land_connect()
+LANDMARKS = [m for m in LANDMARKS if 12 <= m[1] < W-12 and 12 <= m[2] < H-12]
+# 地図のふち（8マス）は、必ず海にする（陸が画像の外へ続いて見えないように）
+MARGIN = 8
+for y in range(H):
+    for x in range(W):
+        if x < MARGIN or y < MARGIN or x >= W-MARGIN or y >= H-MARGIN:
+            T[y][x] = "O"
+for _pt in [(x, y) for _k, (x, y, _n) in TOWNS.items()] + [(v[1], v[2]) for v in VILLAGES] + [(cx, cy) for _i, cx, cy, _n in ISLETS] + BEACONS + [(x, y) for _k, x, y in LANDMARKS] + [SHIP_DOCK, AIRSHIP]:
+    assert MARGIN+1 <= _pt[0] < W-MARGIN-1 and MARGIN+1 <= _pt[1] < H-MARGIN-1, f"ふちの海にかかる: {_pt}"
+# ふちを海にして、ちぎれた小さな陸（12マス未満）を消す
+_seen2 = set()
+for y0 in range(H):
+    for x0 in range(W):
+        if T[y0][x0] in "OVQM" or (x0, y0) in _seen2: continue
+        comp = [(x0, y0)]; _seen2.add((x0, y0)); i = 0
+        while i < len(comp):
+            cx, cy = comp[i]; i += 1
+            for dx, dy in ((1,0),(-1,0),(0,1),(0,-1)):
+                nx, ny = cx+dx, cy+dy
+                if 0 <= nx < W and 0 <= ny < H and T[ny][nx] not in "OVQM" and (nx, ny) not in _seen2:
+                    _seen2.add((nx, ny)); comp.append((nx, ny))
+        if len(comp) < 12 and not any(T[cy][cx] in "CRW" for cx, cy in comp):
+            for cx, cy in comp: T[cy][cx] = "O"
 
 rows = ["".join(r) for r in T]
 ts = ["// 自動生成: tools/world-map/gen_world.py（手で編集しない）。大陸アルテシアの地形。1文字=1マス。",
