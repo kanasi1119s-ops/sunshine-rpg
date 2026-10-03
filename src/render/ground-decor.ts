@@ -96,6 +96,19 @@ function waterShimmer(ctx: CanvasRenderingContext2D, ox: number, oy: number, tx:
   }
 }
 
+/** 溶岩の脈動: 明るい部分がゆっくり強まったり弱まったりし、ときどき火の粉が立ちのぼる。 */
+function lavaGlow(ctx: CanvasRenderingContext2D, ox: number, oy: number, tx: number, ty: number, nowMs: number): void {
+  const h = hashCell(tx * 17 + 3, ty * 23 + 1);
+  const pulse = (Math.sin(nowMs / 900 + (h % 628) / 100) + 1) / 2;
+  ctx.fillStyle = `rgba(255,150,40,${(0.05 + pulse * 0.16).toFixed(2)})`;
+  ctx.fillRect(ox, oy, 16, 16);
+  const spark = (nowMs / 1400 + (h % 100) / 100) % 1;
+  if (h % 3 === 0) {
+    ctx.fillStyle = `rgba(255,220,120,${(1 - spark).toFixed(2)})`;
+    ctx.fillRect(ox + 2 + (h % 11), oy + 12 - Math.round(spark * 12), 1, 1);
+  }
+}
+
 /** 海岸の砂浜: 水に接する陸のふちに、不ぞろいな砂のおびと、水ぎわの濡れた砂。 */
 function beachEdge(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: number, tx: number, ty: number, side: number): void {
   for (let i = 0; i < s; i++) {
@@ -218,6 +231,10 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
       }
       const ox = tx * s - camera.x;
       const oy = ty * s - camera.y;
+      if (map.data.tileArt[getTileId(map, 0, tx, ty)] === "lava") {
+        lavaGlow(ctx, ox, oy, tx, ty, nowMs);
+        continue;
+      }
       if (kind === "grass") {
         grassPatches(ctx, ox, oy, tx, ty);
         if (!map.data.coastal || hashCell(tx * 3 + 1, ty * 7 + 2) % 4 === 0) {
