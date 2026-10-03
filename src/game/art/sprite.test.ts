@@ -18,7 +18,7 @@ describe("書き出されたドット絵データ（sprite-data.generated.ts）"
   const keys = Object.keys(SPRITE_DATA);
 
   it("地形・ボス・登場人物が入っている", () => {
-    for (const key of ["terrain:grass-a", "terrain:water", "boss:mugikano-yugami", "boss:garasuko-yugami", "boss:tetsukusari-yugami", "boss:sanone-yugami", "boss:kiri-yugami", "boss:shimohara-yugami", "boss:fushima-yugami", "boss:toushin-yugami", "boss:kyotoukyu-yugami", "boss:god-1", "boss:god-8", "boss:tower2-guard", "boss:tower3-guard", "boss:kanou3-guard", "boss:deep3-yugami", "boss:zenkan", "char:ユーリ", "char:オルカ", "mob:bat", "mob:beetle", "mob:shard", "mob:drop", "mob:ghost", "mob:rat", "mob:scorpion", "mob:eye", "prop:tree", "prop:house"]) {
+    for (const key of ["terrain:grass-a", "terrain:water", "boss:mugikano-yugami", "boss:garasuko-yugami", "boss:tetsukusari-yugami", "boss:sanone-yugami", "boss:kiri-yugami", "boss:shimohara-yugami", "boss:fushima-yugami", "boss:toushin-yugami", "boss:kyotoukyu-yugami", "boss:god-1", "boss:god-8", "boss:tower2-guard", "boss:tower3-guard", "boss:kanou3-guard", "boss:deep3-yugami", "boss:zenkan", "char:ユーリ", "char:オルカ", "mob:bat", "mob:beetle", "mob:shard", "mob:drop", "mob:ghost", "mob:rat", "mob:scorpion", "mob:eye", "prop:tree", "prop:house", "prop:house-blue", "prop:house-green", "prop:rock", "prop:bush"]) {
       expect(keys, key).toContain(key);
     }
   });

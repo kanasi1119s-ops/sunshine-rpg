@@ -43,7 +43,10 @@ export interface MapExit {
 
 /** 地図の飾り。(tileX, tileY) は、絵の「足元・中央」のマス。 */
 export interface MapProp {
-  kind: "tree" | "house";
+  kind: MapPropKind;
   tileX: number;
   tileY: number;
 }
+
+/** 飾りの種類。`prop:<種類>` のドット絵がある。 */
+export type MapPropKind = "tree" | "house" | "house-blue" | "house-green" | "rock" | "bush";
