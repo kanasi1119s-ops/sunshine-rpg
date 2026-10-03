@@ -1,7 +1,8 @@
 """画像生成AIで「ドット絵風」の下絵を作る（試作、2026-10-03）。
 
 使い方: MODEL=PublicPrompts/All-In-One-Pixel-Model python3 tools/pixel-art/ai-gen/generate.py 指示.json
-  指示.json は [{"name":..., "seed":..., "steps":6, "cfg":1.5, "prompt":"..., in pixelsprite style, ..."}] の形（例: example-jobs.json）。
+  指示.json は [{"name":..., "seed":..., "steps":6, "cfg":1.5, "prompt":"...", "neg":"...", "w":512, "h":512}] の形（例: example-jobs.json）。
+  種類ごとの雛形から作るときは make_jobs.py（prompts.json）を使う。
   出力は raw/<name>.png（512×512）。続けて pixelize.py で本物のドット絵に仕上げる。
 モデル: PublicPrompts/All-In-One-Pixel-Model（CreativeML OpenRAIL-M）＋ latent-consistency/lcm-lora-sdv1-5（openrail++）。
 CPU（2コア）で1枚約56秒。GPU があれば速い。必要なもの: torch（CPU版で可）、diffusers、transformers、accelerate、safetensors、peft。
@@ -17,6 +18,7 @@ torch.set_num_threads(2)
 kw=dict(variant=os.environ["VARIANT"],torch_dtype=torch.float16) if os.environ.get("VARIANT") else dict(torch_dtype=torch.float32)
 pipe=StableDiffusionPipeline.from_pretrained(os.environ.get("MODEL","PublicPrompts/All-In-One-Pixel-Model"),safety_checker=None,requires_safety_checker=False,**kw)
 pipe=pipe.to(torch.float32)  # CPUでは float32 で計算する
+pipe.enable_attention_slicing(1); pipe.vae.enable_slicing(); pipe.vae.enable_tiling()  # メモリを節約（縦長 512×768 でも止まらないように）
 pipe.load_lora_weights("latent-consistency/lcm-lora-sdv1-5"); pipe.fuse_lora()
 pipe.scheduler=LCMScheduler.from_config(pipe.scheduler.config)
 NEG_PIXEL="drop shadow, blurry, 3d, anti aliasing, gradient, textures, depth of field, anime style, modern cartoon, skewed, perspective, text, watermark, photo, realistic"
@@ -27,5 +29,5 @@ os.makedirs('raw',exist_ok=True)
 for j in jobs:
   t=time.time()
   g=torch.Generator().manual_seed(j['seed'])
-  im=pipe(prompt=j['prompt'],negative_prompt=NEG,num_inference_steps=j.get('steps',6),guidance_scale=j.get('cfg',1.5),width=512,height=512,generator=g).images[0]
+  im=pipe(prompt=j['prompt'],negative_prompt=j.get('neg',NEG),num_inference_steps=j.get('steps',6),guidance_scale=j.get('cfg',1.5),width=j.get('w',512),height=j.get('h',512),generator=g).images[0]
   im.save(f"raw/{j['name']}.png"); print(j['name'],round(time.time()-t,1),flush=True)

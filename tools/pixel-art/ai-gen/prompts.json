@@ -1,0 +1,47 @@
+{
+ "_説明": "make_jobs.py が使う、絵の種類ごとの指示文（プロンプト）の雛形。中身（何を描くか）は、色・体の特徴・持ち物まで自分で決めて書く。作品名・ゲーム名・作者名・既存のキャラやモンスターの名前は書かない（CLAUDE.md 1-1）。",
+ "monster": {
+  "説明": "戦闘の敵（ザコ）。96×96・20色のドット絵にする",
+  "model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+  "w": 512,
+  "h": 512,
+  "steps": 6,
+  "cfg": 1.5,
+  "suffix": ", fantasy creature concept painting, entire body visible, wide shot, small in frame, three-quarter view, realistic anatomy, rich colors, dramatic lighting, detailed painterly shading, single monster centered, isolated on plain white background",
+  "neg": "photo, 3d render, anime, cartoon, chibi, text, watermark, frame, border, multiple creatures, cropped, blurry",
+  "convert": "sfcize.py <下絵> <出力> 96 20"
+ },
+ "boss": {
+  "説明": "ボス。128×128・24色（大きいボスは 192 や 256 も可。エディタで描くときは --zoom 6 以上が画面に入る大きさまで）",
+  "model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+  "w": 512,
+  "h": 512,
+  "steps": 6,
+  "cfg": 1.5,
+  "suffix": ", epic dark fantasy boss creature concept painting, imposing, entire body visible, wide shot, small in frame, three-quarter view, realistic anatomy, rich colors, dramatic rim lighting, detailed painterly shading, single monster centered, isolated on plain white background",
+  "neg": "photo, 3d render, anime, cartoon, chibi, text, watermark, frame, border, multiple creatures, cropped, blurry",
+  "convert": "sfcize.py <下絵> <出力> 128 24"
+ },
+ "character": {
+  "説明": "登場人物の全身の絵（戦闘・会話・立ち絵）。128×128・24色。縦長（512×768）で描かせると頭が切れにくい",
+  "model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+  "w": 512,
+  "h": 768,
+  "steps": 6,
+  "cfg": 1.5,
+  "suffix": ", full body from head to toe, the whole figure visible with empty space above the head and below the feet, standing pose, three-quarter view, fantasy rpg character concept painting, realistic proportions, rich colors, soft dramatic lighting, detailed painterly shading, single person centered, isolated on plain white background",
+  "neg": "photo, 3d render, anime, manga, cartoon, chibi, text, watermark, frame, border, multiple people, cropped, cut off head, out of frame, close-up, blurry, nsfw",
+  "convert": "sfcize.py <下絵> <出力> 128 24"
+ },
+ "field": {
+  "説明": "フィールド（マップ）用キャラ 16×32・4方向×3コマの「色の設計図」になる、正面の全身デザイン画。絵はそのまま縮めず、色だけを field_sprite.py で型に当てはめる",
+  "model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+  "w": 512,
+  "h": 768,
+  "steps": 6,
+  "cfg": 1.5,
+  "suffix": ", full body front view from head to toe, standing straight facing the viewer, arms at sides, feet together, fantasy rpg character design, clear simple color blocks, soft shading, whole figure visible, small in frame, single person centered, isolated on plain white background",
+  "neg": "photo, 3d render, anime, manga, chibi, text, watermark, frame, border, multiple people, cropped, cut off head, out of frame, close-up, blurry, nsfw",
+  "convert": "field_sprite.py <下絵> <出力フォルダ> <名前> --style ... --outfit ... --deco ... --rembg"
+ }
+}
