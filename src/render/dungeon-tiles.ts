@@ -425,3 +425,50 @@ export function drawDungeonTile(
   ctx.drawImage(canvas, screenX, screenY, map.data.tileWidth, map.data.tileHeight);
   return true;
 }
+
+/** 壁のたいまつ: ところどころの壁に、ゆれる炎とまわりの光（床と壁を明るく照らす）を重ねる。時刻でゆらぐ。 */
+export function renderDungeonLights(ctx: CanvasRenderingContext2D, map: TileMap, camera: { x: number; y: number; viewportWidth: number; viewportHeight: number }, nowMs: number): void {
+  const themeName = map.data.theme as DungeonTheme | undefined;
+  if (!themeName || themeName === "interior" || !THEMES[themeName]) {
+    return;
+  }
+  const s = map.data.tileWidth;
+  const startX = Math.max(0, Math.floor(camera.x / s) - 2);
+  const endX = Math.min(map.data.width - 1, Math.floor((camera.x + camera.viewportWidth) / s) + 2);
+  const startY = Math.max(0, Math.floor(camera.y / s) - 2);
+  const endY = Math.min(map.data.height - 1, Math.floor((camera.y + camera.viewportHeight) / s) + 3);
+  for (let ty = startY; ty <= endY; ty++) {
+    for (let tx = startX; tx <= endX; tx++) {
+      const id = getTileId(map, 0, tx, ty);
+      const torchAt = (x: number): boolean => hashCell(x * 7 + 3, ty * 5) % 9 === 0 && x % 2 === 0;
+      if (map.data.tileArt?.[id] !== "tint:brick" || isWall(map, tx, ty + 1) || !torchAt(tx) || torchAt(tx - 2) || torchAt(tx + 2)) {
+        continue;
+      }
+      const x = tx * s - camera.x;
+      const y = ty * s - camera.y;
+      const flick = Math.sin(nowMs / 90 + tx * 2.1 + ty) * 0.5 + Math.sin(nowMs / 37 + tx) * 0.3;
+      // 光（足元の床まで届く丸い明かり）
+      const g = ctx.createRadialGradient(x + 8, y + 8, 2, x + 8, y + 14, 44 + flick * 5);
+      g.addColorStop(0, `rgba(255,190,90,${0.26 + flick * 0.05})`);
+      g.addColorStop(1, "rgba(255,150,60,0)");
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.fillStyle = g;
+      ctx.fillRect(x - 40, y - 36, s + 80, s + 90);
+      ctx.restore();
+      // たいまつ本体: 受け金具、棒、炎（外は赤、中は橙、芯は黄）
+      ctx.fillStyle = "#1a1210";
+      ctx.fillRect(x + 6, y + 9, 4, 1);
+      ctx.fillStyle = "#4a3220";
+      ctx.fillRect(x + 7, y + 6, 2, 5);
+      const lean = flick > 0.3 ? 1 : flick < -0.3 ? -1 : 0;
+      const fh = 4 + (flick > 0 ? 1 : 0);
+      ctx.fillStyle = "#c8381c";
+      ctx.fillRect(x + 6 + lean, y + 6 - fh, 4, fh);
+      ctx.fillStyle = "#f08a24";
+      ctx.fillRect(x + 7 + lean, y + 6 - fh + 1, 2, fh - 1);
+      ctx.fillStyle = "#ffe070";
+      ctx.fillRect(x + 7 + lean, y + 6 - Math.max(2, fh - 2), 2, Math.max(2, fh - 2));
+    }
+  }
+}
