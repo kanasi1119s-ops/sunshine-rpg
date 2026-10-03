@@ -78,6 +78,137 @@ function waterEdge(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: num
   }
 }
 
+/**
+ * 山のタイル（mountain=山、peaks=高峰）。タイルの「模様」ではなく、世界座標の高さ（尾根ノイズ＋ふちからの距離）から1ドットずつ描く。
+ * 隣のタイルとも稜線がつながり、塊の外ふちは自然にくずれ、光は左上。タイルごとに一度だけ描いてキャッシュする（見た目は座標だけで決まる）。
+ */
+const ROCK_RAMP = ["#363a42", "#4e5560", "#6c747e", "#929ba6", "#bcc4cc"];
+const PEAK_RAMP = ["#343a44", "#4c5662", "#6e7c8a", "#98a8b6", "#d6e0ea"];
+const mountainCache = new Map<string, HTMLCanvasElement>();
+
+function vnoise(x: number, y: number, seed: number): number {
+  const ix = Math.floor(x), iy = Math.floor(y);
+  const fx = x - ix, fy = y - iy;
+  const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+  const h = (a: number, b: number): number => (hashCell(a * 7 + seed, b * 13 + seed * 3) % 1000) / 1000;
+  const top = h(ix, iy) * (1 - sx) + h(ix + 1, iy) * sx;
+  const bot = h(ix, iy + 1) * (1 - sx) + h(ix + 1, iy + 1) * sx;
+  return top * (1 - sy) + bot * sy;
+}
+
+function mountainTile(map: TileMap, tx: number, ty: number, peaks: boolean): HTMLCanvasElement | null {
+  if (typeof document === "undefined") return null;
+  const key = `${tx},${ty},${peaks ? 1 : 0}`;
+  const hit = mountainCache.get(key);
+  if (hit) return hit;
+  const mass = (x: number, y: number): boolean => {
+    const a = artAt(map, x, y) ?? "";
+    return a === "mountain" || a === "peaks";
+  };
+  const N = mass(tx, ty - 1), S = mass(tx, ty + 1), W = mass(tx - 1, ty), E = mass(tx + 1, ty);
+  const NW = mass(tx - 1, ty - 1), NE = mass(tx + 1, ty - 1), SW = mass(tx - 1, ty + 1), SE = mass(tx + 1, ty + 1);
+  const sideColor = (x: number, y: number): string => {
+    const k = kindAt(map, x, y);
+    if (k === "water") return "#7a7a72";
+    const id = getTileId(map, 0, x, y);
+    return NEIGHBOR_COLOR[k] ?? (id ? map.data.tileColors?.[id] ?? "#5a9040" : "#5a9040");
+  };
+  const ramp = peaks ? PEAK_RAMP : ROCK_RAMP;
+  const canvas = document.createElement("canvas");
+  canvas.width = 16; canvas.height = 16;
+  const c = canvas.getContext("2d");
+  if (!c) return null;
+  const wx0 = tx * 16, wy0 = ty * 16;
+  // ふちからの距離（塊の内側が正）と、いちばん近い外側の方向
+  const edge = (px: number, py: number): { d: number; out: string } => {
+    let d = 8, side = "";
+    const upd = (v: number, tag: string): void => { if (v < d) { d = v; side = tag; } };
+    if (!N) upd(py + 0.5, "N");
+    if (!S) upd(15.5 - py, "S");
+    if (!W) upd(px + 0.5, "W");
+    if (!E) upd(15.5 - px, "E");
+    if (N && W && !NW) upd(Math.hypot(px + 0.5, py + 0.5), "NW");
+    if (N && E && !NE) upd(Math.hypot(15.5 - px, py + 0.5), "NE");
+    if (S && W && !SW) upd(Math.hypot(px + 0.5, 15.5 - py), "SW");
+    if (S && E && !SE) upd(Math.hypot(15.5 - px, 15.5 - py), "SE");
+    return { d, out: side };
+  };
+  const dxy: Record<string, [number, number]> = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0], NW: [-1, -1], NE: [1, -1], SW: [-1, 1], SE: [1, 1] };
+  // 1ドットの書き込み先（タイルの外は捨てる）
+  const buf: (string | null)[][] = Array.from({ length: 16 }, () => Array<string | null>(16).fill(null));
+  const put = (px: number, py: number, color: string): void => {
+    if (px >= 0 && px < 16 && py >= 0 && py < 16) buf[py][px] = color;
+  };
+  // 山と山のすき間の岩肌（ゆるい市松で暗い2色）
+  for (let py = 0; py < 16; py++) {
+    for (let px = 0; px < 16; px++) {
+      put(px, py, ramp[1]);
+    }
+  }
+  // 山を1つずつ描いて、奥（上）から手前（下）へ重ねる。山は格子の目ごとに1つ、少しずらして置く。
+  const CW = peaks ? 18 : 15, CH = peaks ? 14 : 12;
+  const list: Array<{ cx: number; by: number; h: number; seed: number }> = [];
+  for (let gy = Math.floor((wy0 - 2) / CH); gy <= Math.floor((wy0 + 16 + 26) / CH); gy++) {
+    for (let gx = Math.floor((wx0 - 16) / CW); gx <= Math.floor((wx0 + 16 + 16) / CW); gx++) {
+      const hh = hashCell(gx * 41 + 7, gy * 29 + 3);
+      const hh2 = hashCell(gx * 17 + 11, gy * 53 + 5);
+      const baseH = peaks ? 15 : 11;
+      list.push({ cx: gx * CW + 3 + (hh % (CW - 5)), by: gy * CH + 4 + (hh2 % (CH - 3)), h: baseH + (hh2 >> 3) % (peaks ? 8 : 6), seed: hh % 97 });
+    }
+  }
+  list.sort((p1, p2) => p1.by - p2.by);
+  for (const m of list) {
+    const hw = Math.round(m.h * 0.78);
+    const snowRows = peaks && m.h >= 18 ? Math.round(m.h * 0.34) : 0;
+    for (let r = 0; r < m.h; r++) {
+      const y = m.by - m.h + 1 + r - wy0;
+      if (y < -1 || y > 15) continue;
+      const w = Math.round(hw * Math.pow((r + 0.6) / m.h, 0.92) + ((hashCell(m.seed + r, 3) % 3) - 1) * 0.6);
+      // 背骨: 山頂から根もとへ、ジグザグに下りる明暗の境目
+      const split = m.cx + Math.round(Math.sin(r * 0.85 + m.seed) * 1.3) + (r > m.h * 0.55 ? 1 : 0);
+      for (let x = -w; x <= w; x++) {
+        const wxp = m.cx + x;
+        const px = wxp - wx0;
+        const lit = wxp < split;
+        // 明るい面に、斜めに下りる尾根の線を1本だけ入れる（ごちゃつかせない）
+        const ridge = lit && r > 3 && x === -Math.round(w * 0.45) + (r % 2 === 0 ? 0 : 0);
+        let idx = lit ? 3 : 1;
+        if (ridge) idx = 2;
+        if (r < 2) idx = Math.min(4, idx + 1);
+        if (x === w && r > 1) idx = 0; // 右のふちの輪郭
+        let color = ramp[Math.max(0, Math.min(4, idx))];
+        if (r < snowRows && Math.abs(x) < w - (r % 3 === 0 ? 1 : 0)) {
+          // 雪: 頂きのまわり。下の縁はギザギザ
+          const jag = r >= snowRows - 2 && hashCell(wxp * 3, r + m.seed) % 2 === 0;
+          if (!jag) color = lit ? "#eef2f8" : "#b8c2d6";
+        }
+        put(px, y, color);
+      }
+    }
+    // 根もとの暗い線
+    for (let x = -Math.round(hw * 0.7); x <= Math.round(hw * 0.7); x += 1) {
+      if (hashCell(m.cx + x, m.seed) % 3 !== 0) put(m.cx + x - wx0, m.by - wy0 + 1, ramp[0]);
+    }
+  }
+  // 塊の外ふち（隣のタイルが山でないところ）は、自然にくずして、となりの地面の色にする
+  for (let py = 0; py < 16; py++) {
+    for (let px = 0; px < 16; px++) {
+      const { d, out } = edge(px, py);
+      const jitter = (vnoise((wx0 + px) / 3, (wy0 + py) / 3, 5) - 0.5) * 2.2;
+      if (d + jitter < 0.4) {
+        const [ox, oy] = dxy[out] ?? [0, 0];
+        c.fillStyle = sideColor(tx + ox, ty + oy);
+      } else {
+        c.fillStyle = buf[py][px] ?? ramp[1];
+      }
+      c.fillRect(px, py, 1, 1);
+    }
+  }
+  if (mountainCache.size > 4000) mountainCache.clear();
+  mountainCache.set(key, canvas);
+  return canvas;
+}
+
 /** 大きな塊（森・山）の外ふちを、まっすぐにしない: 角を丸め、辺を波うたせて、となりの地面の色を食い込ませる。 */
 const MASS_ART = new Set(["worldforest", "snowforest", "mountain", "peaks"]);
 const NEIGHBOR_COLOR: Partial<Record<Kind, string>> = { grass: "#5a9040", path: "#a87c3c" };
@@ -318,7 +449,15 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
       }
       const ox = tx * s - camera.x;
       const oy = ty * s - camera.y;
-      if (MASS_ART.has(map.data.tileArt[getTileId(map, 0, tx, ty)] ?? "")) {
+      const artHere = map.data.tileArt[getTileId(map, 0, tx, ty)] ?? "";
+      if ((artHere === "mountain" || artHere === "peaks") && !map.data.theme) {
+        const tile = mountainTile(map, tx, ty, artHere === "peaks");
+        if (tile) {
+          ctx.drawImage(tile, ox, oy);
+          continue;
+        }
+      }
+      if (MASS_ART.has(artHere)) {
         erodeMass(ctx, map, ox, oy, s, tx, ty);
       } else if (kind === "grass" || kind === "path" || (kind === "land" && map.data.coastal)) {
         massShadow(ctx, map, ox, oy, s, tx, ty);
