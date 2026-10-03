@@ -48,6 +48,12 @@
 | Free 30 Enemy characters pack（cogabushi） | https://cogabushi.itch.io/free-30-enemy-characters-pack | 再配布禁止（加工・トレースしたものも含む）、使えるのはダウンロードした本人だけ、作者がAIで作った画像と明記 |
 | シカゴ美術館の画像 | https://www.artic.edu/ | 画像の自動取得に確認画面（Cloudflare）が出たので、回避せずに取得をやめた |
 
+## AIで作った絵（2026-10-03、試作）
+
+| もの | 置き場 | 使ったモデル（ライセンス） | 状態 |
+|---|---|---|---|
+| ドット絵の試作7体（スライム・ゴースト・ゴーレム・竜の子・コウモリの悪魔・スケルトン騎士・小悪魔） | `assets-src/ai-generated/trial-2026-10-03/` | PublicPrompts/All-In-One-Pixel-Model（CreativeML OpenRAIL-M）＋ latent-consistency/lcm-lora-sdv1-5（openrail++） | **ゲームには入れていない**。入れる前に、既存作品に似ていないかの確認と人間の確認が要る。1体（キノコ）は有名なキャラを連想させたので外した |
+
 ## 素材の置き場
 - 元ファイル: `assets-src/`（規約の写しも一緒に置く）
 - ゲームに読み込む形（色番号のRLEなど）に変換したもの: `src/game/art/`

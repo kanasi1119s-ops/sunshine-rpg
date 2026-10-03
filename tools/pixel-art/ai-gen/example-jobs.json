@@ -1,0 +1,51 @@
+[
+ {
+  "name": "slime",
+  "seed": 7,
+  "steps": 6,
+  "cfg": 1.5,
+  "prompt": "a round blue slime monster with big eyes, full body, front view, rpg game enemy, in pixelsprite style, simple flat colors, black outline, centered, plain white background"
+ },
+ {
+  "name": "ghost",
+  "seed": 8,
+  "steps": 6,
+  "cfg": 1.5,
+  "prompt": "a floating purple ghost with a lantern, full body, front view, rpg game enemy, in pixelsprite style, simple flat colors, black outline, centered, plain white background"
+ },
+ {
+  "name": "golem",
+  "seed": 9,
+  "steps": 6,
+  "cfg": 1.5,
+  "prompt": "a stone golem with glowing cracks, full body, front view, rpg game enemy, in pixelsprite style, simple flat colors, black outline, centered, plain white background"
+ },
+ {
+  "name": "whelp",
+  "seed": 10,
+  "steps": 6,
+  "cfg": 1.5,
+  "prompt": "a small red dragon whelp with wings, full body, front view, rpg game enemy, in pixelsprite style, simple flat colors, black outline, centered, plain white background"
+ },
+ {
+  "name": "bat",
+  "seed": 11,
+  "steps": 6,
+  "cfg": 1.5,
+  "prompt": "a giant bat demon with spread wings, full body, front view, rpg game enemy, in pixelsprite style, simple flat colors, black outline, centered, plain white background"
+ },
+ {
+  "name": "skel",
+  "seed": 13,
+  "steps": 6,
+  "cfg": 1.5,
+  "prompt": "a skeleton knight with a rusty sword and shield, full body, front view, rpg game enemy, in pixelsprite style, simple flat colors, black outline, centered, plain white background"
+ },
+ {
+  "name": "imp",
+  "seed": 14,
+  "steps": 6,
+  "cfg": 1.5,
+  "prompt": "a small horned imp demon holding a trident, full body, front view, rpg game enemy, in pixelsprite style, simple flat colors, black outline, centered, plain white background"
+ }
+]
