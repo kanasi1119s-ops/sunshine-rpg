@@ -251,7 +251,6 @@ export function scoreToMidiInfo(score: Score, opts: { ampsApplied?: boolean; cle
         const strum = ms(muted ? 3 : 7);
         push(pitch, tick, mVel, mLen);
         push(pitch + 7, tick + strum, Math.round(mVel * 0.92), Math.max(20, mLen - strum));
-        if (!muted && inst === "distGuitar") push(pitch + 12, tick + strum * 2, Math.round(mVel * 0.7), Math.max(20, mLen - strum * 2));
         continue;
       }
       push(pitch, tick, velocity, len);

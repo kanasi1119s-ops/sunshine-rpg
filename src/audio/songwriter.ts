@@ -1165,6 +1165,65 @@ const FLAVOR_PLANS: Record<"orchestra" | "wagakki", (kind: Kind) => Record<strin
  * ラウド: リズムギター（ディストーション／クランチ）を同じ刻みで2本に倍にして、左右いっぱい（-0.9／0.9）に振り、
  * ラウド専用のアンプ（メタル系は loudmetal、ロック系は loudrock）を通す。歪みギターは音割れしやすいので、1本ずつの音量は小さく抑える。
  */
+/**
+ * リードギターが旋律を弾いている小節では、リズムギターの刻みをやめて、和音を伸ばす（2拍ごとに弾き直す）。
+ * 2本とも細かく刻むと、旋律が埋もれて聞き取りにくいため（2026-10-03 に耳で確かめて追加）。
+ * 同じ音が続く所だけをつなぎ、和音が変わる所・休みはそのまま残す。
+ */
+export function relaxRhythmUnderLead(score: Score, beats: number): void {
+  const leads = score.tracks.filter((t) => t.instrument === "leadGuitar");
+  if (!leads.length) return;
+  const barLen = beats;
+  const active = new Set<number>();
+  for (const t of leads) {
+    const sounding = new Map<number, number>();
+    let at = 0;
+    for (const n of t.notes) {
+      if (n.note !== REST) {
+        const bar = Math.floor(at / barLen + 1e-9);
+        sounding.set(bar, (sounding.get(bar) ?? 0) + n.durationBeats);
+      }
+      at += n.durationBeats;
+    }
+    for (const [bar, b] of sounding) if (b >= 1) active.add(bar);
+  }
+  if (!active.size) return;
+  const chunk = 2; // 2拍ごとに弾き直す
+  for (const t of score.tracks) {
+    if (t.instrument !== "distGuitar" && t.instrument !== "crunch") continue;
+    // 拍の位置つきに直す
+    const timed: { at: number; n: (typeof t.notes)[number] }[] = [];
+    let at = 0;
+    for (const n of t.notes) {
+      timed.push({ at, n });
+      at += n.durationBeats;
+    }
+    const out: typeof t.notes = [];
+    let i = 0;
+    while (i < timed.length) {
+      const { at: s0, n } = timed[i];
+      const bar = Math.floor(s0 / barLen + 1e-9);
+      const inBar = s0 - bar * barLen;
+      const chunkEnd = Math.min(bar * barLen + (Math.floor(inBar / chunk + 1e-9) + 1) * chunk, (bar + 1) * barLen);
+      if (!active.has(bar) || n.note === REST) {
+        out.push({ ...n });
+        i++;
+        continue;
+      }
+      // この2拍の区切りの終わりまで（刻みの間の短い休みも含めて）を、最初の音1つにまとめて伸ばす
+      let dur = 0;
+      let j = i;
+      while (j < timed.length && timed[j].at < chunkEnd - 1e-9) {
+        dur += timed[j].n.durationBeats;
+        j++;
+      }
+      out.push({ ...n, durationBeats: dur, gate: 1 });
+      i = j;
+    }
+    t.notes = out;
+  }
+}
+
 function applyLoud(score: Score): void {
   const amp = score.tone === "metal" ? "loudmetal" : "loudrock";
   const out: Score["tracks"] = [];
@@ -1336,6 +1395,7 @@ export function composeSong(spec: SongSpec, extra?: { vocal?: VocalSection[]; se
   if (OPENING_STYLES.includes(spec.style)) score.opening = true;
   score.style = spec.style;
   score.tone = METAL_STYLES.includes(spec.style) ? "metal" : "rock";
+  relaxRhythmUnderLead(score, beats);
   if (flavors.includes("loud")) applyLoud(score);
   if (["electro", "phonk", "progmetal"].includes(spec.style)) score.synth = true;
   return score;

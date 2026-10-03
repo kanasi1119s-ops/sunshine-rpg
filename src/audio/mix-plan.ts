@@ -104,16 +104,16 @@ export interface AmpFx {
 
 /** 曲調ごとのアンプ（リズムギター）。 */
 const AMP_BY_STYLE: Record<string, AmpFx> = {
-  metal:      { tightHz: 130, pushHz: 800, pushDb: 6, driveDb: 30, stages: 2, bassDb: 3, midHz: 650, midDb: -5, presenceDb: 3, cabHz: 5200 },
-  deathmetal: { tightHz: 140, pushHz: 850, pushDb: 7, driveDb: 33, stages: 2, bassDb: 3, midHz: 600, midDb: -6, presenceDb: 3, cabHz: 5000 },
-  hardcore:   { tightHz: 130, pushHz: 900, pushDb: 6, driveDb: 30, stages: 2, bassDb: 2, midHz: 700, midDb: -4, presenceDb: 3, cabHz: 5200 },
-  progmetal:  { tightHz: 125, pushHz: 800, pushDb: 5, driveDb: 27, stages: 2, bassDb: 2, midHz: 700, midDb: -3, presenceDb: 2, cabHz: 5500 },
-  rock:       { tightHz: 100, pushHz: 1000, pushDb: 4, driveDb: 22, stages: 2, bassDb: 1, midHz: 1000, midDb: 2, presenceDb: 2, cabHz: 5800 },
-  dancerock:  { tightHz: 110, pushHz: 1200, pushDb: 3, driveDb: 14, stages: 1, bassDb: -1, midHz: 1200, midDb: 2, presenceDb: 2, cabHz: 6500 },
-  jpop:       { tightHz: 110, pushHz: 1100, pushDb: 3, driveDb: 16, stages: 1, bassDb: 0, midHz: 1100, midDb: 2, presenceDb: 2, cabHz: 6200 },
+  metal:      { tightHz: 130, pushHz: 800, pushDb: 6, driveDb: 20, stages: 2, bassDb: 3, midHz: 650, midDb: -5, presenceDb: 3, cabHz: 5200 },
+  deathmetal: { tightHz: 140, pushHz: 850, pushDb: 7, driveDb: 23, stages: 2, bassDb: 3, midHz: 600, midDb: -6, presenceDb: 3, cabHz: 5000 },
+  hardcore:   { tightHz: 130, pushHz: 900, pushDb: 6, driveDb: 20, stages: 2, bassDb: 2, midHz: 700, midDb: -4, presenceDb: 3, cabHz: 5200 },
+  progmetal:  { tightHz: 125, pushHz: 800, pushDb: 5, driveDb: 18, stages: 2, bassDb: 2, midHz: 700, midDb: -3, presenceDb: 2, cabHz: 5500 },
+  rock:       { tightHz: 100, pushHz: 1000, pushDb: 4, driveDb: 15, stages: 2, bassDb: 1, midHz: 1000, midDb: 2, presenceDb: 2, cabHz: 5800 },
+  dancerock:  { tightHz: 110, pushHz: 1200, pushDb: 3, driveDb: 10, stages: 1, bassDb: -1, midHz: 1200, midDb: 2, presenceDb: 2, cabHz: 6500 },
+  jpop:       { tightHz: 110, pushHz: 1100, pushDb: 3, driveDb: 11, stages: 1, bassDb: 0, midHz: 1100, midDb: 2, presenceDb: 2, cabHz: 6200 },
 };
 /** ソロ・主旋律のギター（よくのびるように、中域を押し出して強めに歪ませる）。 */
-const AMP_LEAD: AmpFx = { tightHz: 150, pushHz: 900, pushDb: 7, driveDb: 28, stages: 2, bassDb: -1, midHz: 1100, midDb: 3, presenceDb: 2, cabHz: 5600 };
+const AMP_LEAD: AmpFx = { tightHz: 150, pushHz: 900, pushDb: 7, driveDb: 19, stages: 2, bassDb: -1, midHz: 1100, midDb: 3, presenceDb: 2, cabHz: 5600 };
 
 const f2a = (n: number): string => (Math.round(n * 100) / 100).toString();
 /** アンプとキャビネットの FFmpeg フィルター。 */
@@ -183,7 +183,8 @@ export function mixPlan(style: string | undefined, flavors: readonly string[] = 
   }
   // ギター: クリーンで鳴らした音に、曲調に合うアンプとキャビネットをかける。リズムギターは左右に2本あるように
   const amp = (style && AMP_BY_STYLE[style]) || AMP_BY_STYLE.rock;
-  plan.gtrRhythm.amp = flavors.includes("loud") ? { ...amp, driveDb: amp.driveDb + 3 } : amp;
+  // 歪ませすぎると音がつぶれてにごるので、増幅は控えめ（2026-10-03 に耳で確かめて、メタル 30→20dB など約3分の2に）
+  plan.gtrRhythm.amp = flavors.includes("loud") ? { ...amp, driveDb: amp.driveDb + 2 } : amp;
   plan.gtrRhythm.warmth = 0; // 歪みはアンプでかけるので、二重にしない
   plan.gtrRhythm.double = !flavors.includes("loud"); // ラウドは楽譜の段階で左右2本にしてある
   plan.gtrLead.amp = AMP_LEAD;
