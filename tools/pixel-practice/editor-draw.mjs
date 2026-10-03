@@ -1,5 +1,5 @@
-// ドット絵エディタ（Artifact「ドット絵エディタ」の index.html を手元に保存したもの）を、ヘッドレスブラウザで実際にマウス操作して絵を描く。
-// 使い方: EDITOR=<editor.html> node editor-draw.mjs <絵.txt> <パレット.json> <出力PNG> [--ref 下絵.png] [--zoom 16] [--wide] [--import]
+// ドット絵エディタ（tools/pixel-editor/index.html。Artifact「ドット絵エディタ」と同じもの）を、ヘッドレスブラウザで実際にマウス操作して絵を描く。
+// 使い方: [EDITOR=<editor.html>] node editor-draw.mjs <絵.txt> <パレット.json> <出力PNG> [--ref 下絵.png] [--zoom 16] [--wide] [--import]
 //   --import: マウスで塗る代わりに、エディタの「貼り付けて読み込む」で読み込む（大きな絵向け。直し描きは同じように行う）
 //   --wide: 256×256 など大きな絵のとき（画面を広くし、エディタの並びの幅の上限を外す）。--zoom は6以上にする
 //   絵.txt: 1文字=1ドットの文字グリッド（'.'は透明）。パレットJSON: {"文字":"#rrggbb"}
@@ -7,6 +7,7 @@
 // 出力: <出力PNG>（エディタのキャンバスの画面）、<出力>.rows.txt（エディタが書き出した配列。描いた結果が文字グリッドと同じか確認する）
 import { chromium } from "playwright-core";
 import fs from "fs";
+import { fileURLToPath } from "url";
 const [txt, palPath, out, ...rest] = process.argv.slice(2);
 const opt = (k, d) => (rest.includes(k) ? rest[rest.indexOf(k) + 1] : d);
 const ref = opt("--ref", null), zoom = Number(opt("--zoom", 16)), wide = rest.includes("--wide"), viaImport = rest.includes("--import");
@@ -17,7 +18,8 @@ const syms = Object.keys(pal);
 const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
 const p = await (await browser.newContext({ viewport: wide ? { width: 2600, height: 2600 } : { width: 1500, height: 2000 } })).newPage();
 await p.route(/fonts\./, (r) => r.abort());
-await p.goto("file://" + process.env.EDITOR);
+const editorPath = process.env.EDITOR || fileURLToPath(new URL("../pixel-editor/index.html", import.meta.url)); // 指定がなければ、リポジトリの中のエディタ
+await p.goto("file://" + editorPath);
 // --wide: 大きな絵（256×256 など）のとき、キャンバスが画面に収まるよう、エディタの並びの幅の上限を外す
 if (wide) await p.addStyleTag({ content: ".layout{max-width:none!important;grid-template-columns:220px max-content 300px!important}.canvas-wrap{max-height:none!important;overflow:visible!important}" });
 await p.evaluate(() => localStorage.clear());
