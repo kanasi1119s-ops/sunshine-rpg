@@ -135,8 +135,8 @@ def palette_for(cols, eye=None):
     return P
 
 
-def build(style, outfit, P, beard=False, decos=()):
-    frames_raw = FT.all_frames(style, outfit, beard, decos)
+def build(style, outfit, P, beard=False, decos=(), hair_sway=True):
+    frames_raw = FT.all_frames(style, outfit, beard, decos, hair_sway)
     frames, pal, idx = {}, [], {}
     for key, rows in frames_raw.items():
         out = []
@@ -162,6 +162,7 @@ def main():
     ap.add_argument("--set", action="append", default=[], help="部位=#rrggbb（hair/skin/top/bottom/boot/acc、杖の玉・腕輪の光は orb）")
     ap.add_argument("--deco", default="", help="飾り（カンマ区切り）: band はちまき・cape マント・backsword 背中の剣・sword 手に剣・shield 盾・helmet 兜・staff 杖・scarf マフラー・goggles ゴーグル・twintails ふたつ結び")
     ap.add_argument("--beard", action="store_true", help="ひげをつける（髪の色）")
+    ap.add_argument("--still-hair", action="store_true", help="歩くときに髪を揺らさない（男性の人物。人間の指示 2026-10-04）")
     ap.add_argument("--eye", help="目の色（省略すると外周と同じ暗い色）")
     ap.add_argument("--colors", help="手で直した .colors.json から作り直す")
     ap.add_argument("--rembg", action="store_true", help="デザイン画の背景をAIで切り抜く")
@@ -183,7 +184,7 @@ def main():
         sys.exit("色が足りません: " + ", ".join(missing) + "（--set で指定してください）")
     json.dump({**{k: hexc(v) for k, v in cols.items()}, **({"eye": a.eye} if a.eye else {})}, open(base + ".colors.json", "w"), ensure_ascii=False, indent=1)
     P = palette_for(cols, a.eye)
-    data = build(a.style, a.outfit, P, a.beard, tuple(filter(None, a.deco.split(','))))
+    data = build(a.style, a.outfit, P, a.beard, tuple(filter(None, a.deco.split(','))), not a.still_hair)
     json.dump(data, open(base + ".walker.json", "w"), ensure_ascii=False)
     sheet_rows = []
     for dr in DIRS:
