@@ -136,10 +136,10 @@ describe("世界地図のエンカウント", () => {
   it("道の上では出会わず、地形と位置で地方が決まる", () => {
     expect(worldZoneIdAt(7, 10)).toBeNull();
     expect(worldZoneIdAt(2, 10)).toBe("world-1");
-    expect(worldZoneIdAt(2, 50)).toBe("world-2");
-    expect(worldZoneIdAt(2, 150, 40)).toBe("world-4");
-    expect(worldZoneIdAt(2, 150, 140)).toBe("world-6");
-    expect(worldZoneIdAt(18, 196, 170)).toBe("world-5");
+    expect(worldZoneIdAt(2, 80)).toBe("world-2");
+    expect(worldZoneIdAt(2, 210, 60)).toBe("world-4");
+    expect(worldZoneIdAt(2, 210, 200)).toBe("world-6");
+    expect(worldZoneIdAt(18, 276, 240)).toBe("world-5");
     expect(worldZoneIdAt(5, 10)).toBe("world-3");
     expect(worldZoneIdAt(6, 10)).toBe("world-4");
   });

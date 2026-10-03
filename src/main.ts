@@ -577,6 +577,18 @@ if (import.meta.env.DEV) {
       applySaveData(JSON.parse(JSON.stringify(saved)) as SaveData);
       return { saved: saved.vehicles, mode: vehicle };
     },
+    /** 開発用: 世界地図の全体を、実際のタイルの絵・飾りで1枚に描いて、PNGのデータURLで返す（確認用）。 */
+    renderWorldFull: () => {
+      const full = createTileMap(WORLD_MAPS["world-map"]);
+      const canvas = document.createElement("canvas");
+      canvas.width = full.widthPx;
+      canvas.height = full.heightPx;
+      const c = canvas.getContext("2d")!;
+      const cam = { x: 0, y: 0, viewportWidth: canvas.width, viewportHeight: canvas.height };
+      renderTileMap(c, full, cam);
+      renderProps(c, full.data, cam, () => true);
+      return canvas.toDataURL("image/png");
+    },
     /** 開発用: 仲間の加入フラグを立てて、隊列（後ろをついてくる姿）を確かめる。 */
     /** 開発用: 船と飛空艇を手に入れた状態にする。 */
     giveVehicles: () => {
