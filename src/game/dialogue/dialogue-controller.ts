@@ -10,6 +10,7 @@ export interface DialogueControllerOptions {
   onWarp?: (warp: WarpRequest) => void;
   onStartBattle?: (battleId: string) => void;
   onGiveGold?: (amount: number) => void;
+  onGiveEquipment?: (itemId: string) => void;
   onOpenShop?: (shopId: string) => void;
   onStaffRoll?: () => void;
   charsPerSecond?: number;
@@ -42,6 +43,7 @@ export class DialogueController {
       onWarp: this.options.onWarp,
       onStartBattle: this.options.onStartBattle,
       onGiveGold: this.options.onGiveGold,
+      onGiveEquipment: this.options.onGiveEquipment,
       onOpenShop: this.options.onOpenShop,
       onStaffRoll: this.options.onStaffRoll,
     });
