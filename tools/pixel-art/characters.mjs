@@ -187,61 +187,67 @@ const mina = () => {
 };
 const minaPal = [["縁", "#101828"], ["肌暗", "#d09a80"], ["肌", "#f0c4a4"], ["肌明", "#fde0c8"], ["髪暗", "#1a4a7a"], ["髪", "#3a86c4"], ["髪明", "#8ac8f0"], ["衣1", "#a0b8c8"], ["衣2", "#c8dce8"], ["衣3", "#e4f0f6"], ["衣4", "#ffffff"], ["紺1", "#0a2a4a"], ["紺2", "#1a5a8a"], ["紺3", "#3c94c0"], ["革1", "#3a2414"], ["革2", "#6a4426"], ["革3", "#a06a3a"], ["金具1", "#5a6a7a"], ["金具2", "#a0b4c4"], ["金具3", "#dceaf4"], ["水1", "#1a6aa4"], ["水2", "#4ac0e0"], ["水3", "#b4f0f8"], ["瞳", "#2a6ac0"], ["白", "#ffffff"], ["影", "#182430"]];
 
-// ======== ガイド: 硝子湖の商人の息子。風唱系。ゴーグル、緑のマフラー、背に弓。コインをはじく ========
+// ======== ガイド: 硝子湖の交易商人の娘（女の子）。風唱系。ふたつ結びの髪、額にゴーグル、緑のマフラー、背に弓。コインをはじく ========
 const guide = () => {
   const g = makeGrid();
   taper(g, curve([164, 30], [196, 110], [166, 196]), 3, 3, P.leather);        // 背負った弓
-  for (let i = 0; i < 40; i++) { const t = i / 39; px(g, 30 + t * 166 + Math.sin(t * 3.14) * 0, 164 + Math.sin(t * 3.14) * 30 - 2, P.metal[1]); }
+  for (let i = 0; i < 40; i++) { const t = i / 39; px(g, 30 + t * 166, 164 + Math.sin(t * 3.14) * 30 - 2, P.metal[1]); }
+  // ふたつ結びの髪（後ろに垂れる束）
+  for (const sg of [-1, 1]) lock(g, [128 + sg * 22, 36], [128 + sg * 40, 66], [128 + sg * 36, 112], 10, 4);
   lock(g, [138, 84], [176, 108], [186, 150], 7, 3, P.B); lock(g, [140, 86], [164, 120], [166, 168], 6, 2.5, P.B);     // 緑のマフラー
-  body(g, { pants: [14, 15, 16], boots: [14, 15, 14], top: P.A, torsoW: 26, hw: 21, stance: [[-4, 0], [8, 0]], hem: 14, legR: [10, 7] });
+  body(g, { pants: [14, 15, 16], boots: [14, 15, 14], top: P.A, torsoW: 23, hw: 20, stance: [[-3, 0], [6, 0]], hem: 0, legR: [8.5, 6.2] });
+  // 緑のスカート（ひだ）
+  for (let r = 144; r <= 184; r++) { const t = (r - 144) / 40, half = 22 + t * 16; for (let c = Math.round(128 - half); c <= Math.round(128 + half); c++) { const u = (c - 128) / half; const lum = -u * 0.6 - t * 0.2 + 0.15; let k = P.B[toneIdx(3, lum, c, r, 0.04)]; if (Math.abs(u) > 0.95 || r === 184) k = 0; else if (Math.abs(Math.sin((c - 128) * 0.33)) < 0.12 && t > 0.15) k = P.B[0]; px(g, r, c, k); } }
   // 革の胴当てと斜め掛けの鞄
-  torso(g, 96, 146, 22, 19, [14, 15, 16], 0);
-  for (let i = 0; i < 60; i++) { px(g, 88 + i * 0.95, 104 + i * 0.8, P.leather[2]); px(g, 89 + i * 0.95, 104 + i * 0.8, P.leather[0]); }
-  ell(g, 152, 148, 9, 8, shaded(P.leather)); px(g, 146, 152, P.metal[2]);
-  ell(g, 128, 88, 20, 8, shaded(P.B)); ell(g, 142, 98, 9, 7, shaded(P.B));
-  rect(g, 100, 142, 56, 6, (r, c, u, v) => (v < 0.3 ? P.leather[2] : v > 0.8 ? 0 : P.leather[1]));
+  torso(g, 96, 142, 20, 18, [14, 15, 16], 0);
+  for (let i = 0; i < 56; i++) { px(g, 88 + i * 0.95, 104 + i * 0.8, P.leather[2]); px(g, 89 + i * 0.95, 104 + i * 0.8, P.leather[0]); }
+  ell(g, 152, 146, 8, 7, shaded(P.leather)); px(g, 146, 152, P.metal[2]);
+  ell(g, 128, 88, 18, 8, shaded(P.B)); ell(g, 140, 98, 8, 7, shaded(P.B));
   // 腕: 左は下ろして、右は胸の前でコインをはじく
-  arm(g, 100, 92, 90, 122, 98, 150, P.A, P.skin, 9, 6.5); arm(g, 156, 92, 176, 112, 168, 92, P.A, P.skin, 9, 6.5);
+  arm(g, 104, 92, 94, 120, 102, 146, P.A, P.skin, 8, 6); arm(g, 152, 92, 172, 112, 166, 92, P.A, P.skin, 8, 6);
   ell(g, 170, 78, 6, 6, (r, c, nx, ny, d, lum) => (d > 0.75 ? 0 : P.glow[toneIdx(3, lum, c, r, 0.05)]));            // 宙を舞う金貨
   px(g, 76, 168, P.white); px(g, 72, 176, P.glow[2]); px(g, 66, 172, P.glow[1]);
-  face(g, 128, 50, { brow: "angry", mouth: "smirk", eyeGap: 10 });
-  // 髪: 明るい茶の短いはね髪、額にゴーグル
-  ell(g, 128, 31, 23, 15, (r, c, nx, ny, d, lum) => (ny > 0.42 ? null : shaded(P.hair)(r, c, nx, ny, d, lum)));
-  for (const [x, y, dx] of [[104, 30, -18], [114, 22, -8], [128, 18, 2], [142, 22, 12], [152, 30, 20]]) lock(g, [x, y], [x + dx * 0.6, y - 4], [x + dx * 1.1, y - 12], 7, 1.2);
-  rect(g, 102, 26, 52, 6, (r, c, u, v) => (v < 0.5 ? P.leather[2] : P.leather[1]));
-  for (const x of [114, 142]) { ell(g, x, 24, 8, 7, (r, c, nx, ny, d, lum) => (d > 0.8 ? 0 : d > 0.45 ? P.metal[1] : P.glow[toneIdx(3, lum, c, r, 0.05)])); }
+  face(g, 128, 50, { brow: "soft", mouth: "smirk", lash: true, eyeGap: 10 });
+  // 髪: 明るい茶色。前髪と、ふたつ結びの根もと（緑のリボン）、額にゴーグル
+  ell(g, 128, 32, 23, 16, (r, c, nx, ny, d, lum) => (ny > 0.42 ? null : shaded(P.hair)(r, c, nx, ny, d, lum)));
+  for (const [x, y, dx] of [[108, 34, -10], [118, 30, -5], [130, 28, 0], [142, 30, 5], [150, 34, 10]]) lock(g, [x, y], [x + dx * 0.5, y + 8], [x + dx * 0.8, y + 18], 7, 2);
+  for (const sg of [-1, 1]) ell(g, 128 + sg * 23, 38, 6, 5, shaded(P.B));
+  rect(g, 102, 22, 52, 5, (r, c, u, v) => (v < 0.5 ? P.leather[2] : P.leather[1]));
+  for (const x of [114, 142]) { ell(g, x, 21, 8, 7, (r, c, nx, ny, d, lum) => (d > 0.8 ? 0 : d > 0.45 ? P.metal[1] : P.glow[toneIdx(3, lum, c, r, 0.05)])); }
   outlineAll(g, [P.shadow]); rimLight(g, [P.shadow], P.white);
   return g;
 };
 const guidePal = [["縁", "#12180e"], ["肌暗", "#c08a62"], ["肌", "#e8b48a"], ["肌明", "#f8d0a8"], ["髪暗", "#6a4a20"], ["髪", "#a87a34"], ["髪明", "#dcb060"], ["服1", "#e8dcc0"], ["服2", "#f4ecd4"], ["服3", "#fffaf0"], ["服4", "#ffffff"], ["緑1", "#0e4a2a"], ["緑2", "#1e8a48"], ["緑3", "#5cc878"], ["革1", "#3a2414"], ["革2", "#6a4426"], ["革3", "#a06a3a"], ["金具1", "#6a5a2a"], ["金具2", "#c0a040"], ["金具3", "#f4e070"], ["光1", "#b08a10"], ["光2", "#ffd838"], ["光3", "#fffab0"], ["瞳", "#3a8a3a"], ["白", "#ffffff"], ["影", "#1a2418"]];
 
-// ======== オルカ: 鉄鏈鉱山の元鉱夫。寡黙で頑固な大男。ヘルメットの灯り、肩に巨大なつるはし ========
+// ======== オルカ: 鉄鏈鉱山の元鉱夫の少女。寡黙で頑固な力持ち。ヘルメットの灯り、肩に大きなつるはし ========
 const orca = () => {
   const g = makeGrid();
-  taper(g, curve([184, 234], [170, 140], [182, 30]), 5.5, 4.5, P.leather);                                      // つるはしの柄
-  ell(g, 182, 28, 8, 8, shaded(P.metal));
-  taper(g, curve([140, 16], [182, 6], [226, 22]), 8, 3, P.metal); taper(g, curve([224, 22], [232, 36], [234, 48]), 3.5, 1.2, P.metal);        // 鋭い刃
-  body(g, { pants: [14, 15, 16], boots: [14, 15, 14], top: P.A, torsoW: 40, hw: 30, stance: [[-6, 0], [10, 0]], hem: 12, legR: [15, 10], shoes: 17, headR: [23, 25] });
+  taper(g, curve([180, 234], [168, 140], [178, 34]), 5, 4, P.leather);                                      // つるはしの柄
+  ell(g, 178, 32, 7, 7, shaded(P.metal));
+  taper(g, curve([140, 22], [178, 12], [218, 26]), 7, 3, P.metal); taper(g, curve([216, 26], [224, 38], [226, 50]), 3, 1.2, P.metal);        // 刃
+  body(g, { pants: [14, 15, 16], boots: [14, 15, 14], top: P.A, torsoW: 28, hw: 23, stance: [[-5, 0], [8, 0]], hem: 10, legR: [11, 8], shoes: 15 });
   // 作業着のベストと反射帯、太いベルト
-  torso(g, 88, 148, 36, 30, P.B);
-  for (const y of [110, 126]) rect(g, 92, y, 72, 5, (r, c, u, v) => (v < 0.4 ? P.glow[2] : P.glow[1]));
-  rect(g, 96, 144, 64, 8, (r, c, u, v) => (v < 0.25 ? P.leather[2] : v > 0.8 ? 0 : P.leather[1])); ell(g, 128, 148, 7, 5, shaded(P.metal));
-  for (let r = 90; r <= 148; r++) px(g, r, 128, 0);
-  // 太い腕（袖をまくった筋肉）
-  arm(g, 92, 96, 70, 128, 76, 156, P.A, P.skin, 14, 10); arm(g, 164, 96, 186, 100, 184, 76, P.A, P.skin, 14, 10);
-  ell(g, 74, 128, 15, 12, shaded(P.skin));  ell(g, 180, 98, 15, 12, shaded(P.skin));
-  face(g, 128, 50, { brow: "angry", mouth: "flat", eyeGap: 11 });
-  // 濃いひげ、傷、ヘルメットとヘッドライト
-  ell(g, 128, 68, 20, 13, (r, c, nx, ny, d, lum) => (ny < -0.2 ? null : d > 0.85 ? 0 : P.hair[toneIdx(3, lum, c, r, 0.12)]));
-  for (let r = 44; r < 58; r++) px(g, r, 142 + (r - 44) * 0.3, P.skin[0]);                                                 // 頬の傷
-  ell(g, 128, 30, 28, 20, (r, c, nx, ny, d, lum) => (ny > 0.35 ? null : shaded(P.metal)(r, c, nx, ny, d, lum)));
-  rect(g, 100, 34, 56, 6, (r, c, u, v) => (v < 0.5 ? P.metal[2] : P.metal[0]));
-  ell(g, 128, 22, 11, 8, (r, c, nx, ny, d, lum) => (d > 0.8 ? 0 : P.glow[toneIdx(3, lum + 0.3, c, r, 0.05)]));               // ヘッドライト
+  torso(g, 90, 146, 26, 22, P.B);
+  for (const y of [110, 126]) rect(g, 104, y, 48, 4, (r, c, u, v) => (v < 0.4 ? P.glow[2] : P.glow[1]));
+  rect(g, 102, 142, 52, 7, (r, c, u, v) => (v < 0.25 ? P.leather[2] : v > 0.8 ? 0 : P.leather[1])); ell(g, 128, 146, 6, 4, shaded(P.metal));
+  for (let r = 90; r <= 146; r++) px(g, r, 128, 0);
+  // 腕（袖をまくった、しっかりした腕）。右手でつるはしを支える
+  arm(g, 100, 94, 86, 124, 92, 150, P.A, P.skin, 10, 7.5); arm(g, 156, 94, 176, 100, 176, 80, P.A, P.skin, 10, 7.5);
+  ell(g, 88, 124, 10, 9, shaded(P.skin)); ell(g, 172, 98, 10, 9, shaded(P.skin));
+  face(g, 128, 50, { brow: "angry", mouth: "flat", lash: true, eyeGap: 10 });
+  for (let r = 46; r < 56; r++) px(g, r, 142 + (r - 46) * 0.3, P.skin[0]);                                                 // 頬の小さな傷
+  // 髪: 濃い茶色の短い髪（あごの線で切りそろえ、ヘルメットの下からはみ出す）
+  for (const sg of [-1, 1]) lock(g, [128 + sg * 18, 34], [128 + sg * 24, 52], [128 + sg * 21, 68], 8, 3);
+  for (const [x, y, dx] of [[112, 36, -6], [122, 34, -2], [134, 34, 2], [144, 36, 6]]) lock(g, [x, y], [x + dx * 0.5, y + 6], [x + dx * 0.8, y + 13], 6, 2);
+  // ヘルメットとヘッドライト
+  ell(g, 128, 30, 26, 18, (r, c, nx, ny, d, lum) => (ny > 0.35 ? null : shaded(P.metal)(r, c, nx, ny, d, lum)));
+  rect(g, 102, 34, 52, 5, (r, c, u, v) => (v < 0.5 ? P.metal[2] : P.metal[0]));
+  ell(g, 128, 22, 10, 7, (r, c, nx, ny, d, lum) => (d > 0.8 ? 0 : P.glow[toneIdx(3, lum + 0.3, c, r, 0.05)]));               // ヘッドライト
   for (let i = 0; i < 24; i++) px(g, 22 - i * 0.2, 118 + i, P.glow[0]);                                                     // 光のすじ
   outlineAll(g, [P.shadow]); rimLight(g, [P.shadow], P.white);
   return g;
 };
-const orcaPal = [["縁", "#12100c"], ["肌暗", "#a06a4a"], ["肌", "#c8905e"], ["肌明", "#e4b484"], ["髭暗", "#1a1210"], ["髭", "#3a2a1e"], ["髭明", "#6a4e38"], ["作業着1", "#2a2e34"], ["作業着2", "#444c56"], ["作業着3", "#68727e"], ["作業着4", "#94a0ac"], ["橙1", "#8a3a10"], ["橙2", "#d8701c"], ["橙3", "#ff9a30"], ["革1", "#2a1a10"], ["革2", "#4a2e1c"], ["革3", "#7a4e2c"], ["金具1", "#4a4e58"], ["金具2", "#8a909c"], ["金具3", "#d0d4dc"], ["光1", "#b08a10"], ["光2", "#ffd838"], ["光3", "#fffab0"], ["瞳", "#5a3a1a"], ["白", "#ffffff"], ["影", "#181410"]];
+const orcaPal = [["縁", "#12100c"], ["肌暗", "#a06a4a"], ["肌", "#c8905e"], ["肌明", "#e4b484"], ["髪暗", "#1a1210"], ["髪", "#3a2a1e"], ["髪明", "#6a4e38"], ["作業着1", "#2a2e34"], ["作業着2", "#444c56"], ["作業着3", "#68727e"], ["作業着4", "#94a0ac"], ["橙1", "#8a3a10"], ["橙2", "#d8701c"], ["橙3", "#ff9a30"], ["革1", "#2a1a10"], ["革2", "#4a2e1c"], ["革3", "#7a4e2c"], ["金具1", "#4a4e58"], ["金具2", "#8a909c"], ["金具3", "#d0d4dc"], ["光1", "#b08a10"], ["光2", "#ffd838"], ["光3", "#fffab0"], ["瞳", "#5a3a1a"], ["白", "#ffffff"], ["影", "#181410"]];
 
 export const PIECES = [
   { name: "C1-ユーリ", pal: yuriPal, build: yuri },
