@@ -11,6 +11,9 @@ B b 下（ズボン・スカート）／K k Y 靴（地・影・折り返し）�
 飾り: decos=('band','cape','backsword','sword','shield','helmet','staff','scarf','goggles','twintails','ponytail','circlet','bracelet','pickaxe')（はちまき・マント・背中の剣・手に剣・盾・兜・杖・マフラー・ゴーグル・ふたつ結び）。服には、V字の襟・袖口・金のバックル・靴の折り返しが最初からつく
 服: tunic（上着＋ズボン）・coat（ひざまでの長い上着）・dress（ワンピース。下の色）・robe（ローブ。上着の色）
 コマ: 0=立ち、1=画面の左の足を出す、2=右の足を出す（歩きは 0→1→0→2 または 1→0→2→0）。
+歩きのコマでは、出した足と反対の腕が前に振れ（手が1ドット上がる）、もう一方の腕は後ろに振れる（手が1ドット下がる）。
+物を持った手（剣・杖・ランタン・つるはし・盾）は振らない。髪の先（長い髪・ふたつ結び・ポニーテール・横向きの後ろ髪）と、
+はちまきの端・マフラーの端・マントのすそも、歩きのコマで1ドット揺れる（人間の指示 2026-10-03）。
 """
 def M(half): return [r+r[::-1] for r in half]
 E8="........"
@@ -135,6 +138,7 @@ DECOS=('lantern','bow','band','cape','backsword','sword','shield','helmet','staf
 def _decorate(g,view,decos):
     """飾り（view: down / up / side＝右向き）。g は文字の2次元リスト。"""
     H=set('HhL')
+    f=getattr(_decorate,'frame',0); armdy=getattr(_decorate,'armdy',{2:0,13:0})
     if 'band' in decos:   # はちまき（額の高さの髪を目印の色に）
         y=11 if view!='up' else 10
         for x in range(16):
@@ -157,10 +161,14 @@ def _decorate(g,view,decos):
             g[27][1]='O'; g[27][14]='O'
             g[19][5]='G'; g[19][10]='G'
         else:
+            flare={0:99,1:24,2:26}[f]   # 歩くと、すそが後ろへ広がる
             for y in range(19,28):
                 if g[y][3]=='.' or g[y][3]=='O': g[y][3]='a'
-                if g[y][2]=='.': g[y][2]='O'
+                if y>=flare:
+                    g[y][2]='a'; g[y][1]='O'
+                elif g[y][2]=='.': g[y][2]='O'
             g[28][3]='O'
+            if f: g[28][2]='O'
     if 'backsword' in decos:  # 背中の剣（柄が肩の上に見える）
         if view=='down':
             for (y,x,ch) in ((15,14,'O'),(16,13,'O'),(16,14,'G'),(16,15,'O'),(17,14,'g'),(17,15,'O'),(18,14,'O')):
@@ -174,14 +182,15 @@ def _decorate(g,view,decos):
         else:
             for (y,x,ch) in ((15,2,'O'),(16,1,'O'),(16,2,'G'),(16,3,'O'),(17,2,'g'),(18,2,'O')):
                 if g[y][x] in '.O': g[y][x]=ch
-    if 'twintails' in decos:   # 左右に結んだ髪
-        for y in range(11,20):
-            sides=(0,15) if view in ('down','up') else (0,)
-            for x0 in sides:
-                inner=1 if x0==0 else 14
+    if 'twintails' in decos:   # 左右に結んだ髪。歩きのコマで房の先が上下に揺れる
+        sides=(0,15) if view in ('down','up') else (0,)
+        for x0 in sides:
+            inner=1 if x0==0 else 14
+            d=0 if f==0 else ((-1 if x0==0 else 1) if f==1 else (1 if x0==0 else -1))
+            if view=='side': d=(-1 if f==1 else 1) if f else 0
+            for y in range(11,20+d):
                 g[y][x0]='O'; g[y][inner]='H' if x0==0 else 'h'
-        for x0 in ((1,14) if view in ('down','up') else (1,)):
-            g[20][x0]='O'; g[11][x0]='A'
+            g[20+d][inner]='O'; g[11][inner]='A'
     if 'scarf' in decos:       # 首に巻いた布（目印の色）。端が後ろへなびく
         if view in ('down','up'):
             for x in range(4,12): g[18][x]='A'
@@ -193,9 +202,10 @@ def _decorate(g,view,decos):
                 g[22][10]='O'
         else:
             for x in range(5,11): g[18][x]='A'
-            for (y,x) in ((19,4),(19,3),(20,3),(20,2),(21,2)): g[y][x]='a'
+            dy=-1 if f==1 else 0   # 歩くと端がはためく
+            for (y,x) in ((19,4),(19,3),(20,3),(20,2),(21,2)): g[y+(dy if x<4 else 0)][x]='a'
             for (y,x) in ((18,3),(18,2),(19,2),(20,1),(21,1),(22,2)):
-                if g[y][x]=='.': g[y][x]='O'
+                if g[y+dy][x]=='.': g[y+dy][x]='O'
     if 'goggles' in decos:     # 額の上のゴーグル
         if view=='down':
             for (x,ch) in ((3,'G'),(4,'Q'),(5,'Q'),(6,'G'),(9,'G'),(10,'Q'),(11,'Q'),(12,'G')): g[9][x]=ch
@@ -208,15 +218,20 @@ def _decorate(g,view,decos):
             for x in range(3,9):
                 if g[9][x] in 'HhL': g[9][x]='g'
     if 'ponytail' in decos:    # 後ろで結んだ髪
-        if view=='up':
+        if view=='up':   # 歩きのコマで、房の先（下の半分）が左右に揺れる
             for y in range(11,20):
-                for x in (7,8): g[y][x]='H' if x==7 else 'h'
-                g[y][6]='O'; g[y][9]='O'
-            g[20][7]='O'; g[20][8]='O'; g[11][7]='A'; g[11][8]='A'
-        elif view=='side':
+                d=0 if (f==0 or y<15) else (-1 if f==1 else 1)
+                for x in (7,8): g[y][x+d]='H' if x==7 else 'h'
+                g[y][6+d]='O'; g[y][9+d]='O'
+            d=0 if f==0 else (-1 if f==1 else 1)
+            g[20][7+d]='O'; g[20][8+d]='O'; g[11][7]='A'; g[11][8]='A'
+        elif view=='side':   # 後ろへなびく（コマ1は大きく、コマ2は小さく）
             for y in range(9,17):
-                g[y][1]='O'; g[y][2]='H'
-            g[17][2]='O'; g[9][2]='A'
+                d=-1 if (f==1 and y>=12) or (f==2 and y>=14) else 0
+                g[y][1+d]='O'; g[y][2+d]='H'
+                if d: g[y][2]='O' if g[y][3] in 'SsO' else g[y][2]
+            d=-1 if f else 0
+            g[17][2+d]='O'; g[9][2]='A'
         else:
             for x in (7,8): g[3][x]='H'
             g[2][7]='O'; g[2][8]='O'
@@ -227,8 +242,8 @@ def _decorate(g,view,decos):
         if view=='down': g[y][7]='A'; g[y][8]='A'
         elif view=='side': g[y][11]='A'
     if 'bracelet' in decos:    # 手首の光る腕輪
-        if view=='down': g[22][13]='Q'
-        elif view=='up': g[22][2]='Q'
+        if view=='down': g[22+armdy[13]][13]='Q'
+        elif view=='up': g[22+armdy[2]][2]='Q'
         else:
             for y in range(19,25):
                 for x in range(16):
@@ -240,9 +255,11 @@ def _decorate(g,view,decos):
             for x in range(16):
                 if g[12][x]=='A': g[12][x]='a'
         elif view=='up':
-            for (y,x,ch) in ((10,7,'a'),(10,8,'a'),(11,7,'A'),(12,7,'A'),(11,8,'a')): px2(y,x,ch)   # 結び目と垂れた端
+            ex=7+(0 if f==0 else (-1 if f==1 else 1))
+            for (y,x,ch) in ((10,7,'a'),(10,8,'a'),(11,7,'A'),(12,ex,'A'),(11,8,'a')): px2(y,x,ch)   # 結び目と垂れた端（歩くと揺れる）
         else:
-            for (y,x,ch) in ((11,1,'A'),(12,0,'A'),(12,1,'a'),(13,0,'a'),(10,1,'O'),(11,0,'O'),(14,0,'O'),(13,1,'O')): px2(y,x,ch)
+            dy=-1 if f==1 else 0   # 歩くと端がはためく
+            for (y,x,ch) in ((11,1,'A'),(12,0,'A'),(12,1,'a'),(13,0,'a'),(10,1,'O'),(11,0,'O'),(14,0,'O'),(13,1,'O')): px2(y+dy,x,ch)
     if 'scarf' in decos and view=='down':   # マフラーのしわと房
         for x in (5,8,11):
             if g[19][x]=='A': g[19][x]='a'
@@ -355,11 +372,54 @@ def _boot_cuffs(g):
             if g[y][x] in 'Kk':
                 g[y][x]='Y'; break
     return g
+def _shift(ov,y0,y1,dx,xlo=0,xhi=16):
+    """重ねる型（髪）の y0〜y1 行の xlo〜xhi の範囲を、横に dx ずらす（空いたところは透明）。"""
+    ov=list(ov)
+    for y in range(y0,min(y1,len(ov)-1)+1):
+        r=list(ov[y]); seg=r[xlo:xhi]
+        seg=(['.']*dx+seg[:len(seg)-dx]) if dx>0 else (seg[-dx:]+['.']*(-dx))
+        r[xlo:xhi]=seg; ov[y]=''.join(r)
+    return ov
+def _hair_sway(ov,view,style,f):
+    """歩きのコマで髪の先を1ドット揺らす。正面・後ろは、コマ1で左の房、コマ2で右の房が内側へ揺れる。横は後ろへなびく。"""
+    if f==0: return ov
+    if view in ('down','up'):
+        if style=='long':
+            y0=17 if view=='down' else 18
+            ov=_shift(ov,y0,23,1,0,8) if f==1 else _shift(ov,y0,23,-1,8,16)
+        return ov
+    # 横（右向き）: 後ろ髪の先が後ろ（左）へ
+    if style=='long': ov=_shift(ov,17 if f==1 else 19,23,-1,0,7)
+    elif style in ('spiky','short'): ov=_shift(ov,14 if f==1 else 15,16,-1,0,6)
+    elif style=='hood': ov=_shift(ov,16 if f==1 else 17,19,-1,0,6)
+    return ov
+HELD=('sword','staff','lantern','pickaxe')
+def _arm_swing(g,view,f,decos):
+    """正面・後ろの腕振り。手の位置のずれ（{2:dy,13:dy}）を返す。"""
+    dys={2:0,13:0}
+    if f==0 or view not in ('down','up'): return dys
+    # 物を持つ手: 正面は画面の左の腕、後ろ向きは画面の右の腕。盾は反対の腕
+    held=set()
+    if any(d in decos for d in HELD): held.add(2 if view=='down' else 13)
+    if 'shield' in decos: held.add(13 if view=='down' else 2)
+    fwd=13 if f==1 else 2          # 出した足と反対の腕が前へ
+    for col in (2,13):
+        if col in held: continue
+        ol=col-1 if col==2 else col+1
+        if any(g[y][col] in 'HhL' for y in range(20,24)): continue   # 髪で隠れている腕は動かさない
+        sleeve=g[21][col]
+        if col==fwd:
+            g[21][col]='A'; g[22][col]='S'; g[23][col]='O'; g[23][ol]='.'; dys[col]=-1
+        else:
+            g[22][col]=sleeve; g[23][col]='A'; g[24][col]='S'; g[24][ol]='O'
+            if g[25][col] in '.BbTt': g[25][col]='O'
+            dys[col]=1
+    return dys
 def frame(dr,f,style='spiky',outfit='tunic',beard=False,decos=()):
-    if dr=='down': g=FRONT_TOP+LEGS_F[f]; g=overlay(g,HAIR[style]['down'])
-    elif dr=='up': g=BACK_TOP+LEGS_F[f]; g=overlay(g,HAIR[style]['up'])
+    if dr=='down': g=FRONT_TOP+LEGS_F[f]; g=overlay(g,_hair_sway(HAIR[style]['down'],'down',style,f))
+    elif dr=='up': g=BACK_TOP+LEGS_F[f]; g=overlay(g,_hair_sway(HAIR[style]['up'],'up',style,f))
     else:
-        g=SIDE_TOP+LEGS_S[f]; g=overlay(g,HAIR[style]['side'])
+        g=SIDE_TOP+LEGS_S[f]; g=overlay(g,_hair_sway(HAIR[style]['side'],'side',style,f))
         g=[list(r) for r in g]
         for (y,x,ch) in SIDE_ARM[f]: g[y][x]=ch
         g=[''.join(r) for r in g]
@@ -386,6 +446,7 @@ def frame(dr,f,style='spiky',outfit='tunic',beard=False,decos=()):
                 g[y][4]='O'; g[y][5]='T'
             g[28][5]='O'
     g=_details(g,'side' if side else dr)
+    _decorate.armdy=_arm_swing(g,'side' if side else dr,f,decos)
     _decorate.frame=f
     g=_decorate(g,'side' if side else dr,decos)
     g=[''.join(r) for r in g]
