@@ -174,6 +174,7 @@ const PATTERNS: Record<TilePatternKind, PatternFn> = {
   },
   // 雪・氷: ほぼ白。まるい吹きだまりのくぼみ（淡い影）を2つ置き、縁は市松でなじませる。まれに小さなきらめき。
   snow: (ramp, row, col, variant) => {
+    const soft = shadeColor(ramp[2], -0.07);
     const h = hashCell(col + variant * 7, row + variant * 13);
     if (h % 53 === 0) return ramp[4];
     for (let n = 0; n < 2; n++) {
@@ -185,10 +186,8 @@ const PATTERNS: Record<TilePatternKind, PatternFn> = {
       const dx = Math.min(Math.abs(col - cx), TILE_ART_SIZE - Math.abs(col - cx)) / rx;
       const dy = Math.min(Math.abs(row - cy), TILE_ART_SIZE - Math.abs(row - cy)) / ry;
       const d = dx * dx + dy * dy;
-      if (d < 0.55) return ramp[1];
-      if (d < 1 && (col + row) % 2 === 0) return ramp[1];
-      // 影の反対側（右下側）に、うっすら明るい縁
-      if (d < 1.5 && col > cx && row > cy && (col + row) % 2 === 1) return ramp[3];
+      if (d < 0.5) return soft;
+      if (d < 1 && (col + row) % 2 === 0) return soft;
     }
     return ramp[2];
   },
@@ -432,6 +431,7 @@ export const TILE_ART: Record<string, TileArtSpec> = {
   treeCanopy: { base: "#2b8022", accentLight: "#5fbb31", accentDark: "#185019", pattern: "treeCanopy" },
   mountain: { base: "#857c74", accentLight: "#b8b0a2", accentDark: "#4e4640", pattern: "mountain" },
   worldforest: { base: "#3a8a30", accentLight: "#7cd048", accentDark: "#1c5a24", pattern: "worldforest" },
+  snowforest: { base: "#3a6a50", accentLight: "#eef4f8", accentDark: "#1c3c3c", pattern: "worldforest" },
   hills: { base: "#5a9a40", accentLight: "#82bc58", accentDark: "#3a7032", pattern: "hills" },
 };
 

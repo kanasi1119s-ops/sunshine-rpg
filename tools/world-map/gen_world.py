@@ -1,6 +1,6 @@
 """世界地図（大陸アルテシア）の地形を作る。決まった種（seed）から毎回同じ地図ができる。
 出力: src/game/map/world/world-map.generated.ts（地形を1行1文字の文字列で）と、確認用の画像 /tmp/claude-0-s/world-preview.png
-地形: O=海 P=平原 F=森 M=山（通れない） D=砂漠 S=雪原 R=道 H=丘 L=湖・川（通れない） C=雲の橋・浮島の雲 W=荒れ地（虚灯宮のまわり）
+地形: O=海 P=平原 F=森 T=雪の森 M=山（通れない） D=砂漠 S=雪原 R=道 H=丘 L=湖・川（通れない） C=雲の橋・浮島の雲 W=荒れ地（虚灯宮のまわり）
 町・環灯台・渡し場の位置は、ここで決めて TypeScript に書き出す。"""
 import math, heapq, sys
 import numpy as np
@@ -81,6 +81,11 @@ for y in range(H):
         if T[y][x] == "P":
             if n1[y, x] > 0.60 and n3[y, x] > 0.45: T[y][x] = "F"
             elif n2[y, x] > 0.66: T[y][x] = "H"
+# 雪原の針葉樹林（T）
+for y in range(H):
+    for x in range(W):
+        if T[y][x] == "S" and n1[y, x] > 0.56 and n3[y, x] > 0.42:
+            T[y][x] = "T"
 # 湖（硝子湖）と川
 for y in range(H):
     for x in range(W):
@@ -107,7 +112,7 @@ for mid, (tx, ty, _n) in TOWNS.items():
             if 0 <= x < W and 0 <= y < H and (abs(x-tx)+abs(y-ty) <= 3):
                 T[y][x] = base if T[y][x] in "OLMF" or mid in ("fushima-town",) else T[y][x]
 
-COST = {"P": 1.0, "F": 2.2, "D": 1.4, "S": 1.8, "H": 2.0, "M": 9.0, "R": 0.4, "W": 1.2, "C": 1.0, "L": 99999, "O": 99999}
+COST = {"T": 2.2, "P": 1.0, "F": 2.2, "D": 1.4, "S": 1.8, "H": 2.0, "M": 9.0, "R": 0.4, "W": 1.2, "C": 1.0, "L": 99999, "O": 99999}
 def astar(a, b):
     (ax, ay), (bx, by) = a, b
     pq = [(0, ax, ay)]; best = {(ax, ay): 0}; prev = {}
@@ -158,7 +163,7 @@ def reachable():
         x, y = st.pop()
         for dx, dy in ((1,0),(-1,0),(0,1),(0,-1)):
             nx, ny = x+dx, y+dy
-            if 0 <= nx < W and 0 <= ny < H and (nx, ny) not in seen and T[ny][nx] in "PFDSRHCW":
+            if 0 <= nx < W and 0 <= ny < H and (nx, ny) not in seen and T[ny][nx] in "PFDSRHCWT":
                 seen.add((nx, ny)); st.append((nx, ny))
     return seen
 seen = reachable()
@@ -175,7 +180,7 @@ for mid in BEACON_TOWNS:
     tx, ty, _ = TOWNS[mid]
     for dx, dy in OFFS:
         x, y = tx+dx, ty+dy
-        if 0 <= x < W and 0 <= y < H and T[y][x] in "PFDSHCW" and (x, y) in seen and (x, y) not in used and all((x+ax, y+ay) not in used for ax, ay in ((1,0),(-1,0),(0,1),(0,-1))):
+        if 0 <= x < W and 0 <= y < H and T[y][x] in "PFDSHCWT" and (x, y) in seen and (x, y) not in used and all((x+ax, y+ay) not in used for ax, ay in ((1,0),(-1,0),(0,1),(0,-1))):
             BEACONS.append((x, y)); used.add((x, y)); break
     else:
         raise SystemExit(f"{mid} の環灯台を置けない")
@@ -194,7 +199,7 @@ VORTEX = (66, 49)
 
 rows = ["".join(r) for r in T]
 ts = ["// 自動生成: tools/world-map/gen_world.py（手で編集しない）。大陸アルテシアの地形。1文字=1マス。",
-      "// O=海 P=平原 F=森 M=山 D=砂漠 S=雪原 R=道 H=丘 L=湖・川 C=雲 W=荒れ地",
+      "// O=海 P=平原 F=森 T=雪の森 M=山 D=砂漠 S=雪原 R=道 H=丘 L=湖・川 C=雲 W=荒れ地",
       f"export const WORLD_WIDTH = {W};", f"export const WORLD_HEIGHT = {H};",
       "export const WORLD_ROWS: string[] = [", *[f'  "{r}",' for r in rows], "];",
       "export const WORLD_TOWNS: Record<string, { x: number; y: number; name: string }> = {",
@@ -206,7 +211,7 @@ import os
 os.makedirs("/home/user/sunshine-rpg/src/game/map/world", exist_ok=True)
 open("/home/user/sunshine-rpg/src/game/map/world/world-map.generated.ts", "w").write("\n".join(ts) + "\n")
 
-col = {"O": (30, 90, 150), "P": (96, 170, 70), "F": (40, 110, 50), "M": (130, 120, 120), "D": (220, 190, 120), "S": (240, 244, 250), "R": (190, 150, 90), "H": (130, 170, 80), "L": (60, 130, 200), "C": (225, 235, 245), "W": (90, 70, 110)}
+col = {"O": (30, 90, 150), "P": (96, 170, 70), "F": (40, 110, 50), "M": (130, 120, 120), "D": (220, 190, 120), "S": (240, 244, 250), "R": (190, 150, 90), "H": (130, 170, 80), "L": (60, 130, 200), "C": (225, 235, 245), "W": (90, 70, 110), "T": (200, 225, 235)}
 im = Image.new("RGB", (W*8, H*8))
 for y in range(H):
     for x in range(W):

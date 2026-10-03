@@ -12,7 +12,7 @@ import type { Camera } from "./camera";
 type Kind = "grass" | "path" | "water" | "tree" | "land" | "other";
 
 const KIND_BY_ART: Record<string, Kind> = {
-  grass: "grass", hills: "grass", path: "path", water: "water", treeCanopy: "tree", worldforest: "tree",
+  grass: "grass", hills: "grass", path: "path", water: "water", treeCanopy: "tree", worldforest: "tree", snowforest: "tree",
   mountain: "land", "tint:sand": "land", "tint:snow": "land", "tint:cloud": "land", "tint:flagstone": "land",
 };
 
@@ -236,6 +236,22 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
         continue;
       }
       if (kind === "water") {
+        // 岸から離れるほど、水の色が濃く（深く）なる
+        let near = 4;
+        for (let r = 1; r <= 3 && near === 4; r++) {
+          for (let dy = -r; dy <= r && near === 4; dy++) {
+            for (let dx = -r; dx <= r; dx++) {
+              if (Math.max(Math.abs(dx), Math.abs(dy)) === r && kindAt(map, tx + dx, ty + dy) !== "water") {
+                near = r;
+                break;
+              }
+            }
+          }
+        }
+        if (near >= 2) {
+          ctx.fillStyle = `rgba(6,24,64,${near === 2 ? 0.1 : near === 3 ? 0.18 : 0.26})`;
+          ctx.fillRect(ox, oy, s, s);
+        }
         waterShimmer(ctx, ox, oy, tx, ty, nowMs);
       }
       if (kind === "tree" && map.data.snowy) {
