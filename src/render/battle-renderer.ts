@@ -69,6 +69,14 @@ function drawEnemySprite(
 
 /** 雑魚の敵の絵（64×64。形ごとの手描きの絵を、地方の色相で塗る）。描けたら true。 */
 function drawMobSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, x: number, y: number, size = 64): boolean {
+  // その敵だけの絵（`enemy:<id>`、96×96。AIの下絵→ドット絵化→手直し→エディタで描いたもの）があれば、それを使う
+  const own = enemy.hp > 0 ? getSpriteCanvas(`enemy:${baseEnemyId(enemy.id)}`, SPRITE_DATA) : null;
+  if (own) {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(own, x, y, size, size);
+    return true;
+  }
   const spec = enemy.hp > 0 ? MONSTERS[baseEnemyId(enemy.id)] : undefined;
   if (!spec?.shape || spec.shape === "blob") {
     return false;

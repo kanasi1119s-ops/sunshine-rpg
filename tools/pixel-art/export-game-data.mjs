@@ -65,6 +65,9 @@ if (mode && mode !== "merge") {
   // 全体フィールドの地形テクスチャ（ai-gen/world_tiles.py で作る world-terrain.json）
   const world = new URL("./world-terrain.json", import.meta.url);
   if (fs.existsSync(world)) Object.assign(all, JSON.parse(fs.readFileSync(world, "utf8")));
+  // 敵の絵（ai-gen/monster_batch.py export で作る enemy-art.json。雑魚は enemy:<id> 96×96、ボスは boss:<id> を置きかえる）
+  const enemyArt = new URL("./enemy-art.json", import.meta.url);
+  if (fs.existsSync(enemyArt)) Object.assign(all, JSON.parse(fs.readFileSync(enemyArt, "utf8")));
   const body = Object.entries(all).map(([k, v]) => `  ${JSON.stringify(k)}: { size: ${v.size}, palette: ${JSON.stringify(v.palette)}, rle: ${JSON.stringify(v.rle)} },`).join("\n");
   fs.writeFileSync(new URL("../../src/game/art/sprite-data.generated.ts", import.meta.url), `// 自動生成: tools/pixel-art/export-game-data.mjs（手で編集しない）
 import type { SpriteData } from "./sprite";
