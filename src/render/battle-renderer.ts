@@ -84,7 +84,7 @@ function drawMobSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, x: numbe
 
 /** ボスの大きな絵（256×256）。あれば画面の中央に大きく描く。描けたら true。 */
 /** 戦闘画面の左右: 敵が右、味方が左（`ENEMIES_ON_RIGHT` を false にすると逆になる）。 */
-const ENEMIES_ON_RIGHT = true;
+const ENEMIES_ON_RIGHT = false;
 
 /** 敵の側の、絵の左端x（絵の幅 w。画面の端から余白を空ける）。 */
 function enemySideX(screenWidth: number, w: number): number {
