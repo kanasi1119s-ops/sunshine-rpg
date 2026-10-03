@@ -202,7 +202,7 @@ function renderBattleBody(
   // 味方は、味方の側（右）の地面の上に、2列にずらして立つ。名前・HP・MPは上に小さく並べる。
   const count = battleState.party.length;
   const nowMs = typeof performance !== "undefined" ? performance.now() : 0;
-  const SPR = 2; // 歩く絵（16×32）を2倍で描く
+  const SPR = 1; // 歩く絵（16×32）を等倍で描く（5人でも重ならない大きさ）
   const groundY = screenHeight - 56 - 4; // 手前の列の足元
   const textX = ENEMIES_ON_RIGHT ? 8 : screenWidth - 128;
   battleState.party.forEach((member, index) => {
@@ -219,12 +219,12 @@ function renderBattleBody(
     }
     const row = index % 2;
     const col = Math.floor(index / 2);
-    const feetY = groundY - row * 20;
-    const leftX = ENEMIES_ON_RIGHT ? 20 + col * 56 + row * 22 : screenWidth - 52 - col * 56 - row * 22;
-    const x = leftX + (isActing ? (ENEMIES_ON_RIGHT ? 6 : -6) : 0);
+    const feetY = groundY - row * 18;
+    const leftX = ENEMIES_ON_RIGHT ? 20 + col * 30 + row * 14 : screenWidth - 40 - col * 30 - row * 14;
+    const x = leftX + (isActing ? (ENEMIES_ON_RIGHT ? 4 : -4) : 0);
     const step = isActing ? frameAt(true, nowMs) : 0;
     ctx.fillStyle = "rgba(0,0,0,0.28)";
-    ctx.fillRect(x + 3, feetY - 2, 26, 4); // 足元の影
+    ctx.fillRect(x + 1, feetY - 2, 14, 3); // 足元の影
     ctx.save();
     ctx.translate(x, feetY - SPR * (SPRITE_FEET_ROW + 1));
     ctx.scale(SPR, SPR);
