@@ -11,6 +11,10 @@ CHARS={
  "ガイド":dict(hair=('#7a5a14','#c8982c','#fff0a0'),skin=('#d49a76','#f0c49c','#ffdcbc'),top=('#d8d0c0','#f4ecdc','#ffffff'),bottom=('#2a5a3a','#3a8a50','#6ac088'),boot=('#3a2418','#5a3a24','#7a5238'),acc=('#1c6a3c','#34a45c','#8af0a8'),eye='#2a6a40',style='twin',skirt=True,goggle=True,vest=('#4a2c14','#6a4222','#9a6c3c')),
  "オルカ":dict(hair=('#2a1c14','#4a3020','#7a5a40'),skin=('#b07850','#d49a70','#eab890'),top=('#a84a0c','#e07a20','#ffb048'),bottom=('#4a2c1a','#6a4228','#8a5c38'),boot=('#2a1a12','#4a2c1a','#6a4228'),acc=('#586070','#8890a0','#d8e0ec'),eye='#4a3820',style='helmet',vestorange=True,shirt=('#4a4e5a','#6a707e','#9aa0b0')),
 }
+def eye_light(h):
+    # 目のハイライトは白ではなく、目の色を35%だけ明るくした近い色にする
+    r,g,b=[int(h[i:i+2],16) for i in (1,3,5)]
+    return '#%02x%02x%02x'%tuple(int(v+(255-v)*0.35) for v in (r,g,b))
 def S(i): return '#10%02x%02x'%(16+i,16+i)   # 役割色（実行時に置き換える目印）
 ARCH_BASE=dict(hair=(S(0),S(1),S(2)),skin=(S(3),S(4),S(5)),top=(S(6),S(7),S(8)),bottom=(S(9),S(10),S(11)),boot=(S(12),S(13),S(14)),acc=(S(15),S(16),S(17)),eye='#1a1420')
 CHARS['素体-short']=dict(ARCH_BASE,style='spiky')
@@ -19,10 +23,10 @@ CHARS['素体-twin']=dict(ARCH_BASE,style='twin',skirt=True)
 def mats(c):
     R={}
     R['hair']=ramp3(*c['hair']); R['skin']=ramp3(*c['skin']); R['top']=ramp3(*c['top']); R['bottom']=ramp3(*c['bottom']); R['boot']=ramp3(*c['boot']); R['acc']=ramp3(*c['acc'])
-    R['eye']=[c['eye']]*4; R['dark']=['#1a1420']*4; R['white']=['#ffffff']*4; R['gold']=ramp3('#a8701c','#e0a830','#fff0a0')
+    R['eye']=[c['eye']]*4; R['dark']=['#1a1420']*4; R['white']=['#ffffff']*4; R['gold']=ramp3('#a8701c','#e0a830','#e0a830')
     if 'vest' in c: R['vest']=ramp3(*c['vest'])
     if 'shirt' in c: R['shirt']=ramp3(*c['shirt'])
-    R['steel']=ramp3('#586070','#8890a0','#d8e0ec')
+    R['steel']=ramp3('#586070','#8890a0','#8890a0')
     return R
 def draw(name,dr,fr):
     c=CHARS[name]; im=Img(W,H)
@@ -96,13 +100,13 @@ def draw(name,dr,fr):
         # 顔: 目2×2、口
         for ex in (5,9):
             im.fixed(ex,9,'eyeC','eye'); im.fixed(ex+1,9,'eyeC','eye'); im.fixed(ex,10,'eyeC','eye'); im.fixed(ex+1,10,'eyeC','eye')
-            im.fixed(ex,9,'white','eye')
+            im.fixed(ex,9,'eyeL','eye')
         im.fixed(7,12,'mouth','mouth'); im.fixed(8,12,'mouth','mouth')
         for x in (4,11): im.fixed(x,11,'blush','blush')
     elif dr!='up':
         ex = 10 if dr=='right' else 5
         im.fixed(ex,9,'eyeC','eye'); im.fixed(ex,10,'eyeC','eye'); im.fixed(ex+(1 if dr=='right' else -1),9,'eyeC','eye') if False else None
-        im.fixed(ex+(-1 if dr=='right' else 1),9,'white','eye')
+        im.fixed(ex+(-1 if dr=='right' else 1),9,'eyeL','eye')
         im.fixed(ex+(1 if dr=='right' else -1),12,'mouth','mouth')
     # 髪
     def hs(x,y,nx,ny): return -nx*0.4-ny*0.5+0.25+(0.2 if (x*3+y)%5==0 else 0)
@@ -159,7 +163,7 @@ def draw(name,dr,fr):
 def render_sprite(name,dr,fr):
     im=draw(name,dr,fr); c=CHARS[name]
     R=mats(c)
-    R['eyeC']=[c['eye']]*4; R['mouth']=['#b0584c']*4; R['blush']=['#f4a898']*4; R['lens']=['#58b0e8']*4
+    R['eyeC']=[c['eye']]*4; R['eyeL']=[eye_light(c['eye'])]*4; R['mouth']=['#b0584c']*4; R['blush']=['#f4a898']*4; R['lens']=['#58b0e8']*4
     EDGE={'hair':'#2a1410','skin':'#7a4a3a','top':'#1a1424','bottom':'#1a1424','boot':'#140c08','acc':'#3a1010','steel':'#2a3040','gold':'#6a4010','vest':'#2a1608','shirt':'#2a2e3a','dark':'#1a1420'}
     if name.startswith('素体'): EDGE.update({'hair':S(18),'skin':S(19),'top':S(20),'bottom':S(21),'boot':S(22),'acc':S(23)})
     out,colors=render(im,R,EDGE,[('head','hairMass'),('head','hairMassS'),('head','hairBack'),('head','helmet'),('head','band'),('body','scarf'),('legS','legS')],merge=not name.startswith('素体'))

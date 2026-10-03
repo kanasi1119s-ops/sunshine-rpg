@@ -129,15 +129,28 @@ const PATTERNS: Record<TilePatternKind, PatternFn> = {
     return ramp[k];
   },
 
-  // 石畳: 段ごとに半分ずらした敷石。縁が暗く、左上が明るい。
+  // 石畳: 段ごとに石の幅が不ぞろいな敷石。目地は暗く、石の左上の縁だけ明るく、右下の縁は少し暗い。
+  // 石ごとの色の差はまれにだけ付け（ざらざらした斑点は付けない）、ときどきひびを入れる。
   flagstone: (ramp, row, col, variant) => {
-    const band = Math.floor(row / 5);
-    const localX = (col + (band % 2) * 4 + (variant % 2) * 2) % 8;
-    const localY = row % 5;
-    if (localY === 4 || localX === 7) return ramp[1];
-    if (localY === 0 || localX === 0) return ramp[3];
-    const h = hashCell(col + variant * 5, row + band * 3);
-    return h % 9 === 0 ? ramp[1] : h % 7 === 0 ? ramp[3] : ramp[2];
+    const bandH = [5, 5, 6];
+    const starts = [0, 5, 10];
+    const band = row < 5 ? 0 : row < 10 ? 1 : 2;
+    const localY = row - starts[band];
+    // この段の石の境目の位置（タイルの外へも続けて、隣のタイルと切れ目なくつなぐ）
+    let x0 = -(hashCell(band + variant * 2, 5) % 5);
+    let w = 4 + (hashCell(x0 + band * 7, variant) % 4);
+    while (x0 + w <= col) {
+      x0 += w;
+      w = 4 + (hashCell(x0 + band * 7, variant) % 4);
+    }
+    const localX = col - x0;
+    if (localY === 0 || localX === 0) return ramp[1];
+    const tone = hashCell(x0 * 3 + band, variant + 7) % 9;
+    const crack = tone === 0 && localX === Math.floor(w / 2) && localY > 1 && localY < bandH[band] - 1;
+    if (crack) return ramp[1];
+    if (localX === 1 || localY === 1) return ramp[3];
+    if (localX === w - 1 || localY === bandH[band] - 1) return ramp[1];
+    return tone === 1 ? ramp[3] : tone === 2 ? ramp[1] : ramp[2];
   },
   // 煉瓦・切り石の壁: 段ごとに半分ずらした長方形。継ぎ目が暗く、上の縁が明るい。
   brick: (ramp, row, col, variant) => {
@@ -159,13 +172,24 @@ const PATTERNS: Record<TilePatternKind, PatternFn> = {
     if (h % 17 === 0) return ramp[1];
     return ramp[2];
   },
-  // 雪・氷: ほぼ白で、やわらかな影のかたまりと、まれなきらめき。
+  // 雪・氷: ほぼ白。まるい吹きだまりのくぼみ（淡い影）を2つ置き、縁は市松でなじませる。まれに小さなきらめき。
   snow: (ramp, row, col, variant) => {
-    const blotch = hashCell(Math.floor(col / 3) + variant * 3, Math.floor(row / 3)) % 6;
     const h = hashCell(col + variant * 7, row + variant * 13);
-    if (h % 37 === 0) return ramp[4];
-    if (blotch === 0) return ramp[1];
-    if (blotch === 1) return ramp[3];
+    if (h % 53 === 0) return ramp[4];
+    for (let n = 0; n < 2; n++) {
+      const cx = hashCell(n + variant * 5, 31) % TILE_ART_SIZE;
+      const cy = hashCell(n + variant * 5, 47) % TILE_ART_SIZE;
+      const rx = 3 + (hashCell(n, variant + 3) % 3);
+      const ry = 2 + (hashCell(n + 9, variant) % 2);
+      // タイルの端をまたぐ（左右・上下でつながる）ように、距離は回り込みで測る
+      const dx = Math.min(Math.abs(col - cx), TILE_ART_SIZE - Math.abs(col - cx)) / rx;
+      const dy = Math.min(Math.abs(row - cy), TILE_ART_SIZE - Math.abs(row - cy)) / ry;
+      const d = dx * dx + dy * dy;
+      if (d < 0.55) return ramp[1];
+      if (d < 1 && (col + row) % 2 === 0) return ramp[1];
+      // 影の反対側（右下側）に、うっすら明るい縁
+      if (d < 1.5 && col > cx && row > cy && (col + row) % 2 === 1) return ramp[3];
+    }
     return ramp[2];
   },
   // 板張り: 縦の板。継ぎ目・木目・板の端の継ぎ目。
