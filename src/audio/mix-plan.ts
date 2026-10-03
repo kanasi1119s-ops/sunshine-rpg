@@ -203,11 +203,19 @@ export function mixPlan(style: string | undefined, flavors: readonly string[] = 
     plan.drumKick.eq = [{ f: 60, g: 2, q: 1 }, { f: 350, g: -5, q: 1.2 }, { f: 4500, g: 5, q: 1 }];
     plan.drumSnare.eq = [{ f: 220, g: 2, q: 1 }, { f: 500, g: -3, q: 1.2 }, { f: 5500, g: 4, q: 0.9 }];
   }
-  // ジャズ・カフェ: 圧縮は軽く、響きを多めに（生の強弱を残す）
+  // ジャズ・カフェ: ドラムは小さく（約4dB下げる）、圧縮はほぼかけず、部屋の響きを多めに（そっと叩いた強弱と余韻を残す）。
+  // ライドは「チーン」の芯（4kHz）と輝き（10kHz）を少し足して、小さくても聞こえるように
   if (style && ["jazz", "cafe"].includes(style)) {
-    for (const g of DRUM_PARTS) if (plan[g].comp) plan[g].comp = { ...plan[g].comp!, ratio: 2 };
-    plan.drumSnare.reverb = 0.25;
-    plan.drumCym.reverb = 0.15;
+    for (const g of DRUM_PARTS) {
+      plan[g].target -= 4;
+      if (plan[g].comp) plan[g].comp = { threshold: -18, ratio: 1.5, attack: 30, release: 220 };
+    }
+    plan.drumKick.reverb = 0.08;
+    plan.drumSnare.reverb = 0.28;
+    plan.drumToms.reverb = 0.2;
+    plan.drumCym.reverb = 0.2;
+    plan.drumCym.hp = 250;
+    plan.drumCym.eq = [{ f: 2500, g: -1.5, q: 1 }, { f: 4000, g: 1.5, q: 1 }, { f: 10000, g: 1, q: 0.7 }];
   }
   // 味つけ: ラウド＝ギターを太く前に、オーケストラ＝弦とブラスを前に、和楽器＝和楽器を前に
   if (flavors.includes("loud")) {

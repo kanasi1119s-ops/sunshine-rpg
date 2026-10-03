@@ -32,8 +32,11 @@ function drumKitFor(style, lib) {
       map: { 35: 36, 37: 88, 41: 41, 43: 41, 45: 48, 47: 48, 48: 48, 50: 48, 52: 49, 55: 49 },
     };
   }
+  const unruly = (p) => path.join(lib, "karoryfer.unruly-drums", "karoryfer.unruly-drums-main", "Programs", p);
   return {
     name: SOFT.has(style) ? "Unruly Drums（ブラシ）" : "Unruly Drums",
+    // ジャズ: ライドだけはスティックで叩いた録音（「チーン」とはっきり鳴る）。スネア・キック・ハイハットはブラシ
+    rideFile: style === "jazz" ? unruly("01-kit-sticks.sfz") : null,
     file: path.join(lib, "karoryfer.unruly-drums", "karoryfer.unruly-drums-main", "Programs", SOFT.has(style) ? "02-kit-brushes.sfz" : "01-kit-sticks.sfz"),
     // 46 のハイハットは CC4 で開き具合が決まる（127=開く）。41・43 は「22インチのスネアをタムとして」なので、ふつうのタムへ。52 は止める音なのでクラッシュへ
     opts: { cc: { 4: 127 } },
@@ -46,6 +49,23 @@ function bassFor(style, lib) {
   if (SOFT.has(style)) return { name: "Meatbass（ウッドベース）", file: path.join(lib, "karoryfer.meatbass", "karoryfer.meatbass-master", "Programs", "04_pizz.sfz") };
   if (HEAVY.has(style)) return { name: "Growlybass（ピック弾き）", file: path.join(lib, "karoryfer.growlybass", "karoryfer.growlybass-master", "growlybass_dirty.sfz") };
   return { name: "Fashionbass（指弾き）", file: path.join(lib, "karoryfer.fashionbass", "karoryfer.fashionbass-master", "fashionbass.sfz") };
+}
+
+/**
+ * ジャズ・カフェのドラムの強さ（そっと叩く）。frac: 拍の中の位置（0=拍の頭、0.67=3連の3つめ）
+ * キックは「添える」くらい（羽根のように軽く。フェザリング）、スネアは小さな合いの手、ライドは拍の頭が「チーン」、3連の3つめ（チキ）は弱く。
+ */
+function shapeJazz(gm, v, i, frac) {
+  const x = v / 127;
+  const jitter = (((i * 2654435761) >>> 0) % 9) - 4;
+  let out;
+  if (gm === 36 || gm === 35) out = 22 + x * 16; // 22〜38
+  else if (gm === 38 || gm === 40 || gm === 37) out = 34 + x * 28; // 34〜62
+  else if (gm === 51 || gm === 42) out = frac < 0.15 || frac > 0.9 ? 66 + x * 18 : 42 + x * 16; // 拍の頭 66〜84、チキ 42〜58
+  else if (gm === 44) out = 46 + x * 12;
+  else if (gm === 49 || gm === 57 || gm === 55) out = 64 + x * 24;
+  else out = 40 + x * 30;
+  return Math.max(1, Math.min(127, Math.round(out + jitter)));
 }
 
 /**
@@ -102,7 +122,7 @@ export function notesOf(midi, ch) {
  * ドラムとベースを本物の録音で鳴らす。
  * 戻り値: { parts: { パート名: { L, R } }, muted: Set<チャンネル>, used: [使った録音集の名前] }
  */
-export function renderRealRhythm({ midi, instruments, style, total }) {
+export function renderRealRhythm({ midi, instruments, style, total, beatSec = 0.5, beatsPerBar = 4 }) {
   const lib = sampleLibDir();
   const parts = {};
   const muted = new Set();
@@ -122,11 +142,33 @@ export function renderRealRhythm({ midi, instruments, style, total }) {
     const snareAt = new Set(raw.filter((n) => n.key === 38).map((n) => Math.round(n.start * 500)));
     const notes = raw.filter((n) => n.key !== 35 && !((n.key === 39 || n.key === 40) && snareAt.has(Math.round(n.start * 500))));
     const byPart = {};
-    // 打楽器は叩きっぱなし（余韻は録音のまま）。止めるのはハイハットの開閉など off_by だけ
-    notes.forEach((n, i) => (byPart[drumPart(n.key)] ??= []).push({ ...n, vel: shapeVelocity(n.key, n.vel, i), key: kit.map[n.key] ?? n.key, end: n.start + 12 }));
+    const soft = SOFT.has(style);
+    const ride = [];
+    if (soft) {
+      // ジャズ・カフェ: 楽譜の「ライド」の刻み（閉じたハイハットで書かれている）を、ライドシンバルで鳴らす
+      for (const n of notes) if (n.key === 42) n.key = 51;
+      // 足で踏むハイハット（チッ）を、2拍目と4拍目に（ジャズの定番）
+      if (notes.length) {
+        const first = notes[0].start, last = notes[notes.length - 1].start;
+        for (let b = Math.ceil(first / beatSec); b * beatSec <= last; b++) {
+          if (b % beatsPerBar === 1 || b % beatsPerBar === 3) notes.push({ start: b * beatSec, end: b * beatSec + 0.1, key: 44, vel: 70 });
+        }
+        notes.sort((a, b) => a.start - b.start);
+      }
+    }
+    notes.forEach((n, i) => {
+      const frac = (((n.start / beatSec) % 1) + 1) % 1;
+      const vel = soft ? shapeJazz(n.key, n.vel, i, frac) : shapeVelocity(n.key, n.vel, i);
+      // 打楽器は叩きっぱなし（余韻は録音のまま）。止めるのはハイハットの開閉など off_by だけ
+      const item = { ...n, vel, key: kit.map[n.key] ?? n.key, end: n.start + 12 };
+      if (kit.rideFile && n.key === 51) ride.push(item);
+      else (byPart[drumPart(n.key)] ??= []).push(item);
+    });
     // 余韻の長さの上限: シンバルは長く鳴らしきる（10秒）、タム 4秒、スネア 3.5秒、キック 3秒
     const maxSec = { drumCym: 10, drumToms: 4, drumSnare: 3.5, drumKick: 3 };
     for (const [g, ns] of Object.entries(byPart)) add(g, kitSfz.render(ns, total, { maxSec: maxSec[g] ?? 4 }));
+    const rideSfz = ride.length && kit.rideFile ? openSfz(kit.rideFile, kit.opts) : null;
+    if (rideSfz) add("drumCym", rideSfz.render(ride, total, { maxSec: 10 }));
     muted.add(9);
     used.push(kit.name);
   }

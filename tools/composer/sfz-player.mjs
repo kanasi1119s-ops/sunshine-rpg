@@ -102,7 +102,10 @@ export function loadSfz(file, { replace = {}, cc: ccOverride = {} } = {}) {
     let ampCc = 1;
     for (const [k, v] of Object.entries(r)) {
       const ac = k.match(/^amplitude_(?:on)?cc(\d+)$/);
-      if (ac) ampCc *= ((cc[Number(ac[1])] ?? ccOverride[Number(ac[1])] ?? 0) / 127) * (Number(v) / 100);
+      if (!ac) continue;
+      // 初期値の決まっていない CC（演奏中に動かす前提のモジュレーションホイールなど）は、音量を変えない
+      const val = cc[Number(ac[1])] ?? ccOverride[Number(ac[1])];
+      if (ac && val !== undefined) ampCc *= (val / 127) * (Number(v) / 100);
     }
     for (const [k, v] of Object.entries(r)) {
       if (k.startsWith("amp_velcurve_")) curve[Number(k.slice(13))] = Number(v);
@@ -110,6 +113,17 @@ export function loadSfz(file, { replace = {}, cc: ccOverride = {} } = {}) {
       if (lc) conds.push({ cc: Number(lc[1]), lo: Number(v) });
       if (hc) conds.push({ cc: Number(hc[1]), hi: Number(v) });
     }
+    // エンベロープを CC で変える設定（ampeg_decay_onccN など）: 初期値の決まっている CC だけ、値の割合（CC/127）を足す
+    const envMod = (stage) => {
+      let add = 0;
+      for (const [k, v] of Object.entries(r)) {
+        const em = k.match(/^ampeg_([a-z]+?)_?(?:on)?cc(\d+)$/);
+        if (!em || em[1] !== stage) continue;
+        const val = cc[Number(em[2])];
+        if (val !== undefined) add += Number(v) * (val / 127);
+      }
+      return add;
+    };
     const silent = r.sample.startsWith("*");
     list.push({
       sample: silent ? null : path.resolve(top, defaultPath, r.sample.replace(/\\/g, "/")),
@@ -124,8 +138,8 @@ export function loadSfz(file, { replace = {}, cc: ccOverride = {} } = {}) {
       volume: num(r.volume, 0), amplitude: num(r.amplitude, 100) * ampCc,
       pan: num(r.pan, 0), tune: num(r.tune, 0), transpose: num(r.transpose, 0),
       veltrack: num(r.amp_veltrack, 100), curve,
-      attack: num(r.ampeg_attack, 0), hold: num(r.ampeg_hold, 0), decay: num(r.ampeg_decay, 0),
-      sustain: num(r.ampeg_sustain, 100), release: num(r.ampeg_release, 0.001),
+      attack: num(r.ampeg_attack, 0) + envMod("attack"), hold: num(r.ampeg_hold, 0) + envMod("hold"), decay: num(r.ampeg_decay, 0) + envMod("decay"),
+      sustain: Math.min(100, num(r.ampeg_sustain, 100) + envMod("sustain")), release: num(r.ampeg_release, 0.001) + envMod("release"),
       offset: num(r.offset, 0), oneShot: r.loop_mode === "one_shot",
       conds,
     });

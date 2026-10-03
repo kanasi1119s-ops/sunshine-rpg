@@ -182,7 +182,7 @@ export async function renderMix(kit, score, { edition = "real", outWav, soundfon
     }
   }
   // ドラムとベースも、本物の録音があればそれで鳴らす（real-rhythm.mjs）。ドラムは キック・スネア・タム・シンバル を別のパートに
-  const rhythm = renderRealRhythm({ midi, instruments: k.instruments, style: score.style, total });
+  const rhythm = renderRealRhythm({ midi, instruments: k.instruments, style: score.style, total, beatSec: 60 / (score.tempoBpm || 120), beatsPerBar: score.beatsPerBar ?? 4 });
   // 鍵盤とシンセ（real-keys.mjs）: ピアノは本物の録音、エレクトリックピアノ・リード・パッド・シンセベース・808 は専用のシンセ
   const keysR = renderRealKeys({ midi, instruments: k.instruments, programs: k.programs, style: score.style, total, groupOfChannel, skip: new Set([...rhythm.muted, ...sampledCh]) });
   for (const [g, buf] of Object.entries(keysR.parts)) {
