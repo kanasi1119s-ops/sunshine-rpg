@@ -4,6 +4,13 @@ import { findCombatant } from "../game/battle/types";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
 import { hueOfHex, mobPalette } from "../game/art/mob-palette";
+import { getBackdropCanvas, type Biome } from "./battle-backdrop";
+
+let currentBiome: Biome = "grass";
+/** これから始まる戦闘の背景（場所）を決める。 */
+export function setBattleBiome(biome: Biome): void {
+  currentBiome = biome;
+}
 import { wrapText } from "./text-wrap";
 import { shakeOffset, type BattleEffect } from "../game/battle/battle-effect";
 
@@ -86,7 +93,7 @@ function drawBossSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, screenW
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(canvas, x, 4, size, size);
   ctx.fillStyle = "#f0f0f0";
-  ctx.fillText(enemy.name, 12, 10);
+  shadowText(ctx, enemy.name, 12, 10);
   drawHpBar(ctx, enemy, 12, 24, 110);
   return true;
 }
@@ -101,6 +108,10 @@ function renderBattleBody(
 ): void {
   ctx.fillStyle = "#1c1030";
   ctx.fillRect(0, 0, screenWidth, screenHeight);
+  const backdrop = getBackdropCanvas(currentBiome, screenWidth, screenHeight - 56);
+  if (backdrop) {
+    ctx.drawImage(backdrop, 0, 0);
+  }
 
   const progress = effectView ? effectView.elapsedMs / effectView.effect.duration : 1;
   const active = effectView && progress < 1 ? effectView.effect.kind : null;
@@ -123,27 +134,27 @@ function renderBattleBody(
       // 手描きの絵がある形は、2倍（128）で大きく描く（きれいに拡大できる整数倍）
       if (drawMobSprite(ctx, enemy, bx - 24, 0, 128)) {
         ctx.fillStyle = "#f0f0f0";
-        ctx.fillText(enemy.name, bx + size + 32, 30);
+        shadowText(ctx, enemy.name, bx + size + 32, 30);
         drawHpBar(ctx, enemy, bx + size + 32, 46, 110);
         return;
       }
       drawEnemySprite(ctx, enemy, bx, 6, size);
       ctx.fillStyle = "#f0f0f0";
-      ctx.fillText(enemy.name, bx + size + 12, 30);
+      shadowText(ctx, enemy.name, bx + size + 12, 30);
       drawHpBar(ctx, enemy, bx + size + 12, 46, 110);
       return;
     }
     const x = 60 + index * 90;
     if (drawMobSprite(ctx, enemy, x - 12, 4)) {
       ctx.fillStyle = "#f0f0f0";
-      ctx.fillText(enemy.name, x - 12, 70);
+      shadowText(ctx, enemy.name, x - 12, 70);
       drawHpBar(ctx, enemy, x - 12, 82, 64);
       return;
     }
     const y = 24;
     drawEnemySprite(ctx, enemy, x, y, 40);
     ctx.fillStyle = "#f0f0f0";
-    ctx.fillText(enemy.name, x, y + 44);
+    shadowText(ctx, enemy.name, x, y + 44);
     drawHpBar(ctx, enemy, x, y + 56, 40);
   });
 
@@ -177,7 +188,7 @@ function renderBattleBody(
     const isActing = uiState.kind === "command" && uiState.actorId === member.id;
     ctx.fillStyle = isActing ? "#f2c14e" : "#f0f0f0";
     const text = columns === 2 ? `${member.name} HP${member.hp}/${member.maxHp} MP${member.mp}` : `${member.name} HP:${member.hp}/${member.maxHp} MP:${member.mp}/${member.maxMp}`;
-    ctx.fillText(text, x, y);
+    shadowText(ctx, text, x, y);
     drawHpBar(ctx, member, x, y + LINE_HEIGHT, columns === 2 ? columnWidth - 12 : 100);
   });
 
@@ -233,6 +244,16 @@ function renderBattleBody(
   const outcomeText =
     uiState.outcome === "won" ? "勝利した！" : uiState.outcome === "lost" ? "全滅してしまった…" : "逃げ出した";
   ctx.fillText(outcomeText, 8, boxY + 6);
+}
+
+/** 背景が明るい所でも読めるよう、暗い影をつけて文字を描く。 */
+function shadowText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number): void {
+  const fill = ctx.fillStyle;
+  ctx.fillStyle = "rgba(10, 8, 24, 0.85)";
+  ctx.fillText(text, x + 1, y + 1);
+  ctx.fillText(text, x - 1, y + 1);
+  ctx.fillStyle = fill;
+  ctx.fillText(text, x, y);
 }
 
 /** 戦闘画面を描く。味方がダメージを受けたときは画面全体をゆらす。 */

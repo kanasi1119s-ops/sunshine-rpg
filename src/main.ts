@@ -40,7 +40,8 @@ import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
 import { awardVictoryMastery, changeJob, isJobSystemUnlocked, battleSkillsOf, withJobBonus } from "./game/job/party-job";
-import { renderBattle } from "./render/battle-renderer";
+import { renderBattle, setBattleBiome } from "./render/battle-renderer";
+import { biomeForMap } from "./render/battle-backdrop";
 import {
   createInitialEquipment,
   createInitialHeroStats,
@@ -367,6 +368,7 @@ function startRandomBattle(enemies: Combatant[]): void {
   if (battle) {
     return;
   }
+  setBattleBiome(biomeForMap(currentMapId));
   victoryExpApplied = false;
   victoryMessage = null;
   pendingVictoryFlag = null;
@@ -394,6 +396,7 @@ function startRandomBattle(enemies: Combatant[]): void {
 }
 
 function startStoryBattle(battleId: string): void {
+  setBattleBiome(biomeForMap(currentMapId));
   const def = STORY_BATTLES[battleId];
   if (!def || battle) {
     return;
