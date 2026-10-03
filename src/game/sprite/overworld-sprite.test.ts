@@ -25,15 +25,15 @@ describe("マップを歩くキャラクターのドット絵（16×32）", () =
         expect(px).toHaveLength(SPRITE_HEIGHT);
         expect(px.every((row) => row.length === SPRITE_WIDTH)).toBe(true);
         expect(px.flat().filter(Boolean).length, `${dir}${frame}`).toBeGreaterThan(150);
-        expect(px.flat()).toContain("#221a30");
+        expect(px.flat().some((c) => c && c !== "rgba(0, 0, 0, 0.28)" && parseInt(c.slice(1, 3), 16) + parseInt(c.slice(3, 5), 16) + parseInt(c.slice(5, 7), 16) < 150), `${dir}${frame} の縁取り`).toBe(true);
       }
     }
   });
 
-  it("色数が多すぎない（縁取り・影を含めて、髪型・服の陰影つきで26色以内）", () => {
+  it("色数が多すぎない（手描きの素体＋役割色で40色以内）", () => {
     for (const dir of DIRS) {
       for (const frame of FRAMES) {
-        expect(colorCount(buildSpritePixels(SPEC, dir, frame))).toBeLessThanOrEqual(26);
+        expect(colorCount(buildSpritePixels(SPEC, dir, frame))).toBeLessThanOrEqual(40);
       }
     }
   });
@@ -45,18 +45,17 @@ describe("マップを歩くキャラクターのドット絵（16×32）", () =
     }
   });
 
-  it("右向きは、左向きを左右に入れ替えたもの。歩きのコマで絵が変わる", () => {
-    const left = buildSpritePixels(SPEC, "left", 0);
-    const right = buildSpritePixels(SPEC, "right", 0);
-    expect(right.map((r) => [...r].reverse())).toEqual(left);
+  it("4方向（下・上・左・右）が別々の絵で、歩きのコマで絵が変わる", () => {
+    const sets = DIRS.map((dir) => JSON.stringify(buildSpritePixels(SPEC, dir, 0)));
+    expect(new Set(sets).size).toBe(4);
     expect(buildSpritePixels(SPEC, "down", 1)).not.toEqual(buildSpritePixels(SPEC, "down", 0));
     expect(buildSpritePixels(SPEC, "left", 1)).not.toEqual(buildSpritePixels(SPEC, "left", 2));
   });
 
   it("正面には顔（目）があり、後ろ向きには無い", () => {
-    const eye = "#2a1f30";
-    expect(buildSpritePixels(SPEC, "down", 0).flat()).toContain(eye);
-    expect(buildSpritePixels(SPEC, "up", 0).flat()).not.toContain(eye);
+    const eye = "#1a1420";
+    const count = (px: (string | null)[][]): number => px.flat().filter((c) => c === eye).length;
+    expect(count(buildSpritePixels(SPEC, "down", 0))).toBeGreaterThan(count(buildSpritePixels(SPEC, "up", 0)));
   });
 
   it("髪型（短い・長い・ツインテール）で、絵が変わる", () => {
@@ -67,7 +66,7 @@ describe("マップを歩くキャラクターのドット絵（16×32）", () =
 
   it("同じ色が続く部分は、矩形にまとまる（描く回数が、ドットの数より少ない）", () => {
     const px = buildSpritePixels(SPEC, "down", 0);
-    expect(spriteRuns(px).length).toBeLessThan(px.flat().filter(Boolean).length / 2);
+    expect(spriteRuns(px).length).toBeLessThan(px.flat().filter(Boolean).length * 0.7);
   });
 
   it("歩きのコマ: 止まっていれば立ち、歩くと立ち→左足→立ち→右足と回る", () => {

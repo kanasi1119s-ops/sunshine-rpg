@@ -1,4 +1,5 @@
 import { shadeColor } from "../color-utils";
+import { ARCHETYPES, WALKERS } from "./walker-data.generated";
 
 /**
  * マップを歩くキャラクターのドット絵（16×32、4方向×3コマ）。`docs/design/pixel-character-guide.md` 第7・8節、
@@ -21,6 +22,8 @@ export interface SpriteSpec {
   accent: string;
   hairStyle: SpriteHairStyle;
   headband?: boolean;
+  /** 手描きの絵（`walker-data.generated.ts`）がある人物の名前。あれば、素体＋色の代わりにそれを使う。 */
+  handKey?: string;
 }
 
 export const SPRITE_WIDTH = 16;
@@ -202,7 +205,46 @@ function mirror(grid: SpritePixels): SpritePixels {
   return grid.map((row) => [...row].reverse());
 }
 
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+/** 手描きの素体（役割色の番号で持つ）を、髪・肌・服・帯の色で塗り替える。 */
+function recolorArchetype(
+  arch: { fixed: string[]; frames: Record<string, string[]> },
+  spec: SpriteSpec,
+  dir: SpriteDir,
+  frame: SpriteFrame,
+): SpritePixels {
+  const roles = [
+    shadeColor(spec.hair, -0.35), spec.hair, shadeColor(spec.hair, 0.3),
+    shadeColor(spec.skin, -0.18), spec.skin, shadeColor(spec.skin, 0.15),
+    shadeColor(spec.top, -0.3), spec.top, shadeColor(spec.top, 0.3),
+    shadeColor(spec.bottom, -0.2), spec.bottom, shadeColor(spec.bottom, 0.25),
+    "#2a1a12", "#4a2c1a", "#6a4228",
+    shadeColor(spec.accent, -0.3), spec.accent, shadeColor(spec.accent, 0.3),
+    shadeColor(spec.hair, -0.7), shadeColor(spec.skin, -0.55), shadeColor(spec.top, -0.7),
+    shadeColor(spec.bottom, -0.7), "#140c08", shadeColor(spec.accent, -0.7),
+  ];
+  return arch.frames[`${dir}${frame}`].map((row) =>
+    [...row].map((ch) => {
+      if (ch === ".") {
+        return null;
+      }
+      const index = LETTERS.indexOf(ch);
+      return index < 24 ? roles[index] : arch.fixed[index - 24];
+    }),
+  );
+}
+
 export function buildSpritePixels(spec: SpriteSpec, dir: SpriteDir, frame: SpriteFrame): SpritePixels {
+  const arch = !spec.handKey ? ARCHETYPES[spec.hairStyle === "short" ? "short" : spec.hairStyle] : undefined;
+  if (arch) {
+    return recolorArchetype(arch, spec, dir, frame);
+  }
+  const hand = spec.handKey ? WALKERS[spec.handKey] : undefined;
+  if (hand) {
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    return hand.frames[`${dir}${frame}`].map((row) => [...row].map((ch) => (ch === "." ? null : hand.palette[letters.indexOf(ch)])));
+  }
   switch (dir) {
     case "down":
       return drawFront(spec, frame, false);

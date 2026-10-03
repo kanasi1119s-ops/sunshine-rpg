@@ -1,10 +1,12 @@
 import { shadeColor, hashCell } from "../color-utils";
 import { PORTRAITS, type PortraitSpec } from "../portrait/portraits";
 import type { SpriteSpec } from "./overworld-sprite";
+import { WALKERS } from "./walker-data.generated";
 
 /** 顔グラフィック（256×256の絵と同じ髪・肌・服の色）から、マップ用の絵の設計を作る。 */
-export function spriteSpecFromPortrait(spec: PortraitSpec): SpriteSpec {
+export function spriteSpecFromPortrait(spec: PortraitSpec, name?: string): SpriteSpec {
   return {
+    handKey: name && WALKERS[name] ? name : undefined,
     skin: spec.skin,
     hair: spec.hair,
     top: spec.accent,
@@ -16,7 +18,7 @@ export function spriteSpecFromPortrait(spec: PortraitSpec): SpriteSpec {
 }
 
 /** 主人公ユーリ。 */
-export const HERO_SPRITE: SpriteSpec = spriteSpecFromPortrait(PORTRAITS["ユーリ"]);
+export const HERO_SPRITE: SpriteSpec = spriteSpecFromPortrait(PORTRAITS["ユーリ"], "ユーリ");
 
 const SKINS = ["#f2c9a0", "#e6bd8f", "#d9a67a", "#c58f66", "#b98860", "#f4d8c0"];
 const HAIRS = ["#3a2a20", "#6a4a2a", "#8a3a2a", "#c8a050", "#1e1e2a", "#5a3a4a", "#a0a0a8", "#e0e0e6"];
@@ -28,7 +30,7 @@ const HAIRS = ["#3a2a20", "#6a4a2a", "#8a3a2a", "#c8a050", "#1e1e2a", "#5a3a4a",
 export function spriteSpecForNpc(npc: { id: string; color: string; spriteName?: string }): SpriteSpec {
   const portrait = npc.spriteName ? PORTRAITS[npc.spriteName] : undefined;
   if (portrait) {
-    return spriteSpecFromPortrait(portrait);
+    return spriteSpecFromPortrait(portrait, npc.spriteName);
   }
   let seed = 0;
   for (let i = 0; i < npc.id.length; i++) {
