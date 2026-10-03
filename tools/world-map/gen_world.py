@@ -211,6 +211,24 @@ for mid in BEACON_TOWNS:
         raise SystemExit(f"{mid} の環灯台を置けない")
 assert len(BEACONS) == 8
 
+# ---- 飾りの名所（入れない目印。遺跡・祠・洞窟の入口・立石・大樹）: 大陸のあちこちに ----
+LANDMARKS = []
+def near_any(x, y, pts, d): return any(abs(x-a) + abs(y-b) < d for a, b in pts)
+town_pts = [(v[0], v[1]) for v in TOWNS.values()]
+taken = list(town_pts) + BEACONS + [(cx, cy) for _i, cx, cy, _n in ISLETS] + [TOWER]
+rr = np.random.default_rng(777)
+spec = [("ruin", "PDWH", 7), ("shrine", "PH", 6), ("cave", "PFDH", 6), ("stones", "H", 6), ("bigtree", "F", 7)]
+for kind, ground, count in spec:
+    placed = 0
+    tries = 0
+    while placed < count and tries < 4000:
+        tries += 1
+        x = int(rr.integers(4, W-4)); y = int(rr.integers(4, H-4))
+        if T[y][x] not in ground or near_any(x, y, taken, 12): continue
+        if T[y+1][x] not in LANDWALK or T[y-1][x] not in LANDWALK: continue
+        if kind == "cave" and not any(T[y+dy][x+dx] == "M" for dx, dy in ((1,0),(-1,0),(0,1),(0,-1))): continue
+        LANDMARKS.append((kind, x, y)); taken.append((x, y)); placed += 1
+
 # ---- 船の停泊場所: 砂音のいちばん近い海岸（陸の海に接するマス）と、そのとなりの海 ----
 sx, sy = pos("sanone-town")
 best = None
@@ -248,6 +266,8 @@ ts = ["// 自動生成: tools/world-map/gen_world.py（手で編集しない）�
       *[f'  "{k}": {{ x: {v[0]}, y: {v[1]}, name: "{v[2]}", continent: "{CONTINENT[k]}" }},' for k, v in TOWNS.items()], "};",
       "/** 環灯台（8神の欠片をささげる灯台）。番号は神の番号（1=女神…8=冥神）。 */",
       "export const WORLD_BEACONS: Array<{ x: number; y: number }> = [", *[f"  {{ x: {x}, y: {y} }}," for x, y in BEACONS], "];",
+      "/** 飾りの名所（入れない目印）。 */",
+      "export const WORLD_LANDMARKS: Array<{ kind: string; x: number; y: number }> = [", *[f'  {{ kind: "{k}", x: {x}, y: {y} }},' for k, x, y in LANDMARKS], "];",
       "/** 隠しダンジョンの小島（入口は島の中心のマス）。 */",
       "export const WORLD_ISLETS: Array<{ id: string; x: number; y: number; name: string }> = [", *[f'  {{ id: "{i}", x: {x}, y: {y}, name: "{n}" }},' for i, x, y, n in ISLETS], "];",
       f"export const WORLD_TOWER = {{ x: {TOWER[0]}, y: {TOWER[1]} }};",
