@@ -33,7 +33,7 @@ const TILE_ART_MAP: Record<number, string> = {
 
 /** 全体フィールドの地形テクスチャ（`tools/pixel-art/ai-gen/world_tiles.py` で作り、エディタで描いて確かめたもの。2026-10-04）。 */
 const TILE_TEXTURE: Record<number, string> = {
-  1: "terrain:w-sea", 2: "terrain:w-grass", 3: "terrain:w-forest", 4: "terrain:w-mountain", 5: "terrain:w-sand", 6: "terrain:w-snow", 7: "terrain:w-road", 8: "terrain:w-hills", 9: "terrain:w-lake", 10: "terrain:w-cloud", 11: "terrain:w-waste", 12: "terrain:w-snowforest", 13: "terrain:w-sea", 14: "terrain:w-sea", 15: "terrain:w-peaks", 16: "terrain:w-chasm", 17: "terrain:w-lava", 18: "terrain:w-ash",
+  1: "terrain:w-sea", 2: "terrain:w-grass", 3: "terrain:w-forest", 4: "terrain:w-mountain", 5: "terrain:w-sand", 6: "terrain:w-snow", 7: "terrain:w-road", 8: "terrain:w-hills", 9: "terrain:w-lake", 10: "terrain:w-cloud", 11: "terrain:w-waste", 12: "terrain:w-snowforest", 13: "terrain:w-sea", 14: "terrain:w-sea", 15: "terrain:w-pyramids", 16: "terrain:w-chasm", 17: "terrain:w-lava", 18: "terrain:w-ash",
 };
 
 /** 通れない地形: 海・山・湖。 */
