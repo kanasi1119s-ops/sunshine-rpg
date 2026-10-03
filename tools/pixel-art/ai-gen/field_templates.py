@@ -3,12 +3,12 @@
 王道のコマンドRPGのフィールドキャラに共通する作り（2頭身、大きな頭、1ドット幅の暗い外周、目は縦2ドットの点、
 部位ごとに「地・影・光」の3段、光は左上から）を、文字の型で手描きしたもの。特定の作品のキャラクターの絵は写していない。
 
-文字（役割）: O 外周・目／H h L 髪（地・影・光）／S s 肌／T t U 上着（地・影・光）／A a 目印（襟・袖口・帯・マント）／
+文字（役割）: O 外周／E 目／P ほお／X 口／V ひざの光／H h L 髪（地・影・光）／S s 肌／T t U 上着（地・影・光）／A a 目印（襟・袖口・帯・マント）／
 B b 下（ズボン・スカート）／K k Y 靴（地・影・折り返し）／G g 金具（バックル・剣の柄）／M m N 金属（兜・盾のふち・刃）／D d 木（杖）／Q 杖の玉／W 白。'.' は透明。
 色は field_sprite.py が、AIのデザイン画（または手で決めた色）から当てはめる。
 髪型: spiky（とがった短髪）・short（ふつうの短髪）・long（長い髪）・hood（フード）
 ひげ: beard=True（年配の人物）
-飾り: decos=('band','cape','backsword','sword','shield','helmet','staff','scarf','goggles','twintails')（はちまき・マント・背中の剣・手に剣・盾・兜・杖・マフラー・ゴーグル・ふたつ結び）。服には、V字の襟・袖口・金のバックル・靴の折り返しが最初からつく
+飾り: decos=('band','cape','backsword','sword','shield','helmet','staff','scarf','goggles','twintails','ponytail','circlet','bracelet','pickaxe')（はちまき・マント・背中の剣・手に剣・盾・兜・杖・マフラー・ゴーグル・ふたつ結び）。服には、V字の襟・袖口・金のバックル・靴の折り返しが最初からつく
 服: tunic（上着＋ズボン）・coat（ひざまでの長い上着）・dress（ワンピース。下の色）・robe（ローブ。上着の色）
 コマ: 0=立ち、1=画面の左の足を出す、2=右の足を出す（歩きは 0→1→0→2 または 1→0→2→0）。
 """
@@ -131,7 +131,7 @@ def light_left(g):
             elif ch=='U': g[y][x]='T'
             elif ch in SHADE and x+1<16 and g[y][x+1]=='O': g[y][x]=SHADE[ch]
     return [''.join(r) for r in g]
-DECOS=('band','cape','backsword','sword','shield','helmet','staff','scarf','goggles','twintails')
+DECOS=('lantern','bow','band','cape','backsword','sword','shield','helmet','staff','scarf','goggles','twintails')
 def _decorate(g,view,decos):
     """飾り（view: down / up / side＝右向き）。g は文字の2次元リスト。"""
     H=set('HhL')
@@ -185,6 +185,7 @@ def _decorate(g,view,decos):
     if 'scarf' in decos:       # 首に巻いた布（目印の色）。端が後ろへなびく
         if view in ('down','up'):
             for x in range(4,12): g[18][x]='A'
+            g[18][3]='O'; g[18][12]='O'
             for x in range(3,13):
                 if g[19][x] not in '.O': g[19][x]='a' if x>=10 else 'A'
             if view=='down':
@@ -206,6 +207,60 @@ def _decorate(g,view,decos):
             for (x,ch) in ((9,'G'),(10,'Q'),(11,'Q'),(12,'G')): g[9][x]=ch
             for x in range(3,9):
                 if g[9][x] in 'HhL': g[9][x]='g'
+    if 'ponytail' in decos:    # 後ろで結んだ髪
+        if view=='up':
+            for y in range(11,20):
+                for x in (7,8): g[y][x]='H' if x==7 else 'h'
+                g[y][6]='O'; g[y][9]='O'
+            g[20][7]='O'; g[20][8]='O'; g[11][7]='A'; g[11][8]='A'
+        elif view=='side':
+            for y in range(9,17):
+                g[y][1]='O'; g[y][2]='H'
+            g[17][2]='O'; g[9][2]='A'
+        else:
+            for x in (7,8): g[3][x]='H'
+            g[2][7]='O'; g[2][8]='O'
+    if 'circlet' in decos:     # 額の飾り（銀の輪と宝石）
+        y=11 if view!='up' else 10
+        for x in range(16):
+            if g[y][x] in 'HhLD': g[y][x]='N'
+        if view=='down': g[y][7]='A'; g[y][8]='A'
+        elif view=='side': g[y][11]='A'
+    if 'bracelet' in decos:    # 手首の光る腕輪
+        if view=='down': g[22][13]='Q'
+        elif view=='up': g[22][2]='Q'
+        else:
+            for y in range(19,25):
+                for x in range(16):
+                    if g[y][x]=='S' and y>=21: g[y][x]='Q'; break
+    def px2(y,x,ch):
+        if 0<=y<32 and 0<=x<16: g[y][x]=ch
+    if 'band' in decos:        # はちまきの結び目と、なびく端
+        if view=='down':
+            for x in range(16):
+                if g[12][x]=='A': g[12][x]='a'
+        elif view=='up':
+            for (y,x,ch) in ((10,7,'a'),(10,8,'a'),(11,7,'A'),(12,7,'A'),(11,8,'a')): px2(y,x,ch)   # 結び目と垂れた端
+        else:
+            for (y,x,ch) in ((11,1,'A'),(12,0,'A'),(12,1,'a'),(13,0,'a'),(10,1,'O'),(11,0,'O'),(14,0,'O'),(13,1,'O')): px2(y,x,ch)
+    if 'scarf' in decos and view=='down':   # マフラーのしわと房
+        for x in (5,8,11):
+            if g[19][x]=='A': g[19][x]='a'
+        px2(22,9,'A'); px2(23,10,'a'); px2(23,9,'O'); px2(24,10,'O')
+    if 'goggles' in decos and view in ('down','side'):   # レンズの光
+        for x in ((4,10) if view=='down' else (10,)): px2(9,x,'W')
+    if 'lantern' in decos:     # 手に下げたランタン（灯りが光る）
+        pat=[" O ","OGO","OWO","OQO"," O "]
+        x0={'down':0,'up':13}.get(view,10); y0=24 if view!='side' else 23
+        for k,row in enumerate(pat):
+            for j,ch in enumerate(row):
+                if ch!=' ': px2(y0+k,x0+j,ch)
+    if 'bow' in decos:         # 背中の弓（後ろ向きと横向きで見える）
+        if view=='up':
+            for k in range(10): px2(13+k,3+(1 if 2<k<7 else 0),'D')
+            for y in range(13,23): px2(y,6,'N')
+        elif view=='side':
+            for k in range(9): px2(14+k,2 if 2<k<6 else 3,'D')
     if 'helmet' in decos:  # 兜（金属。ふちに金の帯）
         for y in range(0,6):
             for x in range(16):
@@ -218,16 +273,30 @@ def _decorate(g,view,decos):
         for k,row in enumerate(rows):
             for x,ch in enumerate(row):
                 if ch!='.': g[4+k][x]=ch
+    if 'helmet' in decos:      # ヘッドランプ（光る灯り）と鋲
+        if view=='down':
+            for (y,x,ch) in ((5,7,'G'),(5,8,'G'),(6,6,'G'),(6,7,'W'),(6,8,'Q'),(6,9,'G'),(7,7,'G'),(7,8,'G')): px2(y,x,ch)
+            for x in (3,12): px2(9,x,'N')
+        elif view=='side':
+            for (y,x,ch) in ((6,11,'G'),(7,11,'W'),(7,12,'Q'),(8,11,'G')): px2(y,x,ch)
     def stamp(pat,y0,x0):
         for k,row in enumerate(pat):
             for x,ch in enumerate(row):
                 if ch not in ' .' and 0<=y0+k<32 and 0<=x0+x<16: g[y0+k][x0+x]=ch
-    if 'staff' in decos:   # 杖（木の柄と、先に光る玉）
-        col={'down':0,'up':15}.get(view,12)
+    if 'staff' in decos:   # 杖（木の柄と、先に光る玉。玉は中心が白く光る）
+        col={'down':1,'up':14}.get(view,12)
         for y in range(13,29): g[y][col]='D' if y%3 else 'd'
-        g[29][col]='O'; g[12][col]='O'; g[11][col]='Q'; g[10][col]='Q'; g[9][col]='O'
+        g[29][col]='O'
+        for (dy,dx,ch) in ((-5,0,'O'),(-4,-1,'O'),(-4,0,'Q'),(-4,1,'O'),(-3,-1,'Q'),(-3,0,'W'),(-3,1,'Q'),(-2,-1,'O'),(-2,0,'Q'),(-2,1,'O'),(-1,0,'O')):
+            px2(13+dy,col+dx,ch)
+    if 'pickaxe' in decos:     # 肩にかついだつるはし
+        col={'down':1,'up':14}.get(view,3)
+        for y in range(6,24): g[y][col]='D' if y%3 else 'd'
+        hd={'down':[(5,0),(5,1),(5,2),(5,3),(6,0),(4,2),(4,3),(4,4),(3,4)],'up':[(5,15),(5,14),(5,13),(5,12),(6,15),(4,13),(4,12),(4,11),(3,11)],
+            'side':[(6,0),(6,1),(6,2),(6,3),(6,4),(7,0),(5,4),(4,5)]}[view]
         if view=='side':
-            g[10][col-1]='O'; g[11][col-1]='O'; g[10][col+1]='O'; g[11][col+1]='O'
+            for y in range(6,24): g[y][col]='D' if y%3 else 'd'
+        for (y,x) in hd: g[y][x]='M' if (x+y)%3 else 'm'
     if 'sword' in decos:   # 手に持った剣（刃は下向き）
         if view in ('down','up'):
             c=1 if view=='down' else 14
@@ -248,6 +317,36 @@ def _decorate(g,view,decos):
             stamp([" OOO ","OmmmO","OMmmO","OMmmO","OMmmO","OmmmO","OmmmO"," OmO ","  O  "],18,0)
         else:
             stamp([" OO ","OMMO","OAGO","OGGO","OAGO","OAaO"," OO "],19,10)
+    return g
+def _details(g,view):
+    """細部の描き込み（ほお・口・髪のすじ・肩の光・服のしわ・腰の袋・ズボンの縫い目・ひざと靴先の光）。型の上から重ねる。目は型のまま。"""
+    def put(y,x,ch,only=None):
+        if 0<=y<32 and 0<=x<16 and (only is None or g[y][x] in only): g[y][x]=ch
+    if view=='down':
+        put(16,3,'P','Ss'); put(16,12,'P','Ss')       # ほお
+        put(17,7,'X','Ss'); put(17,8,'X','Ss')        # 口
+        for (y,x) in ((7,4),(7,5)): put(y,x,'L','H')
+        for (y,x) in ((20,3),(20,4)): put(y,x,'U','T')                     # 肩の光
+        for (y,x) in ((21,5),(21,9),(22,6),(22,10)): put(y,x,'t','T')     # 服のしわ
+        for (y,x) in ((20,6),(21,6)): put(y,x,'G','T')                     # ボタン
+        put(24,4,'K','B'); put(24,5,'K','B'); put(25,4,'k','Bb')           # 腰の袋
+        put(25,9,'V','B'); put(26,5,'V','B')                                # ひざの光
+        for x in (5,10): put(28,x,'Y','Kk')                                 # 靴先の光
+    elif view=='up':
+        for (y,x) in ((7,4),(7,5),(8,4),(9,4),(8,6),(9,6),(10,6)): put(y,x,'L','H')   # 後ろ髪のつや（明るいすじ）
+        for (y,x) in ((20,3),(20,4)): put(y,x,'U','T')
+        for (y,x) in ((21,6),(21,9),(20,7),(22,7),(22,8)): put(y,x,'t','T')   # 背中のしわと縫い目
+        put(24,10,'K','B'); put(24,11,'K','Bb'); put(25,11,'k','Bb')
+        put(25,5,'V','B'); put(25,9,'V','B')
+    else:
+        put(16,9,'P','Ss'); put(16,11,'X','Ss')
+        for (y,x) in ((6,6),(7,6)): put(y,x,'L','H')
+        put(20,6,'U','T')
+        for (y,x) in ((21,7),(22,8)): put(y,x,'t','T')
+        put(24,5,'K','B'); put(25,5,'k','Bb')
+        put(25,7,'V','B')
+        for x in range(16):
+            if g[28][x] in 'Kk' and (x+1>=16 or g[28][x+1] in '.O'): g[28][x]='Y'; break
     return g
 def _boot_cuffs(g):
     """靴の一番上の段を明るく（折り返し）。"""
@@ -286,6 +385,7 @@ def frame(dr,f,style='spiky',outfit='tunic',beard=False,decos=()):
             for y in range(24,28):
                 g[y][4]='O'; g[y][5]='T'
             g[28][5]='O'
+    g=_details(g,'side' if side else dr)
     _decorate.frame=f
     g=_decorate(g,'side' if side else dr,decos)
     g=[''.join(r) for r in g]
@@ -295,5 +395,5 @@ def frame(dr,f,style='spiky',outfit='tunic',beard=False,decos=()):
     return g
 
 def all_frames(style='spiky', outfit='tunic', beard=False, decos=()):
-    """{"down0": [...32行], ...} の12コマ。decos: band（はちまき）・cape（マント）・backsword（背中の剣）・sword（手に剣）・shield（盾）・helmet（兜）・staff（杖）・scarf（マフラー）・goggles（ゴーグル）・twintails（ふたつ結び）"""
+    """{"down0": [...32行], ...} の12コマ。decos: band（はちまき）・cape（マント）・backsword（背中の剣）・sword（手に剣）・shield（盾）・helmet（兜）・staff（杖）・scarf（マフラー）・goggles（ゴーグル）・twintails（ふたつ結び）・ponytail（ポニーテール）・circlet（額の飾り）・bracelet（光る腕輪）・pickaxe（つるはし）"""
     return {f"{d}{f}": frame(d, f, style, outfit, beard, decos) for d in ('down', 'up', 'left', 'right') for f in (0, 1, 2)}

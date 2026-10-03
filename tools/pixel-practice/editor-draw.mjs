@@ -1,5 +1,6 @@
 // ドット絵エディタ（Artifact「ドット絵エディタ」の index.html を手元に保存したもの）を、ヘッドレスブラウザで実際にマウス操作して絵を描く。
-// 使い方: EDITOR=<editor.html> node editor-draw.mjs <絵.txt> <パレット.json> <出力PNG> [--ref 下絵.png] [--zoom 16]
+// 使い方: EDITOR=<editor.html> node editor-draw.mjs <絵.txt> <パレット.json> <出力PNG> [--ref 下絵.png] [--zoom 16] [--wide]
+//   --wide: 256×256 など大きな絵のとき（画面を広くし、エディタの並びの幅の上限を外す）。--zoom は6以上にする
 //   絵.txt: 1文字=1ドットの文字グリッド（'.'は透明）。パレットJSON: {"文字":"#rrggbb"}
 //   --ref を付けると下絵（トレース用）としてエディタに読み込み、下絵を重ねた画面も <出力>-trace.png に残す。
 // 出力: <出力PNG>（エディタのキャンバスの画面）、<出力>.rows.txt（エディタが書き出した配列。描いた結果が文字グリッドと同じか確認する）
@@ -7,15 +8,17 @@ import { chromium } from "playwright-core";
 import fs from "fs";
 const [txt, palPath, out, ...rest] = process.argv.slice(2);
 const opt = (k, d) => (rest.includes(k) ? rest[rest.indexOf(k) + 1] : d);
-const ref = opt("--ref", null), zoom = Number(opt("--zoom", 16));
+const ref = opt("--ref", null), zoom = Number(opt("--zoom", 16)), wide = rest.includes("--wide");
 const rows = fs.readFileSync(txt, "utf8").split("\n").filter((l) => l.trim() !== "" && !l.startsWith("#"));
 const pal = JSON.parse(fs.readFileSync(palPath, "utf8"));
 const H = rows.length, W = Math.max(...rows.map((r) => r.length));
 const syms = Object.keys(pal);
 const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
-const p = await (await browser.newContext({ viewport: { width: 1500, height: 2000 } })).newPage();
+const p = await (await browser.newContext({ viewport: wide ? { width: 2600, height: 2600 } : { width: 1500, height: 2000 } })).newPage();
 await p.route(/fonts\./, (r) => r.abort());
 await p.goto("file://" + process.env.EDITOR);
+// --wide: 大きな絵（256×256 など）のとき、キャンバスが画面に収まるよう、エディタの並びの幅の上限を外す
+if (wide) await p.addStyleTag({ content: ".layout{max-width:none!important;grid-template-columns:220px max-content 300px!important}.canvas-wrap{max-height:none!important;overflow:visible!important}" });
 await p.evaluate(() => localStorage.clear());
 await p.selectOption("#templateSelect", "blank"); await p.click("#loadTemplateBtn");
 await p.fill("#gridW", String(W)); await p.fill("#gridH", String(H)); await p.click("#resizeBtn");

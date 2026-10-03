@@ -120,8 +120,18 @@ def palette_for(cols, eye=None):
         d, m, l = ramp(cols[key])
         P[base], P[dark] = m, d
         if light: P[light] = l
-    if eye:
-        P["E"] = eye
+    # 細部の色: 瞳（目の色と、その明るい色）、ほお、口、ひざの光
+    e = eye or "#3a3050"
+    er, eg, eb = [int(e[i:i + 2], 16) for i in (1, 3, 5)]
+    P["E"] = e   # 目は縦2ドットの点（目の色）
+    P["I"] = e
+    P["J"] = hexc([v + (255 - v) * 0.45 for v in (er, eg, eb)])
+    sr, sg, sb = cols["skin"]
+    P["P"] = hexc([sr * 0.95 + 12, sg * 0.72, sb * 0.72])
+    P["X"] = hexc([sr * 0.62, sg * 0.4, sb * 0.4])
+    P["V"] = ramp(cols["bottom"])[2]
+    if "orb" in cols:
+        P["Q"] = hexc(cols["orb"])
     return P
 
 
@@ -149,7 +159,7 @@ def main():
     ap.add_argument("design"); ap.add_argument("outdir"); ap.add_argument("name")
     ap.add_argument("--style", default="spiky", choices=list(FT.HAIR))
     ap.add_argument("--outfit", default="tunic", choices=["tunic", "coat", "dress", "robe"])
-    ap.add_argument("--set", action="append", default=[], help="部位=#rrggbb（hair/skin/top/bottom/boot/acc）")
+    ap.add_argument("--set", action="append", default=[], help="部位=#rrggbb（hair/skin/top/bottom/boot/acc、杖の玉・腕輪の光は orb）")
     ap.add_argument("--deco", default="", help="飾り（カンマ区切り）: band はちまき・cape マント・backsword 背中の剣・sword 手に剣・shield 盾・helmet 兜・staff 杖・scarf マフラー・goggles ゴーグル・twintails ふたつ結び")
     ap.add_argument("--beard", action="store_true", help="ひげをつける（髪の色）")
     ap.add_argument("--eye", help="目の色（省略すると外周と同じ暗い色）")
