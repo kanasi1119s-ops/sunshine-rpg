@@ -1,0 +1,16 @@
+.AAA............
+ABBBAAAAAAA.....
+ACDDBBBBBBBAA...
+.ACCCCCCCCDEFA..
+..AAAAAAAACGEA..
+...A......ACDBA.
+....A......ACBA.
+.....A.....ACBA.
+......A....ACBA.
+.......A...ACBA.
+........A..ACBA.
+.........A.ACBA.
+..........AACDBA
+...........ACDBA
+............ACCA
+.............AA.
