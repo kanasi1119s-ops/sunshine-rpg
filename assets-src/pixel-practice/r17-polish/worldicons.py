@@ -136,7 +136,66 @@ def icon_palace():
     for (x, y) in ((17, 26), (30, 26), (9, 20), (38, 20), (24, 16)): rect(g, x, y, x+1, y+2, "Y")
     return g
 
-ICONS = {"port": icon_port, "village": icon_village, "lake": icon_lake, "mine": icon_mine, "castle": icon_castle, "tents": icon_tents, "temple": icon_temple, "snowtown": icon_snowtown, "sky": icon_sky, "palace": icon_palace}
+
+def icon_ruin():
+    g = blank(); mound(g, 24, 42, 15, 3, "g", "g")
+    rect(g, 8, 38, 40, 41, "T"); rect(g, 26, 38, 40, 41, "t")
+    for (x, h) in ((11, 16), (20, 22), (30, 12), (36, 18)):
+        rect(g, x, 38-h, x+3, 38, "T"); rect(g, x+2, 38-h, x+3, 38, "t")
+        for k in range(0, h, 4): rect(g, x, 38-k, x+3, 38-k, "s")
+        if h % 2 == 0: rect(g, x-1, 38-h-1, x+4, 38-h, "T")
+    rect(g, 14, 33, 18, 35, "T"); rect(g, 24, 36, 28, 37, "t")
+    for x in (9, 19, 33): g[39][x] = "G"
+    return g
+def icon_shrine():
+    g = blank(); mound(g, 24, 42, 13, 3, "G", "g")
+    # 環の輪の門（石の輪が2本の柱に乗る）
+    rect(g, 12, 22, 15, 41, "T"); rect(g, 32, 22, 35, 41, "T"); rect(g, 14, 22, 15, 41, "t"); rect(g, 34, 22, 35, 41, "t")
+    for y in range(8, 24):
+        for x in range(10, 38):
+            d = math.hypot((x-23.5)/13.0, (y-17)/9.0)
+            if 0.72 < d < 1.0: g[y][x] = "T" if x < 24 else "t"
+    rect(g, 22, 28, 26, 41, "N"); rect(g, 22, 28, 26, 30, "n"); g[24][24] = "Y"; g[25][24] = "Y"
+    return g
+def icon_cave():
+    g = blank(); tri(g, 24, 18, 42, 15, "N", "n")
+    for y in range(22, 42):
+        for x in range(10, 38):
+            if g[y][x] != "." and (x*5+y*3) % 9 == 0: g[y][x] = "T" if x < 24 else "t"
+    for y in range(33, 42):
+        for x in range(19, 29):
+            if (x-23.5)**2/20 + (y-41)**2/70 <= 1: g[y][x] = "A" if y > 34 else "q"
+    return g
+def icon_stones():
+    g = blank(); mound(g, 24, 41, 15, 4, "G", "g")
+    for (x, y, h) in ((8, 40, 11), (16, 36, 14), (24, 35, 15), (32, 36, 13), (39, 40, 10)):
+        rect(g, x, y-h, x+3, y, "T"); rect(g, x+2, y-h, x+3, y, "t"); rect(g, x, y-h, x+3, y-h, "s")
+    return g
+def icon_bigtree():
+    g = blank()
+    rect(g, 21, 28, 27, 43, "M"); rect(g, 25, 28, 27, 43, "m")
+    for (cx, cy, r) in ((24, 14, 11), (14, 20, 8), (34, 20, 8), (24, 24, 9)):
+        for y in range(cy-r, cy+r+1):
+            for x in range(cx-r, cx+r+1):
+                if (x-cx)**2+(y-cy)**2 <= r*r and 0 <= x < W: g[y][x] = "E" if (x-cx)+(y-cy) < 0 else "e"
+    return g
+def icon_vortex():
+    g = blank()
+    for y in range(8, 46):
+        for x in range(2, 46):
+            dx, dy = (x-24)/21.0, (y-27)/17.0
+            d = math.hypot(dx, dy)
+            if d > 1.0: continue
+            ang = math.atan2(dy, dx)
+            band = (d*6.0 + ang/(2*math.pi)*3.0) % 1.0
+            g[y][x] = "C" if band < 0.18 else "c" if band < 0.35 else "L" if band < 0.75 else "l"
+    for y in range(22, 33):
+        for x in range(19, 30):
+            if math.hypot((x-24)/5.0, (y-27)/5.5) <= 1.0: g[y][x] = "q"
+    # 渦の中心にそびえる塔のかげ
+    rect(g, 22, 12, 26, 28, "Q"); rect(g, 25, 12, 26, 28, "q"); rect(g, 21, 10, 27, 12, "Q"); rect(g, 23, 6, 25, 10, "Q"); g[5][24] = "Y"
+    return g
+ICONS = {"port": icon_port, "village": icon_village, "lake": icon_lake, "mine": icon_mine, "castle": icon_castle, "tents": icon_tents, "temple": icon_temple, "snowtown": icon_snowtown, "sky": icon_sky, "palace": icon_palace, "ruin": icon_ruin, "shrine": icon_shrine, "cave": icon_cave, "stones": icon_stones, "bigtree": icon_bigtree, "vortex": icon_vortex}
 if __name__ == "__main__":
     for n, fn in ICONS.items():
         g = outline(fn())

@@ -41,6 +41,9 @@ const SETS = {
   props: [1, { "P1-木": "prop:tree", "P2-家": "prop:house", "P3-家青": "prop:house-blue", "P4-家緑": "prop:house-green", "P5-岩": "prop:rock", "P6-茂み": "prop:bush", "P7-屋敷": "prop:manor", "P8-屋敷青": "prop:manor-blue", "P9-屋敷緑": "prop:manor-green", "P10-雪の木": "prop:tree-snow", "P11-枯れ木": "prop:tree-dead", "P12-雪の岩": "prop:rock-snow", "P13-雪の茂み": "prop:bush-snow", "P14-ヤシ": "prop:palm", "P15-サボテン": "prop:cactus", "P16-樽": "prop:barrel", "P17-街灯": "prop:lamp", "P18-井戸": "prop:well", "P19-道しるべ": "prop:signpost", "P20-木箱の山": "prop:crates", "P21-花壇": "prop:flowerbed", "P22-アイコンport": "prop:icon-port", "P23-アイコンvillage": "prop:icon-village", "P24-アイコンlake": "prop:icon-lake", "P25-アイコンmine": "prop:icon-mine", "P26-アイコンcastle": "prop:icon-castle", "P27-アイコンtents": "prop:icon-tents", "P28-アイコンtemple": "prop:icon-temple", "P29-アイコンsnowtown": "prop:icon-snowtown", "P30-アイコンsky": "prop:icon-sky", "P31-アイコンpalace": "prop:icon-palace" }],
   party: [1, { "C1-ユーリ": "char:ユーリ", "C2-レト": "char:レト", "C3-ミナ": "char:ミナ", "C4-ガイド": "char:ガイド", "C5-オルカ": "char:オルカ" }],
 };
+for (const n of fs.readdirSync(new URL("../../assets-src/pixel-practice/r20-props/", import.meta.url)).filter((f) => f.endsWith(".txt")).map((f) => f.replace(".txt", ""))) {
+  SETS.props[1][`R20-${n}`] = `prop:${n}`;
+}
 // 倍率（SCALE）はモジュールの読み込み時に決まるため、セットごとに別のプロセスで実行する（node export-game-data.mjs → 自動で分けて実行）。
 const [mode, tmpDir] = process.argv.slice(2);
 if (mode && mode !== "merge") {

@@ -56,3 +56,11 @@ export const PIECES = [
   piece("P30-アイコンsky", "r17-polish", "icon-sky.txt", "pal-icon-sky.json"),
   piece("P31-アイコンpalace", "r17-polish", "icon-palace.txt", "pal-icon-palace.json"),
 ];
+
+// 町・遺跡の飾り33点（assets-src/pixel-practice/r20-props/、エージェントが一から作成）。大きさが48を超えるものは64の枠。
+export const R20_NAMES = fs.readdirSync(new URL("r20-props/", ROOT)).filter((f) => f.endsWith(".txt")).map((f) => f.replace(".txt", "")).sort();
+for (const n of R20_NAMES) {
+  const rows = fs.readFileSync(new URL(`r20-props/${n}.txt`, ROOT), "utf8").split("\n").filter((l) => l !== "");
+  const big = Math.max(rows.length, ...rows.map((r) => r.length)) > 48;
+  PIECES.push(piece(`R20-${n}`, "r20-props", `${n}.txt`, `pal-${n}.json`, {}, big ? 64 : 48));
+}

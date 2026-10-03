@@ -18,6 +18,7 @@ import { applyMapTileArt } from "../tile-art/map-tile-art";
 import { applyMapProps } from "../map/map-props";
 import { createWorldMapData } from "../map/world/world-map";
 import { connectWorldMap, WORLD_MAP_NPCS } from "./world-map-world";
+import { applyAutoDecor } from "../map/auto-decor";
 import type { TileMapData } from "../map/types";
 import type { Npc } from "../npc";
 
@@ -78,3 +79,4 @@ export const WORLD_NPCS: Record<string, Npc[]> = (() => {
 })();
 
 connectWorldMap(WORLD_MAPS, WORLD_NPCS);
+applyAutoDecor(WORLD_MAPS, WORLD_NPCS);
