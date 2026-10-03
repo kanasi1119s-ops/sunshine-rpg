@@ -20,6 +20,10 @@ import { renderTileMap } from "./render/tile-map-renderer";
 import { renderPlayer } from "./render/player-renderer";
 import { npcFeetY, renderNpcs } from "./render/npc-renderer";
 import { faceNpc, opposite, updateWander } from "./game/npc-wander";
+import { PartyTrail } from "./game/party-trail";
+import { renderFollowers } from "./render/follower-renderer";
+import { spriteSpecFromPortrait } from "./game/sprite/character-specs";
+import { PORTRAITS } from "./game/portrait/portraits";
 import { propFeetY, renderProps } from "./render/prop-renderer";
 import { renderDialogue } from "./render/dialogue-renderer";
 import { createTileMap, findExitAt } from "./game/map/tile-map";
@@ -155,6 +159,21 @@ let player = createPlayer(
 );
 let renderCamera = camera;
 
+const partyTrail = new PartyTrail();
+
+/** ついてくる仲間（加入済みの仲間）の、マップ用の絵の設計。加入した順。 */
+function followerSpecs(): ReturnType<typeof spriteSpecFromPortrait>[] {
+  const specs: ReturnType<typeof spriteSpecFromPortrait>[] = [];
+  for (const id of Object.keys(companionStats)) {
+    const name = COMPANIONS[id]?.name;
+    const portrait = name ? PORTRAITS[name] : undefined;
+    if (name && portrait) {
+      specs.push(spriteSpecFromPortrait(portrait, name));
+    }
+  }
+  return specs;
+}
+
 function switchMap(mapId: string, tileX: number, tileY: number): void {
   const data = WORLD_MAPS[mapId];
   if (!data) {
@@ -164,6 +183,7 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   map = createTileMap(data);
   npcs = WORLD_NPCS[mapId] ?? [];
   player = { ...player, x: tileX * map.data.tileWidth, y: tileY * map.data.tileHeight };
+  partyTrail.reset(player);
   playMapBgm(mapId);
   if (audioStarted) {
     audio.playSe(seOf("door"));
@@ -437,6 +457,13 @@ if (import.meta.env.DEV) {
       title = { ...title, open: false };
     },
     startBattle: (battleId: string) => startStoryBattle(battleId),
+    /** 開発用: 仲間の加入フラグを立てて、隊列（後ろをついてくる姿）を確かめる。 */
+    joinAll: () => {
+      for (const { flag } of COMPANION_JOIN_FLAGS) {
+        flags[flag] = true;
+      }
+      syncCompanionsFromFlags();
+    },
     /** 開発用: 話者の顔グラフィックを会話欄で見る（絵の確認用）。 */
     startTestDialogue: (speaker: string) => dialogue.start([{ type: "message", speaker, text: "顔グラフィックの確認です。" }]),
     /** 開発用: 指定した地図のランダムエンカウントの敵と戦う（敵の絵の確認用）。 */
@@ -1266,6 +1293,7 @@ const loop = createGameLoop({
     lastDialogueDirection = null;
 
     player = updatePlayer(player, input.getDirection(), dtMs, map);
+    partyTrail.update(player, dtMs, followerSpecs().length);
     updateWander(
       npcs,
       map,
@@ -1358,7 +1386,10 @@ const loop = createGameLoop({
     const playerFeetY = player.y + player.height;
     renderProps(ctx, map.data, renderCamera, (prop) => propFeetY(prop, map.data.tileHeight) <= playerFeetY);
     renderNpcs(ctx, npcs, map, renderCamera, (npc) => npcFeetY(npc, map.data.tileHeight) <= playerFeetY);
+    const followers = followerSpecs();
+    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY <= playerFeetY);
     renderPlayer(ctx, player, renderCamera);
+    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY > playerFeetY);
     renderNpcs(ctx, npcs, map, renderCamera, (npc) => npcFeetY(npc, map.data.tileHeight) > playerFeetY);
     renderProps(ctx, map.data, renderCamera, (prop) => propFeetY(prop, map.data.tileHeight) > playerFeetY);
 
