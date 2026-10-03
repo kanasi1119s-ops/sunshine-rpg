@@ -1,4 +1,5 @@
 import { PAUSE_ITEMS, type PauseMenuState } from "../game/menu/pause-menu";
+import { drawWindow } from "./ui-frame";
 
 export interface StatusRow {
   name: string;
@@ -33,10 +34,7 @@ export function renderPauseMenu(
     const boxH = PAUSE_ITEMS.length * 16 + 16;
     const x = screenWidth - boxW - 8;
     const y = 18;
-    ctx.fillStyle = "rgba(16, 16, 40, 0.95)";
-    ctx.fillRect(x, y, boxW, boxH);
-    ctx.strokeStyle = "#f2c14e";
-    ctx.strokeRect(x, y, boxW, boxH);
+    drawWindow(ctx, x, y, boxW, boxH);
     ctx.font = "11px monospace";
     PAUSE_ITEMS.forEach((item, i) => {
       ctx.fillStyle = i === state.cursor ? "#f2c14e" : "#f0f0f0";
@@ -49,10 +47,7 @@ export function renderPauseMenu(
     }
     return;
   }
-  ctx.fillStyle = "rgba(16, 16, 40, 0.96)";
-  ctx.fillRect(4, 4, screenWidth - 8, screenHeight - 8);
-  ctx.strokeStyle = "#f2c14e";
-  ctx.strokeRect(4, 4, screenWidth - 8, screenHeight - 8);
+  drawWindow(ctx, 4, 4, screenWidth - 8, screenHeight - 8);
   ctx.font = "10px monospace";
   ctx.fillStyle = "#f2c14e";
   ctx.fillText("つよさ（決定またはXでもどる）", 12, 10);

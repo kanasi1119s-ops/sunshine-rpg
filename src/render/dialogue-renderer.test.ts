@@ -15,6 +15,9 @@ class FakeContext {
     this.rectCalls.push({ x, y, w, h });
   }
   strokeRect(): void {}
+  createLinearGradient(): { addColorStop: () => void } {
+    return { addColorStop: () => undefined };
+  }
   fillText(text: string, x: number): void {
     this.texts.push(text);
     this.textPositions.push(x);

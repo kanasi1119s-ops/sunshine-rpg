@@ -1,6 +1,7 @@
 import { describeBonus } from "../game/economy/shop";
 import type { ShopMenuState } from "../game/economy/shop-menu";
 import type { EquipmentSlots } from "../game/items/equipment";
+import { drawWindow } from "./ui-frame";
 
 /** お店の画面。所持金・品物（値段と効果）・買ったかどうか。 */
 export function renderShop(
@@ -16,10 +17,7 @@ export function renderShop(
   }
   ctx.textBaseline = "top";
   ctx.textAlign = "left";
-  ctx.fillStyle = "rgba(16, 20, 40, 0.96)";
-  ctx.fillRect(6, 6, screenWidth - 12, screenHeight - 12);
-  ctx.strokeStyle = "#f2c14e";
-  ctx.strokeRect(6, 6, screenWidth - 12, screenHeight - 12);
+  drawWindow(ctx, 6, 6, screenWidth - 12, screenHeight - 12);
   ctx.font = "10px monospace";
   ctx.fillStyle = "#f2c14e";
   ctx.fillText("武具屋（決定で買う／Xで出る）", 14, 12);

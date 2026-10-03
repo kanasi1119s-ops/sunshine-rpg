@@ -1,6 +1,7 @@
 import type { DialogueRenderState } from "../game/dialogue/dialogue-controller";
 import { wrapText } from "./text-wrap";
 import { PORTRAIT_PIXEL_WIDTH, renderPortraitByName } from "./portrait-renderer";
+import { drawWindow } from "./ui-frame";
 
 const LINE_HEIGHT = 12;
 const PADDING = 6;
@@ -17,10 +18,7 @@ export function renderDialogue(
   const boxY = screenHeight - boxHeight - 8;
   const boxWidth = screenWidth - 16;
 
-  ctx.fillStyle = "rgba(10, 10, 24, 0.92)";
-  ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-  ctx.strokeStyle = "#f0f0f0";
-  ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+  drawWindow(ctx, boxX, boxY, boxWidth, boxHeight);
 
   ctx.font = "10px monospace";
   ctx.textBaseline = "top";
@@ -28,6 +26,10 @@ export function renderDialogue(
 
   if (state.kind === "message") {
     const hasPortrait = state.speaker !== undefined && renderPortraitByName(ctx, state.speaker, boxX + PADDING, boxY + PADDING);
+    if (hasPortrait) {
+      ctx.strokeStyle = "#c89a48";
+      ctx.strokeRect(boxX + PADDING - 0.5, boxY + PADDING - 0.5, PORTRAIT_PIXEL_WIDTH + 1, 14 * 3 + 1);
+    }
     const textIndent = hasPortrait ? PORTRAIT_PIXEL_WIDTH + PORTRAIT_GAP : 0;
     const textX = boxX + PADDING + textIndent;
 

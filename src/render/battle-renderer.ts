@@ -5,6 +5,7 @@ import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
 import { hueOfHex, mobPalette } from "../game/art/mob-palette";
 import { getBackdropCanvas, type Biome } from "./battle-backdrop";
+import { drawWindow } from "./ui-frame";
 
 let currentBiome: Biome = "grass";
 /** これから始まる戦闘の背景（場所）を決める。 */
@@ -193,10 +194,7 @@ function renderBattleBody(
   });
 
   const boxY = screenHeight - 56;
-  ctx.fillStyle = "rgba(10, 10, 24, 0.92)";
-  ctx.fillRect(0, boxY, screenWidth, 56);
-  ctx.strokeStyle = "#f0f0f0";
-  ctx.strokeRect(0, boxY, screenWidth, 56);
+  drawWindow(ctx, 2, boxY, screenWidth - 4, 54);
   ctx.fillStyle = "#f0f0f0";
 
   if (uiState.kind === "command") {
