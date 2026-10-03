@@ -286,7 +286,7 @@ export async function renderMix(kit, score, { edition = "real", outWav, soundfon
     active.forEach((g, i) => {
       inputs.push("-i", path.join(work, `${g}.wav`));
       const m = plan[g];
-      const chain = mix.dryChain(m);
+      const chain = mix.dryChain(m, g);
       flt.push(`[${i}:a]volume=${groups[g].gain.toFixed(2)}dB,${chain}[d_${g}]`);
       const outs2 = [`d1_${g}`];
       if (m.reverb > 0) outs2.push(`r_${g}`);

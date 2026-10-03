@@ -76,6 +76,11 @@ export interface GroupMix {
   amp?: AmpFx | null;
   /** 2回弾いて左右に置いたように聞かせる（片方を少し遅らせ、音色を少し変える）。 */
   double?: boolean;
+  /**
+   * 2つに分けて重ねる（ベースの定番）: きれいなまま低い音だけ（splitHz 以下）＋ 歪ませた中音（splitHz 以上）。
+   * 歪ませる量（driveDb）、歪ませた音の高域の上限（lp）、重ねる大きさ（mixDb）。
+   */
+  parallel?: { splitHz: number; driveDb: number; lp: number; mixDb: number } | null;
 }
 
 /**
@@ -100,14 +105,16 @@ export interface AmpFx {
   presenceDb: number;
   /** 箱の高域の落ち始め（Hz）。 */
   cabHz: number;
+  /** 弾いていない間の雑音を消す（激しく歪ませるときだけ）。 */
+  gate?: boolean;
 }
 
 /** 曲調ごとのアンプ（リズムギター）。 */
 const AMP_BY_STYLE: Record<string, AmpFx> = {
-  metal:      { tightHz: 130, pushHz: 800, pushDb: 6, driveDb: 20, stages: 2, bassDb: 3, midHz: 650, midDb: -5, presenceDb: 3, cabHz: 5200 },
-  deathmetal: { tightHz: 140, pushHz: 850, pushDb: 7, driveDb: 23, stages: 2, bassDb: 3, midHz: 600, midDb: -6, presenceDb: 3, cabHz: 5000 },
-  hardcore:   { tightHz: 130, pushHz: 900, pushDb: 6, driveDb: 20, stages: 2, bassDb: 2, midHz: 700, midDb: -4, presenceDb: 3, cabHz: 5200 },
-  progmetal:  { tightHz: 125, pushHz: 800, pushDb: 5, driveDb: 18, stages: 2, bassDb: 2, midHz: 700, midDb: -3, presenceDb: 2, cabHz: 5500 },
+  metal:      { tightHz: 130, pushHz: 800, pushDb: 6, driveDb: 20, stages: 2, bassDb: 3, midHz: 650, midDb: -5, presenceDb: 3, cabHz: 5200, gate: true },
+  deathmetal: { tightHz: 140, pushHz: 850, pushDb: 7, driveDb: 23, stages: 2, bassDb: 3, midHz: 600, midDb: -6, presenceDb: 3, cabHz: 5000, gate: true },
+  hardcore:   { tightHz: 130, pushHz: 900, pushDb: 6, driveDb: 20, stages: 2, bassDb: 2, midHz: 700, midDb: -4, presenceDb: 3, cabHz: 5200, gate: true },
+  progmetal:  { tightHz: 125, pushHz: 800, pushDb: 5, driveDb: 18, stages: 2, bassDb: 2, midHz: 700, midDb: -3, presenceDb: 2, cabHz: 5500, gate: true },
   rock:       { tightHz: 100, pushHz: 1000, pushDb: 4, driveDb: 15, stages: 2, bassDb: 1, midHz: 1000, midDb: 2, presenceDb: 2, cabHz: 5800 },
   dancerock:  { tightHz: 110, pushHz: 1200, pushDb: 3, driveDb: 10, stages: 1, bassDb: -1, midHz: 1200, midDb: 2, presenceDb: 2, cabHz: 6500 },
   jpop:       { tightHz: 110, pushHz: 1100, pushDb: 3, driveDb: 11, stages: 1, bassDb: 0, midHz: 1100, midDb: 2, presenceDb: 2, cabHz: 6200 },
@@ -116,13 +123,15 @@ const AMP_BY_STYLE: Record<string, AmpFx> = {
 const AMP_LEAD: AmpFx = { tightHz: 150, pushHz: 900, pushDb: 7, driveDb: 19, stages: 2, bassDb: -1, midHz: 1100, midDb: 3, presenceDb: 2, cabHz: 5600 };
 
 const f2a = (n: number): string => (Math.round(n * 100) / 100).toString();
-/** アンプとキャビネットの FFmpeg フィルター。 */
-export function ampChain(a: AmpFx): string {
+/** アンプとキャビネットの FFmpeg フィルター。id はフィルターの中の名前（パートごとに別にする）。 */
+export function ampChain(a: AmpFx, id = "g"): string {
   const f: string[] = [];
   f.push(`highpass=f=${f2a(a.tightHz)}:p=2`);
   f.push(`equalizer=f=${f2a(a.pushHz)}:t=o:w=1.2:g=${f2a(a.pushDb)}`);
   const per = a.driveDb / a.stages;
   for (let i = 0; i < a.stages; i++) f.push(`volume=${f2a(per)}dB`, "asoftclip=type=tanh:oversample=4");
+  // 弾いていない間の、歪みで持ち上がった雑音を消す（刻みの切れをよくする）
+  if (a.gate) f.push("agate=threshold=0.012:ratio=4:attack=0.5:release=70:range=0.05");
   f.push(`volume=${f2a(-11)}dB`); // 歪ませると音が詰まって大きく聞こえるので、ほかのパートとの釣り合いに戻す
   f.push(`equalizer=f=110:t=o:w=1:g=${f2a(a.bassDb)}`);
   f.push(`equalizer=f=${f2a(a.midHz)}:t=o:w=1.4:g=${f2a(a.midDb)}`);
@@ -131,6 +140,10 @@ export function ampChain(a: AmpFx): string {
   f.push("highpass=f=75:p=2", "equalizer=f=110:t=q:w=1.4:g=2.5", "equalizer=f=400:t=q:w=1.2:g=-3");
   // 高域は落としすぎるとこもる。5〜6kHz の少し上から2段で落とし、ざらつきの出る 7kHz 付近は軽く下げるだけ
   f.push(`lowpass=f=${f2a(a.cabHz * 1.2)}:p=2`, `lowpass=f=${f2a(a.cabHz * 1.6)}:p=2`, "equalizer=f=7200:t=q:w=2:g=-3");
+  // スピーカーのコーンの細かいクセ（山と谷）。平らなフィルターだけだと、電子的に聞こえるため
+  f.push("equalizer=f=1600:t=q:w=2:g=1.5", "equalizer=f=2800:t=q:w=2:g=2", "equalizer=f=3400:t=q:w=3:g=-2", "equalizer=f=4300:t=q:w=2:g=1.5", "equalizer=f=6000:t=q:w=2:g=-3");
+  // マイク2本を混ぜる: スピーカーの中心に向けた明るいマイク（7割）＋ 外側に向けた暗く太いマイク（4割）
+  f.push(`asplit[${id}on][${id}off];[${id}on]equalizer=f=4000:t=o:w=1:g=2,volume=0.7[${id}on2];[${id}off]lowpass=f=3000:p=2,equalizer=f=250:t=o:w=1:g=1.5,volume=0.4[${id}off2];[${id}on2][${id}off2]amix=inputs=2:normalize=0`);
   return f.join(",");
 }
 
@@ -149,13 +162,13 @@ const BASE: Record<Group, GroupMix> = {
   ambience:  { target: -34, hp: 100, lp: 10000, eq: [], comp: null, reverb: 0.3, delay: 0, warmth: 0, width: 1.4 },
   // 本物のドラムの録音（sfz-player.mjs）を使うときは、キック・スネア・タム・シンバル（ハイハット含む）を別々にととのえる。
   // キック: 低い押し出し（60Hz）を足し、こもり（350Hz）を削り、ビーターの当たり（4kHz）を足す。速めに強く圧縮して粒をそろえる
-  drumKick:  { target: -21, hp: 28,  lp: 12000, eq: [{ f: 60, g: 3, q: 1 }, { f: 350, g: -4, q: 1.2 }, { f: 4000, g: 3, q: 1 }], comp: { threshold: -20, ratio: 4, attack: 8, release: 90 }, reverb: 0.02, delay: 0, warmth: 0.1, width: 0 },
+  drumKick:  { target: -24, hp: 28,  lp: 12000, eq: [{ f: 60, g: 3, q: 1 }, { f: 350, g: -4, q: 1.2 }, { f: 4000, g: 3, q: 1 }], comp: { threshold: -20, ratio: 3, attack: 15, release: 120 }, reverb: 0.04, delay: 0, warmth: 0.1, width: 0 },
   // スネア: 胴鳴り（200Hz）を少し、箱っぽさ（500Hz）を削り、響き線の張り（5kHz）を足す。少し部屋の響きを
-  drumSnare: { target: -22, hp: 80,  lp: 16000, eq: [{ f: 200, g: 2, q: 1 }, { f: 500, g: -2.5, q: 1.2 }, { f: 5000, g: 3, q: 0.9 }], comp: { threshold: -22, ratio: 4, attack: 5, release: 100 }, reverb: 0.15, delay: 0, warmth: 0.1, width: 0.6 },
+  drumSnare: { target: -25, hp: 80,  lp: 16000, eq: [{ f: 200, g: 2, q: 1 }, { f: 500, g: -2.5, q: 1.2 }, { f: 5000, g: 3, q: 0.9 }], comp: { threshold: -22, ratio: 2.5, attack: 20, release: 150 }, reverb: 0.18, delay: 0, warmth: 0.1, width: 0.6 },
   // タム: こもり（400Hz）を削り、当たり（4kHz）を少し
-  drumToms:  { target: -25, hp: 60,  lp: 14000, eq: [{ f: 400, g: -3, q: 1 }, { f: 4000, g: 2, q: 1 }], comp: { threshold: -22, ratio: 3, attack: 10, release: 150 }, reverb: 0.12, delay: 0, warmth: 0, width: 1 },
+  drumToms:  { target: -28, hp: 60,  lp: 14000, eq: [{ f: 400, g: -3, q: 1 }, { f: 4000, g: 2, q: 1 }], comp: { threshold: -22, ratio: 2, attack: 25, release: 200 }, reverb: 0.15, delay: 0, warmth: 0, width: 1 },
   // シンバル・ハイハット: 低い音は切り（300Hz）、耳に刺さる 2.5kHz を少し削り、空気感（10kHz）を足す。圧縮はしない（余韻をつぶさない）
-  drumCym:   { target: -27, hp: 300, lp: 18000, eq: [{ f: 2500, g: -2, q: 1 }, { f: 10000, g: 2, q: 0.7 }], comp: null, reverb: 0.08, delay: 0, warmth: 0, width: 1.1 },
+  drumCym:   { target: -30, hp: 300, lp: 18000, eq: [{ f: 2500, g: -2, q: 1 }, { f: 10000, g: 2, q: 0.7 }], comp: null, reverb: 0.1, delay: 0, warmth: 0, width: 1.1 },
 };
 const DRUM_PARTS: readonly Group[] = ["drumKick", "drumSnare", "drumToms", "drumCym"];
 
@@ -202,6 +215,17 @@ export function mixPlan(style: string | undefined, flavors: readonly string[] = 
     plan.gtrRhythm.warmth = Math.min(1, plan.gtrRhythm.warmth + 0.2);
     plan.drums.target += 1;
   }
+  // ベース: 電子音楽以外は、本物のベースの録音を想定して「きれいな低音＋歪ませた中音」の2つに分けて重ね、少し前に出す（小さなスピーカーでも聞こえるように）
+  const ELECTRONIC = ["electro", "phonk", "cleandance", "space", "nature", "mystery", "discord"];
+  const HEAVY = ["metal", "deathmetal", "hardcore", "progmetal", "rock", "dancerock", "epic", "finale"];
+  if (!style || !ELECTRONIC.includes(style)) {
+    const heavy = !!style && HEAVY.includes(style);
+    plan.bass.target += heavy ? 2.5 : 2;
+    plan.bass.warmth = 0;
+    plan.bass.lp = 6000;
+    plan.bass.parallel = heavy ? { splitHz: 250, driveDb: 20, lp: 4500, mixDb: -3 } : { splitHz: 300, driveDb: 8, lp: 5000, mixDb: -9 };
+    plan.bass.eq = [{ f: 80, g: 2, q: 1 }, { f: 300, g: -3, q: 1 }, { f: 900, g: heavy ? 3 : 2.5, q: 1 }, { f: 2200, g: heavy ? 2 : 1.5, q: 1 }];
+  }
   // ギター: クリーンで鳴らした音に、曲調に合うアンプとキャビネットをかける。リズムギターは左右に2本あるように
   const amp = (style && AMP_BY_STYLE[style]) || AMP_BY_STYLE.rock;
   // 歪ませすぎると音がつぶれてにごるので、増幅は控えめ（2026-10-03 に耳で確かめて、メタル 30→20dB など約3分の2に）
@@ -224,9 +248,13 @@ const f2 = (n: number): string => (Math.round(n * 100) / 100).toString();
 const dbToLin = (db: number): number => Math.pow(10, db / 20);
 
 /** 1パートぶんの FFmpeg フィルター（音をととのえる部分）。入力と出力のラベルは呼び出し側がつける。 */
-export function dryChain(m: GroupMix): string {
+export function dryChain(m: GroupMix, id = "g"): string {
   const f: string[] = [];
-  if (m.amp) f.push(ampChain(m.amp));
+  if (m.amp) f.push(ampChain(m.amp, id));
+  if (m.parallel) {
+    const p = m.parallel;
+    f.push(`asplit[${id}pc][${id}pd];[${id}pc]lowpass=f=${f2(p.splitHz)}:p=2[${id}pc2];[${id}pd]highpass=f=${f2(p.splitHz)}:p=2,volume=${f2(p.driveDb)}dB,asoftclip=type=tanh:oversample=4,volume=${f2(-p.driveDb * 0.8)}dB,lowpass=f=${f2(p.lp)},volume=${f2(p.mixDb)}dB[${id}pd2];[${id}pc2][${id}pd2]amix=inputs=2:normalize=0`);
+  }
   if (m.double) {
     // 2回弾いたように: いったん真ん中にまとめ、右だけ 14ms 遅らせ、左右で音色を少し変える
     f.push("pan=stereo|c0=0.5*c0+0.5*c1|c1=0.5*c0+0.5*c1", "adelay=delays=0|14", "anequalizer=c0 f=2400 w=900 g=1.5 t=0|c1 f=1600 w=700 g=1.5 t=0");

@@ -98,6 +98,12 @@ export function loadSfz(file, { replace = {}, cc: ccOverride = {} } = {}) {
     if (lokey === undefined || hikey === undefined) continue;
     const curve = {};
     const conds = [];
+    // マイクの音量つまみ（amplitude_onccN・amplitude_ccN）: CC の値（0〜127）に合わせて音量を変える
+    let ampCc = 1;
+    for (const [k, v] of Object.entries(r)) {
+      const ac = k.match(/^amplitude_(?:on)?cc(\d+)$/);
+      if (ac) ampCc *= ((cc[Number(ac[1])] ?? ccOverride[Number(ac[1])] ?? 0) / 127) * (Number(v) / 100);
+    }
     for (const [k, v] of Object.entries(r)) {
       if (k.startsWith("amp_velcurve_")) curve[Number(k.slice(13))] = Number(v);
       const lc = k.match(/^locc(\d+)$/), hc = k.match(/^hicc(\d+)$/);
@@ -115,7 +121,7 @@ export function loadSfz(file, { replace = {}, cc: ccOverride = {} } = {}) {
       lorand: num(r.lorand, 0), hirand: num(r.hirand, 1),
       trigger: r.trigger === "release" || r.trigger === "release_key" ? "release" : "attack",
       group: num(r.group, 0), offBy: num(r.off_by, 0),
-      volume: num(r.volume, 0), amplitude: num(r.amplitude, 100),
+      volume: num(r.volume, 0), amplitude: num(r.amplitude, 100) * ampCc,
       pan: num(r.pan, 0), tune: num(r.tune, 0), transpose: num(r.transpose, 0),
       veltrack: num(r.amp_veltrack, 100), curve,
       attack: num(r.ampeg_attack, 0), hold: num(r.ampeg_hold, 0), decay: num(r.ampeg_decay, 0),

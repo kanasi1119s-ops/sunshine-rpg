@@ -26,7 +26,8 @@ function drumKitFor(style, lib) {
       name: "Virtuosity Drums",
       file: path.join(lib, "virtuosity_drums", "virtuosity_drums-master", "Programs", "02-full-kit.sfz"),
       // 割り当て表を「42=閉じたハイハット・46=開いたハイハット」の版に差しかえる（もとの表は 42 だけで、CC4 で開き具合を変える）
-      opts: { replace: { "keymaps/keymap.sfz": "keymaps/default/keymap.sfz" } },
+      // 部屋の響きのマイクも入れる（伸びと空間）。ミッド 50/127、ルーム 64/127（初期値はどちらも 0＝切ってある）
+      opts: { replace: { "keymaps/keymap.sfz": "keymaps/default/keymap.sfz" }, cc: { 107: 50, 109: 64 } },
       // タムは2つ（41〜47=低いタム、48・50=高いタム）。サイドスティックは 88。チャイナはないのでクラッシュ
       map: { 35: 36, 37: 88, 41: 41, 43: 41, 45: 48, 47: 48, 48: 48, 50: 48, 52: 49, 55: 49 },
     };
@@ -45,6 +46,26 @@ function bassFor(style, lib) {
   if (SOFT.has(style)) return { name: "Meatbass（ウッドベース）", file: path.join(lib, "karoryfer.meatbass", "karoryfer.meatbass-master", "Programs", "04_pizz.sfz") };
   if (HEAVY.has(style)) return { name: "Growlybass（ピック弾き）", file: path.join(lib, "karoryfer.growlybass", "karoryfer.growlybass-master", "growlybass_dirty.sfz") };
   return { name: "Fashionbass（指弾き）", file: path.join(lib, "karoryfer.fashionbass", "karoryfer.fashionbass-master", "fashionbass.sfz") };
+}
+
+/**
+ * ドラムの強さを、人が叩く幅に広げる（楽譜の書き出しでは、ほとんどの打音が 110〜127 に集まっていて、毎回同じ強い録音が鳴る）。
+ * 目安（調べた生のドラムの打ち込み）: ふつうの打音は 70〜106、拍に重ならない8分のハイハットは弱め、スネアのゴーストは 30〜50。
+ * 叩くたびに少し（±5）変える（同じ種からは同じ値）。
+ */
+function shapeVelocity(gm, v, i) {
+  const x = v / 127;
+  const jitter = (((i * 2654435761) >>> 0) % 11) - 5;
+  let out;
+  if (gm === 36 || gm === 35) out = 78 + x * 34; // キック 78〜112
+  else if (gm === 38 || gm === 40) out = v < 80 ? 30 + x * 30 : 62 + Math.pow(x, 1.3) * 52; // スネア: 弱い音はゴースト 30〜50、ふつう 62〜114
+  else if (gm === 37) out = 55 + x * 40;
+  else if (gm === 42 || gm === 44) out = 45 + Math.pow(x, 1.6) * 52; // 閉じたハイハット 45〜97（拍の頭が強く、裏は弱く）
+  else if (gm === 46) out = 60 + x * 40;
+  else if (gm === 51 || gm === 53 || gm === 59) out = 55 + x * 45; // ライド 55〜100
+  else if (gm === 49 || gm === 57 || gm === 52 || gm === 55) out = 92 + x * 26; // クラッシュ 92〜118
+  else out = 68 + x * 44; // タム 68〜112
+  return Math.max(1, Math.min(127, Math.round(out + jitter)));
 }
 
 /** ドラムの部品ごとのパート（mix-plan.ts の drumKick など）。 */
@@ -102,8 +123,10 @@ export function renderRealRhythm({ midi, instruments, style, total }) {
     const notes = raw.filter((n) => n.key !== 35 && !((n.key === 39 || n.key === 40) && snareAt.has(Math.round(n.start * 500))));
     const byPart = {};
     // 打楽器は叩きっぱなし（余韻は録音のまま）。止めるのはハイハットの開閉など off_by だけ
-    for (const n of notes) (byPart[drumPart(n.key)] ??= []).push({ ...n, key: kit.map[n.key] ?? n.key, end: n.start + 6 });
-    for (const [g, ns] of Object.entries(byPart)) add(g, kitSfz.render(ns, total, { maxSec: g === "drumCym" ? 6 : 3 }));
+    notes.forEach((n, i) => (byPart[drumPart(n.key)] ??= []).push({ ...n, vel: shapeVelocity(n.key, n.vel, i), key: kit.map[n.key] ?? n.key, end: n.start + 12 }));
+    // 余韻の長さの上限: シンバルは長く鳴らしきる（10秒）、タム 4秒、スネア 3.5秒、キック 3秒
+    const maxSec = { drumCym: 10, drumToms: 4, drumSnare: 3.5, drumKick: 3 };
+    for (const [g, ns] of Object.entries(byPart)) add(g, kitSfz.render(ns, total, { maxSec: maxSec[g] ?? 4 }));
     muted.add(9);
     used.push(kit.name);
   }
