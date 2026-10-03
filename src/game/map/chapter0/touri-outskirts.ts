@@ -51,9 +51,24 @@ export function createTouriOutskirtsData(): TileMapData {
     set(WIDTH - 1, y, TREE);
   }
 
-  // 南の入口から、歪みの発生地点まで続く一本道。
-  for (let y = 1; y < HEIGHT - 1; y++) {
+  // 南の入口から、歪みの発生地点まで続く道。まっすぐにせず、途中で東へ1マス寄ってまた戻る。
+  for (let y = 4; y < HEIGHT - 1; y++) {
+    set(y === 5 || y === 6 ? SOUTH_GATE.x + 1 : SOUTH_GATE.x, y, PATH);
+  }
+  for (const y of [4, 7]) {
     set(SOUTH_GATE.x, y, PATH);
+    set(SOUTH_GATE.x + 1, y, PATH);
+  }
+
+  // 森のふちを、四角ではなく角のほうへ木が食い込む形にする（四隅のかたまり）。
+  const CORNER_TREES: Array<[number, number]> = [
+    [1, 1], [2, 1], [3, 1], [1, 2], [2, 2], [1, 3],
+    [14, 1], [15, 1], [16, 1], [15, 2], [16, 2], [16, 3],
+    [1, 12], [2, 12], [1, 11],
+    [16, 12], [15, 12], [16, 11],
+  ];
+  for (const [x, y] of CORNER_TREES) {
+    set(x, y, TREE);
   }
 
   // 歪みの発生地点。周りを岩場で囲み、地面の色を変えて異様さを出す。
