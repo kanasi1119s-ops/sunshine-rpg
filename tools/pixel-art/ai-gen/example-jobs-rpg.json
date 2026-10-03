@@ -1,0 +1,226 @@
+[
+ {
+  "name": "rpg_wolf_0",
+  "seed": 100,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a dire wolf beast with glowing yellow eyes and spiky fur, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_wolf_1",
+  "seed": 200,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a dire wolf beast with glowing yellow eyes and spiky fur, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_lizard_0",
+  "seed": 107,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "an armored lizardman warrior with a curved sword and round shield, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_lizard_1",
+  "seed": 207,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "an armored lizardman warrior with a curved sword and round shield, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_wraith_0",
+  "seed": 114,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a hooded wraith mage with a skull face holding a glowing staff, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_wraith_1",
+  "seed": 214,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a hooded wraith mage with a skull face holding a glowing staff, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_crystal_0",
+  "seed": 121,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a crystal golem made of blue gemstones, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_crystal_1",
+  "seed": 221,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a crystal golem made of blue gemstones, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_plant_0",
+  "seed": 128,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a carnivorous plant monster with a huge toothy flower head and vines, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_plant_1",
+  "seed": 228,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a carnivorous plant monster with a huge toothy flower head and vines, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_harpy_0",
+  "seed": 135,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a harpy with feathered wings and sharp talons, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_harpy_1",
+  "seed": 235,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a harpy with feathered wings and sharp talons, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_scorpion_0",
+  "seed": 142,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a giant desert scorpion with a golden armored shell, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_scorpion_1",
+  "seed": 242,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a giant desert scorpion with a golden armored shell, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_lich_0",
+  "seed": 149,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a lich king boss with a crown, ragged robes and a purple magic orb, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_lich_1",
+  "seed": 249,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a lich king boss with a crown, ragged robes and a purple magic orb, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_salamander_0",
+  "seed": 156,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a fire salamander lizard wreathed in flames, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_salamander_1",
+  "seed": 256,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a fire salamander lizard wreathed in flames, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_kraken_0",
+  "seed": 163,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a sea serpent rising from the waves with fins and fangs, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_kraken_1",
+  "seed": 263,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a sea serpent rising from the waves with fins and fangs, fantasy rpg battle enemy sprite, 16-bit era game art, front view facing the viewer, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, plain white background"
+ },
+ {
+  "name": "rpg_plant2_0",
+  "seed": 300,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a giant carnivorous flower monster with a big toothed mouth, thick green vines and thorny leaves, fantasy rpg battle enemy sprite, 16-bit era game art, single creature, full body, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, isolated on plain white background"
+ },
+ {
+  "name": "rpg_plant2_1",
+  "seed": 400,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a giant carnivorous flower monster with a big toothed mouth, thick green vines and thorny leaves, fantasy rpg battle enemy sprite, 16-bit era game art, single creature, full body, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, isolated on plain white background"
+ },
+ {
+  "name": "rpg_scorpion2_0",
+  "seed": 311,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a giant black desert scorpion monster with raised curled stinger tail and big pincers, side view, fantasy rpg battle enemy sprite, 16-bit era game art, single creature, full body, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, isolated on plain white background"
+ },
+ {
+  "name": "rpg_scorpion2_1",
+  "seed": 411,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a giant black desert scorpion monster with raised curled stinger tail and big pincers, side view, fantasy rpg battle enemy sprite, 16-bit era game art, single creature, full body, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, isolated on plain white background"
+ },
+ {
+  "name": "rpg_kraken2_0",
+  "seed": 322,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a purple tentacled sea monster with one big eye rising from the water, many tentacles, fantasy rpg battle enemy sprite, 16-bit era game art, single creature, full body, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, isolated on plain white background"
+ },
+ {
+  "name": "rpg_kraken2_1",
+  "seed": 422,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a purple tentacled sea monster with one big eye rising from the water, many tentacles, fantasy rpg battle enemy sprite, 16-bit era game art, single creature, full body, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, isolated on plain white background"
+ },
+ {
+  "name": "rpg_knight2_0",
+  "seed": 333,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a cursed undead knight in rusted black armor holding a broken greatsword, red glowing eyes, fantasy rpg battle enemy sprite, 16-bit era game art, single creature, full body, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, isolated on plain white background"
+ },
+ {
+  "name": "rpg_knight2_1",
+  "seed": 433,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a cursed undead knight in rusted black armor holding a broken greatsword, red glowing eyes, fantasy rpg battle enemy sprite, 16-bit era game art, single creature, full body, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, isolated on plain white background"
+ },
+ {
+  "name": "rpg_chimera2_0",
+  "seed": 344,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a three-headed chimera beast with lion body, eagle wings and snake tail, fantasy rpg battle enemy sprite, 16-bit era game art, single creature, full body, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, isolated on plain white background"
+ },
+ {
+  "name": "rpg_chimera2_1",
+  "seed": 444,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "a three-headed chimera beast with lion body, eagle wings and snake tail, fantasy rpg battle enemy sprite, 16-bit era game art, single creature, full body, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, isolated on plain white background"
+ },
+ {
+  "name": "rpg_mage2_0",
+  "seed": 355,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "an old evil sorcerer boss in dark crimson robes casting purple magic, long white beard, fantasy rpg battle enemy sprite, 16-bit era game art, single creature, full body, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, isolated on plain white background"
+ },
+ {
+  "name": "rpg_mage2_1",
+  "seed": 455,
+  "steps": 8,
+  "cfg": 2.0,
+  "prompt": "an old evil sorcerer boss in dark crimson robes casting purple magic, long white beard, fantasy rpg battle enemy sprite, 16-bit era game art, single creature, full body, detailed shading with highlights, dark outline, vibrant colors, in pixelsprite style, isolated on plain white background"
+ }
+]

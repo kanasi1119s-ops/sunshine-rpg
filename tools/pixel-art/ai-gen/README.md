@@ -23,6 +23,7 @@ pip install --break-system-packages torch --index-url https://download.pytorch.o
 pip install --break-system-packages diffusers transformers accelerate safetensors peft
 MODEL=PublicPrompts/All-In-One-Pixel-Model python3 tools/pixel-art/ai-gen/generate.py tools/pixel-art/ai-gen/example-jobs.json
 python3 tools/pixel-art/ai-gen/pixelize.py raw/*.png      # → px/*.png
+python3 tools/pixel-art/ai-gen/pixelize.py --size 64 --colors 16 --rembg raw/*.png   # 戦闘の敵向け（64px・16色・AIで背景を切り抜く）
 ```
 
 ## 使っているモデルとライセンス
@@ -42,3 +43,10 @@ python3 tools/pixel-art/ai-gen/pixelize.py raw/*.png      # → px/*.png
   - 学習に使った絵の出どころが分からないモデルなので、出てきた絵はすべて目で確かめる。
 - **ゲームに入れる前に、人間の確認を受ける。** AIで作った絵であることは、`docs/assets-credits.md` と `manifest`（試作のフォルダの README）に記録する。
 - 記事の筆者と同じく、**色の統一**がいちばんの課題。同じキャラの別のコマは、`pixelize.py` で同じパレットに合わせる（今後、パレットを指定できるように直す）。
+
+## 背景の切り抜き（`--rembg`）
+
+- 下絵に景色や地面が描かれたときは `--rembg` をつける。rembg（MITライセンス）と isnet-general-use モデル（Apache-2.0）で背景を消す。
+- 入れ方: `pip install --break-system-packages rembg onnxruntime`。初回にモデル（約180MB）を GitHub から自動で取得する。
+- **メモリに注意**: 7GBほどの環境では、絵の生成（generate.py）と同時に動かすとメモリ不足で止まる。生成が終わってから仕上げる。
+- 減色は「見える画素」だけで色を選ぶように直した（背景の色でパレットをむだにしない）。外周に1ドットの余白を残す。
