@@ -7,12 +7,21 @@ export const PROP_SIZE = 48;
 export const PROP_FOOTPRINT: Record<MapProp["kind"], { left: number; right: number; up: number }> = {
   tree: { left: 0, right: 0, up: 0 },
   house: { left: 1, right: 1, up: 1 },
+  "house-blue": { left: 1, right: 1, up: 1 },
+  "house-green": { left: 1, right: 1, up: 1 },
+  rock: { left: 0, right: 0, up: 0 },
+  bush: { left: 0, right: 0, up: 0 },
 };
+
+/** 絵の高さ（ピクセル）。岩・茂みは低く、家・木は枠いっぱい。 */
+export const PROP_HEIGHT: Record<MapProp["kind"], number> = { tree: 46, house: 46, "house-blue": 46, "house-green": 46, rock: 18, bush: 16 };
+
+export const isHouse = (kind: MapProp["kind"]): boolean => kind.startsWith("house");
 
 /** 絵の上端が、足元のマスより上へ何マスぶんはみ出すか（NPCや出入り口と重ねないための確認に使う）。 */
 export function propOverhangTiles(kind: MapProp["kind"], tileHeight: number): number {
   const footprintUp = PROP_FOOTPRINT[kind].up;
-  return Math.max(0, Math.ceil((PROP_SIZE - tileHeight * (footprintUp + 1)) / tileHeight));
+  return Math.max(0, Math.ceil((PROP_HEIGHT[kind] - tileHeight * (footprintUp + 1)) / tileHeight));
 }
 
 /**
@@ -24,27 +33,32 @@ export const MAP_PROPS: Record<string, MapProp[]> = {
     { kind: "house", tileX: 16, tileY: 4 },
     { kind: "tree", tileX: 1, tileY: 14 }, { kind: "tree", tileX: 9, tileY: 14 }, { kind: "tree", tileX: 14, tileY: 13 },
     { kind: "tree", tileX: 19, tileY: 12 }, { kind: "tree", tileX: 20, tileY: 5 },
+    { kind: "bush", tileX: 7, tileY: 13 }, { kind: "rock", tileX: 12, tileY: 14 },
   ],
   "mugikano-village": [
-    { kind: "house", tileX: 6, tileY: 4 }, { kind: "house", tileX: 15, tileY: 4 },
+    { kind: "house-green", tileX: 6, tileY: 4 }, { kind: "house", tileX: 15, tileY: 4 },
     { kind: "tree", tileX: 2, tileY: 12 }, { kind: "tree", tileX: 19, tileY: 11 }, { kind: "tree", tileX: 5, tileY: 14 }, { kind: "tree", tileX: 17, tileY: 14 },
+    { kind: "bush", tileX: 3, tileY: 10 }, { kind: "rock", tileX: 20, tileY: 13 },
   ],
   "garasuko-town": [
-    { kind: "house", tileX: 6, tileY: 4 }, { kind: "house", tileX: 15, tileY: 4 },
+    { kind: "house-blue", tileX: 6, tileY: 4 }, { kind: "house", tileX: 15, tileY: 4 },
     { kind: "tree", tileX: 2, tileY: 9 }, { kind: "tree", tileX: 19, tileY: 9 }, { kind: "tree", tileX: 20, tileY: 5 },
+    { kind: "bush", tileX: 3, tileY: 7 }, { kind: "rock", tileX: 18, tileY: 9 },
   ],
   "tetsukusari-town": [
-    { kind: "house", tileX: 5, tileY: 5 }, { kind: "house", tileX: 16, tileY: 5 },
+    { kind: "house-blue", tileX: 5, tileY: 5 }, { kind: "house-green", tileX: 16, tileY: 5 },
     { kind: "tree", tileX: 2, tileY: 14 }, { kind: "tree", tileX: 10, tileY: 14 }, { kind: "tree", tileX: 19, tileY: 14 }, { kind: "tree", tileX: 20, tileY: 13 },
   ],
   "sanone-town": [
+    { kind: "rock", tileX: 4, tileY: 12 }, { kind: "rock", tileX: 19, tileY: 12 },
     { kind: "tree", tileX: 2, tileY: 14 }, { kind: "tree", tileX: 8, tileY: 14 }, { kind: "tree", tileX: 16, tileY: 14 }, { kind: "tree", tileX: 21, tileY: 14 },
   ],
   "kiri-town": [
+    { kind: "bush", tileX: 4, tileY: 11 }, { kind: "bush", tileX: 19, tileY: 11 },
     { kind: "tree", tileX: 2, tileY: 13 }, { kind: "tree", tileX: 21, tileY: 13 }, { kind: "tree", tileX: 22, tileY: 5 },
   ],
   "shimohara-town": [
-    { kind: "house", tileX: 18, tileY: 5 },
+    { kind: "house-blue", tileX: 18, tileY: 5 }, { kind: "rock", tileX: 4, tileY: 12 }, { kind: "rock", tileX: 12, tileY: 14 },
     { kind: "tree", tileX: 2, tileY: 14 }, { kind: "tree", tileX: 21, tileY: 14 }, { kind: "tree", tileX: 22, tileY: 5 },
   ],
 };
@@ -86,7 +100,7 @@ export function applyMapProps(maps: Record<string, TileMapData>): void {
           continue;
         }
         collision[i] = 1;
-        if (prop.kind === "house") {
+        if (isHouse(prop.kind)) {
           ground[i] = grassId;
         }
       }
