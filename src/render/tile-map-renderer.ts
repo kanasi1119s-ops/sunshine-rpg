@@ -1,5 +1,6 @@
 import { getTileId, type TileMap } from "../game/map/tile-map";
 import type { Camera } from "./camera";
+import { renderGroundDecor } from "./ground-decor";
 import { hashCell, shadeColor } from "../game/color-utils";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
@@ -216,4 +217,5 @@ export function renderTileMap(
       }
     }
   }
+  renderGroundDecor(ctx, map, camera);
 }
