@@ -87,7 +87,7 @@ def yuri(ver=1):
                 nx=(dx-1.5)/2.1; ny=(dy-2)/2.6
                 if nx*nx+ny*ny<=1.0: im.fixed(xx,yy,'iris1' if dy<2 else 'iris2' if dy<4 else 'iris3','eye')
         for dy in (21,22,23): im.fixed(int(ex-0.5+(0 if sign>0 else 0)),dy,'pupil','eye')
-        im.fixed(int(ex-1.5),20,'white','eye'); im.fixed(int(ex-1.5),21,'white','eye'); im.fixed(int(ex+0.5),23,'iris4','eye')
+        im.fixed(int(ex-1.5),20,'iris1','eye'); im.fixed(int(ex-1.5),21,'iris1','eye'); im.fixed(int(ex+0.5),23,'iris4','eye')
         # 上まぶた（太い線）とまつげ
         for dx in range(-3,3): im.fixed(int(ex-0.5+dx),18,'lash','eye')
         im.fixed(int(ex-3.5 if sign>0 else ex+2.5),19,'lash','eye')

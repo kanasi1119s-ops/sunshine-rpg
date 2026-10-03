@@ -73,14 +73,62 @@ function hills(ctx: Ctx, w: number, h: number, base: number, amp: number, seed: 
 }
 
 function cloud(ctx: Ctx, cx: number, cy: number, s: number, light: string, shade: string): void {
-  const blobs: Array<[number, number, number]> = [[0, 0, 9], [-9, 3, 7], [9, 3, 7], [16, 5, 5], [-15, 5, 5]];
-  for (const [dx, dy, r] of blobs) {
-    for (let y = -r; y <= r; y++) {
-      for (let x = -r * 1.4; x <= r * 1.4; x++) {
-        const nx = x / (r * 1.4), ny = y / r;
-        if (nx * nx + ny * ny > 1) continue;
-        px(ctx, cx + (dx + x) * s, cy + (dy + y) * s * 0.7, ny > 0.35 || nx > 0.55 ? shade : light, Math.max(1, s), Math.max(1, s * 0.7));
+  // 丸い塊をいくつか重ねた雲。1ドットずつ、欠けなく塗る（上が明るく、下が青み）。底は平らに切る。
+  const blobs: Array<[number, number, number]> = [[0, 0, 9], [-9, 3, 7], [9, 3, 7], [17, 5, 5], [-16, 5, 5], [4, -4, 6]];
+  const rx = 1.35;
+  const covered = (x: number, y: number): number => {
+    let hit = -99;
+    for (const [dx, dy, r] of blobs) {
+      const nx = (x - dx * s) / (r * rx * s), ny = (y - dy * s * 0.7) / (r * s * 0.8);
+      const d = nx * nx + ny * ny;
+      if (d <= 1) hit = Math.max(hit, 1 - d);
+    }
+    return hit;
+  };
+  const x0 = Math.floor(-24 * s * rx), x1 = Math.ceil(24 * s * rx);
+  const y0 = Math.floor(-14 * s), y1 = Math.ceil(10 * s);
+  const bottom = 6 * s * 0.7;
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      if (y > bottom) continue;
+      const c = covered(x, y);
+      if (c < 0) continue;
+      const rim = covered(x + 1, y + 1) < 0 || covered(x, y + 1) < 0;
+      const low = y > bottom - 3 * s * 0.7 || covered(x - 2, y - 2) < 0.02 && x > 0;
+      px(ctx, cx + x, cy + y, rim && y > 0 ? shade : low ? shade : light);
+    }
+  }
+}
+
+/** 遠くの山並み。尾根をギザギザにして、左の面は明るく右の面は暗く、てっぺんに雪、ふもとは霞ませる。 */
+function mountains(ctx: Ctx, w: number, baseY: number, seed: number, scale: number, lit: string, side: string, snow: string, haze: string): void {
+  const peaks: Array<[number, number, number]> = [];
+  for (let x = -10; x < w + 20; x += 52 + hash(seed, x) * 30) {
+    peaks.push([x, (26 + hash(seed + 1, x) * 30) * scale, 40 + hash(seed + 2, x) * 24]);
+  }
+  for (let x = 0; x < w; x++) {
+    let top = baseY;
+    let face = 0;
+    for (const [cx, ht, half] of peaks) {
+      const d = Math.abs(x - cx) / half;
+      if (d >= 1) continue;
+      const jag = (hash(seed, Math.floor(x / 3)) - 0.5) * 3;
+      const y = baseY - ht * (1 - d) + jag;
+      if (y < top) {
+        top = y;
+        face = x < cx ? 0 : 1;
       }
+    }
+    const t = Math.round(top);
+    if (t >= baseY) continue;
+    const snowLine = t + Math.max(3, Math.round((baseY - t) * 0.22));
+    for (let y = t; y < baseY; y++) {
+      const dither = ((x + y) % 2 === 0);
+      let c = face === 0 ? lit : side;
+      if (y < snowLine - (dither ? 0 : 1) && baseY - t > 22) c = face === 0 ? snow : "#c8d6ea";
+      const fog = (y - t) / (baseY - t);
+      if (fog > 0.7 && dither) c = haze;
+      px(ctx, x, y, c);
     }
   }
 }
@@ -102,27 +150,57 @@ function tree(ctx: Ctx, x: number, y: number, s: number, light: string, mid: str
 
 function grassBackdrop(ctx: Ctx, w: number, h: number): void {
   bands(ctx, w, 0, 100, ["#5a9ad8", "#6aaae2", "#7ab8ea", "#92c8f0", "#aedaf4", "#cfe8f6", "#e8f4f8"]);
-  cloud(ctx, 60, 26, 2, "#ffffff", "#d8e6f4");
-  cloud(ctx, 210, 18, 2.4, "#ffffff", "#d0e0f0");
-  cloud(ctx, 150, 48, 1.5, "#f4f8fc", "#d8e6f2");
-  hills(ctx, w, h, 86, 7, 1.3, "#7aa0c4", "#a0c0dc");
-  hills(ctx, w, h, 98, 6, 4.1, "#4e8c58", "#7ac07a", "#3a7048");
-  for (let i = 0; i < 22; i++) {
-    const x = 10 + i * 14.5 + hash(i, 1) * 6;
-    const y = 98 + Math.sin(x * 0.021 + 4.1) * 6 + Math.sin(x * 0.057 + 9.4) * 2.7 + 4;
-    tree(ctx, x, y, 1 + (hash(i, 2) > 0.6 ? 0.3 : 0), "#5aa860", "#3a7e48", "#245a34");
+  cloud(ctx, 60, 26, 2, "#ffffff", "#d0e0f2");
+  cloud(ctx, 210, 18, 2.4, "#ffffff", "#c8daee");
+  cloud(ctx, 150, 52, 1.4, "#f8fbff", "#d4e4f2");
+  cloud(ctx, 340, 46, 1.2, "#f8fbff", "#d4e4f2");
+  mountains(ctx, w, 96, 3, 1.1, "#8aa8cc", "#6a88b0", "#f4f8ff", "#a8c4de");
+  mountains(ctx, w, 100, 9, 0.6, "#7a9cc0", "#5e80a8", "#e8f0fa", "#98b8d4");
+  hills(ctx, w, h, 100, 5, 1.3, "#6a9ab8", "#92bad0");
+  hills(ctx, w, h, 104, 6, 4.1, "#4e8c58", "#7ac07a", "#3a7048");
+  // 森：大小の木を2列、後ろの列は色を淡く（空気遠近）
+  for (let i = 0; i < 30; i++) {
+    const x = 4 + i * 10.5 + hash(i, 1) * 5;
+    const y = 104 + Math.sin(x * 0.021 + 4.1) * 6 + Math.sin(x * 0.057 + 9.4) * 2.7;
+    tree(ctx, x, y, 0.8 + hash(i, 2) * 0.35, "#6ab070", "#4a8a58", "#2e6842");
   }
-  bands(ctx, w, 108, h, ["#4a9a48", "#42903f", "#3a8638", "#337c32", "#2c722c", "#266826"]);
-  for (let i = 0; i < 260; i++) {
-    const x = hash(i, 5) * w, y = 112 + hash(i, 6) * (h - 112);
-    const big = (y - 108) / (h - 108);
+  for (let i = 0; i < 20; i++) {
+    const x = 8 + i * 15.5 + hash(i, 11) * 6;
+    const y = 110 + Math.sin(x * 0.021 + 4.1) * 6 + Math.sin(x * 0.057 + 9.4) * 2.7 + 4;
+    tree(ctx, x, y, 1.1 + (hash(i, 12) > 0.5 ? 0.35 : 0), "#5aa860", "#3a7e48", "#245a34");
+  }
+  bands(ctx, w, 116, h, ["#4a9a48", "#42903f", "#3a8638", "#337c32", "#2c722c", "#266826"]);
+  // 草原をうねって奥へのびる小道（手前ほど幅広）
+  for (let y = 118; y < h; y++) {
+    const t = (y - 118) / (h - 118);
+    const cx = 96 + Math.sin(y * 0.05) * (10 + 26 * t) + t * 24;
+    const hw = 3 + t * 22;
+    for (let x = Math.floor(cx - hw); x <= cx + hw; x++) {
+      const edge = x < cx - hw + 1 || x > cx + hw - 1;
+      px(ctx, x, y, edge ? "#8a6a3e" : hash(x, y) < 0.12 ? "#d8bc84" : hash(x, y + 9) < 0.1 ? "#a88852" : "#c4a468");
+    }
+  }
+  for (let i = 0; i < 300; i++) {
+    const x = hash(i, 5) * w, y = 120 + hash(i, 6) * (h - 120);
+    const big = (y - 116) / (h - 116);
     px(ctx, x, y, "#7ac85a"); px(ctx, x - 1, y - 1 - big * 1.5, "#7ac85a"); px(ctx, x + 1, y - 1 - big * 1.5, "#7ac85a");
     px(ctx, x, y + 1, "#1e5a20");
   }
-  for (let i = 0; i < 30; i++) {
-    const x = hash(i, 7) * w, y = 118 + hash(i, 8) * (h - 124);
+  for (let i = 0; i < 40; i++) {
+    const x = hash(i, 7) * w, y = 122 + hash(i, 8) * (h - 128);
     const c = ["#ffffff", "#ffe060", "#ff8aa8"][i % 3];
     px(ctx, x, y, c); px(ctx, x + 1, y, c); px(ctx, x, y - 1, c); px(ctx, x, y + 1, "#2a7a2a");
+  }
+  // 手前の岩と茂み（大きく、濃く）
+  for (const [bx, by, bs] of [[16, h - 8, 1.7], [372, h - 10, 1.9]] as Array<[number, number, number]>) {
+    for (let yy = -9; yy <= 3; yy++) {
+      for (let xx = -13; xx <= 13; xx++) {
+        const n = (xx * xx) / 169 + (yy * yy) / 70;
+        if (n > 1) continue;
+        const lum = -xx * 0.04 - yy * 0.08;
+        px(ctx, bx + xx * bs * 0.7, by + yy * bs * 0.8, lum > 0.45 ? "#4a9a50" : lum > 0 ? "#2e7a3c" : "#1c5a2c", Math.ceil(bs * 0.7), Math.ceil(bs * 0.8));
+      }
+    }
   }
 }
 
@@ -154,8 +232,12 @@ function caveBackdrop(ctx: Ctx, w: number, h: number): void {
         for (let xx = -hw; xx <= hw; xx++) px(ctx, cx + ox + xx, cy - y, xx < -hw * 0.2 ? "#b8f0ff" : xx < hw * 0.4 ? "#58c0e8" : "#2a78b0");
       }
     }
-    ctx.fillStyle = "rgba(120,220,255,0.10)";
-    ctx.fillRect(cx - 22 * s, cy - 18 * s, 44 * s, 22 * s);
+    // 水晶のまわりのやわらかい光（四角ではなく丸く広がる）
+    const glow = ctx.createRadialGradient(cx, cy - 8 * s, 2, cx, cy - 8 * s, 30 * s);
+    glow.addColorStop(0, "rgba(120,220,255,0.22)");
+    glow.addColorStop(1, "rgba(120,220,255,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(cx - 32 * s, cy - 40 * s, 64 * s, 64 * s);
   }
   // 床
   bands(ctx, w, 136, h, ["#2c2240", "#261e38", "#20182e", "#1a1426"]);
@@ -170,10 +252,19 @@ function desertBackdrop(ctx: Ctx, w: number, h: number): void {
   bands(ctx, w, 0, 96, ["#e87a4a", "#ee8e52", "#f4a05a", "#f8b468", "#fcc878", "#ffdc90", "#ffeaa8"]);
   for (let y = -12; y <= 12; y++) for (let x = -12; x <= 12; x++) if (x * x + y * y <= 144) px(ctx, 230 + x, 40 + y, x * x + y * y < 90 ? "#fff4c8" : "#ffe0a0");
   hills(ctx, w, h, 88, 4, 2.2, "#c8785a", "#e09a74");
-  // 遠くの岩山（メサ）
-  for (const [x, wd, ht] of [[40, 38, 22], [150, 52, 16], [270, 30, 26]] as Array<[number, number, number]>) {
-    for (let yy = 0; yy < ht; yy++) for (let xx = 0; xx < wd; xx++) px(ctx, x + xx, 90 - yy, xx < wd * 0.3 ? "#b86a52" : xx < wd * 0.75 ? "#9a5642" : "#7a4234");
-    for (let xx = 0; xx < wd; xx++) px(ctx, x + xx, 90 - ht, "#d08a68");
+  // 遠くの岩山（メサ）: 横の地層のしま、てっぺんは段々に崩れ、右の面は影
+  for (const [x, wd, ht] of [[24, 44, 24], [118, 30, 14], [170, 58, 18], [262, 34, 28], [330, 40, 16]] as Array<[number, number, number]>) {
+    for (let xx = 0; xx < wd; xx++) {
+      const step = Math.floor(hash(x, Math.floor(xx / 5)) * 4);
+      const top = ht - (xx < 3 || xx > wd - 4 ? 3 : 0) - step;
+      for (let yy = 0; yy < top; yy++) {
+        const strata = Math.floor((yy + x) / 4) % 3;
+        const shadow = xx > wd * 0.72;
+        const base = shadow ? ["#7a4234", "#6e3a2e", "#84483a"] : ["#b86a52", "#a85e48", "#c47458"];
+        px(ctx, x + xx, 90 - yy, base[strata]);
+      }
+      px(ctx, x + xx, 90 - top, "#d89070");
+    }
   }
   hills(ctx, w, h, 100, 9, 5.7, "#e8b46a", "#f8d896", "#c8944e");
   hills(ctx, w, h, 122, 7, 1.1, "#dca458", "#f2cc86", "#b88440");
@@ -182,13 +273,35 @@ function desertBackdrop(ctx: Ctx, w: number, h: number): void {
     const x = hash(i, 5) * w, y = 124 + hash(i, 6) * (h - 124);
     px(ctx, x, y, "#f4d48a", 3, 1); px(ctx, x + 1, y + 1, "#a87438", 3, 1);
   }
+  // 手前のサボテン（左が明るく、右が暗い。腕つき）
+  for (const [cx, cy, sc] of [[372, 160, 0.9], [14, 150, 0.6]] as Array<[number, number, number]>) {
+    const bodyH = Math.round(30 * sc), bw = Math.max(2, Math.round(3.4 * sc));
+    for (let yy = 0; yy < bodyH; yy++) {
+      for (let xx = -bw; xx <= bw; xx++) {
+        px(ctx, cx + xx, cy - yy, xx < -bw * 0.3 ? "#5aa05a" : xx < bw * 0.5 ? "#3e8040" : "#2a5e30");
+      }
+      px(ctx, cx - bw - 1, cy - yy, "#1e4426");
+      px(ctx, cx + bw + 1, cy - yy, "#1e4426");
+    }
+    for (const dir of [-1, 1]) {
+      const ay = cy - Math.round(bodyH * (dir < 0 ? 0.45 : 0.62));
+      for (let k = 0; k < Math.round(8 * sc); k++) {
+        px(ctx, cx + dir * (bw + 1 + k), ay, "#3e8040", 1, Math.round(4 * sc));
+      }
+      for (let k = 0; k < Math.round(10 * sc); k++) {
+        px(ctx, cx + dir * (bw + 1 + Math.round(8 * sc)), ay - k, "#3e8040", Math.round(4 * sc), 1);
+      }
+    }
+    px(ctx, cx - bw, cy + 1, "rgba(60,30,10,0.35)", bw * 4, 3);
+  }
 }
 
 function snowBackdrop(ctx: Ctx, w: number, h: number): void {
   bands(ctx, w, 0, 100, ["#a8b8d8", "#b8c8e4", "#c8d6ec", "#d8e2f2", "#e6edf8", "#f2f6fc"]);
   cloud(ctx, 80, 30, 2.2, "#f8fbff", "#d0dcf0");
   cloud(ctx, 240, 22, 1.8, "#f8fbff", "#d0dcf0");
-  hills(ctx, w, h, 80, 10, 0.6, "#8aa0c8", "#b8c8e4", "#7088b0");
+  mountains(ctx, w, 92, 5, 1.2, "#9ab0d4", "#7890b8", "#ffffff", "#c0d0e8");
+  hills(ctx, w, h, 92, 6, 0.6, "#8aa0c8", "#b8c8e4", "#7088b0");
   hills(ctx, w, h, 100, 6, 3.3, "#dce8f6", "#ffffff", "#b8c8e0");
   for (let i = 0; i < 18; i++) {
     const x = 12 + i * 18 + hash(i, 1) * 8, y = 112 + hash(i, 2) * 10, s = 1 + hash(i, 3) * 0.6;

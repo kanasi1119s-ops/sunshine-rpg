@@ -93,7 +93,7 @@ def yuri(ver=2):
                 xx=int(ex-2+dx); yy=int(25+dy); nx=(dx-1.5)/2.1; ny=(dy-2)/2.6
                 if nx*nx+ny*ny<=1.0: im.fixed(xx,yy,'iris1' if dy<2 else 'iris2' if dy<4 else 'iris3','eye')
         for dy in (26,27,28): im.fixed(int(ex-0.5),dy,'pupil','eye')
-        im.fixed(int(ex-1.5),25,'white','eye'); im.fixed(int(ex-1.5),26,'white','eye'); im.fixed(int(ex+0.5),28,'iris4','eye')
+        im.fixed(int(ex-1.5),25,'iris1','eye'); im.fixed(int(ex-1.5),26,'iris1','eye'); im.fixed(int(ex+0.5),28,'iris4','eye')
         for dx in range(-3,3): im.fixed(int(ex-0.5+dx),23,'lash','eye')
         im.fixed(int(ex-3.5 if sign>0 else ex+2.5),24,'lash','eye')
     for k in range(5): im.fixed(24+k,21-(1 if k>=3 else 0),'brow','brow'); im.fixed(36+k,21-(1 if k<=1 else 0),'brow','brow')

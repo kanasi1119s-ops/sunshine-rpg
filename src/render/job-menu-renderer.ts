@@ -2,6 +2,7 @@ import { JOBS_BY_ID } from "../game/job/jobs";
 import { starsOf } from "../game/job/mastery";
 import type { JobMenuState } from "../game/job/job-menu";
 import type { JobId, JobState } from "../game/job/types";
+import { drawWindow } from "./ui-frame";
 
 /** 一度に見せるジョブの行数（多いときは、カーソルのまわりを見せる）。 */
 const MAX_VISIBLE_JOBS = 12;
@@ -31,10 +32,7 @@ export function renderJobMenu(
   const boxH = (rows + 3) * LINE + PAD * 2;
   const x = (screenWidth - boxW) / 2;
   const y = Math.max(4, (screenHeight - boxH) / 2);
-  ctx.fillStyle = "rgba(20, 16, 6, 0.95)";
-  ctx.fillRect(x, y, boxW, boxH);
-  ctx.strokeStyle = "#f2c14e";
-  ctx.strokeRect(x, y, boxW, boxH);
+  drawWindow(ctx, x, y, boxW, boxH);
   ctx.font = "10px monospace";
   ctx.textBaseline = "top";
 
