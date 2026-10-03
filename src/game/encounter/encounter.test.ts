@@ -86,7 +86,7 @@ describe("ランダムエンカウント", () => {
   });
 
   it("各地の敵は、その場所の想定レベルのパーティが、1〜3体の一団に高い確率で勝てる強さ（最悪の3体の一団でも90%以上）", () => {
-    for (const [mapId, zone] of Object.entries(ENCOUNTER_ZONES)) {
+    for (const [mapId, zone] of Object.entries({ ...ENCOUNTER_ZONES, ...WORLD_ENCOUNTER_ZONES })) {
       const companions = zone.level <= 5 ? 1 : zone.level <= 7 ? 2 : zone.level <= 9 ? 3 : zone.level <= 15 ? 4 : 5;
       const party = partyAtLevel(zone.level, companions);
       const stats = enemyStatsForLevel(zone.level);
