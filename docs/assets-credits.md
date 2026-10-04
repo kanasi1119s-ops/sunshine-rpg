@@ -57,7 +57,7 @@
 | `/make-art` の見本（フィールド用キャラ5人・登場人物の全身の絵3人） | `assets-src/ai-generated/2026-10-03-make-art-examples/` | 全身の絵: stable-diffusion-v1-5（CreativeML OpenRAIL-M）＋ LCM-LoRA（openrail++）、切り抜きに rembg（MIT）＋ isnet-general-use（Apache-2.0）。フィールド用キャラは手描きの型に色を当てはめたもの（AIはデザイン画の色の参考だけ） | **ゲームには入れていない**（見本）。名前は仮 |
 | 2026-10-04 | 敵の絵（雑魚・ボス、`assets-src/monsters/`。名簿 `tools/pixel-art/ai-gen/monster-roster.json`） | Stable Diffusion 1.5（CreativeML OpenRAIL-M）の下絵 → sfcize.py → 手直し → ドット絵エディタ | 既存作品に似ていないかを1体ずつ目で確認。顔は右向き |
 | 2026-10-04 | 敵の絵・灯里の郊外の雑魚4体（ちいさな歪み・ゆらぎの影・野ねずみの影・草むらの虫。`assets-src/monsters/enc-touri-outskirts-0〜3/`、各フォルダに下絵・指示文・乱数の種の README） | 同上。全身が入るよう置き場所の下書き（`layouts.py`）から img2img、リアルな描き方（QUALITY=real）。切り抜きに rembg（MIT）＋ isnet-general-use（Apache-2.0） | **ゲームに入れた**（`enemy:` の絵）。既存作品に似ていないことを目で確認。人間の確認待ち |
-| 2026-10-04 | 8神のボスの絵（恵みの残照・理不尽の羽音・坩堝の顎・在らざる歌・透き徹る誓い・不敗の咎人・境界を見ぬ者・無音の弔鐘。`assets-src/monsters/god-1〜8/`、各フォルダに下絵・指示文・乱数の種の README） | 同上（ボスは128×128・24色で作り、ゲームでは2倍） | **ゲームに入れた**（`boss:god-1〜8` を置きかえ）。既存作品に似ていないことを目で確認。人間の確認待ち |
+| 2026-10-04 | 8神のボスの絵（恵みの残照・理不尽の羽音・坩堝の顎・在らざる歌・透き徹る誓い・不敗の咎人・境界を見ぬ者・無音の弔鐘。`assets-src/monsters/god-1〜8/`、各フォルダに下絵・指示文・乱数の種の README） | 同上（ボスは256×256・40色で直接作る） | **ゲームに入れた**（`boss:god-1〜8` を置きかえ）。既存作品に似ていないことを目で確認。人間の確認待ち |
 
 ## 素材の置き場
 - 元ファイル: `assets-src/`（規約の写しも一緒に置く）

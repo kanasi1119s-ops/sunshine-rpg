@@ -50,7 +50,7 @@ python3 tools/pixel-art/ai-gen/monster_batch.py pick <ID> <番号> [--mirror]   
 ## 3. ドット絵にする
 
 ```sh
-python3 tools/pixel-art/ai-gen/sfcize.py raw/golem_0.png out/golem 96 20     # ボスは 128 24
+python3 tools/pixel-art/ai-gen/sfcize.py raw/golem_0.png out/golem 96 20     # ボスは 256 40（256×256で直接作る。手直しの点や輪も256の大きさで）
 ```
 出力: `golem.png`（確認用）・`golem.txt`（エディタ用の文字グリッド）・`golem.json`（パレット）。
 （ブラウザで行うなら、ドット絵エディタの「画像から作る（重厚な敵）」が同じ処理。）
@@ -67,6 +67,8 @@ python3 tools/pixel-art/ai-gen/sfcize.py raw/golem_0.png out/golem 96 20     # �
 7. **似ていないかの確認**（SKILL.md の1）。似ていたら捨てる。
 
 ## 5. エディタで描いて確かめる
+
+ボス（256×256）は `--zoom 6 --wide --import` で描く（1体 数十秒）。40色を超えても、エディタは62色まで扱える。ゲームの絵は27色以上だと別の書き方（`~色番号:数,...`）になり、`monster_batch.py export` が自動で選ぶ。
 
 ```sh
 node tools/pixel-practice/editor-draw.mjs out/golem_fix.txt out/golem_fix.json out/golem-editor.png --zoom 6

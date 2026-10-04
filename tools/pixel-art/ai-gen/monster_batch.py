@@ -31,6 +31,9 @@ ROSTER = f"{AI}/monster-roster.json"
 ART = f"{ROOT}/assets-src/monsters"
 WORK = os.environ.get("WORK", "/tmp/monster-work")
 NAMES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+# ボスは 256×256 で直接作る（人間の指示「リアルなドット絵のボス256×256にしてみよう」2026-10-04）。
+# 以前は 128×128・24色で作って2倍に拡大していた。256 では細かさを活かすため40色（ゲームの絵は27色以上も扱える）
+BOSS_SIZE, BOSS_COLORS = 256, 40
 
 # ボス24体（id・名前・どんな相手か）。絵の設定は docs/story/ と各章の敵データに合わせる
 BOSSES = [
@@ -159,7 +162,7 @@ def cmd_pick(i, k, mirror=False, force=False):
         res = json.load(open(chk))
         if not res["ok"]:
             sys.exit(f"{i}_{k}: 全身が入っていません（{res.get('cut')}・かたまり{res.get('parts')}）。ほかの下絵を選ぶか、extend で描き足す（どうしても使うときは --force）")
-    size, ncol = (128, 24) if e["kind"] == "boss" else (96, 20)
+    size, ncol = (BOSS_SIZE, BOSS_COLORS) if e["kind"] == "boss" else (96, 20)
     d = f"{ART}/{i}"; os.makedirs(d, exist_ok=True)
     subprocess.run(["python3", f"{AI}/sfcize.py", f"{WORK}/raw/{i}_{k}.png", f"{d}/{i}", str(size), str(ncol)], check=True, cwd=WORK)
     if mirror:
@@ -176,13 +179,28 @@ def cmd_done(i):
     r = load(); by = {e["id"]: e for e in r}; e = by[i]
     rows = open(f"{ART}/{i}/final.txt").read().split()
     pal = json.load(open(f"{ART}/{i}/final.json"))
-    size = 128 if e["kind"] == "boss" else 96
-    assert len(rows) == size and all(len(x) == size for x in rows), f"{i}: {size}×{size} にする"
-    assert len(pal) <= 26, f"{i}: 26色以内にする"
+    sizes = (BOSS_SIZE, 128) if e["kind"] == "boss" else (96,)
+    assert len(rows) in sizes and all(len(x) == len(rows) for x in rows), f"{i}: {sizes[0]}×{sizes[0]} にする"
+    limit = 62 if e["kind"] == "boss" else 26
+    assert len(pal) <= limit, f"{i}: {limit}色以内にする"
     e["status"] = "done"; save(r); print(i, "done")
 
 
 def encode(rows, symbols):
+    if len(symbols) > 26:
+        # 27色以上: 「色番号:続く数」をカンマでつなぎ、先頭に「~」（export-game-data.mjs と同じ形。透明は -1）
+        toks, prev, n = [], None, 0
+        for row in rows:
+            for ch in row:
+                v = -1 if ch == "." else symbols.index(ch)
+                if v == prev:
+                    n += 1
+                else:
+                    if prev is not None:
+                        toks.append(f"{prev}:{n}")
+                    prev, n = v, 1
+        toks.append(f"{prev}:{n}")
+        return "~" + ",".join(toks)
     s, prev, n = "", None, 0
     for row in rows:
         for ch in row:
@@ -211,7 +229,7 @@ def cmd_export():
             continue
         rows = open(f"{ART}/{e['id']}/final.txt").read().split()
         pal = json.load(open(f"{ART}/{e['id']}/final.json"))
-        if e["kind"] == "boss":                                   # 128 → 256（1ドット＝2×2）
+        if e["kind"] == "boss" and len(rows) == 128:              # 以前の 128 で作ったボスは 256 に拡大（1ドット＝2×2）
             rows = ["".join(ch * 2 for ch in r) for r in rows for _ in range(2)]
         syms = sorted(pal)
         out[e["key"]] = {"size": len(rows), "palette": [pal[s] for s in syms], "rle": encode(rows, syms)}

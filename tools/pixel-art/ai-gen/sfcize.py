@@ -1,7 +1,7 @@
 """絵画風の下絵を、スーファミ後期の敵グラフィックのような手触りのドット絵にする。
 1) AIで背景を切り抜く 2) 少しシャープにして縮小 3) Lab空間のk-meansで減色
 4) 孤立点を消す 5) 外周に「その部分の色を暗くした」縁取り（黒一色にしない）
-6) 左上から光が当たる縁にハイライト 7) 全体を最終の色数に再減色（エディタの上限26色以内）
+6) 左上から光が当たる縁にハイライト 7) 全体を最終の色数に再減色（雑魚は26色以内。256×256のボスは40色ほど。エディタは62色まで）
 出力: PNG と、エディタで描くための文字グリッド(.txt)・パレット(.json)
 使い方: python3 tools/pixel-art/ai-gen/sfcize.py 下絵.png 出力名 [大きさ=96] [色数=20]
 （出力名.png・出力名.txt（エディタ用の文字グリッド）・出力名.json（パレット）ができる。エディタで描くときは tools/pixel-practice/editor-draw.mjs）
@@ -107,7 +107,7 @@ canvas[oy:oy + th, ox:ox + tw, 3] = alpha * 255
 Image.fromarray(canvas, "RGBA").save(out + ".png")
 
 # エディタ用の文字グリッドとパレット
-names = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+names = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"  # 27色以上（256のボスなど）は小文字・数字も使う（エディタは62色まで）
 cols = {}
 rows = []
 for y in range(SIZE):
