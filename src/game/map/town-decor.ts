@@ -1,8 +1,9 @@
 import { hashCell } from "../color-utils";
 import type { Npc } from "../npc";
 import { TOWN_OLD_WIDTH } from "./town-expand";
-import { isHouse, propFootprintTiles } from "./map-props";
+import { isHouse, propFootprintTiles, propOverhangTiles } from "./map-props";
 import type { MapProp, MapPropKind, TileMapData } from "./types";
+import type { EventCommand } from "../event/types";
 
 /**
  * 町・村を「王道のRPGの町」らしくする（2026-10-04、人間の依頼）。
@@ -194,5 +195,61 @@ export function applyTownDecor(maps: Record<string, TileMapData>, npcsByMap: Rec
         made++;
       }
     }
+
+    // 6) 宿屋の主人。すでにいる人（宿屋の主人）にはとまる選択を足し、いない町は、町の広場の近くに1人置く
+    addInnkeeper(mapId, data, npcsByMap, { occupied, isOpen, inMap, nearNpcOrExit });
   }
+}
+
+/** 宿代（灯貨）。町ごと。物語が進む町ほど高い。 */
+const INN_PRICES: Record<string, number> = {
+  "touri-town": 8, "mugikano-village": 12, "garasuko-town": 16, "tetsukusari-town": 20, "sanone-town": 24,
+  "kiri-town": 28, "shimohara-town": 32, "fushima-town": 36, "toushin-town": 40,
+};
+
+function addInnkeeper(
+  mapId: string,
+  data: TileMapData,
+  npcsByMap: Record<string, Npc[]>,
+  g: { occupied: Set<number>; isOpen: (x: number, y: number) => boolean; inMap: (x: number, y: number) => boolean; nearNpcOrExit: (x: number, y: number, rx: number, ryUp: number, ryDown: number) => boolean },
+): void {
+  const price = INN_PRICES[mapId] ?? 20;
+  const list = npcsByMap[mapId] ?? (npcsByMap[mapId] = []);
+  const inn: EventCommand = { type: "inn", price };
+  const existing = list.find((n) => /-innkeeper$/.test(n.id));
+  if (existing) {
+    if (!existing.commands.some((c) => c.type === "inn")) existing.commands = [...existing.commands, inn];
+    return;
+  }
+  const w = data.width, h = data.height;
+  const cx = w / 2, cy = h / 2;
+  // 絵がはみ出す上のマス（奥に隠れてしまう）にも置かない
+  const hidden = new Set<number>();
+  for (const prop of data.props ?? []) {
+    const tiles = propFootprintTiles(prop);
+    if (!tiles.length) continue;
+    const top = Math.min(...tiles.map((t) => t.y)) - propOverhangTiles(prop.kind, data.tileHeight);
+    const pad = prop.kind === "tree" ? 1 : 0;
+    const x0 = Math.min(...tiles.map((t) => t.x)) - pad, x1 = Math.max(...tiles.map((t) => t.x)) + pad;
+    for (let yy = top; yy <= prop.tileY; yy++) for (let xx = x0; xx <= x1; xx++) hidden.add(yy * w + xx);
+  }
+  const cand: Array<[number, number]> = [];
+  for (let y = 2; y < h - 2; y++) {
+    for (let x = 2; x < w - 2; x++) {
+      if (!g.isOpen(x, y) || g.occupied.has(y * w + x)) continue;
+      if (!AROUND.every(([dx, dy]) => g.inMap(x + dx, y + dy) && g.isOpen(x + dx, y + dy) && !g.occupied.has((y + dy) * w + x + dx))) continue;
+      if (g.nearNpcOrExit(x, y, 2, 2, 2) || [[0, 0], ...AROUND].some(([dx, dy]) => hidden.has((y + dy) * w + x + dx))) continue;
+      cand.push([x, y]);
+    }
+  }
+  cand.sort((a, b) => Math.hypot(a[0] - cx, a[1] - cy) - Math.hypot(b[0] - cx, b[1] - cy));
+  const spot = cand[0];
+  if (!spot) return;
+  list.push({
+    id: `${mapId}-innkeeper`,
+    tileX: spot[0],
+    tileY: spot[1],
+    color: "#b08a5a",
+    commands: [{ type: "message", text: "旅の人かい？ うちの宿で、ゆっくり休んでいきなよ。", speaker: "宿屋の主人" }, inn],
+  });
 }

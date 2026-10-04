@@ -20,7 +20,7 @@ import { battleSeFor } from "./game/battle/battle-se";
 import { battleEffectFor, type BattleEffect } from "./game/battle/battle-effect";
 import { createStaffRollState, skipStaffRoll, startStaffRoll, updateStaffRoll } from "./game/title/staff-roll";
 import { renderStaffRoll } from "./render/staff-roll-renderer";
-import { addGold, computeVictoryGold } from "./game/economy/gold";
+import { addGold, computeVictoryGold, spendGold } from "./game/economy/gold";
 import { ALL_ITEMS_BY_ID, describeBonus, purchaseItem, receiveTreasure } from "./game/economy/shop";
 import { closeShopMenu, createShopMenuState, moveShopCursor, openShopMenu, withShopMessage } from "./game/economy/shop-menu";
 import { renderShop, renderShopWear, type ShopWearView } from "./render/shop-renderer";
@@ -63,7 +63,7 @@ import { attachKeyboard } from "./input/keyboard";
 import { attachKeyRemap, loadBindings, rebind, resetBindings, saveBindings, describeBinding, CONTROL_ACTIONS, sendGameKey, type KeyBindings } from "./input/key-bindings";
 import { createGamepadPoller } from "./input/gamepad";
 import { cycleMoveSpeed, DEFAULT_MOVE_SPEED, loadMoveSpeed, MOVE_SPEEDS, saveMoveSpeed } from "./game/move-speed";
-import { SPEED_ROW, closeControlsMenu, confirmControlsMenu, createControlsMenuState, finishCapture, moveControlsCursor, openControlsMenu } from "./game/menu/controls-menu";
+import { DIFFICULTY_ROW, SPEED_ROW, closeControlsMenu, confirmControlsMenu, createControlsMenuState, finishCapture, moveControlsCursor, openControlsMenu } from "./game/menu/controls-menu";
 import { renderControlsMenu } from "./render/controls-menu-renderer";
 import { createTouchControls } from "./input/touch-controls";
 import type { Direction } from "./input/direction";
@@ -75,6 +75,8 @@ import { CHAPTER4_OPENING_COMMANDS } from "./game/world/chapter4-world";
 import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
+import { cycleDifficulty, loadDifficulty, saveDifficulty, isDifficulty, type Difficulty } from "./game/difficulty";
+import { applyVital, growVital, vitalsAfterBattle, type Vitals } from "./game/vitals";
 import { awardVictoryMastery, changeJob, isJobSystemUnlocked, battleSkillsOf, withJobBonus } from "./game/job/party-job";
 import { renderBattle, setBattleBiome, warmBattleBackdrops } from "./render/battle-renderer";
 import { biomeForMap, ALL_BIOMES, type Biome } from "./render/battle-backdrop";
@@ -452,6 +454,15 @@ const dialogue = new DialogueController(flags, {
   },
   onOpenShop: (shopId) => {
     shopMenu = openShopMenu(shopId);
+  },
+  onInnStay: (price) => {
+    const paid = spendGold(gold, price);
+    if (paid === null) return false;
+    gold = paid;
+    vitals = {};           // 宿屋では、HP・MPが全快する
+    if (audioStarted) audio.playSe(seOf("level-up"));
+    autosave();
+    return true;
   },
   onStaffRoll: () => {
     staffRoll = startStaffRoll();
@@ -834,6 +845,15 @@ let pauseMessageTimer = 0;
 /** そうさ設定の画面。 */
 let controlsMenu = createControlsMenuState();
 let moveSpeed = loadMoveSpeed(window.localStorage);
+/** モード（イージー＝戦闘後に全快、ノーマル＝ダメージ持ち越し）。ブラウザに保存し、セーブにも入れる。 */
+let difficulty: Difficulty = loadDifficulty(window.localStorage);
+/** ノーマルで持ち越す、今のHP・MP（入っていない人は全快）。イージーでは使わない。 */
+let vitals: Vitals = {};
+function setDifficulty(next: Difficulty): void {
+  difficulty = next;
+  saveDifficulty(window.localStorage, difficulty);
+  if (difficulty === "easy") vitals = {};
+}
 let lastControlsDirection: Direction | null = null;
 window.addEventListener("keydown", (event) => {
   if ((event.key === "x" || event.key === "Escape") && controlsMenu.open && !controlsMenu.capturing) {
@@ -870,15 +890,16 @@ window.addEventListener("keydown", (event) => {
 function statusRows(): StatusRow[] {
   const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
   const rows: StatusRow[] = [];
-  const add = (name: string, stats: LeveledStats): void => {
+  const add = (name: string, stats: LeveledStats, id: string): void => {
+    const v = difficulty === "normal" ? vitals[id] : undefined;
     rows.push({
-      name, level: stats.level, hp: stats.hp, maxHp: stats.maxHp, mp: stats.mp, maxMp: stats.maxMp,
+      name, level: stats.level, hp: v ? Math.min(stats.maxHp, v.hp) : stats.maxHp, maxHp: stats.maxHp, mp: v ? Math.min(stats.maxMp, v.mp) : stats.maxMp, maxMp: stats.maxMp,
       attack: stats.attack, defense: stats.defense, speed: stats.speed, expToNext: expToNextLevel(stats.exp),
     });
   };
-  add("ユーリ", applyStatBonus(heroStats, equipmentBonus));
+  add("ユーリ", applyStatBonus(heroStats, equipmentBonus), "hero");
   for (const [id, stats] of Object.entries(companionStats)) {
-    add(COMPANIONS[id].name, withEquipment(id, stats));
+    add(COMPANIONS[id].name, withEquipment(id, stats), id);
   }
   return rows;
 }
@@ -1168,7 +1189,8 @@ function buildActiveParty(effectiveHeroStats: LeveledStats): ReturnType<typeof c
   for (const [id, stats] of Object.entries(companionStats)) {
     party.push(createCompanionCombatant(COMPANIONS[id], withJobBonus(withEquipment(id, stats), jobStates[id], unlocked)));
   }
-  return party;
+  // ノーマルでは、前の戦闘で受けたダメージ・使った魔力を持ち越す
+  return difficulty === "normal" ? party.map((c) => applyVital(c, vitals[c.id])) : party;
 }
 
 /** ヒーローのとくぎ＋加入済み仲間のとくぎをまとめた、戦闘用のとくぎ一覧。 */
@@ -1211,6 +1233,8 @@ function buildSaveData(): SaveData {
     inventory,
     gold,
     flags,
+    difficulty,
+    vitals,
     vehicles: {
       mode: vehicle,
       // 船に乗っている間は、船は自分のいる場所にある
@@ -1233,6 +1257,8 @@ function applySaveData(data: SaveData): void {
   setPartyEquipment(sanitizeParty(partyEquipment(), ALL_ITEMS_BY_ID));
   syncEquipmentToInventory();
   gold = data.gold ?? 0;
+  if (isDifficulty(data.difficulty)) setDifficulty(data.difficulty);
+  vitals = difficulty === "normal" ? { ...(data.vitals ?? {}) } : {};
   for (const key of Object.keys(flags)) {
     delete flags[key];
   }
@@ -1265,6 +1291,7 @@ function resetToNewGame(): void {
   jobStates = {};
   inventory = createInventory();
   syncEquipmentToInventory();
+  vitals = {};
   gold = 0;
   for (const key of Object.keys(flags)) {
     delete flags[key];
@@ -1578,6 +1605,10 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
   if (outcome.kind !== "finished") {
     return;
   }
+  // ノーマル: 戦闘が終わったときのHP・MPを持ち越す（全滅のときは全員HP1で立ち上がる）
+  if (difficulty === "normal") {
+    vitals = vitalsAfterBattle(finishedBattle.getState().party, outcome.outcome === "lost");
+  }
   if (outcome.outcome === "lost") {
     audio.playSe(seOf("defeat"));
     return;
@@ -1592,7 +1623,8 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
   heroStats = result.stats;
   const levelUpNames: string[] = [];
   victoryLevelUps = [];
-  const record = (name: string, before: LeveledStats, after: LeveledStats): void => {
+  const record = (name: string, before: LeveledStats, after: LeveledStats, id: string): void => {
+    vitals = growVital(vitals, id, after.maxHp - before.maxHp, after.maxMp - before.maxMp);
     victoryLevelUps.push({
       name,
       from: before.level,
@@ -1608,14 +1640,14 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
   };
   if (result.levelsGained > 0) {
     levelUpNames.push(`ユーリ（Lv${heroStats.level}）`);
-    record("ユーリ", heroBefore, heroStats);
+    record("ユーリ", heroBefore, heroStats, "hero");
   }
   for (const [id, stats] of Object.entries(companionStats)) {
     const companionResult = gainExp(stats, expGained, COMPANIONS[id].growth);
     companionStats[id] = companionResult.stats;
     if (companionResult.levelsGained > 0) {
       levelUpNames.push(`${COMPANIONS[id].name}（Lv${companionResult.stats.level}）`);
-      record(COMPANIONS[id].name, stats, companionResult.stats);
+      record(COMPANIONS[id].name, stats, companionResult.stats, id);
     }
   }
   if (isJobSystemUnlocked(flags)) {
@@ -1824,7 +1856,7 @@ function renderGameSceneBase(): void {
 function renderGameScene(): void {
   renderGameSceneBase();
   if (controlsMenu.open) {
-    renderControlsMenu(ctx, controlsMenu, keyBindings, moveSpeed, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    renderControlsMenu(ctx, controlsMenu, keyBindings, moveSpeed, difficulty, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   }
 }
 
@@ -1886,6 +1918,9 @@ const loop = createGameLoop({
           moveSpeed = cycleMoveSpeed(moveSpeed, direction === "left" ? -1 : 1);
           saveMoveSpeed(window.localStorage, moveSpeed);
           audio.playSe(seOf("cursor"));
+        } else if ((direction === "left" || direction === "right") && controlsMenu.cursor === DIFFICULTY_ROW) {
+          setDifficulty(cycleDifficulty(difficulty, direction === "left" ? -1 : 1));
+          audio.playSe(seOf("cursor"));
         }
         lastControlsDirection = direction;
       }
@@ -1907,6 +1942,8 @@ const loop = createGameLoop({
         } else if (choice?.kind === "speed") {
           moveSpeed = cycleMoveSpeed(moveSpeed, 1);
           saveMoveSpeed(window.localStorage, moveSpeed);
+        } else if (choice?.kind === "difficulty") {
+          setDifficulty(cycleDifficulty(difficulty, 1));
         } else if (choice?.kind === "reset") {
           keyBindings = resetBindings();
           moveSpeed = DEFAULT_MOVE_SPEED;

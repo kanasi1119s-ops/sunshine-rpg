@@ -18,6 +18,8 @@ export type EventCommand =
   | { type: "giveEquipment"; itemId: string }
   /** お店の画面を開く（`src/game/economy/shop.ts` の店ID）。 */
   | { type: "shop"; shopId: string }
+  /** 宿屋: 「とまる／やめる」を選ばせ、とまると灯貨を払ってHP・MPが全快し、朝になる。 */
+  | { type: "inn"; price: number }
   /** スタッフロール（エンディングの演出）を流す。 */
   | { type: "staffRoll" };
 

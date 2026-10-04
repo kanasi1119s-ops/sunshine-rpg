@@ -97,3 +97,26 @@ describe("createEventRunner", () => {
     expect(afterBattleStart.done).toBe(true);
   });
 });
+
+describe("宿屋（inn）", () => {
+  it("とまると灯貨を払って全快し、足りなければ断られる", () => {
+    for (const ok of [true, false]) {
+      let called = 0;
+      const runner = createEventRunner([{ type: "inn", price: 10 }], {}, { onInnStay: () => { called++; return ok; } });
+      const first = runner.next();
+      expect(first.step?.kind).toBe("choice");
+      const second = runner.next({ kind: "choose", index: 0 });
+      expect(called).toBe(1);
+      expect(second.step).toMatchObject({ kind: "message" });
+      expect((second.step as { text: string }).text).toContain(ok ? "全回復" : "足りない");
+    }
+  });
+  it("やめるを選ぶと、何も払わない", () => {
+    let called = 0;
+    const runner = createEventRunner([{ type: "inn", price: 10 }], {}, { onInnStay: () => { called++; return true; } });
+    runner.next();
+    const r = runner.next({ kind: "choose", index: 1 });
+    expect(called).toBe(0);
+    expect((r.step as { text: string }).text).toContain("また");
+  });
+});

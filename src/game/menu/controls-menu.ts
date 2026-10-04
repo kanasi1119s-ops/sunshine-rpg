@@ -12,10 +12,12 @@ export interface ControlsMenuState {
   message: string | null;
 }
 
-/** 動作の行 + 「あるく速さ」 + 「もとにもどす」 + 「とじる」。 */
-export const CONTROLS_ROW_COUNT = CONTROL_ACTIONS.length + 3;
+/** 動作の行 + 「あるく速さ」 + 「モード」 + 「もとにもどす」 + 「とじる」。 */
+export const CONTROLS_ROW_COUNT = CONTROL_ACTIONS.length + 4;
 /** 「あるく速さ」の行の位置。 */
 export const SPEED_ROW = CONTROL_ACTIONS.length;
+/** 「モード（イージー／ノーマル）」の行の位置。 */
+export const DIFFICULTY_ROW = SPEED_ROW + 1;
 
 export function createControlsMenuState(): ControlsMenuState {
   return { open: false, cursor: 0, capturing: false, message: null };
@@ -30,7 +32,7 @@ export function moveControlsCursor(state: ControlsMenuState, delta: number): Con
   return { ...state, cursor: (state.cursor + delta + CONTROLS_ROW_COUNT) % CONTROLS_ROW_COUNT, message: null };
 }
 
-export type ControlsChoice = { kind: "capture"; action: ControlAction } | { kind: "speed" } | { kind: "reset" } | { kind: "close" } | null;
+export type ControlsChoice = { kind: "capture"; action: ControlAction } | { kind: "speed" } | { kind: "difficulty" } | { kind: "reset" } | { kind: "close" } | null;
 
 export function confirmControlsMenu(state: ControlsMenuState): { state: ControlsMenuState; choice: ControlsChoice } {
   if (!state.open || state.capturing) return { state, choice: null };
@@ -38,7 +40,8 @@ export function confirmControlsMenu(state: ControlsMenuState): { state: Controls
     return { state: { ...state, capturing: true, message: null }, choice: { kind: "capture", action: CONTROL_ACTIONS[state.cursor].id } };
   }
   if (state.cursor === SPEED_ROW) return { state, choice: { kind: "speed" } };
-  if (state.cursor === SPEED_ROW + 1) return { state: { ...state, message: "もとの操作にもどした" }, choice: { kind: "reset" } };
+  if (state.cursor === DIFFICULTY_ROW) return { state, choice: { kind: "difficulty" } };
+  if (state.cursor === SPEED_ROW + 2) return { state: { ...state, message: "もとの操作にもどした" }, choice: { kind: "reset" } };
   return { state: { ...state, open: false }, choice: { kind: "close" } };
 }
 

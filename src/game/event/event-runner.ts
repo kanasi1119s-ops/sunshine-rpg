@@ -12,6 +12,8 @@ interface RunnerOptions {
   onGiveGold?: (amount: number) => void;
   onGiveEquipment?: (itemId: string) => void;
   onOpenShop?: (shopId: string) => void;
+  /** 宿屋にとまる。灯貨が足りて、とまれたら true（灯貨を払う・全快・朝にする、は呼び出し側）。 */
+  onInnStay?: (price: number) => boolean;
   onStaffRoll?: () => void;
 }
 
@@ -79,6 +81,21 @@ function* runCommands(
       case "shop":
         options.onOpenShop?.(command.shopId);
         break;
+
+      case "inn": {
+        const input = yield { kind: "choice", text: `一晩 ${command.price}灯貨 です。とまっていきますか？`, labels: ["とまる", "やめる"] };
+        if (input?.kind === "choose" && input.index === 0) {
+          const ok = options.onInnStay?.(command.price) ?? false;
+          yield {
+            kind: "message",
+            text: ok ? "ぐっすり眠って、朝になった。体も心も、すっかり元気になった！（HP・MPが全回復）" : "おっと、灯貨が足りないようだね。",
+            speaker: "宿屋の主人",
+          };
+        } else {
+          yield { kind: "message", text: "また、いつでもどうぞ。", speaker: "宿屋の主人" };
+        }
+        break;
+      }
 
       case "staffRoll":
         options.onStaffRoll?.();

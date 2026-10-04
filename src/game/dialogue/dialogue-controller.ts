@@ -12,6 +12,7 @@ export interface DialogueControllerOptions {
   onGiveGold?: (amount: number) => void;
   onGiveEquipment?: (itemId: string) => void;
   onOpenShop?: (shopId: string) => void;
+  onInnStay?: (price: number) => boolean;
   onStaffRoll?: () => void;
   charsPerSecond?: number;
 }
@@ -45,6 +46,7 @@ export class DialogueController {
       onGiveGold: this.options.onGiveGold,
       onGiveEquipment: this.options.onGiveEquipment,
       onOpenShop: this.options.onOpenShop,
+      onInnStay: this.options.onInnStay,
       onStaffRoll: this.options.onStaffRoll,
     });
     this.advance(undefined);
