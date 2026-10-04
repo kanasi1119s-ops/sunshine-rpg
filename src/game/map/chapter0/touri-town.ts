@@ -32,13 +32,13 @@ const NON_WALKABLE = new Set([WATER, TREE, BRANCH_WALL, INN_WALL]);
 const WIDTH = 22;
 const HEIGHT = 16;
 
-/** 相談所支部の建物の位置（3x2）。ドアは建物のすぐ南（(5,5)）。 */
+/** 相談所支部の建物の位置（3x2）。ドアは建物の足もとの中央に、建物のなかまとしてくっつく（(5,4)）。 */
 const BRANCH_ORIGIN = { x: 4, y: 3 };
 /** 宿屋（客室はまだ作っていない、外観のみの仮の建物）。 */
 const INN_ORIGIN = { x: 15, y: 3 };
 
 const NORTH_GATE = { x: 11, y: 0 };
-const BRANCH_DOOR_POS = { x: 5, y: 5 };
+const BRANCH_DOOR_POS = { x: 5, y: 4 };
 const mainStreetY = 8;
 /** 麦香野（第1章）へ続く街道の入り口。町の東端。 */
 const EAST_GATE = { x: WIDTH - 1, y: mainStreetY };
@@ -97,6 +97,7 @@ export function createTouriTownData(): TileMapData {
       set(BRANCH_ORIGIN.x + dx, BRANCH_ORIGIN.y + dy, BRANCH_WALL);
     }
   }
+  // ドアは、建物の足もと（下の段）の中央。建物の壁にはさまれて、くっついて見える
   set(BRANCH_DOOR_POS.x, BRANCH_DOOR_POS.y, BRANCH_DOOR);
   for (let y = BRANCH_DOOR_POS.y + 1; y <= mainStreetY; y++) {
     set(BRANCH_DOOR_POS.x, y, PATH);

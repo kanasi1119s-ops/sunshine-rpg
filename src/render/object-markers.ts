@@ -6,11 +6,14 @@ import { getSpriteCanvas } from "../game/art/sprite";
  * マップ上の「物」（宝箱・木箱・階段・石碑・機械・祭壇・焦げ跡・荷馬車）の絵。1マス（16×16）に、
  * 縁取り・地の色・影の2〜3段で描く（ハイライトなし、光は左上）。種類は、物のIDに含まれる言葉で決める（`character-specs.ts`の OBJECT_WORDS）。
  */
-export type ObjectKind = "beacon" | "boat" | "chest" | "crate" | "stairs" | "tablet" | "machine" | "altar" | "scorch" | "wagon" | "generic";
+export type ObjectKind = "tansu" | "bed" | "shelf" | "beacon" | "boat" | "chest" | "crate" | "stairs" | "tablet" | "machine" | "altar" | "scorch" | "wagon" | "generic";
 
 export function objectKindOf(id: string): ObjectKind {
   const words = id.split("-");
   const has = (...ws: string[]): boolean => words.some((w) => ws.includes(w));
+  if (has("tansu")) return "tansu";
+  if (has("bed")) return "bed";
+  if (has("shelf")) return "shelf";
   if (has("beacon")) return "beacon";
   if (has("ferry")) return "boat";
   if (has("chest")) return "chest";
@@ -195,6 +198,43 @@ export function drawObjectMarker(ctx: CanvasRenderingContext2D, kind: ObjectKind
         r(ctx, "#ffffff", x + 2, top, 1, 1);
         r(ctx, "#ffffff", x + 1, top + 1, 3, 1);
         r(ctx, "#ffffff", x + 2, top + 2, 1, 1);
+      }
+      return true;
+    }
+    case "tansu": {
+      // 箪笥（たんす）: 木の箱に、引き出し3段と、金の取っ手。光は左上。
+      r(ctx, INK, x + 1, top - 1, w - 2, 15);
+      r(ctx, "#b07a44", x + 2, top, w - 4, 13);
+      r(ctx, "#8a5a2c", x + 9, top, w - 11, 13);
+      r(ctx, "#d0a064", x + 2, top, w - 4, 1);
+      for (let i = 0; i < 3; i++) {
+        const dy = top + 1 + i * 4;
+        r(ctx, "#6a4020", x + 3, dy + 3, w - 6, 1);
+        r(ctx, "#f2c14e", x + 6, dy + 1, 4, 1);
+        r(ctx, "#a07a20", x + 6, dy + 2, 4, 1);
+      }
+      return true;
+    }
+    case "bed": {
+      // ベッド: まくらと、おふとん（住む人の色）
+      r(ctx, INK, x, top, w, 14);
+      r(ctx, "#7a5228", x + 1, top + 1, w - 2, 12);
+      r(ctx, "#f4f0e8", x + 2, top + 2, 5, 4);
+      r(ctx, "#d8d0c0", x + 2, top + 5, 5, 1);
+      r(ctx, color, x + 2, top + 6, w - 4, 6);
+      r(ctx, "rgba(255,255,255,0.25)", x + 2, top + 6, w - 4, 1);
+      r(ctx, "rgba(0,0,0,0.25)", x + 2, top + 11, w - 4, 1);
+      return true;
+    }
+    case "shelf": {
+      // 本棚: 木のわくに、色とりどりの本の背
+      r(ctx, INK, x + 1, top - 1, w - 2, 15);
+      r(ctx, "#7a5228", x + 2, top, w - 4, 13);
+      const colors = ["#c0504a", "#4a78b0", "#d8b048", "#58985a", "#8a58a8"];
+      for (let row = 0; row < 3; row++) {
+        const y0 = top + 1 + row * 4;
+        r(ctx, "#4a2e14", x + 2, y0 + 3, w - 4, 1);
+        for (let i = 0; i < 5; i++) r(ctx, colors[(i + row * 2) % colors.length], x + 3 + i * 2, y0 + (i % 2), 2, 3 - (i % 2));
       }
       return true;
     }
