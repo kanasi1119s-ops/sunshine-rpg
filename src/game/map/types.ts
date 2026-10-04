@@ -51,6 +51,8 @@ export interface MapExit {
   targetTileY: number;
   /** このフラグが立っていないと通れない（仕掛けの扉・灯りがないと進めない道など）。 */
   requireFlag?: string;
+  /** 家の玄関など: この向きに押しているときだけ入る（前を通るだけでは入らない）。 */
+  enter?: "up" | "down" | "left" | "right";
   /** 通れないときに出す言葉（ヒント）。 */
   blockedMessage?: string;
 }

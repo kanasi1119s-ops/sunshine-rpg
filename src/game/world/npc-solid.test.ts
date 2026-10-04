@@ -51,3 +51,11 @@ describe("物（NPC・宝箱）も通れなくしたとき", () => {
     expect(problems).toEqual([]);
   });
 });
+
+describe("家の玄関", () => {
+  it("家に入る出入り口は、上へ押したときだけ入る（前を通るだけでは入らない）", () => {
+    const doors = Object.values(WORLD_MAPS).flatMap((m) => (m.exits ?? []).filter((e) => e.targetMapId.startsWith("house-")));
+    expect(doors.length).toBeGreaterThan(10);
+    expect(doors.every((e) => e.enter === "up")).toBe(true);
+  });
+});

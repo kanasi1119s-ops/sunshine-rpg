@@ -120,7 +120,7 @@ export function addHouseInteriors(maps: Record<string, TileMapData>, npcsByMap: 
         .map(([dx, dy]) => ({ x: door.x + dx, y: door.y + dy }))
         .find((c) => free(c.x, c.y));
       if (!ret) continue;
-      exits.push({ tileX: door.x, tileY: door.y, targetMapId: id, targetTileX: DOOR_X, targetTileY: H - 2 });
+      exits.push({ tileX: door.x, tileY: door.y, targetMapId: id, targetTileX: DOOR_X, targetTileY: H - 2, enter: "up" });
       maps[id] = interiorMap(mapId, ret, seed);
       DUNGEON_PARENT[id] = mapId; // 曲は、町と同じ
       const resident = RESIDENTS[seed % RESIDENTS.length];

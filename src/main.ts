@@ -2276,7 +2276,8 @@ const loop = createGameLoop({
     const exitHere = findExitAt(map, centerTileX, centerTileY);
     if (input.getDirection() === null) exitReleased = true;
     if (exitReleased && !exitHere) exitArmed = true;
-    const exit = vehicle === "foot" && exitArmed ? exitHere : undefined;
+    // 家の玄関は、家のほう（上）へ押しているときだけ入る。前を通るだけでは入らない
+    const exit = vehicle === "foot" && exitArmed && (!exitHere?.enter || input.getDirection() === exitHere.enter) ? exitHere : undefined;
     if (exit && exit.requireFlag && !flags[exit.requireFlag]) {
       // 条件（仕掛け・道具など）が足りない出口は、ヒントを出して1マス押し戻す
       const back = { up: { x: 0, y: 1 }, down: { x: 0, y: -1 }, left: { x: 1, y: 0 }, right: { x: -1, y: 0 } }[player.direction];
