@@ -70,7 +70,7 @@ function drawSparkles(ctx: Ctx, cx: number, cy: number, ms: number): void {
 }
 
 /** 起動のオープニング。 */
-export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, h: number, title: string): void {
+export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, h: number, title: string, soundBlocked = false): void {
   if (!state.open) return;
   const ms = state.ms;
   ctx.fillStyle = "#000";
@@ -131,6 +131,14 @@ export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, 
     ctx.textBaseline = "top";
     ctx.fillStyle = "rgba(200, 200, 224, 0.7)";
     ctx.fillText("決定で つぎへ", w - 6, 3);
+  }
+  if (soundBlocked) {
+    // ブラウザは、操作がないと音を出せない。すこしだけ目立たないように知らせる
+    ctx.font = "9px monospace";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = `rgba(242, 193, 78, ${0.45 + 0.4 * Math.abs(Math.sin(performance.now() / 600))})`;
+    ctx.fillText("♪ キーか画面をタッチすると 音楽が流れます", 6, 3);
   }
   ctx.textAlign = "left";
 }

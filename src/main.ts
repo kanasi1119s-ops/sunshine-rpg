@@ -734,6 +734,7 @@ function startAudioOnFirstInteraction(): void {
     currentBgmTrack = getTrack("boot-opening");
     const at = bootClockMs / 1000;
     audio.playBgm(currentBgmTrack, at < 34 ? at : 0);
+    bootAudioJustStarted = true;
     return;
   }
   if (title.open) {
@@ -757,6 +758,8 @@ let title = createTitleState(hasAutosave());
 let bootOpening = startBootOpening();
 /** 起動のオープニングが始まってからの時間（ms）。音が遅れて始まるとき、曲の位置をそろえるのに使う。 */
 let bootClockMs = 0;
+/** 最初の操作で音が始まったところ。その1回の決定は、オープニングをとばさず「音をだす」だけに使う。 */
+let bootAudioJustStarted = false;
 
 /** ゲーム中のメニュー（Tab／Escape、スマホは「メニュー」ボタン）。 */
 let pauseMenu = createPauseMenuState();
@@ -1550,7 +1553,7 @@ function renderGameSceneBase(): void {
   ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
   if (bootOpening.open) {
-    renderBootOpening(ctx, bootOpening, LOGICAL_WIDTH, LOGICAL_HEIGHT, GAME_TITLE);
+    renderBootOpening(ctx, bootOpening, LOGICAL_WIDTH, LOGICAL_HEIGHT, GAME_TITLE, !audioStarted);
     return;
   }
   if (title.open) {
@@ -1748,7 +1751,9 @@ const loop = createGameLoop({
     if (bootOpening.open) {
       bootClockMs += dtMs;
       const before = bootOpening;
-      bootOpening = actionPressed ? advanceBootOpening(bootOpening) : updateBootOpening(bootOpening, dtMs, LOGICAL_HEIGHT);
+      const skip = actionPressed && !bootAudioJustStarted;
+      if (actionPressed) bootAudioJustStarted = false;
+      bootOpening = skip ? advanceBootOpening(bootOpening) : updateBootOpening(bootOpening, dtMs, LOGICAL_HEIGHT);
       if (!bootOpening.open && before.open) {
         // タイトル画面へ。曲をタイトルの曲にかえる
         currentBgmTrack = getTrack("title");
