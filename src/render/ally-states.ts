@@ -4,9 +4,9 @@ import { drawSprite } from "./sprite-renderer";
 
 /**
  * 戦闘で見せる、味方のドット絵の「状態」。歩く絵（16×32）のドットを組みかえて作る（絵そのものの描きおこしではなく、
- * ドットの並べかえと色かえ）。普通・ダメージ・瀕死（ひざをつく）・戦闘不能（たおれる）・毒・睡眠・混乱。
+ * ドットの並べかえと色かえ）。普通・ダメージ・戦闘不能（たおれる）・毒・睡眠・混乱。（瀕死の絵は、人間の指示でやめた）
  */
-export type AllyState = "normal" | "hurt" | "dying" | "ko" | "sleep" | "confuse" | "poison";
+export type AllyState = "normal" | "hurt" | "ko" | "sleep" | "confuse" | "poison";
 
 /** ずっと続く状態（ダメージのけぞりは、一瞬だけなので別）。 */
 export function allyStateOf(c: Combatant): AllyState {
@@ -14,7 +14,6 @@ export function allyStateOf(c: Combatant): AllyState {
   if (c.sleep) return "sleep";
   if (c.confused) return "confuse";
   if (c.poison) return "poison";
-  if (c.hp <= c.maxHp * 0.25) return "dying";
   return "normal";
 }
 
@@ -74,16 +73,6 @@ function transform(base: Img, state: AllyState): Img {
       copyRows(out, base, 14, 21, 14, 1);
       copyRows(out, base, 22, 31, 22, 0);
       tint(out, [255, 70, 70], 0.42);
-      return out;
-    }
-    case "dying": {
-      // 瀕死: ひざをつく。体を4ドット低くし、頭を前（左）へたらす。少し色がぬける
-      const out = blank(W, H);
-      copyRows(out, base, 0, 9, 6, -2);          // 頭と肩を、前（左）へたらして低く
-      copyRows(out, base, 10, 17, 16, -1);
-      copyRows(out, base, 26, 31, 26, 0);        // 足先
-      copyRows(out, base, 20, 21, 24, 0);        // ひざ
-      desaturate(out, 0.35);
       return out;
     }
     case "ko": {

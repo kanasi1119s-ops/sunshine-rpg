@@ -382,11 +382,7 @@ function renderBattleBody(
     if (state === "sleep") drawFx(ctx, "sleep", loop, { x: cx - 4, y: feetY - 14 });
     else if (state === "poison") drawFx(ctx, "poison", loop, { x: cx, y: feetY - 14 });
     else if (state === "confuse") drawFx(ctx, "confuse", loop, { x: cx, y: feetY - 14 });
-    else if (state === "dying") {
-      const drop = (nowMs % 1200) / 1200;
-      ctx.fillStyle = "#9ad0ff";
-      ctx.fillRect(x + 3, feetY - 22 + Math.round(drop * 6), 1, 2);
-    }
+    // （瀕死の絵は無し）
   });
   // 動き（武器・魔法のエフェクト）は、味方の絵より手前に重ねる
   if (animView && animView.elapsedMs < animView.spec.durationMs) {
