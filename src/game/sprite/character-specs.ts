@@ -52,7 +52,7 @@ export function spriteSpecForNpc(npc: { id: string; color: string; spriteName?: 
 /** 人ではなく、物・仕掛け・敵として描くNPCのIDの単語（`-` で区切ったとき）。 */
 const OBJECT_WORDS = new Set([
   "scorch", "excavation", "crate", "machine", "wagon", "record", "ledger", "log", "panel", "console", "mural", "stairs",
-  "pedestal", "tablet", "gate", "echo", "circle", "lore", "chest", "truth", "fork", "altar", "entrance", "yugami", "boss", "beacon", "ferry", "tansu", "bed", "shelf",
+  "pedestal", "tablet", "gate", "echo", "circle", "lore", "chest", "truth", "fork", "altar", "entrance", "yugami", "boss", "beacon", "ferry", "tansu", "bed", "shelf", "table",
 ]);
 /** 敵（ボス・強敵）として描くもの。 */
 const MONSTER_WORDS = new Set(["yugami", "boss"]);

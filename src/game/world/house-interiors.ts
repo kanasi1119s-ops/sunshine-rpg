@@ -39,6 +39,12 @@ const TANSU_LINES = [
   "引き出しには、ほしぶどうと、くるみが入っている。",
   "箪笥には、冬用の厚い上着がしまってある。",
 ];
+const TABLE_LINES = [
+  "テーブルの上に、お茶のしたくがしてある。ポットは、まだあたたかい。",
+  "テーブルの上に、ろうそくと、飲みかけのお茶がある。",
+  "テーブルには、きれいなクロスがかけてある。ふちの赤い刺しゅうが、かわいい。",
+  "テーブルの上に、焼きたてのパンが、かごに入っている。",
+];
 const BED_LINES = [
   "ふかふかのベッドだ。お日さまのにおいがする。",
   "きれいにととのえられたベッドだ。",
@@ -71,7 +77,7 @@ function interiorMap(town: string, ret: { x: number; y: number }, seed: number):
   collision[(H - 1) * W + DOOR_X] = 0;
   // 家具: 奥の壁ぎわの左右に、種類・位置がかわる
   const props: MapProp[] = [];
-  const spots: Array<[number, number]> = [[1, 5], [9, 5], [1, 6], [9, 6], [2, 6], [8, 6]];
+  const spots: Array<[number, number]> = [[1, 5], [1, 6], [2, 6], [9, 6], [8, 6]];
   const used: Array<[number, number]> = [];
   for (let i = 0; i < 2; i++) {
     const [x, y] = spots[(hashCell(seed + i, 3) + i * 2) % spots.length];
@@ -127,21 +133,22 @@ export function addHouseInteriors(maps: Record<string, TileMapData>, npcsByMap: 
       const list: Npc[] = [
         {
           id: `${id}-resident`,
-          tileX: 4 + (seed % 3),
-          tileY: 3,
+          tileX: 3 + (seed % 3),
+          tileY: 4,
           color: ["#c08060", "#6a8ab0", "#a0a070", "#b07090", "#7a9a6a"][seed % 5],
           commands: [{ type: "message", text: resident.line, speaker: resident.name }],
         },
       ];
       // 家具（調べられる）: 奥の壁ぎわに、本棚・箪笥・ベッド。箪笥には、小さな灯貨が入っていることがある
-      list.push({ id: `${id}-shelf`, tileX: 2, tileY: 1, color: "#7a5228", commands: [{ type: "message", text: SHELF_LINES[seed % SHELF_LINES.length] }] });
+      list.push({ id: `${id}-shelf`, tileX: 2, tileY: 2, color: "#7a5228", commands: [{ type: "message", text: SHELF_LINES[seed % SHELF_LINES.length] }] });
       if (seed % 3 === 0) {
         const gold = 15 + (seed % 4) * 10;
-        list.push(chestNpc(`${id}-tansu`, { tileX: 5, tileY: 1 }, `${id}_tansu`, { gold }, "箪笥の引き出しを開けた！"));
+        list.push(chestNpc(`${id}-tansu`, { tileX: 5, tileY: 2 }, `${id}_tansu`, { gold }, "箪笥の引き出しを開けた！"));
       } else {
-        list.push({ id: `${id}-tansu`, tileX: 5, tileY: 1, color: "#b07a44", commands: [{ type: "message", text: TANSU_LINES[seed % TANSU_LINES.length] }] });
+        list.push({ id: `${id}-tansu`, tileX: 5, tileY: 2, color: "#b07a44", commands: [{ type: "message", text: TANSU_LINES[seed % TANSU_LINES.length] }] });
       }
-      list.push({ id: `${id}-bed`, tileX: 9, tileY: 1, color: ["#6a8ab0", "#b07090", "#7a9a6a", "#c0a050"][seed % 4], commands: [{ type: "message", text: BED_LINES[seed % BED_LINES.length] }] });
+      list.push({ id: `${id}-table`, tileX: 8, tileY: 5, color: "#d8cbb0", commands: [{ type: "message", text: TABLE_LINES[seed % TABLE_LINES.length] }] });
+      list.push({ id: `${id}-bed`, tileX: 9, tileY: 2, color: ["#6a8ab0", "#b07090", "#7a9a6a", "#c0a050"][seed % 4], commands: [{ type: "message", text: BED_LINES[seed % BED_LINES.length] }] });
       npcsByMap[id] = list;
     }
   }

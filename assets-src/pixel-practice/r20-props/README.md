@@ -100,3 +100,6 @@ cd assets-src/pixel-practice/r20-props
 python3 build.py        # 全部作り直し＋色数チェック＋preview.png
 python3 preview.py 名前…  # 一部だけ6倍で preview-tmp.png に出す（確認用。コミットしない）
 ```
+
+## 家の中の家具（2026-10-04 追加）
+`interior.py` で作った4点（一から自作）: bookshelf（本棚 28×36）、bed（ベッド 34×32）、tansu（箪笥 26×30）、table（丸テーブルとポット・ろうそく 32×28）。光は左上、ハイライトなし、影と地の2〜3段＋暗い縁取り。`python3 interior.py` で作り直し、`node tools/pixel-art/export-game-data.mjs` でゲームの絵（`prop:*`）に書き出す。家の中の部屋は `src/game/world/house-interiors.ts`。
