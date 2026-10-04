@@ -1,4 +1,5 @@
 import type { TileMapData } from "../types";
+import { MUGIKANO_CANAL_ENTRY } from "./mugikano-dungeon";
 import { addCornerGroves } from "../organic";
 
 const GRASS = 1;
@@ -119,8 +120,8 @@ export function createMugikanoVillageData(): TileMapData {
         tileX: NORTH_GATE.x,
         tileY: NORTH_GATE.y,
         targetMapId: "mugikano-canal",
-        targetTileX: 10,
-        targetTileY: 16,
+        targetTileX: MUGIKANO_CANAL_ENTRY.tileX,
+        targetTileY: MUGIKANO_CANAL_ENTRY.tileY,
         requireFlag: "chapter1_heard_miller",
         blockedMessage: "水源へ向かう前に、村長の依頼を受けて、水車小屋の人から水源の様子を聞いておこう。",
       },

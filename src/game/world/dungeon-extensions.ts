@@ -1,7 +1,8 @@
 import { ENCOUNTER_ZONES, encounterMonsterSpec } from "../encounter/encounter";
 import { MONSTERS } from "../monster/monsters";
 import type { MapExit, TileMapData } from "../map/types";
-import { carveMap, type Rect } from "../map/carve-map";
+import { carveMap } from "../map/carve-map";
+import { serpentineLayout, type Landmarks, type SerpentineLayout } from "../map/serpentine";
 import { isWalkable, createTileMap } from "../map/tile-map";
 import type { Npc } from "../npc";
 import type { EventCommand } from "../event/types";
@@ -127,39 +128,19 @@ const DUNGEONS: ChapterDungeon[] = [
   },
 ];
 
-const W = 22;
-const H = 18;
 const FLOOR = 1;
 const WALL = 2;
 const COLORS: Record<number, string> = { [FLOOR]: "#5a4630", [WALL]: "#2a1f16" };
 
-// ---- 1つ目の地図: 入り口の広場・曲がり道・東の寄り道・南西のかくれ場所 ----
-const ROOMS_1: Rect[] = [
-  { x: 8, y: 14, w: 8, h: 3 },
-  { x: 9, y: 10, w: 3, h: 5 },
-  { x: 5, y: 6, w: 12, h: 4 },
-  { x: 3, y: 3, w: 5, h: 4 },
-  { x: 5, y: 1, w: 3, h: 3 },
-  { x: 14, y: 3, w: 6, h: 4 },
-  { x: 2, y: 12, w: 4, h: 3 },
-  { x: 5, y: 13, w: 4, h: 1 },
-];
-// ---- 2つ目の地図: 広間・左右のレバー・奥の門・南東のくぼみ ----
-const ROOMS_2: Rect[] = [
-  { x: 8, y: 13, w: 7, h: 4 },
-  { x: 10, y: 10, w: 3, h: 4 },
-  { x: 6, y: 5, w: 10, h: 6 },
-  { x: 1, y: 6, w: 5, h: 3 },
-  { x: 16, y: 6, w: 5, h: 3 },
-  { x: 9, y: 1, w: 4, h: 5 },
-  { x: 15, y: 13, w: 5, h: 3 },
-  { x: 14, y: 12, w: 2, h: 2 },
-];
+/** 章ごとに、形（小部屋の位置）を変える。通路は5本で、フィールドを歩くように長い。 */
+function layoutsFor(n: number): [SerpentineLayout, SerpentineLayout] {
+  return [
+    serpentineLayout({ lanes: 5, wall: WALL, floor: FLOOR, seed: n * 10 + 1 }),
+    serpentineLayout({ lanes: 5, wall: WALL, floor: FLOOR, seed: n * 10 + 2 }),
+  ];
+}
 
-const LAND = {
-  one: { chestEast: { tileX: 18, tileY: 4 }, chestHidden: { tileX: 3, tileY: 13 }, lore: { tileX: 10, tileY: 12 }, traveler: { tileX: 13, tileY: 8 } },
-  two: { leverW: { tileX: 2, tileY: 7 }, leverE: { tileX: 19, tileY: 7 }, chest: { tileX: 18, tileY: 14 }, lore: { tileX: 12, tileY: 3 } },
-};
+const pick = (l: Landmarks, i: number): { tileX: number; tileY: number } => l.alcoves[Math.min(i, l.alcoves.length - 1)];
 
 function say(text: string, speaker?: string): EventCommand {
   return { type: "message", text, speaker };
@@ -229,38 +210,32 @@ export function addChapterDungeons(maps: Record<string, TileMapData>, npcsByMap:
     const id2 = `${d.id}-2`;
     const gateOpen = `chapter${d.n}_gate_open`;
 
+    const [lay1, lay2] = layoutsFor(d.n);
+    const l1 = lay1.landmarks;
+    const l2 = lay2.landmarks;
     const common = { tileColors: COLORS, tileArt: { [FLOOR]: "tint:flagstone", [WALL]: "tint:brick" } };
-    const south = { x: 11, y: 17 };
-    const northOne = { x: 6, y: 0 };
-    const map1 = carveMap(
-      { width: W, height: H, wall: WALL, floor: FLOOR, rooms: ROOMS_1, gates: [{ ...south, tile: FLOOR }, { ...northOne, tile: FLOOR }] },
-      {
-        ...common,
-        exits: [
-          { tileX: south.x, tileY: south.y, targetMapId: d.town, targetTileX: toTown.targetTileX, targetTileY: toTown.targetTileY },
-          { tileX: northOne.x, tileY: northOne.y, targetMapId: id2, targetTileX: 11, targetTileY: 16 },
-        ],
-      },
-    );
-    const northTwo = { x: 10, y: 0 };
-    const map2 = carveMap(
-      { width: W, height: H, wall: WALL, floor: FLOOR, rooms: ROOMS_2, gates: [{ ...south, tile: FLOOR }, { ...northTwo, tile: FLOOR }] },
-      {
-        ...common,
-        exits: [
-          { tileX: south.x, tileY: south.y, targetMapId: id1, targetTileX: 6, targetTileY: 1 },
-          {
-            tileX: northTwo.x,
-            tileY: northTwo.y,
-            targetMapId: d.boss,
-            targetTileX: toBoss.targetTileX,
-            targetTileY: toBoss.targetTileY,
-            requireFlag: gateOpen,
-            blockedMessage: `奥の門は固く閉ざされている。左右にある${d.lever.thing}を、ふたつとも動かしてみよう。`,
-          },
-        ],
-      },
-    );
+    const map1 = carveMap(lay1.spec, {
+      ...common,
+      exits: [
+        { tileX: l1.south.x, tileY: l1.south.y, targetMapId: d.town, targetTileX: toTown.targetTileX, targetTileY: toTown.targetTileY },
+        { tileX: l1.north.x, tileY: l1.north.y, targetMapId: id2, targetTileX: l2.southArrival.tileX, targetTileY: l2.southArrival.tileY },
+      ],
+    });
+    const map2 = carveMap(lay2.spec, {
+      ...common,
+      exits: [
+        { tileX: l2.south.x, tileY: l2.south.y, targetMapId: id1, targetTileX: l1.northArrival.tileX, targetTileY: l1.northArrival.tileY },
+        {
+          tileX: l2.north.x,
+          tileY: l2.north.y,
+          targetMapId: d.boss,
+          targetTileX: toBoss.targetTileX,
+          targetTileY: toBoss.targetTileY,
+          requireFlag: gateOpen,
+          blockedMessage: `奥の門は固く閉ざされている。ダンジョンのあちこちにある${d.lever.thing}を、ふたつとも探して動かしてみよう。`,
+        },
+      ],
+    });
     map1.theme = d.theme;
     map2.theme = d.theme;
     maps[id1] = map1;
@@ -268,13 +243,13 @@ export function addChapterDungeons(maps: Record<string, TileMapData>, npcsByMap:
 
     // つなぎかえ: 町 → 1つ目 → 2つ目 → ボスの地図 → (戻ると) 2つ目
     toBoss.targetMapId = id1;
-    toBoss.targetTileX = 11;
-    toBoss.targetTileY = 16;
+    toBoss.targetTileX = l1.southArrival.tileX;
+    toBoss.targetTileY = l1.southArrival.tileY;
     toBoss.requireFlag = `chapter${d.n}_prep_done`;
     toBoss.blockedMessage = `${d.place[0]}を通ってボスのもとへ向かう道があるらしい。まず町で、${d.informant.name}に話を聞いてみよう（相談所の依頼を受けてから）。`;
     toTown.targetMapId = id2;
-    toTown.targetTileX = 10;
-    toTown.targetTileY = 1;
+    toTown.targetTileX = l2.northArrival.tileX;
+    toTown.targetTileY = l2.northArrival.tileY;
 
     DUNGEON_PARENT[id1] = d.boss;
     DUNGEON_PARENT[id2] = d.boss;
@@ -294,34 +269,32 @@ export function addChapterDungeons(maps: Record<string, TileMapData>, npcsByMap:
 
     // NPC
     const gold = d.n * 40;
-    const o = LAND.one;
-    const t = LAND.two;
     (npcsByMap[id1] ??= []).push(
-      loreNpc(`${d.id}-lore-sign`, o.lore, d.loreLines),
+      loreNpc(`${d.id}-lore-sign`, l1.nearExit, d.loreLines),
       {
         id: `${d.id}-traveler`,
-        ...o.traveler,
+        ...l1.nearEntry,
         color: "#7a9ab0",
         commands: d.travelerLines.map((l) => say(l, "旅人")),
       },
-      chestNpc(`${d.id}-chest-east`, o.chestEast, `chapter${d.n}_chest_east`, { gold }, d.chestText[0]),
-      chestNpc(`${d.id}-chest-hidden`, o.chestHidden, `chapter${d.n}_chest_hidden`, { gold: Math.round(gold * 1.5) }, d.chestText[1]),
+      chestNpc(`${d.id}-chest-east`, pick(l1, 2), `chapter${d.n}_chest_east`, { gold }, d.chestText[0]),
+      chestNpc(`${d.id}-chest-hidden`, pick(l1, 6), `chapter${d.n}_chest_hidden`, { gold: Math.round(gold * 1.5) }, d.chestText[1]),
     );
     (npcsByMap[id2] ??= []).push(
-      leverNpc(`${d.id}-panel-west`, t.leverW, `chapter${d.n}_lever_west`, `chapter${d.n}_lever_east`, gateOpen, {
+      leverNpc(`${d.id}-panel-west`, pick(l2, 1), `chapter${d.n}_lever_west`, `chapter${d.n}_lever_east`, gateOpen, {
         pull: `西の${d.lever.thing}。${d.lever.pull}と、低い音が響いた。`,
         already: `西の${d.lever.thing}は、もう動かしてある。`,
         opened: `東の${d.lever.thing}も動いている。奥で、重い門の開く音がした！`,
         waiting: "遠くで何かが目覚める気配がする。反対側にも、同じものがあるはずだ。",
       }),
-      leverNpc(`${d.id}-panel-east`, t.leverE, `chapter${d.n}_lever_east`, `chapter${d.n}_lever_west`, gateOpen, {
+      leverNpc(`${d.id}-panel-east`, pick(l2, 6), `chapter${d.n}_lever_east`, `chapter${d.n}_lever_west`, gateOpen, {
         pull: `東の${d.lever.thing}。${d.lever.pull}と、低い音が響いた。`,
         already: `東の${d.lever.thing}は、もう動かしてある。`,
         opened: `西の${d.lever.thing}も動いている。奥で、重い門の開く音がした！`,
         waiting: "遠くで何かが目覚める気配がする。反対側にも、同じものがあるはずだ。",
       }),
-      chestNpc(`${d.id}-chest-deep`, t.chest, `chapter${d.n}_chest_deep`, { gold: gold * 2 }, d.chestText[2]),
-      loreNpc(`${d.id}-lore-wall`, t.lore, [`${d.place[1]}。`, ...d.loreLines]),
+      chestNpc(`${d.id}-chest-deep`, pick(l2, 4), `chapter${d.n}_chest_deep`, { gold: gold * 2 }, d.chestText[2]),
+      loreNpc(`${d.id}-lore-wall`, l2.nearExit, [`${d.place[1]}。`, ...d.loreLines]),
     );
     // 町の情報屋
     const taken = new Set((npcsByMap[d.town] ?? []).map((n) => `${n.tileX},${n.tileY}`));

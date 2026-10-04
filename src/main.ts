@@ -624,6 +624,21 @@ if (import.meta.env.DEV) {
       renderProps(c, full.data, cam, () => true);
       return canvas.toDataURL("image/png");
     },
+    /** 開発用: 地図ぜんたいを1枚に描く（形の確認用）。 */
+    renderMapFull: (mapId: string) => {
+      const full = createTileMap(WORLD_MAPS[mapId]);
+      const canvas = document.createElement("canvas");
+      canvas.width = full.widthPx;
+      canvas.height = full.heightPx;
+      const c = canvas.getContext("2d")!;
+      const cam = { x: 0, y: 0, viewportWidth: canvas.width, viewportHeight: canvas.height };
+      renderTileMap(c, full, cam);
+      renderProps(c, full.data, cam, () => true);
+      const list = WORLD_NPCS[mapId] ?? [];
+      c.fillStyle = "#ff40ff";
+      for (const n of list) c.fillRect(n.tileX * 16 + 4, n.tileY * 16 + 4, 8, 8);
+      return canvas.toDataURL("image/png");
+    },
     /** 開発用: タイトルロゴの絵（確認用）。 */
     logoDataUrl: () => getPixelLogo(GAME_TITLE)?.toDataURL() ?? "",
     /** 開発用: 灯貨をふやす・店を開く（買い物の確認用）。 */

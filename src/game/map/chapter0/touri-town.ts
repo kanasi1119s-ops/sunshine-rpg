@@ -1,4 +1,5 @@
 import type { TileMapData } from "../types";
+import { TOURI_FOREST1_ENTRY } from "./touri-forest";
 
 const GRASS = 1;
 const PATH = 2;
@@ -138,8 +139,8 @@ export function createTouriTownData(): TileMapData {
         tileX: NORTH_GATE.x,
         tileY: NORTH_GATE.y,
         targetMapId: "touri-forest-1",
-        targetTileX: 11,
-        targetTileY: 16,
+        targetTileX: TOURI_FOREST1_ENTRY.tileX,
+        targetTileY: TOURI_FOREST1_ENTRY.tileY,
         requireFlag: "chapter0_got_lamp",
         blockedMessage: "この先の森は、夜のように暗いと聞く。灯りを持たずに入るのは危ない。まず町で、話を聞いて準備をしよう。",
       },

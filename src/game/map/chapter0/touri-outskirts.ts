@@ -1,4 +1,5 @@
 import type { TileMapData } from "../types";
+import { TOURI_FOREST2_NORTH_ENTRY } from "./touri-forest";
 
 const GRASS = 1;
 const PATH = 2;
@@ -95,8 +96,8 @@ export function createTouriOutskirtsData(): TileMapData {
         tileY: SOUTH_GATE.y,
         // 古い祠の森へ戻る（北の門のすぐ手前）。
         targetMapId: "touri-forest-2",
-        targetTileX: 10,
-        targetTileY: 1,
+        targetTileX: TOURI_FOREST2_NORTH_ENTRY.tileX,
+        targetTileY: TOURI_FOREST2_NORTH_ENTRY.tileY,
       },
     ],
   };

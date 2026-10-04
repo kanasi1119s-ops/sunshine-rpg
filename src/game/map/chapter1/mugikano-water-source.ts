@@ -1,4 +1,5 @@
 import type { TileMapData } from "../types";
+import { MUGIKANO_TUNNEL_NORTH_ENTRY } from "./mugikano-dungeon";
 import { addCornerGroves } from "../organic";
 
 const GRASS = 1;
@@ -86,8 +87,8 @@ export function createMugikanoWaterSourceData(): TileMapData {
         tileY: SOUTH_GATE.y,
         // 古い坑道へ戻る（奥の岩戸のすぐ手前）。
         targetMapId: "mugikano-tunnel",
-        targetTileX: 10,
-        targetTileY: 1,
+        targetTileX: MUGIKANO_TUNNEL_NORTH_ENTRY.tileX,
+        targetTileY: MUGIKANO_TUNNEL_NORTH_ENTRY.tileY,
       },
     ],
   };
