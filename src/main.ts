@@ -145,6 +145,9 @@ import { availableJobs } from "./game/job/jobs";
 import { createJobState, starsOf } from "./game/job/mastery";
 import { SAVE_VERSION, type SaveData } from "./game/save/types";
 import { loadFromSlot, saveToSlot } from "./game/save/storage";
+import { latestSaveSlot, summarizeSlots } from "./game/save/slots";
+import { closeSlotMenu, confirmSlot, createSlotMenuState, moveSlotCursor, openSlotMenu, withSlotRows } from "./game/menu/slot-menu";
+import { renderSlotMenu } from "./render/slot-menu-renderer";
 import { downloadSaveFile, readSaveFile } from "./io/save-file";
 import { AudioEngine } from "./audio/audio-engine";
 import { getTrackEdition, type Edition } from "./audio/catalog";
@@ -797,12 +800,21 @@ function startAudioOnFirstInteraction(): void {
 }
 
 /** タイトル画面（起動時に開く）。自動セーブがあれば「つづきから」が選べる。 */
-function hasAutosave(): boolean {
+/** セーブ・ロードの場所えらび。 */
+let slotMenu = createSlotMenuState();
+let lastSlotDirection: Direction | null = null;
+
+/** どこかにセーブがあるか（自動セーブも含む）。 */
+function hasAnySave(): boolean {
   try {
-    return loadFromSlot(window.localStorage, "autosave") !== null;
+    return latestSaveSlot(window.localStorage) !== null;
   } catch {
     return false;
   }
+}
+
+function hasAutosave(): boolean {
+  return hasAnySave();
 }
 let title = createTitleState(hasAutosave());
 /** ゲームを起動したときのオープニング（ロゴが上から落ちてきて、あらすじが流れる）。終わるとタイトル画面。 */
@@ -870,7 +882,7 @@ window.addEventListener("keydown", (event) => {
 let jobMenuWasOpen = false;
 window.addEventListener("keydown", () => { jobMenuWasOpen = jobMenu.open; }, true);
 window.addEventListener("keydown", (event) => {
-  if (equipBackHandled || fieldUse.open) {
+  if (equipBackHandled || fieldUse.open || slotMenu.open) {
     return;
   }
   if (pauseMenu.open) {
@@ -1286,7 +1298,9 @@ function buildExtraSkillsMap(): Record<string, Skill[]> {
   const unlocked = isJobSystemUnlocked(flags);
   const result: Record<string, Skill[]> = {};
   for (const id of ["hero", ...Object.keys(companionStats)]) {
-    result[id] = battleSkillsOf(jobStates[id], unlocked);
+    const level = id === "hero" ? heroStats.level : companionStats[id]?.level ?? 1;
+    const innate = (COMPANIONS[id]?.extraSkills ?? []).filter((e) => level >= e.minLevel).map((e) => e.skill);
+    result[id] = [...innate, ...battleSkillsOf(jobStates[id], unlocked)];
   }
   return result;
 }
@@ -1381,6 +1395,23 @@ function resetToNewGame(): void {
   encounterState = createEncounterState(Math.random);
   resetVehicles();
   switchMap(CHAPTER0_START.mapId, CHAPTER0_START.tileX, CHAPTER0_START.tileY);
+}
+
+/** 全滅したとき: いちばん新しいセーブ（自動セーブも含む）の場所からやりなおす。HP・MPは全快。セーブが無ければタイトルへ。 */
+function restartFromLastSave(): void {
+  const slot = latestSaveSlot(window.localStorage);
+  const data = slot ? loadFromSlot(window.localStorage, slot) : null;
+  if (!data) {
+    title = createTitleState(hasAutosave());
+    currentBgmTrack = getTrack("title");
+    audio.playBgm(currentBgmTrack);
+    return;
+  }
+  applySaveData(data);
+  vitals = {};
+  playMapBgm(currentMapId);
+  saveMessage = "全滅してしまった…。セーブした場所から やりなおす";
+  saveMessageTimer = 4000;
 }
 
 function autosave(): void {
@@ -1766,6 +1797,7 @@ function renderGameSceneBase(): void {
   }
   if (title.open) {
     renderTitle(ctx, title, GAME_TITLE, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    renderSlotMenu(ctx, slotMenu, LOGICAL_WIDTH, LOGICAL_HEIGHT);
     return;
   }
   if (staffRoll.open) {
@@ -1926,6 +1958,7 @@ function renderGameSceneBase(): void {
     renderShopWear(ctx, shopWearView(), shopWear.cursor, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   }
   if (!fieldUse.open) renderPauseMenu(ctx, pauseMenu, pauseMenu.screen === "status" ? statusRows() : [], pauseMessage, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  renderSlotMenu(ctx, slotMenu, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   if (fieldUse.open) renderFieldUse(ctx, fieldUse, fieldUseMembers(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
   if (pauseMenu.open && pauseMenu.screen === "items") {
     renderItemsScreen(ctx, itemsView(), itemsScroll, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
@@ -2043,6 +2076,40 @@ const loop = createGameLoop({
     }
     lastControlsDirection = null;
 
+    if (slotMenu.open) {
+      const direction = input.getDirection();
+      if (direction !== lastSlotDirection) {
+        if (direction === "up" || direction === "down") {
+          slotMenu = moveSlotCursor(slotMenu, direction === "up" ? -1 : 1);
+          audio.playSe(seOf("cursor"));
+        }
+        lastSlotDirection = direction;
+      }
+      if (backPressed) slotMenu = closeSlotMenu(slotMenu);
+      if (actionPressed) {
+        const slot = confirmSlot(slotMenu);
+        if (slot) {
+          if (slotMenu.mode === "save") {
+            saveToSlot(window.localStorage, slot, buildSaveData());
+            audio.playSe(seOf("save"));
+            slotMenu = withSlotRows(slotMenu, summarizeSlots(window.localStorage, false), "セーブしました");
+          } else {
+            const data = loadFromSlot(window.localStorage, slot);
+            if (data) {
+              slotMenu = closeSlotMenu(slotMenu);
+              title = { ...title, open: false };
+              applySaveData(data);
+              playMapBgm(currentMapId);
+            }
+          }
+        } else {
+          audio.playSe(seOf("error"));
+        }
+      }
+      return;
+    }
+    lastSlotDirection = null;
+
     if (title.open) {
       const direction = input.getDirection();
       if (direction !== lastTitleDirection) {
@@ -2061,13 +2128,9 @@ const loop = createGameLoop({
         if (result.action === "keys") {
           controlsMenu = openControlsMenu();
         } else if (result.action === "continue") {
-          const data = loadFromSlot(window.localStorage, "autosave");
-          if (data) {
-            applySaveData(data);
-          } else {
-            dialogue.start(CHAPTER0_OPENING_COMMANDS);
-          }
-          playMapBgm(currentMapId);
+          // 「つづきから」: どのセーブから始めるか選ぶ（自動セーブも入る）。選ぶまでタイトルは開いたまま
+          title = { ...title, open: true };
+          slotMenu = openSlotMenu("load", summarizeSlots(window.localStorage, true));
         } else if (result.action === "new") {
           // まずオープニング（あらすじ）を流す。曲は壮大な `fate`。終わったらゲームを始める。
           opening = startOpening();
@@ -2177,10 +2240,7 @@ const loop = createGameLoop({
         if (result.state.screen === "items" && pauseMenu.screen !== "items") itemsScroll = 0;
         pauseMenu = result.state;
         if (result.action === "save") {
-          autosave();
-          audio.playSe(seOf("save"));
-          pauseMessage = "セーブしました";
-          pauseMessageTimer = 2000;
+          slotMenu = openSlotMenu("save", summarizeSlots(window.localStorage, false));
         } else if (result.action === "keys") {
           controlsMenu = openControlsMenu();
         } else if (result.action === "use" || result.action === "magic") {
@@ -2360,8 +2420,13 @@ const loop = createGameLoop({
       }
       if (actionPressed) {
         if (uiState.kind === "finished") {
+          const lost = uiState.outcome === "lost";
           battle = null;
-          playMapBgm(currentMapId);
+          if (lost) {
+            restartFromLastSave();
+          } else {
+            playMapBgm(currentMapId);
+          }
         } else {
           battle.confirm();
           lastBattleMessage = null;

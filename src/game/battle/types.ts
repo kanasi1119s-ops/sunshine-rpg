@@ -17,6 +17,12 @@ export interface Combatant {
   mods?: Partial<Record<StatKey, StatMod>>;
   /** 眠っている残りターン。眠っているあいだは行動できない。 */
   sleep?: number;
+  /** 毒の残りターン。毎ターンの終わりに、最大HPの約6%のダメージ（HPは1より下がらない）。 */
+  poison?: number;
+  /** 混乱の残りターン。混乱中は、半分の確率で、敵味方かまわず攻撃してしまう。 */
+  confused?: number;
+  /** 敵の通常攻撃が当たったとき、相手にかかる状態異常（毒・眠り・混乱）。 */
+  inflicts?: { status: "poison" | "sleep" | "confuse"; chance: number; turns: number };
 }
 
 export type StatKey = "attack" | "defense" | "speed";
@@ -35,7 +41,7 @@ export function effectiveStat(combatant: Combatant, stat: StatKey): number {
   return Math.max(1, Math.round(combatant[stat] * (mod && mod.turns > 0 ? mod.mult : 1)));
 }
 
-export type SkillEffect = "multi" | "damageAll" | "heal" | "healAll" | "buff" | "buffAll" | "debuff" | "debuffAll" | "sleep";
+export type SkillEffect = "multi" | "damageAll" | "heal" | "healAll" | "buff" | "buffAll" | "debuff" | "debuffAll" | "sleep" | "poison" | "confuse";
 
 export interface Skill {
   id: string;

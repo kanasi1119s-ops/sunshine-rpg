@@ -85,7 +85,34 @@ function tickStatuses(state: BattleState): void {
     if (c.sleep) {
       c.sleep = c.sleep > 1 ? c.sleep - 1 : undefined;
     }
+    if (c.confused) {
+      c.confused = c.confused > 1 ? c.confused - 1 : undefined;
+    }
+    if (c.poison && isAlive(c)) {
+      const dmg = Math.max(1, Math.round(c.maxHp * 0.06));
+      const lost = Math.min(dmg, Math.max(0, c.hp - 1));
+      c.hp -= lost;
+      state.log.push(`${c.name} は毒のダメージを受けた（${lost}）`);
+      c.poison = c.poison > 1 ? c.poison - 1 : undefined;
+      if (!c.poison) state.log.push(`${c.name} の毒が消えた`);
+    }
   }
+}
+
+/** 状態異常をかける（かかったかどうかを返し、ログに書く）。 */
+function inflict(next: BattleState, actorName: string, target: Combatant, status: "poison" | "sleep" | "confuse", turns: number, prefix: string): boolean {
+  if (status === "poison") {
+    target.poison = turns;
+    next.log.push(`${prefix}${target.name} は毒におかされた！`);
+  } else if (status === "sleep") {
+    target.sleep = turns;
+    next.log.push(`${prefix}${target.name} は眠ってしまった`);
+  } else {
+    target.confused = turns;
+    next.log.push(`${prefix}${target.name} は混乱した！`);
+  }
+  void actorName;
+  return true;
 }
 
 /**
@@ -178,6 +205,20 @@ function applyEffectSkill(next: BattleState, actor: Combatant, skill: Skill, raw
       }
       return next;
     }
+    case "poison":
+    case "confuse": {
+      const target = foes.find((c) => c.id === targetId);
+      if (!target || !isAlive(target)) {
+        return next;
+      }
+      actor.mp -= skill.mpCost;
+      if (target.maxHp > 500 || rng() >= (skill.chance ?? 0.6)) {
+        next.log.push(`${actor.name} の ${skill.name}！ ${target.name} には効かなかった`);
+      } else {
+        inflict(next, actor.name, target, skill.effect, skill.turns ?? 3, `${actor.name} の ${skill.name}！ `);
+      }
+      return next;
+    }
     case "sleep": {
       const target = foes.find((c) => c.id === targetId);
       if (!target || !isAlive(target)) {
@@ -252,6 +293,7 @@ export function applyAction(state: BattleState, action: BattleAction, rng: () =>
       );
       const finalAmount = target.guarding ? Math.ceil(amount / 2) : amount;
       target.hp = Math.max(0, target.hp - finalAmount);
+      const inflicted = nextActor.inflicts && isAlive(target) && !target.poison && !target.sleep && !target.confused && rng() < nextActor.inflicts.chance ? nextActor.inflicts : null;
       const skillName = action.type === "skill" ? action.skill.name : "たたかう";
       const criticalNote = critical ? "会心の一撃！ " : "";
       next.log.push(
@@ -259,6 +301,8 @@ export function applyAction(state: BattleState, action: BattleAction, rng: () =>
       );
       if (!isAlive(target)) {
         next.log.push(`${target.name} を倒した！`);
+      } else if (inflicted) {
+        inflict(next, nextActor.name, target, inflicted.status, inflicted.turns, "");
       }
       return next;
     }
@@ -332,6 +376,18 @@ export function runTurn(
     if (livingActor.sleep) {
       current.log.push(`${livingActor.name} は眠っている`);
       continue;
+    }
+    if (livingActor.confused) {
+      current.log.push(`${livingActor.name} は混乱している！`);
+      if (rng() < 0.5) {
+        // 敵味方かまわず、生きている誰かをなぐる
+        const everyone = [...current.party, ...current.enemies].filter((c) => isAlive(c) && c.id !== livingActor.id);
+        const victim = everyone[Math.floor(rng() * everyone.length)];
+        if (victim) {
+          current = applyAction(current, { type: "attack", actorId: livingActor.id, targetId: victim.id }, rng);
+          continue;
+        }
+      }
     }
     current = applyAction(current, action, rng);
   }

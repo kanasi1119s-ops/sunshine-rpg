@@ -10,6 +10,8 @@ export interface CompanionDefinition {
   name: string;
   growth: GrowthProfile;
   skill: Skill;
+  /** もともと使える、とくぎ以外の魔法（魔法使い枠）。minLevel 以上で使える。ジョブで覚える特技とは別。 */
+  extraSkills?: { minLevel: number; skill: Skill }[];
   createInitialStats: () => LeveledStats;
 }
 
@@ -38,6 +40,11 @@ export const MINA: CompanionDefinition = {
   name: "ミナ",
   growth: { hpGrowth: 3, mpGrowth: 3, attackGrowth: 2, defenseGrowth: 2, speedGrowth: 2 },
   skill: { id: "suimon-no-nami", name: "水紋ノ波", mpCost: 3, powerMultiplier: 1.5 },
+  // 魔法使い枠（初級）。上の呪文は、ジョブ（水紋術士など）で覚える
+  extraSkills: [
+    { minLevel: 1, skill: { id: "shizuku-no-megumi", name: "雫ノ恵み", mpCost: 4, powerMultiplier: 1, effect: "heal", healRatio: 2.6 } },
+    { minLevel: 4, skill: { id: "konami-no-retsu", name: "小波ノ列", mpCost: 6, powerMultiplier: 0.9, effect: "damageAll" } },
+  ],
   createInitialStats: () => ({
     level: 1,
     exp: 0,
@@ -95,6 +102,11 @@ export const AYAME: CompanionDefinition = {
   name: "アヤメ",
   growth: { hpGrowth: 3, mpGrowth: 2, attackGrowth: 3, defenseGrowth: 2, speedGrowth: 3 },
   skill: { id: "koudan-no-issen", name: "光断ノ一閃", mpCost: 3, powerMultiplier: 1.7 },
+  // 魔法使い枠（初級）。上の呪文は、ジョブで覚える
+  extraSkills: [
+    { minLevel: 1, skill: { id: "toukou-no-megumi", name: "灯光ノ恵み", mpCost: 4, powerMultiplier: 1, effect: "heal", healRatio: 2.6 } },
+    { minLevel: 1, skill: { id: "koudan-no-ren", name: "光断ノ連", mpCost: 5, powerMultiplier: 1.0, effect: "multi", hits: 2 } },
+  ],
   createInitialStats: () => ({
     level: 1,
     exp: 0,

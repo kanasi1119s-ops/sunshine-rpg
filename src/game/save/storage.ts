@@ -8,7 +8,10 @@ export interface KeyValueStore {
   removeItem(key: string): void;
 }
 
-export type SaveSlotId = "slot1" | "slot2" | "slot3" | "autosave";
+export type SaveSlotId = "slot1" | "slot2" | "slot3" | "slot4" | "slot5" | "autosave";
+
+/** 自分でセーブする場所（5か所）。自動セーブ（`autosave`）は別に1つある。 */
+export const MANUAL_SLOTS: readonly SaveSlotId[] = ["slot1", "slot2", "slot3", "slot4", "slot5"];
 
 const KEY_PREFIX = "sunshine-rpg:save:";
 
