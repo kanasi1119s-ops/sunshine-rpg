@@ -1,6 +1,6 @@
 // ドット絵エディタ（tools/pixel-editor/index.html）で、1枚の絵を作っていく様子を動画にする（2026-10-04、人間の依頼「エディタでの製作動画」）。
 // 使い方: node editor-record.mjs <仕上げ前の絵.txt> <パレット.json> <手直し.json> <出力.mp4> [--ref 下絵.png] [--title "名前"] [--anim 動き.json] [--bgm 曲.mp3]
-//   --anim: boss_anim.py が作った歩く・攻撃のコマ。エディタのフレームに1コマずつ入れ、タイムラインで再生して見せる
+//   --anim: boss_rig.py が作った部品（レイヤー）と歩く・攻撃のコマ。部品をレイヤーに分け、フレームに1コマずつ入れて、タイムラインで再生して見せる
 //   --bgm: 動画に曲を入れる（動画の長さで切り、最後の3秒で小さくしていく）
 //   仕上げ前の絵: ドット絵化（sfcize.py）した文字グリッド。色を暗い順に1色ずつ、エディタの「貼り付けて読み込む」で置いていく
 //   手直し.json: {"palette": {"y": "#rrggbb"}, "strokes": [[行0, 列0, 行1, 列1, "記号"], ...]}
@@ -127,52 +127,59 @@ const back = Object.fromEntries(Object.entries(map).map(([a, b]) => [b, a]));
 const got = JSON.parse(exported.replace(/,\s*\]/, "]")).map((r) => [...r].map((s) => (s === "." ? "." : back[s] ?? "?")).join(""));
 fs.writeFileSync(out + ".rows.txt", got.join("\n") + "\n");
 
-// 動き（歩く・攻撃）: レイヤーを1枚にまとめ、フレームを足して1コマずつ入れ、タイムラインで再生する
+// 動き（歩く・攻撃）: 絵を部品（レイヤー）に描き分け、フレームを足して部品ごとにコマを入れ、タイムラインで再生する
 if (animPath) {
   const A = JSON.parse(fs.readFileSync(animPath, "utf8"));
-  for (const k of Object.keys(A.palette)) if (!syms.includes(k)) {   // 「当たり」のコマの明るい色をパレットに足す
+  for (const k of Object.keys(A.palette)) if (!syms.includes(k)) {   // 残像・火花・当たりの光の色をパレットに足す
     await p.click("#addSymbolBtn");
     const all = await p.$$eval("#symbolList .symbol-row .sym", (els) => els.map((e) => e.textContent).filter((t) => t !== "消"));
     map[k] = all[all.length - 1]; syms.push(k);
     const cis = await p.$$("#symbolList input[type=color]");
     await cis[cis.length - 1].evaluate((el, v) => { el.value = v; el.dispatchEvent(new Event("input", { bubbles: true })); }, A.palette[k]);
   }
-  await cap("動き: 「手直し」を下のレイヤーと結合して1枚に");
-  await p.click("#layerMerge"); await wait(900);
-  const fitZ2 = await p.evaluate((n) => Math.max(1, Math.floor(Math.min(innerHeight - 330, document.getElementById("canvasWrap").clientWidth - 20) / n)), W);
-  await setRange("#zoom", fitZ2); await p.locator("#gridCanvas").evaluate((el) => el.scrollIntoView({ block: "center" }));
-  await p.check("#onionSkin");
-  const put = async (rowsK, ms, label) => {
+  const center = () => p.locator("#gridCanvas").evaluate((el) => el.scrollIntoView({ block: "center" }));
+  const fitZ2 = await p.evaluate((n) => Math.max(1, Math.floor(Math.min(innerHeight - 340, document.getElementById("canvasWrap").clientWidth - 20) / n)), W);
+  await setRange("#zoom", fitZ2); await center();
+  const importTo = async (rowsK) => { await p.fill("#importRows", JSON.stringify(rowsK.map(toEd))); await p.click("#importBtn"); };
+  const rename = async (name) => { await p.fill("#layerName", name); await p.dispatchEvent("#layerName", "change"); };
+  const L = A.layers;   // 例: ["胴", "右腕", "肩当て"]（下から順）
+  await cap("動き: まず「手直し」を下のレイヤーと結合して1枚に");
+  await p.click("#layerMerge"); await wait(800); await center();
+  await cap(`部品に描き分ける: いちばん下を「${L[0]}」に（腕を取り去り、腕に隠れていた所を描き足す）`);
+  await rename(L[0]); await importTo(A.parts[L[0]]); await center(); await wait(1600);
+  for (let li = 1; li < L.length; li++) {
+    await cap(`部品に描き分ける: レイヤー「${L[li]}」を足す` + (L[li].includes("腕") ? "（付け根は丸い関節にして、回してもすき間が出ないように）" : "（腕の付け根を上からかくす）"));
+    await p.click("#layerAdd"); await rename(L[li]); await importTo(A.parts[L[li]]); await center(); await wait(1600);
+  }
+  await cap("部品の確認: 胴以外のレイヤーを消して、胴だけを見る → また付ける");
+  for (let li = 1; li < L.length; li++) { await p.click(`#timeline [data-eye='${li}']`); await wait(250); }
+  await center(); await wait(1200);
+  for (let li = 1; li < L.length; li++) { await p.click(`#timeline [data-eye='${li}']`); await wait(250); }
+  await center(); await wait(900);
+  // フレームを足し、部品ごとにコマを入れる
+  const putFrame = async (fr, ms, label) => {
     await cap(label);
-    await p.click("#frameAdd"); await wait(250);
-    await p.fill("#importRows", JSON.stringify(rowsK.map(toEd)));
-    await p.click("#importBtn");
+    await p.click("#frameAdd"); await wait(150);
+    const f = await p.evaluate(() => [...document.querySelectorAll("#timeline th.tl-frame")].findIndex((t) => t.classList.contains("active")));
+    for (let li = 0; li < L.length; li++) {
+      await p.evaluate(([l, ff]) => document.querySelector(`#timeline td.tl-cel[data-l='${l}'][data-f='${ff}']`).click(), [li, f]);
+      await importTo(fr[L[li]]);
+    }
     await p.fill("#frameDur", String(ms)); await p.dispatchEvent("#frameDur", "change");
-    await p.locator("#gridCanvas").evaluate((el) => el.scrollIntoView({ block: "center" }));
-    await wait(650);
+    await center(); await wait(260);
   };
-  // 1コマ目（いまの絵）は使わず、歩くコマから順に足す
-  for (let i = 0; i < A.walk.length; i++) await put(A.walk[i], A.walk_ms[i], `歩く動き: ${i + 1} / ${A.walk.length} コマ目（オニオンスキンで前後のコマを透かして見る）`);
-  for (let i = 0; i < A.attack.length; i++) await put(A.attack[i], A.attack_ms[i], `攻撃の動き: ${i + 1} / ${A.attack.length} コマ目`);
-  await p.click("#timeline th[data-f='0']"); await p.click("#frameDel"); await wait(500);   // 使わない1コマ目を消す
+  await p.check("#onionSkin");
+  for (let i = 0; i < A.walk.length; i++) await putFrame(A.walk[i], A.walk_ms[i], `歩く動き: ${i + 1} / ${A.walk.length} コマ（体は上下に弾み、足を交互に上げる。腕は足と反対に振る）`);
+  for (let i = 0; i < A.attack.length; i++) await putFrame(A.attack[i], A.attack_ms[i], `攻撃（腕だけ）: ${i + 1} / ${A.attack.length} コマ`);
+  const A2 = A.attack2 || [];
+  for (let i = 0; i < A2.length; i++) await putFrame(A2[i], A.attack2_ms[i], `攻撃（体ごと）: ${i + 1} / ${A2.length} コマ（上半身を反らして踏みこみ、打つ向きへ体を倒す）`);
+  const A3 = A.attack3 || [];
+  for (let i = 0; i < A3.length; i++) await putFrame(A3[i], A.attack3_ms[i], `攻撃（両手）: ${i + 1} / ${A3.length} コマ（両腕を頭の上へ振り上げ、体の前へたたきつける）`);
   await p.uncheck("#onionSkin");
-  await p.locator("#gridCanvas").evaluate((el) => el.scrollIntoView({ block: "center" }));
-  const show = async (f) => { await p.evaluate((i) => document.querySelector(`#timeline th[data-f='${i}']`).click(), f); };
-  const nW = A.walk.length;
-  await cap("再生: 歩く");
-  for (let loop = 0; loop < 3; loop++) for (let i = 0; i < nW; i++) { await show(i); await wait(A.walk_ms[i]); }
-  await cap("再生: 攻撃");
-  for (let loop = 0; loop < 3; loop++) {
-    for (let i = 0; i < A.attack.length; i++) { await show(nW + i); await wait(A.attack_ms[i]); }
-    await wait(450);
-  }
-  await cap("再生: 歩いてから攻撃");
-  for (let loop = 0; loop < 2; loop++) {
-    for (let w = 0; w < 2; w++) for (let i = 0; i < nW; i++) { await show(i); await wait(A.walk_ms[i]); }
-    for (let i = 0; i < A.attack.length; i++) { await show(nW + i); await wait(A.attack_ms[i]); }
-    await wait(350);
-  }
-  await show(0); await wait(800);
+  await p.evaluate(() => document.querySelector("#timeline th[data-f='0']").click()); await p.click("#frameDel"); await wait(500); await center();
+  // エディタの再生ボタンで、ひととおり再生して見せる（正確な速さの再生は、このあとに足す別の動画で見せる）
+  await cap("エディタの再生ボタンで再生（すべてのコマ）");
+  await p.click("#playBtn"); await wait(9000); await p.click("#playBtn"); await wait(400);
 }
 await p.close(); await ctx.close(); await browser.close();
 const webm = fs.readdirSync(vdir).filter((f) => f.endsWith(".webm")).map((f) => path.join(vdir, f))[0];
