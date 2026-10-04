@@ -279,36 +279,46 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
     case "fire": {
       // 炎（見本の動画のまね）: 火の玉は彗星のかたち。爆発は、衝撃の輪・黄白の核・飛び散る火の粉・けむり、画面も赤く光る。火柱は、太く高く、ねじれて立ち、地面にも炎が走る
       if (opts.area) {
-        const u = clamp01(t * 1.1);
-        // 画面の赤い光
-        ctx.globalAlpha = 0.22 * Math.sin(Math.min(1, u * 1.3) * Math.PI);
+        // 火柱（全体）: 全員の足もとから、太い炎の柱がいくつも高く燃えあがり（先は赤、中はだいだい、根もとは黄と白）、
+        // 終わりに赤いしずく型の炎が残り、灰色のけむりがのぼる。画面が赤く染まる
+        const u = clamp01(t * 1.08);
+        ctx.globalAlpha = 0.24 * Math.sin(Math.min(1, u * 1.3) * Math.PI);
         ctx.fillStyle = "#ff6a20";
         ctx.fillRect(-4, -4, 420, 240);
         ctx.globalAlpha = 1;
-        // 地面を走る炎
-        for (let i = 0; i < 26; i++) {
-          const gx = tx - 26 + rnd(i, 30) * 52, gh = 3 + Math.sin(t * 20 + i) * 2 + rnd(i, 31) * 5;
-          dot(ctx, gx, ty + 15 - gh, i % 3 ? "#f06a20" : "#ffc040", 2, gh);
-        }
-        const hgt = Math.sin(Math.min(1, u * 1.15) * Math.PI) * 76;
+        const rise = ease(Math.min(1, u * 1.5));
+        const fall = u > 0.7 ? (u - 0.7) / 0.3 : 0;
+        const hgt = 96 * rise * (1 - fall * 0.85);
         for (let col = -2; col <= 2; col++) {
-          const cx = tx + col * 6 + Math.sin(t * 14 + col) * 2;
-          for (let y = 0; y < hgt; y++) {
-            const swirl = Math.sin(y * 0.22 + t * 18 + col * 1.7) * (2 + y * 0.05);
-            const half = Math.max(1, Math.round(6 - (y / Math.max(1, hgt)) * 5 + (rnd(y + col * 31, Math.floor(t * 26)) - 0.5) * 3));
-            dot(ctx, cx + swirl - half, ty + 14 - y, y < hgt * 0.3 ? "#fffbe0" : y < hgt * 0.55 ? "#ffd050" : y < hgt * 0.8 ? "#f4862a" : "#c8381c", half * 2, 1);
+          const cx = tx + col * 9;
+          const colH = hgt * (0.7 + 0.3 * rnd(col + 5, 90) + Math.sin(t * 16 + col) * 0.06);
+          for (let y = 0; y < colH; y += 1) {
+            const q = y / Math.max(1, colH);
+            const half = Math.max(1, Math.round((9 - q * 6) + (rnd(Math.floor(y / 2) + col * 31, Math.floor(t * 22)) - 0.5) * 4));
+            const sway = Math.round(Math.sin(y * 0.14 + t * 15 + col * 2) * (1.5 + q * 3));
+            const c2 = q < 0.15 ? "#fffbe0" : q < 0.35 ? "#ffd050" : q < 0.7 ? "#f4862a" : "#d83a1c";
+            dot(ctx, cx + sway - half, ty + 14 - y, c2, half * 2, 1);
+          }
+          if (u > 0.55) {
+            // 先に残る、赤いしずく型の炎
+            const dropY = ty + 14 - colH - 3;
+            ctx.globalAlpha = 1 - fall * 0.7;
+            dot(ctx, cx - 2, dropY, "#d83a1c", 5, 6);
+            dot(ctx, cx - 1, dropY - 2, "#d83a1c", 3, 2);
+            dot(ctx, cx - 1, dropY + 1, "#f4862a", 3, 4);
+            ctx.globalAlpha = 1;
           }
         }
-        // 火の粉と、のぼるけむり
-        for (let i = 0; i < 34; i++) {
+        // 火の粉と灰色のけむり
+        for (let i = 0; i < 36; i++) {
           const v = clamp01(t * 1.3 - rnd(i, 32) * 0.4);
           if (v <= 0 || v >= 1) continue;
-          dot(ctx, tx + (rnd(i, 33) - 0.5) * 40 + Math.sin(v * 9 + i) * 3, ty + 12 - v * 70, v < 0.6 ? "#ffd050" : "#ff8a30", 2, 2);
+          dot(ctx, tx + (rnd(i, 33) - 0.5) * 50 + Math.sin(v * 9 + i) * 3, ty + 12 - v * 90, v < 0.6 ? "#ffd050" : "#ff8a30", 2, 2);
         }
-        ctx.globalAlpha = 0.5;
-        for (let i = 0; i < 10; i++) {
-          const v = clamp01(t * 1.2 - 0.3 - rnd(i, 25) * 0.2);
-          if (v > 0 && v < 1) dot(ctx, tx + (rnd(i, 26) - 0.5) * 32, ty - hgt * 0.7 - v * 22, "#5a5660", 6, 4);
+        ctx.globalAlpha = 0.55;
+        for (let i = 0; i < 12; i++) {
+          const v = clamp01(t * 1.2 - 0.25 - rnd(i, 25) * 0.25);
+          if (v > 0 && v < 1) dot(ctx, tx + (rnd(i, 26) - 0.5) * 40 + v * 6, ty - 30 - v * 30, "#6a6670", 7, 5);
         }
         ctx.globalAlpha = 1;
         break;
