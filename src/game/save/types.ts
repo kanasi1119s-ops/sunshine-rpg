@@ -25,7 +25,8 @@ export interface SaveData {
     equipment: EquipmentSlots;
   };
   /** 仲間に加わったキャラクターのステータス（キャラクターIDをキーにする。version 2で追加）。 */
-  companions: Record<string, { stats: LeveledStats }>;
+  /** 仲間の装備（`equipment` は後から足した項目。古いセーブには無い）。 */
+  companions: Record<string, { stats: LeveledStats; equipment?: EquipmentSlots }>;
   /** ジョブの装備・熟練度（キャラクターIDをキーにする。主人公は "hero"。version 3で追加）。 */
   jobs: Record<string, JobState>;
   inventory: Inventory;

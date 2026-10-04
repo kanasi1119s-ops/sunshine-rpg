@@ -3,7 +3,7 @@
  * 画面遷移だけを持つ。実際のセーブやタイトルへ戻る処理は main.ts が行う。
  */
 export type PauseScreen = "main" | "status";
-export type PauseAction = "save" | "title" | null;
+export type PauseAction = "save" | "title" | "equip" | null;
 
 export interface PauseMenuState {
   open: boolean;
@@ -11,8 +11,9 @@ export interface PauseMenuState {
   cursor: number;
 }
 
-export const PAUSE_ITEMS: { id: "status" | "save" | "title" | "close"; label: string }[] = [
+export const PAUSE_ITEMS: { id: "status" | "equip" | "save" | "title" | "close"; label: string }[] = [
   { id: "status", label: "つよさ" },
+  { id: "equip", label: "そうび" },
   { id: "save", label: "セーブする" },
   { id: "title", label: "タイトルへ戻る" },
   { id: "close", label: "とじる" },
@@ -43,6 +44,8 @@ export function confirmPauseMenu(state: PauseMenuState): { state: PauseMenuState
   switch (PAUSE_ITEMS[state.cursor].id) {
     case "status":
       return { state: { ...state, screen: "status" }, action: null };
+    case "equip":
+      return { state, action: "equip" };
     case "save":
       return { state, action: "save" };
     case "title":

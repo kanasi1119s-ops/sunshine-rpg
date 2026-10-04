@@ -10,11 +10,14 @@ import { battleEffectFor, type BattleEffect } from "./game/battle/battle-effect"
 import { createStaffRollState, skipStaffRoll, startStaffRoll, updateStaffRoll } from "./game/title/staff-roll";
 import { renderStaffRoll } from "./render/staff-roll-renderer";
 import { addGold, computeVictoryGold } from "./game/economy/gold";
-import { ALL_ITEMS_BY_ID, buyItem, receiveTreasure } from "./game/economy/shop";
+import { ALL_ITEMS_BY_ID, buyItem, describeBonus, receiveTreasure } from "./game/economy/shop";
 import { closeShopMenu, createShopMenuState, moveShopCursor, openShopMenu, withShopMessage } from "./game/economy/shop-menu";
 import { renderShop } from "./render/shop-renderer";
 import { backPauseMenu, confirmPauseMenu, createPauseMenuState, movePauseCursor, openPauseMenu } from "./game/menu/pause-menu";
 import { renderPauseMenu, type StatusRow } from "./render/pause-menu-renderer";
+import { backEquipMenu, confirmEquipMenu, createEquipMenuState, moveEquipCursor, openEquipMenu } from "./game/menu/equip-menu";
+import { renderEquipMenu, type EquipMenuView, type EquipStatsView } from "./render/equip-menu-renderer";
+import { candidatesFor, ensureOwned, equipTo, unequipFrom, type PartyEquipment } from "./game/items/party-equipment";
 import { expToNextLevel } from "./game/growth/exp-curve";
 import { createGameLoop } from "./core/game-loop";
 import { createGameCanvas, LOGICAL_WIDTH, LOGICAL_HEIGHT } from "./render/canvas";
@@ -111,7 +114,7 @@ import { createRng } from "./game/random";
 import { computeVictoryExp } from "./game/battle/battle-engine";
 import { gainExp, statsAtLevel } from "./game/growth/level-up";
 import { applyStatBonus, computeEquipmentBonus, type EquipmentSlots } from "./game/items/equipment";
-import { createInventory, type Inventory } from "./game/items/inventory";
+import { createInventory, getQuantity, type Inventory } from "./game/items/inventory";
 import type { JobId, JobState } from "./game/job/types";
 import { availableJobs } from "./game/job/jobs";
 import { createJobState, starsOf } from "./game/job/mastery";
@@ -399,6 +402,8 @@ const dialogue = new DialogueController(flags, {
     }
   },
   onGiveEquipment: (itemId) => {
+    // 宝の装備は、まず持ち物に入る。ユーリがいまの装備より強ければ、その場でつける（そうでなくても、そうび画面で仲間に渡せる）
+    inventory = ensureOwned(inventory, [itemId]);
     const result = receiveTreasure(itemId, heroEquipment);
     heroEquipment = result.equipment;
     if (audioStarted) {
@@ -694,6 +699,9 @@ let pauseMessageTimer = 0;
 let jobMenuWasOpen = false;
 window.addEventListener("keydown", () => { jobMenuWasOpen = jobMenu.open; }, true);
 window.addEventListener("keydown", (event) => {
+  if (equipBackHandled) {
+    return;
+  }
   if (pauseMenu.open) {
     if (event.key === "x" || event.key === "Escape") {
       pauseMenu = backPauseMenu(pauseMenu);
@@ -724,7 +732,7 @@ function statusRows(): StatusRow[] {
   };
   add("ユーリ", applyStatBonus(heroStats, equipmentBonus));
   for (const [id, stats] of Object.entries(companionStats)) {
-    add(COMPANIONS[id].name, stats);
+    add(COMPANIONS[id].name, withEquipment(id, stats));
   }
   return rows;
 }
@@ -774,6 +782,127 @@ let heroEquipment: EquipmentSlots = createInitialEquipment();
 /** 仲間に加わったキャラクターのステータス（キャラクターIDをキーにする）。 */
 let companionStats: Record<string, LeveledStats> = {};
 let inventory: Inventory = createInventory();
+/** 仲間の装備（キャラクターIDごと。ユーリの装備は heroEquipment）。 */
+let companionEquipment: Record<string, EquipmentSlots> = {};
+
+/** ユーリと仲間みんなの装備。 */
+function partyEquipment(): PartyEquipment {
+  return { hero: heroEquipment, ...companionEquipment };
+}
+
+function setPartyEquipment(party: PartyEquipment): void {
+  heroEquipment = party.hero ?? {};
+  companionEquipment = Object.fromEntries(Object.entries(party).filter(([id]) => id !== "hero"));
+}
+
+/** 身につけている装備は、すべて持ち物に入っている（はずしたとき、ほかの人に渡せるように）。 */
+function syncEquipmentToInventory(): void {
+  inventory = ensureOwned(inventory, Object.values(partyEquipment()).flatMap((slots) => Object.values(slots)));
+}
+
+syncEquipmentToInventory();
+
+/** そうび画面（メニューの「そうび」）。 */
+let equipMenu = createEquipMenuState();
+let lastEquipDirection: Direction | null = null;
+let equipMessage: string | null = null;
+/** そうび画面でもどるを押したとき、同じキーでメニューまで閉じないようにする目印。 */
+let equipBackHandled = false;
+window.addEventListener("keydown", (event) => {
+  if ((event.key === "x" || event.key === "Escape") && equipMenu.open) {
+    equipMenu = backEquipMenu(equipMenu);
+    equipMessage = null;
+    equipBackHandled = true;
+    setTimeout(() => { equipBackHandled = false; }, 0);
+  }
+}, true);
+
+/** そうび画面の仲間（ユーリと、加わった仲間）。 */
+function equipMembers(): { id: string; name: string; stats: LeveledStats }[] {
+  return [
+    { id: "hero", name: "ユーリ", stats: heroStats },
+    ...Object.entries(companionStats).map(([id, stats]) => ({ id, name: COMPANIONS[id].name, stats })),
+  ];
+}
+
+const EQUIP_SLOT_LABELS = [
+  { id: "weapon" as const, label: "ぶき" },
+  { id: "armor" as const, label: "ぼうぐ" },
+  { id: "accessory" as const, label: "かざり" },
+];
+
+function describeItemId(id: string | undefined): string {
+  const item = id ? ALL_ITEMS_BY_ID[id] : undefined;
+  return item && item.category !== "consumable" ? `${item.name}（${describeBonus(item)}）` : "なし";
+}
+
+function statsView(stats: LeveledStats): EquipStatsView {
+  return { level: stats.level, maxHp: stats.maxHp, attack: stats.attack, defense: stats.defense, speed: stats.speed };
+}
+
+function equipCandidatesFor(): ReturnType<typeof candidatesFor> {
+  const member = equipMembers()[equipMenu.member];
+  return member ? candidatesFor(member.id, EQUIP_SLOT_LABELS[equipMenu.slot].id, partyEquipment(), inventory, ALL_ITEMS_BY_ID) : [];
+}
+
+function equipMenuView(): EquipMenuView {
+  const members = equipMembers();
+  const party = partyEquipment();
+  const current = members[equipMenu.member];
+  const baseOf = (id: string, p: PartyEquipment): LeveledStats => {
+    const m = members.find((x) => x.id === id)!;
+    return applyStatBonus(m.stats, computeEquipmentBonus(p[id] ?? {}, ALL_ITEMS_BY_ID));
+  };
+  const candidates: EquipMenuView["candidates"] = [];
+  if (equipMenu.stage === "item" && current) {
+    const category = EQUIP_SLOT_LABELS[equipMenu.slot].id;
+    candidates.push({ label: "はずす", bonusText: "", after: statsView(baseOf(current.id, unequipFrom(party, current.id, category))) });
+    for (const c of equipCandidatesFor()) {
+      candidates.push({
+        label: c.item.name,
+        bonusText: describeBonus(c.item),
+        note: c.takenBy ? `[${members.find((m) => m.id === c.takenBy)?.name ?? ""}]` : undefined,
+        after: statsView(baseOf(current.id, equipTo(party, current.id, c.item))),
+      });
+    }
+  }
+  return {
+    members: members.map((m) => ({
+      id: m.id,
+      name: m.name,
+      stats: statsView(baseOf(m.id, party)),
+      slots: EQUIP_SLOT_LABELS.map((slot) => ({ label: slot.label, itemText: describeItemId(party[m.id]?.[slot.id]) })),
+    })),
+    candidates,
+    message: equipMessage,
+  };
+}
+
+/** その人のその部位を、選んだ品にかえる（0番目は「はずす」）。 */
+function applyEquipChoice(state: typeof equipMenu): void {
+  const members = equipMembers();
+  const member = members[state.member];
+  if (!member) return;
+  const category = EQUIP_SLOT_LABELS[state.slot].id;
+  const choice = state.item;
+  if (choice === 0) {
+    setPartyEquipment(unequipFrom(partyEquipment(), member.id, category));
+    equipMessage = `${member.name}は ${EQUIP_SLOT_LABELS[state.slot].label}を はずした`;
+  } else {
+    const candidate = candidatesFor(member.id, category, partyEquipment(), inventory, ALL_ITEMS_BY_ID)[choice - 1];
+    if (!candidate) return;
+    setPartyEquipment(equipTo(partyEquipment(), member.id, candidate.item));
+    equipMessage = `${member.name}は ${candidate.item.name}を つけた`;
+  }
+  autosave();
+  if (audioStarted) audio.playSe(seOf("confirm"));
+}
+
+/** その人の装備ボーナスを足した、今の実力。 */
+function withEquipment(id: string, stats: LeveledStats): LeveledStats {
+  const slots = id === "hero" ? heroEquipment : companionEquipment[id] ?? {};
+  return applyStatBonus(stats, computeEquipmentBonus(slots, ALL_ITEMS_BY_ID));
+}
 /** 所持している灯貨（お金）。 */
 let gold = 0;
 /** お店の画面（町の武具屋で開く）。 */
@@ -825,7 +954,7 @@ function buildActiveParty(effectiveHeroStats: LeveledStats): ReturnType<typeof c
   const unlocked = isJobSystemUnlocked(flags);
   const party = createChapter0Party(heroStats.level, withJobBonus(effectiveHeroStats, jobStates.hero, unlocked));
   for (const [id, stats] of Object.entries(companionStats)) {
-    party.push(createCompanionCombatant(COMPANIONS[id], withJobBonus(stats, jobStates[id], unlocked)));
+    party.push(createCompanionCombatant(COMPANIONS[id], withJobBonus(withEquipment(id, stats), jobStates[id], unlocked)));
   }
   return party;
 }
@@ -862,7 +991,7 @@ function buildSaveData(): SaveData {
     player: { mapId: currentMapId, tileX: player.x / map.data.tileWidth, tileY: player.y / map.data.tileHeight, direction: player.direction },
     hero: { stats: heroStats, equipment: heroEquipment },
     companions: Object.fromEntries(
-      Object.entries(companionStats).map(([id, stats]) => [id, { stats }]),
+      Object.entries(companionStats).map(([id, stats]) => [id, { stats, equipment: companionEquipment[id] }]),
     ),
     jobs: jobStates,
     inventory,
@@ -883,8 +1012,10 @@ function applySaveData(data: SaveData): void {
   companionStats = Object.fromEntries(
     Object.entries(data.companions).map(([id, entry]) => [id, entry.stats]),
   );
+  companionEquipment = Object.fromEntries(Object.entries(data.companions).map(([id, entry]) => [id, entry.equipment ?? {}]));
   jobStates = data.jobs;
   inventory = data.inventory;
+  syncEquipmentToInventory();
   gold = data.gold ?? 0;
   for (const key of Object.keys(flags)) {
     delete flags[key];
@@ -914,8 +1045,10 @@ function resetToNewGame(): void {
   heroStats = createInitialHeroStats();
   heroEquipment = createInitialEquipment();
   companionStats = {};
+  companionEquipment = {};
   jobStates = {};
   inventory = createInventory();
+  syncEquipmentToInventory();
   gold = 0;
   for (const key of Object.keys(flags)) {
     delete flags[key];
@@ -1356,6 +1489,29 @@ const loop = createGameLoop({
         pauseMessage = null;
       }
     }
+    if (equipMenu.open) {
+      const direction = input.getDirection();
+      const counts = { members: equipMembers().length, slots: EQUIP_SLOT_LABELS.length, items: equipMenu.stage === "item" ? equipCandidatesFor().length + 1 : 1 };
+      if (direction !== lastEquipDirection) {
+        if (direction === "up" || direction === "down") {
+          equipMenu = moveEquipCursor(equipMenu, direction === "up" ? -1 : 1, counts);
+          audio.playSe(seOf("cursor"));
+        }
+        lastEquipDirection = direction;
+      }
+      if (actionPressed) {
+        const before = equipMenu;
+        const result = confirmEquipMenu(before);
+        equipMenu = result.state;
+        if (result.apply) {
+          applyEquipChoice(before);
+        } else {
+          equipMessage = null;
+        }
+      }
+      return;
+    }
+    lastEquipDirection = null;
     if (pauseMenu.open) {
       const direction = input.getDirection();
       if (direction !== lastPauseDirection) {
@@ -1376,6 +1532,9 @@ const loop = createGameLoop({
           audio.playSe(seOf("save"));
           pauseMessage = "セーブしました";
           pauseMessageTimer = 2000;
+        } else if (result.action === "equip") {
+          equipMenu = openEquipMenu();
+          equipMessage = null;
         } else if (result.action === "title") {
           autosave();
           title = createTitleState(hasAutosave());
@@ -1402,10 +1561,15 @@ const loop = createGameLoop({
       if (actionPressed) {
         const item = shopMenu.items[shopMenu.cursor];
         if (item) {
-          const result = buyItem(item.id, gold, heroEquipment);
+          // すでに持っている品は買わない（そうび画面で、ほかの人につけられる）
+          const result =
+            getQuantity(inventory, item.id) > 0
+              ? ({ ok: false, message: "もう持っている（メニューの「そうび」で つけられる）" } as const)
+              : buyItem(item.id, gold, heroEquipment);
           if (result.ok) {
             gold = result.gold;
             heroEquipment = result.equipment;
+            inventory = ensureOwned(inventory, [item.id]);
             autosave();
             audio.playSe(seOf("buy"));
           } else {
@@ -1786,6 +1950,9 @@ const loop = createGameLoop({
     renderJobMenu(ctx, jobMenu, jobMenuMembers(), jobStates, selectableJobIds(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
     renderShop(ctx, shopMenu, gold, heroEquipment, LOGICAL_WIDTH, LOGICAL_HEIGHT);
     renderPauseMenu(ctx, pauseMenu, pauseMenu.screen === "status" ? statusRows() : [], pauseMessage, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    if (equipMenu.open) {
+      renderEquipMenu(ctx, equipMenu, equipMenuView(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    }
 
     if (import.meta.env.DEV) {
       ctx.fillStyle = "#88ff88";

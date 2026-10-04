@@ -21,13 +21,16 @@ describe("ゲーム中のメニュー", () => {
 
   it("「セーブする」は動作を返して開いたまま。「タイトルへ戻る」は動作を返して閉じる。「とじる」は何も返さず閉じる", () => {
     const at = (index: number) => movePauseCursor(openPauseMenu(), index);
-    const save = confirmPauseMenu(at(1));
+    const equip = confirmPauseMenu(at(1));
+    expect(equip.action).toBe("equip");
+    expect(equip.state.open).toBe(true);
+    const save = confirmPauseMenu(at(2));
     expect(save.action).toBe("save");
     expect(save.state.open).toBe(true);
-    const title = confirmPauseMenu(at(2));
+    const title = confirmPauseMenu(at(3));
     expect(title.action).toBe("title");
     expect(title.state.open).toBe(false);
-    const close = confirmPauseMenu(at(3));
+    const close = confirmPauseMenu(at(4));
     expect(close.action).toBeNull();
     expect(close.state.open).toBe(false);
   });
