@@ -124,23 +124,25 @@ function loadParty(): void {
   }
 }
 
-/** タイトルの背景の絵（キャッシュ）。ブラウザ以外では null。 */
-export function getTitleArt(w: number, h: number): HTMLCanvasElement | null {
+/** タイトルの背景の絵（キャッシュ）。k は画面の拡大率（描く細かさ）。ブラウザ以外では null。 */
+export function getTitleArt(w: number, h: number, k = 1): HTMLCanvasElement | null {
   if (typeof document === "undefined") {
     return null;
   }
   loadParty();
-  const key = `${w}x${h}`;
+  const key = `${w}x${h}x${k}`;
   if (cached && cachedKey === key) {
     return cached;
   }
   const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
+  // 画面の拡大率 k ぶん、細かく描く（キャラクターの絵を、ぼかさず細部まで出すため）。ドットの背景は、論理座標のまま拡大して描く
+  canvas.width = w * k;
+  canvas.height = h * k;
   const ctx = canvas.getContext("2d");
   if (!ctx) {
     return null;
   }
+  ctx.scale(k, k);
   ctx.imageSmoothingEnabled = false;
   skyBands(ctx, w, h);
   // 星

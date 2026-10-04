@@ -8,9 +8,10 @@ export function renderTitle(ctx: CanvasRenderingContext2D, state: TitleState, ga
   if (!state.open) {
     return;
   }
-  const art = state.screen === "menu" ? getTitleArt(screenWidth, screenHeight) : null;
+  const k = Math.max(1, Math.round(ctx.getTransform?.().a ?? 1));
+  const art = state.screen === "menu" ? getTitleArt(screenWidth, screenHeight, k) : null;
   if (art) {
-    ctx.drawImage(art, 0, 0);
+    ctx.drawImage(art, 0, 0, screenWidth, screenHeight);
   } else {
     // 夜空のようなグラデーションと、ちいさな灯り（あそびかた・クレジットの背景）。
     const grad = ctx.createLinearGradient(0, 0, 0, screenHeight);
