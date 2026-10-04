@@ -23,6 +23,50 @@ def lum(hexv):
     r, g, b = (int(h[i:i + 2], 16) / 255 for i in (0, 2, 4))
     return colorsys.rgb_to_hls(r, g, b)[1]
 
+def strip(key, frames):
+    """モブには、武器（弓・杖）・ぶら下げた灯り・髪や額の飾りは付けない（2026-10-04、人間の指示）。
+    持ち物の色の画素を消し、まわりの縁取りが残らないようにする。髪の飾りは、髪の色にぬりかえる。"""
+    out = {}
+    for fk, rows in frames.items():
+        g = [list(r) for r in rows]
+        H, W = len(g), len(g[0])
+        def at(x, y):
+            return g[y][x] if 0 <= x < W and 0 <= y < H else "."
+        for y in range(H):
+            for x in range(W):
+                c = g[y][x]
+                if c == ".":
+                    continue
+                if key == "reto" and ((c in "TU" and y >= 20) or (c == "N" and y >= 24)):
+                    g[y][x] = "."                       # ぶら下げた灯り
+                elif key == "yuri":
+                    if (c in "VP" and y >= 20) or (c == "N" and y >= 24):
+                        g[y][x] = "."                   # ぶら下げた灯り
+                    elif c in "EF" and y <= 12:
+                        g[y][x] = "C"                   # はちまき → 髪
+                elif key == "mina":
+                    if c in "EFHJ":
+                        g[y][x] = "."                   # 髪かざりと杖
+                elif key == "guide":
+                    if y <= 3:
+                        g[y][x] = "."                   # 頭の上のまげ（飾り）
+                    elif c in "EFGNX" and 8 <= y <= 10:
+                        g[y][x] = "B"                   # 額・髪の飾り・髪どめ → 髪
+                    elif c in "LTV":
+                        g[y][x] = "."                   # 弓
+                    elif fk.startswith("up") and y >= 11 and 6 <= x <= 9:
+                        g[y][x] = "S"                   # 背中の矢筒 → 服の色
+        # 持ち物を消したあとに、ひとりぼっちになった縁取りを消す
+        for _ in range(3):
+            for y in range(H):
+                for x in range(W):
+                    if g[y][x] != "A":
+                        continue
+                    if not any(at(x + dx, y + dy) not in (".", "A") for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
+                        g[y][x] = "."
+        out[fk] = ["".join(r) for r in g]
+    return out
+
 out = {}
 for key, (name, groups) in TEMPLATES.items():
     d = json.load(open(SRC / f"{name}.json"))
@@ -37,6 +81,7 @@ for key, (name, groups) in TEMPLATES.items():
             roles[i] = role
             shade[i] = round(max(-0.6, min(0.6, (lum(pal[i]) - med) * 1.25)), 3)
     frames = {k: v for k, v in d["frames"].items() if k[:-1] in ("down", "up", "left", "right") and k[-1] in "012"}
+    frames = strip(key, frames)
     out[key] = {"palette": pal, "roles": roles, "shade": shade, "frames": frames}
 
 ts = (
