@@ -5,6 +5,7 @@ import { backTitle, confirmTitle, createTitleState, moveTitleCursor } from "./ga
 import { renderTitle } from "./render/title-renderer";
 import { renderOpening } from "./render/opening-renderer";
 import { drawWindow } from "./render/ui-frame";
+import { renderItemsScreen, type ItemsView } from "./render/pause-menu-renderer";
 import { objectKindOf, setOpenedChests } from "./render/object-markers";
 import { npcLook } from "./game/sprite/character-specs";
 import { advanceBootOpening, startBootOpening, updateBootOpening } from "./game/title/boot-opening";
@@ -28,7 +29,7 @@ import { renderPauseMenu, type StatusRow } from "./render/pause-menu-renderer";
 import { backEquipMenu, confirmEquipMenu, createEquipMenuState, moveEquipCursor, openEquipMenu } from "./game/menu/equip-menu";
 import { renderEquipMenu, type EquipMenuView, type EquipStatsView } from "./render/equip-menu-renderer";
 import { candidatesFor, ensureOwned, equipTo, sanitizeParty, unequipFrom, type PartyEquipment } from "./game/items/party-equipment";
-import type { ItemData } from "./game/items/types";
+import type { EquipmentItemData, ItemData } from "./game/items/types";
 import { canEquip, WEAPON_LABEL, WEAPON_TYPE_OF, weaponTypeOf, wielderOf } from "./game/items/weapon-types";
 import { expToNextLevel } from "./game/growth/exp-curve";
 import { createGameLoop } from "./core/game-loop";
@@ -795,6 +796,38 @@ let bootClockMs = 0;
 
 /** ゲーム中のメニュー（Tab／Escape、スマホは「メニュー」ボタン）。 */
 let pauseMenu = createPauseMenuState();
+/** 「もちもの」画面の、スクロール位置（行）。 */
+let itemsScroll = 0;
+
+/** 「もちもの」に出す、だいじなもの（フラグから決める）と、持っている装備。 */
+function itemsView(): ItemsView {
+  const KEY_ITEMS: { flag: string | null; name: string; note: string }[] = [
+    { flag: null, name: "祖父の腕輪", note: "灯り石の腕輪。ほんのり温かい。" },
+    { flag: "chapter0_got_lamp", name: "古いランタン", note: "暗い道を照らす灯り。" },
+    { flag: "chapter0_kasen_farewell", name: "通行手形と通信石", note: "カセンから預かった。支部との連絡に使う。" },
+    { flag: "chapter1_got_key", name: "水車小屋の鍵", note: "水源の扉をあける鍵。" },
+    { flag: "chapter2_core_shard_taken", name: "環の文様のかけら", note: "倉庫で見つけた石のかけら。" },
+    { flag: "chapter4_sailcar_obtained", name: "帆走車", note: "砂の海を走る乗り物。" },
+    { flag: "has_ship", name: "船", note: "海を渡る乗り物。" },
+    { flag: "has_airship", name: "空の乗り物", note: "空を飛ぶ乗り物。" },
+  ];
+  const party = partyEquipment();
+  const nameOf = (id: string): string => (id === "hero" ? "ユーリ" : COMPANIONS[id]?.name ?? id);
+  return {
+    keyItems: KEY_ITEMS.filter((k) => !k.flag || flags[k.flag]).map((k) => ({ name: k.name, note: k.note })),
+    equipment: inventory
+      .filter((e) => e.quantity > 0 && ALL_ITEMS_BY_ID[e.itemId] && ALL_ITEMS_BY_ID[e.itemId].category !== "consumable")
+      .map((e) => {
+        const item = ALL_ITEMS_BY_ID[e.itemId] as EquipmentItemData;
+        return {
+          name: item.name,
+          count: e.quantity,
+          bonus: describeBonus(item),
+          wearers: Object.entries(party).filter(([, slots]) => Object.values(slots).includes(item.id)).map(([id]) => nameOf(id)).join("、"),
+        };
+      }),
+  };
+}
 let lastPauseDirection: Direction | null = null;
 let pauseMessage: string | null = null;
 let pauseMessageTimer = 0;
@@ -1774,6 +1807,9 @@ function renderGameSceneBase(): void {
     renderShopWear(ctx, shopWearView(), shopWear.cursor, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   }
   renderPauseMenu(ctx, pauseMenu, pauseMenu.screen === "status" ? statusRows() : [], pauseMessage, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  if (pauseMenu.open && pauseMenu.screen === "items") {
+    renderItemsScreen(ctx, itemsView(), itemsScroll, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  }
   if (equipMenu.open) {
     renderEquipMenu(ctx, equipMenu, equipMenuView(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
   }
@@ -1973,7 +2009,11 @@ const loop = createGameLoop({
     lastEquipDirection = null;
     if (pauseMenu.open) {
       const direction = input.getDirection();
-      if (direction !== lastPauseDirection) {
+      if (direction !== lastPauseDirection && pauseMenu.screen === "items") {
+        if (direction === "up") itemsScroll = Math.max(0, itemsScroll - 3);
+        if (direction === "down") itemsScroll += 3;
+        lastPauseDirection = direction;
+      } else if (direction !== lastPauseDirection) {
         if (direction === "up") {
           pauseMenu = movePauseCursor(pauseMenu, -1);
           audio.playSe(seOf("cursor"));
@@ -1985,6 +2025,7 @@ const loop = createGameLoop({
       }
       if (actionPressed) {
         const result = confirmPauseMenu(pauseMenu);
+        if (result.state.screen === "items" && pauseMenu.screen !== "items") itemsScroll = 0;
         pauseMenu = result.state;
         if (result.action === "save") {
           autosave();

@@ -2,7 +2,7 @@
  * ゲーム中のメニュー（Escape／Tab、スマホは「メニュー」ボタン）。つよさの確認・セーブ・タイトルへ戻る。
  * 画面遷移だけを持つ。実際のセーブやタイトルへ戻る処理は main.ts が行う。
  */
-export type PauseScreen = "main" | "status";
+export type PauseScreen = "main" | "status" | "items";
 export type PauseAction = "save" | "title" | "equip" | "keys" | null;
 
 export interface PauseMenuState {
@@ -11,8 +11,9 @@ export interface PauseMenuState {
   cursor: number;
 }
 
-export const PAUSE_ITEMS: { id: "status" | "equip" | "keys" | "save" | "title" | "close"; label: string }[] = [
+export const PAUSE_ITEMS: { id: "status" | "items" | "equip" | "keys" | "save" | "title" | "close"; label: string }[] = [
   { id: "status", label: "つよさ" },
+  { id: "items", label: "もちもの" },
   { id: "equip", label: "そうび" },
   { id: "keys", label: "そうさ設定" },
   { id: "save", label: "セーブする" },
@@ -39,12 +40,14 @@ export function confirmPauseMenu(state: PauseMenuState): { state: PauseMenuState
   if (!state.open) {
     return { state, action: null };
   }
-  if (state.screen === "status") {
+  if (state.screen === "status" || state.screen === "items") {
     return { state: { ...state, screen: "main" }, action: null };
   }
   switch (PAUSE_ITEMS[state.cursor].id) {
     case "status":
       return { state: { ...state, screen: "status" }, action: null };
+    case "items":
+      return { state: { ...state, screen: "items" }, action: null };
     case "equip":
       return { state, action: "equip" };
     case "keys":
@@ -63,5 +66,5 @@ export function backPauseMenu(state: PauseMenuState): PauseMenuState {
   if (!state.open) {
     return state;
   }
-  return state.screen === "status" ? { ...state, screen: "main" } : { ...state, open: false };
+  return state.screen !== "main" ? { ...state, screen: "main" } : { ...state, open: false };
 }

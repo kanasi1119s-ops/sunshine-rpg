@@ -15,6 +15,52 @@ export interface StatusRow {
   expToNext: number;
 }
 
+export interface ItemsView {
+  /** だいじなもの（名前と説明）。 */
+  keyItems: { name: string; note: string }[];
+  /** 持っている装備（名前・数・効果・つけている人）。 */
+  equipment: { name: string; count: number; bonus: string; wearers: string }[];
+}
+
+/** 「もちもの」の画面。だいじなものと、持っている装備の一覧（上下でスクロール）。 */
+export function renderItemsScreen(ctx: CanvasRenderingContext2D, view: ItemsView, scroll: number, gold: number, screenWidth: number, screenHeight: number): void {
+  ctx.textBaseline = "top";
+  ctx.textAlign = "left";
+  drawWindow(ctx, 4, 4, screenWidth - 8, screenHeight - 8);
+  ctx.font = "10px monospace";
+  ctx.fillStyle = "#f2c14e";
+  ctx.fillText("もちもの（上下でスクロール／決定またはXでもどる）", 12, 10);
+  ctx.fillText(`灯貨 ${gold}`, screenWidth - 90, 10);
+  type Row = { text: string; color: string; sub?: string };
+  const rows: Row[] = [{ text: "【だいじなもの】", color: "#88c8ff" }];
+  for (const k of view.keyItems) rows.push({ text: `　${k.name}`, color: "#f0f0f0", sub: `　　${k.note}` });
+  rows.push({ text: "", color: "#fff" });
+  rows.push({ text: "【そうび】", color: "#88c8ff" });
+  if (view.equipment.length === 0) rows.push({ text: "　（まだ持っていない）", color: "#a0a0b8" });
+  for (const e of view.equipment) rows.push({ text: `　${e.name}${e.count > 1 ? ` ×${e.count}` : ""}　${e.bonus}`, color: "#f0f0f0", sub: e.wearers ? `　　つけている人: ${e.wearers}` : "　　（だれもつけていない）" });
+  const rowH = 11;
+  const lines: { text: string; color: string }[] = [];
+  for (const r of rows) {
+    lines.push({ text: r.text, color: r.color });
+    if (r.sub) lines.push({ text: r.sub, color: "#a8a8c8" });
+  }
+  const visible = Math.floor((screenHeight - 40) / rowH);
+  const maxScroll = Math.max(0, lines.length - visible);
+  const start = Math.max(0, Math.min(maxScroll, scroll));
+  lines.slice(start, start + visible).forEach((l, i) => {
+    ctx.fillStyle = l.color;
+    ctx.fillText(l.text, 12, 26 + i * rowH);
+  });
+  if (start > 0) {
+    ctx.fillStyle = "#f2c14e";
+    ctx.fillText("▲", screenWidth - 18, 24);
+  }
+  if (start < maxScroll) {
+    ctx.fillStyle = "#f2c14e";
+    ctx.fillText("▼", screenWidth - 18, screenHeight - 20);
+  }
+}
+
 /** ゲーム中のメニューと、つよさ画面。 */
 export function renderPauseMenu(
   ctx: CanvasRenderingContext2D,
@@ -27,6 +73,9 @@ export function renderPauseMenu(
 ): void {
   if (!state.open) {
     return;
+  }
+  if (state.screen === "items") {
+    return; // 「もちもの」は renderItemsScreen で描く
   }
   ctx.textBaseline = "top";
   ctx.textAlign = "left";
