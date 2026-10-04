@@ -198,6 +198,25 @@ def fill_notches(frames):
         out[fk] = ["".join(r) for r in g]
     return out
 
+def push_front_hair(frames):
+    """横向きの髪の前（おでこの上）を1ドット前に出す。"""
+    out = {}
+    for fk, rows in frames.items():
+        g = [list(r) for r in rows]
+        if fk[:-1] in ("left", "right"):
+            L = fk.startswith("left")
+            for y in range(5, 12):
+                xs = [x for x in range(len(g[y])) if g[y][x] != "."]
+                if not xs:
+                    continue
+                x0 = min(xs) if L else max(xs)
+                xo = x0 - 1 if L else x0 + 1
+                if 0 <= xo < len(g[y]):
+                    g[y][xo] = g[y][x0]
+                    g[y][x0] = "B"
+        out[fk] = ["".join(r) for r in g]
+    return out
+
 built = {}
 for key, (name, groups) in TEMPLATES.items():
     d = json.load(open(SRC / f"{name}.json"))
@@ -225,6 +244,8 @@ for key, (name, groups) in TEMPLATES.items():
         frames = {fk: ["".join(newl if (ch == "D" and y <= 17) else ch for ch in row) for y, row in enumerate(rows)] for fk, rows in frames.items()}
     frames = symmetrize(strip(key, frames))
     frames = reoutline(fill_notches(reoutline(smooth_head(despeckle(frames, roles)))))
+    if key == "mina":
+        frames = reoutline(push_front_hair(frames))
     # 目は、どの肌の色でも見えやすいよう、黒（ほんのり色つき）にする
     ei = LETTERS.index(EYES[key])
     pal = list(pal); pal[ei] = "#241820"; roles[ei] = "fixed"; shade[ei] = 0.0
