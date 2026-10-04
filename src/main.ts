@@ -75,8 +75,8 @@ import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
 import { awardVictoryMastery, changeJob, isJobSystemUnlocked, battleSkillsOf, withJobBonus } from "./game/job/party-job";
-import { renderBattle, setBattleBiome } from "./render/battle-renderer";
-import { biomeForMap, type Biome } from "./render/battle-backdrop";
+import { renderBattle, setBattleBiome, warmBattleBackdrops } from "./render/battle-renderer";
+import { biomeForMap, ALL_BIOMES, type Biome } from "./render/battle-backdrop";
 import {
   createInitialEquipment,
   createInitialHeroStats,
@@ -176,6 +176,8 @@ app.innerHTML = "";
 const { ctx, resize } = createGameCanvas(app);
 resize();
 window.addEventListener("resize", resize);
+// 戦闘の背景の絵を、遊びはじめて少したってから先に作っておく
+setTimeout(() => warmBattleBackdrops(ALL_BIOMES, LOGICAL_WIDTH, LOGICAL_HEIGHT), 1500);
 
 const flags: Flags = {};
 const camera = createCamera(LOGICAL_WIDTH, LOGICAL_HEIGHT);
@@ -553,11 +555,22 @@ let lastStepTile: { x: number; y: number; mapId: string } | null = null;
 /** 世界地図で、いま立っている地形の戦闘の背景。 */
 let worldBattleBiome: Biome = "grass";
 
+/**
+ * 戦闘を始めるときに、いまいる場所の背景に切りかえる。人間の指摘「バトル画面の背景も一瞬違うやつが写る」（2026-10-05）:
+ * 戦闘の決まり方によっては、前の戦闘の背景が残ったまま描かれることがあったので、戦闘を始める所すべてで、
+ * 戦闘を作る直前にここを呼ぶ（もう戦闘中なら変えない）。前の戦闘の光や揺れの演出も消す。
+ */
+function prepareBattleScreen(): void {
+  setBattleBiome(currentMapId === "world-map" ? worldBattleBiome : biomeForMap(currentMapId));
+  battleEffect = null;
+  lastBattleMessage = null;
+}
+
 function startRandomBattle(enemies: Combatant[]): void {
   if (battle) {
     return;
   }
-  setBattleBiome(currentMapId === "world-map" ? worldBattleBiome : biomeForMap(currentMapId));
+  prepareBattleScreen();
   victoryExpApplied = false;
   victoryMessage = null;
   victoryLevelUps = [];
@@ -587,11 +600,11 @@ function startRandomBattle(enemies: Combatant[]): void {
 }
 
 function startStoryBattle(battleId: string): void {
-  setBattleBiome(biomeForMap(currentMapId));
   const def = STORY_BATTLES[battleId];
   if (!def || battle) {
-    return;
+    return;   // 戦闘中に呼ばれても、いまの戦闘の背景は変えない
   }
+  prepareBattleScreen();
   victoryExpApplied = false;
   victoryMessage = null;
   victoryLevelUps = [];
@@ -1260,6 +1273,7 @@ document.body.appendChild(fileInput);
 if (import.meta.env.DEV) {
   window.addEventListener("keydown", (event) => {
     if (event.key === "b" && !battle && !dialogue.isActive() && !debugMenu.open && !debugNoEncounter) {
+      prepareBattleScreen();
       victoryExpApplied = false;
       victoryMessage = null;
   victoryLevelUps = [];

@@ -2,8 +2,8 @@ import { COMMANDS, type BattleUiState } from "../game/battle/battle-controller";
 import type { BattleState, Combatant } from "../game/battle/types";
 import { baseEnemyId, findCombatant } from "../game/battle/types";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
-import { getSpriteCanvas } from "../game/art/sprite";
 import { drawSmooth } from "./smooth-draw";
+import { getSpriteCanvas } from "../game/art/sprite";
 import { hueOfHex, mobPalette } from "../game/art/mob-palette";
 import { getBackdropCanvas, type Biome } from "./battle-backdrop";
 import { drawWindow } from "./ui-frame";
@@ -16,6 +16,21 @@ let currentBiome: Biome = "grass";
 let currentVariant = 0;
 
 /** これから始まる戦闘の背景（場所）を決める。 */
+/**
+ * 戦闘の背景の絵を、先にぜんぶ作っておく（はじめて行く場所の戦闘で、絵を作るあいだ画面が止まらないように）。
+ * 遊びはじめて少したってから、手のあいた時に1枚ずつ作る。
+ */
+export function warmBattleBackdrops(biomes: Biome[], screenWidth: number, screenHeight: number): void {
+  const queue = [...biomes];
+  const next = (): void => {
+    const b = queue.shift();
+    if (!b) return;
+    getBackdropCanvas(b, screenWidth, screenHeight - 56);
+    setTimeout(next, 30);
+  };
+  setTimeout(next, 30);
+}
+
 export function setBattleBiome(biome: Biome): void {
   currentBiome = biome;
   // 同じ場所に絵が2枚あるときの、どちらを使うか（戦闘ごとに選ぶ）

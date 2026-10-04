@@ -57,4 +57,4 @@ EDITOR=<保存したエディタのindex.html> node tools/pixel-practice/editor-
 
 ## 6. 記録・ゲームへ
 
-SKILL.md の4・5。会話の顔は、立ち絵の頭の部分を切り出して使う（`docs/decisions.md` 2026-09-29 の大きな絵の取り込み方と同じ）。
+SKILL.md の5・6。会話の顔は、立ち絵の頭の部分を切り出して使う（`docs/decisions.md` 2026-09-29 の大きな絵の取り込み方と同じ）。

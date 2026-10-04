@@ -125,6 +125,8 @@ Aseprite のような作業画面（メニュー・レイヤー・フレーム�
 
 `tools/pixel-practice/editor-draw.mjs` が、このエディタをヘッドレスブラウザで開き、文字グリッドの絵を実際のマウス操作で描いて、「食い違い 0 マス」を確かめます（make-art の決まり）。エディタはこのフォルダの `index.html` を使います（環境変数 `EDITOR` で別のファイルも指定できる）。
 
+準備: ヘッドレスブラウザを動かす `playwright-core` が要ります（リポジトリの依存には入れていない）。はじめに一度 `npm install --no-save playwright-core` を実行してください。ブラウザ本体は `/opt/pw-browsers/chromium` を使います（`playwright install` は不要）。
+
 ```bash
 node tools/pixel-practice/editor-draw.mjs 絵.txt パレット.json 出力.png --zoom 6            # マウスで1ドットずつ
 node tools/pixel-practice/editor-draw.mjs 絵.txt パレット.json 出力.png --zoom 6 --import   # 大きな絵（読み込み＋直し描き）

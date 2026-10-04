@@ -7,20 +7,22 @@
   "h": 512,
   "steps": 6,
   "cfg": 1.5,
-  "suffix": ", fantasy creature concept painting, entire body visible, wide shot, small in frame, three-quarter view, realistic anatomy, rich colors, dramatic lighting, detailed painterly shading, single monster centered, isolated on plain white background",
-  "neg": "photo, 3d render, anime, cartoon, chibi, text, watermark, frame, border, multiple creatures, cropped, blurry",
-  "convert": "sfcize.py <下絵> <出力> 96 20"
+  "suffix": ", highly detailed realistic fantasy creature, intricate skin and fur texture, cinematic lighting, dark fantasy concept art, plain white background",
+  "neg": "cartoon, clipart, flat colors, vector art, anime, chibi, cute, toy, plush, cropped, cut off, close-up, portrait, text, watermark, signature, frame, border, multiple creatures, blurry, deformed, extra heads",
+  "convert": "sfcize.py <下絵> <出力> 96 20",
+  "prefix": "full body shot of "
  },
  "boss": {
-  "説明": "ボス。128×128・24色（大きいボスは 192 や 256 も可。エディタで描くときは --zoom 6 以上が画面に入る大きさまで）",
+  "説明": "ボス。256×256・40色で直接作る（2026-10-04 人間の指示「リアルなドット絵のボス256×256」。以前は128×128・24色を2倍）。エディタでは --zoom 6 --wide --import",
   "model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
   "w": 512,
   "h": 512,
   "steps": 6,
   "cfg": 1.5,
-  "suffix": ", epic dark fantasy boss creature concept painting, imposing, entire body visible, wide shot, small in frame, three-quarter view, realistic anatomy, rich colors, dramatic rim lighting, detailed painterly shading, single monster centered, isolated on plain white background",
-  "neg": "photo, 3d render, anime, cartoon, chibi, text, watermark, frame, border, multiple creatures, cropped, blurry",
-  "convert": "sfcize.py <下絵> <出力> 128 24"
+  "suffix": ", huge imposing, highly detailed realistic dark fantasy boss, intricate textures, dramatic rim lighting, epic concept art, plain white background",
+  "neg": "cartoon, clipart, flat colors, vector art, anime, chibi, cute, toy, plush, cropped, cut off, close-up, portrait, text, watermark, signature, frame, border, multiple creatures, blurry, deformed, extra heads",
+  "convert": "sfcize.py <下絵> <出力> 256 40",
+  "prefix": "full body shot of "
  },
  "character": {
   "説明": "登場人物の全身の絵（戦闘・会話・立ち絵）。128×128・24色。縦長（512×768）で描かせると頭が切れにくい",
@@ -43,5 +45,7 @@
   "suffix": ", full body front view from head to toe, standing straight facing the viewer, arms at sides, feet together, fantasy rpg character design, clear simple color blocks, soft shading, whole figure visible, small in frame, single person centered, isolated on plain white background",
   "neg": "photo, 3d render, anime, manga, chibi, text, watermark, frame, border, multiple people, cropped, cut off head, out of frame, close-up, blurry, nsfw",
   "convert": "field_sprite.py <下絵> <出力フォルダ> <名前> --style ... --outfit ... --deco ... --rembg"
- }
+ },
+ "_全身の注意": "2026-10-04: 指示文はCLIPの77トークンまでしか効かない。以前は後ろの『全身が入る』『白い背景』が切り捨てられ、体が切れた下絵ばかりになった。全身・余白・背景の言葉を前寄りに置き、make_jobs.py が長さを確かめる。生成のあとは fullbody.py で全身が入っているかを調べる",
+ "_リアルな下絵": "2026-10-04: 人間の指示『もっとリアルな下絵がいい』。monster_batch.py は QUALITY=real（LCMを使わない22〜24歩・cfg 7）で描き、指示文と避ける言葉がきちんと効くようにした"
 }

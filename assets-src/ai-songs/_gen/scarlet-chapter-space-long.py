@@ -143,10 +143,10 @@ class Part:
 
 
 P = {k: Part(*v) for k, v in dict(
-    lead=("leadGuitar", "リードギター（ソロ・タッピング）", 0.25, 0.2, "prs"),
-    dist=("distGuitar", "刻みリフ", 0.13, -0.4, "metal"),
-    echo=("echoGuitar", "エコーのリード（空間）", 0.2, 0.35, "shoegaze"),
-    bass=("bass", "ベース", 0.22, 0, "overdrive"),
+    lead=("leadGuitar", "リードギター（ソロ・タッピング）", 0.17, 0.2, "overdrive"),  # 2026-10-04 人間の指摘「ギターの音圧が強くて歪がきつい」: 0.25・prs → 0.17・overdrive
+    dist=("distGuitar", "刻みリフ", 0.08, -0.6, "crunch"),  # 0.13・metal → 0.08・crunch
+    echo=("echoGuitar", "エコーのリード（空間）", 0.14, 0.45, "overdrive"),  # 0.2・shoegaze → 0.14・overdrive
+    bass=("bass", "ベース", 0.22, 0, "auto"),  # overdrive → auto（歪ませない）
     slap=("slap", "ベースソロ（スラップ）", 0.24, 0, "funk"),
     strings=("strings", "弦の厚み", 0.13, 0, "auto"),
     keys=("keys", "鍵盤アルペジオ", 0.12, 0.35, "auto"),
