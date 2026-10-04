@@ -79,20 +79,6 @@ export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, 
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  if (state.phase === "splash") {
-    const fade = Math.min(1, performance.now() / 1200);
-    ctx.globalAlpha = fade;
-    ctx.font = "12px monospace";
-    ctx.fillStyle = "#c8c8e0";
-    ctx.fillText("サンシャインソフトウェア  presents", w / 2, h / 2 - 8);
-    const blink = 0.5 + 0.5 * Math.sin(performance.now() / 380);
-    ctx.globalAlpha = fade * (0.35 + 0.65 * blink);
-    ctx.font = "10px monospace";
-    ctx.fillStyle = "#f2c14e";
-    ctx.fillText("決定ボタン（Enter）で スタート", w / 2, h / 2 + 22);
-    ctx.globalAlpha = 1;
-    return;
-  }
 
   const logoY = h * 0.42;
   if (state.phase === "story") {
@@ -132,9 +118,6 @@ export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, 
     drawRays(ctx, w / 2, logoY, ms + 3000, 1);
     drawSparkles(ctx, w / 2, logoY, ms);
     drawPixelLogo(ctx, title, w / 2, logoY, 2, (ms % 4200) / 1100, ms + 5000);
-    ctx.font = "9px monospace";
-    ctx.fillStyle = "rgba(200, 200, 224, 0.85)";
-    ctx.fillText("サンシャインソフトウェア", w / 2, logoY + 56 + 18);
     const blink = 0.5 + 0.5 * Math.sin(performance.now() / 380);
     ctx.globalAlpha = 0.35 + 0.65 * blink;
     ctx.font = "11px monospace";

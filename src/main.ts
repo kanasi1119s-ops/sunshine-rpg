@@ -4,7 +4,8 @@ import { GAME_TITLE } from "./core/status";
 import { backTitle, confirmTitle, createTitleState, moveTitleCursor } from "./game/title/title-menu";
 import { renderTitle } from "./render/title-renderer";
 import { renderOpening } from "./render/opening-renderer";
-import { setOpenedChests } from "./render/object-markers";
+import { objectKindOf, setOpenedChests } from "./render/object-markers";
+import { npcLook } from "./game/sprite/character-specs";
 import { advanceBootOpening, startBootOpening, updateBootOpening } from "./game/title/boot-opening";
 import { renderBootOpening } from "./render/boot-opening-renderer";
 import { getPixelLogo } from "./render/logo-pixel";
@@ -729,9 +730,10 @@ function startAudioOnFirstInteraction(): void {
   }
   audioStarted = true;
   if (bootOpening.open) {
-    // 起動のオープニング: 「スタート」を押したところから、オーケストラの曲がはじまる（ロゴが落ちる0.9秒後にティンパニと金管が鳴る）
+    // 起動のオープニング: オーケストラの曲。最初の操作が遅れたときは、場面の進みにそろえて、途中から鳴らす
     currentBgmTrack = getTrack("boot-opening");
-    audio.playBgm(currentBgmTrack);
+    const at = bootClockMs / 1000;
+    audio.playBgm(currentBgmTrack, at < 34 ? at : 0);
     return;
   }
   if (title.open) {
@@ -753,6 +755,8 @@ function hasAutosave(): boolean {
 let title = createTitleState(hasAutosave());
 /** ゲームを起動したときのオープニング（ロゴが上から落ちてきて、あらすじが流れる）。終わるとタイトル画面。 */
 let bootOpening = startBootOpening();
+/** 起動のオープニングが始まってからの時間（ms）。音が遅れて始まるとき、曲の位置をそろえるのに使う。 */
+let bootClockMs = 0;
 
 /** ゲーム中のメニュー（Tab／Escape、スマホは「メニュー」ボタン）。 */
 let pauseMenu = createPauseMenuState();
@@ -825,6 +829,14 @@ window.addEventListener("keydown", (event) => {
     openingSkipRequested = true;
   }
 });
+// ブラウザが操作なしの音を許しているときは、起動してすぐ曲を鳴らす（許さないときは、最初のキー・タップで）
+try {
+  const probe = new AudioContext();
+  if (probe.state === "running") startAudioOnFirstInteraction();
+  void probe.close();
+} catch {
+  // 音が使えない環境
+}
 window.addEventListener("keydown", startAudioOnFirstInteraction, { once: true });
 window.addEventListener("pointerdown", startAudioOnFirstInteraction, { once: true });
 window.addEventListener("keydown", (event) => {
@@ -1734,6 +1746,7 @@ const loop = createGameLoop({
     }
 
     if (bootOpening.open) {
+      bootClockMs += dtMs;
       const before = bootOpening;
       bootOpening = actionPressed ? advanceBootOpening(bootOpening) : updateBootOpening(bootOpening, dtMs, LOGICAL_HEIGHT);
       if (!bootOpening.open && before.open) {
@@ -2102,7 +2115,7 @@ const loop = createGameLoop({
       syncWorldState();
     }
     const moveMap = onWorld && vehicle === "ship" ? getVehicleMaps().ship : onWorld && vehicle === "air" ? getVehicleMaps().air : map;
-    player = updatePlayer(player, input.getDirection(), dtMs * (onWorld ? VEHICLE_SPEED[vehicle] : 1) * MOVE_SPEEDS[moveSpeed].factor, moveMap, onWorld ? [] : npcs);
+    player = updatePlayer(player, input.getDirection(), dtMs * (onWorld ? VEHICLE_SPEED[vehicle] : 1) * MOVE_SPEEDS[moveSpeed].factor, moveMap, onWorld ? [] : npcs.filter((n) => !(npcLook(n) === "object" && objectKindOf(n.id) === "generic")));
     let actionUsed = false;
     if (onWorld) {
       actionUsed = updateVehicleAfterMove(

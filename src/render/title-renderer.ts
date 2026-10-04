@@ -29,9 +29,6 @@ export function renderTitle(ctx: CanvasRenderingContext2D, state: TitleState, ga
     // ドット絵のタイトルロゴ（光とリング）
     drawPixelLogo(ctx, gameTitle, screenWidth / 2, 36, 1, -1, performance.now());
     ctx.textAlign = "center";
-    ctx.font = "10px monospace";
-    ctx.fillStyle = "#c8c8e0";
-    ctx.fillText("サンシャインソフトウェア", screenWidth / 2, 71);
     ctx.font = "12px monospace";
     titleItemsFor(state.hasSave).forEach((item, i) => {
       const selected = i === state.cursor;

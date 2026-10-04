@@ -53,10 +53,35 @@ export function renderNpcs(
     if (look === "person") {
       drawSprite(ctx, spriteSpecForNpc(npc), walk ? walk.dir : "down", moving ? frameAt(true, walk.animMs) : 0, x + (tileWidth - 16) / 2, feetY - SPRITE_FEET_ROW - 1);
     } else {
-      if (look === "monster" || !drawObjectMarker(ctx, objectKindOf(npc.id), npc.color, x, feetY - tileHeight, tileWidth, tileHeight, npc.id)) {
+      if (look === "object" && objectKindOf(npc.id) === "generic") {
+        // 絵のない「調べる場所」（サブストーリーの手がかりなど）は、四角い箱ではなく、小さなきらめきだけ
+        drawTwinkle(ctx, x, feetY - tileHeight, tileWidth, tileHeight);
+      } else if (look === "monster" || !drawObjectMarker(ctx, objectKindOf(npc.id), npc.color, x, feetY - tileHeight, tileWidth, tileHeight, npc.id)) {
         drawMarker(ctx, npc.color, look === "monster", x, feetY - tileHeight, tileWidth, tileHeight);
       }
     }
+  }
+}
+
+/** 調べられる場所のしるし。小さな十字のきらめき（通れる。ゆっくり点滅）。 */
+function drawTwinkle(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
+  const phase = (performance.now() / 900) % 1;
+  const big = phase < 0.5;
+  const cx = x + Math.floor(w / 2);
+  const cy = y + Math.floor(h / 2) + 2;
+  ctx.fillStyle = "rgba(255, 224, 112, 0.9)";
+  ctx.fillRect(cx, cy, 1, 1);
+  ctx.fillRect(cx - 1, cy, 1, 1);
+  ctx.fillRect(cx + 1, cy, 1, 1);
+  ctx.fillRect(cx, cy - 1, 1, 1);
+  ctx.fillRect(cx, cy + 1, 1, 1);
+  if (big) {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(cx, cy, 1, 1);
+    ctx.fillRect(cx - 2, cy, 1, 1);
+    ctx.fillRect(cx + 2, cy, 1, 1);
+    ctx.fillRect(cx, cy - 2, 1, 1);
+    ctx.fillRect(cx, cy + 2, 1, 1);
   }
 }
 
