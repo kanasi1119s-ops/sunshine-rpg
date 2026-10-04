@@ -1,6 +1,7 @@
 """雷の術のエフェクトを、本物の戦闘画面に重ねて、コマの長さどおりの動画にする（見本）。
 
-使い方: python3 fx_preview.py 背景.png 名前とHPの入った背景.png エフェクトのフォルダ ボスのanim.json 出力.mp4 [--slow 4]
+使い方: python3 fx_preview.py 背景.png 名前とHPの入った背景.png エフェクトのフォルダ ボスのanim.json 出力.mp4 [--slow 4] [--party 2頭身の歩く絵のフォルダ]
+  --party: 味方を新しい2頭身の絵（assets-src/characters/walk-2head/）で立たせる。背景は味方の絵のないもの（ruins-noparty.png）を使う
   背景.png: 戦闘画面（論理 400×225）から敵を抜いたもの。ゲームの描画（battle-renderer.ts）で作る
   ボスの anim.json: boss_rig.py の出力（両手を振り上げるコマを「となえる姿」に使う）
 画面のつくり（battle-renderer.ts と同じ）: ボスは左（x=16, y=2, 132×132）、味方は右の地面。戦闘の場は上の169。
@@ -44,6 +45,22 @@ def main():
     base = np.array(Image.open(bg_none).convert("RGB"))
     named = np.array(Image.open(bg_boss).convert("RGB"))
     base[134:162, 0:170] = named[134:162, 0:170]          # ボスの名前とHP
+    # --party フォルダ: 新しい2頭身の歩く絵（16×32、"left0" が左＝敵の方を向いた絵）を、ゲームと同じ位置に立たせる
+    if "--party" in args:
+        pdir = args[args.index("--party") + 1]
+        names = ["ユーリ", "レト", "ミナ", "ガイド"]
+        img = Image.fromarray(base)
+        for idx, nm in enumerate(names):
+            d = json.load(open(f"{pdir}/{nm}.json"))
+            pal = {chr(65 + i): c for i, c in enumerate(d["palette"])}
+            spr = Image.fromarray(rows_rgba(d["frames"]["left0"], pal), "RGBA")
+            row, col = idx % 2, idx // 2
+            feet = 225 - 56 - 4 - row * 18
+            x = 400 - 40 - col * 30 - row * 14
+            sh = Image.new("RGBA", (14, 3), (0, 0, 0, 71))
+            img.paste(sh, (x + 1, feet - 2), sh)
+            img.paste(spr, (x, feet - 29), spr)
+        base = np.array(img.convert("RGB"))
     anim = json.load(open(animp)); apal = anim["palette"]
     boss_cache = {}
 
