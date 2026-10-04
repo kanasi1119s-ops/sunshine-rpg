@@ -3,7 +3,7 @@ import { buildSpritePixels, SPRITE_HEIGHT, SPRITE_WIDTH, spriteRuns, type Sprite
 const cache = new Map<string, SpriteRun[]>();
 
 function runsFor(spec: SpriteSpec, dir: SpriteDir, frame: SpriteFrame): SpriteRun[] {
-  const key = `${spec.handKey ?? ""}|${spec.mobTemplate ?? ""}|${spec.skin}|${spec.hair}|${spec.top}|${spec.bottom}|${spec.accent}|${spec.hairStyle}|${spec.headband ? 1 : 0}|${dir}|${frame}`;
+  const key = `${spec.handKey ?? ""}|${spec.mobTemplate ?? ""}|${spec.merchant ? 1 : 0}|${spec.skin}|${spec.hair}|${spec.top}|${spec.bottom}|${spec.accent}|${spec.hairStyle}|${spec.headband ? 1 : 0}|${dir}|${frame}`;
   let runs = cache.get(key);
   if (!runs) {
     runs = spriteRuns(buildSpritePixels(spec, dir, frame));

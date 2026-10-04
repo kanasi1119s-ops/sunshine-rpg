@@ -27,6 +27,8 @@ export interface SpriteSpec {
   handKey?: string;
   /** 町の人（モブ）の2頭身の素体の名前（`mob-walker-data.generated.ts`）。あれば、主要キャラと同じ作りの絵を、髪・肌・服の色で塗り替えて使う。 */
   mobTemplate?: string;
+  /** 物を売る人（商人）。エプロン・はちまき・小銭入れを足して、商人らしく見せる（`applyMerchant`）。 */
+  merchant?: boolean;
 }
 
 export const SPRITE_WIDTH = 16;
@@ -244,7 +246,60 @@ function recolorMob(spec: SpriteSpec, dir: SpriteDir, frame: SpriteFrame): Sprit
   if (!tpl) return null;
   const base: Record<string, string> = { hair: spec.hair, skin: spec.skin, top: spec.top, bottom: spec.bottom || spec.top, accent: spec.accent };
   const colors = tpl.palette.map((c, i) => (tpl.roles[i] === "fixed" ? c : shadeColor(base[tpl.roles[i]] ?? c, tpl.shade[i])));
-  return tpl.frames[`${dir}${frame}`].map((row) => [...row].map((ch) => (ch === "." ? null : colors[LETTERS.indexOf(ch)])));
+  const grid = tpl.frames[`${dir}${frame}`].map((row) => [...row].map((ch) => (ch === "." ? null : colors[LETTERS.indexOf(ch)])));
+  if (spec.merchant) {
+    // 顔の上のへり（髪の生えぎわ）の段: 肌の色の画素がいちばん上にある段
+    const down = tpl.frames[`down0`];
+    const skinLetters = new Set(tpl.roles.map((r, i) => (r === "skin" ? LETTERS[i] : "")).filter(Boolean));
+    let faceTop = 8;
+    for (let y = 0; y < down.length; y++) {
+      if ([...down[y]].some((ch) => skinLetters.has(ch))) {
+        faceTop = y;
+        break;
+      }
+    }
+    applyMerchant(grid, dir, spec, faceTop, tpl.roles.map((r, i) => (r === "hair" ? colors[i] : "")).filter(Boolean));
+  }
+  return grid;
+}
+
+const APRON = "#f0e8d4";
+const APRON_SHADE = "#cfc2a0";
+const APRON_DARK = "#a89a78";
+
+/** 商人らしく: はちまき（髪の生えぎわ）・エプロン・小銭入れ。 */
+function applyMerchant(grid: SpritePixels, dir: SpriteDir, spec: SpriteSpec, faceTop: number, hairColors: string[]): void {
+  const put = (x: number, y: number, c: string): void => {
+    if (y >= 0 && y < grid.length && x >= 0 && x < grid[0].length && grid[y][x] !== null) grid[y][x] = c;
+  };
+  const isHair = (c: string | null): boolean => !!c && hairColors.includes(c);
+  // はちまき: 生えぎわのすぐ上の段（髪の色の画素だけ）を、かざりの色に
+  const bandY = faceTop - 1;
+  for (let y = bandY; y <= bandY; y++) {
+    for (let x = 0; x < grid[0].length; x++) if (isHair(grid[y]?.[x] ?? null)) grid[y][x] = spec.accent;
+  }
+  if (dir === "up") {
+    for (let x = 0; x < grid[0].length; x++) if (isHair(grid[bandY + 1]?.[x] ?? null)) grid[bandY + 1][x] = shadeColor(spec.accent, -0.2);
+  }
+  // エプロン
+  if (dir === "down") {
+    for (let y = 17; y <= 25; y++) {
+      const half = y <= 18 ? 2 : 3;
+      for (let x = 8 - half; x < 8 + half; x++) put(x, y, x === 8 - half ? APRON_SHADE : APRON);
+    }
+    for (let x = 5; x <= 10; x++) put(x, 25, APRON_DARK); // すその影
+    for (let x = 6; x <= 9; x++) put(x, 22, APRON_SHADE); // ポケットのふち
+    put(5, 17, APRON_DARK); put(10, 17, APRON_DARK); // 肩のひも
+    // 小銭入れ（腰の右）
+    put(11, 22, "#b88a3a"); put(12, 22, "#b88a3a"); put(11, 23, "#8a6226"); put(12, 23, "#8a6226"); put(11, 21, "#e8c048");
+  } else if (dir === "up") {
+    for (let x = 4; x <= 11; x++) put(x, 20, APRON); // 腰のひも
+    put(7, 21, APRON); put(8, 21, APRON); put(6, 22, APRON_SHADE); put(9, 22, APRON_SHADE);
+  } else {
+    // 横向き: からだの前（向いているほう）に、エプロンのへり
+    const frontX = dir === "left" ? [4, 5, 6] : [9, 10, 11];
+    for (let y = 18; y <= 25; y++) for (const x of frontX) put(x, y, y === 25 ? APRON_DARK : APRON);
+  }
 }
 
 export function buildSpritePixels(spec: SpriteSpec, dir: SpriteDir, frame: SpriteFrame): SpritePixels {

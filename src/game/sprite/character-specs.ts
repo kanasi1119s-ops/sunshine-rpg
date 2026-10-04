@@ -44,6 +44,7 @@ export function spriteSpecForNpc(npc: { id: string; color: string; spriteName?: 
   const styles = ["short", "short", "long", "twin"] as const;
   return {
     mobTemplate: MOB_BODIES[h(6) % MOB_BODIES.length],
+    merchant: /(^shop-|merchant|vendor|stall|shopkeeper)/.test(npc.id) || undefined,
     skin: SKINS[h(1) % SKINS.length],
     hair: HAIRS[h(2) % HAIRS.length],
     top: npc.color,
