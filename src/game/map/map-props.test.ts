@@ -8,7 +8,7 @@ describe("マップの飾り（木・家）", () => {
     for (const [mapId, props] of Object.entries(MAP_PROPS)) {
       const data = WORLD_MAPS[mapId];
       expect(data, mapId).toBeDefined();
-      expect(data.props?.length, mapId).toBe(props.length);
+      expect(data.props?.length, mapId).toBeGreaterThanOrEqual(props.length); // 町の飾り（town-decor）が足されることがある
       const map = createTileMap(data);
       for (const prop of props) {
         for (const { x, y } of propFootprintTiles(prop)) {

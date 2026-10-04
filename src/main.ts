@@ -4,6 +4,7 @@ import { GAME_TITLE } from "./core/status";
 import { backTitle, confirmTitle, createTitleState, moveTitleCursor } from "./game/title/title-menu";
 import { renderTitle } from "./render/title-renderer";
 import { renderOpening } from "./render/opening-renderer";
+import { drawWindow } from "./render/ui-frame";
 import { objectKindOf, setOpenedChests } from "./render/object-markers";
 import { npcLook } from "./game/sprite/character-specs";
 import { advanceBootOpening, startBootOpening, updateBootOpening } from "./game/title/boot-opening";
@@ -297,7 +298,13 @@ function followerSpecs(): ReturnType<typeof spriteSpecFromPortrait>[] {
   return specs;
 }
 
+/** 場所を移った直後は、出口に触れても戻らない。キーをはなして、出口のマスからはずれるまで（下を押しっぱなしで、すぐ元の町に戻るのを防ぐ）。 */
+let exitReleased = false;
+let exitArmed = false;
+
 function switchMap(mapId: string, tileX: number, tileY: number): void {
+  exitReleased = false;
+  exitArmed = false;
   const data = WORLD_MAPS[mapId];
   if (!data) {
     return;
@@ -553,6 +560,7 @@ function startRandomBattle(enemies: Combatant[]): void {
   setBattleBiome(currentMapId === "world-map" ? worldBattleBiome : biomeForMap(currentMapId));
   victoryExpApplied = false;
   victoryMessage = null;
+  victoryLevelUps = [];
   pendingVictoryFlag = null;
   const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
   const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
@@ -586,6 +594,7 @@ function startStoryBattle(battleId: string): void {
   }
   victoryExpApplied = false;
   victoryMessage = null;
+  victoryLevelUps = [];
   pendingVictoryFlag = def.victoryFlag;
   const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
   const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
@@ -1084,7 +1093,12 @@ const COMPANION_NPC_IDS: Record<string, string> = {
 };
 
 function withoutJoinedCompanions(list: typeof npcs): typeof npcs {
-  return list.filter((npc) => !(COMPANION_NPC_IDS[npc.id] && flags[COMPANION_NPC_IDS[npc.id]]));
+  return list.filter(
+    (npc) =>
+      !(COMPANION_NPC_IDS[npc.id] && flags[COMPANION_NPC_IDS[npc.id]]) &&
+      !(npc.hideWhenFlag && flags[npc.hideWhenFlag]) &&
+      !(npc.showWhenFlag && !flags[npc.showWhenFlag]),
+  );
 }
 
 function syncCompanionsFromFlags(): void {
@@ -1130,6 +1144,8 @@ function buildExtraSkillsMap(): Record<string, Skill[]> {
 }
 let victoryExpApplied = false;
 let victoryMessage: string | null = null;
+/** 勝ったあとにレベルアップした人と、上がった能力値（戦闘画面に表で出す）。 */
+let victoryLevelUps: { name: string; from: number; to: number; gains: [string, number][] }[] = [];
 let saveMessage: string | null = null;
 let saveMessageTimer = 0;
 
@@ -1246,6 +1262,7 @@ if (import.meta.env.DEV) {
     if (event.key === "b" && !battle && !dialogue.isActive() && !debugMenu.open && !debugNoEncounter) {
       victoryExpApplied = false;
       victoryMessage = null;
+  victoryLevelUps = [];
       const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
       const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
       const party = buildActiveParty(effectiveStats);
@@ -1523,17 +1540,35 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
   }
   audio.playSe(seOf("victory"));
   const expGained = computeVictoryExp(finishedBattle.getState());
+  const heroBefore = heroStats;
   const result = gainExp(heroStats, expGained, SAMPLE_GROWTH);
   heroStats = result.stats;
   const levelUpNames: string[] = [];
+  victoryLevelUps = [];
+  const record = (name: string, before: LeveledStats, after: LeveledStats): void => {
+    victoryLevelUps.push({
+      name,
+      from: before.level,
+      to: after.level,
+      gains: [
+        ["HP", after.maxHp - before.maxHp],
+        ["MP", after.maxMp - before.maxMp],
+        ["こうげき", after.attack - before.attack],
+        ["ぼうぎょ", after.defense - before.defense],
+        ["すばやさ", after.speed - before.speed],
+      ],
+    });
+  };
   if (result.levelsGained > 0) {
     levelUpNames.push(`ユーリ（Lv${heroStats.level}）`);
+    record("ユーリ", heroBefore, heroStats);
   }
   for (const [id, stats] of Object.entries(companionStats)) {
     const companionResult = gainExp(stats, expGained, COMPANIONS[id].growth);
     companionStats[id] = companionResult.stats;
     if (companionResult.levelsGained > 0) {
       levelUpNames.push(`${COMPANIONS[id].name}（Lv${companionResult.stats.level}）`);
+      record(COMPANIONS[id].name, stats, companionResult.stats);
     }
   }
   if (isJobSystemUnlocked(flags)) {
@@ -1591,6 +1626,23 @@ function renderGameSceneBase(): void {
       ctx.font = "10px monospace";
       ctx.textBaseline = "top";
       ctx.fillText(victoryMessage, 8, LOGICAL_HEIGHT - 56 + 18);
+      if (victoryLevelUps.length > 0) {
+        // レベルアップした人の、上がった能力値（HP・MP・こうげき・ぼうぎょ・すばやさ）
+        const rowH = 22;
+        const winH = 16 + victoryLevelUps.length * rowH;
+        const winW = 330;
+        const wx = Math.round((LOGICAL_WIDTH - winW) / 2);
+        const wy = 14;
+        drawWindow(ctx, wx, wy, winW, winH);
+        ctx.textAlign = "left";
+        victoryLevelUps.forEach((u, i) => {
+          const y = wy + 8 + i * rowH;
+          ctx.fillStyle = "#f2c14e";
+          ctx.fillText(`${u.name}  Lv${u.from} → Lv${u.to}`, wx + 10, y);
+          ctx.fillStyle = "#c8f0c8";
+          ctx.fillText(u.gains.map(([k, v]) => `${k}+${v}`).join("  "), wx + 10, y + 10);
+        });
+      }
     }
     if (import.meta.env.DEV) {
       ctx.fillStyle = "#88ff88";
@@ -1732,8 +1784,12 @@ const loop = createGameLoop({
     // 開けた宝箱は、ふたが開いた絵にする
     setOpenedChests(new Set(npcs.filter((n) => n.openedFlag && flags[n.openedFlag]).map((n) => n.id)));
     // 会話が終わったあと（仲間になった直後）に、その人を場所から外す
-    if (!dialogue.isActive() && npcs.some((n) => COMPANION_NPC_IDS[n.id] && flags[COMPANION_NPC_IDS[n.id]])) {
-      npcs = withoutJoinedCompanions(npcs);
+    if (!dialogue.isActive()) {
+      // 仲間になった人・倒されて去った人は場所から外し、あとから現れるもの（跡）は出す
+      const wanted = withoutJoinedCompanions(WORLD_NPCS[currentMapId] ?? []);
+      if (wanted.length !== npcs.length || wanted.some((n, i) => n.id !== npcs[i]?.id)) {
+        npcs = wanted;
+      }
     }
 
     if (saveMessageTimer > 0) {
@@ -2162,7 +2218,10 @@ const loop = createGameLoop({
 
     const centerTileX = Math.floor((player.x + player.width / 2) / map.data.tileWidth);
     const centerTileY = Math.floor((player.y + player.height / 2) / map.data.tileHeight);
-    const exit = vehicle === "foot" ? findExitAt(map, centerTileX, centerTileY) : undefined;
+    const exitHere = findExitAt(map, centerTileX, centerTileY);
+    if (input.getDirection() === null) exitReleased = true;
+    if (exitReleased && !exitHere) exitArmed = true;
+    const exit = vehicle === "foot" && exitArmed ? exitHere : undefined;
     if (exit && exit.requireFlag && !flags[exit.requireFlag]) {
       // 条件（仕掛け・道具など）が足りない出口は、ヒントを出して1マス押し戻す
       const back = { up: { x: 0, y: 1 }, down: { x: 0, y: -1 }, left: { x: 1, y: 0 }, right: { x: -1, y: 0 } }[player.direction];

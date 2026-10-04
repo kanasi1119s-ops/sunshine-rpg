@@ -71,6 +71,16 @@ export const CHAPTER3_NPCS: Record<string, Npc[]> = {
       color: "#5a3a6a",
       spriteName: "ドルン",
       commands: dorunCommands(),
+      hideWhenFlag: "chapter3_yugami_defeated",
+    },
+    {
+      // ドルンが去ったあとの跡（人は残さない）
+      id: "tetsukusari-dorun-scorch-mark",
+      tileX: TETSUKUSARI_MINE_LANDMARKS.dorun.tileX,
+      tileY: TETSUKUSARI_MINE_LANDMARKS.dorun.tileY - 1,
+      color: "#5a3a6a",
+      commands: dorunCommands(),
+      showWhenFlag: "chapter3_yugami_defeated",
     },
   ],
 };

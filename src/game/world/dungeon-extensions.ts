@@ -135,8 +135,8 @@ const COLORS: Record<number, string> = { [FLOOR]: "#5a4630", [WALL]: "#2a1f16" }
 /** 章ごとに、形（小部屋の位置）を変える。通路は5本で、フィールドを歩くように長い。 */
 function layoutsFor(n: number): [SerpentineLayout, SerpentineLayout] {
   return [
-    mazeLayout({ wall: WALL, floor: FLOOR, seed: n * 10 + 1 }),
-    mazeLayout({ wall: WALL, floor: FLOOR, seed: n * 10 + 2 }),
+    mazeLayout({ wall: WALL, floor: FLOOR, seed: n * 10 + 301 }),
+    mazeLayout({ wall: WALL, floor: FLOOR, seed: n * 10 + 302 }),
   ];
 }
 

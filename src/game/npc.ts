@@ -15,6 +15,10 @@ export interface Npc {
   wander?: boolean;
   /** 宝箱など: このフラグが立つと「開けたあと」の絵になる。 */
   openedFlag?: string;
+  /** このフラグが立つと、その場所からいなくなる（倒された敵・去った人）。 */
+  hideWhenFlag?: string;
+  /** このフラグが立つまでは、いない（人が去ったあとに残る跡など）。 */
+  showWhenFlag?: string;
 }
 
 const FACING_OFFSET: Record<Direction, { dx: number; dy: number }> = {

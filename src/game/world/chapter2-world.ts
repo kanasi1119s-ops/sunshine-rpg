@@ -71,6 +71,16 @@ export const CHAPTER2_NPCS: Record<string, Npc[]> = {
       color: "#5a3a6a",
       spriteName: "ドルン",
       commands: dorunCommands(),
+      hideWhenFlag: "chapter2_yugami_defeated",
+    },
+    {
+      // ドルンが去ったあとの床の跡（粉と、環の文様のかけら）
+      id: "garasuko-dorun-scorch-mark",
+      tileX: GARASUKO_WAREHOUSE_LANDMARKS.dorun.tileX,
+      tileY: GARASUKO_WAREHOUSE_LANDMARKS.dorun.tileY + 1,
+      color: "#5a3a6a",
+      commands: dorunCommands(),
+      showWhenFlag: "chapter2_yugami_defeated",
     },
   ],
 };
