@@ -1273,8 +1273,12 @@ const loop = createGameLoop({
           }
           playMapBgm(currentMapId);
         } else if (result.action === "new") {
-          // まずオープニング（あらすじ）を流す。曲はタイトルの曲のまま。終わったらゲームを始める。
+          // まずオープニング（あらすじ）を流す。曲は壮大な `fate`。終わったらゲームを始める。
           opening = startOpening();
+          if (audioStarted) {
+            currentBgmTrack = getTrack("fate");
+            audio.playBgm(currentBgmTrack);
+          }
         }
       }
       return;

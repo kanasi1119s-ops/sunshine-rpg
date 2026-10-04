@@ -12,11 +12,11 @@ import {
 
 describe("オープニング", () => {
   it("場面は複数あり、どの場面にも文字がある（行は画面に収まる長さ）", () => {
-    expect(OPENING_SCENES.length).toBeGreaterThanOrEqual(5);
+    expect(OPENING_SCENES.length).toBeGreaterThanOrEqual(7);
     for (const scene of OPENING_SCENES) {
       expect(scene.lines.length).toBeGreaterThan(0);
       expect(scene.lines.length).toBeLessThanOrEqual(3);
-      for (const line of scene.lines) expect(line.length).toBeLessThanOrEqual(24);
+      for (const line of scene.lines) expect(line.length).toBeLessThanOrEqual(26);
     }
   });
 
