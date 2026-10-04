@@ -969,6 +969,31 @@ const COMPANION_JOIN_FLAGS: { flag: string; companionId: string }[] = [
   { flag: "chapter6_ayame_joined", companionId: AYAME.id },
 ];
 
+/**
+ * 先まで進んでいる人（ボスを倒した・調べ終えた）は、そこへ行くための準備（聞き込み・鍵・仕掛け）も済んでいるものとして扱う。
+ * 道のりを長くする前のセーブや、デバッグで先へ進んだとき、通れなくならないように。
+ */
+const IMPLIED_FLAGS: { when: string[]; set: string[] }[] = [
+  {
+    when: ["chapter0_yugami_defeated", "chapter0_scorch_mark_found", "chapter0_clue_c001_found", "chapter0_reto_joined"],
+    set: ["chapter0_quest_accepted", "chapter0_heard_rumor", "chapter0_got_lamp", "chapter0_lever_west", "chapter0_lever_east", "chapter0_shrine_open"],
+  },
+  {
+    when: ["chapter1_yugami_defeated", "chapter1_excavation_found", "chapter1_clue_c002_found", "chapter1_reported_to_elder", "chapter1_mina_joined"],
+    set: ["chapter1_quest_accepted", "chapter1_heard_miller", "chapter1_got_key", "chapter1_valve_west", "chapter1_valve_east", "chapter1_valves_open"],
+  },
+];
+
+function applyImpliedFlags(): void {
+  for (const rule of IMPLIED_FLAGS) {
+    if (rule.when.some((f) => flags[f])) {
+      for (const f of rule.set) {
+        if (!flags[f]) flags[f] = true;
+      }
+    }
+  }
+}
+
 /** 仲間になった人は、もう町や家にはいない（いっしょに歩く）ので、その場所のNPCから外す。 */
 const COMPANION_NPC_IDS: Record<string, string> = {
   "touri-reto": "chapter0_reto_joined",
@@ -983,6 +1008,7 @@ function withoutJoinedCompanions(list: typeof npcs): typeof npcs {
 }
 
 function syncCompanionsFromFlags(): void {
+  applyImpliedFlags();
   for (const { flag, companionId } of COMPANION_JOIN_FLAGS) {
     if (flags[flag] && !(companionId in companionStats)) {
       // 途中加入の仲間は、ユーリのレベルより1つ下まで追いついた状態で加わる（Lv1のまま置いていかれないように）。
