@@ -73,6 +73,8 @@ function interiorMap(town: string, ret: { x: number; y: number }, seed: number):
     ground[y * W + W - 1] = WALL;
     collision[y * W + W - 1] = 1;
   }
+  // 横にはばのある家具（本棚・箪笥・ベッド・テーブル）が、歩ける床にはみ出さないよう、となりのマスも通れなくする
+  for (const [fx, fy] of [[1, 2], [3, 2], [4, 2], [6, 2], [7, 2], [9, 2], [7, 5], [9, 5]]) collision[fy * W + fx] = 1;
   ground[(H - 1) * W + DOOR_X] = FLOOR; // 玄関
   collision[(H - 1) * W + DOOR_X] = 0;
   // 家具: 奥の壁ぎわの左右に、種類・位置がかわる
@@ -148,7 +150,7 @@ export function addHouseInteriors(maps: Record<string, TileMapData>, npcsByMap: 
         list.push({ id: `${id}-tansu`, tileX: 5, tileY: 2, color: "#b07a44", commands: [{ type: "message", text: TANSU_LINES[seed % TANSU_LINES.length] }] });
       }
       list.push({ id: `${id}-table`, tileX: 8, tileY: 5, color: "#d8cbb0", commands: [{ type: "message", text: TABLE_LINES[seed % TABLE_LINES.length] }] });
-      list.push({ id: `${id}-bed`, tileX: 9, tileY: 2, color: ["#6a8ab0", "#b07090", "#7a9a6a", "#c0a050"][seed % 4], commands: [{ type: "message", text: BED_LINES[seed % BED_LINES.length] }] });
+      list.push({ id: `${id}-bed`, tileX: 8, tileY: 2, color: ["#6a8ab0", "#b07090", "#7a9a6a", "#c0a050"][seed % 4], commands: [{ type: "message", text: BED_LINES[seed % BED_LINES.length] }] });
       npcsByMap[id] = list;
     }
   }
