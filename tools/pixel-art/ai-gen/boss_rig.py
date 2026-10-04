@@ -161,7 +161,17 @@ class Rig:
             used = [c for c in np.unique(g[fg]) if c in pal]
             dark = sorted(used, key=lum)[min(2, len(used) - 1)]
             body[under] = dark
+        # 胴に残った小さなかけら（腕から外れた指先など）は消す。人間の指摘「指先が取れている」
+        lab, n = ndimage.label(body != DOT)
+        if n > 1:
+            sizes = ndimage.sum(body != DOT, lab, range(1, n + 1))
+            for i, sz in enumerate(sizes):
+                if sz < 40:
+                    body[lab == i + 1] = DOT
         self.body = body
+        # 腕の縁取りの色（絵でいちばん暗い色）
+        def lum2(c): v = pal[c]; return 0.299 * int(v[1:3], 16) + 0.587 * int(v[3:5], 16) + 0.114 * int(v[5:7], 16)
+        self.ink = min([c for c in np.unique(g[fg]) if c in pal], key=lum2)
         ys = np.nonzero(fg)[0]
         self.top, self.foot = int(ys.min()), int(ys.max())
         self.hip = parts.get("hip", int(self.top + (self.foot - self.top) * 0.7))
@@ -216,6 +226,16 @@ class Rig:
         vy, vx = (ys[k] - py) * scale, (xs[k] - px) * scale
         a = math.radians(ang)
         return py + vx * math.sin(a) + vy * math.cos(a) + dy + lift, px + vx * math.cos(a) - vy * math.sin(a) + sway, math.hypot(vy, vx)
+
+
+def outline_front(fr, limb, ink):
+    """腕が体より前に出ているコマ: 腕のまわりに1ドットの暗い縁を付け、胴と見分けられるようにする（人間の指摘「攻撃のとき腕のほうが体より前に行く」）"""
+    a = fr[limb]; m = a != DOT
+    if not m.any():
+        return
+    ring = ndimage.binary_dilation(m, structure=np.ones((3, 3), bool)) & ~m
+    under = fr["胴"] != DOT          # 胴の上にかかる所だけ（外側はもとの絵の縁がある）
+    a[ring & under] = ink
 
 
 def flatten(fr, order=None):
@@ -358,6 +378,9 @@ def build(g, pal, parts):
         for t in (0.5,):                 seq.append((mix(OVR, REST, ease(t, "inout")), 100, ""))
         seq.append(({**DEF, **REST}, 200, ""))
         attack = [rig.frame(**p0) for p0, _, _ in seq]
+        for fr, (p0, _, _) in zip(attack, seq):
+            if p0["arm_scale"] > 1.06 or abs(p0["arm_ang"]) > 90:   # 前へ突き出す・頭の上へ振り上げる（頭の前を通る）
+                outline_front(fr, "右腕", rig.ink)
         attack_ms = [ms for _, ms, _ in seq]
         _, _, rad = rig.hand(150, 0.95)
         for idx, (p0, _, tag) in enumerate(seq):
@@ -382,15 +405,15 @@ def build(g, pal, parts):
     # 攻撃A（腕だけ）: 胴はほとんど動かさない
     attack, attack_ms = make_attack(dict(dy=0), dict(dy=1, arm_ang=60, arm_lift=-2),
                                     dict(dy=-2, sway=1, arm_ang=150, arm_scale=0.95, arm_lift=-4),
-                                    dict(dy=7, sway=-2, squash=2, arm_ang=22, arm_scale=1.28, arm_lift=6),
-                                    dict(dy=6, sway=-2, squash=1, arm_ang=14, arm_scale=1.2, arm_lift=6), dict(dy=0, arm_ang=-8))
+                                    dict(dy=7, sway=-2, squash=2, arm_ang=30, arm_scale=1.34, arm_lift=6),
+                                    dict(dy=6, sway=-2, squash=1, arm_ang=34, arm_scale=1.26, arm_lift=6), dict(dy=0, arm_ang=-8))
     # 攻撃B（体ごと）: ためで上半身を腕の側へ反らして伸び上がり、左足を上げて踏みこむ準備。
     # 当たりで上半身を打つ向き（体のまん中）へ大きく倒し、沈んで縮む。左足を踏みこむ。振り抜けたあと少し戻りすぎる
     attack2, attack2_ms = make_attack(dict(dy=0),
                                       dict(dy=0, arm_ang=60, arm_lift=-2, tilt=6, lift_l=4),
                                       dict(dy=-5, sway=2, squash=-3, arm_ang=150, arm_scale=0.95, arm_lift=-4, tilt=12, lift_l=12),
-                                      dict(dy=10, sway=-4, squash=4, arm_ang=22, arm_scale=1.3, arm_lift=6, tilt=-14),
-                                      dict(dy=8, sway=-4, squash=3, arm_ang=14, arm_scale=1.22, arm_lift=6, tilt=-16),
+                                      dict(dy=10, sway=-4, squash=4, arm_ang=30, arm_scale=1.36, arm_lift=6, tilt=-14),
+                                      dict(dy=8, sway=-4, squash=3, arm_ang=34, arm_scale=1.28, arm_lift=6, tilt=-16),
                                       dict(dy=-1, sway=1, arm_ang=-8, tilt=4))
     # 攻撃C（両手）: 両腕を頭の上へ振り上げ（体は伸び上がって反る）→ 両手を体の前へたたきつける（沈んで縮む・大きく揺れる）
     attack3, attack3_ms = [], []
@@ -398,8 +421,8 @@ def build(g, pal, parts):
         R0 = dict(dy=0)
         U1 = dict(dy=0, squash=-1, arm_ang=60, l_ang=-60, arm_lift=-2, l_lift=-2)
         U2 = dict(dy=-6, squash=-4, arm_ang=155, l_ang=-155, arm_scale=0.95, l_scale=0.95, arm_lift=-5, l_lift=-5)
-        HT = dict(dy=11, squash=5, arm_ang=18, l_ang=-18, arm_scale=1.3, l_scale=1.3, arm_lift=8, l_lift=8)
-        FL = dict(dy=9, squash=4, arm_ang=10, l_ang=-10, arm_scale=1.22, l_scale=1.22, arm_lift=8, l_lift=8)
+        HT = dict(dy=11, squash=5, arm_ang=40, l_ang=-40, arm_scale=1.34, l_scale=1.34, arm_lift=8, l_lift=8)
+        FL = dict(dy=9, squash=4, arm_ang=46, l_ang=-46, arm_scale=1.26, l_scale=1.26, arm_lift=8, l_lift=8)
         OV = dict(dy=-1, arm_ang=-6, l_ang=6)
         seq = []
         for t in (0.35, 0.7): seq.append((mix(R0, U1, ease(t, "in")), 70, ""))
@@ -416,6 +439,9 @@ def build(g, pal, parts):
         seq.append(({**DEF, **R0}, 200, ""))
         for p0, ms, tag in seq:
             fr = rig.frame(**p0)
+            for limb, sc0, an0 in (("右腕", p0["arm_scale"], p0["arm_ang"]), ("左腕", p0["l_scale"], p0["l_ang"])):
+                if sc0 > 1.06 or abs(an0 or 0) > 90:
+                    outline_front(fr, limb, rig.ink)
             for limb, ang, sc, lift in (("右腕", p0["arm_ang"], p0["arm_scale"], p0["arm_lift"]), ("左腕", p0["l_ang"], p0["l_scale"], p0["l_lift"])):
                 L = rig.limbs[limb]; piv = L["pivot"]
                 _, _, rad = rig.hand(155 if limb == "右腕" else -155, 0.95, limb=limb)
