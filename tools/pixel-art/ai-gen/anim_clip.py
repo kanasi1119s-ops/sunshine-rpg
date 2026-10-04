@@ -39,7 +39,9 @@ def card(rows, caption):
 tmp = tempfile.mkdtemp()
 seq = []   # (画像のパス, 秒)
 cache = {}
-def add(kind, i, ms, caption):
+timeline = []   # 効果音を合わせるための「いつ・どの動きの・何コマ目」（出力.timeline.json）
+def add(kind, i, ms, caption, pause=False):
+    timeline.append({"t": round(sum(x for _, x in seq), 3), "kind": kind, "i": i, "pause": pause})
     key = (kind, i, caption)
     if key not in cache:
         p = os.path.join(tmp, f"{len(cache):04d}.png"); card(A[kind][i], caption).save(p); cache[key] = p
@@ -47,7 +49,7 @@ def add(kind, i, ms, caption):
 def run(kind, ms_key, loops, caption, pause=0):
     for _ in range(loops):
         for i, ms in enumerate(A[ms_key]): add(kind, i, ms, caption)
-        if pause: add(kind, len(A[ms_key]) - 1, pause, caption)
+        if pause: add(kind, len(A[ms_key]) - 1, pause, caption, True)
 
 run("flat_walk", "walk_ms", 4, f"歩く（{len(A['walk_ms'])}コマ）")
 run("flat_attack", "attack_ms", 3, f"攻撃・腕だけ（{len(A['attack_ms'])}コマ）", 500)
@@ -67,4 +69,5 @@ with open(lst, "w") as fh:
     fh.write(f"file '{seq[-1][0]}'\n")
 subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst, "-vf", "fps=60,format=yuv420p",
                 "-c:v", "libx264", "-crf", "20", out], check=True)
+json.dump(timeline, open(os.path.splitext(out)[0] + ".timeline.json", "w"))
 print("動画:", out, f"{sum(s for _, s in seq):.1f}秒", len(cache), "枚")

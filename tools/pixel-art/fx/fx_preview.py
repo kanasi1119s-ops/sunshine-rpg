@@ -159,6 +159,12 @@ def main():
         p = f"{tmp}/{k:04d}.png"; card.save(p)
         lines.append(f"file '{p}'\nduration {ms / 1000:.3f}")
     lines.append(f"file '{tmp}/{len(seq) - 1:04d}.png'")
+    # 効果音を合わせるための「いつ・どのエフェクトの・何コマ目」（出力.timeline.json）。ゆっくりの所は slow に倍率
+    tl, t = [], 0.0
+    for pose, effs, ms, cap in seq:
+        tl.append({"t": round(t, 3), "effs": [[n, i] for n, i, _ in effs], "slow": ("ゆっくり" in cap) and slow or 1})
+        t += ms / 1000
+    json.dump(tl, open(os.path.splitext(out)[0] + ".timeline.json", "w"), ensure_ascii=False)
     open(f"{tmp}/list.txt", "w").write("\n".join(lines))
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", f"{tmp}/list.txt",
                     "-vf", "fps=60,format=yuv420p", "-c:v", "libx264", "-crf", "20", out], check=True)
