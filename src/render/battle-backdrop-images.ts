@@ -40,15 +40,21 @@ export const BACKDROP_IMAGES: Partial<Record<Biome, string[]>> = {
   ruins: [warp1, warp2],
 };
 
+/** 名前で選べる背景の絵（オープニングのムービーなど、戦闘以外で使う）。 */
+export const NAMED_BACKDROPS = { void1, void2, sea1, sea2, meadow, prophecy, highland, warp2 } as const;
+export type NamedBackdrop = keyof typeof NAMED_BACKDROPS;
+
 const images = new Map<string, HTMLImageElement>();
 
-/** 背景の絵（読み込めていれば）。まだなら読み込みを始めて null を返す。 */
-export function getBackdropImage(biome: Biome, variant: number): HTMLImageElement | null {
-  const urls = BACKDROP_IMAGES[biome];
-  if (!urls || urls.length === 0 || typeof Image === "undefined") {
+/** 名前で選んだ背景の絵（読み込めていれば）。まだなら読み込みを始めて null を返す。 */
+export function getNamedBackdrop(name: NamedBackdrop): HTMLImageElement | null {
+  return loadImage(NAMED_BACKDROPS[name]);
+}
+
+function loadImage(url: string): HTMLImageElement | null {
+  if (typeof Image === "undefined") {
     return null;
   }
-  const url = urls[Math.abs(Math.floor(variant)) % urls.length];
   let img = images.get(url);
   if (!img) {
     img = new Image();
@@ -56,4 +62,13 @@ export function getBackdropImage(biome: Biome, variant: number): HTMLImageElemen
     images.set(url, img);
   }
   return img.complete && img.naturalWidth > 0 ? img : null;
+}
+
+/** 背景の絵（読み込めていれば）。まだなら読み込みを始めて null を返す。 */
+export function getBackdropImage(biome: Biome, variant: number): HTMLImageElement | null {
+  const urls = BACKDROP_IMAGES[biome];
+  if (!urls || urls.length === 0) {
+    return null;
+  }
+  return loadImage(urls[Math.abs(Math.floor(variant)) % urls.length]);
 }

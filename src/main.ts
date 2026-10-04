@@ -3,6 +3,8 @@ import "./style.css";
 import { GAME_TITLE } from "./core/status";
 import { backTitle, confirmTitle, createTitleState, moveTitleCursor } from "./game/title/title-menu";
 import { renderTitle } from "./render/title-renderer";
+import { renderOpening } from "./render/opening-renderer";
+import { advanceOpening, createOpeningState, skipOpening, startOpening, updateOpening } from "./game/title/opening";
 import { battleSeFor } from "./game/battle/battle-se";
 import { battleEffectFor, type BattleEffect } from "./game/battle/battle-effect";
 import { createStaffRollState, skipStaffRoll, startStaffRoll, updateStaffRoll } from "./game/title/staff-roll";
@@ -407,6 +409,8 @@ const dialogue = new DialogueController(flags, {
 });
 /** エンディングのスタッフロール。 */
 let staffRoll = createStaffRollState();
+/** 「はじめから」のあとに流れるオープニング（あらすじのムービー）。終わると（飛ばすと）ゲームが始まる。 */
+let opening = createOpeningState();
 
 /** イベントの`startBattle`コマンドが指すボス戦のデータ（章が増えるたびここに追加する）。 */
 interface StoryBattleDef {
@@ -707,9 +711,13 @@ function statusRows(): StatusRow[] {
   return rows;
 }
 let lastTitleDirection: Direction | null = null;
+let openingSkipRequested = false;
 window.addEventListener("keydown", (event) => {
   if ((event.key === "x" || event.key === "Escape") && title.open) {
     title = backTitle(title);
+  }
+  if ((event.key === "x" || event.key === "Escape") && opening.open) {
+    openingSkipRequested = true;
   }
 });
 window.addEventListener("keydown", startAudioOnFirstInteraction, { once: true });
@@ -1265,14 +1273,27 @@ const loop = createGameLoop({
           }
           playMapBgm(currentMapId);
         } else if (result.action === "new") {
-          resetToNewGame();
-          dialogue.start(CHAPTER0_OPENING_COMMANDS);
-          playMapBgm(currentMapId);
+          // まずオープニング（あらすじ）を流す。曲はタイトルの曲のまま。終わったらゲームを始める。
+          opening = startOpening();
         }
       }
       return;
     }
     lastTitleDirection = null;
+
+    if (opening.open) {
+      opening = actionPressed ? advanceOpening(opening) : updateOpening(opening, dtMs);
+      if (openingSkipRequested) {
+        opening = skipOpening(opening);
+      }
+      openingSkipRequested = false;
+      if (!opening.open) {
+        resetToNewGame();
+        dialogue.start(CHAPTER0_OPENING_COMMANDS);
+        playMapBgm(currentMapId);
+      }
+      return;
+    }
 
     if (staffRoll.open) {
       staffRoll = actionPressed ? skipStaffRoll() : updateStaffRoll(staffRoll, dtMs, LOGICAL_HEIGHT);
@@ -1573,6 +1594,10 @@ const loop = createGameLoop({
     }
     if (staffRoll.open) {
       renderStaffRoll(ctx, staffRoll, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+      return;
+    }
+    if (opening.open) {
+      renderOpening(ctx, opening, LOGICAL_WIDTH, LOGICAL_HEIGHT, GAME_TITLE);
       return;
     }
 
