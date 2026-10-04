@@ -1,6 +1,6 @@
 import type { DialogueRenderState } from "../game/dialogue/dialogue-controller";
 import { wrapText } from "./text-wrap";
-import { PORTRAIT_PIXEL_WIDTH, renderPortraitByName } from "./portrait-renderer";
+import { PORTRAIT_PIXEL_HEIGHT, PORTRAIT_PIXEL_WIDTH, renderPortraitByName } from "./portrait-renderer";
 import { drawWindow } from "./ui-frame";
 
 const LINE_HEIGHT = 12;
@@ -28,7 +28,7 @@ export function renderDialogue(
     const hasPortrait = state.speaker !== undefined && renderPortraitByName(ctx, state.speaker, boxX + PADDING, boxY + PADDING);
     if (hasPortrait) {
       ctx.strokeStyle = "#c89a48";
-      ctx.strokeRect(boxX + PADDING - 0.5, boxY + PADDING - 0.5, PORTRAIT_PIXEL_WIDTH + 1, 14 * 3 + 1);
+      ctx.strokeRect(boxX + PADDING - 0.5, boxY + PADDING - 0.5, PORTRAIT_PIXEL_WIDTH + 1, PORTRAIT_PIXEL_HEIGHT + 1);
     }
     const textIndent = hasPortrait ? PORTRAIT_PIXEL_WIDTH + PORTRAIT_GAP : 0;
     const textX = boxX + PADDING + textIndent;

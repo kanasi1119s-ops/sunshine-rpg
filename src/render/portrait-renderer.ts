@@ -1,3 +1,4 @@
+import { getPortraitIcon } from "./portrait-icons";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
 import {
@@ -10,8 +11,9 @@ import {
 
 /** 会話欄で使う、1ドットあたりの画面上のピクセル数。 */
 export const PORTRAIT_CELL_SIZE = 3;
-export const PORTRAIT_PIXEL_WIDTH = PORTRAIT_GRID_WIDTH * PORTRAIT_CELL_SIZE;
 export const PORTRAIT_PIXEL_HEIGHT = PORTRAIT_GRID_HEIGHT * PORTRAIT_CELL_SIZE;
+/** 会話欄の顔の枠の幅。顔アイコン（正方形）が収まるよう、高さと同じにする。 */
+export const PORTRAIT_PIXEL_WIDTH = PORTRAIT_PIXEL_HEIGHT;
 
 /**
  * マップ上のプレイヤー・NPC用に、1ドット＝1画面ピクセルで描く等倍サイズ。
@@ -41,6 +43,16 @@ export function renderPortraitByName(
   y: number,
   cellSize: number = PORTRAIT_CELL_SIZE,
 ): boolean {
+  // 人間がくれた顔アイコン（仲間6人）があれば、それを使う。
+  const icon = getPortraitIcon(speaker);
+  if (icon) {
+    ctx.fillStyle = "#2a2140";
+    ctx.fillRect(x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(icon, x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
+    return true;
+  }
   // 大きな立ち絵（256×256）がある人物は、頭のあたりを切り出して顔グラフィックにする。
   const full = getSpriteCanvas(`char:${speaker}`, SPRITE_DATA);
   if (full) {
@@ -57,6 +69,8 @@ export function renderPortraitByName(
   if (!spec) {
     return false;
   }
-  renderPortrait(ctx, spec, x, y, cellSize);
+  ctx.fillStyle = "#2a2140";
+  ctx.fillRect(x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
+  renderPortrait(ctx, spec, x + (PORTRAIT_PIXEL_WIDTH - PORTRAIT_GRID_WIDTH * cellSize) / 2, y, cellSize);
   return true;
 }
