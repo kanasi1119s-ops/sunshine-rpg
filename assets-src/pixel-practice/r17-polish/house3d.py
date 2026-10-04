@@ -10,7 +10,7 @@ pal={"A":"#1e1620","S":"#3c3050",
  "D1":"#4a2a14","D2":"#7a4a22","D3":"#a8703a",
  "G1":"#7ab8e0","G2":"#aee0f8","F1":"#3a8a3a","F2":"#68c048","F3":"#e84a5a","Y":"#f4cc50",
  "M1":"#4a7a38","M2":"#6a9a48","CUR":"#d86a5a","L1":"#ffe8a0","W1":"#c4905a","W2":"#a8703a"}
-def build(W,H,FW,SW,floors,FH=18,roofH=16,ox=3,door=0.5,nwin=3,porch=True,dormer=False,wall='plaster',chimney=0.7,seed=1,ivy=True,roof=None):
+def build(W,H,FW,SW,floors,FH=18,roofH=16,ox=3,door=0.5,nwin=3,porch=True,dormer=False,wall='plaster',chimney=0.7,seed=1,ivy=True,roof=None,fullside=False):
     rnd=random.Random(seed)
     c=Canvas(W,H)
     x0=ox; x1=ox+FW; x2=x1+SW
@@ -161,7 +161,16 @@ def build(W,H,FW,SW,floors,FH=18,roofH=16,ox=3,door=0.5,nwin=3,porch=True,dormer
         if ly==2: return pal_[3]
         return pal_[max(1,min(3,2+jit(row,cid)))]
     c.poly([(x0-4,top),(rl,ridge_y+1),(rr,ridge_y+1),(x1+4,top)],front_roof)
-    c.poly([(rr,ridge_y+1),(x1+4,top),(x2+2,top-(x2+2-x1)*SL),(rr+SW*0.8+4,ridge_y+SW*0.8*0.45+3)],side_roof)
+    far_eave=top-(x2+2-x1)*SL
+    if fullside:
+        # 側面の屋根を、奥（右）まで厚みを保って伸ばす（右端が薄い帯になって足りなく見えた）
+        far_top=min(ridge_y+1, far_eave-roofH*0.6)
+        c.poly([(rr,ridge_y+1),(x1+4,top),(x2+2,far_eave),(x2+2,far_top),(rr+SW*0.5,(ridge_y+1+far_top)/2)],side_roof)
+        for x in range(int(rr+SW*0.5),x2+3):
+            yy=(ridge_y+1+far_top)/2+(x-(rr+SW*0.5))*(far_top-(ridge_y+1+far_top)/2)/max(1,(x2+2-(rr+SW*0.5)))
+            c.put(x,int(round(yy)),'R6')
+    else:
+        c.poly([(rr,ridge_y+1),(x1+4,top),(x2+2,far_eave),(rr+SW*0.8+4,ridge_y+SW*0.8*0.45+3)],side_roof)
     for x in range(int(rl),int(rr)+1): c.put(x,ridge_y,'R6'); c.put(x,ridge_y+1,'R5')
     for y in range(ridge_y+1,top):
         x=rr+(y-ridge_y)*((x1+4)-rr)/(top-ridge_y); c.put(x,y,'R6'); c.put(x+1,y,'R5')
@@ -227,5 +236,5 @@ def variants(name,c):
         save(name+"-"+nm,c,{**pal,**vv})
 if __name__=="__main__":
     variants("cottage",build(48,56,FW=30,SW=11,floors=1,FH=19,roofH=15,ox=3,door=0.5,nwin=3,porch=False,wall='plaster',chimney=0.75,seed=3))
-    variants("manor4",build(80,80,FW=54,SW=19,floors=2,FH=18,roofH=17,ox=3,door=0.45,nwin=3,porch=True,dormer=True,wall='plaster',chimney=0.8,seed=8))
+    variants("manor4",build(80,80,FW=54,SW=19,floors=2,FH=18,roofH=17,ox=3,door=0.45,nwin=3,porch=True,dormer=True,wall='plaster',chimney=0.8,seed=8,fullside=True))
     variants("stonehouse",build(64,64,FW=40,SW=15,floors=1,FH=22,roofH=17,ox=3,door=0.35,nwin=2,porch=False,wall='stone',chimney=0.7,seed=6))
