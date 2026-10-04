@@ -18,6 +18,9 @@ TEMPLATES = {
     "guide": ("ガイド", {"hair": "BCDX", "skin": "HJKM", "accent": "ION", "top": "PQRSUWY"}),
 }
 
+# 目の色の記号（素体ごと）
+EYES = {"reto": "F", "yuri": "H", "mina": "I", "guide": "I"}
+
 def lum(hexv):
     h = hexv.lstrip("#")
     r, g, b = (int(h[i:i + 2], 16) / 255 for i in (0, 2, 4))
@@ -110,6 +113,32 @@ def despeckle(frames, roles):
         out[fk] = ["".join(r) for r in g]
     return out
 
+def smooth_head(frames):
+    """頭（上の18段）のかたちを、なめらかにする。持ち物・飾りを消した跡の、へこみ（欠け）を埋め、とび出たとげ（縁取りのかけら）を消す。"""
+    out = {}
+    for fk, rows in frames.items():
+        g = [list(r) for r in rows]
+        H, W = len(g), len(g[0])
+        def at(x, y):
+            return g[y][x] if 0 <= x < W and 0 <= y < H else "."
+        for _ in range(3):
+            changes = []
+            for y in range(1, 21):
+                for x in range(W):
+                    nb = [at(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))]
+                    filled = [c for c in nb if c != "."]
+                    if g[y][x] == ".":
+                        if len(filled) >= 3:
+                            changes.append((x, y, max(set(filled), key=filled.count)))
+                    elif len(filled) <= 1:
+                        changes.append((x, y, "."))
+                    elif sum(1 for dx in (-1, 0, 1) for dy in (-1, 0, 1) if (dx or dy) and at(x + dx, y + dy) != ".") <= 2 and g[y][x] == "A":
+                        changes.append((x, y, "."))   # ななめにしかつながっていない縁取りのかけら
+            for x, y, c in changes:
+                g[y][x] = c
+        out[fk] = ["".join(r) for r in g]
+    return out
+
 built = {}
 for key, (name, groups) in TEMPLATES.items():
     d = json.load(open(SRC / f"{name}.json"))
@@ -125,7 +154,10 @@ for key, (name, groups) in TEMPLATES.items():
             shade[i] = round(max(-0.6, min(0.6, (lum(pal[i]) - med) * 1.25)), 3)
     frames = {k: v for k, v in d["frames"].items() if k[:-1] in ("down", "up", "left", "right") and k[-1] in "012"}
     frames = symmetrize(strip(key, frames))
-    frames = despeckle(frames, roles)
+    frames = smooth_head(despeckle(frames, roles))
+    # 目は、どの肌の色でも見えやすいよう、黒（ほんのり色つき）にする
+    ei = LETTERS.index(EYES[key])
+    pal = list(pal); pal[ei] = "#241820"; roles[ei] = "fixed"; shade[ei] = 0.0
     built[key] = {"palette": pal, "roles": roles, "shade": shade, "frames": frames}
 
 # 男の人の2種め: レトの頭（ふさふさの髪）に、ユーリの服。ユーリの髪はとげとげなので、モブには使わない（2026-10-04、人間の指示）
