@@ -10,13 +10,24 @@ function hash(n: number): number {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
 
+/** 夜空の背景。なめらかなグラデーションではなく、はっきりした色の帯（ドット絵らしい段）で描く。 */
+export function drawBandedSky(ctx: Ctx, x: number, y: number, w: number, h: number): void {
+  const stops: [number, [number, number, number]][] = [[0, [3, 3, 12]], [0.65, [14, 14, 42]], [1, [42, 26, 58]]];
+  const bands = 14;
+  for (let i = 0; i < bands; i++) {
+    const t = (i + 0.5) / bands;
+    const hi = stops.findIndex(([p]) => p >= t);
+    const [p1, c1] = stops[Math.max(0, hi - 1)];
+    const [p2, c2] = stops[hi < 0 ? stops.length - 1 : hi];
+    const k = p2 === p1 ? 0 : Math.min(1, Math.max(0, (t - p1) / (p2 - p1)));
+    const c = c1.map((v, j) => Math.round(v + (c2[j] - v) * k));
+    ctx.fillStyle = `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+    ctx.fillRect(x, y + Math.floor((i * h) / bands), w, Math.ceil(h / bands) + 1);
+  }
+}
+
 function drawStarfield(ctx: Ctx, w: number, h: number, ms: number): void {
-  const grad = ctx.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0, "#03030c");
-  grad.addColorStop(0.65, "#0e0e2a");
-  grad.addColorStop(1, "#2a1a3a");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, w, h);
+  drawBandedSky(ctx, 0, 0, w, h);
   for (let i = 0; i < 110; i++) {
     const x = Math.round(hash(i * 5) * w);
     const y = Math.round(hash(i * 5 + 1) * h);
@@ -28,7 +39,7 @@ function drawStarfield(ctx: Ctx, w: number, h: number, ms: number): void {
 }
 
 /** 集中線の光。なめらかな色のグラデーションではなく、1ドットずつ、3段階の色と市松のディザで描く。 */
-function drawRays(ctx: Ctx, cx: number, cy: number, ms: number, strength: number): void {
+export function drawRays(ctx: Ctx, cx: number, cy: number, ms: number, strength: number): void {
   if (strength <= 0) return;
   ctx.save();
   const colors = ["#fff4c0", "#ffd45c", "#c8802a"];
@@ -97,11 +108,15 @@ export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, 
     const sinceHit = ms - OPENING_HIT_MS;
     if (sinceHit > -80 && sinceHit < 900) {
       const a = sinceHit < 0 ? 0.3 : Math.max(0, 1 - sinceHit / 900);
-      const g = ctx.createRadialGradient(w / 2, h * 0.45, 4, w / 2, h * 0.45, w * 0.55);
-      g.addColorStop(0, `rgba(255, 236, 170, ${0.55 * a})`);
-      g.addColorStop(1, "rgba(255, 236, 170, 0)");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, w, h);
+      // 中心から外へ、はっきりした輪の段（5段）で光る
+      for (let k = 5; k >= 1; k--) {
+        const rx = (w * 0.55 * k) / 5;
+        const ry = (h * 0.7 * k) / 5;
+        ctx.fillStyle = `rgba(255, 236, 170, ${(0.12 * a * (6 - k)) / 2})`;
+        ctx.beginPath();
+        ctx.ellipse(Math.round(w / 2), Math.round(h * 0.45), Math.round(rx), Math.round(ry), 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
       drawSparkles(ctx, w / 2, h * 0.45, Math.max(0, sinceHit));
     }
     // あらすじ: 下から上へ流れる

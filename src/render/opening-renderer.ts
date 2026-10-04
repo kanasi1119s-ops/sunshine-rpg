@@ -1,3 +1,5 @@
+import { drawPixelText } from "./pixel-text";
+import { drawBandedSky, drawRays as drawPixelRays } from "./boot-opening-renderer";
 import { OPENING_FADE_MS, OPENING_SCENES, sceneDurationMs, visibleChars, type OpeningScene, type OpeningState } from "../game/title/opening";
 import { getNamedBackdrop, type NamedBackdrop } from "./battle-backdrop-images";
 import { PORTRAITS } from "../game/portrait/portraits";
@@ -22,12 +24,7 @@ interface Area { x: number; y: number; w: number; h: number }
 
 /** 星空（夜の背景）。まばらな星がゆっくりまたたく。 */
 function drawStarfield(ctx: Ctx, a: Area, ms: number): void {
-  const grad = ctx.createLinearGradient(0, a.y, 0, a.y + a.h);
-  grad.addColorStop(0, "#04040e");
-  grad.addColorStop(0.7, "#10102c");
-  grad.addColorStop(1, "#241838");
-  ctx.fillStyle = grad;
-  ctx.fillRect(a.x, a.y, a.w, a.h);
+  drawBandedSky(ctx, a.x, a.y, a.w, a.h);
   for (let i = 0; i < 90; i++) {
     const x = Math.round(hash(i * 5) * a.w);
     const y = Math.round(a.y + hash(i * 5 + 1) * a.h * 0.9);
@@ -38,37 +35,75 @@ function drawStarfield(ctx: Ctx, a: Area, ms: number): void {
   ctx.globalAlpha = 1;
 }
 
-/** 「灯の環」。光の輪が、ゆっくり回りながら脈打つ。 */
-function drawRing(ctx: Ctx, a: Area, ms: number, strength: number): void {
-  const cx = a.x + a.w / 2;
-  const cy = a.y + a.h * 0.42;
-  const pulse = 1 + 0.03 * Math.sin(ms / 600);
-  ctx.save();
-  ctx.globalCompositeOperation = "lighter";
-  for (let k = 0; k < 6; k++) {
-    const rx = (74 + k * 3) * pulse;
-    const ry = (22 + k * 1.2) * pulse;
-    ctx.strokeStyle = `rgba(255, 214, 120, ${(0.55 - k * 0.07) * strength})`;
-    ctx.lineWidth = 5 - k * 0.6;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, rx, ry, -0.18, 0, Math.PI * 2);
-    ctx.stroke();
+/** 「灯の環」。1ドットずつ描いた光の輪（中心が白く、外へ金・だいだい、まわりにディザの光）。1回だけ描いてためておく。 */
+let ringCache: HTMLCanvasElement | null = null;
+function getPixelRing(): HTMLCanvasElement | null {
+  if (typeof document === "undefined") return null;
+  if (ringCache) return ringCache;
+  const rx = 78;
+  const ry = 24;
+  const tilt = -0.18;
+  const W = 2 * (rx + 22);
+  const H = 2 * (ry + 22);
+  const c = document.createElement("canvas");
+  c.width = W;
+  c.height = H;
+  const g = c.getContext("2d");
+  if (!g) return null;
+  const cx = W / 2;
+  const cy = H / 2;
+  const cos = Math.cos(-tilt);
+  const sin = Math.sin(-tilt);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const dx = x + 0.5 - cx;
+      const dy = y + 0.5 - cy;
+      const lx = dx * cos - dy * sin;
+      const ly = dx * sin + dy * cos;
+      const d = Math.abs(Math.hypot(lx / rx, ly / ry) - 1) * Math.min(rx, ry);
+      const thick = 1.0 + 0.5 * Math.abs(ly / ry);
+      let col: string | null = null;
+      if (d < thick * 0.7) col = "#ffffff";
+      else if (d < thick * 1.5) col = "#ffe070";
+      else if (d < thick * 2.5) col = "#f0a020";
+      else if (d < thick * 3.8 && (x + y) % 2 === 0) col = "rgba(255, 208, 96, 0.8)";
+      else if (d < thick * 5.5 && x % 2 === 0 && y % 2 === 0) col = "rgba(255, 208, 96, 0.45)";
+      if (col) {
+        g.fillStyle = col;
+        g.fillRect(x, y, 1, 1);
+      }
+    }
   }
-  // 環にそって流れる光の粒
+  ringCache = c;
+  return c;
+}
+
+function drawRing(ctx: Ctx, a: Area, ms: number, strength: number): void {
+  const cx = Math.round(a.x + a.w / 2);
+  const cy = Math.round(a.y + a.h * 0.42);
+  const ring = getPixelRing();
+  if (ring) {
+    const prevSmooth = ctx.imageSmoothingEnabled;
+    ctx.imageSmoothingEnabled = false;
+    // 脈打ち: ゆっくり、3段階の明るさで
+    const beat = Math.floor(2.99 * (0.5 + 0.5 * Math.sin(ms / 600)));
+    ctx.globalAlpha = (0.7 + 0.15 * beat) * Math.min(1, strength + 0.15);
+    ctx.drawImage(ring, cx - ring.width / 2, cy - ring.height / 2);
+    ctx.globalAlpha = 1;
+    ctx.imageSmoothingEnabled = prevSmooth;
+  }
+  // 環にそって流れる光の粒（ドット）
+  const cos = Math.cos(-0.18);
+  const sin = Math.sin(-0.18);
   for (let i = 0; i < 28; i++) {
     const ang = (i / 28) * Math.PI * 2 + ms / 2500;
-    const x = cx + Math.cos(ang) * 74 * pulse;
-    const y = cy + Math.sin(ang) * 22 * pulse;
-    ctx.fillStyle = `rgba(255, 244, 200, ${0.85 * strength})`;
+    const lx = Math.cos(ang) * 78;
+    const ly = Math.sin(ang) * 24;
+    const x = cx + lx * cos + ly * sin;
+    const y = cy - lx * sin + ly * cos;
+    ctx.fillStyle = `rgba(255, 244, 200, ${0.9 * strength})`;
     ctx.fillRect(Math.round(x), Math.round(y), 2, 2);
   }
-  // 環の中心から広がるやわらかい光
-  const glow = ctx.createRadialGradient(cx, cy, 4, cx, cy, 120);
-  glow.addColorStop(0, `rgba(255, 220, 140, ${0.22 * strength})`);
-  glow.addColorStop(1, "rgba(255, 220, 140, 0)");
-  ctx.fillStyle = glow;
-  ctx.fillRect(a.x, a.y, a.w, a.h);
-  ctx.restore();
 }
 
 /** 環が砕けて、光のかけらが四方へ飛び散る。 */
@@ -121,44 +156,29 @@ function drawLightning(ctx: Ctx, a: Area, ms: number): void {
   const within = ms - slot * 900;
   if (hash(slot * 7) < 0.45 || within > 260) return;
   const fade = 1 - within / 260;
-  ctx.fillStyle = `rgba(220, 200, 255, ${0.5 * fade})`;
+  ctx.fillStyle = `rgba(220, 200, 255, ${0.5 * Math.ceil(fade * 3) / 3})`;
   ctx.fillRect(a.x, a.y, a.w, a.h);
-  ctx.strokeStyle = `rgba(255, 255, 255, ${fade})`;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
+  // ぎざぎざの線を、1ドットずつ
+  ctx.fillStyle = "#ffffff";
   let x = a.x + a.w * (0.2 + hash(slot) * 0.6);
   let y = a.y;
-  ctx.moveTo(x, y);
   for (let i = 0; i < 9; i++) {
-    x += (hash(slot * 13 + i) - 0.5) * 36;
-    y += a.h / 8;
-    ctx.lineTo(Math.round(x), Math.round(y));
+    const nx = x + (hash(slot * 13 + i) - 0.5) * 36;
+    const ny = y + a.h / 8;
+    const steps = Math.ceil(Math.max(Math.abs(nx - x), Math.abs(ny - y)));
+    for (let k = 0; k <= steps; k++) {
+      const px = Math.round(x + ((nx - x) * k) / steps);
+      const py = Math.round(y + ((ny - y) * k) / steps);
+      ctx.fillRect(px, py, 2, 1);
+    }
+    x = nx;
+    y = ny;
   }
-  ctx.stroke();
 }
 
-/** 中心から広がる光の筋（タイトルの場面）。 */
+/** 中心から広がる光の筋（タイトルの場面）。ドットの集中線。 */
 function drawRays(ctx: Ctx, a: Area, ms: number): void {
-  const cx = a.x + a.w / 2;
-  const cy = a.y + a.h * 0.5;
-  ctx.save();
-  ctx.globalCompositeOperation = "lighter";
-  const n = 14;
-  for (let i = 0; i < n; i++) {
-    const ang = (i / n) * Math.PI * 2 + ms / 6000;
-    const spread = 0.07;
-    const grad = ctx.createRadialGradient(cx, cy, 6, cx, cy, 260);
-    grad.addColorStop(0, "rgba(255, 224, 150, 0.32)");
-    grad.addColorStop(1, "rgba(255, 224, 150, 0)");
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.cos(ang - spread) * 300, cy + Math.sin(ang - spread) * 300);
-    ctx.lineTo(cx + Math.cos(ang + spread) * 300, cy + Math.sin(ang + spread) * 300);
-    ctx.closePath();
-    ctx.fill();
-  }
-  ctx.restore();
+  drawPixelRays(ctx, a.x + a.w / 2, a.y + a.h * 0.5, ms, 1);
 }
 
 /** 空をただよう光の粒（ドット）。場面の色で、ゆっくり上へ昇る。 */
@@ -176,17 +196,11 @@ function drawSparkles(ctx: Ctx, color: string, a: Area, ms: number): void {
 }
 
 function drawText(ctx: Ctx, lines: string[], visible: number, x: number, y: number): void {
-  ctx.font = "12px monospace";
-  ctx.textBaseline = "top";
-  ctx.textAlign = "left";
   let remaining = visible;
   lines.forEach((line, i) => {
     const shown = line.slice(0, Math.max(0, remaining));
     remaining -= line.length;
-    ctx.fillStyle = "#000000";
-    ctx.fillText(shown, x + 1, y + i * 15 + 1);
-    ctx.fillStyle = "#f4f0e0";
-    ctx.fillText(shown, x, y + i * 15);
+    drawPixelText(ctx, shown, x, y + i * 16, "left", 1, { size: 13 });
   });
 }
 
@@ -210,16 +224,7 @@ function drawCaption(ctx: Ctx, text: string, a: Area, ms: number, duration: numb
   const t = ms / duration;
   const alpha = Math.min(1, Math.max(0, (t - 0.08) / 0.12)) * Math.min(1, Math.max(0, (0.7 - t) / 0.12));
   if (alpha <= 0) return;
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.font = "bold 20px monospace";
-  ctx.fillStyle = "#000";
-  ctx.fillText(text, a.x + a.w / 2 + 1, a.y + a.h * 0.42 + 1);
-  ctx.fillStyle = "#ffe9a0";
-  ctx.fillText(text, a.x + a.w / 2, a.y + a.h * 0.42);
-  ctx.restore();
+  drawPixelText(ctx, text, a.x + a.w / 2, a.y + a.h * 0.42 - 12, "center", Math.round(alpha * 4) / 4, { size: 22, color: "#ffe9a0", bold: true });
 }
 
 function drawArt(ctx: Ctx, scene: OpeningScene, a: Area, ms: number, duration: number): void {
@@ -238,7 +243,7 @@ function drawArt(ctx: Ctx, scene: OpeningScene, a: Area, ms: number, duration: n
   const dw = a.w * zoom;
   const dh = a.h * zoom;
   const pan = scene.pan[0] + (scene.pan[1] - scene.pan[0]) * t;
-  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingEnabled = false; // ドット絵の背景は、なめらかに引きのばさない
   ctx.drawImage(img, a.x + (a.w - dw) / 2 + pan, a.y + (a.h - dh) * 0.7, dw, dh);
 }
 
@@ -304,7 +309,7 @@ export function renderOpening(ctx: Ctx, state: OpeningState, screenWidth: number
 
   // 場面の頭の白いひらめき
   if (scene.flashMs > 0 && ms < scene.flashMs) {
-    ctx.fillStyle = `rgba(255, 255, 255, ${1 - ms / scene.flashMs})`;
+    ctx.fillStyle = `rgba(255, 255, 255, ${Math.ceil((1 - ms / scene.flashMs) * 5) / 5})`;
     ctx.fillRect(a.x, a.y, a.w, a.h);
   }
   // 場面の頭は暗い状態から現れ、終わりぎわは暗くなる（ひらめく場面は暗くしない）
@@ -312,21 +317,21 @@ export function renderOpening(ctx: Ctx, state: OpeningState, screenWidth: number
   const fadeOut = Math.max(0, 1 - (duration - ms) / SCENE_FADE_OUT_MS);
   const dark = Math.max(fadeIn, fadeOut);
   if (dark > 0) {
-    ctx.fillStyle = `rgba(0, 0, 0, ${dark})`;
+    ctx.fillStyle = `rgba(0, 0, 0, ${Math.ceil(dark * 8) / 8})`;
     ctx.fillRect(a.x, a.y, a.w, a.h);
   }
   // 周辺を暗くして、画面に重みを出す
-  const vignette = ctx.createRadialGradient(screenWidth / 2, a.y + a.h / 2, a.h * 0.45, screenWidth / 2, a.y + a.h / 2, screenWidth * 0.62);
-  vignette.addColorStop(0, "rgba(0, 0, 0, 0)");
-  vignette.addColorStop(1, "rgba(0, 0, 0, 0.55)");
-  ctx.fillStyle = vignette;
-  ctx.fillRect(a.x, a.y, a.w, a.h);
+  // 周辺を暗くして、画面に重みを出す（はっきりした4段のふち。外ほど重なって濃くなる）
+  ctx.fillStyle = "rgba(0, 0, 0, 0.09)";
+  for (let k = 1; k <= 4; k++) {
+    const t = k * 7;
+    ctx.fillRect(a.x, a.y, a.w, t);
+    ctx.fillRect(a.x, a.y + a.h - t, a.w, t);
+    ctx.fillRect(a.x, a.y + t, t, a.h - t * 2);
+    ctx.fillRect(a.x + a.w - t, a.y + t, t, a.h - t * 2);
+  }
 
   drawText(ctx, scene.lines, visibleChars(scene, ms), 16, screenHeight - BAR_BOTTOM + 8);
-  ctx.font = "9px monospace";
-  ctx.fillStyle = "rgba(200, 200, 224, 0.75)";
-  ctx.textAlign = "right";
-  ctx.textBaseline = "top";
-  ctx.fillText("決定: つぎへ　x・Esc: とばす", screenWidth - 6, 2);
+  drawPixelText(ctx, "決定: つぎへ　x・Esc: とばす", screenWidth - 6, 2, "right", 0.85, { size: 10, color: "#c8c8e0" });
   ctx.textAlign = "left";
 }
