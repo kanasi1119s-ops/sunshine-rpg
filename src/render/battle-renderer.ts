@@ -238,11 +238,21 @@ function renderBattleBody(
   ctx.font = "10px monospace";
   ctx.textBaseline = "top";
 
+  // 魔法を唱えているあいだ（ため）は、唱える人のまわりが、術の色にぼんやり光る
+  const setGlow = (id: string): void => {
+    const sp = animView && animView.elapsedMs < animView.spec.durationMs ? animView.spec : null;
+    const casting = sp && sp.fx && sp.fxStart > 0 && animView!.elapsedMs / sp.durationMs < sp.fxStart + 0.08 && (sp.casterId === id || (sp.motion === "cast" && sp.actorId === id));
+    ctx.shadowColor = casting && sp?.fx ? FX_COLOR[sp.fx] : "transparent";
+    ctx.shadowBlur = casting ? 9 : 0;
+  };
+  const clearGlow = (): void => { ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; };
+
   // 会心の一撃のときは、敵だけを短く小きざみにゆらす。
   const enemyShake = active === "crit" && effectView ? shakeOffset(progress, effectView.elapsedMs) : 0;
   ctx.save();
   ctx.translate(enemyShake, 0);
   battleState.enemies.forEach((enemy) => {
+    setGlow(enemy.id);
     if (drawBossSprite(ctx, enemy, screenWidth)) {
       return;
     }
@@ -287,6 +297,7 @@ function renderBattleBody(
     .map((enemy, i) => ({ enemy, slot: slots[i] }))
     .sort((a, b) => a.slot.feet - b.slot.feet)
     .forEach(({ enemy, slot }) => {
+      setGlow(enemy.id);
       const flying = isFlying(enemy);
       const bob = flying ? Math.round(Math.sin(performance.now() / 450 + slot.x) * 3) : 0;
       const sx = slot.x;
@@ -301,6 +312,7 @@ function renderBattleBody(
       shadowText(ctx, enemy.name, sx, slot.feet + 2);
       drawHpBar(ctx, enemy, sx, slot.feet + 13, 64);
     });
+  clearGlow();
 
   ctx.restore();
 
@@ -368,7 +380,9 @@ function renderBattleBody(
     const sway = state === "confuse" ? Math.round(Math.sin(nowMs / 160) * 2) : state === "poison" ? Math.round(Math.sin(nowMs / 60)) : 0;
     const canvas = getAllyCanvas(spec, specKey, state, step);
     if (canvas) {
+      setGlow(member.id);
       ctx.drawImage(canvas, x + shake + sway, feetY - SPR * (SPRITE_FEET_ROW + 1));
+      clearGlow();
     } else {
       ctx.save();
       ctx.translate(x, feetY - SPR * (SPRITE_FEET_ROW + 1));
