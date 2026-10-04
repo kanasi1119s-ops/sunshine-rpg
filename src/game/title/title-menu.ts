@@ -3,8 +3,8 @@
  * 「つづきから」は、自動セーブ（`autosave`）があるときだけ選べる。
  */
 export type TitleScreen = "menu" | "help" | "credits";
-export type TitleItemId = "continue" | "new" | "help" | "credits";
-export type TitleAction = "continue" | "new" | null;
+export type TitleItemId = "continue" | "new" | "help" | "keys" | "credits";
+export type TitleAction = "continue" | "new" | "keys" | null;
 
 export interface TitleState {
   open: boolean;
@@ -17,6 +17,7 @@ export const TITLE_ITEMS: { id: TitleItemId; label: string }[] = [
   { id: "continue", label: "つづきから" },
   { id: "new", label: "はじめから" },
   { id: "help", label: "あそびかた" },
+  { id: "keys", label: "そうさ設定" },
   { id: "credits", label: "クレジット" },
 ];
 
@@ -53,6 +54,8 @@ export function confirmTitle(state: TitleState): { state: TitleState; action: Ti
       return { state: { ...state, open: false }, action: "new" };
     case "help":
       return { state: { ...state, screen: "help" }, action: null };
+    case "keys":
+      return { state, action: "keys" };
     case "credits":
       return { state: { ...state, screen: "credits" }, action: null };
     default:

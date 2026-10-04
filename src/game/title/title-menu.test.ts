@@ -4,8 +4,8 @@ import { CREDIT_LINES, HELP_LINES } from "./title-text";
 
 describe("タイトル画面", () => {
   it("セーブがないときは「つづきから」が出ない。あるときは先頭に出る", () => {
-    expect(titleItemsFor(false).map((i) => i.id)).toEqual(["new", "help", "credits"]);
-    expect(titleItemsFor(true).map((i) => i.id)).toEqual(["continue", "new", "help", "credits"]);
+    expect(titleItemsFor(false).map((i) => i.id)).toEqual(["new", "help", "keys", "credits"]);
+    expect(titleItemsFor(true).map((i) => i.id)).toEqual(["continue", "new", "help", "keys", "credits"]);
   });
 
   it("カーソルは上下で動き、端でつながる", () => {
@@ -32,7 +32,7 @@ describe("タイトル画面", () => {
     expect(help.screen).toBe("help");
     expect(help.open).toBe(true);
     expect(confirmTitle(help).state.screen).toBe("menu");
-    const credits = confirmTitle(moveTitleCursor(start, 2)).state;
+    const credits = confirmTitle(moveTitleCursor(start, 3)).state;
     expect(credits.screen).toBe("credits");
     expect(backTitle(credits).screen).toBe("menu");
   });

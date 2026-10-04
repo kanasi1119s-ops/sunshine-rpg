@@ -4,6 +4,8 @@ import { GAME_TITLE } from "./core/status";
 import { backTitle, confirmTitle, createTitleState, moveTitleCursor } from "./game/title/title-menu";
 import { renderTitle } from "./render/title-renderer";
 import { renderOpening } from "./render/opening-renderer";
+import { advanceBootOpening, startBootOpening, updateBootOpening } from "./game/title/boot-opening";
+import { renderBootOpening } from "./render/boot-opening-renderer";
 import { DUNGEON_PARENT } from "./game/world/dungeon-parent";
 import { DUNGEON_PREP_FLAGS } from "./game/world/dungeon-extensions";
 import { advanceBattleTransition, canSkipTransition, isCoverPhase, skipToReveal, startBattleTransition, type BattleTransition } from "./game/battle/battle-transition";
@@ -51,6 +53,10 @@ import type { Flags } from "./game/event/types";
 import { InputState } from "./input/input-state";
 import { ActionButton } from "./input/action-button";
 import { attachKeyboard } from "./input/keyboard";
+import { attachKeyRemap, loadBindings, rebind, resetBindings, saveBindings, describeBinding, CONTROL_ACTIONS, sendGameKey, type KeyBindings } from "./input/key-bindings";
+import { createGamepadPoller } from "./input/gamepad";
+import { closeControlsMenu, confirmControlsMenu, createControlsMenuState, finishCapture, moveControlsCursor, openControlsMenu } from "./game/menu/controls-menu";
+import { renderControlsMenu } from "./render/controls-menu-renderer";
 import { createTouchControls } from "./input/touch-controls";
 import type { Direction } from "./input/direction";
 import { CHAPTER0_OPENING_COMMANDS, CHAPTER0_START } from "./game/world/chapter0-world";
@@ -595,6 +601,7 @@ if (import.meta.env.DEV) {
     mapIds: Object.keys(WORLD_MAPS),
     warp: (mapId: string, tileX: number, tileY: number) => switchMap(mapId, tileX, tileY),
     startNew: () => {
+      bootOpening = { ...bootOpening, open: false };
       title = { ...title, open: false };
     },
     startBattle: (battleId: string) => startStoryBattle(battleId),
@@ -649,7 +656,18 @@ if (import.meta.env.DEV) {
 
 const input = new InputState();
 const actionButton = new ActionButton();
+/** 操作キーの設定（パソコン）。初期設定のときは、これまでのキーのまま。ほかのキー処理より先に動くよう、ここで最初に登録する。 */
+let keyBindings: KeyBindings = loadBindings(typeof window !== "undefined" ? window.localStorage : undefined);
+const keyRemap = attachKeyRemap(() => keyBindings);
 attachKeyboard(input, actionButton);
+/** 外部のコントローラー（ゲームパッド）。毎フレーム、状態を読む。 */
+const gamepad = createGamepadPoller(input, (action, down) => {
+  if (action === "confirm") {
+    if (down) actionButton.press();
+  } else {
+    sendGameKey(down ? "keydown" : "keyup", action);
+  }
+});
 createTouchControls(app, input, actionButton);
 /** スマホ用: ジョブ画面を開く／閉じるボタン（キーボードの C／X と同じ動き）。 */
 const jobButton = document.createElement("button");
@@ -658,7 +676,7 @@ jobButton.className = "touch-job-button";
 jobButton.textContent = "ジョブ";
 jobButton.addEventListener("pointerdown", (event) => {
   event.preventDefault();
-  window.dispatchEvent(new KeyboardEvent("keydown", { key: jobMenu.open ? "x" : "c" }));
+  sendGameKey("keydown", jobMenu.open ? "back" : "job");
 });
 app.appendChild(jobButton);
 /** スマホ用: ゲーム中のメニュー（つよさ・セーブ・タイトルへ）を開くボタン（キーボードの Tab と同じ動き）。 */
@@ -668,7 +686,7 @@ menuButton.className = "touch-menu-button";
 menuButton.textContent = "メニュー";
 menuButton.addEventListener("pointerdown", (event) => {
   event.preventDefault();
-  window.dispatchEvent(new KeyboardEvent("keydown", { key: pauseMenu.open ? "x" : "Tab" }));
+  sendGameKey("keydown", pauseMenu.open ? "back" : "menu");
 });
 app.appendChild(menuButton);
 
@@ -679,7 +697,7 @@ backButton.className = "touch-back-button";
 backButton.textContent = "もどる";
 backButton.addEventListener("pointerdown", (event) => {
   event.preventDefault();
-  window.dispatchEvent(new KeyboardEvent("keydown", { key: "x" }));
+  sendGameKey("keydown", "back");
 });
 app.appendChild(backButton);
 
@@ -690,6 +708,12 @@ function startAudioOnFirstInteraction(): void {
     return;
   }
   audioStarted = true;
+  if (bootOpening.open) {
+    // 起動のオープニング: 「スタート」を押したところから、曲がはじまる
+    currentBgmTrack = getTrack("opening");
+    audio.playBgm(currentBgmTrack);
+    return;
+  }
   if (title.open) {
     currentBgmTrack = getTrack("title");
     audio.playBgm(currentBgmTrack);
@@ -707,12 +731,24 @@ function hasAutosave(): boolean {
   }
 }
 let title = createTitleState(hasAutosave());
+/** ゲームを起動したときのオープニング（ロゴが上から落ちてきて、あらすじが流れる）。終わるとタイトル画面。 */
+let bootOpening = startBootOpening();
 
 /** ゲーム中のメニュー（Tab／Escape、スマホは「メニュー」ボタン）。 */
 let pauseMenu = createPauseMenuState();
 let lastPauseDirection: Direction | null = null;
 let pauseMessage: string | null = null;
 let pauseMessageTimer = 0;
+/** そうさ設定の画面。 */
+let controlsMenu = createControlsMenuState();
+let lastControlsDirection: Direction | null = null;
+window.addEventListener("keydown", (event) => {
+  if ((event.key === "x" || event.key === "Escape") && controlsMenu.open && !controlsMenu.capturing) {
+    controlsMenu = closeControlsMenu(controlsMenu);
+    equipBackHandled = true;
+    setTimeout(() => { equipBackHandled = false; }, 0);
+  }
+}, true);
 let jobMenuWasOpen = false;
 window.addEventListener("keydown", () => { jobMenuWasOpen = jobMenu.open; }, true);
 window.addEventListener("keydown", (event) => {
@@ -727,7 +763,7 @@ window.addEventListener("keydown", (event) => {
   }
   if ((event.key === "Tab" || event.key === "Escape") && !jobMenuWasOpen) {
     event.preventDefault();
-    if (!title.open && !battle && !dialogue.isActive() && !debugMenu.open && !jobMenu.open) {
+    if (!title.open && !opening.open && !bootOpening.open && !battle && !dialogue.isActive() && !debugMenu.open && !jobMenu.open) {
       pauseMenu = openPauseMenu();
       pauseMessage = null;
       if (audioStarted) {
@@ -1476,10 +1512,14 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
 }
 
 /** 1コマぶんの画面をすべて描く（戦闘に入る演出の前後でも、これを使う）。 */
-function renderGameScene(): void {
+function renderGameSceneBase(): void {
   ctx.fillStyle = "#101018";
   ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
+  if (bootOpening.open) {
+    renderBootOpening(ctx, bootOpening, LOGICAL_WIDTH, LOGICAL_HEIGHT, GAME_TITLE);
+    return;
+  }
   if (title.open) {
     renderTitle(ctx, title, GAME_TITLE, LOGICAL_WIDTH, LOGICAL_HEIGHT);
     return;
@@ -1635,6 +1675,13 @@ function renderGameScene(): void {
   }
 }
 
+function renderGameScene(): void {
+  renderGameSceneBase();
+  if (controlsMenu.open) {
+    renderControlsMenu(ctx, controlsMenu, keyBindings, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  }
+}
+
 const loop = createGameLoop({
   update(dtMs) {
     syncCompanionsFromFlags();
@@ -1659,9 +1706,55 @@ const loop = createGameLoop({
       return;
     }
     // 決定の音は、メニューを選ぶとき（タイトル・つよさ・買い物・ジョブ・戦闘）だけ。会話を送るたび・歩いて調べるたびに鳴ると、うるさいので鳴らさない
-    if (actionPressed && (title.open || pauseMenu.open || shopMenu.open || jobMenu.open || battle)) {
+    if (actionPressed && !bootOpening.open && (title.open || pauseMenu.open || shopMenu.open || jobMenu.open || battle)) {
       audio.playSe(seOf("confirm"));
     }
+
+    if (bootOpening.open) {
+      const before = bootOpening;
+      bootOpening = actionPressed ? advanceBootOpening(bootOpening) : updateBootOpening(bootOpening, dtMs, LOGICAL_HEIGHT);
+      if (!bootOpening.open && before.open) {
+        // タイトル画面へ。曲をタイトルの曲にかえる
+        currentBgmTrack = getTrack("title");
+        if (audioStarted) {
+          audio.playBgm(currentBgmTrack);
+        }
+      }
+      return;
+    }
+
+    if (controlsMenu.open) {
+      const direction = input.getDirection();
+      if (!controlsMenu.capturing && direction !== lastControlsDirection) {
+        if (direction === "up" || direction === "down") {
+          controlsMenu = moveControlsCursor(controlsMenu, direction === "up" ? -1 : 1);
+          audio.playSe(seOf("cursor"));
+        }
+        lastControlsDirection = direction;
+      }
+      if (actionPressed && !controlsMenu.capturing) {
+        const result = confirmControlsMenu(controlsMenu);
+        controlsMenu = result.state;
+        const choice = result.choice;
+        if (choice?.kind === "capture") {
+          keyRemap.captureNextKey((key) => {
+            if (key === "Escape") {
+              controlsMenu = finishCapture(controlsMenu, "かえなかった");
+              return;
+            }
+            keyBindings = rebind(keyBindings, choice.action, key);
+            saveBindings(window.localStorage, keyBindings);
+            const label = CONTROL_ACTIONS.find((a) => a.id === choice.action)?.label ?? "";
+            controlsMenu = finishCapture(controlsMenu, `${label}を ${describeBinding(keyBindings, choice.action)} に した`);
+          });
+        } else if (choice?.kind === "reset") {
+          keyBindings = resetBindings();
+          saveBindings(window.localStorage, keyBindings);
+        }
+      }
+      return;
+    }
+    lastControlsDirection = null;
 
     if (title.open) {
       const direction = input.getDirection();
@@ -1678,7 +1771,9 @@ const loop = createGameLoop({
       if (actionPressed) {
         const result = confirmTitle(title);
         title = result.state;
-        if (result.action === "continue") {
+        if (result.action === "keys") {
+          controlsMenu = openControlsMenu();
+        } else if (result.action === "continue") {
           const data = loadFromSlot(window.localStorage, "autosave");
           if (data) {
             applySaveData(data);
@@ -1770,6 +1865,8 @@ const loop = createGameLoop({
           audio.playSe(seOf("save"));
           pauseMessage = "セーブしました";
           pauseMessageTimer = 2000;
+        } else if (result.action === "keys") {
+          controlsMenu = openControlsMenu();
         } else if (result.action === "equip") {
           equipMenu = openEquipMenu();
           equipMessage = null;
@@ -2092,6 +2189,7 @@ const loop = createGameLoop({
 
 
 function frame(nowMs: number): void {
+  gamepad.poll();
   loop.tick(nowMs);
   requestAnimationFrame(frame);
 }
