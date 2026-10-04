@@ -149,14 +149,19 @@ function interpolate(level: number, key: "maxHp" | "attack"): number {
   return last[key];
 }
 
-/** 想定レベルから、雑魚1体の強さを決める。経験値は、想定レベルのパーティが約5戦で1レベル上がる量。 */
+/** 経験値の割り算の数。序盤（Lv6まで）は5、Lv12以降は10で、間は直線でつなぐ（レベルが上がるほど経験値が減らないように）。 */
+function expDivisor(level: number): number {
+  return level <= 6 ? 5 : level >= 12 ? 10 : 5 + ((level - 6) * 5) / 6;
+}
+
+/** 想定レベルから、雑魚1体の強さを決める。経験値は、想定レベルのパーティが約5戦で1レベル上がる量（序盤〔想定Lv6まで〕は、レベルが上がる手ごたえがほしいので約2〜3戦）。 */
 export function enemyStatsForLevel(level: number): { maxHp: number; attack: number; defense: number; speed: number; expReward: number } {
   return {
     maxHp: Math.round(interpolate(level, "maxHp")),
     attack: Math.round(interpolate(level, "attack")),
     defense: Math.round(4 + 0.5 * level),
     speed: Math.round(8 + 0.5 * level),
-    expReward: Math.max(6, Math.round((expRequiredForLevel(level + 1) - expRequiredForLevel(level)) / 10)),
+    expReward: Math.max(6, Math.round((expRequiredForLevel(level + 1) - expRequiredForLevel(level)) / expDivisor(level))),
   };
 }
 

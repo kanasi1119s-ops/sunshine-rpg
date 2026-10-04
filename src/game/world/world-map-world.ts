@@ -320,6 +320,10 @@ export function connectWorldMap(maps: Record<string, TileMapData>, npcsByMap: Re
     data.layers[0].data[gate.y * w + gate.x] = data.layers[0].data[below];
     data.collision![gate.y * w + gate.x] = 0;
     data.exits = [...(data.exits ?? []), { tileX: gate.x, tileY: gate.y, targetMapId: "world-map", targetTileX: pos.x, targetTileY: pos.y + 1 }];
+    // 町と町を直接つなぐ街道の出口（東・西の端など）は、次の町へ瞬間移動せず、世界地図の自分の町のそばに出る（道を歩いて次の町へ行く）。
+    data.exits = data.exits.map((e) =>
+      e.targetMapId !== townId && e.targetMapId in WORLD_TOWNS ? { ...e, targetMapId: "world-map", targetTileX: pos.x, targetTileY: pos.y + 1 } : e,
+    );
     // 世界地図の側: 町のアイコンの上が出入り口
     world.exits = [...(world.exits ?? []), { tileX: pos.x, tileY: pos.y, targetMapId: townId, targetTileX: gate.x, targetTileY: gate.y - 1 }];
   }
