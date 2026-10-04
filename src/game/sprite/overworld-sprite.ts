@@ -271,7 +271,7 @@ function recolorMob(spec: SpriteSpec, dir: SpriteDir, frame: SpriteFrame): Sprit
         break;
       }
     }
-    applyMerchant(grid, dir, spec, faceTop, tpl.roles.map((r, i) => (r === "hair" ? colors[i] : "")).filter(Boolean));
+    applyMerchant(grid, dir, faceTop, tpl.roles.map((r, i) => (r === "hair" ? colors[i] : "")).filter(Boolean));
   }
   return grid;
 }
@@ -326,23 +326,31 @@ function applyWarrior(grid: SpritePixels, dir: SpriteDir, spec: SpriteSpec, face
   if (dir === "down") { put(7, 23, "#e8c048"); put(8, 23, "#e8c048"); }
 }
 
+const HOOD_LIGHT = "#3f8450";
+const HOOD = "#2f6a3c";
+const HOOD_DARK = "#235030";
+const HOOD_DEEP = "#1a3c24";
 const APRON = "#f0e8d4";
 const APRON_SHADE = "#cfc2a0";
 const APRON_DARK = "#a89a78";
 
-/** 商人らしく: はちまき（髪の生えぎわ）・エプロン・小銭入れ。 */
-function applyMerchant(grid: SpritePixels, dir: SpriteDir, spec: SpriteSpec, faceTop: number, hairColors: string[]): void {
+/** 商人らしく: 濃い緑の頭巾・エプロン・小銭入れ。 */
+function applyMerchant(grid: SpritePixels, dir: SpriteDir, faceTop: number, hairColors: string[]): void {
   const put = (x: number, y: number, c: string): void => {
     if (y >= 0 && y < grid.length && x >= 0 && x < grid[0].length && grid[y][x] !== null) grid[y][x] = c;
   };
   const isHair = (c: string | null): boolean => !!c && hairColors.includes(c);
-  // はちまき: 生えぎわのすぐ上の段（髪の色の画素だけ）を、かざりの色に
-  const bandY = faceTop - 1;
-  for (let y = bandY; y <= bandY; y++) {
-    for (let x = 0; x < grid[0].length; x++) if (isHair(grid[y]?.[x] ?? null)) grid[y][x] = spec.accent;
+  // 頭巾（濃い緑）: 生えぎわより上の髪をおおう。左上が明るく、生えぎわのへりは暗い
+  const w = grid[0].length;
+  for (let y = 0; y < faceTop; y++) {
+    for (let x = 0; x < w; x++) {
+      if (!isHair(grid[y][x])) continue;
+      grid[y][x] = y === faceTop - 1 ? HOOD_DEEP : x < w / 2 && y <= faceTop - 3 ? HOOD_LIGHT : x < w / 2 ? HOOD : HOOD_DARK;
+    }
   }
   if (dir === "up") {
-    for (let x = 0; x < grid[0].length; x++) if (isHair(grid[bandY + 1]?.[x] ?? null)) grid[bandY + 1][x] = shadeColor(spec.accent, -0.2);
+    // 後ろ: 頭巾の結び目
+    put(7, faceTop - 1, HOOD_LIGHT); put(8, faceTop - 1, HOOD_LIGHT); put(7, faceTop, HOOD); put(8, faceTop, HOOD_DARK);
   }
   // エプロン
   if (dir === "down") {
