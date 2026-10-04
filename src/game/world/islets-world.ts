@@ -164,7 +164,7 @@ function chest(n: number, islet: Islet): Npc {
       ],
     },
   ];
-  return { id: `islet${n}-chest`, ...CHEST, color: "#e8c860", commands };
+  return { id: `islet${n}-chest`, ...CHEST, color: "#e8c860", openedFlag: flag, commands };
 }
 
 export const ISLET_NPCS: Record<string, Npc[]> = Object.fromEntries(

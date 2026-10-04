@@ -136,3 +136,140 @@ export function serpentineLayout(opts: SerpentineOptions): SerpentineLayout {
     },
   };
 }
+
+// =====================================================================================================
+// 迷路のダンジョン（人間の指摘「道が単調で迷わなすぎる」2026-10-05）。蛇行する一本道のかわりに、
+// 行き止まりと分かれ道がたくさんある迷路にする。道しるべ（土の道）は引かない。行き止まりに、宝箱・仕掛けを置く。
+// =====================================================================================================
+
+export interface MazeOptions {
+  wall: number;
+  floor: number;
+  seed: number;
+  cellsX?: number;
+  cellsY?: number;
+}
+
+const CELL_PITCH = 4;
+
+/**
+ * 迷路の地図を作る。部屋（3×3マス）が縦横にならび、となりの部屋とは、あいだの壁を1マス抜いて（はば3）つなぐ。
+ * 深さ優先で道を彫る（一本の長い道に、枝がたくさん生える）。入り口は下、出口は上。
+ * 出口は、入り口から歩いて一番遠い上の列の部屋。何か所か壁を抜いて、まわり道（輪）もつくる。
+ */
+export function mazeLayout(opts: MazeOptions): SerpentineLayout {
+  const cx = opts.cellsX ?? 11;
+  const cy = opts.cellsY ?? 9;
+  const W = cx * CELL_PITCH + 1;
+  const H = cy * CELL_PITCH + 1;
+  const rand = rng(opts.seed);
+  const idx = (x: number, y: number): number => y * cx + x;
+  const open = new Set<string>(); // "a-b" の形（小さいほうが先）
+  const key = (a: number, b: number): string => (a < b ? `${a}-${b}` : `${b}-${a}`);
+  const visited = new Array<boolean>(cx * cy).fill(false);
+  const entryX = Math.floor(cx / 2);
+  const start = idx(entryX, cy - 1);
+  const stack = [start];
+  visited[start] = true;
+  const dirs: [number, number][] = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  while (stack.length > 0) {
+    const cur = stack[stack.length - 1];
+    const x = cur % cx;
+    const y = Math.floor(cur / cx);
+    const options = dirs
+      .map(([dx, dy]) => [x + dx, y + dy] as [number, number])
+      .filter(([nx, ny]) => nx >= 0 && ny >= 0 && nx < cx && ny < cy && !visited[idx(nx, ny)]);
+    if (options.length === 0) {
+      stack.pop();
+      continue;
+    }
+    const [nx, ny] = options[Math.floor(rand() * options.length)];
+    const next = idx(nx, ny);
+    open.add(key(cur, next));
+    visited[next] = true;
+    stack.push(next);
+  }
+  // まわり道（輪）を、いくつかつくる
+  for (let n = 0; n < Math.floor((cx * cy) / 14); n++) {
+    const x = Math.floor(rand() * (cx - 1));
+    const y = Math.floor(rand() * cy);
+    const horizontal = rand() < 0.5;
+    const a = idx(x, y);
+    const b = horizontal ? idx(x + 1, y) : idx(x, Math.min(cy - 1, y + 1));
+    if (a !== b) open.add(key(a, b));
+  }
+  // 深さ（入り口から歩いた部屋の数）
+  const depth = new Array<number>(cx * cy).fill(-1);
+  depth[start] = 0;
+  const queue = [start];
+  while (queue.length > 0) {
+    const cur = queue.shift()!;
+    const x = cur % cx;
+    const y = Math.floor(cur / cx);
+    for (const [dx, dy] of dirs) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= cx || ny >= cy) continue;
+      const nb = idx(nx, ny);
+      if (depth[nb] === -1 && open.has(key(cur, nb))) {
+        depth[nb] = depth[cur] + 1;
+        queue.push(nb);
+      }
+    }
+  }
+  // 出口: 上の列で、いちばん深い部屋
+  let exitX = 0;
+  for (let x = 0; x < cx; x++) if (depth[idx(x, 0)] > depth[idx(exitX, 0)]) exitX = x;
+  const exitCell = idx(exitX, 0);
+  // 行き止まり（つながりが1つだけの部屋）。入り口・出口をのぞき、入り口に近い順
+  const degree = new Array<number>(cx * cy).fill(0);
+  for (const k of open) {
+    const [a, b] = k.split("-").map(Number);
+    degree[a]++;
+    degree[b]++;
+  }
+  const leaves = [...Array(cx * cy).keys()].filter((c) => degree[c] === 1 && c !== start && c !== exitCell).sort((a, b) => depth[a] - depth[b]);
+  // 行き止まりが足りないときは、深さがちがう部屋をおぎなう
+  const extra = [...Array(cx * cy).keys()].filter((c) => !leaves.includes(c) && c !== start && c !== exitCell).sort((a, b) => depth[a] - depth[b]);
+  while (leaves.length < 8 && extra.length > 0) leaves.push(extra.splice(Math.floor(extra.length / 2), 1)[0]);
+  const center = (c: number): { tileX: number; tileY: number } => ({ tileX: 1 + (c % cx) * CELL_PITCH + 1, tileY: 1 + Math.floor(c / cx) * CELL_PITCH + 1 });
+
+  const rooms: Rect[] = [];
+  for (let c = 0; c < cx * cy; c++) rooms.push({ x: 1 + (c % cx) * CELL_PITCH, y: 1 + Math.floor(c / cx) * CELL_PITCH, w: 3, h: 3 });
+  for (const k of open) {
+    const [a, b] = k.split("-").map(Number);
+    const ax = a % cx;
+    const ay = Math.floor(a / cx);
+    const bx = b % cx;
+    if (ax !== bx) rooms.push({ x: 1 + Math.min(ax, bx) * CELL_PITCH + 3, y: 1 + ay * CELL_PITCH, w: 1, h: 3 });
+    else rooms.push({ x: 1 + ax * CELL_PITCH, y: 1 + Math.min(ay, Math.floor(b / cx)) * CELL_PITCH + 3, w: 3, h: 1 });
+  }
+  const sx = 1 + entryX * CELL_PITCH + 1;
+  const ex = 1 + exitX * CELL_PITCH + 1;
+  const spec: CarveSpec = {
+    width: W,
+    height: H,
+    wall: opts.wall,
+    floor: opts.floor,
+    rooms,
+    gates: [
+      { x: sx, y: H - 1, tile: opts.floor },
+      { x: ex, y: 0, tile: opts.floor },
+    ],
+  };
+  return {
+    width: W,
+    height: H,
+    spec,
+    landmarks: {
+      alcoves: leaves.map(center),
+      south: { x: sx, y: H - 1 },
+      southArrival: { tileX: sx, tileY: H - 2 },
+      north: { x: ex, y: 0 },
+      northArrival: { tileX: ex, tileY: 1 },
+      nearEntry: { tileX: sx + 1, tileY: H - 4 },
+      nearExit: { tileX: ex + 1, tileY: 3 },
+      pathLength: depth[exitCell] * CELL_PITCH,
+    },
+  };
+}

@@ -24,6 +24,12 @@ export function objectKindOf(id: string): ObjectKind {
 
 const INK = "#1c1410";
 
+/** 開けた宝箱のID（`main.ts` が、毎フレーム、フラグから入れる）。 */
+let openedChests = new Set<string>();
+export function setOpenedChests(ids: Set<string>): void {
+  openedChests = ids;
+}
+
 /** 光がともっている環灯台の番号（`main.ts` が、毎フレーム、フラグから入れる）。 */
 let litBeacons = new Set<number>();
 export function setLitBeacons(lit: Set<number>): void {
@@ -86,14 +92,61 @@ export function drawObjectMarker(ctx: CanvasRenderingContext2D, kind: ObjectKind
       return true;
     }
     case "chest": {
-      r(ctx, INK, x + 1, top + 3, w - 2, 11);
-      r(ctx, "#8a5a2c", x + 2, top + 8, w - 4, 5);   // 胴
-      r(ctx, "#6a4220", x + 9, top + 8, w - 11, 5);  // 胴（影の側）
-      r(ctx, "#a8742e", x + 2, top + 4, w - 4, 4);   // ふた
-      r(ctx, "#7a5020", x + 9, top + 4, w - 11, 4);
-      r(ctx, "#e0b038", x + 2, top + 8, w - 4, 1);   // 金の帯
-      r(ctx, "#e0b038", x + 7, top + 6, 2, 4);       // 錠
-      r(ctx, "#6a4a10", x + 7, top + 8, 2, 1);
+      // 宝箱（16×16）: 丸みのあるふた・鉄の帯・金のかざり・錠。開けたあとは、ふたが開いて空っぽ。光は左上。
+      const opened = openedChests.has(id);
+      const IRON = "#46465a";
+      const IRON_HI = "#8a8aa0";
+      if (opened) {
+        r(ctx, INK, x + 1, top + 1, w - 2, 13);
+        // 開いたふた（奥に立っている）
+        r(ctx, "#8a5a2c", x + 2, top + 2, w - 4, 3);
+        r(ctx, "#6a4220", x + 9, top + 2, w - 11, 3);
+        r(ctx, IRON, x + 3, top + 2, 2, 3);
+        r(ctx, IRON, x + 11, top + 2, 2, 3);
+        // 空っぽの中
+        r(ctx, "#2a1a10", x + 2, top + 5, w - 4, 3);
+        r(ctx, "#4a2e18", x + 2, top + 5, w - 4, 1);
+        // 胴
+        r(ctx, "#a8742e", x + 2, top + 8, w - 4, 5);
+        r(ctx, "#7a5020", x + 9, top + 8, w - 11, 5);
+        r(ctx, IRON, x + 3, top + 8, 2, 5);
+        r(ctx, IRON, x + 11, top + 8, 2, 5);
+        r(ctx, "#e0b038", x + 2, top + 8, w - 4, 1);
+        return true;
+      }
+      r(ctx, INK, x + 1, top + 2, w - 2, 12);
+      r(ctx, INK, x + 2, top + 1, w - 4, 1); // ふたの丸み
+      // ふた
+      r(ctx, "#c8903e", x + 2, top + 2, w - 4, 5);
+      r(ctx, "#e0aa58", x + 3, top + 2, w - 8, 1); // 上の照り
+      r(ctx, "#8a5a24", x + 10, top + 3, w - 12, 4); // 影の側
+      // 胴
+      r(ctx, "#a8742e", x + 2, top + 8, w - 4, 5);
+      r(ctx, "#6a4220", x + 10, top + 8, w - 12, 5);
+      r(ctx, "#8a5a2c", x + 6, top + 8, 1, 5); // 板の継ぎ目
+      // 金の帯（ふたと胴のさかい）
+      r(ctx, "#f2c14e", x + 2, top + 7, w - 4, 1);
+      r(ctx, "#b88418", x + 2, top + 8, w - 4, 1);
+      // 鉄の帯（縦）とびょう
+      r(ctx, IRON, x + 3, top + 2, 2, 11);
+      r(ctx, IRON, x + 11, top + 2, 2, 11);
+      r(ctx, IRON_HI, x + 3, top + 3, 1, 1);
+      r(ctx, IRON_HI, x + 11, top + 3, 1, 1);
+      r(ctx, IRON_HI, x + 3, top + 11, 1, 1);
+      r(ctx, IRON_HI, x + 11, top + 11, 1, 1);
+      // 錠
+      r(ctx, "#f2c14e", x + 6, top + 6, 4, 4);
+      r(ctx, "#fff0a0", x + 6, top + 6, 4, 1);
+      r(ctx, "#8a6010", x + 7, top + 8, 2, 1);
+      r(ctx, "#2a1a08", x + 7, top + 7, 2, 1);
+      // ときどききらりと光る（まだ開けていない宝箱の目印）
+      const phase = (typeof performance !== "undefined" ? performance.now() : 0) / 900 + (id.length % 5) * 0.37;
+      const blink = phase % 1;
+      if (blink < 0.18) {
+        r(ctx, "#ffffff", x + 2, top, 1, 1);
+        r(ctx, "#ffffff", x + 1, top + 1, 3, 1);
+        r(ctx, "#ffffff", x + 2, top + 2, 1, 1);
+      }
       return true;
     }
     case "crate": {

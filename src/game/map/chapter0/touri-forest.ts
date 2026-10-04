@@ -1,6 +1,6 @@
 import type { TileMapData } from "../types";
 import { carveMap } from "../carve-map";
-import { serpentineLayout, type Landmarks } from "../serpentine";
+import { mazeLayout, type Landmarks } from "../serpentine";
 
 const GRASS = 1;
 const PATH = 2;
@@ -15,8 +15,8 @@ const TILE_COLORS: Record<number, string> = {
 const TILE_ART_MAP: Record<number, string> = { [GRASS]: "grass", [PATH]: "path", [TREE]: "treeCanopy" };
 
 /** 序章のダンジョン（森）。長く折れ曲がる道を、フィールドを旅するように歩く（5本の通路）。 */
-const LAYOUT_1 = serpentineLayout({ lanes: 5, wall: TREE, floor: GRASS, path: PATH, seed: 11 });
-const LAYOUT_2 = serpentineLayout({ lanes: 5, wall: TREE, floor: GRASS, path: PATH, seed: 12 });
+const LAYOUT_1 = mazeLayout({ wall: TREE, floor: GRASS, seed: 11 });
+const LAYOUT_2 = mazeLayout({ wall: TREE, floor: GRASS, seed: 12 });
 
 const at = (l: Landmarks, i: number): { tileX: number; tileY: number } => l.alcoves[Math.min(i, l.alcoves.length - 1)];
 

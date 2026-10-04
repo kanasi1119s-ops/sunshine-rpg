@@ -103,6 +103,7 @@ export const CHAPTER1_NPCS: Record<string, Npc[]> = {
     chestNpc("mugikano-canal-chest-gold", MUGIKANO_CANAL_LANDMARKS.chestGold, "chapter1_chest_canal_gold", { gold: 70 }, "畑のすみの宝箱を開けた！"),
     {
       id: "mugikano-canal-chest-key",
+      openedFlag: "chapter1_got_key",
       tileX: MUGIKANO_CANAL_LANDMARKS.chestKey.tileX,
       tileY: MUGIKANO_CANAL_LANDMARKS.chestKey.tileY,
       color: "#e8c860",

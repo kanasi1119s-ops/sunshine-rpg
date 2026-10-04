@@ -1,6 +1,6 @@
 import type { TileMapData } from "../types";
 import { carveMap } from "../carve-map";
-import { serpentineLayout, type Landmarks } from "../serpentine";
+import { mazeLayout, type Landmarks } from "../serpentine";
 
 /**
  * 第1章（麦香野）の、水源へ行くまでの道（水路沿いの農道 → 古い坑道）。村の北の門を出ると、水路に沿った長い農道があり、
@@ -14,12 +14,12 @@ const TREE = 4;
 const CANAL_COLORS: Record<number, string> = { [GRASS]: "#4a7a3f", [PATH]: "#b79a68", [TREE]: "#1f5c33", 5: "#5a5a5a" };
 const CANAL_ART: Record<number, string> = { [GRASS]: "grass", [PATH]: "path", [TREE]: "treeCanopy" };
 
-const CANAL = serpentineLayout({ lanes: 5, wall: TREE, floor: GRASS, path: PATH, seed: 21 });
+const CANAL = mazeLayout({ wall: TREE, floor: GRASS, seed: 21 });
 
 const FLOOR = 1;
 const WALL = 2;
 const TUNNEL_COLORS: Record<number, string> = { [FLOOR]: "#5a4630", [WALL]: "#2a1f16" };
-const TUNNEL = serpentineLayout({ lanes: 5, wall: WALL, floor: FLOOR, seed: 22 });
+const TUNNEL = mazeLayout({ wall: WALL, floor: FLOOR, seed: 22 });
 
 const at = (l: Landmarks, i: number): { tileX: number; tileY: number } => l.alcoves[Math.min(i, l.alcoves.length - 1)];
 

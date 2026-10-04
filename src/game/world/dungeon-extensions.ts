@@ -2,7 +2,7 @@ import { ENCOUNTER_ZONES, encounterMonsterSpec } from "../encounter/encounter";
 import { MONSTERS } from "../monster/monsters";
 import type { MapExit, TileMapData } from "../map/types";
 import { carveMap } from "../map/carve-map";
-import { serpentineLayout, type Landmarks, type SerpentineLayout } from "../map/serpentine";
+import { mazeLayout, type Landmarks, type SerpentineLayout } from "../map/serpentine";
 import { isWalkable, createTileMap } from "../map/tile-map";
 import type { Npc } from "../npc";
 import type { EventCommand } from "../event/types";
@@ -135,8 +135,8 @@ const COLORS: Record<number, string> = { [FLOOR]: "#5a4630", [WALL]: "#2a1f16" }
 /** 章ごとに、形（小部屋の位置）を変える。通路は5本で、フィールドを歩くように長い。 */
 function layoutsFor(n: number): [SerpentineLayout, SerpentineLayout] {
   return [
-    serpentineLayout({ lanes: 5, wall: WALL, floor: FLOOR, seed: n * 10 + 1 }),
-    serpentineLayout({ lanes: 5, wall: WALL, floor: FLOOR, seed: n * 10 + 2 }),
+    mazeLayout({ wall: WALL, floor: FLOOR, seed: n * 10 + 1 }),
+    mazeLayout({ wall: WALL, floor: FLOOR, seed: n * 10 + 2 }),
   ];
 }
 
@@ -159,7 +159,9 @@ function pickInformantTile(town: TileMapData, taken: Set<string>, from: { x: num
   while (queue.length > 0) {
     const cur = queue.shift()!;
     const d = seen.get(`${cur.x},${cur.y}`)!;
-    if (d >= 3 && d <= 6 && !taken.has(`${cur.x},${cur.y}`)) candidates.push({ ...cur, d });
+    // 通路をふさがないよう、まわりが広く開けた場所だけにする（物は通れないため）
+    const openAround = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]].filter(([dx, dy]) => isWalkable(map, cur.x + dx, cur.y + dy)).length;
+    if (d >= 3 && d <= 8 && openAround === 8 && !taken.has(`${cur.x},${cur.y}`)) candidates.push({ ...cur, d });
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const nx = cur.x + dx;
       const ny = cur.y + dy;

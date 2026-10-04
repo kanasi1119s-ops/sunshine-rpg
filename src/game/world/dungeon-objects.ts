@@ -32,6 +32,7 @@ export function chestNpc(id: string, tile: { tileX: number; tileY: number }, fla
     id,
     ...tile,
     color: "#e8c860",
+    openedFlag: flag,
     commands: [
       {
         type: "if",

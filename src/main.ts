@@ -4,6 +4,7 @@ import { GAME_TITLE } from "./core/status";
 import { backTitle, confirmTitle, createTitleState, moveTitleCursor } from "./game/title/title-menu";
 import { renderTitle } from "./render/title-renderer";
 import { renderOpening } from "./render/opening-renderer";
+import { setOpenedChests } from "./render/object-markers";
 import { advanceBootOpening, startBootOpening, updateBootOpening } from "./game/title/boot-opening";
 import { renderBootOpening } from "./render/boot-opening-renderer";
 import { getPixelLogo } from "./render/logo-pixel";
@@ -42,7 +43,7 @@ import { renderStorm, renderVortex } from "./render/vortex-renderer";
 import { setLitBeacons } from "./render/object-markers";
 import { renderWorldOverview } from "./render/world-overview";
 import { renderFollowers } from "./render/follower-renderer";
-import { npcLook, spriteSpecFromPortrait } from "./game/sprite/character-specs";
+import { spriteSpecFromPortrait } from "./game/sprite/character-specs";
 import { PORTRAITS } from "./game/portrait/portraits";
 import { propFeetY, renderProps } from "./render/prop-renderer";
 import { renderDialogue } from "./render/dialogue-renderer";
@@ -56,7 +57,8 @@ import { ActionButton } from "./input/action-button";
 import { attachKeyboard } from "./input/keyboard";
 import { attachKeyRemap, loadBindings, rebind, resetBindings, saveBindings, describeBinding, CONTROL_ACTIONS, sendGameKey, type KeyBindings } from "./input/key-bindings";
 import { createGamepadPoller } from "./input/gamepad";
-import { closeControlsMenu, confirmControlsMenu, createControlsMenuState, finishCapture, moveControlsCursor, openControlsMenu } from "./game/menu/controls-menu";
+import { cycleMoveSpeed, DEFAULT_MOVE_SPEED, loadMoveSpeed, MOVE_SPEEDS, saveMoveSpeed } from "./game/move-speed";
+import { SPEED_ROW, closeControlsMenu, confirmControlsMenu, createControlsMenuState, finishCapture, moveControlsCursor, openControlsMenu } from "./game/menu/controls-menu";
 import { renderControlsMenu } from "./render/controls-menu-renderer";
 import { createTouchControls } from "./input/touch-controls";
 import type { Direction } from "./input/direction";
@@ -759,6 +761,7 @@ let pauseMessage: string | null = null;
 let pauseMessageTimer = 0;
 /** そうさ設定の画面。 */
 let controlsMenu = createControlsMenuState();
+let moveSpeed = loadMoveSpeed(window.localStorage);
 let lastControlsDirection: Direction | null = null;
 window.addEventListener("keydown", (event) => {
   if ((event.key === "x" || event.key === "Escape") && controlsMenu.open && !controlsMenu.capturing) {
@@ -1696,13 +1699,15 @@ function renderGameSceneBase(): void {
 function renderGameScene(): void {
   renderGameSceneBase();
   if (controlsMenu.open) {
-    renderControlsMenu(ctx, controlsMenu, keyBindings, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    renderControlsMenu(ctx, controlsMenu, keyBindings, moveSpeed, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   }
 }
 
 const loop = createGameLoop({
   update(dtMs) {
     syncCompanionsFromFlags();
+    // 開けた宝箱は、ふたが開いた絵にする
+    setOpenedChests(new Set(npcs.filter((n) => n.openedFlag && flags[n.openedFlag]).map((n) => n.id)));
     // 会話が終わったあと（仲間になった直後）に、その人を場所から外す
     if (!dialogue.isActive() && npcs.some((n) => COMPANION_NPC_IDS[n.id] && flags[COMPANION_NPC_IDS[n.id]])) {
       npcs = withoutJoinedCompanions(npcs);
@@ -1747,6 +1752,10 @@ const loop = createGameLoop({
         if (direction === "up" || direction === "down") {
           controlsMenu = moveControlsCursor(controlsMenu, direction === "up" ? -1 : 1);
           audio.playSe(seOf("cursor"));
+        } else if ((direction === "left" || direction === "right") && controlsMenu.cursor === SPEED_ROW) {
+          moveSpeed = cycleMoveSpeed(moveSpeed, direction === "left" ? -1 : 1);
+          saveMoveSpeed(window.localStorage, moveSpeed);
+          audio.playSe(seOf("cursor"));
         }
         lastControlsDirection = direction;
       }
@@ -1765,8 +1774,13 @@ const loop = createGameLoop({
             const label = CONTROL_ACTIONS.find((a) => a.id === choice.action)?.label ?? "";
             controlsMenu = finishCapture(controlsMenu, `${label}を ${describeBinding(keyBindings, choice.action)} に した`);
           });
+        } else if (choice?.kind === "speed") {
+          moveSpeed = cycleMoveSpeed(moveSpeed, 1);
+          saveMoveSpeed(window.localStorage, moveSpeed);
         } else if (choice?.kind === "reset") {
           keyBindings = resetBindings();
+          moveSpeed = DEFAULT_MOVE_SPEED;
+          saveMoveSpeed(window.localStorage, moveSpeed);
           saveBindings(window.localStorage, keyBindings);
         }
       }
@@ -2088,7 +2102,7 @@ const loop = createGameLoop({
       syncWorldState();
     }
     const moveMap = onWorld && vehicle === "ship" ? getVehicleMaps().ship : onWorld && vehicle === "air" ? getVehicleMaps().air : map;
-    player = updatePlayer(player, input.getDirection(), dtMs * (onWorld ? VEHICLE_SPEED[vehicle] : 1), moveMap, onWorld ? [] : npcs.filter((n) => npcLook(n) !== "object"));
+    player = updatePlayer(player, input.getDirection(), dtMs * (onWorld ? VEHICLE_SPEED[vehicle] : 1) * MOVE_SPEEDS[moveSpeed].factor, moveMap, onWorld ? [] : npcs);
     let actionUsed = false;
     if (onWorld) {
       actionUsed = updateVehicleAfterMove(

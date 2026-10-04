@@ -13,6 +13,8 @@ export interface Npc {
   commands: EventCommand[];
   /** true なら、家の近くをぶらぶら歩く（`npc-wander.ts`）。町の人だけ。 */
   wander?: boolean;
+  /** 宝箱など: このフラグが立つと「開けたあと」の絵になる。 */
+  openedFlag?: string;
 }
 
 const FACING_OFFSET: Record<Direction, { dx: number; dy: number }> = {
