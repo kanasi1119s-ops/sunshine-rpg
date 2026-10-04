@@ -70,7 +70,7 @@
  {
   "id": "enc-touri-outskirts-4",
   "prompt": "a small lost bat with tattered purple wings, a lantern-like glowing belly and big round ears",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-touri-outskirts-4",
   "kind": "mob",
   "name": "迷いこうもり",
@@ -81,12 +81,13 @@
    90,
    70,
    110
-  ]
+  ],
+  "draft": "enc-touri-outskirts-4_0"
  },
  {
   "id": "enc-touri-outskirts-5",
   "prompt": "a small walking pebble creature made of grey cobblestones with stubby legs and a violet crack for a mouth",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-touri-outskirts-5",
   "kind": "mob",
   "name": "小石のかけら",
@@ -97,12 +98,13 @@
    125,
    120,
    115
-  ]
+  ],
+  "draft": "enc-touri-outskirts-5_0"
  },
  {
   "id": "enc-mugikano-water-source-0",
   "prompt": "a hovering water spirit shaped like a long teardrop with a glassy surface, a single dark eye and trailing water ribbons",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-mugikano-water-source-0",
   "kind": "mob",
   "name": "水のしずく影",
@@ -113,7 +115,8 @@
    90,
    140,
    190
-  ]
+  ],
+  "draft": "enc-mugikano-water-source-0_0"
  },
  {
   "id": "enc-mugikano-water-source-1",
