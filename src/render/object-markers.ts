@@ -26,6 +26,40 @@ export function objectKindOf(id: string): ObjectKind {
 
 const INK = "#1c1410";
 
+/** 開けたあとの宝箱の絵: 作りこんだ「開いた箱」から、金貨の山を消して、中の暗がりにしたもの（中身は取ったあと）。 */
+let emptyChestArt: HTMLCanvasElement | null = null;
+function getEmptyChestArt(): HTMLCanvasElement | null {
+  if (emptyChestArt) return emptyChestArt;
+  const src = getSpriteCanvas("prop:chest-open", SPRITE_DATA);
+  if (!src || typeof document === "undefined") return null;
+  const c = document.createElement("canvas");
+  c.width = src.width;
+  c.height = src.height;
+  const g = c.getContext("2d", { willReadFrequently: true });
+  if (!g) return null;
+  g.drawImage(src, 0, 0);
+  const img = g.getImageData(0, 0, c.width, c.height);
+  const d = img.data;
+  const hex = (r: number, gg: number, b: number): string => ((r << 16) | (gg << 8) | b).toString(16).padStart(6, "0");
+  for (let y = 0; y < c.height; y++) {
+    for (let x = 0; x < c.width; x++) {
+      const i = (y * c.width + x) * 4;
+      if (d[i + 3] === 0) continue;
+      const col = hex(d[i], d[i + 1], d[i + 2]);
+      // 金貨の色（明るい金・金）は全部。濃い金（a8761c）は、箱の中（左右の金具の帯のあいだ。絵は48×48の中で、左に11・上に17ずれている）だけ。
+      const coin = col === "ffe070" || col === "e0a830" || ((col === "a8761c" || col === "7a5210") && x >= 18 && x <= 29 && y >= 24 && y <= 34);
+      if (coin) {
+        d[i] = 0x1a;
+        d[i + 1] = 0x10;
+        d[i + 2] = 0x14;
+      }
+    }
+  }
+  g.putImageData(img, 0, 0);
+  emptyChestArt = c;
+  return c;
+}
+
 /** 開けた宝箱のID（`main.ts` が、毎フレーム、フラグから入れる）。 */
 let openedChests = new Set<string>();
 export function setOpenedChests(ids: Set<string>): void {
@@ -97,7 +131,7 @@ export function drawObjectMarker(ctx: CanvasRenderingContext2D, kind: ObjectKind
       // 宝箱（16×16）: 丸みのあるふた・鉄の帯・金のかざり・錠。開けたあとは、ふたが開いて空っぽ。光は左上。
       const opened = openedChests.has(id);
       // 作りこんだ宝箱のドット絵（`prop:chest-closed` / `prop:chest-open`）があれば、それを足元にそろえて描く
-      const art = getSpriteCanvas(opened ? "prop:chest-open" : "prop:chest-closed", SPRITE_DATA);
+      const art = opened ? getEmptyChestArt() : getSpriteCanvas("prop:chest-closed", SPRITE_DATA);
       if (art) {
         const prev = ctx.imageSmoothingEnabled;
         ctx.imageSmoothingEnabled = false;
