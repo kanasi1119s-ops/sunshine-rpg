@@ -274,6 +274,9 @@ export const FX_COLOR: Record<FxId, string> = {
 export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, target: Pt, opts: { from?: Pt; area?: boolean } = {}): void {
   const { x: tx, y: ty } = target;
   const fade = 1 - t;
+  // 対象の大きさ（人は1、大きい敵ほど炎も大きく、足もとはその人の足もとに）
+  const sc = Math.min(2.2, Math.max(0.9, (target.h ?? 32) / 32));
+  const gy = ty + (target.h ?? 32) / 2 - 2;
   ctx.save();
   switch (fx) {
     case "fire": {
@@ -288,20 +291,21 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
         ctx.globalAlpha = 1;
         const rise = ease(Math.min(1, u * 1.5));
         const fall = u > 0.7 ? (u - 0.7) / 0.3 : 0;
-        const hgt = 96 * rise * (1 - fall * 0.85);
+        const sa = Math.min(sc, 1.25);
+        const hgt = 96 * sa * rise * (1 - fall * 0.85);
         for (let col = -2; col <= 2; col++) {
-          const cx = tx + col * 9;
+          const cx = tx + col * 9 * Math.min(sc, 1.4);
           const colH = hgt * (0.7 + 0.3 * rnd(col + 5, 90) + Math.sin(t * 16 + col) * 0.06);
           for (let y = 0; y < colH; y += 1) {
             const q = y / Math.max(1, colH);
-            const half = Math.max(1, Math.round((9 - q * 6) + (rnd(Math.floor(y / 2) + col * 31, Math.floor(t * 22)) - 0.5) * 4));
+            const half = Math.max(1, Math.round((9 * Math.min(sc, 1.15) - q * 6 * Math.min(sc, 1.15)) + (rnd(Math.floor(y / 2) + col * 31, Math.floor(t * 22)) - 0.5) * 4));
             const sway = Math.round(Math.sin(y * 0.14 + t * 15 + col * 2) * (1.5 + q * 3));
             const c2 = q < 0.15 ? "#fffbe0" : q < 0.35 ? "#ffd050" : q < 0.7 ? "#f4862a" : "#d83a1c";
-            dot(ctx, cx + sway - half, ty + 14 - y, c2, half * 2, 1);
+            dot(ctx, cx + sway - half, gy - y, c2, half * 2, 1);
           }
           if (u > 0.55) {
             // 先に残る、赤いしずく型の炎
-            const dropY = ty + 14 - colH - 3;
+            const dropY = gy - colH - 3;
             ctx.globalAlpha = 1 - fall * 0.7;
             dot(ctx, cx - 2, dropY, "#d83a1c", 5, 6);
             dot(ctx, cx - 1, dropY - 2, "#d83a1c", 3, 2);
@@ -313,7 +317,7 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
         for (let i = 0; i < 36; i++) {
           const v = clamp01(t * 1.3 - rnd(i, 32) * 0.4);
           if (v <= 0 || v >= 1) continue;
-          dot(ctx, tx + (rnd(i, 33) - 0.5) * 50 + Math.sin(v * 9 + i) * 3, ty + 12 - v * 90, v < 0.6 ? "#ffd050" : "#ff8a30", 2, 2);
+          dot(ctx, tx + (rnd(i, 33) - 0.5) * 50 + Math.sin(v * 9 + i) * 3, (gy - 2) - v * 90, v < 0.6 ? "#ffd050" : "#ff8a30", 2, 2);
         }
         ctx.globalAlpha = 0.55;
         for (let i = 0; i < 12; i++) {
@@ -348,7 +352,7 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
       if (e < 0.22) { ctx.globalAlpha = 0.5 * (1 - e / 0.22); ctx.fillStyle = "#fff0c0"; ctx.fillRect(-4, -4, 420, 240); ctx.globalAlpha = 1; }
       else if (e < 0.7) { ctx.globalAlpha = 0.14 * (1 - (e - 0.22) / 0.48); ctx.fillStyle = "#ff5a18"; ctx.fillRect(-4, -4, 420, 240); ctx.globalAlpha = 1; }
       if (e < 0.55) {
-        const rad = 4 + ease(e / 0.55) * 20;
+        const rad = (4 + ease(e / 0.55) * 20) * sc;
         ctx.globalAlpha = 1 - Math.max(0, e / 0.55 - 0.5) * 1.6;
         for (let yy = -Math.floor(rad); yy <= rad; yy++) for (let xx = -Math.floor(rad); xx <= rad; xx++) {
           const d = Math.hypot(xx, yy * 1.1) + (rnd(xx * 7 + yy, Math.floor(e * 14)) - 0.5) * 0.18 * rad;
@@ -367,11 +371,11 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
       if (e > 0.12) {
         // しずく型の炎（根もとが太く、先がとがる。赤い外側・だいだい・黄・白い芯）
         const life = (e - 0.12) / 0.88;
-        const H = Math.sin(Math.min(1, life * 1.15) * Math.PI) ** 0.7 * 50 + 4;
-        const base = ty + 14;
+        const H = Math.sin(Math.min(1, life * 1.15) * Math.PI) ** 0.7 * 50 * sc + 4;
+        const base = gy;
         for (let y = 0; y < H; y++) {
           const q = y / H;
-          const half = Math.max(0, Math.round(11 * Math.sin(Math.PI * Math.min(1, (q + 0.12) / 1.12)) ** 0.9 * (1 - q * 0.45) + (rnd(y, Math.floor(t * 28)) - 0.5) * 3));
+          const half = Math.max(0, Math.round(11 * sc * Math.sin(Math.PI * Math.min(1, (q + 0.12) / 1.12)) ** 0.9 * (1 - q * 0.45) + (rnd(y, Math.floor(t * 28)) - 0.5) * 3));
           if (half <= 0) continue;
           const sway = Math.round(Math.sin(y * 0.18 + t * 20) * 2.2 * q);
           dot(ctx, tx - half + sway, base - y, "#c8381c", half * 2, 1);
@@ -405,7 +409,7 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
       }
       for (let k = 0; k < 3; k++) {
         const u = clamp01(t * 1.3 - k * 0.18);
-        if (u > 0 && u < 1) ring(ctx, tx, ty + 12, 4 + u * 20, 1.5 + u * 6, k === 0 ? "#e8f6ff" : "#6ab4ff", 1 - u);
+        if (u > 0 && u < 1) ring(ctx, tx, (gy - 2), 4 + u * 20, 1.5 + u * 6, k === 0 ? "#e8f6ff" : "#6ab4ff", 1 - u);
       }
       for (let i = 0; i < 18; i++) {
         const u = clamp01(t * 1.5 - rnd(i, 4) * 0.5);
@@ -421,16 +425,16 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
     case "light": {
       const w = Math.max(1, Math.round(10 * (1 - Math.abs(t - 0.4) * 1.6)));
       ctx.globalAlpha = 0.5 * fade + 0.2;
-      dot(ctx, tx - w, 0, "#ffe890", w * 2, ty + 14);
+      dot(ctx, tx - w, 0, "#ffe890", w * 2, gy);
       ctx.globalAlpha = 0.9;
-      dot(ctx, tx - Math.ceil(w / 3), 0, "#ffffff", Math.ceil(w / 3) * 2, ty + 14);
+      dot(ctx, tx - Math.ceil(w / 3), 0, "#ffffff", Math.ceil(w / 3) * 2, gy);
       ctx.globalAlpha = 1;
       for (let i = 0; i < 9; i++) {
         const u = clamp01(t * 1.4 - rnd(i, 6) * 0.4);
         if (u <= 0 || u >= 1) continue;
         star(ctx, tx + (rnd(i, 7) - 0.5) * 30, ty + (rnd(i, 8) - 0.5) * 30 - u * 6, u < 0.5 ? 2 : 1, "#ffe890");
       }
-      ring(ctx, tx, ty + 12, 6 + t * 18, 2 + t * 5, "#fff6c0", 1 - t);
+      ring(ctx, tx, (gy - 2), 6 + t * 18, 2 + t * 5, "#fff6c0", 1 - t);
       break;
     }
     case "wind": {
@@ -478,7 +482,7 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
       if (t < 0.18) { ctx.globalAlpha = 0.34 * (1 - t / 0.18); ctx.fillStyle = "#ffffff"; ctx.fillRect(-4, -4, 420, 240); ctx.globalAlpha = 1; }
       if (strike) {
         const wob = Math.floor(t * 28);
-        const jag = (y: number, k: number): number => tx + (rnd(Math.floor(y / 6) + k * 9, wob) - 0.5) * 12 * (1 - y / (ty + 14));
+        const jag = (y: number, k: number): number => tx + (rnd(Math.floor(y / 6) + k * 9, wob) - 0.5) * 12 * (1 - y / (gy));
         for (const [thick, color, shift] of [[7, "#7ac8ff", 0], [5, "#fff08a", 0], [3, "#ffffff", 0]] as const) {
           let x = jag(0, 1), y = 0;
           while (y < ty + 8) {
@@ -502,7 +506,7 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
       // 足もとの輪（水色）
       for (let k = 0; k < 2; k++) {
         const u = clamp01((t - 0.12) * 1.4 - k * 0.14);
-        if (u > 0 && u < 1) ring(ctx, tx, ty + 14, 5 + u * 20, 2 + u * 6, k ? "#ffffff" : "#7ac8ff", 1 - u);
+        if (u > 0 && u < 1) ring(ctx, tx, gy, 5 + u * 20, 2 + u * 6, k ? "#ffffff" : "#7ac8ff", 1 - u);
       }
       break;
     }
@@ -515,7 +519,7 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
         dot(ctx, x, y, "#7a5a3a", 4, 4);
         dot(ctx, x, y, "#c8a070", 3, 3);
         dot(ctx, x + 2, y + 2, "#5a3a22", 2, 2);
-        if (u > 0.55) { ctx.globalAlpha = 1 - u; dot(ctx, x - 3 - (u - 0.55) * 8, ty + 12, "#b09a80", 3, 2); dot(ctx, x + 3 + (u - 0.55) * 8, ty + 12, "#b09a80", 3, 2); ctx.globalAlpha = 1; }
+        if (u > 0.55) { ctx.globalAlpha = 1 - u; dot(ctx, x - 3 - (u - 0.55) * 8, (gy - 2), "#b09a80", 3, 2); dot(ctx, x + 3 + (u - 0.55) * 8, (gy - 2), "#b09a80", 3, 2); ctx.globalAlpha = 1; }
       }
       break;
     }
@@ -523,10 +527,10 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
       ctx.globalAlpha = 0.22 * Math.sin(Math.min(1, t) * Math.PI);
       dot(ctx, tx - 14, ty - 22, "#88f0a8", 28, 40);
       ctx.globalAlpha = 1;
-      ring(ctx, tx, ty + 14, 6 + t * 10, 2 + t * 3, "#a8ffc8", 1 - t);
+      ring(ctx, tx, gy, 6 + t * 10, 2 + t * 3, "#a8ffc8", 1 - t);
       for (let i = 0; i < 12; i++) {
         const u = (t * 1.2 + rnd(i, 21)) % 1;
-        const x = tx + (rnd(i, 22) - 0.5) * 24, y = ty + 14 - u * 36;
+        const x = tx + (rnd(i, 22) - 0.5) * 24, y = gy - u * 36;
         ctx.globalAlpha = Math.sin(u * Math.PI);
         if (i % 3 === 0) { dot(ctx, x - 1, y, "#ffffff", 3, 1); dot(ctx, x, y - 1, "#ffffff", 1, 3); }
         else dot(ctx, x, y, i % 2 ? "#a8ffc8" : "#ffffff", 2, 2);
@@ -535,10 +539,10 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
       break;
     }
     case "buff": {
-      ring(ctx, tx, ty + 14, 10 + t * 4, 3, "#ffd860", 1 - t * 0.6);
+      ring(ctx, tx, gy, 10 + t * 4, 3, "#ffd860", 1 - t * 0.6);
       for (let i = 0; i < 4; i++) {
         const u = (t * 1.1 + i / 4) % 1;
-        const x = tx + (i - 1.5) * 7, y = ty + 12 - u * 34;
+        const x = tx + (i - 1.5) * 7, y = (gy - 2) - u * 34;
         ctx.globalAlpha = Math.sin(u * Math.PI);
         for (let k = 0; k < 4; k++) { dot(ctx, x - k, y + k, "#ffd860"); dot(ctx, x + k, y + k, "#ffd860"); }
         dot(ctx, x, y, "#ffffff");
@@ -547,7 +551,7 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
       break;
     }
     case "debuff": {
-      ring(ctx, tx, ty + 14, 10 + t * 4, 3, "#9060d0", 1 - t * 0.6);
+      ring(ctx, tx, gy, 10 + t * 4, 3, "#9060d0", 1 - t * 0.6);
       ctx.globalAlpha = 0.22 * Math.sin(Math.min(1, t) * Math.PI);
       dot(ctx, tx - 14, ty - 22, "#5a2a8a", 28, 40);
       ctx.globalAlpha = 1;
@@ -580,7 +584,7 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
     case "poison": {
       for (let i = 0; i < 10; i++) {
         const u = (t * 1.1 + rnd(i, 23)) % 1;
-        const x = tx + (rnd(i, 24) - 0.5) * 20 + Math.sin(u * 8 + i) * 2, y = ty + 14 - u * 34;
+        const x = tx + (rnd(i, 24) - 0.5) * 20 + Math.sin(u * 8 + i) * 2, y = gy - u * 34;
         const r = 1 + (i % 3);
         ctx.globalAlpha = Math.sin(u * Math.PI);
         dot(ctx, x - r + 1, y, "#a050d8", r * 2 - 1, r * 2 - 1);
