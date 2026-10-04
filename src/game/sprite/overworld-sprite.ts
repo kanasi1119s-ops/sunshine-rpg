@@ -29,6 +29,8 @@ export interface SpriteSpec {
   mobTemplate?: string;
   /** 物を売る人（商人）。エプロン・はちまき・小銭入れを足して、商人らしく見せる（`applyMerchant`）。 */
   merchant?: boolean;
+  /** 戦士（兵士・衛兵など）。兜と鎧を足して、戦士らしく見せる（`applyWarrior`）。 */
+  warrior?: boolean;
 }
 
 export const SPRITE_WIDTH = 16;
@@ -247,7 +249,18 @@ function recolorMob(spec: SpriteSpec, dir: SpriteDir, frame: SpriteFrame): Sprit
   const base: Record<string, string> = { hair: spec.hair, skin: spec.skin, top: spec.top, bottom: spec.bottom || spec.top, accent: spec.accent };
   const colors = tpl.palette.map((c, i) => (tpl.roles[i] === "fixed" ? c : shadeColor(base[tpl.roles[i]] ?? c, tpl.shade[i])));
   const grid = tpl.frames[`${dir}${frame}`].map((row) => [...row].map((ch) => (ch === "." ? null : colors[LETTERS.indexOf(ch)])));
-  if (spec.merchant) {
+  if (spec.warrior) {
+    const down = tpl.frames["down0"];
+    const skinLetters = new Set(tpl.roles.map((r, i) => (r === "skin" ? LETTERS[i] : "")).filter(Boolean));
+    let faceTop = 8;
+    for (let y = 0; y < down.length; y++) {
+      if ([...down[y]].some((ch) => skinLetters.has(ch))) {
+        faceTop = y;
+        break;
+      }
+    }
+    applyWarrior(grid, dir, spec, faceTop, tpl.roles.map((r, i) => (r === "hair" ? colors[i] : "")).filter(Boolean));
+  } else if (spec.merchant) {
     // 顔の上のへり（髪の生えぎわ）の段: 肌の色の画素がいちばん上にある段
     const down = tpl.frames[`down0`];
     const skinLetters = new Set(tpl.roles.map((r, i) => (r === "skin" ? LETTERS[i] : "")).filter(Boolean));
@@ -261,6 +274,56 @@ function recolorMob(spec: SpriteSpec, dir: SpriteDir, frame: SpriteFrame): Sprit
     applyMerchant(grid, dir, spec, faceTop, tpl.roles.map((r, i) => (r === "hair" ? colors[i] : "")).filter(Boolean));
   }
   return grid;
+}
+
+const STEEL_LIGHT = "#d4dae4";
+const STEEL = "#9aa4b4";
+const STEEL_DARK = "#6a7484";
+const STEEL_DEEP = "#454e5e";
+
+/** 戦士らしく: 兜（髪の上を鉄の色に。てっぺんに飾り）・胸当て・肩当て・ベルト。 */
+function applyWarrior(grid: SpritePixels, dir: SpriteDir, spec: SpriteSpec, faceTop: number, hairColors: string[]): void {
+  const w = grid[0].length;
+  const put = (x: number, y: number, c: string): void => {
+    if (y >= 0 && y < grid.length && x >= 0 && x < w && grid[y][x] !== null) grid[y][x] = c;
+  };
+  const isHair = (c: string | null): boolean => !!c && hairColors.includes(c);
+  // 兜: 生えぎわより上の髪を鉄に（左上が明るい）。生えぎわのへりは暗く
+  for (let y = 0; y < faceTop + 1; y++) {
+    for (let x = 0; x < w; x++) {
+      if (!isHair(grid[y][x])) continue;
+      const c = y === faceTop ? STEEL_DEEP : y === faceTop - 1 ? STEEL_DARK : y <= 5 && x < w / 2 ? STEEL_LIGHT : x < w / 2 ? STEEL : STEEL_DARK;
+      grid[y][x] = c;
+    }
+  }
+  // 兜の側面（耳のあたり）も鉄に
+  for (let y = faceTop + 1; y <= faceTop + 3; y++) for (let x = 0; x < w; x++) if (isHair(grid[y][x])) grid[y][x] = x < w / 2 ? STEEL : STEEL_DARK;
+  // 兜のてっぺんの飾り（かざりの色）
+  let topY = -1;
+  for (let y = 0; y < grid.length && topY < 0; y++) if (grid[y].some((c) => c !== null && c !== "#1a1018")) topY = y;
+  if (topY >= 0 && dir !== "left" && dir !== "right") {
+    put(7, topY, spec.accent); put(8, topY, spec.accent);
+  } else if (topY >= 0) {
+    put(dir === "left" ? 7 : 8, topY, spec.accent);
+  }
+  // 胸当て・肩当て・ベルト
+  const x0 = dir === "down" || dir === "up" ? 4 : 5;
+  const x1 = dir === "down" || dir === "up" ? 11 : 10;
+  for (let y = 19; y <= 22; y++) {
+    for (let x = x0; x <= x1; x++) {
+      const light = x < (x0 + x1) / 2;
+      put(x, y, y === 19 ? STEEL_LIGHT : y === 22 ? STEEL_DARK : light ? STEEL : STEEL_DARK);
+    }
+  }
+  if (dir === "down") {
+    for (let y = 20; y <= 21; y++) { put(7, y, STEEL_LIGHT); put(8, y, STEEL); } // 胸の中央の筋
+  }
+  if (dir === "up") {
+    for (let y = 20; y <= 21; y++) put(7, y, STEEL_DEEP);
+  }
+  put(x0 - 1, 19, STEEL); put(x0 - 1, 20, STEEL_DARK); put(x1 + 1, 19, STEEL); put(x1 + 1, 20, STEEL_DARK); // 肩当て
+  for (let x = x0; x <= x1; x++) put(x, 23, "#5a4026");
+  if (dir === "down") { put(7, 23, "#e8c048"); put(8, 23, "#e8c048"); }
 }
 
 const APRON = "#f0e8d4";
