@@ -49,15 +49,18 @@ def check(i, k):
 
 def choose(i, seeds):
     """全身が入っていて額縁でない下絵の番号。無ければ、切れた下絵を描き足して使う。だめなら None"""
-    cands = []
+    cands = []; good = []
     for k in range(seeds):
         c = check(i, k)
         if c is None:
             continue
         if c.get("ok") and not c.get("framed"):
-            return str(k)
+            good.append((c.get("fill", 0), k))   # 体が大きく描けている方（細い棒・小さな絵を避ける）
+            continue
         if not c.get("framed") and c.get("parts", 0) >= 0.85:
             cands.append((len(c.get("cut", [])), k))
+    if good:
+        return str(max(good)[1])
     for _, k in sorted(cands)[:1]:
         if run(["python3", f"{AI}/monster_batch.py", "extend", i, str(k)], timeout=1500):
             c = check(i, f"x{k}")
@@ -126,6 +129,17 @@ def main():
                         if os.path.exists(f): os.remove(f)
             json.dump(r, open(ROSTER, "w"), ensure_ascii=False, indent=1)
             log("描き直し:", list(req))
+        # 下絵の選び直し（WORK/auto/repick.json: {id: "1"}）。描き直さずに、もう1枚の下絵から作る
+        pp = f"{AUTO}/repick.json"
+        if os.path.exists(pp):
+            req = json.load(open(pp)); os.remove(pp)
+            for i, k in req.items():
+                for ext in ("txt", "json", "png"):
+                    f = f"{ART}/{i}/{i}_fix.{ext}"
+                    if os.path.exists(f): os.remove(f)
+                if run(["python3", f"{AI}/monster_batch.py", "pick", i, str(k), "--force"], timeout=900) and editor_stage(i):
+                    log(i, "下絵を選び直した:", k)
+            run(["python3", f"{AI}/monster_batch.py", "export"]); run(["node", "tools/pixel-art/export-game-data.mjs"], timeout=900)
         mobs = [e for e in roster() if e.get("kind") != "boss" and e.get("prompt")]
         # ドット絵化まで済んでエディタで止まったものは、エディタからやり直す
         for e in [e for e in mobs if e.get("status") == "picked" and tries.get("ed:" + e["id"], 0) < 2]:
@@ -155,7 +169,7 @@ def main():
             env = {"SEED_BASE": str(base + 997 * tries.get(i, 0)), "SKIP_EXISTING": "1", "STEPS": "16"}
             tries[i] = tries.get(i, 0) + 1
             k = None
-            for seeds in (1, 2):
+            for seeds in (2,):   # 2枚描いて良い方（2026-10-05: 1枚だと半分ほどが使えない絵だった）
                 if not run(["python3", f"{AI}/monster_batch.py", "draft", i, "--seeds", str(seeds)], env=env, timeout=3600):
                     break
                 k = choose(i, seeds)
