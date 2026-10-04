@@ -20,6 +20,10 @@ export function spriteSpecFromPortrait(spec: PortraitSpec, name?: string): Sprit
 /** 主人公ユーリ。 */
 export const HERO_SPRITE: SpriteSpec = spriteSpecFromPortrait(PORTRAITS["ユーリ"], "ユーリ");
 
+/** 町の人の2頭身の素体（レト・ユーリ・ミナ・ガイドと同じ作りの絵）。 */
+const MOB_BODIES = ["reto", "yuri", "mina", "guide"];
+const MOB_ACCENTS = ["#d8b048", "#c0504a", "#4a78b0", "#58985a", "#8a58a8", "#e8e0d0", "#d8803a"];
+const MOB_BOTTOMS = ["#5a4a3a", "#4a4a5a", "#3a4a5a", "#6a5a4a", "#4a3a3a", "#5a5a48"];
 const SKINS = ["#f2c9a0", "#e6bd8f", "#d9a67a", "#c58f66", "#b98860", "#f4d8c0"];
 const HAIRS = ["#3a2a20", "#6a4a2a", "#8a3a2a", "#c8a050", "#1e1e2a", "#5a3a4a", "#a0a0a8", "#e0e0e6"];
 
@@ -39,11 +43,12 @@ export function spriteSpecForNpc(npc: { id: string; color: string; spriteName?: 
   const h = (n: number): number => hashCell(seed, n);
   const styles = ["short", "short", "long", "twin"] as const;
   return {
+    mobTemplate: MOB_BODIES[h(6) % MOB_BODIES.length],
     skin: SKINS[h(1) % SKINS.length],
     hair: HAIRS[h(2) % HAIRS.length],
     top: npc.color,
-    bottom: shadeColor(npc.color, -0.5),
-    accent: shadeColor(npc.color, h(3) % 2 === 0 ? 0.35 : -0.3),
+    bottom: MOB_BOTTOMS[h(7) % MOB_BOTTOMS.length] ?? shadeColor(npc.color, -0.5),
+    accent: MOB_ACCENTS[h(3) % MOB_ACCENTS.length],
     hairStyle: styles[h(4) % styles.length],
     headband: h(5) % 6 === 0,
   };

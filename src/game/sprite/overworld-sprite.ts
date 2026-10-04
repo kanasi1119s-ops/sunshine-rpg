@@ -1,5 +1,6 @@
 import { shadeColor } from "../color-utils";
 import { ARCHETYPES, WALKERS } from "./walker-data.generated";
+import { MOB_TEMPLATES } from "./mob-walker-data.generated";
 
 /**
  * マップを歩くキャラクターのドット絵（16×32、4方向×3コマ）。`docs/design/pixel-character-guide.md` 第7・8節、
@@ -24,6 +25,8 @@ export interface SpriteSpec {
   headband?: boolean;
   /** 手描きの絵（`walker-data.generated.ts`）がある人物の名前。あれば、素体＋色の代わりにそれを使う。 */
   handKey?: string;
+  /** 町の人（モブ）の2頭身の素体の名前（`mob-walker-data.generated.ts`）。あれば、主要キャラと同じ作りの絵を、髪・肌・服の色で塗り替えて使う。 */
+  mobTemplate?: string;
 }
 
 export const SPRITE_WIDTH = 16;
@@ -235,7 +238,20 @@ function recolorArchetype(
   );
 }
 
+/** 町の人の2頭身の素体を、髪・肌・服・飾りの色で塗り替える。同じ役割の色の明暗の差は、そのまま保つ。 */
+function recolorMob(spec: SpriteSpec, dir: SpriteDir, frame: SpriteFrame): SpritePixels | null {
+  const tpl = spec.mobTemplate ? MOB_TEMPLATES[spec.mobTemplate] : undefined;
+  if (!tpl) return null;
+  const base: Record<string, string> = { hair: spec.hair, skin: spec.skin, top: spec.top, bottom: spec.bottom || spec.top, accent: spec.accent };
+  const colors = tpl.palette.map((c, i) => (tpl.roles[i] === "fixed" ? c : shadeColor(base[tpl.roles[i]] ?? c, tpl.shade[i])));
+  return tpl.frames[`${dir}${frame}`].map((row) => [...row].map((ch) => (ch === "." ? null : colors[LETTERS.indexOf(ch)])));
+}
+
 export function buildSpritePixels(spec: SpriteSpec, dir: SpriteDir, frame: SpriteFrame): SpritePixels {
+  const mob = recolorMob(spec, dir, frame);
+  if (mob) {
+    return mob;
+  }
   const arch = !spec.handKey ? ARCHETYPES[spec.hairStyle === "short" ? "short" : spec.hairStyle] : undefined;
   if (arch) {
     return recolorArchetype(arch, spec, dir, frame);
