@@ -10,7 +10,7 @@ pal={"A":"#1e1620","S":"#3c3050",
  "D1":"#4a2a14","D2":"#7a4a22","D3":"#a8703a",
  "G1":"#7ab8e0","G2":"#aee0f8","F1":"#3a8a3a","F2":"#68c048","F3":"#e84a5a","Y":"#f4cc50",
  "M1":"#4a7a38","M2":"#6a9a48","CUR":"#d86a5a","L1":"#ffe8a0","W1":"#c4905a","W2":"#a8703a"}
-def build(W,H,FW,SW,floors,FH=18,roofH=16,ox=3,door=0.5,nwin=3,porch=True,dormer=False,wall='plaster',chimney=0.7,seed=1,ivy=True,roof=None,fullside=False):
+def build(W,H,FW,SW,floors,FH=18,roofH=16,ox=3,door=0.5,nwin=3,porch=True,dormer=False,wall='plaster',chimney=0.7,seed=1,ivy=True,roof=None,fullside=False,sidew=7):
     rnd=random.Random(seed)
     c=Canvas(W,H)
     x0=ox; x1=ox+FW; x2=x1+SW
@@ -115,7 +115,7 @@ def build(W,H,FW,SW,floors,FH=18,roofH=16,ox=3,door=0.5,nwin=3,porch=True,dormer
                 for xx in (sx,sx+3,sx+6): c.put(xx,wy+wh-1,'F3')
         if fl==0 and floors==2:
             pass
-        sidewin(x1+3,7,top+fl*FH+4-int(3*SL),FH-9)
+        sidewin(x1+3 if sidew<=7 else x1+4,sidew,top+fl*FH+4-int(3*SL),FH-9 if sidew<=7 else FH-8)
     # 玄関
     dh=min(FH-4,13)
     for y in range(bot-dh,bot+1):
@@ -244,5 +244,5 @@ def variants(name,c):
         save(name+"-"+nm,c,{**pal,**vv})
 if __name__=="__main__":
     variants("cottage",build(48,56,FW=30,SW=11,floors=1,FH=19,roofH=15,ox=3,door=0.5,nwin=3,porch=False,wall='plaster',chimney=0.75,seed=3))
-    variants("manor4",build(80,80,FW=54,SW=19,floors=2,FH=18,roofH=17,ox=3,door=0.45,nwin=3,porch=True,dormer=True,wall='plaster',chimney=0.8,seed=8,fullside=True))
+    variants("manor4",build(80,80,FW=54,SW=19,floors=2,FH=18,roofH=17,ox=3,door=0.45,nwin=3,porch=True,dormer=True,wall='plaster',chimney=0.8,seed=8,fullside=True,sidew=10))
     variants("stonehouse",build(64,64,FW=40,SW=15,floors=1,FH=22,roofH=17,ox=3,door=0.35,nwin=2,porch=False,wall='stone',chimney=0.7,seed=6))
