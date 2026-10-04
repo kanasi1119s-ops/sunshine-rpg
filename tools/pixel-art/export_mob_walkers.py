@@ -139,6 +139,8 @@ def smooth_head(frames):
         out[fk] = ["".join(r) for r in g]
     return out
 
+REOUTLINE_MAXY = 99  # スカートの型は、すその下（足先のように見える縁取り）を足さない
+
 def reoutline(frames):
     """縁取りが欠けているところ（絵の外へ、すき間が直接つながっているところ）に、縁取りの色を足す。"""
     out = {}
@@ -146,7 +148,7 @@ def reoutline(frames):
         g = [list(r) for r in rows]
         H, W = len(g), len(g[0])
         add = []
-        for y in range(H):
+        for y in range(min(H, REOUTLINE_MAXY + 1)):
             for x in range(W):
                 if g[y][x] != ".":
                     continue
@@ -242,10 +244,22 @@ for key, (name, groups) in TEMPLATES.items():
         shade = shade + [round(max(-0.6, min(0.6, (lum(pal[di]) - med) * 1.25)), 3)]
         newl = LETTERS[newi]
         frames = {fk: ["".join(newl if (ch == "D" and y <= 17) else ch for ch in row) for y, row in enumerate(rows)] for fk, rows in frames.items()}
+    REOUTLINE_MAXY = 28 if key in ("mina", "guide") else 99
     frames = symmetrize(strip(key, frames))
     frames = reoutline(fill_notches(reoutline(smooth_head(despeckle(frames, roles)))))
     if key == "mina":
         frames = reoutline(push_front_hair(push_front_hair(frames)))
+    if key in ("mina", "guide"):
+        # すその線（下から2段）の途切れを、縁取りの色でつなぐ
+        for fk, rows in list(frames.items()):
+            g = [list(r) for r in rows]
+            for y in (29, 30):
+                xs = [x for x, ch in enumerate(g[y]) if ch != "."]
+                if len(xs) >= 6:
+                    for x in range(min(xs), max(xs) + 1):
+                        if g[y][x] == ".":
+                            g[y][x] = "A"
+            frames[fk] = ["".join(r) for r in g]
     # 目は、どの肌の色でも見えやすいよう、黒（ほんのり色つき）にする
     ei = LETTERS.index(EYES[key])
     pal = list(pal); pal[ei] = "#241820"; roles[ei] = "fixed"; shade[ei] = 0.0
