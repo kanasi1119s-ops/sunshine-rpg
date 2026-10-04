@@ -6,6 +6,13 @@ import {
   createMugikanoWaterSourceData,
   MUGIKANO_WATER_SOURCE_LANDMARKS,
 } from "../map/chapter1/mugikano-water-source";
+import {
+  createMugikanoCanalData,
+  createMugikanoTunnelData,
+  MUGIKANO_CANAL_LANDMARKS,
+  MUGIKANO_TUNNEL_LANDMARKS,
+} from "../map/chapter1/mugikano-dungeon";
+import { chestNpc, leverNpc, loreNpc } from "./dungeon-objects";
 import type { TileMapData } from "../map/types";
 import type { EventCommand } from "../event/types";
 import type { Npc } from "../npc";
@@ -16,6 +23,8 @@ import type { Npc } from "../npc";
  */
 export const CHAPTER1_MAPS: Record<string, TileMapData> = {
   "mugikano-village": createMugikanoVillageData(),
+  "mugikano-canal": createMugikanoCanalData(),
+  "mugikano-tunnel": createMugikanoTunnelData(),
   "mugikano-water-source": createMugikanoWaterSourceData(),
 };
 
@@ -45,6 +54,13 @@ export const CHAPTER1_NPCS: Record<string, Npc[]> = {
       commands: elderCommands(),
     },
     {
+      id: "mugikano-miller",
+      tileX: 15,
+      tileY: 6,
+      color: "#c0a878",
+      commands: millerCommands(),
+    },
+    {
       id: "mugikano-mina",
       tileX: MUGIKANO_VILLAGE_LANDMARKS.mina.tileX,
       tileY: MUGIKANO_VILLAGE_LANDMARKS.mina.tileY,
@@ -52,6 +68,82 @@ export const CHAPTER1_NPCS: Record<string, Npc[]> = {
       spriteName: "ミナ",
       commands: minaCommands(),
     },
+  ],
+  "mugikano-canal": [
+    {
+      id: "mugikano-canal-farmer",
+      tileX: MUGIKANO_CANAL_LANDMARKS.farmer.tileX,
+      tileY: MUGIKANO_CANAL_LANDMARKS.farmer.tileY,
+      color: "#a0b070",
+      commands: [
+        { type: "message", text: "水が来なくなって、畑がひび割れてきたよ。この水路は、北の水源からずっと引いているんだ。", speaker: "農夫" },
+        {
+          type: "message",
+          text: "水源へ行く坑道の扉は、鍵がかかってる。鍵は、北の畑の見張り小屋に置いてあったはずだ。小屋の箱を探してごらん。",
+          speaker: "農夫",
+        },
+        { type: "message", text: "それと、坑道の中は暗くて湿っている。獣も出るから、気をつけてな。", speaker: "農夫" },
+      ],
+    },
+    {
+      id: "mugikano-canal-watchman",
+      tileX: MUGIKANO_CANAL_LANDMARKS.watchman.tileX,
+      tileY: MUGIKANO_CANAL_LANDMARKS.watchman.tileY,
+      color: "#8a9ab0",
+      commands: [
+        { type: "message", text: "見張り小屋の番をしている者だ。水が止まってから、毎日この水路を見て回っている。", speaker: "水路の見張り" },
+        {
+          type: "message",
+          text: "水が止まる前の晩、水源の方角から、ごうんと地面が揺れるような音がした。あれは、ただの雷じゃなかった。",
+          speaker: "水路の見張り",
+        },
+        { type: "message", text: "水源の坑道には、水を止める古いバルブが、左右の部屋にあるはずだ。水を抜けば、奥の岩戸が開く。", speaker: "水路の見張り" },
+      ],
+    },
+    chestNpc("mugikano-canal-chest-gold", MUGIKANO_CANAL_LANDMARKS.chestGold, "chapter1_chest_canal_gold", { gold: 70 }, "畑のすみの宝箱を開けた！"),
+    {
+      id: "mugikano-canal-chest-key",
+      tileX: MUGIKANO_CANAL_LANDMARKS.chestKey.tileX,
+      tileY: MUGIKANO_CANAL_LANDMARKS.chestKey.tileY,
+      color: "#e8c860",
+      commands: [
+        {
+          type: "if",
+          flag: "chapter1_got_key",
+          equals: true,
+          then: [{ type: "message", text: "見張り小屋の箱は、もう空だ。" }],
+          else: [
+            { type: "message", text: "見張り小屋の古い箱を開けた。中には、錆びた鍵が入っている。" },
+            { type: "message", text: "【だいじなもの】坑道の鍵を手に入れた！" },
+            { type: "setFlag", flag: "chapter1_got_key", value: true },
+          ],
+        },
+      ],
+    },
+    loreNpc("mugikano-canal-lore-sluice", MUGIKANO_CANAL_LANDMARKS.sluiceStone, [
+      "水路の石組みに、古い刻みがある。「水は北の坑より来たり。坑の戸は、ふたつの弁にて開く」",
+      "昔の人が、この水路と坑道を一緒に作ったのだろう。",
+    ]),
+  ],
+  "mugikano-tunnel": [
+    leverNpc("mugikano-tunnel-panel-west", MUGIKANO_TUNNEL_LANDMARKS.valveWest, "chapter1_valve_west", "chapter1_valve_east", "chapter1_valves_open", {
+      pull: "西の赤い台のバルブを、力いっぱい回す。ごぼごぼと水が抜ける音がした。",
+      already: "西のバルブは、もう回してある。",
+      opened: "東のバルブも回してある。坑道の水が一気に引き、奥で、岩戸の動く音がした！",
+      waiting: "水の抜ける音がするが、まだ足りない。反対側にも、同じバルブがあるはずだ。",
+    }),
+    leverNpc("mugikano-tunnel-panel-east", MUGIKANO_TUNNEL_LANDMARKS.valveEast, "chapter1_valve_east", "chapter1_valve_west", "chapter1_valves_open", {
+      pull: "東の赤い台のバルブを、力いっぱい回す。ごぼごぼと水が抜ける音がした。",
+      already: "東のバルブは、もう回してある。",
+      opened: "西のバルブも回してある。坑道の水が一気に引き、奥で、岩戸の動く音がした！",
+      waiting: "水の抜ける音がするが、まだ足りない。反対側にも、同じバルブがあるはずだ。",
+    }),
+    chestNpc("mugikano-tunnel-chest-deep", MUGIKANO_TUNNEL_LANDMARKS.chest, "chapter1_chest_tunnel", { gold: 90, equipmentId: "treasure-10" }, "坑道のくぼみの宝箱を開けた！"),
+    loreNpc("mugikano-tunnel-lore-wall", MUGIKANO_TUNNEL_LANDMARKS.wallMark, [
+      "坑道の壁に、同じ間隔で刻まれた掘り跡がある。",
+      "自然にできた洞穴ではない。人の手で、きちんと掘り進められた跡だ。",
+      "ずいぶん古いはずなのに、刃の跡が妙に新しく見える……。",
+    ]),
   ],
   "mugikano-water-source": [
     {
@@ -351,6 +443,44 @@ function mugikanoYugamiCommands(): EventCommand[] {
         { type: "message", text: "涸れた水源の奥、掘り返された土の中から、何かがうごめいている。" },
         { type: "message", text: "「歪み」が、姿を現した！" },
         { type: "startBattle", battleId: "mugikano-yugami" },
+      ],
+    },
+  ];
+}
+
+function millerCommands(): EventCommand[] {
+  return [
+    {
+      type: "if",
+      flag: "chapter1_heard_miller",
+      equals: true,
+      then: [
+        { type: "message", text: "水源の坑道は、見張り小屋の鍵が要る。北の農道を行きなさい。水を抜くバルブは、坑道の左右の部屋だ。", speaker: "水車小屋の主" },
+      ],
+      else: [
+        {
+          type: "if",
+          flag: "chapter1_quest_accepted",
+          equals: true,
+          then: [
+            { type: "message", text: "村長の頼みを受けたのかい。なら、見たことを話しておこう。", speaker: "水車小屋の主" },
+            {
+              type: "message",
+              text: "三日前の夜、水源のあたりで、紫色の光がゆらゆら揺れていたんだ。そのあと、水がぱったり止まった。",
+              speaker: "水車小屋の主",
+            },
+            {
+              type: "message",
+              text: "水源へは、北の農道を行って、古い坑道を通る。坑道の扉は鍵つきだが、鍵は見張り小屋の箱にあるはずだ。",
+              speaker: "水車小屋の主",
+            },
+            { type: "message", text: "坑道の奥の岩戸は、左右にある古いバルブを両方回すと開くと、爺さんの代から聞いている。", speaker: "水車小屋の主" },
+            { type: "setFlag", flag: "chapter1_heard_miller", value: true },
+          ],
+          else: [
+            { type: "message", text: "水車が止まって、仕事にならないよ。村長が、相談所の人を待っているはずだ。先に会ってやってくれ。", speaker: "水車小屋の主" },
+          ],
+        },
       ],
     },
   ];

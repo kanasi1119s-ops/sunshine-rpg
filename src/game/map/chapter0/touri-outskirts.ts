@@ -93,8 +93,9 @@ export function createTouriOutskirtsData(): TileMapData {
       {
         tileX: SOUTH_GATE.x,
         tileY: SOUTH_GATE.y,
-        targetMapId: "touri-town",
-        targetTileX: 11,
+        // 古い祠の森へ戻る（北の門のすぐ手前）。
+        targetMapId: "touri-forest-2",
+        targetTileX: 10,
         targetTileY: 1,
       },
     ],

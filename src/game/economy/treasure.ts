@@ -12,6 +12,11 @@ export const TREASURE_ITEMS: EquipmentItemData[] = [
   { id: "treasure-4", name: "風駆けの刃", category: "weapon", price: 0, statBonus: { attack: 90 } },
   { id: "treasure-5", name: "潮読みの腕輪", category: "accessory", price: 0, statBonus: { maxHp: 120 } },
   { id: "treasure-6", name: "紅炎の剣", category: "weapon", price: 0, statBonus: { attack: 98 } },
+  // 序盤のダンジョン（灯里の森・麦香野の坑道）の宝箱。店の1段目より少し弱い（宝箱を探す楽しみと、店で買う楽しみを両方残す）
+  { id: "treasure-7", name: "古祠の短剣", category: "weapon", price: 0, statBonus: { attack: 7 } },
+  { id: "treasure-8", name: "森歩きの外套", category: "armor", price: 0, statBonus: { defense: 3 } },
+  { id: "treasure-9", name: "樹液のお守り", category: "accessory", price: 0, statBonus: { maxHp: 7 } },
+  { id: "treasure-10", name: "坑道の灯り飾り", category: "accessory", price: 0, statBonus: { maxHp: 12 } },
 ];
 
 export const TREASURE_ITEMS_BY_ID: Record<string, EquipmentItemData> = Object.fromEntries(

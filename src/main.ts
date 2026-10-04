@@ -329,9 +329,13 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
 const MAP_BGM_ID: Record<string, string> = {
   "touri-town": "town-touri",
   "touri-branch": "town-touri",
+  "touri-forest-1": "field",
+  "touri-forest-2": "outskirts",
   "touri-outskirts": "outskirts",
   "world-map": "field",
   "mugikano-village": "town-mugikano",
+  "mugikano-canal": "field",
+  "mugikano-tunnel": "mine",
   "mugikano-water-source": "water-source",
   "garasuko-town": "town-garasuko",
   "garasuko-warehouse": "warehouse",
@@ -1575,6 +1579,13 @@ const loop = createGameLoop({
     const centerTileX = Math.floor((player.x + player.width / 2) / map.data.tileWidth);
     const centerTileY = Math.floor((player.y + player.height / 2) / map.data.tileHeight);
     const exit = vehicle === "foot" ? findExitAt(map, centerTileX, centerTileY) : undefined;
+    if (exit && exit.requireFlag && !flags[exit.requireFlag]) {
+      // 条件（仕掛け・道具など）が足りない出口は、ヒントを出して1マス押し戻す
+      const back = { up: { x: 0, y: 1 }, down: { x: 0, y: -1 }, left: { x: 1, y: 0 }, right: { x: -1, y: 0 } }[player.direction];
+      player = { ...player, x: player.x + back.x * map.data.tileWidth, y: player.y + back.y * map.data.tileHeight, moving: false };
+      dialogue.start([{ type: "message", text: exit.blockedMessage ?? "まだ先へは進めない。" }]);
+      return;
+    }
     if (exit) {
       // 世界地図から入る場所には、条件がある（章の順・乗り物・クリア後の航路など）。足りなければ、ヒントを出して押し戻す。
       const problems = currentMapId === "world-map" ? worldEntryProblems(exit.targetMapId, flags) : [];

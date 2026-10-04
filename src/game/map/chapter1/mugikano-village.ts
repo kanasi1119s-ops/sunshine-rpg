@@ -115,12 +115,14 @@ export function createMugikanoVillageData(): TileMapData {
         targetTileY: 8,
       },
       {
-        // 水源・歪みの発生地点へ。
+        // 水路沿いの農道へ（そのさきに、古い坑道と水源がある）。依頼を受け、水車小屋の人から話を聞いてから。
         tileX: NORTH_GATE.x,
         tileY: NORTH_GATE.y,
-        targetMapId: "mugikano-water-source",
-        targetTileX: 9,
-        targetTileY: 12,
+        targetMapId: "mugikano-canal",
+        targetTileX: 10,
+        targetTileY: 16,
+        requireFlag: "chapter1_heard_miller",
+        blockedMessage: "水源へ向かう前に、村長の依頼を受けて、水車小屋の人から水源の様子を聞いておこう。",
       },
       {
         // 東の街道、第2章の舞台・硝子湖へ。

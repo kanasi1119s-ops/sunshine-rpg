@@ -134,12 +134,14 @@ export function createTouriTownData(): TileMapData {
     collision,
     exits: [
       {
-        // 町外れ（歪みの発生地点）へ。
+        // 町の北の森の道へ（そのさきに、歪みの発生地点がある）。森は暗いので、灯りがないと進めない。
         tileX: NORTH_GATE.x,
         tileY: NORTH_GATE.y,
-        targetMapId: "touri-outskirts",
-        targetTileX: 9,
-        targetTileY: 12,
+        targetMapId: "touri-forest-1",
+        targetTileX: 11,
+        targetTileY: 16,
+        requireFlag: "chapter0_got_lamp",
+        blockedMessage: "この先の森は、夜のように暗いと聞く。灯りを持たずに入るのは危ない。まず町で、話を聞いて準備をしよう。",
       },
       {
         // 灯りの相談所 灯里支部の中へ。

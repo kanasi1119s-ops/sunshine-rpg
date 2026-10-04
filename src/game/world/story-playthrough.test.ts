@@ -30,8 +30,8 @@ const BATTLE_VICTORY_FLAG: Record<string, string> = {
 };
 
 const CHAPTER_MAPS: string[][] = [
-  ["touri-town", "touri-branch", "touri-outskirts"],
-  ["mugikano-village", "mugikano-water-source"],
+  ["touri-town", "touri-branch", "touri-forest-1", "touri-forest-2", "touri-outskirts"],
+  ["mugikano-village", "mugikano-canal", "mugikano-tunnel", "mugikano-water-source"],
   ["garasuko-town", "garasuko-warehouse"],
   ["tetsukusari-town", "tetsukusari-mine"],
   ["sanone-town", "sanone-camp"],

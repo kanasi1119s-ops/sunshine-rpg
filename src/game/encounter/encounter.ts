@@ -18,7 +18,11 @@ export interface EncounterZone {
 
 /** 地図ごとのエンカウント設定。ここに無い地図（町・ボスの間・禁域）では出会わない。 */
 export const ENCOUNTER_ZONES: Record<string, EncounterZone> = {
+  "touri-forest-1": { level: 2, names: ["野ねずみの影", "草むらの虫", "迷いこうもり", "小石のかけら", "ちいさな歪み", "ゆらぎの影"], hue: 120 },
+  "touri-forest-2": { level: 3, names: ["祠の影", "苔むした石", "夜の羽虫", "ゆらぎの影", "野ねずみの影", "ちいさな歪み"], hue: 150 },
   "touri-outskirts": { level: 2, names: ["ちいさな歪み", "ゆらぎの影", "野ねずみの影", "草むらの虫", "迷いこうもり", "小石のかけら"], hue: 270 },
+  "mugikano-canal": { level: 3, names: ["畑の虫", "水路の影", "あぜ道の石", "野ねずみの影", "用水路の虫", "ゆらぎの影"], hue: 90 },
+  "mugikano-tunnel": { level: 4, names: ["坑道のこうもり", "湿った影", "水のしずく影", "涸れ田の歪み", "採掘跡の虫", "井戸の石"], hue: 190 },
   "mugikano-water-source": { level: 4, names: ["水のしずく影", "涸れ田の歪み", "採掘跡のこうもり", "用水路の虫", "泥のしずく", "井戸の石"], hue: 200 },
   "garasuko-warehouse": { level: 6, names: ["積荷ねずみ", "湿った歪み", "木箱の影", "縄かじり", "樽の石", "倉庫の羽虫"], hue: 30 },
   "tetsukusari-mine": { level: 8, names: ["岩かじり", "坑道の影", "灯り石の虫", "鉱車の機械", "落盤の石", "鉱夫の残響"], hue: 15 },

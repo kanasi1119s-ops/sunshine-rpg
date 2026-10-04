@@ -84,8 +84,9 @@ export function createMugikanoWaterSourceData(): TileMapData {
       {
         tileX: SOUTH_GATE.x,
         tileY: SOUTH_GATE.y,
-        targetMapId: "mugikano-village",
-        targetTileX: 11,
+        // 古い坑道へ戻る（奥の岩戸のすぐ手前）。
+        targetMapId: "mugikano-tunnel",
+        targetTileX: 10,
         targetTileY: 1,
       },
     ],

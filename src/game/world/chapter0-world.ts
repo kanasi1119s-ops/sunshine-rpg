@@ -1,6 +1,13 @@
 import { createTouriTownData, TOURI_TOWN_SPAWN, TOURI_TOWN_LANDMARKS } from "../map/chapter0/touri-town";
 import { createTouriBranchData, TOURI_BRANCH_LANDMARKS } from "../map/chapter0/touri-branch";
 import { createTouriOutskirtsData, TOURI_OUTSKIRTS_LANDMARKS } from "../map/chapter0/touri-outskirts";
+import {
+  createTouriForest1Data,
+  createTouriForest2Data,
+  TOURI_FOREST1_LANDMARKS,
+  TOURI_FOREST2_LANDMARKS,
+} from "../map/chapter0/touri-forest";
+import { chestNpc, leverNpc, loreNpc } from "./dungeon-objects";
 import type { TileMapData } from "../map/types";
 import type { EventCommand } from "../event/types";
 import type { Npc } from "../npc";
@@ -13,6 +20,8 @@ import type { Npc } from "../npc";
 export const CHAPTER0_MAPS: Record<string, TileMapData> = {
   "touri-town": createTouriTownData(),
   "touri-branch": createTouriBranchData(),
+  "touri-forest-1": createTouriForest1Data(),
+  "touri-forest-2": createTouriForest2Data(),
   "touri-outskirts": createTouriOutskirtsData(),
 };
 
@@ -67,9 +76,39 @@ export const CHAPTER0_NPCS: Record<string, Npc[]> = {
               equals: true,
               then: [
                 {
-                  type: "message",
-                  text: "町外れは物騒だって聞くよ。気をつけて行っておいで。",
-                  speaker: "漁師",
+                  type: "if",
+                  flag: "chapter0_heard_rumor",
+                  equals: true,
+                  then: [
+                    {
+                      type: "message",
+                      text: "森の祠は、灯守りの爺さんが昔から世話をしてるよ。あの爺さんなら、森を歩くための灯りを貸してくれるはずだ。",
+                      speaker: "漁師",
+                    },
+                  ],
+                  else: [
+                    {
+                      type: "message",
+                      text: "ああ、相談所の依頼を受けたのかい。なら、先に話しておくよ。",
+                      speaker: "漁師",
+                    },
+                    {
+                      type: "message",
+                      text: "歪みが出るのは、北の森を抜けた先だ。森は昼でも暗いし、古い祠の門は、左右の石の台を動かさないと開かないらしい。",
+                      speaker: "漁師",
+                    },
+                    {
+                      type: "message",
+                      text: "うちの網にも、紫がかった靄が絡みついてた夜があってね。あれは、森の奥から流れてくるんだと思う。",
+                      speaker: "漁師",
+                    },
+                    {
+                      type: "message",
+                      text: "森に入るなら、灯守りの爺さんに会っていきな。祠の灯りを預かってる人だ。",
+                      speaker: "漁師",
+                    },
+                    { type: "setFlag", flag: "chapter0_heard_rumor", value: true },
+                  ],
                 },
               ],
               else: [
@@ -121,6 +160,13 @@ export const CHAPTER0_NPCS: Record<string, Npc[]> = {
         },
       ],
     },
+    {
+      id: "touri-lampkeeper",
+      tileX: 13,
+      tileY: 3,
+      color: "#b8a070",
+      commands: lampkeeperCommands(),
+    },
   ],
   "touri-branch": [
     {
@@ -139,6 +185,55 @@ export const CHAPTER0_NPCS: Record<string, Npc[]> = {
       spriteName: "レト",
       commands: retoCommands(),
     },
+  ],
+  "touri-forest-1": [
+    loreNpc("touri-forest-signpost-lore", TOURI_FOREST1_LANDMARKS.signpost, [
+      "古い木の看板がある。「この先、灯守りの森。祠の門は、ふたつの石の台が目覚めるとき開く」",
+      "文字の下に、小さな灯りの模様が彫られている。",
+    ]),
+    {
+      id: "touri-forest-traveler",
+      tileX: TOURI_FOREST1_LANDMARKS.traveler.tileX,
+      tileY: TOURI_FOREST1_LANDMARKS.traveler.tileY,
+      color: "#7a9ab0",
+      commands: [
+        { type: "message", text: "おや、相談所の人かい。この先の森は、ここ数日、獣の気配が荒いよ。", speaker: "旅人" },
+        {
+          type: "message",
+          text: "東の脇道に、旅人が置いていったらしい宝箱がある。それと、南西の茂みの奥にも、何かが隠れてたな。",
+          speaker: "旅人",
+        },
+        { type: "message", text: "先へ進む前に、体力に余裕があるうちに寄り道しておくといい。", speaker: "旅人" },
+      ],
+    },
+    chestNpc("touri-forest-chest-east", TOURI_FOREST1_LANDMARKS.chestEast, "chapter0_chest_forest_east", { gold: 40 }, "木の根元の宝箱を開けた！"),
+    chestNpc(
+      "touri-forest-chest-hidden",
+      TOURI_FOREST1_LANDMARKS.chestHidden,
+      "chapter0_chest_forest_hidden",
+      { equipmentId: "treasure-7" },
+      "茂みの奥の宝箱を開けた！",
+    ),
+  ],
+  "touri-forest-2": [
+    leverNpc("touri-forest-panel-west", TOURI_FOREST2_LANDMARKS.leverWest, "chapter0_lever_west", "chapter0_lever_east", "chapter0_shrine_open", {
+      pull: "西の石の台に、灯り石をはめる穴がある。ランタンの灯りをかざすと、石が淡く光り、低い音が響いた。",
+      already: "西の石の台は、もう淡く光っている。",
+      opened: "東の台もすでに光っている。ふたつの光が呼び合い、北の方で、重い門の動く音がした！",
+      waiting: "どこか遠くで、まだ眠っている石の気配がする。反対側にも、同じ台があるはずだ。",
+    }),
+    leverNpc("touri-forest-panel-east", TOURI_FOREST2_LANDMARKS.leverEast, "chapter0_lever_east", "chapter0_lever_west", "chapter0_shrine_open", {
+      pull: "東の石の台に、ランタンの灯りをかざす。石が淡く光り、低い音が響いた。",
+      already: "東の石の台は、もう淡く光っている。",
+      opened: "西の台もすでに光っている。ふたつの光が呼び合い、北の方で、重い門の動く音がした！",
+      waiting: "どこか遠くで、まだ眠っている石の気配がする。反対側にも、同じ台があるはずだ。",
+    }),
+    chestNpc("touri-forest-chest-shrine", TOURI_FOREST2_LANDMARKS.chest, "chapter0_chest_shrine", { gold: 60, equipmentId: "treasure-8" }, "祠の脇の宝箱を開けた！"),
+    loreNpc("touri-forest-lore-shrine", TOURI_FOREST2_LANDMARKS.inscription, [
+      "古い石碑に、擦れた文字が刻まれている。",
+      "「環の欠片、森に降りて眠る。乱れた灯は、静まる夜を待て」",
+      "この先に、乱れた灯り石の力――「歪み」が溜まっているのだろう。",
+    ]),
   ],
   "touri-outskirts": [
     {
@@ -224,7 +319,7 @@ function kasenCommands(): EventCommand[] {
           then: [
             {
               type: "message",
-              text: "町外れの歪みの件、頼んだよ。無理はしないようにね。",
+              text: "町外れの歪みの件、頼んだよ。出発の前に、漁師と灯守りのおじいさんに話を聞くのを忘れずに。無理はしないようにね。",
               speaker: "カセン",
             },
           ],
@@ -273,6 +368,12 @@ function kasenCommands(): EventCommand[] {
                       speaker: "ユーリ",
                     },
                     { type: "message", text: "頼もしいね。レトも一緒に行かせるよ。", speaker: "カセン" },
+                    {
+                      type: "message",
+                      text: "ただ、町の北の森は暗くて道も入り組んでいる。出発の前に、港の漁師と、灯守りのおじいさんに話を聞いておくといい。",
+                      speaker: "カセン",
+                    },
+                    { type: "message", text: "武具屋で装備を整えるのも、忘れずにね。", speaker: "カセン" },
                   ],
                 },
                 {
@@ -460,6 +561,53 @@ function yugamiCommands(): EventCommand[] {
         { type: "message", text: "空気が歪み、紫色の光がうねっている。" },
         { type: "message", text: "「歪み」が、姿を現した！" },
         { type: "startBattle", battleId: "chapter0-yugami" },
+      ],
+    },
+  ];
+}
+
+function lampkeeperCommands(): EventCommand[] {
+  return [
+    {
+      type: "if",
+      flag: "chapter0_got_lamp",
+      equals: true,
+      then: [
+        { type: "message", text: "森では、迷ったら道の灯りをたどりなさい。そして、祠の石の台を、ふたつとも目覚めさせるんだ。", speaker: "灯守り" },
+        { type: "message", text: "武具屋で装備を整えるのも、忘れずにな。", speaker: "灯守り" },
+      ],
+      else: [
+        {
+          type: "if",
+          flag: "chapter0_heard_rumor",
+          equals: true,
+          then: [
+            { type: "message", text: "ほう、漁師から聞いたのかい。ちょうど、森へ入る人に灯りを貸しておるところだ。", speaker: "灯守り" },
+            {
+              type: "message",
+              text: "この灯り石のランタンは、森の祠の石の台にも反応する。灯りをかざせば、台が目覚めるはずだ。",
+              speaker: "灯守り",
+            },
+            { type: "message", text: "「灯り石のランタン」を受け取った。これで、森へ入れる。", speaker: undefined },
+            { type: "setFlag", flag: "chapter0_got_lamp", value: true },
+            { type: "message", text: "森の奥の「歪み」は、あの祠の下に溜まっておる。気をつけて行くんだよ。", speaker: "灯守り" },
+          ],
+          else: [
+            {
+              type: "if",
+              flag: "chapter0_quest_accepted",
+              equals: true,
+              then: [
+                { type: "message", text: "相談所の新しい子かい。森へ入りたいなら、まず港の漁師の話を聞いておいで。", speaker: "灯守り" },
+                { type: "message", text: "あの子は、森の様子に詳しい。話を聞いたら、またここへおいで。", speaker: "灯守り" },
+              ],
+              else: [
+                { type: "message", text: "町の北の森は、ふだんは静かな場所だ。だが最近は、様子がおかしくてな。", speaker: "灯守り" },
+                { type: "message", text: "相談所で依頼を受けたなら、ここへ来なさい。灯りを貸してあげよう。", speaker: "灯守り" },
+              ],
+            },
+          ],
+        },
       ],
     },
   ];

@@ -15,8 +15,12 @@ export const MAP_TILE_ART: Record<string, Record<number, string>> = {
   // 町の建物（壁・屋根・扉・橋・木箱）。屋根は瓦、扉・橋・板壁は板張り、石造りは煉瓦。
   "touri-town": { 5: T("brick"), 6: T("plank"), 7: T("roof") },
   "touri-outskirts": { 5: T("flagstone"), 6: T("rift") },
+  "touri-forest-1": { 5: T("flagstone") },
+  "touri-forest-2": { 5: T("flagstone") },
   "mugikano-village": { 5: T("plank"), 6: T("roof"), 7: T("plank") },
   "mugikano-water-source": { 5: T("flagstone"), 6: T("sand") },
+  "mugikano-canal": { 5: T("flagstone") },
+  "mugikano-tunnel": { 1: T("flagstone"), 2: T("brick") },
   "garasuko-town": { 1: T("flagstone"), 5: T("roof"), 6: T("plank") },
   "tetsukusari-town": { 1: T("flagstone"), 3: T("flagstone"), 5: T("brick"), 6: T("brick") },
   "touri-branch": { 1: T("plank"), 2: T("brick"), 3: T("plank") },
@@ -46,6 +50,7 @@ const SNOWY_MAPS = new Set(["shimohara-town"]);
 /** 床と壁の描き方（`render/dungeon-tiles.ts`）を使う地図。 */
 const MAP_THEME: Record<string, string> = {
   "tetsukusari-mine": "mine",
+  "mugikano-tunnel": "mine",
   "shimohara-facility": "facility",
   "fushima-base": "facility",
   "kiri-archive": "archive",

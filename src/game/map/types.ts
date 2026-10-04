@@ -49,6 +49,10 @@ export interface MapExit {
   targetMapId: string;
   targetTileX: number;
   targetTileY: number;
+  /** このフラグが立っていないと通れない（仕掛けの扉・灯りがないと進めない道など）。 */
+  requireFlag?: string;
+  /** 通れないときに出す言葉（ヒント）。 */
+  blockedMessage?: string;
 }
 
 /** 地図の飾り。(tileX, tileY) は、絵の「足元・中央」のマス。 */

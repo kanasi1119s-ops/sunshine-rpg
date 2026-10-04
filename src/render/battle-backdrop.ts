@@ -11,7 +11,7 @@ export type Biome = "grass" | "cave" | "desert" | "snow" | "ruins" | "ship" | "m
 const PROCEDURAL_FALLBACK: Partial<Record<Biome, Biome>> = { ship: "coast", magma: "lava", prophecy: "shrine" };
 
 const BIOME_BY_PREFIX: Array<[string, Biome]> = [
-  ["tetsukusari-mine", "cave"], ["deep-", "ruins"], ["kyotoukyu", "ruins"],
+  ["touri-forest", "forest"], ["mugikano-tunnel", "cave"], ["tetsukusari-mine", "cave"], ["deep-", "ruins"], ["kyotoukyu", "ruins"],
   ["god-shrine", "shrine"], ["tower-", "shrine"], ["kanou-", "shrine"], ["islet-1", "shrine"], ["islet-2", "lava"], ["islet-3", "coast"], ["islet-4", "sky"], ["islet-5", "deep"], ["islet-6", "magma"], ["shimohara", "snow"], ["sanone", "desert"], ["garasuko-warehouse", "cave"],
   ["kiri-archive", "prophecy"], ["fushima-base", "ruins"], ["toushin", "ruins"], ["mugikano-water", "cave"],
 ];
