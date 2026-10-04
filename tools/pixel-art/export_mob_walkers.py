@@ -55,7 +55,7 @@ def strip(key, frames):
                     elif c in "LTV":
                         g[y][x] = "."                   # 弓
                     elif fk.startswith("up") and y >= 11 and 6 <= x <= 9:
-                        g[y][x] = "S"                   # 背中の矢筒 → 服の色
+                        g[y][x] = "B" if y <= 15 else "S"   # 背中の矢筒 → 髪・服の色
         # 持ち物を消したあとに、ひとりぼっちになった縁取りを消す
         for _ in range(3):
             for y in range(H):
@@ -65,6 +65,26 @@ def strip(key, frames):
                     if not any(at(x + dx, y + dy) not in (".", "A") for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
                         g[y][x] = "."
         out[fk] = ["".join(r) for r in g]
+    return out
+
+def symmetrize(frames):
+    """前向き・後ろ向きの絵の、頭から腰まで（上の23段）を、左右対称にする。持ち物を消したあとの欠けを、
+    絵の残っているほうの半分を反転して埋める。脚（下の段）は歩きの動きがあるので、そのまま。"""
+    out = {}
+    for fk, rows in frames.items():
+        if not (fk.startswith("down") or fk.startswith("up")):
+            out[fk] = rows
+            continue
+        rows = list(rows)
+        upper = rows[:23]
+        left = sum(1 for r in upper for ch in r[:8] if ch != ".")
+        right = sum(1 for r in upper for ch in r[8:] if ch != ".")
+        new = []
+        for r in upper:
+            half = r[8:] if right >= left else r[:8]
+            full = (half[::-1] + half) if right >= left else (half + half[::-1])
+            new.append(full)
+        out[fk] = new + rows[23:]
     return out
 
 built = {}
@@ -81,7 +101,7 @@ for key, (name, groups) in TEMPLATES.items():
             roles[i] = role
             shade[i] = round(max(-0.6, min(0.6, (lum(pal[i]) - med) * 1.25)), 3)
     frames = {k: v for k, v in d["frames"].items() if k[:-1] in ("down", "up", "left", "right") and k[-1] in "012"}
-    frames = strip(key, frames)
+    frames = symmetrize(strip(key, frames))
     built[key] = {"palette": pal, "roles": roles, "shade": shade, "frames": frames}
 
 # 男の人の2種め: レトの頭（ふさふさの髪）に、ユーリの服。ユーリの髪はとげとげなので、モブには使わない（2026-10-04、人間の指示）
@@ -104,7 +124,15 @@ def compose(head_key, body_key, split_y):
         frames[fk] = rows
     return {"palette": [k[0] for k in order], "roles": [k[1] for k in order], "shade": [k[2] for k in order], "frames": frames}
 
-out = {"reto": built["reto"], "man2": compose("reto", "yuri", 14), "mina": built["mina"], "guide": built["guide"]}
+out = {
+    "reto": built["reto"],
+    "man2": compose("reto", "yuri", 14),
+    "mina": built["mina"],
+    "guide": built["guide"],
+    # 女の人の増やした2種: ミナの頭にガイドの服、ガイドの頭にミナの服
+    "woman3": compose("mina", "guide", 14),
+    "woman4": compose("guide", "mina", 14),
+}
 
 ts = (
     "// 自動生成: tools/pixel-art/export_mob_walkers.py（手で編集しない）。町の人（モブ）の2頭身の素体4種\n"
