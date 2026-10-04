@@ -86,6 +86,23 @@ export function buyItem(itemId: string, gold: number, equipment: EquipmentSlots)
   return { ok: true, gold: left, equipment: equip(equipment, item), message: `${item.name}を買って、装備した！` };
 }
 
+export type PurchaseResult =
+  | { ok: true; gold: number; item: EquipmentItemData; message: string }
+  | { ok: false; message: string };
+
+/** 買うだけ（装備は、買ったあとに「だれにつけるか」を選んで決める）。強さに関係なく、灯貨が足りれば買える。 */
+export function purchaseItem(itemId: string, gold: number): PurchaseResult {
+  const item = SHOP_ITEMS_BY_ID[itemId];
+  if (!item) {
+    return { ok: false, message: "その品は、売っていない" };
+  }
+  const left = spendGold(gold, item.price);
+  if (left === null) {
+    return { ok: false, message: "灯貨が足りない" };
+  }
+  return { ok: true, gold: left, item, message: `${item.name}を買った！` };
+}
+
 /** 装備のボーナスの説明（例: 「こうげき+9」）。 */
 export function describeBonus(item: EquipmentItemData): string {
   const names: Record<string, string> = { attack: "こうげき", defense: "ぼうぎょ", speed: "すばやさ", maxHp: "HP", maxMp: "MP" };

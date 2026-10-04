@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { addItem } from "./inventory";
 import { candidatesFor, ensureOwned, equipTo, ownedEquipmentIds, unequipFrom, wearerOf } from "./party-equipment";
 import type { EquipmentItemData, ItemData } from "./types";
 
@@ -23,15 +24,29 @@ describe("仲間みんなの装備", () => {
     const inv = ensureOwned([], ["sword", "dagger"]);
     let party = { hero: { weapon: "sword" } };
     expect(candidatesFor("reto", "weapon", party, inv, items).map((c) => c.item.id).sort()).toEqual(["dagger", "sword"]);
-    party = equipTo(party, "reto", dagger) as typeof party;
+    party = equipTo(party, "reto", dagger, inv) as typeof party;
     expect(party).toEqual({ hero: { weapon: "sword" }, reto: { weapon: "dagger" } });
     expect(wearerOf(party, "dagger")).toBe("reto");
   });
 
   it("ほかの人がつけている品を選ぶと、その人からはずれる", () => {
-    const party = equipTo({ hero: { weapon: "sword" } }, "reto", sword);
+    const party = equipTo({ hero: { weapon: "sword" } }, "reto", sword, ensureOwned([], ["sword"]));
     expect(party.hero.weapon).toBeUndefined();
     expect(party.reto.weapon).toBe("sword");
+  });
+
+  it("同じ品を2個持っていれば、2人がつけられる（あまりがあるときは、取りかえない）", () => {
+    const inv = addItem(ensureOwned([], ["sword"]), "sword", 1); // 2個
+    let party: Record<string, Record<string, string>> = { hero: { weapon: "sword" } };
+    expect(candidatesFor("reto", "weapon", party, inv, items).find((c) => c.item.id === "sword")?.takenBy).toBeUndefined();
+    party = equipTo(party, "reto", sword, inv);
+    expect(party.hero.weapon).toBe("sword");
+    expect(party.reto.weapon).toBe("sword");
+    // 3人目は、あまりがないので、取りかえになる
+    const third = equipTo(party, "mina", sword, inv);
+    expect(Object.values(third).filter((s) => s.weapon === "sword")).toHaveLength(2);
+    expect(third.mina.weapon).toBe("sword");
+    expect(candidatesFor("mina", "weapon", { ...party }, inv, items).find((c) => c.item.id === "sword")?.takenBy).toBe("hero");
   });
 
   it("はずすと、持ち物には残る", () => {

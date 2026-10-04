@@ -36,9 +36,19 @@ export function ensureOwned(inventory: Inventory, itemIds: Iterable<string | und
   return next;
 }
 
-/** いま、その品を身につけている人（いなければ undefined）。 */
-export function wearerOf(party: PartyEquipment, itemId: string): string | undefined {
-  return Object.entries(party).find(([, slots]) => Object.values(slots).includes(itemId))?.[0];
+/** いま、その品を身につけている人（いなければ undefined）。同じ品を何人かがつけているときは、最初の1人。 */
+export function wearerOf(party: PartyEquipment, itemId: string, except?: string): string | undefined {
+  return Object.entries(party).find(([id, slots]) => id !== except && Object.values(slots).includes(itemId))?.[0];
+}
+
+/** その品を、いま身につけている人の数。 */
+export function wornCount(party: PartyEquipment, itemId: string): number {
+  return Object.values(party).filter((slots) => Object.values(slots).includes(itemId)).length;
+}
+
+/** 持っている数のうち、だれもつけていない数。 */
+export function freeCount(inventory: Inventory, party: PartyEquipment, itemId: string): number {
+  return getQuantity(inventory, itemId) - wornCount(party, itemId);
 }
 
 export interface EquipCandidate {
@@ -59,18 +69,24 @@ export function candidatesFor(
   for (const id of ownedEquipmentIds(inventory, itemsById)) {
     const item = itemsById[id];
     if (!isEquipment(item) || item.category !== category) continue;
-    const wearer = wearerOf(party, id);
-    if (wearer === owner) continue; // もうつけている
-    result.push({ item, takenBy: wearer });
+    if (Object.values(party[owner] ?? {}).includes(id)) continue; // もうつけている
+    // 同じ品を何個か持っていれば、あまっている分をつけられる。あまりがなければ、だれかがつけている品を取りかえる
+    result.push({ item, takenBy: freeCount(inventory, party, id) > 0 ? undefined : wearerOf(party, id, owner) });
   }
   return result;
 }
 
-/** その人にその品をつける。別の人がつけていたら、その人からははずれる。 */
-export function equipTo(party: PartyEquipment, owner: string, item: EquipmentItemData): PartyEquipment {
-  const next: PartyEquipment = {};
-  for (const [id, slots] of Object.entries(party)) {
-    next[id] = Object.values(slots).includes(item.id) ? unequip(slots, item.category) : slots;
+/**
+ * その人にその品をつける。同じ品があまっていれば（買い足した・宝で見つけた）そのままつけ、
+ * あまりがなければ、いまつけている人からはずして、その人につける。
+ */
+export function equipTo(party: PartyEquipment, owner: string, item: EquipmentItemData, inventory: Inventory): PartyEquipment {
+  const next: PartyEquipment = { ...party };
+  if (!Object.values(party[owner] ?? {}).includes(item.id) && freeCount(inventory, party, item.id) <= 0) {
+    const from = wearerOf(party, item.id, owner);
+    if (from) {
+      next[from] = unequip(party[from], item.category);
+    }
   }
   next[owner] = equip(next[owner] ?? {}, item);
   return next;

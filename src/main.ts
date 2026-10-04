@@ -12,9 +12,9 @@ import { battleEffectFor, type BattleEffect } from "./game/battle/battle-effect"
 import { createStaffRollState, skipStaffRoll, startStaffRoll, updateStaffRoll } from "./game/title/staff-roll";
 import { renderStaffRoll } from "./render/staff-roll-renderer";
 import { addGold, computeVictoryGold } from "./game/economy/gold";
-import { ALL_ITEMS_BY_ID, buyItem, describeBonus, receiveTreasure } from "./game/economy/shop";
+import { ALL_ITEMS_BY_ID, describeBonus, purchaseItem, receiveTreasure } from "./game/economy/shop";
 import { closeShopMenu, createShopMenuState, moveShopCursor, openShopMenu, withShopMessage } from "./game/economy/shop-menu";
-import { renderShop } from "./render/shop-renderer";
+import { renderShop, renderShopWear, type ShopWearView } from "./render/shop-renderer";
 import { backPauseMenu, confirmPauseMenu, createPauseMenuState, movePauseCursor, openPauseMenu } from "./game/menu/pause-menu";
 import { renderPauseMenu, type StatusRow } from "./render/pause-menu-renderer";
 import { backEquipMenu, confirmEquipMenu, createEquipMenuState, moveEquipCursor, openEquipMenu } from "./game/menu/equip-menu";
@@ -116,7 +116,7 @@ import { createRng } from "./game/random";
 import { computeVictoryExp } from "./game/battle/battle-engine";
 import { gainExp, statsAtLevel } from "./game/growth/level-up";
 import { applyStatBonus, computeEquipmentBonus, type EquipmentSlots } from "./game/items/equipment";
-import { createInventory, getQuantity, type Inventory } from "./game/items/inventory";
+import { addItem, createInventory, type Inventory } from "./game/items/inventory";
 import type { JobId, JobState } from "./game/job/types";
 import { availableJobs } from "./game/job/jobs";
 import { createJobState, starsOf } from "./game/job/mastery";
@@ -614,6 +614,13 @@ if (import.meta.env.DEV) {
       renderProps(c, full.data, cam, () => true);
       return canvas.toDataURL("image/png");
     },
+    /** 開発用: 灯貨をふやす・店を開く（買い物の確認用）。 */
+    giveGold: (amount: number) => {
+      gold += amount;
+    },
+    openShop: (shopId: string) => {
+      shopMenu = openShopMenu(shopId);
+    },
     /** 開発用: 仲間の加入フラグを立てて、隊列（後ろをついてくる姿）を確かめる。 */
     /** 開発用: 船と飛空艇を手に入れた状態にする。 */
     giveVehicles: () => {
@@ -870,7 +877,7 @@ function equipMenuView(): EquipMenuView {
         label: c.item.name,
         bonusText: describeBonus(c.item),
         note: c.takenBy ? `[${members.find((m) => m.id === c.takenBy)?.name ?? ""}]` : undefined,
-        after: statsView(baseOf(current.id, equipTo(party, current.id, c.item))),
+        after: statsView(baseOf(current.id, equipTo(party, current.id, c.item, inventory))),
       });
     }
   }
@@ -883,6 +890,30 @@ function equipMenuView(): EquipMenuView {
     })),
     candidates,
     message: equipMessage,
+  };
+}
+
+/** 買った品を、だれにつけるか選ぶ画面に出すもの。 */
+function shopWearView(): ShopWearView {
+  const item = shopWear ? ALL_ITEMS_BY_ID[shopWear.itemId] : undefined;
+  const members = equipMembers();
+  const party = partyEquipment();
+  if (!item || item.category === "consumable") {
+    return { itemName: "", bonusText: "", members: [] };
+  }
+  return {
+    itemName: item.name,
+    bonusText: describeBonus(item),
+    members: members.map((m) => {
+      const before = applyStatBonus(m.stats, computeEquipmentBonus(party[m.id] ?? {}, ALL_ITEMS_BY_ID));
+      const after = applyStatBonus(m.stats, computeEquipmentBonus(equipTo(party, m.id, item, inventory)[m.id] ?? {}, ALL_ITEMS_BY_ID));
+      return {
+        name: m.name,
+        currentText: describeItemId(party[m.id]?.[item.category]),
+        before: statsView(before),
+        after: statsView(after),
+      };
+    }),
   };
 }
 
@@ -899,7 +930,7 @@ function applyEquipChoice(state: typeof equipMenu): void {
   } else {
     const candidate = candidatesFor(member.id, category, partyEquipment(), inventory, ALL_ITEMS_BY_ID)[choice - 1];
     if (!candidate) return;
-    setPartyEquipment(equipTo(partyEquipment(), member.id, candidate.item));
+    setPartyEquipment(equipTo(partyEquipment(), member.id, candidate.item, inventory));
     equipMessage = `${member.name}は ${candidate.item.name}を つけた`;
   }
   autosave();
@@ -916,11 +947,18 @@ let gold = 0;
 /** お店の画面（町の武具屋で開く）。 */
 let shopMenu = createShopMenuState();
 let lastShopDirection: Direction | null = null;
+/** 買った（持っている）装備を、その場でだれにつけるか選ぶ画面。itemId は品、cursor は仲間の何番目か（最後は「つけない」）。 */
+let shopWear: { itemId: string; cursor: number } | null = null;
+let lastShopWearDirection: Direction | null = null;
 window.addEventListener("keydown", (event) => {
   if ((event.key === "x" || event.key === "Escape") && shopMenu.open) {
-    shopMenu = closeShopMenu(shopMenu);
+    if (shopWear) {
+      shopWear = null; // つけない（品は持ち物に入っている。あとで「そうび」でつけられる）
+    } else {
+      shopMenu = closeShopMenu(shopMenu);
+    }
   }
-});
+}, true);
 
 /** 加入フラグが立っているのに、まだパーティに反映していない仲間を反映する。 */
 const COMPANION_JOIN_FLAGS: { flag: string; companionId: string }[] = [
@@ -1554,6 +1592,9 @@ function renderGameScene(): void {
   }
   renderJobMenu(ctx, jobMenu, jobMenuMembers(), jobStates, selectableJobIds(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
   renderShop(ctx, shopMenu, gold, heroEquipment, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  if (shopWear && shopMenu.open) {
+    renderShopWear(ctx, shopWearView(), shopWear.cursor, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  }
   renderPauseMenu(ctx, pauseMenu, pauseMenu.screen === "status" ? statusRows() : [], pauseMessage, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   if (equipMenu.open) {
     renderEquipMenu(ctx, equipMenu, equipMenuView(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
@@ -1717,6 +1758,31 @@ const loop = createGameLoop({
 
     if (shopMenu.open) {
       const direction = input.getDirection();
+      if (shopWear) {
+        // 買った品を、だれにつけるか選ぶ（ユーリも仲間も。最後は「つけない」）
+        const members = equipMembers();
+        if (direction !== lastShopWearDirection) {
+          if (direction === "up" || direction === "down") {
+            shopWear = { ...shopWear, cursor: (shopWear.cursor + (direction === "up" ? -1 : 1) + members.length + 1) % (members.length + 1) };
+            audio.playSe(seOf("cursor"));
+          }
+          lastShopWearDirection = direction;
+        }
+        if (actionPressed) {
+          const member = members[shopWear.cursor];
+          const item = ALL_ITEMS_BY_ID[shopWear.itemId];
+          if (member && item && item.category !== "consumable") {
+            setPartyEquipment(equipTo(partyEquipment(), member.id, item, inventory));
+            shopMenu = withShopMessage(shopMenu, `${member.name}は ${item.name}を つけた！`);
+            autosave();
+          } else {
+            shopMenu = withShopMessage(shopMenu, "つけなかった（「そうび」であとからつけられる）");
+          }
+          shopWear = null;
+        }
+        return;
+      }
+      lastShopWearDirection = null;
       if (direction !== lastShopDirection) {
         if (direction === "up") {
           shopMenu = moveShopCursor(shopMenu, -1);
@@ -1730,21 +1796,20 @@ const loop = createGameLoop({
       if (actionPressed) {
         const item = shopMenu.items[shopMenu.cursor];
         if (item) {
-          // すでに持っている品は買わない（そうび画面で、ほかの人につけられる）
-          const result =
-            getQuantity(inventory, item.id) > 0
-              ? ({ ok: false, message: "もう持っている（メニューの「そうび」で つけられる）" } as const)
-              : buyItem(item.id, gold, heroEquipment);
+          // 同じ品を何個でも買える（仲間みんなに同じ武器・防具をつけられる）
+          const result = purchaseItem(item.id, gold);
           if (result.ok) {
             gold = result.gold;
-            heroEquipment = result.equipment;
-            inventory = ensureOwned(inventory, [item.id]);
-            autosave();
+            inventory = addItem(inventory, item.id, 1);
             audio.playSe(seOf("buy"));
+            autosave();
+            // 買ったら、その場でだれにつけるか選ぶ
+            shopWear = { itemId: item.id, cursor: 0 };
+            shopMenu = withShopMessage(shopMenu, `${result.item.name}を買った！ だれにつける？`);
           } else {
             audio.playSe(seOf("error"));
+            shopMenu = withShopMessage(shopMenu, result.message);
           }
-          shopMenu = withShopMessage(shopMenu, result.message);
         }
       }
       return;
