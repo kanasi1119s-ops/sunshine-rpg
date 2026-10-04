@@ -16,6 +16,7 @@ import { SHOP_NPCS } from "./shops-world";
 import { AMBIENT_NPCS } from "./ambient-world";
 import { applyMapTileArt } from "../tile-art/map-tile-art";
 import { applyMapProps } from "../map/map-props";
+import { addChapterDungeons } from "./dungeon-extensions";
 import { createWorldMapData } from "../map/world/world-map";
 import { connectWorldMap, SHIP_PART_NPCS, WORLD_MAP_NPCS } from "./world-map-world";
 import { ISLET_MAPS, ISLET_NPCS } from "./islets-world";
@@ -85,5 +86,7 @@ export const WORLD_NPCS: Record<string, Npc[]> = (() => {
   return merged;
 })();
 
+// 第2章〜第8章の、町とボスの間にダンジョン（洞窟・塔）を足す。模様・NPCの用意が済んだあとで、つなぎかえる
+addChapterDungeons(WORLD_MAPS, WORLD_NPCS);
 connectWorldMap(WORLD_MAPS, WORLD_NPCS);
 applyAutoDecor(WORLD_MAPS, WORLD_NPCS);

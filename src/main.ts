@@ -4,6 +4,8 @@ import { GAME_TITLE } from "./core/status";
 import { backTitle, confirmTitle, createTitleState, moveTitleCursor } from "./game/title/title-menu";
 import { renderTitle } from "./render/title-renderer";
 import { renderOpening } from "./render/opening-renderer";
+import { DUNGEON_PARENT } from "./game/world/dungeon-parent";
+import { DUNGEON_PREP_FLAGS } from "./game/world/dungeon-extensions";
 import { advanceBattleTransition, canSkipTransition, isCoverPhase, skipToReveal, startBattleTransition, type BattleTransition } from "./game/battle/battle-transition";
 import { renderTransitionCover, renderTransitionReveal } from "./render/battle-transition-renderer";
 import { advanceOpening, createOpeningState, skipOpening, startOpening, updateOpening } from "./game/title/opening";
@@ -373,7 +375,7 @@ const MAP_BGM_ID: Record<string, string> = {
   "kanou-4": "unease",
 };
 function mapBgmFor(mapId: string): Score {
-  return getTrack(MAP_BGM_ID[mapId] ?? "town-touri");
+  return getTrack(MAP_BGM_ID[DUNGEON_PARENT[mapId] ?? mapId] ?? MAP_BGM_ID[mapId] ?? "town-touri");
 }
 
 let currentBgmTrack: Score | null = null;
@@ -985,7 +987,7 @@ const IMPLIED_FLAGS: { when: string[]; set: string[] }[] = [
 ];
 
 function applyImpliedFlags(): void {
-  for (const rule of IMPLIED_FLAGS) {
+  for (const rule of [...IMPLIED_FLAGS, ...DUNGEON_PREP_FLAGS.map((d) => ({ when: [d.boss], set: d.flags }))]) {
     if (rule.when.some((f) => flags[f])) {
       for (const f of rule.set) {
         if (!flags[f]) flags[f] = true;

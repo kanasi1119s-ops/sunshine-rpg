@@ -4,6 +4,7 @@
  */
 import { EXTRA_BIOMES, paintExtraBackdrop, type ExtraBiome } from "./battle-backdrop-extra";
 import { getBackdropImage, hasBackdropImage } from "./battle-backdrop-images";
+import { DUNGEON_BIOME } from "../game/world/dungeon-parent";
 
 /** ship・magma・prophecy は、絵（`battle-backdrop-images.ts`）がある場所の種類。絵が読み込めないときは、描いた背景（船→海岸、火口→溶岩、予言の間→神殿）を使う。 */
 export type Biome = "grass" | "cave" | "desert" | "snow" | "ruins" | "ship" | "magma" | "prophecy" | ExtraBiome;
@@ -18,6 +19,9 @@ const BIOME_BY_PREFIX: Array<[string, Biome]> = [
 
 /** 地図の名前から、戦闘の背景を決める。 */
 export function biomeForMap(mapId: string): Biome {
+  if (DUNGEON_BIOME[mapId]) {
+    return DUNGEON_BIOME[mapId] as Biome;
+  }
   for (const [prefix, biome] of BIOME_BY_PREFIX) {
     if (mapId.startsWith(prefix)) {
       return biome;
