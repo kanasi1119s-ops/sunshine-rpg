@@ -6,11 +6,13 @@ import { getSpriteCanvas } from "../game/art/sprite";
  * マップ上の「物」（宝箱・木箱・階段・石碑・機械・祭壇・焦げ跡・荷馬車）の絵。1マス（16×16）に、
  * 縁取り・地の色・影の2〜3段で描く（ハイライトなし、光は左上）。種類は、物のIDに含まれる言葉で決める（`character-specs.ts`の OBJECT_WORDS）。
  */
-export type ObjectKind = "table" | "tansu" | "bed" | "shelf" | "beacon" | "boat" | "chest" | "crate" | "stairs" | "tablet" | "machine" | "altar" | "scorch" | "wagon" | "generic";
+export type ObjectKind = "table" | "tansu" | "bed" | "shelf" | "beacon" | "boat" | "chest" | "crate" | "stairs" | "tablet" | "machine" | "altar" | "scorch" | "wagon" | "sign" | "oldsign" | "generic";
 
 export function objectKindOf(id: string): ObjectKind {
   const words = id.split("-");
   const has = (...ws: string[]): boolean => words.some((w) => ws.includes(w));
+  if (has("signpost", "oldsign")) return "oldsign";
+  if (has("sign", "signboard")) return "sign";
   if (has("table")) return "table";
   if (has("tansu")) return "tansu";
   if (has("bed")) return "bed";
@@ -233,6 +235,56 @@ export function drawObjectMarker(ctx: CanvasRenderingContext2D, kind: ObjectKind
       for (let i = 0; i < 4; i++) {
         r(ctx, i % 2 ? "#6a6a78" : "#8a8a98", x + 2, top + 3 + i * 3, w - 4, 2);
         r(ctx, "#3a3a46", x + 2, top + 5 + i * 3, w - 4, 1);
+      }
+      return true;
+    }
+    case "sign":
+    case "oldsign": {
+      // 木の看板（16×16）: 2本の杭に板を打ちつけたもの。光は左上。古い看板は、色あせて、割れ・欠け・コケがあり、少し傾く。
+      const old = kind === "oldsign";
+      const wood = old ? "#a08a66" : "#c08e50";
+      const woodLight = old ? "#b8a47e" : "#dcae6c";
+      const woodDark = old ? "#6e5a40" : "#8e6232";
+      const grain = old ? "#86714f" : "#a67a40";
+      const post = old ? "#6a5238" : "#8a5a2c";
+      const postLight = old ? "#82684a" : "#aa7638";
+      const postDark = old ? "#4a3826" : "#664020";
+      const bx = x + 1;
+      const by = y + 1;
+      const bw = 14;
+      const bh = 7;
+      // 杭（板のうしろ。足もとは地面に刺さる）
+      for (const px of [x + 4, x + 10]) {
+        r(ctx, INK, px - 1, by + bh, 4, h - (by + bh - y) - 1);
+        r(ctx, post, px, by + bh, 2, h - (by + bh - y) - 2);
+        r(ctx, postLight, px, by + bh, 1, h - (by + bh - y) - 2);
+        r(ctx, postDark, px + 1, by + bh, 1, h - (by + bh - y) - 2);
+      }
+      // 板（ふち取り→地→上の明るい縁→下の影→木目）
+      r(ctx, INK, bx, by, bw, bh);
+      r(ctx, wood, bx + 1, by + 1, bw - 2, bh - 2);
+      r(ctx, woodLight, bx + 1, by + 1, bw - 2, 1);
+      r(ctx, woodDark, bx + 1, by + bh - 2, bw - 2, 1);
+      r(ctx, grain, bx + 8, by + 4, 4, 1);
+      // 釘
+      r(ctx, "#3a3a44", bx + 1, by + 1, 1, 1);
+      r(ctx, "#3a3a44", bx + bw - 2, by + 1, 1, 1);
+      // 彫った文字（横の短い線）
+      const ink = old ? "#7a6644" : "#6a4420";
+      r(ctx, ink, bx + 3, by + 2, 8, 1);
+      r(ctx, ink, bx + 3, by + 4, 6, 1);
+      if (old) {
+        // 割れ・欠け・コケ
+        r(ctx, INK, bx + 9, by + 1, 1, 2);
+        r(ctx, INK, bx + 10, by + 3, 1, 2);
+        r(ctx, INK, bx + bw - 2, by, 2, 2);
+        const moss = "#5f8a3c";
+        const mossDark = "#3f6428";
+        r(ctx, moss, bx + 2, by + 1, 4, 1);
+        r(ctx, mossDark, bx + 1, by + 2, 2, 1);
+        r(ctx, moss, bx + 6, by + 1, 2, 1);
+        r(ctx, moss, x + 4, y + h - 3, 2, 1);
+        r(ctx, mossDark, x + 10, y + h - 3, 2, 1);
       }
       return true;
     }
