@@ -60,8 +60,10 @@ export function renderPauseMenu(
     ctx.fillStyle = "#2a2140";
     ctx.fillRect(12, y - 2, 28, 28);
     if (icon) {
-      ctx.imageSmoothingEnabled = false;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
       ctx.drawImage(icon, 12, y - 2, 28, 28);
+      ctx.imageSmoothingEnabled = false;
     }
     ctx.strokeStyle = "#c89a48";
     ctx.strokeRect(11.5, y - 2.5, 29, 29);

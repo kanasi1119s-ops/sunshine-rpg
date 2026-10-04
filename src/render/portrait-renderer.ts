@@ -1,4 +1,5 @@
-import { getPortraitIcon } from "./portrait-icons";
+import { getPortraitIcon, hasPortraitIcon } from "./portrait-icons";
+import { drawSmooth } from "./smooth-draw";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
 import {
@@ -45,23 +46,30 @@ export function renderPortraitByName(
 ): boolean {
   // 人間がくれた顔アイコン（仲間6人）があれば、それを使う。
   const icon = getPortraitIcon(speaker);
+  if (!icon && hasPortraitIcon(speaker)) {
+    // 読み込み中は、前の版の顔を出さず、枠だけ出す
+    ctx.fillStyle = "#2a2140";
+    ctx.fillRect(x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
+    return true;
+  }
   if (icon) {
     ctx.fillStyle = "#2a2140";
     ctx.fillRect(x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
-    ctx.imageSmoothingEnabled = false;
+    // 画面は論理の2〜4倍の細かさで描いている（`canvas.ts`）ので、大きめの絵（256×256）をなめらかに縮めて描くと、顔がくっきり見える
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
     ctx.drawImage(icon, x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
+    ctx.imageSmoothingEnabled = false;
     return true;
   }
   // 大きな立ち絵（256×256）がある人物は、頭のあたりを切り出して顔グラフィックにする。
   const full = getSpriteCanvas(`char:${speaker}`, SPRITE_DATA);
   if (full) {
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
     ctx.fillStyle = "#2a2140";
     ctx.fillRect(x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
     // 104×104の立ち絵: 頭は中央上（x 32〜72、y 0〜46）。256×256の古い絵は頭の位置が違う
     const crop = full.width === 104 ? [32, 0, 40, 46] : [90, 8, 76, 90];
-    ctx.drawImage(full, crop[0], crop[1], crop[2], crop[3], x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
+    drawSmooth(ctx, full, crop[0], crop[1], crop[2], crop[3], x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
     return true;
   }
   const spec = PORTRAITS[speaker];

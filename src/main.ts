@@ -1265,7 +1265,8 @@ const loop = createGameLoop({
     }
 
     const actionPressed = actionButton.consume();
-    if (actionPressed) {
+    // 決定の音は、メニューを選ぶとき（タイトル・つよさ・買い物・ジョブ・戦闘）だけ。会話を送るたび・歩いて調べるたびに鳴ると、うるさいので鳴らさない
+    if (actionPressed && (title.open || pauseMenu.open || shopMenu.open || jobMenu.open || battle)) {
       audio.playSe(seOf("confirm"));
     }
 

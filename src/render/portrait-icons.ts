@@ -50,3 +50,18 @@ export function getPortraitIcon(speaker: string, small = false): HTMLImageElemen
   }
   return img.complete && img.naturalWidth > 0 ? img : null;
 }
+
+/** 顔アイコンの絵がある人か（まだ読み込めていなくても true）。読み込み中に、前の版の顔が一瞬出ないように使う。 */
+export function hasPortraitIcon(speaker: string): boolean {
+  return speaker in PORTRAIT_ICON_URLS;
+}
+
+/** ゲームを開いたときに、顔アイコンを先に読み込んでおく（会話の最初の一瞬に前の絵が出ないように）。 */
+export function preloadPortraitIcons(): void {
+  for (const name of Object.keys(PORTRAIT_ICON_URLS)) {
+    getPortraitIcon(name);
+    getPortraitIcon(name, true);
+  }
+}
+
+preloadPortraitIcons();
