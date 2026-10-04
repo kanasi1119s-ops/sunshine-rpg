@@ -2139,75 +2139,131 @@
  },
  {
   "id": "god-1",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a serene colossal goddess of water and harvest, robes of flowing living water, wheat stalks in her long hair, a broken glowing ring halo",
+  "status": "done",
   "key": "boss:god-1",
   "kind": "boss",
   "name": "恵みの残照（女神）",
-  "zone": "8神"
+  "zone": "8神",
+  "shape": "tall",
+  "tone": [
+   120,
+   150,
+   160
+  ],
+  "draft": "god-1_x0"
  },
  {
   "id": "god-2",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a giant nightmarish locust god, segmented spiked carapace, six barbed legs, ragged moth wings raised, a cluster of red eyes, a cracked glowing ring on its back",
+  "status": "done",
   "key": "boss:god-2",
   "kind": "boss",
   "name": "理不尽の羽音（蟲神）",
-  "zone": "8神"
+  "zone": "8神",
+  "shape": "big",
+  "tone": [
+   105,
+   95,
+   70
+  ],
+  "draft": "god-2_0"
  },
  {
   "id": "god-3",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a towering horned forge god of molten iron, a huge furnace jaw, heavy chains, a cracked glowing ring set in its chest",
+  "status": "done",
   "key": "boss:god-3",
   "kind": "boss",
   "name": "坩堝の顎（鬼神）",
-  "zone": "8神"
+  "zone": "8神",
+  "shape": "big",
+  "tone": [
+   120,
+   70,
+   50
+  ],
+  "draft": "god-3_0"
  },
  {
   "id": "god-4",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a tall faceless deity draped in long sand-colored veils, a dark empty hollow where the face should be, a fading broken golden ring behind its head",
+  "status": "done",
   "key": "boss:god-4",
   "kind": "boss",
   "name": "在らざる歌（無神）",
-  "zone": "8神"
+  "zone": "8神",
+  "shape": "tall",
+  "tone": [
+   160,
+   140,
+   105
+  ],
+  "draft": "god-4_0"
  },
  {
   "id": "god-5",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a radiant crystal knight god of oaths, translucent white and blue crystal armor, a great sword, a pure glowing ring halo",
+  "status": "done",
   "key": "boss:god-5",
   "kind": "boss",
   "name": "透き徹る誓い（純神）",
-  "zone": "8神"
+  "zone": "8神",
+  "shape": "tall",
+  "tone": [
+   170,
+   185,
+   200
+  ],
+  "draft": "god-5_0"
  },
  {
   "id": "god-6",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a colossal undead warrior god in frosted ancient armor, broken swords and spears stuck in its body, chains, a broken ring on its back",
+  "status": "done",
   "key": "boss:god-6",
   "kind": "boss",
   "name": "不敗の咎人（武神）",
-  "zone": "8神"
+  "zone": "8神",
+  "shape": "tall",
+  "tone": [
+   120,
+   125,
+   135
+  ],
+  "draft": "god-6_0"
  },
  {
   "id": "god-7",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "an eyeless alien sky god, a long body of floating stone plates and clouds, many thin arms, a ring of light around its head",
+  "status": "done",
   "key": "boss:god-7",
   "kind": "boss",
   "name": "境界を見ぬ者（異神）",
-  "zone": "8神"
+  "zone": "8神",
+  "shape": "float",
+  "tone": [
+   130,
+   130,
+   170
+  ],
+  "draft": "god-7_1"
  },
  {
   "id": "god-8",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a gaunt black-robed death god whose body is a great silent bronze bell, long skeletal hands, candle flames, a broken ring halo",
+  "status": "done",
   "key": "boss:god-8",
   "kind": "boss",
   "name": "無音の弔鐘（冥神）",
-  "zone": "8神"
+  "zone": "8神",
+  "shape": "tall",
+  "tone": [
+   80,
+   70,
+   70
+  ],
+  "draft": "god-8_1"
  },
  {
   "id": "tower2-guard",

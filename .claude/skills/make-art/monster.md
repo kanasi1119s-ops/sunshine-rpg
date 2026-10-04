@@ -40,7 +40,7 @@ python3 tools/pixel-art/ai-gen/monster_batch.py pick <ID> <番号> [--mirror]   
 | big | ゴーレム・機械・ボスの巨体（ボスの既定） |
 
 - `tone` は体のおおまかな色 `[r,g,b]`。暗すぎ・鮮やかすぎにしない（AIがその色をそのまま平らに塗ってしまう。中くらいの明るさ・少しくすんだ色）。
-- 見比べ用の1枚には、下絵ごとに「全身OK」（緑）か「切れ:上下」「ばらばら」（赤）が出る（`fullbody.py`: 体と絵の端のあいだに2%以上の余白、体のかたまりが85%以上）。**赤の下絵は使わない**（`pick` も止める）。
+- 見比べ用の1枚には、下絵ごとに「全身OK」（緑）か「切れ:上下」「ばらばら」（赤）が出る（`fullbody.py`: 体と絵の端のあいだに2%以上の余白、体のかたまりが85%以上、額縁やポスターのような四角い絵になっていない）。`extend` は、端が白い背景なら白い余白を足すだけ、体がはみ出していればAIで外側を描き足す。**赤の下絵は使わない**（`pick` も止める）。
 - 1体につき3枚ほど描いて、全身OKの中から、形がくずれていない・既存作品に似ていないものを目で選ぶ。顔が左向きなら `--mirror`。
 - 手で行うとき: `make_jobs.py monster jobs.json "名前:説明"` のあと、jobs.json の各行に `"layout": {"shape": "ground", "tone": [110,100,95], "strength": 0.9}` を足して `QUALITY=real MODEL=stable-diffusion-v1-5/stable-diffusion-v1-5 VARIANT=fp16 STYLE=painterly python3 generate.py jobs.json`。
 - **リアルな下絵**（人間の指示、2026-10-04「もっとリアルな下絵がいい」）: `monster_batch.py` は `QUALITY=real` で描く（速く描く設定 LCM を使わず、22〜24歩・cfg 7）。LCMでは細かさと「リアル」「避ける言葉」が効かず、クリップアートのような平らな絵になっていた。指示文の雛形も「highly detailed realistic fantasy creature, intricate ... texture, cinematic lighting」にした。

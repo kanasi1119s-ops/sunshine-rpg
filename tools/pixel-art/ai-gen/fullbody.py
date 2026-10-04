@@ -50,7 +50,12 @@ def check(path):
     res["fill"] = round(float(m.sum() / (w * h)), 3)
     res["margin"] = {k: round(float(v), 3) for k, v in mg.items()}
     res["cut"] = [k for k, v in mg.items() if v < MARGIN]
-    res["ok"] = not res["cut"] and res["parts"] >= MAIN_PART
+    # 額縁に入った絵・ポスターのように描かれたもの: 体の形が、ほぼ四角（または丸）でぎっしり詰まっている
+    bh, bw = ys.max() - ys.min() + 1, xs.max() - xs.min() + 1
+    box_fill = float(m.sum() / (bh * bw))
+    res["box_fill"] = round(box_fill, 3)
+    res["framed"] = bool(box_fill > 0.9) or bool (box_fill > 0.76 and abs(bh - bw) < 0.06 * max(bh, bw))
+    res["ok"] = bool(not res["cut"] and res["parts"] >= MAIN_PART and not res["framed"])
     json.dump(res, open(path + ".check.json", "w"), ensure_ascii=False)
     return res
 
@@ -63,11 +68,30 @@ def label(res):
         msg.append("切れ:" + "".join(res["cut"]))
     if res.get("parts", 1) < MAIN_PART:
         msg.append("ばらばら")
+    if res.get("framed"):
+        msg.append("額縁・四角い絵")
     return " ".join(msg)
 
 
+def pad_if_clear(src, dst, pad=0.08):
+    """体が端に「近い」だけで、端そのものは白い背景のとき（はみ出していない）は、白い余白を足すだけで直す（AIを使わない）"""
+    im = Image.open(src).convert("RGB")
+    a = np.asarray(im).astype(np.int16)
+    edges = np.concatenate([a[:3].reshape(-1, 3), a[-3:].reshape(-1, 3), a[:, :3].reshape(-1, 3), a[:, -3:].reshape(-1, 3)])
+    if (edges.min(axis=1) > 225).mean() < 0.97:
+        return False                      # 端に体がかかっている → 描き足しが要る
+    w, h = im.size; p = int(round(max(w, h) * pad))
+    bg = tuple(int(v) for v in np.median(edges, axis=0))
+    out = Image.new("RGB", (w + 2 * p, h + 2 * p), bg); out.paste(im, (p, p))
+    out.resize((w, h), Image.LANCZOS).save(dst)
+    return True
+
+
 def extend(src, dst, desc, scale=0.68, seed=11):
-    """切れた下絵を小さく置き直し、外側だけを描き足す（元の部分はそのまま）。"""
+    """切れた下絵を直す。端が白い背景なら余白を足すだけ。体が端にかかっていたら、小さく置き直して外側だけを描き足す（元の部分はそのまま）。"""
+    if pad_if_clear(src, dst):
+        print("白い余白を足しました（AIは使っていない）")
+        return
     import torch
     from diffusers import StableDiffusionInpaintPipeline, LCMScheduler
     torch.set_num_threads(2)
@@ -75,7 +99,12 @@ def extend(src, dst, desc, scale=0.68, seed=11):
     s = round(512 * scale)
     small = im.resize((s, s), Image.LANCZOS)
     # 切れている側に余白を多く取る（例: 下が切れていれば、絵を上に寄せる）
-    cut = check(src).get("cut", [])
+    # 切れている向きは、保存済みの調べた結果を使う（ここで切り抜きAIを読み込むと、描き足しのAIと合わせてメモリが足りなくなる）
+    import os
+    cut = json.load(open(src + ".check.json")).get("cut", []) if os.path.exists(src + ".check.json") else check(src).get("cut", [])
+    global _SESSION
+    _SESSION = None
+    import gc; gc.collect()
     def place(lo, hi):   # lo＝左（上）が切れている、hi＝右（下）が切れている
         if hi and not lo:
             return 6                 # 右（下）に描き足す余白を取る
@@ -83,8 +112,8 @@ def extend(src, dst, desc, scale=0.68, seed=11):
             return 512 - s - 6       # 左（上）に描き足す余白を取る
         return (512 - s) // 2
     ox, oy = place("左" in cut, "右" in cut), place("上" in cut, "下" in cut)
-    # 余白は、元の絵の縁の色を引きのばした色で埋めておく（描き足しが背景になじむ）
-    canvas = im.resize((512, 512)).filter(ImageFilter.GaussianBlur(40))
+    # 余白は白い背景にしておく（元の絵をぼかして敷くと、額縁に入った絵のように描かれてしまった）
+    canvas = Image.new("RGB", (512, 512), (245, 244, 241))
     canvas.paste(small, (ox, oy))
     m = np.full((512, 512), 255, np.uint8)
     m[oy + 4:oy + s - 4, ox + 4:ox + s - 4] = 0
