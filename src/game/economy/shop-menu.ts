@@ -1,11 +1,11 @@
-import type { EquipmentItemData } from "../items/types";
-import { shopStock } from "./shop";
+import type { ItemData } from "../items/types";
+import { shopItems } from "./shop";
 
 /** お店の画面の状態（上下で選び、決定で買う、Xで閉じる）。買う処理そのものは main.ts が `buyItem` で行う。 */
 export interface ShopMenuState {
   open: boolean;
   shopId: string;
-  items: EquipmentItemData[];
+  items: ItemData[];
   cursor: number;
   message: string | null;
 }
@@ -15,7 +15,7 @@ export function createShopMenuState(): ShopMenuState {
 }
 
 export function openShopMenu(shopId: string): ShopMenuState {
-  const items = shopStock(shopId);
+  const items = shopItems(shopId);
   return { open: items.length > 0, shopId, items, cursor: 0, message: null };
 }
 

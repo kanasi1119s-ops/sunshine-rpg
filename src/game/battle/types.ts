@@ -69,6 +69,8 @@ export interface BattleItem {
   id: string;
   name: string;
   healAmount: number;
+  /** MPを回復する量（省略は0）。 */
+  mpAmount?: number;
 }
 
 export type BattleAction =

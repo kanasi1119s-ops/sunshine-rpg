@@ -189,6 +189,7 @@ function renderBattleBody(
   screenWidth: number,
   screenHeight: number,
   effectView?: BattleEffectView | null,
+  itemsAvailable = true,
 ): void {
   ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = "#1c1030";
@@ -330,7 +331,10 @@ function renderBattleBody(
     ctx.fillText(`${actor?.name ?? ""} の コマンド`, 8, boxY + 6);
     COMMANDS.forEach((command, index) => {
       const cursor = index === uiState.cursor ? "▶" : " ";
+      const dim = command.kind === "item" && !itemsAvailable;
+      if (dim) ctx.fillStyle = "#807890";
       ctx.fillText(`${cursor} ${command.label}`, 16 + (index % 3) * 90, boxY + 20 + Math.floor(index / 3) * LINE_HEIGHT);
+      if (dim) ctx.fillStyle = "#f0f0f0";
     });
     return;
   }
@@ -345,6 +349,20 @@ function renderBattleBody(
       const index = page * perPage + i;
       const cursor = index === uiState.cursor ? "▶" : " ";
       ctx.fillText(`${cursor} ${skill.name} MP${skill.mpCost}`, 16 + (i % 2) * 140, boxY + 20 + Math.floor(i / 2) * LINE_HEIGHT);
+    });
+    return;
+  }
+
+  if (uiState.kind === "itemList") {
+    const perPage = 6;
+    const page = Math.floor(uiState.cursor / perPage);
+    const pages = Math.ceil(uiState.stacks.length / perPage);
+    ctx.fillText(pages > 1 ? `どのどうぐ？（${page + 1}/${pages}）` : "どのどうぐ？", 8, boxY + 6);
+    uiState.stacks.slice(page * perPage, (page + 1) * perPage).forEach((stack, i) => {
+      const index = page * perPage + i;
+      const cursor = index === uiState.cursor ? "▶" : " ";
+      const count = Number.isFinite(stack.quantity) ? `×${stack.quantity}` : "";
+      ctx.fillText(`${cursor} ${stack.item.name} ${count}`, 16 + (i % 2) * 140, boxY + 20 + Math.floor(i / 2) * LINE_HEIGHT);
     });
     return;
   }
@@ -390,11 +408,12 @@ export function renderBattle(
   screenWidth: number,
   screenHeight: number,
   effectView?: BattleEffectView | null,
+  itemsAvailable = true,
 ): void {
   ctx.save();
   if (effectView && effectView.effect.kind === "shake") {
     ctx.translate(shakeOffset(effectView.elapsedMs / effectView.effect.duration, effectView.elapsedMs), 0);
   }
-  renderBattleBody(ctx, battleState, uiState, screenWidth, screenHeight, effectView);
+  renderBattleBody(ctx, battleState, uiState, screenWidth, screenHeight, effectView, itemsAvailable);
   ctx.restore();
 }

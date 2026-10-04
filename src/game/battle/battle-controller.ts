@@ -21,6 +21,8 @@ export const COMMANDS: { kind: CommandKind; label: string }[] = [
 export type BattleUiState =
   | { kind: "command"; actorId: string; cursor: number }
   | { kind: "skillList"; actorId: string; skills: Skill[]; cursor: number }
+  /** 「どうぐ」を選んだときの一覧（持っている回復アイテムと数）。 */
+  | { kind: "itemList"; actorId: string; stacks: ItemStack[]; cursor: number }
   | {
       kind: "target";
       actorId: string;
@@ -29,9 +31,17 @@ export type BattleUiState =
       cursor: number;
       /** 「とくぎ」のとき、選んだ特技。 */
       skill?: Skill;
+      /** 「どうぐ」のとき、選んだ道具。 */
+      item?: BattleItem;
     }
   | { kind: "message"; text: string }
   | { kind: "finished"; outcome: BattleOutcome };
+
+/** 持っている回復アイテム1種類と、あと何個使えるか。 */
+export interface ItemStack {
+  item: BattleItem;
+  quantity: number;
+}
 
 /** 使える人がいない場合の最後の手段。何も設定し忘れたときに戦闘が壊れないようにするための保険。 */
 const FALLBACK_SKILL: Skill = { id: "fallback", name: "とくぎ", mpCost: 0, powerMultiplier: 1 };
@@ -39,7 +49,10 @@ const FALLBACK_SKILL: Skill = { id: "fallback", name: "とくぎ", mpCost: 0, po
 export interface BattleControllerOptions {
   /** 味方1人ごとのとくぎ（キャラクターIDをキーにする）。複数人パーティでは各キャラが別のとくぎを持つ。 */
   skills: Record<string, Skill>;
-  item: BattleItem;
+  /** 数に限りのない道具（`items` を渡さないときの昔のしくみ。テスト用）。 */
+  item?: BattleItem;
+  /** 持っている回復アイテムと数。数が尽きた道具は選べない。使った数は `getItemUsage()` で受け取る。 */
+  items?: ItemStack[];
   /** ジョブで覚えた特技（キャラクターIDをキーにする）。あれば「とくぎ」を選んだとき一覧が出る。 */
   extraSkills?: Record<string, Skill[]>;
 }
@@ -52,7 +65,8 @@ export class BattleController {
   private state: BattleState;
   private readonly rng: () => number;
   private readonly skills: Record<string, Skill>;
-  private readonly item: BattleItem;
+  private readonly stacks: ItemStack[];
+  private readonly used: Record<string, number> = {};
   private readonly extraSkills: Record<string, Skill[]>;
 
   private pendingActions: BattleAction[] = [];
@@ -70,7 +84,7 @@ export class BattleController {
     this.state = createBattleState(party, enemies);
     this.rng = rng;
     this.skills = options.skills;
-    this.item = options.item;
+    this.stacks = options.items ?? (options.item ? [{ item: options.item, quantity: Infinity }] : []);
     this.extraSkills = options.extraSkills ?? {};
     this.turnQueue = this.state.party.filter(isAlive).map((c) => c.id);
     this.phase = this.currentCommandPhase();
@@ -84,12 +98,31 @@ export class BattleController {
     return this.phase;
   }
 
+  /** 戦闘で使った回復アイテムの数（IDごと）。終わったあと、持ち物から引く。 */
+  getItemUsage(): Record<string, number> {
+    return { ...this.used };
+  }
+
+  /** いま使える回復アイテムがあるか（「どうぐ」を選べるか）。 */
+  hasUsableItems(): boolean {
+    return this.remainingStacks().length > 0;
+  }
+
+  private remainingStacks(): ItemStack[] {
+    return this.stacks
+      .map((s) => ({ item: s.item, quantity: s.quantity - (this.used[s.item.id] ?? 0) }))
+      .filter((s) => s.quantity > 0);
+  }
+
   moveCursor(delta: number): void {
     if (this.phase.kind === "command") {
       const count = COMMANDS.length;
       this.phase = { ...this.phase, cursor: (this.phase.cursor + delta + count) % count };
     } else if (this.phase.kind === "skillList") {
       const count = this.phase.skills.length;
+      this.phase = { ...this.phase, cursor: (this.phase.cursor + delta + count) % count };
+    } else if (this.phase.kind === "itemList") {
+      const count = this.phase.stacks.length;
       this.phase = { ...this.phase, cursor: (this.phase.cursor + delta + count) % count };
     } else if (this.phase.kind === "target") {
       const count = this.phase.candidateIds.length;
@@ -121,12 +154,19 @@ export class BattleController {
       this.phase = this.targetPhase(actorId, "skill", skill);
       return;
     }
+    if (this.phase.kind === "itemList") {
+      const stack = this.phase.stacks[this.phase.cursor];
+      if (stack) {
+        this.phase = this.targetPhase(this.phase.actorId, "item", undefined, stack.item);
+      }
+      return;
+    }
     if (this.phase.kind === "target") {
       const targetId = this.phase.candidateIds[this.phase.cursor];
       if (!targetId) {
         return;
       }
-      this.pushAction(this.phase.actorId, this.phase.commandKind, targetId, this.phase.skill);
+      this.pushAction(this.phase.actorId, this.phase.commandKind, targetId, this.phase.skill, this.phase.item);
       this.phase = this.advanceAfterAction();
       return;
     }
@@ -142,8 +182,16 @@ export class BattleController {
    * コマンドで押すと、前の人が選んだ行動を取り消して、その人の選び直しに戻る。ログ表示中・終了後は何もしない。
    */
   cancel(): void {
+    if (this.phase.kind === "itemList") {
+      this.phase = { kind: "command", actorId: this.phase.actorId, cursor: 0 };
+      return;
+    }
     if (this.phase.kind === "target") {
       const { actorId, commandKind } = this.phase;
+      if (commandKind === "item") {
+        this.phase = { kind: "itemList", actorId, stacks: this.remainingStacks(), cursor: 0 };
+        return;
+      }
       const extras = this.extraSkills[actorId] ?? [];
       if (commandKind === "skill" && extras.length > 0) {
         const base = this.skills[actorId] ?? FALLBACK_SKILL;
@@ -159,6 +207,9 @@ export class BattleController {
     }
     if (this.phase.kind === "command" && this.pendingActions.length > 0) {
       const last = this.pendingActions.pop();
+      if (last && last.type === "item") {
+        this.used[last.item.id] = Math.max(0, (this.used[last.item.id] ?? 0) - 1);
+      }
       if (last) {
         this.turnQueue.unshift(last.actorId);
         this.phase = { kind: "command", actorId: last.actorId, cursor: 0 };
@@ -181,15 +232,22 @@ export class BattleController {
         return;
       }
     }
+    if (commandKind === "item") {
+      const stacks = this.remainingStacks();
+      if (stacks.length > 0) {
+        this.phase = { kind: "itemList", actorId, stacks, cursor: 0 };
+      }
+      return;
+    }
     this.phase = this.targetPhase(actorId, commandKind);
   }
 
-  private targetPhase(actorId: string, commandKind: "attack" | "skill" | "item", skill?: Skill): BattleUiState {
+  private targetPhase(actorId: string, commandKind: "attack" | "skill" | "item", skill?: Skill, item?: BattleItem): BattleUiState {
     const candidateIds =
       commandKind === "item" || skill?.effect === "heal" || skill?.effect === "buff"
         ? this.state.party.filter(isAlive).map((c) => c.id)
         : this.state.enemies.filter(isAlive).map((c) => c.id);
-    return { kind: "target", actorId, commandKind, candidateIds, cursor: 0, skill };
+    return { kind: "target", actorId, commandKind, candidateIds, cursor: 0, skill, item };
   }
 
   private pushAction(
@@ -197,6 +255,7 @@ export class BattleController {
     commandKind: "attack" | "skill" | "item",
     targetId: string,
     chosenSkill?: Skill,
+    chosenItem?: BattleItem,
   ): void {
     if (commandKind === "attack") {
       this.pendingActions.push({ type: "attack", actorId, targetId });
@@ -204,7 +263,10 @@ export class BattleController {
       const skill = chosenSkill ?? this.skills[actorId] ?? FALLBACK_SKILL;
       this.pendingActions.push({ type: "skill", actorId, targetId, skill });
     } else {
-      this.pendingActions.push({ type: "item", actorId, targetId, item: this.item });
+      const item = chosenItem ?? this.stacks[0]?.item;
+      if (!item) return;
+      this.used[item.id] = (this.used[item.id] ?? 0) + 1;
+      this.pendingActions.push({ type: "item", actorId, targetId, item });
     }
   }
 

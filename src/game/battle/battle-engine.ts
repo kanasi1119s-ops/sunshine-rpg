@@ -268,8 +268,14 @@ export function applyAction(state: BattleState, action: BattleAction, rng: () =>
       if (!target) {
         return next;
       }
+      const hpBefore = target.hp;
+      const mpBefore = target.mp;
       target.hp = Math.min(target.maxHp, target.hp + action.item.healAmount);
-      next.log.push(`${nextActor.name} は ${action.item.name} を使った。${target.name} のHPが回復した`);
+      target.mp = Math.min(target.maxMp, target.mp + (action.item.mpAmount ?? 0));
+      const parts: string[] = [];
+      if (action.item.healAmount > 0) parts.push(`HPが ${target.hp - hpBefore} 回復した`);
+      if ((action.item.mpAmount ?? 0) > 0) parts.push(`MPが ${target.mp - mpBefore} 回復した`);
+      next.log.push(`${nextActor.name} は ${action.item.name} を使った。${target.name} の${parts.join("、")}`);
       return next;
     }
 

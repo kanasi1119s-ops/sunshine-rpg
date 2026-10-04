@@ -3,7 +3,7 @@
  * 画面遷移だけを持つ。実際のセーブやタイトルへ戻る処理は main.ts が行う。
  */
 export type PauseScreen = "main" | "status" | "items";
-export type PauseAction = "save" | "title" | "equip" | "keys" | null;
+export type PauseAction = "save" | "title" | "equip" | "keys" | "use" | "magic" | null;
 
 export interface PauseMenuState {
   open: boolean;
@@ -11,9 +11,11 @@ export interface PauseMenuState {
   cursor: number;
 }
 
-export const PAUSE_ITEMS: { id: "status" | "items" | "equip" | "keys" | "save" | "title" | "close"; label: string }[] = [
+export const PAUSE_ITEMS: { id: "status" | "items" | "use" | "magic" | "equip" | "keys" | "save" | "title" | "close"; label: string }[] = [
   { id: "status", label: "つよさ" },
   { id: "items", label: "もちもの" },
+  { id: "use", label: "どうぐ" },
+  { id: "magic", label: "まほう" },
   { id: "equip", label: "そうび" },
   { id: "keys", label: "そうさ設定" },
   { id: "save", label: "セーブする" },
@@ -48,6 +50,10 @@ export function confirmPauseMenu(state: PauseMenuState): { state: PauseMenuState
       return { state: { ...state, screen: "status" }, action: null };
     case "items":
       return { state: { ...state, screen: "items" }, action: null };
+    case "use":
+      return { state, action: "use" };
+    case "magic":
+      return { state, action: "magic" };
     case "equip":
       return { state, action: "equip" };
     case "keys":

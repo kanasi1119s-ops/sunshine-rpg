@@ -4,6 +4,7 @@ import { canEquip } from "../items/weapon-types";
 import { SAMPLE_ITEMS_BY_ID } from "../battle/sample-battle";
 import { spendGold } from "./gold";
 import { TREASURE_ITEMS_BY_ID } from "./treasure";
+import { CONSUMABLES_BY_ID, MAX_CONSUMABLE_STACK, consumableStock } from "../items/consumables";
 
 /**
  * 町のお店（武具屋）で買える装備。町の順（第0章の灯里〜灯芯都）に1段ずつ強くなり、
@@ -61,7 +62,7 @@ export const SHOP_ITEMS_BY_ID: Record<string, EquipmentItemData> = Object.fromEn
 );
 
 /** 戦闘・つよさ画面で使う、すべての品物（最初の剣＋店の装備）。 */
-export const ALL_ITEMS_BY_ID: Record<string, ItemData> = { ...SAMPLE_ITEMS_BY_ID, ...SHOP_ITEMS_BY_ID, ...TREASURE_ITEMS_BY_ID };
+export const ALL_ITEMS_BY_ID: Record<string, ItemData> = { ...SAMPLE_ITEMS_BY_ID, ...SHOP_ITEMS_BY_ID, ...TREASURE_ITEMS_BY_ID, ...CONSUMABLES_BY_ID };
 
 /** 店ID: `tier-1`〜`tier-9`。並ぶ品は、その段の、武器（剣・短剣・杖・弓・斧・槍の6種）・防具・飾り。 */
 export function shopStock(shopId: string): EquipmentItemData[] {
@@ -71,6 +72,12 @@ export function shopStock(shopId: string): EquipmentItemData[] {
     return [];
   }
   return tierItems(tier - 1);
+}
+
+/** お店の画面に並べる品。店ID `tier-N` は装備、`items-N` は回復アイテム（道具屋）。 */
+export function shopItems(shopId: string): ItemData[] {
+  const itemsShop = /^items-(\d+)$/.exec(shopId);
+  return itemsShop ? consumableStock(Number(itemsShop[1])) : shopStock(shopId);
 }
 
 function bonusTotal(item: EquipmentItemData): number {
@@ -117,6 +124,16 @@ export function purchaseItem(itemId: string, gold: number): PurchaseResult {
     return { ok: false, message: "灯貨が足りない" };
   }
   return { ok: true, gold: left, item, message: `${item.name}を買った！` };
+}
+
+/** 回復アイテムを1つ買う（所持数が上限なら買えない）。 */
+export function purchaseConsumable(itemId: string, gold: number, owned: number): { ok: true; gold: number; message: string } | { ok: false; message: string } {
+  const item = CONSUMABLES_BY_ID[itemId];
+  if (!item) return { ok: false, message: "その品は、売っていない" };
+  if (owned >= MAX_CONSUMABLE_STACK) return { ok: false, message: `${item.name}は、これ以上もてない` };
+  const left = spendGold(gold, item.price);
+  if (left === null) return { ok: false, message: "灯貨が足りない" };
+  return { ok: true, gold: left, message: `${item.name}を買った！` };
 }
 
 /** 装備のボーナスの説明（例: 「こうげき+9」）。 */

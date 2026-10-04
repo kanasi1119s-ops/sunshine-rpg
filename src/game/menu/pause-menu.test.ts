@@ -21,23 +21,24 @@ describe("ゲーム中のメニュー", () => {
 
   it("「セーブする」は動作を返して開いたまま。「タイトルへ戻る」は動作を返して閉じる。「とじる」は何も返さず閉じる", () => {
     const at = (index: number) => movePauseCursor(openPauseMenu(), index);
+    const idx = (id: string): number => PAUSE_ITEMS.findIndex((i) => i.id === id);
     const items = confirmPauseMenu(at(1));
     expect(items.state.screen).toBe("items");
     expect(confirmPauseMenu(items.state).state.screen).toBe("main");
     expect(backPauseMenu(items.state).screen).toBe("main");
-    const equip = confirmPauseMenu(at(2));
+    const equip = confirmPauseMenu(at(idx("equip")));
     expect(equip.action).toBe("equip");
     expect(equip.state.open).toBe(true);
-    const keys = confirmPauseMenu(at(3));
+    const keys = confirmPauseMenu(at(idx("keys")));
     expect(keys.action).toBe("keys");
     expect(keys.state.open).toBe(true);
-    const save = confirmPauseMenu(at(4));
+    const save = confirmPauseMenu(at(idx("save")));
     expect(save.action).toBe("save");
     expect(save.state.open).toBe(true);
-    const title = confirmPauseMenu(at(5));
+    const title = confirmPauseMenu(at(idx("title")));
     expect(title.action).toBe("title");
     expect(title.state.open).toBe(false);
-    const close = confirmPauseMenu(at(6));
+    const close = confirmPauseMenu(at(idx("close")));
     expect(close.action).toBeNull();
     expect(close.state.open).toBe(false);
   });

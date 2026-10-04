@@ -11,6 +11,10 @@ export interface ConsumableItemData {
   category: "consumable";
   price: number;
   healAmount: number;
+  /** MPを回復する量（省略は0）。 */
+  mpAmount?: number;
+  /** 説明（もちもの・店に出す）。 */
+  description?: string;
 }
 
 export interface EquipmentItemData {
@@ -26,5 +30,5 @@ export interface EquipmentItemData {
 export type ItemData = ConsumableItemData | EquipmentItemData;
 
 export function toBattleItem(item: ConsumableItemData): BattleItem {
-  return { id: item.id, name: item.name, healAmount: item.healAmount };
+  return { id: item.id, name: item.name, healAmount: item.healAmount, mpAmount: item.mpAmount };
 }

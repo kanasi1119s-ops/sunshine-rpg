@@ -1,4 +1,5 @@
 import { describeBonus } from "../game/economy/shop";
+import { getQuantity, type Inventory } from "../game/items/inventory";
 import type { ShopMenuState } from "../game/economy/shop-menu";
 import type { EquipmentSlots } from "../game/items/equipment";
 import { WEAPON_LABEL, wielderName } from "../game/items/weapon-types";
@@ -13,6 +14,7 @@ export function renderShop(
   state: ShopMenuState,
   gold: number,
   equipment: EquipmentSlots,
+  inventory: Inventory,
   screenWidth: number,
   screenHeight: number,
 ): void {
@@ -24,17 +26,22 @@ export function renderShop(
   drawWindow(ctx, 6, 6, screenWidth - 12, screenHeight - 12);
   ctx.font = "10px monospace";
   ctx.fillStyle = "#f2c14e";
-  ctx.fillText("武具屋（決定で買う／Xで出る）", 14, 12);
+  ctx.fillText(state.shopId.startsWith("items-") ? "道具屋（決定で買う／Xで出る）" : "武具屋（決定で買う／Xで出る）", 14, 12);
   ctx.fillText(`灯貨 ${gold}`, screenWidth - 90, 12);
   state.items.forEach((item, i) => {
     const y = 25 + i * 21;
-    const owned = equipment[item.category] === item.id;
+    const consumable = item.category === "consumable";
+    const owned = !consumable && equipment[item.category] === item.id;
     ctx.fillStyle = i === state.cursor ? "#f2c14e" : "#f0f0f0";
     ctx.fillText(`${i === state.cursor ? "▶" : "　"}`, 14, y);
     drawIcon(ctx, iconForItem(item.id), 26, y - 2, 16);
     ctx.fillStyle = i === state.cursor ? "#f2c14e" : "#f0f0f0";
-    ctx.fillText(`${item.name}${owned ? "（装備中）" : ""}`, 46, y);
+    ctx.fillText(`${item.name}${owned ? "（装備中）" : ""}${consumable ? `　もっている ${getQuantity(inventory, item.id)}` : ""}`, 46, y);
     ctx.fillStyle = gold >= item.price ? "#c8e8c8" : "#a08080";
+    if (item.category === "consumable") {
+      ctx.fillText(`${item.description ?? ""}　${item.price}灯貨`, 46, y + 10);
+      return;
+    }
     const user = item.category === "weapon" ? `　［${WEAPON_LABEL[item.weaponType ?? "sword"]}：${wielderName(item.weaponType ?? "sword")}］` : "";
     ctx.fillText(`${describeBonus(item)}　${item.price}灯貨${user}`, 46, y + 10);
   });

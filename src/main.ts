@@ -21,7 +21,7 @@ import { battleEffectFor, type BattleEffect } from "./game/battle/battle-effect"
 import { createStaffRollState, skipStaffRoll, startStaffRoll, updateStaffRoll } from "./game/title/staff-roll";
 import { renderStaffRoll } from "./render/staff-roll-renderer";
 import { addGold, computeVictoryGold, spendGold } from "./game/economy/gold";
-import { ALL_ITEMS_BY_ID, describeBonus, purchaseItem, receiveTreasure } from "./game/economy/shop";
+import { ALL_ITEMS_BY_ID, describeBonus, purchaseConsumable, purchaseItem, receiveTreasure } from "./game/economy/shop";
 import { closeShopMenu, createShopMenuState, moveShopCursor, openShopMenu, withShopMessage } from "./game/economy/shop-menu";
 import { renderShop, renderShopWear, type ShopWearView } from "./render/shop-renderer";
 import { backPauseMenu, confirmPauseMenu, createPauseMenuState, movePauseCursor, openPauseMenu } from "./game/menu/pause-menu";
@@ -75,8 +75,10 @@ import { CHAPTER4_OPENING_COMMANDS } from "./game/world/chapter4-world";
 import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
+import { backFieldUse, confirmFieldUse, createFieldUseState, moveFieldUse, openFieldUse, refreshFieldUse, type FieldUseApply, type FieldUseOption } from "./game/menu/field-use";
+import { renderFieldUse } from "./render/field-use-renderer";
 import { cycleDifficulty, loadDifficulty, saveDifficulty, isDifficulty, type Difficulty } from "./game/difficulty";
-import { applyVital, growVital, vitalsAfterBattle, type Vitals } from "./game/vitals";
+import { applyVital, growVital, healVital, vitalsAfterBattle, type Vitals } from "./game/vitals";
 import { awardVictoryMastery, changeJob, isJobSystemUnlocked, battleSkillsOf, withJobBonus } from "./game/job/party-job";
 import { renderBattle, setBattleBiome, warmBattleBackdrops } from "./render/battle-renderer";
 import { biomeForMap, ALL_BIOMES, type Biome } from "./render/battle-backdrop";
@@ -88,7 +90,7 @@ import {
   SAMPLE_ITEM,
   SAMPLE_SKILL,
 } from "./game/battle/sample-battle";
-import { CHAPTER0_ITEM, CHAPTER0_SKILL, createChapter0Party, createYugamiBoss } from "./game/battle/chapter0-enemies";
+import { CHAPTER0_SKILL, createChapter0Party, createYugamiBoss } from "./game/battle/chapter0-enemies";
 import { createMugikanoYugami } from "./game/battle/chapter1-enemies";
 import { createGarasukoYugami } from "./game/battle/chapter2-enemies";
 import { createTetsukusariYugami } from "./game/battle/chapter3-enemies";
@@ -134,7 +136,10 @@ import { createRng } from "./game/random";
 import { computeVictoryExp } from "./game/battle/battle-engine";
 import { gainExp, statsAtLevel } from "./game/growth/level-up";
 import { applyStatBonus, computeEquipmentBonus, type EquipmentSlots } from "./game/items/equipment";
-import { addItem, createInventory, type Inventory } from "./game/items/inventory";
+import { addItem, createInventory, getQuantity, removeItem, type Inventory } from "./game/items/inventory";
+import { CONSUMABLES_BY_ID, CONSUMABLE_ITEMS, STARTER_CONSUMABLES } from "./game/items/consumables";
+import { toBattleItem } from "./game/items/types";
+import type { ItemStack } from "./game/battle/battle-controller";
 import type { JobId, JobState } from "./game/job/types";
 import { availableJobs } from "./game/job/jobs";
 import { createJobState, starsOf } from "./game/job/mastery";
@@ -601,7 +606,7 @@ function startRandomBattle(enemies: Combatant[]): void {
     party,
     enemies,
     createRng(Date.now()),
-    { skills: buildSkillsMap(CHAPTER0_SKILL), item: CHAPTER0_ITEM, extraSkills: buildExtraSkillsMap() },
+    { skills: buildSkillsMap(CHAPTER0_SKILL), items: battleItemStacks(), extraSkills: buildExtraSkillsMap() },
   );
   currentBgmTrack = getTrack("battle");
   battleTransition = startBattleTransition(false);
@@ -635,7 +640,7 @@ function startStoryBattle(battleId: string): void {
     party,
     [def.createEnemy()],
     createRng(Date.now()),
-    { skills: buildSkillsMap(CHAPTER0_SKILL), item: CHAPTER0_ITEM, extraSkills: buildExtraSkillsMap() },
+    { skills: buildSkillsMap(CHAPTER0_SKILL), items: battleItemStacks(), extraSkills: buildExtraSkillsMap() },
   );
   currentBgmTrack = getTrack(def.bgmId);
   // ボス・強敵の戦闘は、特別な登場の演出（黒い帯・名前・白いひらめき）をはさむ
@@ -865,7 +870,7 @@ window.addEventListener("keydown", (event) => {
 let jobMenuWasOpen = false;
 window.addEventListener("keydown", () => { jobMenuWasOpen = jobMenu.open; }, true);
 window.addEventListener("keydown", (event) => {
-  if (equipBackHandled) {
+  if (equipBackHandled || fieldUse.open) {
     return;
   }
   if (pauseMenu.open) {
@@ -971,7 +976,15 @@ function syncEquipmentToInventory(): void {
   inventory = ensureOwned(inventory, Object.values(partyEquipment()).flatMap((slots) => Object.values(slots)));
 }
 
+/** はじめの回復アイテムを持たせる（旅のはじめ・古いセーブを読んだときに1回だけ）。 */
+function grantStarterItems(): void {
+  if (flags["starter_items_granted"]) return;
+  flags["starter_items_granted"] = true;
+  for (const { itemId, quantity } of STARTER_CONSUMABLES) inventory = addItem(inventory, itemId, quantity);
+}
+
 syncEquipmentToInventory();
+grantStarterItems();
 
 /** そうび画面（メニューの「そうび」）。 */
 let equipMenu = createEquipMenuState();
@@ -1193,6 +1206,11 @@ function buildActiveParty(effectiveHeroStats: LeveledStats): ReturnType<typeof c
   return difficulty === "normal" ? party.map((c) => applyVital(c, vitals[c.id])) : party;
 }
 
+/** いま持っている回復アイテムを、戦闘で使える形（種類と数）にしたもの。 */
+function battleItemStacks(): ItemStack[] {
+  return CONSUMABLE_ITEMS.map((item) => ({ item: toBattleItem(item), quantity: getQuantity(inventory, item.id) })).filter((s) => s.quantity > 0);
+}
+
 /** ヒーローのとくぎ＋加入済み仲間のとくぎをまとめた、戦闘用のとくぎ一覧。 */
 function buildSkillsMap(heroSkill: Skill): Record<string, Skill> {
   const skills: Record<string, Skill> = { hero: heroSkill };
@@ -1201,6 +1219,68 @@ function buildSkillsMap(heroSkill: Skill): Record<string, Skill> {
   }
   return skills;
 }
+/** フィールドの「どうぐ」「まほう」の画面。 */
+let fieldUse = createFieldUseState();
+let lastFieldUseDirection: Direction | null = null;
+
+/** 今のパーティ（装備・ジョブ・持ち越したHP/MP込み）。 */
+function currentParty(): ReturnType<typeof createChapter0Party> {
+  return buildActiveParty(applyStatBonus(heroStats, computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID)));
+}
+
+function fieldUseOptions(mode: "items" | "spells"): FieldUseOption[] {
+  if (mode === "items") {
+    return CONSUMABLE_ITEMS.filter((i) => getQuantity(inventory, i.id) > 0).map((i) => ({
+      key: i.id, label: `${i.name} ×${getQuantity(inventory, i.id)}`, note: i.description ?? "", itemId: i.id,
+    }));
+  }
+  const skills = buildSkillsMap(CHAPTER0_SKILL);
+  const extras = buildExtraSkillsMap();
+  const out: FieldUseOption[] = [];
+  for (const id of ["hero", ...Object.keys(companionStats)]) {
+    const name = id === "hero" ? "ユーリ" : COMPANIONS[id].name;
+    for (const skill of [skills[id], ...(extras[id] ?? [])]) {
+      if (skill && (skill.effect === "heal" || skill.effect === "healAll")) {
+        out.push({ key: `${id}:${skill.id}`, label: `${name}：${skill.name}`, note: `MP${skill.mpCost}　${skill.effect === "healAll" ? "みんなのHPを回復" : "ひとりのHPを回復"}`, casterId: id, skill });
+      }
+    }
+  }
+  return out;
+}
+
+/** どうぐ・まほうを使う。メッセージを返す（使えなければ、何も減らさない）。 */
+function applyFieldUse(apply: FieldUseApply): string {
+  const party = currentParty().filter((c) => !c.isEnemy);
+  const { option } = apply;
+  if (option.itemId) {
+    const item = CONSUMABLES_BY_ID[option.itemId];
+    const target = apply.targetIndex === null ? undefined : party[apply.targetIndex];
+    if (!item || !target) return "つかえない";
+    const needHp = item.healAmount > 0 && target.hp < target.maxHp;
+    const needMp = (item.mpAmount ?? 0) > 0 && target.mp < target.maxMp;
+    if (!needHp && !needMp) return `${target.name.split(/[\s　]/)[0]}には、つかう必要がない`;
+    vitals = healVital(vitals, target.id, target, item.healAmount, item.mpAmount ?? 0);
+    inventory = removeItem(inventory, item.id, 1);
+    if (audioStarted) audio.playSe(seOf("heal"));
+    return `${item.name}を つかった！`;
+  }
+  const skill = option.skill;
+  const caster = party.find((c) => c.id === option.casterId);
+  if (!skill || !caster) return "つかえない";
+  if (caster.mp < skill.mpCost) return "MPが たりない";
+  const targets = skill.effect === "healAll" ? party : apply.targetIndex === null ? [] : [party[apply.targetIndex]];
+  if (!targets.some((t) => t && t.hp < t.maxHp)) return "つかう必要がない";
+  const amount = Math.max(1, Math.round(caster.attack * (skill.healRatio ?? 1)));
+  for (const t of targets) vitals = healVital(vitals, t.id, t, amount, 0);
+  vitals = healVital(vitals, caster.id, caster, 0, -skill.mpCost);
+  if (audioStarted) audio.playSe(seOf("heal"));
+  return `${skill.name}！ HPが かいふくした`;
+}
+
+function fieldUseMembers(): { name: string; hp: number; maxHp: number; mp: number; maxMp: number }[] {
+  return currentParty().map((c) => ({ name: c.name.split(/[\s　]/)[0], hp: c.hp, maxHp: c.maxHp, mp: c.mp, maxMp: c.maxMp }));
+}
+
 /** ジョブで覚えた戦闘用の特技（ユーリと加入済みの仲間）。機能が解禁前なら空。 */
 function buildExtraSkillsMap(): Record<string, Skill[]> {
   const unlocked = isJobSystemUnlocked(flags);
@@ -1263,6 +1343,7 @@ function applySaveData(data: SaveData): void {
     delete flags[key];
   }
   Object.assign(flags, data.flags);
+  grantStarterItems();
   resetVehicles(data.vehicles);
   switchMap(data.player.mapId, data.player.tileX, data.player.tileY);
   player = { ...player, direction: data.player.direction };
@@ -1296,6 +1377,7 @@ function resetToNewGame(): void {
   for (const key of Object.keys(flags)) {
     delete flags[key];
   }
+  grantStarterItems();
   encounterState = createEncounterState(Math.random);
   resetVehicles();
   switchMap(CHAPTER0_START.mapId, CHAPTER0_START.tileX, CHAPTER0_START.tileY);
@@ -1605,6 +1687,10 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
   if (outcome.kind !== "finished") {
     return;
   }
+  // 戦闘で使った回復アイテムを、持ち物から引く
+  for (const [itemId, count] of Object.entries(finishedBattle.getItemUsage())) {
+    inventory = removeItem(inventory, itemId, Math.min(count, getQuantity(inventory, itemId)));
+  }
   // ノーマル: 戦闘が終わったときのHP・MPを持ち越す（全滅のときは全員HP1で立ち上がる）
   if (difficulty === "normal") {
     vitals = vitalsAfterBattle(finishedBattle.getState().party, outcome.outcome === "lost");
@@ -1699,6 +1785,7 @@ function renderGameSceneBase(): void {
       LOGICAL_WIDTH,
       LOGICAL_HEIGHT,
       battleEffect ? { effect: battleEffect.effect, elapsedMs: performance.now() - battleEffect.startedAt } : null,
+      battle.hasUsableItems(),
     );
     if (victoryMessage && battle.getUiState().kind === "finished") {
       ctx.fillStyle = "#f2c14e";
@@ -1834,11 +1921,12 @@ function renderGameSceneBase(): void {
     ctx.fillText(saveMessage, 4, 14);
   }
   renderJobMenu(ctx, jobMenu, jobMenuMembers(), jobStates, selectableJobIds(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
-  renderShop(ctx, shopMenu, gold, heroEquipment, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  renderShop(ctx, shopMenu, gold, heroEquipment, inventory, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   if (shopWear && shopMenu.open) {
     renderShopWear(ctx, shopWearView(), shopWear.cursor, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   }
-  renderPauseMenu(ctx, pauseMenu, pauseMenu.screen === "status" ? statusRows() : [], pauseMessage, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  if (!fieldUse.open) renderPauseMenu(ctx, pauseMenu, pauseMenu.screen === "status" ? statusRows() : [], pauseMessage, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  if (fieldUse.open) renderFieldUse(ctx, fieldUse, fieldUseMembers(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
   if (pauseMenu.open && pauseMenu.screen === "items") {
     renderItemsScreen(ctx, itemsView(), itemsScroll, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   }
@@ -2044,6 +2132,30 @@ const loop = createGameLoop({
       return;
     }
     lastEquipDirection = null;
+    if (fieldUse.open) {
+      const direction = input.getDirection();
+      if (direction !== lastFieldUseDirection) {
+        if (direction === "up" || direction === "down" || direction === "left" || direction === "right") {
+          const members = fieldUseMembers().length;
+          fieldUse = moveFieldUse(fieldUse, direction === "up" || direction === "left" ? -1 : 1, fieldUse.stage === "target" ? members : fieldUse.options.length);
+          audio.playSe(seOf("cursor"));
+        }
+        lastFieldUseDirection = direction;
+      }
+      if (backPressed) fieldUse = backFieldUse(fieldUse);
+      if (actionPressed) {
+        const result = confirmFieldUse(fieldUse);
+        fieldUse = result.state;
+        if (result.apply) {
+          const message = applyFieldUse(result.apply);
+          fieldUse = refreshFieldUse(fieldUse, fieldUseOptions(fieldUse.mode), message);
+          if (fieldUse.stage === "target" && fieldUse.options.length === 0) fieldUse = { ...fieldUse, stage: "pick" };
+        }
+      }
+      return;
+    }
+    lastFieldUseDirection = null;
+
     if (pauseMenu.open) {
       const direction = input.getDirection();
       if (direction !== lastPauseDirection && pauseMenu.screen === "items") {
@@ -2071,6 +2183,9 @@ const loop = createGameLoop({
           pauseMessageTimer = 2000;
         } else if (result.action === "keys") {
           controlsMenu = openControlsMenu();
+        } else if (result.action === "use" || result.action === "magic") {
+          const mode = result.action === "use" ? "items" : "spells";
+          fieldUse = openFieldUse(mode, fieldUseOptions(mode));
         } else if (result.action === "equip") {
           equipMenu = openEquipMenu();
           equipMessage = null;
@@ -2129,7 +2244,18 @@ const loop = createGameLoop({
       }
       if (actionPressed) {
         const item = shopMenu.items[shopMenu.cursor];
-        if (item) {
+        if (item && item.category === "consumable") {
+          const result = purchaseConsumable(item.id, gold, getQuantity(inventory, item.id));
+          if (result.ok) {
+            gold = result.gold;
+            inventory = addItem(inventory, item.id, 1);
+            audio.playSe(seOf("buy"));
+            autosave();
+          } else {
+            audio.playSe(seOf("error"));
+          }
+          shopMenu = withShopMessage(shopMenu, result.message);
+        } else if (item) {
           // 同じ品を何個でも買える（仲間みんなに同じ武器・防具をつけられる）
           const result = purchaseItem(item.id, gold);
           if (result.ok) {
