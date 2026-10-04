@@ -11,8 +11,8 @@ import {
 
 /** 会話欄で使う、1ドットあたりの画面上のピクセル数。 */
 export const PORTRAIT_CELL_SIZE = 3;
-/** 会話欄の顔の枠（正方形）。顔アイコンは同じ大きさ（56×56）の絵を、拡大も縮小もせずそのまま描く。 */
-export const PORTRAIT_PIXEL_HEIGHT = 56;
+/** 会話欄の顔の枠（正方形）。顔アイコンは同じ大きさ（64×64）の絵を、拡大も縮小もせずそのまま描く。 */
+export const PORTRAIT_PIXEL_HEIGHT = 64;
 export const PORTRAIT_PIXEL_WIDTH = PORTRAIT_PIXEL_HEIGHT;
 
 /**
