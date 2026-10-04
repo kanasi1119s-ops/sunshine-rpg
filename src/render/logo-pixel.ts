@@ -4,7 +4,7 @@
  * 色ぬり（上が白っぽく下が濃い金、ふちが明るい・暗い、黒いふちどり、影、ディザ）して作る。
  * 論理の画面に、整数倍（1倍・2倍）で、補間なしに描く。
  */
-export const LOGO_NATIVE_W = 190;
+export const LOGO_NATIVE_W = 214;
 export const LOGO_NATIVE_H = 56;
 
 type RGBA = [number, number, number, number];
