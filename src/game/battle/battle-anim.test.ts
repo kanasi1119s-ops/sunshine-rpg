@@ -42,3 +42,19 @@ describe("敵の魔法", () => {
     expect(anim).toMatchObject({ casterId: "slime", fx: "water", hurt: true, targetIds: ["hero"], motion: null });
   });
 });
+
+describe("全体の魔法", () => {
+  it("同じ技が別々の味方にあたるログなら、area になる", () => {
+    const st: BattleState = { ...state, log: ["ゆらぎ玉 の 影ノ響き！ ユーリ Lv1 に 3 のダメージ", "ゆらぎ玉 の 影ノ響き！ ミナ Lv1 に 3 のダメージ"] };
+    expect(battleAnimFor(st.log[0], st, w)?.area).toBe(true);
+    const one: BattleState = { ...state, log: ["ゆらぎ玉 の 滴ノ礫！ ユーリ Lv1 に 3 のダメージ"] };
+    expect(battleAnimFor(one.log[0], one, w)?.area).toBe(false);
+  });
+});
+
+describe("ふつうの攻撃にエフェクトは出ない", () => {
+  it("たたかうには、魔法のエフェクトを付けない", () => {
+    expect(battleAnimFor("ユーリ Lv1 の たたかう！ ゆらぎ玉 に 5 のダメージ", state, w)?.fx).toBeNull();
+    expect(battleAnimFor("ガイド Lv1 の たたかう！ ゆらぎ玉 に 5 のダメージ", state, w)?.fx).toBeNull();
+  });
+});

@@ -49,7 +49,7 @@ export function battleSeFor(text: string, partyNames: string[]): string | null {
     const [, , skill, target] = damage;
     if (partyNames.includes(target)) {
       // 敵の魔法（技名つき）は、その術の音。ふつうの攻撃は、味方がダメージを受ける音
-      if (skill !== "たたかう" && !partyNames.some((n) => n === actorNameOf(text))) {
+      if (skill.trim() !== "たたかう" && !partyNames.some((n) => n === actorNameOf(text))) {
         return elementSe(skill) ?? "player-damage";
       }
       return "player-damage";

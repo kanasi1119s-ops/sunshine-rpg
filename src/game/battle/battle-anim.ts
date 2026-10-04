@@ -14,8 +14,12 @@ export type FxId = "fire" | "water" | "light" | "wind" | "ice" | "bolt" | "rock"
 export interface BattleAnimSpec {
   /** 動く味方（敵の行動のときは無い）。 */
   actorId?: string;
-  /** 魔法を唱える敵（唱えるあいだ、敵の足もとに光が集まる）。 */
+  /** 魔法を唱える敵（唱えるあいだ、敵の足もとに魔法陣と光の柱が立つ）。 */
   casterId?: string;
+  /** 魔法・矢がとんでいく元（唱えた人。球・矢の出どころ）。 */
+  fromId?: string;
+  /** 全体にかかる魔法（柱がいくつも立つ、など）。 */
+  area?: boolean;
   motion: WeaponMotion | null;
   targetIds: string[];
   fx: FxId | null;
@@ -45,6 +49,17 @@ export function fxForSkillName(name: string): FxId {
   return "burst";
 }
 
+/** 同じ人が同じ技を、2人以上の別の相手に使ったか（全体の魔法）。ログ全体から数える。 */
+function isAreaMove(state: BattleState, actorName: string, skillName: string): boolean {
+  const targets = new Set<string>();
+  const re = new RegExp(`^${actorName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} の ${skillName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}！ (?:会心の一撃！ )?(.+) に \\d+ のダメージ$`);
+  for (const line of state.log) {
+    const m = re.exec(line);
+    if (m) targets.add(m[1]);
+  }
+  return targets.size >= 2;
+}
+
 function byName(state: BattleState, name: string): Combatant | undefined {
   return [...state.party, ...state.enemies].find((c) => c.name === name);
 }
@@ -60,7 +75,7 @@ export function battleAnimFor(text: string, state: BattleState, weaponOf: (id: s
   };
 
   // 味方がダメージを受けた / 敵にダメージを与えた
-  const damage = /^(.+?) の(.+?)！ (?:会心の一撃！ )?(.+) に \d+ のダメージ$/.exec(text);
+  const damage = /^(.+?) の (.+?)！ (?:会心の一撃！ )?(.+) に \d+ のダメージ$/.exec(text);
   if (damage) {
     const [, actorName, skillName, targetName] = damage;
     const actor = allyActor(actorName);
@@ -71,7 +86,7 @@ export function battleAnimFor(text: string, state: BattleState, weaponOf: (id: s
       const caster = byName(state, actorName);
       // 敵の魔法: 敵が光をためて、味方の上にエフェクトが出て、味方がのけぞる
       if (skillName !== "たたかう" && caster?.isEnemy) {
-        return make({ casterId: caster.id, targetIds: [target.id], fx: fxForSkillName(skillName), hurt: true, durationMs: 760, fxStart: 0.4 });
+        return make({ casterId: caster.id, fromId: caster.id, area: isAreaMove(state, actorName, skillName), targetIds: [target.id], fx: fxForSkillName(skillName), hurt: true, durationMs: 1100, fxStart: 0.42 });
       }
       // 敵の攻撃: 味方がのけぞる
       return make({ targetIds: [target.id], hurt: true, durationMs: 420 });
@@ -83,14 +98,17 @@ export function battleAnimFor(text: string, state: BattleState, weaponOf: (id: s
     const caster = CASTERS.has(actor.id);
     return make({
       actorId: actor.id,
+      fromId: actor.id,
+      area: isAreaMove(state, actorName, skillName),
       motion: caster ? "cast" : MOTION_OF_WEAPON[weapon ?? "sword"],
       targetIds: [target.id],
       fx: fxForSkillName(skillName),
+      ...(caster ? { durationMs: 1100, fxStart: 0.42 } : {}),
     });
   }
 
   // 回復の魔法
-  const heal = /^(.+?) の(.+?)！ (.+) のHPが \d+ 回復した$/.exec(text);
+  const heal = /^(.+?) の (.+?)！ (.+) のHPが \d+ 回復した$/.exec(text);
   if (heal) {
     const actor = allyActor(heal[1]);
     const target = byName(state, heal[3]);
@@ -104,7 +122,7 @@ export function battleAnimFor(text: string, state: BattleState, weaponOf: (id: s
     return target ? make({ targetIds: [target.id], fx: "heal", durationMs: 600, fxStart: 0 }) : null;
   }
   // 強化・弱体
-  const mod = /^(.+?) の(.+?)！ (.+) の(?:こうげき|しゅび|すばやさ)が(上がった|下がった)$/.exec(text);
+  const mod = /^(.+?) の (.+?)！ (.+) の(?:こうげき|しゅび|すばやさ)が(上がった|下がった)$/.exec(text);
   if (mod) {
     const actor = allyActor(mod[1]);
     const target = byName(state, mod[3]);
@@ -112,19 +130,19 @@ export function battleAnimFor(text: string, state: BattleState, weaponOf: (id: s
     return make({ actorId: actor?.id, motion: actor ? "cast" : null, targetIds: [target.id], fx: mod[4] === "上がった" ? "buff" : "debuff" });
   }
   // 状態異常
-  const sleepy = /^(?:(.+?) の(.+?)！ )?(.+) は眠ってしまった$/.exec(text);
+  const sleepy = /^(?:(.+?) の (.+?)！ )?(.+) は眠ってしまった$/.exec(text);
   if (sleepy) {
     const target = byName(state, sleepy[3]);
     const actor = sleepy[1] ? allyActor(sleepy[1]) : undefined;
     return target ? make({ actorId: actor?.id, motion: actor ? "cast" : null, targetIds: [target.id], fx: "sleep" }) : null;
   }
-  const poisoned = /^(?:(.+?) の(.+?)！ )?(.+) は毒におかされた！$/.exec(text);
+  const poisoned = /^(?:(.+?) の (.+?)！ )?(.+) は毒におかされた！$/.exec(text);
   if (poisoned) {
     const target = byName(state, poisoned[3]);
     const actor = poisoned[1] ? allyActor(poisoned[1]) : undefined;
     return target ? make({ actorId: actor?.id, motion: actor ? "cast" : null, targetIds: [target.id], fx: "poison" }) : null;
   }
-  const confused = /^(?:(.+?) の(.+?)！ )?(.+) は混乱した！$/.exec(text);
+  const confused = /^(?:(.+?) の (.+?)！ )?(.+) は混乱した！$/.exec(text);
   if (confused) {
     const target = byName(state, confused[3]);
     const actor = confused[1] ? allyActor(confused[1]) : undefined;

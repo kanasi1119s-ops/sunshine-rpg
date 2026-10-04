@@ -972,6 +972,8 @@ let lastBattleDirection: Direction | null = null;
 let battleEffect: { effect: BattleEffect; startedAt: number } | null = null;
 /** 進行中の「動き」（武器をふる・魔法のエフェクト・のけぞり）。 */
 let battleAnim: { spec: BattleAnimSpec; startedAt: number } | null = null;
+/** 直前に唱えた魔法（全体魔法の2人目以降は、ためを省く）。コマンド選択にもどったら消す。 */
+let lastCast: { fromId: string; fx: string } | null = null;
 let lastBattleMessage: string | null = null;
 let battle: BattleController | null = null;
 let heroStats = createInitialHeroStats();
@@ -2439,7 +2441,15 @@ const loop = createGameLoop({
           const effect = battleEffectFor(uiState.text, battle.getState().party.map((c) => c.name));
           battleEffect = effect ? { effect, startedAt: performance.now() } : null;
           const anim = battleAnimFor(uiState.text, battle.getState(), (id) => WEAPON_TYPE_OF[id]);
-          battleAnim = anim ? { spec: anim, startedAt: performance.now() } : null;
+          // 全体魔法の2人目からは、ためを省いて、すぐ当てる（柱・いなずまが続けて立つ）
+          let animSpec = anim;
+          if (anim?.fx && anim.fromId && (anim.casterId || anim.motion === "cast")) {
+            if (lastCast && lastCast.fromId === anim.fromId && lastCast.fx === anim.fx && anim.area) {
+              animSpec = { ...anim, fxStart: 0, durationMs: 560, motion: null, casterId: undefined };
+            }
+            lastCast = { fromId: anim.fromId, fx: anim.fx };
+          }
+          battleAnim = animSpec ? { spec: animSpec, startedAt: performance.now() } : null;
           const se = battleSeFor(uiState.text, battle.getState().party.map((c) => c.name));
           if (audioStarted) {
             if (anim?.motion) audio.playSe(seOf(swingSeFor(anim.motion)));
@@ -2454,6 +2464,7 @@ const loop = createGameLoop({
         }
       } else {
         lastBattleMessage = null;
+        lastCast = null;
       }
       if (uiState.kind === "finished") {
         applyVictoryExpIfNeeded(battle);

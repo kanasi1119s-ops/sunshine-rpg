@@ -13,7 +13,7 @@ import { drawSprite } from "./sprite-renderer";
 import { frameAt, SPRITE_FEET_ROW } from "../game/sprite/overworld-sprite";
 import type { BattleAnimSpec } from "../game/battle/battle-anim";
 import { allyStateOf, getAllyCanvas, type AllyState } from "./ally-states";
-import { drawCastGlow, drawFx, drawWeaponMotion, FX_COLOR, lungeOffset, type Pt } from "./battle-anim-renderer";
+import { drawCharge, drawFx, drawWeaponMotion, FX_COLOR, lungeOffset, type Pt } from "./battle-anim-renderer";
 
 let currentBiome: Biome = "grass";
 let currentVariant = 0;
@@ -199,19 +199,19 @@ function combatantPoint(state: BattleState, id: string, screenWidth: number, scr
     const col = Math.floor(ally / 2);
     const feetY = screenHeight - 56 - 4 - row * 18;
     const leftX = ENEMIES_ON_RIGHT ? 20 + col * 30 + row * 14 : screenWidth - 40 - col * 30 - row * 14;
-    return { x: leftX + 8, y: feetY - 16 };
+    return { x: leftX + 8, y: feetY - 16, w: 16, h: 32 };
   }
   const enemy = state.enemies.find((c) => c.id === id);
   if (!enemy) return { x: 80, y: 80 };
   const boss = !!getSpriteCanvas(`boss:${baseEnemyId(enemy.id)}`, SPRITE_DATA);
   const strong = state.enemies.length === 1 && enemy.maxHp >= 250 && !!MONSTERS[baseEnemyId(enemy.id)];
-  if (boss) return { x: enemySideX(screenWidth, 132) + 66, y: 80 };
-  if (strong) return { x: enemySideX(screenWidth, 128) + 64, y: 56 + 24 };
+  if (boss) return { x: enemySideX(screenWidth, 132) + 66, y: 80, w: 100, h: 132 };
+  if (strong) return { x: enemySideX(screenWidth, 128) + 64, y: 56 + 24, w: 90, h: 100 };
   const crowd = state.enemies.filter((e) => e.hp > 0 && !getSpriteCanvas(`boss:${baseEnemyId(e.id)}`, SPRITE_DATA) && !(state.enemies.length === 1 && e.maxHp >= 250 && MONSTERS[baseEnemyId(e.id)]));
   const idx = crowd.findIndex((e) => e.id === id);
   const slots = groundSlots(idx >= 0 ? crowd.length : state.enemies.length);
   const slot = slots[idx >= 0 ? idx : Math.max(0, state.enemies.indexOf(enemy)) % slots.length];
-  return { x: slot.x + 32, y: slot.feet - 28 };
+  return { x: slot.x + 32, y: slot.feet - 28, w: 40, h: 56 };
 }
 
 function renderBattleBody(
@@ -397,12 +397,15 @@ function renderBattleBody(
       const lunge = lungeOffset(spec2.motion, prog);
       drawWeaponMotion(ctx, spec2.motion, prog, { x: actorPt.x - 4 + lunge, y: actorPt.y + 2 }, mainTarget, glow);
     }
-    if (spec2.casterId && spec2.fx && prog < spec2.fxStart + 0.1) {
-      drawCastGlow(ctx, pointOf(spec2.casterId), FX_COLOR[spec2.fx], prog / spec2.fxStart);
+    // 魔法のため（敵が唱えるときも、魔法使いの味方が唱えるときも）
+    const casterId = spec2.casterId ?? (spec2.motion === "cast" ? spec2.actorId : undefined);
+    if (casterId && spec2.fx && prog < spec2.fxStart + 0.08 && spec2.fxStart > 0) {
+      drawCharge(ctx, pointOf(casterId), FX_COLOR[spec2.fx], prog / spec2.fxStart, spec2.fx);
     }
     if (spec2.fx && prog >= spec2.fxStart) {
       const ft = (prog - spec2.fxStart) / Math.max(0.01, 1 - spec2.fxStart);
-      for (const t of targets) drawFx(ctx, spec2.fx, Math.min(1, ft), t);
+      const from = spec2.fromId ? pointOf(spec2.fromId) : undefined;
+      for (const t of targets) drawFx(ctx, spec2.fx, Math.min(1, ft), t, { from, area: spec2.area });
     }
   }
   void count;
