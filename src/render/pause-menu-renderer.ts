@@ -1,5 +1,6 @@
 import { PAUSE_ITEMS, type PauseMenuState } from "../game/menu/pause-menu";
 import { drawWindow } from "./ui-frame";
+import { getPortraitIcon } from "./portrait-icons";
 
 export interface StatusRow {
   name: string;
@@ -54,9 +55,19 @@ export function renderPauseMenu(
   ctx.fillText(`灯貨 ${gold}`, screenWidth - 90, 10);
   rows.forEach((row, i) => {
     const y = 26 + i * 30;
+    // 顔アイコン（28×28、拡大も縮小もせずそのまま）。絵のない人は、枠だけ
+    const icon = getPortraitIcon(row.name, true);
+    ctx.fillStyle = "#2a2140";
+    ctx.fillRect(12, y - 2, 28, 28);
+    if (icon) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(icon, 12, y - 2, 28, 28);
+    }
+    ctx.strokeStyle = "#c89a48";
+    ctx.strokeRect(11.5, y - 2.5, 29, 29);
     ctx.fillStyle = "#f0f0f0";
-    ctx.fillText(`${row.name}　Lv${row.level}　HP ${row.hp}/${row.maxHp}　MP ${row.mp}/${row.maxMp}`, 12, y);
+    ctx.fillText(`${row.name}　Lv${row.level}　HP ${row.hp}/${row.maxHp}　MP ${row.mp}/${row.maxMp}`, 48, y);
     ctx.fillStyle = "#c8c8e0";
-    ctx.fillText(`　こうげき${row.attack}　ぼうぎょ${row.defense}　すばやさ${row.speed}　つぎのLvまで${row.expToNext}`, 12, y + 11);
+    ctx.fillText(`こうげき${row.attack}　ぼうぎょ${row.defense}　すばやさ${row.speed}　つぎのLvまで${row.expToNext}`, 48, y + 12);
   });
 }

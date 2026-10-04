@@ -6,9 +6,12 @@ from PIL import Image, ImageFilter
 SRC = Path("assets-src/characters/party-dot")
 DST = Path("src/assets/portraits")
 SIZE = 64
+SMALL = 28  # つよさ画面の一覧用（<romaji>-s.png）
 NAMES = {"ユーリ": "yuri", "レト": "reto", "ミナ": "mina", "ガイド": "guide", "オルカ": "orca", "アヤメ": "ayame"}
 DST.mkdir(parents=True, exist_ok=True)
 for jp, name in NAMES.items():
     im = Image.open(SRC / jp / "アイコン_512x512.png").convert("RGBA").resize((SIZE, SIZE), Image.LANCZOS).filter(ImageFilter.UnsharpMask(radius=1.0, percent=170, threshold=0))
     im.save(DST / f"{name}.png", optimize=True)
+    small = Image.open(SRC / jp / "アイコン_512x512.png").convert("RGBA").resize((SMALL, SMALL), Image.LANCZOS).filter(ImageFilter.UnsharpMask(radius=0.8, percent=140, threshold=0))
+    small.save(DST / f"{name}-s.png", optimize=True)
     print(name, (DST / f"{name}.png").stat().st_size)
