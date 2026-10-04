@@ -106,10 +106,26 @@ def main():
     os.makedirs(AUTO, exist_ok=True)
     tries = {}
     made = 0
-    n_batch = 0
+    import glob
+    n_batch = len(glob.glob(f"{AUTO}/batch-[0-9][0-9][0-9].png"))   # 動かし直しても番号を続ける
     while made < limit:
         if os.path.exists(f"{AUTO}/STOP"):
             log("STOP があるので止まります"); break
+        # 描き直しの頼み（WORK/auto/redo.json: {id: {"prompt":…, "shape":…}}）を名簿に入れる。別の種で描き直す
+        rp = f"{AUTO}/redo.json"
+        if os.path.exists(rp):
+            req = json.load(open(rp)); os.remove(rp)
+            r = roster()
+            for e in r:
+                if e["id"] in req:
+                    e.update({k: v for k, v in req[e["id"]].items()})
+                    e["status"] = "todo"; e["seed_base"] = e.get("seed_base", 2000) + 4001
+                    tries.pop(e["id"], None)
+                    for ext in ("txt", "json", "png"):   # 前の手直しは使わない
+                        f = f"{ART}/{e['id']}/{e['id']}_fix.{ext}"
+                        if os.path.exists(f): os.remove(f)
+            json.dump(r, open(ROSTER, "w"), ensure_ascii=False, indent=1)
+            log("描き直し:", list(req))
         mobs = [e for e in roster() if e.get("kind") != "boss" and e.get("prompt")]
         # ドット絵化まで済んでエディタで止まったものは、エディタからやり直す
         for e in [e for e in mobs if e.get("status") == "picked" and tries.get("ed:" + e["id"], 0) < 2]:
@@ -135,7 +151,8 @@ def main():
         finished = []
         for i in ids:
             # 速くする（2026-10-05、人間の指示）: 16歩で描き（24歩とほぼ同じ絵）、まず1枚。使えないときだけ2枚目を描く
-            env = {"SEED_BASE": str(2000 + 997 * tries.get(i, 0)), "SKIP_EXISTING": "1", "STEPS": "16"}
+            base = {e["id"]: e.get("seed_base", 2000) for e in roster()}[i]
+            env = {"SEED_BASE": str(base + 997 * tries.get(i, 0)), "SKIP_EXISTING": "1", "STEPS": "16"}
             tries[i] = tries.get(i, 0) + 1
             k = None
             for seeds in (1, 2):

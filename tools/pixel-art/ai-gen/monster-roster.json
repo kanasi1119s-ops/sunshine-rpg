@@ -121,7 +121,7 @@
  {
   "id": "enc-mugikano-water-source-1",
   "prompt": "a creature made of cracked dry rice-paddy earth and withered rice stalks, with hollow glowing purple eyes, on four legs",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-mugikano-water-source-1",
   "kind": "mob",
   "name": "涸れ田の歪み",
@@ -132,12 +132,13 @@
    150,
    125,
    85
-  ]
+  ],
+  "draft": "enc-mugikano-water-source-1_0"
  },
  {
   "id": "enc-mugikano-water-source-2",
   "prompt": "a cave bat with a miner's broken lamp hanging from its neck, stone-grey fur, wide leathery wings",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-mugikano-water-source-2",
   "kind": "mob",
   "name": "採掘跡のこうもり",
@@ -148,39 +149,44 @@
    100,
    95,
    90
-  ]
+  ],
+  "draft": "enc-mugikano-water-source-2_0"
  },
  {
   "id": "enc-mugikano-water-source-3",
-  "prompt": "a long water-channel insect like a water strider with very long thin legs and a shiny blue-green shell",
+  "prompt": "a big water strider insect with a small slim body and very long thin bent legs spread wide, shiny blue-green shell, side view",
   "status": "todo",
   "key": "enemy:enc-mugikano-water-source-3",
   "kind": "mob",
   "name": "用水路の虫",
   "zone": "mugikano-water-source",
   "level": 4,
-  "shape": "long",
+  "shape": "ground",
   "tone": [
    70,
    120,
    110
-  ]
+  ],
+  "draft": "enc-mugikano-water-source-3_x0",
+  "seed_base": 6001
  },
  {
   "id": "enc-mugikano-water-source-4",
-  "prompt": "a lumpy creature of wet brown mud with pebbles stuck in it, two stalk eyes and dripping arms",
+  "prompt": "a lumpy blob creature of wet brown mud with pebbles stuck in it, two eyes on short stalks on top, dripping mud arms",
   "status": "todo",
   "key": "enemy:enc-mugikano-water-source-4",
   "kind": "mob",
   "name": "泥のしずく",
   "zone": "mugikano-water-source",
   "level": 4,
-  "shape": "big",
+  "shape": "tall",
   "tone": [
    110,
    85,
    60
-  ]
+  ],
+  "draft": "enc-mugikano-water-source-4_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-mugikano-water-source-5",
