@@ -3,13 +3,17 @@
  * 空・遠景・近景の層（ディザでなじませた帯、雲、丘、木、洞窟の石筍と水晶、砂丘、雪の松、遺跡の柱）で奥行きを出す。
  */
 import { EXTRA_BIOMES, paintExtraBackdrop, type ExtraBiome } from "./battle-backdrop-extra";
+import { getBackdropImage } from "./battle-backdrop-images";
 
-export type Biome = "grass" | "cave" | "desert" | "snow" | "ruins" | ExtraBiome;
+/** ship・magma・prophecy は、絵（`battle-backdrop-images.ts`）がある場所の種類。絵が読み込めないときは、描いた背景（船→海岸、火口→溶岩、予言の間→神殿）を使う。 */
+export type Biome = "grass" | "cave" | "desert" | "snow" | "ruins" | "ship" | "magma" | "prophecy" | ExtraBiome;
+
+const PROCEDURAL_FALLBACK: Partial<Record<Biome, Biome>> = { ship: "coast", magma: "lava", prophecy: "shrine" };
 
 const BIOME_BY_PREFIX: Array<[string, Biome]> = [
   ["tetsukusari-mine", "cave"], ["deep-", "ruins"], ["kyotoukyu", "ruins"],
-  ["god-shrine", "shrine"], ["tower-", "shrine"], ["kanou-", "shrine"], ["islet-1", "shrine"], ["islet-2", "lava"], ["islet-3", "coast"], ["islet-4", "sky"], ["islet-5", "deep"], ["islet-6", "lava"], ["shimohara", "snow"], ["sanone", "desert"], ["garasuko-warehouse", "cave"],
-  ["kiri-archive", "ruins"], ["fushima-base", "ruins"], ["toushin", "ruins"], ["mugikano-water", "cave"],
+  ["god-shrine", "shrine"], ["tower-", "shrine"], ["kanou-", "shrine"], ["islet-1", "shrine"], ["islet-2", "lava"], ["islet-3", "coast"], ["islet-4", "sky"], ["islet-5", "deep"], ["islet-6", "magma"], ["shimohara", "snow"], ["sanone", "desert"], ["garasuko-warehouse", "cave"],
+  ["kiri-archive", "prophecy"], ["fushima-base", "ruins"], ["toushin", "ruins"], ["mugikano-water", "cave"],
 ];
 
 /** 地図の名前から、戦闘の背景を決める。 */
@@ -353,11 +357,31 @@ function ruinsBackdrop(ctx: Ctx, w: number, h: number): void {
 const cache = new Map<string, HTMLCanvasElement>();
 
 /** 戦闘の背景の絵（キャッシュ）。ブラウザ以外では null。 */
-export function getBackdropCanvas(biome: Biome, w: number, h: number): HTMLCanvasElement | null {
+export function getBackdropCanvas(biome: Biome, w: number, h: number, variant = 0): HTMLCanvasElement | null {
   if (typeof document === "undefined") {
     return null;
   }
-  const key = `${biome}:${w}x${h}`;
+  // 人間がくれたドット絵があれば、それを使う（読み込めたあとの最初の1回だけ、画面の大きさに描いてキャッシュする）。
+  const image = getBackdropImage(biome, variant);
+  if (image) {
+    const imageKey = `img:${biome}:${variant % 8}:${w}x${h}`;
+    const cached = cache.get(imageKey);
+    if (cached) {
+      return cached;
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const c = canvas.getContext("2d");
+    if (c) {
+      c.imageSmoothingEnabled = false;
+      c.drawImage(image, 0, 0, w, h);
+      cache.set(imageKey, canvas);
+      return canvas;
+    }
+  }
+  const drawBiome = PROCEDURAL_FALLBACK[biome] ?? biome;
+  const key = `${drawBiome}:${w}x${h}`;
   const hit = cache.get(key);
   if (hit) {
     return hit;
@@ -370,14 +394,14 @@ export function getBackdropCanvas(biome: Biome, w: number, h: number): HTMLCanva
     return null;
   }
   ctx.imageSmoothingEnabled = false;
-  switch (biome) {
+  switch (drawBiome) {
     case "cave": caveBackdrop(ctx, w, h); break;
     case "desert": desertBackdrop(ctx, w, h); break;
     case "snow": snowBackdrop(ctx, w, h); break;
     case "ruins": ruinsBackdrop(ctx, w, h); break;
     default:
-      if (EXTRA_BIOMES.includes(biome as ExtraBiome)) {
-        paintExtraBackdrop(biome as ExtraBiome, ctx, w, h);
+      if (EXTRA_BIOMES.includes(drawBiome as ExtraBiome)) {
+        paintExtraBackdrop(drawBiome as ExtraBiome, ctx, w, h);
       } else {
         grassBackdrop(ctx, w, h);
       }

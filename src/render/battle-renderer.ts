@@ -12,9 +12,13 @@ import { drawSprite } from "./sprite-renderer";
 import { frameAt, SPRITE_FEET_ROW } from "../game/sprite/overworld-sprite";
 
 let currentBiome: Biome = "grass";
+let currentVariant = 0;
+
 /** これから始まる戦闘の背景（場所）を決める。 */
 export function setBattleBiome(biome: Biome): void {
   currentBiome = biome;
+  // 同じ場所に絵が2枚あるときの、どちらを使うか（戦闘ごとに選ぶ）
+  currentVariant = Math.floor(Math.random() * 1000);
 }
 import { wrapText } from "./text-wrap";
 import { shakeOffset, type BattleEffect } from "../game/battle/battle-effect";
@@ -138,7 +142,7 @@ function renderBattleBody(
 ): void {
   ctx.fillStyle = "#1c1030";
   ctx.fillRect(0, 0, screenWidth, screenHeight);
-  const backdrop = getBackdropCanvas(currentBiome, screenWidth, screenHeight - 56);
+  const backdrop = getBackdropCanvas(currentBiome, screenWidth, screenHeight - 56, currentVariant);
   if (backdrop) {
     ctx.drawImage(backdrop, 0, 0);
   }

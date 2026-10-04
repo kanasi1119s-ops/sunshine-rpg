@@ -1536,7 +1536,7 @@ const loop = createGameLoop({
           const tileId = map.data.layers[0].data[centerTileY * map.data.width + centerTileX];
           if (vehicle === "ship") {
             encounterMapId = "world-sea";
-            worldBattleBiome = "coast";
+            worldBattleBiome = "ship";
           } else if (vehicle === "air") {
             encounterMapId = "world-air";
             worldBattleBiome = "sky";
