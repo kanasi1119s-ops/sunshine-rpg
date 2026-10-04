@@ -112,6 +112,38 @@ function partySpecFor(name: string): ReturnType<typeof spriteSpecFromPortrait> |
   return partySpecCache.get(name) ?? null;
 }
 
+/** 飛べる敵の形（こうもり・目・影）。それ以外は地面に立つ。 */
+const FLYING_SHAPES = new Set<string>(["bat", "eye", "ghost"]);
+
+function isFlying(enemy: Combatant): boolean {
+  const shape = MONSTERS[baseEnemyId(enemy.id)]?.shape;
+  return shape !== undefined && FLYING_SHAPES.has(shape);
+}
+
+/** 飛べるボス（名前に空・羽などの言葉があるもの）。 */
+function isFlyingBoss(enemy: Combatant): boolean {
+  return /羽|風|雲|空|鳥|翼|竜|龍|目/.test(enemy.name) || isFlying(enemy);
+}
+
+/** 足元の影。飛んでいる敵は、小さくうすい影を地面に落とす。 */
+function drawGroundShadow(ctx: CanvasRenderingContext2D, cx: number, groundY: number, rx: number, flying: boolean): void {
+  ctx.save();
+  ctx.fillStyle = flying ? "rgba(0, 0, 0, 0.22)" : "rgba(0, 0, 0, 0.38)";
+  ctx.beginPath();
+  ctx.ellipse(cx, groundY, flying ? rx * 0.7 : rx, flying ? 3 : 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/** ふつうの敵の立つ場所（足元のy）。奥の敵を先に描くので、手前ほどyが大きい。 */
+function groundSlots(count: number): { x: number; feet: number }[] {
+  if (count <= 1) return [{ x: 70, feet: 140 }];
+  if (count === 2) return [{ x: 24, feet: 122 }, { x: 104, feet: 146 }];
+  const slots = [{ x: 10, feet: 118 }, { x: 84, feet: 146 }, { x: 158, feet: 122 }];
+  for (let i = 3; i < count; i++) slots.push({ x: 20 + (i - 3) * 60, feet: 132 });
+  return slots;
+}
+
 function drawBossSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, screenWidth: number): boolean {
   if (enemy.hp <= 0) {
     return false;
@@ -120,15 +152,18 @@ function drawBossSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, screenW
   if (!canvas) {
     return false;
   }
-  // 敵の側（右）に大きく描き、名前とHPは絵の下に置く
+  // 敵の側に大きく描き、名前とHPは絵の下に置く。飛べる敵以外は、地面の上に立つ（足元に影）。
   const size = 132;
   const x = enemySideX(screenWidth, size);
+  const flying = isFlyingBoss(enemy);
+  const y = flying ? 2 + Math.round(Math.sin(performance.now() / 500) * 3) : 14;
+  drawGroundShadow(ctx, x + size / 2, 147, size * 0.36, flying);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(canvas, x, 2, size, size);
+  ctx.drawImage(canvas, x, y, size, size);
   ctx.fillStyle = "#f0f0f0";
-  shadowText(ctx, enemy.name, x, 136);
-  drawHpBar(ctx, enemy, x, 150, size);
+  shadowText(ctx, enemy.name, x, 149);
+  drawHpBar(ctx, enemy, x, 160, size);
   return true;
 }
 
@@ -157,7 +192,7 @@ function renderBattleBody(
   const enemyShake = active === "crit" && effectView ? shakeOffset(progress, effectView.elapsedMs) : 0;
   ctx.save();
   ctx.translate(enemyShake, 0);
-  battleState.enemies.forEach((enemy, index) => {
+  battleState.enemies.forEach((enemy) => {
     if (drawBossSprite(ctx, enemy, screenWidth)) {
       return;
     }
@@ -165,35 +200,55 @@ function renderBattleBody(
     if (battleState.enemies.length === 1 && enemy.maxHp >= 250 && enemy.hp > 0 && MONSTERS[baseEnemyId(enemy.id)]) {
       const size = 80;
       const bx = enemySideX(screenWidth, 128);
+      const flyingMob = isFlying(enemy);
+      const by = flyingMob ? 2 + Math.round(Math.sin(performance.now() / 500) * 3) : 16;
+      drawGroundShadow(ctx, bx + 64, 146, 46, flyingMob);
       // 手描きの絵がある形は、2倍（128）で大きく描く（きれいに拡大できる整数倍）
-      if (drawMobSprite(ctx, enemy, bx, 2, 128)) {
+      if (drawMobSprite(ctx, enemy, bx, by, 128)) {
         ctx.fillStyle = "#f0f0f0";
-        shadowText(ctx, enemy.name, bx, 134);
-        drawHpBar(ctx, enemy, bx, 148, 110);
+        shadowText(ctx, enemy.name, bx, 148);
+        drawHpBar(ctx, enemy, bx, 160, 110);
         return;
       }
-      drawEnemySprite(ctx, enemy, bx + 24, 10, size);
+      drawEnemySprite(ctx, enemy, bx + 24, by + 8, size);
       ctx.fillStyle = "#f0f0f0";
-      shadowText(ctx, enemy.name, bx, 134);
-      drawHpBar(ctx, enemy, bx, 148, 110);
+      shadowText(ctx, enemy.name, bx, 148);
+      drawHpBar(ctx, enemy, bx, 160, 110);
       return;
     }
-    // ふつうの敵は、敵の側に、少しずらして縦に並べる（名前とHPは絵の内側＝画面の中央がわ）
-    const stagger = (index % 2) * 34;
-    const sx = ENEMIES_ON_RIGHT ? screenWidth - 64 - 14 - stagger : 14 + stagger;
-    const sy = 4 + index * 48;
-    const labelX = ENEMIES_ON_RIGHT ? sx - 70 : sx + 68;
-    if (drawMobSprite(ctx, enemy, sx, sy)) {
-      ctx.fillStyle = "#f0f0f0";
-      shadowText(ctx, enemy.name, labelX, sy + 20);
-      drawHpBar(ctx, enemy, labelX, sy + 34, 64);
-      return;
-    }
-    drawEnemySprite(ctx, enemy, sx + 12, sy + 10, 40);
-    ctx.fillStyle = "#f0f0f0";
-    shadowText(ctx, enemy.name, labelX, sy + 20);
-    drawHpBar(ctx, enemy, labelX, sy + 34, 40);
+    // ふつうの敵は、地面の上に立つ（手前ほど下）。飛べる敵（こうもり・目・影）だけ、浮かんで足元に影を落とす。
+    // 奥の敵を先に描くため、いったんここでは何もせず、あとでまとめて描く。
+    return;
   });
+
+  // ふつうの敵（1体のボス・強敵を除く）を、立ち位置の奥から手前の順に描く。
+  const crowd = battleState.enemies.filter(
+    (enemy) =>
+      !(
+        enemy.hp > 0 &&
+        (getSpriteCanvas(`boss:${baseEnemyId(enemy.id)}`, SPRITE_DATA) ||
+          (battleState.enemies.length === 1 && enemy.maxHp >= 250 && MONSTERS[baseEnemyId(enemy.id)]))
+      ),
+  );
+  const slots = groundSlots(crowd.length);
+  crowd
+    .map((enemy, i) => ({ enemy, slot: slots[i] }))
+    .sort((a, b) => a.slot.feet - b.slot.feet)
+    .forEach(({ enemy, slot }) => {
+      const flying = isFlying(enemy);
+      const bob = flying ? Math.round(Math.sin(performance.now() / 450 + slot.x) * 3) : 0;
+      const sx = slot.x;
+      const sy = slot.feet - 62 - (flying ? 18 : 0) + bob;
+      if (enemy.hp > 0) {
+        drawGroundShadow(ctx, sx + 32, slot.feet, 22, flying);
+      }
+      if (!drawMobSprite(ctx, enemy, sx, sy)) {
+        drawEnemySprite(ctx, enemy, sx + 12, sy + 20, 40);
+      }
+      ctx.fillStyle = "#f0f0f0";
+      shadowText(ctx, enemy.name, sx, slot.feet + 2);
+      drawHpBar(ctx, enemy, sx, slot.feet + 13, 64);
+    });
 
   ctx.restore();
 
