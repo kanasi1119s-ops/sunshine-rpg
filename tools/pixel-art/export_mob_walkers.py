@@ -139,6 +139,27 @@ def smooth_head(frames):
         out[fk] = ["".join(r) for r in g]
     return out
 
+def reoutline(frames):
+    """縁取りが欠けているところ（絵の外へ、すき間が直接つながっているところ）に、縁取りの色を足す。"""
+    out = {}
+    for fk, rows in frames.items():
+        g = [list(r) for r in rows]
+        H, W = len(g), len(g[0])
+        add = []
+        for y in range(H):
+            for x in range(W):
+                if g[y][x] != ".":
+                    continue
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < W and 0 <= ny < H and g[ny][nx] not in ".A":
+                        add.append((x, y))
+                        break
+        for x, y in add:
+            g[y][x] = "A"
+        out[fk] = ["".join(r) for r in g]
+    return out
+
 built = {}
 for key, (name, groups) in TEMPLATES.items():
     d = json.load(open(SRC / f"{name}.json"))
@@ -154,7 +175,7 @@ for key, (name, groups) in TEMPLATES.items():
             shade[i] = round(max(-0.6, min(0.6, (lum(pal[i]) - med) * 1.25)), 3)
     frames = {k: v for k, v in d["frames"].items() if k[:-1] in ("down", "up", "left", "right") and k[-1] in "012"}
     frames = symmetrize(strip(key, frames))
-    frames = smooth_head(despeckle(frames, roles))
+    frames = reoutline(smooth_head(despeckle(frames, roles)))
     # 目は、どの肌の色でも見えやすいよう、黒（ほんのり色つき）にする
     ei = LETTERS.index(EYES[key])
     pal = list(pal); pal[ei] = "#241820"; roles[ei] = "fixed"; shade[ei] = 0.0
