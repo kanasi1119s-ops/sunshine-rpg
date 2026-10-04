@@ -10,30 +10,36 @@ def wood(p):
 
 def bookshelf():
     p = Pal(); ol = p("#2a1a10"); w1, w2, w3, w4 = wood(p); sh = p(SH)
+    top1 = p("#dcae72")                                    # 天板の上の面（いちばん明るい）
     book_cols = [("#b84a42", "#8a2e2e"), ("#4a78b0", "#2e4e80"), ("#d8b048", "#a08028"), ("#58985a", "#34683a"), ("#8a58a8", "#5a3478"), ("#d8d0b8", "#a8a088"), ("#c87a3a", "#8a4a1c")]
     cols = [(p(a), p(b)) for a, b in book_cols]
-    g = G(28, 36)
-    # 本体
-    g.rect(1, 2, 26, 32, w2)
-    g.rect(1, 2, 26, 4, w1)            # 上の飾り板
-    g.rect(0, 1, 27, 2, w1)
-    g.rect(0, 3, 27, 3, w3)
-    for y in range(4, 33): g.put(1, y, w1); g.put(2, y, w2); g.put(25, y, w3); g.put(26, y, w3)
-    # 中のくぼみ（暗い）
-    g.rect(3, 5, 24, 31, w4)
-    # 棚板と本
-    shelves = [(5, 13), (14, 22), (23, 31)]
+    g = G(30, 40)
+    # 天板の上の面（奥行き）: 手前へ向かって少し広がる台形ではなく、奥の縁と手前の縁がある長方形
+    g.rect(2, 0, 27, 5, top1)
+    g.rect(2, 0, 27, 0, w1)
+    g.rect(2, 5, 27, 5, w2)
+    g.rect(27, 1, 27, 5, w3)
+    # 天板の前の面
+    g.rect(1, 6, 28, 8, w1); g.rect(1, 8, 28, 8, w3)
+    # 本体（左右の側板は手前に厚みが見える）
+    g.rect(1, 9, 28, 37, w2)
+    g.rect(1, 9, 3, 37, w1)      # 左の側板の前の面
+    g.rect(26, 9, 28, 37, w3)    # 右の側板の前の面
+    # 中のくぼみ（奥の板は暗く。側板の内側の面が見えて、奥行きになる）
+    g.rect(4, 10, 25, 36, w4)
+    g.rect(4, 10, 5, 36, w3)     # 左の側板の内側（影）
+    g.rect(24, 10, 25, 36, w4)
+    shelves = [(10, 18), (19, 27), (28, 36)]
     for si, (y0, y1) in enumerate(shelves):
-        # 棚板（手前の板）
-        g.rect(3, y1, 24, y1 + 0, w1)
-        g.rect(3, y1 + 1 if y1 + 1 <= 31 else y1, 24, y1 + 1 if y1 + 1 <= 31 else y1, w3)
-        x = 3
-        k = 0
+        # 棚板（手前の厚みと、下にできる影）
+        g.rect(4, y1, 25, y1, w1)
+        g.rect(4, y1 + 1, 25, y1 + 1, w3) if y1 + 1 <= 36 else None
+        x = 6
         while x < 24:
             wb = 2 + hn(x, y0, si) % 2
             hb = 5 + hn(x, y0, si + 7) % 4
             if hn(x, y0, si + 3) % 11 == 0:
-                x += 2  # すきま
+                x += 2
                 continue
             if x + wb > 24: break
             lc, dc = cols[(hn(x, y0, 5) + si) % len(cols)]
@@ -41,13 +47,12 @@ def bookshelf():
             g.rect(x, top, x + wb - 1, y1 - 1, lc)
             g.rect(x + wb - 1, top, x + wb - 1, y1 - 1, dc)
             if hn(x, y0, 9) % 3 == 0:
-                g.rect(x, top + 2, x + wb - 1, top + 2, dc)  # 背の帯
+                g.rect(x, top + 2, x + wb - 1, top + 2, dc)
             x += wb
-            k += 1
-    # 左のはしに、ななめに立てかけた本（いちばん上の段）
-    g.rect(3, 6, 4, 12, w4)
+        # 棚のなかの、上の暗がり
+        g.rect(6, y0, 23, y0, w4)
     g.outline(ol, {})
-    g.shadow(14, 35, 13, sh, 0)
+    g.shadow(15, 39, 14, sh, 0)
     return g, p
 
 def bed():
@@ -87,34 +92,44 @@ def bed():
 
 def tansu():
     p = Pal(); ol = p("#2a1a10"); w1, w2, w3, w4 = wood(p); sh = p(SH)
+    top1 = p("#dcae72")
     ir1, ir2 = p("#7e8494", "#4e5464"); gd = p("#e8c050")
-    g = G(26, 30)
-    # 天板
-    g.rect(0, 2, 25, 4, w1); g.rect(0, 4, 25, 4, w2)
-    # 本体
-    g.rect(1, 5, 24, 26, w2)
-    g.rect(1, 5, 2, 26, w1)          # 左のふち（明）
-    g.rect(23, 5, 24, 26, w3)        # 右のふち（影）
+    fr, fr2 = p("#e8c050", "#a07a20"); pic1, pic2, pic3, pic4 = p("#8ac0e8", "#58985a", "#d8b048", "#f4ecd8")
+    g = G(30, 38)
+    # 上に飾った写し絵（金のわくに、空と丘）
+    g.rect(4, 0, 12, 9, fr)
+    g.rect(5, 1, 11, 8, pic4)
+    g.rect(5, 1, 11, 4, pic1); g.rect(5, 5, 11, 8, pic2); g.rect(8, 2, 9, 3, pic3)
+    g.rect(4, 9, 12, 9, fr2); g.rect(12, 0, 12, 9, fr2)
+    g.put(8, 10, w4)
+    # 小さな花びん
+    g.rect(21, 6, 24, 10, p("#8a98c0")); g.rect(23, 6, 24, 10, p("#5a6890")); g.put(22, 5, p("#c0504a")); g.put(23, 4, p("#c0504a")); g.put(24, 5, p("#58985a"))
+    # 天板の上の面（奥行き）
+    g.rect(2, 11, 27, 15, top1)
+    g.rect(2, 11, 27, 11, w1)
+    g.rect(2, 15, 27, 15, w2)
+    g.rect(27, 12, 27, 15, w3)
+    # 天板の前の面
+    g.rect(1, 16, 28, 17, w1); g.rect(1, 17, 28, 17, w3)
+    # 本体（前の面）
+    g.rect(1, 18, 28, 33, w2)
+    g.rect(1, 18, 2, 33, w1)
+    g.rect(27, 18, 28, 33, w3)
     # 引き出し4段
     for i in range(4):
-        y0 = 6 + i * 5
-        g.rect(4, y0, 21, y0 + 3, w2 if i % 2 == 0 else w1)
-        g.rect(4, y0 + 3, 21, y0 + 3, w3)
-        g.rect(4, y0, 4, y0 + 3, w1)
-        g.rect(21, y0, 21, y0 + 3, w3)
-        # 取っ手（鉄の輪）
-        g.rect(11, y0 + 1, 14, y0 + 2, ir1); g.rect(11, y0 + 2, 14, y0 + 2, ir2)
-        g.put(12, y0 + 1, w4); g.put(13, y0 + 1, w4)
-        # 錠前の鍵穴
-    # 鉄の角金具
-    for (x0, y0) in ((1, 5), (23, 5), (1, 24), (23, 24)):
-        g.rect(x0, y0, x0 + 1, y0 + 1, ir1)
-        g.put(x0 + 1, y0 + 1, ir2)
-    g.put(12, 25, gd)
+        y0 = 19 + i * 4
+        g.rect(4, y0, 25, y0 + 2, w2 if i % 2 == 0 else w1)
+        g.rect(4, y0 + 3, 25, y0 + 3, w3)
+        g.rect(4, y0, 4, y0 + 2, w1)
+        g.rect(25, y0, 25, y0 + 2, w3)
+        g.rect(13, y0 + 1, 16, y0 + 1, ir1); g.rect(13, y0 + 2, 16, y0 + 2, ir2)
+    for (x0, y0) in ((1, 18), (27, 18), (1, 32), (27, 32)):
+        g.rect(x0, y0, x0 + 1, y0 + 1, ir1); g.put(x0 + 1, y0 + 1, ir2)
+    g.put(14, 33, gd)
     # 脚
-    g.rect(2, 27, 4, 28, w3); g.rect(21, 27, 23, 28, w4)
+    g.rect(2, 34, 5, 35, w3); g.rect(24, 34, 27, 35, w4)
     g.outline(ol, {})
-    g.shadow(13, 29, 12, sh, 0)
+    g.shadow(15, 37, 14, sh, 0)
     return g, p
 
 def table():
