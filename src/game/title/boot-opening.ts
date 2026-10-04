@@ -1,13 +1,14 @@
 /**
  * ゲームを起動したときのオープニング。
  *  1. splash: 「サンシャインソフトウェア」と「決定でスタート」（ブラウザは、音を鳴らす前に操作が要るので、ここで1回押してもらう）
- *  2. logo:   曲が鳴りはじめ、ロゴが上から落ちてきて、光る
- *  3. story:  ロゴが上へ上がり、あらすじが下から上へ流れる
- *  4. 終わると（決定でとばしても）、タイトル画面へ
+ *  2. story:  曲がはじまり、星空の上を、あらすじが下から上へ流れる
+ *  3. reveal: 光が集まってリングになり、曲のクライマックスの一撃で、文字が輝きながら現れる（タイトルは最後に出る）
+ *  4. hold:   ロゴを見せたまま、決定ボタンが押されるまで、曲もロゴもそのまま流れつづける
+ *  5. 決定でタイトル画面へ（途中で押すと、ひとつ先へとばす）
  * 時間の進みだけを持つ。絵は `render/boot-opening-renderer.ts`。
- * （既存作品のロゴ・演出のまねはしない。ロゴは本作の名前を、金色の文字と光で見せるオリジナルのもの。）
+ * （既存作品のロゴ・演出のまねはしない。）
  */
-export type BootPhase = "splash" | "logo" | "story";
+export type BootPhase = "splash" | "story" | "reveal" | "hold";
 
 export interface BootOpeningState {
   open: boolean;
@@ -16,11 +17,15 @@ export interface BootOpeningState {
   ms: number;
 }
 
-/** ロゴが落ちて、光って、落ち着くまでの時間（ms）。 */
-export const LOGO_MS = 4600;
 /** あらすじの流れる速さ（論理のドット／秒）と、1行の高さ。 */
 export const STORY_SPEED = 20;
 export const STORY_LINE_HEIGHT = 17;
+
+/** 曲の最初の一撃（ティンパニと金管）が鳴る時刻（ms。曲のはじまりから）。星空が光る。 */
+export const OPENING_HIT_MS = 900;
+
+/** 光が集まる → 文字が現れる → サブタイトルが出る、の時刻（revealの頭から、ms）と、全体の長さ。 */
+export const REVEAL = { gatherEnd: 3000, lettersEnd: 4300, subtitleEnd: 5500, total: 6500 } as const;
 
 export const STORY_LINES: string[] = [
   "大陸アルテシア。",
@@ -54,34 +59,21 @@ export function storyDurationMs(screenHeight: number): number {
 export function updateBootOpening(state: BootOpeningState, dtMs: number, screenHeight: number): BootOpeningState {
   if (!state.open || state.phase === "splash") return state;
   const ms = state.ms + dtMs;
-  if (state.phase === "logo") {
-    return ms >= LOGO_MS ? { ...state, phase: "story", ms: 0 } : { ...state, ms };
+  if (state.phase === "story") {
+    return ms >= storyDurationMs(screenHeight) ? { ...state, phase: "reveal", ms: 0 } : { ...state, ms };
   }
-  return ms >= storyDurationMs(screenHeight) ? { ...state, open: false } : { ...state, ms };
+  if (state.phase === "reveal") {
+    return ms >= REVEAL.total ? { ...state, phase: "hold", ms: 0 } : { ...state, ms };
+  }
+  // hold: ボタンが押されるまで、そのまま流れつづける
+  return { ...state, ms };
 }
 
-/** 決定: スタート → ロゴ（曲がはじまる）→ あらすじ → タイトル。 */
+/** 決定: スタート → あらすじ → （ロゴの登場を見せる）→ ロゴ → タイトル。途中で押すと、ひとつ先へ。 */
 export function advanceBootOpening(state: BootOpeningState): BootOpeningState {
   if (!state.open) return state;
-  if (state.phase === "splash") return { ...state, phase: "logo", ms: 0 };
-  if (state.phase === "logo") return { ...state, phase: "story", ms: 0 };
+  if (state.phase === "splash") return { ...state, phase: "story", ms: 0 };
+  if (state.phase === "story") return { ...state, phase: "reveal", ms: 0 };
+  if (state.phase === "reveal") return { ...state, phase: "hold", ms: REVEAL.total };
   return { ...state, open: false };
 }
-
-/** ロゴの高さ（0=画面の上の外、1=落ち着いた位置）。落ちて、はずんで、止まる。 */
-export function logoDrop(ms: number): number {
-  const fall = 900;
-  if (ms <= 0) return 0;
-  if (ms < fall) {
-    const t = ms / fall;
-    return t * t; // だんだん速く落ちる
-  }
-  // 着地のあと、2回はずむ
-  const t = (ms - fall) / 900;
-  if (t >= 1) return 1;
-  const bounce = Math.exp(-4 * t) * Math.abs(Math.sin(t * Math.PI * 2.5));
-  return 1 - 0.18 * bounce;
-}
-
-/** 着地の瞬間（ms）。光と画面のゆれの合図に使う。 */
-export const LOGO_LAND_MS = 900;

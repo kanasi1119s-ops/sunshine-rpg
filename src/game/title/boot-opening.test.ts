@@ -1,30 +1,35 @@
 import { describe, expect, it } from "vitest";
-import { advanceBootOpening, LOGO_MS, logoDrop, startBootOpening, STORY_LINES, storyDurationMs, updateBootOpening } from "./boot-opening";
+import { advanceBootOpening, REVEAL, startBootOpening, STORY_LINES, storyDurationMs, updateBootOpening } from "./boot-opening";
 
 describe("起動のオープニング", () => {
-  it("決定でスタートするまでは進まない。決定でロゴ、あらすじ、タイトルの順に進む", () => {
+  it("決定でスタートするまでは進まない。決定で、あらすじ→ロゴの登場→ロゴ→タイトルの順に進む", () => {
     let s = startBootOpening();
     expect(updateBootOpening(s, 5000, 225)).toEqual(s);
     s = advanceBootOpening(s);
-    expect(s.phase).toBe("logo");
-    s = advanceBootOpening(s);
     expect(s.phase).toBe("story");
+    s = advanceBootOpening(s);
+    expect(s.phase).toBe("reveal");
+    s = advanceBootOpening(s);
+    expect(s.phase).toBe("hold");
     expect(advanceBootOpening(s).open).toBe(false);
   });
 
-  it("放っておいても、ロゴ→あらすじ→終わり（タイトルへ）と進む", () => {
+  it("放っておくと、あらすじ→ロゴの登場→ロゴ、と進み、ロゴで止まったまま、ボタンが押されるまで流れつづける", () => {
     let s = advanceBootOpening(startBootOpening());
-    s = updateBootOpening(s, LOGO_MS + 1, 225);
-    expect(s.phase).toBe("story");
     s = updateBootOpening(s, storyDurationMs(225) + 1, 225);
-    expect(s.open).toBe(false);
+    expect(s.phase).toBe("reveal");
+    s = updateBootOpening(s, REVEAL.total + 1, 225);
+    expect(s.phase).toBe("hold");
+    // 何分たっても、タイトルへ勝手に進まない
+    for (let i = 0; i < 100; i++) s = updateBootOpening(s, 10_000, 225);
+    expect(s.open).toBe(true);
+    expect(s.phase).toBe("hold");
   });
 
-  it("ロゴは上から落ちて、着地し、最後は決まった位置で止まる", () => {
-    expect(logoDrop(0)).toBe(0);
-    expect(logoDrop(450)).toBeLessThan(logoDrop(850));
-    expect(logoDrop(900)).toBeCloseTo(1, 1);
-    expect(logoDrop(3000)).toBe(1);
+  it("ロゴの登場は、光が集まる→文字→サブタイトルの順", () => {
+    expect(REVEAL.gatherEnd).toBeLessThan(REVEAL.lettersEnd);
+    expect(REVEAL.lettersEnd).toBeLessThan(REVEAL.subtitleEnd);
+    expect(REVEAL.subtitleEnd).toBeLessThanOrEqual(REVEAL.total);
   });
 
   it("あらすじは、世界観と主人公の旅立ちまでで、黒幕などの真相に触れない", () => {

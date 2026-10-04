@@ -1,5 +1,5 @@
-import { drawPixelLogo, LOGO_NATIVE_H } from "./logo-pixel";
-import { LOGO_LAND_MS, logoDrop, STORY_LINE_HEIGHT, STORY_LINES, STORY_SPEED, type BootOpeningState } from "../game/title/boot-opening";
+import { drawPixelLogo, drawPixelLogoReveal } from "./logo-pixel";
+import { OPENING_HIT_MS, REVEAL, STORY_LINE_HEIGHT, STORY_LINES, STORY_SPEED, type BootOpeningState } from "../game/title/boot-opening";
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -86,70 +86,60 @@ export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, 
     return;
   }
 
-  const restY = h * 0.4;
-  let logoY: number;
-  let storyMs = 0;
-  if (state.phase === "logo") {
-    const drop = logoDrop(ms);
-    logoY = -LOGO_NATIVE_H * 2 + (restY + LOGO_NATIVE_H * 2) * drop;
-    // 着地の光とゆれ
-    const landed = ms - LOGO_LAND_MS;
-    if (landed > 0) {
-      drawRays(ctx, w / 2, restY, ms, Math.min(1, landed / 600) * (landed < 3200 ? 1 : Math.max(0, 1 - (landed - 3200) / 600)));
-      if (landed < 700) {
-        ctx.fillStyle = `rgba(255, 255, 255, ${0.8 * (1 - landed / 700)})`;
-        ctx.fillRect(0, 0, w, h);
-      }
-      drawSparkles(ctx, w / 2, restY, landed);
+  const logoY = h * 0.42;
+  if (state.phase === "story") {
+    // 曲のはじまりの一撃（0.9秒）で、星空が光る
+    const sinceHit = ms - OPENING_HIT_MS;
+    if (sinceHit > -80 && sinceHit < 900) {
+      const a = sinceHit < 0 ? 0.3 : Math.max(0, 1 - sinceHit / 900);
+      const g = ctx.createRadialGradient(w / 2, h * 0.45, 4, w / 2, h * 0.45, w * 0.55);
+      g.addColorStop(0, `rgba(255, 236, 170, ${0.55 * a})`);
+      g.addColorStop(1, "rgba(255, 236, 170, 0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      drawSparkles(ctx, w / 2, h * 0.45, Math.max(0, sinceHit));
     }
-    // 画面のゆれ（着地の直後）
-    if (landed > 0 && landed < 500) {
-      const amp = 4 * (1 - landed / 500);
-      ctx.save();
-      ctx.translate(Math.round((hash(landed / 30) - 0.5) * 2 * amp), Math.round((hash(landed / 30 + 9) - 0.5) * 2 * amp));
-      drawLogoAt(ctx, title, w / 2, logoY, ms - LOGO_LAND_MS - 400, 2, ms);
-      ctx.restore();
-    } else {
-      drawLogoAt(ctx, title, w / 2, logoY, ms - LOGO_LAND_MS - 400, 2, ms);
-    }
-    ctx.font = "9px monospace";
-    ctx.fillStyle = `rgba(200, 200, 224, ${landedAlpha(ms)})`;
-    ctx.fillText("サンシャインソフトウェア", w / 2, restY + LOGO_NATIVE_H * 2 / 2 + 14);
-  } else {
-    // あらすじ: ロゴが上へ上がって小さくなり、文字が下から上へ流れる
-    storyMs = ms;
-    const up = Math.min(1, ms / 1200);
-    const ease = 1 - (1 - up) ** 3;
-    logoY = restY + (28 - restY) * ease;
-    drawLogoAt(ctx, title, w / 2, logoY, 99999, 1, performance.now());
-    const scroll = (storyMs / 1000) * STORY_SPEED;
+    // あらすじ: 下から上へ流れる
+    const scroll = (ms / 1000) * STORY_SPEED;
     ctx.font = "11px monospace";
-    const top = 62;
+    const top = 20;
     STORY_LINES.forEach((line, i) => {
       const y = h - scroll + i * STORY_LINE_HEIGHT;
       if (y < top - 12 || y > h + 4) return;
       // 上と下で、すうっと消える
-      const alpha = Math.max(0, Math.min(1, (y - top) / 28)) * Math.max(0, Math.min(1, (h - y) / 22));
+      const alpha = Math.max(0, Math.min(1, (y - top) / 36)) * Math.max(0, Math.min(1, (h - y) / 26));
       ctx.fillStyle = `rgba(0,0,0,${0.8 * alpha})`;
       ctx.fillText(line, w / 2 + 1, y + 1);
       ctx.fillStyle = `rgba(250, 240, 210, ${alpha})`;
       ctx.fillText(line, w / 2, y);
     });
+  } else if (state.phase === "reveal") {
+    // 光の筋は、文字が現れてから強まる
+    const after = ms - REVEAL.gatherEnd;
+    drawRays(ctx, w / 2, logoY, ms, Math.max(0, Math.min(1, after / 700)));
+    drawPixelLogoReveal(ctx, title, w / 2, logoY, 2, ms, REVEAL);
+    if (after > 0) drawSparkles(ctx, w / 2, logoY, after);
+  } else {
+    // hold: ロゴを見せたまま、ボタンが押されるまで、ずっと流れつづける
+    drawRays(ctx, w / 2, logoY, ms + 3000, 1);
+    drawSparkles(ctx, w / 2, logoY, ms);
+    drawPixelLogo(ctx, title, w / 2, logoY, 2, (ms % 4200) / 1100, ms + 5000);
+    ctx.font = "9px monospace";
+    ctx.fillStyle = "rgba(200, 200, 224, 0.85)";
+    ctx.fillText("サンシャインソフトウェア", w / 2, logoY + 56 + 18);
+    const blink = 0.5 + 0.5 * Math.sin(performance.now() / 380);
+    ctx.globalAlpha = 0.35 + 0.65 * blink;
+    ctx.font = "11px monospace";
+    ctx.fillStyle = "#f2c14e";
+    ctx.fillText("決定ボタン（Enter）で スタート", w / 2, h - 28);
+    ctx.globalAlpha = 1;
   }
-  ctx.font = "9px monospace";
-  ctx.textAlign = "right";
-  ctx.textBaseline = "top";
-  ctx.fillStyle = "rgba(200, 200, 224, 0.7)";
-  ctx.fillText("決定で つぎへ", w - 6, 3);
+  if (state.phase !== "hold") {
+    ctx.font = "9px monospace";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "rgba(200, 200, 224, 0.7)";
+    ctx.fillText("決定で つぎへ", w - 6, 3);
+  }
   ctx.textAlign = "left";
-}
-
-function landedAlpha(ms: number): number {
-  return Math.max(0, Math.min(1, (ms - LOGO_LAND_MS - 900) / 700));
-}
-
-function drawLogoAt(ctx: Ctx, title: string, cx: number, y: number, shineMs: number, scale: number, ms: number): void {
-  // ドット絵のロゴ。整数倍（2倍、あらすじの間は1倍）で、にじまないように描く
-  const shine = shineMs < 0 ? -1 : (shineMs % 3600) / 1100;
-  drawPixelLogo(ctx, title, cx, y, scale, shine, ms);
 }
