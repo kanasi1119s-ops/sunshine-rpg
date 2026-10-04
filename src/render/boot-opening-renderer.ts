@@ -71,7 +71,7 @@ function drawSparkles(ctx: Ctx, cx: number, cy: number, ms: number): void {
 }
 
 /** 起動のオープニング。 */
-export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, h: number, title: string, soundBlocked = false): void {
+export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, h: number, title: string): void {
   if (!state.open) return;
   const ms = state.ms;
   ctx.fillStyle = "#000";
@@ -79,6 +79,16 @@ export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, 
   drawStarfield(ctx, w, h, performance.now());
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
+
+  if (state.phase === "splash") {
+    // 英語だけの表記。ゆっくり現れ、「TAP」の案内がまたたく
+    const fade = Math.min(1, performance.now() / 1400);
+    drawPixelText(ctx, "SUNSHINE SOFTWARE", w / 2, h / 2 - 22, "center", fade, { size: 20, color: "#f2c14e", bold: true });
+    drawPixelText(ctx, "PRESENTS", w / 2, h / 2 + 4, "center", fade, { size: 12, color: "#c8c8e0" });
+    const blink = 0.5 + 0.5 * Math.sin(performance.now() / 380);
+    drawPixelText(ctx, "TAP or PRESS ENTER", w / 2, h / 2 + 46, "center", fade * (0.3 + 0.7 * blink), { size: 10, color: "#f2c14e" });
+    return;
+  }
 
 
   const logoY = h * 0.42;
@@ -120,10 +130,6 @@ export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, 
   }
   if (state.phase !== "hold") {
     drawPixelText(ctx, "決定で つぎへ", w - 6, 3, "right", 0.8, { size: 10, color: "#c8c8e0" });
-  }
-  if (soundBlocked) {
-    // ブラウザは、操作がないと音を出せない。すこしだけ目立たないように知らせる
-    drawPixelText(ctx, "♪ キーか画面をタッチすると 音楽が流れます", 6, 3, "left", 0.5 + 0.4 * Math.abs(Math.sin(performance.now() / 600)), { size: 10, color: "#f2c14e" });
   }
   ctx.textAlign = "left";
 }

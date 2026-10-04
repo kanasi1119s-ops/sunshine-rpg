@@ -1,14 +1,15 @@
 /**
  * ゲームを起動したときのオープニング。
- *  1. story:  起動するとすぐ（ボタンなしで）、曲がはじまり、星空の上を、あらすじが下から上へ流れる
- *     （ブラウザが、操作の前に音を止めているときは、最初のキー・タップで、そのときの場面の位置から曲がはじまる）
- *  2. reveal: 光が集まってリングになり、曲のクライマックスの一撃で、文字が輝きながら現れる（タイトルは最後に出る）
- *  3. hold:   ロゴを見せたまま、決定ボタンが押されるまで、曲もロゴもそのまま流れつづける
- *  4. 決定でタイトル画面へ（途中で押すと、ひとつ先へとばす）
+ *  1. splash: 「SUNSHINE SOFTWARE PRESENTS」（英語のみ）。タップ・決定で、オープニングがはじまる
+ *     （ブラウザは、操作がないと音を鳴らせないので、このタップが音のはじまりにもなる）
+ *  2. story:  曲がはじまり、星空の上を、あらすじが下から上へ流れる
+ *  3. reveal: 光が集まってリングになり、曲のクライマックスの一撃で、文字が輝きながら現れる（タイトルは最後に出る）
+ *  4. hold:   ロゴを見せたまま、決定ボタンが押されるまで、曲もロゴもそのまま流れつづける
+ *  5. 決定でタイトル画面へ（途中で押すと、ひとつ先へとばす）
  * 時間の進みだけを持つ。絵は `render/boot-opening-renderer.ts`。
  * （既存作品のロゴ・演出のまねはしない。）
  */
-export type BootPhase = "story" | "reveal" | "hold";
+export type BootPhase = "splash" | "story" | "reveal" | "hold";
 
 export interface BootOpeningState {
   open: boolean;
@@ -48,7 +49,7 @@ export const STORY_LINES: string[] = [
 ];
 
 export function startBootOpening(): BootOpeningState {
-  return { open: true, phase: "story", ms: 0 };
+  return { open: true, phase: "splash", ms: 0 };
 }
 
 /** あらすじが全部流れきるまでの時間（ms）。画面の高さぶんの余白を含む。 */
@@ -57,7 +58,7 @@ export function storyDurationMs(screenHeight: number): number {
 }
 
 export function updateBootOpening(state: BootOpeningState, dtMs: number, screenHeight: number): BootOpeningState {
-  if (!state.open) return state;
+  if (!state.open || state.phase === "splash") return state;
   const ms = state.ms + dtMs;
   if (state.phase === "story") {
     return ms >= storyDurationMs(screenHeight) ? { ...state, phase: "reveal", ms: 0 } : { ...state, ms };
@@ -69,9 +70,10 @@ export function updateBootOpening(state: BootOpeningState, dtMs: number, screenH
   return { ...state, ms };
 }
 
-/** 決定: あらすじ → （ロゴの登場を見せる）→ ロゴ → タイトル。途中で押すと、ひとつ先へ。 */
+/** 決定: タップでスタート → あらすじ → （ロゴの登場を見せる）→ ロゴ → タイトル。途中で押すと、ひとつ先へ。 */
 export function advanceBootOpening(state: BootOpeningState): BootOpeningState {
   if (!state.open) return state;
+  if (state.phase === "splash") return { ...state, phase: "story", ms: 0 };
   if (state.phase === "story") return { ...state, phase: "reveal", ms: 0 };
   if (state.phase === "reveal") return { ...state, phase: "hold", ms: REVEAL.total };
   return { ...state, open: false };

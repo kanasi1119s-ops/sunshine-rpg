@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import { advanceBootOpening, REVEAL, startBootOpening, STORY_LINES, storyDurationMs, updateBootOpening } from "./boot-opening";
 
 describe("起動のオープニング", () => {
-  it("起動するとすぐあらすじが始まる（決定はいらない）。決定で、ロゴの登場→ロゴ→タイトルの順に先へ進める", () => {
+  it("最初は SUNSHINE SOFTWARE PRESENTS。タップ（決定）するまで進まない。決定で、あらすじ→ロゴの登場→ロゴ→タイトルの順に進む", () => {
     let s = startBootOpening();
+    expect(s.phase).toBe("splash");
+    expect(updateBootOpening(s, 5000, 225)).toEqual(s);
+    s = advanceBootOpening(s);
     expect(s.phase).toBe("story");
-    expect(updateBootOpening(s, 5000, 225).ms).toBe(5000);
     s = advanceBootOpening(s);
     expect(s.phase).toBe("reveal");
     s = advanceBootOpening(s);
@@ -14,7 +16,7 @@ describe("起動のオープニング", () => {
   });
 
   it("放っておくと、あらすじ→ロゴの登場→ロゴ、と進み、ロゴで止まったまま、ボタンが押されるまで流れつづける", () => {
-    let s = startBootOpening();
+    let s = advanceBootOpening(startBootOpening());
     s = updateBootOpening(s, storyDurationMs(225) + 1, 225);
     expect(s.phase).toBe("reveal");
     s = updateBootOpening(s, REVEAL.total + 1, 225);
