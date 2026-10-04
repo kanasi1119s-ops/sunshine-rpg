@@ -160,6 +160,44 @@ def reoutline(frames):
         out[fk] = ["".join(r) for r in g]
     return out
 
+def fill_notches(frames):
+    """輪郭の、1ドットぶんの小さなへこみ（髪のおでこのあたりの欠け）を埋める。左右のへりで、短い区間（3段まで）だけ内側にへこんでいるところを、まわりにそろえる。"""
+    out = {}
+    for fk, rows in frames.items():
+        g = [list(r) for r in rows]
+        H, W = len(g), len(g[0])
+        for side in ("L", "R"):
+            def edge(y):
+                xs = [x for x in range(W) if g[y][x] != "."]
+                if not xs:
+                    return None
+                return min(xs) if side == "L" else max(xs)
+            ys = range(5, 23)
+            e = {y: edge(y) for y in range(H)}
+            y = 5
+            while y < 23:
+                if e[y] is None or e[y - 1] is None:
+                    y += 1
+                    continue
+                # へこみの区間 [y, y2]: へりが、上の段より1だけ内側
+                inward = 1 if side == "L" else -1
+                if e[y] == e[y - 1] + inward:
+                    y2 = y
+                    while y2 + 1 < 23 and e[y2 + 1] == e[y]:
+                        y2 += 1
+                    if y2 - y + 1 <= 3 and e[y2 + 1] is not None and e[y2 + 1] == e[y - 1]:
+                        for yy in range(y, y2 + 1):
+                            x_out = e[yy] - inward
+                            x_in = e[yy]
+                            inner = g[yy][x_in + inward]
+                            g[yy][x_out] = g[yy][x_in]      # 縁取りを外へ
+                            g[yy][x_in] = inner              # もとの縁取りの位置は、内側の色
+                    y = y2 + 1
+                else:
+                    y += 1
+        out[fk] = ["".join(r) for r in g]
+    return out
+
 built = {}
 for key, (name, groups) in TEMPLATES.items():
     d = json.load(open(SRC / f"{name}.json"))
@@ -186,7 +224,7 @@ for key, (name, groups) in TEMPLATES.items():
         newl = LETTERS[newi]
         frames = {fk: ["".join(newl if (ch == "D" and y <= 17) else ch for ch in row) for y, row in enumerate(rows)] for fk, rows in frames.items()}
     frames = symmetrize(strip(key, frames))
-    frames = reoutline(smooth_head(despeckle(frames, roles)))
+    frames = reoutline(fill_notches(reoutline(smooth_head(despeckle(frames, roles)))))
     # 目は、どの肌の色でも見えやすいよう、黒（ほんのり色つき）にする
     ei = LETTERS.index(EYES[key])
     pal = list(pal); pal[ei] = "#241820"; roles[ei] = "fixed"; shade[ei] = 0.0
