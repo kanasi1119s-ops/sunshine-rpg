@@ -26,23 +26,31 @@ function drawStarfield(ctx: Ctx, w: number, h: number, ms: number): void {
   ctx.globalAlpha = 1;
 }
 
+/** 集中線の光。なめらかな色のグラデーションではなく、1ドットずつ、3段階の色と市松のディザで描く。 */
 function drawRays(ctx: Ctx, cx: number, cy: number, ms: number, strength: number): void {
   if (strength <= 0) return;
   ctx.save();
-  ctx.globalCompositeOperation = "lighter";
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * Math.PI * 2 + ms / 7000;
-    const spread = 0.06;
-    const grad = ctx.createRadialGradient(cx, cy, 4, cx, cy, 240);
-    grad.addColorStop(0, `rgba(255, 220, 140, ${0.28 * strength})`);
-    grad.addColorStop(1, "rgba(255, 220, 140, 0)");
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.cos(a - spread) * 300, cy + Math.sin(a - spread) * 300);
-    ctx.lineTo(cx + Math.cos(a + spread) * 300, cy + Math.sin(a + spread) * 300);
-    ctx.closePath();
-    ctx.fill();
+  const colors = ["#fff4c0", "#ffd45c", "#c8802a"];
+  for (let i = 0; i < 16; i++) {
+    const a = (i / 16) * Math.PI * 2 + ms / 9000;
+    const cos = Math.cos(a);
+    const sin = Math.sin(a);
+    const len = (i % 2 === 0 ? 210 : 140) * strength;
+    const half = i % 2 === 0 ? 5 : 3; // 根もとの太さ（ドット）
+    for (let d = 14; d < len; d++) {
+      const t = d / len;
+      const width = Math.max(0, Math.round(half * (1 - t)));
+      const level = t < 0.3 ? 0 : t < 0.65 ? 1 : 2;
+      for (let o = -width; o <= width; o++) {
+        const x = Math.round(cx + cos * d - sin * o);
+        const y = Math.round(cy + sin * d + cos * o);
+        // 先へいくほどまばらに（市松）。ふちは1つおき
+        if (level === 2 && (x + y) % 2 !== 0) continue;
+        if (level === 1 && Math.abs(o) === width && width > 0 && (x + y) % 2 !== 0) continue;
+        ctx.fillStyle = colors[level];
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
   }
   ctx.restore();
 }

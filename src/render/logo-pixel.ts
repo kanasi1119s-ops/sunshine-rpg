@@ -197,6 +197,20 @@ export function getPixelLogo(title: string): HTMLCanvasElement | null {
   paintRing(back, W / 2, textCy, ringRx, 9, -0.13, false);
   paintRing(front, W / 2, textCy, ringRx, 9, -0.13, true);
   paintGoldText(textLayer, mainMask, ox, oy, GOLDS, OUTLINE);
+  // 手前のリングが文字（とくに右はしの T）にかぶって読めなくならないよう、文字のまわり2ドットは手前のリングを消す
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      let hit = false;
+      for (let dy = -2; dy <= 2 && !hit; dy++) {
+        for (let dx = -2; dx <= 2; dx++) {
+          const mx = x - ox + dx;
+          const my = y - oy + dy;
+          if (mx >= 0 && my >= 0 && mx < mainMask.w && my < mainMask.h && mainMask.on[my * mainMask.w + mx]) { hit = true; break; }
+        }
+      }
+      if (hit) front.px[(y * W + x) * 4 + 3] = 0;
+    }
+  }
   // CHRONICLE（小さく。白から水色）
   if (sub) {
     const subMask = textMask(sub, 12, true, 4, 110);
@@ -240,7 +254,7 @@ export function getPixelLogo(title: string): HTMLCanvasElement | null {
 }
 
 /** ロゴのリングの上の、きらめきの位置（ロゴの左上を原点にした、ドットの座標）。 */
-const SPARKLES: [number, number][] = [[24, 26], [160, 22], [96, 38], [60, 36], [132, 18]];
+const SPARKLES: [number, number][] = [[10, 28], [180, 28], [96, 5], [60, 48], [132, 48]];
 
 /**
  * ロゴを描く。scale は整数（1か2）。shine は 0〜1 なら、光の帯が文字の上を走る（範囲外は走らない）。
