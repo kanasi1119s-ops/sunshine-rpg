@@ -194,3 +194,16 @@ describe("chooseEnemyAction", () => {
     }
   });
 });
+
+describe("ねらった敵が倒れていたとき", () => {
+  it("同じターンの、あとの味方の行動は、生きているつぎの敵に自動でねらいをかえる", () => {
+    const hero = { id: "hero", name: "ユーリ", isEnemy: false, hp: 50, maxHp: 50, mp: 0, maxMp: 0, attack: 30, defense: 1, speed: 20 } as never;
+    const friend = { id: "reto", name: "レト", isEnemy: false, hp: 50, maxHp: 50, mp: 0, maxMp: 0, attack: 30, defense: 1, speed: 10 } as never;
+    const a = { id: "e1", name: "敵A", isEnemy: true, hp: 1, maxHp: 1, mp: 0, maxMp: 0, attack: 1, defense: 0, speed: 1 } as never;
+    const b = { id: "e2", name: "敵B", isEnemy: true, hp: 100, maxHp: 100, mp: 0, maxMp: 0, attack: 1, defense: 0, speed: 1 } as never;
+    const state = { party: [hero, friend], enemies: [a, b], log: [], fled: false } as never;
+    const after = applyAction(applyAction(state, { type: "attack", actorId: "hero", targetId: "e1" }, () => 0.5), { type: "attack", actorId: "reto", targetId: "e1" }, () => 0.5);
+    expect(after.enemies[0].hp).toBe(0);
+    expect(after.enemies[1].hp).toBeLessThan(100);
+  });
+});

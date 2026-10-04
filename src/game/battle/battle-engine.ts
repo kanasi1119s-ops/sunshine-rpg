@@ -88,8 +88,22 @@ function tickStatuses(state: BattleState): void {
   }
 }
 
+/**
+ * ねらった敵がすでに倒れていたら、同じ側の、生きているつぎの1体に自動でねらいをかえる（ターゲットを倒したあと、
+ * 同じターンの味方の行動がむだにならない）。味方をねらう行動（回復・強化・蘇生）は、そのまま。
+ */
+function retarget(next: BattleState, actor: Combatant, targetId: string): string {
+  const foes = actor.isEnemy ? next.party : next.enemies;
+  const original = foes.find((c) => c.id === targetId);
+  if (!original || isAlive(original)) {
+    return targetId;
+  }
+  return foes.find(isAlive)?.id ?? targetId;
+}
+
 /** 効果つきの特技（複数回・敵全体・回復・強化・弱体・眠り）を適用する。MPが足りない・対象がいないときは何も起きない。 */
-function applyEffectSkill(next: BattleState, actor: Combatant, skill: Skill, targetId: string, rng: () => number): BattleState {
+function applyEffectSkill(next: BattleState, actor: Combatant, skill: Skill, rawTargetId: string, rng: () => number): BattleState {
+  const targetId = retarget(next, actor, rawTargetId);
   const allies = actor.isEnemy ? next.enemies : next.party;
   const foes = actor.isEnemy ? next.party : next.enemies;
   if (actor.mp < skill.mpCost) {
@@ -218,7 +232,7 @@ export function applyAction(state: BattleState, action: BattleAction, rng: () =>
       if (action.type === "skill" && (action.skill.effect || action.skill.hpCost || action.skill.koChance)) {
         return applyEffectSkill(next, nextActor, action.skill, action.targetId, rng);
       }
-      const target = findCombatant(next, action.targetId);
+      const target = findCombatant(next, retarget(next, nextActor, action.targetId));
       if (!target || !isAlive(target)) {
         return next;
       }

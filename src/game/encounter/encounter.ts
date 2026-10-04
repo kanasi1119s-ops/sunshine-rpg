@@ -120,18 +120,18 @@ export function stepEncounter(state: EncounterState, mapId: string, rng: () => n
 
 /** 想定レベルごとの、雑魚1体の体力・攻撃（間の値は直線でつなぐ）。想定パーティが2体の一団に約96%で勝つ強さを、自動シミュレーションで確かめて決めた。 */
 const MOB_ANCHORS: { level: number; maxHp: number; attack: number }[] = [
-  { level: 2, maxHp: 18, attack: 10 },
-  { level: 4, maxHp: 32, attack: 15 },
-  { level: 6, maxHp: 64, attack: 21 },
-  { level: 8, maxHp: 135, attack: 31 },
-  { level: 10, maxHp: 210, attack: 39 },
-  { level: 12, maxHp: 290, attack: 45 },
-  { level: 14, maxHp: 340, attack: 52 },
-  { level: 16, maxHp: 420, attack: 59 },
-  { level: 22, maxHp: 640, attack: 74 },
-  { level: 25, maxHp: 720, attack: 82 },
-  { level: 30, maxHp: 850, attack: 96 },
-  { level: 36, maxHp: 1050, attack: 112 },
+  { level: 2, maxHp: 30, attack: 10 },
+  { level: 4, maxHp: 40, attack: 15 },
+  { level: 6, maxHp: 77, attack: 21 },
+  { level: 8, maxHp: 162, attack: 31 },
+  { level: 10, maxHp: 252, attack: 39 },
+  { level: 12, maxHp: 348, attack: 45 },
+  { level: 14, maxHp: 408, attack: 52 },
+  { level: 16, maxHp: 504, attack: 59 },
+  { level: 22, maxHp: 768, attack: 74 },
+  { level: 25, maxHp: 864, attack: 82 },
+  { level: 30, maxHp: 1020, attack: 96 },
+  { level: 36, maxHp: 1260, attack: 112 },
 ];
 
 function interpolate(level: number, key: "maxHp" | "attack"): number {
