@@ -206,6 +206,14 @@ def build(W,H,FW,SW,floors,FH=18,roofH=16,ox=3,door=0.5,nwin=3,porch=True,dormer
             x=x0+1+int(1.6*math.sin(t*0.55)); y=bot-t*0.85
             c.put(int(x),int(y),'F1')
             if t%3==0: c.put(int(x)+1,int(y)-1,'F2'); c.put(int(x)-1,int(y),'F2')
+    if fullside:
+        # 側面の屋根の上のふちは、煙突の右の真ん中から、側面の壁の右端の上までの直線。それより上は消す
+        ax,ay=chx+3,ridge_y+1
+        bx,by=x2+2,far_eave
+        for x in range(ax+1,W):
+            ly=ay+(x-ax)*(by-ay)/(bx-ax)
+            for y in range(0,int(math.ceil(ly))):
+                if c.get(x,y) not in ('.',None): c.put(x,y,'.')
     c.outline('A',skip=('S',))
     # 草（土台の足元）・飛び石・樽
     for x in range(x0-2,x2):
