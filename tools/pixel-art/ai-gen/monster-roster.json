@@ -155,7 +155,7 @@
  {
   "id": "enc-mugikano-water-source-3",
   "prompt": "a big water strider insect with a small slim body and very long thin bent legs spread wide, shiny blue-green shell, side view",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-mugikano-water-source-3",
   "kind": "mob",
   "name": "用水路の虫",
@@ -167,13 +167,13 @@
    120,
    110
   ],
-  "draft": "enc-mugikano-water-source-3_x0",
+  "draft": "enc-mugikano-water-source-3_0",
   "seed_base": 6001
  },
  {
   "id": "enc-mugikano-water-source-4",
   "prompt": "a lumpy blob creature of wet brown mud with pebbles stuck in it, two eyes on short stalks on top, dripping mud arms",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-mugikano-water-source-4",
   "kind": "mob",
   "name": "泥のしずく",
@@ -191,7 +191,7 @@
  {
   "id": "enc-mugikano-water-source-5",
   "prompt": "an old stone well ring come alive, mossy bricks, a dark water mouth with a rope and bucket like a tongue",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-mugikano-water-source-5",
   "kind": "mob",
   "name": "井戸の石",
@@ -202,12 +202,13 @@
    120,
    125,
    110
-  ]
+  ],
+  "draft": "enc-mugikano-water-source-5_0"
  },
  {
   "id": "enc-garasuko-warehouse-0",
   "prompt": "a fat cargo rat with a burlap sack on its back, scarred ears, glowing amber eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-garasuko-warehouse-0",
   "kind": "mob",
   "name": "積荷ねずみ",
@@ -218,12 +219,13 @@
    115,
    95,
    75
-  ]
+  ],
+  "draft": "enc-garasuko-warehouse-0_0"
  },
  {
   "id": "enc-garasuko-warehouse-1",
   "prompt": "a damp shapeless shadow seeping from wet wooden planks, mold spots, many small dim eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-garasuko-warehouse-1",
   "kind": "mob",
   "name": "湿った歪み",
@@ -234,12 +236,13 @@
    70,
    85,
    80
-  ]
+  ],
+  "draft": "enc-garasuko-warehouse-1_0"
  },
  {
   "id": "enc-garasuko-warehouse-2",
   "prompt": "a living shadow shaped like a small wooden crate with spider-like legs of dark smoke, iron corner brackets",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-garasuko-warehouse-2",
   "kind": "mob",
   "name": "木箱の影",
@@ -250,7 +253,8 @@
    95,
    80,
    65
-  ]
+  ],
+  "draft": "enc-garasuko-warehouse-2_0"
  },
  {
   "id": "enc-garasuko-warehouse-3",
