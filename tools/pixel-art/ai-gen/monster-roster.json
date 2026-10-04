@@ -357,7 +357,7 @@
  {
   "id": "enc-tetsukusari-mine-3",
   "prompt": "a rusty iron mine cart monster walking on four thick mechanical legs, a glowing furnace mouth full of burning coal at the front, rivets",
-  "status": "picked",
+  "status": "done",
   "key": "enemy:enc-tetsukusari-mine-3",
   "kind": "mob",
   "name": "鉱車の機械",
@@ -391,20 +391,21 @@
  },
  {
   "id": "enc-tetsukusari-mine-5",
-  "prompt": "a pale translucent echo of a miner with a lantern, faded overalls, empty glowing eyes, floating",
+  "prompt": "a pale translucent ghost of an old miner floating, faded ragged clothes, a dim lantern in its hand, empty glowing eyes, wisps instead of legs",
   "status": "done",
   "key": "enemy:enc-tetsukusari-mine-5",
   "kind": "mob",
   "name": "鉱夫の残響",
   "zone": "tetsukusari-mine",
   "level": 8,
-  "shape": "tall",
+  "shape": "float",
   "tone": [
    160,
    170,
    175
   ],
-  "draft": "enc-tetsukusari-mine-5_0"
+  "draft": "enc-tetsukusari-mine-5_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-sanone-camp-0",
@@ -425,8 +426,8 @@
  },
  {
   "id": "enc-sanone-camp-1",
-  "prompt": "a swirling wind spirit made of sand streaks and a torn caravan cloth, two bright eyes in the swirl",
-  "status": "todo",
+  "prompt": "a whirling desert wind spirit made of swirling sand streaks wrapped in a torn striped caravan cloth, two bright eyes inside the whirl, floating",
+  "status": "done",
   "key": "enemy:enc-sanone-camp-1",
   "kind": "mob",
   "name": "風の影",
@@ -437,12 +438,14 @@
    200,
    175,
    130
-  ]
+  ],
+  "draft": "enc-sanone-camp-1_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-sanone-camp-2",
   "prompt": "a shadowy desert scorpion with a translucent dark body, a pale glowing stinger and sand-colored pincers",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-sanone-camp-2",
   "kind": "mob",
   "name": "砂サソリの影",
@@ -453,12 +456,13 @@
    110,
    90,
    70
-  ]
+  ],
+  "draft": "enc-sanone-camp-2_x0"
  },
  {
   "id": "enc-sanone-camp-3",
   "prompt": "a heat-shimmering droplet spirit of sunlight with a dry cracked crust and a burning core, floating",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-sanone-camp-3",
   "kind": "mob",
   "name": "日照りのしずく",
@@ -469,12 +473,13 @@
    230,
    180,
    90
-  ]
+  ],
+  "draft": "enc-sanone-camp-3_0"
  },
  {
   "id": "enc-sanone-camp-4",
   "prompt": "a creature made of bleached animal bones fused with sandstone, horned skull head, walking on four bone legs",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-sanone-camp-4",
   "kind": "mob",
   "name": "骨の石",
@@ -485,7 +490,8 @@
    210,
    200,
    175
-  ]
+  ],
+  "draft": "enc-sanone-camp-4_0"
  },
  {
   "id": "enc-sanone-camp-5",
