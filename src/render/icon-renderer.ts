@@ -14,12 +14,16 @@ export function drawIcon(ctx: CanvasRenderingContext2D, name: string | null, x: 
   ctx.drawImage(canvas, Math.round(x), Math.round(y), size, size);
 }
 
-const WEAPON_BY_TIER = ["weapon-sword", "weapon-sword", "weapon-sword", "weapon-sword", "weapon-scimitar", "weapon-sword", "weapon-sword", "weapon-spear", "weapon-sword-holy"];
+const WEAPON_BY_TIER = ["weapon-sword", "weapon-sword", "weapon-sword", "weapon-sword", "weapon-scimitar", "weapon-sword", "weapon-sword", "weapon-sword", "weapon-sword-holy"];
 const ARMOR_BY_TIER = ["armor-light", "armor-light", "armor-light", "armor-heavy", "armor-robe", "armor-robe", "armor-robe", "armor-heavy", "armor-heavy"];
 const CHARM_BY_TIER = ["armor-bracelet", "armor-necklace", "armor-ring", "armor-ring", "armor-ring", "armor-necklace", "armor-necklace", "armor-bracelet", "armor-necklace"];
 
 /** お店の装備（`weapon-3` `armor-5` `charm-2` ...）に合うアイコンの名前。 */
 export function iconForItem(itemId: string): string | null {
+  const w = /^(dagger|staff|bow|axe|spear)-\d+$/.exec(itemId);
+  if (w) {
+    return `weapon-${w[1]}`;
+  }
   const m = /^(weapon|armor|charm)-(\d+)$/.exec(itemId);
   if (!m) {
     return null;

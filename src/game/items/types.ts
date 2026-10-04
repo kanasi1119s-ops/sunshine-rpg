@@ -2,6 +2,8 @@ import type { BattleItem } from "../battle/types";
 
 export type StatKey = "maxHp" | "maxMp" | "attack" | "defense" | "speed";
 export type EquipmentCategory = "weapon" | "armor" | "accessory";
+/** 武器の種類。キャラクターごとに、持てる種類が決まっている（`weapon-types.ts`）。 */
+export type WeaponType = "sword" | "dagger" | "staff" | "bow" | "axe" | "spear";
 
 export interface ConsumableItemData {
   id: string;
@@ -17,6 +19,8 @@ export interface EquipmentItemData {
   category: EquipmentCategory;
   price: number;
   statBonus: Partial<Record<StatKey, number>>;
+  /** 武器のときの種類（省略は剣）。 */
+  weaponType?: WeaponType;
 }
 
 export type ItemData = ConsumableItemData | EquipmentItemData;

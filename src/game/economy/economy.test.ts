@@ -23,10 +23,11 @@ describe("灯貨", () => {
 });
 
 describe("お店", () => {
-  it("1〜9段目の店があり、2段目以降は前の段の品も並ぶ（6品）。存在しない店は空", () => {
-    expect(shopStock("tier-1")).toHaveLength(3);
+  it("1〜9段目の店があり、どの店もその段の8品（剣・短剣・杖・弓・斧・槍・防具・飾り）が並ぶ。存在しない店は空", () => {
+    expect(shopStock("tier-1")).toHaveLength(8);
+    expect(shopStock("tier-1").filter((i) => i.category === "weapon").map((i) => i.weaponType)).toEqual(["sword", "dagger", "staff", "bow", "axe", "spear"]);
     for (let tier = 2; tier <= 9; tier++) {
-      expect(shopStock(`tier-${tier}`)).toHaveLength(6);
+      expect(shopStock(`tier-${tier}`)).toHaveLength(8);
     }
     expect(shopStock("tier-0")).toEqual([]);
     expect(shopStock("nothing")).toEqual([]);
@@ -79,9 +80,9 @@ describe("お店の画面", () => {
   it("開く・動く・閉じる", () => {
     let state = openShopMenu("tier-3");
     expect(state.open).toBe(true);
-    expect(state.items).toHaveLength(6);
+    expect(state.items).toHaveLength(8);
     state = moveShopCursor(state, -1);
-    expect(state.cursor).toBe(5);
+    expect(state.cursor).toBe(7);
     expect(closeShopMenu(state).open).toBe(false);
     expect(openShopMenu("nothing").open).toBe(false);
   });

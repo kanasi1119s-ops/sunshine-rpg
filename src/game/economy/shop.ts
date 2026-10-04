@@ -1,5 +1,6 @@
 import { equip, type EquipmentSlots } from "../items/equipment";
-import type { EquipmentItemData, ItemData } from "../items/types";
+import type { EquipmentItemData, ItemData, WeaponType } from "../items/types";
+import { canEquip } from "../items/weapon-types";
 import { SAMPLE_ITEMS_BY_ID } from "../battle/sample-battle";
 import { spendGold } from "./gold";
 import { TREASURE_ITEMS_BY_ID } from "./treasure";
@@ -7,33 +8,48 @@ import { TREASURE_ITEMS_BY_ID } from "./treasure";
 /**
  * 町のお店（武具屋）で買える装備。町の順（第0章の灯里〜灯芯都）に1段ずつ強くなり、
  * 各店は「その町の段」と「ひとつ前の段」の武器・防具・飾りを売る。数値は仮。
- * 装備できるのはユーリだけ（仲間には装備の仕組みがまだない）。買うとその場で装備する。
+ * 武器はキャラクターごとに種類が決まっている（`items/weapon-types.ts`）。
  */
 interface Tier {
-  weapon: { name: string; attack: number };
+  /** 武器: 種類ごとの名前（攻撃力はどの種類も同じ）。 */
+  weapons: Record<WeaponType, string>;
+  attack: number;
   armor: { name: string; defense: number };
   charm: { name: string; maxHp: number };
 }
 
+const W = (sword: string, dagger: string, staff: string, bow: string, axe: string, spear: string): Record<WeaponType, string> => ({ sword, dagger, staff, bow, axe, spear });
+
 const TIERS: Tier[] = [
-  { weapon: { name: "灯り鉄の剣", attack: 9 }, armor: { name: "灯編みの服", defense: 4 }, charm: { name: "灯りの腕飾り", maxHp: 8 } },
-  { weapon: { name: "水鏡の剣", attack: 14 }, armor: { name: "麦藁の外套", defense: 7 }, charm: { name: "水滴の首飾り", maxHp: 14 } },
-  { weapon: { name: "湖光の刃", attack: 20 }, armor: { name: "湖織りの服", defense: 11 }, charm: { name: "湖珠の耳飾り", maxHp: 22 } },
-  { weapon: { name: "鉄鎖断ちの大剣", attack: 28 }, armor: { name: "坑夫の胸当て", defense: 16 }, charm: { name: "鉄の輪", maxHp: 32 } },
-  { weapon: { name: "砂風の曲刀", attack: 37 }, armor: { name: "砂よけの外套", defense: 22 }, charm: { name: "砂の指輪", maxHp: 44 } },
-  { weapon: { name: "霧割りの剣", attack: 47 }, armor: { name: "霧絹の衣", defense: 29 }, charm: { name: "霧の飾り", maxHp: 58 } },
-  { weapon: { name: "霜刃", attack: 58 }, armor: { name: "霜毛の外套", defense: 37 }, charm: { name: "氷の飾り", maxHp: 74 } },
-  { weapon: { name: "雲裂きの剣", attack: 71 }, armor: { name: "雲糸の鎧", defense: 46 }, charm: { name: "雲の腕輪", maxHp: 92 } },
-  { weapon: { name: "灯芯の聖剣", attack: 86 }, armor: { name: "灯芯の鎧", defense: 56 }, charm: { name: "灯芯の護り", maxHp: 112 } },
+  { weapons: W("灯り鉄の剣", "灯り鉄の短剣", "灯り木の杖", "灯り木の弓", "灯り鉄の斧", "灯り鉄の槍"), attack: 9, armor: { name: "灯編みの服", defense: 4 }, charm: { name: "灯りの腕飾り", maxHp: 8 } },
+  { weapons: W("水鏡の剣", "水鏡の短剣", "水鏡の杖", "水鏡の弓", "水鏡の斧", "水鏡の槍"), attack: 14, armor: { name: "麦藁の外套", defense: 7 }, charm: { name: "水滴の首飾り", maxHp: 14 } },
+  { weapons: W("湖光の刃", "湖光の小刃", "湖光の杖", "湖光の弓", "湖光の斧", "湖光の槍"), attack: 20, armor: { name: "湖織りの服", defense: 11 }, charm: { name: "湖珠の耳飾り", maxHp: 22 } },
+  { weapons: W("鉄鎖断ちの大剣", "鉄鎖の短刀", "鉄輪の杖", "鉄弦の弓", "鉄鎖断ちの大斧", "鉄鎖の槍"), attack: 28, armor: { name: "坑夫の胸当て", defense: 16 }, charm: { name: "鉄の輪", maxHp: 32 } },
+  { weapons: W("砂風の曲刀", "砂風の小曲刀", "砂風の杖", "砂風の弓", "砂風の斧", "砂風の槍"), attack: 37, armor: { name: "砂よけの外套", defense: 22 }, charm: { name: "砂の指輪", maxHp: 44 } },
+  { weapons: W("霧割りの剣", "霧割りの短剣", "霧の杖", "霧割りの弓", "霧割りの斧", "霧割りの槍"), attack: 47, armor: { name: "霧絹の衣", defense: 29 }, charm: { name: "霧の飾り", maxHp: 58 } },
+  { weapons: W("霜刃", "霜の小刃", "霜華の杖", "霜弦の弓", "霜刃の斧", "霜刃の槍"), attack: 58, armor: { name: "霜毛の外套", defense: 37 }, charm: { name: "氷の飾り", maxHp: 74 } },
+  { weapons: W("雲裂きの剣", "雲裂きの短剣", "雲糸の杖", "雲裂きの弓", "雲裂きの斧", "雲裂きの槍"), attack: 71, armor: { name: "雲糸の鎧", defense: 46 }, charm: { name: "雲の腕輪", maxHp: 92 } },
+  { weapons: W("灯芯の聖剣", "灯芯の短剣", "灯芯の聖杖", "灯芯の聖弓", "灯芯の聖斧", "灯芯の聖槍"), attack: 86, armor: { name: "灯芯の鎧", defense: 56 }, charm: { name: "灯芯の護り", maxHp: 112 } },
 ];
 
 const BASE_PRICE = [80, 150, 290, 550, 1050, 2000, 3800, 7200, 13700];
+
+/** 武器の種類 → 店のID（剣は、むかしからの `weapon-N`）。 */
+const WEAPON_ID_PREFIX: Record<WeaponType, string> = { sword: "weapon", dagger: "dagger", staff: "staff", bow: "bow", axe: "axe", spear: "spear" };
+const WEAPON_ORDER: WeaponType[] = ["sword", "dagger", "staff", "bow", "axe", "spear"];
 
 function tierItems(index: number): EquipmentItemData[] {
   const tier = TIERS[index];
   const price = BASE_PRICE[index];
   return [
-    { id: `weapon-${index + 1}`, name: tier.weapon.name, category: "weapon", price, statBonus: { attack: tier.weapon.attack } },
+    ...WEAPON_ORDER.map((type): EquipmentItemData => ({
+      id: `${WEAPON_ID_PREFIX[type]}-${index + 1}`,
+      name: tier.weapons[type],
+      category: "weapon",
+      price,
+      statBonus: { attack: tier.attack },
+      weaponType: type,
+    })),
     { id: `armor-${index + 1}`, name: tier.armor.name, category: "armor", price: Math.round(price * 0.8), statBonus: { defense: tier.armor.defense } },
     { id: `charm-${index + 1}`, name: tier.charm.name, category: "accessory", price: Math.round(price * 0.6), statBonus: { maxHp: tier.charm.maxHp } },
   ];
@@ -47,14 +63,14 @@ export const SHOP_ITEMS_BY_ID: Record<string, EquipmentItemData> = Object.fromEn
 /** 戦闘・つよさ画面で使う、すべての品物（最初の剣＋店の装備）。 */
 export const ALL_ITEMS_BY_ID: Record<string, ItemData> = { ...SAMPLE_ITEMS_BY_ID, ...SHOP_ITEMS_BY_ID, ...TREASURE_ITEMS_BY_ID };
 
-/** 店ID: `tier-1`〜`tier-9`。並ぶ品は、その段とひとつ前の段（1段目は、その段の3品だけ）。 */
+/** 店ID: `tier-1`〜`tier-9`。並ぶ品は、その段の、武器（剣・短剣・杖・弓・斧・槍の6種）・防具・飾り。 */
 export function shopStock(shopId: string): EquipmentItemData[] {
   const match = /^tier-(\d+)$/.exec(shopId);
   const tier = match ? Number(match[1]) : 0;
   if (tier < 1 || tier > TIERS.length) {
     return [];
   }
-  return [...(tier >= 2 ? tierItems(tier - 2) : []), ...tierItems(tier - 1)];
+  return tierItems(tier - 1);
 }
 
 function bonusTotal(item: EquipmentItemData): number {
@@ -113,6 +129,9 @@ export function describeBonus(item: EquipmentItemData): string {
 export function receiveTreasure(itemId: string, equipment: EquipmentSlots): { equipment: EquipmentSlots; equipped: boolean } {
   const item = TREASURE_ITEMS_BY_ID[itemId];
   if (!item) {
+    return { equipment, equipped: false };
+  }
+  if (!canEquip("hero", item)) {
     return { equipment, equipped: false };
   }
   const currentId = equipment[item.category];

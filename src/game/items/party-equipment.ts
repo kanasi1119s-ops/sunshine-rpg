@@ -2,6 +2,7 @@ import type { EquipmentSlots } from "./equipment";
 import { equip, unequip } from "./equipment";
 import { addItem, getQuantity, type Inventory } from "./inventory";
 import type { EquipmentCategory, EquipmentItemData, ItemData } from "./types";
+import { canEquip } from "./weapon-types";
 
 /**
  * 仲間みんなの装備。持ち物（`Inventory`）に入っている装備を、ユーリも仲間も、同じ持ち物から選んで身につける。
@@ -69,6 +70,7 @@ export function candidatesFor(
   for (const id of ownedEquipmentIds(inventory, itemsById)) {
     const item = itemsById[id];
     if (!isEquipment(item) || item.category !== category) continue;
+    if (!canEquip(owner, item)) continue; // 持てない種類の武器（杖のミナに剣、など）
     if (Object.values(party[owner] ?? {}).includes(id)) continue; // もうつけている
     // 同じ品を何個か持っていれば、あまっている分をつけられる。あまりがなければ、だれかがつけている品を取りかえる
     result.push({ item, takenBy: freeCount(inventory, party, id) > 0 ? undefined : wearerOf(party, id, owner) });
@@ -81,6 +83,9 @@ export function candidatesFor(
  * あまりがなければ、いまつけている人からはずして、その人につける。
  */
 export function equipTo(party: PartyEquipment, owner: string, item: EquipmentItemData, inventory: Inventory): PartyEquipment {
+  if (!canEquip(owner, item)) {
+    return party;
+  }
   const next: PartyEquipment = { ...party };
   if (!Object.values(party[owner] ?? {}).includes(item.id) && freeCount(inventory, party, item.id) <= 0) {
     const from = wearerOf(party, item.id, owner);
@@ -95,4 +100,18 @@ export function equipTo(party: PartyEquipment, owner: string, item: EquipmentIte
 /** その人のその部位を、はずす。 */
 export function unequipFrom(party: PartyEquipment, owner: string, category: EquipmentCategory): PartyEquipment {
   return { ...party, [owner]: unequip(party[owner] ?? {}, category) };
+}
+
+/** 持てない武器をつけている人（古いセーブなど）から、その武器をはずす。 */
+export function sanitizeParty(party: PartyEquipment, itemsById: Record<string, ItemData>): PartyEquipment {
+  const next: PartyEquipment = {};
+  for (const [owner, slots] of Object.entries(party)) {
+    const kept: typeof slots = { ...slots };
+    for (const [category, id] of Object.entries(slots) as [EquipmentCategory, string | undefined][]) {
+      const item = id ? itemsById[id] : undefined;
+      if (item && !canEquip(owner, item)) delete kept[category];
+    }
+    next[owner] = kept;
+  }
+  return next;
 }

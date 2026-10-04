@@ -1,6 +1,7 @@
 import type { EventCommand } from "../event/types";
 import type { Npc } from "../npc";
 import { describeBonus } from "../economy/shop";
+import { WEAPON_LABEL, wielderName } from "../items/weapon-types";
 import { TREASURE_ITEMS_BY_ID } from "../economy/treasure";
 
 /**
@@ -25,7 +26,11 @@ export function chestNpc(id: string, tile: { tileX: number; tileY: number }, fla
     const item = TREASURE_ITEMS_BY_ID[reward.equipmentId];
     gain.push(
       { type: "giveEquipment", itemId: reward.equipmentId },
-      say(`【ごほうび】${item.name}を手に入れた！（${describeBonus(item)}）強ければ、その場で身につけた。`),
+      say(
+        item.category === "weapon"
+          ? `【ごほうび】${item.name}（${WEAPON_LABEL[item.weaponType ?? "sword"]}）を手に入れた！（${describeBonus(item)}）${wielderName(item.weaponType ?? "sword")}の武器だ。強ければ、その場で身につけた。`
+          : `【ごほうび】${item.name}を手に入れた！（${describeBonus(item)}）強ければ、その場で身につけた。`,
+      ),
     );
   }
   return {

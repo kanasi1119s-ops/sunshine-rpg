@@ -26,7 +26,9 @@ import { backPauseMenu, confirmPauseMenu, createPauseMenuState, movePauseCursor,
 import { renderPauseMenu, type StatusRow } from "./render/pause-menu-renderer";
 import { backEquipMenu, confirmEquipMenu, createEquipMenuState, moveEquipCursor, openEquipMenu } from "./game/menu/equip-menu";
 import { renderEquipMenu, type EquipMenuView, type EquipStatsView } from "./render/equip-menu-renderer";
-import { candidatesFor, ensureOwned, equipTo, unequipFrom, type PartyEquipment } from "./game/items/party-equipment";
+import { candidatesFor, ensureOwned, equipTo, sanitizeParty, unequipFrom, type PartyEquipment } from "./game/items/party-equipment";
+import type { ItemData } from "./game/items/types";
+import { canEquip, WEAPON_LABEL, WEAPON_TYPE_OF, weaponTypeOf, wielderOf } from "./game/items/weapon-types";
 import { expToNextLevel } from "./game/growth/exp-curve";
 import { createGameLoop } from "./core/game-loop";
 import { createGameCanvas, LOGICAL_WIDTH, LOGICAL_HEIGHT } from "./render/canvas";
@@ -423,6 +425,17 @@ const dialogue = new DialogueController(flags, {
     inventory = ensureOwned(inventory, [itemId]);
     const result = receiveTreasure(itemId, heroEquipment);
     heroEquipment = result.equipment;
+    // 専用武器は、持てる仲間（もう仲間になっていれば）の、いまの武器より強いときにつける
+    const found = ALL_ITEMS_BY_ID[itemId];
+    const type = found ? weaponTypeOf(found) : undefined;
+    const owner = type && type !== "sword" ? wielderOf(type) : undefined;
+    if (found && found.category === "weapon" && owner && owner !== "hero" && owner in companionStats) {
+      const cur = companionEquipment[owner]?.weapon ? ALL_ITEMS_BY_ID[companionEquipment[owner].weapon!] : undefined;
+      const sum = (it: ItemData | undefined): number => (it && it.category !== "consumable" ? Object.values(it.statBonus).reduce((a, v) => a + (v ?? 0), 0) : 0);
+      if (sum(found) > sum(cur)) {
+        setPartyEquipment(equipTo(partyEquipment(), owner, found, inventory));
+      }
+    }
     if (audioStarted) {
       audio.playSe(seOf("item-get"));
     }
@@ -983,7 +996,7 @@ function shopWearView(): ShopWearView {
       const after = applyStatBonus(m.stats, computeEquipmentBonus(equipTo(party, m.id, item, inventory)[m.id] ?? {}, ALL_ITEMS_BY_ID));
       return {
         name: m.name,
-        currentText: describeItemId(party[m.id]?.[item.category]),
+        currentText: canEquip(m.id, item) ? describeItemId(party[m.id]?.[item.category]) : `（${WEAPON_LABEL[WEAPON_TYPE_OF[m.id]]}しか もてない）`,
         before: statsView(before),
         after: statsView(after),
       };
@@ -1161,6 +1174,8 @@ function applySaveData(data: SaveData): void {
   companionEquipment = Object.fromEntries(Object.entries(data.companions).map(([id, entry]) => [id, entry.equipment ?? {}]));
   jobStates = data.jobs;
   inventory = data.inventory;
+  // 持てない武器（杖のミナが剣、など）をつけていたら、はずす（専用武器の導入前のセーブ）
+  setPartyEquipment(sanitizeParty(partyEquipment(), ALL_ITEMS_BY_ID));
   syncEquipmentToInventory();
   gold = data.gold ?? 0;
   for (const key of Object.keys(flags)) {
@@ -1946,6 +1961,11 @@ const loop = createGameLoop({
         if (actionPressed) {
           const member = members[shopWear.cursor];
           const item = ALL_ITEMS_BY_ID[shopWear.itemId];
+          if (member && item && item.category !== "consumable" && !canEquip(member.id, item)) {
+            audio.playSe(seOf("error"));
+            shopMenu = withShopMessage(shopMenu, `${member.name}は ${WEAPON_LABEL[WEAPON_TYPE_OF[member.id]]}しか もてない`);
+            return;
+          }
           if (member && item && item.category !== "consumable") {
             setPartyEquipment(equipTo(partyEquipment(), member.id, item, inventory));
             shopMenu = withShopMessage(shopMenu, `${member.name}は ${item.name}を つけた！`);
