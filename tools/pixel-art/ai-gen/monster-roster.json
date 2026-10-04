@@ -2032,7 +2032,7 @@
  {
   "id": "chapter0-yugami",
   "prompt": "a writhing beast of twisted purple light and smoke, a crooked wolf-like body, glowing gold eyes, sharp purple crystal spikes on its back",
-  "status": "picked",
+  "status": "done",
   "key": "boss:chapter0-yugami",
   "kind": "boss",
   "name": "灯里の歪み",
@@ -2048,7 +2048,7 @@
  {
   "id": "mugikano-yugami",
   "prompt": "a giant withered skeletal beast, cracked dry hide over bones, a hollow ribcage dripping black water, a horned skull with three red-violet eyes",
-  "status": "picked",
+  "status": "done",
   "key": "boss:mugikano-yugami",
   "kind": "boss",
   "name": "水涸れの歪み",
@@ -2064,7 +2064,7 @@
  {
   "id": "garasuko-yugami",
   "prompt": "a monster made of a huge open wooden cargo crate, jagged teeth of splintered boards along its open lid like jaws, a long rope tongue, glowing amber eyes",
-  "status": "draft",
+  "status": "done",
   "key": "boss:garasuko-yugami",
   "kind": "boss",
   "name": "積荷の歪み",
@@ -2075,12 +2075,13 @@
    85,
    55
   ],
-  "neg_extra": ""
+  "neg_extra": "",
+  "draft": "garasuko-yugami_0"
  },
  {
   "id": "tetsukusari-yugami",
   "prompt": "a rusted steel experimental machine come alive, one giant slit-pupil eye, gear jaws, tangled pipes like veins, purple lightning, chains",
-  "status": "picked",
+  "status": "done",
   "key": "boss:tetsukusari-yugami",
   "kind": "boss",
   "name": "実験の歪み",
@@ -2129,7 +2130,7 @@
  {
   "id": "shimohara-yugami",
   "prompt": "an ancient prototype war machine covered in snow and ice, frozen gears, ice crystal spikes, a glowing red core, four heavy mechanical legs",
-  "status": "picked",
+  "status": "done",
   "key": "boss:shimohara-yugami",
   "kind": "boss",
   "name": "試作機の歪み",
@@ -2161,7 +2162,7 @@
  {
   "id": "toushin-yugami",
   "prompt": "a colossal guardian of brass clockwork and street lamps, a clock face on its chest, glowing glass lantern eyes, cobblestone armor plates",
-  "status": "picked",
+  "status": "done",
   "key": "boss:toushin-yugami",
   "kind": "boss",
   "name": "灯芯都の歪み",
@@ -2177,7 +2178,7 @@
  {
   "id": "kyotoukyu-yugami",
   "prompt": "a tall sorceress cloaked in swirling void darkness, a crown of bone, many glowing eyes in her dark cloak, a white core of light, a broken ring of light",
-  "status": "picked",
+  "status": "done",
   "key": "boss:kyotoukyu-yugami",
   "kind": "boss",
   "name": "虚灯宮の歪み",
@@ -2209,7 +2210,7 @@
  {
   "id": "deep3-yugami",
   "prompt": "a huge monstrous chimera beast on four legs, a horned skull head, a cracked wooden jaw, rusty gears in its body, stone armor, many magenta eyes, tentacles",
-  "status": "draft",
+  "status": "done",
   "key": "boss:deep3-yugami",
   "kind": "boss",
   "name": "深部3層の歪み",
@@ -2220,7 +2221,8 @@
    75,
    110
   ],
-  "neg_extra": "poster, painting on wall, framed picture, panel, canvas print"
+  "neg_extra": "poster, painting on wall, framed picture, panel, canvas print",
+  "draft": "deep3-yugami_x2"
  },
  {
   "id": "god-1",
@@ -2353,7 +2355,7 @@
  {
   "id": "tower2-guard",
   "prompt": "a majestic lion-like beast made of translucent pale blue light crystal, glowing white and gold facets, wisps of cloud around its paws",
-  "status": "picked",
+  "status": "done",
   "key": "boss:tower2-guard",
   "kind": "boss",
   "name": "塔の守り（2層）",
@@ -2369,7 +2371,7 @@
  {
   "id": "kanou3-guard",
   "prompt": "a serene guardian of living stone and soft golden light, a tall armored figure with a glowing gem face, white flowers growing on its shoulders",
-  "status": "picked",
+  "status": "done",
   "key": "boss:kanou3-guard",
   "kind": "boss",
   "name": "塔の守り（3層）",
@@ -2385,7 +2387,7 @@
  {
   "id": "tower3-guard",
   "prompt": "a giant glowing crystal sentinel, a lantern-shaped body of amber crystal, a flame inside as its single eye, floating crystal shards around it",
-  "status": "picked",
+  "status": "done",
   "key": "boss:tower3-guard",
   "kind": "boss",
   "name": "灯りの番人",
