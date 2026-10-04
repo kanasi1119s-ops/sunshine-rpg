@@ -137,6 +137,35 @@ export class BattleController {
     // finished: 呼び出し側が戦闘終了処理をする（ここでは何もしない）
   }
 
+  /**
+   * ひとつ前に戻る（もどるボタン）。対象選択→とくぎ一覧／コマンド、とくぎ一覧→コマンド、
+   * コマンドで押すと、前の人が選んだ行動を取り消して、その人の選び直しに戻る。ログ表示中・終了後は何もしない。
+   */
+  cancel(): void {
+    if (this.phase.kind === "target") {
+      const { actorId, commandKind } = this.phase;
+      const extras = this.extraSkills[actorId] ?? [];
+      if (commandKind === "skill" && extras.length > 0) {
+        const base = this.skills[actorId] ?? FALLBACK_SKILL;
+        this.phase = { kind: "skillList", actorId, skills: [base, ...extras], cursor: 0 };
+      } else {
+        this.phase = { kind: "command", actorId, cursor: 0 };
+      }
+      return;
+    }
+    if (this.phase.kind === "skillList") {
+      this.phase = { kind: "command", actorId: this.phase.actorId, cursor: 0 };
+      return;
+    }
+    if (this.phase.kind === "command" && this.pendingActions.length > 0) {
+      const last = this.pendingActions.pop();
+      if (last) {
+        this.turnQueue.unshift(last.actorId);
+        this.phase = { kind: "command", actorId: last.actorId, cursor: 0 };
+      }
+    }
+  }
+
   private confirmCommand(actorId: string, commandKind: CommandKind): void {
     if (commandKind === "defend" || commandKind === "flee") {
       this.pendingActions.push({ type: commandKind, actorId });

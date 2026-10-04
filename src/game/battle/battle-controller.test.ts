@@ -181,3 +181,36 @@ describe("BattleController", () => {
     expect(controller.getUiState().kind).toBe("target");
   });
 });
+
+describe("BattleController: もどる（cancel）", () => {
+  const enemy = () => makeCombatant({ id: "slime", isEnemy: true, hp: 1000, speed: 1 });
+
+  it("対象選択でもどるとコマンド選択に戻る", () => {
+    const c = new BattleController([makeCombatant({ id: "hero" })], [enemy()], () => 0.5, { skills, item });
+    c.confirm();
+    expect(c.getUiState().kind).toBe("target");
+    c.cancel();
+    expect(c.getUiState()).toEqual({ kind: "command", actorId: "hero", cursor: 0 });
+  });
+
+  it("2人目のコマンドでもどると、1人目の行動を取り消して選び直せる", () => {
+    const c = new BattleController([makeCombatant({ id: "hero" }), makeCombatant({ id: "a" })], [enemy()], () => 0.5, { skills, item });
+    c.confirm(); // heroがたたかう
+    c.confirm(); // 対象
+    expect(c.getUiState()).toEqual({ kind: "command", actorId: "a", cursor: 0 });
+    c.cancel();
+    expect(c.getUiState()).toEqual({ kind: "command", actorId: "hero", cursor: 0 });
+    // もう一度選べて、最後まで進める
+    c.confirm();
+    c.confirm();
+    c.confirm();
+    c.confirm();
+    expect(c.getUiState().kind).toBe("message");
+  });
+
+  it("最初のコマンドでは、もどっても何も起きない", () => {
+    const c = new BattleController([makeCombatant({ id: "hero" })], [enemy()], () => 0.5, { skills, item });
+    c.cancel();
+    expect(c.getUiState()).toEqual({ kind: "command", actorId: "hero", cursor: 0 });
+  });
+});

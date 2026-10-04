@@ -72,3 +72,18 @@ export function getBackdropImage(biome: Biome, variant: number): HTMLImageElemen
   }
   return loadImage(urls[Math.abs(Math.floor(variant)) % urls.length]);
 }
+
+/** この種類の場所に、人間がくれた背景の絵があるか（まだ読み込めていなくても true）。 */
+export function hasBackdropImage(biome: Biome): boolean {
+  return (BACKDROP_IMAGES[biome]?.length ?? 0) > 0;
+}
+
+/** ゲームを開いたときに、背景の絵を全部先に読み込んでおく（戦闘の最初の一瞬に、別の背景が出ないように）。 */
+export function preloadBackdropImages(): void {
+  for (const urls of Object.values(BACKDROP_IMAGES)) {
+    for (const url of urls ?? []) loadImage(url);
+  }
+  for (const url of Object.values(NAMED_BACKDROPS)) loadImage(url);
+}
+
+preloadBackdropImages();

@@ -3,7 +3,7 @@
  * 空・遠景・近景の層（ディザでなじませた帯、雲、丘、木、洞窟の石筍と水晶、砂丘、雪の松、遺跡の柱）で奥行きを出す。
  */
 import { EXTRA_BIOMES, paintExtraBackdrop, type ExtraBiome } from "./battle-backdrop-extra";
-import { getBackdropImage } from "./battle-backdrop-images";
+import { getBackdropImage, hasBackdropImage } from "./battle-backdrop-images";
 
 /** ship・magma・prophecy は、絵（`battle-backdrop-images.ts`）がある場所の種類。絵が読み込めないときは、描いた背景（船→海岸、火口→溶岩、予言の間→神殿）を使う。 */
 export type Biome = "grass" | "cave" | "desert" | "snow" | "ruins" | "ship" | "magma" | "prophecy" | ExtraBiome;
@@ -379,6 +379,18 @@ export function getBackdropCanvas(biome: Biome, w: number, h: number, variant = 
       cache.set(imageKey, canvas);
       return canvas;
     }
+  }
+  if (hasBackdropImage(biome)) {
+    // 絵はあるが、まだ読み込み中。別の（描いた）背景が一瞬出ないよう、暗い単色にしておく（キャッシュしない）
+    const wait = document.createElement("canvas");
+    wait.width = w;
+    wait.height = h;
+    const wc = wait.getContext("2d");
+    if (wc) {
+      wc.fillStyle = "#14101e";
+      wc.fillRect(0, 0, w, h);
+    }
+    return wait;
   }
   const drawBiome = PROCEDURAL_FALLBACK[biome] ?? biome;
   const key = `${drawBiome}:${w}x${h}`;

@@ -646,6 +646,17 @@ menuButton.addEventListener("pointerdown", (event) => {
 });
 app.appendChild(menuButton);
 
+/** スマホ用: もどるボタン（キーボードの x・Esc と同じ。十字キーとは別）。メニュー・ジョブ・買い物・戦闘の選び直しなどを、ひとつ戻る。 */
+const backButton = document.createElement("button");
+backButton.type = "button";
+backButton.className = "touch-back-button";
+backButton.textContent = "もどる";
+backButton.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  window.dispatchEvent(new KeyboardEvent("keydown", { key: "x" }));
+});
+app.appendChild(backButton);
+
 const audio = new AudioEngine();
 let audioStarted = false;
 function startAudioOnFirstInteraction(): void {
@@ -715,7 +726,12 @@ function statusRows(): StatusRow[] {
 }
 let lastTitleDirection: Direction | null = null;
 let openingSkipRequested = false;
+/** 「もどる」（x・Esc・画面のもどるボタン）が押された。戦闘の選び直しに使う（毎フレーム、1回だけ読む）。 */
+let backRequested = false;
 window.addEventListener("keydown", (event) => {
+  if (event.key === "x" || event.key === "Escape") {
+    backRequested = true;
+  }
   if ((event.key === "x" || event.key === "Escape") && title.open) {
     title = backTitle(title);
   }
@@ -1265,6 +1281,8 @@ const loop = createGameLoop({
     }
 
     const actionPressed = actionButton.consume();
+    const backPressed = backRequested;
+    backRequested = false;
     // 決定の音は、メニューを選ぶとき（タイトル・つよさ・買い物・ジョブ・戦闘）だけ。会話を送るたび・歩いて調べるたびに鳴ると、うるさいので鳴らさない
     if (actionPressed && (title.open || pauseMenu.open || shopMenu.open || jobMenu.open || battle)) {
       audio.playSe(seOf("confirm"));
@@ -1474,6 +1492,9 @@ const loop = createGameLoop({
         }
       } else {
         lastBattleDirection = null;
+      }
+      if (backPressed) {
+        battle.cancel();
       }
       if (actionPressed) {
         if (uiState.kind === "finished") {

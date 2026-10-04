@@ -117,3 +117,21 @@ body {
   touch-action: none;
   user-select: none;
 }
+
+/* もどるボタン: 決定ボタンの上。十字キーとは別 */
+.touch-back-button {
+  position: absolute;
+  right: 20px;
+  bottom: 80px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: rgba(40, 40, 70, 0.7);
+  color: #fff;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  padding: 0;
+  touch-action: none;
+  user-select: none;
+}
