@@ -1,3 +1,4 @@
+import { drawPixelText } from "./pixel-text";
 import { drawPixelLogo, drawPixelLogoReveal } from "./logo-pixel";
 import { OPENING_HIT_MS, REVEAL, STORY_LINE_HEIGHT, STORY_LINES, STORY_SPEED, type BootOpeningState } from "../game/title/boot-opening";
 
@@ -95,17 +96,13 @@ export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, 
     }
     // あらすじ: 下から上へ流れる
     const scroll = (ms / 1000) * STORY_SPEED;
-    ctx.font = "11px monospace";
     const top = 20;
     STORY_LINES.forEach((line, i) => {
       const y = h - scroll + i * STORY_LINE_HEIGHT;
       if (y < top - 12 || y > h + 4) return;
       // 上と下で、すうっと消える
       const alpha = Math.max(0, Math.min(1, (y - top) / 36)) * Math.max(0, Math.min(1, (h - y) / 26));
-      ctx.fillStyle = `rgba(0,0,0,${0.8 * alpha})`;
-      ctx.fillText(line, w / 2 + 1, y + 1);
-      ctx.fillStyle = `rgba(250, 240, 210, ${alpha})`;
-      ctx.fillText(line, w / 2, y);
+      drawPixelText(ctx, line, w / 2, y - 6, "center", alpha, { size: 13 });
     });
   } else if (state.phase === "reveal") {
     // 光の筋は、文字が現れてから強まる
@@ -119,26 +116,14 @@ export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, 
     drawSparkles(ctx, w / 2, logoY, ms);
     drawPixelLogo(ctx, title, w / 2, logoY, 2, (ms % 4200) / 1100, ms + 5000);
     const blink = 0.5 + 0.5 * Math.sin(performance.now() / 380);
-    ctx.globalAlpha = 0.35 + 0.65 * blink;
-    ctx.font = "11px monospace";
-    ctx.fillStyle = "#f2c14e";
-    ctx.fillText("決定ボタン（Enter）で スタート", w / 2, h - 28);
-    ctx.globalAlpha = 1;
+    drawPixelText(ctx, "決定ボタン（Enter）で スタート", w / 2, h - 34, "center", 0.35 + 0.65 * blink, { color: "#f2c14e" });
   }
   if (state.phase !== "hold") {
-    ctx.font = "9px monospace";
-    ctx.textAlign = "right";
-    ctx.textBaseline = "top";
-    ctx.fillStyle = "rgba(200, 200, 224, 0.7)";
-    ctx.fillText("決定で つぎへ", w - 6, 3);
+    drawPixelText(ctx, "決定で つぎへ", w - 6, 3, "right", 0.8, { size: 10, color: "#c8c8e0" });
   }
   if (soundBlocked) {
     // ブラウザは、操作がないと音を出せない。すこしだけ目立たないように知らせる
-    ctx.font = "9px monospace";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
-    ctx.fillStyle = `rgba(242, 193, 78, ${0.45 + 0.4 * Math.abs(Math.sin(performance.now() / 600))})`;
-    ctx.fillText("♪ キーか画面をタッチすると 音楽が流れます", 6, 3);
+    drawPixelText(ctx, "♪ キーか画面をタッチすると 音楽が流れます", 6, 3, "left", 0.5 + 0.4 * Math.abs(Math.sin(performance.now() / 600)), { size: 10, color: "#f2c14e" });
   }
   ctx.textAlign = "left";
 }
