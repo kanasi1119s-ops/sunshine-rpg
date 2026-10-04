@@ -100,6 +100,15 @@ def build(W,H,FW,SW,floors,FH=18,roofH=16,ox=3,door=0.5,nwin=3,porch=True,dormer
             for y in range(yt,yt+h): c.put(x,y,'G1' if (dx+y)%7 else 'G2')
             c.put(x,yt-1,'B2'); c.put(x,yt+h,'B2')
         for y in range(sideY(sx,ytop)-1,sideY(sx,ytop)+h+1): c.put(sx-1,y,'B2')
+        if sidew>7:
+            # 窓のまわり全体を木の縁で囲む（上・左は明るい木、下・右は暗い木、右のへりも足す）
+            xr=sx+w
+            for y in range(sideY(xr-1,ytop)-1,sideY(xr-1,ytop)+h+1): c.put(xr,y,'B2')
+            for dx in range(-1,w+1):
+                x=sx+dx; yt=sideY(min(max(x,sx),sx+w-1),ytop)
+                c.put(x,yt-1,'B3'); c.put(x,yt-2,'B2') if False else None
+                c.put(x,yt+h,'B2')
+            for y in range(sideY(sx,ytop)-1,sideY(sx,ytop)+h): c.put(sx-1,y,'B3')
     doorx=x0+int(FW*door)
     # 正面の窓（ドアの位置を避ける）
     for fl in range(floors):
