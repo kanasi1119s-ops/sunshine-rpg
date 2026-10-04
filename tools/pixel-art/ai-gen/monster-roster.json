@@ -3568,7 +3568,7 @@
  {
   "id": "zenkan",
   "prompt": "a colossal floating halo ring of cracked ancient stone with golden glowing seams, a large calm eye floating in the center of the ring, rays of light, monster, fantasy art",
-  "status": "draft",
+  "status": "done",
   "key": "boss:zenkan",
   "kind": "boss",
   "name": "全観",
@@ -3579,6 +3579,7 @@
    170,
    95
   ],
-  "neg_extra": "jewelry, finger ring, wedding ring, small object, metal band, gemstone"
+  "neg_extra": "jewelry, finger ring, wedding ring, small object, metal band, gemstone",
+  "draft": "zenkan_1"
  }
 ]
