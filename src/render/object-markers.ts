@@ -289,13 +289,43 @@ export function drawObjectMarker(ctx: CanvasRenderingContext2D, kind: ObjectKind
       return true;
     }
     case "tablet": {
-      r(ctx, INK, x + 3, top, w - 6, 14);
-      r(ctx, "#8a8f9c", x + 4, top + 1, w - 8, 12);
-      r(ctx, "#686d7a", x + 9, top + 1, w - 13, 12);
+      // 石板（16×16）: 上が丸い立て石に、台座。左が明るく右が暗い。刻まれた文字がうっすら光り、ひび・欠け・コケがある。
+      const stone = "#9ba0ae";
+      const light = "#c2c6d2";
+      const dark = "#6c7180";
+      const deep = "#50556a";
       const glow = shadeColor(color, 0.3);
-      for (let i = 0; i < 4; i++) {
-        r(ctx, glow, x + 5 + (i % 2), top + 3 + i * 2, 4 - (i % 2), 1);
+      const sx = x + 3;
+      const sw = 10;
+      const st = y + 1;
+      // 立て石: 丸い肩を作るため、上の段ほど幅をせまく
+      r(ctx, INK, sx + 2, st, sw - 4, 1);
+      r(ctx, INK, sx + 1, st + 1, sw - 2, 1);
+      r(ctx, INK, sx, st + 2, sw, 11);
+      r(ctx, light, sx + 2, st + 1, 3, 1);
+      r(ctx, stone, sx + 1, st + 2, sw - 2, 10);
+      r(ctx, light, sx + 1, st + 2, 2, 10);
+      r(ctx, dark, sx + sw - 3, st + 2, 2, 10);
+      r(ctx, deep, sx + sw - 2, st + 3, 1, 9);
+      // 台座
+      r(ctx, INK, x + 2, y + h - 5, 12, 4);
+      r(ctx, "#8a8f9c", x + 3, y + h - 4, 10, 2);
+      r(ctx, light, x + 3, y + h - 4, 4, 1);
+      r(ctx, dark, x + 3, y + h - 3, 10, 1);
+      // 刻まれた文字（輪の印と、短い刻み。光る線と、ほりの影）
+      const glyph: Array<[number, string]> = [[3, ".XX."], [4, "X..X"], [5, ".XX."], [7, "X.XX"], [9, "XX.X"]];
+      for (const [gy, row] of glyph) {
+        for (let k = 0; k < row.length; k++) {
+          if (row[k] !== "X") continue;
+          if (gy < 9) r(ctx, deep, sx + 3 + k, st + gy + 1, 1, 1);
+          r(ctx, glow, sx + 3 + k, st + gy, 1, 1);
+        }
       }
+      // ひびと欠け・コケ
+      r(ctx, dark, sx + 6, st + 2, 1, 2);
+      r(ctx, dark, sx + 5, st + 4, 1, 1);
+      r(ctx, "#5f8a3c", x + 3, y + h - 5, 3, 1);
+      r(ctx, "#3f6428", x + 3, y + h - 6, 1, 1);
       return true;
     }
     case "machine": {
