@@ -709,8 +709,8 @@ function startAudioOnFirstInteraction(): void {
   }
   audioStarted = true;
   if (bootOpening.open) {
-    // 起動のオープニング: 「スタート」を押したところから、曲がはじまる
-    currentBgmTrack = getTrack("opening");
+    // 起動のオープニング: 「スタート」を押したところから、オーケストラの曲がはじまる（ロゴが落ちる0.9秒後にティンパニと金管が鳴る）
+    currentBgmTrack = getTrack("boot-opening");
     audio.playBgm(currentBgmTrack);
     return;
   }
