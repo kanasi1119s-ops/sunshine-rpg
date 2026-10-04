@@ -1,5 +1,6 @@
 import { hashCell } from "../color-utils";
 import type { Npc } from "../npc";
+import { TOWN_OLD_WIDTH } from "./town-expand";
 import { isHouse, propFootprintTiles } from "./map-props";
 import type { MapProp, MapPropKind, TileMapData } from "./types";
 
@@ -155,5 +156,43 @@ export function applyTownDecor(maps: Record<string, TileMapData>, npcsByMap: Rec
       if (place("bench", x, y)) benches++;
     }
     data.props = props;
+
+    // 5) 広げた東の区域に、町の人を3人（ぶらぶら歩く）。道や広場のあいたマスに置く
+    const oldW = TOWN_OLD_WIDTH.get(mapId);
+    if (oldW !== undefined) {
+      const lines = [
+        "ここは、旅の人がよく通る町だよ。ゆっくりしていってね。",
+        "市場の品は、朝がいちばん新鮮なの。夕方には売り切れちゃうのよ。",
+        "大通りの東にも、家がふえてね。ずいぶん、にぎやかになったもんだ。",
+        "宿屋のスープは、この町いちばんの自慢さ。",
+        "このごろ、灯り石の光が、ほんの少しちらつくんだ。気のせいかな。",
+        "子どもたちは、広場で毎日かけっこしてるよ。元気なのは、いいことさ。",
+      ];
+      const colors = ["#c08060", "#6a8ab0", "#a0a070", "#b07090", "#7a9a6a"];
+      const taken = new Set(npcs.map((n) => `${n.tileX},${n.tileY}`));
+      const cand: Array<[number, number]> = [];
+      for (let y = 2; y < h - 2; y++) {
+        for (let x = oldW + 1; x < w - 2; x++) {
+          if (isOpen(x, y) && !occupied.has(y * w + x) && AROUND.every(([dx, dy]) => !occupied.has((y + dy) * w + x + dx))) cand.push([x, y]);
+        }
+      }
+      const list = npcsByMap[mapId] ?? (npcsByMap[mapId] = []);
+      let made = 0;
+      for (const [x, y] of order(cand, 91)) {
+        if (made >= 3) break;
+        if (taken.has(`${x},${y}`) || [...taken].some((t) => { const [tx, ty] = t.split(",").map(Number); return Math.abs(tx - x) + Math.abs(ty - y) < 4; })) continue;
+        const idx = (hashCell(x + idSalt, y) + made) % lines.length;
+        list.push({
+          id: `${mapId}-townsfolk-${made + 1}`,
+          tileX: x,
+          tileY: y,
+          color: colors[(hashCell(y, x + idSalt) + made) % colors.length],
+          wander: true,
+          commands: [{ type: "message", text: lines[idx], speaker: "町の人" }],
+        });
+        taken.add(`${x},${y}`);
+        made++;
+      }
+    }
   }
 }

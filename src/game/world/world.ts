@@ -23,6 +23,7 @@ import { ISLET_MAPS, ISLET_NPCS } from "./islets-world";
 import { VILLAGE_MAPS, VILLAGE_NPCS } from "./villages-world";
 import { applyAutoDecor } from "../map/auto-decor";
 import { applyTownDecor } from "../map/town-decor";
+import { applyTownExpansion } from "../map/town-expand";
 import { applyVariantWalls } from "../map/variant-walls";
 import type { TileMapData } from "../map/types";
 import type { Npc } from "../npc";
@@ -91,6 +92,7 @@ export const WORLD_NPCS: Record<string, Npc[]> = (() => {
 // 第2章〜第8章の、町とボスの間にダンジョン（洞窟・塔）を足す。模様・NPCの用意が済んだあとで、つなぎかえる
 addChapterDungeons(WORLD_MAPS, WORLD_NPCS);
 connectWorldMap(WORLD_MAPS, WORLD_NPCS);
+applyTownExpansion(WORLD_MAPS);
 applyVariantWalls(WORLD_MAPS, WORLD_NPCS);
 applyAutoDecor(WORLD_MAPS, WORLD_NPCS);
 applyTownDecor(WORLD_MAPS, WORLD_NPCS);
