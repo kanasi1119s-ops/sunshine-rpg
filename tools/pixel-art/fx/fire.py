@@ -132,7 +132,7 @@ def make_aura(seed, boss_mask, n=16, fade=4):
     ey, ex = np.nonzero(edge)
     top_edge = [(y, x) for y, x in zip(ey, ex) if y < foot_y - 20]
     f_front = FireField(H, W, rnd, decay=0.93, cool=0.03)
-    f_back = FireField(H, W, rnd, decay=0.955, cool=0.02)
+    f_back = FireField(H, W, rnd, decay=0.97, cool=0.014)
     f_lick = FireField(H, W, rnd, decay=0.86, cool=0.06)
     yy, xx = np.indices((H, W))
     embers = []
@@ -231,10 +231,10 @@ def make_charge(seed):
     for i in range(N):
         cv = Canvas(W, H)
         t = i / (N - 1)
-        r = 2.5 + 6.5 * t + (0.7 if i % 2 else 0)
+        r = 3 + 10 * t + (0.8 if i % 2 else 0)
         # 玉の上半分から炎の舌がのびる
         top = (np.hypot(yy - cy, xx - cx) < r + 1) & (yy < cy)
-        heat_paint(cv, ff.step(top, 0.9, sub=2))
+        heat_paint(cv, ff.step(top, 1.0, sub=3))
         fire_ball(cv, cy, cx, r, rnd, t)
         # まわりから、うずを巻いて火の粉が吸いこまれる
         for _ in range(4):
@@ -246,7 +246,7 @@ def make_charge(seed):
             s[0] += 0.5; s[1] -= 4.5
         frames.append(frame(cv, 80 if i < N - 3 else 70, dim=0.1 + 0.25 * t))
     # 最後: 玉がぎゅっと縮んで、光る
-    for j, rr in enumerate((7, 11)):
+    for j, rr in enumerate((10, 15)):
         cv = Canvas(W, H)
         fire_ball(cv, cy, cx, rr, rnd, 1, extra=0.25 - 0.1 * j)
         ring(cv, cy, cx, 14 + j * 7, 14 + j * 7, "O", dither=bool(j))
@@ -278,18 +278,19 @@ def make_fireball(seed, start=(87, 10), target=(368, 165), member=0):
             if tr[3] or (int(tr[0]) + int(tr[1])) % 2 == 0:
                 cv.put(tr[0], tr[1], col)
             tr[0] += -0.6 if not tr[3] else 0.8
-        fire_ball(cv, y, x, 10, rnd, u, vel=vel, stretch=3.4)
-        for _ in range(5):
+        fire_ball(cv, y, x, 14, rnd, u, vel=vel, stretch=3.6)
+        for _ in range(9):
             trail.append([y + rnd.uniform(-4, 4), x - vel[1] * rnd.uniform(0.5, 2) + rnd.uniform(-3, 3), rnd.randint(3, 6), rnd.random() < 0.6])
         se = [["fire/whoosh", 0.9]] if k == 0 else None
         frames.append(frame(cv, 50, dim=0.3, se=se)); centers.append((int(round(x)), int(round(y))))
     # 当たって、はじける
     ff = FireField(H, W, rnd, decay=0.9, cool=0.045)
+    fcol = FireField(H, W, rnd, decay=0.975, cool=0.012)
     yy, xx = np.indices((H, W))
-    ground = (np.abs(yy - target[1]) < 2) & (np.abs(xx - tx) < 20)
-    sparks = Sparks(rnd, ty, tx, 22, target[1])
+    ground = (np.abs(yy - target[1]) < 3) & (np.abs(xx - tx) < 34)
+    sparks = Sparks(rnd, ty, tx, 40, target[1])
     smoke = []
-    R = [12, 20, 25, 28, 29, 28, 26, 24, 22, 20, 18]
+    R = [16, 28, 36, 41, 43, 42, 40, 37, 34, 31, 28, 25, 22]
     for k, rr in enumerate(R):
         cv = Canvas(W, H)
         burn = min(1.0, k / 6)
@@ -299,10 +300,25 @@ def make_fireball(seed, start=(87, 10), target=(368, 165), member=0):
         heat = (1 - d / rr) * 1.25 + (nz - 0.5) * 0.55
         heat = heat - np.clip(burn * 1.1 - d / rr, 0, 1) * 1.4
         if k >= 2:
-            heat = heat * (1 - (k - 2) / 10)
+            heat = heat * (1 - (k - 2) / 13)
+        # つづけて2つの小さな爆発（左下・右上）。豪快に（人間の指示「火のエフェクトをもっと豪快に」）
+        for (ox, oy, k0) in ((-24, 2, 2), (22, -16, 3)):
+            kk = k - k0
+            if 0 <= kk < 7:
+                r2 = [8, 15, 19, 20, 19, 17, 14][kk]
+                d2 = np.hypot((yy - ty - oy) * 1.15, xx - tx - ox)
+                h2 = (1 - d2 / r2) * 1.25 + (noise(rnd, H, W, 3) - 0.5) * 0.5 - np.clip(kk / 4 * 1.1 - d2 / r2, 0, 1) * 1.4
+                heat = np.maximum(heat, np.clip(h2, 0, 1))
+        # 爆発のまん中から、火がもくもくと立ちのぼる（きのこの形）
+        if 2 <= k <= 8:
+            col = (np.hypot(yy - (ty - 6), (xx - tx) * 0.8) < 9)
+            fcol.step(col, 1.0, sub=7)
+        else:
+            fcol.step(None, sub=7)
+        heat = np.maximum(heat, fcol.heat)
         # 地面から炎が立つ（ところどころから。一面に置くと、平らな帯に見えた）
-        gsrc = ground & (noise(rnd, H, W, 3) > 0.55) & (np.abs(xx - tx) < 20 - k)
-        hf = ff.step(gsrc if k < 7 else None, 0.85, sub=4)
+        gsrc = ground & (noise(rnd, H, W, 3) > 0.5) & (np.abs(xx - tx) < 34 - k)
+        hf = ff.step(gsrc if k < 9 else None, 0.95, sub=6)
         heat = np.maximum(np.clip(heat, 0, 1), hf * (1 - max(0, k - 6) / 5))
         # 煙（灰色の点々。のぼって大きくなる）
         if 2 <= k <= 6:
@@ -315,7 +331,7 @@ def make_fireball(seed, start=(87, 10), target=(368, 165), member=0):
                         cv.put(y, x, "K" if s[2] < 4 else ("S" if s[2] < 6 else "L"), over=False)
             s[0] -= 1.8; s[2] += 0.6
         heat_paint(cv, heat)
-        if k <= 2:   # 当たった瞬間の、とがった光（白→黄→橙）
+        if k <= 3:   # 当たった瞬間の、とがった光（白→黄→橙）
             for q in range(10):
                 a = q * math.pi / 5 + rnd.uniform(-0.2, 0.2); L = rr * (1.5 if q % 2 == 0 else 1.0)
                 for s_ in range(int(L)):
@@ -325,13 +341,13 @@ def make_fireball(seed, start=(87, 10), target=(368, 165), member=0):
             if k >= 3 and ((x + k) % 2 == 0 or abs(x - tx) < 7):
                 cv.put(target[1] + 1, x, "K", over=False)
         flash = {0: 0.4, 1: 0.18}.get(k, 0.0)
-        shake = {0: 4, 1: 3, 2: 2, 3: 1}.get(k, 0)
-        party = [[member, "flash_left", 2]] if k == 0 else ([[member, "burn_left" if k in (1, 3, 5) else "hurt_left", 2]] if k < 7 else [[member, "hurt_left", 1]])
+        shake = {0: 6, 1: 5, 2: 4, 3: 3, 4: 2, 5: 1}.get(k, 0)
+        party = [[member, "flash_left", 2]] if k == 0 else ([[member, "burn_left" if k in (1, 3, 5, 7) else "hurt_left", 3]] if k < 9 else [[member, "hurt_left", 1]])
         se = [["fire/explode", 1.0]] if k == 0 else None
         frames.append(frame(cv, 55 if k < 4 else 75, dim=0.45 - 0.04 * k, flash=flash, shake=shake, party=party, se=se)); centers.append((tx, ty))
     # ドット絵エディタは幅256までなので、コマごとに「火の玉（当たった所）のまわり 120×104」だけを切り出し、
     # 画面のどこに置くかを "at"（画面の点）に書く（anchor はキャンバスの中のその点）
-    CW, CH, AX, AY = 120, 104, 64, 66
+    CW, CH, AX, AY = 200, 160, 100, 112
     out = []
     for f, (cx, cy) in zip(frames, centers):
         full = np.full((H, W), ".", dtype="<U1")
@@ -350,63 +366,78 @@ def make_fireball(seed, start=(87, 10), target=(368, 165), member=0):
 
 # ---------------------------------------------------------------- 火柱（全体）
 def make_pillars(seed, targets=((22, 5), (8, -13), (-8, 5), (-22, -13))):
-    """味方の足もとが赤く光り（予告）、地面から火柱が少しずつずれて立つ。最後は煙と火の粉"""
+    """味方の足もとが赤く光り（予告）、地面から太い火柱が少しずつずれて立ち、足もとが火の海になる。
+    最後に、ぜんぶの火柱がいっせいに燃え上がって（大炎上）、煙と火の粉が残る（人間の指示「火のエフェクトをもっと豪快に」）"""
     rnd = random.Random(seed + 24)
-    W, H = 200, 200
-    ax, ay = 100, 180
-    spots = [(ax + dx, ay + dy) for dx, dy in targets] + [(ax + 40, ay + 2), (ax - 50, ay - 4)]
+    W, H = 220, 220
+    ax, ay = 110, 200
+    spots = [(ax + dx, ay + dy) for dx, dy in targets] + [(ax + 44, ay + 2), (ax - 52, ay - 4)]
     order = [4, 0, 2, 5, 1, 3]
     starts = {k: 4 + j * 2 for j, k in enumerate(order)}
-    fields = {k: FireField(H, W, rnd, decay=0.988, cool=0.006) for k in range(len(spots))}
+    fields = {k: FireField(H, W, rnd, decay=0.99, cool=0.005) for k in range(len(spots))}
+    sea = FireField(H, W, rnd, decay=0.955, cool=0.02)
     yy, xx = np.indices((H, W))
-    sparks = [Sparks(rnd, y - 4, x, 8, y) for x, y in spots]
+    sparks = [Sparks(rnd, y - 4, x, 14, y) for x, y in spots]
     smoke = []
     frames = []
-    N = 4 + 2 * len(spots) + 12
+    last_start = max(starts.values())
+    BIG = last_start + 6                      # 大炎上のコマ
+    N = BIG + 12
+    sea_band = (yy >= ay - 22) & (yy <= ay + 6) & (np.abs(xx - ax) < 72)
     for i in range(N):
         cv = Canvas(W, H)
         party, se = [], []
-        if i == 0: se.append(["fire/rumble", 0.8])
+        if i == 0: se.append(["fire/rumble", 0.9])
+        big = BIG <= i < BIG + 3
+        if i == BIG: se.append(["fire/explode", 1.0]); se.append(["fire/erupt", 0.9])
         for k, (x, y) in enumerate(spots):
             s = i - starts[k]
             if s < 0:
-                # 予告: 足もとに赤い輪が光る（だんだん強く）
+                # 予告: 足もとに赤い輪が光る（だんだん強く、ひびから火の粉）
                 if i >= 1:
-                    rr = 7 + (i % 2)
-                    for q in range(28):
-                        a = 2 * math.pi * q / 28
+                    rr = 9 + (i % 2)
+                    for q in range(32):
+                        a_ = 2 * math.pi * q / 32
                         if (q + i) % 2: continue
-                        cv.put(y + math.sin(a) * rr * 0.3, x + math.cos(a) * rr, "R" if s < -2 else "O", over=False)
+                        cv.put(y + math.sin(a_) * rr * 0.3, x + math.cos(a_) * rr, "R" if s < -2 else "O", over=False)
+                    if s >= -2:
+                        cv.put(y - rnd.randint(1, 6), x + rnd.randint(-6, 6), "Y")
                 continue
-            src = (np.abs(yy - y) <= 2) & (np.abs(xx - x) <= 8) if s < 5 else None
-            fields[k].step(src, 1.0 if s < 3 else 0.85, sub=11)
+            on = s < 6 or big
+            src = (np.abs(yy - y) <= 2) & (np.abs(xx - x) <= 10) if on else None
+            fields[k].step(src, 1.0, sub=13 if (s < 3 or big) else 10)
             if s == 0:
-                se.append(["fire/erupt", 1.0 if k == order[0] else 0.7])
+                se.append(["fire/erupt", 1.0 if k == order[0] else 0.75])
             if k < 4:
-                if s == 0: party.append([k, "flash_left", 2])
-                elif s < 6: party.append([k, "burn_left" if s % 2 else "hurt_left", 2])
+                if s == 0 or i == BIG: party.append([k, "flash_left", 2])
+                elif s < 6 or big: party.append([k, "burn_left" if (s + i) % 2 else "hurt_left", 3 if big else 2])
                 else: party.append([k, "hurt_left", 1])
-            sparks[k].step(cv) if s >= 1 else None
-            if s == 6:
-                for _ in range(3): smoke.append([y - rnd.uniform(10, 30), x + rnd.uniform(-6, 6), rnd.uniform(2, 3.5)])
-        heat = np.zeros((H, W))
+            if s >= 1:
+                sparks[k].step(cv)
+                if s in (1, 4) or i == BIG:
+                    sparks[k] = Sparks(rnd, y - 6, x, 10, y) if i != BIG else Sparks(rnd, y - 10, x, 18, y)
+            if s == 7 or i == BIG + 3:
+                for _ in range(4): smoke.append([y - rnd.uniform(10, 50), x + rnd.uniform(-10, 10), rnd.uniform(2.5, 4)])
+        # 足もとの火の海（2本目の火柱が立ったころから、大炎上のあとまで）
+        sea_on = starts[order[1]] <= i < BIG + 3
+        sea_src = sea_band & (noise(rnd, H, W, 4) > (0.6 if not big else 0.4)) if sea_on else None
+        sea.step(sea_src, 0.8 if not big else 1.0, sub=5)
+        heat = sea.heat.copy()
         for k in fields:
             heat = np.maximum(heat, fields[k].heat)
-        # 火柱の芯を細く明るく（下のほうがいちばん熱い）
         for s_ in smoke:
             for y in range(int(s_[0] - s_[2]), int(s_[0] + s_[2]) + 1):
                 for x in range(int(s_[1] - s_[2]), int(s_[1] + s_[2]) + 1):
                     if (y - s_[0]) ** 2 + (x - s_[1]) ** 2 <= s_[2] ** 2 and (y + x + i) % 2 == 0:
-                        cv.put(y, x, "K" if s_[2] < 4 else ("S" if s_[2] < 6 else "L"), over=False)
-            s_[0] -= 1.6; s_[2] += 0.5
+                        cv.put(y, x, "K" if s_[2] < 4.5 else ("S" if s_[2] < 7 else "L"), over=False)
+            s_[0] -= 1.8; s_[2] += 0.55
         heat_paint(cv, heat)
         first = i == starts[order[0]]
-        flash = 0.3 if first else 0.0
-        shake = 3 if first else (1 if any(i == starts[k] for k in starts) else 0)
-        dim = min(0.55, 0.15 + 0.08 * i) if i < N - 5 else max(0.0, 0.55 - 0.12 * (i - (N - 5)))
-        frames.append(frame(cv, 60 if i < N - 8 else 85, dim=dim, flash=flash, shake=shake, party=party or None, se=se or None))
+        flash = 0.25 if first else (0.35 if i == BIG else 0.0)
+        shake = 3 if first else (5 if i == BIG else (3 if i == BIG + 1 else (2 if any(i == starts[k] for k in starts) else 0)))
+        dim = min(0.6, 0.15 + 0.08 * i) if i < N - 6 else max(0.0, 0.6 - 0.1 * (i - (N - 6)))
+        frames.append(frame(cv, 60 if i < BIG + 3 else 85, dim=dim, flash=flash, shake=shake, party=party or None, se=se or None))
     return {"name": "火柱（全体）", "w": W, "h": H, "anchor": [ax, ay], "palette": PAL, "frames": frames}
-
 
 if __name__ == "__main__":
     out = sys.argv[1]

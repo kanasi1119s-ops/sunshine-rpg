@@ -1,6 +1,6 @@
 """雷の術のエフェクトを、本物の戦闘画面に重ねて、コマの長さどおりの動画にする（見本）。
 
-使い方: python3 fx_preview.py 背景.png 名前とHPの入った背景.png エフェクトのフォルダ ボスのanim.json 出力.mp4 [--slow 4] [--party 2頭身の歩く絵のフォルダ] [--set fire]
+使い方: python3 fx_preview.py 背景.png 名前とHPの入った背景.png エフェクトのフォルダ ボスのanim.json 出力.mp4 [--slow 4] [--party 2頭身の歩く絵のフォルダ] [--set fire] [--bg 背景.png] [--ui 文字と窓.png]
   --set: lightning（雷の術、ふだん）か fire（炎の術）
   --party: 味方を新しい2頭身の絵（assets-src/characters/walk-2head/）で立たせる。背景は味方の絵のないもの（ruins-noparty.png）を使う
   背景.png: 戦闘画面（論理 400×225）から敵を抜いたもの。ゲームの描画（battle-renderer.ts）で作る
@@ -46,6 +46,14 @@ def main():
     base = np.array(Image.open(bg_none).convert("RGB"))
     named = np.array(Image.open(bg_boss).convert("RGB"))
     base[134:162, 0:170] = named[134:162, 0:170]          # ボスの名前とHP
+    # --bg 絵.png: 戦闘の場（上の400×169）の背景をこの絵にする。--ui 文字と窓.png: ゲームと同じ細かさ（1200×675）の
+    # 文字と窓（battle-ui-layer.mjs で作る）を、拡大したあとに重ねる（論理の大きさの文字を拡大すると、つぶれて読みにくかった）
+    ui = None
+    if "--bg" in args:
+        bgimg = np.array(Image.open(args[args.index("--bg") + 1]).convert("RGB").resize((400, FIELD_H), Image.NEAREST))
+        base = np.zeros((225, 400, 3), np.uint8); base[:] = (20, 14, 36); base[:FIELD_H] = bgimg
+    if "--ui" in args:
+        ui = Image.open(args[args.index("--ui") + 1]).convert("RGBA").resize((400 * SCALE, 225 * SCALE), Image.LANCZOS)
     # --party フォルダ: 新しい2頭身の歩く絵（16×32）を、ゲームと同じ位置に立たせる。
     # "left0"（敵の方を向いた絵）。雷に当たると flash_left（白）→ shock_left（しびれ）⇄ hurt_left（ひるむ）になり、2ドット後ろへ飛ばされる
     party = []
@@ -195,6 +203,8 @@ def main():
             s = f0["shake"] * (1 if k % 2 else -1)
             a[:FIELD_H] = np.roll(a[:FIELD_H], s, axis=1)
         img = Image.fromarray(a.astype(np.uint8)).resize((400 * SCALE, 225 * SCALE), Image.NEAREST)
+        if ui is not None:
+            img = img.convert("RGBA"); img.alpha_composite(ui); img = img.convert("RGB")
         card = Image.new("RGB", (400 * SCALE, 225 * SCALE + 55), (24, 18, 40))
         card.paste(img, (0, 0))
         ImageDraw.Draw(card).text((16, 225 * SCALE + 10), cap, font=font, fill=(242, 193, 78))

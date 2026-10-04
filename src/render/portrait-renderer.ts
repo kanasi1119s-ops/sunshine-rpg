@@ -1,5 +1,6 @@
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
+import { drawSmooth } from "./smooth-draw";
 import {
   buildShadedCells,
   PORTRAIT_GRID_HEIGHT,
@@ -44,13 +45,11 @@ export function renderPortraitByName(
   // 大きな立ち絵（256×256）がある人物は、頭のあたりを切り出して顔グラフィックにする。
   const full = getSpriteCanvas(`char:${speaker}`, SPRITE_DATA);
   if (full) {
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
     ctx.fillStyle = "#2a2140";
     ctx.fillRect(x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
     // 104×104の立ち絵: 頭は中央上（x 32〜72、y 0〜46）。256×256の古い絵は頭の位置が違う
     const crop = full.width === 104 ? [32, 0, 40, 46] : [90, 8, 76, 90];
-    ctx.drawImage(full, crop[0], crop[1], crop[2], crop[3], x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
+    drawSmooth(ctx, full, crop[0], crop[1], crop[2], crop[3], x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
     return true;
   }
   const spec = PORTRAITS[speaker];

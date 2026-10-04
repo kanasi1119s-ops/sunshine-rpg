@@ -1,6 +1,6 @@
 """boss_rig.py の動き（anim.json）を、決めたコマの長さどおりに再生する動画（MP4）にする（2026-10-04）。
 エディタの中の再生は、コマが多いと描き直しが追いつかず遅くなるため、なめらかさを正しく見せるのに使う。
-使い方: python3 anim_clip.py anim.json 出力.mp4 [--size 1280x800] [--title 名前]
+使い方: python3 anim_clip.py anim.json 出力.mp4 [--size 1280x800] [--title 名前] [--bg 背景.png]
 """
 import json, os, subprocess, sys, tempfile
 from PIL import Image, ImageDraw, ImageFont
@@ -22,17 +22,32 @@ def img(rows, scale):
     return im.resize((256 * scale, 256 * scale), Image.NEAREST)
 
 
+BG = None
+if "--bg" in a:   # 背景のドット絵（人間の指示「ボスの攻撃動画の背景をこのドット画に変えよう」）。最近傍で画面いっぱいに広げる
+    _b = Image.open(opt("--bg", "")).convert("RGB")
+    _k = max(VW / _b.width, VH / _b.height)
+    _b = _b.resize((round(_b.width * _k), round(_b.height * _k)), Image.NEAREST)
+    BG = _b.crop(((_b.width - VW) // 2, (_b.height - VH) // 2, (_b.width - VW) // 2 + VW, (_b.height - VH) // 2 + VH))
+
+
 def card(rows, caption):
-    bg = Image.new("RGB", (VW, VH), (28, 22, 44))
-    d = ImageDraw.Draw(bg)
+    bg = BG.copy() if BG is not None else Image.new("RGB", (VW, VH), (28, 22, 44))
+    d = ImageDraw.Draw(bg, "RGBA")
     # 床（足もと）と、キャプション
     s = max(1, (VH - 140) // 256)
     sp = img(rows, s)
     x0, y0 = (VW - sp.width) // 2, VH - 40 - sp.height
-    d.rectangle((0, y0 + sp.height - 6, VW, VH), fill=(22, 17, 34))
+    if BG is None:
+        d.rectangle((0, y0 + sp.height - 6, VW, VH), fill=(22, 17, 34))
+    else:   # 足もとの影
+        d.ellipse((x0 + sp.width * 0.18, y0 + sp.height - 14, x0 + sp.width * 0.82, y0 + sp.height + 10), fill=(0, 0, 0, 90))
     bg.paste(sp, (x0, y0), sp)
     f = ImageFont.truetype(FONT, 30)
-    d.text((40, 30), (title + "　" if title else "") + caption, font=f, fill=(242, 193, 78))
+    text = (title + "　" if title else "") + caption
+    if BG is not None:   # 背景が明るい所でも読めるように、文字の下に暗い帯
+        w = d.textlength(text, font=f)
+        d.rounded_rectangle((26, 22, 54 + w, 70), 10, fill=(14, 10, 26, 200))
+    d.text((40, 30), text, font=f, fill=(242, 193, 78))
     return bg
 
 

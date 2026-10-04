@@ -2,6 +2,7 @@ import { COMMANDS, type BattleUiState } from "../game/battle/battle-controller";
 import type { BattleState, Combatant } from "../game/battle/types";
 import { baseEnemyId, findCombatant } from "../game/battle/types";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
+import { drawSmooth } from "./smooth-draw";
 import { getSpriteCanvas } from "../game/art/sprite";
 import { hueOfHex, mobPalette } from "../game/art/mob-palette";
 import { getBackdropCanvas, type Biome } from "./battle-backdrop";
@@ -34,12 +35,13 @@ function drawHpBar(
   x: number,
   y: number,
   width: number,
+  height = 4,
 ): void {
   const ratio = combatant.maxHp > 0 ? combatant.hp / combatant.maxHp : 0;
   ctx.fillStyle = "#333";
-  ctx.fillRect(x, y, width, 4);
+  ctx.fillRect(x, y, width, height);
   ctx.fillStyle = ratio > 0.3 ? "#4caf50" : "#e05555";
-  ctx.fillRect(x, y, width * Math.max(0, ratio), 4);
+  ctx.fillRect(x, y, width * Math.max(0, ratio), height);
 }
 
 /**
@@ -72,9 +74,7 @@ function drawMobSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, x: numbe
   // その敵だけの絵（`enemy:<id>`、96×96。AIの下絵→ドット絵化→手直し→エディタで描いたもの）があれば、それを使う
   const own = enemy.hp > 0 ? getSpriteCanvas(`enemy:${baseEnemyId(enemy.id)}`, SPRITE_DATA) : null;
   if (own) {
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(own, x, y, size, size);
+    drawSmooth(ctx, own, 0, 0, own.width, own.height, x, y, size, size);
     return true;
   }
   const spec = enemy.hp > 0 ? MONSTERS[baseEnemyId(enemy.id)] : undefined;
@@ -93,6 +93,8 @@ function drawMobSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, x: numbe
 /** ボスの大きな絵（256×256）。あれば画面の中央に大きく描く。描けたら true。 */
 /** 戦闘画面の左右: 敵が右、味方が左（`ENEMIES_ON_RIGHT` を false にすると逆になる）。 */
 const ENEMIES_ON_RIGHT = false;
+/** 状態表示の1行の高さ（論理のドット） */
+const STATUS_PITCH = 14;
 
 /** 敵の側の、絵の左端x（絵の幅 w。画面の端から余白を空ける）。 */
 function enemySideX(screenWidth: number, w: number): number {
@@ -119,9 +121,7 @@ function drawBossSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, screenW
   // 敵の側（右）に大きく描き、名前とHPは絵の下に置く
   const size = 132;
   const x = enemySideX(screenWidth, size);
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(canvas, x, 2, size, size);
+  drawSmooth(ctx, canvas, 0, 0, canvas.width, canvas.height, x, 2, size, size);
   ctx.fillStyle = "#f0f0f0";
   shadowText(ctx, enemy.name, x, 136);
   drawHpBar(ctx, enemy, x, 150, size);
@@ -136,6 +136,7 @@ function renderBattleBody(
   screenHeight: number,
   effectView?: BattleEffectView | null,
 ): void {
+  ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = "#1c1030";
   ctx.fillRect(0, 0, screenWidth, screenHeight);
   const backdrop = getBackdropCanvas(currentBiome, screenWidth, screenHeight - 56);
@@ -213,13 +214,17 @@ function renderBattleBody(
   const SPR = 1; // 歩く絵（16×32）を等倍で描く（5人でも重ならない大きさ）
   const groundY = screenHeight - 56 - 4; // 手前の列の足元
   const textX = ENEMIES_ON_RIGHT ? 8 : screenWidth - 128;
+  // 状態表示（名前・HP・MP）のうしろに、うすい暗い板。文字の下にHPの帯が重なって読みにくかったので、
+  // 1行の間をあけ（14ドット）、帯は文字の下に細く（2ドット）置く（人間の指摘「ゲーム画面の文字が読みにくい」2026-10-04）
+  ctx.fillStyle = "rgba(16, 10, 30, 0.55)";
+  ctx.fillRect(textX - 3, 0, 124, 2 + count * STATUS_PITCH + 1);
   battleState.party.forEach((member, index) => {
     const isActing = uiState.kind === "command" && uiState.actorId === member.id;
     // 状態表示（1人1行）
-    const ty = 2 + index * 12;
+    const ty = 2 + index * STATUS_PITCH;
     ctx.fillStyle = isActing ? "#f2c14e" : "#f0f0f0";
     shadowText(ctx, `${member.name.split(/[\s　]/)[0]} ${member.hp}/${member.maxHp} MP${member.mp}`, textX, ty);
-    drawHpBar(ctx, member, textX, ty + 9, 118);
+    drawHpBar(ctx, member, textX, ty + 11, 118, 2);
     // 地面に立つ姿
     const spec = partySpecFor(member.name.split(/[\s　]/)[0]);
     if (!spec || member.hp <= 0) {
