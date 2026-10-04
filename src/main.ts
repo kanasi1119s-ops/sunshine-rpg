@@ -16,8 +16,9 @@ import { DUNGEON_PREP_FLAGS } from "./game/world/dungeon-extensions";
 import { advanceBattleTransition, canSkipTransition, isCoverPhase, skipToReveal, startBattleTransition, type BattleTransition } from "./game/battle/battle-transition";
 import { renderTransitionCover, renderTransitionReveal } from "./render/battle-transition-renderer";
 import { advanceOpening, createOpeningState, skipOpening, startOpening, updateOpening } from "./game/title/opening";
-import { battleSeFor } from "./game/battle/battle-se";
+import { battleSeFor, swingSeFor } from "./game/battle/battle-se";
 import { battleEffectFor, type BattleEffect } from "./game/battle/battle-effect";
+import { battleAnimFor, type BattleAnimSpec } from "./game/battle/battle-anim";
 import { createStaffRollState, skipStaffRoll, startStaffRoll, updateStaffRoll } from "./game/title/staff-roll";
 import { renderStaffRoll } from "./render/staff-roll-renderer";
 import { addGold, computeVictoryGold, spendGold } from "./game/economy/gold";
@@ -583,6 +584,7 @@ let worldBattleBiome: Biome = "grass";
 function prepareBattleScreen(): void {
   setBattleBiome(currentMapId === "world-map" ? worldBattleBiome : biomeForMap(currentMapId));
   battleEffect = null;
+  battleAnim = null;
   lastBattleMessage = null;
 }
 
@@ -963,6 +965,8 @@ let lastDialogueDirection: Direction | null = null;
 let lastBattleDirection: Direction | null = null;
 /** 直前に効果音を鳴らした戦闘メッセージ（同じメッセージで2度鳴らさない）。 */
 let battleEffect: { effect: BattleEffect; startedAt: number } | null = null;
+/** 進行中の「動き」（武器をふる・魔法のエフェクト・のけぞり）。 */
+let battleAnim: { spec: BattleAnimSpec; startedAt: number } | null = null;
 let lastBattleMessage: string | null = null;
 let battle: BattleController | null = null;
 let heroStats = createInitialHeroStats();
@@ -1818,6 +1822,7 @@ function renderGameSceneBase(): void {
       LOGICAL_HEIGHT,
       battleEffect ? { effect: battleEffect.effect, elapsedMs: performance.now() - battleEffect.startedAt } : null,
       battle.hasUsableItems(),
+      battleAnim ? { spec: battleAnim.spec, elapsedMs: performance.now() - battleAnim.startedAt } : null,
     );
     if (victoryMessage && battle.getUiState().kind === "finished") {
       ctx.fillStyle = "#f2c14e";
@@ -2389,9 +2394,17 @@ const loop = createGameLoop({
           lastBattleMessage = uiState.text;
           const effect = battleEffectFor(uiState.text, battle.getState().party.map((c) => c.name));
           battleEffect = effect ? { effect, startedAt: performance.now() } : null;
+          const anim = battleAnimFor(uiState.text, battle.getState(), (id) => WEAPON_TYPE_OF[id]);
+          battleAnim = anim ? { spec: anim, startedAt: performance.now() } : null;
           const se = battleSeFor(uiState.text, battle.getState().party.map((c) => c.name));
-          if (se && audioStarted) {
-            audio.playSe(seOf(se));
+          if (audioStarted) {
+            if (anim?.motion) audio.playSe(seOf(swingSeFor(anim.motion)));
+            // 当たる音・魔法の音は、武器がとどく／魔法が出るときに合わせる
+            if (se) {
+              const delay = anim ? Math.round(anim.durationMs * anim.fxStart) : 0;
+              if (delay > 0) window.setTimeout(() => audio.playSe(seOf(se)), delay);
+              else audio.playSe(seOf(se));
+            }
           }
         }
       } else {

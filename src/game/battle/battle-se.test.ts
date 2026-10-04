@@ -15,12 +15,12 @@ describe("戦闘の効果音", () => {
   it("特技の名前で、炎・風・氷（水）の術の音になる", () => {
     expect(battleSeFor("ユーリ の 火照ノ一！ ゆらぎ玉 に 20 のダメージ", party)).toBe("fire");
     expect(battleSeFor("ユーリ の 疾風の刃！ ゆらぎ玉 に 20 のダメージ", party)).toBe("wind");
-    expect(battleSeFor("ミナ の 水紋ノ波！ ゆらぎ玉 に 20 のダメージ", ["ミナ"])).toBe("ice");
+    expect(battleSeFor("ミナ の 水紋ノ波！ ゆらぎ玉 に 20 のダメージ", ["ミナ"])).toBe("water");
   });
 
-  it("敵を倒したときだけ「倒した」音。味方が倒れたときは鳴らさない", () => {
+  it("敵を倒したときは「倒した」音。味方が倒れたときは、倒れる音", () => {
     expect(battleSeFor("ゆらぎ玉 を倒した！", party)).toBe("enemy-down");
-    expect(battleSeFor("レト を倒した！", party)).toBeNull();
+    expect(battleSeFor("レト を倒した！", party)).toBe("ally-down");
     expect(battleSeFor("ユーリ の 羽音！ ゆらぎ玉 は一撃で倒れた", party)).toBe("enemy-down");
   });
 

@@ -19,10 +19,19 @@ export function battleSeFor(text: string, partyNames: string[]): string | null {
   if (text.includes("のHPが") && text.includes("回復した")) {
     return "heal";
   }
+  if (text.includes("は毒におかされた") || text.includes("は毒のダメージ")) {
+    return "poison";
+  }
+  if (text.includes("は混乱した！")) {
+    return "confuse";
+  }
+  if (text.includes("は眠ってしまった")) {
+    return "sleep";
+  }
   if (/の(こうげき|しゅび|すばやさ)が上がった$/.test(text)) {
     return "buff";
   }
-  if (/の(こうげき|しゅび|すばやさ)が下がった$/.test(text) || text.includes("は眠ってしまった")) {
+  if (/の(こうげき|しゅび|すばやさ)が下がった$/.test(text)) {
     return "debuff";
   }
   if (text.includes("HPを支払った")) {
@@ -30,7 +39,7 @@ export function battleSeFor(text: string, partyNames: string[]): string | null {
   }
   const killed = /^(.+) を倒した！$/.exec(text);
   if (killed) {
-    return partyNames.includes(killed[1]) ? null : "enemy-down";
+    return partyNames.includes(killed[1]) ? "ally-down" : "enemy-down";
   }
   if (text.includes("は一撃で倒れた")) {
     return "enemy-down";
@@ -50,10 +59,27 @@ export function battleSeFor(text: string, partyNames: string[]): string | null {
     if (/風|疾|颶|刃/.test(skill)) {
       return "wind";
     }
-    if (/氷|水|雨/.test(skill)) {
+    if (/雷|電/.test(skill)) {
+      return "thunder";
+    }
+    if (/氷|霜|凍/.test(skill)) {
       return "ice";
+    }
+    if (/水|雫|波|雨|流|潮|紋/.test(skill)) {
+      return "water";
+    }
+    if (/光|灯|閃|断/.test(skill)) {
+      return "light";
+    }
+    if (/土|岩|砂|地|鉄/.test(skill)) {
+      return "rock";
     }
     return "attack";
   }
   return null;
+}
+
+/** 武器の動き（振る・さす・矢をはなつ…）の効果音。動きの始まりに鳴らす。 */
+export function swingSeFor(motion: "slash" | "stab" | "cast" | "shoot" | "chop" | "thrust"): string {
+  return { slash: "swing-sword", stab: "swing-dagger", cast: "magic-charge", shoot: "bow-shoot", chop: "swing-axe", thrust: "spear-thrust" }[motion];
 }

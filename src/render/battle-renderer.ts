@@ -11,6 +11,9 @@ import { PORTRAITS } from "../game/portrait/portraits";
 import { spriteSpecFromPortrait } from "../game/sprite/character-specs";
 import { drawSprite } from "./sprite-renderer";
 import { frameAt, SPRITE_FEET_ROW } from "../game/sprite/overworld-sprite";
+import type { BattleAnimSpec } from "../game/battle/battle-anim";
+import { allyStateOf, getAllyCanvas, type AllyState } from "./ally-states";
+import { drawFx, drawWeaponMotion, FX_COLOR, lungeOffset, type Pt } from "./battle-anim-renderer";
 
 let currentBiome: Biome = "grass";
 let currentVariant = 0;
@@ -42,6 +45,12 @@ import { shakeOffset, type BattleEffect } from "../game/battle/battle-effect";
 /** 進行中の演出（種類と経過ミリ秒）。 */
 export interface BattleEffectView {
   effect: BattleEffect;
+  elapsedMs: number;
+}
+
+/** 進行中の「動き」（武器をふる・魔法のエフェクト・のけぞり）と、経過ミリ秒。 */
+export interface BattleAnimView {
+  spec: BattleAnimSpec;
   elapsedMs: number;
 }
 import { buildMonsterCells, MONSTER_GRID_SIZE, MONSTERS } from "../game/monster/monsters";
@@ -182,6 +191,29 @@ function drawBossSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, screenW
   return true;
 }
 
+/** 戦闘の画面で、その人のからだの中心の位置（エフェクトを重ねる場所）。 */
+function combatantPoint(state: BattleState, id: string, screenWidth: number, screenHeight: number): Pt {
+  const ally = state.party.findIndex((c) => c.id === id);
+  if (ally >= 0) {
+    const row = ally % 2;
+    const col = Math.floor(ally / 2);
+    const feetY = screenHeight - 56 - 4 - row * 18;
+    const leftX = ENEMIES_ON_RIGHT ? 20 + col * 30 + row * 14 : screenWidth - 40 - col * 30 - row * 14;
+    return { x: leftX + 8, y: feetY - 16 };
+  }
+  const enemy = state.enemies.find((c) => c.id === id);
+  if (!enemy) return { x: 80, y: 80 };
+  const boss = !!getSpriteCanvas(`boss:${baseEnemyId(enemy.id)}`, SPRITE_DATA);
+  const strong = state.enemies.length === 1 && enemy.maxHp >= 250 && !!MONSTERS[baseEnemyId(enemy.id)];
+  if (boss) return { x: enemySideX(screenWidth, 132) + 66, y: 80 };
+  if (strong) return { x: enemySideX(screenWidth, 128) + 64, y: 56 + 24 };
+  const crowd = state.enemies.filter((e) => e.hp > 0 && !getSpriteCanvas(`boss:${baseEnemyId(e.id)}`, SPRITE_DATA) && !(state.enemies.length === 1 && e.maxHp >= 250 && MONSTERS[baseEnemyId(e.id)]));
+  const idx = crowd.findIndex((e) => e.id === id);
+  const slots = groundSlots(idx >= 0 ? crowd.length : state.enemies.length);
+  const slot = slots[idx >= 0 ? idx : Math.max(0, state.enemies.indexOf(enemy)) % slots.length];
+  return { x: slot.x + 32, y: slot.feet - 28 };
+}
+
 function renderBattleBody(
   ctx: CanvasRenderingContext2D,
   battleState: BattleState,
@@ -190,6 +222,7 @@ function renderBattleBody(
   screenHeight: number,
   effectView?: BattleEffectView | null,
   itemsAvailable = true,
+  animView?: BattleAnimView | null,
 ): void {
   ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = "#1c1030";
@@ -303,23 +336,76 @@ function renderBattleBody(
     drawHpBar(ctx, member, textX, ty + 11, 118, 2);
     // 地面に立つ姿
     const spec = partySpecFor(member.name.split(/[\s　]/)[0]);
-    if (!spec || member.hp <= 0) {
+    if (!spec) {
       return;
     }
     const row = index % 2;
     const col = Math.floor(index / 2);
     const feetY = groundY - row * 18;
     const leftX = ENEMIES_ON_RIGHT ? 20 + col * 30 + row * 14 : screenWidth - 40 - col * 30 - row * 14;
-    const x = leftX + (isActing ? (ENEMIES_ON_RIGHT ? 4 : -4) : 0);
-    const step = isActing ? frameAt(true, nowMs) : 0;
+    const anim = animView && animView.elapsedMs < animView.spec.durationMs ? animView : null;
+    const p = anim ? anim.elapsedMs / anim.spec.durationMs : 1;
+    const acting = anim?.spec.actorId === member.id && anim.spec.motion;
+    const flinch = anim?.spec.hurt && anim.spec.targetIds.includes(member.id) && p < 0.85;
+    const lunge = acting && anim?.spec.motion ? lungeOffset(anim.spec.motion, p) : 0;
+    const x = leftX + (isActing ? (ENEMIES_ON_RIGHT ? 4 : -4) : 0) + lunge;
+    const baseState: AllyState = allyStateOf(member);
+    const state: AllyState = flinch && baseState !== "ko" ? "hurt" : baseState;
+    const step = isActing || acting ? frameAt(true, nowMs) : 0;
+    const specKey = member.name.split(/[\s　]/)[0];
+    if (state === "ko") {
+      // たおれた姿（よこ向き）
+      const lying = getAllyCanvas(spec, specKey, "ko", 0);
+      ctx.fillStyle = "rgba(0,0,0,0.28)";
+      ctx.fillRect(leftX - 8, feetY - 2, 32, 3);
+      if (lying) ctx.drawImage(lying, leftX - 8, feetY - lying.height);
+      return;
+    }
     ctx.fillStyle = "rgba(0,0,0,0.28)";
     ctx.fillRect(x + 1, feetY - 2, 14, 3); // 足元の影
-    ctx.save();
-    ctx.translate(x, feetY - SPR * (SPRITE_FEET_ROW + 1));
-    ctx.scale(SPR, SPR);
-    drawSprite(ctx, spec, ENEMIES_ON_RIGHT ? "right" : "left", step, 0, 0);
-    ctx.restore();
+    const shake = flinch ? Math.round(Math.sin(nowMs / 14) * 1.5) : 0;
+    // ゆらゆら（混乱）・ぶるぶる（毒）
+    const sway = state === "confuse" ? Math.round(Math.sin(nowMs / 160) * 2) : state === "poison" ? Math.round(Math.sin(nowMs / 60)) : 0;
+    const canvas = getAllyCanvas(spec, specKey, state, step);
+    if (canvas) {
+      ctx.drawImage(canvas, x + shake + sway, feetY - SPR * (SPRITE_FEET_ROW + 1));
+    } else {
+      ctx.save();
+      ctx.translate(x, feetY - SPR * (SPRITE_FEET_ROW + 1));
+      ctx.scale(SPR, SPR);
+      drawSprite(ctx, spec, ENEMIES_ON_RIGHT ? "right" : "left", step, 0, 0);
+      ctx.restore();
+    }
+    // 状態のしるし（ずっと出ている小さな動き）
+    const cx = x + 8;
+    const loop = (nowMs % 1800) / 1800;
+    if (state === "sleep") drawFx(ctx, "sleep", loop, { x: cx - 4, y: feetY - 14 });
+    else if (state === "poison") drawFx(ctx, "poison", loop, { x: cx, y: feetY - 14 });
+    else if (state === "confuse") drawFx(ctx, "confuse", loop, { x: cx, y: feetY - 14 });
+    else if (state === "dying") {
+      const drop = (nowMs % 1200) / 1200;
+      ctx.fillStyle = "#9ad0ff";
+      ctx.fillRect(x + 3, feetY - 22 + Math.round(drop * 6), 1, 2);
+    }
   });
+  // 動き（武器・魔法のエフェクト）は、味方の絵より手前に重ねる
+  if (animView && animView.elapsedMs < animView.spec.durationMs) {
+    const spec2 = animView.spec;
+    const prog = animView.elapsedMs / spec2.durationMs;
+    const pointOf = (id: string): Pt => combatantPoint(battleState, id, screenWidth, screenHeight);
+    const targets = spec2.targetIds.map(pointOf);
+    const mainTarget = targets[0] ?? { x: 80, y: 80 };
+    if (spec2.actorId && spec2.motion) {
+      const actorPt = pointOf(spec2.actorId);
+      const glow = spec2.fx ? FX_COLOR[spec2.fx] : "#9ad0ff";
+      const lunge = lungeOffset(spec2.motion, prog);
+      drawWeaponMotion(ctx, spec2.motion, prog, { x: actorPt.x - 4 + lunge, y: actorPt.y + 2 }, mainTarget, glow);
+    }
+    if (spec2.fx && prog >= spec2.fxStart) {
+      const ft = (prog - spec2.fxStart) / Math.max(0.01, 1 - spec2.fxStart);
+      for (const t of targets) drawFx(ctx, spec2.fx, Math.min(1, ft), t);
+    }
+  }
   void count;
 
   const boxY = screenHeight - 56;
@@ -409,11 +495,12 @@ export function renderBattle(
   screenHeight: number,
   effectView?: BattleEffectView | null,
   itemsAvailable = true,
+  animView?: BattleAnimView | null,
 ): void {
   ctx.save();
   if (effectView && effectView.effect.kind === "shake") {
     ctx.translate(shakeOffset(effectView.elapsedMs / effectView.effect.duration, effectView.elapsedMs), 0);
   }
-  renderBattleBody(ctx, battleState, uiState, screenWidth, screenHeight, effectView, itemsAvailable);
+  renderBattleBody(ctx, battleState, uiState, screenWidth, screenHeight, effectView, itemsAvailable, animView);
   ctx.restore();
 }
