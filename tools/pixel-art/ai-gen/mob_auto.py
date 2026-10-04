@@ -123,7 +123,7 @@ def main():
         n_batch += 1
         seed_base = str(2000 + 997 * max(tries.get(i, 0) for i in ids))
         log(f"[{n_batch}] 下絵:", ids, "種", seed_base)
-        if not run(["python3", f"{AI}/monster_batch.py", "draft", *ids, "--seeds", "2"], env={"SEED_BASE": seed_base}, timeout=7200):
+        if not run(["python3", f"{AI}/monster_batch.py", "draft", *ids, "--seeds", "2"], env={"SEED_BASE": seed_base, "SKIP_EXISTING": "1"}, timeout=7200):
             for i in ids: tries[i] = tries.get(i, 0) + 1
             continue
         finished = []
