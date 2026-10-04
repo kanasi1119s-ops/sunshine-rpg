@@ -2031,111 +2031,196 @@
  },
  {
   "id": "chapter0-yugami",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a writhing beast of twisted purple light and smoke, a crooked wolf-like body, glowing gold eyes, sharp purple crystal spikes on its back",
+  "status": "picked",
   "key": "boss:chapter0-yugami",
   "kind": "boss",
   "name": "灯里の歪み",
-  "zone": "序章"
+  "zone": "序章",
+  "shape": "ground",
+  "tone": [
+   110,
+   80,
+   150
+  ],
+  "draft": "chapter0-yugami_1"
  },
  {
   "id": "mugikano-yugami",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a giant withered skeletal beast, cracked dry hide over bones, a hollow ribcage dripping black water, a horned skull with three red-violet eyes",
+  "status": "picked",
   "key": "boss:mugikano-yugami",
   "kind": "boss",
   "name": "水涸れの歪み",
-  "zone": "1章"
+  "zone": "1章",
+  "shape": "big",
+  "tone": [
+   140,
+   120,
+   95
+  ],
+  "draft": "mugikano-yugami_1"
  },
  {
   "id": "garasuko-yugami",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a monster made of a huge open wooden cargo crate, jagged teeth of splintered boards along its open lid like jaws, a long rope tongue, glowing amber eyes",
+  "status": "draft",
   "key": "boss:garasuko-yugami",
   "kind": "boss",
   "name": "積荷の歪み",
-  "zone": "2章"
+  "zone": "2章",
+  "shape": "big",
+  "tone": [
+   120,
+   85,
+   55
+  ],
+  "neg_extra": ""
  },
  {
   "id": "tetsukusari-yugami",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a rusted steel experimental machine come alive, one giant slit-pupil eye, gear jaws, tangled pipes like veins, purple lightning, chains",
+  "status": "picked",
   "key": "boss:tetsukusari-yugami",
   "kind": "boss",
   "name": "実験の歪み",
-  "zone": "3章"
+  "zone": "3章",
+  "shape": "big",
+  "tone": [
+   110,
+   95,
+   85
+  ],
+  "draft": "tetsukusari-yugami_0"
  },
  {
   "id": "sanone-yugami",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a towering monster made of swirling desert sand and stone, a huge jagged split mouth, half-buried wooden cart wheels in its body, many glowing amber eyes, dark sand",
+  "status": "picked",
   "key": "boss:sanone-yugami",
   "kind": "boss",
   "name": "砂嵐の歪み",
-  "zone": "4章"
+  "zone": "4章",
+  "shape": "big",
+  "tone": [
+   150,
+   115,
+   70
+  ],
+  "draft": "sanone-yugami_0",
+  "neg_extra": "poster, framed picture, foggy background, landscape"
  },
  {
   "id": "kiri-yugami",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a huge broken stone monolith monster, glowing pale blue carved letters, swirling bands of paper scraps, one great eye and many small eyes, mist",
+  "status": "done",
   "key": "boss:kiri-yugami",
   "kind": "boss",
   "name": "予言の歪み",
-  "zone": "5章"
+  "zone": "5章",
+  "shape": "tall",
+  "tone": [
+   125,
+   130,
+   140
+  ],
+  "draft": "kiri-yugami_0"
  },
  {
   "id": "shimohara-yugami",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "an ancient prototype war machine covered in snow and ice, frozen gears, ice crystal spikes, a glowing red core, four heavy mechanical legs",
+  "status": "picked",
   "key": "boss:shimohara-yugami",
   "kind": "boss",
   "name": "試作機の歪み",
-  "zone": "6章"
+  "zone": "6章",
+  "shape": "big",
+  "tone": [
+   135,
+   150,
+   165
+  ],
+  "draft": "shimohara-yugami_0"
  },
  {
   "id": "fushima-yugami",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a floating rock fortress monster, a ring of glowing pale blue eye-like lenses around its body, hanging chains and roots, mossy stone, crystals, ancient machinery",
+  "status": "draft",
   "key": "boss:fushima-yugami",
   "kind": "boss",
   "name": "浮嶼の歪み",
-  "zone": "7章"
+  "zone": "7章",
+  "shape": "float",
+  "tone": [
+   95,
+   115,
+   110
+  ],
+  "neg_extra": ""
  },
  {
   "id": "toushin-yugami",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a colossal guardian of brass clockwork and street lamps, a clock face on its chest, glowing glass lantern eyes, cobblestone armor plates",
+  "status": "picked",
   "key": "boss:toushin-yugami",
   "kind": "boss",
   "name": "灯芯都の歪み",
-  "zone": "8章"
+  "zone": "8章",
+  "shape": "big",
+  "tone": [
+   150,
+   120,
+   70
+  ],
+  "draft": "toushin-yugami_0"
  },
  {
   "id": "kyotoukyu-yugami",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a tall sorceress cloaked in swirling void darkness, a crown of bone, many glowing eyes in her dark cloak, a white core of light, a broken ring of light",
+  "status": "picked",
   "key": "boss:kyotoukyu-yugami",
   "kind": "boss",
   "name": "虚灯宮の歪み",
-  "zone": "9章"
+  "zone": "9章",
+  "shape": "tall",
+  "tone": [
+   75,
+   55,
+   95
+  ],
+  "draft": "kyotoukyu-yugami_0"
  },
  {
   "id": "deep-yugami",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a colossal ghostly tentacled creature, many long translucent tentacles, sorrowful pale faces in its body, a dim glowing heart, floating motes of light",
+  "status": "draft",
   "key": "boss:deep-yugami",
   "kind": "boss",
   "name": "初源の歪み",
-  "zone": "10章"
+  "zone": "10章",
+  "shape": "big",
+  "tone": [
+   95,
+   90,
+   130
+  ],
+  "neg_extra": "poster, painting on wall, framed picture, canvas print"
  },
  {
   "id": "deep3-yugami",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a huge monstrous chimera beast on four legs, a horned skull head, a cracked wooden jaw, rusty gears in its body, stone armor, many magenta eyes, tentacles",
+  "status": "draft",
   "key": "boss:deep3-yugami",
   "kind": "boss",
   "name": "深部3層の歪み",
-  "zone": "10章"
+  "zone": "10章",
+  "shape": "big",
+  "tone": [
+   130,
+   75,
+   110
+  ],
+  "neg_extra": "poster, painting on wall, framed picture, panel, canvas print"
  },
  {
   "id": "god-1",
@@ -2267,38 +2352,66 @@
  },
  {
   "id": "tower2-guard",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a majestic lion-like beast made of translucent pale blue light crystal, glowing white and gold facets, wisps of cloud around its paws",
+  "status": "picked",
   "key": "boss:tower2-guard",
   "kind": "boss",
   "name": "塔の守り（2層）",
-  "zone": "芯環塔"
+  "zone": "芯環塔",
+  "shape": "ground",
+  "tone": [
+   140,
+   155,
+   190
+  ],
+  "draft": "tower2-guard_0"
  },
  {
   "id": "kanou3-guard",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a serene guardian of living stone and soft golden light, a tall armored figure with a glowing gem face, white flowers growing on its shoulders",
+  "status": "picked",
   "key": "boss:kanou3-guard",
   "kind": "boss",
   "name": "塔の守り（3層）",
-  "zone": "環奥"
+  "zone": "環奥",
+  "shape": "tall",
+  "tone": [
+   150,
+   140,
+   120
+  ],
+  "draft": "kanou3-guard_0"
  },
  {
   "id": "tower3-guard",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a giant glowing crystal sentinel, a lantern-shaped body of amber crystal, a flame inside as its single eye, floating crystal shards around it",
+  "status": "picked",
   "key": "boss:tower3-guard",
   "kind": "boss",
   "name": "灯りの番人",
-  "zone": "芯環塔"
+  "zone": "芯環塔",
+  "shape": "float",
+  "tone": [
+   170,
+   130,
+   70
+  ],
+  "draft": "tower3-guard_1"
  },
  {
   "id": "zenkan",
-  "prompt": "",
-  "status": "todo",
+  "prompt": "a colossal ancient floating deity shaped like a giant cracked stone halo, golden light, a single calm eye at its center, beams of light, monumental size",
+  "status": "draft",
   "key": "boss:zenkan",
   "kind": "boss",
   "name": "全観",
-  "zone": "環奥の最後"
+  "zone": "環奥の最後",
+  "shape": "float",
+  "tone": [
+   165,
+   160,
+   145
+  ],
+  "neg_extra": "jewelry, finger ring, wedding ring, small object, metal band, gemstone"
  }
 ]

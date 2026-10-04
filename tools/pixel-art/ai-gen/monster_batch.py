@@ -131,6 +131,8 @@ def cmd_draft(ids, seeds=4):
         js = json.load(open(f"{WORK}/j.json"))
         # 置き場所の下書き（layouts.py）から描く: 名簿の shape（形）と tone（体のおおまかな色）を使う
         for j in js:
+            if e.get("neg_extra"):   # その敵だけ避けたいもの（例: 全環は「指輪」になりやすい）
+                j["neg"] = e["neg_extra"] + ", " + j["neg"]
             j["layout"] = {"shape": e.get("shape") or ("big" if e["kind"] == "boss" else "ground"),
                            "tone": e.get("tone") or [110, 100, 95], "strength": e.get("strength", 0.9)}
         jobs += js
