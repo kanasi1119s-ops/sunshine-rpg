@@ -4,6 +4,7 @@ import { PORTRAITS } from "../game/portrait/portraits";
 import { frameAt } from "../game/sprite/overworld-sprite";
 import { spriteSpecFromPortrait } from "../game/sprite/character-specs";
 import { drawSprite } from "./sprite-renderer";
+import { drawPixelLogo } from "./logo-pixel";
 
 const BAR_TOP = 14;
 const BAR_BOTTOM = 52;
@@ -292,16 +293,11 @@ export function renderOpening(ctx: Ctx, state: OpeningState, screenWidth: number
     drawCaption(ctx, scene.caption, a, ms, duration);
   }
   if (scene.art === "title") {
+    // 最後は、ドット絵のロゴがふわっと現れる
     const reveal = Math.min(1, Math.max(0, (ms - 500) / 1200));
     ctx.save();
     ctx.globalAlpha = reveal;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.font = "bold 24px monospace";
-    ctx.shadowColor = "#ffcc55";
-    ctx.shadowBlur = 14;
-    ctx.fillStyle = "#fff0b0";
-    ctx.fillText(gameTitle, screenWidth / 2, a.y + a.h / 2);
+    drawPixelLogo(ctx, gameTitle, screenWidth / 2, a.y + a.h / 2, 2, -1, ms);
     ctx.restore();
   }
   ctx.restore();

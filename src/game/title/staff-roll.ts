@@ -5,7 +5,7 @@ import { CREDIT_LINES } from "./title-text";
  * 仮: 文は簡易。曲は `staff-roll`（`src/audio/catalog.ts`）。
  */
 export const STAFF_ROLL_LINES: string[] = [
-  "サンシャインRPG（仮題）",
+  "Ringlight Chronicle",
   "",
   "――灯りの相談所の旅は、ここでひとつの終わりを迎えました――",
   "",

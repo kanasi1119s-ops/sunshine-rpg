@@ -1,6 +1,7 @@
 import { CREDIT_LINES, HELP_LINES } from "../game/title/title-text";
 import { titleItemsFor, type TitleState } from "../game/title/title-menu";
 import { getTitleArt } from "./title-art";
+import { drawPixelLogo } from "./logo-pixel";
 
 /** タイトル画面（メニュー／あそびかた／クレジット）。 */
 export function renderTitle(ctx: CanvasRenderingContext2D, state: TitleState, gameTitle: string, screenWidth: number, screenHeight: number): void {
@@ -25,17 +26,12 @@ export function renderTitle(ctx: CanvasRenderingContext2D, state: TitleState, ga
   ctx.textBaseline = "top";
 
   if (state.screen === "menu") {
-    ctx.font = "bold 22px monospace";
+    // ドット絵のタイトルロゴ（光とリング）
+    drawPixelLogo(ctx, gameTitle, screenWidth / 2, 36, 1, -1, performance.now());
     ctx.textAlign = "center";
-    for (const [dx, dy, c] of [[-1, 0, "#2a1038"], [1, 0, "#2a1038"], [0, -1, "#2a1038"], [0, 2, "#2a1038"], [0, 1, "#7a3a2a"]] as Array<[number, number, string]>) {
-      ctx.fillStyle = c;
-      ctx.fillText(gameTitle, screenWidth / 2 + dx, screenHeight * 0.14 + dy);
-    }
-    ctx.fillStyle = "#ffd866";
-    ctx.fillText(gameTitle, screenWidth / 2, screenHeight * 0.14);
     ctx.font = "10px monospace";
     ctx.fillStyle = "#c8c8e0";
-    ctx.fillText("サンシャインソフトウェア", screenWidth / 2, screenHeight * 0.14 + 28);
+    ctx.fillText("サンシャインソフトウェア", screenWidth / 2, 71);
     ctx.font = "12px monospace";
     titleItemsFor(state.hasSave).forEach((item, i) => {
       const selected = i === state.cursor;

@@ -6,6 +6,7 @@ import { renderTitle } from "./render/title-renderer";
 import { renderOpening } from "./render/opening-renderer";
 import { advanceBootOpening, startBootOpening, updateBootOpening } from "./game/title/boot-opening";
 import { renderBootOpening } from "./render/boot-opening-renderer";
+import { getPixelLogo } from "./render/logo-pixel";
 import { DUNGEON_PARENT } from "./game/world/dungeon-parent";
 import { DUNGEON_PREP_FLAGS } from "./game/world/dungeon-extensions";
 import { advanceBattleTransition, canSkipTransition, isCoverPhase, skipToReveal, startBattleTransition, type BattleTransition } from "./game/battle/battle-transition";
@@ -623,6 +624,8 @@ if (import.meta.env.DEV) {
       renderProps(c, full.data, cam, () => true);
       return canvas.toDataURL("image/png");
     },
+    /** 開発用: タイトルロゴの絵（確認用）。 */
+    logoDataUrl: () => getPixelLogo(GAME_TITLE)?.toDataURL() ?? "",
     /** 開発用: 灯貨をふやす・店を開く（買い物の確認用）。 */
     giveGold: (amount: number) => {
       gold += amount;

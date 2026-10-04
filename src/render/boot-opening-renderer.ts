@@ -1,92 +1,12 @@
+import { drawPixelLogo, LOGO_NATIVE_H } from "./logo-pixel";
 import { LOGO_LAND_MS, logoDrop, STORY_LINE_HEIGHT, STORY_LINES, STORY_SPEED, type BootOpeningState } from "../game/title/boot-opening";
 
 type Ctx = CanvasRenderingContext2D;
-
-const SS = 3; // ロゴを、論理の3倍の細かさで作っておく
-const LOGO_W = 300;
-const LOGO_H = 84;
 
 function hash(n: number): number {
   let h = (Math.floor(n) * 374761393) >>> 0;
   h = ((h ^ (h >>> 13)) * 1274126177) >>> 0;
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
-}
-
-let logoCanvas: HTMLCanvasElement | null = null;
-let scratch: HTMLCanvasElement | null = null;
-
-/** ロゴの絵（金色の文字・黒いふちどり）を、一度だけ作る。 */
-function getLogo(title: string): HTMLCanvasElement | null {
-  if (typeof document === "undefined") return null;
-  if (logoCanvas) return logoCanvas;
-  const c = document.createElement("canvas");
-  c.width = LOGO_W * SS;
-  c.height = LOGO_H * SS;
-  const g = c.getContext("2d");
-  if (!g) return null;
-  g.scale(SS, SS);
-  g.textAlign = "center";
-  g.textBaseline = "middle";
-  g.lineJoin = "round";
-  const main = title.replace(/（.*?）/g, "").replace(/RPG/g, "");
-  // 影
-  g.font = "bold 40px 'Hiragino Sans','Yu Gothic','Noto Sans JP',sans-serif";
-  g.fillStyle = "rgba(0,0,0,0.55)";
-  g.fillText(main, LOGO_W / 2 + 2, 30 + 3);
-  // ふちどり
-  g.strokeStyle = "#2a1204";
-  g.lineWidth = 7;
-  g.strokeText(main, LOGO_W / 2, 30);
-  g.strokeStyle = "#8a5a18";
-  g.lineWidth = 3.5;
-  g.strokeText(main, LOGO_W / 2, 30);
-  // 金のグラデーション
-  const grad = g.createLinearGradient(0, 8, 0, 54);
-  grad.addColorStop(0, "#fffbe0");
-  grad.addColorStop(0.45, "#ffd45c");
-  grad.addColorStop(0.55, "#e8a020");
-  grad.addColorStop(1, "#a8601a");
-  g.fillStyle = grad;
-  g.fillText(main, LOGO_W / 2, 30);
-  // RPG（小さな飾り枠つき）
-  g.font = "bold 22px 'Hiragino Sans','Yu Gothic','Noto Sans JP',sans-serif";
-  g.strokeStyle = "#2a1204";
-  g.lineWidth = 5;
-  g.strokeText("R P G", LOGO_W / 2, 66);
-  const grad2 = g.createLinearGradient(0, 54, 0, 78);
-  grad2.addColorStop(0, "#ffffff");
-  grad2.addColorStop(1, "#9ad8ff");
-  g.fillStyle = grad2;
-  g.fillText("R P G", LOGO_W / 2, 66);
-  // 左右の飾り線
-  g.fillStyle = "#ffd45c";
-  g.fillRect(LOGO_W / 2 - 100, 66, 56, 1.5);
-  g.fillRect(LOGO_W / 2 + 44, 66, 56, 1.5);
-  logoCanvas = c;
-  return c;
-}
-
-/** ロゴに、斜めの光の帯を走らせたもの（ロゴの形の中だけに光る）。 */
-function logoWithShine(logo: HTMLCanvasElement, progress: number): HTMLCanvasElement {
-  if (!scratch) {
-    scratch = document.createElement("canvas");
-    scratch.width = logo.width;
-    scratch.height = logo.height;
-  }
-  const g = scratch.getContext("2d")!;
-  g.clearRect(0, 0, scratch.width, scratch.height);
-  g.drawImage(logo, 0, 0);
-  g.save();
-  g.globalCompositeOperation = "source-atop";
-  const x = (-0.3 + progress * 1.6) * scratch.width;
-  const band = g.createLinearGradient(x - 60 * SS, 0, x + 60 * SS, 0);
-  band.addColorStop(0, "rgba(255,255,255,0)");
-  band.addColorStop(0.5, "rgba(255,255,255,0.9)");
-  band.addColorStop(1, "rgba(255,255,255,0)");
-  g.fillStyle = band;
-  g.fillRect(0, 0, scratch.width, scratch.height);
-  g.restore();
-  return scratch;
 }
 
 function drawStarfield(ctx: Ctx, w: number, h: number, ms: number): void {
@@ -166,14 +86,12 @@ export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, 
     return;
   }
 
-  const logo = getLogo(title);
   const restY = h * 0.4;
   let logoY: number;
-  let logoScale = 1;
   let storyMs = 0;
   if (state.phase === "logo") {
     const drop = logoDrop(ms);
-    logoY = -LOGO_H + (restY + LOGO_H) * drop;
+    logoY = -LOGO_NATIVE_H * 2 + (restY + LOGO_NATIVE_H * 2) * drop;
     // 着地の光とゆれ
     const landed = ms - LOGO_LAND_MS;
     if (landed > 0) {
@@ -189,22 +107,21 @@ export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, 
       const amp = 4 * (1 - landed / 500);
       ctx.save();
       ctx.translate(Math.round((hash(landed / 30) - 0.5) * 2 * amp), Math.round((hash(landed / 30 + 9) - 0.5) * 2 * amp));
-      drawLogoAt(ctx, logo, w / 2, logoY, ms - LOGO_LAND_MS - 400, logoScale);
+      drawLogoAt(ctx, title, w / 2, logoY, ms - LOGO_LAND_MS - 400, 2, ms);
       ctx.restore();
     } else {
-      drawLogoAt(ctx, logo, w / 2, logoY, ms - LOGO_LAND_MS - 400, logoScale);
+      drawLogoAt(ctx, title, w / 2, logoY, ms - LOGO_LAND_MS - 400, 2, ms);
     }
     ctx.font = "9px monospace";
     ctx.fillStyle = `rgba(200, 200, 224, ${landedAlpha(ms)})`;
-    ctx.fillText("サンシャインソフトウェア", w / 2, restY + LOGO_H / 2 + 14);
+    ctx.fillText("サンシャインソフトウェア", w / 2, restY + LOGO_NATIVE_H * 2 / 2 + 14);
   } else {
     // あらすじ: ロゴが上へ上がって小さくなり、文字が下から上へ流れる
     storyMs = ms;
     const up = Math.min(1, ms / 1200);
     const ease = 1 - (1 - up) ** 3;
-    logoScale = 1 - 0.4 * ease;
     logoY = restY + (28 - restY) * ease;
-    drawLogoAt(ctx, logo, w / 2, logoY, 99999, logoScale);
+    drawLogoAt(ctx, title, w / 2, logoY, 99999, 1, performance.now());
     const scroll = (storyMs / 1000) * STORY_SPEED;
     ctx.font = "11px monospace";
     const top = 62;
@@ -231,15 +148,8 @@ function landedAlpha(ms: number): number {
   return Math.max(0, Math.min(1, (ms - LOGO_LAND_MS - 900) / 700));
 }
 
-function drawLogoAt(ctx: Ctx, logo: HTMLCanvasElement | null, cx: number, y: number, shineMs: number, scale: number): void {
-  if (!logo) return;
-  const shineProgress = shineMs < 0 ? -1 : (shineMs % 3600) / 1100;
-  const src = shineProgress >= 0 && shineProgress <= 1 ? logoWithShine(logo, shineProgress) : logo;
-  const dw = LOGO_W * scale;
-  const dh = LOGO_H * scale;
-  ctx.save();
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(src, cx - dw / 2, y - dh / 2, dw, dh);
-  ctx.restore();
+function drawLogoAt(ctx: Ctx, title: string, cx: number, y: number, shineMs: number, scale: number, ms: number): void {
+  // ドット絵のロゴ。整数倍（2倍、あらすじの間は1倍）で、にじまないように描く
+  const shine = shineMs < 0 ? -1 : (shineMs % 3600) / 1100;
+  drawPixelLogo(ctx, title, cx, y, scale, shine, ms);
 }
