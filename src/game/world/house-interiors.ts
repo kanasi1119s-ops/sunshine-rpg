@@ -67,6 +67,11 @@ function interiorMap(town: string, ret: { x: number; y: number }, seed: number):
     ground[(H - 1) * W + x] = WALL;
     collision[(H - 1) * W + x] = 1;
   }
+  // 奥の壁は2段（家具を、壁にぴったりつけて置くため）
+  for (let x = 0; x < W; x++) {
+    ground[W + x] = WALL;
+    collision[W + x] = 1;
+  }
   for (let y = 0; y < H; y++) {
     ground[y * W] = WALL;
     collision[y * W] = 1;

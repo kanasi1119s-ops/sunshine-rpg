@@ -31,10 +31,13 @@ export function centerCameraOn(
   const maxX = Math.max(0, mapWidthPx - camera.viewportWidth);
   const maxY = Math.max(0, mapHeightPx - camera.viewportHeight);
 
+  // 地図が画面より小さいとき（家の中など）は、地図を画面の中央に置く
+  const smallX = mapWidthPx < camera.viewportWidth;
+  const smallY = mapHeightPx < camera.viewportHeight;
   return {
     ...camera,
     // 小数のままだとタイルの継ぎ目に黒い線が出るので、ピクセルの整数位置にそろえる。
-    x: Math.round(clamp(rawX, 0, maxX)),
-    y: Math.round(clamp(rawY, 0, maxY)),
+    x: smallX ? Math.round((mapWidthPx - camera.viewportWidth) / 2) : Math.round(clamp(rawX, 0, maxX)),
+    y: smallY ? Math.round((mapHeightPx - camera.viewportHeight) / 2) : Math.round(clamp(rawY, 0, maxY)),
   };
 }

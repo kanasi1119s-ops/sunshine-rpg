@@ -23,11 +23,11 @@ describe("centerCameraOn", () => {
     expect(result.y).toBe(1000 - 200);
   });
 
-  it("マップが画面より小さいときは0に固定する", () => {
+  it("マップが画面より小さいときは、マップを画面の中央に置く（家の中など）", () => {
     const camera = createCamera(400, 200);
     const result = centerCameraOn(camera, 50, 50, 100, 80);
-    expect(result.x).toBe(0);
-    expect(result.y).toBe(0);
+    expect(result.x).toBe(-150);
+    expect(result.y).toBe(-60);
   });
 });
 
