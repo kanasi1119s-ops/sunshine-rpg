@@ -174,6 +174,17 @@ for key, (name, groups) in TEMPLATES.items():
             roles[i] = role
             shade[i] = round(max(-0.6, min(0.6, (lum(pal[i]) - med) * 1.25)), 3)
     frames = {k: v for k, v in d["frames"].items() if k[:-1] in ("down", "up", "left", "right") and k[-1] in "012"}
+    # ミナの髪の左右のふちの濃い色（D）は、頭のところでは「髪」の色にする（飾りの色にすると、横向きで髪が欠けて見える）
+    if key == "mina":
+        di = LETTERS.index("D")
+        hair_idx = [LETTERS.index(c) for c in groups["hair"]]
+        med = sorted(lum(pal[i]) for i in hair_idx)[len(hair_idx) // 2]
+        newi = len(pal)
+        pal = list(pal) + [pal[di]]
+        roles = roles + ["hair"]
+        shade = shade + [round(max(-0.6, min(0.6, (lum(pal[di]) - med) * 1.25)), 3)]
+        newl = LETTERS[newi]
+        frames = {fk: ["".join(newl if (ch == "D" and y <= 17) else ch for ch in row) for y, row in enumerate(rows)] for fk, rows in frames.items()}
     frames = symmetrize(strip(key, frames))
     frames = reoutline(smooth_head(despeckle(frames, roles)))
     # 目は、どの肌の色でも見えやすいよう、黒（ほんのり色つき）にする
