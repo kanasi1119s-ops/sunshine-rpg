@@ -21,9 +21,9 @@ interface DecorSet {
 const DECOR: Record<string, DecorSet> = {
   tower: { wall: ["banner-purple", "pillar", "candelabra", "statue-winged", "banner-purple", "cobweb"], floor: ["pillar-broken", "bones"], wallPer100: 4.2, floorPer100: 1.2 },
   ruins: { wall: ["banner-red", "pillar", "statue-soldier", "candelabra", "banner-purple", "cobweb", "chains"], floor: ["pillar-broken", "bones", "coffin", "box-broken"], wallPer100: 4.2, floorPer100: 1.8 },
-  mine: { wall: ["crystal-blue", "mushrooms", "crystal-red", "chains"], floor: ["mushrooms", "barrel-broken", "box-broken", "bones", "crystal-blue"], wallPer100: 3.6, floorPer100: 2.0 },
-  seabed: { wall: ["crystal-blue", "pillar", "statue-winged", "pillar", "crystal-blue", "candelabra"], floor: ["pillar-broken", "bones", "crystal-blue", "box-broken"], wallPer100: 3.6, floorPer100: 1.6 },
-  volcano: { wall: ["brazier", "crystal-red", "chains", "banner-red", "brazier", "pillar"], floor: ["bones", "pillar-broken", "crystal-red"], wallPer100: 3.6, floorPer100: 1.6 },
+  mine: { wall: ["crystal-blue", "chains", "crystal-red", "chains"], floor: ["barrel-broken", "box-broken", "bones"], wallPer100: 3.6, floorPer100: 2.0 },
+  seabed: { wall: ["crystal-blue", "pillar", "statue-winged", "pillar", "crystal-blue", "candelabra"], floor: ["pillar-broken", "bones", "box-broken"], wallPer100: 3.6, floorPer100: 1.6 },
+  volcano: { wall: ["brazier", "crystal-red", "chains", "banner-red", "brazier", "pillar"], floor: ["bones", "pillar-broken"], wallPer100: 3.6, floorPer100: 1.6 },
   facility: { wall: ["banner-red", "pillar", "chains", "candelabra"], floor: ["box-broken", "barrel-broken", "bones"], wallPer100: 3.0, floorPer100: 1.4 },
 };
 
@@ -107,14 +107,15 @@ export function applyAutoDecor(maps: Record<string, TileMapData>, npcsByMap: Rec
     }
     const order = (spots: Array<[number, number]>, salt: number): Array<[number, number]> =>
       [...spots].sort((a, b) => hashCell(a[0] * 31 + salt, a[1] * 17) - hashCell(b[0] * 31 + salt, b[1] * 17));
-    const wantWall = Math.max(2, Math.round((floorTiles * set.wallPer100) / 100));
-    const wantFloor = Math.max(1, Math.round((floorTiles * set.floorPer100) / 100));
+    // 置きすぎると歩くのにじゃまなので、密度は低め・1つの地図に置く数にも上限（2026-10-04）
+    const wantWall = Math.min(8, Math.max(2, Math.round((floorTiles * set.wallPer100 * 0.35) / 100)));
+    const wantFloor = Math.min(3, Math.max(1, Math.round((floorTiles * set.floorPer100 * 0.3) / 100)));
     let placed = 0;
     let i = 0;
     for (const [x, y] of order(wallSpots, 11)) {
       if (placed >= wantWall) break;
       // 壁ぎわの飾りは、近くに同じ飾りを置かない（間をあける）
-      if (props.some((p) => Math.abs(p.tileX - x) <= 3 && Math.abs(p.tileY - y) <= 1)) continue;
+      if (props.some((p) => Math.abs(p.tileX - x) <= 6 && Math.abs(p.tileY - y) <= 3)) continue;
       const kind = set.wall[hashCell(x * 5 + i, y * 3 + 7) % set.wall.length];
       i++;
       if (place(kind, x, y)) placed++;
@@ -122,7 +123,7 @@ export function applyAutoDecor(maps: Record<string, TileMapData>, npcsByMap: Rec
     placed = 0;
     for (const [x, y] of order(floorSpots, 23)) {
       if (placed >= wantFloor) break;
-      if (props.some((p) => Math.abs(p.tileX - x) <= 3 && Math.abs(p.tileY - y) <= 3)) continue;
+      if (props.some((p) => Math.abs(p.tileX - x) <= 6 && Math.abs(p.tileY - y) <= 6)) continue;
       const kind = set.floor[hashCell(x * 7 + i, y * 11 + 3) % set.floor.length];
       i++;
       if (place(kind, x, y)) placed++;
