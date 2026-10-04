@@ -17,15 +17,20 @@ export interface FollowerState {
   seq: number;
   moving: boolean;
   animMs: number;
+  /** 動いていない時間（ms）。 */
+  idleMs?: number;
 }
 
-export const CRUMB_SPACING = 2;
-/** 仲間どうしの間隔（パンくずの数。10個＝20ドット）。 */
-export const GAP_CRUMBS = 10;
-/** 追いかける速さ（パンくず／秒）。主人公の歩く速さ（約60ドット/秒＝30個/秒）より少し速い。 */
-const CHASE_SPEED = 38;
+/** パンくずの間隔（ドット）。細かくして、仲間の位置を毎フレームなめらかに動かす（粗いと、2ドットずつカクカクして見える）。 */
+export const CRUMB_SPACING = 0.5;
+/** 仲間どうしの間隔（パンくずの数。40個＝20ドット）。 */
+export const GAP_CRUMBS = 40;
+/** 追いかける速さ（パンくず／秒）。主人公の歩く速さ（約64ドット/秒＝128個/秒）より少し速い。 */
+const CHASE_SPEED = 150;
+/** 止まったと見なすまでの時間（ms）。歩いている途中で、歩く絵が止まっては動くのをくり返さないための余裕。 */
+const STOP_GRACE_MS = 90;
 
-const MAX_CRUMBS = 600;
+const MAX_CRUMBS = 2400;
 
 export class PartyTrail {
   private crumbs: Crumb[] = [];
@@ -74,11 +79,17 @@ export class PartyTrail {
       f.seq = Math.max(this.base, f.seq);
       if (f.seq < target) {
         f.seq = Math.min(target, f.seq + (CHASE_SPEED * dtMs) / 1000);
+        f.idleMs = 0;
         f.moving = true;
         f.animMs += dtMs;
       } else {
-        f.moving = false;
-        f.animMs = 0;
+        f.idleMs = (f.idleMs ?? 0) + dtMs;
+        if (f.idleMs >= STOP_GRACE_MS) {
+          f.moving = false;
+          f.animMs = 0;
+        } else if (f.moving) {
+          f.animMs += dtMs;
+        }
       }
     });
   }
