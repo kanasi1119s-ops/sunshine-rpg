@@ -36,16 +36,22 @@ export const CHAPTER0_START = {
  * 呼び出し側（main.ts）が、フラグが立っていなければ起動直後に流す。
  */
 export const CHAPTER0_OPENING_COMMANDS: EventCommand[] = [
-  { type: "message", text: "――大陸アルテシア、港町・灯里。" },
+  { type: "message", text: "――統暦412年、春の終わり。大陸アルテシア、港町・灯里。" },
   {
     type: "message",
-    text: "ユーリは「灯りの相談所」灯里支部の新人調査員。左手首には、亡き祖父の形見の腕輪が光っている。",
+    text: "ユーリは「灯りの相談所」灯里支部の新人調査員。16歳。左手首には、祖父の形見の腕輪がある。",
   },
   {
     type: "message",
-    text: "ここ数日、町外れで「歪み」――灯り石の力が乱れて生まれる異形――が、いつになく頻繁に現れているという。",
+    text: "祖父のソウイチは、ユーリが生まれる前の「静まりの年」に姿を消した。ユーリは、会ったことがない。",
   },
-  { type: "message", text: "支部長のカセンが、話を聞かせてほしいと呼んでいる。相談所へ向かおう。" },
+  { type: "message", text: "腕輪の石は、くすんだ青色で、いつもほんのり温かい。" },
+  { type: "message", text: "祖父は消える前に、「いつか生まれる孫に、この腕輪を頼む」と言い残したのだと、母から聞いている。" },
+  {
+    type: "message",
+    text: "ここ十日ほど、町外れで「歪み」――灯り石の力が乱れて生まれる異形――が、いつになく頻繁に現れているという。",
+  },
+  { type: "message", text: "支部長のカセンが、朝いちばんに来てほしいと呼んでいる。相談所へ向かおう。" },
   { type: "setFlag", flag: "chapter0_intro_seen", value: true },
 ];
 
@@ -64,10 +70,15 @@ export const CHAPTER0_NPCS: Record<string, Npc[]> = {
           then: [
             {
               type: "message",
-              text: "町外れの歪みがおとなしくなったって聞いたよ。ユーリちゃんのおかげかい？",
-              speaker: "漁師",
+              text: "町外れの歪みがおとなしくなったって聞いたよ。ユーリのおかげかい？",
+              speaker: "ガンジ",
             },
-            { type: "message", text: "港の魚も安心して獲れるってもんだ。ありがとよ。", speaker: "漁師" },
+            { type: "message", text: "港の魚も安心して獲れるってもんだ。ありがとよ。", speaker: "ガンジ" },
+            {
+              type: "message",
+              text: "……おまえは、ソウイチさんに似てきたなあ。人のために走るところがよ。",
+              speaker: "ガンジ",
+            },
           ],
           else: [
             {
@@ -83,29 +94,34 @@ export const CHAPTER0_NPCS: Record<string, Npc[]> = {
                     {
                       type: "message",
                       text: "森の祠は、灯守りの爺さんが昔から世話をしてるよ。あの爺さんなら、森を歩くための灯りを貸してくれるはずだ。",
-                      speaker: "漁師",
+                      speaker: "ガンジ",
                     },
                   ],
                   else: [
                     {
                       type: "message",
                       text: "ああ、相談所の依頼を受けたのかい。なら、先に話しておくよ。",
-                      speaker: "漁師",
+                      speaker: "ガンジ",
                     },
                     {
                       type: "message",
-                      text: "歪みが出るのは、北の森を抜けた先だ。森は昼でも暗いし、古い祠の門は、左右の石の台を動かさないと開かないらしい。",
-                      speaker: "漁師",
+                      text: "うちの若いのが、夜釣りの帰りに、町外れの草地で紫の光を見たんだ。耳鳴りみたいな音もしたそうだ。",
+                      speaker: "ガンジ",
                     },
                     {
                       type: "message",
-                      text: "うちの網にも、紫がかった靄が絡みついてた夜があってね。あれは、森の奥から流れてくるんだと思う。",
-                      speaker: "漁師",
+                      text: "草地へ行くには、北の森を抜ける。森は昼でも暗いし、古い祠の門は、左右の石の台を動かさないと開かないらしい。",
+                      speaker: "ガンジ",
                     },
                     {
                       type: "message",
                       text: "森に入るなら、灯守りの爺さんに会っていきな。祠の灯りを預かってる人だ。",
-                      speaker: "漁師",
+                      speaker: "ガンジ",
+                    },
+                    {
+                      type: "message",
+                      text: "……それから、気をつけてな。おまえの祖父さん、ソウイチさんには、俺も世話になった。",
+                      speaker: "ガンジ",
                     },
                     { type: "setFlag", flag: "chapter0_heard_rumor", value: true },
                   ],
@@ -114,13 +130,38 @@ export const CHAPTER0_NPCS: Record<string, Npc[]> = {
               else: [
                 {
                   type: "message",
-                  text: "最近、町外れで妙な光や音がするって噂だよ。歪みが増えてるんじゃないかねえ。",
-                  speaker: "漁師",
+                  text: "おう、ユーリ。今朝もいい天気だぞ。……ところでな、最近、町外れの草地で、妙な光や音がするって噂だ。",
+                  speaker: "ガンジ",
                 },
                 {
                   type: "message",
-                  text: "気になるなら、相談所に行ってみるといい。",
-                  speaker: "漁師",
+                  text: "夜釣りの帰りに、ぼうっと紫の光が見えたとか、耳鳴りみたいな音がしたとか。歪みが増えてるんじゃねえかってな。",
+                  speaker: "ガンジ",
+                },
+                {
+                  type: "message",
+                  text: "おまえ、相談所の人間だろう。ちょっと気にしといてくれ。支部長も、今朝は呼んでるはずだ。",
+                  speaker: "ガンジ",
+                },
+                {
+                  type: "message",
+                  text: "ハルカさんも、いい息子を持ったもんだ。……そういや、おまえの祖父さんのソウイチさんに、俺は網の結び方を教わったんだ。",
+                  speaker: "ガンジ",
+                },
+                { type: "message", text: "祖父を知っているんですか。", speaker: "ユーリ" },
+                {
+                  type: "message",
+                  text: "ああ。あの人には世話になった。だから、あの年のことは、今でもたまに夢に見る。",
+                  speaker: "ガンジ",
+                },
+                {
+                  type: "message",
+                  text: "灯芯都に出かけて、それきりだったろう。たしか、疫病が流行って、連絡もつかなくなって……いや、すまねえ。湿っぽい話だった。",
+                  speaker: "ガンジ",
+                },
+                {
+                  type: "message",
+                  text: "（祖父の話をしかけて、みんなやめてしまう。……いつか、ちゃんと聞かせてもらおう）",
                 },
               ],
             },
@@ -141,20 +182,57 @@ export const CHAPTER0_NPCS: Record<string, Npc[]> = {
           then: [
             {
               type: "message",
-              text: "レトさんとユーリちゃんが組むのかい。あの人は口は悪いが腕は確かだよ。",
-              speaker: "宿屋の隣人",
+              text: "あんた、旅に出るんだってね。……さっきは言いすぎたよ。怖かったんだ、あたしも。",
+              speaker: "布屋の女将",
+            },
+            {
+              type: "message",
+              text: "レトさんと組むのかい。あの人は口は悪いが腕は確かだよ。ほら、旅の途中で食べな。",
+              speaker: "布屋の女将",
+            },
+            { type: "message", text: "干し杏の入った小さな袋をもらった。" },
+            {
+              type: "message",
+              text: "ふん。ちゃんと戻ってきなよ。じゃないと、干し杏の代金を取りっぱぐれるからね。",
+              speaker: "布屋の女将",
             },
           ],
           else: [
             {
-              type: "message",
-              text: "宿屋の予約はまだまだ先まで埋まってないから、いつでもどうぞ（と言っても、まだ泊まれる部屋の準備はできていないみたいだけど）。",
-              speaker: "宿屋の隣人",
-            },
-            {
-              type: "message",
-              text: "相談所のレトさんは、新人指導って言いつつ、いつも一人で調べ物をしてるみたいだね。",
-              speaker: "宿屋の隣人",
+              type: "if",
+              flag: "chapter0_yugami_defeated",
+              equals: true,
+              then: [
+                {
+                  type: "message",
+                  text: "町外れの歪みを、しずめてくれたんだってね。……やっとうちの商売も、落ち着きそうだよ。",
+                  speaker: "布屋の女将",
+                },
+                {
+                  type: "message",
+                  text: "相談所がどうのと、きついことを言ったね。あれは怖さが言わせたのさ。気にしないどくれ。",
+                  speaker: "布屋の女将",
+                },
+              ],
+              else: [
+                {
+                  type: "message",
+                  text: "あんたたち相談所は、何をやってるんだい。町の近くで歪みだなんて、商売あがったりだよ。",
+                  speaker: "布屋の女将",
+                },
+                {
+                  type: "message",
+                  text: "雑貨屋のドウマさんも、町外れの倉庫から青い顔で戻ってきてね。店を閉めっぱなしさ。",
+                  speaker: "布屋の女将",
+                },
+                {
+                  type: "message",
+                  text: "……ふん。言い方がきつかったね。ほら、干し杏だ。朝ごはんは食べたかい？　じゃあ、おやつだよ。",
+                  speaker: "布屋の女将",
+                },
+                { type: "message", text: "干し杏をひとつもらった。ほんの少し酸っぱく、それから甘い。" },
+                { type: "message", text: "（この町の人は、怒りながら、やさしい）" },
+              ],
             },
           ],
         },
@@ -250,6 +328,7 @@ export const CHAPTER0_NPCS: Record<string, Npc[]> = {
           else: [
             { type: "message", text: "地面に、何かが焼け焦げたような跡がある。" },
             { type: "message", text: "自然にできたにしては、輪郭がやけにまっすぐだ……。" },
+            { type: "message", text: "焦げ臭さもない。かわりに、雨上がりの石のような、冷たい匂いがする。" },
             { type: "setFlag", flag: "chapter0_scorch_mark_found", value: true },
           ],
         },
@@ -278,17 +357,93 @@ function kasenCommands(): EventCommand[] {
           equals: true,
           then: [
             {
-              type: "message",
-              text: "今日も無茶をしてきそうな顔だね、君たちは。次の依頼が来たら、また声をかけるよ。",
-              speaker: "カセン",
+              type: "if",
+              flag: "chapter0_reto_joined",
+              equals: true,
+              then: [
+                {
+                  type: "if",
+                  flag: "chapter0_kasen_farewell",
+                  equals: true,
+                  then: [
+                    {
+                      type: "message",
+                      text: "気をつけて行っておいで。怖くなったら、逃げるんじゃなくて、帰っておいで。ここは、あんたの帰る場所だよ。",
+                      speaker: "カセン",
+                    },
+                  ],
+                  else: [
+                    {
+                      type: "message",
+                      text: "旅に出ると聞いたよ。歪みのことと、静まりの年のこと……ソウイチさんのことも調べたいんだね。",
+                      speaker: "カセン",
+                    },
+                    {
+                      type: "message",
+                      text: "ソウイチさんは、私の同僚だった。朝が早くて、歌が下手で、石ころを拾ってきては机に並べる人だったよ。",
+                      speaker: "カセン",
+                    },
+                    { type: "message", text: "母も、同じことを言っていました。", speaker: "ユーリ" },
+                    {
+                      type: "message",
+                      text: "あの年のことは、まだ話せない。……いや、話す資格が、私にはないのかもしれない。あの年、私は何もできなかった。",
+                      speaker: "カセン",
+                    },
+                    {
+                      type: "message",
+                      text: "ひとつだけ言っておくよ。歪みを人の手で起こす者が、もしいるなら、きっと、どこかで見ている。",
+                      speaker: "カセン",
+                    },
+                    {
+                      type: "message",
+                      text: "あんたたちが動けば、向こうも動く。誰が味方で誰が敵か、簡単には分からないからね。",
+                      speaker: "カセン",
+                    },
+                    {
+                      type: "message",
+                      text: "これを持っておゆき。通行手形と、小さな灯り石が三つ。いざというとき、私に声を届けられる。",
+                      speaker: "カセン",
+                    },
+                    { type: "message", text: "「通行手形」と「通信用の灯り石」を受け取った。" },
+                    {
+                      type: "message",
+                      text: "傷薬と灯り草の煎じ薬も入れておいたよ。それから……無茶は、しないこと。",
+                      speaker: "カセン",
+                    },
+                    { type: "message", text: "はい。……あ、その返事が、いちばん信用ならないんですよね。", speaker: "ユーリ" },
+                    { type: "message", text: "分かっているじゃないか。気をつけて行っておいで。", speaker: "カセン" },
+                    { type: "setFlag", flag: "chapter0_kasen_farewell", value: true },
+                  ],
+                },
+              ],
+              else: [
+                {
+                  type: "message",
+                  text: "今日も無茶をしてきそうな顔だね、君たちは。レトにも、あとで声をかけてやっておくれ。",
+                  speaker: "カセン",
+                },
+              ],
             },
           ],
           else: [
             { type: "message", text: "戻ったか。それで、町外れの歪みは……", speaker: "カセン" },
-            { type: "message", text: "しずめてきました。それと、気になるものを見つけたんです。", speaker: "ユーリ" },
             {
               type: "message",
-              text: "地面に焼け焦げたような跡があって……あれは、自然に歪みが起きたようには見えませんでした。",
+              text: "しずめてきました。はぐれ歪みが三体、そのあとに大きなものが一体。ドウマさんの倉庫の荷物も、もう大丈夫です。",
+              speaker: "ユーリ",
+            },
+            { type: "message", text: "そうか。……ふたりとも、本当によくやってくれたね。", speaker: "カセン" },
+            { type: "message", text: "それと、気になるものを見つけたんです。", speaker: "ユーリ" },
+            {
+              type: "message",
+              text: "草地の焦げ跡は、輪郭がまっすぐで、焦げた匂いもしませんでした。中心には、灯り石の粉で描いた溝の図が。",
+              speaker: "ユーリ",
+            },
+            { type: "message", text: "北の端に埋まっていた灰色の石も、持ってきた。", speaker: "レト" },
+            { type: "message", text: "（レトが、布に包んだ灰色の石を机に置いた）" },
+            {
+              type: "message",
+              text: "あれは、自然に歪みが起きたようには見えませんでした。",
               speaker: "ユーリ",
             },
             {
@@ -301,12 +456,15 @@ function kasenCommands(): EventCommand[] {
               text: "……昔、似たような話を聞いたことがある。あれは確か、「静まりの年」の頃に――",
               speaker: "カセン",
             },
-            { type: "message", text: "……いや、なんでもない。昔のことだ、忘れてくれ。", speaker: "カセン" },
+            { type: "message", text: "支部長。今、静まりの年って。", speaker: "レト" },
+            { type: "message", text: "……言ったかね？　年を取ると、口がすべるんだよ。", speaker: "カセン" },
+            { type: "message", text: "……いや、なんでもない。昔のことだ、忘れておくれ。", speaker: "カセン" },
             {
               type: "message",
-              text: "とにかく、よくやってくれた。この件は、念のため灯芯都にも報告しておくよ。",
+              text: "とにかく、よくやってくれた。この件は、念のため灯芯都にも報告しておく。その石は預かるよ。",
               speaker: "カセン",
             },
+            { type: "message", text: "今日は休みなさい。ふたりとも、疲れているだろう。", speaker: "カセン" },
             { type: "setFlag", flag: "chapter0_reported_to_kasen", value: true },
           ],
         },
@@ -319,19 +477,36 @@ function kasenCommands(): EventCommand[] {
           then: [
             {
               type: "message",
-              text: "町外れの歪みの件、頼んだよ。出発の前に、漁師と灯守りのおじいさんに話を聞くのを忘れずに。無理はしないようにね。",
+              text: "町外れの歪みの件、頼んだよ。出発の前に、漁師のガンジと灯守りのおじいさんに話を聞くのを忘れずに。",
+              speaker: "カセン",
+            },
+            {
+              type: "message",
+              text: "それから、無茶はしないこと。その「しませんよ」が、いちばん信用ならないんだけどね。",
               speaker: "カセン",
             },
           ],
           else: [
+            { type: "message", text: "おや、来たね。今日も無茶をしてきそうな顔だ、君は。", speaker: "カセン" },
+            { type: "message", text: "さっき、ガンジさんに会ったろう。顔に「心配ごとを聞かされました」と書いてあるよ。", speaker: "カセン" },
             {
               type: "message",
-              text: "呼び立てて悪いね。実は、町外れで歪みの出る頻度が急に増えていてね。",
+              text: "呼び立てて悪いね。実は、町外れで歪みの出る頻度が、急に増えていてね。",
               speaker: "カセン",
             },
             {
               type: "message",
-              text: "「歪み」というのは、灯り石の力が乱れて、形を持ってしまったものだ。獣のようだったり、影のようだったり、姿は場所によって変わる。",
+              text: "ここ十日ほどで、確認できただけでも三度。町外れの草地と、旧い街道の脇だ。ごく小さなものばかりだった。",
+              speaker: "カセン",
+            },
+            {
+              type: "message",
+              text: "ところが昨日の夕方、雑貨屋のドウマさんが倉庫に行ったとき、大きめのに出くわしてね。逃げてきて無事だったが、荷物は置いたままだ。",
+              speaker: "カセン",
+            },
+            {
+              type: "message",
+              text: "「歪み」は、灯り石の力が乱れて、輪郭のさだまらない形をとったものだ。ふつうは、山奥や古い坑道で出る。",
               speaker: "カセン",
             },
             {
@@ -341,17 +516,27 @@ function kasenCommands(): EventCommand[] {
             },
             {
               type: "message",
-              text: "これまでは年に一度あるかないかだった。それが、この三週間で何度も出ている。夜になると、町外れの方角に紫がかった靄が見えると、漁師たちも怖がっていてね。",
+              text: "けれど、この町の外れに古い坑道はない。少なくとも、私は知らない。だから、おかしいんだよ。",
               speaker: "カセン",
             },
             {
               type: "message",
-              text: "頼みたいことは二つ。ひとつは、町外れの歪みをしずめること。もうひとつは、なぜ急に増えたのか、現場に手がかりが残っていないか調べることだ。",
+              text: "頼みたいことは二つ。ひとつは、町外れの歪みをしずめること。",
               speaker: "カセン",
             },
             {
               type: "message",
-              text: "歪みは、灯り石の力に打ち勝てば、しずめられる。危険は確かにあるが、レトを一緒に行かせるから、ひとりにはしないよ。",
+              text: "もうひとつは、なぜ急に増えたのか、現場に手がかりが残っていないか調べることだ。",
+              speaker: "カセン",
+            },
+            {
+              type: "message",
+              text: "歪みは、灯り石の力に打ち勝てば、しずめられる。危険はあるが、ひとりでは行かせないよ。レトを付ける。「新人指導」ってやつさ。",
+              speaker: "カセン",
+            },
+            {
+              type: "message",
+              text: "……あの子も、たまには誰かと歩いたほうがいいからね。",
               speaker: "カセン",
             },
             {
@@ -367,13 +552,18 @@ function kasenCommands(): EventCommand[] {
                       text: "わかりました……でも、ちゃんと最後まで話を聞かせてください。",
                       speaker: "ユーリ",
                     },
-                    { type: "message", text: "頼もしいね。レトも一緒に行かせるよ。", speaker: "カセン" },
+                    { type: "message", text: "頼もしいね。傷薬と灯り草の煎じ薬、それと飴玉だ。持っておいき。", speaker: "カセン" },
                     {
                       type: "message",
-                      text: "ただ、町の北の森は暗くて道も入り組んでいる。出発の前に、港の漁師と、灯守りのおじいさんに話を聞いておくといい。",
+                      text: "飴玉は、孫にやるつもりで買ったんだがね。あの子は、甘いものを食べすぎだ。",
                       speaker: "カセン",
                     },
-                    { type: "message", text: "武具屋で装備を整えるのも、忘れずにね。", speaker: "カセン" },
+                    {
+                      type: "message",
+                      text: "草地へ行くには、北の森を通る。暗くて道も入り組んでいる。出発の前に、港の漁師と、灯守りのおじいさんに話を聞いておくといい。",
+                      speaker: "カセン",
+                    },
+                    { type: "message", text: "武具屋で装備を整えるのも、忘れずにね。レトにも声をかけておくれ。", speaker: "カセン" },
                   ],
                 },
                 {
@@ -438,15 +628,47 @@ function retoCommands(): EventCommand[] {
           then: [
             {
               type: "message",
+              text: "レトさん。支部長に言われて来ました。今日から、よろしくお願いします。",
+              speaker: "ユーリ",
+            },
+            {
+              type: "message",
               text: "はいはい、そういうのは現場に着いてから言ってくれる？　先に行ってるよ。",
+              speaker: "レト",
+            },
+            {
+              type: "message",
+              text: "じゃあ、現場に着いてから、もう一度言います。",
+              speaker: "ユーリ",
+            },
+            {
+              type: "message",
+              text: "……おう。ひとつだけ教えとく。歪みを見るところは三つ。足元と、輪郭と、呼吸だ。",
+              speaker: "レト",
+            },
+            {
+              type: "message",
+              text: "輪郭の濃いところは硬い。薄いところは剣が通る。歪みも息をする。縮む直前に、ほんのわずか止まる。そこが間合いだ。",
+              speaker: "レト",
+            },
+            {
+              type: "message",
+              text: "怖いか？　怖いのは正しい。怖くないやつは死ぬ。怖がりすぎるやつも死ぬ。ちょうどいい怖がり方を覚えな。",
               speaker: "レト",
             },
           ],
           else: [
-            { type: "message", text: "新人指導係のレトだ。まあ、よろしく。", speaker: "レト" },
+            { type: "message", text: "お前が新人か。……その剣の握りの凹み、毎日振ってる証拠だな。", speaker: "レト" },
             {
               type: "message",
-              text: "……なんて、建前はどうでもいいか。歪みの件、詳しく話を聞いてやりな。",
+              text: "力が入ると、先に手がこわばる。次の稽古では、握るとき小指から意識してみな。",
+              speaker: "レト",
+            },
+            { type: "message", text: "それと、靴ひもがほどけてる。", speaker: "レト" },
+            { type: "message", text: "あっ、本当だ！", speaker: "ユーリ" },
+            {
+              type: "message",
+              text: "悪い、ほめるつもりだったのに、順番を間違えた。……歪みの件は、まず支部長の話を聞いてきな。",
               speaker: "レト",
             },
           ],
@@ -524,12 +746,55 @@ function reasoningQuizCommands(): EventCommand[] {
       ],
     },
     { type: "message", text: "やるじゃないか。思ったよりちゃんとやれるみたいだな。", speaker: "レト" },
+    { type: "message", text: "……なあ。夕方の港で、少し話をしていいか。", speaker: "レト" },
+    { type: "message", text: "（ふたりは、夕暮れの港へ歩いた。突堤の先で、波が石を洗っている）" },
+    { type: "message", text: "俺は、あの「静まりの年」を調べてる。身内を、あの年に亡くしてな。", speaker: "レト" },
+    {
+      type: "message",
+      text: "兄貴だ。俺が六つのとき。灯芯都の合議会で、書記官をやってた。頭がよくて、優しい人だった。",
+      speaker: "レト",
+    },
+    {
+      type: "message",
+      text: "役所から「疫病で亡くなった」と知らせが来た。それだけだ。遺体は見せてもらえず、葬式もなかった。",
+      speaker: "レト",
+    },
+    {
+      type: "message",
+      text: "でも、疫病なんて流行ってなかった。兄貴と同じ職場の人たちも、次々に消えた。だから、大人になって調べ始めた。",
+      speaker: "レト",
+    },
+    {
+      type: "message",
+      text: "お前を巻き込むつもりはなかった。ただ、あの草地に立って確信した。あれは、静まりの年に繋がる話だ。",
+      speaker: "レト",
+    },
+    { type: "message", text: "だから、隠しごとをしたまま組むのは、筋が通らない。", speaker: "レト" },
+    { type: "message", text: "レトさん。……ぼくにも、知りたいことがあります。祖父のことです。", speaker: "ユーリ" },
+    {
+      type: "message",
+      text: "祖父も、静まりの年にいなくなりました。ぼくが生まれる四年前です。だから、会ったことがありません。",
+      speaker: "ユーリ",
+    },
+    {
+      type: "message",
+      text: "母は言っていました。祖父は消える前の晩、「いつか生まれる孫に、この腕輪を頼む」と言ったって。",
+      speaker: "ユーリ",
+    },
+    {
+      type: "message",
+      text: "今日、歪みの目の中に、誰かの影が見えた気がしたんです。あれが何だったのか、知りたい。",
+      speaker: "ユーリ",
+    },
+    { type: "message", text: "一緒に行きます。静まりの年のことを調べる旅に。", speaker: "ユーリ" },
+    { type: "message", text: "……ありがとな。", speaker: "レト" },
     {
       type: "message",
       text: "……悪い、ちょっと先走った。素直に言うよ。これからも、お前の調査に付き合わせてくれ。",
       speaker: "レト",
     },
     { type: "message", text: "はい、よろしくお願いします！", speaker: "ユーリ" },
+    { type: "message", text: "お前、返事だけは立派だな。……いや、ほめてるんだ。", speaker: "レト" },
     { type: "setFlag", flag: "chapter0_reto_joined", value: true },
   ];
 }
@@ -550,8 +815,10 @@ function yugamiCommands(): EventCommand[] {
             { type: "message", text: "歪みが消えたあとを、もう一度調べてみる。" },
             {
               type: "message",
-              text: "……これは。歪みが生まれた中心に、規則正しく並んだ焼け跡がある。",
+              text: "……これは。歪みが生まれた中心に、細い溝が刻まれている。中心から広がる直線と、それを囲む円だ。",
             },
+            { type: "message", text: "溝の底には、灯り石の粉が薄く敷きつめられている。誰かが、図を描いたのだ。" },
+            { type: "message", text: "円の北の端には、灰色の石が埋まっていた。描いた人が、場所を覚えるための目印だろうか。" },
             { type: "message", text: "自然に歪みが起きたにしては、あまりにも人為的だ……。" },
             { type: "setFlag", flag: "chapter0_clue_c001_found", value: true },
           ],

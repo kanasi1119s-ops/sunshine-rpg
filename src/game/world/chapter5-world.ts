@@ -21,9 +21,10 @@ export const CHAPTER5_OPENING_COMMANDS: EventCommand[] = [
     type: "message",
     text: "砂音で聞いた「合議会に近い誰か」の噂。その手がかりと、紙切れの「静まりの年」の意味を求めて、ユーリたちは環信仰の聖地を訪ねた。",
   },
+  { type: "message", text: "門の石柱には、三つの環が刻まれている。いちばん小さな環だけが、欠けている。環信仰のしるしだ。" },
   {
     type: "message",
-    text: "町は深い霧に包まれている。巡礼者たちは声をひそめ、しきりに聖堂のほうを気にしている。",
+    text: "町は深い霧に包まれている。巡礼者たちは声をひそめ、荷造りをして町を去る家族の姿もある。",
   },
   { type: "setFlag", flag: "chapter5_intro_seen", value: true },
 ];
@@ -89,6 +90,11 @@ function priestCommands(): EventCommand[] {
           text: "環の教えは、人を怖がらせるためのものではありません。それを取り戻せたのは、あなた方のおかげです。",
           speaker: "司祭",
         },
+        {
+          type: "message",
+          text: "灯りの芯を、一本お持ちください。旅の先で、あなたの灯りが消えませんように。",
+          speaker: "司祭",
+        },
       ],
       else: [
         {
@@ -108,41 +114,80 @@ function priestCommands(): EventCommand[] {
                 },
                 {
                   type: "message",
-                  text: "「静まりの年」に、合議会の要人が幾人も職を追われ、消えた。その記録が、原本から抜き取られていたとは。",
+                  text: "実は二十年前、碑の欄が削られたとき、私は気づいていました。気づいて、黙っていたのです。",
                   speaker: "司祭",
                 },
                 {
                   type: "message",
-                  text: "しかも、原本の綴りには、灯芯都の元合議会員の名が――あなたの祖父君の名が、残っていたのですね。",
+                  text: "「静まりの年」に、合議会の要人が四人職を退き、三人が行方を絶った。その記録が、碑から消されていたとは。",
                   speaker: "司祭",
                 },
-                { type: "message", text: "……おじいちゃんの名前が、どうして……。", speaker: "ユーリ" },
+                {
+                  type: "message",
+                  text: "しかも、原本の綴りには、ハクエイ殿、トウマ殿、そしてあなたの祖父君、ソウイチ殿の名が残っていたのですね。",
+                  speaker: "司祭",
+                },
+                {
+                  type: "message",
+                  text: "……祖父が、合議会員を二期も務めた人だったなんて。ぼくは、何も知りませんでした。",
+                  speaker: "ユーリ",
+                },
+                {
+                  type: "message",
+                  text: "綴りには「ほか、随行の者数名。名は略す」とあった。数えられなかった人たちが、まだいるんだ。",
+                  speaker: "レト",
+                },
+                { type: "message", text: "レトは、それ以上は何も言わず、静かに拳を握った。" },
+                {
+                  type: "message",
+                  text: "写字官は、碑を元の形に戻すと誓いました。町の人々には、私からすべてを話します。",
+                  speaker: "司祭",
+                },
                 {
                   type: "message",
                   text: "私に分かるのは、ここまでです。真実を知る者は、灯芯都にいるでしょう。どうか、気をつけて。",
                   speaker: "司祭",
+                },
+                {
+                  type: "message",
+                  text: "禁域の縄の先にも、いつか来ます。祖父の名前を、ぼくは知りたいんです。",
+                  speaker: "ユーリ",
                 },
                 { type: "setFlag", flag: "chapter5_reported", value: true },
               ],
               else: [
                 {
                   type: "message",
-                  text: "調べは、北の岩壁の「記録の間」からお願いします。碑文の原本は、そこにあります。",
+                  text: "調べは、北の岩壁の「記録の間」からお願いします。碑文の写しは、そこにあります。",
+                  speaker: "司祭",
+                },
+                {
+                  type: "message",
+                  text: "鍵は書記のユキヒサが持っています。町の書記の話も、聞いてみてください。",
                   speaker: "司祭",
                 },
               ],
             },
           ],
           else: [
-            { type: "message", text: "ようこそ、霧断崖へ。灯りの相談所の方々とお見受けします。", speaker: "司祭" },
             {
               type: "message",
-              text: "先日、聖堂の予言の碑に「霧が町を呑み、人々は灯を失う」という一節が浮かび上がりました。",
+              text: "ようこそ、霧断崖へ。司祭のホウゲンです。五十年近く、この聖堂に仕えてまいりました。",
               speaker: "司祭",
             },
             {
               type: "message",
-              text: "巡礼者は怯え、町を去る者も出ています。けれど、こんな一節は、私が知る限り古い記録にありません。",
+              text: "五日前の朝、予言の碑に「霧が町を呑み、人々は灯を失う」という一節が、光って浮かび上がったのです。",
+              speaker: "司祭",
+            },
+            {
+              type: "message",
+              text: "日が沈むと薄れ、翌朝また現れます。巡礼者は怯え、町を去る家族も出ています。",
+              speaker: "司祭",
+            },
+            {
+              type: "message",
+              text: "けれど、私は碑の写しを何千回も読みました。こんな一節は、古い記録にありません。",
               speaker: "司祭",
             },
             {
@@ -176,12 +221,20 @@ function pilgrimCommands(): EventCommand[] {
       type: "if",
       flag: "chapter5_reported",
       equals: true,
-      then: [{ type: "message", text: "霧が晴れたら、また巡礼を続けます。教えの道は、まだ先ですから。", speaker: "巡礼者" }],
+      then: [
+        { type: "message", text: "碑が元に戻ったそうだね。霧は、この町の毛布。やっぱり、歌のとおりだったよ。", speaker: "巡礼者" },
+        { type: "message", text: "霧が晴れたら、また巡礼を続けるよ。教えの道は、まだ先だからね。", speaker: "巡礼者" },
+      ],
       else: [
-        { type: "message", text: "予言の碑に「霧が町を呑む」と出たそうです。私はもう、帰ろうかと……。", speaker: "巡礼者" },
+        { type: "message", text: "今年で四十一回目の巡礼だけど、碑に「霧が町を呑む」と出たそうでね。もう帰ろうかと思ってたんだよ。", speaker: "巡礼者" },
         {
           type: "message",
-          text: "でも、不思議なんです。古い巡礼歌には、そんな恐ろしい一節はないはずなのに。",
+          text: "でも、不思議なんだ。巡礼歌の四番には「霧は町を抱き　灯をつつむ」とある。碑の言葉と、正反対なんだよ。",
+          speaker: "巡礼者",
+        },
+        {
+          type: "message",
+          text: "みんな怖いから、碑を信じるほうが楽なんだろうねえ。怖い理由があれば、逃げる言い訳もできるから。",
           speaker: "巡礼者",
         },
       ],
@@ -195,15 +248,28 @@ function scribeCommands(): EventCommand[] {
       type: "if",
       flag: "chapter5_ledger_found",
       equals: true,
-      then: [{ type: "message", text: "原本と写しの綴りが合わない……。書き手の癖まで、真似ていたのですね。", speaker: "書記" }],
+      then: [
+        { type: "message", text: "原本と写しの綴りが合わない……。書き手の癖まで、真似ていたのですね。", speaker: "書記" },
+        { type: "message", text: "もう、黙っていません。私が見たことは、すべてお話しします。", speaker: "書記" },
+      ],
       else: [
-        { type: "message", text: "私は聖堂の書記です。記録の間の書き写しも、私の役目でして。", speaker: "書記" },
+        { type: "message", text: "私は聖堂の書記、ユキヒサです。記録の間の書き写しも、私の役目でして。", speaker: "書記" },
         {
           type: "message",
-          text: "ただ、ここ数年、古い巻物の一部が「修復」の名目で、灯芯都から来た方に預けられているのです。",
+          text: "六年ほど前から、古い巻物の一部が「修復」の名目で、灯芯都から来た写字官の方に預けられているのです。",
+          speaker: "書記",
+        },
+        {
+          type: "message",
+          text: "返ってきた巻物は、文字の癖が、ほんの少し違いました。気のせいだと思って……黙っていたのです。怖くて。",
           speaker: "書記",
         },
         { type: "message", text: "灯芯都から……？", speaker: "レト" },
+        {
+          type: "message",
+          text: "責めやしないさ。気づいて黙ってた人間を責めたら、世の中の九割は罪人だ。だが、これからは黙らないでくれ。",
+          speaker: "レト",
+        },
       ],
     },
   ];
@@ -217,10 +283,15 @@ function recordCommands(): EventCommand[] {
       equals: true,
       then: [{ type: "message", text: "書き換えられた碑文の写し。「静まりの年」の欄だけ、インクの色が違う。" }],
       else: [
-        { type: "message", text: "閲覧机に、予言の碑文の写しが広げられている。「静まりの年」の欄に目が留まった。" },
+        { type: "message", text: "閲覧机に、予言の碑文の写しが広げられている。統暦392年、「静まりの年」の欄に目が留まった。" },
         {
           type: "message",
-          text: "この欄だけ、インクが新しい。古い文字を削って、上から書き直してある。",
+          text: "「この年、灯芯都にて、疫病の噂あり。町は静まり、人々は語らず」……疫病じゃない。「噂あり」としか書いてない。",
+          speaker: "レト",
+        },
+        {
+          type: "message",
+          text: "この欄だけ、インクが新しいです。それに、行の間隔が詰まっています。長い文を削って、詰め直したみたい。",
           speaker: "ミナ",
         },
         {
@@ -228,7 +299,12 @@ function recordCommands(): EventCommand[] {
           text: "削られた跡から、元の文字がうっすら読める。「この年、合議会の要人、四名が職を退き、うち三名は行方を絶つ」……。",
           speaker: "ユーリ",
         },
-        { type: "message", text: "合議会の要人が、一度に失踪した……？ それを隠したい誰かが、書き換えたんだ。", speaker: "レト" },
+        {
+          type: "message",
+          text: "合議会の要人が、一度に三人も消えた……？ それを隠したい誰かが、「疫病の噂」に置き換えたんだ。",
+          speaker: "レト",
+        },
+        { type: "message", text: "レトの声は平らだった。平らすぎるほど、平らだった。" },
         { type: "setFlag", flag: "chapter5_record_found", value: true },
       ],
     },
@@ -248,15 +324,36 @@ function ledgerCommands(): EventCommand[] {
           flag: "chapter5_record_found",
           equals: true,
           then: [
-            { type: "message", text: "書架の奥に、布で包まれた古い綴りが隠されていた。書き換えられる前の、原本の一部のようだ。" },
             {
               type: "message",
-              text: "失踪した三名の名が並んでいる。その一番下の名前に、ユーリの目が止まった。",
+              text: "書架の最下段に、布で包まれた古い綴りが隠されていた。封蝋は割れて粉になっている。書き換えられる前の、原本のようだ。",
             },
-            { type: "message", text: "「ソウイチ」……。おじいちゃんの名前だ。", speaker: "ユーリ" },
             {
               type: "message",
-              text: "灯芯都の元合議会員が、「静まりの年」に姿を消した三人のうちの一人……。",
+              text: "「統暦三九二年　合議会人事異動の件。一、合議会員四名、職を退く。一、うち三名は所在不明。一、碑への記載は、疫病の噂の一行にとどめる」",
+            },
+            {
+              type: "message",
+              text: "失踪した三名の名が、縦に並んでいる。ハクエイ。トウマ。その一番下の名前に、ユーリの目が止まった。",
+            },
+            { type: "message", text: "「ソウイチ」……。祖父の名前だ。", speaker: "ユーリ" },
+            {
+              type: "message",
+              text: "名の脇に、小さな肩書がある。「灯里出身。元・相談所調査員。合議会員として二期目」。その下に、「ほか、随行の者数名。名は略す」。",
+            },
+            {
+              type: "message",
+              text: "灯里の調査員から、合議会員に……。そして、消された三人のうちの一人か。",
+              speaker: "レト",
+            },
+            {
+              type: "message",
+              text: "ユーリ。怒っても、泣いても、分からないままでもいいんです。折れたところは、みんなで支えますから。",
+              speaker: "ミナ",
+            },
+            {
+              type: "message",
+              text: "お前の祖父さんは、まっすぐな人だったんだろう。だから消された。……重さは、みんなで分けよう。",
               speaker: "レト",
             },
             { type: "setFlag", flag: "chapter5_ledger_found", value: true },
@@ -274,7 +371,12 @@ function keeperCommands(): EventCommand[] {
       type: "if",
       flag: "chapter5_yugami_defeated",
       equals: true,
-      then: [{ type: "message", text: "黒いローブの男は姿を消し、床に砕けた灯り石だけが残っている。" }],
+      then: [
+        {
+          type: "message",
+          text: "写字官のオウギは、床に膝をついたまま動かない。「碑は、私が元の形に戻します」と、小さくつぶやいた。",
+        },
+      ],
       else: [
         {
           type: "if",
@@ -284,22 +386,42 @@ function keeperCommands(): EventCommand[] {
             { type: "message", text: "「……原本を見つけてしまいましたか」――黒いローブの男が、書架の陰から振り向いた。" },
             {
               type: "message",
-              text: "碑文を書き換えたのは、あなたですね。誰の命令で、こんなことを！",
+              text: "写字官のオウギと申します。合議会書庫局から派遣されております。碑を書き換えたのは、私です。",
+              speaker: "写字官",
+            },
+            {
+              type: "message",
+              text: "誰の命令で、こんなことを！ 行方を絶った三人の中に、ぼくの祖父がいるんです。",
               speaker: "ユーリ",
             },
             {
               type: "message",
-              text: "私は「修復」を頼まれただけです。あるお方から、古い記録は正しい形に直すよう命じられて。",
+              text: "ソウイチさま……削るようにと渡された、名の一覧にありました。私は、人が消えていたと、初めて知ったのです。",
               speaker: "写字官",
             },
             {
               type: "message",
-              text: "名は申せません。ただ……そのお方は、灯芯都の高い場所におられる、とだけ。",
+              text: "命じたのは、灯芯都の高い場所におられる方です。お名前は存じません。文には「記録を、正しい形に」と。",
               speaker: "写字官",
             },
             {
               type: "message",
-              text: "写字官が灯り石を握りつぶすと、碑文の文字が霧になって立ち上がり、歪みの姿になった！",
+              text: "灯芯都には、娘がおります。「保護」の名の人質です。私は、従うほかなかった……。",
+              speaker: "写字官",
+            },
+            {
+              type: "message",
+              text: "まだ間に合います。碑を元に戻して、娘さんのことは、ぼくたちが相談所に伝えます。",
+              speaker: "ユーリ",
+            },
+            {
+              type: "message",
+              text: "だめです。あの方は、すべてご存じなのです。……すまない、すまない。",
+              speaker: "写字官",
+            },
+            {
+              type: "message",
+              text: "写字官が黒い灯り石を握りつぶすと、碑文の文字が霧になって立ち上がり、歪みの姿になった！",
             },
             { type: "setFlag", flag: "chapter5_keeper_met", value: true },
             { type: "startBattle", battleId: "kiri-yugami" },

@@ -66,8 +66,9 @@ export const CHAPTER7_OPENING_COMMANDS: EventCommand[] = [
   },
   {
     type: "message",
-    text: "板張りの通りの向こうに、空を見上げる人々の暮らしがあった。ここは、かつて「雲海衆」と呼ばれた人々の島だ。",
+    text: "雲の上に張られた綱を、籠舟で渡ると、板張りの通りの向こうに、空を見上げる人々の暮らしがあった。ここは、かつて「雲海衆」と呼ばれた人々の島だ。",
   },
+  { type: "message", text: "子どもたちの数え歌が聞こえる。「かえして、かえして、空の島」。島の挨拶は、「いい風を」だという。" },
   { type: "setFlag", flag: "chapter7_intro_seen", value: true },
 ];
 
@@ -128,7 +129,7 @@ function elderCommands(): EventCommand[] {
       flag: "chapter7_reported",
       equals: true,
       then: [
-        { type: "message", text: "空の乗り物は、あなた方のものです。雲の上でも、どうかご無事で。", speaker: "雲海衆の長老" },
+        { type: "message", text: "空の乗り物は、あなた方のものです。雲の上でも、どうかご無事で。いい風を。", speaker: "雲海衆の長老" },
       ],
       else: [
         {
@@ -143,15 +144,30 @@ function elderCommands(): EventCommand[] {
               then: [
                 {
                   type: "message",
-                  text: "北の整備区画に、そんな部屋が……。わしらの島が、ずっと見張られていたというのか。",
+                  text: "北の整備区画に、そんな部屋が……。わたしたちの島が、ずっと見張られていたというのか。",
                   speaker: "雲海衆の長老",
                 },
                 {
                   type: "message",
-                  text: "奪われた空の上に、まだ奪うものがあったとはな。……礼として、島に一隻だけ残っていた空の乗り物を、あなた方に託そう。",
+                  text: "奪われた空の上に、まだ奪うものがあったとはな。……けれど、知らないまま見られ続けるよりは、ずっといい。",
                   speaker: "雲海衆の長老",
                 },
-                { type: "message", text: "空の乗り物を手に入れた！（浮嶼の渡し守に頼むと、これまで訪れた町へ飛べる）" },
+                {
+                  type: "message",
+                  text: "礼として、島に一隻だけ隠してきた空の乗り物を、あなた方に託します。二十七年、誰にも触れさせませんでした。",
+                  speaker: "雲海衆の長老",
+                },
+                {
+                  type: "message",
+                  text: "名は「風待ち」。大切だからこそ、お渡しします。あなた方には、行かなければならない場所があるのでしょう。",
+                  speaker: "雲海衆の長老",
+                },
+                {
+                  type: "message",
+                  text: "二十七年ぶりに、空に浮かぶんです。操縦は、わしが引き受けましょう。",
+                  speaker: "渡し守",
+                },
+                { type: "message", text: "空の乗り物「風待ち」を手に入れた！（浮嶼の渡し守に頼むと、これまで訪れた町へ飛べる）" },
                 { type: "setFlag", flag: "chapter7_airship_obtained", value: true },
                 { type: "setFlag", flag: "chapter7_reported", value: true },
               ],
@@ -161,19 +177,34 @@ function elderCommands(): EventCommand[] {
                   text: "北の整備区画は、町の北の入口です。夜ごと、見知らぬ船が出入りしていると、渡し守が言っていました。",
                   speaker: "雲海衆の長老",
                 },
+                {
+                  type: "message",
+                  text: "ドルンという少年を預かっていた老人が、島の東の端におります。サザンといいます。頑固ですが、あなた方になら話すでしょう。",
+                  speaker: "雲海衆の長老",
+                },
               ],
             },
           ],
           else: [
-            { type: "message", text: "灯りの相談所の方ですね。浮嶼の長老をしております。", speaker: "雲海衆の長老" },
+            { type: "message", text: "灯りの相談所の方々ですね。ようこそ、浮嶼へ。長老をしております。いい風を。", speaker: "雲海衆の長老" },
             {
               type: "message",
-              text: "この島の北に、立入りを禁じられた整備区画があります。二十年以上前、合議会が「接収」して以来、わしらは近づけません。",
+              text: "二十七年前まで、この空は、わたしたちのものでした。合議会は「浮嶼平定戦」と呼びますが、わたしたちは「奪われた空」と呼びます。",
               speaker: "雲海衆の長老",
             },
             {
               type: "message",
-              text: "近ごろ、そこに明かりがともり、船が出入りしています。どうか、中を確かめてはもらえませんか。",
+              text: "島の北の整備区画は、そのとき合議会が「接収」し、以来、わたしたちは近づけません。",
+              speaker: "雲海衆の長老",
+            },
+            {
+              type: "message",
+              text: "ところが近ごろ、そこに青白い明かりがともり、船が夜ごと出入りしています。兵の姿は、誰も見ていません。それが、いちばん不気味なのです。",
+              speaker: "雲海衆の長老",
+            },
+            {
+              type: "message",
+              text: "合議会の役所の方ではない、あなた方だから、お頼みできます。どうか、中を確かめてはもらえませんか。",
               speaker: "雲海衆の長老",
             },
             {
@@ -211,6 +242,7 @@ function innkeeperCommands(): EventCommand[] {
       else: [
         { type: "message", text: "ようこそ、浮嶼へ。風が強い日は、板の通りが少し揺れますが、慣れれば心地いいものです。", speaker: "宿屋の主人" },
         { type: "message", text: "遠くの空に、いつも黒い雲が渦を巻いているでしょう？ あれは嵐雲ですよ。昔からああです。", speaker: "宿屋の主人" },
+        { type: "message", text: "あの渦のせいで、東の空へは船で出られません。だから、東のほうへは、誰も行きません。", speaker: "宿屋の主人" },
       ],
     },
   ];
@@ -287,9 +319,9 @@ function ledgerCommands(): EventCommand[] {
       type: "if",
       flag: "chapter7_ledger_found",
       equals: true,
-      then: [{ type: "message", text: "帳簿の最後の欄には、「灯芯都・合議会」の宛名と、代表の署名の跡が残っている。" }],
+      then: [{ type: "message", text: "帳簿の最後の欄には、「灯芯都・合議会　書記長　処置責任者」の宛名と、擦れた署名の跡が残っている。" }],
       else: [
-        { type: "message", text: "壁ぎわの棚に、厚い帳簿が並んでいる。" },
+        { type: "message", text: "長い廊下の奥の部屋に、ユーリの腕輪が応えて、鍵がかちりと開いた。壁ぎわの棚に、厚い帳簿が並んでいる。" },
         {
           type: "message",
           text: "灯里、麦香野、硝子湖、鉄鏈鉱山、砂音、霧断崖、霜原……。全部そろってる。歪みが起きた場所と、その日付だ。",
@@ -300,6 +332,22 @@ function ledgerCommands(): EventCommand[] {
           text: "起きた「あと」の記録じゃない。「起こす前」の計画の欄に、印がついてる。……全部、ここで決められていたんだ。",
           speaker: "ミナ",
         },
+        { type: "message", text: "麦香野だけは、「村の工事で偶発的に起動。計画外。修正不要」……。水が枯れて困ったことが、「修正不要」。", speaker: "ミナ" },
+        { type: "message", text: "硝子湖には、「商家の縁者を看板に使う。潔白は問わない」とあるよ。……分かってたのに、文字で見ると、ちがうね。", speaker: "ガイド" },
+        { type: "message", text: "灯里は、「目立たない試験地」……。ぼくの町が、そう呼ばれてたのか。", speaker: "ユーリ" },
+        { type: "message", text: "棚の端に、濃紺の背表紙の帳簿が一冊あった。題は、ただ「静まりの年」。" },
+        {
+          type: "message",
+          text: "最初の頁に、三つの名前。「ソウイチ　処置済　保全」「ハクエイ　処置済　保全」「トウマ　処置済　保全」。",
+        },
+        { type: "message", text: "……祖父です。なかったことにされていたんじゃない。ちゃんと、書かれていた。", speaker: "アヤメ" },
+        { type: "message", text: "「処置済」と「保全」。……「殺した」とは、書いてない。生きてるかもしれないぞ。", speaker: "レト" },
+        {
+          type: "message",
+          text: "最後の頁の署名欄は、「書記長　処置責任者」。名は擦れて読めないが、最後の払いだけが、細く長く残っていた。",
+        },
+        { type: "message", text: "この筆跡……祖父に届いた、茶会の招待状の署名と、同じです。", speaker: "アヤメ" },
+        { type: "message", text: "全部は持ち出せない。写せるだけ写して、まず外へ出よう。「静まりの年」の一冊は、持っていけるはずだ。", speaker: "レト" },
         { type: "setFlag", flag: "chapter7_ledger_found", value: true },
       ],
     },
@@ -322,11 +370,18 @@ function consoleCommands(): EventCommand[] {
             { type: "message", text: "奥の大きな卓に、大陸の地図が浮かんでいる。歪みの起きた場所に、赤い光点がともっている。" },
             {
               type: "message",
-              text: "見て。灯里から霜原まで、光点が一本の線でつながってる。……そして、線の行き先は灯芯都だ。",
+              text: "見て。灯里から霜原まで、光点が一本の線でつながってる。……そして、線の行き先は灯芯都です。",
+              speaker: "ミナ",
+            },
+            { type: "message", text: "ぼくたちの旅の順番と、同じだ。……辿らされてきたのかもしれない。", speaker: "ユーリ" },
+            {
+              type: "message",
+              text: "この小さな白い光は、何でしょう。……動いているものも、あります。",
               speaker: "アヤメ",
             },
+            { type: "message", text: "人だ。白い点は、一人ひとりの人です。ぼくたちが旅をしている間も、ずっと、見張られていた。", speaker: "ユーリ" },
             { type: "setFlag", flag: "chapter7_console_found", value: true },
-            { type: "message", text: "触れた瞬間、卓が青白く光り、歪みの姿となって襲いかかってきた！" },
+            { type: "message", text: "ミナの指先が、卓の端にふれた。青白い光が爆ぜ、卓は歪みの姿となって襲いかかってきた！" },
             { type: "startBattle", battleId: "fushima-yugami" },
           ],
           else: [{ type: "message", text: "奥に大きな卓がある。まずは周りの記録を調べてからのほうがよさそうだ。" }],
@@ -349,10 +404,10 @@ function edreaCommands(): EventCommand[] {
           equals: true,
           then: [{ type: "message", text: "エドレアの姿はもうない。床に、灯芯都の紋章の入った書き付けだけが残っている。" }],
           else: [
-            { type: "message", text: "静まった卓の向こうから、ゆっくりと足音が近づいてきた。" },
+            { type: "message", text: "静まった卓の向こうから、ゆっくりと足音が近づいてきた。紺の衣をまとった、五十代半ばの女性だ。" },
             {
               type: "message",
-              text: "見事な戦いでした。ここまで辿り着く人は、そう多くありません。",
+              text: "見事な戦いでした。ここまで辿り着く人は、そう多くありません。……あなた方が、初めてです。",
               speaker: "エドレア",
             },
             { type: "message", text: "合議会代表の……エドレア！ あなたが、これを？", speaker: "ユーリ" },
@@ -361,12 +416,41 @@ function edreaCommands(): EventCommand[] {
               text: "わたしの言葉を信じるかどうかは、あなた方次第です。ただ、ここで多くを語るつもりはありません。",
               speaker: "エドレア",
             },
+            { type: "message", text: "祖父の名は、ハクエイといいます。祖父は、どこにいるのですか。", speaker: "アヤメ" },
+            {
+              type: "message",
+              text: "ハクエイ殿。穏やかな方でした。何度か、茶をご一緒しました。……それを、ここで話すつもりはありません。",
+              speaker: "エドレア",
+            },
+            {
+              type: "message",
+              text: "レトさん。お兄さまは、合議会の書記官でしたね。聡明な方でした。",
+              speaker: "エドレア",
+            },
+            { type: "message", text: "……兄の名を、口にするな。", speaker: "レト" },
+            {
+              type: "message",
+              text: "ユーリさん。あなたは、お祖父さまに似ておいでです。人の話を、最後まで聞く方でした。",
+              speaker: "エドレア",
+            },
+            { type: "message", text: "祖父を、知っているんですか。", speaker: "ユーリ" },
             {
               type: "message",
               text: "続きは、灯芯都で。合議会の広間で、お待ちしています。……真実が知りたければ、いらっしゃい。",
               speaker: "エドレア",
             },
+            {
+              type: "message",
+              text: "わたしは、大乱期を二度と繰り返さないために生きてきました。平和は、あなた方が思うより、ずっと脆いものです。",
+              speaker: "エドレア",
+            },
             { type: "message", text: "エドレアは静かに背を向け、待たせていた空の船に乗って雲の向こうへ消えた。" },
+            {
+              type: "message",
+              text: "床に、書き付けが落ちていた。「灯芯都・合議会堂にて、お待ちしております」。最後の払いは、帳簿の署名と同じ形だった。",
+            },
+            { type: "message", text: "あの顔を、何年も、信じてたんだぞ。……合議会の代表は、正しい人だって。", speaker: "レト" },
+            { type: "message", text: "信じたかったから、信じたんです。それは、弱さじゃありません。", speaker: "ユーリ" },
             { type: "setFlag", flag: "chapter7_edrea_appeared", value: true },
           ],
         },

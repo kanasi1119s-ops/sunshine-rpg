@@ -32,14 +32,20 @@ export const CHAPTER1_MAPS: Record<string, TileMapData> = {
  * 麦香野へ到着したとき、一度だけ流す短い場面つなぎ（`chapter1_intro_seen` フラグで管理）。
  */
 export const CHAPTER1_OPENING_COMMANDS: EventCommand[] = [
-  { type: "message", text: "――数日後、麦香野。" },
+  { type: "message", text: "――灯里から東の街道を歩いて、丸二日。麦香野。" },
   {
     type: "message",
-    text: "灯里での一件を灯芯都へ報告したカセンの指示で、ユーリとレトは次の依頼地・麦香野へ向かった。",
+    text: "灯里支部に届いた「水路の水が涸れた。至急、調査員を求む」という依頼を受けて、ユーリとレトは村へ向かった。",
+  },
+  { type: "message", text: "風の中に、熟れかけた麦の、香ばしい匂いがまじっている。" },
+  { type: "message", text: "麦香野には、ガキの頃に一回だけ来たことがある。兄貴に連れられて、手紙を届けにな。", speaker: "レト" },
+  {
+    type: "message",
+    text: "……水路が、光っていない。灯り石を含んだ水が流れていれば、晴れた日は淡い青にきらめくはずなのに。",
   },
   {
     type: "message",
-    text: "村に着くなり、慌ただしい様子の村人たちに出迎えられる。水路の水が、突然涸れてしまったのだという。",
+    text: "村に着くと、声をひそめた村人たちが、井戸のまわりに集まっていた。いちばん大きな音――水車の音が、していない。",
   },
   { type: "setFlag", flag: "chapter1_intro_seen", value: true },
 ];
@@ -77,6 +83,7 @@ export const CHAPTER1_NPCS: Record<string, Npc[]> = {
       color: "#a0b070",
       commands: [
         { type: "message", text: "水が来なくなって、畑がひび割れてきたよ。この水路は、北の水源からずっと引いているんだ。", speaker: "農夫" },
+        { type: "message", text: "水がないのを誰のせいにするかで、村じゅう揉めとる。誰も悪い人じゃないんだがなあ。", speaker: "農夫" },
         {
           type: "message",
           text: "水源へ行く坑道の扉は、鍵がかかってる。鍵は、北の畑の見張り小屋に置いてあったはずだ。小屋の箱を探してごらん。",
@@ -178,7 +185,12 @@ function elderCommands(): EventCommand[] {
           then: [
             {
               type: "message",
-              text: "水路の水も戻って、村もようやく落ち着いたよ。ありがとうな、ふたりとも。",
+              text: "水路の水も戻って、村もようやく落ち着いたよ。ありがとうな、ユーリ殿、レト殿。",
+              speaker: "村長",
+            },
+            {
+              type: "message",
+              text: "番水帳には、新しい頁を足すことにした。水が少ないとき、来ないときの決まりをな。水があるうちに、皆で話しあえる。",
               speaker: "村長",
             },
           ],
@@ -191,13 +203,18 @@ function elderCommands(): EventCommand[] {
                 { type: "message", text: "戻ったか。水源はどうだった？", speaker: "村長" },
                 {
                   type: "message",
-                  text: "しずめてきました。それと、水源の奥に、古い採掘の跡のようなものがありました。",
+                  text: "泉の奥の、古い採掘跡の坑道に、灯り石を使った輪のような装置がありました。それが歪みの根でした。",
                   speaker: "ユーリ",
                 },
-                { type: "message", text: "……採掘跡？", speaker: "村長" },
+                { type: "message", text: "……採掘跡？　あの山に、灯り石の坑道があったのか。", speaker: "村長" },
                 {
                   type: "message",
-                  text: "灯里の町外れで見た焼け跡と、似た感じがするんです。あそこも、歪みが起きた場所でした。",
+                  text: "わしの祖父が、「北の山に、掘り終わった穴がある」と言っていた覚えはある。それが、あれか。",
+                  speaker: "村長",
+                },
+                {
+                  type: "message",
+                  text: "灯里の町外れで見た焼け跡と、似た感じがするんです。あそこも、歪みが起きた場所でした。古い坑口もありました。",
                   speaker: "ユーリ",
                 },
                 {
@@ -213,7 +230,33 @@ function elderCommands(): EventCommand[] {
                 { type: "setFlag", flag: "chapter1_clue_c002_found", value: true },
                 {
                   type: "message",
-                  text: "とにかく、水路の水が戻ってくれて助かったよ。本当にありがとう。",
+                  text: "村長。山や村の周りで、また変わったことがあったら、すぐ灯里の支部に知らせてください。",
+                  speaker: "レト",
+                },
+                { type: "message", text: "分かった。必ず。", speaker: "村長" },
+                {
+                  type: "message",
+                  text: "それと、さっきの寄り合いのことじゃが。シンが、みんなの前で詫びたよ。",
+                  speaker: "村長",
+                },
+                {
+                  type: "message",
+                  text: "浚渫で輪を掘り出したが、怖くなって、夜のうちにひとりで埋めなおした、とな。",
+                  speaker: "村長",
+                },
+                {
+                  type: "message",
+                  text: "するとゴンザが言った。「あの輪を、村の皆が触っていたら、どうなった」と。「ひとりで抱えるな。皆で、泥をかぶれ」とな。",
+                  speaker: "村長",
+                },
+                {
+                  type: "message",
+                  text: "あの二人も、少しずつ変わってきたようじゃ。人は、怒る。争う。間違える。じゃが、また立ち上がる。",
+                  speaker: "村長",
+                },
+                {
+                  type: "message",
+                  text: "とにかく、水路の水が戻ってくれて助かったよ。この十日あまりで、はじめて芯から眠れそうだ。本当にありがとう。",
                   speaker: "村長",
                 },
                 { type: "setFlag", flag: "chapter1_reported_to_elder", value: true },
@@ -238,30 +281,40 @@ function elderCommands(): EventCommand[] {
           then: [
             {
               type: "message",
-              text: "北の水源、頼んだよ。危ないと思ったら、決して無理はしないでおくれ。",
+              text: "北の水源、頼んだよ。わしは足が悪うて、あの山道はもう登れん。危ないと思ったら、決して無理はしないでおくれ。",
               speaker: "村長",
             },
           ],
           else: [
-            { type: "message", text: "灯りの相談所の人たちかい。よく来てくれた……！", speaker: "村長" },
+            { type: "message", text: "灯りの相談所の人たちかい。よう来てくださった。村長のヨサクです。", speaker: "村長" },
             {
               type: "message",
-              text: "数日前から、村の水路の水が急に涸れてしまってな。水車小屋の水も止まって、みんな気が立っているんだ。",
+              text: "九日前の朝、水路の水が、一夜にして止まった。前の晩まで、うるさいくらい流れとったのに。",
               speaker: "村長",
             },
             {
               type: "message",
-              text: "このままだと、田畑を持つ家と水車小屋の間で、いさかいになりかねない。",
+              text: "水車小屋の水も止まって、みんな気が立っておる。上手の田のゴンザと、下手の田のタヘイは、言い争いが絶えん。",
               speaker: "村長",
             },
             {
               type: "message",
-              text: "水路の水は、北の水源から引いている。ところが、ここ何日か、夜になると水源の方から低い唸り声のようなものが聞こえるんだ。",
+              text: "麦の刈り入れは、あと十日ほどじゃ。刈った麦は水車で挽く。水が来んと、パンにも粥にもならん。",
               speaker: "村長",
             },
             {
               type: "message",
-              text: "水車小屋の主が、水源のあたりで紫色の光が揺れるのを見たとも言っている。町で言う「歪み」が、水の流れを乱しているのかもしれん。",
+              text: "村の水は、北の山ぎわの「灯の泉」から引いておる。大昔から、絶えたことのない湧き水じゃ。",
+              speaker: "村長",
+            },
+            {
+              type: "message",
+              text: "実はな、ひと月ほど前、若い衆のシンが、泉の取水口のあたりを浚渫した。泥をさらう仕事じゃ。そのあと十日ほどで、水が止まった。",
+              speaker: "村長",
+            },
+            {
+              type: "message",
+              text: "村の中には、シンのせいだと言う者もおる。……あれは、わしが許した仕事じゃ。責めは、わしが負うべきなんじゃが。",
               speaker: "村長",
             },
             {
@@ -271,7 +324,12 @@ function elderCommands(): EventCommand[] {
             },
             {
               type: "message",
-              text: "水源の様子を見てきてほしい。北の道を行った先だ。もし歪みがいたら、しずめてもらえると助かる。それと、水が涸れた原因になりそうなものがないか、よく見てきておくれ。",
+              text: "水源の様子を見てきてほしい。北の道を行った先だ。もし歪みがいたら、しずめてもらえると助かる。",
+              speaker: "村長",
+            },
+            {
+              type: "message",
+              text: "それと、水が涸れた原因になりそうなものがないか、よく見てきておくれ。",
               speaker: "村長",
             },
             {
@@ -282,13 +340,13 @@ function elderCommands(): EventCommand[] {
                   label: "受けます",
                   commands: [
                     { type: "setFlag", flag: "chapter1_quest_accepted", value: true },
-                    { type: "message", text: "わかりました。見てきます。", speaker: "ユーリ" },
+                    { type: "message", text: "わかりました。まず、いちばん最初から話を聞かせてください。見てきます。", speaker: "ユーリ" },
                     {
                       type: "message",
-                      text: "頼む。……ああ、それと、ミナという村の子が心配して自分で見に行きたがっていてな。危ないから止めてはいるんだが……",
+                      text: "頼む。……ああ、それと、ミナという村の子が、水路のことなら誰より詳しい。自分も行きたがっていてな。",
                       speaker: "村長",
                     },
-                    { type: "message", text: "念のため、あの子にも声をかけてやってくれないか。", speaker: "村長" },
+                    { type: "message", text: "危ないから止めてはいるんだが、話だけでも聞いてやってくれないか。", speaker: "村長" },
                   ],
                 },
                 {
@@ -335,9 +393,11 @@ function minaCommands(): EventCommand[] {
             { type: "message", text: "そう、ですよね。……すみません、変なことを聞いて。", speaker: "ミナ" },
             {
               type: "message",
-              text: "（ミナは、一瞬だけ表情を曇らせた。……何か、思うところがあるのかもしれない）",
+              text: "（ミナは、一瞬だけ表情を曇らせた。……その目の奥に、暗い光が見えた気がした）",
             },
-            { type: "message", text: "……おい、今の顔。何か知ってるのか？", speaker: "レト" },
+            { type: "message", text: "……ユーリ。あの子は、まだ本当のことを言ってない。", speaker: "レト" },
+            { type: "message", text: "分かってます。話してくれるまで、待ちます。", speaker: "ユーリ" },
+            { type: "message", text: "……そうか。お前、先輩に向いてるよ。人が黙ってることを、待てる奴は貴重なんだ。", speaker: "レト" },
             {
               type: "message",
               text: "……いえ、なんでもないです！　それより、次はどこに向かうんですか？",
@@ -353,17 +413,59 @@ function minaCommands(): EventCommand[] {
           flag: "chapter1_reported_to_elder",
           equals: true,
           then: [
+            { type: "message", text: "ユーリ。……あの、お願いがあるんです。", speaker: "ミナ" },
             {
               type: "message",
-              text: "水源、直してきてくださったんですね。ありがとうございます……！",
+              text: "水は、戻りました。でも、まだ終わってない気がするんです。あの輪は、誰かがずっと前から置いていたものなんですよね。",
               speaker: "ミナ",
             },
             {
               type: "message",
-              text: "あの、わたしも水紋系の力が少し使えるんです。よかったら、これからの調査、ご一緒させてもらえませんか？",
+              text: "もし、ほかの場所にも同じものが埋まっていたら。……放っておきたくないんです。",
               speaker: "ミナ",
             },
-            { type: "message", text: "村のみんなのためにも、わたしにできることをしたくて……。", speaker: "ミナ" },
+            {
+              type: "message",
+              text: "水紋系の術が使えます。水路のことも、薬草のことも、少しなら分かります。足手まといには、ならないようにします。",
+              speaker: "ミナ",
+            },
+            { type: "message", text: "歪みのこと、もっと知りたいんです。", speaker: "ミナ" },
+            {
+              type: "message",
+              text: "……ミナ。ひとつ、聞いてもいい？　水源へ行く道で、石橋の前を通るとき、きみは目をそらしていたよね。",
+              speaker: "ユーリ",
+            },
+            { type: "message", text: "……気づいて、いたんですね。", speaker: "ミナ" },
+            {
+              type: "message",
+              text: "ハルという、幼なじみがいたんです。隣の家の男の子で、生まれた日が、三日しか違わなくて。",
+              speaker: "ミナ",
+            },
+            {
+              type: "message",
+              text: "わたしのほうが、三日だけお姉さんでした。灯り石が大好きで、泉の岩場で拾った水色の欠片を、宝物にして、毎日握りしめていました。",
+              speaker: "ミナ",
+            },
+            {
+              type: "message",
+              text: "四年前の初夏の夕暮れ、ハルは、あの石橋のたもとで、歪みに遭って……いなくなったんです。",
+              speaker: "ミナ",
+            },
+            {
+              type: "message",
+              text: "見つかりませんでした。ハルの家族は、遠くの町へ移ってしまいました。でも、わたしは、待っていたいんです。",
+              speaker: "ミナ",
+            },
+            {
+              type: "message",
+              text: "待っているだけだと、苦しくて。だから、調べたいんです。ハルが、どうなったのか。",
+              speaker: "ミナ",
+            },
+            {
+              type: "message",
+              text: "話してくれて、ありがとう。ミナが一人で持っていたものを、ぼくに分けてくれた。それは、大きいことだと思う。",
+              speaker: "ユーリ",
+            },
             {
               type: "choice",
               text: "ミナの申し出にどう答える？",
@@ -372,6 +474,12 @@ function minaCommands(): EventCommand[] {
                   label: "一緒に来てください",
                   commands: [
                     { type: "message", text: "はい！　足を引っ張らないよう、頑張ります。", speaker: "ミナ" },
+                    { type: "message", text: "ただし、約束を三つ。一つ、俺の後ろから出ない。", speaker: "レト" },
+                    { type: "message", text: "二つ、俺が下がれと言ったら、理由を聞かずに下がる。", speaker: "レト" },
+                    { type: "message", text: "三つ、怖くなったら、怖いと言う。我慢しない。", speaker: "レト" },
+                    { type: "message", text: "……三つ目は、どうしてですか。", speaker: "ミナ" },
+                    { type: "message", text: "我慢して黙ってる奴が、いちばん最初に死ぬからだ。", speaker: "レト" },
+                    { type: "message", text: "……はい。守ります。大丈夫、わたしがついてます。……なんて、偉そうですね。", speaker: "ミナ" },
                     { type: "setFlag", flag: "chapter1_mina_joined", value: true },
                   ],
                 },
@@ -395,17 +503,61 @@ function minaCommands(): EventCommand[] {
               equals: true,
               then: [
                 {
-                  type: "message",
-                  text: "水源のこと、お願いしますね。……本当は、わたしも一緒に行きたいんですけど。",
-                  speaker: "ミナ",
+                  type: "if",
+                  flag: "chapter1_mina_asked",
+                  equals: true,
+                  then: [
+                    {
+                      type: "message",
+                      text: "水源のこと、お願いします。水路をさかのぼると、途中に古い石橋があります。そこから先は、道が細くなるので気をつけて。",
+                      speaker: "ミナ",
+                    },
+                    { type: "message", text: "村長さんにも止められて。大人しく、待っています。", speaker: "ミナ" },
+                  ],
+                  else: [
+                    {
+                      type: "message",
+                      text: "あの、水源へ行かれるんですよね。わたしも、連れていってもらえませんか。",
+                      speaker: "ミナ",
+                    },
+                    {
+                      type: "message",
+                      text: "水源の水が止まった原因には、たぶん、危ないものが絡んでる。素人は連れていけないな。",
+                      speaker: "レト",
+                    },
+                    {
+                      type: "message",
+                      text: "素人じゃありません。水路のことは、この村のだれより知っています。水紋系の術も、少し使えます。",
+                      speaker: "ミナ",
+                    },
+                    { type: "message", text: "使ったこと、ある？", speaker: "レト" },
+                    { type: "message", text: "……何度か、村の人の擦り傷に。", speaker: "ミナ" },
+                    { type: "message", text: "擦り傷、ね。", speaker: "レト" },
+                    { type: "message", text: "でも、擦り傷でも、ちゃんと治りました。", speaker: "ミナ" },
+                    {
+                      type: "message",
+                      text: "そりゃ、いいことだ。……ただ、今日は無理だ。まず水源は、俺たちで見てくる。",
+                      speaker: "レト",
+                    },
+                    {
+                      type: "message",
+                      text: "……はい。では、道だけでも教えます。水路をさかのぼって、古い石橋の先です。",
+                      speaker: "ミナ",
+                    },
+                    { type: "message", text: "（石橋のことを話すとき、ミナは、そっと目をそらした）" },
+                    { type: "setFlag", flag: "chapter1_mina_asked", value: true },
+                  ],
                 },
-                { type: "message", text: "村長さんに止められてしまって。大人しく待ってます。", speaker: "ミナ" },
               ],
               else: [
-                { type: "message", text: "はじめまして。麦香野で生まれ育った、ミナといいます。", speaker: "ミナ" },
                 {
                   type: "message",
-                  text: "水路の水が涸れてしまって……みんな心配しているんです。何とかなるといいんですが。",
+                  text: "はじめまして。麦香野で生まれ育った、ミナといいます。お水の管理を、お手伝いしているものです。",
+                  speaker: "ミナ",
+                },
+                {
+                  type: "message",
+                  text: "今は、井戸の水を、お年寄りの家に届けてまわっているんです。水路の水が涸れて、みんな心配しています。",
                   speaker: "ミナ",
                 },
               ],
@@ -423,10 +575,24 @@ function excavationMarkCommands(): EventCommand[] {
       type: "if",
       flag: "chapter1_excavation_found",
       equals: true,
-      then: [{ type: "message", text: "掘り返された古い跡が、静かに広がっている。" }],
+      then: [
+        { type: "message", text: "掘り返された古い跡が、静かに広がっている。" },
+        {
+          type: "if",
+          flag: "chapter1_yugami_defeated",
+          equals: true,
+          then: [
+            { type: "message", text: "ひびの入った青銅の輪の縁から、レトが小さな欠片を折りとっていた。" },
+            { type: "message", text: "欠片の裏には、円の中に一本の線が引かれた、すり減った刻印がある。" },
+            { type: "message", text: "……まだ、分からん。ただ、今日のことは、ぜんぶ覚えておけ。ここの匂いも、輪の形も。", speaker: "レト" },
+          ],
+          else: [],
+        },
+      ],
       else: [
-        { type: "message", text: "地面が大きく掘り返されている。随分と古い跡のようだ。" },
-        { type: "message", text: "……これは、灯り石の採掘跡？　こんな所に？" },
+        { type: "message", text: "取水口のそばの地面が、大きく掘り返されている。浚渫の跡の奥に、古い坑道が口を開けている。" },
+        { type: "message", text: "壁には、規則正しい鑿の跡。……これは、灯り石の採掘跡？　こんな所に？" },
+        { type: "message", text: "灯里の町外れの、あの焦げ跡のそばにも、崩れかけた古い坑口があった。" },
         { type: "setFlag", flag: "chapter1_excavation_found", value: true },
       ],
     },
@@ -456,7 +622,8 @@ function millerCommands(): EventCommand[] {
       flag: "chapter1_heard_miller",
       equals: true,
       then: [
-        { type: "message", text: "水源の坑道は、見張り小屋の鍵が要る。北の農道を行きなさい。水を抜くバルブは、坑道の左右の部屋だ。", speaker: "水車小屋の主" },
+        { type: "message", text: "水源の坑道は、見張り小屋の鍵が要る。北の農道を行きなさい。水を抜くバルブは、坑道の左右の部屋だ。", speaker: "ロク" },
+        { type: "message", text: "寄り合いの空気は、あんまり吸わんほうがええぞ。今の麦香野は、水より先に、みんなの堪忍袋が涸れとる。", speaker: "ロク" },
       ],
       else: [
         {
@@ -464,22 +631,35 @@ function millerCommands(): EventCommand[] {
           flag: "chapter1_quest_accepted",
           equals: true,
           then: [
-            { type: "message", text: "村長の頼みを受けたのかい。なら、見たことを話しておこう。", speaker: "水車小屋の主" },
+            { type: "message", text: "村長の頼みを受けたのかい。なら、見たことを話しておこう。", speaker: "ロク" },
             {
               type: "message",
-              text: "三日前の夜、水源のあたりで、紫色の光がゆらゆら揺れていたんだ。そのあと、水がぱったり止まった。",
-              speaker: "水車小屋の主",
+              text: "九日前の朝じゃ。前の晩まで、うるさいくらい流れとった水が、朝起きたら、水路の底が見えとった。",
+              speaker: "ロク",
             },
+            {
+              type: "message",
+              text: "日照りで涸れたんなら、上流から徐々に細るもんじゃ。それが、村じゅういっぺんに止まりおった。",
+              speaker: "レト",
+            },
+            { type: "message", text: "ほう。あんた、若いのによう見とるな。", speaker: "ロク" },
+            { type: "message", text: "（乾いた泥からは、土と、古い水と、焦げたような匂いがした。灯里の町外れで嗅いだ、あの匂いだ）" },
             {
               type: "message",
               text: "水源へは、北の農道を行って、古い坑道を通る。坑道の扉は鍵つきだが、鍵は見張り小屋の箱にあるはずだ。",
-              speaker: "水車小屋の主",
+              speaker: "ロク",
             },
-            { type: "message", text: "坑道の奥の岩戸は、左右にある古いバルブを両方回すと開くと、爺さんの代から聞いている。", speaker: "水車小屋の主" },
+            { type: "message", text: "坑道の奥の岩戸は、左右にある古いバルブを両方回すと開くと、爺さんの代から聞いている。", speaker: "ロク" },
             { type: "setFlag", flag: "chapter1_heard_miller", value: true },
           ],
           else: [
-            { type: "message", text: "水車が止まって、仕事にならないよ。村長が、相談所の人を待っているはずだ。先に会ってやってくれ。", speaker: "水車小屋の主" },
+            { type: "message", text: "わしはロク。ここの粉屋じゃ。六十年、この水車を回しとる。", speaker: "ロク" },
+            {
+              type: "message",
+              text: "水車が止まって、仕事にならん。粉屋はな、村じゅうの胃袋の、いちばん最後の番人なんじゃよ。",
+              speaker: "ロク",
+            },
+            { type: "message", text: "村長が、相談所の人を待っているはずだ。先に会ってやってくれ。", speaker: "ロク" },
           ],
         },
       ],
