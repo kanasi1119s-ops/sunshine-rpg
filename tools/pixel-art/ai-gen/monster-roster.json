@@ -427,7 +427,7 @@
  {
   "id": "enc-sanone-camp-1",
   "prompt": "a whirling sand spirit, a swirling vortex of golden sand with a torn striped cloth caught in it, two bright eyes in the whirl",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-sanone-camp-1",
   "kind": "mob",
   "name": "風の影",
@@ -439,7 +439,7 @@
    175,
    130
   ],
-  "draft": "enc-sanone-camp-1_0",
+  "draft": "enc-sanone-camp-1_1",
   "seed_base": 14003
  },
  {
@@ -513,7 +513,7 @@
  {
   "id": "enc-kiri-archive-0",
   "prompt": "a big silverfish insect monster made of torn paper scraps with ink stains, thick segmented body, many small legs, long antennae, side view",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kiri-archive-0",
   "kind": "mob",
   "name": "紙魚の影",
