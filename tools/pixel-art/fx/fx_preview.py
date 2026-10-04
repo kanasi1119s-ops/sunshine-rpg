@@ -1,6 +1,7 @@
 """雷の術のエフェクトを、本物の戦闘画面に重ねて、コマの長さどおりの動画にする（見本）。
 
-使い方: python3 fx_preview.py 背景.png 名前とHPの入った背景.png エフェクトのフォルダ ボスのanim.json 出力.mp4 [--slow 4] [--party 2頭身の歩く絵のフォルダ]
+使い方: python3 fx_preview.py 背景.png 名前とHPの入った背景.png エフェクトのフォルダ ボスのanim.json 出力.mp4 [--slow 4] [--party 2頭身の歩く絵のフォルダ] [--set fire]
+  --set: lightning（雷の術、ふだん）か fire（炎の術）
   --party: 味方を新しい2頭身の絵（assets-src/characters/walk-2head/）で立たせる。背景は味方の絵のないもの（ruins-noparty.png）を使う
   背景.png: 戦闘画面（論理 400×225）から敵を抜いたもの。ゲームの描画（battle-renderer.ts）で作る
   ボスの anim.json: boss_rig.py の出力（両手を振り上げるコマを「となえる姿」に使う）
@@ -54,7 +55,7 @@ def main():
         for idx, nm in enumerate(["ユーリ", "レト", "ミナ", "ガイド"]):
             d = json.load(open(f"{pdir}/{nm}.json"))
             pal = {S[i]: c for i, c in enumerate(d["palette"])}
-            imgs = {k: Image.fromarray(rows_rgba(d["frames"][k], pal), "RGBA") for k in ("left0", "hurt_left", "shock_left", "flash_left") if k in d["frames"]}
+            imgs = {k: Image.fromarray(rows_rgba(d["frames"][k], pal), "RGBA") for k in ("left0", "hurt_left", "shock_left", "flash_left", "burn_left") if k in d["frames"]}
             row, col = idx % 2, idx // 2
             party.append((imgs, 400 - 40 - col * 30 - row * 14, 225 - 56 - 4 - row * 18))
     BOLT_STATE = {3: "flash_left", 4: "shock_left", 5: "hurt_left", 6: "shock_left", 7: "hurt_left", 8: "shock_left"}
@@ -64,6 +65,8 @@ def main():
         """そのコマでの、味方それぞれの（絵, 後ろへのずれ）"""
         st = [("left0", 0)] * len(party)
         for name, i, _ in effs:
+            for m, key, dx in fx[name]["frames"][i].get("party", []):   # エフェクトのコマに書いてある、当たった味方の絵（炎の術など）
+                if m < len(st): st[m] = (key, dx)
             if name == "bolt" and party:
                 if i in BOLT_STATE: st[0] = (BOLT_STATE[i], 2)
                 elif 9 <= i: st[0] = ("hurt_left", 1)
@@ -78,7 +81,7 @@ def main():
 
     def draw_party(img, states, glowing):
         for (imgs, x, feet), (key, dx) in zip(party, states):
-            if (key in ("flash_left", "shock_left")) != glowing:
+            if (key in ("flash_left", "shock_left", "burn_left")) != glowing:
                 continue
             spr = imgs.get(key, imgs["left0"])
             if not glowing:
@@ -94,7 +97,14 @@ def main():
             boss_cache[(key, i)] = Image.fromarray(a, "RGBA").resize((BOSS_SIZE, BOSS_SIZE), Image.LANCZOS)
         return boss_cache[(key, i)]
 
-    fx = {n: json.load(open(f"{fxdir}/{n}.json")) for n in ("charge", "bolt", "storm", "aura") if os.path.exists(f"{fxdir}/{n}.json")}
+    # --set lightning（雷）/ fire（炎）: 1人用・全体用のエフェクトの名前と、画面のどこに合わせるか、字幕
+    kind = args[args.index("--set") + 1] if "--set" in args else "lightning"
+    SETS = {
+        "lightning": ("bolt", [PARTY_FEET[0]], "storm", [PARTY_MID], "雷の術", "落雷・1人", "雷の嵐・全体"),
+        "fire": ("fireball", [(0, 0)], "pillars", [PARTY_MID], "炎の術", "火球・1人", "火柱・全体"),
+    }
+    single, s_anchor, allfx, a_anchor, label, l1, l2 = SETS[kind]
+    fx = {n: json.load(open(f"{fxdir}/{n}.json")) for n in ("charge", single, allfx, "aura") if os.path.exists(f"{fxdir}/{n}.json")}
     fx_cache = {}
 
     def fx_img(n, i, key="rows"):
@@ -130,15 +140,15 @@ def main():
                 effs.append(("aura", na, (BOSS_X, BOSS_Y)))
             seq.append((pose, effs, f["ms"], cap))
 
-    caps = ["雷の術（発動・ため → 落雷・1人）", "雷の術（発動・ため → 雷の嵐・全体）"]
-    idle(700, caps[0]); cast(caps[0]); play("bolt", [PARTY_FEET[0]], caps[0]); idle(900, caps[0])
-    cast(caps[1]); play("storm", [PARTY_MID], caps[1]); idle(1000, caps[1])
+    caps = [f"{label}（発動・ため → {l1}）", f"{label}（発動・ため → {l2}）"]
+    idle(700, caps[0]); cast(caps[0]); play(single, s_anchor, caps[0]); idle(900, caps[0])
+    cast(caps[1]); play(allfx, a_anchor, caps[1]); idle(1000, caps[1])
     if slow:
         fx_names = None
-        c = f"ゆっくり（{int(slow)}倍おそく）: 発動 → 落雷・1人"
+        c = f"ゆっくり（{int(slow)}倍おそく）: 発動 → {l1}"
         seq += [(p, e, ms * slow, c) for p, e, ms, _ in [s for s in seq if s[1] and s[3] == caps[0]]]
         idle(500, c)
-        c = f"ゆっくり（{int(slow)}倍おそく）: 発動 → 雷の嵐・全体"
+        c = f"ゆっくり（{int(slow)}倍おそく）: 発動 → {l2}"
         seq += [(p, e, ms * slow, c) for p, e, ms, _ in [s for s in seq if s[1] and s[3] == caps[1]]]
         idle(800, c)
 
@@ -166,6 +176,8 @@ def main():
         img.paste(bi, (BOSS_X, BOSS_Y), bi)
         for name, i, (sx, sy) in effs:
             f = fx[name]["frames"][i]; ax, ay = fx[name]["anchor"]
+            if "at" in f:          # コマごとに画面の置き場所がある（飛んでいく火の玉など）
+                sx, sy = f["at"]
             im = fx_img(name, i)
             ox, oy = sx - ax + f["x"], sy - ay + f["y"]
             # 戦闘の場（上の169）の中だけに描く
@@ -173,11 +185,12 @@ def main():
             if crop_h > 0:
                 part = im.crop((0, 0, im.width, crop_h))
                 img.paste(part, (ox, oy), part)
-        # 白・しびれの姿は、光っているので暗くせず、稲妻より手前に描く（稲妻にかくれて、ダメージの絵が見えなかった）
+        # 白・しびれ・燃える姿は、光っているので暗くせず、稲妻・炎より手前に描く（稲妻にかくれて、ダメージの絵が見えなかった）
         draw_party(img, pst, True)
         a = np.array(img).astype(float)
         if f0["flash"]:
-            a[:FIELD_H] = a[:FIELD_H] * (1 - f0["flash"] * 0.6) + 255 * f0["flash"] * 0.6
+            fc = np.array(hex_rgb(f0.get("flash_color", "#ffffff")))
+            a[:FIELD_H] = a[:FIELD_H] * (1 - f0["flash"] * 0.6) + fc * f0["flash"] * 0.6
         if f0["shake"]:
             s = f0["shake"] * (1 if k % 2 else -1)
             a[:FIELD_H] = np.roll(a[:FIELD_H], s, axis=1)

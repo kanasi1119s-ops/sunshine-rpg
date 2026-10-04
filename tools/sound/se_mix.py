@@ -3,6 +3,7 @@
 使い方:
   python3 se_mix.py lightning 動画.mp4 出力.mp4            # fx_preview.py の動画（雷の術）
   python3 se_mix.py attack 動画.mp4 出力.mp4 [--bgm 曲.mp3 --bgm-gain 0.3]   # anim_clip.py の動画（歩く・攻撃）
+  python3 se_mix.py fx 動画.mp4 出力.mp4 --fxdir エフェクトのフォルダ [--bgm ...]   # コマに se を書いたエフェクト（炎の術など）
 効果音は assets-src/se/（tools/sound/se_synth.py で作る）。
 """
 import json
@@ -49,6 +50,18 @@ def events_lightning(tl):
     return ev
 
 
+def events_fx(tl, fxdir):
+    """エフェクトのコマに書いてある効果音（"se": [[名前, 音量], ...]）を、そのコマの時刻に鳴らす（炎の術など）"""
+    cache, ev = {}, []
+    for e in tl:
+        for name, i in e["effs"]:
+            if name not in cache:
+                cache[name] = json.load(open(os.path.join(fxdir, name + ".json")))
+            for se, g in cache[name]["frames"][i].get("se", []):
+                ev.append((e["t"], se, g))
+    return ev
+
+
 def events_attack(tl):
     ev = []
     for e in tl:
@@ -77,7 +90,12 @@ def main():
     dur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", video],
                                capture_output=True, text=True).stdout)
     mix = np.zeros((int(SR * (dur + 1)), 2))
-    ev = events_lightning(tl) if mode == "lightning" else events_attack(tl)
+    if mode == "lightning":
+        ev = events_lightning(tl)
+    elif mode == "fx":
+        ev = events_fx(tl, a[a.index("--fxdir") + 1])
+    else:
+        ev = events_attack(tl)
     cache = {}
     for t, name, g in ev:
         if name not in cache: cache[name] = load(name)

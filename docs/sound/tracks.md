@@ -122,6 +122,7 @@
 
 - 作り方: `tools/sound/se_synth.py`（ノイズと正弦波から一から合成。録音素材・既存作品の音は使わない）。置き場所は `assets-src/se/`（48kHz・ステレオ・WAV）。
 - 雷（`lightning/`）: cast（発動とため。低いうなりが上がり、ぱちぱちが増え、最後にはじける）・leader（先がけのジジッ）・strike（裂ける音→どん→ゴロゴロ）・restrike（光りなおし）・crack1〜3（嵐の1本ずつ）・storm-rumble（嵐のうなり）。
+- 炎（`fire/`）: cast（発動とため。ごうごうと燃える音がふくらみ、最後に「ボッ」）・whoosh（火の玉が飛ぶ）・explode（はじける）・erupt（火柱）・rumble（低いうなり）。どのコマで鳴らすかは、エフェクトのコマの `se` に書く。
 - 攻撃（`boss-attack/`）: windup（ため。岩がきしむ）・whoosh（振り下ろしの風切り）・impact（当たり）・slam（両手でたたきつける）・step（重い足音）。
 - 見本の動画に入れる: `tools/sound/se_mix.py`（`fx_preview.py`・`anim_clip.py` が書き出すコマの時刻 `*.timeline.json` に合わせて並べる。曲と重ねるときは曲を小さく、最後にリミッター）。見本の大きさは約 -14 LUFS。
 - ゲームにはまだつないでいない（仮）。ゲームの効果音（`se-library.ts`）は譜面で鳴らす形なので、つなぐときは WAV を読む仕組みを足すか、同じ作りを譜面に移す（工程表 FX-2）。

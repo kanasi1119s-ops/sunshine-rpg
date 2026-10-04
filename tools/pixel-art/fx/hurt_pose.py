@@ -6,6 +6,7 @@
   hurt_left  ダメージの姿: 身をすくめ（胴を1行ちぢめ、頭を1ドット下げる）、目をぎゅっとつぶり、口をあける
   shock_left しびれ（雷に打たれた瞬間）: hurt_left と同じ形で、ふちを白く、中を青くした色（光る）
   flash_left 当たった瞬間: 体ぜんぶを白く（1コマだけ）
+  burn_left  燃える（炎に当たった瞬間）: hurt_left と同じ形で、ふちを暗い赤、中を赤・橙・黄に
 2頭身の型（field_templates.py）では、左向きの目は (14,5)(15,5)、顔の肌は (13,4) の色（ここを変えるのは、ちぢめる前）。
 """
 import json
@@ -67,10 +68,25 @@ def make(d):
                 o += DB if v < 90 else (BL if v < 170 else CY)
         shock.append(o)
     flash = ["".join(W if ch != "." else "." for ch in r) for r in d["frames"]["left0"]]
+    # 燃える（炎に当たった瞬間）: ひるむ姿を、ふちは暗い赤、中は明るさで 赤・橙・黄 にする
+    burn_cols = ["#5a1410", "#b8321a", "#ff7a2a", "#ffd36b"]
+    newpal += burn_cols
+    BM, BR, BO, BY = (L(base + 4 + i) for i in range(4))
+    burn = []
+    for r in hurt:
+        o = ""
+        for ch in r:
+            if ch == ".": o += "."
+            elif ch == ink: o += BM
+            else:
+                v = lum(sym[ch]); o += BR if v < 90 else (BO if v < 170 else BY)
+        burn.append(o)
     d["palette"] = newpal
     d["frames"]["hurt_left"] = hurt
     d["frames"]["shock_left"] = shock
     d["frames"]["flash_left"] = flash
+    d["frames"]["burn_left"] = burn
+    d["added_colors"] = len(newpal) - len(pal)
     return d
 
 
@@ -82,9 +98,9 @@ if __name__ == "__main__":
         p = os.path.join(folder, fn)
         d = json.load(open(p))
         if "hurt_left" in d["frames"]:          # 作りなおすときは、足した色と絵を外してから
-            d["palette"] = d["palette"][: len(d["palette"]) - 4]
-            for k in ("hurt_left", "shock_left", "flash_left"):
-                d["frames"].pop(k)
+            d["palette"] = d["palette"][: len(d["palette"]) - d.pop("added_colors", 4)]
+            for k in ("hurt_left", "shock_left", "flash_left", "burn_left", "soot_left"):
+                d["frames"].pop(k, None)
         d = make(d)
         json.dump(d, open(p, "w"), ensure_ascii=False)
         print(fn, "色", len(d["palette"]), "コマ", len(d["frames"]))
