@@ -285,7 +285,7 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   }
   currentMapId = mapId;
   map = createTileMap(data);
-  npcs = WORLD_NPCS[mapId] ?? [];
+  npcs = withoutJoinedCompanions(WORLD_NPCS[mapId] ?? []);
   player = { ...player, x: tileX * map.data.tileWidth, y: tileY * map.data.tileHeight };
   partyTrail.reset(player);
   vehicle = "foot";
@@ -774,6 +774,19 @@ const COMPANION_JOIN_FLAGS: { flag: string; companionId: string }[] = [
   { flag: "chapter6_ayame_joined", companionId: AYAME.id },
 ];
 
+/** 仲間になった人は、もう町や家にはいない（いっしょに歩く）ので、その場所のNPCから外す。 */
+const COMPANION_NPC_IDS: Record<string, string> = {
+  "touri-reto": "chapter0_reto_joined",
+  "mugikano-mina": "chapter1_mina_joined",
+  "garasuko-guide": "chapter2_guide_joined",
+  "tetsukusari-orca": "chapter3_orca_joined",
+  "shimohara-ayame": "chapter6_ayame_joined",
+};
+
+function withoutJoinedCompanions(list: typeof npcs): typeof npcs {
+  return list.filter((npc) => !(COMPANION_NPC_IDS[npc.id] && flags[COMPANION_NPC_IDS[npc.id]]));
+}
+
 function syncCompanionsFromFlags(): void {
   for (const { flag, companionId } of COMPANION_JOIN_FLAGS) {
     if (flags[flag] && !(companionId in companionStats)) {
@@ -1238,6 +1251,10 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
 const loop = createGameLoop({
   update(dtMs) {
     syncCompanionsFromFlags();
+    // 会話が終わったあと（仲間になった直後）に、その人を場所から外す
+    if (!dialogue.isActive() && npcs.some((n) => COMPANION_NPC_IDS[n.id] && flags[COMPANION_NPC_IDS[n.id]])) {
+      npcs = withoutJoinedCompanions(npcs);
+    }
 
     if (saveMessageTimer > 0) {
       saveMessageTimer -= dtMs;
