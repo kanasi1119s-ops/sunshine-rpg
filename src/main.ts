@@ -2114,7 +2114,7 @@ const loop = createGameLoop({
         if (vehicleHint.ms <= 0) vehicleHint = null;
       }
     }
-    partyTrail.update(player, dtMs, followerSpecs().length);
+    partyTrail.update(player, dtMs, followerSpecs().length, Math.max(1, (onWorld ? VEHICLE_SPEED[vehicle] : 1) * MOVE_SPEEDS[moveSpeed].factor));
     updateWander(
       npcs,
       map,

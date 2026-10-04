@@ -48,8 +48,8 @@ export class PartyTrail {
     this.followers = this.followers.map(() => ({ seq: 0, moving: false, animMs: 0 }));
   }
 
-  /** 毎フレーム呼ぶ。`count` は、ついてくる仲間の人数。 */
-  update(player: PlayerState, dtMs: number, count: number): void {
+  /** 毎フレーム呼ぶ。`count` は、ついてくる仲間の人数。`speed` は、主人公の歩く速さの倍率（速く歩くとき、仲間も同じだけ速く追いかける）。 */
+  update(player: PlayerState, dtMs: number, count: number, speed = 1): void {
     if (this.crumbs.length === 0) {
       this.reset(player);
     }
@@ -78,10 +78,10 @@ export class PartyTrail {
       const target = Math.max(this.base, this.latestSeq - GAP_CRUMBS * (i + 1));
       f.seq = Math.max(this.base, f.seq);
       if (f.seq < target) {
-        f.seq = Math.min(target, f.seq + (CHASE_SPEED * dtMs) / 1000);
+        f.seq = Math.min(target, f.seq + (CHASE_SPEED * speed * dtMs) / 1000);
         f.idleMs = 0;
         f.moving = true;
-        f.animMs += dtMs;
+        f.animMs += dtMs * speed;
       } else {
         f.idleMs = (f.idleMs ?? 0) + dtMs;
         if (f.idleMs >= STOP_GRACE_MS) {

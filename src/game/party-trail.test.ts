@@ -64,4 +64,13 @@ describe("隊列（仲間が後ろをついてくる）", () => {
     expect(trail.followerAt(0)).toBeNull();
     expect(trail.count).toBe(0);
   });
+
+  it("主人公が速く歩いても、仲間は同じ速さで追いかけ、間があきすぎない", () => {
+    const trail = new PartyTrail();
+    trail.reset(at(0, 0));
+    // 1.75倍速: 1フレームで主人公が約1.8ドット進む（毎秒112ドット）（仲間の追いかけも1.75倍にする）
+    for (let f = 1; f <= 120; f++) trail.update(at(f * 1.8, 0), 16, 1, 1.75);
+    const a = trail.followerAt(0)!;
+    expect(120 * 1.8 - a.x).toBeLessThanOrEqual(GAP_PX + 6);
+  });
 });
