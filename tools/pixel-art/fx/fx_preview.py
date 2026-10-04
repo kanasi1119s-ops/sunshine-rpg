@@ -45,22 +45,46 @@ def main():
     base = np.array(Image.open(bg_none).convert("RGB"))
     named = np.array(Image.open(bg_boss).convert("RGB"))
     base[134:162, 0:170] = named[134:162, 0:170]          # ボスの名前とHP
-    # --party フォルダ: 新しい2頭身の歩く絵（16×32、"left0" が左＝敵の方を向いた絵）を、ゲームと同じ位置に立たせる
+    # --party フォルダ: 新しい2頭身の歩く絵（16×32）を、ゲームと同じ位置に立たせる。
+    # "left0"（敵の方を向いた絵）。雷に当たると flash_left（白）→ shock_left（しびれ）⇄ hurt_left（ひるむ）になり、2ドット後ろへ飛ばされる
+    party = []
     if "--party" in args:
         pdir = args[args.index("--party") + 1]
-        names = ["ユーリ", "レト", "ミナ", "ガイド"]
-        img = Image.fromarray(base)
-        for idx, nm in enumerate(names):
+        S = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+        for idx, nm in enumerate(["ユーリ", "レト", "ミナ", "ガイド"]):
             d = json.load(open(f"{pdir}/{nm}.json"))
-            pal = {chr(65 + i): c for i, c in enumerate(d["palette"])}
-            spr = Image.fromarray(rows_rgba(d["frames"]["left0"], pal), "RGBA")
+            pal = {S[i]: c for i, c in enumerate(d["palette"])}
+            imgs = {k: Image.fromarray(rows_rgba(d["frames"][k], pal), "RGBA") for k in ("left0", "hurt_left", "shock_left", "flash_left") if k in d["frames"]}
             row, col = idx % 2, idx // 2
-            feet = 225 - 56 - 4 - row * 18
-            x = 400 - 40 - col * 30 - row * 14
-            sh = Image.new("RGBA", (14, 3), (0, 0, 0, 71))
-            img.paste(sh, (x + 1, feet - 2), sh)
-            img.paste(spr, (x, feet - 29), spr)
-        base = np.array(img.convert("RGB"))
+            party.append((imgs, 400 - 40 - col * 30 - row * 14, 225 - 56 - 4 - row * 18))
+    BOLT_STATE = {3: "flash_left", 4: "shock_left", 5: "hurt_left", 6: "shock_left", 7: "hurt_left", 8: "shock_left"}
+    STORM_ORDER = [4, 0, 2, 5, 1, 3]          # lightning.py の make_storm と同じ（0〜3 が味方4人）
+
+    def party_state(effs):
+        """そのコマでの、味方それぞれの（絵, 後ろへのずれ）"""
+        st = [("left0", 0)] * len(party)
+        for name, i, _ in effs:
+            if name == "bolt" and party:
+                if i in BOLT_STATE: st[0] = (BOLT_STATE[i], 2)
+                elif 9 <= i: st[0] = ("hurt_left", 1)
+            if name == "storm":
+                for k in range(min(4, len(party))):
+                    sidx = i - (2 + 2 * STORM_ORDER.index(k))
+                    if sidx == 1: st[k] = ("flash_left", 2)
+                    elif sidx in (2, 4): st[k] = ("shock_left", 2)
+                    elif sidx in (3, 5): st[k] = ("hurt_left", 2)
+                    elif sidx >= 6: st[k] = ("hurt_left", 1)
+        return st
+
+    def draw_party(img, states, glowing):
+        for (imgs, x, feet), (key, dx) in zip(party, states):
+            if (key in ("flash_left", "shock_left")) != glowing:
+                continue
+            spr = imgs.get(key, imgs["left0"])
+            if not glowing:
+                sh = Image.new("RGBA", (14, 3), (0, 0, 0, 71))
+                img.paste(sh, (x + 1 + dx, feet - 2), sh)
+            img.paste(spr, (x + dx, feet - 29), spr)
     anim = json.load(open(animp)); apal = anim["palette"]
     boss_cache = {}
 
@@ -124,7 +148,10 @@ def main():
     for k, (pose, effs, ms, cap) in enumerate(seq):
         f0 = fx[effs[0][0]]["frames"][effs[0][1]] if effs else {"dim": 0, "flash": 0, "shake": 0}
         dk = f0["dim"] * 0.72
-        a = base.copy().astype(float)
+        pst = party_state(effs)
+        img = Image.fromarray(base.copy())
+        draw_party(img, pst, False)                 # ふつう・ひるむ姿は、画面といっしょに暗くする
+        a = np.array(img).astype(float)
         a[:FIELD_H] = a[:FIELD_H] * (1 - dk) + np.array([18, 8, 40]) * dk
         img = Image.fromarray(a.astype(np.uint8))
         # 発動のエフェクトの奥の半分（ボスのうしろ）
@@ -146,6 +173,8 @@ def main():
             if crop_h > 0:
                 part = im.crop((0, 0, im.width, crop_h))
                 img.paste(part, (ox, oy), part)
+        # 白・しびれの姿は、光っているので暗くせず、稲妻より手前に描く（稲妻にかくれて、ダメージの絵が見えなかった）
+        draw_party(img, pst, True)
         a = np.array(img).astype(float)
         if f0["flash"]:
             a[:FIELD_H] = a[:FIELD_H] * (1 - f0["flash"] * 0.6) + 255 * f0["flash"] * 0.6
