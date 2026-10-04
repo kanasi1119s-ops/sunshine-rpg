@@ -170,6 +170,15 @@ export function enemyStatsForLevel(level: number): { maxHp: number; attack: numb
 }
 
 /** 出会うのは1〜3体（tierが低いうちは少なめ）。 */
+/** 形ごとの状態異常攻撃（毒＝さそり・虫、混乱＝目、眠り＝影）。序盤（レベル3まで）はかからない。 */
+function statusAttackFor(shape: MonsterShape, level: number): { inflicts?: NonNullable<Combatant["inflicts"]> } {
+  if (level < 4) return {};
+  if (shape === "scorpion" || shape === "beetle") return { inflicts: { status: "poison", chance: 0.3, turns: 3 } };
+  if (shape === "eye") return { inflicts: { status: "confuse", chance: 0.3, turns: 2 } };
+  if (shape === "ghost") return { inflicts: { status: "sleep", chance: 0.25, turns: 2 } };
+  return {};
+}
+
 export function createEncounterEnemies(mapId: string, zone: EncounterZone, rng: () => number): Combatant[] {
   const maxCount = zone.level <= 6 ? 2 : 3;
   const count = 1 + Math.floor(rng() * maxCount);
@@ -191,6 +200,7 @@ export function createEncounterEnemies(mapId: string, zone: EncounterZone, rng: 
       isEnemy: true,
       guarding: false,
       expReward: stats.expReward,
+      ...statusAttackFor(shapeForName(zone.names[variant], variant), zone.level),
     });
   }
   return enemies;

@@ -36,6 +36,8 @@ export interface SaveData {
   /** モード（"easy" | "normal"）と、ノーマルで持ち越すHP・MP。古いセーブには無い（オプション）。 */
   difficulty?: "easy" | "normal";
   vitals?: Record<string, { hp: number; mp: number }>;
+  /** ゲームの中の時間（ミリ秒。0＝朝）。古いセーブには無い（オプション）。 */
+  clockMs?: number;
   /** 世界地図の乗り物（船・飛空艇の置き場所と、いま乗っているもの）。古いセーブには無い（オプション）。 */
   vehicles?: { mode: "foot" | "ship" | "air"; ship: { x: number; y: number }; airship: { x: number; y: number } };
 }

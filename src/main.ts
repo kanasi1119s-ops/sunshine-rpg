@@ -76,6 +76,7 @@ import { CHAPTER4_OPENING_COMMANDS } from "./game/world/chapter4-world";
 import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
+import { dayFraction, isNight, isOutdoorMap, nextMorning, nightness, periodLabel, staysOutAtNight, warmGlow } from "./game/time-of-day";
 import { backFieldUse, confirmFieldUse, createFieldUseState, moveFieldUse, openFieldUse, refreshFieldUse, type FieldUseApply, type FieldUseOption } from "./game/menu/field-use";
 import { renderFieldUse } from "./render/field-use-renderer";
 import { cycleDifficulty, loadDifficulty, saveDifficulty, isDifficulty, type Difficulty } from "./game/difficulty";
@@ -469,6 +470,7 @@ const dialogue = new DialogueController(flags, {
     if (paid === null) return false;
     gold = paid;
     vitals = {};           // 宿屋では、HP・MPが全快する
+    clockMs = nextMorning(clockMs);   // 朝になる
     if (audioStarted) audio.playSe(seOf("level-up"));
     autosave();
     return true;
@@ -660,6 +662,7 @@ if (import.meta.env.DEV) {
   // 開発用: ブラウザの自動確認（全地図の見た目・エラーの点検）から、地図を切り替えるための入口。
   (window as unknown as { __sunshine: unknown }).__sunshine = {
     mapIds: Object.keys(WORLD_MAPS),
+    setClock: (ms: number) => { clockMs = ms; },
     warp: (mapId: string, tileX: number, tileY: number) => switchMap(mapId, tileX, tileY),
     startNew: () => {
       bootOpening = { ...bootOpening, open: false };
@@ -866,6 +869,8 @@ let controlsMenu = createControlsMenuState();
 let moveSpeed = loadMoveSpeed(window.localStorage);
 /** モード（イージー＝戦闘後に全快、ノーマル＝ダメージ持ち越し）。ブラウザに保存し、セーブにも入れる。 */
 let difficulty: Difficulty = loadDifficulty(window.localStorage);
+/** ゲームの中の時間（ミリ秒）。外を歩いている間だけ進む。0＝朝。夜は町の人が減り、画面が暗くなる。 */
+let clockMs = 0;
 /** ノーマルで持ち越す、今のHP・MP（入っていない人は全快）。イージーでは使わない。 */
 let vitals: Vitals = {};
 function setDifficulty(next: Difficulty): void {
@@ -1193,7 +1198,9 @@ function withoutJoinedCompanions(list: typeof npcs): typeof npcs {
     (npc) =>
       !(COMPANION_NPC_IDS[npc.id] && flags[COMPANION_NPC_IDS[npc.id]]) &&
       !(npc.hideWhenFlag && flags[npc.hideWhenFlag]) &&
-      !(npc.showWhenFlag && !flags[npc.showWhenFlag]),
+      !(npc.showWhenFlag && !flags[npc.showWhenFlag]) &&
+      // 夜は、ぶらぶら歩いている町の人が減る
+      !(npc.wander && isOutdoorMap(currentMapId) && isNight(clockMs) && !staysOutAtNight(npc.id)),
   );
 }
 
@@ -1333,6 +1340,7 @@ function buildSaveData(): SaveData {
     flags,
     difficulty,
     vitals,
+    clockMs,
     vehicles: {
       mode: vehicle,
       // 船に乗っている間は、船は自分のいる場所にある
@@ -1357,6 +1365,7 @@ function applySaveData(data: SaveData): void {
   gold = data.gold ?? 0;
   if (isDifficulty(data.difficulty)) setDifficulty(data.difficulty);
   vitals = difficulty === "normal" ? { ...(data.vitals ?? {}) } : {};
+  clockMs = data.clockMs ?? 0;
   for (const key of Object.keys(flags)) {
     delete flags[key];
   }
@@ -1391,6 +1400,7 @@ function resetToNewGame(): void {
   inventory = createInventory();
   syncEquipmentToInventory();
   vitals = {};
+  clockMs = 0;
   gold = 0;
   for (const key of Object.keys(flags)) {
     delete flags[key];
@@ -1940,6 +1950,36 @@ function renderGameSceneBase(): void {
     }
   }
 
+  // 夜の色（外の地図だけ）。夕方はあかね色、夜は青く暗く
+  if (isOutdoorMap(currentMapId)) {
+    const f = dayFraction(clockMs);
+    const n = nightness(f);
+    const glow = warmGlow(f);
+    if (glow > 0.02) {
+      ctx.fillStyle = `rgba(255, 140, 60, ${0.2 * glow})`;
+      ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    }
+    if (n > 0.01) {
+      ctx.save();
+      ctx.globalCompositeOperation = "multiply";
+      const lerp = (a: number, b: number): number => Math.round(a + (b - a) * n);
+      ctx.fillStyle = `rgb(${lerp(255, 78)}, ${lerp(255, 92)}, ${lerp(255, 158)})`;
+      ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+      ctx.restore();
+      ctx.fillStyle = `rgba(16, 24, 80, ${0.14 * n})`;
+      ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    }
+    // 時間の表示（小さく、右上）
+    ctx.font = "9px monospace";
+    ctx.textBaseline = "top";
+    ctx.textAlign = "right";
+    ctx.fillStyle = "rgba(10,14,34,0.55)";
+    ctx.fillRect(LOGICAL_WIDTH - 40, 17, 37, 12);
+    ctx.fillStyle = n >= 0.7 ? "#a8b8ff" : "#f2c14e";
+    ctx.fillText(`${n >= 0.7 ? "☾" : "☀"} ${periodLabel(clockMs)}`, LOGICAL_WIDTH - 6, 19);
+    ctx.textAlign = "left";
+  }
+
   const dialogueState = dialogue.getRenderState();
   if (dialogueState) {
     renderDialogue(ctx, dialogueState, LOGICAL_WIDTH, LOGICAL_HEIGHT);
@@ -1989,6 +2029,10 @@ function renderGameScene(): void {
 const loop = createGameLoop({
   update(dtMs) {
     syncCompanionsFromFlags();
+    // 外を歩いている間だけ、時間が進む（メニュー・会話・戦闘・タイトルのあいだは止まる）
+    if (!title.open && !battle && !bootOpening.open && !opening.open && !staffRoll.open && !pauseMenu.open && !shopMenu.open && !jobMenu.open && !fieldUse.open && !slotMenu.open && !dialogue.isActive() && isOutdoorMap(currentMapId)) {
+      clockMs += dtMs;
+    }
     // 開けた宝箱は、ふたが開いた絵にする
     setOpenedChests(new Set(npcs.filter((n) => n.openedFlag && flags[n.openedFlag]).map((n) => n.id)));
     // 会話が終わったあと（仲間になった直後）に、その人を場所から外す
