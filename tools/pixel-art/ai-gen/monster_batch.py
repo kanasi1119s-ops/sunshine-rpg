@@ -127,7 +127,8 @@ def cmd_draft(ids, seeds=4):
         assert e["prompt"], f"{i}: 名簿の prompt（英語の指示文）を先に書く"
         kind = "boss" if e["kind"] == "boss" else "monster"
         desc = e["prompt"] if "facing right" in e["prompt"] else e["prompt"] + ", facing right"
-        subprocess.run(["python3", f"{AI}/make_jobs.py", kind, f"{WORK}/j.json", f"{i}:{desc}", "--seeds", str(seeds)], check=True, cwd=WORK)
+        extra = ["--seed-base", os.environ["SEED_BASE"]] if os.environ.get("SEED_BASE") else []   # 描き直すときは別の種で
+        subprocess.run(["python3", f"{AI}/make_jobs.py", kind, f"{WORK}/j.json", f"{i}:{desc}", "--seeds", str(seeds)] + extra, check=True, cwd=WORK)
         js = json.load(open(f"{WORK}/j.json"))
         # 置き場所の下書き（layouts.py）から描く: 名簿の shape（形）と tone（体のおおまかな色）を使う
         for j in js:

@@ -17,7 +17,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 BG = (244, 242, 238)
-SHAPES = ("ground", "float", "tall", "long", "winged", "big")
+SHAPES = ("ground", "float", "tall", "long", "winged", "big", "ring")
 
 
 def _mask(shape, rng):
@@ -55,6 +55,10 @@ def _mask(shape, rng):
         d.ellipse((j(305), j(90), j(415), j(200)), 255)
         for x in (145, 315):
             d.rectangle((j(x), 380, j(x) + 55, j(445)), 255)
+    elif shape == "ring":   # 浮かぶ輪（全環など）。輪の真ん中に丸い芯（目）
+        r0 = 170 + int(rng.integers(-8, 9)); r1 = r0 - 46
+        d.ellipse((256 - r0, 250 - r0, 256 + r0, 250 + r0), 255); d.ellipse((256 - r1, 250 - r1, 256 + r1, 250 + r1), 0)
+        d.ellipse((j(216), j(210), j(296), j(290)), 255)
     else:
         raise ValueError(f"形は {SHAPES} のどれか: {shape}")
     return m
@@ -72,7 +76,7 @@ def make_layout(shape="ground", tone=(110, 100, 95), seed=0):
     bg = np.asarray(BG, np.float32)[None, None, :] * np.ones((512, 512, 1), np.float32)
     shadow = np.zeros((512, 512), np.float32)
     ys = np.nonzero(np.asarray(m))[0]
-    if len(ys) and shape != "float":
+    if len(ys) and shape not in ("float", "ring"):
         bottom = ys.max()
         shadow = np.exp(-(((yy - bottom) / 10) ** 2) - (((xx - 256) / 150) ** 2)) * 0.18
     elif len(ys):

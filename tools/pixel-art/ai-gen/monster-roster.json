@@ -69,143 +69,227 @@
  },
  {
   "id": "enc-touri-outskirts-4",
-  "prompt": "",
+  "prompt": "a small lost bat with tattered purple wings, a lantern-like glowing belly and big round ears",
   "status": "todo",
   "key": "enemy:enc-touri-outskirts-4",
   "kind": "mob",
   "name": "迷いこうもり",
   "zone": "touri-outskirts",
-  "level": 2
+  "level": 2,
+  "shape": "winged",
+  "tone": [
+   90,
+   70,
+   110
+  ]
  },
  {
   "id": "enc-touri-outskirts-5",
-  "prompt": "",
+  "prompt": "a small walking pebble creature made of grey cobblestones with stubby legs and a violet crack for a mouth",
   "status": "todo",
   "key": "enemy:enc-touri-outskirts-5",
   "kind": "mob",
   "name": "小石のかけら",
   "zone": "touri-outskirts",
-  "level": 2
+  "level": 2,
+  "shape": "ground",
+  "tone": [
+   125,
+   120,
+   115
+  ]
  },
  {
   "id": "enc-mugikano-water-source-0",
-  "prompt": "",
+  "prompt": "a hovering water spirit shaped like a long teardrop with a glassy surface, a single dark eye and trailing water ribbons",
   "status": "todo",
   "key": "enemy:enc-mugikano-water-source-0",
   "kind": "mob",
   "name": "水のしずく影",
   "zone": "mugikano-water-source",
-  "level": 4
+  "level": 4,
+  "shape": "float",
+  "tone": [
+   90,
+   140,
+   190
+  ]
  },
  {
   "id": "enc-mugikano-water-source-1",
-  "prompt": "",
+  "prompt": "a creature made of cracked dry rice-paddy earth and withered rice stalks, with hollow glowing purple eyes, on four legs",
   "status": "todo",
   "key": "enemy:enc-mugikano-water-source-1",
   "kind": "mob",
   "name": "涸れ田の歪み",
   "zone": "mugikano-water-source",
-  "level": 4
+  "level": 4,
+  "shape": "ground",
+  "tone": [
+   150,
+   125,
+   85
+  ]
  },
  {
   "id": "enc-mugikano-water-source-2",
-  "prompt": "",
+  "prompt": "a cave bat with a miner's broken lamp hanging from its neck, stone-grey fur, wide leathery wings",
   "status": "todo",
   "key": "enemy:enc-mugikano-water-source-2",
   "kind": "mob",
   "name": "採掘跡のこうもり",
   "zone": "mugikano-water-source",
-  "level": 4
+  "level": 4,
+  "shape": "winged",
+  "tone": [
+   100,
+   95,
+   90
+  ]
  },
  {
   "id": "enc-mugikano-water-source-3",
-  "prompt": "",
+  "prompt": "a long water-channel insect like a water strider with very long thin legs and a shiny blue-green shell",
   "status": "todo",
   "key": "enemy:enc-mugikano-water-source-3",
   "kind": "mob",
   "name": "用水路の虫",
   "zone": "mugikano-water-source",
-  "level": 4
+  "level": 4,
+  "shape": "long",
+  "tone": [
+   70,
+   120,
+   110
+  ]
  },
  {
   "id": "enc-mugikano-water-source-4",
-  "prompt": "",
+  "prompt": "a lumpy creature of wet brown mud with pebbles stuck in it, two stalk eyes and dripping arms",
   "status": "todo",
   "key": "enemy:enc-mugikano-water-source-4",
   "kind": "mob",
   "name": "泥のしずく",
   "zone": "mugikano-water-source",
-  "level": 4
+  "level": 4,
+  "shape": "big",
+  "tone": [
+   110,
+   85,
+   60
+  ]
  },
  {
   "id": "enc-mugikano-water-source-5",
-  "prompt": "",
+  "prompt": "an old stone well ring come alive, mossy bricks, a dark water mouth with a rope and bucket like a tongue",
   "status": "todo",
   "key": "enemy:enc-mugikano-water-source-5",
   "kind": "mob",
   "name": "井戸の石",
   "zone": "mugikano-water-source",
-  "level": 4
+  "level": 4,
+  "shape": "big",
+  "tone": [
+   120,
+   125,
+   110
+  ]
  },
  {
   "id": "enc-garasuko-warehouse-0",
-  "prompt": "",
+  "prompt": "a fat cargo rat with a burlap sack on its back, scarred ears, glowing amber eyes",
   "status": "todo",
   "key": "enemy:enc-garasuko-warehouse-0",
   "kind": "mob",
   "name": "積荷ねずみ",
   "zone": "garasuko-warehouse",
-  "level": 6
+  "level": 6,
+  "shape": "ground",
+  "tone": [
+   115,
+   95,
+   75
+  ]
  },
  {
   "id": "enc-garasuko-warehouse-1",
-  "prompt": "",
+  "prompt": "a damp shapeless shadow seeping from wet wooden planks, mold spots, many small dim eyes",
   "status": "todo",
   "key": "enemy:enc-garasuko-warehouse-1",
   "kind": "mob",
   "name": "湿った歪み",
   "zone": "garasuko-warehouse",
-  "level": 6
+  "level": 6,
+  "shape": "float",
+  "tone": [
+   70,
+   85,
+   80
+  ]
  },
  {
   "id": "enc-garasuko-warehouse-2",
-  "prompt": "",
+  "prompt": "a living shadow shaped like a small wooden crate with spider-like legs of dark smoke, iron corner brackets",
   "status": "todo",
   "key": "enemy:enc-garasuko-warehouse-2",
   "kind": "mob",
   "name": "木箱の影",
   "zone": "garasuko-warehouse",
-  "level": 6
+  "level": 6,
+  "shape": "ground",
+  "tone": [
+   95,
+   80,
+   65
+  ]
  },
  {
   "id": "enc-garasuko-warehouse-3",
-  "prompt": "",
+  "prompt": "a beaver-like gnawing creature with huge front teeth, coils of chewed hemp rope wrapped around its body",
   "status": "todo",
   "key": "enemy:enc-garasuko-warehouse-3",
   "kind": "mob",
   "name": "縄かじり",
   "zone": "garasuko-warehouse",
-  "level": 6
+  "level": 6,
+  "shape": "ground",
+  "tone": [
+   140,
+   110,
+   70
+  ]
  },
  {
   "id": "enc-garasuko-warehouse-4",
-  "prompt": "",
+  "prompt": "a walking wine barrel creature with iron hoops, stone-heavy legs and a cork for a nose, wood grain body",
   "status": "todo",
   "key": "enemy:enc-garasuko-warehouse-4",
   "kind": "mob",
   "name": "樽の石",
   "zone": "garasuko-warehouse",
-  "level": 6
+  "level": 6,
+  "shape": "big",
+  "tone": [
+   130,
+   90,
+   55
+  ]
  },
  {
   "id": "enc-garasuko-warehouse-5",
-  "prompt": "",
+  "prompt": "a dusty warehouse moth with grey-brown patterned wings, feathery antennae and a lamp-glow spot on each wing",
   "status": "todo",
   "key": "enemy:enc-garasuko-warehouse-5",
   "kind": "mob",
   "name": "倉庫の羽虫",
   "zone": "garasuko-warehouse",
-  "level": 6
+  "level": 6,
+  "shape": "winged",
+  "tone": [
+   150,
+   135,
+   110
+  ]
  },
  {
   "id": "enc-tetsukusari-mine-0",
@@ -220,193 +304,307 @@
  },
  {
   "id": "enc-tetsukusari-mine-1",
-  "prompt": "",
+  "prompt": "a tall thin shadow wearing a broken miner's helmet, long arms dragging a pickaxe, coal-black body",
   "status": "todo",
   "key": "enemy:enc-tetsukusari-mine-1",
   "kind": "mob",
   "name": "坑道の影",
   "zone": "tetsukusari-mine",
-  "level": 8
+  "level": 8,
+  "shape": "tall",
+  "tone": [
+   55,
+   50,
+   55
+  ]
  },
  {
   "id": "enc-tetsukusari-mine-2",
-  "prompt": "",
+  "prompt": "a glowing ore beetle with a crystal on its back that shines like a lamp, orange-gold shell",
   "status": "todo",
   "key": "enemy:enc-tetsukusari-mine-2",
   "kind": "mob",
   "name": "灯り石の虫",
   "zone": "tetsukusari-mine",
-  "level": 8
+  "level": 8,
+  "shape": "ground",
+  "tone": [
+   190,
+   140,
+   60
+  ]
  },
  {
   "id": "enc-tetsukusari-mine-3",
-  "prompt": "",
+  "prompt": "a rusty mine cart machine walking on four mechanical legs, a furnace mouth with burning coal, rivets",
   "status": "todo",
   "key": "enemy:enc-tetsukusari-mine-3",
   "kind": "mob",
   "name": "鉱車の機械",
   "zone": "tetsukusari-mine",
-  "level": 8
+  "level": 8,
+  "shape": "ground",
+  "tone": [
+   120,
+   80,
+   60
+  ]
  },
  {
   "id": "enc-tetsukusari-mine-4",
-  "prompt": "",
+  "prompt": "a creature formed from a pile of fallen rocks and timber supports, one glowing red eye between the stones",
   "status": "todo",
   "key": "enemy:enc-tetsukusari-mine-4",
   "kind": "mob",
   "name": "落盤の石",
   "zone": "tetsukusari-mine",
-  "level": 8
+  "level": 8,
+  "shape": "big",
+  "tone": [
+   110,
+   100,
+   95
+  ]
  },
  {
   "id": "enc-tetsukusari-mine-5",
-  "prompt": "",
+  "prompt": "a pale translucent echo of a miner with a lantern, faded overalls, empty glowing eyes, floating",
   "status": "todo",
   "key": "enemy:enc-tetsukusari-mine-5",
   "kind": "mob",
   "name": "鉱夫の残響",
   "zone": "tetsukusari-mine",
-  "level": 8
+  "level": 8,
+  "shape": "tall",
+  "tone": [
+   160,
+   170,
+   175
+  ]
  },
  {
   "id": "enc-sanone-camp-0",
-  "prompt": "",
+  "prompt": "a sand-burrowing creature like a mole with a flat shovel-shaped head and sandy plated back, peeking out of a sand mound",
   "status": "todo",
   "key": "enemy:enc-sanone-camp-0",
   "kind": "mob",
   "name": "砂ぬけ",
   "zone": "sanone-camp",
-  "level": 10
+  "level": 10,
+  "shape": "ground",
+  "tone": [
+   190,
+   160,
+   110
+  ]
  },
  {
   "id": "enc-sanone-camp-1",
-  "prompt": "",
+  "prompt": "a swirling wind spirit made of sand streaks and a torn caravan cloth, two bright eyes in the swirl",
   "status": "todo",
   "key": "enemy:enc-sanone-camp-1",
   "kind": "mob",
   "name": "風の影",
   "zone": "sanone-camp",
-  "level": 10
+  "level": 10,
+  "shape": "float",
+  "tone": [
+   200,
+   175,
+   130
+  ]
  },
  {
   "id": "enc-sanone-camp-2",
-  "prompt": "",
+  "prompt": "a shadowy desert scorpion with a translucent dark body, a pale glowing stinger and sand-colored pincers",
   "status": "todo",
   "key": "enemy:enc-sanone-camp-2",
   "kind": "mob",
   "name": "砂サソリの影",
   "zone": "sanone-camp",
-  "level": 10
+  "level": 10,
+  "shape": "ground",
+  "tone": [
+   110,
+   90,
+   70
+  ]
  },
  {
   "id": "enc-sanone-camp-3",
-  "prompt": "",
+  "prompt": "a heat-shimmering droplet spirit of sunlight with a dry cracked crust and a burning core, floating",
   "status": "todo",
   "key": "enemy:enc-sanone-camp-3",
   "kind": "mob",
   "name": "日照りのしずく",
   "zone": "sanone-camp",
-  "level": 10
+  "level": 10,
+  "shape": "float",
+  "tone": [
+   230,
+   180,
+   90
+  ]
  },
  {
   "id": "enc-sanone-camp-4",
-  "prompt": "",
+  "prompt": "a creature made of bleached animal bones fused with sandstone, horned skull head, walking on four bone legs",
   "status": "todo",
   "key": "enemy:enc-sanone-camp-4",
   "kind": "mob",
   "name": "骨の石",
   "zone": "sanone-camp",
-  "level": 10
+  "level": 10,
+  "shape": "ground",
+  "tone": [
+   210,
+   200,
+   175
+  ]
  },
  {
   "id": "enc-sanone-camp-5",
-  "prompt": "",
+  "prompt": "a sandstorm bird with ragged tan feathers that shed sand, a long hooked beak and goggle-like eye rings",
   "status": "todo",
   "key": "enemy:enc-sanone-camp-5",
   "kind": "mob",
   "name": "砂嵐の羽",
   "zone": "sanone-camp",
-  "level": 10
+  "level": 10,
+  "shape": "winged",
+  "tone": [
+   180,
+   145,
+   95
+  ]
  },
  {
   "id": "enc-kiri-archive-0",
-  "prompt": "",
+  "prompt": "a silverfish shadow creature with a long segmented body made of torn paper scraps, many legs, ink spots",
   "status": "todo",
   "key": "enemy:enc-kiri-archive-0",
   "kind": "mob",
   "name": "紙魚の影",
   "zone": "kiri-archive",
-  "level": 12
+  "level": 12,
+  "shape": "long",
+  "tone": [
+   170,
+   175,
+   165
+  ]
  },
  {
   "id": "enc-kiri-archive-1",
-  "prompt": "",
+  "prompt": "a whispering mist spirit with a long trailing body, a faint mouth and floating letters of light around it",
   "status": "todo",
   "key": "enemy:enc-kiri-archive-1",
   "kind": "mob",
   "name": "霧のささやき",
   "zone": "kiri-archive",
-  "level": 12
+  "level": 12,
+  "shape": "float",
+  "tone": [
+   180,
+   205,
+   200
+  ]
  },
  {
   "id": "enc-kiri-archive-2",
-  "prompt": "",
+  "prompt": "a bookworm insect with a hard leather book-cover shell, gold page edges and a curling bookmark tail",
   "status": "todo",
   "key": "enemy:enc-kiri-archive-2",
   "kind": "mob",
   "name": "古文書の虫",
   "zone": "kiri-archive",
-  "level": 12
+  "level": 12,
+  "shape": "ground",
+  "tone": [
+   120,
+   85,
+   60
+  ]
  },
  {
   "id": "enc-kiri-archive-3",
-  "prompt": "",
+  "prompt": "a floating black ink drop creature with brush-stroke tendrils, a single white eye and splatter trail",
   "status": "todo",
   "key": "enemy:enc-kiri-archive-3",
   "kind": "mob",
   "name": "墨のしずく",
   "zone": "kiri-archive",
-  "level": 12
+  "level": 12,
+  "shape": "float",
+  "tone": [
+   35,
+   35,
+   50
+  ]
  },
  {
   "id": "enc-kiri-archive-4",
-  "prompt": "",
+  "prompt": "a bookshelf guardian made of a tall wooden shelf with books, carved wooden arms holding a quill spear",
   "status": "todo",
   "key": "enemy:enc-kiri-archive-4",
   "kind": "mob",
   "name": "書架の番兵",
   "zone": "kiri-archive",
-  "level": 12
+  "level": 12,
+  "shape": "tall",
+  "tone": [
+   110,
+   80,
+   55
+  ]
  },
  {
   "id": "enc-kiri-archive-5",
-  "prompt": "",
+  "prompt": "a fog-winged owl-like spirit with misty feathers fading at the edges and pale teal glowing eyes",
   "status": "todo",
   "key": "enemy:enc-kiri-archive-5",
   "kind": "mob",
   "name": "霧の羽",
   "zone": "kiri-archive",
-  "level": 12
+  "level": 12,
+  "shape": "winged",
+  "tone": [
+   170,
+   190,
+   190
+  ]
  },
  {
   "id": "enc-shimohara-facility-0",
-  "prompt": "",
+  "prompt": "a frost-covered distortion shaped like a crouching beast of ice shards and dark violet cracks",
   "status": "todo",
   "key": "enemy:enc-shimohara-facility-0",
   "kind": "mob",
   "name": "霜の歪み",
   "zone": "shimohara-facility",
-  "level": 14
+  "level": 14,
+  "shape": "ground",
+  "tone": [
+   170,
+   200,
+   225
+  ]
  },
  {
   "id": "enc-shimohara-facility-1",
-  "prompt": "",
+  "prompt": "a shadow of an ice soldier wearing a cracked frozen helmet and long coat, holding an icicle rifle",
   "status": "todo",
   "key": "enemy:enc-shimohara-facility-1",
   "kind": "mob",
   "name": "氷の兵の影",
   "zone": "shimohara-facility",
-  "level": 14
+  "level": 14,
+  "shape": "tall",
+  "tone": [
+   120,
+   140,
+   165
+  ]
  },
  {
   "id": "enc-shimohara-facility-2",
@@ -421,1613 +619,2579 @@
  },
  {
   "id": "enc-shimohara-facility-3",
-  "prompt": "",
+  "prompt": "a creature made of tall frost column crystals growing from frozen soil, with a cold blue core",
   "status": "todo",
   "key": "enemy:enc-shimohara-facility-3",
   "kind": "mob",
   "name": "霜柱の結晶",
   "zone": "shimohara-facility",
-  "level": 14
+  "level": 14,
+  "shape": "big",
+  "tone": [
+   190,
+   220,
+   240
+  ]
  },
  {
   "id": "enc-shimohara-facility-4",
-  "prompt": "",
+  "prompt": "a long centipede-like insect crawling along cold metal pipes, frosty grey segments and blue joint lights",
   "status": "todo",
   "key": "enemy:enc-shimohara-facility-4",
   "kind": "mob",
   "name": "冷たい配管の虫",
   "zone": "shimohara-facility",
-  "level": 14
+  "level": 14,
+  "shape": "long",
+  "tone": [
+   130,
+   150,
+   160
+  ]
  },
  {
   "id": "enc-shimohara-facility-5",
-  "prompt": "",
+  "prompt": "a pale shadow of a bird with white frost feathers and smoky dark edges, piercing pale eyes",
   "status": "todo",
   "key": "enemy:enc-shimohara-facility-5",
   "kind": "mob",
   "name": "白い羽の影",
   "zone": "shimohara-facility",
-  "level": 14
+  "level": 14,
+  "shape": "winged",
+  "tone": [
+   205,
+   215,
+   225
+  ]
  },
  {
   "id": "enc-fushima-base-0",
-  "prompt": "",
+  "prompt": "a cloud shadow creature, a dark storm cloud body with small lightning eyes and wispy arms",
   "status": "todo",
   "key": "enemy:enc-fushima-base-0",
   "kind": "mob",
   "name": "雲の影",
   "zone": "fushima-base",
-  "level": 16
+  "level": 16,
+  "shape": "float",
+  "tone": [
+   120,
+   125,
+   150
+  ]
  },
  {
   "id": "enc-fushima-base-1",
-  "prompt": "",
+  "prompt": "a tangle of old electrical wires and cables forming a twisted creature with sparking ends",
   "status": "todo",
   "key": "enemy:enc-fushima-base-1",
   "kind": "mob",
   "name": "配線の歪み",
   "zone": "fushima-base",
-  "level": 16
+  "level": 16,
+  "shape": "big",
+  "tone": [
+   90,
+   90,
+   100
+  ]
  },
  {
   "id": "enc-fushima-base-2",
-  "prompt": "",
+  "prompt": "a floating surveillance eye machine, a brass ring frame with a large glass lens and small propellers",
   "status": "todo",
   "key": "enemy:enc-fushima-base-2",
   "kind": "mob",
   "name": "監視の目",
   "zone": "fushima-base",
-  "level": 16
+  "level": 16,
+  "shape": "float",
+  "tone": [
+   170,
+   140,
+   80
+  ]
  },
  {
   "id": "enc-fushima-base-3",
-  "prompt": "",
+  "prompt": "a floating stone with a small tree growing on top and hanging roots, two glowing slits in the rock",
   "status": "todo",
   "key": "enemy:enc-fushima-base-3",
   "kind": "mob",
   "name": "浮き石",
   "zone": "fushima-base",
-  "level": 16
+  "level": 16,
+  "shape": "float",
+  "tone": [
+   120,
+   115,
+   105
+  ]
  },
  {
   "id": "enc-fushima-base-4",
-  "prompt": "",
+  "prompt": "a small fluffy cloud insect with translucent wings and a cotton-like body, tiny antenna lights",
   "status": "todo",
   "key": "enemy:enc-fushima-base-4",
   "kind": "mob",
   "name": "雲の羽虫",
   "zone": "fushima-base",
-  "level": 16
+  "level": 16,
+  "shape": "winged",
+  "tone": [
+   215,
+   220,
+   235
+  ]
  },
  {
   "id": "enc-fushima-base-5",
-  "prompt": "",
+  "prompt": "a sentry soldier in pale blue armor with a long spyglass helmet visor and a halberd",
   "status": "todo",
   "key": "enemy:enc-fushima-base-5",
   "kind": "mob",
   "name": "見張りの兵",
   "zone": "fushima-base",
-  "level": 16
+  "level": 16,
+  "shape": "tall",
+  "tone": [
+   110,
+   125,
+   160
+  ]
  },
  {
   "id": "enc-deep-1-0",
-  "prompt": "",
+  "prompt": "a ghostly echo of an ancient war, a tattered banner wrapped around a faint armored figure, faceless",
   "status": "todo",
   "key": "enemy:enc-deep-1-0",
   "kind": "mob",
   "name": "大乱期の残響",
   "zone": "deep-1",
-  "level": 22
+  "level": 22,
+  "shape": "tall",
+  "tone": [
+   150,
+   160,
+   180
+  ]
  },
  {
   "id": "enc-deep-1-1",
-  "prompt": "",
+  "prompt": "the memory of an ice soldier, a translucent icy figure with a broken lance, cracks of blue light",
   "status": "todo",
   "key": "enemy:enc-deep-1-1",
   "kind": "mob",
   "name": "氷の兵の記憶",
   "zone": "deep-1",
-  "level": 22
+  "level": 22,
+  "shape": "tall",
+  "tone": [
+   160,
+   195,
+   220
+  ]
  },
  {
   "id": "enc-deep-1-2",
-  "prompt": "",
+  "prompt": "a shadow creature formed around a broken sword stuck in its back, dark smoke body, rusty blade edges",
   "status": "todo",
   "key": "enemy:enc-deep-1-2",
   "kind": "mob",
   "name": "折れた剣の影",
   "zone": "deep-1",
-  "level": 22
+  "level": 22,
+  "shape": "ground",
+  "tone": [
+   70,
+   70,
+   80
+  ]
  },
  {
   "id": "enc-deep-1-3",
-  "prompt": "",
+  "prompt": "a fragment of a rusty round shield that floats and spins, with a rust-red eye in the boss and chipped edges",
   "status": "todo",
   "key": "enemy:enc-deep-1-3",
   "kind": "mob",
   "name": "錆びた盾のかけら",
   "zone": "deep-1",
-  "level": 22
+  "level": 22,
+  "shape": "float",
+  "tone": [
+   140,
+   90,
+   60
+  ]
  },
  {
   "id": "enc-deep-1-4",
-  "prompt": "",
+  "prompt": "an old battlefield beetle with a helmet-like shell and arrowheads stuck in its back, dark bronze color",
   "status": "todo",
   "key": "enemy:enc-deep-1-4",
   "kind": "mob",
   "name": "古戦場の虫",
   "zone": "deep-1",
-  "level": 22
+  "level": 22,
+  "shape": "ground",
+  "tone": [
+   110,
+   95,
+   70
+  ]
  },
  {
   "id": "enc-deep-1-5",
-  "prompt": "",
+  "prompt": "a floating frozen tear drop of ice with a sad face reflection inside and a frosty halo",
   "status": "todo",
   "key": "enemy:enc-deep-1-5",
   "kind": "mob",
   "name": "凍った涙",
   "zone": "deep-1",
-  "level": 22
+  "level": 22,
+  "shape": "float",
+  "tone": [
+   185,
+   215,
+   235
+  ]
  },
  {
   "id": "enc-deep-2-0",
-  "prompt": "",
+  "prompt": "an echo of silence, a hollow hooded figure with a covered mouth, grey robes fading into dust",
   "status": "todo",
   "key": "enemy:enc-deep-2-0",
   "kind": "mob",
   "name": "静まりの残響",
   "zone": "deep-2",
-  "level": 23
+  "level": 23,
+  "shape": "tall",
+  "tone": [
+   140,
+   135,
+   130
+  ]
  },
  {
   "id": "enc-deep-2-1",
-  "prompt": "",
+  "prompt": "a shadow of an assembly hall, a creature made of stacked carved chairs and a podium with a dark face",
   "status": "todo",
   "key": "enemy:enc-deep-2-1",
   "kind": "mob",
   "name": "議場の影",
   "zone": "deep-2",
-  "level": 23
+  "level": 23,
+  "shape": "big",
+  "tone": [
+   100,
+   75,
+   55
+  ]
  },
  {
   "id": "enc-deep-2-2",
-  "prompt": "",
+  "prompt": "a floating blank nameplate with smeared golden letters, ribbons and a blurred face, ghostly",
   "status": "todo",
   "key": "enemy:enc-deep-2-2",
   "kind": "mob",
   "name": "消えた名前",
   "zone": "deep-2",
-  "level": 23
+  "level": 23,
+  "shape": "float",
+  "tone": [
+   200,
+   180,
+   120
+  ]
  },
  {
   "id": "enc-deep-2-3",
-  "prompt": "",
+  "prompt": "a heavy stone seal creature, a carved square seal stamp walking on short legs, red ink on its base",
   "status": "todo",
   "key": "enemy:enc-deep-2-3",
   "kind": "mob",
   "name": "印章の石",
   "zone": "deep-2",
-  "level": 23
+  "level": 23,
+  "shape": "ground",
+  "tone": [
+   150,
+   140,
+   125
+  ]
  },
  {
   "id": "enc-deep-2-4",
-  "prompt": "",
+  "prompt": "a scribe insect with quill-like antennae, a parchment-colored body and ink-dipped legs",
   "status": "todo",
   "key": "enemy:enc-deep-2-4",
   "kind": "mob",
   "name": "書記の虫",
   "zone": "deep-2",
-  "level": 23
+  "level": 23,
+  "shape": "ground",
+  "tone": [
+   190,
+   170,
+   130
+  ]
  },
  {
   "id": "enc-deep-2-5",
-  "prompt": "",
+  "prompt": "a floating golden liquid droplet creature with a metallic sheen, coins orbiting it",
   "status": "todo",
   "key": "enemy:enc-deep-2-5",
   "kind": "mob",
   "name": "黄金のしずく",
   "zone": "deep-2",
-  "level": 23
+  "level": 23,
+  "shape": "float",
+  "tone": [
+   220,
+   180,
+   70
+  ]
  },
  {
   "id": "enc-deep-3-0",
-  "prompt": "",
+  "prompt": "a fragment of distortion, jagged floating shards of purple glass orbiting a dark core with an eye",
   "status": "todo",
   "key": "enemy:enc-deep-3-0",
   "kind": "mob",
   "name": "歪みの断片",
   "zone": "deep-3",
-  "level": 24
+  "level": 24,
+  "shape": "float",
+  "tone": [
+   140,
+   80,
+   170
+  ]
  },
  {
   "id": "enc-deep-3-1",
-  "prompt": "",
+  "prompt": "a lingering scent of dried water, a thin wispy ghost of steam above a cracked bowl",
   "status": "todo",
   "key": "enemy:enc-deep-3-1",
   "kind": "mob",
   "name": "水涸れの残り香",
   "zone": "deep-3",
-  "level": 24
+  "level": 24,
+  "shape": "float",
+  "tone": [
+   180,
+   175,
+   160
+  ]
  },
  {
   "id": "enc-deep-3-2",
-  "prompt": "",
+  "prompt": "a fragment of a stone guardian, a broken stone arm and half a helmet held together by violet light",
   "status": "todo",
   "key": "enemy:enc-deep-3-2",
   "kind": "mob",
   "name": "番人のかけら",
   "zone": "deep-3",
-  "level": 24
+  "level": 24,
+  "shape": "big",
+  "tone": [
+   130,
+   125,
+   130
+  ]
  },
  {
   "id": "enc-deep-3-3",
-  "prompt": "",
+  "prompt": "a cluster of violet crystals that walks on crystal legs, light refracting inside",
   "status": "todo",
   "key": "enemy:enc-deep-3-3",
   "kind": "mob",
   "name": "紫の結晶",
   "zone": "deep-3",
-  "level": 24
+  "level": 24,
+  "shape": "ground",
+  "tone": [
+   160,
+   100,
+   190
+  ]
  },
  {
   "id": "enc-deep-3-4",
-  "prompt": "",
+  "prompt": "a thirsty dark droplet creature with a cracked dry shell and a wide gaping mouth",
   "status": "todo",
   "key": "enemy:enc-deep-3-4",
   "kind": "mob",
   "name": "渇きのしずく",
   "zone": "deep-3",
-  "level": 24
+  "level": 24,
+  "shape": "float",
+  "tone": [
+   100,
+   60,
+   80
+  ]
  },
  {
   "id": "enc-deep-3-5",
-  "prompt": "",
+  "prompt": "a twisted wing creature, a single huge bent wing with eyes on its feathers, purple and black",
   "status": "todo",
   "key": "enemy:enc-deep-3-5",
   "kind": "mob",
   "name": "歪んだ羽",
   "zone": "deep-3",
-  "level": 24
+  "level": 24,
+  "shape": "winged",
+  "tone": [
+   110,
+   70,
+   130
+  ]
  },
  {
   "id": "enc-deep-4-0",
-  "prompt": "",
+  "prompt": "a primordial droplet, a luminous pearl-like drop with swirling starlight inside and a soft halo",
   "status": "todo",
   "key": "enemy:enc-deep-4-0",
   "kind": "mob",
   "name": "初源のしずく",
   "zone": "deep-4",
-  "level": 25
+  "level": 25,
+  "shape": "float",
+  "tone": [
+   200,
+   195,
+   230
+  ]
  },
  {
   "id": "enc-deep-4-1",
-  "prompt": "",
+  "prompt": "a nameless shadow, a tall featureless silhouette with blank white gaps where a face should be",
   "status": "todo",
   "key": "enemy:enc-deep-4-1",
   "kind": "mob",
   "name": "名前のない影",
   "zone": "deep-4",
-  "level": 25
+  "level": 25,
+  "shape": "tall",
+  "tone": [
+   50,
+   45,
+   70
+  ]
  },
  {
   "id": "enc-deep-4-2",
-  "prompt": "",
+  "prompt": "an echo of sorrow, a floating veiled figure with tear-like light streaks and drooping sleeves",
   "status": "todo",
   "key": "enemy:enc-deep-4-2",
   "kind": "mob",
   "name": "悲しみの残響",
   "zone": "deep-4",
-  "level": 25
+  "level": 25,
+  "shape": "float",
+  "tone": [
+   150,
+   150,
+   190
+  ]
  },
  {
   "id": "enc-deep-4-3",
-  "prompt": "",
+  "prompt": "an ancient origin stone, a smooth egg-shaped monolith with glowing spiral carvings and small floating pebbles",
   "status": "todo",
   "key": "enemy:enc-deep-4-3",
   "kind": "mob",
   "name": "始まりの石",
   "zone": "deep-4",
-  "level": 25
+  "level": 25,
+  "shape": "big",
+  "tone": [
+   120,
+   115,
+   140
+  ]
  },
  {
   "id": "enc-deep-4-4",
-  "prompt": "",
+  "prompt": "a dawn-colored feathered creature with pale gold and rose wings, a small glowing crest",
   "status": "todo",
   "key": "enemy:enc-deep-4-4",
   "kind": "mob",
   "name": "夜明けの羽",
   "zone": "deep-4",
-  "level": 25
+  "level": 25,
+  "shape": "winged",
+  "tone": [
+   230,
+   190,
+   160
+  ]
  },
  {
   "id": "enc-deep-4-5",
-  "prompt": "",
+  "prompt": "an insect of forgetting, a moth with grey wings that fade into transparency and a blank white face",
   "status": "todo",
   "key": "enemy:enc-deep-4-5",
   "kind": "mob",
   "name": "忘却の虫",
   "zone": "deep-4",
-  "level": 25
+  "level": 25,
+  "shape": "winged",
+  "tone": [
+   175,
+   175,
+   180
+  ]
  },
  {
   "id": "enc-tower-1-0",
-  "prompt": "",
+  "prompt": "a floating light crystal with prism facets and a beam-like eye in the center",
   "status": "todo",
   "key": "enemy:enc-tower-1-0",
   "kind": "mob",
   "name": "光の結晶",
   "zone": "tower-1",
-  "level": 30
+  "level": 30,
+  "shape": "float",
+  "tone": [
+   190,
+   225,
+   245
+  ]
  },
  {
   "id": "enc-tower-1-1",
-  "prompt": "",
+  "prompt": "a living stone creature with moss joints, a rounded rock body and leafy sprouts on its head",
   "status": "todo",
   "key": "enemy:enc-tower-1-1",
   "kind": "mob",
   "name": "生きた石",
   "zone": "tower-1",
-  "level": 30
+  "level": 30,
+  "shape": "big",
+  "tone": [
+   125,
+   130,
+   115
+  ]
  },
  {
   "id": "enc-tower-1-2",
-  "prompt": "",
+  "prompt": "the master of a blue ore vein, a beast whose back is covered in blue crystal ore spikes, heavy jaw",
   "status": "todo",
   "key": "enemy:enc-tower-1-2",
   "kind": "mob",
   "name": "青い鉱脈の主",
   "zone": "tower-1",
-  "level": 30
+  "level": 30,
+  "shape": "ground",
+  "tone": [
+   80,
+   120,
+   170
+  ]
  },
  {
   "id": "enc-tower-1-3",
-  "prompt": "",
+  "prompt": "a tower gear machine, a walking clockwork body of brass gears with a lantern head",
   "status": "todo",
   "key": "enemy:enc-tower-1-3",
   "kind": "mob",
   "name": "塔の歯車機械",
   "zone": "tower-1",
-  "level": 30
+  "level": 30,
+  "shape": "tall",
+  "tone": [
+   170,
+   140,
+   80
+  ]
  },
  {
   "id": "enc-tower-1-4",
-  "prompt": "",
+  "prompt": "a tiny insect of light with glowing transparent wings and a bright tail like a firefly",
   "status": "todo",
   "key": "enemy:enc-tower-1-4",
   "kind": "mob",
   "name": "光の羽虫",
   "zone": "tower-1",
-  "level": 30
+  "level": 30,
+  "shape": "winged",
+  "tone": [
+   230,
+   230,
+   170
+  ]
  },
  {
   "id": "enc-tower-1-5",
-  "prompt": "",
+  "prompt": "a root guardian, a humanoid made of thick tree roots holding a wooden shield, glowing green eyes",
   "status": "todo",
   "key": "enemy:enc-tower-1-5",
   "kind": "mob",
   "name": "根の番兵",
   "zone": "tower-1",
-  "level": 30
+  "level": 30,
+  "shape": "tall",
+  "tone": [
+   110,
+   90,
+   60
+  ]
  },
  {
   "id": "enc-tower-2-0",
-  "prompt": "",
+  "prompt": "a cloud-road crystal, a pale blue crystal with clouds trapped inside, floating with small wings of mist",
   "status": "todo",
   "key": "enemy:enc-tower-2-0",
   "kind": "mob",
   "name": "雲路の結晶",
   "zone": "tower-2",
-  "level": 31
+  "level": 31,
+  "shape": "float",
+  "tone": [
+   175,
+   200,
+   230
+  ]
  },
  {
   "id": "enc-tower-2-1",
-  "prompt": "",
+  "prompt": "misty footprints come alive, a low creature of fog with heavy foot shapes and a lantern eye",
   "status": "todo",
   "key": "enemy:enc-tower-2-1",
   "kind": "mob",
   "name": "霧の足あと",
   "zone": "tower-2",
-  "level": 31
+  "level": 31,
+  "shape": "ground",
+  "tone": [
+   185,
+   195,
+   205
+  ]
  },
  {
   "id": "enc-tower-2-2",
-  "prompt": "",
+  "prompt": "a stone wrapped in swirling wind ribbons, a round boulder with carved wind symbols and one eye",
   "status": "todo",
   "key": "enemy:enc-tower-2-2",
   "kind": "mob",
   "name": "風をまとう石",
   "zone": "tower-2",
-  "level": 31
+  "level": 31,
+  "shape": "float",
+  "tone": [
+   140,
+   150,
+   160
+  ]
  },
  {
   "id": "enc-tower-2-3",
-  "prompt": "",
+  "prompt": "a cloud gear machine, white porcelain gears and cloud puffs coming from its vents, on spindly legs",
   "status": "todo",
   "key": "enemy:enc-tower-2-3",
   "kind": "mob",
   "name": "雲の歯車機械",
   "zone": "tower-2",
-  "level": 31
+  "level": 31,
+  "shape": "tall",
+  "tone": [
+   210,
+   215,
+   220
+  ]
  },
  {
   "id": "enc-tower-2-4",
-  "prompt": "",
+  "prompt": "a fog soldier with a hazy body, a misty spear and a visor of condensed water",
   "status": "todo",
   "key": "enemy:enc-tower-2-4",
   "kind": "mob",
   "name": "霧の兵",
   "zone": "tower-2",
-  "level": 31
+  "level": 31,
+  "shape": "tall",
+  "tone": [
+   160,
+   175,
+   190
+  ]
  },
  {
   "id": "enc-tower-2-5",
-  "prompt": "",
+  "prompt": "a crackling thunder droplet, a floating drop of yellow electricity with sparking spikes",
   "status": "todo",
   "key": "enemy:enc-tower-2-5",
   "kind": "mob",
   "name": "雷のしずく",
   "zone": "tower-2",
-  "level": 31
+  "level": 31,
+  "shape": "float",
+  "tone": [
+   230,
+   220,
+   100
+  ]
  },
  {
   "id": "enc-tower-3-0",
-  "prompt": "",
+  "prompt": "a fragment of a golden ring floating with engraved runes and a light seam",
   "status": "todo",
   "key": "enemy:enc-tower-3-0",
   "kind": "mob",
   "name": "環のかけら",
   "zone": "tower-3",
-  "level": 32
+  "level": 32,
+  "shape": "float",
+  "tone": [
+   210,
+   180,
+   90
+  ]
  },
  {
   "id": "enc-tower-3-1",
-  "prompt": "",
+  "prompt": "a shadow made of intricate engraved patterns, a dark lace-like figure with glowing gold lines",
   "status": "todo",
   "key": "enemy:enc-tower-3-1",
   "kind": "mob",
   "name": "紋様の影",
   "zone": "tower-3",
-  "level": 32
+  "level": 32,
+  "shape": "tall",
+  "tone": [
+   70,
+   60,
+   50
+  ]
  },
  {
   "id": "enc-tower-3-2",
-  "prompt": "",
+  "prompt": "a guardian of light in white and gold armor with a halo-shaped helmet crest and a radiant sword",
   "status": "todo",
   "key": "enemy:enc-tower-3-2",
   "kind": "mob",
   "name": "光の番兵",
   "zone": "tower-3",
-  "level": 32
+  "level": 32,
+  "shape": "tall",
+  "tone": [
+   225,
+   215,
+   180
+  ]
  },
  {
   "id": "enc-tower-3-3",
-  "prompt": "",
+  "prompt": "a golden gear machine, a round gold clockwork creature with many gear legs and a ruby eye",
   "status": "todo",
   "key": "enemy:enc-tower-3-3",
   "kind": "mob",
   "name": "金の歯車機械",
   "zone": "tower-3",
-  "level": 32
+  "level": 32,
+  "shape": "ground",
+  "tone": [
+   210,
+   170,
+   70
+  ]
  },
  {
   "id": "enc-tower-3-4",
-  "prompt": "",
+  "prompt": "a heraldic crest stone, a shield-shaped stone slab with a carved emblem that walks on stone feet",
   "status": "todo",
   "key": "enemy:enc-tower-3-4",
   "kind": "mob",
   "name": "紋章の石",
   "zone": "tower-3",
-  "level": 32
+  "level": 32,
+  "shape": "big",
+  "tone": [
+   170,
+   160,
+   140
+  ]
  },
  {
   "id": "enc-tower-3-5",
-  "prompt": "",
+  "prompt": "a feather of light, a large glowing white-gold feather with a living eye at its base",
   "status": "todo",
   "key": "enemy:enc-tower-3-5",
   "kind": "mob",
   "name": "光の羽",
   "zone": "tower-3",
-  "level": 32
+  "level": 32,
+  "shape": "winged",
+  "tone": [
+   240,
+   225,
+   180
+  ]
  },
  {
   "id": "enc-kanou-1-0",
-  "prompt": "",
+  "prompt": "a wavering boundary creature, a rippling silhouette that looks half transparent and half solid, blue-violet",
   "status": "todo",
   "key": "enemy:enc-kanou-1-0",
   "kind": "mob",
   "name": "境目の揺らぎ",
   "zone": "kanou-1",
-  "level": 33
+  "level": 33,
+  "shape": "float",
+  "tone": [
+   130,
+   120,
+   180
+  ]
  },
  {
   "id": "enc-kanou-1-1",
-  "prompt": "",
+  "prompt": "a wandering light, a small orb of pale light with a long flickering tail and two dot eyes",
   "status": "todo",
   "key": "enemy:enc-kanou-1-1",
   "kind": "mob",
   "name": "迷いの光",
   "zone": "kanou-1",
-  "level": 33
+  "level": 33,
+  "shape": "float",
+  "tone": [
+   210,
+   210,
+   240
+  ]
  },
  {
   "id": "enc-kanou-1-2",
-  "prompt": "",
+  "prompt": "a drifting shadow like a jellyfish of darkness with long flowing tendrils",
   "status": "todo",
   "key": "enemy:enc-kanou-1-2",
   "kind": "mob",
   "name": "たゆたう影",
   "zone": "kanou-1",
-  "level": 33
+  "level": 33,
+  "shape": "float",
+  "tone": [
+   70,
+   65,
+   100
+  ]
  },
  {
   "id": "enc-kanou-1-3",
-  "prompt": "",
+  "prompt": "a boundary insect with a body split down the middle in two different colors, violet and grey",
   "status": "todo",
   "key": "enemy:enc-kanou-1-3",
   "kind": "mob",
   "name": "境目の虫",
   "zone": "kanou-1",
-  "level": 33
+  "level": 33,
+  "shape": "ground",
+  "tone": [
+   120,
+   105,
+   140
+  ]
  },
  {
   "id": "enc-kanou-1-4",
-  "prompt": "",
+  "prompt": "a lost wing creature, a pair of wings without a body that flap with a dim eye between them",
   "status": "todo",
   "key": "enemy:enc-kanou-1-4",
   "kind": "mob",
   "name": "迷い羽",
   "zone": "kanou-1",
-  "level": 33
+  "level": 33,
+  "shape": "winged",
+  "tone": [
+   150,
+   140,
+   190
+  ]
  },
  {
   "id": "enc-kanou-1-5",
-  "prompt": "",
+  "prompt": "a boundary marker stone, a tall carved milestone with faded signs and an eye-shaped hole",
   "status": "todo",
   "key": "enemy:enc-kanou-1-5",
   "kind": "mob",
   "name": "境界の石",
   "zone": "kanou-1",
-  "level": 33
+  "level": 33,
+  "shape": "tall",
+  "tone": [
+   125,
+   120,
+   135
+  ]
  },
  {
   "id": "enc-kanou-2-0",
-  "prompt": "",
+  "prompt": "a quiet shadow, a soft round dark figure sitting with folded hands, faint green eyes",
   "status": "todo",
   "key": "enemy:enc-kanou-2-0",
   "kind": "mob",
   "name": "静かな影",
   "zone": "kanou-2",
-  "level": 34
+  "level": 34,
+  "shape": "big",
+  "tone": [
+   60,
+   75,
+   70
+  ]
  },
  {
   "id": "enc-kanou-2-1",
-  "prompt": "",
+  "prompt": "the presence of someone waiting, a faint figure holding an umbrella of leaves, mostly transparent",
   "status": "todo",
   "key": "enemy:enc-kanou-2-1",
   "kind": "mob",
   "name": "待ち人の気配",
   "zone": "kanou-2",
-  "level": 34
+  "level": 34,
+  "shape": "tall",
+  "tone": [
+   150,
+   175,
+   160
+  ]
  },
  {
   "id": "enc-kanou-2-2",
-  "prompt": "",
+  "prompt": "a green light spirit, a glowing green flame-like wisp with leaf-shaped flickers",
   "status": "todo",
   "key": "enemy:enc-kanou-2-2",
   "kind": "mob",
   "name": "緑の光",
   "zone": "kanou-2",
-  "level": 34
+  "level": 34,
+  "shape": "float",
+  "tone": [
+   120,
+   210,
+   140
+  ]
  },
  {
   "id": "enc-kanou-2-3",
-  "prompt": "",
+  "prompt": "a moss stone, a round stone completely covered in thick moss and small mushrooms, with a sleepy eye",
   "status": "todo",
   "key": "enemy:enc-kanou-2-3",
   "kind": "mob",
   "name": "苔の石",
   "zone": "kanou-2",
-  "level": 34
+  "level": 34,
+  "shape": "big",
+  "tone": [
+   95,
+   130,
+   85
+  ]
  },
  {
   "id": "enc-kanou-2-4",
-  "prompt": "",
+  "prompt": "a forest dew droplet creature with a leaf hat and a stem tail, translucent green",
   "status": "todo",
   "key": "enemy:enc-kanou-2-4",
   "kind": "mob",
   "name": "森のしずく",
   "zone": "kanou-2",
-  "level": 34
+  "level": 34,
+  "shape": "float",
+  "tone": [
+   140,
+   200,
+   150
+  ]
  },
  {
   "id": "enc-kanou-2-5",
-  "prompt": "",
+  "prompt": "a leaf-winged insect with wings exactly like green leaves with veins, a twig body",
   "status": "todo",
   "key": "enemy:enc-kanou-2-5",
   "kind": "mob",
   "name": "葉の羽虫",
   "zone": "kanou-2",
-  "level": 34
+  "level": 34,
+  "shape": "winged",
+  "tone": [
+   110,
+   160,
+   90
+  ]
  },
  {
   "id": "enc-kanou-3-0",
-  "prompt": "",
+  "prompt": "a flower growing from a rift, a large pink flower with a dark crack-shaped center full of teeth, on a vine body",
   "status": "todo",
   "key": "enemy:enc-kanou-3-0",
   "kind": "mob",
   "name": "裂け目の花",
   "zone": "kanou-3",
-  "level": 35
+  "level": 35,
+  "shape": "tall",
+  "tone": [
+   220,
+   130,
+   180
+  ]
  },
  {
   "id": "enc-kanou-3-1",
-  "prompt": "",
+  "prompt": "overlapping scenery creature, a body made of mismatched picture fragments of landscapes stitched together",
   "status": "todo",
   "key": "enemy:enc-kanou-3-1",
   "kind": "mob",
   "name": "重なる景色",
   "zone": "kanou-3",
-  "level": 35
+  "level": 35,
+  "shape": "big",
+  "tone": [
+   150,
+   140,
+   160
+  ]
  },
  {
   "id": "enc-kanou-3-2",
-  "prompt": "",
+  "prompt": "a thin boundary, a paper-thin flat creature like a sheet of glass with a reflected face",
   "status": "todo",
   "key": "enemy:enc-kanou-3-2",
   "kind": "mob",
   "name": "薄い境目",
   "zone": "kanou-3",
-  "level": 35
+  "level": 35,
+  "shape": "tall",
+  "tone": [
+   190,
+   190,
+   210
+  ]
  },
  {
   "id": "enc-kanou-3-3",
-  "prompt": "",
+  "prompt": "a rift insect with a cracked shell leaking pink light and long antennae",
   "status": "todo",
   "key": "enemy:enc-kanou-3-3",
   "kind": "mob",
   "name": "裂け目の虫",
   "zone": "kanou-3",
-  "level": 35
+  "level": 35,
+  "shape": "ground",
+  "tone": [
+   150,
+   90,
+   130
+  ]
  },
  {
   "id": "enc-kanou-3-4",
-  "prompt": "",
+  "prompt": "a mirror crystal creature, sharp mirror shards forming a spiky body reflecting colors",
   "status": "todo",
   "key": "enemy:enc-kanou-3-4",
   "kind": "mob",
   "name": "鏡の結晶",
   "zone": "kanou-3",
-  "level": 35
+  "level": 35,
+  "shape": "float",
+  "tone": [
+   200,
+   205,
+   220
+  ]
  },
  {
   "id": "enc-kanou-3-5",
-  "prompt": "",
+  "prompt": "a flower droplet creature, a floating drop of nectar with petals around it and a tiny pollen crown",
   "status": "todo",
   "key": "enemy:enc-kanou-3-5",
   "kind": "mob",
   "name": "花のしずく",
   "zone": "kanou-3",
-  "level": 35
+  "level": 35,
+  "shape": "float",
+  "tone": [
+   240,
+   170,
+   200
+  ]
  },
  {
   "id": "enc-kanou-4-0",
-  "prompt": "",
+  "prompt": "a fragment of the great ring, a curved white stone arc piece floating with gold inlay and an eye",
   "status": "todo",
   "key": "enemy:enc-kanou-4-0",
   "kind": "mob",
   "name": "全環のかけら",
   "zone": "kanou-4",
-  "level": 36
+  "level": 36,
+  "shape": "float",
+  "tone": [
+   225,
+   220,
+   210
+  ]
  },
  {
   "id": "enc-kanou-4-1",
-  "prompt": "",
+  "prompt": "a white wavering figure like a heat haze of white light with a faint human outline",
   "status": "todo",
   "key": "enemy:enc-kanou-4-1",
   "kind": "mob",
   "name": "白い揺らぎ",
   "zone": "kanou-4",
-  "level": 36
+  "level": 36,
+  "shape": "float",
+  "tone": [
+   235,
+   235,
+   240
+  ]
  },
  {
   "id": "enc-kanou-4-2",
-  "prompt": "",
+  "prompt": "an echo of the ring, concentric floating white rings around a hollow center that hums",
   "status": "todo",
   "key": "enemy:enc-kanou-4-2",
   "kind": "mob",
   "name": "環の残響",
   "zone": "kanou-4",
-  "level": 36
+  "level": 36,
+  "shape": "float",
+  "tone": [
+   210,
+   210,
+   225
+  ]
  },
  {
   "id": "enc-kanou-4-3",
-  "prompt": "",
+  "prompt": "a creature of white feathers, a bird made only of layered white wings with no visible face",
   "status": "todo",
   "key": "enemy:enc-kanou-4-3",
   "kind": "mob",
   "name": "白い羽",
   "zone": "kanou-4",
-  "level": 36
+  "level": 36,
+  "shape": "winged",
+  "tone": [
+   240,
+   240,
+   245
+  ]
  },
  {
   "id": "enc-kanou-4-4",
-  "prompt": "",
+  "prompt": "a ring crystal, a white crystal grown in the shape of a ring with prism light inside",
   "status": "todo",
   "key": "enemy:enc-kanou-4-4",
   "kind": "mob",
   "name": "環の結晶",
   "zone": "kanou-4",
-  "level": 36
+  "level": 36,
+  "shape": "float",
+  "tone": [
+   220,
+   225,
+   240
+  ]
  },
  {
   "id": "enc-kanou-4-5",
-  "prompt": "",
+  "prompt": "the last droplet, a dark droplet with a white ring around it, looking calm and heavy",
   "status": "todo",
   "key": "enemy:enc-kanou-4-5",
   "kind": "mob",
   "name": "終わりのしずく",
   "zone": "kanou-4",
-  "level": 36
+  "level": 36,
+  "shape": "float",
+  "tone": [
+   90,
+   85,
+   110
+  ]
  },
  {
   "id": "enc-islet-1-1-0",
-  "prompt": "",
+  "prompt": "an echo of moonlight, a pale silver ghost of a dancer with flowing sleeves",
   "status": "todo",
   "key": "enemy:enc-islet-1-1-0",
   "kind": "mob",
   "name": "月影の残響",
   "zone": "islet-1-1",
-  "level": 16
+  "level": 16,
+  "shape": "tall",
+  "tone": [
+   190,
+   195,
+   220
+  ]
  },
  {
   "id": "enc-islet-1-1-1",
-  "prompt": "",
+  "prompt": "the shadow of a garden stone statue, a weathered stone lion-dog figure with dark glowing cracks",
   "status": "todo",
   "key": "enemy:enc-islet-1-1-1",
   "kind": "mob",
   "name": "庭の石像の影",
   "zone": "islet-1-1",
-  "level": 16
+  "level": 16,
+  "shape": "ground",
+  "tone": [
+   130,
+   130,
+   125
+  ]
  },
  {
   "id": "enc-islet-1-1-2",
-  "prompt": "",
+  "prompt": "a moss-covered broken fragment of a garden lantern, stone pieces held by vines, a dim candle inside",
   "status": "todo",
   "key": "enemy:enc-islet-1-1-2",
   "kind": "mob",
   "name": "苔むした断片",
   "zone": "islet-1-1",
-  "level": 16
+  "level": 16,
+  "shape": "big",
+  "tone": [
+   110,
+   125,
+   100
+  ]
  },
  {
   "id": "enc-islet-1-1-3",
-  "prompt": "",
+  "prompt": "a moon droplet, a floating silvery drop with a crescent moon reflected inside and star sparkles",
   "status": "todo",
   "key": "enemy:enc-islet-1-1-3",
   "kind": "mob",
   "name": "月のしずく",
   "zone": "islet-1-1",
-  "level": 16
+  "level": 16,
+  "shape": "float",
+  "tone": [
+   200,
+   205,
+   235
+  ]
  },
  {
   "id": "enc-islet-1-1-4",
-  "prompt": "",
+  "prompt": "a night moth with deep blue wings dotted with star-like spots and furry antennae",
   "status": "todo",
   "key": "enemy:enc-islet-1-1-4",
   "kind": "mob",
   "name": "夜の羽虫",
   "zone": "islet-1-1",
-  "level": 16
+  "level": 16,
+  "shape": "winged",
+  "tone": [
+   60,
+   70,
+   130
+  ]
  },
  {
   "id": "enc-islet-1-1-5",
-  "prompt": "",
+  "prompt": "a garden guardian, a figure made of trimmed hedge and garden stones holding a rake like a spear",
   "status": "todo",
   "key": "enemy:enc-islet-1-1-5",
   "kind": "mob",
   "name": "庭の番兵",
   "zone": "islet-1-1",
-  "level": 16
+  "level": 16,
+  "shape": "tall",
+  "tone": [
+   80,
+   120,
+   80
+  ]
  },
  {
   "id": "enc-islet-2-1-0",
-  "prompt": "",
+  "prompt": "a heat shadow, a wavering dark shape with orange glowing edges like a mirage",
   "status": "todo",
   "key": "enemy:enc-islet-2-1-0",
   "kind": "mob",
   "name": "熱の影",
   "zone": "islet-2-1",
-  "level": 18
+  "level": 18,
+  "shape": "float",
+  "tone": [
+   120,
+   60,
+   40
+  ]
  },
  {
   "id": "enc-islet-2-1-1",
-  "prompt": "",
+  "prompt": "a melting stone creature, a half-molten rock dripping orange lava with a cooling black crust",
   "status": "todo",
   "key": "enemy:enc-islet-2-1-1",
   "kind": "mob",
   "name": "溶けた石",
   "zone": "islet-2-1",
-  "level": 18
+  "level": 18,
+  "shape": "big",
+  "tone": [
+   150,
+   80,
+   50
+  ]
  },
  {
   "id": "enc-islet-2-1-2",
-  "prompt": "",
+  "prompt": "a spark insect, a small beetle with a glowing ember abdomen and sparks trailing from it",
   "status": "todo",
   "key": "enemy:enc-islet-2-1-2",
   "kind": "mob",
   "name": "火の粉の虫",
   "zone": "islet-2-1",
-  "level": 18
+  "level": 18,
+  "shape": "ground",
+  "tone": [
+   200,
+   110,
+   50
+  ]
  },
  {
   "id": "enc-islet-2-1-3",
-  "prompt": "",
+  "prompt": "a flame-feathered bird with burning orange feathers and a smoky tail",
   "status": "todo",
   "key": "enemy:enc-islet-2-1-3",
   "kind": "mob",
   "name": "炎の羽",
   "zone": "islet-2-1",
-  "level": 18
+  "level": 18,
+  "shape": "winged",
+  "tone": [
+   230,
+   120,
+   50
+  ]
  },
  {
   "id": "enc-islet-2-1-4",
-  "prompt": "",
+  "prompt": "an iron furnace machine walking on thick legs, a chimney on its back and glowing grill teeth",
   "status": "todo",
   "key": "enemy:enc-islet-2-1-4",
   "kind": "mob",
   "name": "鉄の機械",
   "zone": "islet-2-1",
-  "level": 18
+  "level": 18,
+  "shape": "big",
+  "tone": [
+   100,
+   90,
+   85
+  ]
  },
  {
   "id": "enc-islet-2-1-5",
-  "prompt": "",
+  "prompt": "a droplet of heat, a floating red-hot drop of molten metal with a shimmering aura",
   "status": "todo",
   "key": "enemy:enc-islet-2-1-5",
   "kind": "mob",
   "name": "熱のしずく",
   "zone": "islet-2-1",
-  "level": 18
+  "level": 18,
+  "shape": "float",
+  "tone": [
+   220,
+   90,
+   40
+  ]
  },
  {
   "id": "enc-islet-3-1-0",
-  "prompt": "",
+  "prompt": "a sea breeze shadow, a salty wind spirit with seaweed streamers and a gull-shaped head",
   "status": "todo",
   "key": "enemy:enc-islet-3-1-0",
   "kind": "mob",
   "name": "潮風の影",
   "zone": "islet-3-1",
-  "level": 20
+  "level": 20,
+  "shape": "float",
+  "tone": [
+   140,
+   170,
+   170
+  ]
  },
  {
   "id": "enc-islet-3-1-1",
-  "prompt": "",
+  "prompt": "a fragment of a lighthouse, a broken white and red striped stone piece with a lit lens eye",
   "status": "todo",
   "key": "enemy:enc-islet-3-1-1",
   "kind": "mob",
   "name": "灯台のかけら",
   "zone": "islet-3-1",
-  "level": 20
+  "level": 20,
+  "shape": "big",
+  "tone": [
+   200,
+   120,
+   100
+  ]
  },
  {
   "id": "enc-islet-3-1-2",
-  "prompt": "",
+  "prompt": "an insect between the waves, a sea skater bug with oar-like legs and a shell of shells",
   "status": "todo",
   "key": "enemy:enc-islet-3-1-2",
   "kind": "mob",
   "name": "波間の虫",
   "zone": "islet-3-1",
-  "level": 20
+  "level": 20,
+  "shape": "ground",
+  "tone": [
+   90,
+   140,
+   150
+  ]
  },
  {
   "id": "enc-islet-3-1-3",
-  "prompt": "",
+  "prompt": "a tide droplet creature, a floating drop of seawater with a tiny crab living inside and foam",
   "status": "todo",
   "key": "enemy:enc-islet-3-1-3",
   "kind": "mob",
   "name": "潮のしずく",
   "zone": "islet-3-1",
-  "level": 20
+  "level": 20,
+  "shape": "float",
+  "tone": [
+   100,
+   170,
+   190
+  ]
  },
  {
   "id": "enc-islet-3-1-4",
-  "prompt": "",
+  "prompt": "a lighthouse guardian, a tall keeper figure in a salt-stained coat with a lamp for a head",
   "status": "todo",
   "key": "enemy:enc-islet-3-1-4",
   "kind": "mob",
   "name": "灯台の番兵",
   "zone": "islet-3-1",
-  "level": 20
+  "level": 20,
+  "shape": "tall",
+  "tone": [
+   170,
+   150,
+   110
+  ]
  },
  {
   "id": "enc-islet-3-1-5",
-  "prompt": "",
+  "prompt": "a seabird with white and grey feathers, a long orange beak and fish-scale patterns on its wings",
   "status": "todo",
   "key": "enemy:enc-islet-3-1-5",
   "kind": "mob",
   "name": "海鳥の羽",
   "zone": "islet-3-1",
-  "level": 20
+  "level": 20,
+  "shape": "winged",
+  "tone": [
+   210,
+   210,
+   205
+  ]
  },
  {
   "id": "enc-islet-4-1-0",
-  "prompt": "",
+  "prompt": "a shadow of a war banner, a tattered purple flag on a pole that moves by itself with a face in the cloth",
   "status": "todo",
   "key": "enemy:enc-islet-4-1-0",
   "kind": "mob",
   "name": "旗の影",
   "zone": "islet-4-1",
-  "level": 22
+  "level": 22,
+  "shape": "tall",
+  "tone": [
+   120,
+   80,
+   140
+  ]
  },
  {
   "id": "enc-islet-4-1-1",
-  "prompt": "",
+  "prompt": "a shadow of a fortress soldier with a tall pointed helmet, round shield and a dark smoky body",
   "status": "todo",
   "key": "enemy:enc-islet-4-1-1",
   "kind": "mob",
   "name": "砦の兵の影",
   "zone": "islet-4-1",
-  "level": 22
+  "level": 22,
+  "shape": "tall",
+  "tone": [
+   80,
+   75,
+   95
+  ]
  },
  {
   "id": "enc-islet-4-1-2",
-  "prompt": "",
+  "prompt": "a fragment of cloud with a cracked stone core, floating and dripping light rain",
   "status": "todo",
   "key": "enemy:enc-islet-4-1-2",
   "kind": "mob",
   "name": "雲のかけら",
   "zone": "islet-4-1",
-  "level": 22
+  "level": 22,
+  "shape": "float",
+  "tone": [
+   200,
+   200,
+   215
+  ]
  },
  {
   "id": "enc-islet-4-1-3",
-  "prompt": "",
+  "prompt": "a fortress siege machine, a small wooden catapult creature with a stone mouth and wheels",
   "status": "todo",
   "key": "enemy:enc-islet-4-1-3",
   "kind": "mob",
   "name": "砦の機械",
   "zone": "islet-4-1",
-  "level": 22
+  "level": 22,
+  "shape": "big",
+  "tone": [
+   130,
+   100,
+   70
+  ]
  },
  {
   "id": "enc-islet-4-1-4",
-  "prompt": "",
+  "prompt": "an echo of an archer, a faded translucent bowman with a glowing bowstring and empty quiver",
   "status": "todo",
   "key": "enemy:enc-islet-4-1-4",
   "kind": "mob",
   "name": "弓兵の残響",
   "zone": "islet-4-1",
-  "level": 22
+  "level": 22,
+  "shape": "tall",
+  "tone": [
+   160,
+   150,
+   190
+  ]
  },
  {
   "id": "enc-islet-4-1-5",
-  "prompt": "",
+  "prompt": "a castle wall stone creature, a chunk of battlement with arrow slits as eyes, walking on brick legs",
   "status": "todo",
   "key": "enemy:enc-islet-4-1-5",
   "kind": "mob",
   "name": "城壁の石",
   "zone": "islet-4-1",
-  "level": 22
+  "level": 22,
+  "shape": "big",
+  "tone": [
+   140,
+   130,
+   120
+  ]
  },
  {
   "id": "enc-islet-5-1-0",
-  "prompt": "",
+  "prompt": "a sunken shadow, a dark sea creature like a manta made of shadow with glowing blue spots",
   "status": "todo",
   "key": "enemy:enc-islet-5-1-0",
   "kind": "mob",
   "name": "沈んだ影",
   "zone": "islet-5-1",
-  "level": 23
+  "level": 23,
+  "shape": "float",
+  "tone": [
+   40,
+   60,
+   90
+  ]
  },
  {
   "id": "enc-islet-5-1-1",
-  "prompt": "",
+  "prompt": "a coral stone creature, a rock covered in pink and orange coral branches with small fish hiding",
   "status": "todo",
   "key": "enemy:enc-islet-5-1-1",
   "kind": "mob",
   "name": "珊瑚の石",
   "zone": "islet-5-1",
-  "level": 23
+  "level": 23,
+  "shape": "big",
+  "tone": [
+   210,
+   130,
+   120
+  ]
  },
  {
   "id": "enc-islet-5-1-2",
-  "prompt": "",
+  "prompt": "a sea firefly bug, a small crustacean that glows bright blue, with feathery legs",
   "status": "todo",
   "key": "enemy:enc-islet-5-1-2",
   "kind": "mob",
   "name": "海ほたるの虫",
   "zone": "islet-5-1",
-  "level": 23
+  "level": 23,
+  "shape": "ground",
+  "tone": [
+   60,
+   140,
+   200
+  ]
  },
  {
   "id": "enc-islet-5-1-3",
-  "prompt": "",
+  "prompt": "a deep sea droplet, a dark drop with a hanging lure light like an anglerfish and tiny teeth",
   "status": "todo",
   "key": "enemy:enc-islet-5-1-3",
   "kind": "mob",
   "name": "深海のしずく",
   "zone": "islet-5-1",
-  "level": 23
+  "level": 23,
+  "shape": "float",
+  "tone": [
+   30,
+   50,
+   80
+  ]
  },
  {
   "id": "enc-islet-5-1-4",
-  "prompt": "",
+  "prompt": "a shell crystal creature, a spiral seashell made of mother-of-pearl crystal with an eye in the opening",
   "status": "todo",
   "key": "enemy:enc-islet-5-1-4",
   "kind": "mob",
   "name": "貝の結晶",
   "zone": "islet-5-1",
-  "level": 23
+  "level": 23,
+  "shape": "ground",
+  "tone": [
+   220,
+   210,
+   220
+  ]
  },
  {
   "id": "enc-islet-5-1-5",
-  "prompt": "",
+  "prompt": "a bubble wing creature, a fish-like body with wings made of clustered bubbles",
   "status": "todo",
   "key": "enemy:enc-islet-5-1-5",
   "kind": "mob",
   "name": "泡の羽",
   "zone": "islet-5-1",
-  "level": 23
+  "level": 23,
+  "shape": "winged",
+  "tone": [
+   150,
+   200,
+   220
+  ]
  },
  {
   "id": "enc-islet-6-1-0",
-  "prompt": "",
+  "prompt": "a lava shadow, a crawling dark creature with cracks of flowing lava along its back",
   "status": "todo",
   "key": "enemy:enc-islet-6-1-0",
   "kind": "mob",
   "name": "溶岩の影",
   "zone": "islet-6-1",
-  "level": 25
+  "level": 25,
+  "shape": "ground",
+  "tone": [
+   80,
+   40,
+   30
+  ]
  },
  {
   "id": "enc-islet-6-1-1",
-  "prompt": "",
+  "prompt": "a scorched stone creature, a charred black rock with smoking holes and ember eyes",
   "status": "todo",
   "key": "enemy:enc-islet-6-1-1",
   "kind": "mob",
   "name": "焦げた石",
   "zone": "islet-6-1",
-  "level": 25
+  "level": 25,
+  "shape": "big",
+  "tone": [
+   60,
+   50,
+   45
+  ]
  },
  {
   "id": "enc-islet-6-1-2",
-  "prompt": "",
+  "prompt": "an ember bat with wings of glowing coals and a smoking trail",
   "status": "todo",
   "key": "enemy:enc-islet-6-1-2",
   "kind": "mob",
   "name": "火の粉のこうもり",
   "zone": "islet-6-1",
-  "level": 25
+  "level": 25,
+  "shape": "winged",
+  "tone": [
+   180,
+   80,
+   40
+  ]
  },
  {
   "id": "enc-islet-6-1-3",
-  "prompt": "",
+  "prompt": "a volcanic smoke bird with dark grey smoke feathers and glowing ash specks",
   "status": "todo",
   "key": "enemy:enc-islet-6-1-3",
   "kind": "mob",
   "name": "噴煙の羽",
   "zone": "islet-6-1",
-  "level": 25
+  "level": 25,
+  "shape": "winged",
+  "tone": [
+   90,
+   85,
+   85
+  ]
  },
  {
   "id": "enc-islet-6-1-4",
-  "prompt": "",
+  "prompt": "a lava droplet creature, a floating drop of molten rock with a crust shell cracking open",
   "status": "todo",
   "key": "enemy:enc-islet-6-1-4",
   "kind": "mob",
   "name": "溶岩のしずく",
   "zone": "islet-6-1",
-  "level": 25
+  "level": 25,
+  "shape": "float",
+  "tone": [
+   210,
+   80,
+   30
+  ]
  },
  {
   "id": "enc-islet-6-1-5",
-  "prompt": "",
+  "prompt": "an obsidian soldier, a tall warrior made of black volcanic glass with sharp shard armor",
   "status": "todo",
   "key": "enemy:enc-islet-6-1-5",
   "kind": "mob",
   "name": "黒曜の兵",
   "zone": "islet-6-1",
-  "level": 25
+  "level": 25,
+  "shape": "tall",
+  "tone": [
+   40,
+   35,
+   45
+  ]
  },
  {
   "id": "enc-world-1-0",
-  "prompt": "",
+  "prompt": "a field grasshopper-like insect with leaf-green armor plates and long jumping legs",
   "status": "todo",
   "key": "enemy:enc-world-1-0",
   "kind": "mob",
   "name": "野の虫",
   "zone": "world-1",
-  "level": 3
+  "level": 3,
+  "shape": "ground",
+  "tone": [
+   110,
+   160,
+   80
+  ]
  },
  {
   "id": "enc-world-1-1",
-  "prompt": "",
+  "prompt": "a roadside shadow, a hunched dark figure wearing a travel hat and holding a broken signpost",
   "status": "todo",
   "key": "enemy:enc-world-1-1",
   "kind": "mob",
   "name": "街道の影",
   "zone": "world-1",
-  "level": 3
+  "level": 3,
+  "shape": "tall",
+  "tone": [
+   80,
+   75,
+   70
+  ]
  },
  {
   "id": "enc-world-1-2",
-  "prompt": "",
+  "prompt": "a field mouse shadow, a small dark mouse with a long tail of smoke and wheat stuck in its fur",
   "status": "todo",
   "key": "enemy:enc-world-1-2",
   "kind": "mob",
   "name": "野ねずみの影",
   "zone": "world-1",
-  "level": 3
+  "level": 3,
+  "shape": "ground",
+  "tone": [
+   120,
+   100,
+   80
+  ]
  },
  {
   "id": "enc-world-1-3",
-  "prompt": "",
+  "prompt": "a meadow dew droplet, a floating clear drop holding a tiny clover and a rainbow gleam",
   "status": "todo",
   "key": "enemy:enc-world-1-3",
   "kind": "mob",
   "name": "草原のしずく",
   "zone": "world-1",
-  "level": 3
+  "level": 3,
+  "shape": "float",
+  "tone": [
+   150,
+   200,
+   160
+  ]
  },
  {
   "id": "enc-world-1-4",
-  "prompt": "",
+  "prompt": "a roadside stone creature, a milestone rock with a moss beard and wooden stick arms",
   "status": "todo",
   "key": "enemy:enc-world-1-4",
   "kind": "mob",
   "name": "道ばたの石",
   "zone": "world-1",
-  "level": 3
+  "level": 3,
+  "shape": "big",
+  "tone": [
+   140,
+   135,
+   120
+  ]
  },
  {
   "id": "enc-world-1-5",
-  "prompt": "",
+  "prompt": "a little songbird with brown and cream feathers, a puffed chest and a sharp beak",
   "status": "todo",
   "key": "enemy:enc-world-1-5",
   "kind": "mob",
   "name": "小鳥の羽",
   "zone": "world-1",
-  "level": 3
+  "level": 3,
+  "shape": "winged",
+  "tone": [
+   170,
+   130,
+   90
+  ]
  },
  {
   "id": "enc-world-2-0",
-  "prompt": "",
+  "prompt": "a mountain pass shadow, a tall thin shadow with a walking staff and a cloak flapping in the wind",
   "status": "todo",
   "key": "enemy:enc-world-2-0",
   "kind": "mob",
   "name": "峠の影",
   "zone": "world-2",
-  "level": 7
+  "level": 7,
+  "shape": "tall",
+  "tone": [
+   90,
+   95,
+   110
+  ]
  },
  {
   "id": "enc-world-2-1",
-  "prompt": "",
+  "prompt": "a lakeside bat with blue-grey fur, webbed wings and a fishing line tangled on it",
   "status": "todo",
   "key": "enemy:enc-world-2-1",
   "kind": "mob",
   "name": "湖畔のこうもり",
   "zone": "world-2",
-  "level": 7
+  "level": 7,
+  "shape": "winged",
+  "tone": [
+   100,
+   120,
+   140
+  ]
  },
  {
   "id": "enc-world-2-2",
-  "prompt": "",
+  "prompt": "a stone distortion, a rock that twists into a spiral shape with a violet glow inside",
   "status": "todo",
   "key": "enemy:enc-world-2-2",
   "kind": "mob",
   "name": "石の歪み",
   "zone": "world-2",
-  "level": 7
+  "level": 7,
+  "shape": "big",
+  "tone": [
+   120,
+   110,
+   125
+  ]
  },
  {
   "id": "enc-world-2-3",
-  "prompt": "",
+  "prompt": "a lake droplet, a floating drop of blue lake water with a small fish swimming inside",
   "status": "todo",
   "key": "enemy:enc-world-2-3",
   "kind": "mob",
   "name": "湖のしずく",
   "zone": "world-2",
-  "level": 7
+  "level": 7,
+  "shape": "float",
+  "tone": [
+   110,
+   160,
+   200
+  ]
  },
  {
   "id": "enc-world-2-4",
-  "prompt": "",
+  "prompt": "a mountain pass insect, a sturdy beetle with a rocky shell and short strong legs",
   "status": "todo",
   "key": "enemy:enc-world-2-4",
   "kind": "mob",
   "name": "峠の虫",
   "zone": "world-2",
-  "level": 7
+  "level": 7,
+  "shape": "ground",
+  "tone": [
+   120,
+   115,
+   100
+  ]
  },
  {
   "id": "enc-world-2-5",
-  "prompt": "",
+  "prompt": "a rocky mountain soldier made of stacked grey stones wearing a rusty helmet, carrying a stone club",
   "status": "todo",
   "key": "enemy:enc-world-2-5",
   "kind": "mob",
   "name": "岩山の兵",
   "zone": "world-2",
-  "level": 7
+  "level": 7,
+  "shape": "tall",
+  "tone": [
+   130,
+   125,
+   115
+  ]
  },
  {
   "id": "enc-world-3-0",
-  "prompt": "",
+  "prompt": "a dune-slipping creature like a sand eel with a smooth sandy body leaping out of the dunes",
   "status": "todo",
   "key": "enemy:enc-world-3-0",
   "kind": "mob",
   "name": "砂ぬけ",
   "zone": "world-3",
-  "level": 11
+  "level": 11,
+  "shape": "long",
+  "tone": [
+   210,
+   180,
+   120
+  ]
  },
  {
   "id": "enc-world-3-1",
-  "prompt": "",
+  "prompt": "a hot wind shadow, a whirling dust devil with an orange glowing face inside",
   "status": "todo",
   "key": "enemy:enc-world-3-1",
   "kind": "mob",
   "name": "熱風の影",
   "zone": "world-3",
-  "level": 11
+  "level": 11,
+  "shape": "float",
+  "tone": [
+   200,
+   140,
+   90
+  ]
  },
  {
   "id": "enc-world-3-2",
-  "prompt": "",
+  "prompt": "a desert scorpion shadow with glassy sand-colored plates and a long curved tail made of glass",
   "status": "todo",
   "key": "enemy:enc-world-3-2",
   "kind": "mob",
   "name": "砂サソリの影",
   "zone": "world-3",
-  "level": 11
+  "level": 11,
+  "shape": "ground",
+  "tone": [
+   190,
+   160,
+   110
+  ]
  },
  {
   "id": "enc-world-3-3",
-  "prompt": "",
+  "prompt": "a sand dune stone creature, a sandstone rock eroded into a face, half buried in sand",
   "status": "todo",
   "key": "enemy:enc-world-3-3",
   "kind": "mob",
   "name": "砂丘の石",
   "zone": "world-3",
-  "level": 11
+  "level": 11,
+  "shape": "big",
+  "tone": [
+   200,
+   165,
+   115
+  ]
  },
  {
   "id": "enc-world-3-4",
-  "prompt": "",
+  "prompt": "a mirage droplet, a floating shimmering drop that shows a fake oasis inside, wavering edges",
   "status": "todo",
   "key": "enemy:enc-world-3-4",
   "kind": "mob",
   "name": "蜃気楼のしずく",
   "zone": "world-3",
-  "level": 11
+  "level": 11,
+  "shape": "float",
+  "tone": [
+   170,
+   210,
+   220
+  ]
  },
  {
   "id": "enc-world-3-5",
-  "prompt": "",
+  "prompt": "a desert vulture-like bird with sand-colored feathers, a bald head and long wings",
   "status": "todo",
   "key": "enemy:enc-world-3-5",
   "kind": "mob",
   "name": "砂漠の羽",
   "zone": "world-3",
-  "level": 11
+  "level": 11,
+  "shape": "winged",
+  "tone": [
+   160,
+   125,
+   90
+  ]
  },
  {
   "id": "enc-world-4-0",
-  "prompt": "",
+  "prompt": "a snowfield ice soldier shadow, a figure of packed snow and ice with a fur hat and an ice axe",
   "status": "todo",
   "key": "enemy:enc-world-4-0",
   "kind": "mob",
   "name": "氷の兵の影",
   "zone": "world-4",
-  "level": 15
+  "level": 15,
+  "shape": "tall",
+  "tone": [
+   190,
+   205,
+   220
+  ]
  },
  {
   "id": "enc-world-4-1",
-  "prompt": "",
+  "prompt": "a frost distortion on four legs, a wolf-like shape of frozen mist with violet ice teeth",
   "status": "todo",
   "key": "enemy:enc-world-4-1",
   "kind": "mob",
   "name": "霜の歪み",
   "zone": "world-4",
-  "level": 15
+  "level": 15,
+  "shape": "ground",
+  "tone": [
+   175,
+   195,
+   215
+  ]
  },
  {
   "id": "enc-world-4-2",
-  "prompt": "",
+  "prompt": "a white shadow, a pale snow-covered blob-free figure like a tall snowdrift with dark eyes",
   "status": "todo",
   "key": "enemy:enc-world-4-2",
   "kind": "mob",
   "name": "白い影",
   "zone": "world-4",
-  "level": 15
+  "level": 15,
+  "shape": "tall",
+  "tone": [
+   225,
+   230,
+   235
+  ]
  },
  {
   "id": "enc-world-4-3",
-  "prompt": "",
+  "prompt": "a snowfield insect, a white furry caterpillar with icy blue spots and frost on its hairs",
   "status": "todo",
   "key": "enemy:enc-world-4-3",
   "kind": "mob",
   "name": "雪原の虫",
   "zone": "world-4",
-  "level": 15
+  "level": 15,
+  "shape": "long",
+  "tone": [
+   215,
+   225,
+   235
+  ]
  },
  {
   "id": "enc-world-4-4",
-  "prompt": "",
+  "prompt": "an ice crystal creature, a large hexagonal snowflake crystal with a frozen face in the center",
   "status": "todo",
   "key": "enemy:enc-world-4-4",
   "kind": "mob",
   "name": "氷の結晶",
   "zone": "world-4",
-  "level": 15
+  "level": 15,
+  "shape": "float",
+  "tone": [
+   180,
+   215,
+   240
+  ]
  },
  {
   "id": "enc-world-4-5",
-  "prompt": "",
+  "prompt": "a blizzard bird with feathers like flying snow, a pale blue body and an icy crest",
   "status": "todo",
   "key": "enemy:enc-world-4-5",
   "kind": "mob",
   "name": "吹雪の羽",
   "zone": "world-4",
-  "level": 15
+  "level": 15,
+  "shape": "winged",
+  "tone": [
+   200,
+   220,
+   235
+  ]
  },
  {
   "id": "enc-world-5-0",
-  "prompt": "",
+  "prompt": "an ember shadow, a dark figure with glowing ember speckles all over and burning eyes",
   "status": "todo",
   "key": "enemy:enc-world-5-0",
   "kind": "mob",
   "name": "火の粉の影",
   "zone": "world-5",
-  "level": 24
+  "level": 24,
+  "shape": "tall",
+  "tone": [
+   90,
+   50,
+   40
+  ]
  },
  {
   "id": "enc-world-5-1",
-  "prompt": "",
+  "prompt": "a lava distortion, a twisted lava rock creature with violet cracks mixed with orange magma",
   "status": "todo",
   "key": "enemy:enc-world-5-1",
   "kind": "mob",
   "name": "溶岩の歪み",
   "zone": "world-5",
-  "level": 24
+  "level": 24,
+  "shape": "big",
+  "tone": [
+   140,
+   60,
+   70
+  ]
  },
  {
   "id": "enc-world-5-2",
-  "prompt": "",
+  "prompt": "an ash-covered shadow, a hunched creature buried in grey volcanic ash with red eyes peeking out",
   "status": "todo",
   "key": "enemy:enc-world-5-2",
   "kind": "mob",
   "name": "灰かぶりの影",
   "zone": "world-5",
-  "level": 24
+  "level": 24,
+  "shape": "big",
+  "tone": [
+   110,
+   105,
+   105
+  ]
  },
  {
   "id": "enc-world-5-3",
-  "prompt": "",
+  "prompt": "an ash insect, a grey beetle with a soot-covered shell and glowing orange joints",
   "status": "todo",
   "key": "enemy:enc-world-5-3",
   "kind": "mob",
   "name": "灰の虫",
   "zone": "world-5",
-  "level": 24
+  "level": 24,
+  "shape": "ground",
+  "tone": [
+   100,
+   95,
+   90
+  ]
  },
  {
   "id": "enc-world-5-4",
-  "prompt": "",
+  "prompt": "a volcano stone creature, a dark basalt column rock with a magma mouth, on stubby legs",
   "status": "todo",
   "key": "enemy:enc-world-5-4",
   "kind": "mob",
   "name": "火山の石",
   "zone": "world-5",
-  "level": 24
+  "level": 24,
+  "shape": "big",
+  "tone": [
+   70,
+   60,
+   60
+  ]
  },
  {
   "id": "enc-world-5-5",
-  "prompt": "",
+  "prompt": "a magma droplet, a heavy floating drop of glowing magma with a black cooled skin",
   "status": "todo",
   "key": "enemy:enc-world-5-5",
   "kind": "mob",
   "name": "マグマのしずく",
   "zone": "world-5",
-  "level": 24
+  "level": 24,
+  "shape": "float",
+  "tone": [
+   200,
+   70,
+   30
+  ]
  },
  {
   "id": "enc-world-6-0",
-  "prompt": "",
+  "prompt": "a wasteland shadow, a lean dog-like creature of dust and shadow with a cracked bone collar",
   "status": "todo",
   "key": "enemy:enc-world-6-0",
   "kind": "mob",
   "name": "荒野の影",
   "zone": "world-6",
-  "level": 18
+  "level": 18,
+  "shape": "ground",
+  "tone": [
+   130,
+   110,
+   90
+  ]
  },
  {
   "id": "enc-world-6-1",
-  "prompt": "",
+  "prompt": "a distortion whose light went out, an old broken street lamp creature with a dark empty glass head",
   "status": "todo",
   "key": "enemy:enc-world-6-1",
   "kind": "mob",
   "name": "灯の消えた歪み",
   "zone": "world-6",
-  "level": 18
+  "level": 18,
+  "shape": "tall",
+  "tone": [
+   80,
+   85,
+   90
+  ]
  },
  {
   "id": "enc-world-6-2",
-  "prompt": "",
+  "prompt": "an old machine insect, a rusty mechanical beetle with exposed gears and a dented lamp eye",
   "status": "todo",
   "key": "enemy:enc-world-6-2",
   "kind": "mob",
   "name": "古い機械の虫",
   "zone": "world-6",
-  "level": 18
+  "level": 18,
+  "shape": "ground",
+  "tone": [
+   130,
+   100,
+   70
+  ]
  },
  {
   "id": "enc-world-6-3",
-  "prompt": "",
+  "prompt": "a wasteland stone creature, a cracked red rock with dry thorny brush growing on it, one eye",
   "status": "todo",
   "key": "enemy:enc-world-6-3",
   "kind": "mob",
   "name": "荒野の石",
   "zone": "world-6",
-  "level": 18
+  "level": 18,
+  "shape": "big",
+  "tone": [
+   160,
+   110,
+   80
+  ]
  },
  {
   "id": "enc-world-6-4",
-  "prompt": "",
+  "prompt": "a rusted machine, a boxy rusty robot on tank treads with a broken antenna and a loose jaw",
   "status": "todo",
   "key": "enemy:enc-world-6-4",
   "kind": "mob",
   "name": "錆びた機械",
   "zone": "world-6",
-  "level": 18
+  "level": 18,
+  "shape": "big",
+  "tone": [
+   140,
+   90,
+   60
+  ]
  },
  {
   "id": "enc-world-6-5",
-  "prompt": "",
+  "prompt": "a withered field bird, a scarecrow-like bird made of dry straw and torn cloth wings",
   "status": "todo",
   "key": "enemy:enc-world-6-5",
   "kind": "mob",
   "name": "枯れ野の羽",
   "zone": "world-6",
-  "level": 18
+  "level": 18,
+  "shape": "winged",
+  "tone": [
+   170,
+   150,
+   100
+  ]
  },
  {
   "id": "enc-world-sea-0",
-  "prompt": "",
+  "prompt": "a shadow between the waves, a dark eel-like creature with foam crests and glowing teal eyes",
   "status": "todo",
   "key": "enemy:enc-world-sea-0",
   "kind": "mob",
   "name": "波間の影",
   "zone": "world-sea",
-  "level": 12
+  "level": 12,
+  "shape": "long",
+  "tone": [
+   40,
+   80,
+   100
+  ]
  },
  {
   "id": "enc-world-sea-1",
-  "prompt": "",
+  "prompt": "a tide stone creature, a barnacle-covered rock with a crab-claw arm and seaweed hair",
   "status": "todo",
   "key": "enemy:enc-world-sea-1",
   "kind": "mob",
   "name": "潮の石",
   "zone": "world-sea",
-  "level": 12
+  "level": 12,
+  "shape": "big",
+  "tone": [
+   100,
+   110,
+   100
+  ]
  },
  {
   "id": "enc-world-sea-2",
-  "prompt": "",
+  "prompt": "a sea firefly bug swarm queen, a larger glowing insect with transparent shell and blue light trails",
   "status": "todo",
   "key": "enemy:enc-world-sea-2",
   "kind": "mob",
   "name": "海ほたるの虫",
   "zone": "world-sea",
-  "level": 12
+  "level": 12,
+  "shape": "winged",
+  "tone": [
+   70,
+   160,
+   210
+  ]
  },
  {
   "id": "enc-world-sea-3",
-  "prompt": "",
+  "prompt": "a whirlpool droplet, a floating drop of seawater spinning into a spiral with a dark eye at its center",
   "status": "todo",
   "key": "enemy:enc-world-sea-3",
   "kind": "mob",
   "name": "渦のしずく",
   "zone": "world-sea",
-  "level": 12
+  "level": 12,
+  "shape": "float",
+  "tone": [
+   60,
+   120,
+   160
+  ]
  },
  {
   "id": "enc-world-sea-4",
-  "prompt": "",
+  "prompt": "a sea feather creature, a flying fish with huge feather-like fins and silver scales",
   "status": "todo",
   "key": "enemy:enc-world-sea-4",
   "kind": "mob",
   "name": "海の羽",
   "zone": "world-sea",
-  "level": 12
+  "level": 12,
+  "shape": "winged",
+  "tone": [
+   170,
+   200,
+   210
+  ]
  },
  {
   "id": "enc-world-sea-5",
-  "prompt": "",
+  "prompt": "an echo of a boat, a ghostly small wooden rowboat with a faint rower and a lantern",
   "status": "todo",
   "key": "enemy:enc-world-sea-5",
   "kind": "mob",
   "name": "舟の残響",
   "zone": "world-sea",
-  "level": 12
+  "level": 12,
+  "shape": "big",
+  "tone": [
+   140,
+   150,
+   160
+  ]
  },
  {
   "id": "enc-world-sea-6",
-  "prompt": "",
+  "prompt": "a sunken ship guardian, a figure made of ship planks and an anchor with a ship wheel shield",
   "status": "todo",
   "key": "enemy:enc-world-sea-6",
   "kind": "mob",
   "name": "沈没船の番兵",
   "zone": "world-sea",
-  "level": 12
+  "level": 12,
+  "shape": "tall",
+  "tone": [
+   100,
+   85,
+   70
+  ]
  },
  {
   "id": "enc-world-air-0",
-  "prompt": "",
+  "prompt": "a shadow with wind wings, a dark streamlined bird-like shadow with feathers made of wind lines",
   "status": "todo",
   "key": "enemy:enc-world-air-0",
   "kind": "mob",
   "name": "風の羽の影",
   "zone": "world-air",
-  "level": 17
+  "level": 17,
+  "shape": "winged",
+  "tone": [
+   90,
+   100,
+   130
+  ]
  },
  {
   "id": "enc-world-air-1",
-  "prompt": "",
+  "prompt": "a fragment of cloud, a fluffy white cloud chunk with a grumpy face and small hailstones",
   "status": "todo",
   "key": "enemy:enc-world-air-1",
   "kind": "mob",
   "name": "雲のかけら",
   "zone": "world-air",
-  "level": 17
+  "level": 17,
+  "shape": "float",
+  "tone": [
+   225,
+   230,
+   240
+  ]
  },
  {
   "id": "enc-world-air-2",
-  "prompt": "",
+  "prompt": "a thundercloud shadow, a dark heavy cloud creature with a lightning bolt tail and yellow eyes",
   "status": "todo",
   "key": "enemy:enc-world-air-2",
   "kind": "mob",
   "name": "雷雲の影",
   "zone": "world-air",
-  "level": 17
+  "level": 17,
+  "shape": "float",
+  "tone": [
+   80,
+   85,
+   110
+  ]
  },
  {
   "id": "enc-world-air-3",
-  "prompt": "",
+  "prompt": "a sky droplet, a floating drop of pale sky blue with a cloud inside and a tiny sun reflection",
   "status": "todo",
   "key": "enemy:enc-world-air-3",
   "kind": "mob",
   "name": "空のしずく",
   "zone": "world-air",
-  "level": 17
+  "level": 17,
+  "shape": "float",
+  "tone": [
+   160,
+   200,
+   240
+  ]
  },
  {
   "id": "enc-world-air-4",
-  "prompt": "",
+  "prompt": "a lightning crystal, a jagged yellow crystal crackling with electricity, floating",
   "status": "todo",
   "key": "enemy:enc-world-air-4",
   "kind": "mob",
   "name": "雷の結晶",
   "zone": "world-air",
-  "level": 17
+  "level": 17,
+  "shape": "float",
+  "tone": [
+   230,
+   210,
+   90
+  ]
  },
  {
   "id": "enc-world-air-5",
-  "prompt": "",
+  "prompt": "a cloud insect, a dragonfly with wings of mist and a long pale body",
   "status": "todo",
   "key": "enemy:enc-world-air-5",
   "kind": "mob",
   "name": "雲の虫",
   "zone": "world-air",
-  "level": 17
+  "level": 17,
+  "shape": "long",
+  "tone": [
+   200,
+   210,
+   225
+  ]
  },
  {
   "id": "enc-world-air-6",
-  "prompt": "",
+  "prompt": "a storm feather creature, a large bird with dark storm-grey feathers and lightning patterns",
   "status": "todo",
   "key": "enemy:enc-world-air-6",
   "kind": "mob",
   "name": "嵐の羽",
   "zone": "world-air",
-  "level": 17
+  "level": 17,
+  "shape": "winged",
+  "tone": [
+   100,
+   105,
+   125
+  ]
  },
  {
   "id": "chapter0-yugami",
@@ -2097,7 +3261,7 @@
  {
   "id": "sanone-yugami",
   "prompt": "a towering monster made of swirling desert sand and stone, a huge jagged split mouth, half-buried wooden cart wheels in its body, many glowing amber eyes, dark sand",
-  "status": "picked",
+  "status": "done",
   "key": "boss:sanone-yugami",
   "kind": "boss",
   "name": "砂嵐の歪み",
@@ -2108,7 +3272,7 @@
    115,
    70
   ],
-  "draft": "sanone-yugami_0",
+  "draft": "sanone-yugami_2",
   "neg_extra": "poster, framed picture, foggy background, landscape"
  },
  {
@@ -2146,7 +3310,7 @@
  {
   "id": "fushima-yugami",
   "prompt": "a floating rock fortress monster, a ring of glowing pale blue eye-like lenses around its body, hanging chains and roots, mossy stone, crystals, ancient machinery",
-  "status": "draft",
+  "status": "done",
   "key": "boss:fushima-yugami",
   "kind": "boss",
   "name": "浮嶼の歪み",
@@ -2194,7 +3358,7 @@
  {
   "id": "deep-yugami",
   "prompt": "a colossal ghostly tentacled creature, many long translucent tentacles, sorrowful pale faces in its body, a dim glowing heart, floating motes of light",
-  "status": "draft",
+  "status": "done",
   "key": "boss:deep-yugami",
   "kind": "boss",
   "name": "初源の歪み",
@@ -2205,7 +3369,8 @@
    90,
    130
   ],
-  "neg_extra": "poster, painting on wall, framed picture, canvas print"
+  "neg_extra": "poster, painting on wall, framed picture, canvas print",
+  "draft": "deep-yugami_0"
  },
  {
   "id": "deep3-yugami",
@@ -2402,17 +3567,17 @@
  },
  {
   "id": "zenkan",
-  "prompt": "a colossal ancient floating deity shaped like a giant cracked stone halo, golden light, a single calm eye at its center, beams of light, monumental size",
+  "prompt": "a colossal floating halo ring of cracked ancient stone with golden glowing seams, a large calm eye floating in the center of the ring, rays of light, monster, fantasy art",
   "status": "draft",
   "key": "boss:zenkan",
   "kind": "boss",
   "name": "全観",
   "zone": "環奥の最後",
-  "shape": "float",
+  "shape": "ring",
   "tone": [
-   165,
-   160,
-   145
+   200,
+   170,
+   95
   ],
   "neg_extra": "jewelry, finger ring, wedding ring, small object, metal band, gemstone"
  }
