@@ -14,6 +14,21 @@ import { frameAt, SPRITE_FEET_ROW } from "../game/sprite/overworld-sprite";
 
 let currentBiome: Biome = "grass";
 /** これから始まる戦闘の背景（場所）を決める。 */
+/**
+ * 戦闘の背景の絵を、先にぜんぶ作っておく（はじめて行く場所の戦闘で、絵を作るあいだ画面が止まらないように）。
+ * 遊びはじめて少したってから、手のあいた時に1枚ずつ作る。
+ */
+export function warmBattleBackdrops(biomes: Biome[], screenWidth: number, screenHeight: number): void {
+  const queue = [...biomes];
+  const next = (): void => {
+    const b = queue.shift();
+    if (!b) return;
+    getBackdropCanvas(b, screenWidth, screenHeight - 56);
+    setTimeout(next, 30);
+  };
+  setTimeout(next, 30);
+}
+
 export function setBattleBiome(biome: Biome): void {
   currentBiome = biome;
 }
