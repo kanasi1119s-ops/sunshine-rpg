@@ -225,21 +225,21 @@
  },
  {
   "id": "enc-garasuko-warehouse-1",
-  "prompt": "a dripping shapeless shadow of dark green mold and murky water seeping from broken wet wooden planks, many tiny glowing eyes, no human face",
+  "prompt": "a hunched creature made of rotten wet wooden planks and dark green mold, dripping murky water, many small glowing yellow eyes in the gaps",
   "status": "done",
   "key": "enemy:enc-garasuko-warehouse-1",
   "kind": "mob",
   "name": "湿った歪み",
   "zone": "garasuko-warehouse",
   "level": 6,
-  "shape": "float",
+  "shape": "big",
   "tone": [
    70,
    85,
    80
   ],
-  "draft": "enc-garasuko-warehouse-1_0",
-  "seed_base": 6001
+  "draft": "enc-garasuko-warehouse-1_1",
+  "seed_base": 10002
  },
  {
   "id": "enc-garasuko-warehouse-2",
@@ -356,24 +356,26 @@
  },
  {
   "id": "enc-tetsukusari-mine-3",
-  "prompt": "a rusty mine cart machine walking on four mechanical legs, a furnace mouth with burning coal, rivets",
-  "status": "todo",
+  "prompt": "a rusty iron mine cart monster walking on four thick mechanical legs, a glowing furnace mouth full of burning coal at the front, rivets",
+  "status": "picked",
   "key": "enemy:enc-tetsukusari-mine-3",
   "kind": "mob",
   "name": "鉱車の機械",
   "zone": "tetsukusari-mine",
   "level": 8,
-  "shape": "ground",
+  "shape": "big",
   "tone": [
    120,
    80,
    60
-  ]
+  ],
+  "draft": "enc-tetsukusari-mine-3_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-tetsukusari-mine-4",
   "prompt": "a creature formed from a pile of fallen rocks and timber supports, one glowing red eye between the stones",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tetsukusari-mine-4",
   "kind": "mob",
   "name": "落盤の石",
@@ -384,12 +386,13 @@
    110,
    100,
    95
-  ]
+  ],
+  "draft": "enc-tetsukusari-mine-4_0"
  },
  {
   "id": "enc-tetsukusari-mine-5",
   "prompt": "a pale translucent echo of a miner with a lantern, faded overalls, empty glowing eyes, floating",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tetsukusari-mine-5",
   "kind": "mob",
   "name": "鉱夫の残響",
@@ -400,12 +403,13 @@
    160,
    170,
    175
-  ]
+  ],
+  "draft": "enc-tetsukusari-mine-5_0"
  },
  {
   "id": "enc-sanone-camp-0",
   "prompt": "a sand-burrowing creature like a mole with a flat shovel-shaped head and sandy plated back, peeking out of a sand mound",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-sanone-camp-0",
   "kind": "mob",
   "name": "砂ぬけ",
@@ -416,7 +420,8 @@
    190,
    160,
    110
-  ]
+  ],
+  "draft": "enc-sanone-camp-0_0"
  },
  {
   "id": "enc-sanone-camp-1",
