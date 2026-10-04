@@ -207,7 +207,7 @@
  },
  {
   "id": "enc-garasuko-warehouse-0",
-  "prompt": "a fat cargo rat with a burlap sack on its back, scarred ears, glowing amber eyes",
+  "prompt": "a fat brown cargo rat monster with a burlap sack tied on its back, scarred ears, long tail, glowing amber eyes, on four legs, side view",
   "status": "done",
   "key": "enemy:enc-garasuko-warehouse-0",
   "kind": "mob",
@@ -220,11 +220,12 @@
    95,
    75
   ],
-  "draft": "enc-garasuko-warehouse-0_0"
+  "draft": "enc-garasuko-warehouse-0_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-garasuko-warehouse-1",
-  "prompt": "a damp shapeless shadow seeping from wet wooden planks, mold spots, many small dim eyes",
+  "prompt": "a dripping shapeless shadow of dark green mold and murky water seeping from broken wet wooden planks, many tiny glowing eyes, no human face",
   "status": "done",
   "key": "enemy:enc-garasuko-warehouse-1",
   "kind": "mob",
@@ -237,7 +238,8 @@
    85,
    80
   ],
-  "draft": "enc-garasuko-warehouse-1_0"
+  "draft": "enc-garasuko-warehouse-1_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-garasuko-warehouse-2",
@@ -259,7 +261,7 @@
  {
   "id": "enc-garasuko-warehouse-3",
   "prompt": "a beaver-like gnawing creature with huge front teeth, coils of chewed hemp rope wrapped around its body",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-garasuko-warehouse-3",
   "kind": "mob",
   "name": "縄かじり",
@@ -270,12 +272,13 @@
    140,
    110,
    70
-  ]
+  ],
+  "draft": "enc-garasuko-warehouse-3_0"
  },
  {
   "id": "enc-garasuko-warehouse-4",
   "prompt": "a walking wine barrel creature with iron hoops, stone-heavy legs and a cork for a nose, wood grain body",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-garasuko-warehouse-4",
   "kind": "mob",
   "name": "樽の石",
@@ -286,12 +289,13 @@
    130,
    90,
    55
-  ]
+  ],
+  "draft": "enc-garasuko-warehouse-4_0"
  },
  {
   "id": "enc-garasuko-warehouse-5",
   "prompt": "a dusty warehouse moth with grey-brown patterned wings, feathery antennae and a lamp-glow spot on each wing",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-garasuko-warehouse-5",
   "kind": "mob",
   "name": "倉庫の羽虫",
@@ -302,7 +306,8 @@
    150,
    135,
    110
-  ]
+  ],
+  "draft": "enc-garasuko-warehouse-5_0"
  },
  {
   "id": "enc-tetsukusari-mine-0",
@@ -318,7 +323,7 @@
  {
   "id": "enc-tetsukusari-mine-1",
   "prompt": "a tall thin shadow wearing a broken miner's helmet, long arms dragging a pickaxe, coal-black body",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tetsukusari-mine-1",
   "kind": "mob",
   "name": "坑道の影",
@@ -329,12 +334,13 @@
    55,
    50,
    55
-  ]
+  ],
+  "draft": "enc-tetsukusari-mine-1_0"
  },
  {
   "id": "enc-tetsukusari-mine-2",
   "prompt": "a glowing ore beetle with a crystal on its back that shines like a lamp, orange-gold shell",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tetsukusari-mine-2",
   "kind": "mob",
   "name": "灯り石の虫",
@@ -345,7 +351,8 @@
    190,
    140,
    60
-  ]
+  ],
+  "draft": "enc-tetsukusari-mine-2_0"
  },
  {
   "id": "enc-tetsukusari-mine-3",
