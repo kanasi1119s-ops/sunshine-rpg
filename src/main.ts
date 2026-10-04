@@ -4,6 +4,8 @@ import { GAME_TITLE } from "./core/status";
 import { backTitle, confirmTitle, createTitleState, moveTitleCursor } from "./game/title/title-menu";
 import { renderTitle } from "./render/title-renderer";
 import { renderOpening } from "./render/opening-renderer";
+import { advanceBattleTransition, canSkipTransition, isCoverPhase, skipToReveal, startBattleTransition, type BattleTransition } from "./game/battle/battle-transition";
+import { renderTransitionCover, renderTransitionReveal } from "./render/battle-transition-renderer";
 import { advanceOpening, createOpeningState, skipOpening, startOpening, updateOpening } from "./game/title/opening";
 import { battleSeFor } from "./game/battle/battle-se";
 import { battleEffectFor, type BattleEffect } from "./game/battle/battle-effect";
@@ -390,6 +392,9 @@ function playMapBgm(mapId: string): void {
 /** 世界地図を歩く主人公たちの大きさ（1で町と同じ。以前は0.6で小さすぎた。2026-10-05、人間の指摘）。 */
 const WORLD_MAP_CHARACTER_SCALE = 1;
 
+/** 戦闘に入る演出（ふつうは短く、ボスは長い特別な登場）。演出の間は、戦闘の操作を受けつけない。 */
+let battleTransition: BattleTransition | null = null;
+
 let pendingVictoryFlag: string | null = null;
 
 const dialogue = new DialogueController(flags, {
@@ -541,6 +546,7 @@ function startRandomBattle(enemies: Combatant[]): void {
     { skills: buildSkillsMap(CHAPTER0_SKILL), item: CHAPTER0_ITEM, extraSkills: buildExtraSkillsMap() },
   );
   currentBgmTrack = getTrack("battle");
+  battleTransition = startBattleTransition(false);
   if (audioStarted) {
     audio.playSe(seOf("encounter"));
   }
@@ -573,6 +579,8 @@ function startStoryBattle(battleId: string): void {
     { skills: buildSkillsMap(CHAPTER0_SKILL), item: CHAPTER0_ITEM, extraSkills: buildExtraSkillsMap() },
   );
   currentBgmTrack = getTrack(def.bgmId);
+  // ボス・強敵の戦闘は、特別な登場の演出（黒い帯・名前・白いひらめき）をはさむ
+  battleTransition = startBattleTransition(true, battle.getState().enemies[0]?.name ?? "");
   if (audioStarted) {
     audio.playSe(seOf("battle-start"));
   }
@@ -1401,6 +1409,163 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
   autosave();
 }
 
+/** 1コマぶんの画面をすべて描く（戦闘に入る演出の前後でも、これを使う）。 */
+function renderGameScene(): void {
+  ctx.fillStyle = "#101018";
+  ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+
+  if (title.open) {
+    renderTitle(ctx, title, GAME_TITLE, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    return;
+  }
+  if (staffRoll.open) {
+    renderStaffRoll(ctx, staffRoll, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    return;
+  }
+  if (opening.open) {
+    renderOpening(ctx, opening, LOGICAL_WIDTH, LOGICAL_HEIGHT, GAME_TITLE);
+    return;
+  }
+
+  if (battle) {
+    renderBattle(
+      ctx,
+      battle.getState(),
+      battle.getUiState(),
+      LOGICAL_WIDTH,
+      LOGICAL_HEIGHT,
+      battleEffect ? { effect: battleEffect.effect, elapsedMs: performance.now() - battleEffect.startedAt } : null,
+    );
+    if (victoryMessage && battle.getUiState().kind === "finished") {
+      ctx.fillStyle = "#f2c14e";
+      ctx.font = "10px monospace";
+      ctx.textBaseline = "top";
+      ctx.fillText(victoryMessage, 8, LOGICAL_HEIGHT - 56 + 18);
+    }
+    if (import.meta.env.DEV) {
+      ctx.fillStyle = "#88ff88";
+      ctx.font = "10px monospace";
+      ctx.textBaseline = "top";
+      ctx.fillText(`FPS: ${loop.getFps()}`, 4, LOGICAL_HEIGHT - 12);
+      renderDebugMenu(ctx, debugMenu, DEBUG_MENU_ROWS, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    }
+    return;
+  }
+
+  setLitBeacons(new Set([1, 2, 3, 4, 5, 6, 7, 8].filter((n) => flags[`beacon${n}_lit`])));
+  if (worldOverviewOpen) {
+    renderWorldOverview(
+      ctx,
+      map,
+      { x: Math.floor((player.x + player.width / 2) / map.data.tileWidth), y: Math.floor((player.y + player.height / 2) / map.data.tileHeight) },
+      new Set([1, 2, 3, 4, 5, 6, 7, 8].filter((n) => flags[`beacon${n}_lit`])),
+      LOGICAL_WIDTH,
+      LOGICAL_HEIGHT,
+      performance.now(),
+    );
+    return;
+  }
+  renderTileMap(ctx, map, renderCamera);
+  // 奥にいる人を先に、手前にいる人をあとに描く（足元の位置の順）。
+  const playerFeetY = player.y + player.height;
+  // 家・木・NPCは、プレイヤーとの前後だけでなく、お互いの前後も足元の位置の順に並べて描く（家の裏を歩く人が家より手前に出ないように）。
+  const depthItems: { feetY: number; draw: () => void }[] = [];
+  for (const prop of map.data.props ?? []) {
+    depthItems.push({ feetY: propFeetY(prop, map.data.tileHeight), draw: () => renderProps(ctx, map.data, renderCamera, () => true, [prop]) });
+  }
+  for (const npc of npcs) {
+    depthItems.push({ feetY: visibleNpcFeetY(npc, map.data.tileHeight), draw: () => renderNpcs(ctx, [npc], map, renderCamera) });
+  }
+  depthItems.sort((a, b) => a.feetY - b.feetY);
+  for (const item of depthItems) {
+    if (item.feetY <= playerFeetY) item.draw();
+  }
+  const followers = followerSpecs();
+  const onWorldMap = currentMapId === "world-map";
+  const riding = onWorldMap && vehicle !== "foot";
+  const nowMs = performance.now();
+  if (onWorldMap) {
+    renderVortex(ctx, map, renderCamera, nowMs);
+    // 停泊中の船・着陸中の飛空艇
+    const ts = map.data.tileWidth;
+    if (flags["has_ship"] && vehicle !== "ship") {
+      drawShip(ctx, shipPos.x * ts + ts / 2 - renderCamera.x, shipPos.y * ts + ts - renderCamera.y, "right", true);
+    }
+    if (flags["has_airship"] && vehicle !== "air") {
+      drawAirship(ctx, airshipPos.x * ts + ts / 2 - renderCamera.x, airshipPos.y * ts + ts - renderCamera.y, "down", nowMs, false);
+    }
+  }
+  if (!riding) {
+    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY <= playerFeetY, onWorldMap ? WORLD_MAP_CHARACTER_SCALE : 1);
+    renderPlayer(ctx, player, renderCamera, onWorldMap ? WORLD_MAP_CHARACTER_SCALE : 1);
+    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY > playerFeetY, onWorldMap ? WORLD_MAP_CHARACTER_SCALE : 1);
+  } else {
+    const fx = player.x + player.width / 2 - renderCamera.x;
+    const fy = player.y + player.height - renderCamera.y;
+    if (vehicle === "ship") {
+      drawShip(ctx, fx, fy, player.direction);
+    } else {
+      drawAirship(ctx, fx, fy, player.direction, nowMs, true);
+    }
+  }
+  for (const item of depthItems) {
+    if (item.feetY > playerFeetY) item.draw();
+  }
+  if (onWorldMap) {
+    if (!flags["vortex_route_open"]) {
+      renderStorm(ctx, map, renderCamera, nowMs);
+    }
+    if (vehicleHint) {
+      ctx.font = "9px monospace";
+      ctx.textBaseline = "top";
+      ctx.textAlign = "left";
+      const w = Math.min(LOGICAL_WIDTH - 8, vehicleHint.text.length * 9 + 10);
+      ctx.fillStyle = "rgba(10,14,34,0.8)";
+      ctx.fillRect(4, LOGICAL_HEIGHT - 22, w, 14);
+      ctx.fillStyle = "#f2c14e";
+      ctx.fillText(vehicleHint.text, 8, LOGICAL_HEIGHT - 19);
+    } else if (vehicle === "air") {
+      ctx.font = "9px monospace";
+      ctx.textBaseline = "top";
+      ctx.textAlign = "left";
+      ctx.fillStyle = "rgba(10,14,34,0.6)";
+      ctx.fillRect(4, LOGICAL_HEIGHT - 20, 120, 12);
+      ctx.fillStyle = "#dfe8f4";
+      ctx.fillText("決定ボタンで着陸", 8, LOGICAL_HEIGHT - 18);
+    }
+  }
+
+  const dialogueState = dialogue.getRenderState();
+  if (dialogueState) {
+    renderDialogue(ctx, dialogueState, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  }
+
+  ctx.fillStyle = "#f0f0f0";
+  ctx.font = "10px monospace";
+  ctx.textBaseline = "top";
+  ctx.fillText(GAME_TITLE, 4, 2);
+  ctx.textAlign = "right";
+  ctx.fillText(`灯貨 ${gold}`, LOGICAL_WIDTH - 4, 2);
+  ctx.textAlign = "left";
+
+  if (saveMessage) {
+    ctx.fillStyle = "#f2c14e";
+    ctx.fillText(saveMessage, 4, 14);
+  }
+  renderJobMenu(ctx, jobMenu, jobMenuMembers(), jobStates, selectableJobIds(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  renderShop(ctx, shopMenu, gold, heroEquipment, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  renderPauseMenu(ctx, pauseMenu, pauseMenu.screen === "status" ? statusRows() : [], pauseMessage, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  if (equipMenu.open) {
+    renderEquipMenu(ctx, equipMenu, equipMenuView(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  }
+
+  if (import.meta.env.DEV) {
+    ctx.fillStyle = "#88ff88";
+    ctx.fillText(`FPS: ${loop.getFps()}`, 4, LOGICAL_HEIGHT - 12);
+    renderDebugMenu(ctx, debugMenu, DEBUG_MENU_ROWS, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  }
+}
+
 const loop = createGameLoop({
   update(dtMs) {
     syncCompanionsFromFlags();
@@ -1420,6 +1585,10 @@ const loop = createGameLoop({
     const actionPressed = actionButton.consume();
     const backPressed = backRequested;
     backRequested = false;
+    if (battleTransition) {
+      battleTransition = actionPressed && canSkipTransition(battleTransition) ? skipToReveal(battleTransition) : advanceBattleTransition(battleTransition, dtMs);
+      return;
+    }
     // 決定の音は、メニューを選ぶとき（タイトル・つよさ・買い物・ジョブ・戦闘）だけ。会話を送るたび・歩いて調べるたびに鳴ると、うるさいので鳴らさない
     if (actionPressed && (title.open || pauseMenu.open || shopMenu.open || jobMenu.open || battle)) {
       audio.playSe(seOf("confirm"));
@@ -1806,159 +1975,25 @@ const loop = createGameLoop({
     }
   },
   render() {
-    ctx.fillStyle = "#101018";
-    ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
-
-    if (title.open) {
-      renderTitle(ctx, title, GAME_TITLE, LOGICAL_WIDTH, LOGICAL_HEIGHT);
-      return;
-    }
-    if (staffRoll.open) {
-      renderStaffRoll(ctx, staffRoll, LOGICAL_WIDTH, LOGICAL_HEIGHT);
-      return;
-    }
-    if (opening.open) {
-      renderOpening(ctx, opening, LOGICAL_WIDTH, LOGICAL_HEIGHT, GAME_TITLE);
-      return;
-    }
-
-    if (battle) {
-      renderBattle(
-        ctx,
-        battle.getState(),
-        battle.getUiState(),
-        LOGICAL_WIDTH,
-        LOGICAL_HEIGHT,
-        battleEffect ? { effect: battleEffect.effect, elapsedMs: performance.now() - battleEffect.startedAt } : null,
-      );
-      if (victoryMessage && battle.getUiState().kind === "finished") {
-        ctx.fillStyle = "#f2c14e";
-        ctx.font = "10px monospace";
-        ctx.textBaseline = "top";
-        ctx.fillText(victoryMessage, 8, LOGICAL_HEIGHT - 56 + 18);
-      }
-      if (import.meta.env.DEV) {
-        ctx.fillStyle = "#88ff88";
-        ctx.font = "10px monospace";
-        ctx.textBaseline = "top";
-        ctx.fillText(`FPS: ${loop.getFps()}`, 4, LOGICAL_HEIGHT - 12);
-        renderDebugMenu(ctx, debugMenu, DEBUG_MENU_ROWS, LOGICAL_WIDTH, LOGICAL_HEIGHT);
-      }
-      return;
-    }
-
-    setLitBeacons(new Set([1, 2, 3, 4, 5, 6, 7, 8].filter((n) => flags[`beacon${n}_lit`])));
-    if (worldOverviewOpen) {
-      renderWorldOverview(
-        ctx,
-        map,
-        { x: Math.floor((player.x + player.width / 2) / map.data.tileWidth), y: Math.floor((player.y + player.height / 2) / map.data.tileHeight) },
-        new Set([1, 2, 3, 4, 5, 6, 7, 8].filter((n) => flags[`beacon${n}_lit`])),
-        LOGICAL_WIDTH,
-        LOGICAL_HEIGHT,
-        performance.now(),
-      );
-      return;
-    }
-    renderTileMap(ctx, map, renderCamera);
-    // 奥にいる人を先に、手前にいる人をあとに描く（足元の位置の順）。
-    const playerFeetY = player.y + player.height;
-    // 家・木・NPCは、プレイヤーとの前後だけでなく、お互いの前後も足元の位置の順に並べて描く（家の裏を歩く人が家より手前に出ないように）。
-    const depthItems: { feetY: number; draw: () => void }[] = [];
-    for (const prop of map.data.props ?? []) {
-      depthItems.push({ feetY: propFeetY(prop, map.data.tileHeight), draw: () => renderProps(ctx, map.data, renderCamera, () => true, [prop]) });
-    }
-    for (const npc of npcs) {
-      depthItems.push({ feetY: visibleNpcFeetY(npc, map.data.tileHeight), draw: () => renderNpcs(ctx, [npc], map, renderCamera) });
-    }
-    depthItems.sort((a, b) => a.feetY - b.feetY);
-    for (const item of depthItems) {
-      if (item.feetY <= playerFeetY) item.draw();
-    }
-    const followers = followerSpecs();
-    const onWorldMap = currentMapId === "world-map";
-    const riding = onWorldMap && vehicle !== "foot";
-    const nowMs = performance.now();
-    if (onWorldMap) {
-      renderVortex(ctx, map, renderCamera, nowMs);
-      // 停泊中の船・着陸中の飛空艇
-      const ts = map.data.tileWidth;
-      if (flags["has_ship"] && vehicle !== "ship") {
-        drawShip(ctx, shipPos.x * ts + ts / 2 - renderCamera.x, shipPos.y * ts + ts - renderCamera.y, "right", true);
-      }
-      if (flags["has_airship"] && vehicle !== "air") {
-        drawAirship(ctx, airshipPos.x * ts + ts / 2 - renderCamera.x, airshipPos.y * ts + ts - renderCamera.y, "down", nowMs, false);
-      }
-    }
-    if (!riding) {
-      renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY <= playerFeetY, onWorldMap ? WORLD_MAP_CHARACTER_SCALE : 1);
-      renderPlayer(ctx, player, renderCamera, onWorldMap ? WORLD_MAP_CHARACTER_SCALE : 1);
-      renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY > playerFeetY, onWorldMap ? WORLD_MAP_CHARACTER_SCALE : 1);
-    } else {
-      const fx = player.x + player.width / 2 - renderCamera.x;
-      const fy = player.y + player.height - renderCamera.y;
-      if (vehicle === "ship") {
-        drawShip(ctx, fx, fy, player.direction);
+    if (battleTransition && battle) {
+      if (isCoverPhase(battleTransition)) {
+        // 前半: 戦闘はまだ見せず、フィールドの上に演出を重ねる
+        const hiddenBattle = battle;
+        battle = null;
+        try {
+          renderGameScene();
+        } finally {
+          battle = hiddenBattle;
+        }
+        renderTransitionCover(ctx, battleTransition, LOGICAL_WIDTH, LOGICAL_HEIGHT);
       } else {
-        drawAirship(ctx, fx, fy, player.direction, nowMs, true);
+        // 後半: 戦闘画面が、暗いところからひらく
+        renderGameScene();
+        renderTransitionReveal(ctx, battleTransition, LOGICAL_WIDTH, LOGICAL_HEIGHT);
       }
+      return;
     }
-    for (const item of depthItems) {
-      if (item.feetY > playerFeetY) item.draw();
-    }
-    if (onWorldMap) {
-      if (!flags["vortex_route_open"]) {
-        renderStorm(ctx, map, renderCamera, nowMs);
-      }
-      if (vehicleHint) {
-        ctx.font = "9px monospace";
-        ctx.textBaseline = "top";
-        ctx.textAlign = "left";
-        const w = Math.min(LOGICAL_WIDTH - 8, vehicleHint.text.length * 9 + 10);
-        ctx.fillStyle = "rgba(10,14,34,0.8)";
-        ctx.fillRect(4, LOGICAL_HEIGHT - 22, w, 14);
-        ctx.fillStyle = "#f2c14e";
-        ctx.fillText(vehicleHint.text, 8, LOGICAL_HEIGHT - 19);
-      } else if (vehicle === "air") {
-        ctx.font = "9px monospace";
-        ctx.textBaseline = "top";
-        ctx.textAlign = "left";
-        ctx.fillStyle = "rgba(10,14,34,0.6)";
-        ctx.fillRect(4, LOGICAL_HEIGHT - 20, 120, 12);
-        ctx.fillStyle = "#dfe8f4";
-        ctx.fillText("決定ボタンで着陸", 8, LOGICAL_HEIGHT - 18);
-      }
-    }
-
-    const dialogueState = dialogue.getRenderState();
-    if (dialogueState) {
-      renderDialogue(ctx, dialogueState, LOGICAL_WIDTH, LOGICAL_HEIGHT);
-    }
-
-    ctx.fillStyle = "#f0f0f0";
-    ctx.font = "10px monospace";
-    ctx.textBaseline = "top";
-    ctx.fillText(GAME_TITLE, 4, 2);
-    ctx.textAlign = "right";
-    ctx.fillText(`灯貨 ${gold}`, LOGICAL_WIDTH - 4, 2);
-    ctx.textAlign = "left";
-
-    if (saveMessage) {
-      ctx.fillStyle = "#f2c14e";
-      ctx.fillText(saveMessage, 4, 14);
-    }
-    renderJobMenu(ctx, jobMenu, jobMenuMembers(), jobStates, selectableJobIds(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
-    renderShop(ctx, shopMenu, gold, heroEquipment, LOGICAL_WIDTH, LOGICAL_HEIGHT);
-    renderPauseMenu(ctx, pauseMenu, pauseMenu.screen === "status" ? statusRows() : [], pauseMessage, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
-    if (equipMenu.open) {
-      renderEquipMenu(ctx, equipMenu, equipMenuView(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
-    }
-
-    if (import.meta.env.DEV) {
-      ctx.fillStyle = "#88ff88";
-      ctx.fillText(`FPS: ${loop.getFps()}`, 4, LOGICAL_HEIGHT - 12);
-      renderDebugMenu(ctx, debugMenu, DEBUG_MENU_ROWS, LOGICAL_WIDTH, LOGICAL_HEIGHT);
-    }
+    renderGameScene();
   },
 });
 
