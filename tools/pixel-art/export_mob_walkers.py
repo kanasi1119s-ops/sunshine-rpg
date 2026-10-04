@@ -67,7 +67,7 @@ def strip(key, frames):
         out[fk] = ["".join(r) for r in g]
     return out
 
-out = {}
+built = {}
 for key, (name, groups) in TEMPLATES.items():
     d = json.load(open(SRC / f"{name}.json"))
     pal = d["palette"]
@@ -82,7 +82,29 @@ for key, (name, groups) in TEMPLATES.items():
             shade[i] = round(max(-0.6, min(0.6, (lum(pal[i]) - med) * 1.25)), 3)
     frames = {k: v for k, v in d["frames"].items() if k[:-1] in ("down", "up", "left", "right") and k[-1] in "012"}
     frames = strip(key, frames)
-    out[key] = {"palette": pal, "roles": roles, "shade": shade, "frames": frames}
+    built[key] = {"palette": pal, "roles": roles, "shade": shade, "frames": frames}
+
+# 男の人の2種め: レトの頭（ふさふさの髪）に、ユーリの服。ユーリの髪はとげとげなので、モブには使わない（2026-10-04、人間の指示）
+def compose(head_key, body_key, split_y):
+    h, b = built[head_key], built[body_key]
+    table, order = {}, []
+    def letter(pal, i, src):
+        k = (src["palette"][i], src["roles"][i], src["shade"][i])
+        if k not in table:
+            table[k] = LETTERS[len(order)]
+            order.append(k)
+        return table[k]
+    frames = {}
+    for fk in h["frames"]:
+        rows = []
+        for y in range(len(h["frames"][fk])):
+            src = h if y < split_y else b
+            row = src["frames"][fk][y]
+            rows.append("".join("." if ch == "." else letter(None, LETTERS.index(ch), src) for ch in row))
+        frames[fk] = rows
+    return {"palette": [k[0] for k in order], "roles": [k[1] for k in order], "shade": [k[2] for k in order], "frames": frames}
+
+out = {"reto": built["reto"], "man2": compose("reto", "yuri", 14), "mina": built["mina"], "guide": built["guide"]}
 
 ts = (
     "// 自動生成: tools/pixel-art/export_mob_walkers.py（手で編集しない）。町の人（モブ）の2頭身の素体4種\n"

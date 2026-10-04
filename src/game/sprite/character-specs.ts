@@ -20,8 +20,8 @@ export function spriteSpecFromPortrait(spec: PortraitSpec, name?: string): Sprit
 /** 主人公ユーリ。 */
 export const HERO_SPRITE: SpriteSpec = spriteSpecFromPortrait(PORTRAITS["ユーリ"], "ユーリ");
 
-/** 町の人の2頭身の素体（レト・ユーリ・ミナ・ガイドと同じ作りの絵）。 */
-const MOB_BODIES = ["reto", "yuri", "mina", "guide"];
+/** 町の人の2頭身の素体（レト・ミナ・ガイドと同じ作りの絵。man2 はレトの髪にユーリの服）。 */
+const MOB_BODIES = ["reto", "man2", "mina", "guide"];
 const MOB_ACCENTS = ["#d8b048", "#c0504a", "#4a78b0", "#58985a", "#8a58a8", "#e8e0d0", "#d8803a"];
 const MOB_BOTTOMS = ["#5a4a3a", "#4a4a5a", "#3a4a5a", "#6a5a4a", "#4a3a3a", "#5a5a48"];
 const SKINS = ["#f2c9a0", "#e6bd8f", "#d9a67a", "#c58f66", "#b98860", "#f4d8c0"];
