@@ -391,8 +391,8 @@
  },
  {
   "id": "enc-tetsukusari-mine-5",
-  "prompt": "a pale translucent ghost of an old miner floating, faded ragged clothes, a dim lantern in its hand, empty glowing eyes, wisps instead of legs",
-  "status": "done",
+  "prompt": "a floating pale blue phantom creature wearing a dented miner's helmet, holding a dim lantern, long ragged wisps for a body, hollow glowing eye holes",
+  "status": "todo",
   "key": "enemy:enc-tetsukusari-mine-5",
   "kind": "mob",
   "name": "鉱夫の残響",
@@ -405,7 +405,7 @@
    175
   ],
   "draft": "enc-tetsukusari-mine-5_0",
-  "seed_base": 6001
+  "seed_base": 10002
  },
  {
   "id": "enc-sanone-camp-0",
@@ -426,21 +426,21 @@
  },
  {
   "id": "enc-sanone-camp-1",
-  "prompt": "a whirling desert wind spirit made of swirling sand streaks wrapped in a torn striped caravan cloth, two bright eyes inside the whirl, floating",
-  "status": "done",
+  "prompt": "a desert dust devil creature, a spinning funnel of sand wrapped in a torn striped cloth, two glowing eyes in the funnel",
+  "status": "todo",
   "key": "enemy:enc-sanone-camp-1",
   "kind": "mob",
   "name": "風の影",
   "zone": "sanone-camp",
   "level": 10,
-  "shape": "float",
+  "shape": "tall",
   "tone": [
    200,
    175,
    130
   ],
   "draft": "enc-sanone-camp-1_0",
-  "seed_base": 6001
+  "seed_base": 10002
  },
  {
   "id": "enc-sanone-camp-2",
@@ -496,7 +496,7 @@
  {
   "id": "enc-sanone-camp-5",
   "prompt": "a sandstorm bird with ragged tan feathers that shed sand, a long hooked beak and goggle-like eye rings",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-sanone-camp-5",
   "kind": "mob",
   "name": "砂嵐の羽",
@@ -507,12 +507,13 @@
    180,
    145,
    95
-  ]
+  ],
+  "draft": "enc-sanone-camp-5_0"
  },
  {
   "id": "enc-kiri-archive-0",
   "prompt": "a silverfish shadow creature with a long segmented body made of torn paper scraps, many legs, ink spots",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kiri-archive-0",
   "kind": "mob",
   "name": "紙魚の影",
@@ -523,7 +524,8 @@
    170,
    175,
    165
-  ]
+  ],
+  "draft": "enc-kiri-archive-0_x0"
  },
  {
   "id": "enc-kiri-archive-1",
