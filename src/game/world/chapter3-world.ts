@@ -139,7 +139,7 @@ function orcaCommands(): EventCommand[] {
                   label: "一緒に来てほしい",
                   commands: [
                     { type: "message", text: "歓迎します、オルカさん。あなたの声と力が、必要です。", speaker: "ユーリ" },
-                    { type: "message", text: "……やる。足は引っ張らん。", speaker: "オルカ" },
+                    { type: "message", text: "……やる。俺も行く。足は引っ張らん。", speaker: "オルカ" },
                     { type: "setFlag", flag: "chapter3_orca_joined", value: true },
                   ],
                 },
