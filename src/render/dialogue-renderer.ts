@@ -14,7 +14,7 @@ export function renderDialogue(
   screenHeight: number,
 ): void {
   const boxX = 8;
-  const boxHeight = 56;
+  const boxHeight = 68;
   const boxY = screenHeight - boxHeight - 8;
   const boxWidth = screenWidth - 16;
 

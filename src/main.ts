@@ -380,6 +380,9 @@ function playMapBgm(mapId: string): void {
   audio.playBgm(track);
 }
 
+/** 世界地図を歩く主人公たちの大きさ（1で町と同じ。以前は0.6で小さすぎた。2026-10-05、人間の指摘）。 */
+const WORLD_MAP_CHARACTER_SCALE = 1;
+
 let pendingVictoryFlag: string | null = null;
 
 const dialogue = new DialogueController(flags, {
@@ -1674,9 +1677,9 @@ const loop = createGameLoop({
       }
     }
     if (!riding) {
-      renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY <= playerFeetY, onWorldMap ? 0.6 : 1);
-      renderPlayer(ctx, player, renderCamera, onWorldMap ? 0.6 : 1);
-      renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY > playerFeetY, onWorldMap ? 0.6 : 1);
+      renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY <= playerFeetY, onWorldMap ? WORLD_MAP_CHARACTER_SCALE : 1);
+      renderPlayer(ctx, player, renderCamera, onWorldMap ? WORLD_MAP_CHARACTER_SCALE : 1);
+      renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY > playerFeetY, onWorldMap ? WORLD_MAP_CHARACTER_SCALE : 1);
     } else {
       const fx = player.x + player.width / 2 - renderCamera.x;
       const fy = player.y + player.height - renderCamera.y;

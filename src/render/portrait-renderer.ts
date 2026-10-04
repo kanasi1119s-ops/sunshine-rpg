@@ -11,8 +11,8 @@ import {
 
 /** 会話欄で使う、1ドットあたりの画面上のピクセル数。 */
 export const PORTRAIT_CELL_SIZE = 3;
-export const PORTRAIT_PIXEL_HEIGHT = PORTRAIT_GRID_HEIGHT * PORTRAIT_CELL_SIZE;
-/** 会話欄の顔の枠の幅。顔アイコン（正方形）が収まるよう、高さと同じにする。 */
+/** 会話欄の顔の枠（正方形）。顔アイコンは同じ大きさ（56×56）の絵を、拡大も縮小もせずそのまま描く。 */
+export const PORTRAIT_PIXEL_HEIGHT = 56;
 export const PORTRAIT_PIXEL_WIDTH = PORTRAIT_PIXEL_HEIGHT;
 
 /**
@@ -48,8 +48,7 @@ export function renderPortraitByName(
   if (icon) {
     ctx.fillStyle = "#2a2140";
     ctx.fillRect(x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
+    ctx.imageSmoothingEnabled = false;
     ctx.drawImage(icon, x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
     return true;
   }
@@ -71,6 +70,6 @@ export function renderPortraitByName(
   }
   ctx.fillStyle = "#2a2140";
   ctx.fillRect(x, y, PORTRAIT_PIXEL_WIDTH, PORTRAIT_PIXEL_HEIGHT);
-  renderPortrait(ctx, spec, x + (PORTRAIT_PIXEL_WIDTH - PORTRAIT_GRID_WIDTH * cellSize) / 2, y, cellSize);
+  renderPortrait(ctx, spec, x + (PORTRAIT_PIXEL_WIDTH - PORTRAIT_GRID_WIDTH * cellSize) / 2, y + (PORTRAIT_PIXEL_HEIGHT - PORTRAIT_GRID_HEIGHT * cellSize) / 2, cellSize);
   return true;
 }
