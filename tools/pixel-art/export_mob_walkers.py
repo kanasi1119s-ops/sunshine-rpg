@@ -245,7 +245,7 @@ for key, (name, groups) in TEMPLATES.items():
     frames = symmetrize(strip(key, frames))
     frames = reoutline(fill_notches(reoutline(smooth_head(despeckle(frames, roles)))))
     if key == "mina":
-        frames = reoutline(push_front_hair(frames))
+        frames = reoutline(push_front_hair(push_front_hair(frames)))
     # 目は、どの肌の色でも見えやすいよう、黒（ほんのり色つき）にする
     ei = LETTERS.index(EYES[key])
     pal = list(pal); pal[ei] = "#241820"; roles[ei] = "fixed"; shade[ei] = 0.0
