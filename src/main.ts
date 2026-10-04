@@ -2443,6 +2443,7 @@ const loop = createGameLoop({
           const se = battleSeFor(uiState.text, battle.getState().party.map((c) => c.name));
           if (audioStarted) {
             if (anim?.motion) audio.playSe(seOf(swingSeFor(anim.motion)));
+            else if (anim?.casterId) audio.playSe(seOf("magic-charge"));
             // 当たる音・魔法の音は、武器がとどく／魔法が出るときに合わせる
             if (se) {
               const delay = anim ? Math.round(anim.durationMs * anim.fxStart) : 0;

@@ -14,6 +14,8 @@ export type FxId = "fire" | "water" | "light" | "wind" | "ice" | "bolt" | "rock"
 export interface BattleAnimSpec {
   /** 動く味方（敵の行動のときは無い）。 */
   actorId?: string;
+  /** 魔法を唱える敵（唱えるあいだ、敵の足もとに光が集まる）。 */
+  casterId?: string;
   motion: WeaponMotion | null;
   targetIds: string[];
   fx: FxId | null;
@@ -37,9 +39,9 @@ export function fxForSkillName(name: string): FxId {
   if (/雷|電/.test(name)) return "bolt";
   if (/氷|霜|凍/.test(name)) return "ice";
   if (/風|疾|颶|刃|矢/.test(name)) return "wind";
-  if (/水|雫|波|雨|流|潮|紋/.test(name)) return "water";
+  if (/水|雫|波|雨|流|潮|紋|滴/.test(name)) return "water";
   if (/光|灯|閃|断/.test(name)) return "light";
-  if (/土|岩|砂|地|鉄/.test(name)) return "rock";
+  if (/土|岩|砂|地|鉄|砕/.test(name)) return "rock";
   return "burst";
 }
 
@@ -65,8 +67,14 @@ export function battleAnimFor(text: string, state: BattleState, weaponOf: (id: s
     const target = byName(state, targetName);
     if (!target) return null;
     if (!actor) {
+      if (target.isEnemy) return null;
+      const caster = byName(state, actorName);
+      // 敵の魔法: 敵が光をためて、味方の上にエフェクトが出て、味方がのけぞる
+      if (skillName !== "たたかう" && caster?.isEnemy) {
+        return make({ casterId: caster.id, targetIds: [target.id], fx: fxForSkillName(skillName), hurt: true, durationMs: 760, fxStart: 0.4 });
+      }
       // 敵の攻撃: 味方がのけぞる
-      return target.isEnemy ? null : make({ targetIds: [target.id], hurt: true, durationMs: 420 });
+      return make({ targetIds: [target.id], hurt: true, durationMs: 420 });
     }
     const weapon = weaponOf(actor.id);
     if (skillName === "たたかう") {

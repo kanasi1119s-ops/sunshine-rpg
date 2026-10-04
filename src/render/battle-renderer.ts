@@ -13,7 +13,7 @@ import { drawSprite } from "./sprite-renderer";
 import { frameAt, SPRITE_FEET_ROW } from "../game/sprite/overworld-sprite";
 import type { BattleAnimSpec } from "../game/battle/battle-anim";
 import { allyStateOf, getAllyCanvas, type AllyState } from "./ally-states";
-import { drawFx, drawWeaponMotion, FX_COLOR, lungeOffset, type Pt } from "./battle-anim-renderer";
+import { drawCastGlow, drawFx, drawWeaponMotion, FX_COLOR, lungeOffset, type Pt } from "./battle-anim-renderer";
 
 let currentBiome: Biome = "grass";
 let currentVariant = 0;
@@ -396,6 +396,9 @@ function renderBattleBody(
       const glow = spec2.fx ? FX_COLOR[spec2.fx] : "#9ad0ff";
       const lunge = lungeOffset(spec2.motion, prog);
       drawWeaponMotion(ctx, spec2.motion, prog, { x: actorPt.x - 4 + lunge, y: actorPt.y + 2 }, mainTarget, glow);
+    }
+    if (spec2.casterId && spec2.fx && prog < spec2.fxStart + 0.1) {
+      drawCastGlow(ctx, pointOf(spec2.casterId), FX_COLOR[spec2.fx], prog / spec2.fxStart);
     }
     if (spec2.fx && prog >= spec2.fxStart) {
       const ft = (prog - spec2.fxStart) / Math.max(0.01, 1 - spec2.fxStart);

@@ -48,6 +48,10 @@ export function battleSeFor(text: string, partyNames: string[]): string | null {
   if (damage) {
     const [, , skill, target] = damage;
     if (partyNames.includes(target)) {
+      // 敵の魔法（技名つき）は、その術の音。ふつうの攻撃は、味方がダメージを受ける音
+      if (skill !== "たたかう" && !partyNames.some((n) => n === actorNameOf(text))) {
+        return elementSe(skill) ?? "player-damage";
+      }
       return "player-damage";
     }
     if (text.includes("会心の一撃")) {
@@ -82,4 +86,19 @@ export function battleSeFor(text: string, partyNames: string[]): string | null {
 /** 武器の動き（振る・さす・矢をはなつ…）の効果音。動きの始まりに鳴らす。 */
 export function swingSeFor(motion: "slash" | "stab" | "cast" | "shoot" | "chop" | "thrust"): string {
   return { slash: "swing-sword", stab: "swing-dagger", cast: "magic-charge", shoot: "bow-shoot", chop: "swing-axe", thrust: "spear-thrust" }[motion];
+}
+
+function actorNameOf(text: string): string {
+  return /^(.+?) の/.exec(text)?.[1] ?? "";
+}
+
+function elementSe(skill: string): string | null {
+  if (/火|炎|灼|業|滅|照/.test(skill)) return "fire";
+  if (/風|疾|颶|刃/.test(skill)) return "wind";
+  if (/雷|電/.test(skill)) return "thunder";
+  if (/氷|霜|凍/.test(skill)) return "ice";
+  if (/水|雫|波|雨|流|潮|紋|滴/.test(skill)) return "water";
+  if (/光|灯|閃|断/.test(skill)) return "light";
+  if (/土|岩|砂|地|鉄|砕/.test(skill)) return "rock";
+  return null;
 }

@@ -28,3 +28,19 @@ describe("状態異常（毒・混乱・敵の状態異常攻撃）", () => {
     }
   });
 });
+
+describe("敵の攻撃魔法", () => {
+  it("魔法を持つ敵は、確率で魔法を使う（MPは使わず、味方にダメージ）", async () => {
+    const { chooseEnemyAction } = await import("./battle-engine");
+    const spell = { id: "e", name: "滴ノ礫", mpCost: 0, powerMultiplier: 1.2 };
+    const enemy = c({ id: "kage", isEnemy: true, spell: { skill: spell, chance: 1 } });
+    const action = chooseEnemyAction(enemy, [c({ id: "hero" })], () => 0.5);
+    expect(action).toMatchObject({ type: "skill", actorId: "kage" });
+    const st = createBattleState([c({ id: "hero" })], [enemy]);
+    const t = runTurn(st, [{ type: "defend", actorId: "hero" }, action], () => 0.5);
+    expect(t.log.join("\n")).toContain("滴ノ礫");
+    expect(t.party[0].hp).toBeLessThan(50);
+    const plain = chooseEnemyAction(c({ id: "x", isEnemy: true, spell: { skill: spell, chance: 0 } }), [c({ id: "hero" })], () => 0.5);
+    expect(plain.type).toBe("attack");
+  });
+});

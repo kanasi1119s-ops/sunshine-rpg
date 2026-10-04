@@ -405,5 +405,9 @@ export function computeVictoryExp(state: BattleState): number {
 export function chooseEnemyAction(enemy: Combatant, party: Combatant[], rng: () => number): BattleAction {
   const aliveParty = party.filter(isAlive);
   const target = aliveParty[Math.floor(rng() * aliveParty.length)] ?? party[0];
+  // 攻撃魔法を持つ敵は、ときどき魔法を使う
+  if (enemy.spell && rng() < enemy.spell.chance) {
+    return { type: "skill", actorId: enemy.id, targetId: target.id, skill: enemy.spell.skill };
+  }
   return { type: "attack", actorId: enemy.id, targetId: target.id };
 }

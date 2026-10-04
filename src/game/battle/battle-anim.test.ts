@@ -35,3 +35,10 @@ describe("戦闘の動き", () => {
     expect(fxForSkillName("よくわからない")).toBe("burst");
   });
 });
+
+describe("敵の魔法", () => {
+  it("敵が技名つきでダメージを与えたら、敵が光をため、味方の上にエフェクト、味方はのけぞる", () => {
+    const anim = battleAnimFor("ゆらぎ玉 の 滴ノ礫！ ユーリ Lv1 に 6 のダメージ", state, w);
+    expect(anim).toMatchObject({ casterId: "slime", fx: "water", hurt: true, targetIds: ["hero"], motion: null });
+  });
+});

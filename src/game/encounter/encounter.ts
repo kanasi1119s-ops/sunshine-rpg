@@ -171,6 +171,23 @@ export function enemyStatsForLevel(level: number): { maxHp: number; attack: numb
 
 /** 出会うのは1〜3体（tierが低いうちは少なめ）。 */
 /** 形ごとの状態異常攻撃（毒＝さそり・虫、混乱＝目、眠り＝影）。序盤（レベル3まで）はかからない。 */
+/** 形ごとの攻撃魔法（ときどき通常攻撃のかわりに使う）。序盤（レベル2まで）は使わない。 */
+function spellFor(shape: MonsterShape, level: number): { spell?: NonNullable<Combatant["spell"]> } {
+  if (level < 3) return {};
+  const mk = (id: string, name: string, power: number, effect?: "damageAll", chance = 0.25): { spell: NonNullable<Combatant["spell"]> } => ({
+    spell: { skill: { id, name, mpCost: 0, powerMultiplier: power, ...(effect ? { effect } : {}) }, chance },
+  });
+  switch (shape) {
+    case "drop": return mk("enemy-shizuku", "滴ノ礫", 1.0);
+    case "eye": return mk("enemy-hikari", "監視ノ光", 1.05);
+    case "bat": return mk("enemy-hayate", "疾風ノ刃", 1.0);
+    case "shard": return mk("enemy-saihen", "砕片ノ雨", 1.05);
+    case "ghost": return level >= 12 ? mk("enemy-kage-no-hibiki", "影ノ響き", 0.55, "damageAll", 0.2) : mk("enemy-kage-no-sasayaki", "影ノ囁き", 1.05);
+    case "blob": return level >= 6 ? mk("enemy-yuragi-no-honoo", "揺らぎノ炎", 1.05, undefined, 0.2) : {};
+    default: return {};
+  }
+}
+
 function statusAttackFor(shape: MonsterShape, level: number): { inflicts?: NonNullable<Combatant["inflicts"]> } {
   if (level < 4) return {};
   if (shape === "scorpion" || shape === "beetle") return { inflicts: { status: "poison", chance: 0.3, turns: 3 } };
@@ -201,6 +218,7 @@ export function createEncounterEnemies(mapId: string, zone: EncounterZone, rng: 
       guarding: false,
       expReward: stats.expReward,
       ...statusAttackFor(shapeForName(zone.names[variant], variant), zone.level),
+      ...spellFor(shapeForName(zone.names[variant], variant), zone.level),
     });
   }
   return enemies;

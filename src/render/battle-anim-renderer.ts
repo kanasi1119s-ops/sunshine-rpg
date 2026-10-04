@@ -195,6 +195,23 @@ export function drawWeaponMotion(ctx: CanvasRenderingContext2D, motion: WeaponMo
   }
 }
 
+/** 魔法を唱える敵の足もとに、光が集まる（唱えはじめ〜魔法が出るまで）。 */
+export function drawCastGlow(ctx: CanvasRenderingContext2D, at: Pt, color: string, t: number): void {
+  const u = clamp01(t);
+  ctx.save();
+  ctx.globalAlpha = 0.25 + 0.5 * u;
+  ring(ctx, at.x, at.y + 12, 18 - 8 * u, 6 - 2 * u, color);
+  ring(ctx, at.x, at.y + 12, 12 - 6 * u, 4 - 2 * u, "#ffffff");
+  ctx.globalAlpha = 1;
+  for (let i = 0; i < 10; i++) {
+    const r = 22 * (1 - u) + 4;
+    const a = (i / 10) * Math.PI * 2 + u * 3;
+    dot(ctx, at.x + Math.cos(a) * r, at.y + 6 + Math.sin(a) * r * 0.6, i % 2 ? color : "#ffffff", 2, 2);
+  }
+  if (u > 0.7) star(ctx, at.x, at.y, 3, color);
+  ctx.restore();
+}
+
 export const FX_COLOR: Record<FxId, string> = {
   fire: "#ff9a40", water: "#6ab4ff", light: "#fff0a0", wind: "#a8f0d0", ice: "#bfe8ff", bolt: "#ffe848", rock: "#c8a070",
   burst: "#ffffff", heal: "#88f0a8", buff: "#ffd860", debuff: "#b080e8", sleep: "#9ab0ff", poison: "#b060e0", confuse: "#ffe070",

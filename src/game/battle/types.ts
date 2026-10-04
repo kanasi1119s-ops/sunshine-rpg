@@ -21,6 +21,8 @@ export interface Combatant {
   poison?: number;
   /** 混乱の残りターン。混乱中は、半分の確率で、敵味方かまわず攻撃してしまう。 */
   confused?: number;
+  /** 敵が使う攻撃魔法。ターンごとに、chance の確率で、通常攻撃のかわりに使う。 */
+  spell?: { skill: Skill; chance: number };
   /** 敵の通常攻撃が当たったとき、相手にかかる状態異常（毒・眠り・混乱）。 */
   inflicts?: { status: "poison" | "sleep" | "confuse"; chance: number; turns: number };
 }
