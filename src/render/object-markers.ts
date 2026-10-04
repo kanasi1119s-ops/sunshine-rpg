@@ -1,4 +1,6 @@
 import { shadeColor } from "../game/color-utils";
+import { SPRITE_DATA } from "../game/art/sprite-data.generated";
+import { getSpriteCanvas } from "../game/art/sprite";
 
 /**
  * マップ上の「物」（宝箱・木箱・階段・石碑・機械・祭壇・焦げ跡・荷馬車）の絵。1マス（16×16）に、
@@ -94,6 +96,19 @@ export function drawObjectMarker(ctx: CanvasRenderingContext2D, kind: ObjectKind
     case "chest": {
       // 宝箱（16×16）: 丸みのあるふた・鉄の帯・金のかざり・錠。開けたあとは、ふたが開いて空っぽ。光は左上。
       const opened = openedChests.has(id);
+      // 作りこんだ宝箱のドット絵（`prop:chest-closed` / `prop:chest-open`）があれば、それを足元にそろえて描く
+      const art = getSpriteCanvas(opened ? "prop:chest-open" : "prop:chest-closed", SPRITE_DATA);
+      if (art) {
+        const prev = ctx.imageSmoothingEnabled;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(art, Math.round(x + w / 2 - art.width / 2), Math.round(y + h - art.height));
+        ctx.imageSmoothingEnabled = prev;
+        if (!opened) {
+          const t = (performance.now() / 900) % 1;
+          if (t < 0.25) r(ctx, "#ffffff", x + w - 5, y + h - art.height + 2, 1, 1);
+        }
+        return true;
+      }
       const IRON = "#46465a";
       const IRON_HI = "#8a8aa0";
       if (opened) {
