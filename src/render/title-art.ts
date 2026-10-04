@@ -1,13 +1,7 @@
 /**
- * タイトル画面の絵。夜明け前の青い空、メニューをかこむ大きな光の輪、遠くの山と塔（虚灯宮）、丘の上に並ぶ仲間6人（全身のドット絵）。
- * 背景は一度だけ描いて使い回す。キャラクターの全身の絵は、読みこみが終わったら描きなおす。
+ * タイトル画面の絵。夜明け前の青い空、メニューをかこむ大きな光の輪、遠くの山と塔（虚灯宮）、手前の丘と木。
+ * 一度だけ描いて使い回す（画面の拡大率ごと）。
  */
-import yuri from "../assets/title/yuri.png";
-import reto from "../assets/title/reto.png";
-import mina from "../assets/title/mina.png";
-import guide from "../assets/title/guide.png";
-import orca from "../assets/title/orca.png";
-import ayame from "../assets/title/ayame.png";
 
 function hash(a: number, b: number): number {
   let h = (Math.floor(a) * 374761393 + Math.floor(b) * 668265263) >>> 0;
@@ -98,38 +92,14 @@ function pine(ctx: CanvasRenderingContext2D, x: number, y: number, s: number): v
   px(ctx, x - 1, y, "#0c0a10", 2, 4 * s);
 }
 
-/** 仲間6人の全身の絵（左から、ふくろの奥→手前）。x は画面の幅に対する位置、size は絵の高さ（画面の高さに対する割合）、depth は奥ほど上げる量。 */
-const PARTY: Array<{ img: HTMLImageElement | null; src: string; fx: number; scale: number; depth: number }> = [
-  { img: null, src: orca, fx: 0.16, scale: 0.4, depth: 5 },
-  { img: null, src: guide, fx: 0.255, scale: 0.42, depth: 3 },
-  { img: null, src: ayame, fx: 0.85, scale: 0.4, depth: 5 },
-  { img: null, src: mina, fx: 0.75, scale: 0.42, depth: 3 },
-  { img: null, src: reto, fx: 0.65, scale: 0.44, depth: 1 },
-  { img: null, src: yuri, fx: 0.35, scale: 0.52, depth: 0 },
-];
 let cached: HTMLCanvasElement | null = null;
 let cachedKey = "";
-let loading = false;
-
-function loadParty(): void {
-  if (loading || typeof Image === "undefined") return;
-  loading = true;
-  for (const m of PARTY) {
-    const img = new Image();
-    img.onload = () => {
-      m.img = img;
-      cached = null;       // 読みこめたら、背景を描きなおす
-    };
-    img.src = m.src;
-  }
-}
 
 /** タイトルの背景の絵（キャッシュ）。k は画面の拡大率（描く細かさ）。ブラウザ以外では null。 */
 export function getTitleArt(w: number, h: number, k = 1): HTMLCanvasElement | null {
   if (typeof document === "undefined") {
     return null;
   }
-  loadParty();
   const key = `${w}x${h}x${k}`;
   if (cached && cachedKey === key) {
     return cached;
@@ -163,8 +133,8 @@ export function getTitleArt(w: number, h: number, k = 1): HTMLCanvasElement | nu
   // 遠景の山々
   mountains(ctx, w, h * 0.7, 24, 1.7, "#12304a", "#4a7a8a");
   ctx.save();
-  ctx.translate(w * 0.5, h * 0.74);
-  ctx.scale(0.46, 0.46);
+  ctx.translate(w * 0.27, h * 0.78);
+  ctx.scale(0.8, 0.8);
   tower(ctx, 0, 0);
   ctx.restore();
   mountains(ctx, w, h * 0.77, 16, 5.2, "#0c2236", "#2e5a6a");
@@ -182,18 +152,6 @@ export function getTitleArt(w: number, h: number, k = 1): HTMLCanvasElement | nu
   }
   for (const [x, s] of [[12, 1.3], [34, 1], [w - 16, 1.4], [w - 40, 1.0]] as Array<[number, number]>) pine(ctx, x, h * 0.86, s);
   for (let i = 0; i < 110; i++) { const x = hash(i, 8) * w, y = h * 0.84 + hash(i, 9) * (h * 0.16); px(ctx, x, y, "#143a3c"); px(ctx, x + 1, y - 1, "#235a54"); }
-  // 仲間6人（奥から手前の順）
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
-  for (const m of PARTY) {
-    if (!m.img) continue;
-    const size = Math.round(h * m.scale);       // 絵（256角）の一辺。人は、そのほぼ全高
-    const x = Math.round(w * m.fx - size / 2);
-    const y = Math.round(h * 0.965 - size - m.depth);
-    ctx.fillStyle = "rgba(4, 8, 16, 0.5)";
-    ctx.beginPath(); ctx.ellipse(x + size / 2, y + size - 1, size * 0.2, 2.5, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.drawImage(m.img, x, y, size, size);
-  }
   ctx.imageSmoothingEnabled = false;
   cached = canvas;
   cachedKey = key;
