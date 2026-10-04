@@ -33,7 +33,8 @@ export function centerCameraOn(
 
   return {
     ...camera,
-    x: clamp(rawX, 0, maxX),
-    y: clamp(rawY, 0, maxY),
+    // 小数のままだとタイルの継ぎ目に黒い線が出るので、ピクセルの整数位置にそろえる。
+    x: Math.round(clamp(rawX, 0, maxX)),
+    y: Math.round(clamp(rawY, 0, maxY)),
   };
 }

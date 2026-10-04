@@ -19,7 +19,7 @@ import { createGameCanvas, LOGICAL_WIDTH, LOGICAL_HEIGHT } from "./render/canvas
 import { createCamera, centerCameraOn } from "./render/camera";
 import { renderTileMap } from "./render/tile-map-renderer";
 import { renderPlayer } from "./render/player-renderer";
-import { npcFeetY, renderNpcs } from "./render/npc-renderer";
+import { renderNpcs, visibleNpcFeetY } from "./render/npc-renderer";
 import { faceNpc, opposite, updateWander } from "./game/npc-wander";
 import { PartyTrail } from "./game/party-trail";
 import { worldEntryProblems } from "./game/world/world-map-world";
@@ -30,7 +30,7 @@ import { renderStorm, renderVortex } from "./render/vortex-renderer";
 import { setLitBeacons } from "./render/object-markers";
 import { renderWorldOverview } from "./render/world-overview";
 import { renderFollowers } from "./render/follower-renderer";
-import { spriteSpecFromPortrait } from "./game/sprite/character-specs";
+import { npcLook, spriteSpecFromPortrait } from "./game/sprite/character-specs";
 import { PORTRAITS } from "./game/portrait/portraits";
 import { propFeetY, renderProps } from "./render/prop-renderer";
 import { renderDialogue } from "./render/dialogue-renderer";
@@ -1476,7 +1476,7 @@ const loop = createGameLoop({
       syncWorldState();
     }
     const moveMap = onWorld && vehicle === "ship" ? getVehicleMaps().ship : onWorld && vehicle === "air" ? getVehicleMaps().air : map;
-    player = updatePlayer(player, input.getDirection(), dtMs * (onWorld ? VEHICLE_SPEED[vehicle] : 1), moveMap);
+    player = updatePlayer(player, input.getDirection(), dtMs * (onWorld ? VEHICLE_SPEED[vehicle] : 1), moveMap, onWorld ? [] : npcs.filter((n) => npcLook(n) !== "object"));
     let actionUsed = false;
     if (onWorld) {
       actionUsed = updateVehicleAfterMove(
@@ -1617,8 +1617,18 @@ const loop = createGameLoop({
     renderTileMap(ctx, map, renderCamera);
     // 奥にいる人を先に、手前にいる人をあとに描く（足元の位置の順）。
     const playerFeetY = player.y + player.height;
-    renderProps(ctx, map.data, renderCamera, (prop) => propFeetY(prop, map.data.tileHeight) <= playerFeetY);
-    renderNpcs(ctx, npcs, map, renderCamera, (npc) => npcFeetY(npc, map.data.tileHeight) <= playerFeetY);
+    // 家・木・NPCは、プレイヤーとの前後だけでなく、お互いの前後も足元の位置の順に並べて描く（家の裏を歩く人が家より手前に出ないように）。
+    const depthItems: { feetY: number; draw: () => void }[] = [];
+    for (const prop of map.data.props ?? []) {
+      depthItems.push({ feetY: propFeetY(prop, map.data.tileHeight), draw: () => renderProps(ctx, map.data, renderCamera, () => true, [prop]) });
+    }
+    for (const npc of npcs) {
+      depthItems.push({ feetY: visibleNpcFeetY(npc, map.data.tileHeight), draw: () => renderNpcs(ctx, [npc], map, renderCamera) });
+    }
+    depthItems.sort((a, b) => a.feetY - b.feetY);
+    for (const item of depthItems) {
+      if (item.feetY <= playerFeetY) item.draw();
+    }
     const followers = followerSpecs();
     const onWorldMap = currentMapId === "world-map";
     const riding = onWorldMap && vehicle !== "foot";
@@ -1647,8 +1657,9 @@ const loop = createGameLoop({
         drawAirship(ctx, fx, fy, player.direction, nowMs, true);
       }
     }
-    renderNpcs(ctx, npcs, map, renderCamera, (npc) => npcFeetY(npc, map.data.tileHeight) > playerFeetY);
-    renderProps(ctx, map.data, renderCamera, (prop) => propFeetY(prop, map.data.tileHeight) > playerFeetY);
+    for (const item of depthItems) {
+      if (item.feetY > playerFeetY) item.draw();
+    }
     if (onWorldMap) {
       if (!flags["vortex_route_open"]) {
         renderStorm(ctx, map, renderCamera, nowMs);

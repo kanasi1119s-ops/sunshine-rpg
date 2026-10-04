@@ -167,3 +167,54 @@ export function drawBuildingTile(
   ctx.drawImage(canvas, screenX, screenY, map.data.tileWidth, map.data.tileHeight);
   return true;
 }
+
+/** 建物の出入り口（真上が建物の壁で、出口がある場所）なら、木の扉の絵で描く。描いたら true。 */
+export function drawDoorTile(
+  ctx: CanvasRenderingContext2D,
+  map: TileMap,
+  tx: number,
+  ty: number,
+  screenX: number,
+  screenY: number,
+): boolean {
+  const style = map.data.building;
+  if (!style || style.tent || !style.walls.includes(getTileId(map, 0, tx, ty - 1))) {
+    return false;
+  }
+  if (!(map.data.exits ?? []).some((e) => e.tileX === tx && e.tileY === ty)) {
+    return false;
+  }
+  const canvas = canvasFor("door|" + style.plaster, (put) => {
+    const wood = "#7a4a26";
+    for (let y = 0; y < SIZE; y++) {
+      for (let x = 0; x < SIZE; x++) {
+        let c = shadeColor(style.plaster, y > 12 ? -0.14 * (y - 12) : 0);
+        if (x >= 3 && x <= 12 && y >= 1) {
+          // 石の枠
+          c = "#5a4a3c";
+          if (x >= 4 && x <= 11 && y >= 2) {
+            // 板の扉（縦の継ぎ目と、上の丸み）
+            const arch = y < 5 && (x === 4 || x === 11) && y < 4 - (y === 2 ? 0 : 1) ? "#5a4a3c" : null;
+            c = arch ?? (x === 7 || x === 8 ? shadeColor(wood, -0.25) : x % 2 === 0 ? wood : shadeColor(wood, 0.1));
+            if (y === 9) c = shadeColor(wood, -0.35);
+          }
+        }
+        put(x, y, c);
+      }
+    }
+    // ドアノブ
+    put(10, 9, "#f2c14e");
+    put(10, 10, "#f2c14e");
+    // 敷居の石
+    for (let x = 2; x <= 13; x++) {
+      put(x, 14, "#9a8a78");
+      put(x, 15, "#7a6a58");
+    }
+  });
+  if (!canvas) {
+    return false;
+  }
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(canvas, screenX, screenY, map.data.tileWidth, map.data.tileHeight);
+  return true;
+}

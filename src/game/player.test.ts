@@ -77,3 +77,45 @@ describe("updatePlayer", () => {
     expect(result.animationMs).toBe(0);
   });
 });
+
+describe("出口・角のすべり補助とNPCの通せんぼ", () => {
+  /** 上の壁の列に、1マス（x=5）だけ出口が開いている地図。 */
+  function makeGateMap(): ReturnType<typeof createTileMap> {
+    const map = makeOpenMap();
+    for (let x = 0; x < 10; x++) {
+      if (x !== 5) map.data.collision![2 * 10 + x] = 1;
+    }
+    return map;
+  }
+
+  it("出口の幅より少しずれていても、上へ進むだけで出口へ横にすべって通れる", () => {
+    const map = makeGateMap();
+    // 出口(x=5: 80〜96px)に対し、プレイヤー（幅12）の左端が 85px。右端が 97px で壁にかかる。
+    let player = createPlayer(85, 60);
+    for (let i = 0; i < 60; i++) player = updatePlayer(player, "up", 16, map);
+    expect(player.y).toBeLessThan(32);
+  });
+
+  it("遠く離れた壁の前では、すべらずに止まる", () => {
+    const map = makeGateMap();
+    let player = createPlayer(20, 60);
+    for (let i = 0; i < 60; i++) player = updatePlayer(player, "up", 16, map);
+    expect(player.y).toBeGreaterThanOrEqual(32);
+    expect(player.x).toBe(20);
+  });
+
+  it("NPCのいるマスには入れない", () => {
+    const map = makeOpenMap();
+    let player = createPlayer(80, 80);
+    for (let i = 0; i < 40; i++) player = updatePlayer(player, "right", 16, map, [{ tileX: 7, tileY: 5 }]);
+    // NPC（x=112〜）の手前で止まる。プレイヤーの右端 = x + 12 <= 112
+    expect(player.x + player.width).toBeLessThanOrEqual(112);
+  });
+
+  it("NPCと重なってしまったときは、離れる向きに動ける", () => {
+    const map = makeOpenMap();
+    const player = createPlayer(80, 80);
+    const result = updatePlayer(player, "left", 100, map, [{ tileX: 5, tileY: 5 }]);
+    expect(result.x).toBeLessThan(80);
+  });
+});

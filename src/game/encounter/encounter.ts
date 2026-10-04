@@ -116,9 +116,9 @@ export function stepEncounter(state: EncounterState, mapId: string, rng: () => n
 
 /** 想定レベルごとの、雑魚1体の体力・攻撃（間の値は直線でつなぐ）。想定パーティが2体の一団に約96%で勝つ強さを、自動シミュレーションで確かめて決めた。 */
 const MOB_ANCHORS: { level: number; maxHp: number; attack: number }[] = [
-  { level: 2, maxHp: 22, attack: 14 },
-  { level: 4, maxHp: 45, attack: 20 },
-  { level: 6, maxHp: 80, attack: 25 },
+  { level: 2, maxHp: 18, attack: 10 },
+  { level: 4, maxHp: 32, attack: 15 },
+  { level: 6, maxHp: 64, attack: 21 },
   { level: 8, maxHp: 135, attack: 31 },
   { level: 10, maxHp: 210, attack: 39 },
   { level: 12, maxHp: 290, attack: 45 },

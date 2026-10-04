@@ -30,3 +30,11 @@ describe("centerCameraOn", () => {
     expect(result.y).toBe(0);
   });
 });
+
+describe("カメラの位置は整数（タイルの継ぎ目に黒い線が出ないように）", () => {
+  it("小数の座標を中心にしても、カメラの位置は整数になる", () => {
+    const cam = centerCameraOn(createCamera(100, 80), 123.37, 90.62, 400, 300);
+    expect(Number.isInteger(cam.x)).toBe(true);
+    expect(Number.isInteger(cam.y)).toBe(true);
+  });
+});

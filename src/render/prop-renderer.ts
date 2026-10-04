@@ -14,12 +14,14 @@ export function renderProps(
   data: TileMapData,
   camera: Camera,
   filter: (prop: MapProp) => boolean = () => true,
+  /** 描く飾りを指定する（前後の並べ替えで1つずつ描くとき用）。省略すると地図の飾り全部。 */
+  props: readonly MapProp[] | undefined = data.props,
 ): void {
-  if (!data.props) {
+  if (!props) {
     return;
   }
   ctx.imageSmoothingEnabled = false;
-  for (const prop of data.props) {
+  for (const prop of props) {
     if (!filter(prop)) {
       continue;
     }

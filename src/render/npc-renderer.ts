@@ -13,6 +13,15 @@ export function npcFeetY(npc: Npc, tileHeight: number): number {
   return npc.tileY * tileHeight + tileHeight;
 }
 
+/** ぶらぶら歩き中の動きも含めた、いま見えている足元のy。前後の並べ替えに使う。 */
+export function visibleNpcFeetY(npc: Npc, tileHeight: number): number {
+  const walk = wanderStateOf(npc.id);
+  if (walk && walk.moving) {
+    return (walk.fromY + (npc.tileY - walk.fromY) * walk.t) * tileHeight + tileHeight;
+  }
+  return npcFeetY(npc, tileHeight);
+}
+
 /**
  * NPCのドット絵（16×32、正面向き）を、そのマスの足元にそろえて描く（頭は上のマスにはみ出す）。
  * 顔グラフィックのある人は、その色。名前の無い人は、IDから髪・肌・髪型を決めた色替え。
