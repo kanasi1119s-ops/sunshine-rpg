@@ -242,12 +242,18 @@ function recolorArchetype(
   );
 }
 
+function hexLum(hex: string): number {
+  const n = parseInt(hex.slice(1), 16);
+  return (((n >> 16) & 255) * 0.3 + ((n >> 8) & 255) * 0.59 + (n & 255) * 0.11) / 255;
+}
+
 /** 町の人の2頭身の素体を、髪・肌・服・飾りの色で塗り替える。同じ役割の色の明暗の差は、そのまま保つ。 */
 function recolorMob(spec: SpriteSpec, dir: SpriteDir, frame: SpriteFrame): SpritePixels | null {
   const tpl = spec.mobTemplate ? MOB_TEMPLATES[spec.mobTemplate] : undefined;
   if (!tpl) return null;
   const base: Record<string, string> = { hair: spec.hair, skin: spec.skin, top: spec.top, bottom: spec.bottom || spec.top, accent: spec.accent };
-  const colors = tpl.palette.map((c, i) => (tpl.roles[i] === "fixed" ? c : shadeColor(base[tpl.roles[i]] ?? c, tpl.shade[i])));
+  // 髪の明るい色は、暗い髪だと灰色っぽく見えて頭の先が欠けて見えるので、明るくする幅をおさえる
+  const colors = tpl.palette.map((c, i) => (tpl.roles[i] === "fixed" ? c : shadeColor(base[tpl.roles[i]] ?? c, tpl.roles[i] === "hair" && tpl.shade[i] > 0 ? tpl.shade[i] * (hexLum(spec.hair) < 0.3 ? 0.12 : 0.45) : tpl.shade[i])));
   const grid = tpl.frames[`${dir}${frame}`].map((row) => [...row].map((ch) => (ch === "." ? null : colors[LETTERS.indexOf(ch)])));
   if (spec.warrior) {
     const down = tpl.frames["down0"];
@@ -271,7 +277,7 @@ function recolorMob(spec: SpriteSpec, dir: SpriteDir, frame: SpriteFrame): Sprit
         break;
       }
     }
-    applyMerchant(grid, dir, faceTop, tpl.roles.map((r, i) => (r === "hair" ? colors[i] : "")).filter(Boolean));
+    applyMerchant(grid, dir, faceTop, tpl.roles.map((r, i) => (r === "hair" || r === "accent" ? colors[i] : "")).filter(Boolean));
   }
   return grid;
 }
@@ -342,10 +348,11 @@ function applyMerchant(grid: SpritePixels, dir: SpriteDir, faceTop: number, hair
   const isHair = (c: string | null): boolean => !!c && hairColors.includes(c);
   // 頭巾（濃い緑）: 生えぎわより上の髪をおおう。左上が明るく、生えぎわのへりは暗い
   const w = grid[0].length;
-  for (let y = 0; y < faceTop; y++) {
+  for (let y = 0; y < faceTop + 4; y++) {
     for (let x = 0; x < w; x++) {
       if (!isHair(grid[y][x])) continue;
-      grid[y][x] = y === faceTop - 1 ? HOOD_DEEP : x < w / 2 && y <= faceTop - 3 ? HOOD_LIGHT : x < w / 2 ? HOOD : HOOD_DARK;
+      // 生えぎわより下の、顔のわきの髪も、頭巾でかくす
+      grid[y][x] = y >= faceTop ? (x < w / 2 ? HOOD : HOOD_DARK) : y === faceTop - 1 ? HOOD_DEEP : x < w / 2 && y <= faceTop - 3 ? HOOD_LIGHT : x < w / 2 ? HOOD : HOOD_DARK;
     }
   }
   if (dir === "up") {

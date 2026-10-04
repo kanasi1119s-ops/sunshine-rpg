@@ -87,6 +87,29 @@ def symmetrize(frames):
         out[fk] = new + rows[23:]
     return out
 
+def despeckle(frames, roles):
+    """髪の、ひとりぼっちの明るい点・暗い点（上のほうで、頭の先が欠けたように見える）を、まわりの髪の色にそろえる。"""
+    out = {}
+    for fk, rows in frames.items():
+        g = [list(r) for r in rows]
+        H, W = len(g), len(g[0])
+        def role(ch):
+            return roles[LETTERS.index(ch)] if ch != "." else None
+        for _ in range(2):
+            for y in range(1, 22):
+                for x in range(W):
+                    ch = g[y][x]
+                    if role(ch) != "hair":
+                        continue
+                    nb = [g[y + dy][x + dx] for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)) if 0 <= x + dx < W and 0 <= y + dy < H]
+                    if sum(1 for c in nb if c == ch) >= 2:
+                        continue
+                    hair_nb = [c for c in nb if role(c) == "hair"]
+                    if hair_nb:
+                        g[y][x] = max(set(hair_nb), key=hair_nb.count)
+        out[fk] = ["".join(r) for r in g]
+    return out
+
 built = {}
 for key, (name, groups) in TEMPLATES.items():
     d = json.load(open(SRC / f"{name}.json"))
@@ -102,6 +125,7 @@ for key, (name, groups) in TEMPLATES.items():
             shade[i] = round(max(-0.6, min(0.6, (lum(pal[i]) - med) * 1.25)), 3)
     frames = {k: v for k, v in d["frames"].items() if k[:-1] in ("down", "up", "left", "right") and k[-1] in "012"}
     frames = symmetrize(strip(key, frames))
+    frames = despeckle(frames, roles)
     built[key] = {"palette": pal, "roles": roles, "shade": shade, "frames": frames}
 
 # 男の人の2種め: レトの頭（ふさふさの髪）に、ユーリの服。ユーリの髪はとげとげなので、モブには使わない（2026-10-04、人間の指示）
