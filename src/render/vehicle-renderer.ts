@@ -51,7 +51,9 @@ function airshipFallback(ctx: CanvasRenderingContext2D, x: number, y: number, di
 }
 
 export function drawShip(ctx: CanvasRenderingContext2D, x: number, y: number, dir: Direction, docked = false): void {
-  const sprite = (docked ? spriteOr("prop:ship-docked") : null) ?? spriteOr(`prop:ship-${dir}`);
+  // 停泊中も、ふつうの船の絵で描く（足場つきの絵 \`ship-docked\` は、人間の指示「足場は無くていい」で使わない、2026-10-05）
+  void docked;
+  const sprite = spriteOr(`prop:ship-${dir}`);
   if (sprite) {
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(sprite, Math.round(x - sprite.width / 2), Math.round(y - sprite.height + 6));
