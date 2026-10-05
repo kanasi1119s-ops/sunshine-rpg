@@ -37,8 +37,8 @@ AX, AY = 26, 56                      # 山のすそのまん中
 
 # 系統ごとの色（暗→明）: 縁・影の暗・影・光・光の明・稜線の光 / 雪の影・雪・雪の光
 FAMILY = {
-    "gray": dict(rock=["#2e2e3a", "#4c4c58", "#646474", "#8a8a9a", "#a8a8b8", "#c8c8d4"], snow=["#aebcd2", "#dfe7f2", "#ffffff"],
-                 valley=["#3e3e4a", "#4a4a56", "#565664", "#686876"]),
+    "gray": dict(rock=["#363644", "#585868", "#707082", "#9292a4", "#b0b0c0", "#cecede"], snow=["#aebcd2", "#dfe7f2", "#ffffff"],
+                 valley=["#464654", "#545462", "#606070", "#747484"]),
     "snow": dict(rock=["#3a4a64", "#566a86", "#7088a6", "#94a8c2", "#b4c4d8", "#d0dcea"], snow=["#b8cadf", "#e6eef7", "#ffffff"],
                  valley=["#b4c6da", "#c6d6e8", "#d4e2f0", "#e8f0f8"]),
     "volc": dict(rock=["#221c1a", "#3a322e", "#4e4640", "#665c54", "#80746a", "#9a8e80"], snow=None,
@@ -47,8 +47,8 @@ FAMILY = {
 TIERS = {   # はば（すその半はば）と高さ
     "foot": dict(hw=(9.0, 11.0), h=(8, 11)),
     "slope": dict(hw=(12.5, 14.5), h=(15, 19)),
-    "high": dict(hw=(16.0, 18.0), h=(23, 28)),
-    "peak": dict(hw=(19.0, 21.0), h=(31, 37)),
+    "high": dict(hw=(15.0, 18.5), h=(20, 27)),
+    "peak": dict(hw=(21.0, 23.0), h=(38, 43)),
 }
 
 
@@ -91,12 +91,27 @@ def mountain(fam, tier, lean, seed):
 
     xl, xr = AX - hw, AX + hw
 
-    def top(x):
+    def main_top(x):
         if x <= sx:
             t = (x - xl) / max(1e-6, sx - xl)               # 0=すそ … 1=頂
             return AY - h * interp(PL, max(0.0, t))
         t = (xr - x) / max(1e-6, xr - sx)
         return AY - h * interp(PR, max(0.0, t))
+    # 肩（もう1つの低い頂）: 頂と反対がわの長い斜面に。中腹は半分、高い山と峰はいつも
+    shoulder = None
+    if tier in ("high", "peak") or (tier == "slope" and rng.random() < 0.5):
+        side = -lean if lean else 1
+        fx = rng.uniform(0.5, 0.65)
+        shx = sx + side * (hw * 0.9) * fx
+        shy = main_top(shx) - h * rng.uniform(0.16, 0.24)
+        k = h / hw * rng.uniform(1.25, 1.5)                    # 肩の斜面は急
+        shoulder = (shx, shy, k)
+
+    def sh_top(x):
+        return shoulder[1] + abs(x - shoulder[0]) * shoulder[2] if shoulder else 1e9
+
+    def top(x):
+        return min(main_top(x), sh_top(x))
     cells = {}
     for x in range(int(math.floor(xl)), int(math.ceil(xr)) + 1):
         ty = top(x + 0.5)
@@ -117,9 +132,17 @@ def mountain(fam, tier, lean, seed):
         gullies.append(("lit", rng.uniform(0.25, 0.45), rng.uniform(0.35, 0.65)))
     if tier != "foot":
         gullies.append(("shade", rng.uniform(0.2, 0.4), rng.uniform(0.3, 0.6)))
+    def on_shoulder(x, y):
+        """肩が、もとの斜面より上に出ている所（肩の稜線で塗りわける）"""
+        return shoulder is not None and sh_top(x + 0.5) < main_top(x + 0.5) - 0.3 and y < main_top(x + 0.5) + 1
+
+    def ridge_at(x, y):
+        if on_shoulder(x, y):
+            return shoulder[0] + (y - shoulder[1]) * 0.35     # 肩の稜線（すこし右へかたむく）
+        return ridge(y)
     for (x, y), ty in cells.items():
         f = (y - sy) / max(1, h)                              # 0=頂 … 1=すそ
-        xm = ridge(y)
+        xm = ridge_at(x, y)
         if x + 0.5 < xm:                                      # 光の面: 上の方ほど明るい。稜線のすぐ左は稜線の光
             c = R[4] if f < 0.55 else R[3]
             if xm - (x + 0.5) < 1.2 and f < 0.9:
@@ -156,14 +179,14 @@ def mountain(fam, tier, lean, seed):
     snowy = F["snow"] and (tier == "peak" or (fam == "snow" and tier in ("high", "slope")))
     if snowy:
         S = F["snow"]
-        depth = {"peak": 0.42, "high": 0.38, "slope": 0.3}[tier] * h
+        depth = {"peak": 0.46, "high": 0.38, "slope": 0.3}[tier] * h
         if fam == "snow" and tier == "peak":
             depth = 0.62 * h
         for (x, y), ty in cells.items():
             # 下のふち: 3ドットはばのかたまりごとに、1〜3ドット上下（決まった並び）
-            jag = [0, 2, 1, 3, 0, 1][(x // 3) % 6]
+            jag = [0, 2, 1, 3, 0, 1][(x // 3) % 6] - (3 if tier == "peak" and (x // 3) % 4 == 1 else 0)   # 峰は、谷すじにそって雪が長くのびる
             if y - sy <= depth - jag:
-                xm = ridge(y)
+                xm = ridge_at(x, y)
                 if x + 0.5 < xm:
                     g.put(x, y, S[2] if (xm - (x + 0.5) < 1.2 or y - ty < 1) else S[1])
                 else:
@@ -172,7 +195,7 @@ def mountain(fam, tier, lean, seed):
     if fam == "snow" and tier in ("foot", "slope"):
         S = F["snow"]
         for (x, y), ty in cells.items():
-            if x + 0.5 < ridge(y) and y - ty < 2:
+            if x + 0.5 < ridge_at(x, y) and y - ty < 2:
                 g.put(x, y, S[1])                             # 光の面の上のふちに雪
         for k in range(3 if tier == "slope" else 2):
             yy = int(sy + h * (0.35 + 0.22 * k))
@@ -182,7 +205,7 @@ def mountain(fam, tier, lean, seed):
                     g.put(xx - d, yy, S[1])
     # 縁: 影の側（右のふち）だけ、いちばん暗い色。光の側のふちは、明るいまま
     for (x, y), ty in list(cells.items()):
-        if (x + 1, y) not in cells and x + 0.5 >= ridge(y) - 0.5 and y > sy + 1:
+        if (x + 1, y) not in cells and x + 0.5 >= ridge_at(x, y) - 0.5 and y > sy + 1:
             g.put(x, y, R[0])
     # すその1行: 地面にとける（右半分だけ、影の暗）
     for x in range(int(xl), int(xr) + 1):
@@ -282,7 +305,7 @@ def main():
     for fam in FAMILY:
         for tier in TIERS:
             for lean, ln in ((-1, "l"), (1, "r")):
-                for vi, v in enumerate("ab"):
+                for vi, v in enumerate("abc"):
                     name = f"{fam}-{tier}-{ln}{v}"
                     seed = (list(FAMILY).index(fam) * 100 + list(TIERS).index(tier) * 10 + (0 if ln == "l" else 5) + vi) * 7919 + 13
                     g, cells = mountain(fam, tier, lean, seed)

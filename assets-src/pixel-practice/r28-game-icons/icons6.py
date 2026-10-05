@@ -117,7 +117,7 @@ PALETTES = {
     "icon-tents": ["#e6d29a", "#cdb47c", "#f6e8bc", "#b89058", "#d4ae72", "#e8c88a"] + _R + ["#ece2c6", "#b4a282"]
                   + ["#1c5a22", "#2f6e24", "#3a9034", "#62b04a"] + ["#4a2e1c", "#6a4428", "#946032"] + ["#9696a2", "#2456a4", "#ffd878", "#e0b850"],
     "icon-tents-grass": _G + _T + _R + ["#b4a282", "#d6c8a6", "#ece2c6", "#f8f2de"] + ["#3070c4", "#7ab0ea", "#e6d29a"]
-                        + ["#4a2e1c", "#6a4428", "#946032"] + ["#9696a2", "#babac4", "#ff8a2c", "#ffd878"],
+                        + ["#4a2e1c", "#6a4428", "#946032"] + ["#9696a2", "#babac4", "#ff8a2c", "#ffd878", "#9cbc48"],
     "icon-temple": _G + ["#62b240"] + ["#383842", "#5c5c64", "#727280", "#9696a2", "#babac4"] + ["#2c3a52", "#3a4e6c", "#4e688c", "#6c88aa"]
                    + _WL + ["#b8c8dc", "#cad8e8", "#dce6f2"] + ["#4a2e1c", "#6a4428", "#a8703c"] + ["#e0b850", "#ffd878"],
     "icon-snowtown": ["#e8f0f8", "#ffffff", "#d4e2f0", "#b4cce2", "#94aac4", "#2e4a64", "#3a5a7a", "#6a8eac", "#5c5c64", "#727280", "#9696a2", "#babac4",
@@ -129,6 +129,8 @@ PALETTES = {
 MERGE = {
     # 港町は青い石板の屋根を灰色の石板にする（青は海の色とまざるため）
     "icon-port": {"#6c88aa": "#9696a2", "#4e688c": "#727280", "#94acc8": "#babac4", "#3a4e6c": "#2c3a52"},
+    # お城は25色になったので、井戸の水の明るい色を、暗い水の色にまとめる（窓の灯の黄色は残す）
+    "icon-castle": {"#2a5e9e": "#1a3a6e"},
 }
 
 
@@ -1229,10 +1231,8 @@ def dome_tent(c, cx, yb, rx, ry, cloth, ground="grass"):
         cur = c.get(x, yb - 1)
         if cur in cloth:
             c.put(x, yb - 1, cloth[max(1, cloth.index(cur) - 1)], cloth)
-    for y in range(yb - 3, yb + 1):                                # 入口のたれ幕（暗いすき間）
-        c.put(cx, y, TIMBER[0], cloth)
-        c.put(cx + 1, y, TIMBER[0] if y > yb - 3 else cloth[1], cloth)
-    c.put(cx - 1, yb, cloth[3], cloth)
+    flap(c, cx, yb, cloth)                                         # 入口（7回目: 折り返したたれ幕）
+    guy_ropes(c, cx, yb, rx, ry)
     c.put(cx, int(yb - ry) - 1, TIMBER[1], cloth); c.put(cx, int(yb - ry) - 2, ROOF[3], cloth)
 
 
@@ -1240,19 +1240,21 @@ def icon_tents_grass():
     c = Canvas()
     g = "grass"
     skirt(c, 32, 40, 30, 22, g)
-    water_ell(c, 46, 52, 11, 6, LAKE, rim=(SAND[2], SAND[1]), rim_w=1.5)
-    wave_dash(c, 42, 51, 3, LAKE[3])
-    reeds(c, 55, 50); reeds(c, 36, 55)
+    water_ell(c, 49, 55, 10, 5, LAKE, rim=(SAND[2], SAND[1]), rim_w=1.5)
+    wave_dash(c, 46, 55, 3, LAKE[3])
+    stamp(c, 55, 47, "reeds", FOREST)
     dome_tent(c, 18, 38, 12, 11, ROOF)
     dome_tent(c, 38, 32, 8, 8, CREAM)
     dome_tent(c, 50, 38, 6, 6, ROOF)
     awning(c, 4, 15, 50)
     awning(c, 19, 30, 54, cols=(SLATE[3], WALL[3]), dark=(SLATE[1], WALL[1]))
-    # たき火（石の輪・まき・火）とけむり
-    for (x, y, col) in ((31, 45, STONE[3]), (34, 45, STONE[2]), (32, 46, TIMBER[1]), (33, 46, TIMBER[0]),
-                        (32, 44, FIRE[1]), (33, 44, FIRE[0]), (32, 43, LIGHT), (33, 45, FIRE[0]), (32, 45, FIRE[1])):
-        c.put(x, y, col, STONE)
-    puff(c, 33.5, 39.5, 2.3); puff(c, 35.5, 35.0, 2.7)            # けむりは火のま上から、2つのかたまりだけ
+    # たき火: 足もとの草が火に照らされる（だ円の明るい輪）→ 石の輪・まき・炎。けむりは火のま上から
+    for y in range(44, 54):
+        for x in range(28, 44):
+            if ((x + 0.5 - 35) / 7) ** 2 + ((y + 0.5 - 49) / 3.2) ** 2 <= 1 and c.get(x, y) in (None, hx(sorted(texture("grass").getcolors(99999), reverse=True)[0][1])):
+                c.put(x, y, EMBER)
+    stamp(c, 31, 43, "campfire", STONE)
+    puff(c, 36, 41.5, 1.6); puff(c, 38, 38.2, 2.0)                # けむりは炎のすぐ上から
     palm(c, 56, 22, 36)
     tree(c, 8, 24, 4.6)
     c.shadow_edges()
@@ -1300,20 +1302,15 @@ def icon_temple():
     g = "grass"
     skirt(c, 32, 40, 30, 24, g)
     top = lambda x: 13 + 2.0 * math.sin(x / 4.0) + (0 if 20 <= x <= 44 else 3) + (2 if x < 6 or x > 57 else 0)
-    face = lambda x, y: top(x) <= y <= 45 - (2 if x < 5 or x > 58 else 0) and 2 <= x <= 61
-    rock_mass(c, face, (2, 8, 61, 45), cell=6, seed=12, tall=True)
+    strata_cliff(c, 2, 61, top, 45)
     for x in range(2, 62):                                         # 崖の上のへり（草）
         t = int(math.ceil(top(x)))
-        if c.get(x, t) is not None:
-            c.put(x, t, GRASS[3], GRASS); c.put(x, t + 1, GRASS[1], GRASS)
-    for (ly, lx0, lx1) in [(23, 3, 18), (29, 41, 60), (35, 15, 34), (41, 3, 22)]:   # 岩だな（上の面2行・下に影1行）
-        for x in range(lx0, lx1 + 1):
-            c.put(x, ly - 1, STONE[4] if x < lx1 else STONE[3], STONE)
-            c.put(x, ly, STONE[3] if x < lx1 else STONE[2], STONE)
-            c.put(x, ly + 1, STONE[0], STONE)
+        c.put(x, t, GRASS[3], GRASS); c.put(x, t + 1, GRASS[1], GRASS)
+    for (ly, lx0, lx1) in [(23, 3, 18), (29, 43, 60), (35, 15, 32), (41, 3, 22)]:
+        ledge(c, ly, lx0, lx1)
     house(c, 4, 21, 11, "side", SLATE, WHITE, door=7, wins=(2,), lit=(0,), wh=4, shadow=False)
-    house(c, 44, 27, 12, "hip", SLATE, WHITE, door=8, wins=(2,), wh=4, shadow=False)
-    house(c, 18, 33, 11, "front", SLATE, WHITE, door=6, wins=(2,), lit=(0,), wh=4, shadow=False)
+    house(c, 46, 27, 12, "hip", SLATE, WHITE, door=8, wins=(2,), wh=4, shadow=False)
+    house(c, 17, 33, 11, "front", SLATE, WHITE, door=6, wins=(2,), lit=(0,), wh=4, shadow=False)
     house(c, 6, 39, 10, "side", SLATE, WHITE, door=6, wins=(2,), wh=4, shadow=False)
     # 崖の上の堂（白い壁・石板の寄棟・金の環のしるし）
     house(c, 24, 13, 16, "hip", SLATE, WHITE, door=7, wins=(2, 11), lit=(0, 1), rh=6, wh=4, shadow=False)
@@ -1322,13 +1319,14 @@ def icon_temple():
         for i, ch in enumerate(r):
             if ch == "o":
                 c.put(30 + i, j, GOLD[1] if i + j < 4 else GOLD[0])
-    # つづら折りの石段（崖の上からすそまで）
-    stair = [(40, 10, 40, 22), (40, 22, 36, 26), (36, 26, 36, 33), (36, 37, 40, 40), (40, 40, 40, 45)]
-    for (xa, ya, xb, yb) in stair:
-        n = max(abs(xb - xa), abs(yb - ya))
-        for k in range(n + 1):
-            x = round(xa + (xb - xa) * k / n); y = round(ya + (yb - ya) * k / n)
-            c.put(x, y, STONE[5], STONE); c.put(x + 1, y, STONE[4], STONE)
+    # つづら折りの石段（崖の上からすそまで）: 4つの流れと、折り返しの踊り場
+    flight(c, 39, 15, 20, -1)
+    landing(c, 32, 21)
+    flight(c, 34, 23, 28, 1)
+    landing(c, 39, 29)
+    flight(c, 40, 31, 36, -1)
+    landing(c, 32, 37)
+    flight(c, 34, 39, 44, 1)
     # すその家と霧
     house(c, 44, 57, 13, "side", SLATE, WHITE, door=9, wins=(2,), lit=(0,))
     house(c, 14, 59, 12, "hip", SLATE, WHITE, door=8, wins=(2,))
@@ -1345,29 +1343,10 @@ def icon_snowtown():
     g = "snow"
     skirt(c, 32, 38, 30, 25, g)
     path(c, [(32, 63), (32, 46), (26, 38), (30, 30)], w=4, pal=[None, SNOW[2], SNOW[3], None])
-    # 見張りの塔（古戦場のなごり。石の塔、上の段の胸壁、かがり火＝目じるし）
-    for y in range(11, 37):
-        for x in range(28, 36):
-            col = STONE[4] if x < 30 else STONE[3] if x < 34 else STONE[2]
-            if x == 35:
-                col = STONE[1]
-            c.put(x, y, col, STONE)
-    for y in (16, 22, 28):                                         # 段の線（3段だけ）
-        for x in range(28, 36):
-            c.put(x, y, STONE[2] if x < 34 else STONE[1], STONE)
-    for (y, x) in ((19, 31), (25, 32)):
-        c.put(x, y, GLASS, STONE); c.put(x, y + 1, GLASS, STONE)
-    c.put(31, 31, LIGHT, STONE); c.put(31, 32, LAMP, STONE)
-    for y in range(33, 37):
-        c.put(32, y, TIMBER[0], STONE); c.put(33, y, TIMBER[0], STONE)
-    for x in range(26, 38):                                        # 張り出した上の段と胸壁
-        c.put(x, 9, STONE[4] if x < 36 else STONE[3], STONE)
-        c.put(x, 10, STONE[2] if x < 36 else STONE[1], STONE)
-        if (x - 26) % 3 == 0:
-            c.put(x, 8, STONE[4], STONE); c.put(x + 1, 8, STONE[3], STONE)
-    for (x, y, col) in ((31, 7, FIRE[0]), (32, 7, FIRE[0]), (33, 7, FIRE[0]), (31, 6, FIRE[1]), (32, 6, LIGHT), (33, 6, FIRE[1]),
-                        (32, 5, FIRE[1]), (32, 4, LIGHT), (31, 5, FIRE[0])):
-        c.put(x, y, col)
+    # 見張りやぐら（古戦場のなごり。7回目: 木のやぐらと、屋根の下のかがり火＝目じるし）
+    for k in range(9):                                             # 足もとの雪の上の影（右下へ）
+        c.put(29 + k, 37, GROUND["snow"]["sh"][0]); c.put(30 + k, 38, GROUND["snow"]["sh"][1])
+    stamp(c, 26, 5, "watchtower", TIMBER)
     # 家（木の壁・雪の屋根・明かり・えんとつ）
     house(c, 4, 22, 14, "side", ROOF, TIMBER_WALL, door=10, wins=(2,), lit=(0,), chimney=4, snow=True, ground=g)
     house(c, 41, 21, 13, "front", SLATE, TIMBER_WALL, door=7, wins=(2,), lit=(0,), snow=True, ground=g)
@@ -1573,24 +1552,12 @@ def icon_castle():
     for y in range(26, 44):
         for x in range(28, 36):
             c.put(x, y, CS[4] if x < 34 else CS[3], CS)
-    for (tx, ty) in ((16, 35), (47, 35)):
+    for (tx, ty) in ((16, 35), (48, 36)):
         tree(c, tx, ty, 3.6, pal=CL, shadow=False, trunk=1)
-    # 壁ぞいの長屋（兵舎と馬屋。青緑の片流れ屋根）と井戸
-    for (bx0, bx1) in ((10, 17), (46, 53)):
-        for y in range(19, 24):
-            for x in range(bx0, bx1 + 1):
-                c.put(x, y, CT[3] if (y - 19) % 2 == 0 else CT[2], CT)
-        for x in range(bx0, bx1 + 1):
-            c.put(x, 24, CT[1], CT)
-        for y in range(25, 29):
-            for x in range(bx0, bx1 + 1):
-                c.put(x, y, CS[3] if x < bx1 else CS[2], CS)
-        for x in range(bx0, bx1 + 1):
-            c.put(x, 25, CS[2], CS)
-        for x in (bx0 + 2, bx0 + 5):
-            c.put(x, 26, HOLE, CS); c.put(x, 27, HOLE, CS)
-    for (dx, dy, col) in ((0, 0, CS[4]), (1, 0, CS[4]), (2, 0, CS[3]), (0, 1, CS[3]), (1, 1, M["Q"]), (2, 1, CS[2]), (0, 2, CS[2]), (1, 2, CS[2]), (2, 2, CS[1])):
-        c.put(43 + dx, 39 + dy, col, CS)
+    # 壁ぞいの兵舎（左右）と、屋根のある井戸
+    stamp(c, 9, 18, "barracks", CS)
+    stamp(c, 46, 18, "barracks", CS)
+    stamp(c, 38, 30, "well", CS)
     # 天守（青緑の寄棟・手前の壁・窓・垂れ幕・入口・環のしるし）
     hip_roof(c, 18, 45, 2, 13, CT)
     face(c, 19, 44, 14, 26, CS, v=3)
@@ -1626,26 +1593,19 @@ def icon_castle():
     top(c, 9, 54, 42, 43, CS)
     crenel(c, 9, 54, 42, CS)
     face(c, 9, 54, 44, 50, CS, v=3)
-    for x in (14, 19, 44, 49):                                     # 手前の壁の矢狭間（縦長の細い穴）
-        c.put(x, 46, HOLE, CS); c.put(x, 47, HOLE, CS); c.put(x, 48, CS[4], CS)
+    for x in (13, 18, 44, 49):                                     # 手前の壁の矢狭間（十字の細い穴）
+        stamp(c, x - 1, 45, "slit", CS)
     # 手前の角の塔（平らな屋上）
     for tx in (8, 55):
-        round_tower(c, tx, 6.0, 39, 52, CS, slits=(44,))
+        round_tower(c, tx, 6.0, 39, 52, CS)
         flat_top(c, tx, 39, 6.4, CS)
+        stamp(c, tx - 2, 44, "slit", CS)
     # 門の建物（張り出した上の面・胸壁・アーチの門・落とし格子）
     top(c, 24, 39, 38, 40, CS)
     crenel(c, 24, 39, 38, CS)
     face(c, 24, 39, 41, 55, CS, v=3)
-    for y in range(45, 56):
-        for x in range(28, 36):
-            if y > 46 or 29 <= x <= 34:
-                if y == 45 and not (30 <= x <= 33):
-                    continue
-                c.put(x, y, HOLE if (x - 28) % 2 == 0 or y > 53 else M["w"], CS)
-    for x in range(28, 36):
-        c.put(x, 44, CS[4], CS)
-    for y in (43,):
-        c.put(31, y, CG[1], CS); c.put(32, y, CG[0], CS)
+    stamp(c, 27, 43, "portcullis", CS)
+    c.put(31, 42, CG[1], CS); c.put(32, 42, CG[0], CS)            # 門の上の金のしるし
     # 門前の道（下へ広がる）
     for y in range(56, 64):
         k = (y - 56) // 2
@@ -1991,10 +1951,12 @@ def adobe_house(c, x0, yb, w, wh, depth, door=None, wins=(), lit=(), ground="san
     if door is not None:
         dx = x0 + door
         for x in range(dx - 1, dx + 3):
-            c.put(x, yb - 3, TIMBER[1], TIMBER)                    # まぐさ
+            c.put(x, yb - 3, TIMBER[2], TIMBER)                    # まぐさ（両方の柱の上にわたる木。「T」の字に見えないように）
         for y in range(yb - 2, yb + 1):
             c.put(dx - 1, y, P[4], P)                              # 左の柱（光が当たる）
             c.put(dx, y, P[0], P); c.put(dx + 1, y, P[0], P)
+            c.put(dx + 2, y, P[2], P)                              # 右の柱（影）
+        c.put(dx, yb - 2, TIMBER[0], TIMBER); c.put(dx + 1, yb - 2, TIMBER[0], TIMBER)   # まぐさの下のいちばん深い影
 
 
 # --- 隊商宿のアーチの門: 明るい縁どり（左と上）、影の縁（右）、中は深い影。奥に半分あいた木の扉
@@ -2016,6 +1978,217 @@ TPL["archwin"] = ([
     "TkU",
     "TTU",
 ], {"T": ADOBE[4], "U": ADOBE[2], "k": ADOBE[0]})
+
+
+EMBER = "#9cbc48"                                                        # たき火に照らされた草（あたたかい明るい緑）
+
+# --- たき火（1倍でも読める大きさ）: 前の石の輪（左上が明るい石）、交差したまき（明るい面と暗い面）、
+#     炎は外が赤・中がだいだい・芯が黄と白。てっぺんは細い舌の形
+TPL["campfire"] = ([
+    "....y....",
+    "...yY....",
+    "...oYy...",
+    "..oYWYo..",
+    "..rOYOr..",
+    ".sLrOrls.",
+    "sSsLlLsSs",
+    ".sSsSsSs.",
+], {"y": LIGHT, "Y": LIGHT, "W": PALE, "o": FIRE[1], "O": FIRE[1], "r": FIRE[0], "L": TIMBER[2], "l": TIMBER[0],
+    "s": STONE[2], "S": STONE[4]})
+
+
+def flap(c, cx, yb, cloth):
+    """天幕の入口: 中は暗い。左へ折り返したたれ幕（裏の明るい布）が三角に見える。右のふちは布の影"""
+    rows = ["...k..",
+            "..Fkk.",
+            ".FFkkk",
+            ".FfkkK",
+            "FFfkkK",
+            "FffkkK"]
+    leg = {"k": TIMBER[0], "F": cloth[4], "f": cloth[2], "K": cloth[1]}
+    for j, r in enumerate(rows):
+        for i, ch in enumerate(r):
+            if ch != ".":
+                c.put(cx - 3 + i, yb - 5 + j, leg[ch], cloth)
+
+
+def line(c, x0, y0, x1, y1, col, mat=None):
+    x0, y0, x1, y1 = round(x0), round(y0), round(x1), round(y1)
+    n = max(abs(x1 - x0), abs(y1 - y0), 1)
+    for k in range(n + 1):
+        c.put(round(x0 + (x1 - x0) * k / n), round(y0 + (y1 - y0) * k / n), col, mat)
+
+
+def guy_ropes(c, cx, yb, rx, ry):
+    """張り綱: 天幕の左右の肩から、外の地面の杭へ（明るい綱の1ドットの線、先に暗い杭）"""
+    for side in (-1, 1):
+        sx = cx + side * (rx * 0.78)
+        sy = yb - ry * 0.55
+        px_ = cx + side * (rx + 3)
+        line(c, sx + side, sy, px_, yb, WALL[3] if side < 0 else WALL[2])
+        c.put(px_, yb + 1, TIMBER[0], TIMBER)
+
+
+def strata_cliff(c, x0, x1, top, ybot, seed=5):
+    """地層の重なった断崖: 厚さのちがう横の層（2〜4行）。層ごとに、上のふちは明るい1行（光が当たる張り出し）、
+    下のふちは影の1行。層のさかいは、決まった場所で1行だけ段になる（まっすぐすぎると板に見える）。右のはしの2列は1段暗い"""
+    import random
+    rnd = random.Random(seed)
+    heights = [3, 4, 2, 3, 4, 3, 2, 4, 3, 3, 4, 2, 3]
+    starts = []
+    y = 0
+    for h in heights:
+        starts.append((y, h)); y += h
+    steps = {}
+    for x in range(x0, x1 + 1):
+        steps[x] = 1 if (x // 9) % 3 == 1 else (2 if (x // 9) % 3 == 2 and (x // 9) % 2 == 0 else 0)
+    ytop = min(int(math.ceil(top(x))) for x in range(x0, x1 + 1))
+    for x in range(x0, x1 + 1):
+        t = int(math.ceil(top(x)))
+        for y in range(t, ybot + 1):
+            yy = y - ytop + steps[x]
+            for i, (s0, h) in enumerate(starts):
+                if s0 <= yy < s0 + h:
+                    break
+            base = (3, 2, 2, 3, 2, 3, 3, 2, 3, 2, 2, 3, 2)[i]
+            k = yy - s0
+            lip = h >= 3 and (x * 7 + i * 13) % 17 >= 3                # 厚い層だけ、張り出しのへり（3ドットずつ欠ける）
+            col = STONE[4] if (k == 0 and lip) else STONE[1] if (k == h - 1 and h >= 3) else STONE[base]
+            if x >= x1 - 1:
+                col = STONE[max(1, STONE.index(col) - 1)]
+            if y == t:
+                col = STONE[4]
+            c.put(x, y, col, STONE)
+    for (cx, cy, n) in ((9, 26, 4), (27, 22, 5), (48, 34, 4), (54, 18, 5), (13, 32, 3), (31, 40, 4)):   # 縦の割れ目（左どなりは明るい）
+        for y in range(cy, cy + n):
+            if c.get(cx, y) is not None:
+                c.put(cx, y, STONE[1], STONE)
+                c.put(cx - 1, y, STONE[4], STONE)
+
+
+def ledge(c, ly, lx0, lx1):
+    """岩だな: 張り出した上の面2行（明るい）と、その下のえぐれた暗い影1行。右のはしは影"""
+    for x in range(lx0, lx1 + 1):
+        c.put(x, ly - 1, STONE[4] if x < lx1 else STONE[3], STONE)
+        c.put(x, ly, STONE[3] if x < lx1 else STONE[2], STONE)
+        c.put(x, ly + 1, STONE[0], STONE)
+
+
+def flight(c, xa, ya, yb, d):
+    """階段の1つの流れ（ななめ）: はば3。踏み面（明るい）とけあげ（暗い）が1行ずつ交互。
+    下がる向きの外がわ（右）に、1ドット上を通る手すりと、3段ごとの柱"""
+    for y in range(ya, yb + 1):
+        x = xa + (y - ya) * d
+        for k in range(3):
+            c.put(x + k, y, WALL[3] if (y - ya) % 2 == 0 else STONE[2], STONE)
+        c.put(x + 3, y - 1, TIMBER[1], TIMBER)                     # 手すり
+        if (y - ya) % 3 == 0:
+            c.put(x + 3, y, TIMBER[0], TIMBER)                     # 手すりの柱
+
+
+def landing(c, x, y, w=4):
+    for yy in (y, y + 1):
+        for xx in range(x, x + w):
+            c.put(xx, yy, WALL[3] if yy == y else WALL[2], STONE)
+    c.put(x + w, y, TIMBER[0], TIMBER); c.put(x + w, y + 1, TIMBER[0], TIMBER)
+
+
+# --- 木の見張りやぐら（雪の町）: 赤い三角の屋根（左の斜面のふちに細い雪。白い雪を厚くすると雪原にとけて屋根の形が消えた。
+#     屋根の下がわは火に照らされて明るい）、屋根の下にかがり火（鉄の鉢・炎・白い芯）、
+#     手すり（横木と細い柱）、床の板、ひらいた4本の脚（見えるのは左右2本。左は明るい木、右は影の木）と、2段のななめの筋かい
+TPL["watchtower"] = ([
+    "......w......",
+    ".....WRr.....",
+    "....WRRrr....",
+    "...WRRRrrr...",
+    "..WRRRRrrrr..",
+    ".WRRRRRrrrrr.",
+    "WRRRRRRrrrrrr",
+    "eeeeaaaaeeeee",
+    ".p...yy....q.",
+    ".p..yYcy...q.",
+    ".p..oYYo...q.",
+    ".p..bOOb...q.",
+    ".pTTTTTTTTTq.",
+    ".pt.t.t.t.tq.",
+    "FFFFFFFFFFFFf",
+    ".ffffffffff..",
+    "..L.......K..",
+    "..Lx.....xK..",
+    "..L.x...x.K..",
+    "..L..x.x..K..",
+    ".L....x....K.",
+    ".L...x.x...K.",
+    ".L..x...x..K.",
+    ".L.x.....x.K.",
+    ".LBBBBBBBBBK.",
+    ".Lx.......xK.",
+    "L..x.....x..K",
+    "L...x...x...K",
+    "L....x.x....K",
+    "L.....x.....K",
+    "L....x.x....K",
+    "L...x...x...K",
+], {"W": SNOW[5], "w": SNOW[3], "R": ROOF[3], "r": ROOF[1], "e": TIMBER[0], "a": LAMP, "p": TIMBER[2], "q": TIMBER[0],
+    "y": LIGHT, "Y": LIGHT, "c": PALE, "o": FIRE[1], "O": FIRE[1], "b": STONE[1], "T": DIRT[3], "t": TIMBER[1],
+    "F": DIRT[3], "f": TIMBER[0], "L": TIMBER[2], "K": TIMBER[0], "x": TIMBER[1], "B": TIMBER[1]})
+
+
+# --- お城の兵舎: 青緑の瓦屋根（棟は明るい・瓦の列・軒は暗い）とえんとつ、しっくいの壁に2つの窓と木の扉（左の板は明るい）
+TPL["barracks"] = ([
+    ".....hH..",
+    ".DDDDhHD.",
+    "CCCCCCCCB",
+    "BBBBBBBBA",
+    "CCCCCCCCB",
+    "AAAAAAAAA",
+    ".mmmmmmm.",
+    ".nkknwxm.",
+    ".nkknwxm.",
+    ".nnnnwxm.",
+], {"D": M["D"], "C": M["C"], "B": M["B"], "A": M["A"], "h": M["a"], "H": M["c"], "m": M["m"], "n": M["n"],
+    "k": M["k"], "w": M["y"], "x": M["x"]})
+
+# --- 屋根のある井戸: 小さな青緑の切妻屋根、木の柱2本（左は明るい）、まん中に綱とつるべ（木の桶）、石の井げた（奥のふち・中の水・手前の面）
+TPL["well"] = ([
+    "...D...",
+    "..CDB..",
+    ".CCDBB.",
+    "CCCDBBA",
+    ".w.r.x.",
+    ".w.y.x.",
+    "ddddddb",
+    "dQQRQQa",
+    "bbbbaaa",
+], {"D": M["D"], "C": M["C"], "B": M["B"], "A": M["A"], "w": M["y"], "x": M["w"], "r": M["x"], "y": M["y"],
+    "d": M["d"], "c": M["c"], "b": M["b"], "a": M["a"], "Q": M["Q"], "R": M["R"]})
+
+# --- 矢狭間（やざま）: 縦に細い穴に、短い横の穴が交わる十字。下に明るい石の棚
+TPL["slit"] = ([
+    ".k.",
+    "kkk",
+    ".k.",
+    ".k.",
+    ".d.",
+], {"k": M["k"], "d": M["d"]})
+
+# --- 落とし格子の門: 石のアーチ（かなめの石は明るい・暗いを交互）、左の柱は明るく右は影。
+#     中は深い闇に、鉄の格子（縦2本・横3本）。格子は少し上がっていて、下のとがった先の下に暗いすき間
+TPL["portcullis"] = ([
+    "...dccb...",
+    "..dGkkGb..",
+    ".dkGkkGkb.",
+    ".dGGGGGGb.",
+    ".dkGkkGkb.",
+    ".dkGkkGkb.",
+    ".dGGGGGGb.",
+    ".dkGkkGkb.",
+    ".dkGkkGkb.",
+    ".dGGGGGGb.",
+    ".dkgkkgkb.",
+    ".dkkkkkkb.",
+    ".dkkkkkkb.",
+], {"d": M["d"], "c": M["c"], "b": M["b"], "G": M["a"], "g": M["b"], "k": M["k"]})
 
 
 # ===================================================================== 見本
@@ -2172,6 +2345,51 @@ def size_of(name):
     return min(xs), max(xs), max(xs) - min(xs) + 1, min(ys), max(ys)
 
 
+# 7回目の見比べ: 部品ごとに、6回目（before7/ に残した絵）と7回目を、同じ場所で大きく切り出して並べる
+DETAILS = [  # (ラベル, 絵, 切り出す範囲 x, y, はば, 高さ)
+    ("port: pier, sailboat, rowboat", "icon-port", 24, 40, 38, 24),
+    ("port: lighthouse", "icon-port", 42, 8, 20, 40),
+    ("village: wheat fields", "icon-village", 34, 6, 28, 24),
+    ("village: water wheel + millrace", "icon-village", 28, 32, 26, 22),
+    ("lake: glass dome + reeds", "icon-lake", 30, 30, 32, 26),
+    ("mine: rails + mine cart", "icon-mine", 36, 4, 24, 28),
+    ("desert: adobe houses", "icon-tents", 0, 10, 30, 26),
+    ("desert: caravanserai", "icon-tents", 16, 12, 32, 36),
+    ("camp: tents (flap, ropes)", "icon-tents-grass", 2, 24, 40, 24),
+    ("camp: campfire", "icon-tents-grass", 24, 38, 22, 20),
+    ("cliff town: strata ledges + stairs", "icon-temple", 2, 8, 60, 40),
+    ("snow town: watchtower + brazier", "icon-snowtown", 18, 0, 28, 42),
+    ("castle: barracks + well", "icon-castle", 4, 14, 56, 28),
+    ("castle: arrow slits + portcullis", "icon-castle", 2, 38, 60, 22),
+]
+
+
+def preview_details(path, Z=6):
+    cells = []
+    for (label, n, x, y, w, h) in DETAILS:
+        ims = []
+        for d in (os.path.join(HERE, "before7"), HERE):
+            im = load_icon(d, n)
+            bg = terrain(TERRAIN[n], 64, 64)
+            bg.alpha_composite(im)
+            ims.append(bg.crop((x, y, x + w, y + h)).resize((w * Z, h * Z), Image.NEAREST))
+        one = terrain(TERRAIN[n], 64, 64)
+        one.alpha_composite(load_icon(HERE, n))
+        cell = Image.new("RGBA", (ims[0].width * 2 + 64 * 2 + 40, max(ims[0].height, 128) + 20), (40, 40, 48, 255))
+        dr = ImageDraw.Draw(cell)
+        dr.text((4, 3), f"{label}   left: before (6th) / right: after (7th) x{Z}   / far right: after x2 (game x1 doubled)", fill=(255, 255, 255))
+        cell.paste(ims[0], (4, 18)); cell.paste(ims[1], (ims[0].width + 16, 18))
+        cell.paste(one.resize((128, 128), Image.NEAREST), (ims[0].width * 2 + 28, 18))
+        cells.append(cell)
+    W = max(c.width for c in cells)
+    H = sum(c.height + 6 for c in cells)
+    sheet = Image.new("RGBA", (W, H), (30, 30, 36, 255))
+    yy = 0
+    for c in cells:
+        sheet.paste(c, (0, yy)); yy += c.height + 6
+    sheet.save(path)
+
+
 def colors(name_fn):
     """（作業用）まとめる前の色と、その数"""
     import builtins
@@ -2208,3 +2426,5 @@ if __name__ == "__main__":
             print(n, "左右・はば・上下", size_of(n), "地面の明るさ / 目じるし", landmark(n))
         preview(os.path.join(HERE, "preview.png"))
         world_preview(os.path.join(HERE, "preview-world.png"), os.path.join(HERE, "preview-world-1x.png"))
+        if os.path.isdir(os.path.join(HERE, "before7")):
+            preview_details(os.path.join(HERE, "preview-details.png"))

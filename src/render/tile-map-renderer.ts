@@ -2,6 +2,7 @@ import { drawCandleFlames } from "./candle-flames";
 import { getTileId, type TileMap } from "../game/map/tile-map";
 import type { Camera } from "./camera";
 import { renderGroundDecor } from "./ground-decor";
+import { renderMountainRelief } from "./mountain-relief";
 import { drawDungeonTile, renderDungeonLights } from "./dungeon-tiles";
 import { drawBuildingTile, drawDoorTile } from "./building-tiles";
 import { hashCell, shadeColor } from "../game/color-utils";
@@ -272,6 +273,7 @@ export function renderTileMap(
     }
   }
   renderGroundDecor(ctx, map, camera);
+  renderMountainRelief(ctx, map, camera);   // 全体フィールドの山の高低差（見た目だけ。通れる所は変えない）
   if (map.data.theme && typeof performance !== "undefined") {
     renderDungeonLights(ctx, map, camera, performance.now());
   }
