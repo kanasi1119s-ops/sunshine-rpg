@@ -2150,7 +2150,7 @@
  {
   "id": "enc-islet-2-1-4",
   "prompt": "an iron furnace machine walking on thick legs, a chimney on its back and glowing grill teeth",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-2-1-4",
   "kind": "mob",
   "name": "鉄の機械",
@@ -2161,12 +2161,13 @@
    100,
    90,
    85
-  ]
+  ],
+  "draft": "enc-islet-2-1-4_0"
  },
  {
   "id": "enc-islet-2-1-5",
   "prompt": "a droplet of heat, a floating red-hot drop of molten metal with a shimmering aura",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-2-1-5",
   "kind": "mob",
   "name": "熱のしずく",
@@ -2177,12 +2178,13 @@
    220,
    90,
    40
-  ]
+  ],
+  "draft": "enc-islet-2-1-5_0"
  },
  {
   "id": "enc-islet-3-1-0",
   "prompt": "a sea breeze shadow, a salty wind spirit with seaweed streamers and a gull-shaped head",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-3-1-0",
   "kind": "mob",
   "name": "潮風の影",
@@ -2193,7 +2195,8 @@
    140,
    170,
    170
-  ]
+  ],
+  "draft": "enc-islet-3-1-0_0"
  },
  {
   "id": "enc-islet-3-1-1",
