@@ -1562,7 +1562,7 @@
  {
   "id": "enc-kanou-1-1",
   "prompt": "a small glowing orb of warm amber light with a long flickering comet-like tail of sparks and two tiny dot eyes, floating, no human",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-1-1",
   "kind": "mob",
   "name": "迷いの光",
@@ -1574,7 +1574,7 @@
    130,
    60
   ],
-  "draft": "enc-kanou-1-1_1",
+  "draft": "enc-kanou-1-1_0",
   "seed_base": 10002,
   "bg": "dark"
  },
@@ -1650,7 +1650,7 @@
  {
   "id": "enc-kanou-2-0",
   "prompt": "a quiet shadow, a soft round dark figure sitting with folded hands, faint green eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-2-0",
   "kind": "mob",
   "name": "静かな影",
@@ -1661,12 +1661,13 @@
    60,
    75,
    70
-  ]
+  ],
+  "draft": "enc-kanou-2-0_0"
  },
  {
   "id": "enc-kanou-2-1",
   "prompt": "the presence of someone waiting, a faint figure holding an umbrella of leaves, mostly transparent",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-2-1",
   "kind": "mob",
   "name": "待ち人の気配",
@@ -1677,7 +1678,8 @@
    150,
    175,
    160
-  ]
+  ],
+  "draft": "enc-kanou-2-1_1"
  },
  {
   "id": "enc-kanou-2-2",
