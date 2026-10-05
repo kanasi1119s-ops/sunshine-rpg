@@ -634,7 +634,7 @@
  {
   "id": "enc-shimohara-facility-1",
   "prompt": "a shadow of an ice soldier wearing a cracked frozen helmet and long coat, holding an icicle rifle",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-shimohara-facility-1",
   "kind": "mob",
   "name": "氷の兵の影",
@@ -645,7 +645,8 @@
    120,
    140,
    165
-  ]
+  ],
+  "draft": "enc-shimohara-facility-1_0"
  },
  {
   "id": "enc-shimohara-facility-2",
@@ -661,7 +662,7 @@
  {
   "id": "enc-shimohara-facility-3",
   "prompt": "a creature made of tall frost column crystals growing from frozen soil, with a cold blue core",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-shimohara-facility-3",
   "kind": "mob",
   "name": "霜柱の結晶",
@@ -672,12 +673,13 @@
    190,
    220,
    240
-  ]
+  ],
+  "draft": "enc-shimohara-facility-3_1"
  },
  {
   "id": "enc-shimohara-facility-4",
   "prompt": "a long centipede-like insect crawling along cold metal pipes, frosty grey segments and blue joint lights",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-shimohara-facility-4",
   "kind": "mob",
   "name": "冷たい配管の虫",
@@ -688,7 +690,8 @@
    130,
    150,
    160
-  ]
+  ],
+  "draft": "enc-shimohara-facility-4_0"
  },
  {
   "id": "enc-shimohara-facility-5",
