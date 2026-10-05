@@ -68,3 +68,18 @@ describe("乗り物（船・飛空艇）", () => {
     expect(groundIdAt(world, 0, 0)).toBe(1);
   });
 });
+
+describe("芯環塔の上の積乱雲の下は、船も飛空艇も入れない", () => {
+  it("雲の下の海のマスは通れず、雲の外の海は通れる", () => {
+    const ship = buildVehicleCollision(world, "ship");
+    const air = buildVehicleCollision(world, "air");
+    const at = (c: number[], dx: number, dy: number): number => c[(WORLD_TOWER.y + dy) * W + WORLD_TOWER.x + dx];
+    expect(groundIdAt(world, WORLD_TOWER.x, WORLD_TOWER.y - 10)).toBe(1);
+    expect(at(ship, 0, -10)).toBe(1);
+    expect(at(air, 0, -10)).toBe(1);
+    expect(at(ship, -9, -9)).toBe(1);
+    // 雲より上（北）の海は、これまでどおり通れる
+    expect(groundIdAt(world, WORLD_TOWER.x, WORLD_TOWER.y - 19)).toBe(1);
+    expect(at(ship, 0, -19)).toBe(0);
+  });
+});
