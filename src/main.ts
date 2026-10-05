@@ -800,6 +800,18 @@ menuButton.addEventListener("pointerdown", (event) => {
 });
 app.appendChild(menuButton);
 
+/** スマホ用: 世界地図の全体図を開く／閉じるボタン（キーボードの V と同じ）。世界地図を歩いているときだけ出る。 */
+const mapButton = document.createElement("button");
+mapButton.type = "button";
+mapButton.className = "touch-map-button";
+mapButton.textContent = "地図";
+mapButton.style.display = "none";
+mapButton.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  sendGameKey("keydown", "map");
+});
+app.appendChild(mapButton);
+
 /** スマホ用: もどるボタン（キーボードの x・Esc と同じ。十字キーとは別）。メニュー・ジョブ・買い物・戦闘の選び直しなどを、ひとつ戻る。 */
 const backButton = document.createElement("button");
 backButton.type = "button";
@@ -2147,6 +2159,10 @@ function renderGameScene(): void {
 const loop = createGameLoop({
   update(dtMs) {
     syncCompanionsFromFlags();
+    // 世界地図を歩いているときだけ、「地図」ボタンを出す
+    const showMapButton = currentMapId === "world-map" && !title.open && !bootOpening.open && !opening.open && !battle;
+    const wanted = showMapButton || worldOverviewOpen ? "" : "none";
+    if (mapButton.style.display !== wanted) mapButton.style.display = wanted;
     if (joinQueue.length > 0 && !dialogue.isActive() && !battle && !title.open && !bootOpening.open && !opening.open) {
       startJoinNotice(joinQueue.shift()!);
     }

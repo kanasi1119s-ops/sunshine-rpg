@@ -70,6 +70,21 @@ body {
   user-select: none;
 }
 
+.touch-map-button {
+  position: absolute;
+  right: 84px;
+  bottom: 108px;
+  width: 56px;
+  height: 40px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 0.75rem;
+  touch-action: none;
+  user-select: none;
+}
+
 .touch-job-button {
   position: absolute;
   right: 84px;

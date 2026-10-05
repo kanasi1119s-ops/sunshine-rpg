@@ -95,5 +95,5 @@ export function renderWorldOverview(
   ctx.textAlign = "left";
   ctx.fillStyle = "#f2c14e";
   ctx.font = "9px monospace";
-  ctx.fillText("世界地図（Vキーか決定でとじる）　赤＝町　点＝環灯台", 8, 3);
+  ctx.fillText("世界地図（Vキー・地図ボタン・決定でとじる）　赤＝町　点＝環灯台", 8, 3);
 }
