@@ -115,7 +115,7 @@ await p.evaluate(async () => {
     const u = (t - seg[0]) / (seg[1] - seg[0]);
     if (seg[2] === "open") {
       opening("story", t * 1000);
-      if (t > 1.5) caption(["砕けた光が、", "世界をつくった。"], 520, t - 1.5, 84, "#ffe9a0", Math.min(1, (3.5 - t) * 2));
+      if (t > 1.5) caption(["砕けた光が、", "世界をつくった。"], 1380, t - 1.5, 84, "#ffe9a0", Math.min(1, (3.5 - t) * 2));
     } else if (seg[2] === "still") {
       band(window.__stills[seg[3]], u, 0.12, 0.6);
       caption(seg[4], 330, t - seg[0], 84, "#ffffff", Math.min(1, (seg[1] - t) * 4 + 0.2));

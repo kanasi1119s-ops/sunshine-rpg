@@ -89,36 +89,54 @@ function drawSparkles(ctx: Ctx, cx: number, cy: number, ms: number): void {
   ctx.restore();
 }
 
-/** 色の段（中心ほど明るい）。 */
-const BANG_COLORS = ["#ffffff", "#fff4c0", "#ffd45c", "#e8a038", "#a8601e", "#5a3216"];
+/** ビッグバンが続く時間（ms。曲の一撃から）。 */
+export const BIGBANG_MS = 2800;
 
-/** 塗りつぶした楕円を、1行ずつの横線で描く（ふちがにじまない）。dither が true なら、ふちを市松にする。 */
-function pixelEllipse(ctx: Ctx, cx: number, cy: number, rx: number, ry: number, color: string, dither = false): void {
+const clamp01 = (x: number): number => Math.min(1, Math.max(0, x));
+const easeOutCubic = (x: number): number => 1 - Math.pow(1 - clamp01(x), 3);
+const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+
+/** 火の色の段（若い光ほど白く、年をとると赤・紫・暗い青へ）。 */
+const FIRE = ["#ffffff", "#fff4c0", "#ffd45c", "#ff9a30", "#e8502a", "#a02a50", "#5a2a6a", "#2a2a6a"];
+const fireColor = (age: number): string => FIRE[Math.min(FIRE.length - 1, Math.floor(clamp01(age) * FIRE.length))];
+
+function px(ctx: Ctx, x: number, y: number, size: number, color: string): void {
   ctx.fillStyle = color;
-  for (let dy = -ry; dy <= ry; dy++) {
-    const half = Math.round(rx * Math.sqrt(Math.max(0, 1 - (dy * dy) / (ry * ry))));
-    if (half <= 0) continue;
-    const y = cy + dy;
-    if (!dither) {
-      ctx.fillRect(cx - half, y, half * 2 + 1, 1);
-    } else {
-      // ふちの4ドットだけ、1つおきにする
-      ctx.fillRect(cx - half + 4, y, Math.max(0, half * 2 - 7), 1);
-      for (let o = 0; o < 4; o++) {
-        if ((cx - half + o + y) % 2 === 0) { ctx.fillRect(cx - half + o, y, 1, 1); ctx.fillRect(cx + half - o, y, 1, 1); }
-      }
+  ctx.fillRect(Math.round(x), Math.round(y), size, size);
+}
+
+/** 円（だ円）のふちを、1〜2ドットの点でなぞる。fade が大きいほど、点が抜けていく（半透明は使わない）。 */
+function pixelRing(ctx: Ctx, cx: number, cy: number, rx: number, ry: number, color: string, thick: number, fade: number, seed = 0): void {
+  const n = Math.max(24, Math.round(((rx + ry) * Math.PI) / 1.6));
+  for (let i = 0; i < n; i++) {
+    if (hash(seed * 977 + i) < fade) continue;
+    const a = (i / n) * Math.PI * 2;
+    px(ctx, cx + Math.cos(a) * rx - thick / 2, cy + Math.sin(a) * ry - thick / 2, thick, color);
+  }
+}
+
+/** 画面ぜんたいの白いひらめき。ベイヤー行列のディザで、白→透けていく（半透明ではない）。 */
+function ditherFlash(ctx: Ctx, w: number, h: number, level: number, color: string): void {
+  if (level <= 0) return;
+  ctx.fillStyle = color;
+  const cell = 2;
+  const th = level * 16;
+  for (let y = 0; y < h; y += cell) {
+    for (let x = 0; x < w; x += cell) {
+      if (BAYER4[((y / cell) % 4) * 4 + ((x / cell) % 4)] < th) ctx.fillRect(x, y, cell, cell);
     }
   }
 }
 
 /**
- * 曲のはじまりの一撃で光る「ビッグバン」を、ドット絵で描く。
- * 小さな白い点がふくらみ、色の段（白→うす黄→金→だいだい→茶）の輪が広がって、集中線がのび、
- * 最後は外がわの輪から順に市松で消えていく。半透明・ぼかしは使わない。
+ * 曲のはじまりの一撃で起きる「ビッグバン」を、ドット絵で描く（全部ドット。半透明・ぼかしは使わない）。
+ *  1. 画面全体が白くひらめき、ふるえる
+ *  2. 白い核がふくらみ、火の色の段の球になる。十字の光の筋と、集中線がのびる
+ *  3. 衝撃の輪が3つ、外へ広がる。火花（ふき出す粒）が、尾を引いて飛ぶ
+ *  4. 球はしぼみ、金色の「灯の環」だけが残って、ゆっくり回る。やがて環はくだけ、かけらと火の粉になって消える
  */
 function drawBigBang(ctx: Ctx, w: number, h: number, sinceHit: number, block = 1): void {
   if (block > 1 && typeof document !== "undefined") {
-    // ドットを大きくする（block×blockの正方形を1ドットにする）。小さい絵に描いて、補間なしで拡大する
     const small = document.createElement("canvas");
     small.width = Math.ceil(w / block);
     small.height = Math.ceil(h / block);
@@ -130,38 +148,134 @@ function drawBigBang(ctx: Ctx, w: number, h: number, sinceHit: number, block = 1
     return;
   }
   const cx = Math.round(w / 2), cy = Math.round(h * 0.45);
+  const R0 = Math.min(w, h * 1.2) * 0.5;               // 基準の半径
+  const aspect = w > h ? (h / w) * 1.24 : 1;           // 横長の画面はだ円、縦長は円
+  const t = sinceHit;
   ctx.save();
-  if (sinceHit < 0) {
+  if (t < 0) {
     // 一撃の直前: 小さな白い点が、ふるえながら大きくなる
-    const grow = Math.max(0, (sinceHit + 80) / 80);
+    const grow = Math.max(0, (t + 80) / 80);
     const r = 1 + Math.round(grow * 3);
-    pixelEllipse(ctx, cx, cy, r + 2, r + 2, BANG_COLORS[3]);
-    pixelEllipse(ctx, cx, cy, r, r, BANG_COLORS[0]);
+    px(ctx, cx - r - 2, cy - r - 2, (r + 2) * 2 + 1, FIRE[3]);
+    px(ctx, cx - r, cy - r, r * 2 + 1, FIRE[0]);
     ctx.restore();
     return;
   }
-  const p = Math.min(1, sinceHit / 900);
-  // 広がる: 最初の0.25で一気に広がり、そのあとゆっくり
-  const spread = p < 0.25 ? (p / 0.25) * 0.7 : 0.7 + ((p - 0.25) / 0.75) * 0.3;
-  // 集中線
-  const rayStrength = p < 0.2 ? p / 0.2 : Math.max(0, 1 - (p - 0.2) / 0.8);
-  drawRays(ctx, cx, cy, sinceHit * 3, rayStrength);
-  // 輪: 外から内へ重ねる。時間がたつほど、外の輪から消える
-  // 横長の画面は横長の楕円、縦長の画面（動画など）は円
-  const aspect = w > h ? (h / w) * 1.24 : 1;
-  const maxRx = w * 0.5 * spread, maxRy = maxRx * aspect;
-  const rings = BANG_COLORS.length;
-  for (let k = rings - 1; k >= 0; k--) {
-    const frac = (k + 1) / rings;
-    // その輪が消えはじめる時刻: 外の輪ほど早い
-    const life = 0.38 + (1 - frac) * 0.5;
-    if (p > life) continue;
-    const fadingOut = p > life - 0.12;
-    pixelEllipse(ctx, cx, cy, Math.round(maxRx * frac), Math.round(maxRy * frac), BANG_COLORS[k], fadingOut);
+  // ふるえ（最初の0.45秒）
+  if (t < 450) {
+    const k = (1 - t / 450) * 3;
+    ctx.translate(Math.round((hash(Math.floor(t / 33) * 3) - 0.5) * 2 * k), Math.round((hash(Math.floor(t / 33) * 3 + 1) - 0.5) * 2 * k));
   }
-  // 中心の白い核
-  if (p < 0.6) pixelEllipse(ctx, cx, cy, Math.round(6 * (1 - p / 0.6)) + 2, Math.round(6 * (1 - p / 0.6)) + 2, "#ffffff");
-  drawSparkles(ctx, cx, cy, sinceHit);
+
+  // --- 核（火の色の段の球）: 0〜1100msでふくらみ、そのあとしぼむ ---
+  const grow = easeOutCubic(t / 650);
+  const shrink = t < 900 ? 1 : Math.max(0, 1 - (t - 900) / 700);
+  const coreR = R0 * 0.62 * grow * (0.35 + 0.65 * shrink);
+  if (coreR > 1) {
+    const rings = FIRE.length - 2;
+    for (let k = rings - 1; k >= 0; k--) {
+      const frac = (k + 1) / rings;
+      const rr = Math.round(coreR * frac);
+      const fadingOut = t > 700 + (1 - frac) * 400;
+      ctx.fillStyle = FIRE[k];
+      for (let dy = -Math.round(rr * aspect); dy <= Math.round(rr * aspect); dy++) {
+        const ry = Math.max(1, rr * aspect);
+        const half = Math.round(rr * Math.sqrt(Math.max(0, 1 - (dy * dy) / (ry * ry))));
+        if (half <= 0) continue;
+        if (!fadingOut) ctx.fillRect(cx - half, cy + dy, half * 2 + 1, 1);
+        else {
+          for (let dx = -half; dx <= half; dx += 1) if (BAYER4[((cy + dy) & 3) * 4 + ((cx + dx) & 3)] < 9) ctx.fillRect(cx + dx, cy + dy, 1, 1);
+        }
+      }
+    }
+  }
+
+  // --- 十字の光の筋（0〜900ms、先にいくほど細くなる）---
+  const flare = t < 150 ? t / 150 : Math.max(0, 1 - (t - 150) / 750);
+  if (flare > 0) {
+    const len = R0 * 1.7 * flare;
+    for (let step = 0; step < 3; step++) {
+      const th = 3 - step;                               // 太さ 3→1
+      const l = len * (1 - step * 0.28);
+      const col = [FIRE[0], FIRE[1], FIRE[2]][step];
+      ctx.fillStyle = col;
+      ctx.fillRect(Math.round(cx - l), cy - Math.floor(th / 2), Math.round(l * 2), th);
+      ctx.fillRect(cx - Math.floor(th / 2), Math.round(cy - l * aspect * 1.2), th, Math.round(l * aspect * 2.4));
+    }
+  }
+
+  // --- 集中線 ---
+  const ray = t < 200 ? t / 200 : Math.max(0, 1 - (t - 200) / 1100);
+  drawRays(ctx, cx, cy, t * 3, ray);
+
+  // --- 衝撃の輪（3つ）---
+  for (let i = 0; i < 3; i++) {
+    const t0 = i * 170;
+    const u = (t - t0) / 1300;
+    if (u <= 0 || u >= 1) continue;
+    const rr = R0 * 1.55 * easeOutCubic(u);
+    pixelRing(ctx, cx, cy, rr, rr * aspect, fireColor(u * 0.9), u < 0.4 ? 3 : 2, u * u, i + 1);
+  }
+
+  // --- 火花（ふき出す粒。尾を引く）---
+  for (let i = 0; i < 64; i++) {
+    const ang = hash(i * 11 + 2) * Math.PI * 2;
+    const speed = 0.55 + hash(i * 11 + 3) * 1.1;
+    const life = 900 + hash(i * 11 + 4) * 1100;
+    const u = t / life;
+    if (u >= 1) continue;
+    const dist = R0 * speed * easeOutCubic(u) * 1.25;
+    const x = cx + Math.cos(ang) * dist, y = cy + Math.sin(ang) * dist * aspect + u * u * R0 * 0.25;
+    if (hash(i * 11 + 5 + Math.floor(t / 70)) < u * 0.55) continue;     // 終わりに近いほど、ちらつく
+    const col = fireColor(u);
+    px(ctx, x, y, u < 0.5 ? 2 : 1, col);
+    // 尾
+    for (let k = 1; k <= 3; k++) {
+      const du = Math.max(0, u - k * 0.03);
+      const d2 = R0 * speed * easeOutCubic(du) * 1.25;
+      px(ctx, cx + Math.cos(ang) * d2, cy + Math.sin(ang) * d2 * aspect + du * du * R0 * 0.25, 1, fireColor(Math.min(1, u + k * 0.12)));
+    }
+  }
+
+  // --- 灯の環（くだけてのこる、金色の輪）---
+  if (t > 500) {
+    const u = clamp01((t - 500) / 400);
+    const ringR = R0 * 0.66 * easeOutCubic(u);
+    const shatter = t > 1700 ? clamp01((t - 1700) / 1000) : 0;
+    const spin = t / 900;
+    const n = 90;
+    for (let i = 0; i < n; i++) {
+      const seg = Math.floor(i / 6);                       // 6点ずつが1つのかけら
+      if (shatter > 0 && hash(seg * 31 + 7) < shatter * 1.1) {
+        // かけらが、外へ飛んで消える
+        const drift = shatter * R0 * (0.3 + hash(seg * 31 + 8) * 0.9);
+        const a = (i / n) * Math.PI * 2;
+        if (hash(i * 13 + Math.floor(t / 60)) < shatter) continue;
+        px(ctx, cx + Math.cos(a) * (ringR + drift), cy + Math.sin(a) * (ringR + drift) * aspect, 2, fireColor(0.15 + shatter * 0.7));
+        continue;
+      }
+      const a = (i / n) * Math.PI * 2;
+      const glint = Math.cos(a - spin * 2) > 0.92;         // 回る光の点
+      px(ctx, cx + Math.cos(a) * ringR - 1, cy + Math.sin(a) * ringR * aspect - 1, glint ? 3 : 2, glint ? FIRE[0] : i % 2 ? FIRE[2] : FIRE[3]);
+    }
+  }
+
+  // --- 火の粉（ゆっくり落ちる）---
+  if (t > 700) {
+    for (let i = 0; i < 40; i++) {
+      const born = 700 + hash(i * 17 + 1) * 900;
+      const u = (t - born) / 1700;
+      if (u <= 0 || u >= 1) continue;
+      const x = cx + (hash(i * 17 + 2) - 0.5) * R0 * 2.2 + Math.sin(u * 6 + i) * 4;
+      const y = cy + (hash(i * 17 + 3) - 0.5) * R0 * aspect * 1.2 + u * R0 * 0.8;
+      if (hash(i * 17 + 4 + Math.floor(t / 90)) < u * 0.6) continue;
+      px(ctx, x, y, 1, fireColor(0.1 + u * 0.8));
+    }
+  }
+
+  // --- 最初のひらめき（画面ぜんたい）---
+  if (t < 200) ditherFlash(ctx, w, h, 1 - t / 200, "#fff8e0");
+  drawSparkles(ctx, cx, cy, t);
   ctx.restore();
 }
 
@@ -190,7 +304,7 @@ export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, 
   if (state.phase === "story") {
     // 曲のはじまりの一撃（0.9秒）で、星空が光る
     const sinceHit = ms - OPENING_HIT_MS;
-    if (sinceHit > -80 && sinceHit < 900) drawBigBang(ctx, w, h, sinceHit, bangBlock);
+    if (sinceHit > -80 && sinceHit < BIGBANG_MS) drawBigBang(ctx, w, h, sinceHit, bangBlock);
     // あらすじ: 下から上へ流れる
     const scroll = (ms / 1000) * STORY_SPEED;
     const top = 20;
