@@ -1369,7 +1369,7 @@
  },
  {
   "id": "enc-tower-2-2",
-  "prompt": "a stone wrapped in swirling wind ribbons, a round boulder with carved wind symbols and one eye",
+  "prompt": "a living boulder monster wrapped in swirling pale green wind ribbons, carved spiral grooves, a single large glowing eye in the stone, small stone arms",
   "status": "done",
   "key": "enemy:enc-tower-2-2",
   "kind": "mob",
@@ -1382,12 +1382,13 @@
    150,
    160
   ],
-  "draft": "enc-tower-2-2_1"
+  "draft": "enc-tower-2-2_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-tower-2-3",
   "prompt": "a cloud gear machine, white porcelain gears and cloud puffs coming from its vents, on spindly legs",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-2-3",
   "kind": "mob",
   "name": "雲の歯車機械",
@@ -1398,12 +1399,13 @@
    210,
    215,
    220
-  ]
+  ],
+  "draft": "enc-tower-2-3_0"
  },
  {
   "id": "enc-tower-2-4",
   "prompt": "a fog soldier with a hazy body, a misty spear and a visor of condensed water",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-2-4",
   "kind": "mob",
   "name": "霧の兵",
@@ -1414,12 +1416,13 @@
    160,
    175,
    190
-  ]
+  ],
+  "draft": "enc-tower-2-4_0"
  },
  {
   "id": "enc-tower-2-5",
   "prompt": "a crackling thunder droplet, a floating drop of yellow electricity with sparking spikes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-2-5",
   "kind": "mob",
   "name": "雷のしずく",
@@ -1430,7 +1433,8 @@
    230,
    220,
    100
-  ]
+  ],
+  "draft": "enc-tower-2-5_1"
  },
  {
   "id": "enc-tower-3-0",
