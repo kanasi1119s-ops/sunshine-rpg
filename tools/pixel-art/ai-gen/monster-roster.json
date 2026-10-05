@@ -1790,7 +1790,7 @@
  },
  {
   "id": "enc-kanou-3-2",
-  "prompt": "a thin boundary, a paper-thin flat creature like a sheet of glass with a reflected face",
+  "prompt": "a thin flat creature like a tall pane of cracked glass standing on spindly legs, faint colorful reflections, a dark slit eye",
   "status": "done",
   "key": "enemy:enc-kanou-3-2",
   "kind": "mob",
@@ -1803,12 +1803,14 @@
    190,
    210
   ],
-  "draft": "enc-kanou-3-2_0"
+  "draft": "enc-kanou-3-2_x1",
+  "bg": "dark",
+  "seed_base": 6001
  },
  {
   "id": "enc-kanou-3-3",
   "prompt": "a rift insect with a cracked shell leaking pink light and long antennae",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-3-3",
   "kind": "mob",
   "name": "裂け目の虫",
@@ -1819,12 +1821,13 @@
    150,
    90,
    130
-  ]
+  ],
+  "draft": "enc-kanou-3-3_x1"
  },
  {
   "id": "enc-kanou-3-4",
   "prompt": "a mirror crystal creature, sharp mirror shards forming a spiky body reflecting colors",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-3-4",
   "kind": "mob",
   "name": "鏡の結晶",
@@ -1835,7 +1838,8 @@
    200,
    205,
    220
-  ]
+  ],
+  "draft": "enc-kanou-3-4_0"
  },
  {
   "id": "enc-kanou-3-5",
