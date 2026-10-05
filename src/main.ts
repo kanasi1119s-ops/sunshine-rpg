@@ -79,7 +79,7 @@ import { BattleController } from "./game/battle/battle-controller";
 import { dayFraction, isNight, isOutdoorMap, nextMorning, nightness, periodLabel, staysOutAtNight, warmGlow } from "./game/time-of-day";
 import { backFieldUse, confirmFieldUse, createFieldUseState, moveFieldUse, openFieldUse, refreshFieldUse, type FieldUseApply, type FieldUseOption } from "./game/menu/field-use";
 import { renderFieldUse } from "./render/field-use-renderer";
-import { cycleDifficulty, loadDifficulty, saveDifficulty, isDifficulty, type Difficulty } from "./game/difficulty";
+import { cycleDifficulty, loadDifficulty, saveDifficulty, type Difficulty } from "./game/difficulty";
 import { applyVital, growVital, healVital, vitalsAfterBattle, type Vitals } from "./game/vitals";
 import { awardVictoryMastery, changeJob, isJobSystemUnlocked, battleSkillsOf, withJobBonus } from "./game/job/party-job";
 import { renderBattle, setBattleBiome, warmBattleBackdrops } from "./render/battle-renderer";
@@ -880,8 +880,14 @@ function setDifficulty(next: Difficulty): void {
 }
 let lastControlsDirection: Direction | null = null;
 window.addEventListener("keydown", (event) => {
-  if ((event.key === "x" || event.key === "Escape") && controlsMenu.open && !controlsMenu.capturing) {
-    controlsMenu = closeControlsMenu(controlsMenu);
+  if ((event.key === "x" || event.key === "Escape") && controlsMenu.open) {
+    if (controlsMenu.capturing) {
+      // キー入力待ちの間にここへ届くのは、画面のボタン・コントローラーのもどる。待ちをやめる。
+      keyRemap.cancelCapture();
+      controlsMenu = finishCapture(controlsMenu, "かえなかった");
+    } else {
+      controlsMenu = closeControlsMenu(controlsMenu);
+    }
     equipBackHandled = true;
     setTimeout(() => { equipBackHandled = false; }, 0);
   }
@@ -1365,7 +1371,6 @@ function applySaveData(data: SaveData): void {
   setPartyEquipment(sanitizeParty(partyEquipment(), ALL_ITEMS_BY_ID));
   syncEquipmentToInventory();
   gold = data.gold ?? 0;
-  if (isDifficulty(data.difficulty)) setDifficulty(data.difficulty);
   vitals = difficulty === "normal" ? { ...(data.vitals ?? {}) } : {};
   clockMs = data.clockMs ?? 0;
   for (const key of Object.keys(flags)) {
