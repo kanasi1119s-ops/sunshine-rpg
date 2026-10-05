@@ -2099,7 +2099,7 @@
  {
   "id": "enc-islet-2-1-1",
   "prompt": "a melting stone creature, a half-molten rock dripping orange lava with a cooling black crust",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-2-1-1",
   "kind": "mob",
   "name": "溶けた石",
@@ -2110,12 +2110,13 @@
    150,
    80,
    50
-  ]
+  ],
+  "draft": "enc-islet-2-1-1_0"
  },
  {
   "id": "enc-islet-2-1-2",
   "prompt": "a spark insect, a small beetle with a glowing ember abdomen and sparks trailing from it",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-2-1-2",
   "kind": "mob",
   "name": "火の粉の虫",
@@ -2126,12 +2127,13 @@
    200,
    110,
    50
-  ]
+  ],
+  "draft": "enc-islet-2-1-2_1"
  },
  {
   "id": "enc-islet-2-1-3",
   "prompt": "a flame-feathered bird with burning orange feathers and a smoky tail",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-2-1-3",
   "kind": "mob",
   "name": "炎の羽",
@@ -2142,7 +2144,8 @@
    230,
    120,
    50
-  ]
+  ],
+  "draft": "enc-islet-2-1-3_1"
  },
  {
   "id": "enc-islet-2-1-4",
