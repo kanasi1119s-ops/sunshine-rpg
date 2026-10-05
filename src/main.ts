@@ -747,7 +747,7 @@ if (import.meta.env.DEV) {
     /** 開発用: 仲間が加わったときの知らせを出す（確認用）。 */
     showJoinNotice: (companionId: string) => startJoinNotice(companionId),
     /** 開発用: 話者の顔グラフィックを会話欄で見る（絵の確認用）。 */
-    startTestDialogue: (speaker: string) => dialogue.start([{ type: "message", speaker, text: "顔グラフィックの確認です。" }]),
+    startTestDialogue: (speaker: string, text = "顔グラフィックの確認です。") => dialogue.start([{ type: "message", speaker, text }]),
     /** 開発用: 指定した地図のランダムエンカウントの敵と戦う（敵の絵の確認用）。 */
     startEncounter: (mapId: string) => {
       const zone = ENCOUNTER_ZONES[mapId] ?? WORLD_ENCOUNTER_ZONES[mapId];

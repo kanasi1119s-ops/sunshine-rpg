@@ -13,12 +13,19 @@ await p.evaluate(() => { window.__sunshine.startNew(); window.__sunshine.joinSom
 await p.waitForTimeout(500);
 for (let i = 0; i < 8; i++) { await p.keyboard.press("Enter"); await p.waitForTimeout(80); }
 // 実際のゲーム画面の静止画
-const stills = [["town", "touri-town", 18, 12, 0], ["inn", "inn-touri-town-1f", 14, 10, 0], ["night", "touri-town", 18, 12, 0.75 * 480000], ["village", "mugikano-village", 22, 10, 0]];
-for (const [name, map, x, y, clock] of stills) {
+const stills = [
+  ["town", "touri-town", 18, 12, 0, "ユーリ", "ひとつも見落とさないように、調べよう。"],
+  ["inn", "inn-touri-town-1f", 14, 10, 0],
+  ["night", "touri-town", 18, 12, 0.75 * 480000],
+  ["village", "mugikano-village", 22, 10, 0, "ミナ", "水路のことなら、わたしにまかせて。"],
+  ["plain", "touri-town", 18, 12, 0],
+];
+for (const [name, map, x, y, clock, speaker, line] of stills) {
   await p.evaluate(([m, x, y, c]) => { window.__sunshine.setClock(c); window.__sunshine.warp(m, x, y); }, [map, x, y, clock]);
   await p.waitForTimeout(900);
-  for (let i = 0; i < 6; i++) { await p.keyboard.press("Enter"); await p.waitForTimeout(80); }
+  for (let i = 0; i < 16; i++) { await p.keyboard.press("Enter"); await p.waitForTimeout(80); }
   await p.waitForTimeout(300);
+  if (speaker) { await p.evaluate(([s, l]) => window.__sunshine.startTestDialogue(s, l), [speaker, line]); await p.waitForTimeout(700); }
   await p.evaluate((n) => {
     const src = document.querySelector("canvas");
     const c = document.createElement("canvas"); c.width = src.width; c.height = src.height;
@@ -108,7 +115,7 @@ await p.evaluate(async () => {
     [23.6, 25.7, "flash"],
     [25.7, 40, "reveal"],
   ];
-  const flashStills = ["town", "inn", "night", "village", "town", "village"];
+  const flashStills = ["plain", "inn", "night", "village", "town", "village"];
   window.__frame = (t) => {
     const seg = T.find((s) => t >= s[0] && t < s[1]) ?? T[T.length - 1];
     g.clearRect(0, 0, FW, FH);
