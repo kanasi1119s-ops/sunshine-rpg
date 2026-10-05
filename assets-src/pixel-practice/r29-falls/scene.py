@@ -27,7 +27,12 @@ OUT = os.path.join(HERE, "..", "..", "..", "src", "assets", "falls")
 SPIRE = os.path.join(HERE, "..", "r27-spire")
 W, H = 320, 440
 CX, CY = 160, 280                 # 塔のマスのまん中
-SUMMIT = 26                       # 塔の頂（いちばん高い岩の柱の上のはし。絵の上から）
+SUMMIT = 4                        # 塔の頂（いちばん高い岩の柱の上のはし。絵の上から。積乱雲の上に出るよう、高くした）
+# 積乱雲（r30-cumulonimbus の 352×256 の絵）を置く所: 雲の絵の (x, y) は、この絵の (x + CLOUD_DX, y + CLOUD_DY)。
+# 雲そのものはこの絵には描かず、ゲームで上に重ねる（雲の中の雷のコマがあるので）。塔の上のほう（SPIRE_TOP_Y より上）は、
+# 雲のさらに上に重ねる別の絵（spire-top.png）にする（塔が雲を突き抜けて見える）。
+CLOUD_DX, CLOUD_DY = -16, -71
+SPIRE_TOP_Y = 66
 FRAMES = basin.FRAMES
 TOWER_FEET = 72                   # 塔の絵の足もと（塔のマスのまん中から下へ。world-map の「4マス下」と同じ）
 
@@ -551,13 +556,17 @@ def tower_pixels(spire_rows, spire_rgb):
 
 def build():
     spire_rows, spire_rgb = load_spire()
-    clouds, owner = cumulonimbus()
-    veil = cloud_veil(owner)
+    # 2026-10-05: 雲は、写真をトレースした積乱雲（r30-cumulonimbus）に差しかえた。雲はゲームで上に重ねるので、ここでは描かない
+    clouds = {}
     tower = tower_pixels(*load_spire())
     # 雲の底（列ごと）。雨はこれより下だけ
     base = [168] * W
-    for (x, y) in clouds:
-        base[x] = max(base[x], y)
+    crows = [l for l in open(os.path.join(HERE, "..", "r30-cumulonimbus", "cumulonimbus.txt")).read().split("\n") if l]
+    for cy_, r in enumerate(crows):
+        for cx_, ch in enumerate(r):
+            x = cx_ + CLOUD_DX
+            if ch != "." and 0 <= x < W:
+                base[x] = max(base[x], cy_ + CLOUD_DY)
     sw, sh = len(spire_rows[0]), len(spire_rows)
     sx0 = CX - sw // 2
     sy0 = CY + TOWER_FEET - sh
@@ -610,17 +619,20 @@ def build():
                 if img[y][x] is not None:
                     sheet.putpixel((fr * W + x, y), img[y][x] + (255,))
     sheet.save(os.path.join(OUT, "scene.png"))
-    # 透けるうす雲（ゲームでは半透明で重ねる）
-    vk = {c: k for c, k in zip(VEIL, "AB")}
-    vrows = ["".join(vk[veil[(x, y)]] if (x, y) in veil else "." for x in range(W)) for y in range(H)]
-    with open(os.path.join(HERE, "veil.txt"), "w") as f:
-        f.write("\n".join(vrows) + "\n")
-    with open(os.path.join(HERE, "pal-veil.json"), "w") as f:
-        json.dump({k: "#%02x%02x%02x" % c for c, k in vk.items()}, f)
-    vim = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    for (x, y), c in veil.items():
-        vim.putpixel((x, y), c + (255,))
-    vim.save(os.path.join(OUT, "veil.png"))
+    # 塔の上のほう（雲のさらに上に重ねる）。下のはしは、ゆるく波うつ
+    top = {(x, y): c for (x, y), c in tower.items() if 0 <= y < SPIRE_TOP_Y + 3 * math.sin(x / 2.3)}
+    th = SPIRE_TOP_Y + 4
+    tcols = sorted(set(top.values()))
+    tkey = {c: pool[i] for i, c in enumerate(tcols)}
+    trows = ["".join(tkey[top[(x, y)]] if (x, y) in top else "." for x in range(W)) for y in range(th)]
+    with open(os.path.join(HERE, "spire-top.txt"), "w") as f:
+        f.write("\n".join(trows) + "\n")
+    with open(os.path.join(HERE, "pal-spire-top.json"), "w") as f:
+        json.dump({tkey[c]: "#%02x%02x%02x" % c for c in tcols}, f)
+    tim = Image.new("RGBA", (W, th), (0, 0, 0, 0))
+    for (x, y), c in top.items():
+        tim.putpixel((x, y), c + (255,))
+    tim.save(os.path.join(OUT, "spire-top.png"))
     print("ok", len(colors))
 
 

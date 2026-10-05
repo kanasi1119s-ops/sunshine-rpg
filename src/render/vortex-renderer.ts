@@ -20,7 +20,8 @@ if (typeof window !== "undefined") {
   fallsImage("scene");
   fallsImage("whirl");
   fallsImage("bolt");
-  fallsImage("veil");
+  fallsImage("cloud");
+  fallsImage("spire-top");
 }
 import type { Camera } from "./camera";
 
@@ -34,7 +35,9 @@ function hash2(x: number, y: number, k: number): number {
  * 芯環塔と大滝（2026-10-05、人間の指示「滝と塔をくっつけて、ドットで滝が流れていて、周りが大雨・嵐になって、雷まであるドットの動きを」）。
  * 穴と大滝・塔・塔の足もとを包む霧・嵐の雲・大雨を、ひとつの絵（320×360・16コマ、assets-src/pixel-practice/r29-falls/scene.py）にして重ねる。
  * 絵（320×440）の (160, 280) が塔のマスのまん中。塔は雲を突き抜けて、雲の上に頂が出る。
- * 雲のまわりの透けるうす雲（veil.png）は、半透明で重ねる。まわりの海の渦潮は、その下に描く。地形のすぐあと（建物・人より前）に描く。
+ * 雲は、写真をトレースした積乱雲（cloud.png、352×256・4コマ、assets-src/pixel-practice/r30-cumulonimbus）を上に重ね、
+ * 雲の中の黄色く光る所に、ときどき雷が走る（cloudFlashFrame）。塔の上のほう（spire-top.png）は雲のさらに上に重ね、雲を突き抜けて見せる。
+ * まわりの海の渦潮は、その下に描く。地形のすぐあと（建物・人より前）に描く。
  */
 export function renderBasin(ctx: CanvasRenderingContext2D, map: TileMap, camera: Camera, nowMs: number): void {
   if (map.data.width < WORLD_TOWER.x + 12) return;
@@ -59,13 +62,29 @@ export function renderBasin(ctx: CanvasRenderingContext2D, map: TileMap, camera:
     const fr = Math.floor(nowMs / 65) % 16;   // 16コマ。水も雨も、本当に流れて・降って見える
     ctx.drawImage(scene, fr * 320, 0, 320, 440, Math.round(cx - 160), Math.round(cy - 280), 320, 440);
   }
-  const veil = fallsImage("veil");
-  if (veil) {
-    ctx.globalAlpha = 0.42;
-    ctx.drawImage(veil, Math.round(cx - 160), Math.round(cy - 280));
-    ctx.globalAlpha = 1;
+  const cloud = fallsImage("cloud");
+  if (cloud) {
+    const cf = cloudFlashFrame(nowMs);
+    ctx.drawImage(cloud, cf * 352, 0, 352, 256, Math.round(cx - 176), Math.round(cy - 351), 352, 256);
   }
+  const spireTop = fallsImage("spire-top");
+  if (spireTop) ctx.drawImage(spireTop, Math.round(cx - 160), Math.round(cy - 280));
   ctx.restore();
+}
+
+/**
+ * 雲の中の雷（約3.3秒ごと）。雲の絵のコマ: 0=ふだん 1=光る 2=稲妻A 3=稲妻B。
+ * 光る→稲妻→光る→（少し暗く）→もう一度稲妻→光る、の順。回ごとに A と B を入れかえる。
+ */
+const CLOUD_FLASH_PERIOD = 3300;
+const CLOUD_FLASH: [number, number][] = [[0, 1], [60, 2], [130, 1], [190, 0], [270, 3], [330, 1], [400, 0]];
+export function cloudFlashFrame(nowMs: number): number {
+  const ph = nowMs % CLOUD_FLASH_PERIOD;
+  const odd = Math.floor(nowMs / CLOUD_FLASH_PERIOD) % 2 === 1;
+  let f = 0;
+  for (const [t, fr] of CLOUD_FLASH) if (ph >= t) f = fr;
+  if (odd && f >= 2) f = f === 2 ? 3 : 2;
+  return f;
 }
 
 /** 稲妻の時間（約5.2秒ごと）。いまのコマ（0〜5）と、何回目の稲妻か。光っていなければ null。 */
