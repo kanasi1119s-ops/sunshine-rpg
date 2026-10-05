@@ -76,7 +76,7 @@ import { CHAPTER3_OPENING_COMMANDS } from "./game/world/chapter3-world";
 import { CHAPTER4_OPENING_COMMANDS } from "./game/world/chapter4-world";
 import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
-import { rescueTile } from "./game/player-rescue";
+import { isOpenSpot, rescueTile } from "./game/player-rescue";
 import { applyTraits } from "./game/items/traits";
 import { bossDropFor } from "./game/items/boss-drops";
 import { allyLuck } from "./game/battle/luck";
@@ -322,6 +322,32 @@ function followerSpecs(): ReturnType<typeof spriteSpecFromPortrait>[] {
 /** 場所を移った直後は、出口に触れても戻らない。キーをはなして、出口のマスからはずれるまで（下を押しっぱなしで、すぐ元の町に戻るのを防ぐ）。 */
 let exitReleased = false;
 let exitArmed = false;
+
+/** 「動けないとき」: 町・ダンジョンの入口の近くへ、プレイヤーを移す（世界地図では、近くの動ける場所へ）。 */
+function escapeStuck(): void {
+  const tw = map.data.tileWidth, th = map.data.tileHeight;
+  const here = { x: Math.floor((player.x + player.width / 2) / tw), y: Math.floor((player.y + player.height / 2) / th) };
+  let target: { x: number; y: number } | null = null;
+  const exits = map.data.exits ?? [];
+  const isExit = (x: number, y: number): boolean => exits.some((e) => e.tileX === x && e.tileY === y);
+  const entrance = exits[0];
+  if (currentMapId !== "world-map" && entrance) {
+    // 入口のすぐ内がわ（出入り口そのものは避ける）
+    for (let r = 1; r <= 4 && !target; r++) {
+      for (let dy = -r; dy <= r && !target; dy++) {
+        for (let dx = -r; dx <= r && !target; dx++) {
+          const x = entrance.tileX + dx, y = entrance.tileY + dy;
+          if (Math.max(Math.abs(dx), Math.abs(dy)) === r && !isExit(x, y) && isOpenSpot(map, x, y)) target = { x, y };
+        }
+      }
+    }
+  }
+  target ??= rescueTile(map, here.x, here.y) ?? here;
+  player = { ...player, x: target.x * tw, y: target.y * th };
+  partyTrail.reset(player);
+  saveMessage = "入口の近くに もどった";
+  saveMessageTimer = 2000;
+}
 
 function switchMap(mapId: string, tileX: number, tileY: number): void {
   exitReleased = false;
@@ -688,6 +714,7 @@ if (import.meta.env.DEV) {
     },
     startBattle: (battleId: string) => startStoryBattle(battleId),
     battleUi: () => (battle ? battle.getUiState() : null),
+    playerTile: () => ({ map: currentMapId, x: player.x / map.data.tileWidth, y: player.y / map.data.tileHeight, dialogue: dialogue.isActive(), overview: worldOverviewOpen, pw: player.width, ph: player.height, px: player.x, py: player.y, tw: map.data.tileWidth, near: npcs.filter((n) => Math.abs(n.tileX - player.x / map.data.tileWidth) < 3 && Math.abs(n.tileY - player.y / map.data.tileHeight) < 3).map((n) => `${n.id}@${n.tileX},${n.tileY}`) }),
     /** 開発用: いまの状態を保存データにして、すぐ読み込み直す（乗り物の保存の確認用）。保存した乗り物の情報を返す。 */
     saveLoadRoundtrip: () => {
       const saved = buildSaveData();
@@ -2446,6 +2473,8 @@ const loop = createGameLoop({
         pauseMenu = result.state;
         if (result.action === "save") {
           slotMenu = openSlotMenu("save", summarizeSlots(window.localStorage, false));
+        } else if (result.action === "unstick") {
+          escapeStuck();
         } else if (result.action === "keys") {
           controlsMenu = openControlsMenu();
         } else if (result.action === "use" || result.action === "magic") {
