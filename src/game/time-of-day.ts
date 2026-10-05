@@ -34,6 +34,29 @@ export function nextMorning(clockMs: number): number {
   return (Math.floor(clockMs / DAY_MS) + 1) * DAY_MS;
 }
 
+/** 場面の時間帯（小説の場面で「夕暮れ」「その夜」などと書いてあるとき、時計をそこへ合わせる）。 */
+export type SceneTime = "morning" | "day" | "dusk" | "night";
+
+/** その時間帯の、まん中あたりの1日の割合。 */
+export const SCENE_TIME_FRACTION: Record<SceneTime, number> = { morning: 0.03, day: 0.25, dusk: 0.56, night: 0.76 };
+
+export function sceneTimeOf(clockMs: number): SceneTime {
+  const f = dayFraction(clockMs);
+  if (f >= 0.88 || f < 0.1) return "morning";
+  if (f < 0.5) return "day";
+  if (f < 0.66) return "dusk";
+  return "night";
+}
+
+/** 時計を、つぎにその時間帯になる時刻まで進める（もうその時間帯なら、そのまま。時計は戻さない）。 */
+export function advanceClockTo(clockMs: number, time: SceneTime): number {
+  if (sceneTimeOf(clockMs) === time) return clockMs;
+  const day = Math.floor(clockMs / DAY_MS) * DAY_MS;
+  let target = day + SCENE_TIME_FRACTION[time] * DAY_MS;
+  if (target <= clockMs) target += DAY_MS;
+  return target;
+}
+
 export function periodLabel(clockMs: number): string {
   const f = dayFraction(clockMs);
   if (nightness(f) >= 0.7) return "夜";

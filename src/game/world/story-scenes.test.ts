@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { EventCommand } from "../event/types";
-import { pendingScene, sceneSeenFlag, STORY_SCENES, type StoryScene } from "./story-scenes";
+import { pendingScene, sceneSeenFlag, sceneSleptFlag, sleptFlagsAfterInn, STORY_SCENES, type StoryScene } from "./story-scenes";
+import { advanceClockTo, DAY_MS, sceneTimeOf } from "../time-of-day";
 import { WORLD_MAPS, WORLD_NPCS } from "./world";
 
 /** ゲームの中で、どこかで立てられるフラグ（NPCの会話・場面の setFlag）。 */
@@ -99,5 +100,37 @@ describe("小説の場面（story-scenes）", () => {
     expect(pendingScene("m", { x: 0, y: 0 }, { a: true, z: true }, scenes)).toBeNull();
     expect(pendingScene("m", { x: 2, y: 3 }, { [sceneSeenFlag("t-enter")]: true }, scenes)?.id).toBe("t-area");
     expect(pendingScene("other", { x: 2, y: 3 }, {}, scenes)).toBeNull();
+  });
+
+  it("宿にとまったあとの場面: 条件がそろったあとで同じ町の宿にとまるまでは流れない", () => {
+    const scenes: StoryScene[] = [
+      { id: "t-morning", mapId: "inn-x-town-1f", requires: ["a"], at: "enter", afterSleep: true, commands: [{ type: "message", text: "朝" }] },
+    ];
+    expect(pendingScene("inn-x-town-1f", { x: 0, y: 0 }, { a: true }, scenes)).toBeNull();
+    expect(sleptFlagsAfterInn("inn-x-town-2f", {}, scenes)).toEqual([]);              // 条件がそろう前にとまっても、しるしはつかない
+    expect(sleptFlagsAfterInn("inn-y-town-1f", { a: true }, scenes)).toEqual([]);     // 別の町の宿
+    const slept = sleptFlagsAfterInn("inn-x-town-2f", { a: true }, scenes);
+    expect(slept).toEqual([sceneSleptFlag("t-morning")]);
+    expect(pendingScene("inn-x-town-1f", { x: 0, y: 0 }, { a: true, [slept[0]]: true }, scenes)?.id).toBe("t-morning");
+  });
+
+  it("霜原の朝の場面は、宿にとまって目がさめたあとに流れ、女将が話す", () => {
+    const s = STORY_SCENES.find((x) => x.id === "ch6-inn-preparations")!;
+    expect(s.afterSleep).toBe(true);
+    expect(s.mapId.startsWith("inn-shimohara-town")).toBe(true);
+    expect(s.commands.some((c) => c.type === "message" && c.speaker === "宿の女将")).toBe(true);
+  });
+
+  it("場面の時間帯: 時計は前へだけ進み、その時間帯になる", () => {
+    const noon = DAY_MS * 3 + DAY_MS * 0.25;
+    const dusk = advanceClockTo(noon, "dusk");
+    expect(sceneTimeOf(dusk)).toBe("dusk");
+    expect(dusk).toBeGreaterThan(noon);
+    expect(advanceClockTo(dusk, "dusk")).toBe(dusk);                 // もう夕暮れなら、そのまま
+    const night = DAY_MS * 3 + DAY_MS * 0.8;
+    const nextDusk = advanceClockTo(night, "dusk");                    // 夜のあとの夕暮れは、つぎの日
+    expect(sceneTimeOf(nextDusk)).toBe("dusk");
+    expect(nextDusk).toBeGreaterThan(night);
+    expect(sceneTimeOf(advanceClockTo(night, "morning"))).toBe("morning");
   });
 });

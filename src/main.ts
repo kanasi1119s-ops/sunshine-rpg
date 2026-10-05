@@ -57,7 +57,7 @@ import { renderDialogue } from "./render/dialogue-renderer";
 import { startCloudSaves } from "./game/save/cloud-saves";
 import type { EventCommand } from "./game/event/types";
 import type { Npc } from "./game/npc";
-import { isVoiceOnly, pendingScene, sceneSeenFlag, sceneSpeakers } from "./game/world/story-scenes";
+import { isVoiceOnly, pendingScene, sceneSeenFlag, sceneSpeakers, sleptFlagsAfterInn } from "./game/world/story-scenes";
 import { firstSpeaker } from "./game/sprite/character-specs";
 import { createTileMap, findExitAt, isWalkable, type TileMap } from "./game/map/tile-map";
 import { createPlayer, updatePlayer } from "./game/player";
@@ -88,7 +88,7 @@ import { bossDropFor } from "./game/items/boss-drops";
 import { allyLuck } from "./game/battle/luck";
 import { BattleController } from "./game/battle/battle-controller";
 import type { BattleState } from "./game/battle/types";
-import { dayFraction, isNight, isOutdoorMap, nextMorning, nightness, periodLabel, staysOutAtNight, warmGlow } from "./game/time-of-day";
+import { advanceClockTo, dayFraction, isNight, isOutdoorMap, nextMorning, nightness, periodLabel, staysOutAtNight, warmGlow } from "./game/time-of-day";
 import { backFieldUse, confirmFieldUse, createFieldUseState, moveFieldUse, openFieldUse, refreshFieldUse, type FieldUseApply, type FieldUseOption } from "./game/menu/field-use";
 import { renderFieldUse } from "./render/field-use-renderer";
 import { cycleDifficulty, loadDifficulty, saveDifficulty, type Difficulty } from "./game/difficulty";
@@ -609,7 +609,10 @@ const dialogue = new DialogueController(flags, {
     gold = paid;
     vitals = {};           // 宿屋では、HP・MPが全快する
     clockMs = nextMorning(clockMs);   // 朝になる
-    if (audioStarted) audio.playSe(seOf("level-up"));
+    // 目がさめたあとに流れる場面（宿の女将と話す朝など）に、とまったしるしをつける
+    for (const f of sleptFlagsAfterInn(currentMapId, flags)) flags[f] = true;
+    sleepFxStart = performance.now();   // 画面を暗くして眠る（目がさめるまで操作を止める）
+    sleepFxSePlayed = false;
     autosave();
     return true;
   },
@@ -1433,6 +1436,23 @@ const COMPANION_NPC_IDS: Record<string, string> = {
 
 /** 映画のような演出（上下の黒い帯）。ドルンが話す場面と、`cinematic` コマンドで入る。会話がおわると、ゆっくり消える。 */
 let cinematicSticky = false;
+/** 宿で眠る演出（2026-10-05、人間の指示「宿に泊まったら、画面を真っ暗にして寝る」）。暗くなる→真っ暗→明るくなる。そのあいだは操作できない。 */
+const SLEEP_FADE_OUT_MS = 700;
+const SLEEP_DARK_MS = 1500;
+const SLEEP_FADE_IN_MS = 800;
+let sleepFxStart: number | null = null;
+let sleepFxSePlayed = false;
+/** 眠る演出の暗さ（0〜1）。演出中でなければ null。 */
+function sleepDarkness(now: number): number | null {
+  if (sleepFxStart === null) return null;
+  const t = now - sleepFxStart;
+  if (t < SLEEP_FADE_OUT_MS) return t / SLEEP_FADE_OUT_MS;
+  if (t < SLEEP_FADE_OUT_MS + SLEEP_DARK_MS) return 1;
+  const u = (t - SLEEP_FADE_OUT_MS - SLEEP_DARK_MS) / SLEEP_FADE_IN_MS;
+  if (u < 1) return 1 - u;
+  sleepFxStart = null;
+  return null;
+}
 let cinematicLevel = 0;
 
 /** 天幕などから出てくる人が現れた時刻（ms）と、出てくるのにかかる時間。 */
@@ -2317,8 +2337,33 @@ function renderGameSceneBase(): void {
     }
   }
   const dialogueState = dialogue.getRenderState();
-  if (dialogueState) {
+  const asleep = sleepFxStart !== null && performance.now() - sleepFxStart < SLEEP_FADE_OUT_MS + SLEEP_DARK_MS;
+  if (dialogueState && !asleep) {
     renderDialogue(ctx, dialogueState, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  }
+  {
+    const dark = sleepDarkness(performance.now());
+    if (dark !== null) {
+      ctx.save();
+      ctx.globalAlpha = dark;
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+      if (dark >= 1) {
+        // 寝息（ゆっくり浮かぶ「z」）
+        const t = (performance.now() - (sleepFxStart ?? 0) - SLEEP_FADE_OUT_MS) / 1000;
+        ctx.globalAlpha = 0.75;
+        ctx.fillStyle = "#a8b8ff";
+        ctx.font = "10px monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        for (let i = 0; i < 3; i++) {
+          const k = (t * 0.9 + i / 3) % 1;
+          ctx.globalAlpha = 0.75 * Math.sin(k * Math.PI);
+          ctx.fillText("z", LOGICAL_WIDTH / 2 + 6 * i - 6 + k * 8, LOGICAL_HEIGHT / 2 + 8 - k * 18);
+        }
+      }
+      ctx.restore();
+    }
   }
 
   ctx.fillStyle = "#f0f0f0";
@@ -2927,6 +2972,17 @@ const loop = createGameLoop({
     }
     lastBattleDirection = null;
 
+    {
+      const dark = sleepDarkness(performance.now());
+      if (dark !== null) {
+        // 眠っているあいだは操作を止める。明るくなりはじめたら、目ざめの音
+        if (!sleepFxSePlayed && performance.now() - (sleepFxStart ?? 0) >= SLEEP_FADE_OUT_MS + SLEEP_DARK_MS) {
+          sleepFxSePlayed = true;
+          if (audioStarted) audio.playSe(seOf("level-up"));
+        }
+        return;
+      }
+    }
     if (dialogue.isActive()) {
       dialogue.update(dtMs);
       updateWander(npcs, map, { x: -1, y: -1 }, dtMs, true, Math.random);
@@ -3040,6 +3096,7 @@ const loop = createGameLoop({
       const scene = pendingScene(currentMapId, { x: centerTileX, y: centerTileY }, flags);
       if (scene) {
         flags[sceneSeenFlag(scene.id)] = true;
+        if (scene.time) clockMs = advanceClockTo(clockMs, scene.time);   // 「夕暮れ」「その夜」の場面は、時計もそこへ
         bringSceneActors(scene.commands, { x: centerTileX, y: centerTileY });
         dialogue.start(scene.commands);
         return;

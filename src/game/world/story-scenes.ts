@@ -1,4 +1,5 @@
 import type { EventCommand, Flags } from "../event/types";
+import type { SceneTime } from "../time-of-day";
 import { CH0_SCENES } from "./scenes/ch0-scenes";
 import { CH1_SCENES } from "./scenes/ch1-scenes";
 import { CH2_SCENES } from "./scenes/ch2-scenes";
@@ -29,6 +30,16 @@ export interface StoryScene {
   /** 地図に入ったとき、または範囲（両端を含むマス）に足を踏み入れたとき。 */
   at: "enter" | { x0: number; y0: number; x1: number; y1: number };
   commands: EventCommand[];
+  /**
+   * 場面の時間帯。流れはじめるときに、時計をこの時間帯まで進める（2026-10-05、人間の指示「夕暮れという言葉が出てきたので、時間も夕暮れに。強制でも」）。
+   * 文の中で「夕暮れ」「その夜」「朝」などと、その場の時間がはっきり書いてある場面につける。
+   */
+  time?: SceneTime;
+  /**
+   * 宿にとまって、目がさめたあとに流れる場面（2026-10-05、人間の指示「宿に泊まって起きて、女将と話す流れが自然」）。
+   * ほかの条件がそろったあとで、同じ町の宿にとまると、目がさめたときに流れる（とまるまでは流れない）。
+   */
+  afterSleep?: boolean;
   /** 元にした小説の節（docs/novel/本編/...）。 */
   source?: string;
 }
@@ -50,12 +61,42 @@ export function sceneSeenFlag(id: string): string {
   return `scene_${id}_seen`;
 }
 
+/** 「宿にとまったあとの場面」の、とまったしるしのフラグ。 */
+export function sceneSleptFlag(id: string): string {
+  return `scene_${id}_slept`;
+}
+
+/** 宿の地図（inn-<町>-1f / -2f）なら、その町の宿の名前（inn-<町>）。 */
+function innOf(mapId: string): string | null {
+  const m = /^(inn-.+)-[12]f$/.exec(mapId);
+  return m ? m[1] : null;
+}
+
+/** 条件（requires・blockedBy）がそろっているか。 */
+function conditionsMet(s: StoryScene, flags: Flags): boolean {
+  if (s.requires && !s.requires.every((f) => flags[f])) return false;
+  if (s.blockedBy && s.blockedBy.some((f) => flags[f])) return false;
+  return true;
+}
+
+/**
+ * 宿にとまったとき: その宿の「目がさめたあとの場面」で、ほかの条件がそろっているものに、とまったしるしをつける。
+ * つけたフラグの名前を返す（呼んだ側で flags に立てる）。
+ */
+export function sleptFlagsAfterInn(mapId: string, flags: Flags, scenes: readonly StoryScene[] = STORY_SCENES): string[] {
+  const inn = innOf(mapId);
+  if (!inn) return [];
+  return scenes
+    .filter((s) => s.afterSleep && innOf(s.mapId) === inn && !flags[sceneSeenFlag(s.id)] && conditionsMet(s, flags))
+    .map((s) => sceneSleptFlag(s.id));
+}
+
 /** いま流すべき場面（無ければ null）。tile はプレイヤーの足もとのマス。 */
 export function pendingScene(mapId: string, tile: { x: number; y: number }, flags: Flags, scenes: readonly StoryScene[] = STORY_SCENES): StoryScene | null {
   for (const s of scenes) {
     if (s.mapId !== mapId || flags[sceneSeenFlag(s.id)]) continue;
-    if (s.requires && !s.requires.every((f) => flags[f])) continue;
-    if (s.blockedBy && s.blockedBy.some((f) => flags[f])) continue;
+    if (!conditionsMet(s, flags)) continue;
+    if (s.afterSleep && !flags[sceneSleptFlag(s.id)]) continue;
     if (s.at !== "enter") {
       const a = s.at;
       if (tile.x < a.x0 || tile.x > a.x1 || tile.y < a.y0 || tile.y > a.y1) continue;
