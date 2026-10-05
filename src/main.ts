@@ -994,6 +994,8 @@ function shownBattleState(b: BattleController): BattleState {
   const apply = (list: BattleState["party"]): BattleState["party"] => list.map((c) => (hp![c.id] === undefined ? c : { ...c, hp: hp![c.id] }));
   return { ...state, party: apply(state.party), enemies: apply(state.enemies) };
 }
+/** 攻撃のエフェクトが終わるまで、メッセージ送り（次の行動・次のコマンド）を受けつけない時刻。 */
+let battleInputLockUntil = 0;
 let lastCast: { fromId: string; fx: string } | null = null;
 let lastBattleMessage: string | null = null;
 let battle: BattleController | null = null;
@@ -2470,6 +2472,7 @@ const loop = createGameLoop({
             lastCast = { fromId: anim.fromId, fx: anim.fx };
           }
           battleAnim = animSpec ? { spec: animSpec, startedAt: performance.now() } : null;
+          battleInputLockUntil = performance.now() + (animSpec ? animSpec.durationMs : 0);
           // HPは、効果が当たる瞬間まで前のまま見せる
           const hpBefore = battle.getHpBeforeMessage();
           hpHold = animSpec && animSpec.fxStart > 0 && hpBefore ? { from: hpBefore, until: performance.now() + animSpec.durationMs * animSpec.fxStart } : null;
@@ -2510,7 +2513,9 @@ const loop = createGameLoop({
       if (backPressed) {
         battle.cancel();
       }
-      if (actionPressed) {
+      if (actionPressed && uiState.kind === "message" && performance.now() < battleInputLockUntil) {
+        // 攻撃のエフェクトの最中は、先に進めない
+      } else if (actionPressed) {
         if (uiState.kind === "finished") {
           const lost = uiState.outcome === "lost";
           battle = null;
