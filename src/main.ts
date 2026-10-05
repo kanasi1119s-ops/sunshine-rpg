@@ -75,6 +75,7 @@ import { CHAPTER3_OPENING_COMMANDS } from "./game/world/chapter3-world";
 import { CHAPTER4_OPENING_COMMANDS } from "./game/world/chapter4-world";
 import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
+import { rescueTile } from "./game/player-rescue";
 import { applyTraits } from "./game/items/traits";
 import { bossDropFor } from "./game/items/boss-drops";
 import { allyLuck } from "./game/battle/luck";
@@ -332,6 +333,11 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   map = createTileMap(data);
   npcs = withoutJoinedCompanions(WORLD_NPCS[mapId] ?? []);
   player = { ...player, x: tileX * map.data.tileWidth, y: tileY * map.data.tileHeight };
+  // セーブした場所がふさがっていて動けないときは、近くの動ける場所へ移す
+  const rescue = mapId === "world-map" ? null : rescueTile(map, tileX, tileY);
+  if (rescue) {
+    player = { ...player, x: rescue.x * map.data.tileWidth, y: rescue.y * map.data.tileHeight };
+  }
   partyTrail.reset(player);
   vehicle = "foot";
   prevWorldTile = { x: -1, y: -1 };
