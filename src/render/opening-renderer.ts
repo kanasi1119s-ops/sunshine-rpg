@@ -200,7 +200,8 @@ function drawText(ctx: Ctx, lines: string[], visible: number, x: number, y: numb
   lines.forEach((line, i) => {
     const shown = line.slice(0, Math.max(0, remaining));
     remaining -= line.length;
-    drawPixelText(ctx, shown, x, y + i * 16, "left", 1, { size: 13 });
+    // 下の帯（52ドット）に3行が収まるように、行の間は14ドット
+    drawPixelText(ctx, shown, x, y + i * 14, "left", 1, { size: 13 });
   });
 }
 
@@ -331,7 +332,7 @@ export function renderOpening(ctx: Ctx, state: OpeningState, screenWidth: number
     ctx.fillRect(a.x + a.w - t, a.y + t, t, a.h - t * 2);
   }
 
-  drawText(ctx, scene.lines, visibleChars(scene, ms), 16, screenHeight - BAR_BOTTOM + 8);
+  drawText(ctx, scene.lines, visibleChars(scene, ms), 16, screenHeight - BAR_BOTTOM + 5);
   drawPixelText(ctx, "決定: つぎへ　x・Esc: とばす", screenWidth - 6, 2, "right", 0.85, { size: 10, color: "#c8c8e0" });
   ctx.textAlign = "left";
 }
