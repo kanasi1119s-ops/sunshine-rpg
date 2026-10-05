@@ -1,5 +1,5 @@
 import { computeDamage, computeFleeChance } from "./formulas";
-import type { BattleAction, BattleState, Combatant, Skill } from "./types";
+import type { BattleAction, BattleState, HpTrailEntry, Combatant, Skill } from "./types";
 import { effectiveStat, findCombatant, isAlive, STAT_LABELS } from "./types";
 
 export function createBattleState(party: Combatant[], enemies: Combatant[]): BattleState {
@@ -358,10 +358,17 @@ export function runTurn(
     fled: state.fled,
   };
 
+  const trail: HpTrailEntry[] = [...(state.hpTrail ?? [])].slice(-64);
+  const snap = (): void => {
+    const hp: Record<string, number> = {};
+    for (const c of [...current.party, ...current.enemies]) hp[c.id] = c.hp;
+    trail.push({ end: current.log.length, hp });
+  };
   const actors = [...current.party, ...current.enemies];
   const order = resolveTurnOrder(actors, rng);
 
   for (const combatant of order) {
+    snap();
     if (checkOutcome(current) !== "ongoing") {
       break;
     }
@@ -391,7 +398,10 @@ export function runTurn(
     }
     current = applyAction(current, action, rng);
   }
+  snap();
   tickStatuses(current);
+  snap();
+  current.hpTrail = trail;
 
   return current;
 }

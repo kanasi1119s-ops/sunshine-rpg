@@ -93,6 +93,13 @@ export interface BattleState {
   enemies: Combatant[];
   log: string[];
   fled: boolean;
+  /** ログの1行ごとの「その行動が終わった時点のHP」（画面で、ダメージを当たる瞬間に合わせて見せるため）。`end` は、その時点のログの行数。 */
+  hpTrail?: HpTrailEntry[];
+}
+
+export interface HpTrailEntry {
+  end: number;
+  hp: Record<string, number>;
 }
 
 export function isAlive(combatant: Combatant): boolean {

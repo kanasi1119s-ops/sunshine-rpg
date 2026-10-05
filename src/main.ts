@@ -76,6 +76,7 @@ import { CHAPTER4_OPENING_COMMANDS } from "./game/world/chapter4-world";
 import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { BattleController } from "./game/battle/battle-controller";
+import type { BattleState } from "./game/battle/types";
 import { dayFraction, isNight, isOutdoorMap, nextMorning, nightness, periodLabel, staysOutAtNight, warmGlow } from "./game/time-of-day";
 import { backFieldUse, confirmFieldUse, createFieldUseState, moveFieldUse, openFieldUse, refreshFieldUse, type FieldUseApply, type FieldUseOption } from "./game/menu/field-use";
 import { renderFieldUse } from "./render/field-use-renderer";
@@ -979,6 +980,20 @@ let battleEffect: { effect: BattleEffect; startedAt: number } | null = null;
 /** 進行中の「動き」（武器をふる・魔法のエフェクト・のけぞり）。 */
 let battleAnim: { spec: BattleAnimSpec; startedAt: number } | null = null;
 /** 直前に唱えた魔法（全体魔法の2人目以降は、ためを省く）。コマンド選択にもどったら消す。 */
+/** 戦闘の画面に出すHP。ダメージのエフェクトが当たる瞬間まで、当たる前のHPを見せる（行動ごとに少しずつ減る）。 */
+let hpHold: { from: Record<string, number>; until: number } | null = null;
+function shownBattleState(b: BattleController): BattleState {
+  const state = b.getState();
+  const target = b.getShownHp();
+  let hp: Record<string, number> | null = target;
+  if (hpHold) {
+    if (performance.now() < hpHold.until) hp = hpHold.from;
+    else hpHold = null;
+  }
+  if (!hp) return state;
+  const apply = (list: BattleState["party"]): BattleState["party"] => list.map((c) => (hp![c.id] === undefined ? c : { ...c, hp: hp![c.id] }));
+  return { ...state, party: apply(state.party), enemies: apply(state.enemies) };
+}
 let lastCast: { fromId: string; fx: string } | null = null;
 let lastBattleMessage: string | null = null;
 let battle: BattleController | null = null;
@@ -1833,7 +1848,7 @@ function renderGameSceneBase(): void {
   if (battle) {
     renderBattle(
       ctx,
-      battle.getState(),
+      shownBattleState(battle),
       battle.getUiState(),
       LOGICAL_WIDTH,
       LOGICAL_HEIGHT,
@@ -2455,6 +2470,9 @@ const loop = createGameLoop({
             lastCast = { fromId: anim.fromId, fx: anim.fx };
           }
           battleAnim = animSpec ? { spec: animSpec, startedAt: performance.now() } : null;
+          // HPは、効果が当たる瞬間まで前のまま見せる
+          const hpBefore = battle.getHpBeforeMessage();
+          hpHold = animSpec && animSpec.fxStart > 0 && hpBefore ? { from: hpBefore, until: performance.now() + animSpec.durationMs * animSpec.fxStart } : null;
           const se = battleSeFor(uiState.text, battle.getState().party.map((c) => c.name));
           if (audioStarted) {
             if (anim?.motion) audio.playSe(seOf(swingSeFor(anim.motion)));

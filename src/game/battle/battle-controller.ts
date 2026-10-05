@@ -94,6 +94,22 @@ export class BattleController {
     return this.state;
   }
 
+  /** いま出ているメッセージの行動が終わった時点の、みんなのHP（メッセージ表示中のみ。それ以外は null）。 */
+  getShownHp(): Record<string, number> | null {
+    if (this.phase.kind !== "message") return null;
+    const idx = this.state.log.length - this.messageQueue.length - 1;
+    const entry = (this.state.hpTrail ?? []).find((e) => e.end > idx);
+    return entry ? entry.hp : null;
+  }
+
+  /** いま出ているメッセージの行動が始まる前の、みんなのHP。 */
+  getHpBeforeMessage(): Record<string, number> | null {
+    if (this.phase.kind !== "message") return null;
+    const idx = this.state.log.length - this.messageQueue.length - 1;
+    const before = (this.state.hpTrail ?? []).filter((e) => e.end <= idx);
+    return before.length ? before[before.length - 1].hp : null;
+  }
+
   getUiState(): BattleUiState {
     return this.phase;
   }
