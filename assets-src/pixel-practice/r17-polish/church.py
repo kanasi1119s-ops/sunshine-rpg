@@ -634,37 +634,162 @@ def interior():
                 g.put(x, yy, c)
         g.hline(91, 116, sy0 + 1, "g"); g.put(90, sy0 + 1, "G"); g.put(117, sy0 + 1, "G")
 
+    CR_ = ["z", "x", "i", "P", "Q", "I", "W"]      # 柱の石: 暗→明
+
+    def ctone(u, shift=0):
+        """丸い柱の横の位置 u（-1 左〜+1 右）の明るさ。左上から光、右へまわりこむほど暗い。"""
+        nz = math.sqrt(max(0.0, 1 - u * u))
+        v = 0.5 + (-u * 0.55 + nz * 0.35) * 0.75
+        k = int(round(v * 5)) + shift
+        return CR_[max(0, min(len(CR_) - 1, k))]
+
     def column(cx, base_y, top_y, width=10, sconce=0):
-        """丸い柱: 台座（2段）・金の飾り帯・溝のある円柱（左から光、右へ暗く）・柱頭。床に右へ影。"""
-        x0 = cx - width // 2
-        for yy in range(base_y - 2, base_y + 1):
-            for x in range(x0 + width + 3, x0 + width + 7):
-                if g.get(x, yy) in "fFjE":
-                    g.put(x, yy, "j")
-        g.rect(x0 - 3, base_y - 3, x0 + width + 2, base_y, "S"); g.hline(x0 - 3, x0 + width + 2, base_y - 3, "T"); g.hline(x0 - 3, x0 + width + 2, base_y, "s")
-        g.vline(x0 - 3, base_y - 3, base_y, "T"); g.vline(x0 + width + 2, base_y - 3, base_y, "s")
-        g.rect(x0 - 1, base_y - 6, x0 + width, base_y - 4, "P"); g.hline(x0 - 1, x0 + width, base_y - 6, "Q"); g.vline(x0 + width, base_y - 6, base_y - 4, "i")
-        g.hline(x0, x0 + width - 1, base_y - 7, "G"); g.put(x0 + width - 1, base_y - 7, "g")
-        tones = ["x", "Q", "I", "Q", "P", "P", "P", "i", "i", "x"]
-        for k in range(width):
-            tn = tones[int(k * len(tones) / width)]
-            for yy in range(top_y + 6, base_y - 7):
-                c = tn
-                if k % 3 == 2 and tn not in ("I", "x"):
-                    c = "i" if tn in ("P", "Q") else "x"
+        """凝った柱（1ドットずつ）: 柱頭（四角い板・うず巻き・2段の葉の彫り・金の輪）／溝のある円柱（溝の中は左が影・右が光、
+        溝の間の細い面が明るい）／まん中の金の帯と青い石／台座（金の細帯・上の丸いふくらみ・くぼみ・下の大きなふくらみ・彫りの板のある四角い台）。
+        うしろの壁には右へ影が落ちる。"""
+        w = width + 2
+        x0 = cx - w // 2
+        x1 = x0 + w - 1
+        big = width >= 10
+        cap_h = 14 if big else 10
+        base_h = 11 if big else 8
+        shaft_top, shaft_bot = top_y + cap_h, base_y - base_h
+        # うしろの壁・床に落ちる影（右へ3ドット）
+        darker = {"Z": "z", "y": "Z", "N": "y", "R": "Z", "f": "j", "F": "f", "E": "F"}
+        for yy in range(top_y + 2, base_y + 1):
+            for x in range(x1 + 1, x1 + 5 if big else x1 + 4):
+                if g.get(x, yy) in darker:
+                    g.put(x, yy, darker[g.get(x, yy)])
+        # ---- 円柱（溝: 3ドットで1組＝細い面・溝の左（影）・溝の右（光））
+        for k in range(w):
+            u = (k + 0.5) / w * 2 - 1
+            ph = k % 3
+            sh = 1 if ph == 0 else (-1 if ph == 1 else 0)
+            for yy in range(shaft_top, shaft_bot + 1):
+                c = ctone(u, sh)
+                if ph == 0 and -0.65 < u < -0.25:
+                    c = "W" if big else "I"                  # 光のいちばん強い細い面
+                if k == 0 or k == w - 1:
+                    c = "x" if k == w - 1 else "i"           # 輪郭（右は濃く）
                 g.put(x0 + k, yy, c)
-        g.hline(x0, x0 + width - 1, top_y + 5, "G"); g.hline(x0, x0 + width - 1, top_y + 6, "g")
-        g.rect(x0 - 1, top_y + 3, x0 + width, top_y + 4, "P"); g.put(x0 - 1, top_y + 3, "Q"); g.put(x0 + width, top_y + 4, "i")
-        g.rect(x0 - 3, top_y, x0 + width + 2, top_y + 2, "S"); g.hline(x0 - 3, x0 + width + 2, top_y, "T"); g.hline(x0 - 3, x0 + width + 2, top_y + 2, "s")
-        g.put(x0 - 2, top_y + 1, "G"); g.put(x0 + width + 1, top_y + 1, "G")
+        # 溝の上下のはし（丸くおわる）
+        for k in range(1, w - 1):
+            if k % 3 in (1, 2):
+                g.put(x0 + k, shaft_top, ctone((k + 0.5) / w * 2 - 1, 1))
+                g.put(x0 + k, shaft_bot, ctone((k + 0.5) / w * 2 - 1, 0))
+        # まん中の金の帯と、青い石（大きい柱だけ）
+        if big:
+            my = (shaft_top + shaft_bot) // 2
+            for k in range(-1, w + 1):
+                u = (k + 0.5) / w * 2 - 1
+                g.put(x0 + k, my - 1, "h" if u < 0 else "G")
+                g.put(x0 + k, my, "G" if u < 0.3 else "g")
+                g.put(x0 + k, my + 1, "g")
+            g.put(cx - 1, my - 1, "K"); g.put(cx, my - 1, "K")
+            g.put(cx - 2, my, "K"); g.put(cx - 1, my, "n"); g.put(cx, my, "B"); g.put(cx + 1, my, "K")
+            g.put(cx - 1, my + 1, "K"); g.put(cx, my + 1, "K")
+            g.put(cx - 1, my - 2, "W")
+        # ---- 柱頭
+        y = top_y
+        ab = 3 if big else 2                                  # 四角い板（張り出す）
+        for k in range(-ab - 1, w + ab + 1):
+            g.put(x0 + k, y, "I" if k < w else "Q")
+            g.put(x0 + k, y + 1, ctone(((k + 0.5) / w * 2 - 1) * 0.7, 0))
+            g.put(x0 + k, y + 2, "x")
+        g.put(x0 - ab - 1, y + 1, "Q"); g.put(x0 + w + ab, y + 1, "i")
+        # 鐘の形の芯（下ほど細い。奥の暗い面）
+        for yy in range(y + 3, shaft_top - 2):
+            t = (yy - (y + 3)) / max(1, shaft_top - 2 - (y + 3))
+            ext = int(round((ab - 1) * (1 - t)))
+            for k in range(-ext, w + ext):
+                g.put(x0 + k, yy, "x" if k >= w // 2 else "i")
+        # 葉（1枚ずつ。左が光・右のふちが影・先が金で外へ丸まる）。上の段（奥）→下の段（手前）の順に重ねる
+        LEAF = ["..G.",
+                ".QPi",
+                "QIPx",
+                "QPix",
+                ".Pi."]
+        SHADE = {"I": "Q", "Q": "P", "P": "i", "i": "x", "x": "z", "G": "g"}
+        LIGHT = {"P": "Q", "i": "P", "Q": "I"}
+        tiers = [(y + 3, -2), (shaft_top - 7, 0)] if big else [(shaft_top - 6, -1)]
+        for (ty, offx) in tiers:
+            for lx in range(-ab + offx, w + ab - 2, 4):
+                u = (lx + 2 - w / 2) / (w / 2 + ab)
+                for dy, row in enumerate(LEAF):
+                    for dx, ch in enumerate(row):
+                        if ch == ".":
+                            continue
+                        c = ch
+                        if u > 0.35:
+                            c = SHADE.get(c, c)
+                        elif u < -0.45:
+                            c = LIGHT.get(c, c)
+                        g.put(x0 + lx + dx, ty + dy, c)
+        # うず巻き（左右の角の下。くるりと巻く石）
+        VL = [".QQi",
+              "QIxQ",
+              "QxGi",
+              ".iix"]
+        VR = ["iPP.",
+              "Pxix",
+              "igxx",
+              "xxz."]
+        for dy in range(4):
+            for dx in range(4):
+                if VL[dy][dx] != ".":
+                    g.put(x0 - ab - 1 + dx, y + 3 + dy, VL[dy][dx])
+                if VR[dy][dx] != ".":
+                    g.put(x0 + w + ab - 3 + dx, y + 3 + dy, VR[dy][dx])
+        # 金の輪（柱頭と円柱のさかい）
+        ry = shaft_top - 2
+        for k in range(-1, w + 1):
+            u = (k + 0.5) / w * 2 - 1
+            g.put(x0 + k, ry, "h" if u < -0.2 else ("G" if u < 0.5 else "g"))
+            g.put(x0 + k, ry + 1, "g")
+        # ---- 台座（上から: 金の細帯・上のふくらみ・くぼみ・下のふくらみ・四角い台）
+        y = shaft_bot + 1
+        parts = ([("gold", 0), ("torus", 1), ("scotia", 1), ("torus", 2), ("torus2", 2), ("plinth", 3)] if big
+                 else [("gold", 0), ("torus", 1), ("torus", 2), ("plinth", 2)])
+        for (kind, grow) in parts:
+            xa, xb = x0 - grow, x1 + grow
+            n = xb - xa + 1
+            if kind == "gold":
+                for x in range(xa, xb + 1):
+                    g.put(x, y, "G" if (x - xa) / n < 0.6 else "g")
+                y += 1
+            elif kind in ("torus", "torus2"):
+                for x in range(xa, xb + 1):
+                    u = (x - xa + 0.5) / n * 2 - 1
+                    g.put(x, y, ctone(u, 1))
+                    g.put(x, y + 1, ctone(u, -1))
+                g.put(xa, y, "Q"); g.put(xb, y + 1, "x")
+                y += 2
+            elif kind == "scotia":
+                for x in range(xa + 1, xb):
+                    g.put(x, y, "x")
+                y += 1
+            else:                                              # 四角い台（上の面・前の面に彫りの板）
+                ph_ = base_y - y
+                g.rect(xa, y, xb, base_y, "P")
+                g.hline(xa, xb, y, "I"); g.vline(xa, y, base_y, "Q"); g.vline(xb, y, base_y, "x"); g.hline(xa, xb, base_y, "x")
+                if ph_ >= 4:
+                    g.rect(xa + 2, y + 2, xb - 2, base_y - 2, "i")
+                    g.hline(xa + 2, xb - 2, y + 2, "x"); g.vline(xa + 2, y + 2, base_y - 2, "x")
+                    g.hline(xa + 3, xb - 2, base_y - 2, "Q"); g.vline(xb - 2, y + 3, base_y - 2, "Q")
+                    g.put((xa + xb) // 2, (y + base_y) // 2, "G")
+                y = base_y + 1
+        for x in range(x1 + 3, x1 + 7):                       # 床の影
+            if g.get(x, base_y) in "fFjE":
+                g.put(x, base_y, "j")
         if sconce:
-            sy = (top_y + base_y) // 2
-            sx = x0 + width if sconce > 0 else x0 - 1
+            sy = (shaft_top + shaft_bot) // 2
+            sx = x1 + 1 if sconce > 0 else x0 - 1
             for k in range(3):
                 g.put(sx + sconce * k, sy, "g"); g.put(sx + sconce * k, sy + 1, "G" if k == 2 else "g")
+            g.put(sx, sy - 1, "G")
             tip = sx + sconce * 2
             g.put(tip, sy - 1, "L"); g.put(tip, sy - 2, "L"); g.put(tip, sy - 3, "A"); g.put(tip, sy - 4, "a")
-            g.put(tip - sconce, sy - 3, "r"); g.put(tip + sconce, sy - 3, "r")
+            g.put(tip - sconce, sy - 3, "r"); g.put(tip + sconce, sy - 3, "r"); g.put(tip, sy - 5, "r")
 
     # アーチの左右の大柱
     for gcx in (40, 168):
