@@ -1844,7 +1844,7 @@
  {
   "id": "enc-kanou-3-5",
   "prompt": "a small floating creature, a golden drop of nectar with bright pink petals around it like a collar and a tiny yellow pollen crown",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-3-5",
   "kind": "mob",
   "name": "花のしずく",
@@ -1882,7 +1882,7 @@
  {
   "id": "enc-kanou-4-1",
   "prompt": "a wavering white heat-haze spirit shaped like a tall flickering flame of white light, no human body",
-  "status": "todo",
+  "status": "draft",
   "key": "enemy:enc-kanou-4-1",
   "kind": "mob",
   "name": "白い揺らぎ",
@@ -1900,7 +1900,7 @@
  {
   "id": "enc-kanou-4-2",
   "prompt": "an echo of the ring, concentric floating white rings around a hollow center that hums",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-4-2",
   "kind": "mob",
   "name": "環の残響",
@@ -1913,7 +1913,8 @@
    225
   ],
   "bg": "dark",
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-kanou-4-2_1"
  },
  {
   "id": "enc-kanou-4-3",
