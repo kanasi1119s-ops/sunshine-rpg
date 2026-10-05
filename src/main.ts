@@ -670,6 +670,7 @@ if (import.meta.env.DEV) {
       title = { ...title, open: false };
     },
     startBattle: (battleId: string) => startStoryBattle(battleId),
+    battleUi: () => (battle ? battle.getUiState() : null),
     /** 開発用: いまの状態を保存データにして、すぐ読み込み直す（乗り物の保存の確認用）。保存した乗り物の情報を返す。 */
     saveLoadRoundtrip: () => {
       const saved = buildSaveData();
