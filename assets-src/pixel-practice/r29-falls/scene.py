@@ -83,29 +83,35 @@ def cloud_lobes():
         return 66 + t * t * 78 + (vnoise(x, 5, 46, 401) - 0.5) * 24 - max(0.0, (x - 170) / 150) * 10
 
     def bottom(x):                      # 雲の底（ちぎれてでこぼこ。ところどころ垂れ下がる）
-        return 168 + (vnoise(x, 9, 18, 402) - 0.5) * 12 + max(0.0, vnoise(x, 2, 7, 403) - 0.62) * 34
+        return 168 + (vnoise(x, 9, 40, 402) - 0.5) * 10
 
     lobes = []
     # 本体: 外形の中に、ばらばらに散らす（大きい玉から置き、小さい玉ほど多く）
     tries = 0
-    while len(lobes) < 120 and tries < 20000:
+    while len(lobes) < 240 and tries < 40000:
         tries += 1
         x = rnd.uniform(LEFT, RIGHT)
         tp, bt = top_at(x), bottom(x)
         y = rnd.uniform(tp, bt)
         edge = min(x - LEFT, RIGHT - x, y - tp) / 40     # ふちに近いほど 0
-        rmax = 6 + 22 * max(0.0, min(1.0, edge))
-        r = rnd.uniform(5, rmax) if rnd.random() < 0.7 else rnd.uniform(5, 9)
+        rmax = 5 + 15 * max(0.0, min(1.0, edge))
+        r = rnd.uniform(4, rmax) if rnd.random() < 0.65 else rnd.uniform(4, 8)
         # 玉が外形から大きくはみ出さない（上へは少し出てよい＝もくもくの頭）
-        if y - r < tp - r * 0.55 or x - r < LEFT - 6 or x + r > RIGHT + 6:
+        if y - r < tp - r * 0.55 or x - r < LEFT - 6 or x + r > RIGHT + 6 or y + r > bt + 1:
             continue
         lobes.append((x, y, r, 0.0))
     # はしと上のふちを、小さなもくもくでうめる（すき間の穴を作らない）
-    for i in range(70):
-        x = LEFT + 8 + (RIGHT - LEFT - 16) * (i + rnd.random()) / 70
+    for i in range(110):
+        x = LEFT + 8 + (RIGHT - LEFT - 16) * (i + rnd.random()) / 110
         tp = top_at(x)
-        r = rnd.uniform(5, 11)
+        r = rnd.uniform(4, 9)
         lobes.append((x, tp + r * rnd.uniform(0.35, 0.8), r, 0.0))
+    # 雲の底: 底にそって、丸いもくもくを並べる（底は丸いふくらみの連なりで終わり、とがらない）
+    x = LEFT + 10.0
+    while x < RIGHT - 10:
+        r = rnd.uniform(7, 13)
+        lobes.append((x, bottom(x) - r + 1, r, 0.0))
+        x += r * rnd.uniform(1.0, 1.4)
     # ちぎれ雲（本体からはなれた、小さなかけら）
     for (x, y) in ((26, 152), (296, 110), (300, 160), (44, 104)):
         for k in range(3):
@@ -145,7 +151,7 @@ def cloud_layer():
         r2 = r * r + r * 0.8
         for y in range(cy - r - 1, cy + r + 2):
             for x in range(cx - r - 1, cx + r + 2):
-                if 0 <= x < W and 0 <= y < H and y <= bottom(x) and (x - cx) ** 2 + (y - cy) ** 2 <= r2:
+                if 0 <= x < W and 0 <= y < H and (x - cx) ** 2 + (y - cy) ** 2 <= r2:
                     owner[(x, y)] = i
     # 雲の中の小さな穴（外とつながらないすき間）は、となりのもくもくでうめる
     from collections import deque
@@ -185,6 +191,21 @@ def cloud_layer():
         ox, oy, rr = cx - r * 0.28, cy - r * 0.34, r * 0.74
         return (x + 0.5 - ox) ** 2 + (y + 0.5 - oy) ** 2 <= rr * rr
 
+    def in_hot(i, x, y):
+        cx, cy, r = snapped[i]
+        if r < 6 or body[i] < 4:
+            return False
+        ox, oy, rr = cx - r * 0.4, cy - r * 0.46, r * 0.36
+        return (x + 0.5 - ox) ** 2 + (y + 0.5 - oy) ** 2 <= rr * rr
+
+    def in_shade(i, x, y):
+        cx, cy, r = snapped[i]
+        if r < 5:
+            return False
+        ox, oy, rr = cx - r * 0.14, cy - r * 0.18, r * 0.9
+        # 右下の半分だけ（三日月の角を、ななめに短く切る＝とがらせない）
+        return (x + 0.5 - ox) ** 2 + (y + 0.5 - oy) ** 2 > rr * rr and (x + 0.5 - cx) * 0.6 + (y + 0.5 - cy) * 0.8 > r * 0.25
+
     idx = {}
     for (x, y), i in owner.items():
         k = body[i]
@@ -192,9 +213,13 @@ def cloud_layer():
         down = owner.get((x, y + 1))
         if up is None:
             k = min(n, k + 2)                                     # 雲のいちばん上のふち（日の当たる頭）
+        elif in_hot(i, x, y):
+            k = min(n, k + 2)                                     # 光のいちばん強い所（上の方のもくもくの左上）
         elif in_cap(i, x, y):
-            k = min(n, k + 1)                                     # もくもくの左上の、光の当たる面（右下には影の三日月が残る）
-        if down is None and y >= bottom(x) - 14:
+            k = min(n, k + 1)                                     # もくもくの左上の、光の当たる面
+        elif in_shade(i, x, y):
+            k = max(0, k - 1)                                     # 右下の、影の三日月
+        if down is None and y >= bottom(x) - 16:
             k = 0                                                 # 雲の底のふち
         idx[(x, y)] = k
     # いちばん上のふちの光の線は、L 字の角をとって、ななめにつながる1ドットの線に（変える前の状態を見て決める）
@@ -214,6 +239,16 @@ def cloud_layer():
                 continue
             if all(b != k for b in nb):
                 idx[(x, y)] = max(set(nb), key=nb.count)
+    # とがった先（影の三日月の角・光の面の細い先）を丸める: 同じ色のとなりが1つ以下のドットを、その玉の地の色にもどす（3回）
+    for _ in range(3):
+        snap2 = dict(idx)
+        for (x, y), k in snap2.items():
+            i = owner[(x, y)]
+            if k == body[i] or owner.get((x, y - 1)) is None or (owner.get((x, y + 1)) is None and k == 0):
+                continue
+            same = sum(1 for q in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)) if snap2.get(q) == k and owner.get(q) == i)
+            if same <= 1:
+                idx[(x, y)] = body[i]
     # 小さなかけら（同じ色でつながる5ドット以下の面）は、まわりにいちばん多く接する色にする（細い三角のくずをなくす）
     seen = set()
     for q0 in list(idx):
@@ -230,7 +265,7 @@ def cloud_layer():
                 if nq in idx and nq not in seen and idx[nq] == k:
                     seen.add(nq)
                     st.append(nq)
-        if len(comp) <= 5 and owner.get((q0[0], q0[1] - 1)) is not None:
+        if len(comp) <= 3 and owner.get((q0[0], q0[1] - 1)) is not None:
             cnt = {}
             cs = set(comp)
             for (x, y) in comp:
