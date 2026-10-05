@@ -68,7 +68,7 @@ def _mask(shape, rng):
     return m
 
 
-def make_layout(shape="ground", tone=(110, 100, 95), seed=0):
+def make_layout(shape="ground", tone=(110, 100, 95), seed=0, bg=None):
     """白い背景＋左上から光の当たった、ぼかした影絵（512×512 RGB）"""
     rng = np.random.default_rng(seed)
     m = _mask(shape, rng)
@@ -77,7 +77,8 @@ def make_layout(shape="ground", tone=(110, 100, 95), seed=0):
     light = 1.18 - 0.55 * ((xx + yy) / 1024)                          # 左上が明るく、右下が暗い
     body = np.clip(np.asarray(tone, np.float32)[None, None, :] * light[:, :, None], 0, 255)
     body += rng.normal(0, 16, body.shape)                              # 少しざらつかせる（平らな塗りを防ぐ）
-    bg = np.asarray(BG, np.float32)[None, None, :] * np.ones((512, 512, 1), np.float32)
+    # bg: 光る・白い敵は暗い背景で描く（白い背景だと体が背景にとける）
+    bg = np.asarray(bg or BG, np.float32)[None, None, :] * np.ones((512, 512, 1), np.float32)
     shadow = np.zeros((512, 512), np.float32)
     ys = np.nonzero(np.asarray(m))[0]
     if len(ys) and shape not in ("float", "ring"):

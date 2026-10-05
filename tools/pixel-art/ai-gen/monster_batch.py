@@ -136,6 +136,9 @@ def cmd_draft(ids, seeds=4):
                 j["neg"] = e["neg_extra"] + ", " + j["neg"]
             j["layout"] = {"shape": e.get("shape") or ("big" if e["kind"] == "boss" else "ground"),
                            "tone": e.get("tone") or [110, 100, 95], "strength": e.get("strength", 0.9)}
+            if e.get("bg") == "dark":   # 光る・白い敵: 暗い背景で描く（rembg で切り抜くので背景の色は問わない。2026-10-05）
+                j["prompt"] = j["prompt"].replace("plain white background", "plain dark charcoal background")
+                j["layout"]["bg"] = [34, 32, 38]
         jobs += js
     json.dump(jobs, open(f"{WORK}/jobs.json", "w"))
     env = dict(os.environ, MODEL="stable-diffusion-v1-5/stable-diffusion-v1-5", VARIANT="fp16", STYLE="painterly", QUALITY=os.environ.get("QUALITY", "real"))  # リアルな下絵（1枚 約5分）
