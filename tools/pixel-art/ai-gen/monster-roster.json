@@ -1231,7 +1231,7 @@
  {
   "id": "enc-tower-1-0",
   "prompt": "a floating cluster of faceted prism crystal shards glowing gold and amber, one bright eye in the center",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-1-0",
   "kind": "mob",
   "name": "光の結晶",
@@ -1243,7 +1243,7 @@
    130,
    70
   ],
-  "draft": "enc-tower-1-0_1",
+  "draft": "enc-tower-1-0_0",
   "seed_base": 6001
  },
  {
@@ -1300,7 +1300,7 @@
  {
   "id": "enc-tower-1-4",
   "prompt": "a tiny insect of light with glowing transparent wings and a bright tail like a firefly",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-1-4",
   "kind": "mob",
   "name": "光の羽虫",
@@ -1311,12 +1311,13 @@
    230,
    230,
    170
-  ]
+  ],
+  "draft": "enc-tower-1-4_1"
  },
  {
   "id": "enc-tower-1-5",
   "prompt": "a root guardian, a humanoid made of thick tree roots holding a wooden shield, glowing green eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-1-5",
   "kind": "mob",
   "name": "根の番兵",
@@ -1327,7 +1328,8 @@
    110,
    90,
    60
-  ]
+  ],
+  "draft": "enc-tower-1-5_0"
  },
  {
   "id": "enc-tower-2-0",
