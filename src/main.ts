@@ -736,6 +736,14 @@ if (import.meta.env.DEV) {
       syncCompanionsFromFlags();
       joinQueue.length = 0;
     },
+    /** 開発用: 指定した仲間だけを加える（動画の撮影用）。 */
+    joinSome: (ids: string[]) => {
+      for (const { flag, companionId } of COMPANION_JOIN_FLAGS) {
+        if (ids.includes(companionId)) flags[flag] = true;
+      }
+      syncCompanionsFromFlags();
+      joinQueue.length = 0;
+    },
     /** 開発用: 仲間が加わったときの知らせを出す（確認用）。 */
     showJoinNotice: (companionId: string) => startJoinNotice(companionId),
     /** 開発用: 話者の顔グラフィックを会話欄で見る（絵の確認用）。 */

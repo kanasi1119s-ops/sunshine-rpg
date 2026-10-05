@@ -9,7 +9,7 @@ const b = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-119
 const p = await b.newPage({ viewport: { width: 1280, height: 720 } });
 const errs = []; p.on("pageerror", (e) => errs.push(String(e)));
 await p.goto("http://localhost:5199/"); await p.waitForTimeout(2500);
-await p.evaluate(() => { window.__sunshine.startNew(); window.__sunshine.joinAll(); });
+await p.evaluate(() => { window.__sunshine.startNew(); window.__sunshine.joinSome(["reto", "mina"]); });
 await p.waitForTimeout(500);
 for (let i = 0; i < 8; i++) { await p.keyboard.press("Enter"); await p.waitForTimeout(80); }
 // 実際のゲーム画面の静止画
@@ -32,7 +32,7 @@ await p.evaluate(async () => {
   const O = await import("/src/render/boot-opening-renderer.ts");
   const FW = 1080, FH = 1920;
   const TITLE = "Ringlight Chronicle";
-  const chars = [["ユーリ", "hero"], ["レト", "reto"], ["ミナ", "mina"], ["ガイド", "guide"], ["オルカ", "orca"], ["アヤメ", "ayame"]];
+  const chars = [["ユーリ", "hero"], ["レト", "reto"], ["ミナ", "mina"]];
   const mk = ([n, id], over = {}) => ({ id, name: `${n} Lv12`, maxHp: 90, hp: 90, maxMp: 20, mp: 20, attack: 10, defense: 5, speed: 5, isEnemy: false, guarding: false, ...over });
   const en = (id, name, over = {}) => ({ id, name, maxHp: 200, hp: 200, maxMp: 0, mp: 0, attack: 5, defense: 1, speed: 3, isEnemy: true, guarding: false, ...over });
   const spec = (o) => ({ actorId: undefined, casterId: undefined, fromId: undefined, motion: null, targetIds: ["hero"], fx: null, hurt: false, durationMs: 2000, fxStart: 0.45, area: false, ...o });
@@ -93,7 +93,7 @@ await p.evaluate(async () => {
     return bctx({ party, enemies: foes, log: [], fled: false }, msg(`ユーリは すばやい動きで 3回 こうげき！（${k + 1}）`), { spec: spec({ actorId: "hero", motion: "slash", targetIds: [E2], durationMs: 520, fxStart: 0.5 }), elapsedMs: uu * 520 });
   };
   const boss = (u) => bctx({ party, enemies: bossE, log: [], fled: false }, msg("ミナの 水紋ノ波！"), { spec: spec({ actorId: "mina", fromId: "mina", motion: "cast", fx: "water", targetIds: ["god-1"], durationMs: 2000 }), elapsedMs: u * 2000 });
-  const lineup = (u) => bctx({ party, enemies: foes, log: [], fled: false }, msg("6人の 仲間が そろった！"), null);
+  const lineup = (u) => bctx({ party, enemies: foes, log: [], fled: false }, msg("ユーリ・レト・ミナの 3人で たびに 出る！"), null);
   const T = [
     [0, 3.6, "open"],
     [3.6, 5.8, "still", "town", ["灯りの町で、", "調査がはじまる。"]],
@@ -104,7 +104,7 @@ await p.evaluate(async () => {
     [14.6, 16.8, "fn", enemyBolt, ["敵も、", "魔法を使ってくる。"]],
     [16.8, 19.0, "fn", multi, ["素早ければ", "2回・3回・4回攻撃！"]],
     [19.0, 21.2, "fn", boss, ["強敵を倒せば、", "特別な装備が手に入る。"]],
-    [21.2, 23.6, "fn", lineup, ["6人の仲間と、", "長い旅へ。"]],
+    [21.2, 23.6, "fn", lineup, ["仲間と、", "長い旅へ。"]],
     [23.6, 25.7, "flash"],
     [25.7, 40, "reveal"],
   ];
