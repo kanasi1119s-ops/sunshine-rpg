@@ -2359,7 +2359,7 @@
  },
  {
   "id": "enc-islet-4-1-4",
-  "prompt": "an echo of an archer, a faded translucent bowman with a glowing bowstring and empty quiver",
+  "prompt": "a faded translucent ghost archer in a hooded cloak and leather armor, holding a glowing blue bow, empty quiver, wisps instead of legs",
   "status": "done",
   "key": "enemy:enc-islet-4-1-4",
   "kind": "mob",
@@ -2373,30 +2373,31 @@
    190
   ],
   "bg": "dark",
-  "seed_base": 6001,
-  "draft": "enc-islet-4-1-4_x0"
+  "seed_base": 10002,
+  "draft": "enc-islet-4-1-4_1"
  },
  {
   "id": "enc-islet-4-1-5",
-  "prompt": "a castle wall stone creature, a chunk of battlement with arrow slits as eyes, walking on brick legs",
-  "status": "done",
+  "prompt": "a squat castle battlement creature, a stubby block of stone bricks with crenellations on top, two narrow glowing arrow-slit eyes, short thick brick legs, side view",
+  "status": "picked",
   "key": "enemy:enc-islet-4-1-5",
   "kind": "mob",
   "name": "城壁の石",
   "zone": "islet-4-1",
   "level": 22,
-  "shape": "big",
+  "shape": "ground",
   "tone": [
    140,
    130,
    120
   ],
-  "draft": "enc-islet-4-1-5_0"
+  "draft": "enc-islet-4-1-5_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-islet-5-1-0",
   "prompt": "a sunken shadow, a dark sea creature like a manta made of shadow with glowing blue spots",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-5-1-0",
   "kind": "mob",
   "name": "沈んだ影",
@@ -2407,12 +2408,13 @@
    40,
    60,
    90
-  ]
+  ],
+  "draft": "enc-islet-5-1-0_0"
  },
  {
   "id": "enc-islet-5-1-1",
   "prompt": "a coral stone creature, a rock covered in pink and orange coral branches with small fish hiding",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-5-1-1",
   "kind": "mob",
   "name": "珊瑚の石",
@@ -2423,7 +2425,8 @@
    210,
    130,
    120
-  ]
+  ],
+  "draft": "enc-islet-5-1-1_0"
  },
  {
   "id": "enc-islet-5-1-2",
