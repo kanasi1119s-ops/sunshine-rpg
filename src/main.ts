@@ -1121,7 +1121,7 @@ let battleEffect: { effect: BattleEffect; startedAt: number } | null = null;
 /** 進行中の「動き」（武器をふる・魔法のエフェクト・のけぞり）。 */
 let battleAnim: { spec: BattleAnimSpec; startedAt: number } | null = null;
 /** 直前に唱えた魔法（全体魔法の2人目以降は、ためを省く）。コマンド選択にもどったら消す。 */
-/** 戦闘の画面に出すHP。ダメージのエフェクトが当たる瞬間まで、当たる前のHPを見せる（行動ごとに少しずつ減る）。 */
+/** 戦闘の画面に出すHP。攻撃の動き・エフェクトが終わるまで、当たる前のHPを見せる（行動ごとに少しずつ減る）。 */
 let hpHold: { from: Record<string, number>; until: number } | null = null;
 function shownBattleState(b: BattleController): BattleState {
   const state = b.getState();
@@ -2782,7 +2782,8 @@ const loop = createGameLoop({
           battleAutoAdvanceAt = battleInputLockUntil + Math.min(1300, 650 + uiState.text.length * 25);
           // HPは、効果が当たる瞬間まで前のまま見せる
           const hpBefore = battle.getHpBeforeMessage();
-          hpHold = animSpec && animSpec.fxStart > 0 && hpBefore ? { from: hpBefore, until: performance.now() + animSpec.durationMs * animSpec.fxStart } : null;
+          // 攻撃（武器の動き・魔法のエフェクト）が終わってから、HPが減る（倒れるのも、そのあと）
+          hpHold = animSpec && hpBefore ? { from: hpBefore, until: performance.now() + animSpec.durationMs } : null;
           const se = battleSeFor(uiState.text, battle.getState().party.map((c) => c.name));
           if (audioStarted) {
             if (anim?.motion) audio.playSe(seOf(swingSeFor(anim.motion)));

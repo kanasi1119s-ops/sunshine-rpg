@@ -161,6 +161,48 @@ function drawGroundShadow(ctx: CanvasRenderingContext2D, cx: number, groundY: nu
   ctx.restore();
 }
 
+/** 倒れた敵が、体の上から消えていく長さ（ミリ秒）。 */
+const DIE_MS = 900;
+const deathAt = new Map<string, number>();
+/** 倒れた敵の消え方の進み（0〜1）。生きていれば null、消え終わったら 1。 */
+function dyingProgress(enemy: Combatant, now: number): number | null {
+  if (enemy.hp > 0) {
+    deathAt.delete(enemy.id);
+    return null;
+  }
+  let t = deathAt.get(enemy.id);
+  if (t === undefined) {
+    t = now;
+    deathAt.set(enemy.id, t);
+  }
+  return Math.min(1, (now - t) / DIE_MS);
+}
+/** 体の上から消えていく: 上から k の割合ぶんを切り取って描き、切り口が白く光り、光の粒が立ちのぼる。 */
+function dissolve(ctx: CanvasRenderingContext2D, k: number, x: number, y: number, w: number, h: number, draw: () => void): void {
+  const cut = Math.round(y + k * h);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x - 8, cut, w + 16, y + h + 24 - cut);
+  ctx.clip();
+  draw();
+  ctx.restore();
+  ctx.save();
+  ctx.globalAlpha = 0.9 * (1 - k * 0.5);
+  ctx.fillStyle = "#ffe8b0";
+  ctx.fillRect(Math.round(x + w * 0.1), cut - 1, Math.round(w * 0.8), 1);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(Math.round(x + w * 0.15), cut, Math.round(w * 0.7), 1);
+  for (let i = 0; i < 16; i++) {
+    const r = Math.sin(i * 91.7 + 3.1) * 43758.5453;
+    const f = r - Math.floor(r);
+    const rise = ((k * 2 + f) % 1) * 22;
+    ctx.globalAlpha = (1 - k) * (1 - rise / 22);
+    ctx.fillStyle = i % 3 ? "#ffe8b0" : "#ffffff";
+    ctx.fillRect(Math.round(x + w * (0.1 + f * 0.8)), Math.round(cut - 2 - rise), i % 2 ? 2 : 1, i % 2 ? 2 : 1);
+  }
+  ctx.restore();
+}
+
 /** ふつうの敵の立つ場所（足元のy）。奥の敵を先に描くので、手前ほどyが大きい。 */
 function groundSlots(count: number): { x: number; feet: number }[] {
   if (count <= 1) return [{ x: 70, feet: 140 }];
@@ -251,13 +293,36 @@ function renderBattleBody(
   const enemyShake = active === "crit" && effectView ? shakeOffset(progress, effectView.elapsedMs) : 0;
   ctx.save();
   ctx.translate(enemyShake, 0);
-  battleState.enemies.forEach((enemy) => {
-    setGlow(enemy.id);
-    if (drawBossSprite(ctx, enemy, screenWidth)) {
-      return;
+  const nowDie = performance.now();
+  const dieK = new Map(battleState.enemies.map((e) => [e.id, dyingProgress(e, nowDie)] as const));
+  /** 倒れて消えている途中か（消え終わった敵・生きている敵は false）。 */
+  const isDying = (e: Combatant): boolean => { const k = dieK.get(e.id); return k !== null && k !== undefined && k < 1; };
+  /** 消えている途中の敵を、生きているときの絵で描くための写し（HPは0に見える）。 */
+  const asShown = (e: Combatant): Combatant => (e.hp > 0 ? e : { ...e, hp: 0.0001 });
+  battleState.enemies.forEach((enemy0) => {
+    setGlow(enemy0.id);
+    if (enemy0.hp <= 0 && !isDying(enemy0)) return;
+    const k = enemy0.hp > 0 ? 0 : dieK.get(enemy0.id) ?? 1;
+    const enemy = asShown(enemy0);
+    if (getSpriteCanvas(`boss:${baseEnemyId(enemy.id)}`, SPRITE_DATA)) {
+      const bx = enemySideX(screenWidth, 132);
+      if (k > 0) {
+        let drawn = false;
+        dissolve(ctx, k, bx, 2, 132, 146, () => { drawn = drawBossSprite(ctx, enemy, screenWidth); });
+        if (drawn) return;
+      } else if (drawBossSprite(ctx, enemy, screenWidth)) {
+        return;
+      }
     }
     // 1体だけの強敵（ボス・神など、体力が大きい敵）は、敵の側に大きく描く。
-    if (battleState.enemies.length === 1 && enemy.maxHp >= 250 && enemy.hp > 0 && MONSTERS[baseEnemyId(enemy.id)]) {
+    if (battleState.enemies.length === 1 && enemy.maxHp >= 250 && MONSTERS[baseEnemyId(enemy.id)]) {
+      if (k > 0) {
+        const bx0 = enemySideX(screenWidth, 128);
+        dissolve(ctx, k, bx0, 2, 128, 144, () => {
+          if (!drawMobSprite(ctx, enemy, bx0, 16, 128)) drawEnemySprite(ctx, enemy, bx0 + 24, 24, 80);
+        });
+        return;
+      }
       const size = 80;
       const bx = enemySideX(screenWidth, 128);
       const flyingMob = isFlying(enemy);
@@ -284,12 +349,11 @@ function renderBattleBody(
   // ふつうの敵（1体のボス・強敵を除く）を、立ち位置の奥から手前の順に描く。
   const crowd = battleState.enemies.filter(
     (enemy) =>
-      // 倒した敵は描かない（灰色の四角が背景に残らないように）
-      enemy.hp > 0 &&
+      // 倒した敵は、体の上から消えていくあいだだけ描く（消え終わったら描かない）
+      (enemy.hp > 0 || isDying(enemy)) &&
       !(
-        enemy.hp > 0 &&
-        (getSpriteCanvas(`boss:${baseEnemyId(enemy.id)}`, SPRITE_DATA) ||
-          (battleState.enemies.length === 1 && enemy.maxHp >= 250 && MONSTERS[baseEnemyId(enemy.id)]))
+        getSpriteCanvas(`boss:${baseEnemyId(enemy.id)}`, SPRITE_DATA) ||
+        (battleState.enemies.length === 1 && enemy.maxHp >= 250 && MONSTERS[baseEnemyId(enemy.id)])
       ),
   );
   const slots = groundSlots(crowd.length);
@@ -302,9 +366,15 @@ function renderBattleBody(
       const bob = flying ? Math.round(Math.sin(performance.now() / 450 + slot.x) * 3) : 0;
       const sx = slot.x;
       const sy = slot.feet - 62 - (flying ? 18 : 0) + bob;
-      if (enemy.hp > 0) {
-        drawGroundShadow(ctx, sx + 32, slot.feet, 22, flying);
+      if (enemy.hp <= 0) {
+        // 倒れた敵: 体の上から、光りながら消えていく（名前・HPは出さない）
+        const shown = asShown(enemy);
+        dissolve(ctx, dieK.get(enemy.id) ?? 1, sx, sy, 64, 64, () => {
+          if (!drawMobSprite(ctx, shown, sx, sy)) drawEnemySprite(ctx, shown, sx + 12, sy + 20, 40);
+        });
+        return;
       }
+      drawGroundShadow(ctx, sx + 32, slot.feet, 22, flying);
       if (!drawMobSprite(ctx, enemy, sx, sy)) {
         drawEnemySprite(ctx, enemy, sx + 12, sy + 20, 40);
       }
