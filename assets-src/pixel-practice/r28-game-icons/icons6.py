@@ -105,8 +105,8 @@ _R = ["#7e3a2a", "#a24e36", "#c06a48", "#d88c62"]
 _WD = ["#4a2e1c", "#6a4428", "#946032", "#a8703c"]
 _WL = ["#b4a282", "#d6c8a6", "#ece2c6"]
 PALETTES = {
-    "icon-port": _G + _T + _R + _WD + _WL + ["#2c3a52", "#2456a4", "#5a8ad0", "#e6d29a", "#727280", "#9696a2", "#babac4", "#ffd878"],
-    "icon-village": _G + _T + ["#8a6a36", "#a8864a", "#c4a260", "#dcc07c"] + _R[:3] + _WD + _WL + ["#3070c4", "#7ab0ea", "#2c3a52", "#9696a2", "#ffd878"],
+    "icon-port": _G + _T + _R + _WD + _WL + ["#2c3a52", "#2456a4", "#5a8ad0", "#1c4890", "#cc9a60", "#9696a2", "#ffd878", "#fff4c8"],
+    "icon-village": _G + _T + ["#8a6a36", "#a8864a", "#c4a260", "#dcc07c", "#f0dca0"] + _R[:3] + _WD + _WL + ["#3070c4", "#7ab0ea", "#2c3a52", "#ffd878"],
     "icon-village-mist": ["#e8f0f8", "#ffffff", "#d4e2f0", "#bccbdd", "#a8bcd2", "#94aac4", "#7e96b2", "#2e4a64", "#3a5a7a", "#6a8eac", "#c8d8ea",
                           "#2c3a52", "#4e688c", "#6c88aa", "#4a2e1c", "#6a4428", "#946032", "#b8844c", "#383842", "#5c5c64", "#9696a2",
                           "#babac4", "#ffd878", "#f0a040"],
@@ -194,8 +194,8 @@ class Canvas:
                     continue
                 if self.m[y][x] == "ground":
                     continue                                    # 地形と同じ色のすそ（地図の上では見えない）
-                if all(self.get(x + dx, y + dy) != v for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
-                    n.append((x, y))
+                if all(self.get(x + dx, y + dy) != v for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1))):
+                    n.append((x, y))                            # ななめにつながる同じ色があれば「線」なので点ではない（櫂・綱・稜線）
         return n
 
     def speckles(self, skip=ACCENT):
@@ -735,36 +735,29 @@ def icon_port():
     g = "grass"
     skirt(c, 30, 36, 30, 27, g)
     # 入り江（右下）: 砂浜の帯・浅瀬・深い水
-    water_ell(c, 45, 57, 14, 6.5, SEA, rim=(SAND[3], SAND[2]), rim_w=2.4)
-    for (x, y, n) in ((49, 60, 4), (53, 55, 3)):
+    water_ell(c, 44, 57, 17, 7.5, SEA, rim=(SAND[3], SAND[2]), rim_w=2.4)
+    for (x, y, n) in ((51, 54, 3), (38, 61, 3)):
         wave_dash(c, x, y, n, SEA[3])
+    tree(c, 41, 8, 4.4)
+    tree(c, 8, 9, 4.4)
     # 灯台（岩の台の上。目じるし）
-    rocks_base(c, 53, 46, 7, 4)
-    lighthouse(c, 53, 43, 27)
-    # 桟橋（板と杭）
-    for y in range(47, 60):                                       # 桟橋（板と杭）
-        for x in range(36, 39):
-            c.put(x, y, DIRT[4] if y % 2 == 0 else DIRT[3], DIRT)
-        c.put(39, y, DIRT[1], DIRT)
-    for y in (52, 56):
-        c.put(35, y, TIMBER[0], TIMBER); c.put(35, y + 1, TIMBER[0], TIMBER)
-    for x in range(36, 40):
-        c.put(x, 60, SEA[1])
-    boat(c, 41, 56, 9, sail=8)
-    boat(c, 49, 61, 6)
+    rocks_base(c, 53, 44, 6, 3.5)
+    lighthouse7(c, 53, 41, 28)
+    # 桟橋と舟
+    pier(c, 29, 46, 61, w=4)
+    stamp(c, 34, 40, "sailboat", TIMBER)
+    stamp(c, 46, 55, "rowboat", TIMBER)
     # 通り（桟橋から町へ）
-    path(c, [(37, 46), (31, 38), (22, 31), (12, 29)], w=3)
-    # 家（赤茶の瓦と青い石板。窓と扉と明かり）
+    path(c, [(30, 45), (28, 38), (22, 31), (12, 29)], w=3)
+    # 家（赤茶の瓦と灰色の石板。窓と扉と明かり）
     house(c, 3, 23, 15, "side", ROOF, door=10, wins=(2, 6), lit=(0,), chimney=11)
     house(c, 20, 20, 12, "hip", SLATE, door=7, wins=(2,), lit=())
     house(c, 33, 25, 11, "front", ROOF, door=5, wins=(2,), lit=(0,))
-    tree(c, 46, 13, 5)
-    tree(c, 8, 9, 4.4)
     house(c, 2, 40, 13, "hip", ROOF, door=8, wins=(2,), lit=(0,))
-    house(c, 17, 43, 11, "front", SLATE, door=6, wins=(2,))
+    house(c, 16, 43, 11, "front", SLATE, door=6, wins=(2,))
     # 港の倉庫（長い切妻）と市場の日よけ
     house(c, 3, 58, 18, "side", SLATE, wh=6, door=12, wins=(2, 6), lit=(1,), chimney=4)
-    awning(c, 23, 32, 47)
+    awning(c, 20, 27, 47)
     c.shadow_edges()
     return c.save("icon-port")
 
@@ -774,43 +767,53 @@ def icon_village():
     c = Canvas()
     g = "grass"
     skirt(c, 32, 36, 30, 27, g)
-    # 畑（右上）: 平行四辺形の区画3つ。うねは2行ごと（明るい行と暗い行）。区画のあいだは土のあぜ
-    plots = [(36, 9, 13, 8, THATCH, (4, 3)), (50, 9, 10, 8, GRASS, (4, 2)), (37, 19, 23, 7, THATCH, (3, 2))]
-    for (px_, py_, pw, ph, pal, (lt, dk)) in plots:
-        for y in range(py_, py_ + ph):
-            for x in range(px_, px_ + pw):
-                col = pal[lt] if (y - py_) % 2 == 0 else pal[dk]
-                c.put(x, y, col)                                # 平らな地面なので、ふちを暗くしない
-    for y in range(9, 27):
-        for x in range(34, 63):
-            if c.get(x, y) is None:
-                continue
-    # 水路（左から右下へ。岸の土の線）
-    pts = [(2, 40), (12, 41), (24, 44), (36, 47), (48, 52), (61, 55)]
+    # 麦畑（右上）: 実った麦（つやの帯）と、刈ったあとの畑（麦の束）
+    wheat_field(c, 36, 8, 24, 11, ripe=True)
+    wheat_field(c, 36, 21, 24, 6, ripe=False)
+    for (sx, sy) in ((38, 21), (44, 22), (50, 21), (56, 22)):
+        stamp(c, sx, sy, "stook", THATCH)
+    fence(c, 37, 59, 28)
+    # 水路（左から、橋の下を通って水車の水路へ。そのあと右下へ）
+    pts = [(2, 40), (12, 41), (24, 45), (30, 48)]
     for (xa, ya), (xb, yb) in zip(pts, pts[1:]):
         for x in range(xa, xb + 1):
-            y = ya + (yb - ya) * (x - xa) / max(1, xb - xa)
-            c.put(x, y - 1, DIRT[3])
-            c.put(x, y, LAKE[3]); c.put(x, y + 1, LAKE[2]); c.put(x, y + 2, LAKE[2]); c.put(x, y + 3, LAKE[1])
-            c.put(x, y + 4, DIRT[1])
+            y = round(ya + (yb - ya) * (x - xa) / max(1, xb - xa))
+            c.put(x, y - 1, DIRT[3]); c.put(x, y, LAKE[3]); c.put(x, y + 1, LAKE[2]); c.put(x, y + 2, LAKE[2])
+            c.put(x, y + 3, LAKE[1]); c.put(x, y + 4, DIRT[1])
+    pts = [(50, 48), (61, 53)]
+    for (xa, ya), (xb, yb) in zip(pts, pts[1:]):
+        for x in range(xa, xb + 1):
+            y = round(ya + (yb - ya) * (x - xa) / max(1, xb - xa))
+            c.put(x, y - 1, DIRT[3]); c.put(x, y, LAKE[3]); c.put(x, y + 1, LAKE[2]); c.put(x, y + 2, LAKE[2])
+            c.put(x, y + 3, LAKE[1]); c.put(x, y + 4, DIRT[1])
     # 橋
     for x in range(14, 19):
-        for y in range(39, 46):
-            c.put(x, y, DIRT[4] if x % 2 == 0 else DIRT[3], DIRT)
-    for y in range(39, 46):
+        for y in range(38, 46):
+            c.put(x, y, DIRT[4] if (y - 38) % 2 == 0 else DIRT[3], DIRT)
+    for y in range(38, 46):
         c.put(19, y, DIRT[1], DIRT)
     path(c, [(16, 63), (16, 46)], w=3)
-    path(c, [(16, 38), (18, 30), (28, 26)], w=3)
-    # 水車小屋と水車（目じるし: いちばん暗い木の輪）
-    house(c, 22, 44, 12, "side", THATCH, door=7, wins=(2,), lit=(0,), chimney=2)
-    wheel(c, 37, 47, 5)
+    path(c, [(16, 37), (18, 30), (28, 26)], w=3)
+    # 水車小屋と水車（目じるし: 水路にはまった木の輪、はねる水しぶき）
+    house(c, 20, 44, 14, "side", THATCH, door=4, wins=(8,), lit=(0,), chimney=2)
+    for y in range(39, 48):                                       # 水車の後ろの壁（輪の腕が明るい壁の前で読めるように）
+        for x in range(34, 47):
+            c.put(x, y, WALL[2] if x < 45 else WALL[1], WALL)
+    for x in range(34, 47):
+        c.put(x, 39, WALL[3] if x < 45 else WALL[2], WALL); c.put(x, 38, TIMBER[0], TIMBER)
+    stamp(c, 34, 37, "wheel", TIMBER)
+    millrace(c, 30, 50, 47)
+    for x in range(36, 46):                                       # 輪の下は水の中（水路の水を手前に重ねる）
+        if c.get(x, 49) is not None:
+            c.put(x, 49, LAKE[2]); c.put(x, 48, LAKE[3] if x % 3 else LAKE[2])
+    for (x, y, col) in ((46, 47, WALL[3]), (47, 47, WALL[3]), (47, 46, LAKE[3]), (48, 47, LAKE[3]), (46, 48, WALL[3]),
+                        (47, 48, LAKE[3]), (45, 46, WALL[3]), (49, 48, WALL[3])):
+        c.put(x, y, col)                                          # 水しぶき（下流がわ）
     # わら屋根の家・赤い屋根の家
     house(c, 4, 26, 13, "hip", THATCH, door=8, wins=(2,), lit=(0,))
     house(c, 19, 19, 12, "front", ROOF, door=6, wins=(2,), lit=())
     house(c, 2, 60, 12, "side", THATCH, door=7, wins=(2,), chimney=8)
     house(c, 38, 62, 13, "hip", ROOF, door=8, wins=(2,), lit=(0,))
-    # 柵（畑のまえ）
-    fence(c, 37, 59, 28)
     tree(c, 9, 10, 5)
     tree(c, 54, 39, 4.4)
     tree(c, 28, 57, 4)
@@ -1057,8 +1060,8 @@ def icon_lake():
     water_ell(c, 32, 45, 27, 16, LAKE, rim=(SAND[2], SAND[1]), rim_w=1.8)
     for (x, y, n) in ((11, 48, 3), (48, 36, 4), (52, 55, 3), (26, 57, 4)):
         wave_dash(c, x, y, n, LAKE[3])
-    for (x, y) in ((8, 44), (10, 48), (55, 41), (54, 50)):
-        reeds(c, x, y)
+    for (x, y) in ((6, 40), (52, 36), (51, 47)):
+        stamp(c, x, y, "reeds", FOREST)
     # 島と橋
     isle_stone(c, 21, 40, 13, 7, 3)
     isle_stone(c, 45, 47, 10, 6, 3)
@@ -1081,7 +1084,7 @@ def icon_lake():
     house(c, 10, 41, 12, "hip", ROOF, door=8, wins=(2,), lit=(0,), shadow=False)
     house(c, 29, 40, 7, "side", ROOF, door=None, wins=(2,), wh=4, shadow=False)
     # ガラスの丸屋根（目じるし）
-    glass_dome(c, 45, 46, 7)
+    stamp(c, 38, 39, "glassdome", GLOW)
     house(c, 50, 50, 6, "side", ROOF, wh=4, door=2, shadow=False)
     boat(c, 9, 55, 6)
     boat(c, 50, 36, 6, sail=5)
@@ -1714,6 +1717,212 @@ def icon_palace():
     c.put(31, 0, CG[1], CD); c.put(32, 0, CG[0], CD)
     c.outline(OUT)
     return c.save("icon-palace", trim=False)
+
+
+# ===================================================================== 7回目: 手で1ドットずつ決めた部品（テンプレート）
+# 文字1つ＝1ドット。'.' は透明。凡例（legend）は 文字 → 色（または (色, 素材)）。
+# 7回目の指示「これらドット絵もっとこだわって。リアルな感じで」: 港・村・湖・鉱山・砂漠・野営地・霧断崖・雪の町・お城の部品を、
+# 計算で作った形（ぼやける）ではなく、大事なドットを手で置いた形にした。光はいつも左上。
+TPL = {}
+
+
+def stamp(c, x0, y0, name, mat=None, flip=False):
+    rows, leg = TPL[name]
+    for j, r in enumerate(rows):
+        for i, ch in enumerate(r):
+            if ch == ".":
+                continue
+            v = leg[ch]
+            col, m = (v if isinstance(v, tuple) else (v, mat))
+            xx = x0 + (len(r) - 1 - i if flip else i)
+            c.put(xx, y0 + j, col, m)
+
+
+SEA_D = "#1c4890"
+PALE = "#fff4c8"                                                         # 灯のまわりの光（灯台の光の筋・たき火の照り返し）
+
+# --- 帆船: 船体は弓なり（へさきが上がる）、帆柱、前の綱（ななめの1本）。帆は、帆柱ぎわが少し暗く（風で張って奥へ曲がる）、
+#     まん中の「ふくらみ」がいちばん明るく、後ろのふち（右）と下のふちが影。帆柱のてっぺんに赤い小旗
+TPL["sailboat"] = ([
+    "......f......",
+    "......mff....",
+    "......mS.....",
+    ".....rmsS....",
+    ".....rmsSS...",
+    "....r.msSSs..",
+    "....r.msSSSt.",
+    "...r..msSSSst",
+    "...r..msSSSst",
+    "..r...msSSsst",
+    "..r...mssssst",
+    ".r....bbbbbbb",
+    "ww....m......",
+    "Hwwwwwwwwwwww",
+    ".HHHHHHHHHHHh",
+    "..hhhhhhhhhh.",
+    "...~vvvvvvv~.",
+], {"f": ROOF[3], "m": TIMBER[0], "S": WALL[3], "s": WALL[2], "t": WALL[1], "r": TIMBER[1], "b": TIMBER[1],
+    "w": DIRT[4], "H": TIMBER[2], "h": TIMBER[0], "~": SEA[3], "v": SEA_D})
+
+# --- 小舟: へさきとともがとがった細長い形。中は暗く、腰かけ板2枚。奥の櫂は上へ、手前の櫂は水の中へ（水かきのまわりに波紋）
+TPL["rowboat"] = ([
+    "O..............",
+    ".o.............",
+    "..o.wwwwwww....",
+    "..wwdbdddbdw...",
+    ".wddbdddbddddw.",
+    "..wHHHHHHHHHw..",
+    "...hhhhhhhhho..",
+    "....~vvvvv~..o~",
+    ".............OO",
+], {"O": DIRT[3], "o": TIMBER[1], "w": DIRT[4], "d": TIMBER[0], "b": DIRT[3], "H": TIMBER[2], "h": TIMBER[0],
+    "v": SEA_D, "~": SEA[3]})
+
+# --- 灯台の上: 金のてっぺん、暗い丸屋根、ガラスの灯室（白い芯・まわりは黄・暗い枠）、手すりの回廊（手すりと細い柱）、
+#     左右へ短い光の筋（水平に4ドット、ななめに2ドットずつ。ばらまかない）
+TPL["lamp"] = ([
+    "........g........",
+    ".......DDd.......",
+    "......DDDdd......",
+    ".p....kLLLk....p.",
+    "..p...kLMLk...p..",
+    "PPL..kLMMLLk..LPP",
+    "..p...kLLLk...p..",
+    ".p...rrrrrrr...p.",
+    ".....r.r.r.r.....",
+    ".....RRRRRRR.....",
+], {"g": GOLD[1], "D": SLATE[2], "d": SLATE[0], "k": SLATE[0], "L": LIGHT, "M": PALE, "P": PALE, "p": PALE,
+    "r": SLATE[3], "R": SLATE[1]})
+
+
+def lighthouse7(c, cx, ybase, h=28):
+    """灯台（7回目）: 上は手描きの灯室（TPL lamp）。塔は下が太い円柱で、赤と白の帯（4行ずつ）。
+    どの帯も左の2列が明るく、右の1列が影。白い帯に小窓、足もとに扉と石段"""
+    top = ybase - h
+    stamp(c, cx - 8, top, "lamp", WALL)
+    for y in range(top + 10, ybase + 1):
+        t = (y - top - 10) / max(1, ybase - top - 10)
+        half = 3.0 + t * 1.6
+        band = ((y - top - 10) // 4) % 2 == 0
+        pal = ROOF if band else WALL
+        for x in range(int(cx - half), int(cx + half) + 1):
+            u = (x + 0.5 - (cx + 0.5)) / (half + 0.5)
+            if abs(u) > 1:
+                continue
+            i = 3 if u < -0.35 else 2 if u < 0.45 else 1
+            c.put(x, y, pal[i], pal)
+    for wy in (top + 15, top + 23):
+        c.put(cx, wy, GLASS, WALL); c.put(cx, wy + 1, GLASS, WALL)
+    for y in range(ybase - 2, ybase + 1):
+        c.put(cx - 1, y, TIMBER[1], WALL); c.put(cx, y, TIMBER[0], WALL)
+
+
+def pier(c, x0, y0, y1, w=4):
+    """桟橋: 横にわたした板（上の行は明るく、下の行は1段暗い）と、2枚ごとのすき間（下の水が暗く見える）。
+    右のふちは影の梁。左右の杭は6行ごとで、水の上の杭には明るい波紋（杭の左右と下に1ドットずつ）"""
+    water = set(SEA)
+    for y in range(y0, y1 + 1):
+        k = (y - y0) % 3
+        on_water = c.get(x0 + 1, y) in water or c.get(x0 + 1, y) == SEA_D
+        for x in range(x0, x0 + w):
+            if k == 2:
+                col = SEA_D if on_water else TIMBER[0]
+            else:
+                col = DIRT[4] if k == 0 else DIRT[3]
+            if x == x0 + w - 1:
+                col = TIMBER[1] if k != 2 else TIMBER[0]
+            c.put(x, y, col, DIRT)
+    for y in range(y0 + 3, y1, 6):
+        for px in (x0 - 1, x0 + w):
+            wet = c.get(px, y + 1) in water
+            c.put(px, y, TIMBER[0], TIMBER); c.put(px, y + 1, TIMBER[0], TIMBER)
+            if wet:
+                side = -1 if px < x0 else 1
+                c.put(px + side, y + 1, SEA[3]); c.put(px, y + 2, SEA[3])
+
+
+# --- 水車（正面から）: 左上が明るい木の輪・8本の腕・軸・輪の外の板（羽根）。中のすき間は透明（うしろの壁や水が見える）
+TPL["wheel"] = ([
+    ".....PPP.....",
+    "..P.RRRRR.P..",
+    ".PRR..S..rrP.",
+    "..RS..S..Sr..",
+    ".R..S.S.S..r.",
+    "PR...SSS...rp",
+    "PRSSSSHSSSSrp",
+    "PR...SSS...rp",
+    ".R..S.S.S..r.",
+    "..rS..S..Sr..",
+    ".prr..S..rrp.",
+    "..p.rrrrr.p..",
+    ".....ppp.....",
+], {"P": DIRT[2], "p": TIMBER[0], "R": DIRT[3], "r": TIMBER[0], "S": TIMBER[1], "H": DIRT[4]})
+
+# --- 刈った麦を立てて束ねた「麦の束」（3×4。左が明るく、右が影、足もとに短い影）
+TPL["stook"] = ([
+    ".a.",
+    "aAb",
+    "aAb",
+    "Abb",
+], {"a": THATCH[4], "A": THATCH[3], "b": THATCH[1]})
+
+SHEEN = "#f0dca0"
+
+
+def wheat_field(c, x0, y0, w, h, ripe=True):
+    """麦畑: 3行で1つのうね（穂の明るい行・穂のまん中の行・うねのあいだの影）。左上から右下へ、つやの帯（穂がいちばん明るい色）。
+    手前のふち2行は、立っている麦の横の面（1段暗い）。刈ったあとの畑（ripe=False）は、うすい刈り株のうねに麦の束"""
+    for y in range(y0, y0 + h):
+        for x in range(x0, x0 + w):
+            k = (y - y0) % 3
+            if ripe:
+                band = abs((x - x0) - (y - y0) * 1.6 - w * 0.35) < 3.2      # つやの帯（ななめ）
+                if y >= y0 + h - 2:
+                    col = THATCH[2] if y == y0 + h - 2 else THATCH[1]       # 手前の横の面
+                elif k == 0:
+                    col = SHEEN if band else THATCH[4]
+                elif k == 1:
+                    col = THATCH[4] if band else THATCH[3]
+                else:
+                    col = THATCH[2]
+            else:
+                col = THATCH[3] if k == 0 else THATCH[2] if k == 1 else DIRT[3]
+            c.put(x, y, col)
+
+
+def millrace(c, x0, x1, y):
+    """水車の水路（木の板で囲んだ、まっすぐな流れ）: 上のふちの板・水3行（明るい波の行・水・深い所）・下のふちの板"""
+    for x in range(x0, x1 + 1):
+        c.put(x, y, DIRT[2], DIRT)
+        c.put(x, y + 1, LAKE[3] if (x - x0) % 5 in (1, 2) else LAKE[2])
+        c.put(x, y + 2, LAKE[2])
+        c.put(x, y + 3, LAKE[1])
+        c.put(x, y + 4, TIMBER[0], TIMBER)
+
+
+# --- ガラスの丸屋根: 鉄の骨（てっぺんから下へ5本、横に1本の輪）。左上に、丸みにそった白い映りこみ。右下は暗いガラス
+TPL["glassdome"] = ([
+    ".....FFFFF.....",
+    "...FHHGFGggF...",
+    "..FHHFGFGFggF..",
+    ".FHGFGGFGGFggF.",
+    ".FFFFFFFFFFFFF.",
+    "FGGFGGGFGGgFggF",
+    "FGGFGGGFGggFggF",
+    "BBBBBBBBBBBBBbb",
+], {"F": SLATE[3], "H": GLOW[2], "G": GLOW[1], "g": GLOW[0], "B": WALL[2], "b": WALL[1]})
+
+# --- 葦（あし）とがま: 細い茎4本（左は明るく右は暗い）、ななめの葉2枚、2本の先に茶色のがまの穂（2ドット）。根もとに水の輪
+TPL["reeds"] = ([
+    "..h....",
+    "..h..h.",
+    "h.s..h.",
+    "h.s.lS.",
+    "s.sl.S.",
+    "sl.s.S.",
+    ".sssSS.",
+    ".~~~~~.",
+], {"h": TIMBER[0], "s": FOREST[3], "S": FOREST[2], "l": FOREST[4], "~": LAKE[3]})
 
 
 # ===================================================================== 見本
