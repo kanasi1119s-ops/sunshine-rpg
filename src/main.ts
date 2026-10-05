@@ -381,6 +381,17 @@ function escapeStuck(): void {
   saveMessageTimer = 2000;
 }
 
+/**
+ * 物語がまだ届いていない場所（章が進んでいない町・祠・小島）にいるあいだ、その場所の世界地図からの入口のID。
+ * そこでは、何も起こらない: 会話・宝箱・店・宿・物語の場面・戦闘は、ぜんぶ起きない（人間の指示、2026-10-05）。世界地図へ出ると消える。
+ */
+let quietPlace: string | null = null;
+
+/** 世界地図からの入口で、条件（章・物語の進み）が足りないとき、静かに入れる場所か（芯環塔は、嵐でふさがれたまま）。 */
+function canEnterQuietly(targetMapId: string): boolean {
+  return targetMapId !== "tower-1";
+}
+
 function switchMap(mapId: string, tileX: number, tileY: number): void {
   exitReleased = false;
   exitArmed = false;
@@ -404,6 +415,11 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   if (audioStarted) {
     audio.playSe(seOf("door"));
   }
+  if (mapId === "world-map") {
+    quietPlace = null;
+  }
+  // 物語がまだ届いていない場所では、場面（章のはじまり）を始めない
+  if (quietPlace) return;
   if (mapId === "mugikano-village" && !flags["chapter1_intro_seen"]) {
     dialogue.start(CHAPTER1_OPENING_COMMANDS);
   }
@@ -1534,6 +1550,7 @@ function buildSaveData(): SaveData {
     version: SAVE_VERSION,
     savedAt: new Date().toISOString(),
     player: { mapId: currentMapId, tileX: player.x / map.data.tileWidth, tileY: player.y / map.data.tileHeight, direction: player.direction },
+    ...(quietPlace ? { quietPlace } : {}),
     hero: { stats: heroStats, equipment: heroEquipment },
     companions: Object.fromEntries(
       Object.entries(companionStats).map(([id, stats]) => [id, { stats, equipment: companionEquipment[id] }]),
@@ -1575,6 +1592,7 @@ function applySaveData(data: SaveData): void {
   Object.assign(flags, data.flags);
   grantStarterItems();
   resetVehicles(data.vehicles);
+  quietPlace = data.quietPlace ?? null;
   switchMap(data.player.mapId, data.player.tileX, data.player.tileY);
   player = { ...player, direction: data.player.direction };
   // 船・飛空艇に乗ったまま保存したときは、乗ったまま再開する（海の上で動けなくならないように）
@@ -2945,10 +2963,16 @@ const loop = createGameLoop({
     if (exit) {
       // 世界地図から入る場所には、条件がある（章の順・乗り物・クリア後の航路など）。足りなければ、ヒントを出して押し戻す。
       const problems = currentMapId === "world-map" ? worldEntryProblems(exit.targetMapId, flags) : [];
-      if (problems.length > 0) {
+      if (problems.length > 0 && !canEnterQuietly(exit.targetMapId)) {
         player = { ...player, y: player.y + map.data.tileHeight, moving: false };
         dialogue.start(problems.map((text) => ({ type: "message" as const, text })));
         return;
+      }
+      if (problems.length > 0) {
+        // まだ物語の先の場所: 入れるが、何も起こらない
+        quietPlace = exit.targetMapId;
+        saveMessage = "まだ物語の先の場所。いまは、何も起こらない";
+        saveMessageTimer = 3500;
       }
       if (exit.targetMapId === "tower-1") {
         flags["tower_gate_open"] = true;
@@ -2963,7 +2987,7 @@ const loop = createGameLoop({
       lastStepTile = { x: centerTileX, y: centerTileY, mapId: currentMapId };
     } else if (lastStepTile.x !== centerTileX || lastStepTile.y !== centerTileY) {
       lastStepTile = { x: centerTileX, y: centerTileY, mapId: currentMapId };
-      if (!debugNoEncounter) {
+      if (!debugNoEncounter && !quietPlace) {
         // 世界地図では、足もとの地形で出会う敵と戦闘の背景を決める（道の上では出会わない）。
         let encounterMapId: string | null = currentMapId;
         if (currentMapId === "world-map") {
@@ -2993,7 +3017,8 @@ const loop = createGameLoop({
       const npc = findNpcAt(npcs, facing.tileX, facing.tileY);
       if (npc) {
         faceNpc(npc, opposite(player.direction));
-        dialogue.start(npc.commands);
+        // 物語がまだ届いていない場所では、話しかけても・調べても、何も起こらない（店・宿・宝箱も）
+        dialogue.start(quietPlace ? [{ type: "message", text: npcLook(npc) === "object" ? "何も起こらない。" : "……。" }] : npc.commands);
       }
     }
   },

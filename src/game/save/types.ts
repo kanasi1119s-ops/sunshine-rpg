@@ -39,5 +39,7 @@ export interface SaveData {
   /** ゲームの中の時間（ミリ秒。0＝朝）。古いセーブには無い（オプション）。 */
   clockMs?: number;
   /** 世界地図の乗り物（船・飛空艇の置き場所と、いま乗っているもの）。古いセーブには無い（オプション）。 */
+  /** 物語がまだ届いていない場所（何も起こらない場所）にいるとき、その入口のID。古いセーブには無い（オプション）。 */
+  quietPlace?: string;
   vehicles?: { mode: "foot" | "ship" | "air"; ship: { x: number; y: number }; airship: { x: number; y: number } };
 }
