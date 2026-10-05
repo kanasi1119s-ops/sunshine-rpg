@@ -1493,7 +1493,7 @@
  {
   "id": "enc-tower-3-3",
   "prompt": "a golden gear machine, a round gold clockwork creature with many gear legs and a ruby eye",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-3-3",
   "kind": "mob",
   "name": "金の歯車機械",
@@ -1504,12 +1504,13 @@
    210,
    170,
    70
-  ]
+  ],
+  "draft": "enc-tower-3-3_0"
  },
  {
   "id": "enc-tower-3-4",
   "prompt": "a heraldic crest stone, a shield-shaped stone slab with a carved emblem that walks on stone feet",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-3-4",
   "kind": "mob",
   "name": "紋章の石",
@@ -1520,12 +1521,13 @@
    170,
    160,
    140
-  ]
+  ],
+  "draft": "enc-tower-3-4_0"
  },
  {
   "id": "enc-tower-3-5",
   "prompt": "a feather of light, a large glowing white-gold feather with a living eye at its base",
-  "status": "todo",
+  "status": "draft",
   "key": "enemy:enc-tower-3-5",
   "kind": "mob",
   "name": "光の羽",
