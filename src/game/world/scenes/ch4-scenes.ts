@@ -22,6 +22,7 @@ export const CH4_SCENES: StoryScene[] = [
     requires: ["chapter3_orca_joined"],
     blockedBy: ["chapter4_intro_seen"],
     at: "enter",
+    time: "dusk",
     source: `${SRC}01-砂の海の町.md（一 赤い砂の向こう）`,
     commands: [
       n("鉄鏈鉱山の東は、木がすっかり少なくなる。足もとの土が赤みを帯び、靴の底でさらさらと鳴りはじめた。"),
@@ -110,6 +111,7 @@ export const CH4_SCENES: StoryScene[] = [
     requires: ["chapter4_quest_accepted"],
     blockedBy: ["chapter4_wagon_found"],
     at: "enter",
+    time: "night",
     source: `${SRC}01-砂の海の町.md（四 噂の重さ）`,
     commands: [
       n("その夜。夕食の豆の煮込みのあと、ユーリが中庭に出ると、井戸の縁に、コハクがひとりで膝を抱えて座っていた。"),
@@ -153,6 +155,7 @@ export const CH4_SCENES: StoryScene[] = [
     requires: ["chapter4_quest_accepted"],
     blockedBy: ["chapter4_wagon_found"],
     at: "enter",
+    time: "night",
     source: `${SRC}02-夜の荷馬車と三本の岩.md（五 南の野営地、夜）`,
     commands: [
       n("夜の砂の上を渡る風は、昼とはまるで別のものだった。足もとで、砂がときおり、眠る獣の寝息のように低く鳴る。"),
@@ -235,6 +238,7 @@ export const CH4_SCENES: StoryScene[] = [
     requires: ["chapter4_yugami_defeated"],
     blockedBy: ["chapter4_reported"],
     at: "enter",
+    time: "night",
     source: `${SRC}03-掟を破る者.md（十四 レトとコハク）`,
     commands: [
       n("宿の屋上で、コハクがひとり、星を見ていた。階段を上ってきたのは、杯を二つ持ったレトだった。"),
@@ -260,6 +264,7 @@ export const CH4_SCENES: StoryScene[] = [
     requires: ["chapter4_reported"],
     blockedBy: ["chapter5_intro_seen"],
     at: "enter",
+    time: "night",
     source: `${SRC}06-砂鯨.md（三十 紺の使者）・05-名を貸した人.md（二十）`,
     commands: [
       n("紺の外套の使者の言葉を聞いた、その夜。宿の食堂で、五人はしばらく黙りこんでいた。"),
@@ -283,6 +288,7 @@ export const CH4_SCENES: StoryScene[] = [
     requires: ["chapter4_reported"],
     blockedBy: ["chapter5_intro_seen"],
     at: "enter",
+    time: "morning",
     source: `${SRC}06-砂鯨.md（二十九 帆走車・三十一 旅立ちの朝）`,
     commands: [
       n("出発の朝。屋根から屋根へ渡された色とりどりの布が、涼しい風にはためいていた。"),

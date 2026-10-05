@@ -136,6 +136,7 @@ export const CH5_SCENES: StoryScene[] = [
     requires: ["chapter5_quest_accepted"],
     blockedBy: ["chapter5_yugami_defeated"],
     at: "enter",
+    time: "night",
     source: `${SRC}01-霧の坂道.md（六 眠れない夜）`,
     commands: [
       n("夜。オルカは横になるとすぐ、岩のように動かなくなった。ユーリは寝つけずに起き上がった。レトが、窓辺に座っていた。"),
@@ -159,6 +160,7 @@ export const CH5_SCENES: StoryScene[] = [
     requires: ["chapter5_quest_accepted"],
     blockedBy: ["chapter5_record_found"],
     at: { x0: 2, y0: 1, x1: 6, y1: 2 },
+    time: "night",
     source: `${SRC}02-三つの灯りと夜の崖道.md（十・十一）`,
     commands: [
       { type: "cinematic", on: true },
@@ -254,6 +256,7 @@ export const CH5_SCENES: StoryScene[] = [
     requires: ["chapter5_reported"],
     blockedBy: ["chapter6_intro_seen"],
     at: { x0: 5, y0: 6, x1: 7, y1: 8 },
+    time: "night",
     source: `${SRC}04-写字官と予言の歪み.md（十九・二十）`,
     commands: [
       s("ミナ", "司祭さま。疑うことは、悪いことじゃないと思います。疑って、それでも歌を歌う人は、きっと、本当に歌う人です。"),
@@ -276,6 +279,7 @@ export const CH5_SCENES: StoryScene[] = [
     requires: ["chapter5_reported"],
     blockedBy: ["chapter6_intro_seen"],
     at: { x0: 8, y0: 7, x1: 11, y1: 8 },
+    time: "night",
     source: `${SRC}06-霧の晴れ間.md（三十 禁域のふち）・02（九 縄の向こう）`,
     commands: [
       n("町を発つ前の夜。ユーリはひとりで、巡礼路の奥を歩いた。宵月の赤い光が、霧の粒をやわらかく照らしている。"),
@@ -321,6 +325,7 @@ export const CH5_SCENES: StoryScene[] = [
     requires: ["chapter5_reported"],
     blockedBy: ["chapter6_intro_seen"],
     at: "enter",
+    time: "morning",
     source: `${SRC}06-霧の晴れ間.md（三十一 朝の門）`,
     commands: [
       n("朝、霧断崖の門に、五人は並んだ。司祭も、書記も、記録係も、巡礼者の老女も、見送りに来ていた。"),

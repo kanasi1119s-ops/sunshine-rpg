@@ -298,6 +298,7 @@ export const CH6_SCENES: StoryScene[] = [
     requires: ["chapter6_dorun_farewell"],
     blockedBy: ["chapter6_reported"],
     at: "enter",
+    time: "dusk",
     source: `${NOVEL}/07-あの方の領分.md`,
     commands: [
       say("町に戻ると、雪原はいちめん夕焼けの色だった。白い門のそばに、アヤメが立っていた。"),
@@ -363,6 +364,7 @@ export const CH6_SCENES: StoryScene[] = [
     requires: ["chapter6_ayame_joined"],
     blockedBy: ["chapter7_intro_seen"],
     at: "enter",
+    time: "morning",
     source: `${NOVEL}/08-手帳と雪解けの道.md`,
     commands: [
       say("出発の朝も、雪が降っていた。けれど今度の雪は、綿くずのように軽く、風もなかった。"),

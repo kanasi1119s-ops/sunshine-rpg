@@ -21,6 +21,7 @@ export const CH0_SCENES: StoryScene[] = [
     requires: ["chapter0_intro_seen"],
     blockedBy: ["chapter0_quest_accepted"],
     at: "enter",
+    time: "morning",
     source: `${SRC}/01-朝の灯里.md 一 潮と麦粥の朝`,
     commands: [
       n("港町・灯里の朝は、音から始まる。漁船の櫓のきしむ音。桟橋で魚箱を積む掛け声。坂をくだってくる、焼きたてのパンの匂い。"),
@@ -47,6 +48,7 @@ export const CH0_SCENES: StoryScene[] = [
     requires: ["chapter0_intro_seen"],
     blockedBy: ["chapter0_quest_accepted"],
     at: { x0: 6, y0: 7, x1: 10, y1: 10 },
+    time: "morning",
     source: `${SRC}/01-朝の灯里.md 二 坂の町`,
     commands: [
       n("灯里は、海にむかってなだらかに落ちていく、扇形の町だ。坂をのぼれば祠に、くだれば海に着く。"),
@@ -105,6 +107,7 @@ export const CH0_SCENES: StoryScene[] = [
     requires: ["chapter0_quest_accepted"],
     blockedBy: ["chapter0_yugami_defeated"],
     at: { x0: 1, y0: 5, x1: 7, y1: 5 },
+    time: "morning",
     source: `${SRC}/01-朝の灯里.md 五 もう一人の調査員`,
     commands: [
       n("支部を出ようとすると、帳場のモモコが顔を上げて、手を振った。"),
@@ -163,6 +166,7 @@ export const CH0_SCENES: StoryScene[] = [
     requires: ["chapter0_yugami_defeated"],
     blockedBy: ["chapter0_reported_to_kasen"],
     at: "enter",
+    time: "dusk",
     source: `${SRC}/03-町外れの草地.md 十二 帰り道`,
     commands: [
       n("夕方が近づいていた。西の空は薄い橙色に染まり、東の空には、小さな赤い宵月が細く顔を出している。"),
@@ -201,6 +205,7 @@ export const CH0_SCENES: StoryScene[] = [
     requires: ["chapter0_reto_joined"],
     blockedBy: ["chapter1_intro_seen"],
     at: "enter",
+    time: "night",
     source: `${SRC}/05-報告と夕焼けの港.md 十五 夜の警鐘`,
     commands: [
       n("その夜。ユーリが家の戸口をくぐると、母は台所でゆで豆を煮ていた。"),
@@ -225,6 +230,7 @@ export const CH0_SCENES: StoryScene[] = [
     requires: ["chapter0_reto_joined", "chapter0_kasen_farewell", "scene_ch0-night-dinner_seen"],
     blockedBy: ["chapter1_intro_seen"],
     at: "enter",
+    time: "morning",
     source: `${SRC}/06-封筒と旅立ち.md 十九 旅立ちの朝`,
     commands: [
       cinematic,

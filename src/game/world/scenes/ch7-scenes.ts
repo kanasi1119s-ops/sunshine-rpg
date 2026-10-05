@@ -137,6 +137,7 @@ export const CH7_SCENES: StoryScene[] = [
     requires: ["chapter7_quest_accepted", "chapter6_ayame_joined"],
     blockedBy: ["chapter7_ledger_found"],
     at: "enter",
+    time: "night",
     source: `${NOVEL}/02-日誌と板直し.md`,
     commands: [
       say("日が沈むと、風が止んだ。二つの月が、雲の海に、ぼんやりと夢のように映っている。"),
@@ -242,6 +243,7 @@ export const CH7_SCENES: StoryScene[] = [
     requires: ["chapter7_edrea_appeared", "chapter6_ayame_joined"],
     blockedBy: ["chapter7_reported"],
     at: "enter",
+    time: "morning",
     source: `${NOVEL}/04-監視卓とエドレア.md`,
     commands: [
       say("去りぎわ、エドレアは壊れた卓を見て、小さくつぶやいていた。「見張るために、作りました。守るために、と、思っておりました」"),
@@ -261,6 +263,7 @@ export const CH7_SCENES: StoryScene[] = [
     requires: ["chapter7_edrea_appeared"],
     blockedBy: ["chapter7_reported"],
     at: "enter",
+    time: "morning",
     source: `${NOVEL}/05-空の乗り物と教団の残り火.md`,
     commands: [
       say("板の通りの入口で、長老が待っていた。夜通し立っていたのか、空色の肩掛けが、夜露で重たげに濡れている。"),
@@ -279,6 +282,7 @@ export const CH7_SCENES: StoryScene[] = [
     requires: ["chapter7_airship_obtained"],
     blockedBy: ["chapter8_intro_seen"],
     at: "enter",
+    time: "morning",
     source: `${NOVEL}/05-空の乗り物と教団の残り火.md`,
     commands: [
       say("島の断崖の下、雲の海すれすれの岩窟の奥に、細長い木の船が、静かに横たわっていた。"),
@@ -305,6 +309,7 @@ export const CH7_SCENES: StoryScene[] = [
     requires: ["chapter7_reported"],
     blockedBy: ["chapter8_intro_seen"],
     at: "enter",
+    time: "night",
     source: `${NOVEL}/05-空の乗り物と教団の残り火.md`,
     commands: [
       say("その夜、ユーリが宿の屋根に上がると、先客がいた。レトだった。"),
@@ -329,6 +334,7 @@ export const CH7_SCENES: StoryScene[] = [
     requires: ["side_s033_step1"],
     blockedBy: ["side_s033_done"],
     at: "enter",
+    time: "night",
     source: `${NOVEL}/06-渡り職人と嵐の夜.md`,
     commands: [
       { type: "cinematic", on: true },

@@ -121,6 +121,25 @@ describe("小説の場面（story-scenes）", () => {
     expect(s.commands.some((c) => c.type === "message" && c.speaker === "宿の女将")).toBe(true);
   });
 
+  it("最初の地の文が夕暮れ・夕焼け・夕日・日暮れの場面は、時間帯も夕暮れ（dusk）", () => {
+    /** 最初の地の文（話し手のない文）。if・choice の中も、出てくる順にたどる。 */
+    const firstNarration = (cmds: readonly EventCommand[]): string | null => {
+      for (const c of cmds) {
+        if (c.type === "message" && !c.speaker) return c.text;
+        const inner: EventCommand[][] =
+          c.type === "if" ? [c.then, c.else ?? []] : c.type === "choice" ? c.options.map((o) => o.commands) : [];
+        for (const sub of inner) {
+          const t = firstNarration(sub);
+          if (t !== null) return t;
+        }
+      }
+      return null;
+    };
+    const duskScenes = STORY_SCENES.filter((s) => /夕暮れ|夕焼け|夕日|日暮れ/.test(firstNarration(s.commands) ?? ""));
+    expect(duskScenes.length, "夕暮れではじまる場面が1つも見つからない").toBeGreaterThan(0);
+    for (const s of duskScenes) expect(s.time, `${s.id}: 夕暮れの場面なのに時間帯が ${s.time ?? "なし"}`).toBe("dusk");
+  });
+
   it("場面の時間帯: 時計は前へだけ進み、その時間帯になる", () => {
     const noon = DAY_MS * 3 + DAY_MS * 0.25;
     const dusk = advanceClockTo(noon, "dusk");

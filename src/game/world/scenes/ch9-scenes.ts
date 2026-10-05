@@ -283,6 +283,7 @@ export const CH9_SCENES: StoryScene[] = [
     requires: ["chapter9_cleared"],
     blockedBy: ["side_s027_accepted", "side_s028_accepted"],
     at: "enter",
+    time: "morning",
     source: `${SRC}05-償いと目覚め.md（十一 ソウイチ）`,
     commands: [
       m("宮を発つ朝。ソウイチは、杖をついて、灯守りの前に立った。"),
@@ -301,6 +302,7 @@ export const CH9_SCENES: StoryScene[] = [
     requires: ["chapter9_cleared"],
     blockedBy: ["scene_ch9-touri-pier_seen", "side_s027_accepted"],
     at: "enter",
+    time: "morning",
     source: `${SRC}06-エピローグ　灯里の朝.md（十二 帰りの海）`,
     commands: [
       m("帰りは、議長の大きな帆船だった。羽根を畳んだ風待ちが、太い綱で曳かれてついてくる。"),
@@ -324,6 +326,7 @@ export const CH9_SCENES: StoryScene[] = [
     requires: ["chapter9_cleared", "scene_ch9-return-sea_seen"],
     blockedBy: ["scene_ch9-touri-pier_seen", "side_s027_accepted"],
     at: "enter",
+    time: "night",
     source: `${SRC}06-エピローグ　灯里の朝.md（十二 帰りの海）`,
     commands: [
       m("その夜、レトは甲板で、毛布にくるまった兄と並んで座っていた。"),
@@ -347,6 +350,7 @@ export const CH9_SCENES: StoryScene[] = [
     requires: ["chapter9_cleared"],
     blockedBy: ["side_s027_accepted"],
     at: "enter",
+    time: "morning",
     source: `${SRC}06-エピローグ　灯里の朝.md（十三 灯里の朝、ふたたび）`,
     commands: [
       m("灯里の朝は、旅立ちの日と同じ匂いがした。海の塩気と、焼きたてのパンと、干し魚の匂い。"),

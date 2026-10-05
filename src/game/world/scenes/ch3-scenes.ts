@@ -29,6 +29,7 @@ export const CH3_SCENES: StoryScene[] = [
     requires: ["chapter2_reported_to_guide"],
     blockedBy: ["chapter3_intro_seen"],
     at: { x0: 114, y0: 106, x1: 130, y1: 120 },
+    time: "morning",
     source: `${NOVEL}/01-鉛色の町と組合の代表.md 一`,
     commands: [
       say("山道を歩いて三日。最後の朝、空の色が変わった。溶かした鉛を、うすく伸ばしてかぶせたような色だ。"),
@@ -116,6 +117,7 @@ export const CH3_SCENES: StoryScene[] = [
     requires: ["chapter3_quest_accepted"],
     blockedBy: ["chapter3_yugami_defeated"],
     at: "enter",
+    time: "dusk",
     source: `${NOVEL}/01-鉛色の町と組合の代表.md 四`,
     commands: [
       say("夕刻、山の斜面の大きな鐘が鳴った。ごぉん、ごぉん、ごぉん。三つ打って、一呼吸おいて、もう三つ。"),
@@ -218,6 +220,7 @@ export const CH3_SCENES: StoryScene[] = [
     requires: ["chapter3_quest_accepted"],
     blockedBy: ["chapter3_yugami_defeated"],
     at: "enter",
+    time: "night",
     source: `${NOVEL}/02-帳簿の穴と支配人の言い分.md 七`,
     commands: [
       say("夜更け。ミナは、ひとりで外に出て、膝を抱えて座っていた。ユーリは上着を脱いで、その肩にかけた。"),
@@ -243,6 +246,7 @@ export const CH3_SCENES: StoryScene[] = [
     requires: ["chapter3_prep_done"],
     blockedBy: ["chapter3_yugami_defeated"],
     at: "enter",
+    time: "night",
     source: `${NOVEL}/03-北の坑道.md 八・九`,
     commands: [
       say("夜明け前の山は、冷たかった。崖から突き出た古い鉄の鎖が、風が吹くたびに、かちゃり、と鳴る。"),
@@ -326,6 +330,7 @@ export const CH3_SCENES: StoryScene[] = [
     requires: ["chapter3_yugami_defeated", "chapter3_clue_c007_found"],
     blockedBy: ["chapter3_reported_to_orca"],
     at: "enter",
+    time: "morning",
     source: `${NOVEL}/04-装置と鎖の主.md 十八`,
     commands: [
       say("坑道を出ると、東の空が白みはじめていた。坑に入ってから、まる一日が過ぎていた。"),
@@ -398,6 +403,7 @@ export const CH3_SCENES: StoryScene[] = [
     requires: ["chapter3_orca_joined"],
     blockedBy: ["chapter4_intro_seen"],
     at: "enter",
+    time: "morning",
     source: `${NOVEL}/05-岩の下の約束と旅立ち.md 二十三`,
     commands: [
       say("翌朝、町の門の前に、オルカを見送る人たちが集まった。ヨネは、山ほどの握り飯を包んでくれた。"),

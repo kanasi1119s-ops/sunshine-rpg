@@ -103,6 +103,7 @@ export const CH8_SCENES: StoryScene[] = [
     requires: ["chapter8_quest_accepted"],
     blockedBy: ["chapter8_hearing_done"],
     at: "enter",
+    time: "night",
     source: `${SRC}01-白い石畳の街.md（四 夜の水路）`,
     commands: [
       m("その夜、ユーリは眠れなかった。そっと宿を出て、街の西を流れる水路のほとりを歩いた。水面に、赤い宵月が揺れている。"),
@@ -128,6 +129,7 @@ export const CH8_SCENES: StoryScene[] = [
     requires: ["chapter8_prep_done"],
     blockedBy: ["chapter8_hearing_done"],
     at: "enter",
+    time: "night",
     source: `${SRC}02-夜明け前の三人.md（五 逃げる男）`,
     commands: [
       cine,
@@ -154,6 +156,7 @@ export const CH8_SCENES: StoryScene[] = [
     requires: ["chapter8_prep_done", "scene_ch8-dorn-underfloor_seen"],
     blockedBy: ["chapter8_hearing_done"],
     at: "enter",
+    time: "night",
     source: `${SRC}02-夜明け前の三人.md（五 逃げる男）`,
     commands: [
       cine,
@@ -179,6 +182,7 @@ export const CH8_SCENES: StoryScene[] = [
     requires: ["chapter8_quest_accepted"],
     blockedBy: ["chapter8_hearing_done"],
     at: "enter",
+    time: "morning",
     source: `${SRC}02-夜明け前の三人.md（六 議場の脇の椅子）`,
     commands: [
       m("翌朝。よく晴れていた。審問の鐘まで、まだ一刻ほどある。"),
@@ -224,6 +228,7 @@ export const CH8_SCENES: StoryScene[] = [
     requires: ["chapter8_yugami_defeated"],
     blockedBy: ["chapter8_edrea_fled"],
     at: "enter",
+    time: "morning",
     source: `${SRC}05-番人との戦い.md（十四〜十六）`,
     commands: [
       m("戦いのさなか、議事官の肩に担がれて運ばれていくトクヨウが、首をねじって叫んでいた。"),
@@ -272,6 +277,7 @@ export const CH8_SCENES: StoryScene[] = [
     requires: ["chapter8_reported"],
     blockedBy: ["chapter9_intro_seen"],
     at: "enter",
+    time: "dusk",
     source: `${SRC}06-手紙と消えゆく人と旅立ち.md（十八 夜の屋根）`,
     commands: [
       m("その日の夕方。議決に反対した三人のうち、ロクジョウ議員は、投票のあとも、長いあいだ席から動かなかったという。"),
@@ -291,6 +297,7 @@ export const CH8_SCENES: StoryScene[] = [
     requires: ["chapter8_edrea_fled"],
     blockedBy: ["chapter9_intro_seen"],
     at: "enter",
+    time: "night",
     source: `${SRC}06-手紙と消えゆく人と旅立ち.md（十八 夜の屋根）`,
     commands: [
       m("その夜。仲間たちは、疲れ切って寝台に倒れこんでいた。……レトの寝台だけが、空だった。"),

@@ -103,6 +103,7 @@ export const CH2_SCENES: StoryScene[] = [
     requires: ["chapter2_quest_accepted"],
     blockedBy: ["chapter2_yugami_defeated"],
     at: "enter",
+    time: "night",
     source: `${NOVEL}/01-湖の街.md 三・四`,
     commands: [
       say("夜。宿の裏手の小さな桟橋に腰かけて、ユーリは夜の水面をながめていた。"),
@@ -148,6 +149,7 @@ export const CH2_SCENES: StoryScene[] = [
     requires: ["chapter2_prep_done"],
     blockedBy: ["chapter2_yugami_defeated"],
     at: "enter",
+    time: "night",
     source: `${NOVEL}/02-ガイドの依頼.md 七・八`,
     commands: [
       say("夜。空には白い朝月と赤い宵月が並び、静かな湖面に、月が二つ映っていた。"),
@@ -231,6 +233,7 @@ export const CH2_SCENES: StoryScene[] = [
     requires: ["chapter2_yugami_defeated"],
     blockedBy: ["chapter2_reported_to_guide"],
     at: "enter",
+    time: "morning",
     source: `${NOVEL}/04-貸しにしとく.md 十三`,
     commands: [
       say("倉庫を出ると、湖は、朝焼けの手前の、いちばん青い時間のなかにあった。"),
@@ -301,6 +304,7 @@ export const CH2_SCENES: StoryScene[] = [
     requires: ["chapter2_reported_to_guide"],
     blockedBy: ["scene_ch2-departure_seen", "chapter3_intro_seen"],
     at: "enter",
+    time: "night",
     source: `${NOVEL}/04-貸しにしとく.md 十六`,
     commands: [
       say("夜も更けて、廊下のつきあたりの窓辺で、ミナと二人になった。"),
@@ -321,6 +325,7 @@ export const CH2_SCENES: StoryScene[] = [
     requires: ["chapter2_reported_to_guide", "chapter2_guide_joined"],
     blockedBy: ["chapter3_intro_seen"],
     at: "enter",
+    time: "morning",
     source: `${NOVEL}/05-朝霧の出立.md 二十`,
     commands: [
       say("出立の朝、湖はまた霧に沈んでいた。橋のたもとまで、宿の女将が見送りに来てくれた。"),

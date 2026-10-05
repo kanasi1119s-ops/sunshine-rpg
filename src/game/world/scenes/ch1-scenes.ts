@@ -67,6 +67,7 @@ export const CH1_SCENES: StoryScene[] = [
     requires: ["chapter1_heard_miller"],
     blockedBy: ["chapter1_yugami_defeated"],
     at: "enter",
+    time: "night",
     source: `${SRC}/01-止まった水車.md 四 鶏が鳴く前に`,
     commands: [
       n("その夜、ユーリとレトは、村の宿の二階に泊まった。窓から、月明かりが差しこんでいる。"),
@@ -89,6 +90,7 @@ export const CH1_SCENES: StoryScene[] = [
     requires: ["scene_ch1-inn-night_seen"],
     blockedBy: ["chapter1_yugami_defeated"],
     at: "enter",
+    time: "night",
     source: `${SRC}/01-止まった水車.md 四 鶏が鳴く前に`,
     commands: [
       cinematic,
@@ -116,6 +118,7 @@ export const CH1_SCENES: StoryScene[] = [
     requires: ["scene_ch1-night-quarrel_seen"],
     blockedBy: ["chapter1_yugami_defeated"],
     at: { x0: 1, y0: 8, x1: 5, y1: 8 },
+    time: "morning",
     source: `${SRC}/02-北の水路.md 五 浚渫の話`,
     commands: [
       n("朝靄のなか、井戸のそばで、がっしりした肩の青年が水を汲んでいた。浚渫の指揮をとった、シンだ。"),
@@ -155,6 +158,7 @@ export const CH1_SCENES: StoryScene[] = [
     requires: ["chapter1_quest_accepted"],
     blockedBy: ["chapter1_yugami_defeated"],
     at: { x0: 1, y0: 5, x1: 3, y1: 7 },
+    time: "dusk",
     source: `${SRC}/02-北の水路.md 七 夕暮れの野営`,
     commands: [
       n("日が傾いてきた。水路の脇の岩棚で、小さな火をおこして、ひと息つくことにした。"),
@@ -295,6 +299,7 @@ export const CH1_SCENES: StoryScene[] = [
     requires: ["chapter1_mina_joined"],
     blockedBy: ["chapter2_intro_seen"],
     at: { x0: 1, y0: 8, x1: 5, y1: 8 },
+    time: "morning",
     source: `${SRC}/05-橋のたもと.md 十六 出立`,
     commands: [
       cinematic,
@@ -320,6 +325,7 @@ export const CH1_SCENES: StoryScene[] = [
     requires: ["scene_ch1-farewell_seen"],
     blockedBy: ["chapter2_intro_seen"],
     at: "enter",
+    time: "morning",
     source: `${SRC}/05-橋のたもと.md 十六 出立`,
     commands: [
       n("街道に出る手前の丘で、ユーリは一度だけ振り返った。麦香野が、朝日を浴びて、金色に輝いている。"),
