@@ -2,7 +2,7 @@ import type { EventCommand } from "../event/types";
 import type { Npc } from "../npc";
 import type { MapProp, TileMapData } from "../map/types";
 import { INN_PRICES, INN_SPOTS } from "../map/town-decor";
-import { propFootprintTiles, propOverhangTiles } from "../map/map-props";
+import { doorOffsetX, propFootprintTiles, propOverhangTiles } from "../map/map-props";
 import { DUNGEON_PARENT } from "./dungeon-parent";
 
 /**
@@ -91,7 +91,7 @@ export function addInnInteriors(maps: Record<string, TileMapData>, npcsByMap: Re
     const w = data.width, h = data.height;
     const exits = data.exits ?? (data.exits = []);
     const list = npcsByMap[town] ?? (npcsByMap[town] = []);
-    const door = { x: spot.x, y: spot.y + 1 };
+    const door = { x: spot.x + doorOffsetX(spot.kind), y: spot.y + 1 };
     const walkable = (x: number, y: number): boolean => x >= 0 && y >= 0 && x < w && y < h && data.collision![y * w + x] === 0;
     const exitAt = (x: number, y: number): boolean => exits.some((e) => e.tileX === x && e.tileY === y);
     const free = (x: number, y: number): boolean => walkable(x, y) && !exitAt(x, y) && !list.some((p) => p.tileX === x && p.tileY === y);

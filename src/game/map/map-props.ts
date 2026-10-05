@@ -90,6 +90,8 @@ export const PROP_HEIGHT: Record<MapProp["kind"], number> = { tree: 48, house: 5
 /** 通り抜けられる飾り（壁の飾り・床の飾り）。足元のマスを通れなくしない。 */
 export const PASSABLE_PROPS = new Set<string>(["banner-purple", "banner-red", "bones", "cobweb", "barrel-broken", "mushrooms", "chains"]);
 
+/** 玄関のマス（足元の1マス下）。屋敷は、絵の玄関が建物の中心より1マス左にあるので、そこに合わせる。 */
+export const doorOffsetX = (kind: MapProp["kind"]): number => (kind.startsWith("manor") ? -1 : 0);
 export const isHouse = (kind: MapProp["kind"]): boolean => kind.startsWith("house") || kind.startsWith("manor");
 
 /** 絵の上端が、足元のマスより上へ何マスぶんはみ出すか（NPCや出入り口と重ねないための確認に使う）。 */

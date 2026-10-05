@@ -12,7 +12,7 @@ import type { EventCommand } from "../event/types";
  * 置くときは、出入り口・人のいるマス・そこへ歩く道がふさがれないようにする（ふさぐ位置はあきらめる）。毎回同じ位置になる。
  */
 /** 町ごとの宿屋の建物（2階建ての屋敷）の場所。足元の1マス下が玄関（`house-interiors.ts` が出入り口にする）。 */
-export const INN_SPOTS = new Map<string, { x: number; y: number }>();
+export const INN_SPOTS = new Map<string, { x: number; y: number; kind: MapPropKind }>();
 
 const HOUSE_KINDS: MapPropKind[] = ["house", "house-blue", "house-green", "house", "house-blue", "house-green"];
 const AROUND: Array<[number, number]> = [[1, 0], [-1, 0], [0, 1], [0, -1]];
@@ -115,15 +115,18 @@ export function applyTownDecor(maps: Record<string, TileMapData>, npcsByMap: Rec
       }
       for (let y = 4; y < h - 2; y++) {
         for (let x = 3; x < w - 3; x++) {
-          if (!isOpen(x, y) || isRoad(x, y) || !isOpen(x, y + 1) || occupied.has((y + 1) * w + x) || covered.has((y + 1) * w + x) || covered.has((y + 2) * w + x)) continue;
+          if (!isOpen(x, y) || isRoad(x, y) || !isOpen(x - 1, y + 1) || occupied.has((y + 1) * w + x - 1) || covered.has((y + 1) * w + x - 1) || covered.has((y + 2) * w + x - 1)) continue;
           const nearRoad = [1, 2, 3].some((d) => isRoad(x, y + d)) || [-4, -3, 3, 4].some((d) => isRoad(x + d, y));
           if (nearRoad || !anyRoad) cands.push([x, y]);
         }
       }
       const sorted = [...cands].sort((a, b) => Math.hypot(a[0] - w / 2, a[1] - h / 2) - Math.hypot(b[0] - w / 2, b[1] - h / 2));
       for (const [x, y] of sorted) {
-        if (place(innKinds[(idSaltEarly + x) % innKinds.length], x, y)) {
-          INN_SPOTS.set(mapId, { x, y });
+        const innKind = innKinds[(idSaltEarly + x) % innKinds.length];
+        if (place(innKind, x, y)) {
+          INN_SPOTS.set(mapId, { x, y, kind: innKind });
+          // 玄関の前（出入り口と、出てきたときの立ち位置）には、あとから飾りを置かない
+          for (let dx = -2; dx <= 0; dx++) for (let dy = 1; dy <= 2; dy++) occupied.add((y + dy) * w + x + dx);
           break;
         }
       }

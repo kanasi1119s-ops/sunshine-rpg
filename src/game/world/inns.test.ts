@@ -13,7 +13,7 @@ describe("宿屋の建物", () => {
       expect(WORLD_MAPS[f2]).toBeDefined();
       // 町から入れる
       const spot = INN_SPOTS.get(town)!;
-      expect(WORLD_MAPS[town].exits?.some((e) => e.targetMapId === f1 && e.tileX === spot.x && e.tileY === spot.y + 1)).toBe(true);
+      expect(WORLD_MAPS[town].exits?.some((e) => e.targetMapId === f1 && e.tileX === spot.x + (spot.kind.startsWith("manor") ? -1 : 0) && e.tileY === spot.y + 1)).toBe(true);
       // 1階: カウンターの前で話すと、とまる選択。奥に店員、大部屋にベッド6つ
       const n1 = WORLD_NPCS[f1];
       const counters = n1.filter((n) => n.id.includes("-counter-"));
