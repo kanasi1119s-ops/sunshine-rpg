@@ -1405,7 +1405,7 @@
  {
   "id": "enc-tower-2-4",
   "prompt": "a soldier made of swirling dark grey fog wearing a dented iron helmet with a glassy blue visor, holding a misty spear, wisps trailing from its body",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-2-4",
   "kind": "mob",
   "name": "霧の兵",
@@ -1423,7 +1423,7 @@
  {
   "id": "enc-tower-2-5",
   "prompt": "a floating drop of crackling yellow lightning with jagged sparking spikes all around it, a glowing white core",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-2-5",
   "kind": "mob",
   "name": "雷のしずく",
@@ -1435,7 +1435,7 @@
    130,
    40
   ],
-  "draft": "enc-tower-2-5_1",
+  "draft": "enc-tower-2-5_x0",
   "seed_base": 6001
  },
  {
@@ -1476,7 +1476,7 @@
  {
   "id": "enc-tower-3-2",
   "prompt": "a guardian of light in white and gold armor with a halo-shaped helmet crest and a radiant sword",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-3-2",
   "kind": "mob",
   "name": "光の番兵",
@@ -1487,7 +1487,8 @@
    225,
    215,
    180
-  ]
+  ],
+  "draft": "enc-tower-3-2_0"
  },
  {
   "id": "enc-tower-3-3",
