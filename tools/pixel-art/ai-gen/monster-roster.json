@@ -1404,8 +1404,8 @@
  },
  {
   "id": "enc-tower-2-4",
-  "prompt": "a fog soldier with a hazy body, a misty spear and a visor of condensed water",
-  "status": "done",
+  "prompt": "a soldier made of swirling dark grey fog wearing a dented iron helmet with a glassy blue visor, holding a misty spear, wisps trailing from its body",
+  "status": "todo",
   "key": "enemy:enc-tower-2-4",
   "kind": "mob",
   "name": "霧の兵",
@@ -1413,16 +1413,17 @@
   "level": 31,
   "shape": "tall",
   "tone": [
-   160,
-   175,
-   190
+   70,
+   75,
+   90
   ],
-  "draft": "enc-tower-2-4_0"
+  "draft": "enc-tower-2-4_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-tower-2-5",
-  "prompt": "a crackling thunder droplet, a floating drop of yellow electricity with sparking spikes",
-  "status": "done",
+  "prompt": "a floating drop of crackling yellow lightning with jagged sparking spikes all around it, a glowing white core",
+  "status": "todo",
   "key": "enemy:enc-tower-2-5",
   "kind": "mob",
   "name": "雷のしずく",
@@ -1430,16 +1431,17 @@
   "level": 31,
   "shape": "float",
   "tone": [
-   230,
-   220,
-   100
+   150,
+   130,
+   40
   ],
-  "draft": "enc-tower-2-5_1"
+  "draft": "enc-tower-2-5_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-tower-3-0",
   "prompt": "a fragment of a golden ring floating with engraved patterns and a light seam",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-3-0",
   "kind": "mob",
   "name": "環のかけら",
@@ -1451,12 +1453,13 @@
    180,
    90
   ],
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-tower-3-0_0"
  },
  {
   "id": "enc-tower-3-1",
   "prompt": "a shadow made of intricate engraved patterns, a dark lace-like figure with glowing gold lines",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-3-1",
   "kind": "mob",
   "name": "紋様の影",
@@ -1467,7 +1470,8 @@
    70,
    60,
    50
-  ]
+  ],
+  "draft": "enc-tower-3-1_1"
  },
  {
   "id": "enc-tower-3-2",
