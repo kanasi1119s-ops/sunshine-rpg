@@ -34,6 +34,12 @@ describe("操作キーの設定", () => {
     expect(b.confirm).toEqual(["Enter", " "]);
   });
 
+  it("もどるのキーを地図にすると、もどるが空にならず、地図のもとのキーがわたる", () => {
+    const b = rebind(resetBindings(), "map", "x");
+    expect(b.map).toEqual(["x"]);
+    expect(b.back).toEqual(["v"]);
+  });
+
   it("もとにもどす", () => {
     expect(isDefaultBindings(resetBindings())).toBe(true);
     const changed = rebind(resetBindings(), "job", "q");

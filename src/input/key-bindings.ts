@@ -64,8 +64,12 @@ export function isDefaultBindings(b: KeyBindings): boolean {
 export function rebind(bindings: KeyBindings, action: ControlAction, key: string): KeyBindings {
   const k = normalizeKey(key);
   const next = cloneBindings(bindings);
+  const previous = bindings[action].filter((x) => x !== k);
   for (const { id } of CONTROL_ACTIONS) {
+    const had = next[id].includes(k);
     next[id] = next[id].filter((x) => x !== k);
+    // キーをとられて空になった動作（もどる・メニューなど）には、かわりに元のキーをわたす（操作できなくなるのを防ぐ）
+    if (had && id !== action && next[id].length === 0) next[id] = [...previous];
   }
   next[action] = [k];
   return next;
