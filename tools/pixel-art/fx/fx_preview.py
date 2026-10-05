@@ -60,7 +60,7 @@ def main():
     if "--party" in args:
         pdir = args[args.index("--party") + 1]
         S = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-        for idx, nm in enumerate(["ユーリ", "レト", "ミナ", "ガイド"]):
+        for idx, nm in enumerate(["ユーリ", "レト", "ミナ", "コハク"]):
             d = json.load(open(f"{pdir}/{nm}.json"))
             pal = {S[i]: c for i, c in enumerate(d["palette"])}
             imgs = {k: Image.fromarray(rows_rgba(d["frames"][k], pal), "RGBA") for k in ("left0", "hurt_left", "shock_left", "flash_left", "burn_left") if k in d["frames"]}

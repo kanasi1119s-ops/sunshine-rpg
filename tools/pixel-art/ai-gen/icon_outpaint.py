@@ -13,7 +13,7 @@ SRC='./'  # イメージ画像（<名前>.jpg）の置き場所
 C={
  'レト':((37,2,277,453),(5,-50,300),'man with messy dark red hair, brown eyes, dark gray coat collar, red scarf'),
  'ユーリ':((713,2,998,463),(660,-50,290),'boy with spiky orange red hair, orange headband, green eyes, orange scarf'),
- 'ガイド':((713,2,998,463),(690,-45,300),'girl with golden brown ponytail hair, brown goggles on head, green eyes, green scarf'),
+ 'コハク':((713,2,998,463),(690,-45,300),'girl with golden brown ponytail hair, brown goggles on head, green eyes, green scarf'),
  'オルカ':((713,2,962,463),(670,-45,300),'tanned man with dark brown hair, brown miner helmet with lamp, gray shirt, orange vest'),
  'アヤメ':((713,8,968,463),(655,-30,290),'woman with long wavy lavender hair, silver circlet, violet eyes, purple robe'),
  'ミナ':((713,278,953,508),(705,215,250),'girl with long light blue hair, blue and white ribbon, braid, blue eyes, white dress'),

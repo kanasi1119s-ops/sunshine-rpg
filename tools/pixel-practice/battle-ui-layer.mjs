@@ -13,7 +13,7 @@ const png = await p.evaluate(async (msg) => {
   const R = await import("/src/render/battle-renderer.ts");
   const mk = (id, name, enemy, hp) => ({ id, name, maxHp: hp, hp, maxMp: 20, mp: 20, attack: 10, defense: 5, speed: 5, isEnemy: enemy, guarding: false });
   const Z = "​";   // 名前に見えない文字を足して、味方の絵を出さない
-  const st = { party: [mk("p1", "ユーリ" + Z, false, 120), mk("p2", "レト" + Z, false, 140), mk("p3", "ミナ" + Z, false, 100), mk("p4", "ガイド" + Z, false, 95)],
+  const st = { party: [mk("p1", "ユーリ" + Z, false, 120), mk("p2", "レト" + Z, false, 140), mk("p3", "ミナ" + Z, false, 100), mk("p4", "コハク" + Z, false, 95)],
     enemies: [mk("kiri-yugami", "予言の歪み", true, 900)], log: [], fled: false };
   R.setBattleBiome("none-for-ui");
   const draw = (bg) => {

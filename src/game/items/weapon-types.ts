@@ -50,7 +50,7 @@ export function wielderOf(type: WeaponType): string | undefined {
 }
 
 /** キャラクターIDごとの名前（画面に出す用）。 */
-export const WIELDER_NAME: Record<string, string> = { hero: "ユーリ", reto: "レト", mina: "ミナ", guide: "ガイド", orca: "オルカ", ayame: "アヤメ" };
+export const WIELDER_NAME: Record<string, string> = { hero: "ユーリ", reto: "レト", mina: "ミナ", guide: "コハク", orca: "オルカ", ayame: "アヤメ" };
 
 /** その種類の武器を持つ人の名前。 */
 export function wielderName(type: WeaponType): string {

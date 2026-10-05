@@ -10,7 +10,7 @@ import { drawPixelLogo } from "./logo-pixel";
 
 const BAR_TOP = 14;
 const BAR_BOTTOM = 52;
-const PARTY = ["ユーリ", "レト", "ミナ", "ガイド", "オルカ", "アヤメ"];
+const PARTY = ["ユーリ", "レト", "ミナ", "コハク", "オルカ", "アヤメ"];
 const SCENE_FADE_OUT_MS = 600;
 
 function hash(n: number): number {

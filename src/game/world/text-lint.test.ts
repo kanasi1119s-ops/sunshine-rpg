@@ -103,7 +103,7 @@ describe("会話文の表記チェック", () => {
   });
 
   it("仲間の一人称がぶれていない（口調の統一）", () => {
-    const expected: Record<string, string> = { オルカ: "俺", ガイド: "あたし", ミナ: "わたし", アヤメ: "わたし" };
+    const expected: Record<string, string> = { オルカ: "俺", コハク: "あたし", ミナ: "わたし", アヤメ: "わたし" };
     const bad = SPEAKER_TEXTS.filter(({ speaker, text }) => {
       const want = expected[speaker];
       if (!want) {

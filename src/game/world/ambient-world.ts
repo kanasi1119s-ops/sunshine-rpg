@@ -43,7 +43,7 @@ const TOWNS: TownAmbient[] = [
     ],
   },
   {
-    mapId: "garasuko-town", giver: "ガイド", place: "密輸倉庫", next: "東の街道の先の、鉄鏈鉱山の町",
+    mapId: "garasuko-town", giver: "コハク", place: "密輸倉庫", next: "東の街道の先の、鉄鏈鉱山の町",
     accepted: "chapter2_quest_accepted", defeated: "chapter2_yugami_defeated", reported: "chapter2_reported_to_guide",
     guide: { name: "湖の水先案内人", tileX: 13, tileY: 5 },
     locals: [

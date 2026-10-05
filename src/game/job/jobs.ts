@@ -238,14 +238,14 @@ export const DIVINE_JOBS: JobData[] = [
 /**
  * レジェンドジョブ「灯心継承者」（主人公専用、`docs/design/jobs.md` 4章）。5系統すべてを、やや高いMPで扱える「何でも屋」。
  * 1点特化の強さは無く、上級ジョブを陳腐化させない。
- * 解放条件: 本編クリア後、仲間4人（レト・ミナ・ガイド・オルカ）との絆（それぞれの寄り道サブストーリー）がそろい、カセンの手紙（S-025）を読んでいる。
+ * 解放条件: 本編クリア後、仲間4人（レト・ミナ・コハク・オルカ）との絆（それぞれの寄り道サブストーリー）がそろい、カセンの手紙（S-025）を読んでいる。
  * （信頼度の数値は作らず、サブストーリーの完了で数える。`docs/decisions.md`）
  */
 export const LEGEND_UNLOCK_FLAGS: string[] = [
   "chapter9_cleared",
   "side_s002_done", // レト
   "side_s004_done", "side_s010_done", // ミナ（幼なじみ前編・後編）
-  "side_s006_done", "side_s007_done", // ガイド
+  "side_s006_done", "side_s007_done", // コハク
   "side_s009_done", "side_s011_done", // オルカ
   "side_s025_done", // カセンの手紙
 ];

@@ -6,7 +6,7 @@ import type { Npc } from "../npc";
 
 /**
  * 第4章（砂音）の世界。`docs/story/structure.md`「第4章（砂音）」・`docs/story/mystery.md`を反映。
- * 伏線 C-005（ガイドの潔白）の回収と C-008（合議会関係者の噂）を実装（roadmap 4-17）。
+ * 伏線 C-005（コハクの潔白）の回収と C-008（合議会関係者の噂）を実装（roadmap 4-17）。
  * ボス戦は4-18で追加（専用BGMは4-19まで、第3章のボス曲を仮に流用）。
  */
 export const CHAPTER4_MAPS: Record<string, TileMapData> = {
@@ -145,7 +145,7 @@ function guildMasterCommands(): EventCommand[] {
                 },
                 {
                   type: "message",
-                  text: "ガイドくん。君の名を聞いたとき、わしも一度は疑った。名前ひとつで、人は目の前の人が見えなくなる。",
+                  text: "コハクくん。君の名を聞いたとき、わしも一度は疑った。名前ひとつで、人は目の前の人が見えなくなる。",
                   speaker: "組合長",
                 },
                 {
@@ -163,7 +163,7 @@ function guildMasterCommands(): EventCommand[] {
                 },
                 {
                   type: "message",
-                  text: "帳面の字は、三年前にトキオが署名した書類と違う。トキオは、名前を使われただけだ。ガイドくんの家も無関係だ。",
+                  text: "帳面の字は、三年前にトキオが署名した書類と違う。トキオは、名前を使われただけだ。コハクくんの家も無関係だ。",
                   speaker: "組合長",
                 },
                 {
@@ -178,14 +178,14 @@ function guildMasterCommands(): EventCommand[] {
                 },
                 {
                   type: "message",
-                  text: "紫の帯の男が進み出て、ガイドに頭を下げた。「怖くて、誰かのせいにしたかった。悪かった」",
+                  text: "紫の帯の男が進み出て、コハクに頭を下げた。「怖くて、誰かのせいにしたかった。悪かった」",
                 },
                 {
                   type: "message",
                   text: "顔を上げてください。あたしも、従兄を疑ったんです。あなたの気持ちは、分かる気がします。",
-                  speaker: "ガイド",
+                  speaker: "コハク",
                 },
-                { type: "message", text: "……そうか。よかった。ずっと胸につかえていたの。", speaker: "ガイド" },
+                { type: "message", text: "……そうか。よかった。ずっと胸につかえていたの。", speaker: "コハク" },
                 { type: "message", text: "（疑いのあとに、詫びる人と、受け止める人がいる。それで、人はまた水を分け合えるんだね）", speaker: "ミナ" },
                 { type: "setFlag", flag: "chapter4_guide_cleared", value: true },
                 {
@@ -236,7 +236,7 @@ function guildMasterCommands(): EventCommand[] {
                 {
                   type: "message",
                   text: "あの使者、嘘は言ってなかった。でも、全部を話してもいないよ。手を見れば分かるの。",
-                  speaker: "ガイド",
+                  speaker: "コハク",
                 },
                 {
                   type: "message",
@@ -285,7 +285,7 @@ function guildMasterCommands(): EventCommand[] {
               text: "割れれば、水場も荷の預け合いも立ちゆかん。あんたたちは、どの隊にも肩入れしない。だから頼みたい。",
               speaker: "組合長",
             },
-            { type: "message", text: "天幕の大人たちの視線が、ちらりとガイドに集まった。ガイドは黙って、うなずいた。" },
+            { type: "message", text: "天幕の大人たちの視線が、ちらりとコハクに集まった。コハクは黙って、うなずいた。" },
             {
               type: "choice",
               text: "野営地の荷馬車列を調べますか？",
@@ -375,18 +375,18 @@ function wagonCommands(): EventCommand[] {
         {
           type: "message",
           text: "本物の組合の印は、縁に波の模様が入ってるの。これは、ただの丸。偽の印だよ。",
-          speaker: "ガイド",
+          speaker: "コハク",
         },
         {
           type: "message",
           text: "隊商の誰かを疑わせるために、わざとこう作ってある。疑い合いまで、荷の狙いの一部なんだ。",
           speaker: "ユーリ",
         },
-        { type: "message", text: "箱の下に、帳面もあるよ。最後の頁の署名は……「トキオ」。あたしの従兄の名前なの。", speaker: "ガイド" },
+        { type: "message", text: "箱の下に、帳面もあるよ。最後の頁の署名は……「トキオ」。あたしの従兄の名前なの。", speaker: "コハク" },
         {
           type: "message",
           text: "……でも、この字は兄さんのじゃない。兄さんの「キ」のはらいは、いつも右に流れるの。",
-          speaker: "ガイド",
+          speaker: "コハク",
         },
         {
           type: "message",

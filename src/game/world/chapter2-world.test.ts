@@ -97,7 +97,7 @@ describe("第2章のイベントデータの整合性", () => {
   });
 });
 
-describe("第2章・ガイドとのやり取り", () => {
+describe("第2章・コハクとのやり取り", () => {
   it("依頼を受ける前は、倉庫の調査を持ちかける", () => {
     const flags: Flags = {};
     const texts = runScripted(guideNpc().commands, flags, [0]);

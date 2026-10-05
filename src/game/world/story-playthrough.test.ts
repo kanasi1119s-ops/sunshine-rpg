@@ -121,7 +121,7 @@ describe("序章〜終章の自動通しプレイ", () => {
     }
   });
 
-  it("第4章: ガイドの潔白（C-005の回収）と、エドレアの使者による章の引きに進める", () => {
+  it("第4章: コハクの潔白（C-005の回収）と、エドレアの使者による章の引きに進める", () => {
     expect(flags["chapter4_guide_cleared"]).toBe(true);
     expect(flags["chapter4_rumor_heard"]).toBe(true);
     expect(flags["chapter4_sailcar_obtained"]).toBe(true);

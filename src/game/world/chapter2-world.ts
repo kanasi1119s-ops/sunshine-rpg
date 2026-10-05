@@ -52,7 +52,7 @@ export const CHAPTER2_NPCS: Record<string, Npc[]> = {
       tileX: GARASUKO_TOWN_LANDMARKS.guide.tileX,
       tileY: GARASUKO_TOWN_LANDMARKS.guide.tileY,
       color: "#5a9ac9",
-      spriteName: "ガイド",
+      spriteName: "コハク",
       commands: guideCommands(),
     },
   ],
@@ -105,7 +105,7 @@ function guideCommands(): EventCommand[] {
                 {
                   type: "message",
                   text: "次は東の鉄鏈鉱山だね。道と相場なら、あたしに任せてよ。",
-                  speaker: "ガイド",
+                  speaker: "コハク",
                 },
               ],
               else: [
@@ -117,7 +117,7 @@ function guideCommands(): EventCommand[] {
                 {
                   type: "message",
                   text: "え？ いや、あんな怪しい奴、知り合うわけないでしょ。……知らないよ、本当に。",
-                  speaker: "ガイド",
+                  speaker: "コハク",
                 },
                 {
                   type: "message",
@@ -132,7 +132,7 @@ function guideCommands(): EventCommand[] {
                 {
                   type: "message",
                   text: "……丸い字？ うちの帳場に、そんな字を書く人はいないよ。……いない、はず。",
-                  speaker: "ガイド",
+                  speaker: "コハク",
                 },
                 {
                   type: "message",
@@ -147,44 +147,44 @@ function guideCommands(): EventCommand[] {
             {
               type: "message",
               text: "倉庫のこと、聞いたよ。灰色の外套の男は、逃げ足が速いね。……悔しいなあ。",
-              speaker: "ガイド",
+              speaker: "コハク",
             },
             {
               type: "message",
               text: "でも、倉庫の灯り石は片付いた。ありがとう、助かったよ。箱の焼き印も、うちのとは別物だったでしょ。",
-              speaker: "ガイド",
+              speaker: "コハク",
             },
             {
               type: "message",
               text: "あたしも、家業のためにずっとこの件を追ってた。……正直、一人じゃここまで来られなかった。",
-              speaker: "ガイド",
+              speaker: "コハク",
             },
             {
               type: "message",
               text: "それにあの男は、灯芯都からの依頼だって言ったんでしょ。この件は、この湖の中だけじゃ終わらない気がする。",
-              speaker: "ガイド",
+              speaker: "コハク",
             },
             {
               type: "choice",
-              text: "ガイドの申し出にどう答える？",
+              text: "コハクの申し出にどう答える？",
               options: [
                 {
                   label: "一緒に来てほしい",
                   commands: [
                     {
                       type: "message",
-                      text: "あなたの目と足が、必要です。ぼくが、ガイドと一緒に来たいんです。",
+                      text: "あなたの目と足が、必要です。ぼくが、コハクと一緒に来たいんです。",
                       speaker: "ユーリ",
                     },
                     {
                       type: "message",
                       text: "……そういう言い方、ずるいな。じゃあ条件ね。タダで手伝えとは言わないでしょ？",
-                      speaker: "ガイド",
+                      speaker: "コハク",
                     },
                     {
                       type: "message",
                       text: "……なんてね、冗談。今回は貸しにしとく。次からは、ちゃんと取り立てるから。",
-                      speaker: "ガイド",
+                      speaker: "コハク",
                     },
                     { type: "setFlag", flag: "chapter2_guide_joined", value: true },
                   ],
@@ -195,7 +195,7 @@ function guideCommands(): EventCommand[] {
                     {
                       type: "message",
                       text: "……そうか。まあ、気が変わったらいつでも声をかけて。桟橋のあたりにいるから。",
-                      speaker: "ガイド",
+                      speaker: "コハク",
                     },
                   ],
                 },
@@ -214,34 +214,34 @@ function guideCommands(): EventCommand[] {
             {
               type: "message",
               text: "頼んだよ。桟橋の先の倉庫だから、気をつけてね。見張りは顔も隠してない。役人にも話が通ってるのかも。",
-              speaker: "ガイド",
+              speaker: "コハク",
             },
           ],
           else: [
             {
               type: "message",
               text: "よかった、相談所の人だよね。腕輪の紋章で、すぐにわかったよ。実は、頼みたいことがあるの。",
-              speaker: "ガイド",
+              speaker: "コハク",
             },
             {
               type: "message",
               text: "うちは三代続く、湖鳥商会。ここ半年、灯芯都へ出る石が、荷車三台分ずつ消えてるの。帳簿が合わないんだ。",
-              speaker: "ガイド",
+              speaker: "コハク",
             },
             {
               type: "message",
               text: "しかも荷には、うちの印つきの書付がついてる。誰かが、うちの名前を使ってるのよ。許せない。",
-              speaker: "ガイド",
+              speaker: "コハク",
             },
             {
               type: "message",
               text: "荷を追うと、いつも桟橋の先の倉庫に行きつくの。夜だけ人が出入りしてる。……街の人には、まだ内緒ね。",
-              speaker: "ガイド",
+              speaker: "コハク",
             },
             {
               type: "message",
               text: "うちの焼き印は、翼をたたんだ白い水鳥。翼の先が、内側に巻いてるのが目印だよ。",
-              speaker: "ガイド",
+              speaker: "コハク",
             },
             {
               type: "choice",
@@ -252,11 +252,11 @@ function guideCommands(): EventCommand[] {
                   commands: [
                     { type: "setFlag", flag: "chapter2_quest_accepted", value: true },
                     { type: "message", text: "わかった。倉庫を調べてくる。", speaker: "ユーリ" },
-                    { type: "message", text: "倉庫は、木箱の裏も、積み荷の底も、徹底的に調べて。商人の勘だけど、大事な物ほど目立たない所にあるの。", speaker: "ガイド" },
+                    { type: "message", text: "倉庫は、木箱の裏も、積み荷の底も、徹底的に調べて。商人の勘だけど、大事な物ほど目立たない所にあるの。", speaker: "コハク" },
                     {
                       type: "message",
                       text: "助かる。あたしは、帳簿をもう一度洗っておくね。……商人は、頼みごとの前に、正直に話すものなの。",
-                      speaker: "ガイド",
+                      speaker: "コハク",
                     },
                   ],
                 },
@@ -266,7 +266,7 @@ function guideCommands(): EventCommand[] {
                     {
                       type: "message",
                       text: "急がなくてもいいけど、荷は毎晩動いてるの。あんまり長引くと、湖の人たちが困るから。頼むよ。",
-                      speaker: "ガイド",
+                      speaker: "コハク",
                     },
                   ],
                 },

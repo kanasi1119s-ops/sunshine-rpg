@@ -19,7 +19,7 @@ export const PORTRAIT_ICON_URLS: Record<string, string> = {
   ユーリ: yuri,
   レト: reto,
   ミナ: mina,
-  ガイド: guide,
+  コハク: guide,
   オルカ: orca,
   アヤメ: ayame,
 };
@@ -29,7 +29,7 @@ export const PORTRAIT_ICON_SMALL_URLS: Record<string, string> = {
   ユーリ: yuriS,
   レト: retoS,
   ミナ: minaS,
-  ガイド: guideS,
+  コハク: guideS,
   オルカ: orcaS,
   アヤメ: ayameS,
 };

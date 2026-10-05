@@ -134,7 +134,7 @@ describe("第4章の報告と章の引き", () => {
     expect(flags.chapter4_guide_cleared).toBeUndefined();
   });
 
-  it("ボスを倒した後の報告で、ガイドの潔白（C-005回収）・帆走車入手・使者の登場まで進む", () => {
+  it("ボスを倒した後の報告で、コハクの潔白（C-005回収）・帆走車入手・使者の登場まで進む", () => {
     const flags: Flags = { chapter4_quest_accepted: true, chapter4_dorun_met: true, chapter4_yugami_defeated: true };
     const texts = runScripted(guild().commands, flags).join("");
     expect(flags.chapter4_guide_cleared).toBe(true);

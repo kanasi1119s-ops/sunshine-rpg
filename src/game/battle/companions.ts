@@ -59,10 +59,10 @@ export const MINA: CompanionDefinition = {
   }),
 };
 
-/** ガイド（硝子湖の交易商人の娘、風唱系）。第2章で仲間に加わる。すばしっこく、風のとくぎで援護する。 */
+/** コハク（硝子湖の交易商人の娘、風唱系）。第2章で仲間に加わる。すばしっこく、風のとくぎで援護する。 */
 export const GUIDE: CompanionDefinition = {
   id: "guide",
-  name: "ガイド",
+  name: "コハク",
   growth: { hpGrowth: 3, mpGrowth: 2, attackGrowth: 3, defenseGrowth: 1, speedGrowth: 3 },
   skill: { id: "shippu-no-ya", name: "疾風ノ矢", mpCost: 3, powerMultiplier: 1.6 },
   createInitialStats: () => ({

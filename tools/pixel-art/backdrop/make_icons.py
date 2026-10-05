@@ -7,7 +7,7 @@ SRC = Path("assets-src/characters/party-dot")
 DST = Path("src/assets/portraits")
 SIZE = 256
 SMALL = 112  # つよさ画面の一覧用（<romaji>-s.png）
-NAMES = {"ユーリ": "yuri", "レト": "reto", "ミナ": "mina", "ガイド": "guide", "オルカ": "orca", "アヤメ": "ayame"}
+NAMES = {"ユーリ": "yuri", "レト": "reto", "ミナ": "mina", "コハク": "guide", "オルカ": "orca", "アヤメ": "ayame"}
 DST.mkdir(parents=True, exist_ok=True)
 for jp, name in NAMES.items():
     im = Image.open(SRC / jp / "アイコン_512x512.png").convert("RGBA").resize((SIZE, SIZE), Image.LANCZOS)

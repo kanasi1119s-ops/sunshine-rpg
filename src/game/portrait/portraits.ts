@@ -217,7 +217,7 @@ export const PORTRAITS: Record<string, PortraitSpec> = {
     hairStyle: "long",
     accessory: "none",
   },
-  ガイド: {
+  コハク: {
     skin: "#e8b48a",
     hair: "#a87a34",
     eyes: "#3a8a3a",

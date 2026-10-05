@@ -3,14 +3,14 @@ import { battleAnimFor, fxForSkillName } from "./battle-anim";
 import type { BattleState, Combatant } from "./types";
 
 const c = (id: string, name: string, isEnemy = false): Combatant => ({ id, name, maxHp: 30, hp: 30, maxMp: 5, mp: 5, attack: 5, defense: 0, speed: 5, isEnemy, guarding: false });
-const state: BattleState = { party: [c("hero", "ユーリ Lv1"), c("guide", "ガイド Lv1"), c("mina", "ミナ Lv1"), c("orca", "オルカ Lv1")], enemies: [c("slime", "ゆらぎ玉", true)], log: [], fled: false };
+const state: BattleState = { party: [c("hero", "ユーリ Lv1"), c("guide", "コハク Lv1"), c("mina", "ミナ Lv1"), c("orca", "オルカ Lv1")], enemies: [c("slime", "ゆらぎ玉", true)], log: [], fled: false };
 const weapons: Record<string, "sword" | "bow" | "staff" | "axe"> = { hero: "sword", guide: "bow", mina: "staff", orca: "axe" };
 const w = (id: string) => weapons[id];
 
 describe("戦闘の動き", () => {
-  it("味方のたたかうは、武器ごとの動き（ガイドは矢をはなつ）", () => {
+  it("味方のたたかうは、武器ごとの動き（コハクは矢をはなつ）", () => {
     expect(battleAnimFor("ユーリ Lv1 の たたかう！ ゆらぎ玉 に 5 のダメージ", state, w)).toMatchObject({ actorId: "hero", motion: "slash", targetIds: ["slime"] });
-    expect(battleAnimFor("ガイド Lv1 の たたかう！ ゆらぎ玉 に 5 のダメージ", state, w)?.motion).toBe("shoot");
+    expect(battleAnimFor("コハク Lv1 の たたかう！ ゆらぎ玉 に 5 のダメージ", state, w)?.motion).toBe("shoot");
     expect(battleAnimFor("オルカ Lv1 の たたかう！ ゆらぎ玉 に 5 のダメージ", state, w)?.motion).toBe("chop");
   });
   it("魔法使い（ミナ）の技は、かざして唱え、水のエフェクト", () => {
@@ -24,7 +24,7 @@ describe("戦闘の動き", () => {
   });
   it("状態異常のエフェクト", () => {
     expect(battleAnimFor("ユーリ Lv1 は毒におかされた！", state, w)?.fx).toBe("poison");
-    expect(battleAnimFor("ガイド Lv1 は眠ってしまった", state, w)?.fx).toBe("sleep");
+    expect(battleAnimFor("コハク Lv1 は眠ってしまった", state, w)?.fx).toBe("sleep");
     expect(battleAnimFor("ミナ Lv1 は混乱した！", state, w)?.fx).toBe("confuse");
     expect(battleAnimFor("ユーリ Lv1 は毒のダメージを受けた（2）", state, w)?.fx).toBe("poison");
   });
@@ -55,7 +55,7 @@ describe("全体の魔法", () => {
 describe("ふつうの攻撃にエフェクトは出ない", () => {
   it("たたかうには、魔法のエフェクトを付けない", () => {
     expect(battleAnimFor("ユーリ Lv1 の たたかう！ ゆらぎ玉 に 5 のダメージ", state, w)?.fx).toBeNull();
-    expect(battleAnimFor("ガイド Lv1 の たたかう！ ゆらぎ玉 に 5 のダメージ", state, w)?.fx).toBeNull();
+    expect(battleAnimFor("コハク Lv1 の たたかう！ ゆらぎ玉 に 5 のダメージ", state, w)?.fx).toBeNull();
   });
 });
 

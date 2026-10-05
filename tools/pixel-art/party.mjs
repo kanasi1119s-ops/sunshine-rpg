@@ -22,6 +22,6 @@ export const PIECES = [
   piece("C1-ユーリ", "yuri4.txt", "pal-yuri4.json"),
   piece("C2-レト", "reto1.txt", "pal-reto1.json"),
   piece("C3-ミナ", "mina2.txt", "pal-mina2.json"),
-  piece("C4-ガイド", "guide2.txt", "pal-guide2.json"),
+  piece("C4-コハク", "guide2.txt", "pal-guide2.json"),
   piece("C5-オルカ", "orca2.txt", "pal-orca2.json"),
 ];

@@ -15,7 +15,7 @@ TEMPLATES = {
     "reto": ("レト", {"hair": "BCD", "skin": "EGHI", "accent": "JK", "top": "LMO", "bottom": "PQRSVW"}),
     "yuri": ("ユーリ", {"hair": "BCD", "skin": "GIJK", "accent": "EF", "top": "LMO", "bottom": "QRSTUW"}),
     "mina": ("ミナ", {"hair": "BCE", "skin": "GKLM", "accent": "DI", "top": "NOPQSTUVWX"}),
-    "guide": ("ガイド", {"hair": "BCDX", "skin": "HJKM", "accent": "ION", "top": "PQRSUWY"}),
+    "guide": ("コハク", {"hair": "BCDX", "skin": "HJKM", "accent": "ION", "top": "PQRSUWY"}),
 }
 
 # 目の色の記号（素体ごと）
@@ -290,7 +290,7 @@ out = {
     "man2": compose("reto", "yuri", 14),
     "mina": built["mina"],
     "guide": built["guide"],
-    # 女の人の増やした2種: ミナの頭にガイドの服、ガイドの頭にミナの服
+    # 女の人の増やした2種: ミナの頭にコハクの服、コハクの頭にミナの服
     "woman3": compose("mina", "guide", 14),
     "woman4": compose("guide", "mina", 14),
 }

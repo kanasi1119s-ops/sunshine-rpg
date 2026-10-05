@@ -86,7 +86,7 @@ describe("強化・弱体のジョブ特技と効果音", () => {
   });
   it("強化は「能力アップ」、弱体は「能力ダウン」、眠りは「眠り」の音", () => {
     expect(battleSeFor("ミナ の水紋の膜！ ユーリ のしゅびが上がった", ["ユーリ", "ミナ"])).toBe("buff");
-    expect(battleSeFor("ガイド の足止めの矢！ 歪み のすばやさが下がった", ["ユーリ"])).toBe("debuff");
-    expect(battleSeFor("ガイド の風唱の眠り唄！ 歪み は眠ってしまった", ["ユーリ"])).toBe("sleep");
+    expect(battleSeFor("コハク の足止めの矢！ 歪み のすばやさが下がった", ["ユーリ"])).toBe("debuff");
+    expect(battleSeFor("コハク の風唱の眠り唄！ 歪み は眠ってしまった", ["ユーリ"])).toBe("sleep");
   });
 });

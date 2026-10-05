@@ -64,7 +64,7 @@ describe("たて・兜・頭巾", () => {
       expect(ids).toContain(`hood-${t}`);
     }
   });
-  it("たては杖のミナ・弓のガイドは持てず、頭巾はみんな、兜はミナ以外がつけられる", () => {
+  it("たては杖のミナ・弓のコハクは持てず、頭巾はみんな、兜はミナ以外がつけられる", () => {
     const shield = ALL_ITEMS_BY_ID["shield-1"], helm = ALL_ITEMS_BY_ID["helm-1"], hood = ALL_ITEMS_BY_ID["hood-1"];
     expect(["hero", "reto", "orca", "ayame"].every((o) => canEquip(o, shield))).toBe(true);
     expect(canEquip("mina", shield)).toBe(false);

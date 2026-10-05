@@ -295,7 +295,7 @@ function machineCommands(): EventCommand[] {
           then: [{ type: "message", text: "灯り石を吸い込んで唸る装置。近づくと、肌がちりちりする。" }],
           else: [
             { type: "message", text: "坑道の奥に、見慣れない大きな装置があった。管が何本も、鉱脈の灯り石につながっている。" },
-            { type: "message", text: "荷車の石は、みんな選外石だ。力が乱れた、売り物にならないクズ石だよ。歪みの材料に、なるんじゃない？", speaker: "ガイド" },
+            { type: "message", text: "荷車の石は、みんな選外石だ。力が乱れた、売り物にならないクズ石だよ。歪みの材料に、なるんじゃない？", speaker: "コハク" },
             { type: "message", text: "灯り石が、泣いてるみたい……。力を吸い上げて、何かを作り出している。", speaker: "ミナ" },
             { type: "message", text: "これは、歪みを人の手で作る装置だ。灯里の草地の歪みも、きっと……。", speaker: "ユーリ" },
             { type: "message", text: "……この機械が歪みを作っているなら。四年前の、あの日も。", speaker: "ミナ" },

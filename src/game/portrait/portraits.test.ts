@@ -135,7 +135,7 @@ describe("buildShadedCells", () => {
 });
 
 describe("PORTRAITS", () => {
-  const NAMED_CAST = ["ユーリ", "レト", "ミナ", "ガイド", "オルカ", "アヤメ", "ドルン", "カセン", "エドレア"];
+  const NAMED_CAST = ["ユーリ", "レト", "ミナ", "コハク", "オルカ", "アヤメ", "ドルン", "カセン", "エドレア"];
 
   it("docs/story/characters.mdの主要キャラクター全員が登録されている", () => {
     for (const name of NAMED_CAST) {
