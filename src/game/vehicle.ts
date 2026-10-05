@@ -1,18 +1,19 @@
-import { WORLD_CHANNEL } from "./map/world/world-map.generated";
 import type { TileMapData } from "./map/types";
 
 /**
  * 乗り物（船・飛空艇）。世界地図の地形のID: 1=海 2=平原 3=森 4=山 5=砂漠 6=雪 7=道 8=丘 9=湖・川 10=雲 11=荒れ地 12=雪の森 13=渦の輪 14=渦の切れ目。
  *  - 徒歩: 海・山・湖・渦は通れない。
  *  - 船: 海を進む。陸は、海に接するマス（海岸）にだけ上がれる（上がったら自動で降りる）。山・湖・渦は通れない。
- *  - 飛空艇: 山・海・湖の上も飛べる。渦の輪（嵐）だけは通れない。決定ボタンで、歩ける地形に着陸できる。
+ *  - 飛空艇: 山・海・湖の上も飛べる。芯環塔のまわりの大滝（19）の上は、嵐で通れない。決定ボタンで、歩ける地形に着陸できる。
+ *  （渦の輪 13・14 は、2026-10-05 になくした。世界地図を作るときに海になる）
  */
 export type Vehicle = "foot" | "ship" | "air";
 
 export const OCEAN = 1;
 /** 徒歩で歩ける地形。 */
 export const WALKABLE_GROUND = new Set([2, 3, 5, 6, 7, 8, 10, 11, 12]);
-const STORM = new Set([13, 14]);
+/** 飛空艇も通れない地形: 渦の輪（いまは地図にない）と、芯環塔のまわりの大滝（嵐）。 */
+const STORM = new Set([13, 14, 19]);
 
 export const VEHICLE_SPEED: Record<Vehicle, number> = { foot: 1, ship: 1.6, air: 2.2 };
 
@@ -47,31 +48,6 @@ export function buildVehicleCollision(data: TileMapData, kind: "ship" | "air"): 
   return out;
 }
 
-/** 航路が開いたとき、渦の輪の切れ目（14）を海（1）にする。変えたら true。 */
-export function openVortexChannel(data: TileMapData): boolean {
-  let changed = false;
-  for (const [x, y] of WORLD_CHANNEL) {
-    const i = y * data.width + x;
-    if (data.layers[0].data[i] !== OCEAN) {
-      data.layers[0].data[i] = OCEAN;
-      changed = true;
-    }
-  }
-  return changed;
-}
-
-/** 「はじめから」などで航路が閉じた状態に戻るとき、切れ目（海）を渦の輪（14）に戻す。変えたら true。 */
-export function closeVortexChannel(data: TileMapData): boolean {
-  let changed = false;
-  for (const [x, y] of WORLD_CHANNEL) {
-    const i = y * data.width + x;
-    if (data.layers[0].data[i] !== 14) {
-      data.layers[0].data[i] = 14;
-      changed = true;
-    }
-  }
-  return changed;
-}
 
 /** 着陸できる地形か。 */
 export function canLandOn(groundId: number): boolean {

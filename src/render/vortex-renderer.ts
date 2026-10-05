@@ -1,5 +1,4 @@
 import type { TileMap } from "../game/map/tile-map";
-import { getTileId } from "../game/map/tile-map";
 import { WORLD_TOWER } from "../game/map/world/world-map.generated";
 
 /** 大滝のドット絵（assets-src/pixel-practice/r29-falls/falls.py で描き、エディタで確かめたもの。横に4コマ）。 */
@@ -23,47 +22,6 @@ if (typeof window !== "undefined") {
   fallsImage("bolt");
 }
 import type { Camera } from "./camera";
-
-/** 世界地図の「渦の輪」（嵐）。芯環塔のまわりを、うずまく流れ（2本の渦のうで）が囲む。航路が開くまで通れない。時刻で回る。 */
-const FOAM = "#e8f4ff";
-const LIGHT = "#6aa8e0";
-const MID = "#2a5ea8";
-const DEEP = "#143a78";
-
-export function renderVortex(ctx: CanvasRenderingContext2D, map: TileMap, camera: Camera, nowMs: number): void {
-  if (map.data.width < WORLD_TOWER.x + 12) {
-    return;
-  }
-  const s = map.data.tileWidth;
-  const startX = Math.max(0, Math.floor(camera.x / s));
-  const startY = Math.max(0, Math.floor(camera.y / s));
-  const endX = Math.min(map.data.width - 1, Math.floor((camera.x + camera.viewportWidth) / s));
-  const endY = Math.min(map.data.height - 1, Math.floor((camera.y + camera.viewportHeight) / s));
-  const cx = (WORLD_TOWER.x + 0.5) * s;
-  const cy = (WORLD_TOWER.y + 0.5) * s;
-  const t = nowMs / 1000;
-  for (let ty = startY; ty <= endY; ty++) {
-    for (let tx = startX; tx <= endX; tx++) {
-      const id = getTileId(map, 0, tx, ty);
-      if (id !== 13 && id !== 14) {
-        continue;
-      }
-      const ox = tx * s - camera.x;
-      const oy = ty * s - camera.y;
-      for (let by = 0; by < s; by += 4) {
-        for (let bx = 0; bx < s; bx += 4) {
-          const px = tx * s + bx + 2 - cx;
-          const py = ty * s + by + 2 - cy;
-          const r = Math.hypot(px, py) / s;
-          const a = Math.atan2(py, px);
-          const v = Math.sin(r * 1.5 - a * 2 - t * 2.4) + Math.sin(r * 0.9 + a * 3 - t * 1.3) * 0.35;
-          ctx.fillStyle = v > 1.0 ? FOAM : v > 0.35 ? LIGHT : v > -0.5 ? MID : DEEP;
-          ctx.fillRect(ox + bx, oy + by, 4, 4);
-        }
-      }
-    }
-  }
-}
 
 function hash2(x: number, y: number, k: number): number {
   let h = (x * 374761393 + y * 668265263 + k * 2147483647) >>> 0;

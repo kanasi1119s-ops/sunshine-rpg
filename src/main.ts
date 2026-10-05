@@ -42,10 +42,10 @@ import { renderNpcs, visibleNpcFeetY } from "./render/npc-renderer";
 import { faceNpc, opposite, updateWander } from "./game/npc-wander";
 import { PartyTrail } from "./game/party-trail";
 import { worldEntryProblems } from "./game/world/world-map-world";
-import { buildVehicleCollision, canLandOn, groundIdAt, OCEAN, closeVortexChannel, openVortexChannel, VEHICLE_SPEED, type Vehicle } from "./game/vehicle";
+import { buildVehicleCollision, canLandOn, groundIdAt, OCEAN, VEHICLE_SPEED, type Vehicle } from "./game/vehicle";
 import { WORLD_AIRSHIP_START, WORLD_SHIP_START } from "./game/map/world/world-map.generated";
 import { drawAirship, drawShip } from "./render/vehicle-renderer";
-import { renderBasin, renderStorm, renderVortex } from "./render/vortex-renderer";
+import { renderBasin, renderStorm } from "./render/vortex-renderer";
 import { setLitBeacons } from "./render/object-markers";
 import { renderWorldOverview } from "./render/world-overview";
 import { renderAreaMap } from "./render/area-map";
@@ -227,7 +227,6 @@ let airshipPos = { x: WORLD_AIRSHIP_START.x, y: WORLD_AIRSHIP_START.y };
 let lastOceanTile = { x: WORLD_SHIP_START.x, y: WORLD_SHIP_START.y };
 let prevWorldTile = { x: -1, y: -1 };
 let vehicleMaps: { ship: ReturnType<typeof createTileMap>; air: ReturnType<typeof createTileMap> } | null = null;
-let channelOpened = false;
 let parkedShipIndex = -1;
 let vehicleHint: { text: string; ms: number } | null = null;
 
@@ -260,26 +259,9 @@ function getVehicleMaps() {
   return vehicleMaps;
 }
 
-/** 渦の輪の切れ目を、航路が開いたら海にするか（塔に近寄れなくしたので、しない）。 */
-const TOWER_GAP_OPENS = false;
-
-/** 世界地図の状態をフラグにそろえる: 航路が開いたら渦の切れ目を海にし、停泊中の船のマスは、歩いて乗れるよう通れるようにする。 */
+/** 世界地図の状態をそろえる: 停泊中の船のマスは、歩いて乗れるよう通れるようにする。 */
 function syncWorldState(): void {
   const data = worldMapData();
-  // 芯環塔は近寄れない（2026-10-05、人間の指示「塔に入口はいらない。近寄れなく」）。渦の輪の切れ目は、航路が開いても海にしない。
-  // 塔へは、深部の転移陣から転移して入る。
-  if (TOWER_GAP_OPENS && flags["vortex_route_open"] && !channelOpened) {
-    channelOpened = true;
-    if (openVortexChannel(data)) {
-      vehicleMaps = null;
-    }
-  } else if (!flags["vortex_route_open"] && channelOpened) {
-    // 「はじめから」やロードで、航路が開く前の状態に戻った
-    channelOpened = false;
-    if (closeVortexChannel(data)) {
-      vehicleMaps = null;
-    }
-  }
   const want = flags["has_ship"] && vehicle !== "ship" ? shipPos.y * data.width + shipPos.x : -1;
   if (want !== parkedShipIndex) {
     if (parkedShipIndex >= 0 && data.collision) {
@@ -2243,7 +2225,6 @@ function renderGameSceneBase(): void {
   const riding = onWorldMap && vehicle !== "foot";
   const nowMs = performance.now();
   if (onWorldMap) {
-    for (const cam of seams) renderVortex(ctx, map, cam, nowMs);
     // 停泊中の船・着陸中の飛空艇
     const ts = map.data.tileWidth;
     if (flags["has_ship"] && vehicle !== "ship") {

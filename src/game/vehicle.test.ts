@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { WORLD_MAPS } from "./world/world";
 import { WORLD_CHANNEL, WORLD_SHIP_DOCK, WORLD_SHIP_START, WORLD_TOWER, WORLD_AIRSHIP_START, WORLD_ISLETS } from "./map/world/world-map.generated";
-import { buildVehicleCollision, canLandOn, closeVortexChannel, groundIdAt, openVortexChannel } from "./vehicle";
+import { buildVehicleCollision, canLandOn, groundIdAt } from "./vehicle";
 import { isBasinCauseway } from "./map/world/world-map";
 
 const world = WORLD_MAPS["world-map"];
@@ -23,13 +23,12 @@ function reach(collision: number[], from: { x: number; y: number }): Set<number>
 }
 
 describe("乗り物（船・飛空艇）", () => {
-  it("船は、海を進み、海に接する陸には上がれる。山・湖・渦の輪は通れない", () => {
+  it("船は、海を進み、海に接する陸には上がれる。塔を囲んでいた渦の輪はなくなり、海になった", () => {
     const c = buildVehicleCollision(world, "ship");
     expect(c[WORLD_SHIP_START.y * W + WORLD_SHIP_START.x]).toBe(0);
     expect(c[WORLD_SHIP_DOCK.y * W + WORLD_SHIP_DOCK.x]).toBe(0);
-    for (const [x, y] of WORLD_CHANNEL) {
-      expect(c[y * W + x], `渦の切れ目 (${x},${y}) は航路が開く前は通れない`).toBe(1);
-    }
+    expect(world.layers[0].data.some((id) => id === 13 || id === 14)).toBe(false);
+    for (const [x, y] of WORLD_CHANNEL) expect(world.layers[0].data[y * W + x]).toBe(1);
   });
 
   it("船で、4つの大陸すべてと、4つの小島の海岸へ行ける（航路が開く前でも）", () => {
@@ -48,21 +47,21 @@ describe("乗り物（船・飛空艇）", () => {
     }
   });
 
-  it("芯環塔には近寄れない: 船でも塔のまわり（大滝・陥没）へは行けない。渦の切れ目を開く・閉じる処理は、もとに戻せる", () => {
+  it("芯環塔には近寄れない: 船でも飛空艇でも、塔のまわり（大滝・陥没）へは行けない", () => {
     const ship = reach(buildVehicleCollision(world, "ship"), WORLD_SHIP_START);
-    for (let dy = -9; dy <= 9; dy++) for (let dx = -9; dx <= 9; dx++) expect(ship.has((WORLD_TOWER.y + dy) * W + WORLD_TOWER.x + dx)).toBe(false);
+    // 大滝のふち（半径8.4マス）の内がわへは入れない。その外は海（船で滝のそばまでは行ける）
+    for (let dy = -9; dy <= 9; dy++) for (let dx = -9; dx <= 9; dx++) if (Math.hypot(dx, dy) <= 8.4) expect(ship.has((WORLD_TOWER.y + dy) * W + WORLD_TOWER.x + dx)).toBe(false);
+    expect(ship.has((WORLD_TOWER.y + 10) * W + WORLD_TOWER.x)).toBe(true);
     for (let dy = -6; dy <= 6; dy++) for (let dx = -6; dx <= 6; dx++) expect(world.collision![(WORLD_TOWER.y + dy) * W + WORLD_TOWER.x + dx]).toBe(1);
     expect(isBasinCauseway(WORLD_TOWER.x, WORLD_TOWER.y + 2)).toBe(false);
-    const copy = { ...world, layers: [{ ...world.layers[0], data: [...world.layers[0].data] }] };
-    expect(openVortexChannel(copy)).toBe(true);
-    expect(closeVortexChannel(copy)).toBe(true);
-    expect(copy.layers[0].data).toEqual(world.layers[0].data);
+    const air = reach(buildVehicleCollision(world, "air"), WORLD_AIRSHIP_START);
+    for (let dy = -6; dy <= 6; dy++) for (let dx = -6; dx <= 6; dx++) if (Math.hypot(dx, dy) <= 6.6) expect(air.has((WORLD_TOWER.y + dy) * W + WORLD_TOWER.x + dx)).toBe(false);
   });
 
-  it("飛空艇は、山や海の上も飛べるが、渦の輪の嵐は越えられない。着陸は歩ける地形だけ", () => {
+  it("飛空艇は、山や海の上も飛べるが、塔のまわりの大滝（嵐）は越えられない。着陸は歩ける地形だけ", () => {
     const c = buildVehicleCollision(world, "air");
     expect(c[(WORLD_AIRSHIP_START.y) * W + WORLD_AIRSHIP_START.x]).toBe(0);
-    for (const [x, y] of WORLD_CHANNEL) expect(c[y * W + x]).toBe(1);
+    expect(c[(WORLD_TOWER.y + 7) * W + WORLD_TOWER.x]).toBe(1);
     expect(canLandOn(2)).toBe(true);
     expect(canLandOn(1)).toBe(false);
     expect(canLandOn(4)).toBe(false);
