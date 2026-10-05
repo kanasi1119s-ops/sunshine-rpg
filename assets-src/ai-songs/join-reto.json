@@ -1,0 +1,65 @@
+{
+  "title": "レトの調べ（仮）",
+  "description": "（仮）レトが仲間に加わるときのジングル。落ち着いた短調に、少しだけ前に進む足どりのリズム。約18秒。",
+  "bpm": 104,
+  "beats": 4,
+  "chords": "Am F G Am",
+  "barsPerChord": 2,
+  "repeats": 1,
+  "autoAccompaniment": false,
+  "synth": false,
+  "dynamics": false,
+  "parts": [
+    {
+      "instrument": "keys",
+      "role": "メロディ",
+      "volume": 0.26,
+      "pan": 0.1,
+      "amp": "auto",
+      "sustain": 1.2,
+      "notes": "A4:1 C5:0.5 E5:0.5 A5:2 G5:1 E5:1 C5:2  F5:1 C5:0.5 A4:0.5 F4:2 A4:1 C5:1 F5:2  G4:1 B4:0.5 D5:0.5 G5:2 D5:1 B4:1 G4:2  A4:1 C5:1 E5:1 A5:1 A5:4"
+    },
+    {
+      "instrument": "bass",
+      "role": "ベース",
+      "volume": 0.22,
+      "pan": 0,
+      "amp": "auto",
+      "notes": "A2:2 E2:1 A2:1 A2:2 E3:1 A2:1  F2:2 C3:1 F2:1 F2:2 C3:1 F2:1  G2:2 D3:1 G2:1 G2:2 D3:1 G2:1  A2:2 E2:1 A2:1 A2:4"
+    },
+    {
+      "instrument": "strings",
+      "role": "弦",
+      "volume": 0.14,
+      "pan": -0.7,
+      "amp": "auto",
+      "sustain": 2,
+      "notes": "A3:8 F3:8 G3:8 A3:8"
+    },
+    {
+      "instrument": "pad",
+      "role": "パッド",
+      "volume": 0.1,
+      "pan": 0.7,
+      "amp": "auto",
+      "sustain": 2,
+      "notes": "E4:8 C4:8 D4:8 C4:8"
+    },
+    {
+      "instrument": "kick",
+      "role": "キック",
+      "volume": 0.2,
+      "pan": 0,
+      "amp": "auto",
+      "notes": "x:1 R:1 x:1 R:1"
+    },
+    {
+      "instrument": "hihat",
+      "role": "ハイハット",
+      "volume": 0.12,
+      "pan": 0.2,
+      "amp": "auto",
+      "notes": "o:0.5 x:0.5 o:0.5 x:0.5 o:0.5 x:0.5 o:0.5 x:0.5"
+    }
+  ]
+}

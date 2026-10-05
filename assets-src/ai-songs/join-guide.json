@@ -1,0 +1,56 @@
+{
+  "title": "ガイドの調べ（仮）",
+  "description": "（仮）ガイドが仲間に加わるときのジングル。弓と旅を思わせる、軽快なフィドルとバンジョー。約16秒。",
+  "bpm": 120,
+  "beats": 4,
+  "chords": "D G A D",
+  "barsPerChord": 2,
+  "repeats": 1,
+  "autoAccompaniment": false,
+  "synth": false,
+  "dynamics": false,
+  "parts": [
+    {
+      "instrument": "fiddle",
+      "role": "メロディ",
+      "volume": 0.24,
+      "pan": 0.1,
+      "amp": "auto",
+      "sustain": 0.9,
+      "notes": "F#5:0.5 A5:0.5 D6:1 B5:0.5 A5:0.5 F#5:1 D5:1 F#5:1  G5:0.5 B5:0.5 D6:1 C#6:0.5 B5:0.5 G5:1 B5:1 D6:1  C#6:0.5 E6:0.5 A5:1 C#6:0.5 E6:0.5 A5:1 E5:1 C#6:1  D6:1 F#5:1 A5:1 D6:1 D6:4"
+    },
+    {
+      "instrument": "banjo",
+      "role": "バンジョー",
+      "volume": 0.2,
+      "pan": -0.6,
+      "amp": "auto",
+      "sustain": 0.5,
+      "notes": "D4:0.5 F#4:0.5 A4:0.5 F#4:0.5 D4:0.5 F#4:0.5 A4:0.5 F#4:0.5 D4:0.5 F#4:0.5 A4:0.5 F#4:0.5 D4:0.5 F#4:0.5 A4:0.5 F#4:0.5 G3:0.5 B3:0.5 D4:0.5 B3:0.5 G3:0.5 B3:0.5 D4:0.5 B3:0.5 G3:0.5 B3:0.5 D4:0.5 B3:0.5 G3:0.5 B3:0.5 D4:0.5 B3:0.5 A3:0.5 C#4:0.5 E4:0.5 C#4:0.5 A3:0.5 C#4:0.5 E4:0.5 C#4:0.5 A3:0.5 C#4:0.5 E4:0.5 C#4:0.5 A3:0.5 C#4:0.5 E4:0.5 C#4:0.5 D4:0.5 F#4:0.5 A4:0.5 F#4:0.5 D4:0.5 F#4:0.5 A4:0.5 F#4:0.5 D4:0.5 F#4:0.5 A4:0.5 F#4:0.5 D4:2"
+    },
+    {
+      "instrument": "bass",
+      "role": "ベース",
+      "volume": 0.2,
+      "pan": 0,
+      "amp": "auto",
+      "notes": "D2:1 A2:1 D2:1 A2:1  D2:1 A2:1 D2:1 A2:1  G2:1 D3:1 G2:1 D3:1  G2:1 D3:1 G2:1 D3:1  A2:1 E3:1 A2:1 E3:1  A2:1 E3:1 A2:1 E3:1  D2:1 A2:1 D2:1 A2:1  D2:4"
+    },
+    {
+      "instrument": "kick",
+      "role": "キック",
+      "volume": 0.2,
+      "pan": 0,
+      "amp": "auto",
+      "notes": "x:1 R:1 x:1 R:1"
+    },
+    {
+      "instrument": "snare",
+      "role": "スネア",
+      "volume": 0.12,
+      "pan": 0.2,
+      "amp": "auto",
+      "notes": "R:1 x:1 R:1 x:1"
+    }
+  ]
+}

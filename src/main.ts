@@ -734,7 +734,10 @@ if (import.meta.env.DEV) {
         flags[flag] = true;
       }
       syncCompanionsFromFlags();
+      joinQueue.length = 0;
     },
+    /** 開発用: 仲間が加わったときの知らせを出す（確認用）。 */
+    showJoinNotice: (companionId: string) => startJoinNotice(companionId),
     /** 開発用: 話者の顔グラフィックを会話欄で見る（絵の確認用）。 */
     startTestDialogue: (speaker: string) => dialogue.start([{ type: "message", speaker, text: "顔グラフィックの確認です。" }]),
     /** 開発用: 指定した地図のランダムエンカウントの敵と戦う（敵の絵の確認用）。 */
@@ -1242,6 +1245,29 @@ function withoutJoinedCompanions(list: typeof npcs): typeof npcs {
   );
 }
 
+/** 仲間が加わったときの知らせ（「○○が仲間に加わった！」と、その人の専用の曲）。会話が終わってから出す。 */
+const joinQueue: string[] = [];
+let joinNotice: { name: string; startedAt: number } | null = null;
+let joinBgmUntil = 0;
+/** 専用の曲の長さ（ミリ秒。曲が終わったら、場所の曲にもどす）。 */
+const JOIN_JINGLE_MS: Record<string, number> = { reto: 20000, mina: 22000, guide: 18000, orca: 24000, ayame: 26000 };
+const JOIN_NOTICE_MS = 5500;
+
+function startJoinNotice(companionId: string): void {
+  joinNotice = { name: COMPANIONS[companionId].name, startedAt: performance.now() };
+  const id = `join-${companionId}`;
+  if (audioStarted && JOIN_JINGLE_MS[companionId]) {
+    try {
+      const track = { ...getTrack(id), loop: false };
+      currentBgmTrack = track;
+      audio.playBgm(track);
+      joinBgmUntil = performance.now() + JOIN_JINGLE_MS[companionId];
+    } catch {
+      // 曲が読めなくても、知らせは出す
+    }
+  }
+}
+
 function syncCompanionsFromFlags(): void {
   applyImpliedFlags();
   for (const { flag, companionId } of COMPANION_JOIN_FLAGS) {
@@ -1252,6 +1278,7 @@ function syncCompanionsFromFlags(): void {
         COMPANIONS[companionId].growth,
         Math.max(1, heroStats.level - 1),
       );
+      joinQueue.push(companionId);
     }
   }
 }
@@ -2076,11 +2103,38 @@ function renderGameScene(): void {
   if (controlsMenu.open) {
     renderControlsMenu(ctx, controlsMenu, keyBindings, moveSpeed, difficulty, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   }
+  if (joinNotice) {
+    const t = performance.now() - joinNotice.startedAt;
+    const fade = Math.min(1, t / 250, (JOIN_NOTICE_MS - t) / 400);
+    const w = 220, h = 34, x = Math.round((LOGICAL_WIDTH - w) / 2), y = 28;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, fade);
+    drawWindow(ctx, x, y, w, h);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.font = "10px monospace";
+    ctx.fillStyle = "#f2c14e";
+    ctx.fillText("♪ 新しい仲間", LOGICAL_WIDTH / 2, y + 6);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "12px monospace";
+    ctx.fillText(`${joinNotice.name} が仲間に加わった！`, LOGICAL_WIDTH / 2, y + 18);
+    ctx.restore();
+  }
 }
 
 const loop = createGameLoop({
   update(dtMs) {
     syncCompanionsFromFlags();
+    if (joinQueue.length > 0 && !dialogue.isActive() && !battle && !title.open && !bootOpening.open && !opening.open) {
+      startJoinNotice(joinQueue.shift()!);
+    }
+    if (joinNotice && performance.now() - joinNotice.startedAt > JOIN_NOTICE_MS) joinNotice = null;
+    if (joinBgmUntil > 0 && performance.now() > joinBgmUntil) {
+      // 専用の曲が終わったら、いまの場所の曲にもどす
+      joinBgmUntil = 0;
+      currentBgmTrack = null;
+      playMapBgm(currentMapId);
+    }
     // 外を歩いている間だけ、時間が進む（メニュー・会話・戦闘・タイトルのあいだは止まる）
     if (!title.open && !battle && !bootOpening.open && !opening.open && !staffRoll.open && !pauseMenu.open && !shopMenu.open && !jobMenu.open && !fieldUse.open && !slotMenu.open && !dialogue.isActive() && isOutdoorMap(currentMapId)) {
       clockMs += dtMs;
