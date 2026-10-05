@@ -41,13 +41,13 @@ describe("世界地図の入場条件（章は順番に進む）", () => {
     }
   });
 
-  it("世界地図の出入り口は、町10か所（虚灯宮を含む）・村8つ・章のダンジョン9つ・小島6つ（海底・火山を含む）・芯環塔1つ・船大工の小屋と技師の祠", () => {
+  it("世界地図の出入り口は、町10か所（虚灯宮を含む）・村8つ・章のダンジョン9つ・小島6つ（海底・火山を含む）・船大工の小屋と技師の祠（芯環塔には入口がない）", () => {
     const targets = (WORLD_MAPS["world-map"].exits ?? []).map((e) => e.targetMapId);
-    expect(targets.length).toBe(36);
+    expect(targets.length).toBe(35);
     expect(targets).toContain("shipwright-hut");
     expect(targets).toContain("keeper-shrine-sky");
     for (const { dungeon } of Object.values(DUNGEON_FROM_TOWN)) expect(targets).toContain(dungeon);
-    expect(targets).toContain("tower-1");
+    expect(targets).not.toContain("tower-1");
     expect(targets.filter((t) => t.startsWith("islet-")).length).toBe(6);
   });
 

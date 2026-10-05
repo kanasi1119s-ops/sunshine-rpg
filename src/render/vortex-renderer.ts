@@ -132,10 +132,37 @@ export function renderBasin(ctx: CanvasRenderingContext2D, map: TileMap, camera:
       if (getTileId(map, 0, tx, ty) !== FALLS) continue;
       const below = getTileId(map, 0, tx, ty + 1) === 16;
       const diag = getTileId(map, 0, tx - 1, ty + 1) === 16 || getTileId(map, 0, tx + 1, ty + 1) === 16;
-      if (!below && !diag) continue;
       const ox = tx * s - camera.x;
+      if (!below && !diag) {
+        // 手前（南）のふち: 水は向こう（穴のほう＝画面の上）へ流れ、ふちを越えて落ちる。ふちに白い泡、その先に水しぶき
+        const above = getTileId(map, 0, tx, ty - 1) === 16 || getTileId(map, 0, tx - 1, ty - 1) === 16 || getTileId(map, 0, tx + 1, ty - 1) === 16;
+        if (!above || ty <= WORLD_TOWER.y) continue;
+        const lip = ty * s - camera.y;
+        for (let col = 0; col < s; col += 2) {
+          const ph = (t * 1.8 + hash2(tx, col, 61)) % 1;
+          ctx.globalAlpha = 0.9;
+          ctx.fillStyle = (col + tx) % 3 === 0 ? "#ffffff" : "#cfe8fb";
+          ctx.fillRect(ox + col, Math.round(lip + s - 2 - ph * (s - 2)), 1, 3);
+        }
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(ox, lip, s, 1);
+        ctx.fillStyle = "#e4f2ff";
+        ctx.fillRect(ox, lip - 1, s, 1);
+        for (let k = 0; k < 3; k++) {
+          const ph = (t * 0.8 + hash2(tx, ty, k + 70)) % 1;
+          ctx.globalAlpha = 0.4 * (1 - ph);
+          ctx.fillStyle = "#eef6ff";
+          ctx.beginPath();
+          ctx.arc(ox + 3 + hash2(tx, ty, k + 71) * (s - 6), lip - 3 - ph * 10, 2 + ph * 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        continue;
+      }
       const top = (ty + 1) * s - camera.y - 3;
-      const len = (below ? 44 : 26) + Math.round(hash2(tx, ty, 21) * 12);
+      // 奥（北）と横のふち: 崖を、穴の底（塔の足もとの高さ）まで、水が流れ落ちる
+      const floorY = (WORLD_TOWER.y + 1.5) * s - camera.y;
+      const len = Math.max(below ? 40 : 22, Math.round(floorY - top)) + Math.round(hash2(tx, ty, 21) * 8);
       for (let col = 0; col < s; col++) {
         const shade = (col + tx * 3) % 5;
         const base = shade === 0 ? "#ffffff" : shade === 1 || shade === 3 ? "#cfe8fb" : shade === 2 ? "#8cc2ec" : "#5e9ad4";

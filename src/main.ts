@@ -260,10 +260,15 @@ function getVehicleMaps() {
   return vehicleMaps;
 }
 
+/** 渦の輪の切れ目を、航路が開いたら海にするか（塔に近寄れなくしたので、しない）。 */
+const TOWER_GAP_OPENS = false;
+
 /** 世界地図の状態をフラグにそろえる: 航路が開いたら渦の切れ目を海にし、停泊中の船のマスは、歩いて乗れるよう通れるようにする。 */
 function syncWorldState(): void {
   const data = worldMapData();
-  if (flags["vortex_route_open"] && !channelOpened) {
+  // 芯環塔は近寄れない（2026-10-05、人間の指示「塔に入口はいらない。近寄れなく」）。渦の輪の切れ目は、航路が開いても海にしない。
+  // 塔へは、深部の転移陣から転移して入る。
+  if (TOWER_GAP_OPENS && flags["vortex_route_open"] && !channelOpened) {
     channelOpened = true;
     if (openVortexChannel(data)) {
       vehicleMaps = null;

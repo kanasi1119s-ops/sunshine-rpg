@@ -32,7 +32,8 @@ S4.GROUND["cloud"] = dict(tex="cloud", sh=["#a2bcdc", "#b6cce6"], tuft=["#ffffff
 S4.GROUND["waste"] = dict(tex="waste", sh=["#382c40", "#4c4056"], tuft=["#6a5c74", "#5c4e66", "#4c4056"])
 S4.GROUND["hills"] = dict(tex="hills", sh=GSHADE, tuft=[GRASS[4], GRASS[3], GRASS[1]])
 PURE_KINDS = ("grass", "snow", "sand", "cloud", "waste", "hills")
-CLOUD = ["#a2bcdc", "#b6cce6", "#cfe0f2", "#d6e4f4", "#eef4fc", "#ffffff"]
+CLOUD = ["#a2bcdc", "#b6cce6", "#cfe0f2", "#d6e4f4", "#eef4fc", "#ffffff"]   # 雲の地形の色（すそ用）
+MIST = ["#9eb4cc", "#b8c8dc", "#cad8e8", "#dce6f2", "#ecf2f9", "#f8fbfe"]    # 霧・雲のかたまり用（地形と同じ色だと「見えない地面」としてけずられるので、少しだけずらした色）
 SMOKE = ["#8a8a96", "#a8a8b4", "#c8c8d2", "#e2e2e8"]
 FIRE = ["#c2401c", "#ff8a2c", LIGHT]
 LAKE = ["#2660b0", "#3070c4", "#7ab0ea", "#a8d0f4"]
@@ -61,7 +62,7 @@ class Canvas(S4.Canvas):
 
     def reduce(self, limit=16):
         pure = pure_colors()
-        prot = {LIGHT, GOLD, *GLOW, *FIRE, CLOUD[3], CLOUD[5]}
+        prot = {LIGHT, GOLD, *GLOW, *FIRE, MIST[3], MIST[5]}
 
         def lab(h):
             r, g, b = [int(h[i:i + 2], 16) for i in (1, 3, 5)]
@@ -110,13 +111,14 @@ def puff(c, cx, cy, r, pal=SMOKE):
                 c.put(x, y, pal[3] if s < -0.3 else pal[2] if s < 0.45 else pal[1], pal)
 
 
-def mist(c, x0, x1, y, pal=CLOUD):
-    """霧の帯: 2行の、はしが丸い横長のかたまり。上の行は明るく、下の行は1段暗い"""
-    for x in range(x0, x1 + 1):
-        edge = x in (x0, x1)
-        if not edge:
-            c.put(x, y, pal[4] if (x // 5) % 2 else pal[5])
-        c.put(x, y + 1, pal[3] if not edge else pal[2])
+def mist(c, x0, x1, y, pal=MIST):
+    """霧の帯: 横にならぶ低い丸いかたまり（線にすると柵に見えたので、かたまりにした）"""
+    x = x0 + 2
+    k = 0
+    while x <= x1 - 1:
+        puff(c, x, y + (k % 2) * 0.6, 2.4 if k % 2 else 2.0, pal[1:])
+        x += 3.2
+        k += 1
 
 
 def water(c, cx, cy, rx, ry, tex="lake", rim=None):
@@ -300,18 +302,18 @@ def icon_village():
     return c.save("icon-village")
 
 
-# ===================================================================== 3) 霧間の集落（山あいの、霧にうかぶ小さな集落）
+# ===================================================================== 3) 霧間の集落（雪の山あいの、霧にうかぶ小さな集落）
 def icon_village_mist():
     c = Canvas()
-    bio = "grass"
+    bio = "snow"                                                   # 霧間の集落は、まわりが雪原と山（地図の上で確かめた）
     skirt(c, 24, 30, 21, 15, bio, seed=121)
     rock_slope(c, {6: 20, 14: 10, 22: 15, 30: 7, 38: 13, 44: 20}, 22, seed=7, n=22)    # 奥の小さな岩山
     GP = ["#0c2a10", "#1c5a22", "#28742a", "#3a9034", "#62b04a"]
     for (x, yb, h) in ((5, 31, 10), (42, 31, 11), (3, 42, 8), (44, 42, 8)):
-        pine(c, x, yb, h, pal=GP)                                  # 山の針葉樹（森の色）
+        pine(c, x, yb, h)                                          # 雪の森と同じ針葉樹
     for (x0, yb, w) in ((9, 29, 11), (26, 27, 12), (17, 41, 11)):
         contact_shadow(c, x0 + 1, x0 + w, yb + 1, bio, depth=2, right=2)
-        house(c, x0, yb, w, SLATE, hip=False)                      # 急な青い石板の屋根、白い壁（目じるし）
+        house(c, x0, yb, w, SLATE, wall=[WALL[0], WALL[1], WALL[3], WALL[3]], hip=False)   # 急な青い石板の屋根、白い壁（目じるし）
         tufts(c, x0, x0 + w - 1, yb + 1, bio, seed=x0)
     mist(c, 1, 14, 33); mist(c, 33, 47, 35)                        # 霧の帯（はしだけ。家は隠さない）
     c.shadow_edges()
@@ -374,52 +376,47 @@ def terrace(c, x0, x1, y, h=3):
     stone_wall(c, x0, x1, y + 1, y + h, seed=x0)
 
 
+# ===================================================================== 5) 鉄鏈鉱山（作りなおし）: 山の斜面に、右上から左下へ下りる段々の町。かじ場とえんとつのけむり・坑口・トロッコの線路
 def icon_mine():
+    """右上の岩山に坑口。そこから左下へ3段の段々（石垣）が下り、段ごとにかじ場や長屋が並ぶ。
+    左上と右下はあけて、ななめの形にする（古いアイコンや mine3 の「山のかたまり」と形を分ける）"""
     c = Canvas()
     bio = "grass"
-    skirt(c, 24, 32, 23, 15, bio, seed=141)
-    # 山の斜面（右上が高い）。坑口は右上
-    rock_slope(c, {14: 18, 22: 8, 30: 3, 38: 2, 47: 6}, 22, seed=17, n=34)
-    for y in range(10, 20):                                       # 坑口（暗い穴と木の枠）
-        for x in range(33, 41):
-            c.put(x, y, STONE[0] if 33 < x < 40 and y > 11 else STONE[1], STONE)
-    for y in range(9, 20):
-        c.put(32, y, DIRT[3], DIRT); c.put(41, y, DIRT[0], DIRT)
-    for x in range(31, 43):
-        c.put(x, 9, DIRT[4] if x < 40 else DIRT[2], DIRT)
-    # 段々（3段）。下の段ほど手前で広い
-    terrace(c, 18, 46, 20)
-    terrace(c, 6, 40, 30)
-    terrace(c, 2, 34, 40, h=2)
-    # トロッコの線路（坑口からジグザグに下りる。レールは明るい石の2本、まくら木は土の色）
-    for (xa, ya, xb, yb) in ((36, 20, 44, 20), (44, 21, 44, 29), (44, 29, 38, 29)):
-        n = max(abs(xb - xa), abs(yb - ya))
-        for k in range(n + 1):
-            x = xa + (xb - xa) * k // max(1, n); y = ya + (yb - ya) * k // max(1, n)
-            if ya == yb:
-                c.put(x, y - 1, STONE[5], STONE); c.put(x, y, DIRT[1] if x % 2 else STONE[3], STONE)
-            else:
-                c.put(x - 1, y, STONE[5], STONE); c.put(x, y, DIRT[1] if y % 2 else STONE[3], STONE)
-    for y in range(17, 20):                                       # トロッコ
-        for x in range(38, 43):
-            c.put(x, y, DIRT[0] if y == 19 else (STONE[4] if y == 17 else DIRT[1]), DIRT)
-    c.put(39, 16, "#c8b45a"); c.put(40, 16, LIGHT)               # 灯り石のかがやき
-    # 上の段: かじ場（ふいごの火）とえんとつ＋けむり
-    house(c, 20, 19, 11, SLATE, hip=False, lit=False)
-    c.put(23, 18, FIRE[1]); c.put(24, 18, LIGHT); c.put(23, 19, FIRE[0]); c.put(24, 19, FIRE[0])   # 目じるし: かじ場の火
-    chimney(c, 27, 6, 6)
-    puff(c, 29, 3, 2.6); puff(c, 33, 1.5, 2.0)
+    skirt(c, 24, 26, 22, 18, bio, seed=141)
+    rock_slope(c, {18: 16, 24: 7, 30: 2, 38: 0, 47: 3}, 19, seed=17, n=30)
+    for y in range(8, 18):                                        # 坑口（暗い穴と木の枠）
+        for x in range(33, 40):
+            c.put(x, y, STONE[0] if 33 < x < 39 and y > 9 else STONE[1], STONE)
+    for y in range(7, 18):
+        c.put(32, y, DIRT[3], DIRT); c.put(40, y, DIRT[0], DIRT)
+    for x in range(31, 42):
+        c.put(x, 7, DIRT[4] if x < 39 else DIRT[2], DIRT)
+    # 段々（右上→左下）
+    terrace(c, 20, 46, 18, h=2)
+    terrace(c, 9, 34, 28, h=2)
+    terrace(c, 1, 22, 38, h=2)
+    # トロッコの線路（坑口から右の段の上を走る）
+    for x in range(36, 46):
+        c.put(x, 17, STONE[5], STONE); c.put(x, 18, DIRT[1] if x % 2 else STONE[4], STONE)
+    for y in range(14, 17):                                       # トロッコ（灯り石を積む）
+        for x in range(41, 46):
+            c.put(x, y, DIRT[0] if y == 16 else DIRT[1], DIRT)
+    c.put(42, 13, LIGHT); c.put(43, 13, "#c8b45a")
+    # 上の段: かじ場（火）とえんとつ＋けむり
+    house(c, 21, 17, 10, SLATE, hip=False, lit=False)
+    c.put(24, 16, FIRE[1]); c.put(25, 16, LIGHT); c.put(24, 17, FIRE[0]); c.put(25, 17, FIRE[0])
+    chimney(c, 28, 5, 6)
+    puff(c, 30, 3, 3.0, MIST[1:]); puff(c, 35, 1.5, 2.4, MIST[1:])
     # 中の段: 家とかじ場
-    house(c, 8, 29, 10, ROOF, hip=True)
-    house(c, 22, 29, 10, SLATE, hip=False, lit=False)
-    c.put(25, 28, FIRE[1]); c.put(25, 29, FIRE[0])
-    chimney(c, 29, 17, 5)
-    puff(c, 31, 14, 2.2)
-    # 下の段: 長屋（横長の家）
-    house(c, 4, 39, 13, ROOF, hip=False)
-    house(c, 19, 39, 10, SLATE, hip=True)
-    tufts(c, 2, 34, 43, bio, seed=7, density=0.35)
-    road(c, [(36, 41), (39, 46)], w=3)
+    house(c, 10, 27, 10, ROOF, hip=True, wall=[WALL[0], WALL[1], WALL[3], WALL[3]])
+    house(c, 22, 27, 10, SLATE, hip=False, lit=False)
+    c.put(25, 26, FIRE[1]); c.put(26, 26, LIGHT); c.put(25, 27, FIRE[0])
+    chimney(c, 29, 15, 5)
+    puff(c, 32, 12, 2.6, MIST[1:])
+    # 下の段: 長屋
+    house(c, 2, 37, 14, ROOF, hip=False, wall=[WALL[0], WALL[1], WALL[3], WALL[3]])
+    tufts(c, 1, 22, 41, bio, seed=7, density=0.35)
+    road(c, [(17, 41), (14, 46)], w=3)
     c.shadow_edges()
     return c.save("icon-mine")
 
@@ -495,23 +492,31 @@ def icon_tents_grass():
     return c.save("icon-tents-grass")
 
 
-# ===================================================================== 8) 霧断崖（断崖にはりつく古い宗教都市）: 崖の段に重なる建物・環のしるしの堂・霧
+# ===================================================================== 8) 霧断崖（断崖にはりつく古い宗教都市）: 横に長い断崖の面に、段ごとにはりつく建物・崖の上の堂・霧
 def icon_temple():
+    """上の半分が横に長い断崖。その面の岩だなに白い壁の建物がはりつき、崖の上に環のしるしの堂。
+    下の半分は崖のすその草地と霧（古いアイコンの「三角の山」と形を分ける）"""
     c = Canvas()
     bio = "grass"
-    skirt(c, 24, 36, 22, 10, bio, seed=171)
-    # 断崖（まん中の高い岩。山の地形の岩の房）
-    rock_slope(c, {4: 30, 10: 14, 18: 4, 30: 3, 38: 12, 45: 28}, 42, seed=23, n=46)
-    # 崖の段に、上へ重なる建物（白い壁＝目じるし、青い石板の屋根）
-    for (x0, yb, w) in ((8, 36, 9), (30, 38, 10), (13, 26, 9), (27, 24, 8), (19, 15, 10)):
-        terrace(c, x0 - 1, x0 + w, yb + 1, h=2)
-        house(c, x0, yb, w, SLATE, wall=WALL, hip=True)
-    for (x, y) in ((24, 3), (23, 4), (25, 4), (22, 5), (26, 5), (23, 6), (25, 6), (24, 6)):
-        c.put(x, y, GOLD)                                          # 堂の上の環のしるし
-    c.put(24, 7, GOLD); c.put(24, 8, GOLD)
-    for k in range(6):                                             # つづら折りの石段
-        c.put(19 + (k % 2) * 6, 27 + k * 2, STONE[5], STONE); c.put(20 + (k % 2) * 6, 27 + k * 2, STONE[4], STONE)
-    mist(c, 2, 16, 30); mist(c, 30, 46, 20); mist(c, 14, 36, 43)  # 霧の帯
+    skirt(c, 24, 34, 22, 10, bio, seed=171)
+    rock_slope(c, {1: 9, 8: 5, 16: 7, 24: 4, 32: 6, 40: 3, 47: 8}, 28, seed=23, n=60)
+    WW = [WALL[0], WALL[1], WALL[3], WALL[3]]
+    for (x0, yb, w) in ((3, 16, 9), (15, 22, 9), (28, 17, 9), (37, 26, 9)):
+        terrace(c, x0 - 1, x0 + w, yb + 1, h=1)
+        house(c, x0, yb, w, SLATE, wall=WW, hip=True)
+    # 崖の上の堂（白い壁＋青い石板の屋根＋金の環）
+    house(c, 18, 9, 11, SLATE, wall=WW, hip=True)
+    for (x, y) in ((24, 0), (23, 1), (25, 1), (22, 2), (26, 2), (23, 3), (25, 3)):
+        c.put(x, y, GOLD)
+    # つづら折りの石段（崖の上から、すそまで）
+    for k in range(10):
+        x = 20 + (6 if (k // 2) % 2 else 0) + (k % 2)
+        c.put(x, 12 + k * 3, STONE[5], STONE); c.put(x + 1, 12 + k * 3, STONE[4], STONE)
+    # すその家と霧
+    contact_shadow(c, 27, 38, 39, bio, depth=2, right=2)
+    house(c, 26, 38, 11, SLATE, wall=WW, hip=False)
+    tufts(c, 26, 37, 39, bio, seed=4, density=0.4)
+    mist(c, 2, 18, 31); mist(c, 30, 46, 34); mist(c, 6, 24, 40)
     c.shadow_edges()
     return c.save("icon-temple")
 
@@ -580,7 +585,7 @@ def icon_sky():
         y = 17 - int(math.sin((x - 22) / 5 * math.pi) * -1.5)
         c.put(x, y, DIRT[3], DIRT); c.put(x, y + 1, DIRT[0], DIRT)
     for (x, y, r) in ((6, 38, 3.4), (11, 40, 2.8), (42, 26, 3.0), (20, 44, 2.6)):
-        puff(c, x, y, r, CLOUD[1:])
+        puff(c, x, y, r, MIST[1:])
     tree(c, 20, 16, 2.6)
     c.shadow_edges()
     return c.save("icon-sky")
@@ -719,7 +724,7 @@ from study import outline_dark            # noqa: E402
 PIECES = [icon_port, icon_village, icon_village_mist, icon_lake, icon_mine, icon_tents, icon_tents_grass, icon_temple,
           icon_snowtown, icon_sky, icon_castle, icon_palace]
 
-TERRAIN = {"icon-port": "grass", "icon-village": "grass", "icon-village-mist": "grass", "icon-lake": "grass", "icon-mine": "grass",
+TERRAIN = {"icon-port": "grass", "icon-village": "grass", "icon-village-mist": "snow", "icon-lake": "grass", "icon-mine": "grass",
            "icon-tents": "sand", "icon-tents-grass": "grass", "icon-temple": "grass", "icon-snowtown": "snow", "icon-sky": "cloud",
            "icon-castle": "hills", "icon-palace": "waste"}
 NAMES = list(TERRAIN)
@@ -790,3 +795,77 @@ def overlaps(name):
                 best = max(best, len(a & bb) / max(1, len(a | bb)))
         out.append((o, round(best, 2)))
     return out
+
+
+# ===================================================================== 地図に置いた見本（本物の地形・本物の位置）
+PLACES = [  # (町・村のid, 名前, アイコンの絵, マスx, マスy)
+    ("touri-town", "touri", "icon-port", 26, 153), ("village-namioto", "namioto", "icon-port", 47, 137),
+    ("mugikano-village", "mugikano", "icon-village", 57, 161), ("village-kazami", "kazami", "icon-village", 68, 102),
+    ("village-tomoshimori", "tomoshimori", "icon-village", 111, 167), ("village-minori", "minori", "icon-village", 214, 242),
+    ("village-kirima", "kirima", "icon-village-mist", 231, 43), ("garasuko-town", "garasuko", "icon-lake", 88, 142),
+    ("tetsukusari-town", "tetsukusari", "icon-mine", 122, 113), ("sanone-town", "sanone", "icon-tents", 102, 195),
+    ("village-samori", "samori", "icon-tents-grass", 122, 185), ("village-arano", "arano", "icon-tents-grass", 269, 217),
+    ("kiri-town", "kiri", "icon-temple", 212, 62), ("shimohara-town", "shimohara", "icon-snowtown", 269, 31),
+    ("village-yukimachi", "yukimachi", "icon-snowtown", 245, 27), ("fushima-town", "fushima", "icon-sky", 320, 130),
+    ("toushin-town", "toushin (castle)", "icon-castle", 238, 198), ("kyotoukyu-court", "kyotoukyu (palace)", "icon-palace", 300, 212),
+]
+
+
+def world_preview(path, tw=16, th=11):
+    """影はどれも描かない（町の影は絵に描きこみ済み、お城と宮殿は影なしの決まり）"""
+    from PIL import ImageDraw
+    from study3_view import world_rows, tex, load_icon, GLYPH_TEX
+    rows = world_rows()
+    panels = []
+    for (pid, label, icon, gx, gy) in PLACES:
+        x0, y0 = gx - tw // 2, gy - th + 3
+        img = Image.new("RGBA", (tw * 16, th * 16))
+        for ty in range(th):
+            for tx in range(tw):
+                X, Y = x0 + tx, y0 + ty
+                gl = rows[Y][X] if 0 <= Y < len(rows) and 0 <= X < len(rows[Y]) else "O"
+                t = tex(GLYPH_TEX.get(gl, "grass"))
+                sx, sy = (X * 16) % 128, (Y * 16) % 128
+                img.paste(t.crop((sx, sy, sx + 16, sy + 16)), (tx * 16, ty * 16))
+        im = load_icon("r26-game-icons", icon)
+        img.alpha_composite(im, ((gx - x0) * 16 + 8 - im.width // 2, (gy - y0 + 1) * 16 - im.height))
+        ImageDraw.Draw(img).text((3, 2), f"{label}: {icon}", fill=(255, 255, 255))
+        panels.append(img)
+    cols = 4
+    W, H = tw * 16, th * 16
+    sheet = Image.new("RGBA", (cols * (W + 4), ((len(panels) + cols - 1) // cols) * (H + 4)), (20, 20, 24, 255))
+    for i, p in enumerate(panels):
+        sheet.paste(p, ((i % cols) * (W + 4), (i // cols) * (H + 4)))
+    sheet.resize((sheet.width * 2, sheet.height * 2), Image.NEAREST).save(path)
+
+
+def preview(path, Z=4):
+    from PIL import ImageDraw
+    from study3_view import terrain, load_icon
+    cells = []
+    for n in NAMES:
+        im = load_icon("r26-game-icons", n)
+        bg = terrain(TERRAIN[n], im.width + 16, im.height + 16)
+        bg.alpha_composite(im, (8, 8))
+        g, lm = landmark(n)
+        cells.append((f"{n} ({TERRAIN[n]})  mark dL {lm[0][2] if lm else '-'}", bg))
+    cols = 6
+    w, h = 64 * Z + 10, 64 * Z + 24
+    sheet = Image.new("RGBA", (cols * w + 10, ((len(cells) + cols - 1) // cols) * h + 10), (40, 40, 48, 255))
+    dr = ImageDraw.Draw(sheet)
+    for i, (label, im) in enumerate(cells):
+        x, y = 10 + (i % cols) * w, 10 + (i // cols) * h
+        sheet.paste(im.resize((im.width * Z, im.height * Z), Image.NEAREST), (x, y))
+        dr.text((x, y + im.height * Z + 3), label, fill=(255, 255, 255))
+    sheet.save(path)
+
+
+if __name__ == "__main__":
+    for f in PIECES:
+        r = f()
+        print(r[0], len(r[2]) if isinstance(r[1], object) and len(r) == 3 else r[1], "色")
+    for n in NAMES:
+        print(n, "地面の明るさ / 目じるし", landmark(n), "形の重なり", overlaps(n))
+    preview(os.path.join(HERE, "preview.png"))
+    world_preview(os.path.join(HERE, "preview-world.png"))
+    print("ok")

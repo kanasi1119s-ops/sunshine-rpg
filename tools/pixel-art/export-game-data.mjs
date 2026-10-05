@@ -49,6 +49,9 @@ SETS.props[1]["P48-教会"] = "prop:church";
 SETS.props[1]["P49-教会の中"] = "prop:church-interior";
 SETS.props[1]["P50-船大工の小屋"] = "prop:icon-hut";
 SETS.props[1]["P51-芯環塔"] = "prop:icon-core-spire";
+SETS.props[1]["P52-アイコンvillage-mist"] = "prop:icon-village-mist";
+SETS.props[1]["P53-アイコンtents-grass"] = "prop:icon-tents-grass";
+SETS.props[1]["P54-アイコンmineshaft"] = "prop:icon-mineshaft";
 for (const n of fs.readdirSync(new URL("../../assets-src/pixel-practice/r20-props/", import.meta.url)).filter((f) => f.endsWith(".txt")).map((f) => f.replace(".txt", ""))) {
   SETS.props[1][`R20-${n}`] = `prop:${n}`;
 }

@@ -16,6 +16,13 @@ const TOWN_ICON: Record<string, MapProp["kind"]> = {
   "kyotoukyu-court": "icon-palace",
 };
 
+/** 村の印を、立っている地面に合わせて替える（2026-10-05。雪原の霧間の集落・草原の砂守のいずみと荒野の市）。 */
+const VILLAGE_ICON: Record<string, MapProp["kind"]> = {
+  "village-kirima": "icon-village-mist",
+  "village-samori": "icon-tents-grass",
+  "village-arano": "icon-tents-grass",
+};
+
 /**
  * 世界地図（大陸アルテシア）。上から見た大陸を歩く。町・遺跡のアイコンの上に乗ると、その場所へ入る（出入り口は `world.ts` で、
  * 各町の南の門とつなぐ）。地形は `tools/world-map/gen_world.py` で作った `world-map.generated.ts`。
@@ -48,8 +55,8 @@ export const BASIN_PIT_R = 6.6;
 export const BASIN_RIM_R = 8.4;
 
 /** 塔のまわりで、陥没の上を塔の足もとへ渡る岩の細い道（南の切れ目から、まっすぐ北へ）のマスか。 */
-export function isBasinCauseway(x: number, y: number): boolean {
-  return x === WORLD_TOWER.x && y > WORLD_TOWER.y && y <= WORLD_TOWER.y + Math.ceil(BASIN_RIM_R) - 1;
+export function isBasinCauseway(_x: number, _y: number): boolean {
+  return false;   // 塔に近寄れなくしたので、道はない（2026-10-05）
 }
 
 /**
@@ -65,7 +72,6 @@ function sinkTowerBasin(ground: number[], collision: number[]): void {
       const i = y * WORLD_WIDTH + x;
       const id = ground[i];
       if (id === 13 || id === 14) continue;                       // 渦の輪・切れ目はそのまま
-      if (x === WORLD_TOWER.x && y === WORLD_TOWER.y) continue;   // 塔の入口
       const d = Math.hypot(x - WORLD_TOWER.x, y - WORLD_TOWER.y);
       let next = id;
       if (isBasinCauseway(x, y)) next = WASTE;
@@ -103,10 +109,10 @@ export function createWorldMapData(): TileMapData {
     wrap: true,
     props: [
       ...Object.entries(WORLD_TOWNS).map(([id, pos]) => ({ kind: TOWN_ICON[id], tileX: pos.x, tileY: pos.y })),
-      ...WORLD_VILLAGES.map((v) => ({ kind: `icon-${v.icon}` as MapProp["kind"], tileX: v.x, tileY: v.y })),
+      ...WORLD_VILLAGES.map((v) => ({ kind: VILLAGE_ICON[v.id] ?? (`icon-${v.icon}` as MapProp["kind"]), tileX: v.x, tileY: v.y })),
       ...WORLD_ISLETS.map((islet, i) => ({ kind: (["icon-islet-ruin", "icon-islet-cave", "icon-islet-shrine", "icon-islet-fort", "icon-dive", "icon-volcano"] as const)[i], tileX: islet.x, tileY: islet.y })),
       ...WORLD_LANDMARKS.map((m) => ({ kind: `icon-${m.kind}` as MapProp["kind"], tileX: m.x, tileY: m.y })),
-      { kind: "icon-core-spire" as const, tileX: WORLD_TOWER.x, tileY: WORLD_TOWER.y },
+      { kind: "icon-core-spire" as const, tileX: WORLD_TOWER.x, tileY: WORLD_TOWER.y + 4 },   // 穴のさらに下から伸びるので、絵の足もとを穴の底より下に置く
     ],
   };
 }

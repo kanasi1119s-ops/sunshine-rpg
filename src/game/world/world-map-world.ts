@@ -1,4 +1,4 @@
-import { WORLD_AIRSHIP_START, WORLD_BEACONS, WORLD_ISLETS, WORLD_SHIP_DOCK, WORLD_TOWER, WORLD_TOWNS, WORLD_VILLAGES } from "../map/world/world-map.generated";
+import { WORLD_AIRSHIP_START, WORLD_BEACONS, WORLD_ISLETS, WORLD_SHIP_DOCK, WORLD_TOWNS, WORLD_VILLAGES } from "../map/world/world-map.generated";
 import { DEEP_ENTRY } from "../map/chapter10/deep-maps";
 import { isletRequirementHint } from "./islets-world";
 import { GODS } from "../battle/chapter11-enemies";
@@ -107,7 +107,7 @@ function beacon(no: number, pos: { x: number; y: number }): Npc {
                     [
                       say(undefined, "八つの環灯台の光が、海の上で、ひとつの環になった。"),
                       say(undefined, "遠い水平線で、渦を覆っていた常嵐が、音もなく、割れていく。"),
-                      say(undefined, "★ 渦への航路が開いた！ 東の渡し場へ行こう。"),
+                      say(undefined, "★ 八つの光がそろった！ 深部の奥の転移陣が、塔への道を開くはずだ。"),
                       { type: "setFlag", flag: "vortex_route_open", value: true },
                     ],
                     no,
@@ -417,7 +417,7 @@ export function connectWorldMap(maps: Record<string, TileMapData>, npcsByMap: Re
   for (const islet of WORLD_ISLETS) {
     world.exits = [...(world.exits ?? []), { tileX: islet.x, tileY: islet.y, targetMapId: `${islet.id}-1`, targetTileX: DEEP_ENTRY.tileX, targetTileY: DEEP_ENTRY.tileY }];
   }
-  world.exits = [...(world.exits ?? []), { tileX: WORLD_TOWER.x, tileY: WORLD_TOWER.y, targetMapId: "tower-1", targetTileX: 10, targetTileY: 11 }];
+  // 芯環塔には、世界地図からの入口はない（2026-10-05、人間の指示）。深部の転移陣から転移して入る。
 }
 
 /**
@@ -429,7 +429,7 @@ export const DUNGEON_FROM_TOWN: Record<string, { dungeon: string; icon: MapProp[
   "touri-town": { dungeon: "touri-forest-1", icon: "icon-bigtree" },
   "mugikano-village": { dungeon: "mugikano-canal", icon: "icon-stones" },
   "garasuko-town": { dungeon: "garasuko-cave-1", icon: "icon-cave" },
-  "tetsukusari-town": { dungeon: "tetsukusari-cave-1", icon: "icon-mine" },
+  "tetsukusari-town": { dungeon: "tetsukusari-cave-1", icon: "icon-mineshaft" },
   "sanone-town": { dungeon: "sanone-ruins-1", icon: "icon-ruin" },
   "kiri-town": { dungeon: "kiri-tower-1", icon: "icon-spire" },
   "shimohara-town": { dungeon: "shimohara-ruins-1", icon: "icon-ruin" },
