@@ -1161,7 +1161,7 @@
  },
  {
   "id": "enc-deep-4-2",
-  "prompt": "an echo of sorrow, a floating veiled figure with tear-like light streaks and drooping sleeves",
+  "prompt": "a floating ghost creature made only of a drooping pale blue veil cloth, no body inside, two tear-shaped glowing eyes, streaks of light like tears",
   "status": "done",
   "key": "enemy:enc-deep-4-2",
   "kind": "mob",
@@ -1170,11 +1170,12 @@
   "level": 25,
   "shape": "float",
   "tone": [
-   150,
-   150,
-   190
+   80,
+   100,
+   150
   ],
-  "draft": "enc-deep-4-2_x0"
+  "draft": "enc-deep-4-2_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-deep-4-3",
@@ -1196,7 +1197,7 @@
  {
   "id": "enc-deep-4-4",
   "prompt": "a dawn-colored feathered creature with pale gold and rose wings, a small glowing crest",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-4-4",
   "kind": "mob",
   "name": "夜明けの羽",
@@ -1207,12 +1208,13 @@
    230,
    190,
    160
-  ]
+  ],
+  "draft": "enc-deep-4-4_1"
  },
  {
   "id": "enc-deep-4-5",
   "prompt": "an insect of forgetting, a moth with grey wings that fade into transparency and a blank white face",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-4-5",
   "kind": "mob",
   "name": "忘却の虫",
@@ -1223,7 +1225,8 @@
    175,
    175,
    180
-  ]
+  ],
+  "draft": "enc-deep-4-5_1"
  },
  {
   "id": "enc-tower-1-0",
