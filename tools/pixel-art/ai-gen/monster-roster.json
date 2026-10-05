@@ -2200,21 +2200,21 @@
  },
  {
   "id": "enc-islet-3-1-1",
-  "prompt": "a small monster made of a broken lighthouse top, a round glass lens eye inside a cracked iron cage, a red and white striped stone base with stubby legs, full body",
+  "prompt": "a cracked red and white striped stone pillar monster floating, a large glowing glass lens on top, a rusty iron railing around it, stone shards orbiting, no animal, no fur",
   "status": "done",
   "key": "enemy:enc-islet-3-1-1",
   "kind": "mob",
   "name": "灯台のかけら",
   "zone": "islet-3-1",
   "level": 20,
-  "shape": "ground",
+  "shape": "tall",
   "tone": [
    200,
    120,
    100
   ],
-  "draft": "enc-islet-3-1-1_1",
-  "seed_base": 10002
+  "draft": "enc-islet-3-1-1_0",
+  "seed_base": 14003
  },
  {
   "id": "enc-islet-3-1-2",
@@ -2608,7 +2608,7 @@
  {
   "id": "enc-world-1-0",
   "prompt": "a field grasshopper-like insect with leaf-green armor plates and long jumping legs",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-1-0",
   "kind": "mob",
   "name": "野の虫",
@@ -2619,12 +2619,13 @@
    110,
    160,
    80
-  ]
+  ],
+  "draft": "enc-world-1-0_1"
  },
  {
   "id": "enc-world-1-1",
   "prompt": "a roadside shadow, a hunched dark figure wearing a travel hat and holding a broken wooden post",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-1-1",
   "kind": "mob",
   "name": "街道の影",
@@ -2636,7 +2637,8 @@
    75,
    70
   ],
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-world-1-1_1"
  },
  {
   "id": "enc-world-1-2",
