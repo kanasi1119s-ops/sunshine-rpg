@@ -13,6 +13,7 @@ import { drawSprite } from "./sprite-renderer";
 import { frameAt, SPRITE_FEET_ROW } from "../game/sprite/overworld-sprite";
 import type { BattleAnimSpec } from "../game/battle/battle-anim";
 import { allyStateOf, getAllyCanvas, type AllyState } from "./ally-states";
+import { drawSpellFrame, hasSpellFx } from "./spell-fx-renderer";
 import { DAMAGE_FX, drawCharge, drawFx, drawRelease, drawSpellDim, drawWeaponMotion, FX_COLOR, lungeOffset, type Pt } from "./battle-anim-renderer";
 
 let currentBiome: Biome = "grass";
@@ -486,13 +487,44 @@ function renderBattleBody(
     }
     // 魔法のため（敵が唱えるときも、魔法使いの味方が唱えるときも）
     const casterId = spec2.casterId ?? (spec2.motion === "cast" ? spec2.actorId : undefined);
+    const feetOf = (pt: Pt): { x: number; y: number } => ({ x: pt.x, y: pt.y + (pt.h ?? 32) / 2 });
+    const scaleOf = (pt: Pt): number => ((pt.h ?? 32) >= 100 ? 2 : 1);
     if (casterId && spec2.fx && prog < spec2.fxStart + 0.08 && spec2.fxStart > 0) {
-      drawCharge(ctx, pointOf(casterId), FX_COLOR[spec2.fx], prog / spec2.fxStart, spec2.fx);
+      // ドット絵エディタで描いた「ため」のコマがあれば、それで。無ければ、これまでのコードの絵
+      const cp = pointOf(casterId);
+      const drawn = prog < spec2.fxStart && drawSpellFrame(ctx, spec2.fx, "charge", prog / spec2.fxStart, feetOf(cp), { scale: scaleOf(cp) });
+      if (!drawn) drawCharge(ctx, cp, FX_COLOR[spec2.fx], prog / spec2.fxStart, spec2.fx);
     }
     if (spec2.fx && prog >= spec2.fxStart) {
       const ft = (prog - spec2.fxStart) / Math.max(0.01, 1 - spec2.fxStart);
       const from = spec2.fromId ? pointOf(spec2.fromId) : undefined;
-      targets.forEach((t, i) => drawFx(ctx, spec2.fx!, Math.min(1, ft), t, { from, area: spec2.area, first: i === 0 }));
+      const kind = spec2.area && hasSpellFx(spec2.fx, "area") ? "area" : "hit";
+      if (hasSpellFx(spec2.fx, kind)) {
+        // ドット絵エディタで描いたコマ: 飛んでいく弾（ある術だけ）→ 当たる
+        const FLY = 0.28;
+        const flying = !!from && !spec2.area && hasSpellFx(spec2.fx, "bolt");
+        if (flying && ft < FLY) {
+          const q = ft / FLY;
+          const tp = mainTarget;
+          const x = from!.x + (tp.x - from!.x) * q;
+          const y = from!.y + (tp.y - from!.y) * q - Math.sin(q * Math.PI) * 18;
+          drawSpellFrame(ctx, spec2.fx, "bolt", 0, { x, y }, { flip: tp.x > from!.x, loopMs: animView.elapsedMs });
+        } else {
+          const ht = flying ? (ft - FLY) / (1 - FLY) : ft;
+          targets.forEach((t, i) => {
+            const info = drawSpellFrame(ctx, spec2.fx!, kind, ht, feetOf(t), { scale: scaleOf(t) });
+            if (info && i === 0 && info.flash > 0) {
+              ctx.save();
+              ctx.globalAlpha = info.flash;
+              ctx.fillStyle = info.flashColor;
+              ctx.fillRect(-8, -8, screenWidth + 16, screenHeight - 40);
+              ctx.restore();
+            }
+          });
+        }
+      } else {
+        targets.forEach((t, i) => drawFx(ctx, spec2.fx!, Math.min(1, ft), t, { from, area: spec2.area, first: i === 0 }));
+      }
       // 唱え終えて解き放つ瞬間（ためのあと）、使い手から光がはじける
       const releaseK = ft * (1 - spec2.fxStart) / 0.12;
       if (casterId && spec2.fxStart > 0 && releaseK < 1) drawRelease(ctx, pointOf(casterId), FX_COLOR[spec2.fx], releaseK);
