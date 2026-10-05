@@ -47,11 +47,15 @@ SETS.props[1]["P46-アイコンvolcano"] = "prop:icon-volcano";
 SETS.props[1]["P47-アイコンdive"] = "prop:icon-dive";
 SETS.props[1]["P48-教会"] = "prop:church";
 SETS.props[1]["P49-教会の中"] = "prop:church-interior";
+SETS.props[1]["P50-船大工の小屋"] = "prop:icon-hut";
 for (const n of fs.readdirSync(new URL("../../assets-src/pixel-practice/r20-props/", import.meta.url)).filter((f) => f.endsWith(".txt")).map((f) => f.replace(".txt", ""))) {
   SETS.props[1][`R20-${n}`] = `prop:${n}`;
 }
-for (const n of fs.readdirSync(new URL("../../assets-src/pixel-practice/r22-vehicles/", import.meta.url)).filter((f) => f.endsWith(".txt") && !f.startsWith("whirlpool")).map((f) => f.replace(".txt", ""))) {
+for (const n of fs.readdirSync(new URL("../../assets-src/pixel-practice/r22-vehicles/", import.meta.url)).filter((f) => f.endsWith(".txt") && !f.startsWith("whirlpool") && !f.startsWith("airship")).map((f) => f.replace(".txt", ""))) {
   SETS.props[1][`R22-${n}`] = n === "spire" || n.startsWith("islet-") ? `prop:icon-${n}` : `prop:${n}`;
+}
+for (const n of fs.readdirSync(new URL("../../assets-src/pixel-practice/r24-airship/", import.meta.url)).filter((f) => f.startsWith("airship-") && f.endsWith(".txt") && !f.includes("showcase")).map((f) => f.replace(".txt", ""))) {
+  SETS.props[1][`R24-${n}`] = `prop:${n}`;
 }
 // 倍率（SCALE）はモジュールの読み込み時に決まるため、セットごとに別のプロセスで実行する（node export-game-data.mjs → 自動で分けて実行）。
 const [mode, tmpDir] = process.argv.slice(2);

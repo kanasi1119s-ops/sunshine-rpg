@@ -43,7 +43,7 @@ const CHAPTER_MAPS: string[][] = [
   ["deep-1", "deep-2", "deep-3", "deep-4"],
   ["tower-1", "tower-2", "tower-3", "kanou-1", "kanou-2", "kanou-3", "kanou-4"],
   ...Array.from({ length: 8 }, (_, i) => [`god-shrine-${i + 1}`]),
-  ["world-map"],
+  ["world-map", "shipwright-hut", "keeper-shrine-sky"],
   ...[1, 2, 3, 4, 5, 6].map((n) => [`islet-${n}-1`, `islet-${n}-2`]),
 ];
 

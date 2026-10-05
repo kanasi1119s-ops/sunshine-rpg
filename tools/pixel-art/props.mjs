@@ -68,7 +68,8 @@ PIECES.push(
   piece("P47-アイコンdive", "r17-polish", "icon-dive.txt", "pal-icon-dive.json"),
   // 霧断崖の環の聖堂（r17-polish/church.py で一から。2026-10-05）。外観と、中の1枚絵
   piece("P48-教会", "r17-polish", "church.txt", "pal-church.json", {}, 88),
-  piece("P49-教会の中", "r17-polish", "church-interior.txt", "pal-church-interior.json", {}, 224)
+  piece("P49-教会の中", "r17-polish", "church-interior.txt", "pal-church-interior.json", {}, 224),
+  piece("P50-船大工の小屋", "r25-hut", "icon-hut.txt", "pal-icon-hut.json")
 );
 
 // 町・遺跡の飾り33点（assets-src/pixel-practice/r20-props/、エージェントが一から作成）。大きさが48を超えるものは64の枠。
@@ -80,9 +81,13 @@ for (const n of R20_NAMES) {
 }
 
 // 船・飛空艇・芯環塔・隠しダンジョンの小島（assets-src/pixel-practice/r22-vehicles/、エージェントが一から作成）。絵は枠の下そろえ（足元の位置を保つ）。
-export const R22_NAMES = fs.readdirSync(new URL("r22-vehicles/", ROOT)).filter((f) => f.endsWith(".txt") && !f.startsWith("whirlpool")).map((f) => f.replace(".txt", "")).sort();
+// 飛空艇は r24-airship の「風待ち」（2026-10-05）に替えたので、r22 の古い飛空艇（airship-*）は使わない。
+export const R22_NAMES = fs.readdirSync(new URL("r22-vehicles/", ROOT)).filter((f) => f.endsWith(".txt") && !f.startsWith("whirlpool") && !f.startsWith("airship")).map((f) => f.replace(".txt", "")).sort();
 for (const n of R22_NAMES) {
   const rows = fs.readFileSync(new URL(`r22-vehicles/${n}.txt`, ROOT), "utf8").split("\n").filter((l) => l !== "");
   const big = Math.max(rows.length, ...rows.map((r) => r.length));
   PIECES.push(piece(`R22-${n}`, "r22-vehicles", `${n}.txt`, `pal-${n}.json`, {}, big > 48 ? 112 : 48));
 }
+// 飛空艇「風待ち」（assets-src/pixel-practice/r24-airship/airship.py。第7章の場面の姿: 細長い木の船・帆布の二枚の羽根・灯り石の丸い機関・空鳥の彫刻）
+export const R24_NAMES = fs.readdirSync(new URL("r24-airship/", ROOT)).filter((f) => f.startsWith("airship-") && f.endsWith(".txt") && !f.includes("showcase")).map((f) => f.replace(".txt", "")).sort();
+for (const n of R24_NAMES) PIECES.push(piece(`R24-${n}`, "r24-airship", `${n}.txt`, `pal-${n}.json`, {}, 48));

@@ -21,7 +21,7 @@ import { addHouseInteriors } from "./house-interiors";
 import { addInnInteriors } from "./inn-interiors";
 import { createWorldMapData } from "../map/world/world-map";
 import { convertTileBuildings } from "../map/tile-buildings";
-import { connectWorldMap, SHIP_PART_NPCS, WORLD_MAP_NPCS } from "./world-map-world";
+import { addKeeperShrines, connectWorldMap, SHIP_PART_NPCS, WORLD_MAP_NPCS } from "./world-map-world";
 import { ISLET_MAPS, ISLET_NPCS } from "./islets-world";
 import { VILLAGE_MAPS, VILLAGE_NPCS } from "./villages-world";
 import { applyAutoDecor } from "../map/auto-decor";
@@ -95,6 +95,7 @@ export const WORLD_NPCS: Record<string, Npc[]> = (() => {
 // 第2章〜第8章の、町とボスの間にダンジョン（洞窟・塔）を足す。模様・NPCの用意が済んだあとで、つなぎかえる
 addChapterDungeons(WORLD_MAPS, WORLD_NPCS);
 connectWorldMap(WORLD_MAPS, WORLD_NPCS);
+addKeeperShrines(WORLD_MAPS, WORLD_NPCS);
 applyTownExpansion(WORLD_MAPS);
 // タイルで描いていた建物も、平屋の家の絵にする（人間の指示、2026-10-05）。宿屋・飾りを置く前に置いて、重ならないようにする
 convertTileBuildings(WORLD_MAPS, WORLD_NPCS);

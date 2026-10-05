@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DUNGEON_FROM_TOWN, worldEntryProblems } from "./world-map-world";
 import { isletRequirementHint } from "./islets-world";
-import { WORLD_MAPS } from "./world";
+import { WORLD_MAPS, WORLD_NPCS } from "./world";
 
 describe("世界地図の入場条件（章は順番に進む）", () => {
   it("最初の町は、いつでも入れる。次の町は、前の章を終えるまで入れない", () => {
@@ -41,11 +41,28 @@ describe("世界地図の入場条件（章は順番に進む）", () => {
     }
   });
 
-  it("世界地図の出入り口は、町10か所（虚灯宮を含む）・村8つ・章のダンジョン9つ・小島6つ（海底・火山を含む）・芯環塔1つ", () => {
+  it("世界地図の出入り口は、町10か所（虚灯宮を含む）・村8つ・章のダンジョン9つ・小島6つ（海底・火山を含む）・芯環塔1つ・船大工の小屋と技師の祠", () => {
     const targets = (WORLD_MAPS["world-map"].exits ?? []).map((e) => e.targetMapId);
-    expect(targets.length).toBe(34);
+    expect(targets.length).toBe(36);
+    expect(targets).toContain("shipwright-hut");
+    expect(targets).toContain("keeper-shrine-sky");
     for (const { dungeon } of Object.values(DUNGEON_FROM_TOWN)) expect(targets).toContain(dungeon);
     expect(targets).toContain("tower-1");
     expect(targets.filter((t) => t.startsWith("islet-")).length).toBe(6);
+  });
+
+  it("船大工と飛空艇の技師は、世界地図ではなく小屋・祠の中にいて、その出口は世界地図の歩ける所へ戻る", () => {
+    const worldIds = (WORLD_NPCS["world-map"] ?? []).map((n) => n.id);
+    expect(worldIds).not.toContain("world-shipwright");
+    expect(worldIds).not.toContain("world-airship-engineer");
+    expect(WORLD_NPCS["shipwright-hut"].map((n) => n.id)).toContain("world-shipwright");
+    expect(WORLD_NPCS["keeper-shrine-sky"].map((n) => n.id)).toContain("world-airship-engineer");
+    const world = WORLD_MAPS["world-map"];
+    for (const id of ["shipwright-hut", "keeper-shrine-sky"]) {
+      const back = WORLD_MAPS[id].exits![0];
+      expect(world.collision![back.targetTileY * world.width + back.targetTileX], id).toBe(0);
+      const door = world.exits!.find((e) => e.targetMapId === id)!;
+      expect(world.collision![door.tileY * world.width + door.tileX], id).toBe(0);
+    }
   });
 });

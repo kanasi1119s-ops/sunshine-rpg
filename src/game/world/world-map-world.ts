@@ -289,8 +289,93 @@ export const SHIP_PART_NPCS: Record<string, Npc[]> = {
 };
 
 export const WORLD_MAP_NPCS: Record<string, Npc[]> = {
-  "world-map": [...WORLD_BEACONS.map((pos, i) => beacon(i + 1, pos)), shipwright(), airshipEngineer()],
+  "world-map": WORLD_BEACONS.map((pos, i) => beacon(i + 1, pos)),
 };
+
+/**
+ * 船大工・飛空艇の技師の住まい（2026-10-05、人間の指示「飛空艇をくれた人と、船をくれた人には祠に住んでもらい、祠の中で話す」
+ * →「船をくれる人は小屋の方がいいか。小屋を丁寧に作って」）。技師は祠、船大工は桟橋のとなりの小屋（`prop:icon-hut`）。
+ * 世界地図のもとの立ち位置のとなりにアイコンを置き、入ると小さな部屋。話は部屋の中でする。
+ */
+export const KEEPER_SHRINES: { mapId: string; icon: MapProp["kind"]; style: "hut" | "shrine"; world: { x: number; y: number }; back: { x: number; y: number }; npc: () => Npc; banner: MapProp["kind"] }[] = [
+  { mapId: "shipwright-hut", icon: "icon-hut", style: "hut", world: { x: WORLD_SHIP_DOCK.x - 1, y: WORLD_SHIP_DOCK.y }, back: { x: WORLD_SHIP_DOCK.x - 1, y: WORLD_SHIP_DOCK.y + 1 }, npc: shipwright, banner: "banner-red" },
+  { mapId: "keeper-shrine-sky", icon: "icon-shrine", style: "shrine", world: { x: WORLD_AIRSHIP_START.x - 2, y: WORLD_AIRSHIP_START.y }, back: { x: WORLD_AIRSHIP_START.x - 2, y: WORLD_AIRSHIP_START.y + 1 }, npc: airshipEngineer, banner: "banner-purple" },
+];
+const KS_W = 11;
+const KS_H = 8;
+const KS_DOOR_X = 5;
+
+function keeperShrineMap(back: { x: number; y: number }, banner: MapProp["kind"], style: "hut" | "shrine"): TileMapData {
+  const FLOOR = 1;
+  const WALL = 2;
+  const ground = new Array<number>(KS_W * KS_H).fill(FLOOR);
+  const collision = new Array<number>(KS_W * KS_H).fill(0);
+  const block = (x: number, y: number): void => {
+    collision[y * KS_W + x] = 1;
+  };
+  for (let x = 0; x < KS_W; x++) {
+    for (const y of [0, 1, KS_H - 1]) {
+      ground[y * KS_W + x] = WALL;
+      block(x, y);
+    }
+  }
+  for (let y = 0; y < KS_H; y++) {
+    ground[y * KS_W] = WALL;
+    ground[y * KS_W + KS_W - 1] = WALL;
+    block(0, y);
+    block(KS_W - 1, y);
+  }
+  ground[(KS_H - 1) * KS_W + KS_DOOR_X] = FLOOR;
+  collision[(KS_H - 1) * KS_W + KS_DOOR_X] = 0;
+  // 小屋: 船大工の仕事場（樽・木箱・作業台がわりの長いす・灯・道しるべ（船の図面板））
+  const hutProps: MapProp[] = [
+    { kind: "crates", tileX: 1, tileY: 2 },
+    { kind: "barrel", tileX: 2, tileY: 2 },
+    { kind: "bench", tileX: 4, tileY: 2 },
+    { kind: "noticeboard", tileX: 6, tileY: 2 },
+    { kind: "lamp", tileX: 8, tileY: 2 },
+    { kind: "barrel", tileX: 9, tileY: 2 },
+    { kind: "crates", tileX: 9, tileY: 6 },
+    { kind: "barrel", tileX: 1, tileY: 6 },
+  ];
+  // 祠: 奥のまんなかに小さな祭壇（灯の環）、左右に燭台・柱・旗、手前の角に火皿
+  const props: MapProp[] = style === "hut" ? hutProps : [
+    { kind: "shrine", tileX: 5, tileY: 2 },
+    { kind: "candelabra", tileX: 3, tileY: 2 },
+    { kind: "candelabra", tileX: 7, tileY: 2 },
+    { kind: "pillar", tileX: 1, tileY: 2 },
+    { kind: "pillar", tileX: 9, tileY: 2 },
+    { kind: banner, tileX: 2, tileY: 2 },
+    { kind: banner, tileX: 8, tileY: 2 },
+    { kind: "brazier", tileX: 1, tileY: 6 },
+    { kind: "brazier", tileX: 9, tileY: 6 },
+  ];
+  for (const p of props) block(p.tileX, p.tileY);
+  return {
+    width: KS_W,
+    height: KS_H,
+    tileWidth: 16,
+    tileHeight: 16,
+    layers: [{ name: "ground", data: ground }],
+    tileColors: style === "hut" ? { [FLOOR]: "#9a7a4a", [WALL]: "#6a4a2c" } : { [FLOOR]: "#8a8478", [WALL]: "#5a5450" },
+    tileArt: style === "hut" ? { [FLOOR]: "tint:plank", [WALL]: "tint:plank" } : { [FLOOR]: "tint:flagstone", [WALL]: "tint:brick" },
+    theme: "interior",
+    collision,
+    props,
+    exits: [{ tileX: KS_DOOR_X, tileY: KS_H - 1, targetMapId: "world-map", targetTileX: back.x, targetTileY: back.y }],
+  };
+}
+
+/** 祠を世界地図に置き、中の地図と、住む人を足す。世界地図をつないだあと（connectWorldMap のあと）に呼ぶ。 */
+export function addKeeperShrines(maps: Record<string, TileMapData>, npcsByMap: Record<string, Npc[]>): void {
+  const world = maps["world-map"];
+  for (const k of KEEPER_SHRINES) {
+    maps[k.mapId] = keeperShrineMap(k.back, k.banner, k.style);
+    npcsByMap[k.mapId] = [{ ...k.npc(), tileX: KS_DOOR_X, tileY: 4 }];
+    (world.props ??= []).push({ kind: k.icon, tileX: k.world.x, tileY: k.world.y });
+    (world.exits ??= []).push({ tileX: k.world.x, tileY: k.world.y, targetMapId: k.mapId, targetTileX: KS_DOOR_X, targetTileY: KS_H - 2, enter: "up" });
+  }
+}
 
 /**
  * 世界地図と各町を、出入り口でつなぐ。町の地図の南のふち（真ん中から近い、通れる場所）に門を開け、
