@@ -13,7 +13,7 @@ import { drawSprite } from "./sprite-renderer";
 import { frameAt, SPRITE_FEET_ROW } from "../game/sprite/overworld-sprite";
 import type { BattleAnimSpec } from "../game/battle/battle-anim";
 import { allyStateOf, getAllyCanvas, type AllyState } from "./ally-states";
-import { drawCharge, drawFx, drawWeaponMotion, FX_COLOR, lungeOffset, type Pt } from "./battle-anim-renderer";
+import { DAMAGE_FX, drawCharge, drawFx, drawRelease, drawSpellDim, drawWeaponMotion, FX_COLOR, lungeOffset, type Pt } from "./battle-anim-renderer";
 
 let currentBiome: Biome = "grass";
 let currentVariant = 0;
@@ -405,6 +405,7 @@ function renderBattleBody(
     const pointOf = (id: string): Pt => combatantPoint(battleState, id, screenWidth, screenHeight);
     const targets = spec2.targetIds.map(pointOf);
     const mainTarget = targets[0] ?? { x: 80, y: 80 };
+    if (spec2.fx) drawSpellDim(ctx, spec2.fx, prog, screenWidth, screenHeight - 56);
     if (spec2.actorId && spec2.motion) {
       const actorPt = pointOf(spec2.actorId);
       const glow = spec2.fx ? FX_COLOR[spec2.fx] : "#9ad0ff";
@@ -421,7 +422,10 @@ function renderBattleBody(
     if (spec2.fx && prog >= spec2.fxStart) {
       const ft = (prog - spec2.fxStart) / Math.max(0.01, 1 - spec2.fxStart);
       const from = spec2.fromId ? pointOf(spec2.fromId) : undefined;
-      for (const t of targets) drawFx(ctx, spec2.fx, Math.min(1, ft), t, { from, area: spec2.area });
+      targets.forEach((t, i) => drawFx(ctx, spec2.fx!, Math.min(1, ft), t, { from, area: spec2.area, first: i === 0 }));
+      // 唱え終えて解き放つ瞬間（ためのあと）、使い手から光がはじける
+      const releaseK = ft * (1 - spec2.fxStart) / 0.12;
+      if (casterId && spec2.fxStart > 0 && releaseK < 1) drawRelease(ctx, pointOf(casterId), FX_COLOR[spec2.fx], releaseK);
     }
   }
   void count;
@@ -518,6 +522,15 @@ export function renderBattle(
   ctx.save();
   if (effectView && effectView.effect.kind === "shake") {
     ctx.translate(shakeOffset(effectView.elapsedMs / effectView.effect.duration, effectView.elapsedMs), 0);
+  }
+  // 攻撃の魔法が当たった瞬間、画面がゆれる（全体魔法は大きく）
+  if (animView && animView.spec.fx && DAMAGE_FX.has(animView.spec.fx) && animView.elapsedMs < animView.spec.durationMs) {
+    const sp = animView.spec;
+    const ft = (animView.elapsedMs / sp.durationMs - sp.fxStart) / Math.max(0.01, 1 - sp.fxStart);
+    if (ft >= 0.05 && ft < 0.4) {
+      const amp = (sp.area ? 4 : 2.5) * (1 - (ft - 0.05) / 0.35);
+      ctx.translate(Math.round(Math.sin(animView.elapsedMs * 0.11) * amp), Math.round(Math.cos(animView.elapsedMs * 0.17) * amp * 0.6));
+    }
   }
   renderBattleBody(ctx, battleState, uiState, screenWidth, screenHeight, effectView, itemsAvailable, animView);
   ctx.restore();

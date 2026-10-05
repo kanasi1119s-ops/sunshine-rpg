@@ -219,7 +219,7 @@ export function drawCharge(ctx: CanvasRenderingContext2D, at: Pt, color: string,
   const u = clamp01(t);
   const w = at.w ?? 16, h = at.h ?? 32;
   const feet = at.y + h / 2 - 2;
-  const rx = Math.max(13, w * 0.62), ry = rx * 0.3;
+  const rx = Math.max(20, w * 0.85), ry = rx * 0.32;
   ctx.save();
   // 魔法陣（外の輪は右まわり、内の輪は左まわりに、ひし形の目盛りがすすむ）
   const fadeIn = Math.min(1, u * 3);
@@ -234,13 +234,22 @@ export function drawCharge(ctx: CanvasRenderingContext2D, at: Pt, color: string,
     dot(ctx, at.x + Math.cos(b) * rx * 0.5, feet + Math.sin(b) * ry * 0.5, color, 1, 1);
   }
   // 光の柱（陣のふちから、だんだん高く）
-  const pillar = ease(u * 1.4) * h * 1.1;
+  const pillar = ease(u * 1.4) * h * 1.7;
   for (let i = 0; i < 7; i++) {
     const a = (i / 7) * Math.PI * 2;
     const px = at.x + Math.cos(a) * rx * 0.9;
     const base = feet + Math.sin(a) * ry * 0.9;
     ctx.globalAlpha = 0.45 * fadeIn * (a > Math.PI ? 0.6 : 1);
     for (let y = 0; y < pillar; y += 2) dot(ctx, px, base - y, y % 4 === 0 ? "#ffffff" : color);
+  }
+  // 外がわを、光の紋様（小さな四角）がまわりながら、体へ吸いこまれていく
+  ctx.globalAlpha = fadeIn;
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2 + u * 8;
+    const rr = (1 - ((u * 2 + i / 10) % 1)) * rx * 1.8 + 4;
+    const x = at.x + Math.cos(a) * rr, y = at.y + Math.sin(a) * rr * 0.6;
+    dot(ctx, x - 1, y - 1, color, 3, 3);
+    dot(ctx, x, y, "#ffffff", 1, 1);
   }
   // 属性ごとのため: 炎＝陣のふちから小さな炎、雷＝陣のふちを走る電光
   if (fx === "fire") {
@@ -265,7 +274,7 @@ export function drawCharge(ctx: CanvasRenderingContext2D, at: Pt, color: string,
   }
   // 光の玉（頭の上）
   const orbY = at.y - h / 2 - 2;
-  const r = 1 + Math.round(u * 5);
+  const r = 1 + Math.round(u * 7);
   ctx.globalAlpha = 0.3 + 0.2 * Math.sin(u * 40);
   ring(ctx, at.x, orbY, r + 3, r + 3, color);
   ctx.globalAlpha = 1;
@@ -285,18 +294,93 @@ export function drawCharge(ctx: CanvasRenderingContext2D, at: Pt, color: string,
   ctx.restore();
 }
 
+/** 攻撃の魔法（当たったとき、衝撃・画面のゆれを出す）。 */
+export const DAMAGE_FX: ReadonlySet<FxId> = new Set<FxId>(["fire", "water", "light", "wind", "ice", "bolt", "rock", "burst"]);
+/** 状態のしるし（毎ターン出る小さなもの。暗くしたり光らせたりしない）。 */
+const STATUS_FX: ReadonlySet<FxId> = new Set<FxId>(["sleep", "poison", "confuse"]);
+
+/** 術・魔法のあいだ、画面を少し暗くする（光が引き立つように）。prog は動き全体の進み（0〜1）。 */
+export function drawSpellDim(ctx: CanvasRenderingContext2D, fx: FxId, prog: number, w: number, h: number): void {
+  if (STATUS_FX.has(fx)) return;
+  const env = Math.min(1, prog / 0.12, (1 - prog) / 0.15);
+  if (env <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = 0.5 * clamp01(env);
+  ctx.fillStyle = "#06040f";
+  ctx.fillRect(-8, -8, w + 16, h + 16);
+  ctx.restore();
+}
+
+/** 唱え終えて、魔法を解き放つ瞬間: 使い手から、光の輪がはじけ、光の線が四方へ走る。k は 0〜1。 */
+export function drawRelease(ctx: CanvasRenderingContext2D, at: Pt, color: string, k: number): void {
+  const u = clamp01(k);
+  ctx.save();
+  ctx.globalAlpha = 0.28 * (1 - u);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(-8, -8, 420, 240);
+  for (let r = 0; r < 3; r++) {
+    const v = clamp01(u * 1.3 - r * 0.15);
+    if (v > 0 && v < 1) ring(ctx, at.x, at.y, 6 + v * 40, 6 + v * 40, r === 0 ? "#ffffff" : color, 1 - v);
+  }
+  ctx.globalAlpha = 1 - u;
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    const r0 = 4 + u * 20, r1 = 10 + u * 50;
+    line(ctx, at.x + Math.cos(a) * r0, at.y + Math.sin(a) * r0, at.x + Math.cos(a) * r1, at.y + Math.sin(a) * r1, i % 2 ? color : "#ffffff");
+  }
+  star(ctx, at.x, at.y, Math.max(1, Math.round(10 * (1 - u))), color);
+  ctx.restore();
+}
+
+/** 魔法が当たったときの衝撃: 色のついた光で画面がひかり、衝撃の輪が2重に広がり、火花が飛び散る。 */
+function drawImpact(ctx: CanvasRenderingContext2D, tx: number, ty: number, gy: number, color: string, t: number, sc: number, first: boolean): void {
+  const u = clamp01(t / 0.45);
+  if (u >= 1) return;
+  ctx.save();
+  if (first && t < 0.16) {
+    ctx.globalAlpha = 0.3 * (1 - t / 0.16);
+    ctx.fillStyle = color;
+    ctx.fillRect(-8, -8, 420, 240);
+  }
+  for (let k = 0; k < 2; k++) {
+    const v = clamp01(u * 1.2 - k * 0.2);
+    if (v > 0 && v < 1) {
+      ring(ctx, tx, ty, (6 + v * 30) * sc, (6 + v * 30) * sc, k ? color : "#ffffff", 1 - v);
+      ring(ctx, tx, gy, (8 + v * 34) * sc, (3 + v * 9) * sc, color, (1 - v) * 0.8);
+    }
+  }
+  for (let i = 0; i < 18; i++) {
+    const a = rnd(i, 31) * Math.PI * 2;
+    const sp = (18 + rnd(i, 32) * 30) * sc;
+    const x = tx + Math.cos(a) * sp * u;
+    const y = ty + Math.sin(a) * sp * u + u * u * 18;
+    ctx.globalAlpha = 1 - u;
+    dot(ctx, x, y, i % 3 === 0 ? "#ffffff" : color, 2, 2);
+  }
+  if (t < 0.12) star(ctx, tx, ty, Math.round(12 * sc * (1 - t / 0.12)) + 2, color);
+  ctx.restore();
+}
+
 export const FX_COLOR: Record<FxId, string> = {
   fire: "#ff9a40", water: "#6ab4ff", light: "#fff0a0", wind: "#a8f0d0", ice: "#bfe8ff", bolt: "#ffe848", rock: "#c8a070",
   burst: "#ffffff", heal: "#88f0a8", buff: "#ffd860", debuff: "#b080e8", sleep: "#9ab0ff", poison: "#b060e0", confuse: "#ffe070",
 };
 
 /** 魔法・状態のエフェクト。target は対象のからだの中心。 */
-export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, target: Pt, opts: { from?: Pt; area?: boolean } = {}): void {
+export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, target: Pt, opts: { from?: Pt; area?: boolean; first?: boolean } = {}): void {
   const { x: tx, y: ty } = target;
   const fade = 1 - t;
   // 対象の大きさ（人は1、大きい敵ほど炎も大きく、足もとはその人の足もとに）
   const sc = Math.min(2.2, Math.max(0.9, (target.h ?? 32) / 32));
   const gy = ty + (target.h ?? 32) / 2 - 2;
+  const first = opts.first ?? true;
+  // 当たる瞬間（飛んでいく魔法は、飛び終わってから）の衝撃
+  if (DAMAGE_FX.has(fx) && fx !== "fire" && fx !== "bolt") {
+    const hitAt = opts.from && !opts.area && (fx === "water") ? 0.45 : fx === "rock" ? 0.3 : fx === "ice" ? 0.2 : 0.08;
+    if (t >= hitAt) drawImpact(ctx, tx, ty, gy, FX_COLOR[fx], (t - hitAt) / (1 - hitAt), sc, first);
+  } else if (fx === "fire" || fx === "bolt") {
+    if (t >= 0.1) drawImpact(ctx, tx, ty, gy, FX_COLOR[fx], (t - 0.1) / 0.9, sc * 0.8, false);
+  }
   ctx.save();
   switch (fx) {
     case "fire": {
@@ -427,9 +511,28 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
         dot(ctx, bx - 1, by - 1, "#ffffff", 2, 2);
         break;
       }
+      // 水柱: 足もとから太い水の柱が噴き上がり、てっぺんでしぶきが広がって、落ちてくる
+      {
+        const w0 = Math.round(9 * Math.min(sc, 1.4));
+        const rise = ease(clamp01(t / 0.3));
+        const fall = clamp01((t - 0.62) / 0.38);
+        const hgt = (70 * Math.min(sc, 1.4)) * rise * (1 - fall);
+        for (let y = 0; y < hgt; y++) {
+          const q = y / Math.max(1, hgt);
+          const half = Math.max(2, Math.round(w0 * (1 - q * 0.45) + Math.sin(y * 0.3 + t * 30) * 1.5));
+          dot(ctx, tx - half, gy - y, "#2a5ea8", half * 2, 1);
+          dot(ctx, tx - half + 2, gy - y, q > 0.85 ? "#e8f6ff" : "#5aa0f0", Math.max(1, half * 2 - 4), 1);
+          if ((y + Math.floor(t * 40)) % 7 === 0) dot(ctx, tx - half + 3 + ((y * 3) % Math.max(1, half)), gy - y, "#ffffff", 2, 1);
+        }
+        if (hgt > 10) for (let i = 0; i < 14; i++) {
+          const a = Math.PI + (i / 13) * Math.PI;
+          const v = clamp01(t * 2 - 0.4);
+          dot(ctx, tx + Math.cos(a) * (6 + v * 24), gy - hgt - Math.sin(a) * (4 + v * 10) * -1 + v * v * 20, i % 2 ? "#ffffff" : "#9ad0ff", 2, 2);
+        }
+      }
       for (let k = 0; k < 3; k++) {
         const u = clamp01(t * 1.3 - k * 0.18);
-        if (u > 0 && u < 1) ring(ctx, tx, (gy - 2), 4 + u * 20, 1.5 + u * 6, k === 0 ? "#e8f6ff" : "#6ab4ff", 1 - u);
+        if (u > 0 && u < 1) ring(ctx, tx, (gy - 2), 4 + u * 30, 1.5 + u * 9, k === 0 ? "#e8f6ff" : "#6ab4ff", 1 - u);
       }
       for (let i = 0; i < 18; i++) {
         const u = clamp01(t * 1.5 - rnd(i, 4) * 0.5);
@@ -443,7 +546,27 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
       break;
     }
     case "light": {
-      const w = Math.max(1, Math.round(10 * (1 - Math.abs(t - 0.4) * 1.6)));
+      // 天から光が降りそそぐ: 画面が白くかがやき、十字の光が走り、光の羽がまう
+      if (first && t < 0.3) { ctx.globalAlpha = 0.28 * (1 - t / 0.3); ctx.fillStyle = "#fff6d0"; ctx.fillRect(-8, -8, 420, 240); ctx.globalAlpha = 1; }
+      {
+        const cr = Math.sin(clamp01(t / 0.7) * Math.PI);
+        ctx.globalAlpha = 0.85 * cr;
+        dot(ctx, tx - 40 * cr * sc, ty - 1, "#fff6c0", Math.round(80 * cr * sc), 3);
+        dot(ctx, tx - 1, ty - 40 * cr * sc, "#fff6c0", 3, Math.round(80 * cr * sc));
+        dot(ctx, tx - 30 * cr * sc, ty, "#ffffff", Math.round(60 * cr * sc), 1);
+        dot(ctx, tx, ty - 30 * cr * sc, "#ffffff", 1, Math.round(60 * cr * sc));
+        ctx.globalAlpha = 1;
+        for (let i = 0; i < 10; i++) {
+          const u = (t * 0.9 + rnd(i, 41)) % 1;
+          const x = tx + (rnd(i, 42) - 0.5) * 50 + Math.sin(u * 6 + i) * 4;
+          const y = -4 + u * (gy + 4);
+          ctx.globalAlpha = Math.sin(u * Math.PI) * fade;
+          dot(ctx, x, y, "#ffffff", 2, 1);
+          dot(ctx, x + 1, y + 1, "#ffe890", 1, 2);
+        }
+        ctx.globalAlpha = 1;
+      }
+      const w = Math.max(1, Math.round(16 * Math.min(sc, 1.5) * (1 - Math.abs(t - 0.4) * 1.6)));
       ctx.globalAlpha = 0.5 * fade + 0.2;
       dot(ctx, tx - w, 0, "#ffe890", w * 2, gy);
       ctx.globalAlpha = 0.9;
@@ -458,6 +581,30 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
       break;
     }
     case "wind": {
+      // 竜巻: 足もとから、らせんの風の柱が立ち、木の葉や砂が巻き上げられる
+      {
+        const grow = ease(clamp01(t / 0.3)) * (1 - clamp01((t - 0.75) / 0.25));
+        const hgt = 64 * Math.min(sc, 1.4) * grow;
+        for (let y = 0; y < hgt; y += 2) {
+          const q = y / Math.max(1, hgt);
+          const rr = (5 + q * 16) * Math.min(sc, 1.3);
+          for (let k = 0; k < 2; k++) {
+            const a = y * 0.35 - t * 40 + k * Math.PI;
+            const x = tx + Math.cos(a) * rr;
+            ctx.globalAlpha = (Math.sin(a) > 0 ? 1 : 0.5) * grow;
+            dot(ctx, x - 1, gy - y, k ? "#a8f0d0" : "#ffffff", 4, 2);
+            dot(ctx, tx - (x - tx) - 1, gy - y, "#6ad0a0", 2, 2);
+          }
+        }
+        for (let i = 0; i < 12; i++) {
+          const q = (t * 1.6 + rnd(i, 51)) % 1;
+          const a = q * 20 + i;
+          const rr = (6 + q * 18) * Math.min(sc, 1.3);
+          ctx.globalAlpha = grow * Math.sin(q * Math.PI);
+          dot(ctx, tx + Math.cos(a) * rr, gy - q * hgt, i % 3 ? "#7ad890" : "#c8a070", 2, 2);
+        }
+        ctx.globalAlpha = 1;
+      }
       for (let k = 0; k < 3; k++) {
         const u = clamp01(t * 1.4 - k * 0.14);
         if (u <= 0 || u >= 1) continue;
@@ -476,6 +623,32 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
       break;
     }
     case "ice": {
+      // 足もとが凍りつき、大きな氷の柱が何本も突き出て、最後にくだけ散る
+      {
+        if (first && t < 0.25) { ctx.globalAlpha = 0.2 * (1 - t / 0.25); ctx.fillStyle = "#dff4ff"; ctx.fillRect(-8, -8, 420, 240); ctx.globalAlpha = 1; }
+        const shatter = clamp01((t - 0.68) / 0.32);
+        ring(ctx, tx, gy, 22 * Math.min(sc, 1.5) * ease(t / 0.25), 6 * Math.min(sc, 1.5) * ease(t / 0.25), "#e8f8ff", 1 - shatter);
+        for (let i = 0; i < 5; i++) {
+          const off = (i - 2) * 8 * Math.min(sc, 1.4);
+          const tall = (16 + (i === 2 ? 22 : rnd(i, 61) * 14)) * Math.min(sc, 1.5);
+          const g = ease(clamp01((t - i * 0.03) / 0.18));
+          const hgt = tall * g;
+          if (shatter <= 0) {
+            for (let y = 0; y < hgt; y++) {
+              const half = Math.max(1, Math.round(4 * (1 - y / tall) + 1));
+              dot(ctx, tx + off - half, gy - y, "#7ac0f0", half * 2, 1);
+              dot(ctx, tx + off - half + 1, gy - y, y > hgt - 3 ? "#ffffff" : "#bfe8ff", Math.max(1, half - 1), 1);
+            }
+          } else {
+            for (let k = 0; k < 6; k++) {
+              const a = rnd(i * 7 + k, 62) * Math.PI * 2;
+              ctx.globalAlpha = 1 - shatter;
+              dot(ctx, tx + off + Math.cos(a) * shatter * 26, gy - tall * 0.5 + Math.sin(a) * shatter * 20 + shatter * shatter * 14, k % 2 ? "#ffffff" : "#bfe8ff", 2, 2);
+            }
+            ctx.globalAlpha = 1;
+          }
+        }
+      }
       for (let i = 0; i < 7; i++) {
         const ang = (i / 7) * Math.PI * 2;
         const cx = tx + Math.cos(ang) * (8 + rnd(i, 12) * 6), cy = ty + Math.sin(ang) * (6 + rnd(i, 13) * 6);
@@ -531,6 +704,38 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
       break;
     }
     case "rock": {
+      // 地面が割れて、岩のとげが突き出し、土けむりが舞う
+      {
+        const up = ease(clamp01((t - 0.25) / 0.15)) * (1 - clamp01((t - 0.75) / 0.25));
+        for (let i = 0; i < 6; i++) {
+          const off = (i - 2.5) * 9 * Math.min(sc, 1.4);
+          const full = (18 + rnd(i, 71) * 22) * Math.min(sc, 1.4);
+          const tall = full * up;
+          for (let y = 0; y < tall; y++) {
+            const half = Math.max(1, Math.round(6 * (1 - y / Math.max(1, full)) + 1));
+            dot(ctx, tx + off - half, gy - y, "#4a3220", half * 2, 1);
+            dot(ctx, tx + off - half + 1, gy - y, "#8a6a48", Math.max(1, half - 1), 1);
+            dot(ctx, tx + off, gy - y, "#b8946a", Math.max(1, Math.floor(half / 2)), 1);
+          }
+        }
+        for (let i = 0; i < 10; i++) {
+          const v = clamp01((t - 0.3) * 1.6 - rnd(i, 72) * 0.2);
+          if (v <= 0 || v >= 1) continue;
+          ctx.globalAlpha = 0.6 * (1 - v);
+          const r = 3 + v * 7;
+          dot(ctx, tx + (rnd(i, 73) - 0.5) * 50 * v - r, gy - 4 - v * 16 - r, "#b09a80", r * 2, r * 1.4);
+        }
+        ctx.globalAlpha = 1;
+        // 大岩（上から落ちてくる）
+        const fallU = clamp01(t / 0.3);
+        if (fallU < 1) {
+          const by = -20 + (ty + 10) * fallU * fallU;
+          const R = Math.round(13 * Math.min(sc, 1.5));
+          dot(ctx, tx - R, by - R, "#5a3a22", R * 2, R * 2);
+          dot(ctx, tx - R + 1, by - R + 1, "#a0784e", R * 2 - 3, R * 2 - 3);
+          dot(ctx, tx - R + 2, by - R + 2, "#c8a070", R - 1, R - 2);
+        }
+      }
       for (let i = 0; i < 6; i++) {
         const x = tx + (rnd(i, 19) - 0.5) * 28;
         const u = clamp01(t * 1.3 - rnd(i, 20) * 0.3);
@@ -544,6 +749,29 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
       break;
     }
     case "heal": {
+      // やわらかな光の柱が降り、足もとに緑の紋様がまわり、光の粒と葉が舞いあがる
+      {
+        const env = Math.sin(clamp01(t) * Math.PI);
+        const cw = Math.round(14 * Math.min(sc, 1.4));
+        ctx.globalAlpha = 0.35 * env;
+        dot(ctx, tx - cw, -4, "#c8ffd8", cw * 2, gy + 4);
+        ctx.globalAlpha = 0.5 * env;
+        dot(ctx, tx - Math.round(cw / 3), -4, "#ffffff", Math.round(cw / 3) * 2, gy + 4);
+        ctx.globalAlpha = env;
+        for (let i = 0; i < 12; i++) {
+          const a = (i / 12) * Math.PI * 2 + t * 6;
+          dot(ctx, tx + Math.cos(a) * 18 * Math.min(sc, 1.4), gy + Math.sin(a) * 5, i % 2 ? "#ffffff" : "#88f0a8", 2, 1);
+        }
+        ring(ctx, tx, gy, 18 * Math.min(sc, 1.4), 5, "#a8ffc8", env);
+        for (let i = 0; i < 6; i++) {
+          const u = (t * 1.4 + i / 6) % 1;
+          ctx.globalAlpha = Math.sin(u * Math.PI);
+          const x = tx + Math.sin(u * 7 + i) * 14, y = gy - u * 50;
+          dot(ctx, x, y, "#4ac070", 3, 2);
+          dot(ctx, x + 1, y, "#a8ffc8", 1, 1);
+        }
+        ctx.globalAlpha = 1;
+      }
       ctx.globalAlpha = 0.22 * Math.sin(Math.min(1, t) * Math.PI);
       dot(ctx, tx - 14, ty - 22, "#88f0a8", 28, 40);
       ctx.globalAlpha = 1;
@@ -559,6 +787,22 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
       break;
     }
     case "buff": {
+      // 金色のオーラが、体を包んで燃えあがる
+      {
+        const env = Math.sin(clamp01(t) * Math.PI);
+        ctx.globalAlpha = 0.3 * env;
+        dot(ctx, tx - 13, gy - 56, "#ffe890", 26, 56);
+        ctx.globalAlpha = 0.45 * env;
+        dot(ctx, tx - 6, gy - 56, "#fff6d0", 12, 56);
+      }
+      for (let i = 0; i < 36; i++) {
+        const u = (t * 1.5 + rnd(i, 81)) % 1;
+        const x = tx + (rnd(i, 82) - 0.5) * 30 + Math.sin(u * 9 + i) * 2;
+        ctx.globalAlpha = Math.sin(u * Math.PI) * (1 - t * 0.5);
+        dot(ctx, x, gy - u * 60, i % 3 ? "#ffd860" : "#ffffff", 2, 4);
+      }
+      ctx.globalAlpha = 1;
+      ring(ctx, tx, gy, 16 + Math.sin(t * 20) * 2, 5, "#fff0a0", 1 - t * 0.6);
       ring(ctx, tx, gy, 10 + t * 4, 3, "#ffd860", 1 - t * 0.6);
       for (let i = 0; i < 4; i++) {
         const u = (t * 1.1 + i / 4) % 1;
@@ -571,6 +815,24 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
       break;
     }
     case "debuff": {
+      // 黒むらさきの霧が、上からのしかかり、鎖のような輪がしめつける
+      {
+        const env = Math.sin(clamp01(t) * Math.PI);
+        ctx.globalAlpha = 0.35 * env;
+        dot(ctx, tx - 20, ty - 34, "#2a0a4a", 40, 60);
+      }
+      for (let i = 0; i < 34; i++) {
+        const u = (t * 1.3 + rnd(i, 91)) % 1;
+        const x = tx + (rnd(i, 92) - 0.5) * 40;
+        ctx.globalAlpha = 0.8 * Math.sin(u * Math.PI);
+        dot(ctx, x, ty - 40 + u * 56, i % 2 ? "#5a2a8a" : "#b080e8", 4, 3);
+      }
+      ctx.globalAlpha = 1;
+      for (let k = 0; k < 3; k++) {
+        const shrink = 1 - clamp01(t * 1.5 - k * 0.1) * 0.5;
+        ring(ctx, tx, ty - 8 + k * 10, 24 * shrink, 6 * shrink, k === 1 ? "#e8d0ff" : "#9060d0", 1 - t * 0.7);
+        ring(ctx, tx, ty - 7 + k * 10, 24 * shrink, 6 * shrink, "#5a2a8a", 1 - t * 0.7);
+      }
       ring(ctx, tx, gy, 10 + t * 4, 3, "#9060d0", 1 - t * 0.6);
       ctx.globalAlpha = 0.22 * Math.sin(Math.min(1, t) * Math.PI);
       dot(ctx, tx - 14, ty - 22, "#5a2a8a", 28, 40);
@@ -632,9 +894,13 @@ export function drawFx(ctx: CanvasRenderingContext2D, fx: FxId, t: number, targe
     }
     default: {
       // burst
-      for (let i = 0; i < 10; i++) {
-        const a = (i / 10) * Math.PI * 2;
-        const r0 = 4 + t * 8, r1 = 8 + t * 26;
+      for (let k = 0; k < 3; k++) {
+        const v = clamp01(t * 1.4 - k * 0.12);
+        if (v > 0 && v < 1) ring(ctx, tx, ty, (8 + v * 34) * sc, (8 + v * 34) * sc, k === 1 ? "#ffe890" : "#ffffff", 1 - v);
+      }
+      for (let i = 0; i < 16; i++) {
+        const a = (i / 16) * Math.PI * 2;
+        const r0 = 4 + t * 10, r1 = 10 + t * 40;
         line(ctx, tx + Math.cos(a) * r0, ty + Math.sin(a) * r0, tx + Math.cos(a) * r1, ty + Math.sin(a) * r1, i % 2 ? "#ffe890" : "#ffffff");
       }
       if (t < 0.3) star(ctx, tx, ty, 8 - Math.round(t * 20), "#ffffff");
