@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { partyAtLevel, winRate } from "./balance-helpers";
 import type { Combatant } from "./types";
+import { strengthenBoss } from "./difficulty-scale";
 import { createMugikanoYugami } from "./chapter1-enemies";
 import { createGarasukoYugami } from "./chapter2-enemies";
 import { createTetsukusariYugami } from "./chapter3-enemies";
@@ -25,41 +26,41 @@ interface BossCase {
   level: number;
   companions: number;
   make: () => Combatant;
-  /** 目安の勝率（±0.1の範囲に入っていればよい）。 */
+  /** 目安の勝率（±0.1の範囲に入っていればよい）。2026-10-05に、ボスを強くした（`difficulty-scale.ts`）ぶん、以前より0.15下げた。 */
   target: number;
 }
 
 const dungeon = (id: string) => DUNGEON_ENEMIES.find((e) => e.id === id)!;
 
 const CASES: BossCase[] = [
-  { name: "第1章「水涸れの歪み」", level: 5, companions: 1, make: createMugikanoYugami, target: 0.78 },
-  { name: "第2章「積荷の歪み」", level: 7, companions: 2, make: createGarasukoYugami, target: 0.83 },
-  { name: "第3章「実験の歪み」", level: 9, companions: 3, make: createTetsukusariYugami, target: 0.78 },
-  { name: "第4章「砂嵐の歪み」", level: 11, companions: 4, make: createSanoneSunaarashiYugami, target: 0.76 },
-  { name: "第5章「予言の歪み」", level: 13, companions: 4, make: createKiriYogenYugami, target: 0.75 },
-  { name: "第6章「試作機の歪み」", level: 15, companions: 4, make: createShimoharaShisakukiYugami, target: 0.72 },
-  { name: "第7章「監視卓の歪み」", level: 17, companions: 5, make: createFushimaKanshitakuYugami, target: 0.75 },
-  { name: "第8章「灯芯都の番人の歪み」", level: 19, companions: 5, make: createToushinBanninYugami, target: 0.74 },
-  { name: "終章「虚灯をまとうエドレア」", level: 21, companions: 5, make: createKyotoukyuEdreaYugami, target: 0.74 },
-  { name: "深部の中ボス「歪みの残響」", level: 23, companions: 5, make: createDeepEchoYugami, target: 0.89 },
-  { name: "裏ボス「初源の歪み」", level: 25, companions: 5, make: createShogenYugami, target: 0.48 },
+  { name: "第1章「水涸れの歪み」", level: 5, companions: 1, make: createMugikanoYugami, target: 0.63 },
+  { name: "第2章「積荷の歪み」", level: 7, companions: 2, make: createGarasukoYugami, target: 0.68 },
+  { name: "第3章「実験の歪み」", level: 9, companions: 3, make: createTetsukusariYugami, target: 0.63 },
+  { name: "第4章「砂嵐の歪み」", level: 11, companions: 4, make: createSanoneSunaarashiYugami, target: 0.61 },
+  { name: "第5章「予言の歪み」", level: 13, companions: 4, make: createKiriYogenYugami, target: 0.60 },
+  { name: "第6章「試作機の歪み」", level: 15, companions: 4, make: createShimoharaShisakukiYugami, target: 0.57 },
+  { name: "第7章「監視卓の歪み」", level: 17, companions: 5, make: createFushimaKanshitakuYugami, target: 0.60 },
+  { name: "第8章「灯芯都の番人の歪み」", level: 19, companions: 5, make: createToushinBanninYugami, target: 0.59 },
+  { name: "終章「虚灯をまとうエドレア」", level: 21, companions: 5, make: createKyotoukyuEdreaYugami, target: 0.59 },
+  { name: "深部の中ボス「歪みの残響」", level: 23, companions: 5, make: createDeepEchoYugami, target: 0.74 },
+  { name: "裏ボス「初源の歪み」", level: 25, companions: 5, make: createShogenYugami, target: 0.33 },
   ...GODS.map((god, i) => ({
     name: `8神 ${god.kind}「${god.name}」`,
     level: 28,
     companions: 5,
     make: () => createGodYugami(god),
-    target: [0.74, 0.71, 0.7, 0.74, 0.72, 0.64, 0.71, 0.64][i],
+    target: [0.74, 0.71, 0.7, 0.74, 0.72, 0.64, 0.71, 0.64].map((t) => Math.max(0.2, t - 0.15))[i],
   })),
-  { name: "塔の強敵「雲路の結晶獣」", level: 30, companions: 5, make: () => createDungeonEnemy(dungeon("tower2-guard")), target: 0.84 },
-  { name: "塔の宝の番人「環光の番人」", level: 32, companions: 5, make: () => createDungeonEnemy(dungeon("tower3-guard")), target: 0.67 },
-  { name: "環奥の「裂け目の守り手」", level: 34, companions: 5, make: () => createDungeonEnemy(dungeon("kanou3-guard")), target: 0.6 },
-  { name: "ラスト裏ボス「全環」", level: 36, companions: 5, make: () => createDungeonEnemy(dungeon("zenkan")), target: 0.36 },
+  { name: "塔の強敵「雲路の結晶獣」", level: 30, companions: 5, make: () => createDungeonEnemy(dungeon("tower2-guard")), target: 0.69 },
+  { name: "塔の宝の番人「環光の番人」", level: 32, companions: 5, make: () => createDungeonEnemy(dungeon("tower3-guard")), target: 0.52 },
+  { name: "環奥の「裂け目の守り手」", level: 34, companions: 5, make: () => createDungeonEnemy(dungeon("kanou3-guard")), target: 0.45 },
+  { name: "ラスト裏ボス「全環」", level: 36, companions: 5, make: () => createDungeonEnemy(dungeon("zenkan")), target: 0.25 },
 ];
 
 describe("ボスのバランス（想定レベルの仲間つきパーティ、300回のシミュレーション）", () => {
   for (const c of CASES) {
     it(`${c.name}（Lv${c.level}）: 勝率が目安${Math.round(c.target * 100)}%の前後`, () => {
-      const { rate } = winRate(partyAtLevel(c.level, c.companions), () => [c.make()]);
+      const { rate } = winRate(partyAtLevel(c.level, c.companions), () => [strengthenBoss(c.make())]);
       expect(rate, `勝率 ${(rate * 100).toFixed(1)}%`).toBeGreaterThanOrEqual(c.target - 0.1);
       expect(rate, `勝率 ${(rate * 100).toFixed(1)}%`).toBeLessThanOrEqual(c.target + 0.1);
     });

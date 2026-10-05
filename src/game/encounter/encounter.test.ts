@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { baseEnemyId } from "../battle/types";
+import { encounterScale } from "../battle/difficulty-scale";
 import {
   createEncounterEnemies,
   shapeForName,
@@ -91,14 +92,16 @@ describe("ランダムエンカウント", () => {
     for (const [mapId, zone] of Object.entries({ ...ENCOUNTER_ZONES, ...WORLD_ENCOUNTER_ZONES })) {
       const companions = zone.level <= 5 ? 1 : zone.level <= 7 ? 2 : zone.level <= 9 ? 3 : zone.level <= 15 ? 4 : 5;
       const party = partyAtLevel(zone.level, companions);
-      const stats = enemyStatsForLevel(zone.level);
+      const base = enemyStatsForLevel(zone.level);
+      const scale = encounterScale(companions);
+      const stats = { ...base, maxHp: Math.round(base.maxHp * scale.hp), attack: Math.round(base.attack * scale.atk) };
       const group = (n: number) => () =>
         Array.from({ length: n }, (_, i) => ({
           id: `e${i}`, name: `e${i}`, maxHp: stats.maxHp, hp: stats.maxHp, maxMp: 0, mp: 0,
           attack: stats.attack, defense: stats.defense, speed: stats.speed, isEnemy: true, guarding: false,
         }));
       const worst = winRate(party, group(zone.level <= 6 ? 2 : 3), 100);
-      expect(worst.rate, `${mapId}（Lv${zone.level}）の勝率 ${(worst.rate * 100).toFixed(0)}%`).toBeGreaterThanOrEqual(0.9);
+      expect(worst.rate, `${mapId}（Lv${zone.level}）の勝率 ${(worst.rate * 100).toFixed(0)}%`).toBeGreaterThanOrEqual(0.6); // 2026-10-05: 仲間が増えるほど敵が強くなるので、0.9から下げた（最悪の3体の一団）
       expect(worst.hpRatio, `${mapId} の戦闘後の残りHP ${(worst.hpRatio * 100).toFixed(0)}%`).toBeLessThanOrEqual(0.92);
     }
   });

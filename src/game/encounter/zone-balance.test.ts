@@ -22,7 +22,7 @@ const COMPANIONS: Record<string, number> = {
 function rateAt(id: string, level: number): number {
   const zone = WORLD_ENCOUNTER_ZONES[id];
   let n = 0;
-  return winRate(partyAtLevel(level, COMPANIONS[id]), () => createEncounterEnemies(id, zone, createRng(n++ * 7 + 1)), 300).rate;
+  return winRate(partyAtLevel(level, COMPANIONS[id]), () => createEncounterEnemies(id, zone, createRng(n++ * 7 + 1), COMPANIONS[id]), 300).rate;
 }
 
 describe("世界地図の敵のバランス（300回のシミュレーション）", () => {
@@ -32,7 +32,7 @@ describe("世界地図の敵のバランス（300回のシミュレーション�
 
   for (const [id, zone] of Object.entries(WORLD_ENCOUNTER_ZONES)) {
     it(`${id}（想定Lv${zone.level}）`, () => {
-      expect(rateAt(id, zone.level)).toBeGreaterThanOrEqual(0.95);
+      expect(rateAt(id, zone.level)).toBeGreaterThanOrEqual(0.85); // 2026-10-05: 仲間が増えるほど敵が強くなるので、0.95から下げた
       expect(rateAt(id, Math.max(1, zone.level - 4))).toBeGreaterThanOrEqual(0.4);
     });
   }
@@ -43,7 +43,7 @@ function dungeonRateAt(id: string, level: number): number {
   const zone = ENCOUNTER_ZONES[id];
   const companions = zone.level <= 5 ? 1 : zone.level <= 7 ? 2 : zone.level <= 9 ? 3 : zone.level <= 15 ? 4 : 5;
   let n = 0;
-  return winRate(partyAtLevel(level, companions), () => createEncounterEnemies(id, zone, createRng(n++ * 7 + 1)), 300).rate;
+  return winRate(partyAtLevel(level, companions), () => createEncounterEnemies(id, zone, createRng(n++ * 7 + 1), companions), 300).rate;
 }
 
 describe("ダンジョンの敵のバランス（想定より4レベル低くても詰まらない）", () => {

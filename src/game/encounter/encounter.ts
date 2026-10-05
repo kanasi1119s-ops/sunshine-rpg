@@ -1,4 +1,5 @@
 import { enemyLuck } from "../battle/luck";
+import { encounterScale } from "../battle/difficulty-scale";
 import type { Combatant } from "../battle/types";
 import { expRequiredForLevel } from "../growth/exp-curve";
 import type { MonsterShape, MonsterSpec } from "../monster/monsters";
@@ -107,7 +108,7 @@ function nextThreshold(rng: () => number): number {
 }
 
 /** 1歩ぶん進める。出会うとき（歩数が尽きた、かつエンカウントのある地図）は敵の一団を返し、次の歩数を決め直す。 */
-export function stepEncounter(state: EncounterState, mapId: string, rng: () => number): { state: EncounterState; enemies: Combatant[] | null } {
+export function stepEncounter(state: EncounterState, mapId: string, rng: () => number, companions = 0): { state: EncounterState; enemies: Combatant[] | null } {
   const zone = ENCOUNTER_ZONES[mapId] ?? WORLD_ENCOUNTER_ZONES[mapId];
   if (!zone) {
     return { state, enemies: null };
@@ -116,7 +117,7 @@ export function stepEncounter(state: EncounterState, mapId: string, rng: () => n
   if (stepsLeft > 0) {
     return { state: { stepsLeft }, enemies: null };
   }
-  return { state: { stepsLeft: nextThreshold(rng) }, enemies: createEncounterEnemies(mapId, zone, rng) };
+  return { state: { stepsLeft: nextThreshold(rng) }, enemies: createEncounterEnemies(mapId, zone, rng, companions) };
 }
 
 /** 想定レベルごとの、雑魚1体の体力・攻撃（間の値は直線でつなぐ）。想定パーティが2体の一団に約96%で勝つ強さを、自動シミュレーションで確かめて決めた。 */
@@ -197,10 +198,13 @@ function statusAttackFor(shape: MonsterShape, level: number): { inflicts?: NonNu
   return {};
 }
 
-export function createEncounterEnemies(mapId: string, zone: EncounterZone, rng: () => number): Combatant[] {
+export function createEncounterEnemies(mapId: string, zone: EncounterZone, rng: () => number, companions = 0): Combatant[] {
   const maxCount = zone.level <= 6 ? 2 : 3;
   const count = 1 + Math.floor(rng() * maxCount);
-  const stats = enemyStatsForLevel(zone.level);
+  const base = enemyStatsForLevel(zone.level);
+  // 仲間が増えるほど、敵は強くなる
+  const scale = encounterScale(companions);
+  const stats = { ...base, maxHp: Math.round(base.maxHp * scale.hp), attack: Math.round(base.attack * scale.atk) };
   const enemies: Combatant[] = [];
   for (let i = 0; i < count; i++) {
     const variant = Math.floor(rng() * zone.names.length);

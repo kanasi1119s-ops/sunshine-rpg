@@ -77,6 +77,7 @@ import { CHAPTER4_OPENING_COMMANDS } from "./game/world/chapter4-world";
 import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { isOpenSpot, rescueTile } from "./game/player-rescue";
+import { strengthenBoss } from "./game/battle/difficulty-scale";
 import { applyTraits } from "./game/items/traits";
 import { bossDropFor } from "./game/items/boss-drops";
 import { allyLuck } from "./game/battle/luck";
@@ -689,7 +690,7 @@ function startStoryBattle(battleId: string): void {
   }
   battle = new BattleController(
     party,
-    [def.createEnemy()],
+    [strengthenBoss(def.createEnemy())],
     createRng(Date.now()),
     { skills: buildSkillsMap(CHAPTER0_SKILL), items: battleItemStacks(), extraSkills: buildExtraSkillsMap() },
   );
@@ -786,7 +787,7 @@ if (import.meta.env.DEV) {
     startEncounter: (mapId: string) => {
       const zone = ENCOUNTER_ZONES[mapId] ?? WORLD_ENCOUNTER_ZONES[mapId];
       if (zone) {
-        startRandomBattle(createEncounterEnemies(mapId, zone, Math.random));
+        startRandomBattle(createEncounterEnemies(mapId, zone, Math.random, Object.keys(companionStats).length));
       }
     },
   };
@@ -2807,7 +2808,7 @@ const loop = createGameLoop({
             worldBattleBiome = tileId === 18 ? "lava" : tileId === 5 ? "desert" : tileId === 6 || tileId === 12 ? "snow" : "grass";
           }
         }
-        const stepped = encounterMapId ? stepEncounter(encounterState, encounterMapId, Math.random) : { state: encounterState, enemies: null };
+        const stepped = encounterMapId ? stepEncounter(encounterState, encounterMapId, Math.random, Object.keys(companionStats).length) : { state: encounterState, enemies: null };
         encounterState = stepped.state;
         if (stepped.enemies) {
           startRandomBattle(stepped.enemies);

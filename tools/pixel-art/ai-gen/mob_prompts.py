@@ -242,6 +242,28 @@ P = {
 }
 
 
+import re
+
+EYE_WORD = re.compile(r"\b(eye|eyes|eyeball|eyeballs|lens)\b", re.I)
+
+
+def strip_eyes(prompt):
+    """目を足す言い回しを、指示文から取りのぞく（人間の指示 2026-10-05「雑魚モンスターに無理に目がついてるけど、なくてもいい」）。
+    「, a single dark eye and trailing ribbons」のように、目だけを言う部分は消し、ほかの特徴もある部分は、目の語だけ落とす。
+    最後に「no eyes」を足す。目が体の特徴そのものの敵（目玉の機械など）は、人が指示文を直して残す。"""
+    parts = [x.strip() for x in prompt.split(",")]
+    kept = []
+    for part in parts:
+        if not EYE_WORD.search(part):
+            kept.append(part)
+            continue
+        # 「two stalk eyes and dripping arms」→「dripping arms」のように、and のあとに残る特徴があれば残す
+        m = re.search(r"\band\b(.+)$", part)
+        if m and not EYE_WORD.search(m.group(1)):
+            kept.append(m.group(1).strip())
+    return ", ".join(kept) + ", no eyes"
+
+
 def main():
     path = os.path.join(os.path.dirname(__file__), "monster-roster.json")
     r = json.load(open(path))
@@ -249,8 +271,11 @@ def main():
     for e in r:
         if e["id"] in P and not e.get("prompt"):
             p, shape, tone = P[e["id"]]
-            e["prompt"], e["shape"], e["tone"] = p, shape, tone
+            e["prompt"], e["shape"], e["tone"] = strip_eyes(p), shape, tone
             n += 1
+        elif e.get("prompt") and e.get("status") != "done" and e.get("kind") != "boss" and "no eyes" not in e["prompt"]:
+            # まだ絵ができていない敵の指示文からも、目を取りのぞく（できあがった絵は、そのまま）
+            e["prompt"] = strip_eyes(e["prompt"])
     json.dump(r, open(path, "w"), ensure_ascii=False, indent=1)
     left = [e["id"] for e in r if e.get("kind") != "boss" and not e.get("prompt")]
     print("書いた:", n, "／ まだ空:", left)
