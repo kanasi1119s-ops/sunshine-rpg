@@ -11,7 +11,7 @@
   J. 岩は「向きと大きさがばらばらの面」＋「ななめの割れ目」（rock）。レンガのように並べない
   K. 雪は丸いこぶ（半円の並び）で屋根にのせ、軒からまるいしずくを垂らす（snow_cap）
   L. 奥にあるものは細く暗く、手前にあるものは太く明るく（環・壁・石）。奥の物は先に描き、手前の物で隠す
-出力: 23点の .txt / pal-*.json、study3-preview.png、study3-grounds.png、study3-world.png
+出力: 11点の .txt（3回目の23点のうち、今のアイコンに似ていた12点は4回目の前に削除） / pal-*.json、study3-preview.png、study3-grounds.png、study3-world.png
 """
 import json
 import math
@@ -248,35 +248,6 @@ def house(g, x0, y0, w, style, roof, wall="nm", rd=5, wh=4, door="x", win=True, 
             if g.get(x, top + wh) not in ".":
                 g.put(x, top + wh, shadow)
     return top + wh
-
-
-# ===================================================================== 小島の土台（4つの小島で共通）
-def islet_base(g, cx=24, cy=31, rx=20, ry=None, top="grass", cliff=5, seed=3):
-    ry = ry or rx * ER
-    T = "oJKN" if top == "grass" else SAND
-    # がけ（だ円の手前半分を下へ cliff ドット。岩の面で）
-    def inside(x, y):
-        u = (x + 0.5 - cx) / rx
-        if abs(u) > 1:
-            return False
-        bow = ry * math.sqrt(1 - u * u)
-        return cy <= y + 0.5 <= cy + bow + cliff
-    rock(g, inside, (int(cx - rx) - 1, int(cy), int(cx + rx) + 1, int(cy + ry + cliff) + 1), STONE, seed=seed, n=10, cracks=0.3, base=-0.08)
-    # 上の面（だ円。ふちは1段明るい、まん中はかたまりの模様）
-    fill_ellipse(g, cx, cy, rx, ry, lambda x, y, u, v, d: tone(T, (0.95 if (d > 0.72 and v < 0.2) else 0.62) - u * 0.15 - (0.2 if d > 0.8 and v > 0.3 else 0)
-                                                           - (0.16 if ((x // 3) + (y // 2) * 2) % 7 == 0 and d < 0.7 else 0)))
-    # 波の白（水ぎわの手前に、決まった間かくの短い線。点はまかない）
-    for k in range(0, 360, 1):
-        a = math.radians(k)
-        if math.sin(a) < 0.15:
-            continue
-        x = cx + math.cos(a) * (rx + 1.5)
-        y = cy + math.sin(a) * (ry + 1.2) + cliff + 1
-        if int(k / 9) % 3 != 2:
-            g.put(x, y, "z" if math.cos(a) < 0.3 else "X")
-    for x in (int(cx - rx) - 1, int(cx + rx) + 1):
-        g.put(x, cy + 2, "z")
-    return T
 
 
 # ===================================================================== 1) お城（本当の斜め上からの見え方。中庭が見える）
@@ -713,87 +684,6 @@ def lake3():
     return save(g, "lake3")
 
 
-# ===================================================================== 8) 山の寺（雪をいただく岩山の中腹に、寺と石段）
-def temple3():
-    g = Grid()
-    def inside(x, y):
-        xx = x + 0.5
-        h = 2 + abs(xx - 26) * 1.55 + (2 if xx < 20 else 0)
-        return y >= h and y <= 45 and 1 <= x <= 46
-    cell = rock(g, inside, (1, 2, 46, 45), STONE, seed=31, n=20, cracks=0.4)
-    # 雪（高い所の面を、雪の色に置きかえる。ふちは丸く）
-    for (x, y), i in cell.items():
-        lim = 13 + math.sin(x * 0.9) * 1.5
-        if y < lim:
-            c = g.get(x, y)
-            g.put(x, y, {"o": "u", "a": "u", "b": "v", "c": "z", "d": "z"}.get(c, c))
-    # 寺の台（岩を切った平らな面）
-    for y in range(24, 28):
-        for x in range(9, 40):
-            g.put(x, y, "d" if y == 24 else "c")
-    for y in range(28, 30):
-        for x in range(9, 40):
-            g.put(x, y, "b")
-    # 寺（赤い柱の堂。寄棟の屋根の上に金の環）
-    hip_roof(g, 13, 35, 11, 18, "oFG", wb=1.5, ws=1.0)
-    for y in range(20, 25):
-        for x in range(14, 35):
-            g.put(x, y, "n" if x < 33 else "m")
-    for x in (14, 19, 29, 34):
-        g.rect(x, 20, x, 24, "F")
-    g.rect(22, 21, 26, 24, "k"); g.put(15, 21, "L"); g.put(33, 21, "L")
-    for (x, y) in ((23, 6), (24, 6), (25, 6), (22, 7), (26, 7), (22, 8), (26, 8), (23, 9), (24, 9), (25, 9)):
-        g.put(x, y, "h")
-    g.put(24, 8, "g"); g.rect(24, 10, 24, 10, "g")
-    # 石段（台から下へ、まっすぐ）
-    for k in range(8):
-        y = 30 + k * 2
-        for x in range(21 - k // 2, 28 + k // 2):
-            g.put(x, y, "d"); g.put(x, y + 1, "b")
-    outline_dark(g, ramp_of(STONE, SNOW, "oFG"))
-    return save(g, "temple3")
-
-
-# ===================================================================== 9) 遺跡（高さのちがう柱・折れた柱・横たわる柱・はり）
-def ruin3():
-    g = Grid()
-    S = STONE
-    # 基壇（2段）
-    top_face(g, 3, 44, 33, 38, S, 0.86); brick_face(g, 3, 44, 39, 42, S, 0.5, seed=1)
-    top_face(g, 8, 40, 30, 32, S, 0.92); brick_face(g, 8, 40, 33, 34, S, 0.55, seed=2)
-    # 柱（丸い柱。奥から。高さはばらばら）
-    def column(cx, top, bot, broken=False):
-        cylinder(g, cx, 2.6, top, bot, 0.9, S, course=3, joints=False)
-        if broken:
-            for x in range(int(cx - 3), int(cx + 4)):
-                t = top + (1 if (x * 7) % 3 == 0 else 0) + (2 if x > cx + 1 else 0)
-                for y in range(top - 2, t):
-                    if g.get(x, y) in S:
-                        g.put(x, y, ".")
-            g.put(cx - 2, top, "d"); g.put(cx - 1, top, "d"); g.put(cx, top + 1, "c")
-        else:
-            for x in range(int(cx - 3), int(cx + 4)):
-                g.put(x, top - 1, "d" if x < cx + 1 else "c"); g.put(x, top, "b")   # 柱頭
-    column(11, 6, 31)
-    column(20, 9, 31)
-    column(29, 17, 31, broken=True)
-    column(38, 12, 31, broken=True)
-    # はり（左の2本の柱にかかる石）
-    top_face(g, 7, 24, 3, 4, S, 0.95); brick_face(g, 7, 24, 5, 6, S, 0.5, course=9, brick=8)
-    # 横たわる柱（手前。円の切り口が見える）
-    for y in range(36, 40):
-        for x in range(26, 40):
-            g.put(x, y, tone(S, 0.75 - (y - 36) * 0.15))
-    fill_ellipse(g, 25, 38, 2, 2.2, lambda x, y, u, v, d: "d" if d < 0.5 else "c")
-    fill_ellipse(g, 15, 37, 2.5, 1.6, lambda x, y, u, v, d: tone(S, 0.8 - v * 0.3))     # くずれた石
-    # つた（かたまり）
-    for (x, y) in ((10, 14), (11, 15), (10, 16), (12, 17), (20, 22), (21, 23), (37, 20), (38, 21)):
-        g.put(x, y, "K"); g.put(x, y + 1, "J")
-    g.put(10, 13, "N"); g.put(20, 21, "N")
-    outline_dark(g, ramp_of(S, LEAF))
-    return save(g, "ruin3")
-
-
 # ===================================================================== 10) 立ち石（だ円に並ぶ石。奥は小さく、手前は大きい。まん中に光る環の石）
 def stones3():
     g = Grid()
@@ -833,109 +723,6 @@ def stones3():
         g.put(x0 + 1, int(y) - h + 3, "K"); g.put(x0 + 1, int(y) - h + 4, "J")   # 苔
     outline_dark(g, ramp_of(S, LEAF))
     return save(g, "stones3")
-
-
-# ===================================================================== 11) 大樹（大きな房の葉・太い幹と根・うろの灯）
-def bigtree3():
-    g = Grid()
-    # 幹と根
-    for y in range(24, 45):
-        t = (y - 24) / 20
-        half = 4.5 + (t ** 3) * 9
-        for x in range(48):
-            u = (x + 0.5 - 24) / half
-            if abs(u) <= 1:
-                v = 0.7 - u * 0.4
-                if (x + y // 4) % 4 == 0:
-                    v -= 0.2                                               # 樹皮のたてのすじ
-                g.put(x, y, tone(WOOD, v))
-    for (rx0, d) in ((10, -1), (38, 1)):                                    # 根の先
-        for k in range(5):
-            g.put(rx0 + d * k // 2, 44 - k // 3, "x")
-    for y in range(34, 41):                                                # うろ（中に灯）
-        for x in range(22, 27):
-            if y > 35 or 23 <= x <= 25:
-                g.put(x, y, "k")
-    g.put(24, 38, "L"); g.put(24, 37, "M")
-    # 葉（大きな房を7つ。奥から）
-    foliage(g, [(12, 12, 9), (35, 11, 9.5), (24, 7, 9), (8, 22, 7), (40, 22, 7), (18, 22, 8), (31, 22, 8.5)])
-    outline_dark(g, ramp_of(LEAF, WOOD))
-    return save(g, "bigtree3")
-
-
-# ===================================================================== 12) 火山（上の面＝火口が見える。溶岩の流れ、けむりは丸いかたまり3つ）
-def volcano3():
-    g = Grid()
-    def inside(x, y):
-        xx = x + 0.5
-        return y >= 14 + 0 * xx and y <= 45 and abs(xx - 24) <= 8 + (y - 14) * 0.52
-    rock(g, inside, (1, 13, 46, 45), STONE, seed=41, n=18, cracks=0.4, base=-0.18)
-    # 火口（だ円。ふちは明るい岩、中は溶岩）
-    fill_ellipse(g, 24, 14, 9, 3.3, lambda x, y, u, v, d: ("b" if v < 0 else "a") if d > 0.6 else ("t" if d > 0.3 else "L"))
-    # 溶岩の流れ（火口から手前へ2本。ゆれる線、芯は明るい）
-    def flow(x, y0, y1, drift, wide):
-        for y in range(y0, y1):
-            x += drift
-            xi = int(x + math.sin(y * 0.45) * 1.2)
-            w = wide if y < (y0 + y1) / 2 else max(1, wide - 1)
-            for k in range(w):
-                g.put(xi + k, y, "L" if (k == 0 and y < y0 + 6) else "t")
-            g.put(xi + w, y, "f")
-        return x
-    xm = flow(23.0, 16, 30, -0.05, 3)          # 太い流れが途中で2つに分かれる
-    flow(xm, 30, 44, -0.35, 2)
-    flow(xm + 2, 30, 42, 0.3, 1)
-    # けむり（丸いかたまり3つ。下が暗い）
-    for (bx, by, r) in ((22, 8.5, 3.8), (28, 4.5, 3.6)):   # 右へ流れるけむり（丸いかたまり4つ）
-        fill_ellipse(g, bx, by, r, r * 0.85, lambda x, y, u, v, d: "d" if u + v < -0.1 else ("c" if d < 0.8 or u + v < 0.6 else "b"))
-    outline_dark(g, ramp_of(STONE, SNOW))
-    return save(g, "volcano3")
-
-
-# ===================================================================== 13) 渦（うずまく海と、まん中から立つ暗い石の針）
-def vortex3():
-    g = Grid()
-    cx, cy, rx, ry = 24, 36, 23, 10
-    def swirl(x, y, u, v, d):
-        r = math.sqrt(d)
-        a = math.atan2(v, u)
-        arm = (a + r * 7.0) % (2 * math.pi / 3)
-        if r < 0.18:
-            return "k"
-        if arm < 0.45:
-            return "z" if r > 0.5 else "X"
-        if arm < 1.1:
-            return "U" if r > 0.35 else "R"
-        return "R" if r > 0.4 else "Q"
-    fill_ellipse(g, cx, cy, rx, ry, swirl)
-    # 石の針（まん中から上へ。左が明るい。先にむらさきの光）
-    for y in range(4, 37):
-        t = (y - 4) / 32
-        half = 1 + t * 3.6
-        for x in range(cx - 6, cx + 7):
-            u = (x + 0.5 - cx) / half
-            if abs(u) <= 1:
-                g.put(x, y, tone(DARK, 0.7 - u * 0.45 - (0.15 if (y % 5 == 0) else 0)))
-    for (x, y, c) in ((24, 2, "Y"), (24, 3, "s"), (23, 3, "Y"), (25, 3, "W"), (24, 1, "W"), (22, 4, "W"), (26, 4, "W")):
-        g.put(x, y, c)
-    outline_dark(g, ramp_of(DARK, WATER))
-    return save(g, "vortex3")
-
-
-# ===================================================================== 14) 潜る場所（浅い海の中の、深い青の穴。泡と光）
-def dive3():
-    g = Grid()
-    cx, cy = 24, 30
-    fill_ellipse(g, cx, cy, 20, 9, lambda x, y, u, v, d: "X" if d > 0.82 else ("U" if d > 0.45 else ("R" if d > 0.18 else "Q")))
-    for k in range(0, 360, 6):
-        a = math.radians(k)
-        if (k // 18) % 2:
-            g.put(cx + math.cos(a) * 21, cy + math.sin(a) * 10, "z")            # 浅瀬の白い線（とぎれとぎれ）
-    for (bx, by, r) in ((24, 18, 1.6), (21, 12, 1.2), (26, 8, 1.0), (23, 4, 0.8)):  # 泡（上へ小さく）
-        fill_ellipse(g, bx, by, r + 0.6, r + 0.6, lambda x, y, u, v, d: "z" if (d > 0.45 and u + v < 0.6) else ("P" if d > 0.45 else None))
-    for (x, y) in ((12, 25), (36, 33)):
-        g.put(x, y, "e"); g.put(x - 1, y, "P"); g.put(x + 1, y, "P"); g.put(x, y - 1, "P"); g.put(x, y + 1, "P")
-    return save(g, "dive3")
 
 
 # ===================================================================== 15) 砂漠の野営地（しまの天幕3つ・やしの木・たき火）
@@ -985,162 +772,6 @@ def tents3():
     return save(g, "tents3")
 
 
-# ===================================================================== 16) 浮き島（草の上の面・岩の底・小さな塔と家・雲のかたまり）
-def sky3():
-    g = Grid()
-    cx, cy, rx = 24, 20, 19
-    ry = rx * ER
-    def under(x, y):
-        u = (x + 0.5 - cx) / rx
-        if abs(u) > 1 or y + 0.5 < cy:
-            return False
-        depth = 22 * (1 - abs(u)) ** 1.2 + ry * math.sqrt(max(0, 1 - u * u))
-        return y + 0.5 <= cy + depth
-    rock(g, under, (4, int(cy), 44, 44), "oabc", seed=51, n=12, cracks=0.4, base=-0.05)
-    fill_ellipse(g, cx, cy, rx, ry, lambda x, y, u, v, d: tone("oJKN", (0.95 if (d > 0.7 and v < 0) else 0.62) - u * 0.15 - (0.25 if d > 0.82 and v > 0.3 else 0)))
-    # 塔（左）と家（右）
-    cylinder(g, 15, 3, 6, 19, 1.1, "oabc", course=3, joints=False)
-    cone(g, 15, 6, 3.8, 6, 1.3, "oBCD")
-    g.rect(14, 10, 14, 12, "k"); g.put(14, 11, "L")
-    house(g, 23, 11, 12, "hip", "oBCD", rd=4, wh=4, door="k")
-    # 雲（左下と右に、丸いかたまり）
-    for (bx, by, r) in ((6, 33, 3.4), (10, 34, 2.6), (41, 28, 3.0), (44, 29, 2.2)):
-        fill_ellipse(g, bx, by, r, r * 0.75, lambda x, y, u, v, d: "z" if u + v < 0.3 else "v")
-    outline_dark(g, ramp_of("oabc", "oJKN", "oBCD", "omn"))
-    return save(g, "sky3")
-
-
-# ===================================================================== 17) 宮殿（暗い石・金の屋根・むらさきの光。左右対称で、まん中がいちばん高い）
-def palace3():
-    g = Grid()
-    P = DARK
-    # テラス（上の面＋手前の面）
-    top_face(g, 2, 45, 35, 38, P, 0.8); brick_face(g, 2, 45, 39, 43, P, 0.45, seed=1)
-    for y in range(39, 44):                                                # 正面の階段
-        for x in range(19, 29):
-            g.put(x, y, "s" if y % 2 else "q")
-    # 左右の翼（寄棟の屋根は金）
-    for (x0, x1) in ((3, 16), (31, 44)):
-        hip_roof(g, x0, x1, 17, 23, "oghL", wb=1.5, ws=1.0)
-        brick_face(g, x0, x1, 25, 34, P, 0.6, seed=2)
-        for i, wx in enumerate(range(x0 + 2, x1 - 1, 4)):
-            g.rect(wx, 28, wx, 30, "k")
-            if i % 2 == 0:
-                g.put(wx, 29, "L")
-    # まん中の館（高い。正面に大きな扉）
-    hip_roof(g, 15, 32, 13, 19, "oghL", wb=1.5, ws=1.0)
-    brick_face(g, 15, 32, 21, 34, P, 0.65, seed=3)
-    for y in range(26, 35):
-        for x in range(21, 27):
-            if y > 27 or 22 <= x <= 25:
-                g.put(x, y, "k")
-    g.put(23, 30, "Y"); g.put(24, 30, "Y"); g.put(23, 29, "W"); g.put(24, 29, "W")
-    for wx in (17, 29):
-        g.rect(wx, 24, wx + 1, 27, "k"); g.put(wx, 25, "L")
-    # まん中の尖塔（いちばん高い）
-    for y in range(0, 14):
-        half = 0.5 + y * 0.32
-        for x in range(18, 30):
-            u = (x + 0.5 - 24) / max(0.6, half)
-            if abs(u) <= 1:
-                g.put(x, y, tone(P, 0.8 - u * 0.45))
-    g.put(24, 0, "h"); g.put(23, 6, "Y"); g.put(23, 7, "W")
-    # 左右の小塔
-    for tx in (5, 42):
-        for y in range(8, 18):
-            half = 0.5 + (y - 8) * 0.3
-            for x in range(tx - 4, tx + 5):
-                u = (x + 0.5 - tx) / max(0.6, half)
-                if abs(u) <= 1:
-                    g.put(x, y, tone("oghL", 0.85 - u * 0.35))
-    outline_dark(g, ramp_of(P, "ogh"))
-    return save(g, "palace3")
-
-
-# ===================================================================== 18〜21) 小島（共通の土台）
-def islet_fort3():
-    g = Grid()
-    islet_base(g, top="sand", seed=61)
-    S = STONE
-    top_face(g, 12, 35, 19, 21, S, 0.9); parapet(g, 12, 35, 19, S, 3)
-    brick_face(g, 12, 35, 22, 32, S, 0.55, seed=4)
-    for y in range(26, 33):
-        for x in range(21, 27):
-            if y > 27 or 22 <= x <= 25:
-                g.put(x, y, "k")
-    cylinder(g, 12, 4, 10, 30, 1.4, S)                                    # 左の塔
-    ellipse_top(g, 12, 10, 4.5, 1.6, S, inner=1.6, merlons=10)
-    g.rect(12, 1, 12, 9, "w"); g.put(13, 1, "G"); g.put(14, 1, "G"); g.put(15, 2, "F"); g.put(13, 2, "F"); g.put(14, 2, "F")
-    g.rect(11, 16, 11, 18, "k"); g.put(11, 17, "L")
-    for (x, y) in ((33, 20), (34, 21), (35, 22), (34, 23)):
-        g.put(x, y, ".")                                                  # 右の壁のくずれ
-    outline_dark(g, ramp_of(S, SAND))
-    return save(g, "islet-fort3")
-
-
-def islet_shrine3():
-    g = Grid()
-    islet_base(g, top="grass", seed=62)
-    # 円い台（石）と、立った大きな石の環（金のふち）。中に欠けた小さな環が光る
-    fill_ellipse(g, 24, 30, 10, 3.6, lambda x, y, u, v, d: "d" if v < 0 else "c")
-    for y in range(29, 32):
-        for x in range(15, 34):
-            if ell(x, y - 2, 24, 30, 10, 3.6) <= 1 and ell(x, y, 24, 30, 10, 3.6) > 1:
-                g.put(x, y, "b")
-    for k in range(720):
-        a = k / 720 * 2 * math.pi
-        for th in (0, 0.9, 1.8):
-            r = 10 - th
-            x, y = 24 + math.cos(a) * r * 0.82, 18 + math.sin(a) * r
-            c = "d" if th == 0 and math.cos(a) < 0.2 else ("c" if th < 1.5 else "b")
-            if th == 0 and math.sin(a) < -0.5:
-                c = "h"
-            g.put(x, y, c)
-    for k in range(360):
-        a = k / 360 * 2 * math.pi
-        if 0.4 < a < 1.3:
-            continue
-        g.put(24 + math.cos(a) * 3.2, 18 + math.sin(a) * 3.6, "P" if math.cos(a) < 0.3 else "O")
-    g.put(24, 18, "e")
-    outline_dark(g, ramp_of(STONE, "oJKN"))
-    return save(g, "islet-shrine3")
-
-
-def islet_cave3():
-    g = Grid()
-    islet_base(g, top="sand", seed=63)
-    inside = crag_mask(24, [(18, 4, 10), (29, 7, 9)], 31, 15, 12)
-    rock(g, inside, (6, 3, 42, 31), STONE, seed=64, n=12, cracks=0.5)
-    for y in range(20, 32):
-        for x in range(18, 31):
-            top = 20 + ((x + 0.5 - 24.5) / 6) ** 2 * 4
-            if abs(x + 0.5 - 24.5) <= 5.5 and y >= top:
-                g.put(x, y, "k" if abs(x + 0.5 - 24.5) < 4 and y > top + 1 else "o")
-    outline_dark(g, ramp_of(STONE, SAND))
-    return save(g, "islet-cave3")
-
-
-def islet_ruin3():
-    g = Grid()
-    islet_base(g, top="grass", seed=65)
-    S = STONE
-    def col(cx, top, bot, broken=False):
-        cylinder(g, cx, 2.4, top, bot, 0.8, S, course=3, joints=False)
-        if not broken:
-            for x in range(int(cx - 3), int(cx + 4)):
-                g.put(x, top - 1, "d" if x < cx + 1 else "c")
-        else:
-            g.put(cx - 2, top, "d"); g.put(cx + 1, top + 1, ".")
-    col(14, 9, 30); col(25, 9, 30)
-    top_face(g, 10, 29, 5, 6, S, 0.95); brick_face(g, 10, 29, 7, 8, S, 0.5, course=9, brick=7)
-    col(34, 18, 31, broken=True)
-    fill_ellipse(g, 38, 33, 3, 1.6, lambda x, y, u, v, d: tone(S, 0.8 - v * 0.3))
-    for (x, y) in ((13, 20), (14, 21), (26, 14), (25, 15), (24, 16)):
-        g.put(x, y, "K"); g.put(x, y + 1, "J")
-    outline_dark(g, ramp_of(S, "oJKN"))
-    return save(g, "islet-ruin3")
-
-
 # ===================================================================== 22) 森の祠（2回目の祠を、家族のパレット16色におさめて描きなおし）
 def shrine3():
     g = Grid()
@@ -1178,8 +809,7 @@ def shrine3():
     return save(g, "shrine3")
 
 
-PIECES = [castle3, spire3, town3, cave3, mine3, port3, village3, lake3, temple3, ruin3, stones3, bigtree3, volcano3,
-          vortex3, dive3, tents3, sky3, palace3, islet_fort3, islet_shrine3, islet_cave3, islet_ruin3, shrine3]
+PIECES = [castle3, spire3, town3, cave3, mine3, port3, village3, lake3, stones3, shrine3, tents3]
 
 
 # ===================================================================== 確かめ用
@@ -1209,9 +839,7 @@ def world(path):
         (236, 18, 42, 32, [("town3", 245, 27, "snow"), ("town3", 269, 31, "snow"), ("shrine3", 272, 47, "snow")], "yukimachi / shimohara"),
         (220, 180, 40, 34, [("castle3", 238, 198, "grass"), ("stones3", 224, 190, "grass"), ("cave3", 256, 187, "grass"), ("shrine3", 231, 212, "grass")], "toushin castle"),
         (164, 110, 26, 30, [("spire3", 177, 135, "sea")], "the spire"),
-        (260, 196, 44, 24, [("palace3", 300, 212, "waste"), ("tents3", 269, 217, "sand"), ("ruin3", 265, 204, "grass")], "kyotoukyu / arano"),
-        (258, 232, 28, 20, [("volcano3", 272, 246, "ash")], "volcano islet"),
-        (154, 20, 22, 20, [("islet-shrine3", 164, 31, None)], "islet"),
+        (260, 204, 20, 18, [("tents3", 269, 217, "sand")], "arano"),
     ]
     ims = [world_panel(rows, *p) for p in panels]
     # 棚づめ（横はば 1500 ドットまで並べ、はみ出たら次の段）

@@ -73,21 +73,9 @@ PAIRS = [
     ("port3", ("r17-polish", "icon-port"), "grass", True),
     ("village3", ("r17-polish", "icon-village"), "grass", True),
     ("lake3", ("r17-polish", "icon-lake"), "grass", True),
-    ("temple3", ("r17-polish", "icon-temple"), "grass", True),
-    ("ruin3", ("r17-polish", "icon-ruin"), "grass", True),
     ("stones3", ("r17-polish", "icon-stones"), "grass", True),
-    ("bigtree3", ("r17-polish", "icon-bigtree"), "grass", True),
     ("shrine3", ("r17-polish", "icon-shrine"), "forest", True),
-    ("volcano3", ("r17-polish", "icon-volcano"), "ash", True),
-    ("vortex3", ("r17-polish", "icon-vortex"), "sea", False),
-    ("dive3", ("r17-polish", "icon-dive"), "sea", False),
     ("tents3", ("r17-polish", "icon-tents"), "sand", True),
-    ("sky3", ("r17-polish", "icon-sky"), "cloud", True),
-    ("palace3", ("r17-polish", "icon-palace"), "waste", True),
-    ("islet-fort3", ("r22-vehicles", "islet-fort"), "sea", False),
-    ("islet-shrine3", ("r22-vehicles", "islet-shrine"), "sea", False),
-    ("islet-cave3", ("r22-vehicles", "islet-cave"), "sea", False),
-    ("islet-ruin3", ("r22-vehicles", "islet-ruin"), "sea", False),
 ]
 
 
