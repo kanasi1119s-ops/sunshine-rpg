@@ -159,6 +159,7 @@ import { latestSaveSlot, summarizeSlots } from "./game/save/slots";
 import { isFileRow, closeSlotMenu, confirmSlot, createSlotMenuState, moveSlotCursor, openSlotMenu, withSlotRows } from "./game/menu/slot-menu";
 import { renderSlotMenu } from "./render/slot-menu-renderer";
 import { downloadSaveFile, readSaveFile } from "./io/save-file";
+import { openBackupDialog } from "./io/backup-dialog";
 import { AudioEngine } from "./audio/audio-engine";
 import { getTrackEdition, type Edition } from "./audio/catalog";
 import "./audio/user-songs";
@@ -743,6 +744,7 @@ if (import.meta.env.DEV) {
     mapIds: Object.keys(WORLD_MAPS),
     setClock: (ms: number) => { clockMs = ms; },
     warp: (mapId: string, tileX: number, tileY: number) => switchMap(mapId, tileX, tileY),
+    openBackup: (mode: "save" | "load") => openBackupDialog({ mode, getSave: buildSaveData, exportFile: () => downloadSaveFile(buildSaveData()), pickFile: () => fileInput.click(), onLoad: (d) => { applySaveData(d); saveMessage = "セーブデータを読み込みました"; saveMessageTimer = 2000; } }),
     startNew: () => {
       bootOpening = { ...bootOpening, open: false };
       title = { ...title, open: false };
@@ -2418,13 +2420,21 @@ const loop = createGameLoop({
       }
       if (backPressed) slotMenu = closeSlotMenu(slotMenu);
       if (actionPressed && isFileRow(slotMenu)) {
-        if (slotMenu.mode === "save") {
-          void downloadSaveFile(buildSaveData()).then((ok) => {
-            slotMenu = withSlotRows(slotMenu, slotMenu.rows, ok ? "ファイルに書き出しました" : "書き出せませんでした");
-          });
-        } else {
-          fileInput.click();
-        }
+        openBackupDialog({
+          mode: slotMenu.mode,
+          getSave: buildSaveData,
+          exportFile: () => downloadSaveFile(buildSaveData()),
+          pickFile: () => fileInput.click(),
+          onLoad: (data) => {
+            slotMenu = closeSlotMenu(slotMenu);
+            title = { ...title, open: false };
+            applySaveData(data);
+            playMapBgm(currentMapId);
+            autosave();
+            saveMessage = "セーブデータを読み込みました";
+            saveMessageTimer = 2000;
+          },
+        });
       } else if (actionPressed) {
         const slot = confirmSlot(slotMenu);
         if (slot) {

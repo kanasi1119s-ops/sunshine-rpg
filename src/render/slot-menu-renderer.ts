@@ -22,7 +22,7 @@ export function renderSlotMenu(ctx: CanvasRenderingContext2D, state: SlotMenuSta
   const fy = 30 + state.rows.length * 24;
   const fileSelected = state.cursor === state.rows.length;
   ctx.fillStyle = fileSelected ? "#f2c14e" : "#9ad0ff";
-  ctx.fillText(`${fileSelected ? "▶" : "　"}${state.mode === "save" ? "ファイルに書き出す（控え用）" : "ファイルから読み込む"}`, 14, fy);
+  ctx.fillText(`${fileSelected ? "▶" : "　"}${state.mode === "save" ? "バックアップを書き出す（ファイル・テキスト）" : "バックアップから読み込む（ファイル・テキスト）"}`, 14, fy);
   if (state.message) {
     ctx.fillStyle = "#88ff88";
     ctx.fillText(state.message, 14, screenHeight - 22);
