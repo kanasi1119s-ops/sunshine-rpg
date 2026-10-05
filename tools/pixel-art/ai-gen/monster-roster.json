@@ -1527,7 +1527,7 @@
  {
   "id": "enc-tower-3-5",
   "prompt": "a floating creature shaped like a large amber gold feather with small feather wings, deep gold and orange glow, one living eye at its base",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-3-5",
   "kind": "mob",
   "name": "光の羽",
@@ -1561,8 +1561,8 @@
  },
  {
   "id": "enc-kanou-1-1",
-  "prompt": "a wandering light, a small orb of pale light with a long flickering tail and two dot eyes",
-  "status": "done",
+  "prompt": "a small glowing orb of warm amber light with a long flickering comet-like tail of sparks and two tiny dot eyes, floating, no human",
+  "status": "todo",
   "key": "enemy:enc-kanou-1-1",
   "kind": "mob",
   "name": "迷いの光",
@@ -1570,16 +1570,17 @@
   "level": 33,
   "shape": "float",
   "tone": [
-   210,
-   210,
-   240
+   170,
+   130,
+   60
   ],
-  "draft": "enc-kanou-1-1_1"
+  "draft": "enc-kanou-1-1_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-kanou-1-2",
   "prompt": "a drifting shadow like a jellyfish of darkness with long flowing tendrils",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-1-2",
   "kind": "mob",
   "name": "たゆたう影",
@@ -1590,12 +1591,13 @@
    70,
    65,
    100
-  ]
+  ],
+  "draft": "enc-kanou-1-2_0"
  },
  {
   "id": "enc-kanou-1-3",
   "prompt": "a boundary insect with a body split down the middle in two different colors, violet and grey",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-1-3",
   "kind": "mob",
   "name": "境目の虫",
@@ -1606,7 +1608,8 @@
    120,
    105,
    140
-  ]
+  ],
+  "draft": "enc-kanou-1-3_1"
  },
  {
   "id": "enc-kanou-1-4",
