@@ -1334,7 +1334,7 @@
  {
   "id": "enc-tower-2-0",
   "prompt": "a cloud-road crystal, a pale blue crystal with clouds trapped inside, floating with small wings of mist",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-2-0",
   "kind": "mob",
   "name": "雲路の結晶",
@@ -1345,7 +1345,8 @@
    175,
    200,
    230
-  ]
+  ],
+  "draft": "enc-tower-2-0_1"
  },
  {
   "id": "enc-tower-2-1",
