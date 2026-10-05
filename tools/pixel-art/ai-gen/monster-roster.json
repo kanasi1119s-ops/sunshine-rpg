@@ -1333,8 +1333,8 @@
  },
  {
   "id": "enc-tower-2-0",
-  "prompt": "a cloud-road crystal, a pale blue crystal with clouds trapped inside, floating with small wings of mist",
-  "status": "done",
+  "prompt": "a floating faceted pale blue crystal with swirling clouds trapped inside, two small wings made of mist at its sides",
+  "status": "todo",
   "key": "enemy:enc-tower-2-0",
   "kind": "mob",
   "name": "雲路の結晶",
@@ -1342,15 +1342,16 @@
   "level": 31,
   "shape": "float",
   "tone": [
-   175,
-   200,
-   230
+   80,
+   110,
+   160
   ],
-  "draft": "enc-tower-2-0_1"
+  "draft": "enc-tower-2-0_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-tower-2-1",
-  "prompt": "misty footprints come alive, a low creature of fog with heavy foot shapes and a lantern eye",
+  "prompt": "a low crawling creature made of dark grey fog with two heavy stone-like feet and one glowing lantern eye on its front",
   "status": "todo",
   "key": "enemy:enc-tower-2-1",
   "kind": "mob",
@@ -1359,15 +1360,17 @@
   "level": 31,
   "shape": "ground",
   "tone": [
-   185,
-   195,
-   205
-  ]
+   80,
+   85,
+   95
+  ],
+  "draft": "enc-tower-2-1_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-tower-2-2",
   "prompt": "a stone wrapped in swirling wind ribbons, a round boulder with carved wind symbols and one eye",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-2-2",
   "kind": "mob",
   "name": "風をまとう石",
@@ -1378,7 +1381,8 @@
    140,
    150,
    160
-  ]
+  ],
+  "draft": "enc-tower-2-2_1"
  },
  {
   "id": "enc-tower-2-3",
