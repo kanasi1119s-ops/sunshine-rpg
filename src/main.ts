@@ -1115,6 +1115,8 @@ function shownBattleState(b: BattleController): BattleState {
 }
 /** 攻撃のエフェクトが終わるまで、メッセージ送り（次の行動・次のコマンド）を受けつけない時刻。 */
 let battleInputLockUntil = 0;
+/** 戦闘のメッセージを、自動で次へ進める時刻（ターンが始まったら、ボタンを押さなくても最後まで進む）。 */
+let battleAutoAdvanceAt = 0;
 let lastCast: { fromId: string; fx: string } | null = null;
 let lastBattleMessage: string | null = null;
 let battle: BattleController | null = null;
@@ -2750,6 +2752,8 @@ const loop = createGameLoop({
           }
           battleAnim = animSpec ? { spec: animSpec, startedAt: performance.now() } : null;
           battleInputLockUntil = performance.now() + (animSpec ? animSpec.durationMs : 0);
+          // 読む時間（短い文は少し、長い文はもう少し）をあけて、自動で次へ進む
+          battleAutoAdvanceAt = battleInputLockUntil + Math.min(1300, 650 + uiState.text.length * 25);
           // HPは、効果が当たる瞬間まで前のまま見せる
           const hpBefore = battle.getHpBeforeMessage();
           hpHold = animSpec && animSpec.fxStart > 0 && hpBefore ? { from: hpBefore, until: performance.now() + animSpec.durationMs * animSpec.fxStart } : null;
@@ -2805,6 +2809,10 @@ const loop = createGameLoop({
           battle.confirm();
           lastBattleMessage = null;
         }
+      } else if (uiState.kind === "message" && performance.now() >= battleAutoAdvanceAt) {
+        // 攻撃が始まったら、止まらずに自動で最後まで進む
+        battle.confirm();
+        lastBattleMessage = null;
       }
       return;
     }
