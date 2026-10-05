@@ -394,7 +394,8 @@ function wagonCommands(): EventCommand[] {
           speaker: "レト",
         },
         { type: "message", text: "……印の彫りが浅い。本物の組合印は、もっと深く打つ。偽物だ。", speaker: "オルカ" },
-        // 帳面を見つけたとたん、野営地のはずれの天幕の布が揺れ、中から人が出てくる
+        // 帳面を見つけたとたん、野営地のはずれの天幕の布が揺れ、中から人が出てくる（映画のような演出）
+        { type: "cinematic", on: true },
         { type: "message", text: "そのとき、野営地のはずれの天幕の入り口が、ばさりと揺れた。" },
         { type: "setFlag", flag: "chapter4_wagon_found", value: true },
         { type: "message", text: "天幕の暗がりから、灰色の外套の男が、ゆっくりと歩み出てきた。" },

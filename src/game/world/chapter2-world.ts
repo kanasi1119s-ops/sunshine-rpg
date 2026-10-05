@@ -317,6 +317,7 @@ function dorunCommands(): EventCommand[] {
         },
       ],
       else: [
+        { type: "cinematic", on: true },
         { type: "message", text: "闇の中から、静かな声がした。「……おや、お客様とは珍しい」" },
         { type: "message", text: "姿を見せたのは、人当たりのよさそうな、それでいてどこか底の読めない、灰色の外套の男だった。" },
         {

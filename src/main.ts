@@ -516,6 +516,10 @@ const dialogue = new DialogueController(flags, {
     autosave();
     return true;
   },
+  onCinematic: (on) => {
+    cinematicSticky = on;
+    if (on && audioStarted) audio.playSe(seOf("magic-charge"));
+  },
   onStaffRoll: () => {
     staffRoll = startStaffRoll();
     currentBgmTrack = getTrack("staff-roll");
@@ -1298,6 +1302,10 @@ const COMPANION_NPC_IDS: Record<string, string> = {
   "tetsukusari-orca": "chapter3_orca_joined",
   "shimohara-ayame": "chapter6_ayame_joined",
 };
+
+/** 映画のような演出（上下の黒い帯）。ドルンが話す場面と、`cinematic` コマンドで入る。会話がおわると、ゆっくり消える。 */
+let cinematicSticky = false;
+let cinematicLevel = 0;
 
 /** 天幕などから出てくる人が現れた時刻（ms）と、出てくるのにかかる時間。 */
 const npcAppearedAt = new Map<string, number>();
@@ -2148,6 +2156,22 @@ function renderGameSceneBase(): void {
     ctx.textAlign = "left";
   }
 
+  if (cinematicLevel > 0.001) {
+    // 映画のような演出: 上下に黒い帯が入り、まわりが少し暗くなる
+    const e = cinematicLevel * cinematicLevel * (3 - 2 * cinematicLevel);
+    const bar = Math.round(26 * e);
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, LOGICAL_WIDTH, bar);
+    ctx.fillRect(0, LOGICAL_HEIGHT - bar, LOGICAL_WIDTH, bar);
+    // ふちを暗く（市松のディザで、半透明を使わない）
+    ctx.fillStyle = "#000000";
+    const depth = Math.round(18 * e);
+    for (let i = 0; i < depth; i += 2) {
+      for (let y = bar; y < LOGICAL_HEIGHT - bar; y += 2) {
+        if (((y >> 1) + (i >> 1)) % 2 === 0 && i < depth - 4) { ctx.fillRect(i, y, 2, 2); ctx.fillRect(LOGICAL_WIDTH - 2 - i, y, 2, 2); }
+      }
+    }
+  }
   const dialogueState = dialogue.getRenderState();
   if (dialogueState) {
     renderDialogue(ctx, dialogueState, LOGICAL_WIDTH, LOGICAL_HEIGHT);
@@ -2214,6 +2238,17 @@ function renderGameScene(): void {
 const loop = createGameLoop({
   update(dtMs) {
     syncCompanionsFromFlags();
+    // 映画のような演出（ドルンが話す場面・cinematic コマンド）。会話がおわる・戦闘に入ると、ゆっくり消える
+    {
+      const st = dialogue.getRenderState();
+      if (st?.kind === "message" && st.speaker === "ドルン" && !cinematicSticky) {
+        cinematicSticky = true;
+        if (audioStarted) audio.playSe(seOf("magic-charge"));
+      }
+      if (!dialogue.isActive() || battle) cinematicSticky = false;
+      const goal = cinematicSticky ? 1 : 0;
+      cinematicLevel += Math.sign(goal - cinematicLevel) * Math.min(Math.abs(goal - cinematicLevel), dtMs / 450);
+    }
     // どの場所でも「地図」ボタンを出す（タイトル・戦闘中は出さない）
     const showMapButton = !title.open && !bootOpening.open && !opening.open && !staffRoll.open && !battle;
     const wanted = showMapButton || worldOverviewOpen ? "" : "none";

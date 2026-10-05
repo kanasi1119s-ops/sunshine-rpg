@@ -20,6 +20,8 @@ export type EventCommand =
   | { type: "shop"; shopId: string }
   /** 宿屋: 「とまる／やめる」を選ばせ、とまると灯貨を払ってHP・MPが全快し、朝になる。 */
   | { type: "inn"; price: number }
+  /** 映画のような演出（上下に黒い帯）を、入れる・はずす。会話がおわると、自動ではずれる。 */
+  | { type: "cinematic"; on: boolean }
   /** スタッフロール（エンディングの演出）を流す。 */
   | { type: "staffRoll" };
 

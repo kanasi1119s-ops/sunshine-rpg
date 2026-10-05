@@ -315,6 +315,7 @@ function dorunCommands(): EventCommand[] {
       equals: true,
       then: [{ type: "message", text: "男の姿はもうない。足跡だけが、坑道の奥の闇へ消えている。" }],
       else: [
+        { type: "cinematic", on: true },
         { type: "message", text: "「ようこそ、客間まで。また、お会いしましたね」――穏やかな声が、坑道に響いた。" },
         { type: "message", text: "……ドルン！ 硝子湖の倉庫にいた男ですね。", speaker: "ユーリ" },
         {

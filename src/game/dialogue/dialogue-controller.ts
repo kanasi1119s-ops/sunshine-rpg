@@ -14,6 +14,7 @@ export interface DialogueControllerOptions {
   onOpenShop?: (shopId: string) => void;
   onInnStay?: (price: number) => boolean;
   onStaffRoll?: () => void;
+  onCinematic?: (on: boolean) => void;
   charsPerSecond?: number;
 }
 
@@ -48,6 +49,7 @@ export class DialogueController {
       onOpenShop: this.options.onOpenShop,
       onInnStay: this.options.onInnStay,
       onStaffRoll: this.options.onStaffRoll,
+      onCinematic: this.options.onCinematic,
     });
     this.advance(undefined);
   }

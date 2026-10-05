@@ -370,6 +370,7 @@ function dorunCommands(): EventCommand[] {
           equals: true,
           then: [{ type: "message", text: "ドルンの姿はない。床に、砕けた白い石の粉が散っているだけだ。" }],
           else: [
+            { type: "cinematic", on: true },
             {
               type: "message",
               text: "ドルンは肩で息をしながら、壊れた装置にもたれかかっている。",

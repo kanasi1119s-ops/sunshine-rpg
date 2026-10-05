@@ -15,6 +15,7 @@ interface RunnerOptions {
   /** 宿屋にとまる。灯貨が足りて、とまれたら true（灯貨を払う・全快・朝にする、は呼び出し側）。 */
   onInnStay?: (price: number) => boolean;
   onStaffRoll?: () => void;
+  onCinematic?: (on: boolean) => void;
 }
 
 /**
@@ -96,6 +97,10 @@ function* runCommands(
         }
         break;
       }
+
+      case "cinematic":
+        options.onCinematic?.(command.on);
+        break;
 
       case "staffRoll":
         options.onStaffRoll?.();
