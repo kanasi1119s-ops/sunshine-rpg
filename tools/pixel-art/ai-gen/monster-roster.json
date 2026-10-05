@@ -1757,7 +1757,7 @@
  {
   "id": "enc-kanou-3-0",
   "prompt": "a flower growing from a rift, a large pink flower with a dark crack-shaped center full of teeth, on a vine body",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-3-0",
   "kind": "mob",
   "name": "裂け目の花",
@@ -1768,12 +1768,13 @@
    220,
    130,
    180
-  ]
+  ],
+  "draft": "enc-kanou-3-0_x0"
  },
  {
   "id": "enc-kanou-3-1",
   "prompt": "overlapping scenery creature, a body made of mismatched picture fragments of landscapes stitched together",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-3-1",
   "kind": "mob",
   "name": "重なる景色",
@@ -1784,12 +1785,13 @@
    150,
    140,
    160
-  ]
+  ],
+  "draft": "enc-kanou-3-1_0"
  },
  {
   "id": "enc-kanou-3-2",
   "prompt": "a thin boundary, a paper-thin flat creature like a sheet of glass with a reflected face",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-3-2",
   "kind": "mob",
   "name": "薄い境目",
@@ -1800,7 +1802,8 @@
    190,
    190,
    210
-  ]
+  ],
+  "draft": "enc-kanou-3-2_0"
  },
  {
   "id": "enc-kanou-3-3",
