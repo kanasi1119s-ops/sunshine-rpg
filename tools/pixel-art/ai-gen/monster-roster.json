@@ -2487,7 +2487,7 @@
  {
   "id": "enc-islet-5-1-5",
   "prompt": "a flying fish monster with large wings made of clustered shiny bubbles, silver-blue scales, big round eye, side view, no human",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-5-1-5",
   "kind": "mob",
   "name": "泡の羽",
@@ -2499,7 +2499,7 @@
    200,
    220
   ],
-  "draft": "enc-islet-5-1-5_0",
+  "draft": "enc-islet-5-1-5_x0",
   "bg": "dark",
   "seed_base": 6001
  },
@@ -2523,7 +2523,7 @@
  {
   "id": "enc-islet-6-1-1",
   "prompt": "a scorched stone creature, a charred black rock with smoking holes and ember eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-6-1-1",
   "kind": "mob",
   "name": "焦げた石",
@@ -2534,7 +2534,8 @@
    60,
    50,
    45
-  ]
+  ],
+  "draft": "enc-islet-6-1-1_1"
  },
  {
   "id": "enc-islet-6-1-2",
