@@ -20,11 +20,11 @@ interface DecorSet {
 
 const DECOR: Record<string, DecorSet> = {
   tower: { wall: ["banner-purple", "pillar", "candelabra", "statue-winged", "banner-purple", "cobweb"], floor: ["pillar-broken", "bones"], wallPer100: 4.2, floorPer100: 1.2 },
-  ruins: { wall: ["banner-red", "pillar", "statue-soldier", "candelabra", "banner-purple", "cobweb", "chains"], floor: ["pillar-broken", "bones", "coffin", "box-broken"], wallPer100: 4.2, floorPer100: 1.8 },
-  mine: { wall: ["crystal-blue", "chains", "crystal-red", "chains"], floor: ["barrel-broken", "box-broken", "bones"], wallPer100: 3.6, floorPer100: 2.0 },
+  ruins: { wall: ["banner-red", "pillar", "statue-soldier", "candelabra", "banner-purple", "cobweb"], floor: ["pillar-broken", "bones", "coffin", "box-broken"], wallPer100: 4.2, floorPer100: 1.8 },
+  mine: { wall: ["crystal-blue", "crystal-red"], floor: ["barrel-broken", "box-broken", "bones"], wallPer100: 3.6, floorPer100: 2.0 },
   seabed: { wall: ["crystal-blue", "pillar", "statue-winged", "pillar", "crystal-blue", "candelabra"], floor: ["pillar-broken", "bones", "box-broken"], wallPer100: 3.6, floorPer100: 1.6 },
-  volcano: { wall: ["brazier", "crystal-red", "chains", "banner-red", "brazier", "pillar"], floor: ["bones", "pillar-broken"], wallPer100: 3.6, floorPer100: 1.6 },
-  facility: { wall: ["banner-red", "pillar", "chains", "candelabra"], floor: ["box-broken", "barrel-broken", "bones"], wallPer100: 3.0, floorPer100: 1.4 },
+  volcano: { wall: ["brazier", "crystal-red", "banner-red", "brazier", "pillar"], floor: ["bones", "pillar-broken"], wallPer100: 3.6, floorPer100: 1.6 },
+  facility: { wall: ["banner-red", "pillar", "candelabra"], floor: ["box-broken", "barrel-broken", "bones"], wallPer100: 3.0, floorPer100: 1.4 },
 };
 
 const AROUND: Array<[number, number]> = [[1, 0], [-1, 0], [0, 1], [0, -1]];
