@@ -55,6 +55,7 @@ import { PORTRAITS } from "./game/portrait/portraits";
 import { propFeetY, renderProps } from "./render/prop-renderer";
 import { renderDialogue } from "./render/dialogue-renderer";
 import { startCloudSaves } from "./game/save/cloud-saves";
+import { pendingScene, sceneSeenFlag } from "./game/world/story-scenes";
 import { createTileMap, findExitAt, isWalkable, type TileMap } from "./game/map/tile-map";
 import { createPlayer, updatePlayer } from "./game/player";
 import { findNpcAt, getFacingTile } from "./game/npc";
@@ -2983,6 +2984,16 @@ const loop = createGameLoop({
       switchMap(exit.targetMapId, exit.targetTileX, exit.targetTileY);
       autosave();
       return;
+    }
+
+    // 小説の場面: 条件がそろった場面があれば、一度だけ流す（物語がまだ届いていない場所では流さない）
+    if (vehicle === "foot" && !quietPlace) {
+      const scene = pendingScene(currentMapId, { x: centerTileX, y: centerTileY }, flags);
+      if (scene) {
+        flags[sceneSeenFlag(scene.id)] = true;
+        dialogue.start(scene.commands);
+        return;
+      }
     }
 
     // 歩くたびに、ランダムエンカウントの歩数を進める（タイルが変わったときだけ数える）。
