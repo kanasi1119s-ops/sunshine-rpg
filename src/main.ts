@@ -90,7 +90,7 @@ import { renderFieldUse } from "./render/field-use-renderer";
 import { cycleDifficulty, loadDifficulty, saveDifficulty, type Difficulty } from "./game/difficulty";
 import { applyVital, growVital, healVital, vitalsAfterBattle, type Vitals } from "./game/vitals";
 import { awardVictoryMastery, changeJob, isJobSystemUnlocked, battleSkillsOf, withJobBonus } from "./game/job/party-job";
-import { renderBattle, setBattleBiome, warmBattleBackdrops } from "./render/battle-renderer";
+import { renderBattle, setBattleBiome, setBattleTimeOfDay, warmBattleBackdrops } from "./render/battle-renderer";
 import { biomeForMap, ALL_BIOMES, type Biome } from "./render/battle-backdrop";
 import {
   createInitialEquipment,
@@ -2060,6 +2060,9 @@ function renderGameSceneBase(): void {
   }
 
   if (battle) {
+    // 外の戦いは、フィールドと同じ時刻の色（夜なら夜の背景）
+    const outdoor = isOutdoorMap(currentMapId);
+    setBattleTimeOfDay(outdoor ? nightness(dayFraction(clockMs)) : 0, outdoor ? warmGlow(dayFraction(clockMs)) : 0);
     renderBattle(
       ctx,
       shownBattleState(battle),

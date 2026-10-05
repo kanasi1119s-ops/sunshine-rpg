@@ -204,6 +204,49 @@ function dissolve(ctx: CanvasRenderingContext2D, k: number, x: number, y: number
   ctx.restore();
 }
 
+/** 戦闘の背景にかける、時刻の色（夜の深さ 0〜1・夕方のあかね色 0〜1）。外の戦いのときだけ main.ts が入れる。 */
+let battleNight = 0;
+let battleGlow = 0;
+export function setBattleTimeOfDay(night: number, glow: number): void {
+  battleNight = night;
+  battleGlow = glow;
+}
+function drawBattleSkyTint(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+  if (battleGlow > 0.02) {
+    ctx.fillStyle = `rgba(255, 140, 60, ${0.2 * battleGlow})`;
+    ctx.fillRect(0, 0, w, h);
+  }
+  const n = battleNight;
+  if (n <= 0.01) return;
+  ctx.save();
+  ctx.globalCompositeOperation = "multiply";
+  const lerp = (a: number, b: number): number => Math.round(a + (b - a) * n);
+  ctx.fillStyle = `rgb(${lerp(255, 78)}, ${lerp(255, 92)}, ${lerp(255, 158)})`;
+  ctx.fillRect(0, 0, w, h);
+  ctx.restore();
+  ctx.fillStyle = `rgba(16, 24, 80, ${0.14 * n})`;
+  ctx.fillRect(0, 0, w, h);
+  // 夜空の星（画面の上のほうだけ。ゆっくりまたたく）
+  if (n >= 0.7) {
+    const t = typeof performance !== "undefined" ? performance.now() / 1000 : 0;
+    for (let i = 0; i < 26; i++) {
+      const r = Math.sin(i * 127.1 + 3.7) * 43758.5453;
+      const fx = r - Math.floor(r);
+      const r2 = Math.sin(i * 311.7 + 1.3) * 43758.5453;
+      const fy = r2 - Math.floor(r2);
+      const tw = 0.5 + 0.5 * Math.sin(t * (1.2 + (i % 5) * 0.3) + i);
+      ctx.globalAlpha = (n - 0.6) * 2 * (0.35 + 0.65 * tw);
+      ctx.fillStyle = i % 4 === 0 ? "#fff6d0" : "#dfe8ff";
+      ctx.fillRect(Math.round(fx * w), Math.round(4 + fy * h * 0.18), 1, 1);
+      if (i % 7 === 0 && tw > 0.7) {
+        ctx.fillRect(Math.round(fx * w) - 1, Math.round(4 + fy * h * 0.18), 3, 1);
+        ctx.fillRect(Math.round(fx * w), Math.round(3 + fy * h * 0.18), 1, 3);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+
 /** ふつうの敵の立つ場所（足元のy）。奥の敵を先に描くので、手前ほどyが大きい。 */
 function groundSlots(count: number): { x: number; feet: number }[] {
   if (count <= 1) return [{ x: 70, feet: 140 }];
@@ -274,6 +317,8 @@ function renderBattleBody(
   if (backdrop) {
     ctx.drawImage(backdrop, 0, 0);
   }
+  // 外の戦い（世界地図・町・村）では、フィールドと同じ時刻の色を背景にかける（夕方はあかね色、夜は青く暗く）
+  drawBattleSkyTint(ctx, screenWidth, screenHeight - 56);
 
   const progress = effectView ? effectView.elapsedMs / effectView.effect.duration : 1;
   const active = effectView && progress < 1 ? effectView.effect.kind : null;
