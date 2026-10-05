@@ -28,46 +28,30 @@ body {
   justify-content: center;
 }
 
-.touch-dpad {
+.touch-stick {
   position: absolute;
   left: 16px;
   bottom: 16px;
-  display: grid;
-  grid-template-columns: repeat(3, 48px);
-  grid-template-rows: repeat(3, 48px);
-  grid-template-areas:
-    ".    up    ."
-    "left .     right"
-    ".    down  .";
-  gap: 4px;
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(255, 255, 255, 0.28);
   touch-action: none;
   user-select: none;
 }
 
-.touch-dpad__button {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  border: none;
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.touch-dpad__button--up {
-  grid-area: up;
-}
-.touch-dpad__button--down {
-  grid-area: down;
-}
-.touch-dpad__button--left {
-  grid-area: left;
-}
-.touch-dpad__button--right {
-  grid-area: right;
+.touch-stick__knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  pointer-events: none;
 }
 
 .touch-action-button {
