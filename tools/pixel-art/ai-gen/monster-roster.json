@@ -953,8 +953,8 @@
  },
  {
   "id": "enc-deep-2-2",
-  "prompt": "a floating blank nameplate with smeared golden letters, ribbons and a blurred face, ghostly",
-  "status": "draft",
+  "prompt": "a floating ghostly creature made of torn golden ribbons wrapped around a blank old wooden plaque, faded scratches, two hollow glowing eyes",
+  "status": "done",
   "key": "enemy:enc-deep-2-2",
   "kind": "mob",
   "name": "消えた名前",
@@ -965,29 +965,32 @@
    200,
    180,
    120
-  ]
+  ],
+  "seed_base": 6001,
+  "draft": "enc-deep-2-2_1"
  },
  {
   "id": "enc-deep-2-3",
-  "prompt": "a heavy stone seal creature, a carved square seal stamp walking on short legs, red ink on its base",
-  "status": "done",
+  "prompt": "a walking stamp creature, a heavy carved square granite block on short stubby stone legs, red ink dripping from its flat bottom, carved symbols, two small glowing eyes",
+  "status": "todo",
   "key": "enemy:enc-deep-2-3",
   "kind": "mob",
   "name": "印章の石",
   "zone": "deep-2",
   "level": 23,
-  "shape": "ground",
+  "shape": "big",
   "tone": [
    150,
    140,
    125
   ],
-  "draft": "enc-deep-2-3_0"
+  "draft": "enc-deep-2-3_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-deep-2-4",
   "prompt": "a scribe insect with quill-like antennae, a parchment-colored body and ink-dipped legs",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-2-4",
   "kind": "mob",
   "name": "書記の虫",
@@ -998,12 +1001,13 @@
    190,
    170,
    130
-  ]
+  ],
+  "draft": "enc-deep-2-4_0"
  },
  {
   "id": "enc-deep-2-5",
   "prompt": "a floating golden liquid droplet creature with a metallic sheen, coins orbiting it",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-2-5",
   "kind": "mob",
   "name": "黄金のしずく",
@@ -1014,7 +1018,8 @@
    220,
    180,
    70
-  ]
+  ],
+  "draft": "enc-deep-2-5_1"
  },
  {
   "id": "enc-deep-3-0",
@@ -1402,7 +1407,7 @@
  },
  {
   "id": "enc-tower-3-0",
-  "prompt": "a fragment of a golden ring floating with engraved runes and a light seam",
+  "prompt": "a fragment of a golden ring floating with engraved patterns and a light seam",
   "status": "todo",
   "key": "enemy:enc-tower-3-0",
   "kind": "mob",
@@ -1414,7 +1419,8 @@
    210,
    180,
    90
-  ]
+  ],
+  "seed_base": 6001
  },
  {
   "id": "enc-tower-3-1",
@@ -1578,7 +1584,7 @@
  },
  {
   "id": "enc-kanou-1-5",
-  "prompt": "a boundary marker stone, a tall carved milestone with faded signs and an eye-shaped hole",
+  "prompt": "a boundary marker stone, a tall carved milestone with faded carvings and an eye-shaped hole",
   "status": "todo",
   "key": "enemy:enc-kanou-1-5",
   "kind": "mob",
@@ -1590,7 +1596,8 @@
    125,
    120,
    135
-  ]
+  ],
+  "seed_base": 6001
  },
  {
   "id": "enc-kanou-2-0",
@@ -2474,7 +2481,7 @@
  },
  {
   "id": "enc-world-1-1",
-  "prompt": "a roadside shadow, a hunched dark figure wearing a travel hat and holding a broken signpost",
+  "prompt": "a roadside shadow, a hunched dark figure wearing a travel hat and holding a broken wooden post",
   "status": "todo",
   "key": "enemy:enc-world-1-1",
   "kind": "mob",
@@ -2486,7 +2493,8 @@
    80,
    75,
    70
-  ]
+  ],
+  "seed_base": 6001
  },
  {
   "id": "enc-world-1-2",
