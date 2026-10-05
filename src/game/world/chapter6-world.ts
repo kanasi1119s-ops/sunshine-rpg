@@ -333,6 +333,8 @@ function logCommands(): EventCommand[] {
         { type: "message", text: "じゃあ、わたしの怒りは、どこへ向ければいいんですか。", speaker: "ミナ" },
         { type: "message", text: "ひとりで抱えなくていい。ぼくたちと一緒に、正しい場所へ向けよう。", speaker: "ユーリ" },
         { type: "setFlag", flag: "chapter6_log_found", value: true },
+        { type: "message", text: "ここまで記録が残ってるなんて……隠す気がなかったのか、隠せる自信があったのか。どっちにしても、気味が悪い。", speaker: "ガイド" },
+        { type: "message", text: "……この機械、鉱山の装置と作りが同じだ。部品の癖まで。", speaker: "オルカ" },
       ],
     },
   ];
@@ -396,6 +398,9 @@ function dorunCommands(): EventCommand[] {
             },
             { type: "message", text: "ドルンは白い石を砕き、まばゆい光の中に姿を消した。" },
             { type: "message", text: "二十年以上、隠れ続けてきた「あの方」か。……俺は、誰のことか、想像がついてる。", speaker: "レト" },
+            { type: "message", text: "最後まで、笑ってたね。……あの笑い、商人のものじゃなかった。", speaker: "ガイド" },
+            { type: "message", text: "……「あの方」。この先に、いるんだな。", speaker: "オルカ" },
+            { type: "message", text: "ドルンさんも……ほんとは、こわかったのかな。", speaker: "ミナ" },
             { type: "setFlag", flag: "chapter6_dorun_farewell", value: true },
           ],
         },

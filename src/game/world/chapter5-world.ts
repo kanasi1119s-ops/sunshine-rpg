@@ -307,6 +307,8 @@ function recordCommands(): EventCommand[] {
         },
         { type: "message", text: "レトの声は平らだった。平らすぎるほど、平らだった。" },
         { type: "setFlag", flag: "chapter5_record_found", value: true },
+        { type: "message", text: "疫病じゃなくて、人が消えた……。あたしの従兄の件と、同じにおいがする。", speaker: "ガイド" },
+        { type: "message", text: "……書き換えた者は、書き手より上の人間だ。そうでなければ、消せん。", speaker: "オルカ" },
       ],
     },
   ];
@@ -357,6 +359,8 @@ function ledgerCommands(): EventCommand[] {
               text: "お前の祖父さんは、まっすぐな人だったんだろう。だから消された。……重さは、みんなで分けよう。",
               speaker: "レト",
             },
+            { type: "message", text: "ユーリ、顔を上げて。あたしたちが、ついてるんだから。", speaker: "ガイド" },
+            { type: "message", text: "……重い荷は、持ち手が多いほど軽くなる。", speaker: "オルカ" },
             { type: "setFlag", flag: "chapter5_ledger_found", value: true },
           ],
           else: [{ type: "message", text: "古い綴りの棚だ。まずは、閲覧机の碑文の写しを確かめたほうがよさそうだ。" }],

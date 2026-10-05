@@ -80,7 +80,7 @@ await p.evaluate(async () => {
   function opening(phase, ms, hideHint = true) {
     const c = document.createElement("canvas"); c.width = 225; c.height = 400;
     const cx = c.getContext("2d");
-    O.renderBootOpening(cx, { open: true, phase, ms }, 225, 400, TITLE, 1);
+    O.renderBootOpening(cx, { open: true, phase, ms }, 225, 400, TITLE, 1, phase === "story" ? 2 : 1);
     if (hideHint) { cx.fillStyle = "#03030c"; cx.fillRect(120, 0, 105, 18); }
     g.imageSmoothingEnabled = false; g.drawImage(c, 0, 0, FW, FH);
   }
@@ -132,9 +132,12 @@ await p.evaluate(async () => {
     } else {
       opening("reveal", (t - 25.7) * 1000);
       const a = t - 29.4;
-      if (a > 0) caption(["ブラウザで遊べる", "長編RPG"], 1450, a, 70, "#ffe9a0", Math.min(1, a * 2));
+      if (a > 0) caption(["ブラウザで遊べる長編RPG", "（制作中）"], 1450, a, 62, "#ffe9a0", Math.min(1, a * 2));
       if (t > 31) caption(["SUNSHINE SOFTWARE"], 1700, t - 31, 44, "#c8c8e0", Math.min(1, (t - 31) * 2));
     }
+    // 制作中のバッジ（完成前であることを、全場面で見せる）
+    g.save(); g.fillStyle = "rgba(10,6,24,0.8)"; g.fillRect(FW - 250, 36, 214, 74); g.strokeStyle = "#f2c14e"; g.lineWidth = 5; g.strokeRect(FW - 250, 36, 214, 74);
+    g.fillStyle = "#f2c14e"; g.font = `bold 44px ${FONT}`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("制作中", FW - 143, 74); g.restore();
     return big.toDataURL("image/jpeg", 0.9);
   };
 });

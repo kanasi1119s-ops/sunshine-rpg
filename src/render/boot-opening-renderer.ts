@@ -116,7 +116,19 @@ function pixelEllipse(ctx: Ctx, cx: number, cy: number, rx: number, ry: number, 
  * 小さな白い点がふくらみ、色の段（白→うす黄→金→だいだい→茶）の輪が広がって、集中線がのび、
  * 最後は外がわの輪から順に市松で消えていく。半透明・ぼかしは使わない。
  */
-function drawBigBang(ctx: Ctx, w: number, h: number, sinceHit: number): void {
+function drawBigBang(ctx: Ctx, w: number, h: number, sinceHit: number, block = 1): void {
+  if (block > 1 && typeof document !== "undefined") {
+    // ドットを大きくする（block×blockの正方形を1ドットにする）。小さい絵に描いて、補間なしで拡大する
+    const small = document.createElement("canvas");
+    small.width = Math.ceil(w / block);
+    small.height = Math.ceil(h / block);
+    drawBigBang(small.getContext("2d")!, small.width, small.height, sinceHit, 1);
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(small, 0, 0, small.width * block, small.height * block);
+    ctx.restore();
+    return;
+  }
   const cx = Math.round(w / 2), cy = Math.round(h * 0.45);
   ctx.save();
   if (sinceHit < 0) {
@@ -135,7 +147,9 @@ function drawBigBang(ctx: Ctx, w: number, h: number, sinceHit: number): void {
   const rayStrength = p < 0.2 ? p / 0.2 : Math.max(0, 1 - (p - 0.2) / 0.8);
   drawRays(ctx, cx, cy, sinceHit * 3, rayStrength);
   // 輪: 外から内へ重ねる。時間がたつほど、外の輪から消える
-  const maxRx = w * 0.5 * spread, maxRy = h * 0.62 * spread;
+  // 横長の画面は横長の楕円、縦長の画面（動画など）は円
+  const aspect = w > h ? (h / w) * 1.24 : 1;
+  const maxRx = w * 0.5 * spread, maxRy = maxRx * aspect;
   const rings = BANG_COLORS.length;
   for (let k = rings - 1; k >= 0; k--) {
     const frac = (k + 1) / rings;
@@ -152,7 +166,7 @@ function drawBigBang(ctx: Ctx, w: number, h: number, sinceHit: number): void {
 }
 
 /** 起動のオープニング。 */
-export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, h: number, title: string, logoScale = 2): void {
+export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, h: number, title: string, logoScale = 2, bangBlock = 1): void {
   if (!state.open) return;
   const ms = state.ms;
   ctx.fillStyle = "#000";
@@ -176,7 +190,7 @@ export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, 
   if (state.phase === "story") {
     // 曲のはじまりの一撃（0.9秒）で、星空が光る
     const sinceHit = ms - OPENING_HIT_MS;
-    if (sinceHit > -80 && sinceHit < 900) drawBigBang(ctx, w, h, sinceHit);
+    if (sinceHit > -80 && sinceHit < 900) drawBigBang(ctx, w, h, sinceHit, bangBlock);
     // あらすじ: 下から上へ流れる
     const scroll = (ms / 1000) * STORY_SPEED;
     const top = 20;

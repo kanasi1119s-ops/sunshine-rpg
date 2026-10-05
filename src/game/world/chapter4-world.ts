@@ -391,6 +391,7 @@ function wagonCommands(): EventCommand[] {
           speaker: "レト",
         },
         { type: "setFlag", flag: "chapter4_wagon_found", value: true },
+        { type: "message", text: "……印の彫りが浅い。本物の組合印は、もっと深く打つ。偽物だ。", speaker: "オルカ" },
       ],
     },
   ];

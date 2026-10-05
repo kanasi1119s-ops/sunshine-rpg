@@ -357,6 +357,8 @@ function hearingCommands(): EventCommand[] {
       speaker: "ドルン",
     },
     { type: "message", text: "ドルンは、震える指でエドレアを指した。", speaker: undefined },
+    { type: "message", text: "議事官の言い回し、商人の嘘と同じ癖。肝心なところだけ、ぼかすの。", speaker: "ガイド" },
+    { type: "message", text: "あの方の目は、一度も揺れませんでした。……よく、練習された言葉です。", speaker: "アヤメ" },
     { type: "setFlag", flag: "chapter8_hearing_done", value: true },
     { type: "message", text: "エドレアが、ゆっくりと席を立った。（代表席のエドレアに話しかけよう）" },
   ];
@@ -459,6 +461,9 @@ function edreaCommands(): EventCommand[] {
                 { type: "message", text: "祖父は、あなたの怖さを聞こうとしたはずです。話を聞いてくれるはずだった人を、あなたが、眠らせたんだ。", speaker: "ユーリ" },
                 e("……ええ。聞いてもらえる資格のある人は、この二十年、わたしの中にしか、いませんでした。"),
                 e("お引き取りを願いましょう。この広間には、番人がおります。話は、そのあとで。"),
+                { type: "message", text: "……あんたが、全部の糸を引いていたのか。", speaker: "オルカ" },
+                { type: "message", text: "ずっと、にこにこ笑って……！", speaker: "ガイド" },
+                { type: "message", text: "……やはり、あなたでしたか。", speaker: "アヤメ" },
                 { type: "setFlag", flag: "chapter8_edrea_revealed", value: true },
                 { type: "message", text: "エドレアが指を鳴らすと、議場の床が青白く光り、歪みの姿となって襲いかかってきた！" },
                 { type: "startBattle", battleId: "toushin-yugami" },

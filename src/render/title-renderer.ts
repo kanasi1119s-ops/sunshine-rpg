@@ -42,6 +42,13 @@ export function renderTitle(ctx: CanvasRenderingContext2D, state: TitleState, ga
     ctx.font = "9px monospace";
     ctx.fillStyle = "#9a9ab8";
     ctx.fillText("やじるしで えらぶ ／ 決定で すすむ", screenWidth / 2, screenHeight - 16);
+    // まだ完成していないことを、はっきり出す（CLAUDE.md 1-4）
+    ctx.fillStyle = "#f2c14e";
+    ctx.fillText("★ 制作中バージョン（未完成・仮の部分があります）", screenWidth / 2, screenHeight - 30);
+    ctx.strokeStyle = "#f2c14e";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(screenWidth - 46.5, 6.5, 40, 14);
+    ctx.fillText("制作中", screenWidth - 26, 9);
     ctx.textAlign = "left";
     return;
   }
