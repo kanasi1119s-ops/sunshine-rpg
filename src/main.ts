@@ -869,6 +869,8 @@ app.appendChild(menuButton);
 /** スマホ用: 地図（世界地図の全体図、町・ダンジョンの地図）を開く／閉じるボタン（キーボードの V と同じ）。 */
 /** 戦闘のオートモード（入れたら、コマンドを自動で選ぶ。戦闘をまたいで続く）。 */
 let battleAuto = false;
+/** オートのときの戦闘の速さ（動き・エフェクト・メッセージ送りが、この倍の速さになる）。 */
+const AUTO_BATTLE_SPEED = 3;
 let battleAutoCmdAt = 0;
 const autoButton = document.createElement("button");
 autoButton.type = "button";
@@ -2776,10 +2778,15 @@ const loop = createGameLoop({
             }
             lastCast = { fromId: anim.fromId, fx: anim.fx };
           }
+          // オートのときは、動き・エフェクト・読む時間をぜんぶ3倍速にする
+          const speed = battleAuto ? AUTO_BATTLE_SPEED : 1;
+          if (animSpec && speed !== 1) {
+            animSpec = { ...animSpec, durationMs: animSpec.durationMs / speed, motionMs: animSpec.motionMs !== undefined ? animSpec.motionMs / speed : undefined };
+          }
           battleAnim = animSpec ? { spec: animSpec, startedAt: performance.now() } : null;
           battleInputLockUntil = performance.now() + (animSpec ? animSpec.durationMs : 0);
           // 読む時間（短い文は少し、長い文はもう少し）をあけて、自動で次へ進む
-          battleAutoAdvanceAt = battleInputLockUntil + Math.min(1300, 650 + uiState.text.length * 25);
+          battleAutoAdvanceAt = battleInputLockUntil + Math.min(1300, 650 + uiState.text.length * 25) / speed;
           // HPは、効果が当たる瞬間まで前のまま見せる
           const hpBefore = battle.getHpBeforeMessage();
           // 攻撃（武器の動き・魔法のエフェクト）が終わってから、HPが減る（倒れるのも、そのあと）
@@ -2790,7 +2797,7 @@ const loop = createGameLoop({
             else if (anim?.casterId) audio.playSe(seOf("magic-charge"));
             // 当たる音・魔法の音は、武器がとどく／魔法が出るときに合わせる
             if (se) {
-              const delay = anim ? Math.round(anim.durationMs * anim.fxStart) : 0;
+              const delay = animSpec ? Math.round(animSpec.durationMs * animSpec.fxStart) : 0;
               if (delay > 0) window.setTimeout(() => audio.playSe(seOf(se)), delay);
               else audio.playSe(seOf(se));
             }
@@ -2839,7 +2846,7 @@ const loop = createGameLoop({
       } else if (battleAuto && uiState.kind === "command" && performance.now() >= battleAutoCmdAt) {
         // オート: コマンドを自動で選ぶ（見やすいよう、少し間をあける）
         battle.autoCommand();
-        battleAutoCmdAt = performance.now() + 250;
+        battleAutoCmdAt = performance.now() + 250 / AUTO_BATTLE_SPEED;
       } else if (uiState.kind === "message" && performance.now() >= battleAutoAdvanceAt) {
         // 攻撃が始まったら、止まらずに自動で最後まで進む
         battle.confirm();
