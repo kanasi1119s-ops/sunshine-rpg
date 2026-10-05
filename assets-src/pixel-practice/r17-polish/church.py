@@ -5,7 +5,7 @@
 
 出力（このフォルダ）:
   church.txt / pal-church.json                   … 外観（80×88）。町の地図の飾り `prop:church`
-  church-interior.txt / pal-church-interior.json … 中（208×176＝13×11マス）。聖堂の中の地図の1枚絵 `prop:church-interior`
+  church-interior.txt / pal-church-interior.json … 中（208×224＝13×14マス）。聖堂の中の地図の1枚絵 `prop:church-interior`
 このあと、tools/pixel-practice/editor-draw.mjs でドット絵エディタに描き入れ、食い違い0マスを確かめる。
 """
 import json
@@ -288,18 +288,30 @@ def exterior():
     g.save("church", pal)
 
 
-# ===================================================================== 中（208×176＝13×11マス）
+# ===================================================================== 中（208×224＝13×14マス）
 def interior():
-    W, H = 208, 176
+    """奥行きのある聖堂の中（2026-10-05、人間の指示「教会の中も奥行きが欲しい。エディタ使って凝った教会にして」）。
+    奥のまんなかに大きなアーチがあり、その向こうへ内陣が遠ざかる: 天井のリブ（肋骨のような梁）が奥へいくつも重なり、左右の壁は奥へすぼまり、
+    床は奥へ上がっていく（1点に集まる見え方）。手前の身廊は、奥ほど目の細かい石畳（縦の目地も奥の1点へ集まる）、奥ほど細くなるじゅうたん、
+    背もたれ・座面・影のある立体の長いす。奥ほど明るく、手前の角ほど暗い（点描のぼかし）。"""
+    W, H = 208, 224
+    T = 16
+    CX = W / 2
+    FLOOR_Y = 5 * T          # 身廊の床の、いちばん奥の行（ここから手前が歩ける）
+    FRONT_Y = H - T          # 手前の壁
     g = Grid(W, H, "f")
     pal = {
         "K": "#16121c",  # 輪郭・いちばん暗い
+        "k": "#241e2c",  # 天井の奥の暗がり
         "z": "#2a2430",  # 壁の影
         "Z": "#463c4c",  # 壁（奥）
         "y": "#5e5466",  # 壁の石
+        "R": "#5a5066",  # 内陣の右の壁（かげ）
+        "N": "#7a7088",  # 内陣の左の壁（ひなた）
         "Y": "#fff0a0",  # 灯
         "W": "#ffffff",  # 光
         "f": "#6e6876",  # 床の石
+        "j": "#5e5866",  # 床の石（暗いところ）
         "F": "#827c8a",  # 床の石（明るい）
         "e": "#5a5462",  # 床の目地
         "E": "#9a94a2",  # 床の光
@@ -313,7 +325,6 @@ def interior():
         "O": "#6e4222",  # 木（長いす）
         "o": "#9a6234",  # 木の明るい所
         "q": "#c08a4a",  # 木のいちばん明るい所
-        "p": "#2a2050",  # 柱の影
         "P": "#8a8898",  # 柱
         "Q": "#b8b6c4",  # 柱の明るい所
         "b": "#203c80",  # ステンドグラス 青
@@ -337,92 +348,227 @@ def interior():
         "a": "#ff9a3c",  # ろうそくの炎（外）
         "A": "#ffe060",  # 炎（中）
     }
-    T = 16
-    # ---------------- 床（石畳。2マスで1枚の大きな石）
-    for y in range(H):
+    B4 = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
+
+    def dith(x, y, amount):
+        return amount * 16 > B4[y % 4][x % 4] + 0.5
+
+    # ---------------- 身廊の床（奥ほど低い石の列。縦の目地は奥の1点へ集まる）
+    VPY = -160
+    y = FLOOR_Y
+    ri = 0
+    while y < H:
+        hgt = 9 + (min(y, FRONT_Y) - FLOOR_Y) * 7 / (FRONT_Y - FLOOR_Y)
+        y0, y1 = int(round(y)), int(round(y + hgt))
+        for yy in range(y0, min(y1, H)):
+            s = (yy - VPY) / (FRONT_Y - VPY)
+            for x in range(W):
+                u = (x + 0.5 - CX) / s + (14 if ri % 2 else 0)
+                bx = u % 28
+                c = "f"
+                if yy == y0:
+                    c = "e"
+                elif yy == y0 + 1 or bx < 1.0 + s * 0.2 and bx >= 1.0:
+                    c = "F"
+                elif bx < 1.0:
+                    c = "e"
+                elif (x * 7 + yy * 13) % 29 == 0:
+                    c = "F"
+                # 明るさ: 祭壇のまわりが明るく、手前の角ほど暗い
+                dx, dy = (x - CX) / 1.0, (yy - FLOOR_Y) * 1.5
+                dist = math.hypot(dx, dy)
+                if c == "f" and dith(x, yy, max(0.0, 1 - dist / 70) * 0.7):
+                    c = "F"
+                elif c in "fF" and dith(x, yy, min(1.0, max(0.0, (dist - 95) / 120)) * 0.85):
+                    c = "j"
+                g.a[yy, x] = c
+        y += hgt
+        ri += 1
+
+    # ---------------- 奥の壁（0〜4マス目）
+    g.rect(0, 0, W - 1, FLOOR_Y - 1, "Z")
+    for yy in range(FLOOR_Y):
         for x in range(W):
-            bx, by = x % 32, y % 16
-            off = 16 if (y // 16) % 2 else 0
-            bx = (x + off) % 32
-            c = "f"
-            if by == 0 or bx == 0:
-                c = "e"
-            elif by == 1 or bx == 1:
-                c = "F"
-            elif (x * 7 + y * 13) % 29 == 0:
-                c = "F"
-            g.a[y, x] = c
-    # ---------------- 奥の壁（0〜2マス目）
-    g.rect(0, 0, W - 1, 3 * T - 1, "Z")
-    for y in range(0, 3 * T):
-        for x in range(W):
-            row = y // 6
-            off = 0 if row % 2 == 0 else 6
-            if y % 6 == 0 or (x + off) % 12 == 0:
-                g.put(x, y, "z")
-            elif y % 6 == 1 and (x + off) % 12 < 4:
-                g.put(x, y, "y")
-    g.hline(0, W - 1, 3 * T - 1, "K")
-    g.hline(0, W - 1, 3 * T - 2, "S")
-    # ステンドグラスの窓（奥の壁に3つ: 左・まんなか（大）・右）
+            off = 0 if (yy // 6) % 2 == 0 else 6
+            if yy % 6 == 0 or (x + off) % 12 == 0:
+                g.put(x, yy, "z")
+            elif yy % 6 == 1 and (x + off) % 12 < 4:
+                g.put(x, yy, "y")
+
     def glass(x0, x1, top, bottom, big=False):
         g.arch(x0 - 1, x1 + 1, top - 1, bottom + 1, "K")
         g.arch(x0, x1, top, bottom, "b")
-        cx = (x0 + x1) / 2
-        for y in range(top, bottom + 1):
+        for yy in range(top, bottom + 1):
             for x in range(x0, x1 + 1):
-                if g.a[y, x] != "b":
+                if g.a[yy, x] != "b":
                     continue
-                # 鉛の枠（格子）と、色ガラス
-                if (x - x0) % 5 == 0 or (y - top) % 6 == 0:
-                    g.put(x, y, "K" if (x - x0) % 5 == 0 and (y - top) % 6 == 0 else "z")
+                if (x - x0) % 5 == 0 or (yy - top) % 6 == 0:
+                    g.put(x, yy, "K" if (x - x0) % 5 == 0 and (yy - top) % 6 == 0 else "z")
                     continue
-                k = ((x - x0) // 5 * 3 + (y - top) // 6 * 5) % 7
-                g.put(x, y, ["B", "b", "n", "m", "B", "v", "M"][k])
-        # まんなかに灯の環
-        cy = top + (x1 - x0) / 2 + 2
+                k = ((x - x0) // 5 * 3 + (yy - top) // 6 * 5) % 7
+                g.put(x, yy, ["B", "b", "n", "m", "B", "v", "M"][k])
         if not big:
-            emblem(g, cx, cy, 3.2, ring="G", ring_d="g", lamp="Y", core="W")
-    glass(30, 46, 6, 40)
-    glass(161, 177, 6, 40)
-    glass(86, 121, 3, 40, big=True)
-    # 光の筋（窓から床へ、ななめに。1ドットおき）
-    for (sx, w_) in ((38, 8), (169, 8), (103, 16)):
-        for y in range(3 * T, 9 * T):
-            k = (y - 3 * T)
-            for x in range(int(sx - w_ / 2 + k * 0.35), int(sx + w_ / 2 + k * 0.35)):
-                if 0 <= x < W and (x + y) % 2 == 0 and g.a[y, x] in "fFeE":
-                    g.put(x, y, "E" if (x + y) % 4 == 0 else "r")
+            emblem(g, (x0 + x1) / 2, top + (x1 - x0) / 2 + 2, 3.2, ring="G", ring_d="g", lamp="Y", core="W")
+
+    def stone_arch(x0a, x1a, top):
+        cxa = (x0a + x1a) / 2
+        ra = (x1a - x0a) / 2 + 1
+        for yy in range(int(top - 3), int(top + ra + 2)):
+            for x in range(x0a - 4, x1a + 5):
+                d = math.hypot(x - cxa, yy - (top + ra))
+                if yy <= top + ra and ra + 0.5 <= d <= ra + 2.5:
+                    ang = math.atan2(yy - (top + ra), x - cxa)
+                    g.put(x, yy, "K" if int((ang + math.pi) * 7) % 3 == 0 else ("T" if x < cxa else "S"))
+
+    # 左右の奥の壁の、細長いステンドグラス
+    for wcx in (18, 190):
+        glass(wcx - 8, wcx + 8, 12, 50)
+        stone_arch(wcx - 10, wcx + 10, 10)
+
+    # ---------------- 内陣（アーチの向こうへ遠ざかる。t=0 が手前のアーチ、t=1 が奥の壁）
+    def contour(t):
+        return 56 - 14 * t, 48 - 26 * t, 64 - 14 * t      # 半円の中心の高さ・半径・床の線
+
+    def inside(t, x, yy):
+        cy, r, yb = contour(t)
+        dx = abs(x + 0.5 - CX)
+        if dx > r or yy > yb:
+            return False
+        return yy >= cy or math.hypot(dx, yy + 0.5 - cy) <= r
+
+    for yy in range(0, 66):
+        for x in range(W):
+            if not inside(0, x, yy):
+                continue
+            if inside(1, x, yy):
+                # 奥の壁（明るい石）
+                off = 0 if (yy // 5) % 2 == 0 else 5
+                g.put(x, yy, "R" if yy % 5 == 0 or (x + off) % 10 == 0 else "N")
+                continue
+            lo, hi = 0.0, 1.0
+            for _ in range(18):
+                mid = (lo + hi) / 2
+                if inside(mid, x, yy):
+                    lo = mid
+                else:
+                    hi = mid
+            t = lo
+            cy, r, yb = contour(hi)
+            dx = abs(x + 0.5 - CX)
+            f4 = (t * 3) % 1.0
+            if yy > yb:
+                # 内陣の床（白と灰の市松。奥へ細かく）
+                u = (x + 0.5 - CX) / (r / 48)
+                f7 = (t * 7) % 1.0
+                if f7 < 0.14:
+                    c = "s"
+                else:
+                    c = "T" if (int(math.floor(u / 10)) + int(t * 7)) % 2 == 0 else "S"
+            elif dx > r and yy >= cy:
+                # 左右の壁: リブの柱・石の目地・細長い窓
+                left = x < CX
+                v = (yy - cy) / max(1.0, yb - cy)
+                if f4 < 0.10:
+                    c = "Q" if left else "P"
+                elif f4 < 0.17:
+                    c = "i" if left else "x"
+                elif 0.40 < f4 < 0.66 and 0.12 < v < 0.62:
+                    c = ("n" if (x + yy) % 3 else "W") if left else ("B" if (x + yy) % 3 else "n")
+                elif 0.36 < f4 < 0.70 and 0.06 < v < 0.68:
+                    c = "K"
+                elif (v * 8) % 1.0 < 0.14:
+                    c = "R" if left else "Z"
+                else:
+                    c = "N" if left else "R"
+            else:
+                # 天井（暗い丸天井に、奥へ重なるリブと、まんなかの背骨のリブ、金の星）
+                if f4 < 0.16:
+                    c = "T" if x < CX else "S"
+                elif f4 < 0.24:
+                    c = "s"
+                elif abs(x + 0.5 - CX) < 1.0:
+                    c = "S"
+                elif (x * 7 + yy * 11) % 53 == 0:
+                    c = "G"
+                else:
+                    c = "z" if dith(x, yy, min(1.0, max(0.0, (t - 0.3) * 2.2))) else "Z"
+            g.put(x, yy, c)
+    # 手前のアーチの石（くさび石と、まんなかの要石）
+    ACY, AR = 56, 48
+    for yy in range(0, 66):
+        for x in range(W):
+            dx = x + 0.5 - CX
+            if yy < ACY:
+                d = math.hypot(dx, yy + 0.5 - ACY)
+                if AR + 0.3 <= d <= AR + 5:
+                    ang = math.atan2(yy + 0.5 - ACY, dx)
+                    edge = d > AR + 4
+                    joint = (ang + math.pi) % 0.26 < 0.04
+                    g.put(x, yy, "K" if edge or d < AR + 1.2 else ("s" if joint else ("T" if dx < -AR * 0.3 else ("S" if dx > AR * 0.3 else "T" if d < AR + 2.6 else "S"))))
+            elif AR + 0.3 <= abs(dx) <= AR + 5:
+                g.put(x, yy, "K" if abs(dx) > AR + 4 or abs(dx) < AR + 1.2 else ("s" if yy % 7 == 0 else ("T" if dx < 0 else "S")))
+    g.rect(int(CX) - 4, 2, int(CX) + 3, 10, "T"); g.vline(int(CX) + 3, 2, 10, "S"); g.hline(int(CX) - 4, int(CX) + 3, 10, "s")
+    g.rect(int(CX) - 5, 1, int(CX) + 4, 1, "K")
+    emblem(g, CX, 6, 2.6, ring="G", ring_d="g", lamp="h", core="W")
+    # 奥の壁の大きなステンドグラスと、灯の環
+    glass(94, 114, 23, 46, big=True)
+    emblem(g, CX, 33, 8, ring="G", ring_d="g", lamp="Y", core="W")
+    # 祭壇（上の面・前の面。白い布と金のふち）
+    g.rect(84, 43, 124, 46, "L"); g.hline(84, 124, 43, "W")
+    g.rect(84, 47, 124, 57, "l"); g.hline(84, 124, 47, "G"); g.hline(84, 124, 48, "h"); g.hline(84, 124, 57, "g")
+    for x in range(88, 122, 6):
+        g.vline(x, 50, 56, "L")
+    g.vline(83, 43, 58, "K"); g.vline(125, 43, 58, "K"); g.hline(83, 125, 58, "K")
+    emblem(g, CX, 53, 3.4, ring="G", ring_d="g", lamp="Y", core="W")
+    for cx in (88, 96, 111, 119):
+        g.rect(cx, 38, cx + 1, 44, "L")
+        g.put(cx, 37, "A"); g.put(cx + 1, 37, "a"); g.put(cx, 36, "Y"); g.put(cx, 35, "a")
+        g.hline(cx - 1, cx + 2, 44, "g")
+    # 内陣の手前の、背の高い燭台（左右）
+    for cx in (66, 141):
+        g.rect(cx, 30, cx + 1, 62, "g"); g.vline(cx, 30, 62, "G")
+        g.hline(cx - 3, cx + 4, 63, "g"); g.hline(cx - 2, cx + 3, 64, "G")
+        g.hline(cx - 4, cx + 5, 30, "G"); g.hline(cx - 4, cx + 5, 31, "g")
+        for k in (-4, 0, 4):
+            g.rect(cx + k, 25, cx + k + 1, 29, "L")
+            g.put(cx + k, 24, "A"); g.put(cx + k + 1, 24, "a"); g.put(cx + k, 23, "Y"); g.put(cx + k + 1, 22, "a")
+
+    # ---------------- 奥の壁の飾りの帯と、すその台石（アーチの外だけ）
+    for x in range(W):
+        if abs(x + 0.5 - CX) <= AR + 5:
+            continue
+        g.put(x, 56, "T"); g.put(x, 57, "S"); g.put(x, 58, "s" if x % 4 < 2 else "S")
+        g.put(x, 72, "T"); g.rect(x, 73, x, 78, "S"); g.put(x, 79, "s")
+    # ---------------- 祭壇へ上がる段（3段。下ほど広い）
+    for (sy0, sy1, sx0, sx1) in ((64, 68, 54, 154), (69, 73, 46, 162), (74, 80, 38, 170)):
+        g.rect(sx0, sy0, sx1, sy1, "S")
+        g.hline(sx0, sx1, sy0, "T"); g.hline(sx0, sx1, sy1, "s")
+        g.vline(sx0, sy0, sy1, "T"); g.vline(sx1, sy0, sy1, "s")
+    g.hline(38, 170, 81, "e")
+
     def column(cx, base_y, top_y, width=10, sconce=0):
-        """丸い柱: 台座（2段）・金の飾り帯・溝のある円柱（左から光、右へ暗く）・柱頭（まるいふくらみと四角い板）。床に右へ影。"""
-        half = width // 2
-        x0 = cx - half
-        # 床の影（右へ、1ドットおき）
-        for y in range(base_y - 2, base_y + 1):
-            for x in range(cx + half + 1, cx + half + 5):
-                if (x + y) % 2 == 0:
-                    g.put(x, y, "e")
-        # 台座（下の大きい段・上の段）
+        """丸い柱: 台座（2段）・金の飾り帯・溝のある円柱（左から光、右へ暗く）・柱頭。床に右へ影。"""
+        x0 = cx - width // 2
+        for yy in range(base_y - 2, base_y + 1):
+            for x in range(x0 + width + 3, x0 + width + 7):
+                if (x + yy) % 2 == 0:
+                    g.put(x, yy, "e")
         g.rect(x0 - 3, base_y - 3, x0 + width + 2, base_y, "S"); g.hline(x0 - 3, x0 + width + 2, base_y - 3, "T"); g.hline(x0 - 3, x0 + width + 2, base_y, "s")
         g.vline(x0 - 3, base_y - 3, base_y, "T"); g.vline(x0 + width + 2, base_y - 3, base_y, "s")
         g.rect(x0 - 1, base_y - 6, x0 + width, base_y - 4, "P"); g.hline(x0 - 1, x0 + width, base_y - 6, "Q"); g.vline(x0 + width, base_y - 6, base_y - 4, "i")
         g.hline(x0, x0 + width - 1, base_y - 7, "G"); g.put(x0 + width - 1, base_y - 7, "g")
-        # 円柱（縦の溝。左が明るく、右が暗い）
         tones = ["x", "Q", "I", "Q", "P", "P", "P", "i", "i", "x"]
         for k in range(width):
-            t = tones[int(k * len(tones) / width)]
-            for y in range(top_y + 6, base_y - 7):
-                c = t
-                if k % 3 == 2 and t not in ("I", "x"):
-                    c = "i" if t in ("P", "Q") else "x"      # 溝
-                g.put(x0 + k, y, c)
-        # 金の飾り帯（柱頭の下）
+            tn = tones[int(k * len(tones) / width)]
+            for yy in range(top_y + 6, base_y - 7):
+                c = tn
+                if k % 3 == 2 and tn not in ("I", "x"):
+                    c = "i" if tn in ("P", "Q") else "x"
+                g.put(x0 + k, yy, c)
         g.hline(x0, x0 + width - 1, top_y + 5, "G"); g.hline(x0, x0 + width - 1, top_y + 6, "g")
-        # 柱頭（ふくらみ→四角い板）
         g.rect(x0 - 1, top_y + 3, x0 + width, top_y + 4, "P"); g.put(x0 - 1, top_y + 3, "Q"); g.put(x0 + width, top_y + 4, "i")
         g.rect(x0 - 3, top_y, x0 + width + 2, top_y + 2, "S"); g.hline(x0 - 3, x0 + width + 2, top_y, "T"); g.hline(x0 - 3, x0 + width + 2, top_y + 2, "s")
-        g.put(x0 - 2, top_y + 1, "G"); g.put(x0 + width + 1, top_y + 1, "G")       # 角の小さなうず巻き
-        # 柱のろうそく受け（内がわへ向く）
+        g.put(x0 - 2, top_y + 1, "G"); g.put(x0 + width + 1, top_y + 1, "G")
         if sconce:
             sy = (top_y + base_y) // 2
             sx = x0 + width if sconce > 0 else x0 - 1
@@ -432,127 +578,135 @@ def interior():
             g.put(tip, sy - 1, "L"); g.put(tip, sy - 2, "L"); g.put(tip, sy - 3, "A"); g.put(tip, sy - 4, "a")
             g.put(tip - sconce, sy - 3, "r"); g.put(tip + sconce, sy - 3, "r")
 
-    # ---------------- 奥の壁の飾り: 窓を囲む石のアーチ（くさび石）と、上を走る飾りの帯
-    for (x0a, x1a, top) in ((28, 48, 4), (84, 123, 1), (159, 179, 4)):
-        cxa = (x0a + x1a) / 2
-        ra = (x1a - x0a) / 2 + 1
-        for y in range(int(top - 2), int(top + ra + 2)):
-            for x in range(x0a - 3, x1a + 4):
-                d = math.hypot(x - cxa, y - (top + ra))
-                if y <= top + ra and ra + 0.5 <= d <= ra + 2.5:
-                    ang = math.atan2(y - (top + ra), x - cxa)
-                    g.put(x, y, "K" if int((ang + math.pi) * 7) % 3 == 0 else ("T" if x < cxa else "S"))
-    for x in range(W):                                   # 飾りの帯（歯形の飾り）
-        g.put(x, 3 * T - 6, "T"); g.put(x, 3 * T - 5, "S"); g.put(x, 3 * T - 4, "s" if x % 4 < 2 else "S")
-    # ---------------- 祭壇の左右の、大きな柱（奥の壁の前に立つ）
-    for gcx in (66, 141):
-        column(gcx, 3 * T + 2, 2, width=10)
+    # アーチの左右の大柱
+    for gcx in (40, 168):
+        column(gcx, 79, 4, width=10)
 
-    # ---------------- 左右の壁と柱
+    # ---------------- 光の筋（左右の窓から、内がわの床へ、ななめに。1ドットおき）
+    for (sx, dirx) in ((26, 1), (182, -1)):
+        for yy in range(FLOOR_Y + 2, FRONT_Y - 20):
+            k = yy - FLOOR_Y
+            for x in range(int(sx + dirx * k * 0.4 - 5), int(sx + dirx * k * 0.4 + 5)):
+                if 0 <= x < W and (x + yy) % 2 == 0 and g.a[yy, x] in "fFjE":
+                    g.put(x, yy, "E" if (x + yy) % 4 == 0 else "r")
+
+    # ---------------- 左右の壁（壁の上の面・内がわの面。柱・壁のくぼみの灯・旗）
     for side in (0, 1):
         x0 = 0 if side == 0 else W - T
-        g.rect(x0, 3 * T, x0 + T - 1, H - 1, "Z")
-        for y in range(3 * T, H):
-            if y % 6 == 0:
-                g.hline(x0, x0 + T - 1, y, "z")
-        g.vline(x0 + (T - 1 if side == 0 else 0), 3 * T, H - 1, "K")
-        # 柱（3本ずつ。台座・溝のある円柱・柱頭。ろうそく受けは内がわへ）
-        for py in (3 * T + 6, 6 * T + 6, 9 * T - 2):
-            column(x0 + 8, py, py - 34, width=8, sconce=1 if side == 0 else -1)
-        # むらさきの旗（灯の環のしるし）
-        bx = x0 + (2 if side == 0 else 7)
-        for y in range(7 * T, 9 * T + 4):
+        g.rect(x0, FLOOR_Y, x0 + T - 1, FRONT_Y + 1, "Z")
+        for yy in range(FLOOR_Y, FRONT_Y + 1):
+            if yy % 6 == 0:
+                g.hline(x0, x0 + T - 1, yy, "z")
+        if side == 0:
+            g.rect(12, FLOOR_Y, 14, FRONT_Y, "y"); g.vline(15, FLOOR_Y, FRONT_Y, "K")
+        else:
+            g.rect(W - T + 1, FLOOR_Y, W - T + 3, FRONT_Y, "z"); g.vline(W - T, FLOOR_Y, FRONT_Y, "K")
+        # 壁ぎわの床の影（壁の足もとが暗く）
+        for yy in range(FLOOR_Y, FRONT_Y):
+            for k in range(1, 5):
+                x = (T - 1 + k) if side == 0 else (W - T - k)
+                if g.a[yy, x] in "fFjE" and dith(x, yy, 0.8 - k * 0.18):
+                    g.put(x, yy, "e")
+        # 壁のくぼみ（灯）
+        nx0 = x0 + 3
+        g.arch(nx0, nx0 + 8, 102, 116, "K")
+        g.arch(nx0 + 1, nx0 + 7, 103, 116, "k")
+        g.vline(nx0 + 1 if side == 0 else nx0 + 7, 107, 116, "R")
+        g.hline(nx0, nx0 + 8, 117, "T")
+        g.rect(nx0 + 4, 111, nx0 + 4, 116, "L"); g.put(nx0 + 4, 110, "A"); g.put(nx0 + 4, 109, "a"); g.put(nx0 + 3, 110, "r"); g.put(nx0 + 5, 110, "r")
+        # むらさきの旗
+        bx = x0 + (3 if side == 0 else 6)
+        for yy in range(151, 172):
             for x in range(bx, bx + 7):
-                c = "U" if x < bx + 5 else "u"
-                if x == bx:
-                    c = "V"
-                g.put(x, y, c)
-        for x in range(bx, bx + 7):
-            if (x - bx) % 2 == 0:
-                g.put(x, 9 * T + 5, "u")
-        emblem(g, bx + 3, 8 * T, 2.4, ring="G", ring_d="g", lamp="h", core="W")
-    # ---------------- 祭壇（2マス目の奥、まんなか）
-    ax0, ax1 = 5 * T - 6, 8 * T + 5
-    # 段（2段）
-    g.rect(ax0 - 8, 3 * T, ax1 + 8, 3 * T + 10, "S"); g.hline(ax0 - 8, ax1 + 8, 3 * T, "T"); g.hline(ax0 - 8, ax1 + 8, 3 * T + 10, "s")
-    g.rect(ax0 - 16, 3 * T + 11, ax1 + 16, 3 * T + 18, "S"); g.hline(ax0 - 16, ax1 + 16, 3 * T + 11, "T"); g.hline(ax0 - 16, ax1 + 16, 3 * T + 18, "s")
-    # 祭壇の台（白い布・金のふち）
-    g.rect(ax0 + 4, 2 * T + 4, ax1 - 4, 3 * T + 4, "L")
-    g.rect(ax1 - 10, 2 * T + 4, ax1 - 4, 3 * T + 4, "l")
-    g.hline(ax0 + 4, ax1 - 4, 2 * T + 4, "G"); g.hline(ax0 + 4, ax1 - 4, 2 * T + 5, "h")
-    g.hline(ax0 + 4, ax1 - 4, 3 * T + 5, "g")
-    g.vline(ax0 + 3, 2 * T + 4, 3 * T + 5, "K"); g.vline(ax1 - 3, 2 * T + 4, 3 * T + 5, "K")
-    for x in range(ax0 + 8, ax1 - 6, 6):
-        g.vline(x, 2 * T + 7, 3 * T + 3, "l")
-    emblem(g, (ax0 + ax1) / 2, 2 * T + 17, 4.5, ring="G", ring_d="g", lamp="Y", core="W")
-    # 祭壇のうしろの、大きな灯の環（金の輪と8つの灯。光をまとう）
-    ex, ey = (ax0 + ax1) / 2, 1 * T + 6
-    emblem(g, ex, ey, 14, ring="G", ring_d="g", lamp="Y", core="W")
-    # 祭壇の上のろうそく（4本）
-    for cx in (ax0 + 10, ax0 + 20, ax1 - 20, ax1 - 10):
-        g.rect(cx, 2 * T - 3, cx + 1, 2 * T + 3, "L")
-        g.put(cx, 2 * T - 4, "A"); g.put(cx + 1, 2 * T - 4, "a"); g.put(cx, 2 * T - 5, "Y"); g.put(cx, 2 * T - 6, "a")
-        g.hline(cx - 1, cx + 2, 2 * T + 3, "g")
-    # ---------------- 燭台（祭壇の左右、背の高いもの）
-    for cx in (3 * T + 4, 10 * T - 6):
-        g.rect(cx, 2 * T + 6, cx + 1, 3 * T + 14, "g"); g.vline(cx, 2 * T + 6, 3 * T + 14, "G")
-        g.hline(cx - 3, cx + 4, 3 * T + 15, "g"); g.hline(cx - 2, cx + 3, 3 * T + 16, "G")
-        g.hline(cx - 4, cx + 5, 2 * T + 6, "G"); g.hline(cx - 4, cx + 5, 2 * T + 7, "g")
-        for k in (-4, 0, 4):
-            g.rect(cx + k, 2 * T + 1, cx + k + 1, 2 * T + 5, "L")
-            g.put(cx + k, 2 * T, "A"); g.put(cx + k + 1, 2 * T, "a"); g.put(cx + k, 2 * T - 1, "Y"); g.put(cx + k + 1, 2 * T - 2, "a")
-    # ---------------- まんなかの通路のじゅうたん（扉から祭壇へ）
-    cx0, cx1 = 5 * T + 10, 8 * T - 10
-    for y in range(4 * T + 3, H - T + 2):
-        for x in range(cx0, cx1 + 1):
-            c = "C"
-            if x in (cx0, cx1):
-                c = "c"
-            elif x in (cx0 + 1, cx1 - 1):
-                c = "G" if y % 4 else "g"
-            elif x == cx0 + 3 or (y // 8) % 2 == 0 and (x - cx0) % 9 == 4:
-                c = "D"
-            g.put(x, y, c)
-    # ---------------- じゅうたんの両わきの、床のモザイクの縁取り（小さな四角を交互に）
-    for y in range(4 * T + 3, H - T + 2):
-        for x in (cx0 - 3, cx0 - 2, cx1 + 2, cx1 + 3):
-            k = (y // 2 + x) % 4
-            g.put(x, y, ["S", "T", "s", "G"][k] if (y // 2) % 6 != 0 else "e")
-    # 祭壇の前の床の、象眼の環（三つの環を大きく）
-    emblem(g, (cx0 + cx1) / 2, 4 * T + 10, 9, ring="T", ring_d="s", lamp="E", core="W")
+                g.put(x, yy, "V" if x == bx else ("U" if x < bx + 5 else "u"))
+        for x in range(bx, bx + 7, 2):
+            g.put(x, 172, "u")
+        g.hline(bx - 1, bx + 7, 150, "G")
+        emblem(g, bx + 3, 160, 2.4, ring="G", ring_d="g", lamp="h", core="W")
+        for base in (100, 150, 200):
+            column(x0 + 8, base, base - 30, width=8, sconce=1 if side == 0 else -1)
 
-    # ---------------- 長いす（左右に4列ずつ。3マスぶんの幅）
+    # ---------------- じゅうたん（扉から段へ。奥ほど細い）
+    def carpet_x(yy):
+        k = (yy - FLOOR_Y) / (FRONT_Y - FLOOR_Y)
+        return int(round(90 - 4 * k)), int(round(117 + 4 * k))
+    for yy in range(FLOOR_Y + 2, FRONT_Y + 1):
+        xl, xr = carpet_x(yy)
+        for x in range(xl, xr + 1):
+            c = "C"
+            if x in (xl, xr):
+                c = "c"
+            elif x in (xl + 1, xr - 1):
+                c = "G" if yy % 4 else "g"
+            elif x == xl + 3 or ((yy // 8) % 2 == 0 and (x - xl) % 9 == 4):
+                c = "D"
+            elif x == xr - 3:
+                c = "c"
+            g.put(x, yy, c)
+        for x in (xl - 3, xl - 2, xr + 2, xr + 3):
+            k = (yy // 2 + x) % 4
+            g.put(x, yy, ["S", "T", "s", "G"][k] if (yy // 2) % 6 != 0 else "e")
+    g.hline(carpet_x(FLOOR_Y + 2)[0], carpet_x(FLOOR_Y + 2)[1], FLOOR_Y + 2, "D")
+    # 祭壇の前の床の、象眼の環（司祭が立つ所）
+    emblem(g, CX, FLOOR_Y + 8, 7, ring="T", ring_d="s", lamp="E", core="W")
+
+    # ---------------- 長いす（左右に4列ずつ。背もたれの上の面・前の面・座面・影）
     for row in range(4):
-        y0 = 5 * T + row * 20 + 4
-        for (x0, x1) in ((1 * T + 4, 5 * T - 2), (8 * T + 2, 12 * T - 4)):
-            # 背もたれ
-            g.rect(x0, y0, x1, y0 + 4, "O")
-            g.hline(x0, x1, y0, "q"); g.hline(x0, x1, y0 + 1, "o"); g.hline(x0, x1, y0 + 4, "w")
-            # 座面
-            g.rect(x0, y0 + 5, x1, y0 + 9, "o")
-            g.hline(x0, x1, y0 + 5, "q"); g.hline(x0, x1, y0 + 9, "w")
-            # 脚とふち
-            for lx in (x0, x0 + (x1 - x0) // 2, x1):
-                g.rect(lx, y0 + 10, lx + 1, y0 + 13, "w")
-            g.vline(x0 - 1, y0, y0 + 10, "K"); g.vline(x1 + 1, y0, y0 + 10, "K")
-            g.hline(x0, x1, y0 + 14, "e")
-            # 両はしの彫りのある板（うず巻きの形）と、金のつまみ
-            for ex in (x0, x1 - 2):
-                g.rect(ex, y0 - 2, ex + 2, y0 + 10, "O")
-                g.vline(ex, y0 - 2, y0 + 10, "q"); g.vline(ex + 2, y0 - 2, y0 + 10, "w")
-                g.put(ex + 1, y0 - 3, "w"); g.put(ex + 1, y0 + 3, "w"); g.put(ex + 1, y0 + 6, "q")
-                g.put(ex + 1, y0 - 2, "G")
+        y0 = 7 * T + 2 + row * 20
+        for (px0, px1) in ((20, 76), (132, 188)):
+            # 床に落ちる影
+            for yy in range(y0 + 14, y0 + 17):
+                for x in range(px0, px1 + 3):
+                    if g.a[yy, x] in "fFjEre" and dith(x, yy, 0.75):
+                        g.put(x, yy, "e")
+            g.hline(px0, px1, y0, "q"); g.hline(px0, px1, y0 + 1, "o")          # 背もたれの上の面
+            g.rect(px0, y0 + 2, px1, y0 + 5, "O"); g.hline(px0, px1, y0 + 5, "w")  # 背もたれの前の面
+            for x in range(px0 + 4, px1 - 3, 8):
+                g.rect(x, y0 + 3, x + 4, y0 + 4, "w")                               # 彫りの板
+                g.hline(x, x + 4, y0 + 2, "o")
+            g.hline(px0, px1, y0 + 6, "w")
+            g.rect(px0, y0 + 7, px1, y0 + 9, "o"); g.hline(px0, px1, y0 + 7, "q")  # 座面
+            g.rect(px0, y0 + 10, px1, y0 + 11, "O"); g.hline(px0, px1, y0 + 11, "w")  # 座面の前のふち
+            for lx in (px0 + 1, (px0 + px1) // 2, px1 - 2):
+                g.rect(lx, y0 + 12, lx + 1, y0 + 14, "w")
+            for ex in (px0 - 1, px1 - 1):                                          # 両はしの彫りの板
+                g.rect(ex, y0 - 2, ex + 2, y0 + 13, "O")
+                g.vline(ex, y0 - 2, y0 + 13, "q"); g.vline(ex + 2, y0 - 2, y0 + 13, "w")
+                g.put(ex + 1, y0 + 2, "w"); g.put(ex + 1, y0 + 6, "q"); g.put(ex + 1, y0 + 9, "w")
+                g.put(ex + 1, y0 - 3, "G"); g.put(ex + 1, y0 - 2, "g")
+            g.vline(px0 - 2, y0 - 2, y0 + 13, "K"); g.vline(px1 + 2, y0 - 2, y0 + 13, "K")
+
+    # ---------------- 扉のそばの、聖水の鉢（左右）
+    for bcx in (2 * T + 8, 10 * T + 8):
+        for yy in range(203, 207):
+            for x in range(bcx - 5, bcx + 7):
+                if g.a[yy, x] in "fFjEre" and dith(x, yy, 0.7):
+                    g.put(x, yy, "e")
+        g.rect(bcx - 2, 198, bcx + 2, 205, "P"); g.vline(bcx - 2, 198, 205, "Q"); g.vline(bcx + 2, 198, 205, "i")
+        g.rect(bcx - 4, 205, bcx + 4, 206, "S"); g.hline(bcx - 4, bcx + 4, 206, "s")
+        for yy in range(192, 199):
+            for x in range(bcx - 8, bcx + 9):
+                d = ((x + 0.5 - bcx - 0.5) / 7.5) ** 2 + ((yy + 0.5 - 194.5) / 3.2) ** 2
+                if d <= 1:
+                    g.put(x, yy, "Q" if yy < 195 else ("P" if yy < 198 else "i"))
+        for yy in range(193, 196):
+            for x in range(bcx - 6, bcx + 7):
+                if ((x + 0.5 - bcx - 0.5) / 5.5) ** 2 + ((yy + 0.5 - 194.5) / 1.6) ** 2 <= 1:
+                    g.put(x, yy, "n")
+        g.put(bcx - 2, 194, "W"); g.put(bcx + 2, 195, "B")
+
     # ---------------- 手前の壁と、両開きの扉（下のまんなか）
-    g.rect(0, H - T + 4, W - 1, H - 1, "Z")
-    g.hline(0, W - 1, H - T + 4, "K"); g.hline(0, W - 1, H - T + 5, "y")
+    g.rect(0, FRONT_Y + 2, W - 1, H - 1, "Z")
+    g.hline(0, W - 1, FRONT_Y + 2, "K"); g.hline(0, W - 1, FRONT_Y + 3, "y")
+    for x in range(0, W, 12):
+        g.vline(x, FRONT_Y + 4, H - 1, "z")
     dx0, dx1 = 6 * T - 2, 7 * T + 1
-    g.rect(dx0 - 2, H - T + 2, dx1 + 2, H - 1, "K")
-    g.rect(dx0, H - T + 3, dx1, H - 1, "O")
-    g.vline((dx0 + dx1) // 2, H - T + 3, H - 1, "w")
-    g.vline(dx0 + 2, H - T + 3, H - 1, "q"); g.vline(dx1 - 2, H - T + 3, H - 1, "w")
+    g.rect(dx0 - 2, FRONT_Y + 1, dx1 + 2, H - 1, "K")
+    g.rect(dx0, FRONT_Y + 2, dx1, H - 1, "O")
+    g.vline((dx0 + dx1) // 2, FRONT_Y + 2, H - 1, "w")
+    g.vline(dx0 + 2, FRONT_Y + 2, H - 1, "q"); g.vline(dx1 - 2, FRONT_Y + 2, H - 1, "w")
     g.put((dx0 + dx1) // 2 - 2, H - 7, "G"); g.put((dx0 + dx1) // 2 + 2, H - 7, "G")
-    # 入口のマット
-    g.rect(dx0 + 2, H - T - 2, dx1 - 2, H - T + 1, "c"); g.hline(dx0 + 2, dx1 - 2, H - T - 2, "D")
+    g.rect(dx0 + 2, FRONT_Y - 3, dx1 - 2, FRONT_Y, "c"); g.hline(dx0 + 2, dx1 - 2, FRONT_Y - 3, "D")
     g.save("church-interior", pal)
 
 

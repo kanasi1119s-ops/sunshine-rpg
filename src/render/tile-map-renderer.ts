@@ -214,7 +214,8 @@ export function renderTileMap(
     const art = getSpriteCanvas(map.data.backdropSprite, SPRITE_DATA);
     if (art) {
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(art, Math.round(-camera.x), Math.round(map.heightPx - art.height - camera.y));
+      // 1枚絵は正方形の枠に、横は中央・縦は下そろえで入っている。
+      ctx.drawImage(art, Math.round((map.widthPx - art.width) / 2 - camera.x), Math.round(map.heightPx - art.height - camera.y));
       return;
     }
   }
