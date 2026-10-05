@@ -48,6 +48,7 @@ import { drawAirship, drawShip } from "./render/vehicle-renderer";
 import { renderStorm, renderVortex } from "./render/vortex-renderer";
 import { setLitBeacons } from "./render/object-markers";
 import { renderWorldOverview } from "./render/world-overview";
+import { renderAreaMap } from "./render/area-map";
 import { renderFollowers } from "./render/follower-renderer";
 import { spriteSpecFromPortrait } from "./game/sprite/character-specs";
 import { PORTRAITS } from "./game/portrait/portraits";
@@ -800,7 +801,7 @@ menuButton.addEventListener("pointerdown", (event) => {
 });
 app.appendChild(menuButton);
 
-/** スマホ用: 世界地図の全体図を開く／閉じるボタン（キーボードの V と同じ）。世界地図を歩いているときだけ出る。 */
+/** スマホ用: 地図（世界地図の全体図、町・ダンジョンの地図）を開く／閉じるボタン（キーボードの V と同じ）。 */
 const mapButton = document.createElement("button");
 mapButton.type = "button";
 mapButton.className = "touch-map-button";
@@ -1017,7 +1018,7 @@ window.addEventListener("keydown", (event) => {
     event.preventDefault();
     return;
   }
-  if (event.key === "v" && currentMapId === "world-map" && !title.open && !battle && !dialogue.isActive() && !pauseMenu.open && !jobMenu.open && !debugMenu.open) {
+  if (event.key === "v" && !title.open && !battle && !dialogue.isActive() && !pauseMenu.open && !jobMenu.open && !debugMenu.open) {
     worldOverviewOpen = true;
   }
 }, true);
@@ -1981,6 +1982,19 @@ function renderGameSceneBase(): void {
   }
 
   setLitBeacons(new Set([1, 2, 3, 4, 5, 6, 7, 8].filter((n) => flags[`beacon${n}_lit`])));
+  if (worldOverviewOpen && currentMapId !== "world-map") {
+    renderAreaMap(
+      ctx,
+      map,
+      currentMapId,
+      "地図",
+      { x: Math.floor((player.x + player.width / 2) / map.data.tileWidth), y: Math.floor((player.y + player.height / 2) / map.data.tileHeight) },
+      LOGICAL_WIDTH,
+      LOGICAL_HEIGHT,
+      performance.now(),
+    );
+    return;
+  }
   if (worldOverviewOpen) {
     renderWorldOverview(
       ctx,
@@ -2159,8 +2173,8 @@ function renderGameScene(): void {
 const loop = createGameLoop({
   update(dtMs) {
     syncCompanionsFromFlags();
-    // 世界地図を歩いているときだけ、「地図」ボタンを出す
-    const showMapButton = currentMapId === "world-map" && !title.open && !bootOpening.open && !opening.open && !battle;
+    // どの場所でも「地図」ボタンを出す（タイトル・戦闘中は出さない）
+    const showMapButton = !title.open && !bootOpening.open && !opening.open && !staffRoll.open && !battle;
     const wanted = showMapButton || worldOverviewOpen ? "" : "none";
     if (mapButton.style.display !== wanted) mapButton.style.display = wanted;
     if (joinQueue.length > 0 && !dialogue.isActive() && !battle && !title.open && !bootOpening.open && !opening.open) {
