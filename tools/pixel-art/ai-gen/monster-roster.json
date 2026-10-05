@@ -1526,8 +1526,8 @@
  },
  {
   "id": "enc-tower-3-5",
-  "prompt": "a feather of light, a large glowing white-gold feather with a living eye at its base",
-  "status": "draft",
+  "prompt": "a floating creature shaped like a large amber gold feather with small feather wings, deep gold and orange glow, one living eye at its base",
+  "status": "todo",
   "key": "enemy:enc-tower-3-5",
   "kind": "mob",
   "name": "光の羽",
@@ -1535,15 +1535,17 @@
   "level": 32,
   "shape": "winged",
   "tone": [
-   240,
-   225,
-   180
-  ]
+   160,
+   115,
+   45
+  ],
+  "draft": "enc-tower-3-5_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-kanou-1-0",
   "prompt": "a wavering boundary creature, a rippling silhouette that looks half transparent and half solid, blue-violet",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-1-0",
   "kind": "mob",
   "name": "境目の揺らぎ",
@@ -1554,12 +1556,13 @@
    130,
    120,
    180
-  ]
+  ],
+  "draft": "enc-kanou-1-0_1"
  },
  {
   "id": "enc-kanou-1-1",
   "prompt": "a wandering light, a small orb of pale light with a long flickering tail and two dot eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-1-1",
   "kind": "mob",
   "name": "迷いの光",
@@ -1570,7 +1573,8 @@
    210,
    210,
    240
-  ]
+  ],
+  "draft": "enc-kanou-1-1_1"
  },
  {
   "id": "enc-kanou-1-2",
