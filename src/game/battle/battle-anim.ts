@@ -107,6 +107,15 @@ export function battleAnimFor(text: string, state: BattleState, weaponOf: (id: s
     });
   }
 
+  // 攻撃のミス（味方は武器を振るだけ。敵のミスは何も起きない）
+  const miss = /^(.+?) の (.+?)！ ミス！ (.+) にはあたらなかった$/.exec(text);
+  if (miss) {
+    const actor = allyActor(miss[1]);
+    const target = byName(state, miss[3]);
+    if (!actor || !target) return null;
+    return make({ actorId: actor.id, motion: MOTION_OF_WEAPON[weaponOf(actor.id) ?? "sword"], targetIds: [target.id] });
+  }
+
   // 回復の魔法
   const heal = /^(.+?) の (.+?)！ (.+) のHPが \d+ 回復した$/.exec(text);
   if (heal) {

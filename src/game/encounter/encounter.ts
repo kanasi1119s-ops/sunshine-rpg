@@ -1,3 +1,4 @@
+import { enemyLuck } from "../battle/luck";
 import type { Combatant } from "../battle/types";
 import { expRequiredForLevel } from "../growth/exp-curve";
 import type { MonsterShape, MonsterSpec } from "../monster/monsters";
@@ -214,6 +215,7 @@ export function createEncounterEnemies(mapId: string, zone: EncounterZone, rng: 
       attack: stats.attack,
       defense: stats.defense,
       speed: stats.speed,
+      luck: enemyLuck(zone.level),
       isEnemy: true,
       guarding: false,
       expReward: stats.expReward,

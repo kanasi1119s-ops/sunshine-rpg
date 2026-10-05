@@ -71,6 +71,8 @@ const STEEL = "#e8eef8";
 const STEEL_D = "#8a96b0";
 const WOOD = "#8a5a2c";
 const WOOD_D = "#5a3a1c";
+const GOLD = "#f2c14e";
+const GOLD_D = "#a07a20";
 
 /** 武器をふる動き。hand は味方の手の位置。 */
 export function drawWeaponMotion(ctx: CanvasRenderingContext2D, motion: WeaponMotion, t: number, hand: Pt, target: Pt, glow = "#9ad0ff"): void {
@@ -90,18 +92,31 @@ export function drawWeaponMotion(ctx: CanvasRenderingContext2D, motion: WeaponMo
       }
       const tx = hand.x - Math.sin((a * Math.PI) / 180) * L;
       const ty = hand.y - Math.cos((a * Math.PI) / 180) * L;
-      line(ctx, hand.x, hand.y, tx, ty, STEEL_D, 3);
-      line(ctx, hand.x, hand.y, tx, ty, STEEL, 1);
-      dot(ctx, hand.x - 1, hand.y, WOOD, 3, 2);
+      // 剣：つか（にぎり）・つば・かしら（つかの端）まで、手にもって振る
+      const dx = -Math.sin((a * Math.PI) / 180), dy = -Math.cos((a * Math.PI) / 180);
+      const gx = hand.x - dx * 5, gy = hand.y - dy * 5;           // かしら
+      line(ctx, gx, gy, hand.x, hand.y, WOOD_D, 3);
+      line(ctx, gx, gy, hand.x, hand.y, WOOD, 1);
+      dot(ctx, gx - 1, gy - 1, GOLD, 3, 3);                       // かしら
+      line(ctx, hand.x + dy * 3, hand.y - dx * 3, hand.x - dy * 3, hand.y + dx * 3, GOLD_D, 2);   // つば
+      line(ctx, hand.x + dy * 3, hand.y - dx * 3, hand.x - dy * 3, hand.y + dx * 3, GOLD, 1);
+      line(ctx, hand.x + dx * 2, hand.y + dy * 2, tx, ty, STEEL_D, 3);
+      line(ctx, hand.x + dx * 2, hand.y + dy * 2, tx, ty, STEEL, 1);
       break;
     }
     case "stab": {
       const thrust = (u: number): number => Math.sin(clamp01((u - 0.1) / 0.3) * Math.PI) + Math.sin(clamp01((u - 0.5) / 0.3) * Math.PI);
       const e = thrust(t);
-      const tipx = hand.x - 3 - e * 9;
-      line(ctx, hand.x, hand.y, tipx - 5, hand.y, STEEL_D, 3);
-      line(ctx, hand.x - 1, hand.y, tipx - 5, hand.y, STEEL, 1);
-      dot(ctx, hand.x - 1, hand.y - 1, WOOD, 2, 3);
+      const hx = hand.x - e * 4;                                  // 短剣ぜんたいが前へつき出る
+      const tipx = hx - 3 - e * 5;
+      // つか（にぎり）・つば・かしら
+      line(ctx, hx + 6, hand.y, hx + 1, hand.y, WOOD_D, 3);
+      line(ctx, hx + 6, hand.y, hx + 1, hand.y, WOOD, 1);
+      dot(ctx, hx + 6, hand.y - 1, GOLD, 2, 3);                   // かしら
+      dot(ctx, hx, hand.y - 3, GOLD_D, 2, 7);                     // つば
+      dot(ctx, hx, hand.y - 3, GOLD, 1, 7);
+      line(ctx, hx - 1, hand.y, tipx - 5, hand.y, STEEL_D, 3);
+      line(ctx, hx - 1, hand.y, tipx - 5, hand.y, STEEL, 1);
       if (e > 0.6) for (let k = 0; k < 3; k++) dot(ctx, tipx - 7 - k * 2, hand.y + (k % 2 ? 1 : -1), "#ffffff");
       break;
     }
@@ -118,7 +133,12 @@ export function drawWeaponMotion(ctx: CanvasRenderingContext2D, motion: WeaponMo
         dot(ctx, hand.x - Math.sin((aa * Math.PI) / 180) * (L + 2), hand.y - Math.cos((aa * Math.PI) / 180) * (L + 2), "#ffe9b0", 2, 2);
         ctx.restore();
       }
-      line(ctx, hand.x, hand.y, tx, ty, WOOD, 2);
+      // 斧：えの手元（にぎるところ）まで、手にもって振る
+      const bx = hand.x + Math.sin((a * Math.PI) / 180) * 5, by = hand.y + Math.cos((a * Math.PI) / 180) * 5;
+      line(ctx, bx, by, tx, ty, WOOD_D, 3);
+      line(ctx, bx, by, tx, ty, WOOD, 1);
+      dot(ctx, bx - 1, by - 1, GOLD_D, 3, 3);                     // えじり（石づき）
+      dot(ctx, hand.x - 1, hand.y - 1, GOLD, 2, 2);               // にぎりの巻き
       // 刃（先の太い部分）
       dot(ctx, tx - 3, ty - 3, STEEL_D, 6, 6);
       dot(ctx, tx - 2, ty - 2, STEEL, 4, 4);

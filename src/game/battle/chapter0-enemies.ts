@@ -1,3 +1,4 @@
+import { allyLuck } from "./luck";
 import type { BattleItem, Combatant, Skill } from "./types";
 import type { LeveledStats } from "../growth/types";
 
@@ -17,6 +18,7 @@ export function createChapter0Party(heroLevel: number, effectiveStats: LeveledSt
       attack: effectiveStats.attack,
       defense: effectiveStats.defense,
       speed: effectiveStats.speed,
+      luck: allyLuck("hero", heroLevel),
       isEnemy: false,
       guarding: false,
     },

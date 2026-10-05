@@ -8,6 +8,8 @@ export interface Combatant {
   attack: number;
   defense: number;
   speed: number;
+  /** 運（省略は5）。会心の一撃の出やすさ、攻撃のミスのしやすさ・されやすさ。 */
+  luck?: number;
   isEnemy: boolean;
   /** 「ぼうぎょ」コマンドの効果。次に受けるダメージが半分になる。 */
   guarding: boolean;
@@ -82,7 +84,7 @@ export interface BattleItem {
 }
 
 export type BattleAction =
-  | { type: "attack"; actorId: string; targetId: string }
+  | { type: "attack"; actorId: string; targetId: string; /** 2回目以降の連続攻撃のダメージの倍率。 */ powerScale?: number }
   | { type: "skill"; actorId: string; targetId: string; skill: Skill }
   | { type: "item"; actorId: string; targetId: string; item: BattleItem }
   | { type: "defend"; actorId: string }

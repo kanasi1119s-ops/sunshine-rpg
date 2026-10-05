@@ -1,3 +1,4 @@
+import { allyLuck } from "./luck";
 import type { GrowthProfile, LeveledStats } from "../growth/types";
 import type { Combatant, Skill } from "./types";
 
@@ -139,6 +140,7 @@ export function createCompanionCombatant(companion: CompanionDefinition, stats: 
     attack: stats.attack,
     defense: stats.defense,
     speed: stats.speed,
+    luck: allyLuck(companion.id, stats.level),
     isEnemy: false,
     guarding: false,
   };

@@ -75,6 +75,7 @@ import { CHAPTER3_OPENING_COMMANDS } from "./game/world/chapter3-world";
 import { CHAPTER4_OPENING_COMMANDS } from "./game/world/chapter4-world";
 import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
+import { allyLuck } from "./game/battle/luck";
 import { BattleController } from "./game/battle/battle-controller";
 import type { BattleState } from "./game/battle/types";
 import { dayFraction, isNight, isOutdoorMap, nextMorning, nightness, periodLabel, staysOutAtNight, warmGlow } from "./game/time-of-day";
@@ -926,7 +927,7 @@ function statusRows(): StatusRow[] {
     const v = difficulty === "normal" ? vitals[id] : undefined;
     rows.push({
       name, level: stats.level, hp: v ? Math.min(stats.maxHp, v.hp) : stats.maxHp, maxHp: stats.maxHp, mp: v ? Math.min(stats.maxMp, v.mp) : stats.maxMp, maxMp: stats.maxMp,
-      attack: stats.attack, defense: stats.defense, speed: stats.speed, expToNext: expToNextLevel(stats.exp),
+      attack: stats.attack, defense: stats.defense, speed: stats.speed, luck: allyLuck(id, stats.level), expToNext: expToNextLevel(stats.exp),
     });
   };
   add("ユーリ", applyStatBonus(heroStats, equipmentBonus), "hero");

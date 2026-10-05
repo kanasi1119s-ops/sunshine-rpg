@@ -12,6 +12,7 @@ export interface StatusRow {
   attack: number;
   defense: number;
   speed: number;
+  luck: number;
   expToNext: number;
 }
 
@@ -119,6 +120,6 @@ export function renderPauseMenu(
     ctx.fillStyle = "#f0f0f0";
     ctx.fillText(`${row.name}　Lv${row.level}　HP ${row.hp}/${row.maxHp}　MP ${row.mp}/${row.maxMp}`, 48, y);
     ctx.fillStyle = "#c8c8e0";
-    ctx.fillText(`こうげき${row.attack}　ぼうぎょ${row.defense}　すばやさ${row.speed}　つぎのLvまで${row.expToNext}`, 48, y + 12);
+    ctx.fillText(`こうげき${row.attack}　ぼうぎょ${row.defense}　すばやさ${row.speed}　うん${row.luck}　つぎのLvまで${row.expToNext}`, 48, y + 12);
   });
 }

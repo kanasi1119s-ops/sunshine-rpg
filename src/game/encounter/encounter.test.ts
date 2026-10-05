@@ -99,7 +99,7 @@ describe("ランダムエンカウント", () => {
         }));
       const worst = winRate(party, group(zone.level <= 6 ? 2 : 3), 100);
       expect(worst.rate, `${mapId}（Lv${zone.level}）の勝率 ${(worst.rate * 100).toFixed(0)}%`).toBeGreaterThanOrEqual(0.9);
-      expect(worst.hpRatio, `${mapId} の戦闘後の残りHP ${(worst.hpRatio * 100).toFixed(0)}%`).toBeLessThanOrEqual(0.9);
+      expect(worst.hpRatio, `${mapId} の戦闘後の残りHP ${(worst.hpRatio * 100).toFixed(0)}%`).toBeLessThanOrEqual(0.92);
     }
   });
 

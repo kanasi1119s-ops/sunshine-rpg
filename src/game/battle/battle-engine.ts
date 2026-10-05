@@ -1,4 +1,5 @@
-import { computeDamage, computeFleeChance } from "./formulas";
+import { attackCount, computeDamage, computeFleeChance, criticalChance, missChance } from "./formulas";
+import { luckOf } from "./luck";
 import type { BattleAction, BattleState, HpTrailEntry, Combatant, Skill } from "./types";
 import { effectiveStat, findCombatant, isAlive, STAT_LABELS } from "./types";
 
@@ -10,6 +11,9 @@ export function createBattleState(party: Combatant[], enemies: Combatant[]): Bat
     fled: false,
   };
 }
+
+/** 連続攻撃の、2回目以降のダメージの倍率。 */
+export const EXTRA_HIT_POWER = 0.5;
 
 export type BattleOutcome = "won" | "lost" | "fled" | "ongoing";
 
@@ -45,7 +49,7 @@ function averageSpeed(combatants: Combatant[]): number {
 
 /** 1体にダメージを与え、ログに書く（防御中は半分）。倒したらそのログも書く。 */
 function dealDamage(next: BattleState, actor: Combatant, target: Combatant, skillName: string, powerMultiplier: number, rng: () => number): void {
-  const { amount, critical } = computeDamage(effectiveStat(actor, "attack"), effectiveStat(target, "defense"), powerMultiplier, rng);
+  const { amount, critical } = computeDamage(effectiveStat(actor, "attack"), effectiveStat(target, "defense"), powerMultiplier, rng, criticalChance(luckOf(actor)));
   const finalAmount = target.guarding ? Math.ceil(amount / 2) : amount;
   target.hp = Math.max(0, target.hp - finalAmount);
   next.log.push(`${actor.name} の ${skillName}！ ${critical ? "会心の一撃！ " : ""}${target.name} に ${finalAmount} のダメージ`);
@@ -277,7 +281,7 @@ export function applyAction(state: BattleState, action: BattleAction, rng: () =>
       if (!target || !isAlive(target)) {
         return next;
       }
-      const powerMultiplier = action.type === "skill" ? action.skill.powerMultiplier : 1;
+      const powerMultiplier = action.type === "skill" ? action.skill.powerMultiplier : (action.powerScale ?? 1);
       if (action.type === "skill") {
         if (nextActor.mp < action.skill.mpCost) {
           next.log.push(`${nextActor.name} はMPが足りず ${action.skill.name} を使えなかった`);
@@ -285,11 +289,17 @@ export function applyAction(state: BattleState, action: BattleAction, rng: () =>
         }
         nextActor.mp -= action.skill.mpCost;
       }
+      // 通常攻撃は、はずれることがある（運・すばやさの差）
+      if (action.type === "attack" && rng() < missChance(luckOf(nextActor), luckOf(target))) {
+        next.log.push(`${nextActor.name} の たたかう！ ミス！ ${target.name} にはあたらなかった`);
+        return next;
+      }
       const { amount, critical } = computeDamage(
         effectiveStat(nextActor, "attack"),
         effectiveStat(target, "defense"),
         powerMultiplier,
         rng,
+        criticalChance(luckOf(nextActor)),
       );
       const finalAmount = target.guarding ? Math.ceil(amount / 2) : amount;
       target.hp = Math.max(0, target.hp - finalAmount);
@@ -395,6 +405,19 @@ export function runTurn(
           continue;
         }
       }
+    }
+    if (action.type === "attack") {
+      // すばやさが相手よりずっと高いと、1回の攻撃で2〜4回こうげきする
+      const foe = findCombatant(current, retarget(current, livingActor, action.targetId));
+      const hits = foe ? attackCount(effectiveStat(livingActor, "speed") - effectiveStat(foe, "speed")) : 1;
+      if (hits > 1) current.log.push(`${livingActor.name} は すばやい動きで ${hits}回 こうげき！`);
+      for (let i = 0; i < hits; i++) {
+        if (i > 0) snap();
+        const self = findCombatant(current, livingActor.id);
+        if (!self || !isAlive(self) || checkOutcome(current) !== "ongoing") break;
+        current = applyAction(current, i > 0 ? { ...action, powerScale: EXTRA_HIT_POWER } : action, rng);
+      }
+      continue;
     }
     current = applyAction(current, action, rng);
   }
