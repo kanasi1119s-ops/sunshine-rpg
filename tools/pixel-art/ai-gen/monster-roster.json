@@ -530,21 +530,21 @@
  },
  {
   "id": "enc-kiri-archive-1",
-  "prompt": "a whispering pale grey mist spirit with a long trailing wispy body, a faint open mouth and two dim eyes, small glowing motes around it",
+  "prompt": "a coiling serpent made of pale grey fog and mist, a small round head with two dim blue eyes, trailing wisps, no human features",
   "status": "done",
   "key": "enemy:enc-kiri-archive-1",
   "kind": "mob",
   "name": "霧のささやき",
   "zone": "kiri-archive",
   "level": 12,
-  "shape": "float",
+  "shape": "long",
   "tone": [
    180,
    205,
    200
   ],
   "draft": "enc-kiri-archive-1_0",
-  "seed_base": 6001
+  "seed_base": 10002
  },
  {
   "id": "enc-kiri-archive-2",
@@ -583,7 +583,7 @@
  {
   "id": "enc-kiri-archive-4",
   "prompt": "a bookshelf guardian made of a tall wooden shelf with books, carved wooden arms holding a quill spear",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kiri-archive-4",
   "kind": "mob",
   "name": "書架の番兵",
@@ -594,12 +594,13 @@
    110,
    80,
    55
-  ]
+  ],
+  "draft": "enc-kiri-archive-4_1"
  },
  {
   "id": "enc-kiri-archive-5",
   "prompt": "a fog-winged owl-like spirit with misty feathers fading at the edges and pale teal glowing eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kiri-archive-5",
   "kind": "mob",
   "name": "霧の羽",
@@ -610,12 +611,13 @@
    170,
    190,
    190
-  ]
+  ],
+  "draft": "enc-kiri-archive-5_1"
  },
  {
   "id": "enc-shimohara-facility-0",
   "prompt": "a frost-covered distortion shaped like a crouching beast of ice shards and dark violet cracks",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-shimohara-facility-0",
   "kind": "mob",
   "name": "霜の歪み",
@@ -626,7 +628,8 @@
    170,
    200,
    225
-  ]
+  ],
+  "draft": "enc-shimohara-facility-0_1"
  },
  {
   "id": "enc-shimohara-facility-1",
