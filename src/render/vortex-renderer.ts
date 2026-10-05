@@ -62,6 +62,21 @@ export function renderBasin(ctx: CanvasRenderingContext2D, map: TileMap, camera:
     const fr = Math.floor(nowMs / 65) % 16;   // 16コマ。水も雨も、本当に流れて・降って見える
     ctx.drawImage(scene, fr * 320, 0, 320, 440, Math.round(cx - 160), Math.round(cy - 280), 320, 440);
   }
+  ctx.restore();
+}
+
+/**
+ * 芯環塔の上の積乱雲と、雲を突き抜ける塔の上のほう。船や人より上に描く（船は雲のうしろを進む。2026-10-05、
+ * 人間の指示「船は雲の後ろ側を動けるようにしてほしい」）。飛空艇に乗っているときは、雲より上を飛ぶので、先に描く（main.ts）。
+ */
+export function renderTowerCloud(ctx: CanvasRenderingContext2D, map: TileMap, camera: Camera, nowMs: number): void {
+  if (map.data.width < WORLD_TOWER.x + 12) return;
+  const s = map.data.tileWidth;
+  const cx = (WORLD_TOWER.x + 0.5) * s - camera.x;
+  const cy = (WORLD_TOWER.y + 0.5) * s - camera.y;
+  if (cx < -260 || cx > camera.viewportWidth + 260 || cy < -260 || cy > camera.viewportHeight + 360) return;
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
   const cloud = fallsImage("cloud");
   if (cloud) {
     const cf = cloudFlashFrame(nowMs);

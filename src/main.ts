@@ -45,7 +45,7 @@ import { worldEntryProblems } from "./game/world/world-map-world";
 import { buildVehicleCollision, canLandOn, groundIdAt, OCEAN, VEHICLE_SPEED, type Vehicle } from "./game/vehicle";
 import { WORLD_AIRSHIP_START, WORLD_SHIP_START } from "./game/map/world/world-map.generated";
 import { drawAirship, drawShip } from "./render/vehicle-renderer";
-import { renderBasin, renderStorm } from "./render/vortex-renderer";
+import { renderBasin, renderStorm, renderTowerCloud } from "./render/vortex-renderer";
 import { setLitBeacons } from "./render/object-markers";
 import { renderWorldOverview } from "./render/world-overview";
 import { renderAreaMap } from "./render/area-map";
@@ -807,6 +807,13 @@ if (import.meta.env.DEV) {
     },
     startBattle: (battleId: string) => startStoryBattle(battleId),
     setFlag: (name: string, value = true) => { flags[name] = value; },
+    /** 開発用: 世界地図の (x, y) で、船（ship）か飛空艇（air）に乗った状態にする（見た目の確認用）。 */
+    ride: (kind: "ship" | "air", x: number, y: number) => {
+      flags[kind === "ship" ? "has_ship" : "has_airship"] = true;
+      switchMap("world-map", x, y);
+      vehicle = kind;
+      lastOceanTile = { x, y };
+    },
     battleUi: () => (battle ? battle.getUiState() : null),
     playerTile: () => ({ map: currentMapId, x: player.x / map.data.tileWidth, y: player.y / map.data.tileHeight, dialogue: dialogue.isActive(), overview: worldOverviewOpen, pw: player.width, ph: player.height, px: player.x, py: player.y, tw: map.data.tileWidth, near: npcs.filter((n) => Math.abs(n.tileX - player.x / map.data.tileWidth) < 3 && Math.abs(n.tileY - player.y / map.data.tileHeight) < 3).map((n) => `${n.id}@${n.tileX},${n.tileY}`) }),
     /** 開発用: いまの状態を保存データにして、すぐ読み込み直す（乗り物の保存の確認用）。保存した乗り物の情報を返す。 */
@@ -2198,6 +2205,9 @@ function renderGameSceneBase(): void {
   const seams: Camera[] = seamCameras(renderCamera, map);
   for (const cam of seams) renderTileMap(ctx, map, cam);
   if (currentMapId === "world-map") for (const cam of seams) renderBasin(ctx, map, cam, performance.now());
+  // 飛空艇は雲より上を飛ぶので、乗っているときは雲を先に描く（ふだんは、船や人のあとに描き、雲のうしろを通って見える）
+  const cloudFirst = currentMapId === "world-map" && vehicle === "air";
+  if (cloudFirst) for (const cam of seams) renderTowerCloud(ctx, map, cam, performance.now());
   // 奥にいる人を先に、手前にいる人をあとに描く（足元の位置の順）。
   const playerFeetY = player.y + player.height;
   // 家・木・NPCは、プレイヤーとの前後だけでなく、お互いの前後も足元の位置の順に並べて描く（家の裏を歩く人が家より手前に出ないように）。
@@ -2254,6 +2264,7 @@ function renderGameSceneBase(): void {
     if (item.feetY > playerFeetY) item.draw();
   }
   if (onWorldMap) {
+    if (!cloudFirst) for (const cam of seams) renderTowerCloud(ctx, map, cam, nowMs);
     // 塔のまわりは、いつも嵐（2026-10-05、人間の指示「まわりは常時嵐」）
     for (const cam of seams) renderStorm(ctx, map, cam, nowMs);
     if (vehicleHint) {

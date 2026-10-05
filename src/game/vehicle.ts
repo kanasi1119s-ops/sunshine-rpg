@@ -8,7 +8,8 @@ import { WORLD_TOWER } from "./map/world/world-map.generated";
  *  - 船: 海を進む。陸は、海に接するマス（海岸）にだけ上がれる（上がったら自動で降りる）。山・湖・渦は通れない。
  *  - 飛空艇: 山・海・湖の上も飛べる。芯環塔のまわりの大滝（19）の上は、嵐で通れない。決定ボタンで、歩ける地形に着陸できる。
  *  （渦の輪 13・14 は、2026-10-05 になくした。世界地図を作るときに海になる）
- *  - 芯環塔の上の積乱雲の下の海（TOWER_CLOUD_TILES）は、船も飛空艇も入れない。雲の絵の上を進んで見えないように（2026-10-05）。
+ *  - 芯環塔の上の積乱雲の下の海（TOWER_CLOUD_TILES）は、船は進める（雲は船より上に描くので、雲のうしろを通って見える）。
+ *    飛空艇は、嵐の雲の中へは入れない（2026-10-05）。
  */
 export type Vehicle = "foot" | "ship" | "air";
 
@@ -48,8 +49,8 @@ export function buildVehicleCollision(data: TileMapData, kind: "ship" | "air"): 
       out[y * data.width + x] = ok ? 0 : 1;
     }
   }
-  // 芯環塔の上の積乱雲の下（世界地図だけ）
-  if (data.width >= WORLD_TOWER.x + 12 && data.height >= WORLD_TOWER.y + 12) {
+  // 芯環塔の上の積乱雲の下（世界地図だけ）: 飛空艇だけ入れない
+  if (kind === "air" && data.width >= WORLD_TOWER.x + 12 && data.height >= WORLD_TOWER.y + 12) {
     for (const [dx, dy] of TOWER_CLOUD_TILES) {
       const x = WORLD_TOWER.x + dx, y = WORLD_TOWER.y + dy;
       if (x >= 0 && y >= 0 && x < data.width && y < data.height) out[y * data.width + x] = 1;
