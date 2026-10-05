@@ -106,10 +106,6 @@ def cloud_lobes():
         tp = top_at(x)
         r = rnd.uniform(5, 11)
         lobes.append((x, tp + r * rnd.uniform(0.35, 0.8), r, 0.0))
-    for i in range(40):
-        x = LEFT + 10 + (RIGHT - LEFT - 20) * (i + rnd.random()) / 40
-        y = (top_at(x) + bottom(x)) / 2
-        lobes.append((x, y, rnd.uniform(14, 20), 0.0))
     # ちぎれ雲（本体からはなれた、小さなかけら）
     for (x, y) in ((8, 150), (300, 112), (330, 158), (40, 104)):
         for k in range(3):
@@ -124,73 +120,127 @@ LIGHT = (-0.5, -0.66, 0.56)                # 左上・手前からの光
 
 
 def cloud_layer():
-    """もくもくの雲（どのコマも同じ）。ドット絵の雲の描き方: 丸いもくもくを、奥（底が上にある玉）から手前へ重ねて塗る。
-    - 玉の中の色は、雲全体の上下の位置で決まる平らな色（上ほど明るく、底は暗く重い。左ほど少し明るい）。
-    - 玉の左上のふち（2〜3ドット）は1段明るく、右下のふち（内がわ）は1段暗い。手前の玉が奥の玉をかくすので、
-      奥の玉のふちの弧だけが残り、もくもくの重なりに見える。
-    - 1ドットのちらばりは置かない。
-    戻り値: (雲の色 {(x,y):色}, 雲のマスの集まり)"""
+    """もくもくの雲（どのコマも同じ）。1ドットずつこだわって塗る（2026-10-05、人間の指示「自然な感じだけど、ドットはもっとこだわって」）。
+    - もくもくは、中心も半径も整数にそろえ、きれいなドットの円にする（ふちのがたつきを出さない）。
+    - 1つのもくもくの中は1色（平らな面）。上の方のもくもくほど明るく、底の方ほど暗い（玉ごとに色を決めるので、
+      玉をまたいだ横のしま模様が出ない）。左ほど少し明るい（光は左上から）。
+    - 光: もくもくの左上のふちに、1ドットの明るい弧。雲のいちばん上のふちは、さらに明るい光の弧（日の当たる頭）。
+    - 重なりの影: 手前のもくもくの上のふちのすぐ外（奥のもくもくの上）に、1ドットの暗い弧。明るい弧と暗い弧が
+      となり合い、もくもくの重なりがくっきり見える。
+    - 雲の底のふちは、いちばん暗い色の1ドットの線。
+    - 弧は、L字の角のドットをのぞいて、ななめにつながる1ドットの線にする。ぽつんと残ったドットはまわりの色にする。
+    戻り値: (雲の色 {(x,y):色}, もくもくの持ち主 {(x,y):番号})"""
     lobes, bottom = cloud_lobes()
-    order = sorted(lobes, key=lambda l: l[1] + l[2])          # 玉の下のはしが上にあるものから（奥から）
-    n = len(CLOUD) - 1
-    tone = {}
-    for (lx, ly, r, _z) in order:
-        for y in range(int(ly - r) - 1, int(ly + r) + 2):
-            for x in range(int(lx - r) - 1, int(lx + r) + 2):
-                if not (0 <= x < W and 0 <= y < H) or y > bottom(x):
-                    continue
-                dx, dy = x + 0.5 - lx, y + 0.5 - ly
-                d = math.sqrt(dx * dx + dy * dy)
-                if d > r:
-                    continue
-                # 雲全体の上下・左右で決まる明るさ
-                top = 60.0
-                v = 0.92 - (y - top) / (bottom(x) - top + 1) * 0.66 - (x - 40) / 600
-                # 玉のふち: 左上は明るく、右下（内がわ）は暗く
-                rim = r - d
-                ang = (dx * -0.6 + dy * -0.8) / (d + 1e-6)           # 左上を向く度合い
-                if rim < 2.6 and ang > 0.25:
-                    v += 0.14 if rim < 1.3 else 0.08
-                elif rim < 2.2 and ang < -0.35:
-                    v -= 0.1
-                tone[(x, y)] = v
-    layer = {}
-    for (x, y), v in tone.items():
-        k = max(0, min(n, int(round(v * n))))
-        layer[(x, y)] = CLOUD[k]
-    # 雲の中の小さな穴（外とつながっていないすき間）は、まわりの色でうめる
+    snapped = []
+    for (lx, ly, r, _z) in lobes:
+        snapped.append((int(round(lx)), int(round(ly)), max(3, int(round(r)))))
+    order = sorted(range(len(snapped)), key=lambda i: snapped[i][1] + snapped[i][2])   # 奥（下のはしが上）から手前へ
+    owner = {}
+    rank = {}
+    for k, i in enumerate(order):
+        cx, cy, r = snapped[i]
+        rank[i] = k
+        r2 = r * r + r * 0.8
+        for y in range(cy - r - 1, cy + r + 2):
+            for x in range(cx - r - 1, cx + r + 2):
+                if 0 <= x < W and 0 <= y < H and y <= bottom(x) and (x - cx) ** 2 + (y - cy) ** 2 <= r2:
+                    owner[(x, y)] = i
+    # 雲の中の小さな穴（外とつながらないすき間）は、となりのもくもくでうめる
     from collections import deque
     outside = set()
     dq = deque((x, y) for x in range(W) for y in (0, H - 1))
     while dq:
         q = dq.popleft()
-        if q in outside or q in layer or not (0 <= q[0] < W and 0 <= q[1] < H):
+        if q in outside or q in owner or not (0 <= q[0] < W and 0 <= q[1] < H):
             continue
         outside.add(q)
         x, y = q
         dq.extend(((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)))
-    ys = [y for (_, y) in layer]
-    holes = [(x, y) for y in range(min(ys), max(ys) + 1) for x in range(W) if (x, y) not in layer and (x, y) not in outside]
-    while holes:
+    ys = [y for (_, y) in owner]
+    holes = [(x, y) for y in range(min(ys), max(ys) + 1) for x in range(W) if (x, y) not in owner and (x, y) not in outside]
+    for _ in range(20):
         rest = []
         for (x, y) in holes:
-            nb = [layer.get(q) for q in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)) if q in layer]
+            nb = [owner[q] for q in ((x, y - 1), (x - 1, y), (x + 1, y), (x, y + 1)) if q in owner]
             if nb:
-                layer[(x, y)] = max(set(nb), key=nb.count)
-                tone[(x, y)] = 0.5
+                owner[(x, y)] = nb[0]
             else:
                 rest.append((x, y))
-        if len(rest) == len(holes):
-            break
         holes = rest
-    # ちぎれた1ドット（まわりの4つのうち3つ以上が別の色）を、まわりの多い色に
+        if not holes:
+            break
+    # もくもくごとの色（ramp の番号）: 上ほど明るく、左ほど少し明るい
+    n = len(CLOUD) - 1
+    body = {}
+    for i, (cx, cy, r) in enumerate(snapped):
+        tp, bt = 60.0, bottom(cx)
+        t = max(0.0, min(1.0, (cy - tp) / (bt - tp)))
+        body[i] = max(1, min(n - 2, int(round(6.2 - t * 4.6 - (cx - 40) / 300))))
+    def in_cap(i, x, y):
+        cx, cy, r = snapped[i]
+        if r < 5:
+            return (x - cx) + (y - cy) < 0                         # 小さなもくもくは、左上の半分
+        ox, oy, rr = cx - r * 0.28, cy - r * 0.34, r * 0.74
+        return (x + 0.5 - ox) ** 2 + (y + 0.5 - oy) ** 2 <= rr * rr
+
+    idx = {}
+    for (x, y), i in owner.items():
+        k = body[i]
+        up, left = owner.get((x, y - 1)), owner.get((x - 1, y))
+        down = owner.get((x, y + 1))
+        if up is None:
+            k = min(n, k + 2)                                     # 雲のいちばん上のふち（日の当たる頭）
+        elif in_cap(i, x, y):
+            k = min(n, k + 1)                                     # もくもくの左上の、光の当たる面（右下には影の三日月が残る）
+        if down is None and y >= bottom(x) - 14:
+            k = 0                                                 # 雲の底のふち
+        idx[(x, y)] = k
+    # いちばん上のふちの光の線は、L 字の角をとって、ななめにつながる1ドットの線に（変える前の状態を見て決める）
+    snap = dict(idx)
+    rim = {q for q in owner if owner.get((q[0], q[1] - 1)) is None}
+    for (x, y) in rim:
+        same = lambda q: q in rim
+        if (same((x - 1, y)) or same((x + 1, y))) and (same((x, y + 1)) and not same((x, y - 1))):
+            if same((x - 1, y + 1)) or same((x + 1, y + 1)):
+                continue
+            idx[(x, y)] = snap[(x, y + 1)]
+    # ぽつんと残ったドット（4つのとなりが、すべて別の色）は、まわりの多い色に
     for _ in range(2):
-        for (x, y), c in list(layer.items()):
-            nb = [layer.get(q) for q in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1))]
-            nb = [b for b in nb if b is not None]
-            if len(nb) == 4 and sum(b != c for b in nb) >= 3:
-                layer[(x, y)] = max(set(nb), key=nb.count)
-    return layer, tone
+        for (x, y), k in list(idx.items()):
+            nb = [idx.get(q) for q in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1))]
+            if None in nb:
+                continue
+            if all(b != k for b in nb):
+                idx[(x, y)] = max(set(nb), key=nb.count)
+    # 小さなかけら（同じ色でつながる5ドット以下の面）は、まわりにいちばん多く接する色にする（細い三角のくずをなくす）
+    seen = set()
+    for q0 in list(idx):
+        if q0 in seen:
+            continue
+        k = idx[q0]
+        comp, st = [], [q0]
+        seen.add(q0)
+        while st:
+            q = st.pop()
+            comp.append(q)
+            x, y = q
+            for nq in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                if nq in idx and nq not in seen and idx[nq] == k:
+                    seen.add(nq)
+                    st.append(nq)
+        if len(comp) <= 5 and owner.get((q0[0], q0[1] - 1)) is not None:
+            cnt = {}
+            cs = set(comp)
+            for (x, y) in comp:
+                for nq in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+                    if nq in idx and nq not in cs:
+                        cnt[idx[nq]] = cnt.get(idx[nq], 0) + 1
+            if cnt:
+                best = max(cnt, key=cnt.get)
+                for q in comp:
+                    idx[q] = best
+    layer = {q: CLOUD[k] for q, k in idx.items()}
+    return layer, owner
 
 
 VEIL = [(150, 156, 178), (186, 190, 208)]
