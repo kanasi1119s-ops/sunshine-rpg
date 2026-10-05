@@ -3,7 +3,7 @@ import { DEEP_ENTRY } from "../map/chapter10/deep-maps";
 import { isletRequirementHint } from "./islets-world";
 import { GODS } from "../battle/chapter11-enemies";
 import type { EventCommand } from "../event/types";
-import type { TileMapData } from "../map/types";
+import type { MapProp, TileMapData } from "../map/types";
 import type { Npc } from "../npc";
 import { say } from "./side-story";
 
@@ -327,11 +327,99 @@ export function connectWorldMap(maps: Record<string, TileMapData>, npcsByMap: Re
     // 世界地図の側: 町のアイコンの上が出入り口
     world.exits = [...(world.exits ?? []), { tileX: pos.x, tileY: pos.y, targetMapId: townId, targetTileX: gate.x, targetTileY: gate.y - 1 }];
   }
+  connectDungeonsToWorld(world, maps);
   // 隠しダンジョンの小島の入口（島の中心）と、海のまんなかの芯環塔の入口
   for (const islet of WORLD_ISLETS) {
     world.exits = [...(world.exits ?? []), { tileX: islet.x, tileY: islet.y, targetMapId: `${islet.id}-1`, targetTileX: DEEP_ENTRY.tileX, targetTileY: DEEP_ENTRY.tileY }];
   }
   world.exits = [...(world.exits ?? []), { tileX: WORLD_TOWER.x, tileY: WORLD_TOWER.y, targetMapId: "tower-1", targetTileX: 10, targetTileY: 11 }];
+}
+
+/**
+ * 章のダンジョンの入口は、町の門ではなく、世界地図の町のそば（フィールド）に置く（人間の指示「町の中からそのままダンジョンに行けるのはどうにかしたい」、2026-10-05）。
+ * 町の側: ダンジョンへの門は、世界地図へ出る出口に変える。世界地図の側: 町から歩いて行ける、町のそばの地面にアイコンと入口を置く
+ * （入るための条件 requireFlag はそのまま）。ダンジョンの側: 町へもどる出口は、世界地図の入口のそばに出る。
+ */
+export const DUNGEON_FROM_TOWN: Record<string, { dungeon: string; icon: MapProp["kind"] }> = {
+  "touri-town": { dungeon: "touri-forest-1", icon: "icon-bigtree" },
+  "mugikano-village": { dungeon: "mugikano-canal", icon: "icon-stones" },
+  "garasuko-town": { dungeon: "garasuko-cave-1", icon: "icon-cave" },
+  "tetsukusari-town": { dungeon: "tetsukusari-cave-1", icon: "icon-mine" },
+  "sanone-town": { dungeon: "sanone-ruins-1", icon: "icon-ruin" },
+  "kiri-town": { dungeon: "kiri-tower-1", icon: "icon-spire" },
+  "shimohara-town": { dungeon: "shimohara-ruins-1", icon: "icon-ruin" },
+  "fushima-town": { dungeon: "fushima-tower-1", icon: "icon-spire" },
+  "toushin-town": { dungeon: "toushin-tower-1", icon: "icon-shrine" },
+};
+
+/** 世界地図で、町から歩いて行ける、町から3〜9マスはなれた地面（入口）と、そのすぐ手前の立つ場所。北（ダンジョンの門があった向き）を少し優先する。 */
+function dungeonSpot(world: TileMapData, town: { x: number; y: number }, taken: Set<number>): { gate: { x: number; y: number }; stand: { x: number; y: number } } | null {
+  const w = world.width, h = world.height;
+  const col = world.collision ?? [];
+  const start = { x: town.x, y: town.y + 1 };
+  const prev = new Map<number, number>();
+  const dist = new Map<number, number>([[start.y * w + start.x, 0]]);
+  const queue = [start.y * w + start.x];
+  let best: { i: number; score: number } | null = null;
+  while (queue.length) {
+    const i = queue.shift()!;
+    const d = dist.get(i)!;
+    if (d > 14) continue;
+    const x = i % w, y = Math.floor(i / w);
+    const cheb = Math.max(Math.abs(x - town.x), Math.abs(y - town.y));
+    if (cheb >= 3 && cheb <= 9 && !taken.has(i) && d >= 3) {
+      const score = d + (y > town.y ? 3 : 0) + Math.abs(cheb - 5);
+      if (!best || score < best.score) best = { i, score };
+    }
+    for (const [dx, dy] of [[0, -1], [1, 0], [-1, 0], [0, 1]]) {
+      const nx = x + dx, ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+      const j = ny * w + nx;
+      if (col[j] === 1 || dist.has(j) || taken.has(j)) continue;
+      dist.set(j, d + 1);
+      prev.set(j, i);
+      queue.push(j);
+    }
+  }
+  if (!best) return null;
+  const standI = prev.get(best.i) ?? best.i;
+  return { gate: { x: best.i % w, y: Math.floor(best.i / w) }, stand: { x: standI % w, y: Math.floor(standI / w) } };
+}
+
+function connectDungeonsToWorld(world: TileMapData, maps: Record<string, TileMapData>): void {
+  const w = world.width;
+  const taken = new Set<number>();
+  for (const e of world.exits ?? []) taken.add(e.tileY * w + e.tileX);
+  for (const p of world.props ?? []) taken.add(p.tileY * w + p.tileX);
+  for (const [townId, { dungeon, icon }] of Object.entries(DUNGEON_FROM_TOWN)) {
+    const town = maps[townId];
+    const pos = (WORLD_TOWNS as Record<string, { x: number; y: number }>)[townId] ?? WORLD_VILLAGES.find((v) => v.id === townId);
+    if (!town || !pos || !maps[dungeon]) continue;
+    const door = (town.exits ?? []).find((e) => e.targetMapId === dungeon);
+    if (!door) continue;
+    const spot = dungeonSpot(world, pos, taken);
+    if (!spot) continue;
+    taken.add(spot.gate.y * w + spot.gate.x);
+    // 町の側: ダンジョンへの門は、世界地図（町のそば）へ出る出口に
+    town.exits = (town.exits ?? []).map((e) =>
+      e === door ? { tileX: e.tileX, tileY: e.tileY, targetMapId: "world-map", targetTileX: pos.x, targetTileY: pos.y + 1 } : e,
+    );
+    // 世界地図の側: アイコンと入口（条件はもとの門と同じ）
+    world.props = [...(world.props ?? []), { kind: icon, tileX: spot.gate.x, tileY: spot.gate.y }];
+    world.exits = [...(world.exits ?? []), {
+      tileX: spot.gate.x, tileY: spot.gate.y, targetMapId: dungeon, targetTileX: door.targetTileX, targetTileY: door.targetTileY,
+      ...(door.requireFlag ? { requireFlag: door.requireFlag } : {}),
+      ...(door.blockedMessage ? { blockedMessage: door.blockedMessage } : {}),
+    }];
+    // ダンジョンの側: 町へもどる出口は、世界地図の入口の手前に出る
+    for (const id of Object.keys(maps)) {
+      if (id === townId || id === "world-map") continue;
+      const m = maps[id];
+      if (!m.exits?.some((e) => e.targetMapId === townId)) continue;
+      if (!(id === dungeon || id.startsWith(dungeon.replace(/-1$/, "")))) continue;
+      m.exits = m.exits.map((e) => (e.targetMapId === townId ? { ...e, targetMapId: "world-map", targetTileX: spot.stand.x, targetTileY: spot.stand.y } : e));
+    }
+  }
 }
 
 function findSouthGate(data: TileMapData, npcs: Npc[], first?: { tileX: number; tileY: number }): { x: number; y: number } | null {

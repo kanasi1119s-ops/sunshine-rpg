@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { worldEntryProblems } from "./world-map-world";
+import { DUNGEON_FROM_TOWN, worldEntryProblems } from "./world-map-world";
 import { isletRequirementHint } from "./islets-world";
 import { WORLD_MAPS } from "./world";
 
@@ -34,9 +34,17 @@ describe("世界地図の入場条件（章は順番に進む）", () => {
     expect(worldEntryProblems("tower-1", { vortex_route_open: true })).toEqual([]);
   });
 
-  it("世界地図の出入り口は、町10か所（虚灯宮を含む）・村8つ・小島6つ（海底・火山を含む）・芯環塔1つ", () => {
+  it("町からダンジョンへ直接つながる出入り口は無い（ダンジョンは世界地図から入る）", () => {
+    for (const [town, { dungeon }] of Object.entries(DUNGEON_FROM_TOWN)) {
+      expect((WORLD_MAPS[town].exits ?? []).some((e) => e.targetMapId === dungeon)).toBe(false);
+      expect((WORLD_MAPS[dungeon].exits ?? []).some((e) => e.targetMapId === town)).toBe(false);
+    }
+  });
+
+  it("世界地図の出入り口は、町10か所（虚灯宮を含む）・村8つ・章のダンジョン9つ・小島6つ（海底・火山を含む）・芯環塔1つ", () => {
     const targets = (WORLD_MAPS["world-map"].exits ?? []).map((e) => e.targetMapId);
-    expect(targets.length).toBe(25);
+    expect(targets.length).toBe(34);
+    for (const { dungeon } of Object.values(DUNGEON_FROM_TOWN)) expect(targets).toContain(dungeon);
     expect(targets).toContain("tower-1");
     expect(targets.filter((t) => t.startsWith("islet-")).length).toBe(6);
   });
