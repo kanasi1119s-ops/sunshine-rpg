@@ -341,6 +341,7 @@ function elderCommands(): EventCommand[] {
                   commands: [
                     { type: "setFlag", flag: "chapter1_quest_accepted", value: true },
                     { type: "message", text: "わかりました。まず、いちばん最初から話を聞かせてください。見てきます。", speaker: "ユーリ" },
+                    { type: "message", text: "調べるときは、見える所だけで済ませないでおくれ。足もとも、壁の古い跡も、決定ボタンで一つずつ確かめるんだ。見落としが、いちばん怖い。", speaker: "村長" },
                     {
                       type: "message",
                       text: "頼む。……ああ、それと、ミナという村の子が、水路のことなら誰より詳しい。自分も行きたがっていてな。",

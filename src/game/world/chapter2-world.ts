@@ -252,6 +252,7 @@ function guideCommands(): EventCommand[] {
                   commands: [
                     { type: "setFlag", flag: "chapter2_quest_accepted", value: true },
                     { type: "message", text: "わかった。倉庫を調べてくる。", speaker: "ユーリ" },
+                    { type: "message", text: "倉庫は、木箱の裏も、積み荷の底も、徹底的に調べて。商人の勘だけど、大事な物ほど目立たない所にあるの。", speaker: "ガイド" },
                     {
                       type: "message",
                       text: "助かる。あたしは、帳簿をもう一度洗っておくね。……商人は、頼みごとの前に、正直に話すものなの。",

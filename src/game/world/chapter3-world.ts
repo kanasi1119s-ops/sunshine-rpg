@@ -207,6 +207,7 @@ function orcaCommands(): EventCommand[] {
                   commands: [
                     { type: "setFlag", flag: "chapter3_quest_accepted", value: true },
                     { type: "message", text: "わかりました。十二番坑を調べてきます。", speaker: "ユーリ" },
+                    { type: "message", text: "……坑道は暗い。目で見える所だけを見るな。壁も、床も、機械の下も、全部だ。見落としは事故のもとになる。", speaker: "オルカ" },
                     { type: "message", text: "……頼む。入口は町の北、崖の中腹だ。", speaker: "オルカ" },
                   ],
                 },

@@ -199,6 +199,7 @@ function priestCommands(): EventCommand[] {
                   commands: [
                     { type: "setFlag", flag: "chapter5_quest_accepted", value: true },
                     { type: "message", text: "お任せください。", speaker: "ユーリ" },
+                    { type: "message", text: "碑文は、一文字ずつ。書架も、綴りの奥まで、隅々まで調べてください。ほんの小さな違いが、大きな真実を隠していることがあります。", speaker: "司祭" },
                     { type: "message", text: "ありがとうございます。記録の間は、町の北の岩壁にあります。", speaker: "司祭" },
                   ],
                 },

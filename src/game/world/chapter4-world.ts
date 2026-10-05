@@ -292,6 +292,7 @@ function guildMasterCommands(): EventCommand[] {
                   commands: [
                     { type: "setFlag", flag: "chapter4_quest_accepted", value: true },
                     { type: "message", text: "引き受けます。野営地の荷馬車列を、調べさせてください。", speaker: "ユーリ" },
+                    { type: "message", text: "荷馬車は一台ずつ、荷の中身まで徹底的に調べてくれ。偽物は、本物のふりをして混ざっているものだ。", speaker: "組合長" },
                     { type: "message", text: "頼もしいな。野営地は、町の南の門の先だ。案内を一人つけよう。", speaker: "組合長" },
                   ],
                 },

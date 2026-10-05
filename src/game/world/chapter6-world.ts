@@ -158,6 +158,7 @@ function watchmanCommands(): EventCommand[] {
                   commands: [
                     { type: "setFlag", flag: "chapter6_quest_accepted", value: true },
                     { type: "message", text: "やります。青白い光は、歪みのしるしです。放っておけません。", speaker: "ユーリ" },
+                    { type: "message", text: "施設の中は、気になる所をぜんぶ調べて。記録も、機械も、壁の文字も。見落とさなければ、必ず答えにたどりつくわ。", speaker: "アヤメ" },
                     { type: "message", text: "ありがとうございます。入口までの案内は、アヤメさんが引き受けてくださいます。どうか、お気をつけて。", speaker: "番所の守り" },
                   ],
                 },

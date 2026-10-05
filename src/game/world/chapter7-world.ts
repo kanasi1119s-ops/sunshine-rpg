@@ -216,6 +216,7 @@ function elderCommands(): EventCommand[] {
                   commands: [
                     { type: "setFlag", flag: "chapter7_quest_accepted", value: true },
                     { type: "message", text: "任せてください。", speaker: "ユーリ" },
+                    { type: "message", text: "それと、現場は、隅々まで調べてください。風が運んだ小さな物も、手がかりかもしれません。", speaker: "雲海衆の長老" },
                     { type: "message", text: "ありがとうございます。空の上の風は気まぐれです。どうか、お気をつけて。", speaker: "雲海衆の長老" },
                   ],
                 },
