@@ -901,7 +901,7 @@
  },
  {
   "id": "enc-deep-1-5",
-  "prompt": "a floating frozen tear drop of ice with a sad face reflection inside and a frosty halo",
+  "prompt": "a floating teardrop-shaped creature of deep blue ice with a frosty ring around it and two small sad glowing eyes",
   "status": "done",
   "key": "enemy:enc-deep-1-5",
   "kind": "mob",
@@ -910,11 +910,12 @@
   "level": 22,
   "shape": "float",
   "tone": [
-   185,
-   215,
-   235
+   70,
+   110,
+   160
   ],
-  "draft": "enc-deep-1-5_0"
+  "draft": "enc-deep-1-5_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-deep-2-0",
@@ -936,7 +937,7 @@
  {
   "id": "enc-deep-2-1",
   "prompt": "a shadow of an assembly hall, a creature made of stacked carved chairs and a podium with a dark face",
-  "status": "picked",
+  "status": "done",
   "key": "enemy:enc-deep-2-1",
   "kind": "mob",
   "name": "議場の影",
@@ -953,7 +954,7 @@
  {
   "id": "enc-deep-2-2",
   "prompt": "a floating blank nameplate with smeared golden letters, ribbons and a blurred face, ghostly",
-  "status": "todo",
+  "status": "draft",
   "key": "enemy:enc-deep-2-2",
   "kind": "mob",
   "name": "消えた名前",
@@ -969,7 +970,7 @@
  {
   "id": "enc-deep-2-3",
   "prompt": "a heavy stone seal creature, a carved square seal stamp walking on short legs, red ink on its base",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-2-3",
   "kind": "mob",
   "name": "印章の石",
@@ -980,7 +981,8 @@
    150,
    140,
    125
-  ]
+  ],
+  "draft": "enc-deep-2-3_0"
  },
  {
   "id": "enc-deep-2-4",
