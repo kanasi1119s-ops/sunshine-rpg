@@ -177,51 +177,49 @@ def cloud_layer():
         holes = rest
         if not holes:
             break
-    # もくもくごとの色（ramp の番号）: 上ほど明るく、左ほど少し明るい
+    # もくもくを、近いものどうし「かたまり」にまとめる（2026-10-05、人間の指示「今度は丸みが多すぎる」）。
+    # 陰は、1つ1つの丸ではなく、かたまりのふちの形に沿ってつける。丸いでこぼこは、かたまりの外のふちにだけ見え、
+    # かたまりの中に、小さな丸の線がたくさん並ばない。
     n = len(CLOUD) - 1
+    seeds = []
+    clus = {}
+    for i in sorted(range(len(snapped)), key=lambda i: -snapped[i][2]):
+        cx, cy, r = snapped[i]
+        best, bd = None, 1e9
+        for si, (sx, sy) in enumerate(seeds):
+            d = math.hypot(cx - sx, (cy - sy) * 1.3)
+            if d < bd:
+                best, bd = si, d
+        if best is None or bd > 24:
+            seeds.append((cx, cy))
+            best = len(seeds) - 1
+        clus[i] = best
+    cown = {q: clus[i] for q, i in owner.items()}
     body = {}
-    for i, (cx, cy, r) in enumerate(snapped):
-        tp, bt = 60.0, bottom(cx)
-        t = max(0.0, min(1.0, (cy - tp) / (bt - tp)))
-        body[i] = max(1, min(n - 2, int(round(6.2 - t * 4.6 - (cx - 40) / 300))))
-    def in_cap(i, x, y):
-        cx, cy, r = snapped[i]
-        if r < 5:
-            return (x - cx) + (y - cy) < 0                         # 小さなもくもくは、左上の半分
-        ox, oy, rr = cx - r * 0.28, cy - r * 0.34, r * 0.74
-        return (x + 0.5 - ox) ** 2 + (y + 0.5 - oy) ** 2 <= rr * rr
+    for si, (sx, sy) in enumerate(seeds):
+        tp, bt = 60.0, bottom(sx)
+        t = max(0.0, min(1.0, (sy - tp) / (bt - tp)))
+        body[si] = max(1, min(n - 2, int(round(6.7 - t * 4.4 - (sx - 40) / 300))))
+    pbody = {i: body[clus[i]] for i in clus}
 
-    def in_hot(i, x, y):
-        cx, cy, r = snapped[i]
-        if r < 6 or body[i] < 4:
-            return False
-        ox, oy, rr = cx - r * 0.4, cy - r * 0.46, r * 0.36
-        return (x + 0.5 - ox) ** 2 + (y + 0.5 - oy) ** 2 <= rr * rr
-
-    def in_shade(i, x, y):
-        cx, cy, r = snapped[i]
-        if r < 5:
-            return False
-        ox, oy, rr = cx - r * 0.14, cy - r * 0.18, r * 0.9
-        # 右下の半分だけ（三日月の角を、ななめに短く切る＝とがらせない）
-        return (x + 0.5 - ox) ** 2 + (y + 0.5 - oy) ** 2 > rr * rr and (x + 0.5 - cx) * 0.6 + (y + 0.5 - cy) * 0.8 > r * 0.25
+    def outside(q, c):
+        return cown.get(q) != c
 
     idx = {}
-    for (x, y), i in owner.items():
-        k = body[i]
-        up, left = owner.get((x, y - 1)), owner.get((x - 1, y))
-        down = owner.get((x, y + 1))
-        if up is None:
+    for (x, y), c in cown.items():
+        k = body[c]
+        if owner.get((x, y - 1)) is None:
             k = min(n, k + 2)                                     # 雲のいちばん上のふち（日の当たる頭）
-        elif in_hot(i, x, y):
-            k = min(n, k + 2)                                     # 光のいちばん強い所（上の方のもくもくの左上）
-        elif in_cap(i, x, y):
-            k = min(n, k + 1)                                     # もくもくの左上の、光の当たる面
-        elif in_shade(i, x, y):
-            k = max(0, k - 1)                                     # 右下の、影の三日月
-        if down is None and y >= bottom(x) - 16:
+        elif outside((x - 1, y - 1), c) and outside((x - 1, y - 2), c):
+            k = min(n, k + 2)                                     # かたまりの左上のふち（光の線）
+        elif outside((x - 3, y - 4), c):
+            k = min(n, k + 1)                                     # 左上を向いた面（光の面）
+        elif outside((x + 3, y + 3), c) or outside((x + 1, y + 4), c):
+            k = max(0, k - 1)                                     # 右下を向いた面（影）
+        if owner.get((x, y + 1)) is None and y >= bottom(x) - 16:
             k = 0                                                 # 雲の底のふち
         idx[(x, y)] = k
+    body = pbody
     # いちばん上のふちの光の線は、L 字の角をとって、ななめにつながる1ドットの線に（変える前の状態を見て決める）
     snap = dict(idx)
     rim = {q for q in owner if owner.get((q[0], q[1] - 1)) is None}
