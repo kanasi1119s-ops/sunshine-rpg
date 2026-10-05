@@ -1608,7 +1608,7 @@ function autosave(): void {
 
 const fileInput = document.createElement("input");
 fileInput.type = "file";
-fileInput.accept = "application/json";
+// スマホでは、種類で絞ると保存したファイルが選べないことがあるので、絞らない
 fileInput.style.display = "none";
 fileInput.addEventListener("change", () => {
   const file = fileInput.files?.[0];
@@ -1625,9 +1625,11 @@ fileInput.addEventListener("change", () => {
       saveMessage = "セーブデータを読み込みました";
       saveMessageTimer = 2000;
     })
-    .catch(() => {
-      saveMessage = "セーブデータを読み込めませんでした";
-      saveMessageTimer = 2000;
+    .catch((e: unknown) => {
+      const why = e instanceof Error ? e.message.slice(0, 40) : "";
+      saveMessage = `セーブデータを読み込めませんでした（${why || "形式がちがう"}）`;
+      saveMessageTimer = 5000;
+      slotMenu = withSlotRows(slotMenu, slotMenu.rows, saveMessage);
     })
     .finally(() => {
       fileInput.value = "";
