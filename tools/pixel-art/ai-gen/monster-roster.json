@@ -1162,7 +1162,7 @@
  {
   "id": "enc-deep-4-2",
   "prompt": "an echo of sorrow, a floating veiled figure with tear-like light streaks and drooping sleeves",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-4-2",
   "kind": "mob",
   "name": "悲しみの残響",
@@ -1173,12 +1173,13 @@
    150,
    150,
    190
-  ]
+  ],
+  "draft": "enc-deep-4-2_x0"
  },
  {
   "id": "enc-deep-4-3",
   "prompt": "an ancient origin stone, a smooth egg-shaped monolith with glowing spiral carvings and small floating pebbles",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-4-3",
   "kind": "mob",
   "name": "始まりの石",
@@ -1189,7 +1190,8 @@
    120,
    115,
    140
-  ]
+  ],
+  "draft": "enc-deep-4-3_0"
  },
  {
   "id": "enc-deep-4-4",
