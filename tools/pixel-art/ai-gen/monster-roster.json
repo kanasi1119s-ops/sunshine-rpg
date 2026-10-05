@@ -2307,7 +2307,7 @@
  {
   "id": "enc-islet-4-1-1",
   "prompt": "a shadow of a fortress soldier with a tall pointed helmet, round shield and a dark smoky body",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-4-1-1",
   "kind": "mob",
   "name": "砦の兵の影",
@@ -2318,12 +2318,13 @@
    80,
    75,
    95
-  ]
+  ],
+  "draft": "enc-islet-4-1-1_1"
  },
  {
   "id": "enc-islet-4-1-2",
   "prompt": "a fragment of cloud with a cracked stone core, floating and dripping light rain",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-4-1-2",
   "kind": "mob",
   "name": "雲のかけら",
@@ -2336,12 +2337,13 @@
    215
   ],
   "bg": "dark",
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-islet-4-1-2_1"
  },
  {
   "id": "enc-islet-4-1-3",
   "prompt": "a fortress siege machine, a small wooden catapult creature with a stone mouth and wheels",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-4-1-3",
   "kind": "mob",
   "name": "砦の機械",
@@ -2352,7 +2354,8 @@
    130,
    100,
    70
-  ]
+  ],
+  "draft": "enc-islet-4-1-3_0"
  },
  {
   "id": "enc-islet-4-1-4",
