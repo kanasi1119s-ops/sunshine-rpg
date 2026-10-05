@@ -12,7 +12,10 @@ from PIL import Image, ImageFilter
 photo = Image.open("ref-photo.png").convert("RGB")
 crop = photo.crop((28, 0, 412, 262))
 SKY = (32, 62, 120)
-CW, CH = 384, 384
+import sys
+WIDE = len(sys.argv) > 1 and sys.argv[1] == "wide"     # 横にも雲を足す版（試し3）
+CW, CH = (480 if WIDE else 384), 384
+OX = 48 if WIDE else 0                          # 横に広げた分、まん中へずらす
 
 
 def alpha_of(img, top_rows=0):
@@ -68,14 +71,22 @@ def fade_bottom(a, start=0.55):
 
 canvas = Image.new("RGB", (CW, CH), SKY)
 dome = crop.crop((0, 0, 384, 150))              # 写真の雲の上半分（白い頭。横と上は、雲のもとのふち）
+# 横の雲（試し3）: 本体のうしろの左右に、白い頭を小さく置く（本体の横から、もくもくがはみ出して広がる）
+if WIDE:
+    sl = dome.resize((int(384 * 0.5), int(150 * 0.5)), Image.LANCZOS)
+    canvas.paste(sl, (8, 196), fade_bottom(alpha_of(sl, 999), 0.7))
+    sr = dome.transpose(Image.FLIP_LEFT_RIGHT).resize((int(384 * 0.44), int(150 * 0.44)), Image.LANCZOS)
+    canvas.paste(sr, (CW - sr.width - 6, 214), fade_bottom(alpha_of(sr, 999), 0.7))
+    lo = dome.resize((int(384 * 0.36), int(150 * 0.36)), Image.LANCZOS)
+    canvas.paste(lo, (CW - lo.width - 30, 288), fade_bottom(alpha_of(lo, 999), 0.75))
 # いちばん上の段（いちばんうしろ・小さい）
 d3 = dome.resize((int(384 * 0.42), int(150 * 0.42)), Image.LANCZOS)
-canvas.paste(d3, (150, 62), fade_bottom(alpha_of(d3, 999), 0.75))
+canvas.paste(d3, (150 + OX, 62), fade_bottom(alpha_of(d3, 999), 0.75))
 # 2段目（左右を入れかえて、くり返しに見えないように）
 d2 = dome.transpose(Image.FLIP_LEFT_RIGHT).resize((int(384 * 0.66), int(150 * 0.66)), Image.LANCZOS)
-canvas.paste(d2, (90, 98), fade_bottom(alpha_of(d2, 999), 0.78))
+canvas.paste(d2, (90 + OX, 98), fade_bottom(alpha_of(d2, 999), 0.78))
 # 本体（いちばんまえ）
 body = crop.resize((int(384 * 0.9), int(262 * 0.9)), Image.LANCZOS)
-canvas.paste(body, (14, CH - body.height), alpha_of(body, 100))
-canvas.save("composite2.png")
+canvas.paste(body, (14 + OX, CH - body.height), alpha_of(body, 100))
+canvas.save("composite3.png" if WIDE else "composite2.png")
 print("ok")

@@ -22,12 +22,12 @@ SRC = sys.argv[1] if len(sys.argv) > 1 else "composite.png"     # 重ねた絵
 OUTN = sys.argv[2] if len(sys.argv) > 2 else "reshape"          # 書き出しの名前
 src = Image.open(SRC).convert("RGB")
 crop = src
-h = round(crop.height * 256 / crop.width)
-w = 352
+h = round(crop.height * 256 / 384)            # 重ねた絵 384 → 256（たて）、384 → 352（よこ）。採用した雲と同じ縮め方
+w = round(crop.width * 352 / 384)
 small = crop.resize((w, h), Image.LANCZOS).filter(ImageFilter.MedianFilter(3))
 px = small.load()
 S = 256
-SW = 352
+SW = w
 BAYER = [[0.125, 0.625], [0.875, 0.375]]
 
 
