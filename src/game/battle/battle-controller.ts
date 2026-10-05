@@ -295,6 +295,47 @@ export class BattleController {
     return { kind: "command", actorId, cursor: 0 };
   }
 
+  /**
+   * オートモード: いまコマンドを選ぶ人の行動を、こちらで決めて進める（コマンド選択のときだけ）。
+   * HPが半分を切った味方がいて回復の特技があれば回復、危ないときは回復アイテム、MPがあれば強い特技（ときどき）、
+   * そうでなければ、HPがいちばん少ない敵をたたかう。逃げることはしない。
+   */
+  autoCommand(): void {
+    const ph = this.phase;
+    if (ph.kind !== "command") return;
+    const actor = this.state.party.find((c) => c.id === ph.actorId);
+    const foes = this.state.enemies.filter(isAlive);
+    if (!actor || foes.length === 0) return;
+    const allies = this.state.party.filter(isAlive);
+    const weakest = [...allies].sort((x, y) => x.hp / x.maxHp - y.hp / y.maxHp)[0];
+    const weakRatio = weakest.hp / weakest.maxHp;
+    const usable = [this.skills[actor.id], ...(this.extraSkills[actor.id] ?? [])].filter(
+      (sk): sk is Skill => !!sk && sk.mpCost <= actor.mp && (!sk.hpCost || actor.hp > actor.maxHp * (sk.hpCost + 0.3)),
+    );
+    const finish = (): void => {
+      this.phase = this.advanceAfterAction();
+    };
+    const heal = usable.find((sk) => sk.effect === "heal" || sk.effect === "healAll");
+    if (heal && weakRatio < 0.5) {
+      this.pushAction(actor.id, "skill", weakest.id, heal);
+      return finish();
+    }
+    const stack = this.remainingStacks()[0];
+    if (stack && weakRatio < 0.3) {
+      this.pushAction(actor.id, "item", weakest.id, undefined, stack.item);
+      return finish();
+    }
+    const target = [...foes].sort((x, y) => x.hp - y.hp)[0];
+    const attackers = usable.filter((sk) => !sk.effect || sk.effect === "multi" || sk.effect === "damageAll");
+    const best = [...attackers].sort((x, y) => y.powerMultiplier - x.powerMultiplier)[0];
+    if (best && actor.mp >= best.mpCost * 2 && this.rng() < 0.6) {
+      this.pushAction(actor.id, "skill", target.id, best);
+    } else {
+      this.pushAction(actor.id, "attack", target.id);
+    }
+    finish();
+  }
+
   /** 今の人の行動が決まったので、キューから外して次の人へ進む。 */
   private advanceAfterAction(): BattleUiState {
     this.turnQueue.shift();

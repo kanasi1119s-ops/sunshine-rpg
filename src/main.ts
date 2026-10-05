@@ -867,6 +867,28 @@ menuButton.addEventListener("pointerdown", (event) => {
 app.appendChild(menuButton);
 
 /** スマホ用: 地図（世界地図の全体図、町・ダンジョンの地図）を開く／閉じるボタン（キーボードの V と同じ）。 */
+/** 戦闘のオートモード（入れたら、コマンドを自動で選ぶ。戦闘をまたいで続く）。 */
+let battleAuto = false;
+let battleAutoCmdAt = 0;
+const autoButton = document.createElement("button");
+autoButton.type = "button";
+autoButton.className = "touch-map-button";
+autoButton.textContent = "オート";
+autoButton.style.display = "none";
+autoButton.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  battleAuto = !battleAuto;
+  battleAutoCmdAt = performance.now() + 300;
+  if (audioStarted) audio.playSe(seOf("cursor"));
+});
+app.appendChild(autoButton);
+window.addEventListener("keydown", (event) => {
+  if (event.key === "o" && battle) {
+    battleAuto = !battleAuto;
+    battleAutoCmdAt = performance.now() + 300;
+  }
+});
+
 const mapButton = document.createElement("button");
 mapButton.type = "button";
 mapButton.className = "touch-map-button";
@@ -2302,6 +2324,10 @@ const loop = createGameLoop({
     const showMapButton = !title.open && !bootOpening.open && !opening.open && !staffRoll.open && !battle;
     const wanted = showMapButton || worldOverviewOpen ? "" : "none";
     if (mapButton.style.display !== wanted) mapButton.style.display = wanted;
+    const autoWanted = battle ? "" : "none";
+    if (autoButton.style.display !== autoWanted) autoButton.style.display = autoWanted;
+    autoButton.style.background = battleAuto ? "rgba(242,193,78,0.85)" : "";
+    autoButton.style.color = battleAuto ? "#222" : "";
     if (joinQueue.length > 0 && !dialogue.isActive() && !battle && !title.open && !bootOpening.open && !opening.open) {
       startJoinNotice(joinQueue.shift()!);
     }
@@ -2809,6 +2835,10 @@ const loop = createGameLoop({
           battle.confirm();
           lastBattleMessage = null;
         }
+      } else if (battleAuto && uiState.kind === "command" && performance.now() >= battleAutoCmdAt) {
+        // オート: コマンドを自動で選ぶ（見やすいよう、少し間をあける）
+        battle.autoCommand();
+        battleAutoCmdAt = performance.now() + 250;
       } else if (uiState.kind === "message" && performance.now() >= battleAutoAdvanceAt) {
         // 攻撃が始まったら、止まらずに自動で最後まで進む
         battle.confirm();

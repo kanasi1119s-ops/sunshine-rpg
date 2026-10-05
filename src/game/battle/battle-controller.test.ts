@@ -214,3 +214,30 @@ describe("BattleController: もどる（cancel）", () => {
     expect(c.getUiState()).toEqual({ kind: "command", actorId: "hero", cursor: 0 });
   });
 });
+
+describe("オートモード", () => {
+  it("autoCommand で、全員ぶんのコマンドが自動で決まりターンが進む", () => {
+    const c = new BattleController(
+      [makeCombatant({ id: "hero" }), makeCombatant({ id: "a" })],
+      [makeCombatant({ id: "slime", isEnemy: true, hp: 1000, speed: 1 })],
+      () => 0.9,
+      { skills, item },
+    );
+    c.autoCommand();
+    expect(c.getUiState()).toMatchObject({ kind: "command", actorId: "a" });
+    c.autoCommand();
+    expect(c.getUiState().kind).toBe("message");
+  });
+  it("コマンド選択以外では何もしない", () => {
+    const c = new BattleController(
+      [makeCombatant({ id: "hero" })],
+      [makeCombatant({ id: "slime", isEnemy: true, hp: 1000, speed: 1 })],
+      () => 0.9,
+      { skills, item },
+    );
+    c.autoCommand();
+    const before = c.getUiState();
+    c.autoCommand();
+    expect(c.getUiState()).toEqual(before);
+  });
+});
