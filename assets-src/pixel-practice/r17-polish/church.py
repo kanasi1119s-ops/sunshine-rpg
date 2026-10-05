@@ -352,60 +352,64 @@ def interior():
         "a": "#ff9a3c",  # ろうそくの炎（外）
         "A": "#ffe060",  # 炎（中）
     }
+    FLAMES = []          # ろうそくの炎の位置（炎のいちばん下のドット・大きさ 1=大 0=小）。ゲームで揺らめかせる
     B4 = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
 
     def dith(x, y, amount):
         return amount * 16 > B4[y % 4][x % 4] + 0.5
 
-    # ---------------- 身廊の床（石の板を1枚ずつ描く: 左上のふちに光・右下のふちに影・ひびや欠け。
-    #                  奥ほど低い列、縦の目地は奥の1点へ集まる。明るさは板ごとに1色で、点描はしない）
+    # ---------------- 身廊の床（細かなタイルを1枚ずつ: 明るい石と灰の石の市松・4辺の面取り（左上が光・右下が影）・石の筋・
+    #                  タイルの角ごとに小さな黒い菱形の象眼。奥ほど低い列で、縦の目地は奥の1点へ集まる。点描はしない）
     VPY = -160
-    slabs = []
+    rows_f = []
     y = FLOOR_Y
     ri = 0
     while y < H:
-        hgt = 9 + (min(y, FRONT_Y) - FLOOR_Y) * 7 / (FRONT_Y - FLOOR_Y)
-        slabs.append((ri, int(round(y)), min(int(round(y + hgt)), H)))
+        hgt = 6 + (min(y, FRONT_Y) - FLOOR_Y) * 4 / (FRONT_Y - FLOOR_Y)
+        rows_f.append((ri, int(round(y)), min(int(round(y + hgt)), H)))
         y += hgt
         ri += 1
-    for (ri, y0, y1) in slabs:
+    corners = []
+    for (ri, y0, y1) in rows_f:
         ym = (y0 + y1) / 2
         s = (ym - VPY) / (FRONT_Y - VPY)
-        off = 14 if ri % 2 else 0
-        xs = sorted({int(round(CX + (k * 28 - off) * s)) for k in range(-7, 8)})
-        for a, b in zip(xs, xs[1:]):
+        xs = sorted({int(round(CX + (k * 12 - 6) * s)) for k in range(-12, 13)})
+        for ci, (a, b) in enumerate(zip(xs, xs[1:])):
             mx = (a + b) / 2
             dist = math.hypot(mx - CX, (ym - FLOOR_Y) * 1.5)
-            h = (a * 31 + ri * 17) % 7
-            base = "F" if dist < 52 else ("j" if dist > 150 else "f")
-            if h == 0 and base == "f":
-                base = "F"
-            if h == 3 and base == "f" and dist > 105:
-                base = "j"
-            hi = {"F": "E", "f": "F", "j": "f"}[base]
-            lo = {"F": "f", "f": "j", "j": "e"}[base]
+            light = (ci + ri) % 2 == 0
+            if light:
+                base, hi, lo = ("E", "T", "F") if dist < 40 else (("F", "E", "f") if dist < 140 else ("f", "F", "j"))
+            else:
+                base, hi, lo = ("f", "F", "j") if dist < 60 else ("j", "f", "e")
+            h = (a * 31 + ri * 17) % 9
             for yy in range(y0, y1):
                 for x in range(max(0, a), min(W, b)):
                     if yy == y0 or x == a:
-                        c = "e"                      # 目地
+                        c = "e"
                     elif yy == y0 + 1 or x == a + 1:
-                        c = hi                       # 左上のふち（光）
+                        c = hi
                     elif yy == y1 - 1 or x == b - 1:
-                        c = lo                       # 右下のふち（影）
+                        c = lo
                     else:
                         c = base
                     g.a[yy, x] = c
-            # ひび（何枚かに1枚。ジグザグに下りる線と、その右の光）
-            if h in (2, 5) and b - a > 12 and y1 - y0 > 8:
-                px, py = a + 4 + (h * 7 + ri * 3) % max(1, b - a - 9), y0 + 2
-                for step in range(y1 - y0 - 4):
-                    g.put(px, py, "e")
-                    g.put(px + 1, py, hi)
-                    py += 1
-                    if (h + step) % 3 == 0:
-                        px += 1 if h == 2 else -1
-            if h == 4 and b - a > 6:
-                g.put(b - 2, y1 - 2, "e"); g.put(b - 3, y1 - 2, lo); g.put(b - 2, y1 - 3, lo)   # 角の欠け
+            # 石の筋（ななめに走る細い線。明るいタイルは暗い筋、暗いタイルは明るい筋）
+            if h in (1, 5) and b - a > 6 and y1 - y0 > 5:
+                vx, vy = a + 2 + h % max(1, b - a - 5), y0 + 2
+                for step in range(y1 - y0 - 3):
+                    if a + 1 < vx < b - 1:
+                        g.put(vx, vy, lo if light else hi)
+                    vy += 1
+                    vx += 1 if (h + step) % 2 == 0 else 0
+            corners.append((a, y0))
+    # タイルの角の象眼（黒い石の小さな菱形。上に光の点）
+    for (a, y0) in corners:
+        if y0 <= FLOOR_Y + 1 or not (0 < a < W - 1):
+            continue
+        g.put(a, y0, "s"); g.put(a - 1, y0, "s"); g.put(a + 1, y0, "s")
+        g.put(a, y0 - 1, "s"); g.put(a, y0 + 1, "s")
+        g.put(a, y0 - 1, "T")
 
     # ---------------- 奥の壁（0〜4マス目）。石を1つずつ: 上のふちに光、ところどころ明るい石・欠けた石
     g.rect(0, 0, W - 1, FLOOR_Y - 1, "Z")
@@ -598,6 +602,7 @@ def interior():
     for cx in (88, 96, 111, 119):
         g.rect(cx, 38, cx + 1, 44, "L")
         g.put(cx, 37, "A"); g.put(cx + 1, 37, "a"); g.put(cx, 36, "Y"); g.put(cx, 35, "a")
+        FLAMES.append((cx, 37, 1))
         g.hline(cx - 1, cx + 2, 44, "g")
     # 内陣の手前の、背の高い燭台（左右）
     for cx in (66, 141):
@@ -607,6 +612,7 @@ def interior():
         for k in (-4, 0, 4):
             g.rect(cx + k, 25, cx + k + 1, 29, "L")
             g.put(cx + k, 24, "A"); g.put(cx + k + 1, 24, "a"); g.put(cx + k, 23, "Y"); g.put(cx + k + 1, 22, "a")
+            FLAMES.append((cx + k, 24, 1))
 
     # ---------------- 奥の壁の飾りの帯と、すその台石（アーチの外だけ）
     for x in range(W):
@@ -779,7 +785,7 @@ def interior():
                     g.put((xa + xb) // 2, (y + base_y) // 2, "G")
                 y = base_y + 1
         for x in range(x1 + 3, x1 + 7):                       # 床の影
-            if g.get(x, base_y) in "fFjE":
+            if g.get(x, base_y) in "fFjEWs":
                 g.put(x, base_y, "j")
         if sconce:
             sy = (shaft_top + shaft_bot) // 2
@@ -789,6 +795,7 @@ def interior():
             g.put(sx, sy - 1, "G")
             tip = sx + sconce * 2
             g.put(tip, sy - 1, "L"); g.put(tip, sy - 2, "L"); g.put(tip, sy - 3, "A"); g.put(tip, sy - 4, "a")
+            FLAMES.append((tip, sy - 3, 0))
             g.put(tip - sconce, sy - 3, "r"); g.put(tip + sconce, sy - 3, "r"); g.put(tip, sy - 5, "r")
 
     # アーチの左右の大柱
@@ -796,7 +803,7 @@ def interior():
         column(gcx, 79, 4, width=10)
 
     # ---------------- 光の筋（左右の窓から、内がわの床へ、ななめに。床の板の色を1段だけ明るくする）
-    LIGHTER = {"j": "f", "f": "F", "F": "E", "E": "E"}
+    LIGHTER = {"e": "j", "j": "f", "f": "F", "F": "E", "E": "E", "s": "e"}
     for (sx, dirx) in ((26, 1), (182, -1)):
         for yy in range(FLOOR_Y + 2, FRONT_Y - 24):
             k = yy - FLOOR_Y
@@ -805,7 +812,7 @@ def interior():
             for x in range(int(c0 - half), int(c0 + half)):
                 if 0 <= x < W and g.a[yy, x] in LIGHTER:
                     v = LIGHTER[g.a[yy, x]]
-                    if abs(x + 0.5 - c0) < half - 2.5 and v in LIGHTER:
+                    if abs(x + 0.5 - c0) < half - 2.5 and v in LIGHTER and v not in "ej":
                         v = LIGHTER[v]                      # 光の芯は、もう1段明るく
                     g.put(x, yy, v)
 
@@ -824,9 +831,9 @@ def interior():
         for yy in range(FLOOR_Y, FRONT_Y):
             for k in range(1, 5):
                 x = (T - 1 + k) if side == 0 else (W - T - k)
-                if k == 1 and g.a[yy, x] in "fFjE":
+                if k == 1 and g.a[yy, x] in "fFjEWs":
                     g.put(x, yy, "e")
-                elif k == 2 and g.a[yy, x] in "fFE":
+                elif k == 2 and g.a[yy, x] in "fFEW":
                     g.put(x, yy, "j")
         # 壁のくぼみ（灯）
         nx0 = x0 + 3
@@ -835,6 +842,7 @@ def interior():
         g.vline(nx0 + 1 if side == 0 else nx0 + 7, 107, 116, "R")
         g.hline(nx0, nx0 + 8, 117, "T")
         g.rect(nx0 + 4, 111, nx0 + 4, 116, "L"); g.put(nx0 + 4, 110, "A"); g.put(nx0 + 4, 109, "a"); g.put(nx0 + 3, 110, "r"); g.put(nx0 + 5, 110, "r")
+        FLAMES.append((nx0 + 4, 110, 0))
         # むらさきの旗
         bx = x0 + (3 if side == 0 else 6)
         for yy in range(151, 172):
@@ -918,7 +926,7 @@ def interior():
         for (px0, px1) in ((20, 76), (132, 188)):
             for x in range(px0 + 1, px1 + 3):                             # 床の影（右下へ）
                 for yy, c in ((y0 + 14, "e"), (y0 + 15, "e"), (y0 + 16, "j")):
-                    if g.a[yy, x] in "fFjE":
+                    if g.a[yy, x] in "fFjEWs":
                         g.put(x, yy, c)
             g.hline(px0, px1, y0, "q")                                    # 背もたれの上の木（光）
             g.hline(px0, px1, y0 + 1, "o")
@@ -953,7 +961,7 @@ def interior():
     for bcx in (2 * T + 8, 10 * T + 8):
         for yy in range(203, 208):
             for x in range(bcx - 6, bcx + 9):
-                if ((x + 0.5 - bcx - 1.5) / 7) ** 2 + ((yy + 0.5 - 205) / 2.2) ** 2 <= 1 and g.a[yy, x] in "fFjE":
+                if ((x + 0.5 - bcx - 1.5) / 7) ** 2 + ((yy + 0.5 - 205) / 2.2) ** 2 <= 1 and g.a[yy, x] in "fFjEWs":
                     g.put(x, yy, "e")
         g.rect(bcx - 2, 198, bcx + 2, 205, "P"); g.vline(bcx - 2, 198, 205, "Q"); g.vline(bcx + 2, 198, 205, "i")
         g.rect(bcx - 4, 205, bcx + 4, 206, "S"); g.hline(bcx - 4, bcx + 4, 206, "s")
@@ -968,7 +976,7 @@ def interior():
                     g.put(x, yy, "n")
         g.put(bcx - 2, 194, "W"); g.put(bcx + 2, 195, "B")
 
-    # ---------------- 手前の壁（上の面の石を1つずつ）と、両開きの扉（石の枠・木の板・金具）
+    # ---------------- 手前の壁（上の面の石を1つずつ）
     g.rect(0, FRONT_Y + 2, W - 1, H - 1, "Z")
     for yy in range(FRONT_Y + 4, H):
         for x in range(W):
@@ -977,25 +985,61 @@ def interior():
             h = (((x + off) // 14) * 5 + (yy // 5) * 3) % 7
             g.put(x, yy, "z" if lx == 0 or ly == 4 else ("y" if ly == 0 or h == 0 else "Z"))
     g.hline(0, W - 1, FRONT_Y + 2, "K"); g.hline(0, W - 1, FRONT_Y + 3, "N")
-    dx0, dx1 = 6 * T - 2, 7 * T + 1
-    g.rect(dx0 - 4, FRONT_Y + 1, dx1 + 4, H - 1, "S"); g.vline(dx0 - 4, FRONT_Y + 1, H - 1, "T"); g.vline(dx1 + 4, FRONT_Y + 1, H - 1, "s")
-    g.hline(dx0 - 4, dx1 + 4, FRONT_Y + 1, "T")
-    g.rect(dx0 - 1, FRONT_Y + 2, dx1 + 1, H - 1, "K")
-    g.rect(dx0, FRONT_Y + 3, dx1, H - 1, "O")
-    for x in range(dx0, dx1 + 1):
-        if (x - dx0) % 4 == 0:
-            g.vline(x, FRONT_Y + 3, H - 1, "w")                 # 板のつなぎ目
-        elif (x - dx0) % 4 == 1:
-            g.vline(x, FRONT_Y + 3, H - 1, "o")
+    # ---------------- 重い出入口: 厚い壁に深く入った扉（左右に通路の石の面）・要石と灯の環の石の梁・鉄の帯と鋲の両開きの扉・
+    #                  輪の取っ手・左右に立つ柱（燭台つき）・石の敷居とマット
+    dx0, dx1 = 92, 115
     mid = (dx0 + dx1) // 2
-    g.vline(mid, FRONT_Y + 3, H - 1, "K"); g.vline(mid + 1, FRONT_Y + 3, H - 1, "w")
-    for yy in (FRONT_Y + 6, H - 4):                              # 金の帯
-        g.hline(dx0, dx1, yy, "g"); g.hline(dx0, mid - 1, yy, "G")
-    g.put(mid - 2, FRONT_Y + 10, "h"); g.put(mid + 3, FRONT_Y + 10, "G")        # 取っ手
-    g.rect(dx0 + 2, FRONT_Y - 3, dx1 - 2, FRONT_Y, "c"); g.hline(dx0 + 2, dx1 - 2, FRONT_Y - 3, "D")
-    for x in range(dx0 + 2, dx1 - 1, 2):
-        g.put(x, FRONT_Y - 4, "G")                               # 入口のマットのふさ
+    # 壁の厚み（通路の左の面は光、右の面は影。奥ほど暗い）
+    for yy in range(FRONT_Y + 2, H):
+        for k in range(4):
+            g.put(dx0 + k, yy, ["T", "S", "S", "P"][k] if (yy - FRONT_Y) % 5 else "z")
+            g.put(dx1 - k, yy, ["x", "i", "i", "P"][k] if (yy - FRONT_Y) % 5 else "z")
+    g.vline(dx0 - 1, FRONT_Y + 2, H - 1, "K"); g.vline(dx1 + 1, FRONT_Y + 2, H - 1, "K")
+    # 扉（濃い木の縦板・鉄の帯と鋲・合わせ目・輪の取っ手）
+    ex0, ex1 = dx0 + 4, dx1 - 4
+    m2 = (ex0 + ex1) // 2
+    g.rect(ex0, FRONT_Y + 6, ex1, H - 1, "w")
+    for x in range(ex0, ex1 + 1):
+        k = (x - ex0) % 4
+        g.vline(x, FRONT_Y + 6, H - 1, "O" if k in (1, 2) else ("o" if k == 0 else "w"))
+    g.vline(m2, FRONT_Y + 6, H - 1, "K"); g.vline(m2 + 1, FRONT_Y + 6, H - 1, "K")
+    for yy in (FRONT_Y + 8, H - 3):
+        g.hline(ex0, ex1, yy, "x"); g.hline(ex0, ex1, yy + 1, "z")
+        for x in range(ex0 + 1, ex1, 3):
+            if x not in (m2, m2 + 1):
+                g.put(x, yy, "Q")
+    for hx in (m2 - 2, m2 + 3):
+        for (ddx, ddy, c) in ((0, -1, "x"), (-1, 0, "Q"), (1, 0, "x"), (-1, 1, "G"), (1, 1, "g"), (0, 2, "g"), (0, 0, "K")):
+            g.put(hx + ddx, H - 7 + ddy, c)
+    # 石の梁（扉の上。厚い1本石。左右のはしは柱へ）と要石
+    by0, by1 = FRONT_Y + 1, FRONT_Y + 5
+    g.rect(dx0 - 22, by0, dx1 + 22, by1, "S")
+    g.hline(dx0 - 22, dx1 + 22, by0, "I"); g.hline(dx0 - 22, dx1 + 22, by0 + 1, "T"); g.hline(dx0 - 22, dx1 + 22, by1, "x")
+    g.hline(dx0 - 22, dx1 + 22, by1 - 1, "P")
+    for x in range(dx0 - 16, dx1 + 17, 8):
+        g.vline(x, by0 + 1, by1 - 1, "i")
+    g.rect(mid - 4, by0 - 3, mid + 5, by1 + 1, "T")
+    g.vline(mid - 4, by0 - 3, by1 + 1, "I"); g.hline(mid - 4, mid + 5, by0 - 3, "I")
+    g.vline(mid + 5, by0 - 3, by1 + 1, "s"); g.hline(mid - 4, mid + 5, by1 + 1, "s")
+    emblem(g, mid + 0.5, (by0 + by1) / 2 - 1, 2.6, ring="G", ring_d="g", lamp="h", core="W")
+    # 石の敷居と、入口のマット
+    g.rect(dx0 - 2, FRONT_Y - 2, dx1 + 2, FRONT_Y, "S"); g.hline(dx0 - 2, dx1 + 2, FRONT_Y - 2, "T"); g.hline(dx0 - 2, dx1 + 2, FRONT_Y, "s")
+    g.rect(dx0 + 3, FRONT_Y - 8, dx1 - 3, FRONT_Y - 3, "c"); g.hline(dx0 + 3, dx1 - 3, FRONT_Y - 8, "D")
+    for x in range(dx0 + 3, dx1 - 2, 2):
+        g.put(x, FRONT_Y - 9, "G")
+    # 左右に立つ柱（燭台つき）
+    column(72, H - 2, 192, width=8, sconce=1)
+    column(136, H - 2, 192, width=8, sconce=-1)
     g.save("church-interior", pal)
+    # 炎の位置をゲームのコードへ（kiri-church-flames.generated.ts）
+    seen = sorted(set(FLAMES))
+    out = os.path.join(HERE, "..", "..", "..", "src", "game", "map", "chapter5", "kiri-church-flames.generated.ts")
+    with open(out, "w") as f:
+        f.write("// assets-src/pixel-practice/r17-polish/church.py が書き出す（手で直さない）。聖堂の中の1枚絵の、ろうそくの炎の位置（絵の左上からのドット）。\n")
+        f.write("export const KIRI_CHURCH_FLAMES: readonly { x: number; y: number; big: boolean }[] = [\n")
+        for (x, y, b) in seen:
+            f.write(f"  {{ x: {int(x)}, y: {int(y)}, big: {'true' if b else 'false'} }},\n")
+        f.write("];\n")
 
 
 if __name__ == "__main__":

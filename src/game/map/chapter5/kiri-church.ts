@@ -1,4 +1,5 @@
 import type { TileMapData } from "../types";
+import { KIRI_CHURCH_FLAMES } from "./kiri-church-flames.generated";
 
 /**
  * 霧断崖の「環の聖堂」の中（2026-10-05、人間の指示「司祭がいるなら教会もほしい。教会内ならエディタ使って細かく作って」）。
@@ -40,6 +41,8 @@ export function createKiriChurchData(townDoor: { x: number; y: number }): TileMa
   }
   block(2, 12);
   block(10, 12);                                         // 聖水の鉢
+  block(4, 12);
+  block(8, 12);                                          // 出入口の左右の柱
   for (let y = 7; y <= 11; y++) {
     for (const x of [1, 2, 3, 4, 8, 9, 10, 11]) block(x, y);   // 長いす（左右に4列）
   }
@@ -52,6 +55,7 @@ export function createKiriChurchData(townDoor: { x: number; y: number }): TileMa
     tileColors: { [FLOOR]: "#6e6876", [WALL]: "#463c4c" },
     collision,
     backdropSprite: "prop:church-interior",
+    backdropFlames: KIRI_CHURCH_FLAMES,
     exits: [
       { tileX: KIRI_CHURCH_DOOR.x, tileY: KIRI_CHURCH_DOOR.y, targetMapId: "kiri-town", targetTileX: townDoor.x, targetTileY: townDoor.y + 1 },
     ],

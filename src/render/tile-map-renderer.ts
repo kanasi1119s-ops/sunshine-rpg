@@ -1,3 +1,4 @@
+import { drawCandleFlames } from "./candle-flames";
 import { getTileId, type TileMap } from "../game/map/tile-map";
 import type { Camera } from "./camera";
 import { renderGroundDecor } from "./ground-decor";
@@ -216,6 +217,11 @@ export function renderTileMap(
       ctx.imageSmoothingEnabled = false;
       // 1枚絵は正方形の枠に、横は中央・縦は下そろえで入っている。
       ctx.drawImage(art, Math.round((map.widthPx - art.width) / 2 - camera.x), Math.round(map.heightPx - art.height - camera.y));
+      if (map.data.backdropFlames) {
+        // 絵の左上（枠の中で横は中央にあるので、地図の左はしと同じ）から、炎を揺らめかせる
+        const now = typeof performance !== "undefined" ? performance.now() : 0;
+        drawCandleFlames(ctx, map.data.backdropFlames, -camera.x, map.heightPx - art.height - camera.y, now);
+      }
       return;
     }
   }

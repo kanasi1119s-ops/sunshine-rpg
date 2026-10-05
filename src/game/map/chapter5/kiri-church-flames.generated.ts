@@ -1,0 +1,23 @@
+// assets-src/pixel-practice/r17-polish/church.py が書き出す（手で直さない）。聖堂の中の1枚絵の、ろうそくの炎の位置（絵の左上からのドット）。
+export const KIRI_CHURCH_FLAMES: readonly { x: number; y: number; big: boolean }[] = [
+  { x: 7, y: 110, big: false },
+  { x: 15, y: 83, big: false },
+  { x: 15, y: 133, big: false },
+  { x: 15, y: 183, big: false },
+  { x: 62, y: 24, big: true },
+  { x: 66, y: 24, big: true },
+  { x: 70, y: 24, big: true },
+  { x: 79, y: 205, big: false },
+  { x: 88, y: 37, big: true },
+  { x: 96, y: 37, big: true },
+  { x: 111, y: 37, big: true },
+  { x: 119, y: 37, big: true },
+  { x: 128, y: 205, big: false },
+  { x: 137, y: 24, big: true },
+  { x: 141, y: 24, big: true },
+  { x: 145, y: 24, big: true },
+  { x: 192, y: 83, big: false },
+  { x: 192, y: 133, big: false },
+  { x: 192, y: 183, big: false },
+  { x: 199, y: 110, big: false },
+];

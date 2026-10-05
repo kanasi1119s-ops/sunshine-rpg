@@ -18,6 +18,8 @@ export interface TileMapData {
   tileColors: Record<number, string>;
   /** 地図の下に敷く1枚絵（`sprite-data` の名前。例 "prop:church-interior"）。あればタイルの代わりにこの絵を描く（通れるかは collision のまま）。 */
   backdropSprite?: string;
+  /** 1枚絵の中の、ろうそくの炎の位置（絵の左上からのドット）。ゲームで揺らめかせる。 */
+  backdropFlames?: readonly { x: number; y: number; big: boolean }[];
   /** 上下左右がつながる地図（世界地図）。端から出ると、反対の端から入る。 */
   wrap?: boolean;
   /**
