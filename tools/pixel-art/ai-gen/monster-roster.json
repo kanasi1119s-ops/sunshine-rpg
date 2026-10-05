@@ -661,7 +661,7 @@
  },
  {
   "id": "enc-shimohara-facility-3",
-  "prompt": "a monster of jagged pale blue ice crystal spikes growing out of a lump of frozen soil, a glowing cold blue core in the middle, no person",
+  "prompt": "a spiky monster of deep blue and teal ice crystal shards on a lump of dark frozen soil, a glowing cold core, small dark eyes",
   "status": "done",
   "key": "enemy:enc-shimohara-facility-3",
   "kind": "mob",
@@ -670,12 +670,12 @@
   "level": 14,
   "shape": "big",
   "tone": [
-   190,
-   220,
-   240
+   60,
+   95,
+   140
   ],
   "draft": "enc-shimohara-facility-3_0",
-  "seed_base": 6001
+  "seed_base": 10002
  },
  {
   "id": "enc-shimohara-facility-4",
@@ -800,7 +800,7 @@
  {
   "id": "enc-fushima-base-5",
   "prompt": "a sentry soldier in pale blue armor with a long spyglass helmet visor and a halberd",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-fushima-base-5",
   "kind": "mob",
   "name": "見張りの兵",
@@ -811,12 +811,13 @@
    110,
    125,
    160
-  ]
+  ],
+  "draft": "enc-fushima-base-5_0"
  },
  {
   "id": "enc-deep-1-0",
   "prompt": "a ghostly echo of an ancient war, a tattered banner wrapped around a faint armored figure, faceless",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-1-0",
   "kind": "mob",
   "name": "大乱期の残響",
@@ -827,12 +828,13 @@
    150,
    160,
    180
-  ]
+  ],
+  "draft": "enc-deep-1-0_0"
  },
  {
   "id": "enc-deep-1-1",
   "prompt": "the memory of an ice soldier, a translucent icy figure with a broken lance, cracks of blue light",
-  "status": "todo",
+  "status": "draft",
   "key": "enemy:enc-deep-1-1",
   "kind": "mob",
   "name": "氷の兵の記憶",
