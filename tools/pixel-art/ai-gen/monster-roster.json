@@ -1041,7 +1041,7 @@
  {
   "id": "enc-deep-3-1",
   "prompt": "a small spirit of pale steam curling up out of a cracked brown clay bowl, the steam shaped like a little ghost with two dim eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-3-1",
   "kind": "mob",
   "name": "水涸れの残り香",
@@ -1076,7 +1076,7 @@
  {
   "id": "enc-deep-3-3",
   "prompt": "a cluster of sharp violet crystal spikes walking on four thin crystal legs, light refracting inside, no fur",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-3-3",
   "kind": "mob",
   "name": "紫の結晶",
@@ -1145,7 +1145,7 @@
  {
   "id": "enc-deep-4-1",
   "prompt": "a nameless shadow, a tall featureless silhouette with blank white gaps where a face should be",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-4-1",
   "kind": "mob",
   "name": "名前のない影",
@@ -1156,7 +1156,8 @@
    50,
    45,
    70
-  ]
+  ],
+  "draft": "enc-deep-4-1_1"
  },
  {
   "id": "enc-deep-4-2",
