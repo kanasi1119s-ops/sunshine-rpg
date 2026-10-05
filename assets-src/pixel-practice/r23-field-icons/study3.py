@@ -11,7 +11,7 @@
   J. 岩は「向きと大きさがばらばらの面」＋「ななめの割れ目」（rock）。レンガのように並べない
   K. 雪は丸いこぶ（半円の並び）で屋根にのせ、軒からまるいしずくを垂らす（snow_cap）
   L. 奥にあるものは細く暗く、手前にあるものは太く明るく（環・壁・石）。奥の物は先に描き、手前の物で隠す
-出力: 21点の .txt / pal-*.json、study3-preview.png、study3-grounds.png、study3-world.png
+出力: 23点の .txt / pal-*.json、study3-preview.png、study3-grounds.png、study3-world.png
 """
 import json
 import math
@@ -663,7 +663,7 @@ def village3():
                 g.put(x, y, "n" if u < 0.2 else "m")
     g.rect(10, 25, 11, 29, "w")
     cone(g, 10.5, 10, 4.8, 5, 1.6, TH)
-    for k in range(-9, 10):                                               # 羽（ななめの十字。板の色）
+    for k in range(-7, 8):                                                # 羽（ななめの十字。板の色）
         for (x, y) in ((10 + k, 10 + k), (10 + k, 10 - k)):
             if 0 <= x < 48 and 0 <= y < 48:
                 g.put(x, y, "y" if k < 0 else "x")
@@ -886,7 +886,7 @@ def volcano3():
     flow(xm, 30, 44, -0.35, 2)
     flow(xm + 2, 30, 42, 0.3, 1)
     # けむり（丸いかたまり3つ。下が暗い）
-    for (bx, by, r) in ((24, 9, 4.0), (27, 5.5, 3.6), (23, 3, 2.8), (30, 2.5, 2.4)):   # 右へ流れるけむり（丸いかたまり4つ）
+    for (bx, by, r) in ((22, 8.5, 3.8), (28, 4.5, 3.6)):   # 右へ流れるけむり（丸いかたまり4つ）
         fill_ellipse(g, bx, by, r, r * 0.85, lambda x, y, u, v, d: "d" if u + v < -0.1 else ("c" if d < 0.8 or u + v < 0.6 else "b"))
     outline_dark(g, ramp_of(STONE, SNOW))
     return save(g, "volcano3")

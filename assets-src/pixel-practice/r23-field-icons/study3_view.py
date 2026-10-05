@@ -108,7 +108,7 @@ def preview(path, Z=3):
         if x + w > maxw:
             x, y, rowh = 12, y + rowh + 22, 0
         placed.append((label, im, x, y)); x += w + 14; rowh = max(rowh, h)
-    H1 = y + rowh + 26
+    H1 = y + rowh + 40
     # 下の帯: ゲームと同じ大きさ（1倍）を2倍に広げて見せる。草の地面に足もとをそろえる
     names = [p[0] for p in PAIRS]
     ims = [load_icon("r23-field-icons", n) for n in names]
