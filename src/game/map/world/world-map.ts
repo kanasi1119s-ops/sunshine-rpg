@@ -116,7 +116,7 @@ export function createWorldMapData(): TileMapData {
       ...WORLD_VILLAGES.map((v) => ({ kind: VILLAGE_ICON[v.id] ?? (`icon-${v.icon}` as MapProp["kind"]), tileX: v.x, tileY: v.y })),
       ...WORLD_ISLETS.map((islet, i) => ({ kind: (["icon-islet-ruin", "icon-islet-cave", "icon-islet-shrine", "icon-islet-fort", "icon-dive", "icon-volcano"] as const)[i], tileX: islet.x, tileY: islet.y })),
       ...WORLD_LANDMARKS.map((m) => ({ kind: `icon-${m.kind}` as MapProp["kind"], tileX: m.x, tileY: m.y })),
-      { kind: "icon-core-spire" as const, tileX: WORLD_TOWER.x, tileY: WORLD_TOWER.y + 4 },   // 穴のさらに下から伸びるので、絵の足もとを穴の底より下に置く
+      // 芯環塔の絵は、大滝・嵐といっしょの1枚の動く絵（vortex-renderer の renderBasin）で描くので、ここには置かない
     ],
   };
 }
