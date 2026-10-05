@@ -2200,21 +2200,21 @@
  },
  {
   "id": "enc-islet-3-1-1",
-  "prompt": "a broken chunk of a red and white striped stone lighthouse tower floating, a glowing round lamp lens on top like an eye, cracked stone edges, no animal",
+  "prompt": "a small monster made of a broken lighthouse top, a round glass lens eye inside a cracked iron cage, a red and white striped stone base with stubby legs, full body",
   "status": "done",
   "key": "enemy:enc-islet-3-1-1",
   "kind": "mob",
   "name": "灯台のかけら",
   "zone": "islet-3-1",
   "level": 20,
-  "shape": "tall",
+  "shape": "ground",
   "tone": [
    200,
    120,
    100
   ],
-  "draft": "enc-islet-3-1-1_0",
-  "seed_base": 6001
+  "draft": "enc-islet-3-1-1_1",
+  "seed_base": 10002
  },
  {
   "id": "enc-islet-3-1-2",
@@ -2252,7 +2252,7 @@
  },
  {
   "id": "enc-islet-3-1-4",
-  "prompt": "a lighthouse guardian, a tall keeper figure in a salt-stained coat with a lamp for a head",
+  "prompt": "a tall keeper creature in a salt-stained dark coat whose head is a big glowing glass lamp with a flame inside, no human face, long thin arms",
   "status": "done",
   "key": "enemy:enc-islet-3-1-4",
   "kind": "mob",
@@ -2265,12 +2265,13 @@
    150,
    110
   ],
-  "draft": "enc-islet-3-1-4_0"
+  "draft": "enc-islet-3-1-4_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-islet-3-1-5",
-  "prompt": "a seabird with white and grey feathers, a long orange beak and fish-scale patterns on its wings",
-  "status": "done",
+  "prompt": "a seabird monster with white and grey feathers, a long orange hooked beak, fish-scale pattern on its chest, wings spread, full body with feet",
+  "status": "todo",
   "key": "enemy:enc-islet-3-1-5",
   "kind": "mob",
   "name": "海鳥の羽",
@@ -2282,12 +2283,14 @@
    210,
    205
   ],
-  "draft": "enc-islet-3-1-5_0"
+  "draft": "enc-islet-3-1-5_0",
+  "bg": "dark",
+  "seed_base": 6001
  },
  {
   "id": "enc-islet-4-1-0",
   "prompt": "a shadow of a war banner, a tattered purple flag on a pole that moves by itself with a face in the cloth",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-4-1-0",
   "kind": "mob",
   "name": "旗の影",
@@ -2298,7 +2301,8 @@
    120,
    80,
    140
-  ]
+  ],
+  "draft": "enc-islet-4-1-0_1"
  },
  {
   "id": "enc-islet-4-1-1",
