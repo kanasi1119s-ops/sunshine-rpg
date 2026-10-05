@@ -354,6 +354,11 @@ def encode(g):
 
 
 def main(out):
+    # 2026-10-05: 山・とがった山・丘・雪の森・道・荒れ地・灰の大地・谷は、world_tiles_v2.py の描き方に置きかえた
+    #（人間の指示「フィールドの1マスのドット絵もこだわりを持って、違和感がなくなるように作って」）
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import world_tiles_v2
+    TEXTURES.update(world_tiles_v2.TEXTURES_V2)
     os.makedirs(out, exist_ok=True)
     game = {}
     for name, fn in TEXTURES.items():
@@ -371,3 +376,4 @@ def main(out):
 
 if __name__ == "__main__":
     main(sys.argv[1] if len(sys.argv) > 1 else "out")
+

@@ -53,6 +53,8 @@ const WASTE = 11;
 /** 陥没（深い穴）の半径と、大滝のふちの外がわの半径（マス）。 */
 export const BASIN_PIT_R = 6.6;
 export const BASIN_RIM_R = 8.4;
+/** 塔のまわりで、大滝のふちの外を海にする広さ（マス。渦の輪・切れ目には手をつけない）。 */
+const BASIN_SEA_R = 16;
 
 /** 塔のまわりで、陥没の上を塔の足もとへ渡る岩の細い道（南の切れ目から、まっすぐ北へ）のマスか。 */
 export function isBasinCauseway(_x: number, _y: number): boolean {
@@ -66,17 +68,19 @@ export function isBasinCauseway(_x: number, _y: number): boolean {
  * 塔へは、南の切れ目（航路が開くと海になる）から、岩の細い道が一本だけ通る（物語で塔へ入るための道。航路が開くまでは渦の輪の嵐で近づけない）。
  */
 function sinkTowerBasin(ground: number[], collision: number[]): void {
-  const r = Math.ceil(BASIN_RIM_R) + 1;
+  const r = BASIN_SEA_R;
   for (let y = WORLD_TOWER.y - r; y <= WORLD_TOWER.y + r; y++) {
     for (let x = WORLD_TOWER.x - r; x <= WORLD_TOWER.x + r; x++) {
       const i = y * WORLD_WIDTH + x;
       const id = ground[i];
       if (id === 13 || id === 14) continue;                       // 渦の輪・切れ目はそのまま
       const d = Math.hypot(x - WORLD_TOWER.x, y - WORLD_TOWER.y);
+      if (d > BASIN_SEA_R) continue;
       let next = id;
       if (isBasinCauseway(x, y)) next = WASTE;
       else if (d <= BASIN_PIT_R) next = CHASM;
       else if (d <= BASIN_RIM_R) next = FALLS;
+      else next = 1;          // 大滝のふちの外は、渦の輪まで海（まわりの岩はなくす。2026-10-05、人間の指示「塔は周りの岩なくして」）
       ground[i] = next;
       collision[i] = BLOCKED.has(next) ? 1 : 0;
     }

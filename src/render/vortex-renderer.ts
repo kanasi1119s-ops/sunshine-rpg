@@ -1,7 +1,26 @@
 import type { TileMap } from "../game/map/tile-map";
 import { getTileId } from "../game/map/tile-map";
 import { WORLD_TOWER } from "../game/map/world/world-map.generated";
-import { BASIN_PIT_R, FALLS } from "../game/map/world/world-map";
+
+/** 大滝のドット絵（assets-src/pixel-practice/r29-falls/falls.py で描き、エディタで確かめたもの。横に4コマ）。 */
+const FALLS_URLS = import.meta.glob("../assets/falls/*.png", { eager: true, query: "?url", import: "default" }) as Record<string, string>;
+const fallsImages = new Map<string, HTMLImageElement>();
+function fallsImage(name: string): HTMLImageElement | null {
+  if (typeof Image === "undefined") return null;
+  let img = fallsImages.get(name);
+  if (!img) {
+    const url = FALLS_URLS[`../assets/falls/${name}.png`];
+    if (!url) return null;
+    img = new Image();
+    img.src = url;
+    fallsImages.set(name, img);
+  }
+  return img.complete && img.naturalWidth > 0 ? img : null;
+}
+if (typeof window !== "undefined") {
+  fallsImage("basin");
+  fallsImage("whirl");
+}
 import type { Camera } from "./camera";
 
 /** 世界地図の「渦の輪」（嵐）。芯環塔のまわりを、うずまく流れ（2本の渦のうで）が囲む。航路が開くまで通れない。時刻で回る。 */
@@ -52,146 +71,33 @@ function hash2(x: number, y: number, k: number): number {
 }
 
 /**
- * 塔のまわりの陥没と大滝（2026-10-05）。ふち（大滝）のマスでは、海の水が白い筋になって穴のほうへ流れ落ち、
- * 穴のふちからは水しぶきの霧が立ちのぼる。穴は、まんなかへ行くほど深く暗い。地形のすぐあと（建物・人より前）に描く。
+ * 塔のまわりの陥没と大滝（2026-10-05、人間の指示「滝もっとリアルに」）。穴のまわり全体を1枚の絵として描いたものを、
+ * 塔のマスのまん中に合わせて重ねる（288×288・16コマ。assets-src/pixel-practice/r29-falls/basin.py で1ドットずつ描き、エディタで確かめたもの）。
+ * なめらかな円のふち・穴へ走る水面と泡・奥の崖を底まで流れ落ちる水のカーテン・底の霧と闇。地形のすぐあと（建物・人より前）に描く。
  */
 export function renderBasin(ctx: CanvasRenderingContext2D, map: TileMap, camera: Camera, nowMs: number): void {
   if (map.data.width < WORLD_TOWER.x + 12) return;
+  const img = fallsImage("basin");
+  if (!img) return;
   const s = map.data.tileWidth;
-  const cxp = (WORLD_TOWER.x + 0.5) * s;
-  const cyp = (WORLD_TOWER.y + 0.5) * s;
-  if (Math.abs(cxp - (camera.x + camera.viewportWidth / 2)) > camera.viewportWidth / 2 + 14 * s) return;
-  if (Math.abs(cyp - (camera.y + camera.viewportHeight / 2)) > camera.viewportHeight / 2 + 14 * s) return;
-  const startX = Math.max(0, Math.floor(camera.x / s));
-  const startY = Math.max(0, Math.floor(camera.y / s));
-  const endX = Math.min(map.data.width - 1, Math.floor((camera.x + camera.viewportWidth) / s));
-  const endY = Math.min(map.data.height - 1, Math.floor((camera.y + camera.viewportHeight) / s));
-  const t = nowMs / 1000;
+  const size = 288;
+  const x = Math.round((WORLD_TOWER.x + 0.5) * s - size / 2 - camera.x);
+  const y = Math.round((WORLD_TOWER.y + 0.5) * s - size / 2 - camera.y);
+  if (x > camera.viewportWidth || y > camera.viewportHeight || x + size < 0 || y + size < 0) return;
+  const fr = Math.floor(nowMs / 65) % 16;   // 16コマ。模様が流れの向きに本当にずれていくので、水が流れて見える
   ctx.save();
-  for (let ty = startY; ty <= endY; ty++) {
-    for (let tx = startX; tx <= endX; tx++) {
-      const id = getTileId(map, 0, tx, ty);
-      const ox = tx * s - camera.x;
-      const oy = ty * s - camera.y;
-      const mx = (tx + 0.5) * s - cxp;
-      const my = (ty + 0.5) * s - cyp;
-      const d = Math.hypot(mx, my) / s;
-      if (id === 16 && d <= BASIN_PIT_R + 0.5) {
-        // 穴: まんなかほど深く暗い（4段の暗さ）。ふちの近くは、水しぶきの白い霧がゆらぐ
-        const depth = 1 - Math.min(1, d / BASIN_PIT_R);
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = `rgba(6,8,18,${(0.45 + depth * 0.45).toFixed(2)})`;
-        ctx.fillRect(ox, oy, s, s);
-        // 穴の中をゆっくり流れる霧の帯（明るさは控えめ）
-        const band = Math.sin(((ty * s) + t * 9) / 14 + tx * 0.3);
-        if (band > 0.55) {
-          ctx.globalAlpha = (band - 0.55) * 0.35;
-          ctx.fillStyle = "#b8c8e0";
-          ctx.fillRect(ox, oy, s, s);
-        }
-        if (d > BASIN_PIT_R - 1.6) {
-          for (let k = 0; k < 2; k++) {
-            const ph = (t * 0.35 + hash2(tx, ty, k)) % 1;
-            const px = ox + hash2(tx, ty, k + 7) * s;
-            const py = oy + s - ph * s * 1.4;
-            ctx.globalAlpha = 0.28 * Math.sin(ph * Math.PI);
-            ctx.fillStyle = "#e8f2ff";
-            ctx.fillRect(Math.round(px) - 2, Math.round(py) - 1, 5, 3);
-            ctx.fillRect(Math.round(px) - 1, Math.round(py) - 2, 3, 5);
-          }
-        }
-      } else if (id === FALLS) {
-        // 大滝: 穴のほうへ流れ落ちる白い筋（ふちの外がわから内がわへ動く）
-        const ux = -mx / (d * s), uy = -my / (d * s);
-        const vx = -uy, vy = ux;
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = "rgba(120,180,230,0.35)";
-        ctx.fillRect(ox, oy, s, s);
-        for (let k = 0; k < 5; k++) {
-          const ph = (t * 1.3 + hash2(tx, ty, k)) % 1;
-          const off = (k - 2) * 3 + (hash2(tx, ty, k + 3) - 0.5) * 2;
-          const bx = ox + s / 2 + vx * off - ux * 7 + ux * ph * 14;
-          const by = oy + s / 2 + vy * off - uy * 7 + uy * ph * 14;
-          ctx.fillStyle = ph > 0.6 ? "#ffffff" : "#d6ecff";
-          for (let j = 0; j < 4; j++) ctx.fillRect(Math.round(bx + ux * j), Math.round(by + uy * j), 1, 1);
-        }
-        // 内がわのふち（落ち口）の白い泡
-        ctx.fillStyle = "#f4faff";
-        for (let k = 0; k < 3; k++) {
-          const w = (hash2(tx, ty, k + 11) - 0.5) * 12;
-          const pulse = 0.5 + 0.5 * Math.sin(t * 5 + k + tx);
-          ctx.globalAlpha = 0.5 + pulse * 0.4;
-          ctx.fillRect(Math.round(ox + s / 2 + ux * 6 + vx * w), Math.round(oy + s / 2 + uy * 6 + vy * w), 2, 2);
-        }
-      }
-    }
-  }
-  // 2回目: 大滝の水のカーテン（穴の内がわの崖を、白い水が画面の下へ流れ落ちる）と、落ちた先の霧
-  for (let ty = startY - 1; ty <= endY; ty++) {
-    for (let tx = startX; tx <= endX; tx++) {
-      if (getTileId(map, 0, tx, ty) !== FALLS) continue;
-      const below = getTileId(map, 0, tx, ty + 1) === 16;
-      const diag = getTileId(map, 0, tx - 1, ty + 1) === 16 || getTileId(map, 0, tx + 1, ty + 1) === 16;
-      const ox = tx * s - camera.x;
-      if (!below && !diag) {
-        // 手前（南）のふち: 水は向こう（穴のほう＝画面の上）へ流れ、ふちを越えて落ちる。ふちに白い泡、その先に水しぶき
-        const above = getTileId(map, 0, tx, ty - 1) === 16 || getTileId(map, 0, tx - 1, ty - 1) === 16 || getTileId(map, 0, tx + 1, ty - 1) === 16;
-        if (!above || ty <= WORLD_TOWER.y) continue;
-        const lip = ty * s - camera.y;
-        for (let col = 0; col < s; col += 2) {
-          const ph = (t * 1.8 + hash2(tx, col, 61)) % 1;
-          ctx.globalAlpha = 0.9;
-          ctx.fillStyle = (col + tx) % 3 === 0 ? "#ffffff" : "#cfe8fb";
-          ctx.fillRect(ox + col, Math.round(lip + s - 2 - ph * (s - 2)), 1, 3);
-        }
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(ox, lip, s, 1);
-        ctx.fillStyle = "#e4f2ff";
-        ctx.fillRect(ox, lip - 1, s, 1);
-        for (let k = 0; k < 3; k++) {
-          const ph = (t * 0.8 + hash2(tx, ty, k + 70)) % 1;
-          ctx.globalAlpha = 0.4 * (1 - ph);
-          ctx.fillStyle = "#eef6ff";
-          ctx.beginPath();
-          ctx.arc(ox + 3 + hash2(tx, ty, k + 71) * (s - 6), lip - 3 - ph * 10, 2 + ph * 4, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        continue;
-      }
-      const top = (ty + 1) * s - camera.y - 3;
-      // 奥（北）と横のふち: 崖を、穴の底（塔の足もとの高さ）まで、水が流れ落ちる
-      const floorY = (WORLD_TOWER.y + 1.5) * s - camera.y;
-      const len = Math.max(below ? 40 : 22, Math.round(floorY - top)) + Math.round(hash2(tx, ty, 21) * 8);
-      for (let col = 0; col < s; col++) {
-        const shade = (col + tx * 3) % 5;
-        const base = shade === 0 ? "#ffffff" : shade === 1 || shade === 3 ? "#cfe8fb" : shade === 2 ? "#8cc2ec" : "#5e9ad4";
-        const speed = 70 + (shade * 13) % 40;
-        const off = (nowMs / 1000 * speed + hash2(tx, col, 5) * 40) % 10;
-        for (let y = 0; y < len; y++) {
-          const fade = 1 - y / len;
-          // 流れのすじ（下へ動く切れ目）
-          const gap = (y + 10 - off) % 10 < 1.4;
-          if (gap && shade !== 0) continue;
-          ctx.globalAlpha = Math.min(1, 0.35 + fade * 0.75);
-          ctx.fillStyle = base;
-          ctx.fillRect(ox + col, top + y, 1, 1);
-        }
-      }
-      // 落ち口のふくらみ（白い泡の線）
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(ox, top - 1, s, 2);
-      // 滝つぼの霧（ふくらんでは消える）
-      for (let k = 0; k < 3; k++) {
-        const ph = (t * 0.6 + hash2(tx, ty, k + 30)) % 1;
-        const r = 3 + ph * 7;
-        ctx.globalAlpha = 0.35 * (1 - ph);
-        ctx.fillStyle = "#eef6ff";
-        ctx.beginPath();
-        ctx.arc(ox + s / 2 + (hash2(tx, ty, k + 40) - 0.5) * 14, top + len - 2 - ph * 6, r, 0, Math.PI * 2);
-        ctx.fill();
-      }
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(img, fr * size, 0, size, size, x, y, size, size);
+  // まわりの海の渦潮（2026-10-05、人間の指示「その周りには渦潮」）。大滝のふちと渦の輪のあいだに6つ、それぞれ少しずつ回る速さがちがう
+  const whirl = fallsImage("whirl");
+  if (whirl) {
+    for (let i = 0; i < 6; i++) {
+      const a = i * (Math.PI / 3) + 0.4;
+      const rr = (11 + (i % 2) * 0.8) * s;
+      const wx = Math.round((WORLD_TOWER.x + 0.5) * s + Math.cos(a) * rr - 24 - camera.x);
+      const wy = Math.round((WORLD_TOWER.y + 0.5) * s + Math.sin(a) * rr - 24 - camera.y);
+      const wf = Math.floor(nowMs / (95 + i * 9) + i * 3) % 8;
+      ctx.drawImage(whirl, wf * 48, 0, 48, 48, wx, wy, 48, 48);
     }
   }
   ctx.restore();

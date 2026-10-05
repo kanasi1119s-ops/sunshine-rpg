@@ -23,7 +23,8 @@ PAL_RGB = {
     # 光る石の筋
     "p": (40, 150, 170), "q": (130, 230, 240),
     # 雲（暗→明）
-    "r": (26, 28, 40), "s": (40, 43, 58), "t": (58, 62, 82), "u": (82, 87, 110), "v": (110, 115, 138), "w": (142, 147, 168), "x": (176, 180, 198),
+    "1": (16, 17, 26), "r": (26, 28, 40), "s": (40, 43, 58), "t": (58, 62, 82), "u": (82, 87, 110), "v": (110, 115, 138), "w": (142, 147, 168), "x": (176, 180, 198),
+    "2": (206, 210, 226), "3": (150, 186, 232),
     # 底の霧
     "y": (60, 70, 92), "z": (90, 102, 124),
 }
@@ -152,42 +153,61 @@ def build():
             amt = (y - (ABYSS - 30)) / 60
             if band > 0.62 - amt * 0.4 and vnoise(x, y, 9, 22) > 0.45:
                 g[y][x] = "z" if band > 0.85 else "y"
-    # 嵐の雲（上をのみこむ）: ふくらんだ雲のかたまりの重なり。上と左が明るく、下が暗い。すそはちぎれる
+    # 嵐の雲（上をのみこむ）: 雲の濃さの場を作り、その傾きから面の向きを出して、左上の光で陰をつける（かたまりは、ひとつながり）。
+    # 下はどっしり暗く、上のふちは銀色に光り、雲の中に稲光のほのかな光。すそからは、ちぎれた雲の筋が塔にまとわりつく。
     puffs = []
-    for k in range(26):
-        px = (k * 37) % 100 - 2 + (hsh(k, 1, 50) - 0.5) * 8
-        py = 10 + (k * 53 % 60) + (hsh(k, 2, 50) - 0.5) * 6
-        pr = 9 + hsh(k, 3, 50) * 9
-        if py + pr * 0.6 > CLOUD_BOTTOM + 8:
-            py = CLOUD_BOTTOM + 8 - pr * 0.6
+    for k in range(44):
+        px = (k * 41) % 108 - 6 + (hsh(k, 1, 50) - 0.5) * 10
+        py = 4 + (k * 29 % 62) + (hsh(k, 2, 50) - 0.5) * 8
+        pr = 11 + hsh(k, 3, 50) * 13
         puffs.append((px, py, pr))
-    puffs.sort(key=lambda p: p[1])                          # 奥（上）から手前（下）の順に重ねる
-    cloud = [[None] * W for _ in range(H)]
-    for (px, py, pr) in puffs:
-        for y in range(max(0, int(py - pr)), min(H, int(py + pr * 0.75) + 1)):
-            for x in range(max(0, int(px - pr)), min(W, int(px + pr) + 1)):
-                dx = (x + 0.5 - px) / pr
-                dy = (y + 0.5 - py) / (pr * 0.75)
-                d = dx * dx + dy * dy
-                if d > 1:
-                    continue
-                if d > 0.82 and vnoise(x, y, 3, 51) > 0.6:
-                    continue
-                nzc = math.sqrt(1 - d)
-                lit = -dx * 0.35 - dy * 0.55 + nzc * 0.45
-                shade = 0.35 + lit * 0.45 - (py / CLOUD_BOTTOM) * 0.25 + (vnoise(x, y, 5, 52) - 0.5) * 0.1
-                cloud[y][x] = shade
-    # 塔の上は、雲で必ずかくす（すき間を、雲の奥の暗い色でうめる）
-    for y in range(0, CLOUD_BOTTOM - 2):
+    # 塔の上をおおう、大きなかたまり（いちばん手前・下）
+    for (dx, py, pr) in ((-10, 56, 17), (9, 60, 16), (0, 66, 14), (-4, 46, 18), (12, 48, 15)):
+        puffs.append((cx_at(py) + dx, py, pr))
+
+    def dens(x, y):
+        d = 0.0
+        for (px, py, pr) in puffs:
+            q = ((x - px) ** 2 + ((y - py) * 1.35) ** 2) ** 0.5 / pr
+            if q < 1:
+                d = max(d, (1 - q * q))
+        d += (fbm(x * 1.2, y * 1.6, 61) - 0.5) * 0.45
+        d -= max(0.0, (y - (CLOUD_BOTTOM - 8 + (fbm(x * 1.5, 3, 65) - 0.5) * 18)) / 9)   # すそで薄くなる（すそのふちは、ちぎれてでこぼこ）
+        return d
+
+    TH = 0.28
+    for y in range(0, CLOUD_BOTTOM + 12):
         for x in range(W):
-            if cloud[y][x] is None and abs(x + 0.5 - cx_at(y)) < hw_at(y) + 6:
-                cloud[y][x] = 0.12 + vnoise(x, y, 6, 53) * 0.22 - y / CLOUD_BOTTOM * 0.05
-    for y in range(H):
-        for x in range(W):
-            sh = cloud[y][x]
-            if sh is None:
+            d = dens(x + 0.5, y + 0.5)
+            if d < TH:
                 continue
-            g[y][x] = nearest(mix(PAL_RGB["r"], PAL_RGB["x"], max(0.0, min(1.0, sh))), list("rstuvwx"))
+            gx = dens(x + 1.5, y + 0.5) - dens(x - 0.5, y + 0.5)
+            gy = dens(x + 0.5, y + 1.5) - dens(x + 0.5, y - 0.5)
+            # 面の向き: 濃さが増す向きの反対が外向き。左上（-0.6, -0.8）からの光
+            lit = (gx * 0.6 + gy * 0.8) * 2.2
+            v = 0.42 + lit - (y / CLOUD_BOTTOM) * 0.22 + (fbm(x * 2, y * 2, 63) - 0.5) * 0.12
+            edge = d < TH + 0.07
+            if edge and lit > 0.05:
+                v += 0.25                                    # 銀のふち
+            if d > 0.75:
+                v -= 0.08                                    # 奥まった、濃いところ
+            col = mix(PAL_RGB["1"], PAL_RGB["2"], max(0.0, min(1.0, v)))
+            # 雲の中の稲光のほのかな光（塔の上のあたり）
+            glow = max(0.0, 1 - (((x - 52) / 22) ** 2 + ((y - 34) / 16) ** 2))
+            if glow > 0:
+                col = mix(col, PAL_RGB["3"], glow * 0.45)
+            g[y][x] = nearest(col, list("1rstuvwx23"))
+    # ちぎれた雲の筋（すそから下へたれて、塔にまとわりつく）
+    for k in range(9):
+        sx = int(cx_at(CLOUD_BOTTOM) + (hsh(k, 4, 64) - 0.5) * (hw_at(CLOUD_BOTTOM) * 2 + 18))
+        ln = 6 + int(hsh(k, 5, 64) * 14)
+        for j in range(ln):
+            y = CLOUD_BOTTOM + 2 + j
+            x = sx + int(math.sin(j / 3.0 + k) * 1.5)
+            if 0 <= x < W and y < H:
+                g[y][x] = "t" if j < ln * 0.6 else "s"
+                if j < ln * 0.4 and 0 <= x + 1 < W:
+                    g[y][x + 1] = "u"
     rows = ["".join(r) for r in g]
     used = sorted(set("".join(rows)) - {"."})
     pal = {k: "#%02x%02x%02x" % PAL_RGB[k] for k in used}

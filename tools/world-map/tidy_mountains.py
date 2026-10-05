@@ -5,9 +5,10 @@ apply_field_trace.py のあとに実行する（何度実行しても同じ結�
 やること（どれも決まった順番・決まったきまりで、乱数は使わない）
   1. 山のかたまりのふちをなめらかにする: 山（M・N）のマスを、まわり3×3の多数決でならす（2と合わせて、変わらなくなるまで）
   2. ぽつんと1マスだけの山は消し、山にかこまれた1マスのくぼみ・穴はうめる
-  3. 小さな谷（X）のかけら（6マス以下）は山にする（どちらも通れないので、歩ける所は変わらない）
+  3. 小さな谷（X）のかけら（6マス以下）は山にする（どちらも通れない）。そのあと、ほかの山と同じきまりで、ぽつんと残れば陸になる
+  2b. 消すと近道ができる「ななめにつながる山の壁」は、すき間を1マスうめて、ふつうの山の帯にする
   4. とがった山（N）は、大きな山脈のまん中だけ: 山のふちから3マス以上内がわで、山のかたまりが60マス以上のときだけ N、ほかは M
-     （火山のまわり・溶岩から8マス以内の N は、火山の本体なのでそのまま）
+     （火山のまわり・溶岩から8マス以内の N は、火山の本体なのでそのまま。雪の地方には N を置かない）
   5. 丘（H）: 山にとなる草原（P）のうち、山に2マス以上ふれる所を丘にして、山と草原のあいだをやわらげる
 
 まもること（スクリプトの最後で確かめ、守れていなければ書きかえずに止まる）
@@ -18,6 +19,7 @@ apply_field_trace.py のあとに実行する（何度実行しても同じ結�
   - 道のとなりのマスを山にしない
   - 歩いて行ける所のつながりを変えない: 前もあとも通れるマスどうしの「つながりの組」が、まったく同じであること
 使い方: python3 tools/world-map/tidy_mountains.py [リポジトリのルート]
+（整える前の地形は tools/world-map/rows-before-tidy.txt にとっておく。2回目からはそこから整えなおすので、結果は毎回同じ）
 """
 import re
 import sys
@@ -89,16 +91,19 @@ def components(g):
     return lab
 
 
-def same_partition(g0, g1):
-    """前もあとも歩けるマスについて、つながりの組の分け方が同じか"""
+def same_partition(g0, g1, tiny=5):
+    """前もあとも歩けるマスについて、つながりの組の分け方が同じか（もとから行けない5マス以下の小さな陸がくっつくのはよい）"""
     a, b = components(g0), components(g1)
+    size = Counter(v for row in a for v in row if v >= 0)
     fw, bw = {}, {}
     H, W = len(g0), len(g0[0])
     for y in range(H):
         for x in range(W):
             if a[y][x] >= 0 and b[y][x] >= 0:
-                if fw.setdefault(a[y][x], b[y][x]) != b[y][x] or bw.setdefault(b[y][x], a[y][x]) != a[y][x]:
-                    return False, (x, y)
+                if fw.setdefault(a[y][x], b[y][x]) != b[y][x]:
+                    return False, (x, y)                       # もとの組が分かれた
+                if size[a[y][x]] > tiny and bw.setdefault(b[y][x], a[y][x]) != a[y][x]:
+                    return False, (x, y)                       # もとの大きな組どうしがつながった
     return True, None
 
 
@@ -110,6 +115,7 @@ class Tidy:
         self.lab = components(g)
         self.orig = [r[:] for r in g]
         self.lab0 = [r[:] for r in self.lab]                   # もとのつながりの組（もと歩けたマスだけ >= 0）
+        self.size0 = Counter(v for row in self.lab0 for v in row if v >= 0)
 
     def at(self, x, y):
         return self.g[y][x] if 0 <= x < self.W and 0 <= y < self.H else "O"
@@ -132,7 +138,9 @@ class Tidy:
         labs = {self.lab[y + dy][x + dx] for dx, dy in N4 if 0 <= x + dx < self.W and 0 <= y + dy < self.H and self.g[y + dy][x + dx] not in BLOCKED}
         if self.lab0[y][x] >= 0:
             labs.add(self.lab0[y][x])                          # もと歩けたマスにもどすときは、もとの組にしかつながらないこと
-        return len(labs) <= 1
+        # 負の番号＝もとは山だった所にできた新しい空き地。もとの組どうしをつながなければ、くっついてよい。
+        # 5マス以下の、もとから行けない小さな陸（海と山にはさまれた1〜2マスなど）も、くっついてよい（行ける所がふえるだけで、近道にはならない）
+        return len({l for l in labs if l >= 0 and self.size0.get(l, 0) > 5}) <= 1
 
     def can_fill(self, x, y):
         """陸を山にしてよいか: 道のとなりでない、そのマスを山にしても、まわりの歩けるマスどうしが 9×9 の中でつながったまま"""
@@ -169,14 +177,27 @@ class Tidy:
         return "P" if top == "H" else top
 
     def open(self, x, y):
-        if self.orig[y][x] == "X":
-            return False                                       # もとが谷のマスは、山にはしても陸にはしない
         if self.can_open(x, y):
             labs = [self.lab[y + dy][x + dx] for dx, dy in N4 if self.at(x + dx, y + dy) not in BLOCKED]
             self.g[y][x] = self.land_for(x, y)
-            self.lab[y][x] = self.lab0[y][x] if self.lab0[y][x] >= 0 else (labs[0] if labs else -2)
+            if self.lab0[y][x] >= 0:
+                labs.append(self.lab0[y][x])
+            big = [l for l in labs if l >= 0 and self.size0.get(l, 0) > 5]
+            keep = big[0] if big else (labs[0] if labs else -2)
+            self.lab[y][x] = keep
+            for l in set(labs):                                 # くっついた小さな陸・新しい空き地は、同じ組の番号にそろえる
+                if l != keep and l != -1:                       # （小さな陸を橋にして、大きな組どうしがつながらないように）
+                    self.relabel(l, keep)
+                    if keep >= 0:
+                        self.size0[keep] = self.size0.get(keep, 0) + self.size0.pop(l, 0)
             return True
         return False
+
+    def relabel(self, a, b):
+        for row in self.lab:
+            for i, v in enumerate(row):
+                if v == a:
+                    row[i] = b
 
     def fill(self, x, y, glyph="M"):
         if self.can_fill(x, y):
@@ -201,8 +222,8 @@ class Tidy:
                         continue
                     m = self.mcount8(x, y)
                     is_m = self.g[y][x] in MOUNT
-                    if is_m and m <= 2:
-                        plan.append(("open", x, y))
+                    if is_m and m <= 3:
+                        plan.append(("open", x, y))              # 3マス以下にしかふれない山（細い筋・とんがり）は消す
                     elif not is_m and m >= 6:
                         plan.append(("fill", x, y))
             for op, x, y in plan:
@@ -215,9 +236,34 @@ class Tidy:
                 if not self.changeable(x, y):
                     continue
                 if self.g[y][x] in MOUNT and self.mcount4(x, y) == 0:
-                    self.open(x, y)
+                    if not self.open(x, y):
+                        # 消すと近道ができる「ななめにつながる山の壁」は、すき間を1マスうめて、ふつうの山の帯にする
+                        for dx, dy in ((1, 1), (-1, 1), (1, -1), (-1, -1)):
+                            if self.at(x + dx, y + dy) in MOUNT:
+                                for (fx, fy) in ((x + dx, y), (x, y + dy)):
+                                    if self.changeable(fx, fy) and self.g[fy][fx] not in MOUNT and self.fill(fx, fy):
+                                        break
                 elif self.g[y][x] not in MOUNT and self.mcount4(x, y) >= 3:
                     self.fill(x, y)
+
+    def small_ranges(self, minsize=6):
+        """5マス以下の小さな山のかたまりは消す（ぽつんとした岩の点に見えるため）"""
+        seen = set()
+        for y in range(self.H):
+            for x in range(self.W):
+                if self.g[y][x] not in MOUNT or (x, y) in seen:
+                    continue
+                comp, dq = [], deque([(x, y)]); seen.add((x, y))
+                while dq:
+                    cx, cy = dq.popleft(); comp.append((cx, cy))
+                    for dx, dy in N8:
+                        p = (cx + dx, cy + dy)
+                        if p not in seen and self.at(*p) in MOUNT:
+                            seen.add(p); dq.append(p)
+                if len(comp) < minsize:
+                    for cx, cy in comp:
+                        if self.changeable(cx, cy):
+                            self.open(cx, cy)
 
     # ---------------------------------------------------------------- 3) 小さな谷のかけら
     def small_chasms(self, maxn=6):
@@ -269,12 +315,38 @@ class Tidy:
                                 seen.add(p); q2.append(p)
                     for cx, cy in comp:
                         size[cy][cx] = len(comp)
+        # 雪の地方（雪原・雪の森から5マス以内）では、茶色のとがった山は置かない（雪の中で浮くため）
+        snowy = [[False] * W for _ in range(H)]
+        for y in range(H):
+            for x in range(W):
+                if self.g[y][x] in "ST":
+                    for yy in range(max(0, y - 5), min(H, y + 6)):
+                        for xx in range(max(0, x - 5), min(W, x + 6)):
+                            snowy[yy][xx] = True
+        cand = [[self.g[y][x] in MOUNT and dist[y][x] >= core and size[y][x] >= minsize and not snowy[y][x] for x in range(W)] for y in range(H)]
+        # とがった山のかたまりも、まるくする: まわり8マスのうち5マス以上が候補の所だけ残す（2回）。12マス未満のかたまりは M に
+        for _ in range(2):
+            cand = [[cand[y][x] and sum(cand[y + dy][x + dx] for dx, dy in N8 if 0 <= x + dx < W and 0 <= y + dy < H) >= 5
+                     for x in range(W)] for y in range(H)]
+        seen = set()
+        for y in range(H):
+            for x in range(W):
+                if cand[y][x] and (x, y) not in seen:
+                    comp, q3 = [], deque([(x, y)]); seen.add((x, y))
+                    while q3:
+                        cx, cy = q3.popleft(); comp.append((cx, cy))
+                        for dx, dy in N4:
+                            nx, ny = cx + dx, cy + dy
+                            if 0 <= nx < W and 0 <= ny < H and cand[ny][nx] and (nx, ny) not in seen:
+                                seen.add((nx, ny)); q3.append((nx, ny))
+                    if len(comp) < 12:
+                        for cx, cy in comp:
+                            cand[cy][cx] = False
         for y in range(H):
             for x in range(W):
                 if self.g[y][x] not in MOUNT or self.prot[y][x]:
                     continue
-                want = "N" if (dist[y][x] >= core and size[y][x] >= minsize) else "M"
-                self.g[y][x] = want                                # M と N はどちらも通れない
+                self.g[y][x] = "N" if cand[y][x] else "M"         # M と N はどちらも通れない
 
     # ---------------------------------------------------------------- 5) 丘の帯
     def hills(self):
@@ -286,8 +358,17 @@ class Tidy:
                     self.g[y][x] = "H"                             # 通れる → 通れる
 
 
+BASE = f"{ROOT}/tools/world-map/rows-before-tidy.txt"
+
+
 def main():
     src, i, j, g0 = load()
+    # 何度実行しても同じ結果にする: 1回目に、整える前の地形を rows-before-tidy.txt にとっておき、
+    # 2回目からはそこから整えなおす（gen_world.py / apply_field_trace.py を実行し直すと見出しが元にもどるので、また取りなおす）
+    if "tidy_mountains.py" in src.split("\n", 1)[0]:
+        g0 = [list(r) for r in open(BASE).read().split()]
+    else:
+        open(BASE, "w").write("\n".join("".join(r) for r in g0) + "\n")
     prot = protected_mask(src, g0)
     g1 = [r[:] for r in g0]
     lab0 = components(g0)
@@ -295,13 +376,16 @@ def main():
         t = Tidy([r[:] for r in g1], prot)
         t.orig = g0
         t.lab0 = lab0
+        t.size0 = Counter(v for row in lab0 for v in row if v >= 0)
         # 今のつながりの組を、もとの組の番号に読みかえる（もとは歩けなかった所だけの組は、それぞれ別の負の番号）
         cur, mp, k = t.lab, {}, -10
         for yy in range(len(g0)):
             for xx in range(len(g0[0])):
                 c = cur[yy][xx]
                 if c >= 0 and lab0[yy][xx] >= 0:
-                    mp.setdefault(c, lab0[yy][xx])
+                    o = lab0[yy][xx]
+                    if c not in mp or t.size0.get(o, 0) > t.size0.get(mp[c], 0):
+                        mp[c] = o                                # いちばん大きなもとの組の番号にする
         for yy in range(len(g0)):
             for xx in range(len(g0[0])):
                 c = cur[yy][xx]
@@ -313,6 +397,7 @@ def main():
             before = ["".join(r) for r in t.g]
             t.smooth(1)
             t.singles()
+            t.small_ranges()
             if ["".join(r) for r in t.g] == before:
                 break
         t.peaks()
@@ -332,8 +417,8 @@ def main():
                 bad.append(("まもる所が変わった", x, y, a, b))
             if a in FIXED or b in FIXED:
                 bad.append(("変えてはいけない地形", x, y, a, b))
-            if a == "X" and b != "M":
-                bad.append(("谷は山にだけ", x, y, a, b))
+            if a == "X" and b in FIXED:
+                bad.append(("谷が水や道になった", x, y, a, b))
     ok, where = same_partition(g0, g1)
     if not ok:
         bad.append(("歩けるつながりが変わった", where))
