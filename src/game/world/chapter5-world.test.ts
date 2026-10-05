@@ -47,7 +47,7 @@ function npcById(mapId: string, id: string) {
   return npc;
 }
 
-const priest = () => npcById("kiri-town", "kiri-priest");
+const priest = () => npcById("kiri-church", "kiri-priest");
 
 describe("第5章のイベントデータの整合性", () => {
   it("NPCはすべて実在するマップの、通行可能なタイルに置かれている", () => {

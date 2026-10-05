@@ -98,5 +98,10 @@ applyTownExpansion(WORLD_MAPS);
 applyVariantWalls(WORLD_MAPS, WORLD_NPCS);
 applyAutoDecor(WORLD_MAPS, WORLD_NPCS);
 applyTownDecor(WORLD_MAPS, WORLD_NPCS);
+// 平屋の家は、1つの絵（赤い屋根）にそろえる（2階建ての屋敷はそのまま。人間の指示「家は2階建て以外は統一しましょう」、2026-10-05）
+for (const m of Object.values(WORLD_MAPS)) {
+  if (!m.props) continue;
+  m.props = m.props.map((p) => (p.kind === "house-blue" || p.kind === "house-green" ? { ...p, kind: "house" } : p));
+}
 addHouseInteriors(WORLD_MAPS, WORLD_NPCS);
 addInnInteriors(WORLD_MAPS, WORLD_NPCS);

@@ -10,6 +10,8 @@ export const PROP_FOOTPRINT: Record<MapProp["kind"], { left: number; right: numb
   "house-blue": { left: 1, right: 1, up: 1 },
   "house-green": { left: 1, right: 1, up: 1 },
   manor: { left: 2, right: 2, up: 1 },
+  church: { left: 2, right: 2, up: 2 },
+  "church-interior": { left: 0, right: 0, up: 0 },
   "manor-blue": { left: 2, right: 2, up: 1 },
   "manor-green": { left: 2, right: 2, up: 1 },
   rock: { left: 0, right: 0, up: 0 },
@@ -86,7 +88,7 @@ export const PROP_FOOTPRINT: Record<MapProp["kind"], { left: number; right: numb
 };
 
 /** 絵の高さ（ピクセル）。岩・茂みは低く、家・木は枠いっぱい。 */
-export const PROP_HEIGHT: Record<MapProp["kind"], number> = { tree: 48, house: 56, "house-blue": 56, "house-green": 56, manor: 80, "manor-blue": 80, "manor-green": 80, rock: 20, bush: 18, "tree-snow": 48, "tree-dead": 48, "rock-snow": 20, "bush-snow": 18, palm: 48, cactus: 48, barrel: 26, lamp: 48, well: 44, signpost: 40, crates: 36, flowerbed: 12, "icon-port": 48, "icon-village": 48, "icon-lake": 48, "icon-mine": 48, "icon-castle": 48, "icon-tents": 48, "icon-temple": 48, "icon-snowtown": 48, "icon-sky": 48, "icon-palace": 48, "icon-ruin": 48, "icon-shrine": 48, "icon-cave": 48, "icon-stones": 48, "icon-bigtree": 48, "icon-vortex": 48, "icon-volcano": 48, "icon-dive": 48, "icon-spire": 112, "icon-islet-ruin": 48, "icon-islet-cave": 48, "icon-islet-shrine": 48, "icon-islet-fort": 48, "fountain": 47, "stall": 45, "haystack": 28, "cart": 32, "laundry": 30, "fence": 17, "fence-end": 18, "bench": 20, "statue-traveler": 41, "grave-cross": 22, "grave-round": 19, "noticeboard": 37, "brazier": 32, "shrine": 33, "pillar": 48, "pillar-broken": 29, "statue-soldier": 46, "statue-winged": 46, "banner-purple": 42, "banner-red": 42, "bones": 17, "cobweb": 26, "candelabra": 36, "coffin": 24, "barrel-broken": 21, "box-broken": 24, "crystal-blue": 36, "crystal-red": 36, "mushrooms": 25, "chest-closed": 22, "chest-open": 30, "chains": 44, "jail-bars": 50, tent: 46 };
+export const PROP_HEIGHT: Record<MapProp["kind"], number> = { tree: 48, house: 56, "house-blue": 56, "house-green": 56, manor: 80, "manor-blue": 80, "manor-green": 80, rock: 20, bush: 18, "tree-snow": 48, "tree-dead": 48, "rock-snow": 20, "bush-snow": 18, palm: 48, cactus: 48, barrel: 26, lamp: 48, well: 44, signpost: 40, crates: 36, flowerbed: 12, "icon-port": 48, "icon-village": 48, "icon-lake": 48, "icon-mine": 48, "icon-castle": 48, "icon-tents": 48, "icon-temple": 48, "icon-snowtown": 48, "icon-sky": 48, "icon-palace": 48, "icon-ruin": 48, "icon-shrine": 48, "icon-cave": 48, "icon-stones": 48, "icon-bigtree": 48, "icon-vortex": 48, "icon-volcano": 48, "icon-dive": 48, "icon-spire": 112, "icon-islet-ruin": 48, "icon-islet-cave": 48, "icon-islet-shrine": 48, "icon-islet-fort": 48, "fountain": 47, "stall": 45, "haystack": 28, "cart": 32, "laundry": 30, "fence": 17, "fence-end": 18, "bench": 20, "statue-traveler": 41, "grave-cross": 22, "grave-round": 19, "noticeboard": 37, "brazier": 32, "shrine": 33, "pillar": 48, "pillar-broken": 29, "statue-soldier": 46, "statue-winged": 46, "banner-purple": 42, "banner-red": 42, "bones": 17, "cobweb": 26, "candelabra": 36, "coffin": 24, "barrel-broken": 21, "box-broken": 24, "crystal-blue": 36, "crystal-red": 36, "mushrooms": 25, "chest-closed": 22, "chest-open": 30, "chains": 44, "jail-bars": 50, tent: 46, church: 88, "church-interior": 176 };
 
 /** 通り抜けられる飾り（壁の飾り・床の飾り）。足元のマスを通れなくしない。 */
 export const PASSABLE_PROPS = new Set<string>(["banner-purple", "banner-red", "bones", "cobweb", "barrel-broken", "mushrooms", "chains"]);
@@ -141,8 +143,10 @@ export const MAP_PROPS: Record<string, MapProp[]> = {
     { kind: "cactus", tileX: 6, tileY: 13 },
   ],
   "kiri-town": [
+    // 環の聖堂（教会）。足もとのまんなか (7,5)、扉は (7,6)（kiri-town.ts の CHURCH_FOOT と同じ）
+    { kind: "church", tileX: 7, tileY: 5 },
     { kind: "statue-traveler", tileX: 14, tileY: 6 }, { kind: "bench", tileX: 6, tileY: 10 }, { kind: "shrine", tileX: 18, tileY: 10 },
-    { kind: "lamp", tileX: 8, tileY: 6 }, { kind: "barrel", tileX: 15, tileY: 10 }, { kind: "flowerbed", tileX: 7, tileY: 10 },
+    { kind: "lamp", tileX: 4, tileY: 6 }, { kind: "barrel", tileX: 15, tileY: 10 }, { kind: "flowerbed", tileX: 7, tileY: 10 },
     { kind: "bush", tileX: 4, tileY: 11 }, { kind: "bush", tileX: 19, tileY: 11 },
     { kind: "tree", tileX: 2, tileY: 13 }, { kind: "tree", tileX: 21, tileY: 13 }, { kind: "tree", tileX: 22, tileY: 5 },
   ],

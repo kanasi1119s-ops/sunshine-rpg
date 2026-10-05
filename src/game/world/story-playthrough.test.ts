@@ -35,7 +35,7 @@ const CHAPTER_MAPS: string[][] = [
   ["garasuko-town", "garasuko-warehouse"],
   ["tetsukusari-town", "tetsukusari-mine"],
   ["sanone-town", "sanone-camp"],
-  ["kiri-town", "kiri-archive"],
+  ["kiri-town", "kiri-church", "kiri-archive"],
   ["shimohara-town", "shimohara-facility"],
   ["fushima-town", "fushima-base"],
   ["toushin-town", "toushin-hall"],

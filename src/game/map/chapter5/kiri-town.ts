@@ -27,8 +27,10 @@ const WEST_GATE = { x: 0, y: 10 };
 const EAST_GATE = { x: WIDTH - 1, y: 10 };
 /** 町の北、崖の岩肌に掘られた記録の間（古文書庫）への入口。 */
 const ARCHIVE_GATE_POS = { x: 12, y: 0 };
-/** 環の聖堂（4x2）と、巡礼者の宿坊（3x2）。 */
-const CHAPEL_ORIGIN = { x: 5, y: 4 };
+/** 環の聖堂（教会。絵は `prop:church`、足もとのまんなかがここ。横5マス×縦3マス）と、巡礼者の宿坊（3x2）。 */
+const CHURCH_FOOT = { x: 7, y: 5 };
+/** 聖堂の扉（足もとのすぐ下。上へ押すと中へ入る）。 */
+export const KIRI_CHURCH_TOWN_DOOR = { x: CHURCH_FOOT.x, y: CHURCH_FOOT.y + 1 };
 const HOSTEL_ORIGIN = { x: 17, y: 4 };
 
 /**
@@ -66,12 +68,7 @@ export function createKiriTownData(): TileMapData {
     set(ARCHIVE_GATE_POS.x, y, PATH);
   }
 
-  // 聖堂と宿坊（外観のみ）。
-  for (let dx = 0; dx < 4; dx++) {
-    for (let dy = 0; dy < 2; dy++) {
-      set(CHAPEL_ORIGIN.x + dx, CHAPEL_ORIGIN.y + dy, CHAPEL);
-    }
-  }
+  // 宿坊（外観のみ）。聖堂は、map-props.ts の飾りの絵（`church`、足もと CHURCH_FOOT）で置く（通れない範囲は絵の足もとから決まる）。
   for (let dx = 0; dx < 3; dx++) {
     for (let dy = 0; dy < 2; dy++) {
       set(HOSTEL_ORIGIN.x + dx, HOSTEL_ORIGIN.y + dy, CHAPEL);
@@ -91,6 +88,15 @@ export function createKiriTownData(): TileMapData {
     tileColors: TILE_COLORS,
     collision,
     exits: [
+      {
+        // 環の聖堂の扉から、中へ。
+        tileX: KIRI_CHURCH_TOWN_DOOR.x,
+        tileY: KIRI_CHURCH_TOWN_DOOR.y,
+        targetMapId: "kiri-church",
+        targetTileX: 6,
+        targetTileY: 9,
+        enter: "up",
+      },
       {
         // 砂音へ戻る街道。
         tileX: WEST_GATE.x,
@@ -130,7 +136,7 @@ export const KIRI_TOWN_ARCHIVE_RETURN = { tileX: ARCHIVE_GATE_POS.x, tileY: ARCH
 
 /** 町のNPCを置く座標（イベントデータ側で使う）。 */
 export const KIRI_TOWN_LANDMARKS = {
-  priest: { tileX: CHAPEL_ORIGIN.x + 1, tileY: CHAPEL_ORIGIN.y + 2 },
+  priest: { tileX: CHURCH_FOOT.x - 2, tileY: CHURCH_FOOT.y + 2 },
   pilgrim: { tileX: HOSTEL_ORIGIN.x + 1, tileY: HOSTEL_ORIGIN.y + 2 },
   scribe: { tileX: 8, tileY: WEST_GATE.y - 1 },
 };

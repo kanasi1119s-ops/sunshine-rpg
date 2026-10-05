@@ -45,6 +45,8 @@ const SETS = {
 for (const [i, n] of ["ruin", "shrine", "cave", "stones", "bigtree", "vortex"].entries()) SETS.props[1][`P${40 + i}-アイコン${n}`] = `prop:icon-${n}`;
 SETS.props[1]["P46-アイコンvolcano"] = "prop:icon-volcano";
 SETS.props[1]["P47-アイコンdive"] = "prop:icon-dive";
+SETS.props[1]["P48-教会"] = "prop:church";
+SETS.props[1]["P49-教会の中"] = "prop:church-interior";
 for (const n of fs.readdirSync(new URL("../../assets-src/pixel-practice/r20-props/", import.meta.url)).filter((f) => f.endsWith(".txt")).map((f) => f.replace(".txt", ""))) {
   SETS.props[1][`R20-${n}`] = `prop:${n}`;
 }

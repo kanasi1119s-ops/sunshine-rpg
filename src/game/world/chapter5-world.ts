@@ -1,5 +1,6 @@
 import { createKiriArchiveData, KIRI_ARCHIVE_LANDMARKS } from "../map/chapter5/kiri-archive";
-import { createKiriTownData, KIRI_TOWN_LANDMARKS } from "../map/chapter5/kiri-town";
+import { createKiriTownData, KIRI_CHURCH_TOWN_DOOR, KIRI_TOWN_LANDMARKS } from "../map/chapter5/kiri-town";
+import { createKiriChurchData, KIRI_CHURCH_SPOTS } from "../map/chapter5/kiri-church";
 import type { TileMapData } from "../map/types";
 import type { EventCommand } from "../event/types";
 import type { Npc } from "../npc";
@@ -12,6 +13,7 @@ import type { Npc } from "../npc";
 export const CHAPTER5_MAPS: Record<string, TileMapData> = {
   "kiri-town": createKiriTownData(),
   "kiri-archive": createKiriArchiveData(),
+  "kiri-church": createKiriChurchData(KIRI_CHURCH_TOWN_DOOR),
 };
 
 /** 霧断崖へ到着したとき、一度だけ流す場面つなぎ（`chapter5_intro_seen` フラグで管理）。 */
@@ -30,14 +32,37 @@ export const CHAPTER5_OPENING_COMMANDS: EventCommand[] = [
 ];
 
 export const CHAPTER5_NPCS: Record<string, Npc[]> = {
-  "kiri-town": [
+  // 司祭は、環の聖堂の中の祭壇の前にいる（2026-10-05、聖堂の中を作ったので町の広場から移した）
+  "kiri-church": [
     {
       id: "kiri-priest",
-      tileX: KIRI_TOWN_LANDMARKS.priest.tileX,
-      tileY: KIRI_TOWN_LANDMARKS.priest.tileY,
+      tileX: KIRI_CHURCH_SPOTS.priest.tileX,
+      tileY: KIRI_CHURCH_SPOTS.priest.tileY,
       color: "#d8d0b8",
       commands: priestCommands(),
     },
+    {
+      id: "kiri-church-friar",
+      tileX: KIRI_CHURCH_SPOTS.friar.tileX,
+      tileY: KIRI_CHURCH_SPOTS.friar.tileY,
+      color: "#6a5a7a",
+      commands: [
+        { type: "message", speaker: "修道士", text: "ようこそ、環の聖堂へ。奥の大きな窓の三つの環を、ご覧になりましたか。" },
+        { type: "message", speaker: "修道士", text: "いちばん小さな環だけが、欠けているでしょう。欠けたままでも、環は環。そう教わってきました。" },
+      ],
+    },
+    {
+      id: "kiri-church-worshipper",
+      tileX: KIRI_CHURCH_SPOTS.worshipper.tileX,
+      tileY: KIRI_CHURCH_SPOTS.worshipper.tileY,
+      color: "#8a7a60",
+      commands: [
+        { type: "message", speaker: "祈る人", text: "……霧が晴れますように。町を出ていった家族が、無事でありますように。" },
+        { type: "message", text: "静かに手を合わせている。ろうそくの火が、かすかにゆれた。" },
+      ],
+    },
+  ],
+  "kiri-town": [
     {
       id: "kiri-pilgrim",
       tileX: KIRI_TOWN_LANDMARKS.pilgrim.tileX,

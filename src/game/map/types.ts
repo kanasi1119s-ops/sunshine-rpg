@@ -16,6 +16,8 @@ export interface TileMapData {
    * 将来、実際のドット絵タイルセットに差し替える。
    */
   tileColors: Record<number, string>;
+  /** 地図の下に敷く1枚絵（`sprite-data` の名前。例 "prop:church-interior"）。あればタイルの代わりにこの絵を描く（通れるかは collision のまま）。 */
+  backdropSprite?: string;
   /** 上下左右がつながる地図（世界地図）。端から出ると、反対の端から入る。 */
   wrap?: boolean;
   /**
@@ -67,5 +69,5 @@ export interface MapProp {
 }
 
 /** 飾りの種類。`prop:<種類>` のドット絵がある。 */
-export type MapPropKind = "tree" | "house" | "house-blue" | "house-green" | "manor" | "manor-blue" | "manor-green" | "rock" | "bush" | "tree-snow" | "tree-dead" | "rock-snow" | "bush-snow" | "palm" | "cactus" | "barrel" | "lamp" | "well" | "signpost" | "crates" | "flowerbed" | "icon-port" | "icon-village" | "icon-lake" | "icon-mine" | "icon-castle" | "icon-tents" | "icon-temple" | "icon-snowtown" | "icon-sky" | "icon-palace" | "icon-ruin" | "icon-shrine" | "icon-cave" | "icon-stones" | "icon-bigtree" | "icon-vortex" | "icon-volcano" | "icon-dive" | "icon-spire" | "icon-islet-ruin" | "icon-islet-cave" | "icon-islet-shrine" | "icon-islet-fort"
+export type MapPropKind = "tree" | "church" | "church-interior" | "house" | "house-blue" | "house-green" | "manor" | "manor-blue" | "manor-green" | "rock" | "bush" | "tree-snow" | "tree-dead" | "rock-snow" | "bush-snow" | "palm" | "cactus" | "barrel" | "lamp" | "well" | "signpost" | "crates" | "flowerbed" | "icon-port" | "icon-village" | "icon-lake" | "icon-mine" | "icon-castle" | "icon-tents" | "icon-temple" | "icon-snowtown" | "icon-sky" | "icon-palace" | "icon-ruin" | "icon-shrine" | "icon-cave" | "icon-stones" | "icon-bigtree" | "icon-vortex" | "icon-volcano" | "icon-dive" | "icon-spire" | "icon-islet-ruin" | "icon-islet-cave" | "icon-islet-shrine" | "icon-islet-fort"
   | "fountain" | "stall" | "haystack" | "cart" | "laundry" | "fence" | "fence-end" | "bench" | "statue-traveler" | "grave-cross" | "grave-round" | "noticeboard" | "brazier" | "shrine" | "pillar" | "pillar-broken" | "statue-soldier" | "statue-winged" | "banner-purple" | "banner-red" | "bones" | "cobweb" | "candelabra" | "coffin" | "barrel-broken" | "box-broken" | "crystal-blue" | "crystal-red" | "mushrooms" | "chest-closed" | "chest-open" | "chains" | "jail-bars" | "tent";

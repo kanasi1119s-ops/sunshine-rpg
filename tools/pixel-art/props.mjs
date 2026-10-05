@@ -65,7 +65,10 @@ PIECES.push(
   piece("P44-アイコンbigtree", "r17-polish", "icon-bigtree.txt", "pal-icon-bigtree.json"),
   piece("P45-アイコンvortex", "r17-polish", "icon-vortex.txt", "pal-icon-vortex.json"),
   piece("P46-アイコンvolcano", "r17-polish", "icon-volcano.txt", "pal-icon-volcano.json"),
-  piece("P47-アイコンdive", "r17-polish", "icon-dive.txt", "pal-icon-dive.json")
+  piece("P47-アイコンdive", "r17-polish", "icon-dive.txt", "pal-icon-dive.json"),
+  // 霧断崖の環の聖堂（r17-polish/church.py で一から。2026-10-05）。外観と、中の1枚絵
+  piece("P48-教会", "r17-polish", "church.txt", "pal-church.json", {}, 88),
+  piece("P49-教会の中", "r17-polish", "church-interior.txt", "pal-church-interior.json", {}, 208)
 );
 
 // 町・遺跡の飾り33点（assets-src/pixel-practice/r20-props/、エージェントが一から作成）。大きさが48を超えるものは64の枠。

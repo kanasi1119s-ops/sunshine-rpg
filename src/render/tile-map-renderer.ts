@@ -209,6 +209,16 @@ export function renderTileMap(
 ): void {
   const { tileWidth, tileHeight } = map.data;
 
+  // 1枚絵の地図（教会の中など）: タイルの代わりに、絵をそのまま敷く（絵は下そろえで書き出してあるので、下に合わせる）
+  if (map.data.backdropSprite) {
+    const art = getSpriteCanvas(map.data.backdropSprite, SPRITE_DATA);
+    if (art) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(art, Math.round(-camera.x), Math.round(map.heightPx - art.height - camera.y));
+      return;
+    }
+  }
+
   const startX = Math.max(0, Math.floor(camera.x / tileWidth));
   const startY = Math.max(0, Math.floor(camera.y / tileHeight));
   const endX = Math.min(
