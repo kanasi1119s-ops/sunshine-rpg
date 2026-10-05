@@ -5,9 +5,26 @@ function fileNameFor(data: SaveData): string {
   return `sunshine-rpg-save-${data.savedAt.replace(/[:.]/g, "-")}.json`;
 }
 
-/** セーブデータをJSONファイルとしてダウンロードさせる。 */
-export function downloadSaveFile(data: SaveData): void {
+interface DownloadsCap { save(req: { filename: string; data: string }): Promise<unknown> }
+
+/**
+ * セーブデータをJSONファイルとしてダウンロードさせる。アーティファクトでは、`downloads` 機能で保存する
+ * （ふつうのダウンロードがふさがれていることがあるため）。成功したら true。
+ */
+export async function downloadSaveFile(data: SaveData): Promise<boolean> {
   const json = serializeSaveData(data);
+  const claude = (globalThis as { claude?: { use(n: string): Promise<unknown> } }).claude;
+  if (claude) {
+    try {
+      const cap = (await claude.use("downloads")) as DownloadsCap | null;
+      if (cap) {
+        await cap.save({ filename: fileNameFor(data), data: json });
+        return true;
+      }
+    } catch {
+      return false;
+    }
+  }
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -17,6 +34,7 @@ export function downloadSaveFile(data: SaveData): void {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+  return true;
 }
 
 /** ファイルからセーブデータを読み込む。形式が不正なら例外を投げる。 */

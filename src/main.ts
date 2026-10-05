@@ -156,7 +156,7 @@ import { createJobState, starsOf } from "./game/job/mastery";
 import { SAVE_VERSION, type SaveData } from "./game/save/types";
 import { loadFromSlot, saveToSlot } from "./game/save/storage";
 import { latestSaveSlot, summarizeSlots } from "./game/save/slots";
-import { closeSlotMenu, confirmSlot, createSlotMenuState, moveSlotCursor, openSlotMenu, withSlotRows } from "./game/menu/slot-menu";
+import { isFileRow, closeSlotMenu, confirmSlot, createSlotMenuState, moveSlotCursor, openSlotMenu, withSlotRows } from "./game/menu/slot-menu";
 import { renderSlotMenu } from "./render/slot-menu-renderer";
 import { downloadSaveFile, readSaveFile } from "./io/save-file";
 import { AudioEngine } from "./audio/audio-engine";
@@ -1617,7 +1617,11 @@ fileInput.addEventListener("change", () => {
   }
   readSaveFile(file)
     .then((data) => {
+      slotMenu = closeSlotMenu(slotMenu);
+      title = { ...title, open: false };
       applySaveData(data);
+      playMapBgm(currentMapId);
+      autosave();
       saveMessage = "セーブデータを読み込みました";
       saveMessageTimer = 2000;
     })
@@ -1671,7 +1675,7 @@ if (import.meta.env.DEV) {
       }
       saveMessageTimer = 2000;
     } else if (event.key === "j" && !battle) {
-      downloadSaveFile(buildSaveData());
+      void downloadSaveFile(buildSaveData());
     } else if (event.key === "u" && !battle) {
       fileInput.click();
     }
@@ -2411,7 +2415,15 @@ const loop = createGameLoop({
         lastSlotDirection = direction;
       }
       if (backPressed) slotMenu = closeSlotMenu(slotMenu);
-      if (actionPressed) {
+      if (actionPressed && isFileRow(slotMenu)) {
+        if (slotMenu.mode === "save") {
+          void downloadSaveFile(buildSaveData()).then((ok) => {
+            slotMenu = withSlotRows(slotMenu, slotMenu.rows, ok ? "ファイルに書き出しました" : "書き出せませんでした");
+          });
+        } else {
+          fileInput.click();
+        }
+      } else if (actionPressed) {
         const slot = confirmSlot(slotMenu);
         if (slot) {
           if (slotMenu.mode === "save") {

@@ -19,18 +19,24 @@ export function createSlotMenuState(): SlotMenuState {
 
 export function openSlotMenu(mode: "save" | "load", rows: SlotSummary[]): SlotMenuState {
   const first = rows.findIndex((r) => mode === "save" || !r.empty);
-  return { open: true, mode, rows, cursor: Math.max(0, first), message: rows.every((r) => r.empty) && mode === "load" ? "セーブデータが ありません" : null };
+  return { open: true, mode, rows, cursor: Math.max(0, first), message: rows.every((r) => r.empty) && mode === "load" ? "セーブデータが ありません（下のファイルからも読み込めます）" : null };
+}
+
+/** いちばん下に、ファイルの書き出し（セーブのとき）・読み込み（ロードのとき）の行がある。 */
+export function isFileRow(state: SlotMenuState): boolean {
+  return state.open && state.cursor === state.rows.length;
 }
 
 export function moveSlotCursor(state: SlotMenuState, delta: number): SlotMenuState {
   if (!state.open || state.rows.length === 0) return state;
-  return { ...state, cursor: (state.cursor + delta + state.rows.length) % state.rows.length, message: null };
+  const n = state.rows.length + 1;
+  return { ...state, cursor: (state.cursor + delta + n) % n, message: null };
 }
 
 /** 決定。ロードで、からっぽの場所は選べない。 */
 export function confirmSlot(state: SlotMenuState): SaveSlotId | null {
   const row = state.rows[state.cursor];
-  if (!state.open || !row) return null;
+  if (!state.open || !row) return null; // ファイル行は isFileRow で判定する
   if (state.mode === "load" && row.empty) return null;
   return row.id;
 }
