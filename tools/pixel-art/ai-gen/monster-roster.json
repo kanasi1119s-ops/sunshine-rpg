@@ -661,8 +661,8 @@
  },
  {
   "id": "enc-shimohara-facility-3",
-  "prompt": "a creature made of tall frost column crystals growing from frozen soil, with a cold blue core",
-  "status": "done",
+  "prompt": "a monster of jagged pale blue ice crystal spikes growing out of a lump of frozen soil, a glowing cold blue core in the middle, no person",
+  "status": "todo",
   "key": "enemy:enc-shimohara-facility-3",
   "kind": "mob",
   "name": "霜柱の結晶",
@@ -674,7 +674,8 @@
    220,
    240
   ],
-  "draft": "enc-shimohara-facility-3_1"
+  "draft": "enc-shimohara-facility-3_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-shimohara-facility-4",
@@ -695,7 +696,7 @@
  },
  {
   "id": "enc-shimohara-facility-5",
-  "prompt": "a pale shadow of a bird with white frost feathers and smoky dark edges, piercing pale eyes",
+  "prompt": "a pale owl-like bird monster with white frost feathers and smoky dark wing edges, full body with head and talons, piercing pale eyes",
   "status": "todo",
   "key": "enemy:enc-shimohara-facility-5",
   "kind": "mob",
@@ -707,12 +708,14 @@
    205,
    215,
    225
-  ]
+  ],
+  "draft": "enc-shimohara-facility-5_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-fushima-base-0",
   "prompt": "a cloud shadow creature, a dark storm cloud body with small lightning eyes and wispy arms",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-fushima-base-0",
   "kind": "mob",
   "name": "雲の影",
@@ -723,12 +726,13 @@
    120,
    125,
    150
-  ]
+  ],
+  "draft": "enc-fushima-base-0_1"
  },
  {
   "id": "enc-fushima-base-1",
   "prompt": "a tangle of old electrical wires and cables forming a twisted creature with sparking ends",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-fushima-base-1",
   "kind": "mob",
   "name": "配線の歪み",
@@ -739,7 +743,8 @@
    90,
    90,
    100
-  ]
+  ],
+  "draft": "enc-fushima-base-1_0"
  },
  {
   "id": "enc-fushima-base-2",
