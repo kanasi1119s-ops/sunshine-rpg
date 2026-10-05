@@ -172,7 +172,8 @@ const TIER_BOX: Record<ReliefTier, [number, number, number, number]> = {
 
 /**
  * その段の山の絵が、川・湖・海のマスにかかるか（2026-10-05、人間の指示「山が川からはみ出るのはダメ」）。
- * かかるなら、ひとつ低い段（小さい絵）にする。いちばん低い段でもかかる分は、描いたあとに水のマスを消す（drawChunk）。
+ * かかるなら、ひとつ低い段（小さい絵）にする。いちばん低い段でもかかる岸のマスには、山の絵を置かない。
+ * 影など、それでもかかる分は、描いたあとに水のマスから消す（drawChunk）。
  */
 export function reliefOverWater(tier: ReliefTier, tx: number, ty: number, jx: number, jy: number, isWater: (x: number, y: number) => boolean): boolean {
   const [l, r, t, b] = TIER_BOX[tier];
@@ -246,6 +247,23 @@ function landBeside(map: TileMap, x: number, y: number): string | null {
   return best;
 }
 
+/** 3マス以内でいちばん多い陸の地面（水と山をのぞく）。なければ草地。 */
+function landNear(map: TileMap, x: number, y: number): string {
+  const counts = new Map<string, number>();
+  for (let dy = -3; dy <= 3; dy++) {
+    for (let dx = -3; dx <= 3; dx++) {
+      const art = artOf(map, x + dx, y + dy);
+      if (!art || art === "water" || isMountArt(art)) continue;
+      const tex = textureOf(map, x + dx, y + dy);
+      if (tex) counts.set(tex, (counts.get(tex) ?? 0) + 1);
+    }
+  }
+  let best = "terrain:w-grass";
+  let bestN = 0;
+  for (const [k, v] of counts) if (v > bestN || (v === bestN && k < best)) { best = k; bestN = v; }
+  return best;
+}
+
 interface ReliefPlan {
   /** マスごとの山の絵の番号（-1 は山でない）。keys[番号] が絵のキー。 */
   sprite: Int16Array;
@@ -297,15 +315,20 @@ function reliefPlanFor(map: TileMap): ReliefPlan {
       let t = field.tier[i];
       while (t > 0 && reliefOverWater(TIERS[t], tx, ty, jx[i], jy[i], water)) t--;
       const tier = TIERS[t];
+      // いちばん小さいふもとの小山でも水にかかる岸のマスには、山の絵を置かない（地面だけ）。
+      // 山は、となりのマスの山の丸いすその形で岸の手前に終わり、水のふちでまっすぐ切れて見えない
+      // （2026-10-05、人間の指示「岸の形にそって丸く見せて」）
+      const shore = reliefOverWater(tier, tx, ty, jx[i], jy[i], water);
       const left = tx > 0 ? field.elev[i - 1] : 0;
       const right = tx < width - 1 ? field.elev[i + 1] : 0;
       const lean = right > left ? "r" : "l";
       const variant = "abc"[h % 3];
       // 内がわの中腹・高い山は、ところどころ描かない（谷の地面がのぞき、峰と峰のあいだに谷ができる）
       const gap = field.dist[i] >= 3 && tier !== "peak" && (h >> 7) % 5 === 0;
-      if (!gap) sprite[i] = idx(keyIndex, keys, `relief:${fam}-${tier}-${lean}${variant}`);
+      if (!gap && !shore) sprite[i] = idx(keyIndex, keys, `relief:${fam}-${tier}-${lean}${variant}`);
       // ふち（ななめにも陸がとなる所までふくむ）は、となりの陸の地面。山のすそのすき間から、四角い谷の地面が見えないように
-      const land = field.dist[i] <= 2 ? landBeside(map, tx, ty) : null;
+      // 岸のマス（山の絵を置かない）は、となりに陸がなくても、近くの陸の地面（なければ草地）を敷く（谷の暗い地面が、水ぎわに四角く出ない）
+      const land = field.dist[i] <= 2 ? landBeside(map, tx, ty) ?? (shore ? landNear(map, tx, ty) : null) : null;
       base[i] = land ? idx(baseIndex, bases, `T:${land}`) : idx(baseIndex, bases, `R:relief:valley-${fam}`);
     }
   }

@@ -20,6 +20,7 @@ if (typeof window !== "undefined") {
   fallsImage("scene");
   fallsImage("whirl");
   fallsImage("bolt");
+  fallsImage("veil");
 }
 import type { Camera } from "./camera";
 
@@ -32,14 +33,15 @@ function hash2(x: number, y: number, k: number): number {
 /**
  * 芯環塔と大滝（2026-10-05、人間の指示「滝と塔をくっつけて、ドットで滝が流れていて、周りが大雨・嵐になって、雷まであるドットの動きを」）。
  * 穴と大滝・塔・塔の足もとを包む霧・嵐の雲・大雨を、ひとつの絵（320×360・16コマ、assets-src/pixel-practice/r29-falls/scene.py）にして重ねる。
- * 絵の (160, 200) が塔のマスのまん中。まわりの海の渦潮は、その下に描く。地形のすぐあと（建物・人より前）に描く。
+ * 絵（320×440）の (160, 280) が塔のマスのまん中。塔は雲を突き抜けて、雲の上に頂が出る。
+ * 雲のまわりの透けるうす雲（veil.png）は、半透明で重ねる。まわりの海の渦潮は、その下に描く。地形のすぐあと（建物・人より前）に描く。
  */
 export function renderBasin(ctx: CanvasRenderingContext2D, map: TileMap, camera: Camera, nowMs: number): void {
   if (map.data.width < WORLD_TOWER.x + 12) return;
   const s = map.data.tileWidth;
   const cx = (WORLD_TOWER.x + 0.5) * s - camera.x;
   const cy = (WORLD_TOWER.y + 0.5) * s - camera.y;
-  if (cx < -260 || cx > camera.viewportWidth + 260 || cy < -260 || cy > camera.viewportHeight + 260) return;
+  if (cx < -260 || cx > camera.viewportWidth + 260 || cy < -260 || cy > camera.viewportHeight + 300) return;
   ctx.save();
   ctx.imageSmoothingEnabled = false;
   // まわりの海の渦潮（大滝のふちと渦の輪のあいだに6つ。少しずつ速さがちがう）
@@ -55,7 +57,13 @@ export function renderBasin(ctx: CanvasRenderingContext2D, map: TileMap, camera:
   const scene = fallsImage("scene");
   if (scene) {
     const fr = Math.floor(nowMs / 65) % 16;   // 16コマ。水も雨も、本当に流れて・降って見える
-    ctx.drawImage(scene, fr * 320, 0, 320, 360, Math.round(cx - 160), Math.round(cy - 200), 320, 360);
+    ctx.drawImage(scene, fr * 320, 0, 320, 440, Math.round(cx - 160), Math.round(cy - 280), 320, 440);
+  }
+  const veil = fallsImage("veil");
+  if (veil) {
+    ctx.globalAlpha = 0.42;
+    ctx.drawImage(veil, Math.round(cx - 160), Math.round(cy - 280));
+    ctx.globalAlpha = 1;
   }
   ctx.restore();
 }
@@ -95,7 +103,7 @@ export function renderStorm(ctx: CanvasRenderingContext2D, map: TileMap, camera:
     ctx.fillStyle = cg;
     ctx.fillRect(x - 56, y - 56, 112, 112);
   }
-  // 雨: ななめに降る細い線（嵐のまんなかほど多い）
+  // 雨: ななめに降る細い線（嵐のまんなかほど多い）。雲の底（塔のマスから約6マス上）より下にだけ降る
   ctx.save();
   ctx.strokeStyle = "rgba(200,215,240,0.45)";
   ctx.lineWidth = 1;
@@ -105,7 +113,7 @@ export function renderStorm(ctx: CanvasRenderingContext2D, map: TileMap, camera:
     const fall = ((nowMs / 420 + seedY) % 1);
     const x = cx - 230 + seedX * 460 + fall * 18;
     const y = cy - 230 + ((seedY * 460 + fall * 460) % 460);
-    if (Math.hypot(x - cx, y - cy) > 225) continue;
+    if (Math.hypot(x - cx, y - cy) > 225 || y < cy - 104) continue;
     ctx.moveTo(Math.round(x), Math.round(y));
     ctx.lineTo(Math.round(x - 3), Math.round(y + 7));
   }
