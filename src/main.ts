@@ -799,6 +799,15 @@ app.appendChild(backButton);
 
 const audio = new AudioEngine();
 let audioStarted = false;
+/** 起動のオープニングと、タイトル（はじめから・つづきから）は、同じ曲を使う（オープニングから、曲が途切れずにタイトルへつながる）。 */
+const TITLE_TRACK_ID = "boot-opening";
+/** タイトルの曲を流す。もう流れているなら、そのまま（はじめから鳴らしなおさない）。 */
+function playTitleBgm(): void {
+  const track = getTrack(TITLE_TRACK_ID);
+  if (currentBgmTrack === track) return;
+  currentBgmTrack = track;
+  if (audioStarted) audio.playBgm(track);
+}
 function startAudioOnFirstInteraction(): void {
   if (audioStarted) {
     return;
@@ -806,13 +815,13 @@ function startAudioOnFirstInteraction(): void {
   audioStarted = true;
   if (bootOpening.open) {
     // 起動のオープニング: オーケストラの曲。最初の操作が遅れたときは、場面の進みにそろえて、途中から鳴らす
-    currentBgmTrack = getTrack("boot-opening");
+    currentBgmTrack = getTrack(TITLE_TRACK_ID);
     const at = bootClockMs / 1000;
     audio.playBgm(currentBgmTrack, at < 34 ? at : 0);
     return;
   }
   if (title.open) {
-    currentBgmTrack = getTrack("title");
+    currentBgmTrack = getTrack(TITLE_TRACK_ID);
     audio.playBgm(currentBgmTrack);
     return;
   }
@@ -1481,8 +1490,7 @@ function restartFromLastSave(): void {
   const data = slot ? loadFromSlot(window.localStorage, slot) : null;
   if (!data) {
     title = createTitleState(hasAutosave());
-    currentBgmTrack = getTrack("title");
-    audio.playBgm(currentBgmTrack);
+    playTitleBgm();
     return;
   }
   applySaveData(data);
@@ -2176,11 +2184,8 @@ const loop = createGameLoop({
       const before = bootOpening;
       bootOpening = actionPressed ? advanceBootOpening(bootOpening) : updateBootOpening(bootOpening, dtMs, LOGICAL_HEIGHT);
       if (!bootOpening.open && before.open) {
-        // タイトル画面へ。曲をタイトルの曲にかえる
-        currentBgmTrack = getTrack("title");
-        if (audioStarted) {
-          audio.playBgm(currentBgmTrack);
-        }
+        // タイトル画面へ。オープニングと同じ曲なので、そのまま流れつづける
+        playTitleBgm();
       }
       return;
     }
@@ -2408,8 +2413,7 @@ const loop = createGameLoop({
         } else if (result.action === "title") {
           autosave();
           title = createTitleState(hasAutosave());
-          currentBgmTrack = getTrack("title");
-          audio.playBgm(currentBgmTrack);
+          playTitleBgm();
         }
       }
       return;
