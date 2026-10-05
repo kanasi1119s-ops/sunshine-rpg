@@ -1974,7 +1974,7 @@
  },
  {
   "id": "enc-islet-1-1-0",
-  "prompt": "a pale silver ghostly spirit made only of flowing moonlit cloth sleeves swirling as if dancing, no face, no human body, glowing blue edges",
+  "prompt": "a floating spirit shaped like a silver crescent moon with long flowing ribbon tails, small dark eyes on the inner curve, glowing blue mist",
   "status": "done",
   "key": "enemy:enc-islet-1-1-0",
   "kind": "mob",
@@ -1988,8 +1988,8 @@
    220
   ],
   "bg": "dark",
-  "seed_base": 10002,
-  "draft": "enc-islet-1-1-0_x0"
+  "seed_base": 14003,
+  "draft": "enc-islet-1-1-0_1"
  },
  {
   "id": "enc-islet-1-1-1",
@@ -2010,20 +2010,21 @@
  },
  {
   "id": "enc-islet-1-1-2",
-  "prompt": "a moss-covered broken fragment of a garden lantern, stone pieces held by vines, a dim candle inside",
+  "prompt": "a small walking stone garden lantern monster, a pointed stone roof cap and a cracked lantern box with a dim candle glowing inside, short stone legs, creeping vines",
   "status": "done",
   "key": "enemy:enc-islet-1-1-2",
   "kind": "mob",
   "name": "苔むした断片",
   "zone": "islet-1-1",
   "level": 16,
-  "shape": "big",
+  "shape": "tall",
   "tone": [
    110,
    125,
    100
   ],
-  "draft": "enc-islet-1-1-2_0"
+  "draft": "enc-islet-1-1-2_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-islet-1-1-3",
@@ -2081,7 +2082,7 @@
  {
   "id": "enc-islet-2-1-0",
   "prompt": "a heat shadow, a wavering dark shape with orange glowing edges like a mirage",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-2-1-0",
   "kind": "mob",
   "name": "熱の影",
@@ -2092,7 +2093,8 @@
    120,
    60,
    40
-  ]
+  ],
+  "draft": "enc-islet-2-1-0_0"
  },
  {
   "id": "enc-islet-2-1-1",
