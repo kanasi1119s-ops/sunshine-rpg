@@ -885,7 +885,7 @@
  {
   "id": "enc-deep-1-4",
   "prompt": "an old battlefield beetle with a helmet-like shell and arrowheads stuck in its back, dark bronze color",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-1-4",
   "kind": "mob",
   "name": "古戦場の虫",
@@ -896,12 +896,13 @@
    110,
    95,
    70
-  ]
+  ],
+  "draft": "enc-deep-1-4_0"
  },
  {
   "id": "enc-deep-1-5",
   "prompt": "a floating frozen tear drop of ice with a sad face reflection inside and a frosty halo",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-1-5",
   "kind": "mob",
   "name": "凍った涙",
@@ -912,12 +913,13 @@
    185,
    215,
    235
-  ]
+  ],
+  "draft": "enc-deep-1-5_0"
  },
  {
   "id": "enc-deep-2-0",
   "prompt": "an echo of silence, a hollow hooded figure with a covered mouth, grey robes fading into dust",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-2-0",
   "kind": "mob",
   "name": "静まりの残響",
@@ -928,12 +930,13 @@
    140,
    135,
    130
-  ]
+  ],
+  "draft": "enc-deep-2-0_1"
  },
  {
   "id": "enc-deep-2-1",
   "prompt": "a shadow of an assembly hall, a creature made of stacked carved chairs and a podium with a dark face",
-  "status": "todo",
+  "status": "picked",
   "key": "enemy:enc-deep-2-1",
   "kind": "mob",
   "name": "議場の影",
@@ -944,7 +947,8 @@
    100,
    75,
    55
-  ]
+  ],
+  "draft": "enc-deep-2-1_0"
  },
  {
   "id": "enc-deep-2-2",
