@@ -55,7 +55,10 @@ import { PORTRAITS } from "./game/portrait/portraits";
 import { propFeetY, renderProps } from "./render/prop-renderer";
 import { renderDialogue } from "./render/dialogue-renderer";
 import { startCloudSaves } from "./game/save/cloud-saves";
-import { pendingScene, sceneSeenFlag } from "./game/world/story-scenes";
+import type { EventCommand } from "./game/event/types";
+import type { Npc } from "./game/npc";
+import { isVoiceOnly, pendingScene, sceneSeenFlag, sceneSpeakers } from "./game/world/story-scenes";
+import { firstSpeaker } from "./game/sprite/character-specs";
 import { createTileMap, findExitAt, isWalkable, type TileMap } from "./game/map/tile-map";
 import { createPlayer, updatePlayer } from "./game/player";
 import { findNpcAt, getFacingTile } from "./game/npc";
@@ -391,6 +394,52 @@ let quietPlace: string | null = null;
 /** 世界地図からの入口で、条件（章・物語の進み）が足りないとき、静かに入れる場所か（芯環塔は、嵐でふさがれたまま）。 */
 function canEnterQuietly(targetMapId: string): boolean {
   return targetMapId !== "tower-1";
+}
+
+/**
+ * 小説の場面で話す人を、その場に出す（人間の指示「イベント始まるならその相手が近くにいないと」、2026-10-05）。
+ * 話し手のうち、主人公・ついてくる仲間・声だけの人・すでに近く（7マス以内）にいる人をのぞいて、主人公のそばのあいているマスに出す。
+ * 少しはなれた所から歩いて出てきて、主人公のほうを向く。顔の絵がある人は、その人の絵で。会話が終わると、ふだんの人の並びにもどる（消える）。
+ */
+function bringSceneActors(commands: EventCommand[], at: { x: number; y: number }): void {
+  const party = new Set(["ユーリ", ...Object.keys(companionStats).map((id) => COMPANIONS[id]?.name ?? "")]);
+  const near = (n: { tileX: number; tileY: number }): boolean => Math.abs(n.tileX - at.x) <= 7 && Math.abs(n.tileY - at.y) <= 7;
+  const names = sceneSpeakers(commands, flags).filter(
+    (name) => !party.has(name) && !isVoiceOnly(name) && !npcs.some((n) => near(n) && firstSpeaker(n.commands).speaker === name),
+  );
+  const w = map.data.width, h = map.data.height;
+  const taken = new Set<number>([at.y * w + at.x]);
+  for (const n of npcs) taken.add(Math.round(n.tileY) * w + Math.round(n.tileX));
+  for (const e of map.data.exits ?? []) taken.add(e.tileY * w + e.tileX);
+  const free = (x: number, y: number): boolean => x > 0 && y > 0 && x < w - 1 && y < h - 1 && isWalkable(map, x, y) && !taken.has(y * w + x);
+  // 主人公の前・左右・うしろの近いマスから順に
+  const front = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[player.direction];
+  const order: Array<[number, number]> = [front as [number, number], [front[0] + 1, front[1] + (front[0] === 0 ? 0 : 1)], [front[0] - 1, front[1] - (front[0] === 0 ? 0 : 1)], [1, 0], [-1, 0], [0, 1], [0, -1], [2, 0], [-2, 0], [0, 2], [0, -2], [1, 1], [-1, 1], [1, -1], [-1, -1], [2, 1], [-2, 1], [2, -1], [-2, -1]];
+  const actors: Npc[] = [];
+  for (const name of names.slice(0, 4)) {
+    const spot = order.map(([dx, dy]) => ({ x: at.x + dx, y: at.y + dy })).find((c) => free(c.x, c.y));
+    if (!spot) break;
+    taken.add(spot.y * w + spot.x);
+    let hash = 0;
+    for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+    const id = `scene-actor-${hash.toString(36)}`;
+    const dx = Math.sign(spot.x - at.x), dy = Math.sign(spot.y - at.y);
+    const actor: Npc = {
+      id,
+      tileX: spot.x,
+      tileY: spot.y,
+      color: "#a08870",
+      ...(PORTRAITS[name] ? { spriteName: name } : {}),
+      commands: [{ type: "message", speaker: name, text: "……" }],
+      // 主人公から見て、外がわから歩いて出てくる
+      emerge: { dx: (dx || (dy ? 0 : 1)) * 2, dy: dy * 2 },
+    };
+    npcAppearedAt.set(id, performance.now());
+    actors.push(actor);
+  }
+  if (actors.length === 0) return;
+  npcs = [...npcs, ...actors];
+  for (const a of actors) faceNpc(a, a.tileX < at.x ? "right" : a.tileX > at.x ? "left" : a.tileY < at.y ? "down" : "up");
 }
 
 function switchMap(mapId: string, tileX: number, tileY: number): void {
@@ -2991,6 +3040,7 @@ const loop = createGameLoop({
       const scene = pendingScene(currentMapId, { x: centerTileX, y: centerTileY }, flags);
       if (scene) {
         flags[sceneSeenFlag(scene.id)] = true;
+        bringSceneActors(scene.commands, { x: centerTileX, y: centerTileY });
         dialogue.start(scene.commands);
         return;
       }

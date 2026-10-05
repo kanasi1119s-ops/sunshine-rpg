@@ -64,3 +64,25 @@ export function pendingScene(mapId: string, tile: { x: number; y: number }, flag
   }
   return null;
 }
+
+/** 場面で話す人の名前（出てくる順、重なりなし）。flags を渡すと、if は、いまのフラグで通る側だけを見る。 */
+export function sceneSpeakers(commands: readonly EventCommand[], flags?: Flags): string[] {
+  const out: string[] = [];
+  const walk = (cmds: readonly EventCommand[]): void => {
+    for (const c of cmds) {
+      if (c.type === "message" && c.speaker && !out.includes(c.speaker)) out.push(c.speaker);
+      if (c.type === "if") {
+        if (!flags || !!flags[c.flag] === c.equals) walk(c.then);
+        if (c.else && (!flags || !!flags[c.flag] !== c.equals)) walk(c.else);
+      }
+      if (c.type === "choice") for (const o of c.options) walk(o.commands);
+    }
+  };
+  walk(commands);
+  return out;
+}
+
+/** その場に姿を出さない話し手（声だけの人・名前の分からない声など）。 */
+export function isVoiceOnly(name: string): boolean {
+  return /声|？|\?|一同|ナレーション/.test(name);
+}

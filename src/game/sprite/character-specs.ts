@@ -92,7 +92,7 @@ interface NpcLike {
   commands: import("../event/types").EventCommand[];
 }
 
-function firstSpeaker(commands: import("../event/types").EventCommand[]): { found: boolean; speaker?: string } {
+export function firstSpeaker(commands: import("../event/types").EventCommand[]): { found: boolean; speaker?: string } {
   for (const c of commands) {
     if (c.type === "message") {
       return { found: true, speaker: c.speaker };
