@@ -2200,21 +2200,21 @@
  },
  {
   "id": "enc-islet-3-1-1",
-  "prompt": "a cracked red and white striped stone pillar monster floating, a large glowing glass lens on top, a rusty iron railing around it, stone shards orbiting, no animal, no fur",
+  "prompt": "a big sea snail monster with a tall red and white striped spiral shell whose tip glows like a lighthouse lamp, slimy grey body, eye stalks, side view",
   "status": "done",
   "key": "enemy:enc-islet-3-1-1",
   "kind": "mob",
   "name": "灯台のかけら",
   "zone": "islet-3-1",
   "level": 20,
-  "shape": "tall",
+  "shape": "ground",
   "tone": [
    200,
    120,
    100
   ],
-  "draft": "enc-islet-3-1-1_0",
-  "seed_base": 14003
+  "draft": "enc-islet-3-1-1_1",
+  "seed_base": 18004
  },
  {
   "id": "enc-islet-3-1-2",
@@ -2607,7 +2607,7 @@
  },
  {
   "id": "enc-world-1-0",
-  "prompt": "a field grasshopper-like insect with leaf-green armor plates and long jumping legs",
+  "prompt": "a big brown field locust monster with olive armored plates, a small horn on its head, thick spiked jumping legs, dusty folded wings, side view",
   "status": "done",
   "key": "enemy:enc-world-1-0",
   "kind": "mob",
@@ -2616,11 +2616,12 @@
   "level": 3,
   "shape": "ground",
   "tone": [
-   110,
-   160,
-   80
+   120,
+   100,
+   60
   ],
-  "draft": "enc-world-1-0_1"
+  "draft": "enc-world-1-0_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-1-1",
@@ -2642,7 +2643,7 @@
  },
  {
   "id": "enc-world-1-2",
-  "prompt": "a field mouse shadow, a small dark mouse with a long tail of smoke and wheat stuck in its fur",
+  "prompt": "a mouse-shaped shadow creature made of swirling black smoke, glowing amber eyes, golden wheat stalks stuck in its wispy body, a long tail dissolving into smoke",
   "status": "todo",
   "key": "enemy:enc-world-1-2",
   "kind": "mob",
@@ -2651,15 +2652,17 @@
   "level": 3,
   "shape": "ground",
   "tone": [
-   120,
-   100,
-   80
-  ]
+   50,
+   45,
+   55
+  ],
+  "draft": "enc-world-1-2_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-1-3",
   "prompt": "a meadow dew droplet, a floating clear drop holding a tiny clover and a rainbow gleam",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-1-3",
   "kind": "mob",
   "name": "草原のしずく",
@@ -2670,7 +2673,8 @@
    150,
    200,
    160
-  ]
+  ],
+  "draft": "enc-world-1-3_0"
  },
  {
   "id": "enc-world-1-4",
