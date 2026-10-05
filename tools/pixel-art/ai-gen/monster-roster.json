@@ -70,7 +70,7 @@
  {
   "id": "enc-touri-outskirts-4",
   "prompt": "a small lost bat with tattered purple wings, a lantern-like glowing belly and big round ears",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-touri-outskirts-4",
   "kind": "mob",
   "name": "迷いこうもり",
@@ -81,12 +81,13 @@
    90,
    70,
    110
-  ]
+  ],
+  "draft": "enc-touri-outskirts-4_0"
  },
  {
   "id": "enc-touri-outskirts-5",
   "prompt": "a small walking pebble creature made of grey cobblestones with stubby legs and a violet crack for a mouth",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-touri-outskirts-5",
   "kind": "mob",
   "name": "小石のかけら",
@@ -97,12 +98,13 @@
    125,
    120,
    115
-  ]
+  ],
+  "draft": "enc-touri-outskirts-5_0"
  },
  {
   "id": "enc-mugikano-water-source-0",
   "prompt": "a hovering water spirit shaped like a long teardrop with a glassy surface, a single dark eye and trailing water ribbons",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-mugikano-water-source-0",
   "kind": "mob",
   "name": "水のしずく影",
@@ -113,12 +115,13 @@
    90,
    140,
    190
-  ]
+  ],
+  "draft": "enc-mugikano-water-source-0_0"
  },
  {
   "id": "enc-mugikano-water-source-1",
   "prompt": "a creature made of cracked dry rice-paddy earth and withered rice stalks, with hollow glowing purple eyes, on four legs",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-mugikano-water-source-1",
   "kind": "mob",
   "name": "涸れ田の歪み",
@@ -129,12 +132,13 @@
    150,
    125,
    85
-  ]
+  ],
+  "draft": "enc-mugikano-water-source-1_0"
  },
  {
   "id": "enc-mugikano-water-source-2",
   "prompt": "a cave bat with a miner's broken lamp hanging from its neck, stone-grey fur, wide leathery wings",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-mugikano-water-source-2",
   "kind": "mob",
   "name": "採掘跡のこうもり",
@@ -145,44 +149,49 @@
    100,
    95,
    90
-  ]
+  ],
+  "draft": "enc-mugikano-water-source-2_0"
  },
  {
   "id": "enc-mugikano-water-source-3",
-  "prompt": "a long water-channel insect like a water strider with very long thin legs and a shiny blue-green shell",
-  "status": "todo",
+  "prompt": "a big water strider insect with a small slim body and very long thin bent legs spread wide, shiny blue-green shell, side view",
+  "status": "done",
   "key": "enemy:enc-mugikano-water-source-3",
   "kind": "mob",
   "name": "用水路の虫",
   "zone": "mugikano-water-source",
   "level": 4,
-  "shape": "long",
+  "shape": "ground",
   "tone": [
    70,
    120,
    110
-  ]
+  ],
+  "draft": "enc-mugikano-water-source-3_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-mugikano-water-source-4",
-  "prompt": "a lumpy creature of wet brown mud with pebbles stuck in it, two stalk eyes and dripping arms",
-  "status": "todo",
+  "prompt": "a lumpy blob creature of wet brown mud with pebbles stuck in it, two eyes on short stalks on top, dripping mud arms",
+  "status": "done",
   "key": "enemy:enc-mugikano-water-source-4",
   "kind": "mob",
   "name": "泥のしずく",
   "zone": "mugikano-water-source",
   "level": 4,
-  "shape": "big",
+  "shape": "tall",
   "tone": [
    110,
    85,
    60
-  ]
+  ],
+  "draft": "enc-mugikano-water-source-4_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-mugikano-water-source-5",
   "prompt": "an old stone well ring come alive, mossy bricks, a dark water mouth with a rope and bucket like a tongue",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-mugikano-water-source-5",
   "kind": "mob",
   "name": "井戸の石",
@@ -193,12 +202,13 @@
    120,
    125,
    110
-  ]
+  ],
+  "draft": "enc-mugikano-water-source-5_0"
  },
  {
   "id": "enc-garasuko-warehouse-0",
-  "prompt": "a fat cargo rat with a burlap sack on its back, scarred ears, glowing amber eyes",
-  "status": "todo",
+  "prompt": "a fat brown cargo rat monster with a burlap sack tied on its back, scarred ears, long tail, glowing amber eyes, on four legs, side view",
+  "status": "done",
   "key": "enemy:enc-garasuko-warehouse-0",
   "kind": "mob",
   "name": "積荷ねずみ",
@@ -209,28 +219,32 @@
    115,
    95,
    75
-  ]
+  ],
+  "draft": "enc-garasuko-warehouse-0_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-garasuko-warehouse-1",
-  "prompt": "a damp shapeless shadow seeping from wet wooden planks, mold spots, many small dim eyes",
-  "status": "todo",
+  "prompt": "a hunched creature made of rotten wet wooden planks and dark green mold, dripping murky water, many small glowing yellow eyes in the gaps",
+  "status": "done",
   "key": "enemy:enc-garasuko-warehouse-1",
   "kind": "mob",
   "name": "湿った歪み",
   "zone": "garasuko-warehouse",
   "level": 6,
-  "shape": "float",
+  "shape": "big",
   "tone": [
    70,
    85,
    80
-  ]
+  ],
+  "draft": "enc-garasuko-warehouse-1_1",
+  "seed_base": 10002
  },
  {
   "id": "enc-garasuko-warehouse-2",
   "prompt": "a living shadow shaped like a small wooden crate with spider-like legs of dark smoke, iron corner brackets",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-garasuko-warehouse-2",
   "kind": "mob",
   "name": "木箱の影",
@@ -241,12 +255,13 @@
    95,
    80,
    65
-  ]
+  ],
+  "draft": "enc-garasuko-warehouse-2_0"
  },
  {
   "id": "enc-garasuko-warehouse-3",
   "prompt": "a beaver-like gnawing creature with huge front teeth, coils of chewed hemp rope wrapped around its body",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-garasuko-warehouse-3",
   "kind": "mob",
   "name": "縄かじり",
@@ -257,12 +272,13 @@
    140,
    110,
    70
-  ]
+  ],
+  "draft": "enc-garasuko-warehouse-3_0"
  },
  {
   "id": "enc-garasuko-warehouse-4",
   "prompt": "a walking wine barrel creature with iron hoops, stone-heavy legs and a cork for a nose, wood grain body",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-garasuko-warehouse-4",
   "kind": "mob",
   "name": "樽の石",
@@ -273,12 +289,13 @@
    130,
    90,
    55
-  ]
+  ],
+  "draft": "enc-garasuko-warehouse-4_0"
  },
  {
   "id": "enc-garasuko-warehouse-5",
   "prompt": "a dusty warehouse moth with grey-brown patterned wings, feathery antennae and a lamp-glow spot on each wing",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-garasuko-warehouse-5",
   "kind": "mob",
   "name": "倉庫の羽虫",
@@ -289,7 +306,8 @@
    150,
    135,
    110
-  ]
+  ],
+  "draft": "enc-garasuko-warehouse-5_0"
  },
  {
   "id": "enc-tetsukusari-mine-0",
@@ -305,7 +323,7 @@
  {
   "id": "enc-tetsukusari-mine-1",
   "prompt": "a tall thin shadow wearing a broken miner's helmet, long arms dragging a pickaxe, coal-black body",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tetsukusari-mine-1",
   "kind": "mob",
   "name": "坑道の影",
@@ -316,12 +334,13 @@
    55,
    50,
    55
-  ]
+  ],
+  "draft": "enc-tetsukusari-mine-1_0"
  },
  {
   "id": "enc-tetsukusari-mine-2",
   "prompt": "a glowing ore beetle with a crystal on its back that shines like a lamp, orange-gold shell",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tetsukusari-mine-2",
   "kind": "mob",
   "name": "灯り石の虫",
@@ -332,28 +351,31 @@
    190,
    140,
    60
-  ]
+  ],
+  "draft": "enc-tetsukusari-mine-2_0"
  },
  {
   "id": "enc-tetsukusari-mine-3",
-  "prompt": "a rusty mine cart machine walking on four mechanical legs, a furnace mouth with burning coal, rivets",
-  "status": "todo",
+  "prompt": "a rusty iron mine cart monster walking on four thick mechanical legs, a glowing furnace mouth full of burning coal at the front, rivets",
+  "status": "done",
   "key": "enemy:enc-tetsukusari-mine-3",
   "kind": "mob",
   "name": "鉱車の機械",
   "zone": "tetsukusari-mine",
   "level": 8,
-  "shape": "ground",
+  "shape": "big",
   "tone": [
    120,
    80,
    60
-  ]
+  ],
+  "draft": "enc-tetsukusari-mine-3_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-tetsukusari-mine-4",
   "prompt": "a creature formed from a pile of fallen rocks and timber supports, one glowing red eye between the stones",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tetsukusari-mine-4",
   "kind": "mob",
   "name": "落盤の石",
@@ -364,28 +386,31 @@
    110,
    100,
    95
-  ]
+  ],
+  "draft": "enc-tetsukusari-mine-4_0"
  },
  {
   "id": "enc-tetsukusari-mine-5",
-  "prompt": "a pale translucent echo of a miner with a lantern, faded overalls, empty glowing eyes, floating",
-  "status": "todo",
+  "prompt": "a floating pale blue phantom creature wearing a dented miner's helmet, holding a dim lantern, long ragged wisps for a body, hollow glowing eye holes",
+  "status": "done",
   "key": "enemy:enc-tetsukusari-mine-5",
   "kind": "mob",
   "name": "鉱夫の残響",
   "zone": "tetsukusari-mine",
   "level": 8,
-  "shape": "tall",
+  "shape": "float",
   "tone": [
    160,
    170,
    175
-  ]
+  ],
+  "draft": "enc-tetsukusari-mine-5_x0",
+  "seed_base": 10002
  },
  {
   "id": "enc-sanone-camp-0",
   "prompt": "a sand-burrowing creature like a mole with a flat shovel-shaped head and sandy plated back, peeking out of a sand mound",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-sanone-camp-0",
   "kind": "mob",
   "name": "砂ぬけ",
@@ -396,12 +421,13 @@
    190,
    160,
    110
-  ]
+  ],
+  "draft": "enc-sanone-camp-0_0"
  },
  {
   "id": "enc-sanone-camp-1",
-  "prompt": "a swirling wind spirit made of sand streaks and a torn caravan cloth, two bright eyes in the swirl",
-  "status": "todo",
+  "prompt": "a whirling sand spirit, a swirling vortex of golden sand with a torn striped cloth caught in it, two bright eyes in the whirl",
+  "status": "done",
   "key": "enemy:enc-sanone-camp-1",
   "kind": "mob",
   "name": "風の影",
@@ -412,12 +438,14 @@
    200,
    175,
    130
-  ]
+  ],
+  "draft": "enc-sanone-camp-1_1",
+  "seed_base": 14003
  },
  {
   "id": "enc-sanone-camp-2",
   "prompt": "a shadowy desert scorpion with a translucent dark body, a pale glowing stinger and sand-colored pincers",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-sanone-camp-2",
   "kind": "mob",
   "name": "砂サソリの影",
@@ -428,12 +456,13 @@
    110,
    90,
    70
-  ]
+  ],
+  "draft": "enc-sanone-camp-2_x0"
  },
  {
   "id": "enc-sanone-camp-3",
   "prompt": "a heat-shimmering droplet spirit of sunlight with a dry cracked crust and a burning core, floating",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-sanone-camp-3",
   "kind": "mob",
   "name": "日照りのしずく",
@@ -444,12 +473,13 @@
    230,
    180,
    90
-  ]
+  ],
+  "draft": "enc-sanone-camp-3_0"
  },
  {
   "id": "enc-sanone-camp-4",
   "prompt": "a creature made of bleached animal bones fused with sandstone, horned skull head, walking on four bone legs",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-sanone-camp-4",
   "kind": "mob",
   "name": "骨の石",
@@ -460,12 +490,13 @@
    210,
    200,
    175
-  ]
+  ],
+  "draft": "enc-sanone-camp-4_0"
  },
  {
   "id": "enc-sanone-camp-5",
   "prompt": "a sandstorm bird with ragged tan feathers that shed sand, a long hooked beak and goggle-like eye rings",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-sanone-camp-5",
   "kind": "mob",
   "name": "砂嵐の羽",
@@ -476,12 +507,13 @@
    180,
    145,
    95
-  ]
+  ],
+  "draft": "enc-sanone-camp-5_0"
  },
  {
   "id": "enc-kiri-archive-0",
-  "prompt": "a silverfish shadow creature with a long segmented body made of torn paper scraps, many legs, ink spots",
-  "status": "todo",
+  "prompt": "a big silverfish insect monster made of torn paper scraps with ink stains, thick segmented body, many small legs, long antennae, side view",
+  "status": "done",
   "key": "enemy:enc-kiri-archive-0",
   "kind": "mob",
   "name": "紙魚の影",
@@ -492,28 +524,32 @@
    170,
    175,
    165
-  ]
+  ],
+  "draft": "enc-kiri-archive-0_x0",
+  "seed_base": 6001
  },
  {
   "id": "enc-kiri-archive-1",
-  "prompt": "a whispering mist spirit with a long trailing body, a faint mouth and floating letters of light around it",
-  "status": "todo",
+  "prompt": "a coiling serpent made of pale grey fog and mist, a small round head with two dim blue eyes, trailing wisps, no human features",
+  "status": "done",
   "key": "enemy:enc-kiri-archive-1",
   "kind": "mob",
   "name": "霧のささやき",
   "zone": "kiri-archive",
   "level": 12,
-  "shape": "float",
+  "shape": "long",
   "tone": [
    180,
    205,
    200
-  ]
+  ],
+  "draft": "enc-kiri-archive-1_0",
+  "seed_base": 10002
  },
  {
   "id": "enc-kiri-archive-2",
   "prompt": "a bookworm insect with a hard leather book-cover shell, gold page edges and a curling bookmark tail",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kiri-archive-2",
   "kind": "mob",
   "name": "古文書の虫",
@@ -524,12 +560,13 @@
    120,
    85,
    60
-  ]
+  ],
+  "draft": "enc-kiri-archive-2_1"
  },
  {
   "id": "enc-kiri-archive-3",
   "prompt": "a floating black ink drop creature with brush-stroke tendrils, a single white eye and splatter trail",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kiri-archive-3",
   "kind": "mob",
   "name": "墨のしずく",
@@ -540,12 +577,13 @@
    35,
    35,
    50
-  ]
+  ],
+  "draft": "enc-kiri-archive-3_0"
  },
  {
   "id": "enc-kiri-archive-4",
   "prompt": "a bookshelf guardian made of a tall wooden shelf with books, carved wooden arms holding a quill spear",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kiri-archive-4",
   "kind": "mob",
   "name": "書架の番兵",
@@ -556,12 +594,13 @@
    110,
    80,
    55
-  ]
+  ],
+  "draft": "enc-kiri-archive-4_1"
  },
  {
   "id": "enc-kiri-archive-5",
   "prompt": "a fog-winged owl-like spirit with misty feathers fading at the edges and pale teal glowing eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kiri-archive-5",
   "kind": "mob",
   "name": "霧の羽",
@@ -572,12 +611,13 @@
    170,
    190,
    190
-  ]
+  ],
+  "draft": "enc-kiri-archive-5_1"
  },
  {
   "id": "enc-shimohara-facility-0",
   "prompt": "a frost-covered distortion shaped like a crouching beast of ice shards and dark violet cracks",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-shimohara-facility-0",
   "kind": "mob",
   "name": "霜の歪み",
@@ -588,12 +628,13 @@
    170,
    200,
    225
-  ]
+  ],
+  "draft": "enc-shimohara-facility-0_1"
  },
  {
   "id": "enc-shimohara-facility-1",
   "prompt": "a shadow of an ice soldier wearing a cracked frozen helmet and long coat, holding an icicle rifle",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-shimohara-facility-1",
   "kind": "mob",
   "name": "氷の兵の影",
@@ -604,7 +645,8 @@
    120,
    140,
    165
-  ]
+  ],
+  "draft": "enc-shimohara-facility-1_0"
  },
  {
   "id": "enc-shimohara-facility-2",
@@ -619,8 +661,8 @@
  },
  {
   "id": "enc-shimohara-facility-3",
-  "prompt": "a creature made of tall frost column crystals growing from frozen soil, with a cold blue core",
-  "status": "todo",
+  "prompt": "a spiky monster of deep blue and teal ice crystal shards on a lump of dark frozen soil, a glowing cold core, small dark eyes",
+  "status": "done",
   "key": "enemy:enc-shimohara-facility-3",
   "kind": "mob",
   "name": "霜柱の結晶",
@@ -628,15 +670,17 @@
   "level": 14,
   "shape": "big",
   "tone": [
-   190,
-   220,
-   240
-  ]
+   60,
+   95,
+   140
+  ],
+  "draft": "enc-shimohara-facility-3_0",
+  "seed_base": 10002
  },
  {
   "id": "enc-shimohara-facility-4",
   "prompt": "a long centipede-like insect crawling along cold metal pipes, frosty grey segments and blue joint lights",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-shimohara-facility-4",
   "kind": "mob",
   "name": "冷たい配管の虫",
@@ -647,12 +691,13 @@
    130,
    150,
    160
-  ]
+  ],
+  "draft": "enc-shimohara-facility-4_0"
  },
  {
   "id": "enc-shimohara-facility-5",
-  "prompt": "a pale shadow of a bird with white frost feathers and smoky dark edges, piercing pale eyes",
-  "status": "todo",
+  "prompt": "a pale owl-like bird monster with white frost feathers and smoky dark wing edges, full body with head and talons, piercing pale eyes",
+  "status": "done",
   "key": "enemy:enc-shimohara-facility-5",
   "kind": "mob",
   "name": "白い羽の影",
@@ -663,12 +708,14 @@
    205,
    215,
    225
-  ]
+  ],
+  "draft": "enc-shimohara-facility-5_x0",
+  "seed_base": 6001
  },
  {
   "id": "enc-fushima-base-0",
   "prompt": "a cloud shadow creature, a dark storm cloud body with small lightning eyes and wispy arms",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-fushima-base-0",
   "kind": "mob",
   "name": "雲の影",
@@ -679,12 +726,13 @@
    120,
    125,
    150
-  ]
+  ],
+  "draft": "enc-fushima-base-0_1"
  },
  {
   "id": "enc-fushima-base-1",
   "prompt": "a tangle of old electrical wires and cables forming a twisted creature with sparking ends",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-fushima-base-1",
   "kind": "mob",
   "name": "配線の歪み",
@@ -695,12 +743,13 @@
    90,
    90,
    100
-  ]
+  ],
+  "draft": "enc-fushima-base-1_0"
  },
  {
   "id": "enc-fushima-base-2",
   "prompt": "a floating surveillance eye machine, a brass ring frame with a large glass lens and small propellers",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-fushima-base-2",
   "kind": "mob",
   "name": "監視の目",
@@ -711,12 +760,13 @@
    170,
    140,
    80
-  ]
+  ],
+  "draft": "enc-fushima-base-2_0"
  },
  {
   "id": "enc-fushima-base-3",
   "prompt": "a floating stone with a small tree growing on top and hanging roots, two glowing slits in the rock",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-fushima-base-3",
   "kind": "mob",
   "name": "浮き石",
@@ -727,12 +777,13 @@
    120,
    115,
    105
-  ]
+  ],
+  "draft": "enc-fushima-base-3_1"
  },
  {
   "id": "enc-fushima-base-4",
   "prompt": "a small fluffy cloud insect with translucent wings and a cotton-like body, tiny antenna lights",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-fushima-base-4",
   "kind": "mob",
   "name": "雲の羽虫",
@@ -743,12 +794,13 @@
    215,
    220,
    235
-  ]
+  ],
+  "draft": "enc-fushima-base-4_1"
  },
  {
   "id": "enc-fushima-base-5",
   "prompt": "a sentry soldier in pale blue armor with a long spyglass helmet visor and a halberd",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-fushima-base-5",
   "kind": "mob",
   "name": "見張りの兵",
@@ -759,12 +811,13 @@
    110,
    125,
    160
-  ]
+  ],
+  "draft": "enc-fushima-base-5_0"
  },
  {
   "id": "enc-deep-1-0",
   "prompt": "a ghostly echo of an ancient war, a tattered banner wrapped around a faint armored figure, faceless",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-1-0",
   "kind": "mob",
   "name": "大乱期の残響",
@@ -775,12 +828,13 @@
    150,
    160,
    180
-  ]
+  ],
+  "draft": "enc-deep-1-0_0"
  },
  {
   "id": "enc-deep-1-1",
   "prompt": "the memory of an ice soldier, a translucent icy figure with a broken lance, cracks of blue light",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-1-1",
   "kind": "mob",
   "name": "氷の兵の記憶",
@@ -791,12 +845,13 @@
    160,
    195,
    220
-  ]
+  ],
+  "draft": "enc-deep-1-1_x0"
  },
  {
   "id": "enc-deep-1-2",
   "prompt": "a shadow creature formed around a broken sword stuck in its back, dark smoke body, rusty blade edges",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-1-2",
   "kind": "mob",
   "name": "折れた剣の影",
@@ -807,12 +862,13 @@
    70,
    70,
    80
-  ]
+  ],
+  "draft": "enc-deep-1-2_1"
  },
  {
   "id": "enc-deep-1-3",
   "prompt": "a fragment of a rusty round shield that floats and spins, with a rust-red eye in the boss and chipped edges",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-1-3",
   "kind": "mob",
   "name": "錆びた盾のかけら",
@@ -823,12 +879,13 @@
    140,
    90,
    60
-  ]
+  ],
+  "draft": "enc-deep-1-3_1"
  },
  {
   "id": "enc-deep-1-4",
   "prompt": "an old battlefield beetle with a helmet-like shell and arrowheads stuck in its back, dark bronze color",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-1-4",
   "kind": "mob",
   "name": "古戦場の虫",
@@ -839,12 +896,13 @@
    110,
    95,
    70
-  ]
+  ],
+  "draft": "enc-deep-1-4_0"
  },
  {
   "id": "enc-deep-1-5",
-  "prompt": "a floating frozen tear drop of ice with a sad face reflection inside and a frosty halo",
-  "status": "todo",
+  "prompt": "a floating teardrop-shaped creature of deep blue ice with a frosty ring around it and two small sad glowing eyes",
+  "status": "done",
   "key": "enemy:enc-deep-1-5",
   "kind": "mob",
   "name": "凍った涙",
@@ -852,15 +910,17 @@
   "level": 22,
   "shape": "float",
   "tone": [
-   185,
-   215,
-   235
-  ]
+   70,
+   110,
+   160
+  ],
+  "draft": "enc-deep-1-5_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-deep-2-0",
   "prompt": "an echo of silence, a hollow hooded figure with a covered mouth, grey robes fading into dust",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-2-0",
   "kind": "mob",
   "name": "静まりの残響",
@@ -871,12 +931,13 @@
    140,
    135,
    130
-  ]
+  ],
+  "draft": "enc-deep-2-0_1"
  },
  {
   "id": "enc-deep-2-1",
   "prompt": "a shadow of an assembly hall, a creature made of stacked carved chairs and a podium with a dark face",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-2-1",
   "kind": "mob",
   "name": "議場の影",
@@ -887,12 +948,13 @@
    100,
    75,
    55
-  ]
+  ],
+  "draft": "enc-deep-2-1_0"
  },
  {
   "id": "enc-deep-2-2",
-  "prompt": "a floating blank nameplate with smeared golden letters, ribbons and a blurred face, ghostly",
-  "status": "todo",
+  "prompt": "a floating ghostly creature made of torn golden ribbons wrapped around a blank old wooden plaque, faded scratches, two hollow glowing eyes",
+  "status": "done",
   "key": "enemy:enc-deep-2-2",
   "kind": "mob",
   "name": "消えた名前",
@@ -903,28 +965,32 @@
    200,
    180,
    120
-  ]
+  ],
+  "seed_base": 6001,
+  "draft": "enc-deep-2-2_1"
  },
  {
   "id": "enc-deep-2-3",
-  "prompt": "a heavy stone seal creature, a carved square seal stamp walking on short legs, red ink on its base",
-  "status": "todo",
+  "prompt": "a walking stamp creature, a heavy carved square granite block on short stubby stone legs, red ink dripping from its flat bottom, carved symbols, two small glowing eyes",
+  "status": "done",
   "key": "enemy:enc-deep-2-3",
   "kind": "mob",
   "name": "印章の石",
   "zone": "deep-2",
   "level": 23,
-  "shape": "ground",
+  "shape": "big",
   "tone": [
    150,
    140,
    125
-  ]
+  ],
+  "draft": "enc-deep-2-3_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-deep-2-4",
   "prompt": "a scribe insect with quill-like antennae, a parchment-colored body and ink-dipped legs",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-2-4",
   "kind": "mob",
   "name": "書記の虫",
@@ -935,12 +1001,13 @@
    190,
    170,
    130
-  ]
+  ],
+  "draft": "enc-deep-2-4_0"
  },
  {
   "id": "enc-deep-2-5",
   "prompt": "a floating golden liquid droplet creature with a metallic sheen, coins orbiting it",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-2-5",
   "kind": "mob",
   "name": "黄金のしずく",
@@ -951,12 +1018,13 @@
    220,
    180,
    70
-  ]
+  ],
+  "draft": "enc-deep-2-5_1"
  },
  {
   "id": "enc-deep-3-0",
   "prompt": "a fragment of distortion, jagged floating shards of purple glass orbiting a dark core with an eye",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-3-0",
   "kind": "mob",
   "name": "歪みの断片",
@@ -967,28 +1035,31 @@
    140,
    80,
    170
-  ]
+  ],
+  "draft": "enc-deep-3-0_1"
  },
  {
   "id": "enc-deep-3-1",
-  "prompt": "a lingering scent of dried water, a thin wispy ghost of steam above a cracked bowl",
+  "prompt": "a small spirit of pale steam curling up out of a cracked brown clay bowl, the steam shaped like a little ghost with two dim eyes",
   "status": "todo",
   "key": "enemy:enc-deep-3-1",
   "kind": "mob",
   "name": "水涸れの残り香",
   "zone": "deep-3",
   "level": 24,
-  "shape": "float",
+  "shape": "big",
   "tone": [
-   180,
-   175,
-   160
-  ]
+   120,
+   90,
+   70
+  ],
+  "draft": "enc-deep-3-1_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-deep-3-2",
   "prompt": "a fragment of a stone guardian, a broken stone arm and half a helmet held together by violet light",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-3-2",
   "kind": "mob",
   "name": "番人のかけら",
@@ -999,11 +1070,12 @@
    130,
    125,
    130
-  ]
+  ],
+  "draft": "enc-deep-3-2_1"
  },
  {
   "id": "enc-deep-3-3",
-  "prompt": "a cluster of violet crystals that walks on crystal legs, light refracting inside",
+  "prompt": "a cluster of sharp violet crystal spikes walking on four thin crystal legs, light refracting inside, no fur",
   "status": "todo",
   "key": "enemy:enc-deep-3-3",
   "kind": "mob",
@@ -1012,15 +1084,17 @@
   "level": 24,
   "shape": "ground",
   "tone": [
-   160,
-   100,
-   190
-  ]
+   110,
+   70,
+   150
+  ],
+  "draft": "enc-deep-3-3_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-deep-3-4",
   "prompt": "a thirsty dark droplet creature with a cracked dry shell and a wide gaping mouth",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-3-4",
   "kind": "mob",
   "name": "渇きのしずく",
@@ -1031,12 +1105,13 @@
    100,
    60,
    80
-  ]
+  ],
+  "draft": "enc-deep-3-4_0"
  },
  {
   "id": "enc-deep-3-5",
   "prompt": "a twisted wing creature, a single huge bent wing with eyes on its feathers, purple and black",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-3-5",
   "kind": "mob",
   "name": "歪んだ羽",
@@ -1047,12 +1122,13 @@
    110,
    70,
    130
-  ]
+  ],
+  "draft": "enc-deep-3-5_0"
  },
  {
   "id": "enc-deep-4-0",
   "prompt": "a primordial droplet, a luminous pearl-like drop with swirling starlight inside and a soft halo",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-4-0",
   "kind": "mob",
   "name": "初源のしずく",
@@ -1063,7 +1139,8 @@
    200,
    195,
    230
-  ]
+  ],
+  "draft": "enc-deep-4-0_1"
  },
  {
   "id": "enc-deep-4-1",
@@ -1339,7 +1416,7 @@
  },
  {
   "id": "enc-tower-3-0",
-  "prompt": "a fragment of a golden ring floating with engraved runes and a light seam",
+  "prompt": "a fragment of a golden ring floating with engraved patterns and a light seam",
   "status": "todo",
   "key": "enemy:enc-tower-3-0",
   "kind": "mob",
@@ -1351,7 +1428,8 @@
    210,
    180,
    90
-  ]
+  ],
+  "seed_base": 6001
  },
  {
   "id": "enc-tower-3-1",
@@ -1515,7 +1593,7 @@
  },
  {
   "id": "enc-kanou-1-5",
-  "prompt": "a boundary marker stone, a tall carved milestone with faded signs and an eye-shaped hole",
+  "prompt": "a boundary marker stone, a tall carved milestone with faded carvings and an eye-shaped hole",
   "status": "todo",
   "key": "enemy:enc-kanou-1-5",
   "kind": "mob",
@@ -1527,7 +1605,8 @@
    125,
    120,
    135
-  ]
+  ],
+  "seed_base": 6001
  },
  {
   "id": "enc-kanou-2-0",
@@ -2411,7 +2490,7 @@
  },
  {
   "id": "enc-world-1-1",
-  "prompt": "a roadside shadow, a hunched dark figure wearing a travel hat and holding a broken signpost",
+  "prompt": "a roadside shadow, a hunched dark figure wearing a travel hat and holding a broken wooden post",
   "status": "todo",
   "key": "enemy:enc-world-1-1",
   "kind": "mob",
@@ -2423,7 +2502,8 @@
    80,
    75,
    70
-  ]
+  ],
+  "seed_base": 6001
  },
  {
   "id": "enc-world-1-2",
@@ -3568,7 +3648,7 @@
  {
   "id": "zenkan",
   "prompt": "a colossal floating halo ring of cracked ancient stone with golden glowing seams, a large calm eye floating in the center of the ring, rays of light, monster, fantasy art",
-  "status": "draft",
+  "status": "done",
   "key": "boss:zenkan",
   "kind": "boss",
   "name": "全観",
@@ -3579,6 +3659,7 @@
    170,
    95
   ],
-  "neg_extra": "jewelry, finger ring, wedding ring, small object, metal band, gemstone"
+  "neg_extra": "jewelry, finger ring, wedding ring, small object, metal band, gemstone",
+  "draft": "zenkan_1"
  }
 ]

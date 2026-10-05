@@ -43,11 +43,16 @@ if any('layout' in j for j in jobs):
   img2img=StableDiffusionImg2ImgPipeline(**pipe.components)
 for j in jobs:
   t=time.time()
+  meta=json.dumps([j['seed'],j['prompt'],j.get('layout'),os.environ.get('STEPS')]+([int(os.environ['DRAFT_SIZE'])] if os.environ.get('DRAFT_SIZE') else []),ensure_ascii=False)
+  if os.environ.get('SKIP_EXISTING') and os.path.exists(f"raw/{j['name']}.png") and os.path.exists(f"raw/{j['name']}.png.meta") and open(f"raw/{j['name']}.png.meta").read()==meta:
+    print(j['name'],'描いてあるので飛ばす',flush=True); continue   # 途中で止まった続きから（同じ種・同じ指示なら同じ絵になる）
   g=torch.Generator().manual_seed(j['seed'])
   if 'layout' in j:
     L=j['layout']; init=make_layout(L.get('shape','ground'),tuple(L.get('tone',(110,100,95))),j['seed'])
+    if os.environ.get('DRAFT_SIZE'):   # 下絵を小さく描く（速い。雑魚は96まで縮めるので384で足りる。2026-10-05）
+      S=int(os.environ['DRAFT_SIZE']); init=init.resize((S,S))
     init.save(f"raw/{j['name']}.layout.png")
-    im=img2img(prompt=j['prompt'],negative_prompt=j.get('neg',NEG),image=init,strength=L.get('strength',0.9),num_inference_steps=j.get('steps_real',24) if REAL else j.get('steps_layout',9),guidance_scale=j.get('cfg_real',7.0) if REAL else j.get('cfg',1.5),generator=g).images[0]
+    im=img2img(prompt=j['prompt'],negative_prompt=j.get('neg',NEG),image=init,strength=L.get('strength',0.9),num_inference_steps=int(os.environ.get('STEPS') or j.get('steps_real',24)) if REAL else j.get('steps_layout',9),guidance_scale=j.get('cfg_real',7.0) if REAL else j.get('cfg',1.5),generator=g).images[0]
   else:
     im=pipe(prompt=j['prompt'],negative_prompt=j.get('neg',NEG),num_inference_steps=j.get('steps_real',22) if REAL else j.get('steps',6),guidance_scale=j.get('cfg_real',7.0) if REAL else j.get('cfg',1.5),width=j.get('w',512),height=j.get('h',512),generator=g).images[0]
-  im.save(f"raw/{j['name']}.png"); print(j['name'],round(time.time()-t,1),flush=True)
+  im.save(f"raw/{j['name']}.png"); open(f"raw/{j['name']}.png.meta","w").write(meta); print(j['name'],round(time.time()-t,1),flush=True)
