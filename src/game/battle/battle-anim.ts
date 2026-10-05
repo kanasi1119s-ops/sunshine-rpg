@@ -32,7 +32,7 @@ export interface BattleAnimSpec {
 }
 
 const MOTION_OF_WEAPON: Record<WeaponType, WeaponMotion> = { sword: "slash", dagger: "stab", staff: "cast", bow: "shoot", axe: "chop", spear: "thrust" };
-export const MOTION_DURATION: Record<WeaponMotion, number> = { slash: 520, stab: 420, cast: 760, shoot: 760, chop: 620, thrust: 480 };
+export const MOTION_DURATION: Record<WeaponMotion, number> = { slash: 520, stab: 420, cast: 1500, shoot: 760, chop: 620, thrust: 480 };
 
 /** 魔法使い枠。たたかう以外の技は、杖（槍）をかざして唱える動きになる。 */
 const CASTERS = new Set(["mina", "ayame"]);
@@ -67,7 +67,7 @@ function byName(state: BattleState, name: string): Combatant | undefined {
 export function battleAnimFor(text: string, state: BattleState, weaponOf: (id: string) => WeaponType | undefined): BattleAnimSpec | null {
   const make = (p: Partial<BattleAnimSpec> & { targetIds: string[] }): BattleAnimSpec => {
     const motion = p.motion ?? null;
-    return { actorId: undefined, motion, fx: null, hurt: false, durationMs: motion ? MOTION_DURATION[motion] : 600, fxStart: motion === "cast" ? 0.4 : motion === "shoot" ? 0.55 : motion ? 0.5 : 0, ...p };
+    return { actorId: undefined, motion, fx: null, hurt: false, durationMs: motion ? MOTION_DURATION[motion] : 900, fxStart: motion === "cast" ? 0.4 : motion === "shoot" ? 0.55 : motion ? 0.5 : 0, ...p };
   };
   const allyActor = (name: string): Combatant | undefined => {
     const c = byName(state, name);
@@ -86,7 +86,7 @@ export function battleAnimFor(text: string, state: BattleState, weaponOf: (id: s
       const caster = byName(state, actorName);
       // 敵の魔法: 敵が光をためて、味方の上にエフェクトが出て、味方がのけぞる
       if (skillName !== "たたかう" && caster?.isEnemy) {
-        return make({ casterId: caster.id, fromId: caster.id, area: isAreaMove(state, actorName, skillName), targetIds: [target.id], fx: fxForSkillName(skillName), hurt: true, durationMs: 1100, fxStart: 0.42 });
+        return make({ casterId: caster.id, fromId: caster.id, area: isAreaMove(state, actorName, skillName), targetIds: [target.id], fx: fxForSkillName(skillName), hurt: true, durationMs: 2000, fxStart: 0.45 });
       }
       // 敵の攻撃: 味方がのけぞる
       return make({ targetIds: [target.id], hurt: true, durationMs: 420 });
@@ -103,7 +103,7 @@ export function battleAnimFor(text: string, state: BattleState, weaponOf: (id: s
       motion: caster ? "cast" : MOTION_OF_WEAPON[weapon ?? "sword"],
       targetIds: [target.id],
       fx: fxForSkillName(skillName),
-      ...(caster ? { durationMs: 1100, fxStart: 0.42 } : {}),
+      ...(caster ? { durationMs: 2000, fxStart: 0.45 } : {}),
     });
   }
 
@@ -119,7 +119,7 @@ export function battleAnimFor(text: string, state: BattleState, weaponOf: (id: s
   const item = /^(.+?) は (.+?) を使った。(.+?) の/.exec(text);
   if (item) {
     const target = byName(state, item[3]);
-    return target ? make({ targetIds: [target.id], fx: "heal", durationMs: 600, fxStart: 0 }) : null;
+    return target ? make({ targetIds: [target.id], fx: "heal", durationMs: 900, fxStart: 0 }) : null;
   }
   // 強化・弱体
   const mod = /^(.+?) の (.+?)！ (.+) の(?:こうげき|しゅび|すばやさ)が(上がった|下がった)$/.exec(text);

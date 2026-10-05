@@ -2468,7 +2468,7 @@ const loop = createGameLoop({
           let animSpec = anim;
           if (anim?.fx && anim.fromId && (anim.casterId || anim.motion === "cast")) {
             if (lastCast && lastCast.fromId === anim.fromId && lastCast.fx === anim.fx && anim.area) {
-              animSpec = { ...anim, fxStart: 0, durationMs: 760, motion: null, casterId: undefined };
+              animSpec = { ...anim, fxStart: 0, durationMs: 1300, motion: null, casterId: undefined };
             }
             lastCast = { fromId: anim.fromId, fx: anim.fx };
           }
