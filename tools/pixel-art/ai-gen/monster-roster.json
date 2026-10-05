@@ -972,7 +972,7 @@
  {
   "id": "enc-deep-2-3",
   "prompt": "a walking stamp creature, a heavy carved square granite block on short stubby stone legs, red ink dripping from its flat bottom, carved symbols, two small glowing eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-2-3",
   "kind": "mob",
   "name": "印章の石",
@@ -1024,7 +1024,7 @@
  {
   "id": "enc-deep-3-0",
   "prompt": "a fragment of distortion, jagged floating shards of purple glass orbiting a dark core with an eye",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-3-0",
   "kind": "mob",
   "name": "歪みの断片",
@@ -1035,12 +1035,13 @@
    140,
    80,
    170
-  ]
+  ],
+  "draft": "enc-deep-3-0_1"
  },
  {
   "id": "enc-deep-3-1",
   "prompt": "a lingering scent of dried water, a thin wispy ghost of steam above a cracked bowl",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-3-1",
   "kind": "mob",
   "name": "水涸れの残り香",
@@ -1051,12 +1052,13 @@
    180,
    175,
    160
-  ]
+  ],
+  "draft": "enc-deep-3-1_1"
  },
  {
   "id": "enc-deep-3-2",
   "prompt": "a fragment of a stone guardian, a broken stone arm and half a helmet held together by violet light",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-3-2",
   "kind": "mob",
   "name": "番人のかけら",
@@ -1067,12 +1069,13 @@
    130,
    125,
    130
-  ]
+  ],
+  "draft": "enc-deep-3-2_1"
  },
  {
   "id": "enc-deep-3-3",
   "prompt": "a cluster of violet crystals that walks on crystal legs, light refracting inside",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-3-3",
   "kind": "mob",
   "name": "紫の結晶",
@@ -1083,7 +1086,8 @@
    160,
    100,
    190
-  ]
+  ],
+  "draft": "enc-deep-3-3_1"
  },
  {
   "id": "enc-deep-3-4",
