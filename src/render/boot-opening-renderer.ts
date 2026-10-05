@@ -152,7 +152,7 @@ function drawBigBang(ctx: Ctx, w: number, h: number, sinceHit: number): void {
 }
 
 /** 起動のオープニング。 */
-export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, h: number, title: string): void {
+export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, h: number, title: string, logoScale = 2): void {
   if (!state.open) return;
   const ms = state.ms;
   ctx.fillStyle = "#000";
@@ -191,13 +191,13 @@ export function renderBootOpening(ctx: Ctx, state: BootOpeningState, w: number, 
     // 光の筋は、文字が現れてから強まる
     const after = ms - REVEAL.gatherEnd;
     drawRays(ctx, w / 2, logoY, ms, Math.max(0, Math.min(1, after / 700)));
-    drawPixelLogoReveal(ctx, title, w / 2, logoY, 2, ms, REVEAL);
+    drawPixelLogoReveal(ctx, title, w / 2, logoY, logoScale, ms, REVEAL);
     if (after > 0) drawSparkles(ctx, w / 2, logoY, after);
   } else {
     // hold: ロゴを見せたまま、ボタンが押されるまで、ずっと流れつづける
     drawRays(ctx, w / 2, logoY, ms + 3000, 1);
     drawSparkles(ctx, w / 2, logoY, ms);
-    drawPixelLogo(ctx, title, w / 2, logoY, 2, (ms % 4200) / 1100, ms + 5000);
+    drawPixelLogo(ctx, title, w / 2, logoY, logoScale, (ms % 4200) / 1100, ms + 5000);
     const blink = 0.5 + 0.5 * Math.sin(performance.now() / 380);
     drawPixelText(ctx, "決定ボタン（Enter）で スタート", w / 2, h - 34, "center", 0.35 + 0.65 * blink, { color: "#f2c14e" });
   }
