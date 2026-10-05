@@ -107,12 +107,14 @@ def cloud_lobes():
         r = rnd.uniform(5, 11)
         lobes.append((x, tp + r * rnd.uniform(0.35, 0.8), r, 0.0))
     # ちぎれ雲（本体からはなれた、小さなかけら）
-    for (x, y) in ((8, 150), (300, 112), (330, 158), (40, 104)):
+    for (x, y) in ((26, 152), (296, 110), (300, 160), (44, 104)):
         for k in range(3):
             lobes.append((x + rnd.uniform(-8, 8), y + rnd.uniform(-3, 3), rnd.uniform(4, 7), 0.0))
     # 塔が雲を突き抜ける所: 塔の両わきに、まとわりつく小さなもくもく
     lobes.append((CX - 13, top_at(CX) + 3, 8, 5.0))
     lobes.append((CX + 14, top_at(CX) + 5, 7, 5.0))
+    # 絵のはしで切れないよう、はしにかかるもくもくはのぞく（まわりの透けるうす雲のぶんも、あける）
+    lobes = [l for l in lobes if l[0] - l[2] >= 14 and l[0] + l[2] <= W - 15]
     return lobes, bottom
 
 

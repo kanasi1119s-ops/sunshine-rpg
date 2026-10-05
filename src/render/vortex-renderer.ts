@@ -91,18 +91,7 @@ export function renderStorm(ctx: CanvasRenderingContext2D, map: TileMap, camera:
   g.addColorStop(1, "rgba(24,28,44,0)");
   ctx.fillStyle = g;
   ctx.fillRect(cx - 240, cy - 240, 480, 480);
-  // ゆっくり流れる雲のかたまり
-  for (let i = 0; i < 7; i++) {
-    const ang = nowMs / 9000 + i * 0.9;
-    const rad = 120 + (i % 3) * 22;
-    const x = cx + Math.cos(ang) * rad;
-    const y = cy + Math.sin(ang) * rad * 0.7;
-    const cg = ctx.createRadialGradient(x, y, 4, x, y, 54);
-    cg.addColorStop(0, "rgba(58,62,84,0.55)");
-    cg.addColorStop(1, "rgba(58,62,84,0)");
-    ctx.fillStyle = cg;
-    ctx.fillRect(x - 56, y - 56, 112, 112);
-  }
+  // （コードで描いていた、ぼんやりした雲のかたまりは、2026-10-05 にやめた。雲はドット絵の雲だけにする）
   // 雨: ななめに降る細い線（嵐のまんなかほど多い）。雲の底（塔のマスから約6マス上）より下にだけ降る
   ctx.save();
   ctx.strokeStyle = "rgba(200,215,240,0.45)";
