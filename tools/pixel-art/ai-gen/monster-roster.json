@@ -531,7 +531,7 @@
  {
   "id": "enc-kiri-archive-1",
   "prompt": "a whispering pale grey mist spirit with a long trailing wispy body, a faint open mouth and two dim eyes, small glowing motes around it",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kiri-archive-1",
   "kind": "mob",
   "name": "霧のささやき",
@@ -549,7 +549,7 @@
  {
   "id": "enc-kiri-archive-2",
   "prompt": "a bookworm insect with a hard leather book-cover shell, gold page edges and a curling bookmark tail",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kiri-archive-2",
   "kind": "mob",
   "name": "古文書の虫",
@@ -560,12 +560,13 @@
    120,
    85,
    60
-  ]
+  ],
+  "draft": "enc-kiri-archive-2_1"
  },
  {
   "id": "enc-kiri-archive-3",
   "prompt": "a floating black ink drop creature with brush-stroke tendrils, a single white eye and splatter trail",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kiri-archive-3",
   "kind": "mob",
   "name": "墨のしずく",
@@ -576,7 +577,8 @@
    35,
    35,
    50
-  ]
+  ],
+  "draft": "enc-kiri-archive-3_0"
  },
  {
   "id": "enc-kiri-archive-4",
