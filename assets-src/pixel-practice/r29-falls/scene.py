@@ -278,6 +278,153 @@ def cloud_layer():
     return layer, owner
 
 
+# 積乱雲（2026-10-05、人間が見せた写真「こんな感じの雲のがいいかも、試しにやってみて」）。
+# 上へ高くもり上がる、きのこの形の雷雲。中は、雷と夕日で、あたたかい金色に光る。ふちは白っぽい灰色、底と右下は青い灰色の影。
+WARM = [(64, 46, 44), (104, 70, 52), (150, 100, 60), (196, 140, 72), (232, 184, 104), (250, 220, 150), (255, 242, 200)]
+MID = [(48, 46, 56), (80, 74, 82), (116, 106, 108), (156, 142, 134), (196, 182, 166), (228, 220, 206)]
+
+
+def cb_half_width(y):
+    """積乱雲の外形（高さ y での左右の広がり。左, 右）。上はかさのように広く、まん中は少しくびれ、底はまた広がる。左右ふぞろい。"""
+    if y < 44 or y > 176:
+        return None
+    if y < 108:                                    # かさ（上の大きなドーム）
+        t = (y - 44) / 64
+        hw = 10 + 112 * math.sin(t * math.pi / 2) ** 1.05
+        return (hw * 1.0, hw * 0.94)
+    if y < 140:                                    # くびれ
+        t = (y - 108) / 32
+        hw = 122 - 40 * math.sin(t * math.pi * 0.5)
+        return (hw, hw * 0.9 + 4)
+    t = (y - 140) / 36                             # 底（左に低い棚のように張り出す）
+    return (82 + 46 * t, 78 + 18 * t)
+
+
+def cumulonimbus():
+    """積乱雲をドット絵で描く。
+    - もくもく: 大きなもくもく（半径 12〜22）を外形の中に重ね、その上を向いた面に、小さなもくもく（半径 4〜9）をさらに重ねる
+      （カリフラワーのように、大きな山の上に小さな山）。高さの場（いちばん高い玉の面）から、面の向きを出す。
+    - 光は2つ: 空からの光（左上）でふちが白く光る。雲の中の光（雷と夕日。まん中の少し下）で、手前を向いた面が金色に光る。
+      中の光は、雲の奥ほど届かない（ふちと底は青い灰色のまま）。
+    - くぼみ（もくもくとの境）は1段暗く。底は暗く重い。
+    - 色は、冷たい灰色（CLOUD）・中間（MID）・あたたかい金色（WARM）の3つの段の表から選ぶ（色を混ぜてにごらせない）。
+      段の境だけ、2×2 の市松もようで1ドットずつまぜ、なめらかにする。"""
+    import random
+    rnd = random.Random(2026)
+    inside = lambda x, y: (lambda hw: hw is not None and CX - hw[0] <= x <= CX + hw[1])(cb_half_width(y))
+    lobes = []
+    # 外形のふちにそって大きなもくもく（ふちのでこぼこ）
+    for y in range(46, 176, 3):
+        hw = cb_half_width(y)
+        for side, sx in ((-1, CX - hw[0]), (1, CX + hw[1])):
+            r = rnd.uniform(10, 18)
+            lobes.append((sx - side * r * 0.55, y, r, 0.0))
+    x = CX - 40
+    while x < CX + 40:                              # かさのてっぺん
+        r = rnd.uniform(12, 20)
+        lobes.append((x, 46 + r * 0.7, r, 0.0))
+        x += r * 0.9
+    # 中身の大きなもくもく
+    for _ in range(170):
+        x, y = rnd.uniform(CX - 130, CX + 130), rnd.uniform(48, 172)
+        if inside(x, y):
+            lobes.append((x, y, rnd.uniform(12, 22), rnd.uniform(-4, 2)))
+    height = {}
+
+    def stamp(lx, ly, r, z):
+        for yy in range(int(ly - r) - 1, int(ly + r) + 2):
+            for xx in range(int(lx - r) - 1, int(lx + r) + 2):
+                if not (0 <= xx < W and 0 <= yy < H) or yy > 176 + 3 * math.sin(xx / 11.0):
+                    continue
+                d2 = (xx + 0.5 - lx) ** 2 + (yy + 0.5 - ly) ** 2
+                if d2 <= r * r:
+                    h = z + math.sqrt(r * r - d2)
+                    if h > height.get((xx, yy), -1e9):
+                        height[(xx, yy)] = h
+    for l in lobes:
+        stamp(*l)
+    # 小さなもくもく: 上を向いた面（上のふち、もくもくのてっぺん）に重ねる
+    big = list(height.items())
+    rnd.shuffle(big)
+    placed = 0
+    for (x, y), h in big:
+        if placed > 420:
+            break
+        up = height.get((x, y - 3))
+        if up is None or (h - up > 1.6 and rnd.random() < 0.5):
+            r = rnd.uniform(4, 9)
+            stamp(x + rnd.uniform(-1, 1), y + r * 0.45, r, h - r * 0.55)
+            placed += 1
+    # 面の向きと光
+    L = (-0.55, -0.65, 0.52)
+    ln = math.sqrt(sum(c * c for c in L))
+    L = [c / ln for c in L]
+    GX, GY = CX - 6, 120                            # 雲の中の光のまん中
+    blur = {}
+    for (x, y) in height:
+        acc, cnt = 0.0, 0
+        for dy in (-3, 0, 3):
+            for dx in (-3, 0, 3):
+                v = height.get((x + dx, y + dy))
+                if v is not None:
+                    acc += v
+                    cnt += 1
+        blur[(x, y)] = acc / cnt
+    BAYER = [[0, 2], [3, 1]]
+    layer = {}
+    for (x, y), h in height.items():
+        hl = height.get((x - 1, y), h - 2)
+        hr = height.get((x + 1, y), h - 2)
+        hu = height.get((x, y - 1), h - 2)
+        hd = height.get((x, y + 1), h - 2)
+        nx, ny, nz = -(hr - hl) / 2, -(hd - hu) / 2, 1.3
+        nn = math.sqrt(nx * nx + ny * ny + nz * nz)
+        nx, ny, nz = nx / nn, ny / nn, nz / nn
+        sky = max(0.0, nx * L[0] + ny * L[1] + nz * L[2])
+        v = 0.2 + sky * 0.82
+        v += max(0.0, (100 - y) / 60) * 0.12                       # 上ほど明るい
+        v -= max(0.0, (y - 146) / 30) * 0.42                       # 底は暗く重い
+        crease = blur[(x, y)] - h
+        if crease > 1.0:
+            v -= min(0.22, crease * 0.06)                          # もくもくの境のくぼみ
+        # 雲の中の光（手前を向いた面ほど、まん中に近いほど）
+        d = math.hypot((x - GX) / 120, (y - GY) / 64)
+        glow = max(0.0, 1 - d) ** 1.2 * (0.3 + 0.7 * nz) * 1.25
+        glow += (vnoise(x, y, 14, 501) - 0.5) * 0.25
+        v += glow * 0.16
+        # 3つの表のどれを使うか（市松でまぜる）
+        g = glow * 2.3
+        bi = BAYER[y % 2][x % 2] / 4 + 0.125
+        zone = int(g + (bi - 0.5) * 0.5)
+        ramp = CLOUD[1:] if zone <= 0 else (MID if zone == 1 else WARM)
+        n = len(ramp) - 1
+        f = max(0.0, min(1.0, v)) * n
+        k = int(f)
+        if f - k > 0.62 and bi > 0.5:
+            k += 1
+        elif f - k > 0.88:
+            k += 1
+        layer[(x, y)] = ramp[max(0, min(n, k))]
+    # 外のふち: 上と左上は、いちばん明るい光の線（冷たい色）。底のふちは、いちばん暗い線
+    for (x, y) in list(layer):
+        if (x, y - 1) not in height and (x - 1, y) not in height:
+            layer[(x, y)] = CLOUD[-1]
+        elif (x, y - 1) not in height:
+            layer[(x, y)] = CLOUD[-2]
+        elif (x, y + 1) not in height and y > 150:
+            layer[(x, y)] = CLOUD[0]
+    # ぽつんと1ドットの色（4つのとなりがすべて別の色、しかも市松でない）を、まわりの多い色に
+    for (x, y), c in list(layer.items()):
+        nb = [layer.get(q) for q in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1))]
+        if None in nb or any(b == c for b in nb):
+            continue
+        diag = [layer.get(q) for q in ((x + 1, y + 1), (x - 1, y - 1))]
+        if c in diag:
+            continue
+        layer[(x, y)] = max(set(nb), key=nb.count)
+    return layer, height
+
+
 VEIL = [(150, 156, 178), (186, 190, 208)]
 
 
@@ -404,7 +551,7 @@ def tower_pixels(spire_rows, spire_rgb):
 
 def build():
     spire_rows, spire_rgb = load_spire()
-    clouds, owner = cloud_layer()
+    clouds, owner = cumulonimbus()
     veil = cloud_veil(owner)
     tower = tower_pixels(*load_spire())
     # 雲の底（列ごと）。雨はこれより下だけ
@@ -438,8 +585,10 @@ def build():
                 m = front_mist(x, y, fr)
                 if m is not None:
                     img[y][x] = m
-        # 4. 雲
+        # 4. 雲（塔が雲のてっぺんを突き抜ける所は、塔を前に出す。下のふちは、ゆるく波うつ）
         for (x, y), c in clouds.items():
+            if (x, y) in tower and y < 60 + 3 * math.sin(x / 2.3):
+                continue
             img[y][x] = c
         # 5. 大雨
         for y in range(H):
