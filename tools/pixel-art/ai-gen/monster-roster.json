@@ -1843,7 +1843,7 @@
  },
  {
   "id": "enc-kanou-3-5",
-  "prompt": "a flower droplet creature, a floating drop of nectar with petals around it and a tiny pollen crown",
+  "prompt": "a small floating creature, a golden drop of nectar with bright pink petals around it like a collar and a tiny yellow pollen crown",
   "status": "todo",
   "key": "enemy:enc-kanou-3-5",
   "kind": "mob",
@@ -1855,12 +1855,15 @@
    240,
    170,
    200
-  ]
+  ],
+  "draft": "enc-kanou-3-5_0",
+  "bg": "dark",
+  "seed_base": 6001
  },
  {
   "id": "enc-kanou-4-0",
   "prompt": "a fragment of the great ring, a curved white stone arc piece floating with gold inlay and an eye",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-4-0",
   "kind": "mob",
   "name": "全環のかけら",
@@ -1873,7 +1876,8 @@
    210
   ],
   "bg": "dark",
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-kanou-4-0_0"
  },
  {
   "id": "enc-kanou-4-1",
