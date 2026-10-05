@@ -1,8 +1,9 @@
 import { equip, type EquipmentSlots } from "../items/equipment";
-import type { EquipmentItemData, ItemData, WeaponType } from "../items/types";
+import type { EquipmentItemData, ItemData, ItemTrait, WeaponType } from "../items/types";
 import { canEquip } from "../items/weapon-types";
 import { SAMPLE_ITEMS_BY_ID } from "../battle/sample-battle";
 import { spendGold } from "./gold";
+import { BOSS_DROP_ITEMS_BY_ID } from "../items/boss-drops";
 import { TREASURE_ITEMS_BY_ID } from "./treasure";
 import { CONSUMABLES_BY_ID, MAX_CONSUMABLE_STACK, consumableStock } from "../items/consumables";
 
@@ -33,6 +34,14 @@ const TIERS: Tier[] = [
   { weapons: W("灯芯の聖剣", "灯芯の短剣", "灯芯の聖杖", "灯芯の聖弓", "灯芯の聖斧", "灯芯の聖槍"), attack: 86, armor: { name: "灯芯の鎧", defense: 56 }, charm: { name: "灯芯の護り", maxHp: 112 } },
 ];
 
+/** たて・兜・頭巾の名前（町の段ごと）。強さは、その段の防具の強さから決める。 */
+const SHIELD_NAMES = ["灯り木の盾", "水鏡の盾", "湖光の盾", "鉄鎖の大盾", "砂風の丸盾", "霧割りの盾", "霜刃の盾", "雲糸の盾", "灯芯の聖盾"];
+const HELM_NAMES = ["灯り鉄の兜", "水鏡の兜", "湖光の兜", "鉄鎖の兜", "砂風の兜", "霧割りの兜", "霜刃の兜", "雲裂きの兜", "灯芯の聖兜"];
+const HOOD_NAMES = ["灯編みの頭巾", "麦藁の頭巾", "湖織りの頭巾", "坑夫の頭巾", "砂よけの頭巾", "霧絹の頭巾", "霜毛の頭巾", "雲糸の頭巾", "灯芯の頭巾"];
+/** たて・兜をつけられる人（杖のミナと弓のガイドは、たてを持たない。ミナは兜もかぶらず、頭巾をかぶる）。 */
+const SHIELD_WEARERS = ["hero", "reto", "orca", "ayame"];
+const HELM_WEARERS = ["hero", "reto", "orca", "guide", "ayame"];
+
 const BASE_PRICE = [80, 150, 290, 550, 1050, 2000, 3800, 7200, 13700];
 
 /** 武器の種類 → 店のID（剣は、むかしからの `weapon-N`）。 */
@@ -51,6 +60,9 @@ function tierItems(index: number): EquipmentItemData[] {
       statBonus: { attack: tier.attack },
       weaponType: type,
     })),
+    { id: `shield-${index + 1}`, name: SHIELD_NAMES[index], category: "shield", price: Math.round(price * 0.7), statBonus: { defense: Math.round(tier.armor.defense * 0.55) }, wearers: SHIELD_WEARERS },
+    { id: `helm-${index + 1}`, name: HELM_NAMES[index], category: "head", price: Math.round(price * 0.5), statBonus: { defense: Math.round(tier.armor.defense * 0.4) }, wearers: HELM_WEARERS },
+    { id: `hood-${index + 1}`, name: HOOD_NAMES[index], category: "head", price: Math.round(price * 0.4), statBonus: { defense: Math.round(tier.armor.defense * 0.25), maxMp: 3 + index * 3 } },
     { id: `armor-${index + 1}`, name: tier.armor.name, category: "armor", price: Math.round(price * 0.8), statBonus: { defense: tier.armor.defense } },
     { id: `charm-${index + 1}`, name: tier.charm.name, category: "accessory", price: Math.round(price * 0.6), statBonus: { maxHp: tier.charm.maxHp } },
   ];
@@ -62,7 +74,7 @@ export const SHOP_ITEMS_BY_ID: Record<string, EquipmentItemData> = Object.fromEn
 );
 
 /** 戦闘・つよさ画面で使う、すべての品物（最初の剣＋店の装備）。 */
-export const ALL_ITEMS_BY_ID: Record<string, ItemData> = { ...SAMPLE_ITEMS_BY_ID, ...SHOP_ITEMS_BY_ID, ...TREASURE_ITEMS_BY_ID, ...CONSUMABLES_BY_ID };
+export const ALL_ITEMS_BY_ID: Record<string, ItemData> = { ...SAMPLE_ITEMS_BY_ID, ...SHOP_ITEMS_BY_ID, ...TREASURE_ITEMS_BY_ID, ...BOSS_DROP_ITEMS_BY_ID, ...CONSUMABLES_BY_ID };
 
 /** 店ID: `tier-1`〜`tier-9`。並ぶ品は、その段の、武器（剣・短剣・杖・弓・斧・槍の6種）・防具・飾り。 */
 export function shopStock(shopId: string): EquipmentItemData[] {
@@ -136,10 +148,27 @@ export function purchaseConsumable(itemId: string, gold: number, owned: number):
   return { ok: true, gold: left, message: `${item.name}を買った！` };
 }
 
+/** 特殊効果の説明（短く）。 */
+export function describeTrait(trait: ItemTrait): string {
+  switch (trait.kind) {
+    case "luck": return `うん+${trait.value}`;
+    case "crit": return `会心+${trait.value}%`;
+    case "evade": return `ミスさせる+${trait.value}%`;
+    case "guard": return `${{ poison: "毒", sleep: "眠り", confuse: "混乱" }[trait.status]}をふせぐ`;
+    case "regenHp": return `毎ターンHP${trait.percent}%回復`;
+    case "regenMp": return `毎ターンMP${trait.value}回復`;
+    case "multi": return `連続攻撃しやすい`;
+  }
+}
+
 /** 装備のボーナスの説明（例: 「こうげき+9」）。 */
 export function describeBonus(item: EquipmentItemData): string {
   const names: Record<string, string> = { attack: "こうげき", defense: "ぼうぎょ", speed: "すばやさ", maxHp: "HP", maxMp: "MP" };
-  return Object.entries(item.statBonus).map(([k, v]) => `${names[k] ?? k}+${v}`).join(" ");
+  const stats = Object.entries(item.statBonus).map(([k, v]) => `${names[k] ?? k}+${v}`);
+  const traits = item.traits ?? [];
+  const guards = traits.filter((t) => t.kind === "guard");
+  const shown = guards.length >= 3 ? [...traits.filter((t) => t.kind !== "guard"), null] : traits;
+  return [...stats, ...shown.map((t) => (t ? describeTrait(t) : "状態異常をふせぐ"))].join(" ");
 }
 
 /** 宝の装備を受け取る。いまの装備より強ければその場で装備し、そうでなければ装備はそのまま。 */

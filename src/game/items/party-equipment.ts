@@ -13,6 +13,8 @@ export type PartyEquipment = Record<string, EquipmentSlots>;
 
 export const EQUIPMENT_CATEGORIES: { id: EquipmentCategory; label: string }[] = [
   { id: "weapon", label: "ぶき" },
+  { id: "shield", label: "たて" },
+  { id: "head", label: "あたま" },
   { id: "armor", label: "ぼうぐ" },
   { id: "accessory", label: "かざり" },
 ];

@@ -2,7 +2,7 @@ import { describeBonus } from "../game/economy/shop";
 import { getQuantity, type Inventory } from "../game/items/inventory";
 import type { ShopMenuState } from "../game/economy/shop-menu";
 import type { EquipmentSlots } from "../game/items/equipment";
-import { WEAPON_LABEL, wielderName } from "../game/items/weapon-types";
+import { WEAPON_LABEL, WIELDER_NAME, wielderName } from "../game/items/weapon-types";
 import { drawWindow } from "./ui-frame";
 import { drawIcon, iconForItem } from "./icon-renderer";
 import { getPortraitIcon } from "./portrait-icons";
@@ -28,8 +28,14 @@ export function renderShop(
   ctx.fillStyle = "#f2c14e";
   ctx.fillText(state.shopId.startsWith("items-") ? "道具屋（決定で買う／Xで出る）" : "武具屋（決定で買う／Xで出る）", 14, 12);
   ctx.fillText(`灯貨 ${gold}`, screenWidth - 90, 12);
+  // 品が多いときは、カーソルのまわりだけを出して、スクロールする
+  const visible = 8;
+  const top = Math.max(0, Math.min(state.items.length - visible, state.cursor - (visible - 2)));
+  if (top > 0) ctx.fillText("▲", screenWidth - 24, 24);
+  if (top + visible < state.items.length) ctx.fillText("▼", screenWidth - 24, 24 + (visible - 1) * 21);
   state.items.forEach((item, i) => {
-    const y = 25 + i * 21;
+    if (i < top || i >= top + visible) return;
+    const y = 25 + (i - top) * 21;
     const consumable = item.category === "consumable";
     const owned = !consumable && equipment[item.category] === item.id;
     ctx.fillStyle = i === state.cursor ? "#f2c14e" : "#f0f0f0";
@@ -42,7 +48,11 @@ export function renderShop(
       ctx.fillText(`${item.description ?? ""}　${item.price}灯貨`, 46, y + 10);
       return;
     }
-    const user = item.category === "weapon" ? `　［${WEAPON_LABEL[item.weaponType ?? "sword"]}：${wielderName(item.weaponType ?? "sword")}］` : "";
+    const user = item.category === "weapon"
+      ? `　［${WEAPON_LABEL[item.weaponType ?? "sword"]}：${wielderName(item.weaponType ?? "sword")}］`
+      : item.wearers
+        ? `　［${item.wearers.map((id) => WIELDER_NAME[id] ?? id).join("・")}］`
+        : "";
     ctx.fillText(`${describeBonus(item)}　${item.price}灯貨${user}`, 46, y + 10);
   });
   if (state.message) {

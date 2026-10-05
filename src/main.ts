@@ -75,6 +75,8 @@ import { CHAPTER3_OPENING_COMMANDS } from "./game/world/chapter3-world";
 import { CHAPTER4_OPENING_COMMANDS } from "./game/world/chapter4-world";
 import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
+import { applyTraits } from "./game/items/traits";
+import { bossDropFor } from "./game/items/boss-drops";
 import { allyLuck } from "./game/battle/luck";
 import { BattleController } from "./game/battle/battle-controller";
 import type { BattleState } from "./game/battle/types";
@@ -434,6 +436,9 @@ const WORLD_MAP_CHARACTER_SCALE = 1;
 let battleTransition: BattleTransition | null = null;
 
 let pendingVictoryFlag: string | null = null;
+/** ボスを倒したときに落とす、特殊効果つきのかざりのID。 */
+let pendingDropId: string | null = null;
+let victoryDropText: string | null = null;
 
 const dialogue = new DialogueController(flags, {
   onWarp: (warp) => switchMap(warp.mapId, warp.tileX, warp.tileY),
@@ -601,6 +606,8 @@ function startRandomBattle(enemies: Combatant[]): void {
   victoryMessage = null;
   victoryLevelUps = [];
   pendingVictoryFlag = null;
+  pendingDropId = null;
+  victoryDropText = null;
   const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
   const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
   const party = buildActiveParty(effectiveStats);
@@ -635,6 +642,8 @@ function startStoryBattle(battleId: string): void {
   victoryMessage = null;
   victoryLevelUps = [];
   pendingVictoryFlag = def.victoryFlag;
+  pendingDropId = bossDropFor(battleId) ?? null;
+  victoryDropText = null;
   const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
   const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
   const party = buildActiveParty(effectiveStats);
@@ -1059,6 +1068,8 @@ function equipMembers(): { id: string; name: string; stats: LeveledStats }[] {
 
 const EQUIP_SLOT_LABELS = [
   { id: "weapon" as const, label: "ぶき" },
+  { id: "shield" as const, label: "たて" },
+  { id: "head" as const, label: "あたま" },
   { id: "armor" as const, label: "ぼうぐ" },
   { id: "accessory" as const, label: "かざり" },
 ];
@@ -1248,9 +1259,9 @@ function syncCompanionsFromFlags(): void {
 /** 現在の実力（装備ボーナス込み）のユーリに、加入済みの仲間を加えた戦闘パーティ。 */
 function buildActiveParty(effectiveHeroStats: LeveledStats): ReturnType<typeof createChapter0Party> {
   const unlocked = isJobSystemUnlocked(flags);
-  const party = createChapter0Party(heroStats.level, withJobBonus(effectiveHeroStats, jobStates.hero, unlocked));
+  const party = createChapter0Party(heroStats.level, withJobBonus(effectiveHeroStats, jobStates.hero, unlocked)).map((c) => applyTraits(c, heroEquipment, ALL_ITEMS_BY_ID));
   for (const [id, stats] of Object.entries(companionStats)) {
-    party.push(createCompanionCombatant(COMPANIONS[id], withJobBonus(withEquipment(id, stats), jobStates[id], unlocked)));
+    party.push(applyTraits(createCompanionCombatant(COMPANIONS[id], withJobBonus(withEquipment(id, stats), jobStates[id], unlocked)), companionEquipment[id] ?? {}, ALL_ITEMS_BY_ID));
   }
   // ノーマルでは、前の戦闘で受けたダメージ・使った魔力を持ち越す
   return difficulty === "normal" ? party.map((c) => applyVital(c, vitals[c.id])) : party;
@@ -1823,6 +1834,16 @@ function applyVictoryExpIfNeeded(finishedBattle: BattleController): void {
     flags[pendingVictoryFlag] = true;
     pendingVictoryFlag = null;
   }
+  // ボスは、特殊効果つきのかざりを落とす（持っていなければ、持ち物に入る）
+  if (pendingDropId) {
+    const drop = ALL_ITEMS_BY_ID[pendingDropId];
+    if (drop && getQuantity(inventory, pendingDropId) === 0) {
+      inventory = ensureOwned(inventory, [pendingDropId]);
+      victoryDropText = `${drop.name} を手に入れた！（${describeBonus(drop as EquipmentItemData)}）`;
+      if (audioStarted) window.setTimeout(() => audio.playSe(seOf("chest")), 900);
+    }
+    pendingDropId = null;
+  }
   autosave();
 }
 
@@ -1865,6 +1886,11 @@ function renderGameSceneBase(): void {
       ctx.font = "10px monospace";
       ctx.textBaseline = "top";
       ctx.fillText(victoryMessage, 8, LOGICAL_HEIGHT - 56 + 18);
+      if (victoryDropText) {
+        ctx.fillStyle = "#9ad0ff";
+        ctx.fillText(victoryDropText, 8, LOGICAL_HEIGHT - 56 + 30);
+        ctx.fillStyle = "#f2c14e";
+      }
       if (victoryLevelUps.length > 0) {
         // レベルアップした人の、上がった能力値（HP・MP・こうげき・ぼうぎょ・すばやさ）
         const rowH = 22;
@@ -2086,7 +2112,8 @@ const loop = createGameLoop({
       return;
     }
     // 決定の音は、メニューを選ぶとき（タイトル・つよさ・買い物・ジョブ・戦闘）だけ。会話を送るたび・歩いて調べるたびに鳴ると、うるさいので鳴らさない
-    if (actionPressed && !bootOpening.open && (title.open || pauseMenu.open || shopMenu.open || jobMenu.open || battle)) {
+    if (actionPressed && !bootOpening.open && (title.open || pauseMenu.open || shopMenu.open || jobMenu.open || (battle && battle.getUiState().kind !== "message"))) {
+      // 戦闘のメッセージを送る決定は、音を鳴らさない（コマンドを選ぶときだけ鳴る）
       audio.playSe(seOf("confirm"));
     }
 

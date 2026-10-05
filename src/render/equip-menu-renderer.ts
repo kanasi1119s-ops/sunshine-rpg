@@ -81,30 +81,30 @@ export function renderEquipMenu(ctx: CanvasRenderingContext2D, state: EquipMenuS
 
   // 右上: いまの装備
   member.slots.forEach((slot, i) => {
-    const y = 44 + i * 15;
+    const y = 42 + i * 12;
     const selected = i === state.slot && state.stage !== "member";
     ctx.fillStyle = selected ? "#f2c14e" : "#c8c8e0";
-    ctx.fillText(`${selected && state.stage === "slot" ? "▶" : "　"}${slot.label}　${slot.itemText}`, rx, y);
+    ctx.fillText(`${selected && state.stage === "slot" ? "▶" : "　"}${slot.label}　${slot.itemText}`, rx, y, screenWidth - rx - 12);
   });
 
   // 右下: 選べる品
   if (state.stage === "item") {
     ctx.fillStyle = "#f2c14e";
-    ctx.fillText("もっている品", rx, 98);
-    const perPage = 6;
+    ctx.fillText("もっている品", rx, 104);
+    const perPage = 5;
     const page = Math.floor(state.item / perPage);
     view.candidates.slice(page * perPage, page * perPage + perPage).forEach((c, i) => {
       const index = page * perPage + i;
-      const y = 112 + i * 14;
+      const y = 116 + i * 12;
       const selected = index === state.item;
       ctx.fillStyle = selected ? "#f2c14e" : "#f0f0f0";
-      ctx.fillText(`${selected ? "▶" : "　"}${c.label}　${c.bonusText}${c.note ? `　${c.note}` : ""}`, rx, y);
+      ctx.fillText(`${selected ? "▶" : "　"}${c.label}　${c.bonusText}${c.note ? `　${c.note}` : ""}`, rx, y, screenWidth - rx - 12);
     });
     const current = view.candidates[state.item];
     if (current?.after) {
       const parts = STAT_NAMES.filter(([k]) => current.after![k] !== member.stats[k]).map(([k, name]) => `${name} ${member.stats[k]}→${current.after![k]}`);
       ctx.fillStyle = "#88ff88";
-      ctx.fillText(parts.length > 0 ? `かえると: ${parts.join("　")}` : "かえても、強さは変わらない", rx, 198);
+      ctx.fillText(parts.length > 0 ? `かえると: ${parts.join("　")}` : "かえても、強さは変わらない", rx, 190, screenWidth - rx - 12);
     }
   }
   if (view.message) {

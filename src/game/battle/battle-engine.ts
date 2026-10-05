@@ -49,7 +49,7 @@ function averageSpeed(combatants: Combatant[]): number {
 
 /** 1体にダメージを与え、ログに書く（防御中は半分）。倒したらそのログも書く。 */
 function dealDamage(next: BattleState, actor: Combatant, target: Combatant, skillName: string, powerMultiplier: number, rng: () => number): void {
-  const { amount, critical } = computeDamage(effectiveStat(actor, "attack"), effectiveStat(target, "defense"), powerMultiplier, rng, criticalChance(luckOf(actor)));
+  const { amount, critical } = computeDamage(effectiveStat(actor, "attack"), effectiveStat(target, "defense"), powerMultiplier, rng, criticalChance(luckOf(actor)) + (actor.critBonus ?? 0));
   const finalAmount = target.guarding ? Math.ceil(amount / 2) : amount;
   target.hp = Math.max(0, target.hp - finalAmount);
   next.log.push(`${actor.name} の ${skillName}！ ${critical ? "会心の一撃！ " : ""}${target.name} に ${finalAmount} のダメージ`);
@@ -92,6 +92,15 @@ function tickStatuses(state: BattleState): void {
     if (c.confused) {
       c.confused = c.confused > 1 ? c.confused - 1 : undefined;
     }
+    if (isAlive(c) && c.regenHp && c.hp < c.maxHp) {
+      const heal = Math.min(c.maxHp - c.hp, Math.max(1, Math.round(c.maxHp * c.regenHp)));
+      c.hp += heal;
+      state.log.push(`${c.name} は 装備の力で ${heal} 回復した`);
+    }
+    if (isAlive(c) && c.regenMp && c.mp < c.maxMp) {
+      const gain = Math.min(c.maxMp - c.mp, c.regenMp);
+      c.mp += gain;
+    }
     if (c.poison && isAlive(c)) {
       const dmg = Math.max(1, Math.round(c.maxHp * 0.06));
       const lost = Math.min(dmg, Math.max(0, c.hp - 1));
@@ -105,6 +114,10 @@ function tickStatuses(state: BattleState): void {
 
 /** 状態異常をかける（かかったかどうかを返し、ログに書く）。 */
 function inflict(next: BattleState, actorName: string, target: Combatant, status: "poison" | "sleep" | "confuse", turns: number, prefix: string): boolean {
+  if (target.guards?.includes(status)) {
+    next.log.push(`${prefix}${target.name} には効かなかった（装備の力）`);
+    return false;
+  }
   if (status === "poison") {
     target.poison = turns;
     next.log.push(`${prefix}${target.name} は毒におかされた！`);
@@ -229,7 +242,7 @@ function applyEffectSkill(next: BattleState, actor: Combatant, skill: Skill, raw
         return next;
       }
       actor.mp -= skill.mpCost;
-      if (target.maxHp > 500 || rng() >= (skill.chance ?? 0.6)) {
+      if (target.maxHp > 500 || target.guards?.includes("sleep") || rng() >= (skill.chance ?? 0.6)) {
         next.log.push(`${actor.name} の ${skill.name}！ ${target.name} には効かなかった`);
       } else {
         target.sleep = skill.turns ?? 2;
@@ -290,7 +303,7 @@ export function applyAction(state: BattleState, action: BattleAction, rng: () =>
         nextActor.mp -= action.skill.mpCost;
       }
       // 通常攻撃は、はずれることがある（運・すばやさの差）
-      if (action.type === "attack" && rng() < missChance(luckOf(nextActor), luckOf(target))) {
+      if (action.type === "attack" && rng() < Math.min(0.6, missChance(luckOf(nextActor), luckOf(target)) + (target.evade ?? 0))) {
         next.log.push(`${nextActor.name} の たたかう！ ミス！ ${target.name} にはあたらなかった`);
         return next;
       }
@@ -299,7 +312,7 @@ export function applyAction(state: BattleState, action: BattleAction, rng: () =>
         effectiveStat(target, "defense"),
         powerMultiplier,
         rng,
-        criticalChance(luckOf(nextActor)),
+        criticalChance(luckOf(nextActor)) + (nextActor.critBonus ?? 0),
       );
       const finalAmount = target.guarding ? Math.ceil(amount / 2) : amount;
       target.hp = Math.max(0, target.hp - finalAmount);
@@ -409,7 +422,7 @@ export function runTurn(
     if (action.type === "attack") {
       // すばやさが相手よりずっと高いと、1回の攻撃で2〜4回こうげきする
       const foe = findCombatant(current, retarget(current, livingActor, action.targetId));
-      const hits = foe ? attackCount(effectiveStat(livingActor, "speed") - effectiveStat(foe, "speed")) : 1;
+      const hits = foe ? attackCount(effectiveStat(livingActor, "speed") - effectiveStat(foe, "speed") + (livingActor.multiBonus ?? 0)) : 1;
       if (hits > 1) current.log.push(`${livingActor.name} は すばやい動きで ${hits}回 こうげき！`);
       for (let i = 0; i < hits; i++) {
         if (i > 0) snap();

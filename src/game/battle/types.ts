@@ -10,6 +10,18 @@ export interface Combatant {
   speed: number;
   /** 運（省略は5）。会心の一撃の出やすさ、攻撃のミスのしやすさ・されやすさ。 */
   luck?: number;
+  /** 装備の特殊効果（`items/types.ts` の `ItemTrait`）。会心の出やすさの足し（0.04＝+4%）。 */
+  critBonus?: number;
+  /** 敵の通常攻撃がはずれやすくなる確率の足し。 */
+  evade?: number;
+  /** かからない状態異常。 */
+  guards?: Array<"poison" | "sleep" | "confuse">;
+  /** 毎ターンの終わりに回復する、最大HPの割合（0.03＝3%）。 */
+  regenHp?: number;
+  /** 毎ターンの終わりに回復するMP。 */
+  regenMp?: number;
+  /** 連続攻撃に必要な、すばやさの差から引く数。 */
+  multiBonus?: number;
   isEnemy: boolean;
   /** 「ぼうぎょ」コマンドの効果。次に受けるダメージが半分になる。 */
   guarding: boolean;
