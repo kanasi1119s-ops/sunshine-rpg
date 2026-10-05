@@ -61,6 +61,7 @@ export function createWorldMapData(): TileMapData {
     collision,
     exits: [],
     coastal: true,
+    wrap: true,
     props: [
       ...Object.entries(WORLD_TOWNS).map(([id, pos]) => ({ kind: TOWN_ICON[id], tileX: pos.x, tileY: pos.y })),
       ...WORLD_VILLAGES.map((v) => ({ kind: `icon-${v.icon}` as MapProp["kind"], tileX: v.x, tileY: v.y })),

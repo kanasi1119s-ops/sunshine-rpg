@@ -14,6 +14,13 @@ export function createTileMap(data: TileMapData): TileMap {
   };
 }
 
+/** つながる地図なら、座標を地図の中に折りかえす。 */
+function wrapTile(map: TileMap, tileX: number, tileY: number): [number, number] {
+  if (!map.data.wrap) return [tileX, tileY];
+  const w = map.data.width, h = map.data.height;
+  return [((tileX % w) + w) % w, ((tileY % h) + h) % h];
+}
+
 function isInBounds(map: TileMap, tileX: number, tileY: number): boolean {
   return (
     tileX >= 0 && tileY >= 0 && tileX < map.data.width && tileY < map.data.height
@@ -26,6 +33,7 @@ export function getTileId(
   tileX: number,
   tileY: number,
 ): number {
+  [tileX, tileY] = wrapTile(map, tileX, tileY);
   if (!isInBounds(map, tileX, tileY)) {
     return 0;
   }
@@ -38,6 +46,7 @@ export function getTileId(
 
 /** マップ外、または通行判定レイヤーで塞がれているタイルは通れない。 */
 export function isWalkable(map: TileMap, tileX: number, tileY: number): boolean {
+  [tileX, tileY] = wrapTile(map, tileX, tileY);
   if (!isInBounds(map, tileX, tileY)) {
     return false;
   }

@@ -35,7 +35,7 @@ import { canEquip, WEAPON_LABEL, WEAPON_TYPE_OF, weaponTypeOf, wielderOf } from 
 import { expToNextLevel } from "./game/growth/exp-curve";
 import { createGameLoop } from "./core/game-loop";
 import { createGameCanvas, LOGICAL_WIDTH, LOGICAL_HEIGHT } from "./render/canvas";
-import { createCamera, centerCameraOn } from "./render/camera";
+import { createCamera, centerCameraOn, type Camera } from "./render/camera";
 import { renderTileMap } from "./render/tile-map-renderer";
 import { renderPlayer } from "./render/player-renderer";
 import { renderNpcs, visibleNpcFeetY } from "./render/npc-renderer";
@@ -54,7 +54,7 @@ import { spriteSpecFromPortrait } from "./game/sprite/character-specs";
 import { PORTRAITS } from "./game/portrait/portraits";
 import { propFeetY, renderProps } from "./render/prop-renderer";
 import { renderDialogue } from "./render/dialogue-renderer";
-import { createTileMap, findExitAt } from "./game/map/tile-map";
+import { createTileMap, findExitAt, isWalkable, type TileMap } from "./game/map/tile-map";
 import { createPlayer, updatePlayer } from "./game/player";
 import { findNpcAt, getFacingTile } from "./game/npc";
 import { DialogueController } from "./game/dialogue/dialogue-controller";
@@ -230,6 +230,19 @@ function worldMapData() {
 }
 
 /** 乗り物の通行判定の地図（航路が開いたら作り直す）。 */
+/** つながる地図で、画面が端をまたぐとき、反対側を描くためのずらしたカメラ（ふつうの地図は、そのままの1つだけ）。 */
+function seamCameras(cam: Camera, m: TileMap): Camera[] {
+  if (!m.data.wrap) return [cam];
+  const xs = [0], ys = [0];
+  if (cam.x < 0) xs.push(-m.widthPx);
+  if (cam.x + cam.viewportWidth > m.widthPx) xs.push(m.widthPx);
+  if (cam.y < 0) ys.push(-m.heightPx);
+  if (cam.y + cam.viewportHeight > m.heightPx) ys.push(m.heightPx);
+  const out: Camera[] = [];
+  for (const dx of xs) for (const dy of ys) out.push({ ...cam, x: cam.x - dx, y: cam.y - dy });
+  return out;
+}
+
 function getVehicleMaps() {
   const data = worldMapData();
   if (!vehicleMaps) {
@@ -269,6 +282,22 @@ function syncWorldState(): void {
 }
 
 /** 歩いたあとの乗り降り。決定ボタンを使ったら true。 */
+/**
+ * 船を降りる・着陸するとき、足もとを歩ける陸のマスの中央にそろえる（体の判定が海や山に少しかかったまま歩きに切り替わると、
+ * どちらへも動けなくなるため）。そのマスが歩けないときは、となりの歩けるマスへ。見つからなければ false（降りない）。
+ */
+function snapToWalkableLand(tile: { x: number; y: number }): boolean {
+  const tw = map.data.tileWidth, th = map.data.tileHeight;
+  const foot = (x: number, y: number): boolean => isWalkable(map, x, y) && canLandOn(groundIdAt(worldMapData(), x, y));
+  const cands = [[0, 0], [0, 1], [0, -1], [1, 0], [-1, 0]].map(([dx, dy]) => ({ x: tile.x + dx, y: tile.y + dy })).filter((t) => foot(t.x, t.y));
+  const to = cands[0];
+  if (!to) return false;
+  const w = map.data.width, h = map.data.height;
+  const tx = ((to.x % w) + w) % w, ty = ((to.y % h) + h) % h;
+  player = { ...player, x: tx * tw + Math.floor((tw - player.width) / 2), y: ty * th + Math.floor((th - player.height) / 2), moving: false };
+  return true;
+}
+
 function updateVehicleAfterMove(tile: { x: number; y: number }, actionPressed: boolean): boolean {
   const data = worldMapData();
   const ground = groundIdAt(data, tile.x, tile.y);
@@ -288,14 +317,14 @@ function updateVehicleAfterMove(tile: { x: number; y: number }, actionPressed: b
   } else if (vehicle === "ship") {
     if (ground === OCEAN) {
       lastOceanTile = { x: tile.x, y: tile.y };
-    } else {
+    } else if (snapToWalkableLand(tile)) {
       vehicle = "foot";
       shipPos = { ...lastOceanTile };
       vehicleHint = { text: "船を降りた。船は海岸にとめてある。", ms: 2800 };
     }
   } else if (vehicle === "air" && actionPressed) {
     usedAction = true;
-    if (canLandOn(ground) && !findExitAt(map, tile.x, tile.y)) {
+    if (canLandOn(ground) && !findExitAt(map, tile.x, tile.y) && snapToWalkableLand(tile)) {
       vehicle = "foot";
       airshipPos = { x: tile.x, y: tile.y };
       vehicleHint = { text: "着陸した。", ms: 2000 };
@@ -2048,13 +2077,15 @@ function renderGameSceneBase(): void {
     );
     return;
   }
-  renderTileMap(ctx, map, renderCamera);
+  // つながる地図（世界地図）は、端をまたぐとき、反対側の景色もずらして描く（seams）
+  const seams: Camera[] = seamCameras(renderCamera, map);
+  for (const cam of seams) renderTileMap(ctx, map, cam);
   // 奥にいる人を先に、手前にいる人をあとに描く（足元の位置の順）。
   const playerFeetY = player.y + player.height;
   // 家・木・NPCは、プレイヤーとの前後だけでなく、お互いの前後も足元の位置の順に並べて描く（家の裏を歩く人が家より手前に出ないように）。
   const depthItems: { feetY: number; draw: () => void }[] = [];
   for (const prop of map.data.props ?? []) {
-    depthItems.push({ feetY: propFeetY(prop, map.data.tileHeight), draw: () => renderProps(ctx, map.data, renderCamera, () => true, [prop]) });
+    depthItems.push({ feetY: propFeetY(prop, map.data.tileHeight), draw: () => { for (const cam of seams) renderProps(ctx, map.data, cam, () => true, [prop]); } });
   }
   for (const npc0 of npcs) {
     // 天幕などから出てくる人は、はじめの位置から、本来の位置まで歩いてくる（出てくるあいだは、天幕の奥に隠れて見える）
@@ -2065,7 +2096,7 @@ function renderGameSceneBase(): void {
       const left = 1 - k * k * (3 - 2 * k);
       if (left > 0) npc = { ...npc0, tileX: npc0.tileX + npc0.emerge.dx * left, tileY: npc0.tileY + npc0.emerge.dy * left };
     }
-    depthItems.push({ feetY: visibleNpcFeetY(npc, map.data.tileHeight), draw: () => renderNpcs(ctx, [npc], map, renderCamera) });
+    depthItems.push({ feetY: visibleNpcFeetY(npc, map.data.tileHeight), draw: () => { for (const cam of seams) renderNpcs(ctx, [npc], map, cam); } });
   }
   depthItems.sort((a, b) => a.feetY - b.feetY);
   for (const item of depthItems) {
@@ -2076,27 +2107,30 @@ function renderGameSceneBase(): void {
   const riding = onWorldMap && vehicle !== "foot";
   const nowMs = performance.now();
   if (onWorldMap) {
-    renderVortex(ctx, map, renderCamera, nowMs);
+    for (const cam of seams) renderVortex(ctx, map, cam, nowMs);
     // 停泊中の船・着陸中の飛空艇
     const ts = map.data.tileWidth;
     if (flags["has_ship"] && vehicle !== "ship") {
-      drawShip(ctx, shipPos.x * ts + ts / 2 - renderCamera.x, shipPos.y * ts + ts - renderCamera.y, "right", true);
+      for (const cam of seams) drawShip(ctx, shipPos.x * ts + ts / 2 - cam.x, shipPos.y * ts + ts - cam.y, "right", true);
     }
     if (flags["has_airship"] && vehicle !== "air") {
-      drawAirship(ctx, airshipPos.x * ts + ts / 2 - renderCamera.x, airshipPos.y * ts + ts - renderCamera.y, "down", nowMs, false);
+      for (const cam of seams) drawAirship(ctx, airshipPos.x * ts + ts / 2 - cam.x, airshipPos.y * ts + ts - cam.y, "down", nowMs, false);
     }
   }
   if (!riding) {
-    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY <= playerFeetY, onWorldMap ? WORLD_MAP_CHARACTER_SCALE : 1);
-    renderPlayer(ctx, player, renderCamera, onWorldMap ? WORLD_MAP_CHARACTER_SCALE : 1);
-    renderFollowers(ctx, partyTrail, followers, renderCamera, (feetY) => feetY > playerFeetY, onWorldMap ? WORLD_MAP_CHARACTER_SCALE : 1);
+    const cs = onWorldMap ? WORLD_MAP_CHARACTER_SCALE : 1;
+    for (const cam of seams) renderFollowers(ctx, partyTrail, followers, cam, (feetY) => feetY <= playerFeetY, cs);
+    for (const cam of seams) renderPlayer(ctx, player, cam, cs);
+    for (const cam of seams) renderFollowers(ctx, partyTrail, followers, cam, (feetY) => feetY > playerFeetY, cs);
   } else {
-    const fx = player.x + player.width / 2 - renderCamera.x;
-    const fy = player.y + player.height - renderCamera.y;
-    if (vehicle === "ship") {
-      drawShip(ctx, fx, fy, player.direction);
-    } else {
-      drawAirship(ctx, fx, fy, player.direction, nowMs, true);
+    for (const cam of seams) {
+      const fx = player.x + player.width / 2 - cam.x;
+      const fy = player.y + player.height - cam.y;
+      if (vehicle === "ship") {
+        drawShip(ctx, fx, fy, player.direction);
+      } else {
+        drawAirship(ctx, fx, fy, player.direction, nowMs, true);
+      }
     }
   }
   for (const item of depthItems) {
@@ -2104,7 +2138,7 @@ function renderGameSceneBase(): void {
   }
   if (onWorldMap) {
     if (!flags["vortex_route_open"]) {
-      renderStorm(ctx, map, renderCamera, nowMs);
+      for (const cam of seams) renderStorm(ctx, map, cam, nowMs);
     }
     if (vehicleHint) {
       ctx.font = "9px monospace";
@@ -2781,7 +2815,15 @@ const loop = createGameLoop({
       syncWorldState();
     }
     const moveMap = onWorld && vehicle === "ship" ? getVehicleMaps().ship : onWorld && vehicle === "air" ? getVehicleMaps().air : map;
+    const beforeMove = player;
     player = updatePlayer(player, input.getDirection(), dtMs * (onWorld ? VEHICLE_SPEED[vehicle] : 1) * MOVE_SPEEDS[moveSpeed].factor, moveMap, onWorld ? [] : npcs.filter((n) => !(npcLook(n) === "object" && objectKindOf(n.id) === "generic")));
+    if (map.data.wrap) {
+      // 世界地図の端をまたいだら、仲間の道すじも同じだけずらす（とんで見えないように）
+      const jx = player.x - beforeMove.x, jy = player.y - beforeMove.y;
+      if (Math.abs(jx) > map.widthPx / 2 || Math.abs(jy) > map.heightPx / 2) {
+        partyTrail.shift(Math.abs(jx) > map.widthPx / 2 ? jx : 0, Math.abs(jy) > map.heightPx / 2 ? jy : 0);
+      }
+    }
     let actionUsed = false;
     if (onWorld) {
       actionUsed = updateVehicleAfterMove(
@@ -2808,6 +2850,7 @@ const loop = createGameLoop({
       player.y + player.height / 2,
       map.widthPx,
       map.heightPx,
+      !!map.data.wrap,
     );
 
     const centerTileX = Math.floor((player.x + player.width / 2) / map.data.tileWidth);

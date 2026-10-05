@@ -24,7 +24,12 @@ export function centerCameraOn(
   targetY: number,
   mapWidthPx: number,
   mapHeightPx: number,
+  /** つながる地図は、端でカメラを止めない。 */
+  wrap = false,
 ): Camera {
+  if (wrap) {
+    return { ...camera, x: Math.round(targetX - camera.viewportWidth / 2), y: Math.round(targetY - camera.viewportHeight / 2) };
+  }
   const rawX = targetX - camera.viewportWidth / 2;
   const rawY = targetY - camera.viewportHeight / 2;
 

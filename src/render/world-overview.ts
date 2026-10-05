@@ -65,32 +65,40 @@ export function renderWorldOverview(
   if (!canvas) {
     return;
   }
-  const ox = Math.floor((screenWidth - map.data.width) / 2);
-  const oy = Math.floor((screenHeight - map.data.height) / 2) + 6;
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(canvas, ox, oy);
+  // 画面に収まる大きさに縮めて描く（上の見出し14ドットぶんをあける）。収まるなら等倍。
+  const k = Math.min(1, (screenWidth - 8) / map.data.width, (screenHeight - 18) / map.data.height);
+  const dw = Math.floor(map.data.width * k);
+  const dh = Math.floor(map.data.height * k);
+  const ox = Math.floor((screenWidth - dw) / 2);
+  const oy = 14 + Math.floor((screenHeight - 14 - dh) / 2);
+  ctx.imageSmoothingEnabled = k < 1;
+  ctx.drawImage(canvas, ox, oy, dw, dh);
   ctx.strokeStyle = "#f2c14e";
-  ctx.strokeRect(ox - 1.5, oy - 1.5, map.data.width + 3, map.data.height + 3);
+  ctx.strokeRect(ox - 1.5, oy - 1.5, dw + 3, dh + 3);
   ctx.font = "8px monospace";
   ctx.textBaseline = "top";
   ctx.textAlign = "center";
   for (const [, t] of Object.entries(WORLD_TOWNS)) {
     ctx.fillStyle = "#e8483c";
-    ctx.fillRect(ox + t.x - 1, oy + t.y - 1, 3, 3);
+    const tx = ox + Math.round(t.x * k);
+    const ty = oy + Math.round(t.y * k);
+    ctx.fillRect(tx - 1, ty - 1, 3, 3);
     ctx.fillStyle = "#000";
-    ctx.fillText(t.name, ox + t.x + 1, oy + t.y + 3);
+    ctx.fillText(t.name, tx + 1, ty + 3);
     ctx.fillStyle = "#fff";
-    ctx.fillText(t.name, ox + t.x, oy + t.y + 2);
+    ctx.fillText(t.name, tx, ty + 2);
   }
   WORLD_BEACONS.forEach((b, i) => {
     ctx.fillStyle = lit.has(i + 1) ? BEACON_COLORS[i] : "#50566a";
-    ctx.fillRect(ox + b.x - 1, oy + b.y - 1, 2, 2);
+    ctx.fillRect(ox + Math.round(b.x * k) - 1, oy + Math.round(b.y * k) - 1, 2, 2);
   });
   if (Math.floor(nowMs / 350) % 2 === 0) {
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(ox + playerTile.x - 2, oy + playerTile.y - 2, 5, 5);
+    const px = ox + Math.round(playerTile.x * k);
+    const py = oy + Math.round(playerTile.y * k);
+    ctx.fillRect(px - 2, py - 2, 5, 5);
     ctx.fillStyle = "#e8483c";
-    ctx.fillRect(ox + playerTile.x - 1, oy + playerTile.y - 1, 3, 3);
+    ctx.fillRect(px - 1, py - 1, 3, 3);
   }
   ctx.textAlign = "left";
   ctx.fillStyle = "#f2c14e";

@@ -16,6 +16,8 @@ export interface TileMapData {
    * 将来、実際のドット絵タイルセットに差し替える。
    */
   tileColors: Record<number, string>;
+  /** 上下左右がつながる地図（世界地図）。端から出ると、反対の端から入る。 */
+  wrap?: boolean;
   /**
    * タイルIDごとの地形カテゴリ（`tile-art.ts`の`TILE_ART`のキー。例: "grass"）。
    * 指定があれば、単色四角の代わりにそのカテゴリのドット絵模様で描く。

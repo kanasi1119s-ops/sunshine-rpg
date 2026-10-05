@@ -48,6 +48,14 @@ export class PartyTrail {
     this.followers = this.followers.map(() => ({ seq: 0, moving: false, animMs: 0 }));
   }
 
+  /** つながる地図の端をまたいだとき、道すじ全体をずらして、仲間がとんで見えないようにする。 */
+  shift(dx: number, dy: number): void {
+    for (const c of this.crumbs) {
+      c.x += dx;
+      c.y += dy;
+    }
+  }
+
   /** 毎フレーム呼ぶ。`count` は、ついてくる仲間の人数。`speed` は、主人公の歩く速さの倍率（速く歩くとき、仲間も同じだけ速く追いかける）。 */
   update(player: PlayerState, dtMs: number, count: number, speed = 1): void {
     if (this.crumbs.length === 0) {

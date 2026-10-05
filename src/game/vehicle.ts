@@ -17,6 +17,10 @@ const STORM = new Set([13, 14]);
 export const VEHICLE_SPEED: Record<Vehicle, number> = { foot: 1, ship: 1.6, air: 2.2 };
 
 function groundAt(data: TileMapData, x: number, y: number): number {
+  if (data.wrap) {
+    x = ((x % data.width) + data.width) % data.width;
+    y = ((y % data.height) + data.height) % data.height;
+  }
   if (x < 0 || y < 0 || x >= data.width || y >= data.height) {
     return 0;
   }

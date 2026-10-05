@@ -82,6 +82,11 @@ export function updatePlayer(
   const nextY = state.y + dy * distance;
 
   const from = { x: state.x, y: state.y };
+  const wrapPos = (p: PlayerState): PlayerState => {
+    if (!map.data.wrap) return p;
+    const w = map.widthPx, h = map.heightPx;
+    return { ...p, x: ((p.x % w) + w) % w, y: ((p.y % h) + h) % h };
+  };
   if (!canMoveTo(map, nextX, nextY, state.width, state.height, blockedTiles, from)) {
     // 出口・扉・角の手前で少しずれていても、通れる位置まで横へすべらせる（すべり補助）。
     const slide = findSlide(map, state, dx, dy, nextX, nextY, blockedTiles, from);
@@ -90,13 +95,13 @@ export function updatePlayer(
       const slidX = dx === 0 ? state.x + step : state.x;
       const slidY = dy === 0 ? state.y + step : state.y;
       if (canMoveTo(map, slidX, slidY, state.width, state.height, blockedTiles, from)) {
-        return { ...state, x: slidX, y: slidY, direction, moving: true, animationMs: state.animationMs + dtMs };
+        return wrapPos({ ...state, x: slidX, y: slidY, direction, moving: true, animationMs: state.animationMs + dtMs });
       }
     }
     return { ...state, direction, moving: false, animationMs: 0 };
   }
 
-  return { ...state, x: nextX, y: nextY, direction, moving: true, animationMs: state.animationMs + dtMs };
+  return wrapPos({ ...state, x: nextX, y: nextY, direction, moving: true, animationMs: state.animationMs + dtMs });
 }
 
 /** 進みたい向きが塞がれているとき、横へ何px動けば通れるか（0なら通れる位置が近くにない）。 */
