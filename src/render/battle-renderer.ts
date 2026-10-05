@@ -408,8 +408,10 @@ function renderBattleBody(
     if (spec2.actorId && spec2.motion) {
       const actorPt = pointOf(spec2.actorId);
       const glow = spec2.fx ? FX_COLOR[spec2.fx] : "#9ad0ff";
-      const lunge = lungeOffset(spec2.motion, prog);
-      drawWeaponMotion(ctx, spec2.motion, prog, { x: actorPt.x - 4 + lunge, y: actorPt.y + 2 }, mainTarget, glow);
+      // エフェクトを長く見せるために全体を延ばしても、武器の動きは、もとの速さのまま
+      const mprog = Math.min(1, spec2.motionMs ? animView.elapsedMs / spec2.motionMs : prog);
+      const lunge = lungeOffset(spec2.motion, mprog);
+      drawWeaponMotion(ctx, spec2.motion, mprog, { x: actorPt.x - 4 + lunge, y: actorPt.y + 2 }, mainTarget, glow);
     }
     // 魔法のため（敵が唱えるときも、魔法使いの味方が唱えるときも）
     const casterId = spec2.casterId ?? (spec2.motion === "cast" ? spec2.actorId : undefined);

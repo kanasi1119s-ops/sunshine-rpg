@@ -58,3 +58,19 @@ describe("ふつうの攻撃にエフェクトは出ない", () => {
     expect(battleAnimFor("ガイド Lv1 の たたかう！ ゆらぎ玉 に 5 のダメージ", state, w)?.fx).toBeNull();
   });
 });
+
+import { stretchFx as _stretch, type BattleAnimSpec as _Spec } from "./battle-anim";
+describe("エフェクトの長さ", () => {
+  const base = { actorId: undefined, motion: null, targetIds: ["x"], hurt: false } as const;
+  it("短いエフェクトは、最低1.5秒まで延ばし、エフェクトの始まりの時刻は変えない", () => {
+    const spec = { ...base, fx: "fire", durationMs: 1000, fxStart: 0.5 } as _Spec;
+    const out = _stretch(spec)!;
+    expect(out.durationMs - out.durationMs * out.fxStart).toBeGreaterThanOrEqual(1500);
+    expect(out.durationMs * out.fxStart).toBeCloseTo(500, 0);
+    expect(out.motionMs).toBe(1000);
+  });
+  it("エフェクトの無い動きはそのまま", () => {
+    const spec = { ...base, fx: null, durationMs: 500, fxStart: 0 } as _Spec;
+    expect(_stretch(spec)).toBe(spec);
+  });
+});

@@ -29,6 +29,17 @@ export interface BattleAnimSpec {
   durationMs: number;
   /** エフェクトが始まる位置（0〜1）。矢は飛んで当たったあと、魔法はかざしたあとに始まる。 */
   fxStart: number;
+  /** 武器・杖の動きだけの長さ（ミリ秒）。エフェクトを長く見せるために全体を延ばしても、武器の動きの速さは変えない。 */
+  motionMs?: number;
+}
+
+/** 術・魔法・とくぎのエフェクトを見せる長さ（ミリ秒）。もとの長さの1.5倍で、最低でも1.5秒、最大でも2.4秒。 */
+export function stretchFx(spec: BattleAnimSpec | null): BattleAnimSpec | null {
+  if (!spec || !spec.fx) return spec;
+  const startMs = spec.durationMs * spec.fxStart;
+  const fxMs = Math.min(2400, Math.max(1500, (spec.durationMs - startMs) * 1.5));
+  const durationMs = Math.round(startMs + fxMs);
+  return { ...spec, motionMs: spec.durationMs, durationMs, fxStart: durationMs > 0 ? startMs / durationMs : 0 };
 }
 
 const MOTION_OF_WEAPON: Record<WeaponType, WeaponMotion> = { sword: "slash", dagger: "stab", staff: "cast", bow: "shoot", axe: "chop", spear: "thrust" };
@@ -65,6 +76,10 @@ function byName(state: BattleState, name: string): Combatant | undefined {
 }
 
 export function battleAnimFor(text: string, state: BattleState, weaponOf: (id: string) => WeaponType | undefined): BattleAnimSpec | null {
+  return stretchFx(battleAnimRaw(text, state, weaponOf));
+}
+
+function battleAnimRaw(text: string, state: BattleState, weaponOf: (id: string) => WeaponType | undefined): BattleAnimSpec | null {
   const make = (p: Partial<BattleAnimSpec> & { targetIds: string[] }): BattleAnimSpec => {
     const motion = p.motion ?? null;
     return { actorId: undefined, motion, fx: null, hurt: false, durationMs: motion ? MOTION_DURATION[motion] : 900, fxStart: motion === "cast" ? 0.4 : motion === "shoot" ? 0.55 : motion ? 0.5 : 0, ...p };
