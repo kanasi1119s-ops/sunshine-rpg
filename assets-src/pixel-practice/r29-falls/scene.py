@@ -66,107 +66,123 @@ def load_spire():
 
 
 def cloud_lobes():
-    """嵐の雲を、大小のもくもく（積乱雲のかたまり）を重ねて組む（2026-10-05、人間の指示「雲全体的にモクモクさせよう。
-    上側が切れてる。もっとリアルな感じで、透ける感じも雲の周りに。今の雲は有機物な感じが強い」）。
-    外形: まん中（塔の上）ほど高くもり上がるドーム。左右のはしは低く、丸く終わる（絵のはしで切れない）。底は平ら。
-    もくもくの大きさは 6〜24 ドットとばらばらにし、外がわのふちほど小さいもくもく（カリフラワーのような頭）。"""
+    """嵐の雲を、大小のもくもくを重ねて組む。
+    2026-10-05 人間の指示「雲全体的にモクモクさせよう…今の雲は有機物な感じが強い」のあと、「雲、自然な感じにして」で作り直し:
+      - 外形は、きれいなドーム（きのこのかさ）にしない。上のふちの高さは、ゆるいゆらぎで左右ふぞろい（右側が少し高い）。
+        左右のはしの長さもちがう。底は、ちぎれてでこぼこ（ところどころ、すそが垂れ下がる）。
+      - もくもくは、決まった段に並べない。外形の中に、ばらばらに散らす（大きなもくもくは少なく、小さなもくもくが多い。
+        ふちに近いほど小さい＝カリフラワーのような頭）。
+      - 本体のまわりに、はなれた小さな雲のかけら（ちぎれ雲）をいくつか置く。
+    戻り値: (もくもく [(x, y, 半径, 高さ)], 底の高さ bottom(x))"""
+    import random
+    rnd = random.Random(1005)
+    LEFT, RIGHT = 18, 306
+
+    def top_at(x):                      # 雲の上のふち（左右ふぞろい）
+        t = (x - 168) / 150
+        return 66 + t * t * 78 + (vnoise(x, 5, 46, 401) - 0.5) * 24 - max(0.0, (x - 170) / 150) * 10
+
+    def bottom(x):                      # 雲の底（ちぎれてでこぼこ。ところどころ垂れ下がる）
+        return 168 + (vnoise(x, 9, 18, 402) - 0.5) * 12 + max(0.0, vnoise(x, 2, 7, 403) - 0.62) * 34
+
     lobes = []
-    def top_at(x):                      # 雲の上のふち（ドーム）
-        t = (x - CX) / 138
-        return 74 + t * t * 70
-    BOTTOM = 172                        # 雲の底（平ら）
-    k = 0
-    # 中身（大きなもくもく。うしろの方）
-    for i in range(16):
-        x = 40 + i * 16 + (hsh(i, 1, 300) - 0.5) * 10
-        if abs(x - CX) > 132:
+    # 本体: 外形の中に、ばらばらに散らす（大きい玉から置き、小さい玉ほど多く）
+    tries = 0
+    while len(lobes) < 120 and tries < 20000:
+        tries += 1
+        x = rnd.uniform(LEFT, RIGHT)
+        tp, bt = top_at(x), bottom(x)
+        y = rnd.uniform(tp, bt)
+        edge = min(x - LEFT, RIGHT - x, y - tp) / 40     # ふちに近いほど 0
+        rmax = 6 + 22 * max(0.0, min(1.0, edge))
+        r = rnd.uniform(5, rmax) if rnd.random() < 0.7 else rnd.uniform(5, 9)
+        # 玉が外形から大きくはみ出さない（上へは少し出てよい＝もくもくの頭）
+        if y - r < tp - r * 0.55 or x - r < LEFT - 6 or x + r > RIGHT + 6:
             continue
-        y = (top_at(x) + BOTTOM) / 2 + (hsh(i, 2, 300) - 0.5) * 10
-        lobes.append((x, y, 22 + hsh(i, 3, 300) * 6, 0.0))
-        lobes.append((x + 8, top_at(x + 8) + 22, 16 + hsh(i, 9, 300) * 4, 1.0))     # 上のふちのすぐ下（すき間を作らない）
-    # 上のふちのもくもく（小〜中。ふちに沿って並び、少し外へ出る）
-    x = 26.0
-    while x < W - 26:
-        t = abs(x - CX) / 140
-        r = 9 + hsh(int(x), 4, 300) * 10 * (1 - t * 0.45)
-        y = top_at(x) + r * 0.6 + (hsh(int(x), 5, 300) - 0.5) * 6
-        lobes.append((x, y, r, 3.0))
-        # その上に、ときどき小さなもくもくの頭
-        if hsh(int(x), 6, 300) > 0.55:
-            lobes.append((x + (hsh(int(x), 7, 300) - 0.5) * r, y - r * 0.75, r * 0.6, 4.0))
-        x += r * 1.05
-    # 下の段（手前）: 底にそって、中くらいのもくもく
-    x = 30.0
-    while x < W - 30:
-        t = abs(x - CX) / 140
-        r = 11 + hsh(int(x), 8, 300) * 7
-        y = BOTTOM - r * 0.45 + t * t * 6
-        lobes.append((x, y, r, 5.0))
-        x += r * 1.3
+        lobes.append((x, y, r, 0.0))
+    # はしと上のふちを、小さなもくもくでうめる（すき間の穴を作らない）
+    for i in range(70):
+        x = LEFT + 8 + (RIGHT - LEFT - 16) * (i + rnd.random()) / 70
+        tp = top_at(x)
+        r = rnd.uniform(5, 11)
+        lobes.append((x, tp + r * rnd.uniform(0.35, 0.8), r, 0.0))
+    for i in range(40):
+        x = LEFT + 10 + (RIGHT - LEFT - 20) * (i + rnd.random()) / 40
+        y = (top_at(x) + bottom(x)) / 2
+        lobes.append((x, y, rnd.uniform(14, 20), 0.0))
+    # ちぎれ雲（本体からはなれた、小さなかけら）
+    for (x, y) in ((8, 150), (300, 112), (330, 158), (40, 104)):
+        for k in range(3):
+            lobes.append((x + rnd.uniform(-8, 8), y + rnd.uniform(-3, 3), rnd.uniform(4, 7), 0.0))
     # 塔が雲を突き抜ける所: 塔の両わきに、まとわりつく小さなもくもく
-    lobes.append((CX - 13, top_at(CX) + 4, 8, 12.0))
-    lobes.append((CX + 14, top_at(CX) + 6, 7, 12.0))
-    return lobes, BOTTOM
+    lobes.append((CX - 13, top_at(CX) + 3, 8, 5.0))
+    lobes.append((CX + 14, top_at(CX) + 5, 7, 5.0))
+    return lobes, bottom
 
 
 LIGHT = (-0.5, -0.66, 0.56)                # 左上・手前からの光
 
 
 def cloud_layer():
-    """もくもくの雲（どのコマも同じ）。もくもくを、高さの場（それぞれの玉の高さのいちばん高い所）としてまとめ、
-    その傾きで陰をつける。玉と玉は、境でなめらかにつながり、くぼみ（谷）だけが暗い線になる（つぶつぶの玉に見えない）。
-    色は 9 段の平らな面にそろえ、1ドットのちらばりは置かない。外のふちの左上は銀色に光る。
+    """もくもくの雲（どのコマも同じ）。ドット絵の雲の描き方: 丸いもくもくを、奥（底が上にある玉）から手前へ重ねて塗る。
+    - 玉の中の色は、雲全体の上下の位置で決まる平らな色（上ほど明るく、底は暗く重い。左ほど少し明るい）。
+    - 玉の左上のふち（2〜3ドット）は1段明るく、右下のふち（内がわ）は1段暗い。手前の玉が奥の玉をかくすので、
+      奥の玉のふちの弧だけが残り、もくもくの重なりに見える。
+    - 1ドットのちらばりは置かない。
     戻り値: (雲の色 {(x,y):色}, 雲のマスの集まり)"""
-    lobes, BOTTOM = cloud_lobes()
-    height = {}
-    for (lx, ly, r, z) in lobes:
+    lobes, bottom = cloud_lobes()
+    order = sorted(lobes, key=lambda l: l[1] + l[2])          # 玉の下のはしが上にあるものから（奥から）
+    n = len(CLOUD) - 1
+    tone = {}
+    for (lx, ly, r, _z) in order:
         for y in range(int(ly - r) - 1, int(ly + r) + 2):
             for x in range(int(lx - r) - 1, int(lx + r) + 2):
-                if not (0 <= x < W and 0 <= y < H) or y > BOTTOM + 3 * math.sin(x / 9.0) + 2 * math.sin(x / 23.0 + 1):
-                    continue                    # 雲の底は、ゆるく波うつ
-                d2 = (x + 0.5 - lx) ** 2 + (y + 0.5 - ly) ** 2
-                if d2 <= r * r:
-                    h = z + math.sqrt(r * r - d2)
-                    if h > height.get((x, y), -1e9):
-                        height[(x, y)] = h
-    # 高さの場を少しぼかす（玉と玉の境が角ばった岩の面にならず、ふんわりつながる）
-    raw = height
-    height = {}
-    for (x, y) in raw:
-        acc, cnt = 0.0, 0
-        for dy in range(-2, 3):
-            for dx in range(-2, 3):
-                hv = raw.get((x + dx, y + dy))
-                if hv is not None:
-                    acc += hv
-                    cnt += 1
-        height[(x, y)] = acc / cnt
-    ln = math.sqrt(sum(c * c for c in LIGHT))
-    L = [c / ln for c in LIGHT]
+                if not (0 <= x < W and 0 <= y < H) or y > bottom(x):
+                    continue
+                dx, dy = x + 0.5 - lx, y + 0.5 - ly
+                d = math.sqrt(dx * dx + dy * dy)
+                if d > r:
+                    continue
+                # 雲全体の上下・左右で決まる明るさ
+                top = 60.0
+                v = 0.92 - (y - top) / (bottom(x) - top + 1) * 0.66 - (x - 40) / 600
+                # 玉のふち: 左上は明るく、右下（内がわ）は暗く
+                rim = r - d
+                ang = (dx * -0.6 + dy * -0.8) / (d + 1e-6)           # 左上を向く度合い
+                if rim < 2.6 and ang > 0.25:
+                    v += 0.14 if rim < 1.3 else 0.08
+                elif rim < 2.2 and ang < -0.35:
+                    v -= 0.1
+                tone[(x, y)] = v
     layer = {}
-    n = len(CLOUD) - 1
-    for (x, y), h in height.items():
-        hl = height.get((x - 1, y), h - 1.5)
-        hr = height.get((x + 1, y), h - 1.5)
-        hu = height.get((x, y - 1), h - 1.5)
-        hd = height.get((x, y + 1), h - 1.5)
-        gx, gy = (hr - hl) / 2, (hd - hu) / 2
-        nx, ny, nz = -gx, -gy, 1.6
-        nl = math.sqrt(nx * nx + ny * ny + nz * nz)
-        lam = max(0.0, (nx * L[0] + ny * L[1] + nz * L[2]) / nl)
-        v = 0.12 + lam * 0.62
-        v += max(0.0, (130 - y) / 70) * 0.22                    # 上ほど光を受けて明るい（積乱雲の頭）
-        v -= max(0.0, (y - (BOTTOM - 30)) / 30) * 0.3           # 雲の底は暗く重い
-        # くぼみ（となりより、まわりが高い所＝もくもくとの境の谷）は暗く
-        if (hl + hr + hu + hd) / 4 - h > 0.6:
-            v -= 0.12
-        # 外のふち: 左上は銀色、右下は暗く
-        out_l, out_u = (x - 1, y) not in height, (x, y - 1) not in height
-        if out_l or out_u:
-            v += 0.2 if (out_l and out_u) or v > 0.42 else 0.0
+    for (x, y), v in tone.items():
         k = max(0, min(n, int(round(v * n))))
-        col = CLOUD[k]
-        layer[(x, y)] = col
+        layer[(x, y)] = CLOUD[k]
+    # 雲の中の小さな穴（外とつながっていないすき間）は、まわりの色でうめる
+    from collections import deque
+    outside = set()
+    dq = deque((x, y) for x in range(W) for y in (0, H - 1))
+    while dq:
+        q = dq.popleft()
+        if q in outside or q in layer or not (0 <= q[0] < W and 0 <= q[1] < H):
+            continue
+        outside.add(q)
+        x, y = q
+        dq.extend(((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)))
+    ys = [y for (_, y) in layer]
+    holes = [(x, y) for y in range(min(ys), max(ys) + 1) for x in range(W) if (x, y) not in layer and (x, y) not in outside]
+    while holes:
+        rest = []
+        for (x, y) in holes:
+            nb = [layer.get(q) for q in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)) if q in layer]
+            if nb:
+                layer[(x, y)] = max(set(nb), key=nb.count)
+                tone[(x, y)] = 0.5
+            else:
+                rest.append((x, y))
+        if len(rest) == len(holes):
+            break
+        holes = rest
     # ちぎれた1ドット（まわりの4つのうち3つ以上が別の色）を、まわりの多い色に
     for _ in range(2):
         for (x, y), c in list(layer.items()):
@@ -174,7 +190,7 @@ def cloud_layer():
             nb = [b for b in nb if b is not None]
             if len(nb) == 4 and sum(b != c for b in nb) >= 3:
                 layer[(x, y)] = max(set(nb), key=nb.count)
-    return layer, height
+    return layer, tone
 
 
 VEIL = [(150, 156, 178), (186, 190, 208)]
