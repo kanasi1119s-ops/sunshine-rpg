@@ -54,7 +54,12 @@ def check(path):
     bh, bw = ys.max() - ys.min() + 1, xs.max() - xs.min() + 1
     box_fill = float(m.sum() / (bh * bw))
     res["box_fill"] = round(box_fill, 3)
-    res["framed"] = bool(box_fill > 0.9) or bool (box_fill > 0.76 and abs(bh - bw) < 0.06 * max(bh, bw))
+    # 四すみまで詰まっているか（四角い額縁の絵）。丸い体（苔玉・光の玉）は四すみが空くので額縁としない（2026-10-05）
+    y0, x0 = ys.min(), xs.min(); c = max(2, int(min(bh, bw) * 0.12))
+    corners = float(np.mean([m[y0:y0 + c, x0:x0 + c].mean(), m[y0:y0 + c, x0 + bw - c:x0 + bw].mean(),
+                             m[y0 + bh - c:y0 + bh, x0:x0 + c].mean(), m[y0 + bh - c:y0 + bh, x0 + bw - c:x0 + bw].mean()]))
+    res["corners"] = round(corners, 3)
+    res["framed"] = bool(box_fill > 0.9) or bool(box_fill > 0.76 and abs(bh - bw) < 0.06 * max(bh, bw) and corners > 0.6)
     res["ok"] = bool(not res["cut"] and res["parts"] >= MAIN_PART and not res["framed"])
     json.dump(res, open(path + ".check.json", "w"), ensure_ascii=False)
     return res

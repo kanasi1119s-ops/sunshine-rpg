@@ -1649,8 +1649,8 @@
  },
  {
   "id": "enc-kanou-2-0",
-  "prompt": "a quiet shadow, a soft round dark figure sitting with folded hands, faint green eyes",
-  "status": "done",
+  "prompt": "a soft round dark shadow creature sitting quietly with small folded paws, a round body like a smooth dark stone, faint green eyes, full body",
+  "status": "todo",
   "key": "enemy:enc-kanou-2-0",
   "kind": "mob",
   "name": "静かな影",
@@ -1662,7 +1662,8 @@
    75,
    70
   ],
-  "draft": "enc-kanou-2-0_0"
+  "draft": "enc-kanou-2-0_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-kanou-2-1",
@@ -1684,7 +1685,7 @@
  {
   "id": "enc-kanou-2-2",
   "prompt": "a green light spirit, a glowing green flame-like wisp with leaf-shaped flickers",
-  "status": "todo",
+  "status": "draft",
   "key": "enemy:enc-kanou-2-2",
   "kind": "mob",
   "name": "緑の光",
@@ -1702,7 +1703,7 @@
  {
   "id": "enc-kanou-2-3",
   "prompt": "a moss stone, a round stone completely covered in thick moss and small mushrooms, with a sleepy eye",
-  "status": "todo",
+  "status": "draft",
   "key": "enemy:enc-kanou-2-3",
   "kind": "mob",
   "name": "苔の石",
