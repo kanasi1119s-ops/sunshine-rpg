@@ -1721,7 +1721,7 @@
  {
   "id": "enc-kanou-2-4",
   "prompt": "a forest dew droplet creature with a leaf hat and a stem tail, translucent green",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-2-4",
   "kind": "mob",
   "name": "森のしずく",
@@ -1734,12 +1734,13 @@
    150
   ],
   "bg": "dark",
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-kanou-2-4_x0"
  },
  {
   "id": "enc-kanou-2-5",
   "prompt": "a leaf-winged insect with wings exactly like green leaves with veins, a twig body",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-2-5",
   "kind": "mob",
   "name": "葉の羽虫",
@@ -1750,7 +1751,8 @@
    110,
    160,
    90
-  ]
+  ],
+  "draft": "enc-kanou-2-5_1"
  },
  {
   "id": "enc-kanou-3-0",
