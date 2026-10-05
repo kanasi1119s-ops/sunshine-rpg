@@ -1,6 +1,7 @@
 import { hashCell } from "../color-utils";
 import type { Npc } from "../npc";
 import { isHouse } from "../map/map-props";
+import { INN_SPOTS } from "../map/town-decor";
 import type { MapProp, TileMapData } from "../map/types";
 import { chestNpc } from "./dungeon-objects";
 import { DUNGEON_PARENT } from "./dungeon-parent";
@@ -120,6 +121,9 @@ export function addHouseInteriors(maps: Record<string, TileMapData>, npcsByMap: 
     let n = 0;
     for (const prop of [...data.props]) {
       if (!isHouse(prop.kind)) continue;
+      // 宿屋の建物は、専用の中身（`inn-interiors.ts`）にする
+      const inn = INN_SPOTS.get(mapId);
+      if (inn && inn.x === prop.tileX && inn.y === prop.tileY) continue;
       const door = { x: prop.tileX, y: prop.tileY + 1 };
       if (!walkable(door.x, door.y) || exitAt(door.x, door.y) || npcs.some((p) => p.tileX === door.x && p.tileY === door.y)) continue;
       // 玄関の前に、すでに別の出入り口があるとき（相談所など）は、そちらにまかせる

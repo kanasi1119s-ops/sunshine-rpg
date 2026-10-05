@@ -6,13 +6,14 @@ import { getSpriteCanvas } from "../game/art/sprite";
  * マップ上の「物」（宝箱・木箱・階段・石碑・機械・祭壇・焦げ跡・荷馬車）の絵。1マス（16×16）に、
  * 縁取り・地の色・影の2〜3段で描く（ハイライトなし、光は左上）。種類は、物のIDに含まれる言葉で決める（`character-specs.ts`の OBJECT_WORDS）。
  */
-export type ObjectKind = "table" | "tansu" | "bed" | "shelf" | "beacon" | "boat" | "chest" | "crate" | "stairs" | "tablet" | "machine" | "altar" | "scorch" | "wagon" | "sign" | "oldsign" | "generic";
+export type ObjectKind = "table" | "tansu" | "bed" | "shelf" | "beacon" | "boat" | "chest" | "crate" | "stairs" | "tablet" | "machine" | "altar" | "scorch" | "wagon" | "sign" | "oldsign" | "counter" | "generic";
 
 export function objectKindOf(id: string): ObjectKind {
   const words = id.split("-");
   const has = (...ws: string[]): boolean => words.some((w) => ws.includes(w));
   if (has("signpost", "oldsign")) return "oldsign";
   if (has("sign", "signboard")) return "sign";
+  if (has("counter")) return "counter";
   if (has("table")) return "table";
   if (has("tansu")) return "tansu";
   if (has("bed")) return "bed";
@@ -236,6 +237,17 @@ export function drawObjectMarker(ctx: CanvasRenderingContext2D, kind: ObjectKind
         r(ctx, i % 2 ? "#6a6a78" : "#8a8a98", x + 2, top + 3 + i * 3, w - 4, 2);
         r(ctx, "#3a3a46", x + 2, top + 5 + i * 3, w - 4, 1);
       }
+      return true;
+    }
+    case "counter": {
+      // 宿屋の受付カウンター（16×16）: 明るい天板と、板をならべた前面。左右のマスとつながって、ひとつづきに見える
+      r(ctx, "#ecc58a", x, y + 2, w, 1);
+      r(ctx, "#d9a566", x, y + 3, w, 5);
+      r(ctx, "#b07a3c", x, y + 8, w, 1);
+      r(ctx, "#8a5a2c", x, y + 9, w, 6);
+      for (const px of [3, 8, 13]) r(ctx, "#6a4220", x + px, y + 9, 1, 6);
+      r(ctx, "#5a3a1c", x, y + 15, w, 1);
+      r(ctx, "rgba(0,0,0,0.18)", x, y + 13, w, 2);
       return true;
     }
     case "sign":

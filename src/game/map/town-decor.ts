@@ -11,6 +11,9 @@ import type { EventCommand } from "../event/types";
  * 並べ、広場に井戸・噴水・ベンチ・花壇を置き、通りに街灯を立て、すみに木を植える。
  * 置くときは、出入り口・人のいるマス・そこへ歩く道がふさがれないようにする（ふさぐ位置はあきらめる）。毎回同じ位置になる。
  */
+/** 町ごとの宿屋の建物（2階建ての屋敷）の場所。足元の1マス下が玄関（`house-interiors.ts` が出入り口にする）。 */
+export const INN_SPOTS = new Map<string, { x: number; y: number }>();
+
 const HOUSE_KINDS: MapPropKind[] = ["house", "house-blue", "house-green", "house", "house-blue", "house-green"];
 const AROUND: Array<[number, number]> = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
@@ -91,6 +94,40 @@ export function applyTownDecor(maps: Record<string, TileMapData>, npcsByMap: Rec
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (isOpen(x, y)) open++;
     const existingHouses = props.filter((p) => isHouse(p.kind)).length;
     const wantHouses = Math.max(0, Math.min(9, Math.round(open / 30)) - existingHouses);
+
+    // 0) 宿屋: 2階建ての屋敷を、道に面した場所に1軒（足元の下がひらけている所）。置けない町は、屋外に宿屋の主人を置く
+    {
+      let idSaltEarly = 0;
+      for (let i = 0; i < mapId.length; i++) idSaltEarly = (idSaltEarly * 31 + mapId.charCodeAt(i)) % 9973;
+      const innKinds: MapPropKind[] = ["manor", "manor-blue", "manor-green"];
+      const cands: Array<[number, number]> = [];
+      let anyRoad = false;
+      for (let i = 0; i < ground.length && !anyRoad; i++) if (art(i % w, Math.floor(i / w)) === "path") anyRoad = true;
+      // 玄関（足元の1マス下）が、ほかの飾りの絵がはみ出すマスの奥に隠れないように
+      const covered = new Set<number>();
+      for (const prop of props) {
+        const tiles = propFootprintTiles(prop);
+        if (!tiles.length) continue;
+        const top = Math.min(...tiles.map((t) => t.y)) - propOverhangTiles(prop.kind, data.tileHeight);
+        const pad = prop.kind === "tree" ? 1 : 0;
+        const x0 = Math.min(...tiles.map((t) => t.x)) - pad, x1 = Math.max(...tiles.map((t) => t.x)) + pad;
+        for (let yy = top; yy <= prop.tileY; yy++) for (let xx = x0; xx <= x1; xx++) covered.add(yy * w + xx);
+      }
+      for (let y = 4; y < h - 2; y++) {
+        for (let x = 3; x < w - 3; x++) {
+          if (!isOpen(x, y) || isRoad(x, y) || !isOpen(x, y + 1) || occupied.has((y + 1) * w + x) || covered.has((y + 1) * w + x) || covered.has((y + 2) * w + x)) continue;
+          const nearRoad = [1, 2, 3].some((d) => isRoad(x, y + d)) || [-4, -3, 3, 4].some((d) => isRoad(x + d, y));
+          if (nearRoad || !anyRoad) cands.push([x, y]);
+        }
+      }
+      const sorted = [...cands].sort((a, b) => Math.hypot(a[0] - w / 2, a[1] - h / 2) - Math.hypot(b[0] - w / 2, b[1] - h / 2));
+      for (const [x, y] of sorted) {
+        if (place(innKinds[(idSaltEarly + x) % innKinds.length], x, y)) {
+          INN_SPOTS.set(mapId, { x, y });
+          break;
+        }
+      }
+    }
 
     // 1) 家: 道に面した場所（足元の下・左右が道か、道のすぐわき）から、まばらに選んで並べる。間は横4マス・縦3マスあける
     const spots: Array<[number, number]> = [];
@@ -197,12 +234,13 @@ export function applyTownDecor(maps: Record<string, TileMapData>, npcsByMap: Rec
     }
 
     // 6) 宿屋の主人。すでにいる人（宿屋の主人）にはとまる選択を足し、いない町は、町の広場の近くに1人置く
-    addInnkeeper(mapId, data, npcsByMap, { occupied, isOpen, inMap, nearNpcOrExit });
+    // 宿屋の建物を置けた町は、中に宿屋の主人がいる（`inn-interiors.ts`）。置けなかった町だけ、屋外に主人を置く
+    if (!INN_SPOTS.has(mapId)) addInnkeeper(mapId, data, npcsByMap, { occupied, isOpen, inMap, nearNpcOrExit });
   }
 }
 
 /** 宿代（灯貨）。町ごと。物語が進む町ほど高い。 */
-const INN_PRICES: Record<string, number> = {
+export const INN_PRICES: Record<string, number> = {
   "touri-town": 8, "mugikano-village": 12, "garasuko-town": 16, "tetsukusari-town": 20, "sanone-town": 24,
   "kiri-town": 28, "shimohara-town": 32, "fushima-town": 36, "toushin-town": 40,
 };
