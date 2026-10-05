@@ -2467,7 +2467,7 @@
  },
  {
   "id": "enc-islet-5-1-4",
-  "prompt": "a shell crystal creature, a spiral seashell made of mother-of-pearl crystal with an eye in the opening",
+  "prompt": "a spiral seashell monster with an iridescent mother-of-pearl crystal shell, soft purple tentacles and one big eye coming out of the opening",
   "status": "done",
   "key": "enemy:enc-islet-5-1-4",
   "kind": "mob",
@@ -2480,29 +2480,33 @@
    210,
    220
   ],
-  "draft": "enc-islet-5-1-4_0"
+  "draft": "enc-islet-5-1-4_x1",
+  "bg": "dark",
+  "seed_base": 6001
  },
  {
   "id": "enc-islet-5-1-5",
-  "prompt": "a bubble wing creature, a fish-like body with wings made of clustered bubbles",
-  "status": "done",
+  "prompt": "a flying fish monster with large wings made of clustered shiny bubbles, silver-blue scales, big round eye, side view, no human",
+  "status": "todo",
   "key": "enemy:enc-islet-5-1-5",
   "kind": "mob",
   "name": "泡の羽",
   "zone": "islet-5-1",
   "level": 23,
-  "shape": "winged",
+  "shape": "long",
   "tone": [
    150,
    200,
    220
   ],
-  "draft": "enc-islet-5-1-5_0"
+  "draft": "enc-islet-5-1-5_0",
+  "bg": "dark",
+  "seed_base": 6001
  },
  {
   "id": "enc-islet-6-1-0",
   "prompt": "a lava shadow, a crawling dark creature with cracks of flowing lava along its back",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-6-1-0",
   "kind": "mob",
   "name": "溶岩の影",
@@ -2513,7 +2517,8 @@
    80,
    40,
    30
-  ]
+  ],
+  "draft": "enc-islet-6-1-0_1"
  },
  {
   "id": "enc-islet-6-1-1",
