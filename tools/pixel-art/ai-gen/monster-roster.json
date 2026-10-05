@@ -662,7 +662,7 @@
  {
   "id": "enc-shimohara-facility-3",
   "prompt": "a monster of jagged pale blue ice crystal spikes growing out of a lump of frozen soil, a glowing cold blue core in the middle, no person",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-shimohara-facility-3",
   "kind": "mob",
   "name": "霜柱の結晶",
@@ -674,7 +674,7 @@
    220,
    240
   ],
-  "draft": "enc-shimohara-facility-3_1",
+  "draft": "enc-shimohara-facility-3_0",
   "seed_base": 6001
  },
  {
@@ -697,7 +697,7 @@
  {
   "id": "enc-shimohara-facility-5",
   "prompt": "a pale owl-like bird monster with white frost feathers and smoky dark wing edges, full body with head and talons, piercing pale eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-shimohara-facility-5",
   "kind": "mob",
   "name": "白い羽の影",
@@ -709,7 +709,7 @@
    215,
    225
   ],
-  "draft": "enc-shimohara-facility-5_1",
+  "draft": "enc-shimohara-facility-5_x0",
   "seed_base": 6001
  },
  {
@@ -749,7 +749,7 @@
  {
   "id": "enc-fushima-base-2",
   "prompt": "a floating surveillance eye machine, a brass ring frame with a large glass lens and small propellers",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-fushima-base-2",
   "kind": "mob",
   "name": "監視の目",
@@ -760,12 +760,13 @@
    170,
    140,
    80
-  ]
+  ],
+  "draft": "enc-fushima-base-2_0"
  },
  {
   "id": "enc-fushima-base-3",
   "prompt": "a floating stone with a small tree growing on top and hanging roots, two glowing slits in the rock",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-fushima-base-3",
   "kind": "mob",
   "name": "浮き石",
@@ -776,12 +777,13 @@
    120,
    115,
    105
-  ]
+  ],
+  "draft": "enc-fushima-base-3_1"
  },
  {
   "id": "enc-fushima-base-4",
   "prompt": "a small fluffy cloud insect with translucent wings and a cotton-like body, tiny antenna lights",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-fushima-base-4",
   "kind": "mob",
   "name": "雲の羽虫",
@@ -792,7 +794,8 @@
    215,
    220,
    235
-  ]
+  ],
+  "draft": "enc-fushima-base-4_1"
  },
  {
   "id": "enc-fushima-base-5",
