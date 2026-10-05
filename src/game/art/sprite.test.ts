@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import { decodeSprite, type SpriteData } from "./sprite";
 import { SPRITE_DATA } from "./sprite-data.generated";
 
+/** 町・村・お城の印は64×64（2026-10-05、6回目）。 */
+const TOWN_ICONS_64 = new Set(["port", "village", "lake", "mine", "castle", "tents", "temple", "snowtown", "sky", "palace", "village-mist", "tents-grass"].map((n) => `prop:icon-${n}`));
+
 describe("decodeSprite", () => {
   it("色番号（A〜Z）と透明（_）、続く個数（36進数）を正しく読む", () => {
     const data: SpriteData = { size: 2, palette: ["#000000", "#ffffff"], rle: "A_B2" };
@@ -43,7 +46,7 @@ describe("書き出されたドット絵データ（sprite-data.generated.ts）"
 
   it("地形は128×128、雑魚の敵は64×64、飾りは48・80（教会は88・中の1枚絵は208）、登場人物は104×104、ボスは256×256", () => {
     for (const key of keys) {
-      const expected = key.startsWith("terrain:") ? 128 : key.startsWith("mob:") ? 64 : key.startsWith("prop:manor") ? 80 : key.startsWith("icon:") ? 16 : key.startsWith("prop:house") || key === "prop:jail-bars" ? 64 : key === "prop:icon-spire" ? 112 : key === "prop:icon-core-spire" ? 256 : key === "prop:church" ? 88 : key === "prop:church-interior" ? 224 : key.startsWith("prop:") ? 48 : key.startsWith("char:") ? 104 : key.startsWith("enemy:") ? 96 : 256;
+      const expected = key.startsWith("terrain:") ? 128 : key.startsWith("mob:") ? 64 : key.startsWith("prop:manor") ? 80 : key.startsWith("icon:") ? 16 : key.startsWith("prop:house") || key === "prop:jail-bars" ? 64 : key === "prop:icon-spire" ? 112 : key === "prop:icon-core-spire" ? 256 : TOWN_ICONS_64.has(key) ? 64 : key === "prop:church" ? 88 : key === "prop:church-interior" ? 224 : key.startsWith("prop:") ? 48 : key.startsWith("char:") ? 104 : key.startsWith("enemy:") ? 96 : 256;
       expect(SPRITE_DATA[key].size, key).toBe(expected);
     }
   });

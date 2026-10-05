@@ -45,16 +45,16 @@ export const PIECES = [
   piece("P20-木箱の山", "r17-polish", "crates.txt", "pal-crates.json"),
   piece("P21-花壇", "r17-polish", "flowerbed.txt", "pal-flowerbed.json"),
   // 世界地図の町のアイコン（r17-polish/worldicons.py で一から）
-  piece("P22-アイコンport", "r26-game-icons", "icon-port.txt", "pal-icon-port.json"),
-  piece("P23-アイコンvillage", "r26-game-icons", "icon-village.txt", "pal-icon-village.json"),
-  piece("P24-アイコンlake", "r26-game-icons", "icon-lake.txt", "pal-icon-lake.json"),
-  piece("P25-アイコンmine", "r26-game-icons", "icon-mine.txt", "pal-icon-mine.json"),
-  piece("P26-アイコンcastle", "r26-game-icons", "icon-castle.txt", "pal-icon-castle.json"),
-  piece("P27-アイコンtents", "r26-game-icons", "icon-tents.txt", "pal-icon-tents.json"),
-  piece("P28-アイコンtemple", "r26-game-icons", "icon-temple.txt", "pal-icon-temple.json"),
-  piece("P29-アイコンsnowtown", "r26-game-icons", "icon-snowtown.txt", "pal-icon-snowtown.json"),
-  piece("P30-アイコンsky", "r26-game-icons", "icon-sky.txt", "pal-icon-sky.json"),
-  piece("P31-アイコンpalace", "r26-game-icons", "icon-palace.txt", "pal-icon-palace.json"),
+  piece("P22-アイコンport", "r28-game-icons", "icon-port.txt", "pal-icon-port.json", {}, 64),
+  piece("P23-アイコンvillage", "r28-game-icons", "icon-village.txt", "pal-icon-village.json", {}, 64),
+  piece("P24-アイコンlake", "r28-game-icons", "icon-lake.txt", "pal-icon-lake.json", {}, 64),
+  piece("P25-アイコンmine", "r28-game-icons", "icon-mine.txt", "pal-icon-mine.json", {}, 64),
+  piece("P26-アイコンcastle", "r28-game-icons", "icon-castle.txt", "pal-icon-castle.json", {}, 64),
+  piece("P27-アイコンtents", "r28-game-icons", "icon-tents.txt", "pal-icon-tents.json", {}, 64),
+  piece("P28-アイコンtemple", "r28-game-icons", "icon-temple.txt", "pal-icon-temple.json", {}, 64),
+  piece("P29-アイコンsnowtown", "r28-game-icons", "icon-snowtown.txt", "pal-icon-snowtown.json", {}, 64),
+  piece("P30-アイコンsky", "r28-game-icons", "icon-sky.txt", "pal-icon-sky.json", {}, 64),
+  piece("P31-アイコンpalace", "r28-game-icons", "icon-palace.txt", "pal-icon-palace.json", {}, 64),
 ];
 
 PIECES.push(
@@ -71,11 +71,11 @@ PIECES.push(
   piece("P49-教会の中", "r17-polish", "church-interior.txt", "pal-church-interior.json", {}, 224),
   piece("P50-船大工の小屋", "r25-hut", "icon-hut.txt", "pal-icon-hut.json"),
   // 芯環塔（世界地図のまんなか。2026-10-05、自然にできた岩の柱。上は嵐の雲。assets-src/pixel-practice/r27-spire/spire.py）。章の塔のダンジョンの印は、これまでどおり r22 の spire
-  // 町・村・お城の印（2026-10-05、5回目の勉強から。町は地形になじむ作り方、お城は3回目の作り方で影なし。assets-src/pixel-practice/r26-game-icons/icons.py）
+  // 町・村・お城の印（2026-10-05、6回目: 64×64で細かく。r28-game-icons/icons6.py。5回目の勉強から。町は地形になじむ作り方、お城は3回目の作り方で影なし。assets-src/pixel-practice/r26-game-icons/icons.py）
   // 鉄鏈鉱山のダンジョン（坑道）の入口は、これまでの鉱山の印のまま（町の印 icon-mine は町の絵に替えたため、別の名前にする）
   piece("P54-アイコンmineshaft", "r17-polish", "icon-mine.txt", "pal-icon-mine.json"),
-  piece("P52-アイコンvillage-mist", "r26-game-icons", "icon-village-mist.txt", "pal-icon-village-mist.json"),
-  piece("P53-アイコンtents-grass", "r26-game-icons", "icon-tents-grass.txt", "pal-icon-tents-grass.json"),
+  piece("P52-アイコンvillage-mist", "r28-game-icons", "icon-village-mist.txt", "pal-icon-village-mist.json", {}, 64),
+  piece("P53-アイコンtents-grass", "r28-game-icons", "icon-tents-grass.txt", "pal-icon-tents-grass.json", {}, 64),
   piece("P51-芯環塔", "r27-spire", "spire-natural.txt", "pal-spire-natural.json", {}, 256)
 );
 
