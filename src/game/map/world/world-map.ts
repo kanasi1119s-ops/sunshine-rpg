@@ -24,20 +24,58 @@ const TOWN_ICON: Record<string, MapProp["kind"]> = {
 const GLYPH_TO_ID: Record<string, number> = { O: 1, P: 2, F: 3, M: 4, D: 5, S: 6, R: 7, H: 8, L: 9, C: 10, W: 11, T: 12, V: 13, Q: 14, N: 15, X: 16, Z: 17, A: 18 };
 
 const TILE_COLORS: Record<number, string> = {
-  1: "#1e5a96", 2: "#4a9a3a", 3: "#2f7a2a", 4: "#857c74", 5: "#d9bf82", 6: "#e8eef2", 7: "#b3853f", 8: "#5a9a40", 9: "#2f6fb0", 10: "#cfe3f2", 11: "#5a4a6a", 12: "#3a6a50", 13: "#143a78", 14: "#143a78", 15: "#6a6068", 16: "#3a2c3a", 17: "#d8501c", 18: "#4a4244",
+  1: "#1e5a96", 2: "#4a9a3a", 3: "#2f7a2a", 4: "#857c74", 5: "#d9bf82", 6: "#e8eef2", 7: "#b3853f", 8: "#5a9a40", 9: "#2f6fb0", 10: "#cfe3f2", 11: "#5a4a6a", 12: "#3a6a50", 13: "#143a78", 14: "#143a78", 15: "#6a6068", 16: "#3a2c3a", 17: "#d8501c", 18: "#4a4244", 19: "#9ac8ec",
 };
 
 const TILE_ART_MAP: Record<number, string> = {
-  1: "water", 2: "grass", 3: "worldforest", 4: "mountain", 5: "tint:sand", 6: "tint:snow", 7: "path", 8: "hills", 9: "water", 10: "tint:cloud", 11: "tint:flagstone", 12: "snowforest", 13: "water", 14: "water", 15: "peaks", 16: "chasm", 17: "lava", 18: "tint:sand",
+  1: "water", 2: "grass", 3: "worldforest", 4: "mountain", 5: "tint:sand", 6: "tint:snow", 7: "path", 8: "hills", 9: "water", 10: "tint:cloud", 11: "tint:flagstone", 12: "snowforest", 13: "water", 14: "water", 15: "peaks", 16: "chasm", 17: "lava", 18: "tint:sand", 19: "water",
 };
 
 /** 全体フィールドの地形テクスチャ（`tools/pixel-art/ai-gen/world_tiles.py` で作り、エディタで描いて確かめたもの。2026-10-04）。 */
 const TILE_TEXTURE: Record<number, string> = {
-  1: "terrain:w-sea", 2: "terrain:w-grass", 3: "terrain:w-forest", 4: "terrain:w-mountain", 5: "terrain:w-sand", 6: "terrain:w-snow", 7: "terrain:w-road", 8: "terrain:w-hills", 9: "terrain:w-lake", 10: "terrain:w-cloud", 11: "terrain:w-waste", 12: "terrain:w-snowforest", 13: "terrain:w-sea", 14: "terrain:w-sea", 15: "terrain:w-pyramids", 16: "terrain:w-chasm", 17: "terrain:w-lava", 18: "terrain:w-ash",
+  1: "terrain:w-sea", 2: "terrain:w-grass", 3: "terrain:w-forest", 4: "terrain:w-mountain", 5: "terrain:w-sand", 6: "terrain:w-snow", 7: "terrain:w-road", 8: "terrain:w-hills", 9: "terrain:w-lake", 10: "terrain:w-cloud", 11: "terrain:w-waste", 12: "terrain:w-snowforest", 13: "terrain:w-sea", 14: "terrain:w-sea", 15: "terrain:w-pyramids", 16: "terrain:w-chasm", 17: "terrain:w-lava", 18: "terrain:w-ash", 19: "terrain:w-lake",
 };
 
-/** 通れない地形: 海・山・湖。 */
-const BLOCKED = new Set([1, 4, 9, 13, 14, 15, 16, 17]);
+/** 通れない地形: 海・山・湖・渦・谷・溶岩・大滝。 */
+const BLOCKED = new Set([1, 4, 9, 13, 14, 15, 16, 17, 19]);
+
+/** 大滝（芯環塔のまわりの陥没のふち。海が穴へ流れ落ちる）。 */
+export const FALLS = 19;
+const CHASM = 16;
+const WASTE = 11;
+/** 陥没（深い穴）の半径と、大滝のふちの外がわの半径（マス）。 */
+export const BASIN_PIT_R = 6.6;
+export const BASIN_RIM_R = 8.4;
+
+/** 塔のまわりで、陥没の上を塔の足もとへ渡る岩の細い道（南の切れ目から、まっすぐ北へ）のマスか。 */
+export function isBasinCauseway(x: number, y: number): boolean {
+  return x === WORLD_TOWER.x && y > WORLD_TOWER.y && y <= WORLD_TOWER.y + Math.ceil(BASIN_RIM_R) - 1;
+}
+
+/**
+ * 芯環塔のまわり（2026-10-05、人間の指示「中央の塔は、自然にできたような感じで、もっと高く。上の方は雲で見えなく。まわりは常時嵐で近寄れない。
+ * まわりは陥没していて、ナイアガラの滝のような大きな滝になっていて近づけない」）。
+ * 渦の輪の内がわのうち、塔のまわりを大きな穴（谷）にし、そのふちは海が流れ落ちる大滝にする。
+ * 塔へは、南の切れ目（航路が開くと海になる）から、岩の細い道が一本だけ通る（物語で塔へ入るための道。航路が開くまでは渦の輪の嵐で近づけない）。
+ */
+function sinkTowerBasin(ground: number[], collision: number[]): void {
+  const r = Math.ceil(BASIN_RIM_R) + 1;
+  for (let y = WORLD_TOWER.y - r; y <= WORLD_TOWER.y + r; y++) {
+    for (let x = WORLD_TOWER.x - r; x <= WORLD_TOWER.x + r; x++) {
+      const i = y * WORLD_WIDTH + x;
+      const id = ground[i];
+      if (id === 13 || id === 14) continue;                       // 渦の輪・切れ目はそのまま
+      if (x === WORLD_TOWER.x && y === WORLD_TOWER.y) continue;   // 塔の入口
+      const d = Math.hypot(x - WORLD_TOWER.x, y - WORLD_TOWER.y);
+      let next = id;
+      if (isBasinCauseway(x, y)) next = WASTE;
+      else if (d <= BASIN_PIT_R) next = CHASM;
+      else if (d <= BASIN_RIM_R) next = FALLS;
+      ground[i] = next;
+      collision[i] = BLOCKED.has(next) ? 1 : 0;
+    }
+  }
+}
 
 export function createWorldMapData(): TileMapData {
   const ground = new Array(WORLD_WIDTH * WORLD_HEIGHT).fill(1);
@@ -49,6 +87,7 @@ export function createWorldMapData(): TileMapData {
       collision[y * WORLD_WIDTH + x] = BLOCKED.has(id) ? 1 : 0;
     }
   }
+  sinkTowerBasin(ground, collision);
   return {
     width: WORLD_WIDTH,
     height: WORLD_HEIGHT,
@@ -67,7 +106,7 @@ export function createWorldMapData(): TileMapData {
       ...WORLD_VILLAGES.map((v) => ({ kind: `icon-${v.icon}` as MapProp["kind"], tileX: v.x, tileY: v.y })),
       ...WORLD_ISLETS.map((islet, i) => ({ kind: (["icon-islet-ruin", "icon-islet-cave", "icon-islet-shrine", "icon-islet-fort", "icon-dive", "icon-volcano"] as const)[i], tileX: islet.x, tileY: islet.y })),
       ...WORLD_LANDMARKS.map((m) => ({ kind: `icon-${m.kind}` as MapProp["kind"], tileX: m.x, tileY: m.y })),
-      { kind: "icon-spire" as const, tileX: WORLD_TOWER.x, tileY: WORLD_TOWER.y },
+      { kind: "icon-core-spire" as const, tileX: WORLD_TOWER.x, tileY: WORLD_TOWER.y },
     ],
   };
 }
