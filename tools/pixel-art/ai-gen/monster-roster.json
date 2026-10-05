@@ -1040,20 +1040,21 @@
  },
  {
   "id": "enc-deep-3-1",
-  "prompt": "a lingering scent of dried water, a thin wispy ghost of steam above a cracked bowl",
-  "status": "done",
+  "prompt": "a small spirit of pale steam curling up out of a cracked brown clay bowl, the steam shaped like a little ghost with two dim eyes",
+  "status": "todo",
   "key": "enemy:enc-deep-3-1",
   "kind": "mob",
   "name": "水涸れの残り香",
   "zone": "deep-3",
   "level": 24,
-  "shape": "float",
+  "shape": "big",
   "tone": [
-   180,
-   175,
-   160
+   120,
+   90,
+   70
   ],
-  "draft": "enc-deep-3-1_1"
+  "draft": "enc-deep-3-1_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-deep-3-2",
@@ -1074,8 +1075,8 @@
  },
  {
   "id": "enc-deep-3-3",
-  "prompt": "a cluster of violet crystals that walks on crystal legs, light refracting inside",
-  "status": "done",
+  "prompt": "a cluster of sharp violet crystal spikes walking on four thin crystal legs, light refracting inside, no fur",
+  "status": "todo",
   "key": "enemy:enc-deep-3-3",
   "kind": "mob",
   "name": "紫の結晶",
@@ -1083,16 +1084,17 @@
   "level": 24,
   "shape": "ground",
   "tone": [
-   160,
-   100,
-   190
+   110,
+   70,
+   150
   ],
-  "draft": "enc-deep-3-3_1"
+  "draft": "enc-deep-3-3_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-deep-3-4",
   "prompt": "a thirsty dark droplet creature with a cracked dry shell and a wide gaping mouth",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-3-4",
   "kind": "mob",
   "name": "渇きのしずく",
@@ -1103,12 +1105,13 @@
    100,
    60,
    80
-  ]
+  ],
+  "draft": "enc-deep-3-4_0"
  },
  {
   "id": "enc-deep-3-5",
   "prompt": "a twisted wing creature, a single huge bent wing with eyes on its feathers, purple and black",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-3-5",
   "kind": "mob",
   "name": "歪んだ羽",
@@ -1119,12 +1122,13 @@
    110,
    70,
    130
-  ]
+  ],
+  "draft": "enc-deep-3-5_0"
  },
  {
   "id": "enc-deep-4-0",
   "prompt": "a primordial droplet, a luminous pearl-like drop with swirling starlight inside and a soft halo",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-4-0",
   "kind": "mob",
   "name": "初源のしずく",
@@ -1135,7 +1139,8 @@
    200,
    195,
    230
-  ]
+  ],
+  "draft": "enc-deep-4-0_1"
  },
  {
   "id": "enc-deep-4-1",
