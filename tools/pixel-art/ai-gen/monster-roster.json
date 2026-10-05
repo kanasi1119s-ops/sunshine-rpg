@@ -1975,7 +1975,7 @@
  {
   "id": "enc-islet-1-1-0",
   "prompt": "a pale silver ghostly spirit made only of flowing moonlit cloth sleeves swirling as if dancing, no face, no human body, glowing blue edges",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-1-1-0",
   "kind": "mob",
   "name": "月影の残響",
@@ -2064,7 +2064,7 @@
  {
   "id": "enc-islet-1-1-5",
   "prompt": "a garden guardian, a figure made of trimmed hedge and garden stones holding a rake like a spear",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-1-1-5",
   "kind": "mob",
   "name": "庭の番兵",
@@ -2075,7 +2075,8 @@
    80,
    120,
    80
-  ]
+  ],
+  "draft": "enc-islet-1-1-5_1"
  },
  {
   "id": "enc-islet-2-1-0",
