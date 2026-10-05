@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeReliefField, reliefNoise, reliefTierOf, TIERS } from "./mountain-relief";
+import { computeReliefField, reliefNoise, reliefTierOf, TIERS, reliefOverWater } from "./mountain-relief";
 import { RELIEF_SPRITES } from "../game/art/relief-sprites.generated";
 
 describe("山の高低差（見た目だけ）", () => {
@@ -38,5 +38,19 @@ describe("山の高低差（見た目だけ）", () => {
         expect(RELIEF_SPRITES[`relief:${fam}-${tier}-${lr}${v}-sh`]).toBeTruthy();
       }
     }
+  });
+});
+
+describe("山は川・湖・海にはみ出ない", () => {
+  it("すぐ上が水なら、峰の絵はかかるが、ふもとの小山はかからない（横にはみ出る数ドットは、描いたあとに消す）", () => {
+    const waterUp = (x: number, y: number): boolean => x === 10 && y === 9;
+    expect(reliefOverWater("peak", 10, 10, 0, 0, waterUp)).toBe(true);
+    expect(reliefOverWater("foot", 10, 10, 0, 1, waterUp)).toBe(false);
+    expect(reliefOverWater("peak", 10, 10, 0, 0, (x, y) => x === 11 && y === 10)).toBe(true);
+  });
+  it("2マス上の水には、峰の絵がかかる（高い山は、川のすぐ下には立たない）", () => {
+    const waterAbove = (x: number, y: number): boolean => x === 10 && y === 8;
+    expect(reliefOverWater("peak", 10, 10, 0, 0, waterAbove)).toBe(true);
+    expect(reliefOverWater("slope", 10, 10, 0, 0, waterAbove)).toBe(false);
   });
 });

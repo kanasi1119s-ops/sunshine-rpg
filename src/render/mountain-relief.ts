@@ -158,6 +158,32 @@ function textureOf(map: TileMap, x: number, y: number): string {
   return map.data.tileTexture?.[id] ?? "";
 }
 
+function isWaterArt(art: string): boolean {
+  return art === "water";
+}
+
+/** 段ごとの絵の、色のある範囲（72×72 の枠の中。どの形・向きもふくむ、いちばん広い所）。[左, 右, 上, 下] */
+const TIER_BOX: Record<ReliefTier, [number, number, number, number]> = {
+  foot: [15, 36, 45, 56],
+  slope: [12, 39, 37, 56],
+  high: [8, 43, 29, 56],
+  peak: [3, 48, 13, 56],
+};
+
+/**
+ * その段の山の絵が、川・湖・海のマスにかかるか（2026-10-05、人間の指示「山が川からはみ出るのはダメ」）。
+ * かかるなら、ひとつ低い段（小さい絵）にする。いちばん低い段でもかかる分は、描いたあとに水のマスを消す（drawChunk）。
+ */
+export function reliefOverWater(tier: ReliefTier, tx: number, ty: number, jx: number, jy: number, isWater: (x: number, y: number) => boolean): boolean {
+  const [l, r, t, b] = TIER_BOX[tier];
+  const px = tx * ART + ART / 2 - ANCHOR_X + jx;
+  const py = ty * ART + ART - 2 - ANCHOR_Y + jy;
+  const x0 = Math.floor((px + l) / ART), x1 = Math.floor((px + r) / ART);
+  const y0 = Math.floor((py + t) / ART), y1 = Math.floor((py + b) / ART);
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if ((x !== tx || y !== ty) && isWater(x, y)) return true;
+  return false;
+}
+
 function isMountArt(art: string): boolean {
   return art === "mountain" || art === "peaks";
 }
@@ -263,17 +289,21 @@ function reliefPlanFor(map: TileMap): ReliefPlan {
       const i = ty * width + tx;
       if (!field.dist[i]) continue;
       const fam = FAMILIES[field.family[i]];
-      const tier = TIERS[field.tier[i]];
+      const h = hashCell(tx * 17 + 5, ty * 31 + 7);
+      jx[i] = ((h >> 3) % 5) - 2;
+      jy[i] = ((h >> 5) % 3) - 1;
+      // 川・湖・海にかからない段まで下げる
+      const water = (x: number, y: number): boolean => isWaterArt(artOf(map, x, y));
+      let t = field.tier[i];
+      while (t > 0 && reliefOverWater(TIERS[t], tx, ty, jx[i], jy[i], water)) t--;
+      const tier = TIERS[t];
       const left = tx > 0 ? field.elev[i - 1] : 0;
       const right = tx < width - 1 ? field.elev[i + 1] : 0;
       const lean = right > left ? "r" : "l";
-      const h = hashCell(tx * 17 + 5, ty * 31 + 7);
       const variant = "abc"[h % 3];
       // 内がわの中腹・高い山は、ところどころ描かない（谷の地面がのぞき、峰と峰のあいだに谷ができる）
       const gap = field.dist[i] >= 3 && tier !== "peak" && (h >> 7) % 5 === 0;
       if (!gap) sprite[i] = idx(keyIndex, keys, `relief:${fam}-${tier}-${lean}${variant}`);
-      jx[i] = ((h >> 3) % 5) - 2;
-      jy[i] = ((h >> 5) % 3) - 1;
       // ふち（ななめにも陸がとなる所までふくむ）は、となりの陸の地面。山のすそのすき間から、四角い谷の地面が見えないように
       const land = field.dist[i] <= 2 ? landBeside(map, tx, ty) : null;
       base[i] = land ? idx(baseIndex, bases, `T:${land}`) : idx(baseIndex, bases, `R:relief:valley-${fam}`);
@@ -327,6 +357,12 @@ function drawChunk(map: TileMap, plan: ReliefPlan, cx: number, cy: number): HTML
     }
   }
   ctx.globalAlpha = 1;
+  // 3) 川・湖・海のマスにはみ出た山と影は消す（山は水の上に出ない）
+  for (let ty = y0; ty < Math.min(height, y0 + CHUNK); ty++) {
+    for (let tx = x0; tx < Math.min(width, x0 + CHUNK); tx++) {
+      if (isWaterArt(artOf(map, tx, ty))) ctx.clearRect(tx * ART - ox, ty * ART - oy, ART, ART);
+    }
+  }
   return drew ? canvas : null;
 }
 
