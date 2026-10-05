@@ -1334,7 +1334,7 @@
  {
   "id": "enc-tower-2-0",
   "prompt": "a floating faceted pale blue crystal with swirling clouds trapped inside, two small wings made of mist at its sides",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-2-0",
   "kind": "mob",
   "name": "雲路の結晶",
@@ -1352,7 +1352,7 @@
  {
   "id": "enc-tower-2-1",
   "prompt": "a low crawling creature made of dark grey fog with two heavy stone-like feet and one glowing lantern eye on its front",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-2-1",
   "kind": "mob",
   "name": "霧の足あと",
