@@ -2644,7 +2644,7 @@
  {
   "id": "enc-world-1-2",
   "prompt": "a mouse-shaped shadow creature made of swirling black smoke, glowing amber eyes, golden wheat stalks stuck in its wispy body, a long tail dissolving into smoke",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-1-2",
   "kind": "mob",
   "name": "野ねずみの影",
@@ -2656,7 +2656,7 @@
    45,
    55
   ],
-  "draft": "enc-world-1-2_1",
+  "draft": "enc-world-1-2_0",
   "seed_base": 6001
  },
  {
@@ -2679,7 +2679,7 @@
  {
   "id": "enc-world-1-4",
   "prompt": "a roadside stone creature, a milestone rock with a moss beard and wooden stick arms",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-1-4",
   "kind": "mob",
   "name": "道ばたの石",
@@ -2690,12 +2690,13 @@
    140,
    135,
    120
-  ]
+  ],
+  "draft": "enc-world-1-4_0"
  },
  {
   "id": "enc-world-1-5",
   "prompt": "a little songbird with brown and cream feathers, a puffed chest and a sharp beak",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-1-5",
   "kind": "mob",
   "name": "小鳥の羽",
@@ -2706,7 +2707,8 @@
    170,
    130,
    90
-  ]
+  ],
+  "draft": "enc-world-1-5_0"
  },
  {
   "id": "enc-world-2-0",
