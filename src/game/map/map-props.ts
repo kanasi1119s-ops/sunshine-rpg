@@ -146,7 +146,7 @@ export const MAP_PROPS: Record<string, MapProp[]> = {
     // 環の聖堂（教会）。足もとのまんなか (7,5)、扉は (7,6)（kiri-town.ts の CHURCH_FOOT と同じ）
     { kind: "church", tileX: 7, tileY: 5 },
     { kind: "statue-traveler", tileX: 14, tileY: 6 }, { kind: "bench", tileX: 6, tileY: 10 }, { kind: "shrine", tileX: 18, tileY: 10 },
-    { kind: "lamp", tileX: 4, tileY: 6 }, { kind: "barrel", tileX: 15, tileY: 10 }, { kind: "flowerbed", tileX: 7, tileY: 10 },
+    { kind: "lamp", tileX: 2, tileY: 8 }, { kind: "barrel", tileX: 15, tileY: 10 }, { kind: "flowerbed", tileX: 7, tileY: 10 },
     { kind: "bush", tileX: 4, tileY: 11 }, { kind: "bush", tileX: 19, tileY: 11 },
     { kind: "tree", tileX: 2, tileY: 13 }, { kind: "tree", tileX: 21, tileY: 13 }, { kind: "tree", tileX: 22, tileY: 5 },
   ],

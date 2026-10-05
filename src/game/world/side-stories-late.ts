@@ -11,7 +11,7 @@ export const SIDE_STORIES_LATE: SideStory[] = [
     key: "s015",
     title: "カセン支部長への手紙",
     unlockFlags: ["chapter5_record_found"],
-    giver: { mapId: "kiri-town", tileX: 9, tileY: 3, color: "#8a9ab0" },
+    giver: { mapId: "kiri-town", tileX: 10, tileY: 3, color: "#8a9ab0" },
     locked: [say("郵便係", "霧が濃い日は、手紙も遅れがちでして……。")],
     offer: [
       say("郵便係", "灯りの相談所の方ですね。灯里のカセン支部長へ、手紙を出されますか？"),
