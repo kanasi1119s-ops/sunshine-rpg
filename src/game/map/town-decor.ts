@@ -116,6 +116,10 @@ export function applyTownDecor(maps: Record<string, TileMapData>, npcsByMap: Rec
       for (let y = 4; y < h - 2; y++) {
         for (let x = 3; x < w - 3; x++) {
           if (!isOpen(x, y) || isRoad(x, y) || !isOpen(x - 1, y + 1) || occupied.has((y + 1) * w + x - 1) || covered.has((y + 1) * w + x - 1) || covered.has((y + 2) * w + x - 1)) continue;
+          // 屋敷の絵（横5マス・上へ5マス）が、ほかの建物・木の絵と重ならないこと
+          let overlaps = false;
+          for (let yy = y - 5; yy <= y && !overlaps; yy++) for (let xx = x - 2; xx <= x + 2 && !overlaps; xx++) if (covered.has(yy * w + xx)) overlaps = true;
+          if (overlaps) continue;
           const nearRoad = [1, 2, 3].some((d) => isRoad(x, y + d)) || [-4, -3, 3, 4].some((d) => isRoad(x + d, y));
           if (nearRoad || !anyRoad) cands.push([x, y]);
         }

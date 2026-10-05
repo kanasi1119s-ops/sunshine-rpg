@@ -20,6 +20,7 @@ import { addChapterDungeons } from "./dungeon-extensions";
 import { addHouseInteriors } from "./house-interiors";
 import { addInnInteriors } from "./inn-interiors";
 import { createWorldMapData } from "../map/world/world-map";
+import { convertTileBuildings } from "../map/tile-buildings";
 import { connectWorldMap, SHIP_PART_NPCS, WORLD_MAP_NPCS } from "./world-map-world";
 import { ISLET_MAPS, ISLET_NPCS } from "./islets-world";
 import { VILLAGE_MAPS, VILLAGE_NPCS } from "./villages-world";
@@ -95,6 +96,8 @@ export const WORLD_NPCS: Record<string, Npc[]> = (() => {
 addChapterDungeons(WORLD_MAPS, WORLD_NPCS);
 connectWorldMap(WORLD_MAPS, WORLD_NPCS);
 applyTownExpansion(WORLD_MAPS);
+// タイルで描いていた建物も、平屋の家の絵にする（人間の指示、2026-10-05）。宿屋・飾りを置く前に置いて、重ならないようにする
+convertTileBuildings(WORLD_MAPS, WORLD_NPCS);
 applyVariantWalls(WORLD_MAPS, WORLD_NPCS);
 applyAutoDecor(WORLD_MAPS, WORLD_NPCS);
 applyTownDecor(WORLD_MAPS, WORLD_NPCS);

@@ -168,7 +168,10 @@ export function addInnInteriors(maps: Record<string, TileMapData>, npcsByMap: Re
       const x0 = Math.min(...tiles.map((t) => t.x)) - pad, x1 = Math.max(...tiles.map((t) => t.x)) + pad;
       for (let yy = top; yy <= prop.tileY; yy++) for (let xx = x0; xx <= x1; xx++) covered.add(yy * w + xx);
     }
-    const signSpot = [[3, 1], [-3, 1], [2, 1], [-2, 1]].map(([dx, dy]) => ({ x: door.x + dx, y: door.y + dy })).find((c) => free(c.x, c.y) && !covered.has(c.y * w + c.x) && (c.x !== ret.x || c.y !== ret.y));
+    // ほかの地図から来たときに立つ場所（到着地点）にも置かない
+    const arrivals = new Set<number>();
+    for (const m of Object.values(maps)) for (const e of m.exits ?? []) if (e.targetMapId === town) arrivals.add(e.targetTileY * w + e.targetTileX);
+    const signSpot = [[3, 1], [-3, 1], [2, 1], [-2, 1]].map(([dx, dy]) => ({ x: door.x + dx, y: door.y + dy })).find((c) => free(c.x, c.y) && !covered.has(c.y * w + c.x) && !arrivals.has(c.y * w + c.x) && (c.x !== ret.x || c.y !== ret.y));
     if (signSpot) {
       list.push({ id: `${town}-inn-sign`, tileX: signSpot.x, tileY: signSpot.y, color: "#a0723c", commands: [{ type: "message", text: "「宿屋　旅の人、ようこそ。一晩ごとに、とまれます」と書いてある。" }] });
     }
