@@ -54,6 +54,7 @@ import { spriteSpecFromPortrait } from "./game/sprite/character-specs";
 import { PORTRAITS } from "./game/portrait/portraits";
 import { propFeetY, renderProps } from "./render/prop-renderer";
 import { renderDialogue } from "./render/dialogue-renderer";
+import { startCloudSaves } from "./game/save/cloud-saves";
 import { createTileMap, findExitAt, isWalkable, type TileMap } from "./game/map/tile-map";
 import { createPlayer, updatePlayer } from "./game/player";
 import { findNpcAt, getFacingTile } from "./game/npc";
@@ -935,6 +936,10 @@ function hasAutosave(): boolean {
   return hasAnySave();
 }
 let title = createTitleState(hasAutosave());
+// アーティファクトで遊ぶとき、セーブをデータベースにも写す／起動時に戻す（ページを開き直してもセーブが消えないように）
+void startCloudSaves(window.localStorage, () => {
+  if (title.open) title = createTitleState(hasAutosave());
+});
 /** ゲームを起動したときのオープニング（ロゴが上から落ちてきて、あらすじが流れる）。終わるとタイトル画面。 */
 let bootOpening = startBootOpening();
 /** 起動のオープニングが始まってからの時間（ms）。音が遅れて始まるとき、曲の位置をそろえるのに使う。 */

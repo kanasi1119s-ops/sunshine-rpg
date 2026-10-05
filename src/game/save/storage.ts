@@ -19,8 +19,17 @@ function keyFor(slot: SaveSlotId): string {
   return `${KEY_PREFIX}${slot}`;
 }
 
+type SaveListener = (key: string, raw: string | null) => void;
+let saveListener: SaveListener | null = null;
+/** セーブ・削除のたびに呼ばれる関数を決める（アーティファクトのデータベースへの写し用）。 */
+export function setSaveListener(fn: SaveListener | null): void {
+  saveListener = fn;
+}
+
 export function saveToSlot(store: KeyValueStore, slot: SaveSlotId, data: SaveData): void {
-  store.setItem(keyFor(slot), serializeSaveData(data));
+  const raw = serializeSaveData(data);
+  store.setItem(keyFor(slot), raw);
+  saveListener?.(keyFor(slot), raw);
 }
 
 /** 読み込みに失敗した場合（壊れたデータ・非対応バージョンなど）はnullを返す。 */
@@ -42,6 +51,7 @@ export function hasSlot(store: KeyValueStore, slot: SaveSlotId): boolean {
 
 export function deleteSlot(store: KeyValueStore, slot: SaveSlotId): void {
   store.removeItem(keyFor(slot));
+  saveListener?.(keyFor(slot), null);
 }
 
 /** テスト・デバッグ用の、メモリ上だけで完結するKeyValueStore。 */
