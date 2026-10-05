@@ -17,7 +17,10 @@ import json
 import math
 from PIL import Image, ImageFilter
 
-src = Image.open("composite.png").convert("RGB")
+import sys
+SRC = sys.argv[1] if len(sys.argv) > 1 else "composite.png"     # 重ねた絵
+OUTN = sys.argv[2] if len(sys.argv) > 2 else "reshape"          # 書き出しの名前
+src = Image.open(SRC).convert("RGB")
 crop = src
 h = round(crop.height * 256 / crop.width)
 w = 352
@@ -135,12 +138,12 @@ for y in range(1, h - 1):
 keys = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef"
 rows = ["." * SW] * (S - h) + ["".join(keys[k] if k >= 0 else "." for k in r) for r in idx]
 used = sorted(set("".join(rows)) - {"."})
-open("reshape.txt", "w").write("\n".join(rows) + "\n")
-json.dump({keys[i]: "#%02x%02x%02x" % colors[i] for i in range(32) if keys[i] in used}, open("pal-reshape.json", "w"))
+open(OUTN + ".txt", "w").write("\n".join(rows) + "\n")
+json.dump({keys[i]: "#%02x%02x%02x" % colors[i] for i in range(32) if keys[i] in used}, open("pal-" + OUTN + ".json", "w"))
 im = Image.new("RGBA", (SW, S), (0, 0, 0, 0))
 for y, r in enumerate(rows):
     for x, ch in enumerate(r):
         if ch != ".":
             im.putpixel((x, y), colors[keys.index(ch)] + (255,))
-im.save("reshape.png")
+im.save(OUTN + ".png")
 print("ok colors", len(used))
