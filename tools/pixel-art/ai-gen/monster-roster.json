@@ -834,7 +834,7 @@
  {
   "id": "enc-deep-1-1",
   "prompt": "the memory of an ice soldier, a translucent icy figure with a broken lance, cracks of blue light",
-  "status": "draft",
+  "status": "done",
   "key": "enemy:enc-deep-1-1",
   "kind": "mob",
   "name": "氷の兵の記憶",
@@ -845,12 +845,13 @@
    160,
    195,
    220
-  ]
+  ],
+  "draft": "enc-deep-1-1_x0"
  },
  {
   "id": "enc-deep-1-2",
   "prompt": "a shadow creature formed around a broken sword stuck in its back, dark smoke body, rusty blade edges",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-1-2",
   "kind": "mob",
   "name": "折れた剣の影",
@@ -861,12 +862,13 @@
    70,
    70,
    80
-  ]
+  ],
+  "draft": "enc-deep-1-2_1"
  },
  {
   "id": "enc-deep-1-3",
   "prompt": "a fragment of a rusty round shield that floats and spins, with a rust-red eye in the boss and chipped edges",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-deep-1-3",
   "kind": "mob",
   "name": "錆びた盾のかけら",
@@ -877,7 +879,8 @@
    140,
    90,
    60
-  ]
+  ],
+  "draft": "enc-deep-1-3_1"
  },
  {
   "id": "enc-deep-1-4",
