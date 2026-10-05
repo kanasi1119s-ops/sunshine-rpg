@@ -714,6 +714,7 @@ if (import.meta.env.DEV) {
       title = { ...title, open: false };
     },
     startBattle: (battleId: string) => startStoryBattle(battleId),
+    setFlag: (name: string, value = true) => { flags[name] = value; },
     battleUi: () => (battle ? battle.getUiState() : null),
     playerTile: () => ({ map: currentMapId, x: player.x / map.data.tileWidth, y: player.y / map.data.tileHeight, dialogue: dialogue.isActive(), overview: worldOverviewOpen, pw: player.width, ph: player.height, px: player.x, py: player.y, tw: map.data.tileWidth, near: npcs.filter((n) => Math.abs(n.tileX - player.x / map.data.tileWidth) < 3 && Math.abs(n.tileY - player.y / map.data.tileHeight) < 3).map((n) => `${n.id}@${n.tileX},${n.tileY}`) }),
     /** 開発用: いまの状態を保存データにして、すぐ読み込み直す（乗り物の保存の確認用）。保存した乗り物の情報を返す。 */
@@ -1297,6 +1298,10 @@ const COMPANION_NPC_IDS: Record<string, string> = {
   "tetsukusari-orca": "chapter3_orca_joined",
   "shimohara-ayame": "chapter6_ayame_joined",
 };
+
+/** 天幕などから出てくる人が現れた時刻（ms）と、出てくるのにかかる時間。 */
+const npcAppearedAt = new Map<string, number>();
+const EMERGE_MS = 1300;
 
 function withoutJoinedCompanions(list: typeof npcs): typeof npcs {
   return list.filter(
@@ -2043,7 +2048,15 @@ function renderGameSceneBase(): void {
   for (const prop of map.data.props ?? []) {
     depthItems.push({ feetY: propFeetY(prop, map.data.tileHeight), draw: () => renderProps(ctx, map.data, renderCamera, () => true, [prop]) });
   }
-  for (const npc of npcs) {
+  for (const npc0 of npcs) {
+    // 天幕などから出てくる人は、はじめの位置から、本来の位置まで歩いてくる（出てくるあいだは、天幕の奥に隠れて見える）
+    let npc = npc0;
+    const born = npc0.emerge ? npcAppearedAt.get(npc0.id) : undefined;
+    if (npc0.emerge && born !== undefined) {
+      const k = Math.min(1, (performance.now() - born) / EMERGE_MS);
+      const left = 1 - k * k * (3 - 2 * k);
+      if (left > 0) npc = { ...npc0, tileX: npc0.tileX + npc0.emerge.dx * left, tileY: npc0.tileY + npc0.emerge.dy * left };
+    }
     depthItems.push({ feetY: visibleNpcFeetY(npc, map.data.tileHeight), draw: () => renderNpcs(ctx, [npc], map, renderCamera) });
   }
   depthItems.sort((a, b) => a.feetY - b.feetY);
@@ -2222,10 +2235,15 @@ const loop = createGameLoop({
     // 開けた宝箱は、ふたが開いた絵にする
     setOpenedChests(new Set(npcs.filter((n) => n.openedFlag && flags[n.openedFlag]).map((n) => n.id)));
     // 会話が終わったあと（仲間になった直後）に、その人を場所から外す
-    if (!dialogue.isActive()) {
+    {
       // 仲間になった人・倒されて去った人は場所から外し、あとから現れるもの（跡）は出す
       const wanted = withoutJoinedCompanions(WORLD_NPCS[currentMapId] ?? []);
-      if (wanted.length !== npcs.length || wanted.some((n, i) => n.id !== npcs[i]?.id)) {
+      // 天幕から出てくる人は、会話の途中でも出す（そのあいだ、ほかの人は入れかえない）
+      const emergers = wanted.filter((n) => n.emerge && !npcs.some((m) => m.id === n.id));
+      if (emergers.length > 0) {
+        for (const n of emergers) npcAppearedAt.set(n.id, performance.now());
+        npcs = [...npcs, ...emergers];
+      } else if (!dialogue.isActive() && (wanted.length !== npcs.length || wanted.some((n, i) => n.id !== npcs[i]?.id))) {
         npcs = wanted;
       }
     }

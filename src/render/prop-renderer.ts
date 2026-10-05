@@ -1,3 +1,4 @@
+import { proceduralPropCanvas } from "./tent-prop";
 import type { MapProp, TileMapData } from "../game/map/types";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
@@ -25,7 +26,7 @@ export function renderProps(
     if (!filter(prop)) {
       continue;
     }
-    const canvas = getSpriteCanvas(`prop:${prop.kind}`, SPRITE_DATA);
+    const canvas = getSpriteCanvas(`prop:${prop.kind}`, SPRITE_DATA) ?? proceduralPropCanvas(prop);
     if (!canvas) {
       continue;
     }

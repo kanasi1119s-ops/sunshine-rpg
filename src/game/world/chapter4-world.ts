@@ -69,7 +69,10 @@ export const CHAPTER4_NPCS: Record<string, Npc[]> = {
       color: "#5a3a6a",
       spriteName: "ドルン",
       commands: dorunCommands(),
+      // 荷馬車の底が見つかると、天幕の中から出てくる（それまでは、いない）
+      showWhenFlag: "chapter4_wagon_found",
       hideWhenFlag: "chapter4_yugami_defeated",
+      emerge: { dx: 0, dy: -1.6 },
     },
     {
       // ドルンが去ったあとの跡（人は残さない）
@@ -390,8 +393,12 @@ function wagonCommands(): EventCommand[] {
           text: "身内の言葉だけじゃ、証拠にならない。それがこの町の掟だ。帳面は預かって、組合長に見せよう。",
           speaker: "レト",
         },
-        { type: "setFlag", flag: "chapter4_wagon_found", value: true },
         { type: "message", text: "……印の彫りが浅い。本物の組合印は、もっと深く打つ。偽物だ。", speaker: "オルカ" },
+        // 帳面を見つけたとたん、野営地のはずれの天幕の布が揺れ、中から人が出てくる
+        { type: "message", text: "そのとき、野営地のはずれの天幕の入り口が、ばさりと揺れた。" },
+        { type: "setFlag", flag: "chapter4_wagon_found", value: true },
+        { type: "message", text: "天幕の暗がりから、灰色の外套の男が、ゆっくりと歩み出てきた。" },
+        ...dorunCommands(),
       ],
     },
   ];

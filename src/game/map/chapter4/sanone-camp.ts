@@ -78,6 +78,8 @@ export function createSanoneCampData(): TileMapData {
     layers: [{ name: "ground", data: ground }],
     tileColors: TILE_COLORS,
     collision,
+    // ドルンが隠れている天幕（荷馬車の底が見つかると、ここから出てくる）
+    props: [{ kind: "tent", tileX: 5, tileY: 6 }],
     exits: [
       {
         // 北の門を戻って砂音の町へ。
@@ -97,5 +99,6 @@ export const SANONE_CAMP_ENTRY = { tileX: NORTH_GATE.x, tileY: NORTH_GATE.y + 2 
 /** 野営地のNPC・仕掛けを置く座標（イベントデータ側で使う）。 */
 export const SANONE_CAMP_LANDMARKS = {
   wagon: { tileX: WAGON_ORIGIN.x + 1, tileY: WAGON_ORIGIN.y - 1 },
-  dorun: { tileX: 9, tileY: 6 },
+  /** ドルンが現れる天幕の入り口の前（天幕は、すぐ北の (5,6)）。 */
+  dorun: { tileX: 5, tileY: 7 },
 };

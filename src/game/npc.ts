@@ -19,6 +19,8 @@ export interface Npc {
   hideWhenFlag?: string;
   /** このフラグが立つまでは、いない（人が去ったあとに残る跡など）。 */
   showWhenFlag?: string;
+  /** 現れるとき、この位置（タイルの数。dx, dy）から、本来の位置まで歩いて出てくる（天幕から出てくる人など）。 */
+  emerge?: { dx: number; dy: number };
 }
 
 const FACING_OFFSET: Record<Direction, { dx: number; dy: number }> = {
