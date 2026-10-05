@@ -1975,7 +1975,7 @@
  {
   "id": "enc-islet-1-1-0",
   "prompt": "an echo of moonlight, a pale silver ghost of a dancer with flowing sleeves",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-1-1-0",
   "kind": "mob",
   "name": "月影の残響",
@@ -1988,12 +1988,13 @@
    220
   ],
   "bg": "dark",
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-islet-1-1-0_x0"
  },
  {
   "id": "enc-islet-1-1-1",
   "prompt": "the shadow of a garden stone statue, a weathered stone lion-dog figure with dark glowing cracks",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-1-1-1",
   "kind": "mob",
   "name": "庭の石像の影",
@@ -2004,7 +2005,8 @@
    130,
    130,
    125
-  ]
+  ],
+  "draft": "enc-islet-1-1-1_0"
  },
  {
   "id": "enc-islet-1-1-2",
