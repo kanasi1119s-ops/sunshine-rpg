@@ -61,7 +61,7 @@ describe("ふつうの攻撃にエフェクトは出ない", () => {
 
 import { stretchFx as _stretch, type BattleAnimSpec as _Spec } from "./battle-anim";
 describe("エフェクトの長さ", () => {
-  const base = { actorId: undefined, motion: null, targetIds: ["x"], hurt: false } as const;
+  const base = { actorId: undefined, motion: null, targetIds: ["x"] as string[], hurt: false };
   it("短いエフェクトは、最低1.5秒まで延ばし、エフェクトの始まりの時刻は変えない", () => {
     const spec = { ...base, fx: "fire", durationMs: 1000, fxStart: 0.5 } as _Spec;
     const out = _stretch(spec)!;
