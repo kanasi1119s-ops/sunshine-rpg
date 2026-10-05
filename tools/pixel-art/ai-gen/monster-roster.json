@@ -1230,7 +1230,7 @@
  },
  {
   "id": "enc-tower-1-0",
-  "prompt": "a floating light crystal with prism facets and a beam-like eye in the center",
+  "prompt": "a floating cluster of faceted prism crystal shards glowing gold and amber, one bright eye in the center",
   "status": "todo",
   "key": "enemy:enc-tower-1-0",
   "kind": "mob",
@@ -1239,15 +1239,17 @@
   "level": 30,
   "shape": "float",
   "tone": [
-   190,
-   225,
-   245
-  ]
+   160,
+   130,
+   70
+  ],
+  "draft": "enc-tower-1-0_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-tower-1-1",
   "prompt": "a living stone creature with moss joints, a rounded rock body and leafy sprouts on its head",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-1-1",
   "kind": "mob",
   "name": "生きた石",
@@ -1258,12 +1260,13 @@
    125,
    130,
    115
-  ]
+  ],
+  "draft": "enc-tower-1-1_0"
  },
  {
   "id": "enc-tower-1-2",
   "prompt": "the master of a blue ore vein, a beast whose back is covered in blue crystal ore spikes, heavy jaw",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-1-2",
   "kind": "mob",
   "name": "青い鉱脈の主",
@@ -1274,12 +1277,13 @@
    80,
    120,
    170
-  ]
+  ],
+  "draft": "enc-tower-1-2_1"
  },
  {
   "id": "enc-tower-1-3",
   "prompt": "a tower gear machine, a walking clockwork body of brass gears with a lantern head",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-1-3",
   "kind": "mob",
   "name": "塔の歯車機械",
@@ -1290,7 +1294,8 @@
    170,
    140,
    80
-  ]
+  ],
+  "draft": "enc-tower-1-3_0"
  },
  {
   "id": "enc-tower-1-4",
