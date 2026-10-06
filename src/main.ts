@@ -26,7 +26,7 @@ import { ALL_ITEMS_BY_ID, describeBonus, purchaseConsumable, purchaseItem, recei
 import { closeShopMenu, createShopMenuState, moveShopCursor, openShopMenu, withShopMessage } from "./game/economy/shop-menu";
 import { renderShop, renderShopWear, type ShopWearView } from "./render/shop-renderer";
 import { backPauseMenu, confirmPauseMenu, createPauseMenuState, movePauseCursor, openPauseMenu } from "./game/menu/pause-menu";
-import { renderPauseMenu, type StatusRow } from "./render/pause-menu-renderer";
+import { renderOrderScreen, renderPauseMenu, type StatusRow } from "./render/pause-menu-renderer";
 import { backEquipMenu, confirmEquipMenu, createEquipMenuState, moveEquipCursor, openEquipMenu } from "./game/menu/equip-menu";
 import { renderEquipMenu, type EquipMenuView, type EquipStatsView } from "./render/equip-menu-renderer";
 import { candidatesFor, ensureOwned, equipTo, sanitizeParty, unequipFrom, type PartyEquipment } from "./game/items/party-equipment";
@@ -91,6 +91,7 @@ import { arbiterChance, createArbiter } from "./game/battle/arbiter";
 import { setArbiterQueue } from "./game/battle/battle-engine";
 import { arbiterIntro } from "./game/battle/arbiter-talk";
 import { COSMO_ID } from "./game/items/legend-items";
+import { applyFormation, sortByOrder, swapOrder } from "./game/battle/formation";
 import { resetCosmo } from "./render/cosmo-renderer";
 import { applyTraits } from "./game/items/traits";
 import { bossDropFor } from "./game/items/boss-drops";
@@ -875,7 +876,7 @@ function startArbiterBattle(): void {
   victoryDropText = null;
   const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
   const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
-  const party = buildActiveParty(effectiveStats);
+  const party = applyFormation(buildActiveParty(effectiveStats));
   if (debugInvincible) {
     for (const member of party) {
       member.maxHp = 99999;
@@ -919,7 +920,7 @@ function startRandomBattle(enemies: Combatant[]): void {
   victoryDropText = null;
   const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
   const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
-  const party = buildActiveParty(effectiveStats);
+  const party = applyFormation(buildActiveParty(effectiveStats));
   if (debugInvincible) {
     for (const member of party) {
       member.maxHp = 99999;
@@ -955,7 +956,7 @@ function startStoryBattle(battleId: string): void {
   victoryDropText = null;
   const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
   const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
-  const party = buildActiveParty(effectiveStats);
+  const party = applyFormation(buildActiveParty(effectiveStats));
   if (debugInvincible) {
     for (const member of party) {
       member.maxHp = 99999;
@@ -1410,6 +1411,8 @@ let lastBattleMessage: string | null = null;
 let battle: BattleController | null = null;
 let heroStats = createInitialHeroStats();
 let heroEquipment: EquipmentSlots = createInitialEquipment();
+/** 仲間の並び順（キャラクターID。メニューの「ならびかえ」で変える。戦闘では1〜3人目が前列）。 */
+let partyOrder: string[] = [];
 /** 仲間に加わったキャラクターのステータス（キャラクターIDをキーにする）。 */
 let companionStats: Record<string, LeveledStats> = {};
 let inventory: Inventory = createInventory();
@@ -1712,7 +1715,9 @@ function buildActiveParty(effectiveHeroStats: LeveledStats): ReturnType<typeof c
     party.push(applyTraits(createCompanionCombatant(COMPANIONS[id], withJobBonus(withEquipment(id, stats), jobStates[id], unlocked)), companionEquipment[id] ?? {}, ALL_ITEMS_BY_ID));
   }
   // ノーマルでは、前の戦闘で受けたダメージ・使った魔力を持ち越す
-  return difficulty === "normal" ? party.map((c) => applyVital(c, vitals[c.id])) : party;
+  const withVitals = difficulty === "normal" ? party.map((c) => applyVital(c, vitals[c.id])) : party;
+  // メニューの「ならびかえ」で決めた並び順（1〜3人目が前列、4人目からが後列）
+  return sortByOrder(withVitals, partyOrder);
 }
 
 /** いま持っている回復アイテムを、戦闘で使える形（種類と数）にしたもの。 */
@@ -1827,6 +1832,7 @@ function buildSaveData(): SaveData {
     flags,
     difficulty,
     vitals,
+    partyOrder,
     clockMs,
     vehicles: {
       mode: vehicle,
@@ -1852,6 +1858,7 @@ function applySaveData(data: SaveData): void {
   gold = data.gold ?? 0;
   vitals = difficulty === "normal" ? { ...(data.vitals ?? {}) } : {};
   clockMs = data.clockMs ?? 0;
+  partyOrder = [...(data.partyOrder ?? [])];
   for (const key of Object.keys(flags)) {
     delete flags[key];
   }
@@ -1882,6 +1889,7 @@ function resetToNewGame(): void {
   heroStats = createInitialHeroStats();
   heroEquipment = createInitialEquipment();
   companionStats = {};
+  partyOrder = [];
   companionEquipment = {};
   jobStates = {};
   inventory = createInventory();
@@ -1958,7 +1966,7 @@ if (import.meta.env.DEV) {
   victoryLevelUps = [];
       const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
       const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
-      const party = buildActiveParty(effectiveStats);
+      const party = applyFormation(buildActiveParty(effectiveStats));
       if (debugInvincible) {
         for (const member of party) {
           member.maxHp = 99999;
@@ -2586,6 +2594,7 @@ function renderGameSceneBase(): void {
   if (shopWear && shopMenu.open) {
     renderShopWear(ctx, shopWearView(), shopWear.cursor, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   }
+  if (pauseMenu.open && pauseMenu.screen === "order") renderOrderScreen(ctx, pauseMenu, currentParty().map((c) => c.name.split(/[\s　]/)[0]), LOGICAL_WIDTH, LOGICAL_HEIGHT);
   if (!fieldUse.open) renderPauseMenu(ctx, pauseMenu, pauseMenu.screen === "status" ? statusRows() : [], pauseMessage, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   renderSlotMenu(ctx, slotMenu, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   if (fieldUse.open) renderFieldUse(ctx, fieldUse, fieldUseMembers(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
@@ -2925,10 +2934,10 @@ const loop = createGameLoop({
         lastPauseDirection = direction;
       } else if (direction !== lastPauseDirection) {
         if (direction === "up") {
-          pauseMenu = movePauseCursor(pauseMenu, -1);
+          pauseMenu = movePauseCursor(pauseMenu, -1, currentParty().length);
           audio.playSe(seOf("cursor"));
         } else if (direction === "down") {
-          pauseMenu = movePauseCursor(pauseMenu, 1);
+          pauseMenu = movePauseCursor(pauseMenu, 1, currentParty().length);
           audio.playSe(seOf("cursor"));
         }
         lastPauseDirection = direction;
@@ -2937,7 +2946,12 @@ const loop = createGameLoop({
         const result = confirmPauseMenu(pauseMenu);
         if (result.state.screen === "items" && pauseMenu.screen !== "items") itemsScroll = 0;
         pauseMenu = result.state;
-        if (result.action === "save") {
+        if (result.action === "swap" && result.swap) {
+          // ならびかえ: 選んだ2人を入れかえる（戦いでは1〜3人目が前列）
+          partyOrder = swapOrder(currentParty().map((c) => c.id), result.swap[0], result.swap[1]);
+          audio.playSe(seOf("confirm"));
+          autosave();
+        } else if (result.action === "save") {
           slotMenu = openSlotMenu("save", summarizeSlots(window.localStorage, false));
         } else if (result.action === "unstick") {
           escapeStuck();

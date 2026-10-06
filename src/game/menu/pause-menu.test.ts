@@ -43,3 +43,24 @@ describe("ゲーム中のメニュー", () => {
     expect(close.state.open).toBe(false);
   });
 });
+
+describe("ならびかえ", () => {
+  it("1人目を選び、2人目を選ぶと入れかえる。同じ人を選ぶとやめる。戻るで選びなおし", () => {
+    let s = { ...openPauseMenu(), cursor: PAUSE_ITEMS.findIndex((i) => i.id === "order") };
+    s = confirmPauseMenu(s).state;
+    expect(s.screen).toBe("order");
+    s = confirmPauseMenu(s).state;                    // 1人目（0番）
+    expect(s.orderPick).toBe(0);
+    s = movePauseCursor(s, 1, 4);
+    s = movePauseCursor(s, 1, 4);
+    const r = confirmPauseMenu(s);                      // 2人目（2番）
+    expect(r.action).toBe("swap");
+    expect(r.swap).toEqual([0, 2]);
+    s = confirmPauseMenu(r.state).state;
+    expect(confirmPauseMenu(s).state.orderPick).toBeNull();
+    s = backPauseMenu(s);
+    expect(s.orderPick).toBeNull();
+    expect(s.screen).toBe("order");
+    expect(backPauseMenu(s).screen).toBe("main");
+  });
+});

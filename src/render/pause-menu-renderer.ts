@@ -1,4 +1,5 @@
 import { PAUSE_ITEMS, type PauseMenuState } from "../game/menu/pause-menu";
+import { BACK_DEFENSE, FRONT_ATTACK, FRONT_ROW_SIZE } from "../game/battle/formation";
 import { drawWindow } from "./ui-frame";
 import { getPortraitIcon } from "./portrait-icons";
 
@@ -75,8 +76,8 @@ export function renderPauseMenu(
   if (!state.open) {
     return;
   }
-  if (state.screen === "items") {
-    return; // 「もちもの」は renderItemsScreen で描く
+  if (state.screen === "items" || state.screen === "order") {
+    return; // 「もちもの」は renderItemsScreen、「ならびかえ」は renderOrderScreen で描く
   }
   ctx.textBaseline = "top";
   ctx.textAlign = "left";
@@ -121,5 +122,45 @@ export function renderPauseMenu(
     ctx.fillText(`${row.name}　Lv${row.level}　HP ${row.hp}/${row.maxHp}　MP ${row.mp}/${row.maxMp}`, 48, y);
     ctx.fillStyle = "#c8c8e0";
     ctx.fillText(`こうげき${row.attack}　ぼうぎょ${row.defense}　すばやさ${row.speed}　うん${row.luck}　つぎのLvまで${row.expToNext}`, 48, y + 12);
+  });
+}
+
+/**
+ * 「ならびかえ」の画面。並び順の1〜3人目が前列（こうげきが上がる）、4人目からが後列（しゅびが上がる）。
+ * 1人目を選ぶと印がつき、2人目を選ぶと入れかわる。
+ */
+export function renderOrderScreen(ctx: CanvasRenderingContext2D, state: PauseMenuState, names: string[], screenWidth: number, screenHeight: number): void {
+  ctx.textBaseline = "top";
+  ctx.textAlign = "left";
+  drawWindow(ctx, 4, 4, screenWidth - 8, screenHeight - 8);
+  ctx.font = "10px monospace";
+  ctx.fillStyle = "#f2c14e";
+  ctx.fillText("ならびかえ（2人を選ぶと入れかわる／Xでもどる）", 12, 10);
+  const cur = state.orderCursor ?? 0;
+  const pick = state.orderPick ?? null;
+  const front = `前列（戦いで こうげき＋${Math.round((FRONT_ATTACK - 1) * 100)}%）`;
+  const back = `後列（戦いで しゅび＋${Math.round((BACK_DEFENSE - 1) * 100)}%）`;
+  let y = 28;
+  names.forEach((name, i) => {
+    if (i === 0 || i === FRONT_ROW_SIZE) {
+      ctx.fillStyle = "#88c8ff";
+      ctx.fillText(i === 0 ? front : back, 12, y);
+      y += 14;
+    }
+    const icon = getPortraitIcon(name, true);
+    ctx.fillStyle = i === pick ? "#5a4a20" : "#2a2140";
+    ctx.fillRect(28, y - 1, 22, 22);
+    if (icon) {
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(icon, 28, y - 1, 22, 22);
+      ctx.imageSmoothingEnabled = false;
+    }
+    ctx.strokeStyle = i === pick ? "#f2c14e" : "#c89a48";
+    ctx.strokeRect(27.5, y - 1.5, 23, 23);
+    ctx.fillStyle = i === cur ? "#f2c14e" : "#f0f0f0";
+    ctx.fillText(`${i === cur ? "▶" : "　"}`, 14, y + 6);
+    ctx.fillText(`${i + 1}. ${name}${i === pick ? "　← 入れかえる相手を選んでください" : ""}`, 56, y + 6);
+    y += 25;
   });
 }

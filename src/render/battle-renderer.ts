@@ -15,6 +15,7 @@ import { VOLLEY_FX, type BattleAnimSpec } from "../game/battle/battle-anim";
 import { allyStateOf, getAllyCanvas, type AllyState } from "./ally-states";
 import { drawSpellFrame, hasSpellFx } from "./spell-fx-renderer";
 import { drawCosmoOverlay, drawCosmoWearer } from "./cosmo-renderer";
+import { allySlot, isFrontRow } from "../game/battle/formation";
 import { DAMAGE_FX, drawCharge, drawFx, drawRelease, drawSpellDim, drawWeaponMotion, FX_COLOR, lungeOffset, type Pt } from "./battle-anim-renderer";
 
 let currentBiome: Biome = "grass";
@@ -282,10 +283,8 @@ function drawBossSprite(ctx: CanvasRenderingContext2D, enemy: Combatant, screenW
 function combatantPoint(state: BattleState, id: string, screenWidth: number, screenHeight: number): Pt {
   const ally = state.party.findIndex((c) => c.id === id);
   if (ally >= 0) {
-    const row = ally % 2;
-    const col = Math.floor(ally / 2);
-    const feetY = screenHeight - 56 - 4 - row * 18;
-    const leftX = ENEMIES_ON_RIGHT ? 20 + col * 30 + row * 14 : screenWidth - 40 - col * 30 - row * 14;
+    // 横2列（前列3人・後列）。立つ場所は `formation.ts` の allySlot
+    const { leftX, feetY } = allySlot(ally, screenWidth, screenHeight - 56 - 4);
     return { x: leftX + 8, y: feetY - 16, w: 16, h: 32 };
   }
   const enemy = state.enemies.find((c) => c.id === id);
@@ -456,7 +455,9 @@ function renderBattleBody(
   // 状態表示（名前・HP・MP）のうしろに、うすい暗い板。文字の下にHPの帯が重なって読みにくかったので、行の間をあけ、帯は細くする
   ctx.fillStyle = "rgba(16, 10, 30, 0.55)";
   ctx.fillRect(textX - 3, 0, 124, 2 + count * STATUS_PITCH + 1);
-  battleState.party.forEach((member, index) => {
+  // 奥の後列を先に、手前の前列をあとに描く（状態表示は、並び順のまま上から）
+  const drawOrder = battleState.party.map((member, index) => ({ member, index })).sort((a, b) => Number(isFrontRow(a.index)) - Number(isFrontRow(b.index)));
+  drawOrder.forEach(({ member, index }) => {
     const isActing = uiState.kind === "command" && uiState.actorId === member.id;
     // 状態表示（1人1行）
     const ty = 2 + index * STATUS_PITCH;
@@ -468,10 +469,7 @@ function renderBattleBody(
     if (!spec) {
       return;
     }
-    const row = index % 2;
-    const col = Math.floor(index / 2);
-    const feetY = groundY - row * 18;
-    const leftX = ENEMIES_ON_RIGHT ? 20 + col * 30 + row * 14 : screenWidth - 40 - col * 30 - row * 14;
+    const { leftX, feetY } = allySlot(index, screenWidth, groundY);
     const anim = animView && animView.elapsedMs < animView.spec.durationMs ? animView : null;
     const p = anim ? anim.elapsedMs / anim.spec.durationMs : 1;
     const acting = anim?.spec.actorId === member.id && anim.spec.motion;
