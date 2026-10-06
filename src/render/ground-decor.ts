@@ -467,7 +467,7 @@ function canopyBlend(ctx: CanvasRenderingContext2D, map: TileMap, ox: number, oy
   const grassish = (x: number, y: number): boolean => { const k = kindAt(map, x, y); return k === "grass" || isC(x, y) === 1; };
   if (!grassish(tx, ty)) return;
   let mixed = false;
-  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (grassish(tx + dx, ty + dy) && isC(tx + dx, ty + dy) !== here) mixed = true;
+  for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) if (grassish(tx + dx, ty + dy) && isC(tx + dx, ty + dy) !== here) mixed = true;
   if (!mixed) return;
   const key = `${map.data.width}x${map.data.height}:${tx},${ty}:${getTileId(map, 0, 0, 0)}`;
   let tile = canopyTileCache.get(key);
@@ -480,22 +480,33 @@ function canopyBlend(ctx: CanvasRenderingContext2D, map: TileMap, ox: number, oy
       const g = c.getContext("2d");
       if (g) {
         g.imageSmoothingEnabled = false;
-        const cv = (x: number, y: number): number => (grassish(x, y) ? isC(x, y) : here);
+        // 2026-10-06 人間の指示「しげみの端の方長さを短くしていって、芝となじむようにして」:
+        // 芝とのさかいからの距離（ドット。草むらの中は＋、芝の側は－）で、低い草 → 中くらいの草 → ふつうの草へ切りかえる。
+        // 草の株は根もとで高さが決まるので、距離は少し下（根もとのあたり）ではかる。
+        const depthAt = (gx: number, gy: number): number => {
+          const cx0 = Math.floor(gx / s), cy0 = Math.floor(gy / s);
+          const inC = isC(cx0, cy0) === 1 || (!grassish(cx0, cy0) && here === 1);
+          let best = 99;
+          for (let dy = -2; dy <= 2; dy++) {
+            for (let dx = -2; dx <= 2; dx++) {
+              const x = cx0 + dx, y = cy0 + dy;
+              if (!grassish(x, y) || (isC(x, y) === 1) === inC) continue;
+              const ddx = Math.max(x * s - gx, 0, gx - (x * s + s));
+              const ddy = Math.max(y * s - gy, 0, gy - (y * s + s));
+              best = Math.min(best, Math.hypot(ddx, ddy));
+            }
+          }
+          return inC ? best : -best;
+        };
+        const lawnKey = ["terrain:grass-a", "terrain:grass-b"][hashCell(Math.floor(tx / 8), Math.floor(ty / 8)) % 2];
+        const texOf = (k: string): HTMLCanvasElement | null => getSpriteCanvas(k, SPRITE_DATA) ?? canopy;
         for (let py = 0; py < s; py++) {
           for (let px = 0; px < s; px++) {
-            const fx = (px + 0.5) / s - 0.5, fy = (py + 0.5) / s - 0.5;
-            const ix = fx < 0 ? tx - 1 : tx, iy = fy < 0 ? ty - 1 : ty;
-            const wx = fx < 0 ? fx + 1 : fx, wy = fy < 0 ? fy + 1 : fy;
-            let v = (cv(ix, iy) * (1 - wx) + cv(ix + 1, iy) * wx) * (1 - wy) + (cv(ix, iy + 1) * (1 - wx) + cv(ix + 1, iy + 1) * wx) * wy;
             const gx = tx * s + px, gy = ty * s + py;
-            v += (smoothNoise(gx * 2.3, gy * 2.3) - 0.5) * 0.55 + ((hashCell(gx, gy) % 100) / 100 - 0.5) * 0.12;
-            if (v > 0.5) {
-              g.drawImage(canopy, ((gx % 128) + 128) % 128, ((gy % 128) + 128) % 128, 1, 1, px, py, 1, 1);
-            } else {
-              const key2 = ["terrain:grass-a", "terrain:grass-b"][hashCell(Math.floor(tx / 8), Math.floor(ty / 8)) % 2];
-              const grass = getSpriteCanvas(key2, SPRITE_DATA);
-              if (grass) g.drawImage(grass, ((gx % 128) + 128) % 128, ((gy % 128) + 128) % 128, 1, 1, px, py, 1, 1);
-            }
+            const d = depthAt(gx + 0.5, gy + 5.5) + (smoothNoise(gx * 0.35, gy * 0.35) - 0.5) * 7 + ((hashCell(gx, gy) % 100) / 100 - 0.5) * 1.5;
+            const key3 = d < 0 ? lawnKey : d < 6 ? "terrain:forest-low" : d < 13 ? "terrain:forest-mid" : "terrain:forest";
+            const tex = key3 === "terrain:forest" ? canopy : texOf(key3);
+            if (tex) g.drawImage(tex, ((gx % 128) + 128) % 128, ((gy % 128) + 128) % 128, 1, 1, px, py, 1, 1);
           }
         }
         tile = c;
