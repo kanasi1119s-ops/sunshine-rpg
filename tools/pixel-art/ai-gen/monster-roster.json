@@ -3275,21 +3275,21 @@
  },
  {
   "id": "enc-world-sea-2",
-  "prompt": "a sea firefly bug swarm queen, a larger glowing insect with transparent shell and blue light trails",
+  "prompt": "a large glowing sea firefly insect with a round transparent abdomen full of blue light, feathery antennae, small clear wings, many thin legs, side view, no human",
   "status": "done",
   "key": "enemy:enc-world-sea-2",
   "kind": "mob",
   "name": "海ほたるの虫",
   "zone": "world-sea",
   "level": 12,
-  "shape": "winged",
+  "shape": "ground",
   "tone": [
    70,
    160,
    210
   ],
   "bg": "dark",
-  "seed_base": 6001,
+  "seed_base": 10002,
   "draft": "enc-world-sea-2_0"
  },
  {
@@ -3312,7 +3312,7 @@
  {
   "id": "enc-world-sea-4",
   "prompt": "a sea feather creature, a flying fish with huge feather-like fins and silver scales",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-sea-4",
   "kind": "mob",
   "name": "海の羽",
@@ -3323,12 +3323,13 @@
    170,
    200,
    210
-  ]
+  ],
+  "draft": "enc-world-sea-4_0"
  },
  {
   "id": "enc-world-sea-5",
   "prompt": "an echo of a boat, a ghostly small wooden rowboat with a faint rower and a lantern",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-sea-5",
   "kind": "mob",
   "name": "舟の残響",
@@ -3339,12 +3340,13 @@
    140,
    150,
    160
-  ]
+  ],
+  "draft": "enc-world-sea-5_1"
  },
  {
   "id": "enc-world-sea-6",
   "prompt": "a sunken ship guardian, a figure made of ship planks and an anchor with a ship wheel shield",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-sea-6",
   "kind": "mob",
   "name": "沈没船の番兵",
@@ -3355,7 +3357,8 @@
    100,
    85,
    70
-  ]
+  ],
+  "draft": "enc-world-sea-6_0"
  },
  {
   "id": "enc-world-air-0",
