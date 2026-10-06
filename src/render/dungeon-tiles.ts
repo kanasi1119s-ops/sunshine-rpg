@@ -220,6 +220,29 @@ function wallFrontPlaster(t: ThemeSpec, variant: number, tx: number): Painter {
   };
 }
 
+/** 家の中の奥の壁の、上の段: いちばん上に天井のまわり縁（木）、その下は漆喰（下の段の壁の面へ、そのままつながる）。 */
+function wallUpperPlaster(t: ThemeSpec, variant: number, tx: number): Painter {
+  const wood = ["#2c1e14", "#4a321e", "#6a4828", "#845c34"];
+  return (_x, _y, put) => {
+    for (let y = 0; y < SIZE; y++) {
+      for (let x = 0; x < SIZE; x++) {
+        let c: string;
+        if (y === 0) c = wood[0];
+        else if (y === 1) c = wood[3];
+        else if (y === 2) c = wood[2];
+        else if (y === 3) c = wood[1];
+        else if (y === 4) c = t.wall[1];                       // まわり縁の下の影
+        else {
+          const n = hashCell(x * 5 + variant, y * 3 + tx);
+          c = n % 13 === 0 ? t.wall[3] : t.wall[2];
+          if (y === 5) c = t.wall[3];
+        }
+        put(x, y, c);
+      }
+    }
+  };
+}
+
 /** 机・カウンター: 上から見た天板（木目）と、手前の側面（暗い羽目板）と、足元の影。 */
 function furnitureTable(_t: ThemeSpec, variant: number, tx: number, below: boolean): Painter {
   const wood = ["#2c1e14", "#4a321e", "#6a4828", "#8a6238", "#a67a48"];
@@ -444,7 +467,13 @@ export function drawDungeonTile(
     const above = isWall(map, tx, ty - 1);
     const left = isWall(map, tx - 1, ty);
     const right = isWall(map, tx + 1, ty);
-    if (!below) {
+    // 家の中の奥の壁（2段）は、上の段も壁の面にする（2026-10-06 人間の指示「家財が壁に食い込んでるのよくあるから修正して」:
+    // 上の段が暗い天井だと、壁ぎわに置いた背の高い家具（本棚・箪笥・ベッドの頭）が、天井へはみ出して見えた）。
+    // 横にのびる壁（すぐ下の段の左右も壁）で、2段下が床のときだけ。たての仕切りの壁や、すみの柱は、これまでどおり天井
+    const upperFace = (themeName === "interior" || themeName === "archive") && below && !isWall(map, tx, ty + 2) && isWall(map, tx - 1, ty + 1) && isWall(map, tx + 1, ty + 1) && isWall(map, tx - 1, ty) && isWall(map, tx + 1, ty);
+    if (upperFace) {
+      canvas = canvasFor(`${themeName}|upper|${variant}|${tx % 3}`, wallUpperPlaster(t, variant, tx % 3));
+    } else if (!below) {
       const front = t.wallKind === "brick" ? wallFrontBrick(t, variant, tx % 3) : t.wallKind === "plaster" ? wallFrontPlaster(t, variant, tx % 3) : wallFrontRock(t, variant, tx % 3);
       canvas = canvasFor(`${themeName}|front|${variant}|${tx % 3}`, front);
     } else {

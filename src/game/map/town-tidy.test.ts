@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { WORLD_MAPS, WORLD_NPCS } from "../world/world";
-import { townOverlaps, townWallOverhangs } from "./town-tidy";
+import { townOverlaps, townPostOverlaps, townWallOverhangs } from "./town-tidy";
 import { doorOffsetX, isHouse } from "./map-props";
 
 const towns = Object.keys(WORLD_MAPS).filter((m) => /-(town|village)$/.test(m) || /^village-/.test(m));
@@ -26,6 +26,11 @@ describe("町のととのえ", () => {
   it("建物いがいの飾りの絵は、塀にはみ出さない", () => {
     const all: string[] = [];
     for (const id of towns) for (const o of townWallOverhangs(WORLD_MAPS[id])) all.push(`${id}: ${o}`);
+    expect(all).toEqual([]);
+  });
+  it("飾りの絵は、塀の柱（すみ・門の両わき）にかからない", () => {
+    const all: string[] = [];
+    for (const id of towns) for (const o of townPostOverlaps(WORLD_MAPS[id])) all.push(`${id}: ${o}`);
     expect(all).toEqual([]);
   });
   it("家の玄関は、塀にかからない", () => {

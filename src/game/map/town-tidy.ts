@@ -106,6 +106,24 @@ function overlaps(a: Box, b: Box): boolean {
   return Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0) > 2 && Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0) > 2;
 }
 
+/** 町の塀の柱（四すみと、門の両わき）の絵の範囲（town-wall.ts と同じ決め方。柱は 16×28 で、足もとのマスの下にそろう）。 */
+export function townPostBoxes(data: TileMapData): Box[] {
+  const w = data.width, h = data.height, ts = data.tileWidth;
+  const exits = data.exits ?? [];
+  const isExit = (x: number, y: number): boolean => exits.some((e) => e.tileX === x && e.tileY === y);
+  const ring = (x: number, y: number): boolean => x === 0 || y === 0 || x === w - 1 || y === h - 1;
+  const out: Box[] = [];   // 町の塀は tidyTowns のあとで立てるが、町にはかならず立つので、ここでは町かどうかを見ない
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (!ring(x, y) || isExit(x, y)) continue;
+      const corner = (x === 0 || x === w - 1) && (y === 0 || y === h - 1);
+      const gateSide = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => ring(x + dx, y + dy) && isExit(x + dx, y + dy));
+      if (corner || gateSide) out.push({ x0: x * ts, x1: x * ts + ts, y0: (y + 1) * ts - 28, y1: (y + 1) * ts });
+    }
+  }
+  return out;
+}
+
 function isTown(mapId: string): boolean {
   return (/-(town|village)$/.test(mapId) || /^village-/.test(mapId)) && mapId !== "world-map";
 }
@@ -173,6 +191,7 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
     }
     return exits.every((e) => seen.has(e.tileY * w + e.tileX)) && npcs.every((n) => AROUND.some(([ddx, ddy]) => seen.has((n.tileY + ddy) * w + n.tileX + ddx)));
   };
+  const posts = townPostBoxes(data);
   const objectBoxes = (): Box[] =>
     npcs.filter(isSolidObject).map((n) => ({ x0: n.tileX * ts, x1: n.tileX * ts + ts, y0: n.tileY * ts, y1: n.tileY * ts + ts }));
   const tryPlace = (kind: MapPropKind, x: number, y: number, onRoad = false): boolean => {
@@ -194,6 +213,7 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
         if (qb && overlaps(b, qb)) return false;
       }
       if (objectBoxes().some((o) => overlaps(b, o))) return false;
+      if (posts.some((o) => overlaps(b, o))) return false;               // 門柱・すみの柱にかからない
     }
     for (const t of tiles) col[t.y * w + t.x] = 1;
     if (!reachable()) {
@@ -305,6 +325,19 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
     if (b && (b.x0 < ts - 1 || b.x1 > (w - 1) * ts + 1 || b.y1 > (h - 1) * ts + 1)) remove(p);
   }
 
+  // 3.6) 門柱・すみの柱に絵がかかる飾り（建物はのぞく）は、近くへずらす。置ける所がなければ、はずす
+  //      （2026-10-06 人間の指示「灯の町の入って左側の木も柱に食い込んでるから直して」）
+  for (const p of [...props]) {
+    if (isHouse(p.kind) || p.kind === "church" || p.kind === "flowerbed") continue;
+    const b = boxOf(p, ts);
+    if (!b || !posts.some((o) => overlaps(b, o))) continue;
+    remove(p);
+    const cands: Array<[number, number]> = [];
+    for (let dy = -3; dy <= 1; dy++) for (let dx = -3; dx <= 3; dx++) if (dx || dy) cands.push([p.tileX + dx, p.tileY + dy]);
+    cands.sort((a, c) => Math.hypot(a[0] - p.tileX, (a[1] - p.tileY) * 1.2) - Math.hypot(c[0] - p.tileX, (c[1] - p.tileY) * 1.2));
+    for (const [x, y] of cands) if (tryPlace(p.kind, x, y)) break;
+  }
+
   // 4) 重なり: だいじなほうを残す（花壇はのぞく）。調べられる物と重なる飾りも取りのぞく
   const objs = objectBoxes();
   let changed = true;
@@ -361,6 +394,19 @@ export function townWallOverhangs(data: TileMapData): string[] {
     if (isHouse(p.kind) || p.kind === "church") continue;
     const b = boxOf(p, ts);
     if (b && (b.x0 < ts - 1 || b.x1 > (w - 1) * ts + 1 || b.y1 > (h - 1) * ts + 1)) out.push(`${p.kind}(${p.tileX},${p.tileY})`);
+  }
+  return out;
+}
+
+/** 町の塀の柱に、絵がかかっている飾り（建物・花壇はのぞく。テスト用）。 */
+export function townPostOverlaps(data: TileMapData): string[] {
+  const ts = data.tileWidth;
+  const posts = townPostBoxes(data);
+  const out: string[] = [];
+  for (const p of data.props ?? []) {
+    if (isHouse(p.kind) || p.kind === "church" || p.kind === "flowerbed") continue;
+    const b = boxOf(p, ts);
+    if (b && posts.some((o) => overlaps(b, o))) out.push(`${p.kind}(${p.tileX},${p.tileY})`);
   }
   return out;
 }
