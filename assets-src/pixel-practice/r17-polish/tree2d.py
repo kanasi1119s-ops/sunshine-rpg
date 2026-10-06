@@ -62,10 +62,21 @@ for k in range(22):
         continue                                                          # 幹の上の底は少しへこませる
     clumps.append((x, y, rr, 1.0 + rnd(k, 4)))
 # 中くらいの房
-for k in range(14):
+for k in range(9):                                                         # 中くらいの房（へらして、重たさをへらす）
     a = rnd(k, 5) * 2 * math.pi
     d = 0.35 + rnd(k, 6) * 0.45
     clumps.append((CX + math.cos(a) * RX * d, CY + math.sin(a) * RY * d, (4.5 + rnd(k, 7) * 2.5) * SC, 4.0 + rnd(k, 8) * 3))
+
+# 2026-10-06 人間の指示「木ちょっともっさりしてるから少し直して。葉の下の方が広がる感じかな」:
+# 樹冠の上のほうを細く、下のほうを横へ広げる（枝が横へ張り出した、すそ広がりの形）。上の房は少し小さく
+def spread(x, y):
+    f = 0.6 + 0.62 * min(1.0, max(0.0, (y - (CY - RY)) / (2 * RY))) ** 1.3
+    return CX + (x - CX) * f
+
+
+BOT = CY + RY
+clumps = [(spread(x, y), BOT - (BOT - y) * 0.9, r * (0.86 if y < CY - RY * 0.3 else 1.0), z) for (x, y, r, z) in clumps   # 少し背を低く
+          if not (y > CY + RY - 9 and abs(x - CX) < 11 and r < 7)]                     # 幹の上の底を、上へへこませる（枝が見える）
 
 # 高さの場（房を球として、いちばん手前の面）
 hgt = np.full((H, W), -1e9)
@@ -105,7 +116,7 @@ for py in range(H):
         n = 0.45 * g + 0.55 * np.array([lx, ly, lz]); n /= np.linalg.norm(n)
         v = max(0.0, float(n @ L))
         v = 0.18 + 0.72 * v
-        v -= 0.22 * max(0.0, (py - CY) / RY)                             # 底ほど暗い（空の光が届かない）
+        v -= 0.13 * max(0.0, (py - CY) / RY)                             # 底ほど暗い（空の光が届かない）
         # 上（光の側）の房が、この点に影を落とす
         for s in (1, 2, 3, 4, 5):
             qx, qy = int(round(px - s * 0.6)), int(py - s)
@@ -135,7 +146,7 @@ for py in range(H):
         img[py, px] = LEAF[k]
 
 # ---- 5. 暗いすき間と、のぞく枝 ------------------------------------------------------------
-gaps = [(CX + 4, CY + 8, True), (CX - 8, CY + 10, True), (CX + 13, CY + 1, False)]
+gaps = [(CX + 4, CY + 10, True), (CX - 10, CY + 12, True), (CX + 16, CY + 10, True)]   # 下のほうのすき間から、横へ張る枝がのぞく
 for gi, (gx, gy, br) in enumerate(gaps):
     for py in range(int(gy) - 2, int(gy) + 3):
         for px in range(int(gx) - 3, int(gx) + 4):
