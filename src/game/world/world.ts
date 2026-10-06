@@ -19,7 +19,7 @@ import { SIDE_STORY_NPCS } from "./side-stories";
 import { SHOP_NPCS } from "./shops-world";
 import { AMBIENT_NPCS } from "./ambient-world";
 import { applyMapTileArt } from "../tile-art/map-tile-art";
-import { applyMapProps } from "../map/map-props";
+import { applyMapProps, propFootprintTiles } from "../map/map-props";
 import { addChapterDungeons } from "./dungeon-extensions";
 import { addHouseInteriors } from "./house-interiors";
 import { addInnInteriors } from "./inn-interiors";
@@ -101,6 +101,15 @@ addChapterDungeons(WORLD_MAPS, WORLD_NPCS);
 connectWorldMap(WORLD_MAPS, WORLD_NPCS);
 addKeeperShrines(WORLD_MAPS, WORLD_NPCS);
 applyTownExpansion(WORLD_MAPS);
+// 町を東へ広げたあとで、広げた区域にある飾り（霧断崖の聖堂など、2026-10-06）の足もとも、通れなくする
+for (const m of Object.values(WORLD_MAPS)) {
+  if (!m.props || !m.collision) continue;
+  for (const prop of m.props) {
+    for (const { x, y } of propFootprintTiles(prop)) {
+      if (x >= 0 && y >= 0 && x < m.width && y < m.height) m.collision[y * m.width + x] = 1;
+    }
+  }
+}
 // タイルで描いていた建物も、平屋の家の絵にする（人間の指示、2026-10-05）。宿屋・飾りを置く前に置いて、重ならないようにする
 convertTileBuildings(WORLD_MAPS, WORLD_NPCS);
 applyVariantWalls(WORLD_MAPS, WORLD_NPCS);

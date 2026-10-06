@@ -99,7 +99,7 @@ export function createShimoharaTownData(): TileMapData {
         tileY: WEST_GATE.y,
         targetMapId: "kiri-town",
         targetTileX: 21,
-        targetTileY: 10,
+        targetTileY: 16,
       },
       {
         // 東の街道を渡って、第7章の浮嶼へ。

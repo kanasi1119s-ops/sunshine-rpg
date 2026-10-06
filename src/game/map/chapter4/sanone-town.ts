@@ -110,7 +110,7 @@ export function createSanoneTownData(): TileMapData {
         tileY: EAST_GATE.y,
         targetMapId: "kiri-town",
         targetTileX: 2,
-        targetTileY: 10,
+        targetTileY: 16,
       },
       {
         // 南の門から、隊商の野営地へ。

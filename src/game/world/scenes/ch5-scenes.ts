@@ -49,7 +49,7 @@ export const CH5_SCENES: StoryScene[] = [
     mapId: "kiri-town",
     requires: ["chapter5_intro_seen"],
     blockedBy: ["chapter5_quest_accepted"],
-    at: { x0: 3, y0: 9, x1: 4, y1: 11 },
+    at: { x0: 3, y0: 15, x1: 4, y1: 17 },
     source: `${SRC}01-霧の坂道.md（三 霧の門）`,
     commands: [
       n("石畳の路地が、崖の壁に貼りつくように段々に続いている。屋根の端から垂れた細い鎖の先で、小さな灯りが揺れていた。"),
@@ -159,7 +159,7 @@ export const CH5_SCENES: StoryScene[] = [
     mapId: "kiri-town",
     requires: ["chapter5_quest_accepted"],
     blockedBy: ["chapter5_record_found"],
-    at: { x0: 1, y0: 1, x1: 2, y1: 4 },   // 聖堂の西の裏の路地（2026-10-06 聖堂を大きくしたので、西のはしへ）
+    at: { x0: 19, y0: 1, x1: 22, y1: 3 },   // 聖堂の裏の路地（2026-10-06 聖堂を町の東へ動かしたので、その北の裏へ）
     time: "night",
     source: `${SRC}02-三つの灯りと夜の崖道.md（十・十一）`,
     commands: [
@@ -278,7 +278,7 @@ export const CH5_SCENES: StoryScene[] = [
     mapId: "kiri-town",
     requires: ["chapter5_reported"],
     blockedBy: ["chapter6_intro_seen"],
-    at: { x0: 13, y0: 6, x1: 16, y1: 7 },   // 2026-10-06 聖堂を大きくしたので、東へ
+    at: { x0: 8, y0: 18, x1: 12, y1: 19 },   // 2026-10-06 町を広げたので、南の霧のふちの近くへ
     time: "night",
     source: `${SRC}06-霧の晴れ間.md（三十 禁域のふち）・02（九 縄の向こう）`,
     commands: [

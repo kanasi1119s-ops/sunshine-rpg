@@ -11,7 +11,7 @@ export const SIDE_STORIES_LATE: SideStory[] = [
     key: "s015",
     title: "カセン支部長への手紙",
     unlockFlags: ["chapter5_record_found"],
-    giver: { mapId: "kiri-town", tileX: 13, tileY: 2, color: "#8a9ab0" },
+    giver: { mapId: "kiri-town", tileX: 11, tileY: 8, color: "#8a9ab0" },
     locked: [say("郵便係", "霧が濃い日は、手紙も遅れがちでして……。")],
     offer: [
       say("郵便係", "灯りの相談所の方ですね。灯里のカセン支部長へ、手紙を出されますか？"),
@@ -23,7 +23,7 @@ export const SIDE_STORIES_LATE: SideStory[] = [
     hint: [say("郵便係", "返事は、まだ届いていないようです。宿屋の前の、ポストも見てみてください。")],
     steps: [
       {
-        mapId: "kiri-town", tileX: 15, tileY: 6, color: "#b0a080",
+        mapId: "kiri-town", tileX: 15, tileY: 13, color: "#b0a080",
         commands: [
           say(undefined, "ポストの中に、灯里の消印の封筒が届いている。カセンの、いつもの角ばった字だ。"),
           say("カセン", "手紙は、読んだ。三度、読んだ。お前たちが、ここまで調べてくれたとは。わしは、言葉が足りんかった。"),
@@ -46,7 +46,7 @@ export const SIDE_STORIES_LATE: SideStory[] = [
     key: "s016",
     title: "巡礼儀礼の手伝い",
     unlockFlags: ["chapter5_intro_seen"],
-    giver: { mapId: "kiri-town", tileX: 12, tileY: 3, color: "#c0b090" },
+    giver: { mapId: "kiri-town", tileX: 12, tileY: 9, color: "#c0b090" },
     locked: [say("見習い巫女", "今日は、静かな日です。")],
     offer: [
       say("見習い巫女", "見習い巫女のツムギです。この町では、年に一度、環の祠へ灯りを捧げる巡礼儀礼があります。"),
@@ -58,19 +58,19 @@ export const SIDE_STORIES_LATE: SideStory[] = [
     hint: [say("見習い巫女", "祠は、町のあちこちにあります。灯りの芯は、私が渡しておきました。順番は、どれからでも構いません。")],
     steps: [
       {
-        mapId: "kiri-town", tileX: 2, tileY: 6, color: "#d0c8a8",
+        mapId: "kiri-town", tileX: 1, tileY: 6, color: "#d0c8a8",
         commands: [
           say(undefined, "南の祠に、灯りの芯を置いた。ミナが小さく「……ハル」とつぶやく。水色の、やわらかな光がともる。"),
         ],
       },
       {
-        mapId: "kiri-town", tileX: 21, tileY: 6, color: "#d0c8a8",
+        mapId: "kiri-town", tileX: 21, tileY: 14, color: "#d0c8a8",
         commands: [
           say(undefined, "崖ぎわの祠に、ふたつ目の灯りをともした。オルカは黙って、十二年前に亡くした友を思う。黄色い光が、霧に滲んでいく。"),
         ],
       },
       {
-        mapId: "kiri-town", tileX: 9, tileY: 11, color: "#d0c8a8",
+        mapId: "kiri-town", tileX: 9, tileY: 18, color: "#d0c8a8",
         commands: [
           say(undefined, "路地の祠に、コハクは従兄を、レトは兄を、ユーリは祖父を思って、灯りを置いた。緑、赤、白の光が寄りそう。"),
           say(undefined, "五つの光が、ゆっくり揺れて、ひとつにまとまった。"),
@@ -121,7 +121,7 @@ export const SIDE_STORIES_LATE: SideStory[] = [
     key: "s029",
     title: "灯を失った村（前編）",
     unlockFlags: ["chapter5_intro_seen", "side_s016_done"],
-    giver: { mapId: "kiri-town", tileX: 18, tileY: 3, color: "#8a8a98" },
+    giver: { mapId: "kiri-town", tileX: 22, tileY: 14, color: "#8a8a98" },
     locked: [say("旅の商人", "寒村へ行く道は、霧が深くて危ないよ。")],
     offer: [
       say("旅の商人", "崖を降りた谷あいに、冷谷村という寒村があってね。毎年、塩と布を届けてるんだ。"),
@@ -133,7 +133,7 @@ export const SIDE_STORIES_LATE: SideStory[] = [
     hint: [say("旅の商人", "寒村の様子と、聖堂の人の話。両方、聞いてみてくれ。")],
     steps: [
       {
-        mapId: "kiri-town", tileX: 15, tileY: 7, color: "#9a9aa8",
+        mapId: "kiri-town", tileX: 16, tileY: 15, color: "#9a9aa8",
         commands: [
           say("寒村の村人", "灯りは、手放すもの……。個は、重い……。手放せば、楽になる……。"),
           say("カイ", "母ちゃんが、おれの名前を呼んでくれないんだ。笑ってるのに、おれのほうを見ないんだ。"),
@@ -141,7 +141,7 @@ export const SIDE_STORIES_LATE: SideStory[] = [
         ],
       },
       {
-        mapId: "kiri-town", tileX: 13, tileY: 5, color: "#c0b8a0",
+        mapId: "kiri-town", tileX: 13, tileY: 12, color: "#c0b8a0",
         commands: [
           say("司祭見習い", "環信仰から分かれた一派、「静滅教団」が、二年ほど前から、あの近辺で活動しています。教祖は、澄影という人です。"),
           say("司祭見習い", "「個を手放せば苦しみは消える」と説き、苦しんでいる人のもとを訪ねて、谷の祠へ誘うのだそうです。"),
@@ -161,7 +161,7 @@ export const SIDE_STORIES_LATE: SideStory[] = [
     key: "s030",
     title: "静滅教団の教え（後編）",
     unlockFlags: ["side_s029_done"],
-    giver: { mapId: "kiri-town", tileX: 5, tileY: 11, color: "#8a8098" },
+    giver: { mapId: "kiri-town", tileX: 5, tileY: 18, color: "#8a8098" },
     locked: [say("見張りの兵", "この先の谷は、立入り禁止だ。")],
     offer: [
       say("見張りの兵", "寒村の裏の谷に、教団の隠れ拠点があるという情報がある。古い祠の跡で、夜ごと灯りがともるそうだ。"),

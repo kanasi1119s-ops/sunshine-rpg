@@ -215,10 +215,18 @@ export function applyTownDecor(maps: Record<string, TileMapData>, npcsByMap: Rec
       ];
       const colors = ["#c08060", "#6a8ab0", "#a0a070", "#b07090", "#7a9a6a"];
       const taken = new Set(npcs.map((n) => `${n.tileX},${n.tileY}`));
+      // 大きな飾り（聖堂など）の絵がはみ出す上のマス（奥にかくれてしまう）にも置かない（2026-10-06）
+      const behind = new Set<number>();
+      for (const prop of data.props ?? []) {
+        const tiles = propFootprintTiles(prop);
+        if (!tiles.length) continue;
+        const top = Math.min(...tiles.map((t) => t.y)) - propOverhangTiles(prop.kind, data.tileHeight);
+        for (let yy = top; yy <= prop.tileY; yy++) for (const t of tiles) behind.add(yy * w + t.x);
+      }
       const cand: Array<[number, number]> = [];
       for (let y = 2; y < h - 2; y++) {
         for (let x = oldW + 1; x < w - 2; x++) {
-          if (isOpen(x, y) && !occupied.has(y * w + x) && AROUND.every(([dx, dy]) => !occupied.has((y + dy) * w + x + dx))) cand.push([x, y]);
+          if (isOpen(x, y) && !occupied.has(y * w + x) && !behind.has(y * w + x) && AROUND.every(([dx, dy]) => !occupied.has((y + dy) * w + x + dx))) cand.push([x, y]);
         }
       }
       const list = npcsByMap[mapId] ?? (npcsByMap[mapId] = []);

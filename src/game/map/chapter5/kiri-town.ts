@@ -21,17 +21,19 @@ const TILE_COLORS: Record<number, string> = {
 const NON_WALKABLE = new Set([CLIFF, MIST, CHAPEL, PILLAR]);
 
 const WIDTH = 24;
-const HEIGHT = 16;
+const HEIGHT = 22;   // 2026-10-06 人間の指示「町を上に少し広げよう」で、上へ6マス広げた（16→22）
 
-const WEST_GATE = { x: 0, y: 10 };
-const EAST_GATE = { x: WIDTH - 1, y: 10 };
+const WEST_GATE = { x: 0, y: 16 };
+const EAST_GATE = { x: WIDTH - 1, y: 16 };
 /** 町の北、崖の岩肌に掘られた記録の間（古文書庫）への入口。 */
 const ARCHIVE_GATE_POS = { x: 12, y: 0 };
 /** 環の聖堂（教会。絵は `prop:church`、足もとのまんなかがここ。横7マス×縦4マス（絵は右へ奥行きがのびる）。2026-10-06 に大きくし、足もとを (7,5) から下げた）と、巡礼者の宿坊（3x2）。 */
-const CHURCH_FOOT = { x: 7, y: 8 };
+const CHURCH_FOOT = { x: 26, y: 12 };   // 2026-10-06 人間の指示「教会の場所変えよう右側の空間空いているからそこにしよう」。町を東へ広げた区域（x 24〜、town-expand.ts）
 /** 聖堂の扉（足もとのすぐ下。上へ押すと中へ入る）。 */
 export const KIRI_CHURCH_TOWN_DOOR = { x: CHURCH_FOOT.x, y: CHURCH_FOOT.y + 1 };
-const HOSTEL_ORIGIN = { x: 17, y: 4 };
+const HOSTEL_ORIGIN = { x: 5, y: 3 };
+/** 民家（3x2 の壁のかたまり。町の家の絵になり、中がつく）。2026-10-06 人間の指示「民家を増やして」。 */
+const HOUSES: Array<[number, number]> = [[2, 8], [6, 8], [2, 12], [7, 12], [13, 3], [16, 9], [19, 9]];
 
 /**
  * 第5章の舞台、断崖に張り付く古い宗教都市・霧断崖（`docs/story/structure.md`「第5章（霧断崖）」参照）。
@@ -74,8 +76,12 @@ export function createKiriTownData(): TileMapData {
       set(HOSTEL_ORIGIN.x + dx, HOSTEL_ORIGIN.y + dy, CHAPEL);
     }
   }
+  // 民家
+  for (const [hx, hy] of HOUSES) {
+    for (let dx = 0; dx < 3; dx++) for (let dy = 0; dy < 2; dy++) set(hx + dx, hy + dy, CHAPEL);
+  }
   // 広場の石柱。
-  for (const [x, y] of [[13, 8], [17, 8], [13, 12], [17, 12]] as [number, number][]) {   // 2026-10-06 聖堂を大きくしたので、東へ
+  for (const [x, y] of [[11, 18], [15, 18], [11, 14], [15, 14]] as [number, number][]) {   // 2026-10-06 町を広げて聖堂を東へ動かしたので、広場の石柱も
     set(x, y, PILLAR);
   }
 
@@ -88,15 +94,6 @@ export function createKiriTownData(): TileMapData {
     tileColors: TILE_COLORS,
     collision,
     exits: [
-      {
-        // 環の聖堂の扉から、中へ。
-        tileX: KIRI_CHURCH_TOWN_DOOR.x,
-        tileY: KIRI_CHURCH_TOWN_DOOR.y,
-        targetMapId: "kiri-church",
-        targetTileX: 6,
-        targetTileY: 9,
-        enter: "up",
-      },
       {
         // 砂音へ戻る街道。
         tileX: WEST_GATE.x,
@@ -120,6 +117,15 @@ export function createKiriTownData(): TileMapData {
         targetMapId: "kiri-archive",
         targetTileX: 9,
         targetTileY: 12,
+      },
+      {
+        // 環の聖堂の扉から、中へ（2026-10-06 聖堂を町を広げた東の区域へ動かしたので、最初の出入り口にしない。最初の出入り口は、歩ける範囲を調べる出発点に使われるため）。
+        tileX: KIRI_CHURCH_TOWN_DOOR.x,
+        tileY: KIRI_CHURCH_TOWN_DOOR.y,
+        targetMapId: "kiri-church",
+        targetTileX: 6,
+        targetTileY: 9,
+        enter: "up",
       },
     ],
   };

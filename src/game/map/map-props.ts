@@ -148,12 +148,12 @@ export const MAP_PROPS: Record<string, MapProp[]> = {
     { kind: "cactus", tileX: 6, tileY: 13 },
   ],
   "kiri-town": [
-    // 環の聖堂（教会）。足もとのまんなか (7,8)、扉は (7,9)（kiri-town.ts の CHURCH_FOOT と同じ）
-    { kind: "church", tileX: 7, tileY: 8 },
-    { kind: "statue-traveler", tileX: 14, tileY: 6 }, { kind: "bench", tileX: 6, tileY: 10 }, { kind: "shrine", tileX: 18, tileY: 10 },
-    { kind: "lamp", tileX: 2, tileY: 8 }, { kind: "barrel", tileX: 15, tileY: 10 }, { kind: "flowerbed", tileX: 7, tileY: 10 },
-    { kind: "bush", tileX: 4, tileY: 11 }, { kind: "bush", tileX: 19, tileY: 11 },
-    { kind: "tree", tileX: 2, tileY: 13 }, { kind: "tree", tileX: 21, tileY: 13 }, { kind: "tree", tileX: 22, tileY: 5 },
+    // 環の聖堂（教会）。足もとのまんなか (26,12)、扉は (26,13)（kiri-town.ts の CHURCH_FOOT と同じ）。2026-10-06 町を上へ6マス広げ、聖堂を東の広げた区域へ
+    { kind: "church", tileX: 26, tileY: 12 },
+    { kind: "statue-traveler", tileX: 13, tileY: 15 }, { kind: "bench", tileX: 6, tileY: 17 }, { kind: "shrine", tileX: 20, tileY: 18 },
+    { kind: "lamp", tileX: 2, tileY: 15 }, { kind: "barrel", tileX: 15, tileY: 11 }, { kind: "flowerbed", tileX: 7, tileY: 17 },
+    { kind: "bush", tileX: 4, tileY: 18 }, { kind: "bush", tileX: 19, tileY: 18 },
+    { kind: "tree", tileX: 2, tileY: 19 }, { kind: "tree", tileX: 21, tileY: 19 }, { kind: "tree", tileX: 22, tileY: 3 },
   ],
   "touri-outskirts": [
     { kind: "tree", tileX: 2, tileY: 5 }, { kind: "tree", tileX: 15, tileY: 5 }, { kind: "tree", tileX: 3, tileY: 10 }, { kind: "tree", tileX: 14, tileY: 11 },
