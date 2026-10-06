@@ -219,7 +219,8 @@ def build(W, H, FW, D, floors, FH, RH, ox=3, door=0.5, nwin=3, ov=3, porch=False
         for y in range(ty(sx, ytop), ty(sx, ytop) + 2):
             g.put(sx, y, "CUR")                                       # カーテン
 
-    doorx = x0 + int(FW * door)
+    # door=None: 玄関を、左右の窓がちょうど同じ大きさになる所（窓のあく所のまんなか）に置く
+    doorx = x0 + int(FW * door) if door is not None else (x0 + 3 + x1 - 5) // 2
     for fl in range(floors):
         wy = top + fl * FH + 5
         wh = FH - 10
@@ -444,5 +445,5 @@ def variants(name, g):
 
 
 if __name__ == "__main__":
-    variants("cottage-brick", build(56, 56, FW=37, D=12, floors=1, FH=22, RH=12, ox=3, door=0.5, nwin=2, ov=2, chimney=0.62, seed=3))
+    variants("cottage-brick", build(56, 56, FW=39, D=12, floors=1, FH=22, RH=12, ox=2, door=None, nwin=2, ov=2, chimney=0.62, seed=3))
     variants("manor-brick", build(80, 80, FW=55, D=19, floors=2, FH=18, RH=16, ox=2, door=0.45, nwin=3, ov=2, porch=True, dormer=True, chimney=0.74, seed=8))
