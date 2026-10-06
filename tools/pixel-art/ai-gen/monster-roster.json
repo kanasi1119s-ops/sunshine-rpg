@@ -2678,20 +2678,21 @@
  },
  {
   "id": "enc-world-1-4",
-  "prompt": "a roadside stone creature, a milestone rock with a moss beard and wooden stick arms",
+  "prompt": "a short round grey boulder creature with a long moss beard hanging from its face, two thin wooden stick arms, small stone feet, side view",
   "status": "done",
   "key": "enemy:enc-world-1-4",
   "kind": "mob",
   "name": "道ばたの石",
   "zone": "world-1",
   "level": 3,
-  "shape": "big",
+  "shape": "ground",
   "tone": [
    140,
    135,
    120
   ],
-  "draft": "enc-world-1-4_0"
+  "draft": "enc-world-1-4_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-1-5",
@@ -2713,7 +2714,7 @@
  {
   "id": "enc-world-2-0",
   "prompt": "a mountain pass shadow, a tall thin shadow with a walking staff and a cloak flapping in the wind",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-2-0",
   "kind": "mob",
   "name": "峠の影",
@@ -2724,12 +2725,13 @@
    90,
    95,
    110
-  ]
+  ],
+  "draft": "enc-world-2-0_0"
  },
  {
   "id": "enc-world-2-1",
   "prompt": "a lakeside bat with blue-grey fur, webbed wings and a fishing line tangled on it",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-2-1",
   "kind": "mob",
   "name": "湖畔のこうもり",
@@ -2740,12 +2742,13 @@
    100,
    120,
    140
-  ]
+  ],
+  "draft": "enc-world-2-1_0"
  },
  {
   "id": "enc-world-2-2",
   "prompt": "a stone distortion, a rock that twists into a spiral shape with a violet glow inside",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-2-2",
   "kind": "mob",
   "name": "石の歪み",
@@ -2756,7 +2759,8 @@
    120,
    110,
    125
-  ]
+  ],
+  "draft": "enc-world-2-2_0"
  },
  {
   "id": "enc-world-2-3",
