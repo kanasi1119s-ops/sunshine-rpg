@@ -50,6 +50,15 @@ def flood_cut(src, r):
     floor[band2:] |= (sat[band2:] < 30) & (a[band2:].min(2) >= 150)
     add &= ~floor
     add = ndimage.binary_opening(add, iterations=1)
+    # 体のすき間から見える背景（背景と同じ色で、まわりがほとんど rembg の体）は足さない
+    if r is not None:
+        gap = add & (np.abs(a - bgv).max(2) <= 6)
+        gl, gn = ndimage.label(gap)
+        for k in range(1, gn + 1):
+            comp = gl == k
+            ring = ndimage.binary_dilation(comp, iterations=1) & ~comp
+            if ring.sum() and (rr[ring].mean() >= 0.6 or (rr | ~add)[ring].mean() >= 0.85 and rr[ring].mean() >= 0.3):
+                add &= ~comp
     # 絵のふちに届く所（額縁など）は足さない
     al, an = ndimage.label(add)
     edge = set(al[0]) | set(al[-1]) | set(al[:, 0]) | set(al[:, -1]); edge.discard(0)

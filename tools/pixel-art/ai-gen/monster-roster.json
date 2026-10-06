@@ -4033,7 +4033,7 @@
  },
  {
   "id": "angel-06",
-  "status": "todo",
+  "status": "done",
   "kind": "extra",
   "name": "氷の天使",
   "group": "天使",
@@ -4057,7 +4057,7 @@
  },
  {
   "id": "angel-07",
-  "status": "todo",
+  "status": "done",
   "kind": "extra",
   "name": "天秤の天使",
   "group": "天使",
@@ -4076,7 +4076,7 @@
    "statue"
   ],
   "bg": "dark",
-  "draft": "angel-07_0",
+  "draft": "angel-07_1",
   "seed_base": 6001
  },
  {
