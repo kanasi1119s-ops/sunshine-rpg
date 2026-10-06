@@ -34,6 +34,63 @@ const DIRS: Array<{ dir: Direction; dx: number; dy: number }> = [
   { dir: "right", dx: 1, dy: 0 },
 ];
 
+/**
+ * 決められた道を歩かせる（物語の場面で、話し手が主人公のそばまで歩いてくる・元の所へ帰るとき。2026-10-06、
+ * 人間の指示「会話イベントもドットキャラは近づくときは歩いてきて、必ず町にいるように」）。
+ * 道は、いまのマスのとなりから、着くマスまで（1マスずつ、上下左右につながる）。ぶらぶら歩きの人でなくても歩ける。
+ */
+const scripted = new Map<string, Array<{ x: number; y: number }>>();
+/** 場面で歩く一歩の時間（ふだんのぶらぶら歩きより少し速い）。 */
+export const SCRIPTED_MOVE_MS = 260;
+
+export function walkNpcAlong(npc: Npc, path: Array<{ x: number; y: number }>): void {
+  ensure(npc, () => 0.5);
+  if (path.length > 0) scripted.set(npc.id, path.map((p) => ({ ...p })));
+}
+
+/** 決められた道を歩いている人がいるか。 */
+export function isScriptedWalking(npcId?: string): boolean {
+  return npcId ? scripted.has(npcId) : scripted.size > 0;
+}
+
+/** 決められた道を、すぐに歩き終えたことにする（地図が変わったときなど）。 */
+export function finishScriptedWalks(npcs: Npc[]): void {
+  for (const npc of npcs) {
+    const path = scripted.get(npc.id);
+    if (!path || path.length === 0) continue;
+    const last = path[path.length - 1];
+    npc.tileX = last.x;
+    npc.tileY = last.y;
+    const s = states.get(npc.id);
+    if (s) s.moving = false;
+  }
+  scripted.clear();
+}
+
+function stepScripted(npc: Npc, s: WanderState, dtMs: number): void {
+  const path = scripted.get(npc.id)!;
+  if (s.moving) {
+    s.animMs += dtMs;
+    s.t = Math.min(1, s.t + dtMs / SCRIPTED_MOVE_MS);
+    if (s.t < 1) return;
+    s.moving = false;
+  }
+  const next = path.shift();
+  if (!next) {
+    scripted.delete(npc.id);
+    s.animMs = 0;
+    s.waitMs = 1500;
+    return;
+  }
+  s.dir = next.x > npc.tileX ? "right" : next.x < npc.tileX ? "left" : next.y > npc.tileY ? "down" : "up";
+  s.fromX = npc.tileX;
+  s.fromY = npc.tileY;
+  npc.tileX = next.x;
+  npc.tileY = next.y;
+  s.moving = true;
+  s.t = 0;
+}
+
 export function wanderStateOf(npcId: string): WanderState | undefined {
   return states.get(npcId);
 }
@@ -69,6 +126,10 @@ export function updateWander(
   rng: () => number,
 ): void {
   for (const npc of npcs) {
+    if (scripted.has(npc.id)) {
+      stepScripted(npc, ensure(npc, rng), dtMs);
+      continue;
+    }
     if (!npc.wander) {
       continue;
     }

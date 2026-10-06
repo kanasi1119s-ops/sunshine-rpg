@@ -19,6 +19,8 @@ export interface Npc {
   hideWhenFlag?: string;
   /** このフラグが立つまでは、いない（人が去ったあとに残る跡など）。 */
   showWhenFlag?: string;
+  /** 物語の場面で話す人（`world/scene-residents.ts`）: どれかの場面の時期にあてはまるあいだだけ、その町にいる。 */
+  sceneWindows?: Array<{ requires?: string[]; blockedBy?: string[] }>;
   /** 現れるとき、この位置（タイルの数。dx, dy）から、本来の位置まで歩いて出てくる（天幕から出てくる人など）。 */
   emerge?: { dx: number; dy: number };
 }

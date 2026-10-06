@@ -39,7 +39,7 @@ import { createCamera, centerCameraOn, type Camera } from "./render/camera";
 import { renderTileMap } from "./render/tile-map-renderer";
 import { renderPlayer } from "./render/player-renderer";
 import { renderNpcs, visibleNpcFeetY } from "./render/npc-renderer";
-import { faceNpc, opposite, updateWander } from "./game/npc-wander";
+import { faceNpc, finishScriptedWalks, isScriptedWalking, opposite, updateWander, walkNpcAlong } from "./game/npc-wander";
 import { PartyTrail } from "./game/party-trail";
 import { worldEntryProblems } from "./game/world/world-map-world";
 import { buildVehicleCollision, canLandOn, groundIdAt, OCEAN, VEHICLE_SPEED, type Vehicle } from "./game/vehicle";
@@ -57,6 +57,7 @@ import { renderDialogue } from "./render/dialogue-renderer";
 import { startCloudSaves } from "./game/save/cloud-saves";
 import type { EventCommand } from "./game/event/types";
 import type { Npc } from "./game/npc";
+import { PARTY_NAMES, residentVisible } from "./game/world/scene-residents";
 import { isVoiceOnly, pendingScene, sceneSeenFlag, sceneSpeakers, sleptFlagsAfterInn } from "./game/world/story-scenes";
 import { firstSpeaker } from "./game/sprite/character-specs";
 import { createTileMap, findExitAt, isWalkable, type TileMap } from "./game/map/tile-map";
@@ -383,53 +384,147 @@ function canEnterQuietly(targetMapId: string): boolean {
   return targetMapId !== "tower-1";
 }
 
+/** 場面の話し手が歩いてくるあいだ（着いたら会話を始める）。 */
+let sceneApproach: { commands: EventCommand[]; startedAt: number } | null = null;
+/** 場面のために歩いてきた人と、もとの場所（会話のあと、歩いて帰る）。帰ったら消える人（町にいない人）は leave。 */
+let sceneWalkers: Array<{ npc: Npc; homeX: number; homeY: number; leave: boolean }> = [];
+
 /**
- * 小説の場面で話す人を、その場に出す（人間の指示「イベント始まるならその相手が近くにいないと」、2026-10-05）。
- * 話し手のうち、主人公・ついてくる仲間・声だけの人・すでに近く（7マス以内）にいる人をのぞいて、主人公のそばのあいているマスに出す。
- * 少しはなれた所から歩いて出てきて、主人公のほうを向く。顔の絵がある人は、その人の絵で。会話が終わると、ふだんの人の並びにもどる（消える）。
+ * 通れるマスだけを通る道（上下左右）。建物・物（宝箱・看板など）・ほかの人・主人公のマスは通らない
+ * （人間の指示「オブジェクトをすり抜けてこないように」、2026-10-06）。from のとなりから to まで。見つからなければ null。
  */
-function bringSceneActors(commands: EventCommand[], at: { x: number; y: number }): void {
-  const party = new Set(["ユーリ", ...Object.keys(companionStats).map((id) => COMPANIONS[id]?.name ?? "")]);
-  const near = (n: { tileX: number; tileY: number }): boolean => Math.abs(n.tileX - at.x) <= 7 && Math.abs(n.tileY - at.y) <= 7;
-  const names = sceneSpeakers(commands, flags).filter(
-    (name) => !party.has(name) && !isVoiceOnly(name) && !npcs.some((n) => near(n) && firstSpeaker(n.commands).speaker === name),
-  );
+function walkPath(from: { x: number; y: number }, to: { x: number; y: number }, self: Npc, at: { x: number; y: number }, maxLen = 60): Array<{ x: number; y: number }> | null {
   const w = map.data.width, h = map.data.height;
-  const taken = new Set<number>([at.y * w + at.x]);
-  for (const n of npcs) taken.add(Math.round(n.tileY) * w + Math.round(n.tileX));
-  for (const e of map.data.exits ?? []) taken.add(e.tileY * w + e.tileX);
-  const free = (x: number, y: number): boolean => x > 0 && y > 0 && x < w - 1 && y < h - 1 && isWalkable(map, x, y) && !taken.has(y * w + x);
-  // 主人公の前・左右・うしろの近いマスから順に
+  const blocked = new Set<number>([at.y * w + at.x]);
+  for (const n of npcs) if (n !== self) blocked.add(Math.round(n.tileY) * w + Math.round(n.tileX));
+  const start = from.y * w + from.x, goal = to.y * w + to.x;
+  if (blocked.has(goal) || !isWalkable(map, to.x, to.y)) return null;
+  const prev = new Map<number, number>([[start, -1]]);
+  const q = [start];
+  for (let qi = 0; qi < q.length; qi++) {
+    const cur = q[qi];
+    if (cur === goal) break;
+    const cx = cur % w, cy = Math.floor(cur / w);
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = cx + dx, ny = cy + dy, ni = ny * w + nx;
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h || prev.has(ni) || blocked.has(ni) || !isWalkable(map, nx, ny)) continue;
+      prev.set(ni, cur);
+      q.push(ni);
+    }
+  }
+  if (!prev.has(goal)) return null;
+  const path: Array<{ x: number; y: number }> = [];
+  for (let c = goal; c !== start; c = prev.get(c)!) path.unshift({ x: c % w, y: Math.floor(c / w) });
+  return path.length <= maxLen ? path : null;
+}
+
+/**
+ * 小説の場面で話す人を、主人公のそばまで歩かせる（人間の指示「イベント始まるならその相手が近くにいないと」2026-10-05、
+ * 「会話イベントもドットキャラは近づくときは歩いてきて、必ず町にいるように」「オブジェクトをすり抜けてこないように」2026-10-06）。
+ * 話し手のうち、主人公・ついてくる仲間・声だけの人をのぞいた人（4人まで）を、町にいるその人（同じ名前の町の人、
+ * または `scene-residents.ts` で置いた人）のいる所から、主人公の前・左右・うしろのあいているマスまで、通れる道だけを歩かせる。
+ * 町にその人が見つからないときだけ、少しはなれた（通れる道で6マスほど先の）所から歩いてくる。
+ * だれかが歩くなら true（着いてから会話を始める）。会話が終わると、みんな歩いてもとの所へ帰る。
+ */
+function bringSceneActors(commands: EventCommand[], at: { x: number; y: number }): boolean {
+  const party = new Set(["ユーリ", ...Object.keys(companionStats).map((id) => COMPANIONS[id]?.name ?? "")]);
+  const names = sceneSpeakers(commands, flags).filter((name) => !party.has(name) && !isVoiceOnly(name)).slice(0, 4);
+  const w = map.data.width, h = map.data.height;
+  const reserved = new Set<number>();
+  const exitAt = (x: number, y: number): boolean => !!findExitAt(map, x, y);
   const front = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[player.direction];
   const order: Array<[number, number]> = [front as [number, number], [front[0] + 1, front[1] + (front[0] === 0 ? 0 : 1)], [front[0] - 1, front[1] - (front[0] === 0 ? 0 : 1)], [1, 0], [-1, 0], [0, 1], [0, -1], [2, 0], [-2, 0], [0, 2], [0, -2], [1, 1], [-1, 1], [1, -1], [-1, -1], [2, 1], [-2, 1], [2, -1], [-2, -1]];
-  const actors: Npc[] = [];
-  for (const name of names.slice(0, 4)) {
-    const spot = order.map(([dx, dy]) => ({ x: at.x + dx, y: at.y + dy })).find((c) => free(c.x, c.y));
-    if (!spot) break;
-    taken.add(spot.y * w + spot.x);
-    let hash = 0;
-    for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
-    const id = `scene-actor-${hash.toString(36)}`;
-    const dx = Math.sign(spot.x - at.x), dy = Math.sign(spot.y - at.y);
-    const actor: Npc = {
-      id,
-      tileX: spot.x,
-      tileY: spot.y,
-      color: "#a08870",
-      ...(PORTRAITS[name] ? { spriteName: name } : {}),
-      commands: [{ type: "message", speaker: name, text: "……" }],
-      // 主人公から見て、外がわから歩いて出てくる
-      emerge: { dx: (dx || (dy ? 0 : 1)) * 2, dy: dy * 2 },
-    };
-    npcAppearedAt.set(id, performance.now());
-    actors.push(actor);
+  const dist = (n: Npc): number => Math.abs(n.tileX - at.x) + Math.abs(n.tileY - at.y);
+  let walking = false;
+  for (const name of names) {
+    let npc = npcs
+      .filter((n) => firstSpeaker(n.commands).speaker === name && !sceneWalkers.some((s) => s.npc === n))
+      .sort((p, q) => dist(p) - dist(q))[0];
+    let leave = false;
+    // まだ仲間になっていない仲間（レトなど）は、町にいるときだけ来てもらう（どこからともなく出さない）
+    if (!npc && PARTY_NAMES.has(name)) continue;
+    if (!npc) {
+      // 町に置いていない人（世界地図の旅の場面など）: 通れる道で6マスほどはなれた所から歩いてくる
+      const seen = new Map<number, number>([[at.y * w + at.x, 0]]);
+      const q = [at.y * w + at.x];
+      let far: { x: number; y: number } | null = null;
+      for (let qi = 0; qi < q.length && !far; qi++) {
+        const cur = q[qi], d = seen.get(cur)!;
+        const cx = cur % w, cy = Math.floor(cur / w);
+        if (d >= 6 && !exitAt(cx, cy) && !npcs.some((n) => Math.round(n.tileX) === cx && Math.round(n.tileY) === cy)) far = { x: cx, y: cy };
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = cx + dx, ny = cy + dy, ni = ny * w + nx;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h || seen.has(ni) || !isWalkable(map, nx, ny)) continue;
+          seen.set(ni, d + 1);
+          q.push(ni);
+        }
+      }
+      if (!far) continue;
+      let hash = 0;
+      for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+      npc = { id: `scene-actor-${hash.toString(36)}`, tileX: far.x, tileY: far.y, color: "#a08870", ...(PORTRAITS[name] ? { spriteName: name } : {}), commands: [{ type: "message", speaker: name, text: "……" }] };
+      npcs = [...npcs, npc];
+      leave = true;
+    }
+    const home = { x: Math.round(npc.tileX), y: Math.round(npc.tileY) };
+    if (Math.abs(home.x - at.x) + Math.abs(home.y - at.y) <= 1) {
+      sceneWalkers.push({ npc, homeX: home.x, homeY: home.y, leave });
+      continue;
+    }
+    let path: Array<{ x: number; y: number }> | null = null;
+    for (const [dx, dy] of order) {
+      const spot = { x: at.x + dx, y: at.y + dy };
+      if (reserved.has(spot.y * w + spot.x) || exitAt(spot.x, spot.y)) continue;
+      path = walkPath(home, spot, npc, at);
+      if (path) {
+        reserved.add(spot.y * w + spot.x);
+        break;
+      }
+    }
+    if (!path) continue;
+    // 遠すぎる人は、道の途中（着く所の16歩手前）から歩いてくる
+    if (path.length > 16) {
+      const startAt = path[path.length - 17];
+      npc.tileX = startAt.x;
+      npc.tileY = startAt.y;
+      path = path.slice(path.length - 16);
+    }
+    walkNpcAlong(npc, path);
+    sceneWalkers.push({ npc, homeX: home.x, homeY: home.y, leave });
+    walking = true;
   }
-  if (actors.length === 0) return;
-  npcs = [...npcs, ...actors];
-  for (const a of actors) faceNpc(a, a.tileX < at.x ? "right" : a.tileX > at.x ? "left" : a.tileY < at.y ? "down" : "up");
+  return walking;
+}
+
+/** 場面の話し手を、主人公のほうへ向ける。 */
+function faceSceneWalkers(at: { x: number; y: number }): void {
+  for (const s of sceneWalkers) {
+    const n = s.npc;
+    faceNpc(n, n.tileX < at.x ? "right" : n.tileX > at.x ? "left" : n.tileY < at.y ? "down" : "up");
+  }
+}
+
+/** 会話が終わったら、歩いてきた人を、もとの所へ歩いて帰す（道がなければ、その場にとどまる）。 */
+function sendSceneWalkersHome(): void {
+  const at = { x: Math.floor((player.x + player.width / 2) / map.data.tileWidth), y: Math.floor((player.y + player.height / 2) / map.data.tileHeight) };
+  for (const s of sceneWalkers) {
+    const here = { x: Math.round(s.npc.tileX), y: Math.round(s.npc.tileY) };
+    if (here.x === s.homeX && here.y === s.homeY) continue;
+    const path = walkPath(here, { x: s.homeX, y: s.homeY }, s.npc, at);
+    if (path) walkNpcAlong(s.npc, path);
+  }
+  sceneWalkers = [];
 }
 
 function switchMap(mapId: string, tileX: number, tileY: number): void {
+  // 場面で歩いてきた人は、もとの所へもどしておく（地図をはなれたあと、変な所に残らないように）
+  finishScriptedWalks(npcs);
+  for (const w of sceneWalkers) {
+    w.npc.tileX = w.homeX;
+    w.npc.tileY = w.homeY;
+  }
+  sceneWalkers = [];
+  sceneApproach = null;
   exitReleased = false;
   exitArmed = false;
   const data = WORLD_MAPS[mapId];
@@ -1459,6 +1554,7 @@ function withoutJoinedCompanions(list: typeof npcs): typeof npcs {
       !(COMPANION_NPC_IDS[npc.id] && flags[COMPANION_NPC_IDS[npc.id]]) &&
       !(npc.hideWhenFlag && flags[npc.hideWhenFlag]) &&
       !(npc.showWhenFlag && !flags[npc.showWhenFlag]) &&
+      !(npc.sceneWindows && !residentVisible(npc.sceneWindows, flags)) &&
       // 夜は、ぶらぶら歩いている町の人が減る
       !(npc.wander && isOutdoorMap(currentMapId) && isNight(clockMs) && !staysOutAtNight(npc.id)),
   );
@@ -2468,7 +2564,7 @@ const loop = createGameLoop({
       if (emergers.length > 0) {
         for (const n of emergers) npcAppearedAt.set(n.id, performance.now());
         npcs = [...npcs, ...emergers];
-      } else if (!dialogue.isActive() && (wanted.length !== npcs.length || wanted.some((n, i) => n.id !== npcs[i]?.id))) {
+      } else if (!dialogue.isActive() && !sceneApproach && !isScriptedWalking() && (wanted.length !== npcs.length || wanted.some((n, i) => n.id !== npcs[i]?.id))) {
         npcs = wanted;
       }
     }
@@ -2980,6 +3076,17 @@ const loop = createGameLoop({
         return;
       }
     }
+    // 物語の場面: 話し手が歩いてくるあいだ、主人公は止まって待つ。みんな着いたら（長くても9秒で）会話を始める
+    if (sceneApproach) {
+      updateWander(npcs, map, { x: -1, y: -1 }, dtMs, true, Math.random);
+      if (!isScriptedWalking() || performance.now() - sceneApproach.startedAt > 9000) {
+        finishScriptedWalks(npcs);
+        faceSceneWalkers({ x: Math.floor((player.x + player.width / 2) / map.data.tileWidth), y: Math.floor((player.y + player.height / 2) / map.data.tileHeight) });
+        dialogue.start(sceneApproach.commands);
+        sceneApproach = null;
+      }
+      return;
+    }
     if (dialogue.isActive()) {
       dialogue.update(dtMs);
       updateWander(npcs, map, { x: -1, y: -1 }, dtMs, true, Math.random);
@@ -3005,6 +3112,7 @@ const loop = createGameLoop({
       return;
     }
     lastDialogueDirection = null;
+    if (sceneWalkers.length > 0) sendSceneWalkersHome();
 
     if (worldOverviewOpen) {
       return;
@@ -3094,8 +3202,12 @@ const loop = createGameLoop({
       if (scene) {
         flags[sceneSeenFlag(scene.id)] = true;
         if (scene.time) clockMs = advanceClockTo(clockMs, scene.time);   // 「夕暮れ」「その夜」の場面は、時計もそこへ
-        bringSceneActors(scene.commands, { x: centerTileX, y: centerTileY });
-        dialogue.start(scene.commands);
+        if (bringSceneActors(scene.commands, { x: centerTileX, y: centerTileY })) {
+          sceneApproach = { commands: scene.commands, startedAt: performance.now() };
+        } else {
+          faceSceneWalkers({ x: centerTileX, y: centerTileY });
+          dialogue.start(scene.commands);
+        }
         return;
       }
     }
