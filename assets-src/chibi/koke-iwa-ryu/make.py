@@ -1,22 +1,29 @@
-"""苔岩の子竜（2頭身のモンスター・32×32・右向き・待機3コマ）を作る。
-2026-10-07、人間の指示「モンスターも1体作ってみて」。イメージ画像は ref.png（Stable Diffusion 1.5）。
-イメージ画像から拾った特ちょう: 苔の緑の体／頭の上と後ろの、灰色の石のとげ（冠のように並ぶ）／大きな黒い目と白っぽい目のふち／
-灰色のこうもりのような小さな羽（とげが3本）／長いしっぽ／太い前足と灰色の爪。
-2頭身にするため、頭を全体の半分近くまで大きくし、体と足を短くした。
-部品（しっぽ・後ろ足・羽・体・前足・頭）を後ろから順に置き、縁取りと陰影（光は左上）をつけてから、目・口・石のとげを1ドットずつ描く。
-使い方: python3 make.py → sheet.txt・sheet.json（エディタ用、96×32 = 3コマ）・sheet.png・sheet_x8.png・idle.gif"""
+"""苔岩の子竜（2頭身の歩くモンスター）を、3つの大きさで作って見比べる。
+2026-10-07、人間の指示「モンスターも1体作ってみて」「却下、32×16よ」「無理なら16×16でも検討して。もしくは16×32か」
+「16×32と32×16をうまく使うのもありだね」「とりあえずこのパターン全部やってみて」。
+最初に作った 32×32 の待機絵は old-32x32/ に残した（採用しない）。
+
+3つのパターン（どれも 4方向×3コマの歩き。右向きは左向きの左右反転）:
+- v16x32/ … 16×32 だけ。下・上は体が奥へのびる長い竜、横は 16×16 の竜を下にそろえて置く
+- v16x16/ … 16×16。小さな4本足の竜（頭が全体の半分より大きい）
+- mix/    … 下・上は 16×32（体が奥へのびる）、横は 32×16（イメージ画像どおり、4本足で低く歩く形）
+立たせない（2026-10-07、人間の指示「立たせないで」）。どれも4本足で歩く。
+
+イメージ画像（ref.png, Stable Diffusion 1.5）から残した特ちょう: 苔の緑の体と模様／頭の上の灰色の石のとげ（冠のように並ぶ）／
+黒いアーモンド形の大きな目と石のまゆ／灰色の羽（とげつき）／しっぽと灰色の爪。
+下・上は左半分を描いて左右反転でつなぐ（右半分の明るい色は1段暗くして、光を左上にする）。
+使い方: python3 make.py → 各フォルダに walker.json・sheet.txt/json（エディタ用）・sheet.png・sheet_x8.png・walk.gif"""
 import json
 import pathlib
-from PIL import Image, ImageDraw
+from PIL import Image
 
 HERE = pathlib.Path(__file__).parent
-W = H = 32
+ORDER = ["down", "up", "left", "right"]
+LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-# 色（16色）
 PAL = {
-    ".": None,
-    "A": "#1a2014",  # 外の縁取り（黒ではなく、こい緑の黒）
-    "a": "#2e3e1c",  # 中の縁取り（部品の重なり）
+    "A": "#1a2014",  # 縁取り（こい緑の黒）
+    "a": "#2e3e1c",  # 中の縁取り
     "B": "#40601e",  # 苔の暗
     "C": "#6e922c",  # 苔の地
     "D": "#9cbc42",  # 苔の明
@@ -24,179 +31,314 @@ PAL = {
     "F": "#3a3a42",  # 石の暗
     "G": "#6c6c76",  # 石の地
     "H": "#a2a2ae",  # 石の明
-    "I": "#d8d8e0",  # 目のふち・光
     "J": "#0e0e14",  # 目
     "K": "#ffffff",  # 目の光
-    "L": "#2a1c14",  # 口
-    "M": "#b8cc6a",  # おなか
+    "L": "#2a1c14",  # 口・鼻の穴
+    "M": "#b8cc6a",  # おなか・口のまわり
     "N": "#24242a",  # 爪
 }
-# 部品ごとの 明・地・暗
-TONES = {"moss": ("D", "C", "B"), "stone": ("H", "G", "F"), "wing": ("G", "F", "F"), "belly": ("M", "M", "C")}
 
 
-def parts(bob=0, wing_up=0):
-    """部品を後ろから順に、(名前, 色の種類, マスク) で返す"""
-    out = []
+def mirror(half_rows):
+    darker = {"D": "C", "E": "D", "H": "G"}
+    return [r + "".join(darker.get(c, c) for c in r[::-1]) for r in half_rows]
 
-    def mask(draw_fn):
-        im = Image.new("L", (W, H), 0)
-        draw_fn(ImageDraw.Draw(im))
-        return im
 
-    b = bob
-    # しっぽ（体の左下から左へのび、先が少し上がる）
-    out.append(("tail", "moss", mask(lambda d: (d.line([(9, 23 + b), (5, 25 + b), (2, 26 + b)], fill=255, width=3),
-                                               d.line([(2, 26 + b), (1, 24 + b)], fill=255, width=2)))))
-    # 後ろ足（地面に着いているので、上下しない）
-    out.append(("leg_b", "moss", mask(lambda d: (d.rectangle([7, 23, 11, 28], fill=255), d.rectangle([6, 28, 12, 29], fill=255)))))
-    # 羽（背中から左上へ、石の色のとげ3本）
-    w = wing_up
-    wing_rows = {3: "..#...........", 4: "..##..........", 5: "...###........", 6: "...#####......",
-                 7: "....#######...", 8: "....#########.", 9: "...###########", 10: "..############",
-                 11: "..##.###.#####", 12: "..#...#...####", 13: "...........###", 14: "............##"}
+# 4本足の竜（2026-10-07、人間の指示「立たせないで」）。見下ろしのRPGなので、
+# 下・上向きは「体が奥へ長くのびる」形を 16×32 に、横向きは「低く長い」形を 32×16 に描くと、長い竜をそのまま描ける。
 
-    def draw_wing(d):
-        for y, r in wing_rows.items():
-            dy = b - (wing_up if y <= 8 else (wing_up // 2 if y <= 11 else 0))   # 羽を上げるときは、先ほど大きく動く
-            for x, c in enumerate(r):
-                if c == "#":
-                    d.point((x, y + dy), fill=255)
-                    if wing_up and y <= 8:
-                        d.point((x, y + dy + 1), fill=255)
-    out.append(("wing", "wing", mask(draw_wing)))
-    # 体
-    out.append(("body", "moss", mask(lambda d: d.ellipse([5, 15 + b, 21, 27 + b], fill=255))))
-    # 前足
-    out.append(("leg_f", "moss", mask(lambda d: (d.rectangle([17, 21 + b, 21, 28], fill=255), d.rectangle([16, 28, 23, 29], fill=255)))))
-    # 頭（大きく丸く）と鼻先
-    out.append(("head", "moss", mask(lambda d: (d.ellipse([11, 4 + b, 28, 20 + b], fill=255), d.ellipse([21, 9 + b, 30, 18 + b], fill=255)))))
+LEG_L = ["AA.", "DCC", "CBB", "NNA"]           # 左の足（上から 付け根・足・足・爪）。体の縁に重ねて付ける
+LEG_R = [".AA", "BCB", "BBB", "ANN"]           # 右の足（右半分なので1段暗い）
+
+
+def put_leg(g, y0, left):
+    spr, x0 = (LEG_L, 1) if left else (LEG_R, 12)
+    for i, r in enumerate(spr):
+        y = y0 + i
+        if 0 <= y < len(g):
+            row = list(g[y])
+            for j, c in enumerate(r):
+                if c != ".":
+                    row[x0 + j] = c
+            g[y] = "".join(row)
+
+
+def sway(g, rows, dx):
+    """しっぽの行を左右に1ドットずらす"""
+    for y in rows:
+        r = g[y]
+        g[y] = (r[1:] + ".") if dx < 0 else ("." + r[:-1])
+
+
+# =============== 16×32（下・上。体が奥へのびる長い竜） ===============
+L_DOWN = mirror([
+    "......AA",   # 0  しっぽの先（いちばん奥）
+    "......AC",
+    "......AC",
+    ".....ABC",
+    ".....ABC",
+    "....ABCC",   # 5  背中
+    "...ABCCG",   # 6  背中の石のとげ
+    "..A.ABCF",   # 7  たたんだ羽（背中の左右）
+    ".AHAABCG",
+    ".AGHABCF",
+    "AGHGABCG",
+    "AFGHAaCF",
+    "AFFGHABC",
+    ".AFFGABC",
+    "..AAAaBC",
+    "...ABCCC",   # 15
+    "...ABCCC",
+    "....AAGF",   # 17 首・頭の石の冠
+    "...AGFGF",
+    "..AGFGFG",
+    "..ADGFGG",
+    "..ADCCDC",
+    "..ACFFFC",   # 22 まゆの石
+    "..AHJJJC",   # 23 目
+    "..AJKJJC",
+    "..ACHHHC",
+    "..ABCCML",   # 26 鼻の穴
+    "..ABCMMM",
+    "...ABLLL",   # 28 口
+    "....AMMM",
+    ".....AAA",
+])
+L_UP = mirror([
+    "....A..A",   # 0  頭の石のとげ（後ろから）
+    "...AHAAH",
+    "..AGFGFG",
+    "..ADGGFG",
+    "..ADCCGF",
+    "..ACCBFG",
+    "..ACCCGF",
+    "..ABCCCF",
+    "...ABCCG",
+    "....ABCF",   # 9  首
+    "...ABCCG",
+    "..A.ABCF",   # 11 たたんだ羽
+    ".AHAABCG",
+    ".AGHABCF",
+    "AGHGABCG",
+    "AFGHAaCF",
+    "AFFGHABC",
+    ".AFFGABC",
+    "..AAAaBC",
+    "...ABCCC",
+    "...ABBCC",
+    "....ABCC",
+    "....ABCC",
+    ".....ABC",   # 23 しっぽ（手前へ）
+    ".....ABC",
+    "......AC",
+    "......AC",
+    "......AC",
+    "......AA",
+])
+
+
+def long_frames():
+    fr = {}
+    for f in range(3):
+        g = list(L_DOWN) + ["." * 16]
+        a, b = {0: (27, 27), 1: (28, 26), 2: (26, 28)}[f]      # 前足（頭の左右）を交互に
+        put_leg(g, a, True); put_leg(g, b, False)
+        a, b = {0: (15, 15), 1: (14, 16), 2: (16, 14)}[f]      # 後ろ足は前足と逆
+        put_leg(g, a, True); put_leg(g, b, False)
+        if f:
+            sway(g, range(0, 5), -1 if f == 1 else 1)          # しっぽの先がゆれる
+        fr[f"down{f}"] = g
+        g = list(L_UP) + ["." * 16] * 3
+        a, b = {0: (6, 6), 1: (5, 7), 2: (7, 5)}[f]            # 前足（首の左右）
+        put_leg(g, a, True); put_leg(g, b, False)
+        a, b = {0: (18, 18), 1: (19, 17), 2: (17, 19)}[f]      # 後ろ足
+        put_leg(g, a, True); put_leg(g, b, False)
+        if f:
+            sway(g, range(24, 29), -1 if f == 1 else 1)
+        fr[f"up{f}"] = g
+    return fr
+
+
+# =============== 16×16（小さな4本足の竜） ===============
+S_DOWN = mirror([
+    "....A..A",   # 0  石のとげ
+    "...AHAAH",
+    ".A.AGFGF",   # 2  羽の先（頭の後ろからのぞく）
+    "AHAGFGFG",
+    "AGADGGFG",
+    "AFADCCDC",
+    ".AACFFFC",   # 6  まゆ
+    "..AHJJJC",   # 7  目
+    "..AJKJJC",
+    "..ACHHHC",
+    "..ABCCML",   # 10 鼻
+    "..ABCMMM",
+    "...ABLLL",   # 12 口
+    "....AMMM",
+    ".....AAA",
+])
+S_UP = mirror([
+    "....A..A",
+    "...AHAAH",
+    "..AGFGFG",
+    ".AADGGFG",
+    "AHAACCGF",   # 4  羽
+    "AGHABCFG",
+    "AFGHABCG",
+    ".AFGABCF",
+    "..AAABCC",
+    "...ABCCC",
+    "....ABCC",
+    ".....ABC",   # 11 しっぽ
+    "......AC",
+    "......AC",
+    "......AA",
+])
+S_SIDE = [
+    "...A.A.A........",   # 0  石のとげ
+    "..AHAHAHA..A....",
+    ".AGFGFGFGAAHA...",   # 2  羽の先
+    ".ADGGFGFGAGHA...",
+    "ACFFFCCGAGHGA...",   # 4  まゆ・羽
+    "AHJJHCCCBAGFA...",   # 5  目
+    "AJKJCCCCCBAA....",
+    "MCHHCCCCCCCBAA.A",   # 7  鼻先・しっぽ
+    "LMCCCCCBCCCCBADA",
+    "AMMCCCMMMMMCCCBA",
+    "ALLLMMMMMMMMABA.",   # 10 口・おなか
+    ".AMMMAAAAAAAAA..",
+]
+S_SIDE_LEGS = {0: ["..ACBA..ACBA....", ".ANNBA.ANNBA....", ".AAAAA.AAAAA...."],
+               1: [".ACBA....ABBA...", "ANNBA...ANNBA...", "AAAAA...AAAAA..."],
+               2: ["...ABBA.ACBA....", "..ANNBAANNBA....", "..AAAAAAAAAA...."]}
+
+
+def small_frames():
+    fr = {}
+    for f in range(3):
+        g = list(S_DOWN) + ["." * 16]
+        a, b = {0: (11, 11), 1: (12, 10), 2: (10, 12)}[f]
+        put_leg(g, a, True); put_leg(g, b, False)
+        fr[f"down{f}"] = g
+        g = list(S_UP) + ["." * 16]
+        a, b = {0: (8, 8), 1: (9, 7), 2: (7, 9)}[f]
+        put_leg(g, a, True); put_leg(g, b, False)
+        if f:
+            sway(g, range(11, 15), -1 if f == 1 else 1)
+        fr[f"up{f}"] = g
+        fr[f"left{f}"] = S_SIDE + S_SIDE_LEGS[f]
+    return fr
+
+
+# =============== 32×16（横向き・4本足で低く歩く形。mix で使う） ===============
+W_SIDE = [
+    "....A.A.A.....A.................",   # 0  頭の石のとげ・羽の先
+    "...AHAHAHA...AHA...A............",
+    "..AGFGFGFGA..AGHA.AHA...........",   # 2  羽（背中から上へ、とげ3本）
+    "..AGFGFGFGGAAGFGHAGHA.A.........",
+    ".ADGGFGFGFGAAFGFGHGHAHA.........",
+    ".ADCFFFFCCGAaFFFGFGHGHA.........",   # 5  まゆの石
+    "ACHJJJHCCCBAaaFFFFFGFA..........",   # 6  目
+    "ACJKJJCCCCCBBCaAAAAAAA..........",
+    "AMHHHCCCCBCCDCDCCCBCCCAA.......A",   # 8  鼻先・背中・しっぽの先
+    "LMMCCCCBCCCDCCCCCBCCCCCBAA...AEA",
+    "AMMMCCCCCCMMMMMMMMMCCCCCCBAAAADA",
+    "ALLLLMCCCAMMMMMMMMMMACCCBBBBBBA.",   # 11 口・おなか
+    ".AMMMMMCAAMMMMMMMMMMAABBAAAAAA..",
+    "..AAAAAA",                             # 13 以降は足
+]
+W_LEGS = {  # 13〜15行め。前足（x=7〜10）と後ろ足（x=19〜22）を交互に出す
+    0: ["........ACCBA.......ACCBA.......", ".......ANNNCA......ANNNCA.......", ".......AAAAAA......AAAAAA......."],
+    1: [".......ACCBA..........ABBA......", "......ANNNCA.........ANNNA......", "......AAAAAA.........AAAAA......"],
+    2: ["........ABBA.......ACCBA........", "........ANNNA.....ANNNCA........", "........AAAAA.....AAAAAA........"],
+}
+
+
+def wide_side_frames():
+    fr = {}
+    for f in range(3):
+        top = [r.ljust(32, ".") for r in W_SIDE[:13]]
+        fr[f"left{f}"] = top + W_LEGS[f]
+    return fr
+
+
+# =============== 書き出し ===============
+def finish(fr, fw, fh):
+    out = {}
+    for k, g in fr.items():
+        g = [r.ljust(fw, ".")[:fw] for r in g]
+        g += ["." * fw] * (fh - len(g))
+        out[k] = g[:fh]
+    for f in range(3):
+        if f"left{f}" in out:
+            out[f"right{f}"] = [r[::-1] for r in out[f"left{f}"]]
     return out
 
 
-def render(bob=0, wing_up=0):
-    g = [["."] * W for _ in range(H)]
-    owner = [[-1] * W for _ in range(H)]
-    ps = parts(bob, wing_up)
-    for i, (name, tone, m) in enumerate(ps):
-        lt, mid, dk = TONES[tone]
-        px = m.load()
-        inside = lambda x, y: 0 <= x < W and 0 <= y < H and px[x, y] > 0
-        for y in range(H):
-            for x in range(W):
-                if not inside(x, y):
-                    continue
-                if not inside(x - 1, y) or not inside(x, y - 1):
-                    c = lt
-                elif not inside(x + 1, y) or not inside(x, y + 1) or not inside(x + 1, y + 1):
-                    c = dk
-                else:
-                    c = mid
-                g[y][x] = c
-                owner[y][x] = i
-        # 前の部品の縁: 後ろの部品と接する所に中の縁取り
-        for y in range(H):
-            for x in range(W):
-                if owner[y][x] != i:
-                    continue
-                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-                    xx, yy = x + dx, y + dy
-                    if 0 <= xx < W and 0 <= yy < H and 0 <= owner[yy][xx] < i and not inside(xx, yy):
-                        g[y][x] = "a"
-                        break
-    # 苔の模様（まばらに暗い点と明るい点）
-    for y in range(H):
-        for x in range(W):
-            if g[y][x] == "C":
-                if (x * 7 + y * 3) % 11 == 0:
-                    g[y][x] = "B"
-                elif (x * 5 + y * 9) % 13 == 0:
-                    g[y][x] = "D"
-    # おなか（体の下の方を明るく）
-    for y in range(20 + bob, 27 + bob):
-        for x in range(7, 20):
-            if 0 <= y < H and owner[y][x] == 3 and g[y][x] in "CBD" and ((x - 14) / 6.5) ** 2 + ((y - bob - 25.5) / 3.6) ** 2 < 1:
-                g[y][x] = "M"
-    # 外の縁取り
-    filled = [[g[y][x] != "." for x in range(W)] for y in range(H)]
-    for y in range(H):
-        for x in range(W):
-            if filled[y][x]:
-                continue
-            if any(0 <= x + dx < W and 0 <= y + dy < H and filled[y + dy][x + dx] for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
-                g[y][x] = "A"
+def to_img(rows, palette, k=1):
+    im = Image.new("RGBA", (len(rows[0]), len(rows)))
+    for y, r in enumerate(rows):
+        for x, c in enumerate(r):
+            if c != ".":
+                h = palette[LETTERS.index(c)].lstrip("#")
+                im.putpixel((x, y), tuple(int(h[i:i + 2], 16) for i in (0, 2, 4)) + (255,))
+    return im.resize((im.width * k, im.height * k), Image.NEAREST)
 
-    def put(y, x, c):
-        if 0 <= y < H and 0 <= x < W:
-            g[y][x] = c
-    b = bob
-    # 頭の石のとげ（冠のように、頭の上と後ろに並ぶ）
-    for (x, y, h) in ((13, 6, 2), (15, 4, 3), (18, 3, 3), (21, 3, 3), (24, 4, 2), (12, 9, 2)):
-        for k in range(h):
-            put(y + b - k, x, "G" if k else "F")
-            put(y + b - k, x + 1, "H" if k == h - 1 else "G")
-        put(y + b - h, x, "A"); put(y + b - h, x + 1, "A")
-        put(y + b - h + 1, x - 1, "A") if g[y + b - h + 1][x - 1] == "." else None
-        put(y + b - h + 1, x + 2, "A") if g[y + b - h + 1][x + 2] == "." else None
-    for (x, y) in ((14, 7), (16, 6), (19, 6), (22, 6), (25, 7), (17, 8), (20, 8), (13, 11)):   # 頭の上の石のつぶ
-        put(y + b, x, "G"); put(y + b, x + 1, "F")
-    # 羽の骨（3本のとげの先から肩へ、明るい石の線）
-    wu = wing_up
-    for (x, y) in ((3, 4), (4, 5), (5, 5), (6, 6), (7, 6), (8, 7), (9, 7), (10, 8), (11, 8), (12, 9), (13, 10), (7, 8), (6, 9), (5, 10), (4, 11), (3, 12), (9, 9), (8, 10), (7, 11), (6, 12)):
-        yy = y + b - (wu if y <= 8 else (wu // 2 if y <= 11 else 0))
-        if 0 <= yy < H and g[yy][x] in "FG":
-            put(yy, x, "H")
-    # 背中の小さな石のとげ
-    for (x, y) in ((8, 15), (6, 17)):
-        put(y + b, x, "G"); put(y + b - 1, x, "H"); put(y + b - 2, x, "A"); put(y + b - 1, x - 1, "A"); put(y + b - 1, x + 1, "A")
-    # 目（イメージ画像どおり、黒いアーモンド形の大きな目に、灰色のふちと、石のまゆ）
-    for x in range(19, 27):
-        put(7 + b, x, "G")                       # まゆの石（上）
-        put(8 + b, x, "F")                       # まゆの石（影）
-    put(7 + b, 19, "H"); put(7 + b, 20, "H")
-    for (x, y) in ((20, 9), (25, 9), (19, 10), (26, 10), (20, 11), (25, 11), (21, 12), (22, 12), (23, 12), (24, 12)):
-        put(y + b, x, "H")                       # 目のふち
-    for (x, y) in ((21, 9), (22, 9), (23, 9), (24, 9), (20, 10), (21, 10), (22, 10), (23, 10), (24, 10), (25, 10), (21, 11), (22, 11), (23, 11), (24, 11)):
-        put(y + b, x, "J")
-    put(9 + b, 22, "K"); put(10 + b, 21, "I")   # 目の光
-    # 鼻の穴と口
-    put(12 + b, 28, "L")
-    for x in range(23, 30):
-        put(15 + b, x, "L")
-    put(14 + b, 23, "L")
-    # 爪
-    for x in (17, 19, 21, 23):                   # 前足の爪（地面に広がる）
-        put(30, x, "N")
-    put(29, 24, "N"); put(30, 24, "A")
-    for x in (6, 8, 10, 12):                     # 後ろ足の爪
-        put(30, x, "N")
-    return g
+
+def save(folder, groups):
+    """groups: [(名前, frames, 1コマの幅, 高さ, 向きの並び)]。1つのフォルダに、グループごとのシートを書く"""
+    out = HERE / folder
+    out.mkdir(exist_ok=True)
+    allf = {}
+    for _, fr, _, _, _ in groups:
+        allf.update(fr)
+    used = sorted({c for g in allf.values() for r in g for c in r} - {"."})
+    remap = {c: LETTERS[i] for i, c in enumerate(used)}
+    palette = [PAL[c] for c in used]
+    walker = {"palette": palette, "frames": {}}
+    gif = []
+    for name, fr, fw, fh, dirs in groups:
+        frames = {k: ["".join(remap.get(c, c) for c in r) for r in g] for k, g in fr.items()}
+        walker["frames"].update(frames)
+        sheet = [""] * (fh * len(dirs))
+        for ri, d in enumerate(dirs):
+            for f in range(3):
+                for y, row in enumerate(frames[f"{d}{f}"]):
+                    sheet[ri * fh + y] += row
+        suffix = "" if len(groups) == 1 else "-" + name
+        (out / f"sheet{suffix}.txt").write_text("\n".join(sheet) + "\n")
+        json.dump({LETTERS[i]: v for i, v in enumerate(palette)}, open(out / f"sheet{suffix}.json", "w"))
+        to_img(sheet, palette).save(out / f"sheet{suffix}.png")
+        big = Image.new("RGBA", (fw * 3 * 8, fh * len(dirs) * 8), (52, 60, 72, 255))
+        big.alpha_composite(to_img(sheet, palette, 8))
+        big.save(out / f"sheet{suffix}_x8.png")
+    json.dump(walker, open(out / "koke-iwa-ryu.walker.json", "w"), ensure_ascii=False)
+    # 動きのGIF（下・上・左・右の順に、1→0→2→0 で2回ずつ）。大きさのちがうコマは、下をそろえて同じ台に置く
+    allframes = walker["frames"]
+    cw = max(len(g[0]) for g in allframes.values()) * 6
+    ch = max(len(g) for g in allframes.values()) * 6
+    for d in ORDER:
+        for _ in range(2):
+            for f in (1, 0, 2, 0):
+                g = allframes[f"{d}{f}"]
+                im = Image.new("RGBA", (cw, ch), (52, 60, 72, 255))
+                sp = to_img(g, palette, 6)
+                im.alpha_composite(sp, ((cw - sp.width) // 2, ch - sp.height))
+                gif.append(im.convert("P", palette=Image.ADAPTIVE))
+    gif[0].save(out / "walk.gif", save_all=True, append_images=gif[1:], duration=200, loop=0)
+    print(folder, "色数", len(used))
 
 
 def main():
-    frames = [render(0, 0), render(1, 0), render(0, 2)]   # 0 ふつう / 1 体が1ドット下がる / 2 羽が上がる
-    used = sorted({c for f in frames for r in f for c in r} - {"."})
-    sheet = ["".join("".join(f[y]) for f in frames) for y in range(H)]
-    (HERE / "sheet.txt").write_text("\n".join(sheet) + "\n")
-    json.dump({c: PAL[c] for c in used}, open(HERE / "sheet.json", "w"))
-
-    def img(rows, k=1):
-        im = Image.new("RGBA", (len(rows[0]), len(rows)))
-        for y, r in enumerate(rows):
-            for x, c in enumerate(r):
-                if c != ".":
-                    h = PAL[c].lstrip("#")
-                    im.putpixel((x, y), tuple(int(h[i:i + 2], 16) for i in (0, 2, 4)) + (255,))
-        return im.resize((im.width * k, im.height * k), Image.NEAREST)
-    img(sheet).save(HERE / "sheet.png")
-    big = Image.new("RGBA", (96 * 8, 32 * 8), (52, 60, 72, 255)); big.alpha_composite(img(sheet, 8)); big.save(HERE / "sheet_x8.png")
-    gif = []
-    for f in (0, 1, 0, 2):
-        fr = Image.new("RGBA", (32 * 6, 32 * 6), (52, 60, 72, 255))
-        fr.alpha_composite(img(["".join(r) for r in frames[f]], 6))
-        gif.append(fr.convert("P", palette=Image.ADAPTIVE))
-    gif[0].save(HERE / "idle.gif", save_all=True, append_images=gif[1:], duration=300, loop=0)
-    print("色数", len(used))
+    long = finish(long_frames(), 16, 32)
+    small = finish(small_frames(), 16, 16)
+    wide = finish(wide_side_frames(), 32, 16)
+    # 16×32 だけで作るとき: 下・上は長い竜、横は 16×16 の竜を 16×32 の下にそろえて置く
+    tall_side = {k: ["." * 16] * 16 + v for k, v in small.items() if k[:-1] in ("left", "right")}
+    save("v16x32", [("all", {**{k: v for k, v in long.items() if k[:-1] in ("down", "up")}, **tall_side}, 16, 32, ORDER)])
+    save("v16x16", [("all", small, 16, 16, ORDER)])
+    save("mix", [("down-up", {k: v for k, v in long.items() if k[:-1] in ("down", "up")}, 16, 32, ["down", "up"]),
+                 ("side", wide, 32, 16, ["left", "right"])])
 
 
 if __name__ == "__main__":
