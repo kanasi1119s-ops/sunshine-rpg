@@ -3328,20 +3328,21 @@
  },
  {
   "id": "enc-world-sea-5",
-  "prompt": "an echo of a boat, a ghostly small wooden rowboat with a faint rower and a lantern",
+  "prompt": "a ghostly old wooden rowboat floating above the water, a faint glowing green phantom rower holding an oar, a lit lantern hanging at the bow, side view",
   "status": "done",
   "key": "enemy:enc-world-sea-5",
   "kind": "mob",
   "name": "舟の残響",
   "zone": "world-sea",
   "level": 12,
-  "shape": "big",
+  "shape": "ground",
   "tone": [
-   140,
-   150,
-   160
+   120,
+   95,
+   70
   ],
-  "draft": "enc-world-sea-5_1"
+  "draft": "enc-world-sea-5_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-sea-6",
@@ -3363,7 +3364,7 @@
  {
   "id": "enc-world-air-0",
   "prompt": "a shadow with wind wings, a dark streamlined bird-like shadow with feathers made of wind lines",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-air-0",
   "kind": "mob",
   "name": "風の羽の影",
@@ -3374,7 +3375,8 @@
    90,
    100,
    130
-  ]
+  ],
+  "draft": "enc-world-air-0_0"
  },
  {
   "id": "enc-world-air-1",
