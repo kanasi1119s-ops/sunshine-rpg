@@ -11,6 +11,7 @@ import type { MapProp, MapPropKind, TileMapData } from "./types";
  *  1) 玄関が町の外まわり（塀）にかかる家は、取りのぞく（入れない家をなくす）。
  *  2) 街灯は、道にそって、決まった間かく（6マスごと）・決まった側（横の道は北がわ、たての道は東がわ）に立てなおす。
  *  3) 花壇は、家の玄関の左右（足もとの列の、2マス横）に、そろえて置く。家のそばにない花壇は、はずす。
+ *  5) 最後に、木が3本・街灯が4本に足りない町は、空いた所に足す（木は、その町の気候の木。重なりを取りのぞいたあとに）。
  *  3.2) 樽は家のすぐとなり、井戸は家の近く（家とのあいだに1マスあけた、2〜3マスの所）へ移す。屋台は、まっすぐな横の道の上へ移し、
  *     その手前（南）の1列を道にして、人が屋台をよけて通れるようにする（2026-10-06 人間の指示
  *     「井戸は家の近くに商店は道の上に置いて」「樽は小さくしてすべて家の近くに置こうか」）。置けなければ、はずす。
@@ -130,6 +131,12 @@ function isTown(mapId: string): boolean {
 
 const AROUND: Array<[number, number]> = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
+function hn32(a: number, b: number): number {
+  let n = 2166136261 ^ (a * 374761393) ^ (b * 668265263);
+  n = Math.imul(n ^ (n >>> 13), 1274126177);
+  return (n ^ (n >>> 16)) >>> 0;
+}
+
 export function tidyTowns(maps: Record<string, TileMapData>, npcsByMap: Record<string, Npc[]>): void {
   for (const [mapId, data] of Object.entries(maps)) {
     if (!isTown(mapId) || !data.collision || !data.props) continue;
@@ -233,13 +240,25 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
       if (!road(x, y)) continue;
       const horiz = road(x - 1, y) && road(x + 1, y);
       const vert = road(x, y - 1) && road(x, y + 1);
-      if (horiz && !vert && x % 6 === 3 && !road(x, y - 1)) lamps.push([x, y - 1]);
-      if (vert && !horiz && y % 6 === 3 && !road(x + 1, y)) lamps.push([x + 1, y]);
+      // 2026-10-06 人間の指示「いろんな町に街灯を増やそう」: 6マスごと → 4マスごと
+      if (horiz && !vert && x % 4 === 2 && !road(x, y - 1)) lamps.push([x, y - 1]);
+      if (vert && !horiz && y % 4 === 2 && !road(x + 1, y)) lamps.push([x + 1, y]);
     }
   }
+  const lampNear = (x: number, y: number, d: number): boolean => props.some((q) => q.kind === "lamp" && Math.abs(q.tileX - x) + Math.abs(q.tileY - y) < d);
   for (const [x, y] of lamps) {
-    if (props.some((q) => q.kind === "lamp" && Math.abs(q.tileX - x) + Math.abs(q.tileY - y) < 4)) continue;
+    if (lampNear(x, y, 3)) continue;
     tryPlace("lamp", x, y);
+  }
+  // 家の玄関の前の、左か右に1本（石だたみの町など、土の道のない町にも街灯が立つように）
+  for (const p of props.filter((q) => isHouse(q.kind))) {
+    const dx0 = p.tileX + doorOffsetX(p.kind);
+    const sides = hn32(p.tileX, p.tileY) % 2 === 0 ? [-2, 2, -3, 3] : [2, -2, 3, -3];
+    for (const sx of sides) {
+      const x = dx0 + sx, y = p.tileY + 1;
+      if (lampNear(x, y, 3)) break;
+      if (tryPlace("lamp", x, y)) break;
+    }
   }
 
   // 3) 花壇: 家の玄関の左右に、そろえて。家のそばにない花壇（家を取りのぞいたあとに残ったものなど）は、はずす
@@ -366,6 +385,44 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
       }
     }
   }
+  // 5) 木は3本以上・街灯は4本以上（2026-10-06 人間の指示「いろんな町に街灯を増やそう」「あと木も3本は置くようにしよう」）。
+  //      木の種類は、その町にもとからある木（気候に合わせた木）にそろえる。足りない分は、塀ぎわの空いた所に、間をあけて置く
+  const TREEISH = ["tree", "tree-pine", "tree-snow", "tree-dead", "palm"];
+  const treeCount = (): number => props.filter((q) => TREEISH.includes(q.kind)).length;
+  if (treeCount() < 3) {
+    const have: Record<string, number> = {};
+    for (const q of props) if (TREEISH.includes(q.kind) && q.kind !== "tree-dead") have[q.kind] = (have[q.kind] ?? 0) + 1;
+    const kindT = (Object.entries(have).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "tree") as MapPropKind;
+    const cands: Array<[number, number, number]> = [];
+    for (let y = 3; y < h - 2; y++) {
+      for (let x = 2; x < w - 2; x++) {
+        if (road(x, y)) continue;
+        const edge = Math.min(x - 1, w - 2 - x, h - 2 - y);         // 塀からの近さ（上の塀ぎわは、絵が塀にかかるのでさける）
+        cands.push([x, y, edge * 10 + (hn32(x, y) % 7)]);
+      }
+    }
+    cands.sort((a, c) => a[2] - c[2]);
+    // 置けなければ、木と木の間を少しつめて、もう一度。それでも足りない町（家と水でせまい町）は、絵の細い針葉樹で
+    for (const [gap, k] of [[5, kindT], [3, kindT], [3, kindT === "tree" ? "tree-pine" : kindT]] as Array<[number, MapPropKind]>) {
+      for (const [x, y] of cands) {
+        if (treeCount() >= 3) break;
+        if (props.some((q) => TREEISH.includes(q.kind) && Math.max(Math.abs(q.tileX - x), Math.abs(q.tileY - y)) < gap)) continue;
+        tryPlace(k, x, y);
+      }
+    }
+  }
+  if (props.filter((q) => q.kind === "lamp").length < 4) {
+    const cx = w / 2, cy = h / 2;
+    const cands: Array<[number, number]> = [];
+    for (let y = 2; y < h - 2; y++) for (let x = 2; x < w - 2; x++) if ((x + 2 * y) % 5 === 0) cands.push([x, y]);
+    cands.sort((a, c) => Math.hypot(a[0] - cx, a[1] - cy) - Math.hypot(c[0] - cx, c[1] - cy));
+    for (const [x, y] of cands) {
+      if (props.filter((q) => q.kind === "lamp").length >= 4) break;
+      if (lampNear(x, y, 5)) continue;
+      tryPlace("lamp", x, y);
+    }
+  }
+
   // 重なりで家を取りのぞいたあとに残った花壇も、はずす
   for (const f of props.filter((q) => q.kind === "flowerbed" && !besideHouse(q))) remove(f);
   data.props = props;

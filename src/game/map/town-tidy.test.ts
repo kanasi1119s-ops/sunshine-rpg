@@ -43,11 +43,22 @@ describe("町のととのえ", () => {
       }
     }
   });
-  it("街灯は、道にそって6マスごとの決まった所にある", () => {
+  it("街灯は、決まった所にある（道ぞいの4マスごと・家の玄関の前の左右・足りない町の決まった間かく）", () => {
     for (const id of towns) {
-      for (const p of (WORLD_MAPS[id].props ?? []).filter((q) => q.kind === "lamp")) {
-        expect(p.tileX % 6 === 3 || p.tileY % 6 === 3, `${id} lamp(${p.tileX},${p.tileY})`).toBe(true);
+      const props = WORLD_MAPS[id].props ?? [];
+      for (const p of props.filter((q) => q.kind === "lamp")) {
+        const road = p.tileX % 4 === 2 || p.tileY % 4 === 2;
+        const door = props.some((q) => isHouse(q.kind) && p.tileY === q.tileY + 1 && [2, 3].includes(Math.abs(p.tileX - q.tileX - (q.kind.startsWith("manor") ? -1 : 0))));
+        const grid = (p.tileX + 2 * p.tileY) % 5 === 0;
+        expect(road || door || grid, `${id} lamp(${p.tileX},${p.tileY})`).toBe(true);
       }
+    }
+  });
+  it("どの町にも、木が3本以上・街灯が4本以上ある", () => {
+    for (const id of towns) {
+      const props = WORLD_MAPS[id].props ?? [];
+      expect(props.filter((q) => ["tree", "tree-pine", "tree-snow", "tree-dead", "palm"].includes(q.kind)).length, `${id} 木`).toBeGreaterThanOrEqual(3);
+      expect(props.filter((q) => q.kind === "lamp").length, `${id} 街灯`).toBeGreaterThanOrEqual(4);
     }
   });
 });
