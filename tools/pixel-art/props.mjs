@@ -19,16 +19,16 @@ function piece(name, dir, grid, palFile, recolor = {}, frame = 48) {
   };
 }
 export const PIECES = [
-  // 磨き直した版（assets-src/pixel-practice/r17-polish/。生成の元は tree.py・house3d.py・smallprops.py）
+  // 磨き直した版（assets-src/pixel-practice/r17-polish/。生成の元は tree.py・house_brick.py（2026-10-06 からレンガの家。前は house3d.py）・smallprops.py）
   piece("P1-木", "r17-polish", "tree4.txt", "pal-tree.json"),
-  piece("P2-家", "r17-polish", "cottage.txt", "pal-cottage.json", {}, 64),
-  piece("P3-家青", "r17-polish", "cottage.txt", "pal-cottage-blue.json", {}, 64),
-  piece("P4-家緑", "r17-polish", "cottage.txt", "pal-cottage-green.json", {}, 64),
+  piece("P2-家", "r17-polish", "cottage-brick.txt", "pal-cottage-brick.json", {}, 64),
+  piece("P3-家青", "r17-polish", "cottage-brick.txt", "pal-cottage-brick-blue.json", {}, 64),
+  piece("P4-家緑", "r17-polish", "cottage-brick.txt", "pal-cottage-brick-green.json", {}, 64),
   piece("P5-岩", "r17-polish", "rock2.txt", "pal-rock2.json"),
   piece("P6-茂み", "r17-polish", "bush2.txt", "pal-bush2.json"),
-  piece("P7-屋敷", "r17-polish", "manor4.txt", "pal-manor4.json", {}, 80),
-  piece("P8-屋敷青", "r17-polish", "manor4.txt", "pal-manor4-blue.json", {}, 80),
-  piece("P9-屋敷緑", "r17-polish", "manor4.txt", "pal-manor4-green.json", {}, 80),
+  piece("P7-屋敷", "r17-polish", "manor-brick.txt", "pal-manor-brick.json", {}, 80),
+  piece("P8-屋敷青", "r17-polish", "manor-brick.txt", "pal-manor-brick-blue.json", {}, 80),
+  piece("P9-屋敷緑", "r17-polish", "manor-brick.txt", "pal-manor-brick-green.json", {}, 80),
   // 雪の地方の飾り（r17-polish/snow.py で、既存の木・岩・茂みを雪化／枯れ木は一から）
   piece("P10-雪の木", "r17-polish", "tree-snow.txt", "pal-tree-snow.json"),
   piece("P11-枯れ木", "r17-polish", "tree-dead.txt", "pal-tree-dead.json"),
