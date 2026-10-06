@@ -54,43 +54,6 @@ for k, g in c.frames.items():
         for y in range(12, 27):                  # 横向き: 背中から上下に出る弓の先
             x = 13 if s == 1 else 2
             if g[y][x] == ".": g[y][x] = bw
-# 髪の動き（2026-10-07、人間の指示「エルフの髪の毛の動きドットはミナと同じにして」）:
-# ミナの歩きと同じく、①長い横髪のすそが、左足のコマ（1）では左、右足のコマ（2）では右で、1ドット内側へ寄る
-# ②頭の横の飾り（ひし形3×3。エルフは葉の髪輪にそろえて緑と金の葉）が1ドット上下にゆれる
-def sway_hair(g, rows, side):
-    for y in rows:
-        r = g[y]
-        if side == "L":
-            g[y] = ["."] + r[0:3] + r[4:]
-        else:
-            g[y] = r[:12] + r[13:16] + ["."]
-
-
-LEAF = [["A", "e", "A"], ["e", "f", "e"], ["A", "e", "A"]]
-
-
-def put_leaf(g, y0, x0):
-    for i, r in enumerate(LEAF):
-        for j, ch in enumerate(r):
-            g[y0 + i][x0 + j] = ch
-
-
-for f in range(3):
-    g = c.frames[f"down{f}"]
-    if f == 1:
-        sway_hair(g, range(15, 21), "L")
-    if f == 2:
-        sway_hair(g, range(15, 21), "R")
-    put_leaf(g, 10 if f == 1 else 9, 0)              # 前向き: 左の横に葉の飾り（コマ1で1ドット下がる）
-    g = c.frames[f"up{f}"]
-    if f == 1:
-        sway_hair(g, range(18, 22), "L")
-    if f == 2:
-        sway_hair(g, range(18, 22), "R")
-    put_leaf(g, 10 if f == 2 else 9, 13)             # 後ろ向き: 右の横（コマ2で1ドット下がる）
-    g = c.frames[f"left{f}"]
-    put_leaf(g, {0: 9, 1: 8, 2: 10}[f], 1)           # 横向き: 顔の前の横（ミナと同じく 0→上→下）
-    c.frames[f"right{f}"] = [r[::-1] for r in g]
 build("エルフの弓使い", "elf-archer", c)
 
 # 2. 天使（男性）
