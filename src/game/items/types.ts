@@ -40,7 +40,7 @@ export interface EquipmentItemData {
   statBonus: Partial<Record<StatKey, number>>;
   /** 武器のときの種類（省略は剣）。 */
   weaponType?: WeaponType;
-  /** だれでも持てる武器（武器の種類の決まりを受けない。レジェンドの装備「コスモ」）。 */
+  /** だれでも持てる武器（武器の種類の決まりを受けない。レジェンドの装備「コスモリングライト」）。 */
   anyWielder?: boolean;
   /** 特殊効果（省略はなし）。 */
   traits?: ItemTrait[];
