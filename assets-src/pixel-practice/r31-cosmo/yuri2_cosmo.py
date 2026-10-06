@@ -15,7 +15,7 @@ NEW = {
     "r": "#3a7cc0",                                                      # 光の環（奥の暗い側）
 }
 pal.update(NEW)
-W, H, OX, OY = 48, 40, 16, 4
+W, H, OX, OY = 40, 40, 12, 5
 G = [["."] * W for _ in range(H)]
 def put(x, y, c):
     if 0 <= x < W and 0 <= y < H: G[y][x] = c
@@ -26,7 +26,7 @@ def outline(mask_chars):
             if 0 <= x+dx < W and 0 <= y+dy < H and G[y+dy][x+dx] == ".": G[y+dy][x+dx] = "A"
 
 # 1) 背の光の環（いちばん奥）。左上が明るく、右下は暗い。6つの金の節
-RCX, RCY, RR = 25.5, 19.5, 12.0
+RCX, RCY, RR = 21.5, 20.5, 10.5
 for y in range(H):
     for x in range(W):
         d = math.hypot(x+.5-RCX, y+.5-RCY)
@@ -39,8 +39,8 @@ for k in range(6):
     put(x, y, "5")
 
 # 2) 羽の板（背＝右側から、右へ流れる3枚。上の板ほど明るい）
-ROOTX, ROOTY = 28, 23
-for i, (deg, ln) in enumerate(((-52, 13), (-14, 15), (24, 12))):
+ROOTX, ROOTY = 24, 24
+for i, (deg, ln) in enumerate(((-52, 10), (-14, 12), (24, 9))):
     a = math.radians(deg); ux, uy = math.cos(a), math.sin(a); px, py = -uy, ux
     body = "2" if i < 2 else "3"
     for t in range(ln):
@@ -61,7 +61,7 @@ POD = [
     "AA3334A.",
     "..AAAA..",
 ]
-for (px, py) in ((2, 5), (0, 17), (3, 29), (35, 2), (39, 14), (37, 30)):
+for (px, py) in ((2, 2), (0, 15), (2, 31), (28, 0), (31, 12), (29, 32)):
     for j, row in enumerate(POD):
         for i, ch in enumerate(row):
             if ch != ".": put(px+i, py+j, ch)
