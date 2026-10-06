@@ -3944,7 +3944,7 @@
   "draft": "angel-03_0"
  },
  {
-  "status": "todo",
+  "status": "done",
   "kind": "extra",
   "id": "zenkan-hand",
   "name": "全観の手（部品）",
@@ -3961,7 +3961,8 @@
   "neg_drop": [
    "human, human face",
    "statue"
-  ]
+  ],
+  "draft": "zenkan-hand_0"
  },
  {
   "id": "mecha-god-giant",
