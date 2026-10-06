@@ -3860,8 +3860,8 @@
  },
  {
   "id": "zenkan",
-  "prompt": "a colossal floating halo ring of cracked ancient stone with golden glowing seams, a large calm eye floating in the center of the ring, rays of light, monster, fantasy art",
-  "status": "done",
+  "prompt": "a colossal floating golden ring halo, a serene stone face of a bodhisattva with closed eyes at its center, dozens of disembodied open palms floating around, ominous dark cracks",
+  "status": "draft",
   "key": "boss:zenkan",
   "kind": "boss",
   "name": "全観",
@@ -3944,6 +3944,26 @@
   "draft": "angel-03_0"
  },
  {
+  "status": "todo",
+  "kind": "extra",
+  "id": "zenkan-hand",
+  "name": "全観の手（部品）",
+  "group": "部品",
+  "shape": "float",
+  "tone": [
+   200,
+   170,
+   100
+  ],
+  "prompt": "a single disembodied open human palm hand floating in the air, smooth golden skin, fingers spread, glowing light, no arm",
+  "size": 96,
+  "ncol": 20,
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
   "id": "mecha-god-giant",
   "status": "todo",
   "kind": "extra",
@@ -3966,7 +3986,7 @@
  },
  {
   "id": "angel-04",
-  "status": "todo",
+  "status": "draft",
   "kind": "extra",
   "name": "弓の天使",
   "group": "天使",
