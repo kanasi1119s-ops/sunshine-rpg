@@ -3381,7 +3381,7 @@
  {
   "id": "enc-world-air-1",
   "prompt": "a fragment of cloud, a fluffy white cloud chunk with a grumpy face and small hailstones",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-air-1",
   "kind": "mob",
   "name": "雲のかけら",
@@ -3394,12 +3394,13 @@
    240
   ],
   "bg": "dark",
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-world-air-1_1"
  },
  {
   "id": "enc-world-air-2",
   "prompt": "a thundercloud shadow, a dark heavy cloud creature with a lightning bolt tail and yellow eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-air-2",
   "kind": "mob",
   "name": "雷雲の影",
@@ -3410,7 +3411,8 @@
    80,
    85,
    110
-  ]
+  ],
+  "draft": "enc-world-air-2_0"
  },
  {
   "id": "enc-world-air-3",
