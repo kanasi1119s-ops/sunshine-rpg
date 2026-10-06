@@ -52,7 +52,9 @@ import { renderAreaMap } from "./render/area-map";
 import { renderFollowers } from "./render/follower-renderer";
 import { spriteSpecFromPortrait } from "./game/sprite/character-specs";
 import { PORTRAITS } from "./game/portrait/portraits";
-import { propFeetY, renderProps } from "./render/prop-renderer";
+import { propFeetY, renderDoorOpening, renderProps } from "./render/prop-renderer";
+import { doorOffsetX, isHouse } from "./game/map/map-props";
+import type { MapExit, MapProp } from "./game/map/types";
 import { renderDialogue } from "./render/dialogue-renderer";
 import { startCloudSaves } from "./game/save/cloud-saves";
 import type { EventCommand } from "./game/event/types";
@@ -400,6 +402,12 @@ function canEnterQuietly(targetMapId: string): boolean {
   return targetMapId !== "tower-1";
 }
 
+/** 町の建物の扉が開いているところ（開ききったら中へ入る。2026-10-06、人間の指示「扉を開いて入れるように」）。 */
+let doorOpening: { prop: MapProp; exit: MapExit; startedAt: number } | null = null;
+const DOOR_OPEN_MS = 420;
+/** 扉を開けたときに音を鳴らしたので、つづく場所の切りかえでは、扉の音を鳴らさない。 */
+let doorSePlayed = false;
+
 /** 場面の話し手が歩いてくるあいだ（着いたら会話を始める）。 */
 let sceneApproach: { commands: EventCommand[]; startedAt: number } | null = null;
 /** 場面のために歩いてきた人と、もとの場所（会話のあと、歩いて帰る）。帰ったら消える人（町にいない人）は leave。 */
@@ -541,6 +549,7 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   }
   sceneWalkers = [];
   sceneApproach = null;
+  doorOpening = null;
   exitReleased = false;
   exitArmed = false;
   const data = WORLD_MAPS[mapId];
@@ -560,9 +569,10 @@ function switchMap(mapId: string, tileX: number, tileY: number): void {
   vehicle = "foot";
   prevWorldTile = { x: -1, y: -1 };
   playMapBgm(mapId);
-  if (audioStarted) {
+  if (audioStarted && !doorSePlayed) {
     audio.playSe(seOf("door"));
   }
+  doorSePlayed = false;
   if (mapId === "world-map") {
     quietPlace = null;
   }
@@ -2334,7 +2344,16 @@ function renderGameSceneBase(): void {
   // 家・木・NPCは、プレイヤーとの前後だけでなく、お互いの前後も足元の位置の順に並べて描く（家の裏を歩く人が家より手前に出ないように）。
   const depthItems: { feetY: number; draw: () => void }[] = [];
   for (const prop of map.data.props ?? []) {
-    depthItems.push({ feetY: propFeetY(prop, map.data.tileHeight), draw: () => { for (const cam of seams) renderProps(ctx, map.data, cam, () => true, [prop]); } });
+    depthItems.push({
+      feetY: propFeetY(prop, map.data.tileHeight),
+      draw: () => {
+        for (const cam of seams) renderProps(ctx, map.data, cam, () => true, [prop]);
+        if (doorOpening?.prop === prop) {
+          const k = (performance.now() - doorOpening.startedAt) / DOOR_OPEN_MS;
+          for (const cam of seams) renderDoorOpening(ctx, map.data, cam, prop, k * 1.25);
+        }
+      },
+    });
   }
   for (const npc0 of npcs) {
     // 天幕などから出てくる人は、はじめの位置から、本来の位置まで歩いてくる（出てくるあいだは、天幕の奥に隠れて見える）
@@ -3101,6 +3120,16 @@ const loop = createGameLoop({
         return;
       }
     }
+    // 扉が開いているあいだは、止まって待つ。開ききったら中へ
+    if (doorOpening) {
+      if (performance.now() - doorOpening.startedAt >= DOOR_OPEN_MS) {
+        const e = doorOpening.exit;
+        doorOpening = null;
+        switchMap(e.targetMapId, e.targetTileX, e.targetTileY);
+        autosave();
+      }
+      return;
+    }
     // 物語の場面: 話し手が歩いてくるあいだ、主人公は止まって待つ。みんな着いたら（長くても9秒で）会話を始める
     if (sceneApproach) {
       updateWander(npcs, map, { x: -1, y: -1 }, dtMs, true, Math.random);
@@ -3198,6 +3227,16 @@ const loop = createGameLoop({
       player = { ...player, x: player.x + back.x * map.data.tileWidth, y: player.y + back.y * map.data.tileHeight, moving: false };
       dialogue.start([{ type: "message", text: exit.blockedMessage ?? "まだ先へは進めない。" }]);
       return;
+    }
+    // 町の建物の玄関: まず扉が開き、開ききってから中へ入る
+    if (exit && !doorOpening && currentMapId !== "world-map") {
+      const door = (map.data.props ?? []).find((p) => isHouse(p.kind) && p.tileX + doorOffsetX(p.kind) === exit.tileX && p.tileY + 1 === exit.tileY);
+      if (door) {
+        doorOpening = { prop: door, exit, startedAt: performance.now() };
+        if (audioStarted) audio.playSe(seOf("door"));
+        doorSePlayed = true;
+        return;
+      }
     }
     if (exit) {
       // 世界地図から入る場所には、条件がある（章の順・乗り物・クリア後の航路など）。足りなければ、ヒントを出して押し戻す。
