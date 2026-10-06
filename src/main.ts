@@ -3224,11 +3224,26 @@ const loop = createGameLoop({
       dialogue.start([{ type: "message", text: exit.blockedMessage ?? "まだ先へは進めない。" }]);
       return;
     }
-    // 町の建物の玄関: まず扉が開き、開ききってから中へ入る
-    if (exit && !doorOpening && currentMapId !== "world-map") {
-      const door = (map.data.props ?? []).find((p) => isHouse(p.kind) && p.tileX + doorOffsetX(p.kind) === exit.tileX && p.tileY + 1 === exit.tileY);
+    // 扉の真正面から少しずれていても（となりのマスでも、扉のまんなかから20ドットまで）、上へ押せば開く
+    // （2026-10-06 人間の指示「ドアは真正面より少し外れても開けれるようにして。真正面で入れるようにしよう」）
+    let doorExit = exit;
+    if (!doorExit && vehicle === "foot" && exitArmed && currentMapId !== "world-map" && input.getDirection() === "up") {
+      const pcx = player.x + player.width / 2;
+      for (const dx of [-1, 1]) {
+        const e = findExitAt(map, centerTileX + dx, centerTileY);
+        if (e && e.enter === "up" && Math.abs((e.tileX + 0.5) * map.data.tileWidth - pcx) <= 20) {
+          doorExit = e;
+          break;
+        }
+      }
+    }
+    // 町の建物の玄関: まず扉が開き、開ききってから中へ入る。入るときは、扉の真正面にそろえる
+    if (doorExit && !doorOpening && currentMapId !== "world-map") {
+      const de = doorExit;
+      const door = (map.data.props ?? []).find((p) => isHouse(p.kind) && p.tileX + doorOffsetX(p.kind) === de.tileX && p.tileY + 1 === de.tileY);
       if (door) {
-        doorOpening = { prop: door, exit, startedAt: performance.now() };
+        player = { ...player, x: (de.tileX + 0.5) * map.data.tileWidth - player.width / 2, direction: "up", moving: false };
+        doorOpening = { prop: door, exit: de, startedAt: performance.now() };
         if (audioStarted) audio.playSe(seOf("door"));
         doorSePlayed = true;
         return;
