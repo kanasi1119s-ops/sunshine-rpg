@@ -438,9 +438,14 @@ def save(name, g, palette=None):
     json.dump(p, open("pal-" + name + ".json", "w"))
 
 
+# 白い石の壁（霧断崖の民家。2026-10-06 人間の指示「元作った家の白バージョンでよかったよ」）。形は同じで、壁の色だけ白に
+WHITE = {"C1": "#8e8c92", "C2": "#b2b0b4", "C3": "#c8c6c8", "C4": "#dcdadb", "C5": "#eeedec", "J1": "#a6a4a8", "J2": "#88868c",
+         "E1": "#5e5c66", "E2": "#76747e", "E3": "#8c8a94", "E4": "#a2a0a8", "J3": "#6a6872"}
+
+
 def variants(name, g):
     save(name, g)
-    for nm, vv in (("blue", BLUE), ("green", GREEN)):
+    for nm, vv in (("blue", BLUE), ("green", GREEN), ("white", WHITE)):
         save(name + "-" + nm, g, {**pal, **vv})
 
 

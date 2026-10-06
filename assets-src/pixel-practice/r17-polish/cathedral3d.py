@@ -192,6 +192,24 @@ def framed_x(cz, w, y0, ys, xf):
     solid(lambda p: sd_box(p, (xf + 0.3, y0 - 0.8, cz), (0.5, 0.4, w / 2 + 1.1)), "frame")
 
 
+def belfry_z(sx, w, y0, ys, zf):
+    cut(lambda p: sd_arch_z(p, sx, w, y0, ys, zf, 1.8), "dark")
+    ring = lambda p: np.maximum(np.maximum(sd_arch_z(p, sx, w + 1.3, y0 - 0.5, ys, zf + 0.5, 0.95), -sd_arch_z(p, sx, w, y0, ys, zf + 0.5, 3.0)), p[..., 2] - (zf + 0.5))
+    solid(ring, "frame")
+    solid(lambda p: sd_box(p, (sx, y0 - 0.5, zf + 0.3), (w / 2 + 0.9, 0.35, 0.5)), "frame")
+    for yy in np.arange(y0 + 0.9, ys + 0.5, 1.5):
+        solid(lambda p, yy=yy: sd_box(p, (sx, yy, zf - 0.8), (w / 2, 0.22, 0.45)), "louver")
+
+
+def belfry_x(cz, w, y0, ys, xf):
+    cut(lambda p: sd_arch_x(p, cz, w, y0, ys, xf, 1.8), "dark")
+    ring = lambda p: np.maximum(np.maximum(sd_arch_x(p, cz, w + 1.3, y0 - 0.5, ys, xf + 0.5, 0.95), -sd_arch_x(p, cz, w, y0, ys, xf + 0.5, 3.0)), p[..., 0] - (xf + 0.5))
+    solid(ring, "frame")
+    solid(lambda p: sd_box(p, (xf + 0.3, y0 - 0.5, cz), (0.5, 0.35, w / 2 + 0.9)), "frame")
+    for yy in np.arange(y0 + 0.9, ys + 0.5, 1.5):
+        solid(lambda p, yy=yy: sd_box(p, (xf - 0.8, yy, cz), (0.45, 0.22, w / 2)), "louver")
+
+
 # ---- 大聖堂版（2026-10-06 人間の指示「教会を大聖堂みたいな感じバージョンも同じような感じで作って」。試し）:
 # 正面の左右に、四角い大きな塔（かどの控え壁・縦長の鐘楼の窓・上に四すみの小尖塔・まんなかに鋭い八角の尖塔）
 for tx in (-18.0, 18.0):
@@ -204,8 +222,10 @@ for tx in (-18.0, 18.0):
     for yb in (22, 40, 62):
         solid(lambda p, tx=tx, yb=yb: sd_box(p, (tx, yb, -TW + 0.2), (TW + 0.5, 0.45, TW + 0.5)))           # 横の帯（蛇腹）
     for k in (-1, 1):                                                                                         # 鐘楼の縦長の窓（正面に2つ・横に2つ）
-        cut(lambda p, tx=tx, k=k: sd_arch_z(p, tx + k * 2.4, 2.0, 45, 56, 0.0, 1.2), "dark")
-        cut(lambda p, tx=tx, k=k: sd_arch_x(p, -TW + k * 2.4, 2.0, 45, 56, tx + TW, 1.2), "dark")
+        # 2026-10-06「上の黒い部分立体感あるように縁とかつけて」: 石のアーチの縁（張り出し 0.5）、窓台、
+        # 中に木のよろい板（横の板を、ななめに重ねる）。奥は暗い
+        belfry_z(tx + k * 2.4, 2.2, 45, 55.5, 0.0)
+        belfry_x(-TW + k * 2.4, 2.2, 45, 55.5, tx + TW)
     framed_z(tx, 4.6, 24, 36, 0.0)                                                                           # 塔の正面のステンドグラス（大きく）
     solid(lambda p, tx=tx: sd_box(p, (tx, 62.8, -TW), (TW + 0.6, 0.8, TW + 0.6)))                           # 塔の上の胸壁の台
     for (dx, dz) in ((-TW, TW), (TW, TW), (-TW, -TW), (TW, -TW)):                                          # 四すみの小尖塔
@@ -379,6 +399,7 @@ RAMPS = {
     "glass": ["#141c3a", "#1e3060", "#2c4a88", "#3e6aac", "#5a90cc"],
     "rose": ["#141c3a", "#1e3060", "#2c4a88", "#3e6aac", "#5a90cc"],
     "gold": ["#5a3e10", "#8a6418", "#c0902a", "#e0b040", "#f8dc80"],
+    "louver": ["#1e140c", "#2e2014", "#46321e", "#5e4428", "#7a5a36", "#967048"],
     "frame": ["#2a2a32", "#44444e", "#60606a", "#7e7e88", "#9c9ca4", "#b8b8be", "#d2d2d6", "#e8e8ea", "#f8f8f8"],
     "mosaic": ["#5a3e10", "#8a6418", "#c0902a", "#e0b040", "#f8dc80"],
 }

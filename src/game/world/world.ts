@@ -120,11 +120,16 @@ for (const m of Object.values(WORLD_MAPS)) {
   if (!m.props) continue;
   m.props = m.props.map((p) => (p.kind === "house-blue" || p.kind === "house-green" ? { ...p, kind: "house" } : p));
 }
-// 霧断崖の民家は、城のような石の家（人間の指示「民家の建物も城をイメージしてもいいか」「じゃあ奥行きをもっと作ろう」、2026-10-06）
+// 木は町の気候に合わせる（人間の指示「木々は場所の気候に合わせて」、2026-10-06）: 霧の断崖・鉱山の町は、針葉樹
+for (const id of ["kiri-town", "tetsukusari-town"]) {
+  const m = WORLD_MAPS[id];
+  if (m?.props) m.props = m.props.map((p) => (p.kind === "tree" ? { ...p, kind: "tree-pine" as const } : p));
+}
+// 霧断崖の民家は、白い石の壁の平屋（人間の指示「元作った家の白バージョンでよかったよ」、2026-10-06。城のような家の試しは不採用）
 if (WORLD_MAPS["kiri-town"]?.props) {
   const kt = WORLD_MAPS["kiri-town"];
-  kt.props = kt.props!.map((p) => (p.kind === "house" ? { ...p, kind: "house-castle" as const } : p));
-  for (const p of kt.props!) if (p.kind === "house-castle") for (const { x, y } of propFootprintTiles(p)) if (x < kt.width && y < kt.height) kt.collision![y * kt.width + x] = 1;
+  kt.props = kt.props!.map((p) => (p.kind === "house" ? { ...p, kind: "house-white" as const } : p));
+  for (const p of kt.props!) if (p.kind === "house-white") for (const { x, y } of propFootprintTiles(p)) if (x < kt.width && y < kt.height) kt.collision![y * kt.width + x] = 1;
 }
 // 町をととのえる（玄関が塀にかかる家・街灯の並び・花壇・重なり。2026-10-06）。家の中を作る前に
 tidyTowns(WORLD_MAPS, WORLD_NPCS);
