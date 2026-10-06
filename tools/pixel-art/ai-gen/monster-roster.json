@@ -3173,7 +3173,7 @@
  {
   "id": "enc-world-6-2",
   "prompt": "a rusty clockwork beetle robot with exposed brass gears turning on its back, riveted metal plates, one big cracked lamp eye at the front, thin metal legs, side view",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-6-2",
   "kind": "mob",
   "name": "古い機械の虫",
@@ -3208,7 +3208,7 @@
  {
   "id": "enc-world-6-4",
   "prompt": "a rusted machine, a boxy rusty robot on tank treads with a broken antenna and a loose jaw",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-6-4",
   "kind": "mob",
   "name": "錆びた機械",
@@ -3219,12 +3219,13 @@
    140,
    90,
    60
-  ]
+  ],
+  "draft": "enc-world-6-4_1"
  },
  {
   "id": "enc-world-6-5",
   "prompt": "a withered field bird, a scarecrow-like bird made of dry straw and torn cloth wings",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-6-5",
   "kind": "mob",
   "name": "枯れ野の羽",
@@ -3235,7 +3236,8 @@
    170,
    150,
    100
-  ]
+  ],
+  "draft": "enc-world-6-5_0"
  },
  {
   "id": "enc-world-sea-0",
