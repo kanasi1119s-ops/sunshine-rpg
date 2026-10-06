@@ -26,7 +26,9 @@ import { ALL_ITEMS_BY_ID, describeBonus, purchaseConsumable, purchaseItem, recei
 import { closeShopMenu, createShopMenuState, moveShopCursor, openShopMenu, withShopMessage } from "./game/economy/shop-menu";
 import { renderShop, renderShopWear, type ShopWearView } from "./render/shop-renderer";
 import { backPauseMenu, confirmPauseMenu, createPauseMenuState, movePauseCursor, openPauseMenu } from "./game/menu/pause-menu";
-import { renderOrderScreen, renderPauseMenu, type StatusRow } from "./render/pause-menu-renderer";
+import { renderOrderScreen, renderPauseMenu, renderQuestLog, type StatusRow } from "./render/pause-menu-renderer";
+import { sideQuestLog } from "./game/world/side-quest-log";
+import { SIDE_STORIES } from "./game/world/side-stories";
 import { backEquipMenu, confirmEquipMenu, createEquipMenuState, moveEquipCursor, openEquipMenu } from "./game/menu/equip-menu";
 import { renderEquipMenu, type EquipMenuView, type EquipStatsView } from "./render/equip-menu-renderer";
 import { candidatesFor, ensureOwned, equipTo, sanitizeParty, unequipFrom, type PartyEquipment } from "./game/items/party-equipment";
@@ -2601,6 +2603,9 @@ function renderGameSceneBase(): void {
   if (pauseMenu.open && pauseMenu.screen === "items") {
     renderItemsScreen(ctx, itemsView(), itemsScroll, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   }
+  if (pauseMenu.open && pauseMenu.screen === "quests") {
+    renderQuestLog(ctx, sideQuestLog(SIDE_STORIES, flags), itemsScroll, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  }
   if (equipMenu.open) {
     renderEquipMenu(ctx, equipMenu, equipMenuView(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
   }
@@ -2928,7 +2933,7 @@ const loop = createGameLoop({
 
     if (pauseMenu.open) {
       const direction = input.getDirection();
-      if (direction !== lastPauseDirection && pauseMenu.screen === "items") {
+      if (direction !== lastPauseDirection && (pauseMenu.screen === "items" || pauseMenu.screen === "quests")) {
         if (direction === "up") itemsScroll = Math.max(0, itemsScroll - 3);
         if (direction === "down") itemsScroll += 3;
         lastPauseDirection = direction;
@@ -2944,7 +2949,7 @@ const loop = createGameLoop({
       }
       if (actionPressed) {
         const result = confirmPauseMenu(pauseMenu);
-        if (result.state.screen === "items" && pauseMenu.screen !== "items") itemsScroll = 0;
+        if ((result.state.screen === "items" || result.state.screen === "quests") && pauseMenu.screen !== result.state.screen) itemsScroll = 0;
         pauseMenu = result.state;
         if (result.action === "swap" && result.swap) {
           // ならびかえ: 選んだ2人を入れかえる（戦いでは1〜3人目が前列）

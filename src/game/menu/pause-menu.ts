@@ -2,7 +2,7 @@
  * ゲーム中のメニュー（Escape／Tab、スマホは「メニュー」ボタン）。つよさの確認・セーブ・タイトルへ戻る。
  * 画面遷移だけを持つ。実際のセーブやタイトルへ戻る処理は main.ts が行う。
  */
-export type PauseScreen = "main" | "status" | "items" | "order";
+export type PauseScreen = "main" | "status" | "items" | "order" | "quests";
 export type PauseAction = "save" | "title" | "equip" | "keys" | "use" | "magic" | "unstick" | "swap" | null;
 
 export interface PauseMenuState {
@@ -14,9 +14,10 @@ export interface PauseMenuState {
   orderPick?: number | null;
 }
 
-export const PAUSE_ITEMS: { id: "status" | "items" | "use" | "magic" | "equip" | "order" | "keys" | "save" | "unstick" | "title" | "close"; label: string }[] = [
+export const PAUSE_ITEMS: { id: "status" | "items" | "quests" | "use" | "magic" | "equip" | "order" | "keys" | "save" | "unstick" | "title" | "close"; label: string }[] = [
   { id: "status", label: "つよさ" },
   { id: "items", label: "もちもの" },
+  { id: "quests", label: "依頼の記録" },
   { id: "use", label: "どうぐ" },
   { id: "magic", label: "まほう" },
   { id: "equip", label: "そうび" },
@@ -62,7 +63,7 @@ export function confirmPauseMenu(state: PauseMenuState): { state: PauseMenuState
     if (pick === cur) return { state: { ...state, orderPick: null }, action: null };
     return { state: { ...state, orderPick: null }, action: "swap", swap: [pick, cur] };
   }
-  if (state.screen === "status" || state.screen === "items") {
+  if (state.screen === "status" || state.screen === "items" || state.screen === "quests") {
     return { state: { ...state, screen: "main" }, action: null };
   }
   switch (PAUSE_ITEMS[state.cursor].id) {
@@ -70,6 +71,8 @@ export function confirmPauseMenu(state: PauseMenuState): { state: PauseMenuState
       return { state: { ...state, screen: "status" }, action: null };
     case "items":
       return { state: { ...state, screen: "items" }, action: null };
+    case "quests":
+      return { state: { ...state, screen: "quests" }, action: null };
     case "use":
       return { state, action: "use" };
     case "magic":

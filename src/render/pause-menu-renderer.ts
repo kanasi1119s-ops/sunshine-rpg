@@ -1,6 +1,8 @@
 import { PAUSE_ITEMS, type PauseMenuState } from "../game/menu/pause-menu";
 import { BACK_DEFENSE, FRONT_ATTACK, FRONT_ROW_SIZE } from "../game/battle/formation";
 import { drawWindow } from "./ui-frame";
+import { wrapText } from "./text-wrap";
+import type { QuestEntry } from "../game/world/side-quest-log";
 import { getPortraitIcon } from "./portrait-icons";
 
 export interface StatusRow {
@@ -76,8 +78,8 @@ export function renderPauseMenu(
   if (!state.open) {
     return;
   }
-  if (state.screen === "items" || state.screen === "order") {
-    return; // 「もちもの」は renderItemsScreen、「ならびかえ」は renderOrderScreen で描く
+  if (state.screen === "items" || state.screen === "order" || state.screen === "quests") {
+    return; // 「もちもの」は renderItemsScreen、「ならびかえ」は renderOrderScreen、「依頼の記録」は renderQuestLog で描く
   }
   ctx.textBaseline = "top";
   ctx.textAlign = "left";
@@ -163,4 +165,66 @@ export function renderOrderScreen(ctx: CanvasRenderingContext2D, state: PauseMen
     ctx.fillText(`${i + 1}. ${name}${i === pick ? "　← 入れかえる相手を選んでください" : ""}`, 56, y + 6);
     y += 25;
   });
+}
+
+/**
+ * 「依頼の記録」の画面（サブストーリー）。報告できる → 受けている → 受けられる → 終わった、の順。
+ * 受けている依頼は、依頼人と場所・調べた所の数・次に行く場所・依頼人の言葉（手がかり）を出す。上下でスクロール。
+ */
+export function renderQuestLog(ctx: CanvasRenderingContext2D, entries: QuestEntry[], scroll: number, screenWidth: number, screenHeight: number): void {
+  ctx.textBaseline = "top";
+  ctx.textAlign = "left";
+  drawWindow(ctx, 4, 4, screenWidth - 8, screenHeight - 8);
+  ctx.font = "10px monospace";
+  ctx.fillStyle = "#f2c14e";
+  ctx.fillText("依頼の記録（上下で見る／Xでもどる）", 12, 10);
+  const count = (s: QuestEntry["status"]): number => entries.filter((e) => e.status === s).length;
+  ctx.fillStyle = "#c8c8e0";
+  ctx.textAlign = "right";
+  ctx.fillText(`受けている${count("progress") + count("report")}　終わった${count("done")}`, screenWidth - 14, 10);
+  ctx.textAlign = "left";
+  const lines: { text: string; color: string }[] = [];
+  const width = screenWidth - 40;
+  const wrap = (t: string): string[] => wrapText(t, width, (seg) => ctx.measureText(seg).width);
+  const section = (title: string, status: QuestEntry["status"], color: string): void => {
+    const list = entries.filter((e) => e.status === status);
+    if (list.length === 0) return;
+    lines.push({ text: title, color: "#88c8ff" });
+    for (const e of list) {
+      lines.push({ text: `　${status === "report" ? "★" : status === "done" ? "✓" : "・"}${e.title}`, color });
+      if (status === "done") continue;
+      if (status === "report") {
+        lines.push({ text: `　　→ ${e.place}の${e.giver}に報告しよう（調べた所 ${e.stepsDone}/${e.stepsTotal}）`, color: "#ffe08a" });
+        continue;
+      }
+      if (status === "available") {
+        lines.push({ text: `　　${e.place}の${e.giver}が困っている`, color: "#a8a8c8" });
+        continue;
+      }
+      lines.push({ text: `　　依頼人: ${e.giver}（${e.place}）　調べた所 ${e.stepsDone}/${e.stepsTotal}${e.next ? `　次は: ${e.next}` : ""}`, color: "#c8c8e0" });
+      if (e.hint) for (const l of wrap(`　　手がかり「${e.hint}」`)) lines.push({ text: l, color: "#a8a8c8" });
+    }
+    lines.push({ text: "", color: "#fff" });
+  };
+  section("【報告できる】", "report", "#f2c14e");
+  section("【受けている】", "progress", "#f0f0f0");
+  section("【受けられる依頼】", "available", "#d0d0e8");
+  section("【終わった依頼】", "done", "#9090a8");
+  if (lines.length === 0) lines.push({ text: "　まだ依頼を受けていない。町の人の話を聞いてみよう。", color: "#a0a0b8" });
+  const rowH = 11;
+  const visible = Math.floor((screenHeight - 40) / rowH);
+  const maxScroll = Math.max(0, lines.length - visible);
+  const start = Math.max(0, Math.min(maxScroll, scroll));
+  lines.slice(start, start + visible).forEach((l, i) => {
+    ctx.fillStyle = l.color;
+    ctx.fillText(l.text, 12, 26 + i * rowH);
+  });
+  if (start > 0) {
+    ctx.fillStyle = "#f2c14e";
+    ctx.fillText("▲", screenWidth - 18, 24);
+  }
+  if (start < maxScroll) {
+    ctx.fillStyle = "#f2c14e";
+    ctx.fillText("▼", screenWidth - 18, screenHeight - 20);
+  }
 }
