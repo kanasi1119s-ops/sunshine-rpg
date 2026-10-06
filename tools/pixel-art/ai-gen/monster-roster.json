@@ -3101,7 +3101,7 @@
  {
   "id": "enc-world-5-4",
   "prompt": "a creature made of dark hexagonal basalt stone columns, a wide open glowing orange magma mouth, cracks of lava, short stubby stone legs, side view",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-5-4",
   "kind": "mob",
   "name": "火山の石",
@@ -3113,13 +3113,13 @@
    60,
    60
   ],
-  "draft": "enc-world-5-4_0",
+  "draft": "enc-world-5-4_1",
   "seed_base": 6001
  },
  {
   "id": "enc-world-5-5",
-  "prompt": "a magma droplet, a heavy floating drop of glowing magma with a black cooled skin",
-  "status": "done",
+  "prompt": "a heavy teardrop-shaped blob of glowing magma with a pointed top, a cracked black cooled crust peeling off in plates, lava dripping from its bottom",
+  "status": "todo",
   "key": "enemy:enc-world-5-5",
   "kind": "mob",
   "name": "マグマのしずく",
@@ -3131,12 +3131,14 @@
    70,
    30
   ],
-  "draft": "enc-world-5-5_0"
+  "draft": "enc-world-5-5_0",
+  "bg": "dark",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-6-0",
   "prompt": "a wasteland shadow, a lean dog-like creature of dust and shadow with a cracked bone collar",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-6-0",
   "kind": "mob",
   "name": "荒野の影",
@@ -3147,12 +3149,13 @@
    130,
    110,
    90
-  ]
+  ],
+  "draft": "enc-world-6-0_0"
  },
  {
   "id": "enc-world-6-1",
   "prompt": "a distortion whose light went out, an old broken street lamp creature with a dark empty glass head",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-6-1",
   "kind": "mob",
   "name": "灯の消えた歪み",
@@ -3163,7 +3166,8 @@
    80,
    85,
    90
-  ]
+  ],
+  "draft": "enc-world-6-1_1"
  },
  {
   "id": "enc-world-6-2",
