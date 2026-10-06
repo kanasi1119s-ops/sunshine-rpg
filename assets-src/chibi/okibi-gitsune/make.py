@@ -187,10 +187,10 @@ S_UP = mirror([
     ".....AAA",
 ])
 S_SIDE = [
-    "..AA.AA.........",   # 0  耳
-    ".AKKAKKA...AAA..",
-    ".AKRKRKA..ADDDA.",   # 2  しっぽの先（丸く）
-    "AQRRQQQQA.ACCCDA",
+    "....A...........",   # 0  耳（横から見ても分かるよう、手前の耳を橙の三角で高く立て、奥の耳は小さく離す。人間の指示「横から見たとき耳がわからない」）
+    ".A.AKA.....AAA..",
+    "AKAQRQA...ADDDA.",   # 2  しっぽの先（丸く）
+    "AQQQRRQQA.ACCCDA",
     "AQQQQQQQAAAQRQQA",   # 4  しっぽの橙の帯
     "AQWJQQQQQAAQQQQA",   # 5  目
     "AQJJQQSQQACAQQBA",
