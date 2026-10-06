@@ -2799,7 +2799,7 @@
  {
   "id": "enc-world-2-5",
   "prompt": "a rocky mountain soldier made of stacked grey stones wearing a rusty helmet, carrying a stone club",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-2-5",
   "kind": "mob",
   "name": "岩山の兵",
@@ -2810,12 +2810,13 @@
    130,
    125,
    115
-  ]
+  ],
+  "draft": "enc-world-2-5_1"
  },
  {
   "id": "enc-world-3-0",
   "prompt": "a dune-slipping creature like a sand eel with a smooth sandy body leaping out of the dunes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-3-0",
   "kind": "mob",
   "name": "砂ぬけ",
@@ -2826,7 +2827,8 @@
    210,
    180,
    120
-  ]
+  ],
+  "draft": "enc-world-3-0_x1"
  },
  {
   "id": "enc-world-3-1",
