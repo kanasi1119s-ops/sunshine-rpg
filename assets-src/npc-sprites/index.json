@@ -1,0 +1,2875 @@
+[
+ {
+  "file": "each/001-touri-fisherman.png",
+  "id": "touri-fisherman",
+  "name": "ガンジ",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/002-touri-neighbor.png",
+  "id": "touri-neighbor",
+  "name": "布屋の女将",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/003-touri-lampkeeper.png",
+  "id": "touri-lampkeeper",
+  "name": "灯守り",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/004-side-s001-giver.png",
+  "id": "side-s001-giver",
+  "name": "タケ",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/005-shop-1.png",
+  "id": "shop-1",
+  "name": "灯里の武具屋",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/006-ambient-touri-town-guide.png",
+  "id": "ambient-touri-town-guide",
+  "name": "港の案内人",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/007-ambient-touri-town-local1.png",
+  "id": "ambient-touri-town-local1",
+  "name": "漁師",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/008-ambient-touri-town-local2.png",
+  "id": "ambient-touri-town-local2",
+  "name": "パン屋",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/009-touri-town-townsfolk-1.png",
+  "id": "touri-town-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/010-touri-town-townsfolk-2.png",
+  "id": "touri-town-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/011-touri-town-townsfolk-3.png",
+  "id": "touri-town-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/012-resident-touri-town-8kd5.png",
+  "id": "resident-touri-town-8kd5",
+  "name": "トメ",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/013-resident-touri-town-bl9wwh.png",
+  "id": "resident-touri-town-bl9wwh",
+  "name": "パン屋の親父",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/014-resident-touri-town-het5l.png",
+  "id": "resident-touri-town-het5l",
+  "name": "男の子",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/015-resident-touri-town-7dsap.png",
+  "id": "resident-touri-town-7dsap",
+  "name": "ドウマ",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/016-resident-touri-town-7d6kj.png",
+  "id": "resident-touri-town-7d6kj",
+  "name": "カセン",
+  "maps": [
+   "touri-town",
+   "touri-branch"
+  ]
+ },
+ {
+  "file": "each/017-resident-touri-town-6cnxly.png",
+  "id": "resident-touri-town-6cnxly",
+  "name": "ソウイチ",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/018-resident-touri-town-7dycv.png",
+  "id": "resident-touri-town-7dycv",
+  "name": "ハルカ",
+  "maps": [
+   "touri-town"
+  ]
+ },
+ {
+  "file": "each/019-touri-reto.png",
+  "id": "touri-reto",
+  "name": "レト",
+  "maps": [
+   "touri-branch"
+  ]
+ },
+ {
+  "file": "each/020-touri-branch-clerk.png",
+  "id": "touri-branch-clerk",
+  "name": "受付のミヨ",
+  "maps": [
+   "touri-branch"
+  ]
+ },
+ {
+  "file": "each/021-side-s027-giver.png",
+  "id": "side-s027-giver",
+  "name": "支部の職員",
+  "maps": [
+   "touri-branch"
+  ]
+ },
+ {
+  "file": "each/022-side-s002-giver.png",
+  "id": "side-s002-giver",
+  "name": "ホセ",
+  "maps": [
+   "touri-branch"
+  ]
+ },
+ {
+  "file": "each/023-resident-touri-branch-7ec8j.png",
+  "id": "resident-touri-branch-7ec8j",
+  "name": "モモコ",
+  "maps": [
+   "touri-branch"
+  ]
+ },
+ {
+  "file": "each/024-touri-forest-traveler.png",
+  "id": "touri-forest-traveler",
+  "name": "旅人",
+  "maps": [
+   "touri-forest-1"
+  ]
+ },
+ {
+  "file": "each/025-mugikano-elder.png",
+  "id": "mugikano-elder",
+  "name": "村長",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/026-mugikano-miller.png",
+  "id": "mugikano-miller",
+  "name": "ロク",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/027-mugikano-mina.png",
+  "id": "mugikano-mina",
+  "name": "ミナ",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/028-side-s003-giver.png",
+  "id": "side-s003-giver",
+  "name": "ロク",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/029-side-s004-giver.png",
+  "id": "side-s004-giver",
+  "name": "洗濯おばさん",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/030-side-s005-giver.png",
+  "id": "side-s005-giver",
+  "name": "ゴンザ",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/031-shop-2.png",
+  "id": "shop-2",
+  "name": "麦香野の行商人",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/032-ambient-mugikano-village-guide.png",
+  "id": "ambient-mugikano-village-guide",
+  "name": "旅の行商人",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/033-ambient-mugikano-village-local1.png",
+  "id": "ambient-mugikano-village-local1",
+  "name": "農婦",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/034-ambient-mugikano-village-local2.png",
+  "id": "ambient-mugikano-village-local2",
+  "name": "水車小屋の子",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/035-mugikano-village-townsfolk-1.png",
+  "id": "mugikano-village-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/036-mugikano-village-townsfolk-2.png",
+  "id": "mugikano-village-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/037-mugikano-village-townsfolk-3.png",
+  "id": "mugikano-village-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/038-resident-mugikano-village-6qe3uu.png",
+  "id": "resident-mugikano-village-6qe3uu",
+  "name": "大柄な農夫",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/039-resident-mugikano-village-f2ppl6.png",
+  "id": "resident-mugikano-village-f2ppl6",
+  "name": "痩せた男",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/040-resident-mugikano-village-7dm17.png",
+  "id": "resident-mugikano-village-7dm17",
+  "name": "タヘイ",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/041-resident-mugikano-village-8jz0.png",
+  "id": "resident-mugikano-village-8jz0",
+  "name": "シン",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/042-resident-mugikano-village-6dao8a.png",
+  "id": "resident-mugikano-village-6dao8a",
+  "name": "ミナの母",
+  "maps": [
+   "mugikano-village"
+  ]
+ },
+ {
+  "file": "each/043-mugikano-canal-farmer.png",
+  "id": "mugikano-canal-farmer",
+  "name": "農夫",
+  "maps": [
+   "mugikano-canal"
+  ]
+ },
+ {
+  "file": "each/044-mugikano-canal-watchman.png",
+  "id": "mugikano-canal-watchman",
+  "name": "水路の見張り",
+  "maps": [
+   "mugikano-canal"
+  ]
+ },
+ {
+  "file": "each/045-garasuko-guide.png",
+  "id": "garasuko-guide",
+  "name": "コハク",
+  "maps": [
+   "garasuko-town",
+   "tetsukusari-town",
+   "tetsukusari-mine",
+   "sanone-town",
+   "sanone-camp",
+   "kiri-town",
+   "kiri-archive",
+   "shimohara-town",
+   "shimohara-facility",
+   "fushima-town",
+   "fushima-base",
+   "toushin-town",
+   "toushin-hall",
+   "kyotoukyu-court",
+   "kyotoukyu-corridor",
+   "kyotoukyu-sanctum",
+   "tetsukusari-cave-1",
+   "sanone-ruins-1",
+   "fushima-tower-1",
+   "inn-garasuko-town-1f",
+   "inn-tetsukusari-town-1f",
+   "inn-sanone-town-1f",
+   "inn-sanone-town-2f",
+   "inn-shimohara-town-1f"
+  ]
+ },
+ {
+  "file": "each/046-side-s006-giver.png",
+  "id": "side-s006-giver",
+  "name": "商人の少女",
+  "maps": [
+   "garasuko-town"
+  ]
+ },
+ {
+  "file": "each/047-side-s007-giver.png",
+  "id": "side-s007-giver",
+  "name": "船乗り",
+  "maps": [
+   "garasuko-town"
+  ]
+ },
+ {
+  "file": "each/048-side-s008-giver.png",
+  "id": "side-s008-giver",
+  "name": "渡し守",
+  "maps": [
+   "garasuko-town"
+  ]
+ },
+ {
+  "file": "each/049-shop-3.png",
+  "id": "shop-3",
+  "name": "湖上市場の武具屋",
+  "maps": [
+   "garasuko-town"
+  ]
+ },
+ {
+  "file": "each/050-ambient-garasuko-town-guide.png",
+  "id": "ambient-garasuko-town-guide",
+  "name": "湖の水先案内人",
+  "maps": [
+   "garasuko-town"
+  ]
+ },
+ {
+  "file": "each/051-ambient-garasuko-town-local1.png",
+  "id": "ambient-garasuko-town-local1",
+  "name": "織り子",
+  "maps": [
+   "garasuko-town"
+  ]
+ },
+ {
+  "file": "each/052-ambient-garasuko-town-local2.png",
+  "id": "ambient-garasuko-town-local2",
+  "name": "釣り人",
+  "maps": [
+   "garasuko-town"
+  ]
+ },
+ {
+  "file": "each/053-garasuko-cave-informant.png",
+  "id": "garasuko-cave-informant",
+  "name": "船頭",
+  "maps": [
+   "garasuko-town"
+  ]
+ },
+ {
+  "file": "each/054-garasuko-town-townsfolk-1.png",
+  "id": "garasuko-town-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "garasuko-town"
+  ]
+ },
+ {
+  "file": "each/055-garasuko-town-townsfolk-2.png",
+  "id": "garasuko-town-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "garasuko-town"
+  ]
+ },
+ {
+  "file": "each/056-garasuko-town-townsfolk-3.png",
+  "id": "garasuko-town-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "garasuko-town"
+  ]
+ },
+ {
+  "file": "each/057-resident-garasuko-town-gq1t1v.png",
+  "id": "resident-garasuko-town-gq1t1v",
+  "name": "若い船頭",
+  "maps": [
+   "garasuko-town"
+  ]
+ },
+ {
+  "file": "each/058-resident-garasuko-town-sa1864.png",
+  "id": "resident-garasuko-town-sa1864",
+  "name": "役人の上役",
+  "maps": [
+   "garasuko-town"
+  ]
+ },
+ {
+  "file": "each/059-resident-garasuko-town-1gsaw5l.png",
+  "id": "resident-garasuko-town-1gsaw5l",
+  "name": "見張りの男",
+  "maps": [
+   "garasuko-town"
+  ]
+ },
+ {
+  "file": "each/060-resident-garasuko-town-7eiyb.png",
+  "id": "resident-garasuko-town-7eiyb",
+  "name": "ロウガ",
+  "maps": [
+   "garasuko-town"
+  ]
+ },
+ {
+  "file": "each/061-garasuko-dorun.png",
+  "id": "garasuko-dorun",
+  "name": "ドルン",
+  "maps": [
+   "garasuko-warehouse",
+   "tetsukusari-mine",
+   "sanone-camp",
+   "shimohara-facility",
+   "toushin-hall",
+   "kyotoukyu-sanctum",
+   "toushin-tower-1",
+   "toushin-tower-2"
+  ]
+ },
+ {
+  "file": "each/062-tetsukusari-orca.png",
+  "id": "tetsukusari-orca",
+  "name": "オルカ",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/063-tetsukusari-clerk.png",
+  "id": "tetsukusari-clerk",
+  "name": "事務員",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/064-tetsukusari-miner.png",
+  "id": "tetsukusari-miner",
+  "name": "町の人",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/065-tetsukusari-helmsmith.png",
+  "id": "tetsukusari-helmsmith",
+  "name": "鍛冶屋",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/066-side-s009-giver.png",
+  "id": "side-s009-giver",
+  "name": "ミオ",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/067-side-s010-giver.png",
+  "id": "side-s010-giver",
+  "name": "ハツ",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/068-side-s011-giver.png",
+  "id": "side-s011-giver",
+  "name": "ロウ爺",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/069-shop-4.png",
+  "id": "shop-4",
+  "name": "鉱山の鍛冶屋",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/070-ambient-tetsukusari-town-guide.png",
+  "id": "ambient-tetsukusari-town-guide",
+  "name": "坑道の案内人",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/071-ambient-tetsukusari-town-local1.png",
+  "id": "ambient-tetsukusari-town-local1",
+  "name": "鉱夫の妻",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/072-ambient-tetsukusari-town-local2.png",
+  "id": "ambient-tetsukusari-town-local2",
+  "name": "鍛冶屋の弟子",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/073-tetsukusari-cave-informant.png",
+  "id": "tetsukusari-cave-informant",
+  "name": "古参の鉱夫",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/074-tetsukusari-town-townsfolk-1.png",
+  "id": "tetsukusari-town-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/075-tetsukusari-town-townsfolk-2.png",
+  "id": "tetsukusari-town-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/076-tetsukusari-town-townsfolk-3.png",
+  "id": "tetsukusari-town-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/077-resident-tetsukusari-town-1n3y6z8.png",
+  "id": "resident-tetsukusari-town-1n3y6z8",
+  "name": "見習いの少年",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/078-resident-tetsukusari-town-8jtu.png",
+  "id": "resident-tetsukusari-town-8jtu",
+  "name": "ケン",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/079-resident-tetsukusari-town-7driu.png",
+  "id": "resident-tetsukusari-town-7driu",
+  "name": "トウゴ",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/080-resident-tetsukusari-town-8kuv.png",
+  "id": "resident-tetsukusari-town-8kuv",
+  "name": "マサ",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/081-resident-tetsukusari-town-8jz5.png",
+  "id": "resident-tetsukusari-town-8jz5",
+  "name": "スズ",
+  "maps": [
+   "tetsukusari-town"
+  ]
+ },
+ {
+  "file": "each/082-sanone-guildmaster.png",
+  "id": "sanone-guildmaster",
+  "name": "組合長",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/083-sanone-merchant.png",
+  "id": "sanone-merchant",
+  "name": "商人",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/084-sanone-informant.png",
+  "id": "sanone-informant",
+  "name": "情報屋",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/085-sanone-sailmaker.png",
+  "id": "sanone-sailmaker",
+  "name": "帆職人",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/086-side-s012-giver.png",
+  "id": "side-s012-giver",
+  "name": "ケイス",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/087-side-s013-giver.png",
+  "id": "side-s013-giver",
+  "name": "ゴウ",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/088-shop-5.png",
+  "id": "shop-5",
+  "name": "砂音の武具商",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/089-ambient-sanone-town-guide.png",
+  "id": "ambient-sanone-town-guide",
+  "name": "砂漠の道案内",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/090-ambient-sanone-town-local1.png",
+  "id": "ambient-sanone-town-local1",
+  "name": "香辛料商人",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/091-ambient-sanone-town-local2.png",
+  "id": "ambient-sanone-town-local2",
+  "name": "ラクダ番",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/092-sanone-ruins-informant.png",
+  "id": "sanone-ruins-informant",
+  "name": "古老",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/093-sanone-town-townsfolk-1.png",
+  "id": "sanone-town-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/094-sanone-town-townsfolk-2.png",
+  "id": "sanone-town-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/095-sanone-town-townsfolk-3.png",
+  "id": "sanone-town-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/096-resident-sanone-town-jc9zet.png",
+  "id": "resident-sanone-town-jc9zet",
+  "name": "隊商の男",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/097-resident-sanone-town-jc9txd.png",
+  "id": "resident-sanone-town-jc9txd",
+  "name": "隊商の女",
+  "maps": [
+   "sanone-town"
+  ]
+ },
+ {
+  "file": "each/098-kiri-priest.png",
+  "id": "kiri-priest",
+  "name": "司祭",
+  "maps": [
+   "kiri-church"
+  ]
+ },
+ {
+  "file": "each/099-kiri-church-friar.png",
+  "id": "kiri-church-friar",
+  "name": "修道士",
+  "maps": [
+   "kiri-church"
+  ]
+ },
+ {
+  "file": "each/100-kiri-church-worshipper.png",
+  "id": "kiri-church-worshipper",
+  "name": "祈る人",
+  "maps": [
+   "kiri-church"
+  ]
+ },
+ {
+  "file": "each/101-kiri-pilgrim.png",
+  "id": "kiri-pilgrim",
+  "name": "巡礼者",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/102-kiri-scribe.png",
+  "id": "kiri-scribe",
+  "name": "書記",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/103-side-s015-giver.png",
+  "id": "side-s015-giver",
+  "name": "郵便係",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/104-side-s016-giver.png",
+  "id": "side-s016-giver",
+  "name": "見習い巫女",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/105-side-s029-giver.png",
+  "id": "side-s029-giver",
+  "name": "旅の商人",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/106-side-s030-giver.png",
+  "id": "side-s030-giver",
+  "name": "見張りの兵",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/107-shop-6.png",
+  "id": "shop-6",
+  "name": "霧断崖の武具屋",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/108-ambient-kiri-town-guide.png",
+  "id": "ambient-kiri-town-guide",
+  "name": "巡礼の案内人",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/109-ambient-kiri-town-local1.png",
+  "id": "ambient-kiri-town-local1",
+  "name": "鐘つき",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/110-ambient-kiri-town-local2.png",
+  "id": "ambient-kiri-town-local2",
+  "name": "巡礼の老婆",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/111-kiri-tower-informant.png",
+  "id": "kiri-tower-informant",
+  "name": "巡礼の案内人",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/112-kiri-town-townsfolk-1.png",
+  "id": "kiri-town-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/113-kiri-town-townsfolk-2.png",
+  "id": "kiri-town-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/114-kiri-town-townsfolk-3.png",
+  "id": "kiri-town-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/115-resident-kiri-town-j3b1.png",
+  "id": "resident-kiri-town-j3b1",
+  "name": "母親",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/116-resident-kiri-town-k6k4.png",
+  "id": "resident-kiri-town-k6k4",
+  "name": "父親",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/117-resident-kiri-town-ldlmr.png",
+  "id": "resident-kiri-town-ldlmr",
+  "name": "運び屋",
+  "maps": [
+   "kiri-town"
+  ]
+ },
+ {
+  "file": "each/118-kiri-keeper.png",
+  "id": "kiri-keeper",
+  "name": "町の人",
+  "maps": [
+   "kiri-archive"
+  ]
+ },
+ {
+  "file": "each/119-side-s017-giver.png",
+  "id": "side-s017-giver",
+  "name": "記録係",
+  "maps": [
+   "kiri-archive"
+  ]
+ },
+ {
+  "file": "each/120-resident-kiri-archive-ceauy.png",
+  "id": "resident-kiri-archive-ceauy",
+  "name": "写字官",
+  "maps": [
+   "kiri-archive"
+  ]
+ },
+ {
+  "file": "each/121-shimohara-watchman.png",
+  "id": "shimohara-watchman",
+  "name": "番所の守り",
+  "maps": [
+   "shimohara-town"
+  ]
+ },
+ {
+  "file": "each/122-shimohara-ayame.png",
+  "id": "shimohara-ayame",
+  "name": "アヤメ",
+  "maps": [
+   "shimohara-town"
+  ]
+ },
+ {
+  "file": "each/123-side-s018-giver.png",
+  "id": "side-s018-giver",
+  "name": "宿の女将",
+  "maps": [
+   "shimohara-town"
+  ]
+ },
+ {
+  "file": "each/124-side-s019-giver.png",
+  "id": "side-s019-giver",
+  "name": "古物商",
+  "maps": [
+   "shimohara-town"
+  ]
+ },
+ {
+  "file": "each/125-side-s020-giver.png",
+  "id": "side-s020-giver",
+  "name": "番小屋の兵",
+  "maps": [
+   "shimohara-town"
+  ]
+ },
+ {
+  "file": "each/126-shop-7.png",
+  "id": "shop-7",
+  "name": "霜原の武具屋",
+  "maps": [
+   "shimohara-town"
+  ]
+ },
+ {
+  "file": "each/127-ambient-shimohara-town-guide.png",
+  "id": "ambient-shimohara-town-guide",
+  "name": "雪原の道案内",
+  "maps": [
+   "shimohara-town"
+  ]
+ },
+ {
+  "file": "each/128-ambient-shimohara-town-local1.png",
+  "id": "ambient-shimohara-town-local1",
+  "name": "薪割りの少年",
+  "maps": [
+   "shimohara-town"
+  ]
+ },
+ {
+  "file": "each/129-ambient-shimohara-town-local2.png",
+  "id": "ambient-shimohara-town-local2",
+  "name": "織物の老人",
+  "maps": [
+   "shimohara-town"
+  ]
+ },
+ {
+  "file": "each/130-shimohara-ruins-informant.png",
+  "id": "shimohara-ruins-informant",
+  "name": "古い兵の子孫",
+  "maps": [
+   "shimohara-town"
+  ]
+ },
+ {
+  "file": "each/131-shimohara-town-townsfolk-1.png",
+  "id": "shimohara-town-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "shimohara-town"
+  ]
+ },
+ {
+  "file": "each/132-shimohara-town-townsfolk-2.png",
+  "id": "shimohara-town-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "shimohara-town"
+  ]
+ },
+ {
+  "file": "each/133-shimohara-town-townsfolk-3.png",
+  "id": "shimohara-town-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "shimohara-town"
+  ]
+ },
+ {
+  "file": "each/134-fushima-elder.png",
+  "id": "fushima-elder",
+  "name": "雲海衆の長老",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/135-fushima-ferryman.png",
+  "id": "fushima-ferryman",
+  "name": "渡し守",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/136-side-s021-giver.png",
+  "id": "side-s021-giver",
+  "name": "測量士",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/137-side-s022-giver.png",
+  "id": "side-s022-giver",
+  "name": "サザン",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/138-side-s023-giver.png",
+  "id": "side-s023-giver",
+  "name": "避難民の女性",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/139-side-s031-giver.png",
+  "id": "side-s031-giver",
+  "name": "避難民の男",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/140-side-s033-giver.png",
+  "id": "side-s033-giver",
+  "name": "ヴィオン",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/141-shop-8.png",
+  "id": "shop-8",
+  "name": "浮嶼の職人",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/142-ambient-fushima-town-guide.png",
+  "id": "ambient-fushima-town-guide",
+  "name": "島の案内人",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/143-ambient-fushima-town-local1.png",
+  "id": "ambient-fushima-town-local1",
+  "name": "凧職人",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/144-ambient-fushima-town-local2.png",
+  "id": "ambient-fushima-town-local2",
+  "name": "雲海衆の若者",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/145-fushima-tower-informant.png",
+  "id": "fushima-tower-informant",
+  "name": "雲海衆の見張り",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/146-fushima-town-townsfolk-1.png",
+  "id": "fushima-town-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/147-fushima-town-townsfolk-2.png",
+  "id": "fushima-town-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/148-fushima-town-townsfolk-3.png",
+  "id": "fushima-town-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/149-resident-fushima-town-het5l.png",
+  "id": "resident-fushima-town-het5l",
+  "name": "男の子",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/150-resident-fushima-town-1uk8k8v.png",
+  "id": "resident-fushima-town-1uk8k8v",
+  "name": "縄を編む老人",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/151-resident-fushima-town-essadj.png",
+  "id": "resident-fushima-town-essadj",
+  "name": "島の女の人",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/152-resident-fushima-town-e3s5f0.png",
+  "id": "resident-fushima-town-e3s5f0",
+  "name": "渡り職人",
+  "maps": [
+   "fushima-town"
+  ]
+ },
+ {
+  "file": "each/153-fushima-edrea.png",
+  "id": "fushima-edrea",
+  "name": "エドレア",
+  "maps": [
+   "fushima-base",
+   "toushin-hall",
+   "kyotoukyu-sanctum"
+  ]
+ },
+ {
+  "file": "each/154-toushin-clerk.png",
+  "id": "toushin-clerk",
+  "name": "議事官",
+  "maps": [
+   "toushin-town"
+  ]
+ },
+ {
+  "file": "each/155-toushin-guard.png",
+  "id": "toushin-guard",
+  "name": "衛兵",
+  "maps": [
+   "toushin-town"
+  ]
+ },
+ {
+  "file": "each/156-side-s024-giver.png",
+  "id": "side-s024-giver",
+  "name": "下働き",
+  "maps": [
+   "toushin-town"
+  ]
+ },
+ {
+  "file": "each/157-side-s025-giver.png",
+  "id": "side-s025-giver",
+  "name": "配達人",
+  "maps": [
+   "toushin-town"
+  ]
+ },
+ {
+  "file": "each/158-side-s032-giver.png",
+  "id": "side-s032-giver",
+  "name": "旅の男",
+  "maps": [
+   "toushin-town"
+  ]
+ },
+ {
+  "file": "each/159-shop-9.png",
+  "id": "shop-9",
+  "name": "灯芯都の名工",
+  "maps": [
+   "toushin-town"
+  ]
+ },
+ {
+  "file": "each/160-ambient-toushin-town-guide.png",
+  "id": "ambient-toushin-town-guide",
+  "name": "都の案内人",
+  "maps": [
+   "toushin-town"
+  ]
+ },
+ {
+  "file": "each/161-ambient-toushin-town-local1.png",
+  "id": "ambient-toushin-town-local1",
+  "name": "書記見習い",
+  "maps": [
+   "toushin-town"
+  ]
+ },
+ {
+  "file": "each/162-ambient-toushin-town-local2.png",
+  "id": "ambient-toushin-town-local2",
+  "name": "花売りの娘",
+  "maps": [
+   "toushin-town"
+  ]
+ },
+ {
+  "file": "each/163-toushin-tower-informant.png",
+  "id": "toushin-tower-informant",
+  "name": "年老いた書記",
+  "maps": [
+   "toushin-town"
+  ]
+ },
+ {
+  "file": "each/164-toushin-town-townsfolk-1.png",
+  "id": "toushin-town-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "toushin-town"
+  ]
+ },
+ {
+  "file": "each/165-toushin-town-townsfolk-2.png",
+  "id": "toushin-town-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "toushin-town"
+  ]
+ },
+ {
+  "file": "each/166-toushin-town-townsfolk-3.png",
+  "id": "toushin-town-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "toushin-town"
+  ]
+ },
+ {
+  "file": "each/167-toushin-chair.png",
+  "id": "toushin-chair",
+  "name": "議長セイラン",
+  "maps": [
+   "toushin-hall"
+  ]
+ },
+ {
+  "file": "each/168-toushin-hall-clerk.png",
+  "id": "toushin-hall-clerk",
+  "name": "書記",
+  "maps": [
+   "toushin-hall"
+  ]
+ },
+ {
+  "file": "each/169-side-s026-giver.png",
+  "id": "side-s026-giver",
+  "name": "老人",
+  "maps": [
+   "toushin-hall"
+  ]
+ },
+ {
+  "file": "each/170-resident-toushin-hall-6cv6qt.png",
+  "id": "resident-toushin-hall-6cv6qt",
+  "name": "トクヨウ",
+  "maps": [
+   "toushin-hall"
+  ]
+ },
+ {
+  "file": "each/171-resident-toushin-hall-noj4.png",
+  "id": "resident-toushin-hall-noj4",
+  "name": "衛士",
+  "maps": [
+   "toushin-hall"
+  ]
+ },
+ {
+  "file": "each/172-resident-toushin-hall-1j087vo.png",
+  "id": "resident-toushin-hall-1j087vo",
+  "name": "議員ロクジョウ",
+  "maps": [
+   "toushin-hall"
+  ]
+ },
+ {
+  "file": "each/173-kyotoukyu-keeper.png",
+  "id": "kyotoukyu-keeper",
+  "name": "灯守り",
+  "maps": [
+   "kyotoukyu-court"
+  ]
+ },
+ {
+  "file": "each/174-side-s028-giver.png",
+  "id": "side-s028-giver",
+  "name": "灯守り",
+  "maps": [
+   "kyotoukyu-court"
+  ]
+ },
+ {
+  "file": "each/175-resident-kyotoukyu-court-i9u4e2.png",
+  "id": "resident-kyotoukyu-court-i9u4e2",
+  "name": "議長セイラン",
+  "maps": [
+   "kyotoukyu-court"
+  ]
+ },
+ {
+  "file": "each/176-resident-kyotoukyu-court-gdfjm.png",
+  "id": "resident-kyotoukyu-court-gdfjm",
+  "name": "渡し守",
+  "maps": [
+   "kyotoukyu-court"
+  ]
+ },
+ {
+  "file": "each/177-resident-kyotoukyu-corridor-gwp0x.png",
+  "id": "resident-kyotoukyu-corridor-gwp0x",
+  "name": "灯守り",
+  "maps": [
+   "kyotoukyu-corridor"
+  ]
+ },
+ {
+  "file": "each/178-kyotoukyu-grandfather.png",
+  "id": "kyotoukyu-grandfather",
+  "name": "ソウイチ",
+  "maps": [
+   "kyotoukyu-sanctum"
+  ]
+ },
+ {
+  "file": "each/179-resident-kyotoukyu-sanctum-gwp0x.png",
+  "id": "resident-kyotoukyu-sanctum-gwp0x",
+  "name": "灯守り",
+  "maps": [
+   "kyotoukyu-sanctum"
+  ]
+ },
+ {
+  "file": "each/180-village-namioto-folk1.png",
+  "id": "village-namioto-folk1",
+  "name": "漁師",
+  "maps": [
+   "village-namioto"
+  ]
+ },
+ {
+  "file": "each/181-village-namioto-folk2.png",
+  "id": "village-namioto-folk2",
+  "name": "網つくろいの女",
+  "maps": [
+   "village-namioto"
+  ]
+ },
+ {
+  "file": "each/182-village-namioto-folk3.png",
+  "id": "village-namioto-folk3",
+  "name": "子ども",
+  "maps": [
+   "village-namioto"
+  ]
+ },
+ {
+  "file": "each/183-village-namioto-townsfolk-1.png",
+  "id": "village-namioto-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "village-namioto"
+  ]
+ },
+ {
+  "file": "each/184-village-namioto-townsfolk-2.png",
+  "id": "village-namioto-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "village-namioto"
+  ]
+ },
+ {
+  "file": "each/185-village-namioto-townsfolk-3.png",
+  "id": "village-namioto-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "village-namioto"
+  ]
+ },
+ {
+  "file": "each/186-village-kazami-folk1.png",
+  "id": "village-kazami-folk1",
+  "name": "風車守",
+  "maps": [
+   "village-kazami"
+  ]
+ },
+ {
+  "file": "each/187-village-kazami-folk2.png",
+  "id": "village-kazami-folk2",
+  "name": "旅の絵描き",
+  "maps": [
+   "village-kazami"
+  ]
+ },
+ {
+  "file": "each/188-village-kazami-folk3.png",
+  "id": "village-kazami-folk3",
+  "name": "少女",
+  "maps": [
+   "village-kazami"
+  ]
+ },
+ {
+  "file": "each/189-village-kazami-townsfolk-1.png",
+  "id": "village-kazami-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "village-kazami"
+  ]
+ },
+ {
+  "file": "each/190-village-kazami-townsfolk-2.png",
+  "id": "village-kazami-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "village-kazami"
+  ]
+ },
+ {
+  "file": "each/191-village-kazami-townsfolk-3.png",
+  "id": "village-kazami-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "village-kazami"
+  ]
+ },
+ {
+  "file": "each/192-village-tomoshimori-folk1.png",
+  "id": "village-tomoshimori-folk1",
+  "name": "宿の主人",
+  "maps": [
+   "village-tomoshimori"
+  ]
+ },
+ {
+  "file": "each/193-village-tomoshimori-folk2.png",
+  "id": "village-tomoshimori-folk2",
+  "name": "行商人",
+  "maps": [
+   "village-tomoshimori"
+  ]
+ },
+ {
+  "file": "each/194-village-tomoshimori-folk3.png",
+  "id": "village-tomoshimori-folk3",
+  "name": "物知りの老人",
+  "maps": [
+   "village-tomoshimori"
+  ]
+ },
+ {
+  "file": "each/195-village-tomoshimori-townsfolk-1.png",
+  "id": "village-tomoshimori-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "village-tomoshimori"
+  ]
+ },
+ {
+  "file": "each/196-village-tomoshimori-townsfolk-2.png",
+  "id": "village-tomoshimori-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "village-tomoshimori"
+  ]
+ },
+ {
+  "file": "each/197-village-tomoshimori-townsfolk-3.png",
+  "id": "village-tomoshimori-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "village-tomoshimori"
+  ]
+ },
+ {
+  "file": "each/198-village-samori-folk1.png",
+  "id": "village-samori-folk1",
+  "name": "水汲みの男",
+  "maps": [
+   "village-samori"
+  ]
+ },
+ {
+  "file": "each/199-village-samori-folk2.png",
+  "id": "village-samori-folk2",
+  "name": "帆職人の弟子",
+  "maps": [
+   "village-samori"
+  ]
+ },
+ {
+  "file": "each/200-village-samori-folk3.png",
+  "id": "village-samori-folk3",
+  "name": "ラクダ使い",
+  "maps": [
+   "village-samori"
+  ]
+ },
+ {
+  "file": "each/201-village-samori-townsfolk-1.png",
+  "id": "village-samori-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "village-samori"
+  ]
+ },
+ {
+  "file": "each/202-village-samori-townsfolk-2.png",
+  "id": "village-samori-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "village-samori"
+  ]
+ },
+ {
+  "file": "each/203-village-samori-townsfolk-3.png",
+  "id": "village-samori-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "village-samori"
+  ]
+ },
+ {
+  "file": "each/204-village-kirima-folk1.png",
+  "id": "village-kirima-folk1",
+  "name": "霧の番人",
+  "maps": [
+   "village-kirima"
+  ]
+ },
+ {
+  "file": "each/205-village-kirima-folk2.png",
+  "id": "village-kirima-folk2",
+  "name": "薬草売り",
+  "maps": [
+   "village-kirima"
+  ]
+ },
+ {
+  "file": "each/206-village-kirima-folk3.png",
+  "id": "village-kirima-folk3",
+  "name": "猟師",
+  "maps": [
+   "village-kirima"
+  ]
+ },
+ {
+  "file": "each/207-village-kirima-townsfolk-1.png",
+  "id": "village-kirima-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "village-kirima"
+  ]
+ },
+ {
+  "file": "each/208-village-kirima-townsfolk-2.png",
+  "id": "village-kirima-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "village-kirima"
+  ]
+ },
+ {
+  "file": "each/209-village-kirima-townsfolk-3.png",
+  "id": "village-kirima-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "village-kirima"
+  ]
+ },
+ {
+  "file": "each/210-village-yukimachi-folk1.png",
+  "id": "village-yukimachi-folk1",
+  "name": "老人",
+  "maps": [
+   "village-yukimachi"
+  ]
+ },
+ {
+  "file": "each/211-village-yukimachi-folk2.png",
+  "id": "village-yukimachi-folk2",
+  "name": "毛皮商人",
+  "maps": [
+   "village-yukimachi"
+  ]
+ },
+ {
+  "file": "each/212-village-yukimachi-folk3.png",
+  "id": "village-yukimachi-folk3",
+  "name": "子ども",
+  "maps": [
+   "village-yukimachi"
+  ]
+ },
+ {
+  "file": "each/213-village-yukimachi-townsfolk-1.png",
+  "id": "village-yukimachi-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "village-yukimachi"
+  ]
+ },
+ {
+  "file": "each/214-village-yukimachi-townsfolk-2.png",
+  "id": "village-yukimachi-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "village-yukimachi"
+  ]
+ },
+ {
+  "file": "each/215-village-yukimachi-townsfolk-3.png",
+  "id": "village-yukimachi-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "village-yukimachi"
+  ]
+ },
+ {
+  "file": "each/216-village-minori-folk1.png",
+  "id": "village-minori-folk1",
+  "name": "農夫",
+  "maps": [
+   "village-minori"
+  ]
+ },
+ {
+  "file": "each/217-village-minori-folk2.png",
+  "id": "village-minori-folk2",
+  "name": "騎士見習い",
+  "maps": [
+   "village-minori"
+  ]
+ },
+ {
+  "file": "each/218-village-minori-folk3.png",
+  "id": "village-minori-folk3",
+  "name": "行商人",
+  "maps": [
+   "village-minori"
+  ]
+ },
+ {
+  "file": "each/219-village-minori-townsfolk-1.png",
+  "id": "village-minori-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "village-minori"
+  ]
+ },
+ {
+  "file": "each/220-village-minori-townsfolk-2.png",
+  "id": "village-minori-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "village-minori"
+  ]
+ },
+ {
+  "file": "each/221-village-minori-townsfolk-3.png",
+  "id": "village-minori-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "village-minori"
+  ]
+ },
+ {
+  "file": "each/222-village-arano-folk1.png",
+  "id": "village-arano-folk1",
+  "name": "市の商人",
+  "maps": [
+   "village-arano"
+  ]
+ },
+ {
+  "file": "each/223-village-arano-folk2.png",
+  "id": "village-arano-folk2",
+  "name": "占い師",
+  "maps": [
+   "village-arano"
+  ]
+ },
+ {
+  "file": "each/224-village-arano-folk3.png",
+  "id": "village-arano-folk3",
+  "name": "傭兵",
+  "maps": [
+   "village-arano"
+  ]
+ },
+ {
+  "file": "each/225-village-arano-townsfolk-1.png",
+  "id": "village-arano-townsfolk-1",
+  "name": "町の人",
+  "maps": [
+   "village-arano"
+  ]
+ },
+ {
+  "file": "each/226-village-arano-townsfolk-2.png",
+  "id": "village-arano-townsfolk-2",
+  "name": "町の人",
+  "maps": [
+   "village-arano"
+  ]
+ },
+ {
+  "file": "each/227-village-arano-townsfolk-3.png",
+  "id": "village-arano-townsfolk-3",
+  "name": "町の人",
+  "maps": [
+   "village-arano"
+  ]
+ },
+ {
+  "file": "each/228-garasuko-cave-traveler.png",
+  "id": "garasuko-cave-traveler",
+  "name": "旅人",
+  "maps": [
+   "garasuko-cave-1"
+  ]
+ },
+ {
+  "file": "each/229-tetsukusari-cave-traveler.png",
+  "id": "tetsukusari-cave-traveler",
+  "name": "旅人",
+  "maps": [
+   "tetsukusari-cave-1"
+  ]
+ },
+ {
+  "file": "each/230-sanone-ruins-traveler.png",
+  "id": "sanone-ruins-traveler",
+  "name": "旅人",
+  "maps": [
+   "sanone-ruins-1"
+  ]
+ },
+ {
+  "file": "each/231-resident-sanone-ruins-1-klpz4.png",
+  "id": "resident-sanone-ruins-1-klpz4",
+  "name": "見張り",
+  "maps": [
+   "sanone-ruins-1"
+  ]
+ },
+ {
+  "file": "each/232-kiri-tower-traveler.png",
+  "id": "kiri-tower-traveler",
+  "name": "旅人",
+  "maps": [
+   "kiri-tower-1"
+  ]
+ },
+ {
+  "file": "each/233-shimohara-ruins-traveler.png",
+  "id": "shimohara-ruins-traveler",
+  "name": "旅人",
+  "maps": [
+   "shimohara-ruins-1"
+  ]
+ },
+ {
+  "file": "each/234-fushima-tower-traveler.png",
+  "id": "fushima-tower-traveler",
+  "name": "旅人",
+  "maps": [
+   "fushima-tower-1"
+  ]
+ },
+ {
+  "file": "each/235-toushin-tower-traveler.png",
+  "id": "toushin-tower-traveler",
+  "name": "旅人",
+  "maps": [
+   "toushin-tower-1"
+  ]
+ },
+ {
+  "file": "each/236-resident-toushin-tower-1-k21xke.png",
+  "id": "resident-toushin-tower-1-k21xke",
+  "name": "墨色の外套の男",
+  "maps": [
+   "toushin-tower-1"
+  ]
+ },
+ {
+  "file": "each/237-resident-toushin-tower-1-1xofw7c.png",
+  "id": "resident-toushin-tower-1-1xofw7c",
+  "name": "若き日のエドレア",
+  "maps": [
+   "toushin-tower-1"
+  ]
+ },
+ {
+  "file": "each/238-resident-toushin-tower-2-cbxb40.png",
+  "id": "resident-toushin-tower-2-cbxb40",
+  "name": "庭師の源",
+  "maps": [
+   "toushin-tower-2"
+  ]
+ },
+ {
+  "file": "each/239-world-shipwright.png",
+  "id": "world-shipwright",
+  "name": "船大工",
+  "maps": [
+   "shipwright-hut"
+  ]
+ },
+ {
+  "file": "each/240-house-touri-town-1-resident.png",
+  "id": "house-touri-town-1-resident",
+  "name": "少年",
+  "maps": [
+   "house-touri-town-1"
+  ]
+ },
+ {
+  "file": "each/241-house-touri-town-3-resident.png",
+  "id": "house-touri-town-3-resident",
+  "name": "職人",
+  "maps": [
+   "house-touri-town-3"
+  ]
+ },
+ {
+  "file": "each/242-house-touri-town-4-resident.png",
+  "id": "house-touri-town-4-resident",
+  "name": "少年",
+  "maps": [
+   "house-touri-town-4"
+  ]
+ },
+ {
+  "file": "each/243-house-touri-town-5-resident.png",
+  "id": "house-touri-town-5-resident",
+  "name": "主婦",
+  "maps": [
+   "house-touri-town-5"
+  ]
+ },
+ {
+  "file": "each/244-house-touri-town-6-resident.png",
+  "id": "house-touri-town-6-resident",
+  "name": "旅の人",
+  "maps": [
+   "house-touri-town-6"
+  ]
+ },
+ {
+  "file": "each/245-house-touri-town-7-resident.png",
+  "id": "house-touri-town-7-resident",
+  "name": "むすめ",
+  "maps": [
+   "house-touri-town-7"
+  ]
+ },
+ {
+  "file": "each/246-house-mugikano-village-1-resident.png",
+  "id": "house-mugikano-village-1-resident",
+  "name": "おじさん",
+  "maps": [
+   "house-mugikano-village-1"
+  ]
+ },
+ {
+  "file": "each/247-house-mugikano-village-2-resident.png",
+  "id": "house-mugikano-village-2-resident",
+  "name": "おばあさん",
+  "maps": [
+   "house-mugikano-village-2"
+  ]
+ },
+ {
+  "file": "each/248-house-mugikano-village-3-resident.png",
+  "id": "house-mugikano-village-3-resident",
+  "name": "おじいさん",
+  "maps": [
+   "house-mugikano-village-3"
+  ]
+ },
+ {
+  "file": "each/249-house-mugikano-village-4-resident.png",
+  "id": "house-mugikano-village-4-resident",
+  "name": "職人",
+  "maps": [
+   "house-mugikano-village-4"
+  ]
+ },
+ {
+  "file": "each/250-house-mugikano-village-5-resident.png",
+  "id": "house-mugikano-village-5-resident",
+  "name": "少年",
+  "maps": [
+   "house-mugikano-village-5"
+  ]
+ },
+ {
+  "file": "each/251-house-mugikano-village-6-resident.png",
+  "id": "house-mugikano-village-6-resident",
+  "name": "むすめ",
+  "maps": [
+   "house-mugikano-village-6"
+  ]
+ },
+ {
+  "file": "each/252-house-mugikano-village-7-resident.png",
+  "id": "house-mugikano-village-7-resident",
+  "name": "おばあさん",
+  "maps": [
+   "house-mugikano-village-7"
+  ]
+ },
+ {
+  "file": "each/253-house-mugikano-village-8-resident.png",
+  "id": "house-mugikano-village-8-resident",
+  "name": "職人",
+  "maps": [
+   "house-mugikano-village-8"
+  ]
+ },
+ {
+  "file": "each/254-house-garasuko-town-1-resident.png",
+  "id": "house-garasuko-town-1-resident",
+  "name": "おじさん",
+  "maps": [
+   "house-garasuko-town-1"
+  ]
+ },
+ {
+  "file": "each/255-house-garasuko-town-2-resident.png",
+  "id": "house-garasuko-town-2-resident",
+  "name": "おじいさん",
+  "maps": [
+   "house-garasuko-town-2"
+  ]
+ },
+ {
+  "file": "each/256-house-garasuko-town-3-resident.png",
+  "id": "house-garasuko-town-3-resident",
+  "name": "おじさん",
+  "maps": [
+   "house-garasuko-town-3"
+  ]
+ },
+ {
+  "file": "each/257-house-garasuko-town-4-resident.png",
+  "id": "house-garasuko-town-4-resident",
+  "name": "おじさん",
+  "maps": [
+   "house-garasuko-town-4"
+  ]
+ },
+ {
+  "file": "each/258-house-garasuko-town-5-resident.png",
+  "id": "house-garasuko-town-5-resident",
+  "name": "おばあさん",
+  "maps": [
+   "house-garasuko-town-5"
+  ]
+ },
+ {
+  "file": "each/259-house-garasuko-town-6-resident.png",
+  "id": "house-garasuko-town-6-resident",
+  "name": "おじいさん",
+  "maps": [
+   "house-garasuko-town-6"
+  ]
+ },
+ {
+  "file": "each/260-house-garasuko-town-7-resident.png",
+  "id": "house-garasuko-town-7-resident",
+  "name": "おじいさん",
+  "maps": [
+   "house-garasuko-town-7"
+  ]
+ },
+ {
+  "file": "each/261-house-tetsukusari-town-1-resident.png",
+  "id": "house-tetsukusari-town-1-resident",
+  "name": "おじいさん",
+  "maps": [
+   "house-tetsukusari-town-1"
+  ]
+ },
+ {
+  "file": "each/262-house-tetsukusari-town-2-resident.png",
+  "id": "house-tetsukusari-town-2-resident",
+  "name": "おばあさん",
+  "maps": [
+   "house-tetsukusari-town-2"
+  ]
+ },
+ {
+  "file": "each/263-house-tetsukusari-town-3-resident.png",
+  "id": "house-tetsukusari-town-3-resident",
+  "name": "旅の人",
+  "maps": [
+   "house-tetsukusari-town-3"
+  ]
+ },
+ {
+  "file": "each/264-house-tetsukusari-town-4-resident.png",
+  "id": "house-tetsukusari-town-4-resident",
+  "name": "おじいさん",
+  "maps": [
+   "house-tetsukusari-town-4"
+  ]
+ },
+ {
+  "file": "each/265-house-tetsukusari-town-5-resident.png",
+  "id": "house-tetsukusari-town-5-resident",
+  "name": "むすめ",
+  "maps": [
+   "house-tetsukusari-town-5"
+  ]
+ },
+ {
+  "file": "each/266-house-tetsukusari-town-6-resident.png",
+  "id": "house-tetsukusari-town-6-resident",
+  "name": "むすめ",
+  "maps": [
+   "house-tetsukusari-town-6"
+  ]
+ },
+ {
+  "file": "each/267-house-kiri-town-1-resident.png",
+  "id": "house-kiri-town-1-resident",
+  "name": "おじいさん",
+  "maps": [
+   "house-kiri-town-1"
+  ]
+ },
+ {
+  "file": "each/268-house-kiri-town-2-resident.png",
+  "id": "house-kiri-town-2-resident",
+  "name": "旅の人",
+  "maps": [
+   "house-kiri-town-2"
+  ]
+ },
+ {
+  "file": "each/269-house-kiri-town-3-resident.png",
+  "id": "house-kiri-town-3-resident",
+  "name": "主婦",
+  "maps": [
+   "house-kiri-town-3"
+  ]
+ },
+ {
+  "file": "each/270-house-kiri-town-4-resident.png",
+  "id": "house-kiri-town-4-resident",
+  "name": "おじいさん",
+  "maps": [
+   "house-kiri-town-4"
+  ]
+ },
+ {
+  "file": "each/271-house-kiri-town-5-resident.png",
+  "id": "house-kiri-town-5-resident",
+  "name": "少年",
+  "maps": [
+   "house-kiri-town-5"
+  ]
+ },
+ {
+  "file": "each/272-house-kiri-town-6-resident.png",
+  "id": "house-kiri-town-6-resident",
+  "name": "旅の人",
+  "maps": [
+   "house-kiri-town-6"
+  ]
+ },
+ {
+  "file": "each/273-house-shimohara-town-1-resident.png",
+  "id": "house-shimohara-town-1-resident",
+  "name": "おばあさん",
+  "maps": [
+   "house-shimohara-town-1"
+  ]
+ },
+ {
+  "file": "each/274-house-fushima-town-1-resident.png",
+  "id": "house-fushima-town-1-resident",
+  "name": "主婦",
+  "maps": [
+   "house-fushima-town-1"
+  ]
+ },
+ {
+  "file": "each/275-house-fushima-town-2-resident.png",
+  "id": "house-fushima-town-2-resident",
+  "name": "おじいさん",
+  "maps": [
+   "house-fushima-town-2"
+  ]
+ },
+ {
+  "file": "each/276-house-toushin-town-1-resident.png",
+  "id": "house-toushin-town-1-resident",
+  "name": "おばあさん",
+  "maps": [
+   "house-toushin-town-1"
+  ]
+ },
+ {
+  "file": "each/277-house-toushin-town-2-resident.png",
+  "id": "house-toushin-town-2-resident",
+  "name": "主婦",
+  "maps": [
+   "house-toushin-town-2"
+  ]
+ },
+ {
+  "file": "each/278-house-village-namioto-1-resident.png",
+  "id": "house-village-namioto-1-resident",
+  "name": "むすめ",
+  "maps": [
+   "house-village-namioto-1"
+  ]
+ },
+ {
+  "file": "each/279-house-village-namioto-2-resident.png",
+  "id": "house-village-namioto-2-resident",
+  "name": "少年",
+  "maps": [
+   "house-village-namioto-2"
+  ]
+ },
+ {
+  "file": "each/280-house-village-namioto-3-resident.png",
+  "id": "house-village-namioto-3-resident",
+  "name": "少年",
+  "maps": [
+   "house-village-namioto-3"
+  ]
+ },
+ {
+  "file": "each/281-house-village-kazami-1-resident.png",
+  "id": "house-village-kazami-1-resident",
+  "name": "職人",
+  "maps": [
+   "house-village-kazami-1"
+  ]
+ },
+ {
+  "file": "each/282-house-village-kazami-2-resident.png",
+  "id": "house-village-kazami-2-resident",
+  "name": "おばあさん",
+  "maps": [
+   "house-village-kazami-2"
+  ]
+ },
+ {
+  "file": "each/283-house-village-kazami-3-resident.png",
+  "id": "house-village-kazami-3-resident",
+  "name": "少年",
+  "maps": [
+   "house-village-kazami-3"
+  ]
+ },
+ {
+  "file": "each/284-house-village-tomoshimori-1-resident.png",
+  "id": "house-village-tomoshimori-1-resident",
+  "name": "旅の人",
+  "maps": [
+   "house-village-tomoshimori-1"
+  ]
+ },
+ {
+  "file": "each/285-house-village-tomoshimori-2-resident.png",
+  "id": "house-village-tomoshimori-2-resident",
+  "name": "むすめ",
+  "maps": [
+   "house-village-tomoshimori-2"
+  ]
+ },
+ {
+  "file": "each/286-house-village-tomoshimori-3-resident.png",
+  "id": "house-village-tomoshimori-3-resident",
+  "name": "主婦",
+  "maps": [
+   "house-village-tomoshimori-3"
+  ]
+ },
+ {
+  "file": "each/287-house-village-samori-1-resident.png",
+  "id": "house-village-samori-1-resident",
+  "name": "少年",
+  "maps": [
+   "house-village-samori-1"
+  ]
+ },
+ {
+  "file": "each/288-house-village-samori-2-resident.png",
+  "id": "house-village-samori-2-resident",
+  "name": "おばあさん",
+  "maps": [
+   "house-village-samori-2"
+  ]
+ },
+ {
+  "file": "each/289-house-village-kirima-1-resident.png",
+  "id": "house-village-kirima-1-resident",
+  "name": "職人",
+  "maps": [
+   "house-village-kirima-1"
+  ]
+ },
+ {
+  "file": "each/290-house-village-kirima-2-resident.png",
+  "id": "house-village-kirima-2-resident",
+  "name": "おじいさん",
+  "maps": [
+   "house-village-kirima-2"
+  ]
+ },
+ {
+  "file": "each/291-house-village-kirima-3-resident.png",
+  "id": "house-village-kirima-3-resident",
+  "name": "むすめ",
+  "maps": [
+   "house-village-kirima-3"
+  ]
+ },
+ {
+  "file": "each/292-house-village-yukimachi-1-resident.png",
+  "id": "house-village-yukimachi-1-resident",
+  "name": "むすめ",
+  "maps": [
+   "house-village-yukimachi-1"
+  ]
+ },
+ {
+  "file": "each/293-house-village-yukimachi-2-resident.png",
+  "id": "house-village-yukimachi-2-resident",
+  "name": "職人",
+  "maps": [
+   "house-village-yukimachi-2"
+  ]
+ },
+ {
+  "file": "each/294-house-village-minori-1-resident.png",
+  "id": "house-village-minori-1-resident",
+  "name": "職人",
+  "maps": [
+   "house-village-minori-1"
+  ]
+ },
+ {
+  "file": "each/295-house-village-minori-2-resident.png",
+  "id": "house-village-minori-2-resident",
+  "name": "おじいさん",
+  "maps": [
+   "house-village-minori-2"
+  ]
+ },
+ {
+  "file": "each/296-house-village-minori-3-resident.png",
+  "id": "house-village-minori-3-resident",
+  "name": "むすめ",
+  "maps": [
+   "house-village-minori-3"
+  ]
+ },
+ {
+  "file": "each/297-house-village-arano-1-resident.png",
+  "id": "house-village-arano-1-resident",
+  "name": "旅の人",
+  "maps": [
+   "house-village-arano-1"
+  ]
+ },
+ {
+  "file": "each/298-house-village-arano-2-resident.png",
+  "id": "house-village-arano-2-resident",
+  "name": "おじいさん",
+  "maps": [
+   "house-village-arano-2"
+  ]
+ },
+ {
+  "file": "each/299-inn-touri-town-1f-guest.png",
+  "id": "inn-touri-town-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-touri-town-1f"
+  ]
+ },
+ {
+  "file": "each/300-inn-touri-town-1f-clerk.png",
+  "id": "inn-touri-town-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-touri-town-1f"
+  ]
+ },
+ {
+  "file": "each/301-inn-touri-town-2f-guest.png",
+  "id": "inn-touri-town-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-touri-town-2f"
+  ]
+ },
+ {
+  "file": "each/302-inn-mugikano-village-1f-guest.png",
+  "id": "inn-mugikano-village-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-mugikano-village-1f"
+  ]
+ },
+ {
+  "file": "each/303-inn-mugikano-village-1f-clerk.png",
+  "id": "inn-mugikano-village-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-mugikano-village-1f"
+  ]
+ },
+ {
+  "file": "each/304-inn-mugikano-village-2f-guest.png",
+  "id": "inn-mugikano-village-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-mugikano-village-2f"
+  ]
+ },
+ {
+  "file": "each/305-inn-garasuko-town-1f-guest.png",
+  "id": "inn-garasuko-town-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-garasuko-town-1f"
+  ]
+ },
+ {
+  "file": "each/306-inn-garasuko-town-1f-clerk.png",
+  "id": "inn-garasuko-town-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-garasuko-town-1f"
+  ]
+ },
+ {
+  "file": "each/307-resident-inn-garasuko-town-1f-fpwz.png",
+  "id": "resident-inn-garasuko-town-1f-fpwz",
+  "name": "女将",
+  "maps": [
+   "inn-garasuko-town-1f"
+  ]
+ },
+ {
+  "file": "each/308-inn-garasuko-town-2f-guest.png",
+  "id": "inn-garasuko-town-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-garasuko-town-2f"
+  ]
+ },
+ {
+  "file": "each/309-inn-tetsukusari-town-1f-guest.png",
+  "id": "inn-tetsukusari-town-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-tetsukusari-town-1f"
+  ]
+ },
+ {
+  "file": "each/310-inn-tetsukusari-town-1f-clerk.png",
+  "id": "inn-tetsukusari-town-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-tetsukusari-town-1f"
+  ]
+ },
+ {
+  "file": "each/311-resident-inn-tetsukusari-town-1f-8l45.png",
+  "id": "resident-inn-tetsukusari-town-1f-8l45",
+  "name": "ヨネ",
+  "maps": [
+   "inn-tetsukusari-town-1f"
+  ]
+ },
+ {
+  "file": "each/312-inn-tetsukusari-town-2f-guest.png",
+  "id": "inn-tetsukusari-town-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-tetsukusari-town-2f"
+  ]
+ },
+ {
+  "file": "each/313-inn-sanone-town-1f-guest.png",
+  "id": "inn-sanone-town-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-sanone-town-1f"
+  ]
+ },
+ {
+  "file": "each/314-inn-sanone-town-1f-clerk.png",
+  "id": "inn-sanone-town-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-sanone-town-1f"
+  ]
+ },
+ {
+  "file": "each/315-inn-sanone-town-2f-guest.png",
+  "id": "inn-sanone-town-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-sanone-town-2f"
+  ]
+ },
+ {
+  "file": "each/316-inn-kiri-town-1f-guest.png",
+  "id": "inn-kiri-town-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-kiri-town-1f"
+  ]
+ },
+ {
+  "file": "each/317-inn-kiri-town-1f-clerk.png",
+  "id": "inn-kiri-town-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-kiri-town-1f"
+  ]
+ },
+ {
+  "file": "each/318-resident-inn-kiri-town-1f-eccfe.png",
+  "id": "resident-inn-kiri-town-1f-eccfe",
+  "name": "巡礼者",
+  "maps": [
+   "inn-kiri-town-1f"
+  ]
+ },
+ {
+  "file": "each/319-inn-kiri-town-2f-guest.png",
+  "id": "inn-kiri-town-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-kiri-town-2f"
+  ]
+ },
+ {
+  "file": "each/320-inn-shimohara-town-1f-guest.png",
+  "id": "inn-shimohara-town-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-shimohara-town-1f"
+  ]
+ },
+ {
+  "file": "each/321-inn-shimohara-town-1f-clerk.png",
+  "id": "inn-shimohara-town-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-shimohara-town-1f"
+  ]
+ },
+ {
+  "file": "each/322-resident-inn-shimohara-town-1f-bs443m.png",
+  "id": "resident-inn-shimohara-town-1f-bs443m",
+  "name": "宿の女将",
+  "maps": [
+   "inn-shimohara-town-1f"
+  ]
+ },
+ {
+  "file": "each/323-resident-inn-shimohara-town-1f-bs24ry.png",
+  "id": "resident-inn-shimohara-town-1f-bs24ry",
+  "name": "宿の主人",
+  "maps": [
+   "inn-shimohara-town-1f"
+  ]
+ },
+ {
+  "file": "each/324-inn-shimohara-town-2f-guest.png",
+  "id": "inn-shimohara-town-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-shimohara-town-2f"
+  ]
+ },
+ {
+  "file": "each/325-inn-fushima-town-1f-guest.png",
+  "id": "inn-fushima-town-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-fushima-town-1f"
+  ]
+ },
+ {
+  "file": "each/326-inn-fushima-town-1f-clerk.png",
+  "id": "inn-fushima-town-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-fushima-town-1f"
+  ]
+ },
+ {
+  "file": "each/327-inn-fushima-town-2f-guest.png",
+  "id": "inn-fushima-town-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-fushima-town-2f"
+  ]
+ },
+ {
+  "file": "each/328-inn-toushin-town-1f-guest.png",
+  "id": "inn-toushin-town-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-toushin-town-1f"
+  ]
+ },
+ {
+  "file": "each/329-inn-toushin-town-1f-clerk.png",
+  "id": "inn-toushin-town-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-toushin-town-1f"
+  ]
+ },
+ {
+  "file": "each/330-inn-toushin-town-2f-guest.png",
+  "id": "inn-toushin-town-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-toushin-town-2f"
+  ]
+ },
+ {
+  "file": "each/331-inn-village-namioto-1f-guest.png",
+  "id": "inn-village-namioto-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-village-namioto-1f"
+  ]
+ },
+ {
+  "file": "each/332-inn-village-namioto-1f-clerk.png",
+  "id": "inn-village-namioto-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-village-namioto-1f"
+  ]
+ },
+ {
+  "file": "each/333-inn-village-namioto-2f-guest.png",
+  "id": "inn-village-namioto-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-village-namioto-2f"
+  ]
+ },
+ {
+  "file": "each/334-inn-village-kazami-1f-guest.png",
+  "id": "inn-village-kazami-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-village-kazami-1f"
+  ]
+ },
+ {
+  "file": "each/335-inn-village-kazami-1f-clerk.png",
+  "id": "inn-village-kazami-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-village-kazami-1f"
+  ]
+ },
+ {
+  "file": "each/336-inn-village-kazami-2f-guest.png",
+  "id": "inn-village-kazami-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-village-kazami-2f"
+  ]
+ },
+ {
+  "file": "each/337-inn-village-tomoshimori-1f-guest.png",
+  "id": "inn-village-tomoshimori-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-village-tomoshimori-1f"
+  ]
+ },
+ {
+  "file": "each/338-inn-village-tomoshimori-1f-clerk.png",
+  "id": "inn-village-tomoshimori-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-village-tomoshimori-1f"
+  ]
+ },
+ {
+  "file": "each/339-inn-village-tomoshimori-2f-guest.png",
+  "id": "inn-village-tomoshimori-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-village-tomoshimori-2f"
+  ]
+ },
+ {
+  "file": "each/340-inn-village-samori-1f-guest.png",
+  "id": "inn-village-samori-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-village-samori-1f"
+  ]
+ },
+ {
+  "file": "each/341-inn-village-samori-1f-clerk.png",
+  "id": "inn-village-samori-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-village-samori-1f"
+  ]
+ },
+ {
+  "file": "each/342-inn-village-samori-2f-guest.png",
+  "id": "inn-village-samori-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-village-samori-2f"
+  ]
+ },
+ {
+  "file": "each/343-inn-village-kirima-1f-guest.png",
+  "id": "inn-village-kirima-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-village-kirima-1f"
+  ]
+ },
+ {
+  "file": "each/344-inn-village-kirima-1f-clerk.png",
+  "id": "inn-village-kirima-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-village-kirima-1f"
+  ]
+ },
+ {
+  "file": "each/345-inn-village-kirima-2f-guest.png",
+  "id": "inn-village-kirima-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-village-kirima-2f"
+  ]
+ },
+ {
+  "file": "each/346-inn-village-yukimachi-1f-guest.png",
+  "id": "inn-village-yukimachi-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-village-yukimachi-1f"
+  ]
+ },
+ {
+  "file": "each/347-inn-village-yukimachi-1f-clerk.png",
+  "id": "inn-village-yukimachi-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-village-yukimachi-1f"
+  ]
+ },
+ {
+  "file": "each/348-inn-village-yukimachi-2f-guest.png",
+  "id": "inn-village-yukimachi-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-village-yukimachi-2f"
+  ]
+ },
+ {
+  "file": "each/349-inn-village-minori-1f-guest.png",
+  "id": "inn-village-minori-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-village-minori-1f"
+  ]
+ },
+ {
+  "file": "each/350-inn-village-minori-1f-clerk.png",
+  "id": "inn-village-minori-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-village-minori-1f"
+  ]
+ },
+ {
+  "file": "each/351-inn-village-minori-2f-guest.png",
+  "id": "inn-village-minori-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-village-minori-2f"
+  ]
+ },
+ {
+  "file": "each/352-inn-village-arano-1f-guest.png",
+  "id": "inn-village-arano-1f-guest",
+  "name": "旅の人",
+  "maps": [
+   "inn-village-arano-1f"
+  ]
+ },
+ {
+  "file": "each/353-inn-village-arano-1f-clerk.png",
+  "id": "inn-village-arano-1f-clerk",
+  "name": "宿屋の主人",
+  "maps": [
+   "inn-village-arano-1f"
+  ]
+ },
+ {
+  "file": "each/354-inn-village-arano-2f-guest.png",
+  "id": "inn-village-arano-2f-guest",
+  "name": "疲れた旅人",
+  "maps": [
+   "inn-village-arano-2f"
+  ]
+ },
+ {
+  "file": "each/355-yuri-home-haruka.png",
+  "id": "yuri-home-haruka",
+  "name": "ハルカ",
+  "maps": [
+   "yuri-home"
+  ]
+ }
+]
