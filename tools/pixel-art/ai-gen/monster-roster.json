@@ -2937,7 +2937,7 @@
  },
  {
   "id": "enc-world-4-1",
-  "prompt": "a frost distortion on four legs, a wolf-like shape of frozen mist with violet ice teeth",
+  "prompt": "a full body frost wolf monster standing on four legs, a body of frozen mist and jagged ice shards, violet ice teeth, side view",
   "status": "done",
   "key": "enemy:enc-world-4-1",
   "kind": "mob",
@@ -2951,7 +2951,7 @@
    215
   ],
   "bg": "dark",
-  "seed_base": 6001,
+  "seed_base": 10002,
   "draft": "enc-world-4-1_0"
  },
  {
@@ -2976,7 +2976,7 @@
  {
   "id": "enc-world-4-3",
   "prompt": "a snowfield insect, a white furry caterpillar with icy blue spots and frost on its hairs",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-4-3",
   "kind": "mob",
   "name": "雪原の虫",
@@ -2989,7 +2989,8 @@
    235
   ],
   "bg": "dark",
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-world-4-3_1"
  },
  {
   "id": "enc-world-4-4",
