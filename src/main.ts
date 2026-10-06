@@ -2440,14 +2440,7 @@ function renderGameSceneBase(): void {
       ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
     }
     if (n > 0.01) {
-      ctx.save();
-      ctx.globalCompositeOperation = "multiply";
-      const lerp = (a: number, b: number): number => Math.round(a + (b - a) * n);
-      ctx.fillStyle = `rgb(${lerp(255, 78)}, ${lerp(255, 92)}, ${lerp(255, 158)})`;
-      ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
-      ctx.restore();
-      ctx.fillStyle = `rgba(16, 24, 80, ${0.14 * n})`;
-      ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+      drawNightWithLights(n);
     }
     // 時間の表示（小さく、右上）
     ctx.font = "9px monospace";
@@ -3349,3 +3342,76 @@ function frame(nowMs: number): void {
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+
+
+/**
+ * 夜の暗さ（外の地図）。街灯・かがり火のまわりは明るく残す（2026-10-06、人間の指示「街灯があるなら街頭で夜もその周りは明るくなるようにして」）。
+ * 暗さの色を別のキャンバスに塗り、明かりのまわりだけ、まるく白くぬいてから、画面にかけ合わせる（multiply）。
+ * そのあと、明かりのまわりに、あたたかい色の光の輪と、灯りの頭のまぶしい点を足す（screen）。
+ */
+let nightCanvas: HTMLCanvasElement | null = null;
+function drawNightWithLights(n: number): void {
+  if (!nightCanvas) {
+    nightCanvas = document.createElement("canvas");
+    nightCanvas.width = LOGICAL_WIDTH;
+    nightCanvas.height = LOGICAL_HEIGHT;
+  }
+  const nc = nightCanvas.getContext("2d");
+  if (!nc) return;
+  const lerp = (a: number, b: number): number => Math.round(a + (b - a) * n);
+  nc.globalCompositeOperation = "source-over";
+  nc.fillStyle = `rgb(${lerp(255, 66)}, ${lerp(255, 80)}, ${lerp(255, 146)})`;
+  nc.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  // 明かり: 街灯（頭は足もとから40ドット上）・かがり火（火は足もとから22ドット上）
+  const lights: Array<{ x: number; y: number; head: number; r: number }> = [];
+  const ts = map.data.tileHeight;
+  for (const p of map.data.props ?? []) {
+    if (p.kind !== "lamp" && p.kind !== "brazier") continue;
+    const x = p.tileX * map.data.tileWidth + map.data.tileWidth / 2 - renderCamera.x;
+    const foot = (p.tileY + 1) * ts - renderCamera.y;
+    const head = p.kind === "lamp" ? 40 : 22;
+    const r = p.kind === "lamp" ? 46 : 38;
+    if (x < -r || x > LOGICAL_WIDTH + r || foot - head < -r || foot > LOGICAL_HEIGHT + r) continue;
+    lights.push({ x, y: foot, head, r });
+  }
+  for (const L of lights) {
+    // 地面の明るいたまり（足もとを中心に、横長）と、灯りの頭のまわり
+    for (const [cy, rx, ry, a] of [[L.y - 4, L.r, L.r * 0.62, 0.92], [L.y - L.head, L.r * 0.5, L.r * 0.5, 0.8]] as Array<[number, number, number, number]>) {
+      nc.save();
+      nc.translate(L.x, cy);
+      nc.scale(1, ry / rx);
+      const g = nc.createRadialGradient(0, 0, 0, 0, 0, rx);
+      g.addColorStop(0, `rgba(255, 246, 220, ${a})`);
+      g.addColorStop(0.45, `rgba(255, 238, 200, ${a * 0.6})`);
+      g.addColorStop(1, "rgba(255, 238, 200, 0)");
+      nc.fillStyle = g;
+      nc.beginPath();
+      nc.arc(0, 0, rx, 0, Math.PI * 2);
+      nc.fill();
+      nc.restore();
+    }
+  }
+  ctx.save();
+  ctx.globalCompositeOperation = "multiply";
+  ctx.drawImage(nightCanvas, 0, 0);
+  ctx.restore();
+  // 青いもや（明かりのまわりは、うすく）
+  ctx.fillStyle = `rgba(16, 24, 80, ${0.14 * n})`;
+  ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  // あたたかい光の輪と、灯りの頭のまぶしい点
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  for (const L of lights) {
+    const g = ctx.createRadialGradient(L.x, L.y - 6, 0, L.x, L.y - 6, L.r * 0.9);
+    g.addColorStop(0, `rgba(255, 170, 80, ${0.32 * n})`);
+    g.addColorStop(1, "rgba(255, 170, 80, 0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(L.x - L.r, L.y - L.r, L.r * 2, L.r * 2);
+    const h = ctx.createRadialGradient(L.x, L.y - L.head, 0, L.x, L.y - L.head, 9);
+    h.addColorStop(0, `rgba(255, 236, 170, ${0.85 * n})`);
+    h.addColorStop(1, "rgba(255, 220, 140, 0)");
+    ctx.fillStyle = h;
+    ctx.fillRect(L.x - 9, L.y - L.head - 9, 18, 18);
+  }
+  ctx.restore();
+}
