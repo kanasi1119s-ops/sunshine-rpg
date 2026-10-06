@@ -90,3 +90,16 @@ python3 tools/sales/build_monster_pack.py 出力フォルダ
 - Stable Diffusion の利用条件の解説: https://terms.law/ai-output-rights/stable-diffusion/
 - 文化庁「AIと著作権に関する考え方」（GameBusiness.jp）: https://www.gamebusiness.jp/article/2024/04/19/22981.html
 - コンテンツ販売の特商法表記: https://atsoho.com/blog/content-sales-tokushoho-disclosure
+
+## 紹介画像・サムネイル
+
+2026-10-07、人間の指示「画像を10枚ほどピックアップして、紹介で使うから売り文句も2枚ぐらいにつけて」「まとめた小さい画像をPNGで」「カッコいいサムネ画像も」。
+
+```
+python3 tools/sales/make_promo.py パックのフォルダ 出力フォルダ   # 紹介画像10枚（JPEG 1280×960）＋まとめ（PNG 560×420）
+python3 tools/sales/make_thumb.py パックのフォルダ 出力フォルダ   # サムネイル（PNG 1120×840 と 560×420）
+```
+
+- 売り文句つき: 01「敵キャラ、まるごと224体。」／02「戦闘画面に、そのまま置ける。」（仕様の箇条書きつき）
+- 03〜06 ボス2体ずつ（2倍）、07 千手の光輪（3倍）、08〜10 雑魚15体ずつ（2倍、獣・虫／精霊・結晶／機械・亡霊）
+- 01 の下に「AI生成作品」である旨を小さく入れた
