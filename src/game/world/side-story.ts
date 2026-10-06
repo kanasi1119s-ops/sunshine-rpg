@@ -1,5 +1,6 @@
 import type { EventCommand } from "../event/types";
 import type { Npc } from "../npc";
+import { SIDE_REWARD_ITEMS_BY_ID, sideRewardFor } from "../items/side-rewards";
 
 /**
  * サブストーリーの実装フォーマット（roadmap 5-1、`docs/design/side-stories.md`）。
@@ -64,10 +65,28 @@ function whenAll(flags: string[], then: EventCommand[], otherwise: EventCommand[
 }
 
 /** 完了のごほうび: 灯貨（本物）と、品物などの説明（仮）。 */
+/**
+ * もとの「ごほうび（仮）」の文から、品物の説明（〜をもらった。）をのぞいて、話の中身（絆・手帳の記録など）だけを残す。
+ * 本物の装備をわたすようになったので、品物の説明は重なる（2026-10-06）。
+ */
+export function storyNote(reward: string): string {
+  const parts = reward.match(/（[^）]*）|[^。（]+。?/g) ?? [];
+  return parts.filter((p) => p.startsWith("（") || !/もらった/.test(p)).join("").trim();
+}
+
 function rewardCommands(story: SideStory): EventCommand[] {
   const commands: EventCommand[] = [];
   if (story.gold) {
     commands.push({ type: "giveGold", amount: story.gold }, say(undefined, `【ごほうび】灯貨${story.gold}を手に入れた！`));
+  }
+  // その話でしか手に入らない装備（2026-10-06「サイドストーリーが終わるたびに特殊なアイテム、装備もらえるようにしようか」）
+  const itemId = sideRewardFor(story.key);
+  if (itemId) {
+    const item = SIDE_REWARD_ITEMS_BY_ID[itemId];
+    commands.push({ type: "giveEquipment", itemId }, say(undefined, `【ごほうび】「${item.name}」を手に入れた！`), say(undefined, item.description ?? ""));
+    const note = storyNote(story.reward);
+    if (note) commands.push(say(undefined, `【ほかに】${note}`));
+    return commands;
   }
   // 「灯貨をもらった。」だけの説明は、上の本物の灯貨と重なるので出さない。
   if (!story.gold || !/^灯貨(をもらった|の入った)/.test(story.reward)) {

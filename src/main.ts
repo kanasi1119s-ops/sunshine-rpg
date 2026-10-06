@@ -29,6 +29,7 @@ import { backPauseMenu, confirmPauseMenu, createPauseMenuState, movePauseCursor,
 import { renderOrderScreen, renderPauseMenu, renderQuestLog, type StatusRow } from "./render/pause-menu-renderer";
 import { sideQuestLog } from "./game/world/side-quest-log";
 import { SIDE_STORIES } from "./game/world/side-stories";
+import { sideRewardFor } from "./game/items/side-rewards";
 import { backEquipMenu, confirmEquipMenu, createEquipMenuState, moveEquipCursor, openEquipMenu } from "./game/menu/equip-menu";
 import { renderEquipMenu, type EquipMenuView, type EquipStatsView } from "./render/equip-menu-renderer";
 import { candidatesFor, ensureOwned, equipTo, sanitizeParty, unequipFrom, type PartyEquipment } from "./game/items/party-equipment";
@@ -1865,6 +1866,8 @@ function applySaveData(data: SaveData): void {
     delete flags[key];
   }
   Object.assign(flags, data.flags);
+  // 前のセーブで、もう終わっているサブストーリーのごほうびの装備（あとから足したもの）を、持ち物に入れておく
+  inventory = ensureOwned(inventory, SIDE_STORIES.filter((st) => flags[`side_${st.key}_done`] === true).map((st) => sideRewardFor(st.key)));
   grantStarterItems();
   resetVehicles(data.vehicles);
   quietPlace = data.quietPlace ?? null;
