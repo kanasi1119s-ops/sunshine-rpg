@@ -45,9 +45,8 @@
   ふつうの頭身・全身・正面・白い背景の絵を描く（ほかの画像生成・エディタ・rembg と同時に動かさない）。
 - 全身が入る条件（必ず全部守る）:
   1. 絵は縦長（512×768）。龍・神など横に広いものは正方形（512×512）。
-  2. 指示文の先頭に "full body from head to toe, the whole figure visible with empty space above the head and below the feet,
-     standing pose, single figure centered" を入れ、そのあとに設定表の見た目、最後に "front view, realistic proportions,
-     painterly concept art, isolated on plain white background" を付ける（全部で77トークン以内。見た目の説明を短くして収める）。
+  2. 指示文の先頭に "full body shot of" を入れ、そのあとに設定表の見た目、最後に 7 の画風の言葉を付ける
+     （全部で77トークン以内。見た目の説明を短くして収める）。
   3. 避ける言葉: "cropped, cut off head, cut off feet, out of frame, close-up, portrait, half body, upper body, photo, 3d render,
      chibi, text, watermark, frame, border, multiple people, blurry, nsfw, background scenery, floor, shadow"。
   4. 人の形の下書き（tools/pixel-art/ai-gen/layouts.py の tall。龍・大型は big）から img2img（強さ0.9）で描き、
@@ -55,6 +54,14 @@
   5. 描いたら tools/pixel-art/ai-gen/fullbody.py check で、体が絵の端に触れていないか（頭・足・羽の先が切れていないか）を確かめる。
      切れていたら fullbody.py extend で外側を描き足すか、種を変えて描き直す（2回まで）。2人いる・背景がある絵も描き直す。
   6. "lighthouse" のように、場所や物そのものを表す言葉は背景に描かれやすいので、設定（場所）は指示文に入れず、見た目だけを書く。
+  7. 画風の言葉（モンスターがうまく描けたときと同じ書き方。2026-10-07、人間の指示で足した）:
+     - 指示文の最後は "highly detailed realistic dark fantasy character, intricate textures, cinematic lighting,
+       dark fantasy concept art, plain white background"（神・魔王は "huge imposing, ... epic concept art"）にする。
+     - 服は中世ファンタジーの言葉で書く（cloak, tunic, leather vest, robe, armor, mantle など）。jacket・coat・hoodie のような
+       今の服になりやすい言葉は使わない。
+     - 避ける言葉に、モンスターと同じ "cartoon, clipart, flat colors, vector art, anime, chibi, cute, toy" と、
+       "modern clothing, jeans, hoodie, sneakers, fashion illustration" を必ず入れる。
+     - 体の形と色の下書き（layouts.py。人は tall、龍・大型は big）から img2img、QUALITY=real（ていねいな描き方、1枚 約5分）で描く。
 - 2枚描いて、全身が入っていて形のよい方を選ぶ。
 - 絵を assets-src/chibi/〈名前〉/ref.png に置き、ここで一度、人間に絵を見せる。
 
