@@ -19,6 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..", "..", "..")
 N = 128
 LEAF = ["#1c3026", "#243d2e", "#2e4c32", "#395c35", "#456b38", "#527a3c", "#608842", "#70964a", "#84a754", "#9cb862", "#b4c972"]
+LAWN = ["#3d5f30", "#466a35", "#4f7239", "#577d3e", "#5e8441", "#658b45", "#6e924b", "#7a9c52"]   # 町の芝（terrain:grass-a）に合わせた段
 GROUND = 0.47                       # 地面（株のすき間）の明るさ。町の芝（#496d36〜#6a8f48）と同じくらい
 L = np.array([-0.62, -0.55, 0.56])
 L = L / np.linalg.norm(L)
@@ -36,7 +37,7 @@ def rnd(*a):
     return (hn(*a) & 0xFFFF) / 65535
 
 
-def make(scale):
+def make(scale, lawnlike=False):
     """scale: 草の高さの倍率（1=ふつう。しげみの端ほど小さい絵を使う）。株の並びはどれも同じ。"""
     global blade_id
     lum = np.full((N, N), GROUND)
@@ -54,6 +55,8 @@ def make(scale):
 
     blade_id = 0
     for (by, bx, seed) in tufts:
+        if lawnlike and seed % 5 >= 3:
+            continue                                # 芝に近い所は、株をまばらに
         rx = (5.5 + (seed % 7) * 0.45) * (0.65 + 0.35 * scale)   # 株の横の広がり
         H = (10 + (seed >> 3) % 5) * scale           # 株の高さ（端ほど低い）
         # 根もとの地面の影（やわらかい、横長）
@@ -108,6 +111,13 @@ def make(scale):
             v = lum[y, x]
             k = sum(v > t for t in TH)
             c = LEAF[min(10, k)]
+            if lawnlike:
+                # 2026-10-06「この低いしげみの草が少ない部分、もっと芝のドットに近い感じにして」:
+                # 地面は透かして、下の町の芝の絵をそのまま見せる。株の根もとの影はうすく透ける色。葉は芝と同じ色合いの段で
+                if owner[y, x] < 0:
+                    img[y, x] = "#1830184a" if v < GROUND - 0.1 else ("#18301826" if v < GROUND - 0.04 else "")
+                    continue
+                c = LAWN[min(len(LAWN) - 1, max(0, int((v - 0.12) / 0.62 * len(LAWN))))]
             if tip[y, x] and hn(x, y, 41) % 23 == 0:
                 c = ["#e8d898", "#f2eedc", "#e6cf6a", "#d9a4c4"][hn(x, y, 42) % 4]   # 穂・小さな花
             img[y, x] = c
@@ -118,7 +128,7 @@ def make(scale):
 OUTS = {}
 for key, sc in (("terrain:forest", 1.0), ("terrain:forest-mid", 0.62), ("terrain:forest-low", 0.34)):
     blade_id = 0
-    OUTS[key] = make(sc)
+    OUTS[key] = make(sc, lawnlike=key.endswith("-low"))
 img = OUTS["terrain:forest"]
 cols = sorted(set(img.flatten().tolist()))
 syms = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -138,7 +148,8 @@ def b36(v):
 def encode(im):
     cs = sorted(set(im.flatten().tolist()))
     assert len(cs) <= 26
-    idx = [cs.index(im[y, x]) for y in range(N) for x in range(N)]
+    cs = [c for c in cs if c]
+    idx = [cs.index(im[y, x]) if im[y, x] else -1 for y in range(N) for x in range(N)]
     out = []
     prev = None
     n = 0
@@ -147,16 +158,17 @@ def encode(im):
             n += 1
             continue
         if prev is not None:
-            out.append(chr(65 + prev) + (b36(n) if n > 1 else ""))
+            out.append(("_" if prev < 0 else chr(65 + prev)) + (b36(n) if n > 1 else ""))
         prev, n = k, 1
     return {"size": N, "palette": cs, "rle": "".join(out)}
 
 
 for key, nm in (("terrain:forest-mid", "canopy-mid"), ("terrain:forest-low", "canopy-low")):    # エディタで確かめる用
     im = OUTS[key]
-    cs = sorted(set(im.flatten().tolist()))
+    cs = sorted({c for c in im.flatten().tolist() if c})
     cm = {c: syms[i] for i, c in enumerate(cs)}
+    cm[""] = "."
     open(os.path.join(HERE, nm + ".txt"), "w").write("\n".join("".join(cm[im[y, x]] for x in range(N)) for y in range(N)) + "\n")
-    json.dump({cm[c]: c for c in cs}, open(os.path.join(HERE, "pal-" + nm + ".json"), "w"))
+    json.dump({cm[c]: c for c in cs if c}, open(os.path.join(HERE, "pal-" + nm + ".json"), "w"))
 json.dump({k: encode(v) for k, v in OUTS.items()}, open(os.path.join(ROOT, "tools", "pixel-art", "canopy-terrain.json"), "w"))
 print("ok colors", len(cols))

@@ -506,7 +506,13 @@ function canopyBlend(ctx: CanvasRenderingContext2D, map: TileMap, ox: number, oy
             const d = depthAt(gx + 0.5, gy + 5.5) + (smoothNoise(gx * 0.35, gy * 0.35) - 0.5) * 7 + ((hashCell(gx, gy) % 100) / 100 - 0.5) * 1.5;
             const key3 = d < 0 ? lawnKey : d < 6 ? "terrain:forest-low" : d < 13 ? "terrain:forest-mid" : "terrain:forest";
             const tex = key3 === "terrain:forest" ? canopy : texOf(key3);
-            if (tex) g.drawImage(tex, ((gx % 128) + 128) % 128, ((gy % 128) + 128) % 128, 1, 1, px, py, 1, 1);
+            const sx = ((gx % 128) + 128) % 128, sy = ((gy % 128) + 128) % 128;
+            if (key3 === "terrain:forest-low") {
+              // 低い草の所は、芝の絵の上に、すける短い株を重ねる（芝のドットのまま、株だけが立つ）
+              const lawn = getSpriteCanvas(lawnKey, SPRITE_DATA);
+              if (lawn) g.drawImage(lawn, sx, sy, 1, 1, px, py, 1, 1);
+            }
+            if (tex) g.drawImage(tex, sx, sy, 1, 1, px, py, 1, 1);
           }
         }
         tile = c;
