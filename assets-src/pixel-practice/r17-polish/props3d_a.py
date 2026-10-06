@@ -67,7 +67,8 @@ def barrel():
     ななめの見え方だと、丸い樽が横に引きのばされてかたむいて見えたので、正面の少し上（25度）から見下ろす見え方で描く。
     ふくらみはひかえめに、まっすぐ立つ。板（16まい）ごとの色・すき間・木目、鉄のたが4本と鋲、ふたの板と、ふちの木口、横の栓。"""
     m = Model()
-    H, R0, R1 = 27.0, 10.0, 11.2             # 高さ、上下のはしの半径、まんなかのふくらみ（ひかえめ）。前の樽と同じくらいの大きさ
+    # 2026-10-06 人間の指示「樽は小さくして」: 前の 2/3 くらいの大きさに（高さ 27→18）
+    H, R0, R1 = 18.0, 6.8, 7.6               # 高さ、上下のはしの半径、まんなかのふくらみ（ひかえめ）
 
     def rad(y):
         return R0 + (R1 - R0) * np.sin(np.pi * np.clip(y / H, 0, 1))
@@ -78,13 +79,13 @@ def barrel():
         return np.maximum(dr, np.maximum(-y, y - H))
     m.add(body, "stave")
     m.cut(cyl_y(0, 0, R0 - 0.9, H - 0.9, H + 2), "lid")              # ふたは、ふちより少し下
-    for yh in (2.2, 7.0, 20.0, 24.8):                                  # 鉄のたが4本（細め）
+    for yh in (1.5, 4.7, 13.3, 16.5):                                  # 鉄のたが4本（細め）
         r = float(rad(yh)) + 0.25
         m.add(lambda p, yh=yh, r=r: np.maximum(np.abs(np.sqrt(p[..., 0] ** 2 + p[..., 2] ** 2) - r + 0.2) - 0.35,
-                                               np.abs(p[..., 1] - yh) - 0.6), "iron")
+                                               np.abs(p[..., 1] - yh) - 0.5), "iron")
         for a in (1.05, 1.57, 2.1):                                     # 鋲（こちらを向いた側だけ）
             m.add(sphere((math.cos(a) * (r + 0.05), yh, math.sin(a) * (r + 0.05)), 0.32), "rivet")
-    m.add(capsule((math.cos(1.25) * R1 * 0.92, 13.5, math.sin(1.25) * R1 * 0.92), (math.cos(1.25) * R1 * 1.07, 13.5, math.sin(1.25) * R1 * 1.07), 0.9), "lid")   # 栓
+    m.add(capsule((math.cos(1.25) * R1 * 0.92, 9.0, math.sin(1.25) * R1 * 0.92), (math.cos(1.25) * R1 * 1.07, 9.0, math.sin(1.25) * R1 * 1.07), 0.7), "lid")   # 栓
 
     # 光の実物感（2026-10-06「少し光の感じ、実物感を出そうか」）: 見る向き（正面の少し上）と光の向きのあいだの向きで、
     # つや（鏡のような照り返し）を出す。木はやわらかいつやの帯、鉄のたがは、するどい光の点。ふちは少し暗く（丸みが出る）
@@ -107,7 +108,7 @@ def barrel():
             if p[1] > H - 1.2 and math.hypot(p[0], p[2]) < R0 - 0.6:
                 return min(lum, 0.32) - 0.1, "stave"                  # ふちの内がわは、かげ
             ang = math.atan2(p[2], p[0])
-            s = (ang / (2 * math.pi)) * 16 + 0.3
+            s = (ang / (2 * math.pi)) * 12 + 0.3
             if s % 1 < 0.13:
                 lum -= 0.14                                           # 板と板のすき間（細く）
             lum += ((hn(math.floor(s)) % 5) - 2) * 0.018                # 板ごとの色のちがい
@@ -124,7 +125,7 @@ def barrel():
         if mm == "stave" and gloss(n, 8) > 0.82 and (x + y) % 2 == 0:
             return "#e8b47a"                                          # 木のつやの、いちばん明るい所
         return c
-    return render(m, 48, 48, 24, 44, ramps_all, shade_fn=shade, colour_fn=colour, shadow=(26, 45.4, 15, 2.5), front_tilt=25)
+    return render(m, 48, 48, 24, 44, ramps_all, shade_fn=shade, colour_fn=colour, shadow=(25.5, 45.4, 10, 2.0), front_tilt=25)
 
 
 # ===================================================================== 木箱

@@ -1,3 +1,4 @@
+import { PROP_BOX } from "../map/town-tidy";
 import type { EventCommand } from "../event/types";
 import type { Npc } from "../npc";
 import type { MapProp, TileMapData } from "../map/types";
@@ -164,7 +165,9 @@ export function addInnInteriors(maps: Record<string, TileMapData>, npcsByMap: Re
       const tiles = propFootprintTiles(prop);
       if (!tiles.length) continue;
       const top = Math.min(...tiles.map((t) => t.y)) - propOverhangTiles(prop.kind, data.tileHeight);
-      const pad = prop.kind === "tree" ? 1 : 0;
+      // 絵が横のマスへはみ出す飾り（木・井戸など。PROP_BOX ではかった幅）は、となりのマスもふさぐ
+      const box = PROP_BOX[prop.kind];
+      const pad = prop.kind === "tree" || (box && (box[0] < -(data.tileWidth / 2 + 2) || box[1] > data.tileWidth / 2 + 2)) ? 1 : 0;
       const x0 = Math.min(...tiles.map((t) => t.x)) - pad, x1 = Math.max(...tiles.map((t) => t.x)) + pad;
       for (let yy = top; yy <= prop.tileY; yy++) for (let xx = x0; xx <= x1; xx++) covered.add(yy * w + xx);
     }
