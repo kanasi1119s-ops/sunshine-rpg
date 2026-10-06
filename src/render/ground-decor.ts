@@ -279,20 +279,19 @@ function erodeMass(ctx: CanvasRenderingContext2D, map: TileMap, ox: number, oy: 
 /** 山・森のふもとの影（光は左上。塊の下と右の地面に落ちる）と、山すその小石。 */
 function massShadow(ctx: CanvasRenderingContext2D, map: TileMap, ox: number, oy: number, s: number, tx: number, ty: number): void {
   const above = artAt(map, tx, ty - 1) ?? "";
-  const left = artAt(map, tx - 1, ty) ?? "";
   if (MASS_ART.has(above)) {
     const peak = above === "mountain" || above === "peaks";
+    // 影の深さを、なめらかにゆらし（まっすぐな帯にしない）、うすく、下へ行くほど消す
     for (let i = 0; i < s; i++) {
-      const depth = (peak ? 4 : 3) + (hashCell(tx * 19 + i, ty * 7) % 2);
-      for (let d = 0; d < depth; d++) dot(ctx, ox + i, oy + d, `rgba(14,30,20,${(0.3 - d * 0.06).toFixed(2)})`);
+      const w = tx * s + i;
+      const a = Math.floor(w / 6), f = w / 6 - a, t = f * f * (3 - 2 * f);
+      const v = (k: number): number => (hashCell(k * 13 + 7, ty * 5 + 2) % 1000) / 1000;
+      const depth = (peak ? 2 : 1) + Math.round((v(a) * (1 - t) + v(a + 1) * t) * 3);
+      for (let d = 0; d < depth; d++) dot(ctx, ox + i, oy + d, `rgba(14,30,20,${(0.2 * (1 - d / (depth + 0.5))).toFixed(3)})`);
     }
     if (peak && hashCell(tx, ty) % 3 === 0) dot(ctx, ox + 3 + (hashCell(tx, ty + 1) % 10), oy + 6, "#7a7068", 2, 1);
   }
-  if (MASS_ART.has(left)) {
-    for (let i = 0; i < s; i++) {
-      for (let d = 0; d < 2; d++) dot(ctx, ox + d, oy + i, `rgba(14,30,20,${(0.2 - d * 0.08).toFixed(2)})`);
-    }
-  }
+  // 2026-10-06「雪原にも謎の影あるよ山間とか」: 森・山の右どなりに引いていた、たての暗い2列の線（まっすぐな影に見えた）はやめた
 }
 
 /** 水面のきらめき: 細い光の筋が、ゆっくり現れては消える（時刻でゆらぐ）。 */
@@ -520,6 +519,81 @@ function canopyEdge(ctx: CanvasRenderingContext2D, map: TileMap, ox: number, oy:
   }
 }
 
+/** 全体フィールドの、平らな地面どうし（雪・草・砂・道など）のさかいを、四角くせず、波うつ形でまぜる
+ *  （2026-10-06 人間の指示「フィールドのドット絵違和感なくなるようにして」）。順位の高い地面が、低い地面のふちへ、
+ *  なめらかにゆれる深さ（1〜4ドット）だけ、自分の絵で食い込む。かどは丸く。 */
+const FLAT_PRIO: Record<string, number> = {
+  "terrain:w-road": 0, "terrain:w-sand": 1, "terrain:w-ash": 1, "terrain:w-waste": 1, "terrain:w-grass": 2, "terrain:w-hills": 2, "terrain:w-snow": 3,
+};
+function texKey(map: TileMap, x: number, y: number): string | null {
+  if (x < 0 || y < 0 || x >= map.data.width || y >= map.data.height) return null;
+  return map.data.tileTexture?.[getTileId(map, 0, x, y)] ?? null;
+}
+function texPixel(ctx: CanvasRenderingContext2D, key: string, wx: number, wy: number, dx: number, dy: number): void {
+  const tex = getSpriteCanvas(key, SPRITE_DATA);
+  if (!tex) return;
+  ctx.drawImage(tex, ((wx % 128) + 128) % 128, ((wy % 128) + 128) % 128, 1, 1, dx, dy, 1, 1);
+}
+function waveDepth(w: number, salt: number, max: number): number {
+  const a = Math.floor(w / 5), f = w / 5 - a, t = f * f * (3 - 2 * f);
+  const v = (k: number): number => (hashCell(k * 7 + salt, salt * 13 + 3) % 1000) / 1000;
+  return 1 + Math.round((v(a) * (1 - t) + v(a + 1) * t) * (max - 1));
+}
+function flatBlend(ctx: CanvasRenderingContext2D, map: TileMap, ox: number, oy: number, s: number, tx: number, ty: number): void {
+  const here = texKey(map, tx, ty);
+  if (!here || !(here in FLAT_PRIO)) return;
+  const myP = FLAT_PRIO[here];
+  const sides: Array<[number, number, (i: number, d: number) => [number, number], number]> = [
+    [0, -1, (i, d) => [i, d], 1], [0, 1, (i, d) => [i, s - 1 - d], 2], [-1, 0, (i, d) => [d, i], 3], [1, 0, (i, d) => [s - 1 - d, i], 4],
+  ];
+  for (const [dx, dy, at, salt] of sides) {
+    const nk = texKey(map, tx + dx, ty + dy);
+    if (!nk || !(nk in FLAT_PRIO) || FLAT_PRIO[nk] <= myP) continue;
+    const lineSalt = salt * 97 + (dx !== 0 ? tx + (dx > 0 ? 1 : 0) : ty + (dy > 0 ? 1 : 0)) * 31 + (dx !== 0 ? 5000 : 0);
+    for (let i = 0; i < s; i++) {
+      const along = dx !== 0 ? ty * s + i : tx * s + i;
+      const depth = waveDepth(along, lineSalt, 4);
+      for (let d = 0; d < depth; d++) {
+        const [px, py] = at(i, d);
+        texPixel(ctx, nk, tx * s + px, ty * s + py, ox + px, oy + py);
+      }
+    }
+  }
+  // かど: 両どなりが同じ「上の地面」なら、丸く食い込む
+  const corners: Array<[number, number, number, number]> = [[-1, -1, 0, 0], [1, -1, s - 1, 0], [-1, 1, 0, s - 1], [1, 1, s - 1, s - 1]];
+  for (const [dx, dy, cx, cy] of corners) {
+    const a = texKey(map, tx + dx, ty), b = texKey(map, tx, ty + dy);
+    if (!a || a !== b || !(a in FLAT_PRIO) || FLAT_PRIO[a] <= myP) continue;
+    const r = 6 + (hashCell(tx * 13 + dx, ty * 29 + dy) % 3);
+    for (let y = 0; y < r; y++) for (let x = 0; x < r; x++) {
+      if ((r - x - 0.5) ** 2 + (r - y - 0.5) ** 2 <= r * r) continue;
+      const px = cx === 0 ? x : s - 1 - x, py = cy === 0 ? y : s - 1 - y;
+      texPixel(ctx, a, tx * s + px, ty * s + py, ox + px, oy + py);
+    }
+  }
+}
+
+/** 小さな水たまり・沼（まわりが陸の水のタイル）のかどを、まるく陸の絵でけずる（2026-10-06「入れない沼も自然な形にして」）。 */
+function roundPond(ctx: CanvasRenderingContext2D, map: TileMap, ox: number, oy: number, s: number, tx: number, ty: number): void {
+  const isW = (x: number, y: number): boolean => kindAt(map, x, y) === "water";
+  const corners: Array<[number, number, number, number]> = [[-1, -1, 0, 0], [1, -1, s - 1, 0], [-1, 1, 0, s - 1], [1, 1, s - 1, s - 1]];
+  for (const [dx, dy, cx, cy] of corners) {
+    if (isW(tx + dx, ty) || isW(tx, ty + dy) || isW(tx + dx, ty + dy)) continue;
+    const land = texKey(map, tx + dx, ty) ?? texKey(map, tx, ty + dy);
+    if (!land) continue;
+    const r = 6 + (hashCell(tx * 17 + dx, ty * 23 + dy) % 3);
+    for (let y = 0; y < r; y++) for (let x = 0; x < r; x++) {
+      const d2 = (r - x - 0.5) ** 2 + (r - y - 0.5) ** 2;
+      if (d2 <= r * r) {
+        if (d2 > (r - 1.2) ** 2) dot(ctx, ox + (cx === 0 ? x : s - 1 - x), oy + (cy === 0 ? y : s - 1 - y), "rgba(196,228,242,0.55)");   // 水ぎわの白いふち
+        continue;
+      }
+      const px = cx === 0 ? x : s - 1 - x, py = cy === 0 ? y : s - 1 - y;
+      texPixel(ctx, land, tx * s + px, ty * s + py, ox + px, oy + py);
+    }
+  }
+}
+
 /** タイルの描画のあとに呼ぶ。カメラに映る範囲だけを処理する。 */
 export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, camera: Camera): void {
   const { tileWidth: s, tileHeight } = map.data;
@@ -540,6 +614,9 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
       const ox = tx * s - camera.x;
       const oy = ty * s - camera.y;
       const artHere = map.data.tileArt[getTileId(map, 0, tx, ty)] ?? "";
+      if (map.data.tileTexture) {
+        flatBlend(ctx, map, ox, oy, s, tx, ty);
+      }
       if ((artHere === "mountain" || artHere === "peaks") && !map.data.theme && !map.data.tileTexture) {   // 地形テクスチャのある地図（全体フィールド）は、テクスチャの岩山をそのまま見せる
         const tile = mountainTile(map, tx, ty, artHere === "peaks");
         if (tile) {
@@ -649,6 +726,8 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
           waterEdge(ctx, ox, oy, s, tx, ty, index, !!map.data.coastal);
         }
       });
+      // 沼・水たまりのかどは、水ぎわの線をかいたあとで、まるくけずる
+      if (kind === "water" && map.data.tileTexture) roundPond(ctx, map, ox, oy, s, tx, ty);
     }
   }
 }
