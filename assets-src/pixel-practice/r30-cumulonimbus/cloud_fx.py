@@ -18,7 +18,8 @@ OUT = os.path.join(HERE, "..", "..", "..", "src", "assets", "falls")
 import sys
 # 2026-10-06: 人間が「雲採用」と決めた、段になってそびえ横にも雲がある雲（reshape3、440×256）に変えた。
 # 前の雲（cumulonimbus、352×256）で作るときは: python3 cloud_fx.py cumulonimbus
-NAME = sys.argv[1] if len(sys.argv) > 1 else "reshape3"
+# 2026-10-06: 人間が「雲は採用置き換えて」と決めた、元の雲1つの形を変え、中央左に暗い雲・上に段の雲を足した雲（reshape5、440×256）に変えた。
+NAME = sys.argv[1] if len(sys.argv) > 1 else "reshape5"
 rows = [l for l in open(os.path.join(HERE, NAME + ".txt")).read().split("\n") if l]
 pal = json.load(open(os.path.join(HERE, "pal-" + NAME + ".json")))
 rgb = {k: (int(v[1:3], 16), int(v[3:5], 16), int(v[5:7], 16)) for k, v in pal.items()}
@@ -91,7 +92,7 @@ def frame(level, path):
 warm_pts = sorted(p for p, c in base.items() if warmth(c) > 0.55)
 rnd = random.Random(7)
 # 稲妻の始まり（黄色く光る所の中）。reshape3 は、前の雲の位置を、雲の本体の置き場所（0.9 倍、塔のまん中 x=215）に合わせて写した所
-A0, B0 = ((150, 186), (236, 196)) if NAME == "cumulonimbus" else ((192, 192), (269, 201))
+A0, B0 = {"cumulonimbus": ((150, 186), (236, 196)), "reshape3": ((192, 192), (269, 201))}.get(NAME, ((214, 152), (321, 178)))   # reshape5: 黄色く光る所の、左と右のまん中
 pA = bolt(11, *min(warm_pts, key=lambda p: abs(p[0] - A0[0]) + abs(p[1] - A0[1])), 1)
 pB = bolt(23, *min(warm_pts, key=lambda p: abs(p[0] - B0[0]) + abs(p[1] - B0[1])), -1)
 frames = [frame(0, set()), frame(0.6, set()), frame(1.0, pA), frame(1.0, pB)]

@@ -28,7 +28,7 @@ SPIRE = os.path.join(HERE, "..", "r27-spire")
 W, H = 320, 440
 CX, CY = 160, 280                 # 塔のマスのまん中
 SUMMIT = 4                        # 塔の頂（いちばん高い岩の柱の上のはし。絵の上から。積乱雲の上に出るよう、高くした）
-# 積乱雲（r30-cumulonimbus の reshape3、440×256 の絵。2026-10-06 に採用）を置く所: 雲の絵の (x, y) は、この絵の (x + CLOUD_DX, y + CLOUD_DY)。
+# 積乱雲（r30-cumulonimbus の reshape5、440×256 の絵。2026-10-06 に採用。前は reshape3）を置く所: 雲の絵の (x, y) は、この絵の (x + CLOUD_DX, y + CLOUD_DY)。
 # 雲そのものはこの絵には描かず、ゲームで上に重ねる（雲の中の雷のコマがあるので）。塔の上のほう（SPIRE_TOP_Y より上）は、
 # 雲のさらに上に重ねる別の絵（spire-top.png）にする（塔が雲を突き抜けて見える）。
 CLOUD_DX, CLOUD_DY = -55, -71
@@ -561,7 +561,7 @@ def build():
     tower = tower_pixels(*load_spire())
     # 雲の底（列ごと）。雨はこれより下だけ
     base = [168] * W
-    crows = [l for l in open(os.path.join(HERE, "..", "r30-cumulonimbus", "reshape3.txt")).read().split("\n") if l]
+    crows = [l for l in open(os.path.join(HERE, "..", "r30-cumulonimbus", "reshape5.txt")).read().split("\n") if l]
     for cy_, r in enumerate(crows):
         for cx_, ch in enumerate(r):
             x = cx_ + CLOUD_DX

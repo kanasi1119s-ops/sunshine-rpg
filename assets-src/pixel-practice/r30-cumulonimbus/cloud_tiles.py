@@ -1,11 +1,11 @@
 """積乱雲の下のマス（2026-10-05、人間の指示「船が雲の上に動けちゃうからどうにかして」）。
-雲の絵（reshape3.txt、440×256。2026-10-06 に採用）は、ゲームで塔のマスのまん中から (-215, -351) の所に描く。
+雲の絵（reshape5.txt、440×256。2026-10-06 に採用。前は reshape3）は、ゲームで塔のマスのまん中から (-215, -351) の所に描く。
 1マス（16×16）のうち 4割以上を雲がおおうマスを、塔のマスからのずれ (dx, dy) にして書き出す。
 飛空艇は、このマスに入れない（嵐の雲の中）。船は入れる（雲のうしろを進む）。"""
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-rows = [l for l in open(os.path.join(HERE, "reshape3.txt")).read().split("\n") if l]
+rows = [l for l in open(os.path.join(HERE, "reshape5.txt")).read().split("\n") if l]
 cnt = {}
 for py, r in enumerate(rows):
     for px, c in enumerate(r):
