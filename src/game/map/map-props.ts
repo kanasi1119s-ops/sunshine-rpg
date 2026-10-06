@@ -117,7 +117,8 @@ export function propOverhangTiles(kind: MapProp["kind"], tileHeight: number): nu
 export const MAP_PROPS: Record<string, MapProp[]> = {
   "touri-town": [
     { kind: "shrine", tileX: 3, tileY: 6 }, { kind: "bench", tileX: 9, tileY: 12 },
-    { kind: "well", tileX: 14, tileY: 11 }, { kind: "lamp", tileX: 9, tileY: 10 }, { kind: "signpost", tileX: 13, tileY: 7 }, { kind: "barrel", tileX: 6, tileY: 9 }, { kind: "crates", tileX: 18, tileY: 10 }, { kind: "flowerbed", tileX: 8, tileY: 12 },
+    // 2026-10-06 人間の指示「（噴水を）置いてみて見せて」: 町の広場の井戸を噴水に
+    { kind: "fountain", tileX: 14, tileY: 11 }, { kind: "lamp", tileX: 9, tileY: 10 }, { kind: "signpost", tileX: 13, tileY: 7 }, { kind: "barrel", tileX: 6, tileY: 9 }, { kind: "crates", tileX: 18, tileY: 10 }, { kind: "flowerbed", tileX: 8, tileY: 12 },
     { kind: "manor", tileX: 17, tileY: 4 },
     { kind: "tree", tileX: 1, tileY: 14 }, { kind: "tree", tileX: 9, tileY: 14 }, { kind: "tree", tileX: 14, tileY: 13 },
     { kind: "tree", tileX: 19, tileY: 13 }, { kind: "tree", tileX: 20, tileY: 5 },
