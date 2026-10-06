@@ -159,11 +159,19 @@ class Model:
 
 
 def render(model, W, H, CX, GROUND, ramps, shade_fn=None, colour_fn=None, light=(-0.55, 0.62, 0.56),
-           outline="#1e1a18", shadow=None, ambient=0.22):
+           outline="#1e1a18", shadow=None, ambient=0.22, front_tilt=None, ground_contact=True):
+    """front_tilt（度）を入れると、町の家と同じななめの見え方ではなく、正面の少し上から見下ろす見え方にする
+    （2026-10-06: 丸い物（樽など）は、ななめの見え方だと横に引きのばされ、かたむいた卵のような形に見えたため）。"""
     sx, sy = np.meshgrid(np.arange(W) + 0.5, np.arange(H) + 0.5)
     Z0 = 30.0
-    start = np.stack([sx - CX + Z0, GROUND - sy + K * Z0, np.full_like(sx, Z0)], -1)
-    rd = np.array([-1.0, -K, -1.0]); rd /= np.linalg.norm(rd)
+    if front_tilt is None:
+        start = np.stack([sx - CX + Z0, GROUND - sy + K * Z0, np.full_like(sx, Z0)], -1)
+        rd = np.array([-1.0, -K, -1.0]); rd /= np.linalg.norm(rd)
+    else:
+        a_ = math.radians(front_tilt)
+        f = np.array([0.0, -math.sin(a_), -math.cos(a_)]); up = np.array([0.0, math.cos(a_), -math.sin(a_)])
+        start = (sx - CX)[..., None] * np.array([1.0, 0, 0]) + (GROUND - sy)[..., None] * up - f * Z0
+        rd = f
     dist = np.zeros(sx.shape); hit = np.zeros(sx.shape, bool); alive = np.ones(sx.shape, bool)
     for _ in range(300):
         idx = np.nonzero(alive)
@@ -213,6 +221,9 @@ def render(model, W, H, CX, GROUND, ramps, shade_fn=None, colour_fn=None, light=
         if colour_fn:
             c = colour_fn(m, HP[i], N[i], lum, x, y, c)
         img[y, x] = c
+    # 地面からの高さ（地面に接する所を見つけるため）
+    GY = np.full((H, W), 1e9)
+    GY[ys, xs] = HP[:, 1]
     if outline:
         add = []
         for y in range(H):
@@ -220,7 +231,17 @@ def render(model, W, H, CX, GROUND, ramps, shade_fn=None, colour_fn=None, light=
                 if img[y, x] == "" and any(0 <= x + a < W and 0 <= y + b < H and img[y + b, x + a] != "" for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1))):
                     add.append((x, y))
         for x, y in add:
-            img[y, x] = outline
+            # 地面に接する所の下のりんかくは、黒い線にせず、うすく透ける濃い影にする（切りぬいた絵のように浮かないよう）
+            if ground_contact and y > 0 and img[y - 1, x] not in ("", outline) and GY[y - 1, x] < 1.4:
+                img[y, x] = "#14100ca8"
+            else:
+                img[y, x] = outline
+    if ground_contact:
+        # 地面に接する所のすぐ下に、うすい接地の影を1行（地面にしっかり置かれて見える）
+        for y in range(H - 1):
+            for x in range(W):
+                if img[y, x] == "#14100ca8" and img[y + 1, x] == "":
+                    img[y + 1, x] = "#10201878"
     if shadow:
         cx, cy, rx, ry = shadow
         for y in range(int(cy - ry - 1), int(cy + ry + 2)):

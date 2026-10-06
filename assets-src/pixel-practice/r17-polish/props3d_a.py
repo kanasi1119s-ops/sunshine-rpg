@@ -63,51 +63,68 @@ def rot_y(f, ang, c=(0, 0, 0)):
 
 # ===================================================================== 樽
 def barrel():
+    """2026-10-06 作りなおし（人間の指示「樽戻しちゃダメ、リアル感は追及して。変に立体感がありすぎただけだから」）:
+    ななめの見え方だと、丸い樽が横に引きのばされてかたむいて見えたので、正面の少し上（25度）から見下ろす見え方で描く。
+    ふくらみはひかえめに、まっすぐ立つ。板（16まい）ごとの色・すき間・木目、鉄のたが4本と鋲、ふたの板と、ふちの木口、横の栓。"""
     m = Model()
-    H, R0, R1 = 24.0, 6.9, 8.4               # 高さ、上下のはしの半径、まんなかのふくらみの半径
-    cz = -4.0
+    H, R0, R1 = 27.0, 10.0, 11.2             # 高さ、上下のはしの半径、まんなかのふくらみ（ひかえめ）。前の樽と同じくらいの大きさ
 
     def rad(y):
         return R0 + (R1 - R0) * np.sin(np.pi * np.clip(y / H, 0, 1))
 
     def body(p):
         y = p[..., 1]
-        dr = (np.sqrt(p[..., 0] ** 2 + (p[..., 2] - cz) ** 2) - rad(y)) * 0.92
+        dr = (np.sqrt(p[..., 0] ** 2 + p[..., 2] ** 2) - rad(y)) * 0.95
         return np.maximum(dr, np.maximum(-y, y - H))
     m.add(body, "stave")
-    m.cut(cyl_y(0, cz, R0 - 1.0, H - 1.5, H + 2), "lid")             # ふたは、ふちより少し下（板の立ったふち）
-    for yh in (2.2, 7.4, 16.6, 21.8):                                  # 鉄のたが4本
-        r = float(rad(yh)) + 0.32
-        m.add(lambda p, yh=yh, r=r: np.maximum(np.abs(np.sqrt(p[..., 0] ** 2 + (p[..., 2] - cz) ** 2) - r + 0.25) - 0.45,
-                                               np.abs(p[..., 1] - yh) - 0.72), "iron")
-        for a in (-0.55, 0.25, 1.05, 1.85):                               # たがの鋲（こちらを向いた側だけ）
-            m.add(sphere((math.cos(a) * (r + 0.1), yh, cz + math.sin(a) * (r + 0.1)), 0.45), "rivet")
-    # 横の栓（ふくらみのまんなか、正面より少し右の板に、木の栓）
-    bx, bz = math.cos(1.2) * R1, cz + math.sin(1.2) * R1
-    m.add(capsule((bx * 0.9, 12.0, cz + (bz - cz) * 0.9), (bx * 1.08, 12.0, cz + (bz - cz) * 1.08), 0.85), "lid")
+    m.cut(cyl_y(0, 0, R0 - 0.9, H - 0.9, H + 2), "lid")              # ふたは、ふちより少し下
+    for yh in (2.2, 7.0, 20.0, 24.8):                                  # 鉄のたが4本（細め）
+        r = float(rad(yh)) + 0.25
+        m.add(lambda p, yh=yh, r=r: np.maximum(np.abs(np.sqrt(p[..., 0] ** 2 + p[..., 2] ** 2) - r + 0.2) - 0.35,
+                                               np.abs(p[..., 1] - yh) - 0.6), "iron")
+        for a in (1.05, 1.57, 2.1):                                     # 鋲（こちらを向いた側だけ）
+            m.add(sphere((math.cos(a) * (r + 0.05), yh, math.sin(a) * (r + 0.05)), 0.32), "rivet")
+    m.add(capsule((math.cos(1.25) * R1 * 0.92, 13.5, math.sin(1.25) * R1 * 0.92), (math.cos(1.25) * R1 * 1.07, 13.5, math.sin(1.25) * R1 * 1.07), 0.9), "lid")   # 栓
+
+    # 光の実物感（2026-10-06「少し光の感じ、実物感を出そうか」）: 見る向き（正面の少し上）と光の向きのあいだの向きで、
+    # つや（鏡のような照り返し）を出す。木はやわらかいつやの帯、鉄のたがは、するどい光の点。ふちは少し暗く（丸みが出る）
+    V = np.array([0.0, math.sin(math.radians(25)), math.cos(math.radians(25))])
+    Lg = np.array([-0.55, 0.62, 0.56]); Lg /= np.linalg.norm(Lg)
+    Hh = (V + Lg) / np.linalg.norm(V + Lg)
+
+    def gloss(n, power):
+        return max(0.0, float(np.dot(n, Hh))) ** power
 
     def shade(mm, p, n, lum, x, y):
+        rim = (1 - max(0.0, float(np.dot(n, V)))) ** 2
+        if mm == "iron" or mm == "rivet":
+            lum += 0.7 * gloss(n, 24) - 0.15 * rim
+            return lum, mm
         if mm == "stave":
+            lum += 0.3 * gloss(n, 8) - 0.14 * rim
             if n[1] > 0.7:
-                return lum + 0.12, "stave"                            # ふちの上の面（板の木口）は明るく
-            if p[1] > H - 1.8 and math.hypot(p[0], p[2] - cz) < R0 - 0.7:
-                return min(lum, 0.3) - 0.12, "stave"                            # ふちの内がわは、かげ
-            ang = math.atan2(p[2] - cz, p[0])
-            s = (ang / (2 * math.pi)) * 14 + 0.3
-            if s % 1 < 0.2:
-                lum -= 0.2                                            # 板と板のすき間
-            elif s % 1 < 0.34:
-                lum += 0.05                                           # すき間のとなりの、板のかどの光
-            lum += ((hn(math.floor(s)) % 5) - 2) * 0.02                # 板ごとの色のちがい
-            if p[1] < 1.2:
-                lum -= 0.05
+                return lum + 0.08, "stave"                            # ふちの木口
+            if p[1] > H - 1.2 and math.hypot(p[0], p[2]) < R0 - 0.6:
+                return min(lum, 0.32) - 0.1, "stave"                  # ふちの内がわは、かげ
+            ang = math.atan2(p[2], p[0])
+            s = (ang / (2 * math.pi)) * 16 + 0.3
+            if s % 1 < 0.13:
+                lum -= 0.14                                           # 板と板のすき間（細く）
+            lum += ((hn(math.floor(s)) % 5) - 2) * 0.018                # 板ごとの色のちがい
+            if (p[1] * 1.7 + math.floor(s) * 0.37) % 2.3 < 0.18:
+                lum -= 0.04                                           # 木目
         if mm == "lid" and n[1] > 0.6:
             mm = "lidtop"
-            if ((p[2] - cz + 20) / 2.3) % 1 < 0.26:
-                lum -= 0.2                                           # ふたの板の合わせ目
-            lum += ((hn(math.floor((p[2] - cz + 20) / 2.3), 3) % 3) - 1) * 0.03
+            if ((p[2] + 20) / 2.4) % 1 < 0.2:
+                lum -= 0.14                                           # ふたの板の合わせ目
         return lum, mm
-    return render(m, 48, 48, 20, 45, ramps_all, shade_fn=shade, shadow=(22.5, 45.6, 13.5, 2.5))
+    def colour(mm, p, n, lum, x, y, c):
+        if mm in ("iron", "rivet") and gloss(n, 24) > 0.55:
+            return "#eef2f6"                                          # 鉄のするどい光
+        if mm == "stave" and gloss(n, 8) > 0.82 and (x + y) % 2 == 0:
+            return "#e8b47a"                                          # 木のつやの、いちばん明るい所
+        return c
+    return render(m, 48, 48, 24, 44, ramps_all, shade_fn=shade, colour_fn=colour, shadow=(26, 45.4, 15, 2.5), front_tilt=25)
 
 
 # ===================================================================== 木箱

@@ -1,4 +1,5 @@
-"""町の草むら（treeCanopy）の地形の絵を、立体の茂みにする（2026-10-06、人間の指示「草むらり立体感ないよ」）。
+"""町の草むら（treeCanopy）の地形の絵を、立体の草むらにする（2026-10-06 作りなおし: 細い葉の株をびっしり並べた草むら）。
+以下は前の説明: 町の草むら（treeCanopy）の地形の絵を、立体の茂みにする（2026-10-06、人間の指示「草むらり立体感ないよ」）。
 128×128 の、上下左右がつながる（くり返せる）絵。丸い葉の株（茂み）を、ずらした格子にたくさん並べ、
 奥（上）から手前（下）へ順に重ねて描く（手前の株が、奥の株の下の方をかくす）。
 1つずつの株は、丸いもりあがりとして、左上の光で明るさを決め、下と、株と株のすきまは暗く、
@@ -30,49 +31,51 @@ def rnd(*a):
     return (hn(*a) & 0xFFFF) / 65535
 
 
-# 株の置き場所（ずらした格子＋ゆらぎ）。くり返せるよう、格子は 128 をちょうど割り切る
-STEP = 16
-clumps = []
-for gy in range(N // STEP * 2):
-    for gx in range(N // STEP):
-        x = gx * STEP + (STEP / 2 if gy % 2 else 0) + (rnd(gx, gy, 1) - 0.5) * 6
-        y = gy * STEP / 2 + (rnd(gx, gy, 2) - 0.5) * 4
-        r = 8.5 + rnd(gx, gy, 3) * 3.0
-        clumps.append((y, x, r, hn(gx, gy, 4)))
-clumps.sort()                                       # 奥（上）から順に
-
-lum = np.full((N, N), 0.15)                         # すきまは暗い
+# 2026-10-06 作りなおし（人間の指示「草むら作り直して、もっといいものを」）: 丸い茂みをやめ、
+# 背の高い草の株（細い葉が7〜9本、根もとから扇のように広がる）を、ずらした格子にびっしり並べた「草むら」にする。
+# 葉は1本ずつ、根もとは暗く、先は明るく。左（光の側）へかたむく葉は明るく、右へかたむく葉は暗い。
+# 株の根もとには影。奥（上）から手前（下）へ順に描くので、手前の株が奥の株の根もとをかくし、奥行きが出る。
+lum = np.full((N, N), 0.27)                         # 地面（株のすきま）は暗い緑
 height = np.full((N, N), -1.0)
-L = np.array([-0.55, -0.6, 0.58]); L /= np.linalg.norm(L)   # 光（左上・手前）。画面の y は下向き
-for (cy, cx, r, seed) in clumps:
-    ry = r * 0.78                                   # 少しつぶれた丸（上から見た茂み）
-    for oy in (-N, 0, N):
-        for ox in (-N, 0, N):
-            x0, x1 = int(cx + ox - r - 1), int(cx + ox + r + 2)
-            y0, y1 = int(cy + oy - ry - 1), int(cy + oy + ry + 2)
-            if x1 < 0 or y1 < 0 or x0 >= N or y0 >= N:
-                continue
-            for y in range(max(0, y0), min(N, y1)):
-                for x in range(max(0, x0), min(N, x1)):
-                    u = (x + 0.5 - (cx + ox)) / r
-                    v = (y + 0.5 - (cy + oy)) / ry
-                    # ふちを葉のぎざぎざに（角度でゆれる半径）
-                    ang = math.atan2(v, u)
-                    edge = 1.0 - 0.09 * (0.5 + 0.5 * math.sin(ang * 7 + seed % 13)) - 0.05 * rnd(int(ang * 9), seed)
-                    d2 = u * u + v * v
-                    if d2 > edge * edge:
-                        continue
-                    nz = math.sqrt(max(0.0, 1 - d2 / (edge * edge)))
-                    n = np.array([u, v, nz * 1.3]); n /= np.linalg.norm(n)
-                    l = 0.22 + 0.78 * max(0.0, float(n @ L))
-                    l *= 0.6 + 0.4 * min(1.0, (1.15 - v) )          # 株の下の方は、影で暗い
-                    if d2 > (edge * 0.86) ** 2 and v > 0:
-                        l *= 0.7                                     # 下のふちの影の線
-                    # こまかな葉のむら
-                    l += ((hn(x, y, 9) % 7) - 3) * 0.025
-                    lum[y, x] = l * 0.8                              # まわりの草地より少し暗く（茂みとしてうき出る）
-                    height[y, x] = nz
+tufts_ = []
+for gy in range(N // 8):
+    for gx in range(N // 16):
+        x = gx * 16 + (8 if gy % 2 else 0) + (rnd(gx, gy, 1) - 0.5) * 4
+        y = gy * 8 + (rnd(gx, gy, 2) - 0.5) * 2
+        tufts_.append((y, x, hn(gx, gy, 3)))
+tufts_.sort()
 
+
+def put(x, y, l, hgt):
+    x %= N; y %= N
+    lum[y, x] = l
+    height[y, x] = hgt
+
+
+for (by, bx, seed) in tufts_:
+    # 根もとの影（だ円）
+    for dy in range(-1, 3):
+        for dx in range(-8, 9):
+            if (dx / 8.5) ** 2 + (dy / 2.2) ** 2 <= 1:
+                xx, yy = int(bx + dx) % N, int(by + dy + 1) % N
+                lum[yy, xx] = min(lum[yy, xx], 0.12)
+    nb = 6 + seed % 2
+    for k in range(nb):
+        t = (k + 0.5) / nb - 0.5                     # -0.5（左）〜 0.5（右）
+        lean = t * 1.4 + (rnd(seed, k, 5) - 0.5) * 0.25
+        hgt = 10 + rnd(seed, k, 6) * 4 - abs(t) * 5  # まんなかの葉ほど高い
+        x0 = bx + t * 9
+        for i in range(int(hgt) + 1):
+            f = i / max(1.0, hgt)
+            xx = x0 + lean * hgt * f * f * 0.9        # 先へ行くほど外へしなる
+            yy = by - i
+            l = 0.3 + 0.55 * f                        # 根もとは暗く、先は明るい
+            l += -0.18 * lean                         # 左へかたむく葉は光を受ける
+            if i == int(hgt):
+                l += 0.08                             # 葉先の光
+            put(int(round(xx)), int(round(yy)), l, f)
+            if f < 0.6:
+                put(int(round(xx)) + 1, int(round(yy)), l - 0.07, f)   # 根もと側は2ドットの太さ（先へ細くなる）
 # 色にする（段のあいだは、市松でまぜる）
 BAYER = np.array([[0.125, 0.625], [0.875, 0.375]])
 img = np.full((N, N), "", dtype=object)
@@ -85,11 +88,9 @@ for y in range(N):
         lo = int(v); fr = v - lo
         k = lo + (1 if (fr > 0.62 or (0.38 <= fr <= 0.62 and BAYER[y % 2, x % 2] < 0.5)) else 0)
         c = LEAF[min(len(LEAF) - 1, k)]
-        # 明るい所に、ときどき葉先の光と、小さな花
-        if lum[y, x] > 0.72 and hn(x, y, 21) % 23 == 0:
-            c = LEAF[-1]
-        if height[y, x] > 0.55 and hn(x // 2, y // 2, 33) % 97 == 0:
-            c = ["#f4f0e0", "#f2c14e", "#e86a8a"][hn(x, y, 5) % 3]
+        # 葉先に、ときどき小さな花・穂
+        if height[y, x] > 0.95 and hn(x, y, 33) % 41 == 0:
+            c = ["#f4f0e0", "#e8d07a", "#d8a0b8"][hn(x, y, 5) % 3]
         img[y, x] = c
 
 cols = sorted(set(img.flatten().tolist()))
