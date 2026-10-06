@@ -1,3 +1,4 @@
+import { propSpriteKey } from "./prop-renderer";
 import { shadeColor } from "../game/color-utils";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
@@ -229,7 +230,8 @@ export function drawObjectMarker(ctx: CanvasRenderingContext2D, kind: ObjectKind
     case "cupboard":
     case "airship": {
       // 作りこんだ家具のドット絵（`prop:*`）があれば、足もとにそろえて描く（町にとめた飛空艇は、着陸した飛空艇の絵）
-      const art = getSpriteCanvas(`prop:${kind === "shelf" ? "bookshelf" : kind === "reception" ? "front-counter" : kind === "airship" ? "airship-landed" : kind}`, SPRITE_DATA);
+      // コマのある家具（暖炉の火など）は、順番に見せる（prop-renderer.ts の propSpriteKey。2026-10-06「暖炉も火が動いてるようにしよう」）
+      const art = getSpriteCanvas(propSpriteKey(kind === "shelf" ? "bookshelf" : kind === "reception" ? "front-counter" : kind === "airship" ? "airship-landed" : kind, typeof performance !== "undefined" ? performance.now() : 0), SPRITE_DATA);
       if (art) {
         const prev = ctx.imageSmoothingEnabled;
         ctx.imageSmoothingEnabled = false;
