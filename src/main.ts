@@ -3152,11 +3152,13 @@ const loop = createGameLoop({
       if (uiState.kind === "command" || uiState.kind === "skillList" || uiState.kind === "target") {
         const direction = input.getDirection();
         if (direction !== lastBattleDirection) {
+          // とくぎの一覧では、左右で1ページ（6つ）ずつ送る（覚えた特技が多いので）
+          const step = uiState.kind === "skillList" && (direction === "left" || direction === "right") ? 6 : 1;
           if (direction === "up" || direction === "left") {
-            battle.moveCursor(-1);
+            battle.moveCursor(-step);
             audio.playSe(seOf("cursor"));
           } else if (direction === "down" || direction === "right") {
-            battle.moveCursor(1);
+            battle.moveCursor(step);
             audio.playSe(seOf("cursor"));
           }
           lastBattleDirection = direction;

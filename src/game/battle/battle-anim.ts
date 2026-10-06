@@ -168,6 +168,31 @@ function battleAnimRaw(text: string, state: BattleState, weaponOf: (id: string) 
     });
   }
 
+  // 特技の動きの足りない文（2026-10-06「特技はバトル画面で使うものはすべてモーションをつけてね」）
+  // 効かなかった弱体・眠り・毒・混乱: 技を出す動きと、相手の上に弱体の光（はじかれる）
+  const resisted = /^(.+?) の (.+?)！ (.+) には効かなかった$/.exec(text);
+  if (resisted) {
+    const actor = allyActor(resisted[1]);
+    const target = byName(state, resisted[3]);
+    if (!target) return null;
+    const caster = actor && CASTERS.has(actor.id);
+    return make({ actorId: actor?.id, fromId: actor?.id, motion: actor ? (caster ? "cast" : MOTION_OF_WEAPON[weaponOf(actor.id) ?? "sword"]) : null, targetIds: [target.id], fx: "debuff", ...(caster ? { durationMs: 1500, fxStart: 0.4 } : {}) });
+  }
+  // 一撃で倒した（蟲神の呪術師など）: 技を出す動きと、相手の上に暗い光
+  const ko = /^(.+?) の (.+?)！ (.+) は一撃で倒れた$/.exec(text);
+  if (ko) {
+    const actor = allyActor(ko[1]);
+    const target = byName(state, ko[3]);
+    if (!target) return null;
+    return make({ actorId: actor?.id, fromId: actor?.id, motion: actor ? "cast" : null, targetIds: [target.id], fx: "debuff", durationMs: 1600, fxStart: 0.4 });
+  }
+  // HPを支払った（鬼神の破戒者）: 自分の体から、赤黒い光が立ちのぼる
+  const paid = /^(.+?) は \d+ のHPを支払った$/.exec(text);
+  if (paid) {
+    const actor = allyActor(paid[1]);
+    return actor ? make({ targetIds: [actor.id], fx: "debuff", hurt: true, durationMs: 700, fxStart: 0 }) : null;
+  }
+
   // 神の調停（隠しボス）: 全員に、金の紋の輪が降りる。そのあとの「〜の体力が半分になった」は、のけぞるだけ
   const judge = /^(.+?) の 神の調停！$/.exec(text);
   if (judge) {

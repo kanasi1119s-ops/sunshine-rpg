@@ -48,6 +48,8 @@ export interface JobData {
   unlockFlags?: string[];
   /** 主人公（ユーリ）だけが装備できる。 */
   heroOnly?: boolean;
+  /** 熟練度の最大（☆）。省略は MAX_STARS（15）。天神・悪神ジョブは10（2026-10-06 人間の指示「天神、悪神は☆10までね」）。 */
+  maxStars?: number;
   name: string;
   reading: string;
   role: string;

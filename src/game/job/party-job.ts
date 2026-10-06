@@ -3,6 +3,7 @@ import type { LeveledStats } from "../growth/types";
 import type { Skill } from "../battle/types";
 import { computeJobBonus, equipJob, gainMastery, createJobState, learnedSkills } from "./mastery";
 import type { JobId, JobState } from "./types";
+import { JOBS_BY_ID } from "./jobs";
 
 /** このフラグが立つと、ジョブチェンジ機能が使える（第6章でアヤメが仲間に加わったとき）。 */
 export const JOB_UNLOCK_FLAG = "chapter6_ayame_joined";
@@ -59,7 +60,11 @@ export function battleSkillsOf(state: JobState | undefined, unlocked: boolean): 
   if (!unlocked || !state) {
     return [];
   }
-  return learnedSkills(state).flatMap((skill) =>
+  // いまつけているジョブの特技を先に（覚えた特技が多いので、よく使うものを前に）
+  const mine = new Set((state.equipped ? JOBS_BY_ID[state.equipped].skills : []).map((s) => s.name));
+  const learned = learnedSkills(state);
+  const ordered = [...learned.filter((s) => mine.has(s.name)), ...learned.filter((s) => !mine.has(s.name))];
+  return ordered.flatMap((skill) =>
     skill.battle
       ? [{ id: `job:${skill.name}`, name: skill.name, ...skill.battle }]
       : [],

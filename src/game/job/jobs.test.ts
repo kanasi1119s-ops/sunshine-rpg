@@ -25,7 +25,7 @@ describe("初期ジョブのデータ", () => {
       const stars = job.skills.map((s) => s.requiredStars);
       expect(stars).toEqual([...stars].sort((a, b) => a - b));
       for (const s of stars) {
-        expect(s).toBeGreaterThanOrEqual(2);
+        expect(s).toBeGreaterThanOrEqual(1);
         expect(s).toBeLessThanOrEqual(MAX_STARS);
       }
     }
@@ -70,10 +70,11 @@ describe("熟練度", () => {
 
   it("特技は習得すると、ジョブを外しても使える", () => {
     let state = equipJob(createJobState(), "fist-fighter");
-    expect(learnedSkills(state)).toHaveLength(0);
+    // 装備した時点で、☆1の特技を覚えている
+    expect(learnedSkills(state).map((s) => s.name)).toEqual(["軽打"]);
     state = gainMastery(state, masteryExpForStar(2));
     state = unequipJob(state);
-    expect(learnedSkills(state).map((s) => s.name)).toEqual(["二連打"]);
+    expect(learnedSkills(state).map((s) => s.name)).toEqual(["軽打", "二連打"]);
   });
 
   it("能力値ボーナスは装備中だけ有効で、☆が上がると増える", () => {
@@ -120,7 +121,7 @@ describe("上級ジョブ", () => {
       const base = JOBS[job.baseJob!];
       const total = (b: Record<string, number | undefined>) => Object.values(b).reduce<number>((a, v) => a + (v ?? 0), 0);
       expect(total(job.statBonus)).toBeGreaterThan(total(base.statBonus));
-      expect(job.skills.length).toBe(3);
+      expect(job.skills.length).toBe(15);
       for (const skill of job.skills) {
         expect(skill.battle, `${job.name} の ${skill.name}`).toBeDefined();
       }
@@ -151,7 +152,8 @@ describe("天神・悪神ジョブ", () => {
 
   it("鬼神の破戒者の特技はHPを支払い、蟲神の呪術師には一撃で倒すチャンスがある", () => {
     const demon = DIVINE_JOBS.find((j) => j.id === "demon-breaker")!;
-    expect(demon.skills.every((s) => (s.battle?.hpCost ?? 0) > 0)).toBe(true);
+    // 敵を打つ特技は、すべてHPを支払う
+    expect(demon.skills.filter((s) => (s.battle?.powerMultiplier ?? 0) > 0).every((s) => (s.battle?.hpCost ?? 0) > 0)).toBe(true);
     const bug = DIVINE_JOBS.find((j) => j.id === "bug-curser")!;
     expect(bug.skills.some((s) => (s.battle?.koChance ?? 0) > 0)).toBe(true);
   });
@@ -175,12 +177,45 @@ describe("レジェンドジョブ「灯心継承者」", () => {
   it("上級ジョブより1点特化の強さは無い（能力値の合計が、上級ジョブの最大より小さい）。5つの特技はすべて戦闘で使える", () => {
     const total = (b: Record<string, number | undefined>) => Object.values(b).reduce<number>((a, v) => a + (v ?? 0), 0);
     const legend = LEGEND_JOBS[0];
-    expect(legend.skills).toHaveLength(5);
+    expect(legend.skills).toHaveLength(15);
     for (const skill of legend.skills) {
       expect(skill.battle).toBeDefined();
     }
     const maxSpecialist = Math.max(...ADVANCED_JOBS.map((j) => Math.max(...Object.values(j.statBonus).map((v) => v ?? 0))));
     expect(Math.max(...Object.values(legend.statBonus).map((v) => v ?? 0))).toBeLessThan(maxSpecialist);
     expect(total(legend.statBonus)).toBeGreaterThan(0);
+  });
+});
+
+import { DIVINE_MAX_STARS, maxStarsOf } from "./jobs";
+
+describe("ジョブの特技の数（2026-10-06「1ジョブ大して少なくとも15個は覚える」「天神、悪神は☆10までね」）", () => {
+  const ALL = Object.values(JOBS);
+  it("どのジョブも15個以上の特技を覚え、すべて戦闘で使える。☆ごとに1つ以上覚える", () => {
+    for (const job of ALL) {
+      expect(job.skills.length, job.name).toBeGreaterThanOrEqual(15);
+      for (const skill of job.skills) expect(skill.battle, `${job.name} の ${skill.name}`).toBeDefined();
+      for (let star = 1; star <= maxStarsOf(job.id); star++) {
+        expect(job.skills.some((s) => s.requiredStars === star), `${job.name} ☆${star}`).toBe(true);
+      }
+    }
+  });
+  it("天神・悪神ジョブは☆10まで（特技も☆10までに全部覚える）。ほかは☆15まで", () => {
+    for (const job of ALL) {
+      const divine = DIVINE_JOBS.includes(job);
+      expect(maxStarsOf(job.id), job.name).toBe(divine ? DIVINE_MAX_STARS : MAX);
+      expect(Math.max(...job.skills.map((s) => s.requiredStars)), job.name).toBe(maxStarsOf(job.id));
+    }
+    let state = equipJob(createJobState(), "goddess-shaman");
+    state = gainMastery(state, 10 ** 9);
+    expect(starsOf(state, "goddess-shaman")).toBe(DIVINE_MAX_STARS);
+    expect(learnedSkills(state)).toHaveLength(15);
+  });
+  it("特技の名前は、全ジョブで重ならない", () => {
+    const names = ALL.flatMap((j) => j.skills.map((s) => s.name));
+    expect(new Set(names).size).toBe(names.length);
+  });
+  it("一度も装備していないジョブの☆1の特技は、覚えていない", () => {
+    expect(learnedSkills(createJobState())).toHaveLength(0);
   });
 });

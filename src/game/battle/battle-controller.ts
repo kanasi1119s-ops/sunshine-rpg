@@ -161,8 +161,9 @@ export class BattleController {
       const skill = this.phase.skills[this.phase.cursor];
       const actorId = this.phase.actorId;
       // 敵全体・味方全体に効く特技は、対象を選ばずに決まる。
-      if (skill.effect === "damageAll" || skill.effect === "debuffAll" || skill.effect === "healAll" || skill.effect === "buffAll") {
-        const towardEnemies = skill.effect === "damageAll" || skill.effect === "debuffAll";
+      // 自分だけに効く特技（減ったHPの半分を回復）も、対象を選ばない
+      if (skill.effect === "damageAll" || skill.effect === "pierceAll" || skill.effect === "debuffAll" || skill.effect === "healAll" || skill.effect === "buffAll" || skill.effect === "restoreHalf") {
+        const towardEnemies = skill.effect === "damageAll" || skill.effect === "pierceAll" || skill.effect === "debuffAll";
         const anyTarget = towardEnemies ? this.state.enemies.find(isAlive)?.id : actorId;
         if (anyTarget) {
           this.pushAction(actorId, "skill", anyTarget, skill);

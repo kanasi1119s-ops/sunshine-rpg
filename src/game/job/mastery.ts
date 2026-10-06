@@ -1,5 +1,5 @@
 import type { StatBonus } from "../items/equipment";
-import { JOBS_BY_ID, MAX_STARS } from "./jobs";
+import { JOBS_BY_ID, MAX_STARS, maxStarsOf } from "./jobs";
 import type { JobId, JobSkill, JobState } from "./types";
 
 /** ☆Nに到達するために必要な累計の熟練度経験値。 */
@@ -7,10 +7,10 @@ export function masteryExpForStar(star: number): number {
   return star <= 1 ? 0 : Math.floor(6 * Math.pow(star - 1, 2));
 }
 
-/** 熟練度経験値から、いま何☆かを求める（1〜MAX_STARS）。 */
-export function starsForExp(exp: number): number {
+/** 熟練度経験値から、いま何☆かを求める（1〜max。max は省略で MAX_STARS）。 */
+export function starsForExp(exp: number, max = MAX_STARS): number {
   let star = 1;
-  while (star < MAX_STARS && masteryExpForStar(star + 1) <= exp) {
+  while (star < max && masteryExpForStar(star + 1) <= exp) {
     star++;
   }
   return star;
@@ -38,7 +38,7 @@ export function gainMastery(state: JobState, amount: number): JobState {
     return state;
   }
   const current = state.mastery[state.equipped] ?? 0;
-  const max = masteryExpForStar(MAX_STARS);
+  const max = masteryExpForStar(maxStarsOf(state.equipped));
   return {
     ...state,
     mastery: { ...state.mastery, [state.equipped]: Math.min(current + amount, max) },
@@ -46,13 +46,17 @@ export function gainMastery(state: JobState, amount: number): JobState {
 }
 
 export function starsOf(state: JobState, jobId: JobId): number {
-  return starsForExp(state.mastery[jobId] ?? 0);
+  return starsForExp(state.mastery[jobId] ?? 0, maxStarsOf(jobId));
 }
 
-/** 習得済みの特技。ジョブを外しても使い続けられるので、装備の有無に関係なく全ジョブぶん集める。 */
+/**
+ * 習得済みの特技。ジョブを外しても使い続けられるので、装備の有無に関係なく全ジョブぶん集める。
+ * ☆1の特技があるので、一度でも装備した（熟練度の記録がある）ジョブだけを数える。
+ */
 export function learnedSkills(state: JobState): JobSkill[] {
   const result: JobSkill[] = [];
   for (const jobId of Object.keys(JOBS_BY_ID) as JobId[]) {
+    if (state.mastery[jobId] === undefined && state.equipped !== jobId) continue;
     const stars = starsOf(state, jobId);
     for (const skill of JOBS_BY_ID[jobId].skills) {
       if (stars >= skill.requiredStars) {
