@@ -4057,7 +4057,7 @@
  },
  {
   "id": "angel-07",
-  "status": "done",
+  "status": "todo",
   "kind": "extra",
   "name": "天秤の天使",
   "group": "天使",
@@ -4067,7 +4067,7 @@
    190,
    130
   ],
-  "prompt": "a blindfolded angel holding large golden balance scales in both raised hands, white robes, grey wings, stern",
+  "prompt": "a blindfolded angel standing in white robes, holding golden balance scales in one raised hand, grey feathered wings, stern, no glow",
   "size": 128,
   "ncol": 24,
   "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
@@ -4075,9 +4075,9 @@
    "human, human face",
    "statue"
   ],
-  "bg": "dark",
+  "bg": "light",
   "draft": "angel-07_1",
-  "seed_base": 6001
+  "seed_base": 10002
  },
  {
   "status": "cancelled",
@@ -4284,6 +4284,27 @@
   ],
   "bg": "dark",
   "draft": "angel-12_0"
+ },
+ {
+  "status": "todo",
+  "kind": "extra",
+  "id": "chimera",
+  "name": "キメラ",
+  "group": "獣",
+  "shape": "big",
+  "tone": [
+   150,
+   110,
+   70
+  ],
+  "size": 128,
+  "ncol": 40,
+  "seed_base": 6200,
+  "prompt": "a chimera beast, lion body and head, a goat head rising from its back, a snake for a tail, leathery wings, fierce, standing on four legs",
+  "neg_extra": "human, rider, saddle",
+  "neg_drop": [
+   "statue"
+  ]
  },
  {
   "id": "angel-13",
