@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { WORLD_MAPS, WORLD_NPCS } from "../world/world";
-import { townOverlaps, townPostOverlaps, townWallOverhangs } from "./town-tidy";
+import { townOverlaps, townPathOverlaps, townPostOverlaps, townWallOverhangs } from "./town-tidy";
 import { doorOffsetX, isHouse } from "./map-props";
 
 const towns = Object.keys(WORLD_MAPS).filter((m) => /-(town|village)$/.test(m) || /^village-/.test(m));
@@ -64,12 +64,18 @@ describe("町のととのえ", () => {
 });
 
 describe("花壇の並び", () => {
-  it("花壇は、家の左右（足もとの列の2マス横）にだけある", () => {
+  it("花壇は、家の左右（足もとの列の2マス横。歩道をよけたときは3マス横）にだけある", () => {
     for (const id of towns) {
       const props = WORLD_MAPS[id].props ?? [];
       for (const f of props.filter((q) => q.kind === "flowerbed")) {
-        expect(props.some((q) => isHouse(q.kind) && q.tileY === f.tileY && Math.abs(q.tileX - f.tileX) === 2), `${id} flowerbed(${f.tileX},${f.tileY})`).toBe(true);
+        expect(props.some((q) => isHouse(q.kind) && q.tileY === f.tileY && [2, 3].includes(Math.abs(q.tileX - f.tileX))), `${id} flowerbed(${f.tileX},${f.tileY})`).toBe(true);
       }
     }
+  });
+});
+
+describe("歩道との重なり", () => {
+  it("家・花壇の絵は、歩道（道）にかからない（2026-10-06「一部花壇、家が歩道に重なってるから少し離して」）", () => {
+    for (const id of towns) expect(townPathOverlaps(WORLD_MAPS[id]), id).toEqual([]);
   });
 });
