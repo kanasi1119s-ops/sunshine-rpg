@@ -455,68 +455,56 @@ function waterNearRaw(map: TileMap, tx: number, ty: number): number {
   return 4;
 }
 
-/** 町の草むら（treeCanopy）のふちを、四角くせず、波うつ自然な形にする（2026-10-06 人間の指示「草むらのドットもこだわって自然な形に」）。
- *  外がわ（草地・道）に面した辺を、となりの地面の絵で、なめらかにゆれる深さ（1〜5ドット）だけ食い込ませ、
- *  食い込みのすぐ内がわに、草むらの影の線と、ところどころ明るい葉先をつける。かどは丸くする。 */
-function canopyEdge(ctx: CanvasRenderingContext2D, map: TileMap, ox: number, oy: number, s: number, tx: number, ty: number): void {
-  const outside = (x: number, y: number): "grass" | "path" | null => {
-    const k = kindAt(map, x, y);
-    return k === "grass" ? "grass" : k === "path" ? "path" : null;
-  };
-  const texOf = (kind: "grass" | "path", wx: number, wy: number): HTMLCanvasElement | null => {
-    const key = kind === "path" ? "terrain:dirt" : (["terrain:grass-a", "terrain:grass-b"][hashCell(Math.floor(wx / 128), Math.floor(wy / 128)) % 2]);
-    return getSpriteCanvas(key, SPRITE_DATA);
-  };
-  const put = (kind: "grass" | "path", px: number, py: number): void => {
-    const wx = tx * s + px, wy = ty * s + py;
-    const tex = texOf(kind, wx, wy);
-    if (!tex) return;
-    ctx.drawImage(tex, ((wx % 128) + 128) % 128, ((wy % 128) + 128) % 128, 1, 1, ox + px, oy + py, 1, 1);
-  };
-  // 深さ: 世界の位置で決まるなめらかなゆれ（となりのタイルとつながる）
-  const depthAt = (w: number, salt: number): number => {
-    const a = Math.floor(w / 5), f = w / 5 - a;
-    const v = (k: number): number => (hashCell(k * 7 + salt, salt * 13 + 3) % 1000) / 1000;
-    const t = f * f * (3 - 2 * f);
-    return 1 + Math.round((v(a) * (1 - t) + v(a + 1) * t) * 4);
-  };
-  const sides: Array<[number, number, (i: number, d: number) => [number, number], (i: number) => number, number]> = [
-    [0, -1, (i, d) => [i, d], (i) => tx * s + i, 1],
-    [0, 1, (i, d) => [i, s - 1 - d], (i) => tx * s + i, 2],
-    [-1, 0, (i, d) => [d, i], (i) => ty * s + i, 3],
-    [1, 0, (i, d) => [s - 1 - d, i], (i) => ty * s + i, 4],
-  ];
-  for (const [dx, dy, at, along, salt] of sides) {
-    const kind = outside(tx + dx, ty + dy);
-    if (!kind) continue;
-    const lineSalt = salt * 97 + (dx !== 0 ? tx + (dx > 0 ? 1 : 0) : ty + (dy > 0 ? 1 : 0)) * 31;
-    for (let i = 0; i < s; i++) {
-      const depth = depthAt(along(i), lineSalt);
-      for (let d = 0; d < depth; d++) {
-        const [px, py] = at(i, d);
-        put(kind, px, py);
-      }
-      const [qx, qy] = at(i, depth);
-      dot(ctx, ox + qx, oy + qy, "rgba(10,40,18,0.16)");                    // 草むらのふちの影（うすく。まわりの地面になじむ）
-      if (hashCell(along(i) + salt, lineSalt) % 5 === 0) {
-        const [hx, hy] = at(i, depth + 1);
-        dot(ctx, ox + hx, oy + hy, "rgba(150,190,100,0.35)");                 // 明るい葉先
+/** 町の草むら（treeCanopy）と芝（草地）のさかいを、四角いタイルの境目にせず、なめらかな形でまぜる
+ *  （2026-10-06 人間の指示「草むら馴染んでないんだよね。四角なのがいけないと思う。しげみと芝って四角で境目分かれてないと思うんだ」）。
+ *  タイルのまんなかの「草むらかどうか（1/0）」を、となりのタイルとの間でなめらかにつなぎ、ゆれ（ノイズ）を足して、
+ *  0.5 より上の所は草むらの絵、下の所は芝の絵にする（さかいの近くの、芝のタイルにも草むらがはみ出す）。
+ *  さかいのタイルの絵は、一度だけ作って、おぼえておく。 */
+const canopyTileCache = new Map<string, HTMLCanvasElement | null>();
+function canopyBlend(ctx: CanvasRenderingContext2D, map: TileMap, ox: number, oy: number, s: number, tx: number, ty: number): void {
+  const isC = (x: number, y: number): number => (kindAt(map, x, y) === "tree" && artAt(map, x, y) === "treeCanopy" ? 1 : 0);
+  const here = isC(tx, ty);
+  const grassish = (x: number, y: number): boolean => { const k = kindAt(map, x, y); return k === "grass" || isC(x, y) === 1; };
+  if (!grassish(tx, ty)) return;
+  let mixed = false;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (grassish(tx + dx, ty + dy) && isC(tx + dx, ty + dy) !== here) mixed = true;
+  if (!mixed) return;
+  const key = `${map.data.width}x${map.data.height}:${tx},${ty}:${getTileId(map, 0, 0, 0)}`;
+  let tile = canopyTileCache.get(key);
+  if (tile === undefined) {
+    tile = null;
+    const canopy = getSpriteCanvas("terrain:forest", SPRITE_DATA);
+    if (canopy && typeof document !== "undefined") {
+      const c = document.createElement("canvas");
+      c.width = s; c.height = s;
+      const g = c.getContext("2d");
+      if (g) {
+        g.imageSmoothingEnabled = false;
+        const cv = (x: number, y: number): number => (grassish(x, y) ? isC(x, y) : here);
+        for (let py = 0; py < s; py++) {
+          for (let px = 0; px < s; px++) {
+            const fx = (px + 0.5) / s - 0.5, fy = (py + 0.5) / s - 0.5;
+            const ix = fx < 0 ? tx - 1 : tx, iy = fy < 0 ? ty - 1 : ty;
+            const wx = fx < 0 ? fx + 1 : fx, wy = fy < 0 ? fy + 1 : fy;
+            let v = (cv(ix, iy) * (1 - wx) + cv(ix + 1, iy) * wx) * (1 - wy) + (cv(ix, iy + 1) * (1 - wx) + cv(ix + 1, iy + 1) * wx) * wy;
+            const gx = tx * s + px, gy = ty * s + py;
+            v += (smoothNoise(gx * 2.3, gy * 2.3) - 0.5) * 0.55 + ((hashCell(gx, gy) % 100) / 100 - 0.5) * 0.12;
+            if (v > 0.5) {
+              g.drawImage(canopy, ((gx % 128) + 128) % 128, ((gy % 128) + 128) % 128, 1, 1, px, py, 1, 1);
+            } else {
+              const key2 = ["terrain:grass-a", "terrain:grass-b"][hashCell(Math.floor(tx / 8), Math.floor(ty / 8)) % 2];
+              const grass = getSpriteCanvas(key2, SPRITE_DATA);
+              if (grass) g.drawImage(grass, ((gx % 128) + 128) % 128, ((gy % 128) + 128) % 128, 1, 1, px, py, 1, 1);
+            }
+          }
+        }
+        tile = c;
       }
     }
+    if (canopyTileCache.size > 3000) canopyTileCache.clear();
+    canopyTileCache.set(key, tile);
   }
-  // かど: 両どなりが外なら、丸く
-  const corners: Array<[number, number, number, number]> = [[-1, -1, 0, 0], [1, -1, s - 1, 0], [-1, 1, 0, s - 1], [1, 1, s - 1, s - 1]];
-  for (const [dx, dy, cx, cy] of corners) {
-    const kx = outside(tx + dx, ty), ky = outside(tx, ty + dy);
-    if (!kx || !ky) continue;
-    const r = 5 + (hashCell(tx * 13 + dx, ty * 29 + dy) % 3);
-    for (let y = 0; y < r; y++) {
-      for (let x = 0; x < r; x++) {
-        if ((r - x - 0.5) ** 2 + (r - y - 0.5) ** 2 <= r * r) continue;
-        put(kx, cx === 0 ? x : s - 1 - x, cy === 0 ? y : s - 1 - y);
-      }
-    }
-  }
+  if (tile) ctx.drawImage(tile, ox, oy);
 }
 
 /** 全体フィールドの、平らな地面どうし（雪・草・砂・道など）のさかいを、四角くせず、波うつ形でまぜる
@@ -617,6 +605,9 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
       if (map.data.tileTexture) {
         flatBlend(ctx, map, ox, oy, s, tx, ty);
       }
+      if (!map.data.tileTexture && (kind === "grass" || artHere === "treeCanopy")) {
+        canopyBlend(ctx, map, ox, oy, s, tx, ty);
+      }
       if ((artHere === "mountain" || artHere === "peaks") && !map.data.theme && !map.data.tileTexture) {   // 地形テクスチャのある地図（全体フィールド）は、テクスチャの岩山をそのまま見せる
         const tile = mountainTile(map, tx, ty, artHere === "peaks");
         if (tile) {
@@ -638,7 +629,7 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
         if (!map.data.coastal || hashCell(tx * 3 + 1, ty * 7 + 2) % 4 === 0) {
           grassDecor(ctx, ox, oy, s, tx, ty);
         }
-        if (kindAt(map, tx, ty - 1) === "tree") {
+        if (kindAt(map, tx, ty - 1) === "tree" && artAt(map, tx, ty - 1) !== "treeCanopy") {   // 草むらは芝とまざるので、帯の影はつけない
           treeShadow(ctx, ox, oy, s, tx, ty);
         }
         if (map.data.coastal) {
@@ -707,9 +698,6 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
           }
         }
         waterShimmer(ctx, ox, oy, tx, ty, nowMs);
-      }
-      if (kind === "tree" && artHere === "treeCanopy" && !map.data.tileTexture) {
-        canopyEdge(ctx, map, ox, oy, s, tx, ty);
       }
       if (kind === "tree" && map.data.snowy) {
         snowOnTree(ctx, ox, oy, s, tx, ty, kindAt(map, tx, ty - 1) !== "tree");

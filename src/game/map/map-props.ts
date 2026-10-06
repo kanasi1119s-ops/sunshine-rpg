@@ -95,7 +95,7 @@ export const PROP_FOOTPRINT: Record<MapProp["kind"], { left: number; right: numb
 };
 
 /** 絵の高さ（ピクセル）。岩・茂みは低く、家・木は枠いっぱい。 */
-export const PROP_HEIGHT: Record<MapProp["kind"], number> = { tree: 48, house: 56, "house-blue": 56, "house-green": 56, "house-white": 56, manor: 80, "manor-blue": 80, "manor-green": 80, rock: 20, bush: 18, "tree-snow": 48, "tree-pine": 48, "tree-dead": 48, "rock-snow": 20, "bush-snow": 18, palm: 48, cactus: 48, barrel: 26, lamp: 48, well: 44, signpost: 40, crates: 36, flowerbed: 12, "icon-port": 64, "icon-village": 64, "icon-lake": 64, "icon-mine": 64, "icon-castle": 64, "icon-tents": 64, "icon-temple": 64, "icon-snowtown": 64, "icon-sky": 64, "icon-palace": 64, "icon-ruin": 48, "icon-shrine": 48, "icon-cave": 48, "icon-stones": 48, "icon-bigtree": 48, "icon-vortex": 48, "icon-volcano": 48, "icon-dive": 48, "icon-spire": 112, "icon-core-spire": 256, "icon-village-mist": 64, "icon-tents-grass": 64, "icon-mineshaft": 48, "icon-islet-ruin": 48, "icon-islet-cave": 48, "icon-islet-shrine": 48, "icon-islet-fort": 48, "icon-hut": 48, "fountain": 47, "stall": 45, "haystack": 28, "cart": 32, "laundry": 30, "fence": 17, "fence-end": 18, "bench": 20, "statue-traveler": 41, "grave-cross": 22, "grave-round": 19, "noticeboard": 37, "brazier": 32, "shrine": 33, "pillar": 48, "pillar-broken": 29, "statue-soldier": 46, "statue-winged": 46, "banner-purple": 42, "banner-red": 42, "bones": 17, "cobweb": 26, "candelabra": 36, "coffin": 24, "barrel-broken": 21, "box-broken": 24, "crystal-blue": 36, "crystal-red": 36, "mushrooms": 25, "chest-closed": 22, "chest-open": 30, "chains": 44, "jail-bars": 50, tent: 46, church: 176, "church-interior": 224 };
+export const PROP_HEIGHT: Record<MapProp["kind"], number> = { tree: 80, house: 56, "house-blue": 56, "house-green": 56, "house-white": 56, manor: 80, "manor-blue": 80, "manor-green": 80, rock: 20, bush: 18, "tree-snow": 48, "tree-pine": 48, "tree-dead": 48, "rock-snow": 20, "bush-snow": 18, palm: 48, cactus: 48, barrel: 26, lamp: 48, well: 44, signpost: 40, crates: 36, flowerbed: 12, "icon-port": 64, "icon-village": 64, "icon-lake": 64, "icon-mine": 64, "icon-castle": 64, "icon-tents": 64, "icon-temple": 64, "icon-snowtown": 64, "icon-sky": 64, "icon-palace": 64, "icon-ruin": 48, "icon-shrine": 48, "icon-cave": 48, "icon-stones": 48, "icon-bigtree": 48, "icon-vortex": 48, "icon-volcano": 48, "icon-dive": 48, "icon-spire": 112, "icon-core-spire": 256, "icon-village-mist": 64, "icon-tents-grass": 64, "icon-mineshaft": 48, "icon-islet-ruin": 48, "icon-islet-cave": 48, "icon-islet-shrine": 48, "icon-islet-fort": 48, "icon-hut": 48, "fountain": 47, "stall": 45, "haystack": 28, "cart": 32, "laundry": 30, "fence": 17, "fence-end": 18, "bench": 20, "statue-traveler": 41, "grave-cross": 22, "grave-round": 19, "noticeboard": 37, "brazier": 32, "shrine": 33, "pillar": 48, "pillar-broken": 29, "statue-soldier": 46, "statue-winged": 46, "banner-purple": 42, "banner-red": 42, "bones": 17, "cobweb": 26, "candelabra": 36, "coffin": 24, "barrel-broken": 21, "box-broken": 24, "crystal-blue": 36, "crystal-red": 36, "mushrooms": 25, "chest-closed": 22, "chest-open": 30, "chains": 44, "jail-bars": 50, tent: 46, church: 176, "church-interior": 224 };
 
 /** 通り抜けられる飾り（壁の飾り・床の飾り）。足元のマスを通れなくしない。 */
 export const PASSABLE_PROPS = new Set<string>(["banner-purple", "banner-red", "bones", "cobweb", "barrel-broken", "mushrooms", "chains"]);
@@ -120,7 +120,7 @@ export const MAP_PROPS: Record<string, MapProp[]> = {
     { kind: "well", tileX: 14, tileY: 11 }, { kind: "lamp", tileX: 9, tileY: 10 }, { kind: "signpost", tileX: 13, tileY: 7 }, { kind: "barrel", tileX: 6, tileY: 9 }, { kind: "crates", tileX: 18, tileY: 10 }, { kind: "flowerbed", tileX: 8, tileY: 12 },
     { kind: "manor", tileX: 17, tileY: 4 },
     { kind: "tree", tileX: 1, tileY: 14 }, { kind: "tree", tileX: 9, tileY: 14 }, { kind: "tree", tileX: 14, tileY: 13 },
-    { kind: "tree", tileX: 19, tileY: 12 }, { kind: "tree", tileX: 20, tileY: 5 },
+    { kind: "tree", tileX: 19, tileY: 13 }, { kind: "tree", tileX: 20, tileY: 5 },
     { kind: "bush", tileX: 7, tileY: 13 }, { kind: "rock", tileX: 6, tileY: 12 },
   ],
   "mugikano-village": [
@@ -134,7 +134,7 @@ export const MAP_PROPS: Record<string, MapProp[]> = {
     { kind: "noticeboard", tileX: 19, tileY: 7 }, { kind: "stall", tileX: 3, tileY: 10 },
     { kind: "barrel", tileX: 6, tileY: 8 }, { kind: "crates", tileX: 16, tileY: 8 }, { kind: "lamp", tileX: 9, tileY: 7 },
     { kind: "manor-blue", tileX: 5, tileY: 4 }, { kind: "house", tileX: 15, tileY: 4 },
-    { kind: "tree", tileX: 2, tileY: 9 }, { kind: "tree", tileX: 19, tileY: 9 }, { kind: "tree", tileX: 20, tileY: 5 },
+    { kind: "tree", tileX: 2, tileY: 9 }, { kind: "tree", tileX: 19, tileY: 9 }, { kind: "tree", tileX: 21, tileY: 6 },
     { kind: "bush", tileX: 3, tileY: 8 }, { kind: "rock", tileX: 18, tileY: 9 },
   ],
   "tetsukusari-town": [

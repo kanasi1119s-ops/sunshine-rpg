@@ -20,7 +20,7 @@ function piece(name, dir, grid, palFile, recolor = {}, frame = 48) {
 }
 export const PIECES = [
   // 磨き直した版（assets-src/pixel-practice/r17-polish/。生成の元は tree.py・house_brick.py（2026-10-06 からレンガの家。前は house3d.py）・smallprops.py）
-  piece("P1-木", "r17-polish", "tree4.txt", "pal-tree.json"),
+  piece("P1-木", "r17-polish", "tree4.txt", "pal-tree.json", {}, 80),   // 2026-10-06 大きなリアルな木（64×80）
   piece("P2-家", "r17-polish", "cottage-brick.txt", "pal-cottage-brick.json", {}, 64),
   piece("P3-家青", "r17-polish", "cottage-brick.txt", "pal-cottage-brick-blue.json", {}, 64),
   piece("P4-家緑", "r17-polish", "cottage-brick.txt", "pal-cottage-brick-green.json", {}, 64),

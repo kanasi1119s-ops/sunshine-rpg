@@ -187,43 +187,81 @@ OLIVE_LEAF = ["#1a2a14", "#223619", "#2c441f", "#375226", "#42602d", "#4e6e34", 
 
 
 def tree4():
-    rng = np.random.default_rng(14)
+    """2026-10-06 作りなおし（人間の指示「木。いっそのこともっとでかくしてリアルな木にしようか。ドットを細かく。強弱が感じられるような、
+    立体感ある、木を作ろう」「全部光の感じも意識して」）: 64×80 の大きな広葉樹。
+    幹から枝が何度も分かれてのび、枝の先ごとに葉のかたまり（大小40ほど）。かたまりのすきまから、奥の枝と暗い冠の中がのぞく。
+    光: 左上からの日ざしで、冠の左上は明るく、右下と中は深いかげ（明暗の強弱をはっきり）。冠のふちの葉は、すける光で少し明るい。"""
+    rng = np.random.default_rng(31)
     m = Model()
-    m.add(capsule((0, -0.5, 0), (0.3, 14, 0), 2.6, 1.9), "bark")
-    for ang in (-2.6, -0.6, 0.9, 2.4):
+    # 幹（根もとが広がる）
+    m.add(capsule((0, -0.5, 0), (0.6, 13, 0), 3.2, 2.4), "bark")
+    for ang in (-2.7, -1.2, 0.2, 1.4, 2.6):
         dx, dz = math.cos(ang), math.sin(ang)
-        m.add(capsule((dx * 4.0, 0.0, dz * 2.6), (dx * 0.7, 3.6, dz * 0.7), 0.8, 1.7), "bark")
-    for (bx, by, bz) in ((-6.5, 20, 0.5), (6.5, 20.5, 0.0), (0.5, 24, -1.5)):
-        m.add(capsule((0.2, 12.5, 0), (bx, by, bz), 1.3, 0.7), "bark")
-    clumps = [
-        ((0, 27, -1.5), (10.5, 8.5, 8)),        # まんなか（大きい）
-        ((-9.5, 22.5, 0.5), (7, 6, 6.5)),       # 左
-        ((9.5, 23, 0.0), (7, 6, 6.5)),          # 右
-        ((-4.5, 32.5, -1.0), (7, 5.5, 6.5)),    # 上の左
-        ((5, 33, -1.5), (6.5, 5.5, 6.5)),       # 上の右
-        ((0, 20.5, 4.5), (7.5, 5, 4)),          # 手前の下（冠の下のふくらみ）
-    ]
+        m.add(capsule((dx * 5.5, 0.0, dz * 3.6), (dx * 0.8, 4.5, dz * 0.8), 0.9, 2.2), "bark")
+    # 枝: 再帰で分かれる
+    tips = []
+
+    def branch(p0, d, length, r, depth):
+        p1 = (p0[0] + d[0] * length, p0[1] + d[1] * length, p0[2] + d[2] * length)
+        m.add(capsule(p0, p1, r, r * 0.7), "bark")
+        if depth == 0:
+            tips.append(p1)
+            return
+        for k in range(2 if depth > 1 else 3):
+            yaw = rng.uniform(-1.0, 1.0); up = rng.uniform(0.15, 0.6)
+            nd = np.array([d[0] + yaw * 0.8, d[1] + up, d[2] + rng.uniform(-0.6, 0.6)])
+            nd /= np.linalg.norm(nd)
+            branch(p1, nd, length * rng.uniform(0.62, 0.78), r * 0.68, depth - 1)
+    for (dx, dz) in ((-1.0, 0.2), (1.0, -0.1), (0.15, -0.9), (-0.3, 0.8), (0.6, 0.7), (0.0, 0.0)):
+        d = np.array([dx, 2.1, dz]); d /= np.linalg.norm(d)
+        branch((0.4, 11.5, 0), d, 12.5, 1.8, 3)
+    # 葉のかたまり: 枝の先ごとに1〜2つ、上ほど大きく
+    clumps = []
+    for t in tips:
+        for _ in range(2):
+            c = (t[0] + rng.uniform(-1.5, 1.5), t[1] + rng.uniform(-0.5, 2.0), t[2] + rng.uniform(-1.5, 1.5))
+            rr = rng.uniform(3.8, 5.6)
+            clumps.append((c, (rr * 1.1, rr * 0.95, rr)))
+    # 冠の中をうめる、まるい大きなかたまり（奥）と、冠の下のふくらみ
+    cy_ = float(np.mean([c[0][1] for c in clumps]))
+    clumps.append(((0, cy_, -2.5), (13, 11, 10)))
+    clumps.append(((0, cy_ - 8, 1.5), (10, 6, 7)))
     m.add(ellipsoids([c for c, _ in clumps], [r for _, r in clumps]), "leaf")
-    m.add(tufts(clumps, rng, 34, 1.7), "leaf")
+    m.add(tufts(clumps, rng, 110, 1.15), "leaf")
+
+    V = np.array([0.0, math.sin(math.radians(25)), math.cos(math.radians(25))])
 
     def shade(mm, p, n, lum, x, y):
         if mm == "bark":
-            lum = bark_shade(lum, p, 0, 0)
-            if p[1] > 11:
-                lum -= 0.14                            # 冠の下の暗がり
+            lum = bark_shade(lum, p, 0, 0, stripes=9)
+            if p[1] > 18:
+                lum -= 0.16                                    # 冠の下・中の枝は暗い
         if mm == "leaf":
-            lum = leaf_shade(lum, p, n, 1, k=0.06)
-            if n[1] < -0.3:
-                lum -= 0.1                             # 下を向いた葉は、かげ
+            lum = leaf_shade(lum, p, n, 1, k=0.07)
+            lum = (lum - 0.45) * 1.25 + 0.52                   # 明暗の強弱をはっきり（全体は暗くしすぎない）
+            lum += 0.12 * max(0.0, float(n[1]))               # 空からの光（上を向いた葉は明るい）
+            rim = (1 - max(0.0, float(np.dot(n, V)))) ** 3
+            lum += 0.18 * rim * (1 if n[0] < 0.3 else 0.4)     # ふちの葉は、すける光で少し明るい
+            if n[1] < -0.35:
+                lum -= 0.12                                    # 下を向いた葉は深いかげ
         return lum, mm
 
     def colour(mm, p, n, lum, x, y, c):
         if mm == "leaf":
-            return leaf_colour(mm, lum, p, x, y, c, OLIVE_LEAF, 1)
+            return leaf_colour(mm, lum, p, x, y, c, TREE_BIG, 1)
+        if mm == "bark" and p[1] > 24:
+            return TREE_BIG[2]                                   # 冠の奥の枝は、葉のかげにしずむ
+        if mm == "bark" and p[1] > 15:
+            k = BARK.index(c) if c in BARK else 2
+            return BARK[max(1, min(k, 3))]                       # 冠の下の枝は、暗い樹皮
         return c
 
-    return fit(m, 44, 48, {"leaf": OLIVE_LEAF, "bark": BARK}, shade_fn=shade, colour_fn=colour, scale=1.0,
-               shadow_r=(15, 2.5), outline="#16220f", ambient=0.22, front_tilt=25)
+    return fit(m, 64, 80, {"leaf": TREE_BIG, "bark": BARK}, shade_fn=shade, colour_fn=colour, scale=1.32,
+               shadow_r=(22, 3.2), outline="#101a0c", ambient=0.26)
+
+
+# 大きな木の葉の色（町の草地と同じ色合いで、暗い所はより深く、明るい所はより明るく。強弱のため段を多く）
+TREE_BIG = ["#0e180a", "#14220e", "#1a2c12", "#223817", "#2b451c", "#355322", "#406129", "#4c6f31", "#587d39", "#648b42", "#71984b", "#80a556", "#90b262", "#a2c070"]
 
 
 # ===================================================================== 2. 雪をかぶったモミ
