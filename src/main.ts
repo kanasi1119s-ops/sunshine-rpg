@@ -53,6 +53,7 @@ import { renderFollowers } from "./render/follower-renderer";
 import { spriteSpecFromPortrait } from "./game/sprite/character-specs";
 import { PORTRAITS } from "./game/portrait/portraits";
 import { propFeetY, renderDoorOpening, renderProps } from "./render/prop-renderer";
+import { renderTownWall } from "./render/town-wall";
 import { doorOffsetX, isHouse } from "./game/map/map-props";
 import type { MapExit, MapProp } from "./game/map/types";
 import { renderDialogue } from "./render/dialogue-renderer";
@@ -973,6 +974,7 @@ if (import.meta.env.DEV) {
       const c = canvas.getContext("2d")!;
       const cam = { x: 0, y: 0, viewportWidth: canvas.width, viewportHeight: canvas.height };
       renderTileMap(c, full, cam);
+      renderTownWall(c, full, cam);
       renderProps(c, full.data, cam, () => true);
       const list = WORLD_NPCS[mapId] ?? [];
       c.fillStyle = "#ff40ff";
@@ -2335,6 +2337,7 @@ function renderGameSceneBase(): void {
   // つながる地図（世界地図）は、端をまたぐとき、反対側の景色もずらして描く（seams）
   const seams: Camera[] = seamCameras(renderCamera, map);
   for (const cam of seams) renderTileMap(ctx, map, cam);
+  if (map.data.townWall) for (const cam of seams) renderTownWall(ctx, map, cam);
   if (currentMapId === "world-map") for (const cam of seams) renderBasin(ctx, map, cam, performance.now());
   // 飛空艇は雲より上を飛ぶので、乗っているときは雲を先に描く（ふだんは、船や人のあとに描き、雲のうしろを通って見える）
   const cloudFirst = currentMapId === "world-map" && vehicle === "air";

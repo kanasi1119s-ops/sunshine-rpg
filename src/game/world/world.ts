@@ -1,5 +1,6 @@
 import { sceneResidentsFor } from "./scene-residents";
 import { addYuriHome } from "./yuri-home";
+import { tidyTowns } from "../map/town-tidy";
 import { AIRSHIP_DOCKED_FLAG, SKY_TOWN, SKY_TOWN_DOCK } from "../vehicle";
 import { CHAPTER0_MAPS, CHAPTER0_NPCS } from "./chapter0-world";
 import { CHAPTER1_MAPS, CHAPTER1_NPCS } from "./chapter1-world";
@@ -110,6 +111,8 @@ for (const m of Object.values(WORLD_MAPS)) {
   if (!m.props) continue;
   m.props = m.props.map((p) => (p.kind === "house-blue" || p.kind === "house-green" ? { ...p, kind: "house" } : p));
 }
+// 町をととのえる（玄関が塀にかかる家・街灯の並び・花壇・重なり。2026-10-06）。家の中を作る前に
+tidyTowns(WORLD_MAPS, WORLD_NPCS);
 addHouseInteriors(WORLD_MAPS, WORLD_NPCS);
 addInnInteriors(WORLD_MAPS, WORLD_NPCS);
 // ユーリの家（灯里の、宿屋の西どなりの家）。ふつうの家の中身を入れかえる（2026-10-06）
@@ -132,6 +135,20 @@ addYuriHome(WORLD_MAPS, WORLD_NPCS);
     },
   ],
 });
+// 町を、石の塀で囲む（2026-10-06、人間の指示「町は基本立体的な塀で囲むように」）。いちばん外の1マスを塀にし（通れない）、
+// 出入り口のマスは門としてあける。塀の絵は render/town-wall.ts
+for (const [mapId, data] of Object.entries(WORLD_MAPS)) {
+  if (!(/-(town|village)$/.test(mapId) || /^village-/.test(mapId)) || !data.collision) continue;
+  data.townWall = true;
+  const w = data.width, h = data.height;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (x !== 0 && y !== 0 && x !== w - 1 && y !== h - 1) continue;
+      if (data.exits?.some((e) => e.tileX === x && e.tileY === y)) continue;
+      data.collision[y * w + x] = 1;
+    }
+  }
+}
 // 物語の場面で話す人を、その町にいる人として置く（2026-10-06）。地図と人がそろったあとで
 for (const [mapId, data] of Object.entries(WORLD_MAPS)) {
   const residents = sceneResidentsFor(mapId, data, WORLD_NPCS[mapId] ?? []);

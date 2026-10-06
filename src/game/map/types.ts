@@ -32,6 +32,8 @@ export interface TileMapData {
   tileTexture?: Record<number, string>;
   /** ダンジョン・塔・洞窟などの床と壁の描き方（`dungeon-tiles.ts`）。省略時は従来どおり。 */
   theme?: string;
+  /** 町を囲む石の塀を、地図のいちばん外の1マスに描く（出入り口は門としてあける。`render/town-wall.ts`）。 */
+  townWall?: boolean;
   /** 雪の地方か。木のタイルに雪をのせる（`ground-decor.ts`）。 */
   snowy?: boolean;
   /** 海岸のある地図（世界地図）。陸が水に接するところに砂浜を描く（`ground-decor.ts`）。 */

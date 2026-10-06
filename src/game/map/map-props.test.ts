@@ -8,9 +8,11 @@ describe("マップの飾り（木・家）", () => {
     for (const [mapId, props] of Object.entries(MAP_PROPS)) {
       const data = WORLD_MAPS[mapId];
       expect(data, mapId).toBeDefined();
-      expect(data.props?.length, mapId).toBeGreaterThanOrEqual(props.length); // 町の飾り（town-decor）が足されることがある
+      // 町の飾り（town-decor）が足され、町のととのえ（town-tidy、重なり）で取りのぞかれることがある
+      expect(data.props?.length, mapId).toBeGreaterThan(0);
       const map = createTileMap(data);
-      for (const prop of props) {
+      // 町のととのえ（town-tidy.ts）で取りのぞいた飾りは、のぞく
+      for (const prop of props.filter((p) => data.props?.some((q) => q.kind === p.kind && q.tileX === p.tileX && q.tileY === p.tileY))) {
         for (const { x, y } of propFootprintTiles(prop)) {
           expect(isWalkable(map, x, y), `${mapId} (${x},${y})`).toBe(false);
         }
@@ -22,7 +24,7 @@ describe("マップの飾り（木・家）", () => {
     for (const [mapId, props] of Object.entries(MAP_PROPS)) {
       const data = WORLD_MAPS[mapId];
       const npcs = WORLD_NPCS[mapId] ?? [];
-      for (const prop of props) {
+      for (const prop of props.filter((p) => data.props?.some((q) => q.kind === p.kind && q.tileX === p.tileX && q.tileY === p.tileY))) {
         const overhang = propOverhangTiles(prop.kind, data.tileHeight);
         const tiles = propFootprintTiles(prop);
         for (const { x, y } of tiles) {
