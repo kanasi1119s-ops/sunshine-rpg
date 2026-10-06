@@ -54,6 +54,49 @@ for k, g in c.frames.items():
         for y in range(12, 27):                  # 横向き: 背中から上下に出る弓の先
             x = 13 if s == 1 else 2
             if g[y][x] == ".": g[y][x] = bw
+# 髪の動きをなめらかに（2026-10-07、人間の指示「前面と後面と横から見る髪の動きがなめらかじゃない」）。
+# もとの型（アヤメ）の髪のすその動きは、エルフの新しい髪型と形が合わず、点がばらばらに動いていた。
+# 歩きは 1→0→2→0 の順なので、コマ1と2を同じ「はずんだ形」、コマ0を「ふつうの形」にそろえ、
+# 前・後ろは横髪のすそが1ドット上がり、横はうしろに流れる髪が1ドット後ろへふくらむ（毎歩同じ動きでゆれる）。
+def set_cols(g, y, x0, s):
+    for i, ch in enumerate(s):
+        g[y][x0 + i] = ch
+
+
+def mirror_s(s):
+    return s[::-1]
+
+
+HAIR_DOWN = {0: [".AB", ".AB", ".AB", ".AB", ".AD", ".AD", "..A"],
+             1: [".AB", ".AB", ".AB", ".AD", ".AD", "..A", "..A"]}   # 15〜21行め（左のすそ。右は左右反転）
+HAIR_UP = {0: [".AD", ".AD", ".AD", ".AD"], 1: [".AD", ".AD", ".AD", "..A"]}   # 18〜21行め
+down0 = [list(r) for r in c.frames["down0"]]
+up0 = [list(r) for r in c.frames["up0"]]
+for f in range(3):
+    k = 0 if f == 0 else 1
+    g = c.frames[f"down{f}"]
+    for y in range(15, 22):                       # 髪の両わき（x=0〜3, 12〜15）はコマ0にそろえてから、すそを上げる
+        for x in list(range(0, 4)) + list(range(12, 16)):
+            g[y][x] = down0[y][x]
+    gu = c.frames[f"up{f}"]
+    for y in range(18, 22):
+        for x in list(range(0, 5)) + list(range(11, 16)):
+            gu[y][x] = up0[y][x]
+    for i, s in enumerate(HAIR_DOWN[k]):
+        set_cols(g, 15 + i, 0, s); set_cols(g, 15 + i, 13, mirror_s(s))
+    g = c.frames[f"up{f}"]
+    for i, s in enumerate(HAIR_UP[k]):
+        set_cols(g, 18 + i, 0, s); set_cols(g, 18 + i, 13, mirror_s(s))
+side0 = [list(r) for r in c.frames["left0"]]
+for f in (1, 2):
+    g = c.frames[f"left{f}"]
+    for y in range(15, 22):                       # うしろの髪（x=11より後ろ）をコマ0からとり、1ドット後ろへふくらませる
+        for x in range(11, 16):
+            g[y][x] = side0[y][x]
+        for x in range(15, 11, -1):
+            g[y][x] = side0[y][x - 1]
+for f in range(3):
+    c.frames[f"right{f}"] = [r[::-1] for r in c.frames[f"left{f}"]]
 build("エルフの弓使い", "elf-archer", c)
 
 # 2. 天使（男性）
