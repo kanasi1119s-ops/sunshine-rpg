@@ -3050,7 +3050,7 @@
  {
   "id": "enc-world-5-1",
   "prompt": "a lava distortion, a twisted lava rock creature with violet cracks mixed with orange magma",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-5-1",
   "kind": "mob",
   "name": "溶岩の歪み",
@@ -3061,12 +3061,13 @@
    140,
    60,
    70
-  ]
+  ],
+  "draft": "enc-world-5-1_0"
  },
  {
   "id": "enc-world-5-2",
   "prompt": "an ash-covered shadow, a hunched creature buried in grey volcanic ash with red eyes peeking out",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-5-2",
   "kind": "mob",
   "name": "灰かぶりの影",
@@ -3077,7 +3078,8 @@
    110,
    105,
    105
-  ]
+  ],
+  "draft": "enc-world-5-2_0"
  },
  {
   "id": "enc-world-5-3",
