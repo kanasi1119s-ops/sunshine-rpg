@@ -61,7 +61,7 @@ for ch, v in zip("BCD", ("#f0c050", "#fff2a8", "#b07a1c")): c.color(ch, v)
 c.color("F", "#3a8ad8")
 for ch, v in zip("JKLMOPQRSVW", ("#f4f2ea", "#c8b67a", "#ffffff", "#e8e6f0", "#b8b4c8", "#b8a070", "#e8e0c8", "#fff8e8", "#c8b890", "#d8c8a0", "#9a8a60")): c.color(ch, v)
 apply_head(c, ANGEL)
-swing_arms_side(c, "J", "E")
+swing_arms_side(c, "O", "E")                     # 腕は白いローブより少し暗い色の線にする
 swing_arms(c)                                    # 両手を交互に振る（人間の指示「手が動いてない」）
 c.halo(c.new("#ffe680"), c.new("#c89a2a"), gap=3)
 stamp(c, wing_masks(c.new("#f0c860"), c.new("#fff0a0"), c.new("#c8962a"), c.new("#7a5a1a")), over_keys=("up",))   # イメージ画像どおり金の羽
