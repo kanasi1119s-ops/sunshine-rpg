@@ -2348,7 +2348,8 @@ function renderGameSceneBase(): void {
   const depthItems: { feetY: number; draw: () => void }[] = [];
   for (const prop of map.data.props ?? []) {
     depthItems.push({
-      feetY: propFeetY(prop, map.data.tileHeight),
+      // 花壇は地面に近い低い飾りなので、同じ列の街灯などより先に描く（2026-10-06「灯のが前にこなきゃいけない」）
+      feetY: propFeetY(prop, map.data.tileHeight) - (prop.kind === "flowerbed" ? 8 : 0),
       draw: () => {
         for (const cam of seams) renderProps(ctx, map.data, cam, () => true, [prop]);
         if (doorOpening?.prop === prop) {

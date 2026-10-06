@@ -4,7 +4,7 @@
 （明るい所は黄色寄り、影は青寄り）、りんかくは右下だけ（こい色）、左上のふちは光、深い影の中はまぜない。
 足もとは、フィールドの草原（ground_tex.py の草）と同じ色の草の葉先と、うすく透ける影でなじませる。どれも 48×48。
 
-  icon-shrine   祠: 街道わきの西洋風の小さな礼拝堂（しっくいの壁とすみ石・半円アーチの入口・かわら屋根・鐘つき・三つの環の石の帯・鉄の街灯）
+  icon-shrine   祠: 街道わきの西洋風の小さな礼拝堂（しっくいの壁とすみ石・木のアーチ枠と板の扉の入口・かわら屋根・鐘つき・三つの環の石の帯・鉄の街灯）
   icon-cave     洞窟: 草におおわれた岩山の、ななめの地層とひび。まんなか下に、奥ほど暗くなる洞窟の口（口のまわりの石は光を受ける）。
                 上と根もとに草、こけ
   icon-bigtree  森: 新しい木と同じ描き方の木を3本、奥から手前へ重ね、根もとに茂み。木ごとに葉の色を少しかえる
@@ -299,6 +299,8 @@ def shrine():
         for y in (by1 - 1, by1):
             img[y, x] = pick(STONE, (6.6 if y == by1 - 1 else 4.4) - (x - bx0) / (bx1 - bx0) * 1.8)
     # ---- 入口（半円アーチ。くさび石の囲み・中の灯り・木の扉） ----
+    # 入口は木でつくる（2026-10-06 人間の指示「その祠入り口を木材で作ろう」）:
+    # 半円の木のアーチ枠（曲げた板を継いだもの）と、左右の木の柱。中は板を張った両開きの扉で、まんなかが少し開き、灯りがもれる
     DX0, DX1, SPR, R = 20, 27, 34.0, 4.0
     def inside(x, y):
         if y >= SPR:
@@ -309,30 +311,48 @@ def shrine():
             if not (0 <= x < S and 0 <= y < S):
                 continue
             if inside(x, y):
-                d = math.hypot((x + 0.5 - CX) * 1.1, (y + 0.5 - 38.5))
-                g = max(0.0, 1 - d / 7.0)
-                img[y, x] = ["#120e0c", "#2a1a12", "#60381a", GLOW[1]][3 if g > 0.78 else 2 if g > 0.52 else 1 if g > 0.26 else 0]
+                # 扉の板（たての板。左の扉は光、右の扉は影。板のすき間・木目）
+                left = x + 0.5 < CX
+                v = (5.0 if left else 3.6) - abs(x + 0.5 - CX) * (0.0 if left else 0.12)
+                if (x - DX0) % 2 == 1:
+                    v -= 0.9                                              # 板と板のすき間
+                if hn(x, y // 2, 105) % 5 == 0:
+                    v -= 0.5                                              # 木目
+                if y < SPR and math.hypot(x + 0.5 - CX, y + 0.5 - SPR) > R - 1.0:
+                    v -= 1.3                                              # アーチ枠の下の影
+                img[y, x] = pick(WOOD, v)
                 continue
             dd = math.hypot(x + 0.5 - CX, y + 0.5 - SPR)
             arch = y < SPR and R < dd <= R + 2.4
             jamb = y >= SPR and (DX0 - 3 < x < DX0 or DX1 < x < DX1 + 3)
             if arch or jamb:
-                a = math.atan2(SPR - (y + 0.5), x + 0.5 - CX)
-                v = 7.6 - (x - (DX0 - 3)) / 14 * 2.8
-                if arch and (int((a + 3.2) * 3.6) % 2 == 0):
-                    v -= 1.5                                              # くさび石の目地（放射状）
-                if jamb and (y - int(SPR)) % 3 == 0:
-                    v -= 1.5
-                if hn(x, y, 96) % 13 == 0:
-                    v -= 0.5
-                img[y, x] = pick(STONE, v)
-    for x in range(DX0, DX1 + 1):                                         # 入口の下の、すり減った石の敷居
+                if arch:
+                    a = math.atan2(SPR - (y + 0.5), x + 0.5 - CX)
+                    outer = dd > R + 1.3
+                    v = (7.2 if outer else 5.6) - (x - (DX0 - 3)) / 14 * 2.4
+                    if int((a + 3.2) * 2.2) % 2 == 0 and int((a + 3.2) * 4.4) % 2 == 0 and not outer:
+                        v -= 1.0                                          # 曲げ板の継ぎ目
+                else:
+                    inner = x in (DX0 - 1, DX1 + 1)
+                    v = (6.6 if x < CX else 3.6) - (0.9 if inner else 0)
+                    if x == DX0 - 2:
+                        v = 7.4                                           # 左の柱の、光を受けるかど
+                    if hn(x, y // 3, 106) % 4 == 0:
+                        v -= 0.6                                          # 木目
+                img[y, x] = pick(WOOD, v)
+    for x in range(DX0 - 2, DX1 + 3):                                     # 柱の下の、すり減った石の敷居
         img[by1, x] = pick(STONE, 6.2 - (x - DX0) * 0.2)
-    for x in range(DX0 + 1, DX1):                                         # 中の祭壇（石の台）
-        img[39, x] = pick(STONE, 4.6 - (x - DX0) * 0.3)
-        img[40, x] = pick(STONE, 2.6)
-    for (x, y, k) in ((23, 38, 1), (24, 38, 1), (23, 37, 2), (24, 37, 1), (23, 36, 3), (23, 35, 2), (24, 36, 1)):
-        img[y, x] = FLAME[k]                                              # ろうそくのほのお
+    for y in range(int(SPR - R) + 1, by1):                                # 扉のまんなかのすき間（少し開いて、中の灯りがもれる）
+        if inside(23, y):
+            img[y, 23] = GLOW[2] if y > SPR + 1 else GLOW[1]
+            img[y, 24] = pick(WOOD, 1.0)                                  # 右の扉の、すき間がわの影
+    for y in (int(SPR) - 1, by1 - 3):                                     # 鉄の帯金（ちょうつがい）
+        for x in range(DX0, DX1 + 1):
+            if x in (23, 24):
+                continue
+            img[y, x] = IRON[3 if x < CX else 2] if (x in (DX0, DX0 + 1, DX1 - 1, DX1)) else img[y, x]
+    img[by1 - 6, 22] = IRON[4]; img[by1 - 5, 22] = IRON[2]                # 取っ手の輪（左右）
+    img[by1 - 6, 25] = IRON[3]; img[by1 - 5, 25] = IRON[1]
     # ---- 入口の上の、三つの環を彫った石の帯 ----
     for y in range(24, 29):
         for x in range(bx0 + 3, bx1 - 2):

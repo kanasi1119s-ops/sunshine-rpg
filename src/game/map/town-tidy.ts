@@ -425,7 +425,8 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
 
   // 重なりで家を取りのぞいたあとに残った花壇も、はずす
   for (const f of props.filter((q) => q.kind === "flowerbed" && !besideHouse(q))) remove(f);
-  data.props = props;
+  // 花壇は地面に近い低い飾りなので、いちばん先に描く（2026-10-06 人間の指示「灯と花壇が重なっていて灯のが前にこなきゃいけない」）
+  data.props = [...props.filter((q) => q.kind === "flowerbed"), ...props.filter((q) => q.kind !== "flowerbed")];
 }
 
 /** 町の中で、花壇いがいの飾り・調べられる物の絵が重なっている組（テスト用）。 */
