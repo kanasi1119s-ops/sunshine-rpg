@@ -74,11 +74,11 @@ def main():
     N = names(pack)
     files = []
 
-    # 01 売り文句つき（メイン）: 千手の光輪を中央に、左右にボス、下に雑魚の列
+    # 01 売り文句つき（メイン）: 悪夢の蝗神を中央に（千手の光輪は使わない。2026-10-07、人間の指示）、左右にボス、下に雑魚の列
     bg = backdrop(glow=(70, 52, 30)); d = ImageDraw.Draw(bg)
     shadow_paste(bg, sprite(pack, "boss", "boss_13", 1), 40, 300)
     shadow_paste(bg, sprite(pack, "boss", "boss_15", 1), W - 296, 300)
-    shadow_paste(bg, sprite(pack, "boss", "boss_24", 2), (W - 512) // 2, 190)
+    shadow_paste(bg, sprite(pack, "boss", "boss_14", 2), (W - 512) // 2, 190)
     row = ["mob_019", "mob_075", "mob_040", "mob_121", "mob_028", "mob_088", "mob_171", "mob_191", "mob_137", "mob_001"]
     for n, m in enumerate(row):
         shadow_paste(bg, sprite(pack, "mob", m, 1), 24 + n * 124, 760)
@@ -113,11 +113,11 @@ def main():
             label(d, x, 650, no, N[no], 512)
         frame(d); files.append((f"{k + 3:02d}_ボス_{N[a]}・{N[b]}.jpg", bg))
 
-    # 07 千手の光輪（3倍）
+    # 07 ボス1体を3倍で（千手の光輪は使わない）
     bg = backdrop(glow=(80, 60, 26)); d = ImageDraw.Draw(bg)
-    shadow_paste(bg, sprite(pack, "boss", "boss_24", 3), (W - 768) // 2, 60)
-    label(d, 0, 846, "boss_24", N["boss_24"], W)
-    frame(d); files.append(("07_ボス_千手の光輪.jpg", bg))
+    shadow_paste(bg, sprite(pack, "boss", "boss_12", 3), (W - 768) // 2, 60)
+    label(d, 0, 846, "boss_12", N["boss_12"], W)
+    frame(d); files.append((f"07_ボス_{N['boss_12']}.jpg", bg))
 
     # 08〜10 雑魚（2倍・15体ずつ、テーマ別）
     themes = [("獣・虫", ["mob_001", "mob_016", "mob_019", "mob_021", "mob_023", "mob_075", "mob_121", "mob_123", "mob_140", "mob_153", "mob_170", "mob_171", "mob_179", "mob_183", "mob_013"]),
@@ -135,7 +135,7 @@ def main():
     # 11 まとめた小さい画像（PNG・560×420。一覧・サムネイル用。2026-10-07、人間の指示「まとめた小さい画像をPNGで」）
     SW, SH = 560, 420
     sm = backdrop(glow=(70, 52, 30)).resize((SW, SH), Image.LANCZOS); d = ImageDraw.Draw(sm)
-    sm.paste(sprite(pack, "boss", "boss_24", 1), ((SW - 256) // 2, 82), sprite(pack, "boss", "boss_24", 1))
+    sm.paste(sprite(pack, "boss", "boss_14", 1), ((SW - 256) // 2, 82), sprite(pack, "boss", "boss_14", 1))
     for n, m in enumerate(["mob_075", "mob_019"]):
         im = sprite(pack, "mob", m, 1); sm.paste(im, (14, 96 + n * 112), im)
     for n, m in enumerate(["mob_040", "mob_179"]):

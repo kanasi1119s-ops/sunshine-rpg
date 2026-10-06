@@ -62,11 +62,10 @@ def main():
         dr.polygon([(cx, cy), (cx + R * math.cos(a0), cy + R * math.sin(a0)), (cx + R * math.cos(a1), cy + R * math.sin(a1))], fill=38 if k % 2 else 22)
     rays = rays.filter(ImageFilter.GaussianBlur(6))
     bg = Image.composite(Image.new("RGBA", (W, H), (255, 190, 90, 255)), bg, rays)
-    # 奥: 千手の光輪（2倍）と後光
-    ring = sprite(pack, "boss", "boss_24", 2)
+    # 奥: 悪夢の蝗神（2倍）と後光
+    ring = sprite(pack, "boss", "boss_14", 2)   # 奥の主役（千手の光輪は使わない。2026-10-07、人間の指示）
     rx, ry = (W - ring.width) // 2, 70
     put_glow(bg, ring, (255, 200, 90), 30, 1.6, rx, ry)
-    ImageDraw.Draw(bg).ellipse((rx + 256 - 170, ry + 256 - 170, rx + 256 + 170, ry + 256 + 170), fill=(18, 10, 24, 255))   # 輪の内側のもやを暗く見せる下地
     bg.alpha_composite(ring, (rx, ry))
     # 前: 左に鬼神、右に光の獅子（2倍・少し暗くして奥行き）、手前の影
     oni = sprite(pack, "boss", "boss_15", 2)
