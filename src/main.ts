@@ -87,7 +87,7 @@ import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { isOpenSpot, rescueTile } from "./game/player-rescue";
 import { strengthenBoss } from "./game/battle/difficulty-scale";
-import { ARBITER_CHANCE, createArbiter } from "./game/battle/arbiter";
+import { arbiterChance, createArbiter } from "./game/battle/arbiter";
 import { setArbiterQueue } from "./game/battle/battle-engine";
 import { arbiterIntro } from "./game/battle/arbiter-talk";
 import { COSMO_ID } from "./game/items/legend-items";
@@ -3373,8 +3373,9 @@ const loop = createGameLoop({
         const stepped = encounterMapId ? stepEncounter(encounterState, encounterMapId, Math.random, Object.keys(companionStats).length) : { state: encounterState, enemies: null };
         encounterState = stepped.state;
         if (stepped.enemies) {
-          // 全体フィールドでは、ごくまれに（0.01%）隠しボス「機械の悪神巨人兵」が現れる
-          if (currentMapId === "world-map" && Math.random() < ARBITER_CHANCE) startArbiterBattle();
+          // 全体フィールドでは、ごくまれに（0.02%。仲間のだれかがレベル80を超えたら0.2%）隠しボス「機械の悪神巨人兵」が現れる
+          const topLevel = Math.max(heroStats.level, ...Object.values(companionStats).map((c) => c?.level ?? 1));
+          if (currentMapId === "world-map" && Math.random() < arbiterChance(topLevel)) startArbiterBattle();
           else startRandomBattle(stepped.enemies);
           return;
         }

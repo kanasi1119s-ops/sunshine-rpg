@@ -1,11 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { ARBITER_SKILLS, ARBITER_ATTACKS, applyAction, chooseEnemyActions, createBattleState, runTurn } from "./battle-engine";
-import { createArbiter } from "./arbiter";
+import { arbiterChance, createArbiter } from "./arbiter";
 import { partyAtLevel, winRate } from "./balance-helpers";
 import { createRng } from "../random";
 
 describe("隠しボス「機械の悪神巨人兵」", () => {
   const party = () => partyAtLevel(80, 5);
+
+  it("出現率は 0.02%、仲間のだれかがレベル80を超えたら 0.2%（2026-10-06 人間の指示）", () => {
+    expect(arbiterChance(1)).toBe(0.0002);
+    expect(arbiterChance(80)).toBe(0.0002);
+    expect(arbiterChance(81)).toBe(0.002);
+    expect(arbiterChance(99)).toBe(0.002);
+  });
 
   it("神の調停で、味方全員の体力が半分になる", () => {
     const s = createBattleState(party(), [createArbiter()]);
