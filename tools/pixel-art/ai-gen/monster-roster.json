@@ -4217,7 +4217,7 @@
  },
  {
   "id": "angel-10",
-  "status": "todo",
+  "status": "done",
   "kind": "extra",
   "name": "竪琴の天使",
   "group": "天使",
@@ -4241,7 +4241,7 @@
  },
  {
   "id": "angel-11",
-  "status": "draft",
+  "status": "done",
   "kind": "extra",
   "name": "車輪の天使",
   "group": "天使",
@@ -4259,11 +4259,12 @@
    "human, human face",
    "statue"
   ],
-  "bg": "dark"
+  "bg": "dark",
+  "draft": "angel-11_1"
  },
  {
   "id": "angel-12",
-  "status": "todo",
+  "status": "done",
   "kind": "extra",
   "name": "翼の集まり",
   "group": "天使",
@@ -4281,7 +4282,8 @@
    "human, human face",
    "statue"
   ],
-  "bg": "dark"
+  "bg": "dark",
+  "draft": "angel-12_0"
  },
  {
   "id": "angel-13",
