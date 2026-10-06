@@ -1,5 +1,6 @@
 import { sceneResidentsFor } from "./scene-residents";
 import { addYuriHome } from "./yuri-home";
+import { AIRSHIP_DOCKED_FLAG, SKY_TOWN, SKY_TOWN_DOCK } from "../vehicle";
 import { CHAPTER0_MAPS, CHAPTER0_NPCS } from "./chapter0-world";
 import { CHAPTER1_MAPS, CHAPTER1_NPCS } from "./chapter1-world";
 import { CHAPTER2_MAPS, CHAPTER2_NPCS } from "./chapter2-world";
@@ -113,6 +114,24 @@ addHouseInteriors(WORLD_MAPS, WORLD_NPCS);
 addInnInteriors(WORLD_MAPS, WORLD_NPCS);
 // ユーリの家（灯里の、宿屋の西どなりの家）。ふつうの家の中身を入れかえる（2026-10-06）
 addYuriHome(WORLD_MAPS, WORLD_NPCS);
+// 空の町（浮嶼）にとめた飛空艇。とまっているあいだだけ見え、話しかけると乗って飛び立つ（2026-10-06）
+(WORLD_NPCS[SKY_TOWN] ??= []).push({
+  id: "fushima-airship-dock",
+  tileX: SKY_TOWN_DOCK.tileX,
+  tileY: SKY_TOWN_DOCK.tileY,
+  color: "#7a4a28",
+  showWhenFlag: AIRSHIP_DOCKED_FLAG,
+  commands: [
+    {
+      type: "choice",
+      text: "飛空艇だ。乗って、飛び立ちますか？",
+      options: [
+        { label: "飛び立つ", commands: [{ type: "takeoff" }] },
+        { label: "やめる", commands: [] },
+      ],
+    },
+  ],
+});
 // 物語の場面で話す人を、その町にいる人として置く（2026-10-06）。地図と人がそろったあとで
 for (const [mapId, data] of Object.entries(WORLD_MAPS)) {
   const residents = sceneResidentsFor(mapId, data, WORLD_NPCS[mapId] ?? []);

@@ -42,7 +42,7 @@ import { renderNpcs, visibleNpcFeetY } from "./render/npc-renderer";
 import { faceNpc, finishScriptedWalks, isScriptedWalking, opposite, updateWander, walkNpcAlong } from "./game/npc-wander";
 import { PartyTrail } from "./game/party-trail";
 import { worldEntryProblems } from "./game/world/world-map-world";
-import { buildVehicleCollision, canLandOn, groundIdAt, OCEAN, VEHICLE_SPEED, type Vehicle } from "./game/vehicle";
+import { AIRSHIP_DOCKED_FLAG, buildVehicleCollision, skyIslandTiles, canLandOn, groundIdAt, OCEAN, SKY_TOWN, SKY_TOWN_ARRIVAL, VEHICLE_SPEED, type Vehicle } from "./game/vehicle";
 import { WORLD_AIRSHIP_START, WORLD_SHIP_START } from "./game/map/world/world-map.generated";
 import { drawAirship, drawShip } from "./render/vehicle-renderer";
 import { renderBasin, renderStorm, renderTowerCloud } from "./render/vortex-renderer";
@@ -318,7 +318,23 @@ function updateVehicleAfterMove(tile: { x: number; y: number }, actionPressed: b
     }
   } else if (vehicle === "air" && actionPressed) {
     usedAction = true;
-    if (canLandOn(ground) && !findExitAt(map, tile.x, tile.y) && snapToWalkableLand(tile)) {
+    const skyTown = findExitAt(map, tile.x, tile.y);
+    if (skyTown?.targetMapId === SKY_TOWN) {
+      // 空の町: 飛空艇のまま町へ入り、町の中にとめて降りる（物語がまだ届いていないときは、静かに入れる）
+      if (worldEntryProblems(SKY_TOWN, flags).length > 0) {
+        quietPlace = SKY_TOWN;
+        saveMessage = "まだ物語の先の場所。いまは、何も起こらない";
+        saveMessageTimer = 3500;
+      }
+      flags[AIRSHIP_DOCKED_FLAG] = true;
+      airshipPos = { x: tile.x, y: tile.y };
+      switchMap(SKY_TOWN, SKY_TOWN_ARRIVAL.tileX, SKY_TOWN_ARRIVAL.tileY);
+      vehicleHint = null;
+      saveMessage = saveMessage || "飛空艇を、町の中にとめた";
+      saveMessageTimer = Math.max(saveMessageTimer, 2200);
+      return true;
+    }
+    if (canLandOn(ground) && !skyIslandTiles(data).has(tile.y * data.width + tile.x) && !findExitAt(map, tile.x, tile.y) && snapToWalkableLand(tile)) {
       vehicle = "foot";
       airshipPos = { x: tile.x, y: tile.y };
       vehicleHint = { text: "着陸した。", ms: 2000 };
@@ -655,6 +671,15 @@ let victoryDropText: string | null = null;
 
 const dialogue = new DialogueController(flags, {
   onWarp: (warp) => switchMap(warp.mapId, warp.tileX, warp.tileY),
+  // 空の町にとめた飛空艇に乗って、町の上から飛び立つ
+  onTakeoff: () => {
+    const pos = WORLD_TOWNS[SKY_TOWN];
+    flags[AIRSHIP_DOCKED_FLAG] = false;
+    switchMap("world-map", pos.x, pos.y);
+    vehicle = "air";
+    airshipPos = { x: pos.x, y: pos.y };
+    vehicleHint = { text: "飛空艇で飛び立った。", ms: 2200 };
+  },
   onStartBattle: (battleId) => startStoryBattle(battleId),
   onGiveGold: (amount) => {
     gold = addGold(gold, amount);
@@ -2336,7 +2361,7 @@ function renderGameSceneBase(): void {
     if (flags["has_ship"] && vehicle !== "ship") {
       for (const cam of seams) drawShip(ctx, shipPos.x * ts + ts / 2 - cam.x, shipPos.y * ts + ts - cam.y, "right", true);
     }
-    if (flags["has_airship"] && vehicle !== "air") {
+    if (flags["has_airship"] && vehicle !== "air" && !flags[AIRSHIP_DOCKED_FLAG]) {
       for (const cam of seams) drawAirship(ctx, airshipPos.x * ts + ts / 2 - cam.x, airshipPos.y * ts + ts - cam.y, "down", nowMs, false);
     }
   }

@@ -8,6 +8,8 @@ export interface WarpRequest {
 
 interface RunnerOptions {
   onWarp?: (warp: WarpRequest) => void;
+  /** 町にとめた飛空艇に乗って、飛び立つ。 */
+  onTakeoff?: () => void;
   onStartBattle?: (battleId: string) => void;
   onGiveGold?: (amount: number) => void;
   onGiveEquipment?: (itemId: string) => void;
@@ -65,6 +67,10 @@ function* runCommands(
           tileX: command.tileX,
           tileY: command.tileY,
         });
+        break;
+
+      case "takeoff":
+        options.onTakeoff?.();
         break;
 
       case "startBattle":

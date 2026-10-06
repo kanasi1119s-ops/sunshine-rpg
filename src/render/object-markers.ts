@@ -6,7 +6,7 @@ import { getSpriteCanvas } from "../game/art/sprite";
  * マップ上の「物」（宝箱・木箱・階段・石碑・機械・祭壇・焦げ跡・荷馬車）の絵。1マス（16×16）に、
  * 縁取り・地の色・影の2〜3段で描く（ハイライトなし、光は左上）。種類は、物のIDに含まれる言葉で決める（`character-specs.ts`の OBJECT_WORDS）。
  */
-export type ObjectKind = "table" | "tansu" | "bed" | "shelf" | "beacon" | "boat" | "chest" | "crate" | "stairs" | "tablet" | "machine" | "altar" | "scorch" | "wagon" | "sign" | "oldsign" | "counter" | "generic" | "desk" | "papers" | "cabinet" | "reception" | "hearth" | "ladder";
+export type ObjectKind = "table" | "tansu" | "bed" | "shelf" | "beacon" | "boat" | "chest" | "crate" | "stairs" | "tablet" | "machine" | "altar" | "scorch" | "wagon" | "sign" | "oldsign" | "counter" | "generic" | "desk" | "papers" | "cabinet" | "reception" | "hearth" | "ladder" | "airship";
 
 export function objectKindOf(id: string): ObjectKind {
   const words = id.split("-");
@@ -20,6 +20,7 @@ export function objectKindOf(id: string): ObjectKind {
   if (has("cabinet")) return "cabinet";
   if (has("hearth")) return "hearth";
   if (has("ladder")) return "ladder";
+  if (has("airship")) return "airship";
   if (has("counter")) return "counter";
   if (has("table")) return "table";
   if (has("tansu")) return "tansu";
@@ -221,9 +222,10 @@ export function drawObjectMarker(ctx: CanvasRenderingContext2D, kind: ObjectKind
     case "cabinet":
     case "reception":
     case "hearth":
-    case "ladder": {
-      // 作りこんだ家具のドット絵（`prop:*`）があれば、足もとにそろえて描く
-      const art = getSpriteCanvas(`prop:${kind === "shelf" ? "bookshelf" : kind === "reception" ? "front-counter" : kind}`, SPRITE_DATA);
+    case "ladder":
+    case "airship": {
+      // 作りこんだ家具のドット絵（`prop:*`）があれば、足もとにそろえて描く（町にとめた飛空艇は、着陸した飛空艇の絵）
+      const art = getSpriteCanvas(`prop:${kind === "shelf" ? "bookshelf" : kind === "reception" ? "front-counter" : kind === "airship" ? "airship-landed" : kind}`, SPRITE_DATA);
       if (art) {
         const prev = ctx.imageSmoothingEnabled;
         ctx.imageSmoothingEnabled = false;

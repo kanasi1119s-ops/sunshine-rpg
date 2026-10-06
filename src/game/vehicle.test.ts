@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { WORLD_MAPS } from "./world/world";
 import { WORLD_CHANNEL, WORLD_SHIP_DOCK, WORLD_SHIP_START, WORLD_TOWER, WORLD_AIRSHIP_START, WORLD_ISLETS } from "./map/world/world-map.generated";
-import { buildVehicleCollision, canLandOn, groundIdAt } from "./vehicle";
+import { WORLD_TOWNS } from "./map/world/world-map.generated";
+import { buildVehicleCollision, canLandOn, groundIdAt, SKY_TOWN } from "./vehicle";
 import { isBasinCauseway } from "./map/world/world-map";
 
 const world = WORLD_MAPS["world-map"];
@@ -81,5 +82,30 @@ describe("芯環塔の上の積乱雲の下: 船は雲のうしろを進め、�
     // 雲より上（北）の海は、これまでどおり通れる
     expect(groundIdAt(world, WORLD_TOWER.x, WORLD_TOWER.y - 19)).toBe(1);
     expect(at(ship, 0, -19)).toBe(0);
+  });
+});
+
+describe("空の町（浮嶼）は、飛空艇でしか入れない", () => {
+  it("雲の上には着陸できず、ほかの陸には着陸できる", () => {
+    expect(canLandOn(10)).toBe(false);
+    expect(canLandOn(2)).toBe(true);
+  });
+  it("空の町のまわりの雲の島は、ほかの陸とつながっていない（歩きでも船でも、たどり着けない）", () => {
+    const pos = WORLD_TOWNS[SKY_TOWN];
+    const foot = world.collision!;
+    const seen = new Set<number>([(pos.y + 1) * W + pos.x]);
+    const q = [(pos.y + 1) * W + pos.x];
+    for (let i = 0; i < q.length; i++) {
+      const c = q[i], x = c % W, y = Math.floor(c / W);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = (x + dx + W) % W, ny = (y + dy + world.height) % world.height, ni = ny * W + nx;
+        if (!seen.has(ni) && foot[ni] === 0) { seen.add(ni); q.push(ni); }
+      }
+    }
+    const reachable = (world.exits ?? []).filter((e) => seen.has(e.tileY * W + e.tileX)).map((e) => e.targetMapId);
+    expect(new Set(reachable)).toEqual(new Set([SKY_TOWN, "fushima-tower-1"]));
+    // 雲の島には、船の通れるマスもない
+    const ship = buildVehicleCollision(world, "ship");
+    expect([...seen].some((i) => ship[i] === 0)).toBe(false);
   });
 });

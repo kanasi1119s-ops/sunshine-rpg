@@ -22,6 +22,8 @@ export type EventCommand =
   | { type: "inn"; price: number; home?: boolean }
   /** 映画のような演出（上下に黒い帯）を、入れる・はずす。会話がおわると、自動ではずれる。 */
   | { type: "cinematic"; on: boolean }
+  /** 町にとめた飛空艇に乗って、飛び立つ（空の町・浮嶼。2026-10-06）。会話はここで終わる。 */
+  | { type: "takeoff" }
   /** スタッフロール（エンディングの演出）を流す。 */
   | { type: "staffRoll" };
 
