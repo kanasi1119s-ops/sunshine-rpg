@@ -4079,7 +4079,7 @@
   "draft": "angel-07_0"
  },
  {
-  "status": "todo",
+  "status": "cancelled",
   "kind": "extra",
   "id": "zenkan-face-angel",
   "name": "全観の顔（部品・天使）",
@@ -4098,10 +4098,11 @@
   "neg_drop": [
    "human, human face",
    "statue"
-  ]
+  ],
+  "draft": "zenkan-face-angel_0"
  },
  {
-  "status": "todo",
+  "status": "cancelled",
   "kind": "extra",
   "id": "zenkan-face-angel2",
   "name": "全観の顔（部品・天使2）",
@@ -4123,7 +4124,7 @@
   ]
  },
  {
-  "status": "todo",
+  "status": "cancelled",
   "kind": "extra",
   "id": "zenkan-hand2",
   "name": "全観の手（部品・写実）",
