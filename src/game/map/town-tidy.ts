@@ -18,7 +18,7 @@ import type { MapProp, MapPropKind, TileMapData } from "./types";
 export const PROP_BOX: Partial<Record<MapPropKind, [number, number, number, number]>> = {
   "banner-purple": [-11, 11, -42, -5],
   "banner-red": [-11, 11, -42, -5],
-  "barrel": [-13, 12, -33, -1],
+  "barrel": [-13, 12, -32, -1],
   "barrel-broken": [-18, 16, -21, 0],
   "bench": [-16, 15, -18, -1],
   "bones": [-16, 16, -17, 0],
