@@ -169,11 +169,9 @@ def wing_masks(inner, light, dark, outline, bat=False):
     def row(y, xs, edge):
         return [(y, x, outline if x == edge else (light if (x + y) % 3 == 0 else (dark if bat and x % 2 else inner))) for x in xs]
     front = []
-    for y, xs in {1: [1], 2: [0, 1, 2], 3: [0, 1, 2], 4: [0, 1], 5: [0, 1], 6: [0], 17: [0], 18: [0], 19: [0]}.items():
+    for y, xs in {17: [0], 18: [0], 19: [0]}.items():   # 頭の上の左右の羽の先は描かない（2026-10-07、人間の指示「頭の上の左右の黄色いのと赤いのいらないかも」）
         front += row(y, xs, 0)
         front += row(y, [15 - x for x in xs], 15)
-    if bat:   # こうもりの羽: ぎざぎざの先
-        front += [(0, 1, outline), (0, 14, outline)]
     side = []
     for y, xs in {12: [13], 13: [13, 14], 14: [12, 13, 14, 15], 15: [12, 13, 14, 15], 16: [12, 13, 14, 15], 17: [12, 13, 14],
                   18: [12, 13, 14], 19: [12, 13], 20: [12, 13], 21: [12]}.items():
@@ -184,6 +182,4 @@ def wing_masks(inner, light, dark, outline, bat=False):
     for y, (a, b) in {16: (2, 6), 17: (1, 6), 18: (1, 6), 19: (1, 6), 20: (2, 6), 21: (2, 5), 22: (3, 5), 23: (3, 4)}.items():
         back += row(y, range(a, b + 1), a)
         back += row(y, [15 - x for x in range(a, b + 1)], 15 - a)
-    for y, xs in {1: [1], 2: [0, 1, 2], 3: [0, 1, 2], 4: [0, 1], 5: [0, 1], 6: [0]}.items():
-        back += row(y, xs, 0) + row(y, [15 - x for x in xs], 15)
     return {"down": front, "up": back, "left": side}
