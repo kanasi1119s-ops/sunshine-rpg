@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { WORLD_MAPS, WORLD_NPCS } from "../world/world";
-import { townCrowdedHouses, townOverlaps, townPropsOnPath, townTreesNearGate, townPathOverlaps, townPostOverlaps, townWallOverhangs } from "./town-tidy";
+import { townCrowdedHouses, townOverlaps, townPropsOnPath, townObjectsNearGate, townPathOverlaps, townPostOverlaps, townWallOverhangs } from "./town-tidy";
 import { doorOffsetX, isHouse } from "./map-props";
 
 const towns = Object.keys(WORLD_MAPS).filter((m) => /-(town|village)$/.test(m) || /^village-/.test(m));
@@ -87,8 +87,8 @@ describe("建物の間・井戸・噴水", () => {
   it("どの町にも井戸がある（2026-10-06「井戸も置こう」）", () => {
     for (const id of towns) expect((WORLD_MAPS[id].props ?? []).some((p) => p.kind === "well"), id).toBe(true);
   });
-  it("どの町にも噴水がある（湖の上の町・硝子湖は、広場があいていないのでのぞく）（2026-10-06「各町噴水も置こうか」）", () => {
-    for (const id of towns.filter((t) => t !== "garasuko-town")) expect((WORLD_MAPS[id].props ?? []).some((p) => p.kind === "fountain"), id).toBe(true);
+  it("どの町にも噴水がある（2026-10-06「各町噴水も置こうか」）", () => {
+    for (const id of towns) expect((WORLD_MAPS[id].props ?? []).some((p) => p.kind === "fountain"), id).toBe(true);
   });
 });
 
@@ -99,7 +99,7 @@ describe("歩道", () => {
 });
 
 describe("門のまわり", () => {
-  it("町の出入り口（門）の近く（4マス以内）に木を置かない（2026-10-06「出入口の近くに木を置くのはやめよう」）", () => {
-    for (const id of towns) expect(townTreesNearGate(WORLD_MAPS[id]), id).toEqual([]);
+  it("町の出入り口（門）の近く（4マス以内）に、建物・花壇のほかの飾りを置かない（2026-10-06「入り口近くにオブジェクトを置くのをやめよう」）", () => {
+    for (const id of towns) expect(townObjectsNearGate(WORLD_MAPS[id]), id).toEqual([]);
   });
 });
