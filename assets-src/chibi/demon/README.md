@@ -10,3 +10,4 @@
   作り方は `../make_four.py`。
 - ドット絵エディタで 48×128（12コマ）を描き、食い違い 0 マスを確かめた（`sheet-editor.png`）。
 - ファイル: `demon.walker.json`（ゲームの形式）、`sheet.txt`・`sheet.json`（エディタ用）、`sheet.png`・`sheet_x8.png`（縦: 下・上・左・右、横: 3コマ）、`walk.gif`
+- 2026-10-07、人間の指示「悪魔と、エルフも、魔王と同じ手の動きにしてほしい」で、前・後ろ向きの両手を交互に上下させた（もとの型は片手が下がるだけだったので、反対の手を1ドット上げる。`../chibi_parts.py` の `swing_arms_ayame`）。

@@ -2,7 +2,7 @@
 体は仲間の2頭身の型（女性はアヤメ、男性はレトの体）。髪は heads.py で1から描いた新しい髪型にした（仲間の髪型を使わない）。
 使い方: python3 make_four.py → 各フォルダに walker.json・sheet.txt/json（エディタ用）・sheet.png・sheet_x8.png・walk.gif"""
 import pathlib
-from chibi_parts import Chibi, L, stamp, wing_masks, swing_arms, swing_arms_side
+from chibi_parts import Chibi, L, stamp, wing_masks, swing_arms, swing_arms_ayame, swing_arms_side
 from heads import ELF, ANGEL, DEMON, LORD_HELM
 
 HERE = pathlib.Path(__file__).parent
@@ -40,6 +40,7 @@ c.color("K", "#3a8a4a")
 for ch, v in zip("PQRHTSUV", ("#5a8a3a", "#3f6a2a", "#8ab860", "#a8d080", "#2e4f20", "#a8743a", "#6a4020", "#3a2410")): c.color(ch, v)
 cc, cg = c.new("#3c7a2c"), c.new("#ffd36b")
 apply_head(c, ELF, extra={"c": cc, "g": cg})
+swing_arms_ayame(c)                              # 両手を交互に上下（魔王と同じ動き。人間の指示）
 bw, bs = c.new("#8a5a2a"), c.new("#e8e0c8")      # 背中の長弓（木と弦）
 for k, g in c.frames.items():
     if k.startswith(("down", "left", "right")):
@@ -76,6 +77,7 @@ for g in c.frames.values():                      # アヤメの長い後ろ髪�
     for y in range(19, 32):
         g[y] = ["." if ch in "BC" else ("A" if ch == "D" else ch) for ch in g[y]]
 apply_head(c, DEMON)
+swing_arms_ayame(c)                              # 両手を交互に上下（魔王と同じ動き。人間の指示）
 hn, hl = c.new("#2a2028"), c.new("#8a7a94")
 stamp(c, {"down": [(4, 3, hn), (3, 3, hn), (2, 2, hl), (4, 12, hn), (3, 12, hn), (2, 13, hl)],
           "up": [(4, 3, hn), (3, 3, hn), (2, 2, hl), (4, 12, hn), (3, 12, hn), (2, 13, hl)],
