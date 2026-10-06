@@ -29,6 +29,8 @@ export const PIECES = [
   piece("P7-屋敷", "r17-polish", "manor-brick.txt", "pal-manor-brick.json", {}, 80),
   piece("P8-屋敷青", "r17-polish", "manor-brick.txt", "pal-manor-brick-blue.json", {}, 80),
   piece("P9-屋敷緑", "r17-polish", "manor-brick.txt", "pal-manor-brick-green.json", {}, 80),
+  // 霧断崖の、城のような民家（r17-polish/props3d.py で立体の模型から。2026-10-06）
+  piece("P50-城の家", "r17-polish", "house-castle.txt", "pal-house-castle.json", {}, 64),
   // 雪の地方の飾り（r17-polish/snow.py で、既存の木・岩・茂みを雪化／枯れ木は一から）
   piece("P10-雪の木", "r17-polish", "tree-snow.txt", "pal-tree-snow.json"),
   piece("P11-枯れ木", "r17-polish", "tree-dead.txt", "pal-tree-dead.json"),
