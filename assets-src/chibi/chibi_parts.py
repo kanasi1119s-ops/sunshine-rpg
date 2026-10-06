@@ -187,3 +187,59 @@ def wing_masks(inner, light, dark, outline, bat=False):
     for y, xs in {1: [1], 2: [0, 1, 2], 3: [0, 1, 2], 4: [0, 1], 5: [0, 1], 6: [0]}.items():
         back += row(y, xs, 0) + row(y, [15 - x for x in xs], 15)
     return {"down": front, "up": back, "left": side}
+
+
+def front_wing_masks(inner, light, dark, outline, bat=False):
+    """正面から羽が分かるように描く（2026-10-07、人間の指示「前から羽がわかるようにしようか」）。
+    頭の横（頭が細い上の方）に、上へ広げた羽の先を大きく描き、そこから肩・腰へ、たたんだ羽のふちを外側1〜2列で下ろす。
+    記号: A 縁取り・w 羽・l 明るい羽根・d 暗い羽根（左側の形。右側は左右反転）"""
+    art = [
+        ".AA..",
+        "AlwA.",
+        "AwwlA",
+        "AwwwA",
+        "Awwd.",
+        "Awd..",
+        "Ad...",
+        "Ad...",
+        "Al...",
+        "Ad...",
+        "Ad...",
+        "Al...",
+        "Ad...",
+        "Ad...",
+        "Al...",
+        "Ad...",
+        "Ad...",
+        "Al...",
+        "Ad...",
+        "A....",
+        "A....",
+    ] if not bat else [
+        "A..A.",
+        "AA.AA",
+        "AwwwA",
+        "AwldA",
+        "Awdd.",
+        "Ad...",
+        "Ad...",
+        "Al...",
+        "Ad...",
+        "Ad...",
+        "Al...",
+        "Ad...",
+        "Ad...",
+        "Al...",
+        "Ad...",
+        "Ad...",
+        "A....",
+        "A....",
+    ]
+    col = {"A": outline, "w": inner, "l": light, "d": dark}
+    pts = []
+    for y, row in enumerate(art):
+        for x, ch in enumerate(row):
+            if ch != ".":
+                pts.append((y, x, col[ch]))
+                pts.append((y, 15 - x, col[ch]))
+    return pts

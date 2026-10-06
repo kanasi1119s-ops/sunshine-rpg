@@ -2,7 +2,7 @@
 体は仲間の2頭身の型（女性はアヤメ、男性はレトの体）。髪は heads.py で1から描いた新しい髪型にした（仲間の髪型を使わない）。
 使い方: python3 make_four.py → 各フォルダに walker.json・sheet.txt/json（エディタ用）・sheet.png・sheet_x8.png・walk.gif"""
 import pathlib
-from chibi_parts import Chibi, L, stamp, wing_masks
+from chibi_parts import Chibi, L, stamp, wing_masks, front_wing_masks
 from heads import ELF, ANGEL, DEMON, LORD
 
 HERE = pathlib.Path(__file__).parent
@@ -62,7 +62,9 @@ c.color("F", "#3a8ad8")
 for ch, v in zip("JKLMOPQRSVW", ("#f4f2ea", "#c8b67a", "#ffffff", "#e8e6f0", "#b8b4c8", "#b8a070", "#e8e0c8", "#fff8e8", "#c8b890", "#d8c8a0", "#9a8a60")): c.color(ch, v)
 apply_head(c, ANGEL)
 c.halo(c.new("#ffe680"), c.new("#c89a2a"), gap=3)
-stamp(c, wing_masks(c.new("#f0c860"), c.new("#fff0a0"), c.new("#c8962a"), c.new("#7a5a1a")), over_keys=("up",))   # イメージ画像どおり金の羽
+wi, wl, wd, wo = c.new("#fff4d0"), c.new("#ffffff"), c.new("#d8b052"), c.new("#7a5a1a")   # 髪の金と分けるため、白に近い金
+m = wing_masks(wi, wl, wd, wo); m["down"] = front_wing_masks(wi, wl, wd, wo)   # イメージ画像どおり金の羽。正面からも見える
+stamp(c, m, over_keys=("up", "down"))
 build("天使", "angel", c)
 
 # 3. 悪魔（女性）
@@ -79,7 +81,9 @@ hn, hl = c.new("#2a2028"), c.new("#8a7a94")
 stamp(c, {"down": [(4, 3, hn), (3, 3, hn), (2, 2, hl), (4, 12, hn), (3, 12, hn), (2, 13, hl)],
           "up": [(4, 3, hn), (3, 3, hn), (2, 2, hl), (4, 12, hn), (3, 12, hn), (2, 13, hl)],
           "left": [(4, 5, hn), (3, 5, hn), (2, 4, hl), (4, 10, hn), (3, 11, hn), (2, 11, hl)]})
-stamp(c, wing_masks(c.new("#b0202a"), c.new("#e04a4a"), c.new("#6a0a14"), "A", bat=True), over_keys=("up",))   # イメージ画像どおり赤い羽
+wi, wl, wd = c.new("#6a1a3a"), c.new("#b03a5a"), c.new("#3a0a1e")   # 髪の深紅と分けるため、紫がかった暗い赤
+m = wing_masks(wi, wl, wd, "A", bat=True); m["down"] = front_wing_masks(wi, wl, wd, "A", bat=True)   # イメージ画像どおり赤い羽。正面からも見える
+stamp(c, m, over_keys=("up", "down"))
 c.tail(c.new("#3a1a3a"), c.new("#e0505a"))
 build("悪魔", "demon", c)
 
