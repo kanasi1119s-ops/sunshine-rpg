@@ -4,8 +4,7 @@
 （明るい所は黄色寄り、影は青寄り）、りんかくは右下だけ（こい色）、左上のふちは光、深い影の中はまぜない。
 足もとは、フィールドの草原（ground_tex.py の草）と同じ色の草の葉先と、うすく透ける影でなじませる。どれも 48×48。
 
-  icon-shrine   祠: 石を積んだ2本の柱と、その上の石の環（この世界のしるし「環」）。中に小さな石の台と、ともった灯り（灯りのまわりがほんのり明るい）。
-                石の段2つ、石の目地・欠け・こけ、根もとの草
+  icon-shrine   祠: 石の段2つの上の、石を積んだ小さなお堂（石の板の屋根・灯りのともる奥まった口・口の上に三つの環を彫った石）と、両わきの石灯ろう
   icon-cave     洞窟: 草におおわれた岩山の、ななめの地層とひび。まんなか下に、奥ほど暗くなる洞窟の口（口のまわりの石は光を受ける）。
                 上と根もとに草、こけ
   icon-bigtree  森: 新しい木と同じ描き方の木を3本、奥から手前へ重ね、根もとに茂み。木ごとに葉の色を少しかえる
@@ -180,77 +179,120 @@ def forest():
 
 
 # ===================================================================== 祠
+GOLD = ["#5a3a10", "#8a5e1a", "#b8862c", "#e0b248", "#f6dc8a"]
+
+
 def shrine():
+    """小さな石の祠（2026-10-06 人間の指示「祠作り直し」で、石の環のアーチから描きなおした）。
+    石の段2つの上に、石を積んだ小さなお堂。前に灯りのともる、奥まった口（くぼみ）。口の上に、この世界のしるし「三つの環」を彫った石。
+    石の板を張った屋根（軒が張り出し、上の面は左上が明るい。板の継ぎ目・こけ）。両わきに小さな石灯ろう（火がともる）。"""
     img = new()
-    # 石の段（2段）
-    for (y0, y1, x0, x1) in ((42, 45, 7, 40), (39, 42, 10, 37)):
+    # ---- 石の段（2段。上の面は明るく、正面は少し暗い） ----
+    for (y0, y1, x0, x1) in ((42, 46, 6, 41), (39, 42, 10, 37)):
         for y in range(y0, y1):
             for x in range(x0, x1 + 1):
-                v = 5.4 - (x - x0) / (x1 - x0) * 1.8 + (1.6 if y == y0 else 0) - (0.8 if y == y1 - 1 else 0)
-                if (x - x0 + (y0 // 3) * 4) % 9 == 0 and y > y0:
-                    v -= 1.6                                              # 石の目地
-                if hn(x, y, 5) % 13 == 0:
-                    v -= 0.8
-                img[y, x] = pick(STONE, v)
-    # 柱（石を積む。左の柱は光の側、右の柱は少し暗い）
-    def pillar(x0, x1, top, lit):
-        for y in range(top, 39):
-            row = (y - top) // 4
-            for x in range(x0, x1 + 1):
                 u = (x - x0) / (x1 - x0)
-                v = (6.4 if lit else 5.2) - u * 2.6
-                if (y - top) % 4 == 0:
-                    v = v - 1.8 if y > top else v + 1.2                    # 石と石の目地（いちばん上は光）
-                elif (y - top) % 4 == 1:
-                    v += 0.6                                               # 石の上のふちの光
-                if x == x0:
-                    v += 0.8
-                if hn(x, row, x0) % 11 == 0 and (y - top) % 4 == 2:
-                    v -= 1.0                                               # 欠け
+                v = (7.0 if y == y0 else 5.2) - u * 2.0 - (0.9 if y == y1 - 1 else 0)
+                if (x - x0 + (3 if y0 == 42 else 0)) % 8 == 0 and y > y0:
+                    v -= 1.8                                              # 石の継ぎ目
+                if hn(x, y, 5) % 11 == 0:
+                    v -= 0.7                                              # 石のざらつき
                 img[y, x] = pick(STONE, v)
-            if hn(row, x0, 7) % 3 == 0 and (y - top) % 4 == 3:
-                img[y, x1 - 1] = MOSS[1]                                   # 目地のこけ
-    pillar(11, 16, 17, True)
-    pillar(31, 36, 17, False)
-    # 石の環（柱の上。環の左上は光、右下は影。内がわのふちは暗い）
-    cx, cy, R0, R1 = 23.8, 13.0, 8.0, 12.6
-    for y in range(0, 24):
-        for x in range(6, 42):
-            dx, dy = x + 0.5 - cx, (y + 0.5 - cy) * 1.05
-            d = math.hypot(dx, dy)
-            if R0 <= d <= R1 and not (y > 17 and (x < 11 or x > 36)):
-                t = (d - R0) / (R1 - R0)                                  # 0=内がわ 1=外がわ
-                nx, ny = dx / d, dy / d
-                # 環の断面はまるい: まんなかが手前に出る
-                bulge = math.sin(t * math.pi)
-                n = np.array([nx * (1 - bulge) * (1 if t > 0.5 else -1), ny * (1 - bulge) * (1 if t > 0.5 else -1), bulge + 0.3])
-                n /= np.linalg.norm(n)
-                v = 1.2 + 7.0 * max(0.0, float(n @ L))
-                seg = int((math.atan2(dy, dx) + math.pi) / (2 * math.pi) * 12)
-                if abs(((math.atan2(dy, dx) + math.pi) / (2 * math.pi) * 12) - round((math.atan2(dy, dx) + math.pi) / (2 * math.pi) * 12)) < 0.06:
-                    v -= 1.8                                               # 環を組んだ石の継ぎ目
-                if hn(seg, 3) % 4 == 0 and t > 0.7 and ny < -0.3:
-                    img[y, x] = MOSS[2 if v > 5 else 1]                    # 上のこけ
-                    continue
-                img[y, x] = pick(STONE, v)
-    # 中の石の台と、ともった灯り（台のまわりが、ほんのり明るい）
-    for y in range(31, 39):
-        for x in range(20, 28):
-            v = 6.2 - (x - 20) / 8 * 2.4 + (1.4 if y == 31 else 0)
+    # ---- お堂の本体（石を積んだ壁。左が光、右が影） ----
+    bx0, bx1, by0, by1 = 13, 34, 21, 38
+    for y in range(by0, by1 + 1):
+        row = (y - by0) // 3
+        off = 3 if row % 2 else 0
+        for x in range(bx0, bx1 + 1):
+            u = (x - bx0) / (bx1 - bx0)
+            v = 6.2 - u * 2.6
+            if (y - by0) % 3 == 0 or (x - bx0 + off) % 6 == 0:
+                v -= 1.7                                                  # 目地
+            elif (y - by0) % 3 == 1 and (x - bx0 + off) % 6 == 1:
+                v += 0.8                                                  # 石の左上のかどの光
+            if hn(x // 2, y, 7) % 17 == 0:
+                v -= 0.8
             img[y, x] = pick(STONE, v)
-    for y in range(29, 31):
-        for x in range(22, 26):
-            img[y, x] = pick(STONE, 7.2 - (x - 22) * 0.6)                 # 灯りの皿
-    for (x, y, k) in ((23, 28, 1), (24, 28, 1), (23, 27, 2), (24, 27, 1), (23, 26, 2), (23, 25, 3), (24, 26, 0)):
+        if hn(row, 3) % 3 == 0:
+            img[y, bx1 - 1] = MOSS[1] if (y - by0) % 3 == 0 else img[y, bx1 - 1]   # 右の目地のこけ
+    # ---- 奥まった口（上がまるい。奥の壁は暗く、灯りの色がうつる） ----
+    nx0, nx1, ny0, ny1 = 18, 29, 27, 38
+    ncx = (nx0 + nx1 + 1) / 2
+    for y in range(ny0 - 3, ny1 + 1):
+        for x in range(nx0, nx1 + 1):
+            dx = (x + 0.5 - ncx) / ((nx1 - nx0 + 1) / 2)
+            top = ny0 - 3 * math.sqrt(max(0.0, 1 - dx * dx))              # 上のまるみ
+            if y < top:
+                continue
+            d = math.hypot(x + 0.5 - ncx, (y + 0.5 - (ny1 - 3)) * 1.2)
+            glow = max(0.0, 1 - d / 7.5)
+            k = 0 if glow < 0.2 else 1 if glow < 0.45 else 2
+            img[y, x] = ["#14100e", "#2e1e14", "#5a3a1e"][k]
+            if x == nx0 or y <= top + 0.8:
+                img[y, x] = "#0e0a08"                                     # 口の左と上のふちの、奥の影
+    for y in range(ny0 - 3, ny1 + 1):                                    # 口の右のふち（光を受けた石の切り口）
+        img[y, nx1 + 1] = pick(STONE, 7.4) if y > ny0 - 2 else img[y, nx1 + 1]
+    # 灯り（口の中の小さな石の皿と、ほのお）
+    for x in range(21, 27):
+        img[37, x] = pick(STONE, 6.6 - (x - 21) * 0.5)
+        img[38, x] = pick(STONE, 4.6 - (x - 21) * 0.4)
+    for (x, y, k) in ((23, 36, 1), (24, 36, 1), (23, 35, 2), (24, 35, 2), (23, 34, 3), (24, 34, 2), (23, 33, 2), (24, 32, 1), (23, 32, 3)):
         img[y, x] = FLAME[k]
-    for y in range(22, 33):                                               # 灯りの照り（柱の内がわ・台の上）
-        for x in range(17, 31):
-            if img[y, x] in STONE:
-                d = math.hypot(x - 23.5, y - 27)
-                if d < 7 and hn(x, y, 9) % 2 == 0:
-                    k = STONE.index(img[y, x])
-                    img[y, x] = STONE[min(8, k + 1)] if d < 4.5 else img[y, x]
-    ground(img, 6, 41, 45, 41)
+    # ---- 口の上の、三つの環を彫った石（金色の環が、左上で光る） ----
+    for y in range(22, 26):
+        for x in range(19, 29):
+            img[y, x] = pick(STONE, 7.2 - (x - 19) * 0.3 if y > 22 else 8.0 - (x - 19) * 0.3)
+    for (cx, cy) in ((21.5, 24.0), (24.0, 23.6), (26.5, 24.0)):
+        for y in range(22, 27):
+            for x in range(19, 30):
+                d = math.hypot(x + 0.5 - cx, (y + 0.5 - cy) * 1.1)
+                if 1.0 <= d < 1.9:
+                    lit = (x + 0.5 - cx) + (y + 0.5 - cy) < 0
+                    img[y, x] = GOLD[4 if lit and d < 1.5 else 3 if lit else 1]
+    # ---- 屋根（石の板。軒が張り出し、上の面は奥へ。左上が明るい。板の継ぎ目・こけ） ----
+    rx0, rx1, ry0, ry1 = 9, 38, 11, 20                                   # 屋根の上の面（台形: 下が広い）
+    for y in range(ry0, ry1 + 1):
+        t = (y - ry0) / (ry1 - ry0)
+        xl = int(round(rx0 + 5 - t * 5)); xr = int(round(rx1 - 5 + t * 5))
+        for x in range(xl, xr + 1):
+            u = (x - xl) / max(1, xr - xl)
+            v = 7.6 - u * 2.8 - (1 - t) * 0.6
+            if (x - 9) % 5 == 0:
+                v -= 1.6                                                  # 板と板の継ぎ目（たて）
+            elif (x - 9) % 5 == 1:
+                v += 0.5
+            if y == ry0:
+                v = 8.4 - u * 2.0                                         # 棟（いちばん上の、明るい石）
+            if hn(x, y, 13) % 9 == 0 and t > 0.3:
+                img[y, x] = MOSS[2 if u < 0.5 else 1]                     # 屋根のこけ
+                continue
+            img[y, x] = pick(STONE, v)
+    for x in range(rx0, rx1 + 1):                                         # 軒の厚み（前のふち。下は暗い）
+        img[ry1 + 1, x] = pick(STONE, 5.6 - (x - rx0) / (rx1 - rx0) * 2.4)
+        img[ry1 + 2, x] = pick(STONE, 2.4)
+    for x in range(bx0, bx1 + 1):                                         # 軒の下の影（壁の上に落ちる）
+        if img[ry1 + 3, x] in STONE:
+            img[ry1 + 3, x] = pick(STONE, max(0, STONE.index(img[ry1 + 3, x]) - 2))
+    # ---- 両わきの小さな石灯ろう（笠・火袋の灯り・竿・台） ----
+    def lantern(cx):
+        for y in range(30, 42):
+            for x in range(cx - 1, cx + 2):
+                img[y, x] = pick(STONE, 6.5 - (x - cx + 1) * 1.6)        # 竿
+        for x in range(cx - 2, cx + 3):
+            img[41, x] = pick(STONE, 5.8 - (x - cx + 2) * 0.8)            # 台
+            img[29, x] = pick(STONE, 5.4 - (x - cx + 2) * 0.8)
+        for y in range(26, 29):                                           # 火袋（灯りがもれる）
+            for x in range(cx - 2, cx + 3):
+                edge = x in (cx - 2, cx + 2)
+                img[y, x] = pick(STONE, 6.0 - (x - cx + 2) * 0.9) if edge else FLAME[2 if y == 27 else 1]
+        for x in range(cx - 3, cx + 4):                                   # 笠
+            img[25, x] = pick(STONE, 7.4 - (x - cx + 3) * 0.7)
+            if abs(x - cx) <= 2:
+                img[24, x] = pick(STONE, 8.0 - (x - cx + 2) * 0.7)
+        img[23, cx] = pick(STONE, 7.0)
+    lantern(6)
+    lantern(41)
+    ground(img, 5, 42, 46, 41)
     outline_br(img, STONE_OUT)
     return img
 
