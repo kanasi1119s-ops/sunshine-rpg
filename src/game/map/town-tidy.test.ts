@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { WORLD_MAPS, WORLD_NPCS } from "../world/world";
-import { townCrowdedHouses, townOverlaps, townPropsOnPath, townPathOverlaps, townPostOverlaps, townWallOverhangs } from "./town-tidy";
+import { townCrowdedHouses, townOverlaps, townPropsOnPath, townTreesNearGate, townPathOverlaps, townPostOverlaps, townWallOverhangs } from "./town-tidy";
 import { doorOffsetX, isHouse } from "./map-props";
 
 const towns = Object.keys(WORLD_MAPS).filter((m) => /-(town|village)$/.test(m) || /^village-/.test(m));
@@ -95,5 +95,11 @@ describe("建物の間・井戸・噴水", () => {
 describe("歩道", () => {
   it("歩道（道）の上には、飾りがのらない（歩ける。2026-10-06「歩道には歩けるようにオブジェクトがのらないように」）", () => {
     for (const id of towns) expect(townPropsOnPath(WORLD_MAPS[id]), id).toEqual([]);
+  });
+});
+
+describe("門のまわり", () => {
+  it("町の出入り口（門）の近く（4マス以内）に木を置かない（2026-10-06「出入口の近くに木を置くのはやめよう」）", () => {
+    for (const id of towns) expect(townTreesNearGate(WORLD_MAPS[id]), id).toEqual([]);
   });
 });
