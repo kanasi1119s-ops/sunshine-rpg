@@ -75,6 +75,9 @@ if (mode && mode !== "merge") {
   // 全体フィールドの地形テクスチャ（ai-gen/world_tiles.py で作る world-terrain.json）
   const world = new URL("./world-terrain.json", import.meta.url);
   if (fs.existsSync(world)) Object.assign(all, JSON.parse(fs.readFileSync(world, "utf8")));
+  // 全体フィールドの地面（草原・丘・道・砂・雪・荒れ地・灰の地）を、光と細かな模様のある絵に（assets-src/pixel-practice/r17-polish/ground_tex.py で作る ground-terrain.json。2026-10-06）
+  const ground = new URL("./ground-terrain.json", import.meta.url);
+  if (fs.existsSync(ground)) Object.assign(all, JSON.parse(fs.readFileSync(ground, "utf8")));
   // 町の草むら（terrain:forest）を、立体の茂みの絵に（assets-src/pixel-practice/r17-polish/canopy3d.py で作る canopy-terrain.json。2026-10-06）
   const canopy = new URL("./canopy-terrain.json", import.meta.url);
   if (fs.existsSync(canopy)) Object.assign(all, JSON.parse(fs.readFileSync(canopy, "utf8")));

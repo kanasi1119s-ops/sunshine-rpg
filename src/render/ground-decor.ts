@@ -625,8 +625,9 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
         continue;
       }
       if (kind === "grass") {
-        grassPatches(ctx, ox, oy, tx, ty);
-        if (!map.data.coastal || hashCell(tx * 3 + 1, ty * 7 + 2) % 4 === 0) {
+        // 全体フィールドは、地面のテクスチャ（ground_tex.py）に草の株・花・小石まで描いてあるので、古い明るい緑の飾りは重ねない（2026-10-06）
+        if (!map.data.tileTexture) grassPatches(ctx, ox, oy, tx, ty);
+        if (!map.data.tileTexture && !map.data.coastal || hashCell(tx * 3 + 1, ty * 7 + 2) % 4 === 0) {
           grassDecor(ctx, ox, oy, s, tx, ty);
         }
         if (kindAt(map, tx, ty - 1) === "tree" && artAt(map, tx, ty - 1) !== "treeCanopy") {   // 草むらは芝とまざるので、帯の影はつけない
@@ -708,7 +709,7 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
       }
       SIDES.forEach((side, index) => {
         const n = kindAt(map, tx + side.dx, ty + side.dy);
-        if (kind === "path" && n === "grass") {
+        if (kind === "path" && n === "grass" && !map.data.tileTexture) {   // 全体フィールドの道と草のさかいは flatBlend がまぜる
           pathEdge(ctx, ox, oy, s, tx, ty, index);
         } else if (kind === "water" && (n === "grass" || n === "path" || n === "land" || n === "tree")) {
           waterEdge(ctx, ox, oy, s, tx, ty, index, !!map.data.coastal);
