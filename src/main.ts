@@ -88,6 +88,7 @@ import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { isOpenSpot, rescueTile } from "./game/player-rescue";
 import { strengthenBoss } from "./game/battle/difficulty-scale";
 import { ARBITER_CHANCE, createArbiter } from "./game/battle/arbiter";
+import { setArbiterQueue } from "./game/battle/battle-engine";
 import { arbiterIntro } from "./game/battle/arbiter-talk";
 import { COSMO_ID } from "./game/items/legend-items";
 import { applyTraits } from "./game/items/traits";
@@ -981,6 +982,10 @@ if (import.meta.env.DEV) {
     startBattle: (battleId: string) => startStoryBattle(battleId),
     /** 開発用: 隠しボス「機械の悪神巨人兵」と戦う（動画・確認用）。 */
     startArbiter: () => startArbiterBattle(),
+    /** 開発用: 隠しボスの次からの行動を決める（動画の撮影用）。 */
+    arbiterQueue: (actions: string[]) => setArbiterQueue(actions),
+    /** 開発用: 戦闘中の敵のHPを変える（動画の撮影用）。 */
+    setEnemyHp: (hp: number) => { if (battle) for (const e of battle.getState().enemies) e.hp = Math.min(e.maxHp, hp); },
     setFlag: (name: string, value = true) => { flags[name] = value; },
     /** 開発用: 世界地図の (x, y) で、船（ship）か飛空艇（air）に乗った状態にする（見た目の確認用）。 */
     ride: (kind: "ship" | "air", x: number, y: number) => {

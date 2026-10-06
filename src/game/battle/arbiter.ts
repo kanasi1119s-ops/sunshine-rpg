@@ -12,7 +12,7 @@ export const ARBITER_NAME = "機械の悪神巨人兵";
 /** 世界地図の出会い1回あたりの、現れる確率（0.01%）。 */
 export const ARBITER_CHANCE = 0.0001;
 
-export const ARBITER_STATS = { maxHp: 11000, maxMp: 360, attack: 150, defense: 85, speed: 120, expReward: 400000 };
+export const ARBITER_STATS = { maxHp: 10000, maxMp: 360, attack: 175, defense: 85, speed: 120, expReward: 60000 };
 
 export function createArbiter(): Combatant {
   return {

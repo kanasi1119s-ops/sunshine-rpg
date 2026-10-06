@@ -504,10 +504,16 @@ export function chooseEnemyAction(enemy: Combatant, party: Combatant[], rng: () 
 
 /** 隠しボス「機械の悪神巨人兵」の魔法（2026-10-06）。 */
 export const ARBITER_SKILLS = {
-  meteor: { id: "arbiter-meteor", name: "流星の裁き", mpCost: 0, powerMultiplier: 0.4, effect: "pierceAll" } as Skill,
+  meteor: { id: "arbiter-meteor", name: "流星の裁き", mpCost: 0, powerMultiplier: 0.3, effect: "pierceAll" } as Skill,
   judgement: { id: "arbiter-judgement", name: "神の調停", mpCost: 0, powerMultiplier: 0, effect: "halveAll" } as Skill,
   blessing: { id: "arbiter-blessing", name: "神の祝福", mpCost: 120, powerMultiplier: 0, effect: "restoreHalf" } as Skill,
 };
+/** 開発用: 隠しボスの次からの行動を、順に決めておく（動画の撮影用）。"attack"（4回攻撃）・"meteor"・"judgement"・"blessing"。 */
+const arbiterQueue: string[] = [];
+export function setArbiterQueue(actions: string[]): void {
+  arbiterQueue.length = 0;
+  arbiterQueue.push(...actions);
+}
 /** 4回攻撃の回数。 */
 export const ARBITER_ATTACKS = 4;
 
@@ -520,6 +526,11 @@ export function chooseEnemyActions(enemy: Combatant, party: Combatant[], rng: ()
   if (enemy.ai !== "arbiter") return [chooseEnemyAction(enemy, party, rng)];
   const alive = party.filter(isAlive);
   const pick = (): string => (alive[Math.floor(rng() * alive.length)] ?? party[0]).id;
+  const forced = arbiterQueue.shift();
+  if (forced === "meteor" || forced === "judgement" || forced === "blessing") {
+    return [{ type: "skill", actorId: enemy.id, targetId: forced === "blessing" ? enemy.id : pick(), skill: ARBITER_SKILLS[forced] }];
+  }
+  if (forced === "attack") return Array.from({ length: ARBITER_ATTACKS }, () => ({ type: "attack" as const, actorId: enemy.id, targetId: pick() }));
   const hpRatio = alive.reduce((s, c) => s + c.hp, 0) / Math.max(1, alive.reduce((s, c) => s + c.maxHp, 0));
   const r = rng();
   if (enemy.hp < enemy.maxHp * 0.4 && enemy.mp >= ARBITER_SKILLS.blessing.mpCost && r < 0.4) {
