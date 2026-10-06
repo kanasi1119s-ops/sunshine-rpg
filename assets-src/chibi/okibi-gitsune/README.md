@@ -1,0 +1,14 @@
+# 燠火狐（おきびぎつね。2頭身の歩くモンスター・4本足・3つの型の試作）
+
+2026-10-07、人間の指示「このパターン記録しよう。ほかのモンスターでもやってみて」で作った2頭身ドット絵。**ゲームには入れていない。**
+
+- 種類: モンスター（獣）／性別: なし／設定: 灰の積もる焼け跡にすむ狐。頭としっぽの帯だけが、燃えのこりの火のように橙に光る
+- イメージ画像: `ref.png`（Stable Diffusion 1.5、CreativeML OpenRAIL-M。地面の下絵 ground から img2img・強さ0.9、QUALITY=real、乱数の種 7400。2枚描いて形のよい方を選んだ）
+  - 指示文: full body shot of a small fox monster walking, side view, ash grey fur, glowing orange ember tips on its bushy tail and ears, dark paws, bright amber eyes, highly detailed realistic fantasy creature, intricate fur texture, dark fantasy concept art, plain white background
+- 残した特ちょう: 灰色の体／橙の頭と、しっぽの橙の帯（先は灰色）／黒い耳の先と黒い足先／白いほおと口もと／こはく色の目
+- 型（`.claude/skills/make-art/prompt-chibi-from-reference.md` の「モンスターの歩く絵の3つの型」。立たせない）:
+  - `v16x16/` … 16×16 だけ
+  - `mix/` … 下・上は 16×32（見下ろしで体が奥へのびる）、横は 32×16（低く長い横姿）
+  - `v16x32/` … 16×32 だけ（横は 16×16 の横姿を下にそろえて置く）
+  - どれも 4方向×3コマ。前足と後ろ足を交互に出し、しっぽの先が1ドットゆれる。13色
+- 作り方: `make.py`（共通の道具は `../monster_walk.py`）。どのシートもドット絵エディタで描き、食い違い 0 マスを確かめた（`*-editor.png`）
