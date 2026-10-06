@@ -104,7 +104,7 @@ def brick(u, v, lit, seed):
     return ramp[max(0, min(4, t))]
 
 
-def build(W, H, FW, D, floors, FH, RH, ox=3, door=0.5, nwin=3, ov=3, porch=False, dormer=False, chimney=0.72, seed=1):
+def build(W, H, FW, D, floors, FH, RH, ox=3, door=0.5, nwin=3, ov=3, porch=False, dormer=False, chimney=0.72, seed=1, door_h=None):
     rnd = random.Random(seed)
     g = G(W, H)
     x0, x1 = ox, ox + FW - 1
@@ -245,7 +245,7 @@ def build(W, H, FW, D, floors, FH, RH, ox=3, door=0.5, nwin=3, ov=3, porch=False
         sw = max(5, D // 2 + 1) if D < 15 else D // 2 + 2
         sidewin(x1 + max(3, (D - sw) // 2), sw, top + fl * FH + 4, FH - 9)
     # ---- 玄関（石のアーチ＋扉） ----
-    dh = min(FH - 11, 13)
+    dh = door_h if door_h else min(FH - 11, 13)   # 扉の高さ
     for y in range(bot - dh - 3, bot + 1):
         for x in range(doorx - 7, doorx + 8):
             d = abs(x - doorx)
@@ -374,7 +374,7 @@ def build(W, H, FW, D, floors, FH, RH, ox=3, door=0.5, nwin=3, ov=3, porch=False
     # ---- 屋根窓 ----
     if dormer:
         cx = x0 + int(FW * 0.5)
-        dy = int(ey - span * 0.35)
+        dy = int(ey - 4)                               # 屋根窓のてっぺんが、棟より下に来るように
         g.poly([(cx - 6, dy), (cx - 6, dy - 8), (cx, dy - 13), (cx + 6, dy - 8), (cx + 6, dy)],
                lambda x, y: brick(x - cx + 6, y - dy + 30, True, seed + 3))
         window(cx - 3, dy - 7, 7, 6)
@@ -446,4 +446,4 @@ def variants(name, g):
 
 if __name__ == "__main__":
     variants("cottage-brick", build(56, 56, FW=39, D=12, floors=1, FH=22, RH=12, ox=2, door=None, nwin=2, ov=2, chimney=0.62, seed=3))
-    variants("manor-brick", build(80, 80, FW=55, D=19, floors=2, FH=18, RH=16, ox=2, door=0.45, nwin=3, ov=2, porch=True, dormer=True, chimney=0.74, seed=8))
+    variants("manor-brick", build(80, 80, FW=55, D=19, floors=2, FH=21, RH=14, door_h=16, ox=2, door=0.45, nwin=3, ov=2, porch=True, dormer=True, chimney=0.74, seed=8))
