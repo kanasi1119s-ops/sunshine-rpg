@@ -51,8 +51,11 @@ LEG_L = ["AA.", "DCC", "CBB", "NNA"]           # 左の足（上から 付け根
 LEG_R = [".AA", "BCB", "BBB", "ANN"]           # 右の足（右半分なので1段暗い）
 
 
-def put_leg(g, y0, left):
-    spr, x0 = (LEG_L, 1) if left else (LEG_R, 12)
+def put_leg(g, y0, left, spr=None, x0=None):
+    if spr is None:
+        spr = LEG_L if left else LEG_R
+    if x0 is None:
+        x0 = 1 if left else 12
     for i, r in enumerate(spr):
         y = y0 + i
         if 0 <= y < len(g):
@@ -221,8 +224,12 @@ def small_frames():
         put_leg(g, a, True); put_leg(g, b, False)
         fr[f"down{f}"] = g
         g = list(S_UP) + ["." * 16]
-        a, b = {0: (8, 8), 1: (9, 7), 2: (7, 9)}[f]
-        put_leg(g, a, True); put_leg(g, b, False)
+        # 後ろから見た足（人間の指示「後ろから見たとき足が前しか見えない」）: 前足は体の左右に小さく、後ろ足はしっぽの左右に。前と後ろは逆に出す
+        BL, BR = ["ACB", "ACB", "NNA"], ["BCA", "BCA", "ANN"]
+        a, b = {0: (7, 7), 1: (6, 8), 2: (8, 6)}[f]          # 前足（奥）
+        put_leg(g, a, True, BL, 1); put_leg(g, b, False, BR, 12)
+        a, b = {0: (12, 12), 1: (13, 11), 2: (11, 13)}[f]    # 後ろ足（手前）
+        put_leg(g, a, True, BL, 1); put_leg(g, b, False, BR, 12)
         if f:
             sway(g, range(11, 15), -1 if f == 1 else 1)
         fr[f"up{f}"] = g

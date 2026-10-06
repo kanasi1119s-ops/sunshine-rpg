@@ -16,8 +16,12 @@ LEG_L = ["AA.", "DCC", "CBB", "NNA"]           # 左の足（上から 付け根
 LEG_R = [".AA", "BCB", "BBB", "ANN"]           # 右の足（右半分なので1段暗い）
 
 
-def put_leg(g, y0, left):
-    spr, x0 = (LEG_L, 1) if left else (LEG_R, 12)
+def put_leg(g, y0, left, spr=None, x0=None):
+    """足の部品を置く。spr と x0 を渡すと、その形と位置で置く（後ろ向きの小さな足など）"""
+    if spr is None:
+        spr = LEG_L if left else LEG_R
+    if x0 is None:
+        x0 = 1 if left else 12
     for i, r in enumerate(spr):
         y = y0 + i
         if 0 <= y < len(g):

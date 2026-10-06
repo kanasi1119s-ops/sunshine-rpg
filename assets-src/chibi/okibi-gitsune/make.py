@@ -213,8 +213,12 @@ def small_frames():
         put_leg(g, a, True); put_leg(g, b, False)
         fr[f"down{f}"] = g
         g = list(S_UP) + ["." * 16]
-        a, b = {0: (7, 7), 1: (8, 6), 2: (6, 8)}[f]
-        put_leg(g, a, True); put_leg(g, b, False)
+        # 後ろから見た足（人間の指示「後ろから見たとき足が前しか見えない」）: 前足は体の左右に小さく、後ろ足はしっぽの左右に。前と後ろは逆に出す
+        BL, BR = ["ACB", "ACB", "KKA"], ["BCA", "BCA", "AKK"]
+        a, b = {0: (7, 7), 1: (6, 8), 2: (8, 6)}[f]          # 前足（奥）
+        put_leg(g, a, True, BL, 1); put_leg(g, b, False, BR, 12)
+        a, b = {0: (12, 12), 1: (13, 11), 2: (11, 13)}[f]    # 後ろ足（手前）
+        put_leg(g, a, True, BL, 1); put_leg(g, b, False, BR, 12)
         if f:
             sway(g, range(11, 15), -1 if f == 1 else 1)
         fr[f"up{f}"] = g
