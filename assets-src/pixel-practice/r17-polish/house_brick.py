@@ -36,9 +36,11 @@ pal = {
     "G1": "#5a8cb4", "G2": "#9cd0ee", "G3": "#30506e", "CUR": "#d86a5a", "F1": "#3a7a34", "F2": "#5aa844", "F3": "#e84a5a",
     "M1": "#4a6a34", "M2": "#6a8a44",   # こけ
     "SOOT": "#3a3036", "L1": "#fff2b0",                  # すす
+    # 実物感の仕上げ（2026-10-06「家屋も樽みたいにリアルにしよう」）: 屋根のつやの光る点・ガラスの光・レンガの角の光・石のふちの光
+    "R7": "#ffc496", "GW": "#f4fbff", "C6": "#dc9670", "K5": "#e8e6f0",
 }
-BLUE = {"R1": "#1c2850", "R2": "#2c4a88", "R3": "#3a5ea4", "R4": "#4a76c0", "R5": "#6a96dc", "R6": "#9cc0f4"}
-GREEN = {"R1": "#183a28", "R2": "#2a5a3c", "R3": "#36764c", "R4": "#46905c", "R5": "#68b07a", "R6": "#9ad4a8"}
+BLUE = {"R1": "#1c2850", "R2": "#2c4a88", "R3": "#3a5ea4", "R4": "#4a76c0", "R5": "#6a96dc", "R6": "#9cc0f4", "R7": "#d4e6ff"}
+GREEN = {"R1": "#183a28", "R2": "#2a5a3c", "R3": "#36764c", "R4": "#46905c", "R5": "#68b07a", "R6": "#9ad4a8", "R7": "#d0f2d8"}
 
 
 def hn(*a):
@@ -409,6 +411,44 @@ def build(W, H, FW, D, floors, FH, RH, ox=3, door=0.5, nwin=3, ov=3, porch=False
             g.put(x, bot, "M1")
             if hn(x, 6, seed) % 2 == 0 and g.get(x, bot - 1).startswith("C"):
                 g.put(x, bot - 1, "M2")
+    # ---- 実物感の仕上げ（2026-10-06 人間の指示「家屋も樽みたいにリアルにしよう」） ----
+    # 樽と同じ考え方: 見る向きと光の向きのあいだの向きで「つや」が出る。瓦は焼き物で少しつやがあるので、
+    # 屋根の面に、左上から右下へななめにかかる、やわらかいつやの帯（帯の中は1段明るく、ふちは市松でぼかす）、
+    # 帯のまん中の瓦の上のふちに、するどい光の点。ガラスは、左上のすみに光の点、右下のすみは暗い（ふちの暗さ）。
+    # レンガは、光の当たる左上ほど明るく、右下ほど少し暗い。レンガの左上の角に光。石のふちの左はしに光。
+    UP = {"R2": "R3", "R3": "R4", "R4": "R5", "R5": "R6"}
+    DN_C = {"C5": "C4", "C4": "C3", "C3": "C2", "C2": "C1"}
+    UP_C = {"C3": "C4", "C4": "C5"}
+    src = [r[:] for r in g.g]
+    for y in range(H):
+        for x in range(W):
+            k = src[y][x]
+            if k in UP and y <= ey + 1:
+                tt = (ey - y) / max(1, span)
+                u = (x - ex0 - tt * sh) / max(1, ex1 - ex0)
+                if -0.05 <= u <= 1.05:
+                    d = abs((u - 0.3) + (tt - 0.5) * 0.4)
+                    if d < 0.08 or (d < 0.13 and (x + y) % 2 == 0):
+                        g.put(x, y, UP[k])
+                        if k in ("R5", "R6") and d < 0.05 and hn(x, y, seed, 41) % 3 == 0:
+                            g.put(x, y, "R7")
+                    elif u > 0.9 and k in ("R3", "R4", "R5") and (x + y) % 2 == 0:
+                        g.put(x, y, {"R3": "R2", "R4": "R3", "R5": "R4"}[k])   # 屋根の右のはしは、ふちが少し暗い
+            elif k in DN_C or k in UP_C:
+                fx = (x - x0) / max(1, x1 - x0)
+                fy = (y - top) / max(1, bot - top)
+                if fx + fy > 1.35 and k in DN_C and (x + y) % 2 == 0:
+                    g.put(x, y, DN_C[k])                                       # 右下ほど少し暗い
+                elif fx + fy < 0.55 and k in UP_C and (x + y) % 2 == 0:
+                    g.put(x, y, UP_C[k])                                       # 左上ほど少し明るい
+                if k == "C5" and src[y - 1][x] in ("J1", "J2") and src[y][x - 1] in ("J1", "J2") and hn(x, y, seed, 43) % 2 == 0:
+                    g.put(x, y, "C6")                                          # レンガの左上の角の光
+            elif k == "G2" and src[y - 1][x] in ("G3", "B2", "B3", "K2") :
+                g.put(x, y, "GW")                                              # ガラスの左上の光の点
+            elif k == "G1" and src[y][x + 1] in ("B2", "B3") and src[y + 1][x] in ("B2", "B3", "K4", "K1"):
+                g.put(x, y, "G3")                                              # ガラスの右下のすみの暗さ
+            elif k == "K4" and src[y][x - 1] not in ("K4", "K3"):
+                g.put(x, y, "K5")                                              # 石のふちの左はしの光
     # ---- りんかく ----
     add = []
     for y in range(H):
@@ -440,7 +480,7 @@ def save(name, g, palette=None):
 
 # 白い石の壁（霧断崖の民家。2026-10-06 人間の指示「元作った家の白バージョンでよかったよ」）。形は同じで、壁の色だけ白に
 WHITE = {"C1": "#8e8c92", "C2": "#b2b0b4", "C3": "#c8c6c8", "C4": "#dcdadb", "C5": "#eeedec", "J1": "#a6a4a8", "J2": "#88868c",
-         "E1": "#5e5c66", "E2": "#76747e", "E3": "#8c8a94", "E4": "#a2a0a8", "J3": "#6a6872"}
+         "E1": "#5e5c66", "E2": "#76747e", "E3": "#8c8a94", "E4": "#a2a0a8", "J3": "#6a6872", "C6": "#fbfaf6"}
 
 
 def variants(name, g):
