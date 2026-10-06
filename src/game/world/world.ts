@@ -13,6 +13,7 @@ import { CHAPTER7_MAPS, CHAPTER7_NPCS } from "./chapter7-world";
 import { CHAPTER8_MAPS, CHAPTER8_NPCS } from "./chapter8-world";
 import { CHAPTER9_MAPS, CHAPTER9_NPCS } from "./chapter9-world";
 import { CHAPTER10_MAPS, CHAPTER10_NPCS } from "./chapter10-world";
+import { ILLUSION_MAPS, ILLUSION_NPCS } from "./illusion-world";
 import { CHAPTER11_MAPS, CHAPTER11_NPCS } from "./chapter11-world";
 import { CHAPTER12_MAPS, CHAPTER12_NPCS } from "./chapter12-world";
 import { SIDE_STORY_NPCS } from "./side-stories";
@@ -54,6 +55,7 @@ export const WORLD_MAPS: Record<string, TileMapData> = {
   ...CHAPTER10_MAPS,
   ...CHAPTER11_MAPS,
   ...CHAPTER12_MAPS,
+  ...ILLUSION_MAPS,
   "world-map": createWorldMapData(),
   ...ISLET_MAPS,
   ...VILLAGE_MAPS,
@@ -76,6 +78,7 @@ const NPC_SOURCES: Record<string, Npc[]>[] = [
   CHAPTER10_NPCS,
   CHAPTER11_NPCS,
   CHAPTER12_NPCS,
+  ILLUSION_NPCS,
   WORLD_MAP_NPCS,
   SHIP_PART_NPCS,
   ISLET_NPCS,

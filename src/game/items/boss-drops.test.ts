@@ -19,6 +19,7 @@ describe("ボスが落とすかざり", () => {
     "toushin-yugami", "kyotoukyu-yugami", "deep3-yugami", "deep-yugami",
     ...DUNGEON_ENEMIES.map((e) => e.id),
     ...GODS.map((g) => g.id),
+    "illusion-boss",
   ];
   it("すべてのボスの戦闘に、特殊効果つきのかざりが1つずつある", () => {
     for (const id of battleIds) {

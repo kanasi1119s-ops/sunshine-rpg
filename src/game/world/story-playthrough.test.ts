@@ -23,6 +23,8 @@ const BATTLE_VICTORY_FLAG: Record<string, string> = {
   "kyotoukyu-yugami": "chapter9_yugami_defeated",
   // 終章の光の階段・眠りの回廊・エドレアの1戦目（2026-10-06）。夢の番人に勝つと目が覚める（勝ったあとの会話で立つフラグ）
   "kyotoukyu-guardian": "chapter9_guardian_defeated",
+  "illusion-boss": "illusion_boss_defeated",
+  "illusion-phantom": "illusion_phantom_won",
   "kyotoukyu-edrea": "chapter9_edrea1_defeated",
   ...Object.fromEntries(["mina", "orca", "kohaku", "reto", "ayame"].map((k) => [`kyotoukyu-drowse-${k}`, `chapter9_dream_${k}_done`])),
   "deep3-yugami": "deep3_yugami_defeated",
@@ -54,6 +56,7 @@ const CHAPTER_MAPS: string[][] = [
   // 禁域の鍵の頼みごと（依頼人の町 → 試練の番人の2か所 → 依頼人）と、禁域
   ...SHRINE_KEYS.map((key) => [key.giver.mapId, ...key.trials.map((t) => t.mapId), key.giver.mapId]),
   ...Array.from({ length: 8 }, (_, i) => [`god-shrine-${i + 1}`]),
+  ["kyotoukyu-court", "illusion-1", "illusion-2", "illusion-3"],
   ["world-map", "shipwright-hut", "keeper-shrine-sky"],
   ...[1, 2, 3, 4, 5, 6].map((n) => [`islet-${n}-1`, `islet-${n}-2`]),
 ];

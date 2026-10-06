@@ -84,6 +84,15 @@ if (mode && mode !== "merge") {
   // 敵の絵（ai-gen/monster_batch.py export で作る enemy-art.json。雑魚は enemy:<id> 96×96、ボスは boss:<id> を置きかえる）
   const enemyArt = new URL("./enemy-art.json", import.meta.url);
   if (fs.existsSync(enemyArt)) Object.assign(all, JSON.parse(fs.readFileSync(enemyArt, "utf8")));
+  // 幻想の禁域の地面（assets-src/pixel-practice/r33-illusion/illusion_tex.py。128×128、つながる模様。2026-10-06）
+  for (const name of ["illusion-void", "illusion-floor", "illusion-rune", "illusion-wall", "illusion-hidden"]) {
+    const base = new URL("../../assets-src/pixel-practice/r33-illusion/", import.meta.url);
+    const rows = fs.readFileSync(new URL(`${name}.txt`, base), "utf8").split("\n").filter((l) => l);
+    const pal = JSON.parse(fs.readFileSync(new URL(`${name}-pal.json`, base), "utf8"));
+    const syms = Object.keys(pal);
+    const g = rows.map((r) => [...r].map((ch) => syms.indexOf(ch)));
+    all[`terrain:${name}`] = { size: rows.length, palette: syms.map((k) => pal[k]), rle: encode(g, syms.length > 26) };
+  }
   // 隠しボス「機械の悪神巨人兵」（assets-src/monsters/mecha-god-giant/ の 256×256・40色。人間がプッシュした絵を使う。2026-10-06）
   for (const [key, dir, name] of [["boss:arbiter", "mecha-god-giant", "final"]]) {
     const base = new URL(`../../assets-src/monsters/${dir}/`, import.meta.url);

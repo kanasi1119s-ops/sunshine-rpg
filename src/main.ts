@@ -66,6 +66,7 @@ import type { Npc } from "./game/npc";
 import { PARTY_NAMES, residentVisible } from "./game/world/scene-residents";
 import { createTrialEnemy, SHRINE_KEYS, shrineKeyQuestLog, trialBattleId, trialFlag } from "./game/world/shrine-keys";
 import { getVistaImage } from "./render/vista-images";
+import { createIllusionBoss, createIllusionPhantom, ILLUSION_BOSS_AFTER_VICTORY, ILLUSION_BOSS_FLAG, ILLUSION_BOSS_ID, ILLUSION_PHANTOM_ID } from "./game/world/illusion-world";
 import type { VistaImage } from "./game/event/types";
 import { EPILOGUE_AFTER_ROLL, EPILOGUE_SEEN_FLAG } from "./game/world/scenes/epilogue";
 import { isVoiceOnly, pendingScene, sceneSeenFlag, sceneSpeakers, sleptFlagsAfterInn } from "./game/world/story-scenes";
@@ -654,6 +655,9 @@ const MAP_BGM_ID: Record<string, string> = {
   "kyotoukyu-corridor": "kyoto-road",
   "kyotoukyu-sanctum": "unease",
   "kyotoukyu-stair": "kyoto-road",
+  "illusion-1": "kyoto-deep",
+  "illusion-2": "kyoto-deep",
+  "illusion-3": "kyoto-deep",
   "kyotoukyu-dream": "unease",
   "deep-1": "kyoto-deep",
   "deep-2": "kyoto-deep",
@@ -839,6 +843,9 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
     bgmId: "boss-toushin",
   },
   // 終章を厚くするために足した戦い（2026-10-06）: 光の守り手・まどろみの番人（5つの夢）・エドレアの1戦目
+  // 幻想の禁域「まぼろしの回廊」（2026-10-06）
+  [ILLUSION_BOSS_ID]: { createEnemy: createIllusionBoss, victoryFlag: ILLUSION_BOSS_FLAG, bgmId: "secret-boss-2" },
+  [ILLUSION_PHANTOM_ID]: { createEnemy: createIllusionPhantom, victoryFlag: "illusion_phantom_won", bgmId: "elite" },
   "kyotoukyu-guardian": { createEnemy: createKyotoukyuGuardian, victoryFlag: GUARDIAN_DEFEATED_FLAG, bgmId: "elite" },
   ...Object.fromEntries(DROWSE_BATTLES.map((b) => [b.battleId, { createEnemy: () => createKyotoukyuDrowse(b.battleId, b.name), victoryFlag: `${b.battleId}-won`, bgmId: "elite" }])),
   "kyotoukyu-edrea": { createEnemy: createKyotoukyuEdreaFirst, victoryFlag: EDREA_FIRST_DEFEATED_FLAG, bgmId: "boss-final" },
@@ -992,7 +999,7 @@ function startStoryBattle(battleId: string): void {
   victoryMessage = null;
   victoryLevelUps = [];
   pendingVictoryFlag = def.victoryFlag;
-  pendingAfterVictory = CHAPTER9_AFTER_VICTORY[battleId] ?? null;
+  pendingAfterVictory = (battleId === ILLUSION_BOSS_ID ? ILLUSION_BOSS_AFTER_VICTORY : CHAPTER9_AFTER_VICTORY[battleId]) ?? null;
   pendingDropId = bossDropFor(battleId) ?? null;
   victoryDropText = null;
   const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
