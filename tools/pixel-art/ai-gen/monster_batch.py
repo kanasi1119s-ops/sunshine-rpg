@@ -132,6 +132,8 @@ def cmd_draft(ids, seeds=4):
         js = json.load(open(f"{WORK}/j.json"))
         # 置き場所の下書き（layouts.py）から描く: 名簿の shape（形）と tone（体のおおまかな色）を使う
         for j in js:
+            for w in e.get("neg_drop", []):   # その敵だけ避けなくてよい言葉（天使・悪魔は人の形でよい）
+                j["neg"] = j["neg"].replace(", " + w, "").replace(w + ", ", "")
             if e.get("neg_extra"):   # その敵だけ避けたいもの（例: 全環は「指輪」になりやすい）
                 j["neg"] = e["neg_extra"] + ", " + j["neg"]
             j["layout"] = {"shape": e.get("shape") or ("big" if e["kind"] == "boss" else "ground"),
@@ -168,7 +170,7 @@ def cmd_pick(i, k, mirror=False, force=False):
         res = json.load(open(chk))
         if not res["ok"]:
             sys.exit(f"{i}_{k}: 全身が入っていません（{res.get('cut')}・かたまり{res.get('parts')}）。ほかの下絵を選ぶか、extend で描き足す（どうしても使うときは --force）")
-    size, ncol = (BOSS_SIZE, BOSS_COLORS) if e["kind"] == "boss" else (96, 20)
+    size, ncol = (BOSS_SIZE, BOSS_COLORS) if e["kind"] == "boss" else (e.get("size", 96), e.get("ncol", 20))
     d = f"{ART}/{i}"; os.makedirs(d, exist_ok=True)
     subprocess.run(["python3", f"{AI}/sfcize.py", f"{WORK}/raw/{i}_{k}.png", f"{d}/{i}", str(size), str(ncol)], check=True, cwd=WORK)
     if mirror:
@@ -185,7 +187,7 @@ def cmd_done(i):
     r = load(); by = {e["id"]: e for e in r}; e = by[i]
     rows = open(f"{ART}/{i}/final.txt").read().split()
     pal = json.load(open(f"{ART}/{i}/final.json"))
-    sizes = (BOSS_SIZE, 128) if e["kind"] == "boss" else (96,)
+    sizes = (BOSS_SIZE, 128) if e["kind"] == "boss" else (e.get("size", 96),)
     assert len(rows) in sizes and all(len(x) == len(rows) for x in rows), f"{i}: {sizes[0]}×{sizes[0]} にする"
     limit = 62 if e["kind"] == "boss" else 26
     assert len(pal) <= limit, f"{i}: {limit}色以内にする"
@@ -231,7 +233,7 @@ def base36(n):
 def cmd_export():
     out = {}
     for e in load():
-        if e["status"] != "done":
+        if e["status"] != "done" or e["kind"] == "extra":   # extra: ゲームにまだ組み込まない絵（天使・悪魔など）
             continue
         rows = open(f"{ART}/{e['id']}/final.txt").read().split()
         pal = json.load(open(f"{ART}/{e['id']}/final.json"))

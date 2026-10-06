@@ -3874,5 +3874,861 @@
   ],
   "neg_extra": "jewelry, finger ring, wedding ring, small object, metal band, gemstone",
   "draft": "zenkan_1"
+ },
+ {
+  "id": "angel-01",
+  "status": "todo",
+  "kind": "extra",
+  "name": "光輪の見張り",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   220,
+   200,
+   140
+  ],
+  "prompt": "a tall angel in white and gold robes with four large feathered wings and a halo of light, holding a long spear, serene face",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-02",
+  "status": "todo",
+  "kind": "extra",
+  "name": "祈りの天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   200,
+   210,
+   230
+  ],
+  "prompt": "a kneeling angel with folded white wings and hands held together in prayer, pale blue robes, soft glowing halo",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-03",
+  "status": "todo",
+  "kind": "extra",
+  "name": "盾の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   190,
+   195,
+   205
+  ],
+  "prompt": "an angel knight in polished silver armor with white wings, holding a large round shield with a sun emblem",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "angel-04",
+  "status": "todo",
+  "kind": "extra",
+  "name": "弓の天使",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   170,
+   200,
+   150
+  ],
+  "prompt": "an angel archer in green and gold clothes drawing a bow made of light, white wings spread wide",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-05",
+  "status": "todo",
+  "kind": "extra",
+  "name": "炎の天使",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   220,
+   120,
+   60
+  ],
+  "prompt": "an angel with wings made of flames, red and gold armor, holding a burning sword",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "angel-06",
+  "status": "todo",
+  "kind": "extra",
+  "name": "氷の天使",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   150,
+   190,
+   230
+  ],
+  "prompt": "an angel with wings of clear ice crystals, pale blue robes, a crown of icicles, cold mist around",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-07",
+  "status": "todo",
+  "kind": "extra",
+  "name": "天秤の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   210,
+   190,
+   130
+  ],
+  "prompt": "a blindfolded angel in white robes holding golden balance scales, folded wings, calm and stern",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-08",
+  "status": "todo",
+  "kind": "extra",
+  "name": "書の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   200,
+   180,
+   150
+  ],
+  "prompt": "an angel reading a large floating glowing book, holding a feather quill, cream robes and brown-tipped wings",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-09",
+  "status": "todo",
+  "kind": "extra",
+  "name": "星の天使",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   60,
+   70,
+   140
+  ],
+  "prompt": "an angel in dark blue robes with wings dotted with tiny stars like a night sky, a small star above its head",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-10",
+  "status": "todo",
+  "kind": "extra",
+  "name": "竪琴の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   220,
+   200,
+   170
+  ],
+  "prompt": "an angel playing a golden harp, long flowing robes, wings curved around the body, glowing music notes of light",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-11",
+  "status": "todo",
+  "kind": "extra",
+  "name": "車輪の天使",
+  "group": "天使",
+  "shape": "float",
+  "tone": [
+   210,
+   180,
+   90
+  ],
+  "prompt": "a celestial being made of interlocking golden rings covered in eyes, with small white wings, glowing core, no human body",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-12",
+  "status": "todo",
+  "kind": "extra",
+  "name": "翼の集まり",
+  "group": "天使",
+  "shape": "float",
+  "tone": [
+   230,
+   230,
+   240
+  ],
+  "prompt": "a celestial creature made only of many white wings folded around a glowing golden core with one calm eye, no human body",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-13",
+  "status": "todo",
+  "kind": "extra",
+  "name": "鎖の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   180,
+   170,
+   160
+  ],
+  "prompt": "an angel bound by heavy golden chains, torn grey wings, cracked halo, head lowered",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "angel-14",
+  "status": "todo",
+  "kind": "extra",
+  "name": "灯火の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   200,
+   160,
+   100
+  ],
+  "prompt": "an angel holding up a glowing lantern, brown traveling cloak over white robes, small wings, warm light",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-15",
+  "status": "todo",
+  "kind": "extra",
+  "name": "花の天使",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   230,
+   170,
+   190
+  ],
+  "prompt": "an angel with wings made of pink and white flower petals, a crown of flowers, green leafy robes",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-16",
+  "status": "todo",
+  "kind": "extra",
+  "name": "審判の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   200,
+   170,
+   90
+  ],
+  "prompt": "a stern angel warrior in heavy gold armor and a closed helmet, holding a huge two-handed sword, great white wings",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "angel-17",
+  "status": "todo",
+  "kind": "extra",
+  "name": "風の天使",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   180,
+   220,
+   210
+  ],
+  "prompt": "an angel with swirling pale green robes and wings made of streaks of wind, floating, hair blowing",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-18",
+  "status": "todo",
+  "kind": "extra",
+  "name": "薄明の天使",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   190,
+   130,
+   170
+  ],
+  "prompt": "an angel in dusk colors, purple and orange wings, holding a tall staff with a setting sun ornament",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-19",
+  "status": "todo",
+  "kind": "extra",
+  "name": "癒しの天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   200,
+   230,
+   210
+  ],
+  "prompt": "a gentle angel in pale green robes holding a glowing water jar, small white wings, soft light around its hands",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-20",
+  "status": "todo",
+  "kind": "extra",
+  "name": "門番の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   170,
+   175,
+   190
+  ],
+  "prompt": "a huge angel gatekeeper in stone grey armor holding a giant key and a halberd, six folded wings",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-01",
+  "status": "todo",
+  "kind": "extra",
+  "name": "角の悪魔",
+  "group": "悪魔",
+  "shape": "winged",
+  "tone": [
+   150,
+   50,
+   45
+  ],
+  "prompt": "a red-skinned demon with curled black horns, leathery bat wings, clawed hands, holding a forked spear, armored",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-02",
+  "status": "todo",
+  "kind": "extra",
+  "name": "小悪魔",
+  "group": "悪魔",
+  "shape": "ground",
+  "tone": [
+   110,
+   130,
+   90
+  ],
+  "prompt": "a small grey-green imp with long pointed ears, a wide grin, tiny bat wings and a thin tail, crouching",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-03",
+  "status": "todo",
+  "kind": "extra",
+  "name": "炎の悪魔",
+  "group": "悪魔",
+  "shape": "big",
+  "tone": [
+   80,
+   50,
+   45
+  ],
+  "prompt": "a hulking demon made of black stone with glowing molten cracks, fire burning from its shoulders and horns",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-04",
+  "status": "todo",
+  "kind": "extra",
+  "name": "影の悪魔",
+  "group": "悪魔",
+  "shape": "tall",
+  "tone": [
+   50,
+   45,
+   60
+  ],
+  "prompt": "a tall thin shadow demon with very long claws, a smoky body and glowing red eyes, hunched",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-05",
+  "status": "todo",
+  "kind": "extra",
+  "name": "骨の悪魔",
+  "group": "悪魔",
+  "shape": "winged",
+  "tone": [
+   200,
+   190,
+   170
+  ],
+  "prompt": "a skeletal demon with ribcage wings, a horned skull head and glowing violet eye sockets, tattered cloth",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-06",
+  "status": "todo",
+  "kind": "extra",
+  "name": "鎖の悪魔",
+  "group": "悪魔",
+  "shape": "tall",
+  "tone": [
+   100,
+   85,
+   80
+  ],
+  "prompt": "a demon wrapped in rusty chains wearing an iron mask, heavy hooks hanging from the chains, dark robes",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-07",
+  "status": "todo",
+  "kind": "extra",
+  "name": "蛇の悪魔",
+  "group": "悪魔",
+  "shape": "long",
+  "tone": [
+   70,
+   110,
+   80
+  ],
+  "prompt": "a demon with a long scaly green serpent lower body, four arms holding curved blades, horned head",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-08",
+  "status": "todo",
+  "kind": "extra",
+  "name": "雄羊角の悪魔",
+  "group": "悪魔",
+  "shape": "big",
+  "tone": [
+   110,
+   80,
+   60
+  ],
+  "prompt": "a hulking demon with big curled ram horns, furry legs and hooves, holding a heavy axe, leather armor",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-09",
+  "status": "todo",
+  "kind": "extra",
+  "name": "蝙蝠の悪魔",
+  "group": "悪魔",
+  "shape": "winged",
+  "tone": [
+   70,
+   55,
+   70
+  ],
+  "prompt": "a demon with a bat-like head, huge ears, membrane wings and long arms, crouching on a rock",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-10",
+  "status": "todo",
+  "kind": "extra",
+  "name": "蜘蛛の悪魔",
+  "group": "悪魔",
+  "shape": "big",
+  "tone": [
+   60,
+   50,
+   60
+  ],
+  "prompt": "a demon with a horned upper body and eight long spider legs coming from its back, purple markings",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-11",
+  "status": "todo",
+  "kind": "extra",
+  "name": "契約の悪魔",
+  "group": "悪魔",
+  "shape": "tall",
+  "tone": [
+   70,
+   60,
+   80
+  ],
+  "prompt": "an elegant thin demon in a dark tailcoat holding a glowing scroll contract, small curved horns, sly smile",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-12",
+  "status": "todo",
+  "kind": "extra",
+  "name": "悪夢の悪魔",
+  "group": "悪魔",
+  "shape": "winged",
+  "tone": [
+   110,
+   80,
+   140
+  ],
+  "prompt": "a nightmare demon with dusty purple moth wings, a long thin body, a horned mask face, sleepy mist around",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "demon-13",
+  "status": "todo",
+  "kind": "extra",
+  "name": "沼の悪魔",
+  "group": "悪魔",
+  "shape": "big",
+  "tone": [
+   80,
+   95,
+   60
+  ],
+  "prompt": "a fat toad-like swamp demon covered in moss and mud, small horns, a wide mouth, sitting in murky water",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-14",
+  "status": "todo",
+  "kind": "extra",
+  "name": "氷の悪魔",
+  "group": "悪魔",
+  "shape": "tall",
+  "tone": [
+   90,
+   130,
+   170
+  ],
+  "prompt": "a frost demon with pale blue skin, icicle horns and claws, ragged dark fur cloak, cold breath",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-15",
+  "status": "todo",
+  "kind": "extra",
+  "name": "大口の悪魔",
+  "group": "悪魔",
+  "shape": "big",
+  "tone": [
+   130,
+   70,
+   70
+  ],
+  "prompt": "a demon whose body is mostly a giant toothy mouth on short legs, small arms, horns on top",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-16",
+  "status": "todo",
+  "kind": "extra",
+  "name": "宝石の悪魔",
+  "group": "悪魔",
+  "shape": "tall",
+  "tone": [
+   120,
+   80,
+   130
+  ],
+  "prompt": "a greedy demon encrusted with glittering gems, holding a sack of gold coins, jeweled horns, purple robe",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-17",
+  "status": "todo",
+  "kind": "extra",
+  "name": "仮面の悪魔",
+  "group": "悪魔",
+  "shape": "tall",
+  "tone": [
+   90,
+   70,
+   90
+  ],
+  "prompt": "a demon wearing many different masks on its head and body, a long dark cloak, thin clawed hands",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-18",
+  "status": "todo",
+  "kind": "extra",
+  "name": "炉の悪魔",
+  "group": "悪魔",
+  "shape": "big",
+  "tone": [
+   90,
+   70,
+   60
+  ],
+  "prompt": "a demon with a glowing iron furnace built into its chest, soot-black skin, pipes on its back, heavy fists",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-19",
+  "status": "todo",
+  "kind": "extra",
+  "name": "堕ちた天使",
+  "group": "悪魔",
+  "shape": "winged",
+  "tone": [
+   60,
+   55,
+   70
+  ],
+  "prompt": "a fallen angel with tattered black feathered wings, a broken dark halo, torn grey armor, sorrowful",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-20",
+  "status": "todo",
+  "kind": "extra",
+  "name": "角冠の悪魔",
+  "group": "悪魔",
+  "shape": "tall",
+  "tone": [
+   90,
+   40,
+   50
+  ],
+  "prompt": "a demon lord with a crown of black horns, a long red cape, dark armor and a glowing scepter, seated pose",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
  }
 ]
