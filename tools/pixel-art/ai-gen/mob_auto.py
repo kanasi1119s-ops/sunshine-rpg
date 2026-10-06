@@ -73,7 +73,8 @@ def editor_stage(i):
     d = f"{ART}/{i}"
     out = f"{WORK}/auto/ed_{i}.png"
     src = f"{i}_fix" if os.path.exists(f"{d}/{i}_fix.txt") else i   # 手直し（edits.py）があれば、それを描く
-    ok = run(["node", "tools/pixel-practice/editor-draw.mjs", f"{d}/{src}.txt", f"{d}/{src}.json", out, "--zoom", "8", "--import"], timeout=900)
+    big = len([r for r in open(f"{d}/{src}.txt").read().split("\n") if r.strip()]) > 128   # ボス（256×256）はエディタを広げる
+    ok = run(["node", "tools/pixel-practice/editor-draw.mjs", f"{d}/{src}.txt", f"{d}/{src}.json", out] + (["--zoom", "6", "--wide"] if big else ["--zoom", "8"]) + ["--import"], timeout=1800)
     if not ok or not os.path.exists(out + ".rows.txt"):
         return False
     a = [r for r in open(f"{d}/{src}.txt").read().split("\n") if r.strip()]

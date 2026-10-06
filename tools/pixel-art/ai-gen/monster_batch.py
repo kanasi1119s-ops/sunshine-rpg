@@ -189,7 +189,7 @@ def cmd_done(i):
     pal = json.load(open(f"{ART}/{i}/final.json"))
     sizes = (BOSS_SIZE, 128) if e["kind"] == "boss" else (e.get("size", 96),)
     assert len(rows) in sizes and all(len(x) == len(rows) for x in rows), f"{i}: {sizes[0]}×{sizes[0]} にする"
-    limit = 62 if e["kind"] == "boss" else 26
+    limit = 62 if e["kind"] == "boss" or e.get("size", 96) >= 256 else 26
     assert len(pal) <= limit, f"{i}: {limit}色以内にする"
     e["status"] = "done"; save(r); print(i, "done")
 

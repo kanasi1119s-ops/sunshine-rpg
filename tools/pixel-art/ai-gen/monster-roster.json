@@ -3877,7 +3877,7 @@
  },
  {
   "id": "angel-01",
-  "status": "todo",
+  "status": "done",
   "kind": "extra",
   "name": "光輪の見張り",
   "group": "天使",
@@ -3895,11 +3895,12 @@
    "human, human face",
    "statue"
   ],
-  "bg": "dark"
+  "bg": "dark",
+  "draft": "angel-01_0"
  },
  {
   "id": "angel-02",
-  "status": "todo",
+  "status": "done",
   "kind": "extra",
   "name": "祈りの天使",
   "group": "天使",
@@ -3917,11 +3918,12 @@
    "human, human face",
    "statue"
   ],
-  "bg": "dark"
+  "bg": "dark",
+  "draft": "angel-02_0"
  },
  {
   "id": "angel-03",
-  "status": "todo",
+  "status": "done",
   "kind": "extra",
   "name": "盾の天使",
   "group": "天使",
@@ -3935,6 +3937,28 @@
   "size": 128,
   "ncol": 24,
   "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "draft": "angel-03_0"
+ },
+ {
+  "id": "mecha-god-giant",
+  "status": "todo",
+  "kind": "extra",
+  "name": "機械の悪神巨人兵",
+  "group": "機械",
+  "shape": "big",
+  "tone": [
+   70,
+   65,
+   70
+  ],
+  "prompt": "a colossal mechanical evil god giant soldier of black iron and tarnished brass, a cracked crown-shaped head with a red visor slit, glowing red chest core, a cannon arm and a great blade arm, pipes and chains",
+  "size": 256,
+  "ncol": 40,
+  "neg_extra": "nude, naked, gore, blood",
   "neg_drop": [
    "human, human face",
    "statue"
