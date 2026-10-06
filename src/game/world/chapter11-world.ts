@@ -63,7 +63,7 @@ const SHRINES: GodShrine[] = [
   },
   {
     palette: { floor: "#e0e8f0", wall: "#5a6a80", pillar: "#a8b8d0", altar: "#ffffff" },
-    entrance: { mapId: "kiri-town", tileX: 9, tileY: 6 },
+    entrance: { mapId: "kiri-town", tileX: 10, tileY: 9 },
     entranceText: "巡礼路の奥、霧の濃い場所に、白い石の門が立っている。",
     intro: ["白い霧が、静かに晴れる。清らかな光が、床いっぱいに広がる。", "誓いを、立てにいらしたのですか。それとも、疑いに来たのですか。", "どちらでも構いません。あなたたちの誓いを、見せてください。"],
     lore: "門の柱に、環の紋が彫られている。「誓いは、言葉ではなく、歩みで示すもの」。",

@@ -18,8 +18,9 @@ import os
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-W, H = 112, 96
-CX, GROUND = 56, 93           # 正面 (z=0) の地面 (y=0) が、絵の y=93
+W, H = 144, 144
+CX, GROUND = 72, 141          # 正面 (z=0) の地面 (y=0) が、絵の y=141
+S = 1.3                       # 模型を1.3倍に（2026-10-06「でかく、でかく、細かく細かく」）
 K = 0.45                      # 奥へ1すすむと、右へ1・上へ0.45
 
 # ===================================================================== 形（SDF）
@@ -139,7 +140,7 @@ def cut(f, m="dark"):
 
 
 FW = 26          # 正面の半分の幅
-DEP = 28         # 奥行き
+DEP = 24         # 奥行き
 NAVE = 11        # 身廊の半分の幅
 AISLE_H = 24     # 側廊の壁の高さ
 NAVE_H = 42      # 身廊の壁の高さ（高窓のある所まで）
@@ -156,7 +157,7 @@ solid(lambda p: sd_box(p, (0, 1.5, -DEP / 2), (FW + 1, 1.5, DEP / 2 + 1)))
 solid(lambda p: sd_box(p, (0, 0.7, 2.2), (9, 0.7, 2.2)))
 solid(lambda p: sd_box(p, (0, 1.6, 1.4), (7.5, 0.9, 1.4)))
 # 正面の4本の塔（外の2本は太く、内の2本は細く高い）。円柱の上に砲弾形の先、節の輪
-TOWERS = [(-19.5, 5.6, 44, 28), (19.5, 5.6, 44, 26), (-9.5, 3.6, 48, 31), (9.5, 3.6, 48, 29)]
+TOWERS = [(-19.5, 5.6, 54, 32), (19.5, 5.6, 54, 30), (-9.5, 3.6, 60, 36), (9.5, 3.6, 60, 34)]
 for (tx, r, hcol, hsp) in TOWERS:
     solid(lambda p, tx=tx, r=r, hcol=hcol: sd_cyl_y(p, tx, -r * 0.6, r, 0, hcol))
     solid(lambda p, tx=tx, r=r, hcol=hcol, hsp=hsp: sd_spire(p, tx, -r * 0.6, r * 0.82, hcol, hsp))
@@ -172,17 +173,17 @@ for (tx, r, hcol, hsp) in TOWERS:
         yy = hcol + 6 + kk * 7
         cut(lambda p, tx=tx, r=r, yy=yy: sd_box(p, (tx - 0.8, yy, -r * 0.6 + r * 0.9), (0.5, 1.2, 1.2)), "dark")
 # 交差部の高い塔（うしろ）
-solid(lambda p: sd_cyl_y(p, 0, -DEP + 7, 5.5, NAVE_H, 58))
-solid(lambda p: sd_spire(p, 0, -DEP + 7, 4.6, 58, 19))
-solid(lambda p: sd_sphere(p, (0, 78.5, -DEP + 7), 1.8), "mosaic")
-for ky in (48, 54):
+solid(lambda p: sd_cyl_y(p, 0, -DEP + 7, 5.5, NAVE_H, 64))
+solid(lambda p: sd_spire(p, 0, -DEP + 7, 4.6, 64, 22))
+solid(lambda p: sd_sphere(p, (0, 87.5, -DEP + 7), 1.8), "mosaic")
+for ky in (48, 54, 60):
     cut(lambda p, ky=ky: sd_box(p, (2.5, ky + 2, -DEP + 7 + 5), (0.6, 2.4, 1.6)), "dark")
 # 正面のまんなかの壁（身廊の正面）と、上の飾り破風
 solid(lambda p: sd_box(p, (0, (NAVE_H + 4) / 2, -0.8), (NAVE - 1, (NAVE_H + 4) / 2, 0.8)))
 solid(lambda p: sd_tri_front(p, 0, 8.5, NAVE_H + 4, NAVE_H + 17, -1.4, 0.4))
 solid(lambda p: sd_sphere(p, (0, NAVE_H + 18.2, -0.6), 1.3), "gold")
 # 控え壁（右の側廊の横）と、その上の小尖塔、身廊へわたる飛び梁
-for bz in (-8.5, -16.5, -24.5):
+for bz in (-7.5, -14.5, -21.5):
     solid(lambda p, bz=bz: sd_box(p, (FW + 1.6, 9, bz), (1.6, 9, 1.1)))
     solid(lambda p, bz=bz: sd_box(p, (FW + 1.1, 21, bz), (1.1, 4, 0.9)))
     solid(lambda p, bz=bz: sd_spire(p, FW + 1.1, bz, 1.2, 25, 7))
@@ -204,12 +205,41 @@ for i, x in enumerate((-15, -13, 13, 15)):
 for sx in (-14.5, 14.5):
     cut(lambda p, sx=sx: sd_arch_z(p, sx, 2.6, 11, 19, 0.0, 1.0), "glass")
 # 右の側廊の窓と、身廊の高窓
-for wz in (-4.5, -12.5, -20.5):
+for wz in (-4.0, -11.0, -18.0):
     cut(lambda p, wz=wz: sd_arch_x(p, wz, 3.4, 7, 16, FW, 1.2), "glass")
     cut(lambda p, wz=wz: sd_arch_x(p, wz, 2.6, 34, 39, NAVE, 1.0), "glass")
 
 
-def scene(p):
+# ---- 像（立体）: 像の帯のくぼみの中と、まんなかの入口の両わき（柱の像）。体はまるい柱、頭は球、台座は箱
+def statue(x, y0, z, hgt, m="statue"):
+    solid(lambda p: sd_capsule(p, (x, y0 + 0.9, z), (x, y0 + hgt * 0.62, z), hgt * 0.16), m)          # 体（衣のすそ広がりは、下を少し太く）
+    solid(lambda p: sd_capsule(p, (x, y0 + 0.5, z), (x, y0 + hgt * 0.3, z), hgt * 0.2), m)
+    solid(lambda p: sd_sphere(p, (x, y0 + hgt * 0.82, z + 0.1), hgt * 0.13), m)                       # 頭
+    solid(lambda p: sd_box(p, (x, y0 + 0.3, z), (hgt * 0.24, 0.35, hgt * 0.2)), "stone")             # 台座
+
+
+for x in (-15, -13, 13, 15):
+    statue(x, 26.2, -0.4, 3.0)
+for sx in (-8.6, 8.6):
+    statue(sx, 2.4, 0.9, 7.6)
+    solid(lambda p, sx=sx: sd_box(p, (sx, 1.2, 0.9), (1.4, 1.2, 1.2)))                                 # 柱の像の台
+# ---- 細かな飾り: 正面の横の帯（蛇腹）、左右の入口の上の小さな飾り破風、側廊の正面のかどの小尖塔
+for yb in (24.5, 31.0):
+    solid(lambda p, yb=yb: sd_box(p, (0, yb, 0.25), (FW - 0.5, 0.35, 0.35)))
+for sx in (-19.5, 19.5):
+    solid(lambda p, sx=sx: sd_tri_front(p, sx, 4.2, 9.6, 15.5, 1.6, 2.6))
+    solid(lambda p, sx=sx: sd_sphere(p, (sx, 16.2, 2.1), 0.7), "gold")
+for cx_ in (-FW + 0.6, FW - 0.6):
+    solid(lambda p, cx_=cx_: sd_cyl_y(p, cx_, 0.0, 1.1, 0, AISLE_H + 2))
+    solid(lambda p, cx_=cx_: sd_spire(p, cx_, 0.0, 1.2, AISLE_H + 2, 7))
+# 窓の中の桟（たての石の線）
+for sx in (-14.5, 14.5):
+    solid(lambda p, sx=sx: sd_box(p, (sx, 15, -0.7), (0.25, 4.0, 0.25)))
+for wz in (-4.0, -11.0, -18.0):
+    solid(lambda p, wz=wz: sd_box(p, (FW - 0.7, 11.5, wz), (0.25, 4.5, 0.25)))
+
+
+def scene0(p):
     d = np.full(p.shape[:-1], 1e9)
     for f, _ in SOLIDS:
         d = np.minimum(d, f(p))
@@ -218,11 +248,15 @@ def scene(p):
     return d
 
 
+def scene(p):
+    return scene0(p / S) * S
+
+
 # ===================================================================== 光線を飛ばす
 sx, sy = np.meshgrid(np.arange(W) + 0.5, np.arange(H) + 0.5)
 # 絵の (sx, sy) にうつる点: x = sx - CX + (-z)... を、z について進む光線にする
 # 正面から: 点 (x, y, z) は、絵の (CX + x - z, GROUND - y + K*z) にうつる（z は奥へ負）
-Z0 = 30.0
+Z0 = 40.0
 start = np.stack([sx - CX + Z0, GROUND - sy + K * Z0, np.full_like(sx, Z0)], -1)
 rd = np.array([-1.0, -K, -1.0]); rd /= np.linalg.norm(rd)
 dist = np.zeros(sx.shape)
@@ -235,7 +269,7 @@ for it in range(260):
     dist[idx] += np.maximum(d * 0.9, 0.02)
     h = d < 0.02
     hit[idx[0][h], idx[1][h]] = True
-    far = dist[idx] > 140
+    far = dist[idx] > 200
     gone = h | far | (p[:, 1] < -0.5)
     a2 = alive.copy(); a2[idx[0][gone], idx[1][gone]] = False
     alive = a2
@@ -291,12 +325,14 @@ def material(p, n):
     return mat
 
 
-MAT = material(HP, N)
+MAT = material(HP / S, N)
 
 # ===================================================================== 色
 RAMPS = {
-    "stone": ["#2e241c", "#46382a", "#5e4c38", "#7a6448", "#967e5a", "#b0966a", "#c8ae7e", "#dcc494", "#ecd8ac", "#f8ecca"],
-    "roof": ["#1a1e28", "#262c3a", "#343c4e", "#455066", "#58667e", "#6e7e98", "#8898b0"],
+    # 2026-10-06 人間の指示「教会の色白系統で」: 白い石（すこしあたたかい白）
+    "stone": ["#34323a", "#4c4a54", "#66646e", "#82808a", "#9e9ca4", "#b8b6bc", "#cfcdd0", "#e2e0e0", "#f0eeea", "#fbfaf6"],
+    "statue": ["#3a3a46", "#555564", "#727282", "#9090a0", "#aeaebc", "#cacad4", "#e2e2ea", "#f6f6fa"],
+    "roof": ["#1c2230", "#283042", "#363f56", "#47526c", "#5b6884", "#72809c", "#8c9ab4"],
     "dark": ["#140e0c", "#1e1612", "#2a201a", "#382c22"],
     "door": ["#2a160a", "#3e2210", "#5a3418", "#784824", "#965c2e"],
     "glass": ["#141c3a", "#1e3060", "#2c4a88", "#3e6aac", "#5a90cc"],
@@ -311,7 +347,7 @@ img = np.full((H, W), "", dtype=object)
 for i in range(len(HP)):
     x, y = xs_[i], ys_[i]
     m = MAT[i]
-    wp = HP[i]
+    wp = HP[i] / S
     n = N[i]
     lum = 0.2 + 0.8 * diff[i] * (0.35 + 0.65 * sh[i])
     lum *= 0.55 + 0.45 * ao[i]
@@ -354,18 +390,18 @@ for i in range(len(HP)):
     img[y, x] = c
 
 # バラ窓の放射の桟と、中の灯
-rc = (CX + 0 - 0.0, GROUND - 34.5 + K * 0)
+rc = (CX + 0 - 0.0, GROUND - 34.5 * S + K * 0)
 for y in range(H):
     for x in range(W):
         if img[y, x] == "":
             continue
         dx, dy = x + 0.5 - rc[0], y + 0.5 - rc[1]
         d = math.hypot(dx, dy)
-        if 1.5 < d < 5.6:
+        if 1.5 * S < d < 5.6 * S:
             a = (math.atan2(dy, dx) + math.pi) / (2 * math.pi) * 12
             if a % 1 < 0.2:
                 img[y, x] = "#2a201a"
-        if d < 1.6:
+        if d < 1.6 * S:
             img[y, x] = "#fff0a0"
 
 # りんかく
@@ -395,12 +431,12 @@ def ring(cx, cy, r, col, gap=False):
                 img[y, x] = col
 
 
-ring(rc[0], rc[1], 5.2, "#e0b040")
-ring(rc[0], rc[1], 3.3, "#c0902a")
-ring(rc[0], rc[1], 1.9, "#f8dc80", gap=True)
+ring(rc[0], rc[1], 5.2 * S, "#e0b040")
+ring(rc[0], rc[1], 3.3 * S, "#c0902a")
+ring(rc[0], rc[1], 1.9 * S, "#f8dc80", gap=True)
 # 交差部の塔の先に、立つ環
-tx, ty = CX + 0 + (DEP - 7), GROUND - 82 - K * (DEP - 7)
-ring(tx, ty, 2.0, "#e0b040"); ring(tx, ty, 1.0, "#f8dc80", gap=True)
+tx, ty = CX + (DEP - 7) * S, GROUND - 91 * S - K * (DEP - 7) * S
+ring(tx, ty, 2.6, "#e0b040"); ring(tx, ty, 1.3, "#f8dc80", gap=True)
 for k in range(2):
     if 0 <= int(ty + 2.5 + k) < H:
         img[int(ty + 2.5 + k), int(tx)] = "#8a6418"

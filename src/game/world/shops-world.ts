@@ -11,7 +11,7 @@ const SHOP_TOWNS: { mapId: string; tier: number; tileX: number; tileY: number; k
   { mapId: "garasuko-town", tier: 3, tileX: 11, tileY: 4, keeper: "湖上市場の武具屋" },
   { mapId: "tetsukusari-town", tier: 4, tileX: 11, tileY: 4, keeper: "鉱山の鍛冶屋" },
   { mapId: "sanone-town", tier: 5, tileX: 11, tileY: 4, keeper: "砂音の武具商" },
-  { mapId: "kiri-town", tier: 6, tileX: 11, tileY: 4, keeper: "霧断崖の武具屋" },
+  { mapId: "kiri-town", tier: 6, tileX: 14, tileY: 3, keeper: "霧断崖の武具屋" },
   { mapId: "shimohara-town", tier: 7, tileX: 11, tileY: 4, keeper: "霜原の武具屋" },
   { mapId: "fushima-town", tier: 8, tileX: 11, tileY: 4, keeper: "浮嶼の職人" },
   { mapId: "toushin-town", tier: 9, tileX: 11, tileY: 4, keeper: "灯芯都の名工" },

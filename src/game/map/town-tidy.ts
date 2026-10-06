@@ -32,7 +32,7 @@ export const PROP_BOX: Partial<Record<MapPropKind, [number, number, number, numb
   "chains": [-10, 10, -44, -8],
   "chest-closed": [-12, 13, -22, 0],
   "chest-open": [-12, 13, -30, 0],
-  "church": [-52, 48, -96, -2],
+  "church": [-37, 68, -135, -1],
   "cobweb": [-13, 13, -26, -1],
   "coffin": [-21, 21, -24, 0],
   "crates": [-16, 21, -34, -1],

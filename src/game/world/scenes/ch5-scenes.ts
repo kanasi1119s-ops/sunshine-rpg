@@ -159,7 +159,7 @@ export const CH5_SCENES: StoryScene[] = [
     mapId: "kiri-town",
     requires: ["chapter5_quest_accepted"],
     blockedBy: ["chapter5_record_found"],
-    at: { x0: 2, y0: 1, x1: 6, y1: 2 },
+    at: { x0: 1, y0: 1, x1: 2, y1: 4 },   // 聖堂の西の裏の路地（2026-10-06 聖堂を大きくしたので、西のはしへ）
     time: "night",
     source: `${SRC}02-三つの灯りと夜の崖道.md（十・十一）`,
     commands: [
@@ -278,7 +278,7 @@ export const CH5_SCENES: StoryScene[] = [
     mapId: "kiri-town",
     requires: ["chapter5_reported"],
     blockedBy: ["chapter6_intro_seen"],
-    at: { x0: 8, y0: 7, x1: 11, y1: 8 },
+    at: { x0: 13, y0: 6, x1: 16, y1: 7 },   // 2026-10-06 聖堂を大きくしたので、東へ
     time: "night",
     source: `${SRC}06-霧の晴れ間.md（三十 禁域のふち）・02（九 縄の向こう）`,
     commands: [

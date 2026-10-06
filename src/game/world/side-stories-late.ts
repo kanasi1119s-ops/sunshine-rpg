@@ -11,7 +11,7 @@ export const SIDE_STORIES_LATE: SideStory[] = [
     key: "s015",
     title: "カセン支部長への手紙",
     unlockFlags: ["chapter5_record_found"],
-    giver: { mapId: "kiri-town", tileX: 11, tileY: 2, color: "#8a9ab0" },
+    giver: { mapId: "kiri-town", tileX: 13, tileY: 2, color: "#8a9ab0" },
     locked: [say("郵便係", "霧が濃い日は、手紙も遅れがちでして……。")],
     offer: [
       say("郵便係", "灯りの相談所の方ですね。灯里のカセン支部長へ、手紙を出されますか？"),
@@ -58,7 +58,7 @@ export const SIDE_STORIES_LATE: SideStory[] = [
     hint: [say("見習い巫女", "祠は、町のあちこちにあります。灯りの芯は、私が渡しておきました。順番は、どれからでも構いません。")],
     steps: [
       {
-        mapId: "kiri-town", tileX: 3, tileY: 5, color: "#d0c8a8",
+        mapId: "kiri-town", tileX: 2, tileY: 6, color: "#d0c8a8",
         commands: [
           say(undefined, "南の祠に、灯りの芯を置いた。ミナが小さく「……ハル」とつぶやく。水色の、やわらかな光がともる。"),
         ],
@@ -70,7 +70,7 @@ export const SIDE_STORIES_LATE: SideStory[] = [
         ],
       },
       {
-        mapId: "kiri-town", tileX: 8, tileY: 7, color: "#d0c8a8",
+        mapId: "kiri-town", tileX: 9, tileY: 11, color: "#d0c8a8",
         commands: [
           say(undefined, "路地の祠に、コハクは従兄を、レトは兄を、ユーリは祖父を思って、灯りを置いた。緑、赤、白の光が寄りそう。"),
           say(undefined, "五つの光が、ゆっくり揺れて、ひとつにまとまった。"),
@@ -133,7 +133,7 @@ export const SIDE_STORIES_LATE: SideStory[] = [
     hint: [say("旅の商人", "寒村の様子と、聖堂の人の話。両方、聞いてみてくれ。")],
     steps: [
       {
-        mapId: "kiri-town", tileX: 11, tileY: 6, color: "#9a9aa8",
+        mapId: "kiri-town", tileX: 15, tileY: 7, color: "#9a9aa8",
         commands: [
           say("寒村の村人", "灯りは、手放すもの……。個は、重い……。手放せば、楽になる……。"),
           say("カイ", "母ちゃんが、おれの名前を呼んでくれないんだ。笑ってるのに、おれのほうを見ないんだ。"),
@@ -161,7 +161,7 @@ export const SIDE_STORIES_LATE: SideStory[] = [
     key: "s030",
     title: "静滅教団の教え（後編）",
     unlockFlags: ["side_s029_done"],
-    giver: { mapId: "kiri-town", tileX: 5, tileY: 7, color: "#8a8098" },
+    giver: { mapId: "kiri-town", tileX: 5, tileY: 11, color: "#8a8098" },
     locked: [say("見張りの兵", "この先の谷は、立入り禁止だ。")],
     offer: [
       say("見張りの兵", "寒村の裏の谷に、教団の隠れ拠点があるという情報がある。古い祠の跡で、夜ごと灯りがともるそうだ。"),

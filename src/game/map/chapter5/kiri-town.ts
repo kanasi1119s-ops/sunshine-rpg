@@ -27,8 +27,8 @@ const WEST_GATE = { x: 0, y: 10 };
 const EAST_GATE = { x: WIDTH - 1, y: 10 };
 /** 町の北、崖の岩肌に掘られた記録の間（古文書庫）への入口。 */
 const ARCHIVE_GATE_POS = { x: 12, y: 0 };
-/** 環の聖堂（教会。絵は `prop:church`、足もとのまんなかがここ。横5マス×縦3マス）と、巡礼者の宿坊（3x2）。 */
-const CHURCH_FOOT = { x: 7, y: 5 };
+/** 環の聖堂（教会。絵は `prop:church`、足もとのまんなかがここ。横7マス×縦4マス（絵は右へ奥行きがのびる）。2026-10-06 に大きくし、足もとを (7,5) から下げた）と、巡礼者の宿坊（3x2）。 */
+const CHURCH_FOOT = { x: 7, y: 8 };
 /** 聖堂の扉（足もとのすぐ下。上へ押すと中へ入る）。 */
 export const KIRI_CHURCH_TOWN_DOOR = { x: CHURCH_FOOT.x, y: CHURCH_FOOT.y + 1 };
 const HOSTEL_ORIGIN = { x: 17, y: 4 };
@@ -75,7 +75,7 @@ export function createKiriTownData(): TileMapData {
     }
   }
   // 広場の石柱。
-  for (const [x, y] of [[10, 8], [14, 8], [10, 12], [14, 12]] as [number, number][]) {
+  for (const [x, y] of [[13, 8], [17, 8], [13, 12], [17, 12]] as [number, number][]) {   // 2026-10-06 聖堂を大きくしたので、東へ
     set(x, y, PILLAR);
   }
 
