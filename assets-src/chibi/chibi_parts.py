@@ -155,32 +155,31 @@ class Chibi:
 
 
 def swing_arms(c):
-    """前・後ろ向きで、左右の腕を交互に振る（2026-10-07、人間の指示「天使と魔王手が動いてないんだよね」）。
-    もとの型（レト）は、片方の手しか動かず、もう片方には剣があった。剣を外し、両手を逆向きに1ドットずつ上下させる。
-    腕は x=2（左）と x=13（右）の1列、外側と内側に縁取り。コマ0は手が23行目、コマ1は左24・右22、コマ2は左22・右24"""
-    hand_rows = {0: (23, 23), 1: (24, 22), 2: (22, 24)}
+    """前・後ろ向きで、動いていなかったほうの手も、動いている手と同じように動かす
+    （2026-10-07、人間の指示「最初のでいいや…それも右手の動きを左手と同じにしてあげて」「左手しか動いてないのよ」）。
+    もとの型（レト）は、前向きは画面の右側（x=13）の手だけ、後ろ向きは画面の左側（x=2）の手だけが1ドット上下する。
+    止まっている側の手（x=2 / x=13）を、動いている手と同じコマで同じ高さに動かす。持ち物（剣）はそのまま。"""
     for d in ("down", "up"):
+        move, still = (13, 2) if d == "down" else (2, 13)
+        out = 1 if still == 2 else 14              # 止まっている手の外側の縁取りの列
+        inn = 3 if still == 2 else 12
         g0 = c.frames[d + "0"]
-        sides = [(2, 1, 3), (13, 14, 12)]
-        sleeve = {col: [g0[y][col] for y in (20, 21, 22)] for col, _, _ in sides}
-        skin = {col: g0[23][col] for col, _, _ in sides}
-        for f in range(3):
+        sleeve = [g0[y][still] for y in (20, 21, 22)]
+        skin = g0[23][still]
+        for f in (1, 2):
             g = c.frames[d + str(f)]
-            for y in range(21, 29):                  # 剣と、腕の外側を消す
-                for x in (0, 1, 14, 15):
-                    g[y][x] = "."
-            for (col, out, inn), hy in zip(sides, hand_rows[f]):
-                for y in range(20, hy):
-                    g[y][col] = sleeve[col][min(y - 20, 2)]
-                g[hy][col] = skin[col]
-                for y in range(hy + 1, 29):          # 手の下は体の縁取り
-                    if g[y][col] != ".":
-                        g[y][col] = "A"
-                g[hy + 1][col] = "A"
-                for y in range(21, hy + 1):
-                    g[y][out] = "A"
-                for y in range(21, 24):
-                    g[y][inn] = "A"
+            hy = next(y for y in (22, 23, 24) if c.pal[__import__("string").ascii_uppercase.index(g[y][move])] in
+                      (c.pal[__import__("string").ascii_uppercase.index(g0[23][move])],))
+            for y in range(20, hy):
+                g[y][still] = sleeve[min(y - 20, 2)]
+            g[hy][still] = skin
+            g[hy + 1][still] = "A"
+            for y in range(21, hy + 1):
+                g[y][out] = "A"
+            if hy == 22:                              # 手が上がったぶん、手の下は体の縁取りにする
+                g[23][still] = "A"
+                if g[23][out] == "A" and still == 13:
+                    g[23][out] = "."
 
 
 def swing_arms_side(c):

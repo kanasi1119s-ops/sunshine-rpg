@@ -61,8 +61,7 @@ for ch, v in zip("BCD", ("#f0c050", "#fff2a8", "#b07a1c")): c.color(ch, v)
 c.color("F", "#3a8ad8")
 for ch, v in zip("JKLMOPQRSVW", ("#f4f2ea", "#c8b67a", "#ffffff", "#e8e6f0", "#b8b4c8", "#b8a070", "#e8e0c8", "#fff8e8", "#c8b890", "#d8c8a0", "#9a8a60")): c.color(ch, v)
 apply_head(c, ANGEL)
-swing_arms_side(c)                               # 横向きは仲間と同じ動き（手の1ドットが前後に動く）
-swing_arms(c)                                    # 両手を交互に振る（人間の指示「手が動いてない」）
+swing_arms(c)                                    # 止まっていた手も、もう片方と同じように動かす（人間の指示）
 c.halo(c.new("#ffe680"), c.new("#c89a2a"), gap=3)
 stamp(c, wing_masks(c.new("#f0c860"), c.new("#fff0a0"), c.new("#c8962a"), c.new("#7a5a1a")), over_keys=("up",))   # イメージ画像どおり金の羽
 build("天使", "angel", c)
@@ -91,8 +90,7 @@ for ch, v in zip("BCD", ("#2a2238", "#4e3e66", "#120c18")): c.color(ch, v)
 c.color("F", "#ff3030")
 for ch, v in zip("JKLMOPQRSVW", ("#9a1a22", "#5a0a12", "#4a4a58", "#2a2a34", "#16161c", "#3a3040", "#2a2232", "#4a3e58", "#1e1824", "#2e2638", "#140e18")): c.color(ch, v)
 apply_head(c, LORD)
-swing_arms_side(c)                               # 横向きは仲間と同じ動き（手の1ドットが前後に動く）
-swing_arms(c)                                    # 両手を交互に振る（人間の指示「手が動いてない」）
+swing_arms(c)                                    # 止まっていた手も、もう片方と同じように動かす（人間の指示）
 c.cape(c.new("#8a1420"), c.new("#5a0a14"), "A", start=17, end=29)
 kn, kl, kg = c.new("#241a2e"), c.new("#9a88b4"), c.new("#ff3a3a")
 L_HORN = [(6, 2), (5, 2), (4, 2), (3, 2), (2, 3), (1, 3), (0, 4)]   # イメージ画像のような、大きく反った2本の角
