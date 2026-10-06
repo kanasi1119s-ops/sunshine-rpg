@@ -11,7 +11,7 @@ import type { MapProp, MapPropKind, TileMapData } from "./types";
  *  1) 玄関が町の外まわり（塀）にかかる家は、取りのぞく（入れない家をなくす）。
  *  2) 街灯は、道にそって、決まった間かく（6マスごと）・決まった側（横の道は北がわ、たての道は東がわ）に立てなおす。
  *  3) 花壇は、家の玄関の左右（足もとの列の、2マス横）に、そろえて置く。家のそばにない花壇は、はずす。
- *  3.2) 樽は家のすぐとなり、井戸は家の近く（2マスいない）へ移す。屋台は、まっすぐな横の道の上へ移し、
+ *  3.2) 樽は家のすぐとなり、井戸は家の近く（家とのあいだに1マスあけた、2〜3マスの所）へ移す。屋台は、まっすぐな横の道の上へ移し、
  *     その手前（南）の1列を道にして、人が屋台をよけて通れるようにする（2026-10-06 人間の指示
  *     「井戸は家の近くに商店は道の上に置いて」「樽は小さくしてすべて家の近くに置こうか」）。置けなければ、はずす。
  *  4) 絵が重なる飾りは、だいじなほう（建物 → 井戸・祠など → 木 → 街灯 → ベンチ・荷車など → 樽・箱・岩）を残し、ほかは取りのぞく。
@@ -235,10 +235,22 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
   const houseTiles = (): Array<[number, number]> => props.filter((q) => isHouse(q.kind)).flatMap((q) => propFootprintTiles(q).map((t): [number, number] => [t.x, t.y]));
   const houseDist = (x: number, y: number, hs: Array<[number, number]>): number =>
     hs.reduce((m, [hx, hy]) => Math.min(m, Math.max(Math.abs(hx - x), Math.abs(hy - y))), 99);
-  for (const [kind, maxD] of [["well", 2], ["barrel", 1]] as const) {
+  // 井戸は家から少しはなす（あいだに1マスあける。2026-10-06 人間の指示「家の近くの井戸は少し離しましょう」）。樽は家のすぐとなり
+  // 井戸の絵と、家・花壇の絵とのあいだ（ドット）。家の絵は足もとのマスより横に広く、花壇も玄関の横にあるので、絵どうしではかる
+  const gapPx = (a: Box, b: Box): number => Math.max(Math.max(a.x0, b.x0) - Math.min(a.x1, b.x1), Math.max(a.y0, b.y0) - Math.min(a.y1, b.y1));
+  const wellGapOk = (x: number, y: number): boolean => {
+    const wb = boxOf({ kind: "well", tileX: x, tileY: y }, ts);
+    if (!wb) return true;
+    if (wb.y0 < ts + 4) return false;                                     // 上の塀に、屋根がかからない所
+    if (props.some((q) => q.kind !== "flowerbed" && !isHouse(q.kind) && q !== undefined && boxOf(q, ts) && gapPx(wb, boxOf(q, ts)!) < 4 && !(q.tileX === x && q.tileY === y))) return false;   // ほかの飾りとも、少しあける
+    const near = props.filter((q) => isHouse(q.kind) || q.kind === "flowerbed").map((q) => boxOf(q, ts)).filter((b): b is Box => !!b);
+    return near.every((b) => gapPx(wb, b) >= 10) && near.some((b) => gapPx(wb, b) <= 40);
+  };
+  for (const [kind, minD, maxD] of [["well", 2, 3], ["barrel", 1, 1]] as const) {
     for (const p of props.filter((q) => q.kind === kind)) {
       const hs = houseTiles();
-      if (houseDist(p.tileX, p.tileY, hs) <= maxD) continue;
+      const d0 = houseDist(p.tileX, p.tileY, hs);
+      if (d0 >= minD && d0 <= maxD && (kind !== "well" || wellGapOk(p.tileX, p.tileY))) continue;
       remove(p);
       const cands: Array<[number, number, number]> = [];
       for (let y = 1; y < h - 1; y++) {
@@ -246,7 +258,7 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
           const d = houseDist(x, y, hs);
           // 玄関の前の列（玄関から左右3マス）は、宿屋の看板などのためにあけておく
           const front = props.some((q) => isHouse(q.kind) && y === q.tileY + 1 && Math.abs(x - q.tileX - doorOffsetX(q.kind)) <= 3);
-          if (d >= 1 && d <= maxD && !front) cands.push([x, y, d * 100 + Math.abs(x - p.tileX) + Math.abs(y - p.tileY)]);
+          if (d >= minD && d <= maxD && !front && (kind !== "well" || wellGapOk(x, y))) cands.push([x, y, d * 100 + Math.abs(x - p.tileX) + Math.abs(y - p.tileY)]);
         }
       }
       cands.sort((a, b) => a[2] - b[2]);

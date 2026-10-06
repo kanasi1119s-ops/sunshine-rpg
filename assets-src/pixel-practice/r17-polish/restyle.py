@@ -8,8 +8,10 @@
   3. 光のふち: 左上のふちのすぐ内がわを、1段明るく（ところどころ）。
   4. 面をすっきり: まわりと色がちがう1ドットだけの点（ノイズ）は、まわりの色にそろえる。
   5. 接地の影（うすく透ける色）は、そのまま。
-書き出し: ../r29-restyle-trial/<名前>.txt と pal-<名前>.json（試しなので、ゲームには読み込まれない）。
-使い方: python3 restyle.py"""
+書き出し: ../r29-restyle-trial/<名前>.txt と pal-<名前>.json（試し。ゲームには読み込まれない）。
+2026-10-06 人間の指示「これ全部共有ね」で採用。`--apply` をつけると、もとの絵（r17-polish・r20-props）を、この感じの絵で上書きする。
+使い方: python3 restyle.py            … 試しを作る
+        python3 restyle.py --apply    … ゲームの絵にする（模型から描きなおした絵に、1回だけかける。2回かけると強くなりすぎる）"""
 import colorsys
 import json
 import os
@@ -138,9 +140,34 @@ def restyle(rows, pal, grad=True):
     return out
 
 
+def merge_colors(img, limit=62):
+    """色が limit をこえたら、いちばん近い2色を1つにまとめていく（エディタの記号は英字と数字の62個まで）。"""
+    def rgb(c):
+        return tuple(int(c[i:i + 2], 16) for i in (1, 3, 5))
+    while True:
+        cnt = {}
+        for r in img:
+            for c in r:
+                if c:
+                    cnt[c] = cnt.get(c, 0) + 1
+        if len(cnt) <= limit:
+            return img
+        solid = [c for c in cnt if len(c) == 7]
+        best = None
+        for i, a in enumerate(solid):
+            for b in solid[i + 1:]:
+                d = sum((p - q) ** 2 for p, q in zip(rgb(a), rgb(b)))
+                if best is None or d < best[0]:
+                    best = (d, a, b)
+        _, a, b = best
+        keep, drop = (a, b) if cnt[a] >= cnt[b] else (b, a)
+        img = [[keep if c == drop else c for c in r] for r in img]
+
+
 def save(img, name):
+    img = merge_colors(img)
     cols = sorted({c for r in img for c in r if c})
-    syms = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,-/:;<=>?@[]^_{|}~"
+    syms = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     if len(cols) > len(syms):
         raise SystemExit(f"{name}: 色が多すぎる {len(cols)}")
     cmap = {c: syms[i] for i, c in enumerate(cols)}
@@ -150,11 +177,17 @@ def save(img, name):
 
 
 if __name__ == "__main__":
+    import sys
+    apply = "--apply" in sys.argv
     os.makedirs(OUT, exist_ok=True)
     for d, name, pname in TARGETS:
         rows = [l for l in open(os.path.join(PP, d, name + ".txt")).read().split("\n") if l]
         pal = json.load(open(os.path.join(PP, d, "pal-" + pname + ".json")))
         img = restyle(rows, pal)
-        if len({c for r in img for c in r if c}) > 88:
+        if len({c for r in img for c in r if c}) > 90:
             img = restyle(rows, pal, grad=False)                  # 色が多すぎる絵は、全体の明暗をつけない
         print(name, save(img, name), "colors")
+        if apply:
+            import shutil
+            shutil.copy(os.path.join(OUT, name + ".txt"), os.path.join(PP, d, name + ".txt"))
+            shutil.copy(os.path.join(OUT, "pal-" + name + ".json"), os.path.join(PP, d, "pal-" + pname + ".json"))
