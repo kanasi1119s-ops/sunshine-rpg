@@ -1,4 +1,8 @@
-"""霧断崖の「環の聖堂」の外観を、立体の模型から描く（2026-10-06、人間の指示「教会の建物勉強してきて」
+"""（試し）環の聖堂の「大聖堂」版（2026-10-06、人間の指示「教会を大聖堂みたいな感じバージョンも同じような感じで作って」）。
+church3d.py をもとに、正面の4本の丸い塔を、左右2本の四角い大きな塔（鋭い八角の尖塔・四すみの小尖塔・鐘楼の窓）にかえ、
+大きなバラ窓、像の列、交差部の細い尖塔にした。書き出しは cathedral.txt / pal-cathedral.json（ゲームにはまだ入れない）。
+
+以下は church3d.py の説明: 霧断崖の「環の聖堂」の外観を、立体の模型から描く（2026-10-06、人間の指示「教会の建物勉強してきて」
 「リアルだけど、立体感もさらに作って。細かく細かくドットを使って」）。
 勉強ノート docs/design/church-architecture-notes.md のしくみ（高い身廊と低い側廊の2段の屋根・高窓・控え壁と飛び梁・
 三つの入口と奥へ下がるアーチ・像の帯・バラ窓・塔）を、実在の建物を写さずに組み立てた。十字は使わず、三つの環のしるし。
@@ -171,50 +175,6 @@ def castle(cx, y0, cz, r):
     cut(lambda p: sd_box(p, (cx - 0.2, y0 + 1.1, cz + r + 0.9), (0.35, 0.6, 0.6)), "dark")    # 城の小さな門
 
 
-TOWERS = [(-19.5, 5.6, 54, 32), (19.5, 5.6, 54, 30), (-9.5, 3.6, 60, 36), (9.5, 3.6, 60, 34)]
-for (tx, r, hcol, hsp) in TOWERS:
-    solid(lambda p, tx=tx, r=r, hcol=hcol: sd_cyl_y(p, tx, -r * 0.6, r, 0, hcol))
-    solid(lambda p, tx=tx, r=r, hcol=hcol, hsp=hsp: sd_spire(p, tx, -r * 0.6, r * 0.82, hcol, hsp))
-    for ky in range(14, hcol, 9):
-        solid(lambda p, tx=tx, r=r, ky=ky: sd_cyl_y(p, tx, -r * 0.6, r + 0.6, ky, ky + 1.2))      # 節の輪（帯）
-    castle(tx, hcol + hsp * 0.72, -r * 0.6, r * 0.42)
-    # 塔の胴の、たてのすき間（穴）
-    for ky in range(18, hcol - 2, 9):
-        for ang in (-0.5, 0.35):
-            cut(lambda p, tx=tx, r=r, ky=ky, ang=ang: sd_box(p, (tx + math.sin(ang) * r, ky + 3, -r * 0.6 + math.cos(ang) * r), (0.55, 2.6, 1.6)), "dark")
-    # 塔の先の、穴の輪
-    for kk in range(3):
-        yy = hcol + 6 + kk * 7
-        cut(lambda p, tx=tx, r=r, yy=yy: sd_box(p, (tx - 0.8, yy, -r * 0.6 + r * 0.9), (0.5, 1.2, 1.2)), "dark")
-# 交差部の高い塔（うしろ）
-solid(lambda p: sd_cyl_y(p, 0, -DEP + 7, 5.5, NAVE_H, 64))
-solid(lambda p: sd_spire(p, 0, -DEP + 7, 4.6, 64, 22))
-castle(0, 64 + 22 * 0.72, -DEP + 7, 4.6 * 0.42)
-for ky in (48, 54, 60):
-    cut(lambda p, ky=ky: sd_box(p, (2.5, ky + 2, -DEP + 7 + 5), (0.6, 2.4, 1.6)), "dark")
-# 正面のまんなかの壁（身廊の正面）と、上の飾り破風
-solid(lambda p: sd_box(p, (0, (NAVE_H + 4) / 2, -0.8), (NAVE - 1, (NAVE_H + 4) / 2, 0.8)))
-solid(lambda p: sd_tri_front(p, 0, 8.5, NAVE_H + 4, NAVE_H + 17, -1.4, 0.4))
-solid(lambda p: sd_sphere(p, (0, NAVE_H + 18.2, -0.6), 1.3), "gold")
-# 控え壁（右の側廊の横）と、その上の小尖塔、身廊へわたる飛び梁
-for bz in (-7.5, -14.5, -21.5):
-    solid(lambda p, bz=bz: sd_box(p, (FW + 1.6, 9, bz), (1.6, 9, 1.1)))
-    solid(lambda p, bz=bz: sd_box(p, (FW + 1.1, 21, bz), (1.1, 4, 0.9)))
-    solid(lambda p, bz=bz: sd_spire(p, FW + 1.1, bz, 1.2, 25, 7))
-    solid(lambda p, bz=bz: sd_capsule(p, (FW + 0.5, 24, bz), (NAVE + 0.2, NAVE_H - 4, bz), 0.75))
-# 入口: まんなかの大きな入口（3重に奥へ下がる）と、左右の小さな入口（2重）
-for k in range(4):
-    cut(lambda p, k=k: sd_arch_z(p, 0, 15 - k * 2.4, 0, 17 - k * 0.8, 0.3, 1.0 + k * 1.1), "stone" if k < 3 else "door")
-for sx in (-19.5, 19.5):
-    for k in range(3):
-        cut(lambda p, sx=sx, k=k: sd_arch_z(p, sx, 8 - k * 1.8, 0, 9 - k * 0.6, 0.3 + 5.6 * 0.4, 0.8 + k * 0.9), "stone" if k < 2 else "door")
-# 入口の上の、半月の面（タンパン）は、扉の上を少し浅くして残す
-solid(lambda p: sd_box(p, (0, 22.5, -3.5), (5.5, 2.4, 0.6)))
-# バラ窓（まんなかの壁）
-cut(lambda p: sd_disc_z(p, 0, 34.5, 6.2, 0.0, 1.6), "rose")
-# 像の帯（入口の上の、小さなくぼみの列）と、その中の像
-for i, x in enumerate((-15, -13, 13, 15)):
-    cut(lambda p, x=x: sd_arch_z(p, x, 1.6, 26, 29, 0.6, 1.0, pointed=False), "dark")
 # ステンドグラスの窓（2026-10-06「ステンドグラスがはっきりするような」「その枠もしっかり作って」）:
 # 窓を大きくし、まわりに張り出した石の枠（アーチの縁どり）、窓台、まんなかのたての桟をつける
 def framed_z(sx, w, y0, ys, zf):
@@ -232,6 +192,58 @@ def framed_x(cz, w, y0, ys, xf):
     solid(lambda p: sd_box(p, (xf + 0.3, y0 - 0.8, cz), (0.5, 0.4, w / 2 + 1.1)), "frame")
 
 
+# ---- 大聖堂版（2026-10-06 人間の指示「教会を大聖堂みたいな感じバージョンも同じような感じで作って」。試し）:
+# 正面の左右に、四角い大きな塔（かどの控え壁・縦長の鐘楼の窓・上に四すみの小尖塔・まんなかに鋭い八角の尖塔）
+for tx in (-18.0, 18.0):
+    TW = 6.2
+    solid(lambda p, tx=tx: sd_box(p, (tx, 31, -TW), (TW, 31, TW)))                                        # 塔の胴
+    for (cxo, czo) in ((-TW, 0.0), (TW, 0.0)):                                                               # かどの控え壁（上へ段々に細く）
+        solid(lambda p, tx=tx, cxo=cxo: sd_box(p, (tx + cxo, 14, 0.4), (1.1, 14, 1.0)))
+        solid(lambda p, tx=tx, cxo=cxo: sd_box(p, (tx + cxo * 0.97, 36, 0.1), (0.8, 10, 0.7)))
+        solid(lambda p, tx=tx, cxo=cxo: sd_spire(p, tx + cxo * 0.97, 0.1, 0.9, 46, 5))
+    for yb in (22, 40, 62):
+        solid(lambda p, tx=tx, yb=yb: sd_box(p, (tx, yb, -TW + 0.2), (TW + 0.5, 0.45, TW + 0.5)))           # 横の帯（蛇腹）
+    for k in (-1, 1):                                                                                         # 鐘楼の縦長の窓（正面に2つ・横に2つ）
+        cut(lambda p, tx=tx, k=k: sd_arch_z(p, tx + k * 2.4, 2.0, 45, 56, 0.0, 1.2), "dark")
+        cut(lambda p, tx=tx, k=k: sd_arch_x(p, -TW + k * 2.4, 2.0, 45, 56, tx + TW, 1.2), "dark")
+    framed_z(tx, 4.6, 24, 36, 0.0)                                                                           # 塔の正面のステンドグラス（大きく）
+    solid(lambda p, tx=tx: sd_box(p, (tx, 62.8, -TW), (TW + 0.6, 0.8, TW + 0.6)))                           # 塔の上の胸壁の台
+    for (dx, dz) in ((-TW, TW), (TW, TW), (-TW, -TW), (TW, -TW)):                                          # 四すみの小尖塔
+        solid(lambda p, tx=tx, dx=dx, dz=dz: sd_cyl_y(p, tx + dx * 0.85, -TW + dz * 0.85, 0.9, 63, 66))
+        solid(lambda p, tx=tx, dx=dx, dz=dz: sd_spire(p, tx + dx * 0.85, -TW + dz * 0.85, 1.0, 66, 7))
+    solid(lambda p, tx=tx: sd_spire(p, tx, -TW, 5.2, 63, 30))                                                # 鋭い尖塔
+    for ky in (70, 77, 84):
+        cut(lambda p, tx=tx, ky=ky: sd_box(p, (tx - 0.6, ky, -TW + 3.6 - (ky - 63) * 0.12), (0.45, 1.1, 1.2)), "dark")
+    castle(tx, 63 + 30 * 0.74, -TW, 5.2 * 0.24)
+# 交差部の高い塔（うしろ）
+solid(lambda p: sd_cyl_y(p, 0, -DEP + 7, 3.0, NAVE_H, 62))               # 交差部の細い尖塔（フレッシュ）
+solid(lambda p: sd_spire(p, 0, -DEP + 7, 3.0, 62, 22))
+castle(0, 62 + 22 * 0.7, -DEP + 7, 3.0 * 0.3)
+for ky in (50, 56):
+    cut(lambda p, ky=ky: sd_box(p, (1.4, ky + 2, -DEP + 7 + 2.6), (0.45, 2.0, 1.0)), "dark")
+# 正面のまんなかの壁（身廊の正面）と、上の飾り破風
+solid(lambda p: sd_box(p, (0, (NAVE_H + 4) / 2, -0.8), (NAVE - 1, (NAVE_H + 4) / 2, 0.8)))
+solid(lambda p: sd_tri_front(p, 0, 8.5, NAVE_H + 4, NAVE_H + 17, -1.4, 0.4))
+solid(lambda p: sd_sphere(p, (0, NAVE_H + 18.2, -0.6), 1.3), "gold")
+# 控え壁（右の側廊の横）と、その上の小尖塔、身廊へわたる飛び梁
+for bz in (-7.5, -14.5, -21.5):
+    solid(lambda p, bz=bz: sd_box(p, (FW + 1.6, 9, bz), (1.6, 9, 1.1)))
+    solid(lambda p, bz=bz: sd_box(p, (FW + 1.1, 21, bz), (1.1, 4, 0.9)))
+    solid(lambda p, bz=bz: sd_spire(p, FW + 1.1, bz, 1.2, 25, 7))
+    solid(lambda p, bz=bz: sd_capsule(p, (FW + 0.5, 24, bz), (NAVE + 0.2, NAVE_H - 4, bz), 0.75))
+# 入口: まんなかの大きな入口（3重に奥へ下がる）と、左右の小さな入口（2重）
+for k in range(4):
+    cut(lambda p, k=k: sd_arch_z(p, 0, 15 - k * 2.4, 0, 17 - k * 0.8, 0.3, 1.0 + k * 1.1), "stone" if k < 3 else "door")
+for sx in (-18.0, 18.0):
+    for k in range(3):
+        cut(lambda p, sx=sx, k=k: sd_arch_z(p, sx, 8 - k * 1.8, 0, 9 - k * 0.6, 0.3 + 5.6 * 0.4, 0.8 + k * 0.9), "stone" if k < 2 else "door")
+# 入口の上の、半月の面（タンパン）は、扉の上を少し浅くして残す
+solid(lambda p: sd_box(p, (0, 22.5, -3.5), (5.5, 2.4, 0.6)))
+# バラ窓（まんなかの壁）
+cut(lambda p: sd_disc_z(p, 0, 36.0, 7.4, 0.0, 1.6), "rose")
+# 像の帯（入口の上の、小さなくぼみの列）と、その中の像
+for i, x in enumerate((-15, -13, 13, 15)):
+    cut(lambda p, x=x: sd_arch_z(p, x, 1.6, 26, 29, 0.6, 1.0, pointed=False), "dark")
 # （正面の塔のあいだの窓は、塔にかくれて見えないので置かない）
 for wz in (-4.0, -11.0, -18.0):
     framed_x(wz, 4.4, 5.5, 16.5, FW)
@@ -246,15 +258,16 @@ def statue(x, y0, z, hgt, m="statue"):
     solid(lambda p: sd_box(p, (x, y0 + 0.3, z), (hgt * 0.24, 0.35, hgt * 0.2)), "stone")             # 台座
 
 
-for x in (-15, -13, 13, 15):
-    statue(x, 26.2, -0.4, 3.0)
+for x in (-9.0, -6.0, -3.0, 0.0, 3.0, 6.0, 9.0):            # 像の列（王の回廊のような、像の帯）
+    statue(x, 25.4, 0.2, 3.4)
+solid(lambda p: sd_box(p, (0, 25.2, 0.0), (11.0, 0.45, 0.9)))
 for sx in (-8.6, 8.6):
     statue(sx, 2.4, 0.9, 7.6)
     solid(lambda p, sx=sx: sd_box(p, (sx, 1.2, 0.9), (1.4, 1.2, 1.2)))                                 # 柱の像の台
 # ---- 細かな飾り: 正面の横の帯（蛇腹）、左右の入口の上の小さな飾り破風、側廊の正面のかどの小尖塔
 for yb in (24.5, 31.0):
     solid(lambda p, yb=yb: sd_box(p, (0, yb, 0.25), (FW - 0.5, 0.35, 0.35)))
-for sx in (-19.5, 19.5):
+for sx in (-18.0, 18.0):
     solid(lambda p, sx=sx: sd_tri_front(p, sx, 4.2, 9.6, 15.5, 1.6, 2.6))
     solid(lambda p, sx=sx: sd_sphere(p, (sx, 16.2, 2.1), 0.7), "gold")
 for cx_ in (-FW + 0.6, FW - 0.6):
@@ -264,7 +277,7 @@ for cx_ in (-FW + 0.6, FW - 0.6):
 for wz in (-4.0, -11.0, -18.0):
     solid(lambda p, wz=wz: sd_box(p, (FW - 0.75, 12, wz), (0.3, 6.0, 0.28)), "frame")
 # バラ窓の、張り出した石の輪
-solid(lambda p: np.maximum(np.abs(np.sqrt(p[..., 0] ** 2 + (p[..., 1] - 34.5) ** 2) - 6.9) - 0.75, np.abs(p[..., 2] - 0.2) - 0.45), "frame")
+solid(lambda p: np.maximum(np.abs(np.sqrt(p[..., 0] ** 2 + (p[..., 1] - 36.0) ** 2) - 8.1) - 0.8, np.abs(p[..., 2] - 0.2) - 0.45), "frame")
 
 
 def scene0(p):
@@ -424,7 +437,7 @@ for i in range(len(HP)):
         BRIGHT = [("#2f5fb8", "#22457e"), ("#d03a4a", "#8e2632"), ("#e8b830", "#a87e1c"), ("#3a9a5a", "#276a3e"),
                   ("#7a4ab0", "#54327a"), ("#4aa8dc", "#2e74a0")]
         if m == "rose":
-            dx_, dy_ = wp[0], wp[1] - 34.5
+            dx_, dy_ = wp[0], wp[1] - 36.0
             rr = math.hypot(dx_, dy_); ang = (math.atan2(dy_, dx_) + math.pi) / (2 * math.pi)
             ring_i = int(rr / 1.7)
             seg = int(ang * (8 if ring_i < 2 else 16))
@@ -441,14 +454,14 @@ for i in range(len(HP)):
     img[y, x] = c
 
 # バラ窓の放射の桟と、中の灯
-rc = (CX + 0 - 0.0, GROUND - 34.5 * S + K * 0)
+rc = (CX + 0 - 0.0, GROUND - 36.0 * S + K * 0)
 for y in range(H):
     for x in range(W):
         if img[y, x] == "":
             continue
         dx, dy = x + 0.5 - rc[0], y + 0.5 - rc[1]
         d = math.hypot(dx, dy)
-        if 1.5 * S < d < 5.6 * S:
+        if 1.5 * S < d < 6.8 * S:
             a = (math.atan2(dy, dx) + math.pi) / (2 * math.pi) * 12
             if a % 1 < 0.2:
                 img[y, x] = "#2a201a"
@@ -482,11 +495,11 @@ def ring(cx, cy, r, col, gap=False):
                 img[y, x] = col
 
 
-ring(rc[0], rc[1], 5.2 * S, "#e0b040")
+ring(rc[0], rc[1], 6.4 * S, "#e0b040")
 ring(rc[0], rc[1], 3.3 * S, "#c0902a")
 ring(rc[0], rc[1], 1.9 * S, "#f8dc80", gap=True)
 # 交差部の塔の先に、立つ環
-tx, ty = CX + (DEP - 7) * S, GROUND - 89.5 * S - K * (DEP - 7) * S
+tx, ty = CX + (DEP - 7) * S, GROUND - 86.5 * S - K * (DEP - 7) * S
 ring(tx, ty, 2.6, "#e0b040"); ring(tx, ty, 1.3, "#f8dc80", gap=True)
 for k in range(2):
     if 0 <= int(ty + 2.5 + k) < H:
@@ -498,6 +511,6 @@ syms = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,
 assert len(cols) <= len(syms), len(cols)
 cmap = {c: syms[i] for i, c in enumerate(cols)}
 rows = ["".join(cmap[img[y, x]] if img[y, x] != "" else "." for x in range(W)) for y in range(H)]
-open(os.path.join(HERE, "church.txt"), "w").write("\n".join(rows) + "\n")
-json.dump({cmap[c]: c for c in cols}, open(os.path.join(HERE, "pal-church.json"), "w"))
+open(os.path.join(HERE, "cathedral.txt"), "w").write("\n".join(rows) + "\n")
+json.dump({cmap[c]: c for c in cols}, open(os.path.join(HERE, "pal-cathedral.json"), "w"))
 print("ok colors", len(cols))
