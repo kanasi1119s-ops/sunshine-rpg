@@ -2975,27 +2975,27 @@
  },
  {
   "id": "enc-world-4-3",
-  "prompt": "a fat white furry caterpillar monster with bright icy blue spots along its body, frost on its hairs, small black eyes and many stubby legs, side view",
+  "prompt": "a segmented white caterpillar monster with rings of icy blue spines on each segment, a round head with black eyes and small mandibles, many little legs, side view",
   "status": "done",
   "key": "enemy:enc-world-4-3",
   "kind": "mob",
   "name": "雪原の虫",
   "zone": "world-4",
   "level": 15,
-  "shape": "long",
+  "shape": "ground",
   "tone": [
    215,
    225,
    235
   ],
   "bg": "dark",
-  "seed_base": 10002,
-  "draft": "enc-world-4-3_0"
+  "seed_base": 14003,
+  "draft": "enc-world-4-3_1"
  },
  {
   "id": "enc-world-4-4",
   "prompt": "an ice crystal creature, a large hexagonal snowflake crystal with a frozen face in the center",
-  "status": "draft",
+  "status": "done",
   "key": "enemy:enc-world-4-4",
   "kind": "mob",
   "name": "氷の結晶",
@@ -3008,7 +3008,8 @@
    240
   ],
   "bg": "dark",
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-world-4-4_0"
  },
  {
   "id": "enc-world-4-5",
@@ -3032,7 +3033,7 @@
  {
   "id": "enc-world-5-0",
   "prompt": "an ember shadow, a dark figure with glowing ember speckles all over and burning eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-5-0",
   "kind": "mob",
   "name": "火の粉の影",
@@ -3043,7 +3044,8 @@
    90,
    50,
    40
-  ]
+  ],
+  "draft": "enc-world-5-0_0"
  },
  {
   "id": "enc-world-5-1",
