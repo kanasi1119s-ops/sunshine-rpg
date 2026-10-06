@@ -18,9 +18,9 @@ import os
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-W, H = 144, 144
-CX, GROUND = 72, 141          # 正面 (z=0) の地面 (y=0) が、絵の y=141
-S = 1.3                       # 模型を1.3倍に（2026-10-06「でかく、でかく、細かく細かく」）
+W, H = 176, 176
+CX, GROUND = 88, 173          # 正面 (z=0) の地面 (y=0) が、絵の y=173
+S = 1.6                       # 模型を1.6倍に（2026-10-06「でかく、でかく」「もっと大きい教会でもいいよ」）
 K = 0.45                      # 奥へ1すすむと、右へ1・上へ0.45
 
 # ===================================================================== 形（SDF）
@@ -43,7 +43,7 @@ def sd_spire(p, cx, cz, r, y0, h):
     """砲弾形の塔の先（下が太く、上へなめらかにすぼむ）。y0 から高さ h。"""
     y = p[..., 1] - y0
     t = np.clip(y / h, 0, 1)
-    rad = r * np.sqrt(np.maximum(1 - t ** 1.6, 0)) + 0.01
+    rad = r * np.maximum(1 - t, 0) ** 0.85 + 0.01     # 2026-10-06「塔の先を鋭く」: 上へまっすぐ細くなる、とがった円すい
     d_r = np.sqrt((p[..., 0] - cx) ** 2 + (p[..., 2] - cz) ** 2) - rad
     d = np.maximum(d_r * 0.7, np.maximum(-y, y - h))
     return d
@@ -157,13 +157,27 @@ solid(lambda p: sd_box(p, (0, 1.5, -DEP / 2), (FW + 1, 1.5, DEP / 2 + 1)))
 solid(lambda p: sd_box(p, (0, 0.7, 2.2), (9, 0.7, 2.2)))
 solid(lambda p: sd_box(p, (0, 1.6, 1.4), (7.5, 0.9, 1.4)))
 # 正面の4本の塔（外の2本は太く、内の2本は細く高い）。円柱の上に砲弾形の先、節の輪
+def castle(cx, y0, cz, r):
+    """塔の先の、金色の小さな城（2026-10-06「先にある金色は城に変えて」）: まるい胴に、ぎざぎざの胸壁（凸凹）、
+    まんなかに細い小塔と、そのとがり。とがった塔の先が、この城の上へ、さらにのびる。"""
+    solid(lambda p: sd_cyl_y(p, cx, cz, r + 0.9, y0, y0 + 2.2), "gold")
+    for k in range(6):
+        a = k * math.pi / 3
+        solid(lambda p, a=a: sd_box(p, (cx + math.cos(a) * (r + 0.6), y0 + 2.8, cz + math.sin(a) * (r + 0.6)), (0.42, 0.6, 0.42)), "gold")
+    solid(lambda p: sd_cyl_y(p, cx, cz, r * 0.55 + 0.3, y0 + 2.0, y0 + 4.6), "gold")
+    for k in range(4):
+        a = k * math.pi / 2 + 0.4
+        solid(lambda p, a=a: sd_box(p, (cx + math.cos(a) * (r * 0.55 + 0.25), y0 + 5.0, cz + math.sin(a) * (r * 0.55 + 0.25)), (0.3, 0.45, 0.3)), "gold")
+    cut(lambda p: sd_box(p, (cx - 0.2, y0 + 1.1, cz + r + 0.9), (0.35, 0.6, 0.6)), "dark")    # 城の小さな門
+
+
 TOWERS = [(-19.5, 5.6, 54, 32), (19.5, 5.6, 54, 30), (-9.5, 3.6, 60, 36), (9.5, 3.6, 60, 34)]
 for (tx, r, hcol, hsp) in TOWERS:
     solid(lambda p, tx=tx, r=r, hcol=hcol: sd_cyl_y(p, tx, -r * 0.6, r, 0, hcol))
     solid(lambda p, tx=tx, r=r, hcol=hcol, hsp=hsp: sd_spire(p, tx, -r * 0.6, r * 0.82, hcol, hsp))
     for ky in range(14, hcol, 9):
         solid(lambda p, tx=tx, r=r, ky=ky: sd_cyl_y(p, tx, -r * 0.6, r + 0.6, ky, ky + 1.2))      # 節の輪（帯）
-    solid(lambda p, tx=tx, r=r, hcol=hcol, hsp=hsp: sd_sphere(p, (tx, hcol + hsp + 1.6, -r * 0.6), 1.9), "mosaic")
+    castle(tx, hcol + hsp * 0.72, -r * 0.6, r * 0.42)
     # 塔の胴の、たてのすき間（穴）
     for ky in range(18, hcol - 2, 9):
         for ang in (-0.5, 0.35):
@@ -175,7 +189,7 @@ for (tx, r, hcol, hsp) in TOWERS:
 # 交差部の高い塔（うしろ）
 solid(lambda p: sd_cyl_y(p, 0, -DEP + 7, 5.5, NAVE_H, 64))
 solid(lambda p: sd_spire(p, 0, -DEP + 7, 4.6, 64, 22))
-solid(lambda p: sd_sphere(p, (0, 87.5, -DEP + 7), 1.8), "mosaic")
+castle(0, 64 + 22 * 0.72, -DEP + 7, 4.6 * 0.42)
 for ky in (48, 54, 60):
     cut(lambda p, ky=ky: sd_box(p, (2.5, ky + 2, -DEP + 7 + 5), (0.6, 2.4, 1.6)), "dark")
 # 正面のまんなかの壁（身廊の正面）と、上の飾り破風
@@ -201,13 +215,26 @@ cut(lambda p: sd_disc_z(p, 0, 34.5, 6.2, 0.0, 1.6), "rose")
 # 像の帯（入口の上の、小さなくぼみの列）と、その中の像
 for i, x in enumerate((-15, -13, 13, 15)):
     cut(lambda p, x=x: sd_arch_z(p, x, 1.6, 26, 29, 0.6, 1.0, pointed=False), "dark")
-# 正面の窓（塔のあいだの高い所）
-for sx in (-14.5, 14.5):
-    cut(lambda p, sx=sx: sd_arch_z(p, sx, 2.6, 11, 19, 0.0, 1.0), "glass")
-# 右の側廊の窓と、身廊の高窓
+# ステンドグラスの窓（2026-10-06「ステンドグラスがはっきりするような」「その枠もしっかり作って」）:
+# 窓を大きくし、まわりに張り出した石の枠（アーチの縁どり）、窓台、まんなかのたての桟をつける
+def framed_z(sx, w, y0, ys, zf):
+    cut(lambda p: sd_arch_z(p, sx, w, y0, ys, zf, 1.1), "glass")
+    ring = lambda p: np.maximum(sd_arch_z(p, sx, w + 1.5, y0 - 0.6, ys, zf + 0.5, 0.95), -sd_arch_z(p, sx, w, y0, ys, zf + 0.5, 3.0))
+    solid(ring, "frame")
+    solid(lambda p: sd_box(p, (sx, y0 - 0.8, zf + 0.3), (w / 2 + 1.1, 0.4, 0.5)), "frame")
+
+
+def framed_x(cz, w, y0, ys, xf):
+    cut(lambda p: sd_arch_x(p, cz, w, y0, ys, xf, 1.2), "glass")
+    ring = lambda p: np.maximum(sd_arch_x(p, cz, w + 1.5, y0 - 0.6, ys, xf + 0.5, 0.95), -sd_arch_x(p, cz, w, y0, ys, xf + 0.5, 3.0))
+    solid(ring, "frame")
+    solid(lambda p: sd_box(p, (xf + 0.3, y0 - 0.8, cz), (0.5, 0.4, w / 2 + 1.1)), "frame")
+
+
+# （正面の塔のあいだの窓は、塔にかくれて見えないので置かない）
 for wz in (-4.0, -11.0, -18.0):
-    cut(lambda p, wz=wz: sd_arch_x(p, wz, 3.4, 7, 16, FW, 1.2), "glass")
-    cut(lambda p, wz=wz: sd_arch_x(p, wz, 2.6, 34, 39, NAVE, 1.0), "glass")
+    framed_x(wz, 4.4, 5.5, 16.5, FW)
+    framed_x(wz, 3.4, 33.0, 39.0, NAVE)
 
 
 # ---- 像（立体）: 像の帯のくぼみの中と、まんなかの入口の両わき（柱の像）。体はまるい柱、頭は球、台座は箱
@@ -233,10 +260,10 @@ for cx_ in (-FW + 0.6, FW - 0.6):
     solid(lambda p, cx_=cx_: sd_cyl_y(p, cx_, 0.0, 1.1, 0, AISLE_H + 2))
     solid(lambda p, cx_=cx_: sd_spire(p, cx_, 0.0, 1.2, AISLE_H + 2, 7))
 # 窓の中の桟（たての石の線）
-for sx in (-14.5, 14.5):
-    solid(lambda p, sx=sx: sd_box(p, (sx, 15, -0.7), (0.25, 4.0, 0.25)))
 for wz in (-4.0, -11.0, -18.0):
-    solid(lambda p, wz=wz: sd_box(p, (FW - 0.7, 11.5, wz), (0.25, 4.5, 0.25)))
+    solid(lambda p, wz=wz: sd_box(p, (FW - 0.75, 12, wz), (0.3, 6.0, 0.28)), "frame")
+# バラ窓の、張り出した石の輪
+solid(lambda p: np.maximum(np.abs(np.sqrt(p[..., 0] ** 2 + (p[..., 1] - 34.5) ** 2) - 6.9) - 0.75, np.abs(p[..., 2] - 0.2) - 0.45), "frame")
 
 
 def scene0(p):
@@ -338,12 +365,18 @@ RAMPS = {
     "glass": ["#141c3a", "#1e3060", "#2c4a88", "#3e6aac", "#5a90cc"],
     "rose": ["#141c3a", "#1e3060", "#2c4a88", "#3e6aac", "#5a90cc"],
     "gold": ["#5a3e10", "#8a6418", "#c0902a", "#e0b040", "#f8dc80"],
+    "frame": ["#2a2a32", "#44444e", "#60606a", "#7e7e88", "#9c9ca4", "#b8b8be", "#d2d2d6", "#e8e8ea", "#f8f8f8"],
     "mosaic": ["#5a3e10", "#8a6418", "#c0902a", "#e0b040", "#f8dc80"],
 }
 BAYER = np.array([[0.125, 0.625], [0.875, 0.375]])
 
 ys_, xs_ = np.nonzero(hit)
 img = np.full((H, W), "", dtype=object)
+# 2026-10-06 人間の指示「教会はドット一つ一つを細かく」: 奥行きの段差のふちを、1ドットずつ描きわける
+#   - 手前の形に重なられている、奥の側のふち → 1段暗い線（形と形の境目がはっきりする）
+#   - 光の側（左・上）で、手前に出ている形のふち → 1段明るい線（光があたるふち）
+DEPTH = np.full((H, W), np.inf)
+DEPTH[ys_, xs_] = dist[ys_, xs_]
 for i in range(len(HP)):
     x, y = xs_[i], ys_[i]
     m = MAT[i]
@@ -351,6 +384,13 @@ for i in range(len(HP)):
     n = N[i]
     lum = 0.2 + 0.8 * diff[i] * (0.35 + 0.65 * sh[i])
     lum *= 0.55 + 0.45 * ao[i]
+    d0 = DEPTH[y, x]
+    nb_closer = [DEPTH[y + b, x + a] for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1)) if 0 <= x + a < W and 0 <= y + b < H]
+    if any(dd < d0 - 2.5 for dd in nb_closer):
+        lum -= 0.16                                            # 奥のふち（暗い線）
+    elif m not in ("glass", "rose", "dark", "door") and diff[i] > 0.3 and any(
+            0 <= x + a < W and 0 <= y + b < H and DEPTH[y + b, x + a] > d0 + 2.5 for a, b in ((-1, 0), (0, -1))):
+        lum += 0.12                                            # 光の側のふち（明るい線）
     if m == "stone":
         # 石の段と目地: 4ドットごとの横の目地（細く）と、段ごとにずらしたたての目地（ところどころ）
         yy = wp[1]
@@ -377,14 +417,24 @@ for i in range(len(HP)):
     k = lo + (1 if (fr > 0.62 or (0.38 <= fr <= 0.62 and BAYER[y % 2, x % 2] < 0.5)) else 0)
     c = ramp[min(len(ramp) - 1, k)]
     if m == "rose" or m == "glass":
-        # ステンドグラス: 暗い窓の中に、青・赤・金の点
-        hsh = (x * 73 + y * 151) % 11
-        if hsh == 0:
-            c = "#b04070"
-        elif hsh == 5:
-            c = "#e8c060"
-        elif hsh == 8 and m == "rose":
-            c = "#3a8a5a"
+        # ステンドグラス（2026-10-06「はっきりするような」）: 鉛の線で区切った小さな色ガラスの面を、
+        # 青・赤・金・緑・むらさき・水色の、はっきりした色で。中から光るので、明るさはあまり落とさない
+        LEAD = "#1a1622"
+        BRIGHT = [("#2f5fb8", "#22457e"), ("#d03a4a", "#8e2632"), ("#e8b830", "#a87e1c"), ("#3a9a5a", "#276a3e"),
+                  ("#7a4ab0", "#54327a"), ("#4aa8dc", "#2e74a0")]
+        if m == "rose":
+            dx_, dy_ = wp[0], wp[1] - 34.5
+            rr = math.hypot(dx_, dy_); ang = (math.atan2(dy_, dx_) + math.pi) / (2 * math.pi)
+            ring_i = int(rr / 1.7)
+            seg = int(ang * (8 if ring_i < 2 else 16))
+            lead = (rr / 1.7) % 1 < 0.22 or (ang * (8 if ring_i < 2 else 16)) % 1 < 0.12
+            col = BRIGHT[(seg * 2 + ring_i * 3) % len(BRIGHT)]
+        else:
+            u = wp[0] if abs(n[2]) > 0.5 else wp[2]
+            v = wp[1]
+            lead = (u * 1.25) % 1 < 0.22 or (v * 0.9) % 1 < 0.18
+            col = BRIGHT[(int(math.floor(u * 1.25)) * 5 + int(math.floor(v * 0.9)) * 3) % len(BRIGHT)]
+        c = LEAD if lead else (col[0] if ao[i] > 0.7 else col[1])
     if m == "mosaic":
         c = ["#e04848", "#e0b040", "#f4f0ec", "#4aa0d0", "#3a8a5a", "#c0902a"][(x * 7 + y * 13) % 6] if lum > 0.35 else "#8a6418"
     img[y, x] = c
@@ -435,7 +485,7 @@ ring(rc[0], rc[1], 5.2 * S, "#e0b040")
 ring(rc[0], rc[1], 3.3 * S, "#c0902a")
 ring(rc[0], rc[1], 1.9 * S, "#f8dc80", gap=True)
 # 交差部の塔の先に、立つ環
-tx, ty = CX + (DEP - 7) * S, GROUND - 91 * S - K * (DEP - 7) * S
+tx, ty = CX + (DEP - 7) * S, GROUND - 89.5 * S - K * (DEP - 7) * S
 ring(tx, ty, 2.6, "#e0b040"); ring(tx, ty, 1.3, "#f8dc80", gap=True)
 for k in range(2):
     if 0 <= int(ty + 2.5 + k) < H:
