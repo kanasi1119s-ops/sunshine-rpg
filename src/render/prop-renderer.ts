@@ -3,6 +3,7 @@ import type { MapProp, TileMapData } from "../game/map/types";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import { getSpriteCanvas } from "../game/art/sprite";
 import type { Camera } from "./camera";
+import { planterColor, planterOrigin } from "./tree-planter";
 
 /** 飾りの足元のy（ワールド座標）。プレイヤー・NPCとの前後（奥のものを先に描く）を決めるのに使う。 */
 export function propFeetY(prop: MapProp, tileHeight: number): number {
@@ -55,6 +56,12 @@ export function renderProps(
     const y = propFeetY(prop, data.tileHeight) - canvas.height - camera.y;
     ctx.drawImage(canvas, Math.round(x), Math.round(y));
     if (FRONT_GRASS_KINDS.has(prop.kind)) drawFrontGrass(ctx, data, prop, canvas, Math.round(x), Math.round(y), camera);
+    const planter = planterColor(data, prop);                       // 木の根もとのレンガの囲い（前の半分）
+    if (planter) {
+      const front = getSpriteCanvas(`prop:planter-${planter}-front`, SPRITE_DATA);
+      const o = planterOrigin(data, prop);
+      if (front) ctx.drawImage(front, Math.round(o.x + 22 - front.width / 2 - camera.x), Math.round(o.y + 26 - front.height - camera.y));   // 絵は正方形にそろえて下づめ
+    }
   }
 }
 

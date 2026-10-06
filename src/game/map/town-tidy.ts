@@ -12,9 +12,10 @@ import type { MapProp, MapPropKind, TileMapData } from "./types";
  *  2) 街灯は、道にそって、決まった間かく（6マスごと）・決まった側（横の道は北がわ、たての道は東がわ）に立てなおす。
  *  3) 花壇は、家の玄関の左右（足もとの列の、2マス横）に、そろえて置く。家のそばにない花壇は、はずす。
  *  5) 最後に、木が3本・街灯が4本に足りない町は、空いた所に足す（木は、その町の気候の木。重なりを取りのぞいたあとに）。
- *  3.2) 樽は家のすぐとなり、井戸は家の近く（家とのあいだに1マスあけた、2〜3マスの所）へ移す。屋台は、まっすぐな横の道の上へ移し、
- *     その手前（南）の1列を道にして、人が屋台をよけて通れるようにする（2026-10-06 人間の指示
+ *  3.2) 樽は家のすぐとなり、井戸は家の近く（家とのあいだに1マスあけた、2〜3マスの所）へ移す。屋台は、横の道に面した道のすぐ北へ
+ *     移す（道の上には置かない。2026-10-06「歩道には歩けるようにオブジェクトがのらないように」。前は道の上に置いていた）（2026-10-06 人間の指示
  *     「井戸は家の近くに商店は道の上に置いて」「樽は小さくしてすべて家の近くに置こうか」）。置けなければ、はずす。
+ *  3.1) 歩道（道）の上に飾りがのらないように: 足もとのマス・絵の根もと（木はレンガの囲い）が道にかかる飾りは、近くへずらす（置けなければ、はずす）。
  *  4) 絵が重なる飾りは、だいじなほう（建物 → 井戸・祠など → 木 → 街灯 → ベンチ・荷車など → 樽・箱・岩）を残し、ほかは取りのぞく。
  *     花壇は重なってもよい。調べられる物（看板・宝箱など。人のドット絵はのぞく）は、かならず残す。
  * 絵の範囲は `PROP_BOX`（足もとのマスのまんなか・下のはしから、絵の左・右・上・下のドット。ゲームの絵からはかった値）。
@@ -228,6 +229,31 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
   };
   const objectBoxes = (): Box[] =>
     npcs.filter(isSolidObject).map((n) => ({ x0: n.tileX * ts, x1: n.tileX * ts + ts, y0: n.tileY * ts, y1: n.tileY * ts + ts }));
+  const road = (x: number, y: number): boolean => x >= 0 && y >= 0 && x < w && y < h && art(x, y) === "path";
+  // 絵の根もと（地面に接する下のはし）が、歩道（道）にかかるドットの数（2026-10-06「歩道には歩けるようにオブジェクトがのらないように」）
+  const basePathPx = (p: MapProp): number => {
+    const cx = p.tileX * ts + ts / 2, feet = (p.tileY + 1) * ts;
+    let r: Box | null = null;
+    let planterTree = false;
+    if (p.kind === "tree" || p.kind === "tree-pine" || p.kind === "tree-snow" || p.kind === "tree-dead" || p.kind === "palm") {
+      const a0 = art(p.tileX, p.tileY) ?? "";
+      const planter = (p.kind === "tree" || p.kind === "tree-pine") && !["grass", "treeCanopy", "worldforest", "hills"].includes(a0) && !data.tileTexture && !data.theme;
+      planterTree = planter;
+      r = planter ? { x0: cx - 21, x1: cx + 21, y0: feet - 12, y1: feet + 7 } : { x0: cx - 5, x1: cx + 5, y0: feet - 6, y1: feet - 1 };
+    } else {
+      const b = boxOf(p, ts);
+      if (b) r = { x0: b.x0 + 1, x1: b.x1 - 1, y0: Math.max(b.y0, b.y1 - 6), y1: b.y1 };
+    }
+    if (!r) return 0;
+    let n = 0;
+    for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) {
+      const tx = Math.floor(x / ts), ty = Math.floor(y / ts);
+      if (tx < 0 || ty < 0 || tx >= w || ty >= h || art(tx, ty) === "path" || (planterTree && (ring(tx, ty) || art(tx, ty) === "water"))) n++;   // レンガの囲いは、塀・水にもかからない
+    }
+    return n;
+  };
+  const objNear = (p: MapProp): boolean => npcs.some((n) => isSolidObject(n) && Math.abs(n.tileX - p.tileX) <= 1 && Math.abs(n.tileY - p.tileY) <= 1);
+  const facesRoad = (x: number, y: number): boolean => [-1, 0, 1].every((dx) => road(x + dx, y + 1) && !road(x + dx, y));
   // 家をずらすときは、人のすぐとなりでもよい（人の立つマスにはかからず、人へ歩いて行けるまま。出入り口のそばはさける）
   const onPersonOrNearExit = (x: number, y: number): boolean =>
     npcs.some((n) => n.tileX === x && n.tileY === y) || exits.some((e) => Math.abs(e.tileX - x) <= 1 && Math.abs(e.tileY - y) <= 1);
@@ -240,6 +266,7 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
       const i = t.y * w + t.x;
       if (ring(t.x, t.y) || col[i] === 1 || occupied.has(i) || doorFront.has(i) || (art(t.x, t.y) === "path") !== onRoad || art(t.x, t.y) === "water" || (nearPeopleOk ? onPersonOrNearExit(t.x, t.y) : nearPersonOrExit(t.x, t.y))) return false;
     }
+    if (!isHouse(kind) && kind !== "flowerbed" && kind !== "church" && basePathPx(p) > 0) return false;   // 根もとが歩道にかからない
     const b = boxOf(p, ts);
     // 絵が町の塀（左・右・下のはしの1マス）にはみ出す所には置かない（2026-10-06 人間の指示「塀にはみ出てる」）
     if (b && (b.x0 < ts - 1 || b.x1 > (w - 1) * ts + 1 || b.y1 > (h - 1) * ts + 1)) return false;
@@ -351,7 +378,6 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
 
   // 2) 街灯: いまの街灯をはずし、道にそって決まった間かくで立てなおす
   for (const p of props.filter((q) => q.kind === "lamp")) remove(p);
-  const road = (x: number, y: number): boolean => x >= 0 && y >= 0 && x < w && y < h && art(x, y) === "path";
   const lamps: Array<[number, number]> = [];
   for (let y = 1; y < h - 1; y++) {
     for (let x = 1; x < w - 1; x++) {
@@ -394,7 +420,25 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
     }
   }
 
-  // 3.2) 樽・井戸は家の近くへ、屋台は道の上へ
+  // 3.1) 歩道（道）の上に、飾りがのらないように（2026-10-06 人間の指示「歩道には歩けるようにオブジェクトがのらないようにしてください」）。
+  //    足もとのマス、または絵の根もと（地面に接する下のはし。木はレンガの囲い・幹の根もと）が道にかかる飾りは、近くの道でない所へずらす。
+  //    置ける所がなければ、はずす。調べられる物（看板など）のすぐそばの飾りは、動かさない
+  for (const p of [...props]) {
+    if (isHouse(p.kind) || p.kind === "church" || p.kind === "flowerbed" || objNear(p)) continue;
+    const onFoot = propFootprintTiles(p).some((t) => art(t.x, t.y) === "path");
+    if (!onFoot && basePathPx(p) === 0) continue;
+    remove(p);
+    const cands: Array<[number, number]> = [];
+    for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) if (dx || dy) cands.push([p.tileX + dx, p.tileY + dy]);
+    cands.sort((a, c) => Math.hypot(a[0] - p.tileX, a[1] - p.tileY) - Math.hypot(c[0] - p.tileX, c[1] - p.tileY));
+    for (const [x, y] of cands) {
+      if (basePathPx({ kind: p.kind, tileX: x, tileY: y }) > 0) continue;
+      if (p.kind === "stall" && !facesRoad(x, y)) continue;
+      if (tryPlace(p.kind, x, y)) break;
+    }
+  }
+
+  // 3.2) 樽・井戸は家の近くへ、屋台は道のすぐわきへ
   const houseTiles = (): Array<[number, number]> => props.filter((q) => isHouse(q.kind)).flatMap((q) => propFootprintTiles(q).map((t): [number, number] => [t.x, t.y]));
   const houseDist = (x: number, y: number, hs: Array<[number, number]>): number =>
     hs.reduce((m, [hx, hy]) => Math.min(m, Math.max(Math.abs(hx - x), Math.abs(hy - y))), 99);
@@ -431,37 +475,15 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
       for (const [x, y] of cands) if (tryPlace(kind, x, y)) break;
     }
   }
-  const pathTile = ground.find((_g, i) => art(i % w, Math.floor(i / w)) === "path");
+  // 屋台は、道に面した、道のすぐ北（道の上には置かない。人が歩けるように。2026-10-06 人間の指示
+  // 「歩道には歩けるようにオブジェクトがのらないようにしてください」。前の「商店は道の上に」から変えた）
   for (const p of props.filter((q) => q.kind === "stall")) {
-    if (road(p.tileX, p.tileY)) continue;
+    if (!road(p.tileX, p.tileY) && facesRoad(p.tileX, p.tileY)) continue;
     remove(p);
-    if (pathTile === undefined) continue;
     const cands: Array<[number, number, number]> = [];
-    for (let y = 2; y < h - 2; y++) {
-      for (let x = 3; x < w - 3; x++) {
-        // まっすぐな横の道（左右2マスずつ道がつづき、上には道がない所）
-        let ok = true;
-        for (let dx = -2; dx <= 2; dx++) if (!road(x + dx, y) || road(x + dx, y - 1)) ok = false;
-        if (ok) cands.push([x, y, Math.abs(x - p.tileX) + Math.abs(y - p.tileY)]);
-      }
-    }
+    for (let y = 2; y < h - 2; y++) for (let x = 2; x < w - 2; x++) if (facesRoad(x, y)) cands.push([x, y, Math.abs(x - p.tileX) + Math.abs(y - p.tileY)]);
     cands.sort((a, b) => a[2] - b[2]);
-    for (const [x, y] of cands) {
-      // 屋台の手前（南）の1列を、よけて通る道にする（空いている所だけ）
-      const bypass: number[] = [];
-      let ok = true;
-      for (let dx = -2; dx <= 2; dx++) {
-        const i = (y + 1) * w + x + dx;
-        if (road(x + dx, y + 1)) continue;
-        if (ring(x + dx, y + 1) || col[i] === 1 || footSet(props).has(i) || art(x + dx, y + 1) === "water") ok = false;
-        bypass.push(i);
-      }
-      if (!ok) continue;
-      const old = bypass.map((i) => ground[i]);
-      for (const i of bypass) ground[i] = pathTile;
-      if (tryPlace("stall", x, y, true)) break;
-      bypass.forEach((i, k) => (ground[i] = old[k]));
-    }
+    for (const [x, y] of cands) if (tryPlace("stall", x, y)) break;
   }
 
   // 3.5) 絵が塀にはみ出す飾り（建物はのぞく）は、取りのぞく（2026-10-06）
@@ -530,11 +552,12 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
     }
     cands.sort((a, c) => a[2] - c[2]);
     // 置けなければ、木と木の間を少しつめて、もう一度。それでも足りない町（家と水でせまい町）は、絵の細い針葉樹で
-    for (const [gap, k] of [[5, kindT], [3, kindT], [3, kindT === "tree" ? "tree-pine" : kindT]] as Array<[number, MapPropKind]>) {
+    // それでも足りない町は、人のすぐとなりにも置く（人の立つマスにはかからず、人へ歩いて行けるまま）
+    for (const [gap, k, nearOk] of [[5, kindT, false], [3, kindT, false], [3, kindT === "tree" ? "tree-pine" : kindT, false], [3, kindT === "tree" ? "tree-pine" : kindT, true]] as Array<[number, MapPropKind, boolean]>) {
       for (const [x, y] of cands) {
         if (treeCount() >= 3) break;
         if (props.some((q) => TREEISH.includes(q.kind) && Math.max(Math.abs(q.tileX - x), Math.abs(q.tileY - y)) < gap)) continue;
-        tryPlace(k, x, y);
+        tryPlace(k, x, y, false, nearOk);
       }
     }
   }
@@ -660,4 +683,13 @@ export function townCrowdedHouses(data: TileMapData): string[] {
     if (overlaps({ x0: a.x0 - 12, x1: a.x1 + 12, y0: a.y0 - 8, y1: a.y1 + 8 }, bs[j].b)) out.push(`${bs[i].p.kind}(${bs[i].p.tileX},${bs[i].p.tileY}) × ${bs[j].p.kind}(${bs[j].p.tileX},${bs[j].p.tileY})`);
   }
   return out;
+}
+
+/** 町の、足もとのマス（通れないマス）が歩道（道）にのっている飾り（建物はのぞく。テスト用）。 */
+export function townPropsOnPath(data: TileMapData): string[] {
+  const ground = data.layers[0].data;
+  return (data.props ?? [])
+    .filter((p) => !isHouse(p.kind) && p.kind !== "church")
+    .filter((p) => propFootprintTiles(p).some((t) => data.tileArt?.[ground[t.y * data.width + t.x]] === "path"))
+    .map((p) => `${p.kind}(${p.tileX},${p.tileY})`);
 }

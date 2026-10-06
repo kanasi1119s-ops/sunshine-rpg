@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { WORLD_MAPS, WORLD_NPCS } from "../world/world";
-import { townCrowdedHouses, townOverlaps, townPathOverlaps, townPostOverlaps, townWallOverhangs } from "./town-tidy";
+import { townCrowdedHouses, townOverlaps, townPropsOnPath, townPathOverlaps, townPostOverlaps, townWallOverhangs } from "./town-tidy";
 import { doorOffsetX, isHouse } from "./map-props";
 
 const towns = Object.keys(WORLD_MAPS).filter((m) => /-(town|village)$/.test(m) || /^village-/.test(m));
@@ -89,5 +89,11 @@ describe("建物の間・井戸・噴水", () => {
   });
   it("どの町にも噴水がある（湖の上の町・硝子湖は、広場があいていないのでのぞく）（2026-10-06「各町噴水も置こうか」）", () => {
     for (const id of towns.filter((t) => t !== "garasuko-town")) expect((WORLD_MAPS[id].props ?? []).some((p) => p.kind === "fountain"), id).toBe(true);
+  });
+});
+
+describe("歩道", () => {
+  it("歩道（道）の上には、飾りがのらない（歩ける。2026-10-06「歩道には歩けるようにオブジェクトがのらないように」）", () => {
+    for (const id of towns) expect(townPropsOnPath(WORLD_MAPS[id]), id).toEqual([]);
   });
 });

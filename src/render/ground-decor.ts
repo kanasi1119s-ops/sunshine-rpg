@@ -3,6 +3,7 @@ import { hashCell } from "../game/color-utils";
 import { getSpriteCanvas } from "../game/art/sprite";
 import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import type { Camera } from "./camera";
+import { planterColor, planterOrigin } from "./tree-planter";
 
 /**
  * 地面のしあげ。見本のマップ（道がうねり、池に岸があり、草地に小さな草花が散っている）から学んだこと:
@@ -738,58 +739,15 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
   }
 }
 
-/**
- * 町の木の根もとの芝（2026-10-06 人間の指示「町で木を生やしてるなら、地面周り芝にしないと」）。
- * 石だたみ・板・砂など、草でない地面に立つ木（広葉樹・針葉樹）の根もとに、芝の地面をまるく広げる。
- * ふちは四角くせず、ゆれ（ノイズ）で波うたせ、さかいの近くは市松でまぜる。根もとのまわりは少し暗く（木のかげ）。
- * 道・水の上には広げない。芝の絵は、町の芝と同じ terrain:grass-a。木ごとに一度だけ作って、おぼえておく。
- */
-const LAWN_TREES = new Set(["tree", "tree-pine"]);
-const LAWN_RX = 27, LAWN_RY = 15, LAWN_W = 62, LAWN_H = 36;
-const lawnCache = new Map<string, HTMLCanvasElement | null>();
+/** 町の、草でない地面に立つ木の根もとの、レンガの囲いの奥の半分と中の芝（前の半分は prop-renderer で木のあとに描く）。 */
 export function renderTreeLawns(ctx: CanvasRenderingContext2D, map: TileMap, camera: Camera): void {
-  const s = map.data.tileWidth;
-  if (s !== 16 || !map.data.tileArt || map.data.tileTexture || map.data.theme || !map.data.props) return;
+  if (!map.data.props) return;
   for (const p of map.data.props) {
-    if (!LAWN_TREES.has(p.kind)) continue;
-    const k0 = kindAt(map, p.tileX, p.tileY);
-    if (k0 === "grass" || k0 === "tree") continue;
-    const cx = p.tileX * s + s / 2, cy = p.tileY * s + s - 3;            // 根もと（ワールド座標）
-    const x0 = cx - LAWN_W / 2, y0 = cy - LAWN_H / 2;
-    if (x0 - camera.x > camera.viewportWidth || y0 - camera.y > camera.viewportHeight || x0 + LAWN_W < camera.x || y0 + LAWN_H < camera.y) continue;
-    const key = `${map.data.width}x${map.data.height}:${p.tileX},${p.tileY}:${getTileId(map, 0, 0, 0)}`;
-    let tile = lawnCache.get(key);
-    if (tile === undefined) {
-      tile = null;
-      const lawn = getSpriteCanvas("terrain:grass-a", SPRITE_DATA);
-      if (lawn && typeof document !== "undefined") {
-        const c = document.createElement("canvas");
-        c.width = LAWN_W; c.height = LAWN_H;
-        const g = c.getContext("2d");
-        if (g) {
-          for (let py = 0; py < LAWN_H; py++) {
-            for (let px = 0; px < LAWN_W; px++) {
-              const gx = x0 + px, gy = y0 + py;
-              const tx = Math.floor(gx / s), ty = Math.floor(gy / s);
-              const kk = kindAt(map, tx, ty);
-              if (kk === "path" || kk === "water") continue;
-              const ex = (gx + 0.5 - cx) / LAWN_RX, ey = (gy + 0.5 - cy) / LAWN_RY;
-              const e = Math.hypot(ex, ey) + (smoothNoise(gx * 0.3, gy * 0.3) - 0.5) * 0.45;
-              if (e > 1) continue;
-              if (e > 0.82 && (gx + gy) % 2 === 0) continue;                 // ふちは市松でまぜる
-              g.drawImage(lawn, ((gx % 128) + 128) % 128, ((gy % 128) + 128) % 128, 1, 1, px, py, 1, 1);
-              if (e < 0.45 && ey < 0.6) {                                    // 根もとのまわりの、木のかげ
-                g.fillStyle = `rgba(16,40,24,${(0.32 * (1 - e / 0.45)).toFixed(3)})`;
-                g.fillRect(px, py, 1, 1);
-              }
-            }
-          }
-          tile = c;
-        }
-      }
-      if (lawnCache.size > 500) lawnCache.clear();
-      lawnCache.set(key, tile);
-    }
-    if (tile) ctx.drawImage(tile, Math.round(x0 - camera.x), Math.round(y0 - camera.y));
+    const color = planterColor(map.data, p);
+    if (!color) continue;
+    const o = planterOrigin(map.data, p);
+    if (o.x - camera.x > camera.viewportWidth || o.y - camera.y > camera.viewportHeight || o.x + 44 < camera.x || o.y + 26 < camera.y) continue;
+    const c = getSpriteCanvas(`prop:planter-${color}`, SPRITE_DATA);
+    if (c) ctx.drawImage(c, Math.round(o.x + 22 - c.width / 2 - camera.x), Math.round(o.y + 26 - c.height - camera.y));   // 絵は正方形にそろえて下づめ
   }
 }
