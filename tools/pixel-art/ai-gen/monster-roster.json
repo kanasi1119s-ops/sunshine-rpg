@@ -1333,7 +1333,7 @@
  },
  {
   "id": "enc-tower-2-0",
-  "prompt": "a cloud-road crystal, a pale blue crystal with clouds trapped inside, floating with small wings of mist",
+  "prompt": "a floating faceted pale blue crystal with swirling clouds trapped inside, two small wings made of mist at its sides",
   "status": "done",
   "key": "enemy:enc-tower-2-0",
   "kind": "mob",
@@ -1342,16 +1342,17 @@
   "level": 31,
   "shape": "float",
   "tone": [
-   175,
-   200,
-   230
+   80,
+   110,
+   160
   ],
-  "draft": "enc-tower-2-0_1"
+  "draft": "enc-tower-2-0_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-tower-2-1",
-  "prompt": "misty footprints come alive, a low creature of fog with heavy foot shapes and a lantern eye",
-  "status": "todo",
+  "prompt": "a low crawling creature made of dark grey fog with two heavy stone-like feet and one glowing lantern eye on its front",
+  "status": "done",
   "key": "enemy:enc-tower-2-1",
   "kind": "mob",
   "name": "霧の足あと",
@@ -1359,15 +1360,17 @@
   "level": 31,
   "shape": "ground",
   "tone": [
-   185,
-   195,
-   205
-  ]
+   80,
+   85,
+   95
+  ],
+  "draft": "enc-tower-2-1_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-tower-2-2",
-  "prompt": "a stone wrapped in swirling wind ribbons, a round boulder with carved wind symbols and one eye",
-  "status": "todo",
+  "prompt": "a living boulder monster wrapped in swirling pale green wind ribbons, carved spiral grooves, a single large glowing eye in the stone, small stone arms",
+  "status": "done",
   "key": "enemy:enc-tower-2-2",
   "kind": "mob",
   "name": "風をまとう石",
@@ -1378,12 +1381,14 @@
    140,
    150,
    160
-  ]
+  ],
+  "draft": "enc-tower-2-2_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-tower-2-3",
   "prompt": "a cloud gear machine, white porcelain gears and cloud puffs coming from its vents, on spindly legs",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-2-3",
   "kind": "mob",
   "name": "雲の歯車機械",
@@ -1394,12 +1399,13 @@
    210,
    215,
    220
-  ]
+  ],
+  "draft": "enc-tower-2-3_0"
  },
  {
   "id": "enc-tower-2-4",
-  "prompt": "a fog soldier with a hazy body, a misty spear and a visor of condensed water",
-  "status": "todo",
+  "prompt": "a soldier made of swirling dark grey fog wearing a dented iron helmet with a glassy blue visor, holding a misty spear, wisps trailing from its body",
+  "status": "done",
   "key": "enemy:enc-tower-2-4",
   "kind": "mob",
   "name": "霧の兵",
@@ -1407,15 +1413,17 @@
   "level": 31,
   "shape": "tall",
   "tone": [
-   160,
-   175,
-   190
-  ]
+   70,
+   75,
+   90
+  ],
+  "draft": "enc-tower-2-4_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-tower-2-5",
-  "prompt": "a crackling thunder droplet, a floating drop of yellow electricity with sparking spikes",
-  "status": "todo",
+  "prompt": "a floating drop of crackling yellow lightning with jagged sparking spikes all around it, a glowing white core",
+  "status": "done",
   "key": "enemy:enc-tower-2-5",
   "kind": "mob",
   "name": "雷のしずく",
@@ -1423,15 +1431,17 @@
   "level": 31,
   "shape": "float",
   "tone": [
-   230,
-   220,
-   100
-  ]
+   150,
+   130,
+   40
+  ],
+  "draft": "enc-tower-2-5_x0",
+  "seed_base": 6001
  },
  {
   "id": "enc-tower-3-0",
   "prompt": "a fragment of a golden ring floating with engraved patterns and a light seam",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-3-0",
   "kind": "mob",
   "name": "環のかけら",
@@ -1443,12 +1453,13 @@
    180,
    90
   ],
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-tower-3-0_0"
  },
  {
   "id": "enc-tower-3-1",
   "prompt": "a shadow made of intricate engraved patterns, a dark lace-like figure with glowing gold lines",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-3-1",
   "kind": "mob",
   "name": "紋様の影",
@@ -1459,12 +1470,13 @@
    70,
    60,
    50
-  ]
+  ],
+  "draft": "enc-tower-3-1_1"
  },
  {
   "id": "enc-tower-3-2",
   "prompt": "a guardian of light in white and gold armor with a halo-shaped helmet crest and a radiant sword",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-3-2",
   "kind": "mob",
   "name": "光の番兵",
@@ -1475,12 +1487,13 @@
    225,
    215,
    180
-  ]
+  ],
+  "draft": "enc-tower-3-2_0"
  },
  {
   "id": "enc-tower-3-3",
   "prompt": "a golden gear machine, a round gold clockwork creature with many gear legs and a ruby eye",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-3-3",
   "kind": "mob",
   "name": "金の歯車機械",
@@ -1491,12 +1504,13 @@
    210,
    170,
    70
-  ]
+  ],
+  "draft": "enc-tower-3-3_0"
  },
  {
   "id": "enc-tower-3-4",
   "prompt": "a heraldic crest stone, a shield-shaped stone slab with a carved emblem that walks on stone feet",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-tower-3-4",
   "kind": "mob",
   "name": "紋章の石",
@@ -1507,12 +1521,13 @@
    170,
    160,
    140
-  ]
+  ],
+  "draft": "enc-tower-3-4_0"
  },
  {
   "id": "enc-tower-3-5",
-  "prompt": "a feather of light, a large glowing white-gold feather with a living eye at its base",
-  "status": "todo",
+  "prompt": "a floating creature shaped like a large amber gold feather with small feather wings, deep gold and orange glow, one living eye at its base",
+  "status": "done",
   "key": "enemy:enc-tower-3-5",
   "kind": "mob",
   "name": "光の羽",
@@ -1520,15 +1535,17 @@
   "level": 32,
   "shape": "winged",
   "tone": [
-   240,
-   225,
-   180
-  ]
+   160,
+   115,
+   45
+  ],
+  "draft": "enc-tower-3-5_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-kanou-1-0",
   "prompt": "a wavering boundary creature, a rippling silhouette that looks half transparent and half solid, blue-violet",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-1-0",
   "kind": "mob",
   "name": "境目の揺らぎ",
@@ -1539,12 +1556,13 @@
    130,
    120,
    180
-  ]
+  ],
+  "draft": "enc-kanou-1-0_1"
  },
  {
   "id": "enc-kanou-1-1",
-  "prompt": "a wandering light, a small orb of pale light with a long flickering tail and two dot eyes",
-  "status": "todo",
+  "prompt": "a small glowing orb of warm amber light with a long flickering comet-like tail of sparks and two tiny dot eyes, floating, no human",
+  "status": "done",
   "key": "enemy:enc-kanou-1-1",
   "kind": "mob",
   "name": "迷いの光",
@@ -1552,15 +1570,18 @@
   "level": 33,
   "shape": "float",
   "tone": [
-   210,
-   210,
-   240
-  ]
+   170,
+   130,
+   60
+  ],
+  "draft": "enc-kanou-1-1_0",
+  "seed_base": 10002,
+  "bg": "dark"
  },
  {
   "id": "enc-kanou-1-2",
   "prompt": "a drifting shadow like a jellyfish of darkness with long flowing tendrils",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-1-2",
   "kind": "mob",
   "name": "たゆたう影",
@@ -1571,12 +1592,13 @@
    70,
    65,
    100
-  ]
+  ],
+  "draft": "enc-kanou-1-2_0"
  },
  {
   "id": "enc-kanou-1-3",
   "prompt": "a boundary insect with a body split down the middle in two different colors, violet and grey",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-1-3",
   "kind": "mob",
   "name": "境目の虫",
@@ -1587,12 +1609,13 @@
    120,
    105,
    140
-  ]
+  ],
+  "draft": "enc-kanou-1-3_1"
  },
  {
   "id": "enc-kanou-1-4",
   "prompt": "a lost wing creature, a pair of wings without a body that flap with a dim eye between them",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-1-4",
   "kind": "mob",
   "name": "迷い羽",
@@ -1603,12 +1626,13 @@
    150,
    140,
    190
-  ]
+  ],
+  "draft": "enc-kanou-1-4_1"
  },
  {
   "id": "enc-kanou-1-5",
   "prompt": "a boundary marker stone, a tall carved milestone with faded carvings and an eye-shaped hole",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-1-5",
   "kind": "mob",
   "name": "境界の石",
@@ -1620,12 +1644,13 @@
    120,
    135
   ],
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-kanou-1-5_0"
  },
  {
   "id": "enc-kanou-2-0",
-  "prompt": "a quiet shadow, a soft round dark figure sitting with folded hands, faint green eyes",
-  "status": "todo",
+  "prompt": "a soft round dark shadow creature sitting quietly with small folded paws, a round body like a smooth dark stone, faint green eyes, full body",
+  "status": "done",
   "key": "enemy:enc-kanou-2-0",
   "kind": "mob",
   "name": "静かな影",
@@ -1636,12 +1661,14 @@
    60,
    75,
    70
-  ]
+  ],
+  "draft": "enc-kanou-2-0_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-kanou-2-1",
   "prompt": "the presence of someone waiting, a faint figure holding an umbrella of leaves, mostly transparent",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-2-1",
   "kind": "mob",
   "name": "待ち人の気配",
@@ -1652,12 +1679,13 @@
    150,
    175,
    160
-  ]
+  ],
+  "draft": "enc-kanou-2-1_1"
  },
  {
   "id": "enc-kanou-2-2",
   "prompt": "a green light spirit, a glowing green flame-like wisp with leaf-shaped flickers",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-2-2",
   "kind": "mob",
   "name": "緑の光",
@@ -1668,12 +1696,15 @@
    120,
    210,
    140
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 6001,
+  "draft": "enc-kanou-2-2_1"
  },
  {
   "id": "enc-kanou-2-3",
   "prompt": "a moss stone, a round stone completely covered in thick moss and small mushrooms, with a sleepy eye",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-2-3",
   "kind": "mob",
   "name": "苔の石",
@@ -1684,12 +1715,13 @@
    95,
    130,
    85
-  ]
+  ],
+  "draft": "enc-kanou-2-3_0"
  },
  {
   "id": "enc-kanou-2-4",
   "prompt": "a forest dew droplet creature with a leaf hat and a stem tail, translucent green",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-2-4",
   "kind": "mob",
   "name": "森のしずく",
@@ -1700,12 +1732,15 @@
    140,
    200,
    150
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 6001,
+  "draft": "enc-kanou-2-4_x0"
  },
  {
   "id": "enc-kanou-2-5",
   "prompt": "a leaf-winged insect with wings exactly like green leaves with veins, a twig body",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-2-5",
   "kind": "mob",
   "name": "葉の羽虫",
@@ -1716,12 +1751,13 @@
    110,
    160,
    90
-  ]
+  ],
+  "draft": "enc-kanou-2-5_1"
  },
  {
   "id": "enc-kanou-3-0",
   "prompt": "a flower growing from a rift, a large pink flower with a dark crack-shaped center full of teeth, on a vine body",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-3-0",
   "kind": "mob",
   "name": "裂け目の花",
@@ -1732,12 +1768,13 @@
    220,
    130,
    180
-  ]
+  ],
+  "draft": "enc-kanou-3-0_x0"
  },
  {
   "id": "enc-kanou-3-1",
   "prompt": "overlapping scenery creature, a body made of mismatched picture fragments of landscapes stitched together",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-3-1",
   "kind": "mob",
   "name": "重なる景色",
@@ -1748,12 +1785,13 @@
    150,
    140,
    160
-  ]
+  ],
+  "draft": "enc-kanou-3-1_0"
  },
  {
   "id": "enc-kanou-3-2",
-  "prompt": "a thin boundary, a paper-thin flat creature like a sheet of glass with a reflected face",
-  "status": "todo",
+  "prompt": "a thin flat creature like a tall pane of cracked glass standing on spindly legs, faint colorful reflections, a dark slit eye",
+  "status": "done",
   "key": "enemy:enc-kanou-3-2",
   "kind": "mob",
   "name": "薄い境目",
@@ -1764,12 +1802,15 @@
    190,
    190,
    210
-  ]
+  ],
+  "draft": "enc-kanou-3-2_x1",
+  "bg": "dark",
+  "seed_base": 6001
  },
  {
   "id": "enc-kanou-3-3",
   "prompt": "a rift insect with a cracked shell leaking pink light and long antennae",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-3-3",
   "kind": "mob",
   "name": "裂け目の虫",
@@ -1780,12 +1821,13 @@
    150,
    90,
    130
-  ]
+  ],
+  "draft": "enc-kanou-3-3_x1"
  },
  {
   "id": "enc-kanou-3-4",
   "prompt": "a mirror crystal creature, sharp mirror shards forming a spiky body reflecting colors",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-3-4",
   "kind": "mob",
   "name": "鏡の結晶",
@@ -1796,12 +1838,13 @@
    200,
    205,
    220
-  ]
+  ],
+  "draft": "enc-kanou-3-4_0"
  },
  {
   "id": "enc-kanou-3-5",
-  "prompt": "a flower droplet creature, a floating drop of nectar with petals around it and a tiny pollen crown",
-  "status": "todo",
+  "prompt": "a small floating creature, a golden drop of nectar with bright pink petals around it like a collar and a tiny yellow pollen crown",
+  "status": "done",
   "key": "enemy:enc-kanou-3-5",
   "kind": "mob",
   "name": "花のしずく",
@@ -1812,12 +1855,15 @@
    240,
    170,
    200
-  ]
+  ],
+  "draft": "enc-kanou-3-5_0",
+  "bg": "dark",
+  "seed_base": 6001
  },
  {
   "id": "enc-kanou-4-0",
   "prompt": "a fragment of the great ring, a curved white stone arc piece floating with gold inlay and an eye",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-4-0",
   "kind": "mob",
   "name": "全環のかけら",
@@ -1828,12 +1874,15 @@
    225,
    220,
    210
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 6001,
+  "draft": "enc-kanou-4-0_0"
  },
  {
   "id": "enc-kanou-4-1",
-  "prompt": "a white wavering figure like a heat haze of white light with a faint human outline",
-  "status": "todo",
+  "prompt": "a wavering white heat-haze spirit shaped like a tall flickering flame of white light, no human body",
+  "status": "done",
   "key": "enemy:enc-kanou-4-1",
   "kind": "mob",
   "name": "白い揺らぎ",
@@ -1844,12 +1893,15 @@
    235,
    235,
    240
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 6001,
+  "draft": "enc-kanou-4-1_1"
  },
  {
   "id": "enc-kanou-4-2",
   "prompt": "an echo of the ring, concentric floating white rings around a hollow center that hums",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-4-2",
   "kind": "mob",
   "name": "環の残響",
@@ -1860,12 +1912,15 @@
    210,
    210,
    225
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 6001,
+  "draft": "enc-kanou-4-2_1"
  },
  {
   "id": "enc-kanou-4-3",
   "prompt": "a creature of white feathers, a bird made only of layered white wings with no visible face",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-4-3",
   "kind": "mob",
   "name": "白い羽",
@@ -1876,12 +1931,15 @@
    240,
    240,
    245
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 6001,
+  "draft": "enc-kanou-4-3_1"
  },
  {
   "id": "enc-kanou-4-4",
   "prompt": "a ring crystal, a white crystal grown in the shape of a ring with prism light inside",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-4-4",
   "kind": "mob",
   "name": "環の結晶",
@@ -1892,12 +1950,15 @@
    220,
    225,
    240
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 6001,
+  "draft": "enc-kanou-4-4_1"
  },
  {
   "id": "enc-kanou-4-5",
   "prompt": "the last droplet, a dark droplet with a white ring around it, looking calm and heavy",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-kanou-4-5",
   "kind": "mob",
   "name": "終わりのしずく",
@@ -1908,28 +1969,32 @@
    90,
    85,
    110
-  ]
+  ],
+  "draft": "enc-kanou-4-5_1"
  },
  {
   "id": "enc-islet-1-1-0",
-  "prompt": "an echo of moonlight, a pale silver ghost of a dancer with flowing sleeves",
-  "status": "todo",
+  "prompt": "a floating spirit shaped like a silver crescent moon with long flowing ribbon tails, small dark eyes on the inner curve, glowing blue mist",
+  "status": "done",
   "key": "enemy:enc-islet-1-1-0",
   "kind": "mob",
   "name": "月影の残響",
   "zone": "islet-1-1",
   "level": 16,
-  "shape": "tall",
+  "shape": "float",
   "tone": [
    190,
    195,
    220
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 14003,
+  "draft": "enc-islet-1-1-0_1"
  },
  {
   "id": "enc-islet-1-1-1",
   "prompt": "the shadow of a garden stone statue, a weathered stone lion-dog figure with dark glowing cracks",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-1-1-1",
   "kind": "mob",
   "name": "庭の石像の影",
@@ -1940,28 +2005,31 @@
    130,
    130,
    125
-  ]
+  ],
+  "draft": "enc-islet-1-1-1_0"
  },
  {
   "id": "enc-islet-1-1-2",
-  "prompt": "a moss-covered broken fragment of a garden lantern, stone pieces held by vines, a dim candle inside",
-  "status": "todo",
+  "prompt": "a small walking stone garden lantern monster, a pointed stone roof cap and a cracked lantern box with a dim candle glowing inside, short stone legs, creeping vines",
+  "status": "done",
   "key": "enemy:enc-islet-1-1-2",
   "kind": "mob",
   "name": "苔むした断片",
   "zone": "islet-1-1",
   "level": 16,
-  "shape": "big",
+  "shape": "tall",
   "tone": [
    110,
    125,
    100
-  ]
+  ],
+  "draft": "enc-islet-1-1-2_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-islet-1-1-3",
   "prompt": "a moon droplet, a floating silvery drop with a crescent moon reflected inside and star sparkles",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-1-1-3",
   "kind": "mob",
   "name": "月のしずく",
@@ -1972,12 +2040,15 @@
    200,
    205,
    235
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 6001,
+  "draft": "enc-islet-1-1-3_0"
  },
  {
   "id": "enc-islet-1-1-4",
   "prompt": "a night moth with deep blue wings dotted with star-like spots and furry antennae",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-1-1-4",
   "kind": "mob",
   "name": "夜の羽虫",
@@ -1988,12 +2059,13 @@
    60,
    70,
    130
-  ]
+  ],
+  "draft": "enc-islet-1-1-4_1"
  },
  {
   "id": "enc-islet-1-1-5",
   "prompt": "a garden guardian, a figure made of trimmed hedge and garden stones holding a rake like a spear",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-1-1-5",
   "kind": "mob",
   "name": "庭の番兵",
@@ -2004,12 +2076,13 @@
    80,
    120,
    80
-  ]
+  ],
+  "draft": "enc-islet-1-1-5_1"
  },
  {
   "id": "enc-islet-2-1-0",
   "prompt": "a heat shadow, a wavering dark shape with orange glowing edges like a mirage",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-2-1-0",
   "kind": "mob",
   "name": "熱の影",
@@ -2020,12 +2093,13 @@
    120,
    60,
    40
-  ]
+  ],
+  "draft": "enc-islet-2-1-0_0"
  },
  {
   "id": "enc-islet-2-1-1",
   "prompt": "a melting stone creature, a half-molten rock dripping orange lava with a cooling black crust",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-2-1-1",
   "kind": "mob",
   "name": "溶けた石",
@@ -2036,12 +2110,13 @@
    150,
    80,
    50
-  ]
+  ],
+  "draft": "enc-islet-2-1-1_0"
  },
  {
   "id": "enc-islet-2-1-2",
   "prompt": "a spark insect, a small beetle with a glowing ember abdomen and sparks trailing from it",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-2-1-2",
   "kind": "mob",
   "name": "火の粉の虫",
@@ -2052,12 +2127,13 @@
    200,
    110,
    50
-  ]
+  ],
+  "draft": "enc-islet-2-1-2_1"
  },
  {
   "id": "enc-islet-2-1-3",
   "prompt": "a flame-feathered bird with burning orange feathers and a smoky tail",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-2-1-3",
   "kind": "mob",
   "name": "炎の羽",
@@ -2068,12 +2144,13 @@
    230,
    120,
    50
-  ]
+  ],
+  "draft": "enc-islet-2-1-3_1"
  },
  {
   "id": "enc-islet-2-1-4",
   "prompt": "an iron furnace machine walking on thick legs, a chimney on its back and glowing grill teeth",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-2-1-4",
   "kind": "mob",
   "name": "鉄の機械",
@@ -2084,12 +2161,13 @@
    100,
    90,
    85
-  ]
+  ],
+  "draft": "enc-islet-2-1-4_0"
  },
  {
   "id": "enc-islet-2-1-5",
   "prompt": "a droplet of heat, a floating red-hot drop of molten metal with a shimmering aura",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-2-1-5",
   "kind": "mob",
   "name": "熱のしずく",
@@ -2100,12 +2178,13 @@
    220,
    90,
    40
-  ]
+  ],
+  "draft": "enc-islet-2-1-5_0"
  },
  {
   "id": "enc-islet-3-1-0",
   "prompt": "a sea breeze shadow, a salty wind spirit with seaweed streamers and a gull-shaped head",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-3-1-0",
   "kind": "mob",
   "name": "潮風の影",
@@ -2116,28 +2195,31 @@
    140,
    170,
    170
-  ]
+  ],
+  "draft": "enc-islet-3-1-0_0"
  },
  {
   "id": "enc-islet-3-1-1",
-  "prompt": "a fragment of a lighthouse, a broken white and red striped stone piece with a lit lens eye",
-  "status": "todo",
+  "prompt": "a big sea snail monster with a tall red and white striped spiral shell whose tip glows like a lighthouse lamp, slimy grey body, eye stalks, side view",
+  "status": "done",
   "key": "enemy:enc-islet-3-1-1",
   "kind": "mob",
   "name": "灯台のかけら",
   "zone": "islet-3-1",
   "level": 20,
-  "shape": "big",
+  "shape": "ground",
   "tone": [
    200,
    120,
    100
-  ]
+  ],
+  "draft": "enc-islet-3-1-1_1",
+  "seed_base": 18004
  },
  {
   "id": "enc-islet-3-1-2",
   "prompt": "an insect between the waves, a sea skater bug with oar-like legs and a shell of shells",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-3-1-2",
   "kind": "mob",
   "name": "波間の虫",
@@ -2148,12 +2230,13 @@
    90,
    140,
    150
-  ]
+  ],
+  "draft": "enc-islet-3-1-2_1"
  },
  {
   "id": "enc-islet-3-1-3",
   "prompt": "a tide droplet creature, a floating drop of seawater with a tiny crab living inside and foam",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-3-1-3",
   "kind": "mob",
   "name": "潮のしずく",
@@ -2164,28 +2247,31 @@
    100,
    170,
    190
-  ]
+  ],
+  "draft": "enc-islet-3-1-3_0"
  },
  {
   "id": "enc-islet-3-1-4",
-  "prompt": "a lighthouse guardian, a tall keeper figure in a salt-stained coat with a lamp for a head",
-  "status": "todo",
+  "prompt": "a tall hermit crab guardian carrying a small lighthouse tower as its shell, the lamp at the top glowing, big claws, barnacles",
+  "status": "done",
   "key": "enemy:enc-islet-3-1-4",
   "kind": "mob",
   "name": "灯台の番兵",
   "zone": "islet-3-1",
   "level": 20,
-  "shape": "tall",
+  "shape": "big",
   "tone": [
    170,
    150,
    110
-  ]
+  ],
+  "draft": "enc-islet-3-1-4_1",
+  "seed_base": 10002
  },
  {
   "id": "enc-islet-3-1-5",
-  "prompt": "a seabird with white and grey feathers, a long orange beak and fish-scale patterns on its wings",
-  "status": "todo",
+  "prompt": "a seabird monster with white and grey feathers, a long orange hooked beak, fish-scale pattern on its chest, wings spread, full body with feet",
+  "status": "done",
   "key": "enemy:enc-islet-3-1-5",
   "kind": "mob",
   "name": "海鳥の羽",
@@ -2196,12 +2282,15 @@
    210,
    210,
    205
-  ]
+  ],
+  "draft": "enc-islet-3-1-5_1",
+  "bg": "dark",
+  "seed_base": 6001
  },
  {
   "id": "enc-islet-4-1-0",
   "prompt": "a shadow of a war banner, a tattered purple flag on a pole that moves by itself with a face in the cloth",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-4-1-0",
   "kind": "mob",
   "name": "旗の影",
@@ -2212,12 +2301,13 @@
    120,
    80,
    140
-  ]
+  ],
+  "draft": "enc-islet-4-1-0_1"
  },
  {
   "id": "enc-islet-4-1-1",
   "prompt": "a shadow of a fortress soldier with a tall pointed helmet, round shield and a dark smoky body",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-4-1-1",
   "kind": "mob",
   "name": "砦の兵の影",
@@ -2228,12 +2318,13 @@
    80,
    75,
    95
-  ]
+  ],
+  "draft": "enc-islet-4-1-1_1"
  },
  {
   "id": "enc-islet-4-1-2",
   "prompt": "a fragment of cloud with a cracked stone core, floating and dripping light rain",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-4-1-2",
   "kind": "mob",
   "name": "雲のかけら",
@@ -2244,12 +2335,15 @@
    200,
    200,
    215
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 6001,
+  "draft": "enc-islet-4-1-2_1"
  },
  {
   "id": "enc-islet-4-1-3",
   "prompt": "a fortress siege machine, a small wooden catapult creature with a stone mouth and wheels",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-4-1-3",
   "kind": "mob",
   "name": "砦の機械",
@@ -2260,12 +2354,13 @@
    130,
    100,
    70
-  ]
+  ],
+  "draft": "enc-islet-4-1-3_0"
  },
  {
   "id": "enc-islet-4-1-4",
-  "prompt": "an echo of an archer, a faded translucent bowman with a glowing bowstring and empty quiver",
-  "status": "todo",
+  "prompt": "a faded translucent ghost archer in a hooded cloak and leather armor, holding a glowing blue bow, empty quiver, wisps instead of legs",
+  "status": "done",
   "key": "enemy:enc-islet-4-1-4",
   "kind": "mob",
   "name": "弓兵の残響",
@@ -2276,28 +2371,33 @@
    160,
    150,
    190
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 10002,
+  "draft": "enc-islet-4-1-4_1"
  },
  {
   "id": "enc-islet-4-1-5",
-  "prompt": "a castle wall stone creature, a chunk of battlement with arrow slits as eyes, walking on brick legs",
-  "status": "todo",
+  "prompt": "a squat castle battlement creature, a stubby block of stone bricks with crenellations on top, two narrow glowing arrow-slit eyes, short thick brick legs, side view",
+  "status": "done",
   "key": "enemy:enc-islet-4-1-5",
   "kind": "mob",
   "name": "城壁の石",
   "zone": "islet-4-1",
   "level": 22,
-  "shape": "big",
+  "shape": "ground",
   "tone": [
    140,
    130,
    120
-  ]
+  ],
+  "draft": "enc-islet-4-1-5_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-islet-5-1-0",
   "prompt": "a sunken shadow, a dark sea creature like a manta made of shadow with glowing blue spots",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-5-1-0",
   "kind": "mob",
   "name": "沈んだ影",
@@ -2308,28 +2408,31 @@
    40,
    60,
    90
-  ]
+  ],
+  "draft": "enc-islet-5-1-0_0"
  },
  {
   "id": "enc-islet-5-1-1",
-  "prompt": "a coral stone creature, a rock covered in pink and orange coral branches with small fish hiding",
-  "status": "todo",
+  "prompt": "a rocky creature covered in branching pink and orange coral and sea anemone tufts, small crab-like stone legs, tiny fish hiding in the coral, side view",
+  "status": "done",
   "key": "enemy:enc-islet-5-1-1",
   "kind": "mob",
   "name": "珊瑚の石",
   "zone": "islet-5-1",
   "level": 23,
-  "shape": "big",
+  "shape": "ground",
   "tone": [
    210,
    130,
    120
-  ]
+  ],
+  "draft": "enc-islet-5-1-1_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-islet-5-1-2",
-  "prompt": "a sea firefly bug, a small crustacean that glows bright blue, with feathery legs",
-  "status": "todo",
+  "prompt": "a small glowing blue crustacean with a round transparent shell lit from inside, feathery legs, curled tail, big black eyes, side view",
+  "status": "done",
   "key": "enemy:enc-islet-5-1-2",
   "kind": "mob",
   "name": "海ほたるの虫",
@@ -2340,12 +2443,15 @@
    60,
    140,
    200
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 10002,
+  "draft": "enc-islet-5-1-2_0"
  },
  {
   "id": "enc-islet-5-1-3",
   "prompt": "a deep sea droplet, a dark drop with a hanging lure light like an anglerfish and tiny teeth",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-5-1-3",
   "kind": "mob",
   "name": "深海のしずく",
@@ -2356,12 +2462,13 @@
    30,
    50,
    80
-  ]
+  ],
+  "draft": "enc-islet-5-1-3_0"
  },
  {
   "id": "enc-islet-5-1-4",
-  "prompt": "a shell crystal creature, a spiral seashell made of mother-of-pearl crystal with an eye in the opening",
-  "status": "todo",
+  "prompt": "a spiral seashell monster with an iridescent mother-of-pearl crystal shell, soft purple tentacles and one big eye coming out of the opening",
+  "status": "done",
   "key": "enemy:enc-islet-5-1-4",
   "kind": "mob",
   "name": "貝の結晶",
@@ -2372,28 +2479,34 @@
    220,
    210,
    220
-  ]
+  ],
+  "draft": "enc-islet-5-1-4_x1",
+  "bg": "dark",
+  "seed_base": 6001
  },
  {
   "id": "enc-islet-5-1-5",
-  "prompt": "a bubble wing creature, a fish-like body with wings made of clustered bubbles",
-  "status": "todo",
+  "prompt": "a flying fish monster with large wings made of clustered shiny bubbles, silver-blue scales, big round eye, side view, no human",
+  "status": "done",
   "key": "enemy:enc-islet-5-1-5",
   "kind": "mob",
   "name": "泡の羽",
   "zone": "islet-5-1",
   "level": 23,
-  "shape": "winged",
+  "shape": "long",
   "tone": [
    150,
    200,
    220
-  ]
+  ],
+  "draft": "enc-islet-5-1-5_x0",
+  "bg": "dark",
+  "seed_base": 6001
  },
  {
   "id": "enc-islet-6-1-0",
   "prompt": "a lava shadow, a crawling dark creature with cracks of flowing lava along its back",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-6-1-0",
   "kind": "mob",
   "name": "溶岩の影",
@@ -2404,12 +2517,13 @@
    80,
    40,
    30
-  ]
+  ],
+  "draft": "enc-islet-6-1-0_1"
  },
  {
   "id": "enc-islet-6-1-1",
   "prompt": "a scorched stone creature, a charred black rock with smoking holes and ember eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-6-1-1",
   "kind": "mob",
   "name": "焦げた石",
@@ -2420,12 +2534,13 @@
    60,
    50,
    45
-  ]
+  ],
+  "draft": "enc-islet-6-1-1_1"
  },
  {
   "id": "enc-islet-6-1-2",
   "prompt": "an ember bat with wings of glowing coals and a smoking trail",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-6-1-2",
   "kind": "mob",
   "name": "火の粉のこうもり",
@@ -2436,12 +2551,13 @@
    180,
    80,
    40
-  ]
+  ],
+  "draft": "enc-islet-6-1-2_0"
  },
  {
   "id": "enc-islet-6-1-3",
   "prompt": "a volcanic smoke bird with dark grey smoke feathers and glowing ash specks",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-6-1-3",
   "kind": "mob",
   "name": "噴煙の羽",
@@ -2452,12 +2568,13 @@
    90,
    85,
    85
-  ]
+  ],
+  "draft": "enc-islet-6-1-3_0"
  },
  {
   "id": "enc-islet-6-1-4",
   "prompt": "a lava droplet creature, a floating drop of molten rock with a crust shell cracking open",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-6-1-4",
   "kind": "mob",
   "name": "溶岩のしずく",
@@ -2468,12 +2585,13 @@
    210,
    80,
    30
-  ]
+  ],
+  "draft": "enc-islet-6-1-4_0"
  },
  {
   "id": "enc-islet-6-1-5",
   "prompt": "an obsidian soldier, a tall warrior made of black volcanic glass with sharp shard armor",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-islet-6-1-5",
   "kind": "mob",
   "name": "黒曜の兵",
@@ -2484,12 +2602,13 @@
    40,
    35,
    45
-  ]
+  ],
+  "draft": "enc-islet-6-1-5_0"
  },
  {
   "id": "enc-world-1-0",
-  "prompt": "a field grasshopper-like insect with leaf-green armor plates and long jumping legs",
-  "status": "todo",
+  "prompt": "a big brown field locust monster with olive armored plates, a small horn on its head, thick spiked jumping legs, dusty folded wings, side view",
+  "status": "done",
   "key": "enemy:enc-world-1-0",
   "kind": "mob",
   "name": "野の虫",
@@ -2497,15 +2616,17 @@
   "level": 3,
   "shape": "ground",
   "tone": [
-   110,
-   160,
-   80
-  ]
+   120,
+   100,
+   60
+  ],
+  "draft": "enc-world-1-0_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-1-1",
   "prompt": "a roadside shadow, a hunched dark figure wearing a travel hat and holding a broken wooden post",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-1-1",
   "kind": "mob",
   "name": "街道の影",
@@ -2517,12 +2638,13 @@
    75,
    70
   ],
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-world-1-1_1"
  },
  {
   "id": "enc-world-1-2",
-  "prompt": "a field mouse shadow, a small dark mouse with a long tail of smoke and wheat stuck in its fur",
-  "status": "todo",
+  "prompt": "a mouse-shaped shadow creature made of swirling black smoke, glowing amber eyes, golden wheat stalks stuck in its wispy body, a long tail dissolving into smoke",
+  "status": "done",
   "key": "enemy:enc-world-1-2",
   "kind": "mob",
   "name": "野ねずみの影",
@@ -2530,15 +2652,17 @@
   "level": 3,
   "shape": "ground",
   "tone": [
-   120,
-   100,
-   80
-  ]
+   50,
+   45,
+   55
+  ],
+  "draft": "enc-world-1-2_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-1-3",
   "prompt": "a meadow dew droplet, a floating clear drop holding a tiny clover and a rainbow gleam",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-1-3",
   "kind": "mob",
   "name": "草原のしずく",
@@ -2549,28 +2673,31 @@
    150,
    200,
    160
-  ]
+  ],
+  "draft": "enc-world-1-3_0"
  },
  {
   "id": "enc-world-1-4",
-  "prompt": "a roadside stone creature, a milestone rock with a moss beard and wooden stick arms",
-  "status": "todo",
+  "prompt": "a short round grey boulder creature with a long moss beard hanging from its face, two thin wooden stick arms, small stone feet, side view",
+  "status": "done",
   "key": "enemy:enc-world-1-4",
   "kind": "mob",
   "name": "道ばたの石",
   "zone": "world-1",
   "level": 3,
-  "shape": "big",
+  "shape": "ground",
   "tone": [
    140,
    135,
    120
-  ]
+  ],
+  "draft": "enc-world-1-4_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-1-5",
   "prompt": "a little songbird with brown and cream feathers, a puffed chest and a sharp beak",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-1-5",
   "kind": "mob",
   "name": "小鳥の羽",
@@ -2581,12 +2708,13 @@
    170,
    130,
    90
-  ]
+  ],
+  "draft": "enc-world-1-5_0"
  },
  {
   "id": "enc-world-2-0",
   "prompt": "a mountain pass shadow, a tall thin shadow with a walking staff and a cloak flapping in the wind",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-2-0",
   "kind": "mob",
   "name": "峠の影",
@@ -2597,12 +2725,13 @@
    90,
    95,
    110
-  ]
+  ],
+  "draft": "enc-world-2-0_0"
  },
  {
   "id": "enc-world-2-1",
   "prompt": "a lakeside bat with blue-grey fur, webbed wings and a fishing line tangled on it",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-2-1",
   "kind": "mob",
   "name": "湖畔のこうもり",
@@ -2613,12 +2742,13 @@
    100,
    120,
    140
-  ]
+  ],
+  "draft": "enc-world-2-1_0"
  },
  {
   "id": "enc-world-2-2",
   "prompt": "a stone distortion, a rock that twists into a spiral shape with a violet glow inside",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-2-2",
   "kind": "mob",
   "name": "石の歪み",
@@ -2629,12 +2759,13 @@
    120,
    110,
    125
-  ]
+  ],
+  "draft": "enc-world-2-2_0"
  },
  {
   "id": "enc-world-2-3",
   "prompt": "a lake droplet, a floating drop of blue lake water with a small fish swimming inside",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-2-3",
   "kind": "mob",
   "name": "湖のしずく",
@@ -2645,12 +2776,13 @@
    110,
    160,
    200
-  ]
+  ],
+  "draft": "enc-world-2-3_0"
  },
  {
   "id": "enc-world-2-4",
   "prompt": "a mountain pass insect, a sturdy beetle with a rocky shell and short strong legs",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-2-4",
   "kind": "mob",
   "name": "峠の虫",
@@ -2661,12 +2793,13 @@
    120,
    115,
    100
-  ]
+  ],
+  "draft": "enc-world-2-4_0"
  },
  {
   "id": "enc-world-2-5",
   "prompt": "a rocky mountain soldier made of stacked grey stones wearing a rusty helmet, carrying a stone club",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-2-5",
   "kind": "mob",
   "name": "岩山の兵",
@@ -2677,12 +2810,13 @@
    130,
    125,
    115
-  ]
+  ],
+  "draft": "enc-world-2-5_1"
  },
  {
   "id": "enc-world-3-0",
   "prompt": "a dune-slipping creature like a sand eel with a smooth sandy body leaping out of the dunes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-3-0",
   "kind": "mob",
   "name": "砂ぬけ",
@@ -2693,12 +2827,13 @@
    210,
    180,
    120
-  ]
+  ],
+  "draft": "enc-world-3-0_x1"
  },
  {
   "id": "enc-world-3-1",
   "prompt": "a hot wind shadow, a whirling dust devil with an orange glowing face inside",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-3-1",
   "kind": "mob",
   "name": "熱風の影",
@@ -2709,12 +2844,13 @@
    200,
    140,
    90
-  ]
+  ],
+  "draft": "enc-world-3-1_1"
  },
  {
   "id": "enc-world-3-2",
   "prompt": "a desert scorpion shadow with glassy sand-colored plates and a long curved tail made of glass",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-3-2",
   "kind": "mob",
   "name": "砂サソリの影",
@@ -2725,12 +2861,13 @@
    190,
    160,
    110
-  ]
+  ],
+  "draft": "enc-world-3-2_1"
  },
  {
   "id": "enc-world-3-3",
   "prompt": "a sand dune stone creature, a sandstone rock eroded into a face, half buried in sand",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-3-3",
   "kind": "mob",
   "name": "砂丘の石",
@@ -2741,12 +2878,13 @@
    200,
    165,
    115
-  ]
+  ],
+  "draft": "enc-world-3-3_0"
  },
  {
   "id": "enc-world-3-4",
   "prompt": "a mirage droplet, a floating shimmering drop that shows a fake oasis inside, wavering edges",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-3-4",
   "kind": "mob",
   "name": "蜃気楼のしずく",
@@ -2757,12 +2895,13 @@
    170,
    210,
    220
-  ]
+  ],
+  "draft": "enc-world-3-4_1"
  },
  {
   "id": "enc-world-3-5",
-  "prompt": "a desert vulture-like bird with sand-colored feathers, a bald head and long wings",
-  "status": "todo",
+  "prompt": "a desert vulture monster with ragged sand-colored feathers, a bald wrinkled red head, a hooked beak, long wings spread, talons, side view",
+  "status": "done",
   "key": "enemy:enc-world-3-5",
   "kind": "mob",
   "name": "砂漠の羽",
@@ -2773,12 +2912,14 @@
    160,
    125,
    90
-  ]
+  ],
+  "draft": "enc-world-3-5_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-4-0",
   "prompt": "a snowfield ice soldier shadow, a figure of packed snow and ice with a fur hat and an ice axe",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-4-0",
   "kind": "mob",
   "name": "氷の兵の影",
@@ -2789,12 +2930,15 @@
    190,
    205,
    220
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 6001,
+  "draft": "enc-world-4-0_1"
  },
  {
   "id": "enc-world-4-1",
-  "prompt": "a frost distortion on four legs, a wolf-like shape of frozen mist with violet ice teeth",
-  "status": "todo",
+  "prompt": "a full body frost wolf monster standing on four legs, a body of frozen mist and jagged ice shards, violet ice teeth, side view",
+  "status": "done",
   "key": "enemy:enc-world-4-1",
   "kind": "mob",
   "name": "霜の歪み",
@@ -2805,12 +2949,15 @@
    175,
    195,
    215
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 10002,
+  "draft": "enc-world-4-1_0"
  },
  {
   "id": "enc-world-4-2",
   "prompt": "a white shadow, a pale snow-covered blob-free figure like a tall snowdrift with dark eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-4-2",
   "kind": "mob",
   "name": "白い影",
@@ -2821,28 +2968,34 @@
    225,
    230,
    235
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 6001,
+  "draft": "enc-world-4-2_1"
  },
  {
   "id": "enc-world-4-3",
-  "prompt": "a snowfield insect, a white furry caterpillar with icy blue spots and frost on its hairs",
-  "status": "todo",
+  "prompt": "a segmented white caterpillar monster with rings of icy blue spines on each segment, a round head with black eyes and small mandibles, many little legs, side view",
+  "status": "done",
   "key": "enemy:enc-world-4-3",
   "kind": "mob",
   "name": "雪原の虫",
   "zone": "world-4",
   "level": 15,
-  "shape": "long",
+  "shape": "ground",
   "tone": [
    215,
    225,
    235
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 14003,
+  "draft": "enc-world-4-3_1"
  },
  {
   "id": "enc-world-4-4",
   "prompt": "an ice crystal creature, a large hexagonal snowflake crystal with a frozen face in the center",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-4-4",
   "kind": "mob",
   "name": "氷の結晶",
@@ -2853,12 +3006,15 @@
    180,
    215,
    240
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 6001,
+  "draft": "enc-world-4-4_0"
  },
  {
   "id": "enc-world-4-5",
   "prompt": "a blizzard bird with feathers like flying snow, a pale blue body and an icy crest",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-4-5",
   "kind": "mob",
   "name": "吹雪の羽",
@@ -2869,12 +3025,15 @@
    200,
    220,
    235
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 6001,
+  "draft": "enc-world-4-5_1"
  },
  {
   "id": "enc-world-5-0",
   "prompt": "an ember shadow, a dark figure with glowing ember speckles all over and burning eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-5-0",
   "kind": "mob",
   "name": "火の粉の影",
@@ -2885,12 +3044,13 @@
    90,
    50,
    40
-  ]
+  ],
+  "draft": "enc-world-5-0_0"
  },
  {
   "id": "enc-world-5-1",
   "prompt": "a lava distortion, a twisted lava rock creature with violet cracks mixed with orange magma",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-5-1",
   "kind": "mob",
   "name": "溶岩の歪み",
@@ -2901,12 +3061,13 @@
    140,
    60,
    70
-  ]
+  ],
+  "draft": "enc-world-5-1_0"
  },
  {
   "id": "enc-world-5-2",
   "prompt": "an ash-covered shadow, a hunched creature buried in grey volcanic ash with red eyes peeking out",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-5-2",
   "kind": "mob",
   "name": "灰かぶりの影",
@@ -2917,12 +3078,13 @@
    110,
    105,
    105
-  ]
+  ],
+  "draft": "enc-world-5-2_0"
  },
  {
   "id": "enc-world-5-3",
   "prompt": "an ash insect, a grey beetle with a soot-covered shell and glowing orange joints",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-5-3",
   "kind": "mob",
   "name": "灰の虫",
@@ -2933,28 +3095,31 @@
    100,
    95,
    90
-  ]
+  ],
+  "draft": "enc-world-5-3_0"
  },
  {
   "id": "enc-world-5-4",
-  "prompt": "a volcano stone creature, a dark basalt column rock with a magma mouth, on stubby legs",
-  "status": "todo",
+  "prompt": "a creature made of dark hexagonal basalt stone columns, a wide open glowing orange magma mouth, cracks of lava, short stubby stone legs, side view",
+  "status": "done",
   "key": "enemy:enc-world-5-4",
   "kind": "mob",
   "name": "火山の石",
   "zone": "world-5",
   "level": 24,
-  "shape": "big",
+  "shape": "ground",
   "tone": [
    70,
    60,
    60
-  ]
+  ],
+  "draft": "enc-world-5-4_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-5-5",
-  "prompt": "a magma droplet, a heavy floating drop of glowing magma with a black cooled skin",
-  "status": "todo",
+  "prompt": "a heavy teardrop-shaped blob of glowing orange magma with a pointed top, a cracked black cooled crust peeling off in plates, lava dripping from its bottom",
+  "status": "done",
   "key": "enemy:enc-world-5-5",
   "kind": "mob",
   "name": "マグマのしずく",
@@ -2965,12 +3130,15 @@
    200,
    70,
    30
-  ]
+  ],
+  "draft": "enc-world-5-5_1",
+  "bg": null,
+  "seed_base": 10002
  },
  {
   "id": "enc-world-6-0",
   "prompt": "a wasteland shadow, a lean dog-like creature of dust and shadow with a cracked bone collar",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-6-0",
   "kind": "mob",
   "name": "荒野の影",
@@ -2981,12 +3149,13 @@
    130,
    110,
    90
-  ]
+  ],
+  "draft": "enc-world-6-0_0"
  },
  {
   "id": "enc-world-6-1",
-  "prompt": "a distortion whose light went out, an old broken street lamp creature with a dark empty glass head",
-  "status": "todo",
+  "prompt": "an old broken iron street lamp post monster walking on bent iron legs, a dark empty cracked glass lantern for a head, rust, dangling wires",
+  "status": "done",
   "key": "enemy:enc-world-6-1",
   "kind": "mob",
   "name": "灯の消えた歪み",
@@ -2997,12 +3166,14 @@
    80,
    85,
    90
-  ]
+  ],
+  "draft": "enc-world-6-1_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-6-2",
-  "prompt": "an old machine insect, a rusty mechanical beetle with exposed gears and a dented lamp eye",
-  "status": "todo",
+  "prompt": "a rusty clockwork beetle robot with exposed brass gears turning on its back, riveted metal plates, one big cracked lamp eye at the front, thin metal legs, side view",
+  "status": "done",
   "key": "enemy:enc-world-6-2",
   "kind": "mob",
   "name": "古い機械の虫",
@@ -3010,15 +3181,17 @@
   "level": 18,
   "shape": "ground",
   "tone": [
-   130,
-   100,
-   70
-  ]
+   150,
+   95,
+   50
+  ],
+  "draft": "enc-world-6-2_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-6-3",
   "prompt": "a wasteland stone creature, a cracked red rock with dry thorny brush growing on it, one eye",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-6-3",
   "kind": "mob",
   "name": "荒野の石",
@@ -3029,12 +3202,13 @@
    160,
    110,
    80
-  ]
+  ],
+  "draft": "enc-world-6-3_0"
  },
  {
   "id": "enc-world-6-4",
   "prompt": "a rusted machine, a boxy rusty robot on tank treads with a broken antenna and a loose jaw",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-6-4",
   "kind": "mob",
   "name": "錆びた機械",
@@ -3045,12 +3219,13 @@
    140,
    90,
    60
-  ]
+  ],
+  "draft": "enc-world-6-4_1"
  },
  {
   "id": "enc-world-6-5",
   "prompt": "a withered field bird, a scarecrow-like bird made of dry straw and torn cloth wings",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-6-5",
   "kind": "mob",
   "name": "枯れ野の羽",
@@ -3061,12 +3236,13 @@
    170,
    150,
    100
-  ]
+  ],
+  "draft": "enc-world-6-5_0"
  },
  {
   "id": "enc-world-sea-0",
   "prompt": "a shadow between the waves, a dark eel-like creature with foam crests and glowing teal eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-sea-0",
   "kind": "mob",
   "name": "波間の影",
@@ -3077,12 +3253,13 @@
    40,
    80,
    100
-  ]
+  ],
+  "draft": "enc-world-sea-0_1"
  },
  {
   "id": "enc-world-sea-1",
   "prompt": "a tide stone creature, a barnacle-covered rock with a crab-claw arm and seaweed hair",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-sea-1",
   "kind": "mob",
   "name": "潮の石",
@@ -3093,28 +3270,32 @@
    100,
    110,
    100
-  ]
+  ],
+  "draft": "enc-world-sea-1_0"
  },
  {
   "id": "enc-world-sea-2",
-  "prompt": "a sea firefly bug swarm queen, a larger glowing insect with transparent shell and blue light trails",
-  "status": "todo",
+  "prompt": "a large glowing sea firefly insect with a round transparent abdomen full of blue light, feathery antennae, small clear wings, many thin legs, side view, no human",
+  "status": "done",
   "key": "enemy:enc-world-sea-2",
   "kind": "mob",
   "name": "海ほたるの虫",
   "zone": "world-sea",
   "level": 12,
-  "shape": "winged",
+  "shape": "ground",
   "tone": [
    70,
    160,
    210
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 10002,
+  "draft": "enc-world-sea-2_0"
  },
  {
   "id": "enc-world-sea-3",
   "prompt": "a whirlpool droplet, a floating drop of seawater spinning into a spiral with a dark eye at its center",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-sea-3",
   "kind": "mob",
   "name": "渦のしずく",
@@ -3125,12 +3306,13 @@
    60,
    120,
    160
-  ]
+  ],
+  "draft": "enc-world-sea-3_1"
  },
  {
   "id": "enc-world-sea-4",
   "prompt": "a sea feather creature, a flying fish with huge feather-like fins and silver scales",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-sea-4",
   "kind": "mob",
   "name": "海の羽",
@@ -3141,28 +3323,31 @@
    170,
    200,
    210
-  ]
+  ],
+  "draft": "enc-world-sea-4_0"
  },
  {
   "id": "enc-world-sea-5",
-  "prompt": "an echo of a boat, a ghostly small wooden rowboat with a faint rower and a lantern",
-  "status": "todo",
+  "prompt": "a ghostly old wooden rowboat floating above the water, a faint glowing green phantom rower holding an oar, a lit lantern hanging at the bow, side view",
+  "status": "done",
   "key": "enemy:enc-world-sea-5",
   "kind": "mob",
   "name": "舟の残響",
   "zone": "world-sea",
   "level": 12,
-  "shape": "big",
+  "shape": "ground",
   "tone": [
-   140,
-   150,
-   160
-  ]
+   120,
+   95,
+   70
+  ],
+  "draft": "enc-world-sea-5_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-sea-6",
   "prompt": "a sunken ship guardian, a figure made of ship planks and an anchor with a ship wheel shield",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-sea-6",
   "kind": "mob",
   "name": "沈没船の番兵",
@@ -3173,12 +3358,13 @@
    100,
    85,
    70
-  ]
+  ],
+  "draft": "enc-world-sea-6_0"
  },
  {
   "id": "enc-world-air-0",
   "prompt": "a shadow with wind wings, a dark streamlined bird-like shadow with feathers made of wind lines",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-air-0",
   "kind": "mob",
   "name": "風の羽の影",
@@ -3189,12 +3375,13 @@
    90,
    100,
    130
-  ]
+  ],
+  "draft": "enc-world-air-0_0"
  },
  {
   "id": "enc-world-air-1",
   "prompt": "a fragment of cloud, a fluffy white cloud chunk with a grumpy face and small hailstones",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-air-1",
   "kind": "mob",
   "name": "雲のかけら",
@@ -3205,12 +3392,15 @@
    225,
    230,
    240
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 6001,
+  "draft": "enc-world-air-1_1"
  },
  {
   "id": "enc-world-air-2",
   "prompt": "a thundercloud shadow, a dark heavy cloud creature with a lightning bolt tail and yellow eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-air-2",
   "kind": "mob",
   "name": "雷雲の影",
@@ -3221,12 +3411,13 @@
    80,
    85,
    110
-  ]
+  ],
+  "draft": "enc-world-air-2_0"
  },
  {
   "id": "enc-world-air-3",
-  "prompt": "a sky droplet, a floating drop of pale sky blue with a cloud inside and a tiny sun reflection",
-  "status": "todo",
+  "prompt": "a floating water droplet creature, a light blue glassy drop with a pointed tip on top, a tiny cloud and sun reflected inside, small dark eyes",
+  "status": "done",
   "key": "enemy:enc-world-air-3",
   "kind": "mob",
   "name": "空のしずく",
@@ -3237,12 +3428,15 @@
    160,
    200,
    240
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 14003,
+  "draft": "enc-world-air-3_1"
  },
  {
   "id": "enc-world-air-4",
   "prompt": "a lightning crystal, a jagged yellow crystal crackling with electricity, floating",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-air-4",
   "kind": "mob",
   "name": "雷の結晶",
@@ -3253,12 +3447,13 @@
    230,
    210,
    90
-  ]
+  ],
+  "draft": "enc-world-air-4_1"
  },
  {
   "id": "enc-world-air-5",
   "prompt": "a cloud insect, a dragonfly with wings of mist and a long pale body",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-air-5",
   "kind": "mob",
   "name": "雲の虫",
@@ -3269,12 +3464,15 @@
    200,
    210,
    225
-  ]
+  ],
+  "bg": "dark",
+  "seed_base": 6001,
+  "draft": "enc-world-air-5_x0"
  },
  {
   "id": "enc-world-air-6",
   "prompt": "a storm feather creature, a large bird with dark storm-grey feathers and lightning patterns",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-air-6",
   "kind": "mob",
   "name": "嵐の羽",
@@ -3285,7 +3483,8 @@
    100,
    105,
    125
-  ]
+  ],
+  "draft": "enc-world-air-6_0"
  },
  {
   "id": "chapter0-yugami",
@@ -3661,7 +3860,7 @@
  },
  {
   "id": "zenkan",
-  "prompt": "a colossal floating halo ring of cracked ancient stone with golden glowing seams, a large calm eye floating in the center of the ring, rays of light, monster, fantasy art",
+  "prompt": "a colossal floating golden ring halo, a serene stone face of a bodhisattva with closed eyes at its center, dozens of disembodied open palms floating around, ominous dark cracks",
   "status": "done",
   "key": "boss:zenkan",
   "kind": "boss",
@@ -3675,5 +3874,1030 @@
   ],
   "neg_extra": "jewelry, finger ring, wedding ring, small object, metal band, gemstone",
   "draft": "zenkan_1"
+ },
+ {
+  "id": "angel-01",
+  "status": "done",
+  "kind": "extra",
+  "name": "光輪の見張り",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   220,
+   200,
+   140
+  ],
+  "prompt": "a tall angel in white and gold robes with four large feathered wings and a halo of light, holding a long spear, serene face",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark",
+  "draft": "angel-01_0"
+ },
+ {
+  "id": "angel-02",
+  "status": "done",
+  "kind": "extra",
+  "name": "祈りの天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   200,
+   210,
+   230
+  ],
+  "prompt": "a kneeling angel with folded white wings and hands held together in prayer, pale blue robes, soft glowing halo",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark",
+  "draft": "angel-02_0"
+ },
+ {
+  "id": "angel-03",
+  "status": "done",
+  "kind": "extra",
+  "name": "盾の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   190,
+   195,
+   205
+  ],
+  "prompt": "an angel knight in polished silver armor with white wings, holding a large round shield with a sun emblem",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "draft": "angel-03_0"
+ },
+ {
+  "status": "done",
+  "kind": "extra",
+  "id": "zenkan-hand",
+  "name": "全観の手（部品）",
+  "group": "部品",
+  "shape": "float",
+  "tone": [
+   200,
+   170,
+   100
+  ],
+  "prompt": "a single disembodied open human palm hand floating in the air, smooth golden skin, fingers spread, glowing light, no arm",
+  "size": 96,
+  "ncol": 20,
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "draft": "zenkan-hand_0"
+ },
+ {
+  "id": "mecha-god-giant",
+  "status": "done",
+  "kind": "extra",
+  "name": "機械の悪神巨人兵",
+  "group": "機械",
+  "shape": "big",
+  "tone": [
+   70,
+   65,
+   70
+  ],
+  "prompt": "a colossal mechanical evil god giant soldier of black iron and tarnished brass, a cracked crown-shaped head with a red visor slit, glowing red chest core, a cannon arm and a great blade arm, pipes and chains",
+  "size": 256,
+  "ncol": 40,
+  "neg_extra": "nude, naked, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "draft": "mecha-god-giant_0"
+ },
+ {
+  "id": "angel-04",
+  "status": "done",
+  "kind": "extra",
+  "name": "弓の天使",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   170,
+   200,
+   150
+  ],
+  "prompt": "an angel archer in green and gold clothes drawing a bow made of light, white wings spread wide",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark",
+  "draft": "angel-04_x1"
+ },
+ {
+  "id": "angel-05",
+  "status": "done",
+  "kind": "extra",
+  "name": "炎の天使",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   220,
+   120,
+   60
+  ],
+  "prompt": "an angel with wings made of flames, red and gold armor, holding a burning sword",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "draft": "angel-05_0"
+ },
+ {
+  "id": "angel-06",
+  "status": "done",
+  "kind": "extra",
+  "name": "氷の天使",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   150,
+   190,
+   230
+  ],
+  "prompt": "an angel with two huge symmetrical spread wings of pale blue ice crystals, pale blue robes, icicle crown",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark",
+  "draft": "angel-06_1",
+  "seed_base": 10002
+ },
+ {
+  "id": "angel-07",
+  "status": "todo",
+  "kind": "extra",
+  "name": "天秤の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   210,
+   190,
+   130
+  ],
+  "prompt": "a blindfolded angel standing in white robes, holding golden balance scales in one raised hand, grey feathered wings, stern, no glow",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "light",
+  "draft": "angel-07_1",
+  "seed_base": 10002
+ },
+ {
+  "status": "cancelled",
+  "kind": "extra",
+  "id": "zenkan-face-angel",
+  "name": "全観の顔（部品・天使）",
+  "group": "部品",
+  "shape": "big",
+  "tone": [
+   200,
+   165,
+   90
+  ],
+  "size": 96,
+  "ncol": 24,
+  "seed_base": 9701,
+  "prompt": "head of a gilded bronze angel statue, front view, serene face with closed eyes, long wavy flowing hair, laurel circlet, isolated head",
+  "neg_extra": "buddha, buddhist, bodhisattva, curly hair bumps, earlobes, bindi, dot on forehead, body, shoulders, open eyes",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "draft": "zenkan-face-angel_0"
+ },
+ {
+  "status": "cancelled",
+  "kind": "extra",
+  "id": "zenkan-face-angel2",
+  "name": "全観の顔（部品・天使2）",
+  "group": "部品",
+  "shape": "big",
+  "tone": [
+   210,
+   175,
+   100
+  ],
+  "size": 96,
+  "ncol": 24,
+  "seed_base": 9901,
+  "prompt": "golden head of a solemn angel, front view, eyes closed, sorrowful face, long wavy golden hair, halo diadem, isolated head",
+  "neg_extra": "buddha, buddhist, bodhisattva, curly hair bumps, earlobes, bindi, dot on forehead, body, shoulders, open eyes",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "status": "cancelled",
+  "kind": "extra",
+  "id": "zenkan-hand2",
+  "name": "全観の手（部品・写実）",
+  "group": "部品",
+  "shape": "tall",
+  "tone": [
+   190,
+   150,
+   80
+  ],
+  "size": 96,
+  "ncol": 24,
+  "seed_base": 9101,
+  "prompt": "one raised open hand of a gilded bronze statue, palm facing viewer, fingers together, realistic anatomy, cut at the wrist",
+  "neg_extra": "arm, sleeve, extra fingers, missing fingers, fused fingers, deformed hand, person, face",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "status": "done",
+  "kind": "extra",
+  "id": "zenkan-hand3",
+  "name": "全観の手（部品・写実2）",
+  "group": "部品",
+  "shape": "tall",
+  "tone": [
+   200,
+   165,
+   90
+  ],
+  "size": 96,
+  "ncol": 24,
+  "seed_base": 5300,
+  "prompt": "a single realistic golden hand sculpture, open palm facing forward in a blessing gesture, elegant long fingers, soft shading, polished gold with dark patina in the creases, wrist only, product photo",
+  "neg_extra": "arm, sleeve, extra fingers, missing fingers, fused fingers, deformed hand, person, face",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "draft": "zenkan-hand3_0"
+ },
+ {
+  "id": "angel-08",
+  "status": "done",
+  "kind": "extra",
+  "name": "書の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   200,
+   180,
+   150
+  ],
+  "prompt": "an angel reading a large floating glowing book, holding a feather quill, cream robes and brown-tipped wings",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark",
+  "draft": "angel-08_0"
+ },
+ {
+  "id": "angel-09",
+  "status": "done",
+  "kind": "extra",
+  "name": "星の天使",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   60,
+   70,
+   140
+  ],
+  "prompt": "an angel in dark blue robes with wings dotted with tiny stars like a night sky, a small star above its head",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark",
+  "draft": "angel-09_x0"
+ },
+ {
+  "id": "angel-10",
+  "status": "done",
+  "kind": "extra",
+  "name": "竪琴の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   220,
+   200,
+   170
+  ],
+  "prompt": "an angel sitting and playing a large golden harp held in front of its body, flowing cream robes, white wings",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark",
+  "draft": "angel-10_0",
+  "seed_base": 6001
+ },
+ {
+  "id": "angel-11",
+  "status": "done",
+  "kind": "extra",
+  "name": "車輪の天使",
+  "group": "天使",
+  "shape": "float",
+  "tone": [
+   210,
+   180,
+   90
+  ],
+  "prompt": "a celestial being made of interlocking golden rings covered in eyes, with small white wings, glowing core, no human body",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark",
+  "draft": "angel-11_1"
+ },
+ {
+  "id": "angel-12",
+  "status": "done",
+  "kind": "extra",
+  "name": "翼の集まり",
+  "group": "天使",
+  "shape": "float",
+  "tone": [
+   230,
+   230,
+   240
+  ],
+  "prompt": "a celestial creature made only of many white wings folded around a glowing golden core with one calm eye, no human body",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark",
+  "draft": "angel-12_0"
+ },
+ {
+  "status": "todo",
+  "kind": "extra",
+  "id": "chimera",
+  "name": "キメラ",
+  "group": "獣",
+  "shape": "big",
+  "tone": [
+   150,
+   110,
+   70
+  ],
+  "size": 128,
+  "ncol": 40,
+  "seed_base": 6200,
+  "prompt": "a chimera beast, lion body and head, a goat head rising from its back, a snake for a tail, leathery wings, fierce, standing on four legs",
+  "neg_extra": "human, rider, saddle",
+  "neg_drop": [
+   "statue"
+  ]
+ },
+ {
+  "id": "angel-13",
+  "status": "todo",
+  "kind": "extra",
+  "name": "鎖の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   180,
+   170,
+   160
+  ],
+  "prompt": "an angel bound by heavy golden chains, torn grey wings, cracked halo, head lowered",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "angel-14",
+  "status": "todo",
+  "kind": "extra",
+  "name": "灯火の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   200,
+   160,
+   100
+  ],
+  "prompt": "an angel holding up a glowing lantern, brown traveling cloak over white robes, small wings, warm light",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-15",
+  "status": "todo",
+  "kind": "extra",
+  "name": "花の天使",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   230,
+   170,
+   190
+  ],
+  "prompt": "an angel with wings made of pink and white flower petals, a crown of flowers, green leafy robes",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-16",
+  "status": "todo",
+  "kind": "extra",
+  "name": "審判の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   200,
+   170,
+   90
+  ],
+  "prompt": "a stern angel warrior in heavy gold armor and a closed helmet, holding a huge two-handed sword, great white wings",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "angel-17",
+  "status": "todo",
+  "kind": "extra",
+  "name": "風の天使",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   180,
+   220,
+   210
+  ],
+  "prompt": "an angel with swirling pale green robes and wings made of streaks of wind, floating, hair blowing",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-18",
+  "status": "todo",
+  "kind": "extra",
+  "name": "薄明の天使",
+  "group": "天使",
+  "shape": "winged",
+  "tone": [
+   190,
+   130,
+   170
+  ],
+  "prompt": "an angel in dusk colors, purple and orange wings, holding a tall staff with a setting sun ornament",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-19",
+  "status": "todo",
+  "kind": "extra",
+  "name": "癒しの天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   200,
+   230,
+   210
+  ],
+  "prompt": "a gentle angel in pale green robes holding a glowing water jar, small white wings, soft light around its hands",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "angel-20",
+  "status": "todo",
+  "kind": "extra",
+  "name": "門番の天使",
+  "group": "天使",
+  "shape": "tall",
+  "tone": [
+   170,
+   175,
+   190
+  ],
+  "prompt": "a huge angel gatekeeper in stone grey armor holding a giant key and a halberd, six folded wings",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-01",
+  "status": "todo",
+  "kind": "extra",
+  "name": "角の悪魔",
+  "group": "悪魔",
+  "shape": "winged",
+  "tone": [
+   150,
+   50,
+   45
+  ],
+  "prompt": "a red-skinned demon with curled black horns, leathery bat wings, clawed hands, holding a forked spear, armored",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-02",
+  "status": "todo",
+  "kind": "extra",
+  "name": "小悪魔",
+  "group": "悪魔",
+  "shape": "ground",
+  "tone": [
+   110,
+   130,
+   90
+  ],
+  "prompt": "a small grey-green imp with long pointed ears, a wide grin, tiny bat wings and a thin tail, crouching",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-03",
+  "status": "todo",
+  "kind": "extra",
+  "name": "炎の悪魔",
+  "group": "悪魔",
+  "shape": "big",
+  "tone": [
+   80,
+   50,
+   45
+  ],
+  "prompt": "a hulking demon made of black stone with glowing molten cracks, fire burning from its shoulders and horns",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-04",
+  "status": "todo",
+  "kind": "extra",
+  "name": "影の悪魔",
+  "group": "悪魔",
+  "shape": "tall",
+  "tone": [
+   50,
+   45,
+   60
+  ],
+  "prompt": "a tall thin shadow demon with very long claws, a smoky body and glowing red eyes, hunched",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-05",
+  "status": "todo",
+  "kind": "extra",
+  "name": "骨の悪魔",
+  "group": "悪魔",
+  "shape": "winged",
+  "tone": [
+   200,
+   190,
+   170
+  ],
+  "prompt": "a skeletal demon with ribcage wings, a horned skull head and glowing violet eye sockets, tattered cloth",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-06",
+  "status": "todo",
+  "kind": "extra",
+  "name": "鎖の悪魔",
+  "group": "悪魔",
+  "shape": "tall",
+  "tone": [
+   100,
+   85,
+   80
+  ],
+  "prompt": "a demon wrapped in rusty chains wearing an iron mask, heavy hooks hanging from the chains, dark robes",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-07",
+  "status": "todo",
+  "kind": "extra",
+  "name": "蛇の悪魔",
+  "group": "悪魔",
+  "shape": "long",
+  "tone": [
+   70,
+   110,
+   80
+  ],
+  "prompt": "a demon with a long scaly green serpent lower body, four arms holding curved blades, horned head",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-08",
+  "status": "todo",
+  "kind": "extra",
+  "name": "雄羊角の悪魔",
+  "group": "悪魔",
+  "shape": "big",
+  "tone": [
+   110,
+   80,
+   60
+  ],
+  "prompt": "a hulking demon with big curled ram horns, furry legs and hooves, holding a heavy axe, leather armor",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-09",
+  "status": "todo",
+  "kind": "extra",
+  "name": "蝙蝠の悪魔",
+  "group": "悪魔",
+  "shape": "winged",
+  "tone": [
+   70,
+   55,
+   70
+  ],
+  "prompt": "a demon with a bat-like head, huge ears, membrane wings and long arms, crouching on a rock",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-10",
+  "status": "todo",
+  "kind": "extra",
+  "name": "蜘蛛の悪魔",
+  "group": "悪魔",
+  "shape": "big",
+  "tone": [
+   60,
+   50,
+   60
+  ],
+  "prompt": "a demon with a horned upper body and eight long spider legs coming from its back, purple markings",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-11",
+  "status": "todo",
+  "kind": "extra",
+  "name": "契約の悪魔",
+  "group": "悪魔",
+  "shape": "tall",
+  "tone": [
+   70,
+   60,
+   80
+  ],
+  "prompt": "an elegant thin demon in a dark tailcoat holding a glowing scroll contract, small curved horns, sly smile",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-12",
+  "status": "todo",
+  "kind": "extra",
+  "name": "悪夢の悪魔",
+  "group": "悪魔",
+  "shape": "winged",
+  "tone": [
+   110,
+   80,
+   140
+  ],
+  "prompt": "a nightmare demon with dusty purple moth wings, a long thin body, a horned mask face, sleepy mist around",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "bg": "dark"
+ },
+ {
+  "id": "demon-13",
+  "status": "todo",
+  "kind": "extra",
+  "name": "沼の悪魔",
+  "group": "悪魔",
+  "shape": "big",
+  "tone": [
+   80,
+   95,
+   60
+  ],
+  "prompt": "a fat toad-like swamp demon covered in moss and mud, small horns, a wide mouth, sitting in murky water",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-14",
+  "status": "todo",
+  "kind": "extra",
+  "name": "氷の悪魔",
+  "group": "悪魔",
+  "shape": "tall",
+  "tone": [
+   90,
+   130,
+   170
+  ],
+  "prompt": "a frost demon with pale blue skin, icicle horns and claws, ragged dark fur cloak, cold breath",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-15",
+  "status": "todo",
+  "kind": "extra",
+  "name": "大口の悪魔",
+  "group": "悪魔",
+  "shape": "big",
+  "tone": [
+   130,
+   70,
+   70
+  ],
+  "prompt": "a demon whose body is mostly a giant toothy mouth on short legs, small arms, horns on top",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-16",
+  "status": "todo",
+  "kind": "extra",
+  "name": "宝石の悪魔",
+  "group": "悪魔",
+  "shape": "tall",
+  "tone": [
+   120,
+   80,
+   130
+  ],
+  "prompt": "a greedy demon encrusted with glittering gems, holding a sack of gold coins, jeweled horns, purple robe",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-17",
+  "status": "todo",
+  "kind": "extra",
+  "name": "仮面の悪魔",
+  "group": "悪魔",
+  "shape": "tall",
+  "tone": [
+   90,
+   70,
+   90
+  ],
+  "prompt": "a demon wearing many different masks on its head and body, a long dark cloak, thin clawed hands",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-18",
+  "status": "todo",
+  "kind": "extra",
+  "name": "炉の悪魔",
+  "group": "悪魔",
+  "shape": "big",
+  "tone": [
+   90,
+   70,
+   60
+  ],
+  "prompt": "a demon with a glowing iron furnace built into its chest, soot-black skin, pipes on its back, heavy fists",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-19",
+  "status": "todo",
+  "kind": "extra",
+  "name": "堕ちた天使",
+  "group": "悪魔",
+  "shape": "winged",
+  "tone": [
+   60,
+   55,
+   70
+  ],
+  "prompt": "a fallen angel with tattered black feathered wings, a broken dark halo, torn grey armor, sorrowful",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "id": "demon-20",
+  "status": "todo",
+  "kind": "extra",
+  "name": "角冠の悪魔",
+  "group": "悪魔",
+  "shape": "tall",
+  "tone": [
+   90,
+   40,
+   50
+  ],
+  "prompt": "a demon lord with a crown of black horns, a long red cape, dark armor and a glowing scepter, seated pose",
+  "size": 128,
+  "ncol": 24,
+  "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
  }
 ]

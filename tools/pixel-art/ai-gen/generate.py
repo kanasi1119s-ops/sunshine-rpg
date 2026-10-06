@@ -48,7 +48,7 @@ for j in jobs:
     print(j['name'],'描いてあるので飛ばす',flush=True); continue   # 途中で止まった続きから（同じ種・同じ指示なら同じ絵になる）
   g=torch.Generator().manual_seed(j['seed'])
   if 'layout' in j:
-    L=j['layout']; init=make_layout(L.get('shape','ground'),tuple(L.get('tone',(110,100,95))),j['seed'])
+    L=j['layout']; init=make_layout(L.get('shape','ground'),tuple(L.get('tone',(110,100,95))),j['seed'],tuple(L['bg']) if L.get('bg') else None)
     if os.environ.get('DRAFT_SIZE'):   # 下絵を小さく描く（速い。雑魚は96まで縮めるので384で足りる。2026-10-05）
       S=int(os.environ['DRAFT_SIZE']); init=init.resize((S,S))
     init.save(f"raw/{j['name']}.layout.png")

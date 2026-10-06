@@ -73,7 +73,8 @@ def editor_stage(i):
     d = f"{ART}/{i}"
     out = f"{WORK}/auto/ed_{i}.png"
     src = f"{i}_fix" if os.path.exists(f"{d}/{i}_fix.txt") else i   # 手直し（edits.py）があれば、それを描く
-    ok = run(["node", "tools/pixel-practice/editor-draw.mjs", f"{d}/{src}.txt", f"{d}/{src}.json", out, "--zoom", "8", "--import"], timeout=900)
+    big = len([r for r in open(f"{d}/{src}.txt").read().split("\n") if r.strip()]) > 128   # ボス（256×256）はエディタを広げる
+    ok = run(["node", "tools/pixel-practice/editor-draw.mjs", f"{d}/{src}.txt", f"{d}/{src}.json", out] + (["--zoom", "6", "--wide"] if big else ["--zoom", "8"]) + ["--import"], timeout=1800)
     if not ok or not os.path.exists(out + ".rows.txt"):
         return False
     a = [r for r in open(f"{d}/{src}.txt").read().split("\n") if r.strip()]
@@ -114,6 +115,16 @@ def main():
     while made < limit:
         if os.path.exists(f"{AUTO}/STOP"):
             log("STOP があるので止まります"); break
+        # 新しく足す敵（WORK/auto/add.json: [{id, name, prompt, ...}]）。名簿の書きかえがぶつからないよう、ここで足す。先に作る
+        ap = f"{AUTO}/add.json"
+        if os.path.exists(ap):
+            new = json.load(open(ap)); os.remove(ap)
+            r = roster(); ids = {e["id"] for e in r}
+            head = [dict({"status": "todo", "kind": "extra"}, **e) for e in new if e["id"] not in ids]
+            k = next((n for n, e in enumerate(r) if e.get("status") in ("todo", "draft") and e.get("kind") != "boss"), len(r))
+            r[k:k] = head
+            json.dump(r, open(ROSTER, "w"), ensure_ascii=False, indent=1)
+            log("足した:", [e["id"] for e in head])
         # 描き直しの頼み（WORK/auto/redo.json: {id: {"prompt":…, "shape":…}}）を名簿に入れる。別の種で描き直す
         rp = f"{AUTO}/redo.json"
         if os.path.exists(rp):
