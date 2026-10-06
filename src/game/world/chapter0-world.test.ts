@@ -1,3 +1,4 @@
+import { WORLD_MAPS } from "./world";
 import { describe, expect, it } from "vitest";
 import { CHAPTER0_MAPS, CHAPTER0_NPCS, CHAPTER0_OPENING_COMMANDS, CHAPTER0_START } from "./chapter0-world";
 import { collectBattleIds, collectReferencedFlags, collectSetFlags, collectWarpTargets } from "../event/inspect";
@@ -49,7 +50,8 @@ function allNpcCommands() {
 
 describe("序章のイベントデータの整合性", () => {
   it("開始地点のマップが実在し、通行可能なタイルに立つ", () => {
-    const map = createTileMap(CHAPTER0_MAPS[CHAPTER0_START.mapId]);
+    // はじめの場所は、ユーリの家の屋根裏（world.ts で足す地図）
+    const map = createTileMap(WORLD_MAPS[CHAPTER0_START.mapId]);
     expect(map).toBeDefined();
     expect(isWalkable(map, CHAPTER0_START.tileX, CHAPTER0_START.tileY)).toBe(true);
   });

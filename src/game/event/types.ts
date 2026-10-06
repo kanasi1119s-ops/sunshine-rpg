@@ -18,8 +18,8 @@ export type EventCommand =
   | { type: "giveEquipment"; itemId: string }
   /** お店の画面を開く（`src/game/economy/shop.ts` の店ID）。 */
   | { type: "shop"; shopId: string }
-  /** 宿屋: 「とまる／やめる」を選ばせ、とまると灯貨を払ってHP・MPが全快し、朝になる。 */
-  | { type: "inn"; price: number }
+  /** 宿屋: 「とまる／やめる」を選ばせ、とまると灯貨を払ってHP・MPが全快し、朝になる。home なら、自分の家のベッドで休む（宿屋の主人のセリフにしない。2026-10-06）。 */
+  | { type: "inn"; price: number; home?: boolean }
   /** 映画のような演出（上下に黒い帯）を、入れる・はずす。会話がおわると、自動ではずれる。 */
   | { type: "cinematic"; on: boolean }
   /** スタッフロール（エンディングの演出）を流す。 */

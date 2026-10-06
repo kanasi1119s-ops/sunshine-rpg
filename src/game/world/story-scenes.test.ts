@@ -75,7 +75,9 @@ describe("小説の場面（story-scenes）", () => {
   it("場面は章の進み（依頼・報告・仲間）を変えない（立てるのは scene_・novel_ のフラグだけ）", () => {
     for (const s of STORY_SCENES) {
       for (const f of setFlagsIn(s.commands)) expect(/^(scene_|novel_)/.test(f), `${s.id}: ${f}`).toBe(true);
-      expect(s.commands.some((c) => c.type === "startBattle" || c.type === "warp"), `${s.id}: 戦闘・移動は入れない`).toBe(false);
+      // 移動は、さいごに同じ町のユーリの家へ帰るときだけ（「ch0-night-home」。家の中で夕食の場面が流れる）
+      const homeWarp = (c: (typeof s.commands)[number], i: number): boolean => c.type === "warp" && c.mapId === "yuri-home" && s.mapId === "touri-town" && i === s.commands.length - 1;
+      expect(s.commands.some((c, i) => c.type === "startBattle" || (c.type === "warp" && !homeWarp(c, i))), `${s.id}: 戦闘・移動は入れない`).toBe(false);
     }
   });
 

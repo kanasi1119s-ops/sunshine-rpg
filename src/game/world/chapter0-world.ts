@@ -1,4 +1,4 @@
-import { createTouriTownData, TOURI_TOWN_SPAWN, TOURI_TOWN_LANDMARKS } from "../map/chapter0/touri-town";
+import { createTouriTownData, TOURI_TOWN_LANDMARKS } from "../map/chapter0/touri-town";
 import { createTouriBranchData, TOURI_BRANCH_FURNITURE, TOURI_BRANCH_LANDMARKS } from "../map/chapter0/touri-branch";
 import { createTouriOutskirtsData, TOURI_OUTSKIRTS_LANDMARKS } from "../map/chapter0/touri-outskirts";
 import {
@@ -8,6 +8,7 @@ import {
   TOURI_FOREST2_LANDMARKS,
 } from "../map/chapter0/touri-forest";
 import { chestNpc, leverNpc, loreNpc } from "./dungeon-objects";
+import { YURI_ATTIC, YURI_ATTIC_START } from "./yuri-home";
 import type { TileMapData } from "../map/types";
 import type { EventCommand } from "../event/types";
 import type { Npc } from "../npc";
@@ -25,10 +26,11 @@ export const CHAPTER0_MAPS: Record<string, TileMapData> = {
   "touri-outskirts": createTouriOutskirtsData(),
 };
 
+/** ゲームのはじめの場所: ユーリの家の屋根裏（2026-10-06。小説の「屋根裏の小さな窓から、朝月を見ていた」から）。 */
 export const CHAPTER0_START = {
-  mapId: "touri-town",
-  tileX: TOURI_TOWN_SPAWN.tileX,
-  tileY: TOURI_TOWN_SPAWN.tileY,
+  mapId: YURI_ATTIC,
+  tileX: YURI_ATTIC_START.tileX,
+  tileY: YURI_ATTIC_START.tileY,
 };
 
 /**

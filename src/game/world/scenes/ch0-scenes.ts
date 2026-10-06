@@ -17,7 +17,8 @@ export const CH0_SCENES: StoryScene[] = [
   // ===== 依頼を受けるまで（朝） =====
   {
     id: "ch0-morning-porridge",
-    mapId: "touri-town",
+    // ユーリの家の台所（屋根裏から梯子でおりたとき。2026-10-06）
+    mapId: "yuri-home",
     requires: ["chapter0_intro_seen"],
     blockedBy: ["chapter0_quest_accepted"],
     at: "enter",
@@ -201,7 +202,8 @@ export const CH0_SCENES: StoryScene[] = [
   // ===== 仲間になったあと（旅立ちまで） =====
   {
     id: "ch0-night-dinner",
-    mapId: "touri-town",
+    // ユーリの家（町に入ると「ch0-night-home」で家へもどり、ここが流れる。2026-10-06）
+    mapId: "yuri-home",
     requires: ["chapter0_reto_joined"],
     blockedBy: ["chapter1_intro_seen"],
     at: "enter",
@@ -222,6 +224,20 @@ export const CH0_SCENES: StoryScene[] = [
       s("ハルカ", "行きなさい。でも、ひとつだけ約束して。怖くなったら、帰ってくること"),
       s("ハルカ", "逃げるんじゃなくて、帰ってくるの。ここは、あなたが帰ってくる場所だから"),
       s("ユーリ", "……うん"),
+    ],
+  },
+  {
+    // 仲間になったあと、町に入ると、その夜、家へ帰る（家の中で「ch0-night-dinner」が流れる）。旅立ちの場面は、夕食の場面を見たあとで流れる
+    id: "ch0-night-home",
+    mapId: "touri-town",
+    requires: ["chapter0_reto_joined"],
+    blockedBy: ["chapter1_intro_seen", "scene_ch0-night-dinner_seen"],
+    at: "enter",
+    time: "night",
+    commands: [
+      n("日がすっかり暮れて、港の灯りが、ひとつ、またひとつと、ともりはじめた。"),
+      n("ユーリは、家へ帰った。"),
+      { type: "warp", mapId: "yuri-home", tileX: 6, tileY: 7 },
     ],
   },
   {

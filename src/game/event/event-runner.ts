@@ -84,6 +84,14 @@ function* runCommands(
         break;
 
       case "inn": {
+        if (command.home) {
+          const input = yield { kind: "choice", text: "少し休んでいこうか？", labels: ["休む", "やめる"] };
+          if (input?.kind === "choose" && input.index === 0) {
+            options.onInnStay?.(0);
+            yield { kind: "message", text: "自分のベッドで、ぐっすり眠った。体も心も、すっかり元気になった！（HP・MPが全回復）" };
+          }
+          break;
+        }
         const input = yield { kind: "choice", text: `一晩 ${command.price}灯貨 です。とまっていきますか？`, labels: ["とまる", "やめる"] };
         if (input?.kind === "choose" && input.index === 0) {
           const ok = options.onInnStay?.(command.price) ?? false;
