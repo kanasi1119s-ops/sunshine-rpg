@@ -3861,7 +3861,7 @@
  {
   "id": "zenkan",
   "prompt": "a colossal floating golden ring halo, a serene stone face of a bodhisattva with closed eyes at its center, dozens of disembodied open palms floating around, ominous dark cracks",
-  "status": "draft",
+  "status": "done",
   "key": "boss:zenkan",
   "kind": "boss",
   "name": "全観",
@@ -3966,7 +3966,7 @@
  },
  {
   "id": "mecha-god-giant",
-  "status": "todo",
+  "status": "done",
   "kind": "extra",
   "name": "機械の悪神巨人兵",
   "group": "機械",
@@ -3983,11 +3983,12 @@
   "neg_drop": [
    "human, human face",
    "statue"
-  ]
+  ],
+  "draft": "mecha-god-giant_0"
  },
  {
   "id": "angel-04",
-  "status": "draft",
+  "status": "done",
   "kind": "extra",
   "name": "弓の天使",
   "group": "天使",
@@ -4005,11 +4006,12 @@
    "human, human face",
    "statue"
   ],
-  "bg": "dark"
+  "bg": "dark",
+  "draft": "angel-04_x1"
  },
  {
   "id": "angel-05",
-  "status": "todo",
+  "status": "done",
   "kind": "extra",
   "name": "炎の天使",
   "group": "天使",
@@ -4026,7 +4028,8 @@
   "neg_drop": [
    "human, human face",
    "statue"
-  ]
+  ],
+  "draft": "angel-05_0"
  },
  {
   "id": "angel-06",
