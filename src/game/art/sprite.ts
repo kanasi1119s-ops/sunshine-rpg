@@ -71,9 +71,11 @@ export function getSpriteCanvas(
     return null;
   }
   const image = ctx.createImageData(data.size, data.size);
+  // 色は "#rrggbb"。"#rrggbbaa" なら、最後の2けたが不透明さ（影などの、うすく透ける色）
   const rgb = (paletteOverride ?? data.palette).map((hex) => {
-    const v = parseInt(hex.slice(1), 16);
-    return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
+    const v = parseInt(hex.slice(1, 7), 16);
+    const a = hex.length >= 9 ? parseInt(hex.slice(7, 9), 16) : 255;
+    return [(v >> 16) & 255, (v >> 8) & 255, v & 255, a];
   });
   for (let n = 0; n < cells.length; n++) {
     const k = cells[n];
@@ -83,7 +85,7 @@ export function getSpriteCanvas(
     image.data[n * 4] = rgb[k][0];
     image.data[n * 4 + 1] = rgb[k][1];
     image.data[n * 4 + 2] = rgb[k][2];
-    image.data[n * 4 + 3] = 255;
+    image.data[n * 4 + 3] = rgb[k][3];
   }
   ctx.putImageData(image, 0, 0);
   canvasCache.set(cacheKey, canvas);

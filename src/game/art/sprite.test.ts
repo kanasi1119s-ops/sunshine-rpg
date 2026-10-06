@@ -51,10 +51,10 @@ describe("書き出されたドット絵データ（sprite-data.generated.ts）"
     }
   });
 
-  it("パレットはすべて #rrggbb 形式", () => {
+  it("パレットはすべて #rrggbb 形式（影などの透ける色は #rrggbbaa）", () => {
     for (const key of keys) {
       for (const color of SPRITE_DATA[key].palette) {
-        expect(color).toMatch(/^#[0-9a-f]{6}$/i);
+        expect(color).toMatch(/^#[0-9a-f]{6}([0-9a-f]{2})?$/i);
       }
     }
   });
