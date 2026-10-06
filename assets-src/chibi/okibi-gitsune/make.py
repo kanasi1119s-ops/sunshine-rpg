@@ -30,77 +30,76 @@ PAL = {
     "J": "#2a1a0a",  # 目
     "E": "#f0b030",  # 目の光（こはく色）
     "N": "#0c0a0a",  # 鼻
+    "S": "#ff8c8c",  # ほおの桃色
 }
 mw.LEG_L = ["AA.", "DCC", "CBB", "KKA"]          # 灰色の足に黒い足先
 mw.LEG_R = [".AA", "BCB", "BBB", "AKK"]
 
+# かわいくする（2026-10-07、人間の指示「狐もっとかわいくして」）: 頭をもっと大きく、体を短く、
+# 目を2×3の大きな黒目に白い光、耳の内側を明るい橙、ほおに桃色、口もとは小さく、しっぽは丸くふくらませる。
+
 # ---- 16×32 下向き（頭が手前、体としっぽが奥へのびる） ----
 L_DOWN = mirror([
-    ".....AAA",   # 0  しっぽの先（灰。ふさふさと太く）
-    "....ADDC",
-    "...ADCCC",
-    "...ACCCC",
-    "...AQRQQ",   # 4  しっぽの橙の帯
-    "...AQQQQ",
-    "....APQQ",
+    "....AAAA",   # 0  しっぽの先（灰。丸くふくらむ）
+    "...ADDDC",
+    "..ADDCCC",
+    "..ADCCCC",
+    "..AQRQQQ",   # 4  しっぽの橙の帯
+    "..AQQQQQ",
+    "...APQQQ",
     "....ABCC",   # 7  しっぽの付け根
-    "...ABCCC",
-    "...ABCDC",   # 9  背中
+    "...ABCDC",   # 8  背中（短く）
     "..ABCCDC",
     "..ABCCCC",
-    "..ABCCCC",
-    "..ABCCCC",
-    "..ABCCCC",
     "...ABCCC",
-    "..AA.ABC",   # 16 耳の先（黒）
-    "..AKA.AC",
-    "..AKQAQQ",
-    "..AQRQQQ",
-    ".AQRQQQQ",   # 20 頭（橙）
-    ".AQQQQQQ",
-    ".AQQQQQQ",
-    ".AQQJEQQ",   # 23 目
-    ".AWQQQQQ",   # 24 白いほお
-    ".AWWQQQQ",
-    "..AWWWQQ",
-    "..AVWWWN",   # 27 鼻
-    "...AVWWW",
-    "....AAVW",
-    "......AA",
+    ".AA.ABCC",   # 12 耳の先（黒）
+    "AKKAAACC",
+    "AKRKAAAA",
+    "AQRRQAQQ",   # 15 耳の内側（明るい橙）
+    "AQRRQQQQ",
+    "AQQQQQQQ",   # 17 頭（大きく丸く）
+    "AQRQQQQQ",
+    "AQQQQQQQ",
+    "AQQWJQQQ",   # 20 目（大きな黒目に白い光）
+    "AQQJJQQQ",
+    "AQQJJQQQ",
+    "AQSSQWWW",   # 23 ほおの桃色・白い口もと
+    ".AQQWWWN",   # 24 鼻
+    ".AQQWWWW",
+    "..AQQWWV",
+    "...AAVVV",
+    "....ACCC",   # 28 胸
+    "....ABCC",
+    ".....AAA",
 ])
 # ---- 16×32 上向き（頭が奥、しっぽが手前） ----
 L_UP = mirror([
-    "..AA....",   # 0  耳の先
-    "..AKA...",
-    "..AKQA..",
-    "..AQQQAA",
-    ".AQRQQQQ",   # 4  頭の後ろ（橙）
-    ".AQQQQQQ",
-    ".AQQQQQQ",
+    ".AA.....",   # 0  耳の先
+    "AKKA....",
+    "AKQKA...",
+    "AQQQQA..",
+    "AQQQQQAA",
+    "AQRQQQQQ",   # 5  頭の後ろ（大きく丸く）
+    "AQQQQQQQ",
+    "AQQQQQQQ",
+    "APQQQQQQ",
     ".APQQQQQ",
-    "..APQQQQ",
-    "...APPQQ",
-    "....ABCC",   # 10 首
-    "...ABCDC",
+    "..APPQQQ",
+    "....ABCC",   # 11 首
+    "...ABCDC",   # 12 背中（短く）
     "..ABCCDC",
     "..ABCCCC",
-    "..ABCCCC",
-    "..ABCCCC",
-    "..ABCCCC",
-    "..ABCCCC",
-    "..ABCCCC",
-    "..ABCCCC",
     "...ABCCC",
-    "....ABCC",
-    "....ABCC",   # 22 しっぽ（手前へ。ふさふさと太く）
-    "...ABCCC",
-    "...AQQRQ",   # 24 橙の帯
-    "...AQQQQ",
-    "...APQQQ",
+    "....ABCC",   # 16 しっぽの付け根
     "...ACCCC",
-    "...ADCCC",
-    "....ADDC",
-    ".....AAA",
+    "..ACCCCC",
+    "..AQQRQQ",   # 19 橙の帯
+    "..AQQQQQ",
+    "..APQQQQ",
+    "..ACCCCC",
+    "..ADCCCC",   # 23 しっぽの先（丸く）
+    "...ADDDC",
+    "....AAAA",
 ])
 
 
@@ -108,44 +107,44 @@ def long_frames():
     fr = {}
     for f in range(3):
         g = list(L_DOWN) + ["." * 16]
-        a, b = {0: (27, 27), 1: (28, 26), 2: (26, 28)}[f]   # 前足（頭の左右）
+        a, b = {0: (26, 26), 1: (27, 25), 2: (25, 27)}[f]   # 前足（頭の左右）
         put_leg(g, a, True); put_leg(g, b, False)
-        a, b = {0: (13, 13), 1: (12, 14), 2: (14, 12)}[f]   # 後ろ足
+        a, b = {0: (9, 9), 1: (8, 10), 2: (10, 8)}[f]       # 後ろ足
         put_leg(g, a, True); put_leg(g, b, False)
         if f:
             sway(g, range(0, 4), -1 if f == 1 else 1)       # しっぽの先がゆれる
         fr[f"down{f}"] = g
-        g = list(L_UP) + ["." * 16]
+        g = list(L_UP) + ["." * 16] * 6
         a, b = {0: (9, 9), 1: (8, 10), 2: (10, 8)}[f]
         put_leg(g, a, True); put_leg(g, b, False)
-        a, b = {0: (19, 19), 1: (20, 18), 2: (18, 20)}[f]
+        a, b = {0: (14, 14), 1: (15, 13), 2: (13, 15)}[f]
         put_leg(g, a, True); put_leg(g, b, False)
         if f:
-            sway(g, range(27, 31), -1 if f == 1 else 1)
-        fr[f"up{f}"] = g
+            sway(g, range(22, 26), -1 if f == 1 else 1)
+        fr[f"up{f}"] = [ "." * 16] * 5 + g[:27]              # 下をそろえる
     return fr
 
 
 # ---- 32×16 横向き（左向き。頭が左、しっぽが右上へ） ----
 W_TOP = [
-    "...A.A..........................",   # 0  耳の先
-    "..AKAKA.................AAA.....",
-    "..AKQKQA...............ACDDA....",   # 2  しっぽの先（灰）
-    ".AQRQQQQA.............ACCCDA....",
-    ".AQRQQQQQA...AAAAAAA..ACCQQCA...",
-    "AQRQEJQQQQAAACDDDDDCAACCQRQCA...",   # 5  目・背中・しっぽの橙の帯
-    "AQQQQQQQPQACCDCCCCCCCCCQRQQBA...",
-    "AWWQQQQPPACCCCCCCCCCCCBQQQBA....",
-    "NWWWQQPPACCCCCCCCCCCCBCBQBBA....",   # 8  鼻
-    "AVWWWPPACCCCCCCCCCCCCBCBBBA.....",
-    ".AVVWWACBCCCCCCCCCCCBBBAAA......",
-    "..AAAABBCCBBBBBBBBBBBBA.........",
-    "......ABBBAAAAAAAAABBBA.........",
+    "......AA........................",   # 0  耳（手前の耳が大きく、奥の耳は小さく）
+    "..AA.AKKA............AAAAA......",
+    ".AKKAAKRKA..........ADDDDCA.....",   # 2  耳の内側・しっぽの先（丸くふくらむ）
+    "AQRRQQRRQQA........ADDCCCCCA....",
+    "AQQQQQQQQQQA.......ACCCCCCCA....",
+    "AQRQQQQQQQQQA......AQQRQQQQA....",   # 5  しっぽの橙の帯
+    "AQQWJQQQQQQQAAAAAAAQQQQQQQA.....",   # 6  目（大きな黒目に白い光）
+    "AQQJJQQQQQQQACDDDCCCAQQQQBA.....",
+    "NWQJJSQQQQQAACCCCCCCCAPPBA......",   # 8  鼻・ほおの桃色
+    "AWWQQSQQQQQACCCCCCCCCCAAA.......",
+    ".AWWWQQQQQACCCCCCCCCCBA.........",
+    "..AVWWQQQACBCCCCCCCBBA..........",
+    "...AAAAAAABBBBBBBBBBA...........",
 ]
 W_LEGS = {
-    0: ["......ACCA.........ACCA.........", "......ACCA.........ACCA.........", ".....AKKKA........AKKKA........."],
-    1: [".....ACCA..........ABBA.........", "....ACCA............ABBA........", "...AKKKA............AKKKA......."],
-    2: ["......ABBA........ACCA..........", ".......ABBA......ACCA...........", ".......AKKKA....AKKKA............"],
+    0: ["........ACCA....ACCA............", "........ACCA....ACCA............", ".......AKKKA...AKKKA............"],
+    1: [".......ACCA......ABBA...........", "......ACCA........ABBA..........", ".....AKKKA........AKKKA........."],
+    2: [".........ABBA..ACCA.............", "..........ABBAACCA..............", ".........AKKKAKKKA.............."],
 }
 
 
@@ -155,66 +154,66 @@ def wide_frames():
 
 # ---- 16×16 ----
 S_DOWN = mirror([
-    "..A.....",   # 0  耳
-    ".AKA....",
-    ".AKQA...",
-    ".AQQQAAA",
-    "AQRQQQQQ",   # 4  頭
-    "AQQQQQQQ",
-    "AQQJEQQQ",   # 6  目
-    "AWQQQQQQ",
-    "AWWQQQQQ",
-    ".AWWWWQN",   # 9  鼻
-    "..AVWWWW",
+    ".AA.....",   # 0  耳
+    "AKKA....",
+    "AKRKA...",
+    "AQRRQAAA",
+    "AQQQQQQQ",   # 4  頭（ほとんど頭だけ）
+    "AQRQQQQQ",
+    "AQQWJQQQ",   # 6  目
+    "AQQJJQQQ",
+    "AQSSQWWW",   # 8  ほお・口もと
+    ".AQQWWWN",   # 9  鼻
+    "..AQWWWV",
     "...AAVVV",
     "....ACCC",   # 12 胸
-    "....ABCC",
     ".....AAA",
 ])
 S_UP = mirror([
-    "..A.....",
-    ".AKA....",
-    ".AKQA...",
-    ".AQQQAAA",
-    "AQRQQQQQ",
+    ".AA.....",
+    "AKKA....",
+    "AKQKA...",
+    "AQQQQAAA",
     "AQQQQQQQ",
-    ".APQQQQQ",
-    "..APPQQQ",
+    "AQRQQQQQ",
+    "APQQQQQQ",
+    ".APPQQQQ",
     "...ABCCC",   # 8  背中
     "...ABCDC",
-    "...ABCCC",
-    "....AQQR",   # 11 しっぽの橙の帯
-    "....AQQQ",
-    "....ACDC",
+    "....AQQR",   # 10 しっぽの橙の帯
+    "...AQQQQ",
+    "...ACCCC",
+    "....ADDC",
     ".....AAA",
 ])
 S_SIDE = [
-    "..A.A...........",   # 0  耳
-    ".AKAKA......AA..",
-    ".AKQKQA....ACDA.",   # 2  しっぽの先
-    "AQRQQQQA..ACCQA.",
-    "AQEJQQQAAAAQRQA.",   # 4  目・しっぽの橙
-    "AQQQQQQACCCAQQA.",
-    "NWWQQPACCCCCCBA.",   # 6  鼻
-    "AVWWPACCCCCCCBA.",
-    ".AVWACCCCCCCBA..",
-    "..AABCCCCCBBA...",
-    "...ABBBBBBBA....",
+    "..AA.AA.........",   # 0  耳
+    ".AKKAKKA...AAA..",
+    ".AKRKRKA..ADDDA.",   # 2  しっぽの先（丸く）
+    "AQRRQQQQA.ACCCDA",
+    "AQQQQQQQAAAQRQQA",   # 4  しっぽの橙の帯
+    "AQWJQQQQQAAQQQQA",   # 5  目
+    "AQJJQQSQQACAQQBA",
+    "NWQQQQQQACCCAPA.",   # 7  鼻・ほお
+    "AWWQQQQACCCCCBA.",
+    ".AVWWQACCCCCBA..",
+    "..AAAACCCCCBA...",
+    "....ABBBBBBA....",
 ]
-S_LEGS = {0: ["...ACCA.ACCA....", "...ACCA.ACCA....", "..AKKKAAKKKA....", "................"],
-          1: ["..ACCA...ABBA...", ".ACCA.....ABBA..", "AKKKA.....AKKKA.", "................"],
-          2: ["....ABBAACCA....", ".....ABBACCA....", ".....AKKKKKKA...", "................"]}
+S_LEGS = {0: ["....ACA.ACA.....", "...AKKAAKKA.....", "................", "................"],
+          1: ["...ACA...ABA....", "..AKKA...AKKA...", "................", "................"],
+          2: [".....ABAACA.....", ".....AKKKKA.....", "................", "................"]}
 
 
 def small_frames():
     fr = {}
     for f in range(3):
         g = list(S_DOWN) + ["." * 16]
-        a, b = {0: (11, 11), 1: (12, 10), 2: (10, 12)}[f]
+        a, b = {0: (10, 10), 1: (11, 9), 2: (9, 11)}[f]
         put_leg(g, a, True); put_leg(g, b, False)
         fr[f"down{f}"] = g
         g = list(S_UP) + ["." * 16]
-        a, b = {0: (8, 8), 1: (9, 7), 2: (7, 9)}[f]
+        a, b = {0: (7, 7), 1: (8, 6), 2: (6, 8)}[f]
         put_leg(g, a, True); put_leg(g, b, False)
         if f:
             sway(g, range(11, 15), -1 if f == 1 else 1)
