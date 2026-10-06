@@ -68,7 +68,7 @@ export const PROP_BOX: Partial<Record<MapPropKind, [number, number, number, numb
   "statue-soldier": [-9, 7, -41, -1],
   "statue-traveler": [-8, 7, -37, -1],
   "statue-winged": [-11, 10, -39, -1],
-  "tree": [-26, 25, -69, -1],
+  "tree": [-26, 26, -69, -1],
   "tree-dead": [-19, 19, -36, -1],
   "tree-snow": [-16, 15, -40, -1],
   "tree-pine": [-15, 15, -42, -1],
