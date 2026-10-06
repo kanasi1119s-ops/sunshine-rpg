@@ -4033,7 +4033,7 @@
  },
  {
   "id": "angel-06",
-  "status": "todo",
+  "status": "done",
   "kind": "extra",
   "name": "氷の天使",
   "group": "天使",
@@ -4043,7 +4043,7 @@
    190,
    230
   ],
-  "prompt": "an angel with wings of clear ice crystals, pale blue robes, a crown of icicles, cold mist around",
+  "prompt": "an angel with two huge spread wings made of pale blue ice crystals, clearly visible wings wider than its body, pale blue robes, a crown of icicles, cold mist around",
   "size": 128,
   "ncol": 24,
   "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
@@ -4051,11 +4051,13 @@
    "human, human face",
    "statue"
   ],
-  "bg": "dark"
+  "bg": "dark",
+  "draft": "angel-06_1",
+  "seed_base": 6001
  },
  {
   "id": "angel-07",
-  "status": "todo",
+  "status": "done",
   "kind": "extra",
   "name": "天秤の天使",
   "group": "天使",
@@ -4073,7 +4075,53 @@
    "human, human face",
    "statue"
   ],
-  "bg": "dark"
+  "bg": "dark",
+  "draft": "angel-07_0"
+ },
+ {
+  "status": "todo",
+  "kind": "extra",
+  "id": "zenkan-hand2",
+  "name": "全観の手（部品・写実）",
+  "group": "部品",
+  "shape": "tall",
+  "tone": [
+   190,
+   150,
+   80
+  ],
+  "size": 96,
+  "ncol": 24,
+  "seed_base": 5100,
+  "prompt": "close-up of one raised open right hand of an ancient gilded bronze statue, palm facing the viewer, five fingers held together pointing up, thumb slightly apart, realistic anatomy, detailed knuckles and palm lines, cut at the wrist, isolated object",
+  "neg_extra": "arm, sleeve, extra fingers, missing fingers, fused fingers, deformed hand, person, face",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ]
+ },
+ {
+  "status": "done",
+  "kind": "extra",
+  "id": "zenkan-hand3",
+  "name": "全観の手（部品・写実2）",
+  "group": "部品",
+  "shape": "tall",
+  "tone": [
+   200,
+   165,
+   90
+  ],
+  "size": 96,
+  "ncol": 24,
+  "seed_base": 5300,
+  "prompt": "a single realistic golden hand sculpture, open palm facing forward in a blessing gesture, elegant long fingers, soft shading, polished gold with dark patina in the creases, wrist only, product photo",
+  "neg_extra": "arm, sleeve, extra fingers, missing fingers, fused fingers, deformed hand, person, face",
+  "neg_drop": [
+   "human, human face",
+   "statue"
+  ],
+  "draft": "zenkan-hand3_0"
  },
  {
   "id": "angel-08",
