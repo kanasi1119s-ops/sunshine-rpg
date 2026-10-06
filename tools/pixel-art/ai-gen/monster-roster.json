@@ -3417,7 +3417,7 @@
  {
   "id": "enc-world-air-3",
   "prompt": "a sky droplet, a floating drop of pale sky blue with a cloud inside and a tiny sun reflection",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-air-3",
   "kind": "mob",
   "name": "空のしずく",
@@ -3430,12 +3430,13 @@
    240
   ],
   "bg": "dark",
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-world-air-3_1"
  },
  {
   "id": "enc-world-air-4",
   "prompt": "a lightning crystal, a jagged yellow crystal crackling with electricity, floating",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-air-4",
   "kind": "mob",
   "name": "雷の結晶",
@@ -3446,12 +3447,13 @@
    230,
    210,
    90
-  ]
+  ],
+  "draft": "enc-world-air-4_1"
  },
  {
   "id": "enc-world-air-5",
   "prompt": "a cloud insect, a dragonfly with wings of mist and a long pale body",
-  "status": "todo",
+  "status": "draft",
   "key": "enemy:enc-world-air-5",
   "kind": "mob",
   "name": "雲の虫",
