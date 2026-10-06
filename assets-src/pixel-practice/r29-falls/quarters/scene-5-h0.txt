@@ -170,11 +170,11 @@
 ......................................................................................KG.DcKKKKKKQQcQKKDDKQKKDKKKKGKKKKccccGGKKKgKQcKKgggjcgcgggcccQcUSURYUWUSWU
 ......................................................................................KKGGGcKKKKKQQQcKKKDDQQKDDKKKDKKQKcccgGGKKKcgQcKKgggjgggcggccKcgUSURYUWUSWU
 .................................................................................K...KK.KGGKKKKKKcQQQQKKDDKQKcDKccGGcQKQgcgGGKQQcgccKKgjggjjjgcjcccgUUSURYUWUSWU
-...................................................................................GGKKKcKKGKKQQKQcQQQKKDDDQQccccgKGKQQQgcggcKQcgggeccgjjgjjjggjcggjUUSUSYUWUSWU
-.................................................................................QKKcKKKKKKKKKKQQQcQQQQKDDDKcKccccQGKcQQgcQggcccgggecccjjgjjjjjjgjjjUURWSYUWUNWU
-..............................................................................V....KcGKKKcKKKKKQQQccQQQKGDDGQQcDGccKGcQQcgQggjggjjhjggcjjjgjjjjjgjjjUYRWSYUYUNUU
-............................................................................c....QccKGKKKKKKKKKKQQccQQQQKGDDQcKcGccQGcgcggccgjjggjgjgjgjjjgjjjjjjjgjUYUYYYUYURUR
-.......................................b...........................h........K.VV.cKcKKKKKKKKccKKQQQQQQQQcKGDKQQcKQcgKgjgjgccgjjjggjjjjjjjjjjgjjgjjgjjYURYYRUSRUR
+...................................................................................GGKKKcKKGKKQQKQcQQQKKDDDQQccccgKGKQQQgcggcKQcgggcccgjjgjjjggjcggjUUSUSYUWUSWU
+................................................................e...b............QKKcKKKKKKKKKKQQQcQQQQKDDDKcKccccQGKcQQgcQggcccggggcccjjgjjjjjjgjjjUURWSYUWUNWU
+...............................................................e...e..........V....KcGKKKcKKKKKQQQccQQQKGDDGQQcDGccKGcQQcgQggjggjjgjggcjjjgjjjjjgjjjUYRWSYUYUNUU
+.................b.............................................h...e........c....QccKGKKKKKKKKKKQQccQQQQKGDDQcKcGccQGcgcggccgjjggjgjgjgjjjgjjjjjjjgjUYUYYYUYURUR
+.................b.....................b...........................h........K.VV.cKcKKKKKKKKccKKQQQQQQQQcKGDKQQcKQcgKgjgjgccgjjjggjjjjjjjjjjgjjgjjgjjYURYYRUSRUR
 ................b.....................b...........b............................QccQKKKKKKKKKKccKKQQQQQQQcccGcccQcccgQgjjgjgggjjjggjjjjjjjgjjgbjgjjgjjYRYYYRUSYUR
 ..............b.e.....................e...........b.....................K..QQ.KKcccKKKKKKcKKKcccKcQQQQQQQcgKGgccQgcggcjjjjgjgbjjjgggjjgjjgjjgbjgjjgjjSUUYYRUSYUR
 ..............b.h.....................e...........b......................K...QQQKccQKKKcKKcKKKccKKcQQQQcQQcgKgggccjcjcjjjjjgjbjjgjjgjjgjjgjjgbjgjjgjjYYUYYYUSRRN
