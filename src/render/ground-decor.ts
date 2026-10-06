@@ -1,5 +1,7 @@
 import { getTileId, type TileMap } from "../game/map/tile-map";
 import { hashCell } from "../game/color-utils";
+import { getSpriteCanvas } from "../game/art/sprite";
+import { SPRITE_DATA } from "../game/art/sprite-data.generated";
 import type { Camera } from "./camera";
 
 /**
@@ -22,7 +24,6 @@ const GRASS_LIGHT = "#86bf5c";
 const BANK = "#4a3c2a";
 const SHALLOW = "#7ab6d8";
 const FOAM = "#c4e4f2";
-const SHADOW = "rgba(14, 40, 24, 0.34)";
 const FLOWERS = ["#f4f0e0", "#f2c14e", "#e86a8a", "#9a8ae8"];
 
 function kindAt(map: TileMap, x: number, y: number): Kind {
@@ -232,10 +233,8 @@ function erodeMass(ctx: CanvasRenderingContext2D, map: TileMap, ox: number, oy: 
   const forest = art === "worldforest" || art === "snowforest";
   // 同じ模様のくり返しに見えないよう、塊の内側の明暗を、タイルごとに少しゆらす
   const tone = hashCell(tx * 5 + 1, ty * 11 + 3) % 6;
-  if (tone === 0) {
-    ctx.fillStyle = "rgba(0,0,0,0.13)";
-    ctx.fillRect(ox, oy, s, s);
-  } else if (tone === 1 && !forest) {
+  // 2026-10-06 人間の指示「フィールドに謎の影」: タイルまるごと暗くする四角（森・山の中に四角い影が見えた）はやめた
+  if (tone === 1 && !forest) {
     ctx.fillStyle = "rgba(255,255,255,0.07)";
     ctx.fillRect(ox, oy, s, s);
   }
@@ -339,16 +338,15 @@ function beachEdge(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: num
   }
 }
 
-/** 木の下（南どなりの草地）に落ちる影。市松でなじませる。 */
+/** 木の下（南どなりの草地）に落ちる影。2026-10-06「謎の影」: 四角い暗い帯に見えたので、うすく、深さをなめらかにゆらし、下へ行くほど消える。 */
 function treeShadow(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: number, tx: number, ty: number): void {
   for (let i = 0; i < s; i++) {
-    const h = hashCell(tx * 19 + i, ty * 23);
-    const depth = 3 + (h % 3);
+    const w = tx * s + i;
+    const a = Math.floor(w / 6), f = w / 6 - a, t = f * f * (3 - 2 * f);
+    const v = (k: number): number => (hashCell(k * 11 + 5, ty * 7 + 1) % 1000) / 1000;
+    const depth = 1 + Math.round((v(a) * (1 - t) + v(a + 1) * t) * 3);
     for (let d = 0; d < depth; d++) {
-      if (d === depth - 1 && (i + d) % 2 === 0) {
-        continue;
-      }
-      dot(ctx, ox + i, oy + d, SHADOW);
+      dot(ctx, ox + i, oy + d, `rgba(14,40,24,${(0.2 * (1 - d / (depth + 0.5))).toFixed(3)})`);
     }
   }
 }
@@ -367,13 +365,14 @@ function smoothNoise(wx: number, wy: number): number {
 
 /** 草地の色むら: 明るい日なた・暗い日かげを、4ドット単位のうすい色で重ねる（広い草原の単調さをなくす）。 */
 function grassPatches(ctx: CanvasRenderingContext2D, ox: number, oy: number, tx: number, ty: number): void {
-  for (let by = 0; by < 4; by++) {
-    for (let bx = 0; bx < 4; bx++) {
-      const n = smoothNoise(tx * 16 + bx * 4 + 2, ty * 16 + by * 4 + 2) - 0.5;
-      const a = Math.round(Math.abs(n) * 0.5 * 100) / 100;
-      if (a < 0.035) continue;
+  // 2026-10-06「フィールドに謎の影」: 暗いむらが、四角いしみ（影）に見えたので、2ドット単位でなめらかにし、暗い側はうすく
+  for (let by = 0; by < 8; by++) {
+    for (let bx = 0; bx < 8; bx++) {
+      const n = smoothNoise(tx * 16 + bx * 2 + 1, ty * 16 + by * 2 + 1) - 0.5;
+      const a = Math.round(Math.abs(n) * (n > 0 ? 0.4 : 0.18) * 100) / 100;
+      if (a < 0.03) continue;
       ctx.fillStyle = n > 0 ? `rgba(190,226,96,${a})` : `rgba(8,44,28,${a})`;
-      ctx.fillRect(ox + bx * 4, oy + by * 4, 4, 4);
+      ctx.fillRect(ox + bx * 2, oy + by * 2, 2, 2);
     }
   }
 }
@@ -427,6 +426,97 @@ function grassDecor(ctx: CanvasRenderingContext2D, ox: number, oy: number, s: nu
     dot(ctx, px, py, GRASS_LIGHT);
     dot(ctx, px + 2, py + 1, GRASS_LIGHT);
     dot(ctx, px + 1, py + 2, GRASS_DARK);
+  }
+}
+
+/** 水のタイルの、岸からの近さ（1〜4。水でなければ 0）。地図ごとに一度だけ数えて、おぼえておく。 */
+const waterNearCache = new WeakMap<object, Int8Array>();
+function waterNear(map: TileMap, tx: number, ty: number): number {
+  const { width: w, height: h } = map.data;
+  if (tx < 0 || ty < 0 || tx >= w || ty >= h) return 0;
+  let c = waterNearCache.get(map.data);
+  if (!c) {
+    c = new Int8Array(w * h).fill(-1);
+    waterNearCache.set(map.data, c);
+  }
+  const i = ty * w + tx;
+  if (c[i] < 0) c[i] = waterNearRaw(map, tx, ty);
+  return c[i];
+}
+
+function waterNearRaw(map: TileMap, tx: number, ty: number): number {
+  if (kindAt(map, tx, ty) !== "water") return 0;
+  for (let r = 1; r <= 3; r++) {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) === r && kindAt(map, tx + dx, ty + dy) !== "water") return r;
+      }
+    }
+  }
+  return 4;
+}
+
+/** 町の草むら（treeCanopy）のふちを、四角くせず、波うつ自然な形にする（2026-10-06 人間の指示「草むらのドットもこだわって自然な形に」）。
+ *  外がわ（草地・道）に面した辺を、となりの地面の絵で、なめらかにゆれる深さ（1〜5ドット）だけ食い込ませ、
+ *  食い込みのすぐ内がわに、草むらの影の線と、ところどころ明るい葉先をつける。かどは丸くする。 */
+function canopyEdge(ctx: CanvasRenderingContext2D, map: TileMap, ox: number, oy: number, s: number, tx: number, ty: number): void {
+  const outside = (x: number, y: number): "grass" | "path" | null => {
+    const k = kindAt(map, x, y);
+    return k === "grass" ? "grass" : k === "path" ? "path" : null;
+  };
+  const texOf = (kind: "grass" | "path", wx: number, wy: number): HTMLCanvasElement | null => {
+    const key = kind === "path" ? "terrain:dirt" : (["terrain:grass-a", "terrain:grass-b"][hashCell(Math.floor(wx / 128), Math.floor(wy / 128)) % 2]);
+    return getSpriteCanvas(key, SPRITE_DATA);
+  };
+  const put = (kind: "grass" | "path", px: number, py: number): void => {
+    const wx = tx * s + px, wy = ty * s + py;
+    const tex = texOf(kind, wx, wy);
+    if (!tex) return;
+    ctx.drawImage(tex, ((wx % 128) + 128) % 128, ((wy % 128) + 128) % 128, 1, 1, ox + px, oy + py, 1, 1);
+  };
+  // 深さ: 世界の位置で決まるなめらかなゆれ（となりのタイルとつながる）
+  const depthAt = (w: number, salt: number): number => {
+    const a = Math.floor(w / 5), f = w / 5 - a;
+    const v = (k: number): number => (hashCell(k * 7 + salt, salt * 13 + 3) % 1000) / 1000;
+    const t = f * f * (3 - 2 * f);
+    return 1 + Math.round((v(a) * (1 - t) + v(a + 1) * t) * 4);
+  };
+  const sides: Array<[number, number, (i: number, d: number) => [number, number], (i: number) => number, number]> = [
+    [0, -1, (i, d) => [i, d], (i) => tx * s + i, 1],
+    [0, 1, (i, d) => [i, s - 1 - d], (i) => tx * s + i, 2],
+    [-1, 0, (i, d) => [d, i], (i) => ty * s + i, 3],
+    [1, 0, (i, d) => [s - 1 - d, i], (i) => ty * s + i, 4],
+  ];
+  for (const [dx, dy, at, along, salt] of sides) {
+    const kind = outside(tx + dx, ty + dy);
+    if (!kind) continue;
+    const lineSalt = salt * 97 + (dx !== 0 ? tx + (dx > 0 ? 1 : 0) : ty + (dy > 0 ? 1 : 0)) * 31;
+    for (let i = 0; i < s; i++) {
+      const depth = depthAt(along(i), lineSalt);
+      for (let d = 0; d < depth; d++) {
+        const [px, py] = at(i, d);
+        put(kind, px, py);
+      }
+      const [qx, qy] = at(i, depth);
+      dot(ctx, ox + qx, oy + qy, "rgba(10,40,18,0.42)");                    // 草むらのふちの影
+      if (hashCell(along(i) + salt, lineSalt) % 5 === 0) {
+        const [hx, hy] = at(i, depth + 1);
+        dot(ctx, ox + hx, oy + hy, "rgba(170,220,110,0.55)");                 // 明るい葉先
+      }
+    }
+  }
+  // かど: 両どなりが外なら、丸く
+  const corners: Array<[number, number, number, number]> = [[-1, -1, 0, 0], [1, -1, s - 1, 0], [-1, 1, 0, s - 1], [1, 1, s - 1, s - 1]];
+  for (const [dx, dy, cx, cy] of corners) {
+    const kx = outside(tx + dx, ty), ky = outside(tx, ty + dy);
+    if (!kx || !ky) continue;
+    const r = 5 + (hashCell(tx * 13 + dx, ty * 29 + dy) % 3);
+    for (let y = 0; y < r; y++) {
+      for (let x = 0; x < r; x++) {
+        if ((r - x - 0.5) ** 2 + (r - y - 0.5) ** 2 <= r * r) continue;
+        put(kx, cx === 0 ? x : s - 1 - x, cy === 0 ? y : s - 1 - y);
+      }
+    }
   }
 }
 
@@ -496,11 +586,53 @@ export function renderGroundDecor(ctx: CanvasRenderingContext2D, map: TileMap, c
             }
           }
         }
-        if (near >= 2) {
-          ctx.fillStyle = `rgba(6,24,64,${near === 2 ? 0.1 : near === 3 ? 0.18 : 0.26})`;
-          ctx.fillRect(ox, oy, s, s);
+        // 深さの色は、タイルごとの四角にせず、となりのタイルとの間をなめらかにつなぐ（2026-10-06「謎の影」: 湖に四角い暗い所が見えた）
+        const depthA = (x: number, y: number): number => {
+          const n = waterNear(map, x, y);
+          return n <= 1 ? 0 : n === 2 ? 0.1 : n === 3 ? 0.18 : 0.26;
+        };
+        for (let by = 0; by < 4; by++) {
+          for (let bx = 0; bx < 4; bx++) {
+            // タイルのまんなかどうしの間を、線形にまぜる（となりのタイル4つ）
+            const fx = (bx + 0.5) / 4 - 0.5, fy = (by + 0.5) / 4 - 0.5;
+            const ix = fx < 0 ? tx - 1 : tx, iy = fy < 0 ? ty - 1 : ty;
+            const wx = fx < 0 ? fx + 1 : fx, wy = fy < 0 ? fy + 1 : fy;
+            const a = (depthA(ix, iy) * (1 - wx) + depthA(ix + 1, iy) * wx) * (1 - wy) + (depthA(ix, iy + 1) * (1 - wx) + depthA(ix + 1, iy + 1) * wx) * wy;
+            if (a < 0.02) continue;
+            ctx.fillStyle = `rgba(6,24,64,${a.toFixed(3)})`;
+            ctx.fillRect(ox + bx * 4, oy + by * 4, 4, 4);
+          }
+        }
+        // 海（濃い青）と湖（明るい青）のテクスチャのさかいを、なめらかにまぜる（2026-10-06「謎の影」: 湖の中に、四角い濃い所が見えた）
+        if (map.data.tileTexture) {
+          const tex = (x: number, y: number): number => {
+            if (x < 0 || y < 0 || x >= map.data.width || y >= map.data.height || kindAt(map, x, y) !== "water") return -1;
+            const k = map.data.tileTexture?.[getTileId(map, 0, x, y)] ?? "";
+            return k.endsWith("w-sea") ? 1 : 0;
+          };
+          const here = tex(tx, ty);
+          const vAt = (x: number, y: number): number => { const v = tex(x, y); return v < 0 ? here : v; };
+          let mixed = false;
+          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) if (vAt(tx + dx, ty + dy) !== here) mixed = true;
+          if (mixed) {
+            for (let by = 0; by < 8; by++) {
+              for (let bx = 0; bx < 8; bx++) {
+                const fx = (bx + 0.5) / 8 - 0.5, fy = (by + 0.5) / 8 - 0.5;
+                const ix = fx < 0 ? tx - 1 : tx, iy = fy < 0 ? ty - 1 : ty;
+                const wx = fx < 0 ? fx + 1 : fx, wy = fy < 0 ? fy + 1 : fy;
+                const v = (vAt(ix, iy) * (1 - wx) + vAt(ix + 1, iy) * wx) * (1 - wy) + (vAt(ix, iy + 1) * (1 - wx) + vAt(ix + 1, iy + 1) * wx) * wy;
+                const d = v - here;
+                if (Math.abs(d) < 0.04) continue;
+                ctx.fillStyle = d > 0 ? `rgba(18,58,120,${(d * 0.55).toFixed(3)})` : `rgba(64,128,190,${(-d * 0.55).toFixed(3)})`;
+                ctx.fillRect(ox + bx * 2, oy + by * 2, 2, 2);
+              }
+            }
+          }
         }
         waterShimmer(ctx, ox, oy, tx, ty, nowMs);
+      }
+      if (kind === "tree" && artHere === "treeCanopy" && !map.data.tileTexture) {
+        canopyEdge(ctx, map, ox, oy, s, tx, ty);
       }
       if (kind === "tree" && map.data.snowy) {
         snowOnTree(ctx, ox, oy, s, tx, ty, kindAt(map, tx, ty - 1) !== "tree");
