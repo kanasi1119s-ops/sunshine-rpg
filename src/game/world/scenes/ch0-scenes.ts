@@ -237,7 +237,7 @@ export const CH0_SCENES: StoryScene[] = [
     commands: [
       n("日がすっかり暮れて、港の灯りが、ひとつ、またひとつと、ともりはじめた。"),
       n("ユーリは、家へ帰った。"),
-      { type: "warp", mapId: "yuri-home", tileX: 6, tileY: 7 },
+      { type: "warp", mapId: "yuri-home", tileX: 7, tileY: 8 },   // ユーリの家の玄関のすぐ内がわ（yuri-home.ts の YURI_HOME_ENTRY）
     ],
   },
   {
