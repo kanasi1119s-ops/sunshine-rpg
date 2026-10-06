@@ -182,6 +182,7 @@ if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     only = [a for a in sys.argv[1:] if not a.startswith("--")]                # 名前をならべると、その絵だけ
     targets = TARGETS + [("r20-props", n, n) for n in ("fountain-1", "fountain-2", "fountain-3")]
+    targets += [("r20-props", n, n) for n in only if n not in {t[1] for t in targets}]   # 名前で指定した、ほかの r20-props の絵（階段など）
     for d, name, pname in targets:
         if only and name not in only:
             continue

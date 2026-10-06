@@ -119,7 +119,10 @@ export function addInnInteriors(maps: Record<string, TileMapData>, npcsByMap: Re
     addFurniture(f1, id1, "table", 11, 4, 0, TABLE_LINES[0]);
     f1.npcs.push({ id: `${id1}-guest`, tileX: 16, tileY: 4, color: "#a0a070", commands: [{ type: "message", text: "旅の途中でね。大部屋は安いし、いろんな人と話せるから好きなんだ。", speaker: "旅の人" }] });
     // 階段ホール
-    addFurniture(f1, id1, "shelf", 26, 2, 1, SHELF_LINES[1]);
+    // 2026-10-06「階段もちゃんとしたのを作ろう」: 棚をやめ、奥の壁ぞいに右へ上がる階段（prop:stairs-up。いちばん左 (26,2) が上り口）
+    f1.props.push({ kind: "stairs-up", tileX: 27, tileY: 2 });
+    blockAt(f1, 27, 2);
+    blockAt(f1, 28, 2);
     f1.props.push({ kind: "flowerbed", tileX: 25, tileY: 5 });
     // 受付: カウンター（前から話しかけられる）・奥の店員
     for (let x = 12; x <= 17; x++) {
@@ -133,7 +136,6 @@ export function addInnInteriors(maps: Record<string, TileMapData>, npcsByMap: Re
     // 出入り口（玄関）と階段
     f1.ground[(INN_H - 1) * INN_W + 14] = FLOOR;
     f1.collision[(INN_H - 1) * INN_W + 14] = 0;
-    f1.ground[3 * INN_W + 28] = STAIR;
 
     // ── 2階 ──
     const f2 = newFloor();
@@ -148,13 +150,13 @@ export function addInnInteriors(maps: Record<string, TileMapData>, npcsByMap: Re
     addFurniture(f2, id2, "shelf", 26, 2, 1, SHELF_LINES[1]);
     addFurniture(f2, id2, "table", 23, 4, 1, TABLE_LINES[2]);
     f2.npcs.push({ id: `${id2}-guest`, tileX: 18, tileY: 4, color: "#b07090", commands: [{ type: "message", text: "……ふあ。長い旅で、へとへとなの。この部屋の窓から見える夕日が、とてもきれいでね。", speaker: "疲れた旅人" }] });
-    f2.ground[9 * INN_W + 28] = STAIR;
+    f2.props.push({ kind: "stairs-down", tileX: 28, tileY: 9 });   // 床の下り口
 
     maps[id1] = mapOf(f1, [
       { tileX: 14, tileY: INN_H - 1, targetMapId: town, targetTileX: ret.x, targetTileY: ret.y },
-      { tileX: 28, tileY: 3, targetMapId: id2, targetTileX: 27, targetTileY: 9 },
+      { tileX: 26, tileY: 2, targetMapId: id2, targetTileX: 27, targetTileY: 9 },
     ]);
-    maps[id2] = mapOf(f2, [{ tileX: 28, tileY: 9, targetMapId: id1, targetTileX: 27, targetTileY: 3 }]);
+    maps[id2] = mapOf(f2, [{ tileX: 28, tileY: 9, targetMapId: id1, targetTileX: 26, targetTileY: 3 }]);
     npcsByMap[id1] = f1.npcs;
     npcsByMap[id2] = f2.npcs;
     DUNGEON_PARENT[id1] = town;

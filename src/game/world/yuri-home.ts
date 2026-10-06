@@ -18,9 +18,14 @@ export const YURI_ATTIC = "yuri-home-attic";
 export const YURI_HOME_DOOR = { x: 20, y: 8 };
 /** 1階: 玄関のすぐ内がわ・梯子の下。屋根裏: 梯子のとなり・はじめに立つ所。 */
 export const YURI_HOME_ENTRY = { tileX: 6, tileY: 7 };
-export const YURI_HOME_LADDER_FOOT = { tileX: 10, tileY: 3 };
+export const YURI_HOME_LADDER_FOOT = { tileX: 11, tileY: 3 };
 export const YURI_ATTIC_LADDER_TOP = { tileX: 3, tileY: 5 };
 export const YURI_ATTIC_START = { tileX: 4, tileY: 4 };
+/** 階段のマス（1階は上り口、屋根裏は下り口）。2026-10-06 人間の指示「ユーリ自分の部屋から出れないよ」「階段もちゃんとしたのを作ろう」:
+ *  梯子（向き合って調べる）をやめ、歩いて乗ると上り下りできる階段にした。1階は壁ぞいに右へ上がる3マス幅の階段（prop:stairs-up。
+ *  いちばん左の段が上り口）、屋根裏は床の下り口（prop:stairs-down）。 */
+export const YURI_HOME_LADDER = { tileX: 11, tileY: 2 };
+export const YURI_ATTIC_LADDER = { tileX: 2, tileY: 5 };
 
 interface Furniture {
   id: string;
@@ -63,12 +68,6 @@ const FLOOR_FURNITURE: Furniture[] = [
   { id: "yuri-home-hearth", x: 2, y: 2, wide: true, commands: [say("かまど。母の手入れで、れんがのすみまで、きれいにみがかれている。")] },
   { id: "yuri-home-tansu", x: 5, y: 2, wide: true, commands: [say("箪笥。母のエプロンと、洗いたての手ぬぐいがしまってある。")] },
   { id: "yuri-home-shelf", x: 8, y: 2, wide: true, commands: [say("本棚。古い本が、ほこりひとつなく並んでいる。母が、毎日ふいているらしい。")] },
-  {
-    id: "yuri-home-ladder",
-    x: 11,
-    y: 2,
-    commands: [say("梯子をのぼって、屋根裏の自分の部屋へ。"), { type: "warp", mapId: YURI_ATTIC, ...YURI_ATTIC_LADDER_TOP }],
-  },
   { id: "yuri-home-table", x: 6, y: 5, commands: [say("食卓。ふたり分の椀と匙が、いつもの場所に置いてある。")] },
 ];
 
@@ -76,12 +75,6 @@ const ATTIC_FURNITURE: Furniture[] = [
   { id: "yuri-attic-desk", x: 2, y: 2, wide: true, commands: [say("ユーリの机。「調査員の手引き」と、書きかけの日記。小さな窓から、港の灯りが見える。")] },
   { id: "yuri-attic-papers", x: 4, y: 2, commands: [say("町で聞いた話を書きとめた帳面。表紙に、大きな字で「困っている人がいたら、まず話を聞く」と書いてある。")] },
   { id: "yuri-attic-bed", x: 6, y: 2, wide: true, commands: [say("自分のベッドだ。"), { type: "inn", price: 0, home: true }] },
-  {
-    id: "yuri-attic-ladder",
-    x: 2,
-    y: 5,
-    commands: [say("梯子をおりて、台所へ。"), { type: "warp", mapId: YURI_HOME, ...YURI_HOME_LADDER_FOOT }],
-  },
 ];
 
 const HARUKA_TALK: EventCommand[] = [
@@ -104,6 +97,12 @@ const HARUKA_TALK: EventCommand[] = [
     ],
   },
 ];
+
+/** 1階の階段: 上り口（いちばん左の段）より右の2段は、通れない。 */
+function stairBlock(r: ReturnType<typeof room>): ReturnType<typeof room> {
+  for (const dx of [1, 2]) if (r.collision) r.collision[YURI_HOME_LADDER.tileY * r.width + YURI_HOME_LADDER.tileX + dx] = 1;
+  return r;
+}
 
 function furnitureNpcs(list: Furniture[]): Npc[] {
   return list.map((f) => ({ id: f.id, tileX: f.x, tileY: f.y, color: "#7a5228", commands: f.commands }));
@@ -135,11 +134,20 @@ export function addYuriHome(maps: Record<string, TileMapData>, npcsByMap: Record
   door.targetTileX = YURI_HOME_ENTRY.tileX;
   door.targetTileY = YURI_HOME_ENTRY.tileY;
   maps[YURI_HOME] = {
-    ...room(13, 9, 6, FLOOR_FURNITURE),
+    ...stairBlock(room(15, 9, 6, FLOOR_FURNITURE)),
     ...look,
-    exits: [{ tileX: 6, tileY: 8, targetMapId: "touri-town", targetTileX: back.x, targetTileY: back.y }],
+    exits: [
+      { tileX: 6, tileY: 8, targetMapId: "touri-town", targetTileX: back.x, targetTileY: back.y },
+      { tileX: YURI_HOME_LADDER.tileX, tileY: YURI_HOME_LADDER.tileY, targetMapId: YURI_ATTIC, targetTileX: YURI_ATTIC_LADDER_TOP.tileX, targetTileY: YURI_ATTIC_LADDER_TOP.tileY },
+    ],
+    props: [{ kind: "stairs-up", tileX: YURI_HOME_LADDER.tileX + 1, tileY: YURI_HOME_LADDER.tileY }],
   };
-  maps[YURI_ATTIC] = { ...room(9, 7, null, ATTIC_FURNITURE), ...look, exits: [] };
+  maps[YURI_ATTIC] = {
+    ...room(9, 7, null, ATTIC_FURNITURE),
+    ...look,
+    exits: [{ tileX: YURI_ATTIC_LADDER.tileX, tileY: YURI_ATTIC_LADDER.tileY, targetMapId: YURI_HOME, targetTileX: YURI_HOME_LADDER_FOOT.tileX, targetTileY: YURI_HOME_LADDER_FOOT.tileY }],
+    props: [{ kind: "stairs-down", tileX: YURI_ATTIC_LADDER.tileX, tileY: YURI_ATTIC_LADDER.tileY }],
+  };
   DUNGEON_PARENT[YURI_HOME] = "touri-town";
   DUNGEON_PARENT[YURI_ATTIC] = "touri-town";
   npcsByMap[YURI_HOME] = [
