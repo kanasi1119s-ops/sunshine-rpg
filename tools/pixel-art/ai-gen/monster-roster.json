@@ -3084,7 +3084,7 @@
  {
   "id": "enc-world-5-3",
   "prompt": "an ash insect, a grey beetle with a soot-covered shell and glowing orange joints",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-5-3",
   "kind": "mob",
   "name": "灰の虫",
@@ -3095,28 +3095,31 @@
    100,
    95,
    90
-  ]
+  ],
+  "draft": "enc-world-5-3_0"
  },
  {
   "id": "enc-world-5-4",
-  "prompt": "a volcano stone creature, a dark basalt column rock with a magma mouth, on stubby legs",
+  "prompt": "a creature made of dark hexagonal basalt stone columns, a wide open glowing orange magma mouth, cracks of lava, short stubby stone legs, side view",
   "status": "todo",
   "key": "enemy:enc-world-5-4",
   "kind": "mob",
   "name": "火山の石",
   "zone": "world-5",
   "level": 24,
-  "shape": "big",
+  "shape": "ground",
   "tone": [
    70,
    60,
    60
-  ]
+  ],
+  "draft": "enc-world-5-4_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-5-5",
   "prompt": "a magma droplet, a heavy floating drop of glowing magma with a black cooled skin",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-5-5",
   "kind": "mob",
   "name": "マグマのしずく",
@@ -3127,7 +3130,8 @@
    200,
    70,
    30
-  ]
+  ],
+  "draft": "enc-world-5-5_0"
  },
  {
   "id": "enc-world-6-0",
