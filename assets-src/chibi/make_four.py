@@ -90,11 +90,21 @@ for f in range(3):
 side0 = [list(r) for r in c.frames["left0"]]
 for f in (1, 2):
     g = c.frames[f"left{f}"]
-    for y in range(15, 22):                       # うしろの髪（x=11より後ろ）をコマ0からとり、1ドット後ろへふくらませる
+    for y in range(13, 22):                       # うしろの髪（x=11より後ろ）は、まずコマ0にそろえる
         for x in range(11, 16):
             g[y][x] = side0[y][x]
-        for x in range(15, 11, -1):
-            g[y][x] = side0[y][x - 1]
+    pass
+# 横向きのうしろ髪のすそ（x=11〜15、17〜21行め）を、髪の色の形で描きなおす（人間の指示「横から見た髪の動きまだ違和感あります」）。
+# ミナの横向きのように、すそは先ほど大きく後ろへはね、縁取りだけの棒にならないようにする。コマ1は大きく、コマ2は小さくはねる。
+SIDE_TIP = {
+    0: ["BBDA.", "BBDA.", "ADBA.", "ADDA.", "AAA.."],
+    1: ["BBBDA", "BBBDA", "ADBBA", "ADDBA", "AAAA."],
+    2: ["BBDA.", "BBDA.", "ADBBA", "ADDA.", "AAA.."],
+}
+for f in range(3):
+    g = c.frames[f"left{f}"]
+    for i, s in enumerate(SIDE_TIP[f]):
+        set_cols(g, 17 + i, 11, s)
 for f in range(3):
     c.frames[f"right{f}"] = [r[::-1] for r in c.frames[f"left{f}"]]
 build("エルフの弓使い", "elf-archer", c)
