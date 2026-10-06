@@ -31,9 +31,10 @@ const ARCHIVE_GATE_POS = { x: 12, y: 0 };
 const CHURCH_FOOT = { x: 25, y: 12 };   // 2026-10-06 人間の指示「教会の場所変えよう右側の空間空いているからそこにしよう」。町を東へ広げた区域（x 24〜、town-expand.ts）
 /** 聖堂の扉（足もとのすぐ下。上へ押すと中へ入る）。 */
 export const KIRI_CHURCH_TOWN_DOOR = { x: CHURCH_FOOT.x, y: CHURCH_FOOT.y + 1 };
-const HOSTEL_ORIGIN = { x: 5, y: 3 };
-/** 民家（3x2 の壁のかたまり。町の家の絵になり、中がつく）。2026-10-06 人間の指示「民家を増やして」。 */
-const HOUSES: Array<[number, number]> = [[2, 8], [6, 8], [2, 12], [7, 12], [13, 3], [16, 9], [19, 9]];
+/** 民家（3x2 の壁のかたまり。町の家の絵になり、中がつく）。2026-10-06 人間の指示「民家を増やして」「ほかの町と同じ感じにして」:
+ *  ほかの町と同じく、ならべず、間をあけて、ずらして散らす。いちばん目の家が巡礼者の宿坊。 */
+const HOUSES: Array<[number, number]> = [[7, 6], [2, 3], [2, 10], [8, 12], [14, 3], [18, 6]];
+const HOSTEL_ORIGIN = { x: HOUSES[0][0], y: HOUSES[0][1] };
 
 /**
  * 第5章の舞台、断崖に張り付く古い宗教都市・霧断崖（`docs/story/structure.md`「第5章（霧断崖）」参照）。
