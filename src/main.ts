@@ -133,8 +133,9 @@ import { createFushimaKanshitakuYugami } from "./game/battle/chapter7-enemies";
 import { CHAPTER7_OPENING_COMMANDS } from "./game/world/chapter7-world";
 import { createToushinBanninYugami } from "./game/battle/chapter8-enemies";
 import { CHAPTER8_OPENING_COMMANDS } from "./game/world/chapter8-world";
-import { createKyotoukyuEdreaYugami } from "./game/battle/chapter9-enemies";
-import { CHAPTER9_OPENING_COMMANDS } from "./game/world/chapter9-world";
+import { createKyotoukyuDrowse, createKyotoukyuEdreaFirst, createKyotoukyuEdreaYugami, createKyotoukyuGuardian } from "./game/battle/chapter9-enemies";
+import { DROWSE_BATTLES, GUARDIAN_DEFEATED_FLAG } from "./game/world/chapter9-trials";
+import { CHAPTER9_AFTER_VICTORY, CHAPTER9_OPENING_COMMANDS, EDREA_FIRST_DEFEATED_FLAG } from "./game/world/chapter9-world";
 import { createDeepEchoYugami, createShogenYugami } from "./game/battle/chapter10-enemies";
 import { DEEP_ENTRY } from "./game/map/chapter10/deep-maps";
 import { createGodYugami, GODS } from "./game/battle/chapter11-enemies";
@@ -652,6 +653,8 @@ const MAP_BGM_ID: Record<string, string> = {
   "kyotoukyu-court": "kyoto-road",
   "kyotoukyu-corridor": "kyoto-road",
   "kyotoukyu-sanctum": "unease",
+  "kyotoukyu-stair": "kyoto-road",
+  "kyotoukyu-dream": "unease",
   "deep-1": "kyoto-deep",
   "deep-2": "kyoto-deep",
   "deep-3": "kyoto-deep",
@@ -694,6 +697,8 @@ const WORLD_MAP_CHARACTER_SCALE = 1;
 let battleTransition: BattleTransition | null = null;
 
 let pendingVictoryFlag: string | null = null;
+/** 戦いに勝ったあと、フィールドにもどってすぐ流す会話（エドレアの2段階の戦いなど）。 */
+let pendingAfterVictory: EventCommand[] | null = null;
 /** ボスを倒したときに落とす、特殊効果つきのかざりのID。 */
 let pendingDropId: string | null = null;
 let victoryDropText: string | null = null;
@@ -833,6 +838,10 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
     victoryFlag: "chapter8_yugami_defeated",
     bgmId: "boss-toushin",
   },
+  // 終章を厚くするために足した戦い（2026-10-06）: 光の守り手・まどろみの番人（5つの夢）・エドレアの1戦目
+  "kyotoukyu-guardian": { createEnemy: createKyotoukyuGuardian, victoryFlag: GUARDIAN_DEFEATED_FLAG, bgmId: "elite" },
+  ...Object.fromEntries(DROWSE_BATTLES.map((b) => [b.battleId, { createEnemy: () => createKyotoukyuDrowse(b.battleId, b.name), victoryFlag: `${b.battleId}-won`, bgmId: "elite" }])),
+  "kyotoukyu-edrea": { createEnemy: createKyotoukyuEdreaFirst, victoryFlag: EDREA_FIRST_DEFEATED_FLAG, bgmId: "boss-final" },
   "kyotoukyu-yugami": {
     createEnemy: createKyotoukyuEdreaYugami,
     victoryFlag: "chapter9_yugami_defeated",
@@ -983,6 +992,7 @@ function startStoryBattle(battleId: string): void {
   victoryMessage = null;
   victoryLevelUps = [];
   pendingVictoryFlag = def.victoryFlag;
+  pendingAfterVictory = CHAPTER9_AFTER_VICTORY[battleId] ?? null;
   pendingDropId = bossDropFor(battleId) ?? null;
   victoryDropText = null;
   const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
@@ -3293,10 +3303,14 @@ const loop = createGameLoop({
         if (uiState.kind === "finished") {
           const lost = uiState.outcome === "lost";
           battle = null;
+          const after = pendingAfterVictory;
+          pendingAfterVictory = null;
           if (lost) {
             restartFromLastSave();
           } else {
             playMapBgm(currentMapId);
+            // 勝ったあとに続く会話（2段階のボス戦の2戦目への流れ・夢から覚める場面など）
+            if (after && after.length > 0) dialogue.start(after);
           }
         } else {
           battle.confirm();

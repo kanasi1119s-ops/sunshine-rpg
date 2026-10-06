@@ -3,17 +3,40 @@ import {
   createKyotoukyuCorridorData,
   createKyotoukyuCourtData,
   createKyotoukyuSanctumData,
+  createKyotoukyuDreamData,
+  createKyotoukyuStairData,
   KYOTOUKYU_CORRIDOR_LANDMARKS,
   KYOTOUKYU_COURT_LANDMARKS,
   KYOTOUKYU_SANCTUM_LANDMARKS,
 } from "../map/chapter9/kyotoukyu-maps";
 import type { TileMapData } from "../map/types";
 import { say } from "./side-story";
+import { CHAPTER9_TRIAL_NPCS, DROWSE_BATTLES, drowseAfterVictory, GUARDIAN_AFTER_VICTORY } from "./chapter9-trials";
 import type { EventCommand } from "../event/types";
 import type { Npc } from "../npc";
 
+/** エドレア戦の1戦目に勝ったしるし（2段階の戦い。2026-10-06）。 */
+export const EDREA_FIRST_DEFEATED_FLAG = "chapter9_edrea1_defeated";
+
+/** エドレア戦の1戦目に勝ったあと: 静めの間の力をまとい、そのまま2戦目へ。 */
+export const EDREA_FIRST_AFTER_VICTORY: EventCommand[] = [
+  { type: "cinematic", on: true },
+  { type: "message", text: "エドレアの杖が、床に突き立った。肩で息をしながら、それでも、エドレアは倒れなかった。" },
+  { type: "message", text: "……ここで、終わるわけには、いかないのです。二十年。二十年を、無かったことには、できない。", speaker: "エドレア" },
+  { type: "message", text: "やめてください！ その力を使ったら、あなたまで、戻れなくなる！", speaker: "ユーリ" },
+  { type: "message", text: "戻る場所など、とうに、ありません。", speaker: "エドレア" },
+  { type: "message", text: "奥の祭壇から、静めの間の光が、川のようにあふれだした。光はエドレアを包み、その姿を、青白い炎のような輪郭に変えていく。" },
+  { type: "message", text: "寝台の眠りびとたちの胸の灯りが、ひとつ、またひとつと、弱まっていく。……眠りの力が、吸い上げられている！", speaker: undefined },
+  { type: "message", text: "眠ってる人たちの力まで、使う気か……！", speaker: "レト" },
+  { type: "message", text: "みんな、まだ立てる？ ……ここで止めなきゃ、おじいちゃんたちが、二度と起きられなくなる！", speaker: "ユーリ" },
+  { type: "message", text: "立てます。……何度でも。", speaker: "ミナ" },
+  { type: "message", text: "虚灯をまとったエドレアが、ゆっくりと、こちらへ手をのばした！" },
+  { type: "startBattle", battleId: "kyotoukyu-yugami" },
+];
+
 /**
- * 終章（虚灯宮）の世界。`docs/story/structure.md`「終章（虚灯宮）」・`docs/story/mystery.md`を反映。
+ * 終章（虚灯宮）の世界。2026-10-06: 外庭と回廊のあいだに「光の階段」、回廊と奥の間のあいだに「眠りの回廊」を足し、
+ * エドレア戦を2段階にした（`chapter9-trials.ts`）。`docs/story/structure.md`「終章（虚灯宮）」・`docs/story/mystery.md`を反映。
  * 壁画で「灯の環」と「静めの仕組み」の由来を知る（真相の完全解明）→ エドレアの最後の計画 → 最終決戦
  * → 祖父ソウイチの救出（C-017の回収）→ エンディング → 「まだ何かが眠っている」（C-020、裏ボスへの入口）。
  * ボスは `src/game/battle/chapter9-enemies.ts`。仮: 守り手・壁画の文章は簡易、地形は単色タイル。
@@ -22,7 +45,10 @@ export const CHAPTER9_MAPS: Record<string, TileMapData> = {
   "kyotoukyu-court": createKyotoukyuCourtData(),
   "kyotoukyu-corridor": createKyotoukyuCorridorData(),
   "kyotoukyu-sanctum": createKyotoukyuSanctumData(),
+  "kyotoukyu-stair": createKyotoukyuStairData(),
+  "kyotoukyu-dream": createKyotoukyuDreamData(),
 };
+
 
 /** 虚灯宮へ着いたとき、一度だけ流す場面つなぎ（`chapter9_intro_seen` フラグで管理）。 */
 export const CHAPTER9_OPENING_COMMANDS: EventCommand[] = [
@@ -37,6 +63,7 @@ export const CHAPTER9_OPENING_COMMANDS: EventCommand[] = [
 ];
 
 export const CHAPTER9_NPCS: Record<string, Npc[]> = {
+  ...CHAPTER9_TRIAL_NPCS,
   "kyotoukyu-court": [
     {
       id: "kyotoukyu-keeper",
@@ -212,8 +239,19 @@ function edreaCommands(): EventCommand[] {
           flag: "chapter9_edrea_told",
           equals: true,
           then: [
-            { type: "message", text: "もう一度、お相手しましょう。宮の力は、まだわたしの手の中にあります。", speaker: "エドレア" },
-            { type: "startBattle", battleId: "kyotoukyu-yugami" },
+            {
+              type: "if",
+              flag: EDREA_FIRST_DEFEATED_FLAG,
+              equals: true,
+              then: [
+                { type: "message", text: "静めの間の光が、ふたたび、エドレアの身にまとわりつく。", speaker: undefined },
+                { type: "startBattle", battleId: "kyotoukyu-yugami" },
+              ],
+              else: [
+                { type: "message", text: "もう一度、お相手しましょう。宮の力は、まだわたしの手の中にあります。", speaker: "エドレア" },
+                { type: "startBattle", battleId: "kyotoukyu-edrea" },
+              ],
+            },
           ],
           else: [
             { type: "message", text: "来ましたね。……灯守りの言葉を聞き、壁画も読んだのでしょう。ならば、隠しごとは要りませんね。", speaker: "エドレア" },
@@ -240,8 +278,8 @@ function edreaCommands(): EventCommand[] {
             { type: "message", text: "その目覚めを、苦しみと呼ぶなら、わたしは、彼らに苦しみを与えました。それより大きな苦しみを、防いだと信じてきたのです。", speaker: "エドレア" },
             { type: "message", text: "わたしの平和を、止められるものなら止めてごらんなさい。", speaker: "エドレア" },
             { type: "setFlag", flag: "chapter9_edrea_told", value: true },
-            { type: "message", text: "エドレアが杖をかかげると、虚灯宮の光が渦を巻き、その身にまとわりついた！" },
-            { type: "startBattle", battleId: "kyotoukyu-yugami" },
+            { type: "message", text: "エドレアが、灯り石の杖をかまえた！" },
+            { type: "startBattle", battleId: "kyotoukyu-edrea" },
           ],
         },
       ],
@@ -316,3 +354,12 @@ function grandfatherCommands(): EventCommand[] {
     },
   ];
 }
+
+/** 戦いに勝ったすぐあとに、続けて流す会話（戦闘ID → 会話）。 */
+export const CHAPTER9_AFTER_VICTORY: Record<string, EventCommand[]> = {
+  "kyotoukyu-guardian": GUARDIAN_AFTER_VICTORY,
+  "kyotoukyu-edrea": EDREA_FIRST_AFTER_VICTORY,
+  // 2戦目に勝ったら、そのまま降参の場面へ（話しかけなくても流れる）
+  "kyotoukyu-yugami": edreaCommands(),
+  ...Object.fromEntries(DROWSE_BATTLES.map((b) => [b.battleId, drowseAfterVictory(b.key)])),
+};

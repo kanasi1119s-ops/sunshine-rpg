@@ -21,6 +21,10 @@ const BATTLE_VICTORY_FLAG: Record<string, string> = {
   "fushima-yugami": "chapter7_yugami_defeated",
   "toushin-yugami": "chapter8_yugami_defeated",
   "kyotoukyu-yugami": "chapter9_yugami_defeated",
+  // 終章の光の階段・眠りの回廊・エドレアの1戦目（2026-10-06）。夢の番人に勝つと目が覚める（勝ったあとの会話で立つフラグ）
+  "kyotoukyu-guardian": "chapter9_guardian_defeated",
+  "kyotoukyu-edrea": "chapter9_edrea1_defeated",
+  ...Object.fromEntries(["mina", "orca", "kohaku", "reto", "ayame"].map((k) => [`kyotoukyu-drowse-${k}`, `chapter9_dream_${k}_done`])),
   "deep3-yugami": "deep3_yugami_defeated",
   "deep-yugami": "deep_yugami_defeated",
   "tower2-guard": "tower2_guard_defeated",
@@ -44,7 +48,7 @@ const CHAPTER_MAPS: string[][] = [
   ["shimohara-town", "shimohara-facility"],
   ["fushima-town", "fushima-base"],
   ["toushin-town", "toushin-hall"],
-  ["kyotoukyu-court", "kyotoukyu-corridor", "kyotoukyu-sanctum"],
+  ["kyotoukyu-court", "kyotoukyu-stair", "kyotoukyu-corridor", "kyotoukyu-dream", "kyotoukyu-sanctum"],
   ["deep-1", "deep-2", "deep-3", "deep-4"],
   ["tower-1", "tower-4", "tower-2", "tower-5", "tower-6", "tower-3", "tower-7", "tower-8", "kanou-1", "kanou-2", "kanou-3", "kanou-4"],
   // 禁域の鍵の頼みごと（依頼人の町 → 試練の番人の2か所 → 依頼人）と、禁域

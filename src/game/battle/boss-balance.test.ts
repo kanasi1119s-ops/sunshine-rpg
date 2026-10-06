@@ -10,7 +10,7 @@ import { createKiriYogenYugami } from "./chapter5-enemies";
 import { createShimoharaShisakukiYugami } from "./chapter6-enemies";
 import { createFushimaKanshitakuYugami } from "./chapter7-enemies";
 import { createToushinBanninYugami } from "./chapter8-enemies";
-import { createKyotoukyuEdreaYugami } from "./chapter9-enemies";
+import { createKyotoukyuEdreaFirst, createKyotoukyuEdreaYugami, createKyotoukyuGuardian } from "./chapter9-enemies";
 import { createDeepEchoYugami, createShogenYugami } from "./chapter10-enemies";
 import { createGodYugami, GODS } from "./chapter11-enemies";
 import { createDungeonEnemy, DUNGEON_ENEMIES } from "./chapter12-enemies";
@@ -41,7 +41,9 @@ const CASES: BossCase[] = [
   { name: "第6章「試作機の歪み」", level: 15, companions: 4, make: createShimoharaShisakukiYugami, target: 0.57 },
   { name: "第7章「監視卓の歪み」", level: 17, companions: 5, make: createFushimaKanshitakuYugami, target: 0.60 },
   { name: "第8章「灯芯都の番人の歪み」", level: 19, companions: 5, make: createToushinBanninYugami, target: 0.59 },
-  { name: "終章「虚灯をまとうエドレア」", level: 21, companions: 5, make: createKyotoukyuEdreaYugami, target: 0.59 },
+  { name: "終章「光の守り手」", level: 21, companions: 5, make: createKyotoukyuGuardian, target: 0.75 },
+  { name: "終章「合議会代表エドレア」（1戦目）", level: 21, companions: 5, make: createKyotoukyuEdreaFirst, target: 0.87 },
+  { name: "終章「虚灯をまとうエドレア」（2戦目。1戦目の傷を持ちこす）", level: 21, companions: 5, make: createKyotoukyuEdreaYugami, target: 0.43 },
   { name: "深部の中ボス「歪みの残響」", level: 23, companions: 5, make: createDeepEchoYugami, target: 0.74 },
   { name: "裏ボス「初源の歪み」", level: 25, companions: 5, make: createShogenYugami, target: 0.33 },
   ...GODS.map((god, i) => ({

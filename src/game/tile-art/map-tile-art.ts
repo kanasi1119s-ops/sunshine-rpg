@@ -39,6 +39,8 @@ export const MAP_TILE_ART: Record<string, Record<number, string>> = {
   "kyotoukyu-court": KYOTOUKYU,
   "kyotoukyu-corridor": KYOTOUKYU,
   "kyotoukyu-sanctum": KYOTOUKYU,
+  "kyotoukyu-stair": KYOTOUKYU,
+  "kyotoukyu-dream": KYOTOUKYU,
   ...Object.fromEntries(["deep-1", "deep-2", "deep-3", "deep-4", "tower-1", "tower-2", "tower-3", "tower-4", "tower-5", "tower-6", "tower-7", "tower-8", "kanou-1", "kanou-2", "kanou-3", "kanou-4"].map((id) => [id, DUNGEON])),
   ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`god-shrine-${i + 1}`, DUNGEON])),
   ...Object.fromEntries([1, 2, 3, 4, 5, 6].flatMap((n) => [`islet-${n}-1`, `islet-${n}-2`].map((id) => [id, DUNGEON]))),

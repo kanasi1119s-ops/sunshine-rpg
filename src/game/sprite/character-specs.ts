@@ -84,9 +84,11 @@ const OBJECT_WORDS = new Set([
   "scorch", "excavation", "crate", "machine", "wagon", "record", "ledger", "log", "panel", "console", "mural", "stairs",
   "pedestal", "tablet", "gate", "echo", "circle", "lore", "chest", "truth", "fork", "altar", "entrance", "yugami", "boss", "beacon", "ferry", "tansu", "bed", "shelf", "table", "counter", "signpost", "sign", "signboard", "oldsign",
   "desk", "papers", "cabinet", "reception", "hearth", "ladder", "airship", "kitchen", "cupboard",
+  // 2026-10-06: 終章の光の階段・眠りの回廊、芯環塔の窓
+  "bridge", "door", "window", "view", "stele",
 ]);
 /** 敵（ボス・強敵）として描くもの。 */
-const MONSTER_WORDS = new Set(["yugami", "boss"]);
+const MONSTER_WORDS = new Set(["yugami", "boss", "guardian", "trial"]);
 
 interface NpcLike {
   id: string;
