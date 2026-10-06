@@ -3118,7 +3118,7 @@
  },
  {
   "id": "enc-world-5-5",
-  "prompt": "a heavy teardrop-shaped blob of glowing magma with a pointed top, a cracked black cooled crust peeling off in plates, lava dripping from its bottom",
+  "prompt": "a heavy teardrop-shaped blob of glowing orange magma with a pointed top, a cracked black cooled crust peeling off in plates, lava dripping from its bottom",
   "status": "todo",
   "key": "enemy:enc-world-5-5",
   "kind": "mob",
@@ -3131,9 +3131,9 @@
    70,
    30
   ],
-  "draft": "enc-world-5-5_0",
-  "bg": "dark",
-  "seed_base": 6001
+  "draft": "enc-world-5-5_1",
+  "bg": null,
+  "seed_base": 10002
  },
  {
   "id": "enc-world-6-0",
@@ -3154,8 +3154,8 @@
  },
  {
   "id": "enc-world-6-1",
-  "prompt": "a distortion whose light went out, an old broken street lamp creature with a dark empty glass head",
-  "status": "done",
+  "prompt": "an old broken iron street lamp post monster walking on bent iron legs, a dark empty cracked glass lantern for a head, rust, dangling wires",
+  "status": "todo",
   "key": "enemy:enc-world-6-1",
   "kind": "mob",
   "name": "灯の消えた歪み",
@@ -3167,11 +3167,12 @@
    85,
    90
   ],
-  "draft": "enc-world-6-1_1"
+  "draft": "enc-world-6-1_1",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-6-2",
-  "prompt": "an old machine insect, a rusty mechanical beetle with exposed gears and a dented lamp eye",
+  "prompt": "a rusty clockwork beetle robot with exposed brass gears turning on its back, riveted metal plates, one big cracked lamp eye at the front, thin metal legs, side view",
   "status": "todo",
   "key": "enemy:enc-world-6-2",
   "kind": "mob",
@@ -3180,15 +3181,17 @@
   "level": 18,
   "shape": "ground",
   "tone": [
-   130,
-   100,
-   70
-  ]
+   150,
+   95,
+   50
+  ],
+  "draft": "enc-world-6-2_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-6-3",
   "prompt": "a wasteland stone creature, a cracked red rock with dry thorny brush growing on it, one eye",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-6-3",
   "kind": "mob",
   "name": "荒野の石",
@@ -3199,7 +3202,8 @@
    160,
    110,
    80
-  ]
+  ],
+  "draft": "enc-world-6-3_0"
  },
  {
   "id": "enc-world-6-4",
