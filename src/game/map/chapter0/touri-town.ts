@@ -150,8 +150,8 @@ export function createTouriTownData(): TileMapData {
         tileX: BRANCH_DOOR_POS.x,
         tileY: BRANCH_DOOR_POS.y,
         targetMapId: "touri-branch",
-        targetTileX: 4,
-        targetTileY: 5,
+        targetTileX: 8,
+        targetTileY: 10,
       },
       {
         // 麦香野（第1章）へ続く街道。

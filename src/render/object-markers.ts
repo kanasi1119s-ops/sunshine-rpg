@@ -6,13 +6,20 @@ import { getSpriteCanvas } from "../game/art/sprite";
  * マップ上の「物」（宝箱・木箱・階段・石碑・機械・祭壇・焦げ跡・荷馬車）の絵。1マス（16×16）に、
  * 縁取り・地の色・影の2〜3段で描く（ハイライトなし、光は左上）。種類は、物のIDに含まれる言葉で決める（`character-specs.ts`の OBJECT_WORDS）。
  */
-export type ObjectKind = "table" | "tansu" | "bed" | "shelf" | "beacon" | "boat" | "chest" | "crate" | "stairs" | "tablet" | "machine" | "altar" | "scorch" | "wagon" | "sign" | "oldsign" | "counter" | "generic";
+export type ObjectKind = "table" | "tansu" | "bed" | "shelf" | "beacon" | "boat" | "chest" | "crate" | "stairs" | "tablet" | "machine" | "altar" | "scorch" | "wagon" | "sign" | "oldsign" | "counter" | "generic" | "desk" | "papers" | "cabinet" | "reception" | "hearth" | "ladder";
 
 export function objectKindOf(id: string): ObjectKind {
   const words = id.split("-");
   const has = (...ws: string[]): boolean => words.some((w) => ws.includes(w));
   if (has("signpost", "oldsign")) return "oldsign";
   if (has("sign", "signboard")) return "sign";
+  // 相談所・家の家具（2026-10-06）。r20-props/office.py の絵
+  if (has("reception")) return "reception";
+  if (has("desk")) return "desk";
+  if (has("papers")) return "papers";
+  if (has("cabinet")) return "cabinet";
+  if (has("hearth")) return "hearth";
+  if (has("ladder")) return "ladder";
   if (has("counter")) return "counter";
   if (has("table")) return "table";
   if (has("tansu")) return "tansu";
@@ -208,9 +215,15 @@ export function drawObjectMarker(ctx: CanvasRenderingContext2D, kind: ObjectKind
     case "table":
     case "tansu":
     case "bed":
-    case "shelf": {
+    case "shelf":
+    case "desk":
+    case "papers":
+    case "cabinet":
+    case "reception":
+    case "hearth":
+    case "ladder": {
       // 作りこんだ家具のドット絵（`prop:*`）があれば、足もとにそろえて描く
-      const art = getSpriteCanvas(`prop:${kind === "shelf" ? "bookshelf" : kind}`, SPRITE_DATA);
+      const art = getSpriteCanvas(`prop:${kind === "shelf" ? "bookshelf" : kind === "reception" ? "front-counter" : kind}`, SPRITE_DATA);
       if (art) {
         const prev = ctx.imageSmoothingEnabled;
         ctx.imageSmoothingEnabled = false;

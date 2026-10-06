@@ -635,7 +635,7 @@ export const SIDE_STORIES_LATE: SideStory[] = [
     key: "s027",
     title: "仲間たちのその後",
     unlockFlags: ["chapter9_cleared"],
-    giver: { mapId: "touri-branch", tileX: 4, tileY: 2, color: "#9a8ab0" },
+    giver: { mapId: "touri-branch", tileX: 13, tileY: 9, color: "#9a8ab0" },
     locked: [say("支部の職員", "みなさん、お疲れさまです。")],
     offer: [
       say("支部の職員", "本当に、お疲れさまでした。ソウイチさんが戻られた朝の桟橋は、忘れられません。カセン支部長も、お母さまも、泣いておられました。"),

@@ -106,7 +106,7 @@ export const CH0_SCENES: StoryScene[] = [
     mapId: "touri-branch",
     requires: ["chapter0_quest_accepted"],
     blockedBy: ["chapter0_yugami_defeated"],
-    at: { x0: 1, y0: 5, x1: 7, y1: 5 },
+    at: { x0: 1, y0: 8, x1: 15, y1: 8 },
     time: "morning",
     source: `${SRC}/01-朝の灯里.md 五 もう一人の調査員`,
     commands: [

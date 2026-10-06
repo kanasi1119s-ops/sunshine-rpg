@@ -1,5 +1,5 @@
 import { createTouriTownData, TOURI_TOWN_SPAWN, TOURI_TOWN_LANDMARKS } from "../map/chapter0/touri-town";
-import { createTouriBranchData, TOURI_BRANCH_LANDMARKS } from "../map/chapter0/touri-branch";
+import { createTouriBranchData, TOURI_BRANCH_FURNITURE, TOURI_BRANCH_LANDMARKS } from "../map/chapter0/touri-branch";
 import { createTouriOutskirtsData, TOURI_OUTSKIRTS_LANDMARKS } from "../map/chapter0/touri-outskirts";
 import {
   createTouriForest1Data,
@@ -53,6 +53,12 @@ export const CHAPTER0_OPENING_COMMANDS: EventCommand[] = [
   },
   { type: "message", text: "支部長のカセンが、朝いちばんに来てほしいと呼んでいる。相談所へ向かおう。" },
   { type: "setFlag", flag: "chapter0_intro_seen", value: true },
+];
+
+/** 支部の受付の人（カウンター越しにも話せる）。 */
+const BRANCH_CLERK_TALK: EventCommand[] = [
+  { type: "message", speaker: "受付のミヨ", text: "灯りの相談所・灯里支部へ、ようこそ。……あら、ユーリくん。おはよう。" },
+  { type: "message", speaker: "受付のミヨ", text: "町の人からの依頼は、まずここで受けて、帳面に書くの。支部長は、奥の机よ。" },
 ];
 
 export const CHAPTER0_NPCS: Record<string, Npc[]> = {
@@ -263,6 +269,21 @@ export const CHAPTER0_NPCS: Record<string, Npc[]> = {
       spriteName: "レト",
       commands: retoCommands(),
     },
+    {
+      id: "touri-branch-clerk",
+      tileX: TOURI_BRANCH_LANDMARKS.clerk.tileX,
+      tileY: TOURI_BRANCH_LANDMARKS.clerk.tileY,
+      color: "#8aa08a",
+      commands: BRANCH_CLERK_TALK,
+    },
+    // 家具（調べられる）。受付カウンターに話しかけると、受付の人と話す
+    ...TOURI_BRANCH_FURNITURE.map((f): Npc => ({
+      id: f.id,
+      tileX: f.tileX,
+      tileY: f.tileY,
+      color: "#7a5228",
+      commands: f.id.endsWith("reception") ? BRANCH_CLERK_TALK : [{ type: "message", text: f.text }],
+    })),
   ],
   "touri-forest-1": [
     loreNpc("touri-forest-signpost-lore", TOURI_FOREST1_LANDMARKS.signpost, [

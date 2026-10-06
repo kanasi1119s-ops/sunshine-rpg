@@ -56,7 +56,7 @@ export const SIDE_STORIES: SideStory[] = [
     key: "s002",
     title: "レトの忘れ物",
     unlockFlags: ["chapter0_reto_joined"],
-    giver: { mapId: "touri-branch", tileX: 6, tileY: 3, color: "#8a9ab8" },
+    giver: { mapId: "touri-branch", tileX: 12, tileY: 6, color: "#8a9ab8" },
     locked: [say("ホセ", "資料室は、灯りの相談所の調査員のための部屋です。")],
     offer: [
       say("ホセ", "ああ、ユーリくん。レトくんが、資料室の古い棚に、封筒を預けたままなんだ。旅に出るなら、持っていくだろう。"),
@@ -67,7 +67,7 @@ export const SIDE_STORIES: SideStory[] = [
     hint: [say("ホセ", "封筒は、棚の奥の、一番下だよ。埃をかぶっているから、気をつけてな。")],
     steps: [
       {
-        mapId: "touri-branch", tileX: 2, tileY: 4, color: "#a08a6a",
+        mapId: "touri-branch", tileX: 5, tileY: 3, color: "#a08a6a",
         commands: [
           say(undefined, "棚の一番下に、古い封筒が挟まっている。表には、細くて几帳面な字で「静まりの年 覚え書き」と書かれていた。"),
           say(undefined, "この字は、レトのものではない。封は閉じられているが、糊はほとんど剥がれかけている。"),
