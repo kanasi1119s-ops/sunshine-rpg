@@ -5,6 +5,8 @@
   左の翼（暗い平たい雲）: 左へ、少し下へ。
   右のこぶ: 上へ、外へ。
 2026-10-06 追記（人間の指示「中央左側に暗い雲を足して」）: 写真の左の暗い平たい雲（翼）を切り出し、まん中の左の前に、ふちをぼかして重ねる。
+2026-10-06 追記（人間の指示「さらに雲の上部、周りに雲を足して」）: 写真の雲の白い頭（上と横は雲のもとのふち）を小さくして、
+雲の上のまわり（左の肩・右の肩・てっぺん）の、うしろに置く。下のはしは本体のうしろへ入るように消す。
 重ねた絵は composite5.png（480×384、空は写真の空の色）。ドットにするのは reshape.py（python3 reshape.py composite5.png reshape5）。"""
 import numpy as np
 from PIL import Image
@@ -54,5 +56,33 @@ dark = np.clip((150 - lum) / 60, 0, 1)            # 暗い所ほど濃くのせ�
 a = (ell * sky_like * (0.35 + 0.65 * dark))[..., None]
 y0_, x0_ = DARK_AT[1], DARK_AT[0]
 out[y0_:y0_ + ph, x0_:x0_ + pw] = out[y0_:y0_ + ph, x0_:x0_ + pw] * (1 - a) + pc * a
+# 上のまわりの雲（うしろ）: 先にうしろの絵を作り、その上に本体をのせる
+from PIL import ImageFilter
+
+
+def cloudness(img):
+    return np.clip((78 - (img[..., 2] - img[..., 0])) / 34, 0, 1)
+
+
+back = np.zeros((CH, CW, 3)) + SKY
+dome = Image.fromarray(crop[0:150].astype(np.uint8))
+TOPS = [   # (左右入れかえ, 大きさ, 置く所（左上）, 下の消えはじめ)
+    (False, 0.40, (70, 92), 0.6),
+    (True, 0.44, (272, 86), 0.6),
+    (False, 0.30, (186, 52), 0.65),
+    (True, 0.26, (40, 150), 0.6),
+    (False, 0.28, (360, 146), 0.6),
+]
+for flip, sc, (px0, py0), st in TOPS:
+    d = dome.transpose(Image.FLIP_LEFT_RIGHT) if flip else dome
+    d = np.asarray(d.resize((int(384 * sc), int(150 * sc)), Image.LANCZOS), float)
+    hh, ww = d.shape[:2]
+    a = cloudness(d)
+    fade = np.clip(1 - (np.arange(hh) - hh * st) / (hh * (1 - st)), 0, 1)[:, None]
+    a = (a * np.minimum(1, fade))[..., None]
+    reg = back[py0:py0 + hh, px0:px0 + ww]
+    back[py0:py0 + hh, px0:px0 + ww] = reg * (1 - a[:reg.shape[0], :reg.shape[1]]) + d[:reg.shape[0], :reg.shape[1]] * a[:reg.shape[0], :reg.shape[1]]
+am = np.asarray(Image.fromarray((cloudness(out) * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.6)), float)[..., None] / 255
+out = back * (1 - am) + out * am
 Image.fromarray(out.clip(0, 255).astype(np.uint8)).save("composite5.png")
 print("ok")
