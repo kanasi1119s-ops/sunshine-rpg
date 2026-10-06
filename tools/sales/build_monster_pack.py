@@ -48,6 +48,18 @@ def sheet(items, cell, cols, path, title):
     s.save(path)
 
 
+def readme_page(path):
+    """説明書の文章を、PDF の1ページ目にする画像にする"""
+    f = ImageFont.truetype(FONT, 18)
+    lines = open(path, encoding="utf-8").read().split("\n")
+    W, lh = 1240, 28
+    im = Image.new("RGB", (W, 60 + lh * len(lines)), (250, 248, 244))
+    d = ImageDraw.Draw(im)
+    for n, ln in enumerate(lines):
+        d.text((50, 30 + n * lh), ln, font=f, fill=(30, 30, 40))
+    return im
+
+
 def main():
     out = sys.argv[1]
     top = os.path.join(out, TITLE)
@@ -76,6 +88,14 @@ def main():
     with open(os.path.join(top, "一覧.csv"), "w", newline="", encoding="utf-8-sig") as fp:
         w = csv.writer(fp); w.writerow(["番号", "種類", "参考名", "大きさ（等倍）", "色数"]); w.writerows(cat)
     shutil.copy(os.path.join(os.path.dirname(__file__), "monster-pack-README.txt"), os.path.join(top, "はじめにお読みください.txt"))
+    # DLsite の推奨形式（アプリケーション・JPEG・PDF・MP4・WAV）に合わせて、見て確かめる用の PDF と JPEG も入れる（2026-10-07、人間の情報）。
+    # 使う素材そのものは、背景を透明にできる PNG のまま（JPEG は透明にできない）。
+    pages = [readme_page(os.path.join(top, "はじめにお読みください.txt"))]
+    for name in ["ボス一覧.png"] + [f"雑魚一覧_{k}.png" for k in range(1, 5)]:
+        im = Image.open(os.path.join(d, name)).convert("RGB")
+        im.save(os.path.join(d, name.replace(".png", ".jpg")), quality=92)
+        pages.append(im)
+    pages[0].save(os.path.join(top, "一覧と説明書.pdf"), save_all=True, append_images=pages[1:], resolution=96)
     print("雑魚", len(mobs), "ボス", len(bosses), "→", top)
 
 
