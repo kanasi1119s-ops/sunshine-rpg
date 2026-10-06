@@ -159,8 +159,10 @@ class Model:
 
 
 def render(model, W, H, CX, GROUND, ramps, shade_fn=None, colour_fn=None, light=(-0.55, 0.62, 0.56),
-           outline="#1e1a18", shadow=None, ambient=0.22, front_tilt=None, ground_contact=True):
-    """front_tilt（度）を入れると、町の家と同じななめの見え方ではなく、正面の少し上から見下ろす見え方にする
+           outline="#1e1a18", shadow=None, ambient=0.22, front_tilt=25, ground_contact=True):
+    """2026-10-06 人間の指示「オブジェクト、多分すべて家のイメージの奥行きに引っ張られてるからそこを注意して全部作り直して」:
+    飾りは、ふだん（front_tilt=25）正面の少し上から見下ろす見え方で描く。front_tilt=None のときだけ、町の家と同じななめの見え方。
+    以下、前の説明: front_tilt（度）を入れると、町の家と同じななめの見え方ではなく、正面の少し上から見下ろす見え方にする
     （2026-10-06: 丸い物（樽など）は、ななめの見え方だと横に引きのばされ、かたむいた卵のような形に見えたため）。"""
     sx, sy = np.meshgrid(np.arange(W) + 0.5, np.arange(H) + 0.5)
     Z0 = 30.0
@@ -211,6 +213,8 @@ def render(model, W, H, CX, GROUND, ramps, shade_fn=None, colour_fn=None, light=
         m = MAT[i]
         lum = ambient + (1 - ambient) * dif[i] * (0.3 + 0.7 * sh[i])
         lum *= 0.55 + 0.45 * ao[i]
+        if ground_contact and HP[i][1] < 1.6:
+            lum -= 0.1 * (1 - HP[i][1] / 1.6)          # 地面のすぐ上は、照り返しが少なく少し暗い（地面になじむ）
         if shade_fn:
             lum, m = shade_fn(m, HP[i], N[i], lum, x, y)
         ramp = ramps[m]
@@ -242,6 +246,21 @@ def render(model, W, H, CX, GROUND, ramps, shade_fn=None, colour_fn=None, light=
             for x in range(W):
                 if img[y, x] == "#14100ca8" and img[y + 1, x] == "":
                     img[y + 1, x] = "#10201878"
+        # 2026-10-06「オブジェクト地面につくとき違和感ないように地面になじむように」:
+        # 足もとの幅に合わせた、接地のやわらかい影（足もとのすぐまわりは少しこく、外へうすく）
+        base = [(x, y) for y in range(H) for x in range(W) if img[y, x] == "#14100ca8"]
+        if base:
+            bx0 = min(b[0] for b in base); bx1 = max(b[0] for b in base); by = max(b[1] for b in base)
+            cxb, rxb = (bx0 + bx1) / 2 + 0.8, (bx1 - bx0) / 2 + 2.5
+            for y in range(by - 1, by + 3):
+                for x in range(int(cxb - rxb - 1), int(cxb + rxb + 2)):
+                    if not (0 <= x < W and 0 <= y < H) or img[y, x] != "":
+                        continue
+                    d = ((x + 0.5 - cxb) / rxb) ** 2 + ((y + 0.5 - (by + 0.6)) / 1.7) ** 2
+                    if d < 0.5:
+                        img[y, x] = "#10201870"
+                    elif d < 1.0:
+                        img[y, x] = "#10201840"
     if shadow:
         cx, cy, rx, ry = shadow
         for y in range(int(cy - ry - 1), int(cy + ry + 2)):

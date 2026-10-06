@@ -497,10 +497,10 @@ function canopyEdge(ctx: CanvasRenderingContext2D, map: TileMap, ox: number, oy:
         put(kind, px, py);
       }
       const [qx, qy] = at(i, depth);
-      dot(ctx, ox + qx, oy + qy, "rgba(10,40,18,0.42)");                    // 草むらのふちの影
+      dot(ctx, ox + qx, oy + qy, "rgba(10,40,18,0.16)");                    // 草むらのふちの影（うすく。まわりの地面になじむ）
       if (hashCell(along(i) + salt, lineSalt) % 5 === 0) {
         const [hx, hy] = at(i, depth + 1);
-        dot(ctx, ox + hx, oy + hy, "rgba(170,220,110,0.55)");                 // 明るい葉先
+        dot(ctx, ox + hx, oy + hy, "rgba(150,190,100,0.35)");                 // 明るい葉先
       }
     }
   }

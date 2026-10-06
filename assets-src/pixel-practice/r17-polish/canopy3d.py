@@ -15,8 +15,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..", "..", "..")
 N = 128
 # 2026-10-06「木も草も作り直し町になじんでない」: 町の草地（オリーブがかった落ちついた緑）と同じ色合いに
-LEAF = ["#223619", "#2c441f", "#375226", "#42602d", "#4e6e34", "#5a7c3c", "#668a44", "#73974d", "#82a458", "#93b266"]
-GAP = "#1a2a14"
+# 2026-10-06 人間の指示「草むら自然な感じにならないね。周りの地面となじむように作り直し」:
+# 地面（株のすきま）は、まわりの町の草地の絵と同じ色（terrain:grass-a の #496d36〜#6a8f48）にし、
+# 草の株も同じ色合いで、根もとが少し暗く、葉先が少し明るいだけにする（暗い別の場所に見えないように）
+LEAF = ["#3c5c2c", "#456833", "#4f7239", "#55793c", "#5b8040", "#618743", "#6a8f48", "#759a50", "#82a65a", "#90b266"]
+GAP = "#55793c"
 
 
 def hn(*a):
@@ -35,7 +38,7 @@ def rnd(*a):
 # 背の高い草の株（細い葉が7〜9本、根もとから扇のように広がる）を、ずらした格子にびっしり並べた「草むら」にする。
 # 葉は1本ずつ、根もとは暗く、先は明るく。左（光の側）へかたむく葉は明るく、右へかたむく葉は暗い。
 # 株の根もとには影。奥（上）から手前（下）へ順に描くので、手前の株が奥の株の根もとをかくし、奥行きが出る。
-lum = np.full((N, N), 0.27)                         # 地面（株のすきま）は暗い緑
+lum = np.full((N, N), 0.42)                         # 地面（株のすきま）は、まわりの草地と同じ明るさ
 height = np.full((N, N), -1.0)
 tufts_ = []
 for gy in range(N // 8):
@@ -58,7 +61,7 @@ for (by, bx, seed) in tufts_:
         for dx in range(-8, 9):
             if (dx / 8.5) ** 2 + (dy / 2.2) ** 2 <= 1:
                 xx, yy = int(bx + dx) % N, int(by + dy + 1) % N
-                lum[yy, xx] = min(lum[yy, xx], 0.12)
+                lum[yy, xx] = min(lum[yy, xx], 0.3)
     nb = 6 + seed % 2
     for k in range(nb):
         t = (k + 0.5) / nb - 0.5                     # -0.5（左）〜 0.5（右）
@@ -69,7 +72,7 @@ for (by, bx, seed) in tufts_:
             f = i / max(1.0, hgt)
             xx = x0 + lean * hgt * f * f * 0.9        # 先へ行くほど外へしなる
             yy = by - i
-            l = 0.3 + 0.55 * f                        # 根もとは暗く、先は明るい
+            l = 0.38 + 0.5 * f                        # 根もとは少し暗く、先は少し明るい
             l += -0.18 * lean                         # 左へかたむく葉は光を受ける
             if i == int(hgt):
                 l += 0.08                             # 葉先の光
@@ -82,7 +85,8 @@ img = np.full((N, N), "", dtype=object)
 for y in range(N):
     for x in range(N):
         if height[y, x] < 0:
-            img[y, x] = GAP
+            v = np.clip(lum[y, x], 0, 0.999) * (len(LEAF) - 1)
+            img[y, x] = LEAF[int(v)] if lum[y, x] < 0.4 else GAP   # 株の根もとの影の所だけ、少し暗い
             continue
         v = np.clip(lum[y, x], 0, 0.999) * (len(LEAF) - 1)
         lo = int(v); fr = v - lo
