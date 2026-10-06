@@ -155,3 +155,13 @@ assets-src/chibi/〈名前〉/ に、エディタ用のファイル（文字グ�
 - 外部の画像生成AIの画像を参考にして作った絵を売ったりゲームに入れたりする前に、そのAIの利用規約（商用利用・出力の扱い）を確かめ、
   README に、使ったAIの名前と、AIを使ったことを書く（販売するときは「AI生成作品」の表示が要る。`docs/sales/monster-pack.md`）。
 - 有料の画像生成AIを新しく契約するのは、人間の承認が要る（CLAUDE.md 1-2）。
+
+## メモ: この作業環境の画像生成（Stable Diffusion 1.5）で描くときの画風の言葉（2026-10-07）
+
+モンスターがうまく描けたときと同じ書き方にする。
+- 指示文: "full body shot of 〈見た目〉, highly detailed realistic dark fantasy character, intricate textures, cinematic lighting,
+  dark fantasy concept art, plain white background"（神・魔王は "huge imposing" を足して "epic concept art"）。
+- 服は中世ファンタジーの言葉（cloak, tunic, leather vest, robe, armor, mantle）。jacket・coat・hoodie は今の服になりやすいので使わない。
+- 避ける言葉: "cartoon, clipart, flat colors, vector art, anime, chibi, cute, toy, modern clothing, jeans, hoodie, sneakers,
+  fashion illustration, cropped, cut off, close-up, portrait, text, watermark, frame, border, multiple people, blurry"。
+- 体の形と色の下書き（layouts.py）から img2img、QUALITY=real で描き、fullbody.py check で全身を確かめる。
