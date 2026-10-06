@@ -192,8 +192,8 @@ S_SIDE = [
     "AKAQRQA...ADDDA.",   # 2  しっぽの先（丸く）
     "AQQQRRQQA.ACCCDA",
     "AQQQQQQQAAAQRQQA",   # 4  しっぽの橙の帯
-    ".AWJQQQQQAAQQQQA",   # 5  目（顔の前を1ドット下げて、鼻先だけ前へとがらせる）
-    ".AJJQQSQQACAQQBA",
+    ".AQWJQQQQAAQQQQA",   # 5  目（顔の前を1ドット下げて、鼻先だけ前へとがらせる。目は1ドット後ろへ下げ、前側の黒い点をなくした）
+    ".AQJJQSQQACAQQBA",
     "NWWQQQQQACCCAPA.",   # 7  鼻の頭（人間の指示「横から見たとき鼻の頭がわかるといい」）
     ".AWWQQQACCCCCBA.",
     ".AVWWQACCCCCBA..",
