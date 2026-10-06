@@ -190,10 +190,10 @@ S_SIDE = [
     "....A...........",   # 0  耳（横から見ても分かるよう、手前の耳を橙の三角で高く立て、奥の耳は小さく離す。人間の指示「横から見たとき耳がわからない」）
     ".A.AKA.....AAA..",
     "AKAQRQA...ADDDA.",   # 2  しっぽの先（丸く）
-    ".AQQRRQQA.ACCCDA",   # 3  おでこを1ドット下げて、口もとを前へ突き出す（人間の指示「口元の白いの増やして。口を突き出す感じ」）
-    ".AQQQQQQAAAQRQQA",   # 4  しっぽの橙の帯
-    ".AQWJQQQQAAQQQQA",   # 5  目（前側の黒い点はなし）
-    "AWQJJQSQQACAQQBA",   # 6  口もとの上（白）
+    "..AQRRQQA.ACCCDA",   # 3  おでこを2ドット下げて、口もとを前へ突き出す（人間の指示「口元の白いの増やして。口を突き出す感じ」「もう少し突き出していいかな」）
+    "..AQQQQQAAAQRQQA",   # 4  しっぽの橙の帯
+    "..AQWJQQQAAQQQQA",   # 5  目（前側の黒い点はなし）
+    ".AWQJJSQQACAQQBA",   # 6  口もとの上（白）
     "NWWWQQQQACCCAPA.",   # 7  鼻の頭と、白い口もと
     "AWWWWQQACCCCCBA.",   # 8  下あご（白く前へ）
     ".AVWWWACCCCCBA..",
