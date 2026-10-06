@@ -40,13 +40,22 @@
   - イメージ画像の指示文（英語、77トークン以内）と、避ける言葉（英語）
   - 選んだ理由（これまでの一覧と重ならない点）
 
-■ 2. イメージ画像（ふつうの頭身・背景なし）
-- 設定表の英語の指示文で、この作業環境の画像生成（Stable Diffusion 1.5、tools/pixel-art/ai-gen/generate.py、QUALITY=real）を使い、
-  ふつうの頭身・全身・正面・白い背景の絵を1枚描く（1枚 約9分。ほかの画像生成・エディタ・rembg と同時に動かさない）。
-  指示文の決まり: "full body standing fantasy rpg character, 〈設定表の見た目〉, front view, realistic proportions,
-  painterly concept art, isolated on plain white background"。避ける言葉: "photo, 3d render, chibi, text, watermark, frame,
-  border, multiple people, cropped, cut off head, close-up, blurry, nsfw, background scenery, floor, shadow"。
-- 頭や足が切れた・2人いる・背景がある絵なら、種を変えてもう1枚（2枚まで）。
+■ 2. イメージ画像（ふつうの頭身・背景なし・全身が入る）
+- 設定表の英語の指示文で、この作業環境の画像生成（Stable Diffusion 1.5、tools/pixel-art/ai-gen/generate.py）を使い、
+  ふつうの頭身・全身・正面・白い背景の絵を描く（ほかの画像生成・エディタ・rembg と同時に動かさない）。
+- 全身が入る条件（必ず全部守る）:
+  1. 絵は縦長（512×768）。龍・神など横に広いものは正方形（512×512）。
+  2. 指示文の先頭に "full body from head to toe, the whole figure visible with empty space above the head and below the feet,
+     standing pose, single figure centered" を入れ、そのあとに設定表の見た目、最後に "front view, realistic proportions,
+     painterly concept art, isolated on plain white background" を付ける（全部で77トークン以内。見た目の説明を短くして収める）。
+  3. 避ける言葉: "cropped, cut off head, cut off feet, out of frame, close-up, portrait, half body, upper body, photo, 3d render,
+     chibi, text, watermark, frame, border, multiple people, blurry, nsfw, background scenery, floor, shadow"。
+  4. 人の形の下書き（tools/pixel-art/ai-gen/layouts.py の tall。龍・大型は big）から img2img（強さ0.9）で描き、
+     体が絵の中央・上下に余白のある位置に来るようにする（monster_batch.py の draft と同じ描き方）。
+  5. 描いたら tools/pixel-art/ai-gen/fullbody.py check で、体が絵の端に触れていないか（頭・足・羽の先が切れていないか）を確かめる。
+     切れていたら fullbody.py extend で外側を描き足すか、種を変えて描き直す（2回まで）。2人いる・背景がある絵も描き直す。
+  6. "lighthouse" のように、場所や物そのものを表す言葉は背景に描かれやすいので、設定（場所）は指示文に入れず、見た目だけを書く。
+- 2枚描いて、全身が入っていて形のよい方を選ぶ。
 - 絵を assets-src/chibi/〈名前〉/ref.png に置き、ここで一度、人間に絵を見せる。
 
 ■ 3. 2頭身のドット絵（ドット絵エディタで描く）
