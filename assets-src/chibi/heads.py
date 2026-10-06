@@ -212,3 +212,81 @@ for nm, H in (("ELF", ELF), ("ANGEL", ANGEL), ("DEMON", DEMON), ("LORD", LORD)):
     for d, rows in H.items():
         for y, r in rows.items():
             assert len(r) == 16, (nm, d, y, len(r), r)
+
+
+# 魔王（2026-10-07、人間の指示「魔王の顔はおおもとの画像を忠実に再現してほしい」）:
+# イメージ画像どおり、顔は見せず、黒いかぶとで全部おおう。まん中に赤く光る目が1つ、そこから赤い光が胸へ流れる。
+# 頭の上にとがった前立て、左右から太い角が外へ張り出して上へ反る。
+# 記号: h/H/d かぶと（地・明・暗）、k/l 角（地・明）、e 光の芯、r 赤い光、R 暗い赤い光
+def _mirror(rows, keep_h_left=True):
+    out = {}
+    for y, half in rows.items():
+        full = half + half[::-1]
+        out[y] = "".join(("h" if (c == "H" and x >= 8) else c) for x, c in enumerate(full))
+    return out
+
+
+LORD_HELM = {
+ "down": _mirror({
+  0: ".AlA....",
+  1: "AlkA....",
+  2: "AlkA....",
+  3: "AkkA...A",
+  4: "AkkA..Ah",
+  5: ".AkkAAdH",
+  6: "..AkkdhH",
+  7: "..AdkhHH",
+  8: ".AdhhHHh",
+  9: "AdhhhHhh",
+  10: "Adhhhhhd",
+  11: "AdhhhAdd",
+  12: "AdhhAddr",
+  13: "AdhhAdre",
+  14: ".AdhAdrr",
+  15: ".AdhhAdR",
+  16: "..AdhhAR",
+  17: ".AAAdhAR",
+ }),
+ "left": {
+  0: "...AlA...AlA....",
+  1: "...AlkA..AlkA...",
+  2: "...AlkA..AlkA...",
+  3: "....AkAAAAkA....",
+  4: "....AkdhhhkAA...",
+  5: "...AkdhHHhhkdA..",
+  6: "...AdhHHhhhhhdA.",
+  7: "..AdhHHhhhhhhdA.",
+  8: "..AdhhhhhhhhhdA.",
+  9: "..AdhhhhhhhhhhdA",
+  10: "..AAddhhhhhhhhdA",
+  11: ".AddrAhhhhhhhhdA",
+  12: ".AdreAhhhhhhhhdA",
+  13: "..AdrdAhhhhhhdA.",
+  14: "..AddRdAhhhhddA.",
+  15: "..AdddRAhhhddA..",
+  16: "...AddRAAhddA...",
+  17: "....AdRddAAA....",
+ },
+ "up": _mirror({
+  0: ".AlA....",
+  1: "AlkA....",
+  2: "AlkA....",
+  3: "AkkA...A",
+  4: "AkkA..Ah",
+  5: ".AkkAAdH",
+  6: "..AkkdhH",
+  7: "..AdkhHH",
+  8: ".AdhhHHh",
+  9: "AdhhhHhh",
+  10: "Adhhhhhd",
+  11: "Adhhhhhd",
+  12: "Adhhhhhd",
+  13: "Adhhhhhd",
+  14: "AddhhhhD",
+  15: ".AddhhhD",
+  16: ".AAdddhD",
+ }),
+}
+for d, rows in LORD_HELM.items():
+    for y, r in rows.items():
+        assert len(r) == 16, ("LORD_HELM", d, y, len(r), r)

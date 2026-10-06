@@ -3,7 +3,7 @@
 使い方: python3 make_four.py → 各フォルダに walker.json・sheet.txt/json（エディタ用）・sheet.png・sheet_x8.png・walk.gif"""
 import pathlib
 from chibi_parts import Chibi, L, stamp, wing_masks, swing_arms, swing_arms_side
-from heads import ELF, ANGEL, DEMON, LORD
+from heads import ELF, ANGEL, DEMON, LORD_HELM
 
 HERE = pathlib.Path(__file__).parent
 
@@ -89,16 +89,10 @@ c = Chibi("レト")
 for ch, v in zip("BCD", ("#2a2238", "#4e3e66", "#120c18")): c.color(ch, v)
 c.color("F", "#ff3030")
 for ch, v in zip("JKLMOPQRSVW", ("#9a1a22", "#5a0a12", "#4a4a58", "#2a2a34", "#16161c", "#3a3040", "#2a2232", "#4a3e58", "#1e1824", "#2e2638", "#140e18")): c.color(ch, v)
-apply_head(c, LORD)
-swing_arms(c)                                    # 止まっていた手も、もう片方と同じように動かす（人間の指示）
+for ch, v in zip("BCD", ("#26222e", "#5e5870", "#100c14")): c.color(ch, v)   # 黒いかぶと
+apply_head(c, LORD_HELM, extra={"k": c.new("#1e1a24"), "l": c.new("#7a7488"),          # 角
+                                "e": c.new("#ffe6c8"), "r": c.new("#ff3a2a"), "R": c.new("#a01820")})  # 赤く光る目と光の流れ
+swing_arms(c)                                    # 止まっていた手も動かす（左右交互。人間の指示）
 c.cape(c.new("#8a1420"), c.new("#5a0a14"), "A", start=17, end=29)
-kn, kl, kg = c.new("#241a2e"), c.new("#9a88b4"), c.new("#ff3a3a")
-L_HORN = [(6, 2), (5, 2), (4, 2), (3, 2), (2, 3), (1, 3), (0, 4)]   # イメージ画像のような、大きく反った2本の角
-crown = [(y, x, kl if y == 0 else kn) for y, x in L_HORN] + [(y, 15 - x, kl if y == 0 else kn) for y, x in L_HORN]
-stamp(c, {"down": crown, "up": crown,
-          "left": [(5, 4, kn), (4, 4, kn), (3, 4, kn), (2, 5, kn), (1, 5, kn), (0, 6, kl), (5, 12, kn), (4, 12, kn), (3, 12, kn), (2, 11, kn), (1, 11, kl)]},
-      over_keys=())
-for k, g in c.frames.items():                     # 冠のまん中の赤い石は、頭の上にのせる
-    if k[:-1] in ("down", "up"):
-        g[3][7] = g[3][8] = kg
+# 顔はイメージ画像どおり、黒いかぶとで全部おおい、まん中に赤く光る目を1つ（2026-10-07、人間の指示「魔王の顔はおおもとの画像を忠実に再現してほしい」）
 build("魔王", "demon-lord", c)

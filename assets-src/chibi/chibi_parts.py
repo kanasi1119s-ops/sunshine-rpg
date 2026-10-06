@@ -158,7 +158,7 @@ def swing_arms(c):
     """前・後ろ向きで、動いていなかったほうの手も、動いている手と同じように動かす
     （2026-10-07、人間の指示「最初のでいいや…それも右手の動きを左手と同じにしてあげて」「左手しか動いてないのよ」）。
     もとの型（レト）は、前向きは画面の右側（x=13）の手だけ、後ろ向きは画面の左側（x=2）の手だけが1ドット上下する。
-    止まっている側の手（x=2 / x=13）を、動いている手と同じコマで同じ高さに動かす。持ち物（剣）はそのまま。"""
+    止まっている側の手（x=2 / x=13）も、動いている手と同じ1ドットの上下で、左右反対（交互）に動かす。持ち物（剣）はそのまま。"""
     for d in ("down", "up"):
         move, still = (13, 2) if d == "down" else (2, 13)
         out = 1 if still == 2 else 14              # 止まっている手の外側の縁取りの列
@@ -168,8 +168,8 @@ def swing_arms(c):
         skin = g0[23][still]
         for f in (1, 2):
             g = c.frames[d + str(f)]
-            hy = next(y for y in (22, 23, 24) if c.pal[__import__("string").ascii_uppercase.index(g[y][move])] in
-                      (c.pal[__import__("string").ascii_uppercase.index(g0[23][move])],))
+            hm = next(y for y in (22, 23, 24) if g[y][move] == g0[23][move])
+            hy = {22: 24, 24: 22, 23: 23}[hm]           # 振り方は左右反対（人間の指示「振り方は左右反対にしてほしい」）
             for y in range(20, hy):
                 g[y][still] = sleeve[min(y - 20, 2)]
             g[hy][still] = skin
