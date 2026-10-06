@@ -4,6 +4,7 @@
   頭（上の白いもくもく）: 上へ、少し右へ。雲が高くそびえ、右へかたむく。
   左の翼（暗い平たい雲）: 左へ、少し下へ。
   右のこぶ: 上へ、外へ。
+2026-10-06 追記（人間の指示「中央左側に暗い雲を足して」）: 写真の左の暗い平たい雲（翼）を切り出し、まん中の左の前に、ふちをぼかして重ねる。
 重ねた絵は composite5.png（480×384、空は写真の空の色）。ドットにするのは reshape.py（python3 reshape.py composite5.png reshape5）。"""
 import numpy as np
 from PIL import Image
@@ -38,5 +39,20 @@ def at(x, y):
 
 out = (at(x0, y0) * (1 - fx) * (1 - fy) + at(x0 + 1, y0) * fx * (1 - fy)
        + at(x0, y0 + 1) * (1 - fx) * fy + at(x0 + 1, y0 + 1) * fx * fy)
+# 中央左の暗い雲（写真の左の翼の、暗い所。ふちはだ円でぼかし、空の色の所はのせない）
+DARK_BOX = (6, 166, 126, 222)                      # 写真の切り出しの中の範囲
+DARK_AT = (118, 226)                              # 置く所（重ねた絵の中の左上）
+pc = crop[DARK_BOX[1]:DARK_BOX[3], DARK_BOX[0]:DARK_BOX[2]]
+pc = np.asarray(Image.fromarray(pc.astype(np.uint8)).resize((int(pc.shape[1] * 1.35), int(pc.shape[0] * 1.35)), Image.LANCZOS), float)   # ひとまわり大きく
+ph, pw = pc.shape[:2]
+py, px_ = np.mgrid[0:ph, 0:pw].astype(float)
+u = (px_ + 0.5 - pw / 2) / (pw / 2); v = (py + 0.5 - ph / 2) / (ph / 2)
+ell = np.clip((1 - np.sqrt(u * u + v * v)) / 0.45, 0, 1)
+sky_like = np.clip((78 - (pc[..., 2] - pc[..., 0])) / 34, 0, 1)
+lum = pc.mean(-1)
+dark = np.clip((150 - lum) / 60, 0, 1)            # 暗い所ほど濃くのせる
+a = (ell * sky_like * (0.35 + 0.65 * dark))[..., None]
+y0_, x0_ = DARK_AT[1], DARK_AT[0]
+out[y0_:y0_ + ph, x0_:x0_ + pw] = out[y0_:y0_ + ph, x0_:x0_ + pw] * (1 - a) + pc * a
 Image.fromarray(out.clip(0, 255).astype(np.uint8)).save("composite5.png")
 print("ok")
