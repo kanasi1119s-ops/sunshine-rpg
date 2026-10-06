@@ -35,7 +35,7 @@ pal = {
     # 窓ガラス・カーテン・花
     "G1": "#5a8cb4", "G2": "#9cd0ee", "G3": "#30506e", "CUR": "#d86a5a", "F1": "#3a7a34", "F2": "#5aa844", "F3": "#e84a5a",
     "M1": "#4a6a34", "M2": "#6a8a44",   # こけ
-    "SOOT": "#3a3036",                  # すす
+    "SOOT": "#3a3036", "L1": "#fff2b0",                  # すす
 }
 BLUE = {"R1": "#1c2850", "R2": "#2c4a88", "R3": "#3a5ea4", "R4": "#4a76c0", "R5": "#6a96dc", "R6": "#9cc0f4"}
 GREEN = {"R1": "#183a28", "R2": "#2a5a3c", "R3": "#36764c", "R4": "#46905c", "R5": "#68b07a", "R6": "#9ad4a8"}
@@ -86,14 +86,22 @@ def brick(u, v, lit, seed):
     if (u + off) % 6 == 5:
         return "J2" if lit else "J3"
     h = hn(row, col, seed)
-    tones = ["C2", "C3", "C3", "C4", "C4", "C3", "C5", "C2", "C1"] if lit else ["E2", "E3", "E3", "E4", "E2", "E3", "E1"]
-    k = tones[h % len(tones)]
-    # レンガの上のふちは少し明るく（光は上から）、欠けの明るい点
-    if lit and v % 3 == 0 and (u + off) % 6 in (0, 1) and h % 5 == 0:
-        k = "C5"
-    if lit and h % 17 == 3 and (u + off) % 6 == 2 and v % 3 == 1:
-        k = "C1"                                         # 欠け（暗い点）
-    return k
+    ramp = ["C1", "C2", "C3", "C4", "C5"] if lit else ["E1", "E2", "E3", "E4", "E4"]
+    base = [1, 2, 2, 3, 3, 2, 4, 1, 2, 3, 0][h % 11] if lit else [1, 2, 2, 3, 1, 2, 0][h % 7]
+    i = (u + off) % 6
+    t = base
+    # レンガ一つずつに立体感: 上の段は明るめ、下の段は1つ暗い（下のふちの影）。右はしは少し暗く、左上のかどに光
+    if v % 3 == 1:
+        t = base - 1 if (h >> 4) % 3 else base
+    if i == 4 and v % 3 == 1:
+        t = base - 1
+    if lit and v % 3 == 0 and i == 0 and (h >> 6) % 3 == 0:
+        t = base + 1
+    if lit and (h >> 8) % 19 == 0 and i == 2:
+        t = 0                                            # 欠け（暗い点）
+    if lit and (h >> 9) % 23 == 0 and v % 3 == 0 and i in (1, 2, 3):
+        return "J1"                                      # 角の欠け（目地の色がのぞく）
+    return ramp[max(0, min(4, t))]
 
 
 def build(W, H, FW, D, floors, FH, RH, ox=3, door=0.5, nwin=3, ov=3, porch=False, dormer=False, chimney=0.72, seed=1):
@@ -188,38 +196,60 @@ def build(W, H, FW, D, floors, FH, RH, ox=3, door=0.5, nwin=3, ov=3, porch=False
             g.put(x, wy + h, "K4"); g.put(x, wy + h + 1, "K1")
 
     def sidewin(sx, w, ytop, h):
-        for dx in range(w):
+        """右の壁（奥へななめ）の窓。木の枠（上・左は明るい木、下・右は暗い木）、まん中に桟、下に石の窓台。"""
+        def ty(x, y):
+            return int(round(sideY(x, y)))
+        for dx in range(-1, w + 1):
             x = sx + dx
-            yt = int(round(sideY(x, ytop)))
-            for y in range(yt, yt + h):
-                g.put(x, y, "G3" if y == yt else ("G2" if (dx + y - yt) % 5 == 1 else "G1"))
-            g.put(x, yt - 1, "K2"); g.put(x, yt + h, "K2")
-        for y in range(int(round(sideY(sx, ytop))) - 1, int(round(sideY(sx, ytop))) + h + 1):
-            g.put(sx - 1, y, "K1")
+            yt = ty(x, ytop)
+            for y in range(yt - 1, yt + h + 1):
+                if dx in (-1, w) or y in (yt - 1, yt + h):
+                    k = "B3" if (dx == -1 or y == yt - 1) else "B2"
+                elif dx == w // 2 or y == yt + h // 2:
+                    k = "B2"                              # 桟
+                elif y == yt:
+                    k = "G3"                              # 上は枠の影
+                elif (dx + (y - yt)) % 6 in (2, 3) and dx < w // 2:
+                    k = "G2"                              # 空のうつりこみ（ななめ）
+                else:
+                    k = "G1"
+                g.put(x, y, k)
+            g.put(x, yt + h + 1, "K3"); g.put(x, yt + h + 2, "K1")   # 石の窓台
+            g.put(x, yt - 2, "E1")                                    # 上のまぐさの影
+        for y in range(ty(sx, ytop), ty(sx, ytop) + 2):
+            g.put(sx, y, "CUR")                                       # カーテン
 
     doorx = x0 + int(FW * door)
     for fl in range(floors):
         wy = top + fl * FH + 5
         wh = FH - 10
-        for i in range(nwin):
-            sx = x0 + int(FW * (i + 0.5) / nwin) - 3
-            if fl == floors - 1 and abs((sx + 3) - doorx) < 10:
-                continue
-            window(sx, wy, 7, wh)
+        if fl == floors - 1:
+            # 玄関のある階: 窓は、玄関のアーチの左と右の、あいた所のまん中に
+            spans = [(x0 + 3, doorx - 8), (doorx + 8, x1 - 5)]
+            slots = []
+            for a_, b_ in spans:
+                ww = min(7, b_ - a_ - 1)
+                if ww >= 4:
+                    slots.append(((a_ + b_ - ww) // 2 + 1, ww))
+        else:
+            slots = [(x0 + int(FW * (i + 0.5) / nwin) - 3, 7) for i in range(nwin)]
+        for sx, ww in slots:
+            window(sx, wy, ww, wh)
             if fl == floors - 1:                      # 下の階の窓には、花の植木箱
-                for x in range(sx - 1, sx + 8):
+                for x in range(sx - 1, sx + ww + 1):
                     g.put(x, wy + wh + 2, "B3"); g.put(x, wy + wh + 3, "B2")
                     g.put(x, wy + wh + 1, "F1" if x % 2 else "F2")
-                for x in (sx, sx + 3, sx + 6):
+                for x in range(sx, sx + ww, 3):
                     g.put(x, wy + wh + 1, "F3")
-        sidewin(x1 + max(3, D // 3), max(4, D // 3), top + fl * FH + 5, FH - 10)
+        sw = max(5, D // 2 + 1) if D < 15 else D // 2 + 2
+        sidewin(x1 + max(3, (D - sw) // 2), sw, top + fl * FH + 4, FH - 9)
     # ---- 玄関（石のアーチ＋扉） ----
-    dh = min(FH - 5, 13)
+    dh = min(FH - 11, 13)
     for y in range(bot - dh - 3, bot + 1):
         for x in range(doorx - 7, doorx + 8):
             d = abs(x - doorx)
             ya = bot - dh - (2 if d <= 3 else 1 if d <= 5 else 0)
-            if y >= ya - 2 and d <= 7:
+            if y >= ya - 2 and d <= 6:
                 g.put(x, y, "K3" if (x + y) % 4 else "K2")   # アーチの石
     for y in range(bot - dh, bot + 1):
         for x in range(doorx - 5, doorx + 6):
@@ -234,15 +264,43 @@ def build(W, H, FW, D, floors, FH, RH, ox=3, door=0.5, nwin=3, ov=3, porch=False
         g.put(doorx, y, "D1")
     g.put(doorx - 2, bot - 5, "Y"); g.put(doorx + 2, bot - 5, "Y")
     g.put(doorx, bot - dh - 2, "K4")                # かなめ石
-    for x in range(doorx - 7, doorx + 8):
+    for x in range(doorx - 6, doorx + 7):
         g.put(x, bot + 1, "K4"); g.put(x, bot + 2, "K3")
-    if porch:
-        py = bot - dh - 6
-        for x in range(doorx - 9, doorx + 10):
-            g.put(x, py, "R5"); g.put(x, py + 1, "R4"); g.put(x, py + 2, "R3"); g.put(x, py + 3, "R1")
-        for x in range(doorx - 8, doorx + 9):
-            if g.get(x, py + 4) not in ("D1", "D2", "D3"):
-                g.put(x, py + 4, "SOOT") if x % 2 else None
+    # 出入口の屋根（石のアーチの上の、小さな瓦の庇。両はしに木の腕木）
+    py = bot - dh - 8
+    for x in range(doorx - 9, doorx + 10):
+        for r in range(5):
+            y = py + r
+            if r == 0:
+                k = "R6"                                    # 壁につく所の水切り
+            elif r == 4:
+                k = "R1"                                    # 軒のふち
+            else:
+                cell = (x + (2 if r % 2 else 0)) % 3
+                k = "R5" if cell == 0 else ("R3" if cell == 2 else "R4")
+                if r == 3:
+                    k = "R2" if cell == 2 else "R3"
+            g.put(x, y, k)
+    for x in range(doorx - 8, doorx + 9):                   # 庇の下の影（アーチの石に落ちる）
+        g.put(x, py + 5, "SOOT" if x % 2 else "K1")
+    for side in (-1, 1):                                    # 腕木（ななめの木）
+        bx = doorx + side * 8
+        for k in range(4):
+            g.put(bx - side * k * 0, py + 5 + k, "B3" if side < 0 else "B2")
+            g.put(bx + side * 0 - side * (k // 2), py + 5 + k, "B2")
+    # 雨どい（正面の右のかど、たて）
+    for y in range(top + 1, bot + 1):
+        g.put(x1 - 3, y, "K2"); g.put(x1 - 2, y, "K1")
+        if (y - top) % 7 == 3:
+            g.put(x1 - 4, y, "K3"); g.put(x1 - 1, y, "K1")   # とめ金
+    g.put(x1 - 4, bot, "K2"); g.put(x1 - 5, bot, "K1")    # 下の口
+    # 玄関の横のかべ灯り
+    lx = doorx + 9
+    ly = bot - dh + 1
+    if any(g.get(lx + a_, ly + b_)[0] in "GBF" for a_ in (-1, 0, 1) for b_ in (-1, 0, 1, 2)):
+        lx = -100                                   # 窓とかさなるときは、灯りをつけない
+    g.put(lx, ly - 1, "SOOT"); g.put(lx - 1, ly, "SOOT"); g.put(lx + 1, ly, "SOOT")
+    g.put(lx, ly, "Y"); g.put(lx, ly + 1, "L1"); g.put(lx - 1, ly + 1, "SOOT"); g.put(lx + 1, ly + 1, "SOOT"); g.put(lx, ly + 2, "SOOT")
     # ---- 屋根（切妻。棟は正面と平行で、奥行きのまん中） ----
     ex0, ex1 = x0 - ov, x1 + ov                      # 正面の軒の左右
     ey = top + 1                                     # 軒の高さ（壁の上に少しかぶる）
@@ -264,6 +322,11 @@ def build(W, H, FW, D, floors, FH, RH, ox=3, door=0.5, nwin=3, ov=3, porch=False
             k = "R5"                                # 瓦の上のふち（光）
         if cell == 3:
             k = "R3"
+        tv = hn(int(xs + off) // 4, r, seed + 2) % 7
+        if ly == 1 and tv == 0:
+            k = "R3"                                # すこし色のちがう瓦（ふき替えた所）
+        if cell == 0 and ly == 1:
+            k = "R5"                                # 瓦の左のふちの光
         if ly == 1 and hn(int(xs + off) // 4, r, seed) % 9 == 0:
             k = "R5"
         if ly == 1 and hn(int(xs + off) // 4, r, seed + 1) % 13 == 0:
@@ -381,5 +444,5 @@ def variants(name, g):
 
 
 if __name__ == "__main__":
-    variants("cottage-brick", build(48, 56, FW=31, D=11, floors=1, FH=19, RH=13, ox=3, door=0.5, nwin=3, ov=2, chimney=0.62, seed=3))
+    variants("cottage-brick", build(48, 56, FW=31, D=11, floors=1, FH=22, RH=12, ox=3, door=0.64, nwin=2, ov=2, chimney=0.62, seed=3))
     variants("manor-brick", build(80, 80, FW=55, D=19, floors=2, FH=18, RH=16, ox=2, door=0.45, nwin=3, ov=2, porch=True, dormer=True, chimney=0.74, seed=8))
