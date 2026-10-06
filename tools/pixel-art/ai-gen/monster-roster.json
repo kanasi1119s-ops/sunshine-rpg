@@ -3276,7 +3276,7 @@
  {
   "id": "enc-world-sea-2",
   "prompt": "a sea firefly bug swarm queen, a larger glowing insect with transparent shell and blue light trails",
-  "status": "draft",
+  "status": "done",
   "key": "enemy:enc-world-sea-2",
   "kind": "mob",
   "name": "海ほたるの虫",
@@ -3289,12 +3289,13 @@
    210
   ],
   "bg": "dark",
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-world-sea-2_0"
  },
  {
   "id": "enc-world-sea-3",
   "prompt": "a whirlpool droplet, a floating drop of seawater spinning into a spiral with a dark eye at its center",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-sea-3",
   "kind": "mob",
   "name": "渦のしずく",
@@ -3305,7 +3306,8 @@
    60,
    120,
    160
-  ]
+  ],
+  "draft": "enc-world-sea-3_1"
  },
  {
   "id": "enc-world-sea-4",
