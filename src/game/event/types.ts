@@ -1,3 +1,5 @@
+import type { SceneTime } from "../time-of-day";
+
 export type Flags = Record<string, boolean>;
 
 export interface ChoiceOption {
@@ -25,7 +27,11 @@ export type EventCommand =
   /** 町にとめた飛空艇に乗って、飛び立つ（空の町・浮嶼。2026-10-06）。会話はここで終わる。 */
   | { type: "takeoff" }
   /** スタッフロール（エンディングの演出）を流す。 */
-  | { type: "staffRoll" };
+  | { type: "staffRoll" }
+  /** 時計を、その時間帯まで進める（イベントの途中で「その夜」「翌朝」にする。2026-10-06）。 */
+  | { type: "time"; time: SceneTime }
+  /** 画面を暗くする・もどす（回想などを、暗い画面に文字だけで見せる。会話がおわると、自動でもどる。2026-10-06）。 */
+  | { type: "screen"; dark: boolean };
 
 /** イベント実行中、画面表示側に「今これを見せて」と伝える1コマ。 */
 export type EventStep =

@@ -1,5 +1,6 @@
 import { createEventRunner, type WarpRequest } from "../event/event-runner";
 import type { EventCommand, EventInput, EventStep, Flags } from "../event/types";
+import type { SceneTime } from "../time-of-day";
 import { computeVisibleChars } from "./typewriter";
 
 export type DialogueRenderState =
@@ -16,6 +17,8 @@ export interface DialogueControllerOptions {
   onInnStay?: (price: number) => boolean;
   onStaffRoll?: () => void;
   onCinematic?: (on: boolean) => void;
+  onTime?: (time: SceneTime) => void;
+  onScreen?: (dark: boolean) => void;
   charsPerSecond?: number;
 }
 
@@ -52,6 +55,8 @@ export class DialogueController {
       onInnStay: this.options.onInnStay,
       onStaffRoll: this.options.onStaffRoll,
       onCinematic: this.options.onCinematic,
+      onTime: this.options.onTime,
+      onScreen: this.options.onScreen,
     });
     this.advance(undefined);
   }

@@ -1,3 +1,4 @@
+import type { SceneTime } from "../time-of-day";
 import type { EventCommand, EventInput, EventStep, Flags } from "./types";
 
 export interface WarpRequest {
@@ -18,6 +19,8 @@ interface RunnerOptions {
   onInnStay?: (price: number) => boolean;
   onStaffRoll?: () => void;
   onCinematic?: (on: boolean) => void;
+  onTime?: (time: SceneTime) => void;
+  onScreen?: (dark: boolean) => void;
 }
 
 /**
@@ -71,6 +74,14 @@ function* runCommands(
 
       case "takeoff":
         options.onTakeoff?.();
+        break;
+
+      case "time":
+        options.onTime?.(command.time);
+        break;
+
+      case "screen":
+        options.onScreen?.(command.dark);
         break;
 
       case "startBattle":

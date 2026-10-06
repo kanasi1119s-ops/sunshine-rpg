@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CHAPTER11_MAPS, CHAPTER11_NPCS } from "./chapter11-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./world";
 import { GODS } from "../battle/chapter11-enemies";
+import { keyAcceptedFlag, keyFlag, trialBattleId, trialFlag, trialStats } from "./shrine-keys";
 import { collectBattleIds, collectReferencedFlags, collectSetFlags, collectWarpTargets } from "../event/inspect";
 import { createTileMap, isWalkable } from "../map/tile-map";
 import { createEventRunner } from "../event/event-runner";
@@ -86,7 +87,7 @@ describe("8神の禁域のデータの整合性", () => {
   it("参照するフラグは、どこかでsetFlagされているか、戦闘の勝利で立つ。warpは実在、戦闘IDは8神のもの", () => {
     const commands = all().flatMap((n) => n.commands);
     const set = collectSetFlags(commands);
-    const victory = new Set(GODS.map((g) => `god${g.no}_defeated`));
+    const victory = new Set([...GODS.map((g) => `god${g.no}_defeated`), ...GODS.flatMap((g) => [trialFlag(g.no, 1), trialFlag(g.no, 2)])]);
     for (const flag of collectReferencedFlags(commands)) {
       if (flag === "deep_yugami_defeated" || victory.has(flag)) {
         continue;
@@ -96,7 +97,7 @@ describe("8神の禁域のデータの整合性", () => {
     for (const mapId of collectWarpTargets(commands)) {
       expect(WORLD_MAPS[mapId]).toBeDefined();
     }
-    expect(collectBattleIds(commands)).toEqual(new Set(GODS.map((g) => g.id)));
+    expect(collectBattleIds(commands)).toEqual(new Set([...GODS.map((g) => g.id), ...GODS.flatMap((g) => [trialBattleId(g.no, 1), trialBattleId(g.no, 2)])]));
   });
 });
 
@@ -109,6 +110,32 @@ describe("8神の禁域の進行", () => {
     const targets = collectWarpTargets(npc("god-1-entrance").commands);
     expect(targets).toEqual(new Set(["god-shrine-1"]));
     expect(run(npc("god-1-entrance").commands, cleared).join("")).toContain("石扉");
+  });
+
+  it("鍵がないと扉は開かない。依頼を受け、番人を2体（1体目→2体目の順で）倒して報告すると、鍵がもらえる", () => {
+    for (const god of GODS) {
+      const flags: Flags = { deep_yugami_defeated: true };
+      expect(run(npc(`${god.id}-entrance`).commands, flags).join("")).toContain("封印の紋");
+      run(npc(`${god.id}-key-giver`).commands, flags);
+      expect(flags[keyAcceptedFlag(god.no)]).toBe(true);
+      expect(run(npc(`${god.id}-trial-2`).commands, flags).join("")).toContain("先に");
+      flags[trialFlag(god.no, 1)] = true;
+      run(npc(`${god.id}-key-giver`).commands, flags);
+      expect(flags[keyFlag(god.no)]).toBeUndefined();
+      flags[trialFlag(god.no, 2)] = true;
+      run(npc(`${god.id}-key-giver`).commands, flags);
+      expect(flags[keyFlag(god.no)]).toBe(true);
+    }
+  });
+
+  it("試練の番人は、8神に近い強さ（2体目のほうが強い）", () => {
+    for (const god of GODS) {
+      const a = trialStats(god.no, 1);
+      const b = trialStats(god.no, 2);
+      expect(a.maxHp).toBeGreaterThan(god.maxHp * 0.75);
+      expect(b.maxHp).toBeGreaterThan(a.maxHp);
+      expect(b.attack).toBeGreaterThanOrEqual(god.attack);
+    }
   });
 
   it("裏ボスを倒したあとは入口から禁域へ入れ、神を倒し、祭壇で環の欠片を得る（神を倒す前は得られない）", () => {

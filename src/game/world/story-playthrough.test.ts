@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { WORLD_NPCS } from "./world";
+import { SHRINE_KEYS } from "./shrine-keys";
 import { availableJobs, LEGEND_UNLOCK_FLAGS } from "../job/jobs";
 import { createEventRunner } from "../event/event-runner";
 import type { Flags } from "../event/types";
@@ -27,6 +28,8 @@ const BATTLE_VICTORY_FLAG: Record<string, string> = {
   "kanou3-guard": "kanou3_guard_defeated",
   zenkan: "zenkan_defeated",
   ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`god-${i + 1}`, `god${i + 1}_defeated`])),
+  // 禁域の鍵の、試練の番人（shrine-keys.ts）
+  ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [1, 2].map((k) => [`shrine-trial-${i + 1}-${k}`, `god${i + 1}_trial${k}_defeated`])).flat()),
 };
 
 const CHAPTER_MAPS: string[][] = [
@@ -42,6 +45,8 @@ const CHAPTER_MAPS: string[][] = [
   ["kyotoukyu-court", "kyotoukyu-corridor", "kyotoukyu-sanctum"],
   ["deep-1", "deep-2", "deep-3", "deep-4"],
   ["tower-1", "tower-2", "tower-3", "kanou-1", "kanou-2", "kanou-3", "kanou-4"],
+  // 禁域の鍵の頼みごと（依頼人の町 → 試練の番人の2か所 → 依頼人）と、禁域
+  ...SHRINE_KEYS.map((key) => [key.giver.mapId, ...key.trials.map((t) => t.mapId), key.giver.mapId]),
   ...Array.from({ length: 8 }, (_, i) => [`god-shrine-${i + 1}`]),
   ["world-map", "shipwright-hut", "keeper-shrine-sky"],
   ...[1, 2, 3, 4, 5, 6].map((n) => [`islet-${n}-1`, `islet-${n}-2`]),

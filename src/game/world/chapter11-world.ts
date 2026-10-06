@@ -3,11 +3,12 @@ import { GODS } from "../battle/chapter11-enemies";
 import type { TileMapData } from "../map/types";
 import type { EventCommand } from "../event/types";
 import type { Npc } from "../npc";
+import { keyFlag, lockedDoorCommands, SHRINE_KEY_NPCS } from "./shrine-keys";
 import { say } from "./side-story";
 
 /**
  * 8神（`docs/story/secret-boss.md` 3章、roadmap 6-4〜6-7）。裏ボス「初源の歪み」を倒したあと、各地方の禁域に挑める。
- * 各禁域は、その地方の地図にある「禁域の入口」から入る1部屋。神を倒し、奥の祭壇から「環の欠片」を持ち帰る。
+ * 各禁域は、その地方の地図にある「禁域の入口」から入る1部屋。扉を開けるには、その土地の頼みごとで「鍵」がいる（`shrine-keys.ts`。2026-10-06）。神を倒し、奥の祭壇から「環の欠片」を持ち帰る。
  * 8つそろうと、虚灯宮・深部の転移陣が起動する（`chapter10-world.ts` の `deep4-circle`）。
  * 撃破報酬: 女神・純神・鬼神・蟲神は、天神・悪神ジョブの解放（`chapter{N}_defeated` フラグで、ジョブ画面に出る）。武神・無神・異神・冥神は、最強クラスの装備（仮。会話のみ）。ボスの絵は図形。
  */
@@ -128,12 +129,20 @@ function entranceCommands(no: number, shrine: GodShrine): EventCommand[] {
           else: [
             say(undefined, shrine.entranceText),
             {
+              type: "if",
+              flag: keyFlag(no),
+              equals: true,
+              then: [
+            {
               type: "choice",
               text: `${god.kind}の禁域へ入りますか？`,
               options: [
                 { label: "入る", commands: [{ type: "warp", mapId: shrineMapId(no), tileX: SHRINE_ENTRY.tileX, tileY: SHRINE_ENTRY.tileY }] },
                 { label: "やめておく", commands: [] },
               ],
+            },
+              ],
+              else: lockedDoorCommands(no),
             },
           ],
         },
@@ -215,5 +224,6 @@ export const CHAPTER11_NPCS: Record<string, Npc[]> = (() => {
     add(shrineMapId(no), { id: `god-${no}-altar`, ...SHRINE_LANDMARKS.altar, tileY: SHRINE_LANDMARKS.altar.tileY + 0, color: shrine.palette.altar, commands: altarCommands(no, shrine) });
     add(shrineMapId(no), { id: `god-${no}-lore`, ...SHRINE_LANDMARKS.lore, color: "#909090", commands: [say(undefined, shrine.lore)] });
   });
+  for (const [mapId, list] of Object.entries(SHRINE_KEY_NPCS)) for (const npc of list) add(mapId, npc);
   return result;
 })();

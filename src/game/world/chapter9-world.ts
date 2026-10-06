@@ -1,3 +1,4 @@
+import { EPILOGUE_BEFORE_ROLL } from "./scenes/epilogue";
 import {
   createKyotoukyuCorridorData,
   createKyotoukyuCourtData,
@@ -300,10 +301,10 @@ function grandfatherCommands(): EventCommand[] {
               text: "……まだ、何かが眠っておる。この宮の、もっと深いところに。あれは、二十年前の事件よりも、ずっと古いものじゃ。",
               speaker: "ソウイチ",
             },
-            { type: "message", text: "★ メインストーリーをクリアしました！（虚灯宮の奥に、クリア後の道が開いた）" },
             { type: "setFlag", flag: "chapter9_cleared", value: true },
             { type: "setFlag", flag: "chapter9_secret_open", value: true },
-            { type: "staffRoll" },
+            // 帰り道（帰りの海・旅の回想・灯里の桟橋）を見せてから、スタッフロール（scenes/epilogue.ts）
+            ...EPILOGUE_BEFORE_ROLL,
           ],
           else: [
             { type: "message", text: "寝台の上で、老人が静かに眠っている。手首には、ユーリの腕輪とそっくりな灯り石の腕輪。" },

@@ -64,6 +64,8 @@ import { startCloudSaves } from "./game/save/cloud-saves";
 import type { EventCommand } from "./game/event/types";
 import type { Npc } from "./game/npc";
 import { PARTY_NAMES, residentVisible } from "./game/world/scene-residents";
+import { createTrialEnemy, SHRINE_KEYS, shrineKeyQuestLog, trialBattleId, trialFlag } from "./game/world/shrine-keys";
+import { EPILOGUE_AFTER_ROLL, EPILOGUE_SEEN_FLAG } from "./game/world/scenes/epilogue";
 import { isVoiceOnly, pendingScene, sceneSeenFlag, sceneSpeakers, sleptFlagsAfterInn } from "./game/world/story-scenes";
 import { firstSpeaker } from "./game/sprite/character-specs";
 import { createTileMap, findExitAt, isWalkable, type TileMap } from "./game/map/tile-map";
@@ -743,6 +745,12 @@ const dialogue = new DialogueController(flags, {
     autosave();
     return true;
   },
+  onTime: (t) => {
+    clockMs = advanceClockTo(clockMs, t);
+  },
+  onScreen: (on) => {
+    screenDarkSticky = on;
+  },
   onCinematic: (on) => {
     cinematicSticky = on;
     if (on && audioStarted) audio.playSe(seOf("magic-charge"));
@@ -840,6 +848,12 @@ const STORY_BATTLES: Record<string, StoryBattleDef> = {
   // 8神（roadmap 6-4〜6-7）。
   ...Object.fromEntries(
     GODS.map((god) => [god.id, { createEnemy: () => createGodYugami(god), victoryFlag: `god${god.no}_defeated`, bgmId: "eight-gods" }]),
+  ),
+  // 禁域の鍵の、試練の番人（各神に2体。2026-10-06）。
+  ...Object.fromEntries(
+    SHRINE_KEYS.flatMap((key) =>
+      ([1, 2] as const).map((k) => [trialBattleId(key.no, k), { createEnemy: () => createTrialEnemy(key.no, k), victoryFlag: trialFlag(key.no, k), bgmId: "elite" }]),
+    ),
   ),
 };
 
@@ -1637,6 +1651,9 @@ const COMPANION_NPC_IDS: Record<string, string> = {
 
 /** 映画のような演出（上下の黒い帯）。ドルンが話す場面と、`cinematic` コマンドで入る。会話がおわると、ゆっくり消える。 */
 let cinematicSticky = false;
+/** 画面を暗くする演出（`screen` コマンド。回想を、暗い画面に文字だけで見せる）。会話がおわると、ゆっくりもどる。 */
+let screenDarkSticky = false;
+let screenDarkLevel = 0;
 /** 宿で眠る演出（2026-10-05、人間の指示「宿に泊まったら、画面を真っ暗にして寝る」）。暗くなる→真っ暗→明るくなる。そのあいだは操作できない。 */
 const SLEEP_FADE_OUT_MS = 700;
 const SLEEP_DARK_MS = 1500;
@@ -2582,6 +2599,11 @@ function renderGameSceneBase(): void {
     ctx.textAlign = "left";
   }
 
+  if (screenDarkLevel > 0.001) {
+    // 回想の暗い画面（文字の窓は、このあとに描くので、上に出る）
+    ctx.fillStyle = `rgba(4,6,14,${(0.94 * screenDarkLevel).toFixed(3)})`;
+    ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  }
   if (cinematicLevel > 0.001) {
     // 映画のような演出: 上下に黒い帯が入り、まわりが少し暗くなる
     const e = cinematicLevel * cinematicLevel * (3 - 2 * cinematicLevel);
@@ -2653,7 +2675,7 @@ function renderGameSceneBase(): void {
     renderItemsScreen(ctx, itemsView(), itemsScroll, gold, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   }
   if (pauseMenu.open && pauseMenu.screen === "quests") {
-    renderQuestLog(ctx, sideQuestLog(SIDE_STORIES, flags), itemsScroll, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    renderQuestLog(ctx, [...shrineKeyQuestLog(flags), ...sideQuestLog(SIDE_STORIES, flags)], itemsScroll, LOGICAL_WIDTH, LOGICAL_HEIGHT);
   }
   if (equipMenu.open) {
     renderEquipMenu(ctx, equipMenu, equipMenuView(), LOGICAL_WIDTH, LOGICAL_HEIGHT);
@@ -2700,7 +2722,9 @@ const loop = createGameLoop({
         cinematicSticky = true;
         if (audioStarted) audio.playSe(seOf("magic-charge"));
       }
-      if (!dialogue.isActive() || battle) cinematicSticky = false;
+      if (!dialogue.isActive() || battle) { cinematicSticky = false; screenDarkSticky = false; }
+      const darkGoal = screenDarkSticky ? 1 : 0;
+      screenDarkLevel += Math.sign(darkGoal - screenDarkLevel) * Math.min(Math.abs(darkGoal - screenDarkLevel), dtMs / 600);
       const goal = cinematicSticky ? 1 : 0;
       cinematicLevel += Math.sign(goal - cinematicLevel) * Math.min(Math.abs(goal - cinematicLevel), dtMs / 450);
     }
@@ -2929,6 +2953,10 @@ const loop = createGameLoop({
       staffRoll = actionPressed ? skipStaffRoll() : updateStaffRoll(staffRoll, dtMs, LOGICAL_HEIGHT);
       if (!staffRoll.open) {
         playMapBgm(currentMapId);
+        // 本編クリアのスタッフロールのあとは、エピローグの続き（灯里の家の夕食・屋根裏の夜・翌朝）を流す
+        if (flags["chapter9_cleared"] && !flags[EPILOGUE_SEEN_FLAG]) {
+          dialogue.start(EPILOGUE_AFTER_ROLL);
+        }
       }
       return;
     }
