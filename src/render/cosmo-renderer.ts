@@ -36,9 +36,9 @@ export function resetCosmo(): void {
   memory.clear();
 }
 
-/** 浮いている高さ（ドット。上がマイナス）。ゆっくり上下にゆれる。 */
+/** 浮いている高さ（ドット。上がマイナス）。ゆっくり上下にゆれる（人間の指示「もっと飛んでもいいや」で高く）。 */
 export function cosmoHover(nowMs: number, id: string): number {
-  return -7 + Math.round(Math.sin(nowMs / 420 + id.length) * 2);
+  return -20 + Math.round(Math.sin(nowMs / 520 + id.length) * 3);
 }
 
 function activeSpec(anim: { spec: BattleAnimSpec; elapsedMs: number } | null | undefined, id: string): { spec: BattleAnimSpec; p: number } | null {
@@ -62,9 +62,20 @@ const ease = (t: number): number => t * t * (3 - 2 * t);
 
 /** 砲台の位置（と、どの砲台が手前か・どこを向くか）。 */
 function podPositions(member: Combatant, center: { x: number; y: number }, anim: { spec: BattleAnimSpec; elapsedMs: number } | null | undefined, pointOf: (id: string) => Pt, nowMs: number): { x: number; y: number; front: boolean; aim: { x: number; y: number } | null }[] {
+  // 待機中は、体のまわりを縦にぐるぐる回る（人間の指示「縦にぐるぐる回る感じにして」）。
+  // 背中（右）側を上り、頭の上をこえて、前（左）側を下りる。前を通る砲台は体より手前に描く
+  // もう1つの動き方（人間の指示「周辺を不規則に自由に飛んでる感じでもいいや」）: 砲台ごとにちがう速さの波を重ねて、
+  // まわりを気ままに飛びまわる。2つの動き方は、10秒ごとに、なめらかに入れかわる（縦に回る→自由に飛ぶ→縦に回る…）
   const orbit = (i: number, t: number): { x: number; y: number; front: boolean } => {
-    const a = t / 900 + (i * Math.PI * 2) / PODS;
-    return { x: center.x + Math.cos(a) * 24, y: center.y - 4 + Math.sin(a) * 8, front: Math.sin(a) > 0 };
+    const a = t / 800 + (i * Math.PI * 2) / PODS;
+    const vx = center.x + 2 - Math.cos(a) * 13, vy = center.y - 2 + Math.sin(a) * 27, vf = Math.cos(a) > 0;
+    const s = t / 1000, ph = i * 1.7;
+    const fx = center.x + Math.sin(s * (0.9 + i * 0.13) + ph) * 26 + Math.sin(s * 2.3 + ph * 2) * 7;
+    const fy = center.y - 4 + Math.sin(s * (1.3 + i * 0.11) + ph * 1.3) * 22 + Math.cos(s * 3.1 + ph) * 5;
+    const ff = Math.cos(s * (0.9 + i * 0.13) + ph) > 0;
+    const c = (t / 10000) % 1;
+    const w = c < 0.42 ? 0 : c < 0.5 ? ease((c - 0.42) / 0.08) : c < 0.92 ? 1 : 1 - ease((c - 0.92) / 0.08);
+    return { x: vx + (fx - vx) * w, y: vy + (fy - vy) * w, front: w < 0.5 ? vf : ff };
   };
   const formation = (i: number, tp: Pt, t: number): { x: number; y: number } => {
     const big = (tp.h ?? 32) >= 90;
@@ -149,6 +160,8 @@ function drawPod(ctx: CanvasRenderingContext2D, x: number, y: number, aim: { x: 
 
 /** いつもの光（体のまわりの、ゆっくり脈打つ水色の光と、立ちのぼる光の粒）。 */
 function drawAura(ctx: CanvasRenderingContext2D, cx: number, cy: number, nowMs: number, strong: boolean): void {
+  // ドット絵エディタで描いた、いつもの輝きのコマ（くり返す。脈打つ光・広がる光の輪・まわる光の粒・立ちのぼる光のすじ）
+  drawSpellFrame(ctx, "cosmo", "aura", 0, { x: cx, y: cy }, { loopMs: nowMs });
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
   const pulse = 0.5 + 0.5 * Math.sin(nowMs / 350);
@@ -220,6 +233,12 @@ export function drawCosmoWearer(
     drawRing(ctx, center.x, center.y - 2, nowMs);
     if (normal) ctx.drawImage(normal, left, top);
   }
+  // 体の上にも、うすく輝きを重ねる（体そのものが光って見えるように）
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = 0.22 + 0.12 * Math.sin(nowMs / 280);
+  drawSpellFrame(ctx, "cosmo", "aura", 0, { x: center.x, y: center.y }, { loopMs: nowMs + 300 });
+  ctx.restore();
   pods.forEach((p, i) => { if (p.front && !p.aim) drawPod(ctx, p.x, p.y, p.aim, 1, nowMs, i); });
   void state;
   return true;

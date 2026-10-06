@@ -9,6 +9,8 @@ verify_sheet.py で食い違い0マスを確かめてから、export-spell-sheet
   bolt（雷のビーム）: 砲口（右はし）から左へのびる、太い雷のビーム。芯は白、ふちは水色、外は青の点々。枝の稲妻と、
                   砲口の光の星。くり返す（ゲームでは、砲台から敵へ向けて回して、長さを合わせて描く）
   hit（命中）: 白い閃光の芯・十字の星・まわりへ走る短い稲妻・広がる光の輪・火花
+  aura（いつもの輝き。くり返す）: 体のまわりで脈打つ光・外へ広がって消える光の輪・逆向きにまわる2つの光の粒の輪・
+                  立ちのぼる光のすじ（人間の指示「常時輝きのモーション入れて」）
 
 使い方: python3 tools/pixel-art/fx/cosmo_fx.py assets-src/effects/spells
 """
@@ -32,6 +34,7 @@ spells.FLASH["cosmo"] = "#d8f6ff"
 
 BW, BH, BAX, BAY = 112, 28, 111, 14     # ビーム（右はしが砲口）
 HW, HH, HAX, HAY = 80, 80, 40, 40       # 命中（まん中が当たる所）
+AUW, AUH, AUX, AUY = 72, 80, 36, 42     # いつもの輝き（まん中が体のまん中）
 
 
 def zig(rnd, y0, x0, y1, x1, seg=(4, 8), amp=(2, 5)):
@@ -190,6 +193,48 @@ def hit(rnd):
     return frames
 
 
+def aura(rnd):
+    """いつもの輝き。16コマでひとめぐり（くり返してもつながる）"""
+    el = "cosmo"
+    frames = []
+    N = 16
+    streaks = [(rnd.uniform(-16, 16), rnd.uniform(0, 1), rnd.choice((3, 4, 5))) for _ in range(9)]
+    for k in range(N):
+        cv = Canvas(AUW, AUH)
+        cy, cx = AUY, AUX
+        ph = k / N
+        # 体のまわりの、脈打つ光（芯はうすく、まわりは1ドットおき）
+        pulse = 0.5 + 0.5 * math.cos(ph * 2 * math.pi)
+        R0 = 13 + pulse * 3
+        for y in range(int(cy - R0 * 1.5) - 1, int(cy + R0 * 1.5) + 2):
+            for x in range(int(cx - R0) - 1, int(cx + R0) + 2):
+                d = math.hypot((x - cx) / R0, (y - cy) / (R0 * 1.45))
+                if 0.82 < d <= 1.0:
+                    cv.put(y, x, "G" if pulse > 0.5 else "O", over=False)
+                elif 0.6 < d <= 0.82 and (x + y + k) % 2 == 0:
+                    cv.put(y, x, "R", over=False)
+        # 外へ広がって消える光の輪（2つ、半周ずらし）
+        for off in (0.0, 0.5):
+            q = (ph + off) % 1
+            R = 14 + q * 18
+            ellipse_ring(cv, cy, cx, R, R * 1.25, "Y" if q < 0.35 else ("O" if q < 0.7 else "D"), dither=q > 0.45, k=k, over=False)
+        # 逆向きにまわる、光の粒の輪（6つずつ）
+        for q in range(6):
+            a1 = ph * 2 * math.pi + q * math.pi / 3
+            a2 = -ph * 2 * math.pi + q * math.pi / 3 + 0.5
+            for (a, rx, ry, c) in ((a1, 20, 9, "W"), (a2, 16, 24, "Y")):
+                y, x = cy + math.sin(a) * ry, cx + math.cos(a) * rx
+                cv.put(y, x, c); cv.put(y, x + 1, "G", over=False); cv.put(y + 1, x, "O", over=False)
+        # 立ちのぼる光のすじ
+        for (ox, st, ln) in streaks:
+            q = (ph + st) % 1
+            y0 = cy + 22 - q * 46
+            for j in range(ln):
+                cv.put(y0 + j, cx + ox, "W" if j == 0 else ("G" if j < 2 else "O"))
+        frames.append(frame(cv, 70, el))
+    return frames
+
+
 def build(seed=21):
     rnd = random.Random(seed)
     meta = lambda name, frames, w, h, a: {"name": name, "w": w, "h": h, "anchor": list(a), "palette": PAL, "frames": frames}
@@ -197,6 +242,7 @@ def build(seed=21):
         "charge": meta("コスモリングライト 装着", equip_charge(rnd), CW, CH, (CAX, CAY)),
         "bolt": meta("コスモリングライト 雷のビーム（砲口＝右はし）", beam(rnd), BW, BH, (BAX, BAY)),
         "hit": meta("コスモリングライト 命中", hit(rnd), HW, HH, (HAX, HAY)),
+        "aura": meta("コスモリングライト いつもの輝き（くり返す）", aura(rnd), AUW, AUH, (AUX, AUY)),
     }
 
 

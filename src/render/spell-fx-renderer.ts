@@ -55,7 +55,7 @@ export interface SpellFrameInfo {
 export function drawSpellFrame(
   ctx: CanvasRenderingContext2D,
   fx: string,
-  kind: "hit" | "area" | "charge" | "bolt",
+  kind: "hit" | "area" | "charge" | "bolt" | "aura",
   progress: number,
   at: { x: number; y: number },
   opts: { scale?: number; flip?: boolean; loopMs?: number; rotate?: number; stretchX?: number } = {},
