@@ -90,10 +90,36 @@ for y in range(32):
     row = head[y] if y < 18 else (BODY[y-18] if y-18 < len(BODY) else "." * 16)
     for x, ch in enumerate(row):
         if ch == ".": continue
-        if y == 11 and ch in ("E", "F"): ch = "6" if ch == "F" else "5"   # はちまき → 金の額の輪
         put(OX+x, OY+y, ch)
-# 額の輪の前（左）に、小さな環の飾り
-for (x, y, c) in ((OX+2, OY+10, "A"), (OX+1, OY+11, "A"), (OX+2, OY+11, "v"), (OX+2, OY+12, "A"), (OX+3, OY+11, "5")):
+# 兜（2026-10-06 人間の指示「兜もつけよう」）。白い丸い鉢・金の額の帯・目の上のひさし・後ろへ流れる1枚のひれ・
+# 首の後ろを守るしころ。前（左）に環の飾り。髪は、ひさしの下の前髪と、しころの下の後ろ髪だけ見せる。
+# 記号: "_"=元の絵のまま、"."=消す、ほかは色。V字の角はつけない（CLAUDE.md 1-1）。
+HELM = [
+    "____________AA__",   # 0  ひれの先
+    "__________AA56A_",   # 1
+    "________AA5566A_",   # 2
+    ".....AAA55566A..",   # 3  ひれの根もと
+    "....A11112223A..",   # 4
+    "...A111122222A..",   # 5
+    "..A11112222233A.",   # 6
+    "..A11122222333A.",   # 7
+    "..A11222222334A.",   # 8
+    "..A12222222344A.",   # 9
+    "..A55555555566A.",   # 10 額の帯
+    "..AA4AAA12A334A_",   # 11 ひさし・耳当て・しころ
+    "___A____A12A44A_",   # 12
+    "________A2vA4A__",   # 13 耳当ての環の飾り
+    "_________AAA____",   # 14
+]
+for y, row in enumerate(HELM):
+    for x, ch in enumerate(row):
+        if ch == "_": continue
+        if ch == ".":
+            if G[OY+y][OX+x] in LET: put(OX+x, OY+y, ".")    # 元の絵（髪）だけ消す。後ろの光の環は残す
+        else:
+            put(OX+x, OY+y, ch)
+# 額の帯の前（左）に、小さな環の飾り
+for (x, y, c) in ((OX+1, OY+9, "A"), (OX+0, OY+10, "A"), (OX+1, OY+10, "v"), (OX+1, OY+11, "A"), (OX+2, OY+10, "5"), (OX+2, OY+9, "A")):
     put(x, y, c)
 
 used = sorted(set(ch for row in G for ch in row if ch != "."))
