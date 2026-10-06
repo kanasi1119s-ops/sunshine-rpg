@@ -54,6 +54,45 @@ export function renderProps(
     const x = prop.tileX * data.tileWidth + data.tileWidth / 2 - canvas.width / 2 - camera.x;
     const y = propFeetY(prop, data.tileHeight) - canvas.height - camera.y;
     ctx.drawImage(canvas, Math.round(x), Math.round(y));
+    if (FRONT_GRASS_KINDS.has(prop.kind)) drawFrontGrass(ctx, data, prop, canvas, Math.round(x), Math.round(y), camera);
+  }
+}
+
+/**
+ * 草むらの中に立つ木の根元を、手前の草の葉で少しかくす（2026-10-06 人間の指示「木の根元も手前のしげみで少し隠れるようにしよう」）。
+ * 木を描いたあと、根元のあたり（足もとから上へ10ドット）の、木の絵がある所にだけ、草むらと同じ並びの「葉だけの絵」
+ * （terrain:forest-front。地面は透明）を重ねる。木が草むらのタイルに立っているときだけ。
+ */
+const FRONT_GRASS_KINDS = new Set<string>(["tree", "tree-pine", "tree-dead"]);
+const alphaMasks = new Map<HTMLCanvasElement, Uint8ClampedArray | null>();
+function solidMask(canvas: HTMLCanvasElement): Uint8ClampedArray | null {
+  let m = alphaMasks.get(canvas);
+  if (m === undefined) {
+    m = null;
+    try {
+      const c = canvas.getContext("2d");
+      if (c) m = c.getImageData(0, 0, canvas.width, canvas.height).data;
+    } catch {
+      m = null;
+    }
+    alphaMasks.set(canvas, m);
+  }
+  return m;
+}
+function drawFrontGrass(ctx: CanvasRenderingContext2D, data: TileMapData, prop: MapProp, canvas: HTMLCanvasElement, sx: number, sy: number, camera: Camera): void {
+  const ground = data.layers[0]?.data;
+  if (!ground || !data.tileArt) return;
+  if (data.tileArt[ground[prop.tileY * data.width + prop.tileX]] !== "treeCanopy") return;
+  const grass = getSpriteCanvas("terrain:forest-front", SPRITE_DATA);
+  const mask = solidMask(canvas);
+  if (!grass || !mask) return;
+  const W = canvas.width, H = canvas.height;
+  for (let py = Math.max(0, H - 11); py < H; py++) {
+    for (let px = 0; px < W; px++) {
+      if (mask[(py * W + px) * 4 + 3] < 250) continue;          // 木の絵がある所（すける影はのぞく）だけ
+      const wx = sx + px + camera.x, wy = sy + py + camera.y;      // ワールド座標（草むらの絵の位置にそろえる）
+      ctx.drawImage(grass, ((wx % 128) + 128) % 128, ((wy % 128) + 128) % 128, 1, 1, sx + px, sy + py, 1, 1);
+    }
   }
 }
 

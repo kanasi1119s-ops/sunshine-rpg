@@ -37,7 +37,7 @@ def rnd(*a):
     return (hn(*a) & 0xFFFF) / 65535
 
 
-def make(scale, lawnlike=False):
+def make(scale, lawnlike=False, front=False):
     """scale: 草の高さの倍率（1=ふつう。しげみの端ほど小さい絵を使う）。株の並びはどれも同じ。"""
     global blade_id
     lum = np.full((N, N), GROUND)
@@ -111,6 +111,8 @@ def make(scale, lawnlike=False):
             v = lum[y, x]
             k = sum(v > t for t in TH)
             c = LEAF[min(10, k)]
+            if front and owner[y, x] < 0:
+                continue                                  # 葉だけの絵（木の根元の手前に重ねる）。地面は透かす
             if lawnlike:
                 # 2026-10-06「この低いしげみの草が少ない部分、もっと芝のドットに近い感じにして」:
                 # 地面は透かして、下の町の芝の絵をそのまま見せる。株の根もとの影はうすく透ける色。葉は芝と同じ色合いの段で
@@ -126,9 +128,9 @@ def make(scale, lawnlike=False):
 
 
 OUTS = {}
-for key, sc in (("terrain:forest", 1.0), ("terrain:forest-mid", 0.62), ("terrain:forest-low", 0.34)):
+for key, sc in (("terrain:forest", 1.0), ("terrain:forest-mid", 0.62), ("terrain:forest-low", 0.34), ("terrain:forest-front", 0.62)):   # 木の根元の手前の草は、中くらいの高さ（少しだけかくす）
     blade_id = 0
-    OUTS[key] = make(sc, lawnlike=key.endswith("-low"))
+    OUTS[key] = make(sc, lawnlike=key.endswith("-low"), front=key.endswith("-front"))
 img = OUTS["terrain:forest"]
 cols = sorted(set(img.flatten().tolist()))
 syms = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -163,7 +165,7 @@ def encode(im):
     return {"size": N, "palette": cs, "rle": "".join(out)}
 
 
-for key, nm in (("terrain:forest-mid", "canopy-mid"), ("terrain:forest-low", "canopy-low")):    # エディタで確かめる用
+for key, nm in (("terrain:forest-mid", "canopy-mid"), ("terrain:forest-low", "canopy-low"), ("terrain:forest-front", "canopy-front")):    # エディタで確かめる用
     im = OUTS[key]
     cs = sorted({c for c in im.flatten().tolist() if c})
     cm = {c: syms[i] for i, c in enumerate(cs)}
