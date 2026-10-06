@@ -21,16 +21,16 @@ function piece(name, dir, grid, palFile, recolor = {}, frame = 48) {
 export const PIECES = [
   // 磨き直した版（assets-src/pixel-practice/r17-polish/。生成の元は tree.py・house_brick.py（2026-10-06 からレンガの家。前は house3d.py）・smallprops.py）
   piece("P1-木", "r17-polish", "tree4.txt", "pal-tree.json", {}, 80),   // 2026-10-06 大きなリアルな木（64×80）
-  piece("P2-家", "r17-polish", "cottage-brick.txt", "pal-cottage-brick.json", {}, 64),
-  piece("P3-家青", "r17-polish", "cottage-brick.txt", "pal-cottage-brick-blue.json", {}, 64),
-  piece("P4-家緑", "r17-polish", "cottage-brick.txt", "pal-cottage-brick-green.json", {}, 64),
+  piece("P2-家", "r17-polish", "house-r.txt", "pal-house-r.json", {}, 64),   // 2026-10-06 木の技法（restyle.py --houses）
+  piece("P3-家青", "r17-polish", "house-blue-r.txt", "pal-house-blue-r.json", {}, 64),
+  piece("P4-家緑", "r17-polish", "house-green-r.txt", "pal-house-green-r.json", {}, 64),
   piece("P5-岩", "r17-polish", "rock2.txt", "pal-rock2.json"),
   piece("P6-茂み", "r17-polish", "bush2.txt", "pal-bush2.json"),
-  piece("P7-屋敷", "r17-polish", "manor-brick.txt", "pal-manor-brick.json", {}, 80),
-  piece("P8-屋敷青", "r17-polish", "manor-brick.txt", "pal-manor-brick-blue.json", {}, 80),
-  piece("P9-屋敷緑", "r17-polish", "manor-brick.txt", "pal-manor-brick-green.json", {}, 80),
+  piece("P7-屋敷", "r17-polish", "manor-r.txt", "pal-manor-r.json", {}, 80),
+  piece("P8-屋敷青", "r17-polish", "manor-blue-r.txt", "pal-manor-blue-r.json", {}, 80),
+  piece("P9-屋敷緑", "r17-polish", "manor-green-r.txt", "pal-manor-green-r.json", {}, 80),
   // 霧断崖の民家: 平屋の白い石の壁の版（house_brick.py の WHITE。2026-10-06）
-  piece("P50-白い家", "r17-polish", "cottage-brick.txt", "pal-cottage-brick-white.json", {}, 64),
+  piece("P50-白い家", "r17-polish", "house-white-r.txt", "pal-house-white-r.json", {}, 64),
   // 雪の地方の飾り（r17-polish/snow.py で、既存の木・岩・茂みを雪化／枯れ木は一から）
   piece("P10-雪の木", "r17-polish", "tree-snow.txt", "pal-tree-snow.json"),
   piece("P51-針葉樹", "r17-polish", "tree-pine.txt", "pal-tree-pine.json"),
@@ -70,7 +70,7 @@ PIECES.push(
   piece("P46-アイコンvolcano", "r17-polish", "icon-volcano.txt", "pal-icon-volcano.json"),
   piece("P47-アイコンdive", "r17-polish", "icon-dive.txt", "pal-icon-dive.json"),
   // 霧断崖の環の聖堂（r17-polish/church.py で一から。2026-10-05）。外観と、中の1枚絵
-  piece("P48-教会", "r17-polish", "cathedral.txt", "pal-cathedral.json", {}, 176),   // 2026-10-06 大聖堂版を採用（cathedral3d.py）
+  piece("P48-教会", "r17-polish", "cathedral-r.txt", "pal-cathedral-r.json", {}, 176),   // 2026-10-06 大聖堂版を採用（cathedral3d.py）
   piece("P49-教会の中", "r17-polish", "church-interior.txt", "pal-church-interior.json", {}, 224),
   piece("P50-船大工の小屋", "r25-hut", "icon-hut.txt", "pal-icon-hut.json"),
   // 芯環塔（世界地図のまんなか。2026-10-05、自然にできた岩の柱。上は嵐の雲。assets-src/pixel-practice/r27-spire/spire.py）。章の塔のダンジョンの印は、これまでどおり r22 の spire

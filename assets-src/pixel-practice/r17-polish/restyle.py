@@ -11,6 +11,7 @@
 書き出し: ../r29-restyle-trial/<名前>.txt と pal-<名前>.json（試し。ゲームには読み込まれない）。
 2026-10-06 人間の指示「これ全部共有ね」で採用。`--apply` をつけると、もとの絵（r17-polish・r20-props）を、この感じの絵で上書きする。
 使い方: python3 restyle.py            … 試しを作る
+        python3 restyle.py --houses   … 家屋（家・屋敷・聖堂。色ちがいごと）を、*-r.txt として書き出す
         python3 restyle.py --apply    … ゲームの絵にする（模型から描きなおした絵に、1回だけかける。2回かけると強くなりすぎる）"""
 import colorsys
 import json
@@ -70,9 +71,10 @@ def darker(c, f=0.55):
     return to_hex(colorsys.hls_to_rgb(h, l * f, min(1, s * 0.9 + 0.08)))
 
 
-def restyle(rows, pal, grad=True):
+def restyle(rows, pal, grad=True, keep=()):
     H, W = len(rows), len(rows[0])
     col = [[pal[ch] if ch != "." else "" for ch in r] for r in rows]
+    orig = [r[:] for r in col]
     solid = lambda x, y: 0 <= x < W and 0 <= y < H and len(col[y][x]) == 7
     # 1) 色相のずれ
     cache = {}
@@ -136,11 +138,15 @@ def restyle(rows, pal, grad=True):
                 r, g, b = hx(c)
                 h, l, s = colorsys.rgb_to_hls(r, g, b)
                 out[y][x] = to_hex(colorsys.hls_to_rgb(toward(h, WARM, 0.1) if s > 0.15 else h, min(0.95, l + 0.07), s))
-    # 左上のりんかくをなくしたあとの、すぐ内がわにも光のふち
+    # 5) 変えてはいけない色（家の扉の4色。扉が開く動きが、この色で扉の場所を見つける）は、もとのまま
+    for y in range(H):
+        for x in range(W):
+            if orig[y][x].lower() in keep:
+                out[y][x] = orig[y][x]
     return out
 
 
-def merge_colors(img, limit=62):
+def merge_colors(img, limit=62, protect=()):
     """色が limit をこえたら、いちばん近い2色を1つにまとめていく（エディタの記号は英字と数字の62個まで）。"""
     def rgb(c):
         return tuple(int(c[i:i + 2], 16) for i in (1, 3, 5))
@@ -152,7 +158,7 @@ def merge_colors(img, limit=62):
                     cnt[c] = cnt.get(c, 0) + 1
         if len(cnt) <= limit:
             return img
-        solid = [c for c in cnt if len(c) == 7]
+        solid = [c for c in cnt if len(c) == 7 and c.lower() not in protect]
         best = None
         for i, a in enumerate(solid):
             for b in solid[i + 1:]:
@@ -164,8 +170,8 @@ def merge_colors(img, limit=62):
         img = [[keep if c == drop else c for c in r] for r in img]
 
 
-def save(img, name):
-    img = merge_colors(img)
+def save(img, name, protect=()):
+    img = merge_colors(img, protect=protect)
     cols = sorted({c for r in img for c in r if c})
     syms = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     if len(cols) > len(syms):
@@ -176,8 +182,36 @@ def save(img, name):
     return len(cols)
 
 
+DOOR_KEEP = {"#a8703a", "#4a2a14", "#7a4a22", "#f4cc50"}
+# 家屋（2026-10-06 人間の指示「家屋全部さっきの木の技法使って作り直して」）。1つの絵を、色ちがいのパレットで使い分けているので、
+# パレットごとに別の絵（<出力名>.txt / pal-<出力名>.json）として書き出す（tools/pixel-art/props.mjs が読む）。
+HOUSES = [
+    ("cottage-brick", "cottage-brick", "house-r"), ("cottage-brick", "cottage-brick-blue", "house-blue-r"),
+    ("cottage-brick", "cottage-brick-green", "house-green-r"), ("cottage-brick", "cottage-brick-white", "house-white-r"),
+    ("manor-brick", "manor-brick", "manor-r"), ("manor-brick", "manor-brick-blue", "manor-blue-r"), ("manor-brick", "manor-brick-green", "manor-green-r"),
+    ("cathedral", "cathedral", "cathedral-r"),
+]
+
+
+def houses():
+    for txt, palname, outname in HOUSES:
+        rows = [l for l in open(os.path.join(HERE, txt + ".txt")).read().split("\n") if l]
+        pal = json.load(open(os.path.join(HERE, "pal-" + palname + ".json")))
+        img = restyle(rows, pal, keep=DOOR_KEEP)
+        img = merge_colors(img, protect=DOOR_KEEP)
+        cols = sorted({c for r in img for c in r if c})
+        syms = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        cmap = {c: syms[i] for i, c in enumerate(cols)}
+        open(os.path.join(HERE, outname + ".txt"), "w").write("\n".join("".join(cmap[c] if c else "." for c in r) for r in img) + "\n")
+        json.dump({cmap[c]: c for c in cols}, open(os.path.join(HERE, "pal-" + outname + ".json"), "w"))
+        print(outname, len(cols), "colors")
+
+
 if __name__ == "__main__":
     import sys
+    if "--houses" in sys.argv:
+        houses()
+        sys.exit(0)
     apply = "--apply" in sys.argv
     os.makedirs(OUT, exist_ok=True)
     only = [a for a in sys.argv[1:] if not a.startswith("--")]                # 名前をならべると、その絵だけ
