@@ -2975,7 +2975,7 @@
  },
  {
   "id": "enc-world-4-3",
-  "prompt": "a snowfield insect, a white furry caterpillar with icy blue spots and frost on its hairs",
+  "prompt": "a fat white furry caterpillar monster with bright icy blue spots along its body, frost on its hairs, small black eyes and many stubby legs, side view",
   "status": "done",
   "key": "enemy:enc-world-4-3",
   "kind": "mob",
@@ -2989,13 +2989,13 @@
    235
   ],
   "bg": "dark",
-  "seed_base": 6001,
-  "draft": "enc-world-4-3_1"
+  "seed_base": 10002,
+  "draft": "enc-world-4-3_0"
  },
  {
   "id": "enc-world-4-4",
   "prompt": "an ice crystal creature, a large hexagonal snowflake crystal with a frozen face in the center",
-  "status": "todo",
+  "status": "draft",
   "key": "enemy:enc-world-4-4",
   "kind": "mob",
   "name": "氷の結晶",
@@ -3013,7 +3013,7 @@
  {
   "id": "enc-world-4-5",
   "prompt": "a blizzard bird with feathers like flying snow, a pale blue body and an icy crest",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-4-5",
   "kind": "mob",
   "name": "吹雪の羽",
@@ -3026,7 +3026,8 @@
    235
   ],
   "bg": "dark",
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-world-4-5_1"
  },
  {
   "id": "enc-world-5-0",
