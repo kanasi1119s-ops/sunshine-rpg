@@ -2900,7 +2900,7 @@
  },
  {
   "id": "enc-world-3-5",
-  "prompt": "a desert vulture-like bird with sand-colored feathers, a bald head and long wings",
+  "prompt": "a desert vulture monster with ragged sand-colored feathers, a bald wrinkled red head, a hooked beak, long wings spread, talons, side view",
   "status": "done",
   "key": "enemy:enc-world-3-5",
   "kind": "mob",
@@ -2913,7 +2913,8 @@
    125,
    90
   ],
-  "draft": "enc-world-3-5_0"
+  "draft": "enc-world-3-5_0",
+  "seed_base": 6001
  },
  {
   "id": "enc-world-4-0",
@@ -2937,7 +2938,7 @@
  {
   "id": "enc-world-4-1",
   "prompt": "a frost distortion on four legs, a wolf-like shape of frozen mist with violet ice teeth",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-4-1",
   "kind": "mob",
   "name": "霜の歪み",
@@ -2950,12 +2951,13 @@
    215
   ],
   "bg": "dark",
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-world-4-1_0"
  },
  {
   "id": "enc-world-4-2",
   "prompt": "a white shadow, a pale snow-covered blob-free figure like a tall snowdrift with dark eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-4-2",
   "kind": "mob",
   "name": "白い影",
@@ -2968,7 +2970,8 @@
    235
   ],
   "bg": "dark",
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-world-4-2_1"
  },
  {
   "id": "enc-world-4-3",
