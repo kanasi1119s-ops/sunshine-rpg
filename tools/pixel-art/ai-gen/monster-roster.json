@@ -2833,7 +2833,7 @@
  {
   "id": "enc-world-3-1",
   "prompt": "a hot wind shadow, a whirling dust devil with an orange glowing face inside",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-3-1",
   "kind": "mob",
   "name": "熱風の影",
@@ -2844,12 +2844,13 @@
    200,
    140,
    90
-  ]
+  ],
+  "draft": "enc-world-3-1_1"
  },
  {
   "id": "enc-world-3-2",
   "prompt": "a desert scorpion shadow with glassy sand-colored plates and a long curved tail made of glass",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-3-2",
   "kind": "mob",
   "name": "砂サソリの影",
@@ -2860,12 +2861,13 @@
    190,
    160,
    110
-  ]
+  ],
+  "draft": "enc-world-3-2_1"
  },
  {
   "id": "enc-world-3-3",
   "prompt": "a sand dune stone creature, a sandstone rock eroded into a face, half buried in sand",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-3-3",
   "kind": "mob",
   "name": "砂丘の石",
@@ -2876,12 +2878,13 @@
    200,
    165,
    115
-  ]
+  ],
+  "draft": "enc-world-3-3_0"
  },
  {
   "id": "enc-world-3-4",
   "prompt": "a mirage droplet, a floating shimmering drop that shows a fake oasis inside, wavering edges",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-3-4",
   "kind": "mob",
   "name": "蜃気楼のしずく",
@@ -2892,7 +2895,8 @@
    170,
    210,
    220
-  ]
+  ],
+  "draft": "enc-world-3-4_1"
  },
  {
   "id": "enc-world-3-5",
