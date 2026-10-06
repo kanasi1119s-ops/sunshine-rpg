@@ -168,8 +168,8 @@ import { CONSUMABLES_BY_ID, CONSUMABLE_ITEMS, STARTER_CONSUMABLES } from "./game
 import { toBattleItem } from "./game/items/types";
 import type { ItemStack } from "./game/battle/battle-controller";
 import type { JobId, JobState } from "./game/job/types";
-import { availableJobs } from "./game/job/jobs";
-import { createJobState, starsOf } from "./game/job/mastery";
+import { availableJobs, INITIAL_JOBS, LEGEND_UNLOCK_FLAGS, MAX_STARS } from "./game/job/jobs";
+import { createJobState, masteryExpForStar, starsOf } from "./game/job/mastery";
 import { SAVE_VERSION, type SaveData } from "./game/save/types";
 import { loadFromSlot, saveToSlot } from "./game/save/storage";
 import { latestSaveSlot, summarizeSlots } from "./game/save/slots";
@@ -1890,6 +1890,52 @@ function resetVehicles(saved?: SaveData["vehicles"]): void {
 }
 
 /** 「はじめから」: これまでの進み具合を初期状態に戻し、序章の開始地点に立つ。 */
+/**
+ * テスト版（2026-10-06、人間の依頼「ジョブをすべて使える状態のテストアーティファクトを準備して。8章クリア後の状態で」）。
+ * `VITE_TEST_PRESET=ch8-alljobs` でビルドしたときだけ、「はじめから」で8章クリア後の状態から始まる（ふつうのビルドには何も入らない）。
+ *  - 序章〜8章の物語のフラグをすべて立て、船・飛空艇を持ち、仲間6人がそろい、全員Lv20、灯貨10000。灯芯都（飛空艇をとめた状態）から始まる
+ *  - ジョブ: 全員、初期ジョブ8種が☆15（上級ジョブが出る）。天神・悪神・レジェンドジョブは、ジョブ画面でだけ条件を満たしたあつかい
+ *    （8神を倒した・終章クリアなどのフラグそのものは立てないので、世界は8章クリア後のまま）
+ */
+const TEST_PRESET = import.meta.env.VITE_TEST_PRESET === "ch8-alljobs";
+const TEST_STORY_FLAGS = [
+  "chapter0_chest_forest_east", "chapter0_chest_forest_hidden", "chapter0_chest_shrine", "chapter0_clue_c001_found", "chapter0_got_lamp", "chapter0_heard_rumor",
+  "chapter0_intro_seen", "chapter0_kasen_farewell", "chapter0_lever_east", "chapter0_lever_west", "chapter0_quest_accepted", "chapter0_reasoning_correct",
+  "chapter0_reported_to_kasen", "chapter0_reto_joined", "chapter0_scorch_mark_found", "chapter0_shrine_open", "chapter0_yugami_defeated", "chapter1_chest_canal_gold",
+  "chapter1_chest_tunnel", "chapter1_clue_c002_found", "chapter1_excavation_found", "chapter1_got_key", "chapter1_heard_miller", "chapter1_intro_seen",
+  "chapter1_mina_asked", "chapter1_mina_friend_hint_seen", "chapter1_mina_joined", "chapter1_quest_accepted", "chapter1_reported_to_elder", "chapter1_valve_east",
+  "chapter1_valve_west", "chapter1_valves_open", "chapter1_yugami_defeated", "chapter2_clue_c003_found", "chapter2_clue_c004_found", "chapter2_core_shard_taken",
+  "chapter2_crates_found", "chapter2_gate_open", "chapter2_guide_cousin_hint_seen", "chapter2_guide_joined", "chapter2_intro_seen", "chapter2_prep_done",
+  "chapter2_quest_accepted", "chapter2_reported_to_guide", "chapter2_yugami_defeated", "chapter3_clue_c007_found", "chapter3_gate_open", "chapter3_intro_seen",
+  "chapter3_machine_found", "chapter3_orca_hint_seen", "chapter3_orca_joined", "chapter3_prep_done", "chapter3_quest_accepted", "chapter3_reported_to_orca",
+  "chapter3_yugami_defeated", "chapter4_dorun_met", "chapter4_guide_cleared", "chapter4_intro_seen", "chapter4_quest_accepted", "chapter4_reported",
+  "chapter4_rumor_heard", "chapter4_sailcar_obtained", "chapter4_wagon_found", "chapter4_yugami_defeated", "chapter5_intro_seen", "chapter5_keeper_met",
+  "chapter5_ledger_found", "chapter5_quest_accepted", "chapter5_record_found", "chapter5_reported", "chapter5_yugami_defeated", "chapter6_ayame_joined",
+  "chapter6_ayame_met", "chapter6_dorun_farewell", "chapter6_dorun_met", "chapter6_intro_seen", "chapter6_log_found", "chapter6_quest_accepted",
+  "chapter6_reported", "chapter6_yugami_defeated", "chapter7_airship_obtained", "chapter7_console_found", "chapter7_edrea_appeared", "chapter7_intro_seen",
+  "chapter7_ledger_found", "chapter7_quest_accepted", "chapter7_reported", "chapter7_yugami_defeated", "chapter8_edrea_fled", "chapter8_edrea_revealed",
+  "chapter8_hearing_done", "chapter8_intro_seen", "chapter8_kyotoukyu_open", "chapter8_prep_done", "chapter8_q1_ok", "chapter8_q2_ok",
+  "chapter8_quest_accepted", "chapter8_quiz_perfect", "chapter8_reported", "chapter8_yugami_defeated",
+  "has_ship", "ship_sail", "ship_helm", "has_airship",
+];
+const TEST_JOB_FLAGS: Record<string, boolean> = Object.fromEntries(["god1_defeated", "god2_defeated", "god3_defeated", "god5_defeated", ...LEGEND_UNLOCK_FLAGS].map((f) => [f, true]));
+
+function applyTestPreset(): void {
+  resetToNewGame();
+  for (const f of TEST_STORY_FLAGS) flags[f] = true;
+  syncCompanionsFromFlags();
+  joinQueue.length = 0;
+  heroStats = statsAtLevel(heroStats, SAMPLE_GROWTH, 20);
+  for (const id of Object.keys(companionStats)) companionStats[id] = statsAtLevel(companionStats[id], COMPANIONS[id].growth, 20);
+  vitals = {};
+  gold = 10000;
+  const mastered = Object.fromEntries(INITIAL_JOBS.map((j) => [j.id, masteryExpForStar(MAX_STARS)]));
+  for (const id of ["hero", ...Object.keys(companionStats)]) jobStates[id] = { mastery: { ...mastered } };
+  flags[AIRSHIP_DOCKED_FLAG] = true;
+  airshipPos = { x: WORLD_TOWNS[SKY_TOWN].x, y: WORLD_TOWNS[SKY_TOWN].y };
+  switchMap(SKY_TOWN, SKY_TOWN_ARRIVAL.tileX, SKY_TOWN_ARRIVAL.tileY);
+}
+
 function resetToNewGame(): void {
   heroStats = createInitialHeroStats();
   heroEquipment = createInitialEquipment();
@@ -2018,7 +2064,7 @@ let lastJobDirection: Direction | null = null;
 function selectableJobIds(): JobId[] {
   const memberId = jobMenuMembers()[jobMenu.memberCursor]?.id;
   const state = (memberId && jobStates[memberId]) || createJobState();
-  return availableJobs((id) => starsOf(state, id), flags, memberId).map((job) => job.id);
+  return availableJobs((id) => starsOf(state, id), TEST_PRESET ? { ...flags, ...TEST_JOB_FLAGS } : flags, memberId).map((job) => job.id);
 }
 function jobMenuMembers(): { id: string; name: string }[] {
   return [
@@ -2865,6 +2911,12 @@ const loop = createGameLoop({
         opening = skipOpening(opening);
       }
       openingSkipRequested = false;
+      if (!opening.open && TEST_PRESET) {
+        applyTestPreset();
+        dialogue.start([{ type: "message", text: "【テスト版】8章クリア後の状態です。仲間6人・Lv20・灯貨10000。ジョブはすべて選べます（初期ジョブは☆15）。ジョブ画面は「ジョブ」ボタンかCキー。" }]);
+        playMapBgm(currentMapId);
+        return;
+      }
       if (!opening.open) {
         resetToNewGame();
         dialogue.start(CHAPTER0_OPENING_COMMANDS);
