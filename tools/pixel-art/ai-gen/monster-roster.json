@@ -3416,7 +3416,7 @@
  },
  {
   "id": "enc-world-air-3",
-  "prompt": "a sky droplet, a floating drop of pale sky blue with a cloud inside and a tiny sun reflection",
+  "prompt": "a floating water droplet creature, a light blue glassy drop with a pointed tip on top, a tiny cloud and sun reflected inside, small dark eyes",
   "status": "done",
   "key": "enemy:enc-world-air-3",
   "kind": "mob",
@@ -3430,7 +3430,7 @@
    240
   ],
   "bg": "dark",
-  "seed_base": 6001,
+  "seed_base": 14003,
   "draft": "enc-world-air-3_1"
  },
  {
@@ -3453,7 +3453,7 @@
  {
   "id": "enc-world-air-5",
   "prompt": "a cloud insect, a dragonfly with wings of mist and a long pale body",
-  "status": "draft",
+  "status": "done",
   "key": "enemy:enc-world-air-5",
   "kind": "mob",
   "name": "雲の虫",
@@ -3466,12 +3466,13 @@
    225
   ],
   "bg": "dark",
-  "seed_base": 6001
+  "seed_base": 6001,
+  "draft": "enc-world-air-5_x0"
  },
  {
   "id": "enc-world-air-6",
   "prompt": "a storm feather creature, a large bird with dark storm-grey feathers and lightning patterns",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-air-6",
   "kind": "mob",
   "name": "嵐の羽",
@@ -3482,7 +3483,8 @@
    100,
    105,
    125
-  ]
+  ],
+  "draft": "enc-world-air-6_0"
  },
  {
   "id": "chapter0-yugami",
