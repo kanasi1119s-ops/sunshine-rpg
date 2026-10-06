@@ -444,5 +444,5 @@ def variants(name, g):
 
 
 if __name__ == "__main__":
-    variants("cottage-brick", build(48, 56, FW=31, D=11, floors=1, FH=22, RH=12, ox=3, door=0.64, nwin=2, ov=2, chimney=0.62, seed=3))
+    variants("cottage-brick", build(56, 56, FW=37, D=12, floors=1, FH=22, RH=12, ox=3, door=0.5, nwin=2, ov=2, chimney=0.62, seed=3))
     variants("manor-brick", build(80, 80, FW=55, D=19, floors=2, FH=18, RH=16, ox=2, door=0.45, nwin=3, ov=2, porch=True, dormer=True, chimney=0.74, seed=8))

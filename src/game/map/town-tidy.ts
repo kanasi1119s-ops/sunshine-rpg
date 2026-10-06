@@ -45,7 +45,7 @@ export const PROP_BOX: Partial<Record<MapPropKind, [number, number, number, numb
   "grave-cross": [-8, 8, -22, 0],
   "grave-round": [-8, 8, -19, 0],
   "haystack": [-16, 16, -28, 0],
-  "house": [-24, 24, -51, -1],
+  "house": [-24, 24, -51, -1],   // 2026-10-06 に絵を横へ広げた（56 ドット）が、重なりは本体で見る（左右のはしの2〜4ドットは軒のでっぱり）
   "house-blue": [-24, 24, -51, -1],
   "house-green": [-24, 24, -51, -1],
   "jail-bars": [-17, 17, -50, 0],
