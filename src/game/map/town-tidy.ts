@@ -64,13 +64,13 @@ export const PROP_BOX: Partial<Record<MapPropKind, [number, number, number, numb
   "shrine": [-12, 12, -33, 0],
   "signpost": [-20, 21, -37, -1],
   "stall": [-22, 22, -45, -2],
-  "statue-soldier": [-13, 12, -46, 0],
-  "statue-traveler": [-11, 12, -41, 0],
-  "statue-winged": [-18, 17, -46, 0],
+  "statue-soldier": [-14, 13, -46, 0],
+  "statue-traveler": [-14, 13, -41, 0],
+  "statue-winged": [-14, 13, -46, 0],
   "tree": [-21, 21, -46, -1],
   "tree-dead": [-19, 21, -43, 0],
   "tree-snow": [-21, 21, -46, -1],
-  "well": [-17, 17, -43, -1]
+  "well": [-19, 19, -43, -1]
 };
 
 const PRIORITY = (kind: MapPropKind): number => {
