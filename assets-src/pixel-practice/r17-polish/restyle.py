@@ -180,7 +180,13 @@ if __name__ == "__main__":
     import sys
     apply = "--apply" in sys.argv
     os.makedirs(OUT, exist_ok=True)
-    for d, name, pname in TARGETS:
+    only = [a for a in sys.argv[1:] if not a.startswith("--")]                # 名前をならべると、その絵だけ
+    targets = TARGETS + [("r20-props", n, n) for n in ("fountain-1", "fountain-2", "fountain-3")]
+    for d, name, pname in targets:
+        if only and name not in only:
+            continue
+        if not only and name.startswith("fountain-") and not apply:
+            continue
         rows = [l for l in open(os.path.join(PP, d, name + ".txt")).read().split("\n") if l]
         pal = json.load(open(os.path.join(PP, d, "pal-" + pname + ".json")))
         img = restyle(rows, pal)

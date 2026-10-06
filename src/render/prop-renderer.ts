@@ -9,6 +9,26 @@ export function propFeetY(prop: MapProp, tileHeight: number): number {
   return prop.tileY * tileHeight + tileHeight;
 }
 
+/** 動く飾り（噴水など）のコマの数。`prop:<種類>` のほかに `prop:<種類>-1`, `-2`… があれば、順番に見せる（2026-10-06「噴水は水が流れるようにして」）。 */
+const frameCounts = new Map<string, number>();
+function propFrameCount(kind: string): number {
+  let n = frameCounts.get(kind);
+  if (n === undefined) {
+    n = 1;
+    while (SPRITE_DATA[`prop:${kind}-${n}`]) n++;
+    frameCounts.set(kind, n);
+  }
+  return n;
+}
+const PROP_FRAME_MS = 140;
+/** いま見せるコマの絵の名前。 */
+export function propSpriteKey(kind: string, nowMs: number): string {
+  const n = propFrameCount(kind);
+  if (n <= 1) return `prop:${kind}`;
+  const f = Math.floor(nowMs / PROP_FRAME_MS) % n;
+  return f === 0 ? `prop:${kind}` : `prop:${kind}-${f}`;
+}
+
 /** 飾り（木・家）を、足元・中央のマスにそろえて描く。`filter` で、プレイヤーより奥・手前に分けて描ける。 */
 export function renderProps(
   ctx: CanvasRenderingContext2D,
@@ -22,11 +42,12 @@ export function renderProps(
     return;
   }
   ctx.imageSmoothingEnabled = false;
+  const nowMs = typeof performance !== "undefined" ? performance.now() : 0;
   for (const prop of props) {
     if (!filter(prop)) {
       continue;
     }
-    const canvas = getSpriteCanvas(`prop:${prop.kind}`, SPRITE_DATA) ?? proceduralPropCanvas(prop);
+    const canvas = getSpriteCanvas(propSpriteKey(prop.kind, nowMs), SPRITE_DATA) ?? proceduralPropCanvas(prop);
     if (!canvas) {
       continue;
     }
