@@ -101,7 +101,9 @@ export function sceneResidentsFor(mapId: string, data: TileMapData, npcs: readon
     const hash = hashOf(name);
     let best: { x: number; y: number; score: number } | null = null;
     // まわりまで広い所がなければ（せまい部屋）、そのマスがあいていればよい（少しだけ点を悪くする）
-    const usable = (x: number, y: number): number => (roomy(x, y) ? 0 : open(x, y) && !taken.has(y * w + x) ? 50 : -1);
+    // 橋や細い道（左右だけ、または上下だけが通れるマス）には立たない（人が通れなくなる。2026-10-06）
+    const corridor = (x: number, y: number): boolean => (open(x - 1, y) && open(x + 1, y) && !open(x, y - 1) && !open(x, y + 1)) || (open(x, y - 1) && open(x, y + 1) && !open(x - 1, y) && !open(x + 1, y));
+    const usable = (x: number, y: number): number => (roomy(x, y) ? 0 : open(x, y) && !taken.has(y * w + x) && !corridor(x, y) ? 50 : -1);
     for (let y = 1; y < h - 1; y++) {
       for (let x = 1; x < w - 1; x++) {
         const u = usable(x, y);

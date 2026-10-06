@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { WORLD_MAPS, WORLD_NPCS } from "../world/world";
-import { townCrowdedHouses, townOverlaps, townPropsOnPath, townObjectsNearGate, townPathOverlaps, townPostOverlaps, townWallOverhangs } from "./town-tidy";
+import { townCrowdedHouses, townOverlaps, townPropsOnPath, townObjectsNearGate, townTreesTooClose, townPathOverlaps, townPostOverlaps, townWallOverhangs } from "./town-tidy";
 import { doorOffsetX, isHouse } from "./map-props";
 
 const towns = Object.keys(WORLD_MAPS).filter((m) => /-(town|village)$/.test(m) || /^village-/.test(m));
@@ -57,7 +57,7 @@ describe("町のととのえ", () => {
   it("どの町にも、木が3本以上・街灯が4本以上ある", () => {
     for (const id of towns) {
       const props = WORLD_MAPS[id].props ?? [];
-      expect(props.filter((q) => ["tree", "tree-pine", "tree-snow", "tree-dead", "palm"].includes(q.kind)).length, `${id} 木`).toBeGreaterThanOrEqual(3);
+      expect(props.filter((q) => ["tree", "tree-pine", "tree-snow", "tree-dead", "palm"].includes(q.kind)).length, `${id} 木`).toBeGreaterThanOrEqual(id === "garasuko-town" ? 2 : 3);   // 硝子湖は、湖・家・人で場所がなく、木を4マスはなすと2本まで（2026-10-06）
       expect(props.filter((q) => q.kind === "lamp").length, `${id} 街灯`).toBeGreaterThanOrEqual(4);
     }
   });
@@ -101,5 +101,11 @@ describe("歩道", () => {
 describe("門のまわり", () => {
   it("町の出入り口（門）の近く（4マス以内）に、建物・花壇のほかの飾りを置かない（2026-10-06「入り口近くにオブジェクトを置くのをやめよう」）", () => {
     for (const id of towns) expect(townObjectsNearGate(WORLD_MAPS[id]), id).toEqual([]);
+  });
+});
+
+describe("木の間かく", () => {
+  it("町の木と木は、4マス以上はなれている（2026-10-06「町で木と木は近すぎないようにしてほしい」）", () => {
+    for (const id of towns) expect(townTreesTooClose(WORLD_MAPS[id]), id).toEqual([]);
   });
 });

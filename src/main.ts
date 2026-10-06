@@ -18,7 +18,7 @@ import { renderTransitionCover, renderTransitionReveal } from "./render/battle-t
 import { advanceOpening, createOpeningState, skipOpening, startOpening, updateOpening } from "./game/title/opening";
 import { battleSeFor, swingSeFor } from "./game/battle/battle-se";
 import { battleEffectFor, type BattleEffect } from "./game/battle/battle-effect";
-import { battleAnimFor, type BattleAnimSpec } from "./game/battle/battle-anim";
+import { battleAnimFor, VOLLEY_FX, type BattleAnimSpec } from "./game/battle/battle-anim";
 import { createStaffRollState, skipStaffRoll, startStaffRoll, updateStaffRoll } from "./game/title/staff-roll";
 import { renderStaffRoll } from "./render/staff-roll-renderer";
 import { addGold, computeVictoryGold, spendGold } from "./game/economy/gold";
@@ -87,6 +87,9 @@ import { CHAPTER5_OPENING_COMMANDS } from "./game/world/chapter5-world";
 import { WORLD_MAPS, WORLD_NPCS } from "./game/world/world";
 import { isOpenSpot, rescueTile } from "./game/player-rescue";
 import { strengthenBoss } from "./game/battle/difficulty-scale";
+import { ARBITER_CHANCE, createArbiter } from "./game/battle/arbiter";
+import { arbiterIntro } from "./game/battle/arbiter-talk";
+import { COSMO_ID } from "./game/items/legend-items";
 import { applyTraits } from "./game/items/traits";
 import { bossDropFor } from "./game/items/boss-drops";
 import { allyLuck } from "./game/battle/luck";
@@ -853,6 +856,45 @@ function prepareBattleScreen(): void {
   lastBattleMessage = null;
 }
 
+/**
+ * 隠しボス「機械の悪神巨人兵」との戦い（2026-10-06）。全体フィールドの出会いのうち 0.01% で、ふつうの敵のかわりに現れる。
+ * はじめに戦闘画面で会話（世界の真実を知る前・後で変わる）。倒すと、レジェンドの装備「コスモ」を手に入れる（何度でも戦えるが、コスモは1つだけ）。
+ */
+function startArbiterBattle(): void {
+  if (battle) {
+    return;
+  }
+  prepareBattleScreen();
+  victoryExpApplied = false;
+  victoryMessage = null;
+  victoryLevelUps = [];
+  pendingVictoryFlag = "arbiter_defeated";
+  pendingDropId = COSMO_ID;
+  victoryDropText = null;
+  const equipmentBonus = computeEquipmentBonus(heroEquipment, ALL_ITEMS_BY_ID);
+  const effectiveStats = applyStatBonus(heroStats, equipmentBonus);
+  const party = buildActiveParty(effectiveStats);
+  if (debugInvincible) {
+    for (const member of party) {
+      member.maxHp = 99999;
+      member.hp = 99999;
+      member.defense = 999;
+    }
+  }
+  battle = new BattleController(
+    party,
+    [createArbiter()],
+    createRng(Date.now()),
+    { skills: buildSkillsMap(CHAPTER0_SKILL), items: battleItemStacks(), extraSkills: buildExtraSkillsMap(), intro: arbiterIntro(!!flags["tower_truth_known"], party.map((c) => c.id)) },
+  );
+  currentBgmTrack = getTrack("secret-boss-2");
+  battleTransition = startBattleTransition(true, battle.getState().enemies[0]?.name ?? "");
+  if (audioStarted) {
+    audio.playSe(seOf("battle-start"));
+  }
+  audio.playBgm(currentBgmTrack);
+}
+
 function startRandomBattle(enemies: Combatant[]): void {
   if (battle) {
     return;
@@ -937,6 +979,8 @@ if (import.meta.env.DEV) {
       title = { ...title, open: false };
     },
     startBattle: (battleId: string) => startStoryBattle(battleId),
+    /** 開発用: 隠しボス「機械の悪神巨人兵」と戦う（動画・確認用）。 */
+    startArbiter: () => startArbiterBattle(),
     setFlag: (name: string, value = true) => { flags[name] = value; },
     /** 開発用: 世界地図の (x, y) で、船（ship）か飛空艇（air）に乗った状態にする（見た目の確認用）。 */
     ride: (kind: "ship" | "air", x: number, y: number) => {
@@ -1003,6 +1047,14 @@ if (import.meta.env.DEV) {
       syncCompanionsFromFlags();
       joinQueue.length = 0;
     },
+    /** 開発用: ユーリと仲間を、指定のレベルにして全快にする（隠しボスの動画の撮影用）。 */
+    setLevel: (level: number) => {
+      heroStats = statsAtLevel(heroStats, SAMPLE_GROWTH, level);
+      for (const id of Object.keys(companionStats)) companionStats[id] = statsAtLevel(companionStats[id], COMPANIONS[id].growth, level);
+      vitals = {};
+    },
+    /** 開発用: フラグを立てる・おろす（会話の分かれ道の確認用）。 */
+    flag: (name: string, value: boolean) => { flags[name] = value; },
     /** 開発用: 指定した仲間だけを加える（動画の撮影用）。 */
     joinSome: (ids: string[]) => {
       for (const { flag, companionId } of COMPANION_JOIN_FLAGS) {
@@ -3024,7 +3076,10 @@ const loop = createGameLoop({
           let animSpec = anim;
           if (anim?.fx && anim.fromId && (anim.casterId || anim.motion === "cast")) {
             if (lastCast && lastCast.fromId === anim.fromId && lastCast.fx === anim.fx && anim.area) {
-              animSpec = { ...anim, fxStart: 0, durationMs: 1800, motionMs: undefined, motion: null, casterId: undefined };
+              // いっせいに落ちる魔法（隠しボスの流星）は、1行目で全員に見せたので、2行目からはのけぞるだけ
+              animSpec = VOLLEY_FX.has(anim.fx)
+                ? { ...anim, fx: null, fxStart: 0, durationMs: 380, motionMs: undefined, motion: null, casterId: undefined, targetIds: anim.targetIds.slice(0, 1) }
+                : { ...anim, fxStart: 0, durationMs: 1800, motionMs: undefined, motion: null, casterId: undefined };
             }
             lastCast = { fromId: anim.fromId, fx: anim.fx };
           }
@@ -3036,7 +3091,8 @@ const loop = createGameLoop({
           battleAnim = animSpec ? { spec: animSpec, startedAt: performance.now() } : null;
           battleInputLockUntil = performance.now() + (animSpec ? animSpec.durationMs : 0);
           // 読む時間（短い文は少し、長い文はもう少し）をあけて、自動で次へ進む
-          battleAutoAdvanceAt = battleInputLockUntil + Math.min(1300, 650 + uiState.text.length * 25) / speed;
+          // 会話（「名前「せりふ」」）は、読めるように長めに出す
+          battleAutoAdvanceAt = battleInputLockUntil + (/「.+」$/.test(uiState.text) ? 1800 + uiState.text.length * 70 : Math.min(1300, 650 + uiState.text.length * 25)) / speed;
           // HPは、効果が当たる瞬間まで前のまま見せる
           const hpBefore = battle.getHpBeforeMessage();
           // 攻撃（武器の動き・魔法のエフェクト）が終わってから、HPが減る（倒れるのも、そのあと）
@@ -3312,7 +3368,9 @@ const loop = createGameLoop({
         const stepped = encounterMapId ? stepEncounter(encounterState, encounterMapId, Math.random, Object.keys(companionStats).length) : { state: encounterState, enemies: null };
         encounterState = stepped.state;
         if (stepped.enemies) {
-          startRandomBattle(stepped.enemies);
+          // 全体フィールドでは、ごくまれに（0.01%）隠しボス「機械の悪神巨人兵」が現れる
+          if (currentMapId === "world-map" && Math.random() < ARBITER_CHANCE) startArbiterBattle();
+          else startRandomBattle(stepped.enemies);
           return;
         }
       }

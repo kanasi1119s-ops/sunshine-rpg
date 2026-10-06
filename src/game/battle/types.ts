@@ -39,6 +39,11 @@ export interface Combatant {
   spell?: { skill: Skill; chance: number };
   /** 敵の通常攻撃が当たったとき、相手にかかる状態異常（毒・眠り・混乱）。 */
   inflicts?: { status: "poison" | "sleep" | "confuse"; chance: number; turns: number };
+  /**
+   * 特別な動き方をするボス（2026-10-06）。"arbiter"＝隠しボス「機械の悪神巨人兵」（世界の調停者）。
+   * 1ターンに、4回攻撃・流星の裁き・神の調停・神の祝福のどれか1つを行う（`chooseEnemyActions`）。
+   */
+  ai?: "arbiter";
 }
 
 export type StatKey = "attack" | "defense" | "speed";
@@ -57,7 +62,7 @@ export function effectiveStat(combatant: Combatant, stat: StatKey): number {
   return Math.max(1, Math.round(combatant[stat] * (mod && mod.turns > 0 ? mod.mult : 1)));
 }
 
-export type SkillEffect = "multi" | "damageAll" | "heal" | "healAll" | "buff" | "buffAll" | "debuff" | "debuffAll" | "sleep" | "poison" | "confuse";
+export type SkillEffect = "multi" | "damageAll" | "heal" | "healAll" | "buff" | "buffAll" | "debuff" | "debuffAll" | "sleep" | "poison" | "confuse" | "pierceAll" | "halveAll" | "restoreHalf";
 
 export interface Skill {
   id: string;
@@ -69,6 +74,8 @@ export interface Skill {
    * 効果の種類。省略は「敵1体にダメージ」。
    * multi=敵1体に`hits`回、damageAll=敵全体にダメージ、heal=味方1人のHPを回復、healAll=味方全体のHPを回復、
    * buff=味方1人の能力アップ、buffAll=味方全体、debuff=敵1体の能力ダウン、debuffAll=敵全体、sleep=敵1体を眠らせる。
+   * pierceAll=敵全体に、しゅび・ぼうぎょを無視したダメージ。halveAll=敵全員のHPを半分に（端数切り上げで残す）。
+   * restoreHalf=自分の、減ったHPの半分を回復する（2026-10-06、隠しボス「機械の悪神巨人兵」の魔法）。
    */
   effect?: SkillEffect;
   /** multi の回数。 */

@@ -159,13 +159,13 @@ class Model:
 
 
 def render(model, W, H, CX, GROUND, ramps, shade_fn=None, colour_fn=None, light=(-0.55, 0.62, 0.56),
-           outline="#1e1a18", shadow=None, ambient=0.22, front_tilt=25, ground_contact=True):
+           outline="#1e1a18", shadow=None, ambient=0.22, front_tilt=25, ground_contact=True, z0=30.0, max_dist=150.0):
     """2026-10-06 人間の指示「オブジェクト、多分すべて家のイメージの奥行きに引っ張られてるからそこを注意して全部作り直して」:
     飾りは、ふだん（front_tilt=25）正面の少し上から見下ろす見え方で描く。front_tilt=None のときだけ、町の家と同じななめの見え方。
     以下、前の説明: front_tilt（度）を入れると、町の家と同じななめの見え方ではなく、正面の少し上から見下ろす見え方にする
     （2026-10-06: 丸い物（樽など）は、ななめの見え方だと横に引きのばされ、かたむいた卵のような形に見えたため）。"""
     sx, sy = np.meshgrid(np.arange(W) + 0.5, np.arange(H) + 0.5)
-    Z0 = 30.0
+    Z0 = z0                                          # 光線の出発点の奥行き（大きな模型は、z0 を大きくする）
     if front_tilt is None:
         start = np.stack([sx - CX + Z0, GROUND - sy + K * Z0, np.full_like(sx, Z0)], -1)
         rd = np.array([-1.0, -K, -1.0]); rd /= np.linalg.norm(rd)
@@ -182,7 +182,7 @@ def render(model, W, H, CX, GROUND, ramps, shade_fn=None, colour_fn=None, light=
         dist[idx] += np.maximum(d * 0.9, 0.01)
         h = d < 0.01
         hit[idx[0][h], idx[1][h]] = True
-        gone = h | (dist[idx] > 150) | (p[:, 1] < -0.3)
+        gone = h | (dist[idx] > max_dist) | (p[:, 1] < -0.3)
         alive[idx[0][gone], idx[1][gone]] = False
         if not alive.any():
             break

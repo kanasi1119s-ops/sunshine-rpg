@@ -84,6 +84,15 @@ if (mode && mode !== "merge") {
   // 敵の絵（ai-gen/monster_batch.py export で作る enemy-art.json。雑魚は enemy:<id> 96×96、ボスは boss:<id> を置きかえる）
   const enemyArt = new URL("./enemy-art.json", import.meta.url);
   if (fs.existsSync(enemyArt)) Object.assign(all, JSON.parse(fs.readFileSync(enemyArt, "utf8")));
+  // 隠しボス「機械の悪神巨人兵」（assets-src/pixel-practice/r25-arbiter/arbiter3d.py で立体の模型から描いた 256×256。2026-10-06）
+  for (const [key, dir, name] of [["boss:arbiter", "r25-arbiter", "arbiter"]]) {
+    const base = new URL(`../../assets-src/pixel-practice/${dir}/`, import.meta.url);
+    const rows = fs.readFileSync(new URL(`${name}.txt`, base), "utf8").split("\n").filter((l) => l);
+    const pal = JSON.parse(fs.readFileSync(new URL(`pal-${name}.json`, base), "utf8"));
+    const syms = Object.keys(pal);
+    const g = rows.map((r) => [...r].map((ch) => (ch === "." ? -1 : syms.indexOf(ch))));
+    all[key] = { size: rows.length, palette: syms.map((k) => pal[k]), rle: encode(g, syms.length > 26) };
+  }
   const body = Object.entries(all).map(([k, v]) => `  ${JSON.stringify(k)}: { size: ${v.size}, palette: ${JSON.stringify(v.palette)}, rle: ${JSON.stringify(v.rle)} },`).join("\n");
   fs.writeFileSync(new URL("../../src/game/art/sprite-data.generated.ts", import.meta.url), `// 自動生成: tools/pixel-art/export-game-data.mjs（手で編集しない）
 import type { SpriteData } from "./sprite";

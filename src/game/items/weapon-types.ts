@@ -39,7 +39,7 @@ export function weaponTypeOf(item: ItemData): WeaponType | undefined {
 /** その人が、その品を身につけられるか（武器だけ、種類が合うものに限る）。 */
 export function canEquip(owner: string, item: ItemData): boolean {
   const type = weaponTypeOf(item);
-  if (type !== undefined && WEAPON_TYPE_OF[owner] !== type) return false;
+  if (type !== undefined && WEAPON_TYPE_OF[owner] !== type && !(item as EquipmentItemData).anyWielder) return false;
   const wearers = item.category === "consumable" ? undefined : (item as EquipmentItemData).wearers;
   return !wearers || wearers.includes(owner);
 }

@@ -4,6 +4,11 @@
  * 「Aの技名！ Bに N のダメージ」「Bを倒した！」「Bのふたつめ…回復した」「Aは身を守っている」など。
  */
 export function battleSeFor(text: string, partyNames: string[]): string | null {
+  // 隠しボス「機械の悪神巨人兵」の魔法は、専用の音（2026-10-06）
+  if (text.includes("の 流星の裁き！")) return "meteor";
+  if (text.includes("の 神の調停！")) return "judgement";
+  if (text.includes("の 神の祝福！")) return "blessing";
+  if (text.includes("の体力が半分になった")) return "player-damage";
   if (text.includes("MPが足りず")) {
     return "error";
   }

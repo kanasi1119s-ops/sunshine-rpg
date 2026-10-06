@@ -4,6 +4,7 @@ import { canEquip } from "../items/weapon-types";
 import { SAMPLE_ITEMS_BY_ID } from "../battle/sample-battle";
 import { spendGold } from "./gold";
 import { BOSS_DROP_ITEMS_BY_ID } from "../items/boss-drops";
+import { LEGEND_ITEMS_BY_ID } from "../items/legend-items";
 import { TREASURE_ITEMS_BY_ID } from "./treasure";
 import { CONSUMABLES_BY_ID, MAX_CONSUMABLE_STACK, consumableStock } from "../items/consumables";
 
@@ -74,7 +75,7 @@ export const SHOP_ITEMS_BY_ID: Record<string, EquipmentItemData> = Object.fromEn
 );
 
 /** 戦闘・つよさ画面で使う、すべての品物（最初の剣＋店の装備）。 */
-export const ALL_ITEMS_BY_ID: Record<string, ItemData> = { ...SAMPLE_ITEMS_BY_ID, ...SHOP_ITEMS_BY_ID, ...TREASURE_ITEMS_BY_ID, ...BOSS_DROP_ITEMS_BY_ID, ...CONSUMABLES_BY_ID };
+export const ALL_ITEMS_BY_ID: Record<string, ItemData> = { ...SAMPLE_ITEMS_BY_ID, ...SHOP_ITEMS_BY_ID, ...TREASURE_ITEMS_BY_ID, ...BOSS_DROP_ITEMS_BY_ID, ...LEGEND_ITEMS_BY_ID, ...CONSUMABLES_BY_ID };
 
 /** 店ID: `tier-1`〜`tier-9`。並ぶ品は、その段の、武器（剣・短剣・杖・弓・斧・槍の6種）・防具・飾り。 */
 export function shopStock(shopId: string): EquipmentItemData[] {

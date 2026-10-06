@@ -364,6 +364,7 @@ function drawImpact(ctx: CanvasRenderingContext2D, tx: number, ty: number, gy: n
 export const FX_COLOR: Record<FxId, string> = {
   fire: "#ff9a40", water: "#6ab4ff", light: "#fff0a0", wind: "#a8f0d0", ice: "#bfe8ff", bolt: "#ffe848", rock: "#c8a070",
   burst: "#ffffff", heal: "#88f0a8", buff: "#ffd860", debuff: "#b080e8", sleep: "#9ab0ff", poison: "#b060e0", confuse: "#ffe070",
+  meteor: "#c070ff", judgement: "#ffd860", blessing: "#fff0a0",
 };
 
 /** 魔法・状態のエフェクト。target は対象のからだの中心。 */

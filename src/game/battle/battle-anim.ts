@@ -9,7 +9,9 @@ import type { BattleState, Combatant } from "./types";
  * 効果音（`battle-se.ts`）・演出（`battle-effect.ts`）と同じく、メッセージが出るたびに1回だけ始める。
  */
 export type WeaponMotion = "slash" | "stab" | "cast" | "shoot" | "chop" | "thrust";
-export type FxId = "fire" | "water" | "light" | "wind" | "ice" | "bolt" | "rock" | "burst" | "heal" | "buff" | "debuff" | "sleep" | "poison" | "confuse";
+export type FxId = "fire" | "water" | "light" | "wind" | "ice" | "bolt" | "rock" | "burst" | "heal" | "buff" | "debuff" | "sleep" | "poison" | "confuse" | "meteor" | "judgement" | "blessing";
+/** 全員にいっせいに落ちる魔法（1行目で全員に見せ、2行目からは、のけぞるだけ）。隠しボスの魔法（2026-10-06）。 */
+export const VOLLEY_FX: ReadonlySet<FxId> = new Set<FxId>(["meteor", "judgement"]);
 
 export interface BattleAnimSpec {
   /** 動く味方（敵の行動のときは無い）。 */
@@ -50,6 +52,9 @@ const CASTERS = new Set(["mina", "ayame"]);
 
 /** とくぎ・魔法の名前から、エフェクトの種類を決める。 */
 export function fxForSkillName(name: string): FxId {
+  if (name === "流星の裁き") return "meteor";
+  if (name === "神の調停") return "judgement";
+  if (name === "神の祝福") return "blessing";
   if (/火|炎|灼|業|滅|照/.test(name)) return "fire";
   if (/雷|電/.test(name)) return "bolt";
   if (/氷|霜|凍/.test(name)) return "ice";
@@ -101,7 +106,10 @@ function battleAnimRaw(text: string, state: BattleState, weaponOf: (id: string) 
       const caster = byName(state, actorName);
       // 敵の魔法: 敵が光をためて、味方の上にエフェクトが出て、味方がのけぞる
       if (skillName !== "たたかう" && caster?.isEnemy) {
-        return make({ casterId: caster.id, fromId: caster.id, area: isAreaMove(state, actorName, skillName), targetIds: [target.id], fx: fxForSkillName(skillName), hurt: true, durationMs: 2000, fxStart: 0.45 });
+        const fx = fxForSkillName(skillName);
+        // 流星の裁き: 全員の上に、いっせいに流星が落ちる（ためは長め）
+        if (VOLLEY_FX.has(fx)) return make({ casterId: caster.id, fromId: caster.id, area: true, targetIds: state.party.filter((c) => c.hp > 0 || c.id === target.id).map((c) => c.id), fx, hurt: true, durationMs: 3400, fxStart: 0.4 });
+        return make({ casterId: caster.id, fromId: caster.id, area: isAreaMove(state, actorName, skillName), targetIds: [target.id], fx, hurt: true, durationMs: 2000, fxStart: 0.45 });
       }
       // 敵の攻撃: 味方がのけぞる
       return make({ targetIds: [target.id], hurt: true, durationMs: 420 });
@@ -122,6 +130,18 @@ function battleAnimRaw(text: string, state: BattleState, weaponOf: (id: string) 
     });
   }
 
+  // 神の調停（隠しボス）: 全員に、金の紋の輪が降りる。そのあとの「〜の体力が半分になった」は、のけぞるだけ
+  const judge = /^(.+?) の 神の調停！$/.exec(text);
+  if (judge) {
+    const caster = byName(state, judge[1]);
+    if (!caster) return null;
+    return make({ casterId: caster.id, fromId: caster.id, area: true, targetIds: state.party.filter((c) => c.hp > 0).map((c) => c.id), fx: "judgement", hurt: true, durationMs: 3400, fxStart: 0.38 });
+  }
+  const halved = /^(.+) の体力が半分になった/.exec(text);
+  if (halved) {
+    const target = byName(state, halved[1]);
+    return target ? make({ targetIds: [target.id], hurt: true, durationMs: 380 }) : null;
+  }
   // 攻撃のミス（味方は武器を振るだけ。敵のミスは何も起きない）
   const miss = /^(.+?) の (.+?)！ ミス！ (.+) にはあたらなかった$/.exec(text);
   if (miss) {
@@ -137,7 +157,7 @@ function battleAnimRaw(text: string, state: BattleState, weaponOf: (id: string) 
     const actor = allyActor(heal[1]);
     const target = byName(state, heal[3]);
     if (!target) return null;
-    return make({ actorId: actor?.id, motion: actor ? "cast" : null, targetIds: [target.id], fx: "heal" });
+    return make({ actorId: actor?.id, motion: actor ? "cast" : null, targetIds: [target.id], fx: heal[2] === "神の祝福" ? "blessing" : "heal", ...(heal[2] === "神の祝福" ? { durationMs: 1700 } : {}) });
   }
   // どうぐ
   const item = /^(.+?) は (.+?) を使った。(.+?) の/.exec(text);

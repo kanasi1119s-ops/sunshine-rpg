@@ -187,6 +187,34 @@ function applyEffectSkill(next: BattleState, actor: Combatant, skill: Skill, raw
       healOne(next, actor, target, skill);
       return next;
     }
+    case "pierceAll": {
+      actor.mp -= skill.mpCost;
+      for (const foe of foes.filter(isAlive)) {
+        // しゅび・ぼうぎょを無視する（防御0として計算し、半分にもしない）
+        const { amount, critical } = computeDamage(effectiveStat(actor, "attack"), 0, skill.powerMultiplier, rng, criticalChance(luckOf(actor)) + (actor.critBonus ?? 0));
+        foe.hp = Math.max(0, foe.hp - amount);
+        next.log.push(`${actor.name} の ${skill.name}！ ${critical ? "会心の一撃！ " : ""}${foe.name} に ${amount} のダメージ`);
+        if (!isAlive(foe)) next.log.push(`${foe.name} を倒した！`);
+      }
+      return next;
+    }
+    case "halveAll": {
+      actor.mp -= skill.mpCost;
+      next.log.push(`${actor.name} の ${skill.name}！`);
+      for (const foe of foes.filter(isAlive)) {
+        const lost = foe.hp - Math.ceil(foe.hp / 2);
+        foe.hp -= lost;
+        next.log.push(`${foe.name} の体力が半分になった（${lost}）`);
+      }
+      return next;
+    }
+    case "restoreHalf": {
+      actor.mp -= skill.mpCost;
+      const before = actor.hp;
+      actor.hp = Math.min(actor.maxHp, actor.hp + Math.ceil((actor.maxHp - actor.hp) / 2));
+      next.log.push(`${actor.name} の ${skill.name}！ ${actor.name} のHPが ${actor.hp - before} 回復した`);
+      return next;
+    }
     case "healAll": {
       actor.mp -= skill.mpCost;
       for (const ally of allies.filter(isAlive)) {
@@ -395,7 +423,8 @@ export function runTurn(
     if (checkOutcome(current) !== "ongoing") {
       break;
     }
-    const action = actions.find((a) => a.actorId === combatant.id);
+    const mine = actions.filter((a) => a.actorId === combatant.id);
+    const action = mine[0];
     if (!action) {
       continue;
     }
@@ -418,6 +447,21 @@ export function runTurn(
           continue;
         }
       }
+    }
+    if (mine.length > 1) {
+      // 1ターンに何度も行動する敵（隠しボスの4回攻撃）。すばやさによる連続攻撃は、ここでは足さない
+      if (mine.every((a) => a.type === "attack")) current.log.push(`${livingActor.name} の 猛攻！ ${mine.length}回 こうげき！`);
+      for (let i = 0; i < mine.length; i++) {
+        if (i > 0) snap();
+        const self = findCombatant(current, livingActor.id);
+        if (!self || !isAlive(self) || checkOutcome(current) !== "ongoing") break;
+        const a = mine[i];
+        const foes = current.party.filter(isAlive);
+        // ねらった人が倒れていたら、生きているほかの人へ
+        const t = a.type === "attack" && !foes.some((f) => f.id === a.targetId) && foes.length ? { ...a, targetId: foes[Math.floor(rng() * foes.length)].id } : a;
+        current = applyAction(current, t, rng);
+      }
+      continue;
     }
     if (action.type === "attack") {
       // すばやさが相手よりずっと高いと、1回の攻撃で2〜4回こうげきする
@@ -456,4 +500,36 @@ export function chooseEnemyAction(enemy: Combatant, party: Combatant[], rng: () 
     return { type: "skill", actorId: enemy.id, targetId: target.id, skill: enemy.spell.skill };
   }
   return { type: "attack", actorId: enemy.id, targetId: target.id };
+}
+
+/** 隠しボス「機械の悪神巨人兵」の魔法（2026-10-06）。 */
+export const ARBITER_SKILLS = {
+  meteor: { id: "arbiter-meteor", name: "流星の裁き", mpCost: 0, powerMultiplier: 0.4, effect: "pierceAll" } as Skill,
+  judgement: { id: "arbiter-judgement", name: "神の調停", mpCost: 0, powerMultiplier: 0, effect: "halveAll" } as Skill,
+  blessing: { id: "arbiter-blessing", name: "神の祝福", mpCost: 120, powerMultiplier: 0, effect: "restoreHalf" } as Skill,
+};
+/** 4回攻撃の回数。 */
+export const ARBITER_ATTACKS = 4;
+
+/**
+ * 敵の、このターンの行動（ふつうは1つ。隠しボスは4回攻撃のとき4つ）。
+ * 隠しボス: HPが4割より下で、MPがあれば、ときどき「神の祝福」。そうでなければ、
+ * 味方の体力がまだ多いときは「神の調停」（全員の体力を半分に）、ときどき「流星の裁き」（全体・防御無視）、ほかは4回攻撃。
+ */
+export function chooseEnemyActions(enemy: Combatant, party: Combatant[], rng: () => number): BattleAction[] {
+  if (enemy.ai !== "arbiter") return [chooseEnemyAction(enemy, party, rng)];
+  const alive = party.filter(isAlive);
+  const pick = (): string => (alive[Math.floor(rng() * alive.length)] ?? party[0]).id;
+  const hpRatio = alive.reduce((s, c) => s + c.hp, 0) / Math.max(1, alive.reduce((s, c) => s + c.maxHp, 0));
+  const r = rng();
+  if (enemy.hp < enemy.maxHp * 0.4 && enemy.mp >= ARBITER_SKILLS.blessing.mpCost && r < 0.4) {
+    return [{ type: "skill", actorId: enemy.id, targetId: enemy.id, skill: ARBITER_SKILLS.blessing }];
+  }
+  if (hpRatio > 0.7 && r < 0.22) {
+    return [{ type: "skill", actorId: enemy.id, targetId: pick(), skill: ARBITER_SKILLS.judgement }];
+  }
+  if (r < 0.5) {
+    return [{ type: "skill", actorId: enemy.id, targetId: pick(), skill: ARBITER_SKILLS.meteor }];
+  }
+  return Array.from({ length: ARBITER_ATTACKS }, () => ({ type: "attack" as const, actorId: enemy.id, targetId: pick() }));
 }

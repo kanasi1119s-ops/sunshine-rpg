@@ -11,7 +11,7 @@ import { PORTRAITS } from "../game/portrait/portraits";
 import { spriteSpecFromPortrait } from "../game/sprite/character-specs";
 import { drawSprite } from "./sprite-renderer";
 import { frameAt, SPRITE_FEET_ROW } from "../game/sprite/overworld-sprite";
-import type { BattleAnimSpec } from "../game/battle/battle-anim";
+import { VOLLEY_FX, type BattleAnimSpec } from "../game/battle/battle-anim";
 import { allyStateOf, getAllyCanvas, type AllyState } from "./ally-states";
 import { drawSpellFrame, hasSpellFx } from "./spell-fx-renderer";
 import { DAMAGE_FX, drawCharge, drawFx, drawRelease, drawSpellDim, drawWeaponMotion, FX_COLOR, lungeOffset, type Pt } from "./battle-anim-renderer";
@@ -556,8 +556,12 @@ function renderBattleBody(
           drawSpellFrame(ctx, spec2.fx, "bolt", 0, { x, y }, { flip: tp.x > from!.x, loopMs: animView.elapsedMs });
         } else {
           const ht = flying ? (ft - FLY) / (1 - FLY) : ft;
+          // いっせいに落ちる魔法（流星・紋の輪）は、1人ずつ少しずらして当てる
+          const stagger = VOLLEY_FX.has(spec2.fx) && targets.length > 1 ? 0.06 : 0;
           targets.forEach((t, i) => {
-            const info = drawSpellFrame(ctx, spec2.fx!, kind, ht, feetOf(t), { scale: scaleOf(t) });
+            const hti = stagger ? Math.max(0, Math.min(1, (ht - i * stagger) / (1 - stagger * (targets.length - 1)))) : ht;
+            if (stagger && ht < i * stagger) return;
+            const info = drawSpellFrame(ctx, spec2.fx!, kind, hti, feetOf(t), { scale: scaleOf(t) });
             if (info && i === 0 && info.flash > 0) {
               ctx.save();
               ctx.globalAlpha = info.flash;

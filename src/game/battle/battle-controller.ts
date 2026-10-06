@@ -1,5 +1,5 @@
 import {
-  chooseEnemyAction,
+  chooseEnemyActions,
   createBattleState,
   runTurn,
   checkOutcome,
@@ -55,6 +55,8 @@ export interface BattleControllerOptions {
   items?: ItemStack[];
   /** ジョブで覚えた特技（キャラクターIDをキーにする）。あれば「とくぎ」を選んだとき一覧が出る。 */
   extraSkills?: Record<string, Skill[]>;
+  /** 戦闘のはじめに、戦闘画面で流す会話（「名前「せりふ」」の形の文）。隠しボスとの出会いなど（2026-10-06）。 */
+  intro?: string[];
 }
 
 /**
@@ -87,7 +89,8 @@ export class BattleController {
     this.stacks = options.items ?? (options.item ? [{ item: options.item, quantity: Infinity }] : []);
     this.extraSkills = options.extraSkills ?? {};
     this.turnQueue = this.state.party.filter(isAlive).map((c) => c.id);
-    this.phase = this.currentCommandPhase();
+    this.messageQueue = [...(options.intro ?? [])];
+    this.phase = this.messageQueue.length ? this.popMessageOrAdvance() : this.currentCommandPhase();
   }
 
   getState(): BattleState {
@@ -345,7 +348,7 @@ export class BattleController {
   private resolveRound(): BattleUiState {
     const enemyActions = this.state.enemies
       .filter(isAlive)
-      .map((enemy) => chooseEnemyAction(enemy, this.state.party, this.rng));
+      .flatMap((enemy) => chooseEnemyActions(enemy, this.state.party, this.rng));
     const allActions = [...this.pendingActions, ...enemyActions];
     const logBefore = this.state.log.length;
     this.state = runTurn(this.state, allActions, this.rng);

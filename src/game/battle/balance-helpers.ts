@@ -1,4 +1,4 @@
-import { createBattleState, checkOutcome, runTurn, chooseEnemyAction } from "./battle-engine";
+import { createBattleState, checkOutcome, runTurn, chooseEnemyActions } from "./battle-engine";
 import type { BattleAction, Combatant } from "./types";
 import { createRng } from "../random";
 import { CHAPTER0_ITEM, CHAPTER0_SKILL, CHAPTER0_STARTING_ITEM_COUNT, createChapter0Party } from "./chapter0-enemies";
@@ -63,7 +63,7 @@ export function simulateFight(party: Combatant[], enemies: Combatant[], seed: nu
     }
     for (const enemy of state.enemies) {
       if (enemy.hp > 0) {
-        actions.push(chooseEnemyAction(enemy, state.party, rng));
+        actions.push(...chooseEnemyActions(enemy, state.party, rng));
       }
     }
     state = runTurn(state, actions, rng);
