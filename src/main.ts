@@ -888,7 +888,7 @@ function startArbiterBattle(): void {
     createRng(Date.now()),
     { skills: buildSkillsMap(CHAPTER0_SKILL), items: battleItemStacks(), extraSkills: buildExtraSkillsMap(), intro: arbiterIntro(!!flags["tower_truth_known"], party.map((c) => c.id)) },
   );
-  currentBgmTrack = getTrack("secret-boss-2");
+  currentBgmTrack = getTrack("scarlet-chapter-clean");   // 緋色の断章（クリーン版）。2026-10-06 人間の指示
   battleTransition = startBattleTransition(true, battle.getState().enemies[0]?.name ?? "");
   if (audioStarted) {
     audio.playSe(seOf("battle-start"));
