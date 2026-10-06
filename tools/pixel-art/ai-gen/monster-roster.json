@@ -4033,7 +4033,7 @@
  },
  {
   "id": "angel-06",
-  "status": "done",
+  "status": "todo",
   "kind": "extra",
   "name": "氷の天使",
   "group": "天使",
@@ -4043,7 +4043,7 @@
    190,
    230
   ],
-  "prompt": "an angel with two huge spread wings made of pale blue ice crystals, clearly visible wings wider than its body, pale blue robes, a crown of icicles, cold mist around",
+  "prompt": "an angel with two huge symmetrical spread wings of pale blue ice crystals, pale blue robes, icicle crown",
   "size": 128,
   "ncol": 24,
   "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
@@ -4053,11 +4053,11 @@
   ],
   "bg": "dark",
   "draft": "angel-06_1",
-  "seed_base": 6001
+  "seed_base": 10002
  },
  {
   "id": "angel-07",
-  "status": "done",
+  "status": "todo",
   "kind": "extra",
   "name": "天秤の天使",
   "group": "天使",
@@ -4067,7 +4067,7 @@
    190,
    130
   ],
-  "prompt": "a blindfolded angel in white robes holding golden balance scales, folded wings, calm and stern",
+  "prompt": "a blindfolded angel holding large golden balance scales in both raised hands, white robes, grey wings, stern",
   "size": 128,
   "ncol": 24,
   "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
@@ -4076,7 +4076,8 @@
    "statue"
   ],
   "bg": "dark",
-  "draft": "angel-07_0"
+  "draft": "angel-07_0",
+  "seed_base": 6001
  },
  {
   "status": "cancelled",
@@ -4216,7 +4217,7 @@
  },
  {
   "id": "angel-10",
-  "status": "done",
+  "status": "todo",
   "kind": "extra",
   "name": "竪琴の天使",
   "group": "天使",
@@ -4226,7 +4227,7 @@
    200,
    170
   ],
-  "prompt": "an angel playing a golden harp, long flowing robes, wings curved around the body, glowing music notes of light",
+  "prompt": "an angel sitting and playing a large golden harp held in front of its body, flowing cream robes, white wings",
   "size": 128,
   "ncol": 24,
   "neg_extra": "nude, naked, bare chest, cleavage, gore, blood",
@@ -4235,7 +4236,8 @@
    "statue"
   ],
   "bg": "dark",
-  "draft": "angel-10_0"
+  "draft": "angel-10_0",
+  "seed_base": 6001
  },
  {
   "id": "angel-11",

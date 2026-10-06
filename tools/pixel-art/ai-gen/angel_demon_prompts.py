@@ -72,7 +72,7 @@ def main():
                 e = {"id": i, "status": "todo", "kind": "extra"}
                 r.append(e); added += 1
             e.update({"name": name, "group": kind, "shape": shape, "tone": tone, "prompt": prompt,
-                      "size": 128, "ncol": 24, "neg_extra": NEG_EXTRA, "neg_drop": ["human, human face", "statue"]})
+                      "size": 128, "ncol": 40, "neg_extra": NEG_EXTRA, "neg_drop": ["human, human face", "statue"]})
             if dark:
                 e["bg"] = "dark"
     json.dump(r, open(ROSTER, "w"), ensure_ascii=False, indent=1)

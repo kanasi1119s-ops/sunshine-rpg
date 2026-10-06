@@ -171,8 +171,15 @@ def cmd_pick(i, k, mirror=False, force=False):
         if not res["ok"]:
             sys.exit(f"{i}_{k}: 全身が入っていません（{res.get('cut')}・かたまり{res.get('parts')}）。ほかの下絵を選ぶか、extend で描き足す（どうしても使うときは --force）")
     size, ncol = (BOSS_SIZE, BOSS_COLORS) if e["kind"] == "boss" else (e.get("size", 96), e.get("ncol", 20))
+    if e["kind"] == "extra" and size >= 128:
+        ncol = max(ncol, 40)   # ゲームに入れない128×128の絵は40色で細かく（2026-10-06、人間の指示「細かく丁寧に」）
     d = f"{ART}/{i}"; os.makedirs(d, exist_ok=True)
-    subprocess.run(["python3", f"{AI}/sfcize.py", f"{WORK}/raw/{i}_{k}.png", f"{d}/{i}", str(size), str(ncol)], check=True, cwd=WORK)
+    # 白い背景の下絵は、白い布や羽を消さない切り抜き（cutout.py）を先に試す（2026-10-06、人間の指示「トレースを細かく丁寧に」）
+    raw = f"{WORK}/raw/{i}_{k}.png"; cut = f"{WORK}/raw/{i}_{k}.cut.png"
+    if subprocess.run(["python3", f"{AI}/cutout.py", raw, cut], cwd=WORK).returncode == 0:
+        subprocess.run(["python3", f"{AI}/sfcize_mask.py", cut, f"{d}/{i}", str(size), str(ncol)], check=True, cwd=WORK)
+    else:
+        subprocess.run(["python3", f"{AI}/sfcize.py", raw, f"{d}/{i}", str(size), str(ncol)], check=True, cwd=WORK)
     if mirror:
         rows = open(f"{d}/{i}.txt").read().split()
         open(f"{d}/{i}.txt", "w").write("\n".join(row[::-1] for row in rows) + "\n")
@@ -189,7 +196,7 @@ def cmd_done(i):
     pal = json.load(open(f"{ART}/{i}/final.json"))
     sizes = (BOSS_SIZE, 128) if e["kind"] == "boss" else (e.get("size", 96),)
     assert len(rows) in sizes and all(len(x) == len(rows) for x in rows), f"{i}: {sizes[0]}×{sizes[0]} にする"
-    limit = 62 if e["kind"] == "boss" or e.get("size", 96) >= 256 else 26
+    limit = 62 if e["kind"] in ("boss", "extra") or e.get("size", 96) >= 256 else 26   # ゲームに入れない絵（extra）は色を多く使ってよい
     assert len(pal) <= limit, f"{i}: {limit}色以内にする"
     e["status"] = "done"; save(r); print(i, "done")
 
