@@ -65,6 +65,8 @@ import type { EventCommand } from "./game/event/types";
 import type { Npc } from "./game/npc";
 import { PARTY_NAMES, residentVisible } from "./game/world/scene-residents";
 import { createTrialEnemy, SHRINE_KEYS, shrineKeyQuestLog, trialBattleId, trialFlag } from "./game/world/shrine-keys";
+import { getVistaImage } from "./render/vista-images";
+import type { VistaImage } from "./game/event/types";
 import { EPILOGUE_AFTER_ROLL, EPILOGUE_SEEN_FLAG } from "./game/world/scenes/epilogue";
 import { isVoiceOnly, pendingScene, sceneSeenFlag, sceneSpeakers, sleptFlagsAfterInn } from "./game/world/story-scenes";
 import { firstSpeaker } from "./game/sprite/character-specs";
@@ -658,6 +660,11 @@ const MAP_BGM_ID: Record<string, string> = {
   "tower-1": "ruins",
   "tower-2": "ruins",
   "tower-3": "ruins",
+  "tower-4": "ruins",
+  "tower-5": "ruins",
+  "tower-6": "ruins",
+  "tower-7": "ruins",
+  "tower-8": "ruins",
   "kanou-1": "unease",
   "kanou-2": "unease",
   "kanou-3": "unease",
@@ -750,6 +757,13 @@ const dialogue = new DialogueController(flags, {
   },
   onScreen: (on) => {
     screenDarkSticky = on;
+  },
+  onVista: (image) => {
+    if (image) {
+      vistaName = image;
+      getVistaImage(image);   // 読み込みを始めておく
+    }
+    vistaSticky = image !== null;
   },
   onCinematic: (on) => {
     cinematicSticky = on;
@@ -1654,6 +1668,10 @@ let cinematicSticky = false;
 /** 画面を暗くする演出（`screen` コマンド。回想を、暗い画面に文字だけで見せる）。会話がおわると、ゆっくりもどる。 */
 let screenDarkSticky = false;
 let screenDarkLevel = 0;
+/** 景色の絵（`vista` コマンド。塔から外を見る場面など）。会話がおわると、ゆっくり消える。 */
+let vistaName: VistaImage | null = null;
+let vistaSticky = false;
+let vistaLevel = 0;
 /** 宿で眠る演出（2026-10-05、人間の指示「宿に泊まったら、画面を真っ暗にして寝る」）。暗くなる→真っ暗→明るくなる。そのあいだは操作できない。 */
 const SLEEP_FADE_OUT_MS = 700;
 const SLEEP_DARK_MS = 1500;
@@ -2599,6 +2617,16 @@ function renderGameSceneBase(): void {
     ctx.textAlign = "left";
   }
 
+  if (vistaLevel > 0.001 && vistaName) {
+    // 景色の絵（画面いっぱい。文字の窓は、このあとに描くので、上に出る）
+    const img = getVistaImage(vistaName);
+    if (img) {
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, vistaLevel);
+      ctx.drawImage(img, 0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+      ctx.restore();
+    }
+  }
   if (screenDarkLevel > 0.001) {
     // 回想の暗い画面（文字の窓は、このあとに描くので、上に出る）
     ctx.fillStyle = `rgba(4,6,14,${(0.94 * screenDarkLevel).toFixed(3)})`;
@@ -2722,7 +2750,9 @@ const loop = createGameLoop({
         cinematicSticky = true;
         if (audioStarted) audio.playSe(seOf("magic-charge"));
       }
-      if (!dialogue.isActive() || battle) { cinematicSticky = false; screenDarkSticky = false; }
+      if (!dialogue.isActive() || battle) { cinematicSticky = false; screenDarkSticky = false; vistaSticky = false; }
+      const vistaGoal = vistaSticky ? 1 : 0;
+      vistaLevel += Math.sign(vistaGoal - vistaLevel) * Math.min(Math.abs(vistaGoal - vistaLevel), dtMs / 500);
       const darkGoal = screenDarkSticky ? 1 : 0;
       screenDarkLevel += Math.sign(darkGoal - screenDarkLevel) * Math.min(Math.abs(darkGoal - screenDarkLevel), dtMs / 600);
       const goal = cinematicSticky ? 1 : 0;

@@ -25,6 +25,8 @@ const BATTLE_VICTORY_FLAG: Record<string, string> = {
   "deep-yugami": "deep_yugami_defeated",
   "tower2-guard": "tower2_guard_defeated",
   "tower3-guard": "tower3_guard_defeated",
+  "tower6-guard": "tower6_guard_defeated",
+  "tower7-guard": "tower7_guard_defeated",
   "kanou3-guard": "kanou3_guard_defeated",
   zenkan: "zenkan_defeated",
   ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`god-${i + 1}`, `god${i + 1}_defeated`])),
@@ -44,7 +46,7 @@ const CHAPTER_MAPS: string[][] = [
   ["toushin-town", "toushin-hall"],
   ["kyotoukyu-court", "kyotoukyu-corridor", "kyotoukyu-sanctum"],
   ["deep-1", "deep-2", "deep-3", "deep-4"],
-  ["tower-1", "tower-2", "tower-3", "kanou-1", "kanou-2", "kanou-3", "kanou-4"],
+  ["tower-1", "tower-4", "tower-2", "tower-5", "tower-6", "tower-3", "tower-7", "tower-8", "kanou-1", "kanou-2", "kanou-3", "kanou-4"],
   // 禁域の鍵の頼みごと（依頼人の町 → 試練の番人の2か所 → 依頼人）と、禁域
   ...SHRINE_KEYS.map((key) => [key.giver.mapId, ...key.trials.map((t) => t.mapId), key.giver.mapId]),
   ...Array.from({ length: 8 }, (_, i) => [`god-shrine-${i + 1}`]),

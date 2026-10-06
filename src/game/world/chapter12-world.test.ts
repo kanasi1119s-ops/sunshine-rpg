@@ -31,10 +31,10 @@ function runScripted(
   return texts;
 }
 
-const KNOWN_BATTLE_IDS = new Set(["tower2-guard", "tower3-guard", "kanou3-guard", "zenkan"]);
+const KNOWN_BATTLE_IDS = new Set(["tower2-guard", "tower6-guard", "tower3-guard", "tower7-guard", "kanou3-guard", "zenkan"]);
 
 /** main.ts側（戦闘勝利）で立てられるフラグ。 */
-const EXTERNALLY_SET_FLAGS = new Set(["tower2_guard_defeated", "tower3_guard_defeated", "kanou3_guard_defeated", "zenkan_defeated"]);
+const EXTERNALLY_SET_FLAGS = new Set(["tower2_guard_defeated", "tower3_guard_defeated", "tower6_guard_defeated", "tower7_guard_defeated", "kanou3_guard_defeated", "zenkan_defeated"]);
 
 function allNpcCommands() {
   return Object.values(CHAPTER12_NPCS).flatMap((npcs) => npcs.flatMap((npc) => npc.commands));

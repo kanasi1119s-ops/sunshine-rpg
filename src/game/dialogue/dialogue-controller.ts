@@ -1,5 +1,5 @@
 import { createEventRunner, type WarpRequest } from "../event/event-runner";
-import type { EventCommand, EventInput, EventStep, Flags } from "../event/types";
+import type { EventCommand, EventInput, EventStep, Flags, VistaImage } from "../event/types";
 import type { SceneTime } from "../time-of-day";
 import { computeVisibleChars } from "./typewriter";
 
@@ -19,6 +19,7 @@ export interface DialogueControllerOptions {
   onCinematic?: (on: boolean) => void;
   onTime?: (time: SceneTime) => void;
   onScreen?: (dark: boolean) => void;
+  onVista?: (image: VistaImage | null) => void;
   charsPerSecond?: number;
 }
 
@@ -57,6 +58,7 @@ export class DialogueController {
       onCinematic: this.options.onCinematic,
       onTime: this.options.onTime,
       onScreen: this.options.onScreen,
+      onVista: this.options.onVista,
     });
     this.advance(undefined);
   }

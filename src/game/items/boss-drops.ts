@@ -28,6 +28,8 @@ const DROPS: DropDef[] = [
   { battleId: "deep3-yugami", name: "残響の耳飾り", statBonus: { maxMp: 20 }, traits: [{ kind: "regenMp", value: 4 }], description: "消えない響きが魔力をよぶ。" },
   { battleId: "deep-yugami", name: "初源の灯り", statBonus: { maxHp: 40 }, traits: [{ kind: "regenHp", percent: 4 }, G("poison"), G("sleep"), G("confuse"), { kind: "luck", value: 5 }], description: "最初の灯り。あらゆる状態異常をふせぎ、HPも少しずつ回復する。" },
   { battleId: "tower2-guard", name: "結晶獣の心核", statBonus: { defense: 20 }, traits: [{ kind: "regenHp", percent: 3 }], description: "かたい結晶の核。" },
+  { battleId: "tower6-guard", name: "星図の栞", statBonus: { maxMp: 30 }, traits: [{ kind: "regenMp", value: 5 }], description: "星の並びを写した栞。心が澄む。" },
+  { battleId: "tower7-guard", name: "嵐切りの羽かざり", statBonus: { speed: 10 }, traits: [{ kind: "multi", value: 6 }], description: "嵐の風を切った羽。" },
   { battleId: "tower3-guard", name: "環光の冠かざり", statBonus: {}, traits: [{ kind: "luck", value: 6 }, { kind: "crit", value: 5 }], description: "輪の光をまとった飾り。" },
   { battleId: "kanou3-guard", name: "裂け目の指輪", statBonus: { speed: 8 }, traits: [{ kind: "evade", value: 10 }], description: "裂け目をすり抜ける軽い指輪。" },
   { battleId: "zenkan", name: "全環の輪", statBonus: { attack: 20 }, traits: [{ kind: "crit", value: 8 }, { kind: "multi", value: 8 }, { kind: "luck", value: 8 }], description: "すべての環を束ねた輪。" },

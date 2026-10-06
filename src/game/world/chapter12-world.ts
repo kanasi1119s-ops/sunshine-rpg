@@ -7,7 +7,7 @@ import { gate, pedestal } from "./chapter10-world";
 import { say } from "./side-story";
 
 /**
- * 芯環塔（roadmap 6-8・6-9）と環奥・ラスト裏ボス「全環」（roadmap 6-10〜6-12）。`docs/story/secret-boss.md` 4・5章。
+ * 芯環塔（roadmap 6-8・6-9。2026-10-06 に3階 → 8階。風の回廊・頂の見晴らしで、外の景色が見える）と環奥・ラスト裏ボス「全環」（roadmap 6-10〜6-12）。`docs/story/secret-boss.md` 4・5章。
  * 入口は、8つの環の欠片で起動した深部の転移陣（`tower_gate_open`）。塔は昇る3階層（根→雲路→環光）で、
  * 環光の階の紋様で「世界の真実」を知り、最上部の裂け目から環奥（分岐する迷宮、4区画）へ進む。
  * 仮: 撃破・宝箱の報酬（伝説の装備）は「ごほうび（仮）」の会話のみ。ボスの絵は図形。地形は単色タイル。
@@ -16,6 +16,11 @@ export const CHAPTER12_MAPS: Record<string, TileMapData> = {
   "tower-1": createTowerData(1),
   "tower-2": createTowerData(2),
   "tower-3": createTowerData(3),
+  "tower-4": createTowerData(4),
+  "tower-5": createTowerData(5),
+  "tower-6": createTowerData(6),
+  "tower-7": createTowerData(7),
+  "tower-8": createTowerData(8),
   "kanou-1": createKanouData(1),
   "kanou-2": createKanouData(2),
   "kanou-3": createKanouData(3),
@@ -23,6 +28,8 @@ export const CHAPTER12_MAPS: Record<string, TileMapData> = {
 };
 
 const L = DEEP_LANDMARKS;
+/** 塔の窓・欄干（東の壁ぎわ）。外が見える場所。 */
+const WINDOW = { tileX: 18, tileY: 8 };
 const ENTRY = { tileX: 10, tileY: 11 };
 /** 途中の強敵の立ち位置（北の扉の前を通れるよう、来た道の真ん中には置かない）。 */
 const GUARD = { tileX: 10, tileY: 6 };
@@ -76,14 +83,14 @@ export const CHAPTER12_NPCS: Record<string, Npc[]> = {
     { id: "tower1-pedestal-b", ...L.pedestalB, color: "#9ad0ff", commands: pedestal("tower1", "b", "岩肌の割れ目から、青い光が滲み出して、二つ目の台をともした。") },
     { id: "tower1-lore", ...L.echo, color: "#607080", commands: [say(undefined, "灯り石に似ているが、違う。青白い鉱脈は、まるで塔全体の血管のように、壁いっぱいに走っている。"), say("レト", "嵐の音が、遠くで鳴ってる。ここは、塔のいちばん下の、根っこの部分なんだ。"), say("アヤメ", "誰も来たことがないはずなのに、石段の真ん中が、すり減っている。……わたしたちの前にも、誰かが、来ようとしていたのね。"), say("ユーリ", "ここで、ひと休みしよう。おじいちゃんが持たせてくれた麦茶、まだ、ほんのり温かい。")] },
     chest("tower1-chest", "tower1_treasure", "岩陰の宝箱を開けた。中には、青白く輝く伝説の装備が眠っていた。", 4000),
-    { id: "tower1-gate", ...L.gate, color: "#9ad0ff", commands: gate("tower1", "tower-2", ENTRY) },
+    { id: "tower1-gate", ...L.gate, color: "#9ad0ff", commands: gate("tower1", "tower-4", ENTRY) },
   ],
   "tower-2": [
     { id: "tower2-pedestal-a", ...L.pedestalA, color: "#ffffff", commands: pedestal("tower2", "a", "霧に隠れた足場を、灯りを頼りに渡った。台の灯り石が、白くまたたく。") },
     { id: "tower2-pedestal-b", ...L.pedestalB, color: "#ffffff", commands: pedestal("tower2", "b", "雲海の見える裂け目のそばで、二つ目の台をともした。風が、耳元でうなる。") },
     guard("tower2-guard", "tower2-guard", "tower2_guard_defeated", ["雲海の裂け目から、光の結晶でできた獣が、音もなく現れた！"], "結晶獣は砕けて、光の粒になった。道が静まっている。"),
     chest("tower2-chest", "tower2_treasure", "雲のかかった宝箱を開けた。中には、雲のように軽い伝説の装備があった。", 6000),
-    { id: "tower2-gate", ...L.gate, color: "#ffffff", commands: gate("tower2", "tower-3", ENTRY) },
+    { id: "tower2-gate", ...L.gate, color: "#ffffff", commands: gate("tower2", "tower-5", ENTRY) },
   ],
   "tower-3": [
     {
@@ -121,7 +128,44 @@ export const CHAPTER12_NPCS: Record<string, Npc[]> = {
     },
     guard("tower3-guard", "tower3-guard", "tower3_guard_defeated", ["広間の奥の暗がりで、光の結晶が、ひときわ大きく輝いた。宝の番人が目を覚ます！"], "宝の番人は、静かに崩れ去った。"),
     chest("tower3-chest", "tower3_treasure", "広間の隅の宝箱を開けた。中には、環の紋様が刻まれた、最上位の伝説の装備が眠っていた。", 9000),
-    { id: "tower3-gate", ...L.gate, color: "#fff0a0", commands: gate("tower3", "kanou-1", ENTRY) },
+    { id: "tower3-gate", ...L.gate, color: "#fff0a0", commands: gate("tower3", "tower-7", ENTRY) },
+  ],
+  // ===== 芯環塔・足した階（2026-10-06、人間の指示「階層もっと増やしていい」「塔から外が見れる場所がほしい。塔の中のイベントに」）=====
+  "tower-4": [
+    { id: "tower4-pedestal-a", ...L.pedestalA, color: "#7ab8f0", commands: pedestal("tower4", "a", "らせんに巻く鉱脈の、いちばん太いところに触れた。台が、心臓の鼓動のように、とくん、と光る。") },
+    { id: "tower4-pedestal-b", ...L.pedestalB, color: "#7ab8f0", commands: pedestal("tower4", "b", "鉱脈の光を、二つ目の台へみちびいた。青い光が、壁のらせんを、上へ上へとのぼっていく。") },
+    { id: "tower4-lore", ...L.echo, color: "#506078", commands: [say(undefined, "壁を、青い鉱脈がらせんに巻きながら、上へのびている。塔そのものが、ひとつの大きな灯り石のようだ。"), say("オルカ", "……鉱山の脈と、同じ巻き方だ。いや、逆か。鉱山の脈のほうが、こいつを真似てるのかもしれん。"), say("コハク", "これ、ちょっと削って持って帰ったら……いや、なんでもない。なんでもないってば。")] },
+    chest("tower4-chest", "tower4_treasure", "鉱脈のかげの宝箱を開けた。中には、青い光を宿した伝説の装備が眠っていた。", 5000),
+    { id: "tower4-gate", ...L.gate, color: "#7ab8f0", commands: gate("tower4", "tower-2", ENTRY) },
+  ],
+  "tower-5": [
+    { id: "tower5-pedestal-a", ...L.pedestalA, color: "#e8f4ff", commands: pedestal("tower5", "a", "吹きこむ風の中で、台に灯りを入れた。光が、風にあおられて、ゆらゆらと踊る。") },
+    { id: "tower5-pedestal-b", ...L.pedestalB, color: "#e8f4ff", commands: pedestal("tower5", "b", "二つ目の台をともすと、回廊じゅうの窓が、いっせいに白く光った。") },
+    { id: "tower5-window", ...WINDOW, color: "#e8f4ff", commands: cloudWindowCommands() },
+    { id: "tower5-lore", ...L.echo, color: "#7a8ca8", commands: [say(undefined, "東の壁に、大きな石のアーチ窓が開いている。風が、そこから吹きこんでくる。"), say("ミナ", "外が、見えるみたい。……ちょっと、のぞいてみませんか？")] },
+    { id: "tower5-gate", ...L.gate, color: "#e8f4ff", commands: gate("tower5", "tower-6", ENTRY) },
+  ],
+  "tower-6": [
+    { id: "tower6-pedestal-a", ...L.pedestalA, color: "#c8c0ff", commands: pedestal("tower6", "a", "星図の棚の前の台をともすと、天井に、見たことのない星座が浮かびあがった。") },
+    { id: "tower6-pedestal-b", ...L.pedestalB, color: "#c8c0ff", commands: pedestal("tower6", "b", "二つ目の台の光が、八つの星を結んだ。……八柱の神の、しるしだろうか。") },
+    { id: "tower6-lore", ...L.echo, color: "#40406a", commands: [say(undefined, "棚には、石の板に刻まれた星図が、何百枚もならんでいる。どれも、空に浮かぶ大きな環を中心に描かれている。"), say("アヤメ", "四百年より前の空……。環が、まだ欠けていなかったころの星図ね。"), say("レト", "書いた奴は、毎晩、ここで空を見上げてたんだろうな。……ひとりで。")] },
+    guard("tower6-guard", "tower6-guard", "tower6_guard_defeated", ["星図の棚がきしみ、石の板が宙に舞いあがった。書庫を守る番人が、目を覚ます！"], "書守は、星図の一枚にもどって、棚へおさまった。"),
+    chest("tower6-chest", "tower6_treasure", "書庫の奥の宝箱を開けた。中には、星のかけらをちりばめた伝説の装備が眠っていた。", 7500),
+    { id: "tower6-gate", ...L.gate, color: "#c8c0ff", commands: gate("tower6", "tower-3", ENTRY) },
+  ],
+  "tower-7": [
+    { id: "tower7-pedestal-a", ...L.pedestalA, color: "#ffd0a0", commands: pedestal("tower7", "a", "外壁ぞいの段は、嵐の風がまともに吹きつける。両手で台をかばいながら、灯りを入れた。") },
+    { id: "tower7-pedestal-b", ...L.pedestalB, color: "#ffd0a0", commands: pedestal("tower7", "b", "二つ目の台がともると、風が、ふっと弱まった。……頂が、近い。") },
+    { id: "tower7-lore", ...L.echo, color: "#5a5468", commands: [say(undefined, "壁のすきまから、嵐の音がする。ずっと下で、雲海が渦を巻いているのが、ちらりと見えた。"), say("ユーリ", "足もとを見ないように……見ないように……。"), say("オルカ", "見るな。前だけ見ろ。俺の背中でもいい。")] },
+    guard("tower7-guard", "tower7-guard", "tower7_guard_defeated", ["嵐が、ひとつの形に集まっていく。階段を守る番人が、風をまとって立ちふさがった！"], "嵐は、ただの風になって、空へ散っていった。"),
+    { id: "tower7-gate", ...L.gate, color: "#ffd0a0", commands: gate("tower7", "tower-8", ENTRY) },
+  ],
+  "tower-8": [
+    { id: "tower8-pedestal-a", ...L.pedestalA, color: "#ffe0b0", commands: pedestal("tower8", "a", "頂の台に灯りを入れた。空が、少しずつ、白みはじめている。") },
+    { id: "tower8-pedestal-b", ...L.pedestalB, color: "#ffe0b0", commands: pedestal("tower8", "b", "最後の台がともると、塔の頂いっぱいに、朝の光が満ちた。北の扉の向こうで、空間が、かすかに裂けている。") },
+    { id: "tower8-view", ...WINDOW, color: "#ffe0b0", commands: summitViewCommands() },
+    { id: "tower8-lore", ...L.echo, color: "#8a7c98", commands: [say(undefined, "塔のいちばん上。石の欄干の向こうに、夜明けの空が広がっている。"), say("コハク", "ねえ、ちょっと。……欄干のところ、来てみてよ。すごいよ。")] },
+    { id: "tower8-gate", ...L.gate, color: "#ffe0b0", commands: gate("tower8", "kanou-1", ENTRY) },
   ],
   // ===== 環奥 =====
   "kanou-1": [
@@ -177,6 +221,46 @@ export const CHAPTER12_NPCS: Record<string, Npc[]> = {
     },
   ],
 };
+
+/** 風の回廊の窓から、雲海を見る（人間の指示「塔から外が見れる場所」）。 */
+function cloudWindowCommands(): EventCommand[] {
+  return [
+    { type: "cinematic", on: true },
+    say(undefined, "大きな石のアーチ窓から、外をのぞいた。"),
+    { type: "vista", image: "clouds" },
+    say(undefined, "――見わたすかぎりの、雲の海だった。"),
+    say(undefined, "もこもことした雲が、白い波のように、地平の果てまでつづいている。その向こうに、青くかすんだ大陸の山なみ。"),
+    say("ミナ", "……わあ。雲を、上から見てる。わたしたち、雲より高いところにいるんですね。"),
+    say("コハク", "見て、右のほう！ 島が浮かんでる。あれ、浮嶼だよ。あんなに小さく見えるなんて。"),
+    say("レト", "あのあたりの雲の下が霜原で、その手前が砂音か。……歩いたな。全部、歩いた。"),
+    say("オルカ", "鉄鏈の煙も、ここからじゃ見えん。……見えんほうが、いいのかもしれん。"),
+    say("アヤメ", "雲のすき間を、何かが飛んでいる。……小さな、空の船。わたしたちのほかにも、空を渡る人がいるのね。"),
+    say("ユーリ", "母さんにも、見せてあげたいな。……灯里は、あの山の、ずっと向こうだ。"),
+    say(undefined, "冷たい風が、六人の髪を、いっしょにゆらした。"),
+    { type: "setFlag", flag: "tower5_view_seen", value: true },
+  ];
+}
+
+/** 頂の欄干から、夜明けの世界を見る。空には、欠けた光の環の跡。 */
+function summitViewCommands(): EventCommand[] {
+  return [
+    { type: "cinematic", on: true },
+    say(undefined, "石の欄干に手をかけて、六人は、ならんで外を見た。"),
+    { type: "vista", image: "summit" },
+    say(undefined, "――夜明けだった。"),
+    say(undefined, "海の向こうから、太陽が顔を出す。光の道が、波の上を、まっすぐこちらへのびてくる。"),
+    say(undefined, "そして、まだ星の残る空に、大きな、大きな光の弧がかかっていた。ところどころが、欠けている。"),
+    say("アヤメ", "……灯の環。いいえ、その跡。四百年前に砕けた、境目の名残りが、この高さからだと、見えるのね。"),
+    say("レト", "地上からは、一度も見えなかった。……ずっと、頭の上にあったのか。"),
+    say("ミナ", "大陸のほう。小さな灯りが、ぽつ、ぽつって。……あれ、町の灯りですよね。"),
+    say("コハク", "左から、麦香野、硝子湖、鉄鏈……あっちが砂音で、霧断崖。いちばん右の、あれが、灯芯都の白い塔だよ、きっと。"),
+    say("オルカ", "あの灯り、ひとつひとつに、人が暮らしてる。……俺たちが歩いた道も、あの灯りのあいだにある。"),
+    say("ユーリ", "灯里は……見えないや。でも、あの光の道の、ずっと先にある気がする。"),
+    say("ユーリ", "……行こう。環の欠けたところの、その先へ。帰るために。"),
+    say(undefined, "朝の光が、欄干の石を、金色にそめていた。"),
+    { type: "setFlag", flag: "tower8_view_seen", value: true },
+  ];
+}
 
 function zenkanCommands(): EventCommand[] {
   return [

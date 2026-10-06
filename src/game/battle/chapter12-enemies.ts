@@ -17,7 +17,9 @@ export interface DungeonEnemyData {
 
 export const DUNGEON_ENEMIES: DungeonEnemyData[] = [
   { id: "tower2-guard", name: "雲路の結晶獣", maxHp: 6477, attack: 106, defense: 34, speed: 29, expReward: 12633 },
+  { id: "tower6-guard", name: "星図の書守", maxHp: 6950, attack: 109, defense: 34, speed: 29, expReward: 13200 },
   { id: "tower3-guard", name: "環光の番人", maxHp: 7534, attack: 112, defense: 35, speed: 30, expReward: 13896 },
+  { id: "tower7-guard", name: "嵐を纏う階守", maxHp: 7860, attack: 115, defense: 36, speed: 30, expReward: 14500 },
   { id: "kanou3-guard", name: "裂け目の守り手", maxHp: 8194, attack: 118, defense: 37, speed: 31, expReward: 15198 },
   { id: "zenkan", name: "全環", maxHp: 9404, attack: 124, defense: 39, speed: 33, expReward: 16539 },
 ];

@@ -31,7 +31,12 @@ export type EventCommand =
   /** 時計を、その時間帯まで進める（イベントの途中で「その夜」「翌朝」にする。2026-10-06）。 */
   | { type: "time"; time: SceneTime }
   /** 画面を暗くする・もどす（回想などを、暗い画面に文字だけで見せる。会話がおわると、自動でもどる。2026-10-06）。 */
-  | { type: "screen"; dark: boolean };
+  | { type: "screen"; dark: boolean }
+  /** 画面いっぱいに景色の絵を出す・消す（塔から外を見る場面など。会話がおわると、自動で消える。2026-10-06）。 */
+  | { type: "vista"; image: VistaImage | null };
+
+/** 景色の絵（`src/render/vista-images.ts`）。 */
+export type VistaImage = "clouds" | "summit";
 
 /** イベント実行中、画面表示側に「今これを見せて」と伝える1コマ。 */
 export type EventStep =

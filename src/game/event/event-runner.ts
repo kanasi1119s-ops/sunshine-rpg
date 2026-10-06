@@ -1,5 +1,5 @@
 import type { SceneTime } from "../time-of-day";
-import type { EventCommand, EventInput, EventStep, Flags } from "./types";
+import type { EventCommand, EventInput, EventStep, Flags, VistaImage } from "./types";
 
 export interface WarpRequest {
   mapId: string;
@@ -21,6 +21,7 @@ interface RunnerOptions {
   onCinematic?: (on: boolean) => void;
   onTime?: (time: SceneTime) => void;
   onScreen?: (dark: boolean) => void;
+  onVista?: (image: VistaImage | null) => void;
 }
 
 /**
@@ -82,6 +83,10 @@ function* runCommands(
 
       case "screen":
         options.onScreen?.(command.dark);
+        break;
+
+      case "vista":
+        options.onVista?.(command.image);
         break;
 
       case "startBattle":
