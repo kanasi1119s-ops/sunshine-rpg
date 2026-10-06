@@ -3242,7 +3242,7 @@
  {
   "id": "enc-world-sea-0",
   "prompt": "a shadow between the waves, a dark eel-like creature with foam crests and glowing teal eyes",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-sea-0",
   "kind": "mob",
   "name": "波間の影",
@@ -3253,12 +3253,13 @@
    40,
    80,
    100
-  ]
+  ],
+  "draft": "enc-world-sea-0_1"
  },
  {
   "id": "enc-world-sea-1",
   "prompt": "a tide stone creature, a barnacle-covered rock with a crab-claw arm and seaweed hair",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-sea-1",
   "kind": "mob",
   "name": "潮の石",
@@ -3269,12 +3270,13 @@
    100,
    110,
    100
-  ]
+  ],
+  "draft": "enc-world-sea-1_0"
  },
  {
   "id": "enc-world-sea-2",
   "prompt": "a sea firefly bug swarm queen, a larger glowing insect with transparent shell and blue light trails",
-  "status": "todo",
+  "status": "draft",
   "key": "enemy:enc-world-sea-2",
   "kind": "mob",
   "name": "海ほたるの虫",
