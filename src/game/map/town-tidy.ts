@@ -40,7 +40,7 @@ export const PROP_BOX: Partial<Record<MapPropKind, [number, number, number, numb
   "crystal-red": [-17, 17, -36, 0],
   "fence": [-8, 8, -17, 0],
   "fence-end": [-8, 8, -18, 0],
-  "flowerbed": [-17, 18, -16, -1],
+  "flowerbed": [-16, 19, -16, -1],
   "fountain": [-23, 23, -47, 0],
   "grave-cross": [-8, 8, -22, 0],
   "grave-round": [-8, 8, -19, 0],
@@ -181,6 +181,8 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
       if (ring(t.x, t.y) || col[i] === 1 || occupied.has(i) || doorFront.has(i) || art(t.x, t.y) === "path" || art(t.x, t.y) === "water" || nearPersonOrExit(t.x, t.y)) return false;
     }
     const b = boxOf(p, ts);
+    // 絵が町の塀（左・右・下のはしの1マス）にはみ出す所には置かない（2026-10-06 人間の指示「塀にはみ出てる」）
+    if (b && (b.x0 < ts - 1 || b.x1 > (w - 1) * ts + 1 || b.y1 > (h - 1) * ts + 1)) return false;
     if (b && kind !== "flowerbed") {
       for (const q of props) {
         if (q.kind === "flowerbed") continue;
@@ -223,6 +225,13 @@ export function tidyTown(data: TileMapData, npcs: readonly Npc[]): void {
     for (const dx of [-2, 2]) {
       if (!props.some((q) => q.kind === "flowerbed" && q.tileX === p.tileX + dx && q.tileY === p.tileY)) tryPlace("flowerbed", p.tileX + dx, p.tileY);
     }
+  }
+
+  // 3.5) 絵が塀にはみ出す飾り（建物はのぞく）は、取りのぞく（2026-10-06）
+  for (const p of [...props]) {
+    if (isHouse(p.kind) || p.kind === "church") continue;
+    const b = boxOf(p, ts);
+    if (b && (b.x0 < ts - 1 || b.x1 > (w - 1) * ts + 1 || b.y1 > (h - 1) * ts + 1)) remove(p);
   }
 
   // 4) 重なり: だいじなほうを残す（花壇はのぞく）。調べられる物と重なる飾りも取りのぞく
@@ -270,5 +279,17 @@ export function townOverlaps(data: TileMapData, npcs: readonly Npc[]): string[] 
   }
   for (const n of npcs) if (isSolidObject(n)) boxes.push({ name: n.id, box: { x0: n.tileX * ts, x1: n.tileX * ts + ts, y0: n.tileY * ts, y1: n.tileY * ts + ts } });
   for (let i = 0; i < boxes.length; i++) for (let j = 0; j < i; j++) if (overlaps(boxes[i].box, boxes[j].box)) out.push(`${boxes[i].name} × ${boxes[j].name}`);
+  return out;
+}
+
+/** 町の塀（左・右・下のはし）に絵がはみ出している飾り（建物はのぞく。テスト用）。 */
+export function townWallOverhangs(data: TileMapData): string[] {
+  const ts = data.tileWidth, w = data.width, h = data.height;
+  const out: string[] = [];
+  for (const p of data.props ?? []) {
+    if (isHouse(p.kind) || p.kind === "church") continue;
+    const b = boxOf(p, ts);
+    if (b && (b.x0 < ts - 1 || b.x1 > (w - 1) * ts + 1 || b.y1 > (h - 1) * ts + 1)) out.push(`${p.kind}(${p.tileX},${p.tileY})`);
+  }
   return out;
 }

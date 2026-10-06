@@ -193,6 +193,58 @@ def statue_winged():
     return render(m, 48, 48, 24, 46, RAMPS, shade_fn=common_shade, shadow=(26.5, 46.6, 15, 2.3), outline="#24222a")
 
 
+# ===================================================================== 花壇（立体）
+FLOWER = {
+    "fl_red": ["#5a1418", "#8e2028", "#c83038", "#e85a5a", "#f8968c"],
+    "fl_yellow": ["#6a4a08", "#a87810", "#e0b020", "#f4d448", "#fff0a0"],
+    "fl_white": ["#7a7680", "#a8a4ac", "#d4d0d4", "#ecebea", "#ffffff"],
+    "fl_purple": ["#2e1848", "#4a2a72", "#6e44a4", "#9468cc", "#bc98e4"],
+    "fl_pink": ["#6a2440", "#a43a64", "#d8608c", "#f08cb0", "#fcc0d4"],
+    "leaf": ["#14280e", "#1e3c16", "#2c5620", "#3c722a", "#509036", "#6aae46", "#8ccc5e"],
+    "soil": ["#1e140c", "#2e2014", "#40301e", "#544028"],
+    "plank": ["#2a1a0c", "#422814", "#5e3a1c", "#7a4e28", "#9a6634", "#b88044", "#d09c5c"],
+}
+
+
+def flowerbed():
+    """2026-10-06 人間の指示「花壇は作り直し」: 木の植木箱（板・角の柱・上のふち）に、土、もりあがった葉の株、
+    くきの先の丸い花（赤・黄・白・むらさき・桃）。光は左上前から、葉の株は丸みと影で、奥ゆきがわかるように。"""
+    m = Model()
+    L_, D_, Hb = 14.0, 4.6, 3.8
+    m.add(box((0, Hb / 2, -D_ / 2), (L_, Hb / 2, D_ / 2)), "plank")
+    m.cut(box((0, Hb + 0.2, -D_ / 2), (L_ - 0.9, 0.9, D_ / 2 - 0.8)))
+    m.add(box((0, Hb - 0.55, -D_ / 2), (L_ - 0.9, 0.3, D_ / 2 - 0.8)), "soil")
+    for cx in (-L_ + 0.5, L_ - 0.5):                                     # 角の柱
+        m.add(box((cx, Hb / 2 + 0.2, -0.05), (0.7, Hb / 2 + 0.2, 0.55)), "plank")
+    m.add(box((0, Hb + 0.15, 0.0), (L_ + 0.2, 0.28, 0.5)), "plank")      # 上のふち（前）
+    rnd = 0
+    for i, x in enumerate(np.arange(-L_ + 2.0, L_ - 1.4, 2.35)):
+        for j, z in enumerate((-1.3, -3.2)):
+            jx = ((hn(i, j) % 7) - 3) * 0.12
+            m.add(ellipsoid((x + jx + j * 0.9, Hb + 1.2, z), (1.7, 1.7, 1.3)), "leaf")
+            if (i + j) % 2 == 0:
+                fy = Hb + 3.6 + (hn(i, j, 3) % 3) * 0.6
+                col = ["fl_red", "fl_yellow", "fl_white", "fl_purple", "fl_pink"][(i * 2 + j * 3) % 5]
+                m.add(capsule((x + jx + j * 0.9, Hb + 1.2, z), (x + jx + j * 0.9, fy, z + 0.2), 0.2), "leaf")
+                fx = x + jx + j * 0.9
+                for (ox, oy) in ((-0.75, 0), (0.75, 0), (0, 0.75), (0, -0.7)):   # 花びら4まい
+                    m.add(sphere((fx + ox, fy + 0.3 + oy, z + 0.35), 0.62), col)
+                m.add(sphere((fx, fy + 0.35, z + 0.75), 0.42), "fl_yellow" if col != "fl_yellow" else "fl_red")   # まんなか
+
+    def shade(mm, p, n, lum, x, y):
+        if mm == "plank" and abs(n[1]) < 0.6:
+            if (p[1] / 1.4) % 1 < 0.22:
+                lum -= 0.1                                                # 板のすき間
+            if ((p[0] * 0.35 + p[1] * 3.1) % 1.3) < 0.18:
+                lum -= 0.04                                               # 木目
+        if mm == "leaf":
+            lum += ((hn(int(p[0] * 2), int(p[1] * 2), int(p[2] * 2)) % 5) - 2) * 0.04   # 葉のこまかなむら
+        return lum, mm
+
+    ramps = dict(RAMPS); ramps.update(FLOWER)
+    return render(m, 48, 48, 24, 45, ramps, shade_fn=shade, shadow=(26, 45.8, 17, 2.0), outline="#1a1410")
+
+
 # ===================================================================== 城のような民家（霧断崖）
 DOOR3 = ["#4a2a14", "#7a4a22", "#a8703a"]          # 扉の色（prop-renderer.ts の doorRectOf が、この色で扉の場所を見つける）
 
@@ -285,5 +337,5 @@ if __name__ == "__main__":
     todo = sys.argv[1:] or ["well", "statue-traveler", "statue-soldier", "statue-winged"]
     for n in todo:
         img = globals()[n.replace("-", "_")]()
-        d = HERE if n in ("well", "house-castle") else R20
+        d = HERE if n in ("well", "house-castle", "flowerbed") else R20
         print(n, save(img, os.path.join(d, n + ".txt"), os.path.join(d, "pal-" + n + ".json")))
