@@ -21,7 +21,6 @@ if (typeof window !== "undefined") {
   fallsImage("whirl");
   fallsImage("bolt");
   fallsImage("cloud");
-  fallsImage("spire-top");
 }
 import type { Camera } from "./camera";
 
@@ -35,8 +34,8 @@ function hash2(x: number, y: number, k: number): number {
  * 芯環塔と大滝（2026-10-05、人間の指示「滝と塔をくっつけて、ドットで滝が流れていて、周りが大雨・嵐になって、雷まであるドットの動きを」）。
  * 穴と大滝・塔・塔の足もとを包む霧・嵐の雲・大雨を、ひとつの絵（320×360・16コマ、assets-src/pixel-practice/r29-falls/scene.py）にして重ねる。
  * 絵（320×440）の (160, 280) が塔のマスのまん中。塔は雲を突き抜けて、雲の上に頂が出る。
- * 雲は、写真をトレースした積乱雲（cloud.png、352×256・4コマ、assets-src/pixel-practice/r30-cumulonimbus）を上に重ね、
- * 雲の中の黄色く光る所に、ときどき雷が走る（cloudFlashFrame）。塔の上のほう（spire-top.png）は雲のさらに上に重ね、雲を突き抜けて見せる。
+ * 雲は、写真をトレースした積乱雲（cloud.png、440×256・4コマ、assets-src/pixel-practice/r30-cumulonimbus の reshape3）を上に重ね、
+ * 雲の中の黄色く光る所に、ときどき雷が走る（cloudFlashFrame）。塔は雲より低いので、雲の中にかくれる。
  * まわりの海の渦潮は、その下に描く。地形のすぐあと（建物・人より前）に描く。
  */
 export function renderBasin(ctx: CanvasRenderingContext2D, map: TileMap, camera: Camera, nowMs: number): void {
@@ -66,7 +65,7 @@ export function renderBasin(ctx: CanvasRenderingContext2D, map: TileMap, camera:
 }
 
 /**
- * 芯環塔の上の積乱雲と、雲を突き抜ける塔の上のほう。船や人より上に描く（船は雲のうしろを進む。2026-10-05、
+ * 芯環塔の上の積乱雲。船や人より上に描く（船は雲のうしろを進む。2026-10-05、
  * 人間の指示「船は雲の後ろ側を動けるようにしてほしい」）。飛空艇に乗っているときは、雲より上を飛ぶので、先に描く（main.ts）。
  */
 export function renderTowerCloud(ctx: CanvasRenderingContext2D, map: TileMap, camera: Camera, nowMs: number): void {
@@ -74,16 +73,16 @@ export function renderTowerCloud(ctx: CanvasRenderingContext2D, map: TileMap, ca
   const s = map.data.tileWidth;
   const cx = (WORLD_TOWER.x + 0.5) * s - camera.x;
   const cy = (WORLD_TOWER.y + 0.5) * s - camera.y;
-  if (cx < -260 || cx > camera.viewportWidth + 260 || cy < -260 || cy > camera.viewportHeight + 360) return;
+  if (cx < -260 || cx > camera.viewportWidth + 260 || cy < -110 || cy > camera.viewportHeight + 360) return;
   ctx.save();
   ctx.imageSmoothingEnabled = false;
   const cloud = fallsImage("cloud");
   if (cloud) {
     const cf = cloudFlashFrame(nowMs);
-    ctx.drawImage(cloud, cf * 352, 0, 352, 256, Math.round(cx - 176), Math.round(cy - 351), 352, 256);
+    ctx.drawImage(cloud, cf * 440, 0, 440, 256, Math.round(cx - 215), Math.round(cy - 351), 440, 256);
   }
-  const spireTop = fallsImage("spire-top");
-  if (spireTop) ctx.drawImage(spireTop, Math.round(cx - 160), Math.round(cy - 280));
+  // 塔の上のほう（spire-top.png）は、2026-10-06 から雲の上に重ねない。採用した雲（段になってそびえる雲）は塔の頂より高いので、
+  // 塔は雲の中にかくれる（雲の上に重ねると、塔の切れはしが雲の前に浮いて見えた）
   ctx.restore();
 }
 
