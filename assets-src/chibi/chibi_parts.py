@@ -154,6 +154,68 @@ class Chibi:
         return len(self.pal)
 
 
+def swing_arms(c):
+    """前・後ろ向きで、左右の腕を交互に振る（2026-10-07、人間の指示「天使と魔王手が動いてないんだよね」）。
+    もとの型（レト）は、片方の手しか動かず、もう片方には剣があった。剣を外し、両手を逆向きに1ドットずつ上下させる。
+    腕は x=2（左）と x=13（右）の1列、外側と内側に縁取り。コマ0は手が23行目、コマ1は左24・右22、コマ2は左22・右24"""
+    hand_rows = {0: (23, 23), 1: (24, 22), 2: (22, 24)}
+    for d in ("down", "up"):
+        g0 = c.frames[d + "0"]
+        sides = [(2, 1, 3), (13, 14, 12)]
+        sleeve = {col: [g0[y][col] for y in (20, 21, 22)] for col, _, _ in sides}
+        skin = {col: g0[23][col] for col, _, _ in sides}
+        for f in range(3):
+            g = c.frames[d + str(f)]
+            for y in range(21, 29):                  # 剣と、腕の外側を消す
+                for x in (0, 1, 14, 15):
+                    g[y][x] = "."
+            for (col, out, inn), hy in zip(sides, hand_rows[f]):
+                for y in range(20, hy):
+                    g[y][col] = sleeve[col][min(y - 20, 2)]
+                g[hy][col] = skin[col]
+                for y in range(hy + 1, 29):          # 手の下は体の縁取り
+                    if g[y][col] != ".":
+                        g[y][col] = "A"
+                g[hy + 1][col] = "A"
+                for y in range(21, hy + 1):
+                    g[y][out] = "A"
+                for y in range(21, 24):
+                    g[y][inn] = "A"
+
+
+def swing_arms_side(c, sleeve, hand, torso="M"):
+    """横向きで、手前の腕を前後に振る（2026-10-07、人間の指示「天使と魔王手が動いてないんだよね」）。
+    もとの型（レト）の、剣（前の柄・背中の柄）と細い腕を消して、縁取りつきの腕を描き直す。
+    コマ0は下に下ろす、コマ1は前へ、コマ2は後ろへ振る（左向きで描き、右向きは左右反転）"""
+    arm = {
+        0: [(20, 7, "A"), (20, 8, sleeve), (20, 9, "A"), (21, 7, "A"), (21, 8, sleeve), (21, 9, "A"),
+            (22, 7, "A"), (22, 8, sleeve), (22, 9, "A"), (23, 7, "A"), (23, 8, hand), (23, 9, "A"), (24, 8, "A")],
+        1: [(20, 7, "A"), (20, 8, sleeve), (20, 9, "A"), (21, 6, "A"), (21, 7, sleeve), (21, 8, "A"),
+            (22, 5, "A"), (22, 6, hand), (22, 7, "A"), (23, 6, "A")],
+        2: [(20, 8, "A"), (20, 9, sleeve), (20, 10, "A"), (21, 9, "A"), (21, 10, sleeve), (21, 11, "A"),
+            (22, 10, "A"), (22, 11, hand), (22, 12, "A"), (23, 11, "A")],
+    }
+    for f in range(3):
+        g = c.frames["left" + str(f)]
+        for y in range(17, 23):                      # 背中の剣の柄を消す
+            for x in range(12, 16):
+                g[y][x] = "."
+            if g[y][11] == "K":
+                g[y][11] = "."
+        for y in range(19, 24):                      # 前の剣の柄と、もとの細い腕を消す
+            for x in range(5, 12):
+                if g[y][x] in "ELKN":
+                    g[y][x] = torso
+        for y in range(23, 27):
+            for x in (3, 4):
+                g[y][x] = "."
+            if g[y][5] != ".":
+                g[y][5] = "A"
+        for y, x, col in arm[f]:
+            g[y][x] = col
+        c.frames["right" + str(f)] = [r[::-1] for r in g]
+
+
 def stamp(c, masks, over_keys=()):
     """向きごとの点の一覧で描く。masks = {"down": [(y, x, 色記号), ...], "up": [...], "left": [...]}。
     right は left の左右反転。over_keys に入っている向きは、体の上にも描く（後ろ向きの背中の羽など）"""

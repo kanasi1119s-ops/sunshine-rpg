@@ -2,7 +2,7 @@
 体は仲間の2頭身の型（女性はアヤメ、男性はレトの体）。髪は heads.py で1から描いた新しい髪型にした（仲間の髪型を使わない）。
 使い方: python3 make_four.py → 各フォルダに walker.json・sheet.txt/json（エディタ用）・sheet.png・sheet_x8.png・walk.gif"""
 import pathlib
-from chibi_parts import Chibi, L, stamp, wing_masks
+from chibi_parts import Chibi, L, stamp, wing_masks, swing_arms, swing_arms_side
 from heads import ELF, ANGEL, DEMON, LORD
 
 HERE = pathlib.Path(__file__).parent
@@ -61,6 +61,8 @@ for ch, v in zip("BCD", ("#f0c050", "#fff2a8", "#b07a1c")): c.color(ch, v)
 c.color("F", "#3a8ad8")
 for ch, v in zip("JKLMOPQRSVW", ("#f4f2ea", "#c8b67a", "#ffffff", "#e8e6f0", "#b8b4c8", "#b8a070", "#e8e0c8", "#fff8e8", "#c8b890", "#d8c8a0", "#9a8a60")): c.color(ch, v)
 apply_head(c, ANGEL)
+swing_arms_side(c, "J", "E")
+swing_arms(c)                                    # 両手を交互に振る（人間の指示「手が動いてない」）
 c.halo(c.new("#ffe680"), c.new("#c89a2a"), gap=3)
 stamp(c, wing_masks(c.new("#f0c860"), c.new("#fff0a0"), c.new("#c8962a"), c.new("#7a5a1a")), over_keys=("up",))   # イメージ画像どおり金の羽
 build("天使", "angel", c)
@@ -89,6 +91,8 @@ for ch, v in zip("BCD", ("#2a2238", "#4e3e66", "#120c18")): c.color(ch, v)
 c.color("F", "#ff3030")
 for ch, v in zip("JKLMOPQRSVW", ("#9a1a22", "#5a0a12", "#4a4a58", "#2a2a34", "#16161c", "#3a3040", "#2a2232", "#4a3e58", "#1e1824", "#2e2638", "#140e18")): c.color(ch, v)
 apply_head(c, LORD)
+swing_arms_side(c, c.new("#665a7a"), "E")          # 腕は少し明るい紫の灰色にして、黒いよろいの上でも見えるように
+swing_arms(c)                                    # 両手を交互に振る（人間の指示「手が動いてない」）
 c.cape(c.new("#8a1420"), c.new("#5a0a14"), "A", start=17, end=29)
 kn, kl, kg = c.new("#241a2e"), c.new("#9a88b4"), c.new("#ff3a3a")
 L_HORN = [(6, 2), (5, 2), (4, 2), (3, 2), (2, 3), (1, 3), (0, 4)]   # イメージ画像のような、大きく反った2本の角
