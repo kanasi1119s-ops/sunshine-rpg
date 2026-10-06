@@ -18,6 +18,7 @@ export function applyTraits(combatant: Combatant, slots: EquipmentSlots, itemsBy
         case "regenHp": next.regenHp = (next.regenHp ?? 0) + trait.percent / 100; break;
         case "regenMp": next.regenMp = (next.regenMp ?? 0) + trait.value; break;
         case "multi": next.multiBonus = (next.multiBonus ?? 0) + trait.value; break;
+        case "cosmo": next.cosmo = true; break;
       }
     }
   }

@@ -14,6 +14,7 @@ import { frameAt, SPRITE_FEET_ROW } from "../game/sprite/overworld-sprite";
 import { VOLLEY_FX, type BattleAnimSpec } from "../game/battle/battle-anim";
 import { allyStateOf, getAllyCanvas, type AllyState } from "./ally-states";
 import { drawSpellFrame, hasSpellFx } from "./spell-fx-renderer";
+import { drawCosmoOverlay, drawCosmoWearer } from "./cosmo-renderer";
 import { DAMAGE_FX, drawCharge, drawFx, drawRelease, drawSpellDim, drawWeaponMotion, FX_COLOR, lungeOffset, type Pt } from "./battle-anim-renderer";
 
 let currentBiome: Biome = "grass";
@@ -489,6 +490,10 @@ function renderBattleBody(
       if (lying) ctx.drawImage(lying, leftX - 8, feetY - lying.height);
       return;
     }
+    // コスモリングライトをまとった人: 宙に浮き、光り、砲台がまわりを回る（装着がすんでから）
+    if (member.cosmo && drawCosmoWearer(ctx, member, specKey, x, feetY, getAllyCanvas(spec, specKey, state, step), anim, battleState, (id) => combatantPoint(battleState, id, screenWidth, screenHeight), nowMs, SPRITE_FEET_ROW)) {
+      return;
+    }
     ctx.fillStyle = "rgba(0,0,0,0.28)";
     ctx.fillRect(x + 1, feetY - 2, 14, 3); // 足元の影
     const shake = flinch ? Math.round(Math.sin(nowMs / 14) * 1.5) : 0;
@@ -514,6 +519,10 @@ function renderBattleBody(
     else if (state === "confuse") drawFx(ctx, "confuse", loop, { x: cx, y: feetY - 14 });
     // （瀕死の絵は無し）
   });
+  // コスモリングライトの砲台・雷のビーム・命中・装着の光（味方の絵より手前）
+  if (battleState.party.some((m) => m.cosmo)) {
+    drawCosmoOverlay(ctx, battleState, animView, (id) => combatantPoint(battleState, id, screenWidth, screenHeight), nowMs, screenWidth, screenHeight - 56);
+  }
   // 動き（武器・魔法のエフェクト）は、味方の絵より手前に重ねる
   if (animView && animView.elapsedMs < animView.spec.durationMs) {
     const spec2 = animView.spec;

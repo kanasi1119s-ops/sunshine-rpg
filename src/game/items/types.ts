@@ -16,7 +16,9 @@ export type ItemTrait =
   | { kind: "guard"; status: "poison" | "sleep" | "confuse" }
   | { kind: "regenHp"; percent: number }
   | { kind: "regenMp"; value: number }
-  | { kind: "multi"; value: number };
+  | { kind: "multi"; value: number }
+  /** コスモリングライト: たたかうが、6基の砲台からの雷のビーム6連射（1発ごとに、攻撃力そのままの貫通ダメージ）。 */
+  | { kind: "cosmo" };
 /** 武器の種類。キャラクターごとに、持てる種類が決まっている（`weapon-types.ts`）。 */
 export type WeaponType = "sword" | "dagger" | "staff" | "bow" | "axe" | "spear";
 

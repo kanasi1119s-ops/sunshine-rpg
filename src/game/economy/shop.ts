@@ -159,6 +159,7 @@ export function describeTrait(trait: ItemTrait): string {
     case "regenHp": return `毎ターンHP${trait.percent}%回復`;
     case "regenMp": return `毎ターンMP${trait.value}回復`;
     case "multi": return `連続攻撃しやすい`;
+    case "cosmo": return `6基の砲台が雷のビームを6連射`;
   }
 }
 

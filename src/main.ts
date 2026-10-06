@@ -18,7 +18,7 @@ import { renderTransitionCover, renderTransitionReveal } from "./render/battle-t
 import { advanceOpening, createOpeningState, skipOpening, startOpening, updateOpening } from "./game/title/opening";
 import { battleSeFor, swingSeFor } from "./game/battle/battle-se";
 import { battleEffectFor, type BattleEffect } from "./game/battle/battle-effect";
-import { battleAnimFor, VOLLEY_FX, type BattleAnimSpec } from "./game/battle/battle-anim";
+import { battleAnimFor, cosmoEquipLine, VOLLEY_FX, type BattleAnimSpec } from "./game/battle/battle-anim";
 import { createStaffRollState, skipStaffRoll, startStaffRoll, updateStaffRoll } from "./game/title/staff-roll";
 import { renderStaffRoll } from "./render/staff-roll-renderer";
 import { addGold, computeVictoryGold, spendGold } from "./game/economy/gold";
@@ -91,6 +91,7 @@ import { arbiterChance, createArbiter } from "./game/battle/arbiter";
 import { setArbiterQueue } from "./game/battle/battle-engine";
 import { arbiterIntro } from "./game/battle/arbiter-talk";
 import { COSMO_ID } from "./game/items/legend-items";
+import { resetCosmo } from "./render/cosmo-renderer";
 import { applyTraits } from "./game/items/traits";
 import { bossDropFor } from "./game/items/boss-drops";
 import { allyLuck } from "./game/battle/luck";
@@ -886,7 +887,7 @@ function startArbiterBattle(): void {
     party,
     [createArbiter()],
     createRng(Date.now()),
-    { skills: buildSkillsMap(CHAPTER0_SKILL), items: battleItemStacks(), extraSkills: buildExtraSkillsMap(), intro: arbiterIntro(!!flags["tower_truth_known"], party.map((c) => c.id)) },
+    { skills: buildSkillsMap(CHAPTER0_SKILL), items: battleItemStacks(), extraSkills: buildExtraSkillsMap(), intro: [...cosmoIntro(party), ...arbiterIntro(!!flags["tower_truth_known"], party.map((c) => c.id))] },
   );
   currentBgmTrack = getTrack("scarlet-chapter-clean");   // 緋色の断章（クリーン版）。2026-10-06 人間の指示
   battleTransition = startBattleTransition(true, battle.getState().enemies[0]?.name ?? "");
@@ -894,6 +895,15 @@ function startArbiterBattle(): void {
     audio.playSe(seOf("battle-start"));
   }
   audio.playBgm(currentBgmTrack);
+}
+
+/**
+ * コスモリングライトを装備している人がいれば、戦闘のはじめに「環がかがやき、鎧がはまる」文を出す（装着の動き）。
+ * 戦闘ごとに装着をやり直す（2026-10-06）。
+ */
+function cosmoIntro(party: Combatant[]): string[] {
+  resetCosmo();
+  return party.filter((c) => c.cosmo && c.hp > 0).map((c) => cosmoEquipLine(c.name));
 }
 
 function startRandomBattle(enemies: Combatant[]): void {
@@ -921,7 +931,7 @@ function startRandomBattle(enemies: Combatant[]): void {
     party,
     enemies,
     createRng(Date.now()),
-    { skills: buildSkillsMap(CHAPTER0_SKILL), items: battleItemStacks(), extraSkills: buildExtraSkillsMap() },
+    { skills: buildSkillsMap(CHAPTER0_SKILL), items: battleItemStacks(), extraSkills: buildExtraSkillsMap(), intro: cosmoIntro(party) },
   );
   currentBgmTrack = getTrack("battle");
   battleTransition = startBattleTransition(false);
@@ -957,7 +967,7 @@ function startStoryBattle(battleId: string): void {
     party,
     [strengthenBoss(def.createEnemy())],
     createRng(Date.now()),
-    { skills: buildSkillsMap(CHAPTER0_SKILL), items: battleItemStacks(), extraSkills: buildExtraSkillsMap() },
+    { skills: buildSkillsMap(CHAPTER0_SKILL), items: battleItemStacks(), extraSkills: buildExtraSkillsMap(), intro: cosmoIntro(party) },
   );
   currentBgmTrack = getTrack(def.bgmId);
   // ボス・強敵の戦闘は、特別な登場の演出（黒い帯・名前・白いひらめき）をはさむ
@@ -986,6 +996,8 @@ if (import.meta.env.DEV) {
     arbiterQueue: (actions: string[]) => setArbiterQueue(actions),
     /** 開発用: 戦闘中の敵のHPを変える（動画の撮影用）。 */
     setEnemyHp: (hp: number) => { if (battle) for (const e of battle.getState().enemies) e.hp = Math.min(e.maxHp, hp); },
+    /** 開発用: ユーリにコスモリングライトを装備させる（動画・確認用）。 */
+    equipCosmo: () => { heroEquipment = { ...heroEquipment, weapon: COSMO_ID }; },
     setFlag: (name: string, value = true) => { flags[name] = value; },
     /** 開発用: 世界地図の (x, y) で、船（ship）か飛空艇（air）に乗った状態にする（見た目の確認用）。 */
     ride: (kind: "ship" | "air", x: number, y: number) => {
@@ -3097,7 +3109,9 @@ const loop = createGameLoop({
           battleInputLockUntil = performance.now() + (animSpec ? animSpec.durationMs : 0);
           // 読む時間（短い文は少し、長い文はもう少し）をあけて、自動で次へ進む
           // 会話（「名前「せりふ」」）は、読めるように長めに出す
-          battleAutoAdvanceAt = battleInputLockUntil + (/「.+」$/.test(uiState.text) ? 1800 + uiState.text.length * 70 : Math.min(1300, 650 + uiState.text.length * 25)) / speed;
+          // コスモリングライトの連射（舞い上がり・1発ずつ）は、間をあけずに続けて撃つ
+          const rapid = animSpec?.cosmo === "deploy" || animSpec?.cosmo === "shot";
+          battleAutoAdvanceAt = battleInputLockUntil + (rapid ? 90 : /「.+」$/.test(uiState.text) ? 1800 + uiState.text.length * 70 : Math.min(1300, 650 + uiState.text.length * 25)) / speed;
           // HPは、効果が当たる瞬間まで前のまま見せる
           const hpBefore = battle.getHpBeforeMessage();
           // 攻撃（武器の動き・魔法のエフェクト）が終わってから、HPが減る（倒れるのも、そのあと）

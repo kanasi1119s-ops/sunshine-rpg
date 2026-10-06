@@ -297,6 +297,36 @@ function applyEffectSkill(next: BattleState, actor: Combatant, skill: Skill, raw
   }
 }
 
+/** コスモリングライトの砲台の数（＝1回のたたかうで撃つビームの数）。 */
+export const COSMO_SHOTS = 6;
+/** コスモリングライトのビームの名前（ログ・動きの見分けに使う）。 */
+export const COSMO_BEAM = "環光の雷撃";
+
+/**
+ * コスモリングライト（2026-10-06、人間の指示）: 6基の砲台が飛び回り、雷のビームを6連射する。
+ * 1発ごとに、攻撃力（強化・弱体をふくむ）そのままのダメージ。しゅび・ぼうぎょは無視（はずれない）。
+ * ねらった敵が倒れたら、残りの砲台は生きているほかの敵を追う（どの敵かは乱数）。
+ */
+function cosmoVolley(next: BattleState, actor: Combatant, targetId: string, rng: () => number): BattleState {
+  next.log.push(`${actor.name} の コスモリングライト！ ${COSMO_SHOTS}基の砲台が舞い上がった！`);
+  let current = targetId;
+  for (let i = 0; i < COSMO_SHOTS; i++) {
+    let target = findCombatant(next, current);
+    if (!target || !isAlive(target)) {
+      const alive = next.enemies.filter(isAlive);
+      if (alive.length === 0) break;
+      target = alive[Math.floor(rng() * alive.length)];
+      current = target.id;
+    }
+    const amount = Math.max(1, effectiveStat(actor, "attack"));
+    target.hp = Math.max(0, target.hp - amount);
+    // 何発目かを入れる（同じ文が続くと、画面の動き・音が1回しか出ないため）
+    next.log.push(`${actor.name} の ${COSMO_BEAM}（${i + 1}）！ ${target.name} に ${amount} のダメージ`);
+    if (!isAlive(target)) next.log.push(`${target.name} を倒した！`);
+  }
+  return next;
+}
+
 /** 1つの行動を適用し、更新後の状態を返す（元の状態は変更しない）。 */
 export function applyAction(state: BattleState, action: BattleAction, rng: () => number): BattleState {
   const actor = findCombatant(state, action.actorId);
@@ -329,6 +359,9 @@ export function applyAction(state: BattleState, action: BattleAction, rng: () =>
           return next;
         }
         nextActor.mp -= action.skill.mpCost;
+      }
+      if (action.type === "attack" && nextActor.cosmo) {
+        return cosmoVolley(next, nextActor, target.id, rng);
       }
       // 通常攻撃は、はずれることがある（運・すばやさの差）
       if (action.type === "attack" && rng() < Math.min(0.6, missChance(luckOf(nextActor), luckOf(target)) + (target.evade ?? 0))) {
@@ -466,7 +499,8 @@ export function runTurn(
     if (action.type === "attack") {
       // すばやさが相手よりずっと高いと、1回の攻撃で2〜4回こうげきする
       const foe = findCombatant(current, retarget(current, livingActor, action.targetId));
-      const hits = foe ? attackCount(effectiveStat(livingActor, "speed") - effectiveStat(foe, "speed") + (livingActor.multiBonus ?? 0)) : 1;
+      // コスモリングライトをまとっていると、すばやさの連続攻撃のかわりに、6連射を1回
+      const hits = livingActor.cosmo ? 1 : foe ? attackCount(effectiveStat(livingActor, "speed") - effectiveStat(foe, "speed") + (livingActor.multiBonus ?? 0)) : 1;
       if (hits > 1) current.log.push(`${livingActor.name} は すばやい動きで ${hits}回 こうげき！`);
       for (let i = 0; i < hits; i++) {
         if (i > 0) snap();

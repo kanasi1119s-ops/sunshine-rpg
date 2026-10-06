@@ -5,6 +5,10 @@
  */
 export function battleSeFor(text: string, partyNames: string[]): string | null {
   // 隠しボス「機械の悪神巨人兵」の魔法は、専用の音（2026-10-06）
+  // コスモリングライト（2026-10-06）
+  if (text.includes("の コスモリングライト が かがやいた")) return "cosmo-equip";
+  if (text.includes("の コスモリングライト！")) return "cosmo-deploy";
+  if (text.includes("の 環光の雷撃（")) return "cosmo-beam";
   if (text.includes("の 流星の裁き！")) return "meteor";
   if (text.includes("の 神の調停！")) return "judgement";
   if (text.includes("の 神の祝福！")) return "blessing";

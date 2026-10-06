@@ -33,7 +33,21 @@ export interface BattleAnimSpec {
   fxStart: number;
   /** 武器・杖の動きだけの長さ（ミリ秒）。エフェクトを長く見せるために全体を延ばしても、武器の動きの速さは変えない。 */
   motionMs?: number;
+  /**
+   * コスモリングライト（2026-10-06）の動き。equip=戦闘のはじめに環がかがやき鎧がはまる、
+   * deploy=6基の砲台が舞い上がり敵のまわりへ飛ぶ、shot=砲台の1基が雷のビームを撃つ（cosmoShot＝何発目か 0〜5）。
+   */
+  cosmo?: "equip" | "deploy" | "shot";
+  cosmoShot?: number;
 }
+
+/** 戦闘のはじめに出す、コスモリングライトの装着の文（`main.ts` が、装備している人ごとに出す）。 */
+export function cosmoEquipLine(name: string): string {
+  return `${name} の コスモリングライト が かがやいた！`;
+}
+/** コスモリングライトの動きの長さ（ミリ秒）。 */
+export const COSMO_MS = { equip: 2000, deploy: 1300, shot: 520 } as const;
+
 
 /** 術・魔法・とくぎのエフェクトを見せる長さ（ミリ秒）。もとの長さの1.5倍で、最低でも1.5秒、最大でも2.4秒。 */
 export function stretchFx(spec: BattleAnimSpec | null): BattleAnimSpec | null {
@@ -93,6 +107,30 @@ function battleAnimRaw(text: string, state: BattleState, weaponOf: (id: string) 
     const c = byName(state, name);
     return c && !c.isEnemy ? c : undefined;
   };
+
+  // コスモリングライト: 装着・砲台が舞い上がる・雷のビーム（1発ずつ）
+  const equip = /^(.+?) の コスモリングライト が かがやいた！$/.exec(text);
+  if (equip) {
+    const actor = allyActor(equip[1]);
+    return actor ? make({ actorId: actor.id, targetIds: [actor.id], cosmo: "equip", durationMs: COSMO_MS.equip }) : null;
+  }
+  const deploy = /^(.+?) の コスモリングライト！/.exec(text);
+  if (deploy) {
+    const actor = allyActor(deploy[1]);
+    if (!actor) return null;
+    // ねらう敵は、このあとの1発目の行から（ログには、このターンの行がもう全部ある）
+    const at = state.log.lastIndexOf(text);
+    const first = state.log.slice(at + 1).map((l) => new RegExp(`^${deploy[1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} の 環光の雷撃（\\d）！ (.+) に \\d+ のダメージ$`).exec(l)).find(Boolean);
+    const target = first ? byName(state, first[1]) : state.enemies.find((e) => e.hp > 0);
+    return make({ actorId: actor.id, targetIds: target ? [target.id] : [], cosmo: "deploy", durationMs: COSMO_MS.deploy });
+  }
+  const shot = /^(.+?) の 環光の雷撃（(\d)）！ (.+) に \d+ のダメージ$/.exec(text);
+  if (shot) {
+    const actor = allyActor(shot[1]);
+    const target = byName(state, shot[3]);
+    if (!actor || !target) return null;
+    return make({ actorId: actor.id, targetIds: [target.id], cosmo: "shot", cosmoShot: (Number(shot[2]) - 1) % 6, durationMs: COSMO_MS.shot });
+  }
 
   // 味方がダメージを受けた / 敵にダメージを与えた
   const damage = /^(.+?) の (.+?)！ (?:会心の一撃！ )?(.+) に \d+ のダメージ$/.exec(text);

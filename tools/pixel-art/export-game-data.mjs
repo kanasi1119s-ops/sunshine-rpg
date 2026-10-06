@@ -93,6 +93,22 @@ if (mode && mode !== "merge") {
     const g = rows.map((r) => [...r].map((ch) => (ch === "." ? -1 : syms.indexOf(ch))));
     all[key] = { size: rows.length, palette: syms.map((k) => pal[k]), rle: encode(g, syms.length > 26) };
   }
+  // コスモリングライトをまとった2頭身ユーリ（50×50の待機・攻撃態勢）と、追尾砲台（assets-src/pixel-practice/r31-cosmo/。2026-10-06）
+  {
+    const base = new URL("../../assets-src/pixel-practice/r31-cosmo/", import.meta.url);
+    const pal = JSON.parse(fs.readFileSync(new URL("pal-cosmo.json", base), "utf8"));
+    const syms = Object.keys(pal);
+    for (const [key, name] of [["cosmo:idle", "yuri2-cosmo-idle"], ["cosmo:attack", "yuri2-cosmo-attack"], ["cosmo:pod", "cosmo-pod"]]) {
+      const rows = fs.readFileSync(new URL(`${name}.txt`, base), "utf8").split("\n").filter((l) => l);
+      const size = Math.max(rows.length, ...rows.map((r) => r.length));
+      // 正方形にそろえ、下そろえ・左そろえ（ほかの絵と同じ形）
+      const g = Array.from({ length: size }, (_, y) => {
+        const r = rows[y - (size - rows.length)] ?? "";
+        return Array.from({ length: size }, (_, x) => (r[x] && r[x] !== "." ? syms.indexOf(r[x]) : -1));
+      });
+      all[key] = { size, palette: syms.map((k) => pal[k]), rle: encode(g, syms.length > 26) };
+    }
+  }
   const body = Object.entries(all).map(([k, v]) => `  ${JSON.stringify(k)}: { size: ${v.size}, palette: ${JSON.stringify(v.palette)}, rle: ${JSON.stringify(v.rle)} },`).join("\n");
   fs.writeFileSync(new URL("../../src/game/art/sprite-data.generated.ts", import.meta.url), `// 自動生成: tools/pixel-art/export-game-data.mjs（手で編集しない）
 import type { SpriteData } from "./sprite";

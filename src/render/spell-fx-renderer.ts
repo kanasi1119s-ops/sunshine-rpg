@@ -58,7 +58,7 @@ export function drawSpellFrame(
   kind: "hit" | "area" | "charge" | "bolt",
   progress: number,
   at: { x: number; y: number },
-  opts: { scale?: number; flip?: boolean; loopMs?: number } = {},
+  opts: { scale?: number; flip?: boolean; loopMs?: number; rotate?: number; stretchX?: number } = {},
 ): SpellFrameInfo | null {
   const key = `${fx}/${kind}`;
   const sheet = SPELL_FX[key];
@@ -77,7 +77,13 @@ export function drawSpellFrame(
   const dy = Math.round(at.y - sheet.ay * s);
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  if (opts.flip) {
+  if (opts.rotate !== undefined || opts.stretchX !== undefined) {
+    // 足もとの点を中心に回して（ビームを敵へ向ける）、横に伸ばす（長さを合わせる）
+    ctx.translate(Math.round(at.x), Math.round(at.y));
+    ctx.rotate(opts.rotate ?? 0);
+    ctx.scale((opts.stretchX ?? 1) * s, s);
+    ctx.drawImage(img, k * sheet.w, 0, sheet.w, sheet.h, -sheet.ax, -sheet.ay, sheet.w, sheet.h);
+  } else if (opts.flip) {
     ctx.translate(dx + sheet.w * s, dy);
     ctx.scale(-1, 1);
     ctx.drawImage(img, k * sheet.w, 0, sheet.w, sheet.h, 0, 0, sheet.w * s, sheet.h * s);

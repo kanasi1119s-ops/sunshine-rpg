@@ -44,9 +44,9 @@ describe("書き出されたドット絵データ（sprite-data.generated.ts）"
     }
   });
 
-  it("地形は128×128、雑魚の敵は64×64、飾りは48・80（教会は176・中の1枚絵は208）、登場人物は104×104、ボスは256×256", () => {
+  it("地形は128×128、雑魚の敵は64×64、飾りは48・80（教会は176・中の1枚絵は208）、登場人物は104×104、ボスは256×256、コスモリングライトのユーリは50（砲台は9）", () => {
     for (const key of keys) {
-      const expected = key.startsWith("terrain:") ? 128 : key.startsWith("mob:") ? 64 : key.startsWith("prop:manor") ? 80 : key.startsWith("icon:") ? 16 : key.startsWith("prop:house") || key === "prop:jail-bars" ? 64 : key === "prop:icon-spire" ? 112 : key === "prop:icon-core-spire" ? 256 : TOWN_ICONS_64.has(key) ? 64 : key === "prop:church" ? 176 : key === "prop:tree" ? 80 : key === "prop:church-interior" ? 224 : key.startsWith("prop:") ? 48 : key.startsWith("char:") ? 104 : key.startsWith("enemy:") ? 96 : 256;
+      const expected = key === "cosmo:pod" ? 9 : key.startsWith("cosmo:") ? 50 : key.startsWith("terrain:") ? 128 : key.startsWith("mob:") ? 64 : key.startsWith("prop:manor") ? 80 : key.startsWith("icon:") ? 16 : key.startsWith("prop:house") || key === "prop:jail-bars" ? 64 : key === "prop:icon-spire" ? 112 : key === "prop:icon-core-spire" ? 256 : TOWN_ICONS_64.has(key) ? 64 : key === "prop:church" ? 176 : key === "prop:tree" ? 80 : key === "prop:church-interior" ? 224 : key.startsWith("prop:") ? 48 : key.startsWith("char:") ? 104 : key.startsWith("enemy:") ? 96 : 256;
       expect(SPRITE_DATA[key].size, key).toBe(expected);
     }
   });

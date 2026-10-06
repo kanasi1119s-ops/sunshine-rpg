@@ -14,6 +14,7 @@ export const LEGEND_ITEMS: EquipmentItemData[] = [
     category: "weapon",
     price: 0,
     anyWielder: true,
+    traits: [{ kind: "cosmo" }],
     statBonus: { attack: 60, defense: 40, maxHp: 120 },
     description: "（仮）世界の調停者が遺した、光の環の鎧。まわりに6基の追尾砲台が浮かぶ。だれでも装備できる。くわしい力は、これから決める。",
   },

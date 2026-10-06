@@ -44,6 +44,11 @@ export interface Combatant {
    * 1ターンに、4回攻撃・流星の裁き・神の調停・神の祝福のどれか1つを行う（`chooseEnemyActions`）。
    */
   ai?: "arbiter";
+  /**
+   * コスモリングライトをまとっている（2026-10-06）。たたかうが、6基の追尾砲台からの雷のビーム6連射になる。
+   * 1発ごとに、攻撃力そのまま（しゅび・ぼうぎょを無視）のダメージ。ねらった敵が倒れたら、ほかの敵を追う。
+   */
+  cosmo?: boolean;
 }
 
 export type StatKey = "attack" | "defense" | "speed";
