@@ -3119,7 +3119,7 @@
  {
   "id": "enc-world-5-5",
   "prompt": "a heavy teardrop-shaped blob of glowing orange magma with a pointed top, a cracked black cooled crust peeling off in plates, lava dripping from its bottom",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-5-5",
   "kind": "mob",
   "name": "マグマのしずく",
@@ -3155,7 +3155,7 @@
  {
   "id": "enc-world-6-1",
   "prompt": "an old broken iron street lamp post monster walking on bent iron legs, a dark empty cracked glass lantern for a head, rust, dangling wires",
-  "status": "todo",
+  "status": "done",
   "key": "enemy:enc-world-6-1",
   "kind": "mob",
   "name": "灯の消えた歪み",
