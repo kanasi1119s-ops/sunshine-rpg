@@ -31,7 +31,8 @@
 
 ```
 【絵の決まり】
-・1体だけ、全身、正面（少しだけ斜めでもよい）、頭から足先まで切れずに入れる
+・1体だけ、全身、正面（少しだけ斜めでもよい）。頭のてっぺんから足先まで（羽・角・しっぽの先も）切れずに入れ、上下左右に余白を残す。
+  縦長の画像で、体を画面の中央に、全体の8割ほどの大きさで描く。顔だけ・上半身だけの絵にしない
 ・キャラだけを描く。背景は描かない（白一色か透明。景色・床・影・飾りの枠も入れない）
 ・ふつうの頭身（ちびキャラ・デフォルメにしない）。体つき・服・持ち物の形がはっきり分かるように
 ・色ははっきり、数を少なめに。光は左上から。細かい模様より、大きな形と色の分け方を大事に
@@ -42,7 +43,7 @@
 英語で頼むときの共通の決まり:
 
 ```
-Single character only, full body, front view, entire figure visible from head to toe, character only, no background (plain white or transparent), no scenery, no floor, no shadow, no frame.
+Single character only, full body from head to toe in a tall portrait image, front view, the whole figure (including wings, horns and tail tips) visible and centered with empty space around it, never cropped, not a close-up or half body, character only, no background (plain white or transparent), no scenery, no floor, no shadow, no frame.
 Normal (non-chibi, non-deformed) proportions, with the body shape, clothes and items clearly readable.
 Clear flat-ish colors with a small palette, light from the top-left, bold shapes over fine detail.
 Original fantasy RPG design, not based on any existing game, manga, anime character or any specific real-world deity or person. No text, no logo, no signature.
