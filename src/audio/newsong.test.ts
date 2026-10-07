@@ -45,3 +45,25 @@ describe("新しい曲（コード進行から伴奏）", () => {
     expect(Math.max(...pans)).toBeGreaterThanOrEqual(0.6);
   });
 });
+
+import { voiceLead } from "./newsong";
+describe("voiceLead（声部のなめらかな動き）", () => {
+  const C = { root: 0, intervals: [0, 4, 7] }, F = { root: 5, intervals: [0, 4, 7] }, G = { root: 7, intervals: [0, 4, 7] }, Am = { root: 9, intervals: [0, 3, 7] };
+  it("コードが変わっても、各声部の動きは小さい（最大でも3半音）", () => {
+    const v = voiceLead([C, F, G, Am, C], 3);
+    for (let i = 1; i < v.length; i++) v[i].forEach((m, k) => expect(Math.abs(m - v[i - 1][k])).toBeLessThanOrEqual(5));
+    const total = v.slice(1).reduce((s, cur, i) => s + cur.reduce((a, m, k) => a + Math.abs(m - v[i][k]), 0), 0);
+    expect(total / (v.length - 1)).toBeLessThanOrEqual(6);
+  });
+  it("同じコードが続くと動かない。声部が同じ高さにならない", () => {
+    const v = voiceLead([C, C, F], 3);
+    expect(v[1]).toEqual(v[0]);
+    v.forEach((chord) => expect(new Set(chord).size).toBe(3));
+  });
+  it("音は和音の構成音だけ", () => {
+    voiceLead([C, F, G, Am], 3).forEach((chord, i) => {
+      const c = [C, F, G, Am][i];
+      chord.forEach((m) => expect(c.intervals.map((iv) => (c.root + iv) % 12)).toContain(m % 12));
+    });
+  });
+});

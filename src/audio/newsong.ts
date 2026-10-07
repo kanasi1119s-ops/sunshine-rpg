@@ -39,6 +39,38 @@ export function parseChord(name: string): { root: number; intervals: number[] } 
 const rest = (beats: number): NoteEvent => ({ note: REST, durationBeats: beats });
 const note = (midi: number, beats: number, velocity?: number): NoteEvent => ({ note: midiToName(midi), durationBeats: beats, ...(velocity ? { velocity } : {}) });
 
+
+/**
+ * 声部のなめらかな動き（ボイスリーディング）: コードが変わるとき、各声部がなるべく近い音へ動くように、和音の音を選ぶ。
+ * 各コードの先頭 voices 個の構成音を、音域 [lo, hi] の中で、前の和音からの移動量の合計がいちばん小さい並べ方で割り当てる。
+ * 返り値は小節ごとの、声部ごとの音（MIDI番号）。同じ和音が続けば、同じ音のまま動かない。
+ */
+export function voiceLead(bars: { root: number; intervals: number[] }[], voices: number, lo = 52, hi = 79): number[][] {
+  const result: number[][] = [];
+  let prev: number[] | null = null;
+  for (const c of bars) {
+    const pcs = c.intervals.slice(0, voices).map((iv) => (c.root + iv) % 12);
+    while (pcs.length < voices) pcs.push(pcs[pcs.length - 1]);
+    // 各構成音の、音域内の候補（オクターブ違い）
+    const cands = pcs.map((pc) => { const o: number[] = []; for (let m = lo; m <= hi; m++) if (m % 12 === pc) o.push(m); return o; });
+    const targets = prev ?? pcs.map((_, i) => 60 + (i - 1) * 4);
+    let best: number[] = [];
+    let bestCost = Infinity;
+    // 声部 v に構成音 perm[v] を割り当てる全ての並べ替え（最大4!）を試す
+    const perms = (arr: number[]): number[][] => (arr.length <= 1 ? [arr] : arr.flatMap((x, i) => perms([...arr.slice(0, i), ...arr.slice(i + 1)]).map((r) => [x, ...r])));
+    for (const perm of perms(pcs.map((_, i) => i))) {
+      const pick = perm.map((ci, v) => cands[ci].reduce((b, m) => (Math.abs(m - targets[v]) < Math.abs(b - targets[v]) ? m : b), cands[ci][0]));
+      if (new Set(pick).size < pick.length) continue;
+      const cost = pick.reduce((sum, m, v) => sum + Math.abs(m - targets[v]), 0) + (prev ? 0 : Math.abs(Math.max(...pick) - Math.min(...pick)) * 0.3);
+      if (cost < bestCost) { bestCost = cost; best = pick; }
+    }
+    if (!best.length) best = cands.map((o, v) => o.reduce((b, m) => (Math.abs(m - targets[v]) < Math.abs(b - targets[v]) ? m : b), o[0]));
+    result.push(best);
+    prev = best;
+  }
+  return result;
+}
+
 export function buildNewSong(spec: NewSongSpec): Score {
   const chords = spec.chords.split(/[\s|]+/).filter(Boolean).map((c) => ({ name: c, chord: parseChord(c) }));
   const bad = chords.find((c) => !c.chord);
@@ -100,9 +132,11 @@ export function buildNewSong(spec: NewSongSpec): Score {
     waveform: "triangle", instrument: "piano", volume: 0.16, pan: 0.3,
     notes: make((c, b) => [note(octaveOf(c, 60) + (c.intervals[1] ?? 4), b, 84)]),
   };
+  // 弦の3声は、コードが変わるとき近い音へ動く（ボイスリーディング）
+  const padVoicing = voiceLead(bars, 3);
   const padVoice = (k: number): Track => ({
     waveform: "sine", instrument: "strings", volume: 0.09, pan: k === 0 ? -0.25 : k === 1 ? 0.25 : 0,
-    notes: make((c, b) => [note(48 + ((c.root + (c.intervals[k] ?? c.intervals[0])) % 12) + 12, b, 70)]),
+    notes: make((_c, b, index) => [note(padVoicing[index][k], b, 70)]),
   });
   const total = bars.length * beats;
   const lead: Track = { waveform: "square", instrument: spec.leadInstrument, volume: 0.22, pan: 0, notes: [rest(total)] };
@@ -171,9 +205,10 @@ function danceSong(
       return out;
     }),
   };
+  const padVoicing = voiceLead(bars, 3);
   const strings = (k: number, pan: number): Track => ({
     waveform: "sine", instrument: "strings", volume: 0.09, pan,
-    notes: make((c, b) => [note(48 + ((c.root + (c.intervals[k] ?? c.intervals[0])) % 12) + 12, b, 70)]),
+    notes: make((_c, b, index) => [note(padVoicing[index][k], b, 70)]),
   });
   const total = bars.length * beats;
   const lead: Track = { waveform: "square", instrument: spec.leadInstrument, volume: 0.22, pan: 0.05, notes: [rest(total)] };
