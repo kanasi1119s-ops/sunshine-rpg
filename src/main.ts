@@ -418,8 +418,12 @@ function canEnterQuietly(targetMapId: string): boolean {
   return targetMapId !== "tower-1";
 }
 
-/** 町の建物の扉が開いているところ（開ききったら中へ入る。2026-10-06、人間の指示「扉を開いて入れるように」）。 */
-let doorOpening: { prop: MapProp; exit: MapExit; startedAt: number } | null = null;
+/**
+ * 町の建物の扉が開いているところ（2026-10-06、人間の指示「扉を開いて入れるように」）。
+ * 開ききっても、すぐには入らない。一度キーを離して（待って）から、もう一度扉のほう（上）へ進むと中へ入る。
+ * 左右・下へ動くと、扉は閉じる（2026-10-07、人間の指示「ドア開けたらそのまま入室するのではなく、一回待ってからドアの方に向かったら入室」）。
+ */
+let doorOpening: { prop: MapProp; exit: MapExit; startedAt: number; released: boolean } | null = null;
 const DOOR_OPEN_MS = 420;
 /** 扉を開けたときに音を鳴らしたので、つづく場所の切りかえでは、扉の音を鳴らさない。 */
 let doorSePlayed = false;
@@ -3347,15 +3351,26 @@ const loop = createGameLoop({
         return;
       }
     }
-    // 扉が開いているあいだは、止まって待つ。開ききったら中へ
+    // 扉が開くあいだは、止まって待つ。開ききったら、一度キーを離してから、もう一度上へ進むと中へ。ほかの向きへ動くと、扉は閉じる
     if (doorOpening) {
-      if (performance.now() - doorOpening.startedAt >= DOOR_OPEN_MS) {
+      const dir = input.getDirection();
+      if (performance.now() - doorOpening.startedAt < DOOR_OPEN_MS) {
+        if (dir !== "up") doorOpening.released = true;
+        return;
+      }
+      if (dir !== "up") doorOpening.released = true;
+      if (dir === "up" && doorOpening.released) {
         const e = doorOpening.exit;
         doorOpening = null;
         switchMap(e.targetMapId, e.targetTileX, e.targetTileY);
         autosave();
+        return;
       }
-      return;
+      if (dir === null || dir === "up") {
+        player = { ...player, direction: "up", moving: false };
+        return;
+      }
+      doorOpening = null;   // 扉の前からはなれる: 扉を閉じて、ふつうに歩く
     }
     // 物語の場面: 話し手が歩いてくるあいだ、主人公は止まって待つ。みんな着いたら（長くても9秒で）会話を始める
     if (sceneApproach) {
@@ -3474,7 +3489,7 @@ const loop = createGameLoop({
       const door = (map.data.props ?? []).find((p) => isHouse(p.kind) && p.tileX + doorOffsetX(p.kind) === de.tileX && p.tileY + 1 === de.tileY);
       if (door) {
         player = { ...player, x: (de.tileX + 0.5) * map.data.tileWidth - player.width / 2, direction: "up", moving: false };
-        doorOpening = { prop: door, exit: de, startedAt: performance.now() };
+        doorOpening = { prop: door, exit: de, startedAt: performance.now(), released: false };
         if (audioStarted) audio.playSe(seOf("door"));
         doorSePlayed = true;
         return;
