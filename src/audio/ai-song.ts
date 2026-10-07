@@ -158,7 +158,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
   - phrase: フレーズの長さ（拍。2〜32。メロディは4か8がおすすめ）。その長さごとに、出だしを少し弱く→山で強く→終わりを引く強弱がつく（機械的に平らな演奏をさけ、歌うような表情になる）。ドラムでは使わない。
   - volume: 0.1〜0.35 くらい（メロディ 0.22〜0.3、伴奏 0.1〜0.2）。pan: -1〜1。amp: ギター・ベースのアンプ（auto / clean / overdrive / distortion / metal / prs、ジャンル別: jazz / blues / funk / crunch / hardrock / punk / fuzz / shoegaze / lofi / retro8bit / radio / loudmetal＝ラウドメタル / loudrock＝ラウドロック / delicate＝繊細な弱い音）。ほかの楽器は auto。
   - notes: 「音名:拍」を空白でくぎる。例 "E5:1 D5:0.5 R:0.5 C5:2"。R は休み。音名は C4（ド）〜B4 のように、シャープは #、フラットは b（例 F#4, Bb3）。拍のあとに奏法の記号を付けられる: ! アクセント（強く）・,（弱く）・\'（スタッカート）・_（レガート。次の音につなげる）・~（ビブラート）・^（ベンドアップ）・/（しゃくり）・\\（フォール。詳しくは下の「奏法の書き方」）。例 "E5:1! D5:0.5\' C5:2_ A4:2^^~"。拍は 0.25（16分音符）・0.5・0.75・1・1.5・2・3・4 など。
-  - ドラムのパートは、音名のかわりに x（打つ）、X（強く）、o（弱く＝ゴーストノート）、R（休み）。1文字＝16分音符のグリッド記法も使える: "g:x...x...x...x..."（x 打つ・X 強く・o 弱く・. 休み）。例 kick "x:1 R:1 x:0.5 x:0.5 R:1"。
+  - ドラムのパートは、音名のかわりに x（打つ）、X（強く）、o（弱く＝ゴーストノート）、O（オープンハイハット。ハイハットだけ）、R（休み）。1文字＝16分音符のグリッド記法も使える: "g:x...x...x...x..."（x 打つ・X 強く・o 弱く・. 休み）。例 kick "x:1 R:1 x:0.5 x:0.5 R:1"。
   - notes の合計の拍が曲の長さより短いときは、くり返して埋める（ドラムの1〜2小節の型やリフを短く書ける）。メロディは曲全体ぶん書くのがよい（Aメロ・Bメロ・サビのように変化をつける）。
 
 ## 楽器
@@ -219,27 +219,28 @@ const DUR_RULE = /^\d+(\.\d+)?$/;
 export function parseNotes(text: string, drum: boolean, errors: string[], where: string): NoteEvent[] {
   const out: NoteEvent[] = [];
   for (const token of text.trim().split(/\s+/).filter(Boolean)) {
-    // ドラムのグリッド記法: g:x...x...  1文字が16分音符（0.25拍）。x＝打つ、X＝強く、o＝弱く（ゴーストノート）、. か - ＝休み
+    // ドラムのグリッド記法: g:x...x...  1文字が16分音符（0.25拍）。x＝打つ、X＝強く、o＝弱く（ゴーストノート）、O＝オープンハイハット（ハイハットだけ。強め）、. か - ＝休み
     if (drum && /^g:/i.test(token)) {
       const cells = token.slice(2);
-      if (!/^[xXo.\-]+$/.test(cells)) {
-        errors.push(`${where}: グリッドは x X o . - だけで書きます「${token}」`);
+      if (!/^[xXoO.\-]+$/.test(cells)) {
+        errors.push(`${where}: グリッドは x X o O . - だけで書きます「${token}」`);
         continue;
       }
       for (const c of cells) {
-        out.push(c === "." || c === "-" ? { note: REST, durationBeats: 0.25 } : { note: "C2", durationBeats: 0.25, ...(c === "X" ? { velocity: 1.3 } : c === "o" ? { velocity: 0.5 } : {}) });
+        out.push(c === "." || c === "-" ? { note: REST, durationBeats: 0.25 } : { note: "C2", durationBeats: 0.25, ...(c === "X" ? { velocity: 1.3 } : c === "O" ? { velocity: 1.25, open: true } : c === "o" ? { velocity: 0.5 } : {}) });
       }
       continue;
     }
     const [name, rawDur = ""] = token.split(":");
     // 長さのあとに付けられる奏法の記号: ! アクセント（強く）, 「,」 弱く, ' スタッカート（短く）, _ レガート（次の音につなげる）
-    const m = /^(\d+(?:\.\d+)?)([!,'_~^/\\]*)$/.exec(rawDur);
+    const m = /^(\d+(?:\.\d+)?)([!,'_~^/\\*]*)$/.exec(rawDur);
     const dur = m ? m[1] : rawDur;
     const marks = m ? m[2] : "";
     const art: Partial<NoteEvent> = {
       ...(marks.includes("!") ? { velocity: 1.3 } : marks.includes(",") ? { velocity: 0.7 } : {}),
       ...(marks.includes("'") ? { gate: 0.4 } : marks.includes("_") ? { gate: 1.15 } : {}),
       // 音程と揺れの記号: ~ ビブラート（~~ で深く）、^ ベンドアップ（1つ＝半音、2つ＝全音）、/ しゃくり（下から入る）、\\ フォール（終わりで落とす）
+      ...(marks.includes("*") ? { open: true } : {}),
       ...(marks.includes("~") ? { vibrato: (marks.match(/~/g) ?? []).length >= 2 ? 1 : 0.7 } : {}),
       ...(marks.includes("^") ? { bend: Math.min(4, (marks.match(/\^/g) ?? []).length) } : {}),
       ...(marks.includes("/") ? { scoop: Math.min(4, (marks.match(/\//g) ?? []).length) } : {}),
@@ -257,7 +258,7 @@ export function parseNotes(text: string, drum: boolean, errors: string[], where:
         errors.push(`${where}: ドラムは x か R で書きます「${token}」`);
         continue;
       }
-      out.push({ note: "C2", durationBeats: beats, ...(name === "X" ? { velocity: 1.3 } : name === "o" ? { velocity: 0.5 } : {}), ...(art.velocity ? { velocity: art.velocity } : {}) });
+      out.push({ note: "C2", durationBeats: beats, ...(name === "X" ? { velocity: 1.3 } : name === "o" ? { velocity: 0.5 } : {}), ...(art.velocity ? { velocity: art.velocity } : {}), ...(art.open ? { open: true } : {}) });
     } else {
       try {
         const midi = noteNameToMidi(name);

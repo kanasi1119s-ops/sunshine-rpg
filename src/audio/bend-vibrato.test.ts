@@ -215,3 +215,24 @@ describe("ギターの音色（patch）", () => {
     expect(realEdition(score).tracks[0].program).toBe(27);
   });
 });
+
+describe("オープンハイハット（O と *）", () => {
+  it("グリッドの O と音符の * が open になる", () => {
+    const grid = parseNotes("g:x.O.X.o.", true, [], "t");
+    expect(grid.filter((n) => n.open).length).toBe(1);
+    expect(grid[2].open).toBe(true);
+    expect(grid[2].velocity).toBeGreaterThan(1);
+    const tok = parseNotes("x:0.5* x:0.5", true, [], "t");
+    expect(tok[0].open).toBe(true);
+    expect(tok[1].open).toBeUndefined();
+  });
+  it("open の音は、GMのオープンハイハット（46）で鳴る。指定がなければ（拍の頭の8分では）閉じたまま", () => {
+    const mk = (open: boolean): Score => ({
+      tempoBpm: 100, loop: false, edition: "real",
+      tracks: [{ waveform: "square", instrument: "hihat", volume: 0.1, pan: 0, notes: Array.from({ length: 8 }, (_, i) => ({ note: "C2", durationBeats: 0.5, ...(open && i === 3 ? { open: true } : {}) })) }],
+    });
+    const has46 = (b: Uint8Array): boolean => { for (let i = 0; i < b.length - 2; i++) if (b[i] === 0x99 && b[i + 1] === 46 && b[i + 2] > 0) return true; return false; };
+    expect(has46(scoreToMidi(mk(true)))).toBe(true);
+    expect(has46(scoreToMidi(mk(false)))).toBe(false);
+  });
+});

@@ -220,7 +220,12 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         // 表拍は強く、裏拍は弱く。16分の細かい音はさらに弱く。ときどき開いたハイハット
         const frac = startBeat - Math.floor(startBeat);
         vol *= frac === 0 ? 1.15 : Math.abs(frac - 0.5) < 1e-6 ? 0.85 : 0.62;
-        if (Math.abs(frac - 0.75) < 1e-6 && humanize(secStart + 1.3) < 0.95) {
+        if (n.open) {
+          // 指定されたオープンハイハット: 開いて長く、拍の位置の弱さに関係なく、はっきり鳴らす
+          drumKey = 46;
+          lenScale = 1;
+          vol *= frac === 0 ? 1 : frac === 0.5 ? 1.55 : 2;
+        } else if (Math.abs(frac - 0.75) < 1e-6 && humanize(secStart + 1.3) < 0.95) {
           drumKey = 46;
           lenScale = 1;
         }
@@ -236,7 +241,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       const velocity = Math.min(127, Math.round(velocityOf(vol, boost) * strike * rhythmSoft));
       // 音の長さのばらつき（人の弾き方）: 短い音は、少し短く切れたり、つながったり
       if (H > 0 && drumNote === undefined && n.gate === undefined && n.durationBeats <= 1) lenScale *= 1 - 0.14 * H * rnd(startBeat * 3.1 + trackSeed);
-      const len = Math.max(20, Math.round(n.durationBeats * PPQ * lenScale * (drumNote === undefined ? n.gate ?? 1 : 1)));
+      const len = Math.max(20, Math.round((n.open && inst === "hihat" ? Math.max(n.durationBeats, 0.5) : n.durationBeats) * PPQ * lenScale * (drumNote === undefined ? n.gate ?? 1 : 1)));
       const push = (pitch: number, at: number, vel: number, length: number, target: { channel: number; list: Ev[] } = { channel, list }): void => {
         const p = Math.max(0, Math.min(127, pitch));
         target.list.push({ tick: at, order: 2, bytes: [0x90 | target.channel, p, vel] });

@@ -23,6 +23,8 @@ export interface NoteEvent {
   fall?: number;
   /** ビブラート（音の揺れ）の深さ 0〜1。音が出て少したってから揺れ始める。 */
   vibrato?: number;
+  /** オープンハイハット（ハイハットだけ。開いて長く鳴らす）。録音音源（MIDI経由）で鳴らすときに働く。 */
+  open?: boolean;
 }
 
 export type Waveform = "square" | "triangle" | "sawtooth" | "sine";
