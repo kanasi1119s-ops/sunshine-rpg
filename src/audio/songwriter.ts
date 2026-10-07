@@ -156,6 +156,8 @@ export function generateMelody(rng: Rng, key: Key, chords: string[], beats: numb
   const rhythms: number[][] = [];
   const skip = new Set<number>();
   const barTokens: string[][] = [];
+  // 直前の動き（音の並びの上で何段跳んだか）。大きく跳んだあとは、逆向きに順次進行で戻る（自然な旋律の動き）
+  let lastLeap = 0;
   chords.forEach((chord, bar) => {
     if (skip.has(bar)) {
       return;
@@ -201,6 +203,29 @@ export function generateMelody(rng: Rng, key: Key, chords: string[], beats: numb
       });
       return;
     }
+    // 展開（反復進行）: 4小節のまとまりの2小節目で、前の小節の形（リズムと音の上下）を、音階の上で1〜2段ずらして繰り返す。
+    // 小節の頭の音は、そのコードの構成音にそろえる。同じ形のずれ → 「旋律が育つ」感じになる
+    if (bar % 4 === 1 && beats === 4 && bar < chords.length - 1 && barTokens[bar - 1] && rng() < 0.45) {
+      const prevTok = barTokens[bar - 1];
+      const idxs = prevTok.map((t) => (t.startsWith("R:") ? -1 : pool.indexOf(noteNameToMidi(t.split(":")[0]))));
+      const firstPitched = idxs.find((v) => v >= 0);
+      if (idxs[0] >= 0 && firstPitched === idxs[0]) {
+        const want = firstPitched + pick(rng, [-2, -1, 1, 2]);
+        let j = -1;
+        for (let d = 0; d <= 2 && j < 0; d++) for (const c of [want + d, want - d]) if (c >= 0 && c < pool.length && tones.includes(pool[c] % 12)) { j = c; break; }
+        if (j >= 0) {
+          const delta = j - idxs[0];
+          const shifted = prevTok.map((t, k) => (idxs[k] < 0 ? t : `${midiToName(pool[Math.max(0, Math.min(pool.length - 1, idxs[k] + delta))])}:${t.split(":")[1]}`));
+          out.push(...shifted);
+          rhythms.push(rhythms[bar - 1] ?? [1, 1, 1, 1]);
+          barTokens[bar] = shifted;
+          const lastIdx = [...idxs].reverse().find((v) => v >= 0);
+          if (lastIdx !== undefined) cur = Math.max(0, Math.min(pool.length - 1, lastIdx + delta));
+          lastLeap = 0;
+          return;
+        }
+      }
+    }
     let rhythm: number[];
     if (bar === chords.length - 1) {
       rhythm = [1, beats - 1];
@@ -228,13 +253,18 @@ export function generateMelody(rng: Rng, key: Key, chords: string[], beats: numb
             best = i;
           }
         }
+        lastLeap = best - cur;
         cur = best;
       } else {
         const r = rng();
         let step = r < 0.08 ? -2 : r < 0.4 ? -1 : r < 0.5 ? 0 : r < 0.82 ? 1 : r < 0.92 ? 2 : r < 0.96 ? -3 : 3;
         if (pool[cur] > arch + 4 && step > 0 && rng() < 0.6) step = -step;
         if (pool[cur] < arch - 4 && step < 0 && rng() < 0.6) step = -step;
+        // 大きく跳んだ（3段以上）あとは、逆向きに1段で戻る
+        if (Math.abs(lastLeap) >= 3 && rng() < 0.85) step = -Math.sign(lastLeap);
+        const before = cur;
         cur = Math.max(0, Math.min(pool.length - 1, cur + step));
+        lastLeap = cur - before;
       }
       const rest = opts.restChance && n > 0 && rng() < opts.restChance && bar !== chords.length - 1;
       out.push(rest ? `R:${dur}` : `${midiToName(pool[cur])}:${dur}`);

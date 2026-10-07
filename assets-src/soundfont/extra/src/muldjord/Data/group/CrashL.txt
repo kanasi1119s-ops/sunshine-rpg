@@ -1,0 +1,24 @@
+off_time=$otm_cl
+off_shape=$osh_cym
+
+<group>
+note_polyphony=$poly_cym
+#include "../Data/region/CrashL.txt"
+
+//--------------------------------------------
+
+<group>
+group=$off_cl
+group_label=CrashL-choke
+ampeg_sustain=0
+sample=*silence
+
+<region>
+key=$key_cl
+locc130=127
+hicc130=127
+on_locc130=127
+on_hicc130=127
+
+<region>
+key=$chk_cl

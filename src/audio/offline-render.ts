@@ -15,6 +15,8 @@ export interface OfflineRenderOptions {
   /** 版（高音の丸め・ホール残響の量）。曲そのものの編成は、呼び出し側で版に合わせておく。 */
   edition: "modern" | "ps2" | "real";
   nam?: NamHost | null;
+  /** 追加の音源（ベース・ドラムなど。main の同じ楽器を入れかえる）。前にあるほど優先。 */
+  overlays?: ArrayBuffer[];
   /** 曲の終わりのあとに残す余韻（秒）。 */
   tailSec?: number;
   sampleRate?: number;
@@ -79,7 +81,7 @@ export async function renderScoreOffline(score: Score, options: OfflineRenderOpt
   await synth.startOfflineRender({
     midiSequence: BasicMIDI.fromArrayBuffer(binary, "song.mid"),
     loopCount: 0,
-    soundBankList: [{ bankOffset: 0, soundBankBuffer: options.soundfont.slice(0) }],
+    soundBankList: [...(options.overlays ?? []).map((b) => ({ bankOffset: 0, soundBankBuffer: b.slice(0) })), { bankOffset: 0, soundBankBuffer: options.soundfont.slice(0) }],
   });
   return ctx.startRendering();
 }

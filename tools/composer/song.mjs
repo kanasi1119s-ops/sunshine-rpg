@@ -5,6 +5,8 @@
 //       AIソング形式の説明（楽器の一覧・書き方・よい曲にするコツ）を表示する。曲を書く前に読む。
 //   node tools/composer/song.mjs build <曲.json> [--out <フォルダ>] [--edition real|ps2|modern] [--wav] [--register <曲ID> --scene "<場面>"]
 //       AIソング形式のJSONを確かめて、作曲ソフトで開けるプロジェクト（.sunshine-song.json）とMIDIを書き出す。
+//       --bass finger|pick|rock|metal|jazz|jpop: ベースを FreePats のエレキベースの音源に。--drums muldjord|rock|metal|jazz|jpop: ドラムを生ドラム（Muldjord Kit）に（省略は標準）。
+//       --soundfont gu: WAVを GeneralUser GS の音源で作る（省略はゲームと同じ FluidR3）。
 //       --wav: 作曲ソフトと同じ音（録音音源・アンプ・仕上げ）でWAVも作る（Playwright と Chromium が必要）。
 //       --register: ゲームの曲として src/audio/songs/<曲ID>.sunshine-song.json に登録する。
 import fs from "fs";
@@ -25,7 +27,7 @@ try {
   } else if (args[0] === "build" && args[1]) {
     try {
       const name = path.basename(args[1]).replace(/\.json$/i, "").toLowerCase().replace(/[^a-z0-9-]+/g, "-");
-      const r = await kit.build(JSON.parse(fs.readFileSync(args[1], "utf8")), { name, edition: opt("--edition") ?? "real", outDir: opt("--out"), wav: args.includes("--wav") });
+      const r = await kit.build(JSON.parse(fs.readFileSync(args[1], "utf8")), { name, edition: opt("--edition") ?? "real", outDir: opt("--out"), wav: args.includes("--wav"), soundfont: opt("--soundfont") === "gu" ? "gu" : "game", bass: opt("--bass") ?? "std", drums: opt("--drums") ?? "std" });
       for (const w of r.warnings) console.warn("注意:", w);
       console.log(`○ 「${r.title}」 ${r.tracks}トラック・${Math.floor(r.seconds / 60)}分${Math.round(r.seconds % 60)}秒・テンポ${r.bpm}`);
       console.log("  プロジェクト:", r.files.project, "（作曲ソフトの「プロジェクトを読み込む」で開ける）");

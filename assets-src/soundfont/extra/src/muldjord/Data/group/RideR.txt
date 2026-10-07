@@ -1,0 +1,35 @@
+off_time=$otm_rr
+off_shape=$osh_cym
+
+<group>
+note_polyphony=$poly_cym
+#include "../Data/region/RideR.txt"
+
+<group>
+note_polyphony=$poly_cym
+#include "../Data/region/RideRBell.txt"
+
+//--------------------------------------------
+
+<group>
+group=$off_rr
+group_label=RideR-choke
+ampeg_sustain=0
+sample=*silence
+
+<region>
+key=$key_rr_tip
+locc130=127
+hicc130=127
+on_locc130=127
+on_hicc130=127
+
+<region>
+key=$key_rr_bel
+locc130=127
+hicc130=127
+on_locc130=127
+on_hicc130=127
+
+<region>
+key=$chk_rr

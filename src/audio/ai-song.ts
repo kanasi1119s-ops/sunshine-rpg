@@ -20,6 +20,8 @@ export interface AiPart {
   sustain?: number;
   /** タイミングのずれ（拍。-0.1〜0.1）。+＝あと乗り（スネア・バックビート）、-＝前のめり（ハイハット・刻み）。省略は0。 */
   push?: number;
+  /** フレーズの山（拍。2〜32）。この長さごとに、出だしをやや弱く→山で強く→終わりを引く強弱をつける（歌うような表情）。ドラムでは使わない。 */
+  phrase?: number;
   /** アンプ（ギター・ベース向け）。"auto" なら曲の音色から自動。 */
   amp: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate";
   /**
@@ -103,6 +105,7 @@ export const AI_SONG_SCHEMA = {
           pan: { type: "number" },
           sustain: { type: "number" },
           push: { type: "number" },
+          phrase: { type: "number" },
           amp: { type: "string", enum: ["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate"] },
           notes: { type: "string" },
         },
@@ -131,8 +134,9 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - parts: 自分で書くパート。1曲に1〜8パート。
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。
   - sustain: 音の伸び（0.2〜3、省略は1）。0.3〜0.6＝スタッカート（歯切れよく。ピアノ・ギターの刻み・シンセの刻み）、1＝ふつう、1.5〜3＝余韻を残す（ハープ・鐘・パッド・琴・アルペジオ）。長くした音は次の音に重なる。
+  - phrase: フレーズの長さ（拍。2〜32。メロディは4か8がおすすめ）。その長さごとに、出だしを少し弱く→山で強く→終わりを引く強弱がつく（機械的に平らな演奏をさけ、歌うような表情になる）。ドラムでは使わない。
   - volume: 0.1〜0.35 くらい（メロディ 0.22〜0.3、伴奏 0.1〜0.2）。pan: -1〜1。amp: ギター・ベースのアンプ（auto / clean / overdrive / distortion / metal / prs、ジャンル別: jazz / blues / funk / crunch / hardrock / punk / fuzz / shoegaze / lofi / retro8bit / radio / loudmetal＝ラウドメタル / loudrock＝ラウドロック / delicate＝繊細な弱い音）。ほかの楽器は auto。
-  - notes: 「音名:拍」を空白でくぎる。例 "E5:1 D5:0.5 R:0.5 C5:2"。R は休み。音名は C4（ド）〜B4 のように、シャープは #、フラットは b（例 F#4, Bb3）。拍は 0.25（16分音符）・0.5・0.75・1・1.5・2・3・4 など。
+  - notes: 「音名:拍」を空白でくぎる。例 "E5:1 D5:0.5 R:0.5 C5:2"。R は休み。音名は C4（ド）〜B4 のように、シャープは #、フラットは b（例 F#4, Bb3）。拍のあとに奏法の記号を付けられる: ! アクセント（強く）・,（弱く）・\'（スタッカート）・_（レガート。次の音につなげる）。例 "E5:1! D5:0.5\' C5:2_"。拍は 0.25（16分音符）・0.5・0.75・1・1.5・2・3・4 など。
   - ドラムのパートは、音名のかわりに x（打つ）、X（強く）、o（弱く＝ゴーストノート）、R（休み）。1文字＝16分音符のグリッド記法も使える: "g:x...x...x...x..."（x 打つ・X 強く・o 弱く・. 休み）。例 kick "x:1 R:1 x:0.5 x:0.5 R:1"。
   - notes の合計の拍が曲の長さより短いときは、くり返して埋める（ドラムの1〜2小節の型やリフを短く書ける）。メロディは曲全体ぶん書くのがよい（Aメロ・Bメロ・サビのように変化をつける）。
 
@@ -150,6 +154,9 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
 - ダンスミュージックにするには: bpm 120〜132、feel は dance（自動伴奏で4つ打ちキック・オフビートのハイハット・動くベースが付く）。自分で書くなら、kick は毎拍 "x:1"、hihat は裏拍 "R:0.5 x:0.5"、snare（クラップ）は2・4拍、ベースは sub808 か bass で8分音符の刻み（根音とオクターブ）、リードは lead、アルペジオは keys や bell。8小節ごとに、ドラムを抜く「ブレイク」を作り、直前に snare の16分の連打（0.25拍）でせり上げ、次の小節でキックを全部戻す。音量は kick 0.2・ベース 0.17・リード 0.1 前後。
 - ヒップホップにするには: bpm 78〜95（ハーフタイムなら140〜160）、kick は1拍目と「3拍目の手前（2.5拍）」などで間を作り、snare は2・4拍、hihat は8分か16分で、ところどころ 0.25 拍の連打（トラップ風）。ベースは sub808 の長い音（C1〜C2）を、キックに合わせて置く。メロディは keys・piano・bell・pad の短い反復（2小節のループ）で、コードは 7th を使うと雰囲気が出る。サンプリングは使わず、音は自分で書く。
 - ジャンルは自由に選んでよい（レトロな音に限らない）: ジャズ（swing・7thコード・ウォーキングベース・amp: jazz）、オーケストラ（strings・brass・harp・choir・tom、amp は auto）、アンビエント（pad・choir・bell・wind を長い音で。ドラムなし）、フォーク・カントリー（guitar・banjo・fiddle）、ボサノバ（guitar・ゆるいハイハット）、R&B・ソウル（keys・slap・amp: funk）、EDM・ハウス・トランス（上のダンス）、ロック・パンク・メタル（amp: hardrock / punk / loudmetal / loudrock）。曲の場面と合うジャンルを先に決めてから、テンポ・音階・楽器・アンプをそろえる。
+- 旋律の育て方: 4小節のまとまりで、1小節目の形（リズムと音の上下）を、2小節目で音階の2〜3度ずらして繰り返す（反復進行）と、旋律が育つ。3〜4小節目で変化をつけ、4小節目の終わりは安定した音（主音やコードの根音・3度）に落ち着かせる。大きく（5度以上）跳んだら、次は逆向きに順次進行で戻る。サビは Aメロより音域を高く、音数と強弱を増やす。
+- 対旋律とハモリ: メロディが長い音のときに、別のパートが動く（逆に、メロディが動いているときは伴奏は動きを抑える）。ハモリはメロディの3度か6度下に付け、メロディと同じ音域・同じ楽器に重ねすぎない。メロディとベースは、離れる向き（反行）に動かすとすっきりする。
+- 伴奏の和音（弦・パッド・ピアノ）は、コードが変わるたびに全部の音が跳ばないように、共通の音は動かさず、ほかの音は近い高さへ動かす（ボイスリーディング）。
 - グルーブ（ノリ）: 音符を機械的に並べるだけだとノリが出ない。曲の swing（0〜1）で裏拍を遅らせ（ジャズ・ブルース・ファンク 0.5〜0.7、ヒップホップ・ローファイ 0.2〜0.4、ロック・ダンス 0）、パートの push（-0.1〜0.1拍）でタイミングをずらす（スネア +0.02〜0.04＝あと乗りで重く、ハイハット -0.01〜-0.02＝前のめりで軽く、ベースはキックに合わせて 0）。ドラムは強弱が命: グリッド記法（g:x...）で X＝強、x＝ふつう、o＝弱い（ゴーストノート）を書き分け、ハイハットは表拍を強く裏拍を弱く、スネアの間に o を入れる。ビートの型は docs/sound/drum-patterns.md。
 - 繊細な音にするには: amp は delicate か clean、volume は 0.04〜0.12、ピアノ・ハープ・鐘・オルゴール系で細かい音符（0.25〜0.5拍）を、拍の強弱をつけず低めの音域でゆっくり。ドラムは入れないか、ハイハットだけ小さく。パッドと合唱を薄く敷く。
 - 音割れを避ける: 全パートの volume を足した値が大きすぎないようにする（歪みギター2本＋ドラム＋ベースで合計 0.7 前後まで）。出口に安全装置（リミッターと最後のソフトクリップ）はあるが、頼りすぎず、書き出した WAV のピークが -1dBFS 以下であることを確かめる。
@@ -173,7 +180,15 @@ export function parseNotes(text: string, drum: boolean, errors: string[], where:
       }
       continue;
     }
-    const [name, dur] = token.split(":");
+    const [name, rawDur = ""] = token.split(":");
+    // 長さのあとに付けられる奏法の記号: ! アクセント（強く）, 「,」 弱く, ' スタッカート（短く）, _ レガート（次の音につなげる）
+    const m = /^(\d+(?:\.\d+)?)([!,'_]*)$/.exec(rawDur);
+    const dur = m ? m[1] : rawDur;
+    const marks = m ? m[2] : "";
+    const art: Partial<NoteEvent> = {
+      ...(marks.includes("!") ? { velocity: 1.3 } : marks.includes(",") ? { velocity: 0.7 } : {}),
+      ...(marks.includes("'") ? { gate: 0.4 } : marks.includes("_") ? { gate: 1.15 } : {}),
+    };
     const beats = Number(dur);
     if (!dur || !DUR_RULE.test(dur) || !(beats > 0) || beats > 64) {
       errors.push(`${where}: 拍が読めません「${token}」`);
@@ -186,12 +201,12 @@ export function parseNotes(text: string, drum: boolean, errors: string[], where:
         errors.push(`${where}: ドラムは x か R で書きます「${token}」`);
         continue;
       }
-      out.push({ note: "C2", durationBeats: beats, ...(name === "X" ? { velocity: 1.3 } : name === "o" ? { velocity: 0.5 } : {}) });
+      out.push({ note: "C2", durationBeats: beats, ...(name === "X" ? { velocity: 1.3 } : name === "o" ? { velocity: 0.5 } : {}), ...(art.velocity ? { velocity: art.velocity } : {}) });
     } else {
       try {
         const midi = noteNameToMidi(name);
         if (midi < 12 || midi > 108) throw new Error("range");
-        out.push({ note: name, durationBeats: beats });
+        out.push({ note: name, durationBeats: beats, ...art });
       } catch {
         errors.push(`${where}: 音名が読めません「${token}」（例 C4, F#3, Bb5）`);
       }
@@ -221,10 +236,24 @@ export function fitToLength(events: NoteEvent[], total: number): NoteEvent[] {
 export function applySustain(events: NoteEvent[], sustain: number): NoteEvent[] {
   if (!Number.isFinite(sustain) || sustain === 1) return events;
   const gate = Math.max(0.2, Math.min(3, sustain));
-  return events.map((e) => (e.note === REST ? e : { ...e, gate }));
+  return events.map((e) => (e.note === REST || e.gate !== undefined ? e : { ...e, gate }));
 }
 
 /** AIソングを確かめて、曲（Score）に組み立てる。おかしなところがあれば、全部まとめてエラーにする。 */
+/** フレーズごとの強弱（出だし 0.88 → 山 1.1 → 終わり 0.8）を、休符以外の音の強さに掛ける。 */
+export function applyPhrase(events: NoteEvent[], phraseBeats: number): NoteEvent[] {
+  if (!Number.isFinite(phraseBeats) || phraseBeats < 2) return events;
+  const len = Math.min(32, phraseBeats);
+  let pos = 0;
+  return events.map((e) => {
+    const x = (pos % len) / len;
+    pos += e.durationBeats;
+    if (e.note === REST) return e;
+    const g = x < 0.7 ? 0.88 + 0.22 * (x / 0.7) : 1.1 - 0.3 * ((x - 0.7) / 0.3);
+    return { ...e, velocity: Math.round((e.velocity ?? 1) * g * 1000) / 1000 };
+  });
+}
+
 /** 曲の起伏: 出だしを小さく始め、中盤で一度引いてから戻す。 */
 export function applyArc(tracks: Track[], total: number, beats: number): Track[] {
   const intro = Math.min(beats * 4, total / 8);
@@ -284,7 +313,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
       pan: Math.max(-1, Math.min(1, Number(p.pan) || 0)),
       ...(amp ? { amp } : {}),
       ...(Number(p.push) ? { push: Math.max(-0.1, Math.min(0.1, Number(p.push))) } : {}),
-      notes: applySustain(fitToLength(events, total), drum ? 1 : Number(p.sustain)),
+      notes: applySustain(drum ? fitToLength(events, total) : applyPhrase(fitToLength(events, total), Number(p.phrase)), drum ? 1 : Number(p.sustain)),
     });
   });
   if (errors.length) throw new Error(errors.join("\n"));
