@@ -1,0 +1,102 @@
+{
+ "title": "音色めぐり（リードとベース）",
+ "description": "（見本・仮）シンセ音色を順に聞き比べる",
+ "bpm": 100,
+ "beats": 4,
+ "chords": "Am Am Am Am Am Am Am Am Am Am Am Am Am Am Am Am Am Am",
+ "barsPerChord": 1,
+ "repeats": 1,
+ "autoAccompaniment": false,
+ "parts": [
+  {
+   "instrument": "lead",
+   "role": "squareLead",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "squareLead",
+   "sustain": 1,
+   "notes": "A4:1 C5:0.5 E5:0.5 D5:1 C5:1 R:4 R:8 R:8 R:8 R:8 R:8 R:8 R:8 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "sawLead",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "sawLead",
+   "sustain": 1,
+   "notes": "R:8 A4:1 C5:0.5 E5:0.5 D5:1 C5:1 R:4 R:8 R:8 R:8 R:8 R:8 R:8 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "calliope",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "calliope",
+   "sustain": 1,
+   "notes": "R:8 R:8 A4:1 C5:0.5 E5:0.5 D5:1 C5:1 R:4 R:8 R:8 R:8 R:8 R:8 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "chiff",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "chiff",
+   "sustain": 1,
+   "notes": "R:8 R:8 R:8 A4:1 C5:0.5 E5:0.5 D5:1 C5:1 R:4 R:8 R:8 R:8 R:8 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "charang",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "charang",
+   "sustain": 1,
+   "notes": "R:8 R:8 R:8 R:8 A4:1 C5:0.5 E5:0.5 D5:1 C5:1 R:4 R:8 R:8 R:8 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "fifths",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "fifths",
+   "sustain": 1,
+   "notes": "R:8 R:8 R:8 R:8 R:8 A4:1 C5:0.5 E5:0.5 D5:1 C5:1 R:4 R:8 R:8 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "bassLead",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "bassLead",
+   "sustain": 1,
+   "notes": "R:8 R:8 R:8 R:8 R:8 R:8 A2:1 A2:1 E3:1 A2:1 R:4 R:8 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "synthBass1",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "synthBass1",
+   "sustain": 1,
+   "notes": "R:8 R:8 R:8 R:8 R:8 R:8 R:8 A2:1 A2:1 E3:1 A2:1 R:4 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "synthBass2",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "synthBass2",
+   "sustain": 1,
+   "notes": "R:8 R:8 R:8 R:8 R:8 R:8 R:8 R:8 A2:1 A2:1 E3:1 A2:1 R:4"
+  }
+ ]
+}

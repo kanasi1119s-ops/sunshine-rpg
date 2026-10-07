@@ -27,7 +27,8 @@ export function realEdition(score: Score): Score {
   const tracks: Track[] = score.tracks.map((t) => {
     const inst: Instrument | undefined = t.instrument;
     const next: Track = { ...t, notes: t.notes.map((n) => ({ ...n })) };
-    if (electronic || !inst) {
+    // 音色（シンセなど）を自分で選んだトラックは、そのまま使う
+    if (electronic || !inst || t.program !== undefined) {
       return next;
     }
     if (inst === "lead" && LEAD[style] !== undefined) next.program = LEAD[style];
@@ -39,7 +40,7 @@ export function realEdition(score: Score): Score {
   if (ORCHESTRAL.includes(style)) {
     for (const t of score.tracks) {
       const inst = t.instrument;
-      if (!inst || t.notes.every((n) => n.note === "R")) continue;
+      if (!inst || t.program !== undefined || t.notes.every((n) => n.note === "R")) continue;
       const melodic = inst === "lead" || inst === "leadGuitar" || inst === "brass" || inst === "harpsichord";
       if (melodic) {
         tracks.push({ ...t, instrument: "strings", waveform: "sawtooth", volume: t.volume * 0.5, pan: 0, program: style === "classic" || style === "baroque" ? 40 : 48, gm: undefined, gmDrum: undefined, notes: t.notes.map((n) => ({ ...n })) });

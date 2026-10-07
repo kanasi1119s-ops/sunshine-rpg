@@ -14,6 +14,7 @@ import bassJazzUrl from "../../assets-src/soundfont/extra/bass-jazz.sf3?url";
 import drumsJazzUrl from "../../assets-src/soundfont/extra/drums-jazz.sf3?url";
 import bassJpopUrl from "../../assets-src/soundfont/extra/bass-jpop.sf3?url";
 import drumsJpopUrl from "../../assets-src/soundfont/extra/drums-jpop.sf3?url";
+import synthsUrl from "../../assets-src/soundfont/extra/synths.sf3?url";
 import drumsMuldjordUrl from "../../assets-src/soundfont/extra/drums-muldjord.sf3?url";
 import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url";
 import { AudioEngine } from "../../src/audio/audio-engine";
@@ -113,7 +114,8 @@ async function applyOverlay(slot: "bass" | "drums", id: string): Promise<void> {
 }
 /** 書き出し（WAV）に使う、追加の音源。 */
 function overlayBuffers(): ArrayBuffer[] {
-  return [drumsId, bassId].flatMap((id, i) => { const u = (i === 0 ? DRUM_FONTS : BASS_FONTS)[id]?.url; return u ? [bytesOf(u).buffer as ArrayBuffer] : []; });
+  // シンセの音色（patch で選ぶ GM のシンセ・パッド・FX）は、いつも入れておく
+  return [...[drumsId, bassId].flatMap((id, i) => { const u = (i === 0 ? DRUM_FONTS : BASS_FONTS)[id]?.url; return u ? [bytesOf(u).buffer as ArrayBuffer] : []; }), bytesOf(synthsUrl).buffer as ArrayBuffer];
 }
 // 無料のアンプシミュレーター（NAM）: ビルドのときに埋め込んだワークレットとWASMを渡す
 declare const __NAM_PROCESSOR__: string;
@@ -122,6 +124,7 @@ declare const __NAM_MODELS__: Record<string, { label: string; json: string }>;
 const engine = new AudioEngine();
 void applyOverlay("bass", bassId);
 void applyOverlay("drums", drumsId);
+void engine.setOverlaySoundfont("synth", bytesOf(synthsUrl).buffer as ArrayBuffer);
 let namHost: NamHost | null = null;
 /** 同梱のNAMモデル（NAM作者のリポジトリにMITライセンスで入っている見本。docs/assets-credits.md）。キーは "builtin:〇〇"。 */
 const BUILTIN_NAM: Record<string, { label: string; json: string }> = typeof __NAM_MODELS__ === "object" ? __NAM_MODELS__ : {};
@@ -1187,12 +1190,12 @@ const nsBpm = h("input", { type: "number", min: "50", max: "240", value: "110" }
 const nsBeats = select([["4", "4拍子"], ["3", "3拍子"], ["6", "6拍子"], ["7", "7拍子"]], "4");
 const nsBars = select([["1", "1小節"], ["2", "2小節"]], "1");
 const nsRepeat = select([["2", "2回"], ["4", "4回"], ["6", "6回"], ["8", "8回"]], "4");
-const nsFeel = select([["rock", "ロック"], ["pop", "ポップ"], ["ballad", "バラード"], ["dance", "ダンス（きれい・現代的）"]], "rock");
+const nsFeel = select([["rock", "ロック"], ["pop", "ポップ"], ["ballad", "バラード"], ["dance", "ダンス（きれい・現代的）"], ["vocaloid", "ボカロ風バック（歌なし・高速）"]], "rock");
 const nsLead = select(INSTRUMENTS.filter(([k]) => !DRUMS.has(k)).map(([k, l]) => [k, l] as [string, string]), "leadGuitar");
 const nsBtn = h("button", { class: "primary", type: "button" }, "この進行で新しい曲を作る");
 nsBtn.onclick = () => {
   try {
-    const score = buildNewSong({ bpm: Number(nsBpm.value) || 110, beats: Number(nsBeats.value), chords: nsChords.value, barsPerChord: Number(nsBars.value), repeats: Number(nsRepeat.value), feel: nsFeel.value as "rock" | "pop" | "ballad" | "dance", leadInstrument: nsLead.value as Instrument });
+    const score = buildNewSong({ bpm: Number(nsBpm.value) || 110, beats: Number(nsBeats.value), chords: nsChords.value, barsPerChord: Number(nsBars.value), repeats: Number(nsRepeat.value), feel: nsFeel.value as "rock" | "pop" | "ballad" | "dance" | "vocaloid", leadInstrument: nsLead.value as Instrument });
     loadScore(score, nameIn.value || "新しい曲");
     state.selected = score.tracks.length - 1;
     renderAll();

@@ -147,3 +147,7 @@
 | ジャンル別のベース・ドラム（ロック／メタル／J-POP） | 上の FreePats ベース（ピック・指弾き）と Muldjord Kit | 2026-10-07 | 同じ録音に、音量バランスとEQを変えただけのもの（`build-bass.mjs`・`build-drums.mjs` の PROFILES）。`bass-rock/metal/jpop.sf3`、`drums-rock/metal/jpop.sf3` | ベースは CC0。ドラムは Muldjord Kit と同じ CC BY 4.0 | ドラムは必要（ゲームに入れる場合） |
 | 使わない: Salamander Drumkit（CC BY-SA 3.0）、Big Rusty Drums（CC0、2.3GB） | https://github.com/endolith/Salamander-Drumkit | 2026-10-07 | 前者は改変したサンプルを同じ条件（SA）で公開する義務があり、扱いにくい。後者は容量が大きく、クセの強い古い機材のため見送り | — | — |
 
+
+
+## シンセ音色の音源（作曲ソフト専用）
+- `assets-src/soundfont/extra/synths.sf3`: FluidR3（MIT。記録済み）から、シンセ系の音色（GM 38・39・50・51・80〜103の一部）だけを切り出したもの。作曲ソフトの書き出しだけで使い、ゲームには入れていない。

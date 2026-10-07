@@ -1,0 +1,102 @@
+{
+ "title": "音色めぐり（パッドと飾り）",
+ "description": "（見本・仮）シンセ音色を順に聞き比べる",
+ "bpm": 100,
+ "beats": 4,
+ "chords": "Am Am Am Am Am Am Am Am Am Am Am Am Am Am Am Am Am Am",
+ "barsPerChord": 1,
+ "repeats": 1,
+ "autoAccompaniment": false,
+ "parts": [
+  {
+   "instrument": "lead",
+   "role": "warmPad",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "warmPad",
+   "sustain": 2.5,
+   "notes": "A3:4 R:4 R:8 R:8 R:8 R:8 R:8 R:8 R:8 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "newAge",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "newAge",
+   "sustain": 2.5,
+   "notes": "R:8 A3:4 R:4 R:8 R:8 R:8 R:8 R:8 R:8 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "halo",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "halo",
+   "sustain": 2.5,
+   "notes": "R:8 R:8 A3:4 R:4 R:8 R:8 R:8 R:8 R:8 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "sweep",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "sweep",
+   "sustain": 2.5,
+   "notes": "R:8 R:8 R:8 A3:4 R:4 R:8 R:8 R:8 R:8 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "polysynth",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "polysynth",
+   "sustain": 1,
+   "notes": "R:8 R:8 R:8 R:8 A4:1 C5:0.5 E5:0.5 D5:1 C5:1 R:4 R:8 R:8 R:8 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "synthStrings1",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "synthStrings1",
+   "sustain": 2.5,
+   "notes": "R:8 R:8 R:8 R:8 R:8 A3:4 R:4 R:8 R:8 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "crystal",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "crystal",
+   "sustain": 1,
+   "notes": "R:8 R:8 R:8 R:8 R:8 R:8 A4:1 C5:0.5 E5:0.5 D5:1 C5:1 R:4 R:8 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "atmosphere",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "atmosphere",
+   "sustain": 2.5,
+   "notes": "R:8 R:8 R:8 R:8 R:8 R:8 R:8 A3:4 R:4 R:8"
+  },
+  {
+   "instrument": "lead",
+   "role": "metalPad",
+   "volume": 0.28,
+   "pan": 0,
+   "amp": "auto",
+   "patch": "metalPad",
+   "sustain": 2.5,
+   "notes": "R:8 R:8 R:8 R:8 R:8 R:8 R:8 R:8 A3:4 R:4"
+  }
+ ]
+}
