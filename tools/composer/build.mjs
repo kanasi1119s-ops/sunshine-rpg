@@ -7,8 +7,6 @@ import path from "path";
 const root = new URL("../../", import.meta.url).pathname;
 const argv = process.argv.slice(2);
 const desktop = argv.includes("--desktop");
-// 環境変数 COMPOSER_SOUNDFONT=<.sf2/.sf3のパス> で、作曲ソフトだけ別の録音音源に差し替えられる（ゲームの game.sf3 は変えない）
-const altSoundfont = process.env.COMPOSER_SOUNDFONT ? path.resolve(process.env.COMPOSER_SOUNDFONT) : null;
 const out = path.resolve(argv.find((a) => !a.startsWith("--")) || root + "dist-composer/index.html");
 // 無料のアンプシミュレーター（NAM）のワークレットとWASMを、データURLにして埋め込む
 const nam = await build({
@@ -25,7 +23,6 @@ const ampDir = root + "assets-src/amp-plugins/";
 const ampSamples = fs.readdirSync(ampDir).filter((f) => f.endsWith(".sunshine-amp.json")).map((f) => JSON.parse(fs.readFileSync(ampDir + f, "utf8")));
 const result = await build({
   root, configFile: false, logLevel: "warn",
-  resolve: altSoundfont ? { alias: [{ find: /^.*\/soundfont\/game\.sf3\?url$/, replacement: altSoundfont + "?url" }] } : undefined,
   define: {
     __NAM_PROCESSOR__: JSON.stringify("data:text/javascript;base64," + Buffer.from(namCode).toString("base64")),
     __NAM_WASM__: JSON.stringify(namWasm.toString("base64")),

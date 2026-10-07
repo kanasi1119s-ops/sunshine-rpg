@@ -57,6 +57,20 @@ export class SampledBgm {
     return this.loading;
   }
 
+  /**
+   * 録音音源（サウンドフォント）を入れかえる（作曲ソフトの「録音音源」の切りかえ）。まだ読み込む前なら、次の読み込みで使う音源を変えるだけ。
+   * 読み込み済みなら、鳴らすのを止めて、シンセサイザーの音源を差しかえる。
+   */
+  async swapSoundfont(buf: ArrayBuffer): Promise<void> {
+    if (globalThis.__sampledAssets) globalThis.__sampledAssets.soundfont = buf.slice(0);
+    if (!this.ready || !this.synth) return;
+    this.stop();
+    await this.synth.soundBankManager.deleteSoundBank("main");
+    await this.synth.soundBankManager.addSoundBank(buf.slice(0), "main");
+    await this.synth.isReady;
+    this.buffer = buf.slice(0);
+  }
+
   private async doLoad(ctx: AudioContext, destination: AudioNode): Promise<boolean> {
     const embedded = globalThis.__sampledAssets;
     const workletUrl = embedded ? embedded.processorUrl : processorUrl;

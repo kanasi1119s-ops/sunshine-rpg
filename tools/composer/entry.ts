@@ -1,6 +1,8 @@
 // サンシャイン作曲ソフト: 自動作曲＋ピアノロールでの手直し＋実楽器の音での試聴＋MIDI・プロジェクトの書き出し。
 // 再生エンジン（録音音源・ギターアンプ・ドラムの仕上げ）と作曲エンジンは、ゲーム本体のものをそのまま使う。
 import soundfontUrl from "../../src/audio/soundfont/game.sf3?url";
+// 作曲ソフトだけで使う、もう1つの録音音源（GeneralUser GS。規約は docs/assets-credits.md。ゲームには入れていない）
+import generalUserUrl from "../../assets-src/soundfont/GeneralUser-GS.sf2?url";
 import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url";
 import { AudioEngine } from "../../src/audio/audio-engine";
 import { allEntries, getTrack, STYLE_LABEL } from "../../src/audio/catalog";
@@ -41,10 +43,27 @@ function bytesOf(dataUrl: string): Uint8Array {
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;
 }
+// 録音音源の切りかえ（作曲ソフトのサウンド欄）。game＝ゲームと同じ音源（FluidR3）、gu＝GeneralUser GS
+type SoundfontId = "game" | "gu";
+const SOUNDFONTS: Record<SoundfontId, { label: string; url: string }> = {
+  game: { label: "ゲームと同じ（FluidR3）", url: soundfontUrl },
+  gu: { label: "GeneralUser GS（作曲ソフトだけ）", url: generalUserUrl },
+};
+let soundfontId: SoundfontId = "game";
+try {
+  const saved = window.localStorage.getItem("sunshine-composer-soundfont");
+  if (saved === "gu") soundfontId = "gu";
+} catch { /* 保存を読めなくても、既定で始める */ }
+async function applySoundfont(id: SoundfontId): Promise<void> {
+  soundfontId = id;
+  soundfontCopy = bytesOf(SOUNDFONTS[id].url).buffer as ArrayBuffer;
+  await engine.swapSoundfont(soundfontCopy.slice(0));
+  try { window.localStorage.setItem("sunshine-composer-soundfont", id); } catch { /* 保存できなくてもよい */ }
+}
 let soundfontCopy: ArrayBuffer | null = null;
 try {
   // 再生エンジンは読み込み時にデータを使い切るので、WAVの書き出し用に控えを別に持つ
-  soundfontCopy = bytesOf(soundfontUrl).buffer as ArrayBuffer;
+  soundfontCopy = bytesOf(soundfontId === "gu" ? generalUserUrl : soundfontUrl).buffer as ArrayBuffer;
   globalThis.__sampledAssets = { soundfont: soundfontCopy.slice(0), processorUrl };
 } catch (error) {
   console.warn("録音音源の埋め込みを読めませんでした:", error);
@@ -263,6 +282,11 @@ editionSel.onchange = () => {
   state.edition = editionSel.value as State["edition"];
   restartHere();
   save();
+};
+const soundfontSel = select(Object.entries(SOUNDFONTS).map(([id, v]) => [id, v.label] as [string, string]), soundfontId);
+soundfontSel.onchange = () => {
+  const was = state.playing;
+  void applySoundfont(soundfontSel.value as SoundfontId).then(() => { if (was) play(0); });
 };
 const volIn = h("input", { type: "range", min: "0", max: "100", value: "60", "aria-label": "音量" });
 volIn.oninput = () => engine.setBgmVolume(Number(volIn.value) / 100);
@@ -1068,6 +1092,8 @@ function addAmpPlugin(data: unknown, announce: boolean): AmpPluginDef | null {
 
 // Claude Code の song.mjs（--wav）から、曲をWAVにするための入口
 (window as unknown as { __composer: unknown }).__composer = {
+  /** 録音音源を切りかえる（"game" か "gu"）。WAVの書き出し（song.mjs --soundfont）が使う。 */
+  async setSoundfont(id: string): Promise<void> { await applySoundfont(id === "gu" ? "gu" : "game"); soundfontSel.value = soundfontId; },
   /** `raw: true`: ピークをそろえずに書き出す（ゲーム内の実際の大きさを測るとき。`tools/audio-check/render-catalog.mjs --raw`）。 */
   async renderWav(score: Score, edition: State["edition"], opts?: { raw?: boolean }): Promise<string> {
     if (!soundfontCopy) throw new Error("録音音源を読み込めていません");
@@ -1579,7 +1605,7 @@ app.append(
     h("div", { class: "transport" }, ui.playBtn, ui.pauseBtn, ui.stopBtn),
     h("div", { class: "lcd" }, h("div", { class: "lcd-time" }, ui.time), lcd("BPM", lcdTempo), lcd("TRK", lcdTracks), lcd("LEN", lcdLen)),
     h("div", { class: "seekwrap" }, ui.seek),
-    h("div", { class: "row topopts" }, field("サウンド", editionSel), field("マスター音量", volIn)),
+    h("div", { class: "row topopts" }, field("サウンド", editionSel), field("録音音源", soundfontSel), field("マスター音量", volIn)),
   ),
   h("div", { class: "daw" },
     panel("TRK", "トラック", ui.trackBox, h("div", { class: "row", style: "margin-top:8px" }, addTrackBtn),

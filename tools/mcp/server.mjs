@@ -40,14 +40,15 @@ server.registerTool("compose_song", {
     song: z.record(z.string(), z.unknown()).describe("AIソング形式の曲（title, description, bpm, beats, chords, barsPerChord, repeats, autoAccompaniment, feel, tone, parts）"),
     edition: z.enum(["real", "ps2", "modern"]).optional().describe("サウンドの版（既定 real＝実楽器）"),
     wav: z.boolean().optional().describe("WAVも作るか（既定 true。Playwright が必要）"),
+    soundfont: z.enum(["game", "gu"]).optional().describe("WAVの録音音源。game＝ゲームと同じ FluidR3（既定）、gu＝GeneralUser GS（作曲ソフトだけ）"),
   },
-}, async ({ name, song, edition, wav }) => {
+}, async ({ name, song, edition, wav, soundfont }) => {
   try {
     const k = await kit();
     const src = path.join(ROOT, "assets-src/ai-songs", `${name}.json`);
     let r;
     try {
-      r = await k.build(song, { name, edition: edition ?? "real", wav: wav ?? true });
+      r = await k.build(song, { name, edition: edition ?? "real", wav: wav ?? true, soundfont: soundfont ?? "game" });
     } catch (e) {
       if (!/Playwright/.test(e.message)) throw e;
       r = await k.build(song, { name, edition: edition ?? "real", wav: false });

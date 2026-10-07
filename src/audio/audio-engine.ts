@@ -247,6 +247,11 @@ export class AudioEngine {
     this.sampled.setNam(host);
   }
 
+  /** 作曲ソフト用: 録音音源（サウンドフォント）を入れかえる。 */
+  swapSoundfont(buf: ArrayBuffer): Promise<void> {
+    return this.sampled.swapSoundfont(buf);
+  }
+
   /** 作曲ソフト用: 音の場（AudioContext）。録音トラックの再生や録音に使う。 */
   audioContext(): AudioContext {
     return this.ensureContext();
