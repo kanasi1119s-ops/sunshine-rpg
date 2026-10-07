@@ -14,6 +14,7 @@ import bassJazzUrl from "../../assets-src/soundfont/extra/bass-jazz.sf3?url";
 import drumsJazzUrl from "../../assets-src/soundfont/extra/drums-jazz.sf3?url";
 import bassJpopUrl from "../../assets-src/soundfont/extra/bass-jpop.sf3?url";
 import drumsJpopUrl from "../../assets-src/soundfont/extra/drums-jpop.sf3?url";
+import drumsSupraUrl from "../../assets-src/soundfont/extra/drums-supra.sf3?url";
 import synthsUrl from "../../assets-src/soundfont/extra/synths.sf3?url";
 import drumsMuldjordUrl from "../../assets-src/soundfont/extra/drums-muldjord.sf3?url";
 import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url";
@@ -79,6 +80,7 @@ const DRUM_FONTS: Record<string, { label: string; url: string | null }> = {
   metal: { label: "メタルドラム", url: drumsMetalUrl },
   jazz: { label: "ジャズドラム", url: drumsJazzUrl },
   jpop: { label: "J-POPドラム", url: drumsJpopUrl },
+  supra: { label: "スープラ（乾いた金属スネア）", url: drumsSupraUrl },
 };
 let bassId = "std";
 let drumsId = "std";

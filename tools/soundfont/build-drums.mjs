@@ -48,6 +48,10 @@ const PROFILES = {
     eq: "highpass=f=35,equalizer=f=60:t=q:w=1:g=3,equalizer=f=450:t=q:w=1.5:g=-3,equalizer=f=3500:t=q:w=1:g=4,acompressor=threshold=-22dB:ratio=4:attack=2:release=50:makeup=2" },
   jpop:  { out: "drums-jpop", label: "J-POP", overhead: 0.9, amb: 0.25, kick: 1.2, snare: 1.3, tom: 1.0, hat: 1.1, cym: 0.8, sec: 0.85,
     eq: "highpass=f=40,equalizer=f=90:t=q:w=1:g=2,equalizer=f=4500:t=q:w=1:g=3,equalizer=f=9000:t=q:w=1:g=2,acompressor=threshold=-20dB:ratio=3:attack=4:release=80:makeup=1.5" },
+  // 「スープラ」: 乾いて硬い金属スネア（アルミ胴の定番スネアのような、パシッと抜ける高めの音）に寄せた設定。部屋の鳴りを減らし、スネアだけ別のイコライザーと短い余韻にする
+  supra: { out: "drums-supra", label: "スープラ", overhead: 0.8, amb: 0.12, kick: 1.15, snare: 1.45, tom: 1.0, hat: 1.05, cym: 0.8, sec: 0.85, snareSec: 0.55,
+    eq: "highpass=f=40,equalizer=f=90:t=q:w=1:g=2,equalizer=f=4500:t=q:w=1:g=2,equalizer=f=9000:t=q:w=1:g=2,acompressor=threshold=-20dB:ratio=3:attack=4:release=80:makeup=1.5",
+    snareEq: "highpass=f=110,equalizer=f=230:t=q:w=1.2:g=1.5,equalizer=f=420:t=q:w=1.5:g=-4,equalizer=f=1800:t=q:w=1.5:g=1.5,equalizer=f=5500:t=q:w=1:g=4.5,equalizer=f=10000:t=q:w=1:g=3,acompressor=threshold=-24dB:ratio=4:attack=1.5:release=45:makeup=2" },
 };
 const which = process.argv.slice(2).filter((a) => a in PROFILES);
 /** 近接マイクの倍率（楽器の種類で選ぶ） */
@@ -64,7 +68,7 @@ function layers(name) {
 }
 
 function hit(inst, idx, cfg, prof) {
-  const sec = cfg.sec * prof.sec * (kindOf(inst) === "cym" ? prof.cym : 1);
+  const sec = cfg.sec * prof.sec * (kindOf(inst) === "cym" ? prof.cym : 1) * (kindOf(inst) === "snare" && prof.snareSec ? prof.snareSec : 1);
   cfg = { ...cfg, sec };
   const file = (mic) => path.join(SAMPLES, inst, `${idx}-${inst}-${mic}.flac`);
   const read = (mic) => decodeMono(file(mic), cfg.sec);
@@ -76,7 +80,7 @@ function hit(inst, idx, cfg, prof) {
   const ang = ((cfg.pan + 1) * Math.PI) / 4; // 一定パワーのパン
   const boost = prof[kindOf(inst)];
   for (const [mic, g] of Object.entries(cfg.close)) add(read(mic), g * boost * Math.cos(ang) * 1.2, g * boost * Math.sin(ang) * 1.2);
-  const [fl, fr] = filterStereo(L, R, prof.eq);
+  const [fl, fr] = filterStereo(L, R, kindOf(inst) === "snare" && prof.snareEq ? prof.snareEq : prof.eq);
   L.set(fl.subarray(0, len)); R.set(fr.subarray(0, len));
   // 終わりを 0.12秒かけて静かにする
   const fade = Math.round(0.12 * SR);
