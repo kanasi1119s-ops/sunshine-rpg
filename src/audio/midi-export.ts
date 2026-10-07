@@ -71,6 +71,8 @@ const REVERB: Partial<Record<Instrument, number>> = { pad: 70, choir: 80, string
 const CHORUS: Partial<Record<Instrument, number>> = { strings: 30, pad: 35, choir: 30, keys: 22, guitar: 20, echoGuitar: 20, crunch: 12, distGuitar: 8, bell: 12, harpsichord: 10 };
 /** 歪ませないアンプ（これらのときは、元の音色をそのまま使う）。 */
 const CLEAN_AMP_TYPES = new Set<string>(["clean", "jazz", "funk", "lofi", "retro8bit", "radio", "delicate"]);
+const SWELL_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "pad", "strings", "choir", "brass"]);
+const DETUNE_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "guitar", "echoGuitar", "strings", "pad", "brass"]);
 const ECHO_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "cowbell", "bell", "keys"]);
 
 function channelKey(track: Track, program: number): string {
@@ -133,7 +135,12 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     return list;
   };
 
+  const H = Math.max(0, Math.min(1, Number(score.human) || 0));
+  /** 同じ入力なら同じ結果になる 0〜1 の疑似乱数（人間らしさのばらつき用）。 */
+  const rnd = (a: number): number => { const x = Math.sin(a * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+  let trackNo = 0;
   for (const track of score.tracks) {
+    const trackSeed = ++trackNo * 7.31;
     const inst = track.instrument;
     const drumNote = inst ? GM_DRUM_NOTE[inst] : undefined;
     const isDrum = drumNote !== undefined;
@@ -201,10 +208,12 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       // 実楽器版は、人が演奏するように、タイミングのずれを大きめに
       const human = score.edition === "real" ? 1.6 : 1;
       const looseness = human * (inst && ["keys", "piano", "guitar", "echoGuitar", "bass", "harpsichord", "strings", "lead", "leadGuitar", "brass", "crunch", "distGuitar"].includes(inst) ? 70 : inst && ["kick", "snare", "hihat", "tom", "crash"].includes(inst) ? 45 : 0);
-      const jitter = looseness > 0 && startBeat > 0 ? Math.round((humanize(secStart + 3.7) - 1) * looseness) : 0;
+      const jitter = looseness > 0 && startBeat > 0 ? Math.round((humanize(secStart + 3.7 + trackSeed) - 1) * looseness * (1 + (drumNote !== undefined ? 2.5 : 4) * H)) : 0;
       const grooveTicks = Math.round(grooveOffsetBeats(score.swing, track.push, startBeat) * PPQ);
-      const tick = Math.max(0, Math.round(startBeat * PPQ) + jitter + grooveTicks);
-      let vol = track.volume * (n.velocity ?? 1) * (inst ? humanize(secStart) : 1);
+      // バンド全体の、ゆるやかな走り・溜め（全パート同じだけずれるので、アンサンブルはそろったまま）
+      const drift = H > 0 ? Math.round(H * (12 * Math.sin((startBeat * 2 * Math.PI) / 17.3) + 8 * Math.sin((startBeat * 2 * Math.PI) / 41 + 1.3))) : 0;
+      const tick = Math.max(0, Math.round(startBeat * PPQ) + jitter + grooveTicks + drift);
+      let vol = track.volume * (n.velocity ?? 1) * (inst ? 1 + (humanize(secStart + trackSeed * 0.37) - 1) * (1 + 3 * H) : 1);
       let drumKey = drumNote;
       let lenScale = drumNote !== undefined ? 0.5 : 0.97;
       if (inst === "hihat") {
@@ -225,6 +234,8 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       // 特別曲用（prs）の刻みギターは、強すぎないよう控えめに
       const rhythmSoft = score.tone === "prs" && (inst === "distGuitar" || inst === "crunch") ? 0.78 : 1;
       const velocity = Math.min(127, Math.round(velocityOf(vol, boost) * strike * rhythmSoft));
+      // 音の長さのばらつき（人の弾き方）: 短い音は、少し短く切れたり、つながったり
+      if (H > 0 && drumNote === undefined && n.gate === undefined && n.durationBeats <= 1) lenScale *= 1 - 0.14 * H * rnd(startBeat * 3.1 + trackSeed);
       const len = Math.max(20, Math.round(n.durationBeats * PPQ * lenScale * (drumNote === undefined ? n.gate ?? 1 : 1)));
       const push = (pitch: number, at: number, vel: number, length: number, target: { channel: number; list: Ev[] } = { channel, list }): void => {
         const p = Math.max(0, Math.min(127, pitch));
@@ -273,6 +284,26 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
           t.list.push({ tick: tick + delay, order: 1, bytes: [0xb0 | t.channel, 1, Math.round(base + (peak - base) * 0.4)] });
           t.list.push({ tick: tick + delay + Math.round(PPQ * 0.15), order: 1, bytes: [0xb0 | t.channel, 1, peak] });
           t.list.push({ tick: tick + durTicks - 5, order: 1, bytes: [0xb0 | t.channel, 1, base] });
+        }
+      }
+      // 長い音の音量の山（CC11）: 立ち上がって、中ほどで最大、終わりへ少し引く。リード・パッド・弦・ブラス・合唱
+      if (H > 0 && !score.pump && inst && SWELL_INSTRUMENTS.has(inst) && durTicks >= PPQ) {
+        for (const t of bendTargets) {
+          const cc = (at: number, v: number): void => { t.list.push({ tick: at, order: 1, bytes: [0xb0 | t.channel, 11, Math.max(40, Math.min(127, v))] }); };
+          cc(tick, 127 - Math.round(38 * H));
+          cc(tick + Math.round(durTicks * 0.35), 127);
+          cc(tick + Math.round(durTicks * 0.8), 127 - Math.round(16 * H));
+          cc(tick + durTicks - 2, 127);
+        }
+      }
+      // 音程のごくわずかなずれ（±8セント）: リード・ギター・弦。ベンドの指定がない音だけ
+      if (H > 0 && !curve && inst && DETUNE_INSTRUMENTS.has(inst) && durTicks >= 60) {
+        const semi = (rnd(startBeat * 5.7 + trackSeed * 1.3) - 0.5) * 2 * 0.08 * H;
+        for (const t of bendTargets) {
+          const v = bendValue(semi);
+          t.list.push({ tick: Math.max(0, tick - 3), order: 1, bytes: [0xe0 | t.channel, v & 0x7f, (v >> 7) & 0x7f] });
+          const v0 = bendValue(0);
+          t.list.push({ tick: tick + durTicks - 5, order: 1, bytes: [0xe0 | t.channel, v0 & 0x7f, (v0 >> 7) & 0x7f] });
         }
       }
       push(pitch, tick, velocity, len);

@@ -164,3 +164,41 @@ describe("シンセ音色は版（real）で上書きされない", () => {
     expect(realEdition(score).tracks[0].program).toBe(38);
   });
 });
+
+describe("人間らしさ（human）", () => {
+  const mk = (human?: number): Score => ({
+    tempoBpm: 120, loop: false, edition: "real",
+    ...(human !== undefined ? { human } : {}),
+    tracks: [
+      { waveform: "sawtooth", instrument: "lead", volume: 0.2, pan: 0, notes: Array.from({ length: 16 }, () => ({ note: "A4", durationBeats: 1 })) },
+      { waveform: "sine", instrument: "pad", volume: 0.1, pan: 0, notes: Array.from({ length: 4 }, () => ({ note: "C4", durationBeats: 4 })) },
+      { waveform: "square", instrument: "kick", volume: 0.2, pan: 0, notes: Array.from({ length: 16 }, () => ({ note: "C2", durationBeats: 1 })) },
+    ],
+  });
+  const hex = (b: Uint8Array): string => Array.from(b).join(",");
+  const events = (b: Uint8Array, status: number, data1?: number): number => {
+    let n = 0;
+    for (let i = 0; i < b.length - 2; i++) if ((b[i] & 0xf0) === status && (data1 === undefined || b[i + 1] === data1) && b[i] < 0xf0) n++;
+    return n;
+  };
+  it("0 または省略なら、これまでと同じMIDI", () => {
+    expect(hex(scoreToMidi(mk(0)))).toBe(hex(scoreToMidi(mk())));
+  });
+  it("同じ入力なら、いつも同じ結果", () => {
+    expect(hex(scoreToMidi(mk(0.6)))).toBe(hex(scoreToMidi(mk(0.6))));
+  });
+  it("大きくすると、音量の山（CC11）と音程のずれ（ピッチベンド）が入り、MIDIが変わる", () => {
+    const plain = scoreToMidi(mk(0));
+    const human = scoreToMidi(mk(0.6));
+    expect(hex(human)).not.toBe(hex(plain));
+    expect(events(human, 0xb0, 11)).toBeGreaterThan(events(plain, 0xb0, 11));
+    expect(events(human, 0xe0)).toBeGreaterThan(events(plain, 0xe0));
+  });
+  it("AIソングの human がスコアに入り、0〜1に収まる", async () => {
+    const { aiSongToScore } = await import("./ai-song");
+    const base = { title: "t", bpm: 120, beats: 4, repeats: 1, chords: "C", barsPerChord: 1, autoAccompaniment: false, parts: [{ instrument: "lead", role: "m", volume: 0.2, pan: 0, amp: "auto", notes: "A4:4" }] };
+    expect(aiSongToScore({ ...base, human: 0.5 } as never).score.human).toBe(0.5);
+    expect(aiSongToScore({ ...base, human: 9 } as never).score.human).toBe(1);
+    expect(aiSongToScore(base as never).score.human).toBeUndefined();
+  });
+});
