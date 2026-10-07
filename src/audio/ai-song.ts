@@ -1,5 +1,6 @@
 import { noteNameToMidi } from "./note";
 import { buildNewSong } from "./newsong";
+import { applySections, autoSections, fitSections, SECTION_KINDS, type Section, type SectionKind } from "./arrangement";
 import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, type Track } from "./score";
 
 /**
@@ -66,6 +67,8 @@ export interface AiSong {
   synth?: boolean;
   /** true なら、曲の最初の1/8（最大4小節）を小さく始めて上げ、真ん中あたりで一度引いて戻す（曲の起伏。省略は false）。 */
   dynamics?: boolean;
+  /** 自動の伴奏のセクション編曲。"auto"（定番の構成）か、{kind, bars} の並び。autoAccompaniment が true のときだけ効く。 */
+  sections?: "auto" | { kind: SectionKind; bars: number }[];
   /** AIが書くパート（メロディ・対旋律・ベースライン・ドラムなど）。 */
   parts: AiPart[];
 }
@@ -102,6 +105,7 @@ export const AI_SONG_SCHEMA = {
     swing: { type: "number" },
     synth: { type: "boolean" },
     dynamics: { type: "boolean" },
+    sections: { anyOf: [{ type: "string", enum: ["auto"] }, { type: "array", items: { type: "object", additionalProperties: false, required: ["kind", "bars"], properties: { kind: { type: "string", enum: SECTION_KINDS }, bars: { type: "number" } } } }] },
     parts: {
       type: "array",
       items: {
@@ -141,6 +145,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - autoAccompaniment: true なら、コード進行から伴奏（ドラム・ベース・ギター・ピアノ・弦）を自動で足す。自分でドラムやベースを書くときは false にしてよい。feel: 自動の伴奏の雰囲気（rock / pop / ballad / vocaloid＝ボカロ曲のような歌なしのバック（高速・16分の詰まったドラムとピアノ・動くベース・ギターの刻み・左右の弦。bpm 160〜190で）/ dance＝4つ打ち・メロディのように動くベース・ピアノの分散和音・エコーギターの、きれいで現代的な伴奏）。
 - tone: ギターの音色の方向（rock / metal / prs＝なめらかなリード）。
 - synth: true にすると、lead（シンセリード）と pad が電子的なシンセの音色になる。省略（false）だと lead はフルート、pad は合唱に近い生楽器寄りの音色で鳴る（tone が metal / prs の lead はオーバードライブのギター）。ダンス・電子音楽のアルペジオやリードには true にする。
+- sections: 自動の伴奏（autoAccompaniment: true）に、曲の起伏をつける。"auto" なら定番の構成（導入4 → Aメロ8 → Bメロ4 → サビ8 → 間奏4 → Aメロ → Bメロ → サビ → サビ → 終わり4。曲の小節数に合わせて自動で区切る）。自分で決めるなら [{"kind":"intro","bars":4},{"kind":"verse","bars":8},{"kind":"pre","bars":4},{"kind":"chorus","bars":8}] のように書く（kind は intro・verse・pre・chorus・interlude・bridge・outro。bars の合計が曲の小節数になるようにする。ちがうときは最後を延ばすか、後ろを切る）。導入＝ピアノと弦だけ、Aメロ＝ドラム（キックとハイハット）とベースを足す、Bメロ＝スネアとギターを足して少しずつ強く、サビ＝全部とクラッシュ、間奏＝ドラムを抜く、Cメロ・終わり＝静かに。サビの前の小節は、スネアとキックで助走をつける。メロディなど自分で書いたパートには効かないので、メロディ側の強弱は phrase や ! , で付ける。
 - dynamics: true にすると、曲の出だし（最初の1/8、最大4小節）を小さく始めて上げ、中盤で一度引いてから戻す（曲の起伏）。同じ音量で続く曲を避けたいときに使う。
 - parts: 自分で書くパート。1曲に1〜8パート。
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。
@@ -336,7 +341,29 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     throw new Error(`chords: ${(e as Error).message}`);
   }
   const total = base.tracks[0].notes.reduce((s, n) => s + n.durationBeats, 0);
-  const accompaniment = song.autoAccompaniment ? base.tracks.slice(0, -1) : [];
+  let accompaniment = song.autoAccompaniment ? base.tracks.slice(0, -1) : [];
+  // セクション編曲: 導入・Aメロ・Bメロ・サビ・間奏…ごとに、自動の伴奏の楽器と強さを変える
+  if (song.sections && accompaniment.length) {
+    const beatsPerBar = Number(song.beats);
+    const totalBars = Math.round(total / beatsPerBar);
+    let list: Section[];
+    if (song.sections === "auto") list = autoSections(totalBars);
+    else if (Array.isArray(song.sections)) {
+      list = [];
+      song.sections.forEach((x, i) => {
+        const kind = (x?.kind ?? "") as SectionKind;
+        const bars = Math.round(Number(x?.bars));
+        if (!SECTION_KINDS.includes(kind)) { warnings.push(`sections[${i}]: 「${String(x?.kind)}」は使えません（${SECTION_KINDS.join("・")} のどれか）。Aメロにしました`); }
+        if (!(bars >= 1)) { warnings.push(`sections[${i}]: bars は1以上の整数にしてください`); return; }
+        list.push({ kind: SECTION_KINDS.includes(kind) ? kind : "verse", bars });
+      });
+    } else list = [];
+    if (list.length) {
+      const fitted = fitSections(list, totalBars);
+      if (fitted.warning) warnings.push(fitted.warning);
+      accompaniment = applySections(accompaniment, fitted.sections, beatsPerBar);
+    }
+  }
 
   const parts: Track[] = [];
   song.parts.forEach((p, i) => {
