@@ -138,9 +138,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
   const H = Math.max(0, Math.min(1, Number(score.human) || 0));
   /** 同じ入力なら同じ結果になる 0〜1 の疑似乱数（人間らしさのばらつき用）。 */
   const rnd = (a: number): number => { const x = Math.sin(a * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
-  let trackNo = 0;
   for (const track of score.tracks) {
-    const trackSeed = ++trackNo * 7.31;
     const inst = track.instrument;
     const drumNote = inst ? GM_DRUM_NOTE[inst] : undefined;
     const isDrum = drumNote !== undefined;
@@ -172,6 +170,8 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     };
     const main = setupChannel(program, channelKey(track, program), 1);
     const channel = main.channel;
+    // ばらつきの種は、チャンネルごと。同じチャンネルに重ねた声部（ギターのストロークの各弦など）は、同じようにずれて、和音がそろったままになる
+    const trackSeed = (channel + 1) * 7.31;
     if (channel !== DRUM_CHANNEL) programs[channel] = program;
     if (channel !== DRUM_CHANNEL && track.amp) amps[channel] = { amp: track.amp, pan: track.pan ?? 0 };
     const list = main.list;
