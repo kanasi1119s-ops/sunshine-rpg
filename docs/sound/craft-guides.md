@@ -1,7 +1,7 @@
 # 曲づくりの技術の深掘り（2026-10-07）
 
 `genre-guides.md`（ジャンル別）の続き。ジャンルをこえて使う技術（メロディ・和声・リズム・ベース・ドラム・アレンジ）をまとめる。
-調べた先: [Motifkit（メロディの書き方）](https://motifkit.com/melody-writing/)、[Melody Studio（転調）](https://melodystudio.net/2023/01/29/the-art-of-changing-keys-a-guide-to-chord-modulation/)、[Beyond Music Theory（借用和音）](https://www.beyondmusictheory.org/what-to-do-with-modal-interchange/)、[Mastering The Mix（アレンジの強弱）](https://www.masteringthemix.com/blogs/learn/how-to-create-dynamic-arrangements)、[Learn Jazz Standards（ウォーキングベース）](https://www.learnjazzstandards.com/blog/learning-jazz/bass/write-walking-bass-line/)、[Native Instruments（ドラムフィル）](https://blog.native-instruments.com/drum-fills/)。記事が短かった部分（借用和音の使い分けなど）は、一般的な音楽理論で補った。特定の曲の旋律・進行は写さない（CLAUDE.md 1-1）。
+調べた先: [Motifkit（メロディの書き方）](https://motifkit.com/melody-writing/)、[Melody Studio（転調）](https://melodystudio.net/2023/01/29/the-art-of-changing-keys-a-guide-to-chord-modulation/)、[Beyond Music Theory（借用和音）](https://www.beyondmusictheory.org/what-to-do-with-modal-interchange/)、[Mastering The Mix（アレンジの強弱）](https://www.masteringthemix.com/blogs/learn/how-to-create-dynamic-arrangements)、[Learn Jazz Standards（ウォーキングベース）](https://www.learnjazzstandards.com/blog/learning-jazz/bass/write-walking-bass-line/)、[Native Instruments（ドラムフィル）](https://blog.native-instruments.com/drum-fills/)。ほかに [Make My Songbook（旋法）](https://www.makemysongbook.com/blog/music-modes-explained)、[Motifkit（楽器ファミリー）](https://motifkit.com/instrument-families/)、[HyperBits（EQ帯域）](https://hyperbits.com/eq-cheat-sheet/)、[Songcage（対旋律）](https://songcage.com/blog/countermelody/)。記事が短かった部分（借用和音の使い分けなど）は、一般的な音楽理論で補った。特定の曲の旋律・進行は写さない（CLAUDE.md 1-1）。
 
 ## 1. メロディ
 - **輪郭はアーチ型**: 上がって、頂点に着いて、下がる。1つのフレーズ（4〜8小節）に、最高音は1回だけ。置き場所は中盤より後ろ。同じ高さの音をくり返し頂点にしない。
@@ -57,6 +57,59 @@
 - **ブレイクダウン**: 曲の中盤で、ドラムや低音を抜く。次のサビで戻したとき、迫力が増す。
 - **空間**: 低音（キック・ベース）は真ん中、和音の楽器は左右に振る。サビで左右の楽器を増やすと、広く聞こえる。
 - **音の高さの役割分担**: 低域（ベース・キック）、中域（ギター・ピアノ・歌）、高域（ハイハット・鐘）。同じ帯域に楽器を重ねすぎない（にごる）。
+
+## 8. 旋法（モード）と音階の使い分け
+同じ「C」の音階でも、主音をずらすと雰囲気が変わる。曲の「感情」から選ぶ。
+
+| 旋法（Cが主音のとき） | 雰囲気 | 特徴の音 | 使いどころ |
+|---|---|---|---|
+| イオニアン（C D E F G A B） | 明るい・解決した | ふつうの長調 | ポップ・町・フィールド |
+| ドリアン（C D Eb F G A Bb） | 洗練された、明るさのある短調 | 6度が半音上がらない | ジャズ・ファンク・ブルース・旅の曲 |
+| フリジアン（C Db Eb F G Ab Bb） | 暗い・エキゾチック | 2度が半音下がる | メタル・ボス・砂漠 |
+| リディアン（C D E F# G A B） | 浮遊感・幻想的 | 4度が半音上がる | 神殿・空・映画音楽 |
+| ミクソリディアン（C D E F G A Bb） | 地に足のついた長調・ブルージー | 7度が半音下がる | ロック・冒険 |
+| エオリアン（C D Eb F G Ab Bb） | 悲しい・内省的 | 自然短音階 | バラード・悲しい場面 |
+| ロクリアン（C Db Eb F Gb Ab Bb） | 張りつめた・不安定 | 5度が半音下がる | 短く挟むだけ（緊迫の一瞬） |
+
+- **進行の例**: ドリアン＝Am7 D7（短調なのに IV が長調）、ミクソリディアン＝G F C（♭VII を使う）、リディアン＝C D（II が長調）、フリジアン＝Em F（♭II に半音で行く）。
+- **コツ**: 特徴の音（ドリアンの6度、リディアンの4度など）を、メロディの長い音やアクセントに置くと、旋法らしさがはっきりする。
+
+## 9. 楽器ごとの書き方
+- **弦**: 土台（低弦）と旋律（ヴァイオリン）の両方を担える。16本は1つの音に溶ける。長い音とトレモロで雰囲気、短い音で推進力。
+- **木管**: 1本ずつ個性がある（フルート＝軽い、オーボエ＝ささやき、クラリネット＝低音と高音でほぼ別の楽器）。ソロの色づけ、合いの手に。
+- **金管**: パワーと山場。1本で木管の4本分の音量。ホルンは暖かく溶け込む、トランペット・トロンボーンは力強いので、出番を絞る。
+- **打楽器**: リズムと区切り。ティンパニは音の高さを変える時間が要るので、音を変える前に余裕を。
+- **ギター**: 低い開放弦（E2・A2・D3）が刻みの基本。パワーコードは根音と5度。リードは E4 以上で、ベンドや長い音。
+- **ピアノ**: 左手＝低音（根音と5度）、右手＝和音とメロディ。音域が広いので、中央の C4 付近で他の楽器とぶつからないように。
+
+## 10. 音域のすみ分け（にごらないために）
+同じ帯域に楽器を重ねると、にごる（マスキング）。帯域のめやす:
+
+| 楽器 | 厚み・本体 | にごりやすい帯域 | 抜け（きらめき） |
+|---|---|---|---|
+| キック | 60〜145Hz | 250〜300Hz | 2〜8kHz（アタック・クリック） |
+| ベース | 80〜200Hz | 250〜500Hz | 400〜800Hz（輪郭） |
+| ギター | 150〜300Hz | 300〜500Hz | 3〜10kHz（プレゼンス） |
+| ピアノ | 50〜250Hz（暖かさ）、250〜3kHz（本体） | — | 7〜9kHz |
+| 弦 | 80〜300Hz | — | 7〜12kHz |
+| 歌・リード | — | 200〜500Hz | 2.5〜4.5kHz（前に出る）、5kHz〜（空気感） |
+
+- 作曲ソフトでは、にごりを「音域をずらす」ことで避ける。ベースとキックは低く、ギターとピアノは中域、メロディはそれより上へ。同じ帯域の楽器どうしは、片方の音量を下げる（歪みギターを 0.05〜0.1 にする理由）。
+- 300〜500Hz（C4〜B4 あたりの下側）に、和音の楽器を厚く重ねない。
+
+## 11. リズムの型（細かいところ）
+- **ギャロップ（メタル）**: 「タタタ」を、8分＋16分2つ（0.5・0.25・0.25）。グリッドで kick `g:x.xxx.xxx.xxx.xx` または guitar の 0.5・0.25・0.25 のくり返し。馬の駆け足のような推進力。
+- **ツーバス**: kick を16分で連打（`g:XxXxXxXxXxXxXxXx`）。スネアは2・4拍。
+- **ブラスト**: kick と snare を16分で交互に（kick `g:x.x.x.x.x.x.x.x.`、snare `g:.x.x.x.x.x.x.x.x`）。激しい山場に短く使う。
+- **ハーフタイム**: スネアを3拍目だけ。テンポは同じで、半分の速さに感じる。ブレイクダウンに。
+- **シャッフル**: 8分音符を「3連の1つめと3つめ」に（曲の swing を 0.6〜0.7）。ブルース・ロックンロール。
+- **6/8（beats 6）**: 1拍目と4拍目が強い。kick は1、snare は4、hihat は8分。バラードや行進曲、船の曲に。
+
+## 12. 対旋律・ハモリ（追加）
+- **休符のところで答える**: メロディが休んでいる（長い音の）ところに、別の短いフレーズ（4〜5音）を置く。同じタイミングで息をしない。
+- **反行**: メロディが上がるとき、対旋律は下がる（逆も同じ）。2本が溶け合わず、聞き分けられる。
+- **音域**: 低いほうが安全。同じオクターブに置くとメロディと競合する。着地点は和音の構成音に。
+- **やりすぎない**: 曲の最初から最後まで続く第2の旋律は、「できごと」ではなく「背景」になる。ここぞで足す。
 
 ## 7. 仕上げのチェックリスト
 1. 曲の最初の4小節で、雰囲気が伝わるか。
