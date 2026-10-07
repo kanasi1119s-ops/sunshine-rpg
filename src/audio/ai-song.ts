@@ -152,6 +152,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - autoAccompaniment: true なら、コード進行から伴奏（ドラム・ベース・ギター・ピアノ・弦）を自動で足す。自分でドラムやベースを書くときは false にしてよい。feel: 自動の伴奏の雰囲気（rock / pop / ballad / vocaloid＝ボカロ曲のような歌なしのバック（高速・16分の詰まったドラムとピアノ・動くベース・ギターの刻み・左右の弦。bpm 160〜190で）/ dance＝4つ打ち・メロディのように動くベース・ピアノの分散和音・エコーギターの、きれいで現代的な伴奏）。
 - tone: ギターの音色の方向（rock / metal / prs＝なめらかなリード）。
 - synth: true にすると、lead（シンセリード）と pad が電子的なシンセの音色になる。省略（false）だと lead はフルート、pad は合唱に近い生楽器寄りの音色で鳴る（tone が metal / prs の lead はオーバードライブのギター）。ダンス・電子音楽のアルペジオやリードには true にする。
+- タム(tom)のパートは、x のかわりに音名で高さを選べる（C4＝高いタム 〜 A2＝低いフロアタム。例 C4:0.25! A3:0.25, G3:0.25 E3:0.25）。フィルを高→低に下ろすときに使う。
 - snareTune: スネアの音程（半音。-6〜6、0.5刻み。マイナスで低く＝太く落ち着いた音、プラスで高く＝抜けのいい音）。「スネアが高い／低い」と言われたときに使う。録音音源（real版）でだけ効く。
 - human: 0〜1。「打ち込みっぽい」と感じるときに足す。各パートのタイミングのずれを大きく、バンド全体を少し走らせたり溜めたり、音の強さ・長さをばらつかせ、長い音（リード・パッド・弦・ブラス）に音量の山をつけ、リード・ギター・弦の音程をごくわずかにずらす。0.3〜0.6が自然、1はかなりラフ。同じ小節のくり返しが多いほど効く（くり返しは、手で書くときに少しずつ変えるのが本筋で、human はその上に重ねる仕上げ）。録音音源（real版）でだけ効く。
 - sections: 自動の伴奏（autoAccompaniment: true）に、曲の起伏をつける。"auto" なら定番の構成（導入4 → Aメロ8 → Bメロ4 → サビ8 → 間奏4 → Aメロ → Bメロ → サビ → サビ → 終わり4。曲の小節数に合わせて自動で区切る）。自分で決めるなら [{"kind":"intro","bars":4},{"kind":"verse","bars":8},{"kind":"pre","bars":4},{"kind":"chorus","bars":8}] のように書く（kind は intro・verse・pre・chorus・interlude・bridge・outro。bars の合計が曲の小節数になるようにする。ちがうときは最後を延ばすか、後ろを切る）。導入＝ピアノと弦だけ、Aメロ＝ドラム（キックとハイハット）とベースを足す、Bメロ＝スネアとギターを足して少しずつ強く、サビ＝全部とクラッシュ、間奏＝ドラムを抜く、Cメロ・終わり＝静かに。サビの前の小節は、スネアとキックで助走をつける。メロディなど自分で書いたパートには効かないので、メロディ側の強弱は phrase や ! , で付ける。
@@ -258,11 +259,13 @@ export function parseNotes(text: string, drum: boolean, errors: string[], where:
     if (name === "R" || name === "r") {
       out.push({ note: REST, durationBeats: beats });
     } else if (drum) {
-      if (name !== "x" && name !== "X" && name !== "o") {
-        errors.push(`${where}: ドラムは x か R で書きます「${token}」`);
+      // タム(tom)だけは音名(A2〜C4)で高さを選べる（C4 高い → A2 低い）。ほかのドラムでは高さは使われない
+      const tomPitch = /^[A-G][b#]?[0-9]$/.test(name);
+      if (name !== "x" && name !== "X" && name !== "o" && !tomPitch) {
+        errors.push(`${where}: ドラムは x か R で書きます（タムは A3 のような音名でもよい）「${token}」`);
         continue;
       }
-      out.push({ note: "C2", durationBeats: beats, ...(name === "X" ? { velocity: 1.3 } : name === "o" ? { velocity: 0.5 } : {}), ...(art.velocity ? { velocity: art.velocity } : {}), ...(art.open ? { open: true } : {}) });
+      out.push({ note: tomPitch ? name : "C2", durationBeats: beats, ...(name === "X" ? { velocity: 1.3 } : name === "o" ? { velocity: 0.5 } : {}), ...(art.velocity ? { velocity: art.velocity } : {}), ...(art.open ? { open: true } : {}) });
     } else {
       try {
         const midi = noteNameToMidi(name);

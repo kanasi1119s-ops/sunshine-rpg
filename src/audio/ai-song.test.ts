@@ -34,7 +34,7 @@ describe("AIソング形式", () => {
     expect(aiSongToScore({ ...song, autoAccompaniment: false }).score.tracks.length).toBe(2);
   });
   it("まちがいは、場所つきでまとめて知らせる", () => {
-    const bad = { ...song, parts: [{ ...song.parts[0], notes: "H4:1 C5:abc" }, { ...song.parts[1], notes: "C4:1" }, { ...song.parts[0], instrument: "theremin" }] };
+    const bad = { ...song, parts: [{ ...song.parts[0], notes: "H4:1 C5:abc" }, { ...song.parts[1], notes: "Z9:1" }, { ...song.parts[0], instrument: "theremin" }] };
     const msg = (() => {
       try {
         aiSongToScore(bad);

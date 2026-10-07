@@ -221,6 +221,12 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       const tick = Math.max(0, Math.round(startBeat * PPQ) + jitter + grooveTicks + drift);
       let vol = track.volume * (n.velocity ?? 1) * (inst ? 1 + (humanize(secStart + trackSeed * 0.37) - 1) * (1 + 3 * H) : 1);
       let drumKey = drumNote;
+      // タム: 音名でタムの高さを選ぶ（C4 高い → A2 低いフロア）。C2（既定）は今までどおり 47
+      if (inst === "tom" && n.note !== "C2") {
+        const mp = noteNameToMidi(n.note);
+        const TOMS: [number, number][] = [[45, 41], [48, 43], [52, 45], [55, 47], [57, 48], [60, 50]];
+        drumKey = TOMS.reduce((best, t) => (Math.abs(t[0] - mp) < Math.abs(best[0] - mp) ? t : best), TOMS[3])[1];
+      }
       let lenScale = drumNote !== undefined ? 0.5 : 0.97;
       if (inst === "hihat") {
         // 表拍は強く、裏拍は弱く。16分の細かい音はさらに弱く。ときどき開いたハイハット

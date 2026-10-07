@@ -1,6 +1,6 @@
 {
  "title": "夕焼けのとなりで",
- "description": "（見本・仮）秋の夕暮れに、そっと恋をしている気持ちを描いた曲。ギター・ベース・ドラムだけ。Aメロ・Bメロはやわらかい8分のアルペジオ、サビは別の16分のアルペジオ（上に高いきらめき）。ドラムは乾いた金属スネア（スープラ）で、少しゆっくりめ。歌なし。導入→Aメロ→Bメロ→サビ→Aメロ→Bメロ→サビ→Cメロ→サビ→終わり。",
+ "description": "（見本・仮）秋の夕暮れに、そっと恋をしている気持ちを描いた曲。ギター・ベース・ドラムだけ。Aメロ・Bメロはやわらかい8分のアルペジオ、サビは別の16分のアルペジオ（上に高いきらめき）。ドラムは乾いた金属スネア（スープラ）で、入りと場面の変わり目にタムのおかずを入れた。歌なし。導入→Aメロ→Bメロ→サビ→Aメロ→Bメロ→サビ→Cメロ→サビ→終わり。",
  "bpm": 84,
  "beats": 4,
  "chords": "Cmaj7 Am7 Dm7 G Cmaj7 Am7 Fmaj7 G Am7 Fmaj7 Cmaj7 G Am7 Fmaj7 Dm7 E7 Dm7 G Cmaj7 Am7 Dm7 Em7 Fmaj7 G Fmaj7 G Em7 Am7 Dm7 G Cmaj7 E7 Am7 Fmaj7 Cmaj7 G Am7 Fmaj7 Dm7 E7 Dm7 G Cmaj7 Am7 Dm7 Em7 Fmaj7 G Fmaj7 G Em7 Am7 Dm7 G Cmaj7 E7 Dm7 Em7 Fmaj7 G Dm7 Em7 Am7 E7 Fmaj7 G Em7 Am7 Dm7 G Cmaj7 E7 Fmaj7 Em7 Dm7 G Fmaj7 Em7 Am7 Am7",
@@ -19,7 +19,7 @@
    "volume": 0.2,
    "pan": 0,
    "amp": "auto",
-   "notes": "R:4 R:4 R:4 R:4 R:4 R:4 g:X.......x....... g:x.......x...x.x. g:X.....o......... g:X.....o...o..... g:X.....o......... g:X.....o...o..... g:X.....o......... g:X.....o...o..... g:X.....o......... g:X.....o...o..... g:X.......x.x..... g:X.....x.x....... g:X.......x.x..... g:X.....x.x....... g:X.......x.x..... g:X.....x.x....... g:X.......x.x..... g:X.....x.x.x...x. g:X.....x.x.x..... g:X.......x.x..... g:X.....x.x....... g:X.....x.x.x...x. g:X.....x.x.x..... g:X.......x.x..... g:X.....x.x....... g:X.....x.x.x...x. g:X.....o......... g:X.....o...o..... g:X.....o......... g:X.....o...o..... g:X.....o......... g:X.....o...o..... g:X.....o......... g:X.....o...o..... g:X.......x.x..... g:X.....x.x....... g:X.......x.x..... g:X.....x.x....... g:X.......x.x..... g:X.....x.x....... g:X.......x.x..... g:X.....x.x.x...x. g:X.....x.x.x..... g:X.......x.x..... g:X.....x.x....... g:X.....x.x.x...x. g:X.....x.x.x..... g:X.......x.x..... g:X.....x.x....... g:X.....x.x.x...x. R:4 R:4 R:4 R:4 R:4 R:4 R:4 g:X...X...X...X... g:X.....x.x.x..... g:X.......x.x..... g:X.....x.x....... g:X.....x.x.x...x. g:X.....x.x.x..... g:X.......x.x..... g:X.....x.x....... g:X.....x.x.x...x. R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4"
+   "notes": "R:4 R:4 R:4 R:4 R:4 g:X.......X....... g:X.....o.x.x..... g:X.......x...x.x. g:X.....o......... g:X.....o...o..... g:X.....o......... g:X.....o...o..... g:X.....o......... g:X.....o...o..... g:X.....o......... g:X.....o...o..... g:X.......x.x..... g:X.....x.x....... g:X.......x.x..... g:X.....x.x....... g:X.......x.x..... g:X.....x.x....... g:X.......x.x..... g:X.....x.x...x.x. g:X.....x.x.x..... g:X.......x.x..... g:X.....x.x....... g:X.....x.x.x...x. g:X.....x.x.x..... g:X.......x.x..... g:X.....x.x....... g:X.....x.x.x...x. g:X.....o......... g:X.....o...o..... g:X.....o......... g:X.....o...o..... g:X.....o......... g:X.....o...o..... g:X.....o......... g:X.....o...o..... g:X.......x.x..... g:X.....x.x....... g:X.......x.x..... g:X.....x.x....... g:X.......x.x..... g:X.....x.x....... g:X.......x.x..... g:X.....x.x...x.x. g:X.....x.x.x..... g:X.......x.x..... g:X.....x.x....... g:X.....x.x.x...x. g:X.....x.x.x..... g:X.......x.x..... g:X.....x.x....... g:X.....x.x.x...x. R:4 R:4 R:4 R:4 R:4 R:4 R:4 g:X...X...X...X... g:X.....x.x.x..... g:X.......x.x..... g:X.....x.x....... g:X.....x.x.x...x. g:X.....x.x.x..... g:X.......x.x..... g:X.....x.x....... g:X.....x.x.x...x. R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4"
   },
   {
    "instrument": "snare",
@@ -27,7 +27,7 @@
    "volume": 0.14,
    "pan": 0,
    "amp": "auto",
-   "notes": "R:4 R:4 R:4 R:4 R:4 R:4 R:4 g:o.o.o.o.xxxxxXXX g:........X..o.... g:........X..o..o. g:........X.o..... g:........X..o.o.x g:........X..o.... g:........X..o..o. g:........X.o..... g:........X..o.o.x g:....x.......x... g:....x..o....x... g:....x.......X..o g:....X..o....X.o. g:....X.......X... g:....X..o....X..o g:....X.......X... g:..o.X.o.xxxxXXXX g:....X.......X..o g:....X..o....X.o. g:....X.o.....X..o g:....X..o..o.xXXX g:....X.......X..o g:....X..o....X.o. g:....X.o.....X..o g:....X..o..o.xXXX g:........X..o.... g:........X..o..o. g:........X.o..... g:........X..o.o.x g:........X..o.... g:........X..o..o. g:........X.o..... g:........X..o.o.x g:....x.......x... g:....x..o....x... g:....x.......X..o g:....X..o....X.o. g:....X.......X... g:....X..o....X..o g:....X.......X... g:..o.X.o.xxxxXXXX g:....X.......X..o g:....X..o....X.o. g:....X.o.....X..o g:....X..o..o.xXXX g:....X.......X..o g:....X..o....X.o. g:....X.o.....X..o g:....X..o..o.xXXX R:4 R:4 R:4 R:4 R:4 R:4 g:........o...o.o. g:o.o.o.o.xxxxxXXX g:....X..o....X.xX g:....X.o...o.X..X g:....X..o....X.xX g:....X..o..xxXXXX g:....X..o....X.xX g:....X.o...o.X..X g:....X..o....X.xX g:....X..o..xxXXXX R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4",
+   "notes": "R:4 R:4 R:4 R:4 g:........o....... g:..............oo g:....X..o....X.xx g:....X.o......... g:........X..o.... g:........X..o..o. g:........X.o..... g:........X..o.o.x g:........X..o.... g:........X..o..o. g:........X.o..... g:........X..o.o.x g:....x.......x... g:....x..o....x... g:....x.......X..o g:....X..o....X.o. g:....X.......X... g:....X..o....X..o g:....X.......X... g:....X.o......... g:....X.......X..o g:....X..o....X.o. g:....X.o.....X..o g:....X..o..o.xXXX g:....X.......X..o g:....X..o....X.o. g:....X.o.....X..o g:....X.......o... g:........X..o.... g:........X..o..o. g:........X.o..... g:........X..o.o.x g:........X..o.... g:........X..o..o. g:........X.o..... g:........X..o.o.x g:....x.......x... g:....x..o....x... g:....x.......X..o g:....X..o....X.o. g:....X.......X... g:....X..o....X..o g:....X.......X... g:....X.o......... g:....X.......X..o g:....X..o....X.o. g:....X.o.....X..o g:....X..o..o.xXXX g:....X.......X..o g:....X..o....X.o. g:....X.o.....X..o g:....X.......o... R:4 R:4 R:4 R:4 R:4 R:4 g:........o...o.o. g:o.o.o.o......... g:....X..o....X.xX g:....X.o...o.X..X g:....X..o....X.xX g:....X..o..xxXXXX g:....X..o....X.xX g:....X.o...o.X..X g:....X..o....X.xX g:....X..o..xxXXXX R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4",
    "push": 0.025
   },
   {
@@ -36,7 +36,7 @@
    "volume": 0.06,
    "pan": 0.3,
    "amp": "auto",
-   "notes": "R:4 R:4 R:4 R:4 g:x...x...x...x... g:o.o.o.o.o.o.o.o. g:x.o.x.o.x.o.x.O. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.O. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.O. g:X.x.o.x.X.x.o.x. g:X.x.o.x.X.x.o.x. g:X.x.o.x.X.x.o.x. g:X.x.o.x.X.x.o.x. g:X.x.x.x.X.x.x.x. g:X.x.x.x.X.x.x.x. g:X.x.x.x.X.x.x.O. g:X.x.x.x.x.x.xxxx g:XoxoxoxoXoxoxoxo g:XoxoxoOoXoxoxoxo g:XoxoxoxoXoxoXoxo g:XoxoxoxoXoxoxoOo g:XoxoxoxoXoxoxoxo g:XoxoxoOoXoxoxoxo g:XoxoxoxoXoxoXoxo g:XoxoxoxoXoxoxoOo g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.O. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.O. g:X.x.o.x.X.x.o.x. g:X.x.o.x.X.x.o.x. g:X.x.o.x.X.x.o.x. g:X.x.o.x.X.x.o.x. g:X.x.x.x.X.x.x.x. g:X.x.x.x.X.x.x.x. g:X.x.x.x.X.x.x.O. g:X.x.x.x.x.x.xxxx g:XoxoxoxoXoxoxoxo g:XoxoxoOoXoxoxoxo g:XoxoxoxoXoxoXoxo g:XoxoxoxoXoxoxoOo g:XoxoxoxoXoxoxoxo g:XoxoxoOoXoxoxoxo g:XoxoxoxoXoxoXoxo g:XoxoxoxoXoxoxoOo R:4 R:4 R:4 R:4 R:4 R:4 g:..o...o...o...o. R:4 g:XoxoXoOoXoxoXoxo g:XoxoXoxoXoxoXoOo g:XoxoXoOoXoxoXoxo g:XoxoXoxoXoxoXoOo g:XoxoXoOoXoxoXoxo g:XoxoXoxoXoxoXoOo g:XoxoXoOoXoxoXoxo g:XoxoXoxoXoxoXoOo R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4",
+   "notes": "R:4 R:4 R:4 R:4 g:x...x...x...x... g:X.x.o.x.X.x.o.x. g:X.x.x.x.X.x.x.O. g:X.x.x.x......... g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.O. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.O. g:X.x.o.x.X.x.o.x. g:X.x.o.x.X.x.o.x. g:X.x.o.x.X.x.o.x. g:X.x.o.x.X.x.o.x. g:X.x.x.x.X.x.x.x. g:X.x.x.x.X.x.x.x. g:X.x.x.x.X.x.x.O. g:X.x.x.x......... g:XoxoxoxoXoxoxoxo g:XoxoxoOoXoxoxoxo g:XoxoxoxoXoxoXoxo g:XoxoxoxoXoxoxoOo g:XoxoxoxoXoxoxoxo g:XoxoxoOoXoxoxoxo g:XoxoxoxoXoxoXoxo g:XoxoxoxoXoxoxoOo g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.O. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.o. g:x.o.x.o.x.o.x.O. g:X.x.o.x.X.x.o.x. g:X.x.o.x.X.x.o.x. g:X.x.o.x.X.x.o.x. g:X.x.o.x.X.x.o.x. g:X.x.x.x.X.x.x.x. g:X.x.x.x.X.x.x.x. g:X.x.x.x.X.x.x.O. g:X.x.x.x......... g:XoxoxoxoXoxoxoxo g:XoxoxoOoXoxoxoxo g:XoxoxoxoXoxoXoxo g:XoxoxoxoXoxoxoOo g:XoxoxoxoXoxoxoxo g:XoxoxoOoXoxoxoxo g:XoxoxoxoXoxoXoxo g:XoxoxoxoXoxoxoOo R:4 R:4 R:4 R:4 R:4 R:4 g:..o...o...o...o. R:4 g:XoxoXoOoXoxoXoxo g:XoxoXoxoXoxoXoOo g:XoxoXoOoXoxoXoxo g:XoxoXoxoXoxoXoOo g:XoxoXoOoXoxoXoxo g:XoxoXoxoXoxoXoOo g:XoxoXoOoXoxoXoxo g:XoxoXoxoXoxoXoOo R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4",
    "push": -0.01
   },
   {
@@ -46,6 +46,14 @@
    "pan": -0.3,
    "amp": "auto",
    "notes": "R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 x:0.25 R:3.75 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 x:0.25 R:3.75 R:4 R:4 R:4 x:0.25 R:3.75 R:4 R:4 R:4 x:0.25 R:3.75 R:4 R:4 R:4 R:4 R:4 R:4 R:4 x:0.25 R:3.75 R:4 R:4 R:4 R:4 R:4 R:4 R:4 x:0.25 R:3.75 R:4 R:4 R:4 x:0.25 R:3.75 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 x:0.25 R:3.75 R:4 x:0.25 R:3.75 R:4 x:0.25 R:3.75 R:4 x:0.25 R:3.75 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4"
+  },
+  {
+   "instrument": "tom",
+   "role": "タム（おかず）",
+   "volume": 0.11,
+   "pan": 0.15,
+   "amp": "auto",
+   "notes": "R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:2 C4:0.25! C4:0.25, A3:0.25! A3:0.25, G3:0.25! E3:0.25, C3:0.25! C3:0.25! R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:2 C4:0.25! A3:0.25, C4:0.25! A3:0.25, G3:0.25! E3:0.25, C3:0.25! C3:0.25! R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:3 C4:0.25! A3:0.25, G3:0.25! E3:0.25! R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:2 C4:0.25! A3:0.25, C4:0.25! A3:0.25, G3:0.25! E3:0.25, C3:0.25! C3:0.25! R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:3 C4:0.25! A3:0.25, G3:0.25! E3:0.25! R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:2 C4:0.25! C4:0.25, A3:0.25! A3:0.25, G3:0.25! G3:0.25, E3:0.25! C3:0.25! R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4"
   },
   {
    "instrument": "bass",

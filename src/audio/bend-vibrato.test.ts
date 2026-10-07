@@ -251,3 +251,23 @@ describe("スネアの音程（snareTune）", () => {
     expect(hasNrpn(scoreToMidi(mk()), 60)).toBe(false);
   });
 });
+
+describe("タムの高さ", () => {
+  it("音名で、高いタム(50)から低いフロアタム(41)まで選べる。C2 は今までどおり 47", () => {
+    const mk = (note: string): Score => ({ tempoBpm: 100, loop: false, edition: "real", tracks: [{ waveform: "square", instrument: "tom", volume: 0.1, pan: 0, notes: [{ note, durationBeats: 1 }] }] });
+    const key = (b: Uint8Array): number => { for (let i = 0; i < b.length - 2; i++) if (b[i] === 0x99 && b[i + 2] > 0) return b[i + 1]; return -1; };
+    expect(key(scoreToMidi(mk("C4")))).toBe(50);
+    expect(key(scoreToMidi(mk("A2")))).toBe(41);
+    expect(key(scoreToMidi(mk("C2")))).toBe(47);
+  });
+});
+
+describe("タムの音名指定", () => {
+  it("tomのパートは音名で書ける（ほかのドラムの文字も今までどおり）", () => {
+    const errors: string[] = [];
+    const n = parseNotes("C4:0.25! A3:0.25 x:0.5", true, errors, "t");
+    expect(errors).toEqual([]);
+    expect(n[0].note).toBe("C4");
+    expect(n[2].note).toBe("C2");
+  });
+});
