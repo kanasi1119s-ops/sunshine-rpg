@@ -10,6 +10,34 @@ import { grooveOffsetBeats, humanize, REST, type AmpSetting, type Instrument, ty
 
 const PPQ = 480;
 const DRUM_CHANNEL = 9;
+/** ピッチベンドの幅（半音）。チャンネルごとに RPN で設定する。±12半音を 0〜16383 に割りあてる。 */
+const BEND_RANGE = 12;
+const bendValue = (semitones: number): number => Math.max(0, Math.min(0x3fff, Math.round(0x2000 + (semitones / BEND_RANGE) * 0x2000)));
+const clampSemi = (x: number): number => Math.max(-BEND_RANGE, Math.min(BEND_RANGE, x));
+const smooth = (x: number): number => {
+  const t = Math.max(0, Math.min(1, x));
+  return t * t * (3 - 2 * t);
+};
+
+/**
+ * 1つの音の、ピッチベンドの動き（相対時刻[tick] → 半音数）。
+ * しゃくり・ベンド・フォールを重ねたもの。何も指定がなければ null。
+ */
+export function bendCurve(n: { bend?: number; scoop?: number; fall?: number }, durTicks: number): ((rel: number) => number) | null {
+  const bend = clampSemi(n.bend ?? 0);
+  const scoop = clampSemi(n.scoop ?? 0);
+  const fall = clampSemi(n.fall ?? 0);
+  if (!bend && !scoop && !fall) return null;
+  const scoopEnd = Math.max(1, Math.min(durTicks * 0.4, PPQ * 0.3));
+  const bendEnd = Math.max(1, Math.min(durTicks * 0.35, PPQ * 0.5));
+  const fallStart = durTicks * 0.7;
+  return (rel) => {
+    const sc = scoop && rel < scoopEnd ? -scoop * (1 - smooth(rel / scoopEnd)) : 0;
+    const bd = bend ? bend * smooth(rel / bendEnd) : 0;
+    const fl = fall && rel > fallStart ? -fall * smooth((rel - fallStart) / Math.max(1, durTicks - fallStart)) : 0;
+    return sc + bd + fl;
+  };
+}
 
 interface Ev {
   tick: number;
@@ -128,6 +156,8 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 10, Math.max(0, Math.min(127, pan))] });
         list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 91, inst ? REVERB[inst] ?? 30 : 30] });
         list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 93, inst ? CHORUS[inst] ?? 0 : 0] });
+        // ピッチベンドの幅を ±12半音に（RPN 0）。ベンド・しゃくり・フォールの深さに使う
+        for (const [cc, v] of [[101, 0], [100, 0], [6, BEND_RANGE], [38, 0], [101, 127], [100, 127]] as const) list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, cc, v] });
         // 主旋律の楽器には、揺らぎ（ビブラート）を少し
         if (inst === "leadGuitar" || inst === "lead" || inst === "brass") list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 1, score.tone === "prs" ? 40 : 26] });
       }
@@ -209,15 +239,41 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         continue;
       }
       const pitch = noteNameToMidi(n.note);
-      // ギターの長い音は、下から音程を持ち上げて入る（ベンド）。ほかの音に影響しないよう、音の後で戻す
-      if ((inst === "leadGuitar" || inst === "guitar") && n.durationBeats >= 1 && startBeat > 0) {
-        const bendFrom = 0x2000 - 0x1000;
-        const setBend = (at: number, v: number): void => {
-          list.push({ tick: Math.max(0, at), order: 1, bytes: [0xe0 | channel, v & 0x7f, (v >> 7) & 0x7f] });
-        };
-        setBend(tick - 3, bendFrom);
-        setBend(tick + 16, 0x2000 - 0x800);
-        setBend(tick + 34, 0x2000);
+      // ベンド・しゃくり・フォール: 音符に指定があれば、その深さで。なければ、ギターの長い音は下から音程を持ち上げて入る
+      const durTicks = Math.max(1, Math.round(n.durationBeats * PPQ));
+      const explicitBend = n.bend || n.scoop || n.fall;
+      const autoScoop = !explicitBend && (inst === "leadGuitar" || inst === "guitar") && n.durationBeats >= 1 && startBeat > 0;
+      const curve = autoScoop ? (rel: number): number => (rel < 16 ? -1 : rel < 34 ? -0.5 : 0) : durTicks >= 60 ? bendCurve(n, durTicks) : null;
+      const bendTargets = layer && layer.channel !== DRUM_CHANNEL ? [main, layer] : [main];
+      if (curve) {
+        for (const t of bendTargets) {
+          const setBend = (at: number, semi: number): void => {
+            const v = bendValue(semi);
+            t.list.push({ tick: Math.max(0, at), order: 1, bytes: [0xe0 | t.channel, v & 0x7f, (v >> 7) & 0x7f] });
+          };
+          if (autoScoop) {
+            setBend(tick - 3, -1);
+            setBend(tick + 16, -0.5);
+            setBend(tick + 34, 0);
+          } else {
+            // なめらかに動くよう、およそ12tickごとに値を送る。音の終わりで元に戻す
+            setBend(tick - 3, curve(0));
+            for (let rel = 12; rel < durTicks - 6; rel += 12) setBend(tick + rel, curve(rel));
+            setBend(tick + durTicks - 5, 0);
+          }
+        }
+      }
+      // ビブラート: 音が出て少したってから揺れ始め、音の終わりで元の深さに戻す（モジュレーション CC1）
+      if (n.vibrato && n.durationBeats >= 0.4 && (inst === undefined || GM_DRUM_NOTE[inst] === undefined)) {
+        const depth = Math.max(0, Math.min(1, n.vibrato));
+        const base = inst === "leadGuitar" || inst === "lead" || inst === "brass" ? (score.tone === "prs" ? 40 : 26) : 0;
+        const peak = Math.max(base, Math.round(depth * 127));
+        const delay = Math.round(Math.min(durTicks * 0.3, PPQ * 0.4));
+        for (const t of bendTargets) {
+          t.list.push({ tick: tick + delay, order: 1, bytes: [0xb0 | t.channel, 1, Math.round(base + (peak - base) * 0.4)] });
+          t.list.push({ tick: tick + delay + Math.round(PPQ * 0.15), order: 1, bytes: [0xb0 | t.channel, 1, peak] });
+          t.list.push({ tick: tick + durTicks - 5, order: 1, bytes: [0xb0 | t.channel, 1, base] });
+        }
       }
       push(pitch, tick, velocity, len);
       if (layer && layerSpec) push(pitch, tick, Math.max(14, Math.round(velocity * layerSpec.gain)), len, layer);
