@@ -40,8 +40,8 @@ server.registerTool("compose_song", {
     song: z.record(z.string(), z.unknown()).describe("AIソング形式の曲（title, description, bpm, beats, chords, barsPerChord, repeats, autoAccompaniment, feel, tone, parts）"),
     edition: z.enum(["real", "ps2", "modern"]).optional().describe("サウンドの版（既定 real＝実楽器）"),
     wav: z.boolean().optional().describe("WAVも作るか（既定 true。Playwright が必要）"),
-    bass: z.enum(["std", "finger", "pick"]).optional().describe("WAVのベース音源。std＝標準（既定）、finger＝エレキベース指弾き、pick＝エレキベースのピック弾き（FreePats、CC0）"),
-    drums: z.enum(["std", "muldjord"]).optional().describe("WAVのドラム音源。std＝標準（既定）、muldjord＝生ドラム Muldjord Kit（CC BY 4.0）"),
+    bass: z.enum(["std", "finger", "pick", "rock", "metal", "jazz", "jpop"]).optional().describe("WAVのベース音源。std＝標準（既定）、finger＝エレキベース指弾き、pick＝ピック弾き（FreePats、CC0）、rock/metal/jazz/jpop＝ジャンル別（jazzはSneakybassのウッドベース、CC0）"),
+    drums: z.enum(["std", "muldjord", "rock", "metal", "jazz", "jpop"]).optional().describe("WAVのドラム音源。std＝標準（既定）、muldjord＝生ドラム Muldjord Kit（CC BY 4.0）、rock/metal/jpop＝Muldjordをジャンル別に調整、jazz＝Virtuosity Drums（CC0）"),
     soundfont: z.enum(["game", "gu"]).optional().describe("WAVの録音音源。game＝ゲームと同じ FluidR3（既定）、gu＝GeneralUser GS（作曲ソフトだけ）"),
   },
 }, async ({ name, song, edition, wav, soundfont, bass, drums }) => {

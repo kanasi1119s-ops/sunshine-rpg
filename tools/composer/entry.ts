@@ -6,6 +6,14 @@ import generalUserUrl from "../../assets-src/soundfont/GeneralUser-GS.sf2?url";
 // ベースとドラムの追加の音源（FreePats Clean Electric Bass YR＝CC0、Muldjord Kit＝CC BY 4.0。tools/soundfont/ で作る）
 import bassFingerUrl from "../../assets-src/soundfont/extra/bass-finger.sf3?url";
 import bassPickUrl from "../../assets-src/soundfont/extra/bass-pick.sf3?url";
+import bassRockUrl from "../../assets-src/soundfont/extra/bass-rock.sf3?url";
+import drumsRockUrl from "../../assets-src/soundfont/extra/drums-rock.sf3?url";
+import bassMetalUrl from "../../assets-src/soundfont/extra/bass-metal.sf3?url";
+import drumsMetalUrl from "../../assets-src/soundfont/extra/drums-metal.sf3?url";
+import bassJazzUrl from "../../assets-src/soundfont/extra/bass-jazz.sf3?url";
+import drumsJazzUrl from "../../assets-src/soundfont/extra/drums-jazz.sf3?url";
+import bassJpopUrl from "../../assets-src/soundfont/extra/bass-jpop.sf3?url";
+import drumsJpopUrl from "../../assets-src/soundfont/extra/drums-jpop.sf3?url";
 import drumsMuldjordUrl from "../../assets-src/soundfont/extra/drums-muldjord.sf3?url";
 import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url";
 import { AudioEngine } from "../../src/audio/audio-engine";
@@ -58,10 +66,18 @@ const BASS_FONTS: Record<string, { label: string; url: string | null }> = {
   std: { label: "標準（上の音源）", url: null },
   finger: { label: "エレキベース 指弾き（FreePats）", url: bassFingerUrl },
   pick: { label: "エレキベース ピック（FreePats）", url: bassPickUrl },
+  rock: { label: "ロックベース", url: bassRockUrl },
+  metal: { label: "メタルベース", url: bassMetalUrl },
+  jazz: { label: "ジャズベース", url: bassJazzUrl },
+  jpop: { label: "J-POPベース", url: bassJpopUrl },
 };
 const DRUM_FONTS: Record<string, { label: string; url: string | null }> = {
   std: { label: "標準（上の音源）", url: null },
   muldjord: { label: "生ドラム Muldjord Kit", url: drumsMuldjordUrl },
+  rock: { label: "ロックドラム", url: drumsRockUrl },
+  metal: { label: "メタルドラム", url: drumsMetalUrl },
+  jazz: { label: "ジャズドラム", url: drumsJazzUrl },
+  jpop: { label: "J-POPドラム", url: drumsJpopUrl },
 };
 let bassId = "std";
 let drumsId = "std";

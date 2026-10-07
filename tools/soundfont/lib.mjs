@@ -7,8 +7,8 @@ import { SoundBankLoader, BasicSoundBank, BasicSample, GeneratorTypes, SampleTyp
 
 export const SR = 44100;
 /** 音声ファイル（FLAC/WAV）を、モノラル32bit浮動小数で読む（ffmpeg を使う）。 */
-export function decodeMono(file, seconds) {
-  const args = ["-v", "error", "-i", file, ...(seconds ? ["-t", String(seconds)] : []), "-ac", "1", "-ar", String(SR), "-f", "f32le", "-"];
+export function decodeMono(file, seconds, filter) {
+  const args = ["-v", "error", "-i", file, ...(seconds ? ["-t", String(seconds)] : []), "-ac", "1", "-ar", String(SR), ...(filter ? ["-af", filter] : []), "-f", "f32le", "-"];
   const buf = execFileSync("ffmpeg", args, { maxBuffer: 1 << 30 });
   return new Float32Array(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
 }
@@ -51,4 +51,31 @@ export async function compressBank(bank, q = 4) {
     return data;
   };
   await bank.setSampleFormat({ format: "compressed", compressionFunction: encode });
+}
+
+/** 音声ファイルを、左右2つの32bit浮動小数で読む（モノラルなら左右とも同じ）。 */
+export function decodeStereo(file, seconds) {
+  const args = ["-v", "error", "-i", file, ...(seconds ? ["-t", String(seconds)] : []), "-ac", "2", "-ar", String(SR), "-f", "f32le", "-"];
+  const buf = execFileSync("ffmpeg", args, { maxBuffer: 1 << 30 });
+  const all = new Float32Array(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
+  const n = all.length >> 1;
+  const L = new Float32Array(n), R = new Float32Array(n);
+  for (let i = 0; i < n; i++) { L[i] = all[2 * i]; R[i] = all[2 * i + 1]; }
+  return [L, R];
+}
+/** 左右の波形に、ffmpegのフィルター（イコライザー・コンプレッサーなど）をかける。 */
+export function filterStereo(L, R, filter) {
+  if (!filter) return [L, R];
+  const n = L.length;
+  const inter = new Float32Array(n * 2);
+  for (let i = 0; i < n; i++) { inter[2 * i] = L[i]; inter[2 * i + 1] = R[i]; }
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "flt-"));
+  const raw = path.join(tmp, "in.f32");
+  fs.writeFileSync(raw, Buffer.from(inter.buffer));
+  const out = execFileSync("ffmpeg", ["-v", "error", "-f", "f32le", "-ar", String(SR), "-ac", "2", "-i", raw, "-af", filter, "-f", "f32le", "-"], { maxBuffer: 1 << 30 });
+  fs.rmSync(tmp, { recursive: true });
+  const all = new Float32Array(out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength));
+  const L2 = new Float32Array(n), R2 = new Float32Array(n);
+  for (let i = 0; i < n; i++) { L2[i] = all[2 * i] ?? 0; R2[i] = all[2 * i + 1] ?? 0; }
+  return [L2, R2];
 }
