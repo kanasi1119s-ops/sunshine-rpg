@@ -202,3 +202,16 @@ describe("人間らしさ（human）", () => {
     expect(aiSongToScore(base as never).score.human).toBeUndefined();
   });
 });
+
+describe("ギターの音色（patch）", () => {
+  it("cleanGuitar は GM 27、leadGuitar に指定しても版で上書きされない", async () => {
+    const { aiSongToScore, SYNTH_PATCHES } = await import("./ai-song");
+    const { realEdition } = await import("./real-edition");
+    expect(SYNTH_PATCHES.cleanGuitar).toBe(27);
+    const { score } = aiSongToScore({
+      title: "t", bpm: 120, beats: 4, repeats: 1, chords: "C", barsPerChord: 1, autoAccompaniment: false,
+      parts: [{ instrument: "leadGuitar", role: "g", volume: 0.2, pan: 0, amp: "clean", patch: "cleanGuitar", notes: "C4:4" }],
+    } as never);
+    expect(realEdition(score).tracks[0].program).toBe(27);
+  });
+});
