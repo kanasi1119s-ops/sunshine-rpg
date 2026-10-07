@@ -47,7 +47,7 @@ export interface AiSong {
   /** true なら、コード進行から自動の伴奏（ドラム・ベース・ギター・ピアノ・弦）を足す。 */
   autoAccompaniment: boolean;
   /** 自動の伴奏の雰囲気。 */
-  feel: "rock" | "pop" | "ballad" | "dance";
+  feel: "rock" | "pop" | "ballad" | "dance" | "vocaloid";
   /** ギターの音色の方向。 */
   tone: "rock" | "metal" | "prs";
   /** 裏拍を遅らせる量（0〜1。省略は0）。ジャズ・ブルース・ヒップホップ・ファンクのノリに。 */
@@ -87,7 +87,7 @@ export const AI_SONG_SCHEMA = {
     barsPerChord: { type: "integer", enum: [1, 2] },
     repeats: { type: "integer" },
     autoAccompaniment: { type: "boolean" },
-    feel: { type: "string", enum: ["rock", "pop", "ballad", "dance"] },
+    feel: { type: "string", enum: ["rock", "pop", "ballad", "dance", "vocaloid"] },
     tone: { type: "string", enum: ["rock", "metal", "prs"] },
     swing: { type: "number" },
     synth: { type: "boolean" },
@@ -127,7 +127,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - bpm: テンポ（50〜220）。beats: 1小節の拍（3・4・6・7）。
 - chords: コード進行（空白でくぎる。C・Am・F#m7・Bbmaj7・Csus4・Gdim・Eaug・D7 など）。
 - barsPerChord: 1コードの小節数（1か2）。repeats: 進行のくり返し回数。
-- autoAccompaniment: true なら、コード進行から伴奏（ドラム・ベース・ギター・ピアノ・弦）を自動で足す。自分でドラムやベースを書くときは false にしてよい。feel: 自動の伴奏の雰囲気（rock / pop / ballad / dance＝4つ打ち・メロディのように動くベース・ピアノの分散和音・エコーギターの、きれいで現代的な伴奏）。
+- autoAccompaniment: true なら、コード進行から伴奏（ドラム・ベース・ギター・ピアノ・弦）を自動で足す。自分でドラムやベースを書くときは false にしてよい。feel: 自動の伴奏の雰囲気（rock / pop / ballad / vocaloid＝ボカロ曲のような歌なしのバック（高速・16分の詰まったドラムとピアノ・動くベース・ギターの刻み・左右の弦。bpm 160〜190で）/ dance＝4つ打ち・メロディのように動くベース・ピアノの分散和音・エコーギターの、きれいで現代的な伴奏）。
 - tone: ギターの音色の方向（rock / metal / prs＝なめらかなリード）。
 - synth: true にすると、lead（シンセリード）と pad が電子的なシンセの音色になる。省略（false）だと lead はフルート、pad は合唱に近い生楽器寄りの音色で鳴る（tone が metal / prs の lead はオーバードライブのギター）。ダンス・電子音楽のアルペジオやリードには true にする。
 - dynamics: true にすると、曲の出だし（最初の1/8、最大4小節）を小さく始めて上げ、中盤で一度引いてから戻す（曲の起伏）。同じ音量で続く曲を避けたいときに使う。
@@ -175,6 +175,7 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
     - ドラムの強弱: ゴースト（o）＜ふつう（x）＜アクセント（X）。サビほど強く（Aメロ＜Bメロ＜サビ）。スネアは push +0.02〜0.04（あと乗り）、ハイハットは -0.01〜-0.02（前のめり）、キックとベースは 0。フィルは少しずつ強くして（g:xxxxXXXX）1〜2拍で必ずノリに戻る。ハイハットは小節ごとに強弱の型を変える。
     - 弦: 背景は sustain 1.5 の長い音、旋律はレガート（_）、アクションはスタッカート（'）の速い連打、トレモロは同じ音を 0.125〜0.25 拍でくり返す。ピアノ: 左手は根音と5度、右手は和音で、旋律を ! で強く伴奏を , で弱く。ブラス: 長い音の頭を ! で、山場は ' の連打。合唱・木管は phrase で山なりの強弱、息継ぎの休符。
     - 仕上げの確認: 最初の4小節で雰囲気が伝わるか、サビの最高音が Aメロより高いか、2回目の同じ進行で1つ変えたか、切り替わりにフィル・休符・crash があるか。
+  - ボカロ風のバック（歌なし）: bpm 160〜200、feel は vocaloid（autoAccompaniment を true にすると、16分のハイハット・シンコペのキック・動くベース・16分のピアノ・8分のギター・左右の弦が付く）。歌のパートはシンセのリード（lead、synth: true）に任せ、声（choir）は使わない。メロディは音域を広く、8分・16分の早口のフレーズ、サビで高く、ブレスの休符を入れる。コードは1小節1コードで、短調なら Dm Bb F C のような進行。最後のサビの前に半音上げる。自動の伴奏は最初から最後まで同じなので、起伏が欲しいときは、導入（ピアノと弦だけ）→Aメロ（リズムを足す）→Bメロ（ギター）→サビ（全部）→間奏（リズムを抜く）と、パートをセクションごとに自分で書く（見本: assets-src/ai-songs/vocaloid-style-demo.json）。
   - ブルース: 12小節（I I I I / IV IV I I / V IV I V）・7th・swing 0.5・ブルーノート。ワルツ: beats 3・1拍目が強い。チップチューン: 少ない音色・速いアルペジオ・短いフレーズのくり返し。
   - ベース・ドラムの音源は、書き出しの --bass と --drums に rock / metal / jazz / jpop を選べる（ジャンルに合わせる）。
 - 民族音楽にするには: 国・地域の「音階」で notes を書く（例: 琉球風＝C・E・F・G・B、日本の陰旋法＝C・D・Eb・G・Ab、インド風＝C・Db・E・F・G・Ab・B で、ドローンの低い持続音を1パート足す、中東風＝C・Db・E・F・G・Ab・B の増2度、アイルランド風＝Dドリアン、ケルト・北欧風＝ペンタトニック）。和音は少なく、ドローン（根音と5度の長い音）にすると雰囲気が出る。楽器は sitar・koto・shamisen・kalimba・panflute・shakuhachi・ocarina・fiddle・bagpipe・harp・banjo。打楽器は tom と hihat を、小さな音量で不規則なリズムに。**実在する民謡・曲のメロディは使わない**（CLAUDE.md 1-1）。
@@ -315,7 +316,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   if (!Array.isArray(song.parts)) errors.push("parts がありません");
   if (errors.length) throw new Error(errors.join("\n"));
 
-  const feel = ["rock", "pop", "ballad", "dance"].includes(song.feel) ? song.feel : "pop";
+  const feel = ["rock", "pop", "ballad", "dance", "vocaloid"].includes(song.feel) ? song.feel : "pop";
   let base: Score;
   try {
     base = buildNewSong({ bpm, beats: Number(song.beats), chords: song.chords, barsPerChord: song.barsPerChord === 2 ? 2 : 1, repeats, feel, leadInstrument: "lead" });

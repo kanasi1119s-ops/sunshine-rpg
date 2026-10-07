@@ -1,7 +1,7 @@
 # ジャンル別の曲の作り方（2026-10-07）
 
 作曲ガイド（`song.mjs guide`）の「ジャンル別」の元になる手引き。ジャンルの一般的な作法だけを書いている。特定の曲のメロディ・進行・リズムを写さない（CLAUDE.md 1-1）。
-調べた先: [サウンドハウス（J-POPのコード進行）](https://www.soundhouse.co.jp/contents/staff-blog/index?post=3461)、[サウンドハウス（ベースラインの技法）](https://www.soundhouse.co.jp/contents//index?post=4486)、[Open Music Theory（ジャズ）](https://human.libretexts.org/Bookshelves/Music/Music_Theory/Open_Music_Theory_2e_(Gotham_et_al.)/06%3A_Jazz)、[emastered（ロックのコード進行）](https://emastered.com/ja/blog/rock-chord-progressions)。ほかに [Soulbound（ゲーム音楽の場面別）](https://soulbound.game/ja/blog/how-to-compose-music-for-video-games/)、[Yamaha（オーケストラの編成）](https://jp.yamaha.com/files/orchestra_instrumentation_a5d4a68b4199cfb7be97391a87c6a43b.pdf)、[Flat（ローファイのコード）](https://blog.flat.io/lofi-chord-progressions/)、[和風の作り方](https://www.tetsu7017.com/?p=5892)、[emastered（ポリリズム）](https://emastered.com/ja/blog/polyrhythm)。出典の記事が短いところは、一般的な音楽理論の知識で補った。
+調べた先: [サウンドハウス（J-POPのコード進行）](https://www.soundhouse.co.jp/contents/staff-blog/index?post=3461)、[サウンドハウス（ベースラインの技法）](https://www.soundhouse.co.jp/contents//index?post=4486)、[Open Music Theory（ジャズ）](https://human.libretexts.org/Bookshelves/Music/Music_Theory/Open_Music_Theory_2e_(Gotham_et_al.)/06%3A_Jazz)、[emastered（ロックのコード進行）](https://emastered.com/ja/blog/rock-chord-progressions)。ほかに [Soulbound（ゲーム音楽の場面別）](https://soulbound.game/ja/blog/how-to-compose-music-for-video-games/)、[Yamaha（オーケストラの編成）](https://jp.yamaha.com/files/orchestra_instrumentation_a5d4a68b4199cfb7be97391a87c6a43b.pdf)、[Flat（ローファイのコード）](https://blog.flat.io/lofi-chord-progressions/)、[和風の作り方](https://www.tetsu7017.com/?p=5892)、[emastered（ポリリズム）](https://emastered.com/ja/blog/polyrhythm)。ほかに [ボカロ調楽曲の作り方（core-ms）](https://core-ms.net/2026/06/29/vocaloid-style-production/)、[ボカロっぽい曲の作り方（WACCA）](https://wacca-music.co.jp/course/voice-training/vocal/blog/14022/)、[ボカロ曲の作り方まとめ（おとあそび）](https://otoasobidayo.com/vocalo220927/)。出典の記事が短いところは、一般的な音楽理論の知識で補った。
 
 音源の選びかた: ベース・ドラムの音源は、ジャンルに合わせて `--bass` と `--drums` に rock / metal / jazz / jpop を選ぶ。
 
@@ -81,6 +81,21 @@
 - **ブルース**: 12小節（I I I I / IV IV I I / V IV I V）、7thコード、swing 0.5。メロディはブルーノート（3度・5度・7度を半音下げた音）。
 - **ワルツ**: beats 3、1拍目が強く、2・3拍は軽く。bpm 90〜140。ベースは1拍目、和音は2・3拍。
 - **チップチューン**: 少ない音色（lead と bass と簡単なドラム）、速いアルペジオ、短いフレーズのくり返し。レトロな音が欲しいときの一つの選択（edition や音源で調整）。
+
+## ボカロ風のバック（歌なし・ボイスなし）
+ボカロ曲の「オケ」の作り方。歌の代わりに、歌のパート（メロディ）は **シンセのリード（lead）などの楽器**が受け持つ。声（合唱 choir など）は使わない。既存の曲のメロディ・進行・リズムは写さない（CLAUDE.md 1-1）。
+- **テンポ**: bpm 160〜200（170〜185 が多い）。4拍子。16分音符で「詰め込み感」と疾走感を出す。
+- **コード進行**: 長調・短調どちらも。短調なら vi IV I V の形（Dm Bb F C）、Am F C G、♭VII（C の曲の B♭）を借りたロック風。ほとんどが1小節1コード（速いので）。サビ前に V（A など）で終えて緊張を作る。
+- **転調**: 最後のサビの前で半音上げる（高揚感）。
+- **メロディ（歌のパート）**: 音域は広く（D4〜A6 くらい）、サビは高く。8分・16分の細かい動きと「早口」のフレーズ、ところどころ大きな跳躍。長い音の前後に細かい音を詰める。リードは音をやや短く（sustain 0.9）、アクセントをはっきり。
+- **ドラム**: キックは1拍目と3拍目寄りに16分のシンコペーションを混ぜる（`g:x.x...x.x.x.....` と `g:x.....x.x.x...x.` を交互に）、スネアは2・4拍、ハイハットは16分（強弱をつける `XoxoXoxo…`）。4小節ごとに、最後の1拍をスネアの16分フィルにして、次の小節の頭に crash。
+- **ベース**: 根音の8分刻み（`r r r+12 r r+7 r r+12 次の根音の手前`）。オクターブ跳躍と、コードが変わる前の経過音。ドラムのキックと一体に。
+- **ピアノ**: 16分音符の分散和音（根音・5度・3度・5度…）を左側に。拍の頭を強く。
+- **ギター**: 8分の刻み（右側）。Bメロから足す。
+- **弦（背景）**: 左右に広げた長い音。低め（C3〜B3）に置いて、ピアノとぶつからないように。
+- **構成（エネルギーの地図）**: 導入（ピアノ・弦・ハイハット・ベースの長い音）→ Aメロ（キック・スネア・ベースが入る）→ Bメロ（ハイハット16分・ギター・クラッシュ、最後はスネアのせり上げ）→ サビ（全部）→ 間奏（リズムを抜く）→ 最後のサビ（半音上げ）。
+- **ボイスなしで気をつけること**: 歌の「間」（ブレス）を、メロディの休符として入れる。歌の高さに、ピアノ・ギターを重ねない（中域は歌のために空ける）。
+- **作曲ソフトでは**: 新しい曲の「伴奏の雰囲気」で「ボカロ風バック（歌なし・高速）」を選ぶ（AIソング形式では `feel: "vocaloid"`、`autoAccompaniment: true`）。ただし自動の伴奏は曲の最初から最後まで同じなので、起伏をつけたいときは、見本 `assets-src/ai-songs/vocaloid-style-demo.json` のように自分で各パートをセクションごとに書く。
 
 ## 共通のコツ
 - 曲の起伏: 小さく始め、サビで全部を出し、一度引いてから最後を最大にする。

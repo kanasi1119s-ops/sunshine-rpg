@@ -13,8 +13,8 @@ export interface NewSongSpec {
   barsPerChord: number;
   /** 進行をくり返す回数。 */
   repeats: number;
-  /** 伴奏の雰囲気（dance＝4つ打ちのキック・メロディのように動くベース・ピアノの分散和音・エコーギターの、きれいで現代的な伴奏）。 */
-  feel: "rock" | "ballad" | "pop" | "dance";
+  /** 伴奏の雰囲気（vocaloid＝ボカロ曲のようなバック（歌なし）: 高速・16分の詰まったドラムとピアノ・動くベース・ギターの刻み・左右の弦。dance＝4つ打ちのキック・メロディのように動くベース・ピアノの分散和音・エコーギターの、きれいで現代的な伴奏）。 */
+  feel: "rock" | "ballad" | "pop" | "dance" | "vocaloid";
   /** 拍子（指定すると beats より優先。例: 7/8）。 */
   sig?: TimeSignature;
   /** 空にしておくメロディのトラックの楽器。 */
@@ -111,6 +111,7 @@ export function buildNewSong(spec: NewSongSpec): Score {
     return beats >= 4 ? at === 1 || at === 3 : beats === 3 ? at === 2 : at === Math.floor(beats / 2);
   };
 
+  if (spec.feel === "vocaloid") return vocaloidSong(spec, bars, beats, make, every, tones, octaveOf);
   if (dance) return danceSong(spec, bars, beats, make, every, tones, octaveOf, kickPos, snarePos);
   const drums: Track[] = [
     { waveform: "sine", instrument: "kick", volume: 0.3, pan: 0, notes: make((_c, b) => every(b, 0.5, (i) => (kickPos(i, 0.5) ? 36 : null), () => 112)) },
@@ -213,4 +214,84 @@ function danceSong(
   const total = bars.length * beats;
   const lead: Track = { waveform: "square", instrument: spec.leadInstrument, volume: 0.22, pan: 0.05, notes: [rest(total)] };
   return { tempoBpm: spec.bpm, timeSig: spec.sig ?? { num: beats, den: 4 }, loop: true, drumKit: 8, tone: "rock", tracks: [...drums, bass, piano, guitar, strings(1, -0.75), strings(2, 0.75), lead] };
+}
+
+
+/**
+ * 「vocaloid」の伴奏（歌なしのバック）: 疾走感のある、音の詰まったバンド編成。
+ * ドラムは1・3拍目寄りのキックと2・4拍目のスネア、16分のハイハット（強弱つき）、4小節ごとのフィルとクラッシュ。
+ * ベースは根音の8分に、オクターブの跳躍と次のコードへ向かう音。ピアノは16分の分散和音（左）、ギターは8分の刻み（右）、左右に広げた弦（背景）。
+ * メロディ（歌のパート）は空のトラックとして最後に置く。声（合唱など）は使わない。
+ */
+function vocaloidSong(
+  spec: NewSongSpec, bars: Bar[], beats: number,
+  make: (fn: (c: Bar, beats: number, index: number) => NoteEvent[]) => NoteEvent[],
+  every: (beatsPerBar: number, step: number, pitch: (i: number) => number | null, vel?: (i: number) => number | undefined) => NoteEvent[],
+  tones: (c: { root: number; intervals: number[] }, base: number) => number[],
+  octaveOf: (c: { root: number }, base: number) => number,
+): Score {
+  const fold = (m: number): number => (m > 55 ? m - 12 : m < 28 ? m + 12 : m);
+  // 16分のグリッド（1小節16マス。4拍子以外は先頭から数える）
+  const KICK_A = "x.x...x.x.x.....";
+  const KICK_B = "x.....x.x.x...x.";
+  const hit = (pat: string, i: number): boolean => pat[i % 16] === "x";
+  const fillBar = (index: number): boolean => index % 4 === 3;
+  const kick: Track = {
+    waveform: "sine", instrument: "kick", volume: 0.24, pan: 0,
+    notes: make((_c, b, index) => every(b, 0.25, (i) => (hit(index % 2 === 0 ? KICK_A : KICK_B, i) ? 36 : null), (i) => (i % 16 === 0 ? 118 : 104))),
+  };
+  const snare: Track = {
+    waveform: "square", instrument: "snare", volume: 0.17, pan: 0,
+    notes: make((_c, b, index) => every(b, 0.25, (i) => {
+      const at = (i % 16) * 0.25;
+      // 4小節目の最後の1拍は、スネアの16分のフィル（だんだん強く）
+      if (fillBar(index) && beats >= 4 && at >= beats - 1) return 38;
+      return beats >= 4 ? (at === 1 || at === 3 ? 38 : null) : at === Math.floor(beats / 2) ? 38 : null;
+    }, (i) => {
+      const at = (i % 16) * 0.25;
+      return fillBar(index) && beats >= 4 && at >= beats - 1 ? 84 + Math.round((at - (beats - 1)) * 40) : 110;
+    })),
+  };
+  const hihat: Track = {
+    waveform: "square", instrument: "hihat", volume: 0.07, pan: 0.3,
+    notes: make((_c, b) => every(b, 0.25, () => 42, (i) => (i % 4 === 0 ? 100 : i % 2 === 0 ? 78 : 56))),
+  };
+  const crash: Track = {
+    waveform: "square", instrument: "crash", volume: 0.08, pan: -0.3,
+    notes: make((_c, b, index) => (index % 4 === 0 ? [note(49, Math.min(b, 4), 110), ...(b > 4 ? [rest(b - 4)] : [])] : [rest(b)])),
+  };
+  const bass: Track = {
+    waveform: "sawtooth", instrument: "bass", volume: 0.19, pan: 0,
+    notes: make((c, b, index) => {
+      const r = fold(octaveOf(c, 36));
+      const next = bars[(index + 1) % bars.length];
+      const nextRoot = fold(octaveOf(next, 36));
+      const approach = nextRoot + (nextRoot > r ? -1 : nextRoot < r ? 1 : 2);
+      const line = [r, r, r + 12, r, r + 7, r, r + 12, approach];
+      return every(b, 0.5, (i) => line[i % line.length], (i) => (i % 2 === 0 ? 104 : 88));
+    }),
+  };
+  const piano: Track = {
+    waveform: "triangle", instrument: "piano", volume: 0.1, pan: -0.55,
+    notes: make((c, b) => {
+      const t = tones(c, 60);
+      const seq = [t[0], t[2], t[1], t[2], t[0] + 12, t[2], t[1], t[2], t[0], t[2], t[1], t[2], t[0] + 12, t[1] + 12, t[0] + 12, t[2]];
+      return every(b, 0.25, (i) => seq[i % seq.length], (i) => (i % 4 === 0 ? 90 : 68));
+    }),
+  };
+  const guitar: Track = {
+    waveform: "sawtooth", instrument: "crunch", volume: 0.08, pan: 0.75,
+    notes: make((c, b) => {
+      const root = fold(octaveOf(c, 48)) < 40 ? fold(octaveOf(c, 48)) + 12 : fold(octaveOf(c, 48));
+      return every(b, 0.5, () => root, (i) => (i % 2 === 0 ? 98 : 76));
+    }),
+  };
+  const padVoicing = voiceLead(bars, 3);
+  const strings = (k: number, pan: number): Track => ({
+    waveform: "sine", instrument: "strings", volume: 0.09, pan,
+    notes: make((_c, b, index) => [note(padVoicing[index][k], b, 70)]),
+  });
+  const total = bars.length * beats;
+  const lead: Track = { waveform: "square", instrument: spec.leadInstrument, volume: 0.22, pan: 0, notes: [rest(total)] };
+  return { tempoBpm: spec.bpm, timeSig: spec.sig ?? { num: beats, den: 4 }, loop: true, drumKit: 8, tone: "rock", tracks: [kick, snare, hihat, crash, bass, piano, guitar, strings(1, -0.8), strings(2, 0.8), lead] };
 }

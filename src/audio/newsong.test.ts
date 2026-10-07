@@ -15,7 +15,7 @@ describe("新しい曲（コード進行から伴奏）", () => {
     expect(parseChord("Cxyz")).toBeNull();
   });
   it("すべてのトラックの長さがそろい（8小節×4拍=32拍）、音名が読める", () => {
-    for (const feel of ["rock", "ballad", "pop", "dance"] as const) for (const beats of [3, 4, 7]) {
+    for (const feel of ["rock", "ballad", "pop", "dance", "vocaloid"] as const) for (const beats of [3, 4, 7]) {
       const s = buildNewSong({ ...spec, feel, beats });
       const total = 8 * beats;
       for (const t of s.tracks) {
@@ -31,6 +31,22 @@ describe("新しい曲（コード進行から伴奏）", () => {
   it("読めないコードは断る", () => {
     expect(() => buildNewSong({ ...spec, chords: "Am Q" })).toThrow(/読めない/);
     expect(() => buildNewSong({ ...spec, chords: "" })).toThrow();
+  });
+  it("vocaloid: 歌なしのバック（声の楽器なし）・16分のハイハット・4小節ごとのクラッシュとフィル・左右に広げた弦", () => {
+    const s = buildNewSong({ ...spec, bpm: 175, feel: "vocaloid" });
+    const insts = s.tracks.map((t) => t.instrument);
+    expect(insts).not.toContain("choir");
+    const hat = s.tracks.find((t) => t.instrument === "hihat")!;
+    expect(hat.notes.filter((n) => n.note !== REST).length).toBe(8 * 16);
+    const crash = s.tracks.find((t) => t.instrument === "crash")!;
+    expect(crash.notes.filter((n) => n.note !== REST).length).toBe(2);
+    const snare = s.tracks.find((t) => t.instrument === "snare")!;
+    // 4小節目は2拍目に1つ＋最後の1拍に16分のスネア4つ（フィル）、ほかの小節は2・4拍の2つ
+    expect(snare.notes.filter((n) => n.note !== REST).length).toBe((2 * 3 + (1 + 4)) * 2);
+    const pans = s.tracks.map((t) => t.pan ?? 0);
+    expect(Math.min(...pans)).toBeLessThanOrEqual(-0.7);
+    expect(Math.max(...pans)).toBeGreaterThanOrEqual(0.7);
+    expect(s.tracks[s.tracks.length - 1].notes.every((n) => n.note === REST)).toBe(true);
   });
   it("dance: 4つ打ちのキックと、メロディのように動くベース・左右に広げた伴奏", () => {
     const s = buildNewSong({ ...spec, feel: "dance" });
