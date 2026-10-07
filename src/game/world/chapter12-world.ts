@@ -142,7 +142,7 @@ export const CHAPTER12_NPCS: Record<string, Npc[]> = {
     { id: "tower5-pedestal-a", ...L.pedestalA, color: "#e8f4ff", commands: pedestal("tower5", "a", "吹きこむ風の中で、台に灯りを入れた。光が、風にあおられて、ゆらゆらと踊る。") },
     { id: "tower5-pedestal-b", ...L.pedestalB, color: "#e8f4ff", commands: pedestal("tower5", "b", "二つ目の台をともすと、回廊じゅうの窓が、いっせいに白く光った。") },
     { id: "tower5-window", ...WINDOW, color: "#e8f4ff", commands: cloudWindowCommands() },
-    { id: "tower5-lore", ...L.echo, color: "#7a8ca8", commands: [say(undefined, "東の壁に、大きな石のアーチ窓が開いている。風が、そこから吹きこんでくる。"), say("ミナ", "外が、見えるみたい。……ちょっと、のぞいてみませんか？")] },
+    { id: "tower5-lore", ...L.echo, color: "#7a8ca8", commands: [say(undefined, "東の壁に、大きな石のアーチ窓が開いている。雨と風と、雷の音が、そこから吹きこんでくる。"), say("ミナ", "外が、見えるみたい。……ちょっと、のぞいてみませんか？")] },
     { id: "tower5-gate", ...L.gate, color: "#e8f4ff", commands: gate("tower5", "tower-6", ENTRY) },
   ],
   "tower-6": [
@@ -156,15 +156,15 @@ export const CHAPTER12_NPCS: Record<string, Npc[]> = {
   "tower-7": [
     { id: "tower7-pedestal-a", ...L.pedestalA, color: "#ffd0a0", commands: pedestal("tower7", "a", "外壁ぞいの段は、嵐の風がまともに吹きつける。両手で台をかばいながら、灯りを入れた。") },
     { id: "tower7-pedestal-b", ...L.pedestalB, color: "#ffd0a0", commands: pedestal("tower7", "b", "二つ目の台がともると、風が、ふっと弱まった。……頂が、近い。") },
-    { id: "tower7-lore", ...L.echo, color: "#5a5468", commands: [say(undefined, "壁のすきまから、嵐の音がする。ずっと下で、雲海が渦を巻いているのが、ちらりと見えた。"), say("ユーリ", "足もとを見ないように……見ないように……。"), say("オルカ", "見るな。前だけ見ろ。俺の背中でもいい。")] },
+    { id: "tower7-lore", ...L.echo, color: "#5a5468", commands: [say(undefined, "壁のすきまから、嵐の音がする。すぐ下で、雷雲が渦を巻き、稲妻が光っているのが、ちらりと見えた。"), say("ユーリ", "足もとを見ないように……見ないように……。"), say("オルカ", "見るな。前だけ見ろ。俺の背中でもいい。")] },
     guard("tower7-guard", "tower7-guard", "tower7_guard_defeated", ["嵐が、ひとつの形に集まっていく。階段を守る番人が、風をまとって立ちふさがった！"], "嵐は、ただの風になって、空へ散っていった。"),
     { id: "tower7-gate", ...L.gate, color: "#ffd0a0", commands: gate("tower7", "tower-8", ENTRY) },
   ],
   "tower-8": [
-    { id: "tower8-pedestal-a", ...L.pedestalA, color: "#ffe0b0", commands: pedestal("tower8", "a", "頂の台に灯りを入れた。空が、少しずつ、白みはじめている。") },
-    { id: "tower8-pedestal-b", ...L.pedestalB, color: "#ffe0b0", commands: pedestal("tower8", "b", "最後の台がともると、塔の頂いっぱいに、朝の光が満ちた。北の扉の向こうで、空間が、かすかに裂けている。") },
+    { id: "tower8-pedestal-a", ...L.pedestalA, color: "#ffe0b0", commands: pedestal("tower8", "a", "雨にうたれながら、頂の台に灯りを入れた。頭の上で、雷雲がうなっている。") },
+    { id: "tower8-pedestal-b", ...L.pedestalB, color: "#ffe0b0", commands: pedestal("tower8", "b", "最後の台がともると、塔の頂いっぱいに、灯りの光が満ちた。北の扉の向こうで、空間が、かすかに裂けている。") },
     { id: "tower8-view", ...WINDOW, color: "#ffe0b0", commands: summitViewCommands() },
-    { id: "tower8-lore", ...L.echo, color: "#8a7c98", commands: [say(undefined, "塔のいちばん上。石の欄干の向こうに、夜明けの空が広がっている。"), say("コハク", "ねえ、ちょっと。……欄干のところ、来てみてよ。すごいよ。")] },
+    { id: "tower8-lore", ...L.echo, color: "#8a7c98", commands: [say(undefined, "塔のいちばん上。雨と風が、石の欄干にたたきつけている。"), say("コハク", "ねえ、ちょっと。……欄干のところ、来てみてよ。下、すごいよ。")] },
     { id: "tower8-gate", ...L.gate, color: "#ffe0b0", commands: gate("tower8", "kanou-1", ENTRY) },
   ],
   // ===== 環奥 =====
@@ -222,42 +222,43 @@ export const CHAPTER12_NPCS: Record<string, Npc[]> = {
   ],
 };
 
-/** 風の回廊の窓から、雲海を見る（人間の指示「塔から外が見れる場所」）。 */
+/** 風の回廊の窓から、雷雲の下の嵐と、塔のまわりの輪の大滝を見る（人間の指示「塔から外が見れる場所」「外から見えるのは嵐の様子だね。雲の下の」「滝も見えるよね」「雷雲の下だよ」）。 */
 function cloudWindowCommands(): EventCommand[] {
   return [
     { type: "cinematic", on: true },
     say(undefined, "大きな石のアーチ窓から、外をのぞいた。"),
     { type: "vista", image: "clouds" },
-    say(undefined, "――見わたすかぎりの、雲の海だった。"),
-    say(undefined, "もこもことした雲が、白い波のように、地平の果てまでつづいている。その向こうに、青くかすんだ大陸の山なみ。"),
-    say("ミナ", "……わあ。雲を、上から見てる。わたしたち、雲より高いところにいるんですね。"),
-    say("コハク", "見て、右のほう！ 島が浮かんでる。あれ、浮嶼だよ。あんなに小さく見えるなんて。"),
-    say("レト", "あのあたりの雲の下が霜原で、その手前が砂音か。……歩いたな。全部、歩いた。"),
-    say("オルカ", "鉄鏈の煙も、ここからじゃ見えん。……見えんほうが、いいのかもしれん。"),
-    say("アヤメ", "雲のすき間を、何かが飛んでいる。……小さな、空の船。わたしたちのほかにも、空を渡る人がいるのね。"),
-    say("ユーリ", "母さんにも、見せてあげたいな。……灯里は、あの山の、ずっと向こうだ。"),
-    say(undefined, "冷たい風が、六人の髪を、いっしょにゆらした。"),
+    say(undefined, "――雷雲の下の、嵐だった。"),
+    say(undefined, "低くたれこめた黒い雲の底を、稲妻が何本も走る。たたきつけるような雨が、窓のふちで白くはじけた。"),
+    say(undefined, "その下で、荒れる海が、塔のまわりの大きな穴のふちから、白いカーテンのように流れ落ちていた。塔をぐるりと囲む、輪になった大滝。"),
+    say("ミナ", "……海が、落ちてる。穴の底が、見えない。"),
+    say("コハク", "船でも飛空艇でも近づけなかったわけだよ。この滝と、この嵐じゃ……。"),
+    say("オルカ", "滝つぼから、しぶきが煙みたいに上がってる。……底まで、どれだけあるんだ。"),
+    say("レト", "この嵐も、この滝も、四百年、塔を隠してきたってわけか。"),
+    say("アヤメ", "嵐は、塔を守っているのかもしれない。それとも……塔から何かがあふれないように、閉じこめているのか。"),
+    say("ユーリ", "……上へ行こう。この雷雲の、上まで。"),
+    say(undefined, "稲妻が光るたびに、六人の顔が、白く浮かびあがった。"),
     { type: "setFlag", flag: "tower5_view_seen", value: true },
   ];
 }
 
-/** 頂の欄干から、夜明けの世界を見る。空には、欠けた光の環の跡。 */
+/** 頂の欄干から見る景色（2026-10-07、人間の指示「雷雲の下だよ？で嵐滝も見える」）。頂もまだ雷雲の下。雲の裂け目から、夜明けの空と欠けた光の環の跡がのぞく。 */
 function summitViewCommands(): EventCommand[] {
   return [
     { type: "cinematic", on: true },
     say(undefined, "石の欄干に手をかけて、六人は、ならんで外を見た。"),
     { type: "vista", image: "summit" },
-    say(undefined, "――夜明けだった。"),
-    say(undefined, "海の向こうから、太陽が顔を出す。光の道が、波の上を、まっすぐこちらへのびてくる。"),
-    say(undefined, "そして、まだ星の残る空に、大きな、大きな光の弧がかかっていた。ところどころが、欠けている。"),
-    say("アヤメ", "……灯の環。いいえ、その跡。四百年前に砕けた、境目の名残りが、この高さからだと、見えるのね。"),
-    say("レト", "地上からは、一度も見えなかった。……ずっと、頭の上にあったのか。"),
-    say("ミナ", "大陸のほう。小さな灯りが、ぽつ、ぽつって。……あれ、町の灯りですよね。"),
-    say("コハク", "左から、麦香野、硝子湖、鉄鏈……あっちが砂音で、霧断崖。いちばん右の、あれが、灯芯都の白い塔だよ、きっと。"),
-    say("オルカ", "あの灯り、ひとつひとつに、人が暮らしてる。……俺たちが歩いた道も、あの灯りのあいだにある。"),
-    say("ユーリ", "灯里は……見えないや。でも、あの光の道の、ずっと先にある気がする。"),
+    say(undefined, "――塔のてっぺんでも、まだ、雷雲の下だった。"),
+    say(undefined, "見おろすと、荒れる海が、塔をぐるりと囲む輪になって、底の見えない穴へ流れ落ちている。滝のしぶきが、白い霧になって立ちのぼる。"),
+    say(undefined, "稲妻が、雷雲から海へ、何本も落ちた。そのたびに、大滝の白いカーテンが、一瞬だけ、はっきりと浮かびあがる。"),
+    say("コハク", "……見て、上！ 雲が、裂けてる。"),
+    say(undefined, "雷雲の裂け目の向こうに、夜明けの空がのぞいていた。そして、そこに、大きな光の弧が、かすかに見えた。ところどころが、欠けている。"),
+    say("アヤメ", "……灯の環。いいえ、その跡。四百年前に砕けた、境目の名残り。嵐の上に、ずっと、かかっていたのね。"),
+    say("レト", "地上からは、一度も見えなかった。……雷雲の向こうに、隠れてたのか。"),
+    say("ミナ", "雲の上は、もう、朝なんですね。……ここは、まだ、こんなに暗いのに。"),
+    say("オルカ", "嵐の下にいても、朝は来ていた。……それが分かれば、十分だ。"),
     say("ユーリ", "……行こう。環の欠けたところの、その先へ。帰るために。"),
-    say(undefined, "朝の光が、欄干の石を、金色にそめていた。"),
+    say(undefined, "雷鳴が、遠くで、低く長く鳴った。"),
     { type: "setFlag", flag: "tower8_view_seen", value: true },
   ];
 }
