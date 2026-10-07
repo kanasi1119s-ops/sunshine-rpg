@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AI_SONG_GUIDE, AI_SONG_SCHEMA, aiSongToScore, applySustain, fitToLength, parseNotes } from "./ai-song";
+import { AI_SONG_GUIDE, AI_SONG_SCHEMA, aiSongToScore, applyPhrase, applySustain, fitToLength, parseNotes } from "./ai-song";
 import { trackTotalBeats } from "./edit";
 import { grooveOffsetBeats, REST } from "./score";
 
@@ -121,5 +121,36 @@ describe("出口の安全装置", () => {
     expect(at(1)).toBeLessThanOrEqual(0.98);
     expect(Math.max(...Array.from(c).map(Math.abs))).toBeLessThanOrEqual(0.98);
     for (let i = 1; i < c.length; i++) expect(c[i]).toBeGreaterThanOrEqual(c[i - 1]);
+  });
+});
+
+describe("演奏の表情（奏法の記号・フレーズ）", () => {
+  it("! , ' _ を音の強さと長さにする（ドラムも ! , が使える）", () => {
+    const errors: string[] = [];
+    const n = parseNotes("C4:1! D4:1, E4:0.5' F4:2_", false, errors, "t");
+    expect(errors).toEqual([]);
+    expect(n.map((e) => e.velocity)).toEqual([1.3, 0.7, undefined, undefined]);
+    expect(n.map((e) => e.gate)).toEqual([undefined, undefined, 0.4, 1.15]);
+    const d = parseNotes("x:1! x:1,", true, errors, "t");
+    expect(d.map((e) => e.velocity)).toEqual([1.3, 0.7]);
+  });
+  it("記号のない書き方は今までどおり", () => {
+    const errors: string[] = [];
+    expect(parseNotes("C4:1 R:0.5", false, errors, "t")).toEqual([{ note: "C4", durationBeats: 1 }, { note: "R", durationBeats: 0.5 }]);
+    parseNotes("C4:1x", false, errors, "t");
+    expect(errors.length).toBe(1);
+  });
+  it("applyPhrase: 山で強く、終わりで弱く。休符は変えない", () => {
+    const ev = ["C4", "C4", "C4", "C4", "R"].map((note) => ({ note, durationBeats: 1 }));
+    const eighths = Array.from({ length: 8 }, () => ({ note: "C4", durationBeats: 0.5 }));
+    const out = applyPhrase(eighths, 4);
+    expect(out[5].velocity!).toBeGreaterThan(out[0].velocity!);
+    expect(out[7].velocity!).toBeLessThan(out[5].velocity!);
+    expect(applyPhrase(ev, 4)[4]).toEqual(ev[4]);
+    expect(applyPhrase(ev, 0)).toBe(ev);
+  });
+  it("applySustain は、音ごとの gate（' _）を上書きしない", () => {
+    const out = applySustain([{ note: "C4", durationBeats: 1, gate: 0.4 }, { note: "D4", durationBeats: 1 }], 2);
+    expect(out.map((e) => e.gate)).toEqual([0.4, 2]);
   });
 });
