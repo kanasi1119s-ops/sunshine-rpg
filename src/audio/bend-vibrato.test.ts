@@ -271,3 +271,34 @@ describe("タムの音名指定", () => {
     expect(n[2].note).toBe("C2");
   });
 });
+
+describe("パートごとのミックス（reverb・chorus・bright・duck・drumMix）", () => {
+  const cc = (b: Uint8Array, status: number, num: number): number[] => { const out: number[] = []; for (let i = 0; i < b.length - 2; i++) if (b[i] === status && b[i + 1] === num) out.push(b[i + 2]); return out; };
+  const base = (extra: object): Score => ({
+    tempoBpm: 100, loop: false, edition: "real",
+    tracks: [
+      { waveform: "square", instrument: "kick", volume: 0.1, pan: 0, notes: [{ note: "C2", durationBeats: 1 }, { note: "C2", durationBeats: 1 }, { note: "C2", durationBeats: 2 }] },
+      { waveform: "sawtooth", instrument: "bass", volume: 0.1, pan: 0, ...extra, notes: [{ note: "C2", durationBeats: 4 }] },
+    ],
+  });
+  it("reverb と bright が、CC91 と CC74 に出る", () => {
+    const m = scoreToMidi(base({ reverb: 0.5, bright: -0.5 }));
+    expect(cc(m, 0xb0, 91)).toContain(64);
+    expect(cc(m, 0xb0, 74)).toContain(40);
+    expect(cc(scoreToMidi(base({})), 0xb0, 74)).toEqual([]);
+  });
+  it("duck を指定したパートだけ、キックの位置で CC7 が凹む", () => {
+    const withDuck = cc(scoreToMidi(base({ duck: 0.5 })), 0xb0, 7);
+    const without = cc(scoreToMidi(base({})), 0xb0, 7);
+    expect(Math.min(...withDuck)).toBeLessThan(Math.min(...without));
+    expect(withDuck.length).toBeGreaterThan(without.length + 6);
+  });
+  it("drumMix が、ドラムのNRPN（音量26・左右28・残響29）に出る。snareTune も同時に効く", () => {
+    const m = scoreToMidi({ ...base({}), snareTune: -2, drumMix: { hat: { level: 0.5, pan: -1, reverb: 0.2 } } } as Score);
+    const msb = cc(m, 0xb9, 99);
+    expect(msb).toContain(26);
+    expect(msb).toContain(28);
+    expect(msb).toContain(29);
+    expect(msb).toContain(24);
+  });
+});

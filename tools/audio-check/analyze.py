@@ -4,6 +4,7 @@
 使い方:
     python3 tools/audio-check/analyze.py 曲1.wav 曲2.mp3 ... > 結果.json
     python3 tools/audio-check/analyze.py --compare 結果.json   # 目安（docs/sound/reference-nihonichi-bgm.md）と比べて表示
+    python3 tools/audio-check/analyze.py --bands 結果.json     # 帯域の偏りを診断し、直し方（どのパラメータを触るか）まで表示
 
 必要なもの: ffmpeg（読み込み・音量の測定）、numpy。
 うちの曲の WAV は `node tools/composer/song.mjs build <曲.json> --wav` か、作曲ソフトの「WAVで書き出す」で作る。
@@ -120,7 +121,50 @@ def compare(result_file):
         print(("○ " if not notes else "△ ") + name + ("" if not notes else "  " + " / ".join(notes)))
 
 
+# 帯域の目安（参考37曲の全体: docs/sound/reference-nihonichi-bgm.md）。許す幅は±2.5dB（presence・air は±4dB）
+BAND_REF = {"sub": -8.8, "bass": -3.3, "lowmid": -5.9, "mid": -11.5, "presence": -22.9, "air": -27.0}
+BAND_TOL = {"sub": 2.5, "bass": 2.5, "lowmid": 2.5, "mid": 2.5, "presence": 4, "air": 4}
+# 目安より多い／少ないときの直し方（曲JSONのどこを触るか）
+BAND_HINT = {
+    ("sub", 1): "超低音が多い: キックとベースの volume を下げる／ベースに duck（キックに合わせた凹み）を足す",
+    ("sub", -1): "超低音が少ない: キックを足す。sub808 や低いベースの音域を使う（バラードや町の曲では少なくてよい）",
+    ("bass", 1): "低音が多い: ベースの volume を下げる。ベースを短く切る（sustain を小さく）。duck 0.3 前後でキックの隙間に入れる",
+    ("bass", -1): "低音が少ない: ベースの volume を上げる。ベースの音域を下げる",
+    ("lowmid", 1): "250Hz〜1kHz が多い（こもり）: 重なる持続音（弦・パッド・ピアノ）の音域をずらす。パートの bright を下げる",
+    ("lowmid", -1): "250Hz〜1kHz が少ない（薄い）: ギター・ピアノなど中域の楽器の volume を上げる、chorus や reverb を足して厚みを出す",
+    ("mid", 1): "1〜4kHz が多い（硬い）: リード・歪みギターの volume を下げる。bright を -0.2〜-0.4 に",
+    ("mid", -1): "1〜4kHz が少ない（こもる）: リード・アルペジオの volume を上げる。音域を上げる",
+    ("presence", 1): "4〜8kHz が多い（刺さる）: drumMix で hat と crash の level を 0.6〜0.8 に。スネアの強さを下げる。シンバルの強いアクセントを減らす",
+    ("presence", -1): "4〜8kHz が少ない（こもる）: hat の level を上げる。スネア・アルペジオの音域を上げる",
+    ("air", 1): "8kHz 以上が多い: hat・crash を下げる。reverb を減らす",
+    ("air", -1): "8kHz 以上が少ない: hat の level を上げる。高いきらめき（アルペジオの高い音）を足す",
+}
+
+
+def bands(result_file):
+    """帯域の量・広がり・重心を、目安と比べて、直し方つきで表示する。"""
+    data = json.load(open(result_file, encoding="utf-8"))
+    for name, v in data.items():
+        print("■ " + name)
+        bad = 0
+        for b, ref in BAND_REF.items():
+            d = round(v["band_dB"][b] - ref, 1)
+            mark = "○" if abs(d) <= BAND_TOL[b] else "△"
+            print(f"  {mark} {b:8s} {v['band_dB'][b]:6.1f}dB（目安 {ref}、差 {d:+}）")
+            if mark == "△":
+                bad += 1
+                print("      → " + BAND_HINT[(b, 1 if d > 0 else -1)])
+        lo, hi = TARGET["corr"]
+        c = v["corr"]
+        print(f"  {'○' if lo <= c <= hi else '△'} 左右の相関 {c}（目安 {lo}〜{hi}）" + ("" if lo <= c <= hi else "  → " + ("狭い: アルペジオ・パッドの pan を左右に振る。chorus を足す" if c > hi else "広すぎる／位相が怪しい: 低音と主旋律を中央に。モノにして確認")))
+        print(f"  重心 {v['centroid_Hz']}Hz（参考の全体 約390Hz。しっとり 220〜400／町 350〜550／戦闘 550〜900）")
+        print("  → 帯域のバランスは、目安に収まっています" if not bad else f"  → {bad}か所が目安から外れています（上の → を参考に。最後は耳で）")
+
+
 if __name__ == "__main__":
+    if len(sys.argv) >= 3 and sys.argv[1] == "--bands":
+        bands(sys.argv[2])
+        sys.exit(0)
     if len(sys.argv) >= 3 and sys.argv[1] == "--compare":
         compare(sys.argv[2])
         sys.exit(0)

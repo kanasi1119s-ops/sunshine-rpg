@@ -32,6 +32,14 @@ export interface AiPart {
   patch?: string;
   /** タイミングのずれ（拍。-0.1〜0.1）。+＝あと乗り（スネア・バックビート）、-＝前のめり（ハイハット・刻み）。省略は0。 */
   push?: number;
+  /** 残響の送り量（0〜1）。省略は楽器ごとの標準。録音音源（real版）で効く。 */
+  reverb?: number;
+  /** コーラス（広がりの揺らぎ）の量（0〜1）。省略は標準。real版で効く。 */
+  chorus?: number;
+  /** 音の明るさ（-1〜0.5）。マイナスで高域を丸く。0が標準。real版で効く。 */
+  bright?: number;
+  /** キックに合わせた音量の凹みの深さ（0〜1。サイドチェイン風）。ベース・ギター・パッド向け。real版で効く。 */
+  duck?: number;
   /** フレーズの山（拍。2〜32）。この長さごとに、出だしをやや弱く→山で強く→終わりを引く強弱をつける（歌うような表情）。ドラムでは使わない。 */
   phrase?: number;
   /** アンプ（ギター・ベース向け）。"auto" なら曲の音色から自動。 */
@@ -72,6 +80,10 @@ export interface AiSong {
   human?: number;
   /** スネアの音程（半音。-6〜6。マイナスで低く）。録音音源で効く。 */
   snareTune?: number;
+  /** ドラムの太鼓ごとのミックス。{ hat: { level: 0.7, pan: -0.4 }, snare: { reverb: 0.3 } } のように。level＝音量の倍率（1が標準）、pan＝左右、reverb＝残響の送り（0〜1）。real版で効く。 */
+  drumMix?: Partial<Record<"kick" | "snare" | "hat" | "tom" | "crash", { level?: number; pan?: number; reverb?: number; spread?: number }>>;
+  /** false にすると、sections の場面の変わり目にドラムのおかず（フィル）を自動で入れない（省略は入れる）。 */
+  fills?: boolean;
   /** 自動の伴奏のセクション編曲。"auto"（定番の構成）か、{kind, bars} の並び。autoAccompaniment が true のときだけ効く。 */
   sections?: "auto" | { kind: SectionKind; bars: number }[];
   /** AIが書くパート（メロディ・対旋律・ベースライン・ドラムなど）。 */
@@ -112,6 +124,8 @@ export const AI_SONG_SCHEMA = {
     dynamics: { type: "boolean" },
     human: { type: "number" },
     snareTune: { type: "number" },
+    drumMix: { type: "object" },
+    fills: { type: "boolean" },
     sections: { anyOf: [{ type: "string", enum: ["auto"] }, { type: "array", items: { type: "object", additionalProperties: false, required: ["kind", "bars"], properties: { kind: { type: "string", enum: SECTION_KINDS }, bars: { type: "number" } } } }] },
     parts: {
       type: "array",
@@ -127,6 +141,10 @@ export const AI_SONG_SCHEMA = {
           sustain: { type: "number" },
           patch: { type: "string", enum: Object.keys(SYNTH_PATCHES) },
           push: { type: "number" },
+          reverb: { type: "number" },
+          chorus: { type: "number" },
+          bright: { type: "number" },
+          duck: { type: "number" },
           phrase: { type: "number" },
           amp: { type: "string", enum: ["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate"] },
           notes: { type: "string" },
@@ -153,6 +171,8 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - tone: ギターの音色の方向（rock / metal / prs＝なめらかなリード）。
 - synth: true にすると、lead（シンセリード）と pad が電子的なシンセの音色になる。省略（false）だと lead はフルート、pad は合唱に近い生楽器寄りの音色で鳴る（tone が metal / prs の lead はオーバードライブのギター）。ダンス・電子音楽のアルペジオやリードには true にする。
 - タム(tom)のパートは、x のかわりに音名で高さを選べる（C4＝高いタム 〜 A2＝低いフロアタム。例 C4:0.25! A3:0.25, G3:0.25 E3:0.25）。フィルを高→低に下ろすときに使う。
+- ミキシング（real版＝録音音源で効く）: パートごとに reverb（残響の送り 0〜1。奥に置く脇役は大きく）、chorus（広がりの揺らぎ 0〜1）、bright（-1〜0.5。マイナスで高域を丸く）、duck（0〜0.95。キックに合わせて音量が凹む＝サイドチェイン風。ベースやパッドを、キックの隙間に入れるとき 0.2〜0.4）。ドラムの太鼓ごとのバランスは曲の drumMix: {"hat":{"level":0.7,"pan":-0.35},"snare":{"reverb":0.2},"tom":{"spread":0.7},"crash":{"level":0.85}}（level＝音量の倍率、pan＝左右、reverb＝残響の送り、tom の spread＝高いタムを左・低いフロアを右へ振る広がり）。ドラムのパートの pan は効かないので、左右は drumMix で決める。帯域のバランスは、WAVを書き出して tools/audio-check/analyze.py --bands で測れる。
+- fills: false にすると、sections の場面の変わり目にドラムのおかずを自動で入れない（省略は入れる）。おかずの型は docs/sound/drum-fills.md。
 - snareTune: スネアの音程（半音。-6〜6、0.5刻み。マイナスで低く＝太く落ち着いた音、プラスで高く＝抜けのいい音）。「スネアが高い／低い」と言われたときに使う。録音音源（real版）でだけ効く。
 - human: 0〜1。「打ち込みっぽい」と感じるときに足す。各パートのタイミングのずれを大きく、バンド全体を少し走らせたり溜めたり、音の強さ・長さをばらつかせ、長い音（リード・パッド・弦・ブラス）に音量の山をつけ、リード・ギター・弦の音程をごくわずかにずらす。0.3〜0.6が自然、1はかなりラフ。同じ小節のくり返しが多いほど効く（くり返しは、手で書くときに少しずつ変えるのが本筋で、human はその上に重ねる仕上げ）。録音音源（real版）でだけ効く。
 - sections: 自動の伴奏（autoAccompaniment: true）に、曲の起伏をつける。"auto" なら定番の構成（導入4 → Aメロ8 → Bメロ4 → サビ8 → 間奏4 → Aメロ → Bメロ → サビ → サビ → 終わり4。曲の小節数に合わせて自動で区切る）。自分で決めるなら [{"kind":"intro","bars":4},{"kind":"verse","bars":8},{"kind":"pre","bars":4},{"kind":"chorus","bars":8}] のように書く（kind は intro・verse・pre・chorus・interlude・bridge・outro。bars の合計が曲の小節数になるようにする。ちがうときは最後を延ばすか、後ろを切る）。導入＝ピアノと弦だけ、Aメロ＝ドラム（キックとハイハット）とベースを足す、Bメロ＝スネアとギターを足して少しずつ強く、サビ＝全部とクラッシュ、間奏＝ドラムを抜く、Cメロ・終わり＝静かに。サビの前の小節は、スネアとキックで助走をつける。メロディなど自分で書いたパートには効かないので、メロディ側の強弱は phrase や ! , で付ける。
@@ -319,6 +339,23 @@ export function applyPhrase(events: NoteEvent[], phraseBeats: number): NoteEvent
 }
 
 /** 曲の起伏: 出だしを小さく始め、中盤で一度引いてから戻す。 */
+/** drumMix の値を、使える範囲に直す（kick・snare・hat・tom・crash だけ。level 0〜1.5、pan -1〜1、reverb 0〜1）。 */
+function drumMixOf(raw: unknown): Score["drumMix"] | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const out: NonNullable<Score["drumMix"]> = {};
+  for (const k of ["kick", "snare", "hat", "tom", "crash"] as const) {
+    const v = (raw as Record<string, Record<string, unknown> | undefined>)[k];
+    if (!v || typeof v !== "object") continue;
+    const cfg: { level?: number; pan?: number; reverb?: number; spread?: number } = {};
+    if (v.level !== undefined && Number.isFinite(Number(v.level))) cfg.level = Math.max(0, Math.min(1.5, Number(v.level)));
+    if (v.pan !== undefined && Number.isFinite(Number(v.pan))) cfg.pan = Math.max(-1, Math.min(1, Number(v.pan)));
+    if (v.reverb !== undefined && Number.isFinite(Number(v.reverb))) cfg.reverb = Math.max(0, Math.min(1, Number(v.reverb)));
+    if (k === "tom" && v.spread !== undefined && Number.isFinite(Number(v.spread))) cfg.spread = Math.max(0, Math.min(1, Number(v.spread)));
+    if (Object.keys(cfg).length) out[k] = cfg;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 export function applyArc(tracks: Track[], total: number, beats: number): Track[] {
   const intro = Math.min(beats * 4, total / 8);
   const duckFrom = total * 0.5;
@@ -375,7 +412,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     if (list.length) {
       const fitted = fitSections(list, totalBars);
       if (fitted.warning) warnings.push(fitted.warning);
-      accompaniment = applySections(accompaniment, fitted.sections, beatsPerBar);
+      accompaniment = applySections(accompaniment, fitted.sections, beatsPerBar, song.fills !== false);
     }
   }
 
@@ -403,6 +440,10 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
       pan: Math.max(-1, Math.min(1, Number(p.pan) || 0)),
       ...(amp ? { amp } : {}),
       ...(Number(p.push) ? { push: Math.max(-0.1, Math.min(0.1, Number(p.push))) } : {}),
+      ...(!drum && Number.isFinite(Number(p.reverb)) && p.reverb !== undefined ? { reverb: Math.max(0, Math.min(1, Number(p.reverb))) } : {}),
+      ...(!drum && Number.isFinite(Number(p.chorus)) && p.chorus !== undefined ? { chorus: Math.max(0, Math.min(1, Number(p.chorus))) } : {}),
+      ...(!drum && Number(p.bright) ? { bright: Math.max(-1, Math.min(0.5, Number(p.bright))) } : {}),
+      ...(!drum && Number(p.duck) > 0 ? { duck: Math.min(0.95, Number(p.duck)) } : {}),
       notes: applySustain(drum ? fitToLength(events, total) : applyPhrase(fitToLength(events, total), Number(p.phrase)), drum ? 1 : Number(p.sustain)),
     });
   });
@@ -415,6 +456,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     ...(Number(song.swing) > 0 ? { swing: Math.min(1, Number(song.swing)) } : {}),
     ...(Number(song.human) > 0 ? { human: Math.min(1, Number(song.human)) } : {}),
     ...(Number(song.snareTune) && Number.isFinite(Number(song.snareTune)) ? { snareTune: Math.max(-6, Math.min(6, Math.round(Number(song.snareTune) * 2) / 2)) } : {}),
+    ...(drumMixOf(song.drumMix) ? { drumMix: drumMixOf(song.drumMix) } : {}),
     // synth: lead／pad をシンセ音色にする。style "electro" は、実楽器版（real-edition.ts）が電子音楽の音色を生楽器に置き換えないための印
     ...(song.synth === true ? { synth: true, style: "electro" } : {}),
     tracks,

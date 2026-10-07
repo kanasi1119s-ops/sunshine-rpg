@@ -76,8 +76,13 @@ const DETUNE_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "guitar", 
 const ECHO_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "cowbell", "bell", "keys"]);
 
 function channelKey(track: Track, program: number): string {
-  return `${program}|${(track.pan ?? 0).toFixed(2)}|${track.instrument ?? track.waveform}`;
+  // 残響・コーラス・明るさ・キックへの凹みが違うパートは、別のチャンネルに分ける
+  const mix = [track.reverb, track.chorus, track.bright, track.duck].some((v) => v !== undefined) ? `|${track.reverb ?? ""},${track.chorus ?? ""},${track.bright ?? ""},${track.duck ?? ""}` : "";
+  return `${program}|${(track.pan ?? 0).toFixed(2)}|${track.instrument ?? track.waveform}${mix}`;
 }
+const clamp127 = (v: number): number => Math.max(0, Math.min(127, Math.round(v)));
+/** ドラムの太鼓の種類 → GMのキー */
+const DRUM_GROUP_KEYS = { kick: [35, 36], snare: [37, 38, 39, 40], hat: [42, 44, 46], tom: [41, 43, 45, 47, 48, 50], crash: [49, 52, 55, 57] } as const;
 
 export function scoreToMidi(score: Score): Uint8Array {
   return scoreToMidiInfo(score).midi;
@@ -138,6 +143,18 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
   const H = Math.max(0, Math.min(1, Number(score.human) || 0));
   /** 同じ入力なら同じ結果になる 0〜1 の疑似乱数（人間らしさのばらつき用）。 */
   const rnd = (a: number): number => { const x = Math.sin(a * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+  // キックが鳴る位置（サイドチェイン風の音量の凹みに使う）
+  const kickTicks: number[] = [];
+  for (const t of score.tracks) {
+    if (t.instrument !== "kick") continue;
+    let b = 0;
+    for (const n of t.notes) {
+      if (n.note !== REST) kickTicks.push(Math.max(0, Math.round((b + grooveOffsetBeats(score.swing, t.push, b)) * PPQ)));
+      b += n.durationBeats;
+    }
+  }
+  kickTicks.sort((a, b) => a - b);
+  const uniqueKicks = kickTicks.filter((t, i) => i === 0 || t - kickTicks[i - 1] > 10);
   for (const track of score.tracks) {
     const inst = track.instrument;
     const drumNote = inst ? GM_DRUM_NOTE[inst] : undefined;
@@ -154,8 +171,27 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       const list = midiTrackFor(channel);
       if (channel === DRUM_CHANNEL) {
         if (!list.some((e) => e.bytes[0] === 0xc9)) list.push({ tick: 0, order: 0, bytes: [0xc9, score.drumKit ?? 0] });
+        // 太鼓ごとのミックス（ドラムNRPN: 26=音量、28=左右、29=残響。データ120が標準の音量、64が中央）
+        if (score.drumMix && !list.some((e) => e.bytes[0] === 0xb9 && e.bytes[1] === 99 && e.bytes[2] !== 24)) {
+          for (const [group, cfg] of Object.entries(score.drumMix) as [keyof typeof DRUM_GROUP_KEYS, { level?: number; pan?: number; reverb?: number; spread?: number }][]) {
+            for (const key of DRUM_GROUP_KEYS[group] ?? []) {
+              const put = (msb: number, data: number): void => { for (const [cc, v] of [[99, msb], [98, key], [6, clamp127(data)]] as const) list.push({ tick: 0, order: 0, bytes: [0xb9, cc, v] }); };
+              if (cfg.level !== undefined) put(26, 120 * Math.max(0, Math.min(1.05, cfg.level)));
+              if (cfg.pan !== undefined) put(28, Math.max(1, 64 + Math.max(-1, Math.min(1, cfg.pan)) * 63));
+              // タムの広がり: 高いタムを左、低いフロアを右へ振り分ける（聴き手から見て。ドラマー視点のセット配置）
+              if (group === "tom" && cfg.spread !== undefined) {
+                const order = [50, 48, 47, 45, 43, 41];
+                const at = order.indexOf(key);
+                const pos = at < 0 ? 0 : (at / (order.length - 1)) * 2 - 1;
+                put(28, Math.max(1, 64 + Math.max(-1, Math.min(1, (cfg.pan ?? 0) + pos * Math.min(1, cfg.spread))) * 63));
+              }
+              if (cfg.reverb !== undefined) put(29, cfg.reverb * 127);
+            }
+          }
+          for (const [cc, v] of [[99, 127], [98, 127]] as const) list.push({ tick: 0, order: 0, bytes: [0xb9, cc, v] });
+        }
         // スネアの音程調整（ドラムNRPN 24: データ64が元のまま、1あたり50セント）
-        if (score.snareTune && !list.some((e) => e.bytes[0] === 0xb9 && e.bytes[1] === 99)) {
+        if (score.snareTune && !list.some((e) => e.bytes[0] === 0xb9 && e.bytes[1] === 99 && e.bytes[2] === 24)) {
           const data = Math.max(0, Math.min(127, Math.round(64 + score.snareTune * 2)));
           for (const key of [38, 40]) for (const [cc, v] of [[99, 24], [98, key], [6, data]] as const) list.push({ tick: 0, order: 0, bytes: [0xb9, cc, v] });
           for (const [cc, v] of [[99, 127], [98, 127]] as const) list.push({ tick: 0, order: 0, bytes: [0xb9, cc, v] });
@@ -165,8 +201,10 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         list.push({ tick: 0, order: 0, bytes: [0xc0 | channel, prog] });
         list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 7, Math.round(118 * gainBoost)] });
         list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 10, Math.max(0, Math.min(127, pan))] });
-        list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 91, inst ? REVERB[inst] ?? 30 : 30] });
-        list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 93, inst ? CHORUS[inst] ?? 0 : 0] });
+        list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 91, track.reverb !== undefined ? clamp127(track.reverb * 127) : inst ? REVERB[inst] ?? 30 : 30] });
+        list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 93, track.chorus !== undefined ? clamp127(track.chorus * 127) : inst ? CHORUS[inst] ?? 0 : 0] });
+        // 明るさ（CC74。64が標準。下げると高域が丸くなる）
+        if (track.bright) list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 74, clamp127(64 + Math.max(-1, Math.min(0.5, track.bright)) * 48)] });
         // ピッチベンドの幅を ±12半音に（RPN 0）。ベンド・しゃくり・フォールの深さに使う
         for (const [cc, v] of [[101, 0], [100, 0], [6, BEND_RANGE], [38, 0], [101, 127], [100, 127]] as const) list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, cc, v] });
         // 主旋律の楽器には、揺らぎ（ビブラート）を少し
@@ -202,6 +240,21 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         list.push({ tick: at + Math.round(PPQ * 0.3), order: 1, bytes: [0xb0 | channel, 11, 100] });
         list.push({ tick: at + Math.round(PPQ * 0.65), order: 1, bytes: [0xb0 | channel, 11, 127] });
       }
+    }
+    // キックに合わせた音量の凹み（duck）。キックの頭で凹み、約0.45拍かけて戻る（CC7。音量は値の2乗に比例するので平方根で）
+    if (track.duck && track.duck > 0 && !isDrum && channel !== DRUM_CHANNEL) {
+      const base = Math.round(118);
+      const depth = Math.max(0, Math.min(0.95, track.duck));
+      const REL = Math.round(PPQ * 0.45);
+      const gainAt = (t: number): number => 1 - depth * (1 - t / REL) ** 2;
+      uniqueKicks.forEach((kt, i) => {
+        const nextKick = uniqueKicks[i + 1] ?? Infinity;
+        for (const frac of [0, 0.2, 0.4, 0.6, 0.8, 1]) {
+          const at = kt + Math.round(REL * frac);
+          if (at >= nextKick - 4 && frac > 0) break;
+          list.push({ tick: at, order: 1, bytes: [0xb0 | channel, 7, clamp127(base * Math.sqrt(gainAt(REL * frac)))] });
+        }
+      });
     }
     const boost = inst ? BOOST[inst] ?? 1 : 1;
     let beat = 0;

@@ -1,3 +1,4 @@
+import { pickFill, placeFill, type FillSize } from "./drum-fills";
 import { REST, type Instrument, type NoteEvent, type Track } from "./score";
 
 /**
@@ -77,7 +78,7 @@ export function fitSections(sections: Section[], totalBars: number): { sections:
 const restOf = (beats: number): NoteEvent => ({ note: REST, durationBeats: beats });
 
 /** 自動の伴奏のトラックに、セクションごとの楽器の出し入れと強弱をかける。メロディなど自分で書いたパートには使わない。 */
-export function applySections(tracks: Track[], sections: Section[], beatsPerBar: number): Track[] {
+export function applySections(tracks: Track[], sections: Section[], beatsPerBar: number, fills = true): Track[] {
   const starts: number[] = [];
   let at = 0;
   for (const s of sections) { starts.push(at); at += s.bars; }
@@ -133,5 +134,26 @@ export function applySections(tracks: Track[], sections: Section[], beatsPerBar:
   const totalBeats = totalBars * beatsPerBar;
   if (crashNotes.length && used < totalBeats) crashNotes.push(restOf(totalBeats - used));
   if (crashNotes.length) out.push({ waveform: "square", instrument: "crash", volume: crashVolume, pan: -0.3, notes: crashNotes });
-  return out;
+  if (!fills || beatsPerBar < 3) return out;
+  // おかず: 場面の変わり目（大きさは次の場面で決まる）と、長い場面の4小節ごとの区切り
+  const counters: Record<FillSize, number> = { small: 0, medium: 0, big: 0, drop: 0 };
+  let result = out;
+  sections.forEach((sec, si) => {
+    const groups = LAYERS[sec.kind].groups;
+    if (!groups.includes("snare") && !groups.includes("kick")) return;
+    for (let b = 0; b < sec.bars; b++) {
+      const size = b === sec.bars - 1 ? fillSizeAt(sec.kind, sections[si + 1]?.kind) : sec.bars >= 8 && b % 4 === 3 && sec.kind !== "intro" ? "small" : undefined;
+      if (!size) continue;
+      result = placeFill(result, pickFill(size, counters[size]++), (starts[si] + b + 1) * beatsPerBar - 2, totalBars * beatsPerBar);
+    }
+  });
+  return result;
+}
+
+/** 場面の終わりに入れるおかずの大きさ。次がサビなら大きく（ブリッジからは「止める」）、サビが終わるときは中くらい。 */
+function fillSizeAt(kind: SectionKind, next: SectionKind | undefined): FillSize | undefined {
+  if (!next) return undefined;
+  if (next === "chorus") return kind === "bridge" ? "drop" : kind === "chorus" ? "medium" : "big";
+  if (kind === "pre") return "big";
+  return "medium";
 }
