@@ -136,3 +136,31 @@ describe("AIソング形式の記号 ~ ^ / \\", () => {
     expect(notes[0]).toMatchObject({ velocity: 1.3, bend: 2, vibrato: 0.7 });
   });
 });
+
+describe("シンセ音色（patch）", () => {
+  it("patch がGM番号になり、層が重ならない", async () => {
+    const { aiSongToScore, SYNTH_PATCHES } = await import("./ai-song");
+    const { score, warnings } = aiSongToScore({
+      title: "t", bpm: 120, beats: 4, repeats: 1, chords: "C", barsPerChord: 1, autoAccompaniment: false,
+      parts: [{ instrument: "lead", role: "r", volume: 0.2, pan: 0, amp: "auto", patch: "warmPad", notes: "C4:4" },
+              { instrument: "lead", role: "x", volume: 0.2, pan: 0, amp: "auto", patch: "nope", notes: "C4:4" }],
+    } as never);
+    const tracks = (score as { tracks: { program?: number }[] }).tracks;
+    expect(SYNTH_PATCHES.warmPad).toBe(89);
+    expect(tracks[0].program).toBe(89);
+    expect(tracks[1].program).toBeUndefined();
+    expect(JSON.stringify(warnings)).toContain("nope");
+  });
+});
+
+describe("シンセ音色は版（real）で上書きされない", () => {
+  it("patch を選んだトラックの program が realEdition を通っても残る", async () => {
+    const { realEdition } = await import("./real-edition");
+    const { aiSongToScore } = await import("./ai-song");
+    const { score } = aiSongToScore({
+      title: "t", bpm: 120, beats: 4, repeats: 1, chords: "C", barsPerChord: 1, autoAccompaniment: false,
+      parts: [{ instrument: "bass", role: "b", volume: 0.2, pan: 0, amp: "auto", patch: "synthBass1", notes: "C2:4" }],
+    } as never);
+    expect(realEdition(score).tracks[0].program).toBe(38);
+  });
+});

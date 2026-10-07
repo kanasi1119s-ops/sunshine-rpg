@@ -168,7 +168,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     if (channel !== DRUM_CHANNEL) programs[channel] = program;
     if (channel !== DRUM_CHANNEL && track.amp) amps[channel] = { amp: track.amp, pan: track.pan ?? 0 };
     const list = main.list;
-    const layerSpec = inst ? GM_LAYER[inst] : undefined;
+    const layerSpec = inst && track.program === undefined ? GM_LAYER[inst] : undefined;
     const layer = layerSpec ? setupChannel(layerSpec.program, `${channelKey(track, layerSpec.program)}|layer`, 1) : null;
     if (layer && layer.channel !== DRUM_CHANNEL) programs[layer.channel] = layerSpec!.program;
     // ピアノ系は、およそ1小節ごとにペダルを踏み替えて、音をつなげる

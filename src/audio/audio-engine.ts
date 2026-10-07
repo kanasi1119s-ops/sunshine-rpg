@@ -252,8 +252,8 @@ export class AudioEngine {
     return this.sampled.swapSoundfont(buf);
   }
 
-  /** 作曲ソフト用: ベース・ドラムの追加の音源を入れる／はずす（slot は "bass" か "drums"。null ではずす）。 */
-  setOverlaySoundfont(slot: "bass" | "drums", buf: ArrayBuffer | null): Promise<void> {
+  /** 作曲ソフト用: ベース・ドラムの追加の音源を入れる／はずす（slot は "bass"・"drums"・"synth"。null ではずす）。 */
+  setOverlaySoundfont(slot: "bass" | "drums" | "synth", buf: ArrayBuffer | null): Promise<void> {
     return this.sampled.setOverlay(slot, buf);
   }
 

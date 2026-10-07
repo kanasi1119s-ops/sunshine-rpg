@@ -14,6 +14,7 @@ import bassJazzUrl from "../../assets-src/soundfont/extra/bass-jazz.sf3?url";
 import drumsJazzUrl from "../../assets-src/soundfont/extra/drums-jazz.sf3?url";
 import bassJpopUrl from "../../assets-src/soundfont/extra/bass-jpop.sf3?url";
 import drumsJpopUrl from "../../assets-src/soundfont/extra/drums-jpop.sf3?url";
+import synthsUrl from "../../assets-src/soundfont/extra/synths.sf3?url";
 import drumsMuldjordUrl from "../../assets-src/soundfont/extra/drums-muldjord.sf3?url";
 import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url";
 import { AudioEngine } from "../../src/audio/audio-engine";
@@ -113,7 +114,8 @@ async function applyOverlay(slot: "bass" | "drums", id: string): Promise<void> {
 }
 /** 書き出し（WAV）に使う、追加の音源。 */
 function overlayBuffers(): ArrayBuffer[] {
-  return [drumsId, bassId].flatMap((id, i) => { const u = (i === 0 ? DRUM_FONTS : BASS_FONTS)[id]?.url; return u ? [bytesOf(u).buffer as ArrayBuffer] : []; });
+  // シンセの音色（patch で選ぶ GM のシンセ・パッド・FX）は、いつも入れておく
+  return [...[drumsId, bassId].flatMap((id, i) => { const u = (i === 0 ? DRUM_FONTS : BASS_FONTS)[id]?.url; return u ? [bytesOf(u).buffer as ArrayBuffer] : []; }), bytesOf(synthsUrl).buffer as ArrayBuffer];
 }
 // 無料のアンプシミュレーター（NAM）: ビルドのときに埋め込んだワークレットとWASMを渡す
 declare const __NAM_PROCESSOR__: string;
@@ -122,6 +124,7 @@ declare const __NAM_MODELS__: Record<string, { label: string; json: string }>;
 const engine = new AudioEngine();
 void applyOverlay("bass", bassId);
 void applyOverlay("drums", drumsId);
+void engine.setOverlaySoundfont("synth", bytesOf(synthsUrl).buffer as ArrayBuffer);
 let namHost: NamHost | null = null;
 /** 同梱のNAMモデル（NAM作者のリポジトリにMITライセンスで入っている見本。docs/assets-credits.md）。キーは "builtin:〇〇"。 */
 const BUILTIN_NAM: Record<string, { label: string; json: string }> = typeof __NAM_MODELS__ === "object" ? __NAM_MODELS__ : {};
