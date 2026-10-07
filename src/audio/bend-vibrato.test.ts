@@ -236,3 +236,18 @@ describe("オープンハイハット（O と *）", () => {
     expect(has46(scoreToMidi(mk(false)))).toBe(false);
   });
 });
+
+describe("スネアの音程（snareTune）", () => {
+  const mk = (snareTune?: number): Score => ({
+    tempoBpm: 100, loop: false, edition: "real", ...(snareTune !== undefined ? { snareTune } : {}),
+    tracks: [{ waveform: "square", instrument: "snare", volume: 0.1, pan: 0, notes: [{ note: "C2", durationBeats: 1 }] }],
+  });
+  const hasNrpn = (b: Uint8Array, data: number): boolean => {
+    for (let i = 0; i < b.length - 2; i++) if (b[i] === 0xb9 && b[i + 1] === 6 && b[i + 2] === data) return true;
+    return false;
+  };
+  it("-2半音なら、ドラムのNRPNで 60（200セント下）を送る。指定なしなら送らない", () => {
+    expect(hasNrpn(scoreToMidi(mk(-2)), 60)).toBe(true);
+    expect(hasNrpn(scoreToMidi(mk()), 60)).toBe(false);
+  });
+});

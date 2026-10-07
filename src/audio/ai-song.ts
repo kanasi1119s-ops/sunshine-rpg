@@ -70,6 +70,8 @@ export interface AiSong {
   dynamics?: boolean;
   /** 人間らしさ（0〜1）。打ち込みらしい機械的な正確さをくずす（タイミング・強さ・音の長さ・音量の山・音程のわずかなずれ、バンド全体の走りと溜め）。0.3〜0.6が自然。録音音源で効く。 */
   human?: number;
+  /** スネアの音程（半音。-6〜6。マイナスで低く）。録音音源で効く。 */
+  snareTune?: number;
   /** 自動の伴奏のセクション編曲。"auto"（定番の構成）か、{kind, bars} の並び。autoAccompaniment が true のときだけ効く。 */
   sections?: "auto" | { kind: SectionKind; bars: number }[];
   /** AIが書くパート（メロディ・対旋律・ベースライン・ドラムなど）。 */
@@ -109,6 +111,7 @@ export const AI_SONG_SCHEMA = {
     synth: { type: "boolean" },
     dynamics: { type: "boolean" },
     human: { type: "number" },
+    snareTune: { type: "number" },
     sections: { anyOf: [{ type: "string", enum: ["auto"] }, { type: "array", items: { type: "object", additionalProperties: false, required: ["kind", "bars"], properties: { kind: { type: "string", enum: SECTION_KINDS }, bars: { type: "number" } } } }] },
     parts: {
       type: "array",
@@ -149,6 +152,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - autoAccompaniment: true なら、コード進行から伴奏（ドラム・ベース・ギター・ピアノ・弦）を自動で足す。自分でドラムやベースを書くときは false にしてよい。feel: 自動の伴奏の雰囲気（rock / pop / ballad / vocaloid＝ボカロ曲のような歌なしのバック（高速・16分の詰まったドラムとピアノ・動くベース・ギターの刻み・左右の弦。bpm 160〜190で）/ dance＝4つ打ち・メロディのように動くベース・ピアノの分散和音・エコーギターの、きれいで現代的な伴奏）。
 - tone: ギターの音色の方向（rock / metal / prs＝なめらかなリード）。
 - synth: true にすると、lead（シンセリード）と pad が電子的なシンセの音色になる。省略（false）だと lead はフルート、pad は合唱に近い生楽器寄りの音色で鳴る（tone が metal / prs の lead はオーバードライブのギター）。ダンス・電子音楽のアルペジオやリードには true にする。
+- snareTune: スネアの音程（半音。-6〜6、0.5刻み。マイナスで低く＝太く落ち着いた音、プラスで高く＝抜けのいい音）。「スネアが高い／低い」と言われたときに使う。録音音源（real版）でだけ効く。
 - human: 0〜1。「打ち込みっぽい」と感じるときに足す。各パートのタイミングのずれを大きく、バンド全体を少し走らせたり溜めたり、音の強さ・長さをばらつかせ、長い音（リード・パッド・弦・ブラス）に音量の山をつけ、リード・ギター・弦の音程をごくわずかにずらす。0.3〜0.6が自然、1はかなりラフ。同じ小節のくり返しが多いほど効く（くり返しは、手で書くときに少しずつ変えるのが本筋で、human はその上に重ねる仕上げ）。録音音源（real版）でだけ効く。
 - sections: 自動の伴奏（autoAccompaniment: true）に、曲の起伏をつける。"auto" なら定番の構成（導入4 → Aメロ8 → Bメロ4 → サビ8 → 間奏4 → Aメロ → Bメロ → サビ → サビ → 終わり4。曲の小節数に合わせて自動で区切る）。自分で決めるなら [{"kind":"intro","bars":4},{"kind":"verse","bars":8},{"kind":"pre","bars":4},{"kind":"chorus","bars":8}] のように書く（kind は intro・verse・pre・chorus・interlude・bridge・outro。bars の合計が曲の小節数になるようにする。ちがうときは最後を延ばすか、後ろを切る）。導入＝ピアノと弦だけ、Aメロ＝ドラム（キックとハイハット）とベースを足す、Bメロ＝スネアとギターを足して少しずつ強く、サビ＝全部とクラッシュ、間奏＝ドラムを抜く、Cメロ・終わり＝静かに。サビの前の小節は、スネアとキックで助走をつける。メロディなど自分で書いたパートには効かないので、メロディ側の強弱は phrase や ! , で付ける。
 - dynamics: true にすると、曲の出だし（最初の1/8、最大4小節）を小さく始めて上げ、中盤で一度引いてから戻す（曲の起伏）。同じ音量で続く曲を避けたいときに使う。
@@ -407,6 +411,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     tempoBpm: bpm, loop: true, drumKit: base.drumKit, tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock",
     ...(Number(song.swing) > 0 ? { swing: Math.min(1, Number(song.swing)) } : {}),
     ...(Number(song.human) > 0 ? { human: Math.min(1, Number(song.human)) } : {}),
+    ...(Number(song.snareTune) && Number.isFinite(Number(song.snareTune)) ? { snareTune: Math.max(-6, Math.min(6, Math.round(Number(song.snareTune) * 2) / 2)) } : {}),
     // synth: lead／pad をシンセ音色にする。style "electro" は、実楽器版（real-edition.ts）が電子音楽の音色を生楽器に置き換えないための印
     ...(song.synth === true ? { synth: true, style: "electro" } : {}),
     tracks,

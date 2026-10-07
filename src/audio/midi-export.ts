@@ -154,6 +154,12 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       const list = midiTrackFor(channel);
       if (channel === DRUM_CHANNEL) {
         if (!list.some((e) => e.bytes[0] === 0xc9)) list.push({ tick: 0, order: 0, bytes: [0xc9, score.drumKit ?? 0] });
+        // スネアの音程調整（ドラムNRPN 24: データ64が元のまま、1あたり50セント）
+        if (score.snareTune && !list.some((e) => e.bytes[0] === 0xb9 && e.bytes[1] === 99)) {
+          const data = Math.max(0, Math.min(127, Math.round(64 + score.snareTune * 2)));
+          for (const key of [38, 40]) for (const [cc, v] of [[99, 24], [98, key], [6, data]] as const) list.push({ tick: 0, order: 0, bytes: [0xb9, cc, v] });
+          for (const [cc, v] of [[99, 127], [98, 127]] as const) list.push({ tick: 0, order: 0, bytes: [0xb9, cc, v] });
+        }
       } else if (!list.some((e) => e.bytes[0] === (0xc0 | channel))) {
         const pan = Math.round(64 + (track.pan ?? 0) * 63);
         list.push({ tick: 0, order: 0, bytes: [0xc0 | channel, prog] });

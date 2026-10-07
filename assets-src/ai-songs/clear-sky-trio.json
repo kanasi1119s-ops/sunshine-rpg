@@ -11,6 +11,7 @@
  "tone": "rock",
  "swing": 0.05,
  "human": 0.45,
+ "snareTune": -2,
  "parts": [
   {
    "instrument": "kick",
@@ -23,7 +24,7 @@
   {
    "instrument": "snare",
    "role": "スネア",
-   "volume": 0.105,
+   "volume": 0.14,
    "pan": 0,
    "amp": "auto",
    "notes": "R:4 R:4 R:4 R:4 R:4 R:4 R:4 g:o.o.o.o.xxxxxXXX g:........X..o.... g:........X..o..o. g:........X.o..... g:........X..o.o.x g:........X..o.... g:........X..o..o. g:........X.o..... g:........X..o.o.x g:....x.......x... g:....x..o....x... g:....x.......X..o g:....X..o....X.o. g:....X.......X... g:....X..o....X..o g:....X.......X... g:..o.X.o.xxxxXXXX g:....X.......X..o g:....X..o....X.o. g:....X.o.....X..o g:....X..o..o.xXXX g:....X.......X..o g:....X..o....X.o. g:....X.o.....X..o g:....X..o..o.xXXX g:........X..o.... g:........X..o..o. g:........X.o..... g:........X..o.o.x g:........X..o.... g:........X..o..o. g:........X.o..... g:........X..o.o.x g:....x.......x... g:....x..o....x... g:....x.......X..o g:....X..o....X.o. g:....X.......X... g:....X..o....X..o g:....X.......X... g:..o.X.o.xxxxXXXX g:....X.......X..o g:....X..o....X.o. g:....X.o.....X..o g:....X..o..o.xXXX g:....X.......X..o g:....X..o....X.o. g:....X.o.....X..o g:....X..o..o.xXXX R:4 R:4 R:4 R:4 R:4 R:4 g:........o...o.o. g:o.o.o.o.xxxxxXXX g:....X..o....X.xX g:....X.o...o.X..X g:....X..o....X.xX g:....X..o..xxXXXX g:....X..o....X.xX g:....X.o...o.X..X g:....X..o....X.xX g:....X..o..xxXXXX R:4 R:4 R:4 R:4 R:4 R:4 R:4 R:4",
