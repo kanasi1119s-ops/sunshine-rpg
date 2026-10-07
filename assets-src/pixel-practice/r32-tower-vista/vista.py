@@ -199,78 +199,154 @@ def thunder_ceiling(cv, shift=0):
     return cloud
 
 
+# ───── フィールドの大滝・雷雲と同じ色・描き方（2026-10-07、人間の指示「実際のフィールドの滝雷雲のドットに近づけて」）─────
+FIELD = os.path.join(HERE, "..", "..", "..", "src", "assets", "falls")
+# 大滝の色（assets-src/pixel-practice/r29-falls/falls.py と同じ）
+FA, FB, FC, FD, FE, FF, FG = "#163a66", "#245a92", "#3a7cb8", "#62a2d8", "#9cccf0", "#d4ecfc", "#ffffff"
+MIST_L, MIST_D = "#b8c8dc", "#8494ae"
+ABYSS = ["#08090f", "#10131e", "#1a2032", "#28304a"]
+SEA = ["#14345c", "#1e4a7c", "#2c64a0", "#46849e"]
+BOLT_CORE, BOLT_GLOW, BOLT_EDGE = "#ffffff", "#8cc4ff", "#4a78c8"
+RAIN = ["#cad8e6", "#8898b0"]
+
+
+def field_cloud(colors=30):
+    """フィールドの雷雲の絵（src/assets/falls/cloud.png の1コマ目、440×256）を、色数をへらして読みこむ。"""
+    from PIL import Image
+    im = Image.open(os.path.join(FIELD, "cloud.png")).convert("RGBA").crop((0, 0, 440, 256))
+    alpha = im.getchannel("A")
+    q = im.convert("RGB").quantize(colors=colors, dither=Image.Dither.NONE).convert("RGB")
+    px = []
+    for y in range(256):
+        row = []
+        for x in range(440):
+            if alpha.getpixel((x, y)) < 128:
+                row.append(None)
+            else:
+                r, g, b = q.getpixel((x, y))
+                row.append("#%02x%02x%02x" % (r, g, b))
+        px.append(row)
+    return px
+
+
+def stamp_cloud(cv, sprite, ox, oy, flip=False):
+    for y, row in enumerate(sprite):
+        for x, c in enumerate(row):
+            xx = (439 - x if flip else x) + ox
+            if c and 0 <= xx < W and 0 <= y + oy < H:
+                cv.put(xx, y + oy, c)
+
+
+def field_ceiling(cv, bottom=100, colors=30):
+    """雷雲の天井: フィールドの雷雲の絵を2つ（1つは左右反転）ならべ、雲の底（紺の帯・中で光る金色）が bottom の高さに来るようにする。"""
+    sprite = field_cloud(colors)
+    for y in range(0, bottom - 40):
+        for x in range(W):
+            cv.ramp(x, y, ["#3a3842", "#48464e", "#5a5860"], 0.3 + 0.4 * math.sin(x * 0.05 + y * 0.11) ** 2)
+    oy = bottom - 246
+    stamp_cloud(cv, sprite, -70, oy - 30, flip=True)
+    stamp_cloud(cv, sprite, 150, oy - 18)
+    stamp_cloud(cv, sprite, -230, oy + 6)
+    stamp_cloud(cv, sprite, 260, oy + 2, flip=True)
+
+
+def field_bolt(cv, x0, y0, length, seed, inside=lambda x, y: True):
+    """フィールドの稲妻と同じ: 1ドットの白い芯、青白い光、ふちに青。細くジグザグ。"""
+    rnd = random.Random(seed)
+    x, pts = float(x0), []
+    for i in range(length):
+        pts.append((int(x), y0 + i))
+        if i % 3 == 0:
+            x += rnd.choice([-2, -1, 1, 2])
+        if rnd.random() < 0.05:
+            bx = x
+            for k in range(rnd.randrange(5, 10)):
+                bx += rnd.choice([-1, 1, 2]) * (1 if rnd.random() < 0.5 else -1)
+                pts.append((int(bx), y0 + i + k))
+    for (px_, py) in pts:
+        for dx in (-1, 1):
+            if inside(px_ + dx, py):
+                cv.put(px_ + dx, py, BOLT_GLOW)
+    for (px_, py) in pts:
+        if inside(px_, py):
+            cv.put(px_, py, BOLT_CORE)
+
+
+def field_falls(cv, rim, bottom_of, inside_x=lambda x: True, seed=3):
+    """フィールドの大滝と同じ描き方: 水の帯（帯ごとに明るさがちがい、帯の境は暗い）・帯の上を流れる白いすじ・
+    落ち口の白い泡・足もとの水しぶきと霧。rim(x)=落ち口の高さ、bottom_of(x)=滝の下の高さ。"""
+    ribbons = [(2, FB), (3, FC), (2, FD), (3, FE), (2, FD), (2, FC), (2, FB)]
+    seq = []
+    for w_, c in ribbons:
+        seq += [c] * w_
+        seq.append(FA)
+    rnd = random.Random(seed)
+    for x in range(W):
+        if not inside_x(x):
+            continue
+        top, bot = int(rim(x)), int(bottom_of(x))
+        col = seq[x % len(seq)]
+        for y in range(top, bot):
+            c = col
+            if (y * 7 + x * 13 + seed) % 23 < 3 and col != FA:
+                c = FG if col in (FE, FD) else FF   # 下へ流れる白いすじ
+            cv.put(x, y, c)
+        # 落ち口の泡（上の2〜3ドット）と、ふちの水の光
+        cv.put(x, top - 1, FE)
+        cv.put(x, top, FG)
+        cv.put(x, top + 1, FF if x % 3 else FG)
+        if x % 2 == 0:
+            cv.put(x, top + 2, FF)
+        # 足もとの水しぶき・霧（もこもこのかたまり。フィールドと同じ明暗2色と白）
+        for k in range(rnd.randrange(3, 7)):
+            yy = bot - rnd.randrange(0, 9)
+            cv.put(x, yy, [MIST_L, MIST_D, FF, MIST_L][k % 4])
+
+
+def field_rain(cv, n, y0, seed):
+    rnd = random.Random(seed)
+    for _ in range(n):
+        x, y = rnd.randrange(W), rnd.randrange(y0, H)
+        cv.put(x, y, RAIN[0])
+        cv.put(x - 1, y + 1, RAIN[0])
+        cv.put(x - 1, y + 2, RAIN[1])
+
+
 def vista_clouds():
-    """風の回廊の窓から見る、雷雲の下の嵐（2026-10-07、人間の指示「外から見えるのは嵐の様子だね。雲の下の」「滝も見えるよね」「雷雲の下だよ」）。
-    塔は、海が陥没した大穴の中に立ち、まわりは輪のような大滝（`world-map.ts` の大滝）。
-      上: 低くたれこめる雷雲の底。下面のもこもこが、稲妻の光で下から照らされる（光は稲妻の側）
-      まん中: 荒れる海と、陥没のふちから流れ落ちる大滝の白いカーテン（向こう岸の弧）
-      下: 滝の落ちる穴の底からわき上がる、しぶきと霧
-      全体: 稲妻（雷雲から海・滝へ）と、ななめの雨のすじ"""
+    """風の回廊の窓から見る、雷雲の下の嵐（人間の指示「外から見えるのは嵐の様子だね。雲の下の」「滝も見えるよね」「雷雲の下だよ」
+    「実際のフィールドの滝雷雲のドットに近づけて」）。雷雲はフィールドの雷雲の絵そのもの、滝・稲妻・雨はフィールドと同じ色と描き方。
+      上: 雷雲の底（紺の帯と、中で光る金色）
+      まん中: 荒れる紺の海と、陥没のふちから落ちる輪の大滝（向こう岸の弧）
+      下: 滝つぼの暗い穴と、白い水しぶき"""
     cv = Canvas()
-    # 空気（雷雲の下の、暗い灰青）
-    air = ["#141824", "#1c2230", "#262e3e", "#323c4e", "#424e62"]
     for y in range(H):
         for x in range(W):
-            cv.ramp(x, y, air, 0.15 + 0.35 * (y / H) + 0.45 * math.exp(-((y - 88) / 10) ** 2))   # 地平のあたりは、雲の切れ間の光で少し明るい
-    cloud = thunder_ceiling(cv)
-    # 向こうの荒れた海（地平の少し下まで）
-    horizon = 92
-    sea = ["#0e1a22", "#14242e", "#1c3240", "#284454", "#3a5a6a", "#5a7c8a"]
-    for y in range(horizon, 128):
+            cv.ramp(x, y, ABYSS, 0.35 + 0.3 * math.exp(-((y - 96) / 12) ** 2))
+    # 荒れる海（地平から落ち口まで）
+    for y in range(92, 132):
         for x in range(W):
-            d = (y - horizon) / 36
-            wave = 0.1 * math.sin(x * 0.45 + y * 1.7) + 0.06 * math.sin(x * 0.13 - y * 0.6)
-            cv.ramp(x, y, sea, 0.25 + d * 0.3 + wave)
-            if math.sin(x * 0.45 + y * 1.7) > 0.93 and (x * 7 + y * 3) % 5 == 0:
-                cv.put(x, y, "#8aa6b2")   # 白波
-    # 大滝: 向こう岸の陥没のふち（ゆるい弧）から、海が白いカーテンになって落ちる
-    def rim_y(x):
-        return 108 + 22 * ((x - 200) / 230) ** 2   # 向こう岸のふち（まん中が奥で高く、両はしは手前に回りこんで低い）
-    fall = ["#1e2c36", "#2c3e4a", "#3e5664", "#587482", "#7e9aa6", "#b4c8d0", "#e8f2f4"]
-    srnd = random.Random(29)
-    raw = [srnd.random() for _ in range(W + 4)]
-    strands = [(raw[i] + raw[i + 1] * 2 + raw[i + 2]) / 4 for i in range(W)]   # 列ごとの水の量（となりとなじませる）
+            wave = 0.12 * math.sin(x * 0.45 + y * 1.7) + 0.06 * math.sin(x * 0.13 - y * 0.6)
+            cv.ramp(x, y, SEA, 0.2 + (y - 92) / 40 * 0.5 + wave)
+            if math.sin(x * 0.45 + y * 1.7) > 0.97 and (x * 7 + y * 3) % 9 == 0:
+                cv.put(x, y, FE)
+    rim = lambda x: 112 + 22 * ((x - 200) / 230) ** 2
+    # 穴の底（暗い紺）と、白いしぶきのかたまり
+    rnd = random.Random(7)
     for x in range(W):
-        top = int(rim_y(x))
-        cv.put(x, top - 1, "#cfe2e8")   # ふちで盛り上がる水の光
-        cv.put(x, top, "#ffffff")
-        length = H - top
-        strand = strands[x]   # 水のすじの濃い・うすい
-        for y in range(top + 1, H):
-            t = (y - top) / length
-            v = 0.62 - t * 0.42 + (strand - 0.5) * 0.45
-            if t < 0.08:
-                v += 0.18   # 落ちはじめは、白く泡立つ
-            if (x * 5 + y * 3 + int(strand * 40)) % 17 == 0 and t < 0.6:
-                v += 0.15   # 落ちる水のつぶ
-            cv.ramp(x, y, fall, v)
-    # 滝つぼからわき上がる、しぶきと霧（下の帯。もこもこの霧のかたまり）
-    mist = ["#3e4c58", "#56646e", "#717e88", "#919ca4", "#b6c0c6", "#d4dade"]
-    plume = noise(19)
-    for y in range(140, H):
-        for x in range(W):
-            # 下ほど濃く、上へ向かって、ゆらぐ柱のように立ちのぼる
-            rise = (y - 140) / (H - 140)
-            col = 0.5 + 0.5 * math.sin(x * 0.09 + 1.3) * math.sin(x * 0.031)
-            v = rise * 1.4 + col * 0.3 + plume(x, y) * 0.45 - 0.5
-            if v > 0.02:
-                cv.ramp(x, y, mist, min(0.95, 0.1 + v * 0.75))
-    # 稲妻（雷雲から海と滝へ）と、まわりの照り返し
-    BRIGHTEN.clear()
-    BRIGHTEN.update({c: cloud[min(len(cloud) - 1, i + 2)] for i, c in enumerate(cloud)})
-    BRIGHTEN.update({c: air[min(len(air) - 1, i + 2)] for i, c in enumerate(air)})
-    BRIGHTEN.update({c: sea[min(len(sea) - 1, i + 2)] for i, c in enumerate(sea)})
-    for (lx, ly, n, sd) in [(132, 60, 60, 1), (286, 66, 50, 2), (220, 70, 26, 3)]:
-        lightning(cv, lx, ly, n, sd, lambda x, y: 0 <= x < W and 0 <= y < 140)
-    # 雨のすじ（ななめ。手前ほど長い。2段の色）
-    rnd = random.Random(17)
-    for _ in range(420):
-        x, y = rnd.randrange(W), rnd.randrange(40, H)
-        n = 3 + int(y / 60)
-        for k in range(n):
-            xx, yy = x - k, y + k * 2
-            if 0 <= xx < W and yy < H:
-                cv.put(xx, yy, "#6e7c90" if k % 2 else "#4e5a6e")
+        for y in range(int(rim(x)), H):
+            cv.ramp(x, y, ABYSS, 0.2 - (y - rim(x)) / 200)
+    field_falls(cv, rim, lambda x: rim(x) + 58 + 6 * math.sin(x * 0.05))
+    for _ in range(60):
+        cx_, cy_, r = rnd.randrange(W), rnd.randrange(176, 200), rnd.uniform(3, 8)
+        for y in range(int(cy_ - r), int(cy_ + r)):
+            for x in range(int(cx_ - r), int(cx_ + r)):
+                d = math.hypot(x - cx_, (y - cy_) * 1.6) / r + 0.35 * math.sin(x * 1.9 + y * 2.3 + cx_)
+                if d < 1 and 0 <= x < W and 0 <= y < H:
+                    cv.put(x, y, FF if d < 0.35 else (MIST_L if d < 0.7 else MIST_D))
+    field_ceiling(cv, bottom=96)
+    for (lx, ly, n, sd) in [(128, 70, 60, 1), (292, 74, 52, 2)]:
+        field_bolt(cv, lx, ly, n, sd, lambda x, y: 0 <= x < W and 0 <= y < 150)
+    field_rain(cv, 130, 40, 17)
     stone_arch(cv)
     cv.save("vista-clouds")
 
@@ -349,101 +425,59 @@ def stone_arch(cv):
 
 # ───────────────────────── 頂の見晴らし（夜明け）─────────────────────────
 def vista_summit():
-    """頂の見晴らし（2026-10-07、人間の指示「雷雲の下だよ？で嵐滝も見える」）。塔のてっぺんも、まだ雷雲の下。
-      上: 雷雲の底。その裂け目から、夜明けの空と、欠けた光の環の跡が、少しだけのぞく（裂け目のふちの雲は朝日に染まる）
-      下: 高いところから見おろす、荒れる海と、塔をぐるりと囲む輪の大滝（向こう側の弧）、滝つぼのしぶき
+    """頂の見晴らし（人間の指示「雷雲の下だよ？で嵐滝も見える」「実際のフィールドの滝雷雲のドットに近づけて」）。頂もまだ雷雲の下。
+      上: フィールドの雷雲の絵。その裂け目から、夜明けの空と、欠けた光の環の跡がのぞく
+      下: 見おろす紺の海と、塔をぐるりと囲む輪の大滝（フィールドと同じ描き方）、穴の底のしぶき
       全体: 稲妻と雨。手前は石の欄干"""
     cv = Canvas()
-    air = ["#141824", "#1c2230", "#262e3e", "#323c4e", "#424e62"]
     for y in range(H):
         for x in range(W):
-            cv.ramp(x, y, air, 0.15 + 0.3 * (y / H) + 0.4 * math.exp(-((y - 84) / 9) ** 2))
-    cloud = thunder_ceiling(cv, shift=4)
-    # 雷雲の裂け目（夜明けの空がのぞく）
-    rcx, rcy, rrx, rry = 236, 30, 84, 16
+            cv.ramp(x, y, ABYSS, 0.35 + 0.3 * math.exp(-((y - 86) / 10) ** 2))
+    for y in range(84, H):
+        for x in range(W):
+            wave = 0.12 * math.sin(x * 0.4 + y * 1.5) + 0.06 * math.sin(x * 0.12 - y * 0.5)
+            cv.ramp(x, y, SEA, 0.15 + (y - 84) / 60 * 0.45 + wave)
+            if math.sin(x * 0.4 + y * 1.5) > 0.97 and (x * 7 + y * 3) % 9 == 0:
+                cv.put(x, y, FE)
+    bx, by, brx, bry = 200, 206, 250, 78
+    inx = lambda x: abs((x - bx) / brx) < 1
+    rim = lambda x: by - bry * math.sqrt(max(0.0, 1 - ((x - bx) / brx) ** 2))
+    for x in range(W):
+        if inx(x):
+            for y in range(int(rim(x)), H):
+                cv.ramp(x, y, ABYSS, 0.25 - (y - rim(x)) / 160)
+    field_falls(cv, rim, lambda x: rim(x) + 34, inx, seed=5)
+    rnd = random.Random(11)
+    for _ in range(40):
+        cx_, cy_, r = rnd.randrange(W), rnd.randrange(170, 200), rnd.uniform(3, 7)
+        for y in range(int(cy_ - r), int(cy_ + r)):
+            for x in range(int(cx_ - r), int(cx_ + r)):
+                d = math.hypot(x - cx_, (y - cy_) * 1.6) / r + 0.35 * math.sin(x * 1.9 + y * 2.3 + cx_)
+                if d < 1 and 0 <= x < W and 0 <= y < H and inx(x) and y > rim(x) + 20:
+                    cv.put(x, y, FF if d < 0.35 else (MIST_L if d < 0.7 else MIST_D))
+    field_ceiling(cv, bottom=84, colors=18)   # 夜明けの空の色があるぶん、雷雲の色をへらす（エディタの色の数の上限）
+    # 雷雲の裂け目（夜明けの空と、欠けた光の環の跡）
+    rcx, rcy, rrx, rry = 236, 26, 80, 14
     sky = ["#1e2048", "#2c2a5c", "#46366c", "#6a4474", "#984e6e", "#c8645e", "#e8865a", "#f6b070"]
     rift_n = noise(61)
     rift = lambda x, y: ((x - rcx) / rrx) ** 2 + ((y - rcy) / rry) ** 2 + rift_n(x * 3, y * 3) * 0.9 + 0.25 * math.sin(x * 0.21) < 1.0
-    for y in range(0, 60):
+    for y in range(0, 50):
         for x in range(W):
             if rift(x, y):
                 cv.ramp(x, y, sky, (y - (rcy - rry)) / (2 * rry) * 0.9 + 0.05)
-    rnd = random.Random(9)
-    for _ in range(18):
-        x, y = rnd.randrange(rcx - rrx, rcx + rrx), rnd.randrange(rcy - rry, rcy)
-        if rift(x, y):
-            cv.put(x, y, "#e8e8ff")
-    # 欠けた光の環の跡（裂け目の中だけ見える）
     for i in range(2400):
         t = math.pi + i / 2400 * math.pi
-        if 4.6 < t < 4.75:
-            continue
         x, y = 200 + 300 * math.cos(t), 150 + 140 * math.sin(t)
         for o, c in [(-1, "#c8c0ff"), (0, "#fff8e0"), (1, "#d8b8f0")]:
             if rift(int(x), int(y) + o):
                 cv.put(int(x), int(y) + o, c)
-    # 裂け目のふちの雲は、朝日に染まる（ふちから2ドット）
-    edge = []
-    for y in range(0, 62):
+    for y in range(0, 52):
         for x in range(W):
             if not rift(x, y) and any(rift(x + dx, y + dy) for dx, dy in ((0, -1), (0, -2), (-1, 0), (1, 0))):
-                edge.append((x, y))
-    for (x, y) in edge:
-        cv.put(x, y, "#e89a78" if rift(x, y - 1) else "#b86e6c")
-    # 荒れる海（見おろす）
-    horizon = 90
-    sea = ["#0e1a22", "#14242e", "#1c3240", "#284454", "#3a5a6a", "#5a7c8a"]
-    for y in range(horizon, H):
-        for x in range(W):
-            d = (y - horizon) / (H - horizon)
-            wave = 0.1 * math.sin(x * 0.4 + y * 1.5) + 0.06 * math.sin(x * 0.12 - y * 0.5)
-            cv.ramp(x, y, sea, 0.2 + d * 0.35 + wave)
-            if math.sin(x * 0.4 + y * 1.5) > 0.93 and (x * 7 + y * 3) % 5 == 0:
-                cv.put(x, y, "#8aa6b2")
-    # 塔のまわりの陥没（だ円）と、ふちから落ちる輪の大滝
-    bx, by, brx, bry = 200, 200, 240, 74
-    fall = ["#1e2c36", "#2c3e4a", "#3e5664", "#587482", "#7e9aa6", "#b4c8d0", "#e8f2f4"]
-    mist = ["#3e4c58", "#56646e", "#717e88", "#919ca4", "#b6c0c6", "#d4dade"]
-    srnd = random.Random(31)
-    raw = [srnd.random() for _ in range(W + 4)]
-    strands = [(raw[i] + raw[i + 1] * 2 + raw[i + 2]) / 4 for i in range(W)]
-    plume = noise(67)
-    for x in range(W):
-        u = (x - bx) / brx
-        if abs(u) >= 1:
-            continue
-        top = by - bry * math.sqrt(1 - u * u)   # 向こう側のふち
-        cv.put(x, int(top) - 1, "#cfe2e8")
-        cv.put(x, int(top), "#ffffff")
-        abyss = ["#05070c", "#0a0e16", "#121822", "#1c2430"]
-        for y in range(int(top) + 1, H):
-            t = (y - top) / 34
-            if t < 1:
-                v = 0.62 - t * 0.42 + (strands[x] - 0.5) * 0.45
-                if t < 0.08:
-                    v += 0.18
-                cv.ramp(x, y, fall, v)
-            else:
-                cv.ramp(x, y, abyss, 0.6 - (t - 1) * 0.5)   # 穴の深み（下ほど暗い）
-            # 滝の足もとから立ちのぼる、しぶき（滝のすぐ下の帯だけ）
-            m = 1 - abs(t - 1.0) * 2.2 + plume(x, y) * 0.5 + 0.15 * math.sin(x * 0.09) - 0.35
-            if m > 0.05:
-                cv.ramp(x, y, mist, min(0.9, 0.05 + m * 0.7))
-    # 稲妻（雷雲から海・滝へ）
-    BRIGHTEN.clear()
-    BRIGHTEN.update({c: cloud[min(len(cloud) - 1, i + 2)] for i, c in enumerate(cloud)})
-    BRIGHTEN.update({c: air[min(len(air) - 1, i + 2)] for i, c in enumerate(air)})
-    BRIGHTEN.update({c: sea[min(len(sea) - 1, i + 2)] for i, c in enumerate(sea)})
-    for (lx, ly, n, sd) in [(96, 62, 64, 4), (318, 66, 56, 5)]:
-        lightning(cv, lx, ly, n, sd, lambda x, y: 0 <= x < W and 0 <= y < 150)
-    # 雨
-    rnd = random.Random(19)
-    for _ in range(380):
-        x, y = rnd.randrange(W), rnd.randrange(50, H)
-        for k in range(3 + int(y / 70)):
-            xx, yy = x - k, y + k * 2
-            if 0 <= xx < W and yy < H:
-                cv.put(xx, yy, "#6e7c90" if k % 2 else "#4e5a6e")
+                cv.put(x, y, "#e8b088" if rift(x, y - 1) else "#b8806c")
+    for (lx, ly, n, sd) in [(96, 66, 70, 4), (318, 70, 60, 5)]:
+        field_bolt(cv, lx, ly, n, sd, lambda x, y: 0 <= x < W and 0 <= y < 160)
+    field_rain(cv, 120, 40, 19)
     balustrade(cv)
     cv.save("vista-summit")
 
