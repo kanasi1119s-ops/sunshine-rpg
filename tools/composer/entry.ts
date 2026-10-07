@@ -3,6 +3,10 @@
 import soundfontUrl from "../../src/audio/soundfont/game.sf3?url";
 // 作曲ソフトだけで使う、もう1つの録音音源（GeneralUser GS。規約は docs/assets-credits.md。ゲームには入れていない）
 import generalUserUrl from "../../assets-src/soundfont/GeneralUser-GS.sf2?url";
+// ベースとドラムの追加の音源（FreePats Clean Electric Bass YR＝CC0、Muldjord Kit＝CC BY 4.0。tools/soundfont/ で作る）
+import bassFingerUrl from "../../assets-src/soundfont/extra/bass-finger.sf3?url";
+import bassPickUrl from "../../assets-src/soundfont/extra/bass-pick.sf3?url";
+import drumsMuldjordUrl from "../../assets-src/soundfont/extra/drums-muldjord.sf3?url";
 import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url";
 import { AudioEngine } from "../../src/audio/audio-engine";
 import { allEntries, getTrack, STYLE_LABEL } from "../../src/audio/catalog";
@@ -49,10 +53,26 @@ const SOUNDFONTS: Record<SoundfontId, { label: string; url: string }> = {
   game: { label: "ゲームと同じ（FluidR3）", url: soundfontUrl },
   gu: { label: "GeneralUser GS（作曲ソフトだけ）", url: generalUserUrl },
 };
+// ベース・ドラムの音源の切りかえ（"std"＝選んだ録音音源そのまま）
+const BASS_FONTS: Record<string, { label: string; url: string | null }> = {
+  std: { label: "標準（上の音源）", url: null },
+  finger: { label: "エレキベース 指弾き（FreePats）", url: bassFingerUrl },
+  pick: { label: "エレキベース ピック（FreePats）", url: bassPickUrl },
+};
+const DRUM_FONTS: Record<string, { label: string; url: string | null }> = {
+  std: { label: "標準（上の音源）", url: null },
+  muldjord: { label: "生ドラム Muldjord Kit", url: drumsMuldjordUrl },
+};
+let bassId = "std";
+let drumsId = "std";
 let soundfontId: SoundfontId = "game";
 try {
   const saved = window.localStorage.getItem("sunshine-composer-soundfont");
   if (saved === "gu") soundfontId = "gu";
+  const b = window.localStorage.getItem("sunshine-composer-bass");
+  if (b && b in BASS_FONTS) bassId = b;
+  const d = window.localStorage.getItem("sunshine-composer-drums");
+  if (d && d in DRUM_FONTS) drumsId = d;
 } catch { /* 保存を読めなくても、既定で始める */ }
 async function applySoundfont(id: SoundfontId): Promise<void> {
   soundfontId = id;
@@ -68,11 +88,24 @@ try {
 } catch (error) {
   console.warn("録音音源の埋め込みを読めませんでした:", error);
 }
+async function applyOverlay(slot: "bass" | "drums", id: string): Promise<void> {
+  const table = slot === "bass" ? BASS_FONTS : DRUM_FONTS;
+  if (slot === "bass") bassId = id; else drumsId = id;
+  const url = table[id]?.url;
+  await engine.setOverlaySoundfont(slot, url ? (bytesOf(url).buffer as ArrayBuffer) : null);
+  try { window.localStorage.setItem(`sunshine-composer-${slot}`, id); } catch { /* 保存できなくてもよい */ }
+}
+/** 書き出し（WAV）に使う、追加の音源。 */
+function overlayBuffers(): ArrayBuffer[] {
+  return [drumsId, bassId].flatMap((id, i) => { const u = (i === 0 ? DRUM_FONTS : BASS_FONTS)[id]?.url; return u ? [bytesOf(u).buffer as ArrayBuffer] : []; });
+}
 // 無料のアンプシミュレーター（NAM）: ビルドのときに埋め込んだワークレットとWASMを渡す
 declare const __NAM_PROCESSOR__: string;
 declare const __NAM_WASM__: string;
 declare const __NAM_MODELS__: Record<string, { label: string; json: string }>;
 const engine = new AudioEngine();
+void applyOverlay("bass", bassId);
+void applyOverlay("drums", drumsId);
 let namHost: NamHost | null = null;
 /** 同梱のNAMモデル（NAM作者のリポジトリにMITライセンスで入っている見本。docs/assets-credits.md）。キーは "builtin:〇〇"。 */
 const BUILTIN_NAM: Record<string, { label: string; json: string }> = typeof __NAM_MODELS__ === "object" ? __NAM_MODELS__ : {};
@@ -288,6 +321,10 @@ soundfontSel.onchange = () => {
   const was = state.playing;
   void applySoundfont(soundfontSel.value as SoundfontId).then(() => { if (was) play(0); });
 };
+const bassSel = select(Object.entries(BASS_FONTS).map(([id, v]) => [id, v.label] as [string, string]), bassId);
+bassSel.onchange = () => { const was = state.playing; void applyOverlay("bass", bassSel.value).then(() => { if (was) play(0); }); };
+const drumsSel = select(Object.entries(DRUM_FONTS).map(([id, v]) => [id, v.label] as [string, string]), drumsId);
+drumsSel.onchange = () => { const was = state.playing; void applyOverlay("drums", drumsSel.value).then(() => { if (was) play(0); }); };
 const volIn = h("input", { type: "range", min: "0", max: "100", value: "60", "aria-label": "音量" });
 volIn.oninput = () => engine.setBgmVolume(Number(volIn.value) / 100);
 engine.setBgmVolume(0.6);
@@ -866,7 +903,7 @@ const exportBtn = h("button", { class: "primary", type: "button" }, "書き出�
 const safeName = (): string => (state.name || "song").replace(/[\\/:*?"<>|]+/g, "_");
 async function renderAudio(sampleRate: number): Promise<AudioBuffer> {
   if (!soundfontCopy) throw new Error("録音音源を読み込めていません");
-  return renderScoreOffline({ ...effectiveScore(), loop: false }, { soundfont: soundfontCopy, processorUrl, edition: state.edition, nam: namHost, sampleRate });
+  return renderScoreOffline({ ...effectiveScore(), loop: false }, { soundfont: soundfontCopy, overlays: overlayBuffers(), processorUrl, edition: state.edition, nam: namHost, sampleRate });
 }
 async function encodeOpus(buffer: AudioBuffer): Promise<Uint8Array> {
   const Encoder = (globalThis as unknown as { AudioEncoder?: typeof AudioEncoder }).AudioEncoder;
@@ -1093,12 +1130,18 @@ function addAmpPlugin(data: unknown, announce: boolean): AmpPluginDef | null {
 // Claude Code の song.mjs（--wav）から、曲をWAVにするための入口
 (window as unknown as { __composer: unknown }).__composer = {
   /** 録音音源を切りかえる（"game" か "gu"）。WAVの書き出し（song.mjs --soundfont）が使う。 */
+  /** ベース・ドラムの追加の音源を切りかえる（bass: "std"|"finger"|"pick"、drums: "std"|"muldjord"）。 */
+  async setOverlays(bass: string, drums: string): Promise<void> {
+    await applyOverlay("bass", bass in BASS_FONTS ? bass : "std");
+    await applyOverlay("drums", drums in DRUM_FONTS ? drums : "std");
+    bassSel.value = bassId; drumsSel.value = drumsId;
+  },
   async setSoundfont(id: string): Promise<void> { await applySoundfont(id === "gu" ? "gu" : "game"); soundfontSel.value = soundfontId; },
   /** `raw: true`: ピークをそろえずに書き出す（ゲーム内の実際の大きさを測るとき。`tools/audio-check/render-catalog.mjs --raw`）。 */
   async renderWav(score: Score, edition: State["edition"], opts?: { raw?: boolean }): Promise<string> {
     if (!soundfontCopy) throw new Error("録音音源を読み込めていません");
     const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
-    const buffer = await renderScoreOffline({ ...edited, loop: false }, { soundfont: soundfontCopy, processorUrl, edition, nam: namHost });
+    const buffer = await renderScoreOffline({ ...edited, loop: false }, { soundfont: soundfontCopy, overlays: overlayBuffers(), processorUrl, edition, nam: namHost });
     const channels = [buffer.getChannelData(0), buffer.getChannelData(1)];
     if (!opts?.raw) normalizeLoudness(channels, buffer.sampleRate);
     const bytes = encodeWav(channels, buffer.sampleRate);
@@ -1605,7 +1648,7 @@ app.append(
     h("div", { class: "transport" }, ui.playBtn, ui.pauseBtn, ui.stopBtn),
     h("div", { class: "lcd" }, h("div", { class: "lcd-time" }, ui.time), lcd("BPM", lcdTempo), lcd("TRK", lcdTracks), lcd("LEN", lcdLen)),
     h("div", { class: "seekwrap" }, ui.seek),
-    h("div", { class: "row topopts" }, field("サウンド", editionSel), field("録音音源", soundfontSel), field("マスター音量", volIn)),
+    h("div", { class: "row topopts" }, field("サウンド", editionSel), field("録音音源", soundfontSel), field("ベース音源", bassSel), field("ドラム音源", drumsSel), field("マスター音量", volIn)),
   ),
   h("div", { class: "daw" },
     panel("TRK", "トラック", ui.trackBox, h("div", { class: "row", style: "margin-top:8px" }, addTrackBtn),

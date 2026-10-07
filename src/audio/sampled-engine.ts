@@ -33,6 +33,8 @@ export class SampledBgm {
   private pendingOffset = 0;
   private playing = false;
   private buffer: ArrayBuffer | null = null;
+  /** 追加の音源（作曲ソフトのベース・ドラムの切りかえ）。main より優先して、同じ楽器（GMの番号）を入れかえる。 */
+  private overlays = new Map<string, ArrayBuffer>();
   private ctx: AudioContext | null = null;
 
   isReady(): boolean {
@@ -71,6 +73,28 @@ export class SampledBgm {
     this.buffer = buf.slice(0);
   }
 
+  /** 追加の音源（"bass"・"drums"）を、入れる／はずす（null）。鳴らしているときは止めて、次の再生から使う。 */
+  async setOverlay(slot: string, buf: ArrayBuffer | null): Promise<void> {
+    if (buf) this.overlays.set(slot, buf.slice(0)); else this.overlays.delete(slot);
+    if (!this.ready || !this.synth) return;
+    this.stop();
+    await this.applyOverlays(this.synth);
+  }
+
+  private async applyOverlays(synth: WorkletSynthesizer): Promise<void> {
+    const mgr = synth.soundBankManager;
+    for (const id of mgr.priorityOrder) if (id !== "main") await mgr.deleteSoundBank(id);
+    for (const [slot, buf] of this.overlays) await mgr.addSoundBank(buf.slice(0), slot);
+    // 先頭ほど優先（追加の音源が main の楽器を上書きする）
+    mgr.priorityOrder = [...this.overlays.keys(), "main"];
+    await synth.isReady;
+  }
+
+  /** 効果音用のシンセサイザーにも同じ追加の音源を渡すための、控え。 */
+  overlayBuffers(): ArrayBuffer[] {
+    return [...this.overlays.values()];
+  }
+
   private async doLoad(ctx: AudioContext, destination: AudioNode): Promise<boolean> {
     const embedded = globalThis.__sampledAssets;
     const workletUrl = embedded ? embedded.processorUrl : processorUrl;
@@ -93,6 +117,7 @@ export class SampledBgm {
     }
     await synth.soundBankManager.addSoundBank(buffer, "main");
     await synth.isReady;
+    if (this.overlays.size) await this.applyOverlays(synth);
     const seq = new Sequencer(synth);
     // 0=ループしない、Infinity=くり返し続ける（-1 ではくり返さず、1回で止まってしまう）
     seq.loopCount = Infinity;
