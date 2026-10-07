@@ -1,7 +1,7 @@
 # 曲づくりの技術の深掘り（2026-10-07）
 
 `genre-guides.md`（ジャンル別）の続き。ジャンルをこえて使う技術（メロディ・和声・リズム・ベース・ドラム・アレンジ）をまとめる。
-調べた先: [Motifkit（メロディの書き方）](https://motifkit.com/melody-writing/)、[Melody Studio（転調）](https://melodystudio.net/2023/01/29/the-art-of-changing-keys-a-guide-to-chord-modulation/)、[Beyond Music Theory（借用和音）](https://www.beyondmusictheory.org/what-to-do-with-modal-interchange/)、[Mastering The Mix（アレンジの強弱）](https://www.masteringthemix.com/blogs/learn/how-to-create-dynamic-arrangements)、[Learn Jazz Standards（ウォーキングベース）](https://www.learnjazzstandards.com/blog/learning-jazz/bass/write-walking-bass-line/)、[Native Instruments（ドラムフィル）](https://blog.native-instruments.com/drum-fills/)。ほかに [Make My Songbook（旋法）](https://www.makemysongbook.com/blog/music-modes-explained)、[Motifkit（楽器ファミリー）](https://motifkit.com/instrument-families/)、[HyperBits（EQ帯域）](https://hyperbits.com/eq-cheat-sheet/)、[Songcage（対旋律）](https://songcage.com/blog/countermelody/)。記事が短かった部分（借用和音の使い分けなど）は、一般的な音楽理論で補った。特定の曲の旋律・進行は写さない（CLAUDE.md 1-1）。
+調べた先: [Motifkit（メロディの書き方）](https://motifkit.com/melody-writing/)、[Melody Studio（転調）](https://melodystudio.net/2023/01/29/the-art-of-changing-keys-a-guide-to-chord-modulation/)、[Beyond Music Theory（借用和音）](https://www.beyondmusictheory.org/what-to-do-with-modal-interchange/)、[Mastering The Mix（アレンジの強弱）](https://www.masteringthemix.com/blogs/learn/how-to-create-dynamic-arrangements)、[Learn Jazz Standards（ウォーキングベース）](https://www.learnjazzstandards.com/blog/learning-jazz/bass/write-walking-bass-line/)、[Native Instruments（ドラムフィル）](https://blog.native-instruments.com/drum-fills/)。ほかに [Make My Songbook（旋法）](https://www.makemysongbook.com/blog/music-modes-explained)、[Motifkit（楽器ファミリー）](https://motifkit.com/instrument-families/)、[HyperBits（EQ帯域）](https://hyperbits.com/eq-cheat-sheet/)、[Songcage（対旋律）](https://songcage.com/blog/countermelody/)。ほかに [ギター奏法一覧](https://pickuptheguitar.com/list-of-electric-guitar-techniques/)、[ベース奏法（Sweetwater）](https://www.sweetwater.com/insync/bass-guitar-techniques-explained-fingerstyle-pick-slap/)、[弦のアーティキュレーション（Sound On Sound）](https://www.soundonsound.com/techniques/sampled-orchestra-part3)、[ドラムの人間らしさ（Demidify）](https://demidify.com/complete-guide-humanize-midi-drums.html)、[バラードピアノ（Pianist）](https://www.pianistmagazine.com/blogs/how-to-play-ballad-style-piano/)。記事が短かった部分（借用和音の使い分けなど）は、一般的な音楽理論で補った。特定の曲の旋律・進行は写さない（CLAUDE.md 1-1）。
 
 ## 1. メロディ
 - **輪郭はアーチ型**: 上がって、頂点に着いて、下がる。1つのフレーズ（4〜8小節）に、最高音は1回だけ。置き場所は中盤より後ろ。同じ高さの音をくり返し頂点にしない。
@@ -110,6 +110,63 @@
 - **反行**: メロディが上がるとき、対旋律は下がる（逆も同じ）。2本が溶け合わず、聞き分けられる。
 - **音域**: 低いほうが安全。同じオクターブに置くとメロディと競合する。着地点は和音の構成音に。
 - **やりすぎない**: 曲の最初から最後まで続く第2の旋律は、「できごと」ではなく「背景」になる。ここぞで足す。
+
+## 13. 演奏方法（奏法）と、作曲ソフトの記号への置き換え
+作曲ソフトで表せるのは、**強さ（velocity）・音の長さ（gate）・タイミング（push／swing）・音の重なり**。ピッチベンドやビブラートは、今のところ表せない（近い音の並びで近づける）。使える記号: `!` アクセント（強く）、`,` 弱く、`'` スタッカート（短く）、`_` レガート（次の音につなげる）。パート全体の `sustain`・`push`・`phrase`・曲の `swing`。
+
+### ギター
+| 奏法 | 音の特徴・使いどころ | 書き方 |
+|---|---|---|
+| パームミュート | 低音を押さえつけた、詰まった刻み。メタル・ハードロック | `'`（短く）。拍頭だけ `!`（例 `E2:0.25' E2:0.25' E2:0.5!`） |
+| ハンマリング・プルオフ | 音がなめらかにつながる速い動き | 短い音を `_` でつなぐ（`E4:0.25_ G4:0.25_ A4:0.5`） |
+| スライド | 音から音へなめらかに移る。ブルース・ロック | 目的の音の手前に、短い音（0.125〜0.25）を `_` でつなぐ |
+| ベンド | 音を狙って上げる。ロックのソロの歌心 | 手前の半音〜全音下の短い音（0.125）→目的の長い音、を `_` でつなぐ（近似） |
+| ビブラート | 長い音を生きた音にする | 長い音（1拍以上）を、音を2つに割って「少し弱く→強く」。または sustain を長く |
+| ハーモニクス | 金属的な高い輝き | 高い音域（E5以上）の短い音に `!` |
+| タッピング | 速い音の連続 | 0.25拍以下の連続音を `_` でつなぐ |
+| 刻み（ストローク） | 和音をかき鳴らす | 和音は複数パートに分け、パートごとに push を 0.01〜0.03 ずつずらす（ジャーン、と下から上へ聞こえる） |
+| ダブルストップ | 2音の和声 | 2パートに分けて同時に鳴らす |
+
+### ベース
+- **フィンガー**: 温かく丸い。フォーク・ブルース・ジャズ・ポップ。音は少し長め（`_` かふつう）。
+- **ピック**: 硬く鋭い。ロック・メタル。8分・16分の連打は `'` と `!` で歯切れよく。
+- **スラップ（楽器 slap）**: ファンク・フュージョン。親指で弾く低音（`!`）と、はじく高音（オクターブ上、`'`）を交互に。
+- **ゴーストノート**: 弱く短い音（`,` と `'`）で、休符の位置に混ぜるとノリが出る。
+- **スライド・ハンマリング**: 短い経過音を `_` でつなぐ。
+
+### ドラム
+- **強弱の目安（MIDIの強さ 0〜127）**: ゴースト 30〜60（`o`）、通常 80〜90（`x`）、アクセント 100〜110（`X`）、クラッシュなどの大きな山 115以上。
+- **セクションで変える**: Aメロ 70〜85、プリコーラス 85〜95、サビ 95〜110、ブリッジ 75〜90。
+- **タイミング**: スネアを少しあと乗り（push +0.02〜0.04）で重く、ハイハットは前のめり（-0.01〜-0.02）で軽く、キックはぴったり（0）。メタルはほぼぴったり、ジャズは大きくゆるめ。
+- **ハイハット**: 2〜4拍ごとに少し強く→弱く（`XoxoXoxo` ではなく `XooxxoXo` のように）、ところどころ開く（open）。同じ小節のコピペを避け、セクションごとに型を変える。
+- **フィル**: 85から115まで音を強くしていく（`g:xxxxXXXX`）。1〜2拍だけ、必ずノリに戻る。
+- **フラム・ドラッグ**（スネアの装飾）: 本音の直前に、弱く短い音（0.125）を足す。
+
+### 弦楽器（ストリングス）
+- **サスティン（長い音）**: 内声や背景に。`sustain` を 1.5 前後に。
+- **レガート**: 大事な旋律。音を少し重ねてつなぐ（`_`）。
+- **スタッカート／スピッカート**: アクションの曲の推進力。`'` と短い音価。速い8分・16分の連続で。
+- **ピッツィカート**: ユーモアや軽さ。短い音（`'`）で、音量はやや小さく。
+- **トレモロ**: 緊張と不穏。高い音は張りつめ、低い音は脅し。同じ音を0.125〜0.25拍でくり返す。
+- **マルカート**: 力強い強調。`!` と少し短めの音。
+
+### ピアノ
+- **バラード**: 左手は根音と5度（長い音）、右手は和音。7th・9th を多めに。和音の上の音（トップノート）を動かしすぎず、半音か全音で動かすと歌って聞こえる。
+- **ペダル**: コードごとに踏み替えるつもりで、`sustain` を 1.5〜2 に（余韻を次の和音までかぶせる）。
+- **アルペジオ**: 根音→5度→3度→オクターブの順に8分で。16分の細かい動きにするとだんだん盛り上がる。
+- **旋律を歌わせる**: 旋律の音を `!` で少し強く、伴奏の音を `,` で少し弱く（パートを分けて、volume も旋律を大きく）。
+
+### 管楽器（ブラス・木管・合唱）
+- **ブラス**: 長い音は頭を `!` で強く（スフォルツァンド）。山場では短く `'` の連打（ファンファーレ）。
+- **スウェル（だんだん強く）**: 音をつないで、1音ごとに少しずつ強く（`,` から `!` へ段階的に）か、パートの volume を上げる。
+- **合唱・木管**: フレーズの頭と終わりを弱く（`phrase` を使うと自動で山なりの強弱がつく）。息継ぎの休符を入れる。
+
+### 共通の「人間らしさ」のコツ
+1. 同じ強さで並べない。拍の頭を強く、裏を弱く、フレーズの山を強く。
+2. 音の長さを一定にしない（`'` と `_` を混ぜる）。
+3. 全部ぴったりにせず、パートごとに push を少しだけずらす（ただしキックとベースは 0）。
+4. 同じ型のコピペを避け、2回目に1か所変える。
+5. 休符（息継ぎ）を入れる。
 
 ## 7. 仕上げのチェックリスト
 1. 曲の最初の4小節で、雰囲気が伝わるか。
