@@ -17,6 +17,7 @@ APIキーは使わない。曲は、あなた（Claude Code）が「AIソング�
    - 各パートの拍の合計を、コードの数 × barsPerChord × repeats × beats にそろえる（足りない分はくり返し、はみ出た分は切られて注意が出る）。
 4. **確かめて書き出す**: `node tools/composer/song.mjs build assets-src/ai-songs/<名前>.json --wav`
    - `×` が出たら、書かれた場所（`parts[0]（メロディ）: 音名が読めません「H4:1」` など）を直して、もう一度 build する。
+   - `注意:` は自動チェックのヒント（低音のにごり・同じ音域のぶつかり・単調さ。`--wav` のときは音割れ・低音の多すぎ・強弱の平らさ・途中の無音も）。直すと良くなるので、出たら曲を直して build し直す。直さないなら、理由を報告に書く。
    - 出力は `dist-songs/`（gitには入れない）: 作曲ソフトで開けるプロジェクト（`.sunshine-song.json`）・MIDI・WAV。
    - `--edition real|ps2|modern` でサウンドの版を選べる（既定は real＝実楽器）。
    - WAV は Playwright と Chromium が必要。なければ、作曲ソフト（`node tools/composer/build.mjs` で作る `dist-composer/index.html`）でプロジェクトを開き、「WAVで書き出す」を押すよう案内する。
