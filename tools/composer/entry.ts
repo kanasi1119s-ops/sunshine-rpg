@@ -32,6 +32,7 @@ import { encodeWav, type WavBits } from "../../src/audio/wav";
 import { bytesToBase64, type AudioTrack } from "../../src/audio/audio-clips";
 import { ClipPlayer, listInputs, openInput, startRecording, type InputMode, type LiveInput, type Recording } from "./audio-rec";
 import { normalizePeak, renderScoreOffline } from "../../src/audio/offline-render";
+import { normalizeLoudness } from "../../src/audio/loudness";
 
 // 1ファイルのHTMLでは外部ファイルを読み込めないので、埋め込んだ素材（データURL）を録音音源の再生に渡す
 function bytesOf(dataUrl: string): Uint8Array {
@@ -883,7 +884,7 @@ async function doExport(kind: string): Promise<void> {
   ui.status.textContent = "音を作っています…";
   const buffer = await renderAudio(kind === "opus" ? 48000 : 44100);
   const channels = [buffer.getChannelData(0), buffer.getChannelData(1)];
-  normalizePeak(channels);
+  normalizeLoudness(channels, buffer.sampleRate);
   if (kind.startsWith("wav")) download(`${name}.wav`, encodeWav(channels, buffer.sampleRate, 0, undefined, Number(kind.slice(3)) as WavBits) as BlobPart, "audio/wav");
   else if (kind === "flac") download(`${name}.flac`, encodeFlac(channels, buffer.sampleRate) as BlobPart, "audio/flac");
   else if (kind === "opus") download(`${name}.opus`, (await encodeOpus(buffer)) as BlobPart, "audio/ogg");
@@ -1073,7 +1074,7 @@ function addAmpPlugin(data: unknown, announce: boolean): AmpPluginDef | null {
     const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
     const buffer = await renderScoreOffline({ ...edited, loop: false }, { soundfont: soundfontCopy, processorUrl, edition, nam: namHost });
     const channels = [buffer.getChannelData(0), buffer.getChannelData(1)];
-    if (!opts?.raw) normalizePeak(channels);
+    if (!opts?.raw) normalizeLoudness(channels, buffer.sampleRate);
     const bytes = encodeWav(channels, buffer.sampleRate);
     let bin = "";
     for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
