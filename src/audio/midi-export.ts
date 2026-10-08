@@ -323,7 +323,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       // ベンド・しゃくり・フォール: 音符に指定があれば、その深さで。なければ、ギターの長い音は下から音程を持ち上げて入る
       const durTicks = Math.max(1, Math.round(n.durationBeats * PPQ));
       const explicitBend = n.bend || n.scoop || n.fall;
-      const autoScoop = !explicitBend && (inst === "leadGuitar" || inst === "guitar") && n.durationBeats >= 1 && startBeat > 0;
+      const autoScoop = score.autoScoop !== false && !explicitBend && (inst === "leadGuitar" || inst === "guitar") && n.durationBeats >= 1 && startBeat > 0;
       const curve = autoScoop ? (rel: number): number => (rel < 16 ? -1 : rel < 34 ? -0.5 : 0) : durTicks >= 60 ? bendCurve(n, durTicks) : null;
       const bendTargets = layer && layer.channel !== DRUM_CHANNEL ? [main, layer] : [main];
       if (curve) {

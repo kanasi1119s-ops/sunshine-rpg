@@ -302,3 +302,16 @@ describe("パートごとのミックス（reverb・chorus・bright・duck・dru
     expect(msb).toContain(24);
   });
 });
+
+describe("ギターの自動しゃくりを止める（autoScoop: false）", () => {
+  const mk = (autoScoop?: boolean): Score => ({
+    tempoBpm: 120, loop: false, ...(autoScoop === false ? { autoScoop: false } : {}),
+    tracks: [{ waveform: "square", instrument: "leadGuitar", volume: 0.2, pan: 0, notes: [{ note: "C4", durationBeats: 1 }, { note: "E4", durationBeats: 2 }] }],
+  });
+  it("既定では長い音に半音下からのしゃくり（ピッチベンド）がかかり、false なら無い", () => {
+    const withScoop = events(scoreToMidi(mk()), 0xe0);
+    const without = events(scoreToMidi(mk(false)), 0xe0);
+    expect(withScoop.some((e) => e.a !== 0 || e.b !== 64)).toBe(true);
+    expect(without.every((e) => e.a === 0 && e.b === 64)).toBe(true);
+  });
+});

@@ -80,6 +80,8 @@ export interface AiSong {
   human?: number;
   /** スネアの音程（半音。-6〜6。マイナスで低く）。録音音源で効く。 */
   snareTune?: number;
+  /** false にすると、ギターの長い音に自動でかかる「下から持ち上げて入る」しゃくりを止める。 */
+  autoScoop?: boolean;
   /** ドラムの太鼓ごとのミックス。{ hat: { level: 0.7, pan: -0.4 }, snare: { reverb: 0.3 } } のように。level＝音量の倍率（1が標準）、pan＝左右、reverb＝残響の送り（0〜1）。real版で効く。 */
   drumMix?: Partial<Record<"kick" | "snare" | "hat" | "tom" | "crash", { level?: number; pan?: number; reverb?: number; spread?: number }>>;
   /** false にすると、sections の場面の変わり目にドラムのおかず（フィル）を自動で入れない（省略は入れる）。 */
@@ -124,6 +126,7 @@ export const AI_SONG_SCHEMA = {
     dynamics: { type: "boolean" },
     human: { type: "number" },
     snareTune: { type: "number" },
+    autoScoop: { type: "boolean" },
     drumMix: { type: "object" },
     fills: { type: "boolean" },
     sections: { anyOf: [{ type: "string", enum: ["auto"] }, { type: "array", items: { type: "object", additionalProperties: false, required: ["kind", "bars"], properties: { kind: { type: "string", enum: SECTION_KINDS }, bars: { type: "number" } } } }] },
@@ -173,6 +176,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - タム(tom)のパートは、x のかわりに音名で高さを選べる（C4＝高いタム 〜 A2＝低いフロアタム。例 C4:0.25! A3:0.25, G3:0.25 E3:0.25）。フィルを高→低に下ろすときに使う。
 - ミキシング（real版＝録音音源で効く）: パートごとに reverb（残響の送り 0〜1。奥に置く脇役は大きく）、chorus（広がりの揺らぎ 0〜1）、bright（-1〜0.5。マイナスで高域を丸く）、duck（0〜0.95。キックに合わせて音量が凹む＝サイドチェイン風。ベースやパッドを、キックの隙間に入れるとき 0.2〜0.4）。ドラムの太鼓ごとのバランスは曲の drumMix: {"hat":{"level":0.7,"pan":-0.35},"snare":{"reverb":0.2},"tom":{"spread":0.7},"crash":{"level":0.85}}（level＝音量の倍率、pan＝左右、reverb＝残響の送り、tom の spread＝高いタムを左・低いフロアを右へ振る広がり）。ドラムのパートの pan は効かないので、左右は drumMix で決める。帯域のバランスは、WAVを書き出して tools/audio-check/analyze.py --bands で測れる。
 - fills: false にすると、sections の場面の変わり目にドラムのおかずを自動で入れない（省略は入れる）。おかずの型は docs/sound/drum-fills.md。
+- autoScoop: false にすると、ギターの長い音（1拍以上）に自動でかかる「半音下から持ち上げて入る」しゃくりを止める。「ギターがキュインキュインする／しゃくりすぎ」と言われたときに使う。メロディの「/」（しゃくり）や「\\」（フォール）の記号も減らし、旋律を高い音域（A5以上）に置かないとなおよい。
 - snareTune: スネアの音程（半音。-6〜6、0.5刻み。マイナスで低く＝太く落ち着いた音、プラスで高く＝抜けのいい音）。「スネアが高い／低い」と言われたときに使う。録音音源（real版）でだけ効く。
 - human: 0〜1。「打ち込みっぽい」と感じるときに足す。各パートのタイミングのずれを大きく、バンド全体を少し走らせたり溜めたり、音の強さ・長さをばらつかせ、長い音（リード・パッド・弦・ブラス）に音量の山をつけ、リード・ギター・弦の音程をごくわずかにずらす。0.3〜0.6が自然、1はかなりラフ。同じ小節のくり返しが多いほど効く（くり返しは、手で書くときに少しずつ変えるのが本筋で、human はその上に重ねる仕上げ）。録音音源（real版）でだけ効く。
 - sections: 自動の伴奏（autoAccompaniment: true）に、曲の起伏をつける。"auto" なら定番の構成（導入4 → Aメロ8 → Bメロ4 → サビ8 → 間奏4 → Aメロ → Bメロ → サビ → サビ → 終わり4。曲の小節数に合わせて自動で区切る）。自分で決めるなら [{"kind":"intro","bars":4},{"kind":"verse","bars":8},{"kind":"pre","bars":4},{"kind":"chorus","bars":8}] のように書く（kind は intro・verse・pre・chorus・interlude・bridge・outro。bars の合計が曲の小節数になるようにする。ちがうときは最後を延ばすか、後ろを切る）。導入＝ピアノと弦だけ、Aメロ＝ドラム（キックとハイハット）とベースを足す、Bメロ＝スネアとギターを足して少しずつ強く、サビ＝全部とクラッシュ、間奏＝ドラムを抜く、Cメロ・終わり＝静かに。サビの前の小節は、スネアとキックで助走をつける。メロディなど自分で書いたパートには効かないので、メロディ側の強弱は phrase や ! , で付ける。
@@ -455,6 +459,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     tempoBpm: bpm, loop: true, drumKit: base.drumKit, tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock",
     ...(Number(song.swing) > 0 ? { swing: Math.min(1, Number(song.swing)) } : {}),
     ...(Number(song.human) > 0 ? { human: Math.min(1, Number(song.human)) } : {}),
+    ...(song.autoScoop === false ? { autoScoop: false } : {}),
     ...(Number(song.snareTune) && Number.isFinite(Number(song.snareTune)) ? { snareTune: Math.max(-6, Math.min(6, Math.round(Number(song.snareTune) * 2) / 2)) } : {}),
     ...(drumMixOf(song.drumMix) ? { drumMix: drumMixOf(song.drumMix) } : {}),
     // synth: lead／pad をシンセ音色にする。style "electro" は、実楽器版（real-edition.ts）が電子音楽の音色を生楽器に置き換えないための印

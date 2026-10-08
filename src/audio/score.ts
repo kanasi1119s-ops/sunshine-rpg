@@ -124,6 +124,8 @@ export interface Score {
   human?: number;
   /** スネアの音程の調整（半音。マイナスで低く、プラスで高く。-6〜6、0.5刻み）。ドラムのNRPNで、録音音源（MIDI経由）で効く。 */
   snareTune?: number;
+  /** false にすると、ギターの長い音を「半音下から持ち上げて入る」自動のしゃくりをかけない（省略は、かける）。 */
+  autoScoop?: boolean;
   /** 読み込んだNAMモデル（.namファイルの中身）。名前 → JSON文字列。 */
   namModels?: Record<string, string>;
   /** 録音したトラック（オーディオインターフェースから録った、実際の楽器・声）。作曲ソフトで鳴る（ゲーム本体では鳴らさない）。 */
