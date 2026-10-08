@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AI_SONG_GUIDE, AI_SONG_SCHEMA, aiSongToScore, applyPhrase, applySustain, fitToLength, parseNotes } from "./ai-song";
+import { AI_SONG_GUIDE, AI_SONG_SCHEMA, SYNTH_PATCHES, aiSongToScore, applyPhrase, applySustain, fitToLength, parseNotes } from "./ai-song";
 import { trackTotalBeats } from "./edit";
 import { grooveOffsetBeats, REST } from "./score";
 
@@ -152,5 +152,13 @@ describe("演奏の表情（奏法の記号・フレーズ）", () => {
   it("applySustain は、音ごとの gate（' _）を上書きしない", () => {
     const out = applySustain([{ note: "C4", durationBeats: 1, gate: 0.4 }, { note: "D4", durationBeats: 1 }], 2);
     expect(out.map((e) => e.gate)).toEqual([0.4, 2]);
+  });
+});
+
+describe("ベースの音色（旋律ベース用）", () => {
+  it("アコースティック・フレットレス・スラップが選べる", () => {
+    expect(SYNTH_PATCHES.acousticBass).toBe(32);
+    expect(SYNTH_PATCHES.fretlessBass).toBe(35);
+    expect(SYNTH_PATCHES.slapBass).toBe(36);
   });
 });

@@ -11,7 +11,7 @@ import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, typ
 /** 音色（patch）の名前 → GM番号。シンセ・パッド・FXと、ギターの音色（リードギターを歪まないクリーンにしたいとき）。声に似た音（85, 91）は入れない。 */
 export const SYNTH_PATCHES: Record<string, number> = {
   nylonGuitar: 24, steelGuitar: 25, jazzGuitar: 26, cleanGuitar: 27, mutedGuitar: 28,
-  synthBass1: 38, synthBass2: 39, synthStrings1: 50, synthStrings2: 51,
+  acousticBass: 32, fretlessBass: 35, slapBass: 36, synthBass1: 38, synthBass2: 39, synthStrings1: 50, synthStrings2: 51,
   squareLead: 80, sawLead: 81, calliope: 82, chiff: 83, charang: 84, fifths: 86, bassLead: 87,
   newAge: 88, warmPad: 89, polysynth: 90, bowedGlass: 92, metalPad: 93, halo: 94, sweep: 95,
   iceRain: 96, soundtrack: 97, crystal: 98, atmosphere: 99, brightness: 100, goblin: 101, echoDrops: 102, starTheme: 103,
@@ -223,7 +223,7 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
     - 仕上げの確認: 最初の4小節で雰囲気が伝わるか、サビの最高音が Aメロより高いか、2回目の同じ進行で1つ変えたか、切り替わりにフィル・休符・crash があるか。
   - ボカロ風のバック（歌なし）: bpm 160〜200、feel は vocaloid（autoAccompaniment を true にすると、16分のハイハット・シンコペのキック・動くベース・16分のピアノ・8分のギター・左右の弦が付く）。歌のパートはシンセのリード（lead、synth: true）に任せ、声（choir）は使わない。メロディは音域を広く、8分・16分の早口のフレーズ、サビで高く、ブレスの休符を入れる。コードは1小節1コードで、短調なら Dm Bb F C のような進行。最後のサビの前に半音上げる。自動の伴奏は最初から最後まで同じなので、起伏が欲しいときは、導入（ピアノと弦だけ）→Aメロ（リズムを足す）→Bメロ（ギター）→サビ（全部）→間奏（リズムを抜く）と、パートをセクションごとに自分で書く（見本: assets-src/ai-songs/vocaloid-style-demo.json）。
   - ギターの音色（patch）: leadGuitar は標準だと歪んだ音色。クリーンなソロ・単音のメロディにしたいときは patch に cleanGuitar（クリーン）・jazzGuitar（丸い）・steelGuitar（アコースティック）・nylonGuitar（ナイロン弦）・mutedGuitar（ミュート）を指定し、amp は clean にする。
-  - シンセの音色（パートの patch）: 指定すると楽器のかわりにシンセ音で鳴る（ドラム以外）。波形の性格: squareLead＝丸く芯のある角ばった音（旋律・8bit寄り）、sawLead＝明るくぎらつく音（旋律・サビ）、calliope/chiff＝息づかいのある柔らかいリード、charang＝歪んだ攻めのリード、fifths＝5度が重なる力強いリード、bassLead＝低音と旋律を兼ねる。パッド: warmPad（やわらかく広がる）、newAge＝きらめく、halo＝聖なる、sweep＝うねって広がる、metalPad＝冷たく金属的、bowedGlass＝ガラスのような弦。ベース: synthBass1＝太く丸い、synthBass2＝硬く尖った。刻み: polysynth＝和音の刻み、synthStrings1/2＝厚い弦。飾り: crystal・iceRain・brightness・starTheme＝きらきらした余韻（ここぞの場面だけ）、atmosphere＝暗い空気、goblin・echoDrops・soundtrack＝不思議・映画的。使い分けの定石: パッドは sustain 2〜3 で長い音、ピッチは低めに；プラック（ぽん、と減衰する音）は polysynth か crystal に sustain 0.4；リードは ~（ビブラート）と phrase で歌わせる；ベースは根音を低く、旋律と音域を重ねない。声に聞こえる音は入れていない。
+  - シンセの音色（パートの patch）: 指定すると楽器のかわりにシンセ音で鳴る（ドラム以外）。波形の性格: squareLead＝丸く芯のある角ばった音（旋律・8bit寄り）、sawLead＝明るくぎらつく音（旋律・サビ）、calliope/chiff＝息づかいのある柔らかいリード、charang＝歪んだ攻めのリード、fifths＝5度が重なる力強いリード、bassLead＝低音と旋律を兼ねる。パッド: warmPad（やわらかく広がる）、newAge＝きらめく、halo＝聖なる、sweep＝うねって広がる、metalPad＝冷たく金属的、bowedGlass＝ガラスのような弦。ベース: fretlessBass＝なめらかに歌うフレットレス（ベースで旋律を弾くとき）、acousticBass＝ウッド寄り、slapBass＝はじけるスラップ、synthBass1＝太く丸い、synthBass2＝硬く尖った。刻み: polysynth＝和音の刻み、synthStrings1/2＝厚い弦。飾り: crystal・iceRain・brightness・starTheme＝きらきらした余韻（ここぞの場面だけ）、atmosphere＝暗い空気、goblin・echoDrops・soundtrack＝不思議・映画的。使い分けの定石: パッドは sustain 2〜3 で長い音、ピッチは低めに；プラック（ぽん、と減衰する音）は polysynth か crystal に sustain 0.4；リードは ~（ビブラート）と phrase で歌わせる；ベースは根音を低く、旋律と音域を重ねない。声に聞こえる音は入れていない。
   - ブルース: 12小節（I I I I / IV IV I I / V IV I V）・7th・swing 0.5・ブルーノート。ワルツ: beats 3・1拍目が強い。チップチューン: 少ない音色・速いアルペジオ・短いフレーズのくり返し。
   - ベース・ドラムの音源は、書き出しの --bass と --drums に rock / metal / jazz / jpop を選べる（ジャンルに合わせる）。
 - 民族音楽にするには: 国・地域の「音階」で notes を書く（例: 琉球風＝C・E・F・G・B、日本の陰旋法＝C・D・Eb・G・Ab、インド風＝C・Db・E・F・G・Ab・B で、ドローンの低い持続音を1パート足す、中東風＝C・Db・E・F・G・Ab・B の増2度、アイルランド風＝Dドリアン、ケルト・北欧風＝ペンタトニック）。和音は少なく、ドローン（根音と5度の長い音）にすると雰囲気が出る。楽器は sitar・koto・shamisen・kalimba・panflute・shakuhachi・ocarina・fiddle・bagpipe・harp・banjo。打楽器は tom と hihat を、小さな音量で不規則なリズムに。**実在する民謡・曲のメロディは使わない**（CLAUDE.md 1-1）。

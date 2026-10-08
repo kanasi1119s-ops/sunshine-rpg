@@ -67,6 +67,14 @@ for (const id of which.length ? which : Object.keys(VARIANTS)) {
       samples.push({ smp, lo: Number(r.lokey ?? r.key), hi: Number(r.hikey ?? r.key), root, tune: 0 });
     }
   }
+  // 音源の最低音と最高音のゾーンは、鍵盤の端まで広げる（広げないと、録音より高い／低い音が「無音」になる）。
+  // 高い音は最高音のサンプルを速く再生するので、音色は細くなるが、鳴らないよりよい。メロディは A2〜G3 あたりまでが自然。
+  const loMin = Math.min(...samples.map((x) => x.lo));
+  const hiMax = Math.max(...samples.map((x) => x.hi));
+  for (const x of samples) {
+    if (x.lo === loMin) x.lo = 21;
+    if (x.hi === hiMax) x.hi = 84;
+  }
   let zones = 0;
   for (const program of v.programs) {
     const preset = emptyPresetFrom(base, out, { program });
