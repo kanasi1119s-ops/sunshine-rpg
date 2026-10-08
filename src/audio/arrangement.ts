@@ -1,4 +1,4 @@
-import { pickFill, placeFill, type FillSize } from "./drum-fills";
+import { fillBeats, pickFill, placeFill, type FillSize } from "./drum-fills";
 import { REST, type Instrument, type NoteEvent, type Track } from "./score";
 
 /**
@@ -144,7 +144,8 @@ export function applySections(tracks: Track[], sections: Section[], beatsPerBar:
     for (let b = 0; b < sec.bars; b++) {
       const size = b === sec.bars - 1 ? fillSizeAt(sec.kind, sections[si + 1]?.kind) : sec.bars >= 8 && b % 4 === 3 && sec.kind !== "intro" ? "small" : undefined;
       if (!size) continue;
-      result = placeFill(result, pickFill(size, counters[size]++), (starts[si] + b + 1) * beatsPerBar - 2, totalBars * beatsPerBar);
+      const fill = pickFill(size, counters[size]++, beatsPerBar);
+      result = placeFill(result, fill, (starts[si] + b + 1) * beatsPerBar - fillBeats(fill), totalBars * beatsPerBar);
     }
   });
   return result;

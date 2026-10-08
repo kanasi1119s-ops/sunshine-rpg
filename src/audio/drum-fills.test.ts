@@ -1,17 +1,36 @@
 import { describe, expect, it } from "vitest";
 import { applySections } from "./arrangement";
-import { FILLS, overwriteRange, pickFill, placeFill } from "./drum-fills";
+import { FILLS, fillBeats, overwriteRange, pickFill, placeFill } from "./drum-fills";
 import { REST, type NoteEvent, type Track } from "./score";
 
 const beats = (ns: NoteEvent[]): number => ns.reduce((a, n) => a + n.durationBeats, 0);
 const grid = (inst: "kick" | "snare" | "hihat", bars: number): Track => ({ waveform: "square", instrument: inst, volume: 0.1, pan: 0, notes: Array.from({ length: bars * 16 }, (_, i) => (inst === "hihat" || i % 4 === 0 ? { note: "C2", durationBeats: 0.25 } : { note: REST, durationBeats: 0.25 })) });
 
 describe("ドラムのおかず", () => {
-  it("型は、どれも8マス。タムの数字は1〜6", () => {
+  it("型は、どれも4・8・16マスのどれかで、4つの段が同じ長さ。タムの数字は1〜6", () => {
     for (const f of FILLS) {
-      for (const lane of [f.S, f.K, f.T, ...(f.H !== undefined ? [f.H] : [])]) expect(lane.length, f.id).toBe(8);
-      expect(f.T).toMatch(/^[1-6.]{8}$/);
+      expect([4, 8, 16], f.id).toContain(f.S.length);
+      for (const lane of [f.K, f.T, ...(f.H !== undefined ? [f.H] : [])]) expect(lane.length, f.id).toBe(f.S.length);
+      expect(f.T, f.id).toMatch(/^[1-6.]+$/);
+      expect(fillBeats(f)).toBe(f.S.length / 4);
     }
+    expect(new Set(FILLS.map((f) => f.id)).size).toBe(FILLS.length);
+  });
+  it("リニアの型は、スネア・キック・タムが同じマスで鳴らない", () => {
+    for (const id of ["linear", "linearbar"]) {
+      const f = FILLS.find((x) => x.id === id)!;
+      for (let i = 0; i < f.S.length; i++) {
+        const n = [f.S[i], f.K[i], f.T[i]].filter((c) => c !== ".").length;
+        expect(n, `${id}:${i}`).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+  it("1小節の型は、小節の頭から4拍ぶんを入れかえ、長さは保たれる。3拍子では4拍の型を選ばない", () => {
+    const f = FILLS.find((x) => x.id === "bar16")!;
+    const out = placeFill([grid("kick", 3), grid("snare", 3), grid("hihat", 3)], f, 4, 12);
+    for (const t of out) expect(beats(t.notes)).toBeCloseTo(12);
+    expect(fillBeats(pickFill("big", 0, 3))).toBeLessThanOrEqual(3);
+    expect(fillBeats(pickFill("small", 5, 3))).toBeLessThanOrEqual(3);
   });
   it("overwriteRange: 長さは変わらず、指定の範囲だけが入れ替わる（またがる音符は切る）", () => {
     const base: NoteEvent[] = [{ note: "C2", durationBeats: 1 }, { note: "C2", durationBeats: 3 }];
