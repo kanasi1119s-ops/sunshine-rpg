@@ -83,7 +83,7 @@ export interface AiSong {
   /** false にすると、ギターの長い音に自動でかかる「下から持ち上げて入る」しゃくりを止める。 */
   autoScoop?: boolean;
   /** ドラムの太鼓ごとのミックス。{ hat: { level: 0.7, pan: -0.4 }, snare: { reverb: 0.3 } } のように。level＝音量の倍率（1が標準）、pan＝左右、reverb＝残響の送り（0〜1）。real版で効く。 */
-  drumMix?: Partial<Record<"kick" | "snare" | "hat" | "tom" | "crash", { level?: number; pan?: number; reverb?: number; spread?: number }>>;
+  drumMix?: Partial<Record<"kick" | "snare" | "hat" | "tom" | "crash", { level?: number; pan?: number; reverb?: number; spread?: number; tune?: number }>>;
   /** false にすると、sections の場面の変わり目にドラムのおかず（フィル）を自動で入れない（省略は入れる）。 */
   fills?: boolean;
   /** 自動の伴奏のセクション編曲。"auto"（定番の構成）か、{kind, bars} の並び。autoAccompaniment が true のときだけ効く。 */
@@ -174,7 +174,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - tone: ギターの音色の方向（rock / metal / prs＝なめらかなリード）。
 - synth: true にすると、lead（シンセリード）と pad が電子的なシンセの音色になる。省略（false）だと lead はフルート、pad は合唱に近い生楽器寄りの音色で鳴る（tone が metal / prs の lead はオーバードライブのギター）。ダンス・電子音楽のアルペジオやリードには true にする。
 - タム(tom)のパートは、x のかわりに音名で高さを選べる（C4＝高いタム 〜 A2＝低いフロアタム。例 C4:0.25! A3:0.25, G3:0.25 E3:0.25）。フィルを高→低に下ろすときに使う。
-- ミキシング（real版＝録音音源で効く）: パートごとに reverb（残響の送り 0〜1。奥に置く脇役は大きく）、chorus（広がりの揺らぎ 0〜1）、bright（-1〜0.5。マイナスで高域を丸く）、duck（0〜0.95。キックに合わせて音量が凹む＝サイドチェイン風。ベースやパッドを、キックの隙間に入れるとき 0.2〜0.4）。ドラムの太鼓ごとのバランスは曲の drumMix: {"hat":{"level":0.7,"pan":-0.35},"snare":{"reverb":0.2},"tom":{"spread":0.7},"crash":{"level":0.85}}（level＝音量の倍率、pan＝左右、reverb＝残響の送り、tom の spread＝高いタムを左・低いフロアを右へ振る広がり）。ドラムのパートの pan は効かないので、左右は drumMix で決める。帯域のバランスは、WAVを書き出して tools/audio-check/analyze.py --bands で測れる。
+- ミキシング（real版＝録音音源で効く）: パートごとに reverb（残響の送り 0〜1。奥に置く脇役は大きく）、chorus（広がりの揺らぎ 0〜1）、bright（-1〜0.5。マイナスで高域を丸く）、duck（0〜0.95。キックに合わせて音量が凹む＝サイドチェイン風。ベースやパッドを、キックの隙間に入れるとき 0.2〜0.4）。ドラムの太鼓ごとのバランスは曲の drumMix: {"hat":{"level":0.7,"pan":-0.35},"snare":{"reverb":0.2},"tom":{"spread":0.7},"crash":{"level":0.85}}（level＝音量の倍率、pan＝左右、reverb＝残響の送り、tom の spread＝高いタムを左・低いフロアを右へ振る広がり、tune＝音の高さを半音単位でずらす -6〜6。タムを低くしたいときは tom の tune を -3 など）。ドラムのパートの pan は効かないので、左右は drumMix で決める。帯域のバランスは、WAVを書き出して tools/audio-check/analyze.py --bands で測れる。
 - fills: false にすると、sections の場面の変わり目にドラムのおかずを自動で入れない（省略は入れる）。おかずの型は docs/sound/drum-fills.md。
 - autoScoop: false にすると、ギターの長い音（1拍以上）に自動でかかる「半音下から持ち上げて入る」しゃくりを止める。「ギターがキュインキュインする／しゃくりすぎ」と言われたときに使う。メロディの「/」（しゃくり）や「\\」（フォール）の記号も減らし、旋律を高い音域（A5以上）に置かないとなおよい。
 - snareTune: スネアの音程（半音。-6〜6、0.5刻み。マイナスで低く＝太く落ち着いた音、プラスで高く＝抜けのいい音）。「スネアが高い／低い」と言われたときに使う。録音音源（real版）でだけ効く。
@@ -226,7 +226,7 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
     - 弦: 背景は sustain 1.5 の長い音、旋律はレガート（_）、アクションはスタッカート（'）の速い連打、トレモロは同じ音を 0.125〜0.25 拍でくり返す。ピアノ: 左手は根音と5度、右手は和音で、旋律を ! で強く伴奏を , で弱く。ブラス: 長い音の頭を ! で、山場は ' の連打。合唱・木管は phrase で山なりの強弱、息継ぎの休符。
     - 仕上げの確認: 最初の4小節で雰囲気が伝わるか、サビの最高音が Aメロより高いか、2回目の同じ進行で1つ変えたか、切り替わりにフィル・休符・crash があるか。
   - ボカロ風のバック（歌なし）: bpm 160〜200、feel は vocaloid（autoAccompaniment を true にすると、16分のハイハット・シンコペのキック・動くベース・16分のピアノ・8分のギター・左右の弦が付く）。歌のパートはシンセのリード（lead、synth: true）に任せ、声（choir）は使わない。メロディは音域を広く、8分・16分の早口のフレーズ、サビで高く、ブレスの休符を入れる。コードは1小節1コードで、短調なら Dm Bb F C のような進行。最後のサビの前に半音上げる。自動の伴奏は最初から最後まで同じなので、起伏が欲しいときは、導入（ピアノと弦だけ）→Aメロ（リズムを足す）→Bメロ（ギター）→サビ（全部）→間奏（リズムを抜く）と、パートをセクションごとに自分で書く（見本: assets-src/ai-songs/vocaloid-style-demo.json）。
-  - ギターの音色（patch）: leadGuitar は標準だと歪んだ音色。クリーンなソロ・単音のメロディにしたいときは patch に cleanGuitar（クリーン）・jazzGuitar（丸い）・steelGuitar（アコースティック）・nylonGuitar（ナイロン弦）・mutedGuitar（ミュート）を指定し、amp は clean にする。
+  - ギターの音色（patch）: leadGuitar は標準だと歪んだ音色。クリーンなソロ・単音のメロディにしたいときは patch に cleanGuitar（クリーン）・jazzGuitar（丸い）・nylonGuitar（ナイロン弦のアコースティック）を指定し、amp は clean にする。steelGuitar・mutedGuitar はゲーム用の録音音源に入っておらず、ピアノの音になるので使わない。
   - シンセの音色（パートの patch）: 指定すると楽器のかわりにシンセ音で鳴る（ドラム以外）。波形の性格: squareLead＝丸く芯のある角ばった音（旋律・8bit寄り）、sawLead＝明るくぎらつく音（旋律・サビ）、calliope/chiff＝息づかいのある柔らかいリード、charang＝歪んだ攻めのリード、fifths＝5度が重なる力強いリード、bassLead＝低音と旋律を兼ねる。パッド: warmPad（やわらかく広がる）、newAge＝きらめく、halo＝聖なる、sweep＝うねって広がる、metalPad＝冷たく金属的、bowedGlass＝ガラスのような弦。ベース: fretlessBass＝なめらかに歌うフレットレス（ベースで旋律を弾くとき）、acousticBass＝ウッド寄り、slapBass＝はじけるスラップ、synthBass1＝太く丸い、synthBass2＝硬く尖った。刻み: polysynth＝和音の刻み、synthStrings1/2＝厚い弦。飾り: crystal・iceRain・brightness・starTheme＝きらきらした余韻（ここぞの場面だけ）、atmosphere＝暗い空気、goblin・echoDrops・soundtrack＝不思議・映画的。使い分けの定石: パッドは sustain 2〜3 で長い音、ピッチは低めに；プラック（ぽん、と減衰する音）は polysynth か crystal に sustain 0.4；リードは ~（ビブラート）と phrase で歌わせる；ベースは根音を低く、旋律と音域を重ねない。声に聞こえる音は入れていない。
   - ブルース: 12小節（I I I I / IV IV I I / V IV I V）・7th・swing 0.5・ブルーノート。ワルツ: beats 3・1拍目が強い。チップチューン: 少ない音色・速いアルペジオ・短いフレーズのくり返し。
   - ベース・ドラムの音源は、書き出しの --bass と --drums に rock / metal / jazz / jpop を選べる（ジャンルに合わせる）。
@@ -350,11 +350,12 @@ function drumMixOf(raw: unknown): Score["drumMix"] | undefined {
   for (const k of ["kick", "snare", "hat", "tom", "crash"] as const) {
     const v = (raw as Record<string, Record<string, unknown> | undefined>)[k];
     if (!v || typeof v !== "object") continue;
-    const cfg: { level?: number; pan?: number; reverb?: number; spread?: number } = {};
+    const cfg: { level?: number; pan?: number; reverb?: number; spread?: number; tune?: number } = {};
     if (v.level !== undefined && Number.isFinite(Number(v.level))) cfg.level = Math.max(0, Math.min(1.5, Number(v.level)));
     if (v.pan !== undefined && Number.isFinite(Number(v.pan))) cfg.pan = Math.max(-1, Math.min(1, Number(v.pan)));
     if (v.reverb !== undefined && Number.isFinite(Number(v.reverb))) cfg.reverb = Math.max(0, Math.min(1, Number(v.reverb)));
     if (k === "tom" && v.spread !== undefined && Number.isFinite(Number(v.spread))) cfg.spread = Math.max(0, Math.min(1, Number(v.spread)));
+    if (v.tune !== undefined && Number.isFinite(Number(v.tune))) cfg.tune = Math.max(-6, Math.min(6, Number(v.tune)));
     if (Object.keys(cfg).length) out[k] = cfg;
   }
   return Object.keys(out).length ? out : undefined;

@@ -173,7 +173,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         if (!list.some((e) => e.bytes[0] === 0xc9)) list.push({ tick: 0, order: 0, bytes: [0xc9, score.drumKit ?? 0] });
         // 太鼓ごとのミックス（ドラムNRPN: 26=音量、28=左右、29=残響。データ120が標準の音量、64が中央）
         if (score.drumMix && !list.some((e) => e.bytes[0] === 0xb9 && e.bytes[1] === 99 && e.bytes[2] !== 24)) {
-          for (const [group, cfg] of Object.entries(score.drumMix) as [keyof typeof DRUM_GROUP_KEYS, { level?: number; pan?: number; reverb?: number; spread?: number }][]) {
+          for (const [group, cfg] of Object.entries(score.drumMix) as [keyof typeof DRUM_GROUP_KEYS, { level?: number; pan?: number; reverb?: number; spread?: number; tune?: number }][]) {
             for (const key of DRUM_GROUP_KEYS[group] ?? []) {
               const put = (msb: number, data: number): void => { for (const [cc, v] of [[99, msb], [98, key], [6, clamp127(data)]] as const) list.push({ tick: 0, order: 0, bytes: [0xb9, cc, v] }); };
               if (cfg.level !== undefined) put(26, 120 * Math.max(0, Math.min(1.05, cfg.level)));
@@ -185,13 +185,14 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
                 const pos = at < 0 ? 0 : (at / (order.length - 1)) * 2 - 1;
                 put(28, Math.max(1, 64 + Math.max(-1, Math.min(1, (cfg.pan ?? 0) + pos * Math.min(1, cfg.spread))) * 63));
               }
+              if (cfg.tune !== undefined) put(24, 64 + Math.max(-6, Math.min(6, cfg.tune)) * 2);
               if (cfg.reverb !== undefined) put(29, cfg.reverb * 127);
             }
           }
           for (const [cc, v] of [[99, 127], [98, 127]] as const) list.push({ tick: 0, order: 0, bytes: [0xb9, cc, v] });
         }
         // スネアの音程調整（ドラムNRPN 24: データ64が元のまま、1あたり50セント）
-        if (score.snareTune && !list.some((e) => e.bytes[0] === 0xb9 && e.bytes[1] === 99 && e.bytes[2] === 24)) {
+        if (score.snareTune && score.drumMix?.snare?.tune === undefined) {
           const data = Math.max(0, Math.min(127, Math.round(64 + score.snareTune * 2)));
           for (const key of [38, 40]) for (const [cc, v] of [[99, 24], [98, key], [6, data]] as const) list.push({ tick: 0, order: 0, bytes: [0xb9, cc, v] });
           for (const [cc, v] of [[99, 127], [98, 127]] as const) list.push({ tick: 0, order: 0, bytes: [0xb9, cc, v] });

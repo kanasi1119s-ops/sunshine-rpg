@@ -252,6 +252,19 @@ describe("スネアの音程（snareTune）", () => {
   });
 });
 
+describe("太鼓ごとの音程（drumMix の tune）", () => {
+  it("tom の tune -3 なら 6 キー分に NRPN 24 で 58 を送り、snareTune も今までどおり効く", () => {
+    const sc: Score = {
+      tempoBpm: 100, loop: false, edition: "real", snareTune: -2, drumMix: { tom: { tune: -3 } },
+      tracks: [{ waveform: "square", instrument: "tom", volume: 0.1, pan: 0, notes: [{ note: "C2", durationBeats: 1 }] }],
+    };
+    const b = scoreToMidi(sc);
+    const count = (data: number): number => { let c = 0; for (let i = 0; i < b.length - 2; i++) if (b[i] === 0xb9 && b[i + 1] === 6 && b[i + 2] === data) c++; return c; };
+    expect(count(58)).toBe(6);
+    expect(count(60)).toBe(2);
+  });
+});
+
 describe("タムの高さ", () => {
   it("音名で、高いタム(50)から低いフロアタム(41)まで選べる。C2 は今までどおり 47", () => {
     const mk = (note: string): Score => ({ tempoBpm: 100, loop: false, edition: "real", tracks: [{ waveform: "square", instrument: "tom", volume: 0.1, pan: 0, notes: [{ note, durationBeats: 1 }] }] });

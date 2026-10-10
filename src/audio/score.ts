@@ -136,9 +136,9 @@ export interface Score {
   drumKit?: number;
   /**
    * ドラムの太鼓ごとのミックス（録音音源のドラムNRPN）。level＝音量の倍率（1が標準。0〜1.5）、pan＝左右（-1〜1。叩き手から見た位置でなく聴き手から見た位置）、reverb＝残響の送り（0〜1）。
-   * 例: ハイハットは小さく左、スネアは残響を足す。tom の spread（0〜1）は、高いタムを左・低いフロアを右へ振り分ける広がり。
+   * 例: ハイハットは小さく左、スネアは残響を足す。tom の spread（0〜1）は、高いタムを左・低いフロアを右へ振り分ける広がり。tune は音の高さを半音単位でずらす（-6〜6）。
    */
-  drumMix?: Partial<Record<"kick" | "snare" | "hat" | "tom" | "crash", { level?: number; pan?: number; reverb?: number; spread?: number }>>;
+  drumMix?: Partial<Record<"kick" | "snare" | "hat" | "tom" | "crash", { level?: number; pan?: number; reverb?: number; spread?: number; tune?: number }>>;
   /** trueなら、パッド・弦・合唱の音量をキックに合わせて周期的に凹ませる（電子音楽風のポンプ感）。 */
   pump?: boolean;
   /** trueなら、リードとパッドを電子的な音色にする（電子音楽向け）。省略時は生楽器に近い音色。 */

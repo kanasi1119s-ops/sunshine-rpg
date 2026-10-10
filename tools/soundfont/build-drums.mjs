@@ -49,7 +49,7 @@ const PROFILES = {
   jpop:  { out: "drums-jpop", label: "J-POP", overhead: 0.9, amb: 0.25, kick: 1.2, snare: 1.3, tom: 1.0, hat: 1.1, cym: 0.8, sec: 0.85,
     eq: "highpass=f=40,equalizer=f=90:t=q:w=1:g=2,equalizer=f=4500:t=q:w=1:g=3,equalizer=f=9000:t=q:w=1:g=2,acompressor=threshold=-20dB:ratio=3:attack=4:release=80:makeup=1.5" },
   // 「スープラ」: 乾いて硬い金属スネア（アルミ胴の定番スネアのような、パシッと抜ける高めの音）に寄せた設定。部屋の鳴りを減らし、スネアだけ別のイコライザーと短い余韻にする
-  supra: { out: "drums-supra", label: "スープラ", overhead: 0.8, amb: 0.12, kick: 1.15, snare: 1.45, tom: 1.0, hat: 1.05, cym: 0.8, sec: 0.85, snareSec: 0.55,
+  supra: { out: "drums-supra", label: "スープラ", overhead: 0.8, amb: 0.12, kick: 1.15, snare: 1.45, tom: 1.0, hat: 1.05, cym: 0.8, sec: 0.85, snareSec: 0.55, crashSec: 2.2, crashTail: 6,
     eq: "highpass=f=40,equalizer=f=90:t=q:w=1:g=2,equalizer=f=4500:t=q:w=1:g=2,equalizer=f=9000:t=q:w=1:g=2,acompressor=threshold=-20dB:ratio=3:attack=4:release=80:makeup=1.5",
     snareEq: "highpass=f=110,equalizer=f=230:t=q:w=1.2:g=1.5,equalizer=f=420:t=q:w=1.5:g=-4,equalizer=f=1800:t=q:w=1.5:g=1.5,equalizer=f=5500:t=q:w=1:g=4.5,equalizer=f=10000:t=q:w=1:g=3,acompressor=threshold=-24dB:ratio=4:attack=1.5:release=45:makeup=2" },
 };
@@ -68,7 +68,7 @@ function layers(name) {
 }
 
 function hit(inst, idx, cfg, prof) {
-  const sec = cfg.sec * prof.sec * (kindOf(inst) === "cym" ? prof.cym : 1) * (kindOf(inst) === "snare" && prof.snareSec ? prof.snareSec : 1);
+  const sec = cfg.sec * prof.sec * (kindOf(inst) === "cym" ? prof.cym : 1) * (/^Crash/.test(inst) && prof.crashSec ? prof.crashSec : 1) * (kindOf(inst) === "snare" && prof.snareSec ? prof.snareSec : 1);
   cfg = { ...cfg, sec };
   const file = (mic) => path.join(SAMPLES, inst, `${idx}-${inst}-${mic}.flac`);
   const read = (mic) => decodeMono(file(mic), cfg.sec);
@@ -82,8 +82,12 @@ function hit(inst, idx, cfg, prof) {
   for (const [mic, g] of Object.entries(cfg.close)) add(read(mic), g * boost * Math.cos(ang) * 1.2, g * boost * Math.sin(ang) * 1.2);
   const [fl, fr] = filterStereo(L, R, kindOf(inst) === "snare" && prof.snareEq ? prof.snareEq : prof.eq);
   L.set(fl.subarray(0, len)); R.set(fr.subarray(0, len));
+  // クラッシュの余韻をのばす: 録音の減り方（約-18dB/秒）をゆるやかにするため、時間とともに音量を持ち上げる（上限 +36dB）
+  if (/^Crash/.test(inst) && prof.crashTail) {
+    for (let i = 0; i < len; i++) { const g = Math.pow(10, Math.min(36, (prof.crashTail * i) / SR) / 20); L[i] *= g; R[i] *= g; }
+  }
   // 終わりを 0.12秒かけて静かにする
-  const fade = Math.round(0.12 * SR);
+  const fade = Math.round((/^Crash/.test(inst) && prof.crashSec ? 0.6 : 0.12) * SR);
   for (let i = 0; i < fade; i++) { const g = i / fade; L[len - 1 - i] *= g; R[len - 1 - i] *= g; }
   return [L, R];
 }
@@ -135,7 +139,8 @@ async function build(name, prof) {
             z.velRange = { min: m.lo, max: m.hi };
             z.setGenerator(GeneratorTypes.scaleTuning, 0);
             z.setGenerator(GeneratorTypes.pan, smp === l ? -500 : 500);
-            z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(0.3));
+            // クラッシュは、叩いた直後に鍵盤を離しても余韻が鳴り続けるよう、離したあとの減り方を長くする（crashSec のある設定だけ）
+            z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(/^Crash/.test(m.inst) && prof.crashSec ? 12 : 0.3));
             if (m.cfg.exclusive) z.setGenerator(GeneratorTypes.exclusiveClass, m.cfg.exclusive);
           }
         }
