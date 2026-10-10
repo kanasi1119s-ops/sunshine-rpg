@@ -16,8 +16,8 @@ describe("サウンドセット", () => {
   it("アンプ・音量・ドラムのミックスが当たり、合計は 0.9 をこえない", () => {
     const out = applySoundSet(mk(), SOUND_SETS["punk-run"]);
     expect(out.tracks[1].amp?.type).toBe("punk");
-    expect(out.tracks[1].pan).toBe(-0.85);
-    expect(out.tracks[2].pan).toBe(0.85);
+    expect(out.tracks[1].pan).toBe(-0.55);
+    expect(out.tracks[2].pan).toBe(0.55);
     expect(out.tracks[3].volume).toBeLessThanOrEqual(0.06);
     expect(out.drumMix?.tom?.tune).toBe(-3);
     expect(out.tracks.reduce((a, t) => a + t.volume, 0)).toBeLessThanOrEqual(0.9001);
