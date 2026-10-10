@@ -244,7 +244,7 @@ export class AmpRack {
         return this.chain(input, tail([this.filter("highpass", 110), this.filter("peaking", 900, 3, 0.9), this.gain(4 * d), this.shaper(6.5 * d, 0.05), this.filter("lowshelf", 110, 3), this.filter("peaking", 3000, 3, 1), this.filter("lowpass", 5000, 0, 0.8), this.gain(0.38)]));
       case "punk":
         // パンク: 対称に角を立てて強く歪ませる。前段で低音（300Hz未満）を削り、2.8kHzを大きく持ち上げる。後段で700Hz以下を落として、1〜4kHzを厚くする（5曲の楽器ごとの分析で、ギターの重心が約1400Hzと分かったため。2026-10-11）
-        return this.chain(input, tail([this.filter("highpass", 200), this.filter("peaking", 3000, 14, 0.7), this.gain(4.2 * d), this.shaper(7 * d, 0), this.filter("lowshelf", 700, -14), this.filter("peaking", 3000, 8, 0.7), this.filter("highshelf", 4000, 7), this.filter("lowpass", 9000, 0, 0.8), this.gain(0.4)]));
+        return this.chain(input, tail([this.filter("highpass", 200), this.filter("peaking", 3000, 14, 0.7), this.gain(4.2 * d), this.shaper(7 * d, 0), this.filter("lowshelf", 900, -20), this.filter("peaking", 3000, 8, 0.7), this.filter("highshelf", 4000, 7), this.filter("lowpass", 9000, 0, 0.8), this.gain(0.4)]));
       case "fuzz":
         // ファズ: 非常に深く、上下の非対称も大きく歪ませる。低音を太く、中域を少しえぐり、高音は丸める（荒々しく不穏）
         return this.chain(input, tail([this.filter("highpass", 70), this.gain(6 * d), this.shaper(14 * d, 0.2), this.filter("lowshelf", 150, 5), this.filter("peaking", 600, -3, 0.9), this.filter("lowpass", 3800, 0, 0.7), this.gain(0.24)]));
