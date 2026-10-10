@@ -28,6 +28,8 @@ export interface SoundSet {
   /** 楽器ごとの設定。書いていない楽器の音量は 0.06 を上限にする。 */
   parts: Partial<Record<Instrument, PartMix>>;
   drumMix?: Score["drumMix"];
+  /** 書き出しのWAVの大きさ（LUFS）。ゲーム中の再生には効かない。 */
+  master?: { lufs: number };
   /** 目安のテンポ（BPM）。自動では変えない。 */
   tempoHint?: [number, number];
   /** 打ち込みの型の例（16分の格子。ドラムのパートに書く）。 */
@@ -39,12 +41,12 @@ export const SOUND_SETS: Record<string, SoundSet> = {
     id: "punk-run",
     label: "疾走パンク（2ビート・ギター前）",
     description: "歪みギターを左右に振って前に出し、ベースとキックは控えめ。ドラムは2ビート（キックが表・スネアが裏）。メロディは生ギターのクリーン。",
-    source: "参考録音（人間から受け取った録音・画面収録）との帯域比べ＋見本曲 melodic-punk-run の調整（2026-10-11）。音は取り込んでいない",
+    source: "参考録音5曲の楽器ごとの分析（analyze-stems.py：音量比・帯域・重心・左右の広がり。docs/sound/punk-guide.md §9）と、見本曲 melodic-punk-run の調整（2026-10-11）。数字だけを使い、音は取り込んでいない",
     overlays: { bass: "pick", drums: "rock", guitar: "gretsch" },
     tone: "rock",
     human: 0.4,
     parts: {
-      kick: { volume: 0.03 }, snare: { volume: 0.054 }, hihat: { volume: 0.034 }, crash: { volume: 0.04 }, tom: { volume: 0.033 },
+      kick: { volume: 0.03 }, snare: { volume: 0.054 }, hihat: { volume: 0.045 }, crash: { volume: 0.055 }, tom: { volume: 0.033 },
       bass: { volume: 0.026, bright: 0.5, duck: 0.15 },
       distGuitar: { volume: 0.12, amp: { type: "punk" }, panWidth: 0.55 },
       crunch: { volume: 0.12, amp: { type: "punk" }, panWidth: 0.55 },
@@ -52,6 +54,7 @@ export const SOUND_SETS: Record<string, SoundSet> = {
       echoGuitar: { volume: 0.06, amp: { type: "clean" }, reverb: 0.2, chorus: 0 },
     },
     drumMix: { hat: { level: 1.05, pan: -0.3, reverb: 0.05 }, snare: { level: 1.15, reverb: 0.15 }, tom: { spread: 0.6, reverb: 0.12, tune: -3 }, crash: { level: 1.0, pan: 0.3, reverb: 0.25 } },
+    master: { lufs: -10 },
     tempoHint: [160, 210],
     drumPatterns: {
       "2beat-kick": "x...x...x...x...", "2beat-kick-b": "x...x...x..xx...", "2beat-snare": "..x...x...x...x.", "2beat-hat": "x.X.x.X.x.X.x.X.",

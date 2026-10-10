@@ -39,4 +39,14 @@ describe("サウンドセット", () => {
       expect(["std", "gretsch", "hofner"]).toContain(s.overlays.guitar);
     }
   });
+
+  it("仕上げの音量（master）は、あるなら現実的な範囲（-16〜-6 LUFS）", () => {
+    for (const s of Object.values(SOUND_SETS)) {
+      if (s.master) {
+        expect(s.master.lufs).toBeGreaterThanOrEqual(-16);
+        expect(s.master.lufs).toBeLessThanOrEqual(-6);
+      }
+    }
+    expect(SOUND_SETS["punk-run"].master).toBeDefined();
+  });
 });
