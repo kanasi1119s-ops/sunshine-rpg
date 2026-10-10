@@ -2,7 +2,7 @@
 """曲の「リズム」を数値で測る道具（2026-10-11）。参考にしたい録音を聴かずに調べるための、勉強用の分析。
 
 使い方:
-    python3 tools/audio-check/analyze-rhythm.py 曲.wav|mp3 [--bars 8-24]
+    python3 tools/audio-check/analyze-rhythm.py 曲.wav|mp3 [--bars 8-24] [--bpm 160（テンポを指定して測り直す。倍・半分の取り違えを確かめる）]
 測るもの（旋律・和音は測らない。曲を写すためではなく、リズムの作りと音の厚みを知るため）:
 - テンポ（BPM）と、拍の位置のずれ
 - ドラムの型: 帯域ごとの打点を、1小節16個の格子に当てはめる（low＝キック、mid＝スネア、high＝ハイハット・シンコペ）。
@@ -45,16 +45,16 @@ def tempo_of(on, sr, hop):
     return best
 
 def main():
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    args = [a for a in sys.argv[1:] if not a.startswith("--") and not a.replace('.', '').replace('-', '').isdigit()]
     rng = None
     if "--bars" in sys.argv:
         a, b = sys.argv[sys.argv.index("--bars") + 1].split("-"); rng = (int(a), int(b))
-        args = [a for a in args if "-" not in a or "." in a]
     path = args[0]
     x, sr = load(path)
     on, t, hop = band_onsets(x, sr)
     fps = sr / hop
     bpm0 = tempo_of(on, sr, hop)
+    if '--bpm' in sys.argv: bpm0 = float(sys.argv[sys.argv.index('--bpm') + 1])
     n = len(on["low"])
     tot = on["low"] / (on["low"].std() + 1e-9) + on["mid"] / (on["mid"].std() + 1e-9)
     from scipy.ndimage import maximum_filter1d
