@@ -5,7 +5,7 @@
 //       AIソング形式の説明（楽器の一覧・書き方・よい曲にするコツ）を表示する。曲を書く前に読む。
 //   node tools/composer/song.mjs build <曲.json> [--out <フォルダ>] [--edition real|ps2|modern] [--wav] [--register <曲ID> --scene "<場面>"]
 //       AIソング形式のJSONを確かめて、作曲ソフトで開けるプロジェクト（.sunshine-song.json）とMIDIを書き出す。
-//       --bass finger|pick|rock|metal|jazz|jpop: ベースを FreePats のエレキベースの音源に。--guitar gretsch|hofner: ジャズギター(26)・クリーンギター(27)を Karoryfer の生ギター（CC0）に。--drums muldjord|rock|metal|jazz|jpop|supra: ドラムを生ドラム（Muldjord Kit）に（省略は標準）。
+//       --bass finger|pick|rock|metal|jazz|jpop: ベースを FreePats のエレキベースの音源に。--sound punk-run|clear-guitar-rock: サウンドセット（アンプ・音量・ミックス・ドラム・使う音源をまとめて当てはめる。--bass/--drums/--guitar を別に書けばそちらが優先）。--guitar gretsch|hofner: ジャズギター(26)・クリーンギター(27)を Karoryfer の生ギター（CC0）に。--drums muldjord|rock|metal|jazz|jpop|supra: ドラムを生ドラム（Muldjord Kit）に（省略は標準）。
 //       --soundfont gu: WAVを GeneralUser GS の音源で作る（省略はゲームと同じ FluidR3）。
 //       --wav: 作曲ソフトと同じ音（録音音源・アンプ・仕上げ）でWAVも作る（Playwright と Chromium が必要）。
 //       --register: ゲームの曲として src/audio/songs/<曲ID>.sunshine-song.json に登録する。
@@ -24,10 +24,13 @@ try {
   if (args[0] === "guide") {
     console.log(await kit.guide());
     console.log("\n## 見本\nassets-src/ai-songs/ にある .json を見てください。");
+  } else if (args[0] === "sounds") {
+    const { SOUND_SETS } = await kit.soundSets();
+    for (const s of Object.values(SOUND_SETS)) console.log(`${s.id}\t${s.label}\n  ${s.description}\n  音源: ベース ${s.overlays.bass}・ドラム ${s.overlays.drums}・ギター ${s.overlays.guitar}${s.tempoHint ? `　目安テンポ ${s.tempoHint[0]}〜${s.tempoHint[1]}` : ""}`);
   } else if (args[0] === "build" && args[1]) {
     try {
       const name = path.basename(args[1]).replace(/\.json$/i, "").toLowerCase().replace(/[^a-z0-9-]+/g, "-");
-      const r = await kit.build(JSON.parse(fs.readFileSync(args[1], "utf8")), { name, edition: opt("--edition") ?? "real", outDir: opt("--out"), wav: args.includes("--wav"), soundfont: opt("--soundfont") === "gu" ? "gu" : "game", bass: opt("--bass") ?? "std", drums: opt("--drums") ?? "std", guitar: opt("--guitar") ?? "std" });
+      const r = await kit.build(JSON.parse(fs.readFileSync(args[1], "utf8")), { name, edition: opt("--edition") ?? "real", outDir: opt("--out"), wav: args.includes("--wav"), soundfont: opt("--soundfont") === "gu" ? "gu" : "game", bass: opt("--bass") ?? "std", drums: opt("--drums") ?? "std", guitar: opt("--guitar") ?? "std", sound: opt("--sound") ?? "" });
       for (const w of r.warnings) console.warn("注意:", w);
       console.log(`○ 「${r.title}」 ${r.tracks}トラック・${Math.floor(r.seconds / 60)}分${Math.round(r.seconds % 60)}秒・テンポ${r.bpm}`);
       console.log("  プロジェクト:", r.files.project, "（作曲ソフトの「プロジェクトを読み込む」で開ける）");

@@ -12,6 +12,7 @@ import bassMetalUrl from "../../assets-src/soundfont/extra/bass-metal.sf3?url";
 import drumsMetalUrl from "../../assets-src/soundfont/extra/drums-metal.sf3?url";
 import bassJazzUrl from "../../assets-src/soundfont/extra/bass-jazz.sf3?url";
 import drumsJazzUrl from "../../assets-src/soundfont/extra/drums-jazz.sf3?url";
+import { SOUND_SETS, applySoundSet } from "../../src/audio/sound-sets";
 import guitarGretschUrl from "../../assets-src/soundfont/extra/guitar-gretsch.sf3?url";
 import guitarHofnerUrl from "../../assets-src/soundfont/extra/guitar-hofner.sf3?url";
 import bassJpopUrl from "../../assets-src/soundfont/extra/bass-jpop.sf3?url";
@@ -360,6 +361,20 @@ const drumsSel = select(Object.entries(DRUM_FONTS).map(([id, v]) => [id, v.label
 drumsSel.onchange = () => { const was = state.playing; void applyOverlay("drums", drumsSel.value).then(() => { if (was) play(0); }); };
 const guitarSel = select(Object.entries(GUITAR_FONTS).map(([id, v]) => [id, v.label] as [string, string]), guitarId);
 guitarSel.onchange = () => { const was = state.playing; void applyOverlay("guitar", guitarSel.value).then(() => { if (was) play(0); }); };
+// サウンドセット: 選ぶと、アンプ・音量・ミックス・ドラムの設定と、ベース・ドラム・ギターの音源をまとめて切りかえる（曲の中身＝音符は変えない）
+const soundSetSel = select([["", "（選ばない）"], ...Object.values(SOUND_SETS).map((s) => [s.id, s.label] as [string, string])], "");
+soundSetSel.title = "選ぶと、アンプ・音量・ミックス・ドラム・ベース／ドラム／ギターの音源をまとめて切りかえます。もとの曲の音量は、選びなおすと元に戻せません（先にプロジェクトを保存してください）";
+soundSetSel.onchange = () => {
+  const set = SOUND_SETS[soundSetSel.value];
+  if (!set) return;
+  const was = state.playing;
+  state.score = applySoundSet(state.score, set);
+  void Promise.all([applyOverlay("bass", set.overlays.bass in BASS_FONTS ? set.overlays.bass : "std"), applyOverlay("drums", set.overlays.drums in DRUM_FONTS ? set.overlays.drums : "std"), applyOverlay("guitar", set.overlays.guitar in GUITAR_FONTS ? set.overlays.guitar : "std")]).then(() => {
+    bassSel.value = bassId; drumsSel.value = drumsId; guitarSel.value = guitarId;
+    renderAll(); save();
+    if (was) play(0);
+  });
+};
 const volIn = h("input", { type: "range", min: "0", max: "100", value: "60", "aria-label": "音量" });
 volIn.oninput = () => engine.setBgmVolume(Number(volIn.value) / 100);
 engine.setBgmVolume(0.6);
@@ -1684,7 +1699,7 @@ app.append(
     h("div", { class: "transport" }, ui.playBtn, ui.pauseBtn, ui.stopBtn),
     h("div", { class: "lcd" }, h("div", { class: "lcd-time" }, ui.time), lcd("BPM", lcdTempo), lcd("TRK", lcdTracks), lcd("LEN", lcdLen)),
     h("div", { class: "seekwrap" }, ui.seek),
-    h("div", { class: "row topopts" }, field("サウンド", editionSel), field("録音音源", soundfontSel), field("ベース音源", bassSel), field("ドラム音源", drumsSel), field("ギター音源", guitarSel), field("マスター音量", volIn)),
+    h("div", { class: "row topopts" }, field("サウンド", editionSel), field("録音音源", soundfontSel), field("ベース音源", bassSel), field("ドラム音源", drumsSel), field("ギター音源", guitarSel), field("サウンドセット", soundSetSel), field("マスター音量", volIn)),
   ),
   h("div", { class: "daw" },
     panel("TRK", "トラック", ui.trackBox, h("div", { class: "row", style: "margin-top:8px" }, addTrackBtn),

@@ -12,13 +12,17 @@ export async function openSongKit() {
   const server = await createServer({ root: ROOT, configFile: false, logLevel: "silent", server: { middlewareMode: true, hmr: false }, appType: "custom" });
   const load = (p) => server.ssrLoadModule(p);
 
+  async function soundSets() {
+    return load("/src/audio/sound-sets.ts");
+  }
+
   async function guide() {
     const { AI_SONG_GUIDE } = await load("/src/audio/ai-song.ts");
     return AI_SONG_GUIDE;
   }
 
   /** 曲（AIソング形式のオブジェクト）を確かめて、プロジェクト・MIDI（・WAV）を書き出す。 */
-  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std" } = {}) {
+  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", sound = "" } = {}) {
     if (!EDITIONS.includes(edition)) throw new Error("edition は real・ps2・modern のどれか");
     if (!/^[a-z0-9][a-z0-9-]*$/.test(name ?? "")) throw new Error(`name は英小文字・数字・「-」だけ（${name}）`);
     const { aiSongToScore } = await load("/src/audio/ai-song.ts");
@@ -26,7 +30,17 @@ export async function openSongKit() {
     const { realEdition } = await load("/src/audio/real-edition.ts");
     const { ps2Edition } = await load("/src/audio/ps2-edition.ts");
     const { getScoreDurationSec } = await load("/src/audio/score.ts");
-    const { score, song, warnings } = aiSongToScore(songData);
+    let { score, song, warnings } = aiSongToScore(songData);
+    // サウンドセット: アンプ・音量・ミックス・ドラムの設定と、使う音源（ベース・ドラム・ギター）をまとめて当てはめる
+    if (sound) {
+      const { SOUND_SETS, applySoundSet } = await load("/src/audio/sound-sets.ts");
+      const set = SOUND_SETS[sound];
+      if (!set) throw new Error(`サウンドセットがありません: ${sound}（${Object.keys(SOUND_SETS).join("・")}）`);
+      score = applySoundSet(score, set);
+      if (bass === "std") bass = set.overlays.bass;
+      if (drums === "std") drums = set.overlays.drums;
+      if (guitar === "std") guitar = set.overlays.guitar;
+    }
     // 曲の自動チェック（楽譜）: 低音のにごり・同じ音域のぶつかり・単調さ。入力のまちがいではなく、直すと良くなるヒント
     const { checkScore } = await load("/src/audio/song-check.ts");
     warnings.push(...checkScore(score));
@@ -76,7 +90,7 @@ export async function openSongKit() {
     return Object.entries(AMP_PRESETS).map(([id, p]) => ({ id, label: p.label, genre: p.genre }));
   }
 
-  return { guide, build, register, listGameSongs, ampPresets, close: () => server.close() };
+  return { guide, soundSets, build, register, listGameSongs, ampPresets, close: () => server.close() };
 }
 
 async function loadPlaywright() {
