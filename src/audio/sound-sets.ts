@@ -44,8 +44,8 @@ export const SOUND_SETS: Record<string, SoundSet> = {
     tone: "rock",
     human: 0.4,
     parts: {
-      kick: { volume: 0.048 }, snare: { volume: 0.054 }, hihat: { volume: 0.027 }, crash: { volume: 0.033 }, tom: { volume: 0.033 },
-      bass: { volume: 0.042, bright: 0.4, duck: 0.15 },
+      kick: { volume: 0.038 }, snare: { volume: 0.054 }, hihat: { volume: 0.027 }, crash: { volume: 0.033 }, tom: { volume: 0.033 },
+      bass: { volume: 0.034, bright: 0.5, duck: 0.15 },
       distGuitar: { volume: 0.09, amp: { type: "punk" }, panWidth: 0.85 },
       crunch: { volume: 0.09, amp: { type: "punk" }, panWidth: 0.85 },
       leadGuitar: { volume: 0.09, amp: { type: "clean" }, reverb: 0.2 },
