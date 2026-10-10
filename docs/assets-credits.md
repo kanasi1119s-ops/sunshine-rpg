@@ -143,6 +143,7 @@
 | Muldjord Kit（生ドラム。作曲ソフト用のドラム音源） | https://github.com/sfzinstruments/DrumGizmo.MuldjordKit （原典: Lars Muldjord / DrumGizmo、SFZ化: sfzinstruments） | 2026-10-07 | 16本のマイク録音を `tools/soundfont/build-drums.mjs` で「近接マイク＋オーバーヘッド＋部屋」のステレオにまぜ、強さ4〜5層・必要な長さだけ切り出して、SF3（約3.1MB）にした。GMドラムの 0・8・16・32 のキットで、鳴らすキーだけ入れかえる。設定ファイルは `assets-src/soundfont/extra/src/muldjord/Data/`、録音（約340MB）はgitに入れず、変換結果は `assets-src/soundfont/extra/drums-muldjord.sf3`。作曲ソフトの画面「ドラム音源」で選ぶ。**ゲームには入れていない** | CC BY 4.0（`assets-src/soundfont/extra/src/muldjord/LICENSE`）。商用・改変・再配布は可。**作者 Lars Muldjord のクレジット表記が必要**（加工したことも書く）。ゲームに入れるときは、ゲーム内クレジットと README に「Muldjord Kit © Lars Muldjord (CC BY 4.0)。ミックス・切り出しの加工あり」と書くこと | 必要（ゲームに入れる場合） |
 | 使わない: Meatbass（Karoryfer、ウッドベース） | https://www.kvraudio.com/product/meatbass-by-karoryfer/details | 2026-10-07 | GPL 3 のため、ゲームに入れる素材としては避ける | — | — |
 | Sneakybass（Karoryfer、ウッドベース。作曲ソフトの「ジャズ」ベース） | https://github.com/sfzinstruments/karoryfer.sneakybass | 2026-10-07 | リポジトリのライセンス表記が CC0 と確認できたので、`tools/soundfont/build-bass.mjs jazz` でSF3（約1.2MB）にした。`assets-src/soundfont/extra/bass-jazz.sf3`。**ゲームには入れていない** | CC0（クレジット不要） | 不要 |
+| Black And Green Guitars（Karoryfer Samples。Gretsch Anniversary〔緑〕と Hofner Club〔黒〕の生ギター。作曲ソフトの「ギター音源」） | https://github.com/sfzinstruments/karoryfer.black-and-green-guitars （コミット b3b3249） | 2026-10-11 | リポジトリの LICENSE が CC0 1.0、readme に「Royalty-free for all commercial and non-commercial use」と確認できたので、`tools/soundfont/build-guitar.mjs` で twang の録音（ラウンドロビン1番目・強さ3段・mono・Vorbis圧縮）を SF3（Gretsch 5.6MB・Hofner 3.7MB）にした。GMのジャズギター(26)・クリーンギター(27)を入れかえる。`assets-src/soundfont/extra/guitar-gretsch.sf3`・`guitar-hofner.sf3`。ライセンス文と readme の写しも同じ場所。**ゲームには入れていない** | CC0（クレジット不要。録音・写真は Brian Wood） | 不要 |
 | Virtuosity Drums（ジャズ用の生ドラム。作曲ソフトの「ジャズ」ドラム） | https://github.com/sfzinstruments/virtuosity_drums | 2026-10-07 | CC0。`tools/soundfont/build-drums-jazz.mjs` でマイクをまぜ、SF3（約2.9MB）にした。`assets-src/soundfont/extra/drums-jazz.sf3`。**ゲームには入れていない** | CC0（クレジット不要） | 不要 |
 | ジャンル別のベース・ドラム（ロック／メタル／J-POP） | 上の FreePats ベース（ピック・指弾き）と Muldjord Kit | 2026-10-07 | 同じ録音に、音量バランスとEQを変えただけのもの（`build-bass.mjs`・`build-drums.mjs` の PROFILES）。`bass-rock/metal/jpop.sf3`、`drums-rock/metal/jpop.sf3` | ベースは CC0。ドラムは Muldjord Kit と同じ CC BY 4.0 | ドラムは必要（ゲームに入れる場合） |
 | ドラム「スープラ」（乾いた金属スネア寄せ。作曲ソフトの「ドラム音源」） | 上の Muldjord Kit | 2026-10-08 | 同じ録音に、スネアだけ別のEQ（400Hz付近を引き、5.5kHzを持ち上げ）・短い余韻・部屋の鳴りを減らす設定をかけたもの（`build-drums.mjs` の PROFILES の supra）。`drums-supra.sf3`（約2.6MB）。特定の実機の録音ではなく、あくまで音色を寄せた近似。**ゲームには入れていない** | Muldjord Kit と同じ CC BY 4.0 | 必要（ゲームに入れる場合） |
@@ -152,3 +153,10 @@
 
 ## シンセ音色の音源（作曲ソフト専用）
 - `assets-src/soundfont/extra/synths.sf3`: FluidR3（MIT。記録済み）から、シンセ系の音色（GM 38・39・50・51・80〜103の一部）だけを切り出したもの。作曲ソフトの書き出しだけで使い、ゲームには入れていない。
+
+## 使わないと決めた素材（2026-10-11、アンプシミュレーターのモデル）
+
+| 素材 | URL | 外した理由 |
+|---|---|---|
+| TONE3000 のアンプ・ペダルのキャプチャ（`.nam`）の多く（ライセンス表記「T3K」） | https://www.tone3000.com/ | 「再アップロード・再配布は作者の許可が必要」。作曲ソフトに埋め込んで配る形になるので使えない。ダウンロードにもログインが必要な可能性が高い（アカウント作成は人間の判断） |
+| pelennor2170/NAM_models（コミュニティのキャプチャ集） | https://github.com/pelennor2170/NAM_models | ライセンスが GNU GPL v3。作曲ソフトへの埋め込みは、ソフト全体への GPL の適用が必要になるおそれがあるので、人間の判断を待つ（今は使わない） |

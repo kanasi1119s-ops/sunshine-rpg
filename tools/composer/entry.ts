@@ -12,6 +12,8 @@ import bassMetalUrl from "../../assets-src/soundfont/extra/bass-metal.sf3?url";
 import drumsMetalUrl from "../../assets-src/soundfont/extra/drums-metal.sf3?url";
 import bassJazzUrl from "../../assets-src/soundfont/extra/bass-jazz.sf3?url";
 import drumsJazzUrl from "../../assets-src/soundfont/extra/drums-jazz.sf3?url";
+import guitarGretschUrl from "../../assets-src/soundfont/extra/guitar-gretsch.sf3?url";
+import guitarHofnerUrl from "../../assets-src/soundfont/extra/guitar-hofner.sf3?url";
 import bassJpopUrl from "../../assets-src/soundfont/extra/bass-jpop.sf3?url";
 import drumsJpopUrl from "../../assets-src/soundfont/extra/drums-jpop.sf3?url";
 import drumsSupraUrl from "../../assets-src/soundfont/extra/drums-supra.sf3?url";
@@ -82,6 +84,13 @@ const DRUM_FONTS: Record<string, { label: string; url: string | null }> = {
   jpop: { label: "J-POPドラム", url: drumsJpopUrl },
   supra: { label: "スープラ（乾いた金属スネア）", url: drumsSupraUrl },
 };
+// ギター（ジャズギター26・クリーンギター27）の音源。Karoryfer Samples「Black And Green Guitars」（CC0）の録音
+const GUITAR_FONTS: Record<string, { label: string; url: string | null }> = {
+  std: { label: "標準（上の音源）", url: null },
+  gretsch: { label: "Gretsch（明るいクリーン）", url: guitarGretschUrl },
+  hofner: { label: "Hofner（丸い音）", url: guitarHofnerUrl },
+};
+let guitarId = "std";
 let bassId = "std";
 let drumsId = "std";
 let soundfontId: SoundfontId = "game";
@@ -90,6 +99,8 @@ try {
   if (saved === "gu") soundfontId = "gu";
   const b = window.localStorage.getItem("sunshine-composer-bass");
   if (b && b in BASS_FONTS) bassId = b;
+  const g = window.localStorage.getItem("sunshine-composer-guitar");
+  if (g && g in GUITAR_FONTS) guitarId = g;
   const d = window.localStorage.getItem("sunshine-composer-drums");
   if (d && d in DRUM_FONTS) drumsId = d;
 } catch { /* 保存を読めなくても、既定で始める */ }
@@ -107,9 +118,9 @@ try {
 } catch (error) {
   console.warn("録音音源の埋め込みを読めませんでした:", error);
 }
-async function applyOverlay(slot: "bass" | "drums", id: string): Promise<void> {
-  const table = slot === "bass" ? BASS_FONTS : DRUM_FONTS;
-  if (slot === "bass") bassId = id; else drumsId = id;
+async function applyOverlay(slot: "bass" | "drums" | "guitar", id: string): Promise<void> {
+  const table = slot === "bass" ? BASS_FONTS : slot === "guitar" ? GUITAR_FONTS : DRUM_FONTS;
+  if (slot === "bass") bassId = id; else if (slot === "guitar") guitarId = id; else drumsId = id;
   const url = table[id]?.url;
   await engine.setOverlaySoundfont(slot, url ? (bytesOf(url).buffer as ArrayBuffer) : null);
   try { window.localStorage.setItem(`sunshine-composer-${slot}`, id); } catch { /* 保存できなくてもよい */ }
@@ -117,7 +128,7 @@ async function applyOverlay(slot: "bass" | "drums", id: string): Promise<void> {
 /** 書き出し（WAV）に使う、追加の音源。 */
 function overlayBuffers(): ArrayBuffer[] {
   // シンセの音色（patch で選ぶ GM のシンセ・パッド・FX）は、いつも入れておく
-  return [...[drumsId, bassId].flatMap((id, i) => { const u = (i === 0 ? DRUM_FONTS : BASS_FONTS)[id]?.url; return u ? [bytesOf(u).buffer as ArrayBuffer] : []; }), bytesOf(synthsUrl).buffer as ArrayBuffer];
+  return [...[drumsId, bassId, guitarId].flatMap((id, i) => { const u = [DRUM_FONTS, BASS_FONTS, GUITAR_FONTS][i][id]?.url; return u ? [bytesOf(u).buffer as ArrayBuffer] : []; }), bytesOf(synthsUrl).buffer as ArrayBuffer];
 }
 // 無料のアンプシミュレーター（NAM）: ビルドのときに埋め込んだワークレットとWASMを渡す
 declare const __NAM_PROCESSOR__: string;
@@ -126,6 +137,7 @@ declare const __NAM_MODELS__: Record<string, { label: string; json: string }>;
 const engine = new AudioEngine();
 void applyOverlay("bass", bassId);
 void applyOverlay("drums", drumsId);
+void applyOverlay("guitar", guitarId);
 void engine.setOverlaySoundfont("synth", bytesOf(synthsUrl).buffer as ArrayBuffer);
 let namHost: NamHost | null = null;
 /** 同梱のNAMモデル（NAM作者のリポジトリにMITライセンスで入っている見本。docs/assets-credits.md）。キーは "builtin:〇〇"。 */
@@ -346,6 +358,8 @@ const bassSel = select(Object.entries(BASS_FONTS).map(([id, v]) => [id, v.label]
 bassSel.onchange = () => { const was = state.playing; void applyOverlay("bass", bassSel.value).then(() => { if (was) play(0); }); };
 const drumsSel = select(Object.entries(DRUM_FONTS).map(([id, v]) => [id, v.label] as [string, string]), drumsId);
 drumsSel.onchange = () => { const was = state.playing; void applyOverlay("drums", drumsSel.value).then(() => { if (was) play(0); }); };
+const guitarSel = select(Object.entries(GUITAR_FONTS).map(([id, v]) => [id, v.label] as [string, string]), guitarId);
+guitarSel.onchange = () => { const was = state.playing; void applyOverlay("guitar", guitarSel.value).then(() => { if (was) play(0); }); };
 const volIn = h("input", { type: "range", min: "0", max: "100", value: "60", "aria-label": "音量" });
 volIn.oninput = () => engine.setBgmVolume(Number(volIn.value) / 100);
 engine.setBgmVolume(0.6);
@@ -1152,10 +1166,11 @@ function addAmpPlugin(data: unknown, announce: boolean): AmpPluginDef | null {
 (window as unknown as { __composer: unknown }).__composer = {
   /** 録音音源を切りかえる（"game" か "gu"）。WAVの書き出し（song.mjs --soundfont）が使う。 */
   /** ベース・ドラムの追加の音源を切りかえる（bass: "std"|"finger"|"pick"、drums: "std"|"muldjord"）。 */
-  async setOverlays(bass: string, drums: string): Promise<void> {
+  async setOverlays(bass: string, drums: string, guitar = "std"): Promise<void> {
     await applyOverlay("bass", bass in BASS_FONTS ? bass : "std");
     await applyOverlay("drums", drums in DRUM_FONTS ? drums : "std");
-    bassSel.value = bassId; drumsSel.value = drumsId;
+    await applyOverlay("guitar", guitar in GUITAR_FONTS ? guitar : "std");
+    bassSel.value = bassId; drumsSel.value = drumsId; guitarSel.value = guitarId;
   },
   async setSoundfont(id: string): Promise<void> { await applySoundfont(id === "gu" ? "gu" : "game"); soundfontSel.value = soundfontId; },
   /** `raw: true`: ピークをそろえずに書き出す（ゲーム内の実際の大きさを測るとき。`tools/audio-check/render-catalog.mjs --raw`）。 */
@@ -1669,7 +1684,7 @@ app.append(
     h("div", { class: "transport" }, ui.playBtn, ui.pauseBtn, ui.stopBtn),
     h("div", { class: "lcd" }, h("div", { class: "lcd-time" }, ui.time), lcd("BPM", lcdTempo), lcd("TRK", lcdTracks), lcd("LEN", lcdLen)),
     h("div", { class: "seekwrap" }, ui.seek),
-    h("div", { class: "row topopts" }, field("サウンド", editionSel), field("録音音源", soundfontSel), field("ベース音源", bassSel), field("ドラム音源", drumsSel), field("マスター音量", volIn)),
+    h("div", { class: "row topopts" }, field("サウンド", editionSel), field("録音音源", soundfontSel), field("ベース音源", bassSel), field("ドラム音源", drumsSel), field("ギター音源", guitarSel), field("マスター音量", volIn)),
   ),
   h("div", { class: "daw" },
     panel("TRK", "トラック", ui.trackBox, h("div", { class: "row", style: "margin-top:8px" }, addTrackBtn),

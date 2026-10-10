@@ -72,3 +72,10 @@
 - ギター側の**トーン操作・ピックアップ切り替え**の違いは出せない（`bright` で近似）。
 - ディレイの**2系統の設定**（付点8分など）はできない。`echoGuitar` の固定のエコーのみ。
 - **リバースピアノ**（逆再生）は作れない。低いピアノの重ねで代用。
+
+## 5. 生ギターの音源（2026-10-11 追加）
+作曲ソフトに「ギター音源」の選択欄を足した。Karoryfer Samples「Black And Green Guitars」（CC0）の生ギターで、ジャズギター（26）とクリーンギター（27）の音を入れかえる。
+- `gretsch`（明るいクリーン）／`hofner`（丸い音）。書き出しは `node tools/composer/song.mjs build 曲.json --wav --guitar gretsch`。
+- 作り直し: `node --experimental-strip-types tools/soundfont/build-guitar.mjs`（録音の置き場は環境変数 `BGG`）。
+- 録音は小さめ（元の音量が控えめ）なので、標準の音源より中域が薄くなる。ギターのパートの音量や、アコースティックの `steelGuitar`（25）は入れかわらない点に注意。
+- アンプシミュレーター（NAM）は、ライセンスが明確な無料のクリーン／クランチのモデルが見つからなかった（`docs/assets-credits.md` の「使わないと決めた素材」）。
