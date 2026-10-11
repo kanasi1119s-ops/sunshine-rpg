@@ -29,7 +29,7 @@ export interface SoundSet {
   parts: Partial<Record<Instrument, PartMix>>;
   drumMix?: Score["drumMix"];
   /** 書き出しのWAVの大きさ（LUFS）。ゲーム中の再生には効かない。 */
-  master?: { lufs: number };
+  master?: { lufs: number; widen?: number };
   /** 目安のテンポ（BPM）。自動では変えない。 */
   tempoHint?: [number, number];
   /** 打ち込みの型の例（16分の格子。ドラムのパートに書く）。 */

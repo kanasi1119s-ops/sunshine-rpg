@@ -1,0 +1,11 @@
+{
+  "_説明": "録音5曲の「本物らしさ」の数字（realism.py。数字だけ。曲名・旋律は含まない）。2026-10-11",
+  "tracks": {
+    "1": {"lra_LU": 2.5, "lufs": -3.5, "range3s_dB": 2.9, "crest_dB": 9.3, "width": 0.53, "onset_var": 0.33},
+    "2": {"lra_LU": 4.5, "lufs": -5.0, "range3s_dB": 2.8, "crest_dB": 10.4, "width": 0.51, "onset_var": 0.41},
+    "3": {"lra_LU": 10.3, "lufs": -2.9, "range3s_dB": 9.9, "crest_dB": 10.5, "width": 0.50, "onset_var": 0.43},
+    "4": {"lra_LU": 9.2, "lufs": -3.8, "range3s_dB": 8.4, "crest_dB": 9.4, "width": 0.46, "onset_var": 0.37},
+    "5": {"lra_LU": 5.4, "lufs": -3.3, "range3s_dB": 5.7, "crest_dB": 10.3, "width": 0.45, "onset_var": 0.35}
+  },
+  "目標（書き出し時）": {"lra_LU": "4〜8", "width": "0.45〜0.55", "crest_dB": "10〜13（ゲーム用は音量を控えめにするため録音より少し高くてよい）", "lufs": "-10前後（録音は-3〜-5と非常に大きい。ゲームでは耳をつかれさせない -10 を採る）"}
+}

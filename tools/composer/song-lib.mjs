@@ -23,7 +23,7 @@ export async function openSongKit() {
   }
 
   /** 曲（AIソング形式のオブジェクト）を確かめて、プロジェクト・MIDI（・WAV）を書き出す。 */
-  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", sound = "", master = null } = {}) {
+  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", sound = "", master = null, widen = null } = {}) {
     if (!EDITIONS.includes(edition)) throw new Error("edition は real・ps2・modern のどれか");
     if (!/^[a-z0-9][a-z0-9-]*$/.test(name ?? "")) throw new Error(`name は英小文字・数字・「-」だけ（${name}）`);
     const { aiSongToScore } = await load("/src/audio/ai-song.ts");
@@ -42,6 +42,7 @@ export async function openSongKit() {
       if (drums === "std") drums = set.overlays.drums;
       if (guitar === "std") guitar = set.overlays.guitar;
       if (master === null && set.master) master = set.master.lufs;
+      if (widen === null && set.master?.widen) widen = set.master.widen;
     }
     // 曲の自動チェック（楽譜）: 低音のにごり・同じ音域のぶつかり・単調さ。入力のまちがいではなく、直すと良くなるヒント
     const { checkScore } = await load("/src/audio/song-check.ts");
@@ -62,7 +63,9 @@ export async function openSongKit() {
         const tmp = files.wav + ".master.wav";
         const out = `-ar 48000 -ac 2 -c:a pcm_s16le -map_metadata -1 -fflags +bitexact -flags:a +bitexact`;
         // 1) 軽く圧縮して山をそろえる  2) 今の大きさ（LUFS）を測る  3) 目標までゲインをかけ、リミッターでピークを -1dB 以下に抑える
-        const comp = `acompressor=threshold=0.12:ratio=4:attack=4:release=90:makeup=2`;
+        // natural の曲は、強弱の起伏をつぶさないよう、やさしく圧縮する。左右の広がりは widen（1=そのまま、1.5〜2で広げる）
+        const base = songData.dynamics === "natural" ? `acompressor=threshold=0.2:ratio=2.2:attack=8:release=140:makeup=1.5` : `acompressor=threshold=0.12:ratio=4:attack=4:release=90:makeup=2`;
+        const comp = widen && widen > 1 ? `${base},extrastereo=m=${Math.min(3, widen)}` : base;
         const probe = execSync(`ffmpeg -nostats -i "${files.wav}" -af "${comp},ebur128=peak=true" -f null - 2>&1`, { encoding: "utf8" });
         const lufs = Number([...probe.matchAll(/I:\s+(-?[\d.]+) LUFS/g)].pop()?.[1]);
         const gain = Number.isFinite(lufs) ? Math.min(18, Math.max(-18, master - lufs)) : 0;
