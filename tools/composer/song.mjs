@@ -18,6 +18,9 @@
 //       --soundfont gu: WAVを GeneralUser GS の音源で作る（省略はゲームと同じ FluidR3）。
 //       --wav: 作曲ソフトと同じ音（録音音源・アンプ・仕上げ）でWAVも作る（Playwright と Chromium が必要）。
 //       --register: ゲームの曲として src/audio/songs/<曲ID>.sunshine-song.json に登録する。
+//   node tools/composer/song.mjs sfx [<id>] [--wav] [--out <フォルダ>] [--key 2:aeolian]
+//       合成の効果音（src/audio/sfx-recipes.ts の 58 種）を描いて、山・RMS・長さ・立ち上がり・重心・検査を表示する。id を省くと一覧と全件の検査。
+//       --wav で WAV を書く（既定は tmp/sfx/）。--key は「主音(0〜11):音階名」で ※調 の層をその音階へ寄せる。画面で聞き比べるなら dist-composer/sfx-lab.html。
 //   曲作りの流れの道具（docs/sound/ai-composition-workflow.md）:
 //   node tools/composer/song.mjs plan-template                       … 曲の設計図（属性カードとセクション表）の雛形を表示
 //   node tools/composer/song.mjs plan-check <plan.json> [曲.json]     … 設計図の検査（強さカーブ・音域表・曲との食い違い）
@@ -75,6 +78,33 @@ try {
   if (args[0] === "guide") {
     console.log(await kit.guide());
     console.log("\n## 見本\nassets-src/ai-songs/ にある .json を見てください。");
+  } else if (args[0] === "sfx") {
+    const { SFX_RECIPES, SFX_BY_ID } = await kit.load("/src/audio/sfx-recipes.ts");
+    const { inspectSe, tuneSe, SE_MAX_SEC } = await kit.load("/src/audio/sfx-synth.ts");
+    const { toWav16 } = await kit.load("/src/audio/synth-dsp.ts");
+    const key = opt("--key");
+    const fix = (r) => (key ? tuneSe(r, Number(key.split(":")[0]), key.split(":")[1] ?? "ionian") : r);
+    const one = (r, wav) => {
+      const { analysis: a, warnings, samples } = inspectSe(fix(r), 44100);
+      console.log(`${r.id}\t${r.name}\t${r.kind}\t山 ${a.peakDb.toFixed(1)}dBFS\tRMS ${a.rmsDb.toFixed(1)}dB\t長さ ${a.lengthSec.toFixed(2)}秒（上限 ${SE_MAX_SEC[r.kind]}）\t立ち上がり ${a.attackMs.toFixed(0)}ms\t重心 ${a.centroidHz.toFixed(0)}Hz`);
+      for (const w of warnings) console.log("  要直し: " + w);
+      if (wav) {
+        const dir = path.resolve(opt("--out") ?? ROOT + "tmp/sfx");
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, r.id + ".wav"), toWav16(samples, 44100));
+        console.log("  書き出し: " + path.join(dir, r.id + ".wav"));
+      }
+      return warnings.length;
+    };
+    if (args[1] && !args[1].startsWith("--")) {
+      const r = SFX_BY_ID[args[1]];
+      if (!r) { console.error("そのidはありません。node tools/composer/song.mjs sfx で一覧を見てください。"); process.exitCode = 1; }
+      else one(r, args.includes("--wav"));
+    } else {
+      let bad = 0;
+      for (const r of SFX_RECIPES) bad += one(r, args.includes("--wav"));
+      console.log(bad ? `要直し ${bad} 件` : `${SFX_RECIPES.length} 種すべて問題なし`);
+    }
   } else if (args[0] === "sounds") {
     const { SOUND_SETS } = await kit.soundSets();
     for (const s of Object.values(SOUND_SETS)) console.log(`${s.id}\t${s.label}\n  ${s.description}\n  音源: ベース ${s.overlays.bass}・ドラム ${s.overlays.drums}・ギター ${s.overlays.guitar}${s.tempoHint ? `　目安テンポ ${s.tempoHint[0]}〜${s.tempoHint[1]}` : ""}`);

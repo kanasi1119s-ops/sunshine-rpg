@@ -47,4 +47,13 @@ if (desktop) {
 }
 fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.writeFileSync(out, html);
+// SE ラボ（合成 SE の一覧・調整・書き出し。サウンドフォント不要の小さな1ファイル）。出力は作曲ソフトと同じ場所の sfx-lab.html
+const lab = await build({
+  root, configFile: false, logLevel: "warn",
+  build: { write: false, minify: true, lib: { entry: root + "tools/composer/sfx-lab.ts", name: "SfxLab", formats: ["iife"], fileName: "sfx-lab" } },
+});
+const labJs = (Array.isArray(lab) ? lab[0] : lab).output.find((o) => o.type === "chunk").code.replace(/<\/script/gi, "<\\/script");
+const labOut = path.join(path.dirname(out), "sfx-lab.html");
+fs.writeFileSync(labOut, fs.readFileSync(root + "tools/composer/sfx-lab.html", "utf8").replace("/*BUNDLE*/", () => labJs));
+console.log("書き出し:", labOut, (fs.statSync(labOut).size / 1024).toFixed(0) + "KB");
 console.log("書き出し:", out, (html.length / 1024).toFixed(0) + "KB");

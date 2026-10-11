@@ -44,7 +44,9 @@ export type Instrument =
   // フォンク向け: 重く歪んだ低音（808）とカウベル
   | "sub808" | "cowbell"
   // 民族楽器（2026-10-02）: 撥弦（sitar・koto・shamisen・banjo・harp・kalimba）、息の楽器（panflute・shakuhachi・ocarina）、擦弦・リード（fiddle・bagpipe）
-  | "sitar" | "koto" | "shamisen" | "banjo" | "harp" | "kalimba" | "panflute" | "shakuhachi" | "ocarina" | "fiddle" | "bagpipe";
+  | "sitar" | "koto" | "shamisen" | "banjo" | "harp" | "kalimba" | "panflute" | "shakuhachi" | "ocarina" | "fiddle" | "bagpipe"
+  // 追加の音源（2026-10-11）: FMのベル／エレピ、ドローバーオルガン、ユニゾンのノコギリ波
+  | "fmBell" | "fmEpiano" | "drawbarOrgan" | "unisonSaw";
 
 /**
  * ジャンル別のアンプ（2026-09-30 追加）。ジャズ・ブルース・ファンク・クランチ・ハードロック・パンク・ファズ・
@@ -107,6 +109,14 @@ export interface Track {
   duck?: number;
   /** タイミングのずれ（拍。-0.1〜0.1）。プラス＝あと乗り（少し遅らせる。スネアやバックビートに）、マイナス＝前のめり（少し早める。ハイハットに）。省略時は0。 */
   push?: number;
+  /** 音程のずれ（セント。-50〜50）。同じ旋律を2パートにして±数セントずらすと、スーパーソー風の厚みが出る。録音音源（MIDIのRPN 1）で効く。 */
+  detune?: number;
+  /** 音の立ち上がりの遅さ（0〜1。0.5が標準＝音源のまま）。大きいほどゆっくり立ち上がる。録音音源（MIDIのCC73）で効くかは音源しだい。 */
+  attack?: number;
+  /** 余韻の長さ（0〜1。0.5が標準）。大きいほど長く残る。録音音源（MIDIのCC72）で効くかは音源しだい。 */
+  release?: number;
+  /** ピアノ・エレピのペダル。mode＝chord（コードの変わり目で踏み替え）・bar（1小節ごと）・none（踏まない）。changes＝踏み替える拍。省略は4拍ごと。 */
+  pedal?: { mode: "chord" | "bar" | "none"; changes: number[] };
   notes: NoteEvent[];
 }
 

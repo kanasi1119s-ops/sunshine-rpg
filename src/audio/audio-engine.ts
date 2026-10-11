@@ -2,6 +2,7 @@ import type { NamHost } from "./nam/nam-host";
 import { SampledBgm, SampledSe } from "./sampled-engine";
 import { createBgmBus, createHallImpulse, scheduleInstrumentNote, type Source } from "./voices";
 import { noteNameToMidi } from "./note";
+import { DUCK_DB, RoundRobin, SeThrottle, duckBgmForSe, duckLevelOf, makeVariants, playSfx, recipeDuration, tuneSe, type DuckLevel, type SfxRecipe } from "./sfx-synth";
 import { flattenScore, getScoreDurationSec, type Score, type ScheduledNote } from "./score";
 
 /** `?synth` をつけて開くと、録音音源を使わず合成音だけで鳴らす（音の比較・不具合の切り分け用）。 */
@@ -18,6 +19,13 @@ export class AudioEngine {
   private ctx: AudioContext | null = null;
   private bgmGain: GainNode | null = null;
   private seGain: GainNode | null = null;
+  /** BGM の出口とスピーカーの間。SE が鳴る間だけ下げる（ダッキング）。 */
+  private bgmDuck: GainNode | null = null;
+  private sfxThrottle = new SeThrottle();
+  private sfxRobin = new RoundRobin();
+  private sfxVariants = new Map<string, SfxRecipe[]>();
+  /** BGM の調（主音 0〜11 と音階名）。※調 の SE をここへ寄せる。 */
+  private sfxKey: { tonic: number; scale: string } | null = null;
 
   private bgmVolume = 0.6;
   /** 曲ごとの音量補正（倍率。`Score.trimDb` から。曲を鳴らすたびに更新）。 */
@@ -49,7 +57,9 @@ export class AudioEngine {
       this.ctx = new AudioContext();
       this.bgmGain = this.ctx.createGain();
       this.applyBgmGain();
-      this.bgmGain.connect(this.ctx.destination);
+      this.bgmDuck = this.ctx.createGain();
+      this.bgmDuck.connect(this.ctx.destination);
+      this.bgmGain.connect(this.bgmDuck);
       this.bgmBus = createBgmBus(this.ctx, this.bgmGain);
       // 録音音源は、ほんの少しだけ残響を足して、同じ出口（音量・仕上げ）を通す
       // 録音音源の出口には「版」の段を挟む: 高音を丸める低域通過フィルターと、ホール残響（PS2世代の音）
@@ -172,6 +182,40 @@ export class AudioEngine {
     for (const event of flattenScore({ ...score, tracks: synthTracks })) {
       this.scheduleNote(ctx, bus, event, ctx.currentTime + event.startSec);
     }
+  }
+
+  /** BGM の調を知らせる（主音 0〜11・音階名）。以後の playSfx で ※調 の SE がこの音階へ寄る。null で解除。 */
+  setSfxKey(key: { tonic: number; scale: string } | null): void {
+    this.sfxKey = key;
+    this.sfxVariants.clear();
+  }
+
+  /**
+   * 合成の SE（sfx-synth.ts のレシピ）を鳴らす。同じ SE の連打は throttleMs で間引き、vary のある SE は 4 変種を順に回す。
+   * 通知・ファンファーレ・警告の SE は、鳴っている間だけ BGM を下げる（−2/−4/−8dB）。鳴らしたら true、間引かれたら false。
+   */
+  playSfx(recipe: SfxRecipe, opts: { duck?: DuckLevel; gainDb?: number; pan?: number } = {}): boolean {
+    const ctx = this.ensureContext();
+    if (!this.sfxThrottle.allow(recipe.id, ctx.currentTime * 1000, recipe.throttleMs ?? 0)) return false;
+    let r = recipe;
+    if (this.sfxKey) r = tuneSe(r, this.sfxKey.tonic, this.sfxKey.scale);
+    let cacheKey = this.sfxKey ? `${recipe.id}@${this.sfxKey.tonic}${this.sfxKey.scale}` : recipe.id;
+    if (r.vary) {
+      let vs = this.sfxVariants.get(recipe.id);
+      if (!vs) this.sfxVariants.set(recipe.id, (vs = makeVariants(r, 4, 1)));
+      const i = this.sfxRobin.next(recipe.id, vs.length);
+      r = vs[i];
+      cacheKey += `#${i}`;
+    }
+    playSfx(ctx, this.seBus ?? this.seGain!, r, ctx.currentTime, { gainDb: opts.gainDb, pan: opts.pan, cacheKey });
+    this.duckBgm(opts.duck ?? duckLevelOf(recipe), recipeDuration(recipe));
+    return true;
+  }
+
+  /** BGM を level の分だけ一時的に下げ、holdSec 秒後に戻す。 */
+  duckBgm(level: DuckLevel, holdSec: number): void {
+    if (!this.ctx || !this.bgmDuck || !DUCK_DB[level]) return;
+    duckBgmForSe(this.bgmDuck.gain, level, this.ctx.currentTime, holdSec);
   }
 
   /** `offsetSec`: 曲の途中（この秒数の位置）から鳴らす。BGMプレイヤーの「聴きたい部分から再生」用。 */

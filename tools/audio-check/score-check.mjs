@@ -6,6 +6,7 @@ import path from "path";
 import { DRUMS, RANGE, midi, chordPcs, expand as expandPart, prepareForCheck, barChords } from "./score-lib.mjs";
 import { collectFacts, formatFacts } from "./score-facts.mjs";
 import { loadRecentFull } from "../composer/novelty.mjs";
+import { topScales } from "./scale-detect.mjs";
 
 // 追加の使い方: --facts … 小節番号つきの事実の一覧だけを表で出す（言語モデルが直すときはこちらを読む）／--json … 同じ一覧をJSONで／--plan <曲.plan.json> … 動機などを設計図から読む
 // 一覧に出る種類: 音域外・拍の合計・拍頭の不一致・アヴォイドノート（和音の半音上にぶつかる強拍・長い音）・同じ4小節の反復・動機・入り方の重複
@@ -127,6 +128,20 @@ async function check(file, mode, planFile) {
   let all = 0, inScale = 0;
   for (const p of pitched) for (const n of p.seq) { all++; if (scale.has(n.pitch % 12)) inScale++; }
   warn(all === 0 || inScale / all >= 0.9, `音階内の音 ${((inScale / all) * 100) | 0}%`, `音階外の音が多い（音階内 ${((inScale / all) * 100) | 0}%。借用和音なら問題なし）`);
+
+  // 6b. 音階の推定（42 種の音階×12 の主音から、旋律以外も含む全パートの音に合うものの上位 3 つ。docs/sound/scales-world-guide.md）
+  {
+    const hist = new Array(12).fill(0);
+    for (const p of pitched) for (const n of p.seq) hist[n.pitch % 12] += n.dur;
+    const hints = [first?.root];
+    const lastMel = melodies[0]?.seq[melodies[0].seq.length - 1];
+    if (lastMel) hints.push(lastMel.pitch % 12);
+    const top = topScales(hist, 3, { tonicHints: hints.filter((x) => x !== undefined) });
+    if (top.length) {
+      lines.push(`  ・音階の推定: ${top.map((t) => `${t.name} ${t.tonicName} ${Math.round(t.coverage * 100)}%`).join(" / ")}`);
+      warn(top[0].coverage >= 0.9, `音階が決まる（${top[0].name} ${top[0].tonicName} ${Math.round(top[0].coverage * 100)}%）`, `音階不明（いちばん合う ${top[0].name} ${top[0].tonicName} でも ${Math.round(top[0].coverage * 100)}%。借用和音・転調・半音階の多用なら問題なし）`);
+    }
+  }
 
   // 7. 終わり方
   if (melodies[0]) {
