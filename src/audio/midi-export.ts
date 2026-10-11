@@ -1,7 +1,7 @@
 import { timeSignatureOf } from "./time-signature";
 import { GM_DEFAULT_BY_WAVE, GM_DRUM_NOTE, GM_LAYER, GM_PROGRAM, METAL_LEAD, SYNTH_LEAD, SYNTH_PAD } from "./gm-map";
 import { noteNameToMidi } from "./note";
-import { grooveOffsetBeats, humanize, REST, type AmpSetting, type Instrument, type Score, type Track } from "./score";
+import { grooveOffsetBeats, humanize, REST, velocityScale, type AmpSetting, type Instrument, type Score, type Track } from "./score";
 import { pushBeatsOf, swingOf, trackHumanMult, triangular } from "./groove-feel";
 import { makeTempoClock } from "./tempo-map";
 
@@ -358,7 +358,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       // バンド全体の、ゆるやかな走り・溜め（全パート同じだけずれるので、アンサンブルはそろったまま）
       const drift = H > 0 && !quant ? Math.round(H * (12 * Math.sin((startBeat * 2 * Math.PI) / 17.3) + 8 * Math.sin((startBeat * 2 * Math.PI) / 41 + 1.3))) : 0;
       const tick = Math.max(0, Math.round(startBeat * PPQ) + jitter + grooveTicks + drift);
-      let vol = track.volume * (n.velocity ?? 1) * (inst && !quant ? 1 + (hz(secStart + trackSeed * 0.37) - 1) * (1 + 3 * Hv) : 1);
+      let vol = track.volume * velocityScale(n.velocity) * (inst && !quant ? 1 + (hz(secStart + trackSeed * 0.37) - 1) * (1 + 3 * Hv) : 1);
       let drumKey = drumNote;
       // タム: 音名でタムの高さを選ぶ（C4 高い → A2 低いフロア）。C2（既定）は今までどおり 47
       if (inst === "tom" && n.note !== "C2") {

@@ -1,6 +1,6 @@
 import { resolveLayers, type ArrangeOptions, type Layer, type Section } from "./arrangement";
 import { noteNameToMidi } from "./note";
-import { REST, type Score } from "./score";
+import { REST, velocityScale, type Score } from "./score";
 import { resampleEnergy, type EnergyCurve } from "./scene";
 import { expandBars } from "./song-plan";
 
@@ -182,7 +182,7 @@ function barLevels(score: Score, beatsPerBar: number, bars: number, onlyPitched 
     for (const n of t.notes) {
       if (n.note !== REST) {
         const b = Math.min(bars - 1, Math.floor(pos / beatsPerBar + 1e-9));
-        lv[b] += t.volume * (n.velocity ?? 1);
+        lv[b] += t.volume * velocityScale(n.velocity);
       }
       pos += n.durationBeats;
     }

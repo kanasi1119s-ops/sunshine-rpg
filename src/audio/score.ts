@@ -8,6 +8,11 @@ import { makeTempoClock, type TempoPoint } from "./tempo-map";
 /** 音を鳴らさない拍（休符）。 */
 export const REST = "R";
 
+/** NoteEvent.velocity を「1が標準」の尺度に直す。自動伴奏のドラムなどが MIDI の数字（40〜127）で入れた値は 100 で割る（dynamics: "natural" と同じ決まり）。 */
+export function velocityScale(v: number | undefined): number {
+  return v === undefined ? 1 : v > 2 ? v / 100 : v;
+}
+
 export interface NoteEvent {
   /** "C4" のような音名、または休符（REST）。 */
   note: string;
@@ -290,7 +295,7 @@ function flattenTrack(track: Track, score: Score): ScheduledNote[] {
         durationSec: soundSec,
         waveform: track.waveform,
         instrument: track.instrument,
-        volume: track.volume * (noteEvent.velocity ?? 1) * (loop && track.instrument ? humanize(clock ? startSec : t) : 1),
+        volume: track.volume * velocityScale(noteEvent.velocity) * (loop && track.instrument ? humanize(clock ? startSec : t) : 1),
         pan: track.pan,
         beatSec: spb,
       });

@@ -10,11 +10,12 @@ const bar16 = (inst: "kick" | "snare" | "hihat" | "bass", pitch: string, vol = 0
 
 describe("既存の出力は変わらない（提案1〜10は省略時に今までどおり）", () => {
   it("見本曲3つ×版2つ×human 2通りの MIDI・再生用の時刻・長さが、実装前のハッシュと一致", () => {
+    // jazz・waltz は dynamics: "natural" なしの曲。自動伴奏のドラムの強さ（MIDI の数字 70〜112）が MIDI 127 に張りついていたのを velocityScale で直したので、ハッシュを更新した（rock は natural なので不変）
     const want: Record<string, string> = {
       "rock|modern|undefined": "50db7aa5|e236bc4d|16", "rock|modern|0.8": "26ad389d|e236bc4d|16", "rock|real|undefined": "c5328cea|e236bc4d|16", "rock|real|0.8": "cd1d79eb|e236bc4d|16",
-      "jazz|modern|undefined": "fb8428b3|13ed0d6b|13.714285714285714", "jazz|modern|0.8": "4cd9ce4b|13106359|13.714285714285714", "jazz|real|undefined": "378ddb31|13ed0d6b|13.714285714285714", "jazz|real|0.8": "ffe1119a|13106359|13.714285714285714",
+      "jazz|modern|undefined": "6078c1da|77b38a28|13.714285714285714", "jazz|modern|0.8": "fc7697ae|3b2ac85e|13.714285714285714", "jazz|real|undefined": "964e9464|77b38a28|13.714285714285714", "jazz|real|0.8": "35de0ca9|3b2ac85e|13.714285714285714",
       // ワルツの MIDI だけは、拍子記号が 4/4 → 3/4 に直った（ほかの音は同じ。再生用の時刻と長さのハッシュは実装前と同じ）
-      "waltz|modern|undefined": "a5b4fb56|d71fd3b7|15", "waltz|modern|0.8": "8f5d29ad|d71fd3b7|15", "waltz|real|undefined": "5ea1608a|d71fd3b7|15", "waltz|real|0.8": "f5bbfcaa|d71fd3b7|15",
+      "waltz|modern|undefined": "4b401ae3|fd10805e|15", "waltz|modern|0.8": "7e672db0|fd10805e|15", "waltz|real|undefined": "ef01a8e7|fd10805e|15", "waltz|real|0.8": "fa52152f|fd10805e|15",
     };
     for (const [name, song] of [["rock", ROCK_SONG], ["jazz", JAZZ_SONG], ["waltz", WALTZ_SONG]] as const) for (const edition of ["modern", "real"] as const) for (const human of [undefined, 0.8]) {
       const { score } = aiSongToScore({ ...song, ...(human ? { human } : {}) });
@@ -259,5 +260,21 @@ describe("ずれの分布（提案9）", () => {
 describe("新しい項目を使っても、使わない曲は変わらない", () => {
   it("newFeatureSong を何も足さずに作ると ROCK_SONG と同じ", () => {
     expect(JSON.stringify(aiSongToScore(newFeatureSong()).score)).toBe(JSON.stringify(aiSongToScore(ROCK_SONG).score));
+  });
+});
+
+describe("velocityScale: 自動伴奏のドラムの強さ（MIDI の数字）が 127 に張りつかない", () => {
+  it("dynamics なしの曲でも、ドラムの MIDI ベロシティに強弱が残る", async () => {
+    const { velocityScale } = await import("./score");
+    expect(velocityScale(undefined)).toBe(1);
+    expect(velocityScale(1.3)).toBe(1.3);
+    expect(velocityScale(80)).toBeCloseTo(0.8, 12);
+    const { score } = aiSongToScore({ ...JAZZ_SONG, dynamics: undefined });
+    const midi = scoreToMidi(score);
+    const vels: number[] = [];
+    for (let i = 0; i < midi.length - 2; i++) if ((midi[i] & 0xf0) === 0x90 && (midi[i] & 0x0f) === 9 && midi[i + 2] > 0 && midi[i + 1] < 128 && midi[i + 2] < 128) vels.push(midi[i + 2]);
+    expect(vels.length).toBeGreaterThan(10);
+    expect(new Set(vels).size).toBeGreaterThan(3);
+    expect(vels.filter((v) => v === 127).length / vels.length).toBeLessThan(0.3);
   });
 });

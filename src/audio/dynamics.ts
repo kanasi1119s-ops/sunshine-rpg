@@ -1,7 +1,7 @@
 // 曲の「人が弾いたような強弱」を自動でつける（dynamics: "natural"）。
 // 曲全体の山と谷 × フレーズごとの息づかい × 拍の強弱 × ベロシティのわずかなばらつき。
 // 乱数は固定の種から作るので、同じ曲は何度書き出しても同じ結果になる。
-import type { Track } from "./score";
+import { velocityScale, type Track } from "./score";
 
 function rng(seed: number): () => number {
   let a = seed >>> 0;
@@ -52,7 +52,7 @@ export function applyNaturalDynamics(tracks: Track[], total: number, beats: numb
       if (!drum) g *= 1 + (rand() - 0.5) * 0.12;
       pos += n.durationBeats;
       // 自動の伴奏の音は、強さが MIDI の数字（70〜112）で入っている。0〜1の比（0.7〜1.12）に直してから強弱をかける
-      const base = (n.velocity ?? 1) > 1.5 ? (n.velocity as number) / 100 : (n.velocity ?? 1);
+      const base = velocityScale(n.velocity);
       return { ...n, velocity: Math.max(0.05, base * g) };
     });
     return { ...t, notes };

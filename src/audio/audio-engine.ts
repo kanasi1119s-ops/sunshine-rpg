@@ -3,7 +3,7 @@ import { SampledBgm, SampledSe } from "./sampled-engine";
 import { createBgmBus, createHallImpulse, scheduleInstrumentNote, type Source } from "./voices";
 import { noteNameToMidi } from "./note";
 import { DUCK_DB, RoundRobin, SeThrottle, duckBgmForSe, duckLevelOf, makeVariants, playSfx, recipeDuration, tuneSe, type DuckLevel, type SfxRecipe } from "./sfx-synth";
-import { flattenScore, getScoreDurationSec, type Score, type ScheduledNote } from "./score";
+import { velocityScale, flattenScore, getScoreDurationSec, type Score, type ScheduledNote } from "./score";
 
 /** `?synth` をつけて開くと、録音音源を使わず合成音だけで鳴らす（音の比較・不具合の切り分け用）。 */
 const SYNTH_ONLY_FROM_URL = typeof location !== "undefined" && new URLSearchParams(location.search).has("synth");
@@ -172,7 +172,7 @@ export class AudioEngine {
         for (const n of track.notes) {
           if (n.note !== "R") {
             const midi = noteNameToMidi(n.note);
-            const velocity = Math.max(18, Math.min(127, Math.round(34 + track.volume * (n.velocity ?? 1) * 430)));
+            const velocity = Math.max(18, Math.min(127, Math.round(34 + track.volume * velocityScale(n.velocity) * 430)));
             this.sampledSe.note(track.gm, track.gmDrum === true, midi, velocity, beat * secPerBeat, n.durationBeats * secPerBeat);
           }
           beat += n.durationBeats;
