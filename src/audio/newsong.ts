@@ -25,15 +25,28 @@ const PC: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }
 const QUALITY: [string, number[]][] = [
   ["maj7", [0, 4, 7, 11]], ["m7", [0, 3, 7, 10]], ["dim", [0, 3, 6]], ["aug", [0, 4, 8]], ["sus4", [0, 5, 7]], ["sus2", [0, 2, 7]],
   ["m", [0, 3, 7]], ["7", [0, 4, 7, 10]], ["", [0, 4, 7]],
+  // 2026-10-11 追加: 6・9・add9・m7♭5・7sus4 など（コード進行の幅を広げる）
+  ["m7b5", [0, 3, 6, 10]], ["m7(b5)", [0, 3, 6, 10]], ["dim7", [0, 3, 6, 9]], ["7sus4", [0, 5, 7, 10]],
+  ["maj9", [0, 4, 7, 11, 2]], ["m9", [0, 3, 7, 10, 2]], ["9", [0, 4, 7, 10, 2]], ["add9", [0, 4, 7, 2]],
+  ["m6", [0, 3, 7, 9]], ["6", [0, 4, 7, 9]], ["madd9", [0, 3, 7, 2]], ["m(maj7)", [0, 3, 7, 11]],
 ];
 
 /** "Am"・"F#m7"・"Bb"・"Csus4" のようなコード名を、根音（0〜11）と構成音の間隔にする。読めなければ null。 */
-export function parseChord(name: string): { root: number; intervals: number[] } | null {
-  const m = /^([A-G])([#b]?)(.*)$/.exec(name.trim());
+export function parseChord(name: string): { root: number; intervals: number[]; bass?: number } | null {
+  // 分数コード（G/B など）: 和音は左側、ベースの音は右側
+  const slash = name.trim().split("/");
+  if (slash.length > 2) return null;
+  const m = /^([A-G])([#b]?)(.*)$/.exec(slash[0]);
   if (!m) return null;
   const root = (PC[m[1]] + (m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0) + 12) % 12;
   const q = QUALITY.find(([k]) => k === m[3]);
-  return q ? { root, intervals: q[1] } : null;
+  if (!q) return null;
+  if (slash.length === 2) {
+    const b = /^([A-G])([#b]?)$/.exec(slash[1]);
+    if (!b) return null;
+    return { root, intervals: q[1], bass: (PC[b[1]] + (b[2] === "#" ? 1 : b[2] === "b" ? -1 : 0) + 12) % 12 };
+  }
+  return { root, intervals: q[1] };
 }
 
 const rest = (beats: number): NoteEvent => ({ note: REST, durationBeats: beats });
@@ -94,7 +107,7 @@ export function buildNewSong(spec: NewSongSpec): Score {
     return out;
   };
   const tones = (c: { root: number; intervals: number[] }, base: number): number[] => c.intervals.map((iv) => base + ((c.root + iv) % 12));
-  const octaveOf = (c: { root: number }, base: number): number => base + c.root;
+  const octaveOf = (c: { root: number; bass?: number }, base: number): number => base + (c.bass ?? c.root);
   const ballad = spec.feel === "ballad";
   const rock = spec.feel === "rock";
   const dance = spec.feel === "dance";

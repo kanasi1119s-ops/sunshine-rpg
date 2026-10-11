@@ -4,6 +4,7 @@ import { createServer } from "vite";
 import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
+import { masterFile, MASTER_PRESETS } from "./master.mjs";
 import { makeIr, writeWav, SPACES } from "./space-ir.mjs";
 import { checkChordVariety, loadOtherSongs } from "./chord-variety.mjs";
 
@@ -24,7 +25,7 @@ export async function openSongKit() {
   }
 
   /** 曲（AIソング形式のオブジェクト）を確かめて、プロジェクト・MIDI（・WAV）を書き出す。 */
-  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", sound = "", master = null, widen = null, space = "", spaceWet = 0.25 } = {}) {
+  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", sound = "", master = null, widen = null, space = "", spaceWet = 0.25, masterPreset = "" } = {}) {
     if (!EDITIONS.includes(edition)) throw new Error("edition は real・ps2・modern のどれか");
     if (!/^[a-z0-9][a-z0-9-]*$/.test(name ?? "")) throw new Error(`name は英小文字・数字・「-」だけ（${name}）`);
     const { aiSongToScore } = await load("/src/audio/ai-song.ts");
@@ -71,18 +72,17 @@ export async function openSongKit() {
         fs.renameSync(tmpv, files.wav);
         fs.rmSync(irFile, { force: true });
       }
+      let glue;
+      if (masterPreset) {
+        const pr = MASTER_PRESETS[masterPreset];
+        if (!pr) throw new Error(`master-preset は ${Object.keys(MASTER_PRESETS).join("・")} のどれか（${masterPreset}）`);
+        if (master === null || master === undefined) master = pr.lufs;
+        if (widen === null) widen = pr.widen;
+        glue = songData.dynamics === "natural" && pr.glue === "normal" ? "gentle" : pr.glue; // natural の曲は起伏をつぶさない
+      }
       if (master !== null && master !== undefined) {
-        const tmp = files.wav + ".master.wav";
-        const out = `-ar 48000 -ac 2 -c:a pcm_s16le -map_metadata -1 -fflags +bitexact -flags:a +bitexact`;
-        // 1) 軽く圧縮して山をそろえる  2) 今の大きさ（LUFS）を測る  3) 目標までゲインをかけ、リミッターでピークを -1dB 以下に抑える
-        // natural の曲は、強弱の起伏をつぶさないよう、やさしく圧縮する。左右の広がりは widen（1=そのまま、1.5〜2で広げる）
-        const base = songData.dynamics === "natural" ? `acompressor=threshold=0.2:ratio=2.2:attack=8:release=140:makeup=1.5` : `acompressor=threshold=0.12:ratio=4:attack=4:release=90:makeup=2`;
-        const comp = widen && widen > 1 ? `${base},extrastereo=m=${Math.min(3, widen)}` : base;
-        const probe = execSync(`ffmpeg -nostats -i "${files.wav}" -af "${comp},ebur128=peak=true" -f null - 2>&1`, { encoding: "utf8" });
-        const lufs = Number([...probe.matchAll(/I:\s+(-?[\d.]+) LUFS/g)].pop()?.[1]);
-        const gain = Number.isFinite(lufs) ? Math.min(18, Math.max(-18, master - lufs)) : 0;
-        execSync(`ffmpeg -y -loglevel error -i "${files.wav}" -af "${comp},volume=${gain.toFixed(2)}dB,alimiter=limit=0.84:attack=3:release=60:level=false" ${out} "${tmp}"`);
-        fs.renameSync(tmp, files.wav);
+        // 仕上げ（tools/composer/master.mjs）: 低域モノ・左右の広がり・目標の大きさ・トゥルーピーク・ディザ
+        masterFile(files.wav, { lufs: master, widen: widen ?? 1, natural: songData.dynamics === "natural", glue });
       }
       // 鳴らした音の自動チェック（音割れ・低音の多すぎ・強弱の平らさ・途中の無音）
       const { analyzeMix } = await load("/src/audio/song-check.ts");

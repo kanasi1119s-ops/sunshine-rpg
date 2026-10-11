@@ -210,6 +210,8 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - sections: 自動の伴奏（autoAccompaniment: true）に、曲の起伏をつける。"auto" なら定番の構成（導入4 → Aメロ8 → Bメロ4 → サビ8 → 間奏4 → Aメロ → Bメロ → サビ → サビ → 終わり4。曲の小節数に合わせて自動で区切る）。自分で決めるなら [{"kind":"intro","bars":4},{"kind":"verse","bars":8},{"kind":"pre","bars":4},{"kind":"chorus","bars":8}] のように書く（kind は intro・verse・pre・chorus・interlude・bridge・outro。bars の合計が曲の小節数になるようにする。ちがうときは最後を延ばすか、後ろを切る）。導入＝ピアノと弦だけ、Aメロ＝ドラム（キックとハイハット）とベースを足す、Bメロ＝スネアとギターを足して少しずつ強く、サビ＝全部とクラッシュ、間奏＝ドラムを抜く、Cメロ・終わり＝静かに。サビの前の小節は、スネアとキックで助走をつける。メロディなど自分で書いたパートには効かないので、メロディ側の強弱は phrase や ! , で付ける。
 - dynamics: true にすると、曲の出だし（最初の1/8、最大4小節）を小さく始めて上げ、中盤で一度引いてから戻す（曲の起伏）。同じ音量で続く曲を避けたいときに使う。
 - dynamics: "natural" にすると、人が弾いたような強弱を自動でつける（曲全体の山と谷・4小節フレーズごとの息づかい・拍の強弱・音ごとのわずかなばらつき。出だしと終わりは小さく、7割あたりが頂点）。ソロ・バラード・インストで、のっぺりした曲にしたくないときは基本これを使う。ドラムには半分の深さでかかる。
+- 勉強した内容のガイド（曲を書く前に、必要なものを読む）: docs/sound/ai-composition-workflow.md（AIで作曲する手順・点検）／chord-theory-deep.md（ジャンル別・場面別の進行。分数コード G/B、6・9・add9・m7b5・7sus4・maj9 も書ける）／bassline-guide.md（ジャンル別のベース）／drum-genre-guide.md（ジャンル別のドラムと drumMix）／sound-design-basics.md（音づくり・帯域）／mix-patterns.md（ミックスのパターン56個と症状別の直し方）／arrangement-deep.md（編曲）／mastering-guide.md（仕上げ）／amp-sim-guide.md（アンプ）。
+- 書き出しの仕上げ（コマンドの引数。曲のJSONには書かない）: --master-preset game（-14LUFS）・rock（-10）・loud（-8）・calm（-16）、--space hall|room|plate（自作IRの畳み込み残響）、--space-wet、--widen。natural の曲は圧縮をやさしくして強弱の起伏を残す。
 - parts: 自分で書くパート。1曲に1〜8パート。
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。
   - sustain: 音の伸び（0.2〜3、省略は1）。0.3〜0.6＝スタッカート（歯切れよく。ピアノ・ギターの刻み・シンセの刻み）、1＝ふつう、1.5〜3＝余韻を残す（ハープ・鐘・パッド・琴・アルペジオ）。長くした音は次の音に重なる。

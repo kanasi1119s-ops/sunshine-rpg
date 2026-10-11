@@ -82,4 +82,13 @@ describe("voiceLead（声部のなめらかな動き）", () => {
       chord.forEach((m) => expect(c.intervals.map((iv) => (c.root + iv) % 12)).toContain(m % 12));
     });
   });
+
+  it("分数コード・6・9・m7♭5・7sus4 を読める", () => {
+    expect(parseChord("G/B")).toEqual({ root: 7, intervals: [0, 4, 7], bass: 11 });
+    expect(parseChord("Em7b5")?.intervals).toEqual([0, 3, 6, 10]);
+    expect(parseChord("A7sus4")?.intervals).toEqual([0, 5, 7, 10]);
+    expect(parseChord("Cmaj9")).not.toBeNull();
+    expect(parseChord("G/H")).toBeNull();
+    expect(parseChord("C/D/E")).toBeNull();
+  });
 });
