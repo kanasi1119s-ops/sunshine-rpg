@@ -18,7 +18,7 @@ export interface PlanFields {
   beats: number;
   sections?: unknown;
   sectionChords?: Record<string, string>;
-  modulate?: { atBar: number; semitones: number };
+  modulate?: { atBar?: number; at?: string; semitones: number };
   loopTail?: "deceptive" | "dominant";
   parts: { instrument: string; notes: string }[];
 }
@@ -90,7 +90,7 @@ function transposeNotes(notes: string, beatsPerBar: number, fromBar: number, tot
 /** 上の書き方をふつうの形に直す。warnings に注意を足す。何も使っていなければ、同じものをそのまま返す。 */
 export function prepareSong<T extends PlanFields>(song: T, warnings: string[] = []): T {
   if (!song || typeof song !== "object" || typeof song.chords !== "string") return song;
-  const uses = /\*\d/.test(song.chords) || song.sectionChords || song.modulate || song.loopTail;
+  const uses = /\*\d/.test(song.chords) || song.sectionChords || (song.modulate && song.modulate.atBar !== undefined) || song.loopTail;
   if (!uses) return song;
   const bpc = song.barsPerChord === 2 ? 2 : 1;
   let bars: string[];
@@ -127,7 +127,7 @@ export function prepareSong<T extends PlanFields>(song: T, warnings: string[] = 
   }
 
   let parts = song.parts;
-  const mod = song.modulate;
+  const mod = song.modulate && song.modulate.atBar !== undefined ? song.modulate : undefined; // at: "lastChorus" などは arrangement 側で処理
   if (mod) {
     const atBar = Math.round(Number(mod.atBar)), semi = Math.round(Number(mod.semitones));
     if (!(atBar >= 2 && atBar <= bars.length) || !(semi !== 0 && Math.abs(semi) <= 12)) {
@@ -135,8 +135,10 @@ export function prepareSong<T extends PlanFields>(song: T, warnings: string[] = 
     } else {
       for (let i = atBar - 1; i < bars.length; i++) bars[i] = transposeChord(bars[i], semi);
       const total = bars.length * Number(song.beats);
-      parts = song.parts.map((p, i) => (DRUM_SET.has(p?.instrument) || typeof p?.notes !== "string" ? p : { ...p, notes: transposeNotes(p.notes, Number(song.beats), atBar, total, semi, warnings, `parts[${i}]`) }));
+      parts = song.parts.map((p, i) => (DRUM_SET.has(p?.instrument) || (p as { modulate?: boolean })?.modulate === false || typeof p?.notes !== "string" ? p : { ...p, notes: transposeNotes(p.notes, Number(song.beats), atBar, total, semi, warnings, `parts[${i}]`) }));
     }
   }
-  return { ...song, chords: bars.join(" "), barsPerChord: 1, repeats: 1, parts };
+  const out = { ...song, chords: bars.join(" "), barsPerChord: 1, repeats: 1, parts };
+  if (mod) delete out.modulate; // atBar はここで展開済み（arrangement で二重に移さない）
+  return out;
 }

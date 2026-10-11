@@ -1046,3 +1046,100 @@ pad            : E3:16
 38. [Re-crafting a Tune（Songwright）](https://songwright.substack.com/p/re-crafting-a-tune) — 拍子・リズム・和声・構成の作り直し
 
 既存のうちのガイド（`arrangement-guide.md`・`craft-guides.md`・`layering-guide.md`・`guitar-rock-band-guide.md`・`chord-theory-deep.md`・`drum-genre-guide.md`・`drum-fills.md`・`drum-patterns.md`・`bassline-guide.md`・`genre-guides.md`）と `src/audio/arrangement.ts`・`src/audio/ai-song.ts`（`AI_SONG_GUIDE`）を読んで、重複を避け、記法をそろえた。レゲエ・チップチューン・パンク・メタルなど、記事を直接読まなかった部分は、既存ガイドと一般的な知識（補）による。
+
+---
+
+## 14. 実装状況（2026-10-11）
+§11 の「取り入れる提案」10個を、`src/audio/arrangement.ts`（セクション・つなぎ・群・クラッシュ・手書きパート・転調・チェッカー）と新ファイル `src/audio/scene.ts`（場面プリセット・エネルギー曲線）に入れた。`ai-song.ts` には型・スキーマ・案内文・呼び出しの追記だけを足した。**既存の曲（`assets-src/ai-songs` の全曲）の出力は変わらない**ことを、実装前後の楽譜のハッシュで確かめた（新しい書き方はすべて、書いたときだけ効く）。テストは `src/audio/arrangement.test.ts`（49件）。見本3曲を書き出して `realism.py` で測った（EDM は LRA 6.4 LU・グリッド 128 bpm、バラードも起伏あり。戦闘はわざと平ら）。
+
+### 14.1 入れたもの
+| # | 提案 | 入れ方 | 使い方（曲のJSON） |
+|---|---|---|---|
+| 1 | セクション種別 | `SectionKind` に `build`・`break`・`drop`・`solo`・`tag` を追加。`LAYERS` に群と強さを定義 | `sections: [{"kind":"build","bars":8},{"kind":"drop","bars":16}]` |
+| 2 | 場面プリセット | `scene.ts` の `SCENES`（15場面）。書かなかった項目を埋める | `"scene": "battle"` |
+| 3 | 手書きパートの出し入れ | `parts[].sections`（休む・音量・オクターブ） | `"sections": {"intro":0,"chorus":{"gain":1,"octave":1}}` |
+| 4 | 群の上書き | `layers`。群に `pad`・`brass`・`perc` を追加（書いた場面だけ strings・snare から独立） | `"layers": {"verse":["kick","bass","keys"]}` |
+| 5 | 2回目で足す | `occurrence: true`。2回目以降に `ADD_ON` の群を足し、強さ +0.05 | `"occurrence": true` |
+| 6 | つなぎの種類 | セクションの `from`: `fill`・`none`・`stopBeat`・`riser`・`break1bar`・`kime` | `{"kind":"chorus","bars":8,"from":"stopBeat"}` |
+| 7 | クラッシュの位置 | `crashAt`（種類の並び、`last`、`afterBridge`）とセクションの `crash`（true／強さ／false） | `"crashAt":["chorus","drop","last"]` |
+| 8 | 編曲チェッカー | `checkArrangement`。書き出しの注意に小節番号つきで出る | 自動 |
+| 9 | 転調 | `modulate`。自動の伴奏と手書きパート（ドラム以外）が一緒に上がる | `"modulate":{"at":"lastChorus","semitones":2}` |
+| 10 | エネルギー曲線 | `energy`（数字の並びか曲線名）と `energyOrder` | `"energy":[3,4,6,9,5,10]` |
+
+### 14.2 新しいセクション種別の定義
+| 種別 | 鳴らす群 | 強さ（始め→終わり） | 特徴 |
+|---|---|---|---|
+| `build` | kick・hat・snare・bass | 0.7→1.0 | スネアを小節ごとに4分→8分→16分と密にして強くする。鍵盤・ギター・弦は休む。おかずは入れない |
+| `break` | keys・strings | 0.6 | 直前の1拍を全員止める（stopBeat が既定） |
+| `drop` | サビと同じ全群 | 1.0 | 頭にクラッシュ、頭の1拍の kick・bass を強く（×1.15）。直前の1拍は全員止まる（既定） |
+| `solo` | kick・hat・snare・bass・guitar | 0.7→0.75 | 旋律側（手書きのリードやソロ）を立てるため小さく |
+| `tag` | bass・keys・strings | 0.7→0.4 | 1小節に最初の1音だけを小節いっぱいに伸ばす（長音のみ）。おかずなし |
+
+### 14.3 つなぎ（`from`）の動き
+「この場面に入るとき」のつなぎ。直前の場面の終わりに働く。止めるつなぎ（`stopBeat`・`break1bar`）は**手書きパートにも効く**（持続音を残したいパートは `keepBreak: true`）。`break`・`drop` の前は書かなくても `stopBeat`。`none` は助走もおかずも入れない。
+| 値 | 動き |
+|---|---|
+| `fill`（既定） | 今までどおり。サビ・ドロップの前は助走とおかず |
+| `stopBeat` | 直前の1拍を全パート休み。次の頭に全員が戻る |
+| `break1bar` | 直前の1小節を全パート休み |
+| `riser` | 直前の2小節で強さを 0.75→1.2 に上げ、ハイハットを16分にして強くする |
+| `kime` | 直前の1小節を、全員（ドラムの kick・snare、ベース、ギター、鍵盤、弦）が 1拍目・2拍目のウラ・3拍目 の3発に揃える。ハイハットは止める |
+
+### 14.4 場面プリセット（`scene`）
+`bpm` が目安の範囲外だと注意を出す（強制はしない）。`sections` の型は、曲の長さに合わせて小節数を伸び縮みさせる（なるべく4の倍数。型の合計とぴったりなら型のまま）。曲に書いた値が常に優先。
+| scene | 場面 | bpm 目安 | 型・特徴 |
+|---|---|---|---|
+| `town` | 町 | 80〜120 | verse/interlude/verse/bridge の ABAC。強さは一定、ドラムなし（hat と bass のみ）、クラッシュなし |
+| `village` | 村 | 62〜95 | intro 4 + A + 間奏 + A + 終わり。ballad、natural |
+| `field` | フィールド | 100〜140 | 導入・A・B・サビを2周。サビでクラッシュ |
+| `battle` | 通常戦闘 | 150〜190 | verse（1拍目に crash）+ chorus。前奏なし、tone metal |
+| `boss` | ボス戦 | 130〜170 | 3段。最後のサビの前に `stopBeat`、最後のサビで全音上げ |
+| `finalBoss` | 最終決戦 | 150〜190 | energy 6→10 の階段、drop 2回、最後で半音上げ |
+| `castle` | 城 | 70〜100 | energy 4→8、strings 優先 |
+| `dungeon` | ダンジョン | 50〜80 | ドラムなし、弦・鍵盤・ベースだけ、おかずなし |
+| `shrine` | 神殿 | 55〜80 | 鍵盤と弦だけ、余韻で終わる |
+| `mystery` | 謎 | 70〜100 | 鍵盤とベースの少ない音数 |
+| `sad` | 悲しい場面 | 56〜76 | リズムなし、鍵盤・弦、休符多め |
+| `inn` | 宿屋 | 80〜110 | 8+8の短いループ、平ら |
+| `fanfare` | ファンファーレ | 120〜160 | 1+4+2 の7小節、いきなり山 |
+| `title` | タイトル | 70〜110 | 導入長め、energy 3→9 |
+| `ending` | エンディング | 60〜90 | energy 2→9→2→10→2、最後のサビで半音上げ |
+
+### 14.5 energy の決め方
+強さ（1〜10）の群の数: 1〜3＝2群、4〜6＝4群、7〜8＝6群、9〜10＝全群＋クラッシュ。既定の優先順は kick→bass→hat→keys→snare→guitar→strings（§11-10 のとおり）。静かな場面（バラード・エンディング・城）では、ドラムが先に鳴ると合わないので、`energyOrder` に `["keys","strings","bass","guitar","hat","kick","snare"]` のように指定する（scene の ending・title・castle は指定済み）。曲線の名前は §4.3 の型: `mountain`・`twoPeaks`・`valley`・`stairs`・`flat`・`bigValley`。セクションの数と合わない数字の並びは、近い位置に合わせ、注意を出す。energy は `layers` より優先する。
+
+### 14.6 編曲チェッカーが出す注意
+書き出し（`song.mjs build`）で、小節番号と直し方つきで出る。
+- 「N小節目: 前のセクションと鳴る楽器がほぼ同じで、変わり目が弱い」: 群の差が1つ以下、強さの段差が0.08未満、クラッシュや特別なつなぎもない。サビ・ドロップ・終わり・導入への変わり目は対象外。
+- 「サビの鳴る楽器または強さがAメロ以下」。
+- 「最後のサビの直前に、止める・減らす場所がない」（`sections: "auto"` でない曲、サビが2回以上のとき）。
+
+### 14.7 入れなかったもの・変えたもの（理由）
+- **`docs/sound/data/scene-presets.json` は作らず、`scene.ts` の表にした。** 型つきでテストでき、`sections` の型・群・つなぎを同じ場所で書けるため。
+- **`autoSections` は scene を読まない（変えていない）。** 既存の `sections: "auto"` の曲の出力を変えないため。場面の型は `scene` を書いたときだけ入る。
+- **§11-8 のうち「最初の8小節の入り方が直前の曲と同じ」「各パートを1つずつ消して成り立つか」は入れていない。** 前者は曲ごとの入り方を記録する台帳（manifest）が要り、後者は耳で決める性質のため。ほかのチェックは入れた。
+- **§11-4 の群 `lead`（旋律）は作っていない。** 手書きのパートは `parts[].sections` で出し入れするため。`perc` は tom だけ（shaker などの楽器が増えたら足す）。
+- **§11-5 の「ハイハットを細かく」「対旋律を自動で足す」は入れていない。** 2回目に足すのは群（verse はギター、間奏はハイハットなど）と +0.05 の強さだけ。細かい中身（ハイハットの格子など）は手書きで足す。
+- **§11-7 の「ラスサビだけ強く」は `crashAt` に `"last"` を足したときだけ。** 既定は今までどおり。
+- **転調したあとの `chords` の文字列は書き換えない**（楽譜の音名だけをずらす）。`song-check` のコード進行チェックは元の進行で見る。
+- 手書きパートの `sections` は、そのセクションの**頭の拍で音が属するセクション**を決める（セクションをまたぐ長い音は、始まりのセクションの扱い）。
+- 録音音源（real版）での聴こえ方は、見本の曲を書き出して耳で確かめること。
+
+### 14.8 見本の曲（assets-src/ai-songs/）
+すべて完全オリジナルのコード進行・旋律で、タイトルに（仮）。
+- `scene-battle-dust-scout.json`: `scene: battle`。前奏なし、サビだけ対旋律とブラスが入る（`parts[].sections`）。
+- `scene-edm-build-drop-dawn.json`: `build`・`drop`・`break`、`crashAt`、最後のドロップで全音上げ（`modulate`）、リードはドロップだけ、アルペジオはブレイクで1オクターブ下げる。
+- `scene-ending-homeward-light.json`: `scene: ending`（energy と半音上げが scene の既定）、ハープと合唱はセクションで出し入れ。
+
+---
+
+## 15. リアレンジの手順（うちの道具でやるとき）
+§7 の考え方を、`song.mjs` とJSONでそのまま進める手順。**原曲の特定の曲を再現するのではなく、自分で書いた主題を別の場面・ジャンルに作り替える**ときに使う。
+1. **主題を1つのJSONに書く**（旋律＝`lead` の notes、コード＝`chords`）。ここでは `scene` は付けない（まず素の状態を聴く）。
+2. **残すものを決める**: 旋律・進行・動機のうち2つ以上は残す（§7.2）。
+3. **別のファイルにコピーして `scene` を替える**。町→戦闘なら `"scene":"battle"`、`bpm` を目安の範囲へ（町 90 → 戦闘 170）。注意に出る bpm の目安を見て調整する。これで sections・feel・tone・クラッシュ・群が一気に入れ替わる。
+4. **旋律のリズムを組み替える**（§7.4 の L1〜L4）: 戦闘化は音価を半分、悲しい場面化は2倍に。音の高さの並びは変えない。長さが変わると小節数が変わるので、`chords` の `repeats` を合わせる（`sections` は自動で伸び縮みする）。
+5. **和声を変えるなら、ノリも変える**: 短調化や借用和音（♭VI・♭VII）を使うなら `feel`・`tone`・`swing`・`layers` も合わせる。大きく変えない手: 末尾の和音を V か IV にしてループにつなぐ。
+6. **編成を入れ替える**: 主旋律の楽器を変える（町は笛 → 戦闘は `sawLead` や `leadGuitar`）。伴奏は scene の既定のままか、`layers` で足し引きする。副旋律は `parts[].sections` で「サビだけ」にする。
+7. **らしさを1つだけ強く**: 戦闘なら `crashAt` に `"last"`、`modulate`（最後のサビで全音上げ）。ボスなら最後のサビに `"from":"stopBeat"`。エンディングなら `energy` の最後を 10 にしてピアノ単独で終わる。
+8. **書き出して確かめる**: `node tools/composer/song.mjs build <json> --out <dir>` の注意（変わり目が弱い・サビが薄い・最後のサビの前に止める所がない）を直す。WAV を書き出したときは `python3 tools/audio-check/realism.py <wav>` で測り、聴き終わったら WAV は消す。

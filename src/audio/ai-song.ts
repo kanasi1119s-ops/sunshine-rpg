@@ -3,7 +3,8 @@ import { buildNewSong, NEW_SONG_FEELS, type NewSongFeel } from "./newsong";
 import { DRUM_GENRES, drumMixFor, swingForGenre } from "./drum-genres";
 import { prepareSong } from "./song-plan";
 import { applyNaturalDynamics } from "./dynamics";
-import { applySections, autoSections, fitSections, SECTION_KINDS, type Section, type SectionKind } from "./arrangement";
+import { applyMutesToNotes, applyPartSections, applySections, autoSections, checkArrangement, fitSections, muteRanges, parseLayers, parsePartSections, parseSections, resolveModulate, SECTION_KINDS, TRANSITIONS, transposeTrack, type ArrangeOptions, type CrashAt, type Modulate, type PartSectionSpec, type Section, type SectionKind, type Transition } from "./arrangement";
+import { applyScene, parseEnergy, SCENE_NAMES, sceneSections } from "./scene";
 import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, type Track } from "./score";
 
 /**
@@ -20,6 +21,7 @@ export const SYNTH_PATCHES: Record<string, number> = {
   iceRain: 96, soundtrack: 97, crystal: 98, atmosphere: 99, brightness: 100, goblin: 101, echoDrops: 102, starTheme: 103,
 };
 
+type PartSectionSpecJson = Partial<Record<SectionKind, number | boolean | { gain?: number; octave?: number }>>;
 export interface AiPart {
   /** 楽器（AI_INSTRUMENTS のキー）。 */
   instrument: Instrument;
@@ -47,6 +49,12 @@ export interface AiPart {
   phrase?: number;
   /** アンプ（ギター・ベース向け）。"auto" なら曲の音色から自動。 */
   amp: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean";
+  /** セクションごとの出し入れ。{ intro: 0, verse: 0.6, chorus: 1, solo: { gain: 1, octave: 1 } }。数字＝音量の倍率（0＝休み）、octave＝オクターブずらし。書かなかったセクションは1。曲の sections（または scene）が必要。 */
+  sections?: PartSectionSpecJson;
+  /** false にすると、modulate（転調）でこのパートを上げない。 */
+  modulate?: boolean;
+  /** true にすると、stopBeat・break1bar などの「全員止まる」つなぎでもこのパートは止めない（持続音など）。 */
+  keepBreak?: boolean;
   /**
    * 音の並び。「音名:拍」を空白でくぎる（例 "E5:1 D5:0.5 R:0.5 C5:2"）。R は休み。
    * ドラム（kick/snare/hihat/crash/tom）は音名のかわりに x（打つ）か R（休み）。
@@ -98,11 +106,23 @@ export interface AiSong {
   /** false にすると、sections の場面の変わり目にドラムのおかず（フィル）を自動で入れない（省略は入れる）。 */
   fills?: boolean;
   /** 自動の伴奏のセクション編曲。"auto"（定番の構成）か、{kind, bars} の並び。autoAccompaniment が true のときだけ効く。 */
-  sections?: "auto" | { kind: SectionKind; bars: number }[];
+  sections?: "auto" | { kind: SectionKind; bars: number; from?: Transition; crash?: boolean | number }[];
+  /** 場面プリセット（town・village・field・battle・boss・finalBoss・castle・dungeon・shrine・mystery・sad・inn・fanfare・title・ending）。書かなかった項目（sections・feel・tone・dynamics・layers・energy・crashAt・modulate など）の既定値が入る。 */
+  scene?: string;
+  /** 種類ごとに鳴らす群を上書き。{ verse: ["kick","bass","keys"], chorus: { groups: [...], from: 1, to: 1 } }。群: kick hat snare bass keys guitar strings pad brass perc。 */
+  layers?: Partial<Record<SectionKind, string[] | { groups?: string[]; from?: number; to?: number; accentFirst?: boolean; hold?: boolean; crash?: boolean }>>;
+  /** true なら、同じ種類の2回目以降のセクションに楽器を1つ足して少し強くする（2回目は1つ足して1つ変える）。 */
+  occurrence?: boolean;
+  /** セクション順の強さ（1〜10）か曲線の名前（mountain・twoPeaks・valley・stairs・flat・bigValley）。群の数と強さを自動で決める。 */
+  energy?: number[] | string;
+  /** energy で群を足していく優先順（省略は kick・bass・hat・keys・snare・guitar・strings）。 */
+  energyOrder?: string[];
+  /** クラッシュを置くセクションの種類。"last"＝最後のサビ／ドロップを強く、"afterBridge"＝Cメロのあとの頭。省略は ["chorus","drop"]。 */
+  crashAt?: string[];
+  /** 後半の転調。{ atBar: 33, semitones: 1 } か { at: "lastChorus", semitones: 2 }。自動伴奏と手書きパート（ドラム以外）の両方が上がる。 */
+  modulate?: Modulate;
   /** セクションごとのコード進行（{ verse: "C Am F G", chorus: "F G Em Am" }。2回目の同じ種類は verse2 のように書ける）。sections を配列で書いたときだけ効く。 */
   sectionChords?: Record<string, string>;
-  /** 転調: atBar 小節目（1から数える）以降のコードと、ドラム以外のパートの音を semitones 半音ずらす。 */
-  modulate?: { atBar: number; semitones: number };
   /** ループの最後の小節のコードを置き換える（dominant＝V7、deceptive＝vi か ♭VI）。 */
   loopTail?: "deceptive" | "dominant";
   /** AIが書くパート（メロディ・対旋律・ベースライン・ドラムなど）。 */
@@ -150,9 +170,15 @@ export const AI_SONG_SCHEMA = {
     autoScoop: { type: "boolean" },
     drumMix: { type: "object" },
     fills: { type: "boolean" },
-    sections: { anyOf: [{ type: "string", enum: ["auto"] }, { type: "array", items: { type: "object", additionalProperties: false, required: ["kind", "bars"], properties: { kind: { type: "string", enum: SECTION_KINDS }, bars: { type: "number" } } } }] },
+    sections: { anyOf: [{ type: "string", enum: ["auto"] }, { type: "array", items: { type: "object", additionalProperties: false, required: ["kind", "bars"], properties: { kind: { type: "string", enum: SECTION_KINDS }, bars: { type: "number" }, from: { type: "string", enum: TRANSITIONS }, crash: { anyOf: [{ type: "boolean" }, { type: "number" }] } } } }] },
+    scene: { type: "string", enum: SCENE_NAMES },
+    layers: { type: "object" },
+    occurrence: { type: "boolean" },
+    energy: { anyOf: [{ type: "string" }, { type: "array", items: { type: "number" } }] },
+    energyOrder: { type: "array", items: { type: "string" } },
+    crashAt: { type: "array", items: { type: "string" } },
+    modulate: { type: "object", additionalProperties: false, properties: { atBar: { type: "integer" }, at: { type: "string", enum: ["lastChorus", "afterBridge"] }, semitones: { type: "integer" } }, required: ["semitones"] },
     sectionChords: { type: "object", additionalProperties: { type: "string" } },
-    modulate: { type: "object", additionalProperties: false, required: ["atBar", "semitones"], properties: { atBar: { type: "integer" }, semitones: { type: "integer" } } },
     loopTail: { type: "string", enum: ["deceptive", "dominant"] },
     parts: {
       type: "array",
@@ -173,6 +199,9 @@ export const AI_SONG_SCHEMA = {
           bright: { type: "number" },
           duck: { type: "number" },
           phrase: { type: "number" },
+          sections: { type: "object" },
+          modulate: { type: "boolean" },
+          keepBreak: { type: "boolean" },
           amp: { type: "string", enum: ["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean"] },
           notes: { type: "string" },
         },
@@ -230,7 +259,17 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - autoScoop: false にすると、ギターの長い音（1拍以上）に自動でかかる「半音下から持ち上げて入る」しゃくりを止める。「ギターがキュインキュインする／しゃくりすぎ」と言われたときに使う。メロディの「/」（しゃくり）や「\\」（フォール）の記号も減らし、旋律を高い音域（A5以上）に置かないとなおよい。
 - snareTune: スネアの音程（半音。-6〜6、0.5刻み。マイナスで低く＝太く落ち着いた音、プラスで高く＝抜けのいい音）。「スネアが高い／低い」と言われたときに使う。録音音源（real版）でだけ効く。
 - human: 0〜1。「打ち込みっぽい」と感じるときに足す。各パートのタイミングのずれを大きく、バンド全体を少し走らせたり溜めたり、音の強さ・長さをばらつかせ、長い音（リード・パッド・弦・ブラス）に音量の山をつけ、リード・ギター・弦の音程をごくわずかにずらす。0.3〜0.6が自然、1はかなりラフ。同じ小節のくり返しが多いほど効く（くり返しは、手で書くときに少しずつ変えるのが本筋で、human はその上に重ねる仕上げ）。録音音源（real版）でだけ効く。
-- sections: 自動の伴奏（autoAccompaniment: true）に、曲の起伏をつける。"auto" なら定番の構成（導入4 → Aメロ8 → Bメロ4 → サビ8 → 間奏4 → Aメロ → Bメロ → サビ → サビ → 終わり4。曲の小節数に合わせて自動で区切る）。自分で決めるなら [{"kind":"intro","bars":4},{"kind":"verse","bars":8},{"kind":"pre","bars":4},{"kind":"chorus","bars":8}] のように書く（kind は intro・verse・pre・chorus・interlude・bridge・outro。bars の合計が曲の小節数になるようにする。ちがうときは最後を延ばすか、後ろを切る）。導入＝ピアノと弦だけ、Aメロ＝ドラム（キックとハイハット）とベースを足す、Bメロ＝スネアとギターを足して少しずつ強く、サビ＝全部とクラッシュ、間奏＝ドラムを抜く、Cメロ・終わり＝静かに。サビの前の小節は、スネアとキックで助走をつける。メロディなど自分で書いたパートには効かないので、メロディ側の強弱は phrase や ! , で付ける。
+- sections: 自動の伴奏（autoAccompaniment: true）に、曲の起伏をつける。"auto" なら定番の構成（導入4 → Aメロ8 → Bメロ4 → サビ8 → 間奏4 → Aメロ → Bメロ → サビ → サビ → 終わり4。曲の小節数に合わせて自動で区切る）。自分で決めるなら [{"kind":"intro","bars":4},{"kind":"verse","bars":8},{"kind":"pre","bars":4},{"kind":"chorus","bars":8}] のように書く（kind は intro・verse・pre・chorus・interlude・bridge・outro と、build（ビルド＝キック・ハイハット・スネア・ベースだけで、スネアを4分→8分→16分と密にして強くする）・break（ブレイク＝鍵盤と弦だけ）・drop（ドロップ＝全部＋頭のクラッシュ。キックとベースが同時に戻る）・solo（ソロ＝リズム隊を小さくして旋律側を立てる）・tag（余韻＝ベース・鍵盤・弦の長音だけ）。bars の合計が曲の小節数になるようにする。ちがうときは最後を延ばすか、後ろを切る）。導入＝ピアノと弦だけ、Aメロ＝ドラム（キックとハイハット）とベースを足す、Bメロ＝スネアとギターを足して少しずつ強く、サビ＝全部とクラッシュ、間奏＝ドラムを抜く、Cメロ・終わり＝静かに。サビの前の小節は、スネアとキックで助走をつける。メロディなど自分で書いたパートには効かないので、メロディ側の強弱は phrase や ! , で付ける。
+- 編曲の自動化（2026-10-11。詳しくは docs/sound/arrangement-deep.md 末尾の「実装状況」）:
+  - scene: 場面プリセット。"scene": "battle" のように書くと、sections・feel・tone・dynamics・layers・energy・crashAt・modulate などの既定値が入る（曲に書いた値が優先）。使える場面: ${SCENE_NAMES.join("・")}。bpm が場面の目安から外れると注意が出る。
+  - sections の各要素に "from"（この場面に入るときのつなぎ。${TRANSITIONS.join("・")}。stopBeat＝直前の1拍を全員止める、break1bar＝直前の1小節を全員止める、riser＝直前の2小節で強くしてハイハットを16分に、kime＝直前の1小節を全員で同じリズム（1拍目・2拍目のウラ・3拍目）で打つ。break と drop の前は何も書かなくても stopBeat）と "crash"（true／強さ。この場面の頭にクラッシュ）を書ける。例 {"kind":"chorus","bars":8,"from":"stopBeat"}。止めるつなぎは手書きのパートにも効く（持続音を残したいパートは keepBreak: true）。
+  - parts[].sections: 手書きのパートをセクションごとに出し入れする。{"intro":0,"verse":0.6,"chorus":1,"solo":{"gain":1,"octave":1}}（数字＝音量の倍率、0＝休み、octave＝オクターブずらし。書かなかったセクションは1）。2本目のギターや対旋律を「サビだけ」「2番から」にするときに、R を並べずに済む。曲に sections（または scene）が必要。
+  - layers: セクションの種類ごとに鳴らす群を上書き。{"verse":["kick","bass","keys"],"chorus":{"groups":["kick","hat","snare","bass","keys","guitar","strings","brass"],"from":1,"to":1}}。群は kick・hat・snare・bass・keys・guitar・strings・pad・brass・perc（pad・brass・perc を書いた場面では、pad／choir・brass・tom が strings／snare から独立して出し入れできる）。
+  - occurrence: true なら、同じ種類の2回目以降に楽器を1つ足して少し強くする（verse はギター、間奏はハイハットなど）。
+  - energy: セクション順の強さ（1〜10。例 [3,4,6,9,5,10]）か曲線の名前（mountain・twoPeaks・valley・stairs・flat・bigValley）。1〜3＝2群、4〜6＝4群、7〜8＝6群、9〜10＝全群とクラッシュ。群の優先順は energyOrder（省略は kick・bass・hat・keys・snare・guitar・strings。静かな場面は ["keys","strings","bass","guitar","hat","kick","snare"] など）。
+  - crashAt: クラッシュを置く種類（省略は chorus と drop）。"last" を足すと最後のサビ／ドロップだけ強く、"afterBridge" でCメロのあとの頭にも置く。
+  - modulate: 後半の転調。{"atBar":33,"semitones":1}（小節は1から数える）か {"at":"lastChorus","semitones":2}（at は lastChorus＝最後のサビ／ドロップの頭、afterBridge＝Cメロのあとの頭）。自動の伴奏と手書きパート（ドラム以外）が一緒に上がる。上げたくないパートは modulate: false。
+  - 書き出すと、変わり目が弱い・サビがAメロより薄い・最後のサビの前に止める所がない、の注意が小節番号つきで出る。出たら直す。
 - dynamics: true にすると、曲の出だし（最初の1/8、最大4小節）を小さく始めて上げ、中盤で一度引いてから戻す（曲の起伏）。同じ音量で続く曲を避けたいときに使う。
 - dynamics: "natural" にすると、人が弾いたような強弱を自動でつける（曲全体の山と谷・4小節フレーズごとの息づかい・拍の強弱・音ごとのわずかなばらつき。出だしと終わりは小さく、7割あたりが頂点）。ソロ・バラード・インストで、のっぺりした曲にしたくないときは基本これを使う。ドラムには半分の深さでかかる。
 - 勉強した内容のガイド（曲を書く前に、必要なものを読む）:（曲の設計図 <曲>.plan.json の書き方と点検は ai-composition-workflow.md。書き出し後は song.mjs gate・novelty・plan-check） docs/sound/ai-composition-workflow.md（AIで作曲する手順・点検）／chord-theory-deep.md（ジャンル別・場面別の進行。分数コード G/B、6・9・add9・m7b5・7sus4・maj9 も書ける）／bassline-guide.md（ジャンル別のベース）／drum-genre-guide.md（ジャンル別のドラムと drumMix）／sound-design-basics.md（音づくり・帯域）／mix-patterns.md（ミックスのパターン56個と症状別の直し方）／arrangement-deep.md（編曲）／mastering-guide.md（仕上げ）／amp-sim-guide.md（アンプ）。
@@ -435,7 +474,8 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   const errors: string[] = [];
   const warnings: string[] = [];
   if (!input || typeof input !== "object") throw new Error("AIソングのJSONではありません");
-  const song = prepareSong(input as AiSong, warnings); // Am*2・sectionChords・modulate・loopTail をふつうの形に直す（使っていなければそのまま）
+  // Am*2・sectionChords・atBar の転調・loopTail をふつうの形に直し、場面プリセット（scene）の既定値を入れる
+  const song = applyScene(prepareSong(input as AiSong, warnings), warnings);
   const bpm = Math.round(Number(song.bpm));
   if (!(bpm >= 40 && bpm <= 260)) errors.push(`bpm は 40〜260 にしてください（${song.bpm}）`);
   if (![3, 4, 6, 7].includes(Number(song.beats))) errors.push(`beats は 3・4・6・7 のどれか（${song.beats}）`);
@@ -454,27 +494,36 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   const total = base.tracks[0].notes.reduce((s, n) => s + n.durationBeats, 0);
   let accompaniment = song.autoAccompaniment ? base.tracks.slice(0, -1) : [];
   // セクション編曲: 導入・Aメロ・Bメロ・サビ・間奏…ごとに、自動の伴奏の楽器と強さを変える
-  if (song.sections && accompaniment.length) {
-    const beatsPerBar = Number(song.beats);
-    const totalBars = Math.round(total / beatsPerBar);
-    let list: Section[];
-    if (song.sections === "auto") list = autoSections(totalBars);
-    else if (Array.isArray(song.sections)) {
-      list = [];
-      song.sections.forEach((x, i) => {
-        const kind = (x?.kind ?? "") as SectionKind;
-        const bars = Math.round(Number(x?.bars));
-        if (!SECTION_KINDS.includes(kind)) { warnings.push(`sections[${i}]: 「${String(x?.kind)}」は使えません（${SECTION_KINDS.join("・")} のどれか）。Aメロにしました`); }
-        if (!(bars >= 1)) { warnings.push(`sections[${i}]: bars は1以上の整数にしてください`); return; }
-        list.push({ kind: SECTION_KINDS.includes(kind) ? kind : "verse", bars });
-      });
-    } else list = [];
-    if (list.length) {
-      const fitted = fitSections(list, totalBars);
-      if (fitted.warning) warnings.push(fitted.warning);
-      accompaniment = applySections(accompaniment, fitted.sections, beatsPerBar, song.fills !== false, { bassDensity: song.bassDensity === true });
-    }
+  const beatsPerBar = Number(song.beats);
+  const totalBars = Math.round(total / beatsPerBar);
+  let sectionList: Section[] | undefined;
+  const sectionsSpec = song.sections ?? (song.scene ? "scene" : undefined);
+  if (sectionsSpec === "scene") sectionList = sceneSections(song.scene, totalBars);
+  else if (song.sections === "auto") sectionList = autoSections(totalBars);
+  else if (Array.isArray(song.sections)) sectionList = parseSections(song.sections, warnings);
+  if (sectionList?.length) {
+    const fitted = fitSections(sectionList, totalBars);
+    if (fitted.warning && sectionsSpec !== "scene") warnings.push(fitted.warning);
+    sectionList = fitted.sections;
+  } else sectionList = undefined;
+  const hasPartSections = Array.isArray(song.parts) && song.parts.some((p) => p?.sections && typeof p.sections === "object");
+  if (!sectionList && (hasPartSections || song.modulate?.at || song.energy !== undefined)) {
+    sectionList = autoSections(totalBars);
+    warnings.push("parts[].sections / energy / modulate.at を使うには sections（または scene）が必要です。sections: \"auto\" として扱いました");
   }
+  const arrange: ArrangeOptions = {
+    ...(song.bassDensity === true ? { bassDensity: true } : {}),
+    ...(song.layers ? { layers: parseLayers(song.layers, warnings) } : {}),
+    ...(song.occurrence === true ? { occurrence: true } : {}),
+    ...(Array.isArray(song.crashAt) ? { crashAt: song.crashAt.filter((x): x is CrashAt => SECTION_KINDS.includes(x as SectionKind) || x === "last" || x === "afterBridge") } : {}),
+    ...(sectionList && song.energy !== undefined ? { perSection: parseEnergy(song.energy, song.energyOrder, sectionList.length, warnings) } : {}),
+  };
+  if (sectionList && accompaniment.length) accompaniment = applySections(accompaniment, sectionList, beatsPerBar, song.fills !== false, arrange);
+  if (sectionList) warnings.push(...checkArrangement(sectionList, beatsPerBar, arrange, song.sections !== "auto"));
+  // 転調: atBar 以降の音を半音ずらす（自動の伴奏と手書きパート。ドラムは動かさない）
+  const modulation = song.modulate ? resolveModulate(song.modulate, sectionList, beatsPerBar, totalBars, warnings) : null;
+  if (modulation) accompaniment = accompaniment.map((t) => transposeTrack(t, modulation.semitones, modulation.atBeat));
+  const mutes = sectionList ? muteRanges(sectionList, beatsPerBar) : [];
 
   const parts: Track[] = [];
   song.parts.forEach((p, i) => {
@@ -492,7 +541,14 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     const patchKey = p.patch ? String(p.patch) : "";
     if (patchKey && !(patchKey in SYNTH_PATCHES)) warnings.push(`${where}: シンセ音色「${patchKey}」は使えないので、楽器の音にしました`);
     const program = !drum && patchKey in SYNTH_PATCHES ? SYNTH_PATCHES[patchKey] : undefined;
-    parts.push({
+    const partSpec: PartSectionSpec | undefined = p.sections ? parsePartSections(p.sections, where, warnings) : undefined;
+    const arranged = (notes: NoteEvent[]): NoteEvent[] => {
+      let ns = notes;
+      if (partSpec && sectionList) ns = applyPartSections(ns, sectionList, beatsPerBar, partSpec, drum);
+      if (mutes.length && p.keepBreak !== true) ns = applyMutesToNotes(ns, mutes);
+      return ns;
+    };
+    const track: Track = {
       waveform: drum ? "square" : "sawtooth",
       ...(program !== undefined ? { program } : {}),
       instrument: p.instrument,
@@ -504,8 +560,9 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
       ...(!drum && Number.isFinite(Number(p.chorus)) && p.chorus !== undefined ? { chorus: Math.max(0, Math.min(1, Number(p.chorus))) } : {}),
       ...(!drum && Number(p.bright) ? { bright: Math.max(-1, Math.min(0.5, Number(p.bright))) } : {}),
       ...(!drum && Number(p.duck) > 0 ? { duck: Math.min(0.95, Number(p.duck)) } : {}),
-      notes: applySustain(drum ? fitToLength(events, total) : applyPhrase(fitToLength(events, total), Number(p.phrase)), drum ? 1 : Number(p.sustain)),
-    });
+      notes: arranged(applySustain(drum ? fitToLength(events, total) : applyPhrase(fitToLength(events, total), Number(p.phrase)), drum ? 1 : Number(p.sustain))),
+    };
+    parts.push(modulation && p.modulate !== false ? transposeTrack(track, modulation.semitones, modulation.atBeat) : track);
   });
   if (errors.length) throw new Error(errors.join("\n"));
   if (parts.length === 0 && accompaniment.length === 0) throw new Error("パートがありません");
