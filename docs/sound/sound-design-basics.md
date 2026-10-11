@@ -324,3 +324,22 @@
 39. [Audiokinetic: Loudness processing for games](https://blog.audiokinetic.com/loudness-processing-best-practice-chapter-3-scalable-loudness-processing-for-games/)
 
 **調査上の注意**: 一部の記事（Violet Recording など）は読めなかったため使っていない。圧縮の楽器別の数字は、本文に数字を載せていない記事が多く、`mixing-guide.md` の値を土台にした。ADSR は記事の「実例の値」で、規格ではない。GM の録音音源でつまみが効くかは、提案1・3・5の実験で確かめる。
+
+## 10. 実装状況（2026-10-11）
+
+§8 の提案 10 個のうち、書き出し・サウンドセット・診断に関するものを入れた。作曲ソフトの画面や、楽譜の構造（音符の複製・MIDI のコントロール）に手を入れるものは担当外なので入れていない。
+
+| # | 提案 | 状態 | 内容 |
+|---|---|---|---|
+| 1 | 自動ダブル（doubleDetune） | 入れなかった | MIDI のファインチューン（RPN）が録音音源に効くかの実験と、楽譜の複製が要る（エンジン側） |
+| 2 | エコー生成 | 入れなかった | 音符の複製で作る（楽譜の構造に触る）。遅れの秒数の計算だけ `syncDelaySeconds(bpm)` として入れた（付点 1/8 = 60 ÷ BPM × 0.75 秒。BPM 128 で 351.6ms、`song.mjs delays 128`） |
+| 3 | ADSR 近似 | 入れなかった | CC73／CC72 が音源に効くかの実験が先（エンジン側） |
+| 4 | 楽器別の帯域診断 `analyze.py --roles` | **入れた** | 楽譜（プロジェクト）から、パートごとの音域と重心（Hz）を出し、200〜500Hz の持続音が複数・ベースがキックに近い・1〜4kHz に 3 種類以上・低域が 4 つ以上・低域が中央でない／残響が多い、を警告 |
+| 5 | フランジャー／フェイザー代用 | 入れなかった | 1〜5ms ずらした 2 パートは楽譜側（`push`）の使い方で、書き出しの機能ではない |
+| 6 | 低域のモノ化チェック | **入れた** | `analyze.py --mono-low 曲.wav`（150Hz 以下の相関、0.9 未満で警告）。`song.mjs build` では、キック・ベース・808 の pan と reverb を検査（`checkMixRoles`）し、書き出しの合否表に低域相関を出す。見本曲 3 つの 150Hz 以下の相関: 0.84（delicate-demo。逆相気味で警告）・0.97・0.97 |
+| 7 | ゲーム内の帯域の逃がし（gameDuck） | **入れた** | `applyGameDuck(score, db)`（既定 2.5dB）。1〜4kHz のパート（lead・leadGuitar・distGuitar・crunch・bell・brass）の volume を下げ、ドラム・低域・パッド・弦以外の bright を -0.1。通常版とゲーム版の 2 通りに使える |
+| 8 | 音づくりの型 | **入れた** | `PART_RECIPES`: `soft-pad`（やわらかい弦パッド）・`pluck-arp`（プラックのアルペジオ）・`bell-accent`（ベル系の飾り）の PartMix |
+| 9 | テンポ同期の早見表 | 一部 | 計算 `syncDelaySeconds`・`reverbDecayHint`・`duckRecoverMs` と、コマンド `song.mjs delays <BPM>`。作曲ソフトの画面への表示は未 |
+| 10 | 役割から初期値 | **入れた** | `ROLE_DEFAULTS`・`suggestPartDefaults(role, side)`（旋律・低音・和音・飾り・空気・ドラム）。手で変えた値を上書きしない仕組みは、呼び出し側（画面）の作業 |
+
+関連して、書き出しの仕上げ（§7 のマスタリング）は `mastering-guide.md` §11 に、サウンドセット（ミックスの型）は `mix-patterns.md` §10 に実装状況を書いた。§7 の「ゲームBGM -18〜-14」は、仕上げのプリセット（game-field -16.5・game-battle/boss -14.5・game-dungeon -18）として入っている。

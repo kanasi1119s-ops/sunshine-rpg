@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { SOUND_SETS, applySoundSet } from "./sound-sets";
+import { PART_RECIPES, SCENE_SETS, SOUND_SETS, applySoundSet } from "./sound-sets";
+import masterSource from "../../tools/composer/master.mjs?raw";
 import type { Score } from "./score";
 
 const mk = (): Score => ({
@@ -43,10 +44,49 @@ describe("サウンドセット", () => {
   it("仕上げの音量（master）は、あるなら現実的な範囲（-16〜-6 LUFS）", () => {
     for (const s of Object.values(SOUND_SETS)) {
       if (s.master) {
-        expect(s.master.lufs).toBeGreaterThanOrEqual(-16);
+        expect(s.master.lufs).toBeGreaterThanOrEqual(-20); // アンビエント・ゲームのダンジョンは -18
         expect(s.master.lufs).toBeLessThanOrEqual(-6);
       }
     }
     expect(SOUND_SETS["punk-run"].master).toBeDefined();
+  });
+
+  it("既存の2つのセットの書き出し設定は変わらない（punk-run は -10 だけ、clear-guitar-rock は書き出し設定なし）", () => {
+    expect(SOUND_SETS["punk-run"].master).toEqual({ lufs: -10 });
+    expect(SOUND_SETS["clear-guitar-rock"].master).toBeUndefined();
+  });
+
+  it("ミックスの型が 12 種以上あり、master の preset は master.mjs に実在する", () => {
+    const added = ["rock-4", "pop-lead", "jpop-bright", "ballad-piano-strings", "jazz-trio", "funk-bass", "house-duck", "ambient-wide", "orchestra-depth", "game-battle", "game-town", "game-dungeon"];
+    for (const id of added) expect(SOUND_SETS[id], id).toBeDefined();
+    for (const s of Object.values(SOUND_SETS)) {
+      const p = s.master?.preset;
+      if (p) expect(masterSource.includes(`"${p}":`) || masterSource.includes(`  ${p}:`), `${s.id} の preset ${p}`).toBe(true);
+      if (s.master?.space) expect(["hall", "room", "plate"]).toContain(s.master.space);
+      if (s.master?.spaceWet !== undefined) expect(s.master.spaceWet).toBeGreaterThanOrEqual(0), expect(s.master.spaceWet).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("新しいセットでも、キック・ベース・808 は中央のまま（panWidth を持たない）、volume は 0〜0.2", () => {
+    for (const s of Object.values(SOUND_SETS)) {
+      for (const inst of ["kick", "bass", "sub808"] as const) expect(s.parts[inst]?.panWidth, `${s.id}/${inst}`).toBeUndefined();
+      for (const p of Object.values(s.parts)) if (p?.volume !== undefined) { expect(p.volume).toBeGreaterThan(0); expect(p.volume).toBeLessThanOrEqual(0.2); }
+    }
+  });
+
+  it("新しいセットを当てても何度でも同じ結果で、合計は 0.9 以下", () => {
+    for (const s of Object.values(SOUND_SETS)) {
+      const once = applySoundSet(mk(), s);
+      expect(applySoundSet(once, s)).toEqual(once);
+      expect(once.tracks.reduce((a, t) => a + t.volume, 0)).toBeLessThanOrEqual(0.9001);
+    }
+  });
+
+  it("場面の表は実在するセットを指し、音づくりの型は PartMix を持つ", () => {
+    for (const sc of Object.values(SCENE_SETS)) {
+      expect(SOUND_SETS[sc.sound], sc.sound).toBeDefined();
+      expect(masterSource.includes(`"${sc.preset}":`), sc.preset).toBe(true);
+    }
+    for (const r of Object.values(PART_RECIPES)) expect(r.mix.volume).toBeLessThanOrEqual(0.2);
   });
 });

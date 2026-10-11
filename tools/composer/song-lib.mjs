@@ -4,7 +4,8 @@ import { createServer } from "vite";
 import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
-import { masterFile, MASTER_PRESETS } from "./master.mjs";
+import { masterFile, resolvePreset } from "./master.mjs";
+import { masterReport, loopTailWrap, lowShareDb } from "./master-report.mjs";
 import { makeIr, writeWav, SPACES } from "./space-ir.mjs";
 import { checkChordVariety, loadOtherSongs } from "./chord-variety.mjs";
 
@@ -19,13 +20,17 @@ export async function openSongKit() {
     return load("/src/audio/sound-sets.ts");
   }
 
+  async function mixTools() {
+    return load("/src/audio/mix-tools.ts");
+  }
+
   async function guide() {
     const { AI_SONG_GUIDE } = await load("/src/audio/ai-song.ts");
     return AI_SONG_GUIDE;
   }
 
   /** 曲（AIソング形式のオブジェクト）を確かめて、プロジェクト・MIDI（・WAV）を書き出す。 */
-  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", sound = "", master = null, widen = null, space = "", spaceWet = 0.25, masterPreset = "" } = {}) {
+  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", sound = "", master = null, widen = null, space = "", spaceWet = null, masterPreset = "", tp = null, lowmono = null, sideHpf = null, clip = null, hpf = null, lpf = null, matchEq = "", matchAmount = null, loopTail = false } = {}) {
     if (!EDITIONS.includes(edition)) throw new Error("edition は real・ps2・modern のどれか");
     if (!/^[a-z0-9][a-z0-9-]*$/.test(name ?? "")) throw new Error(`name は英小文字・数字・「-」だけ（${name}）`);
     const { aiSongToScore } = await load("/src/audio/ai-song.ts");
@@ -45,14 +50,23 @@ export async function openSongKit() {
       if (guitar === "std") guitar = set.overlays.guitar;
       if (master === null && set.master) master = set.master.lufs;
       if (widen === null && set.master?.widen) widen = set.master.widen;
+      // サウンドセットの master に preset・space・spaceWet があれば、同じ引数（--master-preset・--space・--space-wet）を書いたのと同じ（引数のほうが優先）
+      if (!masterPreset && set.master?.preset) masterPreset = set.master.preset;
+      if (!space && set.master?.space) space = set.master.space;
+      if (spaceWet === null && set.master?.spaceWet !== undefined) spaceWet = set.master.spaceWet;
     }
+    if (spaceWet === null) spaceWet = 0.25;
     // 曲の自動チェック（楽譜）: 低音のにごり・同じ音域のぶつかり・単調さ。入力のまちがいではなく、直すと良くなるヒント
     const { checkScore } = await load("/src/audio/song-check.ts");
     warnings.push(...checkScore(score));
+    // ミックスの検査（kick・bass・sub808 の左右・残響、低域のパートの数、主役の重複、音量の合計）と、150Hz 以下をモノにできるか
+    const { checkMixRoles } = await load("/src/audio/mix-tools.ts");
+    warnings.push(...checkMixRoles(score));
     // コード進行の自動チェック: 基本の和音だけ・少ない種類のくり返し・他の曲と同じ形
     warnings.push(...checkChordVariety(songData.chords, loadOtherSongs(path.join(ROOT, "assets-src", "ai-songs"), name)));
     const out = path.resolve(outDir ?? path.join(ROOT, "dist-songs"));
     fs.mkdirSync(out, { recursive: true });
+    let reportLine = null;
     const files = { project: path.join(out, `${name}.sunshine-song.json`), midi: path.join(out, `${name}.mid`) };
     fs.writeFileSync(files.project, JSON.stringify({ format: "sunshine-song", version: 1, name: song.title, edition, score }));
     const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
@@ -72,18 +86,44 @@ export async function openSongKit() {
         fs.renameSync(tmpv, files.wav);
         fs.rmSync(irFile, { force: true });
       }
-      let glue;
+      // 尾の重ね書き（--loop-tail）: 書き出しの末尾（曲の長さより後ろ＝残響の尾）を先頭に重ねて、曲の長さに切る。仕上げの前にやる
+      if (loopTail) {
+        const t = await loopTailWrap(files.wav, getScoreDurationSec(score));
+        if (!t.wrapped) warnings.push("--loop-tail: 曲の長さより後ろに残響の尾がほとんど無いので、重ねませんでした");
+      }
+      let glue, pr = null;
       if (masterPreset) {
-        const pr = MASTER_PRESETS[masterPreset];
-        if (!pr) throw new Error(`master-preset は ${Object.keys(MASTER_PRESETS).join("・")} のどれか（${masterPreset}）`);
+        pr = resolvePreset(masterPreset);
         if (master === null || master === undefined) master = pr.lufs;
         if (widen === null) widen = pr.widen;
-        glue = songData.dynamics === "natural" && pr.glue === "normal" ? "gentle" : pr.glue; // natural の曲は起伏をつぶさない
+        const nat = songData.dynamics === "natural";
+        // natural の曲は起伏をつぶさないよう、圧縮を一段やさしくする
+        glue = nat ? ({ normal: "gentle", bus3: "bus2", bus2: "light" }[pr.glue] ?? pr.glue) : pr.glue;
       }
+      let masterOpts = null, lowCutoff = 100, shareBefore = null;
       if (master !== null && master !== undefined) {
-        // 仕上げ（tools/composer/master.mjs）: 低域モノ・左右の広がり・目標の大きさ・トゥルーピーク・ディザ
-        masterFile(files.wav, { lufs: master, widen: widen ?? 1, natural: songData.dynamics === "natural", glue });
+        // 仕上げ（tools/composer/master.mjs）: 掃除・EQ・低域モノ・左右の広がり・目標の大きさ・ソフトクリップ・トゥルーピーク・ディザ
+        const { id: _id, lufs: _l, glue: _g, widen: _w, ...rest } = pr ?? {};
+        masterOpts = { ...rest, lufs: master, widen: widen ?? 1, natural: songData.dynamics === "natural", glue };
+        if (tp !== null) masterOpts.tp = tp;
+        if (lowmono !== null) masterOpts.lowmono = lowmono;
+        if (sideHpf !== null) masterOpts.sideHpf = sideHpf;
+        if (clip !== null) masterOpts.clip = clip;
+        if (hpf !== null) masterOpts.hpf = hpf;
+        if (lpf !== null) masterOpts.lpf = lpf;
+        if (matchEq) { masterOpts.match = matchEq; if (matchAmount !== null) masterOpts.matchAmount = matchAmount; }
+        const lm = masterOpts.lowmono ?? 140;
+        lowCutoff = lm > 0 ? Math.min(100, Math.round(lm * 0.5)) : 100;
+        if (lm > 0) shareBefore = lowShareDb(files.wav, lm * 0.8);
+        masterFile(files.wav, masterOpts);
+        // モノ化で低音が痩せていないか（逆相気味の低音は、モノにすると消える）: 全体に対する低域の割合が 3dB 以上減ったら注意
+        if (shareBefore !== null) {
+          const loss = shareBefore - lowShareDb(files.wav, lm * 0.8);
+          if (loss > 3) warnings.push(`低域モノ化（${lm}Hz 以下）で、全体に対する低音の割合が ${loss.toFixed(1)}dB 減りました。左右が逆相気味の低音（chorus・ダブル・広い残響）があるかもしれません。低音パートの pan を 0 に、chorus を外してください。`);
+        }
       }
+      // 書き出しの合否表（I・TP・LRA・PLR・PSR・左右の相関・100Hz 以下の相関・継ぎ目を 1 行で）
+      reportLine = masterReport(files.wav, { lufs: masterOpts?.lufs ?? null, tp: masterOpts?.tp ?? -1.5, loop: true, lowCutoff }).line;
       // 鳴らした音の自動チェック（音割れ・低音の多すぎ・強弱の平らさ・途中の無音）
       const { analyzeMix } = await load("/src/audio/song-check.ts");
       const bytes = fs.readFileSync(files.wav);
@@ -93,7 +133,7 @@ export async function openSongKit() {
       warnings.push(...analyzeMix(ch, bytes.readUInt32LE(24)));
     }
     const sec = getScoreDurationSec(score);
-    return { title: song.title, description: song.description, tracks: score.tracks.length, seconds: Math.round(sec * 10) / 10, bpm: score.tempoBpm, warnings, files, score };
+    return { report: reportLine, title: song.title, description: song.description, tracks: score.tracks.length, seconds: Math.round(sec * 10) / 10, bpm: score.tempoBpm, warnings, files, score };
   }
 
   /** 作った曲を、ゲームの曲として登録する（src/audio/songs/<id>.sunshine-song.json）。 */
@@ -121,7 +161,7 @@ export async function openSongKit() {
     return Object.entries(AMP_PRESETS).map(([id, p]) => ({ id, label: p.label, genre: p.genre }));
   }
 
-  return { guide, soundSets, build, register, listGameSongs, ampPresets, close: () => server.close() };
+  return { guide, soundSets, mixTools, build, register, listGameSongs, ampPresets, close: () => server.close() };
 }
 
 async function loadPlaywright() {
@@ -152,8 +192,8 @@ export async function renderWav(score, edition, file, soundfont = "game", bass =
   const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required"] });
   try {
     const page = await browser.newPage();
-    await page.goto("file://" + html);
-    await page.waitForFunction(() => "__composer" in window);
+    await page.goto("file://" + html, { timeout: 180000 }); // 110MB の HTML。ほかの作業で重いときは 30 秒を超える
+    await page.waitForFunction(() => "__composer" in window, null, { timeout: 180000 });
     await page.evaluate(([b, d, g]) => window.__composer.setOverlays(b, d, g), [bass, drums, guitar]);
     if (soundfont === "gu") await page.evaluate(() => window.__composer.setSoundfont("gu"));
     const b64 = await page.evaluate(([s, e]) => window.__composer.renderWav(s, e), [score, edition]);

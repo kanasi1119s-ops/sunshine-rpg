@@ -5,6 +5,12 @@
     python3 tools/audio-check/analyze.py 曲1.wav 曲2.mp3 ... > 結果.json
     python3 tools/audio-check/analyze.py --compare 結果.json   # 目安（docs/sound/reference-nihonichi-bgm.md）と比べて表示
     python3 tools/audio-check/analyze.py --bands 結果.json     # 帯域の偏りを診断し、直し方（どのパラメータを触るか）まで表示
+    python3 tools/audio-check/analyze.py --bands 結果.json --family rock
+        # 参考37曲の平均ではなく、家族別の目標（docs/sound/data/mix-targets.json。rock・punk・edm・hiphop・jazz・lofi・ambient・game-battle。pop・metal・orch なども別名で可）との差を表示
+    python3 tools/audio-check/analyze.py --roles 曲.sunshine-song.json
+        # 楽譜（作曲ソフトのプロジェクト）から、パートごとの音域と重心(Hz)を出し、席の重なり（200〜500Hz に持続音が複数・キックとベースの重心が近い・低域のパートが多い・低域が中央にない）を警告する
+    python3 tools/audio-check/analyze.py --mono-low 曲1.wav [曲2.wav ...]
+        # 150Hz 以下の左右の相関を測り、0.9 を下回ったら警告（モノで低音が痩せる）
 
 必要なもの: ffmpeg（読み込み・音量の測定）、numpy。
 うちの曲の WAV は `node tools/composer/song.mjs build <曲.json> --wav` か、作曲ソフトの「WAVで書き出す」で作る。
@@ -141,15 +147,34 @@ BAND_HINT = {
 }
 
 
-def bands(result_file):
-    """帯域の量・広がり・重心を、目安と比べて、直し方つきで表示する。"""
+MIX_TARGETS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../docs/sound/data/mix-targets.json")
+
+
+def family_target(family):
+    """家族別の帯域の目標（mix-targets.json）。BAND_REF のうち bass・lowmid・mid・presence を置きかえた辞書と、許す幅を返す。"""
+    data = json.load(open(MIX_TARGETS, encoding="utf-8"))
+    key = data.get("aliases", {}).get(family, family)
+    if key not in data["families"]:
+        raise SystemExit(f"家族名がありません: {family}（{', '.join(data['families'])}）")
+    fam = data["families"][key]
+    ref = dict(BAND_REF)
+    tol = dict(BAND_TOL)
+    for b in ("bass", "lowmid", "mid", "presence"):
+        ref[b] = fam[b]
+        tol[b] = data["tolerance_dB"][b]
+    return ref, tol, fam["label"]
+
+
+def bands(result_file, family=None):
+    """帯域の量・広がり・重心を、目安と比べて、直し方つきで表示する。family を指定すると、その家族の目標との差を出す。"""
     data = json.load(open(result_file, encoding="utf-8"))
+    ref_all, tol_all, label = (BAND_REF, BAND_TOL, "参考37曲の平均") if not family else family_target(family)
     for name, v in data.items():
-        print("■ " + name)
+        print("■ " + name + f"  [目標: {label}]")
         bad = 0
-        for b, ref in BAND_REF.items():
+        for b, ref in ref_all.items():
             d = round(v["band_dB"][b] - ref, 1)
-            mark = "○" if abs(d) <= BAND_TOL[b] else "△"
+            mark = "○" if abs(d) <= tol_all[b] else "△"
             print(f"  {mark} {b:8s} {v['band_dB'][b]:6.1f}dB（目安 {ref}、差 {d:+}）")
             if mark == "△":
                 bad += 1
@@ -161,9 +186,91 @@ def bands(result_file):
         print("  → 帯域のバランスは、目安に収まっています" if not bad else f"  → {bad}か所が目安から外れています（上の → を参考に。最後は耳で）")
 
 
+# ── 楽譜から見るパートの席（--roles） ──
+NOTE_BASE = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
+NO_PITCH = {"kick", "snare", "hihat", "crash", "tom", "cowbell", "sfxDown", "sfxUp", "impact", "swoosh", "pierce", "wind", "rain", "stream", "bird", "crickets"}
+LOW_ROLES = {"kick", "bass", "sub808", "slap"}
+SUSTAIN = {"piano", "guitar", "echoGuitar", "crunch", "distGuitar", "strings", "pad", "choir", "keys", "brass", "harp", "leadGuitar", "lead"}
+
+
+def note_midi(name):
+    """音名（A2・C#4・Bb3 など）を MIDI 番号に。読めなければ None（休符など）。"""
+    m = re.fullmatch(r"([A-Ga-g])([#b♯♭]?)(-?\d)", str(name))
+    if not m:
+        return None
+    n = NOTE_BASE[m.group(1).upper()] + (1 if m.group(2) in "#♯" else -1 if m.group(2) in "b♭" else 0)
+    return 12 * (int(m.group(3)) + 1) + n
+
+
+def midi_hz(m):
+    return 440.0 * 2 ** ((m - 69) / 12)
+
+
+def roles(project_file):
+    """作曲ソフトのプロジェクト（.sunshine-song.json）のパートごとに、音域・重心(Hz)・席を出し、重なりを警告する。EQ が無いので、直し方は編曲（音域・音量・左右）。"""
+    data = json.load(open(project_file, encoding="utf-8"))
+    score = data.get("score", data)
+    rows = []
+    for i, t in enumerate(score["tracks"]):
+        inst = t.get("instrument", t.get("waveform", ""))
+        ms = [x for x in (note_midi(n.get("note")) for n in t.get("notes", [])) if x is not None]
+        if inst in NO_PITCH or t.get("gmDrum") or not ms:
+            rows.append({"i": i, "inst": inst, "pan": t.get("pan", 0), "vol": t.get("volume", 0), "rev": t.get("reverb", 0), "lo": None, "hi": None, "hz": None, "mid": None})
+            continue
+        med = float(np.median(ms))
+        rows.append({"i": i, "inst": inst, "pan": t.get("pan", 0), "vol": t.get("volume", 0), "rev": t.get("reverb", 0), "lo": min(ms), "hi": max(ms), "hz": round(midi_hz(med)), "mid": med})
+    print("■ " + os.path.basename(project_file))
+    names = "C C# D D# E F F# G G# A A# B".split()
+    nm = lambda m: f"{names[int(m) % 12]}{int(m) // 12 - 1}"
+    for r in rows:
+        rng = f"{nm(r['lo'])}〜{nm(r['hi'])}（重心 約{r['hz']}Hz）" if r["lo"] is not None else "（音程なし）"
+        print(f"  {r['i'] + 1:>2} {r['inst']:11s} vol {r['vol']:.3f} pan {r['pan']:+.2f}  {rng}")
+    warn = []
+    body = [r for r in rows if r["inst"] in SUSTAIN and r["mid"] is not None and 250 <= midi_hz(r["mid"]) <= 500]
+    kinds = sorted({r["inst"] for r in body})
+    if len(kinds) >= 2:
+        warn.append(f"200〜500Hz（体の席）に持続音が {len(kinds)} 種類（{'・'.join(kinds)}）。席は 1 つにして、ほかは音域を C4 以上へ上げるか volume を ×0.8（M09）")
+    kick = [r for r in rows if r["inst"] == "kick"]
+    bass = [r for r in rows if r["inst"] in ("bass", "slap") and r["mid"] is not None]
+    if kick and bass and bass[0]["hz"] < 62:
+        warn.append(f"ベースの重心が約{bass[0]['hz']}Hz でキック(50〜100Hz)と近い。ベースを 80〜120Hz 以上へ上げるか duck 0.25〜0.35 を足す")
+    lows = [r for r in rows if r["inst"] in LOW_ROLES]
+    if len(lows) > 3:
+        warn.append(f"低域を担うパートが {len(lows)} 個（3 個まで）")
+    for r in lows:
+        if abs(r["pan"]) > 0.1:
+            warn.append(f"{r['inst']}（{r['i'] + 1}番目）が中央でない（pan {r['pan']:+.2f}）。150Hz 以下はモノ")
+        if r["rev"] > 0.1:
+            warn.append(f"{r['inst']}（{r['i'] + 1}番目）の reverb が {r['rev']}。低音の残響は濁る")
+    mids = [r for r in rows if r["mid"] is not None and r["inst"] in SUSTAIN and 1000 <= midi_hz(r["mid"]) <= 4000]
+    mk = sorted({r["inst"] for r in mids})
+    if len(mk) >= 3:
+        warn.append(f"1〜4kHz（輪郭の席）に {len(mk)} 種類（{'・'.join(mk)}）。主役以外は b-0.15 と volume ×0.8（M09）")
+    print("  → 席の重なりは見つかりませんでした" if not warn else "\n".join("  △ " + w for w in warn))
+
+
+def mono_low(paths, cutoff=150):
+    """cutoff(Hz) 以下の左右の相関。0.9 を下回ったら警告（モノで低音が痩せる）。"""
+    for p in paths:
+        raw = subprocess.run(["ffmpeg", "-v", "quiet", "-i", p, "-af", f"lowpass=f={cutoff}:poles=2", "-ac", "2", "-ar", str(SR), "-f", "f32le", "-"], capture_output=True).stdout
+        x = np.frombuffer(raw, np.float32).reshape(-1, 2).astype(np.float64)
+        if len(x) == 0 or np.sum(x[:, 0] ** 2) < 1e-9 or np.sum(x[:, 1] ** 2) < 1e-9:
+            c = 1.0
+        else:
+            c = float(np.corrcoef(x[:, 0], x[:, 1])[0, 1])
+        print(("○ " if c >= 0.9 else "△ ") + os.path.basename(p) + f"  {cutoff}Hz 以下の左右の相関 {c:.3f}" + ("" if c >= 0.9 else "（0.9 未満: キック・ベースを pan 0 に。chorus・ダブルを低音パートから外す。広げるのは書き出しの --side-hpf で高域だけに）"))
+
+
 if __name__ == "__main__":
+    if len(sys.argv) >= 3 and sys.argv[1] == "--roles":
+        roles(sys.argv[2])
+        sys.exit(0)
+    if len(sys.argv) >= 3 and sys.argv[1] == "--mono-low":
+        mono_low(sys.argv[2:])
+        sys.exit(0)
     if len(sys.argv) >= 3 and sys.argv[1] == "--bands":
-        bands(sys.argv[2])
+        fam = sys.argv[sys.argv.index("--family") + 1] if "--family" in sys.argv else None
+        bands(sys.argv[2], fam)
         sys.exit(0)
     if len(sys.argv) >= 3 and sys.argv[1] == "--compare":
         compare(sys.argv[2])

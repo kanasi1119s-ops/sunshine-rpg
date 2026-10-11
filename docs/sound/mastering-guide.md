@@ -341,3 +341,38 @@ ffmpeg・ラウドネス測定
 40. Google Assistant「Audio loudness（-16 LUFS・ffmpeg の測り方）」https://developers.google.com/assistant/tools/audio-loudness?hl=en
 
 加えて、手元の ffmpeg 6.1.1 の `ffmpeg -h filter=...`（mcompand・alimiter・asoftclip・stereotools・acrossover・acompressor・firequalizer・adynamicequalizer・aresample の dither_method など）で、オプション名・範囲・既定値を確かめた。
+
+## 11. 実装状況（2026-10-11）
+
+§8 の提案 11 個を `tools/composer/master.mjs`・`master-report.mjs`・`song-lib.mjs`・`song.mjs` と `tools/audio-check/` に実装した。テストは `node --test tools/composer/*.test.mjs`（16 件）。**測った数字は合成音と見本曲（`loud-rock-demo` 30 秒、`delicate-demo` 53 秒、`hiphop-demo` 44 秒）のもので、音の良し悪しは耳で確かめていない**。
+
+### 入れたもの
+| # | 提案 | 状態 | どこに・どう入れたか | 測った数字 |
+|---|---|---|---|---|
+| 1 | プリセット `--master-preset` | **入れた** | `MASTER_PRESETS` に 21 個（従来の game・rock・loud・calm の 4 つは**値も出力も変えず**、新しく metal・punk・rock-clean（別名 rock-pop）・pop・jazz・orch・edm・hiphop・lofi・ambient・game-field（別名 game-town）・game-battle・game-boss（別名 game-title）・game-dungeon・retro・wafu・solo の 17）。値は §3-1 の表の数字。`SoundSet.master` に `preset` `space` `spaceWet` を持たせた。個別の上書き引数も追加（下記）。一覧は `song.mjs presets` | 全 21 プリセットを 30 秒の見本曲で通し、1 回の書き出し 5〜14 秒。仕上がりの大きさは目標 ±0.1LU（loud だけ -8.3。リミッターの限界）。従来 4 つの出力は、書き出し前後の WAV の md5 が一致（8 通り） |
+| 2 | 真のピーク対応のリミッター | **入れた**（新プリセットのみ `strictTp`） | 192kHz で処理するのは従来どおり。書き出し後に TP を測り、天井を 0.05dB 超えたら超えたぶん `limit` を下げてやり直す（大きさのずれと合わせて最大 3 回）。従来 4 つは今まで通り（出力固定のため） | 12kHz・山 0.95 の合成音で天井 -1.5 のとき TP -1.4 以下。見本曲では全プリセットが天井以内（-1.3〜-7.9 dBTP） |
+| 3 | 低域のモノ化 | **入れた** | 従来の 140Hz に加え、プリセットごとの周波数（100〜150）と `--lowmono`。書き出し後の「低域相関」を合否表に。モノ化の前後で低域の割合が 3dB 以上減ると警告 | 逆相の 60Hz を入れた合成音で、100Hz 以下の左右の相関 0.5 未満 → 0.93（pop プリセット） |
+| 4 | 音量合わせの閉ループ | 従来どおり（済） | 書き出し後に測り直す仕組みは前から入っていた。TP の補正を足した | 見本曲で目標との差 ±0.1LU |
+| 5 | M/S ワイド | **入れた** | `sideHpf` があると `stereotools`（FL=Mid・FR=Side）でサイドだけ HPF してから `slev=widen`。`--side-hpf`。サイドの高域だけを足す `air`（10kHz のシェルフを FR に）も（edm +2・game-boss +1）。`sideHpf` の無いプリセット（従来 4 つ）は extrastereo のまま | 50Hz の逆相（サイドだけ）の合成音で、M/S のサイド残りは extrastereo の 1/5 以下、2kHz のサイドは残る（テストで固定） |
+| 6 | ソフトクリップ | **入れた** | `clip`（dB）。`volume=+clip` → `aresample=192000` → `asoftclip=tanh:oversample=1` → `volume=-clip`。`--clip`。コメントに oversample の 6dB 低下を残した | `rock-clean` で clip 0 / 0.5（既定）/ 2 を同じ -10LUFS にそろえると、TP -1.3 / -2.3 / -3.1、PLR 8.7 / 7.7 / 7.0。**強くするほど山は下がるが PLR も下がる**ので 2 より上は使わない。型の比較（+8dB 持ち上げた信号の山をどれだけ下げるか）: tanh -2.1dB・exp -2.1・alg -2.8・cubic -1.2・sin -1.3・quintic -0.6・hard 0。-20dB の小さい信号では tanh・cubic・exp・sin・alg・quintic のどれも音が変わらなかった（atan・erf は音量が変わるので不採用）。**§4 の実験 5「tanh は小さい音にも効く」は、この再実験では確認できなかった** |
+| 7 | ディザ | 従来どおり（済） | 変更なし | — |
+| 8 | マルチバンド（低域のみ） | **入れた**（metal・game-battle・game-boss） | `mcompand` の 2 帯域（150Hz 分割、上は素通し）。`mb: {split,thr,ratio}` | metal で mb あり/なし: LRA 7.9 / 6.0、PLR 7.1 / 6.8（低域の動きを抑えたぶん、全体を同じ大きさにするとほかが相対的に動く） |
+| 9 | マッチング EQ | **入れた** | `tools/audio-check/match-eq.py`（1/3 オクターブ・曲全体・隣と 1:2:1 でならす・各帯域 ±3dB で切ってから amount・上限 0.5・80Hz〜12.5kHz だけ・端は 0）。目標は `docs/sound/data/mix-targets.json`（**数字だけ**＝傾き dB/oct）。`--match-eq <家族> --match-amount` で `firequalizer=gain_entry` に | `rock-clean` に `--match-eq rock`（amount 0.4）で、ロックの傾きとの平均絶対差 5.1 → 4.4dB。当てる量は最大 ±1.2dB |
+| 10 | ループの継ぎ目 | **入れた**（一部） | `--loop-tail`（`loopTailWrap`: 曲の長さ T より後ろの尾を先頭に `amix` で重ねて T 秒に切る。入力は同じファイルを 2 つ渡す方式）。`loopCheck`: ①末尾→先頭の段差（末尾 20ms の「となりの音との差」の 8 倍超）②継ぎ目の前後 100ms の大きさの差（6dB 超）③前後 400ms（4dB 超）を警告 | 合成音で、そのまま続く音は通り、フェードアウトで終わる音は警告。`--loop-tail` の合成テストで長さが T ±0.02 秒 |
+| 11 | 音量補正表・合否表 | **入れた** | ①`tools/audio-check/bgm-trim-report.py`: `docs/sound/bgm-loudness.json` から -16 LUFS 軸の補正量を計算（上げるときは TP -1 まで、±12 で切る、戦闘・ボス +1.5・ダンジョン -2 の場面補正、差 3dB 超を警告）。②`master-report`（`song.mjs report <wav>` と、書き出しの最後の 1 行）: I・TP・LRA・PLR・PSR・相関・低域相関・継ぎ目を ○／要直し | 58 曲: 補正は -11.0〜0.0dB、-16 から 3dB 以上離れた曲 31、上限で止まる曲 6（ゲームの `bgm-trim.ts` は軸 -15 のまま。表の差し替えは再生音量が変わるので人間の判断待ち） |
+
+追加した引数（`song.mjs` の使い方の説明文にも書いた）: `--tp` `--lowmono` `--side-hpf` `--clip` `--hpf` `--lpf` `--match-eq` `--match-amount` `--loop-tail`、コマンド `report`・`presets`・`delays`。`--space-wet` の既定値はサウンドセットの `spaceWet` があればそれを使う（引数が優先）。
+
+### 合否表の基準（自分で決めた数字）
+- 大きさ: 目標 ±0.5LU／TP: 天井 +0.1 以内／左右の相関 0.3 以上／低域相関 0.9 以上（0.5×モノ化周波数以下で測る。低域が全体より 30dB 以上小さい曲は測らない）
+- PLR・PSR の下限は目標の大きさで 3 段: -10LUFS 以上 6／4、-13 以上 7.5／5、それより静かなら 9／6.5。§2-2 の「PSR 8 以上」は静かな側の目安で、大きい仕上げにそのまま当てると必ず不合格になるため、見本曲の実測（-10LUFS で PSR 4.3〜6.3）から下げた。
+
+### 入れなかったもの・変えたものと理由
+- **動的 EQ（`adynamicequalizer`）**: ffmpeg 6.1 で試したところ、`threshold=0` で効かず `1` 以上で全域が一定に切れ（しきい値を上げても変わらない）、`mode=cutabove` は構文エラー。動的 EQ としては使えないので採用せず、低域だけの `mcompand` で代用した。
+- **`aexciter`・`asubboost`・`alimiter` の `asc`・アンチエイリアスの比較**: 効果を聴いて決める作業が要るので未実装（コードのコメントに残してある）。
+- **レトロ風の「荒さ」（低いレートに落として戻す）・ローファイのワウ／フラッター**: 音を聴いて決める部分なので、LPF だけ（retro 12kHz・lofi 10kHz）にした。
+- **2 周つなげた Short-term の跳び**: 100ms／400ms の窓の RMS 差で代用した（同じ目的で、ffmpeg を 2 周回さずに済む）。
+- **OGG のループ点メタデータ・ゲーム内の再生側の変更**: ゲーム側の作業（担当外）。`bgm-trim.ts` の軸（-15）も変えていない。
+- **EQ の「ティルト」**: `orch` だけ -0.5dB/oct。ほかは `equalizer`／`treble` の小さい山と棚で足りた。
+- 圧縮の位置: §1 の順（EQ → M/S → 圧縮）ではなく、従来の並び（EQ → 圧縮 → 低域モノ・広げる）のままにした。広げる処理がリミッターの前にあることは守っている。出力を変えないための選択。
+- プリセットの `rock`: 従来の `rock`（-10LUFS・widen 2.4・normal）の意味を変えない約束なので、§3-1 #1 の「クリーンギターのロック」は `rock-clean`（別名 `rock-pop`）にした。
