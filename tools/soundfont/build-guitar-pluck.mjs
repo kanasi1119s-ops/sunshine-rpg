@@ -65,9 +65,9 @@ export function pluck(midi, bright, seconds = SECONDS) {
   // ピックアップ: 拾う位置のくし形
   const pu = Math.max(1, Math.round(0.17 * L));
   const pick = new Float32Array(total);
-  for (let n = 0; n < total; n++) pick[n] = str[n] - (n >= pu ? str[n - pu] * 0.6 : 0);
-  // 音色: 90Hz未満を切る → 3.2kHz付近をなだらかに −3dB（刺さりの帯域）→ 9.5kHz以上をなだらかに落とす（空気感を残す）
-  const out = biquad(biquad(biquad(biquad(pick, "hp", 90, 0.7), "peak", 3200, 0.9, -3), "lp", 9500, 0.6), "lp", 12000, 0.5);
+  for (let n = 0; n < total; n++) pick[n] = str[n] - (n >= pu ? str[n - pu] * 0.72 : 0);
+  // 音色: 90Hz未満を切る → 3.2kHz付近をなだらかに −3dB（刺さりの帯域）→ 7.2kHz以上をなだらかに落とす（空気感を少し残す）
+  const out = biquad(biquad(biquad(biquad(pick, "hp", 90, 0.7), "peak", 3200, 0.9, -3), "lp", 7200, 0.6), "lp", 9500, 0.5);
   // 弾いた瞬間の「コツ」（短いノイズ）を少しだけ。粒の立ち上がりをはっきりさせる
   const rc = rng(7000 + midi);
   const click = Math.floor(0.003 * SR);
