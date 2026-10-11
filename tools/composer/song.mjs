@@ -21,6 +21,7 @@
 //   曲作りの流れの道具（docs/sound/ai-composition-workflow.md）:
 //   node tools/composer/song.mjs plan-template                       … 曲の設計図（属性カードとセクション表）の雛形を表示
 //   node tools/composer/song.mjs plan-check <plan.json> [曲.json]     … 設計図の検査（強さカーブ・音域表・曲との食い違い）
+//   旋律・対位法の道具: motif（動機の変形）・pattern（旋律の型の下書き）・counter（対旋律）・canon（カノン）・pedal（保持音）。詳しくは craft-cli.mjs の先頭
 //   node tools/composer/song.mjs novelty <曲.json> [--n 3] [--vs 曲名,曲名]  … 直前の曲と調・進行・入り方・終わり方・旋律の輪郭が同じでないか
 //   node tools/composer/song.mjs gate <曲.wav> [--target -14] [--save 曲ID] [--json]  … LUFS・真のピーク・LRA・PLR・相関・頭の大きさ・無音の合否表（○／要直し）
 //   node tools/composer/song.mjs gate-compare <曲.wav> <基準.wav>    … 音量をそろえてから帯域ごとの差を出す
@@ -31,6 +32,7 @@ import fs from "fs";
 import path from "path";
 import { openSongKit, ROOT } from "./song-lib.mjs";
 import { runWorkflowCommand } from "./workflow-cli.mjs";
+import { runCraftCommand } from "./craft-cli.mjs";
 import { revisionReminder } from "./revision-log.mjs";
 
 const args = process.argv.slice(2);
@@ -69,6 +71,8 @@ if (args[0] === "delays" && args[1]) {
 }
 // 曲作りの流れの道具（gate・plan-check・novelty など）は、vite を起動せずに先に処理する
 if (await runWorkflowCommand(args)) process.exit(process.exitCode ?? 0);
+// 旋律・対位法の道具（motif・pattern・counter・canon・pedal。craft-cli.mjs）
+if (await runCraftCommand(args)) process.exit(process.exitCode ?? 0);
 
 const kit = await openSongKit();
 try {

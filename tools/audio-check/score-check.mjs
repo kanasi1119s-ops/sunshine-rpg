@@ -6,6 +6,8 @@ import path from "path";
 import { DRUMS, RANGE, midi, chordPcs, expand as expandPart, prepareForCheck, barChords } from "./score-lib.mjs";
 import { collectFacts, formatFacts } from "./score-facts.mjs";
 import { loadRecentFull } from "../composer/novelty.mjs";
+import { melodyLint } from "./melody-lint.mjs";
+import { voiceLint } from "./voice-lint.mjs";
 
 // 追加の使い方: --facts … 小節番号つきの事実の一覧だけを表で出す（言語モデルが直すときはこちらを読む）／--json … 同じ一覧をJSONで／--plan <曲.plan.json> … 動機などを設計図から読む
 // 一覧に出る種類: 音域外・拍の合計・拍頭の不一致・アヴォイドノート（和音の半音上にぶつかる強拍・長い音）・同じ4小節の反復・動機・入り方の重複
@@ -122,6 +124,11 @@ async function check(file, mode, planFile) {
     }
     warn(par <= 4, `ベースと旋律の平行5度・8度 ${par}か所（拍の頭で判定）`, `ベースと旋律の平行5度・8度が ${par}か所（拍の頭で判定。ロック系では許容されることも多い）`);
   }
+
+  // 5b. 旋律の点検 P1〜P6・P11（melody-lint.mjs）と声部の点検（voice-lint.mjs。平行5度・8度の全ペア、声部交差、隠れ5度、低音域の濁り）
+  const planForLint = planFile ? JSON.parse(fs.readFileSync(planFile, "utf8")) : null;
+  for (const r of melodyLint(song, melodies, { chords: barList, plan: planForLint })) if (r.level !== "info" || process.env.VERBOSE) lines.push((r.level === "warn" ? "△ " : r.level === "info" ? "  ・" : "○ ") + r.msg);
+  for (const r of voiceLint(pitched, { beats, totalBeats, melodyIndex: pitched.indexOf(melodies[0]), bassIndex: bass ? pitched.indexOf(bass) : -1 })) lines.push((r.level === "warn" ? "△ " : "○ ") + r.msg);
 
   // 6. 音階内の音の割合
   let all = 0, inScale = 0;

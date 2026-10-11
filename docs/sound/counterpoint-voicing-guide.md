@@ -421,6 +421,25 @@ voice2(strings) : R:4 | E4:1 D4:1 C4:2 | G3:2 C4:2
 9. **保持音（ペダル）の補助（`pedalLine`）**: 和音列と度数（根音／5度）を与えて、長い音の列を返す。上の和音が替わるとき、保持音が和音外になる拍だけ警告する（解決の確認）。
 10. **対旋律の「入り」の自動セクション**: `parts[].sections` と組み合わせて、1周目は休み・2周目から入る対旋律をテンプレートで生成（`arrangement-deep.md` §11 の提案とつなぐ）。
 
+### 9-1. 実装状況（2026-10-11、ブランチ feat/r2-melody）
+
+提案 1〜10 をすべて実装した。テストは `src/audio/counterpoint-craft.test.ts`。いずれも警告・ヒントのみで、曲の生成は止めない。
+
+| 番号 | 状況 | 置き場所・使い方 |
+|---|---|---|
+| 1 平行5度・8度（全ペア） | 実装 | `tools/audio-check/voice-lint.mjs` の `findParallels`。拍の頭で全ペアを比べ、前後2点とも両方が動いて同じ向きで完全5度／オクターブなら数える。ペアの6割以上がその音程（パワーコード・オクターブ重ね）、role に「重ね」「下で」「ハモ」「パワー」を含むパートは除外。同じペアで4回以上なら警告。旋律×ベースは既存の点検があるので、`score-check.mjs` では重複を避けて外した |
+| 2 声部交差 | 実装 | `findVoiceCrossings`。同じ楽器名の複数パートを**平均音高の低い順**（「番号順に低→高」ではなく、書き順に依存しない形にした）に並べ、拍の頭に順序が入れ替わった回数を数える。2回以上で警告 |
+| 3 隠れ5度・8度（外声） | 実装 | `findHiddenPerfects`。旋律とベースが同じ向きに動き、最高声が3半音以上跳んで完全5度・8度に着く所を数える（最高声が順次なら除く、すでに完全音程だった所は平行側で数えるので除く）。4回以上で警告 |
+| 4 voiceLead のコスト関数 | 実装 | `src/audio/newsong.ts` の `voiceLead`。①共通音は同じ声部に残す ②平行5度・8度に罰 ③声部の交差・追い越しは選ばない ④外声の反行にボーナス。省略可の引数 `opts.smart: true` で有効（**既定は false**＝旧い動作。`genre-feels.test.ts` が `buildNewSong` の出力をハッシュで固定しているので、既存の出力を変えないために opt-in にした。自動伴奏の和音に使うかは別途決める） |
+| 5 voiceLead の型 | 実装 | `voiceLead(bars, voices, lo, hi, { voicing: "close" \| "open" \| "drop2" \| "spread" })`。close＝いまの動作。open＝根音が最低・5度は根音の上・3度（と7度）が上。drop2＝上から2番目を1オクターブ下げる。spread＝open の最高声をさらに1オクターブ上げる。open 系・drop2 は lo より最大1オクターブ下に出ることがある（なめらかさの計算は密集形で行う） |
+| 6 低音域の間隔 | 実装 | `findLowMuddy`。C3 より下の3度、E3 より下の2度を、パート名つきで数える |
+| 7 対旋律の自動生成 | 実装 | `tools/composer/counterpoint.mjs` の `generateCounter(melody, chords, { beats, place, lo, hi })`。動的計画法（状態＝候補の高さ＋同じ音の続いた長さ）。評価は逆向き・リズムの補い・強拍は構成音・協和・平行5度8度（大減点）・順次。拍の合計は旋律と同じ。`node tools/composer/song.mjs counter 曲.json [--part N] [--above] [--enter 小節] [--instrument strings]` で `parts` に足せる JSON を出す |
+| 8 カノン／模倣 | 実装 | `canonOf(notes, { delay, transpose, invert, factor, total })`。先頭に `R:遅れ幅`、末尾は休符で合計をそろえる（長すぎれば切る）。`song.mjs canon "<notes>" --delay 4 --transpose 7` |
+| 9 保持音（ペダル） | 実装 | `voice-lint.mjs` の `pedalLine(chords, { degree: "root" \| "fifth", beats, octave })`。長い1音の列と、和音の外になる小節の警告を返す。`song.mjs pedal "C Am F G"` |
+| 10 対旋律の「入り」 | 実装 | `counterEntering(melody, chords, { enterBar })`（入りの前は `R`）と `enterBarFromSections(sections, totalBars)`（同じ種類の2回目の頭。なければ後ろ半分）。`parts[].sections` の音量倍率ではなく**音符に休符を入れる**形にした（`sections` は種類ごとに1つの倍率で、同じ種類の1周目と2周目を分けられないため） |
+
+`score-check.mjs` は声部の点検（1・2・3・6）を `voiceLint` で呼び、出力に行として足す。
+
 ---
 
 ## 10. 参考にした資料（36件。考え方だけを取り出して書き直した）

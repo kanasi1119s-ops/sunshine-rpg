@@ -5,6 +5,7 @@
 import fs from "fs";
 import path from "path";
 import { signature, similarity, recipeOf } from "./chord-variety.mjs";
+import { checkIntervalSimilarity } from "./interval-sim.mjs";
 import { DRUMS, expand, barChords, estimateKey, melodyParts } from "../audio-check/score-lib.mjs";
 
 export const INTRO_LABEL = {
@@ -125,6 +126,7 @@ export function checkNovelty(song, name, others, plan) {
     }
     if (r.contour >= 0.35) warnings.push(`旋律の輪郭が「${r.name}」と${Math.round(r.contour * 100)}%重なっています（8音の上下の並び）。旋律を使い回していないか確かめてください。`);
   });
+  warnings.push(...checkIntervalSimilarity(song, others).warnings); // 音程列の細かい類似（melody-craft-guide P10）
   const keyCount = rows.filter((r) => r.same.some((x) => x.kind === "調")).length;
   if (rows.length >= 3 && keyCount === rows.length) warnings.push(`直近${rows.length}曲すべてと同じ調（${me.key?.label}）です。主音を変えてください。`);
   const lines = [

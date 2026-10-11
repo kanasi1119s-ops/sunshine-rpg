@@ -74,14 +74,58 @@ const rest = (beats: number): NoteEvent => ({ note: REST, durationBeats: beats }
 const note = (midi: number, beats: number, velocity?: number): NoteEvent => ({ note: midiToName(midi), durationBeats: beats, ...(velocity ? { velocity } : {}) });
 
 
+/** voiceLead の型（docs/sound/counterpoint-voicing-guide.md §4・§9 の提案 5）。close＝密集（既定）／open＝根音・5度を下、3度（と7度）を上／drop2＝上から2番目を1オクターブ下げる／spread＝open の最高声をさらに1オクターブ上げる（音域に収まるとき）。open 系は lo より最大1オクターブ下に出ることがある。 */
+export type VoicingKind = "close" | "open" | "drop2" | "spread";
+export interface VoiceLeadOptions {
+  /** 型。省略は close（いまの動作） */
+  voicing?: VoicingKind;
+  /** true にすると、移動量に加えて共通音・平行5度8度・声部交差・外声の反行も見る。省略は false（旧い動作のまま。buildNewSong の既存の出力を変えないため） */
+  smart?: boolean;
+}
+
+/** 密集形の声部（低→高）を、型に合わせて並べ替える。 */
+function applyVoicing(close: number[], kind: VoicingKind, pcs: number[], hi: number): number[] {
+  if (kind === "close" || close.length < 3) return close;
+  const sorted = [...close].sort((x, y) => x - y);
+  if (kind === "drop2") {
+    const out = [...sorted];
+    out[sorted.length - 2] -= 12;
+    return out.sort((x, y) => x - y);
+  }
+  // open: 構成音の順（根音, 3度, 5度, 7度）のうち、根音と5度を下、3度と7度を上に置く
+  const root = pcs[0];
+  const lowSet = new Set([pcs[0], pcs[2]].filter((x) => x !== undefined));
+  const below = sorted.filter((m) => lowSet.has(m % 12));
+  const above = sorted.filter((m) => !lowSet.has(m % 12));
+  if (!below.length || !above.length) return sorted;
+  // 下の群は根音を最低に（5度は根音より上へ）、上の群は下の群の最高音より上へ
+  const rootNote = below.find((m) => m % 12 === root) ?? Math.min(...below);
+  const low = below.map((m) => { if (m === rootNote) return m; let x = m; while (x < rootNote) x += 12; while (x - rootNote > 12) x -= 12; return x; }).sort((x, y) => x - y);
+  const ceiling = Math.max(...low);
+  const up = above.map((m) => { let x = m; while (x < ceiling + 1) x += 12; while (x - 12 > ceiling) x -= 12; return x; }).sort((x, y) => x - y);
+  let out = [...low, ...up].sort((x, y) => x - y);
+  if (kind === "spread") {
+    const topIdx = out.length - 1;
+    if (out[topIdx] + 12 <= hi + 12) out = [...out.slice(0, topIdx), out[topIdx] + 12];
+  }
+  return out;
+}
+
 /**
  * 声部のなめらかな動き（ボイスリーディング）: コードが変わるとき、各声部がなるべく近い音へ動くように、和音の音を選ぶ。
  * 各コードの先頭 voices 個の構成音を、音域 [lo, hi] の中で、前の和音からの移動量の合計がいちばん小さい並べ方で割り当てる。
  * 返り値は小節ごとの、声部ごとの音（MIDI番号）。同じ和音が続けば、同じ音のまま動かない。
+ * 声部の番号は低い順（0 が最低声）。opts.smart: true のときは、移動量に加えて次を見る:
+ *  ①共通音は同じ声部に残す ②平行5度・8度に罰を ③声部の交差・追い越しは選ばない ④外声（最低声と最高声）の反行にボーナス。
+ * opts.voicing で型（close／open／drop2／spread）を選べる。
  */
-export function voiceLead(bars: { root: number; intervals: number[] }[], voices: number, lo = 52, hi = 79): number[][] {
+export function voiceLead(bars: { root: number; intervals: number[] }[], voices: number, lo = 52, hi = 79, opts: VoiceLeadOptions = {}): number[][] {
+  const smart = opts.smart === true;
+  const kind: VoicingKind = opts.voicing ?? "close";
   const result: number[][] = [];
   let prev: number[] | null = null;
+  const perms = (arr: number[]): number[][] => (arr.length <= 1 ? [arr] : arr.flatMap((x, i) => perms([...arr.slice(0, i), ...arr.slice(i + 1)]).map((r) => [x, ...r])));
+  const perfectClass = (a: number, b: number): number => { const d = Math.abs(a - b) % 12; return d === 7 ? 7 : d === 0 && a !== b ? 12 : -1; };
   for (const c of bars) {
     const pcs = c.intervals.slice(0, voices).map((iv) => (c.root + iv) % 12);
     while (pcs.length < voices) pcs.push(pcs[pcs.length - 1]);
@@ -91,16 +135,32 @@ export function voiceLead(bars: { root: number; intervals: number[] }[], voices:
     let best: number[] = [];
     let bestCost = Infinity;
     // 声部 v に構成音 perm[v] を割り当てる全ての並べ替え（最大4!）を試す
-    const perms = (arr: number[]): number[][] => (arr.length <= 1 ? [arr] : arr.flatMap((x, i) => perms([...arr.slice(0, i), ...arr.slice(i + 1)]).map((r) => [x, ...r])));
     for (const perm of perms(pcs.map((_, i) => i))) {
       const pick = perm.map((ci, v) => cands[ci].reduce((b, m) => (Math.abs(m - targets[v]) < Math.abs(b - targets[v]) ? m : b), cands[ci][0]));
       if (new Set(pick).size < pick.length) continue;
-      const cost = pick.reduce((sum, m, v) => sum + Math.abs(m - targets[v]), 0) + (prev ? 0 : Math.abs(Math.max(...pick) - Math.min(...pick)) * 0.3);
+      let cost = pick.reduce((sum, m, v) => sum + Math.abs(m - targets[v]), 0) + (prev ? 0 : Math.abs(Math.max(...pick) - Math.min(...pick)) * 0.3);
+      if (smart) {
+        if (pick.some((m, v) => v > 0 && m < pick[v - 1])) continue; // 声部の交差・追い越し
+        if (prev) {
+          prev.forEach((pm, v) => {
+            if (pick.includes(pm) && pick[v] !== pm) cost += 2; // 共通音は同じ声部に残す
+          });
+          for (let x = 0; x < voices; x++) {
+            for (let y = x + 1; y < voices; y++) {
+              const k0 = perfectClass(prev[x], prev[y]), k1 = perfectClass(pick[x], pick[y]);
+              const dx = pick[x] - prev[x], dy = pick[y] - prev[y];
+              if (k0 >= 0 && k0 === k1 && dx !== 0 && dy !== 0 && Math.sign(dx) === Math.sign(dy)) cost += 8; // 平行5度・8度
+            }
+          }
+          const dTop = pick[voices - 1] - prev[voices - 1], dBot = pick[0] - prev[0];
+          if (dTop !== 0 && dBot !== 0 && Math.sign(dTop) !== Math.sign(dBot)) cost -= 1; // 外声の反行
+        }
+      }
       if (cost < bestCost) { bestCost = cost; best = pick; }
     }
     if (!best.length) best = cands.map((o, v) => o.reduce((b, m) => (Math.abs(m - targets[v]) < Math.abs(b - targets[v]) ? m : b), o[0]));
-    result.push(best);
     prev = best;
+    result.push(kind === "close" ? best : applyVoicing(best, kind, pcs, hi));
   }
   return result;
 }

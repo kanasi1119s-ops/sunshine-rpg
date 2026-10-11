@@ -840,6 +840,27 @@ D5:1 B4:1 G4:2
 - **P11 倚音・掛留の見える化**: 強拍の和音外音で、次の音が順次下行して構成音に着地していれば「倚音／掛留（OK）」と表示し、着地していなければ△。アヴォイド点検の誤警報を減らす。
 - **P12 リズム先の直し手順をガイドに**: 「単調と言われたら、音より先にリズムを変える」（§6の第一行）を、コンポーザーの直しの手順（`ai-composition-workflow.md` の直しのループ）に一文で加える。
 
+### 8-1. 実装状況（2026-10-11、ブランチ feat/r2-melody）
+
+P1〜P12 をすべて実装した。テストは `src/audio/melody-craft.test.ts`（提案ごとに `describe` を分けてある）。
+
+| 番号 | 状況 | 置き場所・使い方 |
+|---|---|---|
+| P1 頂点の点検 | 実装 | `tools/audio-check/melody-lint.mjs` の `checkPeaks`。4小節（8小節未満の曲は2小節）ごとに最高音の回数と位置を数え、2回以上、または前25%なら △。リフ役（role に「リフ」「刻み」「アルペジオ」など）は除外 |
+| P2 同音の再訪・連打 | 実装 | `checkRepeatedPitch`。同じ区間で同じ高さが4割超、または同じ音が4回以上つづくと △ |
+| P3 リズム型（1音テスト） | 実装 | `checkRhythmTypes`。同じ型が4小節以上つづく、8小節に型が7種以上で △。全部の音が拍頭にあるとき（シンコペ0%）は参考表示（`VERBOSE=1` で表示）。「6種を超えたら」は曲全体ではほぼ必ず超えるので、**8小節ごと**に数える形にした |
+| P4 息の点検 | 実装 | `checkBreath`。0.5拍以上の隙間か2拍以上の音を「息」とし、息なしの長さが6秒（バラード・民謡・和風は4秒）を超えたら小節番号つきで △ |
+| P5 問いと答えの終わり | 実装 | `checkAnswerEndings`。8小節ブロックごとに、4小節目の終わりの音と8小節目の終わりの音が同じなら △（全ブロックで同じ場合）。「曲の最後が主音か」は既存の点検 7 が見る |
+| P6 セクション間の音域差 | 実装 | `checkSectionRange`。`--plan` で設計図（sections の kind が verse／chorus）を渡したときだけ働く。サビの平均音高が Aメロ+2半音未満、または最高音が Aメロ側なら △ |
+| P7 動機変形 | 実装 | `tools/composer/motif-ops.mjs`（移高＝音階内／半音、逆さ、逆行、拡大・縮小、断片化、間引き、装飾）。`node tools/composer/song.mjs motif <操作> "<動機>" [--n 2 --tonic C --scale major --axis E4 --factor 2 --pad]`。拍の合計が保たれることをテスト（拡大・縮小と、pad なしの断片化は意図して変わる） |
+| P8 `AI_SONG_GUIDE` の設計図 | 実装 | `src/audio/ai-song.ts` の「技術の深掘り」に「旋律の設計図」1項目（手順①〜⑩）を追記 |
+| P9 旋律の型ライブラリ | 実装 | `docs/sound/data/melody-patterns.json`（型1〜38。`node tools/composer/melody-patterns.mjs build` で本書 §4 から作り直せる。テストが両者の一致を確かめる）。`node tools/composer/song.mjs pattern --scene 町 --key D [--beats 4] [--record <曲ID>]` で移高した下書きを出す。直前2曲で使った型は選ばない（履歴は `docs/sound/data/pattern-history.json`、`--record` で追記）。出力に「リズムか音を2か所以上変える」ルールを付け、`changeCount` で変更数を数えられる。履歴は `revision-log` ではなく専用ファイルにした（`revisions.md` は音の直しの記録で、型番号の検索に向かないため） |
+| P10 音程列の類似 | 実装 | `tools/composer/interval-sim.mjs`。6音の窓（半音数の列）が直近の曲と20%超で一致したら注意、リズム（隣の音との長さの比）も同じ位置で20%超なら【強い警告】。`novelty.mjs` の `checkNovelty` から呼ぶ（`song.mjs novelty`） |
+| P11 倚音・掛留の見える化 | 実装 | `classifyStrongNonChord`／`checkAppoggiatura`。強拍の和音外音が次の音で1〜2半音下がって構成音に着くものを「倚音／掛留（OK）」として数え、解決しないものだけ △ |
+| P12 リズム先の直し手順 | 実装 | `docs/sound/ai-composition-workflow.md` の直しの手順（6.）に1項目を追記 |
+
+`score-check.mjs` は、旋律の点検（P1〜P6・P11）を `melodyLint` で呼び、出力に「旋律「…」: …」の行として足す。設計図つきの確認は `score-check.mjs 曲.json --plan 曲.plan.json`。
+
 ## 9. 参考URL（読んだ35か所）
 
 考え方だけを借りた。文章は写していない。
