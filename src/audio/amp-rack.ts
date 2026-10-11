@@ -244,7 +244,7 @@ export class AmpRack {
         return this.chain(input, tail([this.filter("highpass", 110), this.filter("peaking", 900, 3, 0.9), this.gain(4 * d), this.shaper(6.5 * d, 0.05), this.filter("lowshelf", 110, 3), this.filter("peaking", 3000, 3, 1), this.filter("lowpass", 5000, 0, 0.8), this.gain(0.38)]));
       case "punk":
         // パンク: 対称に角を立てて強く歪ませる。参考録音5曲のギターの1/3オクターブの形（docs/sound/data/guitar-curve-5tracks.json）に合わせてある（100Hz〜5kHzは±2.5dB以内）。高域は5kHzから急に落とす（ピーという高い音を出さない）。2026-10-11
-        return this.chain(input, tail([this.filter("highpass", 100), this.filter("peaking", 3000, 14, 0.7), this.gain(4.2 * d), this.shaper(7 * d, 0), this.filter("lowshelf", 900, -20), this.filter("peaking", 120, 3, 0.7), this.filter("peaking", 450, -3, 0.7), this.filter("peaking", 3000, 8, 0.7), this.filter("lowpass", 4600, 0, 0.8), this.filter("lowpass", 5400, 0, 0.7), this.filter("lowpass", 6000, 0, 0.7), this.filter("lowpass", 6600, 0, 0.7), this.gain(0.4)]));
+        return this.chain(input, tail([this.filter("highpass", 100), this.filter("peaking", 3000, 14, 0.7), this.gain(2.4 * d), this.shaper(3.2 * d, 0), this.filter("lowshelf", 900, -20), this.filter("peaking", 120, 3, 0.7), this.filter("peaking", 450, -3, 0.7), this.filter("peaking", 3000, 8, 0.7), this.filter("lowpass", 4600, 0, 0.8), this.filter("lowpass", 5400, 0, 0.7), this.filter("lowpass", 6000, 0, 0.7), this.filter("lowpass", 6600, 0, 0.7), this.gain(0.4)]));
       case "fuzz":
         // ファズ: 非常に深く、上下の非対称も大きく歪ませる。低音を太く、中域を少しえぐり、高音は丸める（荒々しく不穏）
         return this.chain(input, tail([this.filter("highpass", 70), this.gain(6 * d), this.shaper(14 * d, 0.2), this.filter("lowshelf", 150, 5), this.filter("peaking", 600, -3, 0.9), this.filter("lowpass", 3800, 0, 0.7), this.gain(0.24)]));
