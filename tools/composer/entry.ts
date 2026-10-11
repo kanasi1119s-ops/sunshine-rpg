@@ -15,6 +15,7 @@ import drumsJazzUrl from "../../assets-src/soundfont/extra/drums-jazz.sf3?url";
 import { SOUND_SETS, applySoundSet } from "../../src/audio/sound-sets";
 import guitarGretschUrl from "../../assets-src/soundfont/extra/guitar-gretsch.sf3?url";
 import guitarHofnerUrl from "../../assets-src/soundfont/extra/guitar-hofner.sf3?url";
+import guitarPluckUrl from "../../assets-src/soundfont/extra/guitar-pluck.sf3?url";
 import bassJpopUrl from "../../assets-src/soundfont/extra/bass-jpop.sf3?url";
 import drumsJpopUrl from "../../assets-src/soundfont/extra/drums-jpop.sf3?url";
 import drumsSupraUrl from "../../assets-src/soundfont/extra/drums-supra.sf3?url";
@@ -90,6 +91,7 @@ const GUITAR_FONTS: Record<string, { label: string; url: string | null }> = {
   std: { label: "標準（上の音源）", url: null },
   gretsch: { label: "Gretsch（明るいクリーン）", url: guitarGretschUrl },
   hofner: { label: "Hofner（丸い音）", url: guitarHofnerUrl },
+  pluck: { label: "弦モデル（数式で合成。粒がそろう）", url: guitarPluckUrl },
 };
 let guitarId = "std";
 let bassId = "std";
