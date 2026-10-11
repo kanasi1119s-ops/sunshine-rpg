@@ -5,6 +5,7 @@ import { parseChord } from "./newsong";
 import { noteNameToMidi } from "./note";
 import { findScale, pitchClassOf, resolveScale, snapNotesToScale, type Scale, type SnapPolicy } from "./scales";
 import { realizeRhythm, rhythmPatternLayers } from "./world-rhythms";
+import { applyMask, capoVoicing, expandGuitarTech, resolveStrumSpec, vibratoSpecOf, glideSpecOf } from "./guitar-tech";
 
 /**
  * パートの「展開」（2026-10-11）。AiPart に書かれた便利な指定を、ふつうのパート（notes つき）に直す。
@@ -30,7 +31,7 @@ export interface StrumSpec {
   chords?: string;
   /** コード 1 つが続く小節数（chords を書いたときだけ。省略は 1）。 */
   bars?: number;
-  /** 型。1 文字＝1 ステップ。D＝ダウン、d＝弱いダウン、U/u＝アップ（高い弦だけ・弱く）、x＝ミュートしたかき鳴らし、.＝前の音をのばす、-＝休み。省略は "D.DU.UDU"（8 分 8 つ）。 */
+  /** 型か型の名前（pop・folk6・skank・rasgueado・bossa・funk-cut・punk8・waltz・ballad。guitar-tech.ts）。1 文字＝1 ステップ。D＝ダウン、d＝弱いダウン、U/u＝アップ（高い弦だけ・弱く）、x＝ミュートしたかき鳴らし、g＝ゴースト（とても弱いミュート）、m＝パームミュート（短く切る）、>＝次の1打をアクセント、.＝前の音をのばす、-＝休み。省略は "D.DU.UDU"（8 分 8 つ）。 */
   pattern?: string;
   /** 1 ステップの長さ（拍）。省略は 0.5。 */
   step?: number;
@@ -38,6 +39,10 @@ export interface StrumSpec {
   spreadMs?: number;
   /** 使う弦の数（3〜6。省略は 5）。 */
   strings?: number;
+  /** カポ（0〜11。コード名は鳴る和音で、押さえる形をカポの分だけ下げる。パートの capo でもよい）。 */
+  capo?: number;
+  /** true にすると、展開した和音のパートにも自動しゃくり（autoScoop）をかける（省略は、かけない）。 */
+  scoop?: boolean;
 }
 
 export interface EchoSpec {
@@ -110,11 +115,13 @@ export function strumVoicing(chord: string, strings = 5): number[] | null {
   return out;
 }
 
-const STROKE_CHARS = /^[DdUuxX.\-]+$/;
+const STROKE_CHARS = /^[DdUuxXmMgG>.\-]+$/;
 
 /** ストローク指定を、弦ごとのパート（3〜6 本）に展開する。 */
-export function expandStrum(p: AiPart, spec: StrumSpec, ctx: ExpandCtx, warnings: string[]): AiPart[] {
+export function expandStrum(p: AiPart, rawSpec: StrumSpec, ctx: ExpandCtx, warnings: string[]): AiPart[] {
   const where = `parts（${p.role ?? p.instrument}）の strum`;
+  const spec = resolveStrumSpec(rawSpec, warnings, where);
+  const capo = spec.capo ?? p.capo;
   const pattern = (spec.pattern ?? "D.DU.UDU").replace(/[\s|]/g, "");
   if (!pattern || !STROKE_CHARS.test(pattern)) {
     warnings.push(`${where}: pattern は D d U u x . - だけで書きます「${spec.pattern}」。ストロークを作れませんでした`);
@@ -136,7 +143,7 @@ export function expandStrum(p: AiPart, spec: StrumSpec, ctx: ExpandCtx, warnings
   let filled = 0;
   for (let i = 0; filled < ctx.totalBeats - 1e-6 && i < 4096; i++) {
     const s = spans[i % spans.length];
-    const voicing = strumVoicing(s.chord, stringsN);
+    const voicing = capo ? capoVoicing(s.chord, stringsN, capo) : strumVoicing(s.chord, stringsN);
     if (!voicing) {
       warnings.push(`${where}: コード「${s.chord}」を読めませんでした。strum を使わず、notes のままにしました`);
       return [p];
@@ -148,11 +155,14 @@ export function expandStrum(p: AiPart, spec: StrumSpec, ctx: ExpandCtx, warnings
   const spreadBeats = Math.min((clamp(Number(spec.spreadMs) || 12, 0, 60) / 1000) * (ctx.bpm / 60), 0.1 / Math.max(1, voiceCount - 1));
   const spreadT = Math.round(spreadBeats * TICKS);
   // 型を「打つ音（のばしを含む）」と「休み」のならびにする。先頭の「.」は休み扱い
-  const tokens: { ch: string; steps: number }[] = [];
+  const tokens: { ch: string; steps: number; accent?: boolean }[] = [];
+  let accentNext = false;
   for (const ch of pattern) {
+    if (ch === ">") { accentNext = true; continue; }
     const last = tokens[tokens.length - 1];
     if (ch === "." && last && last.ch !== "-") last.steps++;
-    else tokens.push({ ch: ch === "." ? "-" : ch, steps: 1 });
+    else tokens.push({ ch: ch === "." ? "-" : ch, steps: 1, ...(accentNext && ch !== "." && ch !== "-" ? { accent: true } : {}) });
+    accentNext = false;
   }
   const events: string[][] = Array.from({ length: voiceCount }, () => []);
   const push = (v: number, name: string | null, ticks: number, marks = ""): void => {
@@ -174,7 +184,9 @@ export function expandStrum(p: AiPart, spec: StrumSpec, ctx: ExpandCtx, warnings
       const ch = tok.ch;
       const up = ch === "U" || ch === "u";
       const muted = ch === "x" || ch === "X";
-      const marks = muted ? ",'" : up || ch === "d" ? "," : t % TICKS === 0 ? "!" : "";
+      const ghost = ch === "g" || ch === "G";
+      const palm = ch === "m" || ch === "M";
+      const marks = muted ? (tok.accent ? "!'" : ",'") : ghost ? ",,'" : palm ? (tok.accent ? "!" : ",") : tok.accent ? "!" : up || ch === "d" ? "," : t % TICKS === 0 ? "!" : "";
       // アップは高い弦だけ（半分、少なくとも 2 本）
       const played = up ? vs.map((_, i) => i).slice(-Math.min(vs.length, Math.max(2, Math.ceil(vs.length / 2)))) : vs.map((_, i) => i);
       for (let v = 0; v < voiceCount; v++) {
@@ -184,7 +196,11 @@ export function expandStrum(p: AiPart, spec: StrumSpec, ctx: ExpandCtx, warnings
         const order = up ? played.length - 1 - played.indexOf(idx) : idx - (played[0] ?? 0);
         const off = Math.min(order * spreadT, Math.floor(dur / 2));
         push(v, null, off);
-        push(v, nameOf(vs[idx]), dur - off, marks);
+        // パームミュート（m）は音を 7 割に切る
+        const body = dur - off;
+        const sound = palm ? Math.max(1, Math.round(body * 0.7)) : body;
+        push(v, nameOf(vs[idx]), sound, marks);
+        if (body - sound > 0) push(v, null, body - sound);
       }
       t += dur;
     }
@@ -192,7 +208,8 @@ export function expandStrum(p: AiPart, spec: StrumSpec, ctx: ExpandCtx, warnings
   const vol = Math.max(0.02, (Number(p.volume) || 0.2) / Math.sqrt(voiceCount));
   return events.map((evs, v) => {
     const { strum: _s, ...rest } = p;
-    return { ...rest, role: `${p.role ?? p.instrument}・弦${v + 1}`, volume: Math.round(vol * 1000) / 1000, sustain: p.sustain ?? 1.5, phrase: undefined, notes: evs.join(" ") } as AiPart;
+    // 展開した和音には、自動しゃくり（キュイン）をかけない（strum.scoop:true で戻す）
+    return { ...rest, role: `${p.role ?? p.instrument}・弦${v + 1}`, volume: Math.round(vol * 1000) / 1000, sustain: p.sustain ?? spec.sustainPreset ?? 1.5, ...(spec.scoop ? {} : { autoScoop: p.autoScoop ?? false }), phrase: undefined, notes: evs.join(" ") } as AiPart;
   });
 }
 
@@ -296,12 +313,13 @@ export function expandParts(parts: AiPart[], ctx: ExpandCtx, warnings: string[],
       const policy: SnapPolicy = orig.snap === "down" || orig.snap === "up" ? orig.snap : "nearest";
       list = list.map((p) => ({ ...p, snap: undefined, notes: snapNotesToScale(String(p.notes ?? ""), ctx.scale!.scale, ctx.scale!.tonic, policy) }));
     } else if (orig.snap && !ctx.scale) warnings.push(`parts（${orig.role ?? orig.instrument}）: snap には、曲の scale（と tonic）を書いてください`);
+    if (!drum) list = list.flatMap((p) => expandGuitarTech(p, ctx, warnings));
     if (orig.strum && !drum) list = list.flatMap((p) => (p.strum ? expandStrum(p, p.strum, ctx, warnings) : [p]));
-    if (orig.doubleDetune) list = list.flatMap((p) => (p.doubleDetune ? expandDoubleDetune(p, p.doubleDetune) : [p]));
+    if (orig.doubleDetune || orig.gtrStyle) list = list.flatMap((p) => (p.doubleDetune ? expandDoubleDetune(p, p.doubleDetune) : [p]));
     if (orig.echo) list = list.flatMap((p) => (p.echo ? expandEcho(p, p.echo, warnings) : [p]));
     out.push(...list);
   }
-  return out;
+  return out.some((p) => p && typeof p === "object" && p.mask) ? applyMask(out, ctx, warnings, drums) : out;
 }
 
 /** 曲のコード進行を、1 小節 1 コードの並びにする（barsPerChord とくり返しを反映）。 */
@@ -362,6 +380,11 @@ export function partTrackExtras(p: AiPart, chordBars: string[], beatsPerBar: num
   if (attack !== null) out.attack = clamp(attack, 0, 1);
   const release = num(p.release);
   if (release !== null) out.release = clamp(release, 0, 1);
+  if (typeof p.autoScoop === "boolean") out.autoScoop = p.autoScoop;
+  const vib = vibratoSpecOf(p.vibrato);
+  if (vib) out.vibratoSpec = vib;
+  const gl = glideSpecOf(p.glide);
+  if (gl) out.glide = gl;
   if ((p.instrument === "piano" || p.instrument === "keys") && (p.pedal === "chord" || p.pedal === "bar" || p.pedal === "none")) {
     out.pedal = { mode: p.pedal, changes: p.pedal === "none" ? [] : pedalChanges(p.pedal, chordBars, beatsPerBar) };
   }

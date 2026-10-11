@@ -17,6 +17,7 @@ import { AI_PART_EXTRA_SCHEMA, AI_SONG_EXTRA_SCHEMA, type AiPartExtras, type AiS
 import { autoArticulation, accentTopNotes } from "./articulation";
 import { applyBreath, BREATH_INSTRUMENTS, checkInstrumentUsage } from "./instrument-range";
 import { chordBarsOf, expandParts, partTrackExtras, readSongScale, shiftEvents, type ExpandCtx } from "./part-expand";
+import { applyGuitarEvents, deadNoteEvent, deadNoteName, expandNoteSugar } from "./guitar-tech";
 import { checkScaleUsage } from "./scale-check";
 import { sceneScaleWarning } from "./scene-scales";
 import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, type Track } from "./score";
@@ -421,9 +422,25 @@ function semis(marks: string, ch: string): number {
   return Math.min(4, v);
 }
 
+/** ビブラート記号の深さ。~. ＝0.4（弱）、~ ＝0.7、~~ ＝1、~~~ ＝1.5（ピッチベンドの揺れも自前で作る）。 */
+function vibratoLevel(marks: string): number {
+  const n = (marks.match(/~/g) ?? []).length;
+  return n >= 3 ? 1.5 : n === 2 ? 1 : /~\./.test(marks) ? 0.4 : 0.7;
+}
+
+/** 記号の @数字（^^@0.25 など）を、直前の ^ / \\ の記号ごとに拾う。 */
+function markParams(marks: string): Partial<Record<"^" | "/" | "\\", number>> {
+  const out: Partial<Record<"^" | "/" | "\\", number>> = {};
+  for (const m of marks.matchAll(/([\^/\\])\.?@(\d+(?:\.\d+)?)/g)) out[m[1] as "^" | "/" | "\\"] = Number(m[2]);
+  return out;
+}
+
 /** 「音名:拍」の並びを、音の列にする。まちがいは errors に足す。 */
 export function parseNotes(text: string, drum: boolean, errors: string[], where: string): NoteEvent[] {
   const out: NoteEvent[] = [];
+  // ギャロップ・トレモロの糖衣（E2:2@gallop）を展開し、デッドノート（x）の音程に使う直前の音を覚えておく
+  if (!drum) text = expandNoteSugar(text);
+  let lastPitched: string | null = null;
   for (const token of text.trim().split(/\s+/).filter(Boolean)) {
     // ドラムのグリッド記法: g:x...x...  1文字が16分音符（0.25拍）。x＝打つ、X＝強く、o＝弱く（ゴーストノート）、O＝オープンハイハット（ハイハットだけ。強め）、. か - ＝休み
     if (drum && /^g:/i.test(token)) {
@@ -446,18 +463,25 @@ export function parseNotes(text: string, drum: boolean, errors: string[], where:
     const [name, rawDur = ""] = token.split(":");
     // 長さのあとに付けられる奏法の記号: ! アクセント（強く）, 「,」 弱く, ' スタッカート（短く）, _ レガート（次の音につなげる）
     // ^. / /. \. は「半分」（1/4 音。中東・インドの微分音の近似に）。^. ＝ベンド 0.5 半音
-    const m = /^(\d+(?:\.\d+)?)((?:[!,'_~*]|[\^/\\]\.?)*)$/.exec(rawDur);
+    // 2026-10-11: ~. ＝弱いビブラート、~~~ ＝最大、< > ＝スウェル、^^@0.25 ＝ベンドの形、>D5 ＝スライドの行き先（guitar-tech.ts）
+    const m = /^(\d+(?:\.\d+)?)((?:~\.|[!,'_~*<]|>(?![A-G])|[\^/\\]\.?(?:@\d+(?:\.\d+)?)?)*)(?:>([A-G][#b]?-?\d))?$/.exec(rawDur);
     const dur = m ? m[1] : rawDur;
     const marks = m ? m[2] : "";
+    const slideTo = m ? m[3] : undefined;
+    const prm = markParams(marks);
     const art: Partial<NoteEvent> = {
-      ...(marks.includes("!") ? { velocity: 1.3 } : marks.includes(",") ? { velocity: 0.7 } : {}),
+      ...(marks.includes("!") ? { velocity: 1.3 } : marks.includes(",,") ? { velocity: 0.45 } : marks.includes(",") ? { velocity: 0.7 } : {}),
       ...(marks.includes("'") ? { gate: 0.4 } : marks.includes("_") ? { gate: 1.15 } : {}),
       // 音程と揺れの記号: ~ ビブラート（~~ で深く）、^ ベンドアップ（1つ＝半音、2つ＝全音）、/ しゃくり（下から入る）、\\ フォール（終わりで落とす）
       ...(marks.includes("*") ? { open: true } : {}),
-      ...(marks.includes("~") ? { vibrato: (marks.match(/~/g) ?? []).length >= 2 ? 1 : 0.7 } : {}),
+      ...(marks.includes("~") ? { vibrato: vibratoLevel(marks) } : {}),
       ...(marks.includes("^") ? { bend: semis(marks, "^") } : {}),
       ...(marks.includes("/") ? { scoop: semis(marks, "/") } : {}),
       ...(marks.includes("\\") ? { fall: semis(marks, "\\") } : {}),
+      ...(prm["^"] !== undefined && prm["^"] > 0 && prm["^"] <= 4 ? { bendT: prm["^"] } : {}),
+      ...(prm["/"] !== undefined && prm["/"] > 0 && prm["/"] <= 2 ? { scoopT: prm["/"] } : {}),
+      ...(prm["\\"] !== undefined && prm["\\"] >= 0.05 && prm["\\"] <= 0.95 ? { fallAt: prm["\\"] } : {}),
+      ...(marks.includes("<") ? { swell: 1 as const } : marks.includes(">") ? { swell: -1 as const } : {}),
     };
     const beats = Number(dur);
     if (!dur || !DUR_RULE.test(dur) || !(beats > 0) || beats > 64) {
@@ -466,6 +490,9 @@ export function parseNotes(text: string, drum: boolean, errors: string[], where:
     }
     if (name === "R" || name === "r") {
       out.push({ note: REST, durationBeats: beats });
+    } else if (!drum && (name === "x" || name === "X")) {
+      // デッドノート（音程のない「チッ」）: 直前の音を低くした、弱くて短い音
+      out.push(deadNoteEvent(deadNoteName(lastPitched), beats, marks));
     } else if (drum) {
       // タム(tom)だけは音名(A2〜C4)で高さを選べる（C4 高い → A2 低い）。ほかのドラムでは高さは使われない
       const tomPitch = /^[A-G][b#]?[0-9]$/.test(name);
@@ -478,7 +505,14 @@ export function parseNotes(text: string, drum: boolean, errors: string[], where:
       try {
         const midi = noteNameToMidi(name);
         if (midi < 12 || midi > 108) throw new Error("range");
-        out.push({ note: name, durationBeats: beats, ...art });
+        let slide: number | undefined;
+        if (slideTo) {
+          const d = noteNameToMidi(slideTo) - midi;
+          if (d === 0 || Math.abs(d) > 12) errors.push(`${where}: スライドの行き先は ±12 半音までです「${token}」`);
+          else slide = d;
+        }
+        out.push({ note: name, durationBeats: beats, ...art, ...(slide !== undefined ? { slide } : {}) });
+        lastPitched = name;
       } catch {
         errors.push(`${where}: 音名が読めません「${token}」（例 C4, F#3, Bb5）`);
       }
@@ -651,6 +685,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     // 楽器らしい奏法の自動付与（autoArticulation）と、息継ぎ（breath）
     const wantArt = !drum && (p.autoArticulation ?? song.autoArticulation === true);
     if (wantArt) events = autoArticulation(events, p.instrument, String(p.role ?? ""), `${song.title}|${i}`);
+    if (!drum && (p.legato || p.ghost)) events = applyGuitarEvents(events, p, `${song.title}|${i}`);
     if (p.breath && !drum) {
       if (BREATH_INSTRUMENTS.has(p.instrument)) events = applyBreath(events, bpm, typeof p.breath === "number" ? Math.max(2, p.breath) : 6);
       else warnings.push(`${where}: breath は息の楽器（${[...BREATH_INSTRUMENTS].join("・")}）のパートに書いてください`);

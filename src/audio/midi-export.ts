@@ -25,19 +25,51 @@ const smooth = (x: number): number => {
  * 1つの音の、ピッチベンドの動き（相対時刻[tick] → 半音数）。
  * しゃくり・ベンド・フォールを重ねたもの。何も指定がなければ null。
  */
-export function bendCurve(n: { bend?: number; scoop?: number; fall?: number }, durTicks: number): ((rel: number) => number) | null {
+export function bendCurve(n: { bend?: number; scoop?: number; fall?: number; slide?: number; bendT?: number; scoopT?: number; fallAt?: number }, durTicks: number): ((rel: number) => number) | null {
   const bend = clampSemi(n.bend ?? 0);
   const scoop = clampSemi(n.scoop ?? 0);
   const fall = clampSemi(n.fall ?? 0);
-  if (!bend && !scoop && !fall) return null;
-  const scoopEnd = Math.max(1, Math.min(durTicks * 0.4, PPQ * 0.3));
-  const bendEnd = Math.max(1, Math.min(durTicks * 0.35, PPQ * 0.5));
-  const fallStart = durTicks * 0.7;
+  const slide = clampSemi(n.slide ?? 0);
+  if (!bend && !scoop && !fall && !slide) return null;
+  // 形のパラメータ（bendT＝上がる拍数、scoopT＝しゃくりの拍数、fallAt＝戻し始める位置の割合）。省略は今までの値
+  const scoopEnd = Math.max(1, n.scoopT ? Math.min(durTicks, n.scoopT * PPQ) : Math.min(durTicks * 0.4, PPQ * 0.3));
+  const bendEnd = Math.max(1, n.bendT ? Math.min(durTicks, n.bendT * PPQ) : Math.min(durTicks * 0.35, PPQ * 0.5));
+  const fallStart = durTicks * (n.fallAt ?? 0.7);
+  // スライド: 音の 15% から 75% の間で、行き先の音程までなめらかに動く
+  const slideStart = durTicks * 0.15;
+  const slideLen = Math.max(1, durTicks * 0.6);
   return (rel) => {
     const sc = scoop && rel < scoopEnd ? -scoop * (1 - smooth(rel / scoopEnd)) : 0;
     const bd = bend ? bend * smooth(rel / bendEnd) : 0;
     const fl = fall && rel > fallStart ? -fall * smooth((rel - fallStart) / Math.max(1, durTicks - fallStart)) : 0;
-    return sc + bd + fl;
+    const sl = slide ? slide * smooth((rel - slideStart) / slideLen) : 0;
+    return sc + bd + fl + sl;
+  };
+}
+
+/** グライド（アームの揺れ）: 2 つの正弦波（速さ比 1 : 1.7）を足した、ゆっくり不規則な ±depth セントの揺れ。phase は音ごとに変える。 */
+export function glideCurve(spec: { depth?: number; rate?: number }, durTicks: number, relSec: (rel: number) => number, phase = 0): (rel: number) => number {
+  const rate = Math.max(0.05, Math.min(1, spec.rate ?? 0.2));
+  const depth = Math.max(20, Math.min(150, spec.depth ?? 100)) / 100;
+  return (rel) => {
+    const t = relSec(rel);
+    const fade = smooth(t / 0.4) * smooth((durTicks - rel) / 90);
+    return depth * fade * (0.62 * Math.sin(2 * Math.PI * rate * t + phase) + 0.38 * Math.sin(2 * Math.PI * rate * 1.7 * t + phase * 2.3 + 1));
+  };
+}
+
+/** ビブラートの自前生成（ピッチベンドの正弦波）。rate＝Hz、depth＝セント、delay＝揺れ始めるまでの tick。relSec は音の頭からの経過秒。 */
+export function vibratoCurve(spec: { rate?: number; depth?: number; delay?: number }, durTicks: number, relSec: (rel: number) => number, minDelayTicks = 0): (rel: number) => number {
+  const rate = Math.max(3, Math.min(8, spec.rate ?? 5.5));
+  const depth = Math.max(8, Math.min(60, spec.depth ?? 30)) / 100;
+  const delayTicks = Math.max(minDelayTicks, Math.round((spec.delay ?? 0.4) * PPQ));
+  const delaySec = relSec(delayTicks);
+  return (rel) => {
+    if (rel < delayTicks) return 0;
+    const t = relSec(rel) - delaySec;
+    const fadeIn = smooth(t / 0.25);
+    const fadeOut = smooth((durTicks - rel) / 60);
+    return depth * fadeIn * fadeOut * Math.sin(2 * Math.PI * rate * t);
   };
 }
 
@@ -408,9 +440,16 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       const pitch = noteNameToMidi(n.note);
       // ベンド・しゃくり・フォール: 音符に指定があれば、その深さで。なければ、ギターの長い音は下から音程を持ち上げて入る
       const durTicks = Math.max(1, Math.round(n.durationBeats * PPQ));
-      const explicitBend = n.bend || n.scoop || n.fall;
-      const autoScoop = score.autoScoop !== false && !explicitBend && (inst === "leadGuitar" || inst === "guitar") && n.durationBeats >= 1 && startBeat > 0;
-      const curve = autoScoop ? (rel: number): number => (rel < 16 ? -1 : rel < 34 ? -0.5 : 0) : durTicks >= 60 ? bendCurve(n, durTicks) : null;
+      const explicitBend = n.bend || n.scoop || n.fall || n.slide;
+      const autoScoop = (track.autoScoop ?? score.autoScoop !== false) && !explicitBend && (inst === "leadGuitar" || inst === "guitar") && n.durationBeats >= 1 && startBeat > 0;
+      const baseCurve = autoScoop ? (rel: number): number => (rel < 16 ? -1 : rel < 34 ? -0.5 : 0) : durTicks >= 60 ? bendCurve(n, durTicks) : null;
+      // ビブラートの自前生成: パートの vibrato 指定がある音、または ~~~（vibrato > 1）の音。ベンドした音は、上がりきってから揺らす（ベンドビブラート）
+      const wantVib = !!n.vibrato && n.durationBeats >= 0.4 && durTicks >= 120 && (track.vibratoSpec !== undefined || n.vibrato > 1);
+      const bendRise = n.bend ? Math.max(1, n.bendT ? Math.min(durTicks, n.bendT * PPQ) : Math.min(durTicks * 0.35, PPQ * 0.5)) : 0;
+      const vibCurve = wantVib ? vibratoCurve(track.vibratoSpec ?? {}, durTicks, (rel) => clock.beatToSec(startBeat + rel / PPQ) - secStart, Math.round(bendRise)) : null;
+      const gliding = track.glide !== undefined && n.durationBeats >= 1 && durTicks >= PPQ && !explicitBend;
+      const glide = gliding ? glideCurve(track.glide ?? {}, durTicks, (rel) => clock.beatToSec(startBeat + rel / PPQ) - secStart, rnd(startBeat * 1.7 + trackSeed) * 6.28) : null;
+      const curve = vibCurve || glide ? (rel: number): number => (baseCurve ? baseCurve(rel) : 0) + (vibCurve ? vibCurve(rel) : 0) + (glide ? glide(rel) : 0) : baseCurve;
       const bendTargets = layer && layer.channel !== DRUM_CHANNEL ? [main, layer] : [main];
       if (curve) {
         for (const t of bendTargets) {
@@ -418,7 +457,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
             const v = bendValue(semi);
             t.list.push({ tick: Math.max(0, at), order: 1, bytes: [0xe0 | t.channel, v & 0x7f, (v >> 7) & 0x7f] });
           };
-          if (autoScoop) {
+          if (autoScoop && !vibCurve && !glide) {
             setBend(tick - 3, -1);
             setBend(tick + 16, -0.5);
             setBend(tick + 34, 0);
@@ -431,7 +470,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         }
       }
       // ビブラート: 音が出て少したってから揺れ始め、音の終わりで元の深さに戻す（モジュレーション CC1）
-      if (n.vibrato && n.durationBeats >= 0.4 && (inst === undefined || GM_DRUM_NOTE[inst] === undefined)) {
+      if (n.vibrato && !vibCurve && n.durationBeats >= 0.4 && (inst === undefined || GM_DRUM_NOTE[inst] === undefined)) {
         const depth = Math.max(0, Math.min(1, n.vibrato));
         const base = inst === "leadGuitar" || inst === "lead" || inst === "brass" ? (score.tone === "prs" ? 40 : 26) : 0;
         const peak = Math.max(base, Math.round(depth * 127));
@@ -442,8 +481,20 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
           t.list.push({ tick: tick + durTicks - 5, order: 1, bytes: [0xb0 | t.channel, 1, base] });
         }
       }
+      // ボリューム奏法（< > ）: 音量（CC11）を、音の長さをかけて立ち上げる／減らす。デクレッシェンドは、音のあとに 127 へ戻す
+      if (n.swell && channel !== DRUM_CHANNEL && durTicks >= 120) {
+        for (const t of bendTargets) {
+          const cc = (at: number, v: number): void => { t.list.push({ tick: Math.min(endTick, Math.max(0, at)), order: 1, bytes: [0xb0 | t.channel, 11, clamp127(v)] }); };
+          const steps = 8;
+          for (let k = 0; k <= steps; k++) {
+            const x = smooth(k / steps);
+            cc(tick + Math.round(((durTicks * 0.9) * k) / steps) - (k === 0 ? 2 : 0), n.swell > 0 ? 24 + 103 * x : 127 - 87 * x);
+          }
+          cc(tick + durTicks + (n.swell > 0 ? -2 : 24), 127);
+        }
+      }
       // 長い音の音量の山（CC11）: 立ち上がって、中ほどで最大、終わりへ少し引く。リード・パッド・弦・ブラス・合唱
-      if (Hp > 0 && !score.pump && inst && SWELL_INSTRUMENTS.has(inst) && durTicks >= PPQ) {
+      if (Hp > 0 && !n.swell && !score.pump && inst && SWELL_INSTRUMENTS.has(inst) && durTicks >= PPQ) {
         for (const t of bendTargets) {
           const cc = (at: number, v: number): void => { t.list.push({ tick: at, order: 1, bytes: [0xb0 | t.channel, 11, Math.max(40, Math.min(127, v))] }); };
           cc(tick, 127 - Math.round(38 * Hp));

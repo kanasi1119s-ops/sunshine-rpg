@@ -1,10 +1,11 @@
 import type { DoubleDetuneSpec, EchoSpec, StrumSpec } from "./part-expand";
+import { GUITAR_TECH_GUIDE, GUITAR_TECH_PART_SCHEMA, type GuitarTechPartFields } from "./guitar-tech";
 
 /**
  * AiPart／AiSong に足した項目（2026-10-11）。ai-song.ts を大きく変えないよう、型・スキーマ・説明をここにまとめた。
  * 実装: part-expand.ts（展開）・articulation.ts（奏法）・instrument-range.ts（点検）・scale-check.ts（音階の点検）。
  */
-export interface AiPartExtras {
+export interface AiPartExtras extends GuitarTechPartFields {
   /** ギターのストローク。コードフォームから 3〜6 本のパートに展開される（8 パートの数には入れない）。notes は使わない（""でよい）。 */
   strum?: StrumSpec;
   /** エコー（やまびこ）。遅れて小さくなるコピーを左右交互に足す。 */
@@ -52,6 +53,7 @@ export const AI_PART_EXTRA_SCHEMA = {
   pattern: { type: "string" }, patternNote: { type: "string" }, snap: { anyOf: [{ type: "boolean" }, { type: "string", enum: ["nearest", "down", "up"] }] },
   detune: { type: "number" }, attack: { type: "number" }, release: { type: "number" },
   pedal: { type: "string", enum: ["chord", "bar", "none"] }, breath: { anyOf: [{ type: "boolean" }, { type: "number" }] }, autoArticulation: { type: "boolean" },
+  ...GUITAR_TECH_PART_SCHEMA,
 } as const;
 export const AI_SONG_EXTRA_SCHEMA = {
   scale: { type: "string" }, tonic: { type: "string" }, autoArticulation: { type: "boolean" }, instrumentCheck: { type: "boolean" },
@@ -70,4 +72,4 @@ export const AI_SONG_EXTRAS_GUIDE = `
 - リズムの型: ドラム／tom／音程のある楽器のパートに \`pattern:"son32"\`（rumba32・tresillo・bembe・soleaCompas・taikoJi・taikoOmote・taiko2）。
 - 厚みと空間: \`doubleDetune:true\`（同じ旋律を2パートにして左右±0.5、±8セント）、\`echo:{"repeats":2,"time":"dotted8","decay":0.3}\`（遅れて小さくなるコピー）、\`detune\`（セント）、\`attack\`・\`release\`（0〜1、録音音源のCC73・CC72）。
 - コード: \`C5\`（パワーコード）、\`Bm7-5\`・\`Bm7b5\`、\`Cmmaj7\`・\`CmM7\`・\`CM7\` が読める。
-`;
+` + GUITAR_TECH_GUIDE;

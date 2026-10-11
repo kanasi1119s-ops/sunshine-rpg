@@ -9,6 +9,7 @@ import { loadRecentFull } from "../composer/novelty.mjs";
 import { melodyLint } from "./melody-lint.mjs";
 import { voiceLint } from "./voice-lint.mjs";
 import { topScales } from "./scale-detect.mjs";
+import { guitarLint } from "./guitar-lint.mjs";
 
 // 追加の使い方: --facts … 小節番号つきの事実の一覧だけを表で出す（言語モデルが直すときはこちらを読む）／--json … 同じ一覧をJSONで／--plan <曲.plan.json> … 動機などを設計図から読む
 // 一覧に出る種類: 音域外・拍の合計・拍頭の不一致・アヴォイドノート（和音の半音上にぶつかる強拍・長い音）・同じ4小節の反復・動機・入り方の重複
@@ -130,6 +131,9 @@ async function check(file, mode, planFile) {
   const planForLint = planFile ? JSON.parse(fs.readFileSync(planFile, "utf8")) : null;
   for (const r of melodyLint(song, melodies, { chords: barList, plan: planForLint })) if (r.level !== "info" || process.env.VERBOSE) lines.push((r.level === "warn" ? "△ " : r.level === "info" ? "  ・" : "○ ") + r.msg);
   for (const r of voiceLint(pitched, { beats, totalBeats, melodyIndex: pitched.indexOf(melodies[0]), bassIndex: bass ? pitched.indexOf(bass) : -1 })) lines.push((r.level === "warn" ? "△ " : "○ ") + r.msg);
+
+  // 5c. ギターのソロ・表現の過多・音域の検査（guitar-lint.mjs。解析だけ）
+  for (const r of guitarLint(song, { beats, totalBeats, chords: barList })) if (r.level !== "info" || process.env.VERBOSE) lines.push((r.level === "warn" ? "△ " : r.level === "info" ? "  ・" : "○ ") + r.msg);
 
   // 6. 音階内の音の割合
   let all = 0, inScale = 0;

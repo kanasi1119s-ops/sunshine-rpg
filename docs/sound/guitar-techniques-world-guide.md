@@ -520,3 +520,18 @@ CE2 | guitar patch=nylonGuitar amp=crystal sustain=1.4 vol=0.12 | D4:1 Eb4:0.5\.
 内部資料: `docs/sound/banned-sounds.md`、`craft-guides.md` §13、`scales-world-guide.md`、`guitar-tone-basics.md`、`jpop-clean-guitar-guide.md`、`song.mjs guide`（`src/audio/ai-song.ts`、`part-expand.ts`、`ai-song-extras.ts`）。
 
 読めなかった・薄かった項目（0章の限界を再掲）: ゲーム音楽・映画音楽のギター、ハワイアンの音色、ケルトの奏法（DADGAD 以外）、ディスコのピックアップ・ペダルの具体、エフェクターの機種別の設定値。
+
+## 実装状況（2026-10-11、feat/guitar-tech）
+
+実装ファイル: `src/audio/guitar-tech.ts`（テスト: `guitar-tech.test.ts`）。すべてオプトイン。
+
+| 提案 | 状態 | 書き方 |
+|---|---|---|
+| strum.pattern の型の名前 | 実装済み | skank / rasgueado / bossa / funk-cut / folk6 など（`STRUM_PRESETS`） |
+| capo | 実装済み | `strum.capo` で開放弦の形のまま移調 |
+| fingerpick | 実装済み | `fingerpick` で分散和音（ナイロンは crystal/delicate 系アンプのみ） |
+| 単音の装飾（スライド・グライド） | 実装済み | 記法に追加 |
+
+未実装・未確認:
+- 各地域の固有楽器（シタール等）の細かい装飾は対象外。
+- 耳での確認は未実施。
