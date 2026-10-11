@@ -4,6 +4,7 @@ import { createServer } from "vite";
 import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
+import { makeIr, writeWav, SPACES } from "./space-ir.mjs";
 import { checkChordVariety, loadOtherSongs } from "./chord-variety.mjs";
 
 export const ROOT = path.resolve(new URL("../../", import.meta.url).pathname);
@@ -23,7 +24,7 @@ export async function openSongKit() {
   }
 
   /** 曲（AIソング形式のオブジェクト）を確かめて、プロジェクト・MIDI（・WAV）を書き出す。 */
-  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", sound = "", master = null, widen = null } = {}) {
+  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", sound = "", master = null, widen = null, space = "", spaceWet = 0.25 } = {}) {
     if (!EDITIONS.includes(edition)) throw new Error("edition は real・ps2・modern のどれか");
     if (!/^[a-z0-9][a-z0-9-]*$/.test(name ?? "")) throw new Error(`name は英小文字・数字・「-」だけ（${name}）`);
     const { aiSongToScore } = await load("/src/audio/ai-song.ts");
@@ -59,6 +60,17 @@ export async function openSongKit() {
       files.wav = path.join(out, `${name}.wav`);
       await renderWav(score, edition, files.wav, soundfont, bass, drums, guitar);
       // 仕上げの音量: 書き出しのときだけ、全体の大きさをそろえる（ゲーム中の再生やアプリの音は変わらない）。ピークは -1dB 以下に抑える
+      // 空間（畳み込みリバーブ）: 自作のIRで、書き出しのときだけ残響を足す（hall / room / plate）
+      if (space) {
+        if (!SPACES[space]) throw new Error(`space は ${Object.keys(SPACES).join("・")} のどれか（${space}）`);
+        const irFile = files.wav + `.ir-${space}.wav`;
+        writeWav(irFile, makeIr(space));
+        const tmpv = files.wav + ".space.wav";
+        const w = Math.max(0, Math.min(1, Number(spaceWet)));
+        execSync(`ffmpeg -y -loglevel error -i "${files.wav}" -i "${irFile}" -filter_complex "[0]asplit[d][w];[w][1]afir=dry=1:wet=10,volume=${(5 * w).toFixed(3)}[r];[d][r]amix=inputs=2:normalize=0:duration=first" -ar 48000 -ac 2 -c:a pcm_s16le "${tmpv}"`);
+        fs.renameSync(tmpv, files.wav);
+        fs.rmSync(irFile, { force: true });
+      }
       if (master !== null && master !== undefined) {
         const tmp = files.wav + ".master.wav";
         const out = `-ar 48000 -ac 2 -c:a pcm_s16le -map_metadata -1 -fflags +bitexact -flags:a +bitexact`;
