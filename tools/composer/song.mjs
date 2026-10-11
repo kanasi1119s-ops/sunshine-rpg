@@ -9,15 +9,29 @@
 //       --soundfont gu: WAVを GeneralUser GS の音源で作る（省略はゲームと同じ FluidR3）。
 //       --wav: 作曲ソフトと同じ音（録音音源・アンプ・仕上げ）でWAVも作る（Playwright と Chromium が必要）。
 //       --register: ゲームの曲として src/audio/songs/<曲ID>.sunshine-song.json に登録する。
+//   曲作りの流れの道具（docs/sound/ai-composition-workflow.md）:
+//   node tools/composer/song.mjs plan-template                       … 曲の設計図（属性カードとセクション表）の雛形を表示
+//   node tools/composer/song.mjs plan-check <plan.json> [曲.json]     … 設計図の検査（強さカーブ・音域表・曲との食い違い）
+//   node tools/composer/song.mjs novelty <曲.json> [--n 3] [--vs 曲名,曲名]  … 直前の曲と調・進行・入り方・終わり方・旋律の輪郭が同じでないか
+//   node tools/composer/song.mjs gate <曲.wav> [--target -14] [--save 曲ID] [--json]  … LUFS・真のピーク・LRA・PLR・相関・頭の大きさ・無音の合否表（○／要直し）
+//   node tools/composer/song.mjs gate-compare <曲.wav> <基準.wav>    … 音量をそろえてから帯域ごとの差を出す
+//   node tools/composer/song.mjs log <曲ID> --before .. --change .. --after .. --ear ..  … 直しの記録を1行残す（docs/sound/revisions.md）
+//   node tools/audio-check/score-check.mjs <曲.json> --facts [--json]  … 楽譜の点検を、小節番号つきの事実の一覧で出す（アヴォイドノートなど）
+//   node tools/composer/chord-pick.mjs --scene battle --avoid-last 3  … 場面に合って直近の曲と違う進行の候補を出す
 import fs from "fs";
 import path from "path";
-import { openSongKit } from "./song-lib.mjs";
+import { openSongKit, ROOT } from "./song-lib.mjs";
+import { runWorkflowCommand } from "./workflow-cli.mjs";
+import { revisionReminder } from "./revision-log.mjs";
 
 const args = process.argv.slice(2);
 const opt = (name) => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
 };
+
+// 曲作りの流れの道具（gate・plan-check・novelty など）は、vite を起動せずに先に処理する
+if (await runWorkflowCommand(args)) process.exit(process.exitCode ?? 0);
 
 const kit = await openSongKit();
 try {
@@ -35,7 +49,9 @@ try {
       console.log(`○ 「${r.title}」 ${r.tracks}トラック・${Math.floor(r.seconds / 60)}分${Math.round(r.seconds % 60)}秒・テンポ${r.bpm}`);
       console.log("  プロジェクト:", r.files.project, "（作曲ソフトの「プロジェクトを読み込む」で開ける）");
       console.log("  MIDI:", r.files.midi);
-      if (r.files.wav) console.log("  WAV:", r.files.wav);
+      if (r.files.wav) console.log("  WAV:", r.files.wav, "（合否表: node tools/composer/song.mjs gate <WAV> [--target -14] [--save 曲ID]）");
+      const reminder = revisionReminder(ROOT, name);
+      if (reminder) console.log("  " + reminder);
       const id = opt("--register");
       if (id) console.log("  ゲームに登録:", await kit.register(r.score, { id, title: r.title, scene: opt("--scene") ?? "" }));
     } catch (e) {

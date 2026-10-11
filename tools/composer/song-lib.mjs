@@ -7,6 +7,7 @@ import { execSync } from "child_process";
 import { masterFile, MASTER_PRESETS } from "./master.mjs";
 import { makeIr, writeWav, SPACES } from "./space-ir.mjs";
 import { checkChordVariety, loadOtherSongs } from "./chord-variety.mjs";
+import { workflowWarnings } from "./workflow-check.mjs";
 
 export const ROOT = path.resolve(new URL("../../", import.meta.url).pathname);
 const EDITIONS = ["real", "ps2", "modern"];
@@ -50,7 +51,9 @@ export async function openSongKit() {
     const { checkScore } = await load("/src/audio/song-check.ts");
     warnings.push(...checkScore(score));
     // コード進行の自動チェック: 基本の和音だけ・少ない種類のくり返し・他の曲と同じ形
-    warnings.push(...checkChordVariety(songData.chords, loadOtherSongs(path.join(ROOT, "assets-src", "ai-songs"), name)));
+    warnings.push(...checkChordVariety(song.chords, loadOtherSongs(path.join(ROOT, "assets-src", "ai-songs"), name)));
+    // 曲作りの流れの点検: 直前の曲と同じ選択・旋律と和音のぶつかり（アヴォイドノート）・同じ4小節の反復（tools/composer/workflow-check.mjs）
+    warnings.push(...workflowWarnings(song, name, ROOT));
     const out = path.resolve(outDir ?? path.join(ROOT, "dist-songs"));
     fs.mkdirSync(out, { recursive: true });
     const files = { project: path.join(out, `${name}.sunshine-song.json`), midi: path.join(out, `${name}.mid`) };

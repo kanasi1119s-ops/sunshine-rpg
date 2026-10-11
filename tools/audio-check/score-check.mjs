@@ -2,80 +2,29 @@
 // AIソング形式のJSON（音符データ）を、WAVにする前に楽理の面から点検する（docs/sound/music-knowledge.md の 17）。
 // 数値の目安は一般的な作曲の知見で、良し悪しの最終判断は耳で。警告が出ても、わざとなら直さなくてよい。
 import fs from "fs";
+import path from "path";
+import { DRUMS, RANGE, midi, chordPcs, expand as expandPart, prepareForCheck, barChords } from "./score-lib.mjs";
+import { collectFacts, formatFacts } from "./score-facts.mjs";
+import { loadRecentFull } from "../composer/novelty.mjs";
 
-const NAMES = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom"]);
-// 楽器の音域（MIDI番号。作曲ソフトの手引きの音域）
-const RANGE = {
-  bass: ["E1", "G3"], slap: ["E1", "G3"], sub808: ["C1", "C3"], guitar: ["E2", "E5"], crunch: ["E2", "E5"],
-  distGuitar: ["E2", "E4"], leadGuitar: ["E3", "E6"], echoGuitar: ["E3", "E6"], keys: ["C2", "C6"], harpsichord: ["C2", "C6"],
-  strings: ["C2", "C7"], pad: ["C2", "C6"], choir: ["C3", "C6"], brass: ["E2", "C6"], lead: ["C3", "C7"], bell: ["C4", "C7"],
-  sitar: ["C3", "C6"], koto: ["C3", "C6"], shamisen: ["C3", "C6"], banjo: ["C3", "C6"], harp: ["C2", "C7"], kalimba: ["C4", "C7"],
-  panflute: ["C4", "C7"], shakuhachi: ["C4", "C6"], ocarina: ["C4", "C7"], fiddle: ["G3", "E6"], bagpipe: ["A3", "A5"], piano: ["A0", "C8"],
-};
+// 追加の使い方: --facts … 小節番号つきの事実の一覧だけを表で出す（言語モデルが直すときはこちらを読む）／--json … 同じ一覧をJSONで／--plan <曲.plan.json> … 動機などを設計図から読む
+// 一覧に出る種類: 音域外・拍の合計・拍頭の不一致・アヴォイドノート（和音の半音上にぶつかる強拍・長い音）・同じ4小節の反復・動機・入り方の重複
 
-function midi(name) {
-  const m = /^([A-G])([#b]?)(-?\d)$/.exec(name);
-  if (!m) return null;
-  return 12 * (Number(m[3]) + 1) + NAMES[m[1]] + (m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0);
-}
-function chordPcs(name) {
-  const m = /^([A-G])([#b]?)(.*)$/.exec(name);
-  if (!m) return null;
-  const root = (NAMES[m[1]] + (m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0) + 12) % 12;
-  const q = m[3];
-  let iv = [0, 4, 7];
-  if (/^(m|min)(?!aj)/.test(q)) iv = [0, 3, 7];
-  if (q.startsWith("dim")) iv = [0, 3, 6];
-  if (q.startsWith("aug")) iv = [0, 4, 8];
-  if (q.includes("sus4")) iv = [0, 5, 7];
-  else if (q.includes("sus2")) iv = [0, 2, 7];
-  if (/7/.test(q)) iv = [...iv, q.includes("maj7") ? 11 : 10];
-  if (q.includes("add9") || /9/.test(q)) iv = [...iv, 2];
-  return { root, pcs: new Set(iv.map((x) => (root + x) % 12)) };
-}
-function parseNotes(str) {
-  const out = [];
-  let t = 0;
-  for (const tok of str.trim().split(/\s+/)) {
-    const [n, d] = tok.split(":");
-    const dur = Number(d);
-    if (!Number.isFinite(dur)) continue;
-    out.push({ t, dur, name: n, pitch: midi(n) });
-    t += dur;
-  }
-  return { notes: out, total: t };
-}
-// 曲の長さにそろえてくり返した、音のならび
-function expand(part, totalBeats) {
-  const { notes, total } = parseNotes(part.notes);
-  if (total <= 0) return [];
-  const out = [];
-  for (let base = 0; base < totalBeats - 1e-9; base += total) {
-    for (const n of notes) if (base + n.t < totalBeats - 1e-9) out.push({ ...n, t: base + n.t });
-  }
-  return out;
-}
-
-function check(file) {
-  const song = JSON.parse(fs.readFileSync(file, "utf8"));
-  const chords = song.chords.trim().split(/\s+/);
-  const bars = chords.length * song.barsPerChord * song.repeats;
+async function check(file, mode, planFile) {
+  const song = await prepareForCheck(JSON.parse(fs.readFileSync(file, "utf8")));
+  const barList = barChords(song);
+  const bars = barList.length;
   const beats = song.beats;
   const totalBeats = bars * beats;
-  const chordAt = (t) => {
-    const bar = Math.floor(t / beats);
-    const idx = Math.floor((bar % (chords.length * song.barsPerChord)) / song.barsPerChord);
-    return chordPcs(chords[idx]);
-  };
-  const first = chordPcs(chords[0]);
+  const chordAt = (t) => chordPcs(barList[Math.min(bars - 1, Math.floor(t / beats))]);
+  const first = chordPcs(barList[0]);
   const minor = first && first.pcs.has((first.root + 3) % 12);
   const scale = new Set((minor ? [0, 2, 3, 5, 7, 8, 10, 11] : [0, 2, 4, 5, 7, 9, 11]).map((x) => (first.root + x) % 12));
   const lines = [];
   const warn = (ok, okMsg, ngMsg) => lines.push((ok ? "○ " : "△ ") + (ok ? okMsg : ngMsg));
   lines.push(`■ ${song.title}（${bars}小節・${beats}拍子・テンポ${song.bpm}・約${Math.round((totalBeats / song.bpm) * 60)}秒、主音${["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"][first.root]}${minor ? "短調" : "長調"}と推定）`);
 
-  const parts = song.parts.map((p) => ({ ...p, seq: DRUMS.has(p.instrument) ? [] : expand(p, totalBeats).filter((n) => n.pitch !== null) }));
+  const parts = song.parts.map((p) => ({ ...p, seq: DRUMS.has(p.instrument) ? [] : expandPart(p, totalBeats).filter((n) => n.pitch !== null) }));
   const pitched = parts.filter((p) => p.seq.length);
 
   // 1. 音域
@@ -191,7 +140,7 @@ function check(file) {
   for (let s0 = 0; s0 < totalBeats; s0 += secBeats) {
     let n = 0;
     for (const p of song.parts) {
-      const q = expand(p, totalBeats).filter((x) => x.t >= s0 && x.t < s0 + secBeats && x.name !== "R");
+      const q = expandPart(p, totalBeats).filter((x) => x.t >= s0 && x.t < s0 + secBeats && x.name !== "R");
       if (q.length) n++;
     }
     dens.push(n);
@@ -201,11 +150,24 @@ function check(file) {
   const minIdx = dens.indexOf(Math.min(...dens));
   warn(dens.length < 4 || (minIdx > 0 && minIdx < dens.length - 1) || dens[0] === Math.min(...dens), "途中で一度引く区間がある", "途中で引く区間がない（間奏で一度減らすと最後のサビが映える）");
 
-  // 9. 同時に鳴る音数の詰めすぎ（拍ごとに低域で重なる音）
+  // 9. 事実の一覧（小節番号つき）。アヴォイドノートなどは件数だけここに出し、中身は --facts で読む
+  const others = loadRecentFull(path.resolve(path.dirname(file)), 1, path.basename(file).replace(/\.json$/, ""));
+  const plan = planFile ? JSON.parse(fs.readFileSync(planFile, "utf8")) : null;
+  const result = collectFacts(song, { plan, others });
+  if (mode === "json") { console.log(JSON.stringify({ file, ...result }, null, 1)); return result.facts.length; }
+  if (mode === "facts") { console.log(formatFacts(result)); return result.facts.length; }
+  const avoid = result.facts.filter((f) => f.kind === "アヴォイドノート").length;
+  warn(avoid === 0, "強拍・長い音で和音の半音上にぶつかる音はない", `強拍・長い音で和音の半音上にぶつかる音が ${avoid}か所（小節ごとの一覧は --facts）`);
   console.log(lines.join("\n"));
   return lines.filter((l) => l.startsWith("△")).length;
 }
 
+const argv = process.argv.slice(2);
+const flag = (n) => argv.includes(n);
+const planIdx = argv.indexOf("--plan");
+const planFile = planIdx >= 0 ? argv[planIdx + 1] : null;
+const files = argv.filter((a, i) => !a.startsWith("--") && !(planIdx >= 0 && i === planIdx + 1));
+const mode = flag("--json") ? "json" : flag("--facts") ? "facts" : "text";
 let warnings = 0;
-for (const f of process.argv.slice(2)) warnings += check(f);
-console.log(`\n警告 ${warnings}件（目安。耳で確かめて決める）`);
+for (const f of files) warnings += await check(f, mode, planFile);
+if (mode === "text") console.log(`\n警告 ${warnings}件（目安。耳で確かめて決める）`);
