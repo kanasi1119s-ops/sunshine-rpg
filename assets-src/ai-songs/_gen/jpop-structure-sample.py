@@ -508,7 +508,7 @@ parts = [
     part(instrument="crash", role="クラッシュ（区間の頭）", volume=0.06, pan=-0.3, amp="auto", notes=drum_part(3)),
     part(instrument="bass", role="ベース（Aメロ＝長い音、Bメロ＝動く、サビ＝8分）", volume=0.15, pan=0, amp="auto", notes=" ".join(BASS), push=0.0, duck=0.2),
     part(instrument="piano", role="ピアノ", volume=0.09, pan=0.35, amp="auto", notes=" ".join(PIANO), sustain=1.8, phrase=4),
-    part(instrument="guitar", role="クリーンギター（分散和音。sparkleClean）", volume=0.11, pan=-0.4, amp="sparkleClean", notes=" ".join(GUITAR), sustain=1.6, reverb=0.3, chorus=0.3),
+    part(instrument="guitar", role="クリーンギター（分散和音。sparkleClean）", volume=0.11, pan=-0.4, amp="sparkleClean", notes=" ".join(GUITAR), sustain=1.6, reverb=0.3, chorus=0),
     part(instrument="echoGuitar", role="エコーギター（イントロ・間奏・アウトロのフック）", volume=0.12, pan=0.1, amp="crystal", notes=" ".join(ECHO), echo={"repeats": 2, "time": "dotted8", "decay": 0.28}, reverb=0.35, sustain=1.3, phrase=4),
     part(instrument="lead", role="メロディ（歌のパート）", volume=0.18, pan=0, amp="auto", notes=" ".join(LEAD), sustain=0.95, phrase=4, breath=True, sections={"break": 0.7}),
     part(instrument="strings", role="弦（上の声）", volume=0.05, pan=-0.6, amp="auto", notes=" ".join(strings_bar(i, True) for i in range(120)), sustain=1.5),

@@ -377,28 +377,28 @@ export const PART_RECIPES: Record<string, PartRecipe> = {
   // ── J-POPのクリーン（jpop-clean-guitar-guide.md §3 のレシピA〜E）。数字は出発点で、耳で調整する ──
   "jpop-arpeggio": {
     label: "J-POPの透明なアルペジオ（イントロ・バラード・Aメロ。浅い chorus、のびる音）", instruments: ["guitar"],
-    mix: { volume: 0.16, amp: { type: "jpopClean" }, reverb: 0.3, chorus: 0.3, bright: 0 },
+    mix: { volume: 0.16, amp: { type: "jpopClean" }, reverb: 0.3, chorus: 0, bright: 0 },
     hint: { sustain: 1.6, register: "E3〜E5" },
   },
   "jpop-cutting": {
     label: "J-POPの軽快なカッティング（短く弾き、消す音は休符。pattern cut16 と合わせる）", instruments: ["guitar"],
-    mix: { volume: 0.13, amp: { type: "jpopClean" }, reverb: 0.12, chorus: 0.08, bright: 0 },
+    mix: { volume: 0.13, amp: { type: "jpopClean" }, reverb: 0.12, chorus: 0, bright: 0 },
     hint: { staccato: true, pattern: "cut16", register: "E3〜E5" },
   },
   "jpop-stroke": {
     label: "J-POPの8分ストローク（サビ。左右にひらいて、残響は控えめ）", instruments: ["guitar"],
-    mix: { volume: 0.1, amp: { type: "jpopClean" }, reverb: 0.18, chorus: 0.05, bright: 0 },
+    mix: { volume: 0.1, amp: { type: "jpopClean" }, reverb: 0.18, chorus: 0, bright: 0 },
     fx: { doubleDetune: { cents: 6, spread: 0.7 } }, hint: { sustain: 1.4 },
   },
   "jpop-space": {
     label: "J-POPの空間ギター（イントロのフック・間奏。付点8分のやまびこ2回）", instruments: ["echoGuitar"],
-    mix: { volume: 0.12, amp: { type: "jpopClean" }, reverb: 0.35, chorus: 0.15, bright: 0 },
+    mix: { volume: 0.12, amp: { type: "jpopClean" }, reverb: 0.35, chorus: 0, bright: 0 },
     fx: { echo: { repeats: 2, time: "dotted8", decay: 0.28 } }, hint: { sustain: 1.5 },
   },
   "jpop-dimension": {
     label: "J-POPのディメンションC風の広がり（コードのクリーン。chorus の代わり）", instruments: ["guitar"],
-    mix: { volume: 0.16, amp: { type: "jpopClean" }, reverb: 0.2, chorus: 0.1, bright: 0 },
-    fx: { widen: { mode: "dimension", ms: 12, width: 0.6, chorus: 0.25 } }, hint: { sustain: 1.6 },
+    mix: { volume: 0.16, amp: { type: "jpopClean" }, reverb: 0.2, chorus: 0, bright: 0 },
+    fx: { widen: { mode: "dimension", ms: 12, width: 0.6, chorus: 0 } }, hint: { sustain: 1.6 },
   },
 };
 
