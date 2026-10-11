@@ -27,6 +27,7 @@ export const GM_PROGRAM: Partial<Record<Instrument, number>> = {
   // 民族楽器（GM）
   sitar: 104, banjo: 105, shamisen: 106, koto: 107, kalimba: 108, bagpipe: 109, fiddle: 110,
   harp: 46, panflute: 75, shakuhachi: 77, ocarina: 79,
+  fmBell: 14, fmEpiano: 4, drawbarOrgan: 16, unisonSaw: 81, // 追加の音源（16・81 は game.sf3 を作り直すときに USED_GM_PROGRAMS へ入る。作曲ソフトの GeneralUser には最初からある）
   wind: 122, // 海岸（風・波の音）
   stream: 122,
   rain: 96, // FX 雨

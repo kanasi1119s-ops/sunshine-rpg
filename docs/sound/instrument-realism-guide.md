@@ -457,6 +457,22 @@
 
 ---
 
-## 11. 実装状況（2026-10-11）
+## 11. 実装状況（2026-10-11 第2ラウンド）
 
-提案 1〜10 は**まだ実装していない**（この文書は調査のみ。コードは変えていない）。
+§9 の提案 1〜10 のうち、9 以外を入れた（10 は一部）。新しい書き方は**書いたときだけ効く**。既存の曲は変わらない（`ai-song.test.ts`・`arrangement.test.ts` は変更前と同じ結果）。テストは `src/audio/` の `instrument-range.test.ts`・`articulation.test.ts`・`ai-song-instruments.test.ts`。
+
+| # | 提案 | 状態 | 内容 |
+|---|---|---|---|
+| 1 | 音域チェック | **入れた** | `src/audio/instrument-range.ts` の `INSTRUMENT_RANGES`（hard/safe）と `checkInstrumentRange`。hard 外は警告、safe 外が多いと注意。**曲の `instrumentCheck: true` を書いたときだけ**走る（`song.mjs build` は、書いていなければ自動で true にする）。ライブラリの既定を OFF にしたのは、既存テストの `warnings==[]` を壊さないため |
+| 2 | 和楽器・民族楽器の音階チェック | **入れた** | `checkWorldInstrumentScale`（koto＝D Eb G A Bb、shakuhachi＝D F G A C。外れが 20% を超えたら警告。`WORLD_INSTRUMENT_PCS`） |
+| 3 | 同時発音チェック | **入れた** | `POLYPHONY_LIMITS`・`checkPolyphony`（ギター 6・ハープ 8・ピアノ 10 など） |
+| 4 | 息継ぎ・自動ブレス | **入れた** | `checkBreath`（秒で測る、10 秒目安）と、パートの `breath: true` で終わりの音を短くする `applyBreath` |
+| 5 | 奏法の自動付与 | **入れた** | `src/audio/articulation.ts`。フレーズ終わりの長い音に `~`、strings の旋律に `_`、guitar のハンマー／プル（seed で 50%）、slap の拍頭 `!`・オクターブ上 `'`、ピアノ・ハープの最高音 `!`（`accentTopNotes`）。パートの `autoArticulation`、または曲全体の `autoArticulation: true`。決定的（seed） |
+| 6 | ストローク生成 | **入れた** | パートの `strum: { chords, pattern, spreadMs, strings }`。`part-expand.ts`（オープンコードのフォーム表、重複する音名を先に間引く、960 ticks/拍、弦ごとのずれ、音量は 1/√本数）。パターンは `D d U u x . -` |
+| 7 | ペダルをコード追従に | **入れた** | パートの `pedal: "chord" \| "bar" \| "none"`。MIDI の CC64 を書く（`midi-export.ts` の `track.pedal`）。指定なしは従来の 4 拍ごとのまま |
+| 8 | 立ち上がり補正（attack） | 一部 | パートの `attack`・`release`（CC73／CC72）と、`detune`（RPN 1）を MIDI に書く。**音源に効くかは耳と `analyze.py` で未確認**。数値の決め方（楽器ごとの前倒しの ms）は実験が要る |
+| 9 | ドラムの手足制約（drum-limbs） | **入れなかった** | ドラムの記法とヒューマナイズの内部に踏み込む。リズム担当の作業と重なるので任せた |
+| 10 | 楽器の追加 | 一部 | `drawbarOrgan`（GM16）を追加（`synth-voices.ts`、`synth-sfx-guide.md` §11 参照）。トランペット／フルートなどの個別楽器とピッツィカート専用は**未**（サウンドフォントの切り出し直しが要る） |
+
+あわせて、第1ラウンドの積み残しを入れた: **doubleDetune**（`doubleDetune: { cents, pan }` で 2 パートに分け、左右に振って RPN 1 でずらす）、**echo**（`echo: { beats, decay, repeats }` で音符を複製。`shift` を使う）、**ADSR 近似**（上の `attack`・`release`）、**コード表記** `5`・`m7-5`・`mmaj7`（`newsong.ts` の `QUALITY`）。**アンプの箱（cab）を既存の役割に当て直す**ことは**やらなかった**: 既存の曲の音が変わるうえ、`amp-sim-guide.md` に「耳と 1/3 オクターブ分析で別に決める」とあるため。
+

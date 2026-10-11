@@ -90,7 +90,9 @@ const ECHO_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "cowbell", "
 function channelKey(track: Track, program: number): string {
   // 残響・コーラス・明るさ・キックへの凹みが違うパートは、別のチャンネルに分ける
   const mix = [track.reverb, track.chorus, track.bright, track.duck].some((v) => v !== undefined) ? `|${track.reverb ?? ""},${track.chorus ?? ""},${track.bright ?? ""},${track.duck ?? ""}` : "";
-  return `${program}|${(track.pan ?? 0).toFixed(2)}|${track.instrument ?? track.waveform}${mix}`;
+  // 音程のずれ・立ち上がり・余韻が違うパートも、別のチャンネルに分ける
+  const tone = [track.detune, track.attack, track.release].some((v) => v) ? `|t${track.detune ?? 0},${track.attack ?? ""},${track.release ?? ""}` : "";
+  return `${program}|${(track.pan ?? 0).toFixed(2)}|${track.instrument ?? track.waveform}${mix}${tone}`;
 }
 const clamp127 = (v: number): number => Math.max(0, Math.min(127, Math.round(v)));
 /** ドラムの太鼓の種類 → GMのキー */
@@ -268,6 +270,14 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         if (track.bright) list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 74, clamp127(64 + Math.max(-1, Math.min(0.5, track.bright)) * 48)] });
         // ピッチベンドの幅を ±12半音に（RPN 0）。ベンド・しゃくり・フォールの深さに使う
         for (const [cc, v] of [[101, 0], [100, 0], [6, BEND_RANGE], [38, 0], [101, 127], [100, 127]] as const) list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, cc, v] });
+        // 音程のずれ（RPN 1 ＝チャンネルのファインチューン。セント単位、±100セントを 0〜16383 に）
+        if (track.detune) {
+          const v = Math.max(0, Math.min(0x3fff, Math.round(0x2000 + (Math.max(-50, Math.min(50, track.detune)) / 100) * 0x2000)));
+          for (const [cc, d] of [[101, 0], [100, 1], [6, (v >> 7) & 0x7f], [38, v & 0x7f], [101, 127], [100, 127]] as const) list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, cc, d] });
+        }
+        // 立ち上がり（CC73）と余韻（CC72）。64 が音源のまま
+        if (track.attack !== undefined) list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 73, clamp127(Math.max(0, Math.min(1, track.attack)) * 127)] });
+        if (track.release !== undefined) list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 72, clamp127(Math.max(0, Math.min(1, track.release)) * 127)] });
         // 主旋律の楽器には、揺らぎ（ビブラート）を少し
         if (inst === "leadGuitar" || inst === "lead" || inst === "brass") list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 1, score.tone === "prs" ? 40 : 26] });
       }
@@ -284,7 +294,19 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     const layer = layerSpec ? setupChannel(layerSpec.program, `${channelKey(track, layerSpec.program)}|layer`, 1) : null;
     if (layer && layer.channel !== DRUM_CHANNEL) programs[layer.channel] = layerSpec!.program;
     // ピアノ系は、およそ1小節ごとにペダルを踏み替えて、音をつなげる
-    if (inst === "piano" || inst === "keys") {
+    if ((inst === "piano" || inst === "keys") && track.pedal) {
+      // ペダルの指定がある: chord／bar は踏み替える拍（changes）で、none は踏まない
+      if (track.pedal.mode !== "none") {
+        const points = [0, ...track.pedal.changes.map((b) => Math.round(b * PPQ))].filter((t, i, a2) => t < endTick && (i === 0 || t > a2[i - 1]));
+        for (const at of points) {
+          for (const c of layer ? [channel, layer.channel] : [channel]) {
+            const l = c === channel ? list : layer!.list;
+            if (at > 0) l.push({ tick: at - 6, order: 1, bytes: [0xb0 | c, 64, 0] });
+            l.push({ tick: at, order: 1, bytes: [0xb0 | c, 64, 127] });
+          }
+        }
+      }
+    } else if (inst === "piano" || inst === "keys") {
       const totalTicks = endTick;
       for (let at = 0; at < totalTicks; at += PPQ * 4) {
         for (const c of layer ? [channel, layer.channel] : [channel]) {

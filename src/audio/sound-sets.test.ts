@@ -89,4 +89,14 @@ describe("サウンドセット", () => {
     }
     for (const r of Object.values(PART_RECIPES)) expect(r.mix.volume).toBeLessThanOrEqual(0.2);
   });
+
+  it("音づくりの型に、strings-ensemble など 5 つを足してある", () => {
+    for (const id of ["strings-ensemble", "brass-swell", "organ-hold", "cinematic-drone", "chip-lead"]) expect(PART_RECIPES[id], id).toBeDefined();
+    expect(PART_RECIPES["strings-ensemble"].mix).toMatchObject({ chorus: 0.3, reverb: 0.3, duck: 0.3 });
+    expect(PART_RECIPES["brass-swell"].mix.bright).toBe(-0.1);
+    expect(PART_RECIPES["cinematic-drone"].hint?.sustain).toBe(3);
+    expect(PART_RECIPES["cinematic-drone"].mix.reverb).toBe(0.5);
+    expect(PART_RECIPES["chip-lead"].hint?.patch).toBe("squareLead");
+    expect(PART_RECIPES["chip-lead"].mix.reverb).toBe(0);
+  });
 });

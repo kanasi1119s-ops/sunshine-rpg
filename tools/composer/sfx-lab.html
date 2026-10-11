@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SE ラボ</title>
+<style>
+:root { color-scheme: dark; --bg:#05080e; --panel:#0c1421; --line:#1b2a3e; --fg:#e4f1ff; --muted:#7d91ab; --accent:#00e5ff; --warn:#ffb020; --ok:#37f59b; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.5 "Hiragino Sans","Yu Gothic UI",sans-serif; }
+.wrap { display:grid; grid-template-columns: 280px 1fr; gap:16px; max-width:1200px; margin:0 auto; padding:16px; }
+@media (max-width:760px){ .wrap{grid-template-columns:1fr;} }
+h1 { font-size:18px; margin:0 0 8px; } h3 { font-size:12px; color:var(--muted); margin:12px 0 4px; font-weight:600; }
+#list { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 10px; max-height:90vh; overflow:auto; }
+.se { margin:2px 4px 2px 0; padding:3px 8px; background:#101c2d; color:var(--fg); border:1px solid var(--line); border-radius:6px; cursor:pointer; font:inherit; }
+.se.on, .se:hover { border-color:var(--accent); color:var(--accent); }
+main { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 16px; }
+canvas { width:100%; height:120px; background:#060b13; border:1px solid var(--line); border-radius:6px; }
+label { display:grid; grid-template-columns: 9em 1fr 4em; align-items:center; gap:8px; margin:4px 0; }
+.row { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
+button.act { padding:6px 12px; background:#102a3a; color:var(--fg); border:1px solid var(--accent); border-radius:6px; cursor:pointer; font:inherit; }
+select { background:#101c2d; color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:4px; }
+#stats { color:var(--muted); font-size:12px; } .warn { color:var(--warn); white-space:pre-wrap; } .ok { color:var(--ok); }
+pre { max-height:260px; overflow:auto; background:#060b13; border:1px solid var(--line); border-radius:6px; padding:8px; font-size:11px; }
+</style>
+<div class="wrap">
+  <div id="list"></div>
+  <main>
+    <h1>SE ラボ</h1>
+    <div id="title"></div>
+    <canvas id="wave" width="900" height="120"></canvas>
+    <div id="stats"></div>
+    <div id="warn"></div>
+    <div class="row"><button class="act" id="play">鳴らす</button><button class="act" id="variant">変種を鳴らす</button><button class="act" id="reset">元に戻す</button><button class="act" id="wav">WAV で保存</button><button class="act" id="save">JSON で保存</button></div>
+    <label>高さ（半音）<input type="range" id="pitch" min="-12" max="12" step="0.5" value="0"><span></span></label>
+    <label>長さ（倍）<input type="range" id="time" min="0.3" max="2" step="0.05" value="1"><span></span></label>
+    <label>立ち上がり（倍）<input type="range" id="attack" min="0.2" max="4" step="0.1" value="1"><span></span></label>
+    <label>余韻（倍）<input type="range" id="release" min="0.2" max="4" step="0.1" value="1"><span></span></label>
+    <label>山（dBFS）<input type="range" id="peak" min="-24" max="-3" step="0.5" value="-6"><span></span></label>
+    <div class="row">BGM の調に合わせる（※調のSEだけ）: <select id="tonic"></select><select id="scale"></select></div>
+    <details><summary>レシピ（JSON）</summary><pre id="json"></pre></details>
+  </main>
+</div>
+<script>/*BUNDLE*/</script>

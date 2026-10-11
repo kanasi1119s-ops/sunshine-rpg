@@ -1,4 +1,5 @@
 import type { ScheduledNote } from "./score";
+import { DRAWBAR, FM_BELL, FM_EPIANO, unisonDetunes } from "./synth-voices";
 
 /**
  * 楽器の音色をWeb Audioの部品（発振器・ノイズ・フィルター・歪み）から作る。音声ファイルは使わない。
@@ -652,6 +653,41 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       out.push(osc(ctx, "sawtooth", f, t, stop, lp, 0.5, pipe ? 0 : -6));
       out.push(osc(ctx, "sawtooth", f, t, stop, lp, 0.4, pipe ? 3 : 6));
       if (pipe) out.push(osc(ctx, "square", f * 0.5, t, stop, lp, 0.18));
+      break;
+    }
+    case "fmBell":
+    case "fmEpiano": {
+      const p = e.instrument === "fmBell" ? FM_BELL : FM_EPIANO;
+      const stop = t + p.decaySec + 0.1;
+      const car = ctx.createOscillator();
+      car.type = "sine";
+      car.frequency.value = f;
+      const mod = ctx.createOscillator();
+      mod.type = "sine";
+      mod.frequency.value = f * p.ratio;
+      const mg = ctx.createGain();
+      mg.gain.setValueAtTime(f * p.ratio * p.index0, t);
+      mg.gain.exponentialRampToValueAtTime(Math.max(0.001, f * p.ratio * Math.max(p.index1, 0.001)), t + p.indexSec);
+      mod.connect(mg);
+      mg.connect(car.frequency);
+      car.connect(pluckGain(ctx, dest, t, v, 0.003, p.decaySec));
+      car.start(t); car.stop(stop); mod.start(t); mod.stop(stop);
+      out.push(car, mod);
+      if (e.instrument === "fmEpiano") {
+        const tine = osc(ctx, "sine", f * FM_EPIANO.tineRatio, t, t + 0.2, pluckGain(ctx, dest, t, v * FM_EPIANO.tineIndex * 0.2, 0.001, FM_EPIANO.tineSec));
+        out.push(tine);
+      }
+      break;
+    }
+    case "drawbarOrgan": {
+      const g = sustainGain(ctx, dest, t, d, v * 0.5, 0.008, 0.05);
+      for (const h of DRAWBAR) out.push(osc(ctx, "sine", f * h.ratio, t, t + d + 0.1, g, h.level * 0.35));
+      break;
+    }
+    case "unisonSaw": {
+      const g = sustainGain(ctx, dest, t, d, v * 0.5, 0.01, 0.12);
+      const lp = filter(ctx, "lowpass", Math.min(9000, f * 8), g, 0.7);
+      for (const c of unisonDetunes(5, 18)) out.push(osc(ctx, "sawtooth", f, t, t + d + 0.2, lp, 0.3, c));
       break;
     }
     case "chime": {

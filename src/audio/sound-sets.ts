@@ -340,9 +340,14 @@ export const SCENE_SETS: Record<string, { sound: string; preset: string; label: 
  * 音づくりの型（sound-design-basics 提案 8）。パートの PartMix を、役割の名前で選ぶ。名前は音の特徴にしてある。
  * 使うとき: `{ ...track, ...PART_RECIPES["soft-pad"].mix }` のように、volume・reverb・bright などを当てる。
  */
-export const PART_RECIPES: Record<string, { label: string; instruments: Instrument[]; mix: PartMix }> = {
+export const PART_RECIPES: Record<string, { label: string; instruments: Instrument[]; mix: PartMix; /** パート側で指定する書き方の目安（sustain は AiPart.sustain、staccato は短く切る、register は音域）。 */ hint?: { sustain?: number; staccato?: boolean; register?: string; patch?: string } }> = {
   "soft-pad": { label: "やわらかい弦パッド（遅い立ち上がり・広い・凹む）", instruments: ["strings", "pad", "choir"], mix: { volume: 0.06, reverb: 0.5, bright: -0.25, chorus: 0.2, duck: 0.25, panWidth: 0.4 } },
   "pluck-arp": { label: "プラックのアルペジオ（明るく短い・左右に）", instruments: ["harp", "guitar", "keys", "piano"], mix: { volume: 0.07, reverb: 0.3, bright: 0, duck: 0, panWidth: 0.5 } },
+  "strings-ensemble": { label: "弦のアンサンブル（厚く広がる・ほかを凹ませる）", instruments: ["strings", "pad"], mix: { volume: 0.07, reverb: 0.3, chorus: 0.3, duck: 0.3, panWidth: 0.5 } },
+  "brass-swell": { label: "ブラスの区切り（少し暗く・短く切る）", instruments: ["brass"], mix: { volume: 0.08, reverb: 0.25, bright: -0.1, panWidth: 0.4 }, hint: { staccato: true } },
+  "organ-hold": { label: "オルガンの持続（和音をのばして支える）", instruments: ["drawbarOrgan", "pad"], mix: { volume: 0.05, reverb: 0.35, bright: -0.1, chorus: 0.15, panWidth: 0.3 }, hint: { sustain: 2 } },
+  "cinematic-drone": { label: "映画的な低いドローン（長く・深い残響・低音域）", instruments: ["pad", "strings", "unisonSaw"], mix: { volume: 0.05, reverb: 0.5, bright: -0.35, duck: 0.2, panWidth: 0.6 }, hint: { sustain: 3, register: "C1〜C3" } },
+  "chip-lead": { label: "チップ風のリード（残響なし・まっすぐ）", instruments: ["lead"], mix: { volume: 0.07, reverb: 0, bright: 0, panWidth: 0.2 }, hint: { patch: "squareLead" } },
   "bell-accent": { label: "ベル系の飾り（小さく・遠く・暗め）", instruments: ["bell", "chime"], mix: { volume: 0.04, reverb: 0.6, bright: -0.3, panWidth: 0.5 } },
 };
 

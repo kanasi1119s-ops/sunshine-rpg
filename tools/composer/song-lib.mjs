@@ -27,7 +27,8 @@ export async function openSongKit() {
 
   async function guide() {
     const { AI_SONG_GUIDE } = await load("/src/audio/ai-song.ts");
-    return AI_SONG_GUIDE;
+    const { AI_SONG_EXTRAS_GUIDE } = await load("/src/audio/ai-song-extras.ts");
+    return AI_SONG_GUIDE + AI_SONG_EXTRAS_GUIDE;
   }
 
   /** 曲（AIソング形式のオブジェクト）を確かめて、プロジェクト・MIDI（・WAV）を書き出す。 */
@@ -48,6 +49,8 @@ export async function openSongKit() {
       if (drums === "std") drums = g.drums;
       if (bass === "std") bass = g.bass;
     }
+    // 書き出しでは、楽器の音域・同時発音・息継ぎの点検を既定で行う（曲に instrumentCheck:false で止める）
+    if (songData && typeof songData === "object" && songData.instrumentCheck === undefined) songData = { ...songData, instrumentCheck: true };
     let { score, song, warnings } = aiSongToScore(songData);
     // サウンドセット: アンプ・音量・ミックス・ドラムの設定と、使う音源（ベース・ドラム・ギター）をまとめて当てはめる
     if (sound) {
@@ -179,7 +182,7 @@ export async function openSongKit() {
     return Object.entries(AMP_PRESETS).map(([id, p]) => ({ id, label: p.label, genre: p.genre }));
   }
 
-  return { guide, soundSets, mixTools, build, register, listGameSongs, ampPresets, close: () => server.close() };
+  return { load, guide, soundSets, mixTools, build, register, listGameSongs, ampPresets, close: () => server.close() };
 }
 
 async function loadPlaywright() {

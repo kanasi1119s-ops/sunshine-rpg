@@ -303,6 +303,23 @@ function fmLayer(ctx: BaseAudioContext, dest: AudioNode, o: { fc: number; ratio:
 9. **ビットクラッシュ／ウェーブシェーパーの小さなエフェクト**: `bitcrush(bits)` の階段カーブと `shaper(drive)` を `voices.ts` に足し、レトロ風の場面（チップ風 SE、タイトル画面）で選べるようにする。デフォルトは無し。
 10. **聞き比べページ**: 作曲ソフトの画面に、§5 の 58 種を一覧で鳴らす「SE ラボ」を足す（スライダーで周波数・長さ・ADSR を変えられ、JSON を書き出せる）。レシピ調整の道具として、1・2 の後に。
 
+### 実装状況（2026-10-11 第2ラウンド）
+
+| # | 提案 | 状態 | 内容 |
+|---|---|---|---|
+| 1 | SE ジェネレーター | **入れた** | `src/audio/synth-dsp.ts`（PolyBLEP の波形・ノイズ・双二次フィルター・FFT・WAV）、`sfx-synth.ts`（`renderSfx`・残響・山の正規化・`playSfx`）、`sfx-recipes.ts`（**58 種**）。純 JS なので Node・ブラウザで同じ音。ゲーム本体の `AudioEngine.playSfx(recipe)` から鳴らす。**既存の `se-library.ts`（録音版）は置き換えていない**（並べて聞き比べるため） |
+| 2 | 聞き比べコマンド | **入れた** | `node tools/composer/song.mjs sfx [<id>] [--wav] [--key 2:aeolian]`（山・RMS・長さ・立ち上がり・重心。id なしは全件の検査） |
+| 3 | SE の検査 `checkSe` | **入れた** | 山 −3dBFS 以下・長さ・立ち上がり 10ms・直流・UI の 1〜4kHz。長さの上限は ui 0.4・impact 0.8・magic 1.6・fanfare 4 に、**`notice` 1.0 秒を足した**（セーブ・購入・エラーなどの通知）。ゆっくりが正しい SE（詠唱・ライザー・勝利の盛り上げ）は `soft: true` で立ち上がりの検査を免除 |
+| 4 | 変化づけ | **入れた** | `varySe`・`makeVariants`（4 変種）・`SeThrottle`（間引き）・`RoundRobin`。種が同じなら同じ音 |
+| 5 | 調に合わせる | **入れた** | `tuneSe(recipe, tonic, scale)`（※調の層だけ、最大 ±2 半音）。`AudioEngine.setSfxKey` で BGM の調を渡す |
+| 6 | ダッキング | **入れた** | `duckBgmForSe`（通知 −2・警告 −4・ファンファーレ −8dB、アタック 10ms／戻り 約 0.5 秒）。`AudioEngine` に BGM と出力の間の `bgmDuck` を足し、`playSfx` が自動でかける |
+| 7 | 音源の追加 | 一部 | `fmBell`・`fmEpiano`・`drawbarOrgan`・`unisonSaw` を `Instrument` に追加（`synth-voices.ts` に数字、`voices.ts` に Web Audio の鳴らし方、`gm-map.ts` に GM 番号 14・4・16・81）。**pink／brown ノイズは SE 側（`synth-dsp.ts`）だけ**で、`voices.ts` の風・雨・雷は白色ノイズのまま（既存の音が変わるため） |
+| 8 | `PART_RECIPES` の拡充 | **入れた** | `strings-ensemble`・`brass-swell`・`organ-hold`・`cinematic-drone`・`chip-lead`。PartMix に入らないもの（sustain・スタッカート・音域・patch）は `hint` に書いた |
+| 9 | ビットクラッシュ／シェーパー | 一部 | 階段カーブ `bitcrushCurve(bits)` と `shaperCurve(drive)` を純関数で用意しテストした。**音源として選べるようにはしていない**（デフォルトは無し） |
+| 10 | SE ラボ | **入れた** | `node tools/composer/build.mjs` が `dist-composer/sfx-lab.html`（1 ファイル）も作る。58 種の一覧・鳴らす・高さ／長さ／立ち上がり／余韻／山のスライダー・調に合わせる・変種・WAV と JSON の書き出し・検査の表示 |
+
+**注意**: 数字（周波数・包絡）は本文の表の出発点のままで、**耳での調整はまだ**。音程の組は独自に選び、既存ゲームの効果音と同じ形にしていない。`drawbarOrgan`（GM16）・`unisonSaw`（GM81）は作曲ソフト（GeneralUser）には入っているが、ゲーム用の `game.sf3` にはまだ無い（作り直すときに `USED_GM_PROGRAMS` へ入れる）。
+
 ## 11. 参考URL（調べた先。順不同）
 **Web Audio API・実装**
 1. [MDN: exponentialRampToValueAtTime](https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/exponentialRampToValueAtTime)

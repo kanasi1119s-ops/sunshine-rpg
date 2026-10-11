@@ -155,11 +155,11 @@
 | 呂音階（ヨナ抜き長音階） | C Csus2 Cadd9 C6 Dsus2 Dsus4 Gsus2 Gsus4 Am Asus4 Am7 |
 | 律音階 | Csus2 Csus4 Dm Dsus4 Dm7 F Fsus2 Fadd9 F6 Gsus2 Gsus4 |
 | 民謡音階 | Cm Csus4 Cm7 Eb Ebsus2 Ebadd9 Eb6 Fsus2 Fsus4 Bbsus2 Bbsus4 |
-| 都節音階（陰旋法） | Csus4 Db Dbmaj7 Fm Fsus2 |
-| 平調子（ヨナ抜き短音階・雲井） | Cm Csus2 Gsus4 Ab Abmaj7 |
+| 都節音階（陰旋法） | Csus4 Db Dbmaj7 Fm Fsus2 Fmadd9 |
+| 平調子（ヨナ抜き短音階・雲井） | Cm Csus2 Cmadd9 Gsus4 Ab Abmaj7 |
 | 琉球音階 | C Csus4 Cmaj7 Em Fsus2 |
-| 岩戸 | Fsus4 Gb Gbmaj7 Bbm Bbsus2 |
-| 陰音階の変種（インセン） | Csus4 Fsus2 Fsus4 Gdim Bbm Bbsus2 Bbm6 |
+| 岩戸 | Fsus4 Gb Gbmaj7 Bbm Bbsus2 Bbmadd9 |
+| 陰音階の変種（インセン） | Csus4 Fsus2 Fsus4 Gdim Gm7b5 Bbm Bbsus2 Bbm6 Bbmadd9 |
 | 長調ペンタトニック | C Csus2 Cadd9 C6 Dsus2 Dsus4 Gsus2 Gsus4 Am Asus4 Am7 |
 | 短調ペンタトニック | Cm Csus4 Cm7 Eb Ebsus2 Ebadd9 Eb6 Fsus2 Fsus4 Bbsus2 Bbsus4 |
 | 全音音階 | Caug Daug Eaug Gbaug Abaug Bbaug |
@@ -924,3 +924,27 @@ Eb（♭2）の小節と、B（自然な6度）の音の2つが特徴。
 - S40 https://chromatone.center/theory/melody/drone/ （ドローンの種類）
 
 読めなかった／使えなかったもの: 日本語の音階解説の別ページ（ja.wikibooks）は取得失敗、ファンタジー音楽の解説2件（songtive・lunacy）は本文が取れず不使用、Wikipedia のハーモニックマイナーは取得失敗（別の解説で補った）。
+
+---
+
+## 10. 実装状況（2026-10-11 第2ラウンド）
+
+§8 の提案 10 個を**すべて入れた**。新しい書き方は書いたときだけ効く（既存の曲は変わらない）。テストは `scales.test.ts`（2-1〜2-3 の表と突き合わせ）・`scale-check.test.ts`（24 個の例が警告ゼロ）・`scale-detect.test.ts`・`ai-song-instruments.test.ts`。
+
+| # | 提案 | 状態 | 内容 |
+|---|---|---|---|
+| 1 | 音階の表をデータに | **入れた** | `src/audio/scales.ts` の `SCALES`（44 件＝42 種＋微分音のラスト／バヤーティ。微分音は `approx`）、`findScale`・`resolveScale("miyako@D")`・`scalePitchClasses`。フラットの綴り。`docs/sound/data/scales.json` に同じ内容を置き、テストで一致を見る |
+| 2 | 音階チェック | **入れた** | `src/audio/scale-check.ts` の `checkScaleUsage`（音階外 10% 超・小節頭の外れ音・特性音がない・1 小節に増 2 度が 3 回以上。ベンド音は免除。旋律でないパートは見ない）。置き場所は提案の `song-check.ts` ではなく**新規ファイル**（共有ファイルの衝突を避けるため） |
+| 3 | JSON の `scale` / `tonic` | **入れた** | `AiSong` に `scale`・`tonic`、`modulate` の区間ごとに調を切り替えて検査。型は `ai-song-extras.ts` |
+| 4 | 音階に補正 | **入れた** | `snapNote`・`snapNotesToScale`（`nearest`/`down`/`up`。拍・記号を保つ）。パートの `snap: true` でも使える |
+| 5 | 音階内の和音・自動和声づけ | **入れた** | `chordsInScale`・`harmonize`（`CHORD_QUALITIES`）。読めない和音名（`Ebmaj7#5` など）は `readable:false` |
+| 6 | score-check の音階推定 | **入れた** | `tools/audio-check/scale-detect.mjs`（適合率と再現率の F 値、1.5% 以上を使った音とする）。`score-check.mjs` の 6b で上位 3 つを表示し、最良が 90% 未満なら「音階不明」 |
+| 7 | 1/4 音ベンド `^.` | **入れた** | `^.`・`/.`・`\.` ＝ 0.5 半音。MIDI は連続値のピッチベンド。Web Audio 側の再生は**未確認**（録音音源が中心のため） |
+| 8 | リズムの型 | **入れた** | `src/audio/world-rhythms.ts`（son32・rumba32・tresillo・bembe・soleaCompas・taikoJi／taikoOmote。taiko2 は 2 層に展開）。パートの `pattern`・`patternNote` |
+| 9 | 場面→推奨音階 | **入れた** | `src/audio/scene-scales.ts`（15 場面）。推奨外なら注意（強制しない）。提案の `scene.ts` を直接触らず、新規ファイルにした |
+| 10 | ドローン・デチューン | **入れた** | パートの `drone: "root" \| "root5"`（楽器の safe 音域の下端に合わせる）と `detune`（セント） |
+
+**音楽知識メモの誤りを直した**: 「中東風＝C・Db・E・F・G・Ab・B」「日本の陰旋法＝C・D・Eb・G・Ab」の記述は、実際には `music-knowledge.md` ではなく **`src/audio/ai-song.ts` のガイド文（「民族音楽にするには」）**にあった。中東風（ヒジャーズ）＝C・Db・E・F・G・Ab・**Bb**、日本の都節（陰旋法）＝C・Db・F・G・Ab、C・D・Eb・G・Ab は平調子、と直した（`music-knowledge.md` の 15 章の表は、そのままで合っている）。
+
+**表の修正**: 2-3 の表に Fmadd9・Cmadd9・Bbmadd9・Gm7b5 を足した（列挙と食い違っていた）。
+

@@ -13,6 +13,12 @@ import { applyGroupingToDrums, beatsOk, BEATS_CHOICES, MAX_BEATS, MIN_BEATS, par
 import { applyHihatSections, applyTrapRolls } from "./drum-extras";
 import { applyGrooveFeel, resolveTempoMap, RHYTHM_GUIDE_ADDENDUM, scoreRhythmFields, trackRhythmFields, type RhythmPartFields, type RhythmSongFields } from "./rhythm-options";
 import { applyScene, ENERGY_CURVES, parseEnergy, SCENE_NAMES, sceneSections } from "./scene";
+import { AI_PART_EXTRA_SCHEMA, AI_SONG_EXTRA_SCHEMA, type AiPartExtras, type AiSongExtras } from "./ai-song-extras";
+import { autoArticulation, accentTopNotes } from "./articulation";
+import { applyBreath, BREATH_INSTRUMENTS, checkInstrumentUsage } from "./instrument-range";
+import { chordBarsOf, expandParts, partTrackExtras, readSongScale, shiftEvents, type ExpandCtx } from "./part-expand";
+import { checkScaleUsage } from "./scale-check";
+import { sceneScaleWarning } from "./scene-scales";
 import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, type Track } from "./score";
 
 /**
@@ -30,7 +36,7 @@ export const SYNTH_PATCHES: Record<string, number> = {
 };
 
 type PartSectionSpecJson = Partial<Record<SectionKind, number | boolean | { gain?: number; octave?: number }>>;
-export interface AiPart extends RhythmPartFields {
+export interface AiPart extends RhythmPartFields, AiPartExtras {
   /** 楽器（AI_INSTRUMENTS のキー）。 */
   instrument: Instrument;
   /** パートの名前（メロディ・ハモリ・ベースなど。表示用）。 */
@@ -73,7 +79,7 @@ export interface AiPart extends RhythmPartFields {
   notes: string;
 }
 
-export interface AiSong extends RhythmSongFields {
+export interface AiSong extends RhythmSongFields, AiSongExtras {
   title: string;
   /** どんな曲か（1〜2文。日本語）。 */
   description: string;
@@ -164,6 +170,7 @@ export const AI_INSTRUMENTS: Record<string, string> = {
   guitar: "クリーンギター（E2〜E5）", crunch: "クランチギター（E2〜E5）", distGuitar: "ディストーションギター・刻み（E2〜E4）", leadGuitar: "リードギター・ソロ（E3〜E6）", echoGuitar: "エコーギター（E3〜E6）",
   piano: "ピアノ（A0〜C8）", keys: "エレピ（C2〜C6）", harpsichord: "チェンバロ（C2〜C6）", strings: "弦楽（C2〜C7）", pad: "パッド（C2〜C6）", choir: "合唱（C3〜C6）", brass: "ブラス（E2〜C6）", lead: "シンセリード（C3〜C7）", bell: "鐘（C4〜C7）",
   sitar: "シタール（C3〜C6。インド風の撥弦。ドローンと旋律に）", koto: "琴（C3〜C6。和風の撥弦）", shamisen: "三味線（C3〜C6。歯切れのよい和の撥弦）", banjo: "バンジョー（C3〜C6）", harp: "ハープ（C2〜C7。分散和音に）", kalimba: "カリンバ（C4〜C7。やさしい指ピアノ）",
+  fmBell: "FMのベル（C3〜C7。金属的で長く響く非整数倍音。鐘・きらめき・場面の合図に）", fmEpiano: "FMのエレピ（C2〜C6。すっきり丸い電気ピアノ。コード・アルペジオに）", drawbarOrgan: "ドローバーオルガン（C2〜C6。持続する厚い音。賛美歌・教会・ロック）", unisonSaw: "ユニゾンのノコギリ波（C2〜C6。5本重ねのぶ厚いシンセ。サビ・コードの厚み・リードに）",
   panflute: "パンフルート（C4〜C7。息の音の入った民族風の笛）", shakuhachi: "尺八（C4〜C6。和風の息の笛）", ocarina: "オカリナ（C4〜C7。素朴な笛）", fiddle: "フィドル（G3〜E6。民謡風の擦弦）", bagpipe: "バグパイプ（A3〜A5。ドローン向きのリード）",
 };
 const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom"]);
@@ -230,6 +237,7 @@ export const AI_SONG_SCHEMA = {
     outroType: { type: "string" },
     bossPhases: { type: "array", items: { type: "object" } },
     motifs: { type: "array", items: { type: "string" } },
+    ...AI_SONG_EXTRA_SCHEMA,
     parts: {
       type: "array",
       items: {
@@ -261,6 +269,7 @@ export const AI_SONG_SCHEMA = {
           motif: { anyOf: [{ type: "object" }, { type: "array", items: { type: "object" } }] },
           keepBreak: { type: "boolean" },
           amp: { type: "string", enum: ["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean"] },
+          ...AI_PART_EXTRA_SCHEMA,
           notes: { type: "string" },
         },
       },
@@ -383,7 +392,7 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
   - ブルース: 12小節（I I I I / IV IV I I / V IV I V）・7th・swing 0.5・ブルーノート。ワルツ: beats 3・1拍目が強い。チップチューン: 少ない音色・速いアルペジオ・短いフレーズのくり返し。
   - ベース・ドラムの音源は、書き出しの --bass と --drums に rock / metal / jazz / jpop を選べる（ジャンルに合わせる）。
 - 使わない音は docs/sound/banned-sounds.md を見る（人間がダメと決めたギターの作り方がある）。
-- 民族音楽にするには: 国・地域の「音階」で notes を書く（例: 琉球風＝C・E・F・G・B、日本の陰旋法＝C・D・Eb・G・Ab、インド風＝C・Db・E・F・G・Ab・B で、ドローンの低い持続音を1パート足す、中東風＝C・Db・E・F・G・Ab・B の増2度、アイルランド風＝Dドリアン、ケルト・北欧風＝ペンタトニック）。和音は少なく、ドローン（根音と5度の長い音）にすると雰囲気が出る。楽器は sitar・koto・shamisen・kalimba・panflute・shakuhachi・ocarina・fiddle・bagpipe・harp・banjo。打楽器は tom と hihat を、小さな音量で不規則なリズムに。**実在する民謡・曲のメロディは使わない**（CLAUDE.md 1-1）。
+- 民族音楽にするには: 国・地域の「音階」で notes を書く（例: 琉球風＝C・E・F・G・B、日本の都節（陰旋法）＝C・Db・F・G・Ab（なお C・D・Eb・G・Ab は平調子で別の音階）、インド風（バイラヴ）＝C・Db・E・F・G・Ab・B で、ドローンの低い持続音を1パート足す、中東風（ヒジャーズ）＝C・Db・E・F・G・Ab・Bb で Db–E の増2度、アイルランド風＝Dドリアン、ケルト・北欧風＝ペンタトニック）。和音は少なく、ドローン（根音と5度の長い音）にすると雰囲気が出る。楽器は sitar・koto・shamisen・kalimba・panflute・shakuhachi・ocarina・fiddle・bagpipe・harp・banjo。打楽器は tom と hihat を、小さな音量で不規則なリズムに。**実在する民謡・曲のメロディは使わない**（CLAUDE.md 1-1）。
 - ダンスミュージックにするには: bpm 120〜132、feel は dance（自動伴奏で4つ打ちキック・オフビートのハイハット・動くベースが付く）。自分で書くなら、kick は毎拍 "x:1"、hihat は裏拍 "R:0.5 x:0.5"、snare（クラップ）は2・4拍、ベースは sub808 か bass で8分音符の刻み（根音とオクターブ）、リードは lead、アルペジオは keys や bell。8小節ごとに、ドラムを抜く「ブレイク」を作り、直前に snare の16分の連打（0.25拍）でせり上げ、次の小節でキックを全部戻す。音量は kick 0.2・ベース 0.17・リード 0.1 前後。
 - ヒップホップにするには: bpm 78〜95（ハーフタイムなら140〜160）、kick は1拍目と「3拍目の手前（2.5拍）」などで間を作り、snare は2・4拍、hihat は8分か16分で、ところどころ 0.25 拍の連打（トラップ風）。ベースは sub808 の長い音（C1〜C2）を、キックに合わせて置く。メロディは keys・piano・bell・pad の短い反復（2小節のループ）で、コードは 7th を使うと雰囲気が出る。サンプリングは使わず、音は自分で書く。
 - ジャンルは自由に選んでよい（レトロな音に限らない）: ジャズ（swing・7thコード・ウォーキングベース・amp: jazz）、オーケストラ（strings・brass・harp・choir・tom、amp は auto）、アンビエント（pad・choir・bell・wind を長い音で。ドラムなし）、フォーク・カントリー（guitar・banjo・fiddle）、ボサノバ（guitar・ゆるいハイハット）、R&B・ソウル（keys・slap・amp: funk）、EDM・ハウス・トランス（上のダンス）、ロック・パンク・メタル（amp: hardrock / punk / loudmetal / loudrock）。曲の場面と合うジャンルを先に決めてから、テンポ・音階・楽器・アンプをそろえる。
@@ -404,6 +413,13 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
 - layers の peel: true／数で、層を外から順に抜く。sections の add／gain で、そのセクションだけ層を足す・音量を変える。` + RHYTHM_GUIDE_ADDENDUM;
 
 const DUR_RULE = /^\d+(\.\d+)?$/;
+
+/** 奏法の記号の深さ（半音）。記号1つ＝1半音、記号のあとに「.」が付くと 0.5 半音。最大 4。 */
+function semis(marks: string, ch: string): number {
+  let v = 0;
+  for (let i = 0; i < marks.length; i++) if (marks[i] === ch) v += marks[i + 1] === "." ? 0.5 : 1;
+  return Math.min(4, v);
+}
 
 /** 「音名:拍」の並びを、音の列にする。まちがいは errors に足す。 */
 export function parseNotes(text: string, drum: boolean, errors: string[], where: string): NoteEvent[] {
@@ -429,7 +445,8 @@ export function parseNotes(text: string, drum: boolean, errors: string[], where:
     }
     const [name, rawDur = ""] = token.split(":");
     // 長さのあとに付けられる奏法の記号: ! アクセント（強く）, 「,」 弱く, ' スタッカート（短く）, _ レガート（次の音につなげる）
-    const m = /^(\d+(?:\.\d+)?)([!,'_~^/\\*]*)$/.exec(rawDur);
+    // ^. / /. \. は「半分」（1/4 音。中東・インドの微分音の近似に）。^. ＝ベンド 0.5 半音
+    const m = /^(\d+(?:\.\d+)?)((?:[!,'_~*]|[\^/\\]\.?)*)$/.exec(rawDur);
     const dur = m ? m[1] : rawDur;
     const marks = m ? m[2] : "";
     const art: Partial<NoteEvent> = {
@@ -438,9 +455,9 @@ export function parseNotes(text: string, drum: boolean, errors: string[], where:
       // 音程と揺れの記号: ~ ビブラート（~~ で深く）、^ ベンドアップ（1つ＝半音、2つ＝全音）、/ しゃくり（下から入る）、\\ フォール（終わりで落とす）
       ...(marks.includes("*") ? { open: true } : {}),
       ...(marks.includes("~") ? { vibrato: (marks.match(/~/g) ?? []).length >= 2 ? 1 : 0.7 } : {}),
-      ...(marks.includes("^") ? { bend: Math.min(4, (marks.match(/\^/g) ?? []).length) } : {}),
-      ...(marks.includes("/") ? { scoop: Math.min(4, (marks.match(/\//g) ?? []).length) } : {}),
-      ...(marks.includes("\\") ? { fall: Math.min(4, (marks.match(/\\/g) ?? []).length) } : {}),
+      ...(marks.includes("^") ? { bend: semis(marks, "^") } : {}),
+      ...(marks.includes("/") ? { scoop: semis(marks, "/") } : {}),
+      ...(marks.includes("\\") ? { fall: semis(marks, "\\") } : {}),
     };
     const beats = Number(dur);
     if (!dur || !DUR_RULE.test(dur) || !(beats > 0) || beats > 64) {
@@ -613,16 +630,31 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   if (modulation) accompaniment = accompaniment.map((t) => transposeTrack(t, modulation.semitones, modulation.atBeat));
   const mutes = sectionList ? muteRanges(sectionList, beatsPerBar) : [];
 
+  // パートの展開（ストローク・エコー・自動ダブル・ドローン・リズムの型・音階への補正）。増えたパートは 8 パートの数に入れない
+  const songScale = readSongScale(song.scale, song.tonic, warnings);
+  const chordBars = chordBarsOf(song.chords, song.barsPerChord === 2 ? 2 : 1, repeats);
+  const expandCtx: ExpandCtx = { bpm, beatsPerBar, totalBeats: total, chordBars, tonic: songScale ? songScale.tonic : song.tonic ? readSongScale("ionian", song.tonic, warnings)?.tonic ?? null : null, scale: songScale };
+  const partList = Array.isArray(song.parts) ? expandParts(song.parts, expandCtx, warnings, DRUMS) : song.parts;
   const parts: Track[] = [];
   const explicitPush = new Set<Track>();
-  song.parts.forEach((p, i) => {
+  const handRoles: string[] = [];
+  const articulationFlags: boolean[] = [];
+  const modulatedFlags: boolean[] = [];
+  partList.forEach((p, i) => {
     const where = `parts[${i}]（${p?.role ?? p?.instrument ?? "?"}）`;
     if (!p || !(p.instrument in AI_INSTRUMENTS)) {
       errors.push(`${where}: 楽器が一覧にありません（${p?.instrument}）`);
       return;
     }
     const drum = DRUMS.has(p.instrument);
-    const events = parseNotes(String(p.notes ?? ""), drum, errors, where);
+    let events = parseNotes(String(p.notes ?? ""), drum, errors, where);
+    // 楽器らしい奏法の自動付与（autoArticulation）と、息継ぎ（breath）
+    const wantArt = !drum && (p.autoArticulation ?? song.autoArticulation === true);
+    if (wantArt) events = autoArticulation(events, p.instrument, String(p.role ?? ""), `${song.title}|${i}`);
+    if (p.breath && !drum) {
+      if (BREATH_INSTRUMENTS.has(p.instrument)) events = applyBreath(events, bpm, typeof p.breath === "number" ? Math.max(2, p.breath) : 6);
+      else warnings.push(`${where}: breath は息の楽器（${[...BREATH_INSTRUMENTS].join("・")}）のパートに書いてください`);
+    }
     const length = events.reduce((s, e) => s + e.durationBeats, 0);
     if (length > total + 1e-6) warnings.push(`${where}: 曲の長さ（${total}拍）より長いので、${length}拍のうち後ろを切りました`);
     if (p.amp && !AI_AMPS.has(p.amp)) warnings.push(`${where}: アンプ「${p.amp}」は使えないので、おまかせ（auto）にしました`);
@@ -650,16 +682,33 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
       ...(!drum && Number.isFinite(Number(p.chorus)) && p.chorus !== undefined ? { chorus: Math.max(0, Math.min(1, Number(p.chorus))) } : {}),
       ...(!drum && Number(p.bright) ? { bright: Math.max(-1, Math.min(0.5, Number(p.bright))) } : {}),
       ...(!drum && Number(p.duck) > 0 ? { duck: Math.min(0.95, Number(p.duck)) } : {}),
-      notes: arranged(applySustain(drum ? fitToLength(events, total) : applyPhrase(fitToLength(events, total), Number(p.phrase)), drum ? 1 : Number(p.sustain))),
+      ...(!drum ? partTrackExtras(p, chordBars, beatsPerBar) : {}),
+      notes: arranged(applySustain(drum ? fitToLength(events, total) : applyPhrase(shiftEvents(fitToLength(events, total), Number(p.shift)), Number(p.phrase)), drum ? 1 : Number(p.sustain))),
     };
     if (rollOpts && p.instrument === "hihat") track.notes = arranged(applyTrapRolls([{ ...track, notes: applySustain(fitToLength(events, total), 1) }], beatsPerBar, rollOpts)[0].notes);
+    handRoles.push(String(p.role ?? p.instrument));
+    articulationFlags.push(wantArt);
+    modulatedFlags.push(!!modulation && p.modulate !== false);
     const placed = modulation && p.modulate !== false ? transposeTrack(track, modulation.semitones, modulation.atBeat) : track;
     if (p.push !== undefined || p.pushMs !== undefined) explicitPush.add(placed);
     parts.push(placed);
   });
   if (errors.length) throw new Error(errors.join("\n"));
   if (parts.length === 0 && accompaniment.length === 0) throw new Error("パートがありません");
-  const all = applyGrooveFeel([...accompaniment, ...parts], song, explicitPush, warnings);
+  // 奏法（ピアノ・ハープの最高音）と、楽器・音階の点検（手書きのパートだけ。自動の伴奏は見ない）
+  const handParts = accentTopNotes(parts, articulationFlags);
+  const named = handParts.map((t, i) => ({ ...t, role: handRoles[i] }));
+  if (song.instrumentCheck === true) warnings.push(...checkInstrumentUsage(named, bpm, beatsPerBar));
+  if (songScale) {
+    const mod = modulation ? { semitones: modulation.semitones, atBeat: modulation.atBeat } : null;
+    for (const group of [true, false]) {
+      const list = named.filter((_, i) => modulatedFlags[i] === group);
+      if (list.length) warnings.push(...checkScaleUsage(list, songScale.scale, songScale.tonic, { beatsPerBar, modulate: group ? mod : null }));
+    }
+    const sceneWarning = song.scene ? sceneScaleWarning(String(song.scene), songScale.scale) : null;
+    if (sceneWarning) warnings.push(sceneWarning);
+  }
+  const all = applyGrooveFeel([...accompaniment, ...handParts], song, explicitPush, warnings);
   const tracks = song.dynamics === "natural" ? applyNaturalDynamics(all, total, Number(song.beats)) : song.dynamics === true ? applyArc(all, total, Number(song.beats)) : all;
   // ジャンルの推奨 drumMix（drumGenre）に、曲に書かれた drumMix を重ねる（書かれた太鼓が優先）
   const own = drumMixOf(song.drumMix);
