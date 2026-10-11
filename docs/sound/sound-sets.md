@@ -17,3 +17,8 @@
 ## できていないこと
 - 楽器ごとに分けた分析（音の分離）は、このクラウド環境ではできない（AIの分離モデルが入らず、取得も許可されていない）。あなたのパソコンで動かす形が必要。
 - 高域（presence・air）を録音並みに出すには、アンプ（`punk` は 6.5kHz から上を落とす）とドラムの `level` 上限（1.05）の見直しが要る。
+
+## 追加のセット（2026-10-11、ミックスのパターン）
+
+`docs/sound/mix-patterns.md` の M17〜M48 から、`rock-4`・`pop-lead`・`jpop-bright`・`ballad-piano-strings`・`jazz-trio`・`funk-bass`・`house-duck`・`ambient-wide`・`orchestra-depth`・`game-battle`・`game-boss`・`game-town`・`game-dungeon` を足した。`master` に `preset`（`--master-preset` と同じ）・`space`・`spaceWet` を持てる。場面から選ぶ表は `SCENE_SETS`。`node tools/composer/song.mjs sounds` で一覧。詳しくは `mix-patterns.md` §10。
+

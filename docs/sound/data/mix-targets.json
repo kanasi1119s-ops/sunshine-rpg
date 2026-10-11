@@ -1,0 +1,15 @@
+{
+  "memo": "帯域診断と1/3オクターブ曲線の家族別の目標。数字だけ（音は含まない）。出どころは docs/sound/mix-patterns.md §3.0（参考37曲の平均 低 -3.3／中低 -5.9／中 -11.5／張り -22.9 と、記事の傾向から家族ごとにずらした推定）。analyze.py の帯域名と対応: bass=60-250Hz・lowmid=250-1kHz・mid=1-4kHz・presence=4-8kHz。tilt_dB_oct は1/3オクターブの帯域量の傾き（1kHz=0、1オクターブごと）。どれも出発点で、最後は耳で決める。",
+  "tolerance_dB": { "bass": 2.5, "lowmid": 2.5, "mid": 2.5, "presence": 4 },
+  "families": {
+    "rock":        { "label": "ロック／ポップ／アニソン",        "bass": -4,   "lowmid": -6,   "mid": -8.5,  "presence": -17, "tilt_dB_oct": -1.5 },
+    "punk":        { "label": "パンク／メタル（ギターの壁）",    "bass": -5.5, "lowmid": -5,   "mid": -6.5,  "presence": -15, "tilt_dB_oct": -1.0 },
+    "edm":         { "label": "EDM／ベースミュージック",         "bass": -2,   "lowmid": -8,   "mid": -12,   "presence": -20, "tilt_dB_oct": -2.0 },
+    "hiphop":      { "label": "ヒップホップ／R&B",               "bass": -2.5, "lowmid": -7,   "mid": -11,   "presence": -22, "tilt_dB_oct": -2.0 },
+    "jazz":        { "label": "ジャズ／アコースティック",        "bass": -4,   "lowmid": -5.5, "mid": -9,    "presence": -20, "tilt_dB_oct": -1.5 },
+    "lofi":        { "label": "ローファイ／バラード",            "bass": -3.5, "lowmid": -5,   "mid": -13,   "presence": -28, "tilt_dB_oct": -2.5 },
+    "ambient":     { "label": "アンビエント／映画／オーケストラ", "bass": -5,   "lowmid": -4.5, "mid": -9,    "presence": -20, "tilt_dB_oct": -1.5 },
+    "game-battle": { "label": "ゲーム戦闘／ボス",                "bass": -4,   "lowmid": -6,   "mid": -8,    "presence": -16, "tilt_dB_oct": -1.25 }
+  },
+  "aliases": { "pop": "rock", "rock-clean": "rock", "metal": "punk", "orch": "ambient", "game-field": "ambient", "game-dungeon": "ambient", "game-boss": "game-battle", "game-town": "ambient", "wafu": "jazz", "solo": "jazz", "retro": "rock" }
+}

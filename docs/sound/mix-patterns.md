@@ -636,3 +636,37 @@
 54. https://www.loststoriesacademy.com/blogs-and-tutorials/what-is-gain-staging-and-why-it-matters-in-mixing
 
 うち側の根拠（本書で参照した既存のファイル・コード）: `src/audio/sound-sets.ts`（`PartMix`・`applySoundSet`・音量の目盛り）、`src/audio/score.ts`（`drumMix`）、`tools/composer/song-lib.mjs`（`--master`/`--widen`/`--space`/`--space-wet` の仕組み）、`tools/composer/space-ir.mjs`（`SPACES`: room/hall/plate）、`tools/audio-check/analyze.py`・`third-octave.py`、`docs/sound/mixing-guide.md`・`punk-guide.md`・`layering-guide.md`・`sound-design-basics.md`・`sound-sets.md`。
+
+## 10. 実装状況（2026-10-11）
+
+§7 の提案 12 個のうち、書き出し・サウンドセット・診断に関わるものを実装した。コードは `src/audio/sound-sets.ts`・`src/audio/mix-tools.ts`、診断は `tools/audio-check/`、書き出しは `tools/composer/`。テスト: `npx vitest run src/audio/sound-sets src/audio/mix-tools`（26 件）と `node --test tools/composer/*.test.mjs`。
+
+| # | 提案 | 状態 | 内容・測った数字 |
+|---|---|---|---|
+| 1 | ミックスの型をサウンドセットに | **入れた（13 個）** | 提案の 12 個（rock-4・pop-lead・jpop-bright・ballad-piano-strings・jazz-trio・funk-bass・house-duck・ambient-wide・orchestra-depth・game-battle・game-town・game-dungeon）＋ game-boss。数字は各 M の値。`punk-run`・`clear-guitar-rock` は変えていない（テストで固定）。**M の番号で入れたもの**: M17・M23・M24・M26・M27・M29・M33・M38・M39・M45・M46・M47・M48。ベース／キック／808 は中央のまま（M27 の「ベースをわずかに右」は、低域モノ化・診断と食い違うので中央にした） |
+| 2 | `master` に space・spaceWet・preset | **入れた** | `SoundSet.master = {lufs, widen?, preset?, space?, spaceWet?}`。`build` が読み、`--master-preset`・`--space`・`--space-wet`・`--master`・`--widen` を書けばそちらが優先 |
+| 3 | 帯域診断の家族別 JSON | **入れた** | `docs/sound/data/mix-targets.json`（§3.0 の 8 家族＋別名。数字だけ）。`analyze.py --bands 結果.json --family rock` |
+| 4 | 1/3 オクターブ目標の自動生成 | **入れた** | `third-octave.py 曲.wav --tilt -1.5` または `--family rock`（1kHz 基準の傾き × log2(f/1kHz)）。`match-eq.py` も同じ式 |
+| 5 | 役割から初期値（ミックス下書き） | 一部 | `ROLE_DEFAULTS`／`suggestPartDefaults(role, side)`（旋律 .1／低音 .09／和音 .06／飾り .035／空気 .02）。`suggestMix(score, patternId)` は作らず、型を当てるのは `applySoundSet`（セット）に任せた |
+| 6 | ミックスの検査 | **入れた**（`score-check.mjs` には足さず build の警告へ） | `checkMixRoles(score)`: 合計 volume > 0.9／kick・bass・sub808 が中央でない／低音パートの reverb > .1／低域パートが 4 つ以上／違う楽器の主役が同じ音量／同じ側に 3 パート以上。`song.mjs build` の注意に出る。楽譜から音域・重心を出す `analyze.py --roles 曲.sunshine-song.json`（200〜500Hz に持続音が複数＝体の席の重なり、ベースの重心がキックに近い、1〜4kHz の席、低域の中央・残響） |
+| 7 | `--widen` を高域だけに | **入れた** | 書き出しの M/S ワイド（サイド HPF）＋低域モノ化で実現（`mastering-guide.md` §11）。`widen` を 2 まで上げても低音のサイドは増えない |
+| 8 | ゲームの BGM バスの効果音ダッキング | **入れなかった** | ゲーム内の再生（`createBgmBus`）側の作業で担当外。代わりに書き出し側の `applyGameDuck(score, db)`（1〜4kHz のパートを下げ、伴奏の bright を -0.1）を用意（sound-design-basics 提案 7） |
+| 9 | ループ用の尾の重ね書き出し | **入れた** | `--loop-tail`、継ぎ目の検査つき |
+| 10 | 参照曲の A/B 自動レポート | **入れなかった** | `analyze.py --compare` はある。LUFS をそろえてサビ同士を自動で選ぶ処理は、参照曲の置き方を決めてから |
+| 11 | ゴースト層の自動生成 | **入れた（関数のみ）** | `addGhostLayer(score, instrument)`: volume ×.25・reverb +.25・bright -.25 の複製。作曲ソフトのボタンは未 |
+| 12 | 場面のプリセット | **入れた（表のみ）** | `SCENE_SETS`（field・town・battle・boss・dungeon・title → セットと書き出しプリセット）。画面の選択欄は未 |
+
+追加: サイドチェイン風 duck の推奨値 `recommendDuck(role, genre, bpm)`（役割別の基本値 × ジャンルの掛け率、EDM 以外は .4 まで、戻りは約 0.45 拍 `duckRecoverMs(bpm)`、速い／遅いテンポの注意つき）、BPM 同期のディレイ秒数 `syncDelaySeconds(bpm)`（`song.mjs delays 128` で表示）。
+
+### 書き出して測った数字（見本曲に型と仕上げを当てた）
+| 曲 | 当てたもの | I | TP | LRA | PLR | PSR | 相関 | crest | width |
+|---|---|---|---|---|---|---|---|---|---|
+| loud-rock-demo | `--master-preset game-battle --space room --space-wet 0.1 --loop-tail` | -14.7 | -1.5 | 7.8 | 13.2 | 10.4 | 0.95 | 15.4 | 0.15 |
+| delicate-demo | `--sound ballad-piano-strings`（preset solo・hall .2・-15） | -15.0 | -2.3 | 2.3 | 12.7 | 11.5 | 0.37 | 14.5 | 0.68 |
+| delicate-demo | `--sound jazz-trio`（preset jazz・room .15・-16） | -16.0 | -1.7 | 2.1 | 14.3 | 13.3 | 0.49 | 15.2 | 0.59 |
+| hiphop-demo | `--master-preset hiphop --match-eq hiphop --lowmono 120 --tp -1.2 --clip 1` | -10.1 | -1.2 | 1.8 | 8.9 | 7.9 | 0.92 | 12.0 | 0.21 |
+
+（見本曲は音の良し悪しを聴いて作ったものではないので、数字は「新しい仕上げが目標の大きさと天井に収まり、つぶしすぎない」ことの確認。曲の頭と終わりが違う見本曲では、継ぎ目の検査が「要直し」になる＝検査が働いている。）
+
+### 入れなかった M のパターン
+M01・M02・M04〜M16 は「型」というより手順・書き出しの引数の組み合わせなので、セットの `master`（M04〜M06 の space と wet、M10・M11 の widen）と、検査（M09・M13・M14）、関数（M03 ゴースト層、M08 の duck、M52 の席空け）に分けて入れた。M18〜M22・M25・M28・M30〜M32・M34〜M37・M40〜M43・M49〜M51・M54〜M56 は、**同じ書式で足せる**がセットとしては入れていない（数が多く、聴いて選ぶ段階に入っていないため）。M53 は `--loop-tail`、M56 のドラムのバランスは各セットの `drumMix` に入っている。
