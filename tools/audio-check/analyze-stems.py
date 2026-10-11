@@ -45,6 +45,13 @@ def measure(y, sr, total_rms):
     freq = np.fft.rfftfreq(len(mono), 1 / sr)
     tot = spec.sum() + 1e-12
     out["band_dB"] = {n: round(10 * np.log10(spec[(freq >= lo) & (freq < hi)].sum() / tot + 1e-12), 1) for n, lo, hi in BANDS}
+    # 1/3オクターブごとの量（その楽器の中での割合 dB）。音色を細かく写し取るための数字
+    centers = [100 * 2 ** (i / 3) for i in range(21)]  # 100Hz〜約12.7kHz
+    th = []
+    for c in centers:
+        m = (freq >= c / 2 ** (1 / 6)) & (freq < c * 2 ** (1 / 6))
+        th.append(round(float(10 * np.log10(spec[m].sum() / tot + 1e-12)), 1))
+    out["third_octave_dB"] = dict(zip([str(round(c)) for c in centers], th))
     out["centroid_Hz"] = round(float((freq * spec).sum() / tot))
     peak = float(np.max(np.abs(mono)))
     out["crest_dB"] = round(db(peak / rms), 1)
