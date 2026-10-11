@@ -4,6 +4,10 @@ import { DRUM_GENRES, drumMixFor, swingForGenre } from "./drum-genres";
 import { prepareSong } from "./song-plan";
 import { applyNaturalDynamics } from "./dynamics";
 import { applyMutesToNotes, applyPartSections, applySections, autoSections, checkArrangement, fitSections, muteRanges, parseLayers, parsePartSections, parseSections, resolveModulate, SECTION_KINDS, TRANSITIONS, transposeTrack, type ArrangeOptions, type CrashAt, type Modulate, type PartSectionSpec, type Section, type SectionKind, type Transition } from "./arrangement";
+import { parseTripletGrid } from "./triplet-grid";
+import { applyGroupingToDrums, beatsOk, BEATS_CHOICES, MAX_BEATS, MIN_BEATS, parseGrouping } from "./meter";
+import { applyHihatSections, applyTrapRolls } from "./drum-extras";
+import { applyGrooveFeel, resolveTempoMap, RHYTHM_GUIDE_ADDENDUM, scoreRhythmFields, trackRhythmFields, type RhythmPartFields, type RhythmSongFields } from "./rhythm-options";
 import { applyScene, parseEnergy, SCENE_NAMES, sceneSections } from "./scene";
 import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, type Track } from "./score";
 
@@ -22,7 +26,7 @@ export const SYNTH_PATCHES: Record<string, number> = {
 };
 
 type PartSectionSpecJson = Partial<Record<SectionKind, number | boolean | { gain?: number; octave?: number }>>;
-export interface AiPart {
+export interface AiPart extends RhythmPartFields {
   /** 楽器（AI_INSTRUMENTS のキー）。 */
   instrument: Instrument;
   /** パートの名前（メロディ・ハモリ・ベースなど。表示用）。 */
@@ -63,13 +67,15 @@ export interface AiPart {
   notes: string;
 }
 
-export interface AiSong {
+export interface AiSong extends RhythmSongFields {
   title: string;
   /** どんな曲か（1〜2文。日本語）。 */
   description: string;
   bpm: number;
-  /** 1小節の拍の数。 */
-  beats: 3 | 4 | 6 | 7;
+  /** 1小節の拍の数（2〜12の整数。4分音符を1拍と数える。5・9・11なども使える）。 */
+  beats: number;
+  /** 小節の中のまとまり（拍の数の並び。合計が beats。例 7拍子は [2,2,3]）か "auto"。自動伴奏のドラムが、まとまりの頭にキック・スネア・ハットの強拍を置く。 */
+  grouping?: number[] | "auto";
   /** コード進行（例 "Am F C G"）。伴奏とくり返しの長さの基準になる。 */
   chords: string;
   barsPerChord: 1 | 2;
@@ -151,7 +157,19 @@ export const AI_SONG_SCHEMA = {
     title: { type: "string" },
     description: { type: "string" },
     bpm: { type: "integer" },
-    beats: { type: "integer", enum: [3, 4, 6, 7] },
+    beats: { type: "integer", enum: [...BEATS_CHOICES] },
+    grouping: { anyOf: [{ type: "string", enum: ["auto"] }, { type: "array", items: { type: "number" } }] },
+    tempo: { type: "array", items: { type: "object", additionalProperties: false, required: ["bar", "bpm"], properties: { bar: { type: "integer" }, bpm: { type: "number" }, ramp: { type: "number" } } } },
+    rit: { type: "object", additionalProperties: false, required: ["bar", "bars", "to"], properties: { bar: { type: "integer" }, bars: { type: "number" }, to: { type: "number" }, q: { type: "number" }, aTempo: { type: "boolean" } } },
+    rubato: { type: "number" },
+    bossPhases: { anyOf: [{ type: "boolean" }, { type: "object" }] },
+    swing16: { type: "number" },
+    humanProfile: { type: "string", enum: ["role", "genre"] },
+    humanDist: { type: "string", enum: ["triangle"] },
+    lockToKick: { type: "boolean" },
+    grooveFeel: { type: "string", enum: ["tight", "laidback", "pushed", "genre"] },
+    hihatBySection: { type: "boolean" },
+    trapRolls: { anyOf: [{ type: "boolean" }, { type: "object" }] },
     chords: { type: "string" },
     barsPerChord: { type: "integer", enum: [1, 2] },
     repeats: { type: "integer" },
@@ -194,6 +212,13 @@ export const AI_SONG_SCHEMA = {
           sustain: { type: "number" },
           patch: { type: "string", enum: Object.keys(SYNTH_PATCHES) },
           push: { type: "number" },
+          pushMs: { type: "number" },
+          human: { type: "number" },
+          humanTiming: { type: "number" },
+          humanVelocity: { type: "number" },
+          swing: { type: "number" },
+          swing16: { type: "number" },
+          lockToKick: { type: "boolean" },
           reverb: { type: "number" },
           chorus: { type: "number" },
           bright: { type: "number" },
@@ -335,7 +360,7 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
 - グルーブ（ノリ）: 音符を機械的に並べるだけだとノリが出ない。曲の swing（0〜1）で裏拍を遅らせ（ジャズ・ブルース・ファンク 0.5〜0.7、ヒップホップ・ローファイ 0.2〜0.4、ロック・ダンス 0）、パートの push（-0.1〜0.1拍）でタイミングをずらす（スネア +0.02〜0.04＝あと乗りで重く、ハイハット -0.01〜-0.02＝前のめりで軽く、ベースはキックに合わせて 0）。ドラムは強弱が命: グリッド記法（g:x...）で X＝強、x＝ふつう、o＝弱い（ゴーストノート）を書き分け、ハイハットは表拍を強く裏拍を弱く、スネアの間に o を入れる。ビートの型は docs/sound/drum-patterns.md。
 - 繊細な音にするには: amp は delicate か clean、volume は 0.04〜0.12、ピアノ・ハープ・鐘・オルゴール系で細かい音符（0.25〜0.5拍）を、拍の強弱をつけず低めの音域でゆっくり。ドラムは入れないか、ハイハットだけ小さく。パッドと合唱を薄く敷く。
 - 音割れを避ける: 全パートの volume を足した値が大きすぎないようにする（歪みギター2本＋ドラム＋ベースで合計 0.7 前後まで）。出口に安全装置（リミッターと最後のソフトクリップ）はあるが、頼りすぎず、書き出した WAV のピークが -1dBFS 以下であることを確かめる。
-- 入り方は「編曲家として」の中から曲ごとに選ぶ（小さく始めるのは選択肢の1つ）。途中で一度ドラムを抜いて静かにしてから、最後のサビで全部を戻す。ベースは根音だけでなく、5度・オクターブ・10度を行き来し、小節の最後で次のコードへ向かう音を入れると、メロディのように動く。`;
+- 入り方は「編曲家として」の中から曲ごとに選ぶ（小さく始めるのは選択肢の1つ）。途中で一度ドラムを抜いて静かにしてから、最後のサビで全部を戻す。ベースは根音だけでなく、5度・オクターブ・10度を行き来し、小節の最後で次のコードへ向かう音を入れると、メロディのように動く。` + RHYTHM_GUIDE_ADDENDUM;
 
 const DUR_RULE = /^\d+(\.\d+)?$/;
 
@@ -353,6 +378,12 @@ export function parseNotes(text: string, drum: boolean, errors: string[], where:
       for (const c of cells) {
         out.push(c === "." || c === "-" ? { note: REST, durationBeats: 0.25 } : { note: "C2", durationBeats: 0.25, ...(c === "X" ? { velocity: 1.3 } : c === "O" ? { velocity: 1.25, open: true } : c === "o" ? { velocity: 0.5 } : {}) });
       }
+      continue;
+    }
+    // 三連グリッド t:  1文字＝三連の1つ（1拍＝3文字、4/4の1小節＝12文字）。docs/sound/rhythm-groove-guide.md §10
+    if (drum && /^t:/i.test(token)) {
+      const triplets = parseTripletGrid(token.slice(2), errors, where, token);
+      if (triplets) out.push(...triplets);
       continue;
     }
     const [name, rawDur = ""] = token.split(":");
@@ -479,7 +510,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   const song = applyScene(prepareSong(input as AiSong, warnings), warnings);
   const bpm = Math.round(Number(song.bpm));
   if (!(bpm >= 40 && bpm <= 260)) errors.push(`bpm は 40〜260 にしてください（${song.bpm}）`);
-  if (![3, 4, 6, 7].includes(Number(song.beats))) errors.push(`beats は 3・4・6・7 のどれか（${song.beats}）`);
+  if (!beatsOk(song.beats)) errors.push(`beats は ${MIN_BEATS}〜${MAX_BEATS} の整数にしてください（${song.beats}）`);
   const repeats = Math.round(Number(song.repeats));
   if (!(repeats >= 1 && repeats <= 32)) errors.push(`repeats は 1〜32（${song.repeats}）`);
   if (!Array.isArray(song.parts)) errors.push("parts がありません");
@@ -497,6 +528,9 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   // セクション編曲: 導入・Aメロ・Bメロ・サビ・間奏…ごとに、自動の伴奏の楽器と強さを変える
   const beatsPerBar = Number(song.beats);
   const totalBars = Math.round(total / beatsPerBar);
+  // 拍子のまとまり（grouping）: 自動伴奏のドラムを、まとまりの頭に合わせる
+  const grouping = parseGrouping(song.grouping, beatsPerBar, warnings);
+  if (grouping && accompaniment.length) accompaniment = applyGroupingToDrums(accompaniment, grouping, beatsPerBar);
   let sectionList: Section[] | undefined;
   const sectionsSpec = song.sections ?? (song.scene ? "scene" : undefined);
   if (sectionsSpec === "scene") sectionList = sceneSections(song.scene, totalBars);
@@ -519,6 +553,14 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     ...(Array.isArray(song.crashAt) ? { crashAt: song.crashAt.filter((x): x is CrashAt => SECTION_KINDS.includes(x as SectionKind) || x === "last" || x === "afterBridge") } : {}),
     ...(sectionList && song.energy !== undefined ? { perSection: parseEnergy(song.energy, song.energyOrder, sectionList.length, warnings) } : {}),
   };
+  // セクションごとのハイハット（drumGenre の型。applySections の前に作り直して、出し入れ・つなぎはあとの処理に任せる）
+  if (song.hihatBySection === true) {
+    if (sectionList && song.drumGenre && DRUM_GENRES[song.drumGenre]) accompaniment = applyHihatSections(accompaniment, sectionList, beatsPerBar, song.drumGenre);
+    else warnings.push("hihatBySection には sections（または scene）と、使える drumGenre が要ります。無視しました");
+  }
+  // トラップのロール（自動伴奏のハイハット。手書きのハイハットのパートは下で）
+  const rollOpts = song.trapRolls ? (typeof song.trapRolls === "object" ? song.trapRolls : {}) : null;
+  if (rollOpts && accompaniment.length) accompaniment = applyTrapRolls(accompaniment, beatsPerBar, rollOpts);
   if (sectionList && accompaniment.length) accompaniment = applySections(accompaniment, sectionList, beatsPerBar, song.fills !== false, arrange);
   if (sectionList) warnings.push(...checkArrangement(sectionList, beatsPerBar, arrange, song.sections !== "auto"));
   // 転調: atBar 以降の音を半音ずらす（自動の伴奏と手書きパート。ドラムは動かさない）
@@ -527,6 +569,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   const mutes = sectionList ? muteRanges(sectionList, beatsPerBar) : [];
 
   const parts: Track[] = [];
+  const explicitPush = new Set<Track>();
   song.parts.forEach((p, i) => {
     const where = `parts[${i}]（${p?.role ?? p?.instrument ?? "?"}）`;
     if (!p || !(p.instrument in AI_INSTRUMENTS)) {
@@ -557,27 +600,36 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
       pan: Math.max(-1, Math.min(1, Number(p.pan) || 0)),
       ...(amp ? { amp } : {}),
       ...(Number(p.push) ? { push: Math.max(-0.1, Math.min(0.1, Number(p.push))) } : {}),
+      ...trackRhythmFields(p),
       ...(!drum && Number.isFinite(Number(p.reverb)) && p.reverb !== undefined ? { reverb: Math.max(0, Math.min(1, Number(p.reverb))) } : {}),
       ...(!drum && Number.isFinite(Number(p.chorus)) && p.chorus !== undefined ? { chorus: Math.max(0, Math.min(1, Number(p.chorus))) } : {}),
       ...(!drum && Number(p.bright) ? { bright: Math.max(-1, Math.min(0.5, Number(p.bright))) } : {}),
       ...(!drum && Number(p.duck) > 0 ? { duck: Math.min(0.95, Number(p.duck)) } : {}),
       notes: arranged(applySustain(drum ? fitToLength(events, total) : applyPhrase(fitToLength(events, total), Number(p.phrase)), drum ? 1 : Number(p.sustain))),
     };
-    parts.push(modulation && p.modulate !== false ? transposeTrack(track, modulation.semitones, modulation.atBeat) : track);
+    if (rollOpts && p.instrument === "hihat") track.notes = arranged(applyTrapRolls([{ ...track, notes: applySustain(fitToLength(events, total), 1) }], beatsPerBar, rollOpts)[0].notes);
+    const placed = modulation && p.modulate !== false ? transposeTrack(track, modulation.semitones, modulation.atBeat) : track;
+    if (p.push !== undefined || p.pushMs !== undefined) explicitPush.add(placed);
+    parts.push(placed);
   });
   if (errors.length) throw new Error(errors.join("\n"));
   if (parts.length === 0 && accompaniment.length === 0) throw new Error("パートがありません");
-  const all = [...accompaniment, ...parts];
+  const all = applyGrooveFeel([...accompaniment, ...parts], song, explicitPush, warnings);
   const tracks = song.dynamics === "natural" ? applyNaturalDynamics(all, total, Number(song.beats)) : song.dynamics === true ? applyArc(all, total, Number(song.beats)) : all;
   // ジャンルの推奨 drumMix（drumGenre）に、曲に書かれた drumMix を重ねる（書かれた太鼓が優先）
   const own = drumMixOf(song.drumMix);
   const preset = song.drumGenre ? drumMixFor(song.drumGenre) : undefined;
   if (song.drumGenre && !preset) warnings.push(`drumGenre「${song.drumGenre}」は使えません（${Object.keys(DRUM_GENRES).join("・")}）`);
   const mergedDrumMix = preset || own ? { ...(preset ?? {}), ...(own ?? {}) } : undefined;
+  const tempoMap = resolveTempoMap({ ...song, bpm }, { beatsPerBar, totalBars, sections: sectionList, warnings });
   const score: Score = {
-    tempoBpm: bpm, loop: true, drumKit: base.drumKit, tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock",
+    tempoBpm: bpm, loop: true, drumKit: base.drumKit,
+    // 4拍子以外は拍子を書く（作曲ソフトの小節線・MIDIの拍子記号が合う）。4拍子は今までどおり省略
+    ...(Number(song.beats) !== 4 ? { timeSig: { num: Number(song.beats), den: 4 } } : {}), tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock",
     ...(Number(song.swing) > 0 ? { swing: Math.min(1, Number(song.swing)) } : song.swing === undefined && song.drumGenre && swingForGenre(song.drumGenre, bpm) > 0 ? { swing: swingForGenre(song.drumGenre, bpm) } : song.swing === undefined && base.swing ? { swing: base.swing } : {}),
     ...(Number(song.human) > 0 ? { human: Math.min(1, Number(song.human)) } : song.human === undefined && song.drumGenre && DRUM_GENRES[song.drumGenre] ? { human: DRUM_GENRES[song.drumGenre].human } : {}),
+    ...scoreRhythmFields(song, warnings),
+    ...(tempoMap ? { tempoMap } : {}),
     ...(song.autoScoop === false ? { autoScoop: false } : {}),
     ...(song.dynamics === "natural" ? { dynamicRange: "wide" as const } : {}),
     ...(Number(song.snareTune) && Number.isFinite(Number(song.snareTune)) ? { snareTune: Math.max(-6, Math.min(6, Math.round(Number(song.snareTune) * 2) / 2)) } : {}),

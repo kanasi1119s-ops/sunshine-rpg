@@ -2,6 +2,8 @@ import type { AmpPresetName } from "./amp";
 import type { AmpPluginDef } from "./amp-plugins";
 import type { AudioTrack } from "./audio-clips";
 import { noteNameToFrequency } from "./note";
+import { pushBeatsOf, swingOf } from "./groove-feel";
+import { makeTempoClock, type TempoPoint } from "./tempo-map";
 
 /** 音を鳴らさない拍（休符）。 */
 export const REST = "R";
@@ -107,6 +109,20 @@ export interface Track {
   duck?: number;
   /** タイミングのずれ（拍。-0.1〜0.1）。プラス＝あと乗り（少し遅らせる。スネアやバックビートに）、マイナス＝前のめり（少し早める。ハイハットに）。省略時は0。 */
   push?: number;
+  /** タイミングのずれ（ミリ秒。-50〜50）。bpm で拍に直して push に足す（rhythm-groove-guide §10 提案2）。 */
+  pushMs?: number;
+  /** このパートの human の倍率（0〜2。省略は曲の humanRoles か 1）。0 ならこのパートは機械的に正確なまま。 */
+  human?: number;
+  /** human のうち、タイミングのずれだけの倍率（省略は1）。 */
+  humanTiming?: number;
+  /** human のうち、強さのゆらぎだけの倍率（省略は1）。 */
+  humanVelocity?: number;
+  /** このパートの swing（8分の裏）。曲の swing を上書き（0 でまっすぐ）。16分の裏も同じ量（swing16 で別にもできる）。 */
+  swing?: number;
+  /** このパートの 16分の裏の swing（省略は swing と同じ）。 */
+  swing16?: number;
+  /** true なら、キックと同じ拍の音（16分以内）は、キックと同じだけずれる（human を上げても、キックとそろったまま）。ベース・ギター向け。 */
+  lockToKick?: boolean;
   notes: NoteEvent[];
 }
 
@@ -114,12 +130,12 @@ export interface Track {
  * グルーブ（ノリ）による、音の始まりのずれ（拍）。`swing`＝裏拍を遅らせる量（0〜1。0.5くらいで三連寄りのはね）、`push`＝パートごとのずれ。
  * 8分の裏拍（0.5拍目）は swing/6 拍、16分の裏（0.25・0.75拍目）は swing/12 拍遅れる。
  */
-export function grooveOffsetBeats(swing: number | undefined, push: number | undefined, startBeat: number): number {
+export function grooveOffsetBeats(swing: number | undefined, push: number | undefined, startBeat: number, swing16?: number): number {
   let off = push ?? 0;
-  if (swing) {
+  if (swing || swing16) {
     const frac = Math.round((startBeat - Math.floor(startBeat)) * 1000) / 1000;
-    if (frac === 0.5) off += swing / 6;
-    else if (frac === 0.25 || frac === 0.75) off += swing / 12;
+    if (frac === 0.5) off += (swing ?? 0) / 6;
+    else if (frac === 0.25 || frac === 0.75) off += (swing16 ?? swing ?? 0) / 12;
   }
   return off;
 }
@@ -127,6 +143,16 @@ export function grooveOffsetBeats(swing: number | undefined, push: number | unde
 export interface Score {
   /** 裏拍を遅らせる量（0〜1）。省略時は0（ずらさない）。 */
   swing?: number;
+  /** 16分の裏（0.25・0.75拍目）の swing（省略は swing と同じ動き）。8分の裏だけ揺らして16分をまっすぐにする、などに。 */
+  swing16?: number;
+  /** パート別の human の倍率（役割 kick・snare・hihat・cymbal・bass・sub・rhythm・lead → 0〜2）。Track.human があればそちらが優先。 */
+  humanRoles?: Partial<Record<"kick" | "snare" | "hihat" | "cymbal" | "bass" | "sub" | "rhythm" | "lead" | "other", number>>;
+  /** "triangle" なら、human のタイミング・強さのずれを三角分布（中心に寄りやすい）にする。省略は一様（今までどおり）。 */
+  humanDist?: "triangle";
+  /** true なら、ベース（slap・sub808 を除く）はキックと同じ拍に重なる音を、キックと同じだけずらす。 */
+  lockToKick?: boolean;
+  /** テンポマップ。拍の位置ごとのテンポ（途中の速まり・遅まり）。省略は曲全体で tempoBpm 1つ。 */
+  tempoMap?: TempoPoint[];
   /** "wide" なら、音の強弱を MIDI の強さにそのまま近く反映する（弱い音をより弱く）。dynamics: "natural" の曲で使う。 */
   dynamicRange?: "wide";
   /**
@@ -194,6 +220,7 @@ function trackDurationBeats(track: Track): number {
 export function getScoreDurationSec(score: Score): number {
   const secPerBeat = 60 / score.tempoBpm;
   const longestBeats = Math.max(0, ...score.tracks.map(trackDurationBeats));
+  if (score.tempoMap?.length) return makeTempoClock(score.tempoBpm, score.tempoMap).beatToSec(longestBeats);
   return longestBeats * secPerBeat;
 }
 
@@ -203,31 +230,41 @@ export function humanize(startSec: number): number {
   return 0.93 + 0.14 * (x - Math.floor(x));
 }
 
-function flattenTrack(track: Track, tempoBpm: number, loop: boolean, swing?: number): ScheduledNote[] {
+function flattenTrack(track: Track, score: Score): ScheduledNote[] {
+  const tempoBpm = score.tempoBpm;
+  const { swing, swing16 } = swingOf(score, track);
+  const push = pushBeatsOf(track, tempoBpm);
+  const loop = score.loop;
   const secPerBeat = 60 / tempoBpm;
+  const clock = score.tempoMap?.length ? makeTempoClock(tempoBpm, score.tempoMap) : null;
   let t = 0;
+  let beat = 0;
   const events: ScheduledNote[] = [];
   for (const noteEvent of track.notes) {
-    const durationSec = noteEvent.durationBeats * secPerBeat;
+    const durationSec = clock ? clock.beatToSec(beat + noteEvent.durationBeats) - clock.beatToSec(beat) : noteEvent.durationBeats * secPerBeat;
     if (noteEvent.note !== REST) {
       const soundSec = durationSec * (noteEvent.gate ?? 1);
+      const startSec = clock ? clock.beatToSec(beat) : t;
+      const spb = clock ? 60 / clock.bpmAt(beat) : secPerBeat;
+      const off = grooveOffsetBeats(swing, push, clock ? beat : t / secPerBeat, swing16);
       events.push({
         frequency: noteNameToFrequency(noteEvent.note),
-        startSec: Math.max(0, t + grooveOffsetBeats(swing, track.push, t / secPerBeat) * secPerBeat),
+        startSec: Math.max(0, clock ? clock.beatToSec(Math.max(0, beat + off)) : startSec + off * secPerBeat),
         durationSec: soundSec,
         waveform: track.waveform,
         instrument: track.instrument,
-        volume: track.volume * (noteEvent.velocity ?? 1) * (loop && track.instrument ? humanize(t) : 1),
+        volume: track.volume * (noteEvent.velocity ?? 1) * (loop && track.instrument ? humanize(clock ? startSec : t) : 1),
         pan: track.pan,
-        beatSec: secPerBeat,
+        beatSec: spb,
       });
     }
     t += durationSec;
+    beat += noteEvent.durationBeats;
   }
   return events;
 }
 
 /** 曲を「いつ・どの高さ・どれくらいの長さで鳴らすか」の一覧に変換する。 */
 export function flattenScore(score: Score): ScheduledNote[] {
-  return score.tracks.flatMap((track) => flattenTrack(track, score.tempoBpm, score.loop, score.swing));
+  return score.tracks.flatMap((track) => flattenTrack(track, score));
 }

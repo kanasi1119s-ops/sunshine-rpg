@@ -2,6 +2,8 @@ import { timeSignatureOf } from "./time-signature";
 import { GM_DEFAULT_BY_WAVE, GM_DRUM_NOTE, GM_LAYER, GM_PROGRAM, METAL_LEAD, SYNTH_LEAD, SYNTH_PAD } from "./gm-map";
 import { noteNameToMidi } from "./note";
 import { grooveOffsetBeats, humanize, REST, type AmpSetting, type Instrument, type Score, type Track } from "./score";
+import { pushBeatsOf, swingOf, trackHumanMult, triangular } from "./groove-feel";
+import { makeTempoClock } from "./tempo-map";
 
 /**
  * 曲（Score）を、録音音源（サウンドフォント）で鳴らすための標準MIDIファイル（SMF）に変換する。
@@ -106,15 +108,27 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
   // 指揮者トラック（テンポと曲の長さ）
   const totalBeats = Math.max(...score.tracks.map((t) => t.notes.reduce((s, n) => s + n.durationBeats, 0)));
   const endTick = Math.round(totalBeats * PPQ);
-  const usecPerBeat = Math.round(60_000_000 / score.tempoBpm);
-  const conductor: number[] = [0, 0xff, 0x51, 0x03, (usecPerBeat >> 16) & 255, (usecPerBeat >> 8) & 255, usecPerBeat & 255];
+  const clock = makeTempoClock(score.tempoBpm, score.tempoMap);
+  const tempoBytes = (bpm: number): number[] => {
+    const usec = Math.round(60_000_000 / bpm);
+    return [0xff, 0x51, 0x03, (usec >> 16) & 255, (usec >> 8) & 255, usec & 255];
+  };
+  const conductor: number[] = [0, ...tempoBytes(clock.segs[0].bpm)];
   // 拍子（例: 7/8 → 分子7・分母は2の3乗）
   const sig = timeSignatureOf(score);
   conductor.push(0, 0xff, 0x58, 0x04, sig.num, Math.round(Math.log2(sig.den)), 24, 8);
   // ループの始まりと終わり（曲の頭から最後の拍まで、ぴったりくり返す）
   const marker = (text: string): number[] => [0xff, 0x06, text.length, ...[...text].map((c) => c.charCodeAt(0))];
   conductor.push(0, ...marker("loopstart"));
-  conductor.push(...vlq(endTick), ...marker("loopend"));
+  // テンポマップ: 途中のテンポの変わり目（tempoMap が無い曲は何も足さない）
+  let prevTempoTick = 0;
+  for (const seg of clock.segs.slice(1)) {
+    const at = Math.round(seg.beat * PPQ);
+    if (at <= 0 || at >= endTick) continue;
+    conductor.push(...vlq(at - prevTempoTick), ...tempoBytes(seg.bpm));
+    prevTempoTick = at;
+  }
+  conductor.push(...vlq(endTick - prevTempoTick), ...marker("loopend"));
   conductor.push(0, 0xff, 0x2f, 0x00);
   tracksBytes.push(conductor);
 
@@ -153,22 +167,58 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
   const H = Math.max(0, Math.min(1, Number(score.human) || 0));
   /** 同じ入力なら同じ結果になる 0〜1 の疑似乱数（人間らしさのばらつき用）。 */
   const rnd = (a: number): number => { const x = Math.sin(a * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
-  // キックが鳴る位置（サイドチェイン風の音量の凹みに使う）
+  /** タイミング・強さのずれの元になる 0.93〜1.07 の値。humanDist が "triangle" なら三角分布（2つの一様な値の平均）。 */
+  const hz = (x: number): number => (score.humanDist === "triangle" ? triangular(humanize(x), humanize(x + 17.3)) : humanize(x));
+  // キックが鳴る位置（サイドチェイン風の音量の凹みと、lockToKick に使う）
   const kickTicks: number[] = [];
+  const kickBeats: number[] = [];
   for (const t of score.tracks) {
     if (t.instrument !== "kick") continue;
     let b = 0;
+    const sw = swingOf(score, t);
+    const pushB = pushBeatsOf(t, score.tempoBpm);
     for (const n of t.notes) {
-      if (n.note !== REST) kickTicks.push(Math.max(0, Math.round((b + grooveOffsetBeats(score.swing, t.push, b)) * PPQ)));
+      if (n.note !== REST) {
+        kickTicks.push(Math.max(0, Math.round((b + grooveOffsetBeats(sw.swing, pushB, b, sw.swing16)) * PPQ)));
+        kickBeats.push(b);
+      }
       b += n.durationBeats;
     }
   }
+  kickBeats.sort((a, b) => a - b);
+  // lockToKick: キックと同じ種・同じ幅でずらすための、キックの音の「タイミングのずれ」（ティック）
+  const kickTrack = score.tracks.find((t) => t.instrument === "kick");
+  const DRUM_SEED = (DRUM_CHANNEL + 1) * 7.31;
+  const kickJitterAt = (kb: number): number => {
+    if (!kickTrack || kb <= 0) return 0;
+    const hm = trackHumanMult(score, kickTrack);
+    if (hm === 0) return 0;
+    const Ht = H * hm * (kickTrack.humanTiming ?? 1);
+    return Math.round((hz(clock.beatToSec(kb) + 3.7 + DRUM_SEED) - 1) * (score.edition === "real" ? 1.6 : 1) * 45 * (1 + 2.5 * Ht));
+  };
+  const nearestKickBeat = (beat: number): number | null => {
+    let lo = 0, hi = kickBeats.length - 1, best: number | null = null;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (kickBeats[mid] <= beat + 1e-9) { best = kickBeats[mid]; lo = mid + 1; } else hi = mid - 1;
+    }
+    return best !== null && beat - best <= 0.25 + 1e-9 ? best : null;
+  };
   kickTicks.sort((a, b) => a - b);
   const uniqueKicks = kickTicks.filter((t, i) => i === 0 || t - kickTicks[i - 1] > 10);
   for (const track of score.tracks) {
     const inst = track.instrument;
     const drumNote = inst ? GM_DRUM_NOTE[inst] : undefined;
     const isDrum = drumNote !== undefined;
+    // パート別の human（Track.human／Score.humanRoles。指定が無ければ 1 で、今までと同じ）
+    const hm = trackHumanMult(score, track);
+    const quant = hm === 0;
+    const Hp = H * hm;
+    const Ht = Hp * (track.humanTiming ?? 1);
+    const Hv = Hp * (track.humanVelocity ?? 1);
+    const trackSwing = swingOf(score, track);
+    const trackPush = pushBeatsOf(track, score.tempoBpm);
+    const lockKick = !isDrum && (track.lockToKick ?? (score.lockToKick === true && (inst === "bass")));
     let program = track.program ?? (inst ? GM_PROGRAM[inst] ?? GM_DEFAULT_BY_WAVE[track.waveform] : GM_DEFAULT_BY_WAVE[track.waveform]);
     // リードとパッド: 電子音楽では電子的な音色、メタル調ではオーバードライブのギター、それ以外は生楽器に近い音色
     if (inst === "lead" && track.program === undefined) program = score.synth ? SYNTH_LEAD : score.tone === "metal" || score.tone === "prs" ? METAL_LEAD : program;
@@ -273,17 +323,20 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       const startBeat = beat;
       beat += n.durationBeats;
       if (n.note === REST) continue;
-      const secStart = (startBeat * 60) / score.tempoBpm;
+      const secStart = clock.beatToSec(startBeat);
       // 手で弾いたような、ごくわずかなタイミングのずれ（鍵盤・ギター・ベース）
       // 実楽器版は、人が演奏するように、タイミングのずれを大きめに
       const human = score.edition === "real" ? 1.6 : 1;
-      const looseness = human * (inst && ["keys", "piano", "guitar", "echoGuitar", "bass", "harpsichord", "strings", "lead", "leadGuitar", "brass", "crunch", "distGuitar"].includes(inst) ? 70 : inst && ["kick", "snare", "hihat", "tom", "crash"].includes(inst) ? 45 : 0);
-      const jitter = looseness > 0 && startBeat > 0 ? Math.round((humanize(secStart + 3.7 + trackSeed) - 1) * looseness * (1 + (drumNote !== undefined ? 2.5 : 4) * H)) : 0;
-      const grooveTicks = Math.round(grooveOffsetBeats(score.swing, track.push, startBeat) * PPQ);
+      // slap・sub808・パッドなど、ふだんはずらさない楽器も、Track.human を 0 より大きく書けばずれる
+      const optIn = track.human !== undefined && track.human > 0;
+      const looseness = quant ? 0 : human * (inst && ["keys", "piano", "guitar", "echoGuitar", "bass", "harpsichord", "strings", "lead", "leadGuitar", "brass", "crunch", "distGuitar"].includes(inst) ? 70 : inst && ["kick", "snare", "hihat", "tom", "crash"].includes(inst) ? 45 : optIn ? 70 : 0);
+      const kb = lockKick && startBeat > 0 && !quant ? nearestKickBeat(startBeat) : null;
+      const jitter = kb !== null ? kickJitterAt(kb) : looseness > 0 && startBeat > 0 ? Math.round((hz(secStart + 3.7 + trackSeed) - 1) * looseness * (1 + (drumNote !== undefined ? 2.5 : 4) * Ht)) : 0;
+      const grooveTicks = Math.round(grooveOffsetBeats(trackSwing.swing, trackPush, startBeat, trackSwing.swing16) * PPQ);
       // バンド全体の、ゆるやかな走り・溜め（全パート同じだけずれるので、アンサンブルはそろったまま）
-      const drift = H > 0 ? Math.round(H * (12 * Math.sin((startBeat * 2 * Math.PI) / 17.3) + 8 * Math.sin((startBeat * 2 * Math.PI) / 41 + 1.3))) : 0;
+      const drift = H > 0 && !quant ? Math.round(H * (12 * Math.sin((startBeat * 2 * Math.PI) / 17.3) + 8 * Math.sin((startBeat * 2 * Math.PI) / 41 + 1.3))) : 0;
       const tick = Math.max(0, Math.round(startBeat * PPQ) + jitter + grooveTicks + drift);
-      let vol = track.volume * (n.velocity ?? 1) * (inst ? 1 + (humanize(secStart + trackSeed * 0.37) - 1) * (1 + 3 * H) : 1);
+      let vol = track.volume * (n.velocity ?? 1) * (inst && !quant ? 1 + (hz(secStart + trackSeed * 0.37) - 1) * (1 + 3 * Hv) : 1);
       let drumKey = drumNote;
       // タム: 音名でタムの高さを選ぶ（C4 高い → A2 低いフロア）。C2（既定）は今までどおり 47
       if (inst === "tom" && n.note !== "C2") {
@@ -306,7 +359,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
           lenScale = 1;
         }
       } else if (inst === "snare") {
-        vol *= 1 + (humanize(secStart + 9.1) - 1) * 1.5;
+        if (!quant) vol *= 1 + (humanize(secStart + 9.1) - 1) * 1.5;
       } else if (inst === "crash") {
         lenScale = 3;
       }
@@ -316,7 +369,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       const rhythmSoft = score.tone === "prs" && (inst === "distGuitar" || inst === "crunch") ? 0.78 : 1;
       const velocity = Math.min(127, Math.round(velocityOf(vol, boost, track.volume, score.dynamicRange === "wide") * strike * rhythmSoft));
       // 音の長さのばらつき（人の弾き方）: 短い音は、少し短く切れたり、つながったり
-      if (H > 0 && drumNote === undefined && n.gate === undefined && n.durationBeats <= 1) lenScale *= 1 - 0.14 * H * rnd(startBeat * 3.1 + trackSeed);
+      if (Hp > 0 && drumNote === undefined && n.gate === undefined && n.durationBeats <= 1) lenScale *= 1 - 0.14 * Hp * rnd(startBeat * 3.1 + trackSeed);
       const len = Math.max(20, Math.round((n.open && inst === "hihat" ? Math.max(n.durationBeats, 0.5) : n.durationBeats) * PPQ * lenScale * (drumNote === undefined ? n.gate ?? 1 : 1)));
       const push = (pitch: number, at: number, vel: number, length: number, target: { channel: number; list: Ev[] } = { channel, list }): void => {
         const p = Math.max(0, Math.min(127, pitch));
@@ -368,18 +421,18 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         }
       }
       // 長い音の音量の山（CC11）: 立ち上がって、中ほどで最大、終わりへ少し引く。リード・パッド・弦・ブラス・合唱
-      if (H > 0 && !score.pump && inst && SWELL_INSTRUMENTS.has(inst) && durTicks >= PPQ) {
+      if (Hp > 0 && !score.pump && inst && SWELL_INSTRUMENTS.has(inst) && durTicks >= PPQ) {
         for (const t of bendTargets) {
           const cc = (at: number, v: number): void => { t.list.push({ tick: at, order: 1, bytes: [0xb0 | t.channel, 11, Math.max(40, Math.min(127, v))] }); };
-          cc(tick, 127 - Math.round(38 * H));
+          cc(tick, 127 - Math.round(38 * Hp));
           cc(tick + Math.round(durTicks * 0.35), 127);
-          cc(tick + Math.round(durTicks * 0.8), 127 - Math.round(16 * H));
+          cc(tick + Math.round(durTicks * 0.8), 127 - Math.round(16 * Hp));
           cc(tick + durTicks - 2, 127);
         }
       }
       // 音程のごくわずかなずれ（±8セント）: リード・ギター・弦。ベンドの指定がない音だけ
-      if (H > 0 && !curve && inst && DETUNE_INSTRUMENTS.has(inst) && durTicks >= 60) {
-        const semi = (rnd(startBeat * 5.7 + trackSeed * 1.3) - 0.5) * 2 * 0.08 * H;
+      if (Hp > 0 && !curve && inst && DETUNE_INSTRUMENTS.has(inst) && durTicks >= 60) {
+        const semi = (rnd(startBeat * 5.7 + trackSeed * 1.3) - 0.5) * 2 * 0.08 * Hp;
         for (const t of bendTargets) {
           const v = bendValue(semi);
           t.list.push({ tick: Math.max(0, tick - 3), order: 1, bytes: [0xe0 | t.channel, v & 0x7f, (v >> 7) & 0x7f] });
