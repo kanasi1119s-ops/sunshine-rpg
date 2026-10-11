@@ -3,7 +3,7 @@
 //
 //   node tools/composer/song.mjs guide
 //       AIソング形式の説明（楽器の一覧・書き方・よい曲にするコツ）を表示する。曲を書く前に読む。
-//   node tools/composer/song.mjs build <曲.json> [--out <フォルダ>] [--edition real|ps2|modern] [--wav] [--register <曲ID> --scene "<場面>"]
+//   node tools/composer/song.mjs build <曲.json> [--stems] [--out <フォルダ>] [--edition real|ps2|modern] [--wav] [--register <曲ID> --scene "<場面>"]
 //       AIソング形式のJSONを確かめて、作曲ソフトで開けるプロジェクト（.sunshine-song.json）とMIDIを書き出す。
 //       --bass finger|pick|rock|metal|jazz|jpop: ベースを FreePats のエレキベースの音源に。--sound punk-run|clear-guitar-rock|rock-4|pop-lead|jpop-bright|ballad-piano-strings|jazz-trio|funk-bass|house-duck|ambient-wide|orchestra-depth|game-battle|game-boss|game-town|game-dungeon（`sounds` で一覧）: サウンドセット（アンプ・音量・ミックス・ドラム・使う音源をまとめて当てはめる。--bass/--drums/--guitar を別に書けばそちらが優先）。--master-preset <名前>: 書き出しの仕上げ（大きさ・広がり・圧縮・EQ・天井）をまとめて決める。従来の 4 つ game=-14LUFS・rock=-10・loud=-8・calm=-16 のほか、ジャンル別の metal・punk・rock-clean・pop・jazz・orch・edm・hiphop・lofi・ambient・wafu・solo と、ゲーム用の game-field・game-battle・game-boss・game-dungeon・retro（`node tools/composer/song.mjs presets` で一覧）。--space hall|room|plate: 書き出しのWAVに畳み込みリバーブ（自作のIR）を足す。--space-wet 0〜1（既定0.25）が残響の量。--widen 1.8: 書き出しのWAVの左右の広がりを広げる（1=そのまま。master と一緒に使う。おすすめ 1.5〜2）。--master -9: 書き出しのWAVの大きさ（LUFS）をそろえる（サウンドセットに master があれば自動。ピークは約 -1.5dB 以下）。--guitar gretsch|hofner: ジャズギター(26)・クリーンギター(27)を Karoryfer の生ギター（CC0）に。--drums muldjord|rock|metal|jazz|jpop|supra: ドラムを生ドラム（Muldjord Kit）に（省略は標準）。
 //       仕上げの細かい指定（プリセットの値を上書き。--master 系と一緒に使う）: --tp -1.5: 真のピークの天井(dBTP)。--lowmono 140: この周波数(Hz)より下をモノに（0=切る）。--side-hpf 150: サイドだけをこの周波数より上に（M/S ワイド。--widen がサイドの倍率 slev になる）。--clip 1.5: ソフトクリップに使うゲイン(dB、0=なし)。--hpf 25・--lpf 19000: 掃除(Hz)。--match-eq rock|punk|edm|hiphop|jazz|lofi|ambient|game-battle: 帯域の量を家族別の目標の傾き（docs/sound/data/mix-targets.json。数字だけ）に寄せるマッチング EQ（--match-amount 0.4: 強さ。0.5 が上限、各帯域 ±3dB で切る）。--loop-tail: 曲の長さより後ろの残響の尾を先頭に重ねる（ループの継ぎ目をなじませる。仕上げの前）。
@@ -117,6 +117,20 @@ try {
   } else if (args[0] === "build" && args[1]) {
     try {
       const name = path.basename(args[1]).replace(/\.json$/i, "").toLowerCase().replace(/[^a-z0-9-]+/g, "-");
+      if (args.includes("--stems")) {
+        // 楽器ごとの音（ステム）を別々の WAV に書き出す: ドラム・ベース・ギター・その他。仕上げ（--master 系）は付けず、音量の比率はそのまま
+        const STEM_GROUPS = { drums: ["kick", "snare", "hihat", "crash", "tom"], bass: ["bass", "slap", "sub808"], guitar: ["guitar", "distGuitar", "leadGuitar", "crunch", "echoGuitar"] };
+        const base = JSON.parse(fs.readFileSync(args[1], "utf8"));
+        if (base.autoAccompaniment) console.warn("注意: autoAccompaniment: true の曲は、自動の伴奏を楽器ごとに分けられません。手書きのパートだけが分かれます（伴奏も分けたいときは false にして、パートを書く）");
+        const groupOf = (inst) => Object.entries(STEM_GROUPS).find(([, l]) => l.includes(inst))?.[0] ?? "other";
+        const names = [...new Set((base.parts ?? []).map((p) => groupOf(p.instrument)))];
+        for (const g of names) {
+          const sub = { ...base, autoAccompaniment: false, parts: base.parts.filter((p) => groupOf(p.instrument) === g) };
+          const stemName = `${name}-stem-${g}`;
+          const rr = await kit.build(sub, { name: stemName, edition: opt("--edition") ?? "real", outDir: opt("--out"), wav: true, soundfont: opt("--soundfont") === "gu" ? "gu" : "game", bass: opt("--bass") ?? "std", drums: opt("--drums") ?? "std", guitar: opt("--guitar") ?? "std", autoRetune: false });
+          console.log(`  ステム ${g}: ${rr.files.wav}`);
+        }
+      }
       const r = await kit.build(JSON.parse(fs.readFileSync(args[1], "utf8")), { name, edition: opt("--edition") ?? "real", outDir: opt("--out"), wav: args.includes("--wav"), soundfont: opt("--soundfont") === "gu" ? "gu" : "game", bass: opt("--bass") ?? "std", drums: opt("--drums") ?? "std", guitar: opt("--guitar") ?? "std", sound: opt("--sound") ?? "", master: Number.isFinite(Number(opt("--master"))) && opt("--master") !== undefined ? Number(opt("--master")) : null, widen: opt("--widen") === undefined ? null : Number(opt("--widen")), space: opt("--space") ?? "", masterPreset: opt("--master-preset") ?? "", spaceWet: num("--space-wet"), tp: num("--tp"), lowmono: num("--lowmono"), sideHpf: num("--side-hpf"), clip: num("--clip"), hpf: num("--hpf"), lpf: num("--lpf"), matchEq: opt("--match-eq") ?? "", matchAmount: num("--match-amount"), loopTail: args.includes("--loop-tail"), genre: opt("--genre") ?? "", autoRetune: !args.includes("--no-retune") });
       for (const w of r.warnings) console.warn("注意:", w);
       console.log(`○ 「${r.title}」 ${r.tracks}トラック・${Math.floor(r.seconds / 60)}分${Math.round(r.seconds % 60)}秒・テンポ${r.bpm}`);
