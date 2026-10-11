@@ -72,7 +72,7 @@ def templates():
     return np.array(T), lab
 
 
-def viterbi(sc, stay=0.85):
+def viterbi(sc, stay=0.6):
     n, k = sc.shape
     lp_stay, lp_move = np.log(stay), np.log((1 - stay) / (k - 1))
     dp = sc[0].copy(); bp = np.zeros((n, k), dtype=int)

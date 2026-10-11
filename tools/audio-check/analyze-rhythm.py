@@ -98,4 +98,5 @@ def main():
     mx = max(seg)
     print(" ".join(f"{v - mx:+.0f}" for v in seg))
 
-main()
+if __name__ == "__main__":
+    main()

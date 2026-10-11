@@ -34,7 +34,7 @@ import { barBeats, DENOMINATORS, timeSignatureOf, unitBeats } from "../../src/au
 import { hasCode, validateAmpPlugin, type AmpPluginDef } from "../../src/audio/amp-plugins";
 import { midiToName } from "../../src/audio/compose";
 import { CHORD_SHAPES, chordIntervals } from "../../src/audio/chord-input";
-import { addNotes, copyNotes, moveNotes, notesInRange, notesToEvents, noteStartAt, pasteNotes, removeNotes, resizeNote, setNotesLength, trackToNotes, trackTotalBeats, type RollNote } from "../../src/audio/edit";
+import { addNotes, copyNotes, moveNotes, quantizeNotes, notesInRange, notesToEvents, noteStartAt, pasteNotes, removeNotes, resizeNote, setNotesLength, trackToNotes, trackTotalBeats, type RollNote } from "../../src/audio/edit";
 import { composeFinale, FINALES } from "../../src/audio/finale";
 import { GM_PROGRAM } from "../../src/audio/gm-map";
 import { scoreToMidi } from "../../src/audio/midi-export";
@@ -835,6 +835,7 @@ const ops = {
     ops.paste(ops.pickedEnd());
   },
   length: (dur: number): void => withPicked((t, s) => setNotesLength(t, s, dur)),
+  quantize: (strength: number): void => withPicked((t, s) => quantizeNotes(t, s, state.grid, strength)),
   all: (): void => {
     state.picked = trackToNotes(state.score.tracks[state.selected]).map((n) => n.start);
     drawRoll();
@@ -845,6 +846,7 @@ ui.rollBox.addEventListener("keydown", (ev) => {
   const key = ev.key.toLowerCase();
   let handled = true;
   if (key === "delete" || key === "backspace") ops.del();
+  else if (key === "q" && !ctrl) ops.quantize(ev.shiftKey ? 0.5 : 1);
   else if (key === "arrowleft") ops.move(-state.grid, 0);
   else if (key === "arrowright") ops.move(state.grid, 0);
   else if (key === "arrowup") ops.move(0, ev.shiftKey ? 12 : 1);

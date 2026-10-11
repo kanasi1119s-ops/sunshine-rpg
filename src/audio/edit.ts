@@ -139,6 +139,26 @@ export function moveNotes(track: Track, starts: number[], dBeat: number, dSemi: 
   return { track: addNotes(base, moved, total), starts: moved.map((n) => n.start) };
 }
 
+/**
+ * 選んだ音の始まりを、グリッド（拍）に寄せる（クオンタイズ）。強さ（0〜1）が1なら完全にグリッドへ、0.5なら半分だけ寄せる（人間らしいゆらぎを残す）。
+ * 音の長さは変えない。返す値は、新しいトラックと、寄せたあとの始まりの位置。
+ */
+export function quantizeNotes(track: Track, starts: number[], grid: number, strength = 1): { track: Track; starts: number[] } {
+  const total = trackTotalBeats(track);
+  const all = trackToNotes(track);
+  const picked = all.filter((n) => starts.some((s) => Math.abs(s - n.start) < EPS));
+  if (picked.length === 0 || grid <= 0) return { track, starts: picked.map((n) => n.start) };
+  const k = Math.max(0, Math.min(1, strength));
+  const moved = picked.map((n) => {
+    const target = Math.round(n.start / grid) * grid;
+    const start = Math.max(0, Math.min(total - n.dur, round(n.start + (target - n.start) * k)));
+    return { ...n, start };
+  });
+  const rest = all.filter((n) => !picked.includes(n));
+  const base = { ...track, notes: notesToEvents(rest, total) };
+  return { track: addNotes(base, moved, total), starts: moved.map((n) => n.start) };
+}
+
 /** 選んだ音を取り出す（コピー用）。位置は、いちばん早い音を0とした相対の位置にする。 */
 export function copyNotes(track: Track, starts: number[]): RollNote[] {
   const picked = trackToNotes(track).filter((n) => starts.some((s) => Math.abs(s - n.start) < EPS));

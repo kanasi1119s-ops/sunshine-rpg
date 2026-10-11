@@ -75,3 +75,15 @@ describe("複数の音の選択と編集", () => {
     expect(trackToNotes(t)).toEqual([{ start: 0.5, dur: 1, note: "G4" }, { start: 2, dur: 1, note: "E4" }]);
   });
 });
+
+import { quantizeNotes as _q } from "./edit";
+describe("クオンタイズ", () => {
+  it("ずれた音をグリッドへ寄せ、強さ0.5では半分だけ寄せる", () => {
+    const t: Track = { waveform: "square", notes: [{ note: "C4", dur: 1 }] } as unknown as Track;
+    const base = addNotes({ ...t, notes: [] } as Track, [{ note: "C4", start: 0.13, dur: 0.5 }, { note: "E4", start: 1.4, dur: 0.5 }], 4);
+    const full = _q(base, [0.13, 1.4], 0.5, 1);
+    expect(full.starts.map((s) => Math.round(s * 100) / 100)).toEqual([0, 1.5]);
+    const half = _q(base, [0.13], 0.5, 0.5);
+    expect(half.starts[0]).toBeCloseTo(0.065, 2);
+  });
+});
