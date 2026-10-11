@@ -6,6 +6,8 @@
 import { spawnSync } from "child_process";
 import fs from "fs";
 import path from "path";
+import { genreJudge, genreTargets } from "./genre-targets.mjs";
+import { spectralMetricsOfFile } from "./spectral-metrics.mjs";
 
 /** 判定表。値は measureWav の戻り値。target は目標の統合ラウドネス。 */
 export function judge(m, { target = -14 } = {}) {
@@ -22,9 +24,23 @@ export function judge(m, { target = -14 } = {}) {
   return rows;
 }
 
-export function formatGate(m, rows, name = "") {
+/**
+ * ジャンル別の合否表。音量(lufs)・真のピーク・無音は共通の判定、起伏(LRA)・PLR・頭・余韻・相関・ざらつき(flat)・空気は
+ * ジャンルの p10〜p90（BPM があれば LRA・PLR をテンポに合わせてずらす。genre-targets.mjs）で判定する。
+ * ジャンルが不明なら null。戻り値: { rows, target }
+ */
+export function judgeGenre(m, genre, { target = -14, bpm = NaN } = {}) {
+  const g = genreJudge(m, genre, { bpm });
+  if (!g) return null;
+  const base = judge(m, { target });
+  const pick = (k) => base.find((r) => r.key === k);
+  return { rows: [pick("lufs"), pick("tp"), ...g.rows, pick("silence")], target: g.target };
+}
+
+export function formatGate(m, rows, name = "", { genre = null } = {}) {
   const ng = rows.filter((r) => !r.ok);
   const out = [`■ 合否表${name ? `「${name}」` : ""}（${m.durationSec.toFixed(0)}秒）: ${ng.length ? `要直し ${ng.length}件` : "すべて○"}`];
+  if (genre) out.push(`  ジャンル目標「${genre.label}」（元の曲 ${genre.n}${genre.conf === "low" ? "・目安が粗い" : ""}${genre.bpm ? `・BPM ${genre.bpm} に合わせて LRA ${genre.shift.LRA >= 0 ? "+" : ""}${genre.shift.LRA.toFixed(1)} / PLR ${genre.shift.PLR >= 0 ? "+" : ""}${genre.shift.PLR.toFixed(1)}` : ""}）　頭: ${genre.head.label}型・余韻: ${genre.tail.label}${genre.note ? "\n  注意: " + genre.note : ""}`);
   for (const r of rows) out.push(`  ${r.ok ? "○" : "要直し"}　${r.label}: ${r.value ?? "測れず"}${r.unit ? " " + r.unit : ""}（目安 ${r.goal}）${r.hint ? "\n        → " + r.hint : ""}`);
   out.push("  ※ 数字は耳の代わりにならない。直したら同じ測定をもう一度回し、結果を song.mjs log で1行残す。タイミングのずれ・帯域は analyze.py／realism.py（tools/audio-check）。");
   return out.join("\n");
@@ -33,7 +49,7 @@ export function formatGate(m, rows, name = "") {
 const run = (args, input) => spawnSync("ffmpeg", args, { encoding: "utf8", maxBuffer: 1 << 28, input });
 
 /** WAV を測る（ffmpeg が必要）。 */
-export function measureWav(file) {
+export function measureWav(file, { spectral = true } = {}) {
   if (!fs.existsSync(file)) throw new Error(`ファイルがありません: ${file}`);
   const r = run(["-nostats", "-i", file, "-af", "ebur128=peak=true,silencedetect=n=-60dB:d=4", "-f", "null", "-"]);
   if (r.error) throw new Error("ffmpeg が使えません（インストールしてください）");
@@ -62,17 +78,24 @@ export function measureWav(file) {
     const cov = slr / n - (sl / n) * (sr / n), vl = sll / n - (sl / n) ** 2, vr = srr / n - (sr / n) ** 2;
     corr = vl > 0 && vr > 0 ? cov / Math.sqrt(vl * vr) : NaN;
   }
-  return { lufs, tp, lra, plr: tp - lufs, corr, headVsMax: headS - maxS, midSilences, durationSec };
+  // ざらつき(flat)・空気(8k+)・頭(5秒ごと)・余韻（spectral-metrics.mjs。ジャンル別の目標との比較に使う）
+  let sp = { flat: NaN, air: NaN, presence: NaN, intro: NaN, tail: NaN };
+  if (spectral) { try { sp = spectralMetricsOfFile(file); } catch { /* 測れなければ NaN のまま */ } }
+  return { lufs, tp, lra, plr: tp - lufs, corr, headVsMax: headS - maxS, midSilences, durationSec, ...sp };
 }
 
 /** 数字だけを docs/sound/data/ours/<ID>.json に保存する（過去の曲との比較・推移用）。 */
-export function saveMeasurement(root, id, m, rows, target) {
+export function saveMeasurement(root, id, m, rows, target, genre = null) {
   if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) throw new Error(`曲IDは英小文字・数字・「-」だけ（${id}）`);
   const dir = path.join(root, "docs", "sound", "data", "ours");
   fs.mkdirSync(dir, { recursive: true });
   const file = path.join(dir, `${id}.json`);
   const prev = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : { id, history: [] };
-  const entry = { date: new Date().toISOString().slice(0, 10), target, lufs: rows[0].value, tp: rows[1].value, lra: rows[2].value, plr: rows[3].value, corr: rows[4].value, headVsMax: rows[5].value, midSilences: rows[6].value, ng: rows.filter((r) => !r.ok).map((r) => r.key) };
+  const val = (k) => rows.find((r) => r.key === k)?.value ?? null;
+  const f2 = (x, d = 2) => (Number.isFinite(x) ? Number(x.toFixed(d)) : null);
+  const entry = { date: new Date().toISOString().slice(0, 10), target, lufs: val("lufs"), tp: val("tp"), lra: val("lra"), plr: val("plr"), corr: val("corr"), headVsMax: f2(m.headVsMax, 1), midSilences: val("silence"), ng: rows.filter((r) => !r.ok).map((r) => r.key) };
+  if (Number.isFinite(m.flat)) Object.assign(entry, { flat: f2(m.flat), air: f2(m.air, 1), intro: f2(m.intro, 1), tail: f2(m.tail) });
+  if (genre) entry.genre = genre;
   prev.history.push(entry);
   fs.writeFileSync(file, JSON.stringify(prev, null, 1) + "\n");
   return { file, previous: prev.history.length > 1 ? prev.history[prev.history.length - 2] : null, entry };

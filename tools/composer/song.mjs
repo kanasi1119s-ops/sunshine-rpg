@@ -8,7 +8,7 @@
 //       --bass finger|pick|rock|metal|jazz|jpop: ベースを FreePats のエレキベースの音源に。--sound punk-run|clear-guitar-rock|rock-4|pop-lead|jpop-bright|ballad-piano-strings|jazz-trio|funk-bass|house-duck|ambient-wide|orchestra-depth|game-battle|game-boss|game-town|game-dungeon（`sounds` で一覧）: サウンドセット（アンプ・音量・ミックス・ドラム・使う音源をまとめて当てはめる。--bass/--drums/--guitar を別に書けばそちらが優先）。--master-preset <名前>: 書き出しの仕上げ（大きさ・広がり・圧縮・EQ・天井）をまとめて決める。従来の 4 つ game=-14LUFS・rock=-10・loud=-8・calm=-16 のほか、ジャンル別の metal・punk・rock-clean・pop・jazz・orch・edm・hiphop・lofi・ambient・wafu・solo と、ゲーム用の game-field・game-battle・game-boss・game-dungeon・retro（`node tools/composer/song.mjs presets` で一覧）。--space hall|room|plate: 書き出しのWAVに畳み込みリバーブ（自作のIR）を足す。--space-wet 0〜1（既定0.25）が残響の量。--widen 1.8: 書き出しのWAVの左右の広がりを広げる（1=そのまま。master と一緒に使う。おすすめ 1.5〜2）。--master -9: 書き出しのWAVの大きさ（LUFS）をそろえる（サウンドセットに master があれば自動。ピークは約 -1.5dB 以下）。--guitar gretsch|hofner: ジャズギター(26)・クリーンギター(27)を Karoryfer の生ギター（CC0）に。--drums muldjord|rock|metal|jazz|jpop|supra: ドラムを生ドラム（Muldjord Kit）に（省略は標準）。
 //       仕上げの細かい指定（プリセットの値を上書き。--master 系と一緒に使う）: --tp -1.5: 真のピークの天井(dBTP)。--lowmono 140: この周波数(Hz)より下をモノに（0=切る）。--side-hpf 150: サイドだけをこの周波数より上に（M/S ワイド。--widen がサイドの倍率 slev になる）。--clip 1.5: ソフトクリップに使うゲイン(dB、0=なし)。--hpf 25・--lpf 19000: 掃除(Hz)。--match-eq rock|punk|edm|hiphop|jazz|lofi|ambient|game-battle: 帯域の量を家族別の目標の傾き（docs/sound/data/mix-targets.json。数字だけ）に寄せるマッチング EQ（--match-amount 0.4: 強さ。0.5 が上限、各帯域 ±3dB で切る）。--loop-tail: 曲の長さより後ろの残響の尾を先頭に重ねる（ループの継ぎ目をなじませる。仕上げの前）。
 //       書き出した WAV は、最後に 1 行の合否表（○／要直し: I・TP・LRA・PLR・PSR・左右の相関・100Hz 以下の相関・継ぎ目）を表示する。サウンドセット（--sound）の master に preset・space・spaceWet があれば、同じ引数を書いたことになる（引数が優先）。
-//   node tools/composer/song.mjs report <WAV> [--lufs -14] [--tp -1.5] [--no-loop]
+//   node tools/composer/song.mjs report <WAV> [--lufs -14] [--tp -1.5] [--no-loop] [--genre <ジャンル名> --bpm N]（flat・空気も出す。--genre でジャンル目安からの外れも添える）
 //       すでにある WAV の合否表だけを表示する（ループの継ぎ目も見る。ループしない曲は --no-loop）。
 //   node tools/composer/song.mjs presets
 //       書き出しの仕上げのプリセット一覧（大きさ・天井・広がり・圧縮・EQ）を表示する。
@@ -26,6 +26,7 @@
 //   node tools/composer/song.mjs plan-check <plan.json> [曲.json]     … 設計図の検査（強さカーブ・音域表・曲との食い違い）
 //   旋律・対位法の道具: motif（動機の変形）・pattern（旋律の型の下書き）・counter（対旋律）・canon（カノン）・pedal（保持音）。詳しくは craft-cli.mjs の先頭
 //   node tools/composer/song.mjs novelty <曲.json> [--n 3] [--vs 曲名,曲名]  … 直前の曲と調・進行・入り方・終わり方・旋律の輪郭が同じでないか
+//   node tools/composer/song.mjs gate <曲.wav> [--genre <ジャンル名>|--song <曲.json>] [--bpm N] ...  … ジャンル別の目標（genre-targets.mjs）で判定。 genre-target <ジャンル名> [--bpm N] … 目標の幅を出す
 //   node tools/composer/song.mjs gate <曲.wav> [--target -14] [--save 曲ID] [--json]  … LUFS・真のピーク・LRA・PLR・相関・頭の大きさ・無音の合否表（○／要直し）
 //   node tools/composer/song.mjs gate-compare <曲.wav> <基準.wav>    … 音量をそろえてから帯域ごとの差を出す
 //   node tools/composer/song.mjs log <曲ID> --before .. --change .. --after .. --ear ..  … 直しの記録を1行残す（docs/sound/revisions.md）
@@ -49,7 +50,7 @@ const num = (name) => (opt(name) === undefined ? null : Number(opt(name)));
 
 if (args[0] === "report" && args[1]) {
   const { masterReport } = await import("./master-report.mjs");
-  console.log(masterReport(args[1], { lufs: num("--lufs"), tp: num("--tp") ?? -1.5, loop: !args.includes("--no-loop") }).line);
+  console.log(masterReport(args[1], { lufs: num("--lufs"), tp: num("--tp") ?? -1.5, loop: !args.includes("--no-loop"), genre: opt("--genre") ?? null, bpm: num("--bpm") ?? NaN }).line);
   process.exit(0);
 }
 if (args[0] === "presets") {

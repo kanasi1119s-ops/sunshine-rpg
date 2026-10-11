@@ -3,14 +3,15 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { judge, formatGate, measureWav, saveMeasurement, compareBands, formatCompare } from "./gate.mjs";
+import { judge, judgeGenre, formatGate, measureWav, saveMeasurement, compareBands, formatCompare } from "./gate.mjs";
 import { PLAN_TEMPLATE, checkPlan, formatPlanCheck } from "./plan-check.mjs";
 import { checkNovelty, loadRecentFull } from "./novelty.mjs";
 import { appendRevision } from "./revision-log.mjs";
+import { describeGenre, listGenreNames } from "./genre-targets.mjs";
 import { prepareForCheck } from "../audio-check/score-lib.mjs";
 
 const ROOT = path.resolve(fileURLToPath(new URL("../../", import.meta.url)));
-export const WORKFLOW_COMMANDS = ["gate", "gate-compare", "plan-check", "plan-template", "novelty", "log"];
+export const WORKFLOW_COMMANDS = ["gate", "genre-target", "gate-compare", "plan-check", "plan-template", "novelty", "log"];
 
 export async function runWorkflowCommand(args) {
   const cmd = args[0];
@@ -21,19 +22,31 @@ export async function runWorkflowCommand(args) {
     if (cmd === "plan-template") {
       console.log(JSON.stringify(PLAN_TEMPLATE, null, 1));
     } else if (cmd === "gate") {
-      if (!positional[0]) throw new Error("使い方: song.mjs gate <曲.wav> [--target -14] [--save <曲ID>] [--json]");
+      if (!positional[0]) throw new Error("使い方: song.mjs gate <曲.wav> [--target -14] [--genre <ジャンル名>] [--bpm N] [--song <曲.json>] [--save <曲ID>] [--json]");
       const target = Number(opt("--target", -14));
+      // ジャンル・BPM は --genre／--bpm か、--song の曲JSON（genre または drumGenre、bpm）から
+      const sj = opt("--song") ? JSON.parse(fs.readFileSync(opt("--song"), "utf8")) : null;
+      const genre = opt("--genre") ?? sj?.genre ?? sj?.drumGenre ?? null;
+      const bpm = Number(opt("--bpm", sj?.bpm ?? NaN));
       const m = measureWav(positional[0]);
-      const rows = judge(m, { target });
-      if (args.includes("--json")) console.log(JSON.stringify({ file: positional[0], target, metrics: m, rows }, null, 1));
-      else console.log(formatGate(m, rows, path.basename(positional[0])));
+      let rows = judge(m, { target }), gt = null;
+      if (genre) {
+        const g = judgeGenre(m, genre, { target, bpm });
+        if (!g) throw new Error(`ジャンル「${genre}」の目標がありません（使える名前: ${listGenreNames().join("・")}）`);
+        rows = g.rows; gt = g.target;
+      }
+      if (args.includes("--json")) console.log(JSON.stringify({ file: positional[0], target, genre, bpm: Number.isFinite(bpm) ? bpm : null, metrics: m, rows }, null, 1));
+      else console.log(formatGate(m, rows, path.basename(positional[0]), { genre: gt }));
       const id = opt("--save");
       if (id) {
-        const s = saveMeasurement(ROOT, id, m, rows, target);
+        const s = saveMeasurement(ROOT, id, m, rows, target, genre);
         const p = s.previous;
         console.log(`  保存: ${path.relative(ROOT, s.file)}${p ? `（前回 ${p.date}: LUFS ${p.lufs}・LRA ${p.lra}・PLR ${p.plr} → 今回 ${s.entry.lufs}・${s.entry.lra}・${s.entry.plr}）` : ""}`);
       }
       if (rows.some((r) => !r.ok)) process.exitCode = 2;
+    } else if (cmd === "genre-target") {
+      if (!positional[0]) throw new Error(`使い方: song.mjs genre-target <ジャンル名> [--bpm N]（${listGenreNames().join("・")}）`);
+      console.log(describeGenre(positional[0], { bpm: Number(opt("--bpm", NaN)) }));
     } else if (cmd === "gate-compare") {
       if (positional.length < 2) throw new Error("使い方: song.mjs gate-compare <曲.wav> <基準.wav>");
       console.log(formatCompare(compareBands(positional[0], positional[1]), path.basename(positional[0]), path.basename(positional[1])));

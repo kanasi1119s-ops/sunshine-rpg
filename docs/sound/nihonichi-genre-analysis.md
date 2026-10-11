@@ -89,14 +89,81 @@ I＝音量(LUFS)、PLR＝ピークと音量の差(dB)、LRA＝音量の幅、cor
 ※15曲は9月30日時点の作曲ソフトのもの。その後、動的な強弱（natural）・広がり・仕上げが入ったので、今の数字はもっと近いはず（`natural` で LRA 4.9〜5.9、広がり 0.46〜0.51 になった）。次に15曲を測り直して比べると良い。
 
 ## 7. 作曲ソフトに取り入れる提案
-1. **ジャンル別の目標を `mix-targets.json` に足す**: 起伏(LRA)・PLR・頭の大きさ・余韻・corr の目標を、このJSONの p10〜p90 から（例: ピアノ/バラード LRA 6〜8、PLR 13、corr 0.45。戦闘/電子 LRA 3、PLR 11、corr 0.75）。`gate` の合否の基準にする。【実装しやすい】
-2. **テンポで起伏の目標を変える**: BPM が 100 上がるごとに LRA −1.5 程度（3章）。`natural` の強弱幅や `gate` の LRA 判定を BPM で変える。【実装しやすい】
-3. **空気(8k+)とざらつき(flat)の診断**: うちは flat が 0.04（1000曲の中央値の1/4）。シンバル・ハイハットの高域、残響の空気、プレート系の `space` を足す目安にする。`report` に flat と空気を出す。【中】
-4. **曲の頭の大きさ**: ジャンルに応じて、小さく始める（−7dB）か全開（−3dB）かを `introGain`／sections の目標にする。【中】
-5. **余韻の目標**: `--loop-tail`／`space-wet` のジャンル別の既定（バラード 2.3秒、ロック 0.8秒）。【中】
+1. **【実装済み 2026-10-11・§9】ジャンル別の目標を `mix-targets.json` に足す**（`mix-targets.json` は帯域用のまま壊さず、別の `tools/composer/genre-targets.mjs` が `genre-targets-nihonichi.json` を読む形にした）: 起伏(LRA)・PLR・頭の大きさ・余韻・corr の目標を、このJSONの p10〜p90 から（例: ピアノ/バラード LRA 6〜8、PLR 13、corr 0.45。戦闘/電子 LRA 3、PLR 11、corr 0.75）。`gate` の合否の基準にする。【実装しやすい】
+2. **【実装済み・§9】テンポで起伏の目標を変える**: BPM が 100 上がるごとに LRA −1.5 程度（3章）。`natural` の強弱幅や `gate` の LRA 判定を BPM で変える。【実装しやすい】
+3. **【`report`・`gate` に表示を実装済み・§9。flat／空気を増やす音づくりそのものは未】空気(8k+)とざらつき(flat)の診断**: うちは flat が 0.04（1000曲の中央値の1/4）。シンバル・ハイハットの高域、残響の空気、プレート系の `space` を足す目安にする。`report` に flat と空気を出す。【中】
+4. **【目安の表示を実装済み・§9。`introGain` 等の自動化は未】曲の頭の大きさ**: ジャンルに応じて、小さく始める（−7dB）か全開（−3dB）かを `introGain`／sections の目標にする。【中】
+5. **【目安の表示を実装済み・§9。`--loop-tail`／`space-wet` の自動既定は未】余韻の目標**: `--loop-tail`／`space-wet` のジャンル別の既定（バラード 2.3秒、ロック 0.8秒）。【中】
 6. **足りない学習素材**: ロック・ジャズ・ポップス・ヒップホップは少ない（20〜30曲）。ジャンルごとに200曲は、サイトの規約と、取得の許可が要る（人間が許可済みだが、自動の安全確認で止まることがある）。
 
 ## 8. 限界
 - AI生成曲の数値で、人間の録音の目安ではない。『Suno が作る音』に寄せることになる点に注意（人間の判断で、−13LUFS前後の「ほどよい大きさ」を目標にするのはよいが、ロックの −10 のような大きさは別に決める）。
 - スタイル別の曲数に偏りがあり、ロック(92・タグ判定)、ジャズ系(44)は、分布の幅が広い。
 - 旋律・和音・リズム型は測っていない。**テンポ(BPM)はサイトの表示値**。
+
+## 9. 実装した内容と使い方（2026-10-11）
+
+### 9.1 ジャンル別の合否（`gate --genre`）
+```
+node tools/composer/song.mjs genre-target <ジャンル名> [--bpm N]     … そのジャンルの目標の幅を出す
+node tools/composer/song.mjs gate <曲.wav> --genre <ジャンル名> --bpm N [--save 曲ID]
+node tools/composer/song.mjs gate <曲.wav> --song <曲.json>           … 曲JSONの genre（なければ drumGenre）と bpm を使う
+node tools/composer/song.mjs report <WAV> --genre <ジャンル名> --bpm N   … 1行の合否に flat・空気、ジャンルの目安からの外れを添える
+```
+- `--genre` を付けないときの `gate` は、これまでどおり（LRA 4〜8・PLR 9以上など）。付けたときは、音量・真のピーク・無音は共通、**LRA・PLR・頭・余韻・corr・flat・空気**は、そのジャンルの p10〜p90 で判定する（外れたら直し方つき）。
+- 数字の出どころは `data/genre-targets-nihonichi.json`（1000曲）。1000曲の表に無いサイトのジャンルは、`data/genre-targets-site50.json`（§9.4。50曲測定の集計）の曲数が15以上のものだけ使う。
+- 頭は **最初の5秒−いちばん大きい5秒**（1000曲の「頭」と同じ測り方）で比べる。従来の行（`headVsMax`＝3〜10秒の短時間ラウドネス）は、ジャンル指定なしのときだけ使う。
+- flat・空気・頭・余韻は `tools/composer/spectral-metrics.mjs`（`analyze.py` と同じ定義の JS 版。ボス戦の1曲で `analyze.py` と flat 0.168・空気 −22.3・余韻 1.81 が一致）。
+- `gate --save` は、flat・空気・頭・余韻・ジャンル名も `docs/sound/data/ours/<曲ID>.json` に追記する。
+
+### 9.2 スタイル名 → 目標の対応表（`STYLE_MAP`）
+| 作曲ソフトの名前 | 使う目標 | 備考 |
+|---|---|---|
+| battle・boss・game-battle・game-boss | ボス/戦闘（119曲） | |
+| field・game-field・game-town・game-dungeon | フィールド/町/ダンジョン（32曲） | 曲数が少ない |
+| horror・dark | ホラー/ダーク（79曲） | |
+| rock・hardrock・punk・metal | ロック/パンク/メタル（92曲） | 目安が粗い。AI生成のロックは音量が控えめ |
+| rock-clean・acoustic・folk | アコースティック/フォーク（53曲） | |
+| pop・jpop | (全体)（1000曲） | **元データが無い**ので全体で代用（目安が粗い） |
+| vocaloid・hiphop・trap・dembow | エレクトロニック/シンセ（120曲） | 元データが無いので代用（目安が粗い） |
+| edm・house・disco・dnb・dubstep | エレクトロニック/シンセ | |
+| rnb・reggae | ジャズ/ファンク/ボサノバ（44曲） | 代用（目安が粗い） |
+| jazz・funk・bossa | ジャズ/ファンク/ボサノバ | |
+| retro・chiptune・8bit | チップチューン/8bit（36曲） | |
+| solo・piano | ピアノ独奏（44曲） | |
+| ballad・lullaby | バラード/子守歌（88曲） | |
+| lofi | 50曲測定の Lo-Fi（40曲）。なければ ballad | |
+| ambient | アンビエント/ドローン（160曲） | |
+| orch・orchestra・cinematic | オーケストラ/シネマ（306曲） | |
+| wafu | 和風（74曲） | |
+日本語のスタイル名（`ボス/戦闘` など）や、サイトのジャンル名（`game-bgm` など）も直接使える。
+
+### 9.3 テンポ（BPM）での補正
+`by_tempo` の LRA・PLR の中央値を、BPM の区間の中心（65・90・110・130・150・190）の間で線形補間し、**そのジャンルの代表テンポ（中央値）での値との差**だけ、そのジャンルの p10・中央値・p90 をずらす。BPM が上がるほど小さくなる（LRA は 60 BPM で 5.9 → 190 BPM で 2.9 付近、PLR は 12.8 → 11.1）。corr・flat・頭・余韻・空気はテンポでずらさない。BPM を渡さなければずらさない。
+
+### 9.4 頭・余韻のジャンル別の目安
+| 型 | 条件（中央値） | 目安 | ジャンル |
+|---|---|---|---|
+| 頭: すぐ全開 | −4.5dB 以上 | −3〜−4dB | ジャズ・チップチューン・ロック |
+| 頭: 小さく始める | −7dB 以下 | −7〜−8dB | オーケストラ・ホラー・バラード・ボス/戦闘 |
+| 余韻: 長い | 2秒以上 | reverb／space-wet を多めに | ピアノ独奏・バラード（2.3〜2.5秒） |
+| 余韻: 短い | 1秒以下 | 残響は控えめ | ロック・チップチューン・ボス/戦闘（0.7〜1.0秒） |
+`gate --genre` の表と `genre-target` に、この目安の文が出る。
+
+### 9.5 50曲測定の集計（`build-genre-targets.mjs`）
+```
+node tools/audio-check/build-genre-targets.mjs --in <results-0.jsonl> <results-1.jsonl> [--out docs/sound/data/genre-targets-site50.json] [--min-n 5]
+```
+測定が続いている最中でも読める（書きかけの行は飛ばす・入力は書き換えない）。出力は `genre-targets-nihonichi.json` の `groups` と同じキー名（`n`・`I`・`PLR`・`LRA`・`corr`・`頭`・`余韻`・`flat`・`帯域_*`・`広がり_*` など）に、ジャンル名ごと＋`(全体)`＋`by_tempo` を入れる。測定が終わったら同じコマンドを再実行して、`genre-targets-site50.json` を更新する（`gate --genre Lo-Fi` のようにサイトのジャンル名でも使える）。コミットしてある表は、2026-10-11 時点の途中結果（128曲）。
+
+### 9.6 今の作曲ソフトでゲームの15曲を測り直す手順（まだ実行していない）
+音を書き出すには Chromium（Playwright）が要るので、**CPUが空いているときに**行う（この回は、バックグラウンドの測定と CPU を共有していたため書き出していない）。既に WAV があればそれを測ってよい。
+1. 作曲ソフトを最新にする: `node tools/composer/build.mjs`
+2. 15曲を実際の大きさで書き出す: `node tools/audio-check/render-catalog.mjs --raw tmp/ours15 battle boss-shimo boss-touri deduction kyoto-deep memory opening outskirts sad staff-roll title town-kiri town-mugikano town-touri water-source`
+3. 従来の表（`data/nihonichi-bgm-metrics.json` の `ours` と同じ形）: `python3 tools/audio-check/analyze.py tmp/ours15/*.wav > tmp/ours15.json`
+4. ジャンル別の合否。曲ごとに次のジャンル・BPMを使う（BPMはカタログの値）:
+   - battle → `battle`、boss-shimo・boss-touri → `boss`、deduction → `game-field`、kyoto-deep → `game-dungeon`、memory・sad → `ballad`、opening・title・staff-roll → `orch`、outskirts → `game-field`、town-kiri・town-mugikano・town-touri → `game-town`、water-source → `ambient`
+   - 例: `node tools/composer/song.mjs gate tmp/ours15/battle.wav --genre battle --bpm 150 --save battle`
+   - 1行ずつ見るなら `node tools/composer/song.mjs report tmp/ours15/battle.wav --genre battle --bpm 150 --no-loop`
+5. 結果（LRA・PLR・corr・flat・空気・頭・余韻が p10〜p90 に入ったか）を §6 の表に足し、外れた項目は §7 の直し方（`dynamics: "natural"`・`--widen`・hat／space を足す）で直して、同じ測定を回す。直した理由と数字は `song.mjs log` で1行残す。
+6. WAV は `tmp/` に置く（コミットしない）。数字だけ `data/ours/` に残る。
