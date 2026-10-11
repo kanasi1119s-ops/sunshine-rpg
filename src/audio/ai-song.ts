@@ -1,5 +1,6 @@
 import { noteNameToMidi } from "./note";
 import { buildNewSong } from "./newsong";
+import { applyNaturalDynamics } from "./dynamics";
 import { applySections, autoSections, fitSections, SECTION_KINDS, type Section, type SectionKind } from "./arrangement";
 import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, type Track } from "./score";
 
@@ -75,7 +76,7 @@ export interface AiSong {
   /** true なら、lead をシンセリード、pad をシンセパッドの音色にする（省略は false＝lead はフルート、pad は合唱に近い生楽器寄りの音色）。ダンス・電子音楽向け。 */
   synth?: boolean;
   /** true なら、曲の最初の1/8（最大4小節）を小さく始めて上げ、真ん中あたりで一度引いて戻す（曲の起伏。省略は false）。 */
-  dynamics?: boolean;
+  dynamics?: boolean | "natural";
   /** 人間らしさ（0〜1）。打ち込みらしい機械的な正確さをくずす（タイミング・強さ・音の長さ・音量の山・音程のわずかなずれ、バンド全体の走りと溜め）。0.3〜0.6が自然。録音音源で効く。 */
   human?: number;
   /** スネアの音程（半音。-6〜6。マイナスで低く）。録音音源で効く。 */
@@ -123,7 +124,7 @@ export const AI_SONG_SCHEMA = {
     tone: { type: "string", enum: ["rock", "metal", "prs"] },
     swing: { type: "number" },
     synth: { type: "boolean" },
-    dynamics: { type: "boolean" },
+    dynamics: { anyOf: [{ type: "boolean" }, { type: "string", enum: ["natural"] }] },
     human: { type: "number" },
     snareTune: { type: "number" },
     autoScoop: { type: "boolean" },
@@ -208,6 +209,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - human: 0〜1。「打ち込みっぽい」と感じるときに足す。各パートのタイミングのずれを大きく、バンド全体を少し走らせたり溜めたり、音の強さ・長さをばらつかせ、長い音（リード・パッド・弦・ブラス）に音量の山をつけ、リード・ギター・弦の音程をごくわずかにずらす。0.3〜0.6が自然、1はかなりラフ。同じ小節のくり返しが多いほど効く（くり返しは、手で書くときに少しずつ変えるのが本筋で、human はその上に重ねる仕上げ）。録音音源（real版）でだけ効く。
 - sections: 自動の伴奏（autoAccompaniment: true）に、曲の起伏をつける。"auto" なら定番の構成（導入4 → Aメロ8 → Bメロ4 → サビ8 → 間奏4 → Aメロ → Bメロ → サビ → サビ → 終わり4。曲の小節数に合わせて自動で区切る）。自分で決めるなら [{"kind":"intro","bars":4},{"kind":"verse","bars":8},{"kind":"pre","bars":4},{"kind":"chorus","bars":8}] のように書く（kind は intro・verse・pre・chorus・interlude・bridge・outro。bars の合計が曲の小節数になるようにする。ちがうときは最後を延ばすか、後ろを切る）。導入＝ピアノと弦だけ、Aメロ＝ドラム（キックとハイハット）とベースを足す、Bメロ＝スネアとギターを足して少しずつ強く、サビ＝全部とクラッシュ、間奏＝ドラムを抜く、Cメロ・終わり＝静かに。サビの前の小節は、スネアとキックで助走をつける。メロディなど自分で書いたパートには効かないので、メロディ側の強弱は phrase や ! , で付ける。
 - dynamics: true にすると、曲の出だし（最初の1/8、最大4小節）を小さく始めて上げ、中盤で一度引いてから戻す（曲の起伏）。同じ音量で続く曲を避けたいときに使う。
+- dynamics: "natural" にすると、人が弾いたような強弱を自動でつける（曲全体の山と谷・4小節フレーズごとの息づかい・拍の強弱・音ごとのわずかなばらつき。出だしと終わりは小さく、7割あたりが頂点）。ソロ・バラード・インストで、のっぺりした曲にしたくないときは基本これを使う。ドラムには半分の深さでかかる。
 - parts: 自分で書くパート。1曲に1〜8パート。
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。
   - sustain: 音の伸び（0.2〜3、省略は1）。0.3〜0.6＝スタッカート（歯切れよく。ピアノ・ギターの刻み・シンセの刻み）、1＝ふつう、1.5〜3＝余韻を残す（ハープ・鐘・パッド・琴・アルペジオ）。長くした音は次の音に重なる。
@@ -483,12 +485,13 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   if (errors.length) throw new Error(errors.join("\n"));
   if (parts.length === 0 && accompaniment.length === 0) throw new Error("パートがありません");
   const all = [...accompaniment, ...parts];
-  const tracks = song.dynamics === true ? applyArc(all, total, Number(song.beats)) : all;
+  const tracks = song.dynamics === "natural" ? applyNaturalDynamics(all, total, Number(song.beats)) : song.dynamics === true ? applyArc(all, total, Number(song.beats)) : all;
   const score: Score = {
     tempoBpm: bpm, loop: true, drumKit: base.drumKit, tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock",
     ...(Number(song.swing) > 0 ? { swing: Math.min(1, Number(song.swing)) } : {}),
     ...(Number(song.human) > 0 ? { human: Math.min(1, Number(song.human)) } : {}),
     ...(song.autoScoop === false ? { autoScoop: false } : {}),
+    ...(song.dynamics === "natural" ? { dynamicRange: "wide" as const } : {}),
     ...(Number(song.snareTune) && Number.isFinite(Number(song.snareTune)) ? { snareTune: Math.max(-6, Math.min(6, Math.round(Number(song.snareTune) * 2) / 2)) } : {}),
     ...(drumMixOf(song.drumMix) ? { drumMix: drumMixOf(song.drumMix) } : {}),
     // synth: lead／pad をシンセ音色にする。style "electro" は、実楽器版（real-edition.ts）が電子音楽の音色を生楽器に置き換えないための印

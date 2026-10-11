@@ -115,6 +115,8 @@ export function grooveOffsetBeats(swing: number | undefined, push: number | unde
 export interface Score {
   /** 裏拍を遅らせる量（0〜1）。省略時は0（ずらさない）。 */
   swing?: number;
+  /** "wide" なら、音の強弱を MIDI の強さにそのまま近く反映する（弱い音をより弱く）。dynamics: "natural" の曲で使う。 */
+  dynamicRange?: "wide";
   /**
    * 人間らしさ（0〜1）。省略時は0（今までどおり）。大きいほど、打ち込みらしさ（機械的な正確さ）をくずす。録音音源（MIDI経由）で効く。
    * ・各パートのタイミングのずれを大きく（人の手のばらつき）　・バンド全体が少しだけ走ったり溜めたりする（ゆるやかな揺れ）

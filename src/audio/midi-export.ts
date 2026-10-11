@@ -59,8 +59,18 @@ const u32 = (n: number): number[] => [(n >>> 24) & 255, (n >>> 16) & 255, (n >>>
 const u16 = (n: number): number[] => [(n >>> 8) & 255, n & 255];
 
 /** 音の強さ（0〜127）。トラックの音量0〜0.3ほどを、MIDIの強さへ。 */
-function velocityOf(volume: number, boost: number): number {
-  return Math.max(18, Math.min(127, Math.round((34 + volume * 430) * boost)));
+function velocityOf(volume: number, boost: number, trackVolume = volume, wide = false): number {
+  // 音量の大きいパートは 34 + 音量×430 が 127 を超え、弱い音も 127 に張りついて強弱が消えていた。
+  // 127 に収まる分を「そのパートの最大の強さ」とし、音ごとの強さの比（volume / trackVolume）をその上にかける
+  if (!(trackVolume > 0)) return Math.max(18, Math.min(127, Math.round((34 + volume * 430) * boost)));
+  const ratio = volume / trackVolume;
+  if (wide) {
+    // 強弱を広げる版: 下駄を小さく（34→8）、比を少し強調して、弱い音をはっきり弱くする
+    const top = Math.min(127 / boost, 34 + trackVolume * 430);
+    return Math.max(10, Math.min(127, Math.round((8 + (top - 8) * Math.pow(ratio, 1.25)) * boost)));
+  }
+  const full = Math.min(127 / boost - 34, trackVolume * 430);
+  return Math.max(18, Math.min(127, Math.round((34 + full * ratio) * boost)));
 }
 
 // 楽器ごとの強さの補正（録音音源は楽器によって元の大きさが違うため）
@@ -304,7 +314,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       const strike = score.opening && startBeat < 2 ? 1.22 : 1;
       // 特別曲用（prs）の刻みギターは、強すぎないよう控えめに
       const rhythmSoft = score.tone === "prs" && (inst === "distGuitar" || inst === "crunch") ? 0.78 : 1;
-      const velocity = Math.min(127, Math.round(velocityOf(vol, boost) * strike * rhythmSoft));
+      const velocity = Math.min(127, Math.round(velocityOf(vol, boost, track.volume, score.dynamicRange === "wide") * strike * rhythmSoft));
       // 音の長さのばらつき（人の弾き方）: 短い音は、少し短く切れたり、つながったり
       if (H > 0 && drumNote === undefined && n.gate === undefined && n.durationBeats <= 1) lenScale *= 1 - 0.14 * H * rnd(startBeat * 3.1 + trackSeed);
       const len = Math.max(20, Math.round((n.open && inst === "hihat" ? Math.max(n.durationBeats, 0.5) : n.durationBeats) * PPQ * lenScale * (drumNote === undefined ? n.gate ?? 1 : 1)));
