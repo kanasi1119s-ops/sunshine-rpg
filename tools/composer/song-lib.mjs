@@ -4,6 +4,7 @@ import { createServer } from "vite";
 import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
+import { checkChordVariety, loadOtherSongs } from "./chord-variety.mjs";
 
 export const ROOT = path.resolve(new URL("../../", import.meta.url).pathname);
 const EDITIONS = ["real", "ps2", "modern"];
@@ -45,6 +46,8 @@ export async function openSongKit() {
     // 曲の自動チェック（楽譜）: 低音のにごり・同じ音域のぶつかり・単調さ。入力のまちがいではなく、直すと良くなるヒント
     const { checkScore } = await load("/src/audio/song-check.ts");
     warnings.push(...checkScore(score));
+    // コード進行の自動チェック: 基本の和音だけ・少ない種類のくり返し・他の曲と同じ形
+    warnings.push(...checkChordVariety(songData.chords, loadOtherSongs(path.join(ROOT, "assets-src", "ai-songs"), name)));
     const out = path.resolve(outDir ?? path.join(ROOT, "dist-songs"));
     fs.mkdirSync(out, { recursive: true });
     const files = { project: path.join(out, `${name}.sunshine-song.json`), midi: path.join(out, `${name}.mid`) };
