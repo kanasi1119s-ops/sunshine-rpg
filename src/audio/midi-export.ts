@@ -80,7 +80,7 @@ const REVERB: Partial<Record<Instrument, number>> = { pad: 70, choir: 80, string
 // コーラス（音を広げる揺らぎ）の量（MIDIのCC93）
 const CHORUS: Partial<Record<Instrument, number>> = { strings: 30, pad: 35, choir: 30, keys: 22, guitar: 20, echoGuitar: 20, crunch: 12, distGuitar: 8, bell: 12, harpsichord: 10 };
 /** 歪ませないアンプ（これらのときは、元の音色をそのまま使う）。 */
-const CLEAN_AMP_TYPES = new Set<string>(["clean", "jazz", "funk", "lofi", "retro8bit", "radio", "delicate", "crystal"]);
+const CLEAN_AMP_TYPES = new Set<string>(["clean", "jazz", "funk", "lofi", "retro8bit", "radio", "delicate", "crystal", "sparkleClean"]);
 const SWELL_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "pad", "strings", "choir", "brass"]);
 const DETUNE_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "guitar", "echoGuitar", "strings", "pad", "brass"]);
 const ECHO_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "cowbell", "bell", "keys"]);

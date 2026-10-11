@@ -1242,7 +1242,7 @@ nsBtn.onclick = () => {
 const ampBox = h("div", {});
 const AMP_TYPES: [AmpSetting["type"], string][] = [
   ["auto", "おまかせ（曲の設定どおり）"], ["clean", "クリーン"], ["overdrive", "オーバードライブ"], ["distortion", "ディストーション"], ["metal", "メタルゾーン"], ["prs", "なめらかなリード（PRS風）"], ["plugin", "追加したアンプ（アンプ定義ファイル）"], ["nam", "NAMのアンプモデル（実機を学習したもの）"],
-  ["jazz", "ジャズ（太く柔らかい）"], ["blues", "ブルース（浅く温かい歪み）"], ["funk", "ファンク（明るく歯切れよい）"], ["crunch", "クランチ（ざらっと浅い歪み）"], ["hardrock", "ハードロック（深い歪み）"], ["punk", "パンク（勢いのある歪み）"], ["fuzz", "ファズ（荒々しく不穏）"], ["shoegaze", "シューゲイザー（霞んだ音の壁）"], ["lofi", "ローファイ（古い録音）"], ["loudmetal", "ラウドメタル（重く密度の高い歪み）"], ["loudrock", "ラウドロック（太く前に出る歪み）"], ["delicate", "繊細（歪ませず弱い音の粒が聞こえる）"], ["crystal", "透明（透き通るクリーン・耳にやさしい）"], ["retro8bit", "レトロ8bit（粗い階段の音）"], ["radio", "ラジオ・電話（遠くの音）"],
+  ["jazz", "ジャズ（太く柔らかい）"], ["blues", "ブルース（浅く温かい歪み）"], ["funk", "ファンク（明るく歯切れよい）"], ["crunch", "クランチ（ざらっと浅い歪み）"], ["hardrock", "ハードロック（深い歪み）"], ["punk", "パンク（勢いのある歪み）"], ["fuzz", "ファズ（荒々しく不穏）"], ["shoegaze", "シューゲイザー（霞んだ音の壁）"], ["lofi", "ローファイ（古い録音）"], ["loudmetal", "ラウドメタル（重く密度の高い歪み）"], ["loudrock", "ラウドロック（太く前に出る歪み）"], ["delicate", "繊細（歪ませず弱い音の粒が聞こえる）"], ["crystal", "透明（透き通るクリーン・耳にやさしい）"], ["lead", "リード（浅い歪み・中域が厚く歌う）"], ["modernHigh", "モダン高ゲイン（締まった刻み・ゲート付き）"], ["sparkleClean", "きらびやかなクリーン（歪みなし）"], ["retro8bit", "レトロ8bit（粗い階段の音）"], ["radio", "ラジオ・電話（遠くの音）"],
 ];
 function slider(label: string, min: number, max: number, step: number, value: number, on: (v: number) => void): HTMLElement {
   const input = h("input", { type: "range", min: String(min), max: String(max), step: String(step), value: String(value) });
@@ -1275,6 +1275,20 @@ function renderAmp(): void {
     slider("高音の明るさ(dB)", -6, 6, 0.5, amp.tone ?? 0, (v) => change({ ...(t.amp ?? amp), tone: v })),
     slider("出力の大きさ", 0.5, 1.5, 0.05, amp.level ?? 1, (v) => change({ ...(t.amp ?? amp), level: v })));
   ampBox.append(row);
+  // 箱・マイク・タイト・ゲート・歪みの曲線（任意。空欄は、アンプの種類ごとの既定のまま）
+  if (!["auto", "nam", "plugin", "genre"].includes(amp.type)) {
+    const opt = <K extends "cab" | "mic" | "curve">(key: K, label: string, list: [string, string][]): HTMLElement => {
+      const sel = select([["", "（既定）"], ...list], (amp[key] as string | undefined) ?? "");
+      sel.onchange = () => change({ ...(t.amp ?? amp), [key]: sel.value || undefined });
+      return field(label, sel);
+    };
+    ampBox.append(h("div", { class: "row", style: "margin-top:8px" },
+      opt("cab", "スピーカーの箱", [["closed", "締まる"], ["open", "開放的"], ["dark", "暗い"], ["bright", "明るい"]]),
+      opt("mic", "マイクの位置", [["center", "正面（明るい）"], ["edge", "端寄り（丸い）"], ["off", "斜め（温かい）"], ["far", "遠い（柔らかい）"]]),
+      opt("curve", "歪みの曲線", [["tanh", "標準"], ["softsqrt", "なめらか"], ["diode", "上下で違う"], ["deadzone", "不感帯"]]),
+      slider("タイト（歪みの前の締め）", 0, 1, 0.05, amp.tight ?? 0, (v) => change({ ...(t.amp ?? amp), tight: v || undefined })),
+      slider("ノイズゲートの深さ(dB。0=既定)", 0, 60, 2, amp.gate ?? 0, (v) => change({ ...(t.amp ?? amp), gate: v || undefined }))));
+  }
   if (amp.type === "genre") {
     const presetSel = select(AMP_PRESET_NAMES.map((k) => [k, `${AMP_PRESETS[k].label}（${AMP_PRESETS[k].genre}）`] as [string, string]), amp.preset ?? "rock");
     presetSel.onchange = () => change({ ...(t.amp ?? amp), type: "genre", preset: presetSel.value as AmpPresetName });

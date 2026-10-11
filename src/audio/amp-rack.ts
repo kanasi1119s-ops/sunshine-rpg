@@ -9,6 +9,9 @@ import type { AmpSetting, GenreAmpType } from "./score";
 import { AMP_PRESETS, makeDistortionCurve } from "./amp";
 import { buildAmpPlugin, type AmpPluginDef } from "./amp-plugins";
 import type { NamHost } from "./nam/nam-host";
+import { cabApproxSpec, type CabKind, type MicPos } from "./amp-cab";
+import { shapeCurve, type CurveKind } from "./amp-curves";
+import { createGate, loadGate } from "./amp-gate";
 
 export type Tone = "rock" | "metal" | "prs";
 /** チャンネルごとの、音づくりの上書き（トラックの`amp`と、左右の位置）。 */
@@ -19,7 +22,7 @@ export interface ChannelAmp {
 type Role = "plugin" | "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru" | GenreAmpType;
 
 /** ジャンル別のアンプの種類（`score.ts` の `GenreAmpType` と同じ並び）。 */
-export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal"];
+export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean"];
 
 const STEP_CURVES = new Map<number, Float32Array<ArrayBuffer>>();
 /** 波形を階段状にする（ビットを落としたような粗い音）。levels は片側の段数。 */
@@ -51,10 +54,12 @@ function genreToType(amp: AmpSetting): AmpSetting["type"] {
 const CURVES = new Map<string, Float32Array<ArrayBuffer>>();
 /** 真空管アンプのように、少し非対称にクリップする波形。drive が大きいほど深く歪む。 */
 function curve(drive: number, bias: number): Float32Array<ArrayBuffer> {
+  // 深い歪み（drive 8 以上）は曲線の曲がりが急なので、表の点を倍にして精度を上げる（提案7）
+  const size = drive >= 8 ? 8192 : 4096;
   const key = `${drive}|${bias}`;
   let c = CURVES.get(key);
   if (!c) {
-    c = new Float32Array(4096);
+    c = new Float32Array(size);
     const offset = Math.tanh(drive * bias);
     for (let i = 0; i < c.length; i++) {
       const x = (i / (c.length - 1)) * 2 - 1;
@@ -64,6 +69,19 @@ function curve(drive: number, bias: number): Float32Array<ArrayBuffer> {
   }
   return c;
 }
+
+/** 音づくりの追加の段（cab・mic・tight・gate・preLowpass・curve）。ロールの既定と、利用者の指定を合わせたもの。 */
+type StageOptions = Pick<AmpSetting, "cab" | "mic" | "tight" | "gate" | "preLowpass" | "curve">;
+/** 新しいロールの既定。既存のロールには足さない（既存曲の聞こえ方を変えない）。 */
+const ROLE_DEFAULTS: Partial<Record<Role, StageOptions>> = {
+  lead: { cab: "open", preLowpass: 7000, curve: "softsqrt" },
+  modernHigh: { cab: "closed", preLowpass: 6500, gate: 60 },
+  sparkleClean: { cab: "bright" },
+};
+/** 追加の段をかけない（かけても意味がない）ロール。 */
+const NO_STAGES = new Set<Role>(["bass", "bassMetal", "drumsRock", "drumsMetal", "thru", "nam", "plugin"]);
+/** 非対称（bias がこれ以上）の歪みのあとに、直流（DC）を除くハイパスを入れる（提案3）。 */
+const DC_BLOCK_BIAS = 0.05;
 
 const GUITAR_PROGRAMS = { overdrive: 29, distortion: 30, clean: 27 };
 const BASS_PROGRAMS = new Set([32, 33, 34, 35, 36, 37, 38, 39]);
@@ -75,6 +93,10 @@ export class AmpRack {
   private models: Record<string, string> = {};
   private plugins: Record<string, AmpPluginDef> = {};
   private generation = 0;
+  /** いま組み立てているロールの、追加の段の指定。 */
+  private opt: StageOptions | null = null;
+  /** このラックが作った歪みの部品と、その bias（前段ローパス・DC除去を入れる位置を決める）。 */
+  private shaperBias = new WeakMap<AudioNode, number>();
   private pending: Promise<unknown>[] = [];
 
   constructor(private ctx: BaseAudioContext, private destination: AudioNode) {
@@ -145,11 +167,18 @@ export class AmpRack {
     f.Q.value = q;
     return f;
   }
+  /** 歪みの部品。浅い歪み（drive 2 未満）は 2x、深い歪みは 4x のオーバーサンプリング（提案7）。 */
   private shaper(drive: number, bias: number): WaveShaperNode {
     const s = this.ctx.createWaveShaper();
-    s.curve = curve(drive, bias);
-    s.oversample = "4x";
+    const kind: CurveKind = this.opt?.curve ?? "tanh";
+    s.curve = kind === "tanh" ? curve(drive, bias) : shapeCurve(kind, drive, bias, drive >= 8 ? 8192 : 4096);
+    s.oversample = drive < 2 ? "2x" : "4x";
+    this.shaperBias.set(s, bias);
     return s;
+  }
+  /** キャビネット近似のフィルターを作る（提案1・9）。 */
+  private cabNodes(kind: CabKind, mic: MicPos): BiquadFilterNode[] {
+    return cabApproxSpec(kind, mic).map((f) => this.filter(f.type, f.freq, f.gain, f.q));
   }
   private gain(value: number): GainNode {
     const g = this.ctx.createGain();
@@ -158,7 +187,8 @@ export class AmpRack {
   }
 
   /** ノードを順番につないで、最後を出口につなぐ。 */
-  private chain(input: AudioNode, nodes: AudioNode[]): AudioNode[] {
+  private chain(input: AudioNode, base: AudioNode[]): AudioNode[] {
+    const nodes = this.opt ? this.decorate(base, this.opt) : base;
     let prev: AudioNode = input;
     for (const n of nodes) {
       prev.connect(n);
@@ -168,7 +198,65 @@ export class AmpRack {
     return nodes;
   }
 
+  /**
+   * 追加の段を足す: 入口にノイズゲート（提案4）と tight（提案6）、最初の歪みの前に前段ローパス（提案2）、
+   * 非対称の歪みのあとにDC除去（提案3）、出口にキャビネット近似（提案1・9）。何も指定がなければ、DC除去だけ（聞こえない低さ）。
+   */
+  private decorate(base: AudioNode[], o: StageOptions): AudioNode[] {
+    const out: AudioNode[] = [];
+    if (o.gate && o.gate > 0) {
+      const gateIn = this.gain(1);
+      const gateOut = this.gain(1);
+      out.push(gateIn, gateOut);
+      this.attachGate(gateIn, gateOut, o.gate);
+    }
+    if (o.tight && o.tight > 0) {
+      const t = Math.max(0, Math.min(1, o.tight));
+      const boost = this.ctx.createWaveShaper();
+      boost.curve = shapeCurve("softsqrt", 1.3, 0, 2048);
+      boost.oversample = "2x";
+      out.push(this.filter("highpass", 100 + 200 * t, 0, 0.8), this.filter("peaking", 850, 2 + 4 * t, 0.9), boost);
+    }
+    let preDone = !(o.preLowpass && o.preLowpass > 0);
+    for (const n of base) {
+      const bias = this.shaperBias.get(n);
+      if (bias !== undefined && !preDone) {
+        out.push(this.filter("lowpass", o.preLowpass!, 0, 0.7));
+        preDone = true;
+      }
+      out.push(n);
+      if (bias !== undefined && bias >= DC_BLOCK_BIAS) out.push(this.filter("highpass", 25, 0, 0.7));
+    }
+    const cab = o.cab ?? (o.mic ? "closed" : undefined);
+    if (cab) out.push(...this.cabNodes(cab, o.mic ?? "center"));
+    return out;
+  }
+
+  /** ノイズゲートを、用意ができたらその場でつなぎ替える（用意できるまでは素通し。曲の再生は止めない）。 */
+  private attachGate(gateIn: AudioNode, gateOut: AudioNode, depthDb: number): void {
+    const ready = loadGate(this.ctx);
+    if (!ready) return;
+    const generation = this.generation;
+    const deep = depthDb >= 40;
+    const done = ready.then(() => {
+      if (generation !== this.generation) return;
+      const node = createGate(this.ctx, { depthDb, thresholdDb: deep ? -48 : -52, hold: deep ? 0.015 : 0.02, release: deep ? 0.08 : 0.12 });
+      gateIn.disconnect();
+      gateIn.connect(node);
+      node.connect(gateOut);
+      this.built[this.built.findIndex((list) => list.includes(gateIn))]?.push(node);
+    });
+    this.pending.push(done.catch((error: unknown) => console.warn("ノイズゲートを用意できませんでした:", error)));
+  }
+
   private build(role: Role, input: AudioNode, override?: ChannelAmp): AudioNode[] {
+    if (NO_STAGES.has(role)) this.opt = null;
+    else {
+      const o: StageOptions = { ...ROLE_DEFAULTS[role] };
+      const a = override?.amp;
+      if (a) for (const k of ["cab", "mic", "tight", "gate", "preLowpass", "curve"] as const) if (a[k] !== undefined) (o as Record<string, unknown>)[k] = a[k];
+      this.opt = o;
+    }
     const d = override?.amp.drive ?? 1;
     const toneDb = override?.amp.tone ?? 0;
     const level = override?.amp.level ?? 1;
@@ -281,6 +369,20 @@ export class AmpRack {
       case "crystal":
         // 透明: 歪ませない。2〜4kHz の刺さり（耳に強い帯域）を削り、1kHz 前後のこもりを少し引き、7kHz 以上にごく少し空気感を足す。弱い圧縮で粒をそろえる
         return this.chain(input, tail([this.filter("highpass", 100, 0, 0.7), this.filter("peaking", 350, -5, 0.6), this.filter("peaking", 1000, -1, 0.8), this.filter("peaking", 2800, -3, 0.9), this.filter("highshelf", 7000, 1, 0.7), this.filter("lowpass", 8500, 0, 0.7), this.filter("lowpass", 10500, 0, 0.7), this.compressor(-30, 1.6, 0.02, 0.25), this.gain(1.0)]));
+      // ── 2026-10-11 追加（amp-sim-guide.md 提案10）。キャビネット近似・前段ローパス・ゲートは ROLE_DEFAULTS で足される ──
+      case "lead":
+        // リード: 浅めのなめらかな歪み（x/√(1+x²)）で、0.9〜1.2kHz の厚みと 2.5kHz の抜けで歌わせる。開放的な箱で、高域は急に落とす
+        return this.chain(input, tail([this.filter("highpass", 100, 0, 0.8), this.filter("peaking", 1000, 4.5, 0.8), this.gain(2.6 * d), this.shaper(3.6 * d, 0.06), this.filter("peaking", 2500, 1, 1), this.filter("lowshelf", 150, 1.5), this.compressor(-22, 2, 0.012, 0.18), this.gain(0.5)]));
+      case "modernHigh":
+        // モダン高ゲイン: 160Hz未満を強く削って刻みを締め、ゲートで切れ目を静かにし、2段で深く歪ませ、500Hz をえぐって 3.2kHz と低音を足す。締まった箱
+        return this.chain(input, tail([
+          this.filter("highpass", 160, 0, 0.8), this.filter("peaking", 800, 4, 0.8), this.gain(4.4 * d), this.shaper(9 * d, 0.03),
+          this.filter("lowpass", 5200, 0, 0.7), this.gain(1.8), this.shaper(3.8, 0.02),
+          this.filter("peaking", 500, -5, 1), this.filter("peaking", 3200, 3, 1), this.filter("lowshelf", 100, 3.5), this.gain(0.3),
+        ]));
+      case "sparkleClean":
+        // きらびやかなクリーン: 歪ませない。中域のこもり（900Hz・1.6kHz）を少し引き、2.6kHz にわずかな抜け、低めを足し、弱い圧縮で粒をそろえる。高域は明るい箱で6kHz前後から急に落とす
+        return this.chain(input, tail([this.filter("highpass", 80, 0, 0.7), this.filter("lowshelf", 250, 2, 0.7), this.filter("peaking", 900, -3, 0.8), this.filter("peaking", 1600, -2, 0.8), this.filter("peaking", 2600, 1, 0.9), this.compressor(-26, 2.5, 0.012, 0.2), this.gain(1.0)]));
       default:
         return this.chain(input, []);
     }
@@ -318,17 +420,22 @@ export class AmpRack {
       const tone = this.filter("highshelf", 3500, override.amp.tone ?? 0);
       // 入力の大きさ（歪みの深さ）と、耳に痛い高音を丸めるキャビネットのかわりのフィルター
       const pre = this.gain(override.amp.drive ?? 1);
-      const cab = this.filter("lowpass", 7000, 0);
+      // 付録: 7kHzのローパス1枚をやめて、キャビネット近似（周波数をずらした急なローパス）に（箱の無い「アンプのみ」の録りが多いため）
+      const cab = this.cabNodes(override.amp.cab ?? "closed", override.amp.mic ?? "center");
       input.connect(pre);
       pre.connect(node);
       node.connect(tone);
-      tone.connect(cab);
-      cab.connect(panner);
+      let prev: AudioNode = tone;
+      for (const f of cab) {
+        prev.connect(f);
+        prev = f;
+      }
+      prev.connect(panner);
       panner.connect(out);
       out.connect(this.destination);
       // 音が出はじめたら、元の音（ドライ）を切る
       dry.disconnect();
-      this.built[this.built.findIndex((list) => list.includes(dry))]?.push(node, pre, tone, cab, panner, out);
+      this.built[this.built.findIndex((list) => list.includes(dry))]?.push(node, pre, tone, ...cab, panner, out);
     });
     this.pending.push(done.catch((error: unknown) => console.warn("NAMのアンプを用意できませんでした:", error)));
     return nodes;

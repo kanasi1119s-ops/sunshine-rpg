@@ -50,7 +50,7 @@ export type Instrument =
  * ジャンル別のアンプ（2026-09-30 追加）。ジャズ・ブルース・ファンク・クランチ・ハードロック・パンク・ファズ・
  * シューゲイザー・ローファイ・レトロ8bit・ラジオ。作り方は `amp-rack.ts`、向いている場面は `docs/sound/composition-notes.md`。
  */
-export type GenreAmpType = "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal";
+export type GenreAmpType = "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean";
 
 /** ギターなどの音づくり（アンプ）の設定。`auto`は、曲の音色（tone）と楽器から自動で選ぶ。 */
 export interface AmpSetting {
@@ -65,6 +65,18 @@ export interface AmpSetting {
   tone?: number;
   /** 出力の大きさの倍率（0.5〜1.5、既定1）。 */
   level?: number;
+  /** キャビネット近似の箱（closed=締まる／open=開放的／dark=暗い／bright=明るい）。省略は、ロールの既定（なければ足さない＝これまでの音）。 */
+  cab?: "closed" | "open" | "dark" | "bright";
+  /** マイクの位置（center=明るく直接的／edge=暗く丸い／off=斜めで温かい／far=遠く柔らかい）。cab がなければ closed を足す。 */
+  mic?: "center" | "edge" | "off" | "far";
+  /** タイト（0〜1）。歪みの前に、低音の締め（ハイパス100〜300Hz）＋中域の山＋ごく軽いソフトクリップを足す。省略は無効。 */
+  tight?: number;
+  /** ノイズゲートの深さ（dB。0=なし、24=自然、60=ほぼ切る）。省略はロールの既定。 */
+  gate?: number;
+  /** 前段ローパス（Hz。最初の歪みの前に入れる。省略はロールの既定。0で無効）。 */
+  preLowpass?: number;
+  /** 歪みの波形曲線（省略は tanh）。 */
+  curve?: "tanh" | "softsqrt" | "diode" | "deadzone";
   /** type=nam のとき、使うNAMモデルの名前（`Score.namModels`のキー）。 */
   model?: string;
 }

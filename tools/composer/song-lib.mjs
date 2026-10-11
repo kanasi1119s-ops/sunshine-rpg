@@ -152,8 +152,8 @@ export async function renderWav(score, edition, file, soundfont = "game", bass =
   const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required"] });
   try {
     const page = await browser.newPage();
-    await page.goto("file://" + html);
-    await page.waitForFunction(() => "__composer" in window);
+    await page.goto("file://" + html, { timeout: 240000 });
+    await page.waitForFunction(() => "__composer" in window, undefined, { timeout: 240000 });
     await page.evaluate(([b, d, g]) => window.__composer.setOverlays(b, d, g), [bass, drums, guitar]);
     if (soundfont === "gu") await page.evaluate(() => window.__composer.setSoundfont("gu"));
     const b64 = await page.evaluate(([s, e]) => window.__composer.renderWav(s, e), [score, edition]);
