@@ -1,0 +1,23 @@
+{
+ "title": "ベースだけの見本（ウォーキング）",
+ "description": "ii-V-I を1拍1音で歩くジャズのベースだけ（見本・仮）",
+ "bpm": 140,
+ "beats": 4,
+ "chords": "Dm7 G7 Cmaj7 Cmaj7",
+ "barsPerChord": 1,
+ "repeats": 2,
+ "autoAccompaniment": false,
+ "feel": "rock",
+ "tone": "rock",
+ "swing": 0.6,
+ "parts": [
+  {
+   "instrument": "bass",
+   "role": "ベース",
+   "volume": 0.3,
+   "pan": 0,
+   "amp": "auto",
+   "notes": "D2:1 F2:1 A2:1 Ab2:1 G2:1 F2:1 D2:1 Db2:1 C2:1 E2:1 G2:1 Eb2:1 C2:1 G2:1 E2:1 G2:1"
+  }
+ ]
+}

@@ -548,3 +548,27 @@
 - [Pickup Music: Ghost notes on bass](https://www.pickupmusic.com/bass/bass-classes/learn-ghost-notes-in-7-days)
 - [Premier Guitar: Eighth notes for bassists](https://www.premierguitar.com/articles/Tools_of_the_Trade_for_Bassists_Eighth-Notes)
 - [Dummies: Straight or syncopated bass lines](https://www.dummies.com/art-center/music/bass-guitar/how-to-play-your-bass-guitar-line-straight-or-syncopated/)
+
+---
+
+## 9. 実装状況（2026-10-11）
+
+§8 の提案のうち、次の形で入れた。コードは `src/audio/newsong.ts`（自動伴奏）、`src/audio/arrangement.ts`、`src/audio/song-check.ts`、`src/audio/drum-genres.ts`。テストは `src/audio/genre-feels.test.ts`。
+
+| 提案 | 状態 | 中身 |
+|---|---|---|
+| 1 ジャンル別の自動ベース型 | 入れた | `feel` に `funk`・`reggae`・`bossa`・`jazz`（ウォーキング）・`shuffle`・`metal` を追加。ほかに、ドラム側の提案に合わせて `disco`・`hiphop`・`trap`（sub808）・`dnb`・`halftime` も足した（型は16分の格子で書いてあり、`newsong.ts` の `CFG`）。`ai-song.ts` の型・検証・JSON schema・案内文、作曲ソフトの選択肢（`tools/composer/entry.ts`）は `NEW_SONG_FEELS` で共通。metal は §3.3 のギャロップではなく、ツーバス16分＋ギャロップの小節を回す（ベースはキックと同じ位置） |
+| 2 小節末アプローチの共通化 | 入れた（一部は選べる） | `approachNote()` を共通の関数にし、新しいジャンルは4・8小節目の最後に常に置く。既存の rock／pop／ballad は出力を変えないため、`approach: true`（AIソングは `bassApproach: true`）のときだけ置く。dance／vocaloid は元の作り（それぞれ専用の近づき方）のまま。metal・hiphop・trap・halftime は置かない（ギターと根音をそろえる・長い808のため） |
+| 3 キックからベースの位置を導く | 入れた | `bassFromKick(kick, filler, kickToken)`。キックのマス＝根音、ないマス＝filler（ゴースト・オクターブ・5度）。funk・reggae・bossa・metal・hiphop・trap・dnb・halftime が使う。jazz・shuffle・disco は自前の型 |
+| 4 セクション別のベース密度 | 入れた（選べる） | `applySections(..., { bassDensity: true })`、AIソングでは `bassDensity: true`。Aメロ＝拍の頭だけ、サビ＝8分の裏をオクターブ上へ（G3まで）、終わり＝根音1音を伸ばす。Bメロ・間奏・Cメロはそのまま。省略時は従来どおり変えない |
+| 5 音域の検証 | 入れた | `checkScore` に、bass／slap が E1〜G3、sub808 が C1〜C3 の外、ベースとギター・ピアノの低い音が同じ高さで重なる（30%超）の注意を追加。自動伴奏は全 feel × 6つの進行 × 拍子3・4・6・7 で音域と拍の合計をテストした。**この検査で既存の vocaloid のベースが A3 まで上がっていたのが見つかり、オクターブ上の音を音域内に収めた**（出力が変わるのは vocaloid の根音が G♯2 以上のときだけ。テストのハッシュを更新して理由を書いた） |
+| 6 キック整合率 | 入れた | `kickBassAlignment(score)`（`song-check.ts`）。`song.mjs build` が「キックのうちベースも鳴る割合・スネアのうちベースが休む割合」を表示する。目安の判定（ロック 7〜9 割など）は文書のとおり。自動の判定・警告にはしていない |
+| 7 ゴーストノート自動付与 | 入れた | `ghostDensity`（0〜1。AIソングは `ghostDensity`、`human` を書くと `0.4 + 0.5×human` に連動）。funk・hiphop・dnb のベースの `o`（弱く・短く）と、スネアのゴースト。キックと同じマスは避ける。決まった種から作るので同じ曲は同じ結果 |
+| 8 案内文に早見表 | 入れた | `AI_INSTRUCTIONS` の feel の説明に、ジャンル→リズム型→bpm→音源の1行ずつ |
+| 9 サウンドセットとベース音源 | 一部 | `FEEL_BASS_OVERLAY`（feel→ベース音源）と、`DRUM_GENRES[...].bass`。`song.mjs build --genre <ジャンル>` で `--bass`／`--drums` を自動で決める。サウンドセット側は `genre-sound-sets.ts`（drum-genre-guide §7 の 1）に14個 |
+| 10 見本曲 | 入れた | `assets-src/ai-songs/bass-demo-funk／reggae／bossa／walking.json`（ベース単独、ほかは休み）と `tracks.md` への登録。耳での確認はしていない（仮） |
+
+**入れなかったもの・理由**
+- §3.1〜3.5・3.8・3.9・3.12〜3.16 の細かい型（パンクの8分、J-POP の動くベース、ブルースの12小節など）を feel にはしていない。rock／pop／vocaloid などの既存 feel を変えないため。AIが自分でベースを書くときの型としては、この文書のまま使える。
+- 音源（`slap`）を funk の自動ベースには使っていない（`bass` のまま）。スラップの音源はサウンドセット側で選ぶ。
+- 聴いての確認はこの環境ではできないため、耳で決める項目（duck の量・swing の最終値）は出発点のまま。書き出して `realism.py` で測った値（jazz／metal）は、タイミングのずれ・強弱の幅が自動の伴奏の範囲内だった。

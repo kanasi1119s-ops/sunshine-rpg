@@ -1,0 +1,23 @@
+{
+ "title": "ベースだけの見本（ボサノバ）",
+ "description": "付点4分＋8分の、根音と5度のベースだけ（見本・仮）",
+ "bpm": 120,
+ "beats": 4,
+ "chords": "Dm7 G7 Cmaj7 Cmaj7",
+ "barsPerChord": 1,
+ "repeats": 2,
+ "autoAccompaniment": false,
+ "feel": "rock",
+ "tone": "rock",
+ "swing": 0.15,
+ "parts": [
+  {
+   "instrument": "bass",
+   "role": "ベース",
+   "volume": 0.3,
+   "pan": 0,
+   "amp": "auto",
+   "notes": "D2:1.5 A1:0.5' D2:1.5 A1:0.5' G1:1.5 D2:0.5' G1:1.5 D2:0.5' C2:1.5 G1:0.5' C2:1.5 G1:0.5' C2:1.5 G1:0.5' C2:1.5 G1:0.5'"
+  }
+ ]
+}

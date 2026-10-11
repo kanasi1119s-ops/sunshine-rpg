@@ -1,6 +1,7 @@
 // サウンドセット: 「この音で作る」を1つ選ぶだけで、アンプ・パートごとの音量の目安・ミックス・ドラムの設定・使う音源（ベース・ドラム・ギター）をまとめて切りかえる。
 // 作り方: 参考にした録音や、人間が「いい」と言った曲を、tools/audio-check/analyze.py・analyze-rhythm.py で測り、その数値（帯域・音量比・左右）から決める。
 // 録音の音そのものは取り込まない（数値だけ）。名前はバンド名ではなく、音の特徴にする（CLAUDE.md 1-1）。
+import { GENRE_SOUND_SETS } from "./genre-sound-sets";
 import type { AmpSetting, Instrument, Score, Track } from "./score";
 
 export interface PartMix {
@@ -82,6 +83,7 @@ export const SOUND_SETS: Record<string, SoundSet> = {
   },
 };
 
+Object.assign(SOUND_SETS, GENRE_SOUND_SETS);
 export const SOUND_SET_IDS = Object.keys(SOUND_SETS);
 
 /**
