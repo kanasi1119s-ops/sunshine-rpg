@@ -20,6 +20,7 @@ const VARIANTS = {
   clear: { label: "弦モデル（クリア。空気感が強い）", lp1: 9500, lp2: 12000, comb: 0.6 },
   soft: { label: "弦モデル（少しやわらかい。保存版）", lp1: 7200, lp2: 9500, comb: 0.72 },
   warm: { label: "弦モデル（やわらかく温かい。soft と暗めの中間。人間が「保存」と言った版）", lp1: 6100, lp2: 8650, comb: 0.78 },
+  deep: { label: "弦モデル（重く低音寄り。mellow に低域の厚みを足す）", lp1: 5550, lp2: 8225, comb: 0.815, body: true },
   mellow: { label: "弦モデル（さらにまろやか。warm と暗めの中間）", lp1: 5550, lp2: 8225, comb: 0.815 },
 };
 const LAYERS = { p: { vel: [1, 45], bright: 0.35 }, mf: { vel: [46, 95], bright: 0.6 }, f: { vel: [96, 127], bright: 0.85 } };
@@ -74,7 +75,9 @@ export function pluck(midi, bright, seconds = SECONDS, v = VARIANTS.warm) {
   const pick = new Float32Array(total);
   for (let n = 0; n < total; n++) pick[n] = str[n] - (n >= pu ? str[n - pu] * v.comb : 0);
   // 音色: 90Hz未満を切る → 3.2kHz付近をなだらかに −3dB（刺さりの帯域）→ 7.2kHz以上をなだらかに落とす（空気感を少し残す）
-  const out = biquad(biquad(biquad(biquad(pick, "hp", 90, 0.7), "peak", 3200, 0.9, -3), "lp", v.lp1, 0.6), "lp", v.lp2, 0.5);
+  let pre = pick;
+  if (v.body) pre = biquad(biquad(pick, "ls", 250, 0.7, 3), "peak", 400, 1.0, 2);
+  const out = biquad(biquad(biquad(biquad(pre, "hp", v.body ? 65 : 90, 0.7), "peak", 3200, 0.9, -3), "lp", v.lp1, 0.6), "lp", v.lp2, 0.5);
   // 弾いた瞬間の「コツ」（短いノイズ）を少しだけ。粒の立ち上がりをはっきりさせる
   const rc = rng(7000 + midi);
   const click = Math.floor(0.003 * SR);
@@ -91,11 +94,16 @@ export function pluck(midi, bright, seconds = SECONDS, v = VARIANTS.warm) {
   return out;
 }
 
-/** RBJ の biquad（hp・lp・peak）。 */
+/** RBJ の biquad（hp・lp・ls＝ローシェルフ・peak）。 */
 function biquad(x, type, f, q, gainDb = 0) {
   const w0 = 2 * Math.PI * f / SR, c = Math.cos(w0), s = Math.sin(w0), al = s / (2 * q), A = 10 ** (gainDb / 40);
   let b0, b1, b2, a0, a1, a2;
   if (type === "lp") { b0 = (1 - c) / 2; b1 = 1 - c; b2 = (1 - c) / 2; a0 = 1 + al; a1 = -2 * c; a2 = 1 - al; }
+  else if (type === "ls") {
+    const sq = 2 * Math.sqrt(A) * al;
+    b0 = A * ((A + 1) - (A - 1) * c + sq); b1 = 2 * A * ((A - 1) - (A + 1) * c); b2 = A * ((A + 1) - (A - 1) * c - sq);
+    a0 = (A + 1) + (A - 1) * c + sq; a1 = -2 * ((A - 1) + (A + 1) * c); a2 = (A + 1) + (A - 1) * c - sq;
+  }
   else if (type === "hp") { b0 = (1 + c) / 2; b1 = -(1 + c); b2 = (1 + c) / 2; a0 = 1 + al; a1 = -2 * c; a2 = 1 - al; }
   else { b0 = 1 + al * A; b1 = -2 * c; b2 = 1 - al * A; a0 = 1 + al / A; a1 = -2 * c; a2 = 1 - al / A; }
   const y = new Float32Array(x.length);

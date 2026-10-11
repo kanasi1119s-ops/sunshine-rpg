@@ -18,6 +18,7 @@ import guitarHofnerUrl from "../../assets-src/soundfont/extra/guitar-hofner.sf3?
 import guitarPluckClearUrl from "../../assets-src/soundfont/extra/guitar-pluck-clear.sf3?url";
 import guitarPluckSoftUrl from "../../assets-src/soundfont/extra/guitar-pluck-soft.sf3?url";
 import guitarPluckMellowUrl from "../../assets-src/soundfont/extra/guitar-pluck-mellow.sf3?url";
+import guitarPluckDeepUrl from "../../assets-src/soundfont/extra/guitar-pluck-deep.sf3?url";
 import guitarPluckWarmUrl from "../../assets-src/soundfont/extra/guitar-pluck-warm.sf3?url";
 import bassJpopUrl from "../../assets-src/soundfont/extra/bass-jpop.sf3?url";
 import drumsJpopUrl from "../../assets-src/soundfont/extra/drums-jpop.sf3?url";
@@ -96,6 +97,7 @@ const GUITAR_FONTS: Record<string, { label: string; url: string | null }> = {
   hofner: { label: "Hofner（丸い音）", url: guitarHofnerUrl },
   pluck: { label: "弦モデル（やわらかく温かい。標準の弦モデル）", url: guitarPluckWarmUrl },
   "pluck-mellow": { label: "弦モデル（さらにまろやか）", url: guitarPluckMellowUrl },
+  "pluck-deep": { label: "弦モデル（重く低音寄り）", url: guitarPluckDeepUrl },
   "pluck-soft": { label: "弦モデル（少しやわらかい。保存版）", url: guitarPluckSoftUrl },
   "pluck-clear": { label: "弦モデル（クリア。空気感が強い）", url: guitarPluckClearUrl },
 };
