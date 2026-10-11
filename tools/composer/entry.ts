@@ -1224,7 +1224,7 @@ const nsBpm = h("input", { type: "number", min: "50", max: "240", value: "110" }
 const nsBeats = select([["4", "4拍子"], ["3", "3拍子"], ["6", "6拍子"], ["7", "7拍子"]], "4");
 const nsBars = select([["1", "1小節"], ["2", "2小節"]], "1");
 const nsRepeat = select([["2", "2回"], ["4", "4回"], ["6", "6回"], ["8", "8回"]], "4");
-const nsFeel = select([["rock", "ロック"], ["pop", "ポップ"], ["ballad", "バラード"], ["dance", "ダンス（きれい・現代的）"], ["vocaloid", "ボカロ風バック（歌なし・高速）"], ["funk", "ファンク"], ["reggae", "レゲエ"], ["bossa", "ボサノバ"], ["jazz", "ジャズ（ウォーキングベース）"], ["shuffle", "ブルース・シャッフル"], ["metal", "メタル（ツーバス）"], ["disco", "ディスコ"], ["hiphop", "ヒップホップ"], ["trap", "トラップ（808）"], ["dnb", "ドラムンベース"], ["halftime", "ダブステップ（ハーフタイム）"]], "rock");
+const nsFeel = select([["rock", "ロック"], ["pop", "ポップ"], ["jpop", "J-POP（クリーンのアルペジオ・イントロから段階的に）"], ["ballad", "バラード"], ["dance", "ダンス（きれい・現代的）"], ["vocaloid", "ボカロ風バック（歌なし・高速）"], ["funk", "ファンク"], ["reggae", "レゲエ"], ["bossa", "ボサノバ"], ["jazz", "ジャズ（ウォーキングベース）"], ["shuffle", "ブルース・シャッフル"], ["metal", "メタル（ツーバス）"], ["disco", "ディスコ"], ["hiphop", "ヒップホップ"], ["trap", "トラップ（808）"], ["dnb", "ドラムンベース"], ["halftime", "ダブステップ（ハーフタイム）"]], "rock");
 const nsLead = select(INSTRUMENTS.filter(([k]) => !DRUMS.has(k)).map(([k, l]) => [k, l] as [string, string]), "leadGuitar");
 const nsBtn = h("button", { class: "primary", type: "button" }, "この進行で新しい曲を作る");
 nsBtn.onclick = () => {
@@ -1242,7 +1242,7 @@ nsBtn.onclick = () => {
 const ampBox = h("div", {});
 const AMP_TYPES: [AmpSetting["type"], string][] = [
   ["auto", "おまかせ（曲の設定どおり）"], ["clean", "クリーン"], ["overdrive", "オーバードライブ"], ["distortion", "ディストーション"], ["metal", "メタルゾーン"], ["prs", "なめらかなリード（PRS風）"], ["plugin", "追加したアンプ（アンプ定義ファイル）"], ["nam", "NAMのアンプモデル（実機を学習したもの）"],
-  ["jazz", "ジャズ（太く柔らかい）"], ["blues", "ブルース（浅く温かい歪み）"], ["funk", "ファンク（明るく歯切れよい）"], ["crunch", "クランチ（ざらっと浅い歪み）"], ["hardrock", "ハードロック（深い歪み）"], ["punk", "パンク（勢いのある歪み）"], ["fuzz", "ファズ（荒々しく不穏）"], ["shoegaze", "シューゲイザー（霞んだ音の壁）"], ["lofi", "ローファイ（古い録音）"], ["loudmetal", "ラウドメタル（重く密度の高い歪み）"], ["loudrock", "ラウドロック（太く前に出る歪み）"], ["delicate", "繊細（歪ませず弱い音の粒が聞こえる）"], ["crystal", "透明（透き通るクリーン・耳にやさしい）"], ["lead", "リード（浅い歪み・中域が厚く歌う）"], ["modernHigh", "モダン高ゲイン（締まった刻み・ゲート付き）"], ["sparkleClean", "きらびやかなクリーン（歪みなし）"], ["retro8bit", "レトロ8bit（粗い階段の音）"], ["radio", "ラジオ・電話（遠くの音）"],
+  ["jazz", "ジャズ（太く柔らかい）"], ["blues", "ブルース（浅く温かい歪み）"], ["funk", "ファンク（明るく歯切れよい）"], ["crunch", "クランチ（ざらっと浅い歪み）"], ["hardrock", "ハードロック（深い歪み）"], ["punk", "パンク（勢いのある歪み）"], ["fuzz", "ファズ（荒々しく不穏）"], ["shoegaze", "シューゲイザー（霞んだ音の壁）"], ["lofi", "ローファイ（古い録音）"], ["loudmetal", "ラウドメタル（重く密度の高い歪み）"], ["loudrock", "ラウドロック（太く前に出る歪み）"], ["delicate", "繊細（歪ませず弱い音の粒が聞こえる）"], ["crystal", "透明（透き通るクリーン・耳にやさしい）"], ["lead", "リード（浅い歪み・中域が厚く歌う）"], ["modernHigh", "モダン高ゲイン（締まった刻み・ゲート付き）"], ["sparkleClean", "きらびやかなクリーン（歪みなし）"], ["jpopClean", "J-POPクリーン（歪みなし・粒をそろえる）"], ["retro8bit", "レトロ8bit（粗い階段の音）"], ["radio", "ラジオ・電話（遠くの音）"],
 ];
 function slider(label: string, min: number, max: number, step: number, value: number, on: (v: number) => void): HTMLElement {
   const input = h("input", { type: "range", min: String(min), max: String(max), step: String(step), value: String(value) });

@@ -42,7 +42,8 @@ export type AmpPresetName =
   | "loudmetal"
   | "loudrock"
   | "delicate"
-  | "crystal";
+  | "crystal"
+  | "jpopClean";
 
 export interface AmpSettings {
   /** 日本語の呼び名。 */
@@ -204,6 +205,14 @@ export const AMP_PRESETS: Record<AmpPresetName, AmpSettings> = {
     drive: 1, shape: "soft", hardness: 0.8, asymmetry: 0,
     bassDb: 1, midDb: -3, midHz: 2800, trebleDb: 1,
     highpassHz: 100, lowpassHz: 8500, level: 1,
+  },
+  // ── 2020年代J-POPのクリーン（2026-10-11、jpop-clean-guitar-guide.md 提案1）。歪ませず、粒をそろえる圧縮つき ──
+  jpopClean: {
+    label: "J-POPクリーン",
+    genre: "J-POPのクリーンの刻み・アルペジオ（歪ませず、低域は100Hzから切り、300Hz付近を引き、2kHzに輪郭を足し、8〜9kHzから落とす。粒をそろえる圧縮つき）",
+    drive: 1, shape: "soft", hardness: 0.8, asymmetry: 0,
+    bassDb: -1, midDb: 1.5, midHz: 2000, trebleDb: 0,
+    highpassHz: 100, lowpassHz: 9000, level: 1,
   },
 };
 

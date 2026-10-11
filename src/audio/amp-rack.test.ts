@@ -70,10 +70,10 @@ describe("stepCurve（階段状の波形）", () => {
 });
 
 describe("ジャンル別のアンプ", () => {
-  it("18種類ある（リード・モダン高ゲイン・きらびやかなクリーンを含む）", () => {
-    expect(GENRE_AMP_TYPES).toHaveLength(18);
-    expect(new Set(GENRE_AMP_TYPES).size).toBe(18);
-    for (const t of ["lead", "modernHigh", "sparkleClean"]) expect(GENRE_AMP_TYPES).toContain(t);
+  it("19種類ある（リード・モダン高ゲイン・きらびやかなクリーン・J-POPクリーンを含む）", () => {
+    expect(GENRE_AMP_TYPES).toHaveLength(19);
+    expect(new Set(GENRE_AMP_TYPES).size).toBe(19);
+    for (const t of ["lead", "modernHigh", "sparkleClean", "jpopClean"]) expect(GENRE_AMP_TYPES).toContain(t);
   });
 
   it.each(GENRE_AMP_TYPES)("%s: 入口から出口（最終出力）までつながり、素通しではない", (type: GenreAmpType) => {
@@ -239,7 +239,7 @@ const rmsDb = (x: Float32Array) => 20 * Math.log10(Math.sqrt(x.reduce((a, v) => 
 /** ゲイン階段の表: 入力 -6dBFS のギター風信号を通したときの、出口の山(dB)の静的な見積もり。ロールを調整したら、意図して更新する。 */
 const GAIN_STAIRS: Record<string, number> = {
   clean: -5.2, overdrive: -3.8, distortion: -4.5, metal: -8.2, prs: -3.8, jazz: -7.8, blues: -2.9, funk: -4.2, crunch: -3.9, hardrock: -6.0, punk: -8.0, fuzz: -6.4,
-  shoegaze: 3.3, lofi: -7.2, retro8bit: -7.4, radio: -5.2, loudmetal: -10.0, loudrock: -5.1, delicate: -6.0, crystal: -6.0, lead: -4.7, modernHigh: -9.8, sparkleClean: -6.0,
+  shoegaze: 3.3, lofi: -7.2, retro8bit: -7.4, radio: -5.2, loudmetal: -10.0, loudrock: -5.1, delicate: -6.0, crystal: -6.0, lead: -4.7, modernHigh: -9.8, sparkleClean: -6.0, jpopClean: -6.0,
 };
 
 describe("ゲイン階段（音割れの回帰を防ぐ）", () => {

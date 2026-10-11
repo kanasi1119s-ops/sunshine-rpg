@@ -4,7 +4,7 @@ import { hasCode, presetToPlugin, validateAmpPlugin } from "./amp-plugins";
 
 describe("アンプの追加のしくみ（アンプ定義ファイル）", () => {
   it("ジャンル別アンプ14種は、すべてアンプ定義の形で書ける", () => {
-    for (const name of AMP_PRESET_NAMES) expect(validateAmpPlugin(presetToPlugin(name)).id).toBe(`genre-${name}`);
+    for (const name of AMP_PRESET_NAMES) expect(validateAmpPlugin(presetToPlugin(name)).id).toBe(`genre-${name.toLowerCase()}`);
   });
   it("まちがいは、場所つきでまとめて知らせる", () => {
     const bad = { format: "sunshine-amp", version: 1, id: "Bad Id", label: "", stages: [{ type: "eq", kind: "weird", freq: 5 }, { type: "laser" }] };

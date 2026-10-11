@@ -46,6 +46,18 @@ test("別名とプリセットの解決", () => {
   assert.ok(Object.keys(MASTER_PRESETS).length >= 20);
 });
 
+test("jpop-band は rock-clean に 250Hz -1・2kHz +0.5・8kHz 高域 +1.5 を足したもの（rock-clean は変わらない）", () => {
+  const rock = MASTER_PRESETS["rock-clean"];
+  const jp = resolvePreset("jpop-band");
+  assert.equal(jp.id, "jpop-band");
+  const { eq: rockEq, ...rockRest } = rock;
+  const { eq: jpEq, id: _id, ...jpRest } = jp;
+  assert.deepEqual(jpRest, rockRest);
+  assert.deepEqual(jpEq.slice(0, rockEq.length), rockEq);
+  assert.deepEqual(jpEq.slice(rockEq.length), [{ type: "peak", f: 250, g: -1, o: 1.5 }, { type: "peak", f: 2000, g: 0.5, o: 1.5 }, { type: "hs", f: 8000, g: 1.5 }]);
+  assert.equal(rockEq.length, 3);
+});
+
 test("すべての新プリセットが書き出せて、目標の大きさ（±0.6）と天井（+0.1）に収まる", { timeout: 600000 }, () => {
   const src = makeTone("src.wav");
   for (const [id, p] of Object.entries(MASTER_PRESETS)) {
