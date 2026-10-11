@@ -37,7 +37,7 @@ describe("サウンドセット", () => {
       expect(sum).toBeLessThanOrEqual(1.6); // 同じ楽器が複数あるので、1本ぶんの合計
       expect(["std", "finger", "pick", "rock", "metal", "jazz", "jpop"]).toContain(s.overlays.bass);
       expect(["std", "muldjord", "rock", "metal", "jazz", "jpop", "supra"]).toContain(s.overlays.drums);
-      expect(["std", "gretsch", "hofner", "pluck"]).toContain(s.overlays.guitar);
+      expect(["std", "gretsch", "hofner", "pluck", "pluck-soft", "pluck-clear"]).toContain(s.overlays.guitar);
     }
   });
 

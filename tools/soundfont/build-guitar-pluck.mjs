@@ -1,7 +1,7 @@
 // 使い方: node --experimental-strip-types tools/soundfont/build-guitar-pluck.mjs
 // 弦モデル（Karplus-Strong 系）のクリーンギターの SoundFont を作る（assets-src/soundfont/extra/guitar-pluck.sf3）。
 // 録音ではなく数式で合成するので、音の大きさ・立ち上がり・減り方が音ごとにそろい、「粒」が均一になる。
-// 作曲ソフトでは `--guitar pluck` で、GMのジャズギター(26)とクリーンギター(27)を入れかえる。外部の素材は使わない（CLAUDE.md 1-1）。
+// 作曲ソフトでは `--guitar pluck`（warm）・`pluck-soft`・`pluck-clear` で、GMのジャズギター(26)とクリーンギター(27)を入れかえる。外部の素材は使わない（CLAUDE.md 1-1）。
 //
 // 音のつくり（docs/sound/guitar-solo-guide.md §6）:
 //  1. 弦: 遅延線（長さ SR/f0、小数部は全域通過フィルターで合わせる）＋ループのローパス（1ゼロ）＋減衰（T60 を音域で変える）
@@ -15,6 +15,12 @@ import { SR, loadBank, monoSample, timecents, compressBank, BasicSoundBank, Gene
 const OUT = path.resolve("assets-src/soundfont/extra");
 const base = loadBank(path.resolve("src/audio/soundfont/game.sf3"));
 const SECONDS = 4.5;
+/** 音色の版。clear＝空気感が強い（9.5kHz）、soft＝少しやわらかい（7.2kHz。人間が「保存」と言った版）、warm＝softと最初の暗めの版の中間。 */
+const VARIANTS = {
+  clear: { label: "弦モデル（クリア。空気感が強い）", lp1: 9500, lp2: 12000, comb: 0.6 },
+  soft: { label: "弦モデル（少しやわらかい。保存版）", lp1: 7200, lp2: 9500, comb: 0.72 },
+  warm: { label: "弦モデル（やわらかく温かい。soft と暗めの中間）", lp1: 6100, lp2: 8650, comb: 0.78 },
+};
 const LAYERS = { p: { vel: [1, 45], bright: 0.35 }, mf: { vel: [46, 95], bright: 0.6 }, f: { vel: [96, 127], bright: 0.85 } };
 
 /** 乱数（固定の種。毎回同じ音になる）。 */
@@ -24,7 +30,7 @@ function rng(seed) {
 }
 
 /** 1音を合成する。midi＝音の高さ、bright＝0〜1（強いほど明るい）。 */
-export function pluck(midi, bright, seconds = SECONDS) {
+export function pluck(midi, bright, seconds = SECONDS, v = VARIANTS.warm) {
   const f0 = 440 * 2 ** ((midi - 69) / 12);
   const total = Math.floor(seconds * SR);
   const L = SR / f0;
@@ -65,9 +71,9 @@ export function pluck(midi, bright, seconds = SECONDS) {
   // ピックアップ: 拾う位置のくし形
   const pu = Math.max(1, Math.round(0.17 * L));
   const pick = new Float32Array(total);
-  for (let n = 0; n < total; n++) pick[n] = str[n] - (n >= pu ? str[n - pu] * 0.72 : 0);
+  for (let n = 0; n < total; n++) pick[n] = str[n] - (n >= pu ? str[n - pu] * v.comb : 0);
   // 音色: 90Hz未満を切る → 3.2kHz付近をなだらかに −3dB（刺さりの帯域）→ 7.2kHz以上をなだらかに落とす（空気感を少し残す）
-  const out = biquad(biquad(biquad(biquad(pick, "hp", 90, 0.7), "peak", 3200, 0.9, -3), "lp", 7200, 0.6), "lp", 9500, 0.5);
+  const out = biquad(biquad(biquad(biquad(pick, "hp", 90, 0.7), "peak", 3200, 0.9, -3), "lp", v.lp1, 0.6), "lp", v.lp2, 0.5);
   // 弾いた瞬間の「コツ」（短いノイズ）を少しだけ。粒の立ち上がりをはっきりさせる
   const rc = rng(7000 + midi);
   const click = Math.floor(0.003 * SR);
@@ -101,45 +107,47 @@ function biquad(x, type, f, q, gainDb = 0) {
 }
 
 if (process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1]))) {
-  const out = new BasicSoundBank();
-  out.soundBankInfo = { ...base.soundBankInfo, name: "Guitar Pluck（弦モデル）" };
-  const keys = [];
-  for (let k = 40; k <= 88; k += 3) keys.push(k); // E2〜E6 を3半音おき
-  const byKey = new Map();
-  for (const k of keys) {
-    byKey.set(k, []);
-    for (const [name, layer] of Object.entries(LAYERS)) {
-      const smp = monoSample(`pluck ${k} ${name}`, pluck(k, layer.bright), k);
-      out.addSamples(smp);
-      byKey.get(k).push({ smp, layer });
-    }
-  }
-  for (const program of [26, 27]) {
-    const preset = emptyPresetFrom(base, out, { program: 27 });
-    preset.program = program;
-    preset.name = "Guitar Pluck";
-    const inst = preset.zones[0].instrument;
-    while (inst.zones.length) inst.deleteZone(0, true);
+  for (const [id, v] of Object.entries(VARIANTS)) {
+    const out = new BasicSoundBank();
+    out.soundBankInfo = { ...base.soundBankInfo, name: `Guitar Pluck ${id}` };
+    const keys = [];
+    for (let k = 40; k <= 88; k += 3) keys.push(k); // E2〜E6 を3半音おき
+    const byKey = new Map();
     for (const k of keys) {
-      for (const { smp, layer } of byKey.get(k)) {
-        const z = inst.createZone(smp);
-        z.keyRange = { min: k === keys[0] ? 28 : k - 1, max: k === keys[keys.length - 1] ? 96 : k + 1 };
-        z.velRange = { min: layer.vel[0], max: layer.vel[1] };
-        z.setGenerator(GeneratorTypes.attackVolEnv, timecents(0.001));
-        z.setGenerator(GeneratorTypes.holdVolEnv, timecents(0.001));
-        z.setGenerator(GeneratorTypes.decayVolEnv, timecents(1));
-        z.setGenerator(GeneratorTypes.sustainVolEnv, 0);
-        z.setGenerator(GeneratorTypes.chorusEffectsSend, 0);
-        z.setGenerator(GeneratorTypes.initialFilterQ, 0);
-        z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(0.25));
-        z.setGenerator(GeneratorTypes.overridingRootKey, k);
+      byKey.set(k, []);
+      for (const [name, layer] of Object.entries(LAYERS)) {
+        const smp = monoSample(`pluck ${id} ${k} ${name}`, pluck(k, layer.bright, SECONDS, v), k);
+        out.addSamples(smp);
+        byKey.get(k).push({ smp, layer });
       }
     }
+    for (const program of [26, 27]) {
+      const preset = emptyPresetFrom(base, out, { program: 27 });
+      preset.program = program;
+      preset.name = `Guitar Pluck ${id}`;
+      const inst = preset.zones[0].instrument;
+      while (inst.zones.length) inst.deleteZone(0, true);
+      for (const k of keys) {
+        for (const { smp, layer } of byKey.get(k)) {
+          const z = inst.createZone(smp);
+          z.keyRange = { min: k === keys[0] ? 28 : k - 1, max: k === keys[keys.length - 1] ? 96 : k + 1 };
+          z.velRange = { min: layer.vel[0], max: layer.vel[1] };
+          z.setGenerator(GeneratorTypes.attackVolEnv, timecents(0.001));
+          z.setGenerator(GeneratorTypes.holdVolEnv, timecents(0.001));
+          z.setGenerator(GeneratorTypes.decayVolEnv, timecents(1));
+          z.setGenerator(GeneratorTypes.sustainVolEnv, 0);
+          z.setGenerator(GeneratorTypes.chorusEffectsSend, 0);
+          z.setGenerator(GeneratorTypes.initialFilterQ, 0);
+          z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(0.25));
+          z.setGenerator(GeneratorTypes.overridingRootKey, k);
+        }
+      }
+    }
+    out.flush();
+    await compressBank(out, 6);
+    const buf = out.writeSF2({});
+    const file = path.join(OUT, `guitar-pluck-${id}.sf3`);
+    fs.writeFileSync(file, Buffer.from(buf));
+    console.log("書き出し:", file, (buf.byteLength / 1024 / 1024).toFixed(2) + "MB", "音:", keys.length, v.label);
   }
-  out.flush();
-  await compressBank(out, 6);
-  const buf = out.writeSF2({});
-  const file = path.join(OUT, "guitar-pluck.sf3");
-  fs.writeFileSync(file, Buffer.from(buf));
-  console.log("書き出し:", file, (buf.byteLength / 1024 / 1024).toFixed(2) + "MB", "音:", keys.length);
 }
