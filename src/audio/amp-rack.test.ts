@@ -68,9 +68,9 @@ describe("stepCurve（階段状の波形）", () => {
 });
 
 describe("ジャンル別のアンプ", () => {
-  it("14種類ある", () => {
-    expect(GENRE_AMP_TYPES).toHaveLength(14);
-    expect(new Set(GENRE_AMP_TYPES).size).toBe(14);
+  it("15種類ある", () => {
+    expect(GENRE_AMP_TYPES).toHaveLength(15);
+    expect(new Set(GENRE_AMP_TYPES).size).toBe(15);
   });
 
   it.each(GENRE_AMP_TYPES)("%s: 入口から出口（最終出力）までつながり、素通しではない", (type: GenreAmpType) => {

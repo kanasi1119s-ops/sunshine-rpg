@@ -19,7 +19,7 @@ export interface ChannelAmp {
 type Role = "plugin" | "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru" | GenreAmpType;
 
 /** ジャンル別のアンプの種類（`score.ts` の `GenreAmpType` と同じ並び）。 */
-export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate"];
+export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal"];
 
 const STEP_CURVES = new Map<number, Float32Array<ArrayBuffer>>();
 /** 波形を階段状にする（ビットを落としたような粗い音）。levels は片側の段数。 */
@@ -278,6 +278,9 @@ export class AmpRack {
       case "delicate":
         // 繊細: 歪ませない。強弱をそのまま残し、低音は軽く削り、高音（4kHz〜）をやわらかく丸める。ごく弱い圧縮で小さな音の粒をそろえる
         return this.chain(input, tail([this.filter("highpass", 90, 0, 0.7), this.filter("peaking", 2200, 1, 0.9), this.filter("highshelf", 4000, -2), this.filter("lowpass", 7000, 0, 0.7), this.compressor(-30, 1.6, 0.02, 0.25), this.gain(1.0)]));
+      case "crystal":
+        // 透明: 歪ませない。2〜4kHz の刺さり（耳に強い帯域）を削り、1kHz 前後のこもりを少し引き、7kHz 以上にごく少し空気感を足す。弱い圧縮で粒をそろえる
+        return this.chain(input, tail([this.filter("highpass", 100, 0, 0.7), this.filter("peaking", 350, -5, 0.6), this.filter("peaking", 1000, -1, 0.8), this.filter("peaking", 2800, -3, 0.9), this.filter("highshelf", 7000, 1, 0.7), this.filter("lowpass", 8500, 0, 0.7), this.filter("lowpass", 10500, 0, 0.7), this.compressor(-30, 1.6, 0.02, 0.25), this.gain(1.0)]));
       default:
         return this.chain(input, []);
     }

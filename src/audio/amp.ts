@@ -41,7 +41,8 @@ export type AmpPresetName =
   | "radio"
   | "loudmetal"
   | "loudrock"
-  | "delicate";
+  | "delicate"
+  | "crystal";
 
 export interface AmpSettings {
   /** 日本語の呼び名。 */
@@ -196,6 +197,13 @@ export const AMP_PRESETS: Record<AmpPresetName, AmpSettings> = {
     drive: 1, shape: "soft", hardness: 0.8, asymmetry: 0,
     bassDb: -1, midDb: 1, midHz: 2200, trebleDb: -1,
     highpassHz: 90, lowpassHz: 7000, level: 1,
+  },
+  crystal: {
+    label: "透明",
+    genre: "透き通るクリーン・耳にやさしい明るさ（歪ませず、2〜4kHz の刺さりを抑え、上のほうにほんのり空気感を残す）",
+    drive: 1, shape: "soft", hardness: 0.8, asymmetry: 0,
+    bassDb: 1, midDb: -3, midHz: 2800, trebleDb: 1,
+    highpassHz: 100, lowpassHz: 8500, level: 1,
   },
 };
 

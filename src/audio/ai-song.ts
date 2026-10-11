@@ -44,7 +44,7 @@ export interface AiPart {
   /** フレーズの山（拍。2〜32）。この長さごとに、出だしをやや弱く→山で強く→終わりを引く強弱をつける（歌うような表情）。ドラムでは使わない。 */
   phrase?: number;
   /** アンプ（ギター・ベース向け）。"auto" なら曲の音色から自動。 */
-  amp: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate";
+  amp: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal";
   /**
    * 音の並び。「音名:拍」を空白でくぎる（例 "E5:1 D5:0.5 R:0.5 C5:2"）。R は休み。
    * ドラム（kick/snare/hihat/crash/tom）は音名のかわりに x（打つ）か R（休み）。
@@ -104,7 +104,7 @@ export const AI_INSTRUMENTS: Record<string, string> = {
 };
 const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom"]);
 /** AIソング形式で使えるアンプの名前（`AI_SONG_SCHEMA` の amp と同じ）。 */
-const AI_AMPS = new Set(["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate"]);
+const AI_AMPS = new Set(["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal"]);
 
 /** 構造化出力（JSONスキーマ）。 */
 export const AI_SONG_SCHEMA = {
@@ -150,7 +150,7 @@ export const AI_SONG_SCHEMA = {
           bright: { type: "number" },
           duck: { type: "number" },
           phrase: { type: "number" },
-          amp: { type: "string", enum: ["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate"] },
+          amp: { type: "string", enum: ["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal"] },
           notes: { type: "string" },
         },
       },
@@ -216,7 +216,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。
   - sustain: 音の伸び（0.2〜3、省略は1）。0.3〜0.6＝スタッカート（歯切れよく。ピアノ・ギターの刻み・シンセの刻み）、1＝ふつう、1.5〜3＝余韻を残す（ハープ・鐘・パッド・琴・アルペジオ）。長くした音は次の音に重なる。
   - phrase: フレーズの長さ（拍。2〜32。メロディは4か8がおすすめ）。その長さごとに、出だしを少し弱く→山で強く→終わりを引く強弱がつく（機械的に平らな演奏をさけ、歌うような表情になる）。ドラムでは使わない。
-  - volume: 0.1〜0.35 くらい（メロディ 0.22〜0.3、伴奏 0.1〜0.2）。pan: -1〜1。amp: ギター・ベースのアンプ（auto / clean / overdrive / distortion / metal / prs、ジャンル別: jazz / blues / funk / crunch / hardrock / punk / fuzz / shoegaze / lofi / retro8bit / radio / loudmetal＝ラウドメタル / loudrock＝ラウドロック / delicate＝繊細な弱い音）。ほかの楽器は auto。
+  - volume: 0.1〜0.35 くらい（メロディ 0.22〜0.3、伴奏 0.1〜0.2）。pan: -1〜1。amp: ギター・ベースのアンプ（auto / clean / overdrive / distortion / metal / prs、ジャンル別: jazz / blues / funk / crunch / hardrock / punk / fuzz / shoegaze / lofi / retro8bit / radio / loudmetal＝ラウドメタル / loudrock＝ラウドロック / delicate＝繊細な弱い音 / crystal＝透き通るクリーン。2〜4kHzの刺さりを抑えた、耳にやさしい明るさ）。ほかの楽器は auto。
   - notes: 「音名:拍」を空白でくぎる。例 "E5:1 D5:0.5 R:0.5 C5:2"。R は休み。音名は C4（ド）〜B4 のように、シャープは #、フラットは b（例 F#4, Bb3）。拍のあとに奏法の記号を付けられる: ! アクセント（強く）・,（弱く）・\'（スタッカート）・_（レガート。次の音につなげる）・~（ビブラート）・^（ベンドアップ）・/（しゃくり）・\\（フォール。詳しくは下の「奏法の書き方」）。例 "E5:1! D5:0.5\' C5:2_ A4:2^^~"。拍は 0.25（16分音符）・0.5・0.75・1・1.5・2・3・4 など。
   - ドラムのパートは、音名のかわりに x（打つ）、X（強く）、o（弱く＝ゴーストノート）、O（オープンハイハット。ハイハットだけ）、R（休み）。1文字＝16分音符のグリッド記法も使える: "g:x...x...x...x..."（x 打つ・X 強く・o 弱く・. 休み）。例 kick "x:1 R:1 x:0.5 x:0.5 R:1"。
   - notes の合計の拍が曲の長さより短いときは、くり返して埋める（ドラムの1〜2小節の型やリフを短く書ける）。メロディは曲全体ぶん書くのがよい（Aメロ・Bメロ・サビのように変化をつける）。
