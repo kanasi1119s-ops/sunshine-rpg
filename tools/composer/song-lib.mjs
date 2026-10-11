@@ -32,7 +32,7 @@ export async function openSongKit() {
   }
 
   /** 曲（AIソング形式のオブジェクト）を確かめて、プロジェクト・MIDI（・WAV）を書き出す。 */
-  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", sound = "", master = null, widen = null, space = "", spaceWet = null, masterPreset = "", tp = null, lowmono = null, sideHpf = null, clip = null, hpf = null, lpf = null, matchEq = "", matchAmount = null, loopTail = false, genre = "" } = {}) {
+  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", sound = "", master = null, widen = null, space = "", spaceWet = null, masterPreset = "", tp = null, lowmono = null, sideHpf = null, clip = null, hpf = null, lpf = null, matchEq = "", matchAmount = null, loopTail = false, genre = "", autoRetune = true } = {}) {
     if (!EDITIONS.includes(edition)) throw new Error("edition は real・ps2・modern のどれか");
     if (!/^[a-z0-9][a-z0-9-]*$/.test(name ?? "")) throw new Error(`name は英小文字・数字・「-」だけ（${name}）`);
     const { aiSongToScore } = await load("/src/audio/ai-song.ts");
@@ -121,7 +121,7 @@ export async function openSongKit() {
         // natural の曲は起伏をつぶさないよう、圧縮を一段やさしくする
         glue = nat ? ({ normal: "gentle", bus3: "bus2", bus2: "light" }[pr.glue] ?? pr.glue) : pr.glue;
       }
-      let masterOpts = null, lowCutoff = 100, shareBefore = null;
+      let masterOpts = null, lowCutoff = 100, shareBefore = null, rawFile = null;
       if (master !== null && master !== undefined) {
         // 仕上げ（tools/composer/master.mjs）: 掃除・EQ・低域モノ・左右の広がり・目標の大きさ・ソフトクリップ・トゥルーピーク・ディザ
         const { id: _id, lufs: _l, glue: _g, widen: _w, ...rest } = pr ?? {};
@@ -136,6 +136,9 @@ export async function openSongKit() {
         const lm = masterOpts.lowmono ?? 140;
         lowCutoff = lm > 0 ? Math.min(100, Math.round(lm * 0.5)) : 100;
         if (lm > 0) shareBefore = lowShareDb(files.wav, lm * 0.8);
+        // 「つぶれ気味」が出たときの再調整用に、仕上げ前の音を取っておく
+        rawFile = files.wav + ".raw.wav";
+        fs.copyFileSync(files.wav, rawFile);
         masterFile(files.wav, masterOpts);
         // モノ化で低音が痩せていないか（逆相気味の低音は、モノにすると消える）: 全体に対する低域の割合が 3dB 以上減ったら注意
         if (shareBefore !== null) {
@@ -144,7 +147,24 @@ export async function openSongKit() {
         }
       }
       // 書き出しの合否表（I・TP・LRA・PLR・PSR・左右の相関・100Hz 以下の相関・継ぎ目を 1 行で）
-      reportLine = masterReport(files.wav, { lufs: masterOpts?.lufs ?? null, tp: masterOpts?.tp ?? -1.5, loop: true, lowCutoff }).line;
+      let rep = masterReport(files.wav, { lufs: masterOpts?.lufs ?? null, tp: masterOpts?.tp ?? -1.5, loop: true, lowCutoff });
+      // 再調整のルーティン（人間の指示 2026-10-11）: 「つぶれ気味」（PLR・PSR が小さい）が出たら、仕上げをやさしくして最大2回やり直す
+      //   1回目: クリップ 0・圧縮を一段やさしく・目標を 1.5LU 下げる ／ 2回目: さらに 3LU 下げる。それでも出たら、元の音（アンプ・音量の合計）が原因なので見直しを促す
+      const crushed = (r) => r.issues.some((t) => t.includes("つぶれ気味"));
+      const LIGHTER = { bus3: "bus2", bus2: "light", strong: "normal", normal: "gentle", gentle: "light" };
+      if (autoRetune && masterOpts && rawFile && crushed(rep)) {
+        const first = rep.line;
+        for (let k = 1; k <= 2 && crushed(rep); k++) {
+          const next = { ...masterOpts, clip: 0, glue: LIGHTER[masterOpts.glue] ?? masterOpts.glue, lufs: masterOpts.lufs - 1.5 * k };
+          fs.copyFileSync(rawFile, files.wav);
+          masterFile(files.wav, next);
+          rep = masterReport(files.wav, { lufs: next.lufs, tp: next.tp ?? -1.5, loop: true, lowCutoff });
+          warnings.push(`つぶれ気味が出たので仕上げを再調整しました（${k}回目: クリップ 0・圧縮 ${next.glue}・目標 ${next.lufs}LUFS）→ ${rep.line}`);
+        }
+        if (crushed(rep)) warnings.push(`再調整しても「つぶれ気味」が残りました。元の音がつぶれています（最初: ${first}）。歪みギターのアンプ（punk は高域の割れが出やすい。loudrock・crunch を試す）、パートの音量の合計（0.7 前後）、同じ音を重ねすぎていないかを見直してください`);
+      }
+      if (rawFile) fs.rmSync(rawFile, { force: true });
+      reportLine = rep.line;
       // 鳴らした音の自動チェック（音割れ・低音の多すぎ・強弱の平らさ・途中の無音）
       const { analyzeMix } = await load("/src/audio/song-check.ts");
       const bytes = fs.readFileSync(files.wav);
