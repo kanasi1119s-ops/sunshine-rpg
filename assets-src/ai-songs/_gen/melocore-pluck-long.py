@@ -85,6 +85,6 @@ song={"title":"melocore-pluck-long","description":"メロコアパンク（長�
   part("leadGuitar","リフ（左・ルート）",gl,0.16,-0.6,"cleanGuitar","overdrive",{"reverb":0.08,"chorus":0}),
   part("leadGuitar","リフ（右・5度）",gr,0.16,0.6,"cleanGuitar","overdrive",{"reverb":0.08,"chorus":0}),
   part("leadGuitar","メロディ／ソロ",lead,0.3,0,"cleanGuitar","clean",{"reverb":0.18,"chorus":0}),
-  part("bass","ベース",bass,0.2,0,None,"auto",{}),
+  part("bass","ベース",bass,0.3,0,None,"auto",{}),
   part("kick","キック",kick,0.22,0,None,"auto",{}),part("snare","スネア",snare,0.18,0,None,"auto",{}),part("hihat","ハイハット",hat,0.08,0.3,None,"auto",{})]}
 print(json.dumps(song,ensure_ascii=False))
