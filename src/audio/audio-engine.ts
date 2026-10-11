@@ -20,6 +20,8 @@ export class AudioEngine {
   private bgmGain: GainNode | null = null;
   /** 曲の切り替え（フェード）とダッキング用の音量。bgmGain のあとに直列でつなぐ（bgm-director.ts が動かす）。 */
   private bgmDuck: GainNode | null = null;
+  /** 効果音が鳴る一瞬だけ下げる音量。会話などの長い音量下げ（bgmDuck、bgm-director）と同じノードを動かすと、お互いの予定を消してしまうので別にする。 */
+  private seDuck: GainNode | null = null;
   private bgmFade: GainNode | null = null;
   private seGain: GainNode | null = null;
   private sfxThrottle = new SeThrottle();
@@ -59,9 +61,11 @@ export class AudioEngine {
       this.bgmGain = this.ctx.createGain();
       this.applyBgmGain();
       this.bgmDuck = this.ctx.createGain();
+      this.seDuck = this.ctx.createGain();
       this.bgmFade = this.ctx.createGain();
       this.bgmGain.connect(this.bgmDuck);
-      this.bgmDuck.connect(this.bgmFade);
+      this.bgmDuck.connect(this.seDuck);
+      this.seDuck.connect(this.bgmFade);
       this.bgmFade.connect(this.ctx.destination);
       this.bgmBus = createBgmBus(this.ctx, this.bgmGain);
       // 録音音源は、ほんの少しだけ残響を足して、同じ出口（音量・仕上げ）を通す
@@ -217,8 +221,8 @@ export class AudioEngine {
 
   /** BGM を level の分だけ一時的に下げ、holdSec 秒後に戻す。 */
   duckBgm(level: DuckLevel, holdSec: number): void {
-    if (!this.ctx || !this.bgmDuck || !DUCK_DB[level]) return;
-    duckBgmForSe(this.bgmDuck.gain, level, this.ctx.currentTime, holdSec);
+    if (!this.ctx || !this.seDuck || !DUCK_DB[level]) return;
+    duckBgmForSe(this.seDuck.gain, level, this.ctx.currentTime, holdSec);
   }
 
   /** `offsetSec`: 曲の途中（この秒数の位置）から鳴らす。BGMプレイヤーの「聴きたい部分から再生」用。 */

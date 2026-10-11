@@ -243,7 +243,7 @@ export const AI_SONG_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["instrument", "role", "volume", "pan", "amp", "ampPreset", "notes"],
+        required: ["instrument", "role", "volume", "pan", "amp", "notes"],
         properties: {
           instrument: { type: "string", enum: Object.keys(AI_INSTRUMENTS) },
           role: { type: "string" },

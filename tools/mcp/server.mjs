@@ -15,6 +15,10 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { openSongKit, ROOT } from "../composer/song-lib.mjs";
 
+// 標準出力は MCP の通信に使う。書き出しの途中の console.log（整合率の表示など）が混ざると通信が壊れるので、標準エラーへ回す
+console.log = (...args) => console.error(...args);
+console.info = console.log;
+
 let kitPromise = null;
 const kit = () => (kitPromise ??= openSongKit());
 const text = (t) => ({ content: [{ type: "text", text: t }] });
