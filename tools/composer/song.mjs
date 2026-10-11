@@ -32,6 +32,7 @@ import path from "path";
 import { openSongKit, ROOT } from "./song-lib.mjs";
 import { runWorkflowCommand } from "./workflow-cli.mjs";
 import { revisionReminder } from "./revision-log.mjs";
+import { runR2Command } from "./r2-cli.mjs";
 
 const args = process.argv.slice(2);
 const opt = (name) => {
@@ -69,6 +70,7 @@ if (args[0] === "delays" && args[1]) {
 }
 // 曲作りの流れの道具（gate・plan-check・novelty など）は、vite を起動せずに先に処理する
 if (await runWorkflowCommand(args)) process.exit(process.exitCode ?? 0);
+if (await runR2Command(args)) process.exit(process.exitCode ?? 0);
 
 const kit = await openSongKit();
 try {

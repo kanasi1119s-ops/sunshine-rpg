@@ -441,3 +441,25 @@
 37. [AudioCipher「ライトモチーフ」](https://www.audiocipher.com/post/leitmotif)
 
 （参考にした事実は一般的な音楽の知識の範囲。特定の曲の旋律・進行・構成は使っていない。表中の数値や設計例は、うちの `sections`／`energy` の書式に合わせたオリジナルの設計。）
+
+
+---
+
+## 13. 実装状況（2026-10-11、feat/r2-form）
+
+§12 の10提案は、作曲ソフト側（`src/audio/` と `tools/composer/`）に入れた。ゲーム本体（`/home/claude/sunshine-rpg`）には触れていない。
+
+| 提案 | 状態 | 場所 |
+|---|---|---|
+| 形式の略記（`form`） | 実装・テストあり | `form-helper.ts`、`song-expand.ts`（blues12 のコード生成を含む） |
+| 強さの曲線の追加（20型のうち既存6型以外の16） | 実装・テストあり | `energy-curves.ts`（`scene.ts` の `ENERGY_CURVES` に合流） |
+| 層の抜き方（`peel`）・セクションごとの `add`／`gain` | 実装・テストあり | `arrangement.ts`、`peel.test.ts` |
+| ループ検査 `checkLoop`（曲の和音・音量・末尾）と、楽譜の継ぎ目検査 | 実装・テストあり | `loop-check.ts`、`song.mjs loop-report` |
+| 導入・終わりの型の記録と重複注意 | 実装・テストあり | `type-check.ts`、`song.mjs type-check`、ビルド時の注意 |
+| ループ点・ボス段階などの `Score.meta` | 実装・テストあり | `song-meta.ts`、`score.ts`。ビルドで `<曲>.manifest.json` も出る |
+| 周回（`laps`／`lap2`）の展開 | 実装・テストあり | `laps.ts` |
+| 主題の台帳と使用一覧 | 実装・テストあり | `docs/sound/data/motifs.json`、`motif.ts`、`song.mjs motif-ledger [--write]` |
+| 組曲の検査 | 実装・テストあり | `suite-check.ts`、`assets-src/suites/sample-suite.json`（見本・仮） |
+| 前回の持ち越し: 導入が直前の曲と同じ／ボス段階表 | 実装 | `type-check.ts`／`bossPhases` |
+
+未了: 実際の曲のJSONに `form`・`loop`・`introType` を書き足す作業はしていない（既存の曲は壊さないため）。`--loop-tail` の長さは `meta.loop.endSec` をまだ使っていない。曲の一覧表（`tracks.md`）に型の列を足す作業は、曲を追加するときに行う。

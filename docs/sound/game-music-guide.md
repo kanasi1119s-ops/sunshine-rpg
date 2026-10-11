@@ -413,3 +413,23 @@
 30. https://sites.nd.edu/listening-to-movies/?p=29 （音楽による予告：調・不協和・主題・楽器）
 
 **既存文書・コード（内部）**: `docs/sound/arrangement-deep.md`、`docs/sound/tracks.md`、`docs/sound/mastering-guide.md`、`docs/sound/banned-sounds.md`、`src/audio/scene.ts`、`src/audio/audio-engine.ts`、`src/audio/sampled-engine.ts`、`/home/claude/sunshine-rpg/docs/story/`（bible・mystery・clue-ledger）、`/home/claude/sunshine-rpg/CLAUDE.md`
+
+
+---
+
+## 12. 実装状況（2026-10-11、feat/r2-form）
+
+§10 の8提案のうち、作曲ソフト側で作れるものは作った。ゲーム本体（`main.ts` など）への組み込みは、この作業では行っていない。ゲームは `BgmDirector` を作って使うだけになるよう、土台を `src/audio/` に置いた。
+
+| # | 提案 | 状態 | 場所 |
+|---|---|---|---|
+| 1 | 曲の切り替えのフェード | 実装・テストあり（0.3〜1秒、戦闘開始は0.3秒） | `bgm-director.ts`、`audio-engine.ts`（`bgmFade` の直列ゲイン） |
+| 2 | 会話中のダッキング | 実装・テストあり（会話 -5dB 0.3秒／戻り0.5秒、効果音 -3dB、ファンファーレ -8dB） | `bgm-director.ts`、`audio-engine.ts`（`bgmDuck`） |
+| 3 | フィールド曲の位置を覚える | 実装・テストあり | `bgm-director.ts` |
+| 4 | 音まわりの安全対策 | 実装・テストあり（開始時 resume、非表示で suspend、statechange） | `audio-lifecycle.ts` |
+| 5 | 周回で変わる長い1曲 | 作曲側の仕組みを実装（`laps`／`lap2`）。実際の町・フィールド・洞窟の曲の書き直しは未着手 | `laps.ts` |
+| 6 | ループの継ぎ目の自動検査 | 実装・テストあり | `loop-check.ts` |
+| 7 | 主題の台帳 | 実装・テストあり。台帳は `docs/sound/data/motifs.json`、一覧は `motif-ledger` で作る | `motif.ts` |
+| 8 | スマホのスピーカー確認 | 実装・テストあり（800Hz以上だけ・モノ合成・低音の倍音） | `phone-check.ts`、`song.mjs phone-check <wav>` |
+
+あわせて、導入ループ（`loop` の startBar〜endBar）、ボスの段階の切り替え（小節の頭）も `BgmDirector` に入れた。未了: ゲーム本体での利用、実機（スマホ）での聞き比べ。主題の旋律は仮の設計で、物語の確定に合わせて見直す。

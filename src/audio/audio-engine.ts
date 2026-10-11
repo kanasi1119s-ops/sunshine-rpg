@@ -17,6 +17,9 @@ const SCHEDULE_INTERVAL_MS = 250;
 export class AudioEngine {
   private ctx: AudioContext | null = null;
   private bgmGain: GainNode | null = null;
+  /** 曲の切り替え（フェード）とダッキング用の音量。bgmGain のあとに直列でつなぐ（bgm-director.ts が動かす）。 */
+  private bgmDuck: GainNode | null = null;
+  private bgmFade: GainNode | null = null;
   private seGain: GainNode | null = null;
 
   private bgmVolume = 0.6;
@@ -49,7 +52,11 @@ export class AudioEngine {
       this.ctx = new AudioContext();
       this.bgmGain = this.ctx.createGain();
       this.applyBgmGain();
-      this.bgmGain.connect(this.ctx.destination);
+      this.bgmDuck = this.ctx.createGain();
+      this.bgmFade = this.ctx.createGain();
+      this.bgmGain.connect(this.bgmDuck);
+      this.bgmDuck.connect(this.bgmFade);
+      this.bgmFade.connect(this.ctx.destination);
       this.bgmBus = createBgmBus(this.ctx, this.bgmGain);
       // 録音音源は、ほんの少しだけ残響を足して、同じ出口（音量・仕上げ）を通す
       // 録音音源の出口には「版」の段を挟む: 高音を丸める低域通過フィルターと、ホール残響（PS2世代の音）
@@ -335,6 +342,32 @@ export class AudioEngine {
       }
     }
     this.activeBgmNodes.clear();
+  }
+
+  /** 音量ノードごとの、直前の動き（いまの値を自分で計算するため。同じ瞬間に2回呼ばれても、前の指定を引き継げる）。 */
+  private gainRamps = new Map<GainNode, { from: number; to: number; t0: number; t1: number }>();
+
+  /** 音量ノードを seconds かけて level（0〜1）へ動かす（いまの値から。途中で呼び直してもプチッとならない）。 */
+  private rampGain(node: GainNode | null, level: number, seconds: number): void {
+    if (!node || !this.ctx) return;
+    const p = node.gain;
+    const t = this.ctx.currentTime;
+    const prev = this.gainRamps.get(node);
+    const now = prev ? (t >= prev.t1 ? prev.to : prev.from + ((prev.to - prev.from) * (t - prev.t0)) / Math.max(1e-6, prev.t1 - prev.t0)) : p.value;
+    p.cancelScheduledValues(t);
+    p.setValueAtTime(now, t);
+    if (seconds <= 0.001) { p.setValueAtTime(level, t); this.gainRamps.set(node, { from: level, to: level, t0: t, t1: t }); }
+    else { p.linearRampToValueAtTime(level, t + seconds); this.gainRamps.set(node, { from: now, to: level, t0: t, t1: t + seconds }); }
+  }
+
+  /** 曲の切り替え用の音量（0〜1）を動かす。bgm-director.ts のフェード用。 */
+  rampBgmFade(level: number, seconds: number): void {
+    this.rampGain(this.bgmFade, level, seconds);
+  }
+
+  /** ダッキング用の音量（0〜1）を動かす。bgm-director.ts の会話・効果音の一瞬の音量下げ用。 */
+  rampBgmDuck(level: number, seconds: number): void {
+    this.rampGain(this.bgmDuck, level, seconds);
   }
 
   /** BGMの音量（プレイヤーが決めた音量 × 曲ごとの補正。ミュート中は0）を反映する。 */

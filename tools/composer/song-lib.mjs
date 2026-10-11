@@ -87,6 +87,8 @@ export async function openSongKit() {
     fs.writeFileSync(files.project, JSON.stringify({ format: "sunshine-song", version: 1, name: song.title, edition, score }));
     const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
     fs.writeFileSync(files.midi, scoreToMidi(edited));
+    // ゲーム内の曲の切り替え（BgmDirector）が読む、ループ点・導入と終わりの型・ボスの段階の表
+    try { const { buildManifest } = await load("/src/audio/song-meta.ts"); files.manifest = path.join(out, `${name}.manifest.json`); fs.writeFileSync(files.manifest, JSON.stringify(buildManifest(name, song.title, score, getScoreDurationSec(score)))); } catch { /* 表が作れなくても曲の書き出しは続ける */ }
     if (wav) {
       files.wav = path.join(out, `${name}.wav`);
       await renderWav(score, edition, files.wav, soundfont, bass, drums, guitar);

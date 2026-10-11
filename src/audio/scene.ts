@@ -1,3 +1,4 @@
+import { EXTRA_CURVES, type ExtraCurveName } from "./energy-curves";
 import { GROUPS, type CrashAt, type Group, type Layer, type LayerSpec, type Modulate, type Section, type SectionKind } from "./arrangement";
 
 /**
@@ -31,7 +32,7 @@ export interface ScenePreset {
 }
 
 /** エネルギー曲線の型（arrangement-deep.md §4.3）。 */
-export type EnergyCurve = "mountain" | "twoPeaks" | "valley" | "stairs" | "flat" | "bigValley";
+export type EnergyCurve = "mountain" | "twoPeaks" | "valley" | "stairs" | "flat" | "bigValley" | ExtraCurveName;
 export const ENERGY_CURVES: Record<EnergyCurve, number[]> = {
   mountain: [3, 5, 7, 9, 4],
   twoPeaks: [2, 5, 9, 3, 6, 10, 4],
@@ -39,6 +40,8 @@ export const ENERGY_CURVES: Record<EnergyCurve, number[]> = {
   stairs: [6, 7, 8, 9, 10],
   flat: [4, 5, 4, 5, 4],
   bigValley: [7, 4, 1, 10],
+  // form-structure-guide.md §3 の追加分（energy-curves.ts）
+  ...EXTRA_CURVES,
 };
 
 const S = (kind: SectionKind, bars: number, extra: Partial<Section> = {}): Section => ({ kind, bars, ...extra });
