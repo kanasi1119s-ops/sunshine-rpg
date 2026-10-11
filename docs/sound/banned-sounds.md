@@ -27,6 +27,11 @@
    - 代わりに: amp `loudrock`（PLR 8.4、8kHz 以上が −39dB）か `crunch`。仕上げは `--master-preset rock-clean`（`punk` プリセットはクリップ付きでさらにつぶれやすい）。volume は 0.07 前後。
    - 見分け方: 書き出しの合否表で PLR が 6 未満なら、アンプを疑う。
 
+### 2026-10-11 決定（5件目）
+5. **J-POPのアルペジオ**（jpop-clean-test）: `guitar` ＋ amp `jpopClean`（レシピ `jpop-arpeggio`）
+   - ダメだった所: 人間が聴いて「この音は嫌い」（理由の言葉はまだ聞けていない）。聴いて確かめずに作った初期値のまま。
+   - 代わりに: 前に気に入ってもらった `sparkleClean`／`crystal` 系のクリーン（`sparkle-delay`、`crystal-wide`）。`jpopClean` は人間が聴いて良いと言うまで、曲では使わない。
+
 ## 共通の注意
 - 短い音（スタッカート `'`、0.25拍以下）を同じ高さで連打しない。
 - 高域（6kHz以上）をギターで出さない。
