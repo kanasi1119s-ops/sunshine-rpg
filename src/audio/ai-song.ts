@@ -1,6 +1,7 @@
 import { noteNameToMidi } from "./note";
 import { buildNewSong, NEW_SONG_FEELS, type NewSongFeel } from "./newsong";
 import { DRUM_GENRES, drumMixFor, swingForGenre } from "./drum-genres";
+import { prepareSong } from "./song-plan";
 import { applyNaturalDynamics } from "./dynamics";
 import { applySections, autoSections, fitSections, SECTION_KINDS, type Section, type SectionKind } from "./arrangement";
 import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, type Track } from "./score";
@@ -98,6 +99,12 @@ export interface AiSong {
   fills?: boolean;
   /** 自動の伴奏のセクション編曲。"auto"（定番の構成）か、{kind, bars} の並び。autoAccompaniment が true のときだけ効く。 */
   sections?: "auto" | { kind: SectionKind; bars: number }[];
+  /** セクションごとのコード進行（{ verse: "C Am F G", chorus: "F G Em Am" }。2回目の同じ種類は verse2 のように書ける）。sections を配列で書いたときだけ効く。 */
+  sectionChords?: Record<string, string>;
+  /** 転調: atBar 小節目（1から数える）以降のコードと、ドラム以外のパートの音を semitones 半音ずらす。 */
+  modulate?: { atBar: number; semitones: number };
+  /** ループの最後の小節のコードを置き換える（dominant＝V7、deceptive＝vi か ♭VI）。 */
+  loopTail?: "deceptive" | "dominant";
   /** AIが書くパート（メロディ・対旋律・ベースライン・ドラムなど）。 */
   parts: AiPart[];
 }
@@ -144,6 +151,9 @@ export const AI_SONG_SCHEMA = {
     drumMix: { type: "object" },
     fills: { type: "boolean" },
     sections: { anyOf: [{ type: "string", enum: ["auto"] }, { type: "array", items: { type: "object", additionalProperties: false, required: ["kind", "bars"], properties: { kind: { type: "string", enum: SECTION_KINDS }, bars: { type: "number" } } } }] },
+    sectionChords: { type: "object", additionalProperties: { type: "string" } },
+    modulate: { type: "object", additionalProperties: false, required: ["atBar", "semitones"], properties: { atBar: { type: "integer" }, semitones: { type: "integer" } } },
+    loopTail: { type: "string", enum: ["deceptive", "dominant"] },
     parts: {
       type: "array",
       items: {
@@ -209,7 +219,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 ## 形式
 - title / description: 曲名と、どんな曲か（日本語）。
 - bpm: テンポ（50〜220）。beats: 1小節の拍（3・4・6・7）。
-- chords: コード進行（空白でくぎる。C・Am・F#m7・Bbmaj7・Csus4・Gdim・Eaug・D7 など）。
+- chords: コード進行（空白でくぎる。C・Am・F#m7・Bbmaj7・Csus4・Gdim・Eaug・D7 など）。コードごとの長さは「Am*2」（2小節）。セクションごとの進行は sectionChords（sections を配列で書いたとき）、最後のサビの転調は modulate: {atBar, semitones}、ループの継ぎ目は loopTail: "dominant"|"deceptive"。
 - barsPerChord: 1コードの小節数（1か2）。repeats: 進行のくり返し回数。
 - autoAccompaniment: true なら、コード進行から伴奏（ドラム・ベース・ギター・ピアノ・弦）を自動で足す。自分でドラムやベースを書くときは false にしてよい。feel: 自動の伴奏の雰囲気（rock / pop / ballad / vocaloid＝ボカロ曲のような歌なしのバック（高速・16分の詰まったドラムとピアノ・動くベース・ギターの刻み・左右の弦。bpm 160〜190で）/ dance＝4つ打ち・メロディのように動くベース・ピアノの分散和音・エコーギターの、きれいで現代的な伴奏）。ジャンル別の型（ドラム・ベース・コード楽器がジャンルの型で付く。ベースは 4・8小節目の最後に次の根音へ近づく音を置く）: funk＝16分シンコペ＋ゴースト（bpm 95〜115・swing 0.2・ベース音源 std/slap）／reggae＝ワンドロップ（3拍目にキックとスネア、ベースは1拍目を休む。bpm 65〜90・ベース finger）／bossa＝付点4分＋8分のベース（根音と5度）・弱いクロススティック風（bpm 100〜150・ベース finger）／jazz＝1拍1音のウォーキングベース（根音→3度→5度→次の根音への半音。bpm 120〜220・swing 0.5〜0.7＝速いほど小さく・ベース jazz）／shuffle＝ブルースの8分シャッフル（1-3-5-6-♭7-6-5-3。swing 0.6）／metal＝ツーバス16分とギャロップ・ベースはキックと同じ位置（bpm 140〜200。190を超えると16分を8分に落とす・ベース metal）／disco＝4つ打ち＋オクターブのベース＋裏拍のオープンハイハット／hiphop＝ブーンバップ（キックの位置にベースの長い音。swing 0.3〜0.5）／trap＝808（sub808）がキックの位置から長く鳴る・クラップは3拍目・ハイハットは8分（bpm 130〜160）／dnb＝2ステップ（キック1拍目と3拍目の裏。bpm 165〜180）／halftime＝ダブステップ（スネアは3拍目だけ。bpm 138〜145）。ghostDensity（0〜1）でスネアとベースのゴーストノートの量を決める（human を書くとそれに合わせて増える）。bassApproach: true で rock・pop・ballad にも小節末のアプローチを付ける。bassDensity: true で、sections に合わせてベースの密度を変える（Aメロ＝4分・サビ＝8分の裏がオクターブ・終わり＝根音1音）。drumGenre にジャンル名を書くと、そのジャンルの drumMix・swing・human の推奨値が入る（書いた drumMix はそれが優先）。ブラスト・ギャロップ・トラップのハイハットのロール（x:0.333, ・x:0.125, の拍つき書き）の書き方は docs/sound/drum-genre-guide.md §2.3。
 - tone: ギターの音色の方向（rock / metal / prs＝なめらかなリード）。
@@ -223,7 +233,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - sections: 自動の伴奏（autoAccompaniment: true）に、曲の起伏をつける。"auto" なら定番の構成（導入4 → Aメロ8 → Bメロ4 → サビ8 → 間奏4 → Aメロ → Bメロ → サビ → サビ → 終わり4。曲の小節数に合わせて自動で区切る）。自分で決めるなら [{"kind":"intro","bars":4},{"kind":"verse","bars":8},{"kind":"pre","bars":4},{"kind":"chorus","bars":8}] のように書く（kind は intro・verse・pre・chorus・interlude・bridge・outro。bars の合計が曲の小節数になるようにする。ちがうときは最後を延ばすか、後ろを切る）。導入＝ピアノと弦だけ、Aメロ＝ドラム（キックとハイハット）とベースを足す、Bメロ＝スネアとギターを足して少しずつ強く、サビ＝全部とクラッシュ、間奏＝ドラムを抜く、Cメロ・終わり＝静かに。サビの前の小節は、スネアとキックで助走をつける。メロディなど自分で書いたパートには効かないので、メロディ側の強弱は phrase や ! , で付ける。
 - dynamics: true にすると、曲の出だし（最初の1/8、最大4小節）を小さく始めて上げ、中盤で一度引いてから戻す（曲の起伏）。同じ音量で続く曲を避けたいときに使う。
 - dynamics: "natural" にすると、人が弾いたような強弱を自動でつける（曲全体の山と谷・4小節フレーズごとの息づかい・拍の強弱・音ごとのわずかなばらつき。出だしと終わりは小さく、7割あたりが頂点）。ソロ・バラード・インストで、のっぺりした曲にしたくないときは基本これを使う。ドラムには半分の深さでかかる。
-- 勉強した内容のガイド（曲を書く前に、必要なものを読む）: docs/sound/ai-composition-workflow.md（AIで作曲する手順・点検）／chord-theory-deep.md（ジャンル別・場面別の進行。分数コード G/B、6・9・add9・m7b5・7sus4・maj9 も書ける）／bassline-guide.md（ジャンル別のベース）／drum-genre-guide.md（ジャンル別のドラムと drumMix）／sound-design-basics.md（音づくり・帯域）／mix-patterns.md（ミックスのパターン56個と症状別の直し方）／arrangement-deep.md（編曲）／mastering-guide.md（仕上げ）／amp-sim-guide.md（アンプ）。
+- 勉強した内容のガイド（曲を書く前に、必要なものを読む）:（曲の設計図 <曲>.plan.json の書き方と点検は ai-composition-workflow.md。書き出し後は song.mjs gate・novelty・plan-check） docs/sound/ai-composition-workflow.md（AIで作曲する手順・点検）／chord-theory-deep.md（ジャンル別・場面別の進行。分数コード G/B、6・9・add9・m7b5・7sus4・maj9 も書ける）／bassline-guide.md（ジャンル別のベース）／drum-genre-guide.md（ジャンル別のドラムと drumMix）／sound-design-basics.md（音づくり・帯域）／mix-patterns.md（ミックスのパターン56個と症状別の直し方）／arrangement-deep.md（編曲）／mastering-guide.md（仕上げ）／amp-sim-guide.md（アンプ）。
 - 書き出しの仕上げ（コマンドの引数。曲のJSONには書かない）: --master-preset game（-14LUFS）・rock（-10）・loud（-8）・calm（-16）、--space hall|room|plate（自作IRの畳み込み残響）、--space-wet、--widen。natural の曲は圧縮をやさしくして強弱の起伏を残す。
 - parts: 自分で書くパート。1曲に1〜8パート。
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。
@@ -422,10 +432,10 @@ export function applyArc(tracks: Track[], total: number, beats: number): Track[]
 }
 
 export function aiSongToScore(input: unknown): { score: Score; song: AiSong; warnings: string[] } {
-  const song = input as AiSong;
   const errors: string[] = [];
   const warnings: string[] = [];
-  if (!song || typeof song !== "object") throw new Error("AIソングのJSONではありません");
+  if (!input || typeof input !== "object") throw new Error("AIソングのJSONではありません");
+  const song = prepareSong(input as AiSong, warnings); // Am*2・sectionChords・modulate・loopTail をふつうの形に直す（使っていなければそのまま）
   const bpm = Math.round(Number(song.bpm));
   if (!(bpm >= 40 && bpm <= 260)) errors.push(`bpm は 40〜260 にしてください（${song.bpm}）`);
   if (![3, 4, 6, 7].includes(Number(song.beats))) errors.push(`beats は 3・4・6・7 のどれか（${song.beats}）`);

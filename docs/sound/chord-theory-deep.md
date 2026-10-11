@@ -509,3 +509,30 @@ chords: Em Em Em Bb Em C D Em Em C Bm B7 Am C Am B7 C D Em G C D B7 Em
 40. [eMastered: 映画音楽のコード進行](https://emastered.com/ja/blog/cinematic-chord-progressions)
 
 読めなかった（本文を取れなかった）ページ: ニコニコ大百科「小室進行」、Samplefocus・Violet Recording の EDM／R&B 記事（取得制限）。EDM の型は、一般的な理論（短調の循環・往復・ビルドとドロップ）から自分で組んだもので、出典の文章に頼っていない。
+
+---
+
+## 11. 実装状況（2026-10-11）
+
+9節の提案10個のうち、10個とも何らかの形で入れた（一部は書式を変えている）。
+
+| 提案 | 状態 | 入れたもの・場所 |
+|---|---|---|
+| 1 分数コード | 入れた | 作曲ソフト側（`newsong.ts` の `parseChord`）は先に対応ずみ。**今回は点検側**を直した: `chord-variety.mjs` の `parseChord` が低音（`bass`）を返す、`score-lib.mjs` の `chordPcs` が低音を和音の音に含める（8節の注「読み込みで止まる疑い」「度数が崩れる」は、もう当てはまらない） |
+| 2 和音の種類 | 一部 | `newsong.ts` で 6・m6・9・maj9・m9・add9・madd9・m7b5（`m7(b5)`）・dim7・7sus4・m(maj7) は読める。**`5`（パワーコード）・`m7-5`・`mmaj7` は読めないまま**（`newsong.ts` は別の作業が同時に変更しているため触っていない）。点検側（`chord-variety.mjs`・`score-lib.mjs`）は m7b5・mmaj7・6・9・add9 を読む |
+| 3 コードごとの長さ | 入れた（書式を変更） | `chords` に `Am*2`（2小節）と書く。**半小節（`Am/2`）は入れていない**（`G/B` の分数コードの書式とぶつかるため。小節の単位でだけ数える）。`src/audio/song-plan.ts` の `prepareSong` が、1小節1コードの形に展開してから `buildNewSong` に渡す。`barsPerChord` と混ぜてよい（`*N` が優先） |
+| 4 セクション別の進行 | 入れた | `sectionChords: { "verse": "Em C G D", "chorus": "C G Am*2 D", "verse2": "Em D" }`。`sections` を配列で書いたときだけ効く（自動の `"auto"` は小節数が先に決まらないため）。各セクションの進行は、そのセクションの小節数に合わせて繰り返す／切る。同じ種類の2回目は `verse2`・`chorus2` のキーで別に指定でき、無ければ `verse` を使う。曲の長さは sections の合計になるので `repeats` は使われない |
+| 5 回して書いても見つける | 入れた | `chord-variety.mjs` の `signature` を、**「前のコードからの根音の移動量＋長短」の輪（ループ）**にした。移調しても、回して書いても（`C G Am F` と `Am F C G`）一致率 100%。繰り返して書いた進行は最小の1周にまとめる。調を主音からの度数で比べる代わりに、移動量で比べるので、主音の推定がいらない（テストあり） |
+| 6 型ラベル | 入れた | `docs/sound/data/chord-recipes.json`（46の型。度数・長短・場面・使いすぎ注意のフラグ）。`chord-variety.mjs` の `recipeOf` が進行から型を当て、警告に型名を出す（「王道」など使いすぎ注意の型、他の曲と同じ型）。回転しただけの同じ型は1つにまとめた |
+| 7 進行の選択ツール | 入れた | `node tools/composer/chord-pick.mjs --scene battle --avoid-last 3 --key random --count 3 [--seed N] [--last 曲名,..]`。場面に合い、直近の曲と違う型を選び、C 以外の主音に移して、コード名で出す。使いすぎ注意の型は `--allow-overused` を付けたときだけ |
+| 8 後半の転調 | 入れた | `modulate: { "atBar": 17, "semitones": 1 }`。`atBar`（1から数える）以降のコードと、ドラム以外のパートの音名を移す（パートは曲の長さまで展開してから移すので、短い型を繰り返しているパートも途中から上がる）。ドラム（タムの音名も）は動かさない。`ai-song.ts` の `AI_SONG_SCHEMA` と `AI_SONG_GUIDE` に追記 |
+| 9 アヴォイドノート警告 | 入れた | `score-check.mjs --facts` が、小節ごとに「強拍（1拍目・3拍目）か1拍以上の音が、和音の構成音の半音上にある音階内の音」を出し、近い構成音を2つ直し方として添える。`build` の注意にも件数が出る（`tools/composer/workflow-check.mjs`）。`song-check.ts`（TypeScript 側）は触っていない |
+| 10 ループ末尾 | 入れた | `loopTail: "dominant"`（最後の小節を V7）／`"deceptive"`（長調は vi、短調は ♭VI）。転調と併用すると、転調後の調の V7 になる |
+
+使い方の例（すべて同じ曲に書ける）
+```json
+"chords": "Em Cmaj7*2 G/B D", "sections": [{"kind":"verse","bars":8},{"kind":"chorus","bars":8}],
+"sectionChords": { "verse": "Em Cmaj7*2 G/B", "chorus": "C G Am*2 D" },
+"modulate": { "atBar": 13, "semitones": 2 }, "loopTail": "dominant"
+```
+注意: これらの書式は `aiSongToScore` の最初で、ふつうの形（`chords` を1小節1コードで並べる、`barsPerChord: 1`、`repeats: 1`）に直される。ゲームに登録される曲（`sunshine-song.json`）は直したあとの楽譜なので、再生側の変更はいらない。

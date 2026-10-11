@@ -1,0 +1,484 @@
+{
+  "_about": "コード進行の型（レシピ）。ローマ数字は主音からの度数（大文字=長、小文字=短。bVII は半音下げ、/7 は低音が7度）。出典は docs/sound/chord-variety-guide.md と chord-theory-deep.md の一般的な型で、実在曲の進行ではない。tools/composer/chord-variety.mjs（型ラベル）と chord-pick.mjs（選択ツール）が読む。overused:true は使いすぎ注意の型。",
+  "scenes": {
+    "field": "フィールド",
+    "town": "町",
+    "battle": "戦闘",
+    "boss": "ボス",
+    "dungeon": "ダンジョン",
+    "sad": "悲しみ・別れ",
+    "ending": "エンディング・感動",
+    "event": "イベント・物語",
+    "mystery": "謎・不穏",
+    "sky": "空・幻想",
+    "night": "夜・酒場"
+  },
+  "recipes": [
+    {
+      "id": "royal",
+      "name": "王道（I–V–vi–IV）",
+      "roman": "I V vi IV",
+      "mode": "major",
+      "scenes": [
+        "town",
+        "ending",
+        "sad"
+      ],
+      "overused": true
+    },
+    {
+      "id": "desc-bass",
+      "name": "下降ベース",
+      "roman": "I V/7 vi I/5 IV",
+      "mode": "major",
+      "scenes": [
+        "sad",
+        "ending"
+      ]
+    },
+    {
+      "id": "borrowed-iv",
+      "name": "借用の陰り（iv）",
+      "roman": "I IV iv I",
+      "mode": "major",
+      "scenes": [
+        "field",
+        "sad",
+        "ending"
+      ]
+    },
+    {
+      "id": "bvii-drive",
+      "name": "♭VIIの力強さ",
+      "roman": "I bVII IV I",
+      "mode": "major",
+      "scenes": [
+        "battle",
+        "field"
+      ]
+    },
+    {
+      "id": "minor-triple",
+      "name": "短調の下降（V締め）",
+      "roman": "i bVII bVI V",
+      "mode": "minor",
+      "scenes": [
+        "battle",
+        "boss",
+        "night"
+      ]
+    },
+    {
+      "id": "minor-float",
+      "name": "短調の浮遊",
+      "roman": "i bIII bVII IV",
+      "mode": "minor",
+      "scenes": [
+        "field",
+        "dungeon"
+      ]
+    },
+    {
+      "id": "deceptive",
+      "name": "偽終止",
+      "roman": "I vi IV V7 vi",
+      "mode": "major",
+      "scenes": [
+        "event",
+        "sad"
+      ]
+    },
+    {
+      "id": "pedal",
+      "name": "ペダル（低音固定）",
+      "roman": "I IV/1 V/1 I",
+      "mode": "major",
+      "scenes": [
+        "dungeon",
+        "boss"
+      ]
+    },
+    {
+      "id": "cliche",
+      "name": "半音クリシェ",
+      "roman": "i i(maj7) i7 i6",
+      "mode": "minor",
+      "scenes": [
+        "mystery",
+        "dungeon"
+      ]
+    },
+    {
+      "id": "third-leap",
+      "name": "三度の飛び",
+      "roman": "I III bVI I",
+      "mode": "major",
+      "scenes": [
+        "event",
+        "ending"
+      ]
+    },
+    {
+      "id": "dorian-vamp",
+      "name": "ドリアン往復",
+      "roman": "i IV",
+      "mode": "minor",
+      "scenes": [
+        "field",
+        "town",
+        "night"
+      ]
+    },
+    {
+      "id": "lydian",
+      "name": "リディアン",
+      "roman": "Imaj7 II",
+      "mode": "major",
+      "scenes": [
+        "sky",
+        "event"
+      ]
+    },
+    {
+      "id": "sec-dom-chain",
+      "name": "副ドミナント連鎖",
+      "roman": "III7 vi II7 V I",
+      "mode": "major",
+      "scenes": [
+        "town",
+        "event"
+      ]
+    },
+    {
+      "id": "tritone-sub",
+      "name": "裏コード",
+      "roman": "ii7 bII7 Imaj7",
+      "mode": "major",
+      "scenes": [
+        "night",
+        "town"
+      ]
+    },
+    {
+      "id": "parallel",
+      "name": "平行移動",
+      "roman": "I II bIII IV",
+      "mode": "major",
+      "scenes": [
+        "mystery",
+        "sky"
+      ]
+    },
+    {
+      "id": "five-bar",
+      "name": "5小節周期",
+      "roman": "I IV V bVI V",
+      "mode": "major",
+      "scenes": [
+        "boss",
+        "battle"
+      ]
+    },
+    {
+      "id": "rock-open",
+      "name": "開放の連続",
+      "roman": "I IV bVII IV",
+      "mode": "major",
+      "scenes": [
+        "battle",
+        "field"
+      ]
+    },
+    {
+      "id": "rock-fall",
+      "name": "5度から落ちる",
+      "roman": "I V bVII IV",
+      "mode": "major",
+      "scenes": [
+        "battle",
+        "field"
+      ]
+    },
+    {
+      "id": "punk-fold",
+      "name": "三大和音の折り返し",
+      "roman": "I IV V IV",
+      "mode": "major",
+      "scenes": [
+        "battle",
+        "field"
+      ]
+    },
+    {
+      "id": "punk-bvii",
+      "name": "♭VIIで跳ねる",
+      "roman": "I bVII IV V",
+      "mode": "major",
+      "scenes": [
+        "battle"
+      ]
+    },
+    {
+      "id": "punk-III",
+      "name": "IIIを長三和音に",
+      "roman": "I III IV V",
+      "mode": "major",
+      "scenes": [
+        "battle",
+        "event"
+      ]
+    },
+    {
+      "id": "punk-minor",
+      "name": "短調パンク",
+      "roman": "i bIII iv bVI",
+      "mode": "minor",
+      "scenes": [
+        "battle",
+        "dungeon"
+      ]
+    },
+    {
+      "id": "phrygian",
+      "name": "フリジアの引力",
+      "roman": "i bII i bVII",
+      "mode": "minor",
+      "scenes": [
+        "boss",
+        "dungeon"
+      ]
+    },
+    {
+      "id": "aeolian-fall",
+      "name": "エオリアン下降",
+      "roman": "i bVI bVII i",
+      "mode": "minor",
+      "scenes": [
+        "boss",
+        "ending"
+      ]
+    },
+    {
+      "id": "third-stair",
+      "name": "三度の階段",
+      "roman": "i bIII bVII bVI",
+      "mode": "minor",
+      "scenes": [
+        "boss",
+        "field"
+      ]
+    },
+    {
+      "id": "tritone",
+      "name": "トライトーン",
+      "roman": "i bV i bII",
+      "mode": "minor",
+      "scenes": [
+        "boss",
+        "mystery"
+      ]
+    },
+    {
+      "id": "napoli",
+      "name": "ナポリ風",
+      "roman": "i bVI bII V7",
+      "mode": "minor",
+      "scenes": [
+        "boss",
+        "sad"
+      ]
+    },
+    {
+      "id": "pop-rise",
+      "name": "上昇ベース",
+      "roman": "I iii IV V",
+      "mode": "major",
+      "scenes": [
+        "field",
+        "town"
+      ]
+    },
+    {
+      "id": "pop-iv-vi-v",
+      "name": "4と5を遅らせる",
+      "roman": "I IV vi V",
+      "mode": "major",
+      "scenes": [
+        "town",
+        "field"
+      ]
+    },
+    {
+      "id": "turnaround",
+      "name": "循環",
+      "roman": "I vi ii V",
+      "mode": "major",
+      "scenes": [
+        "town",
+        "night"
+      ]
+    },
+    {
+      "id": "pop-desc",
+      "name": "下降の逆再生",
+      "roman": "vi V IV V",
+      "mode": "minor",
+      "scenes": [
+        "field",
+        "town"
+      ]
+    },
+    {
+      "id": "pop-iii",
+      "name": "iiiを経由",
+      "roman": "I iii vi IV",
+      "mode": "major",
+      "scenes": [
+        "town",
+        "ending"
+      ]
+    },
+    {
+      "id": "pop-bvii",
+      "name": "♭VIIで始まる回遊",
+      "roman": "I bVII vi IV",
+      "mode": "major",
+      "scenes": [
+        "sad",
+        "field"
+      ]
+    },
+    {
+      "id": "jp-royal",
+      "name": "IV–V–iii–vi 型",
+      "roman": "IVmaj7 V7 iii7 vi7",
+      "mode": "major",
+      "scenes": [
+        "town",
+        "ending"
+      ],
+      "overused": true
+    },
+    {
+      "id": "jp-komuro",
+      "name": "vi–IV–V–I 型",
+      "roman": "vi IV V I",
+      "mode": "major",
+      "scenes": [
+        "event",
+        "battle"
+      ]
+    },
+    {
+      "id": "jp-canon",
+      "name": "8コードの循環（5度・2度・4度）",
+      "roman": "I V vi iii IV I IV V",
+      "mode": "major",
+      "scenes": [
+        "ending",
+        "sad"
+      ],
+      "overused": true
+    },
+    {
+      "id": "jp-marunouchi",
+      "name": "IVmaj7–III7–vi7–I7 型",
+      "roman": "IVmaj7 III7 vi7 I7",
+      "mode": "major",
+      "scenes": [
+        "night",
+        "town"
+      ]
+    },
+    {
+      "id": "jp-doki",
+      "name": "vi–iii–IV–V 型",
+      "roman": "vi iii IV V",
+      "mode": "major",
+      "scenes": [
+        "event",
+        "town"
+      ]
+    },
+    {
+      "id": "ballad-victory",
+      "name": "壮大な締め",
+      "roman": "bVI bVII I",
+      "mode": "major",
+      "scenes": [
+        "ending",
+        "event"
+      ]
+    },
+    {
+      "id": "ii-V-I",
+      "name": "ii–V–I",
+      "roman": "ii7 V7 Imaj7",
+      "mode": "major",
+      "scenes": [
+        "night",
+        "town"
+      ]
+    },
+    {
+      "id": "jazz-turn",
+      "name": "ターンアラウンド",
+      "roman": "Imaj7 VI7 ii7 V7",
+      "mode": "major",
+      "scenes": [
+        "night",
+        "town"
+      ]
+    },
+    {
+      "id": "backdoor",
+      "name": "バックドア",
+      "roman": "iv7 bVII7 Imaj7",
+      "mode": "major",
+      "scenes": [
+        "night",
+        "sad"
+      ]
+    },
+    {
+      "id": "blues12",
+      "name": "12小節ブルース",
+      "roman": "I I I I IV IV I I V IV I V",
+      "mode": "major",
+      "scenes": [
+        "night",
+        "town"
+      ]
+    },
+    {
+      "id": "funk-seven",
+      "name": "I7とIV7の往復",
+      "roman": "I7 IV7",
+      "mode": "major",
+      "scenes": [
+        "town",
+        "night"
+      ]
+    },
+    {
+      "id": "rnb-desc",
+      "name": "下降の7th",
+      "roman": "IVmaj7 iii7 ii7 Imaj7",
+      "mode": "major",
+      "scenes": [
+        "night",
+        "sad"
+      ]
+    },
+    {
+      "id": "rnb-iii",
+      "name": "ii–V–iii–vi",
+      "roman": "ii7 V7 iii7 vi7",
+      "mode": "major",
+      "scenes": [
+        "night",
+        "sad"
+      ]
+    }
+  ]
+}
