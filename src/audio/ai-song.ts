@@ -2,13 +2,17 @@ import { noteNameToMidi } from "./note";
 import { buildNewSong, NEW_SONG_FEELS, type NewSongFeel } from "./newsong";
 import { DRUM_GENRES, drumMixFor, swingForGenre } from "./drum-genres";
 import { prepareSong } from "./song-plan";
+import { expandSongExtras } from "./song-expand";
+import { barChordsOf, checkLoop, isLoopSpec } from "./loop-check";
+import { buildSongMeta } from "./song-meta";
+import { getMotif } from "./motif";
 import { applyNaturalDynamics } from "./dynamics";
 import { applyMutesToNotes, applyPartSections, applySections, autoSections, checkArrangement, fitSections, muteRanges, parseLayers, parsePartSections, parseSections, resolveModulate, SECTION_KINDS, TRANSITIONS, transposeTrack, type ArrangeOptions, type CrashAt, type Modulate, type PartSectionSpec, type Section, type SectionKind, type Transition } from "./arrangement";
 import { parseTripletGrid } from "./triplet-grid";
 import { applyGroupingToDrums, beatsOk, BEATS_CHOICES, MAX_BEATS, MIN_BEATS, parseGrouping } from "./meter";
 import { applyHihatSections, applyTrapRolls } from "./drum-extras";
 import { applyGrooveFeel, resolveTempoMap, RHYTHM_GUIDE_ADDENDUM, scoreRhythmFields, trackRhythmFields, type RhythmPartFields, type RhythmSongFields } from "./rhythm-options";
-import { applyScene, parseEnergy, SCENE_NAMES, sceneSections } from "./scene";
+import { applyScene, ENERGY_CURVES, parseEnergy, SCENE_NAMES, sceneSections } from "./scene";
 import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, type Track } from "./score";
 
 /**
@@ -57,6 +61,8 @@ export interface AiPart extends RhythmPartFields {
   sections?: PartSectionSpecJson;
   /** false にすると、modulate（転調）でこのパートを上げない。 */
   modulate?: boolean;
+  /** 主題を置く。{ "id": "akari", "at": "chorus", "transform": ["diminish"], "repeat": 2 }（配列で複数も可）。at は小節番号か "chorus"・"chorus2"。台帳は docs/sound/data/motifs.json。 */
+  motif?: unknown;
   /** true にすると、stopBeat・break1bar などの「全員止まる」つなぎでもこのパートは止めない（持続音など）。 */
   keepBreak?: boolean;
   /**
@@ -112,11 +118,11 @@ export interface AiSong extends RhythmSongFields {
   /** false にすると、sections の場面の変わり目にドラムのおかず（フィル）を自動で入れない（省略は入れる）。 */
   fills?: boolean;
   /** 自動の伴奏のセクション編曲。"auto"（定番の構成）か、{kind, bars} の並び。autoAccompaniment が true のときだけ効く。 */
-  sections?: "auto" | { kind: SectionKind; bars: number; from?: Transition; crash?: boolean | number }[];
+  sections?: "auto" | { kind: SectionKind; bars: number; from?: Transition; crash?: boolean | number; add?: string[]; gain?: number }[];
   /** 場面プリセット（town・village・field・battle・boss・finalBoss・castle・dungeon・shrine・mystery・sad・inn・fanfare・title・ending）。書かなかった項目（sections・feel・tone・dynamics・layers・energy・crashAt・modulate など）の既定値が入る。 */
   scene?: string;
   /** 種類ごとに鳴らす群を上書き。{ verse: ["kick","bass","keys"], chorus: { groups: [...], from: 1, to: 1 } }。群: kick hat snare bass keys guitar strings pad brass perc。 */
-  layers?: Partial<Record<SectionKind, string[] | { groups?: string[]; from?: number; to?: number; accentFirst?: boolean; hold?: boolean; crash?: boolean }>>;
+  layers?: Partial<Record<SectionKind, string[] | { groups?: string[]; from?: number; to?: number; accentFirst?: boolean; hold?: boolean; crash?: boolean; peel?: boolean | number }>>;
   /** true なら、同じ種類の2回目以降のセクションに楽器を1つ足して少し強くする（2回目は1つ足して1つ変える）。 */
   occurrence?: boolean;
   /** セクション順の強さ（1〜10）か曲線の名前（mountain・twoPeaks・valley・stairs・flat・bigValley）。群の数と強さを自動で決める。 */
@@ -131,6 +137,22 @@ export interface AiSong extends RhythmSongFields {
   sectionChords?: Record<string, string>;
   /** ループの最後の小節のコードを置き換える（dominant＝V7、deceptive＝vi か ♭VI）。 */
   loopTail?: "deceptive" | "dominant";
+  /** 形式の略記（"AABA"・"ABAC"・"rondo"・"blues12"・"sawtooth" など、または { pattern, unit, kinds, bars, chords, key, quickChange, laps }）。sections と sectionChords の土台を作る（form-helper.ts）。 */
+  form?: string | { pattern: string; unit?: number; bars?: Record<string, number>; kinds?: Record<string, string>; chords?: Record<string, string>; key?: string; minor?: boolean; quickChange?: boolean; laps?: number };
+  /** 曲全体を2〜4周分に展開する（"auto" は scene の標準）。2周目以降の差は lap2・lap3・lap4（laps.ts）。 */
+  laps?: number | "auto";
+  lap2?: Record<string, unknown>;
+  lap3?: Record<string, unknown>;
+  lap4?: Record<string, unknown>;
+  /** ゲームのループ曲の印。true／"seamless" で継ぎ目の検査（checkLoop）が働く。{ startBar, endBar } は導入を1回だけ鳴らして、その範囲をくり返す（情報だけ。Score.meta.loop に残る）。 */
+  loop?: true | "seamless" | { startBar: number; endBar: number };
+  /** 導入の型（I1〜I10）と終わりの型（E1〜E10）。直前の曲と同じ型だと注意が出る（form-structure-guide.md §6・§7）。 */
+  introType?: string;
+  outroType?: string;
+  /** ボス戦の段階表。[{ id, startBar, endBar, hpBelow }]。HPが hpBelow を下回ったらその小節範囲をループする（Score.meta.bossPhases）。 */
+  bossPhases?: { id?: string; startBar: number; endBar?: number; hpBelow?: number }[];
+  /** 使った主題のID（docs/sound/data/motifs.json）。parts[].motif を使うと自動で入る。 */
+  motifs?: string[];
   /** AIが書くパート（メロディ・対旋律・ベースライン・ドラムなど）。 */
   parts: AiPart[];
 }
@@ -188,7 +210,7 @@ export const AI_SONG_SCHEMA = {
     autoScoop: { type: "boolean" },
     drumMix: { type: "object" },
     fills: { type: "boolean" },
-    sections: { anyOf: [{ type: "string", enum: ["auto"] }, { type: "array", items: { type: "object", additionalProperties: false, required: ["kind", "bars"], properties: { kind: { type: "string", enum: SECTION_KINDS }, bars: { type: "number" }, from: { type: "string", enum: TRANSITIONS }, crash: { anyOf: [{ type: "boolean" }, { type: "number" }] } } } }] },
+    sections: { anyOf: [{ type: "string", enum: ["auto"] }, { type: "array", items: { type: "object", additionalProperties: false, required: ["kind", "bars"], properties: { kind: { type: "string", enum: SECTION_KINDS }, bars: { type: "number" }, from: { type: "string", enum: TRANSITIONS }, crash: { anyOf: [{ type: "boolean" }, { type: "number" }] }, add: { type: "array", items: { type: "string" } }, gain: { type: "number" } } } }] },
     scene: { type: "string", enum: SCENE_NAMES },
     layers: { type: "object" },
     occurrence: { type: "boolean" },
@@ -198,6 +220,16 @@ export const AI_SONG_SCHEMA = {
     modulate: { type: "object", additionalProperties: false, properties: { atBar: { type: "integer" }, at: { type: "string", enum: ["lastChorus", "afterBridge"] }, semitones: { type: "integer" } }, required: ["semitones"] },
     sectionChords: { type: "object", additionalProperties: { type: "string" } },
     loopTail: { type: "string", enum: ["deceptive", "dominant"] },
+    form: { anyOf: [{ type: "string" }, { type: "object" }] },
+    laps: { anyOf: [{ type: "integer" }, { type: "string", enum: ["auto"] }] },
+    lap2: { type: "object" },
+    lap3: { type: "object" },
+    lap4: { type: "object" },
+    loop: { anyOf: [{ type: "boolean" }, { type: "string", enum: ["seamless"] }, { type: "object" }] },
+    introType: { type: "string" },
+    outroType: { type: "string" },
+    bossPhases: { type: "array", items: { type: "object" } },
+    motifs: { type: "array", items: { type: "string" } },
     parts: {
       type: "array",
       items: {
@@ -226,6 +258,7 @@ export const AI_SONG_SCHEMA = {
           phrase: { type: "number" },
           sections: { type: "object" },
           modulate: { type: "boolean" },
+          motif: { anyOf: [{ type: "object" }, { type: "array", items: { type: "object" } }] },
           keepBreak: { type: "boolean" },
           amp: { type: "string", enum: ["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean"] },
           notes: { type: "string" },
@@ -291,7 +324,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
   - parts[].sections: 手書きのパートをセクションごとに出し入れする。{"intro":0,"verse":0.6,"chorus":1,"solo":{"gain":1,"octave":1}}（数字＝音量の倍率、0＝休み、octave＝オクターブずらし。書かなかったセクションは1）。2本目のギターや対旋律を「サビだけ」「2番から」にするときに、R を並べずに済む。曲に sections（または scene）が必要。
   - layers: セクションの種類ごとに鳴らす群を上書き。{"verse":["kick","bass","keys"],"chorus":{"groups":["kick","hat","snare","bass","keys","guitar","strings","brass"],"from":1,"to":1}}。群は kick・hat・snare・bass・keys・guitar・strings・pad・brass・perc（pad・brass・perc を書いた場面では、pad／choir・brass・tom が strings／snare から独立して出し入れできる）。
   - occurrence: true なら、同じ種類の2回目以降に楽器を1つ足して少し強くする（verse はギター、間奏はハイハットなど）。
-  - energy: セクション順の強さ（1〜10。例 [3,4,6,9,5,10]）か曲線の名前（mountain・twoPeaks・valley・stairs・flat・bigValley）。1〜3＝2群、4〜6＝4群、7〜8＝6群、9〜10＝全群とクラッシュ。群の優先順は energyOrder（省略は kick・bass・hat・keys・snare・guitar・strings。静かな場面は ["keys","strings","bass","guitar","hat","kick","snare"] など）。
+  - energy: セクション順の強さ（1〜10。例 [3,4,6,9,5,10]）か曲線の名前（${Object.keys(ENERGY_CURVES).join("・")}）。1〜3＝2群、4〜6＝4群、7〜8＝6群、9〜10＝全群とクラッシュ。群の優先順は energyOrder（省略は kick・bass・hat・keys・snare・guitar・strings。静かな場面は ["keys","strings","bass","guitar","hat","kick","snare"] など）。
   - crashAt: クラッシュを置く種類（省略は chorus と drop）。"last" を足すと最後のサビ／ドロップだけ強く、"afterBridge" でCメロのあとの頭にも置く。
   - modulate: 後半の転調。{"atBar":33,"semitones":1}（小節は1から数える）か {"at":"lastChorus","semitones":2}（at は lastChorus＝最後のサビ／ドロップの頭、afterBridge＝Cメロのあとの頭）。自動の伴奏と手書きパート（ドラム以外）が一緒に上がる。上げたくないパートは modulate: false。
   - 書き出すと、変わり目が弱い・サビがAメロより薄い・最後のサビの前に止める所がない、の注意が小節番号つきで出る。出たら直す。
@@ -360,7 +393,15 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
 - グルーブ（ノリ）: 音符を機械的に並べるだけだとノリが出ない。曲の swing（0〜1）で裏拍を遅らせ（ジャズ・ブルース・ファンク 0.5〜0.7、ヒップホップ・ローファイ 0.2〜0.4、ロック・ダンス 0）、パートの push（-0.1〜0.1拍）でタイミングをずらす（スネア +0.02〜0.04＝あと乗りで重く、ハイハット -0.01〜-0.02＝前のめりで軽く、ベースはキックに合わせて 0）。ドラムは強弱が命: グリッド記法（g:x...）で X＝強、x＝ふつう、o＝弱い（ゴーストノート）を書き分け、ハイハットは表拍を強く裏拍を弱く、スネアの間に o を入れる。ビートの型は docs/sound/drum-patterns.md。
 - 繊細な音にするには: amp は delicate か clean、volume は 0.04〜0.12、ピアノ・ハープ・鐘・オルゴール系で細かい音符（0.25〜0.5拍）を、拍の強弱をつけず低めの音域でゆっくり。ドラムは入れないか、ハイハットだけ小さく。パッドと合唱を薄く敷く。
 - 音割れを避ける: 全パートの volume を足した値が大きすぎないようにする（歪みギター2本＋ドラム＋ベースで合計 0.7 前後まで）。出口に安全装置（リミッターと最後のソフトクリップ）はあるが、頼りすぎず、書き出した WAV のピークが -1dBFS 以下であることを確かめる。
-- 入り方は「編曲家として」の中から曲ごとに選ぶ（小さく始めるのは選択肢の1つ）。途中で一度ドラムを抜いて静かにしてから、最後のサビで全部を戻す。ベースは根音だけでなく、5度・オクターブ・10度を行き来し、小節の最後で次のコードへ向かう音を入れると、メロディのように動く。` + RHYTHM_GUIDE_ADDENDUM;
+- 入り方は「編曲家として」の中から曲ごとに選ぶ（小さく始めるのは選択肢の1つ）。途中で一度ドラムを抜いて静かにしてから、最後のサビで全部を戻す。ベースは根音だけでなく、5度・オクターブ・10度を行き来し、小節の最後で次のコードへ向かう音を入れると、メロディのように動く。
+## 形式・ループ・主題（任意の項目）
+- form: 形式の略記。"AABA"・"ABAC"・"rondo"・"blues12"・"sawtooth" など。{ pattern, unit, kinds, bars, chords, key, quickChange, laps } で細かく指定。sections と sectionChords の土台になる（自分で sections を書いたらそちらが優先）。
+- laps: 曲を2〜4周に展開（"auto" は場面の標準）。2周目以降の変え方は lap2 に書く。
+- loop: true／"seamless" で継ぎ目の検査が働く。{ startBar, endBar } は導入を1回だけ鳴らして、その範囲をくり返す印（ゲーム側が使う）。
+- introType（I1〜I10）／outroType（E1〜E10）: 導入と終わりの型。直前の3曲と同じ型だと注意が出る。
+- bossPhases: [{ id, startBar, endBar, hpBelow }]。ボスのHPが下がったら小節の頭で次の段階へ切り替える表。
+- motifs／parts[].motif: 主題（docs/sound/data/motifs.json の akari・yugami・wa・kazoku・daihyo）。{ id, at: 小節番号か "chorus", transform: [...] }。
+- layers の peel: true／数で、層を外から順に抜く。sections の add／gain で、そのセクションだけ層を足す・音量を変える。` + RHYTHM_GUIDE_ADDENDUM;
 
 const DUR_RULE = /^\d+(\.\d+)?$/;
 
@@ -507,7 +548,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   const warnings: string[] = [];
   if (!input || typeof input !== "object") throw new Error("AIソングのJSONではありません");
   // Am*2・sectionChords・atBar の転調・loopTail をふつうの形に直し、場面プリセット（scene）の既定値を入れる
-  const song = applyScene(prepareSong(input as AiSong, warnings), warnings);
+  const song = applyScene(prepareSong(expandSongExtras(input as AiSong, warnings), warnings), warnings);
   const bpm = Math.round(Number(song.bpm));
   if (!(bpm >= 40 && bpm <= 260)) errors.push(`bpm は 40〜260 にしてください（${song.bpm}）`);
   if (!beatsOk(song.beats)) errors.push(`beats は ${MIN_BEATS}〜${MAX_BEATS} の整数にしてください（${song.beats}）`);
@@ -563,6 +604,10 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   if (rollOpts && accompaniment.length) accompaniment = applyTrapRolls(accompaniment, beatsPerBar, rollOpts);
   if (sectionList && accompaniment.length) accompaniment = applySections(accompaniment, sectionList, beatsPerBar, song.fills !== false, arrange);
   if (sectionList) warnings.push(...checkArrangement(sectionList, beatsPerBar, arrange, song.sections !== "auto"));
+  // ループ検査: "loop" を書いた曲だけ（最後の強さ・最後のコード・長音で終わる・8の倍数・同じ8小節・1周の秒数）
+  if (isLoopSpec(song.loop)) {
+    warnings.push(...checkLoop({ loop: song.loop, bpm, beatsPerBar, totalBars, barChords: barChordsOf(song.chords, song.barsPerChord, repeats), sections: sectionList, arrange, energy: song.energy, scene: song.scene, parts: Array.isArray(song.parts) ? song.parts.map((p) => ({ notes: String(p?.notes ?? ""), instrument: p?.instrument })) : [], loopTail: song.loopTail }));
+  }
   // 転調: atBar 以降の音を半音ずらす（自動の伴奏と手書きパート。ドラムは動かさない）
   const modulation = song.modulate ? resolveModulate(song.modulate, sectionList, beatsPerBar, totalBars, warnings) : null;
   if (modulation) accompaniment = accompaniment.map((t) => transposeTrack(t, modulation.semitones, modulation.atBeat));
@@ -622,7 +667,11 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   if (song.drumGenre && !preset) warnings.push(`drumGenre「${song.drumGenre}」は使えません（${Object.keys(DRUM_GENRES).join("・")}）`);
   const mergedDrumMix = preset || own ? { ...(preset ?? {}), ...(own ?? {}) } : undefined;
   const tempoMap = resolveTempoMap({ ...song, bpm }, { beatsPerBar, totalBars, sections: sectionList, warnings });
+  // 曲の付随情報（ループ点・導入／終わりの型・ボスの段階・主題ID）。何も書いていなければ付けない
+  if (Array.isArray(song.motifs)) for (const id of song.motifs) if (!getMotif(String(id))) warnings.push(`motifs: 主題「${String(id)}」が台帳（docs/sound/data/motifs.json）にありません`);
+  const meta = buildSongMeta({ form: song.form, loop: song.loop, introType: song.introType, outroType: song.outroType, bossPhases: song.bossPhases, motifs: Array.isArray(song.motifs) ? song.motifs.map(String) : undefined, laps: typeof song.laps === "number" ? song.laps : undefined }, { totalBars, beatsPerBar, bpm, sections: sectionList }, warnings);
   const score: Score = {
+    ...(meta ? { meta } : {}),
     tempoBpm: bpm, loop: true, drumKit: base.drumKit,
     // 4拍子以外は拍子を書く（作曲ソフトの小節線・MIDIの拍子記号が合う）。4拍子は今までどおり省略
     ...(Number(song.beats) !== 4 ? { timeSig: { num: Number(song.beats), den: 4 } } : {}), tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock",

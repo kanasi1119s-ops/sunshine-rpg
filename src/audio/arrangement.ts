@@ -26,6 +26,10 @@ export interface Section {
   from?: Transition;
   /** この場面の頭にクラッシュを置くか（true＝標準の強さ、数字＝強さ）。省略は crashAt の決まりに従う。 */
   crash?: boolean | number;
+  /** この場面だけ足す群（2周目に楽器を足すときなど。laps.ts の lap2 が使う）。 */
+  add?: Group[];
+  /** この場面だけ強さに足す量（-0.3〜0.3）。 */
+  gain?: number;
 }
 
 export const SECTION_KINDS: SectionKind[] = ["intro", "verse", "pre", "chorus", "interlude", "bridge", "outro", "build", "break", "drop", "solo", "tag"];
@@ -55,6 +59,8 @@ export interface Layer {
   hold?: boolean;
   /** この場面の頭にクラッシュ。 */
   crash?: boolean;
+  /** true（1小節ごと）か数字（N小節ごと）にすると、場面の中で群を1つずつはがしていく（終わり方 E4「層をはがして消える」）。最後は1群が残る。はがす順は PEEL_ORDER。 */
+  peel?: boolean | number;
 }
 /** layers の1件。群の並びだけ、または { groups, from, to, … }。 */
 export type LayerSpec = Group[] | Partial<Layer>;
@@ -103,11 +109,32 @@ export function resolveLayers(sections: Section[], opts: ArrangeOptions = {}): L
     const n = seen[s.kind] ?? 0;
     seen[s.kind] = n + 1;
     const ps = opts.perSection?.[i];
-    if (ps) return ps;
-    const base = mergeLayer(LAYERS[s.kind], opts.layers?.[s.kind]);
-    if (!opts.occurrence || n === 0) return base;
-    return { ...base, groups: [...new Set([...base.groups, ...ADD_ON[s.kind]])], from: Math.min(1.05, base.from + 0.05), to: Math.min(1.05, base.to + 0.05) };
+    const spec = opts.layers?.[s.kind];
+    let layer: Layer;
+    if (ps) layer = ps;
+    else {
+      const base = mergeLayer(LAYERS[s.kind], spec);
+      layer = !opts.occurrence || n === 0 ? base : { ...base, groups: [...new Set([...base.groups, ...ADD_ON[s.kind]])], from: Math.min(1.05, base.from + 0.05), to: Math.min(1.05, base.to + 0.05) };
+    }
+    // energy で決めた群にも、layers の peel（層をはがす）と、セクション自身の add・gain を重ねる
+    if (ps && spec && !Array.isArray(spec) && spec.peel) layer = { ...layer, peel: spec.peel };
+    if (s.add?.length) layer = { ...layer, groups: [...new Set([...layer.groups, ...s.add])] };
+    if (s.gain) layer = { ...layer, from: Math.max(0, Math.min(1.3, layer.from + s.gain)), to: Math.max(0, Math.min(1.3, layer.to + s.gain)) };
+    return layer;
   });
+}
+
+/** peel でのはがす順（先にはがすものから）。リズム楽器 → 旋律の彩り → 和音 → 低音の順に、最後はベースが残る。 */
+export const PEEL_ORDER: Group[] = ["perc", "hat", "snare", "kick", "brass", "guitar", "pad", "strings", "keys", "bass"];
+
+/** peel の場面で、場面の頭から bar 小節目（0から）に鳴らす群。最後は1群が残る。 */
+export function peelGroups(groups: Group[], peel: boolean | number | undefined, bar: number): Group[] {
+  if (!peel) return groups;
+  const step = typeof peel === "number" && peel >= 1 ? Math.round(peel) : 1;
+  const ordered = [...groups].sort((a, b) => PEEL_ORDER.indexOf(a) - PEEL_ORDER.indexOf(b));
+  const drop = Math.min(ordered.length - 1, Math.floor(bar / step));
+  const gone = new Set(ordered.slice(0, Math.max(0, drop)));
+  return groups.filter((g) => !gone.has(g));
 }
 
 /** layers の生のJSONを確かめる。まちがいは warnings に足して、使えるものだけ返す。 */
@@ -132,6 +159,8 @@ export function parseLayers(raw: unknown, warnings: string[]): Partial<Record<Se
       if (o.accentFirst === true) spec.accentFirst = true;
       if (o.hold === true) spec.hold = true;
       if (o.crash === true) spec.crash = true;
+      if (o.peel === true) spec.peel = true;
+      else if (typeof o.peel === "number" && o.peel >= 1 && o.peel <= 16) spec.peel = Math.round(o.peel);
       out[k as SectionKind] = spec;
     }
   }
@@ -142,7 +171,7 @@ export function parseLayers(raw: unknown, warnings: string[]): Partial<Record<Se
 export function parseSections(raw: unknown, warnings: string[]): Section[] {
   const list: Section[] = [];
   if (!Array.isArray(raw)) return list;
-  (raw as { kind?: unknown; bars?: unknown; from?: unknown; crash?: unknown }[]).forEach((x, i) => {
+  (raw as { kind?: unknown; bars?: unknown; from?: unknown; crash?: unknown; add?: unknown; gain?: unknown }[]).forEach((x, i) => {
     const kind = (x?.kind ?? "") as SectionKind;
     const bars = Math.round(Number(x?.bars));
     if (!SECTION_KINDS.includes(kind)) { warnings.push(`sections[${i}]: 「${String(x?.kind)}」は使えません（${SECTION_KINDS.join("・")} のどれか）。Aメロにしました`); }
@@ -154,6 +183,13 @@ export function parseSections(raw: unknown, warnings: string[]): Section[] {
     }
     if (typeof x?.crash === "boolean") sec.crash = x.crash;
     else if (x?.crash !== undefined && Number.isFinite(Number(x.crash))) sec.crash = Math.max(1, Math.min(127, Number(x.crash)));
+    const extra = x as { add?: unknown; gain?: unknown };
+    if (Array.isArray(extra.add)) {
+      const ok = extra.add.filter((g): g is Group => GROUPS.includes(g as Group));
+      if (ok.length !== extra.add.length) warnings.push(`sections[${i}]: add に使えない群があったので無視しました（使える群: ${GROUPS.join("・")}）`);
+      if (ok.length) sec.add = ok;
+    }
+    if (extra.gain !== undefined && Number.isFinite(Number(extra.gain)) && Number(extra.gain) !== 0) sec.gain = Math.max(-0.3, Math.min(0.3, Number(extra.gain)));
     list.push(sec);
   });
   return list;
@@ -346,7 +382,8 @@ export function applySections(tracks: Track[], sections: Section[], beatsPerBar:
       const nextKind = sections[si + 1]?.kind;
       // サビの前の最後の小節は、スネアとキックを足して、サビへの助走にする
       const leadIn = lastBar && nextKind === "chorus" && (group === "snare" || group === "kick") && transitionInto(sections, si + 1) === "fill";
-      const on = layer.groups.includes(group) || leadIn;
+      const active = layer.peel ? peelGroups(layer.groups, layer.peel, bar - starts[si]) : layer.groups;
+      const on = active.includes(group) || leadIn;
       if (!on || n.note === REST) push(n.note === REST ? n : restOf(n.durationBeats));
       else {
         const progress = sec.bars > 1 ? (bar - starts[si]) / (sec.bars - 1) : 1;

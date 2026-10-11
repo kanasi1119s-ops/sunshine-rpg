@@ -1,0 +1,8 @@
+{
+  "name": "見本の組曲（仮）",
+  "songs": [
+    { "id": "sample-1", "bpm": 96, "key": "D", "mode": "minor", "firstChord": "Dm", "lastChord": "A7", "bars": 32, "energy": [2, 4, 6], "link": "beat" },
+    { "id": "sample-2", "bpm": 96, "key": "D", "mode": "minor", "firstChord": "Dm", "lastChord": "Dm", "bars": 32, "energy": [3, 7, 9], "link": "beat" },
+    { "id": "sample-3", "bpm": 144, "key": "A", "mode": "minor", "firstChord": "Am", "lastChord": "Am", "bars": 24, "energy": [2, 5, 3], "link": "segue" }
+  ]
+}

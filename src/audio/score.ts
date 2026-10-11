@@ -140,7 +140,34 @@ export function grooveOffsetBeats(swing: number | undefined, push: number | unde
   return off;
 }
 
+/** ボス戦の段階（HPの割合で曲の位置を切り替える。docs/sound/game-music-guide.md、bgm-director.ts）。小節は1から数える。 */
+export interface BossPhase {
+  id: string;
+  /** この段階のループの始まりの小節（1から）。 */
+  startBar: number;
+  /** この段階のループの終わりの小節（1から数えて、この小節の終わりまで）。 */
+  endBar: number;
+  /** HPがこの割合（0〜1）を下回ったらこの段階に入る。最初の段階は1。 */
+  hpBelow: number;
+}
+
+/** 曲の付随情報（ゲームの再生側が使う。音そのものは変えない）。song-meta.ts が作る。 */
+export interface SongMeta {
+  form?: string;
+  bars?: number;
+  beatsPerBar?: number;
+  /** ループ点。導入を1回だけ鳴らし、そのあと startBar〜endBar をくり返す。 */
+  loop?: { startBar: number; endBar: number; startSec: number; endSec: number };
+  introType?: string;
+  outroType?: string;
+  bossPhases?: BossPhase[];
+  motifs?: string[];
+  laps?: number;
+}
+
 export interface Score {
+  /** 曲の付随情報（ループ点・導入／終わりの型・ボスの段階・主題ID）。 */
+  meta?: SongMeta;
   /** 裏拍を遅らせる量（0〜1）。省略時は0（ずらさない）。 */
   swing?: number;
   /** 16分の裏（0.25・0.75拍目）の swing（省略は swing と同じ動き）。8分の裏だけ揺らして16分をまっすぐにする、などに。 */
