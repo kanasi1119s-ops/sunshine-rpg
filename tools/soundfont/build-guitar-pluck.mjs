@@ -14,7 +14,7 @@ import { SR, loadBank, monoSample, timecents, compressBank, BasicSoundBank, Gene
 
 const OUT = path.resolve("assets-src/soundfont/extra");
 const base = loadBank(path.resolve("src/audio/soundfont/game.sf3"));
-const SECONDS = 4.5;
+const SECONDS = 6;
 /** 音色の版。clear＝空気感が強い（9.5kHz）、soft＝少しやわらかい（7.2kHz。人間が「保存」と言った版）、warm＝softと最初の暗めの版の中間。 */
 const VARIANTS = {
   clear: { label: "弦モデル（クリア。空気感が強い）", lp1: 9500, lp2: 12000, comb: 0.6 },
@@ -51,9 +51,9 @@ export function pluck(midi, bright, seconds = SECONDS, v = VARIANTS.warm) {
   let y1 = 0;
   for (let i = 0; i < N; i++) { y1 += cut * (exc[i] - y1); exc[i] = y1; }
   // 弦のループ
-  const t60 = Math.min(4.2, Math.max(1.3, 4.6 - (midi - 40) * 0.055));
+  const t60 = Math.min(14, Math.max(5, 14 - (midi - 40) * 0.12)); // 2026-10-12: 「音が伸びない」ので長くした（A4 で約 10 秒。以前は約 3 秒）
   const rho = 10 ** (-3 / (t60 * f0));
-  const b = 0.42 - 0.12 * bright; // ループのローパス（小さいほど明るい＝減衰が遅い）
+  const b = 0.26 - 0.08 * bright; // ループのローパス。小さいほど高い倍音が長く残る // ループのローパス（小さいほど明るい＝減衰が遅い）
   const buf = new Float32Array(N);
   buf.set(exc);
   const str = new Float32Array(total);
