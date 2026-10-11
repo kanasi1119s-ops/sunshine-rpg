@@ -214,7 +214,8 @@ export class AmpRack {
           this.compressor(-18, 2.2, 0.02, 0.2), this.gain(0.5),
         ]));
       case "clean":
-        return this.chain(input, [this.filter("highpass", 70), this.filter("peaking", 3500, 2.5, 0.9), this.filter("highshelf", 8000, 2), this.gain(0.95)]);
+        // 2026-10-11: 琴のような鋭い出だし・倍音が基音より強い「割れた」感じを、1kHz前後と2kHz前後を削って、低めを足して、出だしをコンプで丸めて直した
+        return this.chain(input, [this.filter("highpass", 70), this.filter("lowshelf", 300, 8, 0.7), this.filter("peaking", 550, -4, 0.7), this.filter("peaking", 900, -8, 0.7), this.filter("peaking", 1500, -6, 0.8), this.filter("lowpass", 3200, 0, 0.7), this.compressor(-26, 3, 0.012, 0.2), this.gain(1.1)]);
       case "bass":
         return this.chain(input, [this.filter("lowshelf", 80, 4), this.filter("peaking", 750, 2.5, 1), this.gain(1.05)]);
       case "bassMetal":
