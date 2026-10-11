@@ -20,7 +20,7 @@ const VARIANTS = {
   clear: { label: "弦モデル（クリア。空気感が強い）", lp1: 9500, lp2: 12000, comb: 0.6 },
   soft: { label: "弦モデル（少しやわらかい。保存版）", lp1: 7200, lp2: 9500, comb: 0.72 },
   warm: { label: "弦モデル（やわらかく温かい。soft と暗めの中間。人間が「保存」と言った版）", lp1: 6100, lp2: 8650, comb: 0.78 },
-  deep: { label: "弦モデル（重く低音寄り。mellow に低域の厚みを足す）", lp1: 5550, lp2: 8225, comb: 0.815, body: true },
+  deep: { label: "弦モデル（重く低音寄り。mellow に低域の厚みを足す）", lp1: 5550, lp2: 8225, comb: 0.815, body: true, air: 0.3 },
   mellow: { label: "弦モデル（さらにまろやか。warm と暗めの中間）", lp1: 5550, lp2: 8225, comb: 0.815 },
 };
 const LAYERS = { p: { vel: [1, 45], bright: 0.35 }, mf: { vel: [46, 95], bright: 0.6 }, f: { vel: [96, 127], bright: 0.85 } };
@@ -82,6 +82,17 @@ export function pluck(midi, bright, seconds = SECONDS, v = VARIANTS.warm) {
   const rc = rng(7000 + midi);
   const click = Math.floor(0.003 * SR);
   for (let i = 0; i < click; i++) out[i] += rc() * 0.015 * bright * (1 - i / click);
+  // 弾き始めの「抜け」: 4.5kHz 以上の成分を、頭 50ms の音量に対する割合（v.air）で足し、0.07 秒で消す。
+  // 正規化の「前」に足す（後で足して全体を縮めると、頭の高域まで一緒に小さくなる）。
+  if (v.air) {
+    const hi = biquad(biquad(out, "hp", 4500, 0.7), "lp", 11000, 0.6);
+    const w = Math.floor(0.05 * SR);
+    let ro = 0, rh = 0;
+    for (let n = 0; n < w; n++) { ro += out[n] * out[n]; rh += hi[n] * hi[n]; }
+    const k = rh > 0 ? Math.sqrt(ro / rh) * v.air * (0.4 + 0.6 * bright) : 0;
+    const tau = 0.07 * SR;
+    for (let n = 0; n < Math.min(total, Math.floor(0.5 * SR)); n++) out[n] += hi[n] * k * Math.exp(-n / tau);
+  }
   // 立ち上がり 1ms のフェードイン、最後は 0.3 秒のフェードアウト
   const fi = Math.floor(0.001 * SR), fo = Math.floor(0.3 * SR);
   for (let i = 0; i < fi; i++) out[i] *= i / fi;
