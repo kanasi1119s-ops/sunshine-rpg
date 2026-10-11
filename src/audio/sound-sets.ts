@@ -41,7 +41,7 @@ export const SOUND_SETS: Record<string, SoundSet> = {
     id: "punk-run",
     label: "疾走パンク（2ビート・ギター前）",
     description: "歪みギターを左右に振って前に出し、ベースとキックは控えめ。ドラムは2ビート（キックが表・スネアが裏）。メロディは生ギターのクリーン。",
-    source: "参考録音5曲の楽器ごとの分析（analyze-stems.py：音量比・帯域・重心・左右の広がり。docs/sound/punk-guide.md §9）と、見本曲 melodic-punk-run の調整（2026-10-11）。数字だけを使い、音は取り込んでいない",
+    source: "参考録音5曲の楽器ごとの分析（analyze-stems.py：音量比・帯域・重心・左右の広がり。docs/sound/punk-guide.md §9）と、見本曲の調整（2026-10-11。見本曲は採用せず削除）。数字だけを使い、音は取り込んでいない",
     overlays: { bass: "pick", drums: "rock", guitar: "gretsch" },
     tone: "rock",
     human: 0.4,
