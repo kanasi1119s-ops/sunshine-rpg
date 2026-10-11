@@ -1,0 +1,23 @@
+{
+ "title": "ベースだけの見本（ファンク）",
+ "description": "ワンを強く弾き、16分のシンコペとゴーストで跳ねるベースだけ。ほかは休み（見本・仮）",
+ "bpm": 100,
+ "beats": 4,
+ "chords": "Em7 Em7 Em7 Em7",
+ "barsPerChord": 1,
+ "repeats": 2,
+ "autoAccompaniment": false,
+ "feel": "rock",
+ "tone": "rock",
+ "swing": 0.2,
+ "parts": [
+  {
+   "instrument": "bass",
+   "role": "ベース",
+   "volume": 0.3,
+   "pan": 0,
+   "amp": "auto",
+   "notes": "E1:0.5! R:0.25 E1:0.25, E2:0.5' E1:0.5 R:0.25 G1:0.25, A1:0.5 B1:0.5 R:0.5"
+  }
+ ]
+}

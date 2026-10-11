@@ -13,6 +13,9 @@ const BASS = new Set<string>(["bass", "slap", "sub808"]);
 const LABEL: Partial<Record<Instrument, string>> = { bass: "ベース", slap: "スラップベース", sub808: "808", lead: "リード", piano: "ピアノ", strings: "弦", pad: "パッド", choir: "合唱", brass: "ブラス", guitar: "ギター", keys: "鍵盤" };
 const name = (inst: string | undefined, i: number): string => `${LABEL[inst as Instrument] ?? inst ?? "パート"}（${i + 1}番目）`;
 
+const BASS_RANGE: [number, number] = [28, 55];
+const SUB808_RANGE: [number, number] = [24, 48];
+
 interface Span { start: number; end: number; midi: number }
 
 function spans(track: Score["tracks"][number]): Span[] {
@@ -56,6 +59,24 @@ export function checkScore(score: Score): string[] {
       if (Math.abs(median(mid[a].sp.map((s) => s.midi)) - median(mid[b].sp.map((s) => s.midi))) <= 2) {
         warnings.push(`${name(mid[a].t.instrument, mid[a].i)}と${name(mid[b].t.instrument, mid[b].i)}が、ほぼ同じ音域で重なっています。どちらかを3度〜1オクターブずらすと、音がぶつからず聞き分けやすくなります。`);
       }
+    }
+  }
+
+  // 2b. ベースの音域（E1〜G3。sub808 は C1〜C3）の外にある音
+  for (const x of pitched) {
+    const inst = x.t.instrument ?? "";
+    if (!BASS.has(inst)) continue;
+    const [lo, hi] = inst === "sub808" ? SUB808_RANGE : BASS_RANGE;
+    const out = x.sp.filter((s) => s.midi < lo || s.midi > hi);
+    if (out.length) warnings.push(`${name(inst, x.i)}に、音域（${inst === "sub808" ? "C1〜C3" : "E1〜G3"}）の外の音が ${out.length} 個あります。低すぎる音は聞こえにくく、高すぎるとベースらしさがなくなります。1オクターブずらしてください。`);
+  }
+  // 2c. ベースと、ギター・ピアノなどの低い音が、まったく同じ高さで重なっている（低音の二重）
+  {
+    const bassSpans = pitched.filter((x) => x.t.instrument === "bass" || x.t.instrument === "slap").flatMap((x) => x.sp);
+    const others = pitched.filter((x) => !BASS.has(x.t.instrument ?? "")).flatMap((x) => x.sp.filter((s) => s.midi < 52));
+    if (bassSpans.length >= 8 && others.length) {
+      const dup = bassSpans.filter((b) => others.some((o) => o.midi === b.midi && o.start < b.end && b.start < o.end)).length;
+      if (dup / bassSpans.length > 0.3) warnings.push(`ベースの音の ${Math.round((dup / bassSpans.length) * 100)}% が、ギターやピアノの低い音と同じ高さで重なっています（低音の二重）。ギターやピアノの左手を1オクターブ上げると、低音がすっきりします。`);
     }
   }
 
@@ -103,4 +124,29 @@ export function analyzeMix(channels: Float32Array[], sampleRate: number): string
   }
   if (all > 0 && lo / all > 0.7) warnings.push(`低音が多すぎます（150Hz以下がエネルギーの ${Math.round((lo / all) * 100)}%）。ベース・キック・パッドの低い音を減らすと、メロディが聞こえやすくなります。`);
   return warnings;
+}
+
+/**
+ * キックとベースの整合率（bassline-guide.md §8 の 6）。
+ * kickWithBass＝キックが鳴る位置で、ベースも音を出している割合。snareRest＝スネアの位置でベースが休んでいる（音を出し始めない）割合。
+ * 目安: ロック・パンクは kickWithBass 0.7〜0.9、ファンク・レゲエ・ジャズ・ボサノバは低めが正常。
+ */
+export function kickBassAlignment(score: Score): { kicks: number; kickWithBass: number; snares: number; snareRest: number } | null {
+  const starts = (inst: string[]): number[] => {
+    const out: number[] = [];
+    for (const t of score.tracks) {
+      if (!inst.includes(t.instrument ?? "")) continue;
+      let pos = 0;
+      for (const n of t.notes) { if (n.note !== REST) out.push(pos); pos += n.durationBeats; }
+    }
+    return out;
+  };
+  const kicks = starts(["kick"]), snares = starts(["snare"]), bass = starts(["bass", "slap", "sub808"]);
+  if (!kicks.length || !bass.length) return null;
+  const near = (x: number): boolean => bass.some((b) => Math.abs(b - x) < 0.03);
+  const r = (n: number, d: number): number => Math.round((n / Math.max(1, d)) * 100) / 100;
+  return {
+    kicks: kicks.length, kickWithBass: r(kicks.filter(near).length, kicks.length),
+    snares: snares.length, snareRest: snares.length ? r(snares.filter((x) => !near(x)).length, snares.length) : 1,
+  };
 }

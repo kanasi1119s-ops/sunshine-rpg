@@ -12,7 +12,7 @@ export const ROOT = path.resolve(new URL("../../", import.meta.url).pathname);
 const EDITIONS = ["real", "ps2", "modern"];
 
 export async function openSongKit() {
-  const server = await createServer({ root: ROOT, configFile: false, logLevel: "silent", server: { middlewareMode: true, hmr: false }, appType: "custom" });
+  const server = await createServer({ root: ROOT, configFile: false, logLevel: "silent", server: { middlewareMode: true, hmr: false, watch: null }, appType: "custom" });
   const load = (p) => server.ssrLoadModule(p);
 
   async function soundSets() {
@@ -25,7 +25,7 @@ export async function openSongKit() {
   }
 
   /** 曲（AIソング形式のオブジェクト）を確かめて、プロジェクト・MIDI（・WAV）を書き出す。 */
-  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", sound = "", master = null, widen = null, space = "", spaceWet = 0.25, masterPreset = "" } = {}) {
+  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", sound = "", master = null, widen = null, space = "", spaceWet = 0.25, masterPreset = "", genre = "" } = {}) {
     if (!EDITIONS.includes(edition)) throw new Error("edition は real・ps2・modern のどれか");
     if (!/^[a-z0-9][a-z0-9-]*$/.test(name ?? "")) throw new Error(`name は英小文字・数字・「-」だけ（${name}）`);
     const { aiSongToScore } = await load("/src/audio/ai-song.ts");
@@ -33,6 +33,15 @@ export async function openSongKit() {
     const { realEdition } = await load("/src/audio/real-edition.ts");
     const { ps2Edition } = await load("/src/audio/ps2-edition.ts");
     const { getScoreDurationSec } = await load("/src/audio/score.ts");
+    // --genre: ジャンル名から、drumMix・swing・human の推奨値と、ドラム／ベースの音源（--drums／--bass を別に書けばそちらが優先）を決める
+    if (genre) {
+      const { DRUM_GENRES } = await load("/src/audio/drum-genres.ts");
+      const g = DRUM_GENRES[genre];
+      if (!g) throw new Error(`--genre「${genre}」は使えません（${Object.keys(DRUM_GENRES).join("・")}）`);
+      songData = { drumGenre: genre, ...songData };
+      if (drums === "std") drums = g.drums;
+      if (bass === "std") bass = g.bass;
+    }
     let { score, song, warnings } = aiSongToScore(songData);
     // サウンドセット: アンプ・音量・ミックス・ドラムの設定と、使う音源（ベース・ドラム・ギター）をまとめて当てはめる
     if (sound) {
@@ -49,6 +58,10 @@ export async function openSongKit() {
     // 曲の自動チェック（楽譜）: 低音のにごり・同じ音域のぶつかり・単調さ。入力のまちがいではなく、直すと良くなるヒント
     const { checkScore } = await load("/src/audio/song-check.ts");
     warnings.push(...checkScore(score));
+    // キックとベースの整合率（情報。ロック・パンクは kickWithBass が高め、ファンク・レゲエ・ジャズ・ボサノバは低めが正常）
+    const { kickBassAlignment } = await load("/src/audio/song-check.ts");
+    const align = kickBassAlignment(score);
+    if (align) console.log(`  キックとベースの整合率: キック${align.kicks}回のうちベースも鳴る ${Math.round(align.kickWithBass * 100)}%・スネア${align.snares}回のうちベースが休む ${Math.round(align.snareRest * 100)}%`);
     // コード進行の自動チェック: 基本の和音だけ・少ない種類のくり返し・他の曲と同じ形
     warnings.push(...checkChordVariety(songData.chords, loadOtherSongs(path.join(ROOT, "assets-src", "ai-songs"), name)));
     const out = path.resolve(outDir ?? path.join(ROOT, "dist-songs"));
@@ -152,8 +165,8 @@ export async function renderWav(score, edition, file, soundfont = "game", bass =
   const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required"] });
   try {
     const page = await browser.newPage();
-    await page.goto("file://" + html);
-    await page.waitForFunction(() => "__composer" in window);
+    await page.goto("file://" + html, { timeout: 180000 });
+    await page.waitForFunction(() => "__composer" in window, null, { timeout: 180000 });
     await page.evaluate(([b, d, g]) => window.__composer.setOverlays(b, d, g), [bass, drums, guitar]);
     if (soundfont === "gu") await page.evaluate(() => window.__composer.setSoundfont("gu"));
     const b64 = await page.evaluate(([s, e]) => window.__composer.renderWav(s, e), [score, edition]);

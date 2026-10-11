@@ -309,3 +309,26 @@
 - [Jerome Leroy「ボス戦の曲を書く過程」](https://www.jeromeleroy.com/complog-content/2019/10/12/my-creative-process-writing-a-boss-battle-track-for-a-video-game)
 
 この環境で読めなかった（ブロック・許可なし）ため、内容を使っていない先: Bonedo「10 Basis Drum-Grooves #9 Jazz」、MusicRadar「Amen-style break」、民間の PDF など。
+
+---
+
+## 10. 実装状況（2026-10-11）
+
+§7 の提案のうち、次の形で入れた。表と道具は `src/audio/drum-genres.ts`、自動伴奏は `src/audio/newsong.ts`、サウンドセットは `src/audio/genre-sound-sets.ts`。テストは `src/audio/genre-feels.test.ts`。
+
+| 提案 | 状態 | 中身 |
+|---|---|---|
+| 1 ジャンル別 drumMix プリセット | 入れた | `DRUM_GENRES`（23ジャンル。§2.1・§2.2 の型・drumMix・`--drums`・ベース音源・swing・human・bpm）。`drumMixFor(ジャンル)` で曲JSONの drumMix にそのまま展開できる。AIソングでは `drumGenre: "metal"` と書くと drumMix・swing・human を補う（書いた drumMix が優先）。サウンドセットは `rock-band`・`metal`・`jpop-anime`・`ballad`・`jazz-swing`・`funk-tight`・`hiphop-boombap`・`trap`・`house`・`dnb`・`reggae`・`bossa`・`game-battle`・`game-boss` の14個。**音量（parts）は clear-guitar-rock と同じ規模の出発点で、録音の数値分析はしていない（耳で調整する前のもの）** |
+| 2 自動ドラムのジャンル追加 | 入れた | `feel` に `funk`・`reggae`・`bossa`・`jazz`・`shuffle`・`metal`・`disco`・`hiphop`・`trap`・`dnb`・`halftime`。kick は複数の型を小節ごとに回す（funk・hiphop・trap・dnb・metal）。J-POP の A〜D の4型回しは、feel にはせず `DRUM_GENRES.jpop` の基本形と §2.1 の表にとどめた（既存の vocaloid の KICK_A／B を変えないため） |
+| 3 ハイハットの型の自動生成 | 入れた（道具） | `hihatPattern(ジャンル, 小節番号, セクション)`：小節ごとに強弱を変え、4小節目に開いたハイハット `O` を1つ。verse＝半分、chorus＝16分に細かく。`newsong.ts` のジャンル別 feel は表の型をそのまま使い、セクションごとの切替は `applySections` が楽器単位のため未接続 |
+| 4 スウィング換算 | 入れた | `swingFromPercent(pct)`、`jazzSwingForBpm(bpm)`、`swingForGenre(ジャンル, bpm)`。ジャンル別 feel の標準 swing（jazz 0.6・shuffle 0.6・funk 0.2 など）は、曲に swing を書かなかったときだけ入る。案内文に表を載せた |
+| 5 ブラスト・ギャロップ・ハーフ | 入れた | `blastPattern(type, bpm)`（交互・ハンマー・ボム）、`gallop()`、`twoBass(bpm)`、`breakdownHalftime()`、`limitDensity(grid, bpm)`。16分は bpm 190（ブラストは 200）を超えると自動で8分に落とす。metal の自動ドラムも 190 超でキックを8分にする |
+| 6 トラップのロール | 入れた（道具） | `trapRoll("triplet")`／`trapRoll("thirtysecond")` が拍つき表記の文字列を返す（合計4拍。中の音は `,`、最後は `!`）。`rolls: true` で自動挿入する仕組みは、ハイハットの格子と拍つき表記を1つのパートで混ぜる必要があり、入れていない。曲JSONの hihat にそのまま貼れる。書き方の読み込みはテストで確認した（下） |
+| 7 ゴースト自動配置 | 入れた | `placeGhosts(スネアの格子, キックの格子, density, 小節番号, bpm)`：バックビート・キックと同じマスには置かない、bpm 140 以上はバックビートの直前を避ける、3つ続けない。決まった種から作る。funk・hiphop・dnb のスネアで使う（`ghostDensity`） |
+| 8 check-drums | 入れた | `node tools/audio-check/check-drums.mjs <曲.json か 文書.md>`：格子の文字数が4の倍数でない（15文字など）、パートの合計が小節の倍数でない、スネアがバックビート以外にふつうの強さで鳴る、全部 x のベタ打ち、同じ小節が8回以上続く、を検出。**これで `docs/sound/drum-patterns.md` の16文字でない格子3か所（ボサノバのキック 15・民族風の太鼓のタム 14・場面ごとのビート見本の Aメロのキック 15）を直し、見本曲 `summer-vocaloid-demo.json` のキック（15文字で以降が16分ずれていた）と `vocaloid-style-demo.json` のスネアのフィル（4小節ごとに1拍足りずフィルの位置がずれていた）も直した**。ワルツの12文字とフィルの断片（`g:xxxx`）はわざとなので許す |
+| 9 ボス曲のフェーズ表 | 入れなかった | フェーズごとにテンポ・楽器を変えるには、曲の途中のテンポ変更（`Score` にまだない）が要る。今は `game-boss` サウンドセットと metal／boss の型まで |
+| 10 --drums の自動推奨 | 入れた | `song.mjs build <曲.json> --genre trap` でそのジャンルの drumMix・swing・human と、`--drums`（trap なら jpop）・`--bass` を自動で決める（`--drums`／`--bass` を別に書けばそちらが優先） |
+
+**ブラスト・ギャロップ・トラップのロールの書き方の確認**: ブラスト3種・ギャロップ・ツーバス・ブレイクダウンの格子は、どれも16文字で、`g:` のまま AIソングのドラムのパートとして読める。トラップのロール（三連・32分）は、拍つき表記が読め、1小節4拍に収まり、最後の1発が中の音より強い（テストで確認）。1小節の型は曲の長さまでくり返される。案内文（`AI_INSTRUCTIONS`）に、この書き方の参照先を追記した。
+
+**入れなかったことの補足**: 耳での確認はこの環境ではできない（数値の出発点のまま）。書き出して `realism.py` で測ったのは jazz（タイミングのずれ 20.9ms・強弱の幅 0.4dB）と metal（8.0ms・1.0dB）。強弱の幅が小さいのは、自動伴奏そのものの特徴（`dynamics`・`sections` で起伏をつける前）。

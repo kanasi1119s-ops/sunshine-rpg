@@ -1,4 +1,6 @@
 import { fillBeats, pickFill, placeFill, type FillSize } from "./drum-fills";
+import { midiToName } from "./compose";
+import { noteNameToMidi } from "./note";
 import { REST, type Instrument, type NoteEvent, type Track } from "./score";
 
 /**
@@ -78,7 +80,7 @@ export function fitSections(sections: Section[], totalBars: number): { sections:
 const restOf = (beats: number): NoteEvent => ({ note: REST, durationBeats: beats });
 
 /** 自動の伴奏のトラックに、セクションごとの楽器の出し入れと強弱をかける。メロディなど自分で書いたパートには使わない。 */
-export function applySections(tracks: Track[], sections: Section[], beatsPerBar: number, fills = true): Track[] {
+export function applySections(tracks: Track[], sections: Section[], beatsPerBar: number, fills = true, opts: { bassDensity?: boolean } = {}): Track[] {
   const starts: number[] = [];
   let at = 0;
   for (const s of sections) { starts.push(at); at += s.bars; }
@@ -119,7 +121,7 @@ export function applySections(tracks: Track[], sections: Section[], beatsPerBar:
       }
       pos += n.durationBeats;
     }
-    out.push({ ...t, notes });
+    out.push({ ...t, notes: opts.bassDensity && (t.instrument === "bass" || t.instrument === "sub808") ? reshapeBass(notes, sections, starts, beatsPerBar, t.instrument === "bass") : notes });
   }
   // クラッシュ: サビの頭だけ（元の伴奏のクラッシュは外す）
   const crashNotes: NoteEvent[] = [];
@@ -149,6 +151,41 @@ export function applySections(tracks: Track[], sections: Section[], beatsPerBar:
     }
   });
   return result;
+}
+
+/**
+ * セクションごとのベースの密度（bassline-guide.md §4）: Aメロ＝拍の頭の音だけ（4分）、サビ＝8分の裏をオクターブ上へ（E1〜G3 に収まるときだけ）、
+ * 終わり＝小節の頭の根音1音を伸ばす。Bメロ・間奏・Cメロはそのまま。小節をまたぐ音は無い前提（自動の伴奏のベース）。
+ */
+export function reshapeBass(notes: NoteEvent[], sections: Section[], starts: number[], beatsPerBar: number, octaveTop = true): NoteEvent[] {
+  const out: NoteEvent[] = [];
+  let pos = 0;
+  const push = (n: NoteEvent): void => {
+    const last = out[out.length - 1];
+    if (n.note === REST && last && last.note === REST) last.durationBeats += n.durationBeats; else out.push(n);
+  };
+  const isBeat = (x: number): boolean => Math.abs(x - Math.round(x)) < 1e-6;
+  const barOf = (x: number): number => Math.floor(x / beatsPerBar + 1e-9);
+  const kindAt = (bar: number): SectionKind => {
+    for (let i = sections.length - 1; i >= 0; i--) if (bar >= starts[i]) return sections[i].kind;
+    return "verse";
+  };
+  const barFirst = new Map<number, boolean>();
+  for (const n of notes) {
+    const bar = barOf(pos);
+    const kind = kindAt(bar);
+    const offset = pos - bar * beatsPerBar;
+    if (n.note === REST) { push(n); pos += n.durationBeats; continue; }
+    if (kind === "verse" && !isBeat(offset)) push(restOf(n.durationBeats));
+    else if (kind === "outro") {
+      if (!barFirst.has(bar)) { barFirst.set(bar, true); push({ ...n, durationBeats: Math.min(beatsPerBar, n.durationBeats + (beatsPerBar - offset - n.durationBeats)) }); } else push(restOf(n.durationBeats));
+    } else if (kind === "chorus" && octaveTop && Math.abs(offset - Math.floor(offset) - 0.5) < 1e-6) {
+      const m = noteNameToMidi(n.note);
+      push(m + 12 <= 55 ? { ...n, note: midiToName(m + 12) } : n);
+    } else push(n);
+    pos += n.durationBeats;
+  }
+  return out;
 }
 
 /** 場面の終わりに入れるおかずの大きさ。次がサビなら大きく（ブリッジからは「止める」）、サビが終わるときは中くらい。 */

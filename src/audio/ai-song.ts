@@ -1,5 +1,6 @@
 import { noteNameToMidi } from "./note";
-import { buildNewSong } from "./newsong";
+import { buildNewSong, NEW_SONG_FEELS, type NewSongFeel } from "./newsong";
+import { DRUM_GENRES, drumMixFor, swingForGenre } from "./drum-genres";
 import { applyNaturalDynamics } from "./dynamics";
 import { applySections, autoSections, fitSections, SECTION_KINDS, type Section, type SectionKind } from "./arrangement";
 import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, type Track } from "./score";
@@ -68,7 +69,15 @@ export interface AiSong {
   /** true なら、コード進行から自動の伴奏（ドラム・ベース・ギター・ピアノ・弦）を足す。 */
   autoAccompaniment: boolean;
   /** 自動の伴奏の雰囲気。 */
-  feel: "rock" | "pop" | "ballad" | "dance" | "vocaloid";
+  feel: NewSongFeel;
+  /** ゴーストノート（弱い音）の量 0〜1。funk・hiphop・dnb などのスネアとベースに足す。省略はジャンルの標準。human を指定していれば、それに合わせて増える。 */
+  ghostDensity?: number;
+  /** true なら、rock・pop・ballad のベースも4・8小節目の最後に次の根音へ近づく音を置く（省略は置かない。新しいジャンルの feel は常に置く）。 */
+  bassApproach?: boolean;
+  /** true なら、sections でセクションごとにベースの密度を変える（Aメロ＝4分、サビ＝8分の裏をオクターブ、終わり＝根音1音。省略は変えない）。 */
+  bassDensity?: boolean;
+  /** ジャンル名（drum-genres.ts: rock・hardrock・punk・metal・pop・jpop・vocaloid・ballad・jazz・funk・rnb・hiphop・trap・house・disco・dnb・dubstep・reggae・bossa・dembow・field・battle・boss）。書くと drumMix（と、swing・human が未指定なら標準値）をそのジャンルの推奨値で補う。drumMix を自分で書いた太鼓はそちらが優先。 */
+  drumGenre?: string;
   /** ギターの音色の方向。 */
   tone: "rock" | "metal" | "prs";
   /** 裏拍を遅らせる量（0〜1。省略は0）。ジャズ・ブルース・ヒップホップ・ファンクのノリに。 */
@@ -120,7 +129,11 @@ export const AI_SONG_SCHEMA = {
     barsPerChord: { type: "integer", enum: [1, 2] },
     repeats: { type: "integer" },
     autoAccompaniment: { type: "boolean" },
-    feel: { type: "string", enum: ["rock", "pop", "ballad", "dance", "vocaloid"] },
+    feel: { type: "string", enum: [...NEW_SONG_FEELS] },
+    ghostDensity: { type: "number" },
+    bassApproach: { type: "boolean" },
+    bassDensity: { type: "boolean" },
+    drumGenre: { type: "string", enum: Object.keys(DRUM_GENRES) },
     tone: { type: "string", enum: ["rock", "metal", "prs"] },
     swing: { type: "number" },
     synth: { type: "boolean" },
@@ -198,7 +211,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - bpm: テンポ（50〜220）。beats: 1小節の拍（3・4・6・7）。
 - chords: コード進行（空白でくぎる。C・Am・F#m7・Bbmaj7・Csus4・Gdim・Eaug・D7 など）。
 - barsPerChord: 1コードの小節数（1か2）。repeats: 進行のくり返し回数。
-- autoAccompaniment: true なら、コード進行から伴奏（ドラム・ベース・ギター・ピアノ・弦）を自動で足す。自分でドラムやベースを書くときは false にしてよい。feel: 自動の伴奏の雰囲気（rock / pop / ballad / vocaloid＝ボカロ曲のような歌なしのバック（高速・16分の詰まったドラムとピアノ・動くベース・ギターの刻み・左右の弦。bpm 160〜190で）/ dance＝4つ打ち・メロディのように動くベース・ピアノの分散和音・エコーギターの、きれいで現代的な伴奏）。
+- autoAccompaniment: true なら、コード進行から伴奏（ドラム・ベース・ギター・ピアノ・弦）を自動で足す。自分でドラムやベースを書くときは false にしてよい。feel: 自動の伴奏の雰囲気（rock / pop / ballad / vocaloid＝ボカロ曲のような歌なしのバック（高速・16分の詰まったドラムとピアノ・動くベース・ギターの刻み・左右の弦。bpm 160〜190で）/ dance＝4つ打ち・メロディのように動くベース・ピアノの分散和音・エコーギターの、きれいで現代的な伴奏）。ジャンル別の型（ドラム・ベース・コード楽器がジャンルの型で付く。ベースは 4・8小節目の最後に次の根音へ近づく音を置く）: funk＝16分シンコペ＋ゴースト（bpm 95〜115・swing 0.2・ベース音源 std/slap）／reggae＝ワンドロップ（3拍目にキックとスネア、ベースは1拍目を休む。bpm 65〜90・ベース finger）／bossa＝付点4分＋8分のベース（根音と5度）・弱いクロススティック風（bpm 100〜150・ベース finger）／jazz＝1拍1音のウォーキングベース（根音→3度→5度→次の根音への半音。bpm 120〜220・swing 0.5〜0.7＝速いほど小さく・ベース jazz）／shuffle＝ブルースの8分シャッフル（1-3-5-6-♭7-6-5-3。swing 0.6）／metal＝ツーバス16分とギャロップ・ベースはキックと同じ位置（bpm 140〜200。190を超えると16分を8分に落とす・ベース metal）／disco＝4つ打ち＋オクターブのベース＋裏拍のオープンハイハット／hiphop＝ブーンバップ（キックの位置にベースの長い音。swing 0.3〜0.5）／trap＝808（sub808）がキックの位置から長く鳴る・クラップは3拍目・ハイハットは8分（bpm 130〜160）／dnb＝2ステップ（キック1拍目と3拍目の裏。bpm 165〜180）／halftime＝ダブステップ（スネアは3拍目だけ。bpm 138〜145）。ghostDensity（0〜1）でスネアとベースのゴーストノートの量を決める（human を書くとそれに合わせて増える）。bassApproach: true で rock・pop・ballad にも小節末のアプローチを付ける。bassDensity: true で、sections に合わせてベースの密度を変える（Aメロ＝4分・サビ＝8分の裏がオクターブ・終わり＝根音1音）。drumGenre にジャンル名を書くと、そのジャンルの drumMix・swing・human の推奨値が入る（書いた drumMix はそれが優先）。ブラスト・ギャロップ・トラップのハイハットのロール（x:0.333, ・x:0.125, の拍つき書き）の書き方は docs/sound/drum-genre-guide.md §2.3。
 - tone: ギターの音色の方向（rock / metal / prs＝なめらかなリード）。
 - synth: true にすると、lead（シンセリード）と pad が電子的なシンセの音色になる。省略（false）だと lead はフルート、pad は合唱に近い生楽器寄りの音色で鳴る（tone が metal / prs の lead はオーバードライブのギター）。ダンス・電子音楽のアルペジオやリードには true にする。
 - タム(tom)のパートは、x のかわりに音名で高さを選べる（C4＝高いタム 〜 A2＝低いフロアタム。例 C4:0.25! A3:0.25, G3:0.25 E3:0.25）。フィルを高→低に下ろすときに使う。
@@ -421,10 +434,10 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   if (!Array.isArray(song.parts)) errors.push("parts がありません");
   if (errors.length) throw new Error(errors.join("\n"));
 
-  const feel = ["rock", "pop", "ballad", "dance", "vocaloid"].includes(song.feel) ? song.feel : "pop";
+  const feel: NewSongFeel = (NEW_SONG_FEELS as readonly string[]).includes(song.feel) ? song.feel : "pop";
   let base: Score;
   try {
-    base = buildNewSong({ bpm, beats: Number(song.beats), chords: song.chords, barsPerChord: song.barsPerChord === 2 ? 2 : 1, repeats, feel, leadInstrument: "lead" });
+    base = buildNewSong({ bpm, beats: Number(song.beats), chords: song.chords, barsPerChord: song.barsPerChord === 2 ? 2 : 1, repeats, feel, leadInstrument: "lead", approach: song.bassApproach === true, ...(Number.isFinite(Number(song.ghostDensity)) && song.ghostDensity !== undefined ? { ghostDensity: Number(song.ghostDensity) } : Number(song.human) > 0 ? { ghostDensity: Math.min(1, 0.4 + 0.5 * Number(song.human)) } : {}) });
   } catch (e) {
     throw new Error(`chords: ${(e as Error).message}`);
   }
@@ -449,7 +462,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     if (list.length) {
       const fitted = fitSections(list, totalBars);
       if (fitted.warning) warnings.push(fitted.warning);
-      accompaniment = applySections(accompaniment, fitted.sections, beatsPerBar, song.fills !== false);
+      accompaniment = applySections(accompaniment, fitted.sections, beatsPerBar, song.fills !== false, { bassDensity: song.bassDensity === true });
     }
   }
 
@@ -488,14 +501,19 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   if (parts.length === 0 && accompaniment.length === 0) throw new Error("パートがありません");
   const all = [...accompaniment, ...parts];
   const tracks = song.dynamics === "natural" ? applyNaturalDynamics(all, total, Number(song.beats)) : song.dynamics === true ? applyArc(all, total, Number(song.beats)) : all;
+  // ジャンルの推奨 drumMix（drumGenre）に、曲に書かれた drumMix を重ねる（書かれた太鼓が優先）
+  const own = drumMixOf(song.drumMix);
+  const preset = song.drumGenre ? drumMixFor(song.drumGenre) : undefined;
+  if (song.drumGenre && !preset) warnings.push(`drumGenre「${song.drumGenre}」は使えません（${Object.keys(DRUM_GENRES).join("・")}）`);
+  const mergedDrumMix = preset || own ? { ...(preset ?? {}), ...(own ?? {}) } : undefined;
   const score: Score = {
     tempoBpm: bpm, loop: true, drumKit: base.drumKit, tone: ["rock", "metal", "prs"].includes(song.tone) ? song.tone : "rock",
-    ...(Number(song.swing) > 0 ? { swing: Math.min(1, Number(song.swing)) } : {}),
-    ...(Number(song.human) > 0 ? { human: Math.min(1, Number(song.human)) } : {}),
+    ...(Number(song.swing) > 0 ? { swing: Math.min(1, Number(song.swing)) } : song.swing === undefined && song.drumGenre && swingForGenre(song.drumGenre, bpm) > 0 ? { swing: swingForGenre(song.drumGenre, bpm) } : song.swing === undefined && base.swing ? { swing: base.swing } : {}),
+    ...(Number(song.human) > 0 ? { human: Math.min(1, Number(song.human)) } : song.human === undefined && song.drumGenre && DRUM_GENRES[song.drumGenre] ? { human: DRUM_GENRES[song.drumGenre].human } : {}),
     ...(song.autoScoop === false ? { autoScoop: false } : {}),
     ...(song.dynamics === "natural" ? { dynamicRange: "wide" as const } : {}),
     ...(Number(song.snareTune) && Number.isFinite(Number(song.snareTune)) ? { snareTune: Math.max(-6, Math.min(6, Math.round(Number(song.snareTune) * 2) / 2)) } : {}),
-    ...(drumMixOf(song.drumMix) ? { drumMix: drumMixOf(song.drumMix) } : {}),
+    ...(mergedDrumMix ? { drumMix: mergedDrumMix } : {}),
     // synth: lead／pad をシンセ音色にする。style "electro" は、実楽器版（real-edition.ts）が電子音楽の音色を生楽器に置き換えないための印
     ...(song.synth === true ? { synth: true, style: "electro" } : {}),
     tracks,
