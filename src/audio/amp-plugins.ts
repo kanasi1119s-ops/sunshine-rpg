@@ -95,7 +95,7 @@ export function hasCode(def: AmpPluginDef): boolean {
 export function presetToPlugin(name: AmpPresetName): AmpPluginDef {
   const p = AMP_PRESETS[name];
   return {
-    format: "sunshine-amp", version: 1, id: `genre-${name}`, label: p.label, description: p.genre, author: "サンシャインソフトウェア", license: "このソフトの一部",
+    format: "sunshine-amp", version: 1, id: `genre-${name.toLowerCase()}`, label: p.label, description: p.genre, author: "サンシャインソフトウェア", license: "このソフトの一部",
     stages: [
       { type: "gain", value: p.drive },
       { type: "drive", shape: p.shape, hardness: p.hardness, asymmetry: p.asymmetry },

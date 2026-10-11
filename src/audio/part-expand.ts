@@ -5,6 +5,8 @@ import { parseChord } from "./newsong";
 import { noteNameToMidi } from "./note";
 import { findScale, pitchClassOf, resolveScale, snapNotesToScale, type Scale, type SnapPolicy } from "./scales";
 import { realizeRhythm, rhythmPatternLayers } from "./world-rhythms";
+import type { Section } from "./arrangement";
+import { applyRecipe, expandBare, expandCut16, expandGuitarPair, expandReverbPre, expandSectionFx, expandWiden } from "./jpop-clean";
 
 /**
  * パートの「展開」（2026-10-11）。AiPart に書かれた便利な指定を、ふつうのパート（notes つき）に直す。
@@ -23,6 +25,8 @@ export interface ExpandCtx {
   tonic: number | null;
   /** 曲の音階（snap の補正に使う）。 */
   scale: { scale: Scale; tonic: number } | null;
+  /** 曲のセクション（sectionFx・guitarPair・bare が使う。なければ未指定）。 */
+  sections?: Section[];
 }
 
 export interface StrumSpec {
@@ -43,9 +47,11 @@ export interface StrumSpec {
 export interface EchoSpec {
   /** 繰り返す回数（1〜4。省略は 2）。 */
   repeats?: number;
-  /** 遅れ。"dotted8"（付点8分。省略）・"quarter"・"eighth"・"triplet8" か、拍の数。 */
+  /** 遅れ。"dotted8"（付点8分。省略）・"quarter"・"eighth"・"triplet8"・"slap"（約 0.07 拍・1 回・decay 0.8）か、拍の数。 */
   time?: string | number;
-  /** 1 回ごとの音量の倍率（0.1〜0.6。省略は 0.3）。 */
+  /** 遅れをミリ秒で（1〜400。BPM に関係ない。40ms 未満は別の音でなく厚みに聞こえる）。書くと time より優先。decay は 0.95 まで使える。 */
+  ms?: number;
+  /** 1 回ごとの音量の倍率（0.1〜0.6。省略は 0.3。ms／slap のときは 0.95 まで）。 */
   decay?: number;
 }
 
@@ -197,17 +203,20 @@ export function expandStrum(p: AiPart, spec: StrumSpec, ctx: ExpandCtx, warnings
 }
 
 // ───────── エコー・自動ダブル ─────────
-const ECHO_TIMES: Record<string, number> = { dotted8: 0.75, quarter: 1, eighth: 0.5, triplet8: 1 / 3 };
+const ECHO_TIMES: Record<string, number> = { dotted8: 0.75, quarter: 1, eighth: 0.5, triplet8: 1 / 3, slap: 0.07 };
 
 /** エコー: 元のパートの後ろに、遅れて小さくなるコピーを足す。コピーは左右交互に振り、回ごとに暗くする。 */
-export function expandEcho(p: AiPart, spec: EchoSpec, warnings: string[]): AiPart[] {
-  const delay = typeof spec.time === "number" ? spec.time : ECHO_TIMES[String(spec.time ?? "dotted8")];
+export function expandEcho(p: AiPart, spec: EchoSpec, warnings: string[], bpm = 120): AiPart[] {
+  // ms（ミリ秒）と slap は、短い遅れ用（jpop-clean-guitar-guide.md 提案3）。repeats は 1、decay は 0.8 が標準
+  const msGiven = spec.ms !== undefined && Number.isFinite(Number(spec.ms));
+  const short = msGiven || spec.time === "slap";
+  const delay = msGiven ? Math.round((clamp(Number(spec.ms), 1, 400) / 1000) * (bpm / 60) * 1e6) / 1e6 : typeof spec.time === "number" ? spec.time : ECHO_TIMES[String(spec.time ?? "dotted8")];
   if (!(delay > 0 && delay <= 4)) {
-    warnings.push(`echo.time は dotted8・quarter・eighth・triplet8 か、0〜4 の拍の数にしてください（${String(spec.time)}）。エコーは付けませんでした`);
+    warnings.push(`echo.time は dotted8・quarter・eighth・triplet8・slap か、0〜4 の拍の数にしてください（${String(spec.time)}）。エコーは付けませんでした`);
     return [p];
   }
-  const repeats = clamp(Math.round(Number(spec.repeats) || 2), 1, 4);
-  const decay = clamp(Number(spec.decay) || 0.3, 0.1, 0.6);
+  const repeats = clamp(Math.round(Number(spec.repeats) || (short ? 1 : 2)), 1, 4);
+  const decay = short ? clamp(Number(spec.decay) || 0.8, 0.1, 0.95) : clamp(Number(spec.decay) || 0.3, 0.1, 0.6);
   const { echo: _e, ...base } = p;
   const out: AiPart[] = [base as AiPart];
   for (let n = 1; n <= repeats; n++) {
@@ -217,7 +226,7 @@ export function expandEcho(p: AiPart, spec: EchoSpec, warnings: string[]): AiPar
       volume: Math.max(0.02, Math.round((Number(p.volume) || 0.2) * decay ** n * 1000) / 1000),
       pan: clamp((Number(p.pan) || 0) + (n % 2 ? 0.4 : -0.4), -1, 1),
       bright: clamp((Number(p.bright) || 0) - 0.2 * n, -1, 0.5),
-      shift: Math.round(delay * n * 1e6) / 1e6,
+      shift: Math.round(((Number(p.shift) || 0) + delay * n) * 1e6) / 1e6,
       phrase: p.phrase,
     } as AiPart);
   }
@@ -286,11 +295,15 @@ export function expandPattern(p: AiPart, drum: boolean, warnings: string[]): AiP
 /** まとめて展開する。 */
 export function expandParts(parts: AiPart[], ctx: ExpandCtx, warnings: string[], drums: Set<string>): AiPart[] {
   const out: AiPart[] = [];
-  for (const orig of parts) {
-    if (!orig || typeof orig !== "object") { out.push(orig); continue; }
+  for (const given of parts) {
+    if (!given || typeof given !== "object") { out.push(given); continue; }
+    const orig = applyRecipe(given, warnings);
     let list: AiPart[] = [orig];
     const drum = drums.has(orig.instrument);
-    if (orig.pattern !== undefined) list = list.flatMap((p) => expandPattern(p, drum, warnings));
+    if (orig.pattern === "cut16" && !drum) list = list.flatMap((p) => expandCut16(p, ctx, warnings, strumVoicing));
+    else if (orig.pattern !== undefined) list = list.flatMap((p) => expandPattern(p, drum, warnings));
+    if (orig.bare !== undefined && !drum) list = list.flatMap((p) => (p.bare !== undefined ? expandBare(p, ctx, warnings) : [p]));
+    if (orig.guitarPair && !drum) list = list.flatMap((p) => (p.guitarPair ? expandGuitarPair(p, p.guitarPair, ctx, warnings) : [p]));
     if (orig.drone) list = list.flatMap((p) => (p.drone ? expandDrone(p, ctx, warnings) : [p]));
     if (orig.snap && ctx.scale && !drum) {
       const policy: SnapPolicy = orig.snap === "down" || orig.snap === "up" ? orig.snap : "nearest";
@@ -298,7 +311,10 @@ export function expandParts(parts: AiPart[], ctx: ExpandCtx, warnings: string[],
     } else if (orig.snap && !ctx.scale) warnings.push(`parts（${orig.role ?? orig.instrument}）: snap には、曲の scale（と tonic）を書いてください`);
     if (orig.strum && !drum) list = list.flatMap((p) => (p.strum ? expandStrum(p, p.strum, ctx, warnings) : [p]));
     if (orig.doubleDetune) list = list.flatMap((p) => (p.doubleDetune ? expandDoubleDetune(p, p.doubleDetune) : [p]));
-    if (orig.echo) list = list.flatMap((p) => (p.echo ? expandEcho(p, p.echo, warnings) : [p]));
+    if (orig.widen && !drum) list = list.flatMap((p) => (p.widen ? expandWiden(p, p.widen, ctx) : [p]));
+    if (orig.echo) list = list.flatMap((p) => (p.echo ? expandEcho(p, p.echo, warnings, ctx.bpm) : [p]));
+    if (orig.sectionFx && !drum) list = list.flatMap((p) => (p.sectionFx ? expandSectionFx(p, p.sectionFx, ctx, warnings) : [p]));
+    if (orig.reverbPre !== undefined && !drum) list = list.flatMap((p) => (p.reverbPre !== undefined ? expandReverbPre(p, ctx, warnings) : [p]));
     out.push(...list);
   }
   return out;

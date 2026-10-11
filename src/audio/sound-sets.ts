@@ -340,7 +340,16 @@ export const SCENE_SETS: Record<string, { sound: string; preset: string; label: 
  * 音づくりの型（sound-design-basics 提案 8）。パートの PartMix を、役割の名前で選ぶ。名前は音の特徴にしてある。
  * 使うとき: `{ ...track, ...PART_RECIPES["soft-pad"].mix }` のように、volume・reverb・bright などを当てる。
  */
-export const PART_RECIPES: Record<string, { label: string; instruments: Instrument[]; mix: PartMix; /** パート側で指定する書き方の目安（sustain は AiPart.sustain、staccato は短く切る、register は音域）。 */ hint?: { sustain?: number; staccato?: boolean; register?: string; patch?: string } }> = {
+export interface PartRecipe {
+  label: string;
+  instruments: Instrument[];
+  mix: PartMix;
+  /** パート側で指定する書き方の目安（sustain は AiPart.sustain、staccato は短く切る、register は音域、pattern は使うと楽な型）。 */
+  hint?: { sustain?: number; staccato?: boolean; register?: string; patch?: string; pattern?: string };
+  /** AIソング形式の parts[].recipe で、書いていないときだけ補う空間・厚みの指定（echo・doubleDetune・widen。part-expand.ts の書き方と同じ）。 */
+  fx?: { echo?: { repeats?: number; time?: string | number; decay?: number; ms?: number }; doubleDetune?: { cents?: number; spread?: number }; widen?: { mode?: "dimension"; ms?: number; width?: number; chorus?: number } };
+}
+export const PART_RECIPES: Record<string, PartRecipe> = {
   "soft-pad": { label: "やわらかい弦パッド（遅い立ち上がり・広い・凹む）", instruments: ["strings", "pad", "choir"], mix: { volume: 0.06, reverb: 0.5, bright: -0.25, chorus: 0.2, duck: 0.25, panWidth: 0.4 } },
   "pluck-arp": { label: "プラックのアルペジオ（明るく短い・左右に）", instruments: ["harp", "guitar", "keys", "piano"], mix: { volume: 0.07, reverb: 0.3, bright: 0, duck: 0, panWidth: 0.5 } },
   "strings-ensemble": { label: "弦のアンサンブル（厚く広がる・ほかを凹ませる）", instruments: ["strings", "pad"], mix: { volume: 0.07, reverb: 0.3, chorus: 0.3, duck: 0.3, panWidth: 0.5 } },
@@ -349,6 +358,48 @@ export const PART_RECIPES: Record<string, { label: string; instruments: Instrume
   "cinematic-drone": { label: "映画的な低いドローン（長く・深い残響・低音域）", instruments: ["pad", "strings", "unisonSaw"], mix: { volume: 0.05, reverb: 0.5, bright: -0.35, duck: 0.2, panWidth: 0.6 }, hint: { sustain: 3, register: "C1〜C3" } },
   "chip-lead": { label: "チップ風のリード（残響なし・まっすぐ）", instruments: ["lead"], mix: { volume: 0.07, reverb: 0, bright: 0, panWidth: 0.2 }, hint: { patch: "squareLead" } },
   "bell-accent": { label: "ベル系の飾り（小さく・遠く・暗め）", instruments: ["bell", "chime"], mix: { volume: 0.04, reverb: 0.6, bright: -0.3, panWidth: 0.5 } },
+  // ── 2026-10-11 クリーンギターの音づくり。最初の3つは、人間が「いい」と言った組み合わせ（ディレイは弱め: repeats 1・decay 0.15）。名前は音の特徴 ──
+  "sparkle-delay": {
+    label: "きらびやかなクリーン＋弱いディレイ（付点8分を1回・うんと小さく）", instruments: ["guitar", "echoGuitar", "leadGuitar"],
+    mix: { volume: 0.16, amp: { type: "sparkleClean" }, reverb: 0.25, chorus: 0.1, bright: 0 },
+    fx: { echo: { repeats: 1, time: "dotted8", decay: 0.15 } }, hint: { sustain: 1.5 },
+  },
+  "crystal-wide": {
+    label: "透明なクリーン＋左右の厚み（同じ旋律を2本、±8セントで左右に）", instruments: ["guitar", "echoGuitar", "leadGuitar"],
+    mix: { volume: 0.16, amp: { type: "crystal" }, reverb: 0.25, chorus: 0.1, bright: 0 },
+    fx: { doubleDetune: { cents: 8, spread: 0.5 } }, hint: { sustain: 1.5 },
+  },
+  "sparkle-wide-delay": {
+    label: "きらびやかなクリーン＋左右の厚み＋弱いディレイ", instruments: ["guitar", "echoGuitar", "leadGuitar"],
+    mix: { volume: 0.16, amp: { type: "sparkleClean" }, reverb: 0.25, chorus: 0.1, bright: 0 },
+    fx: { doubleDetune: { cents: 8, spread: 0.5 }, echo: { repeats: 1, time: "dotted8", decay: 0.15 } }, hint: { sustain: 1.5 },
+  },
+  // ── J-POPのクリーン（jpop-clean-guitar-guide.md §3 のレシピA〜E）。数字は出発点で、耳で調整する ──
+  "jpop-arpeggio": {
+    label: "J-POPの透明なアルペジオ（イントロ・バラード・Aメロ。浅い chorus、のびる音）", instruments: ["guitar"],
+    mix: { volume: 0.16, amp: { type: "jpopClean" }, reverb: 0.3, chorus: 0.3, bright: 0 },
+    hint: { sustain: 1.6, register: "E3〜E5" },
+  },
+  "jpop-cutting": {
+    label: "J-POPの軽快なカッティング（短く弾き、消す音は休符。pattern cut16 と合わせる）", instruments: ["guitar"],
+    mix: { volume: 0.13, amp: { type: "jpopClean" }, reverb: 0.12, chorus: 0.08, bright: 0 },
+    hint: { staccato: true, pattern: "cut16", register: "E3〜E5" },
+  },
+  "jpop-stroke": {
+    label: "J-POPの8分ストローク（サビ。左右にひらいて、残響は控えめ）", instruments: ["guitar"],
+    mix: { volume: 0.1, amp: { type: "jpopClean" }, reverb: 0.18, chorus: 0.05, bright: 0 },
+    fx: { doubleDetune: { cents: 6, spread: 0.7 } }, hint: { sustain: 1.4 },
+  },
+  "jpop-space": {
+    label: "J-POPの空間ギター（イントロのフック・間奏。付点8分のやまびこ2回）", instruments: ["echoGuitar"],
+    mix: { volume: 0.12, amp: { type: "jpopClean" }, reverb: 0.35, chorus: 0.15, bright: 0 },
+    fx: { echo: { repeats: 2, time: "dotted8", decay: 0.28 } }, hint: { sustain: 1.5 },
+  },
+  "jpop-dimension": {
+    label: "J-POPのディメンションC風の広がり（コードのクリーン。chorus の代わり）", instruments: ["guitar"],
+    mix: { volume: 0.16, amp: { type: "jpopClean" }, reverb: 0.2, chorus: 0.1, bright: 0 },
+    fx: { widen: { mode: "dimension", ms: 12, width: 0.6, chorus: 0.25 } }, hint: { sustain: 1.6 },
+  },
 };
 
 /**

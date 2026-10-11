@@ -235,3 +235,48 @@ BPM ごとのディレイ時間の換算（付点8分 = 0.75拍 × 60000 ÷ BPM�
 22. 個人ブログ「2025年上半期J-POP売上ランキング制作ポイント」— https://ameblo.jp/yunchan-music/entry-12914120168.html（**信頼度が低い。根拠は示されておらず、一般論に近い。参考のみで、数字は使っていない**）
 
 **読めなかった／使えなかった**: サウンドハウスの一部コラム（ロボット制限）、ギター・マガジン各号（有料）、Equipboardの他バンドのページ（取得制限）。
+
+---
+
+## 8. 実装状況（2026-10-11、(c)の提案12個）
+
+(c) の提案12個を、おすすめの順（2 → 1 → 11 → 9 → 3 → 6 → 7 → 4 → 5 → 8 → 12）にすべて実装した。**どれも書いたときだけ効く**（オプトイン）。実装前の `assets-src/ai-songs` の42曲のスコアと、既存の feel 16種の伴奏が、実装前とまったく同じことを `src/audio/jpop-clean.test.ts` のハッシュ照合で確かめている。コードは新しいファイル `src/audio/jpop-clean.ts`（パートの展開・型・スキーマ・指示文）と `src/audio/jpop-feel.ts`（feel jpop・曲の前処理）にまとめ、共有のファイルには短い追記だけを足した。WAV の書き出し（Chromium）はしていない。**耳での確認はまだ**なので、数字はどれも「出発点」。
+
+| # | 提案 | 状態 | 書き方・場所 | 注意 |
+|---|---|---|---|---|
+| 2 | AIへの指示文に例を追加 | **入れた** | `AI_SONG_JPOP_GUIDE`（`jpop-clean.ts`）を `AI_SONG_GUIDE` の末尾に連結。`song.mjs guide` にも出る | **浅い chorus（0.25〜0.4）を許す**と明記。レシピA〜E・消す音・引き算・出し入れ・仕上げの例 |
+| 1 | 新ロール `jpopClean` | **入れた** | `amp: "jpopClean"`。`amp.ts`・`amp-rack.ts`（GENRE_AMP_TYPES／ロール）・`score.ts`・`ai-song.ts`（型・AI_AMPS・スキーマ・説明）・`midi-export.ts`（歪ませない扱い）・`entry.ts`（選択欄）・`amp-rack.test.ts`（19種・ゲイン階段 −6.0dB） | HP100 → 300Hz −1.5 → 2kHz +1.5 → LP9kHz＋10.5kHz → 圧縮（−24dB／3:1／5ms／50ms）。**箱は足していない**（`bright` の箱は6kHz前後から落ちて、8〜9kHzを残す狙いと合わない）。`amp-plugins` の id は小文字にした（`genre-jpopclean`） |
+| 11 | `--master-preset jpop-band` | **入れた** | `master.mjs` の `MASTER_PRESETS`（`song.mjs presets` に出る）。`master.test.mjs` | `rock-clean` に 250Hz −1・2kHz +0.5・8kHz 高域 +1.5 を**足した**（300Hz −1 と 6kHz +1 は残る）。**数字は未測定**。`analyze.py --bands` で前後を測って決めること |
+| 9 | 引き算の `bare` | **入れた** | 曲に `"bare":["verse"]`（`true` は Aメロ）→ 自動の伴奏の layers に `{groups:[bass,keys,guitar,strings], hold:true}` を入れる（layers に書いた種類は書いた方）。手書きのパートは `"bare":"mute"`（休む。副旋律向け）／`"hold"`（各小節の最初の音だけを小節いっぱいにのばす） | sections／scene がなければ `sections:"auto"` を補って警告。「ルート＋コード」は、単音のパートでは「最初の音だけ」で近似（和音は自動伴奏の鍵盤・弦が担う） |
+| 3 | echo の `ms` と `slap` | **入れた** | `echo:{"ms":30,"repeats":1,"decay":0.8}`／`echo:{"time":"slap"}`（約0.07拍・1回・decay 0.8）。`part-expand.ts` の `expandEcho` | ms／slap のときだけ decay を 0.95 まで許す（拍で書く今までの echo は 0.6 まで・標準2回のまま）。ms は BPM に合わせて拍に直す（1〜400ms） |
+| 6 | 消す音付きの `pattern:"cut16"` | **入れた** | `{"pattern":"cut16","cutGrid":"pop","notes":""}`。格子は `X`（強く・のばす）`x`（弾いて切る）`o`（弱い消す音）`-`（のばす）`.`（休み＝消す音）の16文字か、名前 `pop`・`sparse`・`drive`。コード進行から、和音の上の3声（E3〜E5）に展開 | 連打の単音にならない（和音の構成音を3声で切る）。のばすのは `X-` の頭だけ。notes は使わない。コードが読めないときは警告して使わない |
+| 7 | `feel:"jpop"` | **入れた** | `NEW_SONG_FEELS` に `jpop` を追加。`pop` の伴奏のギターを `jpopClean` の8分アルペジオ（E3〜E5・chorus 0.3・reverb 0.3）にし、ピアノを右へ。曲に sections／scene がなければ `sections:"auto"`、layers の既定（イントロ＝ギターと鍵盤／Aメロ＝ギターなし）、`drumGenre:"jpop"` | 「ギターは crystal か sparkleClean」と書いたが、提案1の `jpopClean` を使った。サビで「質感を戻す」（カチッ→生っぽい→カチッ）は未実装（下の「できていないこと」） |
+| 4 | `widen:"dimension"` | **入れた** | `"widen":"dimension"` か `{ms:12,width:0.6,chorus:0.25}`。同じ旋律を左右に置き、右だけ ms 遅らせて浅い chorus。ms は5〜20、width は 0.7 まで、音量は各 0.75 倍 | 録音音源のエンジンには本物のディメンションCはない。**遅らせた複製による近似**。モノラルで痩せる性質は残る（主役のコードには使わず、クリーンの補助に） |
+| 5 | `sectionFx` | **入れた** | `"sectionFx":{"intro":{"reverb":0.4,"chorus":0.4},"chorus":{"reverb":0.15,"chorus":0.05}}`。曲の実際のセクションを、効果量が同じものごとにまとめて、パートを分ける（ほかのセクションは休み）。書かなかったセクションはパート自身の値 | エンジン側に「セクションごとの送り量」は足していない（パートを分ける近似）。分けた境目で、前のパートの音の余韻は途切れる。sections／scene が必要（なければ auto を補う） |
+| 8 | 2本のギター `guitarPair` | **入れた** | `"guitarPair":true`／`{mode:"crunch"\|"octave", only:["chorus"], volume}`。1本目＝左・クリーン＋chorus、2本目＝右・`crunch`（音量は1本目の半分で上限0.1）か1オクターブ上のクリーン（E5をこえる音は動かさない）。標準はサビだけ | sections／scene が必要。2本目は役の分け方だけ（旋律は同じ） |
+| 12 | `reverbPre` | **入れた（近似）** | `"reverbPre":12`（ms。0〜120）／`"room"`（10）／`"ballad"`（70） | 録音音源の残響はプリディレイを調整できないので、**元のパートは残響0、遅らせた複製（音量0.3倍・暗め）に残響を載せる**近似。5〜15msは厚み、40〜100msは小さなやまびこが混ざる。本物のプリディレイではない |
+
+### 名前付きの音づくり（`recipe`）
+
+`PART_RECIPES`（`sound-sets.ts`）に、**人間が「いい」と言った3つ**と、本書のレシピA〜Eを登録した。AIソング形式では `parts[].recipe` に名前を書くと、**書いていない項目だけ**を補う（`amp` は `auto` のときだけ。`reverb`・`chorus`・`bright`・`duck`・`sustain`・`echo`・`doubleDetune`・`widen`。volume・pan・notes は自分で書く）。
+
+| 名前 | 中身 | 元 |
+|---|---|---|
+| `sparkle-delay` | `sparkleClean`＋弱いディレイ（付点8分を1回、decay **0.15**）。reverb 0.25・chorus 0.1・sustain 1.5 | 人間が気に入った |
+| `crystal-wide` | `crystal`＋左右の厚み（`doubleDetune` ±8セント・左右±0.5）。ディレイなし | 人間が気に入った |
+| `sparkle-wide-delay` | `sparkleClean`＋左右の厚み＋弱いディレイ（repeats 1・decay 0.15） | 人間が気に入った |
+| `jpop-arpeggio` | レシピA。`jpopClean`・reverb 0.3・chorus 0.3・sustain 1.6 | 本書§3 |
+| `jpop-cutting` | レシピB。`jpopClean`・reverb 0.12・chorus 0.08。`pattern:"cut16"` と合わせる | 〃 |
+| `jpop-stroke` | レシピC。`jpopClean`・`doubleDetune` ±6セント・左右±0.7 | 〃 |
+| `jpop-space` | レシピD。`echoGuitar`向け。echo 2回・付点8分・decay 0.28・reverb 0.35 | 〃 |
+| `jpop-dimension` | レシピE。`widen:"dimension"`（12ms・0.6） | 〃 |
+
+注意: 人間が気に入った3つの**細かい設定値（reverb・chorus・左右の幅・音程のずれ）は記録が残っていなかった**ので、`doubleDetune` は標準の ±8セント・±0.5、ディレイは指示どおり repeats 1・decay 0.15、reverb/chorus は控えめな出発点にした。聴いて違えば、`PART_RECIPES` の数字を直す。
+
+### できていないこと
+
+- **10（開放弦のボイシング補助）**: 設計から要る「大」の提案。変則チューニングの選択肢と、開放弦を混ぜた形から E3〜E5 に並べる補助が必要で、他の2人が触っているギター奏法（ストローク・コードフォーム）と重なるため、ここでは手を付けなかった。
+- **7 のうち「サビで質感を戻す」**（クリーンの刻み → ストローク → 刻み）: 自動伴奏のギターはセクションごとに奏法を変えない。手書きのパートに `sections` と `recipe` を使い分ければ近づけられる。
+- **5 のエンジン側の送り量**: パートを分ける近似にとどめた（エンジンは触っていない）。
+- **12 の本物のプリディレイ**: 上の近似。
+- WAV に書き出して `analyze.py --bands` で測ること、`jpop-band` の数字の決定、耳での確認はこれから（このワークツリーでは Chromium を使わない約束のため、書き出しはしていない）。

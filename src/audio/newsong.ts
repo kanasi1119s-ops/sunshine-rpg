@@ -2,9 +2,10 @@ import { midiToName } from "./compose";
 import { REST, type Instrument, type NoteEvent, type Score, type Track } from "./score";
 import { barBeats, type TimeSignature } from "./time-signature";
 import { placeGhosts } from "./drum-genres";
+import { jpopFeelSong } from "./jpop-feel";
 
 /** 自動伴奏の雰囲気の一覧（ai-song.ts の検証・JSON schema・作曲ソフトの選択肢が、ここを共通で使う）。 */
-export const NEW_SONG_FEELS = ["rock", "pop", "ballad", "dance", "vocaloid", "funk", "reggae", "bossa", "jazz", "shuffle", "metal", "disco", "hiphop", "trap", "dnb", "halftime"] as const;
+export const NEW_SONG_FEELS = ["rock", "pop", "ballad", "dance", "vocaloid", "funk", "reggae", "bossa", "jazz", "shuffle", "metal", "disco", "hiphop", "trap", "dnb", "halftime", "jpop"] as const;
 export type NewSongFeel = (typeof NEW_SONG_FEELS)[number];
 /** ジャンル別の型で作る feel（docs/sound/bassline-guide.md・drum-genre-guide.md）。 */
 export const GENRE_FEELS = ["funk", "reggae", "bossa", "jazz", "shuffle", "metal", "disco", "hiphop", "trap", "dnb", "halftime"] as const;
@@ -12,11 +13,11 @@ const isGenreFeel = (f: NewSongFeel): f is (typeof GENRE_FEELS)[number] => (GENR
 /** feel ごとの、ベース音源（--bass）の目安。bassline-guide.md §6 に対応。 */
 export const FEEL_BASS_OVERLAY: Record<NewSongFeel, string> = {
   rock: "pick", pop: "jpop", ballad: "finger", dance: "std", vocaloid: "jpop",
-  funk: "std", reggae: "finger", bossa: "finger", jazz: "jazz", shuffle: "finger", metal: "metal", disco: "finger", hiphop: "std", trap: "std", dnb: "std", halftime: "std",
+  funk: "std", reggae: "finger", bossa: "finger", jazz: "jazz", shuffle: "finger", metal: "metal", disco: "finger", hiphop: "std", trap: "std", dnb: "std", halftime: "std", jpop: "jpop",
 };
 /** feel ごとの、ドラム音源（--drums）の目安と drumMix のジャンル名（drum-genres.ts）。 */
 export const FEEL_DRUM_GENRE: Partial<Record<NewSongFeel, string>> = {
-  rock: "rock", pop: "pop", ballad: "ballad", vocaloid: "vocaloid", funk: "funk", reggae: "reggae", bossa: "bossa", jazz: "jazz", shuffle: "rock", metal: "metal", disco: "disco", hiphop: "hiphop", trap: "trap", dnb: "dnb", halftime: "dubstep", dance: "house",
+  rock: "rock", pop: "pop", ballad: "ballad", vocaloid: "vocaloid", funk: "funk", reggae: "reggae", bossa: "bossa", jazz: "jazz", shuffle: "rock", metal: "metal", disco: "disco", hiphop: "hiphop", trap: "trap", dnb: "dnb", halftime: "dubstep", jpop: "jpop", dance: "house",
 };
 
 /** 作曲ソフトの「新しい曲」: コード進行から、バンド編成の伴奏（と、空のメロディのトラック）を作る。 */
@@ -207,6 +208,8 @@ export function buildNewSong(spec: NewSongSpec): Score {
     return beats >= 4 ? at === 1 || at === 3 : beats === 3 ? at === 2 : at === Math.floor(beats / 2);
   };
 
+  // jpop: pop の伴奏のギターを jpopClean のアルペジオにし、ピアノを反対側へ（jpop-feel.ts）
+  if (spec.feel === "jpop") return jpopFeelSong(buildNewSong({ ...spec, feel: "pop" }), bars, beats);
   if (isGenreFeel(spec.feel)) return genreSong(spec, bars, beats);
   if (spec.feel === "vocaloid") return vocaloidSong(spec, bars, beats, make, every, tones, octaveOf);
   if (dance) return danceSong(spec, bars, beats, make, every, tones, octaveOf, kickPos, snarePos);

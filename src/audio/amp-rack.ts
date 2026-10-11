@@ -22,7 +22,7 @@ export interface ChannelAmp {
 type Role = "plugin" | "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru" | GenreAmpType;
 
 /** ジャンル別のアンプの種類（`score.ts` の `GenreAmpType` と同じ並び）。 */
-export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean"];
+export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean"];
 
 const STEP_CURVES = new Map<number, Float32Array<ArrayBuffer>>();
 /** 波形を階段状にする（ビットを落としたような粗い音）。levels は片側の段数。 */
@@ -383,6 +383,10 @@ export class AmpRack {
       case "sparkleClean":
         // きらびやかなクリーン: 歪ませない。中域のこもり（900Hz・1.6kHz）を少し引き、2.6kHz にわずかな抜け、低めを足し、弱い圧縮で粒をそろえる。高域は明るい箱で6kHz前後から急に落とす
         return this.chain(input, tail([this.filter("highpass", 80, 0, 0.7), this.filter("lowshelf", 250, 2, 0.7), this.filter("peaking", 900, -3, 0.8), this.filter("peaking", 1600, -2, 0.8), this.filter("peaking", 2600, 1, 0.9), this.compressor(-26, 2.5, 0.012, 0.2), this.gain(1.0)]));
+      case "jpopClean":
+        // J-POPのクリーン（2020年代の刻み・アルペジオ。jpop-clean-guitar-guide.md 提案1）: 歪ませない。100Hz未満を切り、300Hz付近のこもりを1.5dB引き、2kHzに1.5dBの輪郭を足し、
+        // 8〜9kHz から落とす（刺さりを出さず、空気感は残す）。圧縮は 3:1／アタック5ms／リリース50ms／約3dB（粒をそろえる。出典9・8）
+        return this.chain(input, tail([this.filter("highpass", 100, 0, 0.7), this.filter("peaking", 300, -1.5, 0.8), this.filter("peaking", 2000, 1.5, 0.9), this.filter("lowpass", 9000, 0, 0.7), this.filter("lowpass", 10500, 0, 0.7), this.compressor(-24, 3, 0.005, 0.05), this.gain(1.0)]));
       default:
         return this.chain(input, []);
     }

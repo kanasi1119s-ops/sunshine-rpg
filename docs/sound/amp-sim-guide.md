@@ -354,3 +354,7 @@ cabApprox(kind):
 - `mic: far` の「残響を足す」は入れていない（部屋鳴りは `--space` のリバーブで足す）。
 - ADAA（微分の逆）の折り返し対策は、重いので入れていない（提案の範囲外）。
 - 作曲ソフトを作り直す（`node tools/composer/build.mjs`）前の古い版では、新しい指定は音に反映されない。
+
+## 追記（2026-10-11）新ロール `jpopClean`
+
+J-POP のクリーンの刻み・アルペジオ向け（`jpop-clean-guitar-guide.md` 提案1）。歪ませない。HP100 → 300Hz −1.5 → 2kHz +1.5 → LP9kHz（＋10.5kHz）→ 圧縮（−24dB／3:1／アタック5ms／リリース50ms）。箱は足さない。ゲイン階段の出口の山は −6.0dB（crystal・sparkleClean と同じ）。`amp: "jpopClean"` で使う。

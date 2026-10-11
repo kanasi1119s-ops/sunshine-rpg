@@ -22,3 +22,7 @@
 
 `docs/sound/mix-patterns.md` の M17〜M48 から、`rock-4`・`pop-lead`・`jpop-bright`・`ballad-piano-strings`・`jazz-trio`・`funk-bass`・`house-duck`・`ambient-wide`・`orchestra-depth`・`game-battle`・`game-boss`・`game-town`・`game-dungeon` を足した。`master` に `preset`（`--master-preset` と同じ）・`space`・`spaceWet` を持てる。場面から選ぶ表は `SCENE_SETS`。`node tools/composer/song.mjs sounds` で一覧。詳しくは `mix-patterns.md` §10。
 
+
+## パートの音づくり（`PART_RECIPES`、2026-10-11 追記）
+
+`src/audio/sound-sets.ts` の `PART_RECIPES` に、クリーンギターの名前付きの音づくりを足した（人間が「いい」と言った `sparkle-delay`・`crystal-wide`・`sparkle-wide-delay`、J-POP のレシピA〜E `jpop-arpeggio`・`jpop-cutting`・`jpop-stroke`・`jpop-space`・`jpop-dimension`）。サウンドセットがアンプ・音量を曲全体に当てるのに対し、こちらは **1パートに当てる**。AIソング形式では `parts[].recipe` に名前を書く（書いていない項目だけ補う）。中身と注意は `jpop-clean-guitar-guide.md` §8。

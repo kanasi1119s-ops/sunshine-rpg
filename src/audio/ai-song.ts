@@ -19,6 +19,8 @@ import { applyBreath, BREATH_INSTRUMENTS, checkInstrumentUsage } from "./instrum
 import { chordBarsOf, expandParts, partTrackExtras, readSongScale, shiftEvents, type ExpandCtx } from "./part-expand";
 import { checkScaleUsage } from "./scale-check";
 import { sceneScaleWarning } from "./scene-scales";
+import { AI_PART_JPOP_SCHEMA, AI_SONG_JPOP_GUIDE, AI_SONG_JPOP_SCHEMA, type AiPartJpop, type AiSongJpop } from "./jpop-clean";
+import { applyJpopSong } from "./jpop-feel";
 import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, type Track } from "./score";
 
 /**
@@ -36,7 +38,7 @@ export const SYNTH_PATCHES: Record<string, number> = {
 };
 
 type PartSectionSpecJson = Partial<Record<SectionKind, number | boolean | { gain?: number; octave?: number }>>;
-export interface AiPart extends RhythmPartFields, AiPartExtras {
+export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   /** 楽器（AI_INSTRUMENTS のキー）。 */
   instrument: Instrument;
   /** パートの名前（メロディ・ハモリ・ベースなど。表示用）。 */
@@ -62,7 +64,7 @@ export interface AiPart extends RhythmPartFields, AiPartExtras {
   /** フレーズの山（拍。2〜32）。この長さごとに、出だしをやや弱く→山で強く→終わりを引く強弱をつける（歌うような表情）。ドラムでは使わない。 */
   phrase?: number;
   /** アンプ（ギター・ベース向け）。"auto" なら曲の音色から自動。 */
-  amp: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean";
+  amp: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean";
   /** セクションごとの出し入れ。{ intro: 0, verse: 0.6, chorus: 1, solo: { gain: 1, octave: 1 } }。数字＝音量の倍率（0＝休み）、octave＝オクターブずらし。書かなかったセクションは1。曲の sections（または scene）が必要。 */
   sections?: PartSectionSpecJson;
   /** false にすると、modulate（転調）でこのパートを上げない。 */
@@ -79,7 +81,7 @@ export interface AiPart extends RhythmPartFields, AiPartExtras {
   notes: string;
 }
 
-export interface AiSong extends RhythmSongFields, AiSongExtras {
+export interface AiSong extends RhythmSongFields, AiSongExtras, AiSongJpop {
   title: string;
   /** どんな曲か（1〜2文。日本語）。 */
   description: string;
@@ -175,7 +177,7 @@ export const AI_INSTRUMENTS: Record<string, string> = {
 };
 const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom"]);
 /** AIソング形式で使えるアンプの名前（`AI_SONG_SCHEMA` の amp と同じ）。 */
-const AI_AMPS = new Set(["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean"]);
+const AI_AMPS = new Set(["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean"]);
 
 /** 構造化出力（JSONスキーマ）。 */
 export const AI_SONG_SCHEMA = {
@@ -238,6 +240,7 @@ export const AI_SONG_SCHEMA = {
     bossPhases: { type: "array", items: { type: "object" } },
     motifs: { type: "array", items: { type: "string" } },
     ...AI_SONG_EXTRA_SCHEMA,
+    ...AI_SONG_JPOP_SCHEMA,
     parts: {
       type: "array",
       items: {
@@ -268,8 +271,9 @@ export const AI_SONG_SCHEMA = {
           modulate: { type: "boolean" },
           motif: { anyOf: [{ type: "object" }, { type: "array", items: { type: "object" } }] },
           keepBreak: { type: "boolean" },
-          amp: { type: "string", enum: ["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean"] },
+          amp: { type: "string", enum: ["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean"] },
           ...AI_PART_EXTRA_SCHEMA,
+          ...AI_PART_JPOP_SCHEMA,
           notes: { type: "string" },
         },
       },
@@ -345,7 +349,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。
   - sustain: 音の伸び（0.2〜3、省略は1）。0.3〜0.6＝スタッカート（歯切れよく。ピアノ・ギターの刻み・シンセの刻み）、1＝ふつう、1.5〜3＝余韻を残す（ハープ・鐘・パッド・琴・アルペジオ）。長くした音は次の音に重なる。
   - phrase: フレーズの長さ（拍。2〜32。メロディは4か8がおすすめ）。その長さごとに、出だしを少し弱く→山で強く→終わりを引く強弱がつく（機械的に平らな演奏をさけ、歌うような表情になる）。ドラムでは使わない。
-  - volume: 0.1〜0.35 くらい（メロディ 0.22〜0.3、伴奏 0.1〜0.2）。pan: -1〜1。amp: ギター・ベースのアンプ（auto / clean / overdrive / distortion / metal / prs、ジャンル別: jazz / blues / funk / crunch / hardrock / punk / fuzz / shoegaze / lofi / retro8bit / radio / loudmetal＝ラウドメタル / loudrock＝ラウドロック / delicate＝繊細な弱い音 / crystal＝透き通るクリーン。2〜4kHzの刺さりを抑えた、耳にやさしい明るさ / lead＝浅い歪み＋中域の厚みで歌うリード / modernHigh＝現代的な高ゲイン（締まった低音・ゲート付き・刻み向き） / sparkleClean＝歪みなしのきらびやかなクリーン。高域は耳にやさしく丸める）。ほかの楽器は auto。
+  - volume: 0.1〜0.35 くらい（メロディ 0.22〜0.3、伴奏 0.1〜0.2）。pan: -1〜1。amp: ギター・ベースのアンプ（auto / clean / overdrive / distortion / metal / prs、ジャンル別: jazz / blues / funk / crunch / hardrock / punk / fuzz / shoegaze / lofi / retro8bit / radio / loudmetal＝ラウドメタル / loudrock＝ラウドロック / delicate＝繊細な弱い音 / crystal＝透き通るクリーン。2〜4kHzの刺さりを抑えた、耳にやさしい明るさ / lead＝浅い歪み＋中域の厚みで歌うリード / modernHigh＝現代的な高ゲイン（締まった低音・ゲート付き・刻み向き） / sparkleClean＝歪みなしのきらびやかなクリーン。高域は耳にやさしく丸める / jpopClean＝J-POPのクリーン。歪みなし・低域100Hz以下を切り、2kHzに輪郭、8〜9kHzから落とし、粒をそろえる圧縮つき。刻み・アルペジオ向き）。ほかの楽器は auto。
   - notes: 「音名:拍」を空白でくぎる。例 "E5:1 D5:0.5 R:0.5 C5:2"。R は休み。音名は C4（ド）〜B4 のように、シャープは #、フラットは b（例 F#4, Bb3）。拍のあとに奏法の記号を付けられる: ! アクセント（強く）・,（弱く）・\'（スタッカート）・_（レガート。次の音につなげる）・~（ビブラート）・^（ベンドアップ）・/（しゃくり）・\\（フォール。詳しくは下の「奏法の書き方」）。例 "E5:1! D5:0.5\' C5:2_ A4:2^^~"。拍は 0.25（16分音符）・0.5・0.75・1・1.5・2・3・4 など。
   - ドラムのパートは、音名のかわりに x（打つ）、X（強く）、o（弱く＝ゴーストノート）、O（オープンハイハット。ハイハットだけ）、R（休み）。1文字＝16分音符のグリッド記法も使える: "g:x...x...x...x..."（x 打つ・X 強く・o 弱く・. 休み）。例 kick "x:1 R:1 x:0.5 x:0.5 R:1"。
   - notes の合計の拍が曲の長さより短いときは、くり返して埋める（ドラムの1〜2小節の型やリフを短く書ける）。メロディは曲全体ぶん書くのがよい（Aメロ・Bメロ・サビのように変化をつける）。
@@ -410,7 +414,7 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
 - introType（I1〜I10）／outroType（E1〜E10）: 導入と終わりの型。直前の3曲と同じ型だと注意が出る。
 - bossPhases: [{ id, startBar, endBar, hpBelow }]。ボスのHPが下がったら小節の頭で次の段階へ切り替える表。
 - motifs／parts[].motif: 主題（docs/sound/data/motifs.json の akari・yugami・wa・kazoku・daihyo）。{ id, at: 小節番号か "chorus", transform: [...] }。
-- layers の peel: true／数で、層を外から順に抜く。sections の add／gain で、そのセクションだけ層を足す・音量を変える。` + RHYTHM_GUIDE_ADDENDUM;
+- layers の peel: true／数で、層を外から順に抜く。sections の add／gain で、そのセクションだけ層を足す・音量を変える。` + RHYTHM_GUIDE_ADDENDUM + AI_SONG_JPOP_GUIDE;
 
 const DUR_RULE = /^\d+(\.\d+)?$/;
 
@@ -565,7 +569,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   const warnings: string[] = [];
   if (!input || typeof input !== "object") throw new Error("AIソングのJSONではありません");
   // Am*2・sectionChords・atBar の転調・loopTail をふつうの形に直し、場面プリセット（scene）の既定値を入れる
-  const song = applyScene(prepareSong(expandSongExtras(input as AiSong, warnings), warnings), warnings);
+  const song = applyJpopSong(applyScene(prepareSong(expandSongExtras(input as AiSong, warnings), warnings), warnings), warnings);
   const bpm = Math.round(Number(song.bpm));
   if (!(bpm >= 40 && bpm <= 260)) errors.push(`bpm は 40〜260 にしてください（${song.bpm}）`);
   if (!beatsOk(song.beats)) errors.push(`beats は ${MIN_BEATS}〜${MAX_BEATS} の整数にしてください（${song.beats}）`);
@@ -633,7 +637,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   // パートの展開（ストローク・エコー・自動ダブル・ドローン・リズムの型・音階への補正）。増えたパートは 8 パートの数に入れない
   const songScale = readSongScale(song.scale, song.tonic, warnings);
   const chordBars = chordBarsOf(song.chords, song.barsPerChord === 2 ? 2 : 1, repeats);
-  const expandCtx: ExpandCtx = { bpm, beatsPerBar, totalBeats: total, chordBars, tonic: songScale ? songScale.tonic : song.tonic ? readSongScale("ionian", song.tonic, warnings)?.tonic ?? null : null, scale: songScale };
+  const expandCtx: ExpandCtx = { bpm, beatsPerBar, totalBeats: total, chordBars, tonic: songScale ? songScale.tonic : song.tonic ? readSongScale("ionian", song.tonic, warnings)?.tonic ?? null : null, scale: songScale, sections: sectionList };
   const partList = Array.isArray(song.parts) ? expandParts(song.parts, expandCtx, warnings, DRUMS) : song.parts;
   const parts: Track[] = [];
   const explicitPush = new Set<Track>();
