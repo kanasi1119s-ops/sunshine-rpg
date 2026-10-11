@@ -530,7 +530,7 @@
 | ハイハットのセクション別設定 | 入れた | AIソング `hihatBySection: true`（`drumGenre` と `sections` が要る）。自動伴奏のハイハットを `hihatPattern(ジャンル, 小節, セクション)` で作り直し（verse＝4分、chorus＝16分に細かく、4小節ごとにオープン）、そのあとの `applySections`（出し入れ・つなぎ）に任せる。`drum-extras.ts` |
 | トラップのロール自動化 | 入れた | AIソング `trapRolls: true`／`{ every: 4, kind: "auto" }`。ハイハットの音の列を直接書き換える（拍つきと格子を混ぜる問題が無い）。最後の1拍＝三連、最後の半拍＝32分を交互。中の音は弱く（×0.6〜0.7）、最後の1発は強く（×1.3）。自動伴奏と手書きのハイハットの両方 |
 | パートごとの human 表 | 入れた | 提案1の `humanTableFor(ジャンル)`（`GENRE_HUMAN_ROLES`） |
-| ボス曲のフェーズ表 | 入れた | AIソング `bossPhases: true`（または `{ phases: [{ at: 0.3, bpmScale: 1.05 }], loopBack }`）。標準は第1形態 ×1.0・第2形態 ×1.05（曲の30%あたり）・最終形態 ×1.10（65%あたり）。フェーズの頭はいちばん近いセクションの頭にそろえ、最後の2小節で基準のテンポへ戻す（ループの継ぎ目）。ドラム型・楽器追加は、`sections`／`energy`／`hihatBySection` で。`drum-extras.ts` の `BOSS_PHASES`・`bossPhasePlan` |
+| ボス曲のフェーズ表 | 入れた | AIソング `bossTempo: true`（または `{ phases: [{ at: 0.3, bpmScale: 1.05 }], loopBack }`）。標準は第1形態 ×1.0・第2形態 ×1.05（曲の30%あたり）・最終形態 ×1.10（65%あたり）。フェーズの頭はいちばん近いセクションの頭にそろえ、最後の2小節で基準のテンポへ戻す（ループの継ぎ目）。ドラム型・楽器追加は、`sections`／`energy`／`hihatBySection` で。`drum-extras.ts` の `BOSS_PHASES`・`bossPhasePlan` |
 
 **入れなかったこと（理由つき）**
 - 作曲ソフトの画面（`tools/composer/entry.ts`）の再生位置カーソル・シーク・録音クリップの位置、`offline-render.ts` の録音クリップの終わり、`audio-engine.ts` の `playSe` は、まだ「テンポは曲に1つ」で計算している。他の担当と共有のファイルで、テンポマップのある曲では位置がずれる。MIDI の書き出し・WAV の描き出し・ゲームの再生（`flattenScore`）・曲の長さは対応済み。

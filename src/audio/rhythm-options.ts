@@ -2,7 +2,7 @@
  * AIソング形式のリズム・グルーヴ関連の項目を、Score に直す（docs/sound/rhythm-groove-guide.md §10）。
  * ai-song.ts から呼ぶ。新しい項目はすべて省略可能で、省略すれば今までと同じ曲になる。
  *
- * 曲の項目: tempo（テンポの変化）・rit・rubato・bossPhases・grouping・swing16・humanProfile・humanDist・lockToKick・grooveFeel・hihatBySection・trapRolls
+ * 曲の項目: tempo（テンポの変化）・rit・rubato・bossTempo・grouping・swing16・humanProfile・humanDist・lockToKick・grooveFeel・hihatBySection・trapRolls
  * パートの項目: pushMs・human・humanTiming・humanVelocity・swing・swing16・lockToKick
  */
 import type { Section } from "./arrangement";
@@ -24,7 +24,7 @@ export interface RhythmSongFields {
   /** ルバート 0〜1（バラード・フィールド曲向け。±3% ほどのゆるやかなテンポのゆれと、フレーズ終わりの小さな伸び）。ループで元に戻る。 */
   rubato?: number;
   /** ボス曲のフェーズ表。true で標準（第1形態→第2形態 +5%→最終形態 +10%、最後の2小節で元のテンポへ）。 */
-  bossPhases?: boolean | { phases?: BossPlanOptions["phases"]; loopBack?: boolean };
+  bossTempo?: boolean | { phases?: BossPlanOptions["phases"]; loopBack?: boolean };
   /** 8分の裏と別に、16分の裏の swing（0〜1）。 */
   swing16?: number;
   /** パート別の human 倍率の表。"role"＝役割ごとの標準（キック0.5・ベース0.8・スネア0.8・ハット1.2・リード1.2…）、"genre"＝drumGenre の表。 */
@@ -55,7 +55,7 @@ export interface RhythmPartFields {
 const finite = (x: unknown): x is number => x !== undefined && x !== null && x !== "" && Number.isFinite(Number(x));
 const clamp = (x: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, x));
 
-/** tempo・rit・bossPhases・rubato から、テンポマップを作る。無ければ undefined。 */
+/** tempo・rit・bossTempo・rubato から、テンポマップを作る。無ければ undefined。 */
 export function resolveTempoMap(
   song: RhythmSongFields & { bpm: number },
   ctx: { beatsPerBar: number; totalBars: number; sections?: Section[]; warnings: string[] },
@@ -76,8 +76,8 @@ export function resolveTempoMap(
       });
     }
   }
-  if (song.bossPhases) {
-    const opt = typeof song.bossPhases === "object" ? song.bossPhases : {};
+  if (song.bossTempo) {
+    const opt = typeof song.bossTempo === "object" ? song.bossTempo : {};
     explicit.push(...bossPhasePlan(bpm, totalBars, beatsPerBar, ctx.sections, { phases: opt.phases, loopBack: opt.loopBack }).tempo);
   }
   if (song.rit !== undefined) {
@@ -151,6 +151,6 @@ export const RHYTHM_GUIDE_ADDENDUM = `
   - swing の分離: parts[].swing（そのパートだけ。0 でまっすぐ。キックをまっすぐにしてハットだけ揺らす）、swing16・曲の swing16（16分の裏だけ別の量）。
   - 三連グリッド: ドラムの音に t:x.xx.xx.xx.x と書くと、1文字が三連の1つ（1拍＝3文字、4/4の1小節＝12文字）。x X o O . -。シャッフル・12/8・トラップの三連ロール・3対2に。
   - 拍子: beats は 2〜12 の整数（5・9・11拍子など）。grouping: [2,2,3]（合計が beats）か "auto" で、自動伴奏のドラムがまとまりの頭にキック・スネア・強いハットを置く。
-  - テンポの変化: tempo: [{ bar: 17, bpm: 96, ramp: 2 }]（bar から。ramp 小節かけて直線的に）、rit: { bar: 31, bars: 2, to: 0.7, aTempo: false }（終わりの減速。aTempo: true なら終わったところで元のテンポに戻る）、rubato: 0〜1（ゆるやかなゆれ。バラード向け。ループで元に戻る）、bossPhases: true（第2形態 +5%・最終形態 +10%、最後の2小節で元に戻す。sections を併用）。ループ曲は、最後のテンポが最初と違うと警告が出る。
+  - テンポの変化: tempo: [{ bar: 17, bpm: 96, ramp: 2 }]（bar から。ramp 小節かけて直線的に）、rit: { bar: 31, bars: 2, to: 0.7, aTempo: false }（終わりの減速。aTempo: true なら終わったところで元のテンポに戻る）、rubato: 0〜1（ゆるやかなゆれ。バラード向け。ループで元に戻る）、bossTempo: true（第2形態 +5%・最終形態 +10%、最後の2小節で元に戻す。sections を併用）。ループ曲は、最後のテンポが最初と違うと警告が出る。
   - ドラムの自動化: hihatBySection: true（drumGenre と sections が要る。verse＝4分、chorus＝16分に細かく）、trapRolls: true（ハイハットの小節末に三連と32分のロール。{ every: 4, kind: "auto" }）。
   - 点検: node tools/audio-check/check-groove.mjs 曲.json（push・human・volume・swing・格子の長さ・ベタ打ち・シンコペ率など）。`;

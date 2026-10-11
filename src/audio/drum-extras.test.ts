@@ -107,12 +107,12 @@ describe("ボス曲のフェーズ表", () => {
     expect(plan.phases.map((p) => p.bar)).toEqual([0, 8]);
     expect(plan.tempo).toEqual([{ beat: 32, bpm: 120 }]);
   });
-  it("AIソング: bossPhases: true でテンポマップができ、継ぎ目の警告は出ない。曲が少し短くなる", () => {
+  it("AIソング: bossTempo: true でテンポマップができ、継ぎ目の警告は出ない。曲が少し短くなる", () => {
     const song = { ...ROCK_SONG, human: undefined, swing: undefined, chords: "Am F C G", repeats: 8, autoAccompaniment: true, sections: "auto", parts: [ROCK_SONG.parts[5]], notes: undefined };
-    const a = aiSongToScore({ ...song, bossPhases: true });
+    const a = aiSongToScore({ ...song, bossTempo: true });
     expect(a.score.tempoMap!.length).toBeGreaterThan(2);
     expect(a.warnings.some((w) => w.includes("継ぎ目"))).toBe(false);
-    const b = aiSongToScore({ ...song, bossPhases: { phases: [{ at: 0, bpmScale: 1 }, { at: 0.5, bpmScale: 1.2 }] } });
+    const b = aiSongToScore({ ...song, bossTempo: { phases: [{ at: 0, bpmScale: 1 }, { at: 0.5, bpmScale: 1.2 }] } });
     expect(getScoreDurationSec(b.score)).toBeLessThan(getScoreDurationSec(aiSongToScore(song).score));
   });
 });

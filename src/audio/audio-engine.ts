@@ -22,8 +22,6 @@ export class AudioEngine {
   private bgmDuck: GainNode | null = null;
   private bgmFade: GainNode | null = null;
   private seGain: GainNode | null = null;
-  /** BGM の出口とスピーカーの間。SE が鳴る間だけ下げる（ダッキング）。 */
-  private bgmDuck: GainNode | null = null;
   private sfxThrottle = new SeThrottle();
   private sfxRobin = new RoundRobin();
   private sfxVariants = new Map<string, SfxRecipe[]>();

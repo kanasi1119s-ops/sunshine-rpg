@@ -191,7 +191,7 @@ export const AI_SONG_SCHEMA = {
     tempo: { type: "array", items: { type: "object", additionalProperties: false, required: ["bar", "bpm"], properties: { bar: { type: "integer" }, bpm: { type: "number" }, ramp: { type: "number" } } } },
     rit: { type: "object", additionalProperties: false, required: ["bar", "bars", "to"], properties: { bar: { type: "integer" }, bars: { type: "number" }, to: { type: "number" }, q: { type: "number" }, aTempo: { type: "boolean" } } },
     rubato: { type: "number" },
-    bossPhases: { anyOf: [{ type: "boolean" }, { type: "object" }] },
+    bossTempo: { anyOf: [{ type: "boolean" }, { type: "object" }] },
     swing16: { type: "number" },
     humanProfile: { type: "string", enum: ["role", "genre"] },
     humanDist: { type: "string", enum: ["triangle"] },
