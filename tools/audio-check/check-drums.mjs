@@ -29,6 +29,13 @@ function checkSong(file, song) {
     const bars = [];
     let total = 0;
     for (const t of String(p.notes ?? "").trim().split(/\s+/).filter(Boolean)) {
+      // 三連グリッド t:（1文字＝三連の1つ、3文字で1拍＝4マス）
+      if (/^t:/i.test(t)) {
+        const n = t.length - 2;
+        if (n % 3 !== 0) say(file, "error", `${label}: ${t} は ${n} 文字です（三連は3文字で1拍。4/4の1小節は12文字）`);
+        total += (n / 3) * 4;
+        continue;
+      }
       if (!/^g:/i.test(t)) { total += (Number(/:([\d.]+)/.exec(t)?.[1] ?? 1)) * 4; continue; }
       const g = t.slice(2);
       total += g.length;

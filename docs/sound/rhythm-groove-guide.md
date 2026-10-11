@@ -7,6 +7,8 @@
 - この環境では音を聴けない。型と数字は「出発点」。聴いて動かす。
 - 数字には根拠の強さを付けた。**A**＝研究・実測、**B**＝制作者の記事や目安、**C**＝この文書の推定・実装の計算。出典は末尾の S番号。
 
+**実装状況**: §10 の提案は 2026-10-11 の第2弾で実装した。結果は §12。§8.2「今できないこと」のうち、テンポマップ・セクションごとの bpm・ルバートも入った。
+
 **先行文書との分担**: ドラムのジャンル別の型・drumMix・ベロシティ表は `drum-genre-guide.md`、ベースの型は `bassline-guide.md`、奏法と「打ち込みっぽさ」の6原因は `craft-guides.md` §13・§15、本物らしさの測定は `realism-roadmap.md`。この文書は、それらに無い **拍子・変拍子、ミリ秒の数字、パート別のずれ方、swing/human の実装の読み解き、テンポ変化、型の追加** を足す。
 
 ---
@@ -501,6 +503,45 @@
    - 曲の1拍目を除く規則（`startBeat > 0`）は残す。
 10. **`tools/audio-check/check-groove.mjs`**
     - 曲JSONを読み、次を警告：`push` が ±0.05 拍を超える、キック・ベースの `push` が 0 でない、`human` がジャンル上限を超える、ドラム volume が 0.18 を超える（`X` が潰れる）、6/8 系で `swing` が掛かっている、`g:` の長さが `beats × 4` でない、全部同じ強さのハット、同じ小節の完全コピーが8回以上、シンコペ率（裏拍の打点÷全打点）が極端（0% や 90% 超。S24の逆U字）。
+
+---
+
+## 12. 実装状況（2026-10-11、第2弾）
+
+§10 の提案は、次の形で入れた。どれも省略すれば今までと同じ曲になる（実装前の見本曲3つのハッシュ照合で確認。ただしワルツなど 4拍子以外の AIソングは、MIDI の拍子記号だけ 4/4 → 実際の拍子に直った）。道具は新規ファイル中心で、`score.ts`・`midi-export.ts`・`ai-song.ts` には最小限の追記。AIソングの書き方は `node tools/composer/song.mjs guide` の末尾にも載せた。見本は `assets-src/ai-songs/rhythm-groove-demo.json`。
+
+| 提案 | 状態 | 中身（場所） |
+|---|---|---|
+| 1 パート別 human | 入れた | `Track.human`（0〜2、0＝そのパートは機械的に正確）・`humanTiming`・`humanVelocity`。曲の `humanRoles`（役割ごとの表）か、AIソングの `humanProfile: "role"`（キック0.5・ベース0.8・スネア0.8・ハット1.2・ギター鍵盤1.0・リード1.2）／`"genre"`（drumGenre のジャンル表 `GENRE_HUMAN_ROLES`。「パートごとのhuman表」）。`slap`・`sub808`・パッドなどは、`Track.human` を 0 より大きく書くとずれの対象になる。全体の走り溜め（drift）は全パート共通のまま。`groove-feel.ts`、`midi-export.ts` |
+| 2 pushMs とノリ | 入れた | `Track.pushMs`（−50〜+50ms）を `push = ms × bpm ÷ 60000` で拍にして push に足す（MIDI・再生の両方）。`grooveFeel: "tight"／"laidback"／"pushed"／"genre"`（`genre` は drumGenre の §3.1 の表 `GENRE_GROOVE_MS`）。push・pushMs を書いたパートはそちらが優先（`push: 0` も「動かさない」の意味で優先）。自動伴奏にも入る。`groove-feel.ts`、`rhythm-options.ts` |
+| 3 swing の分離 | 入れた | `Track.swing`（そのパートの上書き。0 でまっすぐ）・`Track.swing16`・曲の `swing16`（16分の裏だけ別の量）。`grooveOffsetBeats(swing, push, 拍, swing16?)`。duck 用のキック位置もキックの swing に従う。ハットだけ・キックだけ揺らすことができる |
+| 4 三連グリッド `t:` | 入れた | ドラムの音に `t:x.xx.xx.xx.x`（1文字＝三連の1つ、1拍＝3文字、4/4の1小節＝12文字。x X o O . -）。長さは 0.3333・0.3333・0.3334。`check-drums.mjs` も `t:`（3の倍数）に対応。`triplet-grid.ts` |
+| 5 テンポマップ | 入れた | `Score.tempoMap: { beat, bpm, ramp? }[]`。MIDI はテンポイベント（0x51）を拍の位置に書き、`flattenScore`・`getScoreDurationSec` も同じ時計（`makeTempoClock`）で計算。ramp は 1/8 拍ごとの階段。AIソング: `tempo: [{ bar, bpm, ramp }]`（bar は1始まり、ramp は小節）、`rit: { bar, bars, to, q?, aTempo? }`（終わりの減速。`v(x) = (1 + (w^q − 1)·x)^(1/q)`、q＝2）。ループ曲は最後のテンポが最初と違うと警告（`aTempo: true` で元に戻る）。`tempo-map.ts`、`rhythm-options.ts` |
+| 6 拍子の拡張 | 入れた | `beats` は 2〜12 の整数（4分音符を1拍と数える。5・9・11・12拍子など）。`grouping: [2,2,3]`（合計＝beats）か `"auto"`（5＝3+2、7＝2+2+3、9＝3+3+3、11＝3+3+3+2）で、自動伴奏のドラムが「奇数番目のまとまりの頭＝キック、偶数番目＝スネア、ハット＝8分でまとまりの頭が強い」に入れ替わる。`check-drums`／`check-groove` の格子の基準は `beats × 4`。`meter.ts`。**AIソングに `timeSig` が入らず、MIDI の拍子記号が常に 4/4 になっていたのを直した**（4拍子以外は `timeSig: { num: beats, den: 4 }`） |
+| 7 ルバート | 入れた | `rubato: 0〜1`。テンポが ±3%（周期はおよそ3小節で、曲をちょうど整数回まわるのでループで元に戻る）＋フレーズ（4小節）の最後の拍で −5%・その前の拍で −2%。1拍ごとのテンポ点として `tempoMap` に入る（明示の `tempo`・`rit` の上に重なる）。`tempo-map.ts` |
+| 8 lockToKick | 入れた | `Track.lockToKick`／曲の `lockToKick: true`（ベース）。キックの拍から 0.25 拍以内の音は、キックと同じ種・同じ幅でずれる（テストで、重なる音のずれの差が 0 になることを確認）。push の差（ベースだけ pushMs）は残る |
+| 9 ずれの分布と対象 | 入れた | `humanDist: "triangle"`（2つの一様な値の平均＝同じ最大幅で中心に寄る。タイミングと強さに効く）。対象楽器の追加は `Track.human`（提案1）で。曲の1拍目を除く規則は残した |
+| 10 check-groove | 入れた | `node tools/audio-check/check-groove.mjs <曲.json> [--edition real]`（ロジックは `groove-lib.mjs`）。push ±0.05 拍・キック／ベースの push・human がジャンル上限や 30ms 超・ドラム volume 0.18 超・beats 6 の swing・g:／t: の長さと合計・ベタ打ちのハット・同じ小節8回・シンコペ率 0%／90%超。g:／t: の長さ違いと合計のずれだけエラー（終了コード1） |
+
+**drum-genre-guide.md §10 の積み残し**
+
+| 項目 | 状態 | 中身（場所） |
+|---|---|---|
+| ハイハットのセクション別設定 | 入れた | AIソング `hihatBySection: true`（`drumGenre` と `sections` が要る）。自動伴奏のハイハットを `hihatPattern(ジャンル, 小節, セクション)` で作り直し（verse＝4分、chorus＝16分に細かく、4小節ごとにオープン）、そのあとの `applySections`（出し入れ・つなぎ）に任せる。`drum-extras.ts` |
+| トラップのロール自動化 | 入れた | AIソング `trapRolls: true`／`{ every: 4, kind: "auto" }`。ハイハットの音の列を直接書き換える（拍つきと格子を混ぜる問題が無い）。最後の1拍＝三連、最後の半拍＝32分を交互。中の音は弱く（×0.6〜0.7）、最後の1発は強く（×1.3）。自動伴奏と手書きのハイハットの両方 |
+| パートごとの human 表 | 入れた | 提案1の `humanTableFor(ジャンル)`（`GENRE_HUMAN_ROLES`） |
+| ボス曲のフェーズ表 | 入れた | AIソング `bossPhases: true`（または `{ phases: [{ at: 0.3, bpmScale: 1.05 }], loopBack }`）。標準は第1形態 ×1.0・第2形態 ×1.05（曲の30%あたり）・最終形態 ×1.10（65%あたり）。フェーズの頭はいちばん近いセクションの頭にそろえ、最後の2小節で基準のテンポへ戻す（ループの継ぎ目）。ドラム型・楽器追加は、`sections`／`energy`／`hihatBySection` で。`drum-extras.ts` の `BOSS_PHASES`・`bossPhasePlan` |
+
+**入れなかったこと（理由つき）**
+- 作曲ソフトの画面（`tools/composer/entry.ts`）の再生位置カーソル・シーク・録音クリップの位置、`offline-render.ts` の録音クリップの終わり、`audio-engine.ts` の `playSe` は、まだ「テンポは曲に1つ」で計算している。他の担当と共有のファイルで、テンポマップのある曲では位置がずれる。MIDI の書き出し・WAV の描き出し・ゲームの再生（`flattenScore`）・曲の長さは対応済み。
+- 途中の拍子変更（小節の長さが途中で変わる）は未対応のまま（§4.5）。`sections`・`applyArc`・自動伴奏が「1小節＝`beats` 拍」で計算するため。
+- 複合拍子の8分基準（9/8 を `beats: 4.5` にする）は入れていない。`beats` は4分音符を数える整数で、9/8 は 3+3+3 の `beats: 9` か、`t:` の三連で書く。
+- ポリテンポ（パートごとに別のテンポ）、テンポ変化に追従する「ソロだけ自由なルバート」は未対応（全パートが同じ時間軸）。
+- 耳での確認はこの環境ではできない。各ジャンルの ms・倍率は §3.1・§7.2 の出発点のまま。
+- `song.mjs` にサブコマンドは足していない（`check-groove.mjs` を直接使う）。
+
+**気づいたこと（直していない）**
+- 自動伴奏（`newsong.ts` 系）のドラムは `NoteEvent.velocity` に 0〜127 の値（104・78 など）を入れているが、`midi-export.ts` は 1 が標準の倍率として扱うので、`dynamics: "natural"`（`dynamics.ts` が 1.5 超を 100 で割る）を使わない曲では MIDI の強さが 127 に張りついて強弱が消える。`hihatBySection`・`grouping` が作る音は、正しい尺度（1 が標準。0.78 など）で書いてある。`trapRolls` は元のハイハットの強さの中央値に掛けるので、どちらの尺度でも働く。自動伴奏の尺度を直すときは、これらの見え方も確認する。
 
 ---
 
