@@ -282,8 +282,8 @@ def build(i):
      "drumMix":{"tom":{"tune":-4,"level":1.4,"spread":0.5}},
      "parts":[part("leadGuitar","メロディ／ソロ",lead,0.5,0,"steelGuitar","crunch",{**G,"reverb":0.2,"phrase":8,"humanTiming":1.5,"humanVelocity":1.8,"pushMs":7,"ampDrive":1.5}),
       part("leadGuitar","ハモリ（3度上）",lead2,0.32,0.25,"steelGuitar","crunch",{**G,"reverb":0.2,"phrase":8,"humanTiming":1.5,"humanVelocity":1.8,"pushMs":12,"ampDrive":1.5}),
-      part("leadGuitar","リフ（左・ルート）",gl,0.13,-0.6,"cleanGuitar","namB",{**G,"reverb":0.08,"ampTone":-6,"ampDrive":0.25}),
-      part("leadGuitar","リフ（右・5度）",gr,0.13,0.6,"cleanGuitar","namB",{**G,"reverb":0.08,"ampTone":-6,"ampDrive":0.25}),
+      part("leadGuitar","リフ（左・ルート）",gl,0.09,-0.6,"cleanGuitar","namB",{**G,"reverb":0.08,"ampTone":-6,"ampDrive":0.25}),
+      part("leadGuitar","リフ（右・5度）",gr,0.09,0.6,"cleanGuitar","namB",{**G,"reverb":0.08,"ampTone":-6,"ampDrive":0.25}),
       part("bass","ベース（旋律）",bass,0.6,0,None,"auto",{"bright":0.3}),
       part("kick","キック",kick,0.26,0,None,"auto",{}),part("snare","スネア",snare,0.2,0,None,"auto",{}),part("hihat","ハイハット",hat,0.09,0.3,None,"auto",{}),
       part("tom","タム",tomp,0.3,0,None,"auto",{}),part("crash","クラッシュ",crashp,0.16,0.2,None,"auto",{})]}
@@ -296,8 +296,8 @@ def build(i):
                 if lead:
                     if slug=="bike-hill": p.update({"ampDrive":1.1,"ampTone":1,"reverb":0.08})  # 02番のリード: 音の粒をはっきり（歪み浅く・高域を戻し・残響を減らす）
                     continue
-                if LIGHT[slug]=="b": p.update({"ampTone":2,"ampCab":"open","ampDrive":0.03,"ampLevel":1.5,"volume":0.16})  # ひずみ浅め（入力をしぼる。0.01は浅すぎ、0.5は強め）
-                else: p["amp"]="crunch"; p.pop("ampTone",None); p.pop("ampDrive",None); p["volume"]=0.16
+                if LIGHT[slug]=="b": p.update({"ampTone":2,"ampCab":"open","ampDrive":0.03,"ampLevel":1.5,"volume":0.11})  # ひずみ浅め（入力をしぼる。0.01は浅すぎ、0.5は強め）
+                else: p["amp"]="crunch"; p.pop("ampTone",None); p.pop("ampDrive",None); p["volume"]=0.11
     for p in song["parts"]:
         assert abs(beats(p["notes"])-4*total)<1e-6,(slug,p["role"],beats(p["notes"]),4*total)
     meta={"slug":slug,"jp":jp,"bpm":bpm,"bars":total,"mode":mode,"tonic":NAMES[T],"plan":mods[plan],"template":tpl,"verse":vkey,"chorus":ckey,"bridge":bkey,"intro":intro_kind,"drums":[fv,fc],"seconds":round(total*240/bpm)}
