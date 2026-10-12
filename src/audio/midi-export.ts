@@ -505,7 +505,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       }
       // 音程のごくわずかなずれ（±8セント）: リード・ギター・弦。ベンドの指定がない音だけ
       if (Hp > 0 && !curve && inst && DETUNE_INSTRUMENTS.has(inst) && durTicks >= 60) {
-        const semi = (rnd(startBeat * 5.7 + trackSeed * 1.3) - 0.5) * 2 * 0.08 * Hp;
+        const semi = (rnd(startBeat * 5.7 + trackSeed * 1.3) - 0.5) * 2 * 0.08 * Hp * (track.humanPitch ?? 1);
         for (const t of bendTargets) {
           const v = bendValue(semi);
           t.list.push({ tick: Math.max(0, tick - 3), order: 1, bytes: [0xe0 | t.channel, v & 0x7f, (v >> 7) & 0x7f] });

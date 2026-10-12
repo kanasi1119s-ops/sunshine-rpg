@@ -139,6 +139,8 @@ export interface Track {
   humanTiming?: number;
   /** human のうち、強さのゆらぎだけの倍率（省略は1）。 */
   humanVelocity?: number;
+  /** human のうち、音程のごくわずかなずれ（±8セント×human）だけの倍率（省略は1、0でずれなし）。ギターの音が「ゆらいで」聞こえるときに 0 にする。 */
+  humanPitch?: number;
   /** このパートの swing（8分の裏）。曲の swing を上書き（0 でまっすぐ）。16分の裏も同じ量（swing16 で別にもできる）。 */
   swing?: number;
   /** このパートの 16分の裏の swing（省略は swing と同じ）。 */

@@ -263,6 +263,7 @@ export const AI_SONG_SCHEMA = {
           human: { type: "number" },
           humanTiming: { type: "number" },
           humanVelocity: { type: "number" },
+          humanPitch: { type: "number" },
           swing: { type: "number" },
           swing16: { type: "number" },
           lockToKick: { type: "boolean" },

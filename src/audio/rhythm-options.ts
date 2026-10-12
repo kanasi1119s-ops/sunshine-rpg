@@ -47,6 +47,7 @@ export interface RhythmPartFields {
   human?: number;
   humanTiming?: number;
   humanVelocity?: number;
+  humanPitch?: number;
   swing?: number;
   swing16?: number;
   lockToKick?: boolean;
@@ -116,6 +117,7 @@ export function trackRhythmFields(p: RhythmPartFields): Partial<Track> {
   if (finite(p.human)) out.human = clamp(Number(p.human), 0, 2);
   if (finite(p.humanTiming)) out.humanTiming = clamp(Number(p.humanTiming), 0, 2);
   if (finite(p.humanVelocity)) out.humanVelocity = clamp(Number(p.humanVelocity), 0, 2);
+  if (finite(p.humanPitch)) out.humanPitch = clamp(Number(p.humanPitch), 0, 2);
   if (finite(p.swing)) out.swing = clamp(Number(p.swing), 0, 1);
   if (finite(p.swing16)) out.swing16 = clamp(Number(p.swing16), 0, 1);
   if (p.lockToKick === true) out.lockToKick = true;
