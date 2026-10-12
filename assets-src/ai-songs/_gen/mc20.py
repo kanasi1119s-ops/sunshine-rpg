@@ -441,6 +441,9 @@ if __name__=="__main__":
     metas=[]
     for i in ids:
         song,meta=build(i)
+        import re
+        for q in song["parts"][:2]:  # リードとハモリを1オクターブ上げる（低いと濁るため。2026-10-13、人間の指摘）
+            q["notes"]=re.sub(r'\b([A-G][#b]?)(\d)\b',lambda m:m.group(1)+str(min(7,int(m.group(2))+1)),q["notes"])
         json.dump(song,open(os.path.join(out,f"{i+1:02d}-{meta['slug']}.json"),"w"),ensure_ascii=False)
         metas.append(meta); print(i+1,meta["slug"],meta["jp"],meta["tonic"],meta["mode"],meta["bpm"],meta["seconds"],meta["plan"],file=sys.stderr)
     json.dump(metas,open(os.path.join(out,"_meta.json"),"w"),ensure_ascii=False,indent=1)
