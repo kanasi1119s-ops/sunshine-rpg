@@ -29,7 +29,7 @@ PREN=[[(5,m_),(8,M),(10,M),(7,M)],[(8,M),(5,m_),(7,M),(7,M)],[(5,m_),(5,m_),(7,M
 VR=[[-1,.5,.5,1.5,.5],[.5,.5,1,1,1],[1,.5,.5,2],[1.5,.5,1,1],[-.5,.5,.5,.5,1,1],[.5,.5,.5,.5,2],[2,1,.5,.5],[1,1,1,1],[-1,1,.5,.5,1]]
 CR=[[1,1,2],[1.5,.5,2],[.5,.5,1,2],[1,.5,.5,1,1],[2,1,1],[.5,.5,.5,.5,1,1],[1,1,.5,.5,1],[.5,.5,1,.5,.5,1],[1,.5,.5,2],[3,1]]
 PR=[[1,1,1,1],[.5,.5,.5,.5,1,1],[1,1,.5,.5,1],[.5,.5,1,.5,.5,1],[.5]*8]
-SR=[[.25]*8+[1,1],[.5,.5]+[.25]*4+[1,1],[.25]*4+[.5,.5,1,1],[.25]*16,[.5]*4+[.25]*4+[1],[1]+[.25]*4+[1,1]]
+SR=[[.5]*4+[1,1],[.5,.5,1,1,.5,.5],[1,.5,.5,1,1],[1.5,.5,1,1],[.5]*4+[2],[1]+[.5]*4+[1]]
 CAD=[[2,1,-1],[1,1,2],[1.5,.5,2],[3,-1],[2,2],[1,.5,.5,2]]
 STEPS={"verse":[-2,-1,-1,0,1,1,2],"chorus":[-2,-1,0,1,1,2,3,-3],"pre":[1,1,1,2,0,-1,3],"solo":[1,1,1,-1,-1,2,-2],"inter":[-1,-1,0,1,1],"bridge":[-1,0,1],"intro":[-1,1,1,2,-2],"outro":[-1,-1,0,1,2]}
 HEIGHT={"verse":[.2,.35,.3,.4],"chorus":[.6,.8,.7,.5],"pre":[.4,.55,.7,.85],"solo":[.4,.7,.6,.5],"inter":[.3,.3,.35,.25],"bridge":[.35,.4,.3,.25],"intro":[.5,.6,.55,.5],"outro":[.6,.7,.5,.3]}
@@ -86,31 +86,40 @@ def realize(b,chord,nextc,target,sc,lo,hi,rng,tag):
     res=[]
     for p,d in toks:
         if p=="R": res.append(f"R:{d:g}")
-        else: res.append(f"{nn(p)}:{d:g}"+("~" if (tag=="chorus" and d>=2 and rng.random()<0.5) else ""))
-    return " ".join(res)
+        else: res.append((p,d))
+    out=[]
+    for j,t in enumerate(res):
+        if isinstance(t,str): out.append(t); continue
+        p,d=t
+        nxt=res[j+1] if j+1<len(res) else None
+        if d>=1.5 or (d>=1 and rng.random()<0.6): suf="~"
+        elif d<=0.5 and nxt is not None and not isinstance(nxt,str): suf="_"
+        else: suf=""
+        out.append(f"{nn(p)}:{d:g}"+suf)
+    return " ".join(out)
 def beats(s): return sum(float(x.split(":")[1].rstrip("~^_!'")) for x in s.split())
 # ================= 曲の設計 =================
 SONGS=[ # (slug, 日本語の題, 主音, 長短, 構成, 転調, イントロ, ドラム(Aメロ,サビ), ギター型, 進行ID(verse,chorus), 進行ID(bridge)) 
- ("dawn-rail","夜明けの線路",4,"maj","A","up2",0,("rock8","skate"),0,(0,3),5),
+ ("dawn-rail","夜明けの線路",4,"maj","A","up2",5,("rock8","skate"),0,(0,3),5),
  ("bike-hill","坂道の自転車",9,"maj","C","none",1,("skate","skate"),1,(1,4),7),
  ("rain-after","雨あがりの交差点",11,"min","B","par",3,("rock8","rock8"),2,(0,2),3),
  ("last-summer","夏の終わりの海",2,"maj","E","ladder",4,("dbeat","skate"),3,(2,0),6),
  ("night-bus","終バスの窓",7,"min","D","up3",2,("rock8","dbeat"),0,(1,3),1),
- ("paper-plane","紙ひこうき",6,"maj","B","rel",0,("rock8","skate"),1,(3,5),8),
- ("blue-room","青い部屋",0,"maj","A","midup",1,("skate","rock8"),2,(4,2),9),
- ("ash-city","灰色の街",9,"min","C","up5",3,("dbeat","skate"),3,(2,4),0),
- ("stray-star","はぐれ星",4,"min","D","down2",4,("rock8","skate"),0,(0,5),3),
- ("noon-bell","正午のチャイム",5,"maj","E","up1",2,("skate","skate"),1,(6,8),2),
- ("cold-coffee","冷めたコーヒー",10,"maj","A","par",0,("rock8","rock8"),2,(7,9),4),
- ("rooftop","屋上の風",1,"min","B","rel",1,("rock8","dbeat"),3,(1,6),7),
- ("run-away","走り出す朝",7,"maj","D","ladder",3,("skate","skate"),0,(3,10),5),
- ("hollow-moon","からっぽの月",2,"min","C","none",4,("dbeat","rock8"),1,(5,2),0),
- ("kite-day","凧の日",8,"maj","E","up3",2,("rock8","skate"),2,(8,11),6),
- ("ferry-lights","フェリーの灯",11,"min","A","midup",0,("skate","dbeat"),3,(6,4),8),
- ("spring-gate","春の改札",0,"maj","B","par",1,("rock8","skate"),0,(2,0),1),
- ("whisper-wire","ささやく電線",6,"min","C","down2",3,("dbeat","skate"),1,(7,1),9),
- ("tailwind","追い風",3,"maj","D","up5",4,("rock8","rock8"),2,(4,6),2),
- ("long-way-home","遠回りの帰り道",5,"min","E","up1",2,("skate","skate"),3,(0,8),4)]
+ ("paper-plane","紙ひこうき",6,"maj","B","rel",8,("rock8","skate"),1,(3,5),8),
+ ("blue-room","青い部屋",0,"maj","A","midup",6,("skate","rock8"),2,(4,2),9),
+ ("ash-city","灰色の街",9,"min","C","up5",9,("dbeat","skate"),3,(2,4),0),
+ ("stray-star","はぐれ星",4,"min","D","down2",0,("rock8","skate"),0,(0,5),3),
+ ("noon-bell","正午のチャイム",5,"maj","E","up1",7,("skate","skate"),1,(6,8),2),
+ ("cold-coffee","冷めたコーヒー",10,"maj","A","par",2,("rock8","rock8"),2,(7,9),4),
+ ("rooftop","屋上の風",1,"min","B","rel",5,("rock8","dbeat"),3,(1,6),7),
+ ("run-away","走り出す朝",7,"maj","D","ladder",6,("skate","skate"),0,(3,10),5),
+ ("hollow-moon","からっぽの月",2,"min","C","none",8,("dbeat","rock8"),1,(5,2),0),
+ ("kite-day","凧の日",8,"maj","E","up3",1,("rock8","skate"),2,(8,11),6),
+ ("ferry-lights","フェリーの灯",11,"min","A","midup",9,("skate","dbeat"),3,(6,4),8),
+ ("spring-gate","春の改札",0,"maj","B","par",0,("rock8","skate"),0,(2,0),1),
+ ("whisper-wire","ささやく電線",6,"min","C","down2",4,("dbeat","skate"),1,(7,1),9),
+ ("tailwind","追い風",3,"maj","D","up5",7,("rock8","rock8"),2,(4,6),2),
+ ("long-way-home","遠回りの帰り道",5,"min","E","up1",3,("skate","skate"),3,(0,8),4)]
 TEMPL={"A":[("intro",8),("verse",16),("pre",8),("chorus",16),("inter",8),("verse",16),("pre",8),("chorus",16),("solo",16),("bridge",16),("chorus",16),("chorus",16),("outro",8)],
  "B":[("intro",8),("verse",16),("pre",8),("chorus",16),("verse",16),("pre",8),("chorus",16),("solo",8),("bridge",16),("chorus",16),("chorus",16),("outro",8)],
  "C":[("intro",4),("chorus",8),("verse",16),("pre",8),("chorus",16),("inter",8),("verse",16),("pre",8),("chorus",16),("bridge",16),("solo",16),("chorus",16),("outro",8)],
@@ -139,6 +148,20 @@ def plan_offsets(plan,secs,T,mode):
     elif plan=="ladder": setr(last,n,(2,mode))  # 最後のサビを半分に割って +2、+4（下で処理）
     return offs
 BPMS=[196,178,162,176,168,186,204,172,164,190,182,166,200,170,188,176,198,184,194,168]
+
+# ---- 曲の始まり方（10種類）d=ドラム b=ベース g=ギター l=メロディが入る小節。gp=ギターが入る前の弾き方 dm=ドラムが入る前の叩き方 ----
+INTRO={
+ 0:dict(d=4,b=4,g=4,l=0,gp="rest",dm=None),      # メロディ（ギター）だけで始まり、4小節めで全員
+ 1:dict(d=0,b=0,g=0,l=0,gp="rest",dm=None),      # 1小節めから全員
+ 2:dict(d=2,b=0,g=2,l=2,gp="rest",dm=None),      # ベースだけで始まり、3小節めでドラムとギター
+ 3:dict(d=4,b=2,g=4,l=4,gp="rest",dm="hat"),     # ハイハットとキック→ベースが入る→全員
+ 4:dict(d=4,b=4,g=0,l=4,gp="whole",dm=None),     # ギターの伸ばし（ひずんだ和音）だけで始まる
+ 5:dict(d=1,b=1,g=1,l=1,gp="rest",dm="roll"),    # ドラムのフィル（カウント）だけで始まり、2小節めで全員
+ 6:dict(d=2,b=2,g=0,l=4,gp="ring",dm="crash"),   # ギターの和音＋クラッシュ→ドラム・ベース→メロディ
+ 7:dict(d=4,b=0,g=4,l=4,gp="rest",dm="hat"),     # ベース先行（ハイハットが重なる）→全員
+ 8:dict(d=0,b=2,g=2,l=4,gp="rest",dm="open"),    # ドラム先行（キックとハイハット）→ベース・ギター
+ 9:dict(d=4,b=4,g=0,l=0,gp="whole",dm="stop"),   # 和音の伸ばしにメロディが重なる→キメ→全員
+}
 def build(i):
     slug,jp,T,mode,tpl,plan,intro_kind,(fv,fc),gprof,(pv,pc_),pb=SONGS[i]
     rng=random.Random(9100+i*17)
@@ -171,7 +194,7 @@ def build(i):
         if k=="chorus": base=prog(ckey,md,off)
         if k=="pre": base=pre_prog(md,off)
         if k=="bridge": base=prog(bkey,md,off)
-        if k=="intro" and intro_kind==3: base=prog(ckey,md,off)
+        if k=="intro" and intro_kind in(3,7,9): base=prog(ckey,md,off)
         cs=[]
         for b in range(n):
             c=base[b%4]
@@ -192,8 +215,8 @@ def build(i):
     for si,s in enumerate(secs):
         off,md=offs[si]; k=s["kind"]; n=s["bars"]; cs=sec_chords[si]
         tonic=T+off; r0=home_r0+off
-        lo={"verse":r0-3,"chorus":r0+4,"pre":r0,"solo":r0+3,"inter":r0-3,"bridge":r0-3,"intro":r0,"outro":r0+2}[k]
-        hi=min(86,lo+17); lo=max(50,min(lo,hi-14))
+        lo={"verse":r0-7,"chorus":r0-1,"pre":r0-4,"solo":r0,"inter":r0-7,"bridge":r0-7,"intro":r0-4,"outro":r0-1}[k]
+        hi=min(79,lo+13); lo=max(52,min(lo,hi-11))
         sc=scale_list(tonic,md,lo,hi)
         occ[k]=occ.get(k,0)+1
         key=k
@@ -216,6 +239,8 @@ def build(i):
             target=lo+h*(hi-lo)
             nextc=cs[b+1] if b+1<n else (sec_chords[si+1][0] if si+1<len(secs) else None)
             mel.append(realize(spec,cs[b],nextc,target,sc,lo,hi,rng,k))
+        if k=="intro":
+            for b in range(min(INTRO[intro_kind]["l"],n)): mel[b]="R:4"
         text=" ".join(mel)
         if k=="inter" or (k=="bridge" and md!="x"):
             pass
@@ -255,10 +280,10 @@ def build(i):
      "bpm":bpm,"beats":4,"chords":" ".join(cname(c) for c in allch),"barsPerChord":1,"repeats":1,"feel":"rock","tone":"rock",
      "autoAccompaniment":False,"dynamics":"natural","human":0.45,"humanProfile":"role","lockToKick":True,"autoScoop":False,"fills":False,
      "drumMix":{"tom":{"tune":-4,"level":1.4,"spread":0.5}},
-     "parts":[part("leadGuitar","メロディ／ソロ",lead,0.3,0,"cleanGuitar","clean",{**G,"reverb":0.2}),
-      part("leadGuitar","ハモリ（3度上）",lead2,0.2,0.25,"cleanGuitar","clean",{**G,"reverb":0.2}),
-      part("leadGuitar","リフ（左・ルート）",gl,0.16,-0.6,"cleanGuitar","overdrive",{**G,"reverb":0.08}),
-      part("leadGuitar","リフ（右・5度）",gr,0.16,0.6,"cleanGuitar","overdrive",{**G,"reverb":0.08}),
+     "parts":[part("leadGuitar","メロディ／ソロ",lead,0.2,0,"cleanGuitar","namB",{**G,"reverb":0.2,"ampDrive":0.5,"ampTone":-6}),
+      part("leadGuitar","ハモリ（3度上）",lead2,0.13,0.25,"cleanGuitar","namB",{**G,"reverb":0.2,"ampDrive":0.5,"ampTone":-6}),
+      part("leadGuitar","リフ（左・ルート）",gl,0.16,-0.6,"cleanGuitar","namB",{**G,"reverb":0.08,"ampTone":-6}),
+      part("leadGuitar","リフ（右・5度）",gr,0.16,0.6,"cleanGuitar","namB",{**G,"reverb":0.08,"ampTone":-6}),
       part("bass","ベース（旋律）",bass,0.6,0,None,"auto",{"bright":0.3}),
       part("kick","キック",kick,0.26,0,None,"auto",{}),part("snare","スネア",snare,0.2,0,None,"auto",{}),part("hihat","ハイハット",hat,0.09,0.3,None,"auto",{}),
       part("tom","タム",tomp,0.3,0,None,"auto",{}),part("crash","クラッシュ",crashp,0.16,0.2,None,"auto",{})]}
@@ -284,11 +309,19 @@ def drum_bar(rng,k,idx,i,n,feel,intro_kind,fc,off,s):
     K="X..............."; Sn="................"; Ht="................"; tom=[None]*16; cr=False; fl=None
     heavy=k in("chorus","solo","outro")
     if k=="intro":
-        start={0:4,1:0,2:2,3:2,4:4}[intro_kind]
+        I=INTRO[intro_kind]; start=min(I["d"],n)
         if i>=start:
-            K,Sn,Ht=feel_pat(rng,feel,False); cr=(i==start and intro_kind!=3)
-            if intro_kind==3 and i<4: Sn="................"; K="X..............." if i%2==0 else "X.......x......."; Ht="x...x...x...x..."
-        if i==n-1 and n>=4: K="X..............."; Sn="xxxxxxxxxxxxXXXX"; Ht="................"; tom=[None]*16
+            K,Sn,Ht=feel_pat(rng,feel,False); cr=(i==start and intro_kind not in(3,7))
+        else:
+            dm=I["dm"]
+            if dm=="hat": K="X..............." if i%2==0 else "X.......x......."; Ht="x...x...x...x..."
+            elif dm=="roll": Sn="xxxxxxxxxxxxXXXX"; K="X..............."; cr=False
+            elif dm=="crash": K="X..............."; cr=(i==0)
+            elif dm=="open": K="X.......X......."; Ht="x.x.x.x.x.x.x.x."
+            elif dm=="stop": K="X..............." if i%2==0 else "................"; cr=(i%2==0 and i<start)
+        if intro_kind==7 and i<start: K="................" if i<2 else K; Ht="x...x...x...x..." if i>=2 else "................"
+        if i==n-1 and n>=4 and I["dm"]!="roll": K="X..............."; Sn="xxxxxxxxxxxxXXXX"; Ht="................"; tom=[None]*16
+        if intro_kind==5 and i==0: tom=[None]*16
     elif k in("verse",):
         K,Sn,Ht=feel_pat(rng,feel,False)
         if idx==1 and rng.random()<0.5: Ht="X.x.x.x.X.x.x.x."
@@ -335,7 +368,7 @@ def bass_bar(rng,c,k,idx,i,n,intro_kind):
         for d,b in l:
             m=r+d
             while m>50: m-=12
-            out.append(f"{nn(m)}:{b}")
+            out.append(f"{nn(m)}:{b}_")
         return " ".join(out)
     P8=[(0,.5)]*8; PUMP=[(0,.5),(0,.5),(12,.5),(0,.5),(0,.5),(0,.5),(12,.5),(7,.5)]; DRV=[(0,.5)]*6+[(7,.5),(0,.5)]
     SYN=[(0,1),(0,.5),(0,.5),(0,1),(7,.5),(12,.5)]; MEL=[(0,1),(t,.5),(7,.5),(12,1),(7,1)]; MEL2=[(0,1.5),(7,.5),(12,1),(t+12,1)]
@@ -343,9 +376,9 @@ def bass_bar(rng,c,k,idx,i,n,intro_kind):
     LONG=[(0,2),(7,1),(t,1)]; UP=[(0,.5),(0,.5),(t,.5),(t,.5),(7,.5),(7,.5),(12,.5),(14,.5)]
     end=(i%4==3)
     if k=="intro":
-        st={0:4,1:0,2:0,3:2,4:4}[intro_kind]
+        st=min(INTRO[intro_kind]["b"],n)
         if i<st: return "R:4"
-        return seq(MEL2 if intro_kind==2 and i<4 else (END if i==n-1 else SYN))
+        return seq(MEL2 if intro_kind in(2,7) and i<4 else (END if i==n-1 else SYN))
     if k=="verse": return seq(END if i%8==7 else rng.choice([MEL,MEL2,SYN,WALK] if idx>1 else [MEL,MEL2,SYN]))
     if k=="pre": return seq(WALK if i==n-1 else UP)
     if k=="chorus": return seq(END if i%8==7 else (rng.choice([P8,PUMP,DRV]) if not end else MEL2))
@@ -356,20 +389,23 @@ def bass_bar(rng,c,k,idx,i,n,intro_kind):
 def guitar_bar(rng,c,k,idx,i,n,prof,intro_kind):
     r=root_g(c); f=r+7
     def cell(m,name):
+        # 音を短く切らない（ブツブツ切れる弾き方は却下）: すべて次の音へつなげ（_）、休符も短い音も使わない
         a=nn(m)
-        return {"e8":" ".join(f"{a}:0.5"+("!" if q in(0,4) else "")+"'" for q in range(8)),
-                "e8o":" ".join(f"{a}:0.5"+("!" if q in(0,4) else "") for q in range(8)),
-                "sync":f"{a}:1! {a}:0.5 {a}:0.5 {a}:1 {a}:0.5 {a}:0.5","push":f"{a}:0.5! {a}:0.5 R:0.5 {a}:0.5 {a}:1! {a}:0.5 {a}:0.5",
-                "ring":f"{a}:2! {a}:1 {a}:0.5 {a}:0.5","hit":f"{a}:1! R:3","s16":" ".join(f"{a}:0.25"+("!" if q%4==0 else "") for q in range(16)),
-                "whole":f"{a}:4","rest":"R:4","off":" ".join(f"R:0.5 {a}:0.5" for _ in range(4))}[name]
+        return {"e8":" ".join(f"{a}:0.5"+("!_" if q in(0,4) else "_") for q in range(8)),
+                "e8o":" ".join(f"{a}:0.5"+("!_" if q in(0,4) else "_") for q in range(8)),
+                "sync":f"{a}:1!_ {a}:0.5_ {a}:0.5_ {a}:1_ {a}:0.5_ {a}:0.5_","push":f"{a}:0.5!_ {a}:0.5_ {a}:1_ {a}:1!_ {a}:1_",
+                "ring":f"{a}:2!_ {a}:1_ {a}:1_","hit":f"{a}:4!","s16":" ".join(f"{a}:0.5"+("!_" if q in(0,4) else "_") for q in range(8)),
+                "whole":f"{a}:4","whv":f"{a}:4~","rest":"R:4","off":f"{a}:1_ {a}:1_ {a}:1_ {a}:1_"}[name]
     VERSE=[["e8","e8","push"],["push","off","e8"],["e8","sync","e8"],["s16","e8","push"]][prof]
     CHOR=[["sync","push","ring"],["e8o","sync","ring"],["sync","e8o","push"],["push","sync","e8o"]][prof]
     last=(i==n-1)
     if k=="intro":
-        st={0:4,1:0,2:2,3:4,4:4}[intro_kind]
-        if intro_kind==4 and i<4: nm=("whole","rest")
-        elif i<st: nm=("rest","rest")
+        I=INTRO[intro_kind]; st=min(I["g"],n)
+        if i<st: nm=("rest","rest")
+        elif i<4 and I["gp"]=="whole" and I["g"]==0: nm=("whv","rest")
+        elif i<4 and I["gp"]=="ring" and I["g"]==0: nm=("ring","ring")
         else: nm=("e8","e8") if i<n-1 else ("s16","s16")
+        if I["g"]==0 and I["gp"] in("whole","ring") and i>=4 and i<n-1: nm=("e8","e8")
     elif k=="verse":
         x=rng.choice(VERSE); nm=(x,rng.choice([x,"rest"]) if idx==1 and i<8 else x)
         if last: nm=("hit","hit")
@@ -377,7 +413,7 @@ def guitar_bar(rng,c,k,idx,i,n,prof,intro_kind):
     elif k in("chorus",):
         x=rng.choice(CHOR) if i%4!=3 else rng.choice(["e8o","push"]); nm=(x,x)
         if last and idx>=1: nm=("hit","hit")
-    elif k=="inter": nm=("rest","rest")
+    elif k=="inter": nm=("whole","whole")
     elif k=="solo":
         x=rng.choice(CHOR); nm=(x,x)
         if last: nm=("hit","hit")
@@ -385,7 +421,7 @@ def guitar_bar(rng,c,k,idx,i,n,prof,intro_kind):
         if i<n//2: nm=("rest","whole")
         elif i<n-4: nm=("whole","whole")
         elif i<n-1: nm=("e8o","e8o")
-        else: nm=("rest","rest")
+        else: nm=("whole","whole")
     elif k=="outro": nm=(("sync","sync") if i<n-4 else (("whole","whole") if i<n-1 else ("hit","hit")))
     return cell(r,nm[0]),cell(f,nm[1])
 if __name__=="__main__":

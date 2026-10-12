@@ -11,7 +11,7 @@
   "verse": "I-V-vi-IV",
   "chorus": "IV-V-iii-vi",
   "bridge": "vi-V-IV-V",
-  "intro": 0,
+  "intro": 5,
   "drums": [
    "rock8",
    "skate"
@@ -106,7 +106,7 @@
   "verse": "IV-V-iii-vi",
   "chorus": "vi-V-IV-V",
   "bridge": "IV-I-V-vi",
-  "intro": 0,
+  "intro": 8,
   "drums": [
    "rock8",
    "skate"
@@ -125,7 +125,7 @@
   "verse": "I-IV-V-IV",
   "chorus": "I-vi-IV-V",
   "bridge": "vi-IV-V-I",
-  "intro": 1,
+  "intro": 6,
   "drums": [
    "skate",
    "rock8"
@@ -144,7 +144,7 @@
   "verse": "i-iv-VII-III",
   "chorus": "VI-VII-i-i",
   "bridge": "i-VI-III-VII",
-  "intro": 3,
+  "intro": 9,
   "drums": [
    "dbeat",
    "skate"
@@ -163,7 +163,7 @@
   "verse": "i-VI-III-VII",
   "chorus": "i-III-VII-VI",
   "bridge": "i-VI-iv-V",
-  "intro": 4,
+  "intro": 0,
   "drums": [
    "rock8",
    "skate"
@@ -182,7 +182,7 @@
   "verse": "I-bVII-IV-I",
   "chorus": "IV-I-V-vi",
   "bridge": "I-vi-IV-V",
-  "intro": 2,
+  "intro": 7,
   "drums": [
    "skate",
    "skate"
@@ -201,7 +201,7 @@
   "verse": "I-iii-IV-V",
   "chorus": "vi-IV-V-I",
   "bridge": "I-IV-V-IV",
-  "intro": 0,
+  "intro": 2,
   "drums": [
    "rock8",
    "rock8"
@@ -220,7 +220,7 @@
   "verse": "i-VII-VI-VII",
   "chorus": "i-iv-VI-V",
   "bridge": "i-VII-VI-V",
-  "intro": 1,
+  "intro": 5,
   "drums": [
    "rock8",
    "dbeat"
@@ -239,7 +239,7 @@
   "verse": "IV-V-iii-vi",
   "chorus": "I-iv-I-V",
   "bridge": "vi-V-IV-V",
-  "intro": 3,
+  "intro": 6,
   "drums": [
    "skate",
    "skate"
@@ -258,7 +258,7 @@
   "verse": "i-III-VII-VI",
   "chorus": "i-iv-VII-III",
   "bridge": "i-VI-III-VII",
-  "intro": 4,
+  "intro": 8,
   "drums": [
    "dbeat",
    "rock8"
@@ -277,7 +277,7 @@
   "verse": "IV-I-V-vi",
   "chorus": "I-V-IV-V",
   "bridge": "I-bVII-IV-I",
-  "intro": 2,
+  "intro": 1,
   "drums": [
    "rock8",
    "skate"
@@ -296,7 +296,7 @@
   "verse": "i-iv-VI-V",
   "chorus": "VI-VII-i-i",
   "bridge": "III-VII-i-VI",
-  "intro": 0,
+  "intro": 9,
   "drums": [
    "skate",
    "dbeat"
@@ -315,7 +315,7 @@
   "verse": "I-vi-IV-V",
   "chorus": "I-V-vi-IV",
   "bridge": "vi-IV-I-V",
-  "intro": 1,
+  "intro": 0,
   "drums": [
    "rock8",
    "skate"
@@ -334,7 +334,7 @@
   "verse": "i-VII-VI-V",
   "chorus": "i-VII-VI-VII",
   "bridge": "i-VI-III-VII",
-  "intro": 3,
+  "intro": 4,
   "drums": [
    "dbeat",
    "skate"
@@ -353,7 +353,7 @@
   "verse": "I-IV-V-IV",
   "chorus": "I-bVII-IV-I",
   "bridge": "I-vi-IV-V",
-  "intro": 4,
+  "intro": 7,
   "drums": [
    "rock8",
    "rock8"
@@ -372,7 +372,7 @@
   "verse": "i-VI-III-VII",
   "chorus": "III-VII-i-VI",
   "bridge": "VI-VII-i-i",
-  "intro": 2,
+  "intro": 3,
   "drums": [
    "skate",
    "skate"

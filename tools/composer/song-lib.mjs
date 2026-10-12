@@ -230,7 +230,7 @@ export async function renderWav(score, edition, file, soundfont = "game", bass =
     execSync(`node ${JSON.stringify(path.join(ROOT, "tools/composer/build.mjs"))}`, { stdio: "ignore" });
   }
   const { chromium } = await loadPlaywright();
-  const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required"] });
+  const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required", "--disable-gpu"] });
   try {
     const page = await browser.newPage();
     await page.goto("file://" + html, { timeout: 240000 });

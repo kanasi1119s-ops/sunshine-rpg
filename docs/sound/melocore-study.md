@@ -32,6 +32,9 @@
 - 「きゅいんきゅいん」の正体は、autoScoop（音の頭のしゃくり）と音ごとの音程ずれ → 曲の `autoScoop: false`、パートの `humanPitch: 0`、`chorus: 0`（banned-sounds.md の 7）。
 - 自然さに効く設定: `dynamics: "natural"`、`human` 0.3〜0.6 と `humanProfile: "role"`、`lockToKick: true`、旋律の `phrase`、ドラムの `pushMs`（スネア +5〜12ms、ハット −3〜0）。まだ試していない: `strum`（弦ごとの時間差）、`grooveFeel`、`swing16`、`hihatBySection`、`doubleDetune`、`echo` の左右違い。
 
+- **NAM（学習式アンプ）は、これまで書き出しで一度も鳴っていなかった**（2026-10-12 発見・修正）。ワークレットの中に `URL` が無く、NAMの初期化が失敗 → 素通しになっていた。`src/audio/nam/nam-processor.ts` で `URL` の代わりを置き、WASMを同期で組み立てるようにして直した。AIソング形式では `amp: "namA" | "namB"` と `ampDrive`（入力の大きさ）・`ampTone`（高音dB）・`ampCab`（closed/open/dark/bright）で使う。
+- NAMの音色（gretsch 録音ギターを通した測定。耳での確認は未）: namA は低域に偏り暗い／namB は広帯域で 1.6〜3.2kHz が山。`pluck-deepair` を通すと 2〜5kHz に偏って鼻にかかる → リズムは `--guitar gretsch` ＋ `namB`（`ampTone: -6`）を既定にした。**仮**。
+
 ## 次にやること（宿題）
 - 左右のリフを「別テイク」に近づける（タイミング・強さ・弾き方を左右で変える）。いまは弾き方の型だけ変えている。
 - 左右違いのディレイ／数セント差の遅延コピーで、リードの広がりを作る。
