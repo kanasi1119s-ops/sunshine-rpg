@@ -232,8 +232,10 @@ export async function renderWav(score, edition, file, soundfont = "game", bass =
   const { chromium } = await loadPlaywright();
   const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required", "--disable-gpu"] });
   try {
-    const page = await browser.newPage();
+    const page = await browser.newPage({ viewport: { width: 320, height: 240 } });
     await page.goto("file://" + html, { timeout: 240000 });
+    // 画面の動き（光るアニメーション）が、描き出しのCPUを食うので止める
+    await page.addStyleTag({ content: "*,*::before,*::after{animation:none!important;transition:none!important}" });
     await page.waitForFunction(() => "__composer" in window, undefined, { timeout: 240000 });
     await page.evaluate(([b, d, g]) => window.__composer.setOverlays(b, d, g), [bass, drums, guitar]);
     if (soundfont === "gu") await page.evaluate(() => window.__composer.setSoundfont("gu"));
