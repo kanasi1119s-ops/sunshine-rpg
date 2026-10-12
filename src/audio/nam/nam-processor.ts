@@ -13,6 +13,19 @@ declare class AudioWorkletProcessor {
 }
 declare function registerProcessor(name: string, ctor: new (options?: unknown) => AudioWorkletProcessor): void;
 
+// ワークレットの中には URL がない（emscripten の読み込みコードが参照する）ので、最小のかわりを置く
+if (typeof (globalThis as { URL?: unknown }).URL === "undefined") {
+  (globalThis as { URL?: unknown }).URL = class {
+    href: string;
+    constructor(url: string) {
+      this.href = String(url);
+    }
+    toString(): string {
+      return this.href;
+    }
+  };
+}
+
 class NamProcessor extends AudioWorkletProcessor {
   private nam: NamWasmModule | null = null;
   private instance = -1;
@@ -26,7 +39,7 @@ class NamProcessor extends AudioWorkletProcessor {
     const opts = (options as { processorOptions?: { wasmBinary?: ArrayBuffer; modelJson?: string } } | undefined)?.processorOptions;
     // モデルは、はじめから受け取れる（WAVの書き出し＝オフラインでは、あとからのメッセージが届かないことがあるため）
     if (opts?.modelJson !== undefined) this.pendingModel = opts.modelJson;
-    void this.init(opts?.wasmBinary);
+    this.init(opts?.wasmBinary).catch((error: unknown) => this.port.postMessage({ type: "error", message: String(error) }));
     this.port.onmessage = (event: MessageEvent) => {
       const data = event.data as { type: string; modelJson?: string };
       if (data.type === "loadModel" && data.modelJson !== undefined) {
@@ -36,20 +49,26 @@ class NamProcessor extends AudioWorkletProcessor {
   }
 
   private async init(wasmBinary?: ArrayBuffer): Promise<void> {
-    // WASMはその場で（同期で）組み立てる。オフラインの書き出しでも、最初の音から間に合うように
-    const module = await createNamModule(
-      wasmBinary
-        ? {
-            wasmBinary,
-            instantiateWasm: (imports: WebAssembly.Imports, receive: (instance: WebAssembly.Instance, module: WebAssembly.Module) => void) => {
-              const compiled = new WebAssembly.Module(wasmBinary);
-              const instance = new WebAssembly.Instance(compiled, imports);
-              receive(instance, compiled);
-              return instance.exports;
-            },
-          } as Parameters<typeof createNamModule>[0]
-        : undefined,
-    );
+    // WASMはその場で（同期で）組み立てる。オフラインの書き出しでは、あとの処理が動く前に音の処理が始まるので、
+    // 組み立てが同期で終わったら、待たずにそのまま使う（最初の音から間に合わせる）
+    const arg = wasmBinary
+      ? ({
+          wasmBinary,
+          instantiateWasm: (imports: WebAssembly.Imports, receive: (instance: WebAssembly.Instance, module: WebAssembly.Module) => void) => {
+            const compiled = new WebAssembly.Module(wasmBinary);
+            const instance = new WebAssembly.Instance(compiled, imports);
+            receive(instance, compiled);
+            return instance.exports;
+          },
+        } as Parameters<typeof createNamModule>[0])
+      : undefined;
+    const promise = createNamModule(arg);
+    const ready = arg as unknown as { _malloc?: unknown } | undefined;
+    const module = ready && typeof ready._malloc === "function" ? (arg as unknown as Awaited<typeof promise>) : await promise;
+    this.setup(module);
+  }
+
+  private setup(module: Awaited<ReturnType<typeof createNamModule>>): void {
     const nam = NamWasmModule.fromModule(module);
     nam.setSampleRate(sampleRate);
     this.instance = nam.createInstance();

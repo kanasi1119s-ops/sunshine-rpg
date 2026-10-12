@@ -68,7 +68,15 @@ export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   /** フレーズの山（拍。2〜32）。この長さごとに、出だしをやや弱く→山で強く→終わりを引く強弱をつける（歌うような表情）。ドラムでは使わない。 */
   phrase?: number;
   /** アンプ（ギター・ベース向け）。"auto" なら曲の音色から自動。 */
-  amp: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean" | KeysAmpType;
+  /** namA／namB のとき、NAM（学習式）アンプへの入力の大きさ（0〜2、既定1。小さいほど歪みが浅い）。 */
+  ampDrive?: number;
+  /** namA／namB のとき、出力の大きさの倍率（0〜1.5、既定1）。 */
+  ampLevel?: number;
+  /** namA／namB のとき、高音の量（dB。-12〜+6、既定0。マイナスで丸く）。 */
+  ampTone?: number;
+  /** namA／namB のとき、キャビネットの箱（closed/open/dark/bright）。 */
+  ampCab?: string;
+  amp: "namA" | "namB" | "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean" | KeysAmpType;
   /** セクションごとの出し入れ。{ intro: 0, verse: 0.6, chorus: 1, solo: { gain: 1, octave: 1 } }。数字＝音量の倍率（0＝休み）、octave＝オクターブずらし。書かなかったセクションは1。曲の sections（または scene）が必要。 */
   sections?: PartSectionSpecJson;
   /** false にすると、modulate（転調）でこのパートを上げない。 */
@@ -181,7 +189,7 @@ export const AI_INSTRUMENTS: Record<string, string> = {
 };
 const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom"]);
 /** AIソング形式で使えるアンプの名前（`AI_SONG_SCHEMA` の amp と同じ）。 */
-const AI_AMPS = new Set(["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", ...KEYS_AMP_TYPES]);
+const AI_AMPS = new Set(["namA", "namB", "auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", ...KEYS_AMP_TYPES]);
 
 /** 構造化出力（JSONスキーマ）。 */
 export const AI_SONG_SCHEMA = {
@@ -277,7 +285,11 @@ export const AI_SONG_SCHEMA = {
           modulate: { type: "boolean" },
           motif: { anyOf: [{ type: "object" }, { type: "array", items: { type: "object" } }] },
           keepBreak: { type: "boolean" },
-          amp: { type: "string", enum: ["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", ...KEYS_AMP_TYPES] },
+          ampDrive: { type: "number" },
+          ampLevel: { type: "number" },
+          ampTone: { type: "number" },
+          ampCab: { type: "string" },
+          amp: { type: "string", enum: ["namA", "namB", "auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", ...KEYS_AMP_TYPES] },
           ...AI_PART_EXTRA_SCHEMA,
           ...AI_PART_JPOP_SCHEMA,
           notes: { type: "string" },
@@ -702,7 +714,9 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     const length = events.reduce((s, e) => s + e.durationBeats, 0);
     if (length > total + 1e-6) warnings.push(`${where}: 曲の長さ（${total}拍）より長いので、${length}拍のうち後ろを切りました`);
     if (p.amp && !AI_AMPS.has(p.amp)) warnings.push(`${where}: アンプ「${p.amp}」は使えないので、おまかせ（auto）にしました`);
-    const amp: AmpSetting | undefined = p.amp && p.amp !== "auto" && AI_AMPS.has(p.amp) ? { type: p.amp } : undefined;
+    const amp: AmpSetting | undefined = p.amp === "namA" || p.amp === "namB"
+      ? { type: "nam", model: p.amp === "namA" ? "builtin:highgain-a" : "builtin:highgain-b", cab: (["closed", "open", "dark", "bright"].includes(String(p.ampCab)) ? String(p.ampCab) : "closed") as "closed", mic: "center", ...(Number.isFinite(Number(p.ampTone)) && p.ampTone !== undefined ? { tone: Math.max(-12, Math.min(6, Number(p.ampTone))) } : {}), ...(Number(p.ampDrive) > 0 ? { drive: Math.min(2, Number(p.ampDrive)) } : {}), ...(Number.isFinite(Number(p.ampLevel)) && Number(p.ampLevel) > 0 ? { level: Math.min(1.5, Number(p.ampLevel)) } : {}) }
+      : p.amp && p.amp !== "auto" && AI_AMPS.has(p.amp) ? { type: p.amp } : undefined;
     const patchKey = p.patch ? String(p.patch) : "";
     if (patchKey && !(patchKey in SYNTH_PATCHES)) warnings.push(`${where}: シンセ音色「${patchKey}」は使えないので、楽器の音にしました`);
     const program = !drum && patchKey in SYNTH_PATCHES ? SYNTH_PATCHES[patchKey] : undefined;

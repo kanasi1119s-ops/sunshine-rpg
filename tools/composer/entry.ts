@@ -1205,6 +1205,9 @@ function addAmpPlugin(data: unknown, announce: boolean): AmpPluginDef | null {
   /** `raw: true`: ピークをそろえずに書き出す（ゲーム内の実際の大きさを測るとき。`tools/audio-check/render-catalog.mjs --raw`）。 */
   async renderWav(score: Score, edition: State["edition"], opts?: { raw?: boolean }): Promise<string> {
     if (!soundfontCopy) throw new Error("録音音源を読み込めていません");
+    // 同梱のNAMモデルは、曲のファイルには入れず、書き出すときにだけ渡す（effectiveScore と同じ）
+    const usedNam = new Set(score.tracks.map((t) => t.amp?.model).filter((m): m is string => !!m && m in BUILTIN_NAM));
+    if (usedNam.size) score = { ...score, namModels: { ...(score.namModels ?? {}), ...Object.fromEntries([...usedNam].map((k) => [k, BUILTIN_NAM[k].json])) } };
     const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
     const buffer = await renderScoreOffline({ ...edited, loop: false }, { soundfont: soundfontCopy, overlays: overlayBuffers(), processorUrl, edition, nam: namHost });
     const channels = [buffer.getChannelData(0), buffer.getChannelData(1)];
