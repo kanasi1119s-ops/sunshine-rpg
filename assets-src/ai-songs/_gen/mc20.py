@@ -280,8 +280,8 @@ def build(i):
      "bpm":bpm,"beats":4,"chords":" ".join(cname(c) for c in allch),"barsPerChord":1,"repeats":1,"feel":"rock","tone":"rock",
      "autoAccompaniment":False,"dynamics":"natural","human":0.45,"humanProfile":"role","lockToKick":True,"autoScoop":False,"fills":False,
      "drumMix":{"tom":{"tune":-4,"level":1.4,"spread":0.5}},
-     "parts":[part("leadGuitar","メロディ／ソロ",lead,0.2,0,"cleanGuitar","namB",{**G,"reverb":0.2,"ampDrive":0.5,"ampTone":-6,"phrase":8,"humanTiming":1.5,"humanVelocity":1.8,"pushMs":7}),
-      part("leadGuitar","ハモリ（3度上）",lead2,0.13,0.25,"cleanGuitar","namB",{**G,"reverb":0.2,"ampDrive":0.5,"ampTone":-6,"phrase":8,"humanTiming":1.5,"humanVelocity":1.8,"pushMs":12}),
+     "parts":[part("leadGuitar","メロディ／ソロ",lead,0.3,0,"steelGuitar","crunch",{**G,"reverb":0.2,"phrase":8,"humanTiming":1.5,"humanVelocity":1.8,"pushMs":7}),
+      part("leadGuitar","ハモリ（3度上）",lead2,0.2,0.25,"steelGuitar","crunch",{**G,"reverb":0.2,"phrase":8,"humanTiming":1.5,"humanVelocity":1.8,"pushMs":12}),
       part("leadGuitar","リフ（左・ルート）",gl,0.16,-0.6,"cleanGuitar","namB",{**G,"reverb":0.08,"ampTone":-6}),
       part("leadGuitar","リフ（右・5度）",gr,0.16,0.6,"cleanGuitar","namB",{**G,"reverb":0.08,"ampTone":-6}),
       part("bass","ベース（旋律）",bass,0.6,0,None,"auto",{"bright":0.3}),
@@ -291,9 +291,12 @@ def build(i):
     if slug in LIGHT:  # 軽い音の曲: 録音ギターは hofner（作るときに --guitar hofner）。b=明るいNAM、c=軽いクランチのリフ＋明るいNAMのメロディ
         song["description"]=song["description"].replace("。","。軽めのギター音。",1)
         for p in song["parts"]:
-            if p["amp"]=="namB":
+            if p["amp"]=="namB" or p["amp"]=="crunch":
                 lead=p["role"].startswith(("メロディ","ハモリ"))
-                if lead or LIGHT[slug]=="b": p.update({"ampTone":2,"ampCab":"open","ampDrive":0.03,"ampLevel":1.5})  # ひずみ浅め（入力をしぼる。0.01は浅すぎ、0.5は強め）
+                if lead:
+                    if slug=="bike-hill": p["ampDrive"]=0.85  # 02番のリード: ほんの少し歪みを弱める
+                    continue
+                if LIGHT[slug]=="b": p.update({"ampTone":2,"ampCab":"open","ampDrive":0.03,"ampLevel":1.5})  # ひずみ浅め（入力をしぼる。0.01は浅すぎ、0.5は強め）
                 else: p["amp"]="crunch"; p.pop("ampTone",None); p["volume"]=0.16
     for p in song["parts"]:
         assert abs(beats(p["notes"])-4*total)<1e-6,(slug,p["role"],beats(p["notes"]),4*total)
