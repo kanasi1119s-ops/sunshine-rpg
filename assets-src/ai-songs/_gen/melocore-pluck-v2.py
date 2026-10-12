@@ -158,12 +158,12 @@ def sw(c,i):
     if i is None:
         for L in (sw1,sw2,sw3): L.append("R:4")
         return
-    if i==7:   # 8小節目はドラムの入り。和音は休み、ディレイの尾だけが鳴る
-        for L in (sw1,sw2,sw3): L.append("R:4")
+    if i==7:   # 8小節目はドラムの入り。スネアの連打の半分(2拍)まで和音を鳴らし、そのあとはエコーの尾だけ
+        sw1.append(tr(f"{root[c][0]}:2 R:2",-5)); sw2.append(tr(f"{fifth[c]}:2 R:2",-5)); sw3.append(tr(f"{third[c]}:2 R:2",-5))
         return
-    sw1.append(tr(f"{root[c][0]}:4",-5))
-    sw2.append(tr(f"{fifth[c]}:4",-5) if i>=2 else "R:4")
-    sw3.append(tr(f"{third[c]}:4",-5) if i>=4 else "R:4")
+    sw1.append(tr(f"{root[c][0]}:4~~~",-5))
+    sw2.append(tr(f"{fifth[c]}:4~~~",-5) if i>=2 else "R:4")
+    sw3.append(tr(f"{third[c]}:4~~~",-5) if i>=4 else "R:4")
 chords=[];lead=[];lead2=[];gl=[];gr=[];bass=[];kick=[];snare=[];hat=[];tomp=[];crashp=[]
 vcount=ccount=0
 for name,ch,lds in secs:
@@ -251,9 +251,9 @@ song={"title":"melocore-pluck-v2","description":"メロコアパンク v2。ベ�
  "bpm":172,"beats":4,"chords":" ".join(chords),"barsPerChord":1,"repeats":1,"feel":"rock","tone":"rock",
  "autoAccompaniment":False,"dynamics":"natural","human":0.25,"fills":False,
  "parts":[
-  part("leadGuitar","イントロの和音1（根音・エコー）",sw1,0.15,-0.4,"cleanGuitar","clean",{"reverb":0.5,"chorus":0,"echo":{"repeats":2,"time":"dotted8","decay":0.6}}),
-  part("leadGuitar","イントロの和音2（5度・エコー）",sw2,0.15,0.4,"cleanGuitar","clean",{"reverb":0.5,"chorus":0,"echo":{"repeats":2,"time":"dotted8","decay":0.6}}),
-  part("leadGuitar","イントロの和音3（3度・エコー）",sw3,0.16,0,"cleanGuitar","clean",{"reverb":0.5,"chorus":0,"echo":{"repeats":2,"time":"dotted8","decay":0.6}}),
+  part("leadGuitar","イントロの和音1（根音・エコー）",sw1,0.15,-0.4,"cleanGuitar","clean",{"reverb":0.5,"chorus":0,"echo":{"repeats":2,"time":"dotted8","decay":0.3},"vibrato":{"rate":3.2,"depth":55,"delay":0.3}}),
+  part("leadGuitar","イントロの和音2（5度・エコー）",sw2,0.15,0.4,"cleanGuitar","clean",{"reverb":0.5,"chorus":0,"echo":{"repeats":2,"time":"dotted8","decay":0.6},"vibrato":{"rate":3.2,"depth":55,"delay":0.3}}),
+  part("leadGuitar","イントロの和音3（3度・エコー）",sw3,0.16,0,"cleanGuitar","clean",{"reverb":0.5,"chorus":0,"echo":{"repeats":2,"time":"dotted8","decay":0.9},"vibrato":{"rate":3.2,"depth":55,"delay":0.3}}),
   part("leadGuitar","リフ（左・ルート）",gl,0.16,-0.6,"cleanGuitar","overdrive",{"reverb":0.08,"chorus":0}),
   part("leadGuitar","リフ（右・5度）",gr,0.16,0.6,"cleanGuitar","overdrive",{"reverb":0.08,"chorus":0}),
   part("leadGuitar","メロディ／ソロ",lead,0.3,0,"cleanGuitar","clean",{"reverb":0.18,"chorus":0}),
