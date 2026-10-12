@@ -1,5 +1,24 @@
 [
  {
+  "slug": "dawn-rail",
+  "jp": "夜明けの線路",
+  "bpm": 196,
+  "bars": 168,
+  "mode": "maj",
+  "tonic": "E",
+  "plan": "サビ2回を全音上げ",
+  "template": "A",
+  "verse": "I-V-vi-IV",
+  "chorus": "IV-V-iii-vi",
+  "bridge": "vi-V-IV-V",
+  "intro": 5,
+  "drums": [
+   "rock8",
+   "skate"
+  ],
+  "seconds": 206
+ },
+ {
   "slug": "bike-hill",
   "jp": "坂道の自転車",
   "bpm": 178,
@@ -17,5 +36,347 @@
    "skate"
   ],
   "seconds": 210
+ },
+ {
+  "slug": "rain-after",
+  "jp": "雨あがりの交差点",
+  "bpm": 162,
+  "bars": 152,
+  "mode": "min",
+  "tonic": "B",
+  "plan": "最後のサビで同主調に切りかえ",
+  "template": "B",
+  "verse": "i-VI-III-VII",
+  "chorus": "i-iv-VII-III",
+  "bridge": "i-VI-iv-V",
+  "intro": 3,
+  "drums": [
+   "rock8",
+   "rock8"
+  ],
+  "seconds": 225
+ },
+ {
+  "slug": "last-summer",
+  "jp": "夏の終わりの海",
+  "bpm": 176,
+  "bars": 152,
+  "mode": "maj",
+  "tonic": "D",
+  "plan": "最後のサビを全音→長3度と2段上げ",
+  "template": "E",
+  "verse": "I-vi-IV-V",
+  "chorus": "I-V-vi-IV",
+  "bridge": "I-bVII-IV-I",
+  "intro": 4,
+  "drums": [
+   "dbeat",
+   "skate"
+  ],
+  "seconds": 207
+ },
+ {
+  "slug": "night-bus",
+  "jp": "終バスの窓",
+  "bpm": 168,
+  "bars": 144,
+  "mode": "min",
+  "tonic": "G",
+  "plan": "最後のサビで短3度上げ",
+  "template": "D",
+  "verse": "i-VII-VI-VII",
+  "chorus": "i-VI-iv-V",
+  "bridge": "i-VII-VI-VII",
+  "intro": 2,
+  "drums": [
+   "rock8",
+   "dbeat"
+  ],
+  "seconds": 206
+ },
+ {
+  "slug": "paper-plane",
+  "jp": "紙ひこうき",
+  "bpm": 186,
+  "bars": 152,
+  "mode": "maj",
+  "tonic": "F#",
+  "plan": "Cメロとソロで平行調へ→主調にもどる",
+  "template": "B",
+  "verse": "IV-V-iii-vi",
+  "chorus": "vi-V-IV-V",
+  "bridge": "IV-I-V-vi",
+  "intro": 8,
+  "drums": [
+   "rock8",
+   "skate"
+  ],
+  "seconds": 196
+ },
+ {
+  "slug": "blue-room",
+  "jp": "青い部屋",
+  "bpm": 204,
+  "bars": 168,
+  "mode": "maj",
+  "tonic": "C",
+  "plan": "ソロから全音上げたまま",
+  "template": "A",
+  "verse": "I-IV-V-IV",
+  "chorus": "I-vi-IV-V",
+  "bridge": "vi-IV-V-I",
+  "intro": 6,
+  "drums": [
+   "skate",
+   "rock8"
+  ],
+  "seconds": 198
+ },
+ {
+  "slug": "ash-city",
+  "jp": "灰色の街",
+  "bpm": 172,
+  "bars": 156,
+  "mode": "min",
+  "tonic": "A",
+  "plan": "最後のサビで完全4度上げ",
+  "template": "C",
+  "verse": "i-iv-VII-III",
+  "chorus": "VI-VII-i-i",
+  "bridge": "i-VI-III-VII",
+  "intro": 9,
+  "drums": [
+   "dbeat",
+   "skate"
+  ],
+  "seconds": 218
+ },
+ {
+  "slug": "stray-star",
+  "jp": "はぐれ星",
+  "bpm": 164,
+  "bars": 144,
+  "mode": "min",
+  "tonic": "E",
+  "plan": "Cメロで全音下げ→最後のサビで全音上げ",
+  "template": "D",
+  "verse": "i-VI-III-VII",
+  "chorus": "i-III-VII-VI",
+  "bridge": "i-VI-iv-V",
+  "intro": 0,
+  "drums": [
+   "rock8",
+   "skate"
+  ],
+  "seconds": 211
+ },
+ {
+  "slug": "noon-bell",
+  "jp": "正午のチャイム",
+  "bpm": 190,
+  "bars": 144,
+  "mode": "maj",
+  "tonic": "F",
+  "plan": "最後のサビで半音上げ",
+  "template": "E",
+  "verse": "I-bVII-IV-I",
+  "chorus": "IV-I-V-vi",
+  "bridge": "I-vi-IV-V",
+  "intro": 7,
+  "drums": [
+   "skate",
+   "skate"
+  ],
+  "seconds": 182
+ },
+ {
+  "slug": "cold-coffee",
+  "jp": "冷めたコーヒー",
+  "bpm": 182,
+  "bars": 168,
+  "mode": "maj",
+  "tonic": "A#",
+  "plan": "最後のサビで同主調に切りかえ",
+  "template": "A",
+  "verse": "I-iii-IV-V",
+  "chorus": "vi-IV-V-I",
+  "bridge": "I-IV-V-IV",
+  "intro": 2,
+  "drums": [
+   "rock8",
+   "rock8"
+  ],
+  "seconds": 222
+ },
+ {
+  "slug": "rooftop",
+  "jp": "屋上の風",
+  "bpm": 166,
+  "bars": 152,
+  "mode": "min",
+  "tonic": "C#",
+  "plan": "Cメロとソロで平行調へ→主調にもどる",
+  "template": "B",
+  "verse": "i-VII-VI-VII",
+  "chorus": "i-iv-VI-V",
+  "bridge": "i-VII-VI-V",
+  "intro": 5,
+  "drums": [
+   "rock8",
+   "dbeat"
+  ],
+  "seconds": 220
+ },
+ {
+  "slug": "run-away",
+  "jp": "走り出す朝",
+  "bpm": 200,
+  "bars": 144,
+  "mode": "maj",
+  "tonic": "G",
+  "plan": "最後のサビを全音→長3度と2段上げ",
+  "template": "D",
+  "verse": "IV-V-iii-vi",
+  "chorus": "I-iv-I-V",
+  "bridge": "vi-V-IV-V",
+  "intro": 6,
+  "drums": [
+   "skate",
+   "skate"
+  ],
+  "seconds": 173
+ },
+ {
+  "slug": "hollow-moon",
+  "jp": "からっぽの月",
+  "bpm": 170,
+  "bars": 156,
+  "mode": "min",
+  "tonic": "D",
+  "plan": "転調なし",
+  "template": "C",
+  "verse": "i-III-VII-VI",
+  "chorus": "i-iv-VII-III",
+  "bridge": "i-VI-III-VII",
+  "intro": 8,
+  "drums": [
+   "dbeat",
+   "rock8"
+  ],
+  "seconds": 220
+ },
+ {
+  "slug": "kite-day",
+  "jp": "凧の日",
+  "bpm": 188,
+  "bars": 144,
+  "mode": "maj",
+  "tonic": "G#",
+  "plan": "最後のサビで短3度上げ",
+  "template": "E",
+  "verse": "IV-I-V-vi",
+  "chorus": "I-V-IV-V",
+  "bridge": "I-bVII-IV-I",
+  "intro": 1,
+  "drums": [
+   "rock8",
+   "skate"
+  ],
+  "seconds": 184
+ },
+ {
+  "slug": "ferry-lights",
+  "jp": "フェリーの灯",
+  "bpm": 176,
+  "bars": 168,
+  "mode": "min",
+  "tonic": "B",
+  "plan": "ソロから全音上げたまま",
+  "template": "A",
+  "verse": "i-iv-VI-V",
+  "chorus": "VI-VII-i-i",
+  "bridge": "III-VII-i-VI",
+  "intro": 9,
+  "drums": [
+   "skate",
+   "dbeat"
+  ],
+  "seconds": 229
+ },
+ {
+  "slug": "spring-gate",
+  "jp": "春の改札",
+  "bpm": 198,
+  "bars": 152,
+  "mode": "maj",
+  "tonic": "C",
+  "plan": "最後のサビで同主調に切りかえ",
+  "template": "B",
+  "verse": "I-vi-IV-V",
+  "chorus": "I-V-vi-IV",
+  "bridge": "vi-IV-I-V",
+  "intro": 0,
+  "drums": [
+   "rock8",
+   "skate"
+  ],
+  "seconds": 184
+ },
+ {
+  "slug": "whisper-wire",
+  "jp": "ささやく電線",
+  "bpm": 184,
+  "bars": 156,
+  "mode": "min",
+  "tonic": "F#",
+  "plan": "Cメロで全音下げ→最後のサビで全音上げ",
+  "template": "C",
+  "verse": "i-VII-VI-V",
+  "chorus": "i-VII-VI-VII",
+  "bridge": "i-VI-III-VII",
+  "intro": 4,
+  "drums": [
+   "dbeat",
+   "skate"
+  ],
+  "seconds": 203
+ },
+ {
+  "slug": "tailwind",
+  "jp": "追い風",
+  "bpm": 194,
+  "bars": 144,
+  "mode": "maj",
+  "tonic": "D#",
+  "plan": "最後のサビで完全4度上げ",
+  "template": "D",
+  "verse": "I-IV-V-IV",
+  "chorus": "I-bVII-IV-I",
+  "bridge": "I-vi-IV-V",
+  "intro": 7,
+  "drums": [
+   "rock8",
+   "rock8"
+  ],
+  "seconds": 178
+ },
+ {
+  "slug": "long-way-home",
+  "jp": "遠回りの帰り道",
+  "bpm": 168,
+  "bars": 144,
+  "mode": "min",
+  "tonic": "F",
+  "plan": "最後のサビで半音上げ",
+  "template": "E",
+  "verse": "i-VI-III-VII",
+  "chorus": "III-VII-i-VI",
+  "bridge": "VI-VII-i-i",
+  "intro": 3,
+  "drums": [
+   "skate",
+   "skate"
+  ],
+  "seconds": 206
  }
 ]
