@@ -40,6 +40,17 @@ outro="C#6:1 B5:1 A5:2 G#5:2 B5:2 F#5:1 A5:1 C#6:2~ D6:2 C#6:2 B5:1 A5:1 G#5:2 B
 # (名前, 和音, [リード旋律, シフト])
 S=-5; SS=-17
 leadin="E5:1 A5:1 C#6:2~ B5:1 G#5:1 E5:2~ C#6:1 A5:1 F#5:2~ A5:1 F#5:1 D5:2~"
+
+def _c(seq,beat="0.25"): return " ".join(f"{n}:{beat}_" for n in seq.split())
+TAP1=(_c("D5 F#5 A5 D6 A5 F#5 D5 F#5 A5 D6 F#6 D6 A5 F#5 D5 A4")+" "+
+      _c("E5 G#5 B5 E6 B5 G#5 E5 G#5 B5 E6 G#6 E6 B5 G#5 E5 B4")+" "+
+      _c("F#5 A5 C#6 F#6 C#6 A5 F#5 A5 C#6 F#6 A6 F#6 C#6 A5 F#5 C#5")+" "+
+      _c("E5 G#5 B5 E6 G#6 E6 B5 G#5")+" E6:1^~ R:1")
+TAP2=(_c("D6 A5 F#5 D5 F#5 A5 D6 F#6 A6 F#6 D6 A5 F#5 D5 A4 D5")+" "+
+      _c("E6 B5 G#5 E5 G#5 B5 E6 G#6 G#6 E6 B5 G#5 E5 G#5 B5 E6")+" "+
+      _c("F#5 A5 C#6 F#6 C#6 A5 F#5 A5 C#6 F#6 A6 F#6 C#6 A5 F#5 C#5","0.125")+" "+
+      _c("A5 C#6 F#6 A6 F#6 C#6 A5 C#6 F#6 A6 F#6 C#6 A5 F#5 C#5 A4","0.125")+" "+
+      _c("E5 G#5 B5 E6 B5 G#5 E5 G#5 B5 E6 G#6 E6 B5 G#5 E5 B4","0.125")+" G#6:2^~")
 secs=[("leadin",[F,F,F,F],[("R:4 "*4,S)]),
  ("intro",prog*2,[(intro,S),(intro2,S)]),
  ("verse",prog*4,[(V1,S),(V2,S),(V1,S),(V3,S)]),
@@ -51,7 +62,7 @@ secs=[("leadin",[F,F,F,F],[("R:4 "*4,S)]),
  ("intro",prog*2,[(intro,S),(intro2,S)]),
  ("bridge",br_prog,[(B1,S),(B2,S),(B1,S-12),(B2,S)]),
  ("solo",prog*4,[(solo1,SS),(solo2,SS)]),
- ("pre",pre_prog,[(P1,S),(P2,S)]),
+ ("pre",pre_prog,[(TAP1,S),(TAP2,S)]),
  ("chorus",chorus_prog*2,[(c1,S),(c4,S)]),
  ("outro",prog+[A,E,A,A],[(outro,S)])]
 
@@ -124,6 +135,10 @@ def drum_bar(sec,i,n):
             K=KP["drive"][i%4]; Sn="....x.......x..."; Ht=hatp("norm",i)
         else:
             K=KP["drive"][i%4]; Sn="....x..o....x..o"; Ht=hatp("norm",i); crash_on=first
+    elif sec=="pre" and sec_idx_hint.get("p",0)==2:
+        # 最後のサビの前の静かな部分（ギターソロ）: キックは小節の頭だけ、ハイハットは弱い4分、最後の小節でスネアの連打
+        K="X..............." if i%2==0 else "................"; Sn="................"; Ht="o...o...o...o..."
+        if i==n-1: Sn="xxxxxxxxxxxxXXXX"; K="X..............."
     elif sec=="pre":
         K=KP["floor"][0] if i>=4 else KP["drive"][i%4]
         Sn="....x.......x..." if i<4 else ("x...x...x...x..." if i<7 else "xxxxxxxxXXXXXXXX")
@@ -165,7 +180,7 @@ def sw(c,i):
     else:
         sw1.append("R:4"); sw2.append("R:4"); sw3.append("R:4")
 chords=[];lead=[];lead2=[];gl=[];gr=[];bass=[];kick=[];snare=[];hat=[];tomp=[];crashp=[]
-vcount=ccount=0
+vcount=ccount=pcount=0
 for name,ch,lds in secs:
     chords+=ch
     for ld,sh in lds:
@@ -175,6 +190,7 @@ for name,ch,lds in secs:
     n=len(ch)
     if name=="verse": sec_idx_hint["v"]=vcount; vcount+=1
     if name=="chorus": sec_idx_hint["c"]=ccount; ccount+=1
+    if name=="pre": sec_idx_hint["p"]=pcount; pcount+=1
     for i,c in enumerate(ch):
         r0,r1=root[c]
         if name!="leadin": sw(c,None)
@@ -197,6 +213,10 @@ for name,ch,lds in secs:
             if v==0 and i<8: L_=g8(r0,True,True); R_="R:4"
             elif v==0: L_=g8(r0,True,True); R_=" ".join([f"{fifth[c]}:1"]*4)
             else: L_=g8(r0,True,True); R_=g8(fifth[c],True,True)
+        elif name=="pre" and sec_idx_hint["p"]==2:
+            if i<6: L_="R:4"; R_="R:4"
+            elif i==6: L_=f"{r0}:4"; R_=f"{fifth[c]}:4"
+            else: L_=g16(r0); R_=g16(fifth[c])
         elif name=="pre":
             if i<4: L_=g8(r0,True,True); R_=g8(fifth[c],True,True)
             elif i<7: L_=g8(r0); R_=g8(fifth[c])
@@ -220,6 +240,7 @@ for name,ch,lds in secs:
         if name=="intro": b=bpat(r1,[M3,M2][i%2])
         elif name=="verse":
             v=sec_idx_hint["v"]; b=bpat(r1,[M1,M2,M3,M4][(i+(2*v))%4])
+        elif name=="pre" and sec_idx_hint["p"]==2: b=bpat(r1,RUN if i==7 else LONG)
         elif name=="pre": b=bpat(r1,RUN if i==7 else RISE)
         elif name=="chorus":
             c_=sec_idx_hint["c"]; b=bpat(r1,PUMP)
