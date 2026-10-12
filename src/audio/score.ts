@@ -1,4 +1,5 @@
 import type { AmpPresetName } from "./amp";
+import type { KeysAmpType } from "./amp-keys";
 import type { AmpPluginDef } from "./amp-plugins";
 import type { AudioTrack } from "./audio-clips";
 import { noteNameToFrequency } from "./note";
@@ -75,7 +76,7 @@ export type GenreAmpType = "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "
 
 /** ギターなどの音づくり（アンプ）の設定。`auto`は、曲の音色（tone）と楽器から自動で選ぶ。 */
 export interface AmpSetting {
-  type: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "nam" | GenreAmpType | "genre" | "plugin";
+  type: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "nam" | GenreAmpType | KeysAmpType | "genre" | "plugin";
   /** type=plugin のとき、使うアンプ定義のID（`Score.ampPlugins` のキー）。 */
   plugin?: string;
   /** type=genre のとき、amp.ts のプリセット名（ジャンル別の種類は、なるべく上の直接の種類へ置きかえて鳴らす）。 */
@@ -122,6 +123,8 @@ export interface Track {
   reverb?: number;
   /** コーラス（広がりの揺らぎ）の量（0〜1）。省略時は楽器ごとの標準。録音音源（CC93）で効く。 */
   chorus?: number;
+  /** true なら、主旋律のエコー（同じ音を0.75拍後・1.5拍後に小さく鳴らし直す）をしない。音を伸ばしたいリード・ギターに。 */
+  noRestrike?: boolean;
   /** 音の明るさ（-1〜0.5）。マイナスで高域を丸く（ローパス）。0が標準。録音音源（CC74）で効く。高域を足す方向は音源の元の明るさまで。 */
   bright?: number;
   /** キックに合わせて音量を凹ませる深さ（0〜1。サイドチェイン風。ベース・ギター・パッドの隙間をキックに空ける）。録音音源で効く。 */

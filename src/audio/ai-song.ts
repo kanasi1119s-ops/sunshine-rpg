@@ -22,6 +22,7 @@ import { checkScaleUsage } from "./scale-check";
 import { sceneScaleWarning } from "./scene-scales";
 import { AI_PART_JPOP_SCHEMA, AI_SONG_JPOP_GUIDE, AI_SONG_JPOP_SCHEMA, type AiPartJpop, type AiSongJpop } from "./jpop-clean";
 import { applyJpopSong } from "./jpop-feel";
+import { KEYS_AMP_TYPES, type KeysAmpType } from "./amp-keys";
 import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, type Track } from "./score";
 
 /**
@@ -58,6 +59,8 @@ export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   reverb?: number;
   /** コーラス（広がりの揺らぎ）の量（0〜1）。省略は標準。real版で効く。 */
   chorus?: number;
+  /** true なら、主旋律のエコー（同じ音を0.75拍後・1.5拍後に小さく鳴らし直す）をしない。伸ばした音が途中で弱まらない。リード・ギターで使う。 */
+  noRestrike?: boolean;
   /** 音の明るさ（-1〜0.5）。マイナスで高域を丸く。0が標準。real版で効く。 */
   bright?: number;
   /** キックに合わせた音量の凹みの深さ（0〜1。サイドチェイン風）。ベース・ギター・パッド向け。real版で効く。 */
@@ -65,7 +68,7 @@ export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   /** フレーズの山（拍。2〜32）。この長さごとに、出だしをやや弱く→山で強く→終わりを引く強弱をつける（歌うような表情）。ドラムでは使わない。 */
   phrase?: number;
   /** アンプ（ギター・ベース向け）。"auto" なら曲の音色から自動。 */
-  amp: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean";
+  amp: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean" | KeysAmpType;
   /** セクションごとの出し入れ。{ intro: 0, verse: 0.6, chorus: 1, solo: { gain: 1, octave: 1 } }。数字＝音量の倍率（0＝休み）、octave＝オクターブずらし。書かなかったセクションは1。曲の sections（または scene）が必要。 */
   sections?: PartSectionSpecJson;
   /** false にすると、modulate（転調）でこのパートを上げない。 */
@@ -178,7 +181,7 @@ export const AI_INSTRUMENTS: Record<string, string> = {
 };
 const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom"]);
 /** AIソング形式で使えるアンプの名前（`AI_SONG_SCHEMA` の amp と同じ）。 */
-const AI_AMPS = new Set(["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean"]);
+const AI_AMPS = new Set(["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", ...KEYS_AMP_TYPES]);
 
 /** 構造化出力（JSONスキーマ）。 */
 export const AI_SONG_SCHEMA = {
@@ -265,6 +268,7 @@ export const AI_SONG_SCHEMA = {
           lockToKick: { type: "boolean" },
           reverb: { type: "number" },
           chorus: { type: "number" },
+          noRestrike: { type: "boolean" },
           bright: { type: "number" },
           duck: { type: "number" },
           phrase: { type: "number" },
@@ -272,7 +276,7 @@ export const AI_SONG_SCHEMA = {
           modulate: { type: "boolean" },
           motif: { anyOf: [{ type: "object" }, { type: "array", items: { type: "object" } }] },
           keepBreak: { type: "boolean" },
-          amp: { type: "string", enum: ["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean"] },
+          amp: { type: "string", enum: ["auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", ...KEYS_AMP_TYPES] },
           ...AI_PART_EXTRA_SCHEMA,
           ...AI_PART_JPOP_SCHEMA,
           notes: { type: "string" },
@@ -719,6 +723,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
       ...trackRhythmFields(p),
       ...(!drum && Number.isFinite(Number(p.reverb)) && p.reverb !== undefined ? { reverb: Math.max(0, Math.min(1, Number(p.reverb))) } : {}),
       ...(!drum && Number.isFinite(Number(p.chorus)) && p.chorus !== undefined ? { chorus: Math.max(0, Math.min(1, Number(p.chorus))) } : {}),
+      ...(!drum && p.noRestrike === true ? { noRestrike: true } : {}),
       ...(!drum && Number(p.bright) ? { bright: Math.max(-1, Math.min(0.5, Number(p.bright))) } : {}),
       ...(!drum && Number(p.duck) > 0 ? { duck: Math.min(0.95, Number(p.duck)) } : {}),
       ...(!drum ? partTrackExtras(p, chordBars, beatsPerBar) : {}),

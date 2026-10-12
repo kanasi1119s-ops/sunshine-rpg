@@ -522,7 +522,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       // 重さ: ディストーションギターには、1オクターブ下の音を薄く重ねる
       if ((inst === "distGuitar" || inst === "crunch") && pitch - 12 >= 28) push(pitch - 12, tick, Math.round(velocity * (score.tone === "prs" ? 0.25 : 0.45)), len);
       // 主旋律のエコー（付点8分・付点4分）。テンポに合わせて、少しずつ小さく
-      if (inst && ECHO_INSTRUMENTS.has(inst) && n.durationBeats >= 0.4) {
+      if (inst && ECHO_INSTRUMENTS.has(inst) && !track.noRestrike && n.durationBeats >= 0.4) {
         for (const [beats, gain] of [[0.75, 0.42], [1.5, 0.22]] as const) {
           const at = tick + Math.round(beats * PPQ);
           if (at < endTick) push(pitch, at, Math.max(14, Math.round(velocity * gain)), Math.min(len, PPQ));
