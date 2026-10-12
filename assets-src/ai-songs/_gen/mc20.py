@@ -444,6 +444,14 @@ if __name__=="__main__":
         import re
         for q in song["parts"][:2]:  # リードとハモリを1オクターブ上げる（低いと濁るため。2026-10-13、人間の指摘）
             q["notes"]=re.sub(r'\b([A-G][#b]?)(\d)\b',lambda m:m.group(1)+str(min(7,int(m.group(2))+1)),q["notes"])
+        import copy
+        riffs=[(j,q) for j,q in enumerate(song["parts"]) if q["role"].startswith("リフ")]
+        for off,(j,q) in enumerate(riffs):  # リフに1オクターブ上の重ねを足す（音の数が少ない、の指摘。2026-10-13）
+            c=copy.deepcopy(q); c["role"]=q["role"].replace("）","・1オクターブ上）") if "）" in q["role"] else q["role"]+"（1オクターブ上）"
+            c["notes"]=re.sub(r'\b([A-G][#b]?)(\d)\b',lambda m:m.group(1)+str(min(7,int(m.group(2))+1)),q["notes"])
+            c["volume"]=round(q["volume"]*0.75,3); c["pan"]=round(q["pan"]*0.55,2)
+            song["parts"].insert(max(j for j,_ in riffs)+1+off,c)
+        for q in song["parts"][:2]: q["gainDb"]=6 if q["role"].startswith("メロ") else 4
         json.dump(song,open(os.path.join(out,f"{i+1:02d}-{meta['slug']}.json"),"w"),ensure_ascii=False)
         metas.append(meta); print(i+1,meta["slug"],meta["jp"],meta["tonic"],meta["mode"],meta["bpm"],meta["seconds"],meta["plan"],file=sys.stderr)
     json.dump(metas,open(os.path.join(out,"_meta.json"),"w"),ensure_ascii=False,indent=1)
