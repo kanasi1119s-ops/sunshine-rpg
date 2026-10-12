@@ -294,7 +294,7 @@ def build(i):
             if p["amp"]=="namB" or p["amp"]=="crunch":
                 lead=p["role"].startswith(("メロディ","ハモリ"))
                 if lead:
-                    if slug=="bike-hill": p["ampDrive"]=0.85  # 02番のリード: ほんの少し歪みを弱める
+                    if slug=="bike-hill": p["ampDrive"]=0.6; p["ampTone"]=-1.5  # 02番のリード: ほんの少し歪みを弱める
                     continue
                 if LIGHT[slug]=="b": p.update({"ampTone":2,"ampCab":"open","ampDrive":0.03,"ampLevel":1.5})  # ひずみ浅め（入力をしぼる。0.01は浅すぎ、0.5は強め）
                 else: p["amp"]="crunch"; p.pop("ampTone",None); p["volume"]=0.16
