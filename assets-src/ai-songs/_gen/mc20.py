@@ -280,8 +280,8 @@ def build(i):
      "bpm":bpm,"beats":4,"chords":" ".join(cname(c) for c in allch),"barsPerChord":1,"repeats":1,"feel":"rock","tone":"rock",
      "autoAccompaniment":False,"dynamics":"natural","human":0.45,"humanProfile":"role","lockToKick":True,"autoScoop":False,"fills":False,
      "drumMix":{"tom":{"tune":-4,"level":1.4,"spread":0.5}},
-     "parts":[part("leadGuitar","メロディ／ソロ",lead,0.45,0,"steelGuitar","crunch",{**G,"reverb":0.2,"phrase":8,"humanTiming":1.5,"humanVelocity":1.8,"pushMs":7,"ampDrive":1.2}),
-      part("leadGuitar","ハモリ（3度上）",lead2,0.29,0.25,"steelGuitar","crunch",{**G,"reverb":0.2,"phrase":8,"humanTiming":1.5,"humanVelocity":1.8,"pushMs":12,"ampDrive":1.2}),
+     "parts":[part("leadGuitar","メロディ／ソロ",lead,0.5,0,"steelGuitar","crunch",{**G,"reverb":0.2,"phrase":8,"humanTiming":1.5,"humanVelocity":1.8,"pushMs":7,"ampDrive":1.5}),
+      part("leadGuitar","ハモリ（3度上）",lead2,0.32,0.25,"steelGuitar","crunch",{**G,"reverb":0.2,"phrase":8,"humanTiming":1.5,"humanVelocity":1.8,"pushMs":12,"ampDrive":1.5}),
       part("leadGuitar","リフ（左・ルート）",gl,0.13,-0.6,"cleanGuitar","namB",{**G,"reverb":0.08,"ampTone":-6,"ampDrive":0.25}),
       part("leadGuitar","リフ（右・5度）",gr,0.13,0.6,"cleanGuitar","namB",{**G,"reverb":0.08,"ampTone":-6,"ampDrive":0.25}),
       part("bass","ベース（旋律）",bass,0.6,0,None,"auto",{"bright":0.3}),
@@ -294,7 +294,7 @@ def build(i):
             if p["amp"]=="namB" or p["amp"]=="crunch":
                 lead=p["role"].startswith(("メロディ","ハモリ"))
                 if lead:
-                    if slug=="bike-hill": p.update({"ampDrive":0.85,"ampTone":1,"reverb":0.08})  # 02番のリード: 音の粒をはっきり（歪み浅く・高域を戻し・残響を減らす）
+                    if slug=="bike-hill": p.update({"ampDrive":1.1,"ampTone":1,"reverb":0.08})  # 02番のリード: 音の粒をはっきり（歪み浅く・高域を戻し・残響を減らす）
                     continue
                 if LIGHT[slug]=="b": p.update({"ampTone":2,"ampCab":"open","ampDrive":0.03,"ampLevel":1.5,"volume":0.16})  # ひずみ浅め（入力をしぼる。0.01は浅すぎ、0.5は強め）
                 else: p["amp"]="crunch"; p.pop("ampTone",None); p.pop("ampDrive",None); p["volume"]=0.16
