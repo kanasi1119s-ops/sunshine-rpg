@@ -123,6 +123,15 @@ input[type="range"]::-moz-range-thumb { width: 12px; height: 16px; border-radius
 .trk .bt { display: inline-flex; gap: 3px; }
 .trk .bt button { padding: 1px 7px; font-family: var(--mono); font-size: 11px; }
 
+
+/* ミキサー（上下のつまみ） */
+.strips { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: flex-end; margin-top: 6px; }
+.strip { display: grid; justify-items: center; gap: 4px; min-width: 52px; padding: 6px 4px; border: 1px solid var(--line); border-radius: 3px; background: rgba(6, 12, 22, 0.8); }
+.strip.sel { border-color: var(--accent); }
+.strip input.vf { writing-mode: vertical-lr; direction: rtl; -webkit-appearance: slider-vertical; appearance: slider-vertical; width: 18px; height: 120px; }
+.mix-v { font-family: var(--mono); font-size: 11px; color: var(--accent); }
+.mix-n { font-size: 11px; color: var(--muted); text-align: center; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* ピアノロール */
 .info { margin-bottom: 6px; font-size: 12px; color: var(--muted); font-family: var(--body); }
 .rollbox { position: relative; min-height: 240px; overflow: auto; max-height: 560px; border: 1px solid #10324a; border-radius: 3px; background: var(--roll-bg); box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6); }

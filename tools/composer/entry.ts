@@ -1255,6 +1255,68 @@ nsBtn.onclick = () => {
 
 // ── 音づくり（トラックごとのアンプ・NAM） ──
 const ampBox = h("div", {});
+// ── ミキサー（音を足して、上下のつまみで調整する） ──
+const mixBox = h("div", { class: "mix" });
+/** 「足せる音」。ボタンを押すと、その音のつまみ（上下）が出る。もう一度押すと外れて、元にもどる。 */
+interface MixItem { key: string; label: string; hint: string; min: number; max: number; step: number; def: number; get: (t: Track) => number | undefined; set: (t: Track, v: number | undefined) => void }
+const withAmp = (t: Track, f: (a: AmpSetting) => AmpSetting): void => {
+  const next = f(t.amp ?? { type: "auto" });
+  t.amp = next.type === "auto" && next.drive === undefined && next.tone === undefined && next.level === undefined ? undefined : next;
+};
+const MIX_ITEMS: MixItem[] = [
+  { key: "drive", label: "歪み", hint: "上げるほど深く歪む", min: 0.5, max: 2, step: 0.05, def: 1, get: (t) => t.amp?.drive, set: (t, v) => withAmp(t, (a) => ({ ...a, drive: v })) },
+  { key: "tone", label: "明るさ", hint: "高い音の量（dB）", min: -6, max: 6, step: 0.5, def: 0, get: (t) => t.amp?.tone, set: (t, v) => withAmp(t, (a) => ({ ...a, tone: v })) },
+  { key: "level", label: "出力", hint: "アンプを出るときの大きさ", min: 0.5, max: 1.5, step: 0.05, def: 1, get: (t) => t.amp?.level, set: (t, v) => withAmp(t, (a) => ({ ...a, level: v })) },
+  { key: "reverb", label: "空気感", hint: "残響（リバーブ）の量", min: 0, max: 0.6, step: 0.02, def: 0.15, get: (t) => t.reverb, set: (t, v) => { t.reverb = v; } },
+  { key: "human", label: "人間らしさ", hint: "出だしのずれ・強さのゆらぎ", min: 0, max: 2, step: 0.1, def: 1, get: (t) => t.human, set: (t, v) => { t.human = v; } },
+];
+function fader(label: string, hint: string, min: number, max: number, step: number, value: number, on: (v: number) => void): HTMLElement {
+  const input = h("input", { type: "range", class: "vf", min: String(min), max: String(max), step: String(step), value: String(value), title: hint, "aria-label": label, "aria-orientation": "vertical" });
+  const out = h("span", { class: "mix-v" }, String(Math.round(value * 100) / 100));
+  input.oninput = () => {
+    const v = Number(input.value);
+    out.textContent = String(Math.round(v * 100) / 100);
+    on(v);
+  };
+  return h("div", { class: "strip" }, out, input, h("span", { class: "mix-n" }, label));
+}
+function renderMix(): void {
+  mixBox.replaceChildren();
+  const t = state.score.tracks[state.selected];
+  const all = h("div", { class: "strips" });
+  state.score.tracks.forEach((tr, i) => {
+    const f = fader(`${i + 1}. ${instLabel(tr.instrument)}`, "音量", 0, Math.max(1, Math.ceil(tr.volume * 10) / 10), 0.01, tr.volume, (v) => {
+      tr.volume = v;
+      restartSoon();
+      save();
+    });
+    if (i === state.selected) f.classList.add("sel");
+    all.append(f);
+  });
+  mixBox.append(h("div", { class: "muted" }, "全トラックの音量（上げ下げできます）"), all);
+  if (!t) return;
+  const strips = h("div", { class: "strips" });
+  const buttons = h("div", { class: "row" });
+  for (const it of MIX_ITEMS) {
+    const cur = it.get(t);
+    const on = cur !== undefined;
+    const b = h("button", { type: "button", class: on ? "on" : "", title: it.hint }, `${on ? "✓ " : "＋ "}${it.label}`);
+    b.onclick = () => {
+      it.set(t, on ? undefined : it.def);
+      restartSoon();
+      save();
+      renderMix();
+    };
+    buttons.append(b);
+    if (on) strips.append(fader(it.label, it.hint, it.min, it.max, it.step, cur, (v) => {
+      it.set(t, v);
+      restartSoon();
+      save();
+    }));
+  }
+  mixBox.append(h("div", { class: "muted", style: "margin-top:10px" }, `「${instLabel(t.instrument)}」に音を足す（押すと、その音のつまみが出ます。もう一度押すと外れます）`), buttons, strips);
+}
+
 const AMP_TYPES: [AmpSetting["type"], string][] = [
   ["auto", "おまかせ（曲の設定どおり）"], ["clean", "クリーン"], ["overdrive", "オーバードライブ"], ["distortion", "ディストーション"], ["metal", "メタルゾーン"], ["prs", "なめらかなリード（PRS風）"], ["plugin", "追加したアンプ（アンプ定義ファイル）"], ["nam", "NAMのアンプモデル（実機を学習したもの）"],
   ["jazz", "ジャズ（太く柔らかい）"], ["blues", "ブルース（浅く温かい歪み）"], ["funk", "ファンク（明るく歯切れよい）"], ["crunch", "クランチ（ざらっと浅い歪み）"], ["hardrock", "ハードロック（深い歪み）"], ["punk", "パンク（勢いのある歪み）"], ["fuzz", "ファズ（荒々しく不穏）"], ["shoegaze", "シューゲイザー（霞んだ音の壁）"], ["lofi", "ローファイ（古い録音）"], ["loudmetal", "ラウドメタル（重く密度の高い歪み）"], ["loudrock", "ラウドロック（太く前に出る歪み）"], ["delicate", "繊細（歪ませず弱い音の粒が聞こえる）"], ["crystal", "透明（透き通るクリーン・耳にやさしい）"], ["lead", "リード（浅い歪み・中域が厚く歌う）"], ["modernHigh", "モダン高ゲイン（締まった刻み・ゲート付き）"], ["sparkleClean", "きらびやかなクリーン（歪みなし）"], ["jpopClean", "J-POPクリーン（歪みなし・粒をそろえる）"], ["retro8bit", "レトロ8bit（粗い階段の音）"], ["radio", "ラジオ・電話（遠くの音）"],
@@ -1270,6 +1332,7 @@ function slider(label: string, min: number, max: number, step: number, value: nu
   return h("label", { class: "f" }, label, h("div", { class: "row" }, input, out));
 }
 function renderAmp(): void {
+  renderMix();
   ampBox.replaceChildren();
   const t = state.score.tracks[state.selected];
   if (!t) return;
@@ -1767,6 +1830,7 @@ app.append(
       h("div", { class: "row" }, field("コード進行（空白でくぎる）", nsChords), field("テンポ", nsBpm), field("拍子", nsBeats), field("1コードの長さ", nsBars), field("くり返し", nsRepeat), field("伴奏の雰囲気", nsFeel), field("メロディの楽器", nsLead)),
       h("div", { class: "row", style: "margin-top:8px" }, nsBtn),
       h("div", { class: "muted", style: "margin-top:4px" }, "ドラム・ベース・ギター・ピアノ・弦の伴奏を作り、最後に空のメロディのトラックを足します。ピアノロールでメロディを書き込んでください。読めるコード: C・Am・F#m7・Bbmaj7・Csus4・Gdim・Eaug など。")),
+    panel("MIX", "ミキサー（音を足して、上下で調整）", mixBox),
     panel("AMP", "音づくり（アンプ）", ampBox),
     panel("OUT", "書き出し",
       h("div", { class: "row" }, field("形式", exportSel), exportBtn, saveBtn, loadBtn, fileIn),
