@@ -39,7 +39,9 @@ solo2=("E6:0.5 C#6:0.5 A5:0.5 C#6:0.5 E6:1 C#6:1 G#5:0.5 B5:0.5 E6:0.5 B5:0.5 G#
 outro="C#6:1 B5:1 A5:2 G#5:2 B5:2 F#5:1 A5:1 C#6:2~ D6:2 C#6:2 B5:1 A5:1 G#5:2 B5:2 E6:2~ A5:4~ R:4"
 # (名前, 和音, [リード旋律, シフト])
 S=-5; SS=-17
-secs=[("intro",prog*2,[(intro,S),(intro2,S)]),
+leadin="E5:1 A5:1 C#6:2~ B5:1 G#5:1 E5:2~ C#6:1 A5:1 F#5:2~ A5:1 F#5:1 D5:2~"
+secs=[("leadin",prog,[(leadin,S)]),
+ ("intro",prog*2,[(intro,S),(intro2,S)]),
  ("verse",prog*4,[(V1,S),(V2,S),(V1,S),(V3,S)]),
  ("pre",pre_prog,[(P1,S),(P2,S)]),
  ("chorus",chorus_prog*2,[(c1,S),(c3,S)]),
@@ -61,6 +63,10 @@ for name,ch,lds in secs:
     n=len(ch)
     for i,c in enumerate(ch):
         r0,r1=root[c]
+        if name=="leadin":
+            gl.append("R:4"); gr.append("R:4"); bass.append("R:4"); kick.append("R:4")
+            snare.append("x:0.25 "*16 if i==3 else "R:4"); snare[-1]=snare[-1].strip()
+            hat.append("x:1 x:1 x:1 x:1" if i==2 else (" ".join(["x:0.5"]*8) if i==3 else "R:4")); continue
         q=name=="bridge" and i<8
         step="1" if q else "0.5"; cnt=4 if q else 8
         gl.append(tr(" ".join([f"{r0}:{step}"]*cnt),S)); gr.append(tr(" ".join([f"{fifth[c]}:{step}"]*cnt),S)); bass.append(tr(" ".join([f"{r1}:0.5"]*8),S))

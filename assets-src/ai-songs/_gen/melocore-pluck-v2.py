@@ -248,9 +248,9 @@ song={"title":"melocore-pluck-v2","description":"メロコアパンク v2。ベ�
  "bpm":172,"beats":4,"chords":" ".join(chords),"barsPerChord":1,"repeats":1,"feel":"rock","tone":"rock",
  "autoAccompaniment":False,"dynamics":"natural","human":0.25,"fills":False,
  "parts":[
-  part("leadGuitar","イントロの和音1（根音・エコー）",sw1,0.15,-0.4,"cleanGuitar","clean",{"reverb":0.45,"chorus":0,"echo":{"repeats":2,"time":"dotted8","decay":0.4}}),
-  part("leadGuitar","イントロの和音2（5度・エコー）",sw2,0.15,0.4,"cleanGuitar","clean",{"reverb":0.45,"chorus":0,"echo":{"repeats":2,"time":"dotted8","decay":0.4}}),
-  part("leadGuitar","イントロの和音3（3度・エコー）",sw3,0.16,0,"cleanGuitar","clean",{"reverb":0.45,"chorus":0,"echo":{"repeats":2,"time":"dotted8","decay":0.4}}),
+  part("leadGuitar","イントロの和音1（根音・エコー）",sw1,0.15,-0.4,"cleanGuitar","clean",{"reverb":0.5,"chorus":0,"echo":{"repeats":2,"time":"dotted8","decay":0.6}}),
+  part("leadGuitar","イントロの和音2（5度・エコー）",sw2,0.15,0.4,"cleanGuitar","clean",{"reverb":0.5,"chorus":0,"echo":{"repeats":2,"time":"dotted8","decay":0.6}}),
+  part("leadGuitar","イントロの和音3（3度・エコー）",sw3,0.16,0,"cleanGuitar","clean",{"reverb":0.5,"chorus":0,"echo":{"repeats":2,"time":"dotted8","decay":0.6}}),
   part("leadGuitar","リフ（左・ルート）",gl,0.16,-0.6,"cleanGuitar","overdrive",{"reverb":0.08,"chorus":0}),
   part("leadGuitar","リフ（右・5度）",gr,0.16,0.6,"cleanGuitar","overdrive",{"reverb":0.08,"chorus":0}),
   part("leadGuitar","メロディ／ソロ",lead,0.3,0,"cleanGuitar","clean",{"reverb":0.18,"chorus":0}),
