@@ -15,17 +15,17 @@ function resample(x, ratioAt) { // ratioAt(t秒) = 音の高さの倍率
   for (let i = 0; i < y.length; i++) { const t = i / SR; const k = Math.floor(pos); if (k + 1 >= x.length) break; const f = pos - k; y[i] = x[k] * (1 - f) + x[k + 1] * f; pos += ratioAt(t); }
   return y;
 }
-ev.forEach(([midi, b, d, vib, bend], idx) => {
+ev.forEach(([midi, b, d, vib, bend, gain = 1], idx) => {
   const top = idx % 8 === 3;
   let x = pluck(midi, top ? 0.5 : 0.22, 4, vTap);
   if (bend || vib) x = resample(x, (t) => 2 ** (((bend ? Math.min(2, t / 0.25 * 2) : 0) + (vib ? 0.3 * Math.sin(2 * Math.PI * 5.5 * Math.max(0, t - (bend ? 0.35 : 0.2))) * Math.min(1, Math.max(0, (t - 0.2) / 0.3)) : 0)) / 12));
   const start = Math.floor(b * beat * SR), len = Math.floor((d * beat + (bend || vib ? 0.6 : 0.03)) * SR), fo = Math.floor((bend || vib ? 0.35 : 0.03) * SR);
-  const g = VEL[idx % 8];
+  const g = VEL[idx % 8] * gain;
   for (let i = 0; i < len && start + i < total; i++) {
     let a = 1; if (i < 0.003 * SR) a = i / (0.003 * SR); if (i > len - fo) a = Math.min(a, (len - i) / fo);
     dry[start + i] += x[i] * a * g;
   }
-  if (top) { const n = Math.floor(0.012 * SR); for (let i = 0; i < n; i++) dry[start + i] += 0.12 * Math.sin(2 * Math.PI * 130 * i / SR) * Math.exp(-i / (0.004 * SR)); }
+  if (top) { const n = Math.floor(0.012 * SR); for (let i = 0; i < n; i++) dry[start + i] += 0.12 * gain * Math.sin(2 * Math.PI * 130 * i / SR) * Math.exp(-i / (0.004 * SR)); }
 });
 // 軽い残響（T60 約2秒）
 function reverb(x, off) {
