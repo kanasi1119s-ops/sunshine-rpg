@@ -12,6 +12,7 @@ import type { NamHost } from "./nam/nam-host";
 import { cabApproxSpec, type CabKind, type MicPos } from "./amp-cab";
 import { shapeCurve, type CurveKind } from "./amp-curves";
 import { createGate, loadGate } from "./amp-gate";
+import { buildKeysAmp, KEYS_AMP_TYPES, type KeysAmpType } from "./amp-keys";
 
 export type Tone = "rock" | "metal" | "prs";
 /** チャンネルごとの、音づくりの上書き（トラックの`amp`と、左右の位置）。 */
@@ -19,7 +20,7 @@ export interface ChannelAmp {
   amp: AmpSetting;
   pan: number;
 }
-type Role = "plugin" | "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru" | GenreAmpType;
+type Role = "plugin" | "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru" | GenreAmpType | KeysAmpType;
 
 /** ジャンル別のアンプの種類（`score.ts` の `GenreAmpType` と同じ並び）。 */
 export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean"];
@@ -86,6 +87,17 @@ const DC_BLOCK_BIAS = 0.05;
 const GUITAR_PROGRAMS = { overdrive: 29, distortion: 30, clean: 27 };
 const BASS_PROGRAMS = new Set([32, 33, 34, 35, 36, 37, 38, 39]);
 
+/** LFO などの音源は、disconnect だけでは鳴りつづけるので止める（止められない部品は何もしない）。 */
+function stopSource(node: AudioNode): void {
+  const s = node as Partial<AudioScheduledSourceNode>;
+  if (typeof s.stop !== "function") return;
+  try {
+    s.stop();
+  } catch {
+    // すでに止まっている
+  }
+}
+
 export class AmpRack {
   private inputs: GainNode[];
   private built: AudioNode[][] = [];
@@ -131,7 +143,10 @@ export class AmpRack {
     for (let ch = 0; ch < 16; ch++) {
       const input = this.inputs[ch];
       input.disconnect();
-      for (const node of this.built[ch]) node.disconnect();
+      for (const node of this.built[ch]) {
+        node.disconnect();
+        stopSource(node);
+      }
       this.built[ch] = [];
       const override = ch === drumChannel ? undefined : amps[ch];
       const role = override && override.amp.type !== "auto" ? this.roleFromType(genreToType(override.amp), ch === drumChannel ? -1 : programs[ch], tone) : this.roleOf(ch === drumChannel ? -1 : programs[ch], tone);
@@ -146,6 +161,7 @@ export class AmpRack {
     if (type === "plugin") return "plugin";
     if (type === "clean" || type === "overdrive" || type === "distortion" || type === "metal" || type === "prs") return type;
     if ((GENRE_AMP_TYPES as string[]).includes(type)) return type as GenreAmpType;
+    if ((KEYS_AMP_TYPES as string[]).includes(type)) return type as KeysAmpType;
     return this.roleOf(program, tone);
   }
 
@@ -249,7 +265,17 @@ export class AmpRack {
     this.pending.push(done.catch((error: unknown) => console.warn("ノイズゲートを用意できませんでした:", error)));
   }
 
+  /** 鍵盤・シンセ用のロール（amp-keys.ts）。LFO などの音源も、切りはなすときに止める。 */
+  private buildKeys(role: KeysAmpType, input: AudioNode, override?: ChannelAmp): AudioNode[] {
+    this.opt = null;
+    const seg = buildKeysAmp(this.ctx, role, { drive: override?.amp.drive ?? 1, toneDb: override?.amp.tone ?? 0, level: override?.amp.level ?? 1 });
+    input.connect(seg.input);
+    seg.output.connect(this.destination);
+    return seg.nodes;
+  }
+
   private build(role: Role, input: AudioNode, override?: ChannelAmp): AudioNode[] {
+    if ((KEYS_AMP_TYPES as string[]).includes(role)) return this.buildKeys(role as KeysAmpType, input, override);
     if (NO_STAGES.has(role)) this.opt = null;
     else {
       const o: StageOptions = { ...ROLE_DEFAULTS[role] };
