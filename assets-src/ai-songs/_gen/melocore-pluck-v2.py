@@ -255,7 +255,7 @@ song={"title":"melocore-pluck-v2","description":"メロコアパンク v2。ベ�
   part("leadGuitar","リフ（右・5度）",gr,0.16,0.6,"cleanGuitar","overdrive",{"reverb":0.08,"chorus":0}),
   part("leadGuitar","メロディ／ソロ",lead,0.3,0,"cleanGuitar","clean",{"reverb":0.18,"chorus":0}),
   part("leadGuitar","メロディ（最後のサビだけオクターブ下を重ねる）",lead2,0.22,0.1,"cleanGuitar","clean",{"reverb":0.15,"chorus":0}),
-  part("bass","ベース（旋律）",bass,0.45,0,None,"auto",{"bright":0.3}),
+  part("bass","ベース（旋律）",bass,0.6,0,None,"auto",{"bright":0.3}),
   part("kick","キック",kick,0.26,0,None,"auto",{}),part("snare","スネア",snare,0.2,0,None,"auto",{}),part("hihat","ハイハット",hat,0.09,0.3,None,"auto",{}),
   part("tom","タム",tomp,0.2,0,None,"auto",{}),part("crash","クラッシュ",crashp,0.16,0.2,None,"auto",{})]}
 print(json.dumps(song,ensure_ascii=False))
