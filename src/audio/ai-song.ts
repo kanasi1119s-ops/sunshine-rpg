@@ -35,7 +35,7 @@ import { REST, type AmpSetting, type Instrument, type NoteEvent, type Score, typ
 export const SYNTH_PATCHES: Record<string, number> = {
   nylonGuitar: 24, steelGuitar: 25, jazzGuitar: 26, cleanGuitar: 27, mutedGuitar: 28,
   acousticBass: 32, fretlessBass: 35, slapBass: 36, synthBass1: 38, synthBass2: 39, synthStrings1: 50, synthStrings2: 51,
-  squareLead: 80, sawLead: 81, calliope: 82, chiff: 83, charang: 84, fifths: 86, bassLead: 87,
+  violin: 40, squareLead: 80, sawLead: 81, calliope: 82, chiff: 83, charang: 84, fifths: 86, bassLead: 87,
   newAge: 88, warmPad: 89, polysynth: 90, bowedGlass: 92, metalPad: 93, halo: 94, sweep: 95,
   iceRain: 96, soundtrack: 97, crystal: 98, atmosphere: 99, brightness: 100, goblin: 101, echoDrops: 102, starTheme: 103,
 };
