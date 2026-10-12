@@ -21,7 +21,7 @@ const VARIANTS = {
   soft: { label: "弦モデル（少しやわらかい。保存版）", lp1: 7200, lp2: 9500, comb: 0.72 },
   warm: { label: "弦モデル（やわらかく温かい。soft と暗めの中間。人間が「保存」と言った版）", lp1: 6100, lp2: 8650, comb: 0.78 },
   deep: { label: "弦モデル（重く低音寄り。mellow に低域の厚みを足す）", lp1: 5550, lp2: 8225, comb: 0.815, body: true },
-  deepair: { label: "弦モデル（deep＋弾き始めの高域の抜け。人間が「保存」と言った版）", lp1: 5550, lp2: 8225, comb: 0.815, body: true, air: 0.3 },
+  deepair: { label: "弦モデル（deep＋弾き始めの高域の抜け。人間が「保存」と言った版）", lp1: 5550, lp2: 8225, comb: 0.815, body: true, air: 0.3, release26: 3 },
   mellow: { label: "弦モデル（さらにまろやか。warm と暗めの中間）", lp1: 5550, lp2: 8225, comb: 0.815 },
 };
 const LAYERS = { p: { vel: [1, 45], bright: 0.35 }, mf: { vel: [46, 95], bright: 0.6 }, f: { vel: [96, 127], bright: 0.85 } };
@@ -159,7 +159,7 @@ if (process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1])))
           z.setGenerator(GeneratorTypes.sustainVolEnv, 0);
           z.setGenerator(GeneratorTypes.chorusEffectsSend, 0);
           z.setGenerator(GeneratorTypes.initialFilterQ, 0);
-          z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(0.25));
+          z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(program === 26 && v.release26 ? v.release26 : 0.25)); // 26番(jazzGuitar)だけ余韻を長くできる（イントロの和音の「伸び」用）
           z.setGenerator(GeneratorTypes.overridingRootKey, k);
         }
       }
