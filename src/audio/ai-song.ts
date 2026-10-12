@@ -77,6 +77,8 @@ export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   noRestrike?: boolean;
   /** エフェクター（アンプのあとに、書いた順につながる）。例: [{"type":"delay","beats":0.75,"mix":0.2},{"type":"reverb","mix":0.15}]。種類は fx-chain.ts の FX_TYPES。delay／pingpong は ms の代わりに beats（テンポ連動）でもよい。 */
   fx?: AiFx[];
+  /** 音量の上乗せ（dB。-12〜+18、既定0）。volume は 0.22 あたりで頭打ち（ベロシティが最大）になるので、リードをもっと前に出したいときはこれを使う。 */
+  gainDb?: number;
   /** 音の明るさ（-1〜0.5）。マイナスで高域を丸く。0が標準。real版で効く。 */
   bright?: number;
   /** キックに合わせた音量の凹みの深さ（0〜1。サイドチェイン風）。ベース・ギター・パッド向け。real版で効く。 */
@@ -294,6 +296,7 @@ export const AI_SONG_SCHEMA = {
           reverb: { type: "number" },
           chorus: { type: "number" },
           noRestrike: { type: "boolean" },
+          gainDb: { type: "number" },
           fx: { type: "array", items: { type: "object", additionalProperties: false, required: ["type"], properties: Object.fromEntries([["type", { type: "string" }], ...["mix", "ms", "beats", "feedback", "rate", "depth", "freq", "q", "gain", "level", "low", "mid", "midHz", "high", "threshold", "ratio", "bits", "size", "tone"].map((k) => [k, { type: "number" }])]) } },
           bright: { type: "number" },
           duck: { type: "number" },
@@ -367,6 +370,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - human: 0〜1。「打ち込みっぽい」と感じるときに足す。各パートのタイミングのずれを大きく、バンド全体を少し走らせたり溜めたり、音の強さ・長さをばらつかせ、長い音（リード・パッド・弦・ブラス）に音量の山をつけ、リード・ギター・弦の音程をごくわずかにずらす。0.3〜0.6が自然、1はかなりラフ。同じ小節のくり返しが多いほど効く（くり返しは、手で書くときに少しずつ変えるのが本筋で、human はその上に重ねる仕上げ）。録音音源（real版）でだけ効く。
 - sections: 自動の伴奏（autoAccompaniment: true）に、曲の起伏をつける。"auto" なら定番の構成（導入4 → Aメロ8 → Bメロ4 → サビ8 → 間奏4 → Aメロ → Bメロ → サビ → サビ → 終わり4。曲の小節数に合わせて自動で区切る）。自分で決めるなら [{"kind":"intro","bars":4},{"kind":"verse","bars":8},{"kind":"pre","bars":4},{"kind":"chorus","bars":8}] のように書く（kind は intro・verse・pre・chorus・interlude・bridge・outro と、build（ビルド＝キック・ハイハット・スネア・ベースだけで、スネアを4分→8分→16分と密にして強くする）・break（ブレイク＝鍵盤と弦だけ）・drop（ドロップ＝全部＋頭のクラッシュ。キックとベースが同時に戻る）・solo（ソロ＝リズム隊を小さくして旋律側を立てる）・tag（余韻＝ベース・鍵盤・弦の長音だけ）。bars の合計が曲の小節数になるようにする。ちがうときは最後を延ばすか、後ろを切る）。導入＝ピアノと弦だけ、Aメロ＝ドラム（キックとハイハット）とベースを足す、Bメロ＝スネアとギターを足して少しずつ強く、サビ＝全部とクラッシュ、間奏＝ドラムを抜く、Cメロ・終わり＝静かに。サビの前の小節は、スネアとキックで助走をつける。メロディなど自分で書いたパートには効かないので、メロディ側の強弱は phrase や ! , で付ける。
 - 編曲の自動化（2026-10-11。詳しくは docs/sound/arrangement-deep.md 末尾の「実装状況」）:
+  - gainDb: 音量の上乗せ（dB。-12〜+18）。volume は内部で音の強さ（ベロシティ）になり約0.22で頭打ちなので、それ以上に大きくしたいパート（リードなど）はこれを足す。+3dB で約1.4倍。
   - fx（エフェクター）: パートに "fx": [{"type":"delay","beats":0.75,"mix":0.2},{"type":"reverb","mix":0.15}] のように、アンプのあとへ書いた順につなぐ（最大8個）。mix＝元の音との混ぜ具合。ms／beats＝delay・pingpong の間隔、feedback＝くり返し、rate／depth＝ゆれ、freq／q＝wah・filter、gain／level＝boost・tubescreamer・fuzz、low／mid／midHz／high＝eq、threshold／ratio＝compressor、bits＝bitcrusher。種類: ${Object.entries(FX_INFO).map(([k, v]) => `${k}＝${v.label}`).join("・")}。ギターのリードに delay＋plate を薄く、ドラムに room、ベースに compressor など。ミキサーの音量・パン・アンプとは別に効く。
   - scene: 場面プリセット。"scene": "battle" のように書くと、sections・feel・tone・dynamics・layers・energy・crashAt・modulate などの既定値が入る（曲に書いた値が優先）。使える場面: ${SCENE_NAMES.join("・")}。bpm が場面の目安から外れると注意が出る。
   - sections の各要素に "from"（この場面に入るときのつなぎ。${TRANSITIONS.join("・")}。stopBeat＝直前の1拍を全員止める、break1bar＝直前の1小節を全員止める、riser＝直前の2小節で強くしてハイハットを16分に、kime＝直前の1小節を全員で同じリズム（1拍目・2拍目のウラ・3拍目）で打つ。break と drop の前は何も書かなくても stopBeat）と "crash"（true／強さ。この場面の頭にクラッシュ）を書ける。例 {"kind":"chorus","bars":8,"from":"stopBeat"}。止めるつなぎは手書きのパートにも効く（持続音を残したいパートは keepBreak: true）。
@@ -773,6 +777,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
       ...(!drum && Number.isFinite(Number(p.reverb)) && p.reverb !== undefined ? { reverb: Math.max(0, Math.min(1, Number(p.reverb))) } : {}),
       ...(!drum && Number.isFinite(Number(p.chorus)) && p.chorus !== undefined ? { chorus: Math.max(0, Math.min(1, Number(p.chorus))) } : {}),
       ...(!drum && p.noRestrike === true ? { noRestrike: true } : {}),
+      ...(Number.isFinite(Number(p.gainDb)) && Number(p.gainDb) !== 0 && p.gainDb !== undefined ? { gainDb: Math.max(-12, Math.min(18, Number(p.gainDb))) } : {}),
       ...(Array.isArray(p.fx) && p.fx.length ? (() => { const f = parseAiFx(p.fx, bpm, where, warnings); return f.length ? { fx: f } : {}; })() : {}),
       ...(!drum && Number(p.bright) ? { bright: Math.max(-1, Math.min(0.5, Number(p.bright))) } : {}),
       ...(!drum && Number(p.duck) > 0 ? { duck: Math.min(0.95, Number(p.duck)) } : {}),

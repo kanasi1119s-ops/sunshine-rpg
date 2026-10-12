@@ -37,3 +37,19 @@ describe("エフェクター（fx）", () => {
     expect(score.tracks[0].amp).toMatchObject({ type: "crunch", drive: 0.85, level: 1.1, tone: -1 });
   });
 });
+
+describe("gainDb（音量の上乗せ）", () => {
+  it("ai-song の gainDb が Track に入り、チャンネルの fx 末尾に boost として入る", () => {
+    const { score } = aiSongToScore({ ...base, parts: [{ instrument: "leadGuitar", role: "メロディ", volume: 0.3, notes: "C4:16", gainDb: 6, fx: [{ type: "plate" }] }] });
+    expect(score.tracks[0].gainDb).toBe(6);
+    const chain = Object.values(scoreToMidiInfo(score).fx)[0];
+    expect(chain.map((f) => f.type)).toEqual(["plate", "boost"]);
+    expect(chain[1].gain).toBe(6);
+  });
+  it("範囲外は -12〜+18 に収める。0 や省略は何も付けない", () => {
+    const mk2 = (g: unknown) => aiSongToScore({ ...base, parts: [{ instrument: "leadGuitar", role: "メロディ", volume: 0.3, notes: "C4:16", gainDb: g }] }).score.tracks[0].gainDb;
+    expect(mk2(99)).toBe(18);
+    expect(mk2(-99)).toBe(-12);
+    expect(mk2(0)).toBeUndefined();
+  });
+});

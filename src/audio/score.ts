@@ -114,6 +114,8 @@ export interface Track {
   amp?: AmpSetting;
   /** エフェクター（アンプのあとに、書いた順につながる。`fx-chain.ts`）。 */
   fx?: FxSpec[];
+  /** パートの音量の上乗せ（dB。-12〜+18）。`volume` は音の強さ（ベロシティ）に変わり 0.22 あたりで頭打ちになるので、それ以上に大きくするときはこちら。エフェクターの最後に素直な増幅（boost）として入る。 */
+  gainDb?: number;
   /** 録音音源で鳴らすときの、GMの楽器番号の指定（省略時は`instrument`から決める）。実楽器版で使う。 */
   program?: number;
   /** 効果音用: 録音音源（GMの楽器番号）で鳴らす。準備ができていないときは、`instrument`・`waveform`の合成音で鳴らす。 */

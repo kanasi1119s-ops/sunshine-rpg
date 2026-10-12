@@ -322,7 +322,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     // ばらつきの種は、チャンネルごと。同じチャンネルに重ねた声部（ギターのストロークの各弦など）は、同じようにずれて、和音がそろったままになる
     const trackSeed = (channel + 1) * 7.31;
     if (channel !== DRUM_CHANNEL) programs[channel] = program;
-    if (track.fx?.length) fx[channel] = track.fx;
+    if (track.fx?.length || track.gainDb) fx[channel] = [...(track.fx ?? []), ...(track.gainDb ? [{ type: "boost" as const, gain: Math.max(-12, Math.min(18, track.gainDb)) }] : [])];
     if (channel !== DRUM_CHANNEL && track.amp) amps[channel] = { amp: track.amp, pan: track.pan ?? 0 };
     const list = main.list;
     const layerSpec = inst && track.program === undefined ? GM_LAYER[inst] : undefined;

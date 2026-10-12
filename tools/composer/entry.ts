@@ -1268,6 +1268,7 @@ const MIX_ITEMS: MixItem[] = [
   { key: "drive", label: "歪み", hint: "上げるほど深く歪む", min: 0.5, max: 2, step: 0.05, def: 1, get: (t) => t.amp?.drive, set: (t, v) => withAmp(t, (a) => ({ ...a, drive: v })) },
   { key: "tone", label: "明るさ", hint: "高い音の量（dB）", min: -6, max: 6, step: 0.5, def: 0, get: (t) => t.amp?.tone, set: (t, v) => withAmp(t, (a) => ({ ...a, tone: v })) },
   { key: "level", label: "出力", hint: "アンプを出るときの大きさ", min: 0.5, max: 1.5, step: 0.05, def: 1, get: (t) => t.amp?.level, set: (t, v) => withAmp(t, (a) => ({ ...a, level: v })) },
+  { key: "gain", label: "音量の上乗せ", hint: "dB。上げるほど大きく（パート音量が頭打ちでも効きます）", min: -12, max: 18, step: 1, def: 3, get: (t) => t.gainDb, set: (t, v) => { t.gainDb = v; } },
   { key: "reverb", label: "空気感", hint: "残響（リバーブ）の量", min: 0, max: 0.6, step: 0.02, def: 0.15, get: (t) => t.reverb, set: (t, v) => { t.reverb = v; } },
   { key: "human", label: "人間らしさ", hint: "出だしのずれ・強さのゆらぎ", min: 0, max: 2, step: 0.1, def: 1, get: (t) => t.human, set: (t, v) => { t.human = v; } },
 ];
