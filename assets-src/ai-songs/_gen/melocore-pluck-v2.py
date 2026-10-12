@@ -51,6 +51,8 @@ TAP2=(_c("D6 A5 F#5 D5 F#5 A5 D6 F#6 A6 F#6 D6 A5 F#5 D5 A4 D5")+" "+
       _c("F#5 A5 C#6 F#6 C#6 A5 F#5 A5 C#6 F#6 A6 F#6 C#6 A5 F#5 C#5","0.125")+" "+
       _c("A5 C#6 F#6 A6 F#6 C#6 A5 C#6 F#6 A6 F#6 C#6 A5 F#5 C#5 A4","0.125")+" "+
       _c("E5 G#5 B5 E6 B5 G#5 E5 G#5 B5 E6 G#6 E6 B5 G#5 E5 B4","0.125")+" G#6:2^~")
+import os
+if os.environ.get('NOTAP'): TAP1=TAP2='R:16'  # タッピングを別に作るとき(tap-synth)は、本編のこの部分のリードを休みにする
 secs=[("leadin",[F,F,F,F],[("R:4 "*4,S)]),
  ("intro",prog*2,[(intro,S),(intro2,S)]),
  ("verse",prog*4,[(V1,S),(V2,S),(V1,S),(V3,S)]),
