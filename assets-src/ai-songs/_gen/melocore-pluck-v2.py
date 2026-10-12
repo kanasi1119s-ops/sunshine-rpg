@@ -158,6 +158,9 @@ def sw(c,i):
     if i is None:
         for L in (sw1,sw2,sw3): L.append("R:4")
         return
+    if i==7:   # 8小節目はドラムの入り。和音は休み、ディレイの尾だけが鳴る
+        for L in (sw1,sw2,sw3): L.append("R:4")
+        return
     sw1.append(tr(f"{root[c][0]}:4",-5))
     sw2.append(tr(f"{fifth[c]}:4",-5) if i>=2 else "R:4")
     sw3.append(tr(f"{third[c]}:4",-5) if i>=4 else "R:4")
@@ -178,7 +181,7 @@ for name,ch,lds in secs:
         if name=="leadin":
             for L in (gl,gr,bass,kick,tomp,crashp): L.append("R:4")
             snare.append(slots("xxxxxxxxxxxxXXXX") if i==7 else "R:4")
-            hat.append("x:1 x:1 x:1 x:1" if i==6 else (slots(hatp("norm",0)) if i==7 else "R:4")); sw(c,i); continue
+            hat.append(slots(hatp("norm",0)) if i==7 else "R:4"); sw(c,i); continue
         # --- ギター ---
         def g8(note,acc=True,short=False,fx=""):
             t=[]
