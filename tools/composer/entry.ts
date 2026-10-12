@@ -46,6 +46,7 @@ import { GM_PROGRAM } from "../../src/audio/gm-map";
 import { scoreToMidi } from "../../src/audio/midi-export";
 import { AMP_PRESETS, AMP_PRESET_NAMES, type AmpPresetName } from "../../src/audio/amp";
 import { NamHost } from "../../src/audio/nam/nam-host";
+import { FX_INFO, FX_TYPES, type FxSpec, type FxType } from "../../src/audio/fx-chain";
 import { AI_SONG_GUIDE, AI_SONG_SCHEMA, aiSongToScore } from "../../src/audio/ai-song";
 import { buildNewSong, type NewSongFeel } from "../../src/audio/newsong";
 import { noteNameToMidi } from "../../src/audio/note";
@@ -1280,6 +1281,54 @@ function fader(label: string, hint: string, min: number, max: number, step: numb
   };
   return h("div", { class: "strip" }, out, input, h("span", { class: "mix-n" }, label));
 }
+/** エフェクターごとの「いちばん効くつまみ」（mix のほかに1つ）。 */
+const FX_MAIN: Partial<Record<FxType, { key: keyof FxSpec; label: string; min: number; max: number; step: number; def: number }>> = {
+  delay: { key: "ms", label: "間隔(ms)", min: 60, max: 1000, step: 10, def: 360 },
+  pingpong: { key: "ms", label: "間隔(ms)", min: 60, max: 1000, step: 10, def: 360 },
+  chorus: { key: "rate", label: "速さ", min: 0.1, max: 4, step: 0.1, def: 0.8 },
+  flanger: { key: "rate", label: "速さ", min: 0.05, max: 3, step: 0.05, def: 0.4 },
+  phaser: { key: "rate", label: "速さ", min: 0.05, max: 4, step: 0.05, def: 0.5 },
+  tremolo: { key: "rate", label: "速さ", min: 0.5, max: 12, step: 0.5, def: 5 },
+  vibrato: { key: "rate", label: "速さ", min: 0.5, max: 10, step: 0.5, def: 5 },
+  wah: { key: "freq", label: "位置(Hz)", min: 300, max: 2500, step: 50, def: 900 },
+  autowah: { key: "rate", label: "速さ", min: 0.2, max: 6, step: 0.2, def: 1.5 },
+  compressor: { key: "ratio", label: "圧縮の比", min: 1.5, max: 12, step: 0.5, def: 4 },
+  boost: { key: "gain", label: "増幅(dB)", min: 0, max: 18, step: 1, def: 6 },
+  tubescreamer: { key: "gain", label: "歪み(dB)", min: 0, max: 30, step: 1, def: 12 },
+  fuzz: { key: "gain", label: "歪み(dB)", min: 0, max: 40, step: 1, def: 20 },
+  bitcrusher: { key: "bits", label: "ビット数", min: 3, max: 12, step: 1, def: 8 },
+  filter: { key: "freq", label: "位置(Hz)", min: 100, max: 8000, step: 100, def: 1500 },
+  reverb: { key: "size", label: "広さ", min: 0.3, max: 2, step: 0.1, def: 1 },
+  plate: { key: "size", label: "広さ", min: 0.3, max: 2, step: 0.1, def: 1 },
+  spring: { key: "size", label: "広さ", min: 0.3, max: 2, step: 0.1, def: 1 },
+  room: { key: "size", label: "広さ", min: 0.3, max: 2, step: 0.1, def: 1 },
+};
+function renderFx(t: Track): void {
+  const fxBtns = h("div", { class: "row" });
+  const fxStrips = h("div", { class: "strips" });
+  const list = t.fx ?? [];
+  for (const type of FX_TYPES) {
+    const idx = list.findIndex((f) => f.type === type);
+    const on = idx >= 0;
+    const b = h("button", { type: "button", class: on ? "on" : "", title: FX_INFO[type].use }, `${on ? "✓ " : "＋ "}${FX_INFO[type].label}`);
+    b.onclick = () => {
+      if (on) t.fx = list.filter((f) => f.type !== type);
+      else t.fx = [...list, { type, mix: FX_INFO[type].mix }];
+      if (t.fx.length === 0) t.fx = undefined;
+      restartSoon();
+      save();
+      renderMix();
+    };
+    fxBtns.append(b);
+    if (on) {
+      const spec = list[idx];
+      fxStrips.append(fader(`${FX_INFO[type].label} 量`, "元の音との混ぜ具合", 0, 1, 0.02, spec.mix ?? FX_INFO[type].mix, (v) => { spec.mix = v; restartSoon(); save(); }));
+      const m = FX_MAIN[type];
+      if (m) fxStrips.append(fader(`${FX_INFO[type].label} ${m.label}`, m.label, m.min, m.max, m.step, (spec[m.key] as number | undefined) ?? m.def, (v) => { (spec as unknown as Record<string, number>)[m.key] = v; restartSoon(); save(); }));
+    }
+  }
+  mixBox.append(h("div", { class: "muted", style: "margin-top:10px" }, "エフェクター（アンプのあとに、押した順につながります）"), fxBtns, fxStrips);
+}
 function renderMix(): void {
   mixBox.replaceChildren();
   const t = state.score.tracks[state.selected];
@@ -1315,6 +1364,7 @@ function renderMix(): void {
     }));
   }
   mixBox.append(h("div", { class: "muted", style: "margin-top:10px" }, `「${instLabel(t.instrument)}」に音を足す（押すと、その音のつまみが出ます。もう一度押すと外れます）`), buttons, strips);
+  renderFx(t);
 }
 
 const AMP_TYPES: [AmpSetting["type"], string][] = [

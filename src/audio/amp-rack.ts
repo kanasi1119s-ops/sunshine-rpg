@@ -12,6 +12,7 @@ import type { NamHost } from "./nam/nam-host";
 import { cabApproxSpec, type CabKind, type MicPos } from "./amp-cab";
 import { shapeCurve, type CurveKind } from "./amp-curves";
 import { createGate, loadGate } from "./amp-gate";
+import { buildFxChain, type FxSpec } from "./fx-chain";
 import { buildKeysAmp, KEYS_AMP_TYPES, type KeysAmpType } from "./amp-keys";
 
 export type Tone = "rock" | "metal" | "prs";
@@ -105,6 +106,8 @@ export class AmpRack {
   private models: Record<string, string> = {};
   private plugins: Record<string, AmpPluginDef> = {};
   private generation = 0;
+  /** いま組み立てているチャンネルの出口（効果があればその入口、なければ全体の出口）。 */
+  private dest: AudioNode;
   /** いま組み立てているロールの、追加の段の指定。 */
   private opt: StageOptions | null = null;
   /** このラックが作った歪みの部品と、その bias（前段ローパス・DC除去を入れる位置を決める）。 */
@@ -112,6 +115,7 @@ export class AmpRack {
   private pending: Promise<unknown>[] = [];
 
   constructor(private ctx: BaseAudioContext, private destination: AudioNode) {
+    this.dest = destination;
     this.inputs = Array.from({ length: 16 }, () => ctx.createGain());
     this.built = Array.from({ length: 16 }, () => []);
     for (let ch = 0; ch < 16; ch++) {
@@ -135,7 +139,7 @@ export class AmpRack {
   }
 
   /** 曲が変わるたびに、各チャンネルの楽器（GMの番号）と曲の音色に合わせて、機材をつなぎ直す。 */
-  configure(programs: Record<number, number>, tone: Tone, drumChannel = 9, amps: Record<number, ChannelAmp> = {}, models: Record<string, string> = {}, plugins: Record<string, AmpPluginDef> = {}): void {
+  configure(programs: Record<number, number>, tone: Tone, drumChannel = 9, amps: Record<number, ChannelAmp> = {}, models: Record<string, string> = {}, plugins: Record<string, AmpPluginDef> = {}, fx: Record<number, FxSpec[]> = {}): void {
     this.generation++;
     this.models = models;
     this.plugins = plugins;
@@ -150,8 +154,12 @@ export class AmpRack {
       this.built[ch] = [];
       const override = ch === drumChannel ? undefined : amps[ch];
       const role = override && override.amp.type !== "auto" ? this.roleFromType(genreToType(override.amp), ch === drumChannel ? -1 : programs[ch], tone) : this.roleOf(ch === drumChannel ? -1 : programs[ch], tone);
+      const chain = fx[ch]?.length ? buildFxChain(this.ctx, fx[ch]) : null;
+      if (chain) chain.output.connect(this.destination);
+      this.dest = chain ? chain.input : this.destination;
       const nodes = this.build(role, input, override);
-      this.built[ch] = nodes;
+      this.dest = this.destination;
+      this.built[ch] = chain ? [...nodes, chain.input, chain.output, ...chain.nodes] : nodes;
     }
   }
 
@@ -210,7 +218,7 @@ export class AmpRack {
       prev.connect(n);
       prev = n;
     }
-    prev.connect(this.destination);
+    prev.connect(this.dest);
     return nodes;
   }
 
@@ -270,7 +278,7 @@ export class AmpRack {
     this.opt = null;
     const seg = buildKeysAmp(this.ctx, role, { drive: override?.amp.drive ?? 1, toneDb: override?.amp.tone ?? 0, level: override?.amp.level ?? 1 });
     input.connect(seg.input);
-    seg.output.connect(this.destination);
+    seg.output.connect(this.dest);
     return seg.nodes;
   }
 
@@ -432,7 +440,7 @@ export class AmpRack {
     const dry = this.gain(1);
     const hub = this.gain(1);
     input.connect(dry);
-    dry.connect(this.destination);
+    dry.connect(this.dest);
     const nodes: AudioNode[] = [dry, hub];
     const modelJson = override.amp.model ? this.models[override.amp.model] : undefined;
     const generation = this.generation;
@@ -462,7 +470,7 @@ export class AmpRack {
       }
       prev.connect(panner);
       panner.connect(out);
-      out.connect(this.destination);
+      out.connect(this.dest);
       // 音が出はじめたら、元の音（ドライ）を切る
       dry.disconnect();
       this.built[this.built.findIndex((list) => list.includes(dry))]?.push(node, pre, tone, ...cab, panner, out);
@@ -478,7 +486,7 @@ export class AmpRack {
   private buildPlugin(input: AudioNode, override: ChannelAmp): AudioNode[] {
     const dry = this.gain(1);
     input.connect(dry);
-    dry.connect(this.destination);
+    dry.connect(this.dest);
     const nodes: AudioNode[] = [dry];
     const def = override.amp.plugin ? this.plugins[override.amp.plugin] : undefined;
     if (!def) return nodes;
@@ -498,7 +506,7 @@ export class AmpRack {
       chain[chain.length - 1].connect(tone);
       tone.connect(panner);
       panner.connect(out);
-      out.connect(this.destination);
+      out.connect(this.dest);
       dry.disconnect();
       this.built[this.built.findIndex((list) => list.includes(dry))]?.push(drive, ...chain, tone, panner, out);
     });

@@ -1,3 +1,4 @@
+import type { FxSpec } from "./fx-chain";
 import type { AmpPresetName } from "./amp";
 import type { KeysAmpType } from "./amp-keys";
 import type { AmpPluginDef } from "./amp-plugins";
@@ -111,6 +112,8 @@ export interface Track {
   pan?: number;
   /** 音づくり（アンプ）の設定。省略時は自動。 */
   amp?: AmpSetting;
+  /** エフェクター（アンプのあとに、書いた順につながる。`fx-chain.ts`）。 */
+  fx?: FxSpec[];
   /** 録音音源で鳴らすときの、GMの楽器番号の指定（省略時は`instrument`から決める）。実楽器版で使う。 */
   program?: number;
   /** 効果音用: 録音音源（GMの楽器番号）で鳴らす。準備ができていないときは、`instrument`・`waveform`の合成音で鳴らす。 */

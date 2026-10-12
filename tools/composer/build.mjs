@@ -16,7 +16,7 @@ const nam = await build({
 const namCode = (Array.isArray(nam) ? nam[0] : nam).output.find((o) => o.type === "chunk").code;
 const namWasm = fs.readFileSync(root + "node_modules/@opendaw/nam-wasm/dist/nam.wasm");
 // 同梱のNAMモデル（MIT。assets-src/nam-models/README.md）
-const NAM_MODELS = { "builtin:highgain-a": ["ハイゲインアンプA", "highgain-a.nam"], "builtin:highgain-b": ["ハイゲインアンプB", "highgain-b.nam"], "builtin:bass-preamp": ["ベース用プリアンプ", "bass-preamp.nam"] };
+const NAM_MODELS = { "builtin:highgain-a": ["ハイゲインアンプA", "highgain-a.nam"], "builtin:highgain-b": ["ハイゲインアンプB", "highgain-b.nam"], "builtin:bass-preamp": ["ベース用プリアンプ", "bass-preamp.nam"], "builtin:kay703-g3": ["ビンテージ真空管 ゲイン3（ほぼクリーン）", "kay703-g3.nam"], "builtin:kay703-g5": ["ビンテージ真空管 ゲイン5（クランチ）", "kay703-g5.nam"], "builtin:kay703-g7": ["ビンテージ真空管 ゲイン7（深いクランチ）", "kay703-g7.nam"], "builtin:kay703-g10": ["ビンテージ真空管 ゲイン10（ひずみ）", "kay703-g10.nam"] };  // Kay 703 は CC0（TONE3000, @aazuspan。docs/assets-credits.md）
 const namModels = Object.fromEntries(Object.entries(NAM_MODELS).map(([k, [label, file]]) => [k, { label, json: fs.readFileSync(root + "assets-src/nam-models/" + file, "utf8") }]));
 // 見本のアンプ定義（assets-src/amp-plugins/）
 const ampDir = root + "assets-src/amp-plugins/";

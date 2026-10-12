@@ -1,3 +1,4 @@
+import type { FxSpec } from "./fx-chain";
 import { timeSignatureOf } from "./time-signature";
 import { GM_DEFAULT_BY_WAVE, GM_DRUM_NOTE, GM_LAYER, GM_PROGRAM, METAL_LEAD, SYNTH_LEAD, SYNTH_PAD } from "./gm-map";
 import { noteNameToMidi } from "./note";
@@ -135,7 +136,8 @@ export function scoreToMidi(score: Score): Uint8Array {
 }
 
 /** MIDIと、チャンネルごとの楽器（GMの番号）。機材（アンプ・ドラムの仕上げ）を選ぶために使う。 */
-export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Record<number, number>; amps: Record<number, { amp: AmpSetting; pan: number }> } {
+export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Record<number, number>; amps: Record<number, { amp: AmpSetting; pan: number }>; fx: Record<number, FxSpec[]> } {
+  const fx: Record<number, FxSpec[]> = {};
   const programs: Record<number, number> = {};
   const amps: Record<number, { amp: AmpSetting; pan: number }> = {};
   const tracksBytes: number[][] = [];
@@ -320,6 +322,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     // ばらつきの種は、チャンネルごと。同じチャンネルに重ねた声部（ギターのストロークの各弦など）は、同じようにずれて、和音がそろったままになる
     const trackSeed = (channel + 1) * 7.31;
     if (channel !== DRUM_CHANNEL) programs[channel] = program;
+    if (track.fx?.length) fx[channel] = track.fx;
     if (channel !== DRUM_CHANNEL && track.amp) amps[channel] = { amp: track.amp, pan: track.pan ?? 0 };
     const list = main.list;
     const layerSpec = inst && track.program === undefined ? GM_LAYER[inst] : undefined;
@@ -561,5 +564,5 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
 
   const out: number[] = [0x4d, 0x54, 0x68, 0x64, ...u32(6), ...u16(1), ...u16(tracksBytes.length), ...u16(PPQ)];
   for (const t of tracksBytes) out.push(0x4d, 0x54, 0x72, 0x6b, ...u32(t.length), ...t);
-  return { midi: Uint8Array.from(out), programs, amps };
+  return { midi: Uint8Array.from(out), programs, amps, fx };
 }

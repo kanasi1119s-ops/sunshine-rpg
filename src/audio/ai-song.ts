@@ -1,3 +1,4 @@
+import { FX_TYPES, FX_INFO, type FxSpec } from "./fx-chain";
 import { noteNameToMidi } from "./note";
 import { buildNewSong, NEW_SONG_FEELS, type NewSongFeel } from "./newsong";
 import { DRUM_GENRES, drumMixFor, swingForGenre } from "./drum-genres";
@@ -40,6 +41,19 @@ export const SYNTH_PATCHES: Record<string, number> = {
 };
 
 type PartSectionSpecJson = Partial<Record<SectionKind, number | boolean | { gain?: number; octave?: number }>>;
+/** AIソング形式の amp 名 → 同梱のNAMモデル。namKay3〜10 は、ビンテージ真空管アンプ（Kay 703, CC0）のゲイン3・5・7・10。 */
+const NAM_AMPS = {
+  namA: "builtin:highgain-a", namB: "builtin:highgain-b",
+  namKay3: "builtin:kay703-g3", namKay5: "builtin:kay703-g5", namKay7: "builtin:kay703-g7", namKay10: "builtin:kay703-g10",
+} as const;
+type AiNamAmp = keyof typeof NAM_AMPS;
+const NAM_AMP_KEYS = Object.keys(NAM_AMPS) as AiNamAmp[];
+export interface AiFx extends Omit<FxSpec, "type"> {
+  type: string;
+  /** delay／pingpong: 間隔を拍で書く（bpm から ms に直す）。 */
+  beats?: number;
+}
+
 export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   /** 楽器（AI_INSTRUMENTS のキー）。 */
   instrument: Instrument;
@@ -61,6 +75,8 @@ export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   chorus?: number;
   /** true なら、主旋律のエコー（同じ音を0.75拍後・1.5拍後に小さく鳴らし直す）をしない。伸ばした音が途中で弱まらない。リード・ギターで使う。 */
   noRestrike?: boolean;
+  /** エフェクター（アンプのあとに、書いた順につながる）。例: [{"type":"delay","beats":0.75,"mix":0.2},{"type":"reverb","mix":0.15}]。種類は fx-chain.ts の FX_TYPES。delay／pingpong は ms の代わりに beats（テンポ連動）でもよい。 */
+  fx?: AiFx[];
   /** 音の明るさ（-1〜0.5）。マイナスで高域を丸く。0が標準。real版で効く。 */
   bright?: number;
   /** キックに合わせた音量の凹みの深さ（0〜1。サイドチェイン風）。ベース・ギター・パッド向け。real版で効く。 */
@@ -68,15 +84,15 @@ export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   /** フレーズの山（拍。2〜32）。この長さごとに、出だしをやや弱く→山で強く→終わりを引く強弱をつける（歌うような表情）。ドラムでは使わない。 */
   phrase?: number;
   /** アンプ（ギター・ベース向け）。"auto" なら曲の音色から自動。 */
-  /** namA／namB のとき、NAM（学習式）アンプへの入力の大きさ（0〜2、既定1。小さいほど歪みが浅い）。 */
+  /** namA／namB／namKay3〜10 のとき、NAM（学習式）アンプへの入力の大きさ（0〜2、既定1。小さいほど歪みが浅い）。 */
   ampDrive?: number;
-  /** namA／namB のとき、出力の大きさの倍率（0〜1.5、既定1）。 */
+  /** namA／namB／namKay3〜10 のとき、出力の大きさの倍率（0〜1.5、既定1）。 */
   ampLevel?: number;
-  /** namA／namB のとき、高音の量（dB。-12〜+6、既定0。マイナスで丸く）。 */
+  /** namA／namB／namKay3〜10 のとき、高音の量（dB。-12〜+6、既定0。マイナスで丸く）。 */
   ampTone?: number;
-  /** namA／namB のとき、キャビネットの箱（closed/open/dark/bright）。 */
+  /** namA／namB／namKay3〜10 のとき、キャビネットの箱（closed/open/dark/bright）。 */
   ampCab?: string;
-  amp: "namA" | "namB" | "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean" | KeysAmpType;
+  amp: AiNamAmp | "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean" | KeysAmpType;
   /** セクションごとの出し入れ。{ intro: 0, verse: 0.6, chorus: 1, solo: { gain: 1, octave: 1 } }。数字＝音量の倍率（0＝休み）、octave＝オクターブずらし。書かなかったセクションは1。曲の sections（または scene）が必要。 */
   sections?: PartSectionSpecJson;
   /** false にすると、modulate（転調）でこのパートを上げない。 */
@@ -189,7 +205,7 @@ export const AI_INSTRUMENTS: Record<string, string> = {
 };
 const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom"]);
 /** AIソング形式で使えるアンプの名前（`AI_SONG_SCHEMA` の amp と同じ）。 */
-const AI_AMPS = new Set(["namA", "namB", "auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", ...KEYS_AMP_TYPES]);
+const AI_AMPS = new Set([...NAM_AMP_KEYS, "auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", ...KEYS_AMP_TYPES]);
 
 /** 構造化出力（JSONスキーマ）。 */
 export const AI_SONG_SCHEMA = {
@@ -278,6 +294,7 @@ export const AI_SONG_SCHEMA = {
           reverb: { type: "number" },
           chorus: { type: "number" },
           noRestrike: { type: "boolean" },
+          fx: { type: "array", items: { type: "object", additionalProperties: false, required: ["type"], properties: Object.fromEntries([["type", { type: "string" }], ...["mix", "ms", "beats", "feedback", "rate", "depth", "freq", "q", "gain", "level", "low", "mid", "midHz", "high", "threshold", "ratio", "bits", "size", "tone"].map((k) => [k, { type: "number" }])]) } },
           bright: { type: "number" },
           duck: { type: "number" },
           phrase: { type: "number" },
@@ -289,7 +306,7 @@ export const AI_SONG_SCHEMA = {
           ampLevel: { type: "number" },
           ampTone: { type: "number" },
           ampCab: { type: "string" },
-          amp: { type: "string", enum: ["namA", "namB", "auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", ...KEYS_AMP_TYPES] },
+          amp: { type: "string", enum: [...NAM_AMP_KEYS, "auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", ...KEYS_AMP_TYPES] },
           ...AI_PART_EXTRA_SCHEMA,
           ...AI_PART_JPOP_SCHEMA,
           notes: { type: "string" },
@@ -350,6 +367,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - human: 0〜1。「打ち込みっぽい」と感じるときに足す。各パートのタイミングのずれを大きく、バンド全体を少し走らせたり溜めたり、音の強さ・長さをばらつかせ、長い音（リード・パッド・弦・ブラス）に音量の山をつけ、リード・ギター・弦の音程をごくわずかにずらす。0.3〜0.6が自然、1はかなりラフ。同じ小節のくり返しが多いほど効く（くり返しは、手で書くときに少しずつ変えるのが本筋で、human はその上に重ねる仕上げ）。録音音源（real版）でだけ効く。
 - sections: 自動の伴奏（autoAccompaniment: true）に、曲の起伏をつける。"auto" なら定番の構成（導入4 → Aメロ8 → Bメロ4 → サビ8 → 間奏4 → Aメロ → Bメロ → サビ → サビ → 終わり4。曲の小節数に合わせて自動で区切る）。自分で決めるなら [{"kind":"intro","bars":4},{"kind":"verse","bars":8},{"kind":"pre","bars":4},{"kind":"chorus","bars":8}] のように書く（kind は intro・verse・pre・chorus・interlude・bridge・outro と、build（ビルド＝キック・ハイハット・スネア・ベースだけで、スネアを4分→8分→16分と密にして強くする）・break（ブレイク＝鍵盤と弦だけ）・drop（ドロップ＝全部＋頭のクラッシュ。キックとベースが同時に戻る）・solo（ソロ＝リズム隊を小さくして旋律側を立てる）・tag（余韻＝ベース・鍵盤・弦の長音だけ）。bars の合計が曲の小節数になるようにする。ちがうときは最後を延ばすか、後ろを切る）。導入＝ピアノと弦だけ、Aメロ＝ドラム（キックとハイハット）とベースを足す、Bメロ＝スネアとギターを足して少しずつ強く、サビ＝全部とクラッシュ、間奏＝ドラムを抜く、Cメロ・終わり＝静かに。サビの前の小節は、スネアとキックで助走をつける。メロディなど自分で書いたパートには効かないので、メロディ側の強弱は phrase や ! , で付ける。
 - 編曲の自動化（2026-10-11。詳しくは docs/sound/arrangement-deep.md 末尾の「実装状況」）:
+  - fx（エフェクター）: パートに "fx": [{"type":"delay","beats":0.75,"mix":0.2},{"type":"reverb","mix":0.15}] のように、アンプのあとへ書いた順につなぐ（最大8個）。mix＝元の音との混ぜ具合。ms／beats＝delay・pingpong の間隔、feedback＝くり返し、rate／depth＝ゆれ、freq／q＝wah・filter、gain／level＝boost・tubescreamer・fuzz、low／mid／midHz／high＝eq、threshold／ratio＝compressor、bits＝bitcrusher。種類: ${Object.entries(FX_INFO).map(([k, v]) => `${k}＝${v.label}`).join("・")}。ギターのリードに delay＋plate を薄く、ドラムに room、ベースに compressor など。ミキサーの音量・パン・アンプとは別に効く。
   - scene: 場面プリセット。"scene": "battle" のように書くと、sections・feel・tone・dynamics・layers・energy・crashAt・modulate などの既定値が入る（曲に書いた値が優先）。使える場面: ${SCENE_NAMES.join("・")}。bpm が場面の目安から外れると注意が出る。
   - sections の各要素に "from"（この場面に入るときのつなぎ。${TRANSITIONS.join("・")}。stopBeat＝直前の1拍を全員止める、break1bar＝直前の1小節を全員止める、riser＝直前の2小節で強くしてハイハットを16分に、kime＝直前の1小節を全員で同じリズム（1拍目・2拍目のウラ・3拍目）で打つ。break と drop の前は何も書かなくても stopBeat）と "crash"（true／強さ。この場面の頭にクラッシュ）を書ける。例 {"kind":"chorus","bars":8,"from":"stopBeat"}。止めるつなぎは手書きのパートにも効く（持続音を残したいパートは keepBreak: true）。
   - parts[].sections: 手書きのパートをセクションごとに出し入れする。{"intro":0,"verse":0.6,"chorus":1,"solo":{"gain":1,"octave":1}}（数字＝音量の倍率、0＝休み、octave＝オクターブずらし。書かなかったセクションは1）。2本目のギターや対旋律を「サビだけ」「2番から」にするときに、R を並べずに済む。曲に sections（または scene）が必要。
@@ -457,6 +475,22 @@ function markParams(marks: string): Partial<Record<"^" | "/" | "\\", number>> {
 }
 
 /** 「音名:拍」の並びを、音の列にする。まちがいは errors に足す。 */
+/** AIソングの fx（beats つき）を FxSpec に直す。知らない種類は注意を出して飛ばす。 */
+function parseAiFx(list: AiFx[], bpm: number, where: string, warnings: string[]): FxSpec[] {
+  const out: FxSpec[] = [];
+  for (const raw of list.slice(0, 8)) {
+    if (!raw || !(FX_TYPES as readonly string[]).includes(raw.type)) {
+      warnings.push(`${where}: エフェクター「${raw?.type}」は使えないので飛ばしました（使える種類: ${FX_TYPES.join("・")}）`);
+      continue;
+    }
+    const { beats, ...rest } = raw;
+    const spec = { ...rest } as FxSpec;
+    if (Number.isFinite(Number(beats)) && Number(beats) > 0 && spec.ms === undefined) spec.ms = Math.min(2000, (60000 / bpm) * Number(beats));
+    out.push(spec);
+  }
+  return out;
+}
+
 export function parseNotes(text: string, drum: boolean, errors: string[], where: string): NoteEvent[] {
   const out: NoteEvent[] = [];
   // ギャロップ・トレモロの糖衣（E2:2@gallop）を展開し、デッドノート（x）の音程に使う直前の音を覚えておく
@@ -714,9 +748,9 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     const length = events.reduce((s, e) => s + e.durationBeats, 0);
     if (length > total + 1e-6) warnings.push(`${where}: 曲の長さ（${total}拍）より長いので、${length}拍のうち後ろを切りました`);
     if (p.amp && !AI_AMPS.has(p.amp)) warnings.push(`${where}: アンプ「${p.amp}」は使えないので、おまかせ（auto）にしました`);
-    const amp: AmpSetting | undefined = p.amp === "namA" || p.amp === "namB"
-      ? { type: "nam", model: p.amp === "namA" ? "builtin:highgain-a" : "builtin:highgain-b", cab: (["closed", "open", "dark", "bright"].includes(String(p.ampCab)) ? String(p.ampCab) : "closed") as "closed", mic: "center", ...(Number.isFinite(Number(p.ampTone)) && p.ampTone !== undefined ? { tone: Math.max(-12, Math.min(6, Number(p.ampTone))) } : {}), ...(Number(p.ampDrive) > 0 ? { drive: Math.min(2, Number(p.ampDrive)) } : {}), ...(Number.isFinite(Number(p.ampLevel)) && Number(p.ampLevel) > 0 ? { level: Math.min(1.5, Number(p.ampLevel)) } : {}) }
-      : p.amp && p.amp !== "auto" && AI_AMPS.has(p.amp) ? { type: p.amp } : undefined;
+    const amp: AmpSetting | undefined = p.amp && p.amp in NAM_AMPS
+      ? { type: "nam", model: NAM_AMPS[p.amp as AiNamAmp], cab: (["closed", "open", "dark", "bright"].includes(String(p.ampCab)) ? String(p.ampCab) : "closed") as "closed", mic: "center", ...(Number.isFinite(Number(p.ampTone)) && p.ampTone !== undefined ? { tone: Math.max(-12, Math.min(6, Number(p.ampTone))) } : {}), ...(Number(p.ampDrive) > 0 ? { drive: Math.min(2, Number(p.ampDrive)) } : {}), ...(Number.isFinite(Number(p.ampLevel)) && Number(p.ampLevel) > 0 ? { level: Math.min(1.5, Number(p.ampLevel)) } : {}) }
+      : p.amp && p.amp !== "auto" && AI_AMPS.has(p.amp) ? { type: p.amp as AmpSetting["type"], ...(Number(p.ampDrive) > 0 ? { drive: Math.min(2, Number(p.ampDrive)) } : {}), ...(Number(p.ampLevel) > 0 ? { level: Math.min(1.5, Number(p.ampLevel)) } : {}), ...(Number.isFinite(Number(p.ampTone)) && p.ampTone !== undefined ? { tone: Math.max(-12, Math.min(6, Number(p.ampTone))) } : {}) } : undefined;
     const patchKey = p.patch ? String(p.patch) : "";
     if (patchKey && !(patchKey in SYNTH_PATCHES)) warnings.push(`${where}: シンセ音色「${patchKey}」は使えないので、楽器の音にしました`);
     const program = !drum && patchKey in SYNTH_PATCHES ? SYNTH_PATCHES[patchKey] : undefined;
@@ -739,6 +773,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
       ...(!drum && Number.isFinite(Number(p.reverb)) && p.reverb !== undefined ? { reverb: Math.max(0, Math.min(1, Number(p.reverb))) } : {}),
       ...(!drum && Number.isFinite(Number(p.chorus)) && p.chorus !== undefined ? { chorus: Math.max(0, Math.min(1, Number(p.chorus))) } : {}),
       ...(!drum && p.noRestrike === true ? { noRestrike: true } : {}),
+      ...(Array.isArray(p.fx) && p.fx.length ? (() => { const f = parseAiFx(p.fx, bpm, where, warnings); return f.length ? { fx: f } : {}; })() : {}),
       ...(!drum && Number(p.bright) ? { bright: Math.max(-1, Math.min(0.5, Number(p.bright))) } : {}),
       ...(!drum && Number(p.duck) > 0 ? { duck: Math.min(0.95, Number(p.duck)) } : {}),
       ...(!drum ? partTrackExtras(p, chordBars, beatsPerBar) : {}),
