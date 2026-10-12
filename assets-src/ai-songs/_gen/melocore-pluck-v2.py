@@ -40,7 +40,7 @@ outro="C#6:1 B5:1 A5:2 G#5:2 B5:2 F#5:1 A5:1 C#6:2~ D6:2 C#6:2 B5:1 A5:1 G#5:2 B
 # (名前, 和音, [リード旋律, シフト])
 S=-5; SS=-17
 leadin="E5:1 A5:1 C#6:2~ B5:1 G#5:1 E5:2~ C#6:1 A5:1 F#5:2~ A5:1 F#5:1 D5:2~"
-secs=[("leadin",prog,[("R:4 "*4,S)]),
+secs=[("leadin",[F,F,D,D],[("R:4 "*4,S)]),
  ("intro",prog*2,[(intro,S),(intro2,S)]),
  ("verse",prog*4,[(V1,S),(V2,S),(V1,S),(V3,S)]),
  ("pre",pre_prog,[(P1,S),(P2,S)]),
@@ -158,12 +158,17 @@ def sw(c,i):
     if i is None:
         for L in (sw1,sw2,sw3): L.append("R:4")
         return
-    if i==3:   # 4小節目はドラムの入り。スネアの連打の半分(2拍)まで和音を鳴らし、そのあとはエコーの尾だけ
-        sw1.append(tr(f"{root[c][0]}:2 R:2",-5)); sw2.append(tr(f"{fifth[c]}:2 R:2",-5)); sw3.append(tr(f"{third[c]}:2 R:2",-5))
-        return
-    sw1.append(tr(f"{root[c][0]}:4_",-5))
-    sw2.append(tr(f"{fifth[c]}:4_",-5) if i>=1 else "R:4")
-    sw3.append(tr(f"{third[c]}:4_",-5) if i>=2 else "R:4")
+    # ボリューム奏法ふうの出だし: 音が頭から立ち上がらず、ふわっと膨らむ（余韻・エコーつき）。
+    # 1〜2小節目=和音1（Fm=F#m）、3〜4小節目=和音2（D）。4小節目はドラムの入りで、スネアの連打の半分(2拍)=6拍目で和音を止める
+    r0=root[c][0]; f5=fifth[c]; t3=third[c]
+    if i==0:
+        sw1.append(tr(f"{r0}:8_",-5)); sw2.append("R:4"); sw3.append("R:8")
+    elif i==1:
+        sw1.append(""); sw2.append(tr(f"{f5}:4_",-5)); sw3.append("")
+    elif i==2:
+        sw1.append(tr(f"{r0}:6_ R:2",-5)); sw2.append(tr(f"{f5}:6_ R:2",-5)); sw3.append(tr(f"{t3}:6_ R:2",-5))
+    else:
+        sw1.append(""); sw2.append(""); sw3.append("")
 chords=[];lead=[];lead2=[];gl=[];gr=[];bass=[];kick=[];snare=[];hat=[];tomp=[];crashp=[]
 vcount=ccount=0
 for name,ch,lds in secs:
@@ -251,9 +256,9 @@ song={"title":"melocore-pluck-v2","description":"メロコアパンク v2。ベ�
  "bpm":172,"beats":4,"chords":" ".join(chords),"barsPerChord":1,"repeats":1,"feel":"rock","tone":"rock",
  "autoAccompaniment":False,"dynamics":"natural","human":0.25,"fills":False,
  "parts":[
-  part("leadGuitar","イントロの和音1（根音・エコー）",sw1,0.09,-0.4,"jazzGuitar","clean",{"reverb":0.5,"chorus":0,"attack":0.6,"release":0.95,"echo":{"repeats":2,"time":"dotted8","decay":0.3}}),
-  part("leadGuitar","イントロの和音2（5度・エコー）",sw2,0.09,0.4,"jazzGuitar","clean",{"reverb":0.5,"chorus":0,"attack":0.6,"release":0.95,"echo":{"repeats":2,"time":"dotted8","decay":0.6}}),
-  part("leadGuitar","イントロの和音3（3度・エコー）",sw3,0.10,0,"jazzGuitar","clean",{"reverb":0.5,"chorus":0,"attack":0.6,"release":0.95,"echo":{"repeats":2,"time":"dotted8","decay":0.9}}),
+  part("leadGuitar","イントロの和音1（根音・エコー）",sw1,0.13,-0.4,"jazzGuitar","clean",{"reverb":0.5,"chorus":0,"echo":{"repeats":2,"time":"dotted8","decay":0.3}}),
+  part("leadGuitar","イントロの和音2（5度・エコー）",sw2,0.13,0.4,"jazzGuitar","clean",{"reverb":0.5,"chorus":0,"echo":{"repeats":2,"time":"dotted8","decay":0.6}}),
+  part("leadGuitar","イントロの和音3（3度・エコー）",sw3,0.14,0,"jazzGuitar","clean",{"reverb":0.5,"chorus":0,"echo":{"repeats":2,"time":"dotted8","decay":0.9}}),
   part("leadGuitar","リフ（左・ルート）",gl,0.16,-0.6,"cleanGuitar","overdrive",{"reverb":0.08,"chorus":0}),
   part("leadGuitar","リフ（右・5度）",gr,0.16,0.6,"cleanGuitar","overdrive",{"reverb":0.08,"chorus":0}),
   part("leadGuitar","メロディ／ソロ",lead,0.3,0,"cleanGuitar","clean",{"reverb":0.18,"chorus":0}),
