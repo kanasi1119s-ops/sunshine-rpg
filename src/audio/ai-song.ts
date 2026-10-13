@@ -392,7 +392,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - dynamics: "natural" にすると、人が弾いたような強弱を自動でつける（曲全体の山と谷・4小節フレーズごとの息づかい・拍の強弱・音ごとのわずかなばらつき。出だしと終わりは小さく、7割あたりが頂点）。ソロ・バラード・インストで、のっぺりした曲にしたくないときは基本これを使う。ドラムには半分の深さでかかる。
 - 勉強した内容のガイド（曲を書く前に、必要なものを読む）:（曲の設計図 <曲>.plan.json の書き方と点検は ai-composition-workflow.md。書き出し後は song.mjs gate・novelty・plan-check） docs/sound/ai-composition-workflow.md（AIで作曲する手順・点検）／chord-theory-deep.md（ジャンル別・場面別の進行。分数コード G/B、6・9・add9・m7b5・7sus4・maj9 も書ける）／bassline-guide.md（ジャンル別のベース）／drum-genre-guide.md（ジャンル別のドラムと drumMix）／sound-design-basics.md（音づくり・帯域）／mix-patterns.md（ミックスのパターン56個と症状別の直し方）／arrangement-deep.md（編曲）／mastering-guide.md（仕上げ）／amp-sim-guide.md（アンプ）。
 - 書き出しの仕上げ（コマンドの引数。曲のJSONには書かない）: --master-preset game（-14LUFS）・rock（-10）・loud（-8）・calm（-16）、--space hall|room|plate（自作IRの畳み込み残響）、--space-wet、--widen。natural の曲は圧縮をやさしくして強弱の起伏を残す。
-- parts: 自分で書くパート。1曲に1〜8パート。
+- parts: 自分で書くパート。1曲に1〜16パート。
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。
   - sustain: 音の伸び（0.2〜3、省略は1）。0.3〜0.6＝スタッカート（歯切れよく。ピアノ・ギターの刻み・シンセの刻み）、1＝ふつう、1.5〜3＝余韻を残す（ハープ・鐘・パッド・琴・アルペジオ）。長くした音は次の音に重なる。
   - phrase: フレーズの長さ（拍。2〜32。メロディは4か8がおすすめ）。その長さごとに、出だしを少し弱く→山で強く→終わりを引く強弱がつく（機械的に平らな演奏をさけ、歌うような表情になる）。ドラムでは使わない。
@@ -464,6 +464,7 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
 - motifs／parts[].motif: 主題（docs/sound/data/motifs.json の akari・yugami・wa・kazoku・daihyo）。{ id, at: 小節番号か "chorus", transform: [...] }。
 - layers の peel: true／数で、層を外から順に抜く。sections の add／gain で、そのセクションだけ層を足す・音量を変える。` + RHYTHM_GUIDE_ADDENDUM + AI_SONG_JPOP_GUIDE;
 
+const MAX_PARTS = 16;
 const DUR_RULE = /^\d+(\.\d+)?$/;
 
 /** 奏法の記号の深さ（半音）。記号1つ＝1半音、記号のあとに「.」が付くと 0.5 半音。最大 4。 */
@@ -490,7 +491,7 @@ function markParams(marks: string): Partial<Record<"^" | "/" | "\\", number>> {
 /** AIソングの fx（beats つき）を FxSpec に直す。知らない種類は注意を出して飛ばす。 */
 function parseAiFx(list: AiFx[], bpm: number, where: string, warnings: string[]): FxSpec[] {
   const out: FxSpec[] = [];
-  for (const raw of list.slice(0, 8)) {
+  for (const raw of list.slice(0, MAX_PARTS)) {
     if (!raw || !(FX_TYPES as readonly string[]).includes(raw.type)) {
       warnings.push(`${where}: エフェクター「${raw?.type}」は使えないので飛ばしました（使える種類: ${FX_TYPES.join("・")}）`);
       continue;

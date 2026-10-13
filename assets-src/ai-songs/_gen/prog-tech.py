@@ -310,11 +310,15 @@ song = {
         jp("kick", "kick", "バスドラ（リフに合わせて）", 0.22, 0, tok=" ".join(drum["kick"])),
         jp("snare", "snare", "スネア（まとまりの頭）", 0.16, 0, tok=" ".join(drum["snare"]), extra={"push": 0.02}),
         jp("hihat", "hihat", "ハイハット", 0.065, 0.3, tok=" ".join(drum["hihat"]), extra={"push": -0.01}),
+        jp("crash", "crash", "クラッシュ", 0.08, -0.3, tok=" ".join(drum["crash"])),
+        jp("tom", "tom", "タムのフィル", 0.14, 0.2, tok=" ".join(drum["tom"])),
         jp("bass", "bass", "ベース（リフに合わせる）", 0.17, 0),
         jp("rgL", "distGuitar", "リフ（左）", 0.09, -0.9, amp="loudmetal"),
         jp("rgR", "distGuitar", "リフ（右）／和音の5度", 0.09, 0.9, amp="loudmetal"),
         jp("lead", "leadGuitar", "リード（旋律・走句・ソロ）", 0.11, 0.1, amp="loudrock", extra={"noRestrike": True}),
         jp("clean", "guitar", "クリーンのアルペジオ", 0.12, -0.4, amp="clean", extra={"sustain": 1.8, "chorus": 0, "reverb": 0.3}),
+        jp("clean2", "guitar", "クリーンの高いアルペジオ", 0.09, 0.45, amp="clean", extra={"sustain": 2, "chorus": 0, "reverb": 0.35}),
+        jp("strings", "strings", "弦のパッド", 0.1, -0.5),
     ],
 }
 del song["grouping"]
