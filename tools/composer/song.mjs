@@ -114,7 +114,7 @@ try {
     }
   } else if (args[0] === "sounds") {
     const { SOUND_SETS } = await kit.soundSets();
-    for (const s of Object.values(SOUND_SETS)) console.log(`${s.id}\t${s.label}\n  ${s.description}\n  音源: ベース ${s.overlays.bass}・ドラム ${s.overlays.drums}・ギター ${s.overlays.guitar}${s.tempoHint ? `　目安テンポ ${s.tempoHint[0]}〜${s.tempoHint[1]}` : ""}`);
+    for (const s of Object.values(SOUND_SETS)) console.log(`${s.id}\t${s.label}\n  ${s.description}\n  音源: ベース ${s.overlays.bass}・ドラム ${s.overlays.drums}・ギター ${s.overlays.guitar}${s.overlays.orchestra ? `・オーケストラ ${s.overlays.orchestra}` : ""}${s.overlays.piano ? `・ピアノ ${s.overlays.piano}` : ""}${s.tempoHint ? `　目安テンポ ${s.tempoHint[0]}〜${s.tempoHint[1]}` : ""}`);
   } else if (args[0] === "build" && args[1]) {
     try {
       const name = path.basename(args[1]).replace(/\.json$/i, "").toLowerCase().replace(/[^a-z0-9-]+/g, "-");

@@ -143,7 +143,7 @@ export const SOUND_SETS: Record<string, SoundSet> = {
     label: "バラード（ピアノ＋弦）",
     description: "ピアノが主役、弦は右奥。ドラムは極小。曲には dynamics:\"natural\" をつけて起伏を残す。ホールの残響。",
     source: "docs/sound/mix-patterns.md M26（推定）",
-    overlays: { bass: "finger", drums: "jazz", guitar: "gretsch" },
+    overlays: { bass: "finger", drums: "jazz", guitar: "gretsch", orchestra: "vsco", piano: "salamander" },
     tone: "rock",
     parts: {
       piano: { volume: 0.16, panWidth: 0.2, reverb: 0.25, bright: -0.1 }, strings: { volume: 0.08, panWidth: 0.3, reverb: 0.45, bright: -0.2, chorus: 0.2, duck: 0.25 },
@@ -159,7 +159,7 @@ export const SOUND_SETS: Record<string, SoundSet> = {
     label: "ジャズトリオ（ピアノ・ベース・ドラム）",
     description: "ピアノを左、ベースをわずかに右。圧縮はごく軽く、残響は短い部屋。ドラムは小さく、ライドを控えめに。",
     source: "docs/sound/mix-patterns.md M27（推定）",
-    overlays: { bass: "jazz", drums: "jazz", guitar: "hofner" },
+    overlays: { bass: "jazz", drums: "jazz", guitar: "hofner", piano: "salamander" },
     tone: "rock",
     parts: {
       piano: { volume: 0.16, panWidth: 0.3, reverb: 0.12 }, bass: { volume: 0.13, bright: -0.1, reverb: 0.04 },
@@ -205,7 +205,7 @@ export const SOUND_SETS: Record<string, SoundSet> = {
     label: "アンビエント（広い・静か）",
     description: "2つのパッドを左右反対に。低域を空け、残響を多めに。ドラムなし。起伏は音のオン・オフで作る。",
     source: "docs/sound/mix-patterns.md M38（推定）",
-    overlays: { bass: "std", drums: "std", guitar: "std" },
+    overlays: { bass: "std", drums: "std", guitar: "std", orchestra: "vsco", piano: "salamander" },
     tone: "rock",
     parts: {
       pad: { volume: 0.09, panWidth: 0.4, chorus: 0.35, reverb: 0.55, bright: -0.2 }, strings: { volume: 0.06, reverb: 0.5 },
@@ -219,7 +219,7 @@ export const SOUND_SETS: Record<string, SoundSet> = {
     label: "オーケストラ（手前から奥へ）",
     description: "弦が手前（残響少なめ）、管がその後ろ、打楽器が最後方。弦を左右に分ける。ホールの共通残響。",
     source: "docs/sound/mix-patterns.md M39（推定）",
-    overlays: { bass: "std", drums: "std", guitar: "std" },
+    overlays: { bass: "std", drums: "std", guitar: "std", orchestra: "vsco", piano: "salamander" },
     tone: "rock",
     parts: {
       strings: { volume: 0.08, panWidth: 0.4, reverb: 0.25 }, bass: { volume: 0.07, bright: -0.2, reverb: 0.2 }, brass: { volume: 0.09, panWidth: 0.2, reverb: 0.4, bright: -0.1 },
@@ -266,7 +266,7 @@ export const SOUND_SETS: Record<string, SoundSet> = {
     label: "ゲーム：町",
     description: "生ギターが主役で、低い楽器は少なめ。人の声（会話・市場の効果音）が重なるので1〜4kHzを控えめに。",
     source: "docs/sound/mix-patterns.md M47 と mastering-guide §3-1 #12",
-    overlays: { bass: "finger", drums: "supra", guitar: "gretsch" },
+    overlays: { bass: "finger", drums: "supra", guitar: "gretsch", orchestra: "vsco", piano: "salamander" },
     tone: "rock",
     parts: {
       guitar: { volume: 0.18, panWidth: 0.35, reverb: 0.15 }, lead: { volume: 0.1, reverb: 0.25 }, leadGuitar: { volume: 0.1, reverb: 0.25 },
@@ -281,7 +281,7 @@ export const SOUND_SETS: Record<string, SoundSet> = {
     label: "ゲーム：ダンジョン",
     description: "暗いパッドと弦、疎らなベル。足音や水滴の効果音が聞こえるよう2〜4kHzを空ける。広いホールで静かに。",
     source: "docs/sound/mix-patterns.md M48 と mastering-guide §3-1 #15",
-    overlays: { bass: "std", drums: "std", guitar: "std" },
+    overlays: { bass: "std", drums: "std", guitar: "std", orchestra: "vsco" },
     tone: "rock",
     parts: {
       pad: { volume: 0.09, panWidth: 0.3, bright: -0.35, reverb: 0.5, chorus: 0.1 }, strings: { volume: 0.07, panWidth: 0.3, bright: -0.3, reverb: 0.5 },
