@@ -129,7 +129,7 @@ function channelKey(track: Track, program: number): string {
 }
 const clamp127 = (v: number): number => Math.max(0, Math.min(127, Math.round(v)));
 /** ドラムの太鼓の種類 → GMのキー */
-const DRUM_GROUP_KEYS = { kick: [35, 36], snare: [37, 38, 39, 40], hat: [42, 44, 46], tom: [41, 43, 45, 47, 48, 50], crash: [49, 52, 55, 57] } as const;
+const DRUM_GROUP_KEYS = { kick: [35, 36], snare: [37, 38, 39, 40], hat: [42, 44, 46], tom: [41, 43, 45, 47, 48, 50], crash: [49, 51, 52, 53, 55, 57, 59] } as const;
 
 export function scoreToMidi(score: Score): Uint8Array {
   return scoreToMidiInfo(score).midi;
@@ -375,6 +375,11 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       });
     }
     const boost = inst ? BOOST[inst] ?? 1 : 1;
+    // シンバルは、たたいたら次にたたくまで（最長 8 拍）鳴り続ける。すぐに止めない（人間の指摘 2026-10-14）
+    // ドラム全般も同じ: 半分で切らず、次に同じ音をたたくまで（シンバル最長 8 拍、ほかの太鼓は最長 2 拍）鳴らす。閉じたハイハットだけ従来どおり短い
+    const cymbalStarts: number[] = [];
+    if (isDrum && inst !== "hihat") { let bb = 0; for (const q of track.notes) { if (q.note !== REST) cymbalStarts.push(bb); bb += q.durationBeats; } }
+    let cymbalIdx = 0;
     let beat = 0;
     for (const n of track.notes) {
       const startBeat = beat;
@@ -419,6 +424,9 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         if (!quant) vol *= 1 + (humanize(secStart + 9.1) - 1) * 1.5;
       } else if (inst === "crash") {
         lenScale = 3;
+        // 音名で種類を選ぶ: C2（既定）クラッシュ／D2 ライド／E2 ライド2／F2 ライドのカップ／G2 クラッシュ2／A2 スプラッシュ／B2 チャイナ
+        const CYM: Record<string, number> = { D: 51, E: 59, F: 53, G: 57, A: 55, B: 52 };
+        if (n.note !== "C2") drumKey = CYM[n.note[0]?.toUpperCase() ?? ""] ?? drumKey;
       }
       // 曲の頭の2拍は強く（聴き手をつかむ、最初の一撃）
       const strike = score.opening && startBeat < 2 ? 1.22 : 1;
@@ -427,7 +435,9 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       const velocity = Math.min(127, Math.round(velocityOf(vol, boost, track.volume, score.dynamicRange === "wide") * strike * rhythmSoft));
       // 音の長さのばらつき（人の弾き方）: 短い音は、少し短く切れたり、つながったり
       if (Hp > 0 && drumNote === undefined && n.gate === undefined && n.durationBeats <= 1) lenScale *= 1 - 0.14 * Hp * rnd(startBeat * 3.1 + trackSeed);
-      const len = Math.max(20, Math.round((n.open && inst === "hihat" ? Math.max(n.durationBeats, 0.5) : n.durationBeats) * PPQ * lenScale * (drumNote === undefined ? n.gate ?? 1 : 1)));
+      let cymbalLen: number | undefined;
+      if (isDrum && inst !== "hihat") { const ci = cymbalStarts.indexOf(startBeat, cymbalIdx); if (ci >= 0) cymbalIdx = ci; const nxt = cymbalStarts[cymbalIdx + 1]; const cap = inst === "crash" ? 8 : 2; cymbalLen = Math.round(Math.min(cap, nxt !== undefined ? Math.max(inst === "crash" ? 0.5 : 0.1, nxt - startBeat) : cap) * PPQ); }
+      const len = cymbalLen ?? Math.max(20, Math.round((n.open && inst === "hihat" ? Math.max(n.durationBeats, 0.5) : n.durationBeats) * PPQ * lenScale * (drumNote === undefined ? n.gate ?? 1 : 1)));
       const push = (pitch: number, at: number, vel: number, length: number, target: { channel: number; list: Ev[] } = { channel, list }): void => {
         const p = Math.max(0, Math.min(127, pitch));
         target.list.push({ tick: at, order: 2, bytes: [0x90 | target.channel, p, vel] });

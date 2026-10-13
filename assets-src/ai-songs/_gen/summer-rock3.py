@@ -11,7 +11,7 @@ chords,P=build()
 # ── ドラムを毎小節ちがう形に（人間の指摘「ドラムが毎回単調」2026-10-14）──
 import random
 def varied_drums():
-    K,S,H,C,T=[],[],[],[],[]
+    K,S,H,C,T,R=[],[],[],[],[],[]
     ncho=0
     for b,(sec,c,i,n) in enumerate(bars):
         rnd=random.Random(1000+b*7+i)
@@ -70,10 +70,24 @@ def varied_drums():
             if i==0: cr="g:X..............."
             if last: k=sn=h="g:X..............."; h="R:4"; cr="g:X..............."
         for a,v in ((K,k),(S,sn),(H,h)): a.append(v if v.startswith(("g:","R:")) else "g:"+v)
-        C.append(cr); T.append("g:"+tm if tm else "R:4")
-    return K,S,H,C,T
-_k,_s,_h,_c,_t=varied_drums()
-P["kick"],P["snare"],P["hat"],P["crash"],P["tom"]=_k,_s,_h,_c,_t
+        C.append(cr)
+        # タム: 高いタム→フロアタムへ下ろす（C4 高 〜 A2 低）
+        if tm:
+            hits=[j for j,ch in enumerate(tm) if ch in "xX"]; pit=["C4","A3","G3","E3","C3","A2"]; toks=[]; kk=0
+            for j,ch in enumerate(tm):
+                if ch in "xX":
+                    toks.append(pit[min(len(pit)-1,kk*len(pit)//max(1,len(hits)))]+":0.25"+("!" if ch=="X" else "")); kk+=1
+                else: toks.append("R:0.25")
+            T.append(" ".join(toks))
+        else: T.append("R:4")
+        # ライドシンバル: サビ(2回目以降)・ソロは4小節のうち後半、Aメロ2回目は一部、ハイハットのかわりに（D2=ライド、F2=カップ）
+        use=(sec=="chorus" and cn>=1 and ph>=2) or (sec=="solo" and ph!=3) or (sec=="verse" and si>5 and ph==2) or (sec=="inter" and ph>=2 and not last)
+        if use and not last:
+            R.append(("F2:0.5 " if ph==2 else "D2:0.5 ")+"D2:0.5 D2:0.5 D2:0.5 D2:0.5 D2:0.5 D2:0.5 D2:0.5"); H[-1]="R:4"
+        else: R.append("R:4")
+    return K,S,H,C,T,R
+_k,_s,_h,_c,_t,_r=varied_drums()
+P["kick"],P["snare"],P["hat"],P["crash"],P["tom"],P["ride"]=_k,_s,_h,_c,_t,_r
 KIND={"intro":"intro","verse":"verse","pre":"pre","chorus":"chorus","inter":"interlude","solo":"solo","bridge":"bridge","outro":"outro"}
 sections=[{"kind":KIND[s],"bars":n} for s,n in SEC]
 sections[11]["from"]="stopBeat"  # 2つ目のサビの前で一瞬止める
@@ -83,7 +97,7 @@ def part(inst,role,vol,pan,key,**kw):
 OCT={"gain":1,"octave":-1}
 song={"title":"まぶしい夏の入口 v3（ロック）","description":"（見本・仮）夏を感じる明るいロック。A長調・bpm160・8ビート。ギターは和音のストロークだけ（単音は弾かない）。メロディはトランペット、ソロとアルペジオはピアノ（録音音源）。","bpm":160,"beats":4,"chords":" ".join(chords),"barsPerChord":1,"repeats":1,"autoAccompaniment":False,"feel":"rock","tone":"rock","human":0.2,"dynamics":"natural","instrumentCheck":False,"sections":sections,
 "parts":[
- part("kick","キック",0.22,0,"kick"),part("snare","スネア",0.18,0,"snare"),part("hihat","ハイハット",0.07,0,"hat"),part("tom","タム（フィル）",0.16,0.0,"tom"),part("crash","クラッシュ",0.09,0,"crash"),
+ part("kick","キック",0.22,0,"kick"),part("snare","スネア",0.18,0,"snare"),part("hihat","ハイハット",0.07,0,"hat"),part("tom","タム（ハイ〜フロア）",0.2,0.0,"tom"),part("crash","ライドシンバル",0.07,0.15,"ride"),part("crash","クラッシュ",0.09,0,"crash"),
  part("bass","ベース（根音の8分）",0.18,0,"bass"),
  {"instrument":"guitar","role":"歪みギターL（8分刻み）","volume":0.17,"pan":-0.7,"amp":"loudrock","notes":"","strum":{"pattern":"D.DDD.DD","spreadMs":9,"strings":4},"sections":{"intro":0,"verse":0.8,"pre":0.9,"interlude":0.8,"chorus":1,"solo":0.9,"bridge":0.6,"outro":1}},
  {"instrument":"guitar","role":"歪みギターR（8分刻み）","volume":0.17,"pan":0.7,"amp":"loudrock","notes":"","strum":{"pattern":"D.DDD.DD","spreadMs":11,"strings":4},"sections":{"intro":0,"verse":0.8,"pre":0.9,"interlude":0.8,"chorus":1,"solo":0.9,"bridge":0.6,"outro":1}},
