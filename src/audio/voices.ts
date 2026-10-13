@@ -698,6 +698,23 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       out.push(click);
       break;
     }
+    case "kickTrigger": {
+      // 打撃音の層: 高域の「カチッ」と、短い低い胴
+      out.push(noise(ctx, t, t + 0.02, filter(ctx, "highpass", 3500, pluckGain(ctx, dest, t, v * 0.9, 0.0005, 0.006))));
+      const b = osc(ctx, "sine", 150, t, t + 0.12, pluckGain(ctx, dest, t, v * 0.8, 0.001, 0.07), 1);
+      b.frequency.exponentialRampToValueAtTime(55, t + 0.04);
+      out.push(b);
+      break;
+    }
+    case "impactHit": {
+      // 映画のインパクト: 音程が落ちる低音＋割れる打音＋長い暗いノイズの余韻
+      const b = osc(ctx, "sine", f * 3, t, t + 1.6, pluckGain(ctx, dest, t, v * 1.2, 0.001, 1.2), 1);
+      b.frequency.exponentialRampToValueAtTime(Math.max(20, f), t + 0.12);
+      out.push(b);
+      out.push(noise(ctx, t, t + 0.04, filter(ctx, "highpass", 2500, pluckGain(ctx, dest, t, v * 0.9, 0.0005, 0.012))));
+      out.push(noise(ctx, t, t + 1.8, filter(ctx, "lowpass", 500, pluckGain(ctx, dest, t, v * 0.7, 0.002, 1.4))));
+      break;
+    }
     case "drawbarOrgan": {
       const g = sustainGain(ctx, dest, t, d, v * 0.5, 0.008, 0.05);
       for (const h of DRAWBAR) out.push(osc(ctx, "sine", f * h.ratio, t, t + d + 0.1, g, h.level * 0.35));

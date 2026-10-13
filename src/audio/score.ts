@@ -69,7 +69,9 @@ export type Instrument =
   // 追加の音源（2026-10-11）: FMのベル／エレピ、ドローバーオルガン、ユニゾンのノコギリ波
   | "fmBell" | "fmEpiano" | "drawbarOrgan" | "unisonSaw"
   // 打楽器の音程つきタム（2026-10-13）: ロートタム・キャノンタム・インチ違いのタム。鍵盤の高さ＝太鼓の基本の高さ（C2〜C6）
-  | "rotoTom" | "cannonTom" | "inchTom";
+  | "rotoTom" | "cannonTom" | "inchTom"
+  // バスドラのトリガー（打撃音の層）と、映画のインパクト（2026-10-13）
+  | "kickTrigger" | "impactHit";
 
 /**
  * ジャンル別のアンプ（2026-09-30 追加）。ジャズ・ブルース・ファンク・クランチ・ハードロック・パンク・ファズ・

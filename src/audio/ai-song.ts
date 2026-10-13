@@ -41,12 +41,12 @@ export const SYNTH_PATCHES: Record<string, number> = {
   viola: 41, cello: 42, contrabass: 43, pizzicato: 45, timpani: 47, stringEnsemble: 48, slowStrings: 49,
   trumpet: 56, trombone: 57, tuba: 58, horn: 60, brassSection: 61, oboe: 68, bassoon: 70, clarinet: 71, piccolo: 72, flute: 73,
   glockenspiel: 9, marimba: 12, churchOrgan: 19, reedOrgan: 20,
-  rotoTom: 117, cannonTom: 118, inchTom: 119,
+  rotoTom: 117, cannonTom: 118, inchTom: 119, kickTrigger: 120, impactHit: 121,
   iceRain: 96, soundtrack: 97, crystal: 98, atmosphere: 99, brightness: 100, goblin: 101, echoDrops: 102, starTheme: 103,
 };
 
 /** 録音のオーケストラ音源（orchestra.sf3）が鳴らす patch。使うと、書き出しで自動的にオーケストラ音源が選ばれる。 */
-export const ORCHESTRA_PATCHES: string[] = ["violin", "viola", "cello", "contrabass", "pizzicato", "timpani", "stringEnsemble", "slowStrings", "trumpet", "trombone", "tuba", "horn", "brassSection", "oboe", "bassoon", "clarinet", "piccolo", "flute", "glockenspiel", "marimba", "churchOrgan", "reedOrgan", "rotoTom", "cannonTom", "inchTom"];
+export const ORCHESTRA_PATCHES: string[] = ["violin", "viola", "cello", "contrabass", "pizzicato", "timpani", "stringEnsemble", "slowStrings", "trumpet", "trombone", "tuba", "horn", "brassSection", "oboe", "bassoon", "clarinet", "piccolo", "flute", "glockenspiel", "marimba", "churchOrgan", "reedOrgan", "rotoTom", "cannonTom", "inchTom", "kickTrigger", "impactHit"];
 
 type PartSectionSpecJson = Partial<Record<SectionKind, number | boolean | { gain?: number; octave?: number }>>;
 /** AIソング形式の amp 名 → 同梱のNAMモデル。namKay3〜10 は、ビンテージ真空管アンプ（Kay 703, CC0）のゲイン3・5・7・10。 */
@@ -67,6 +67,9 @@ export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   instrument: Instrument;
   /** パートの名前（メロディ・ハモリ・ベースなど。表示用）。 */
   role: string;
+  /** kick のパートだけ。true か "punch"／"tack"／"knock" を書くと、キックと同じリズムで、打撃音の層（バスドラのトリガー）を重ねる。tack＝高域のカチッだけ（メタル）、punch＝低い胴つき、knock＝木と皮の中域。triggerVolume＝層の音量（既定は kick の 0.6倍）。 */
+  trigger?: boolean | "punch" | "tack" | "knock";
+  triggerVolume?: number;
   /** 音量 0〜0.4 くらい。 */
   volume: number;
   /** 左右の位置 -1（左）〜1（右）。 */
@@ -211,7 +214,7 @@ export const AI_INSTRUMENTS: Record<string, string> = {
   piano: "ピアノ（A0〜C8）", keys: "エレピ（C2〜C6）", harpsichord: "チェンバロ（C2〜C6）", strings: "弦楽（C2〜C7）", pad: "パッド（C2〜C6）", choir: "合唱（C3〜C6）", brass: "ブラス（E2〜C6）", lead: "シンセリード（C3〜C7）", bell: "鐘（C4〜C7）",
   sitar: "シタール（C3〜C6。インド風の撥弦。ドローンと旋律に）", koto: "琴（C3〜C6。和風の撥弦）", shamisen: "三味線（C3〜C6。歯切れのよい和の撥弦）", banjo: "バンジョー（C3〜C6）", harp: "ハープ（C2〜C7。分散和音に）", kalimba: "カリンバ（C4〜C7。やさしい指ピアノ）",
   fmBell: "FMのベル（C3〜C7。金属的で長く響く非整数倍音。鐘・きらめき・場面の合図に）", fmEpiano: "FMのエレピ（C2〜C6。すっきり丸い電気ピアノ。コード・アルペジオに）", drawbarOrgan: "ドローバーオルガン（C2〜C6。持続する厚い音。賛美歌・教会・ロック）", unisonSaw: "ユニゾンのノコギリ波（C2〜C6。5本重ねのぶ厚いシンセ。サビ・コードの厚み・リードに）",
-  rotoTom: "ロートタム（C2〜C6。片面・胴なしの太鼓。ピンと張った明るい打音で、打った直後に音が少し上がり、長めに伸びる。鍵盤の高さ＝太鼓の基本の高さ。F2＝18インチ〜B3＝6インチ）", cannonTom: "キャノンタム（C2〜C6。両側が開いた筒状の太鼓。深く「ポン」と抜けて余韻が短い。高さはロートタムと同じ表）", inchTom: "インチ違いのタム（C2〜C6。ふつうの2枚張りのタム。大きいほど低く、太く、長く響く。F2＝18インチ・A2＝16・C3＝14・D#3＝12・F3＝10・A3＝8・B3＝6）",
+  rotoTom: "ロートタム（C2〜C6。片面・胴なしの太鼓。ピンと張った明るい打音で、打った直後に音が少し上がり、長めに伸びる。鍵盤の高さ＝太鼓の基本の高さ。F2＝18インチ〜B3＝6インチ）", cannonTom: "キャノンタム（C2〜C6。両側が開いた筒状の太鼓。深く「ポン」と抜けて余韻が短い。高さはロートタムと同じ表）", kickTrigger: "バスドラのトリガー（打撃音の層。キックと同じリズムで重ねる。鍵盤で種類を選ぶ: C1〜B1＝punch 低い胴＋カチッ／C2〜B2＝tack 高域のカチッだけ／C3〜B3＝knock 木と皮の中域の「ドン」。音程は付かない。ふつうは kick のパートに trigger を書く）", impactHit: "インパクト（E1〜C4。映画の「ドン！」。割れる打音・音程が落ちる低音・長い残響。場面の変わり目・サビ頭・ボスの登場に。鍵盤＝胴鳴りの高さ）", inchTom: "インチ違いのタム（C2〜C6。ふつうの2枚張りのタム。大きいほど低く、太く、長く響く。F2＝18インチ・A2＝16・C3＝14・D#3＝12・F3＝10・A3＝8・B3＝6）",
   panflute: "パンフルート（C4〜C7。息の音の入った民族風の笛）", shakuhachi: "尺八（C4〜C6。和風の息の笛）", ocarina: "オカリナ（C4〜C7。素朴な笛）", fiddle: "フィドル（G3〜E6。民謡風の擦弦）", bagpipe: "バグパイプ（A3〜A5。ドローン向きのリード）",
 };
 const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom"]);
@@ -803,6 +806,14 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     const placed = modulation && p.modulate !== false ? transposeTrack(track, modulation.semitones, modulation.atBeat) : track;
     if (p.push !== undefined || p.pushMs !== undefined) explicitPush.add(placed);
     parts.push(placed);
+    if (p.instrument === "kick" && p.trigger) {
+      const kind = p.trigger === "punch" || p.trigger === "knock" || p.trigger === "tack" ? p.trigger : "tack";
+      const key = kind === "punch" ? "C1" : kind === "knock" ? "C3" : "C2";
+      const tv = Number(p.triggerVolume) > 0 ? Number(p.triggerVolume) : placed.volume * 0.6;
+      const trig: Track = { ...placed, waveform: "sawtooth", instrument: "kickTrigger", program: SYNTH_PATCHES.kickTrigger, volume: Math.max(0.02, Math.min(0.5, tv)), pan: 0, notes: placed.notes.map((n) => (n.note === REST ? n : { ...n, note: key })) };
+      parts.push(trig);
+      handRoles.push("バスドラのトリガー"); articulationFlags.push(false); modulatedFlags.push(false);
+    }
   });
   if (errors.length) throw new Error(errors.join("\n"));
   if (parts.length === 0 && accompaniment.length === 0) throw new Error("パートがありません");

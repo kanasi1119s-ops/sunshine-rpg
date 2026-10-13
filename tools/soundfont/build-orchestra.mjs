@@ -348,7 +348,7 @@ for (const e of ENSEMBLES) {
   }
 }
 // タム（ロートタム117・キャノンタム118・インチ違いのタム119）。計算で作った音。鍵盤の高さ＝太鼓の基本の高さ（toms-synth.mjs）
-import { TOM_KINDS, synthTom } from "./toms-synth.mjs";
+import { TOM_KINDS, synthTom, TRIGGER_KINDS, synthTrigger, synthImpact } from "./toms-synth.mjs";
 for (const kind of Object.keys(TOM_KINDS)) {
   const k = TOM_KINDS[kind];
   const inst = emptyInstrument(k.program, k.name);
@@ -362,6 +362,40 @@ for (const kind of Object.keys(TOM_KINDS)) {
     z.velRange = layer === "loud" ? { min: 66, max: 127 } : { min: 1, max: 104 };
     z.setGenerator(GeneratorTypes.overridingRootKey, root);
     z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(k.release));
+    z.setGenerator(GeneratorTypes.attackVolEnv, timecents(0.001));
+    total++;
+  }
+}
+// バスドラのトリガー（120）: 鍵盤で種類を選ぶ（24〜35 punch／36〜47 tack／48〜59 knock）。音程は付けない（scaleTuning 0）
+{
+  const inst = emptyInstrument(120, "Kick Trigger");
+  for (const [kind, [lo, hi]] of Object.entries(TRIGGER_KINDS)) for (const layer of ["soft", "loud"]) {
+    const smp = new BasicSample(`trigger ${kind} ${layer}`, SR, 60, 0, SampleTypes.monoSample, 0, 0);
+    smp.setAudioData(synthTrigger(kind, layer === "loud" ? 0.95 : 0.4), SR);
+    out.addSamples(smp);
+    const z = inst.createZone(smp);
+    z.keyRange = { min: kind === "punch" ? 0 : lo, max: kind === "knock" ? 127 : hi };
+    z.velRange = layer === "loud" ? { min: 66, max: 127 } : { min: 1, max: 104 };
+    z.setGenerator(GeneratorTypes.overridingRootKey, 60);
+    z.setGenerator(GeneratorTypes.scaleTuning, 0);
+    z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(0.05));
+    z.setGenerator(GeneratorTypes.attackVolEnv, timecents(0.001));
+    total++;
+  }
+}
+// インパクト（121）: 鍵盤＝胴鳴りの高さ（E1〜C4）
+{
+  const inst = emptyInstrument(121, "Impact Hit");
+  const roots = []; for (let m = 28; m <= 60; m += 4) roots.push(m);
+  for (const root of roots) for (const layer of ["soft", "loud"]) {
+    const smp = new BasicSample(`impact ${root} ${layer}`, SR, root, 0, SampleTypes.monoSample, 0, 0);
+    smp.setAudioData(synthImpact(root, layer === "loud" ? 0.95 : 0.5), SR);
+    out.addSamples(smp);
+    const z = inst.createZone(smp);
+    z.keyRange = { min: root === 28 ? 0 : root - 1, max: root === 60 ? 127 : root + 2 };
+    z.velRange = layer === "loud" ? { min: 66, max: 127 } : { min: 1, max: 104 };
+    z.setGenerator(GeneratorTypes.overridingRootKey, root);
+    z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(1.5));
     z.setGenerator(GeneratorTypes.attackVolEnv, timecents(0.001));
     total++;
   }

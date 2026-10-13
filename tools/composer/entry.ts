@@ -348,7 +348,7 @@ const driveChk = h("input", { type: "checkbox" });
 const finaleSel = select(FINALES.map((f) => [f.id, `${f.title}（${f.scene}）`] as [string, string]), FINALES[0].id);
 const nameIn = h("input", { type: "text", value: state.name });
 
-const ORCH_PROGRAMS = new Set([9, 12, 19, 20, 40, 41, 42, 43, 45, 47, 48, 49, 56, 57, 58, 60, 61, 68, 70, 71, 72, 73]);
+const ORCH_PROGRAMS = new Set([9, 12, 19, 20, 40, 41, 42, 43, 45, 47, 48, 49, 56, 57, 58, 60, 61, 68, 70, 71, 72, 73, 117, 118, 119, 120, 121]);
 function loadScore(score: Score, name: string): void {
   // 曲が「patch で選んだ」オーケストラの楽器（バイオリン・チェロ・フルート・ホルンなど）を使うときは、オーケストラ音源を自動で選ぶ
   if (orchId === "std" && score.tracks.some((t) => t.program !== undefined && ORCH_PROGRAMS.has(t.program))) {
