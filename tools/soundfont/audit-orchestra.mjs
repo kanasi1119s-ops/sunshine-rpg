@@ -64,7 +64,7 @@ for (const p of progs) {
   const e = [1, 3, 5, 7, 9, 11].map((s) => win(s, s + 0.5));
   let maxj = 0, at = 0; const s0 = Math.floor(1.5 * SR), s1 = Math.floor(11 * SR); for (let i = s0; i < s1; i++) { const d = Math.abs(y[i + 1] - y[i]); if (d > maxj) { maxj = d; at = i / SR; } }
   const rmsAll = win(1.5, 11);
-  report.push({ p, name, notes: per.length, issues, sustain: e.map((v) => +(20 * Math.log10(v + 1e-9)).toFixed(1)), maxJump: +maxj.toFixed(3), rms: +rmsAll.toFixed(3) });
+  report.push({ p, name, per: per.map((q) => [q.midi, +q.rms.toFixed(5)]), notes: per.length, issues, sustain: e.map((v) => +(20 * Math.log10(v + 1e-9)).toFixed(1)), maxJump: +maxj.toFixed(3), rms: +rmsAll.toFixed(3) });
   console.log(`${p} ${name}: 点検 ${per.length}音 問題 ${issues.length}件 / 長い音の音量(dB) ${e.map((v) => (20 * Math.log10(v + 1e-9)).toFixed(0)).join(",")} / 最大の段差 ${maxj.toFixed(3)} (${at.toFixed(1)}s)`);
   for (const s of issues.slice(0, 8)) console.log("   ", s);
 }

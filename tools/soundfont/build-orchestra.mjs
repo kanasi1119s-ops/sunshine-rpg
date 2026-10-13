@@ -12,6 +12,8 @@ import { BasicSample, SampleTypes } from "spessasynth_core";
 
 const VSCO = process.env.VSCO ?? "/tmp/vsco";
 const OUT = path.resolve("assets-src/soundfont/extra");
+const TRIM_FILE = path.resolve("assets-src/soundfont/extra/src/orchestra-trim.json");
+const TRIM = fs.existsSync(TRIM_FILE) && !process.env.NO_TRIM ? JSON.parse(fs.readFileSync(TRIM_FILE, "utf8")) : {}; // プログラム番号 → { 鍵盤の番号: 補正dB }（tools/soundfont/make-orchestra-trim.mjs）
 const NOTE = /(?<![A-Za-z])([A-G])(#|b)?(-?\d)(?![0-9])/;
 const PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 
@@ -219,6 +221,16 @@ function buildSet(set) {
     }
   }
   const gain = gainSum / items.length;
+  // 半音ごとの補正表があるときは、いちばん持ち上げたい分（B）を録音に焼きこむ（ピークの余裕の範囲で）。各ゾーンは (B − 補正) だけ下げる
+  const trimTab = TRIM[set.programs[0]] ?? {};
+  const wantB = Math.max(0, ...Object.values(trimTab));
+  if (wantB > 0) {
+    let head = 40;
+    for (const it of items) { let pk = 0; for (let i = 0; i < it.data.length; i++) pk = Math.max(pk, Math.abs(it.data[i])); head = Math.min(head, 20 * Math.log10(0.98 / pk)); }
+    set.bake = Math.max(0, Math.min(wantB, head));
+    const mul = 10 ** (set.bake / 20);
+    for (const it of items) for (let i = 0; i < it.data.length; i++) it.data[i] *= mul;
+  } else set.bake = 0;
   console.log("  音量そろえ", set.id, (20 * Math.log10(gain)).toFixed(1) + "dB");
   return items;
 }
@@ -270,20 +282,31 @@ function addZones(inst, set, items, window) {
   const ranges = keyRanges(items.map((i) => i.root), set.range);
   let n = 0;
   const hasLoud = new Set(items.filter((i) => i.layer === "loud").map((i) => i.root));
+  const trimTab = TRIM[set.programs[0]] ?? {};
+  const bake = set.bake ?? 0;
   for (const it of items) {
     const kr = ranges.get(it.root);
     const lo = Math.max(kr[0], window?.[0] ?? 0), hi = Math.min(kr[1], window?.[1] ?? 127);
     if (lo > hi) continue;
-    const z = inst.createZone(sampleOf(set, it));
-    z.keyRange = { min: lo, max: hi };
     const twoLayers = hasLoud.has(it.root);
-    // 弱い層と強い層は、真ん中でかさねる（切りかえの段差を、重なる音のなめらかな入れかわりにする）
-    z.velRange = it.layer === "loud" ? { min: 66, max: 127 } : { min: 1, max: twoLayers ? 104 : 127 };
-    z.setGenerator(GeneratorTypes.overridingRootKey, it.root);
-    z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(set.loop ? 0.45 : 0.9));
-    z.setGenerator(GeneratorTypes.attackVolEnv, timecents(set.id === "organ" ? 0.01 : 0.005));
-    if (it.le > 0) z.setGenerator(GeneratorTypes.sampleModes, 1);
-    n++;
+    // 補正表があれば、半音ごとのゾーンに分けて、鍵盤ごとに音量を合わせる
+    const spans = bake > 0 || Object.keys(trimTab).length ? Array.from({ length: hi - lo + 1 }, (_, i) => [lo + i, lo + i]) : [[lo, hi]];
+    for (const [a, b] of spans) {
+      const z = inst.createZone(sampleOf(set, it));
+      z.keyRange = { min: a, max: b };
+      // 弱い層と強い層は、真ん中でかさねる（切りかえの段差を、重なる音のなめらかな入れかわりにする）
+      z.velRange = it.layer === "loud" ? { min: 66, max: 127 } : { min: 1, max: twoLayers ? 104 : 127 };
+      z.setGenerator(GeneratorTypes.overridingRootKey, it.root);
+      z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(set.loop ? 0.45 : 0.9));
+      z.setGenerator(GeneratorTypes.attackVolEnv, timecents(set.id === "organ" ? 0.01 : 0.005));
+      if (bake > 0) {
+        const trim = Math.min(bake, trimTab[a] ?? 0);
+        const cb = Math.round((bake - trim) * 10);
+        if (cb > 0) z.setGenerator(GeneratorTypes.initialAttenuation, Math.min(1440, cb));
+      }
+      if (it.le > 0) z.setGenerator(GeneratorTypes.sampleModes, 1);
+      n++;
+    }
   }
   return n;
 }
