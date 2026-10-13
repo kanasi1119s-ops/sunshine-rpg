@@ -43,6 +43,10 @@ export interface StrumSpec {
   spreadMs?: number;
   /** 使う弦の数（3〜6。省略は 5）。 */
   strings?: number;
+  /** 弦を次にはじく（またはコードが変わる）まで鳴らし続ける（省略は true）。false で従来の「1ステップ分だけ」。 */
+  ring?: boolean;
+  /** ring のとき、1 つの音をのばす上限（拍。省略は 2）。 */
+  ringMax?: number;
   /** カポ（0〜11。コード名は鳴る和音で、押さえる形をカポの分だけ下げる。パートの capo でもよい）。 */
   capo?: number;
   /** true にすると、展開した和音のパートにも自動しゃくり（autoScoop）をかける（省略は、かけない）。 */
@@ -175,40 +179,60 @@ export function expandStrum(p: AiPart, rawSpec: StrumSpec, ctx: ExpandCtx, warni
     if (ticks <= 0) return;
     events[v].push(name ? `${name}:${fmt(ticks / TICKS)}${marks}` : `R:${fmt(ticks / TICKS)}`);
   };
+  // 実際のギターは、弦をはじいたら次にその弦をはじくまで（またはコードが変わるまで）鳴り続ける。ring（既定: 入）はそれをまねる
+  const ring = spec.ring !== false;
+  const ringMaxT = Math.round(clamp(Number(spec.ringMax) || 2, 0.25, 8) * TICKS);
+  const gapT = Math.round(0.03 * TICKS);
+  const palmT = Math.round(0.25 * TICKS);
+  type Hit = { t: number; name: string; marks: string; dur: number; short: boolean };
   for (const f of forms) {
     const spanT = Math.round(f.beats * TICKS);
     const vs = f.voicing;
+    const hits: Hit[][] = Array.from({ length: voiceCount }, () => []);
     let t = 0;
     for (let ti = 0; t < spanT; ti++) {
       const tok = tokens[ti % tokens.length];
       const dur = Math.min(tok.steps * stepT, spanT - t);
-      if (tok.ch === "-") {
-        for (let v = 0; v < voiceCount; v++) push(v, null, dur);
-        t += dur;
-        continue;
-      }
+      if (tok.ch === "-") { t += dur; continue; }
       const ch = tok.ch;
       const up = ch === "U" || ch === "u";
       const muted = ch === "x" || ch === "X";
       const ghost = ch === "g" || ch === "G";
       const palm = ch === "m" || ch === "M";
-      const marks = muted ? (tok.accent ? "!'" : ",'") : ghost ? ",,'" : palm ? (tok.accent ? "!" : ",") : tok.accent ? "!" : up || ch === "d" ? "," : t % TICKS === 0 ? "!" : "";
+      // 強さ: 1拍目と 2・4 拍（バックビート）を強く、アップは弱く
+      const onBeat = t % TICKS === 0;
+      const beatNo = Math.floor(t / TICKS) % 4;
+      const marks = muted ? (tok.accent ? "!'" : ",'") : ghost ? ",,'" : palm ? (tok.accent ? "!" : ",") : tok.accent ? "!" : up || ch === "d" ? "," : onBeat && (beatNo === 0 || !ring) ? "!" : "";
       // アップは高い弦だけ（半分、少なくとも 2 本）
       const played = up ? vs.map((_, i) => i).slice(-Math.min(vs.length, Math.max(2, Math.ceil(vs.length / 2)))) : vs.map((_, i) => i);
       for (let v = 0; v < voiceCount; v++) {
         const idx = v - (voiceCount - vs.length);
-        if (idx < 0 || !played.includes(idx)) { push(v, null, dur); continue; }
-        // ダウンは低い弦から、アップは高い弦から順にずらす
+        if (idx < 0 || !played.includes(idx)) continue;
+        // ダウンは低い弦から、アップは高い弦から順にずらす（アップは速く）
         const order = up ? played.length - 1 - played.indexOf(idx) : idx - (played[0] ?? 0);
-        const off = Math.min(order * spreadT, Math.floor(dur / 2));
-        push(v, null, off);
-        // パームミュート（m）は音を 7 割に切る
-        const body = dur - off;
-        const sound = palm ? Math.max(1, Math.round(body * 0.7)) : body;
-        push(v, nameOf(vs[idx]), sound, marks);
-        if (body - sound > 0) push(v, null, body - sound);
+        const off = Math.min(Math.round(order * spreadT * (up ? 0.65 : 1)), Math.floor(dur / 2));
+        hits[v].push({ t: t + off, name: nameOf(vs[idx]), marks, dur: dur - off, short: muted || ghost || palm });
       }
       t += dur;
+    }
+    for (let v = 0; v < voiceCount; v++) {
+      let cur = 0;
+      const hs = hits[v];
+      for (let i = 0; i < hs.length; i++) {
+        const h = hs[i];
+        if (h.t > cur) push(v, null, h.t - cur);
+        const nextT = i + 1 < hs.length ? hs[i + 1].t : spanT;
+        let len: number;
+        if (!ring) len = h.short ? h.dur : h.dur;
+        else if (h.short) len = Math.min(h.dur, palmT);
+        else len = Math.min(nextT - h.t - gapT, ringMaxT);
+        len = Math.max(Math.round(0.06 * TICKS), Math.min(len, nextT - h.t));
+        // パームミュートは、音を短く切ったあと、次の打つまで休む（普通に弾いた直後にいきなりミュートにしない）
+        if (!ring && h.short) len = Math.max(1, Math.round(h.dur * 0.7));
+        push(v, h.name, len, h.marks);
+        cur = h.t + len;
+      }
+      if (spanT > cur) push(v, null, spanT - cur);
     }
   }
   const vol = Math.max(0.02, (Number(p.volume) || 0.2) / Math.sqrt(voiceCount));

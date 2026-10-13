@@ -159,7 +159,7 @@ if (process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1])))
           z.setGenerator(GeneratorTypes.sustainVolEnv, 0);
           z.setGenerator(GeneratorTypes.chorusEffectsSend, 0);
           z.setGenerator(GeneratorTypes.initialFilterQ, 0);
-          z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(program === 26 && v.release26 ? v.release26 : 0.25)); // 26番(jazzGuitar)だけ余韻を長くできる（イントロの和音の「伸び」用）
+          z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(program === 26 && v.release26 ? v.release26 : 0.55)); // 26番(jazzGuitar)だけ余韻を長くできる（イントロの和音の「伸び」用）
           z.setGenerator(GeneratorTypes.overridingRootKey, k);
         }
       }

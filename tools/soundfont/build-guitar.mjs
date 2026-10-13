@@ -60,7 +60,7 @@ for (const id of which.length ? which : Object.keys(VARIANTS)) {
         // 元の入れものにある「コーラスの送り25%」と「フィルターの共鳴」も打ち消す（電子的に聞こえる原因になる）
         z.setGenerator(GeneratorTypes.chorusEffectsSend, 0);
         z.setGenerator(GeneratorTypes.initialFilterQ, 0);
-        z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(0.35));
+        z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(0.55));
         z.setGenerator(GeneratorTypes.overridingRootKey, key);
         zones++;
       }

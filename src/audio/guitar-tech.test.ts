@@ -195,6 +195,13 @@ describe("(4) strum.pattern の型の名前・アクセント・ゴースト・�
     expect(mk([gt({ strum: { pattern: "nanika" } })]).warnings.join()).toContain("nanika");
     expect(mk([gt({ strum: { pattern: "DQ" } })]).warnings.join()).toContain("pattern");
   });
+  it("ring（既定）: 低い弦はアップの間も鳴り続け、次に弾くまでのびる。ring:false なら従来どおり1ステップ分", () => {
+    const on = starts(mk([gt({ strum: { pattern: "D.DU.UDU" } })], { chords: "C" }).score.tracks[0]);
+    // D.（1拍）の低い弦は、次のD（1拍後）の直前まで鳴る
+    expect(on[0].dur).toBeGreaterThan(0.9);
+    const off = starts(mk([gt({ strum: { pattern: "D.DU.UDU", ring: false } })], { chords: "C" }).score.tracks[0]);
+    expect(off[0].dur).toBeLessThanOrEqual(1.01);
+  });
   it("> は次の1打のアクセント、m は 7 割に切るパームミュート、g は弱いゴースト", () => {
     // 1 小節ごとに型が頭から始まる。step 0.5: D.(1拍) m D g D = 3拍、残り1拍はくり返しの頭の D
     const { score } = mk([gt({ strum: { pattern: ">D.mDgD" } })], { chords: "C" });
@@ -204,7 +211,7 @@ describe("(4) strum.pattern の型の名前・アクセント・ゴースト・�
     expect(s[0].dur).toBeCloseTo(1, 1);
     expect(s[1].velocity).toBe(0.7); // m
     expect(s[1].at).toBeCloseTo(1, 1);
-    expect(s[1].dur).toBeCloseTo(0.35, 1);
+    expect(s[1].dur).toBeCloseTo(0.25, 1); // パームは 0.25 拍に切る（長く伸ばした直後ではなく、短い刻みの中だけ）
     expect(s[2].velocity).toBeUndefined(); // 拍の頭でないダウン
     expect(s[3].velocity).toBe(0.45); // g
     expect(s[3].gate).toBe(0.4);

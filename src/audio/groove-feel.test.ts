@@ -15,7 +15,7 @@ describe("既存の出力は変わらない（提案1〜10は省略時に今ま�
       "rock|modern|undefined": "50db7aa5|e236bc4d|16", "rock|modern|0.8": "26ad389d|e236bc4d|16", "rock|real|undefined": "c5328cea|e236bc4d|16", "rock|real|0.8": "cd1d79eb|e236bc4d|16",
       "jazz|modern|undefined": "6078c1da|77b38a28|13.714285714285714", "jazz|modern|0.8": "fc7697ae|3b2ac85e|13.714285714285714", "jazz|real|undefined": "964e9464|77b38a28|13.714285714285714", "jazz|real|0.8": "35de0ca9|3b2ac85e|13.714285714285714",
       // ワルツの MIDI だけは、拍子記号が 4/4 → 3/4 に直った（ほかの音は同じ。再生用の時刻と長さのハッシュは実装前と同じ）
-      "waltz|modern|undefined": "4b401ae3|fd10805e|15", "waltz|modern|0.8": "7e672db0|fd10805e|15", "waltz|real|undefined": "ef01a8e7|fd10805e|15", "waltz|real|0.8": "fa52152f|fd10805e|15",
+      "waltz|modern|undefined": "4558b217|fd10805e|15", "waltz|modern|0.8": "e91a7dcc|fd10805e|15", "waltz|real|undefined": "ba7d2813|fd10805e|15", "waltz|real|0.8": "b174b503|fd10805e|15",
     };
     for (const [name, song] of [["rock", ROCK_SONG], ["jazz", JAZZ_SONG], ["waltz", WALTZ_SONG]] as const) for (const edition of ["modern", "real"] as const) for (const human of [undefined, 0.8]) {
       const { score } = aiSongToScore({ ...song, ...(human ? { human } : {}) });
