@@ -148,6 +148,8 @@
 | Virtuosity Drums（ジャズ用の生ドラム。作曲ソフトの「ジャズ」ドラム） | https://github.com/sfzinstruments/virtuosity_drums | 2026-10-07 | CC0。`tools/soundfont/build-drums-jazz.mjs` でマイクをまぜ、SF3（約2.9MB）にした。`assets-src/soundfont/extra/drums-jazz.sf3`。**ゲームには入れていない** | CC0（クレジット不要） | 不要 |
 | ジャンル別のベース・ドラム（ロック／メタル／J-POP） | 上の FreePats ベース（ピック・指弾き）と Muldjord Kit | 2026-10-07 | 同じ録音に、音量バランスとEQを変えただけのもの（`build-bass.mjs`・`build-drums.mjs` の PROFILES）。`bass-rock/metal/jpop.sf3`、`drums-rock/metal/jpop.sf3` | ベースは CC0。ドラムは Muldjord Kit と同じ CC BY 4.0 | ドラムは必要（ゲームに入れる場合） |
 | ドラム「スープラ」（乾いた金属スネア寄せ。作曲ソフトの「ドラム音源」） | 上の Muldjord Kit | 2026-10-08 | 同じ録音に、スネアだけ別のEQ（400Hz付近を引き、5.5kHzを持ち上げ）・短い余韻・部屋の鳴りを減らす設定をかけたもの（`build-drums.mjs` の PROFILES の supra）。`drums-supra.sf3`（約2.6MB）。特定の実機の録音ではなく、あくまで音色を寄せた近似。**ゲームには入れていない** | Muldjord Kit と同じ CC BY 4.0 | 必要（ゲームに入れる場合） |
+| タム（ロートタム・キャノンタム・インチ違い。作曲ソフトの「オーケストラ音源」の GM 117〜119） | 上の Muldjord Kit の録音のタム（Tom1〜4） | 2026-10-13 | `tools/soundfont/toms-real.mjs`。録音を音程の測定→鍵盤の高さに合わせて音程をずらし、キャノン＝余韻短縮・高域を丸め、ロート＝打った直後の音程の動きを加えた。`orchestra.sf3` に収録。**ゲームには入れていない** | Muldjord Kit と同じ CC BY 4.0 | 必要（ゲームに入れる場合） |
+| バスドラのトリガー・インパクト（`orchestra.sf3` の GM 120・121） | 計算で作った音（`tools/soundfont/toms-synth.mjs`。録音素材なし） | 2026-10-13 | 素材の権利なし | 自作 | 不要 |
 | 使わない: Salamander Drumkit（CC BY-SA 3.0）、Big Rusty Drums（CC0、2.3GB） | https://github.com/endolith/Salamander-Drumkit | 2026-10-07 | 前者は改変したサンプルを同じ条件（SA）で公開する義務があり、扱いにくい。後者は容量が大きく、クセの強い古い機材のため見送り | — | — |
 
 

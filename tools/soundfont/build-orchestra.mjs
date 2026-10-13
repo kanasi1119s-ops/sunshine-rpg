@@ -347,25 +347,10 @@ for (const e of ENSEMBLES) {
     }
   }
 }
-// タム（ロートタム117・キャノンタム118・インチ違いのタム119）。計算で作った音。鍵盤の高さ＝太鼓の基本の高さ（toms-synth.mjs）
-import { TOM_KINDS, synthTom, TRIGGER_KINDS, synthTrigger, synthImpact } from "./toms-synth.mjs";
-for (const kind of Object.keys(TOM_KINDS)) {
-  const k = TOM_KINDS[kind];
-  const inst = emptyInstrument(k.program, k.name);
-  const roots = []; for (let m = 36; m <= 84; m += 2) roots.push(m);
-  for (const root of roots) for (const layer of ["soft", "loud"]) {
-    const smp = new BasicSample(`${kind} ${root} ${layer}`, SR, root, 0, SampleTypes.monoSample, 0, 0);
-    smp.setAudioData(synthTom(kind, root, layer === "loud" ? 0.95 : 0.45), SR);
-    out.addSamples(smp);
-    const z = inst.createZone(smp);
-    z.keyRange = { min: root === 36 ? 0 : root - 1, max: root === 84 ? 127 : root };
-    z.velRange = layer === "loud" ? { min: 66, max: 127 } : { min: 1, max: 104 };
-    z.setGenerator(GeneratorTypes.overridingRootKey, root);
-    z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(k.release));
-    z.setGenerator(GeneratorTypes.attackVolEnv, timecents(0.001));
-    total++;
-  }
-}
+// タム（ロートタム117・キャノンタム118・インチ違いのタム119）。Muldjord Kit の録音のタムを、鍵盤の高さに合わせて音程をずらして使う（toms-real.mjs）
+import { TRIGGER_KINDS, synthTrigger, synthImpact } from "./toms-synth.mjs";
+import { addRealToms } from "./toms-real.mjs";
+total += addRealToms(out, emptyInstrument, path.resolve("assets-src/soundfont/extra/drums-muldjord.sf3"));
 // バスドラのトリガー（120）: 鍵盤で種類を選ぶ（24〜35 punch／36〜47 tack／48〜59 knock）。音程は付けない（scaleTuning 0）
 {
   const inst = emptyInstrument(120, "Kick Trigger");
