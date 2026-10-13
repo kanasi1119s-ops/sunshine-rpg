@@ -80,6 +80,8 @@ export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   patch?: string;
   /** タイミングのずれ（拍。-0.1〜0.1）。+＝あと乗り（スネア・バックビート）、-＝前のめり（ハイハット・刻み）。省略は0。 */
   push?: number;
+  /** 小節ごとの音量の倍率（1小節め・2小節め…の順。足りない小節は1）。曲全体の強弱（緩急）の曲線を、パートごとに書く。例 [0.7,0.7,0.8,0.8,0.9,0.9,1,1]。 */
+  barGain?: number[];
   /** 残響の送り量（0〜1）。省略は楽器ごとの標準。録音音源（real版）で効く。 */
   reverb?: number;
   /** コーラス（広がりの揺らぎ）の量（0〜1）。省略は標準。real版で効く。 */
@@ -297,6 +299,7 @@ export const AI_SONG_SCHEMA = {
           sustain: { type: "number" },
           patch: { type: "string", enum: Object.keys(SYNTH_PATCHES) },
           push: { type: "number" },
+          barGain: { type: "array", items: { type: "number" } },
           pushMs: { type: "number" },
           human: { type: "number" },
           humanTiming: { type: "number" },
@@ -777,6 +780,14 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     const arranged = (notes: NoteEvent[]): NoteEvent[] => {
       let ns = notes;
       if (partSpec && sectionList) ns = applyPartSections(ns, sectionList, beatsPerBar, partSpec, drum);
+      if (Array.isArray(p.barGain) && p.barGain.length) {
+        let pos = 0;
+        ns = ns.map((n) => {
+          const g = Number(p.barGain![Math.floor((pos + 1e-9) / beatsPerBar)]);
+          pos += n.durationBeats;
+          return n.note === REST || !Number.isFinite(g) || g === 1 ? n : { ...n, velocity: (n.velocity ?? 1) * Math.max(0, g) };
+        });
+      }
       if (mutes.length && p.keepBreak !== true) ns = applyMutesToNotes(ns, mutes);
       return ns;
     };

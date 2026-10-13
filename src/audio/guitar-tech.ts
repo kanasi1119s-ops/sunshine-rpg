@@ -105,7 +105,7 @@ export function expandNoteSugar(text: string): string {
 }
 
 // ───────── 型の名前の辞書（strum.pattern） ─────────
-export interface StrumPreset { pattern: string; step: number; spreadMs: number; strings: number; sustain?: number; note: string }
+export interface StrumPreset { pattern: string; step: number; spreadMs: number; strings: number; sustain?: number; /** false＝1ステップ分で切る（レゲエ・スカの裏打ちなど、短く切るのが本来の型） */ ring?: boolean; note: string }
 /**
  * strum.pattern に書ける型の名前。pattern・step・spreadMs・strings の既定値を持つ（strum に書いた値が優先）。
  * 型の文字: D ダウン・d 弱いダウン・U/u アップ・x ミュート・g ゴースト（とても弱いミュート）・m パームミュート（短く切る）・> 次の1打をアクセント・. のばす・- 休み。
@@ -113,7 +113,7 @@ export interface StrumPreset { pattern: string; step: number; spreadMs: number; 
 export const STRUM_PRESETS: Record<string, StrumPreset> = {
   pop: { pattern: "D.DU.UDU", step: 0.5, spreadMs: 12, strings: 5, note: "定番の8分（初期値と同じ）" },
   folk6: { pattern: "D.DU.UDU", step: 0.5, spreadMs: 12, strings: 6, note: "フォークの6弦" },
-  skank: { pattern: "-U-U-U-U", step: 0.5, spreadMs: 6, strings: 3, sustain: 0.4, note: "レゲエ・スカの裏打ち（3弦）" },
+  skank: { pattern: "-U-U-U-U", step: 0.5, spreadMs: 6, strings: 3, sustain: 0.4, ring: false, note: "レゲエ・スカの裏打ち（3弦）" },
   rasgueado: { pattern: "DDDD............", step: 0.25, spreadMs: 8, strings: 5, note: "フラメンコ風の連打。1拍のあと3拍のばす" },
   bossa: { pattern: "D.d.-u.-", step: 0.25, spreadMs: 8, strings: 4, sustain: 1, note: "ボサノバのバチーダ（和音の層。拍1の頭と裏、拍2の2つ目の16分）" },
   "funk-cut": { pattern: "gxDgxDgxDgxDgxDx", step: 0.25, spreadMs: 4, strings: 4, sustain: 0.7, note: "ファンクの16分カッティング（3-3-3-3-4）。4音の和音・中低域で（banned-sounds.md の1を避ける）" },
@@ -132,7 +132,7 @@ export function resolveStrumSpec<T extends { pattern?: string; step?: number; sp
     warnings.push(`${where}: strum.pattern の名前「${key}」は表にありません（${Object.keys(STRUM_PRESETS).join("・")}）。D d U u x g m > . - の文字で書くか、名前を直してください`);
   }
   if (!preset) return spec;
-  return { ...spec, pattern: preset.pattern, step: spec.step ?? preset.step, spreadMs: spec.spreadMs ?? preset.spreadMs, strings: spec.strings ?? preset.strings, sustainPreset: preset.sustain };
+  return { ...spec, pattern: preset.pattern, step: spec.step ?? preset.step, spreadMs: spec.spreadMs ?? preset.spreadMs, strings: spec.strings ?? preset.strings, sustainPreset: preset.sustain, ...(preset.ring === false && (spec as { ring?: boolean }).ring === undefined ? { ring: false } : {}) };
 }
 
 // ───────── カポ ─────────
