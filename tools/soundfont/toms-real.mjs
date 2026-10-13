@@ -15,6 +15,22 @@ function decodeOgg(bytes) {
   return new Float32Array(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
 }
 
+/** 重さを足す: 低域を持ち上げ（約+6dB・160Hz以下）、さらに1オクターブ下の低い胴鳴り（元の低域をゆっくり再生したもの）を小さく重ねる。 */
+function addWeight(x) {
+  const n = x.length;
+  const a = Math.exp((-2 * Math.PI * 160) / SR);
+  let lp = 0;
+  const low = new Float32Array(n);
+  for (let i = 0; i < n; i++) { lp = a * lp + (1 - a) * x[i]; low[i] = lp; }
+  // 低域の持ち上げ（低域をもう1回足す＝約+6dB）
+  const sub = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const pos = i * 0.5, j = Math.floor(pos), fr = pos - j; // 半分の速さ＝1オクターブ下
+    sub[i] = j + 1 < n ? low[j] * (1 - fr) + low[j + 1] * fr : 0;
+  }
+  for (let i = 0; i < n; i++) x[i] += 1.0 * low[i] + 0.7 * sub[i];
+}
+
 /** 基本の高さ（MIDIのノート番号、小数）を測る。打った直後を避けて 0.04〜0.4 秒を見る。 */
 function detectTomMidi(x) {
   const a = Math.floor(SR * 0.04), N = Math.min(Math.floor(SR * 0.36), x.length - a);
@@ -65,7 +81,8 @@ export function addRealToms(out, emptyInstrument, kitFile, report = console.log)
       items.push({ v, data: mono });
     }
     const loud = items[items.length - 1];
-    const pitch = detectTomMidi(loud.data);
+    const pitch = detectTomMidi(loud.data); // 重さを足す前に測る（低域を足すと1オクターブ下に誤って測れる）
+    for (const it of items) addWeight(it.data);
     // 音の大きさ: 強い層の頭0.3秒の rms を目標にそろえる（層どうしの強弱は元のまま）
     let s = 0; const m = Math.floor(SR * 0.3); for (let i = 0; i < m; i++) s += loud.data[i] ** 2;
     const g = 0.12 / Math.sqrt(s / m);
