@@ -1,0 +1,21 @@
+{
+ "title": "タムの素の音（録音そのまま・エコーなし）",
+ "description": "（確認用・仮）録音のタム4本を、音程をずらさずに鳴らす。",
+ "bpm": 100,
+ "beats": 4,
+ "chords": "Em Em Em Em Em Em",
+ "barsPerChord": 1,
+ "repeats": 1,
+ "autoAccompaniment": false,
+ "tone": "rock",
+ "parts": [
+  {
+   "instrument": "inchTom",
+   "patch": "inchTom",
+   "role": "タム（素）",
+   "volume": 0.3,
+   "reverb": 0.15,
+   "notes": "C#3:1 G2:1 F#2:1 C#2:1 C#3:0.5 C#3:0.5 G2:0.5 G2:0.5 F#2:0.5 F#2:0.5 C#2:0.5 C#2:0.5 C#3:0.25 C#3:0.25 G2:0.25 G2:0.25 F#2:0.25 F#2:0.25 C#2:0.25 C#2:0.25 C#3:0.25 G2:0.25 F#2:0.25 C#2:0.25 C#2:0.25 F#2:0.25 G2:0.25 C#3:0.25 C#3:0.5 R:0.5 G2:0.5 R:0.5 F#2:1 C#2:2 R:7"
+  }
+ ]
+}
