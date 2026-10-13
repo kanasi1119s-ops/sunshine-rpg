@@ -37,8 +37,15 @@ export const SYNTH_PATCHES: Record<string, number> = {
   acousticBass: 32, fretlessBass: 35, slapBass: 36, synthBass1: 38, synthBass2: 39, synthStrings1: 50, synthStrings2: 51,
   violin: 40, squareLead: 80, sawLead: 81, calliope: 82, chiff: 83, charang: 84, fifths: 86, bassLead: 87,
   newAge: 88, warmPad: 89, polysynth: 90, bowedGlass: 92, metalPad: 93, halo: 94, sweep: 95,
+  // オーケストラの独奏・合奏（作曲ソフトの「オーケストラ音源」＝VSCO 2 CE の録音で鳴る。書き出しでは自動で選ばれる）
+  viola: 41, cello: 42, contrabass: 43, pizzicato: 45, timpani: 47, stringEnsemble: 48, slowStrings: 49,
+  trumpet: 56, trombone: 57, tuba: 58, horn: 60, brassSection: 61, oboe: 68, bassoon: 70, clarinet: 71, piccolo: 72, flute: 73,
+  glockenspiel: 9, marimba: 12, churchOrgan: 19, reedOrgan: 20,
   iceRain: 96, soundtrack: 97, crystal: 98, atmosphere: 99, brightness: 100, goblin: 101, echoDrops: 102, starTheme: 103,
 };
+
+/** 録音のオーケストラ音源（orchestra.sf3）が鳴らす patch。使うと、書き出しで自動的にオーケストラ音源が選ばれる。 */
+export const ORCHESTRA_PATCHES: string[] = ["violin", "viola", "cello", "contrabass", "pizzicato", "timpani", "stringEnsemble", "slowStrings", "trumpet", "trombone", "tuba", "horn", "brassSection", "oboe", "bassoon", "clarinet", "piccolo", "flute", "glockenspiel", "marimba", "churchOrgan", "reedOrgan"];
 
 type PartSectionSpecJson = Partial<Record<SectionKind, number | boolean | { gain?: number; octave?: number }>>;
 /** AIソング形式の amp 名 → 同梱のNAMモデル。namKay3〜10 は、ビンテージ真空管アンプ（Kay 703, CC0）のゲイン3・5・7・10。 */

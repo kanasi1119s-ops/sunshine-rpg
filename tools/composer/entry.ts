@@ -24,6 +24,8 @@ import guitarPluckWarmUrl from "../../assets-src/soundfont/extra/guitar-pluck-wa
 import bassJpopUrl from "../../assets-src/soundfont/extra/bass-jpop.sf3?url";
 import drumsJpopUrl from "../../assets-src/soundfont/extra/drums-jpop.sf3?url";
 import drumsSupraUrl from "../../assets-src/soundfont/extra/drums-supra.sf3?url";
+import orchestraUrl from "../../assets-src/soundfont/extra/orchestra.sf3?url";
+import pianoSalamanderUrl from "../../assets-src/soundfont/extra/piano-salamander.sf3?url";
 import synthsUrl from "../../assets-src/soundfont/extra/synths.sf3?url";
 import drumsMuldjordUrl from "../../assets-src/soundfont/extra/drums-muldjord.sf3?url";
 import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url";
@@ -104,6 +106,18 @@ const GUITAR_FONTS: Record<string, { label: string; url: string | null }> = {
   "pluck-soft": { label: "弦モデル（少しやわらかい。保存版）", url: guitarPluckSoftUrl },
   "pluck-clear": { label: "弦モデル（クリア。空気感が強い）", url: guitarPluckClearUrl },
 };
+// オーケストラ（弦・金管・木管・ティンパニ・ハープ・マリンバ・オルガン）の音源。VSCO 2 Community Edition（CC0）の録音
+const ORCH_FONTS: Record<string, { label: string; url: string | null }> = {
+  std: { label: "標準（上の音源）", url: null },
+  vsco: { label: "オーケストラ（VSCO 2 CE。弦・金管・木管・ティンパニ・ハープ）", url: orchestraUrl },
+};
+// グランドピアノ。Salamander Grand Piano V3（Alexander Holm。CC BY 3.0）の録音
+const PIANO_FONTS: Record<string, { label: string; url: string | null }> = {
+  std: { label: "標準（上の音源）", url: null },
+  salamander: { label: "グランドピアノ（Salamander）", url: pianoSalamanderUrl },
+};
+let orchId = "std";
+let pianoId = "std";
 let guitarId = "std";
 let bassId = "std";
 let drumsId = "std";
@@ -117,6 +131,10 @@ try {
   if (g && g in GUITAR_FONTS) guitarId = g;
   const d = window.localStorage.getItem("sunshine-composer-drums");
   if (d && d in DRUM_FONTS) drumsId = d;
+  const o = window.localStorage.getItem("sunshine-composer-orchestra");
+  if (o && o in ORCH_FONTS) orchId = o;
+  const pn = window.localStorage.getItem("sunshine-composer-piano");
+  if (pn && pn in PIANO_FONTS) pianoId = pn;
 } catch { /* 保存を読めなくても、既定で始める */ }
 async function applySoundfont(id: SoundfontId): Promise<void> {
   soundfontId = id;
@@ -132,9 +150,10 @@ try {
 } catch (error) {
   console.warn("録音音源の埋め込みを読めませんでした:", error);
 }
-async function applyOverlay(slot: "bass" | "drums" | "guitar", id: string): Promise<void> {
-  const table = slot === "bass" ? BASS_FONTS : slot === "guitar" ? GUITAR_FONTS : DRUM_FONTS;
-  if (slot === "bass") bassId = id; else if (slot === "guitar") guitarId = id; else drumsId = id;
+type OverlaySlot = "bass" | "drums" | "guitar" | "orchestra" | "piano";
+async function applyOverlay(slot: OverlaySlot, id: string): Promise<void> {
+  const table = slot === "bass" ? BASS_FONTS : slot === "guitar" ? GUITAR_FONTS : slot === "orchestra" ? ORCH_FONTS : slot === "piano" ? PIANO_FONTS : DRUM_FONTS;
+  if (slot === "bass") bassId = id; else if (slot === "guitar") guitarId = id; else if (slot === "orchestra") orchId = id; else if (slot === "piano") pianoId = id; else drumsId = id;
   const url = table[id]?.url;
   await engine.setOverlaySoundfont(slot, url ? (bytesOf(url).buffer as ArrayBuffer) : null);
   try { window.localStorage.setItem(`sunshine-composer-${slot}`, id); } catch { /* 保存できなくてもよい */ }
@@ -142,7 +161,7 @@ async function applyOverlay(slot: "bass" | "drums" | "guitar", id: string): Prom
 /** 書き出し（WAV）に使う、追加の音源。 */
 function overlayBuffers(): ArrayBuffer[] {
   // シンセの音色（patch で選ぶ GM のシンセ・パッド・FX）は、いつも入れておく
-  return [...[drumsId, bassId, guitarId].flatMap((id, i) => { const u = [DRUM_FONTS, BASS_FONTS, GUITAR_FONTS][i][id]?.url; return u ? [bytesOf(u).buffer as ArrayBuffer] : []; }), bytesOf(synthsUrl).buffer as ArrayBuffer];
+  return [...[drumsId, bassId, guitarId, orchId, pianoId].flatMap((id, i) => { const u = [DRUM_FONTS, BASS_FONTS, GUITAR_FONTS, ORCH_FONTS, PIANO_FONTS][i][id]?.url; return u ? [bytesOf(u).buffer as ArrayBuffer] : []; }), bytesOf(synthsUrl).buffer as ArrayBuffer];
 }
 // 無料のアンプシミュレーター（NAM）: ビルドのときに埋め込んだワークレットとWASMを渡す
 declare const __NAM_PROCESSOR__: string;
@@ -152,6 +171,8 @@ const engine = new AudioEngine();
 void applyOverlay("bass", bassId);
 void applyOverlay("drums", drumsId);
 void applyOverlay("guitar", guitarId);
+void applyOverlay("orchestra", orchId);
+void applyOverlay("piano", pianoId);
 void engine.setOverlaySoundfont("synth", bytesOf(synthsUrl).buffer as ArrayBuffer);
 let namHost: NamHost | null = null;
 /** 同梱のNAMモデル（NAM作者のリポジトリにMITライセンスで入っている見本。docs/assets-credits.md）。キーは "builtin:〇〇"。 */
@@ -327,7 +348,12 @@ const driveChk = h("input", { type: "checkbox" });
 const finaleSel = select(FINALES.map((f) => [f.id, `${f.title}（${f.scene}）`] as [string, string]), FINALES[0].id);
 const nameIn = h("input", { type: "text", value: state.name });
 
+const ORCH_PROGRAMS = new Set([9, 12, 19, 20, 40, 41, 42, 43, 45, 47, 48, 49, 56, 57, 58, 60, 61, 68, 70, 71, 72, 73]);
 function loadScore(score: Score, name: string): void {
+  // 曲が「patch で選んだ」オーケストラの楽器（バイオリン・チェロ・フルート・ホルンなど）を使うときは、オーケストラ音源を自動で選ぶ
+  if (orchId === "std" && score.tracks.some((t) => t.program !== undefined && ORCH_PROGRAMS.has(t.program))) {
+    void applyOverlay("orchestra", "vsco").then(() => { orchSel.value = orchId; });
+  }
   engine.stopBgm();
   state.playing = false;
   state.score = score;
@@ -374,6 +400,10 @@ const drumsSel = select(Object.entries(DRUM_FONTS).map(([id, v]) => [id, v.label
 drumsSel.onchange = () => { const was = state.playing; void applyOverlay("drums", drumsSel.value).then(() => { if (was) play(0); }); };
 const guitarSel = select(Object.entries(GUITAR_FONTS).map(([id, v]) => [id, v.label] as [string, string]), guitarId);
 guitarSel.onchange = () => { const was = state.playing; void applyOverlay("guitar", guitarSel.value).then(() => { if (was) play(0); }); };
+const orchSel = select(Object.entries(ORCH_FONTS).map(([id, v]) => [id, v.label] as [string, string]), orchId);
+orchSel.onchange = () => { const was = state.playing; void applyOverlay("orchestra", orchSel.value).then(() => { if (was) play(0); }); };
+const pianoSel = select(Object.entries(PIANO_FONTS).map(([id, v]) => [id, v.label] as [string, string]), pianoId);
+pianoSel.onchange = () => { const was = state.playing; void applyOverlay("piano", pianoSel.value).then(() => { if (was) play(0); }); };
 // サウンドセット: 選ぶと、アンプ・音量・ミックス・ドラムの設定と、ベース・ドラム・ギターの音源をまとめて切りかえる（曲の中身＝音符は変えない）
 const soundSetSel = select([["", "（選ばない）"], ...Object.values(SOUND_SETS).map((s) => [s.id, s.label] as [string, string])], "");
 soundSetSel.title = "選ぶと、アンプ・音量・ミックス・ドラム・ベース／ドラム／ギターの音源をまとめて切りかえます。もとの曲の音量は、選びなおすと元に戻せません（先にプロジェクトを保存してください）";
@@ -382,8 +412,8 @@ soundSetSel.onchange = () => {
   if (!set) return;
   const was = state.playing;
   state.score = applySoundSet(state.score, set);
-  void Promise.all([applyOverlay("bass", set.overlays.bass in BASS_FONTS ? set.overlays.bass : "std"), applyOverlay("drums", set.overlays.drums in DRUM_FONTS ? set.overlays.drums : "std"), applyOverlay("guitar", set.overlays.guitar in GUITAR_FONTS ? set.overlays.guitar : "std")]).then(() => {
-    bassSel.value = bassId; drumsSel.value = drumsId; guitarSel.value = guitarId;
+  void Promise.all([applyOverlay("bass", set.overlays.bass in BASS_FONTS ? set.overlays.bass : "std"), applyOverlay("drums", set.overlays.drums in DRUM_FONTS ? set.overlays.drums : "std"), applyOverlay("guitar", set.overlays.guitar in GUITAR_FONTS ? set.overlays.guitar : "std"), applyOverlay("orchestra", (set.overlays.orchestra ?? "std") in ORCH_FONTS ? set.overlays.orchestra ?? "std" : "std"), applyOverlay("piano", (set.overlays.piano ?? "std") in PIANO_FONTS ? set.overlays.piano ?? "std" : "std")]).then(() => {
+    bassSel.value = bassId; drumsSel.value = drumsId; guitarSel.value = guitarId; orchSel.value = orchId; pianoSel.value = pianoId;
     renderAll(); save();
     if (was) play(0);
   });
@@ -1196,11 +1226,13 @@ function addAmpPlugin(data: unknown, announce: boolean): AmpPluginDef | null {
 (window as unknown as { __composer: unknown }).__composer = {
   /** 録音音源を切りかえる（"game" か "gu"）。WAVの書き出し（song.mjs --soundfont）が使う。 */
   /** ベース・ドラムの追加の音源を切りかえる（bass: "std"|"finger"|"pick"、drums: "std"|"muldjord"）。 */
-  async setOverlays(bass: string, drums: string, guitar = "std"): Promise<void> {
+  async setOverlays(bass: string, drums: string, guitar = "std", orchestra = "std", piano = "std"): Promise<void> {
     await applyOverlay("bass", bass in BASS_FONTS ? bass : "std");
     await applyOverlay("drums", drums in DRUM_FONTS ? drums : "std");
     await applyOverlay("guitar", guitar in GUITAR_FONTS ? guitar : "std");
-    bassSel.value = bassId; drumsSel.value = drumsId; guitarSel.value = guitarId;
+    await applyOverlay("orchestra", orchestra in ORCH_FONTS ? orchestra : "std");
+    await applyOverlay("piano", piano in PIANO_FONTS ? piano : "std");
+    bassSel.value = bassId; drumsSel.value = drumsId; guitarSel.value = guitarId; orchSel.value = orchId; pianoSel.value = pianoId;
   },
   async setSoundfont(id: string): Promise<void> { await applySoundfont(id === "gu" ? "gu" : "game"); soundfontSel.value = soundfontId; },
   /** `raw: true`: ピークをそろえずに書き出す（ゲーム内の実際の大きさを測るとき。`tools/audio-check/render-catalog.mjs --raw`）。 */
@@ -1921,7 +1953,7 @@ app.append(
     h("div", { class: "transport" }, ui.playBtn, ui.pauseBtn, ui.stopBtn),
     h("div", { class: "lcd" }, h("div", { class: "lcd-time" }, ui.time), lcd("BPM", lcdTempo), lcd("TRK", lcdTracks), lcd("LEN", lcdLen)),
     h("div", { class: "seekwrap" }, ui.seek),
-    h("div", { class: "row topopts" }, field("サウンド", editionSel), field("録音音源", soundfontSel), field("ベース音源", bassSel), field("ドラム音源", drumsSel), field("ギター音源", guitarSel), field("サウンドセット", soundSetSel), field("マスター音量", volIn)),
+    h("div", { class: "row topopts" }, field("サウンド", editionSel), field("録音音源", soundfontSel), field("ベース音源", bassSel), field("ドラム音源", drumsSel), field("ギター音源", guitarSel), field("オーケストラ音源", orchSel), field("ピアノ音源", pianoSel), field("サウンドセット", soundSetSel), field("マスター音量", volIn)),
   ),
   h("div", { class: "daw" },
     panel("TRK", "トラック", ui.trackBox, h("div", { class: "row", style: "margin-top:8px" }, addTrackBtn),

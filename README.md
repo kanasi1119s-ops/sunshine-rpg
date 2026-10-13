@@ -46,3 +46,5 @@ npm run dev
 - BGMの録音音源に、Fluid (R3) GM SoundFont（© 2000-2002 Frank Wen、Mono版 © 2014-2017 Michael Cowgill、MITライセンス）から、ゲームで使う楽器だけを切り出して使っています。再生には spessasynth（Apache-2.0）を使っています。ライセンス文は `public/licenses/` にあります。
 
 - 作曲ソフト（`tools/composer/`）のアンプシミュレーターに、Neural Amp Modeler Core（© 2023 Steven Atkinson、MITライセンス）と、そのリポジトリに同梱の見本のアンプモデル（同じくMIT）を使っています（ゲーム本体には入っていません）。
+
+- 作曲ソフト（`tools/composer/`）のオーケストラ音源に、VSCO 2 Community Edition（Versilian Studios。CC0）の録音を、ピアノ音源に、Salamander Grand Piano V3（Alexander Holm。CC BY 3.0）の録音を変換して使っています（ゲーム本体には入っていません。この音源で書き出した曲をゲームのBGMにするときは、ゲーム内のクレジットにも「Salamander Grand Piano V3 by Alexander Holm (CC BY 3.0)」を載せます）。規約と記録は [`docs/assets-credits.md`](docs/assets-credits.md) にあります。

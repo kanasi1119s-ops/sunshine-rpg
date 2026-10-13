@@ -23,7 +23,7 @@ export interface SoundSet {
   /** 元にした録音・曲のメモ（数値の出どころ）。音そのものは入っていない。 */
   source: string;
   /** 使う追加の音源（作曲ソフトの「ベース音源」「ドラム音源」「ギター音源」の id）。 */
-  overlays: { bass: string; drums: string; guitar: string };
+  overlays: { bass: string; drums: string; guitar: string; orchestra?: string; piano?: string };
   tone?: Score["tone"];
   human?: number;
   /** 楽器ごとの設定。書いていない楽器の音量は 0.06 を上限にする。 */

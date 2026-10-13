@@ -32,7 +32,7 @@ export async function openSongKit() {
   }
 
   /** 曲（AIソング形式のオブジェクト）を確かめて、プロジェクト・MIDI（・WAV）を書き出す。 */
-  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", sound = "", master = null, widen = null, space = "", spaceWet = null, masterPreset = "", tp = null, lowmono = null, sideHpf = null, clip = null, hpf = null, lpf = null, matchEq = "", matchAmount = null, loopTail = false, genre = "", autoRetune = true } = {}) {
+  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", orchestra = "std", piano = "std", sound = "", master = null, widen = null, space = "", spaceWet = null, masterPreset = "", tp = null, lowmono = null, sideHpf = null, clip = null, hpf = null, lpf = null, matchEq = "", matchAmount = null, loopTail = false, genre = "", autoRetune = true } = {}) {
     if (!EDITIONS.includes(edition)) throw new Error("edition は real・ps2・modern のどれか");
     if (!/^[a-z0-9][a-z0-9-]*$/.test(name ?? "")) throw new Error(`name は英小文字・数字・「-」だけ（${name}）`);
     const { aiSongToScore } = await load("/src/audio/ai-song.ts");
@@ -51,6 +51,9 @@ export async function openSongKit() {
     }
     // 書き出しでは、楽器の音域・同時発音・息継ぎの点検を既定で行う（曲に instrumentCheck:false で止める）
     if (songData && typeof songData === "object" && songData.instrumentCheck === undefined) songData = { ...songData, instrumentCheck: true };
+    // オーケストラの patch（violin・cello・flute・horn など）を使う曲は、オーケストラ音源を自動で選ぶ
+    const { ORCHESTRA_PATCHES } = await load("/src/audio/ai-song.ts");
+    if (orchestra === "std" && Array.isArray(songData?.parts) && songData.parts.some((p) => ORCHESTRA_PATCHES.includes(p?.patch))) orchestra = "vsco";
     let { score, song, warnings } = aiSongToScore(songData);
     // サウンドセット: アンプ・音量・ミックス・ドラムの設定と、使う音源（ベース・ドラム・ギター）をまとめて当てはめる
     if (sound) {
@@ -61,6 +64,8 @@ export async function openSongKit() {
       if (bass === "std") bass = set.overlays.bass;
       if (drums === "std") drums = set.overlays.drums;
       if (guitar === "std") guitar = set.overlays.guitar;
+      if (orchestra === "std" && set.overlays.orchestra) orchestra = set.overlays.orchestra;
+      if (piano === "std" && set.overlays.piano) piano = set.overlays.piano;
       if (master === null && set.master) master = set.master.lufs;
       if (widen === null && set.master?.widen) widen = set.master.widen;
       // サウンドセットの master に preset・space・spaceWet があれば、同じ引数（--master-preset・--space・--space-wet）を書いたのと同じ（引数のほうが優先）
@@ -94,7 +99,7 @@ export async function openSongKit() {
     try { const { buildManifest } = await load("/src/audio/song-meta.ts"); files.manifest = path.join(out, `${name}.manifest.json`); fs.writeFileSync(files.manifest, JSON.stringify(buildManifest(name, song.title, score, getScoreDurationSec(score)))); } catch { /* 表が作れなくても曲の書き出しは続ける */ }
     if (wav) {
       files.wav = path.join(out, `${name}.wav`);
-      await renderWav(score, edition, files.wav, soundfont, bass, drums, guitar);
+      await renderWav(score, edition, files.wav, soundfont, bass, drums, guitar, orchestra, piano);
       // 仕上げの音量: 書き出しのときだけ、全体の大きさをそろえる（ゲーム中の再生やアプリの音は変わらない）。ピークは -1dB 以下に抑える
       // 空間（畳み込みリバーブ）: 自作のIRで、書き出しのときだけ残響を足す（hall / room / plate）
       if (space) {
@@ -223,7 +228,7 @@ async function loadPlaywright() {
 }
 
 /** 作曲ソフト（1ファイルのHTML）をヘッドレスのブラウザで開き、作曲ソフトと同じ音でWAVを作る。 */
-export async function renderWav(score, edition, file, soundfont = "game", bass = "std", drums = "std", guitar = "std") {
+export async function renderWav(score, edition, file, soundfont = "game", bass = "std", drums = "std", guitar = "std", orchestra = "std", piano = "std") {
   const html = path.join(ROOT, "dist-composer/index.html");
   const newest = Math.max(...["tools/composer/entry.ts", "tools/composer/template.html"].map((f) => fs.statSync(path.join(ROOT, f)).mtimeMs));
   if (!fs.existsSync(html) || fs.statSync(html).mtimeMs < newest) {
@@ -237,7 +242,7 @@ export async function renderWav(score, edition, file, soundfont = "game", bass =
     // 画面の動き（光るアニメーション）が、描き出しのCPUを食うので止める
     await page.addStyleTag({ content: "*,*::before,*::after{animation:none!important;transition:none!important}" });
     await page.waitForFunction(() => "__composer" in window, undefined, { timeout: 240000 });
-    await page.evaluate(([b, d, g]) => window.__composer.setOverlays(b, d, g), [bass, drums, guitar]);
+    await page.evaluate(([b, d, g, o, p]) => window.__composer.setOverlays(b, d, g, o, p), [bass, drums, guitar, orchestra, piano]);
     if (soundfont === "gu") await page.evaluate(() => window.__composer.setSoundfont("gu"));
     const b64 = await page.evaluate(([s, e]) => window.__composer.renderWav(s, e), [score, edition]);
     fs.writeFileSync(file, Buffer.from(b64, "base64"));
