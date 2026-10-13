@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AI_SONG_GUIDE, AI_SONG_SCHEMA, SYNTH_PATCHES, aiSongToScore, applyPhrase, applySustain, fitToLength, parseNotes } from "./ai-song";
+import { AI_SONG_GUIDE, AI_SONG_SCHEMA, ORCHESTRA_PATCHES, SYNTH_PATCHES, aiSongToScore, applyPhrase, applySustain, fitToLength, parseNotes } from "./ai-song";
 import { trackTotalBeats } from "./edit";
 import { grooveOffsetBeats, REST } from "./score";
 
@@ -160,5 +160,16 @@ describe("ベースの音色（旋律ベース用）", () => {
     expect(SYNTH_PATCHES.acousticBass).toBe(32);
     expect(SYNTH_PATCHES.fretlessBass).toBe(35);
     expect(SYNTH_PATCHES.slapBass).toBe(36);
+  });
+});
+
+describe("オーケストラ音源の patch", () => {
+  it("ORCHESTRA_PATCHES は、すべて SYNTH_PATCHES にあり、ガイドに説明がある", () => {
+    for (const k of ORCHESTRA_PATCHES) {
+      expect(SYNTH_PATCHES[k]).toBeTypeOf("number");
+      expect(AI_SONG_GUIDE).toContain(k);
+    }
+    expect(SYNTH_PATCHES.cello).toBe(42);
+    expect(SYNTH_PATCHES.flute).toBe(73);
   });
 });
