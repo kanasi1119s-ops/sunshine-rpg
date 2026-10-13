@@ -67,7 +67,9 @@ export type Instrument =
   // 民族楽器（2026-10-02）: 撥弦（sitar・koto・shamisen・banjo・harp・kalimba）、息の楽器（panflute・shakuhachi・ocarina）、擦弦・リード（fiddle・bagpipe）
   | "sitar" | "koto" | "shamisen" | "banjo" | "harp" | "kalimba" | "panflute" | "shakuhachi" | "ocarina" | "fiddle" | "bagpipe"
   // 追加の音源（2026-10-11）: FMのベル／エレピ、ドローバーオルガン、ユニゾンのノコギリ波
-  | "fmBell" | "fmEpiano" | "drawbarOrgan" | "unisonSaw";
+  | "fmBell" | "fmEpiano" | "drawbarOrgan" | "unisonSaw"
+  // 打楽器の音程つきタム（2026-10-13）: ロートタム・キャノンタム・インチ違いのタム。鍵盤の高さ＝太鼓の基本の高さ（C2〜C6）
+  | "rotoTom" | "cannonTom" | "inchTom";
 
 /**
  * ジャンル別のアンプ（2026-09-30 追加）。ジャズ・ブルース・ファンク・クランチ・ハードロック・パンク・ファズ・

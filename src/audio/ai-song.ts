@@ -41,11 +41,12 @@ export const SYNTH_PATCHES: Record<string, number> = {
   viola: 41, cello: 42, contrabass: 43, pizzicato: 45, timpani: 47, stringEnsemble: 48, slowStrings: 49,
   trumpet: 56, trombone: 57, tuba: 58, horn: 60, brassSection: 61, oboe: 68, bassoon: 70, clarinet: 71, piccolo: 72, flute: 73,
   glockenspiel: 9, marimba: 12, churchOrgan: 19, reedOrgan: 20,
+  rotoTom: 117, cannonTom: 118, inchTom: 119,
   iceRain: 96, soundtrack: 97, crystal: 98, atmosphere: 99, brightness: 100, goblin: 101, echoDrops: 102, starTheme: 103,
 };
 
 /** 録音のオーケストラ音源（orchestra.sf3）が鳴らす patch。使うと、書き出しで自動的にオーケストラ音源が選ばれる。 */
-export const ORCHESTRA_PATCHES: string[] = ["violin", "viola", "cello", "contrabass", "pizzicato", "timpani", "stringEnsemble", "slowStrings", "trumpet", "trombone", "tuba", "horn", "brassSection", "oboe", "bassoon", "clarinet", "piccolo", "flute", "glockenspiel", "marimba", "churchOrgan", "reedOrgan"];
+export const ORCHESTRA_PATCHES: string[] = ["violin", "viola", "cello", "contrabass", "pizzicato", "timpani", "stringEnsemble", "slowStrings", "trumpet", "trombone", "tuba", "horn", "brassSection", "oboe", "bassoon", "clarinet", "piccolo", "flute", "glockenspiel", "marimba", "churchOrgan", "reedOrgan", "rotoTom", "cannonTom", "inchTom"];
 
 type PartSectionSpecJson = Partial<Record<SectionKind, number | boolean | { gain?: number; octave?: number }>>;
 /** AIソング形式の amp 名 → 同梱のNAMモデル。namKay3〜10 は、ビンテージ真空管アンプ（Kay 703, CC0）のゲイン3・5・7・10。 */
@@ -210,6 +211,7 @@ export const AI_INSTRUMENTS: Record<string, string> = {
   piano: "ピアノ（A0〜C8）", keys: "エレピ（C2〜C6）", harpsichord: "チェンバロ（C2〜C6）", strings: "弦楽（C2〜C7）", pad: "パッド（C2〜C6）", choir: "合唱（C3〜C6）", brass: "ブラス（E2〜C6）", lead: "シンセリード（C3〜C7）", bell: "鐘（C4〜C7）",
   sitar: "シタール（C3〜C6。インド風の撥弦。ドローンと旋律に）", koto: "琴（C3〜C6。和風の撥弦）", shamisen: "三味線（C3〜C6。歯切れのよい和の撥弦）", banjo: "バンジョー（C3〜C6）", harp: "ハープ（C2〜C7。分散和音に）", kalimba: "カリンバ（C4〜C7。やさしい指ピアノ）",
   fmBell: "FMのベル（C3〜C7。金属的で長く響く非整数倍音。鐘・きらめき・場面の合図に）", fmEpiano: "FMのエレピ（C2〜C6。すっきり丸い電気ピアノ。コード・アルペジオに）", drawbarOrgan: "ドローバーオルガン（C2〜C6。持続する厚い音。賛美歌・教会・ロック）", unisonSaw: "ユニゾンのノコギリ波（C2〜C6。5本重ねのぶ厚いシンセ。サビ・コードの厚み・リードに）",
+  rotoTom: "ロートタム（C2〜C6。片面・胴なしの太鼓。ピンと張った明るい打音で、打った直後に音が少し上がり、長めに伸びる。鍵盤の高さ＝太鼓の基本の高さ。F2＝18インチ〜B3＝6インチ）", cannonTom: "キャノンタム（C2〜C6。両側が開いた筒状の太鼓。深く「ポン」と抜けて余韻が短い。高さはロートタムと同じ表）", inchTom: "インチ違いのタム（C2〜C6。ふつうの2枚張りのタム。大きいほど低く、太く、長く響く。F2＝18インチ・A2＝16・C3＝14・D#3＝12・F3＝10・A3＝8・B3＝6）",
   panflute: "パンフルート（C4〜C7。息の音の入った民族風の笛）", shakuhachi: "尺八（C4〜C6。和風の息の笛）", ocarina: "オカリナ（C4〜C7。素朴な笛）", fiddle: "フィドル（G3〜E6。民謡風の擦弦）", bagpipe: "バグパイプ（A3〜A5。ドローン向きのリード）",
 };
 const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom"]);
@@ -441,6 +443,7 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
   - ギターの音色（patch）: leadGuitar は標準だと歪んだ音色。クリーンなソロ・単音のメロディにしたいときは patch に cleanGuitar（クリーン）・jazzGuitar（丸い）・nylonGuitar（ナイロン弦のアコースティック）を指定し、amp は clean にする。steelGuitar・mutedGuitar はゲーム用の録音音源に入っておらず、ピアノの音になるので使わない。
   - シンセの音色（パートの patch）: 指定すると楽器のかわりにシンセ音で鳴る（ドラム以外）。波形の性格: squareLead＝丸く芯のある角ばった音（旋律・8bit寄り）、sawLead＝明るくぎらつく音（旋律・サビ）、calliope/chiff＝息づかいのある柔らかいリード、charang＝歪んだ攻めのリード、fifths＝5度が重なる力強いリード、bassLead＝低音と旋律を兼ねる。パッド: warmPad（やわらかく広がる）、newAge＝きらめく、halo＝聖なる、sweep＝うねって広がる、metalPad＝冷たく金属的、bowedGlass＝ガラスのような弦。ベース: fretlessBass＝なめらかに歌うフレットレス（ベースで旋律を弾くとき）、acousticBass＝ウッド寄り、slapBass＝はじけるスラップ、synthBass1＝太く丸い、synthBass2＝硬く尖った。刻み: polysynth＝和音の刻み、synthStrings1/2＝厚い弦。飾り: crystal・iceRain・brightness・starTheme＝きらきらした余韻（ここぞの場面だけ）、atmosphere＝暗い空気、goblin・echoDrops・soundtrack＝不思議・映画的。使い分けの定石: パッドは sustain 2〜3 で長い音、ピッチは低めに；プラック（ぽん、と減衰する音）は polysynth か crystal に sustain 0.4；リードは ~（ビブラート）と phrase で歌わせる；ベースは根音を低く、旋律と音域を重ねない。声に聞こえる音は入れていない。
   - ブルース: 12小節（I I I I / IV IV I I / V IV I V）・7th・swing 0.5・ブルーノート。ワルツ: beats 3・1拍目が強い。チップチューン: 少ない音色・速いアルペジオ・短いフレーズのくり返し。
+  - 音程つきのタム（rotoTom＝ロートタム・cannonTom＝キャノンタム・inchTom＝インチ違いのタム。instrument にも patch にも同じ名前を書く）: 鍵盤の音名がそのまま太鼓の基本の高さ。インチ ↔ 音名の目安は 18"＝F2・16"＝A2・14"＝C3・13"＝C#3・12"＝D#3・10"＝F3・8"＝A3・6"＝B3（高さは 1500÷インチ Hz）。フィルは大きいほうから小さいほうへ（F2→A2→C3→D#3→F3→A3）下ろす。ふつうの tom（kick／snare と同じドラムのパート）とは別に、パートを1つ使う。書き出しでは自動でオーケストラ音源が選ばれる。
   - オーケストラの楽器: パートの patch に violin・viola・cello・contrabass・pizzicato・stringEnsemble・slowStrings・trumpet・trombone・tuba・horn・brassSection・oboe・bassoon・clarinet・piccolo・flute・timpani・glockenspiel・marimba・churchOrgan・reedOrgan を選ぶと、録音のオーケストラ音源（VSCO 2 CE）で鳴る（書き出しでは自動で選ばれる）。instrument は音域の点検用に strings（弦）・brass（金管）・panflute（笛）などを合わせる。弦と木管は伸ばす音が得意（ループ再生）、ハープ・ピチカート・ティンパニ・マリンバは減衰する短い音。独奏は「1パート1旋律」、重ねたいときは stringEnsemble や instrument: strings（合奏）を足す。ピアノは書き出しの --piano salamander でグランドピアノの録音になる。
   - ベース・ドラムの音源は、書き出しの --bass と --drums に rock / metal / jazz / jpop を選べる（ジャンルに合わせる）。
 - 使わない音は docs/sound/banned-sounds.md を見る（人間がダメと決めたギターの作り方がある）。

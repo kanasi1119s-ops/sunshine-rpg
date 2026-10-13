@@ -679,6 +679,25 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       }
       break;
     }
+    case "rotoTom":
+    case "cannonTom":
+    case "inchTom": {
+      // 皮の振動（音程が打った直後に少し上がって落ちる）＋スティックの当たる音。大きい（低い）太鼓ほど長く響く
+      const kind = e.instrument as string;
+      const inch = Math.max(5, Math.min(20, 1500 / f));
+      const decay = Math.max(0.12, (kind === "rotoTom" ? 0.55 : kind === "cannonTom" ? 0.2 : 0.28) + (inch - 12) * (kind === "cannonTom" ? 0.012 : 0.028)) * 1.6;
+      const bend = kind === "rotoTom" ? 1.07 : kind === "cannonTom" ? 1.025 : 1.045;
+      const stop = t + decay + 0.1;
+      const g = pluckGain(ctx, dest, t, v * 1.1, 0.001, decay);
+      const body = osc(ctx, "sine", f * bend, t, stop, g, 1);
+      body.frequency.exponentialRampToValueAtTime(f, t + (kind === "rotoTom" ? 0.05 : 0.03));
+      out.push(body);
+      const ring = osc(ctx, "sine", f * (kind === "cannonTom" ? 1.5 : 1.55), t, stop, pluckGain(ctx, dest, t, v * 0.35, 0.001, decay * 0.5), 1);
+      out.push(ring);
+      const click = noise(ctx, t, t + 0.04, filter(ctx, "bandpass", kind === "rotoTom" ? 5200 : 3600, pluckGain(ctx, dest, t, v * 0.5, 0.001, 0.018), 0.8));
+      out.push(click);
+      break;
+    }
     case "drawbarOrgan": {
       const g = sustainGain(ctx, dest, t, d, v * 0.5, 0.008, 0.05);
       for (const h of DRAWBAR) out.push(osc(ctx, "sine", f * h.ratio, t, t + d + 0.1, g, h.level * 0.35));
