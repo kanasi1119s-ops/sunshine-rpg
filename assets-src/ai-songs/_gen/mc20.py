@@ -402,10 +402,12 @@ def guitar_bar(rng,c,k,idx,i,n,prof,intro_kind):
     def cell(m,name):
         # 音を短く切らない（ブツブツ切れる弾き方は却下）: すべて次の音へつなげ（_）、休符も短い音も使わない
         a=nn(m)
-        return {"e8":" ".join(f"{a}:0.5"+("!_" if q in(0,4) else "_") for q in range(8)),
-                "e8o":" ".join(f"{a}:0.5"+("!_" if q in(0,4) else "_") for q in range(8)),
-                "sync":f"{a}:1!_ {a}:0.5_ {a}:0.5_ {a}:1_ {a}:0.5_ {a}:0.5_","push":f"{a}:0.5!_ {a}:0.5_ {a}:1_ {a}:1!_ {a}:1_",
-                "ring":f"{a}:2!_ {a}:1_ {a}:1_","hit":f"{a}:4!","s16":" ".join(f"{a}:0.5"+("!_" if q in(0,4) else "_") for q in range(8)),
+        # 2026-10-13「少し刻むリフ」: 8分を1音ずつ弾き直す（つなぎ _ を外す）。休符・スタッカートは使わない
+        e8=" ".join(f"{a}:0.5"+("!" if q in(0,4) else "") for q in range(8))
+        s16=" ".join(f"{a}:0.5"+("!" if q in(0,2) else "") for q in range(4))+" "+" ".join(f"{a}:0.25"+("!" if q%4==0 else "") for q in range(8))
+        return {"e8":e8,"e8o":e8,
+                "sync":f"{a}:1!_ {a}:0.5 {a}:0.5 {a}:1 {a}:0.5 {a}:0.5","push":f"{a}:0.5! {a}:0.5 {a}:1 {a}:1! {a}:1",
+                "ring":f"{a}:2!_ {a}:1_ {a}:1_","hit":f"{a}:4!","s16":s16,
                 "whole":f"{a}:4","whv":f"{a}:4~","rest":"R:4","off":f"{a}:1_ {a}:1_ {a}:1_ {a}:1_"}[name]
     VERSE=[["e8","e8","push"],["push","off","e8"],["e8","sync","e8"],["s16","e8","push"]][prof]
     CHOR=[["sync","push","ring"],["e8o","sync","ring"],["sync","e8o","push"],["push","sync","e8o"]][prof]
