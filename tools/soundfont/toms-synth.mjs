@@ -35,19 +35,24 @@ export function synthTom(kind, midi, loud) {
       out[i] += amp * Math.exp(-t / (tau * dec)) * Math.sin(ph);
     }
   }
-  // ノイズで鳴らす共鳴（皮のふぞろいなうねり。純粋な正弦波だけだと電子音に聞こえるので、各モードに混ぜる）
+  // ノイズで鳴らす共鳴（皮のふぞろいなうねり。正弦波だけだと電子音に聞こえるので、少しだけ混ぜる）。大きさは、正弦波の本体の約3割のピークにそろえる
+  const res = new Float32Array(n);
   for (const [ratio, amp, dec] of k.modes) {
     const fr = f0 * ratio * (1 + 0.004 * rnd());
     const w = (2 * Math.PI * fr) / SR, r = Math.exp(-1 / (SR * tau * dec * 0.9));
     const c1 = 2 * r * Math.cos(w), c2 = -r * r;
-    let y1 = 0, y2 = 0;
+    let y1 = 0, y2 = 0, pk = 1e-9;
+    const tmp = new Float32Array(n);
     for (let i = 0; i < n; i++) {
-      const x = i < SR * 0.006 ? rnd() * (1 - i / (SR * 0.006)) : 0;
-      const y = x * (1 - r) * 3 + c1 * y1 + c2 * y2;
-      y2 = y1; y1 = y;
-      out[i] += amp * 0.9 * y * 4;
+      const x = i < SR * 0.004 ? rnd() : 0;
+      const y = x + c1 * y1 + c2 * y2;
+      y2 = y1; y1 = y; tmp[i] = y; pk = Math.max(pk, Math.abs(y));
     }
+    for (let i = 0; i < n; i++) res[i] += (amp / pk) * tmp[i];
   }
+  let bodyPk = 1e-9, resPk = 1e-9;
+  for (let i = 0; i < n; i++) { bodyPk = Math.max(bodyPk, Math.abs(out[i])); resPk = Math.max(resPk, Math.abs(res[i])); }
+  for (let i = 0; i < n; i++) out[i] += res[i] * (0.3 * bodyPk) / resPk;
   // 打音: スティックが皮に当たる音。高域の「カッ」（0.002秒で消える）と、中域の「コツ」（0.012秒）、皮を叩く鈍い低域。強く叩くほど明るく、大きい
   let lp1 = 0, lp2 = 0, lp3 = 0, hp = 0;
   const a1 = Math.exp((-2 * Math.PI * (k.clickHz * (0.7 + 0.6 * loud))) / SR);
@@ -61,7 +66,7 @@ export function synthTom(kind, midi, loud) {
     out[i] += (k.click * (0.4 + 0.6 * loud)) * hp * Math.exp(-t / 0.0022) + 1.6 * mid * (0.4 + 0.6 * loud) * Math.exp(-t / 0.012) + k.thud * 1.4 * lp2 * Math.exp(-t / 0.012);
   }
   // 強く叩いたときの、わずかな歪み（皮が叩かれて詰まる感じ）
-  const drive = 1 + 1.2 * loud;
+  const drive = 1 + 0.5 * loud;
   for (let i = 0; i < n; i++) out[i] = Math.tanh(out[i] * drive) / Math.tanh(drive);
   // 大きさをそろえる（頭から0.25秒の rms を一定に。弱い音は少し小さく）
   let s = 0; const m = Math.min(n, Math.floor(SR * 0.25));
