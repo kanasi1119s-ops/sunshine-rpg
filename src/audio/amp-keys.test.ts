@@ -18,6 +18,9 @@ class FakeNode {
   channelCount = 2;
   channelCountMode = "max";
   params: Record<string, FakeParam> = {};
+  // Proxy で取り出す AudioParam（型だけ宣言する。値は作らない）
+  declare frequency: FakeParam;
+  declare gain: FakeParam;
   wave: { real: Float32Array; imag: Float32Array } | null = null;
   constructor(public kind: string) {
     return new Proxy(this, {
@@ -207,7 +210,7 @@ describe("AIソング形式との組み合わせ", () => {
 });
 
 describe("鍵盤・シンセのレシピ（PART_RECIPES）", () => {
-  const ids = Object.keys(PART_RECIPES).filter((id) => id.startsWith("keys-") || id.startsWith("synth-") || id.startsWith("pad-") || id.startsWith("ep-") || id.startsWith("organ-") || id.startsWith("piano-") || id.startsWith("strings-"));
+  const ids = Object.keys(PART_RECIPES).filter((id) => id.startsWith("keys-") || id.startsWith("synth-") || id.startsWith("pad-") || id.startsWith("ep-") || id.startsWith("organ-") || id.startsWith("piano-") || id.startsWith("strings-")).filter((id) => PART_RECIPES[id].mix.amp); // amp を持たない昔の弦レシピ（strings-ensemble）は対象外
   it("レシピがあり、どれも amp は鍵盤用の種類で、AIソングの recipe として使える", () => {
     expect(ids.length).toBeGreaterThanOrEqual(8);
     for (const id of ids) {

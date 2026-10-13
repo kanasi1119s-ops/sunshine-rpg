@@ -358,6 +358,18 @@ export const PART_RECIPES: Record<string, PartRecipe> = {
   "cinematic-drone": { label: "映画的な低いドローン（長く・深い残響・低音域）", instruments: ["pad", "strings", "unisonSaw"], mix: { volume: 0.05, reverb: 0.5, bright: -0.35, duck: 0.2, panWidth: 0.6 }, hint: { sustain: 3, register: "C1〜C3" } },
   "chip-lead": { label: "チップ風のリード（残響なし・まっすぐ）", instruments: ["lead"], mix: { volume: 0.07, reverb: 0, bright: 0, panWidth: 0.2 }, hint: { patch: "squareLead" } },
   "bell-accent": { label: "ベル系の飾り（小さく・遠く・暗め）", instruments: ["bell", "chime"], mix: { volume: 0.04, reverb: 0.6, bright: -0.3, panWidth: 0.5 } },
+  // ── 2026-10-13 鍵盤・シンセの音づくり（docs/sound/keys-synth-guide.md §7。amp は amp-keys.ts の鍵盤用。数字は出発点で、耳で直す） ──
+  "piano-clear": { label: "すっきりしたピアノ（中域の箱鳴りを引き、きらめきを足す）", instruments: ["piano"], mix: { volume: 0.1, amp: { type: "pianoPolish" }, reverb: 0.2, bright: 0.05, panWidth: 0.3 } },
+  "ep-warm": { label: "温かいエレピ（こもりを引き、鈴のような輪郭）", instruments: ["keys", "fmEpiano"], mix: { volume: 0.08, amp: { type: "vintageKeys" }, reverb: 0.2, chorus: 0.1, panWidth: 0.3 } },
+  "ep-tremolo": { label: "揺れるエレピ（約4.8Hzで左右に。バラード・ソウル）", instruments: ["keys", "fmEpiano"], mix: { volume: 0.08, amp: { type: "tremKeys" }, reverb: 0.25, panWidth: 0.2 } },
+  "ep-phaser": { label: "ゆっくりフェイザーのエレピ（ファンク・シティポップ）", instruments: ["keys", "fmEpiano"], mix: { volume: 0.08, amp: { type: "phaserKeys" }, reverb: 0.2, panWidth: 0.3 } },
+  "organ-rock": { label: "ロックのオルガン（ゆっくり回るスピーカー）", instruments: ["drawbarOrgan"], mix: { volume: 0.06, amp: { type: "leslie" }, reverb: 0.25, bright: -0.05, panWidth: 0.4 }, hint: { sustain: 2 } },
+  "pad-wide": { label: "広いパッド（低域を空け、左右に広げる）", instruments: ["pad", "choir"], mix: { volume: 0.05, amp: { type: "padWide" }, reverb: 0.45, bright: -0.2, duck: 0.2, panWidth: 0.6 }, hint: { sustain: 3 } },
+  "strings-silk": { label: "絹のような弦（ゆっくり浅いコーラスで厚みを出す）", instruments: ["strings"], mix: { volume: 0.07, amp: { type: "stringsEnsemble" }, reverb: 0.35, duck: 0.25, panWidth: 0.5 }, hint: { sustain: 2 } },
+  "synth-lead-clear": { label: "くっきりしたシンセリード（濁りを抑えて前に出す）", instruments: ["lead"], mix: { volume: 0.08, amp: { type: "synthLead" }, reverb: 0.2, panWidth: 0.2 } },
+  "synth-bass-solid": { label: "芯のあるシンセベース（低域をそろえて太く）", instruments: ["bass", "sub808"], mix: { volume: 0.09, amp: { type: "synthBass" }, reverb: 0, duck: 0 }, hint: { patch: "synthBass1" } },
+  "keys-lofi": { label: "ローファイの鍵盤（高域を落とし、テープの揺れを深く）", instruments: ["piano", "keys"], mix: { volume: 0.09, amp: { type: "lofiKeys" }, reverb: 0.25, bright: -0.3, panWidth: 0.2 } },
+  "keys-tape": { label: "テープの温かさをかけた鍵盤・パッド（角を丸めて接着）", instruments: ["piano", "keys", "pad", "strings"], mix: { volume: 0.08, amp: { type: "tapeWarm" }, reverb: 0.3, panWidth: 0.3 } },
   // ── 2026-10-11 クリーンギターの音づくり。最初の3つは、人間が「いい」と言った組み合わせ（ディレイは弱め: repeats 1・decay 0.15）。名前は音の特徴 ──
   "sparkle-delay": {
     label: "きらびやかなクリーン＋弱いディレイ（付点8分を1回・うんと小さく）", instruments: ["guitar", "echoGuitar", "leadGuitar"],
