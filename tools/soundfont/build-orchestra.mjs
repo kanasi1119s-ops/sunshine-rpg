@@ -51,7 +51,7 @@ function detectMidi(data) {
   const N = Math.min(14000, n - start);
   if (N < 4000) return null;
   const x = data.subarray(start, start + N);
-  const minLag = Math.floor(SR / 2200), maxLag = Math.min(Math.floor(SR / 24), N >> 1);
+  const minLag = Math.floor(SR / 4500), maxLag = Math.min(Math.floor(SR / 24), N >> 1);
   let e0 = 0;
   for (let i = 0; i < N - maxLag; i++) e0 += x[i] * x[i];
   if (e0 < 1e-9) return null;
@@ -138,14 +138,17 @@ function processFile(set, x) {
 
 /** 元の録音の音名（ファイル名）と、測った高さ（midi）から、鍵盤の番号を決める。 */
 function resolveRoot(x, midi, set) {
-  if (set.id === "timpani") { const m = /Timpani(\d)/.exec(x.base); if (m) return [0, 30, 34, 37, 40, 44][Number(m[1])]; } // 5つの太鼓の高さ（測った値をならしたもの）
+  if (set.id === "timpani") { const m = /Timpani(\d)/.exec(x.base); if (m) return { root: [0, 30, 34, 37, 40, 44][Number(m[1])], cents: 0 }; } // 5つの太鼓の高さ（測った値をならしたもの）
   if (midi === null) return null;
-  if (x.pc === null) return Math.round(midi);
+  if (x.pc === null) return { root: Math.round(midi), cents: 0 };
   // ファイル名の音名と同じ音名で、測った高さにいちばん近い音
   let best = null;
   for (let k = x.pc; k < 128; k += 12) if (best === null || Math.abs(k - midi) < Math.abs(best - midi)) best = k;
   if (Math.abs(best - midi) > 1.6) return null; // 倍音を測った可能性。使わない
-  return best;
+  // 録音の音名が半音ずれているものや、チューニングのずれは、測った高さに合わせる（伸ばす音の楽器だけ。鐘や太鼓は倍音が複雑で測りにくいので触らない）
+  if (!set.loop) return { root: best, cents: 0 };
+  const root = Math.round(midi);
+  return { root, cents: Math.max(-49, Math.min(49, Math.round((root - midi) * 100))) };
 }
 
 function applyLoop(data, set) {
@@ -177,28 +180,45 @@ function buildSet(set) {
     for (const [layer, x] of [["soft", soft], ["loud", loud]]) {
       if (!x) continue;
       const { data, midi } = processFile(set, x);
-      const root = resolveRoot(x, midi, set);
+      const rr = resolveRoot(x, midi, set);
+      const root = rr ? rr.root : null;
       if (process.env.VERBOSE) console.log("   ", path.basename(x.f), "測定", midi === null ? "-" : midi.toFixed(2), "→", root);
       if (root === null) { console.warn("  高さを測れず除外:", path.basename(x.f)); continue; }
-      items.push({ x, layer, root, ...applyLoop(data, set), g });
+      items.push({ x, layer, root, cents: rr.cents, ...applyLoop(data, set), g });
     }
   }
   // 録音の音量はライブラリごとにばらばらなので、楽器ごとにそろえる（強い層の中央値が rms 0.09、弱い層は 0.05 になるように。強弱の差は残す）
   const rmsOf = (d) => { const a = Math.floor(SR * 0.1), b = Math.min(d.length, Math.floor(SR * 1.4)); let t = 0; for (let i = a; i < b; i++) t += d[i] * d[i]; return Math.sqrt(t / Math.max(1, b - a)); };
   const hasLoud = new Set(picked.filter((q) => q.loud).map((q) => q.g));
-  const median = (arr) => arr.sort((x, y) => x - y)[Math.floor(arr.length / 2)];
-  const refLoud = median(items.filter((i) => i.layer === "loud" || !hasLoud.has(i.g)).map((i) => rmsOf(i.data)).filter((r) => r > 1e-5));
-  const softs = items.filter((i) => i.layer === "soft" && hasLoud.has(i.g)).map((i) => rmsOf(i.data)).filter((r) => r > 1e-5);
-  const refSoft = softs.length ? median(softs) : refLoud;
-  const lim = set.loop ? 30 : 4;
-  const gainLoud = Math.min(lim, 0.09 / refLoud), gainSoft = Math.min(lim, 0.05 / refSoft);
-  const gain = gainLoud;
+  // 音ごとに、はかる区間（ループがあればその中、なければ頭から1.4秒）の大きさをそろえる。隣の音と大きさがばらつくと、旋律がでこぼこに聞こえるため
+  const measure = (it) => {
+    const a = it.le > 0 ? it.ls : Math.floor(SR * 0.1), b2 = it.le > 0 ? it.le : Math.min(it.data.length, Math.floor(SR * 1.4));
+    let t = 0; for (let i = a; i < b2; i++) t += it.data[i] * it.data[i];
+    return Math.sqrt(t / Math.max(1, b2 - a));
+  };
+  const lim = 30;
+  let gainSum = 0;
   for (const it of items) {
+    const target = it.layer === "soft" && hasLoud.has(it.g) ? 0.065 : 0.085;
     let pk = 0;
     for (let i = 0; i < it.data.length; i++) pk = Math.max(pk, Math.abs(it.data[i]));
-    const g = Math.min(it.layer === "soft" && hasLoud.has(it.g) ? gainSoft : gainLoud, 0.97 / pk);
+    const r = measure(it);
+    const g = r > 1e-5 ? Math.min(target / r, lim, 0.97 / pk) : 1;
+    gainSum += g;
     for (let i = 0; i < it.data.length; i++) it.data[i] *= g;
   }
+  // ピークの制限で大きくできなかった音が混じると、そこだけ小さく聞こえる。同じ層の中で、小さい側の4分位に比べて 3dB より大きい音は、そこまで下げる
+  for (const layer of ["soft", "loud"]) {
+    const grp = items.filter((it) => (it.layer === "soft" && hasLoud.has(it.g)) === (layer === "soft"));
+    if (grp.length < 4) continue;
+    const lv = grp.map((it) => measure(it)).sort((x, y) => x - y);
+    const cap = lv[Math.floor(lv.length / 4)] * 1.41;
+    for (const it of grp) {
+      const r = measure(it);
+      if (r > cap) { const g2 = cap / r; for (let i = 0; i < it.data.length; i++) it.data[i] *= g2; }
+    }
+  }
+  const gain = gainSum / items.length;
   console.log("  音量そろえ", set.id, (20 * Math.log10(gain)).toFixed(1) + "dB");
   return items;
 }
@@ -239,7 +259,7 @@ const smpCache = new Map();
 function sampleOf(set, it) {
   const k = set.id + "/" + it.x.base + "/" + it.layer;
   if (smpCache.has(k)) return smpCache.get(k);
-  const s = new BasicSample(`${set.id} ${it.x.base}`.slice(0, 40), SR, it.root, 0, SampleTypes.monoSample, it.ls, it.le);
+  const s = new BasicSample(`${set.id} ${it.x.base}`.slice(0, 40), SR, it.root, it.cents ?? 0, SampleTypes.monoSample, it.ls, it.le);
   s.setAudioData(it.data, SR);
   out.addSamples(s);
   smpCache.set(k, s);
@@ -257,7 +277,8 @@ function addZones(inst, set, items, window) {
     const z = inst.createZone(sampleOf(set, it));
     z.keyRange = { min: lo, max: hi };
     const twoLayers = hasLoud.has(it.root);
-    z.velRange = it.layer === "loud" ? { min: 88, max: 127 } : { min: 1, max: twoLayers ? 87 : 127 };
+    // 弱い層と強い層は、真ん中でかさねる（切りかえの段差を、重なる音のなめらかな入れかわりにする）
+    z.velRange = it.layer === "loud" ? { min: 66, max: 127 } : { min: 1, max: twoLayers ? 104 : 127 };
     z.setGenerator(GeneratorTypes.overridingRootKey, it.root);
     z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(set.loop ? 0.45 : 0.9));
     z.setGenerator(GeneratorTypes.attackVolEnv, timecents(set.id === "organ" ? 0.01 : 0.005));

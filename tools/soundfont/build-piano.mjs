@@ -31,6 +31,12 @@ for (const root of roots) {
     const data = decodeMono(path.join(SRC, f), 7.5, "highpass=f=20");
     const fade = Math.floor(SR * 2);
     for (let i = 0; i < fade && i < data.length; i++) data[data.length - 1 - i] *= i / fade;
+    // 音ごとの大きさをそろえる（頭から1.4秒の rms。弱い層は少し小さく）
+    let t = 0; const a0 = Math.floor(SR * 0.05), b0 = Math.min(data.length, Math.floor(SR * 1.4));
+    for (let i = a0; i < b0; i++) t += data[i] * data[i];
+    let pk = 0; for (let i = 0; i < data.length; i++) pk = Math.max(pk, Math.abs(data[i]));
+    const g = Math.min(8, (layer === "loud" ? 0.11 : 0.07) / Math.sqrt(t / Math.max(1, b0 - a0)), 0.97 / pk);
+    for (let i = 0; i < data.length; i++) data[i] *= g;
     const smp = monoSample(f.replace(".flac", ""), data, root);
     out.addSamples(smp);
     samples.push({ smp, root, layer });
@@ -55,7 +61,7 @@ for (const program of [0, 1]) {
     const hi = i === roots.length - 1 ? 127 : Math.floor((root + roots[i + 1]) / 2);
     const z = inst.createZone(smp);
     z.keyRange = { min: lo, max: hi };
-    z.velRange = layer === "loud" ? { min: 82, max: 127 } : { min: 1, max: 81 };
+    z.velRange = layer === "loud" ? { min: 60, max: 127 } : { min: 1, max: 100 }; // 重ねて、切りかえの段差をなめらかに
     z.setGenerator(GeneratorTypes.overridingRootKey, root);
     z.setGenerator(GeneratorTypes.releaseVolEnv, timecents(0.5));
     zones++;
