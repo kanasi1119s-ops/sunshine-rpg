@@ -407,13 +407,20 @@ pianoSel.onchange = () => { const was = state.playing; void applyOverlay("piano"
 // サウンドセット: 選ぶと、アンプ・音量・ミックス・ドラムの設定と、ベース・ドラム・ギターの音源をまとめて切りかえる（曲の中身＝音符は変えない）
 const soundSetSel = select([["", "（選ばない）"], ...Object.values(SOUND_SETS).map((s) => [s.id, s.label] as [string, string])], "");
 soundSetSel.title = "選ぶと、アンプ・音量・ミックス・ドラム・ベース／ドラム／ギターの音源をまとめて切りかえます。もとの曲の音量は、選びなおすと元に戻せません（先にプロジェクトを保存してください）";
+/** サウンドセットが指定する音源（ベース・ドラム・ギター・オーケストラ・ピアノ）だけを当てはめる（音量・ミックスは変えない）。 */
+function applySetOverlays(set: (typeof SOUND_SETS)[string]): Promise<void> {
+  const o = set.overlays;
+  return Promise.all([
+    applyOverlay("bass", o.bass in BASS_FONTS ? o.bass : "std"), applyOverlay("drums", o.drums in DRUM_FONTS ? o.drums : "std"), applyOverlay("guitar", o.guitar in GUITAR_FONTS ? o.guitar : "std"),
+    applyOverlay("orchestra", (o.orchestra ?? "std") in ORCH_FONTS ? o.orchestra ?? "std" : "std"), applyOverlay("piano", (o.piano ?? "std") in PIANO_FONTS ? o.piano ?? "std" : "std"),
+  ]).then(() => { bassSel.value = bassId; drumsSel.value = drumsId; guitarSel.value = guitarId; orchSel.value = orchId; pianoSel.value = pianoId; });
+}
 soundSetSel.onchange = () => {
   const set = SOUND_SETS[soundSetSel.value];
   if (!set) return;
   const was = state.playing;
   state.score = applySoundSet(state.score, set);
-  void Promise.all([applyOverlay("bass", set.overlays.bass in BASS_FONTS ? set.overlays.bass : "std"), applyOverlay("drums", set.overlays.drums in DRUM_FONTS ? set.overlays.drums : "std"), applyOverlay("guitar", set.overlays.guitar in GUITAR_FONTS ? set.overlays.guitar : "std"), applyOverlay("orchestra", (set.overlays.orchestra ?? "std") in ORCH_FONTS ? set.overlays.orchestra ?? "std" : "std"), applyOverlay("piano", (set.overlays.piano ?? "std") in PIANO_FONTS ? set.overlays.piano ?? "std" : "std")]).then(() => {
-    bassSel.value = bassId; drumsSel.value = drumsId; guitarSel.value = guitarId; orchSel.value = orchId; pianoSel.value = pianoId;
+  void applySetOverlays(set).then(() => {
     renderAll(); save();
     if (was) play(0);
   });
@@ -454,7 +461,7 @@ ui.seek.onchange = () => {
 };
 
 function exportProject(): void {
-  download(`${state.name || "song"}.sunshine-song.json`, JSON.stringify({ format: "sunshine-song", version: 1, name: state.name, edition: state.edition, score: state.score }), "application/json");
+  download(`${state.name || "song"}.sunshine-song.json`, JSON.stringify({ format: "sunshine-song", version: 1, name: state.name, edition: state.edition, sources: { bass: bassId, drums: drumsId, guitar: guitarId, orchestra: orchId, piano: pianoId }, score: state.score }), "application/json");
 }
 /** ファイルを開く: プロジェクト・ゲームの曲・AIソング・MIDI・アンプ定義。 */
 function openFile(file: File): void {
@@ -487,6 +494,14 @@ function openJson(text: string): void {
         editionSel.value = data.edition;
       }
       loadScore(data.score, data.name ?? data.title ?? "読み込んだ曲");
+      // 保存したときの音源（ベース・ドラム・ギター・オーケストラ・ピアノ）に戻す。古いプロジェクトには無いので、あるときだけ
+      const src = data.sources as Record<string, string> | undefined;
+      if (src && typeof src === "object") {
+        void Promise.all([
+          applyOverlay("bass", src.bass in BASS_FONTS ? src.bass : bassId), applyOverlay("drums", src.drums in DRUM_FONTS ? src.drums : drumsId), applyOverlay("guitar", src.guitar in GUITAR_FONTS ? src.guitar : guitarId),
+          applyOverlay("orchestra", src.orchestra in ORCH_FONTS ? src.orchestra : orchId), applyOverlay("piano", src.piano in PIANO_FONTS ? src.piano : pianoId),
+        ]).then(() => { bassSel.value = bassId; drumsSel.value = drumsId; guitarSel.value = guitarId; orchSel.value = orchId; pianoSel.value = pianoId; });
+      }
       return;
     }
     if (Array.isArray(data.parts) && typeof data.chords === "string") {
@@ -1544,19 +1559,19 @@ interface DesktopApi {
 }
 const desktop = (window as unknown as { sunshineDesktop?: DesktopApi }).sunshineDesktop;
 /** AI作曲のスタイルボタン。text は依頼に足すヒント（既存の曲・作品名は書かない。ジャンルの作り方だけ）。 */
-const AI_STYLES: { label: string; hint: string; text: string }[] = [
-  { label: "メロコア", hint: "疾走感・ギターのリフ・サビで盛り上がる", text: "メロディックなパンク（メロコア）。bpm 170〜190、8分刻みのリフ、ツーバスなし、サビでメロディが高く伸びる。ギターは厚い歪み、リードは歌うように。曲の終わりは勢いよく。" },
-  { label: "バラード", hint: "ゆっくり・ピアノと弦", text: "バラード。bpm 60〜80。ピアノと弦の長い音（パートに patch の violin・cello・flute を足すと本物の録音の弦・フルートで鳴る）、休符を生かす。サビで少しずつ広がり、最後は静かに終わる。" },
-  { label: "ゲームのフィールド", hint: "冒険・広がり・ループできる", text: "RPGのフィールド曲。bpm 100〜130、長調、大きな跳躍と長い音。くり返し流れても飽きないよう、終わりを最初につなげる（ループ）。" },
-  { label: "ボス戦", hint: "重く激しい・盛り上げる", text: "RPGのボス戦。bpm 150〜180、短調。ブラス（patch の horn・trumpet・trombone）・合唱の壁、ティンパニ（patch: timpani）、重い低音、ドラムは激しく。途中で一度静まってからサビに戻る。" },
-  { label: "通常戦闘", hint: "テンポ速め・刻み", text: "RPGの通常戦闘。bpm 150〜190、短調。刻みとキックで勢いよく、入りは短く、ループできる。" },
-  { label: "町・村", hint: "やさしい・ドラムなし", text: "町や村の曲。bpm 80〜110、長調。ハープ・フルート（patch: flute）・クラリネット（patch: clarinet）・ギターでドラムなし、あたたかくのどか。" },
-  { label: "ダンジョン・不穏", hint: "暗い・余韻・静か", text: "ダンジョン・不穏な場面。bpm 60〜90、短調。余韻の長いパッド・低い弦（patch: cello・contrabass）・単音、ドラムは少なめか無し。" },
-  { label: "J-POPバンド", hint: "明るいバンド・サビが強い", text: "J-POPのバンド曲。bpm 120〜170、王道のコード進行、Aメロは低く語り、Bメロでせり上げ、サビで一気に高く。クリーンと歪みのギターを使い分ける。" },
+const AI_STYLES: { label: string; hint: string; text: string; sound?: string }[] = [
+  { label: "メロコア", hint: "疾走感・ギターのリフ・サビで盛り上がる", text: "メロディックなパンク（メロコア）。bpm 170〜190、8分刻みのリフ、ツーバスなし、サビでメロディが高く伸びる。ギターは厚い歪み、リードは歌うように。曲の終わりは勢いよく。", sound: "punk-run" },
+  { label: "バラード", hint: "ゆっくり・ピアノと弦", text: "バラード。bpm 60〜80。ピアノと弦の長い音（パートに patch の violin・cello・flute を足すと本物の録音の弦・フルートで鳴る）、休符を生かす。サビで少しずつ広がり、最後は静かに終わる。", sound: "ballad-piano-strings" },
+  { label: "ゲームのフィールド", hint: "冒険・広がり・ループできる", text: "RPGのフィールド曲。bpm 100〜130、長調、大きな跳躍と長い音。くり返し流れても飽きないよう、終わりを最初につなげる（ループ）。", sound: "game-town" },
+  { label: "ボス戦", hint: "重く激しい・盛り上げる", text: "RPGのボス戦。bpm 150〜180、短調。ブラス（patch の horn・trumpet・trombone）・合唱の壁、ティンパニ（patch: timpani）、重い低音、ドラムは激しく。途中で一度静まってからサビに戻る。", sound: "game-boss" },
+  { label: "通常戦闘", hint: "テンポ速め・刻み", text: "RPGの通常戦闘。bpm 150〜190、短調。刻みとキックで勢いよく、入りは短く、ループできる。", sound: "game-battle" },
+  { label: "町・村", hint: "やさしい・ドラムなし", text: "町や村の曲。bpm 80〜110、長調。ハープ・フルート（patch: flute）・クラリネット（patch: clarinet）・ギターでドラムなし、あたたかくのどか。", sound: "game-town" },
+  { label: "ダンジョン・不穏", hint: "暗い・余韻・静か", text: "ダンジョン・不穏な場面。bpm 60〜90、短調。余韻の長いパッド・低い弦（patch: cello・contrabass）・単音、ドラムは少なめか無し。", sound: "game-dungeon" },
+  { label: "J-POPバンド", hint: "明るいバンド・サビが強い", text: "J-POPのバンド曲。bpm 120〜170、王道のコード進行、Aメロは低く語り、Bメロでせり上げ、サビで一気に高く。クリーンと歪みのギターを使い分ける。", sound: "jpop-bright" },
   { label: "ローファイ", hint: "ゆるい・夜・作業用", text: "ローファイ。bpm 70〜90、やわらかいエレピとゆるいドラム、ざらっとした質感。" },
   { label: "和風", hint: "琴・尺八・和の旋律", text: "和風。都節（陰旋法）の旋律、琴・尺八・三味線、和太鼓風のタム。" },
-  { label: "ジャズ", hint: "スイング・ウォーキングベース", text: "ジャズ。bpm 120〜180、スイング、7thコード、ウォーキングベース、テーマとアドリブ（ピアノ・ウッドベース・トランペット patch: trumpet）。" },
-  { label: "EDM", hint: "4つ打ち・シンセ", text: "EDM。bpm 125〜140、4つ打ち、ビルドアップからドロップ、シンセのリード。" },
+  { label: "ジャズ", hint: "スイング・ウォーキングベース", text: "ジャズ。bpm 120〜180、スイング、7thコード、ウォーキングベース、テーマとアドリブ（ピアノ・ウッドベース・トランペット patch: trumpet）。", sound: "jazz-trio" },
+  { label: "EDM", hint: "4つ打ち・シンセ", text: "EDM。bpm 125〜140、4つ打ち、ビルドアップからドロップ、シンセのリード。", sound: "house-duck" },
 ];
 const aiBox = h("div", {});
 function buildAiPanel(api: DesktopApi): void {
@@ -1594,6 +1609,8 @@ function buildAiPanel(api: DesktopApi): void {
     styleRow.append(b);
   }
   const countSel = select([["1", "1案"], ["2", "2案（聴き比べる）"], ["3", "3案（聴き比べる）"]], "2");
+  const autoSrc = h("input", { type: "checkbox", checked: "" }) as HTMLInputElement;
+  const autoSrcLabel = h("label", { class: "muted", style: "display:flex;gap:6px;align-items:center;margin-top:6px" }, autoSrc, "スタイルを1つ選んだときは、そのジャンルに合う音源（ベース・ドラム・ギター・オーケストラ・ピアノ）に自動で切りかえる");
   const candBox = h("div", { style: "margin-top:8px" });
   interface Cand { title: string; description: string; json: string; score: Score; warnings: string[]; sec: number; bpm: number }
   let current: Cand | null = null;
@@ -1602,6 +1619,9 @@ function buildAiPanel(api: DesktopApi): void {
   const open = (c: Cand): void => {
     current = c;
     loadScore(c.score, c.title || "AIの曲");
+    // スタイルボタンを1つだけ選んでいたら、そのジャンルに合う音源（ベース・ドラム・ギター・オーケストラ・ピアノ）に切りかえる（音量・ミックスは変えない）
+    const chosen = AI_STYLES.filter((st) => picked.has(st.label) && st.sound);
+    if (autoSrc.checked && chosen.length === 1 && SOUND_SETS[chosen[0].sound!]) void applySetOverlays(SOUND_SETS[chosen[0].sound!]);
     fixBtn.disabled = false;
     msg.textContent = `開きました: 「${c.title}」— ${c.description}`;
   };
@@ -1679,7 +1699,7 @@ function buildAiPanel(api: DesktopApi): void {
     h("div", { class: "row" }, field("Anthropic APIキー", keyIn), keySave, keyClear, keyInfo),
     h("div", { class: "row", style: "margin-top:8px" }, field("モデル", modelSel), field("考える深さ", effortSel), field("いくつ作る？", countSel)),
     h("div", { class: "muted", style: "margin-top:8px" }, "スタイル（押すと、そのジャンルの作り方が依頼に足されます。複数選べます）"),
-    styleRow,
+    styleRow, autoSrcLabel,
     h("div", { style: "margin-top:8px" }, req),
     h("div", { class: "row", style: "margin-top:8px" }, newBtn, fixBtn),
     msg,

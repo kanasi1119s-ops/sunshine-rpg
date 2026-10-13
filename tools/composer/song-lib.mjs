@@ -92,7 +92,7 @@ export async function openSongKit() {
     fs.mkdirSync(out, { recursive: true });
     let reportLine = null;
     const files = { project: path.join(out, `${name}.sunshine-song.json`), midi: path.join(out, `${name}.mid`) };
-    fs.writeFileSync(files.project, JSON.stringify({ format: "sunshine-song", version: 1, name: song.title, edition, score }));
+    fs.writeFileSync(files.project, JSON.stringify({ format: "sunshine-song", version: 1, name: song.title, edition, sources: { bass, drums, guitar, orchestra, piano }, score }));
     const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
     fs.writeFileSync(files.midi, scoreToMidi(edited));
     // ゲーム内の曲の切り替え（BgmDirector）が読む、ループ点・導入と終わりの型・ボスの段階の表
