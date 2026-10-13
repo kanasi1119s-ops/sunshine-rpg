@@ -1511,6 +1511,21 @@ interface DesktopApi {
   openAmpFolder(): Promise<void>;
 }
 const desktop = (window as unknown as { sunshineDesktop?: DesktopApi }).sunshineDesktop;
+/** AI作曲のスタイルボタン。text は依頼に足すヒント（既存の曲・作品名は書かない。ジャンルの作り方だけ）。 */
+const AI_STYLES: { label: string; hint: string; text: string }[] = [
+  { label: "メロコア", hint: "疾走感・ギターのリフ・サビで盛り上がる", text: "メロディックなパンク（メロコア）。bpm 170〜190、8分刻みのリフ、ツーバスなし、サビでメロディが高く伸びる。ギターは厚い歪み、リードは歌うように。曲の終わりは勢いよく。" },
+  { label: "バラード", hint: "ゆっくり・ピアノと弦", text: "バラード。bpm 60〜80。ピアノと弦の長い音、休符を生かす。サビで少しずつ広がり、最後は静かに終わる。" },
+  { label: "ゲームのフィールド", hint: "冒険・広がり・ループできる", text: "RPGのフィールド曲。bpm 100〜130、長調、大きな跳躍と長い音。くり返し流れても飽きないよう、終わりを最初につなげる（ループ）。" },
+  { label: "ボス戦", hint: "重く激しい・盛り上げる", text: "RPGのボス戦。bpm 150〜180、短調。ブラス・合唱の壁、重い低音、ドラムは激しく。途中で一度静まってからサビに戻る。" },
+  { label: "通常戦闘", hint: "テンポ速め・刻み", text: "RPGの通常戦闘。bpm 150〜190、短調。刻みとキックで勢いよく、入りは短く、ループできる。" },
+  { label: "町・村", hint: "やさしい・ドラムなし", text: "町や村の曲。bpm 80〜110、長調。ハープ・フルート・ギターでドラムなし、あたたかくのどか。" },
+  { label: "ダンジョン・不穏", hint: "暗い・余韻・静か", text: "ダンジョン・不穏な場面。bpm 60〜90、短調。余韻の長いパッドと単音、ドラムは少なめか無し。" },
+  { label: "J-POPバンド", hint: "明るいバンド・サビが強い", text: "J-POPのバンド曲。bpm 120〜170、王道のコード進行、Aメロは低く語り、Bメロでせり上げ、サビで一気に高く。クリーンと歪みのギターを使い分ける。" },
+  { label: "ローファイ", hint: "ゆるい・夜・作業用", text: "ローファイ。bpm 70〜90、やわらかいエレピとゆるいドラム、ざらっとした質感。" },
+  { label: "和風", hint: "琴・尺八・和の旋律", text: "和風。都節（陰旋法）の旋律、琴・尺八・三味線、和太鼓風のタム。" },
+  { label: "ジャズ", hint: "スイング・ウォーキングベース", text: "ジャズ。bpm 120〜180、スイング、7thコード、ウォーキングベース、テーマとアドリブ。" },
+  { label: "EDM", hint: "4つ打ち・シンセ", text: "EDM。bpm 125〜140、4つ打ち、ビルドアップからドロップ、シンセのリード。" },
+];
 const aiBox = h("div", {});
 function buildAiPanel(api: DesktopApi): void {
   const keyIn = h("input", { type: "password", placeholder: "sk-ant-…", autocomplete: "off", style: "min-width:240px" });
@@ -1520,8 +1535,8 @@ function buildAiPanel(api: DesktopApi): void {
   const modelSel = select([["claude-opus-5-5", "Claude Opus 5.5（いちばん上手）"], ["claude-sonnet-5-5", "Claude Sonnet 5.5（速い・安い）"]], "claude-opus-5-5");
   const effortSel = select([["low", "さっと"], ["medium", "ふつう"], ["high", "じっくり"]], "medium");
   const req = h("textarea", { rows: "3", style: "width:100%", placeholder: "例: 雪の降る港町の夜。やさしいピアノとストリングス、少しさみしいけれどあたたかい。70秒くらい。" });
-  const newBtn = h("button", { class: "primary", type: "button" }, "AIに新しい曲を作ってもらう");
-  const fixBtn = h("button", { type: "button", disabled: "" }, "この曲をAIに直してもらう");
+  const newBtn = h("button", { class: "primary", type: "button" }, "AIに曲を作ってもらう");
+  const fixBtn = h("button", { type: "button", disabled: "" }, "いま開いている案をAIに直してもらう");
   const msg = h("div", { class: "muted", style: "margin-top:6px;white-space:pre-wrap" });
   const show = (st: DesktopKeyStatus): void => {
     keyInfo.textContent = st.hasKey ? `保存済み（末尾 …${st.last4}）${st.canSave ? "・OSの機能で暗号化" : "・このパソコンでは暗号化できないため、終了すると消えます"}` : "まだ入っていません";
@@ -1534,48 +1549,110 @@ function buildAiPanel(api: DesktopApi): void {
     void api.setKey(key).then(show).catch((e: unknown) => (msg.textContent = (e as Error).message.replace(/^Error invoking remote method '[^']+': (Error: )?/, "")));
   };
   keyClear.onclick = () => void api.clearKey().then(show);
-  let hasHistory = false;
+  // ── スタイルボタン（押すと、そのジャンルの作り方のヒントが依頼に足される。複数選べる） ──
+  const picked = new Set<string>();
+  const styleRow = h("div", { class: "row", style: "margin-top:8px;flex-wrap:wrap" });
+  for (const st of AI_STYLES) {
+    const b = h("button", { type: "button", title: st.hint }, st.label);
+    b.onclick = () => {
+      if (picked.has(st.label)) picked.delete(st.label);
+      else picked.add(st.label);
+      b.classList.toggle("on", picked.has(st.label));
+    };
+    styleRow.append(b);
+  }
+  const countSel = select([["1", "1案"], ["2", "2案（聴き比べる）"], ["3", "3案（聴き比べる）"]], "2");
+  const candBox = h("div", { style: "margin-top:8px" });
+  interface Cand { title: string; description: string; json: string; score: Score; warnings: string[]; sec: number; bpm: number }
+  let current: Cand | null = null;
+  const clean = (e: unknown): string => (e as Error).message.replace(/^Error invoking remote method '[^']+': (Error: )?/, "");
+  const styleText = (): string => AI_STYLES.filter((st) => picked.has(st.label)).map((st) => `【${st.label}】${st.text}`).join("\n");
+  const open = (c: Cand): void => {
+    current = c;
+    loadScore(c.score, c.title || "AIの曲");
+    fixBtn.disabled = false;
+    msg.textContent = `開きました: 「${c.title}」— ${c.description}`;
+  };
+  const renderCands = (cands: Cand[]): void => {
+    candBox.replaceChildren();
+    cands.forEach((c, i) => {
+      const b = h("button", { type: "button", class: c === current ? "on" : "" }, `案${i + 1}を開く`);
+      b.onclick = () => {
+        open(c);
+        renderCands(cands);
+      };
+      candBox.append(h("div", { class: "row", style: "margin-top:4px;align-items:center" }, b, h("span", { class: "muted" }, `「${c.title}」 BPM ${c.bpm}・約${Math.round(c.sec)}秒 — ${c.description}${c.warnings.length ? `（注意 ${c.warnings.length}件）` : ""}`)));
+    });
+  };
+  /** 1案ぶん作る（AIの答えを曲に直す。形式のまちがいは、1回だけ理由を伝えて直してもらう）。 */
+  const makeOne = async (request: string): Promise<{ cand: Cand; used: { input: number; output: number } }> => {
+    let answer = await api.compose({ model: modelSel.value, effort: effortSel.value, request, system: AI_SONG_GUIDE, schema: AI_SONG_SCHEMA, continue: false });
+    let used = { ...answer.usage };
+    let built;
+    try {
+      built = aiSongToScore(JSON.parse(answer.text));
+    } catch (first) {
+      answer = await api.compose({ model: modelSel.value, effort: effortSel.value, request: `${request}\n\n前の答えに、次のまちがいがありました: ${(first as Error).message}\n直した曲を、同じ形式でもう一度書いてください。`, system: AI_SONG_GUIDE, schema: AI_SONG_SCHEMA, continue: false });
+      used = { input: used.input + answer.usage.input, output: used.output + answer.usage.output };
+      built = aiSongToScore(JSON.parse(answer.text));
+    }
+    return { cand: { title: built.song.title, description: built.song.description, json: answer.text, score: built.score, warnings: built.warnings, sec: getScoreDurationSec(built.score), bpm: built.score.tempoBpm }, used };
+  };
+  let busy = false;
   const run = async (fix: boolean): Promise<void> => {
-    const request = req.value.trim();
-    if (!request) {
-      msg.textContent = fix ? "どう直したいかを書いてください（例: サビをもっと盛り上げて、テンポを少し速く）。" : "どんな曲がほしいかを書いてください。";
+    const user = req.value.trim();
+    const styles = styleText();
+    if (!user && !styles && !fix) {
+      msg.textContent = "どんな曲がほしいかを書くか、スタイルのボタンを押してください。";
       return;
     }
+    if (fix && !current) return;
+    if (fix && !user) {
+      msg.textContent = "どう直したいかを書いてください（例: サビをもっと盛り上げて、テンポを少し速く）。";
+      return;
+    }
+    if (busy) return;
+    busy = true;
     newBtn.disabled = true;
     fixBtn.disabled = true;
-    msg.textContent = "AIが作曲しています…（30秒〜数分かかります）";
-    const clean = (e: unknown): string => (e as Error).message.replace(/^Error invoking remote method '[^']+': (Error: )?/, "");
+    const n = fix ? 1 : Number(countSel.value) || 1;
+    msg.textContent = `AIが作曲しています…（${n}案。30秒〜数分かかります）`;
+    const requests = fix && current
+      ? [`次の曲（JSON）を、下の直し方に合わせて直してください。直したところ以外は、なるべくそのままにして、同じ形式の曲全体を書いてください。\n直し方: ${user}\n\n曲:\n${current.json}`]
+      : Array.from({ length: n }, (_, i) => `${styles ? `${styles}\n` : ""}${user}${n > 1 ? `\n\n（これは${n}案のうちの${i + 1}案めです。ほかの案と、調・テンポ・構成・楽器の入り方を変えて、聴き比べて選べるようにしてください。）` : ""}`);
     try {
-      let answer = await api.compose({ model: modelSel.value, effort: effortSel.value, request, system: AI_SONG_GUIDE, schema: AI_SONG_SCHEMA, continue: fix });
-      let used = { ...answer.usage };
-      let built;
-      try {
-        built = aiSongToScore(JSON.parse(answer.text));
-      } catch (first) {
-        // 形式のまちがいは、1回だけ理由を伝えて直してもらう
-        answer = await api.compose({ model: modelSel.value, effort: effortSel.value, request: `次のまちがいがありました。直した曲を、同じ形式でもう一度書いてください。\n${(first as Error).message}`, system: AI_SONG_GUIDE, schema: AI_SONG_SCHEMA, continue: true });
-        used = { input: used.input + answer.usage.input, output: used.output + answer.usage.output };
-        built = aiSongToScore(JSON.parse(answer.text));
+      const results = await Promise.allSettled(requests.map((r) => makeOne(r)));
+      const ok = results.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
+      const errors = results.flatMap((r) => (r.status === "rejected" ? [clean(r.reason)] : []));
+      if (ok.length === 0) {
+        msg.textContent = errors[0] ?? "曲を作れませんでした。";
+        return;
       }
-      hasHistory = true;
-      loadScore(built.score, built.song.title || "AIの曲");
-      msg.textContent = `できました: 「${built.song.title}」— ${built.song.description}\n使ったトークン: 入力 ${used.input}・出力 ${used.output}${built.warnings.length ? `\n注意: ${built.warnings.join(" / ")}` : ""}\n▶ で聴けます。ピアノロールで手直しもできます。`;
+      const cands = ok.map((o) => o.cand);
+      const used = ok.reduce((t, o) => ({ input: t.input + o.used.input, output: t.output + o.used.output }), { input: 0, output: 0 });
+      open(cands[0]);
+      renderCands(cands);
+      msg.textContent += `\n使ったトークン: 入力 ${used.input}・出力 ${used.output}${errors.length ? `\nできなかった案: ${errors.length}件（${errors[0]}）` : ""}${cands[0].warnings.length ? `\n注意（案1）:\n${cands[0].warnings.join("\n")}` : ""}`;
     } catch (e) {
       msg.textContent = clean(e);
     } finally {
+      busy = false;
       newBtn.disabled = false;
-      fixBtn.disabled = !hasHistory;
+      fixBtn.disabled = !current;
     }
   };
   newBtn.onclick = () => void run(false);
   fixBtn.onclick = () => void run(true);
   aiBox.append(
     h("div", { class: "row" }, field("Anthropic APIキー", keyIn), keySave, keyClear, keyInfo),
-    h("div", { class: "row", style: "margin-top:8px" }, field("モデル", modelSel), field("考える深さ", effortSel)),
+    h("div", { class: "row", style: "margin-top:8px" }, field("モデル", modelSel), field("考える深さ", effortSel), field("いくつ作る？", countSel)),
+    h("div", { class: "muted", style: "margin-top:8px" }, "スタイル（押すと、そのジャンルの作り方が依頼に足されます。複数選べます）"),
+    styleRow,
     h("div", { style: "margin-top:8px" }, req),
     h("div", { class: "row", style: "margin-top:8px" }, newBtn, fixBtn),
     msg,
-    h("div", { class: "muted", style: "margin-top:6px" }, "APIキーは、このパソコンの中だけに暗号化して保存し、Anthropic（api.anthropic.com）との通信にだけ使います。使った分の料金は、キーの持ち主にかかります（https://console.anthropic.com）。AIには、既存の曲をまねしないよう指示しています。"),
+    candBox,
+    h("div", { class: "muted", style: "margin-top:6px" }, "APIキーは、このパソコンの中だけに暗号化して保存し、Anthropic（api.anthropic.com）との通信にだけ使います。使った分の料金は、キーの持ち主にかかります（https://console.anthropic.com）。案の数だけ料金がかかります。AIには、既存の曲をまねしないよう指示しています。"),
   );
 }
 if (desktop) {
