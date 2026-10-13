@@ -280,10 +280,10 @@ def build(i):
      "bpm":bpm,"beats":4,"chords":" ".join(cname(c) for c in allch),"barsPerChord":1,"repeats":1,"feel":"rock","tone":"rock",
      "autoAccompaniment":False,"dynamics":"natural","human":0.45,"humanProfile":"role","lockToKick":True,"autoScoop":False,"fills":False,
      "drumMix":{"tom":{"tune":-4,"level":1.4,"spread":0.5}},
-     "parts":[part("leadGuitar","メロディ／ソロ",lead,0.2,0,"cleanGuitar","namB",{**G,"reverb":0.2,"ampDrive":0.5,"ampTone":-6,"phrase":8,"humanTiming":1.5,"humanVelocity":1.8,"pushMs":7}),
-      part("leadGuitar","ハモリ（3度上）",lead2,0.13,0.25,"cleanGuitar","namB",{**G,"reverb":0.2,"ampDrive":0.5,"ampTone":-6,"phrase":8,"humanTiming":1.5,"humanVelocity":1.8,"pushMs":12}),
-      part("leadGuitar","リフ（左・ルート）",gl,0.16,-0.6,"cleanGuitar","namB",{**G,"reverb":0.08,"ampTone":-6}),
-      part("leadGuitar","リフ（右・5度）",gr,0.16,0.6,"cleanGuitar","namB",{**G,"reverb":0.08,"ampTone":-6}),
+     "parts":[part("leadGuitar","メロディ／ソロ",lead,0.5,0,"steelGuitar","crunch",{**G,"reverb":0.2,"phrase":8,"humanTiming":1.5,"humanVelocity":1.8,"pushMs":7,"ampDrive":1.5}),
+      part("leadGuitar","ハモリ（3度上）",lead2,0.32,0.25,"steelGuitar","crunch",{**G,"reverb":0.2,"phrase":8,"humanTiming":1.5,"humanVelocity":1.8,"pushMs":12,"ampDrive":1.5}),
+      part("leadGuitar","リフ（左・ルート）",gl,0.12,-0.6,"cleanGuitar","namB",{**G,"reverb":0.08,"ampTone":-6,"ampDrive":0.25}),
+      part("leadGuitar","リフ（右・5度）",gr,0.12,0.6,"cleanGuitar","namB",{**G,"reverb":0.08,"ampTone":-6,"ampDrive":0.25}),
       part("bass","ベース（旋律）",bass,0.6,0,None,"auto",{"bright":0.3}),
       part("kick","キック",kick,0.26,0,None,"auto",{}),part("snare","スネア",snare,0.2,0,None,"auto",{}),part("hihat","ハイハット",hat,0.09,0.3,None,"auto",{}),
       part("tom","タム",tomp,0.3,0,None,"auto",{}),part("crash","クラッシュ",crashp,0.16,0.2,None,"auto",{})]}
@@ -291,10 +291,13 @@ def build(i):
     if slug in LIGHT:  # 軽い音の曲: 録音ギターは hofner（作るときに --guitar hofner）。b=明るいNAM、c=軽いクランチのリフ＋明るいNAMのメロディ
         song["description"]=song["description"].replace("。","。軽めのギター音。",1)
         for p in song["parts"]:
-            if p["amp"]=="namB":
+            if p["amp"]=="namB" or p["amp"]=="crunch":
                 lead=p["role"].startswith(("メロディ","ハモリ"))
-                if lead or LIGHT[slug]=="b": p.update({"ampTone":2,"ampCab":"open","ampDrive":0.03,"ampLevel":1.5})  # ひずみ浅め（入力をしぼる。0.01は浅すぎ、0.5は強め）
-                else: p["amp"]="crunch"; p.pop("ampTone",None); p["volume"]=0.16
+                if lead:
+                    if slug=="bike-hill": p.update({"ampDrive":1.1,"ampTone":1,"reverb":0.08})  # 02番のリード: 音の粒をはっきり（歪み浅く・高域を戻し・残響を減らす）
+                    continue
+                if LIGHT[slug]=="b": p.update({"ampTone":2,"ampCab":"open","ampDrive":0.03,"ampLevel":1.5,"volume":0.14})  # ひずみ浅め（入力をしぼる。0.01は浅すぎ、0.5は強め）
+                else: p["amp"]="crunch"; p.pop("ampTone",None); p.pop("ampDrive",None); p["volume"]=0.14
     for p in song["parts"]:
         assert abs(beats(p["notes"])-4*total)<1e-6,(slug,p["role"],beats(p["notes"]),4*total)
     meta={"slug":slug,"jp":jp,"bpm":bpm,"bars":total,"mode":mode,"tonic":NAMES[T],"plan":mods[plan],"template":tpl,"verse":vkey,"chorus":ckey,"bridge":bkey,"intro":intro_kind,"drums":[fv,fc],"seconds":round(total*240/bpm)}
@@ -399,10 +402,12 @@ def guitar_bar(rng,c,k,idx,i,n,prof,intro_kind):
     def cell(m,name):
         # 音を短く切らない（ブツブツ切れる弾き方は却下）: すべて次の音へつなげ（_）、休符も短い音も使わない
         a=nn(m)
-        return {"e8":" ".join(f"{a}:0.5"+("!_" if q in(0,4) else "_") for q in range(8)),
-                "e8o":" ".join(f"{a}:0.5"+("!_" if q in(0,4) else "_") for q in range(8)),
-                "sync":f"{a}:1!_ {a}:0.5_ {a}:0.5_ {a}:1_ {a}:0.5_ {a}:0.5_","push":f"{a}:0.5!_ {a}:0.5_ {a}:1_ {a}:1!_ {a}:1_",
-                "ring":f"{a}:2!_ {a}:1_ {a}:1_","hit":f"{a}:4!","s16":" ".join(f"{a}:0.5"+("!_" if q in(0,4) else "_") for q in range(8)),
+        # 2026-10-13「少し刻むリフ」: 8分を1音ずつ弾き直す（つなぎ _ を外す）。休符・スタッカートは使わない
+        e8=" ".join(f"{a}:0.5"+("!" if q in(0,4) else "") for q in range(8))
+        s16=" ".join(f"{a}:0.5"+("!" if q in(0,2) else "") for q in range(4))+" "+" ".join(f"{a}:0.25"+("!" if q%4==0 else "") for q in range(8))
+        return {"e8":e8,"e8o":e8,
+                "sync":f"{a}:1!_ {a}:0.5 {a}:0.5 {a}:1 {a}:0.5 {a}:0.5","push":f"{a}:0.5! {a}:0.5 {a}:1 {a}:1! {a}:1",
+                "ring":f"{a}:2!_ {a}:1_ {a}:1_","hit":f"{a}:4!","s16":s16,
                 "whole":f"{a}:4","whv":f"{a}:4~","rest":"R:4","off":f"{a}:1_ {a}:1_ {a}:1_ {a}:1_"}[name]
     VERSE=[["e8","e8","push"],["push","off","e8"],["e8","sync","e8"],["s16","e8","push"]][prof]
     CHOR=[["sync","push","ring"],["e8o","sync","ring"],["sync","e8o","push"],["push","sync","e8o"]][prof]
@@ -438,6 +443,17 @@ if __name__=="__main__":
     metas=[]
     for i in ids:
         song,meta=build(i)
+        import re
+        for q in song["parts"][:2]:  # リードとハモリを1オクターブ上げる（低いと濁るため。2026-10-13、人間の指摘）
+            q["notes"]=re.sub(r'\b([A-G][#b]?)(\d)\b',lambda m:m.group(1)+str(min(7,int(m.group(2))+1)),q["notes"])
+        import copy
+        riffs=[(j,q) for j,q in enumerate(song["parts"]) if q["role"].startswith("リフ")]
+        for off,(j,q) in enumerate(riffs):  # リフに1オクターブ上の重ねを足す（音の数が少ない、の指摘。2026-10-13）
+            c=copy.deepcopy(q); c["role"]=q["role"].replace("）","・1オクターブ上）") if "）" in q["role"] else q["role"]+"（1オクターブ上）"
+            c["notes"]=re.sub(r'\b([A-G][#b]?)(\d)\b',lambda m:m.group(1)+str(min(7,int(m.group(2))+1)),q["notes"])
+            c["volume"]=round(q["volume"]*0.75,3); c["pan"]=round(q["pan"]*0.55,2)
+            song["parts"].insert(max(j for j,_ in riffs)+1+off,c)
+        for q in song["parts"][:2]: q["gainDb"]=6 if q["role"].startswith("メロ") else 4
         json.dump(song,open(os.path.join(out,f"{i+1:02d}-{meta['slug']}.json"),"w"),ensure_ascii=False)
         metas.append(meta); print(i+1,meta["slug"],meta["jp"],meta["tonic"],meta["mode"],meta["bpm"],meta["seconds"],meta["plan"],file=sys.stderr)
     json.dump(metas,open(os.path.join(out,"_meta.json"),"w"),ensure_ascii=False,indent=1)
