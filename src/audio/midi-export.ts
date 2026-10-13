@@ -125,7 +125,8 @@ function channelKey(track: Track, program: number): string {
   const mix = [track.reverb, track.chorus, track.bright, track.duck].some((v) => v !== undefined) ? `|${track.reverb ?? ""},${track.chorus ?? ""},${track.bright ?? ""},${track.duck ?? ""}` : "";
   // 音程のずれ・立ち上がり・余韻が違うパートも、別のチャンネルに分ける
   const tone = [track.detune, track.attack, track.release].some((v) => v) ? `|t${track.detune ?? 0},${track.attack ?? ""},${track.release ?? ""}` : "";
-  return `${program}|${(track.pan ?? 0).toFixed(2)}|${track.instrument ?? track.waveform}${mix}${tone}`;
+  const stem = track.stemKey ? `|stem:${track.stemKey}` : "";
+  return `${program}|${(track.pan ?? 0).toFixed(2)}|${track.instrument ?? track.waveform}${mix}${tone}${stem}`;
 }
 const clamp127 = (v: number): number => Math.max(0, Math.min(127, Math.round(v)));
 /** ドラムの太鼓の種類 → GMのキー */
@@ -136,8 +137,12 @@ export function scoreToMidi(score: Score): Uint8Array {
 }
 
 /** MIDIと、チャンネルごとの楽器（GMの番号）。機材（アンプ・ドラムの仕上げ）を選ぶために使う。 */
-export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Record<number, number>; amps: Record<number, { amp: AmpSetting; pan: number }>; fx: Record<number, FxSpec[]> } {
+export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Record<number, number>; amps: Record<number, { amp: AmpSetting; pan: number }>; fx: Record<number, FxSpec[]>; stemChannels: Record<string, number[]>; trackChannels: number[] } {
   const fx: Record<number, FxSpec[]> = {};
+  /** stemKey ごとの MIDI チャンネル（自動ミックスの解析用。stemKey のあるトラックだけ） */
+  const stemChannels: Record<string, number[]> = {};
+  /** トラックごとの MIDI チャンネル（同じチャンネルを共有するパートの見分けに使う） */
+  const trackChannelOf = new Map<Track, number>();
   const programs: Record<number, number> = {};
   const amps: Record<number, { amp: AmpSetting; pan: number }> = {};
   const tracksBytes: number[][] = [];
@@ -319,6 +324,9 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     };
     const main = setupChannel(program, channelKey(track, program), 1);
     const channel = main.channel;
+    trackChannelOf.set(track, channel);
+    const stemList = track.stemKey ? (stemChannels[track.stemKey] ??= []) : null;
+    if (stemList && !stemList.includes(channel)) stemList.push(channel);
     // ばらつきの種は、チャンネルごと。同じチャンネルに重ねた声部（ギターのストロークの各弦など）は、同じようにずれて、和音がそろったままになる
     const trackSeed = (channel + 1) * 7.31;
     if (channel !== DRUM_CHANNEL) programs[channel] = program;
@@ -328,6 +336,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     const layerSpec = inst && track.program === undefined ? GM_LAYER[inst] : undefined;
     const layer = layerSpec ? setupChannel(layerSpec.program, `${channelKey(track, layerSpec.program)}|layer`, 1) : null;
     if (layer && layer.channel !== DRUM_CHANNEL) programs[layer.channel] = layerSpec!.program;
+    if (layer && stemList && !stemList.includes(layer.channel)) stemList.push(layer.channel);
     // ピアノ系は、およそ1小節ごとにペダルを踏み替えて、音をつなげる
     if ((inst === "piano" || inst === "keys") && track.pedal) {
       // ペダルの指定がある: chord／bar は踏み替える拍（changes）で、none は踏まない
@@ -574,5 +583,5 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
 
   const out: number[] = [0x4d, 0x54, 0x68, 0x64, ...u32(6), ...u16(1), ...u16(tracksBytes.length), ...u16(PPQ)];
   for (const t of tracksBytes) out.push(0x4d, 0x54, 0x72, 0x6b, ...u32(t.length), ...t);
-  return { midi: Uint8Array.from(out), programs, amps, fx };
+  return { midi: Uint8Array.from(out), programs, amps, fx, stemChannels, trackChannels: score.tracks.map((t) => trackChannelOf.get(t) ?? -1) };
 }

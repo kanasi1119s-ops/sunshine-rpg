@@ -210,7 +210,7 @@ export async function openSongKit() {
   return { load, guide, soundSets, mixTools, build, register, listGameSongs, ampPresets, close: () => server.close() };
 }
 
-async function loadPlaywright() {
+export async function loadPlaywright() {
   const tries = ["playwright", "@playwright/test"];
   try {
     tries.push(path.join(execSync("npm root -g", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(), "playwright/index.mjs"));

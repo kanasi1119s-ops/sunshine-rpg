@@ -45,7 +45,8 @@ import { CHORD_SHAPES, chordIntervals } from "../../src/audio/chord-input";
 import { addNotes, copyNotes, moveNotes, quantizeNotes, notesInRange, notesToEvents, noteStartAt, pasteNotes, removeNotes, resizeNote, setNotesLength, trackToNotes, trackTotalBeats, type RollNote } from "../../src/audio/edit";
 import { composeFinale, FINALES } from "../../src/audio/finale";
 import { GM_PROGRAM } from "../../src/audio/gm-map";
-import { scoreToMidi } from "../../src/audio/midi-export";
+import { scoreToMidi, scoreToMidiInfo } from "../../src/audio/midi-export";
+import { analyzeChannels, type Analysis } from "../../src/audio/auto-mix";
 import { AMP_PRESETS, AMP_PRESET_NAMES, type AmpPresetName } from "../../src/audio/amp";
 import { NamHost } from "../../src/audio/nam/nam-host";
 import { FX_INFO, FX_TYPES, type FxSpec, type FxType } from "../../src/audio/fx-chain";
@@ -1264,6 +1265,53 @@ function addAmpPlugin(data: unknown, announce: boolean): AmpPluginDef | null {
     let bin = "";
     for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
     return btoa(bin);
+  },
+  /**
+   * 自動ミックスの解析用: 1 回の描き出しで、全体の音（bus）と、パートごとの音（stemKey を付けたトラックのチャンネルごと）を取り出して測る。
+   * 戻り値: 全体の WAV（base64、renderWav と同じ大きさ合わせ済み）と、stemKey ごとの測定結果（tools/composer/automix.mjs が使う）。
+   * パートの音は、アンプ・エフェクターのあと、全体の仕上げ段（EQ・圧縮・残響）の前。MIDI の残響の送り（reverb）は含まない。
+   * 同じ stemKey が複数のチャンネル（本体＋重ねの音）に分かれたときは、足し合わせて測る。
+   */
+  async renderStems(score: Score, edition: State["edition"], opts?: { windowSec?: number; wantBus?: boolean; fixedGainDb?: number }): Promise<{ busWav: string | null; gainDb: number; seconds: number; channelsOf: Record<string, number[]>; analyses: Record<string, Analysis>; sampleRate: number }> {
+    if (!soundfontCopy) throw new Error("録音音源を読み込めていません");
+    const usedNam = new Set(score.tracks.map((t) => t.amp?.model).filter((m): m is string => !!m && m in BUILTIN_NAM));
+    if (usedNam.size) score = { ...score, namModels: { ...(score.namModels ?? {}), ...Object.fromEntries([...usedNam].map((k) => [k, BUILTIN_NAM[k].json])) } };
+    const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
+    const info = scoreToMidiInfo({ ...edited, loop: false });
+    const taps = [...new Set(Object.values(info.stemChannels).flat())].sort((a, b) => a - b);
+    if (taps.length > 15) throw new Error(`パートが使うチャンネルが ${taps.length} 個あり、15 を超えています（パート別に分けて測れません）`);
+    const buffer = await renderScoreOffline({ ...edited, loop: false }, { soundfont: soundfontCopy, overlays: overlayBuffers(), processorUrl, edition, nam: namHost, stemChannels: taps });
+    const bus = [buffer.getChannelData(0), buffer.getChannelData(1)];
+    // 全体の大きさ合わせ（renderWav と同じ）。別の描き出し（ドラムだけ等）の音を同じ尺度で測るときは、fixedGainDb でその倍率をそのまま使う
+    const gainDb = opts?.fixedGainDb !== undefined ? opts.fixedGainDb : normalizeLoudness(bus, buffer.sampleRate).gainDb;
+    if (opts?.fixedGainDb !== undefined) { const kk = Math.pow(10, gainDb / 20); for (const c of bus) for (let j = 0; j < c.length; j++) c[j] *= kk; }
+    const k = Math.pow(10, gainDb / 20);
+    const analyses: Record<string, Analysis> = {};
+    const cache = new Map<string, Analysis>();
+    for (const [key, chans] of Object.entries(info.stemChannels)) {
+      const id = chans.join(",");
+      let a = cache.get(id);
+      if (!a) {
+        const n = buffer.length;
+        const l = new Float32Array(n), r = new Float32Array(n);
+        for (const ch of chans) {
+          const i = taps.indexOf(ch);
+          const sl = buffer.getChannelData(2 + 2 * i), sr = buffer.getChannelData(3 + 2 * i);
+          for (let j = 0; j < n; j++) { l[j] += sl[j] * k; r[j] += sr[j] * k; }
+        }
+        a = analyzeChannels(l, r, buffer.sampleRate, { windowSec: opts?.windowSec ?? 0.25 });
+        cache.set(id, a);
+      }
+      analyses[key] = a;
+    }
+    let busWav: string | null = null;
+    if (opts?.wantBus !== false) {
+      const bytes = encodeWav(bus, buffer.sampleRate);
+      let bin = "";
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      busWav = btoa(bin);
+    }
+    return { busWav, gainDb, seconds: buffer.duration, channelsOf: info.stemChannels, analyses, sampleRate: buffer.sampleRate };
   },
 };
 

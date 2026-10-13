@@ -109,6 +109,8 @@ export interface AmpSetting {
 }
 
 export interface Track {
+  /** 自動ミックスの解析用（auto-mix.ts）: 同じ値のトラックは同じ MIDI チャンネルに、違う値は別のチャンネルに分ける。普通の曲には付けない。 */
+  stemKey?: string;
   waveform: Waveform;
   /** 楽器の音色（省略時は`waveform`のまま）。 */
   instrument?: Instrument;

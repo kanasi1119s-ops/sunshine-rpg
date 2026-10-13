@@ -114,12 +114,18 @@ export class AmpRack {
   private shaperBias = new WeakMap<AudioNode, number>();
   private pending: Promise<unknown>[] = [];
 
-  constructor(private ctx: BaseAudioContext, private destination: AudioNode) {
-    this.dest = destination;
+  /** destination にチャンネルごとの出口の関数を渡すと、チャンネルごとに別の出口へつなげる（自動ミックスのパート別の書き出し用）。 */
+  private destination: AudioNode;
+  private destFor: (ch: number) => AudioNode;
+
+  constructor(private ctx: BaseAudioContext, destination: AudioNode | ((ch: number) => AudioNode)) {
+    this.destFor = typeof destination === "function" ? destination : () => destination;
+    this.destination = this.destFor(0);
+    this.dest = this.destination;
     this.inputs = Array.from({ length: 16 }, () => ctx.createGain());
     this.built = Array.from({ length: 16 }, () => []);
     for (let ch = 0; ch < 16; ch++) {
-      this.inputs[ch].connect(destination);
+      this.inputs[ch].connect(this.destFor(ch));
       this.built[ch] = [];
     }
   }
@@ -154,12 +160,16 @@ export class AmpRack {
       this.built[ch] = [];
       const override = ch === drumChannel ? undefined : amps[ch];
       const role = override && override.amp.type !== "auto" ? this.roleFromType(genreToType(override.amp), ch === drumChannel ? -1 : programs[ch], tone) : this.roleOf(ch === drumChannel ? -1 : programs[ch], tone);
-      const chain = fx[ch]?.length ? buildFxChain(this.ctx, fx[ch]) : null;
+      // fx の pre: true は、アンプの前（ペダルボードの本来の位置）。それ以外はアンプのあと
+      const chain = fx[ch]?.some((s) => !s.pre) ? buildFxChain(this.ctx, fx[ch].filter((s) => !s.pre)) : null;
+      const preChain = fx[ch]?.some((s) => s.pre) ? buildFxChain(this.ctx, fx[ch].filter((s) => s.pre)) : null;
+      this.destination = this.destFor(ch);
       if (chain) chain.output.connect(this.destination);
       this.dest = chain ? chain.input : this.destination;
-      const nodes = this.build(role, input, override);
+      if (preChain) input.connect(preChain.input);
+      const nodes = this.build(role, preChain ? preChain.output : input, override);
       this.dest = this.destination;
-      this.built[ch] = chain ? [...nodes, chain.input, chain.output, ...chain.nodes] : nodes;
+      this.built[ch] = [...nodes, ...(chain ? [chain.input, chain.output, ...chain.nodes] : []), ...(preChain ? [preChain.input, preChain.output, ...preChain.nodes] : [])];
     }
   }
 

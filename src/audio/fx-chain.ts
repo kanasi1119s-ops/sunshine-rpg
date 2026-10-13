@@ -4,10 +4,14 @@
  * どれも `mix`（0〜1）で、元の音との混ぜ具合を決める。省略すると、その効果の標準の量。
  */
 
+import { EXTRA_FX_INFO, EXTRA_FX_TYPES, buildExtraFx } from "./fx-extra";
+
 export const FX_TYPES = [
   "delay", "pingpong", "reverb", "plate", "spring", "room",
   "chorus", "flanger", "phaser", "tremolo", "vibrato", "wah", "autowah",
   "compressor", "eq", "boost", "tubescreamer", "fuzz", "bitcrusher", "ringmod", "filter", "widen",
+  // 2026-10-14 追加（fx-extra.ts）
+  ...EXTRA_FX_TYPES,
 ] as const;
 export type FxType = (typeof FX_TYPES)[number];
 
@@ -43,6 +47,11 @@ export interface FxSpec {
   bits?: number;
   /** filter: "lowpass" | "highpass" | "bandpass"。 */
   kind?: "lowpass" | "highpass" | "bandpass";
+  /** compressor／pcomp: 反応の速さ・戻りの速さ（秒）。省略は compressor が 0.012／0.2、pcomp が 0.005／0.12。 */
+  attack?: number;
+  release?: number;
+  /** true なら、アンプの「前」につなぐ（ペダルボードの本来の位置。歪み・ブースター・コンプ・ワウ・ファズ向き）。省略はアンプのあと。 */
+  pre?: boolean;
   /** reverb系: 響きの長さの倍率（0.3〜3）。 */
   size?: number;
   /** delay系・reverb系: 響きの高音の丸め（Hz。小さいほど暗い）。 */
@@ -73,6 +82,7 @@ export const FX_INFO: Record<FxType, { label: string; use: string; mix: number }
   ringmod: { label: "リングモジュレーター", use: "金属的な変な音（効果音向け）", mix: 0.4 },
   filter: { label: "フィルター", use: "高音や低音を削る", mix: 1 },
   widen: { label: "ステレオ広げ", use: "左右に少しずらして広げる", mix: 0.5 },
+  ...EXTRA_FX_INFO,
 };
 
 export interface BuiltFx {
@@ -323,8 +333,8 @@ export function buildFx(ctx: BaseAudioContext, spec: FxSpec): BuiltFx {
       const c = ctx.createDynamicsCompressor();
       c.threshold.value = clamp(num(spec.threshold, -24), -60, 0);
       c.ratio.value = clamp(num(spec.ratio, 4), 1, 20);
-      c.attack.value = 0.012;
-      c.release.value = 0.2;
+      c.attack.value = clamp(num(spec.attack, 0.012), 0.0005, 0.2);
+      c.release.value = clamp(num(spec.release, 0.2), 0.02, 1);
       c.knee.value = 12;
       nodes.push(c);
       const makeup = gain(dbToGain(clamp(-num(spec.threshold, -24) * 0.25, 0, 12)));
@@ -392,6 +402,8 @@ export function buildFx(ctx: BaseAudioContext, spec: FxSpec): BuiltFx {
       return { input: m.input, output: m.output, nodes };
     }
     default: {
+      const extra = buildExtraFx(ctx, spec, FX_INFO[spec.type]?.mix ?? 0.3);
+      if (extra) return extra;
       const g = gain(1);
       return { input: g, output: g, nodes };
     }

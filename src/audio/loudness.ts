@@ -2,10 +2,10 @@
  * 曲の音量をそろえる仕上げ（書き出し用）。ITU-R BS.1770 の考え方（K特性フィルター＋ゲート付きの統合ラウドネス）で
  * 曲の「聞こえる大きさ」（LUFS）を測り、目標にそろえる。山（ピーク）だけをそろえるより、曲どうしの大きさが揃う。
  */
-type Biquad = { b0: number; b1: number; b2: number; a1: number; a2: number };
+export type Biquad = { b0: number; b1: number; b2: number; a1: number; a2: number };
 
 /** BS.1770 の K特性（高域の持ち上げ＋低域のカット）を、サンプルレートに合わせて計算する。 */
-function kWeighting(fs: number): Biquad[] {
+export function kWeighting(fs: number): Biquad[] {
   const f0 = 1681.974450955533, G = 3.999843853973347, Q = 0.7071752369554196;
   const K = Math.tan((Math.PI * f0) / fs);
   const Vh = Math.pow(10, G / 20), Vb = Math.pow(Vh, 0.4996667741545416);
@@ -21,7 +21,7 @@ function kWeighting(fs: number): Biquad[] {
   return [shelf, hp];
 }
 
-function filtered(x: Float32Array, stages: Biquad[]): Float32Array {
+export function filtered(x: Float32Array, stages: Biquad[]): Float32Array {
   let cur = x;
   for (const s of stages) {
     const y = new Float32Array(cur.length);

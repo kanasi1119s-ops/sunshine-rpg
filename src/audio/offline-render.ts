@@ -20,6 +20,11 @@ export interface OfflineRenderOptions {
   /** 曲の終わりのあとに残す余韻（秒）。 */
   tailSec?: number;
   sampleRate?: number;
+  /**
+   * パート別の書き出し（自動ミックスの解析用）: ここに書いた MIDI チャンネルの出口（アンプ・エフェクターのあと、全体の仕上げ段の前）を別々に取り出す。
+   * 戻りの AudioBuffer は [0,1]=いつもの全体の音、[2+2i, 3+2i]=stemChannels[i] のチャンネルの音（左右）。最大 15 チャンネル。
+   */
+  stemChannels?: number[];
 }
 
 /**
@@ -32,13 +37,26 @@ export async function renderScoreOffline(score: Score, options: OfflineRenderOpt
   const spb = 60 / score.tempoBpm;
   const clipEnd = Math.max(0, ...(score.audioTracks ?? []).flatMap((t) => t.clips.map((c) => c.startBeat * spb + c.seconds)));
   const seconds = Math.max(getScoreDurationSec(score), clipEnd) + (options.tailSec ?? 2.5);
-  const ctx = new OfflineAudioContext(2, Math.ceil(seconds * sampleRate), sampleRate);
+  const taps = options.stemChannels ?? [];
+  if (taps.length > 15) throw new Error("パート別の書き出しは 15 チャンネルまでです");
+  const outChannels = 2 + 2 * taps.length;
+  const ctx = new OfflineAudioContext(outChannels, Math.ceil(seconds * sampleRate), sampleRate);
   await ctx.audioWorklet.addModule(options.processorUrl);
 
   // 版の段（AudioEngine と同じ値）: 高音を丸める低域通過フィルターと、ホール残響
   const out = ctx.createGain();
   out.gain.value = 0.8;
-  out.connect(ctx.destination);
+  // 出口: 通常は左右 2 チャンネル。パート別のときは、全体の音を最初の 2 チャンネルに、各パートを続く 2 チャンネルずつに並べる
+  const merger = taps.length ? ctx.createChannelMerger(outChannels) : null;
+  if (merger) {
+    const split = ctx.createChannelSplitter(2);
+    out.connect(split);
+    split.connect(merger, 0, 0);
+    split.connect(merger, 1, 1);
+    merger.connect(ctx.destination);
+  } else {
+    out.connect(ctx.destination);
+  }
   const lp = ctx.createBiquadFilter();
   lp.type = "lowpass";
   lp.frequency.value = options.edition === "ps2" ? 15500 : options.edition === "real" ? 19000 : 22000;
@@ -58,7 +76,18 @@ export async function renderScoreOffline(score: Score, options: OfflineRenderOpt
 
   // アンプ（NAMのモデルの読み込みを含む）を先に用意してから、シンセサイザーを作って描き出しを始める
   const { midi, programs, amps, fx } = scoreToMidiInfo(score);
-  const rack = new AmpRack(ctx, bus);
+  // パート別のとき、取り出すチャンネルは「全体の bus」と「そのパートの出口」の両方へ送る（全体の音は普段どおりに残る）
+  const tapOf = new Map<number, GainNode>();
+  taps.forEach((c, i) => {
+    const fan = ctx.createGain();
+    fan.connect(bus);
+    const split = ctx.createChannelSplitter(2);
+    fan.connect(split);
+    split.connect(merger!, 0, 2 + 2 * i);
+    split.connect(merger!, 1, 3 + 2 * i);
+    tapOf.set(c, fan);
+  });
+  const rack = new AmpRack(ctx, taps.length ? (ch: number) => tapOf.get(ch) ?? bus : bus);
   rack.setNam(options.nam ?? null);
   rack.configure(programs, score.tone ?? "rock", 9, amps, score.namModels ?? {}, score.ampPlugins ?? {}, fx);
   await rack.whenReady();

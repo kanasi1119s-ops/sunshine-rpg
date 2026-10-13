@@ -163,3 +163,37 @@
 |---|---|---|
 | TONE3000 のアンプ・ペダルのキャプチャ（`.nam`）の多く（ライセンス表記「T3K」） | https://www.tone3000.com/ | 「再アップロード・再配布は作者の許可が必要」。作曲ソフトに埋め込んで配る形になるので使えない。ダウンロードにもログインが必要な可能性が高い（アカウント作成は人間の判断） |
 | pelennor2170/NAM_models（コミュニティのキャプチャ集） | https://github.com/pelennor2170/NAM_models | ライセンスが GNU GPL v3。作曲ソフトへの埋め込みは、ソフト全体への GPL の適用が必要になるおそれがあるので、人間の判断を待つ（今は使わない） |
+
+## 作曲ソフト用の追加音源（2026-10-14、Suno との差を調べたときに足したもの。作曲ソフト専用で、ゲーム本体 `dist/` には入れていない）
+調べと変換の詳細は `docs/sound/band-ensemble/suno-gap-and-sources.md`。変換後の SF3 は `assets-src/soundfont/extra/`、規約の本文・README の写しは `assets-src/soundfont/extra/src/licenses/`。**どれも耳での確認は未実施（数値で無音でないこと・音程のみ確認）。**
+
+| 素材 | URL | 入手日 | 使い方 | 規約 | クレジット |
+|---|---|---|---|---|---|
+| FSBS Electric Guitar（Fender 基本機種の直接録音。direct・clean bridge small・jazz bridge small） | https://freepats.zenvoid.org/ElectricGuitar/clean-electric-guitar.html | 2026-10-14 | `tools/soundfont/build-fsbs.mjs` で SF3 に変換。`guitar-fsbs-direct.sf3`・`guitar-fsbs-clean-small.sf3`・`guitar-fsbs-jazz-small.sf3`（GM 27・27・26 を入れかえる）。direct はアンプ（NAM）に通す前提 | CC0 1.0（各版の README とライセンス文で確認） | 不要 |
+| FSBS Electric Guitar の歪み版（dist2） | 同上 | 2026-10-14 | `guitar-fsbs-dist2.sf3`（GM 30）。禁止音（「みんなで」の曲の歪みギター）には使わない | 同じシリーズが CC0。この版の README の写しは保存できていない（元の入手元で再確認すること） | 不要 |
+| Emilyguitar（Karoryfer Samples、D. Smolken。Epiphone Emily the Strange の直接録音） | https://github.com/sfzinstruments/karoryfer.emilyguitar | 2026-10-14 | `tools/soundfont/sfz-to-sf3.mjs` で `guitar-emily.sf3`（GM 27） | CC0 1.0（LICENSE 本文を確認） | 不要 |
+| Growlybass（Karoryfer Samples。Squier Jazz Bass） | https://github.com/sfzinstruments/karoryfer.growlybass | 2026-10-14 | `sfz-to-sf3.mjs --shift -12` で `bass-growly.sf3`（GM 33） | CC0 1.0（LICENSE 本文を確認） | 不要 |
+| VCSL（Versilian Community Sample Library）の小物打楽器（クラップ、タンバリン、カウベル、アゴゴ、カバサ、ギロ、クラベス、ウッドブロック、トライアングル、シェイカー、スレイベル、ベルツリー） | https://github.com/sgossner/VCSL | 2026-10-14 | `tools/soundfont/build-aux-percussion.mjs` で既存のドラム SF3 に足し、`drums-{rock,muldjord,jpop,metal,jazz,supra}-aux.sf3` にした | CC0 1.0（LICENSE を確認） | 不要（任意） |
+| FreePats World Percussion（ボンゴ、コンガ、マラカス、カスタネット） | https://freepats.zenvoid.org/ | 2026-10-14 | 同上（`drums-*-aux.sf3` に組み込み） | CC0（LICENSE.txt を確認）。付属の picture.jpg だけ CC BY 4.0 だが使っていない | 不要 |
+| Greg Sullivan E-Pianos（Wurlitzer EP200、Yamaha CP80、Hohner Pianet T。マッピング: kinwie） | https://github.com/sfzinstruments/GregSullivan.E-Pianos （作者: http://www.sullivang.net/） | 2026-10-14 | `sfz-to-sf3.mjs` で `epiano-wurlitzer-ep200.sf3`・`epiano-cp80.sf3`・`epiano-pianet-t.sf3` | **CC BY 3.0**（LICENSE 本文を確認。作者がクレジットを求めている） | **必要（ゲームに入れる場合）。案: 「Electric piano samples by Greg Sullivan (CC BY 3.0)」** |
+| FreePats Upright piano KW（Kawai アップライト。small と bright） | http://freepats.zenvoid.org/Piano/acoustic-grand-piano.html#UprightKW | 2026-10-14 | `tools/soundfont/sf2-to-sf3.mjs` で `piano-upright-kw.sf3`・`piano-upright-kw-bright.sf3` | CC0（cc0.txt を確認） | 不要 |
+| FreePats Spanish classical guitar（ナイロン弦） | http://freepats.zenvoid.org/Guitar/acoustic-guitar.html | 2026-10-14 | `guitar-nylon-spanish.sf3`（GM 24） | CC0（cc0.txt を確認） | 不要 |
+| FreePats Drawbar / Percussive / Rock / Church organ emulation（setBfree・Aeolus の録音） | http://freepats.zenvoid.org/Organ/ | 2026-10-14 | `organ-drawbar.sf3`・`organ-percussive.sf3`・`organ-rock.sf3`・`organ-church.sf3`（GM 16〜19） | CC0（README に明記）。GPL のソフトで鳴らした録音だが、音そのものには及ばないという一般的な理解。法的な最終判断は人間 | 不要 |
+| FreePats Synth pads（New age、Sweep、Bowed、Choir。ZynAddSubFX / Yoshimi で作成） | http://freepats.zenvoid.org/ | 2026-10-14 | `synth-pad-newage.sf3`（GM 88）・`synth-pad-choir.sf3`（91）・`synth-pad-bowed.sf3`（92）・`synth-pad-sweep.sf3`（95） | CC0（README に明記）。上のオルガンと同じ注意 | 不要 |
+
+## 使わないと決めた素材（2026-10-14、音源の調査で外したもの）
+
+| 素材 | URL | 外した理由 |
+|---|---|---|
+| Voxengo の無料インパルス応答 | https://www.voxengo.com/impulses/ | 「売ったり、配布で直接・間接の利益を得てはならない」とあり、ゲームでの扱いが排除できない |
+| EchoThief / MIT IR Survey / OpenAIR | https://www.echothief.com/ ・ https://mcdermottlab.mit.edu/Reverb/IR_Survey.html ・ https://www.openair.hosted.york.ac.uk/ | 読めたページに規約の記載がない（OpenAIR は応答が空）。規約が読めない素材は使わない |
+| Rickenbacker 4001（Project 16） / jRhodes3c・jRhodes3d / MF Tin Whistle | https://sfzinstruments.github.io/ | 非商用（CC BY-NC 系） |
+| Kay 5-String Banjo | https://sfzinstruments.github.io/ | GPL-3.0-or-later |
+| Sonatina Symphonic Orchestra / G-Town Church Sampling Project | https://sfzinstruments.github.io/ | CC Sampling Plus 1.0（宣伝・広告目的の利用を禁じる条項があり、ゲームでの扱いが不明） |
+| Sam's Sonor / LivingRoom Upright Micro / BJDNielPercussions | https://sfzinstruments.github.io/ | CC BY-SA 4.0（ShareAlike の扱いがむずかしい） |
+| Unreal Instruments の各種 / Standard Bass / Estate Grand LE / Piano in 162 / Church Steinway / Maestro Concert Grand / Terkelsen's Marimba ほか、規約が Custom または空欄のもの | https://sfzinstruments.github.io/ | 規約の本文を読めていない |
+| Karoryfer の有料品（Baconwulf、Beefowulf ほか） / SFZ 一覧で Commercial のもの | https://sfzinstruments.github.io/ | 有料（人間の承認が必要） |
+| Meatbass（Karoryfer） | https://shop.karoryfer.com/pages/free-meatbass | **記録のくいちがい**: 上の記録（2026-10-07）は GPL 3、SFZ 一覧は CC0-1.0。LICENSE を直接読んで確かめるまで使わない |
+
+### 規約は使える（CC0 / CC BY）が、まだ変換していない候補（2026-10-14）
+Naked Drums（Wilkinson Audio、CC BY 4.0、1.3GB）、DRS Kit（CC BY 4.0）、SM Drums（Public Domain）、Swirly Drums・Unruly Drums・Frankensnare・Gogodze Phu Vol I/II（CC0）、Fashionbass・Pastabass・Black and Blue Basses・Swagbass・Ergo EUB（CC0）、Shinyguitar（CC0）、Headroom Piano（CC BY 4.0）、VCSL Keys（CC0）、MTG Solo Sax（CC BY 4.0）、Bear Sax・Weresax・War Tuba（CC0）、Minifreak Pads・Wavestate Pads（SHLD Music、CC0）。根拠は SFZ Instruments の一覧（https://sfzinstruments.github.io/ 、2026-10-14 確認）。**使う前に各リポジトリの LICENSE 本文を読んでから、この表に移すこと。**
