@@ -1568,8 +1568,8 @@ const AI_STYLES: { label: string; hint: string; text: string; sound?: string }[]
   { label: "町・村", hint: "やさしい・ドラムなし", text: "町や村の曲。bpm 80〜110、長調。ハープ・フルート（patch: flute）・クラリネット（patch: clarinet）・ギターでドラムなし、あたたかくのどか。", sound: "game-town" },
   { label: "ダンジョン・不穏", hint: "暗い・余韻・静か", text: "ダンジョン・不穏な場面。bpm 60〜90、短調。余韻の長いパッド・低い弦（patch: cello・contrabass）・単音、ドラムは少なめか無し。", sound: "game-dungeon" },
   { label: "J-POPバンド", hint: "明るいバンド・サビが強い", text: "J-POPのバンド曲。bpm 120〜170、王道のコード進行、Aメロは低く語り、Bメロでせり上げ、サビで一気に高く。クリーンと歪みのギターを使い分ける。", sound: "jpop-bright" },
-  { label: "ローファイ", hint: "ゆるい・夜・作業用", text: "ローファイ。bpm 70〜90、やわらかいエレピとゆるいドラム、ざらっとした質感。" },
-  { label: "和風", hint: "琴・尺八・和の旋律", text: "和風。都節（陰旋法）の旋律、琴・尺八・三味線、和太鼓風のタム。" },
+  { label: "ローファイ", hint: "ゆるい・夜・作業用", text: "ローファイ。bpm 70〜90、やわらかいエレピとゆるいドラム、ざらっとした質感。", sound: "lofi-keys" },
+  { label: "和風", hint: "琴・尺八・和の旋律", text: "和風。都節（陰旋法）の旋律、琴・尺八・三味線、和太鼓風のタム。", sound: "wafu-calm" },
   { label: "ジャズ", hint: "スイング・ウォーキングベース", text: "ジャズ。bpm 120〜180、スイング、7thコード、ウォーキングベース、テーマとアドリブ（ピアノ・ウッドベース・トランペット patch: trumpet）。", sound: "jazz-trio" },
   { label: "EDM", hint: "4つ打ち・シンセ", text: "EDM。bpm 125〜140、4つ打ち、ビルドアップからドロップ、シンセのリード。", sound: "house-duck" },
 ];
