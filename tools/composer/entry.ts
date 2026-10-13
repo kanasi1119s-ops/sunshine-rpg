@@ -1953,7 +1953,11 @@ app.append(
     h("div", { class: "transport" }, ui.playBtn, ui.pauseBtn, ui.stopBtn),
     h("div", { class: "lcd" }, h("div", { class: "lcd-time" }, ui.time), lcd("BPM", lcdTempo), lcd("TRK", lcdTracks), lcd("LEN", lcdLen)),
     h("div", { class: "seekwrap" }, ui.seek),
-    h("div", { class: "row topopts" }, field("サウンド", editionSel), field("録音音源", soundfontSel), field("ベース音源", bassSel), field("ドラム音源", drumsSel), field("ギター音源", guitarSel), field("オーケストラ音源", orchSel), field("ピアノ音源", pianoSel), field("サウンドセット", soundSetSel), field("マスター音量", volIn)),
+    h("div", { class: "row volopt" }, field("マスター音量", volIn)),
+    // 音源の選択欄は数が多いので、折りたたむ（固定表示の上の帯が画面を占領しないように）
+    h("details", { class: "topopts" },
+      h("summary", {}, "音源・サウンドの設定（録音音源・ベース・ドラム・ギター・オーケストラ・ピアノ・サウンドセット）"),
+      h("div", { class: "row", style: "margin-top:8px" }, field("サウンド", editionSel), field("録音音源", soundfontSel), field("ベース音源", bassSel), field("ドラム音源", drumsSel), field("ギター音源", guitarSel), field("オーケストラ音源", orchSel), field("ピアノ音源", pianoSel), field("サウンドセット", soundSetSel))),
   ),
   h("div", { class: "daw" },
     panel("TRK", "トラック", ui.trackBox, h("div", { class: "row", style: "margin-top:8px" }, addTrackBtn),

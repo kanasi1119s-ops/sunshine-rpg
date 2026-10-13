@@ -52,7 +52,11 @@ button.tp.on { color: var(--warn); border-color: var(--warn); box-shadow: 0 0 12
 .lcd-v { font-family: var(--mono); font-size: 14px; color: var(--ok); text-shadow: 0 0 8px rgba(55, 245, 155, 0.55); }
 .seekwrap { min-width: 160px; }
 #seek { width: 100%; }
-.topopts label.f { min-width: 130px; }
+.topopts { grid-column: 1 / -1; }
+.topopts summary { cursor: pointer; font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
+.topopts summary:hover { color: var(--accent); }
+.topopts label.f { min-width: 150px; }
+.volopt { min-width: 150px; }
 
 /* 中段: トラックとピアノロール */
 .daw { display: grid; gap: 14px; grid-template-columns: minmax(340px, 430px) minmax(0, 1fr); align-items: start; }
