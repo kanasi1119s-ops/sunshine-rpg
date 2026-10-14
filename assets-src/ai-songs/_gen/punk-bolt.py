@@ -201,9 +201,9 @@ PARTS=[]
 def add(inst,role,vol,pan,secs,**kw):
     d={"instrument":inst,"role":role,"volume":vol,"pan":pan,"notes":cat(secs,role)}; d.update(kw); PARTS.append(d)
 ARCL=[round(x,3) for x in ARC]
-add("kick","キック",0.14,0,kick,barGain=ARCL); add("snare","スネア",0.12,0,snare,barGain=ARCL,push=0.02); add("hihat","ハイハット",0.05,0,hat,barGain=ARCL,push=-0.008)
-add("crash","クラッシュ",0.06,0,crash,barGain=ARCL); add("crash","ライド",0.05,0.15,rideL,barGain=ARCL); add("tom","タム",0.08,0,tom,barGain=ARCL,reverb=0)
-add("bass","メロディベース",0.15,0,per(f_bass),barGain=ARCL)
+add("kick","キック",0.17,0,kick,barGain=ARCL); add("snare","スネア",0.15,0,snare,barGain=ARCL,push=0.02); add("hihat","ハイハット",0.05,0,hat,barGain=ARCL,push=-0.008)
+add("crash","クラッシュ",0.06,0,crash,barGain=ARCL); add("crash","ライド",0.05,0.15,rideL,barGain=ARCL); add("tom","タム",0.09,0,tom,barGain=ARCL,reverb=0)
+add("bass","メロディベース",0.27,0,per(f_bass),barGain=ARCL)
 def gclamp(secs):
     # ディストーションギター（刻み）の音域は E2〜E4。高い音は1オクターブ下げ、低い音は上げる
     def fix(t):
@@ -215,8 +215,22 @@ def gclamp(secs):
         return nm(v)+m.group(3)
     return [[fix(t) for t in (sec.split() if isinstance(sec,str) else sec)] for sec in secs]
 GT=gclamp(per(f_lead))
-add("distGuitar","リフギター（左）",0.13,-0.7,GT,amp="loudrock",humanPitch=0,chorus=0,reverb=0.1,barGain=ARCL)
-add("distGuitar","リフギター（右）",0.13,0.7,GT,amp="loudrock",humanPitch=0,chorus=0,reverb=0.1,push=0.006,barGain=ARCL)
-song={"title":"稲妻ダッシュ（パンク）","description":"（見本・仮）bpm200・E長調・約1分40秒の疾走パンク。ギター（歪みのリフを左右に重ねる。リードギターの音色は使わない）・メロディベース・ドラムの3人編成。Aメロはオクターブのリフ、サビは厚いオクターブのリフ、間奏のストップ（間）、ハーフタイムのブリッジ（ベースが旋律）、リフで押すソロ。ギターはずっとリフ中心。ドラムは小節ごとに型を変えて強弱をつけた。ギターにビブラートなし。","bpm":200,"beats":4,"chords":" ".join(chords),"barsPerChord":1,"repeats":1,"tone":"rock","feel":"rock","human":0.3,"autoScoop":False,"instrumentCheck":False,"dynamics":"natural","drumMix":{"tom":{"reverb":0.0,"spread":0.5}},"parts":PARTS}
+def octdown(secs):
+    out=[]
+    for sec in secs:
+        r=[]
+        for t in sec:
+            m=re.match(r"^([A-G]#?)(-?\d)(:.*)$",t)
+            if not m: r.append(t); continue
+            v=PCN[m.group(1)[0]]+(1 if m.group(1).endswith("#") else 0)+(int(m.group(2))+1)*12-12
+            while v<40: v+=12
+            r.append(nm(v)+m.group(3))
+        out.append(r)
+    return out
+GT2=octdown(GT)
+# 重く・歪みを少し足す: ampDrive 1.4。右のギターは1オクターブ下げて低域の厚みを足す
+add("distGuitar","リフギター（左）",0.12,-0.7,GT,amp="loudrock",ampDrive=1.4,humanPitch=0,chorus=0,reverb=0.1,barGain=ARCL)
+add("distGuitar","リフギター（右・1オクターブ下）",0.12,0.7,GT2,amp="loudrock",ampDrive=1.4,humanPitch=0,chorus=0,reverb=0.1,push=0.006,barGain=ARCL)
+song={"title":"稲妻ダッシュ（パンク）","description":"（見本・仮）bpm200・E長調・約1分40秒の疾走パンク。ギター（歪みのリフを左右に重ねる。リードギターの音色は使わない）・メロディベース・ドラムの3人編成。Aメロはオクターブのリフ、サビは厚いオクターブのリフ、間奏のストップ（間）、ハーフタイムのブリッジ（ベースが旋律）、リフで押すソロ。ギターはずっとリフ中心。ドラムは小節ごとに型を変えて強弱をつけた。ギターにビブラートなし。","bpm":200,"beats":4,"chords":" ".join(chords),"barsPerChord":1,"repeats":1,"tone":"rock","feel":"rock","human":0.3,"autoScoop":False,"instrumentCheck":False,"dynamics":"natural","drumMix":{"kick":{"level":1.05,"tune":-2},"snare":{"level":1.05,"tune":-2,"reverb":0.15},"tom":{"reverb":0.0,"spread":0.5,"level":1.05,"tune":-4}},"parts":PARTS}
 json.dump(song,open(sys.argv[1],"w"),ensure_ascii=False,indent=1)
 print("ok",len(PARTS),len(chords),"bars")
