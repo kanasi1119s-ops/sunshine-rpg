@@ -32,6 +32,7 @@ import guitarFsbsDirectUrl from "../../assets-src/soundfont/extra/guitar-fsbs-di
 import guitarFsbsCleanUrl from "../../assets-src/soundfont/extra/guitar-fsbs-clean-small.sf3?url";
 import guitarFsbsJazzUrl from "../../assets-src/soundfont/extra/guitar-fsbs-jazz-small.sf3?url";
 import guitarEmilyUrl from "../../assets-src/soundfont/extra/guitar-emily.sf3?url";
+import guitarShinyUrl from "../../assets-src/soundfont/extra/guitar-shiny.sf3?url";
 import guitarNylonUrl from "../../assets-src/soundfont/extra/guitar-nylon-spanish.sf3?url";
 import bassGrowlyUrl from "../../assets-src/soundfont/extra/bass-growly.sf3?url";
 import drumsRockAuxUrl from "../../assets-src/soundfont/extra/drums-rock-aux.sf3?url";
@@ -171,6 +172,7 @@ const GUITAR_FONTS: Record<string, { label: string; url: string | null }> = {
   "fsbs-clean": { label: "FSBS クリーン（アンプ・エフェクト入りの録音。CC0）", url: guitarFsbsCleanUrl },
   "fsbs-jazz": { label: "FSBS ジャズ（CC0）", url: guitarFsbsJazzUrl },
   emily: { label: "Emily（直接録音。ハムバッカー系で太い。CC0）", url: guitarEmilyUrl },
+  shiny: { label: "Shiny（アーチトップのピックアップ録音。4層×ラウンドロビン。CC0）", url: guitarShinyUrl },
   nylon: { label: "ナイロンギター（スパニッシュ。CC0）", url: guitarNylonUrl },
   pluck: { label: "弦モデル（やわらかく温かい。標準の弦モデル）", url: guitarPluckWarmUrl },
   "pluck-mellow": { label: "弦モデル（さらにまろやか）", url: guitarPluckMellowUrl },

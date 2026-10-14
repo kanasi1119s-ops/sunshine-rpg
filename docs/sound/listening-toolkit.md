@@ -47,3 +47,8 @@ Claude Code は音を耳で聞けない。そこで、数字では分かりに�
 - 作り方: `node tools/composer/song.mjs build assets-src/ai-songs/summer-signal.json --wav --drums jpop --bass jpop --piano salamander --orchestra vsco --guitar gretsch --master-preset jpop-band`（ドラムは生成スクリプトより -3dB。JSON に反映済み）。PQ 8.00。
 - パートを絞っても（ピアノだけ 7.65、ドラムなし 7.64、ピアノ＋弦 7.71）、仕上げを外しても（7.92）、約8点で止まる。ジャンル・楽器・仕上げに関係ない共通の上限。
 - 公開音楽データの人気上位60曲（全ジャンル）: 最高 8.29、平均 6.87、8.5以上 0曲、9以上 0曲。**このモデルの9点は、実在の音楽でもほぼ出ない。** 8点を超えれば上位1割。
+
+### ギター音源の比べ（2026-10-15）
+- パンク『稲妻ダッシュ』: `--guitar emily`（ハムバッカーの直接録音）8.10 ＞ fsbs-direct 7.96 ≒ shiny 7.97。**歪みギターの元の音は emily がいちばん高い。**
+- ポップ『夏色シグナル』: gretsch・shiny・emily とも 8.00 前後（ギターが小さめの編曲なので差が出ない）。
+- 注意: aes-tune の2並列で、作曲ソフトの作り直し（src を変えた直後）が重なると書き出しに失敗する。src や音源を変えたら、先に1回だけふつうに build してから回す。
