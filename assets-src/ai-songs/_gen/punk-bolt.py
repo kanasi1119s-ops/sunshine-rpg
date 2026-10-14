@@ -45,7 +45,9 @@ def drum(sec,k,n,rnd,si):
     cr="R:4"; tm=None; ride=None; ph=k%4; last=(k==n-1)
     two_k="X...X...X...X..."; two_s="..x...x...x...x."
     if sec=="intro":
-        if k<2: kk=Z; sn=Z; hh=Z; cr="g:X..............."if k==0 else "R:4"
+        # 最初はブラストビート（キックとスネアを16分で交互に叩く）。2小節目は強拍にアクセントを足して変化をつける
+        if k==0: kk="X.X.X.X.X.X.X.X."; sn=".x.x.x.x.x.x.x.X"; hh="x.x.x.x.x.x.x.x."; cr="g:X..............."
+        elif k==1: kk="X.X.X.X.X.X.X.X."; sn=".x.X.x.X.x.X.x.X"; hh="x.x.x.x.x.x.x.x."; cr="g:........X......."
         elif k==2: kk="X.......X.......";sn="....X.......X...";hh="x.x.x.x.x.x.x.x."
         else: kk="X...X...X.x.X.x.";sn="....X...x.x.xXXX";hh="x.x.x.x.x.x.x.x.";tm="............xxXX"
     elif sec=="verse":
@@ -88,7 +90,7 @@ def drum(sec,k,n,rnd,si):
     return "g:"+kk,"g:"+sn,"g:"+hh,cr,tm,ride
 def arc(sec,si,k,n):
     f=k/max(1,n-1)
-    return {"intro":0.7+0.15*f,"verse":0.8+0.1*f,"pre":0.88+0.14*f,"chorus":1.05-(0.05 if k%4==3 else 0),"inter":0.85,"solo":0.97,"bridge":0.55+0.3*f,"outro":1.0-0.15*f}[sec]
+    return {"intro":(1.0 if k<2 else 0.85+0.1*f),"verse":0.8+0.1*f,"pre":0.88+0.14*f,"chorus":1.05-(0.05 if k%4==3 else 0),"inter":0.85,"solo":0.97,"bridge":0.55+0.3*f,"outro":1.0-0.15*f}[sec]
 kick=[];snare=[];hat=[];crash=[];tom=[];rideL=[];ARC=[]
 for si,(sec,n,pr) in enumerate(SEC):
     rnd=random.Random(900+si*13); ks=[];ss=[];hs=[];cs=[];ts=[];rs=[]
@@ -131,7 +133,7 @@ def f_bass(si,sec,n,pr):
             BR2=["C#3:1 E3:1 G#2:1 C#3:1","A2:1 C#3:1 E3:1 A2:1","E3:1 B2:1 G#2:1.5 B2:0.5","B2:1.5 F#3:0.5 B2:2"]
             out+=(BR if k<4 else BR2)[k%4].split(); continue
         if sec=="intro":
-            out+= [f"{nm(root_in(ch,29))}:4"] if k<2 else bass_bar(ch,nch,k,sec,k); continue
+            out+= bass_bar(ch,nch,k,sec,k); continue
         if sec=="inter" and k<2: out+=[f"{nm(root_in(ch,29))}:4"]; continue
         if sec=="outro" and k==n-1: out+=[f"{nm(root_in(ch,29))}:4"]; continue
         stop=(sec=="pre" and k==n-1)
