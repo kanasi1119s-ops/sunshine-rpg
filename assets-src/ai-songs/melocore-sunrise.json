@@ -886,7 +886,8 @@
    "pan": 0,
    "notes": "R:16 D3:4 A3:4 C4:4 G3:4 D3:4 A3:4 C4:4 G3:4 R:16 R:32 G3:4 A3:4 F#3:4 B3:4 D3:4 A3:4 C4:4 G3:4 D3:4 A3:4 C4:4 G3:4 R:16 R:32 D3:4 A3:4 B3:4 G3:4 D3:4 A3:4 B3:4 G3:4 R:32 R:32 R:32 G3:4 A3:4 F#3:4 B3:4",
    "reverb": 0.3,
-   "sustain": 1.5
+   "sustain": 1.5,
+   "patch": "cello"
   },
   {
    "instrument": "brass",
