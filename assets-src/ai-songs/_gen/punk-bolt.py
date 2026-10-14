@@ -46,11 +46,11 @@ def drum(sec,k,n,rnd,si):
     two_k="X...X...X...X..."; two_s="..x...x...x...x."
     if sec=="intro": kk=Z; sn=Z; hh=Z   # ギターだけで4小節
     elif sec=="dstart":
-        # ドラムの始まり: フロアタムとスネアを同時に「だっだっだっだ」と、だんだん強く（1小節目は4分、2小節目は8分）。そのあとブラストビート2小節
+        # ドラムの始まり: フロアタムとスネアを同時に「だっだっだっだ」と、だんだん強く（1小節目は4分、2小節目は8分）。そのあと2ビート→フィルでAメロへ（ブラストビートは使わない）
         if k==0: kk=Z; sn="x...x...x...X..."; hh=Z
         elif k==1: kk=Z; sn="x.x.x.x.x.x.x.X."; hh=Z
-        elif k==2: kk="X.X.X.X.X.X.X.X."; sn=".x.x.x.x.x.x.x.X"; hh="x.x.x.x.x.x.x.x."; cr="g:X..............."
-        else: kk="X.X.X.X.X.X.X.X."; sn=".x.X.x.X.x.X.x.X"; hh="x.x.x.x.x.x.x.x."; cr="g:........X......."
+        elif k==2: kk="X...X...X...X..."; sn="..x...x...x...x."; hh="x.x.x.x.x.x.x.x."; cr="g:X..............."   # 2ビートで走り出す
+        else: kk="X...X...X.x.X.x."; sn="....X...x.x.xXXX"; hh="x.x.x.x.x.x.x.x."; tm="............xxXX"
     elif sec=="verse":
         kk=rnd.choice(["X..xX..xX..xX..x","X.x.X..xX.x.X..x","X.......X.x.X..."]); sn="....X.......X..."
         hh=rnd.choice(["x.x.x.x.x.x.x.x.","X.x.x.x.X.x.x.x."])
