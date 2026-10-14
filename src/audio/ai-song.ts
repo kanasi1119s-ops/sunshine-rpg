@@ -41,6 +41,8 @@ export const SYNTH_PATCHES: Record<string, number> = {
   viola: 41, cello: 42, contrabass: 43, pizzicato: 45, timpani: 47, stringEnsemble: 48, slowStrings: 49,
   trumpet: 56, trombone: 57, tuba: 58, horn: 60, brassSection: 61, oboe: 68, bassoon: 70, clarinet: 71, piccolo: 72, flute: 73,
   glockenspiel: 9, marimba: 12, churchOrgan: 19, reedOrgan: 20,
+  // 鍵盤系の追加音源（作曲ソフトで鍵盤の音源を選ぶと鳴る。選ばないと標準の音）
+  honkyTonk: 3, clavinet: 7, celesta: 8, vibraphone: 11, xylophone: 13, percussiveOrgan: 17, rockOrgan: 18, accordion: 21, synthBrass1: 62, synthBrass2: 63,
   rotoTom: 117, cannonTom: 118, inchTom: 119, kickTrigger: 120, impactHit: 121,
   iceRain: 96, soundtrack: 97, crystal: 98, atmosphere: 99, brightness: 100, goblin: 101, echoDrops: 102, starTheme: 103,
 };

@@ -53,6 +53,41 @@ import padNewageUrl from "../../assets-src/soundfont/extra/synth-pad-newage.sf3?
 import padChoirUrl from "../../assets-src/soundfont/extra/synth-pad-choir.sf3?url";
 import padBowedUrl from "../../assets-src/soundfont/extra/synth-pad-bowed.sf3?url";
 import padSweepUrl from "../../assets-src/soundfont/extra/synth-pad-sweep.sf3?url";
+import pianoYdpUrl from "../../assets-src/soundfont/extra/piano-ydp-grand.sf3?url";
+import pianoHonkyUrl from "../../assets-src/soundfont/extra/piano-honkytonk.sf3?url";
+import epianoFmUrl from "../../assets-src/soundfont/extra/epiano-fm-dx7.sf3?url";
+import epianoFmBrightUrl from "../../assets-src/soundfont/extra/epiano-fm-bright.sf3?url";
+import epianoTx81zUrl from "../../assets-src/soundfont/extra/epiano-tx81z-fm.sf3?url";
+import epianoTx81zPianoUrl from "../../assets-src/soundfont/extra/epiano-tx81z-piano1.sf3?url";
+import clavFmUrl from "../../assets-src/soundfont/extra/keys-clavi-tx81z.sf3?url";
+import harpsFrenchUrl from "../../assets-src/soundfont/extra/harpsichord-french.sf3?url";
+import harpsItalianUrl from "../../assets-src/soundfont/extra/harpsichord-italian.sf3?url";
+import chimesUrl from "../../assets-src/soundfont/extra/chimes-vcsl.sf3?url";
+import glassUrl from "../../assets-src/soundfont/extra/glass-water.sf3?url";
+import glockUrl from "../../assets-src/soundfont/extra/glockenspiel-vcsl.sf3?url";
+import vibesUrl from "../../assets-src/soundfont/extra/vibraphone-vcsl.sf3?url";
+import marimbaUrl from "../../assets-src/soundfont/extra/marimba-vcsl.sf3?url";
+import xyloUrl from "../../assets-src/soundfont/extra/xylophone-vcsl.sf3?url";
+import accordionUrl from "../../assets-src/soundfont/extra/accordion-hohner.sf3?url";
+import leadSquareUrl from "../../assets-src/soundfont/extra/synth-lead-square.sf3?url";
+import leadSawUrl from "../../assets-src/soundfont/extra/synth-lead-saw.sf3?url";
+import leadSuperUrl from "../../assets-src/soundfont/extra/synth-lead-supersaw.sf3?url";
+import leadArpUrl from "../../assets-src/soundfont/extra/synth-lead-arp.sf3?url";
+import leadCalliopeUrl from "../../assets-src/soundfont/extra/synth-lead-calliope.sf3?url";
+import leadFifthsUrl from "../../assets-src/soundfont/extra/synth-lead-fifths.sf3?url";
+import leadBassUrl from "../../assets-src/soundfont/extra/synth-lead-bass.sf3?url";
+import polyAnalogUrl from "../../assets-src/soundfont/extra/synth-poly-analog.sf3?url";
+import stringsMachineUrl from "../../assets-src/soundfont/extra/synth-strings-machine.sf3?url";
+import synthStrings1Url from "../../assets-src/soundfont/extra/synth-strings-1.sf3?url";
+import synthStrings2Url from "../../assets-src/soundfont/extra/synth-strings-2.sf3?url";
+import brassAnalogUrl from "../../assets-src/soundfont/extra/synth-brass-analog.sf3?url";
+import brassZynUrl from "../../assets-src/soundfont/extra/synth-brass-zyn.sf3?url";
+import brassDx7Url from "../../assets-src/soundfont/extra/synth-brass-dx7.sf3?url";
+import bassMoogUrl from "../../assets-src/soundfont/extra/synth-bass-moog.sf3?url";
+import bassZynUrl from "../../assets-src/soundfont/extra/synth-bass-zyn.sf3?url";
+import bassLatelyUrl from "../../assets-src/soundfont/extra/synth-bass-lately.sf3?url";
+import bassAcidUrl from "../../assets-src/soundfont/extra/synth-bass-acid.sf3?url";
+import bassDx7Url from "../../assets-src/soundfont/extra/synth-bass-dx7.sf3?url";
 import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url";
 import { AudioEngine } from "../../src/audio/audio-engine";
 import { allEntries, getTrack, STYLE_LABEL } from "../../src/audio/catalog";
@@ -167,6 +202,42 @@ const PIANO_FONTS: Record<string, { label: string; url: string | null }> = {
   "pad-choir": { label: "パッド コーラス（91）", url: padChoirUrl },
   "pad-bowed": { label: "パッド ボウド（92）", url: padBowedUrl },
   "pad-sweep": { label: "パッド スウィープ（95）", url: padSweepUrl },
+  // 鍵盤・シンセの追加（GM の番号を差し替える。末尾の（）が GM の番号。オーケストラ音源を選ぶと 9・12 などはそちらが優先される）
+  "piano-ydp": { label: "グランドピアノ YDP（Disklavier Pro。CC BY 3.0・クレジット必須）（0）", url: pianoYdpUrl },
+  "honkytonk": { label: "ホンキートンクピアノ（古いピアノの録音。CC0）（3）", url: pianoHonkyUrl },
+  "epiano-fm": { label: "エレピ FM（DX7 風。CC0）（4）", url: epianoFmUrl },
+  "epiano-fm-bright": { label: "エレピ FM 明るめ（CC0）（4）", url: epianoFmBrightUrl },
+  "epiano-tx81z": { label: "エレピ FM（TX81Z 実機の録音。CC0）（4）", url: epianoTx81zUrl },
+  "epiano-tx81z-piano": { label: "ピアノ風 FM（TX81Z Piano 1。CC0）（4）", url: epianoTx81zPianoUrl },
+  "clavi-fm": { label: "クラビ風 FM（TX81Z Clavisynth。本物のクラビネットではない。CC0）（7）", url: clavFmUrl },
+  "harpsi-french": { label: "チェンバロ フランス型（VCSL。CC0）（6）", url: harpsFrenchUrl },
+  "harpsi-italian": { label: "チェンバロ イタリア型（VCSL。CC0）（6）", url: harpsItalianUrl },
+  "chimes": { label: "ハンドチャイム（セレスタ代わり。VCSL。CC0）（8）", url: chimesUrl },
+  "glass": { label: "水のグラス（やわらかい鐘。セレスタ代わり。CC0）（8）", url: glassUrl },
+  "glock": { label: "グロッケン（VCSL。CC0）（9）", url: glockUrl },
+  "vibes": { label: "ビブラフォン（VCSL。CC0）（11）", url: vibesUrl },
+  "marimba": { label: "マリンバ（VCSL。CC0）（12）", url: marimbaUrl },
+  "xylophone": { label: "シロフォン（VCSL。CC0）（13）", url: xyloUrl },
+  "accordion": { label: "アコーディオン（Hohner。FreePats。CC0）（21）", url: accordionUrl },
+  "lead-square": { label: "シンセリード スクエア（CC0）（80）", url: leadSquareUrl },
+  "lead-saw": { label: "シンセリード ソー（自作の合成。CC0 扱い）（81）", url: leadSawUrl },
+  "lead-supersaw": { label: "シンセリード スーパーソー（自作の合成）（81）", url: leadSuperUrl },
+  "lead-arp": { label: "シンセ アルペジオ向けの短い音（自作の合成）（81）", url: leadArpUrl },
+  "lead-calliope": { label: "シンセリード カリオペ（CC0）（82）", url: leadCalliopeUrl },
+  "lead-fifths": { label: "シンセリード 5度（CC0）（86）", url: leadFifthsUrl },
+  "lead-bass": { label: "シンセリード ベース＋リード（CC0）（87）", url: leadBassUrl },
+  "poly-analog": { label: "ポリシンセ ジュピター系（自作の合成）（90）", url: polyAnalogUrl },
+  "strings-machine": { label: "ストリングスマシン（自作の合成）（50）", url: stringsMachineUrl },
+  "strings-1": { label: "シンセストリングス 1（CC0）（50）", url: synthStrings1Url },
+  "strings-2": { label: "シンセストリングス 2（CC0）（51）", url: synthStrings2Url },
+  "brass-analog": { label: "シンセブラス アナログ（自作の合成）（62）", url: brassAnalogUrl },
+  "brass-zyn": { label: "シンセブラス 1（CC0）（62）", url: brassZynUrl },
+  "brass-dx7": { label: "シンセブラス DX7 風（CC0）（63）", url: brassDx7Url },
+  "bass-moog": { label: "シンセベース ムーグ系（自作の合成）（38）", url: bassMoogUrl },
+  "bass-zyn": { label: "シンセベース 1（CC0）（38）", url: bassZynUrl },
+  "bass-lately": { label: "シンセベース Lately Bass（TX81Z 風。CC0）（38）", url: bassLatelyUrl },
+  "bass-acid": { label: "シンセベース アシッド（自作の合成）（39）", url: bassAcidUrl },
+  "bass-dx7": { label: "シンセベース DX7 風（CC0）（39）", url: bassDx7Url },
 };
 let orchId = "std";
 let pianoId = "std";

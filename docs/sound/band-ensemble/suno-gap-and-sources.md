@@ -614,3 +614,77 @@ node tools/soundfont/build-aux-percussion.mjs assets-src/soundfont/extra/drums-r
 
 - 自分の曲の測定: 作業用の ours.json と ext_*.json（`/tmp/claude-0/.../scratchpad/suno-gap/`。セッションの終了で消える可能性がある）。この文書の 2.2〜2.4 の表に、必要な数値を転記してある。
 - Suno 代理の統計: `docs/sound/data/nihonichi-bgm-1000-metrics.json`（1000曲）、`docs/sound/data/genre-targets-nihonichi.json`（分類別の p10 / 中央値 / p90）。
+
+## 11. 追補（2026-10-14）: キーボード・シンセ系の音源の追加
+
+人間（旭さん）の依頼「キーボード系の音源を追加して」への対応。すべて作曲ソフト専用（`tools/composer/entry.ts` の `PIANO_FONTS`）。ゲーム本体の `dist/` には入れていない。追加は 35 ファイル・約 44MB（SF3）。規約の本文・README の写しは `assets-src/soundfont/extra/src/licenses/`、素材ごとの規約の要点は `docs/assets-credits.md`。
+
+### 11.1 追加した音源
+
+印: 【規約】本文を読んだ／【実測】SF3 を作曲ソフトと同じ描画（spessasynth）で鳴らして、音程（倍音の検査）・無音でないこと・ループの音量の落ち込みを機械で確かめた／【耳×】耳では未確認。
+
+| ファイル（`assets-src/soundfont/extra/`） | 中身 | GM 番号 | 規約 | 容量 |
+|---|---|---|---|---|
+| `piano-ydp-grand.sf3` | グランドピアノ（Disklavier Pro。Zenph/OLPC の録音を FreePats が SoundFont 化） | 0 | **CC BY 3.0（クレジット必須）** | 9.96MB |
+| `piano-honkytonk.sf3` | ホンキートンクピアノ（FreePats Piano FB） | 3 | CC0 | 1.31MB |
+| `epiano-fm-dx7.sf3`／`epiano-fm-bright.sf3` | FM エレピ（DX7 風）2 種 | 4 | CC0 | 2.93／1.05MB |
+| `epiano-tx81z-fm.sf3`／`epiano-tx81z-piano1.sf3` | TX81Z 実機録音の FM エレピ／ピアノ風（VCSL） | 4 | CC0 | 3.07／2.52MB |
+| `keys-clavi-tx81z.sf3` | クラビ風の FM 音（TX81Z Clavisynth）。**本物のクラビネットではない** | 7 | CC0 | 1.71MB |
+| `harpsichord-french.sf3`／`harpsichord-italian.sf3` | チェンバロ 2 種（VCSL） | 6 | CC0 | 1.91／2.32MB |
+| `chimes-vcsl.sf3`／`glass-water.sf3` | ハンドチャイム／水のグラス。**セレスタの代わり**（本物のセレスタは見つからなかった） | 8 | CC0 | 0.54／2.22MB |
+| `glockenspiel-vcsl.sf3` | グロッケン | 9 | CC0 | 1.25MB |
+| `vibraphone-vcsl.sf3` | ビブラフォン（ハードマレット） | 11 | CC0 | 1.51MB |
+| `marimba-vcsl.sf3` | マリンバ | 12 | CC0 | 0.56MB |
+| `xylophone-vcsl.sf3` | シロフォン | 13 | CC0 | 0.28MB |
+| `accordion-hohner.sf3` | アコーディオン（Hohner のボタン式。ループあり） | 21 | CC0 | 0.80MB |
+| `synth-lead-square.sf3` | シンセリード スクエア | 80 | CC0 | 1.06MB |
+| `synth-lead-saw.sf3`／`synth-lead-supersaw.sf3`／`synth-lead-arp.sf3` | ソー／スーパーソー（7 本）／アルペジオ向けの短い音。**自作の合成** | 81 | 外部素材なし | 0.51／0.47／0.15MB |
+| `synth-lead-calliope.sf3`／`synth-lead-fifths.sf3`／`synth-lead-bass.sf3` | カリオペ／5度／ベース＋リード | 82／86／87 | CC0 | 0.49／1.54／0.89MB |
+| `synth-poly-analog.sf3` | ジュピター系のポリシンセ（自作の合成） | 90 | 外部素材なし | 0.40MB |
+| `synth-strings-machine.sf3` | ストリングスマシン（自作の合成） | 50 | 外部素材なし | 0.58MB |
+| `synth-strings-1.sf3`／`synth-strings-2.sf3` | シンセストリングス（FreePats） | 50／51 | CC0 | 0.75／0.94MB |
+| `synth-brass-analog.sf3` | アナログ風シンセブラス（自作の合成） | 62 | 外部素材なし | 0.33MB |
+| `synth-brass-zyn.sf3`／`synth-brass-dx7.sf3` | シンセブラス 1／DX7 風（FreePats） | 62／63 | CC0 | 0.66／0.33MB |
+| `synth-bass-moog.sf3`／`synth-bass-acid.sf3` | ムーグ系／アシッド（303 風）ベース（自作の合成） | 38／39 | 外部素材なし | 0.16／0.14MB |
+| `synth-bass-zyn.sf3`／`synth-bass-lately.sf3`／`synth-bass-dx7.sf3` | シンセベース 1／Lately Bass／DX7 BASS 風（FreePats） | 38／38／39 | CC0 | 0.18／0.38／0.30MB |
+
+- 検査の結果【実測】: すべて無音ではない。音程は、サンプル単体の検査と、作曲ソフトの描画での検査（鍵盤 5〜8 点）の両方で合っている。ループの音(アコーディオンと自作シンセ)は、3 秒保持しても落ち込みがなく、つなぎ目の飛びもない。
+- 低音域で基音が極端に弱い録音（チェンバロ イタリア型の最低域、ホンキートンクと YDP の最低域）は、基音の検査では判定できなかったので、倍音が基音の整数倍に乗っているかで確かめた【実測】。
+- 【耳×】音色の良し悪し、音量バランス、ループの自然さ、自作シンセの出来は、耳で確かめていない。自作シンセの音量は、FreePats のシンセと実効値（RMS）が±5dB 程度におさまるよう寄せたが、ほかの音源との釣りあいは未確認。
+- 音名のずれを実測で直した: VCSL の鍵盤・打楽器は、ファイル名の音名が 1 オクターブ低く（Clavisynth は 2 オクターブ低く）書かれていた。FM Piano（TX81Z）はずれなし。
+
+### 11.2 追加できなかったもの（理由）
+
+| 欲しかった音 | 状況 |
+|---|---|
+| 本物のクラビネット | CC0・CC BY の録音が見つからなかった。代わりに FM のクラビ風（TX81Z Clavisynth） |
+| 本物のセレスタ | 同上。代わりにハンドチャイムと水のグラス |
+| Rhodes の別の無料音源 | jRhodes3c/3d は非商用（CC BY-NC 系）で使えない。FM エレピ（DX7 風）を代わりに追加。見つかれば CC0/CC BY の Rhodes を足す |
+| ハモンド系の別音色 | FreePats の 4 種（ドローバー・パーカッシブ・ロック・教会）で足りると判断。ほかに CC0/CC BY の候補は見つからなかった |
+| メロトロン | Sforzatron（Plogue 配布の Taijiguy 版）は SFZ 一覧のライセンス欄が空で規約が読めない。使わない。ストリングスマシン（自作）で代用 |
+| 本物のムーグ・ジュピターなどの録音 | 規約を読めた無料の録音が見つからなかった。**自作の合成**で、ソー波・ラダーフィルター・アンサンブルコーラスから作った（`tools/soundfont/build-analog-synths.mjs`）。本物の機材の録音ほどの厚みや揺らぎはない |
+| 別のグランドピアノ（Kawai／Steinway B。VCSL、CC0） | 取得に 500MB 以上かかり、ディスクの空きが約 2〜3GB しかなかったので見送り。次の担当向けの候補（Salamander と YDP がすでにある） |
+| Pianobook | 規約（制作への商用利用は可、ただし商用のサンプルライブラリにしない）はパックごと。SoundFont をソフトに入れて配る形が認められるか不明なので使わない |
+| Surge／Vital／Helm のプリセットの録音 | 実際に録るには、そのソフトを入れて描画する必要がある。FreePats の Zyn/Hexter/Surge 由来の CC0 の録音で、リード・ベース・ブラス・ストリングスを埋めた |
+
+### 11.3 組み込み（`tools/composer/entry.ts`）と、使うときの注意
+
+- `PIANO_FONTS` の末尾に 35 行を追加した（`import ...?url` と `{label, url}` の 1 行）。ラベルの末尾の（ ）が GM の番号。
+- **鍵盤の差し替えスロットは 1 つだけ**。同時に選べるのは 1 つ（たとえば、ビブラフォンとシンセリードを同時に差し替えることはできない）。同時に使いたいなら、スロットを増やすか、SF3 をまとめる必要がある。
+- 優先順位は、ベース・ドラム・ギター・オーケストラ・ピアノ（鍵盤）・シンセの順。**オーケストラ音源（VSCO）を選ぶと、9（グロッケン）・12（マリンバ）などはそちらが優先される**。マリンバ・グロッケンの差し替えを聴くときは、オーケストラを「標準」にする。
+- **曲から実際に使われる番号か**（`src/audio/gm-map.ts`・`ai-song.ts` の `SYNTH_PATCHES`）:
+  - 使われる: ピアノ 0、エレピ 4（keys）、チェンバロ 6（harpsichord）、グロッケン 9（bell）、ビブラフォン 11（chime）、オルガン 16〜19、ストリングス 50・51（synthStrings1/2）、リード 80・81・82・86・87、ポリシンセ 90、ベース 38・39（synthBass1/2・sub808）、グロッケン patch 9、マリンバ patch 12。
+  - **patch に名前がなく、曲から選べない**: ホンキートンク 3、クラビ 7、セレスタ 8、シロフォン 13、アコーディオン 21、シンセブラス 62・63（brass 楽器は 61 を使う）。使うには、`SYNTH_PATCHES` に `honkyTonk: 3, clavinet: 7, celesta: 8, xylophone: 13, accordion: 21, synthBrass1: 62, synthBrass2: 63` を足す必要がある（`ai-song.ts` の変更になるので、今回は触っていない）。
+  - 通常の「標準」音源（`game.sf3`）は使う番号だけに切り出してあるので、上の番号は、差し替えを選ばないと無音になる可能性がある（未確認）。
+- 作曲ソフトの HTML は音源を丸ごと埋め込むので、**HTML が約 44MB（Base64 で約 59MB）大きくなる**。重いと感じたら、YDP（10MB）を外すのがいちばん効く。
+
+### 11.4 作ったツール
+
+| ツール | 役割 |
+|---|---|
+| `tools/soundfont/build-analog-synths.mjs` | 自作のアナログ風シンセ 8 種を、WAV と SFZ に書き出して SF3 にする。ループの長さを整数フレームにして、全オシレーターの周期の数を整数にそろえる（つなぎ目が鳴らない）。基音のずれは SFZ の tune で打ち消す |
+| `tools/soundfont/strip-unused.mjs` | `sfz-to-sf3.mjs` の出力に残る、使われていないサンプル（元のゲーム音源から写った約 95KB）を取り除く。音は変わらない |
+| `tools/soundfont/sf2-to-sf3.mjs` に `--first-only` を追加 | 強さ別のプリセットが複数入った SF2 で、最初の 1 つだけ残す（ほかの GM 番号を上書きしないため） |
+
+| `tools/soundfont/gen-vcsl-sfz.py` | VCSL の WAV 一式から SFZ を作る（音名のオクターブ補正と、層ごとの音量そろえつき）。例: `python3 -I tools/soundfont/gen-vcsl-sfz.py "<VCSL>/Idiophones/Struck Idiophones/Marimba" marimba . 'Outrigger_([A-G]#?\d)_' '_(soft|med|loud)_' soft,med,loud 1`（最後の 1 がオクターブ補正） |
+| `tools/audio-check/sf3-render-check.mjs`・`sf3-pitch-check.mjs` | 検査。前者は作曲ソフトと同じ描画で鍵ごとに音量・基音・ループの落ち込み・飛びを見る。後者は SF3 のサンプルごとに基音の位置と無音を見る |

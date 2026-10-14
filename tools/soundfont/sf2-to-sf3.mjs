@@ -1,9 +1,10 @@
-// 使い方: node tools/soundfont/sf2-to-sf3.mjs <入力.sf2> <出力.sf3> [--program N] [--name 名前] [--q 4] [--mono] [--no-effects]
+// 使い方: node tools/soundfont/sf2-to-sf3.mjs <入力.sf2> <出力.sf3> [--program N] [--name 名前] [--q 4] [--mono] [--no-effects] [--first-only]
 // 小さな SF2（FreePats など。CC0）を、作曲ソフトの overlay に使える SF3 にする。
 //   元のゾーン（キー範囲・強さの範囲・ループ・エンベロープ）はそのまま残し、サンプルを Vorbis（--q）に圧縮するだけ。
 //   --program N: 入っている最初のプリセットを、GM の N 番（0 始まり）に付けかえる（overlay は GM の番号で元の音と入れかわる）。
 //       オルガンは 16〜20、ナイロンギターは 24、ピアノは 0〜2、シンセパッドは 88〜95 など。省略は元のまま。
 //   --no-effects: コーラス・リバーブの送り（元の音源に入っている分）を 0 にする。作曲ソフトは自前の残響を持つので、二重にならないように。
+//   --first-only: 最初のプリセットだけ残す（複数入っていると、他の GM の番号まで上書きしてしまうため）。
 //   --mono: 左右のサンプルを 1 本に平均して軽くする（ステレオの広がりは失う）。
 // 元素材と規約は docs/assets-credits.md に記録する。ゲーム本体には入れない（作曲ソフト専用）。
 import fs from "fs";
@@ -13,10 +14,10 @@ import { compressBank } from "./lib.mjs";
 
 const args = process.argv.slice(2);
 const opt = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
-const flags = new Set(["--mono", "--no-effects"]);
+const flags = new Set(["--mono", "--no-effects", "--first-only"]);
 const pos = args.filter((a, i) => !a.startsWith("--") && !(i > 0 && args[i - 1].startsWith("--") && !flags.has(args[i - 1])));
 const [inFile, outFile] = pos;
-if (!inFile || !outFile) { console.error("使い方: node tools/soundfont/sf2-to-sf3.mjs <in.sf2> <out.sf3> [--program N] [--name NAME] [--q 4] [--mono] [--no-effects]"); process.exit(1); }
+if (!inFile || !outFile) { console.error("使い方: node tools/soundfont/sf2-to-sf3.mjs <in.sf2> <out.sf3> [--program N] [--name NAME] [--q 4] [--mono] [--no-effects] [--first-only]"); process.exit(1); }
 await BasicSoundBank.isSF3DecoderReady;
 const bank = SoundBankLoader.fromArrayBuffer(fs.readFileSync(inFile).buffer.slice(0));
 const program = opt("--program");
@@ -26,6 +27,11 @@ if (program !== undefined) {
   p.bankMSB = 0;
   p.bankLSB = 0;
   if (opt("--name")) p.name = opt("--name");
+}
+if (args.includes("--first-only")) {
+  // 強さ別のプリセットなどが複数入っているときに、最初の1つだけ残す（他の GM の番号を上書きしないため）
+  for (const p of [...bank.presets].slice(1)) bank.deletePreset(p);
+  bank.removeUnusedElements();
 }
 if (args.includes("--no-effects")) {
   for (const inst of bank.instruments) {
