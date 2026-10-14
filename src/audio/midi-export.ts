@@ -15,6 +15,8 @@ const PPQ = 480;
 const DRUM_CHANNEL = 9;
 /** ピッチベンドの幅（半音）。チャンネルごとに RPN で設定する。±12半音を 0〜16383 に割りあてる。 */
 const BEND_RANGE = 12;
+/** ベンドの「戻し」（ピッチ 0 へ）のうち、余韻のあとまで遅らせたもの。次の音が来たら前倒しする */
+const pendingBendReset = new WeakMap<object, { tick: number }>();
 const bendValue = (semitones: number): number => Math.max(0, Math.min(0x3fff, Math.round(0x2000 + (semitones / BEND_RANGE) * 0x2000)));
 const clampSemi = (x: number): number => Math.max(-BEND_RANGE, Math.min(BEND_RANGE, x));
 const smooth = (x: number): number => {
@@ -70,7 +72,11 @@ export function vibratoCurve(spec: { rate?: number; depth?: number; delay?: numb
     const t = relSec(rel) - delaySec;
     const fadeIn = smooth(t / 0.25);
     const fadeOut = smooth((durTicks - rel) / 60);
-    return depth * fadeIn * fadeOut * Math.sin(2 * Math.PI * rate * t);
+    // 機械的な正弦波に聞こえないよう、速さを±8%・深さを±15%、ゆっくり揺らす（人の指のむら）
+    const w = 0.37 * 2 * Math.PI;
+    const phase = 2 * Math.PI * rate * (t + (0.08 / w) * (1 - Math.cos(w * t)));
+    const wob = 1 + 0.15 * Math.sin(0.53 * 2 * Math.PI * t + 1);
+    return depth * wob * fadeIn * fadeOut * Math.sin(phase);
   };
 }
 
@@ -473,6 +479,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       const glide = gliding ? glideCurve(track.glide ?? {}, durTicks, (rel) => clock.beatToSec(startBeat + rel / PPQ) - secStart, rnd(startBeat * 1.7 + trackSeed) * 6.28) : null;
       const curve = vibCurve || glide ? (rel: number): number => (baseCurve ? baseCurve(rel) : 0) + (vibCurve ? vibCurve(rel) : 0) + (glide ? glide(rel) : 0) : baseCurve;
       const bendTargets = layer && layer.channel !== DRUM_CHANNEL ? [main, layer] : [main];
+      for (const t of bendTargets) { const pend = pendingBendReset.get(t); if (pend && pend.tick > tick - 4) pend.tick = Math.max(0, tick - 4); }
       if (curve) {
         for (const t of bendTargets) {
           const setBend = (at: number, semi: number): void => {
@@ -485,9 +492,20 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
             setBend(tick + 34, 0);
           } else {
             // なめらかに動くよう、およそ12tickごとに値を送る。音の終わりで元に戻す
+            // 次の音が始まる前にたまっている「戻し」を、その音の頭の手前へ前倒しする
+            const pend = pendingBendReset.get(t);
+            if (pend && pend.tick > tick - 4) pend.tick = Math.max(0, tick - 4);
             setBend(tick - 3, curve(0));
             for (let rel = 12; rel < durTicks - 6; rel += 12) setBend(tick + rel, curve(rel));
-            setBend(tick + durTicks - 5, 0);
+            if (explicitBend && !vibCurve && !glide) {
+              // ベンド・スライド・フォールの音は、音が切れたあとも余韻が鳴る。すぐ 0 へ戻すと余韻のピッチが急に落ちて「ゴムが戻る音」になるので、
+              // 余韻が消えるころ（最大2拍あと）まで戻しを遅らせる。次の音が来たら、その手前へ前倒しされる
+              const ev = { tick: tick + durTicks + PPQ * 2, order: 1, bytes: [0xe0 | t.channel, bendValue(0) & 0x7f, (bendValue(0) >> 7) & 0x7f] };
+              t.list.push(ev);
+              pendingBendReset.set(t, ev);
+            } else {
+              setBend(tick + durTicks - 5, 0);
+            }
           }
         }
       }
