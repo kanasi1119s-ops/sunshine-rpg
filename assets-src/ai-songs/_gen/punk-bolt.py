@@ -1,7 +1,7 @@
-# 『稲妻ダッシュ』（パンク）E長調・bpm200。リードギター・メロディベース・ドラムの3人編成。(見本・仮。耳では確かめていない)
+# 『稲妻ダッシュ』（パンク）v2: ギターはリフ中心。E長調・bpm200。ギター（歪みのリフを左右に重ねる。リードギターの音色は使わない）・メロディベース・ドラムの3人編成。(見本・仮。耳では確かめていない)
 # 方針: ドラムは小節ごとに型を変え barGain で強弱の曲線＋間（ストップ）＋ハーフタイム。ギターは `~` なし・短く切らない。
 #       タムは低め(E3・C3・A2)の少数・残響0（banned-sounds 12・13）。弦アンサンブルは使わない。
-import json,sys,random
+import json,sys,random,re
 def fmt(x): return ("%.4f"%x).rstrip("0").rstrip(".")
 N=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
 def nm(m): return f"{N[m%12]}{m//12-1}"
@@ -156,27 +156,44 @@ def solo_bar(k,var):
         b=i0+(g if var%2==0 else -g)
         for s in seqs[(var+g//2)%4]: toks.append(f"{nm(SCALE[max(0,min(len(SCALE)-1,b+s))])}:0.25")
     return toks
+def toks_from(r,ch,pat,accent=True):
+    t3=3 if minor(ch) else 4
+    out=[]
+    for i,(iv,d) in enumerate(pat(t3)):
+        out.append(f"{nm(r+iv)}:{fmt(d)}"+("!" if (i==0 and accent) else ""))
+    return out
+CHR=[lambda t3:[(0,.5),(12,.5),(0,.5),(12,.5),(12+t3,1),(19,.5),(12+t3,.5)],
+     lambda t3:[(0,1),(12,.5),(12,.5),(19,1),(12+t3,.5),(12,.5)]]
+PRER=lambda t3:[(0,.5),(0,.5),(7,.5),(7,.5),(12,.5),(12,.5),(19,.5),(19,.5)]
+BRR=[lambda t3:[(12,1.5),(7,.5),(0,2)], lambda t3:[(0,2),(7,1),(12,1)]]
+S16=lambda t3:[(x,.25) for x in (0,7,12,7,0,7,12,12+t3,12,7,12,12+t3,19,12+t3,12,7)]
+def cut3(toks_pat,t3):
+    out=[];t=0
+    for iv,d in toks_pat(t3):
+        if t+d>3+1e-9: break
+        out.append((iv,d)); t+=d
+    if t<3: out[-1]=(out[-1][0],out[-1][1]+3-t)
+    return out
 def f_lead(si,sec,n,pr):
     out=[]
     for k in range(n):
-        ch=pr[k%4]; fill=(k%4==3)
-        if sec=="intro": out+= riff_bar(ch,k,fill=(k==3)); continue
-        if sec=="verse": out+= riff_bar(ch,(k//2+si),fill=fill); continue
-        if sec=="inter":
-            out+= (R(4) if k<2 else riff_bar(ch,k,fill=(k==3))); continue
-        if sec=="outro":
-            out+= [f"{nm(rootg(ch)+12)}:4"] if k==n-1 else riff_bar(ch,k+1); continue
-    if sec in("pre",): return lst(PRE)
-    if sec=="chorus": return lst(CHO1+"|"+(CHO2 if si<11 else CHOH))
-    if sec=="bridge": return lst("G#4:4|E4:4|B4:4|F#4:4|G#4:4|E4:2 A4:2|B4:4|F#4:2 B4:2")
-    if sec=="solo":
-        toks=[]
-        for k in range(n):
-            if k==0: toks+=["B5:2^","A5:1","G#5:1"]
-            elif k==4: toks+=["E6:1.5^","C#6:0.5","B5:1","G#5:1"]
-            elif k==7: toks+=["E6:4"]
-            else: toks+=solo_bar(k,k)
-        return toks
+        ch=pr[k%4]; fill=(k%4==3); r=rootg(ch)
+        if sec=="intro": out+= riff_bar(ch,k,fill=(k==3))
+        elif sec=="verse": out+= riff_bar(ch,(k//2+si),fill=fill)
+        elif sec=="pre":
+            if k==n-1:
+                pat=cut3(PRER,3 if minor(ch) else 4); out+=[f"{nm(r+iv)}:{fmt(d)}"+("!" if i==0 else "") for i,(iv,d) in enumerate(pat)]+["R:1"]
+            else: out+=toks_from(r,ch,PRER)
+        elif sec=="chorus":
+            if k==n-1 and si==11: out+=[f"{nm(r+12)}:2!",f"{nm(r+19)}:2^"]
+            elif k==3 and si>=10: out+=toks_from(r,ch,CHR[0])
+            else: out+=toks_from(r,ch,CHR[(k+si)%2])
+        elif sec=="inter": out+= (R(4) if k<2 else riff_bar(ch,k,fill=(k==3)))
+        elif sec=="bridge": out+=toks_from(r,ch,BRR[(k//2)%2])
+        elif sec=="solo":
+            if k==n-1: out+=[f"{nm(r+12)}:4!"]
+            else: out+=toks_from(r,ch,S16,accent=False)
+        elif sec=="outro": out+= [f"{nm(r+12)}:4"] if k==n-1 else riff_bar(ch,k+1)
     return out
 PARTS=[]
 def add(inst,role,vol,pan,secs,**kw):
@@ -185,7 +202,19 @@ ARCL=[round(x,3) for x in ARC]
 add("kick","キック",0.14,0,kick,barGain=ARCL); add("snare","スネア",0.12,0,snare,barGain=ARCL,push=0.02); add("hihat","ハイハット",0.05,0,hat,barGain=ARCL,push=-0.008)
 add("crash","クラッシュ",0.06,0,crash,barGain=ARCL); add("crash","ライド",0.05,0.15,rideL,barGain=ARCL); add("tom","タム",0.08,0,tom,barGain=ARCL,reverb=0)
 add("bass","メロディベース",0.15,0,per(f_bass),barGain=ARCL)
-add("leadGuitar","リードギター",0.26,0,per(f_lead),amp="lead",humanPitch=0,chorus=0,reverb=0.12,barGain=ARCL)
-song={"title":"稲妻ダッシュ（パンク）","description":"（見本・仮）bpm200・E長調・約1分40秒の疾走パンク。リードギター・メロディベース・ドラムの3人編成。Aメロはオクターブのリフ、サビは歌えるメロディ、間奏のストップ（間）、ハーフタイムのブリッジ（ベースが旋律）、速弾きのソロ。ドラムは小節ごとに型を変えて強弱をつけた。ギターにビブラートなし。","bpm":200,"beats":4,"chords":" ".join(chords),"barsPerChord":1,"repeats":1,"tone":"rock","feel":"rock","human":0.3,"autoScoop":False,"instrumentCheck":False,"dynamics":"natural","drumMix":{"tom":{"reverb":0.0,"spread":0.5}},"parts":PARTS}
+def gclamp(secs):
+    # ディストーションギター（刻み）の音域は E2〜E4。高い音は1オクターブ下げ、低い音は上げる
+    def fix(t):
+        m=re.match(r"^([A-G]#?)(-?\d)(:.*)$",t)
+        if not m: return t
+        v=PCN[m.group(1)[0]]+(1 if m.group(1).endswith("#") else 0)+(int(m.group(2))+1)*12
+        while v>64: v-=12
+        while v<40: v+=12
+        return nm(v)+m.group(3)
+    return [[fix(t) for t in (sec.split() if isinstance(sec,str) else sec)] for sec in secs]
+GT=gclamp(per(f_lead))
+add("distGuitar","リフギター（左）",0.13,-0.7,GT,amp="loudrock",humanPitch=0,chorus=0,reverb=0.1,barGain=ARCL)
+add("distGuitar","リフギター（右）",0.13,0.7,GT,amp="loudrock",humanPitch=0,chorus=0,reverb=0.1,push=0.006,barGain=ARCL)
+song={"title":"稲妻ダッシュ（パンク）","description":"（見本・仮）bpm200・E長調・約1分40秒の疾走パンク。ギター（歪みのリフを左右に重ねる。リードギターの音色は使わない）・メロディベース・ドラムの3人編成。Aメロはオクターブのリフ、サビは厚いオクターブのリフ、間奏のストップ（間）、ハーフタイムのブリッジ（ベースが旋律）、リフで押すソロ。ギターはずっとリフ中心。ドラムは小節ごとに型を変えて強弱をつけた。ギターにビブラートなし。","bpm":200,"beats":4,"chords":" ".join(chords),"barsPerChord":1,"repeats":1,"tone":"rock","feel":"rock","human":0.3,"autoScoop":False,"instrumentCheck":False,"dynamics":"natural","drumMix":{"tom":{"reverb":0.0,"spread":0.5}},"parts":PARTS}
 json.dump(song,open(sys.argv[1],"w"),ensure_ascii=False,indent=1)
 print("ok",len(PARTS),len(chords),"bars")
