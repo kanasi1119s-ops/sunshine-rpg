@@ -46,9 +46,9 @@ def drum(sec,k,n,rnd,si):
     two_k="X...X...X...X..."; two_s="..x...x...x...x."
     if sec=="intro": kk=Z; sn=Z; hh=Z   # ギターだけで4小節
     elif sec=="dstart":
-        # ドラムの始まり: フロアタムとスネアを「だっだっだっだ」と交互に、だんだん強く（1小節目は4分、2小節目は8分）。そのあとブラストビート2小節
-        if k==0: kk=Z; sn="....x.......x..."; hh=Z
-        elif k==1: kk=Z; sn="..x...x...x...X."; hh=Z
+        # ドラムの始まり: フロアタムとスネアを同時に「だっだっだっだ」と、だんだん強く（1小節目は4分、2小節目は8分）。そのあとブラストビート2小節
+        if k==0: kk=Z; sn="x...x...x...X..."; hh=Z
+        elif k==1: kk=Z; sn="x.x.x.x.x.x.x.X."; hh=Z
         elif k==2: kk="X.X.X.X.X.X.X.X."; sn=".x.x.x.x.x.x.x.X"; hh="x.x.x.x.x.x.x.x."; cr="g:X..............."
         else: kk="X.X.X.X.X.X.X.X."; sn=".x.X.x.X.x.X.x.X"; hh="x.x.x.x.x.x.x.x."; cr="g:........X......."
     elif sec=="verse":
@@ -97,8 +97,8 @@ for si,(sec,n,pr) in enumerate(SEC):
     rnd=random.Random(900+si*13); ks=[];ss=[];hs=[];cs=[];ts=[];rs=[]
     for k in range(n):
         a,b,c,d,e,r=drum(sec,k,n,rnd,si); ks.append(a);ss.append(b);hs.append(c);cs.append(d)
-        if sec=="dstart" and k==0: ts+=["A2:1!","R:1","A2:1!","R:1"]
-        elif sec=="dstart" and k==1: ts+=["A2:0.5","R:0.5","A2:0.5","R:0.5","A2:0.5","R:0.5","A2:0.5!","R:0.5"]
+        if sec=="dstart" and k==0: ts+=["A2:1","A2:1","A2:1","A2:1!"]
+        elif sec=="dstart" and k==1: ts+=["A2:0.5"]*7+["A2:0.5!"]
         else: ts+= tomtok(e) if e else ["R:4"]
         if sec=="bridge": rs+= (["F2:4"] if r else ["R:4"])
         elif sec=="chorus" and r: rs+=["D2:0.5"]*8
