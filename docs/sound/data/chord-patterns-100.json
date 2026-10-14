@@ -1,0 +1,822 @@
+{
+ "key": "C",
+ "count": 102,
+ "patterns": [
+  {
+   "cat": "A 長調のポップ",
+   "name": "王道",
+   "chords": "C G Am F",
+   "mood": "明るい・感動",
+   "note": "最も多用。次は別の型を",
+   "no": 1
+  },
+  {
+   "cat": "A 長調のポップ",
+   "name": "王道の短調始まり",
+   "chords": "Am F C G",
+   "mood": "切ない・サビ向き",
+   "note": "",
+   "no": 2
+  },
+  {
+   "cat": "A 長調のポップ",
+   "name": "小室進行",
+   "chords": "F G Em Am",
+   "mood": "切ない・J-POP",
+   "note": "IV V iii vi。切なさの定番",
+   "no": 3
+  },
+  {
+   "cat": "A 長調のポップ",
+   "name": "50年代",
+   "chords": "C Am F G",
+   "mood": "懐かしい",
+   "note": "I vi IV V",
+   "no": 4
+  },
+  {
+   "cat": "A 長調のポップ",
+   "name": "I-IV-vi-V",
+   "chords": "C F Am G",
+   "mood": "やさしい・歌もの",
+   "note": "",
+   "no": 5
+  },
+  {
+   "cat": "A 長調のポップ",
+   "name": "IV始まり",
+   "chords": "F C G Am",
+   "mood": "開放的",
+   "note": "",
+   "no": 6
+  },
+  {
+   "cat": "A 長調のポップ",
+   "name": "I-iii-IV-V",
+   "chords": "C Em F G",
+   "mood": "少年的・まっすぐ",
+   "note": "",
+   "no": 7
+  },
+  {
+   "cat": "A 長調のポップ",
+   "name": "I-V-IV-I",
+   "chords": "C G F C",
+   "mood": "素朴・フォーク",
+   "note": "",
+   "no": 8
+  },
+  {
+   "cat": "A 長調のポップ",
+   "name": "IV-V-I-vi",
+   "chords": "F G C Am",
+   "mood": "前向き",
+   "note": "",
+   "no": 9
+  },
+  {
+   "cat": "A 長調のポップ",
+   "name": "I-iii-vi-IV",
+   "chords": "C Em Am F",
+   "mood": "やわらかい下降",
+   "note": "",
+   "no": 10
+  },
+  {
+   "cat": "A 長調のポップ",
+   "name": "上行",
+   "chords": "C Dm Em F",
+   "mood": "希望・夜明け",
+   "note": "1度ずつ上がる",
+   "no": 11
+  },
+  {
+   "cat": "A 長調のポップ",
+   "name": "I-vi-ii-V",
+   "chords": "C Am Dm G",
+   "mood": "古き良きポップ",
+   "note": "",
+   "no": 12
+  },
+  {
+   "cat": "A 長調のポップ",
+   "name": "IV-iii-ii-I",
+   "chords": "F Em Dm C",
+   "mood": "下りる・落ち着く",
+   "note": "",
+   "no": 13
+  },
+  {
+   "cat": "A 長調のポップ",
+   "name": "カノン",
+   "chords": "C G/B Am Em/G F C/E Dm7 G",
+   "mood": "荘厳・感動",
+   "note": "8コード。低音が階段状に下りる",
+   "no": 14
+  },
+  {
+   "cat": "B 長調のロック",
+   "name": "♭VII往復",
+   "chords": "C Bb F C",
+   "mood": "荒々しい・疾走",
+   "note": "D型",
+   "no": 15
+  },
+  {
+   "cat": "B 長調のロック",
+   "name": "♭VIIからV",
+   "chords": "C Bb F G",
+   "mood": "明るいロック",
+   "note": "",
+   "no": 16
+  },
+  {
+   "cat": "B 長調のロック",
+   "name": "I-IV-♭VII-IV",
+   "chords": "C F Bb F",
+   "mood": "スタジアム",
+   "note": "",
+   "no": 17
+  },
+  {
+   "cat": "B 長調のロック",
+   "name": "I-IV-V-IV",
+   "chords": "C F G F",
+   "mood": "ガレージ・パンク",
+   "note": "",
+   "no": 18
+  },
+  {
+   "cat": "B 長調のロック",
+   "name": "I-V-♭VII-IV",
+   "chords": "C G Bb F",
+   "mood": "大空・サビ",
+   "note": "",
+   "no": 19
+  },
+  {
+   "cat": "B 長調のロック",
+   "name": "♭III借用",
+   "chords": "C Eb Bb F",
+   "mood": "少しダーク",
+   "note": "",
+   "no": 20
+  },
+  {
+   "cat": "B 長調のロック",
+   "name": "パワーコード",
+   "chords": "C5 Bb5 F5 G5",
+   "mood": "ハードロック",
+   "note": "",
+   "no": 21
+  },
+  {
+   "cat": "B 長調のロック",
+   "name": "ブルース進行の短縮",
+   "chords": "C7 F7 C7 G7",
+   "mood": "ブギー・ロックンロール",
+   "note": "",
+   "no": 22
+  },
+  {
+   "cat": "B 長調のロック",
+   "name": "I-vi-♭VII-IV",
+   "chords": "C Am Bb F",
+   "mood": "ブリットポップ",
+   "note": "",
+   "no": 23
+  },
+  {
+   "cat": "B 長調のロック",
+   "name": "add9の広がり",
+   "chords": "C Fadd9 G Fadd9",
+   "mood": "爽やか・夏",
+   "note": "add9で開放感",
+   "no": 24
+  },
+  {
+   "cat": "C 短調",
+   "name": "短調の王道",
+   "chords": "Cm Ab Eb Bb",
+   "mood": "壮大・切ない",
+   "note": "i VI III VII",
+   "no": 25
+  },
+  {
+   "cat": "C 短調",
+   "name": "アンダルシア",
+   "chords": "Cm Bb Ab G",
+   "mood": "情熱・フラメンコ",
+   "note": "下行4コード。Gはメジャー",
+   "no": 26
+  },
+  {
+   "cat": "C 短調",
+   "name": "小さな終止",
+   "chords": "Cm Fm Cm G7",
+   "mood": "古典・まじめ",
+   "note": "",
+   "no": 27
+  },
+  {
+   "cat": "C 短調",
+   "name": "i-VI-iv-V",
+   "chords": "Cm Ab Fm G",
+   "mood": "劇的",
+   "note": "",
+   "no": 28
+  },
+  {
+   "cat": "C 短調",
+   "name": "i-v-VI-VII",
+   "chords": "Cm Gm Ab Bb",
+   "mood": "ゲームのフィールド",
+   "note": "",
+   "no": 29
+  },
+  {
+   "cat": "C 短調",
+   "name": "i-VI-VII-i",
+   "chords": "Cm Ab Bb Cm",
+   "mood": "戦闘・勇ましい",
+   "note": "",
+   "no": 30
+  },
+  {
+   "cat": "C 短調",
+   "name": "i-III-VII-VI",
+   "chords": "Cm Eb Bb Ab",
+   "mood": "重厚なJ-ROCK",
+   "note": "",
+   "no": 31
+  },
+  {
+   "cat": "C 短調",
+   "name": "i-iv-VI-V",
+   "chords": "Cm Fm Ab G",
+   "mood": "悲劇・哀愁",
+   "note": "",
+   "no": 32
+  },
+  {
+   "cat": "C 短調",
+   "name": "ii半減",
+   "chords": "Cm Dm7b5 G7 Cm",
+   "mood": "ジャズ寄り・夜",
+   "note": "",
+   "no": 33
+  },
+  {
+   "cat": "C 短調",
+   "name": "VI-III-V",
+   "chords": "Cm Ab Eb G",
+   "mood": "ドラマチック",
+   "note": "",
+   "no": 34
+  },
+  {
+   "cat": "C 短調",
+   "name": "i-VII-VI-VII",
+   "chords": "Cm Bb Ab Bb",
+   "mood": "ループ・BGM向き",
+   "note": "",
+   "no": 35
+  },
+  {
+   "cat": "C 短調",
+   "name": "下降ベースの短調",
+   "chords": "Cm Cm/Bb Ab G",
+   "mood": "哀しい・下りる",
+   "note": "",
+   "no": 36
+  },
+  {
+   "cat": "C 短調",
+   "name": "全部7th",
+   "chords": "Cm7 Fm7 Dm7b5 G7",
+   "mood": "おしゃれな哀愁",
+   "note": "",
+   "no": 37
+  },
+  {
+   "cat": "C 短調",
+   "name": "i-VI-iv-VII",
+   "chords": "Cm Ab Fm Bb",
+   "mood": "大きな悲しみ",
+   "note": "",
+   "no": 38
+  },
+  {
+   "cat": "D モード（旋法）",
+   "name": "ドリアン往復",
+   "chords": "Cm7 F7",
+   "mood": "民族・フィールド",
+   "note": "K型",
+   "no": 39
+  },
+  {
+   "cat": "D モード（旋法）",
+   "name": "ドリアン2",
+   "chords": "Cm F Cm F",
+   "mood": "冒険・旅",
+   "note": "",
+   "no": 40
+  },
+  {
+   "cat": "D モード（旋法）",
+   "name": "ドリアン3",
+   "chords": "Cm Eb F Cm",
+   "mood": "明るい短調",
+   "note": "",
+   "no": 41
+  },
+  {
+   "cat": "D モード（旋法）",
+   "name": "ミクソリディアン",
+   "chords": "C Gm F C",
+   "mood": "ブルージー",
+   "note": "",
+   "no": 42
+  },
+  {
+   "cat": "D モード（旋法）",
+   "name": "ミクソ2",
+   "chords": "C Bb C F",
+   "mood": "土っぽいロック",
+   "note": "",
+   "no": 43
+  },
+  {
+   "cat": "D モード（旋法）",
+   "name": "リディアン往復",
+   "chords": "Cmaj7 D",
+   "mood": "空・浮遊",
+   "note": "M型",
+   "no": 44
+  },
+  {
+   "cat": "D モード（旋法）",
+   "name": "リディアン広がり",
+   "chords": "C D Em G",
+   "mood": "映画・希望",
+   "note": "",
+   "no": 45
+  },
+  {
+   "cat": "D モード（旋法）",
+   "name": "フリジアン往復",
+   "chords": "Cm Db",
+   "mood": "エキゾチック・不穏",
+   "note": "♭IIが怪しい",
+   "no": 46
+  },
+  {
+   "cat": "D モード（旋法）",
+   "name": "フリジアン3",
+   "chords": "Cm Db Eb Db",
+   "mood": "砂漠・ボス",
+   "note": "",
+   "no": 47
+  },
+  {
+   "cat": "D モード（旋法）",
+   "name": "エオリアン",
+   "chords": "Cm Gm Fm Gm",
+   "mood": "重い・暗い",
+   "note": "",
+   "no": 48
+  },
+  {
+   "cat": "D モード（旋法）",
+   "name": "ハーモニックマイナー",
+   "chords": "Cm Fm G Ab",
+   "mood": "古城・ダンジョン",
+   "note": "Vがメジャー",
+   "no": 49
+  },
+  {
+   "cat": "D モード（旋法）",
+   "name": "リディアンドミナント",
+   "chords": "Cmaj7 D7 Em7 Fmaj7",
+   "mood": "夢・不思議",
+   "note": "",
+   "no": 50
+  },
+  {
+   "cat": "D モード（旋法）",
+   "name": "ドリアンのIV",
+   "chords": "Cm7 Fm7 G7 Cm7",
+   "mood": "ファンク寄り",
+   "note": "",
+   "no": 51
+  },
+  {
+   "cat": "D モード（旋法）",
+   "name": "ミクソリディアンの♭VII",
+   "chords": "C Bb Am F",
+   "mood": "陽気なロック",
+   "note": "",
+   "no": 52
+  },
+  {
+   "cat": "E ジャズ・シティポップ",
+   "name": "ツーファイブ",
+   "chords": "Dm7 G7 Cmaj7 A7",
+   "mood": "おしゃれ・夜",
+   "note": "",
+   "no": 53
+  },
+  {
+   "cat": "E ジャズ・シティポップ",
+   "name": "ターンアラウンド",
+   "chords": "Cmaj7 Am7 Dm7 G7",
+   "mood": "定番ジャズ",
+   "note": "I vi ii V",
+   "no": 54
+  },
+  {
+   "cat": "E ジャズ・シティポップ",
+   "name": "VI7経由",
+   "chords": "Cmaj7 A7 Dm7 G7",
+   "mood": "古風・ジャズ",
+   "note": "",
+   "no": 55
+  },
+  {
+   "cat": "E ジャズ・シティポップ",
+   "name": "連続ツーファイブ",
+   "chords": "Em7 A7 Dm7 G7",
+   "mood": "洗練",
+   "note": "",
+   "no": 56
+  },
+  {
+   "cat": "E ジャズ・シティポップ",
+   "name": "裏コード",
+   "chords": "Dm7 Db9 Cmaj9 A7",
+   "mood": "都会・ボサ",
+   "note": "",
+   "no": 57
+  },
+  {
+   "cat": "E ジャズ・シティポップ",
+   "name": "下降",
+   "chords": "Fmaj7 Em7 Dm7 Cmaj7",
+   "mood": "夕暮れ・シティポップ",
+   "note": "",
+   "no": 58
+  },
+  {
+   "cat": "E ジャズ・シティポップ",
+   "name": "IV-V7-iii-vi",
+   "chords": "Fmaj7 G7 Em7 Am7",
+   "mood": "王道シティポップ",
+   "note": "丸サ進行に近い",
+   "no": 59
+  },
+  {
+   "cat": "E ジャズ・シティポップ",
+   "name": "I-iii-IV-V7",
+   "chords": "Cmaj7 Em7 Fmaj7 G7",
+   "mood": "80年代AOR",
+   "note": "",
+   "no": 60
+  },
+  {
+   "cat": "E ジャズ・シティポップ",
+   "name": "ii-V-iii-vi",
+   "chords": "Dm7 G7 Em7 Am7",
+   "mood": "明るいジャズ",
+   "note": "",
+   "no": 61
+  },
+  {
+   "cat": "E ジャズ・シティポップ",
+   "name": "減和音経由",
+   "chords": "Cmaj7 Ebdim7 Dm7 G7",
+   "mood": "古いジャズ・ラウンジ",
+   "note": "",
+   "no": 62
+  },
+  {
+   "cat": "E ジャズ・シティポップ",
+   "name": "IV9 経由",
+   "chords": "Am7 D9 Gmaj7 Cmaj7",
+   "mood": "ボサノバ",
+   "note": "",
+   "no": 63
+  },
+  {
+   "cat": "E ジャズ・シティポップ",
+   "name": "IV7借用",
+   "chords": "Fmaj7 Bb7 Em7 A7",
+   "mood": "ネオソウル寄り",
+   "note": "",
+   "no": 64
+  },
+  {
+   "cat": "E ジャズ・シティポップ",
+   "name": "9thだけ",
+   "chords": "Cmaj9 Am9 Dm9 G9",
+   "mood": "おしゃれな浮遊",
+   "note": "",
+   "no": 65
+  },
+  {
+   "cat": "E ジャズ・シティポップ",
+   "name": "m6経由",
+   "chords": "Fmaj7 Fm6 Em7 A7",
+   "mood": "ノスタルジー",
+   "note": "",
+   "no": 66
+  },
+  {
+   "cat": "F 下降・クリシェ・ペダル",
+   "name": "下降ベース",
+   "chords": "C G/B Am C/G",
+   "mood": "感動・別れ",
+   "note": "B型",
+   "no": 67
+  },
+  {
+   "cat": "F 下降・クリシェ・ペダル",
+   "name": "下降ベース長",
+   "chords": "C C/B Am Am/G F",
+   "mood": "映画的",
+   "note": "",
+   "no": 68
+  },
+  {
+   "cat": "F 下降・クリシェ・ペダル",
+   "name": "半音クリシェ短調",
+   "chords": "Cm Cm(maj7) Cm7 Cm6",
+   "mood": "不穏・謎",
+   "note": "内声だけが動く",
+   "no": 69
+  },
+  {
+   "cat": "F 下降・クリシェ・ペダル",
+   "name": "半音クリシェ長調",
+   "chords": "C Cmaj7 C7 F",
+   "mood": "ジャズ・バラード",
+   "note": "",
+   "no": 70
+  },
+  {
+   "cat": "F 下降・クリシェ・ペダル",
+   "name": "ペダル(C)",
+   "chords": "C F/C G/C C",
+   "mood": "緊張・ダンジョン",
+   "note": "H型",
+   "no": 71
+  },
+  {
+   "cat": "F 下降・クリシェ・ペダル",
+   "name": "ペダル2",
+   "chords": "C Dm/C F/C G/C",
+   "mood": "広がる緊張",
+   "note": "",
+   "no": 72
+  },
+  {
+   "cat": "F 下降・クリシェ・ペダル",
+   "name": "ペダル短調",
+   "chords": "Cm Ab/C Bb/C Cm",
+   "mood": "重い戦い",
+   "note": "",
+   "no": 73
+  },
+  {
+   "cat": "F 下降・クリシェ・ペダル",
+   "name": "短調の下降7th",
+   "chords": "Cm7 Cm7/Bb Ab Ab/G",
+   "mood": "哀愁・ソウル",
+   "note": "",
+   "no": 74
+  },
+  {
+   "cat": "F 下降・クリシェ・ペダル",
+   "name": "上行ベース",
+   "chords": "C C/E F G",
+   "mood": "希望・前進",
+   "note": "",
+   "no": 75
+  },
+  {
+   "cat": "F 下降・クリシェ・ペダル",
+   "name": "ベースの5度ずらし",
+   "chords": "F C/E Dm G/B",
+   "mood": "美しい流れ",
+   "note": "",
+   "no": 76
+  },
+  {
+   "cat": "F 下降・クリシェ・ペダル",
+   "name": "上行ベース長",
+   "chords": "C C/E F F/A G G/B C",
+   "mood": "行進・高まり",
+   "note": "7コード",
+   "no": 77
+  },
+  {
+   "cat": "F 下降・クリシェ・ペダル",
+   "name": "maj7の下降",
+   "chords": "Cmaj7 Cmaj7/B Am7 Am7/G Fmaj7",
+   "mood": "ロマンティック",
+   "note": "",
+   "no": 78
+  },
+  {
+   "cat": "G 借用・半音・意外な和音",
+   "name": "IV→iv",
+   "chords": "C F Fm C",
+   "mood": "郷愁",
+   "note": "C型",
+   "no": 79
+  },
+  {
+   "cat": "G 借用・半音・意外な和音",
+   "name": "♭VI-♭VII",
+   "chords": "C Ab Bb C",
+   "mood": "ファンファーレ・勝利",
+   "note": "",
+   "no": 80
+  },
+  {
+   "cat": "G 借用・半音・意外な和音",
+   "name": "♭III-IV-V",
+   "chords": "C Eb F G",
+   "mood": "力強い",
+   "note": "",
+   "no": 81
+  },
+  {
+   "cat": "G 借用・半音・意外な和音",
+   "name": "III(メジャー)",
+   "chords": "C E Am F",
+   "mood": "ドラマチック",
+   "note": "遠い響き",
+   "no": 82
+  },
+  {
+   "cat": "G 借用・半音・意外な和音",
+   "name": "III-IV-iv",
+   "chords": "C E F Fm",
+   "mood": "涙の転換",
+   "note": "",
+   "no": 83
+  },
+  {
+   "cat": "G 借用・半音・意外な和音",
+   "name": "VI7",
+   "chords": "C A7 Dm G7",
+   "mood": "歌謡曲",
+   "note": "N型",
+   "no": 84
+  },
+  {
+   "cat": "G 借用・半音・意外な和音",
+   "name": "♭VII-♭VI-V",
+   "chords": "C Bb Ab G",
+   "mood": "行進・終幕",
+   "note": "",
+   "no": 85
+  },
+  {
+   "cat": "G 借用・半音・意外な和音",
+   "name": "♭II(ナポリ)",
+   "chords": "Dm G Db C",
+   "mood": "ドラマ・終止",
+   "note": "",
+   "no": 86
+  },
+  {
+   "cat": "G 借用・半音・意外な和音",
+   "name": "クロマチックメディアント",
+   "chords": "C Ab E C",
+   "mood": "映画・神秘",
+   "note": "J型",
+   "no": 87
+  },
+  {
+   "cat": "G 借用・半音・意外な和音",
+   "name": "ii半減を使う",
+   "chords": "C Bm7b5 E7 Am7",
+   "mood": "哀愁の歌謡",
+   "note": "",
+   "no": 88
+  },
+  {
+   "cat": "G 借用・半音・意外な和音",
+   "name": "II7ドミナント",
+   "chords": "C D7 Dm7 G7",
+   "mood": "上がって戻る",
+   "note": "",
+   "no": 89
+  },
+  {
+   "cat": "G 借用・半音・意外な和音",
+   "name": "経過減和音",
+   "chords": "C C#dim7 Dm7 G7",
+   "mood": "古典・上昇",
+   "note": "",
+   "no": 90
+  },
+  {
+   "cat": "H 特殊（周期・2コード・長い進行・転調）",
+   "name": "2コード(maj7)",
+   "chords": "Cmaj7 Fmaj7",
+   "mood": "やすらぎ",
+   "note": "繰り返しで世界を作る",
+   "no": 91
+  },
+  {
+   "cat": "H 特殊（周期・2コード・長い進行・転調）",
+   "name": "2コード(♭VII)",
+   "chords": "C Bb",
+   "mood": "ロック・グルーヴ",
+   "note": "",
+   "no": 92
+  },
+  {
+   "cat": "H 特殊（周期・2コード・長い進行・転調）",
+   "name": "2コード(短調)",
+   "chords": "Cm Fm",
+   "mood": "ファンク・ブルース",
+   "note": "",
+   "no": 93
+  },
+  {
+   "cat": "H 特殊（周期・2コード・長い進行・転調）",
+   "name": "add9の連なり",
+   "chords": "Cadd9 G Am7 Fadd9",
+   "mood": "きらきら・透明",
+   "note": "",
+   "no": 94
+  },
+  {
+   "cat": "H 特殊（周期・2コード・長い進行・転調）",
+   "name": "5コードの周期",
+   "chords": "C F G Ab G",
+   "mood": "プログレ・変拍子感",
+   "note": "R型",
+   "no": 95
+  },
+  {
+   "cat": "H 特殊（周期・2コード・長い進行・転調）",
+   "name": "6コードの周期",
+   "chords": "C Am F G C F",
+   "mood": "物語・ゆったり",
+   "note": "",
+   "no": 96
+  },
+  {
+   "cat": "H 特殊（周期・2コード・長い進行・転調）",
+   "name": "12小節ブルース",
+   "chords": "C7 C7 C7 C7 F7 F7 C7 C7 G7 F7 C7 G7",
+   "mood": "ブルース・ロックンロール",
+   "note": "1コード1小節で12小節",
+   "no": 97
+  },
+  {
+   "cat": "H 特殊（周期・2コード・長い進行・転調）",
+   "name": "ジャズブルース",
+   "chords": "C7 F7 C7 A7 Dm7 G7 C7 G7",
+   "mood": "ジャズ・スウィング",
+   "note": "",
+   "no": 98
+  },
+  {
+   "cat": "H 特殊（周期・2コード・長い進行・転調）",
+   "name": "後半転調",
+   "chords": "C G Am F D A Bm G",
+   "mood": "盛り上がり",
+   "note": "Q型。後半は全音上",
+   "no": 99
+  },
+  {
+   "cat": "H 特殊（周期・2コード・長い進行・転調）",
+   "name": "ポップパンク",
+   "chords": "C5 G5 A5 F5",
+   "mood": "疾走・青春",
+   "note": "パワーコード",
+   "no": 100
+  },
+  {
+   "cat": "H 特殊（周期・2コード・長い進行・転調）",
+   "name": "メタル♭II",
+   "chords": "C5 Db5 C5 Eb5",
+   "mood": "凶暴・ダーク",
+   "note": "",
+   "no": 101
+  },
+  {
+   "cat": "H 特殊（周期・2コード・長い進行・転調）",
+   "name": "終止形（エンディング）",
+   "chords": "Fmaj7 Fm6 C/E A7 Dm7 G7 C",
+   "mood": "幕引き・エンディング",
+   "note": "7コード",
+   "no": 102
+  }
+ ]
+}
