@@ -57,3 +57,9 @@ Claude Code は音を耳で聞けない。そこで、数字では分かりに�
 - 内蔵アンプ（hardrock など）にはキャビネットの段がなく、cabir もフィルターの近似だった。録音IR（David Fau Casquel、CC BY 3.0）を6つ入れ、`{"type":"cabir","ir":"dfc-…"}` で使えるようにした（名前: dfc-ampmix・dfc-ampmix2・dfc-axhom・dfc-bestplugins・dfc-bestplugins2・dfc-mixxx）。
 - パンク（Emily）で: 点数はどれも 8.07〜8.10（IRなし 8.10）。点数はギターの音色にほぼ反応しない。
 - 全体の音の変化（IRなしとの差、1.5〜3kHz）: bestplugins +4.1dB（いちばん「張り」が出る）・axhom +1.7（500Hz〜3kが前に出る）・bestplugins2 +2.0・mixxx +1.4・ampmix +1.0。どれが良いかは耳で決める。
+
+### ボカロ風インスト『ネオンハートビート』（2026-10-15）— 7.32 → 7.92
+- 作り方: `node tools/composer/song.mjs build assets-src/ai-songs/neon-heartbeat.json --wav --drums jpop --bass pick --piano salamander --orchestra vsco --guitar emily --master-preset jpop-band`（JSON は生成スクリプトよりドラム -6dB・リード +1dB・リードの音色 chiff）。
+- 効いた順: ドラムを下げる（-3dB で +0.38、-7dB で +0.55）／歌の役のシンセを chiff（息づかいのある柔らかいリード）に（+0.07、楽しさ +0.25）。
+- 効かなかった・下がった: sawLead（-0.05）・フルート（synth なし、-0.8）・生ドラム muldjord（-0.24）・supra（-0.2）・仕上げの種類・弦や FM ベルの増減・ハイハットだけ下げる（太鼓ごとの gainDb は効かない。drumMix の level を使う）。
+- 3ラウンド続けて +0.1 未満で止めた（手順書の決まり）。8点に届かず。
