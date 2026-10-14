@@ -19,3 +19,14 @@ Claude Code は音を耳で聞けない。そこで、数字では分かりに�
 2. `see-audio.py` で、弦のパートの音に、出だしで高い音程から急に下がる曲線があると分かった。
 3. 鍵ごとに出だしの音程を測る（`orchestra.sf3` を spessasynth で鳴らして測定）と、13個の楽器が同じ曲線を持っていた。
 4. 楽器の中身を調べると、13個が1つの楽器データを共有していて、その中身がインパクト音だった。作り方のバグ（`banned-sounds.md` 15）。
+
+## 音質の点数（Audiobox Aesthetics）でのトライ&エラー（2026-10-15、パンク『稲妻ダッシュ』）
+
+`tools/audio-check/aes-score.py`（Meta の公開モデル。PQ=制作品質 1〜10）。**耳の確認ではなく目安。** 同じ曲の版どうしの比較に使う。
+24通り試して PQ 6.0 → 8.05。効いた順:
+1. ギターを録音ギター（`--guitar fsbs-direct`、distGuitar）に: +1.0 前後（いちばん大きい）
+2. 歪みを控えめに（ampDrive 1.2 → 0.5）: +0.3
+3. ドラムを下げる（-3〜-5dB）: +0.3。**ドラムを上げると下がる**（+3dB で -0.8）。人間の「ドラムが小さい」という感覚とは逆なので、最後は耳で決める
+4. 中央のギター層をなくす・ギターを少し下げる: +0.2〜0.4
+効かなかった: マスタリングの種類（rock-clean / rock-open）、左右の広げ、残響、ベースの種類。ドラムは muldjord がいちばん高い（rock / metal / supra は -0.1〜-0.3）。
+作り方: `node tools/composer/song.mjs build assets-src/ai-songs/punk-bolt.json --wav --drums muldjord --bass pick --guitar fsbs-direct --master-preset rock-clean`
