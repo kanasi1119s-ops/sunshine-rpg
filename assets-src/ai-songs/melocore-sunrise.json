@@ -12,6 +12,12 @@
  "autoScoop": false,
  "instrumentCheck": false,
  "dynamics": "natural",
+ "drumMix": {
+  "tom": {
+   "reverb": 0.0,
+   "spread": 0.5
+  }
+ },
  "parts": [
   {
    "instrument": "kick",
@@ -571,7 +577,8 @@
     0.933,
     0.867,
     0.8
-   ]
+   ],
+   "reverb": 0
   },
   {
    "instrument": "bass",
