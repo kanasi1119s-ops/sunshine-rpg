@@ -210,7 +210,7 @@ ARCL=[round(x,3) for x in ARC]
 add("kick","キック",0.17,0,kick,barGain=ARCL); add("snare","スネア",0.15,0,snare,barGain=ARCL,push=0.02); add("hihat","ハイハット",0.05,0,hat,barGain=ARCL,push=-0.008)
 add("crash","クラッシュ",0.06,0,crash,barGain=ARCL); add("crash","ライド",0.05,0.15,rideL,barGain=ARCL); add("tom","タム",0.09,0,tom,barGain=ARCL,reverb=0)
 add("bass","メロディベース",0.38,0,per(f_bass),barGain=ARCL)
-GI=os.environ.get('PUNK_INST','distGuitar'); GA=os.environ.get('PUNK_AMP','hardrock'); GD=float(os.environ.get('PUNK_DRIVE','1.2')); CLAMP_HI=76 if GI=='guitar' else 64
+GI=os.environ.get('PUNK_INST','crunch'); GA=os.environ.get('PUNK_AMP','hardrock'); GD=float(os.environ.get('PUNK_DRIVE','1.2')); CLAMP_HI=76 if GI=='guitar' else 64
 def gclamp(secs):
     # ディストーションギター（刻み）の音域は E2〜E4。高い音は1オクターブ下げ、低い音は上げる
     def fix(t):
@@ -236,8 +236,9 @@ def octdown(secs):
     return out
 GT2=octdown(GT)
 # 重く・歪みを少し足す: ampDrive 1.4。右のギターは1オクターブ下げて低域の厚みを足す
-add(GI,"リフギター（左）",0.2 if GI=="guitar" else 0.12,-0.7,GT,amp=GA,ampDrive=GD,humanPitch=0,chorus=0,reverb=0.1,barGain=ARCL)
-add(GI,"リフギター（右・1オクターブ下）",0.2 if GI=="guitar" else 0.12,0.7,GT2,amp=GA,ampDrive=GD,humanPitch=0,chorus=0,reverb=0.1,push=0.006,barGain=ARCL)
+add(GI,"リフギター（左）",0.2 if GI=="guitar" else 0.12,-0.7,GT,amp=GA,ampDrive=GD,humanPitch=0,chorus=0,reverb=0.16,barGain=ARCL)
+add(GI,"リフギター（右・1オクターブ下）",0.2 if GI=="guitar" else 0.12,0.7,GT2,amp=GA,ampDrive=GD,humanPitch=0,chorus=0,reverb=0.16,push=0.006,barGain=ARCL)
+add(GI,"リフギター（中央・厚み用）",0.07,0.0,GT2,amp=GA,ampDrive=GD*0.9,humanPitch=0,chorus=0,reverb=0.22,push=0.012,barGain=ARCL)
 song={"title":"稲妻ダッシュ（パンク）","description":"（見本・仮）bpm200・E長調・約1分40秒の疾走パンク。ギター（歪みのリフを左右に重ねる。リードギターの音色は使わない）・メロディベース・ドラムの3人編成。Aメロはオクターブのリフ、サビは厚いオクターブのリフ、間奏のストップ（間）、ハーフタイムのブリッジ（ベースが旋律）、リフで押すソロ。ギターはずっとリフ中心。ドラムは小節ごとに型を変えて強弱をつけた。ギターにビブラートなし。","bpm":200,"beats":4,"chords":" ".join(chords),"barsPerChord":1,"repeats":1,"tone":"rock","feel":"rock","human":0.3,"autoScoop":False,"instrumentCheck":False,"dynamics":"natural","drumMix":{"kick":{"level":1.05,"tune":-2},"snare":{"level":1.05,"tune":-2,"reverb":0.15},"tom":{"reverb":0.0,"spread":0.5,"level":1.05,"tune":-4}},"parts":PARTS}
 json.dump(song,open(sys.argv[1],"w"),ensure_ascii=False,indent=1)
 print("ok",len(PARTS),len(chords),"bars")
