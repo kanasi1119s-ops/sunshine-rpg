@@ -1,0 +1,15 @@
+E ジャズ・シティポップ
+0:00  #53 ツーファイブ  Dm7 G7 Cmaj7 A7
+0:10  #54 ターンアラウンド  Cmaj7 Am7 Dm7 G7
+0:21  #55 VI7経由  Cmaj7 A7 Dm7 G7
+0:32  #56 連続ツーファイブ  Em7 A7 Dm7 G7
+0:43  #57 裏コード  Dm7 Db9 Cmaj9 A7
+0:54  #58 下降  Fmaj7 Em7 Dm7 Cmaj7
+1:05  #59 IV-V7-iii-vi  Fmaj7 G7 Em7 Am7
+1:16  #60 I-iii-IV-V7  Cmaj7 Em7 Fmaj7 G7
+1:27  #61 ii-V-iii-vi  Dm7 G7 Em7 Am7
+1:38  #62 減和音経由  Cmaj7 Ebdim7 Dm7 G7
+1:49  #63 IV9 経由  Am7 D9 Gmaj7 Cmaj7
+1:59  #64 IV7借用  Fmaj7 Bb7 Em7 A7
+2:10  #65 9thだけ  Cmaj9 Am9 Dm9 G9
+2:21  #66 m6経由  Fmaj7 Fm6 Em7 A7

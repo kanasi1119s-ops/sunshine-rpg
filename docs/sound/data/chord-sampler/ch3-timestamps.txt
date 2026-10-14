@@ -1,0 +1,15 @@
+C 短調
+0:00  #25 短調の王道  Cm Ab Eb Bb
+0:10  #26 アンダルシア  Cm Bb Ab G
+0:21  #27 小さな終止  Cm Fm Cm G7
+0:32  #28 i-VI-iv-V  Cm Ab Fm G
+0:43  #29 i-v-VI-VII  Cm Gm Ab Bb
+0:54  #30 i-VI-VII-i  Cm Ab Bb Cm
+1:05  #31 i-III-VII-VI  Cm Eb Bb Ab
+1:16  #32 i-iv-VI-V  Cm Fm Ab G
+1:27  #33 ii半減  Cm Dm7b5 G7 Cm
+1:38  #34 VI-III-V  Cm Ab Eb G
+1:49  #35 i-VII-VI-VII  Cm Bb Ab Bb
+1:59  #36 下降ベースの短調  Cm Cm/Bb Ab G
+2:10  #37 全部7th  Cm7 Fm7 Dm7b5 G7
+2:21  #38 i-VI-iv-VII  Cm Ab Fm Bb

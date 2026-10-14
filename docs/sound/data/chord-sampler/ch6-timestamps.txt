@@ -1,0 +1,13 @@
+F 下降・クリシェ・ペダル
+0:00  #67 下降ベース  C G/B Am C/G
+0:10  #68 下降ベース長  C C/B Am Am/G F
+0:24  #69 半音クリシェ短調  Cm Cm(maj7) Cm7 Cm6
+0:35  #70 半音クリシェ長調  C Cmaj7 C7 F
+0:46  #71 ペダル(C)  C F/C G/C C
+0:57  #72 ペダル2  C Dm/C F/C G/C
+1:08  #73 ペダル短調  Cm Ab/C Bb/C Cm
+1:19  #74 短調の下降7th  Cm7 Cm7/Bb Ab Ab/G
+1:30  #75 上行ベース  C C/E F G
+1:40  #76 ベースの5度ずらし  F C/E Dm G/B
+1:51  #77 上行ベース長  C C/E F F/A G G/B C
+2:10  #78 maj7の下降  Cmaj7 Cmaj7/B Am7 Am7/G Fmaj7

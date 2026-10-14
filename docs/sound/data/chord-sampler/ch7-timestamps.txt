@@ -1,0 +1,13 @@
+G 借用・半音・意外な和音
+0:00  #79 IV→iv  C F Fm C
+0:10  #80 ♭VI-♭VII  C Ab Bb C
+0:21  #81 ♭III-IV-V  C Eb F G
+0:32  #82 III(メジャー)  C E Am F
+0:43  #83 III-IV-iv  C E F Fm
+0:54  #84 VI7  C A7 Dm G7
+1:05  #85 ♭VII-♭VI-V  C Bb Ab G
+1:16  #86 ♭II(ナポリ)  Dm G Db C
+1:27  #87 クロマチックメディアント  C Ab E C
+1:38  #88 ii半減を使う  C Bm7b5 E7 Am7
+1:49  #89 II7ドミナント  C D7 Dm7 G7
+1:59  #90 経過減和音  C C#dim7 Dm7 G7

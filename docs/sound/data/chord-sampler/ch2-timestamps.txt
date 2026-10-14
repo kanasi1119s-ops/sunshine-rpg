@@ -1,0 +1,11 @@
+B 長調のロック
+0:00  #15 ♭VII往復  C Bb F C
+0:10  #16 ♭VIIからV  C Bb F G
+0:21  #17 I-IV-♭VII-IV  C F Bb F
+0:32  #18 I-IV-V-IV  C F G F
+0:43  #19 I-V-♭VII-IV  C G Bb F
+0:54  #20 ♭III借用  C Eb Bb F
+1:05  #21 パワーコード  C5 Bb5 F5 G5
+1:16  #22 ブルース進行の短縮  C7 F7 C7 G7
+1:27  #23 I-vi-♭VII-IV  C Am Bb F
+1:38  #24 add9の広がり  C Fadd9 G Fadd9
