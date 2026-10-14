@@ -109,6 +109,8 @@ export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   ampTone?: number;
   /** namA／namB／namKay3〜10 のとき、キャビネットの箱（closed/open/dark/bright）。 */
   ampCab?: string;
+  /** 録音のキャビネットIRの名前（作曲ソフトのみ。例 "dfc-axhom"）。"none" で外す。省略すると歪み系のアンプは標準の IR を通す。 */
+  ampCabIr?: string;
   amp: AiNamAmp | "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean" | KeysAmpType;
   /** セクションごとの出し入れ。{ intro: 0, verse: 0.6, chorus: 1, solo: { gain: 1, octave: 1 } }。数字＝音量の倍率（0＝休み）、octave＝オクターブずらし。書かなかったセクションは1。曲の sections（または scene）が必要。 */
   sections?: PartSectionSpecJson;
@@ -326,6 +328,7 @@ export const AI_SONG_SCHEMA = {
           ampLevel: { type: "number" },
           ampTone: { type: "number" },
           ampCab: { type: "string" },
+          ampCabIr: { type: "string" },
           amp: { type: "string", enum: [...NAM_AMP_KEYS, "auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", ...KEYS_AMP_TYPES] },
           ...AI_PART_EXTRA_SCHEMA,
           ...AI_PART_JPOP_SCHEMA,
@@ -774,7 +777,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     if (p.amp && !AI_AMPS.has(p.amp)) warnings.push(`${where}: アンプ「${p.amp}」は使えないので、おまかせ（auto）にしました`);
     const amp: AmpSetting | undefined = p.amp && p.amp in NAM_AMPS
       ? { type: "nam", model: NAM_AMPS[p.amp as AiNamAmp], cab: (["closed", "open", "dark", "bright"].includes(String(p.ampCab)) ? String(p.ampCab) : "closed") as "closed", mic: "center", ...(Number.isFinite(Number(p.ampTone)) && p.ampTone !== undefined ? { tone: Math.max(-12, Math.min(6, Number(p.ampTone))) } : {}), ...(Number(p.ampDrive) > 0 ? { drive: Math.min(2, Number(p.ampDrive)) } : {}), ...(Number.isFinite(Number(p.ampLevel)) && Number(p.ampLevel) > 0 ? { level: Math.min(1.5, Number(p.ampLevel)) } : {}) }
-      : p.amp && p.amp !== "auto" && AI_AMPS.has(p.amp) ? { type: p.amp as AmpSetting["type"], ...(Number(p.ampDrive) > 0 ? { drive: Math.min(2, Number(p.ampDrive)) } : {}), ...(Number(p.ampLevel) > 0 ? { level: Math.min(1.5, Number(p.ampLevel)) } : {}), ...(Number.isFinite(Number(p.ampTone)) && p.ampTone !== undefined ? { tone: Math.max(-12, Math.min(6, Number(p.ampTone))) } : {}) } : undefined;
+      : p.amp && p.amp !== "auto" && AI_AMPS.has(p.amp) ? { type: p.amp as AmpSetting["type"], ...(Number(p.ampDrive) > 0 ? { drive: Math.min(2, Number(p.ampDrive)) } : {}), ...(Number(p.ampLevel) > 0 ? { level: Math.min(1.5, Number(p.ampLevel)) } : {}), ...(Number.isFinite(Number(p.ampTone)) && p.ampTone !== undefined ? { tone: Math.max(-12, Math.min(6, Number(p.ampTone))) } : {}), ...(typeof p.ampCabIr === "string" && p.ampCabIr ? { cabIr: p.ampCabIr } : {}) } : undefined;
     const patchKey = p.patch ? String(p.patch) : "";
     if (patchKey && !(patchKey in SYNTH_PATCHES)) warnings.push(`${where}: シンセ音色「${patchKey}」は使えないので、楽器の音にしました`);
     const program = !drum && patchKey in SYNTH_PATCHES ? SYNTH_PATCHES[patchKey] : undefined;

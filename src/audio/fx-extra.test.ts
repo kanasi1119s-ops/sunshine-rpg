@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { AmpRack } from "./amp-rack";
 import { aiSongToScore } from "./ai-song";
 import { buildFx, buildFxChain, FX_INFO, FX_TYPES, type FxSpec } from "./fx-chain";
-import { biquadCoefficients, buildExtraFx, cabImpulse, EXTRA_FX_INFO, EXTRA_FX_TYPES, magnitudeAt, rectifierCurve, springImpulse, tapeSaturationCurve } from "./fx-extra";
+import { biquadCoefficients, buildExtraFx, cabImpulse, registerCabIr, EXTRA_FX_INFO, EXTRA_FX_TYPES, magnitudeAt, rectifierCurve, springImpulse, tapeSaturationCurve } from "./fx-extra";
 import { scoreToMidiInfo } from "./midi-export";
 
 /** つなぎ方だけを記録する、Web Audio の部品の偽物（どんな createXxx にも、接続できる部品を返す）。 */
@@ -250,5 +250,25 @@ describe("pre: true（アンプの前につなぐ）", () => {
       hops++;
     }
     expect(n.kind).toBe("destination");
+  });
+});
+
+describe("歪み系アンプの標準の録音キャビネットIR（2026-10-15）", () => {
+  const kindsFrom = (rack: AmpRack, ch: number): string[] => {
+    const all: string[] = [];
+    const walk = (n: FakeNode, depth: number): void => {
+      if (depth > 200) return;
+      for (const o of n.outputs) { all.push(o.kind); walk(o, depth + 1); }
+    };
+    walk(rack.input(ch) as unknown as FakeNode, 0);
+    return all;
+  };
+  it("IR が登録されていれば hardrock の後ろに畳み込みが入り、ampCabIr: none なら入らない", () => {
+    registerCabIr("dfc-bestplugins", new Float32Array([1, 0.5, 0.25, 0]), 44100);
+    const { ctx } = fakeCtx();
+    const rack = new AmpRack(ctx as unknown as BaseAudioContext, ctx.destination as unknown as AudioNode);
+    rack.configure({ 0: 30, 1: 30 }, "rock", 9, { 0: { amp: { type: "hardrock" }, pan: 0 }, 1: { amp: { type: "hardrock", cabIr: "none" }, pan: 0 } });
+    expect(kindsFrom(rack, 0)).toContain("convolver");
+    expect(kindsFrom(rack, 1)).not.toContain("convolver");
   });
 });

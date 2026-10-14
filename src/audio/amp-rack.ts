@@ -10,6 +10,7 @@ import { AMP_PRESETS, makeDistortionCurve } from "./amp";
 import { buildAmpPlugin, type AmpPluginDef } from "./amp-plugins";
 import type { NamHost } from "./nam/nam-host";
 import { cabApproxSpec, type CabKind, type MicPos } from "./amp-cab";
+import { recordedCabImpulse } from "./fx-extra";
 import { shapeCurve, type CurveKind } from "./amp-curves";
 import { createGate, loadGate } from "./amp-gate";
 import { buildFxChain, type FxSpec } from "./fx-chain";
@@ -73,13 +74,20 @@ function curve(drive: number, bias: number): Float32Array<ArrayBuffer> {
 }
 
 /** 音づくりの追加の段（cab・mic・tight・gate・preLowpass・curve）。ロールの既定と、利用者の指定を合わせたもの。 */
-type StageOptions = Pick<AmpSetting, "cab" | "mic" | "tight" | "gate" | "preLowpass" | "curve">;
+type StageOptions = Pick<AmpSetting, "cab" | "mic" | "tight" | "gate" | "preLowpass" | "curve" | "cabIr">;
 /** 新しいロールの既定。既存のロールには足さない（既存曲の聞こえ方を変えない）。 */
 const ROLE_DEFAULTS: Partial<Record<Role, StageOptions>> = {
   lead: { cab: "open", preLowpass: 7000, curve: "softsqrt" },
   modernHigh: { cab: "closed", preLowpass: 6500, gate: 60 },
   sparkleClean: { cab: "bright" },
 };
+/**
+ * 歪み系のアンプの後ろに、録音のキャビネットIRを標準で通す（人間の指示 2026-10-15。聞き比べで「bestplugins」が選ばれた）。
+ * IR は作曲ソフトだけに登録される（fx-extra.ts の registerCabIr）。登録がないとき（ゲーム本体）は何もしない。
+ * 曲のパートの ampCabIr（AmpSetting.cabIr）で別の IR を選ぶか、"none" で外せる。
+ */
+const DIST_ROLES = new Set<Role>(["overdrive", "distortion", "metal", "prs", "crunch", "hardrock", "punk", "fuzz", "loudmetal", "loudrock", "modernHigh"] as Role[]);
+export const DEFAULT_DIST_CAB_IR = "dfc-bestplugins";
 /** 追加の段をかけない（かけても意味がない）ロール。 */
 const NO_STAGES = new Set<Role>(["bass", "bassMetal", "drumsRock", "drumsMetal", "thru", "nam", "plugin"]);
 /** 非対称（bias がこれ以上）の歪みのあとに、直流（DC）を除くハイパスを入れる（提案3）。 */
@@ -263,6 +271,17 @@ export class AmpRack {
     }
     const cab = o.cab ?? (o.mic ? "closed" : undefined);
     if (cab) out.push(...this.cabNodes(cab, o.mic ?? "center"));
+    if (o.cabIr && o.cabIr !== "none") {
+      const data = recordedCabImpulse(o.cabIr, this.ctx.sampleRate);
+      if (data) {
+        const buf = this.ctx.createBuffer(1, data.length, this.ctx.sampleRate);
+        buf.getChannelData(0).set(data);
+        const conv = this.ctx.createConvolver();
+        conv.normalize = false;
+        conv.buffer = buf;
+        out.push(conv);
+      }
+    }
     return out;
   }
 
@@ -298,7 +317,8 @@ export class AmpRack {
     else {
       const o: StageOptions = { ...ROLE_DEFAULTS[role] };
       const a = override?.amp;
-      if (a) for (const k of ["cab", "mic", "tight", "gate", "preLowpass", "curve"] as const) if (a[k] !== undefined) (o as Record<string, unknown>)[k] = a[k];
+      if (a) for (const k of ["cab", "mic", "tight", "gate", "preLowpass", "curve", "cabIr"] as const) if (a[k] !== undefined) (o as Record<string, unknown>)[k] = a[k];
+      if (o.cabIr === undefined && DIST_ROLES.has(role)) o.cabIr = DEFAULT_DIST_CAB_IR;
       this.opt = o;
     }
     const d = override?.amp.drive ?? 1;

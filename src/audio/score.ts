@@ -96,6 +96,8 @@ export interface AmpSetting {
   cab?: "closed" | "open" | "dark" | "bright";
   /** マイクの位置（center=明るく直接的／edge=暗く丸い／off=斜めで温かい／far=遠く柔らかい）。cab がなければ closed を足す。 */
   mic?: "center" | "edge" | "off" | "far";
+  /** 録音のキャビネットIRの名前（作曲ソフトに登録されたもの）。"none" で使わない。省略すると、歪み系のアンプは標準のIR（dfc-bestplugins）を通す（作曲ソフトだけ。ゲーム本体には IR が無いので通さない）。 */
+  cabIr?: string;
   /** タイト（0〜1）。歪みの前に、低音の締め（ハイパス100〜300Hz）＋中域の山＋ごく軽いソフトクリップを足す。省略は無効。 */
   tight?: number;
   /** ノイズゲートの深さ（dB。0=なし、24=自然、60=ほぼ切る）。省略はロールの既定。 */

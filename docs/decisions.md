@@ -210,3 +210,10 @@
 - キャビネット近似・前段ローパス・ノイズゲート・tight・マイク位置・波形曲線を、`AmpSetting` の**任意の指定**として足した。指定しないロールは、これまでと同じつなぎ方（既存曲の聞こえ方を急に変えない）。punk は書き出しの100Hz〜5kHzがビット単位で同じ。
 - 例外: 歪みのあとの25Hzハイパス（DC除去）と、浅い歪み（drive 2未満）の 2x オーバーサンプリング、drive 8以上の曲線の点数（8192）。測った差は 100Hz〜5kHz の各帯域で最大0.4dB（shoegaze 1.6dB、fuzz は直流成分が消えて全体が−3dB）。数字は `amp-sim-guide.md` §10。
 - 新ロール `lead`・`modernHigh`・`sparkleClean` を追加（`GENRE_AMP_TYPES` は18個）。NAM の出口の7kHzローパスは、キャビネット近似（closed）にした。
+
+## 2026-10-15 作曲ソフト: 歪み系アンプに録音のキャビネットIRを標準で通す（人間の指示）
+- 理由: 内蔵アンプにはキャビネットの段がなく、高音を落とすだけだった。録音IR（David Fau Casquel、CC BY 3.0）を3つ聞き比べてもらい、「bestplugins」（1.5〜3kHz の張りが出る）が選ばれた。
+- 中身: overdrive・distortion・metal・prs・crunch・hardrock・punk・fuzz・loudmetal・loudrock・modernHigh のアンプの後ろに `dfc-bestplugins` を通す（src/audio/amp-rack.ts の DIST_ROLES）。パートの `ampCabIr` で別の IR を選ぶか `"none"` で外せる。
+- 影響範囲: **作曲ソフトで書き出す曲だけ**。IR は作曲ソフト（tools/composer/cab-irs.ts）にだけ登録されるので、ゲーム本体の再生は変わらない（そのかわり、ゲームで鳴らす同じ曲は IR なしの音になる）。既存の曲を作曲ソフトで書き出し直すと、歪みギターの音が変わる（1.5〜3kHz が約 +4dB、5kHz 以上が約 -2dB）。
+- この IR を通した音をゲームに入れるときは、クレジット「Impulse Responses by David Fau Casquel (CC BY 3.0)」を書く（docs/assets-credits.md）。
+- あわせて: 曲の書き出し（song-lib.mjs）が src/audio や音源の変更を見ずに古い作曲ソフトで鳴らしていた不具合を直した。

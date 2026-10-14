@@ -230,7 +230,20 @@ export async function loadPlaywright() {
 /** 作曲ソフト（1ファイルのHTML）をヘッドレスのブラウザで開き、作曲ソフトと同じ音でWAVを作る。 */
 export async function renderWav(score, edition, file, soundfont = "game", bass = "std", drums = "std", guitar = "std", orchestra = "std", piano = "std") {
   const html = path.join(ROOT, "dist-composer/index.html");
-  const newest = Math.max(...["tools/composer/entry.ts", "tools/composer/template.html"].map((f) => fs.statSync(path.join(ROOT, f)).mtimeMs));
+  // 作曲ソフトの元（entry.ts・template.html・tools/composer の .ts・src/audio の .ts/.json・音源の .sf3）のどれかが新しければ作り直す
+  // （2026-10-15: 以前は entry.ts と template.html しか見ておらず、src/audio を直しても古い音で書き出されていた）
+  const files = ["tools/composer/entry.ts", "tools/composer/template.html"].map((f) => path.join(ROOT, f));
+  const walk = (dir, re) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) walk(p, re);
+      else if (re.test(e.name) && !e.name.endsWith(".test.ts")) files.push(p);
+    }
+  };
+  walk(path.join(ROOT, "src/audio"), /\.(ts|json)$/);
+  for (const e of fs.readdirSync(path.join(ROOT, "tools/composer"))) if (e.endsWith(".ts")) files.push(path.join(ROOT, "tools/composer", e));
+  for (const e of fs.readdirSync(path.join(ROOT, "assets-src/soundfont/extra"))) if (e.endsWith(".sf3")) files.push(path.join(ROOT, "assets-src/soundfont/extra", e));
+  const newest = Math.max(...files.map((f) => fs.statSync(f).mtimeMs));
   if (!fs.existsSync(html) || fs.statSync(html).mtimeMs < newest) {
     execSync(`node ${JSON.stringify(path.join(ROOT, "tools/composer/build.mjs"))}`, { stdio: "ignore" });
   }
