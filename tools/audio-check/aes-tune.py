@@ -9,7 +9,7 @@
   [{"name": "a", "db": {"drums": -3, "bass": 2}, "set": {"guitars": {"ampDrive": 0.5, "amp": "hardrock"}},
     "flags": "--guitar fsbs-direct", "drop": ["part:9"]}]
   グループ: drums / bass / guitars / keys / melody / all / part:<番号>（0から） / inst:<楽器名>
-  db: gainDb に足す（dB）。set: パートの項目を上書き。flags: --flags に足す（同じ名前は上書き）。drop: パートを消す。
+  db: gainDb に足す（dB）。set: パートの項目を上書き。flags: --flags に足す（同じ名前は上書き）。drop: パートを消す。top: 曲全体の項目を上書き（drumMix は太鼓ごとに混ぜる）。
 結果: <作業フォルダ>/results.csv（名前,PQ,CE,CU,PC,案）と各 mp3。WAV は容量節約のため消す。
 必要なもの（初回）: pip install --break-system-packages audiobox_aesthetics、
   torch と torchaudio の CPU 版をそろえる（例: pip install torch==2.11.0 torchaudio==2.11.0 --index-url https://download.pytorch.org/whl/cpu）。
@@ -51,6 +51,11 @@ def make(base, v):
     for g, fields in (v.get("set") or {}).items():
         for i, p in enumerate(P):
             if match(g, i, p): p.update(fields)
+    for k, val in (v.get("top") or {}).items():
+        if isinstance(val, dict) and isinstance(j.get(k), dict):
+            for kk, vv in val.items():
+                j[k][kk] = {**j[k].get(kk, {}), **vv} if isinstance(vv, dict) and isinstance(j[k].get(kk), dict) else vv
+        else: j[k] = val
     drop = v.get("drop") or []
     j["parts"] = [p for i, p in enumerate(P) if not any(match(g, i, p) for g in drop)]
     return j
