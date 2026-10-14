@@ -207,9 +207,9 @@ PARTS=[]
 def add(inst,role,vol,pan,secs,**kw):
     d={"instrument":inst,"role":role,"volume":vol,"pan":pan,"notes":cat(secs,role)}; d.update(kw); PARTS.append(d)
 ARCL=[round(x,3) for x in ARC]
-add("kick","キック",0.17,0,kick,barGain=ARCL); add("snare","スネア",0.15,0,snare,barGain=ARCL,push=0.02); add("hihat","ハイハット",0.05,0,hat,barGain=ARCL,push=-0.008)
-add("crash","クラッシュ",0.06,0,crash,barGain=ARCL); add("crash","ライド",0.05,0.15,rideL,barGain=ARCL); add("tom","タム",0.09,0,tom,barGain=ARCL,reverb=0)
-add("bass","メロディベース",0.38,0,per(f_bass),barGain=ARCL)
+add("kick","キック",0.34,0,kick,barGain=ARCL); add("snare","スネア",0.30,0,snare,barGain=ARCL,push=0.02); add("hihat","ハイハット",0.10,0,hat,barGain=ARCL,push=-0.008)
+add("crash","クラッシュ",0.12,0,crash,barGain=ARCL); add("crash","ライド",0.10,0.15,rideL,barGain=ARCL); add("tom","タム",0.18,0,tom,barGain=ARCL,reverb=0)
+add("bass","メロディベース",0.76,0,per(f_bass),barGain=ARCL)
 GI=os.environ.get('PUNK_INST','crunch'); GA=os.environ.get('PUNK_AMP','hardrock'); GD=float(os.environ.get('PUNK_DRIVE','1.2')); CLAMP_HI=76 if GI=='guitar' else 64
 def gclamp(secs):
     # ディストーションギター（刻み）の音域は E2〜E4。高い音は1オクターブ下げ、低い音は上げる
