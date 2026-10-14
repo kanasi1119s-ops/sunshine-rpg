@@ -1,6 +1,6 @@
 # 『ミッドナイト・ベルベット』（仮）: 大人っぽく少し色っぽい、ポップなボカロ風の曲（歌なし）。BPM110・ハ短調、約3分56秒。
 # 雰囲気とジャンルの参考だけ（既存曲の旋律・進行・決まったフレーズは使わない。CLAUDE.md 1-1）。
-# ノリ: 16分の裏打ちのグルーブ、跳ねるスラップベース、エレピ（keys）の裏打ちの和音（2声）、サビは左右の弦。
+# ノリ: 16分の裏打ちのグルーブ、跳ねる指弾きベース（書き出しは --bass finger --drums muldjord）、エレピ（keys）の裏打ちの和音（2声）、サビは左右の弦。
 # 色っぽさ: 7th の和音中心。G7 では ♭9（A♭）の緊張音（わざと。半音のぶつかりの注意は出る）。旋律はサビ・間奏がリードギター（warm-lead-b）、Aメロ・Bメロ・ブリッジは FM エレピ。
 # 構成（108小節）: イントロ4 → Aメロ16 → Bメロ8 → サビ16 → 間奏4 → Aメロ8 → Bメロ8 → サビ16 → ブリッジ8 → サビ16 → 終わり4
 # 使い方: python3 midnight-velvet.py <出力.json>
@@ -223,14 +223,14 @@ PARTS = []
 def add(inst, role, vol, pan, secs, **kw):
     d = {"instrument": inst, "role": role, "volume": vol, "pan": pan, "notes": cat(secs, role)}; d.update(kw); PARTS.append(d)
 A = ARC
-DR = -6
+DR = -11   # ドラムは -11dB（点数の試行で決めた）
 add("fmEpiano", "旋律（FMエレピ）", 0.22, -0.05, per(f_piano_mel), barGain=A, reverb=0.22, gainDb=2)
-add("leadGuitar", "旋律（リードギター）", 0.16, 0.08, per(f_lead), barGain=A, gainDb=3, guitarTone="warm-lead-b")
+add("leadGuitar", "旋律（リードギター）", 0.16, 0.08, per(f_lead), barGain=A, gainDb=5, guitarTone="warm-lead-b")
 add("keys", "エレピ（3度）", 0.12, -0.45, per(keys(0)), barGain=A, reverb=0.2)
 add("keys", "エレピ（7度）", 0.11, 0.45, per(keys(1)), barGain=A, reverb=0.2)
 add("strings", "弦（上）", 0.08, 0.6, per(strings(72, 2)), barGain=A, reverb=0.28)
 add("strings", "弦（下）", 0.07, -0.6, per(strings(57, 0)), barGain=A, reverb=0.28)
-add("slap", "スラップベース", 0.3, 0, per(f_bass), barGain=A)
+add("bass", "ベース（指弾き・跳ねる16分）", 0.3, 0, per(f_bass), barGain=A)   # スラップより指弾きのほうが点数が高かった（7.92→8.14）
 add("kick", "キック", 0.3, 0, KICK, barGain=A, gainDb=DR)
 add("snare", "スネア", 0.26, 0, SNARE, barGain=A, push=0.025, gainDb=DR)
 add("hihat", "ハイハット", 0.08, 0, HAT, barGain=A, push=-0.008, gainDb=DR)
@@ -238,7 +238,7 @@ add("crash", "クラッシュ", 0.1, 0, CRASH, barGain=A, gainDb=DR)
 add("tom", "タム", 0.14, 0, TOM, barGain=A, reverb=0, gainDb=DR)
 
 song = {"title": "ミッドナイト・ベルベット（仮）",
-        "description": "（仮）大人っぽく少し色っぽい、ポップなボカロ風の曲（歌なし）。BPM110・ハ短調。16分の裏打ち・スラップベース・エレピの裏打ちの和音。7th 中心で G7 に ♭9。旋律はサビがリードギター（warm-lead-b）、Aメロ・Bメロ・ブリッジが FM エレピ。入り方: 6（ドラムのグルーブだけで2小節→ベースとエレピ）。最後のサビ2回は半音上（嬰ハ短調）。終わり方: サビの頭の動機で終わる。動機: G5:0.75 Ab5:0.25 G5:0.5 Eb5:0.5（サビ頭）。",
+        "description": "（仮）大人っぽく少し色っぽい、ポップなボカロ風の曲（歌なし）。BPM110・ハ短調。16分の裏打ち・跳ねる指弾きベース・エレピの裏打ちの和音。7th 中心で G7 に ♭9。旋律はサビがリードギター（warm-lead-b）、Aメロ・Bメロ・ブリッジが FM エレピ。入り方: 6（ドラムのグルーブだけで2小節→ベースとエレピ）。最後のサビ2回は半音上（嬰ハ短調）。終わり方: サビの頭の動機で終わる。動機: G5:0.75 Ab5:0.25 G5:0.5 Eb5:0.5（サビ頭）。",
         "bpm": 110, "beats": 4, "chords": " ".join(chords), "barsPerChord": 1, "repeats": 1,
         "tone": "pop", "feel": "pop", "human": 0.3, "dynamics": "natural", "autoAccompaniment": False,
         "parts": PARTS}
