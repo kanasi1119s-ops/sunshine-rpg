@@ -173,7 +173,7 @@ add("bass","ベース（8分）",0.2,0,per(f_bass),barGain=ARCL)
 add("distGuitar","リズムギター（左）",0.11,-0.8,per(lambda a,b,c,d:f_gtr(a,b,c,d,0)),amp="loudrock",humanPitch=0,chorus=0,reverb=0.1,barGain=ARCL)
 add("distGuitar","リズムギター（右）",0.11,0.8,per(lambda a,b,c,d:f_gtr(a,b,c,d,1)),amp="loudrock",humanPitch=0,chorus=0,reverb=0.1,push=0.006,barGain=ARCL)
 add("guitar","クリーンのアルペジオ",0.2,-0.3,per(f_arp),amp="crystal",humanPitch=0,chorus=0,reverb=0.3)
-add("strings","弦",0.08,0,per(f_str),reverb=0.3,sustain=1.5,patch="cello")  # 弦アンサンブル(48)は出だしで音程が落ちる「ぽーん」があるので使わない
+add("strings","弦",0.08,0,per(f_str),reverb=0.3,sustain=1.5)
 add("brass","メロディ（トランペット）",0.22,0.05,per(f_lead),patch="trumpet",breath=True,reverb=0.25,fx=[{"type":"delay","beats":0.75,"mix":0.1,"feedback":0.2}])
 add("piano","ソロ（ピアノ）",0.2,0.1,per(f_solo),reverb=0.25)
 song={"title":"夜明けのスプリント（メロコア）","description":"（見本・仮）メロディックハードコア。D長調・bpm176・約2分。8分のパワーコードを伸ばして鳴らし、ドラムは小節ごとに変えて緩急をつけた。メロディはトランペット、ソロはピアノ。歌なし。ギターにビブラート・しゃくり・コーラスなし。","bpm":176,"beats":4,"chords":" ".join(chords),"barsPerChord":1,"repeats":1,"tone":"rock","feel":"rock","human":0.25,"autoScoop":False,"instrumentCheck":False,"dynamics":"natural","drumMix":{"tom":{"reverb":0.0,"spread":0.5}},"parts":PARTS}

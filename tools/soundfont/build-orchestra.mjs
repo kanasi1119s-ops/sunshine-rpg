@@ -8,7 +8,7 @@
 import fs from "fs";
 import path from "path";
 import { SR, decodeMono, loadBank, timecents, compressBank, BasicSoundBank, GeneratorTypes, emptyPresetFrom } from "./lib.mjs";
-import { BasicSample, SampleTypes } from "spessasynth_core";
+import { BasicSample, BasicInstrument, SampleTypes } from "spessasynth_core";
 
 const VSCO = process.env.VSCO ?? "/tmp/vsco";
 const OUT = path.resolve("assets-src/soundfont/extra");
@@ -320,8 +320,14 @@ function emptyInstrument(program, name) {
   preset.zones[0].velRange = { min: 0, max: 127 }; // 残した1つ目は「いちばん強い音だけ」の割りあてだったので、全部の強さで鳴るように広げる
   preset.zones[0].keyRange = { min: 0, max: 127 };
   preset.name = name;
-  const inst = preset.zones[0].instrument;
-  while (inst.zones.length) inst.deleteZone(0, true);
+  // 【2026-10-14 の不具合の修正】clonePreset は、元の楽器（instrument）を名前で共有する。game.sf3 では 19・20・41・43・48・49・57・58・70・72・117・118・121 が
+  // 同じ「Strings」を指していたので、その中身を空にして作り直すたびに、先に作った楽器（ヴィオラ・弦アンサンブル・トロンボーン…）が
+  // あとから作った楽器（最後はインパクト音）に上書きされ、13個の楽器がすべてインパクト音になっていた（出だしで音程が落ちる「ぽーん」）。
+  // 楽器ごとに新しい instrument を作って割りあてる。
+  const inst = new BasicInstrument();
+  inst.name = name;
+  out.addInstruments(inst);
+  preset.zones[0].instrument = inst;
   // 元の楽器の共通設定（音が減衰して消える設定・フィルター・音量の補正など）を捨てて、録音そのままの音にする
   inst.globalZone.generators = [];
   preset.globalZone.generators = preset.globalZone.generators.filter((g) => g.type !== 48);
