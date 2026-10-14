@@ -85,7 +85,7 @@ describe("提案11: 仕上げのプリセット jpop-band", () => {
     const jpop = line("jpop-band");
     expect(jpop).not.toBe("");
     // 大きさ・広がり・圧縮などは rock-clean と同じ
-    for (const part of ["lufs: -10", "widen: 1.25", "glue: \"bus2\"", "hpf: 25", "type: \"peak\", f: 100, g: 0.5", "type: \"hs\", f: 6000, g: 1"]) { expect(rock).toContain(part); expect(jpop).toContain(part); }
+    for (const part of ["lufs: -13.5", "widen: 1.0", "glue: \"bus2\"", "hpf: 25", "type: \"peak\", f: 100, g: 0.5", "type: \"hs\", f: 6000, g: 1"]) { expect(rock).toContain(part); expect(jpop).toContain(part); }
     for (const part of ["f: 250, g: -1", "f: 2000, g: 0.5", "type: \"hs\", f: 8000, g: 1.5"]) { expect(jpop).toContain(part); expect(rock).not.toContain(part); }
   });
 });

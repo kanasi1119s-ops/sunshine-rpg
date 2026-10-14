@@ -197,3 +197,7 @@
 
 ### 規約は使える（CC0 / CC BY）が、まだ変換していない候補（2026-10-14）
 Naked Drums（Wilkinson Audio、CC BY 4.0、1.3GB）、DRS Kit（CC BY 4.0）、SM Drums（Public Domain）、Swirly Drums・Unruly Drums・Frankensnare・Gogodze Phu Vol I/II（CC0）、Fashionbass・Pastabass・Black and Blue Basses・Swagbass・Ergo EUB（CC0）、Shinyguitar（CC0）、Headroom Piano（CC BY 4.0）、VCSL Keys（CC0）、MTG Solo Sax（CC BY 4.0）、Bear Sax・Weresax・War Tuba（CC0）、Minifreak Pads・Wavestate Pads（SHLD Music、CC0）。根拠は SFZ Instruments の一覧（https://sfzinstruments.github.io/ 、2026-10-14 確認）。**使う前に各リポジトリの LICENSE 本文を読んでから、この表に移すこと。**
+
+### 2026-10-14 人間の判断（旭さん）
+- 作曲ソフトへの追加音源の組み込みを許可（「入れて良いです」）。組み込み先は作曲ソフト（tools/composer/entry.ts）のみで、ゲーム本体の `dist/` には入れていない。ゲームに入れる場合は別途、容量予算とクレジット（Greg Sullivan のエレピ3種は CC BY 3.0 で表記必須）を確認する。
+- 書き出しの仕上げは「B」（-13.5 LUFS・左右の広げなし）を標準にした（rock-clean・rock-clear・jpop-band）。

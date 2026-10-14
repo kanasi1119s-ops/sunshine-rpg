@@ -28,6 +28,31 @@ import orchestraUrl from "../../assets-src/soundfont/extra/orchestra.sf3?url";
 import pianoSalamanderUrl from "../../assets-src/soundfont/extra/piano-salamander.sf3?url";
 import synthsUrl from "../../assets-src/soundfont/extra/synths.sf3?url";
 import drumsMuldjordUrl from "../../assets-src/soundfont/extra/drums-muldjord.sf3?url";
+import guitarFsbsDirectUrl from "../../assets-src/soundfont/extra/guitar-fsbs-direct.sf3?url";
+import guitarFsbsCleanUrl from "../../assets-src/soundfont/extra/guitar-fsbs-clean-small.sf3?url";
+import guitarFsbsJazzUrl from "../../assets-src/soundfont/extra/guitar-fsbs-jazz-small.sf3?url";
+import guitarEmilyUrl from "../../assets-src/soundfont/extra/guitar-emily.sf3?url";
+import guitarNylonUrl from "../../assets-src/soundfont/extra/guitar-nylon-spanish.sf3?url";
+import bassGrowlyUrl from "../../assets-src/soundfont/extra/bass-growly.sf3?url";
+import drumsRockAuxUrl from "../../assets-src/soundfont/extra/drums-rock-aux.sf3?url";
+import drumsMuldjordAuxUrl from "../../assets-src/soundfont/extra/drums-muldjord-aux.sf3?url";
+import drumsJpopAuxUrl from "../../assets-src/soundfont/extra/drums-jpop-aux.sf3?url";
+import drumsMetalAuxUrl from "../../assets-src/soundfont/extra/drums-metal-aux.sf3?url";
+import drumsJazzAuxUrl from "../../assets-src/soundfont/extra/drums-jazz-aux.sf3?url";
+import drumsSupraAuxUrl from "../../assets-src/soundfont/extra/drums-supra-aux.sf3?url";
+import pianoUprightUrl from "../../assets-src/soundfont/extra/piano-upright-kw.sf3?url";
+import pianoUprightBrightUrl from "../../assets-src/soundfont/extra/piano-upright-kw-bright.sf3?url";
+import epianoCp80Url from "../../assets-src/soundfont/extra/epiano-cp80.sf3?url";
+import epianoWurlitzerUrl from "../../assets-src/soundfont/extra/epiano-wurlitzer-ep200.sf3?url";
+import epianoPianetUrl from "../../assets-src/soundfont/extra/epiano-pianet-t.sf3?url";
+import organDrawbarUrl from "../../assets-src/soundfont/extra/organ-drawbar.sf3?url";
+import organPercUrl from "../../assets-src/soundfont/extra/organ-percussive.sf3?url";
+import organRockUrl from "../../assets-src/soundfont/extra/organ-rock.sf3?url";
+import organChurchUrl from "../../assets-src/soundfont/extra/organ-church.sf3?url";
+import padNewageUrl from "../../assets-src/soundfont/extra/synth-pad-newage.sf3?url";
+import padChoirUrl from "../../assets-src/soundfont/extra/synth-pad-choir.sf3?url";
+import padBowedUrl from "../../assets-src/soundfont/extra/synth-pad-bowed.sf3?url";
+import padSweepUrl from "../../assets-src/soundfont/extra/synth-pad-sweep.sf3?url";
 import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url";
 import { AudioEngine } from "../../src/audio/audio-engine";
 import { allEntries, getTrack, STYLE_LABEL } from "../../src/audio/catalog";
@@ -85,6 +110,7 @@ const BASS_FONTS: Record<string, { label: string; url: string | null }> = {
   metal: { label: "メタルベース", url: bassMetalUrl },
   jazz: { label: "ジャズベース", url: bassJazzUrl },
   jpop: { label: "J-POPベース", url: bassJpopUrl },
+  growly: { label: "Growly Bass（Jazz Bass の指弾き。Karoryfer。CC0）", url: bassGrowlyUrl },
 };
 const DRUM_FONTS: Record<string, { label: string; url: string | null }> = {
   std: { label: "標準（上の音源）", url: null },
@@ -94,12 +120,23 @@ const DRUM_FONTS: Record<string, { label: string; url: string | null }> = {
   jazz: { label: "ジャズドラム", url: drumsJazzUrl },
   jpop: { label: "J-POPドラム", url: drumsJpopUrl },
   supra: { label: "スープラ（乾いた金属スネア）", url: drumsSupraUrl },
+  "rock-aux": { label: "ロックドラム＋録音の小物（シェイカー・タンバリンなど）", url: drumsRockAuxUrl },
+  "muldjord-aux": { label: "Muldjord＋録音の小物", url: drumsMuldjordAuxUrl },
+  "jpop-aux": { label: "J-POPドラム＋録音の小物", url: drumsJpopAuxUrl },
+  "metal-aux": { label: "メタルドラム＋録音の小物", url: drumsMetalAuxUrl },
+  "jazz-aux": { label: "ジャズドラム＋録音の小物", url: drumsJazzAuxUrl },
+  "supra-aux": { label: "スープラ＋録音の小物", url: drumsSupraAuxUrl },
 };
 // ギター（ジャズギター26・クリーンギター27）の音源。Karoryfer Samples「Black And Green Guitars」（CC0）の録音
 const GUITAR_FONTS: Record<string, { label: string; url: string | null }> = {
   std: { label: "標準（上の音源）", url: null },
   gretsch: { label: "Gretsch（明るいクリーン）", url: guitarGretschUrl },
   hofner: { label: "Hofner（丸い音）", url: guitarHofnerUrl },
+  "fsbs-direct": { label: "FSBS 直接録音（アンプに通す前提。CC0）", url: guitarFsbsDirectUrl },
+  "fsbs-clean": { label: "FSBS クリーン（アンプ・エフェクト入りの録音。CC0）", url: guitarFsbsCleanUrl },
+  "fsbs-jazz": { label: "FSBS ジャズ（CC0）", url: guitarFsbsJazzUrl },
+  emily: { label: "Emily（直接録音。ハムバッカー系で太い。CC0）", url: guitarEmilyUrl },
+  nylon: { label: "ナイロンギター（スパニッシュ。CC0）", url: guitarNylonUrl },
   pluck: { label: "弦モデル（やわらかく温かい。標準の弦モデル）", url: guitarPluckWarmUrl },
   "pluck-mellow": { label: "弦モデル（さらにまろやか）", url: guitarPluckMellowUrl },
   "pluck-deep": { label: "弦モデル（重く低音寄り）", url: guitarPluckDeepUrl },
@@ -116,6 +153,20 @@ const ORCH_FONTS: Record<string, { label: string; url: string | null }> = {
 const PIANO_FONTS: Record<string, { label: string; url: string | null }> = {
   std: { label: "標準（上の音源）", url: null },
   salamander: { label: "グランドピアノ（Salamander）", url: pianoSalamanderUrl },
+  upright: { label: "アップライトピアノ（Karoryfer。CC0）", url: pianoUprightUrl },
+  "upright-bright": { label: "アップライトピアノ 明るめ（CC0）", url: pianoUprightBrightUrl },
+  // 鍵盤・オルガン・パッド（GM の番号を差し替える。曲の keys はエレピ=4、organ=16〜19、pad=88〜95）
+  cp80: { label: "エレピ CP80（Greg Sullivan。CC BY 3.0・クレジット必須）", url: epianoCp80Url },
+  wurlitzer: { label: "エレピ Wurlitzer EP200（Greg Sullivan。CC BY 3.0・クレジット必須）", url: epianoWurlitzerUrl },
+  pianet: { label: "エレピ Pianet T（Greg Sullivan。CC BY 3.0・クレジット必須）", url: epianoPianetUrl },
+  "organ-drawbar": { label: "オルガン ドローバー（16）", url: organDrawbarUrl },
+  "organ-perc": { label: "オルガン パーカッシブ（17）", url: organPercUrl },
+  "organ-rock": { label: "オルガン ロック（18）", url: organRockUrl },
+  "organ-church": { label: "パイプオルガン（19）", url: organChurchUrl },
+  "pad-newage": { label: "パッド ニューエイジ（88）", url: padNewageUrl },
+  "pad-choir": { label: "パッド コーラス（91）", url: padChoirUrl },
+  "pad-bowed": { label: "パッド ボウド（92）", url: padBowedUrl },
+  "pad-sweep": { label: "パッド スウィープ（95）", url: padSweepUrl },
 };
 let orchId = "std";
 let pianoId = "std";
