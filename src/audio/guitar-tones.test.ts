@@ -5,7 +5,7 @@ import { applyGuitarTone, GUITAR_TONES } from "./guitar-tones";
 describe("ギターの音色プリセット（guitarTone）", () => {
   it("書かれていない項目だけ入れ、パートの値を優先する", () => {
     const w: string[] = [];
-    const p = applyGuitarTone({ instrument: "leadGuitar", guitarTone: "warm-lead-b", reverb: 0.1 }, "p", w);
+    const p: Record<string, unknown> = applyGuitarTone<Record<string, unknown>>({ instrument: "leadGuitar", guitarTone: "warm-lead-b", reverb: 0.1 }, "p", w);
     expect(p.amp).toBe("overdrive");
     expect(p.ampCabIr).toBe("dfc-ampmix");
     expect(p.reverb).toBe(0.1);
