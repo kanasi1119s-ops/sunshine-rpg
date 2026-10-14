@@ -69,7 +69,8 @@ def drum(sec,k,n,rnd,si):
         if last: kk=sn="X..............."; hh=z; cr="g:X..............."
     return "g:"+kk,"g:"+sn,"g:"+hh,cr,tm,ride
 def tomtok(tm):
-    pit=["C4","A3","G3","E3","C3","A2"]; hits=[j for j,c in enumerate(tm) if c in "xX"]; toks=[]; kk=0
+    # 高いタムの「ポンポン」を避け、低めの2〜3本だけ使う
+    pit=["E3","E3","C3","C3","A2","A2"]; hits=[j for j,c in enumerate(tm) if c in "xX"]; toks=[]; kk=0
     for j,c in enumerate(tm):
         if c in "xX": toks.append(pit[min(5,kk*6//len(hits))]+":0.25"+("!" if c=="X" else "")); kk+=1
         else: toks.append("R:0.25")
@@ -163,7 +164,7 @@ def add(inst,role,vol,pan,secs,**kw):
     d={"instrument":inst,"role":role,"volume":vol,"pan":pan,"notes":cat(secs,role)}; d.update(kw); PARTS.append(d)
 ARCL=[round(x,3) for x in ARC]
 add("kick","キック",0.2,0,kick,barGain=ARCL); add("snare","スネア",0.17,0,snare,barGain=ARCL,push=0.02); add("hihat","ハイハット",0.07,0,hat,barGain=ARCL,push=-0.008)
-add("crash","クラッシュ",0.09,0,crash,barGain=ARCL); add("crash","ライド",0.08,0.15,rideL,barGain=ARCL); add("tom","タム",0.2,0,tom,barGain=ARCL)
+add("crash","クラッシュ",0.09,0,crash,barGain=ARCL); add("crash","ライド",0.08,0.15,rideL,barGain=ARCL); add("tom","タム",0.14,0,tom,barGain=ARCL)
 add("bass","ベース（8分）",0.2,0,per(f_bass),barGain=ARCL)
 add("distGuitar","リズムギター（左）",0.11,-0.8,per(lambda a,b,c,d:f_gtr(a,b,c,d,0)),amp="loudrock",humanPitch=0,chorus=0,reverb=0.1,barGain=ARCL)
 add("distGuitar","リズムギター（右）",0.11,0.8,per(lambda a,b,c,d:f_gtr(a,b,c,d,1)),amp="loudrock",humanPitch=0,chorus=0,reverb=0.1,push=0.006,barGain=ARCL)
