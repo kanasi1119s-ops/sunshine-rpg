@@ -140,6 +140,34 @@ export function cabImpulse(sampleRate: number, kind: CabKind = "closed", mic: Mi
   return ir;
 }
 
+// ───────────── 録音のキャビネットIR（2026-10-15） ─────────────
+// 本物のスピーカーの箱をマイクで録った応答（docs/assets-credits.md で規約を確かめたもの）。データは作曲ソフトの側
+// （tools/composer/cab-irs.ts）から registerCabIr で登録する。ゲーム本体には入れない（登録されていなければ近似の箱に戻る）。
+const RECORDED_IRS = new Map<string, { data: Float32Array; rate: number }>();
+/** 録音のキャビネットIRを名前で登録する（data はモノラル）。 */
+export function registerCabIr(name: string, data: Float32Array, rate: number): void {
+  RECORDED_IRS.set(name, { data, rate });
+}
+/** 登録ずみの録音IRの名前の一覧。 */
+export function recordedCabIrNames(): string[] {
+  return [...RECORDED_IRS.keys()];
+}
+/** 録音IRを、出力のサンプルレートに直し（線形補間）、1kHz の大きさが 1 になるようにそろえて返す。なければ null。 */
+export function recordedCabImpulse(name: string, sampleRate: number): Float32Array | null {
+  const r = RECORDED_IRS.get(name);
+  if (!r) return null;
+  const ratio = r.rate / sampleRate;
+  const len = Math.max(1, Math.floor(r.data.length / ratio));
+  const out = new Float32Array(len);
+  for (let n = 0; n < len; n++) {
+    const x = n * ratio, i = Math.floor(x), f = x - i;
+    out[n] = (r.data[i] ?? 0) * (1 - f) + (r.data[i + 1] ?? 0) * f;
+  }
+  const m = magnitudeAt(out, 1000, sampleRate);
+  if (m > 1e-6) for (let n = 0; n < len; n++) out[n] /= m;
+  return out;
+}
+
 /** 全波整流（|x|）の曲線。オクターブアップ（Octavia 系）の中身。 */
 export function rectifierCurve(size = 2048, preGain = 3): Float32Array<ArrayBuffer> {
   const c = new Float32Array(size) as Float32Array<ArrayBuffer>;
@@ -366,7 +394,8 @@ export function buildExtraFx(ctx: BaseAudioContext, spec: FxSpec, mixDefault: nu
       const f = frame(1);
       const kind: CabKind = spec.tone !== undefined && spec.tone < 3600 ? "dark" : spec.tone !== undefined && spec.tone > 5200 ? "bright" : "closed";
       const mic: MicPos = spec.size !== undefined && spec.size > 1.5 ? "far" : spec.size !== undefined && spec.size < 0.7 ? "off" : "center";
-      const data = cabImpulse(ctx.sampleRate, kind, mic);
+      // ir に録音IRの名前を書けば、近似の箱のかわりに本物の録音で畳み込む（登録がなければ近似に戻る）
+      const data = (spec.ir ? recordedCabImpulse(spec.ir, ctx.sampleRate) : null) ?? cabImpulse(ctx.sampleRate, kind, mic);
       const buf = ctx.createBuffer(1, data.length, ctx.sampleRate);
       buf.getChannelData(0).set(data);
       const conv = ctx.createConvolver();

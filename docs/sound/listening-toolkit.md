@@ -52,3 +52,8 @@ Claude Code は音を耳で聞けない。そこで、数字では分かりに�
 - パンク『稲妻ダッシュ』: `--guitar emily`（ハムバッカーの直接録音）8.10 ＞ fsbs-direct 7.96 ≒ shiny 7.97。**歪みギターの元の音は emily がいちばん高い。**
 - ポップ『夏色シグナル』: gretsch・shiny・emily とも 8.00 前後（ギターが小さめの編曲なので差が出ない）。
 - 注意: aes-tune の2並列で、作曲ソフトの作り直し（src を変えた直後）が重なると書き出しに失敗する。src や音源を変えたら、先に1回だけふつうに build してから回す。
+
+### 録音のキャビネットIR（2026-10-15）
+- 内蔵アンプ（hardrock など）にはキャビネットの段がなく、cabir もフィルターの近似だった。録音IR（David Fau Casquel、CC BY 3.0）を6つ入れ、`{"type":"cabir","ir":"dfc-…"}` で使えるようにした（名前: dfc-ampmix・dfc-ampmix2・dfc-axhom・dfc-bestplugins・dfc-bestplugins2・dfc-mixxx）。
+- パンク（Emily）で: 点数はどれも 8.07〜8.10（IRなし 8.10）。点数はギターの音色にほぼ反応しない。
+- 全体の音の変化（IRなしとの差、1.5〜3kHz）: bestplugins +4.1dB（いちばん「張り」が出る）・axhom +1.7（500Hz〜3kが前に出る）・bestplugins2 +2.0・mixxx +1.4・ampmix +1.0。どれが良いかは耳で決める。

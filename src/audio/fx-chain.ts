@@ -45,6 +45,8 @@ export interface FxSpec {
   ratio?: number;
   /** bitcrusher: ビット数（2〜12）。 */
   bits?: number;
+  /** cabir: 録音のキャビネットIRの名前（作曲ソフトに登録されたもの。例 "dfc-ampmix"）。省略は近似の箱。 */
+  ir?: string;
   /** filter: "lowpass" | "highpass" | "bandpass"。 */
   kind?: "lowpass" | "highpass" | "bandpass";
   /** compressor／pcomp: 反応の速さ・戻りの速さ（秒）。省略は compressor が 0.012／0.2、pcomp が 0.005／0.12。 */

@@ -91,6 +91,15 @@ import bassAcidUrl from "../../assets-src/soundfont/extra/synth-bass-acid.sf3?ur
 import bassDx7Url from "../../assets-src/soundfont/extra/synth-bass-dx7.sf3?url";
 import processorUrl from "spessasynth_lib/dist/spessasynth_processor.min.js?url";
 import { AudioEngine } from "../../src/audio/audio-engine";
+import { registerCabIr } from "../../src/audio/fx-extra";
+import { CAB_IRS } from "./cab-irs";
+// 録音のキャビネットIRを登録する（fx の cabir に "ir": "dfc-ampmix" などと書くと使える。ゲーム本体には入れない）
+for (const ir of CAB_IRS) {
+  const bin = atob(ir.b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  registerCabIr(ir.name, new Float32Array(bytes.buffer), ir.rate);
+}
 import { allEntries, getTrack, STYLE_LABEL } from "../../src/audio/catalog";
 import "../../src/audio/user-songs";
 import "../../src/audio/archive-songs";
