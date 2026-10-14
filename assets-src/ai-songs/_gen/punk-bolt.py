@@ -1,7 +1,7 @@
 # 『稲妻ダッシュ』（パンク）v2: ギターはリフ中心。E長調・bpm200。ギター（歪みのリフを左右に重ねる。リードギターの音色は使わない）・メロディベース・ドラムの3人編成。(見本・仮。耳では確かめていない)
 # 方針: ドラムは小節ごとに型を変え barGain で強弱の曲線＋間（ストップ）＋ハーフタイム。ギターは `~` なし・短く切らない。
 #       タムは低め(E3・C3・A2)の少数・残響0（banned-sounds 12・13）。弦アンサンブルは使わない。
-import json,sys,random,re
+import json,sys,random,re,os
 def fmt(x): return ("%.4f"%x).rstrip("0").rstrip(".")
 N=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
 def nm(m): return f"{N[m%12]}{m//12-1}"
@@ -210,13 +210,14 @@ ARCL=[round(x,3) for x in ARC]
 add("kick","キック",0.17,0,kick,barGain=ARCL); add("snare","スネア",0.15,0,snare,barGain=ARCL,push=0.02); add("hihat","ハイハット",0.05,0,hat,barGain=ARCL,push=-0.008)
 add("crash","クラッシュ",0.06,0,crash,barGain=ARCL); add("crash","ライド",0.05,0.15,rideL,barGain=ARCL); add("tom","タム",0.09,0,tom,barGain=ARCL,reverb=0)
 add("bass","メロディベース",0.38,0,per(f_bass),barGain=ARCL)
+GI=os.environ.get('PUNK_INST','distGuitar'); GA=os.environ.get('PUNK_AMP','hardrock'); GD=float(os.environ.get('PUNK_DRIVE','1.2')); CLAMP_HI=76 if GI=='guitar' else 64
 def gclamp(secs):
     # ディストーションギター（刻み）の音域は E2〜E4。高い音は1オクターブ下げ、低い音は上げる
     def fix(t):
         m=re.match(r"^([A-G]#?)(-?\d)(:.*)$",t)
         if not m: return t
         v=PCN[m.group(1)[0]]+(1 if m.group(1).endswith("#") else 0)+(int(m.group(2))+1)*12
-        while v>76: v-=12
+        while v>CLAMP_HI: v-=12
         while v<40: v+=12
         return nm(v)+m.group(3)
     return [[fix(t) for t in (sec.split() if isinstance(sec,str) else sec)] for sec in secs]
@@ -235,8 +236,8 @@ def octdown(secs):
     return out
 GT2=octdown(GT)
 # 重く・歪みを少し足す: ampDrive 1.4。右のギターは1オクターブ下げて低域の厚みを足す
-add("guitar","リフギター（左・録音ギター）",0.2,-0.7,GT,amp="hardrock",ampDrive=1.3,humanPitch=0,chorus=0,reverb=0.1,barGain=ARCL)
-add("guitar","リフギター（右・1オクターブ下）",0.2,0.7,GT2,amp="hardrock",ampDrive=1.3,humanPitch=0,chorus=0,reverb=0.1,push=0.006,barGain=ARCL)
+add(GI,"リフギター（左）",0.2 if GI=="guitar" else 0.12,-0.7,GT,amp=GA,ampDrive=GD,humanPitch=0,chorus=0,reverb=0.1,barGain=ARCL)
+add(GI,"リフギター（右・1オクターブ下）",0.2 if GI=="guitar" else 0.12,0.7,GT2,amp=GA,ampDrive=GD,humanPitch=0,chorus=0,reverb=0.1,push=0.006,barGain=ARCL)
 song={"title":"稲妻ダッシュ（パンク）","description":"（見本・仮）bpm200・E長調・約1分40秒の疾走パンク。ギター（歪みのリフを左右に重ねる。リードギターの音色は使わない）・メロディベース・ドラムの3人編成。Aメロはオクターブのリフ、サビは厚いオクターブのリフ、間奏のストップ（間）、ハーフタイムのブリッジ（ベースが旋律）、リフで押すソロ。ギターはずっとリフ中心。ドラムは小節ごとに型を変えて強弱をつけた。ギターにビブラートなし。","bpm":200,"beats":4,"chords":" ".join(chords),"barsPerChord":1,"repeats":1,"tone":"rock","feel":"rock","human":0.3,"autoScoop":False,"instrumentCheck":False,"dynamics":"natural","drumMix":{"kick":{"level":1.05,"tune":-2},"snare":{"level":1.05,"tune":-2,"reverb":0.15},"tom":{"reverb":0.0,"spread":0.5,"level":1.05,"tune":-4}},"parts":PARTS}
 json.dump(song,open(sys.argv[1],"w"),ensure_ascii=False,indent=1)
 print("ok",len(PARTS),len(chords),"bars")
