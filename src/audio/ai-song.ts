@@ -1,4 +1,5 @@
 import { FX_TYPES, FX_INFO, type FxSpec } from "./fx-chain";
+import { applyGuitarTone, GUITAR_TONES } from "./guitar-tones";
 import { noteNameToMidi } from "./note";
 import { buildNewSong, NEW_SONG_FEELS, type NewSongFeel } from "./newsong";
 import { DRUM_GENRES, drumMixFor, swingForGenre } from "./drum-genres";
@@ -111,6 +112,8 @@ export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   ampCab?: string;
   /** 録音のキャビネットIRの名前（作曲ソフトのみ。例 "dfc-axhom"）。"none" で外す。省略すると歪み系のアンプは標準の IR を通す。 */
   ampCabIr?: string;
+  /** ギターの音色プリセットの名前（guitar-tones.ts。例 "warm-lead-a"・"warm-lead-b"）。アンプ・歪み・キャビネット・残響・ディレイをまとめて入れる。パートに書いた項目が優先。 */
+  guitarTone?: string;
   amp: AiNamAmp | "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean" | KeysAmpType;
   /** セクションごとの出し入れ。{ intro: 0, verse: 0.6, chorus: 1, solo: { gain: 1, octave: 1 } }。数字＝音量の倍率（0＝休み）、octave＝オクターブずらし。書かなかったセクションは1。曲の sections（または scene）が必要。 */
   sections?: PartSectionSpecJson;
@@ -329,6 +332,7 @@ export const AI_SONG_SCHEMA = {
           ampTone: { type: "number" },
           ampCab: { type: "string" },
           ampCabIr: { type: "string" },
+          guitarTone: { type: "string" },
           amp: { type: "string", enum: [...NAM_AMP_KEYS, "auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", ...KEYS_AMP_TYPES] },
           ...AI_PART_EXTRA_SCHEMA,
           ...AI_PART_JPOP_SCHEMA,
@@ -391,6 +395,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - sections: 自動の伴奏（autoAccompaniment: true）に、曲の起伏をつける。"auto" なら定番の構成（導入4 → Aメロ8 → Bメロ4 → サビ8 → 間奏4 → Aメロ → Bメロ → サビ → サビ → 終わり4。曲の小節数に合わせて自動で区切る）。自分で決めるなら [{"kind":"intro","bars":4},{"kind":"verse","bars":8},{"kind":"pre","bars":4},{"kind":"chorus","bars":8}] のように書く（kind は intro・verse・pre・chorus・interlude・bridge・outro と、build（ビルド＝キック・ハイハット・スネア・ベースだけで、スネアを4分→8分→16分と密にして強くする）・break（ブレイク＝鍵盤と弦だけ）・drop（ドロップ＝全部＋頭のクラッシュ。キックとベースが同時に戻る）・solo（ソロ＝リズム隊を小さくして旋律側を立てる）・tag（余韻＝ベース・鍵盤・弦の長音だけ）。bars の合計が曲の小節数になるようにする。ちがうときは最後を延ばすか、後ろを切る）。導入＝ピアノと弦だけ、Aメロ＝ドラム（キックとハイハット）とベースを足す、Bメロ＝スネアとギターを足して少しずつ強く、サビ＝全部とクラッシュ、間奏＝ドラムを抜く、Cメロ・終わり＝静かに。サビの前の小節は、スネアとキックで助走をつける。メロディなど自分で書いたパートには効かないので、メロディ側の強弱は phrase や ! , で付ける。
 - 編曲の自動化（2026-10-11。詳しくは docs/sound/arrangement-deep.md 末尾の「実装状況」）:
   - gainDb: 音量の上乗せ（dB。-12〜+18）。volume は内部で音の強さ（ベロシティ）になり約0.22で頭打ちなので、それ以上に大きくしたいパート（リードなど）はこれを足す。+3dB で約1.4倍。
+  - guitarTone（ギターの音色プリセット）: パートに "guitarTone": "warm-lead-a"（響く温かいリード。lead アンプの浅い歪み・中域が太い）か "warm-lead-b"（こもった軽い歪みのリード。オーバードライブ＋丸い録音キャビネット）と書くと、アンプ・歪み・高音・キャビネット・残響・ディレイをまとめて入れる（ビブラート・チョーキング・自動のしゃくりなし）。パートに同じ項目を書けばそちらが優先。旋律やソロの leadGuitar・guitar に。
   - fx（エフェクター）: パートに "fx": [{"type":"delay","beats":0.75,"mix":0.2},{"type":"reverb","mix":0.15}] のように、アンプのあとへ書いた順につなぐ（最大8個）。mix＝元の音との混ぜ具合。ms／beats＝delay・pingpong の間隔、feedback＝くり返し、rate／depth＝ゆれ、freq／q＝wah・filter、gain／level＝boost・tubescreamer・fuzz、low／mid／midHz／high＝eq、threshold／ratio／attack／release（秒）＝compressor・pcomp、bits＝bitcrusher、pre:true＝アンプの前につなぐ（歪み・ブースター・コンプ・ワウ・ファズはここが本来の位置）。種類: ${Object.entries(FX_INFO).map(([k, v]) => `${k}＝${v.label}`).join("・")}。ギターのリードに delay＋plate を薄く、ドラムに room、ベースに compressor など。ミキサーの音量・パン・アンプとは別に効く。
   - scene: 場面プリセット。"scene": "battle" のように書くと、sections・feel・tone・dynamics・layers・energy・crashAt・modulate などの既定値が入る（曲に書いた値が優先）。使える場面: ${SCENE_NAMES.join("・")}。bpm が場面の目安から外れると注意が出る。
   - sections の各要素に "from"（この場面に入るときのつなぎ。${TRANSITIONS.join("・")}。stopBeat＝直前の1拍を全員止める、break1bar＝直前の1小節を全員止める、riser＝直前の2小節で強くしてハイハットを16分に、kime＝直前の1小節を全員で同じリズム（1拍目・2拍目のウラ・3拍目）で打つ。break と drop の前は何も書かなくても stopBeat）と "crash"（true／強さ。この場面の頭にクラッシュ）を書ける。例 {"kind":"chorus","bars":8,"from":"stopBeat"}。止めるつなぎは手書きのパートにも効く（持続音を残したいパートは keepBreak: true）。
@@ -682,6 +687,11 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   if (!input || typeof input !== "object") throw new Error("AIソングのJSONではありません");
   // Am*2・sectionChords・atBar の転調・loopTail をふつうの形に直し、場面プリセット（scene）の既定値を入れる
   const song = applyJpopSong(applyScene(prepareSong(expandSongExtras(input as AiSong, warnings), warnings), warnings), warnings);
+  // ギターの音色プリセット（guitarTone）を、パートに書かれていない項目だけ入れる（guitar-tones.ts）
+  if (Array.isArray(song.parts)) {
+    song.parts = song.parts.map((p, i) => applyGuitarTone(p as unknown as Record<string, unknown>, `parts[${i}]`, warnings) as unknown as AiPart);
+    if (song.autoScoop === undefined && song.parts.some((p) => p.guitarTone && GUITAR_TONES[p.guitarTone]?.noScoop)) song.autoScoop = false;
+  }
   const bpm = Math.round(Number(song.bpm));
   if (!(bpm >= 40 && bpm <= 260)) errors.push(`bpm は 40〜260 にしてください（${song.bpm}）`);
   if (!beatsOk(song.beats)) errors.push(`beats は ${MIN_BEATS}〜${MAX_BEATS} の整数にしてください（${song.beats}）`);

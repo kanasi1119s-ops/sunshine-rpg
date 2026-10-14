@@ -10,7 +10,6 @@
  "feel": "vocaloid",
  "human": 0.25,
  "dynamics": "natural",
- "autoScoop": false,
  "autoAccompaniment": false,
  "parts": [
   {
@@ -464,24 +463,8 @@
     0.98,
     0.98
    ],
-   "amp": "distortion",
-   "ampDrive": 0.8,
-   "chorus": 0,
-   "reverb": 0.32,
    "gainDb": 3,
-   "humanPitch": 0,
-   "fx": [
-    {
-     "type": "delay",
-     "beats": 0.75,
-     "mix": 0.18,
-     "feedback": 0.35
-    },
-    {
-     "type": "plate",
-     "mix": 0.16
-    }
-   ]
+   "guitarTone": "warm-lead-b"
   },
   {
    "instrument": "fmBell",
