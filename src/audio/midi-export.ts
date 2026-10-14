@@ -534,7 +534,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         }
       }
       // 長い音の音量の山（CC11）: 立ち上がって、中ほどで最大、終わりへ少し引く。リード・パッド・弦・ブラス・合唱
-      if (Hp > 0 && !n.swell && !score.pump && inst && SWELL_INSTRUMENTS.has(inst) && durTicks >= PPQ) {
+      if (Hp > 0 && !n.swell && !score.pump && inst && SWELL_INSTRUMENTS.has(inst) && durTicks >= PPQ * 2) { // 1拍の音まで山をつけると、4分音符のメロディが1音ずつ「ポンポン」と脈打つので、2拍以上の音だけ
         for (const t of bendTargets) {
           const cc = (at: number, v: number): void => { t.list.push({ tick: at, order: 1, bytes: [0xb0 | t.channel, 11, Math.max(40, Math.min(127, v))] }); };
           cc(tick, 127 - Math.round(38 * Hp));

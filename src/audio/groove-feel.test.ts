@@ -12,10 +12,10 @@ describe("既存の出力は変わらない（提案1〜10は省略時に今ま�
   it("見本曲3つ×版2つ×human 2通りの MIDI・再生用の時刻・長さが、実装前のハッシュと一致", () => {
     // jazz・waltz は dynamics: "natural" なしの曲。自動伴奏のドラムの強さ（MIDI の数字 70〜112）が MIDI 127 に張りついていたのを velocityScale で直したので、ハッシュを更新した（rock は natural なので不変）
     const want: Record<string, string> = {
-      "rock|modern|undefined": "cac023c7|e236bc4d|16", "rock|modern|0.8": "5af27497|e236bc4d|16", "rock|real|undefined": "81f34fd6|e236bc4d|16", "rock|real|0.8": "85122f65|e236bc4d|16",
-      "jazz|modern|undefined": "b37feeb4|77b38a28|13.714285714285714", "jazz|modern|0.8": "9cb324f6|3b2ac85e|13.714285714285714", "jazz|real|undefined": "3ea81a63|77b38a28|13.714285714285714", "jazz|real|0.8": "b6ac0c50|3b2ac85e|13.714285714285714",
+      "rock|modern|undefined": "d81d0d66|e236bc4d|16", "rock|modern|0.8": "6e981f36|e236bc4d|16", "rock|real|undefined": "633e13d7|e236bc4d|16", "rock|real|0.8": "7648224e|e236bc4d|16",
+      "jazz|modern|undefined": "dc831d9e|77b38a28|13.714285714285714", "jazz|modern|0.8": "f41f9e76|3b2ac85e|13.714285714285714", "jazz|real|undefined": "a703fa43|77b38a28|13.714285714285714", "jazz|real|0.8": "ea16f19c|3b2ac85e|13.714285714285714",
       // ワルツの MIDI だけは、拍子記号が 4/4 → 3/4 に直った（ほかの音は同じ。再生用の時刻と長さのハッシュは実装前と同じ）
-      "waltz|modern|undefined": "d750cd1|fd10805e|15", "waltz|modern|0.8": "5204c06|fd10805e|15", "waltz|real|undefined": "1c07389f|fd10805e|15", "waltz|real|0.8": "c438d889|fd10805e|15",
+      "waltz|modern|undefined": "99aac26a|fd10805e|15", "waltz|modern|0.8": "5204c06|fd10805e|15", "waltz|real|undefined": "1c07389f|fd10805e|15", "waltz|real|0.8": "c438d889|fd10805e|15",
     };
     for (const [name, song] of [["rock", ROCK_SONG], ["jazz", JAZZ_SONG], ["waltz", WALTZ_SONG]] as const) for (const edition of ["modern", "real"] as const) for (const human of [undefined, 0.8]) {
       const { score } = aiSongToScore({ ...song, ...(human ? { human } : {}) });

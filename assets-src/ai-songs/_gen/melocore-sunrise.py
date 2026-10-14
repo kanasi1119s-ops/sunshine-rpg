@@ -161,7 +161,11 @@ def f_str(si,sec,n,pr):
     return R(4*n)
 PARTS=[]
 def add(inst,role,vol,pan,secs,**kw):
-    d={"instrument":inst,"role":role,"volume":vol,"pan":pan,"notes":cat(secs,role)}; d.update(kw); PARTS.append(d)
+    d={"instrument":inst,"role":role,"volume":vol,"pan":pan,"notes":cat(secs,role)}; d.update(kw)
+    if inst=="brass":
+        # トランペットが1音ずつ切れて「ポンポン」と聞こえたので、休みに挟まれていない音はつなげる（レガート）
+        tk=d["notes"].split(); d["notes"]=" ".join(t+"_" if (not t.startswith("R:") and i+1<len(tk) and not tk[i+1].startswith("R:") and not t.endswith("_")) else t for i,t in enumerate(tk))
+    PARTS.append(d)
 ARCL=[round(x,3) for x in ARC]
 add("kick","キック",0.2,0,kick,barGain=ARCL); add("snare","スネア",0.17,0,snare,barGain=ARCL,push=0.02); add("hihat","ハイハット",0.07,0,hat,barGain=ARCL,push=-0.008)
 add("crash","クラッシュ",0.09,0,crash,barGain=ARCL); add("crash","ライド",0.08,0.15,rideL,barGain=ARCL); add("tom","タム",0.14,0,tom,barGain=ARCL,reverb=0)
