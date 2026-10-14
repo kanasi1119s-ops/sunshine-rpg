@@ -1,6 +1,6 @@
 # 『ネオンハートビート』（仮）: ボカロ曲のようなインスト。約5分。BPM172・ロ短調（最後のサビ4回分は半音上のハ短調）。
 # 2026-10-15 改訂: シンセのリードは外した（人間の指示）。旋律は A・Bメロ・落ちサビがピアノ、サビ・間奏・ブリッジ・ソロがリードギター
-#   （distortion アンプ。ビブラートなし・チョーキングは少しだけ）。サビは FM ベルを重ねてきらめかせる。
+#   （distortion アンプ。ビブラート・チョーキングなし。残響とディレイで響かせる）。サビは FM ベルを重ねてきらめかせる。
 # 伴奏: 16分で走るピアノ、動くベース、歪みギターの刻み（左右）、左右の弦、サビの厚いシンセ（unisonSaw）、生ドラム（-7dB）。
 # 構成（216小節）: イントロ8 → リフ8 → Aメロ16 → Bメロ8 → サビ16 → リフ8 → Aメロ16 → Bメロ8 → サビ16 → リフ8 →
 #   ブリッジ16 → ギターソロ16 → 落ちサビ16 → Bメロ8（最後に G7 で転調の準備）→ 半音上のサビ32 → リフ8 → 終わり8
@@ -128,11 +128,11 @@ M_BR1 = ["G5:0.5 B5:0.5 E6:1 D6:0.5 B5:0.5 G5:1", "F#5:1 B5:0.5 D6:0.5 C#6:1 B5:
          "E5:0.5 G5:0.5 C6:0.5 E6:0.5 D6:1 C6:1", "A5:1.5 F#5:0.5 D6:2",
          "E6:0.5 D6:0.5 B5:0.5 G5:0.5 E5:0.5 G5:0.5 B5:0.5 D6:0.5", "D6:1 C#6:0.5 B5:0.5 F#5:1 B5:1",
          "C6:0.5 B5:0.5 G5:0.5 E5:0.5 G5:0.5 C6:0.5 E6:1", "C#6:1 A#5:1 F#5:1 R:1"]
-SOLO0 = ["F#5:0.5 B5:0.5 D6:0.5 B5:0.5 A5:1^^ F#5:1", "G5:0.25 A5:0.25 B5:0.25 D6:0.25 E6:1 D6:0.5 B5:0.5 G5:1",
-         "F#5:0.5 A5:0.5 D6:1 C#6:0.5 A5:0.5 F#5:1", "E5:0.5 A5:0.5 C#6:0.5 E6:0.5 B5:1^^ C#6:1",
+SOLO0 = ["F#5:0.5 B5:0.5 D6:0.5 B5:0.5 A5:1 F#5:1", "G5:0.25 A5:0.25 B5:0.25 D6:0.25 E6:1 D6:0.5 B5:0.5 G5:1",
+         "F#5:0.5 A5:0.5 D6:1 C#6:0.5 A5:0.5 F#5:1", "E5:0.5 A5:0.5 C#6:0.5 E6:0.5 B5:1 C#6:1",
          "B5:0.25 C#6:0.25 D6:0.25 E6:0.25 D6:0.5 B5:0.5 F#5:1 B5:1", "D6:0.5 B5:0.5 G5:0.5 B5:0.5 D6:1 E6:1",
          "E6:0.5 D6:0.5 B5:0.5 G5:0.5 E5:0.25 G5:0.25 B5:0.25 E6:0.25 D6:1", "C#6:1.5 A#5:0.5 F#5:2"]
-SOLO1 = ["B5:2^^ A5:0.5 F#5:0.5 D5:1", "D5:0.5 G5:0.5 B5:0.5 D6:0.5 E6:2",
+SOLO1 = ["B5:2 A5:0.5 F#5:0.5 D5:1", "D5:0.5 G5:0.5 B5:0.5 D6:0.5 E6:2",
          "D6:0.5 C#6:0.5 A5:0.5 F#5:0.5 A5:0.5 D6:0.5 F#5:1", "E5:0.25 F#5:0.25 A5:0.25 C#6:0.25 E6:3",
          "D6:1 C#6:0.5 B5:0.5 F#5:0.5 B5:0.5 D6:1", "E6:0.5 D6:0.5 B5:0.5 G5:0.5 B5:1 D6:1",
          "G5:0.5 B5:0.5 E6:1 D6:0.5 B5:0.5 G5:1", "A#5:1 C#6:1 E6:1 R:1"]
@@ -298,8 +298,8 @@ def add(inst, role, vol, pan, secs, **kw):
 A = ARC
 DR = -7   # ドラムは -7dB（点数の試行で決めた。docs/sound/listening-toolkit.md）
 add("piano", "旋律（ピアノ）", 0.22, -0.05, per(f_piano_mel), barGain=A, reverb=0.18, gainDb=2)
-add("leadGuitar", "旋律（リードギター）", 0.16, 0.08, per(f_gtr_mel), barGain=A, amp="distortion", ampDrive=0.8, chorus=0, reverb=0.18, gainDb=3,
-    fx=[{"type": "delay", "beats": 0.75, "mix": 0.12, "feedback": 0.25}])
+add("leadGuitar", "旋律（リードギター）", 0.16, 0.08, per(f_gtr_mel), barGain=A, amp="distortion", ampDrive=0.8, chorus=0, reverb=0.32, gainDb=3, humanPitch=0,
+    fx=[{"type": "delay", "beats": 0.75, "mix": 0.18, "feedback": 0.35}, {"type": "plate", "mix": 0.16}])   # 響かせる（2026-10-15 人間の指示。チョーキングの「ビヨーン」は外した）
 add("fmBell", "きらめき（FMベル）", 0.07, 0.3, per(f_bell), barGain=A, reverb=0.3)
 add("piano", "ピアノ（16分）", 0.15, -0.3, per(f_piano), barGain=A, reverb=0.15)
 add("distGuitar", "ギター（左）", 0.07, -0.85, per(f_rhythm), barGain=A, amp="hardrock", ampDrive=0.9, ampTone=-3, chorus=0, reverb=0.1)
@@ -320,7 +320,7 @@ add("tom", "タム", 0.14, 0, TOM, barGain=A, reverb=0, gainDb=DR)
 song = {"title": "ネオンハートビート（仮）",
         "description": "（仮）ボカロ曲のようなインスト。約5分・BPM172・ロ短調、最後のサビ4回分は半音上のハ短調。旋律は A・Bメロ・落ちサビがピアノ、サビ・リフ・ブリッジ・ソロがリードギター（ビブラートなし）。16分のピアノ・動くベース・歪みギター・左右の弦・サビの厚いシンセ・FMベル。入り方: 2（ピアノの16分だけで4小節）。終わり方: 全員で一発止め＋長い和音。動機: B5:0.5 A5:0.5 B5:0.5 D6:1（サビ頭）。",
         "bpm": 172, "beats": 4, "chords": " ".join(chords), "barsPerChord": 1, "repeats": 1,
-        "tone": "pop", "feel": "vocaloid", "human": 0.25, "dynamics": "natural", "autoAccompaniment": False,
+        "tone": "pop", "feel": "vocaloid", "human": 0.25, "dynamics": "natural", "autoScoop": False, "autoAccompaniment": False,
         "parts": PARTS}
 json.dump(song, open(sys.argv[1], "w"), ensure_ascii=False, indent=1)
 print("ok", len(PARTS), "parts", len(chords), "bars", round(len(chords) * 4 * 60 / 172), "sec")
