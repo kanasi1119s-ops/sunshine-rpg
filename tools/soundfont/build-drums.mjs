@@ -13,6 +13,9 @@ import { decodeMono, filterStereo, loadBank, stereoPair, timecents, compressBank
 const SRC = path.resolve("assets-src/soundfont/extra/src/muldjord");
 const OUT = path.resolve("assets-src/soundfont/extra");
 const SAMPLES = process.env.MULDJORD_SAMPLES ?? "/home/claude/sfzinstruments/drumgizmo.muldjordkit/DrumGizmo/MuldjordKit/Samples";
+// 環境変数: DRUM_RR＝強さの層ごとに使う録音の数（1＝これまでどおり）、DRUM_Q＝Vorbis の品質（0〜10、既定 4）
+const RR = Number(process.env.DRUM_RR ?? 1);
+const Q = Number(process.env.DRUM_Q ?? 4);
 const base = loadBank(path.resolve("src/audio/soundfont/game.sf3"));
 
 // 元の速度の層（$v51l など）
@@ -62,9 +65,22 @@ function layers(name) {
   const found = new Map();
   for (const line of fs.readFileSync(path.join(SRC, "Data/region", name + ".txt"), "utf8").split("\n")) {
     const m = /<region>\s+lovel=\$(v\d+)l hivel=\$(v\d+)h.*sample=\$instr\/(\d+)-/.exec(line);
-    if (m && !found.has(m[1])) found.set(m[1], { v: m[1], idx: Number(m[3]) });
+    if (!m) continue;
+    if (!found.has(m[1])) found.set(m[1], { v: m[1], idx: Number(m[3]), idxs: [] });
+    found.get(m[1]).idxs.push(Number(m[3]));
   }
-  return [...found.values()].map((x) => ({ ...x, lo: VEL[x.v].l, hi: VEL[x.v].h }));
+  // ラウンドロビンの代わり（2026-10-15）: SoundFont にはラウンドロビンがないので、強さの層をさらに RR 個の細い範囲に分け、
+  // それぞれに同じ強さの別の録音を入れる。演奏の強さの揺れで毎回ちがう録音が鳴り、同じ音のくり返し（機関銃のような音）を減らす。
+  const out = [];
+  for (const x of found.values()) {
+    const lo = VEL[x.v].l, hi = VEL[x.v].h;
+    const n = Math.max(1, Math.min(RR, x.idxs.length, hi - lo + 1));
+    for (let k = 0; k < n; k++) {
+      const a = lo + Math.round(((hi - lo + 1) * k) / n), b = lo + Math.round(((hi - lo + 1) * (k + 1)) / n) - 1;
+      out.push({ v: x.v, idx: x.idxs[k], lo: a, hi: b });
+    }
+  }
+  return out;
 }
 
 function hit(inst, idx, cfg, prof) {
@@ -148,7 +164,7 @@ async function build(name, prof) {
     }
   }
   out.flush();
-  await compressBank(out, 4);
+  await compressBank(out, Q);
   const buf = out.writeSF2({});
   const file = path.join(OUT, prof.out + ".sf3");
   fs.writeFileSync(file, Buffer.from(buf));
