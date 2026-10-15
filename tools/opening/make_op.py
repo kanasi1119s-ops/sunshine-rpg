@@ -7,11 +7,11 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageChops, ImageEnhan
 
 ap = argparse.ArgumentParser()
 ap.add_argument("out"); ap.add_argument("--audio", default=""); ap.add_argument("--from", dest="t0", type=float, default=0)
-ap.add_argument("--to", dest="t1", type=float, default=84.0); ap.add_argument("--still", type=float, default=-1); ap.add_argument("--png", default="")
+ap.add_argument("--to", dest="t1", type=float, default=88.0); ap.add_argument("--still", type=float, default=-1); ap.add_argument("--png", default="")
 a = ap.parse_args()
 
 W, H, FPS = 1280, 720, 30
-BAR = 1.5; BEAT = BAR / 4
+BAR = 2.0; BEAT = BAR / 4   # 『ひのわのそらへ』ジグ版: BPM120（付点4分）、1小節 2 秒
 HERE = os.path.dirname(os.path.abspath(__file__))
 GAME = "/home/claude/wt-dirac/src/assets"
 ART = os.path.join(HERE, "art")
@@ -43,8 +43,25 @@ PARTY = [("ユーリ", "Yuri", "000", "灯りの相談所の新人調査員", (2
          ("ミナ", "Mina", "004", "水紋の術をつかう村の娘", (110, 190, 240)), ("コハク", "Kohaku", "006", "湖の町の交易商人の娘", (240, 200, 90)),
          ("オルカ", "Orca", "008", "鉱山で働いてきた力持ち", (230, 130, 60)), ("アヤメ", "Ayame", "010", "霜原の静かな案内人", (190, 150, 240))]
 FULL = [art(p[2]) for p in PARTY]
-BOSS = [art(f"{i:03d}") for i in range(220, 229)]
-GODS = [art(f"{i:03d}") for i in range(230, 238)]
+SHEET_NAME = ["ユーリ", "レト", "ミナ", "ガイド", "オルカ", "アヤメ"]
+FIG = [(0.28, 0.69), (0.30, 0.71), (0.28, 0.69), (0.28, 0.69), (0.28, 0.69), (0.28, 0.69)]          # 全身が入る縦の帯（横の割合）
+FACE = [(0.716, 0.016, 0.98, 0.82), (0.04, 0.016, 0.275, 0.82), (0.716, 0.47, 0.95, 0.935), (0.716, 0.006, 0.99, 0.855),
+        (0.716, 0.006, 0.985, 0.875), (0.716, 0.006, 0.98, 0.875)]                                    # 顔の大写しの枠の内側
+CENTER = [0.47, 0.50, 0.53, 0.48, 0.47, 0.45]
+SHEET = [Image.open(f"{HERE}/chars/{n}.jpg").convert("RGBA") for n in SHEET_NAME]
+def fr(im, box): return im.crop((int(box[0] * im.width), int(box[1] * im.height), int(box[2] * im.width), int(box[3] * im.height)))
+FIGS = [fr(SHEET[k], (FIG[k][0], 0, FIG[k][1], 1)) for k in range(6)]
+FACES = [fr(SHEET[k], FACE[k]) for k in range(6)]
+BLUR = [cover(SHEET[k].filter(ImageFilter.GaussianBlur(SHEET[k].width / 300)), W, H, 1.1) for k in range(6)]
+def fit_h(im, h): return im.resize((max(1, round(im.width * h / im.height)), h), Image.LANCZOS)
+FIGH = [fit_h(f, 700) for f in FIGS]
+FACEH = [fit_h(f, 400) for f in FACES]
+STRIP = [fit_h(fr(SHEET[k], (CENTER[k] - 0.1, 0.02, CENTER[k] + 0.1, 1.0)), 620) for k in range(6)]
+LOGO = Image.open(f"{HERE}/logo-native.png").convert("RGBA")
+LOGO5 = LOGO.resize((LOGO.width * 5, LOGO.height * 5), Image.NEAREST)
+def artn(i): return load(glob.glob(f"{HERE}/art-new/{i:03d}_*.png")[0])   # 直した版（monster-fullbody ブランチの最新。女神は 10/07 の final.txt）
+BOSS = [artn(i) for i in list(range(220, 230)) + [238, 239]]
+GODS = [artn(i) for i in range(230, 238)]
 WALKS = [load(f"{WALK}/walk-c{i}.png") for i in range(6)]
 def walk_frame(i, row, fr):
     sh = WALKS[i]; f = sh.crop((fr * 16, row * 32, fr * 16 + 16, row * 32 + 32))
@@ -138,174 +155,172 @@ def sparkles(canvas, t, n=40, seed=3, area=(0, 0, W, H), col=(255, 230, 160), sp
         d.ellipse((x0 - s, y - s, x0 + s, y + s), fill=col + (int(220 * b),))
 
 # ---------- 歌詞（小節 → 行） ----------
-LYR = [(16, 18, "朝の港　風が呼んだ"), (18, 20, "地図の向こう　遠い空"), (20, 22, "鞄ひとつ　胸が踊る"), (22, 24, "明日へ行こう"),
-       (24, 26, "光の環を追え"), (26, 28, "目覚めた石が導く"), (28, 30, "その先"), (30, 32, "まだ見ぬ明日"),
-       (32, 34, "駆け出そう　風より"), (34, 36, "灯の環の空"), (36, 38, "めぐりあう仲間と"), (38, 40, "紡いでくよ"),
-       (40, 42, "どこまでも　遠くへ"), (42, 44, "光の先"), (44, 47, "リングライト・クロニクル")]
+LYR = [(12, 14, "朝の港を　風が呼んでる"), (14, 16, "地図の向こうへ　空へ"), (16, 18, "鞄ひとつで　胸が踊るよ"), (18, 20, "明日へ行こう　さあ"),
+       (20, 22, "光の環を　追いかけていく"), (22, 24, "まだ見ぬ明日へ"),
+       (24, 26, "さあ駆け出そうよ　風を追い越して"), (26, 28, "灯の環の空まで　行こう"), (28, 30, "出会う仲間と　物語を"), (30, 32, "紡いでいくよ"),
+       (32, 34, "どこまでも行こう　光の先まで"), (34, 36, "この手でつかもう　ほら"), (36, 39, "リングライト・クロニクル")]
 def lyrics(canvas, t):
     b = t / BAR
     for b0, b1, s in LYR:
-        if b0 - 0.08 <= b < b1:
-            al = min(1, (b - (b0 - 0.08)) / 0.15) * min(1, (b1 - b) / 0.12)
+        if b0 - 0.06 <= b < b1:
+            al = min(1, (b - (b0 - 0.06)) / 0.12) * min(1, (b1 - b) / 0.1)
             im = T(s, 34, "j", fill=(255, 255, 255), stroke=3, sc=(30, 20, 60))
             put(canvas, im, W - im.width - 48, H - im.height - 30, al)
 
 def party_run(canvas, t, ybase, x0=-120, speed=260, k=3, spacing=58, order=(0, 1, 2, 3, 4, 5), row=3):
     for j, i in enumerate(order):
-        fr = int(t * 9 + j) % 3; fr = [0, 1, 2, 1][int(t * 9 + j) % 4] if True else fr
-        im = scale(WF[i][row][fr], k)
+        fr_ = [0, 1, 2, 1][int(t * 9 + j) % 4]
+        im = scale(WF[i][row][fr_], k)
         x = x0 + speed * t - j * spacing
         bob = abs(math.sin(t * 9 + j)) * 3
         put(canvas, im, x, ybase - im.height - bob)
 
-# ---------- 場面 ----------
+def boss_glow(c, im, cx, cy, beat_on, alpha=1.0):
+    dark = Image.new("RGBA", im.size, (0, 0, 0, 0)); dark.paste((60, 10, 40, 255), (0, 0), im.getchannel("A"))
+    put_c(c, Image.blend(dark, im, 0.5 + 0.5 * beat_on), cx, cy, alpha)
+
+# ---------- 場面（1小節＝2秒・44小節） ----------
 def frame(t):
     c = Image.new("RGBA", (W, H), (0, 0, 0, 255))
     b = t / BAR; beat = t / BEAT; bi = int(b); fb = b - bi
-    onbeat = 1 - min(1, (beat - int(beat)) * 3)   # 拍の頭で 1、すぐ 0 へ
-    if b < 8:   # 前奏: 夜空に光の環が生まれる → 夜明けの草原
-        if b < 4:
-            sky(c, t, dawn=0.0); moons(c, t, alpha=ease(b / 1.5))
-            ring(c, 640, 300, 330, 92, prog=ease((b - 0.8) / 2.6), alpha=1.0, glow=0.8)
-            sparkles(c, t, 50, area=(0, 120, W, 520), alpha=ease((b - 1) / 2))
+    onbeat = 1 - min(1, (beat - int(beat)) * 3)
+    if b < 4:   # 前奏: 夜空に光の環 → 夜明けの草原（笛がゆっくり歌う）
+        if b < 2.2:
+            sky(c, t, dawn=0.0); moons(c, t, alpha=ease(b / 0.8))
+            ring(c, 640, 300, 330, 92, prog=ease((b - 0.3) / 1.4), alpha=1.0, glow=0.8)
+            sparkles(c, t, 50, area=(0, 120, W, 520), alpha=ease((b - 0.5) / 1))
             s1 = T("かつて空を渡った光の環は　砕けて大地となった", 30, "j", fill=(240, 230, 255))
-            put_c(c, s1, W / 2, 560, ease((b - 1.2) / 0.8) * (1 - ease((b - 3.4) / 0.5)))
+            put_c(c, s1, W / 2, 560, ease((b - 0.5) / 0.5) * (1 - ease((b - 1.8) / 0.35)))
+            overlay(c, (255, 255, 255), ease((b - 2.0) / 0.2))
         else:
-            u = (b - 4) / 4
-            dawn = ease(u * 1.4)
+            u = (b - 2.2) / 1.8; dawn = ease(u * 1.3)
             bg_pan(c, BGC["meadow"], u, dx=0.6, dy=0.2)
-            overlay(c, (20, 14, 50), 0.55 * (1 - dawn)); overlay(c, (255, 170, 90), 0.12 * dawn)
+            overlay(c, (20, 14, 50), 0.5 * (1 - dawn)); overlay(c, (255, 170, 90), 0.12 * dawn)
             ring(c, 640, 150 - 30 * u, 300, 70, alpha=0.75)
-            party_run(c, (b - 4) * BAR * 0.55, H - 120, x0=-60, speed=200, k=3)
-            s1 = T("統暦412年　港町・灯里", 30, "j"); put(c, s1, 60, 60, ease((b - 4.3) / 0.6) * (1 - ease((b - 7.3) / 0.5)))
-            if b > 7.5: overlay(c, (255, 255, 255), ease((b - 7.5) / 0.5))
-    elif b < 16:   # リフ: 拍に合わせた土地のモンタージュ
-        k = bi - 8
+            party_run(c, (b - 2.2) * BAR * 0.6, H - 120, x0=-60, speed=200, k=3)
+            s1 = T("統暦412年　港町・灯里", 30, "j"); put(c, s1, 60, 60, ease((b - 2.4) / 0.4) * (1 - ease((b - 3.6) / 0.3)))
+            overlay(c, (255, 255, 255), max(1 - (b - 2.2) / 0.25, 0) + ease((b - 3.8) / 0.2))
+    elif b < 12:   # ジグ A: 1小節ごとに土地をめぐる
+        k = bi - 4
         scenes = [("ph", "02-first-town", "灯里"), ("ph", "03-lake-town", "硝子湖"), ("bg", "highland", "麦香野"), ("bg", "sea1", "海をこえて"),
                   ("ph", "19-now-town-desert", "砂音"), ("ph", "04-snow-town", "霜原"), ("map", None, "アルテシア"), ("bg", "void1", "")]
         kind, name, label = scenes[k]
         if kind == "ph": bg_pan(c, PH[name], fb, dx=0.7 * (1 if k % 2 else -1), dy=0.3)
         elif kind == "bg": bg_pan(c, BGC[name], fb, dx=0.9 * (1 if k % 2 else -1), dy=0.2)
         else: bg_pan(c, WMAP, fb, dx=1.0, dy=0.6)
-        if k == 2: party_run(c, fb * BAR, H - 70, x0=-80, speed=900, k=4)
-        if k == 3: put(c, scale(BOSS[0], 0), 0, 0, 0) if False else None
+        if k == 2: party_run(c, fb * BAR, H - 70, x0=-80, speed=700, k=4)
         if label:
             im = T(label, 64, "j", stroke=4, sc=(20, 10, 40)); put(c, im, 70 + 40 * (1 - eout(fb * 3)), H - 180, eout(fb * 4) * (1 - ease((fb - 0.85) / 0.15)))
-        if k == 7:   # ゆがみの気配 → 白くはじける
+        if k == 7:
             overlay(c, (0, 0, 0), 0.3)
             ring(c, 640, 360, 260 + 400 * ease(fb), 80 + 140 * ease(fb), alpha=1 - ease((fb - 0.6) / 0.4), glow=1.2)
-            overlay(c, (255, 255, 255), ease((fb - 0.75) / 0.25))
-        overlay(c, (255, 255, 255), 0.35 * onbeat * (1 if (beat % 4) < 1 else 0))
-    elif b < 24:   # Aメロ: 仲間の紹介
-        k = min(6, max(0, bi - 17)) if bi >= 17 else 0
-        if bi == 23:   # 6人そろう
-            bg_pan(c, BGC["meadow"], fb, dx=0.3)
-            overlay(c, (20, 20, 40), 0.25)
+            overlay(c, (255, 255, 255), ease((fb - 0.8) / 0.2))
+        overlay(c, (255, 255, 255), 0.3 * onbeat * (1 if (beat % 4) < 1 else 0))
+    elif b < 20:   # Aメロ: 仲間の紹介（元のイラスト）
+        if bi == 19:   # 6人そろう（縦の帯を並べる）
+            overlay(c, (16, 12, 30), 1.0)
             for j in range(6):
-                im = scale(FULL[j], 0.9)
-                x = 120 + j * 185; y = H - im.height - 20 + 30 * (1 - eout((fb * 4) - j * 0.18))
-                put(c, im, x - 40, y, eout(fb * 4 - j * 0.18))
-            sparkles(c, t, 40, area=(0, 0, W, H), alpha=0.8)
+                im = STRIP[j]; x = j * (W / 6) + (W / 6 - im.width) / 2
+                d = eout(fb * 4 - j * 0.15)
+                put(c, im, x, 50 + 40 * (1 - d), d)
+                ImageDraw.Draw(c).line([(j * W / 6, 0), (j * W / 6, H)], fill=(255, 210, 122, 120), width=3)
+            sparkles(c, t, 40, alpha=0.8)
         else:
-            idx = 0 if bi < 18 else bi - 17
+            idx = 0 if bi < 14 else bi - 13
             nm_, en, _, role, col = PARTY[idx]
-            u = (b - (16 if idx == 0 else bi)) / (2 if idx == 0 else 1)
-            g = np.linspace(0, 1, W)[None, :]
-            c1 = np.array(col) * 0.35; c2 = np.array([20, 16, 40])
-            grad = (c1[None, None, :] * (1 - g[..., None]) + c2[None, None, :] * g[..., None]).astype(np.uint8)
-            c.alpha_composite(Image.fromarray(np.repeat(grad, H, axis=0)).convert("RGBA"))
-            d = ImageDraw.Draw(c)
-            for s in range(14):   # 斜めの光の帯
-                x = (s * 160 + t * 220) % (W + 400) - 200
-                d.polygon([(x, 0), (x + 40, 0), (x - 260, H), (x - 300, H)], fill=tuple(int(v) for v in col) + (18,))
-            im = scale(FULL[idx], 2.4)
+            u = (b - (12 if idx == 0 else bi)) / (2 if idx == 0 else 1)
+            bgimg = BLUR[idx]; bg_pan(c, bgimg, u, dx=0.4)
+            overlay(c, (12, 8, 24), 0.45)
             side = -1 if idx % 2 else 1
-            cx = (W * 0.68 if side > 0 else W * 0.32) + side * 260 * (1 - eout(u * 2.5)) - side * 30 * u
-            put_c(c, im, cx, H / 2 + 40, eout(u * 3))
-            tx = 90 if side > 0 else W - 520
-            nmI = T(nm_, 96, "j", fill=(255, 255, 255), stroke=4, sc=tuple(int(v * 0.5) for v in col))
-            enI = T(en.upper(), 34, "e", fill=tuple(int(v) for v in col), shadow=False)
-            roI = T(role, 30, "j", fill=(235, 235, 245))
-            al = eout(u * 3) * (1 - ease((u - 0.9) / 0.1))
-            put(c, enI, tx + 40 * (1 - eout(u * 3)), 190, al); put(c, nmI, tx, 230, al); put(c, roI, tx + 6, 360, al)
-            d.line([(tx + 6, 350), (tx + 6 + 380 * eout(u * 2.5), 350)], fill=tuple(int(v) for v in col) + (int(255 * al),), width=4)
-        if bi == 16 and fb < 0.2: overlay(c, (255, 255, 255), 1 - fb / 0.2)
+            fig = FIGH[idx]
+            fx = (W * 0.30 if side > 0 else W * 0.70) - fig.width / 2 - side * 220 * (1 - eout(u * 2.5))
+            put(c, fig, fx, H - fig.height + 10, eout(u * 3))
+            face = FACEH[idx]
+            ax = (W * 0.74 if side > 0 else W * 0.26) - face.width / 2 + side * 160 * (1 - eout(u * 2.2 - 0.25))
+            ay = 70
+            al = eout(u * 2.2 - 0.25) * (1 - ease((u - 0.92) / 0.08))
+            put(c, face, ax, ay, al)
+            ImageDraw.Draw(c).rectangle((ax - 3, ay - 3, ax + face.width + 2, ay + face.height + 2), outline=tuple(int(v) for v in col) + (int(230 * al),), width=4)
+            tx = ax; ty = ay + face.height + 16
+            nmI = T(nm_, 72, "j", fill=(255, 255, 255), stroke=4, sc=tuple(int(v * 0.5) for v in col))
+            enI = T(en.upper(), 28, "e", fill=tuple(int(v) for v in col), shadow=False)
+            roI = T(role, 26, "j", fill=(240, 236, 248))
+            put(c, nmI, tx, ty, al); put(c, enI, tx + nmI.width + 10, ty + 34, al); put(c, roI, tx + 4, ty + 92, al)
+        if bi == 12 and fb < 0.15: overlay(c, (255, 255, 255), 1 - fb / 0.15)
         lyrics(c, t)
-    elif b < 32:   # Bメロ: ゆがみの影（謎の気配）
-        k = bi - 24
+    elif b < 24:   # Bメロ: ゆがみの影（半小節ずつボスが浮かぶ）
+        k = int((b - 20) * 2); sub = (b - 20) * 2 - k
         bgs = ["prophecy", "cave", "forest-shrine1", "volcano1", "warp1", "void2", "warp2", "void1"]
-        bg_pan(c, BGC[bgs[k]], fb, dx=0.6 * (1 if k % 2 else -1))
+        bg_pan(c, BGC[bgs[k]], sub, dx=0.6 * (1 if k % 2 else -1))
         overlay(c, (10, 0, 20), 0.45)
-        boss = BOSS[min(len(BOSS) - 1, k)]
-        im = scale(boss, 2.2 + 0.25 * fb)
-        dark = Image.new("RGBA", im.size, (0, 0, 0, 0)); dark.paste((60, 10, 40, 255), (0, 0), im.getchannel("A"))
-        show = Image.blend(dark, im, 0.5 + 0.5 * onbeat)   # 拍のたびに赤く光って姿が浮かぶ
-        put_c(c, show, W / 2 + (k % 2 * 2 - 1) * 180, H / 2 + 20, eout(fb * 3))
-        if k < 6:
+        im = scale(BOSS[k], 2.2 + 0.2 * sub)
+        if k < 7: boss_glow(c, im, W / 2 + (k % 2 * 2 - 1) * 180, H / 2 + 20, onbeat, eout(sub * 3))
+        if k < 6 and sub < 0.9:
             words = ["歪み", "静まりの年", "消えた祖父", "灯芯都の影", "砕けた環", "真実へ"]
             im2 = T(words[k], 60, "j", fill=(255, 210, 220), stroke=3, sc=(80, 0, 30))
-            put(c, im2, 80 if k % 2 == 0 else W - im2.width - 80, 90, eout(fb * 3) * (1 - ease((fb - 0.8) / 0.2)))
-        if k >= 6:
-            ring(c, 640, 360, 300, 90, alpha=1.0, glow=1.4, crack=ease((b - 30) / 1.5), rot=t)
-            overlay(c, (255, 255, 255), ease((b - 31.4) / 0.6))
+            put(c, im2, 80 if k % 2 == 0 else W - im2.width - 80, 90, eout(sub * 3))
+        if b >= 23:
+            ring(c, 640, 360, 300, 90, alpha=1.0, glow=1.4, crack=ease((b - 23) / 0.7), rot=t)
+            overlay(c, (255, 255, 255), ease((b - 23.6) / 0.4))
         overlay(c, (120, 0, 30), 0.25 * onbeat)
         lyrics(c, t)
-    elif b < 48:   # サビ
-        k = bi - 32
+    elif b < 40:   # サビ
+        k = bi - 24
         if k < 4:   # 草原を駆ける
-            u = (b - 32) / 4
+            u = (b - 24) / 4
             bg_pan(c, BGC["meadow"], u, dx=1.0)
             ring(c, 640, 120, 360, 70, alpha=0.9, glow=1.2, rot=t * 0.2)
-            party_run(c, (b - 32) * BAR, H - 60, x0=W + 60 - 1400, speed=230, k=5, spacing=84)
+            party_run(c, (b - 24) * BAR, H - 60, x0=W + 60 - 1500, speed=200, k=5, spacing=84)
             sparkles(c, t, 60, alpha=0.9)
-            if k == 0 and fb < 0.25: overlay(c, (255, 255, 255), 1 - fb / 0.25)
+            if k == 0 and fb < 0.2: overlay(c, (255, 255, 255), 1 - fb / 0.2)
         elif k < 8:   # 戦い
-            boss = BOSS[[0, 2, 4, 6][k - 4]]; bgn = ["meadow", "snow1", "volcano1", "sea2"][k - 4]
+            boss = BOSS[[8, 9, 10, 11][k - 4]]; bgn = ["meadow", "snow1", "volcano1", "void2"][k - 4]
             bg_pan(c, BGC[bgn], fb, dx=0.8 * (1 if k % 2 else -1))
             im = scale(boss, 2.0); shake = 8 * onbeat
             put_c(c, im, 400 + shake, H / 2 + 10)
             for j in range(6):
-                sp = scale(WF[j][2][int(t * 6 + j) % 3], 4)   # 左を向いて構える
+                sp = scale(WF[j][2][int(t * 6 + j) % 3], 4)
                 put(c, sp, 900 + (j % 2) * 70 + (j // 2) * 60, 300 + (j // 2) * 90 + (j % 2) * 30)
-            overlay(c, (255, 240, 200), 0.5 * onbeat * (1 if int(beat) % 2 == 0 else 0))
+            overlay(c, (255, 240, 200), 0.45 * onbeat * (1 if int(beat) % 2 == 0 else 0))
             ring(c, 400, H / 2 + 10, 180 + 200 * fb, 60 + 70 * fb, alpha=0.8 * (1 - fb), glow=1.3)
         elif k < 12:   # 8つの神（半小節ずつ）
-            j = min(7, int((b - 40) * 2))
-            bg_pan(c, BGC["void2" if j % 2 else "void1"], (b - 40) / 4, dx=0.5)
-            g = GODS[j]; im = scale(g, 2.3)
-            sub = (b - 40) * 2 - j
-            put_c(c, im, W / 2 + (j % 2 * 2 - 1) * 200, H / 2, eout(sub * 4) * (1 - ease((sub - 0.85) / 0.15)))
+            j = min(7, int((b - 32) * 2)); sub = (b - 32) * 2 - j
+            bg_pan(c, BGC["void2" if j % 2 else "void1"], (b - 32) / 4, dx=0.5)
+            im = scale(GODS[j], 2.3)
+            put_c(c, im, W / 2 + (j % 2 * 2 - 1) * 200, H / 2, eout(sub * 4) * (1 - ease((sub - 0.88) / 0.12)))
             overlay(c, (255, 255, 255), 0.6 * max(0, 1 - sub * 6))
         elif k < 14:   # 船で海へ
-            u = (b - 44) / 2
+            u = (b - 36) / 2
             bg_pan(c, BGC["ship2"], u, dx=0.3, dy=0.0)
-            for j in range(6):   # 甲板の上に並んで、前（海のほう）を見る
+            for j in range(6):
                 sp = scale(WF[j][1][1], 5); put(c, sp, 300 + j * 85, 520 + (j % 2) * 18)
         else:   # 朝日の海と大きな光の環
-            u = (b - 46) / 2
+            u = (b - 38) / 2
             bg_pan(c, BGC["sea2"], u, dx=0.5)
             overlay(c, (255, 170, 90), 0.18)
             ring(c, 640, 230, 420, 110, alpha=1.0, glow=1.5, rot=t * 0.3)
             sparkles(c, t, 70, alpha=1.0)
+            overlay(c, (255, 255, 255), ease((b - 39.75) / 0.25))
         lyrics(c, t)
-    else:   # 後奏: タイトル
-        u = (b - 48)
+    else:   # ジグ B: タイトル（ゲームのロゴ）
+        u = b - 40
         sky(c, t, dawn=0.35); moons(c, t, 0.8)
-        bg = BGC["meadow"]; tmp = Image.new("RGBA", (W, H)); bg_pan(tmp, bg, 0.5, dx=0.2)
+        tmp = Image.new("RGBA", (W, H)); bg_pan(tmp, BGC["meadow"], 0.5, dx=0.2)
         tmp.putalpha(Image.linear_gradient("L").resize((W, H)).point(lambda v: min(255, max(0, (v - 90) * 2))))
         c.alpha_composite(tmp)
-        ring(c, 640, 300, 400, 110, prog=ease(u / 2.5), alpha=1.0, glow=1.4, rot=0)
         sparkles(c, t, 80, alpha=1.0)
-        en = T("Ringlight Chronicle", 96, "e", fill=(255, 236, 190), stroke=2, sc=(90, 50, 10))
-        jp = T("リングライト・クロニクル", 44, "j", fill=(255, 255, 255), stroke=3, sc=(40, 30, 70))
-        al = ease((u - 1.8) / 1.0)
-        zoom = 1 + 0.06 * (1 - eout((u - 1.8) / 1.5))
-        put_c(c, scale(en, zoom) if zoom != 1 else en, W / 2, 300, al)
-        put_c(c, jp, W / 2, 395, ease((u - 2.6) / 0.8))
-        if u >= 4:   # 全員で一発
-            overlay(c, (255, 255, 255), max(0, 1 - (u - 4) / 0.4))
-            cr = T("© 2026 サンシャインソフトウェア", 22, "s", fill=(230, 230, 240)); put_c(c, cr, W / 2, H - 40, ease((u - 4.6) / 0.6))
-        overlay(c, (0, 0, 0), ease((u - 7.2) / 0.8))
+        al = ease(u / 0.6)
+        zoom = 1 + 0.08 * (1 - eout(u / 1.5))
+        lg = LOGO5 if abs(zoom - 1) < 0.004 else LOGO5.resize((round(LOGO5.width * zoom), round(LOGO5.height * zoom)), Image.NEAREST)
+        glow = lg.filter(ImageFilter.GaussianBlur(14)); put_c(c, glow, W / 2, 300, 0.7 * al * (0.6 + 0.4 * math.sin(t * 3)))
+        put_c(c, lg, W / 2, 300, al)
+        jp = T("リングライト・クロニクル", 40, "j", fill=(255, 255, 255), stroke=3, sc=(40, 30, 70))
+        put_c(c, jp, W / 2, 470, ease((u - 0.8) / 0.6))
+        if u < 0.2: overlay(c, (255, 255, 255), 1 - u / 0.2)
+        if u >= 3:   # 全員で一発（最後の小節の頭）
+            overlay(c, (255, 255, 255), max(0, 1 - (u - 3) / 0.35))
+            cr = T("© 2026 サンシャインソフトウェア", 22, "s", fill=(230, 230, 240)); put_c(c, cr, W / 2, H - 40, ease((u - 3.2) / 0.4))
+        overlay(c, (0, 0, 0), ease((u - 3.6) / 0.4))
     c.alpha_composite(VIGNETTE)
     return c.convert("RGB")
 
