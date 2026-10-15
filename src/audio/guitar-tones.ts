@@ -2,6 +2,7 @@
  * ギターの音色プリセット（2026-10-15、人間の指示「この音自体も保存して使いまわせるようにして」）。
  * AIソング形式のパートに `"guitarTone": "warm-lead-b"` のように書くと、アンプ・歪み・高音・キャビネット・残響・ディレイを
  * まとめて入れる。パートに同じ項目を書いたときは、パートの値が優先（プリセットは「出発点」）。
+ * 2026-10-15: リードギターの自動ビブラート（CC1）と音量のふくらみ（CC11）は midi-export.ts で止めた（「ゴムが伸びたような音」）。
  * 聞き比べで人間が「いい」と言った音だけを足す。耳での確認は人間が行う（作者は音を聴けない）。
  */
 import type { AiFx } from "./ai-song";
@@ -20,6 +21,8 @@ export interface GuitarTone {
   chorus?: number;
   humanPitch?: number;
   fx?: AiFx[];
+  /** true なら、MIDI のこだま（0.75拍・1.5拍後の弾き直し）を止める（ディレイの fx で響かせるので不要。伸ばした音が途中で弾き直されない）。 */
+  noRestrike?: boolean;
   /** true なら、曲の autoScoop（長い音を半音下から持ち上げる自動のしゃくり）を、曲に書いていなければ止める。 */
   noScoop?: boolean;
 }
@@ -43,6 +46,7 @@ export const GUITAR_TONES: Record<string, GuitarTone> = {
     chorus: 0,
     humanPitch: 0,
     fx: RINGING_FX,
+    noRestrike: true,
     noScoop: true,
   },
   "warm-lead-b": {
@@ -58,6 +62,7 @@ export const GUITAR_TONES: Record<string, GuitarTone> = {
     chorus: 0,
     humanPitch: 0,
     fx: RINGING_FX,
+    noRestrike: true,
     noScoop: true,
   },
 };
@@ -72,7 +77,7 @@ export function applyGuitarTone<T extends Record<string, unknown>>(part: T, wher
     return part;
   }
   const out: Record<string, unknown> = { ...part };
-  for (const key of ["amp", "ampDrive", "ampTone", "ampCabIr", "reverb", "chorus", "humanPitch", "fx"] as const) {
+  for (const key of ["amp", "ampDrive", "ampTone", "ampCabIr", "reverb", "chorus", "humanPitch", "fx", "noRestrike"] as const) {
     if (out[key] === undefined && tone[key] !== undefined) out[key] = Array.isArray(tone[key]) ? (tone[key] as AiFx[]).map((f) => ({ ...f })) : tone[key];
   }
   return out as T;

@@ -5,6 +5,9 @@
 # 構成（136小節）: イントロ8 → Aメロ16 → Bメロ8 → サビ16 → 間奏8 → Aメロ8 → Bメロ8 → サビ16 → ブリッジ8 → ソロ8 → 落ちサビ8 → 転調サビ16 → 終わり8
 # 使い方: python3 natsu-tonari.py <出力.json>
 import json, re, sys
+import os as _os
+sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+import drumkit
 
 def fmt(x): return ("%.4f" % x).rstrip("0").rstrip(".")
 N = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -206,75 +209,54 @@ def f_bass(si, s, pr, k, n):
         else: out += [a + ":1.5", a + ":0.5", o + ":1", ap + ":1"]
     return " ".join(out)
 
-# ---------------- ドラム ----------------
-Z = "................"
-def tomtok(tm):
-    pit = ["E3", "E3", "C3", "C3", "A2", "A2"]; hits = [j for j, c in enumerate(tm) if c in "xX"]; toks = []; kk = 0
-    for c in tm:
-        if c in "xX": toks.append(pit[min(5, kk * 6 // len(hits))] + ":0.25" + ("!" if c == "X" else "")); kk += 1
-        else: toks.append("R:0.25")
-    return toks
+# ---------------- ドラム（drumkit.py: 強弱・アクセント・フィル） ----------------
+Z = drumkit.Z
+def groove(s, n, b, L):
+    ride = False; crash = b == 0 and s not in ("intro", "otosabi", "bridge")
+    if s == "intro":
+        if b < 4: return Z, Z, Z, False, False
+        return "X.......X.x.....", "....x.......x...", "X.x.X.x.X.x.X.x.", False, b == 4
+    if s == "verse":
+        kk = ["X.....x...x.....", "X.....x.X......."][b % 2]
+        return kk, "....X......oX..o", ("X.x.X.x.X.x.X.x." if n == 0 else "X.xoX.xoX.xoX.xo"), False, crash
+    if s == "pre":
+        sn = "....X..oX.o.X.oo" if b == 6 else "....X..o....X..o"
+        return "X.....x.X.x.....", sn, ("X.x.X.x.X.x.X.x." if b < 4 else "XxxxXxxxXxxxXxxx"), False, crash
+    if s in ("chorus", "solo"):
+        kk = ["X...X.x.X...X...", "X...X.x.X.x.X..."][b % 2]; hh = "X.O.X.O.X.O.X.O."
+        return kk, "....X......oX..o", hh, ride, crash
+    if s == "inter": return "X.....x.X.......", "....X......oX...", "XxxxXxxxXxxxXxxx", False, crash
+    if s == "bridge":
+        if b < 4: return "X.......X.......", "........X.......", Z, True, b == 0
+        return "X.....x.X.......", "....X......oX..o", Z, True, b == 4
+    if s == "otosabi":
+        if b < 4: return Z, Z, Z, False, False
+        if b < 6: return "X.......X.......", Z, "x...x...x...x...", False, False
+        return "X...X...X...X...", "....X.......X...", "X.x.X.x.X.x.X.x.", False, b == 6
+    if s == "outro":
+        if b < 6: return "X.......X.x.....", "....x.......x...", "X.x.X.x.X.x.X.x.", False, b == 0
+        if b == 6: return "X...............", Z, Z, False, True
+        return Z, Z, Z, False, False
+    return Z, Z, Z, False, False
+# 転調したサビ（k=1）ではライドで広げる: groove が k を見られるよう、SEC を回しながら k を渡す
+_cur = {"k": 0}
+def groove_k(s, n, b, L):
+    kk, sn, hh, ride, crash = groove(s, n, b, L)
+    if s == "chorus" and _cur["k"] == 1 and b in (1, 2, 5, 6): hh, ride = Z, True
+    return kk, sn, hh, ride, crash
 KICK, SNARE, HAT, CRASH, TOM, RIDE = [], [], [], [], [], []
-for si, (s, pr, k, n) in enumerate(SEC):
-    kb, sb, hb, cb, tb, rb = [], [], [], [], [], []
-    L = len(pr)
-    for b in range(L):
-        last = b == L - 1; cr = "R:4"; ride = False; tm = None
-        if s == "intro":
-            if b < 4: kk, sn, hh = Z, Z, Z
-            else: kk = "X.......X.x....."; sn = "....x.......x..."; hh = "x.x.x.x.x.x.x.x."
-            if b == 4: cr = "g:X..............."
-            if last: sn = "....x.......xxXX"
-        elif s == "verse":
-            kk = "X.....x...x....." if b % 2 == 0 else "X.....x.X......."; sn = "....X.......X..."
-            hh = "x.xox.xox.xox.xo" if n != 0 else "x.x.x.x.x.x.x.x."
-            if b == 0: cr = "g:X..............."
-            if b == 3: sn = "....X.......X.o."
-            if last: sn = "....X.......xxXX" if n == 1 else "....X.......X.oo"
-        elif s == "pre":
-            kk = "X.....x.X.x....."; sn = "....X.......X..."; hh = "x.x.x.x.x.x.x.x."
-            if b == 0: cr = "g:X..............."
-            if b == 6: sn = "....X...x.x.X.x."
-            if last: kk = "X..............."; sn = "........x.x.xxXX"; hh = Z; tm = None
-        elif s == "chorus":
-            kk = "X...X.x.X...X..." if b % 2 == 0 else "X...X.x.X.x.X..."; sn = "....X.......X..."; hh = "x.O.x.O.x.O.x.O."
-            if b % 4 == 0: cr = "g:X..............."
-            if b == 3: sn = "....X.......X.xx"
-            if k == 1 and b in (1, 2, 5, 6): hh = Z; ride = True
-            if last: sn = "....X...xxxxXXXX" if not (k == 1 and n == 3) else "X..............."; tm = "........xx..xxXX" if not (k == 1 and n == 3) else None
-            if last and k == 1 and n == 3: kk = "X..............."; hh = Z; ride = False
-        elif s == "inter":
-            kk = "X.....x.X......."; sn = "....X.......X..."; hh = "x.x.x.x.x.x.x.x."
-            if b == 0: cr = "g:X..............."
-            if last: sn = "....X...xxxxXXXX"; tm = "............xxXX"
-        elif s == "bridge":
-            kk = "X.......X......." if b < 4 else "X.....x.X......."; sn = "........X......." if b < 4 else "....X.......X..."; hh = Z; ride = True
-            if b == 0: cr = "g:X..............."
-            if last: sn = "....X...xxxxXXXX"; tm = "............xxXX"; ride = False
-        elif s == "solo":
-            kk = "X...X.x.X...X..."; sn = "....X.......X..."; hh = "x.O.x.O.x.O.x.O."
-            if b % 4 == 0: cr = "g:X..............."
-            if last: kk = "X..............."; sn = "X..............."; hh = Z   # 落ちサビの前で止める
-        elif s == "otosabi":
-            kk = Z if b < 4 else "X.......X......."; sn = Z if b < 6 else "....X.......X..."; hh = Z if b < 4 else "x...x...x...x..."
-            if last: sn = "x.x.x.x.xxxxXXXX"; tm = "............xxXX"
-        elif s == "outro":
-            kk = "X.......X......." if b < 6 else ("X..............." if b == 6 else Z); sn = "....x.......x..." if b < 6 else Z
-            hh = "x.x.x.x.x.x.x.x." if b < 6 else Z
-            if b in (0, 6): cr = "g:X..............."
-        if cr != "R:4": hh = "." + hh[1:]
-        if tm:
-            first = next(j for j, c in enumerate(tm) if c in "xX"); hh = hh[:first] + "." * (16 - first)
-        kb.append("g:" + kk); sb.append("g:" + sn); hb.append("g:" + hh); cb.append(cr)
-        rb += ["D2:0.5"] * 8 if ride else ["R:4"]
-        tb += tomtok(tm) if tm else ["R:4"]
-    KICK.append(kb); SNARE.append(sb); HAT.append(hb); CRASH.append(cb); TOM.append(tb); RIDE.append(rb)
+for _sec in SEC:
+    _cur["k"] = _sec[2]
+    parts_ = drumkit.build([_sec], groove_k, stops={("solo", 0)}, fills_off={"outro"})
+    for acc, got in zip((KICK, SNARE, HAT, CRASH, TOM, RIDE), parts_): acc += got
+DG = drumkit.drum_gain(SEC, {"intro": (0.75, 0.85), "verse": (0.78, 0.9), "pre": (0.85, 1.02), "chorus": (0.95, 1.0), "inter": (0.9, 0.95),
+                             "bridge": (0.7, 0.85), "solo": (0.95, 1.02), "otosabi": (0.55, 1.0), "outro": (0.9, 0.7)})
 
 PARTS = []
 def add(inst, role, vol, pan, secs, **kw):
     d = {"instrument": inst, "role": role, "volume": vol, "pan": pan, "notes": cat(secs, role)}; d.update(kw); PARTS.append(d)
 A = ARC
-DR = -10   # ドラムは -10dB（点数の試行で決めた）
+DR = -4   # ドラムは -4dB（2026-10-15: 強弱・フィルが聞こえるよう -10/-11 から戻した。点数より人間の指示を優先）
 add("keys", "旋律（エレピ）", 0.24, -0.05, per(f_keys), barGain=A, reverb=0.25, gainDb=2)
 add("leadGuitar", "旋律（リードギター）", 0.16, 0.08, per(f_lead), barGain=A, gainDb=5, guitarTone="warm-lead-a")
 add("piano", "旋律（ピアノ・落ちサビ）", 0.2, -0.05, per(f_piano_mel), barGain=A, reverb=0.25, gainDb=2)
@@ -284,12 +266,12 @@ add("guitar", "クリーンギター", 0.1, 0.65, per(f_clean), barGain=A, amp="
 add("strings", "弦（上）", 0.09, 0.55, per(strings(72, 2)), barGain=A, reverb=0.28)
 add("strings", "弦（下）", 0.08, -0.55, per(strings(57, 0)), barGain=A, reverb=0.28)
 add("bass", "ベース", 0.3, 0, per(f_bass), barGain=A)
-add("kick", "キック", 0.3, 0, KICK, barGain=A, gainDb=DR)
-add("snare", "スネア", 0.26, 0, SNARE, barGain=A, push=0.02, gainDb=DR)
-add("hihat", "ハイハット", 0.08, 0, HAT, barGain=A, push=-0.008, gainDb=DR)
-add("crash", "クラッシュ", 0.1, 0, CRASH, barGain=A, gainDb=DR)
-add("crash", "ライド", 0.07, 0.2, RIDE, barGain=A, gainDb=DR)
-add("tom", "タム", 0.14, 0, TOM, barGain=A, reverb=0, gainDb=DR)
+add("kick", "キック", 0.3, 0, KICK, barGain=DG, gainDb=DR)
+add("snare", "スネア", 0.26, 0, SNARE, barGain=DG, push=0.02, gainDb=DR)
+add("hihat", "ハイハット", 0.08, 0, HAT, barGain=DG, push=-0.008, gainDb=DR)
+add("crash", "クラッシュ", 0.1, 0, CRASH, barGain=DG, gainDb=DR)
+add("crash", "ライド", 0.07, 0.2, RIDE, barGain=DG, gainDb=DR)
+add("tom", "タム", 0.16, 0, TOM, barGain=DG, reverb=0, gainDb=DR)
 
 song = {"title": "あの夏のとなり（仮）",
         "description": "（仮）夏を感じる、甘酸っぱい恋にたどり着くようなボカロ風の曲（歌なし）。BPM115・イ長調、最後のサビは半音上の変ロ長調。長7度の和音と C#7 で甘酸っぱく。旋律は Aメロ・Bメロ・ブリッジ・落ちサビがエレピ、サビ・間奏・ソロがリードギター（warm-lead-a）。入り方: 3（クリーンギターのアルペジオだけで2小節→ピアノとベルが入る→5小節目からドラムとベース）。終わり方: 長い和音で静かに。動機: A5:1 F#5:0.5 A5:0.5 C#6:1（サビ頭）。",

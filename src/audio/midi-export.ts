@@ -122,8 +122,10 @@ const REVERB: Partial<Record<Instrument, number>> = { pad: 70, choir: 80, string
 const CHORUS: Partial<Record<Instrument, number>> = { strings: 30, pad: 35, choir: 30, keys: 22, guitar: 0, echoGuitar: 20, crunch: 12, distGuitar: 8, bell: 12, harpsichord: 10 };
 /** 歪ませないアンプ（これらのときは、元の音色をそのまま使う）。 */
 const CLEAN_AMP_TYPES = new Set<string>(["clean", "jazz", "funk", "lofi", "retro8bit", "radio", "delicate", "crystal", "sparkleClean", "jpopClean"]);
-const SWELL_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "pad", "strings", "choir", "brass"]);
-const DETUNE_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "guitar", "echoGuitar", "strings", "pad", "brass"]);
+// リードギターは外す（2026-10-15、人間の指摘「ゴムが伸びたような音」。ギターの音は弾いた瞬間が一番大きく、ふくらまない）
+const SWELL_INSTRUMENTS = new Set<Instrument>(["lead", "pad", "strings", "choir", "brass"]);
+// ギター類は外す（2026-10-15、人間の指摘「ギターにしゃくり・ゴムが伸びたような音」。音ごとのわずかな音程のずれがしゃくりに聞こえる。フレットのある楽器は音程が揃う）
+const DETUNE_INSTRUMENTS = new Set<Instrument>(["lead", "strings", "pad", "brass"]);
 const ECHO_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "cowbell", "bell", "keys"]);
 
 function channelKey(track: Track, program: number): string {
@@ -323,8 +325,8 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         // 立ち上がり（CC73）と余韻（CC72）。64 が音源のまま
         if (track.attack !== undefined) list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 73, clamp127(Math.max(0, Math.min(1, track.attack)) * 127)] });
         if (track.release !== undefined) list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 72, clamp127(Math.max(0, Math.min(1, track.release)) * 127)] });
-        // 主旋律の楽器には、揺らぎ（ビブラート）を少し
-        if (inst === "leadGuitar" || inst === "lead" || inst === "brass") list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 1, score.tone === "prs" ? 40 : 26] });
+        // 主旋律の楽器には、揺らぎ（ビブラート）を少し。リードギターには付けない（2026-10-15、人間の指摘「ゴムが伸びたような音」。banned-sounds 17）
+        if (inst === "lead" || inst === "brass") list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 1, score.tone === "prs" ? 40 : 26] });
       }
       return { channel, list };
     };
@@ -512,7 +514,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       // ビブラート: 音が出て少したってから揺れ始め、音の終わりで元の深さに戻す（モジュレーション CC1）
       if (n.vibrato && !vibCurve && n.durationBeats >= 0.4 && (inst === undefined || GM_DRUM_NOTE[inst] === undefined)) {
         const depth = Math.max(0, Math.min(1, n.vibrato));
-        const base = inst === "leadGuitar" || inst === "lead" || inst === "brass" ? (score.tone === "prs" ? 40 : 26) : 0;
+        const base = inst === "lead" || inst === "brass" ? (score.tone === "prs" ? 40 : 26) : 0;
         const peak = Math.max(base, Math.round(depth * 127));
         const delay = Math.round(Math.min(durTicks * 0.3, PPQ * 0.4));
         for (const t of bendTargets) {

@@ -5,6 +5,9 @@
 # 構成（108小節）: イントロ4 → Aメロ16 → Bメロ8 → サビ16 → 間奏4 → Aメロ8 → Bメロ8 → サビ16 → ブリッジ8 → サビ16 → 終わり4
 # 使い方: python3 midnight-velvet.py <出力.json>
 import json, re, sys
+import os as _os
+sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+import drumkit
 
 def fmt(x): return ("%.4f" % x).rstrip("0").rstrip(".")
 N = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -168,62 +171,41 @@ def f_bass(si, s, pr, k, n):
         else: out += [f"{a}:0.5", f"{a}:0.25", f"{o}:0.25", "R:0.5", f"{a}:0.5", f"{f5}:0.25", f"{o}:0.25", f"{a}:0.5", f"{b7}:0.5", f"{o}:0.5"]
     return " ".join(out)
 
-# ---------------- ドラム ----------------
-Z = "................"
-def tomtok(tm):
-    pit = ["E3", "E3", "C3", "C3", "A2", "A2"]; hits = [j for j, c in enumerate(tm) if c in "xX"]; toks = []; kk = 0
-    for c in tm:
-        if c in "xX": toks.append(pit[min(5, kk * 6 // len(hits))] + ":0.25" + ("!" if c == "X" else "")); kk += 1
-        else: toks.append("R:0.25")
-    return toks
-KICK, SNARE, HAT, CRASH, TOM = [], [], [], [], []
-for si, (s, pr, k, n) in enumerate(SEC):
-    kb, sb, hb, cb, tb = [], [], [], [], []
-    L = len(pr)
-    for b in range(L):
-        last = b == L - 1; cr = "R:4"; tm = None
-        if s == "intro":
-            kk, sn, hh = "X..X..X...X..X..", "....X..o.o..X...", "xxXxxxXxxxXxxxXx"
-            if last: sn = "....X..o.o..xxXX"
-        elif s == "verse":
-            kk = "X..X..X...X..X.." if b % 2 == 0 else "X..X......X..X.."; sn = "....X..o.o..X..o"
-            hh = "x.x.x.x.x.x.x.x." if n == 0 else "xxXxxxXxxxXxxxXx"
-            if b == 0: cr = "g:X..............."
-            if last: sn = "....X..o.o..xxXX"
-        elif s == "pre":
-            kk = "X.....X.X.....X."; sn = "....X.......X..."; hh = "x.x.x.x.x.x.x.x."
-            if b == 0: cr = "g:X..............."
-            if b == 6: sn = "....X...x.x.X.x."
-            if last: kk = "X..............."; sn = "........xxxxXXXX"; hh = Z
-        elif s == "chorus":
-            kk = "X..X..X...X..X.." if b % 2 == 0 else "X..X..X.X.X..X.."; sn = "....X..o.o..X..o"; hh = "x.O.x.O.x.O.x.O."
-            if b % 4 == 0: cr = "g:X..............."
-            if last: sn = "....X...xxxxXXXX" if n != 3 else "X..............."; tm = "........xx..xxXX" if n != 3 else None
-            if last and n == 3: kk = "X..............."; hh = Z
-        elif s == "inter":
-            kk = "X..X..X...X..X.."; sn = "....X..o.o..X..o"; hh = "xxXxxxXxxxXxxxXx"
-            if b == 0: cr = "g:X..............."
-            if last: sn = "....X...xxxxXXXX"; tm = "............xxXX"
-        elif s == "bridge":
-            kk = "X.......X......." if b < 4 else "X..X..X...X..X.."; sn = "........X......." if b < 4 else "....X..o.o..X..o"; hh = "x...x...x...x..." if b < 4 else "x.x.x.x.x.x.x.x."
-            if b == 0: cr = "g:X..............."
-            if last: kk = "X..............."; sn = "X..............."; hh = Z   # 最後のサビの前で止める
-        elif s == "outro":
-            kk = "X..X..X...X..X.." if b < 2 else ("X..............." if b == 2 else Z); sn = "....X..o.o..X..o" if b < 2 else Z
-            hh = "xxXxxxXxxxXxxxXx" if b < 2 else Z
-            if b in (0, 2): cr = "g:X..............."
-        if cr != "R:4": hh = "." + hh[1:]
-        if tm:
-            first = next(j for j, c in enumerate(tm) if c in "xX"); hh = hh[:first] + "." * (16 - first)
-        kb.append("g:" + kk); sb.append("g:" + sn); hb.append("g:" + hh); cb.append(cr)
-        tb += tomtok(tm) if tm else ["R:4"]
-    KICK.append(kb); SNARE.append(sb); HAT.append(hb); CRASH.append(cb); TOM.append(tb)
+# ---------------- ドラム（drumkit.py: 強弱・アクセント・フィル） ----------------
+Z = drumkit.Z
+_cur = {"k": 0}
+def groove(s, n, b, L):
+    ride = False; crash = b == 0 and s not in ("bridge",)
+    ka = ["X..X..X...X..X..", "X..X......X..X.."]
+    if s == "intro": return "X..X..X...X..X..", "....X..o.o..X..o", "XoxoXoxoXoxoXoxo", False, b == 0
+    if s == "verse": return ka[b % 2], "....X..o.o..X..o", ("X.x.X.x.X.x.X.x." if n == 0 else "XoxoXoxoXoxoXoxo"), False, crash
+    if s == "pre": return "X.....X.X.....X.", "....X..o....X..o", ("X.x.X.x.X.x.X.x." if b < 4 else "XxxxXxxxXxxxXxxx"), False, crash
+    if s == "chorus":
+        kk = ["X..X..X...X..X..", "X..X..X.X.X..X.."][b % 2]; hh = "XoO.XoO.XoO.XoO."
+        if _cur["k"] == 1 and b in (1, 2, 5, 6): hh = Z; ride = True
+        return kk, "....X..o.o..X..o", hh, ride, crash
+    if s == "inter": return "X..X..X...X..X..", "....X..o.o..X..o", "XxxxXxxxXxxxXxxx", False, crash
+    if s == "bridge":
+        if b < 4: return "X.......X.......", "........X.......", "x...x...x...x...", False, b == 0
+        return ka[b % 2], "....X..o.o..X..o", Z, True, b == 4
+    if s == "outro":
+        if b < 2: return "X..X..X...X..X..", "....X..o.o..X..o", "XoO.XoO.XoO.XoO.", False, b == 0
+        if b == 2: return "X...............", Z, Z, False, True
+        return Z, Z, Z, False, False
+    return Z, Z, Z, False, False
+KICK, SNARE, HAT, CRASH, TOM, RIDE = [], [], [], [], [], []
+for _sec in SEC:
+    _cur["k"] = _sec[2]
+    parts_ = drumkit.build([_sec], groove, stops={"bridge"}, fills_off={"outro"})
+    for acc, got in zip((KICK, SNARE, HAT, CRASH, TOM, RIDE), parts_): acc += got
+DG = drumkit.drum_gain(SEC, {"intro": (0.8, 0.85), "verse": (0.78, 0.88), "pre": (0.85, 1.02), "chorus": (0.95, 1.0), "inter": (0.9, 0.95),
+                             "bridge": (0.7, 0.9), "outro": (0.9, 0.75)})
 
 PARTS = []
 def add(inst, role, vol, pan, secs, **kw):
     d = {"instrument": inst, "role": role, "volume": vol, "pan": pan, "notes": cat(secs, role)}; d.update(kw); PARTS.append(d)
 A = ARC
-DR = -11   # ドラムは -11dB（点数の試行で決めた）
+DR = -4   # ドラムは -4dB（2026-10-15: 強弱・フィルが聞こえるよう -10/-11 から戻した。点数より人間の指示を優先）
 add("fmEpiano", "旋律（FMエレピ）", 0.22, -0.05, per(f_piano_mel), barGain=A, reverb=0.22, gainDb=2)
 add("leadGuitar", "旋律（リードギター）", 0.16, 0.08, per(f_lead), barGain=A, gainDb=5, guitarTone="warm-lead-b")
 add("keys", "エレピ（3度）", 0.12, -0.45, per(keys(0)), barGain=A, reverb=0.2)
@@ -231,11 +213,12 @@ add("keys", "エレピ（7度）", 0.11, 0.45, per(keys(1)), barGain=A, reverb=0
 add("strings", "弦（上）", 0.08, 0.6, per(strings(72, 2)), barGain=A, reverb=0.28)
 add("strings", "弦（下）", 0.07, -0.6, per(strings(57, 0)), barGain=A, reverb=0.28)
 add("bass", "ベース（指弾き・跳ねる16分）", 0.3, 0, per(f_bass), barGain=A)   # スラップより指弾きのほうが点数が高かった（7.92→8.14）
-add("kick", "キック", 0.3, 0, KICK, barGain=A, gainDb=DR)
-add("snare", "スネア", 0.26, 0, SNARE, barGain=A, push=0.025, gainDb=DR)
-add("hihat", "ハイハット", 0.08, 0, HAT, barGain=A, push=-0.008, gainDb=DR)
-add("crash", "クラッシュ", 0.1, 0, CRASH, barGain=A, gainDb=DR)
-add("tom", "タム", 0.14, 0, TOM, barGain=A, reverb=0, gainDb=DR)
+add("kick", "キック", 0.3, 0, KICK, barGain=DG, gainDb=DR)
+add("snare", "スネア", 0.26, 0, SNARE, barGain=DG, push=0.025, gainDb=DR)
+add("hihat", "ハイハット", 0.08, 0, HAT, barGain=DG, push=-0.008, gainDb=DR)
+add("crash", "クラッシュ", 0.1, 0, CRASH, barGain=DG, gainDb=DR)
+add("crash", "ライド", 0.07, 0.2, RIDE, barGain=DG, gainDb=DR)
+add("tom", "タム", 0.16, 0, TOM, barGain=DG, reverb=0, gainDb=DR)
 
 song = {"title": "ミッドナイト・ベルベット（仮）",
         "description": "（仮）大人っぽく少し色っぽい、ポップなボカロ風の曲（歌なし）。BPM110・ハ短調。16分の裏打ち・跳ねる指弾きベース・エレピの裏打ちの和音。7th 中心で G7 に ♭9。旋律はサビがリードギター（warm-lead-b）、Aメロ・Bメロ・ブリッジが FM エレピ。入り方: 6（ドラムのグルーブだけで2小節→ベースとエレピ）。最後のサビ2回は半音上（嬰ハ短調）。終わり方: サビの頭の動機で終わる。動機: G5:0.75 Ab5:0.25 G5:0.5 Eb5:0.5（サビ頭）。",
