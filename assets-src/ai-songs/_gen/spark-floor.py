@@ -6,7 +6,8 @@
 # 構成: イントロ8 → ビルド8 → Aメロ16 → Bメロ8 → サビ16 → ブレイク8 → Aメロ8 → Bメロ8 → サビ16 → ブリッジ8（ブレイクダウン）→ 最後のサビ16（一発で終わる）
 # 使い方: python3 spark-floor.py <出力.json>
 # 書き出し: node tools/composer/song.mjs build assets-src/ai-songs/spark-floor.json --wav --edition modern --bass pick --piano salamander --guitar emily --master-preset edm --master -13.5（点数 8.14）
-import json, sys
+import json, os, sys
+KARAOKE = os.environ.get("KARAOKE") == "1"   # 1 なら重音テトの歌入り版の伴奏（spark-floor-vocal.py）
 
 def fmt(x): return ("%.4f" % x).rstrip("0").rstrip(".")
 N = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -160,17 +161,21 @@ for bi, b in enumerate(bars):
     nxt = bars[bi + 1]["chord"] if bi + 1 < NB else ch
     final = s == "chorus" and n == 3 and last
     # 旋律
-    if s == "verse": put("lead", bi, M_V[i % 8].split() if not (n == 0 and i < 8) else [R4])
-    elif s == "chorus":
+    if KARAOKE:   # 歌入り版の伴奏: 歌のある所（Aメロ・Bメロ・サビ）は旋律の楽器を鳴らさない。ブレイクはリードギターが Aメロの旋律を弾く
+        put("lead", bi, M_V[i].split() if s == "break" else [R4]); put("pmel", bi, [R4])
+        put("bell", bi, M_B[i] if s == "bridge" else [R4])
+    else:
+     if s == "verse": put("lead", bi, M_V[i % 8].split() if not (n == 0 and i < 8) else [R4])
+     elif s == "chorus":
         mel = (M_C2 if n % 2 == 1 else M_C)[i]
         put("lead", bi, mel.split() if not final else ["G5:4"])
-    else: put("lead", bi, [R4])
-    if s == "verse" and n == 0 and i < 8: put("pmel", bi, M_V[i])        # 1回目のAメロの前半はピアノ
-    elif s == "pre": put("pmel", bi, M_P[i])
-    else: put("pmel", bi, [R4])
-    if s == "chorus": put("bell", bi, [sh(x, 12) for x in (M_C2 if n % 2 == 1 else M_C)[i].split()] if not final else "G6:4")   # ベルは1オクターブ上
-    elif s == "bridge": put("bell", bi, M_B[i])
-    else: put("bell", bi, [R4])
+     else: put("lead", bi, [R4])
+     if s == "verse" and n == 0 and i < 8: put("pmel", bi, M_V[i])        # 1回目のAメロの前半はピアノ
+     elif s == "pre": put("pmel", bi, M_P[i])
+     else: put("pmel", bi, [R4])
+     if s == "chorus": put("bell", bi, [sh(x, 12) for x in (M_C2 if n % 2 == 1 else M_C)[i].split()] if not final else "G6:4")   # ベルは1オクターブ上
+     elif s == "bridge": put("bell", bi, M_B[i])
+     else: put("bell", bi, [R4])
     # アルペジオ（16分）
     t = tones_from(ch, 62)
     arp_on = s in ("intro", "build", "verse", "chorus", "break") or (s == "bridge" and i >= 2)
@@ -220,7 +225,7 @@ parts = []
 for key in ORDER:
     p = PARTS[key]; assert all(x is not None for x in p["bars"]), key
     d = dict(p["meta"]); d["notes"] = " ".join(p["bars"]); d["barGain"] = ARC; parts.append(d)
-song = {"title": "スパーク・フロア（仮）",
+song = {"title": "スパーク・フロア（歌入り版の伴奏・仮）" if KARAOKE else "スパーク・フロア（仮）",
         "description": "（仮）ダンスとロックを混ぜたインスト。BPM126・ト短調・約3分49秒。4つ打ちのキック・裏拍のオープンハイハット・オクターブで跳ねるベース・"
                        "キックに合わせて沈むシンセの和音・16分のFMエレピのアルペジオに、左右の歪みギターとリードギターの旋律（ビブラート・チョーキングなし）。"
                        "入り方: キックとアルペジオだけ → ギター → 全員。終わり方: 最後のサビの終わりで全員一発、のばして消える。",
