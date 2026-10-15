@@ -1,11 +1,11 @@
 # 『夏空ストローク』（仮）: カッティングが主役の、疾走感のある夏の青春ソング（ボカロ風・歌なし）。BPM178・ホ長調、約5分2秒（224小節）。最後のサビ4回分は半音上（ヘ長調）。
 # カッティング: 左右に型のちがう2本（左＝まっすぐの16分、右＝裏から入るシンコペ）。4弦のクローズ・ボイシング（guitarcut.py）。ほぼ全編。
 #   2回目の間奏はカッティングとドラムだけの見せ場。
-# 旋律: Aメロ・Bメロ・ブリッジ・落ちサビは生ピアノ、サビ・リフ・ソロはリードギター（warm-lead-a）。サビはベルを重ねる。ギターのしゃくり・ビブラートなし。
+# 旋律: Aメロ・Bメロ・ブリッジ・落ちサビは生ピアノ、サビ・リフ・ソロはリードギター（warm-lead-b）。サビはベルを重ねる。ギターのしゃくり・ビブラートなし。
 # ドラム: drumkit.py（強弱・アクセント・フィル）。
 # 構成: イントロ8 → リフ8 → Aメロ16 → Bメロ8 → サビ16 → リフ8 → Aメロ16 → Bメロ8 → サビ16 → 間奏（カッティング）16 →
 #   ブリッジ8 → ソロ16 → 落ちサビ16 → Bメロ8（転調へ） → 半音上のサビ32 → リフ8 → 終わり8
-# 使い方: python3 natsuzora-stroke.py <出力.json>（書き出し: --drums jpop --bass finger --piano salamander --orchestra vsco --guitar gretsch --master-preset jpop-band。点数 7.82）
+# 使い方: python3 natsuzora-stroke.py <出力.json>（書き出し: --drums jpop --bass finger --piano salamander --orchestra vsco --guitar gretsch --master-preset jpop-band。点数 7.85）
 import json, re, sys
 import os as _os
 sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
@@ -275,7 +275,7 @@ def add(inst, role, vol, pan, secs, **kw):
 A = ARC
 DR = -8   # ドラムは -8dB（点数の試行で決めた）
 add("piano", "旋律（ピアノ）", 0.22, -0.05, per(f_piano_mel), barGain=A, reverb=0.2, gainDb=2)
-add("leadGuitar", "旋律（リードギター）", 0.16, 0.08, per(f_lead), barGain=A, gainDb=7, guitarTone="warm-lead-a")
+add("leadGuitar", "旋律（リードギター）", 0.16, 0.08, per(f_lead), barGain=A, gainDb=7, guitarTone="warm-lead-b")   # 2026-10-15 聞き比べで A（こもった軽い歪み）に決定
 add("bell", "きらめき（ベル）", 0.06, 0.3, per(f_bell), barGain=A, reverb=0.3)
 add("piano", "ピアノ（分散和音）", 0.13, -0.3, per(f_piano), barGain=A, reverb=0.15)
 for _i, _name in enumerate(["低", "中低", "中高", "高"]):
@@ -293,7 +293,7 @@ add("crash", "ライド", 0.07, 0.2, RIDE, barGain=DG, gainDb=DR)
 add("tom", "タム", 0.16, 0, TOM, barGain=DG, reverb=0, gainDb=DR)
 
 song = {"title": "夏空ストローク（仮）",
-        "description": "（仮）カッティングが主役の、疾走感のある夏の青春ソング（ボカロ風・歌なし）。BPM178・ホ長調、最後のサビ4回分は半音上のヘ長調。カッティングは左右に型のちがう2本（4弦のクローズ・ボイシング）で、2回目の間奏はカッティングとドラムだけの見せ場。旋律は Aメロ・Bメロ・ブリッジ・落ちサビが生ピアノ、サビ・リフ・ソロがリードギター（warm-lead-a）。ドラムは強弱・アクセント・フィル（drumkit.py）。入り方: 2（左のカッティングだけで2小節→全員でリフ）。終わり方: 全員で一発止め。動機: E6:0.5 C#6:0.5 B5:0.5 A5:0.5 C#6:1（サビ頭）。",
+        "description": "（仮）カッティングが主役の、疾走感のある夏の青春ソング（ボカロ風・歌なし）。BPM178・ホ長調、最後のサビ4回分は半音上のヘ長調。カッティングは左右に型のちがう2本（4弦のクローズ・ボイシング）で、2回目の間奏はカッティングとドラムだけの見せ場。旋律は Aメロ・Bメロ・ブリッジ・落ちサビが生ピアノ、サビ・リフ・ソロがリードギター（warm-lead-b）。ドラムは強弱・アクセント・フィル（drumkit.py）。入り方: 2（左のカッティングだけで2小節→全員でリフ）。終わり方: 全員で一発止め。動機: E6:0.5 C#6:0.5 B5:0.5 A5:0.5 C#6:1（サビ頭）。",
         "bpm": 178, "beats": 4, "chords": " ".join(chords), "barsPerChord": 1, "repeats": 1,
         "tone": "pop", "feel": "vocaloid", "human": 0.25, "dynamics": "natural", "autoAccompaniment": False, "autoScoop": False,
         "parts": PARTS}
