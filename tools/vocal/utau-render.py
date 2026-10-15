@@ -129,6 +129,93 @@ def pitch_curve(notes, total_ms, seed=7):
     out += 0.05 * drift / (np.abs(drift).max() + 1e-9)
     return out
 
+# ---- 表情（2026-10-15、人間の指示「声に強さとか弱さとか、しゃくり、ビブラートも入れてみよう」）----
+# セクションごとの強さ（dB）と、ビブラートの深さ（半音）
+SECT_DB = {"verse": -2.5, "pre": -1.5, "chorus": 0.0, "soft": -5.0, "last": 0.5}
+SECT_VIB = {"verse": 0.26, "pre": 0.30, "chorus": 0.40, "soft": 0.30, "last": 0.45}
+
+def express(notes, total_ms, beat, sect_of, seed=7):
+    """notes: [(開始ms, 長さms, midi)]。sect_of(開始ms) → セクション名。
+    返り値: (5ms ごとの音の高さ[MIDI], 5ms ごとの強さ[dB], 情報)"""
+    n = int(total_ms / FP) + 2
+    t = np.arange(n) * FP
+    cur = np.full(n, float(notes[0][2]))
+    for i, (s, d, m) in enumerate(notes):
+        e = notes[i + 1][0] if i + 1 < len(notes) else total_ms
+        cur[(t >= s) & (t < e)] = m
+    out = cur.copy(); gdb = np.zeros(n)
+    rng = np.random.default_rng(seed)
+    # フレーズ（休みで区切る）
+    phr = []; cur_p = [0]
+    for i in range(1, len(notes)):
+        if notes[i][0] - (notes[i - 1][0] + notes[i - 1][1]) > 1: phr.append(cur_p); cur_p = []
+        cur_p.append(i)
+    phr.append(cur_p)
+    info = {"しゃくり": 0, "ビブラート": 0, "フォール": 0}
+    for P in phr:
+        ms = [notes[i][2] for i in P]; mean_m = np.mean(ms); top = P[int(np.argmax(ms))]
+        for q, i in enumerate(P):
+            s, d, m = notes[i]
+            sec = sect_of(s)
+            first, last = q == 0, q == len(P) - 1
+            prev = notes[P[q - 1]] if q else None
+            iv = m - prev[2] if prev else 0
+            # --- 音の高さ: つなぎ ---
+            if prev is not None and iv != 0:
+                w = min(140.0, 60 + 12 * abs(iv)); c = s - 0.25 * w
+                k = (t >= c - w / 2) & (t < c + w / 2); x = (t[k] - (c - w / 2)) / w
+                out[k] = prev[2] + iv * (0.5 - 0.5 * np.cos(np.pi * x))
+            # --- しゃくり（下からすくい上げる）---
+            sc = 0.0
+            if first: sc = 1.2 if d >= 0.9 * beat else 0.7               # 歌い出し
+            elif iv >= 3 and d >= 0.45 * beat: sc = 0.8                    # 大きく上がる所
+            elif sec in ("chorus", "last") and abs((s / beat) % 4) < 0.01 and iv >= 0 and d >= 0.45 * beat: sc = 0.4   # サビの小節の頭
+            if sc > 0:
+                L = 90 + 40 * sc
+                k = (t >= s - 10) & (t < s + L); x = np.clip((t[k] - (s - 10)) / L, 0, 1)
+                base = out[k]
+                out[k] = base - sc * (1 - x) ** 2.2 + 0.08 * sc * np.sin(np.pi * x) * x   # 少し行き過ぎて落ち着く
+                info["しゃくり"] += 1
+            # --- ビブラート（長い音。途中から、だんだん深く。少しゆらぐ速さ）---
+            if d >= 0.9 * beat:
+                depth = SECT_VIB.get(sec, 0.3) + (0.08 if last else 0.0)
+                vs = s + max(170, d * 0.33); ve = s + d - 20
+                k = (t >= vs) & (t < ve)
+                if k.any():
+                    tt = (t[k] - vs) / 1000.0
+                    rate = 5.6 + 0.35 * np.sin(2 * np.pi * 0.7 * tt + rng.uniform(0, 6))
+                    ph = 2 * np.pi * np.cumsum(rate) * FP / 1000.0
+                    env = np.minimum(1, tt / 0.28) ** 1.5 * np.minimum(1, (ve - t[k]) / 70)
+                    out[k] += depth * env * np.sin(ph)
+                    gdb[k] += 0.9 * env * np.sin(ph - 0.6)        # 音量も少しゆれる
+                    info["ビブラート"] += 1
+            # --- フォール（長いフレーズ終わりで、最後にほんの少し下がる）---
+            if last and d >= 1.4 * beat and sec != "last":
+                k = (t >= s + d - 130) & (t < s + d); x = (t[k] - (s + d - 130)) / 130
+                out[k] -= 0.5 * x ** 2; info["フォール"] += 1
+            # --- 強さ ---
+            g = SECT_DB.get(sec, 0.0)
+            pos = (s / beat) % 4                                 # 拍の中の位置
+            if abs(pos) < 0.01 or abs(pos - 2) < 0.01: g += 0.8   # 1・3拍目
+            elif abs(pos - 1) < 0.01 or abs(pos - 3) < 0.01: g += 0.3
+            elif abs(pos % 1 - 0.5) < 0.01: g -= 0.6              # 裏拍
+            else: g -= 1.0
+            g += float(np.clip(0.25 * (m - mean_m), -2, 2))       # 高い音は少し強く
+            # フレーズの山（いちばん高い音）へ向けて強く、終わりへ向けて少し弱く
+            if len(P) > 2:
+                tp = P.index(top)
+                g += -1.5 + 1.5 * (q / max(1, tp)) if q <= tp else -1.0 * (q - tp) / max(1, len(P) - 1 - tp)
+            k = (t >= s - 40) & (t < s + d)
+            gdb[k] += g
+            if d >= 0.9 * beat:   # 長い音: 終わりへ向けて少しおさめる
+                k2 = (t >= s + d * 0.75) & (t < s + d); x = (t[k2] - (s + d * 0.75)) / (d * 0.25)
+                gdb[k2] -= 2.0 * x ** 2
+    gdb = uniform_filter1d(gdb, 7)            # 35ms でなめらかに
+    gdb = np.clip(gdb, -10, 3)
+    drift = np.convolve(rng.standard_normal(n), np.hanning(101) / np.hanning(101).sum(), mode="same")
+    out += 0.05 * drift / (np.abs(drift).max() + 1e-9)
+    return out, gdb, info
+
 def seg_bounds(o, nfr):
     a = int(o["off"] / FP)
     b = int((o["off"] - o["cut"]) / FP) if o["cut"] < 0 else nfr - int(o["cut"] / FP)
@@ -239,6 +326,9 @@ def main():
     ap_.add_argument("--total-bars", type=int, default=0); ap_.add_argument("--no-ride", action="store_true")
     ap_.add_argument("--ap-power", type=float, default=3.0); ap_.add_argument("--breath-db", type=float, default=-200.0)  # 息は標準では入れない（ノイズに聞こえるため）
     ap_.add_argument("--no-tail", action="store_true")
+    ap_.add_argument("--plain", action="store_true", help="表情（強弱・しゃくり・ビブラート）を付けない")
+    ap_.add_argument("--soft", default="", help="静かなセクションの小節（例 88-96）")
+    ap_.add_argument("--last", default="", help="最後のサビの小節（例 96-112）")
     a = ap_.parse_args()
     global AP_POW; AP_POW = a.ap_power
     spec = importlib.util.spec_from_file_location("vocal", a.vocal); vocal = importlib.util.module_from_spec(spec); spec.loader.exec_module(vocal)
@@ -257,7 +347,23 @@ def main():
             if s <= b < e: return v
         return 1.0
     notes = [(s * beat, d * beat, midi_of(p), k, bar_gain(s)) for s, d, p, k in raw]
-    pc = pitch_curve([(s, d, m) for s, d, m, k, g in notes], total_ms)
+    order = getattr(vocal, "ORDER", None)
+    def rng_of(x):
+        if not x: return None
+        a_, b_ = x.split("-"); return int(a_), int(b_)
+    soft, lastr = rng_of(a.soft), rng_of(a.last)
+    def sect_of(ms):
+        b = int(ms // (4 * beat))
+        if soft and soft[0] <= b < soft[1]: return "soft"
+        if lastr and lastr[0] <= b < lastr[1]: return "last"
+        key = order[b // 8] if order and b // 8 < len(order) else None
+        return {"A": "verse", "B": "pre", "C": "chorus"}.get((key or "C")[0], "chorus")
+    base_notes = [(s, d, m) for s, d, m, k, g in notes]
+    if a.plain:
+        pc = pitch_curve(base_notes, total_ms); gdb = None
+    else:
+        pc, gdb, info = express(base_notes, total_ms, beat, sect_of)
+        print("表情:", info)
     out = np.zeros(int(total_ms * FS / 1000) + FS)
     TARGET = -20.0   # 母音の大きさの目標（dBFS）
     used = {"vcv": 0, "fallback": 0}; bi = 0  # used: 1番目の音源で見つかった数 / ほかの音源で代用した数
@@ -338,6 +444,9 @@ def main():
     for q, x in breaths: out[q:q + len(x)] += x[: max(0, len(out) - q)]
     if not a.no_ride:
         out = ride(out, TARGET)
+    if gdb is not None:   # 表情の強弱は、音量そろえ（ride）のあとにかける（そろえで消えないように）
+        tt = np.arange(len(out)) / FS * 1000 / FP
+        out *= 10 ** (np.interp(tt, np.arange(len(gdb)), gdb) / 20)
     out *= 0.5 / (np.abs(out).max() + 1e-9)
     sf.write(a.out, out.astype(np.float32), FS, subtype="FLOAT")
     print("書き出し:", a.out, f"{len(out) / FS:.1f}秒", len(notes), "音", used)
