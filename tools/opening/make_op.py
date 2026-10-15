@@ -1,7 +1,7 @@
 # リングライト・クロニクルのオープニング映像（1280×720・30fps・84秒）。曲『ひのわのそらへ』（BPM160＝1小節1.5秒）の拍に合わせてカットを切る。
 # 素材: ゲームの戦闘の背景（src/assets/battle-bg）、ドット絵帳の仲間の全身・ボス・神、歩く絵、町の画面。
 # 使い方: python3 make_op.py <出力.mp4> [--audio 曲.wav] [--from 秒 --to 秒] [--still 秒 --png 出力.png]
-import sys, math, random, subprocess, argparse, glob, os
+import sys, json, math, random, subprocess, argparse, glob, os
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageChops, ImageEnhance
 
@@ -59,9 +59,20 @@ FACEH = [fit_h(f, 400) for f in FACES]
 STRIP = [fit_h(fr(SHEET[k], (CENTER[k] - 0.1, 0.02, CENTER[k] + 0.1, 1.0)), 620) for k in range(6)]
 LOGO = Image.open(f"{HERE}/logo-native.png").convert("RGBA")
 LOGO5 = LOGO.resize((LOGO.width * 5, LOGO.height * 5), Image.NEAREST)
-def artn(i): return load(glob.glob(f"{HERE}/art-new/{i:03d}_*.png")[0])   # 直した版（monster-fullbody ブランチの最新。女神は 10/07 の final.txt）
-BOSS = [artn(i) for i in list(range(220, 230)) + [238, 239]]
-GODS = [artn(i) for i in range(230, 238)]
+# ボス（人間の指示 2026-10-16「ボスも神も予言の歪みだけ」）: 手直しと動き（歩く16コマ・攻撃3種類）のある「予言の歪み」1体だけを使う。
+# 絵は monster-fullbody ブランチの assets-src/monsters/kiri-yugami/anim.json から書き出したコマ（yogen/frames/）。
+YDIR = os.path.join(HERE, "yogen")
+_yms = json.load(open(f"{YDIR}/ms.json"))
+YOGEN = {n: [(load(f"{YDIR}/frames/{n}_{i:02d}.png"), ms) for i, ms in enumerate(_yms[n])] for n in _yms}
+def yogen(name, tl, loop=True):
+    """動き name の、始まりから tl 秒のコマ（と何コマ目か）。"""
+    fr = YOGEN[name]; tot = sum(ms for _, ms in fr) / 1000
+    if loop: tl %= tot
+    tl = max(0.0, min(tl, tot - 1e-6)); acc = 0.0
+    for i, (im, ms) in enumerate(fr):
+        acc += ms / 1000
+        if tl < acc: return im, i
+    return fr[-1][0], len(fr) - 1
 WALKS = [load(f"{WALK}/walk-c{i}.png") for i in range(6)]
 def walk_frame(i, row, fr):
     sh = WALKS[i]; f = sh.crop((fr * 16, row * 32, fr * 16 + 16, row * 32 + 32))
@@ -155,10 +166,10 @@ def sparkles(canvas, t, n=40, seed=3, area=(0, 0, W, H), col=(255, 230, 160), sp
         d.ellipse((x0 - s, y - s, x0 + s, y + s), fill=col + (int(220 * b),))
 
 # ---------- 歌詞（小節 → 行） ----------
-LYR = [(12, 14, "朝の港を　風が呼んでる"), (14, 16, "地図の向こうへ　空へ"), (16, 18, "鞄ひとつで　胸が踊るよ"), (18, 20, "明日へ行こう　さあ"),
-       (20, 22, "光の環を　追いかけていく"), (22, 24, "まだ見ぬ明日へ"),
-       (24, 26, "さあ駆け出そうよ　風を追い越して"), (26, 28, "灯の環の空まで　行こう"), (28, 30, "出会う仲間と　物語を"), (30, 32, "紡いでいくよ"),
-       (32, 34, "どこまでも行こう　光の先まで"), (34, 36, "この手でつかもう　ほら"), (36, 39, "リングライト・クロニクル")]
+LYR = [(12, 14, "星降る港　霧の向こうで"), (14, 16, "誰かが歌う　遠く"), (16, 18, "夢の地図には　星のしるしが"), (18, 20, "明日へ招く　さあ"),
+       (20, 22, "目覚めの鐘　精霊の声"), (22, 24, "魔法の空へ"),
+       (24, 26, "さあ駆け出そうよ　星屑の海を"), (26, 28, "灯の環の空まで　行こう"), (28, 30, "古の歌　翼に乗せ"), (30, 32, "運んでいくよ"),
+       (32, 34, "どこまでも行こう　夢のその先へ"), (34, 36, "この手に輝く　ほら"), (36, 39, "リングライト・クロニクル")]
 def lyrics(canvas, t):
     b = t / BAR
     for b0, b1, s in LYR:
@@ -248,21 +259,31 @@ def frame(t):
             put(c, nmI, tx, ty, al); put(c, enI, tx + nmI.width + 10, ty + 34, al); put(c, roI, tx + 4, ty + 92, al)
         if bi == 12 and fb < 0.15: overlay(c, (255, 255, 255), 1 - fb / 0.15)
         lyrics(c, t)
-    elif b < 24:   # Bメロ: ゆがみの影（半小節ずつボスが浮かぶ）
+    elif b < 24:   # Bメロ: 霧の奥から「予言の歪み」が現れる（謎のことばが半小節ずつ）
+        u = (b - 20) / 4
+        bg_pan(c, BGC["prophecy"], u, dx=0.5)
+        overlay(c, (10, 0, 20), 0.55 - 0.2 * ease((b - 21.8) / 0.4))
+        if b < 22:   # 霧の中の影が歩いて近づく
+            im, _ = yogen("walk", b * BAR - 40)
+            im = scale(im, 1.5 + 0.7 * ease((b - 20) / 2))
+            boss_glow(c, im, W / 2, H / 2 + 40, 0.15 * onbeat, ease((b - 20) / 0.8))
+            overlay(c, (150, 140, 170), 0.25 * (1 - ease((b - 21) / 1)))
+        elif b < 23:   # 姿を見せて、両手で打つ
+            im, i = yogen("attack3", (b - 22) * BAR, loop=False)
+            put_c(c, scale(im, 2.2), W / 2, H / 2 + 40)
+            if i in (6, 7): overlay(c, (220, 250, 255), 0.55)
+        else:
+            im, _ = yogen("walk", (b - 23) * BAR)
+            put_c(c, scale(im, 2.2), W / 2, H / 2 + 40)
         k = int((b - 20) * 2); sub = (b - 20) * 2 - k
-        bgs = ["prophecy", "cave", "forest-shrine1", "volcano1", "warp1", "void2", "warp2", "void1"]
-        bg_pan(c, BGC[bgs[k]], sub, dx=0.6 * (1 if k % 2 else -1))
-        overlay(c, (10, 0, 20), 0.45)
-        im = scale(BOSS[k], 2.2 + 0.2 * sub)
-        if k < 7: boss_glow(c, im, W / 2 + (k % 2 * 2 - 1) * 180, H / 2 + 20, onbeat, eout(sub * 3))
         if k < 6 and sub < 0.9:
-            words = ["歪み", "静まりの年", "消えた祖父", "灯芯都の影", "砕けた環", "真実へ"]
-            im2 = T(words[k], 60, "j", fill=(255, 210, 220), stroke=3, sc=(80, 0, 30))
+            words = ["歪み", "静まりの年", "消えた祖父", "霧の予言", "砕けた環", "真実へ"]
+            im2 = T(words[k], 60, "j", fill=(220, 240, 255), stroke=3, sc=(10, 30, 60))
             put(c, im2, 80 if k % 2 == 0 else W - im2.width - 80, 90, eout(sub * 3))
         if b >= 23:
             ring(c, 640, 360, 300, 90, alpha=1.0, glow=1.4, crack=ease((b - 23) / 0.7), rot=t)
             overlay(c, (255, 255, 255), ease((b - 23.6) / 0.4))
-        overlay(c, (120, 0, 30), 0.25 * onbeat)
+        overlay(c, (0, 40, 80), 0.2 * onbeat)
         lyrics(c, t)
     elif b < 40:   # サビ
         k = bi - 24
@@ -273,22 +294,47 @@ def frame(t):
             party_run(c, (b - 24) * BAR, H - 60, x0=W + 60 - 1500, speed=200, k=5, spacing=84)
             sparkles(c, t, 60, alpha=0.9)
             if k == 0 and fb < 0.2: overlay(c, (255, 255, 255), 1 - fb / 0.2)
-        elif k < 8:   # 戦い
-            boss = BOSS[[8, 9, 10, 11][k - 4]]; bgn = ["meadow", "snow1", "volcano1", "void2"][k - 4]
-            bg_pan(c, BGC[bgn], fb, dx=0.8 * (1 if k % 2 else -1))
-            im = scale(boss, 2.0); shake = 8 * onbeat
-            put_c(c, im, 400 + shake, H / 2 + 10)
+        elif k < 8:   # 戦い: 予言の歪みと4小節
+            u = (b - 28) / 4
+            bg_pan(c, BGC["prophecy"], u, dx=0.6)
+            bx, by = 400, H / 2 + 20
+            seq = ["walk", "attack", "walk", "attack2"][k - 4]
+            im, i = yogen(seq, fb * BAR, loop=(seq == "walk"))
+            hit = seq != "walk" and i in (6, 7)
+            pshake = 10 * (1 if hit else 0) * (1 if int(t * 30) % 2 else -1)
+            dead = ease((b - 31.55) / 0.4)
+            if dead > 0:   # 最後に光に包まれて消える
+                wim = Image.new("RGBA", im.size, (255, 255, 255, 0)); wim.putalpha(im.getchannel("A"))
+                im = Image.blend(im, wim, min(1, dead * 1.5))
+            put_c(c, scale(im, 2.1), bx, by, 1 - ease((b - 31.8) / 0.2))
             for j in range(6):
                 sp = scale(WF[j][2][int(t * 6 + j) % 3], 4)
-                put(c, sp, 900 + (j % 2) * 70 + (j // 2) * 60, 300 + (j // 2) * 90 + (j % 2) * 30)
-            overlay(c, (255, 240, 200), 0.45 * onbeat * (1 if int(beat) % 2 == 0 else 0))
-            ring(c, 400, H / 2 + 10, 180 + 200 * fb, 60 + 70 * fb, alpha=0.8 * (1 - fb), glow=1.3)
-        elif k < 12:   # 8つの神（半小節ずつ）
+                put(c, sp, 900 + (j % 2) * 70 + (j // 2) * 60 + pshake, 300 + (j // 2) * 90 + (j % 2) * 30)
+            if hit: overlay(c, (200, 240, 255), 0.5)
+            if seq == "walk":   # 仲間の番: 拍ごとに光の環が当たる
+                ring(c, bx, by, 180 + 200 * (beat % 1), 60 + 70 * (beat % 1), alpha=0.8 * (1 - beat % 1), glow=1.3)
+                overlay(c, (255, 240, 200), 0.3 * onbeat)
+            if k == 7: overlay(c, (255, 255, 255), ease((b - 31.6) / 0.3) * 0.9)
+        elif k < 12:   # 仲間の顔（元のイラスト、半小節ずつ）→ 6人そろう
             j = min(7, int((b - 32) * 2)); sub = (b - 32) * 2 - j
-            bg_pan(c, BGC["void2" if j % 2 else "void1"], (b - 32) / 4, dx=0.5)
-            im = scale(GODS[j], 2.3)
-            put_c(c, im, W / 2 + (j % 2 * 2 - 1) * 200, H / 2, eout(sub * 4) * (1 - ease((sub - 0.88) / 0.12)))
-            overlay(c, (255, 255, 255), 0.6 * max(0, 1 - sub * 6))
+            if j < 6:
+                bg_pan(c, BLUR[j], sub, dx=0.4); overlay(c, (12, 8, 24), 0.35)
+                face = FACEH[j]; side = 1 if j % 2 == 0 else -1
+                fx = W / 2 + side * 170 - face.width / 2 - side * 120 * (1 - eout(sub * 3))
+                fa = eout(sub * 6 + 0.15)
+                put(c, face, fx, (H - face.height) / 2 - 20, fa)
+                col = PARTY[j][4]
+                ImageDraw.Draw(c).rectangle((fx - 3, (H - face.height) / 2 - 23, fx + face.width + 2, (H + face.height) / 2 - 18), outline=col + (int(230 * fa),), width=4)
+                if sub < 0.08: overlay(c, (255, 255, 255), 0.4 * (1 - sub / 0.08))
+            else:
+                overlay(c, (16, 12, 30), 1.0)
+                ring(c, 640, 70, 420, 50, alpha=0.9, glow=1.2, rot=t * 0.3)
+                for q in range(6):
+                    im = STRIP[q]; x = q * (W / 6) + (W / 6 - im.width) / 2
+                    d = eout((b - 35) * 4 - q * 0.15)
+                    put(c, im, x, 90 + 40 * (1 - d), d)
+                sparkles(c, t, 50, alpha=0.9)
+                overlay(c, (255, 255, 255), ease((b - 35.8) / 0.2))
         elif k < 14:   # 船で海へ
             u = (b - 36) / 2
             bg_pan(c, BGC["ship2"], u, dx=0.3, dy=0.0)
