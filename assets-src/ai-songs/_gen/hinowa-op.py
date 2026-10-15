@@ -254,5 +254,5 @@ song = {"title": "ひのわのそらへ（伴奏・仮）",
         "tone": "rock", "feel": "rock", "human": 0.2, "dynamics": "natural", "autoAccompaniment": False, "autoScoop": False,
         "parts": parts}
 out = sys.argv[1] if len(sys.argv) > 1 else "assets-src/ai-songs/hinowa-op.json"
-json.dump(song, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+json.dump({"guitarWobble": False, **song}, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("ok", len(parts), "parts", NB, "bars", NB * 2, "sec")

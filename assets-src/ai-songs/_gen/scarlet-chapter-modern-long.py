@@ -421,5 +421,5 @@ song = {"title": "緋色の断章（現代版・6分）",
         "tone": "rock", "feel": "rock", "human": 0.25, "dynamics": "natural", "autoAccompaniment": False, "autoScoop": False,
         "parts": parts}
 out = sys.argv[1] if len(sys.argv) > 1 else "assets-src/ai-songs/scarlet-chapter-modern-long.json"
-json.dump(song, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+json.dump({"guitarWobble": False, **song}, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("ok", len(parts), "parts", NB, "bars", round(NB * 4 * 60 / 172), "sec")

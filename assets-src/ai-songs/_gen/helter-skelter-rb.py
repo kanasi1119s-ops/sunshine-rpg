@@ -314,5 +314,5 @@ song = {"title": "ヘルタースケルター（仮）",
         "tone": "rock", "feel": "rock", "swing": 0.55, "human": 0.3, "dynamics": "natural", "autoAccompaniment": False, "autoScoop": False,
         "parts": parts}
 out = sys.argv[1] if len(sys.argv) > 1 else "assets-src/ai-songs/helter-skelter-rb.json"
-json.dump(song, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+json.dump({"guitarWobble": False, **song}, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("ok", len(parts), "parts", NB, "bars", round(NB * 4 * 60 / 138), "sec")

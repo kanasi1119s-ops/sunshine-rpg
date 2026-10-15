@@ -243,5 +243,5 @@ song = {"title": ("（アコギ版）" if ACOUSTIC else "") + "ミッドナイ�
         "bpm": 110, "beats": 4, "chords": " ".join(chords), "barsPerChord": 1, "repeats": 1,
         "tone": "pop", "feel": "pop", "human": 0.3, "dynamics": "natural", "autoAccompaniment": False, **({"autoScoop": False} if ACOUSTIC else {}),
         "parts": PARTS}
-json.dump(song, open(sys.argv[1], "w"), ensure_ascii=False, indent=1)
+json.dump({"guitarWobble": False, **song}, open(sys.argv[1], "w"), ensure_ascii=False, indent=1)
 print("ok", len(PARTS), "parts", len(chords), "bars", round(len(chords) * 4 * 60 / 110), "sec")

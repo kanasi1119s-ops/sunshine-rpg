@@ -171,6 +171,8 @@ export interface AiSong extends RhythmSongFields, AiSongExtras, AiSongJpop {
   snareTune?: number;
   /** false にすると、ギターの長い音に自動でかかる「下から持ち上げて入る」しゃくりを止める。 */
   autoScoop?: boolean;
+  /** false なら、ギター類の自動の揺れ（自動ビブラート・音量のふくらみ・音ごとの音程のずれ）を付けない（Score.guitarWobble）。 */
+  guitarWobble?: boolean;
   /** ドラムの太鼓ごとのミックス。{ hat: { level: 0.7, pan: -0.4 }, snare: { reverb: 0.3 } } のように。level＝音量の倍率（1が標準）、pan＝左右、reverb＝残響の送り（0〜1）。real版で効く。 */
   drumMix?: Partial<Record<"kick" | "snare" | "hat" | "tom" | "crash", { level?: number; pan?: number; reverb?: number; spread?: number; tune?: number }>>;
   /** false にすると、sections の場面の変わり目にドラムのおかず（フィル）を自動で入れない（省略は入れる）。 */
@@ -877,6 +879,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     ...scoreRhythmFields(song, warnings),
     ...(tempoMap ? { tempoMap } : {}),
     ...(song.autoScoop === false ? { autoScoop: false } : {}),
+    ...(song.guitarWobble === false ? { guitarWobble: false } : {}),
     ...(song.dynamics === "natural" ? { dynamicRange: "wide" as const } : {}),
     ...(Number(song.snareTune) && Number.isFinite(Number(song.snareTune)) ? { snareTune: Math.max(-6, Math.min(6, Math.round(Number(song.snareTune) * 2) / 2)) } : {}),
     ...(mergedDrumMix ? { drumMix: mergedDrumMix } : {}),

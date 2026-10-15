@@ -4,7 +4,7 @@ import { noteNameToMidi } from "./note";
 
 const key = keyOf({ tonic: "A", minor: true });
 const chords = ["Am", "F", "C", "G", "Am", "F", "C", "G", "Am", "F", "C", "G", "Am", "F", "G", "Am"];
-const make = (seed: number) => generateMelody(makeRng(seed), key, chords, 4, { lo: 64, hi: 84, density: "normal" });
+const make = (seed: number) => generateMelody(makeRng(seed), key, chords, 4, { lo: 64, hi: 84, density: "normal", develop: true });
 const parse = (m: string) => m.split(" ").map((t) => { const [n, d] = t.split(":"); return { n, d: Number(d) }; });
 
 describe("generateMelody（展開・跳躍のあとの戻り）", () => {

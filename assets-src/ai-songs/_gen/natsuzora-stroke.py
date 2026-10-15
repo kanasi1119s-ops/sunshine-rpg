@@ -297,5 +297,5 @@ song = {"title": "夏空ストローク（仮）",
         "bpm": 178, "beats": 4, "chords": " ".join(chords), "barsPerChord": 1, "repeats": 1,
         "tone": "pop", "feel": "vocaloid", "human": 0.25, "dynamics": "natural", "autoAccompaniment": False, "autoScoop": False,
         "parts": PARTS}
-json.dump(song, open(sys.argv[1], "w"), ensure_ascii=False, indent=1)
+json.dump({"guitarWobble": False, **song}, open(sys.argv[1], "w"), ensure_ascii=False, indent=1)
 print("ok", len(PARTS), "parts", len(chords), "bars", round(len(chords) * 4 * 60 / 178), "sec")

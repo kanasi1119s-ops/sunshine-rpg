@@ -141,6 +141,13 @@ export interface MelodyOpts {
   hi: number;
   density: "normal" | "sparse" | "fast";
   restChance?: number;
+  /**
+   * true なら、旋律を「育てる」動き（4小節の2小節目の反復進行、大きく跳んだあとの戻り）を入れる（2026-10-07 に追加した機能）。
+   * 省略・false は入れない＝10/07 より前と同じ旋律。2026-10-16、人間の指摘「明らかにメロディが変わってる」「削除じゃなくて使わなければいい」:
+   * 10/07 にこれを常に入れたため、乱数の流れが変わり、ゲームの組み込み曲 49 曲のメロディ・和音が変わってしまっていた。
+   * 既存の曲は変えない。新しく作る曲で使うときだけ true にする（catalog-melody.test.ts が、組み込み曲が元のままかを見張る）。
+   */
+  develop?: boolean;
 }
 
 export function generateMelody(rng: Rng, key: Key, chords: string[], beats: number, opts: MelodyOpts): string {
@@ -205,7 +212,7 @@ export function generateMelody(rng: Rng, key: Key, chords: string[], beats: numb
     }
     // 展開（反復進行）: 4小節のまとまりの2小節目で、前の小節の形（リズムと音の上下）を、音階の上で1〜2段ずらして繰り返す。
     // 小節の頭の音は、そのコードの構成音にそろえる。同じ形のずれ → 「旋律が育つ」感じになる
-    if (bar % 4 === 1 && beats === 4 && bar < chords.length - 1 && barTokens[bar - 1] && rng() < 0.45) {
+    if (opts.develop && bar % 4 === 1 && beats === 4 && bar < chords.length - 1 && barTokens[bar - 1] && rng() < 0.45) {
       const prevTok = barTokens[bar - 1];
       const idxs = prevTok.map((t) => (t.startsWith("R:") ? -1 : pool.indexOf(noteNameToMidi(t.split(":")[0]))));
       const firstPitched = idxs.find((v) => v >= 0);
@@ -261,7 +268,7 @@ export function generateMelody(rng: Rng, key: Key, chords: string[], beats: numb
         if (pool[cur] > arch + 4 && step > 0 && rng() < 0.6) step = -step;
         if (pool[cur] < arch - 4 && step < 0 && rng() < 0.6) step = -step;
         // 大きく跳んだ（3段以上）あとは、逆向きに1段で戻る
-        if (Math.abs(lastLeap) >= 3 && rng() < 0.85) step = -Math.sign(lastLeap);
+        if (opts.develop && Math.abs(lastLeap) >= 3 && rng() < 0.85) step = -Math.sign(lastLeap);
         const before = cur;
         cur = Math.max(0, Math.min(pool.length - 1, cur + step));
         lastLeap = cur - before;

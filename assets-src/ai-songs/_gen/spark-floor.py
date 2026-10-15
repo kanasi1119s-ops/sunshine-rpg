@@ -233,5 +233,5 @@ song = {"title": "スパーク・フロア（歌入り版の伴奏・仮）" if 
         "tone": "rock", "feel": "dance", "human": 0.2, "dynamics": "natural", "autoAccompaniment": False, "autoScoop": False,
         "parts": parts}
 out = sys.argv[1] if len(sys.argv) > 1 else "assets-src/ai-songs/spark-floor.json"
-json.dump(song, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+json.dump({"guitarWobble": False, **song}, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("ok", len(parts), "parts", NB, "bars", round(NB * 4 * 60 / 126), "sec")

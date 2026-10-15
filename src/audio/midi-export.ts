@@ -122,10 +122,15 @@ const REVERB: Partial<Record<Instrument, number>> = { pad: 70, choir: 80, string
 const CHORUS: Partial<Record<Instrument, number>> = { strings: 30, pad: 35, choir: 30, keys: 22, guitar: 0, echoGuitar: 20, crunch: 12, distGuitar: 8, bell: 12, harpsichord: 10 };
 /** 歪ませないアンプ（これらのときは、元の音色をそのまま使う）。 */
 const CLEAN_AMP_TYPES = new Set<string>(["clean", "jazz", "funk", "lofi", "retro8bit", "radio", "delicate", "crystal", "sparkleClean", "jpopClean"]);
-// リードギターは外す（2026-10-15、人間の指摘「ゴムが伸びたような音」。ギターの音は弾いた瞬間が一番大きく、ふくらまない）
-const SWELL_INSTRUMENTS = new Set<Instrument>(["lead", "pad", "strings", "choir", "brass"]);
-// ギター類は外す（2026-10-15、人間の指摘「ギターにしゃくり・ゴムが伸びたような音」。音ごとのわずかな音程のずれがしゃくりに聞こえる。フレットのある楽器は音程が揃う）
-const DETUNE_INSTRUMENTS = new Set<Instrument>(["lead", "strings", "pad", "brass"]);
+// ギター類の自動の揺れ（2026-10-16、人間の指示「削除すんじゃなくて使わなければいいだけ」）: 10/15 に全曲から外したのを戻す。
+// 曲が guitarWobble: false のときだけ、リードギターのふくらみ・ギター類の音程のずれ・リードギターの自動ビブラートを付けない（「ゴムが伸びたような音」がいやな曲）
+const SWELL_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "pad", "strings", "choir", "brass"]);
+const DETUNE_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "guitar", "echoGuitar", "strings", "pad", "brass"]);
+const GUITAR_WOBBLE = new Set<Instrument>(["leadGuitar", "guitar", "echoGuitar"]);
+/** この曲で、この楽器に自動の揺れを付けるか。 */
+function wobbleOk(score: Score, inst: Instrument | undefined): boolean {
+  return !(score.guitarWobble === false && inst !== undefined && GUITAR_WOBBLE.has(inst));
+}
 const ECHO_INSTRUMENTS = new Set<Instrument>(["lead", "leadGuitar", "cowbell", "bell", "keys"]);
 
 function channelKey(track: Track, program: number): string {
@@ -325,8 +330,8 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         // 立ち上がり（CC73）と余韻（CC72）。64 が音源のまま
         if (track.attack !== undefined) list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 73, clamp127(Math.max(0, Math.min(1, track.attack)) * 127)] });
         if (track.release !== undefined) list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 72, clamp127(Math.max(0, Math.min(1, track.release)) * 127)] });
-        // 主旋律の楽器には、揺らぎ（ビブラート）を少し。リードギターには付けない（2026-10-15、人間の指摘「ゴムが伸びたような音」。banned-sounds 17）
-        if (inst === "lead" || inst === "brass") list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 1, score.tone === "prs" ? 40 : 26] });
+        // 主旋律の楽器には、揺らぎ（ビブラート）を少し。guitarWobble: false の曲のリードギターには付けない（「ゴムが伸びたような音」。banned-sounds 17）
+        if ((inst === "leadGuitar" && wobbleOk(score, inst)) || inst === "lead" || inst === "brass") list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 1, score.tone === "prs" ? 40 : 26] });
       }
       return { channel, list };
     };
@@ -514,7 +519,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       // ビブラート: 音が出て少したってから揺れ始め、音の終わりで元の深さに戻す（モジュレーション CC1）
       if (n.vibrato && !vibCurve && n.durationBeats >= 0.4 && (inst === undefined || GM_DRUM_NOTE[inst] === undefined)) {
         const depth = Math.max(0, Math.min(1, n.vibrato));
-        const base = inst === "lead" || inst === "brass" ? (score.tone === "prs" ? 40 : 26) : 0;
+        const base = (inst === "leadGuitar" && wobbleOk(score, inst)) || inst === "lead" || inst === "brass" ? (score.tone === "prs" ? 40 : 26) : 0;
         const peak = Math.max(base, Math.round(depth * 127));
         const delay = Math.round(Math.min(durTicks * 0.3, PPQ * 0.4));
         for (const t of bendTargets) {
@@ -536,7 +541,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         }
       }
       // 長い音の音量の山（CC11）: 立ち上がって、中ほどで最大、終わりへ少し引く。リード・パッド・弦・ブラス・合唱
-      if (Hp > 0 && !n.swell && !score.pump && inst && SWELL_INSTRUMENTS.has(inst) && durTicks >= PPQ * 2) { // 1拍の音まで山をつけると、4分音符のメロディが1音ずつ「ポンポン」と脈打つので、2拍以上の音だけ
+      if (Hp > 0 && !n.swell && !score.pump && inst && SWELL_INSTRUMENTS.has(inst) && wobbleOk(score, inst) && durTicks >= PPQ * 2) { // 1拍の音まで山をつけると、4分音符のメロディが1音ずつ「ポンポン」と脈打つので、2拍以上の音だけ
         for (const t of bendTargets) {
           const cc = (at: number, v: number): void => { t.list.push({ tick: at, order: 1, bytes: [0xb0 | t.channel, 11, Math.max(40, Math.min(127, v))] }); };
           cc(tick, 127 - Math.round(38 * Hp));
@@ -546,7 +551,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         }
       }
       // 音程のごくわずかなずれ（±8セント）: リード・ギター・弦。ベンドの指定がない音だけ
-      if (Hp > 0 && !curve && inst && DETUNE_INSTRUMENTS.has(inst) && durTicks >= 60) {
+      if (Hp > 0 && !curve && inst && DETUNE_INSTRUMENTS.has(inst) && wobbleOk(score, inst) && durTicks >= 60) {
         const semi = (rnd(startBeat * 5.7 + trackSeed * 1.3) - 0.5) * 2 * 0.08 * Hp * (track.humanPitch ?? 1);
         for (const t of bendTargets) {
           const v = bendValue(semi);
