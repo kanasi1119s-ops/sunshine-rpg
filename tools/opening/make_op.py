@@ -61,7 +61,7 @@ LOGO = Image.open(f"{HERE}/logo-native.png").convert("RGBA")
 LOGO5 = LOGO.resize((LOGO.width * 5, LOGO.height * 5), Image.NEAREST)
 # ボス（人間の指示 2026-10-16「ボスも神も予言の歪みだけ」）: 手直しと動き（歩く16コマ・攻撃3種類）のある「予言の歪み」1体だけを使う。
 # 絵は monster-fullbody ブランチの assets-src/monsters/kiri-yugami/anim.json から書き出したコマ（yogen/frames/）。
-YDIR = os.path.join(HERE, "yogen")
+YDIR = os.path.join(HERE, "yogen-eye")   # 目を足した版（e4f86bb3 の anim.json。13f1f002 で目を取りのぞく前）
 _yms = json.load(open(f"{YDIR}/ms.json"))
 YOGEN = {n: [(load(f"{YDIR}/frames/{n}_{i:02d}.png"), ms) for i, ms in enumerate(_yms[n])] for n in _yms}
 def yogen(name, tl, loop=True):
