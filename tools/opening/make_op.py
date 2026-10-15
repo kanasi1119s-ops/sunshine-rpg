@@ -44,14 +44,20 @@ PARTY = [("ユーリ", "Yuri", "000", "灯りの相談所の新人調査員", (2
          ("オルカ", "Orca", "008", "鉱山で働いてきた力持ち", (230, 130, 60)), ("アヤメ", "Ayame", "010", "霜原の静かな案内人", (190, 150, 240))]
 FULL = [art(p[2]) for p in PARTY]
 SHEET_NAME = ["ユーリ", "レト", "ミナ", "ガイド", "オルカ", "アヤメ"]
-CENTER = [0.47, 0.50, 0.555, 0.49, 0.485, 0.445]   # 全身の絵の、体のまん中（横の割合。シートを見て測った）
+_CC = json.load(open(f"{HERE}/char-centers.json", encoding="utf-8"))   # center_chars.py が背景を切り抜いて測った、体と顔のまん中（横の割合）
+CENTER = [_CC[n]["body"] for n in SHEET_NAME]   # 全身の絵の、体のまん中
 FIG = [(c - min(c - 0.28, 0.705 - c, 0.2), c + min(c - 0.28, 0.705 - c, 0.2)) for c in CENTER]   # 体がまん中に来るように左右同じ幅で切る
-FACE = [(0.716, 0.016, 0.98, 0.82), (0.04, 0.016, 0.275, 0.82), (0.716, 0.47, 0.95, 0.935), (0.716, 0.006, 0.99, 0.855),
+FACE = [(0.716, 0.016, 0.98, 0.82), (0.04, 0.016, 0.275, 0.82), (0.716, 0.51, 0.95, 0.935), (0.716, 0.006, 0.99, 0.855),
         (0.716, 0.006, 0.985, 0.875), (0.716, 0.006, 0.98, 0.875)]                                    # 顔の大写しの枠の内側
 SHEET = [Image.open(f"{HERE}/chars/{n}.jpg").convert("RGBA") for n in SHEET_NAME]
 def fr(im, box): return im.crop((int(box[0] * im.width), int(box[1] * im.height), int(box[2] * im.width), int(box[3] * im.height)))
 FIGS = [fr(SHEET[k], (FIG[k][0], 0, FIG[k][1], 1)) for k in range(6)]
-FACES = [fr(SHEET[k], FACE[k]) for k in range(6)]
+def face_box(k):   # 顔の大写しの枠の中で、顔が左右のまん中に来るように切る（横:縦＝3:4 まで）
+    b = FACE[k]; sh = SHEET[k]; c = _CC[SHEET_NAME[k]]["face"]
+    hw = min(c - b[0], b[2] - c); wpx = 2 * hw * sh.width
+    hfr = min(b[3] - b[1], wpx / 0.75 / sh.height)
+    return (c - hw, b[1], c + hw, b[1] + hfr)
+FACES = [fr(SHEET[k], face_box(k)) for k in range(6)]
 BLUR = [cover(SHEET[k].filter(ImageFilter.GaussianBlur(SHEET[k].width / 300)), W, H, 1.1) for k in range(6)]
 def fit_h(im, h): return im.resize((max(1, round(im.width * h / im.height)), h), Image.LANCZOS)
 FIGH = [fit_h(f, 700) for f in FIGS]
