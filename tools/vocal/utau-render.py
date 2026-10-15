@@ -221,7 +221,8 @@ def seg_bounds(o, nfr):
     b = int((o["off"] - o["cut"]) / FP) if o["cut"] < 0 else nfr - int(o["cut"] / FP)
     return a, max(a + 4, min(nfr, b))
 
-def seg_frames(an, o, length_ms, pcurve, seg_start_ms, keep_tail=False, micro=0.6, vel=1.0):
+VOICED_KANA = set("がぎぐげござじずぜぞだぢづでどばびぶべぼなにぬねのまみむめもらりるれろやゆよわあいうえおんをゔ")
+def seg_frames(an, o, length_ms, pcurve, seg_start_ms, keep_tail=False, micro=0.6, vel=1.0, kana=""):
     """oto の1行を、長さ length_ms に伸ばし、pcurve の高さにした WORLD のパラメータ（5ms ごと）を返す。
     返り値: (cents[音の高さ], sp, ap, voiced, 子音が終わるフレーム)
     vel < 1 のときは、子音までの部分（固定範囲）を vel 倍の長さに縮める（UTAU の「子音速度」と同じ）。"""
@@ -251,6 +252,21 @@ def seg_frames(an, o, length_ms, pcurve, seg_start_ms, keep_tail=False, micro=0.
     ap2 = ap[i0] * (1 - fr) + ap[i1] * fr
     ir = np.rint(fi).astype(int).clip(0, nfr - 1)
     voiced = f0[ir] > 0
+    # 母音の途中で、元の録音の分析が「声なし」になったフレーム（声の高さの取りこぼし）は、そのままだと
+    # 息の雑音（かすれ 1.0）として合成され、「マイクのノイズ」のようなザッという音になる（2026-10-16、人間の指摘）。
+    # 子音が終わったあと（母音）は声ありとみなし、かすれは近くの声ありフレームの値を使う。
+    vowel = j >= fixed
+    if kana and kana[0] in VOICED_KANA:
+        # 声のある子音（び・め・り など）は、子音の所も声帯が鳴っている。元の録音の分析で「声なし」になった所を
+        # 息の雑音で合成すると、つなぎ目で低い音から高い音まで広がる「ザッ・ボッ」という雑音になる（2026-10-16 に絵で確認）
+        first_v = np.argmax(voiced) if voiced.any() else len(voiced)
+        vowel = np.arange(len(voiced)) >= first_v
+    gap = vowel & ~voiced
+    if gap.any() and (vowel & voiced).any():
+        vi = np.where(voiced)[0]
+        near = vi[np.clip(np.searchsorted(vi, np.where(gap)[0]), 0, len(vi) - 1)]
+        ap2[gap] = ap2[near]
+        voiced = voiced | gap
     if AP_POW != 1.0:   # 声のある所だけ、かすれを減らす（子音・息はそのまま）
         ap2[voiced] = ap2[voiced] ** AP_POW
     ti = ((seg_start_ms + jr) / FP).astype(int).clip(0, len(pcurve) - 1)
@@ -296,6 +312,14 @@ class Phrase:
         cents = C / Ws
         voiced = on & (V / Ws > 0.5)
         f0 = np.where(voiced, 440.0 * 2 ** ((cents / 100 - 69) / 12), 0.0)
+        # 低い帯域の雑音を落とす（2026-10-16、人間の指摘「マイクのノイズ」）:
+        #  - 声のある所: 声の高さ（f0）より下には倍音がなく、鳴るのは息の雑音だけ → かすれを 0 に近く
+        #  - 声のない所（さ・か・た などの子音）: 400Hz より下は録音のゴロッという雑音 → 弱める
+        fr = np.arange(K) * FS / (2 * (K - 1))
+        lowv = voiced[:, None] & (fr[None, :] < 0.8 * f0[:, None])
+        ap = np.where(lowv, 1e-3, ap)
+        hp = np.clip((fr / 400.0) ** 2, 1e-3, 1.0)   # 0 にすると合成が壊れる（NaN）ので下限をつける
+        sp = np.where(voiced[:, None], sp, sp * hp[None, :])
         y = pw.synthesize(np.ascontiguousarray(f0), np.ascontiguousarray(sp), np.ascontiguousarray(ap), FS, FP)
         return int(f0_ * FP * FS / 1000), y
 
@@ -397,7 +421,7 @@ def main():
             end = nxt[0] - no["pre"] + no["ovl"]; fout = max(15, no["ovl"])
         else:
             end = s + d - 30; fout = 50
-        cents, sp2, ap2, voiced, fxf = seg_frames(an, o0, end - start, pc, start, vel=vel)
+        cents, sp2, ap2, voiced, fxf = seg_frames(an, o0, end - start, pc, start, vel=vel, kana=k)
         # 1) 音ごとの音量をそろえる（母音の部分の強さで測る。パラメータの段階で）
         b0f = max(fxf, int(o["pre"] / FP)); b1f = len(cents) - int(fout / FP)
         body = sp2[b0f:b1f] if b1f - b0f >= 4 else sp2
@@ -437,6 +461,11 @@ def main():
                     q = int(be * FS / 1000) - len(x)
                     if q > 0: breaths.append((q, x))
     out = out[: int(total_ms * FS / 1000)]
+    # 声のいちばん低い音より下（ボッという低い雑音）を切る（2026-10-16、人間の指摘「マイクのノイズ」）。
+    # 合成のつなぎ目で、声の高さが急に変わる所に 30〜150Hz の短い「ボッ」が出ていた（歌は D4＝294Hz より上なので声は削れない）
+    from scipy.signal import butter, sosfiltfilt
+    lo_hz = min(180.0, 0.7 * 440.0 * 2 ** ((min(m for _, _, m in base_notes) - 69) / 12))
+    out = sosfiltfilt(butter(8, lo_hz, "highpass", fs=FS, output="sos"), out)
     # 全体の大きさを合わせる（声のある所の中央値を TARGET に）→ 息を足す
     w = int(0.02 * FS); el = 10 * np.log10(uniform_filter1d(out ** 2, w)[::w] + 1e-12)
     act = el[el > el.max() - 30]
