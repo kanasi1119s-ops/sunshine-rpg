@@ -141,8 +141,8 @@ def main():
         base = median_filter(he, size=41)
         spike = (he > base + 18) & (he > voice_lvl - 30)
         zz = [s * 0.005 for s, e in events(spike, 200, 0.01) if (e - s) <= 4]   # 20ms 以下だけ（子音の「さ・し」はもっと長い）
-        if notes:   # 「か・た・ぱ」などの破裂音（子音）も短く跳ねるので、音符の頭のまわり（前 0.2 秒〜後 0.08 秒）は除く
-            zz = [z for z in zz if not any(st - 0.2 <= z <= st + 0.08 for st, d, p in notes)]
+        if notes:   # 「か・た・ぱ」などの破裂音（子音）も短く跳ねるので、音符の頭のまわり（前 0.2 秒〜後 0.15 秒。歌い出しの「つ・か」は頭から 0.1 秒ほど遅れて鳴る）は除く
+            zz = [z for z in zz if not any(st - 0.2 <= z <= st + 0.15 for st, d, p in notes)]
         R.append(("ジリッ", len(zz) == 0, len(zz), zz, "8kHz より上が一瞬跳ねる所（20ms 以下。子音の所は除く）"))
         # ---- ザッ（音符の中で声が取れない）----
         if notes:
