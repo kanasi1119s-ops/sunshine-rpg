@@ -22,12 +22,22 @@ def limit(x, fs, ceil_db=-1.0, look_ms=5.0):
     g = np.minimum(g, minimum_filter1d(np.minimum(1.0, c / (np.abs(x).max(axis=0) + 1e-9)), L))
     return x * g
 
+def deess(x, fs, lo=5500, thr_db=-30.0, max_cut_db=8.0):
+    """ディエッサー: 5.5kHz より上（さ・し・つ の「シー」）が強いときだけ、その帯域を下げる。x: (n,)"""
+    from scipy.signal import butter, sosfiltfilt
+    hi = sosfiltfilt(butter(4, lo, "highpass", fs=fs, output="sos"), x)
+    w = int(0.005 * fs)
+    env = 10 * np.log10(uniform_filter1d(hi ** 2, w) + 1e-12)
+    cut = np.clip(env - thr_db, 0, max_cut_db) * 0.6
+    g = 10 ** (-uniform_filter1d(cut, int(0.01 * fs)) / 20)
+    return (x - hi + hi * g).astype(np.float32)
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("backing"); ap.add_argument("vocal"); ap.add_argument("--out", required=True)
     ap.add_argument("--bpm", type=float, required=True); ap.add_argument("--vocal-lu", type=float, default=0.0)
     ap.add_argument("--target", type=float, default=-13.5); ap.add_argument("--reverb", type=float, default=0.16)
-    ap.add_argument("--stems", default="")
+    ap.add_argument("--stems", default=""); ap.add_argument("--deess-db", type=float, default=-32.0)
     a = ap.parse_args()
     bk, fs = sf.read(a.backing, dtype="float32", always_2d=True)
     vx, fs2 = sf.read(a.vocal, dtype="float32", always_2d=True)
@@ -38,10 +48,13 @@ def main():
         g = gcd(fs, fs2); vx = resample_poly(vx, fs // g, fs2 // g).astype(np.float32)
     n = max(len(bk), len(vx))
     bk = np.pad(bk, ((0, n - len(bk)), (0, 0))); vx = np.pad(vx, (0, n - len(vx)))
-    dry = Pedalboard([HighpassFilter(100), PeakFilter(250, -2.0, 1.0), PeakFilter(3000, 2.0, 0.9),
-                      PeakFilter(7200, -2.5, 2.0), HighShelfFilter(10000, 2.0, 0.7),
+    # 透き通る声に（2026-10-15、人間の指示「ノイズを少なく、透き通る声に」）: 高域の持ち上げは控えめ（12kHz +1dB。かすれ・サーッも一緒に上がるため）、
+    # ディエッサーで「シー」をおさえ、こもり（250Hz）を少し減らし、2.5kHz で言葉の輪郭を出す
+    dry = Pedalboard([HighpassFilter(110), PeakFilter(250, -2.5, 1.0), PeakFilter(2500, 1.5, 0.9),
+                      HighShelfFilter(12000, 1.0, 0.7),
                       Compressor(threshold_db=-20, ratio=3.0, attack_ms=4, release_ms=70), Gain(3.0)])
     v = dry(vx[None, :], fs)[0]
+    v = deess(v, fs, thr_db=a.deess_db)
     st = np.stack([v, v])
     eighth = 60.0 / a.bpm / 2
     rv = Pedalboard([HighpassFilter(250), Reverb(room_size=0.55, damping=0.55, wet_level=1.0, dry_level=0.0, width=1.0), LowpassFilter(9000)])(st, fs)

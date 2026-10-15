@@ -24,6 +24,7 @@ from scipy.ndimage import median_filter, uniform_filter1d
 
 FS = 44100
 FP = 5.0  # WORLD のフレーム間隔（ミリ秒）
+AP_POW = 1.0   # 声のある所の「かすれ（非周期成分）」を減らす強さ（1＝そのまま。大きいほど透き通る。--ap-power）
 
 VOWEL = {}
 for v, ks in {"a": "あかがさざただなはばぱまやらわゃぁ", "i": "いきぎしじちぢにひびぴみりぃ", "u": "うくぐすずつづぬふぶぷむゆるゅぅ",
@@ -133,8 +134,9 @@ def seg_bounds(o, nfr):
     b = int((o["off"] - o["cut"]) / FP) if o["cut"] < 0 else nfr - int(o["cut"] / FP)
     return a, max(a + 4, min(nfr, b))
 
-def render_seg(an, o, length_ms, pcurve, seg_start_ms, keep_tail=False, micro=0.6, vel=1.0):
-    """oto の1行を、長さ length_ms に伸ばし、pcurve の高さで鳴らす。返り値: (音, 母音が始まる位置[サンプル])
+def seg_frames(an, o, length_ms, pcurve, seg_start_ms, keep_tail=False, micro=0.6, vel=1.0):
+    """oto の1行を、長さ length_ms に伸ばし、pcurve の高さにした WORLD のパラメータ（5ms ごと）を返す。
+    返り値: (cents[音の高さ], sp, ap, voiced, 子音が終わるフレーム)
     vel < 1 のときは、子音までの部分（固定範囲）を vel 倍の長さに縮める（UTAU の「子音速度」と同じ）。"""
     f0, sp, ap, dev = an.get(o["wav"])
     nfr = len(f0)
@@ -162,12 +164,53 @@ def render_seg(an, o, length_ms, pcurve, seg_start_ms, keep_tail=False, micro=0.
     ap2 = ap[i0] * (1 - fr) + ap[i1] * fr
     ir = np.rint(fi).astype(int).clip(0, nfr - 1)
     voiced = f0[ir] > 0
+    if AP_POW != 1.0:   # 声のある所だけ、かすれを減らす（子音・息はそのまま）
+        ap2[voiced] = ap2[voiced] ** AP_POW
     ti = ((seg_start_ms + jr) / FP).astype(int).clip(0, len(pcurve) - 1)
     cents = pcurve[ti] * 100 + micro * dev[ir] * (j >= fixed)
+    return cents, sp2, ap2, voiced, int(fx / FP)
+
+def render_seg(an, o, length_ms, pcurve, seg_start_ms, keep_tail=False, micro=0.6, vel=1.0):
+    """seg_frames を1つずつ音にする（つなぎ目で位相がそろわないので、ふつうは Phrase を使う）。"""
+    cents, sp2, ap2, voiced, fxf = seg_frames(an, o, length_ms, pcurve, seg_start_ms, keep_tail, micro, vel)
+    m = len(cents); fx = fxf * FP
     hz = 440.0 * 2 ** ((cents / 100 - 69) / 12)
     f0t = np.where(voiced, hz, 0.0)
     y = pw.synthesize(np.ascontiguousarray(f0t), np.ascontiguousarray(sp2), np.ascontiguousarray(ap2), FS, FP)
     return y[: int(m * FP * FS / 1000)], int(fx * FS / 1000)
+
+class Phrase:
+    """ひと息で歌うフレーズを、パラメータの段階でつないでから1回で音にする。
+    つなぎ目で2つの声の波を足すと、波の山の位置（位相）がずれて「ざらつき・かすれ」になる。
+    スペクトル（対数）・かすれ・音の高さを重みつきで混ぜてから合成すれば、1本の声としてつながる（透き通る）。"""
+    def __init__(self):
+        self.items = []   # (開始フレーム, cents, sp, ap, voiced, 重み, 音量の倍率)
+    def add(self, start_ms, cents, sp, ap, voiced, fin_ms, fout_ms, amp):
+        n = len(cents); w = np.ones(n)
+        a = min(n, max(1, int(round(fin_ms / FP)))); b = min(n, max(1, int(round(fout_ms / FP))))
+        w[:a] = np.minimum(w[:a], np.linspace(0, 1, a + 1)[1:])
+        w[n - b:] = np.minimum(w[n - b:], np.linspace(1, 0, b + 1)[:-1])
+        self.items.append((int(round(start_ms / FP)), cents, sp, ap, voiced, w, amp))
+    def synth(self):
+        if not self.items: return 0, np.zeros(0)
+        f0_ = min(it[0] for it in self.items); f1_ = max(it[0] + len(it[1]) for it in self.items)
+        n = f1_ - f0_; K = self.items[0][2].shape[1]
+        W = np.zeros(n); LSP = np.zeros((n, K)); AP = np.zeros((n, K)); C = np.zeros(n); V = np.zeros(n)
+        for st, cents, sp, ap, voiced, w, amp in self.items:
+            k = st - f0_; m = len(cents)
+            W[k:k + m] += w
+            LSP[k:k + m] += w[:, None] * (np.log(sp + 1e-16) + 2 * np.log(amp))
+            AP[k:k + m] += w[:, None] * ap
+            C[k:k + m] += w * cents; V[k:k + m] += w * voiced
+        on = W > 1e-6; Ws = np.where(on, W, 1.0)
+        sp = np.exp(LSP / Ws[:, None]) * (np.minimum(W, 1.0) ** 2)[:, None]
+        sp[~on] = 1e-16
+        ap = np.where(on[:, None], AP / Ws[:, None], 1.0).clip(0.0, 1.0)
+        cents = C / Ws
+        voiced = on & (V / Ws > 0.5)
+        f0 = np.where(voiced, 440.0 * 2 ** ((cents / 100 - 69) / 12), 0.0)
+        y = pw.synthesize(np.ascontiguousarray(f0), np.ascontiguousarray(sp), np.ascontiguousarray(ap), FS, FP)
+        return int(f0_ * FP * FS / 1000), y
 
 def fade(y, fin_ms, fout_ms):
     """同じ力のクロスフェード（sin/cos）"""
@@ -194,7 +237,9 @@ def main():
     ap_.add_argument("--breath", default=""); ap_.add_argument("--bpm", type=float, required=True); ap_.add_argument("--out", required=True)
     ap_.add_argument("--gain", default=""); ap_.add_argument("--cache", default="")
     ap_.add_argument("--total-bars", type=int, default=0); ap_.add_argument("--no-ride", action="store_true")
+    ap_.add_argument("--ap-power", type=float, default=2.0); ap_.add_argument("--breath-db", type=float, default=-16.0)
     a = ap_.parse_args()
+    global AP_POW; AP_POW = a.ap_power
     spec = importlib.util.spec_from_file_location("vocal", a.vocal); vocal = importlib.util.module_from_spec(spec); spec.loader.exec_module(vocal)
     vcv = Banks(a.vb); head = Banks([a.head_vb]); an = Analyzer(a.cache)
     breath = load_oto(a.breath) if a.breath else {}
@@ -228,6 +273,8 @@ def main():
             need = o["pre"] - o["ovl"]; allow = prev[1] * 0.5
             if need > allow: vel = max(0.4, allow / need)
         choice.append((o, vel, dict(o, pre=o["pre"] * vel, ovl=o["ovl"] * vel)))
+    PTARGET = 0.0   # 母音の強さ（スペクトルの合計）の目標。最後に全体の大きさを TARGET に合わせ直す
+    ph = Phrase(); breaths = []
     for i, (s, d, m, k, g) in enumerate(notes):
         prev = notes[i - 1] if i else None
         nxt = notes[i + 1] if i + 1 < len(notes) else None
@@ -243,24 +290,21 @@ def main():
             end = nxt[0] - no["pre"] + no["ovl"]; fout = max(15, no["ovl"])
         else:
             end = s + d - 30; fout = 50
-        y, vstart = render_seg(an, o0, end - start, pc, start, vel=vel)
-        # 1) 音ごとの音量をそろえる（母音の部分で測る）
-        body = y[max(vstart, int(o["pre"] * FS / 1000)): len(y) - int(fout * FS / 1000)]
-        lvl = rms_db(body if len(body) > FS // 50 else y)
-        gain_db = np.clip(TARGET - lvl, -12, 12) + 20 * np.log10(g)
-        y *= 10 ** (gain_db / 20)
-        y = fade(y, (max(15, o["ovl"]) if cprev else 8), fout)
-        p0 = int(start * FS / 1000)
-        if p0 < 0: y = y[-p0:]; p0 = 0
-        out[p0:p0 + len(y)] += y
-        if not cnext:   # フレーズの終わり: 母音を自然に切る
+        cents, sp2, ap2, voiced, fxf = seg_frames(an, o0, end - start, pc, start, vel=vel)
+        # 1) 音ごとの音量をそろえる（母音の部分の強さで測る。パラメータの段階で）
+        b0f = max(fxf, int(o["pre"] / FP)); b1f = len(cents) - int(fout / FP)
+        body = sp2[b0f:b1f] if b1f - b0f >= 4 else sp2
+        lvl = 10 * np.log10(np.mean(body.sum(axis=1)) + 1e-30)
+        gain_db = np.clip(PTARGET - lvl, -12, 12) + 20 * np.log10(g)
+        ph.add(start, cents, sp2, ap2, voiced, (max(15, o["ovl"]) if cprev else 8), fout, 10 ** (gain_db / 20))
+        if not cnext:   # フレーズの終わり: 母音を自然に切る → このフレーズを音にする
             r = vcv.find(f"{vowel_of(k)} R")
             if r:
                 rs = s + d - 30 - max(15, r["ovl"])
-                yr, _ = render_seg(an, r, 240, pc, rs, keep_tail=True)
-                yr *= 10 ** ((gain_db - 2) / 20)
-                yr = fade(yr, max(15, r["ovl"]), 140)
-                q = int(rs * FS / 1000); out[q:q + len(yr)] += yr
+                c2, s2, a2, v2, _ = seg_frames(an, r, 240, pc, rs, keep_tail=True)
+                ph.add(rs, c2, s2, a2, v2, max(15, r["ovl"]), 140, 10 ** ((gain_db - 2) / 20))
+            p0, y = ph.synth(); ph = Phrase()
+            out[p0:p0 + len(y)] += y[: len(out) - p0]
         # 息: 次の歌い出しまで 250ms 以上あいていれば、歌い出しの直前に小さく吸う
         if breath and nxt is not None and not cnext:
             gap = nxt[0] - (s + d)
@@ -273,13 +317,18 @@ def main():
                     if bo["cut"] > 0: x = x[: max(1, len(x) - int(bo["cut"] * FS / 1000))]
                     L = int(min(gap - 120, 380) * FS / 1000)
                     x = x[:L].copy()
-                    x *= 10 ** ((TARGET - 16 - rms_db(x)) / 20)
+                    x *= 10 ** ((TARGET + a.breath_db - rms_db(x)) / 20)
                     x = fade(x, 60, 80)
                     nh = vcv.find(f"- {nxt[3]}") or head.find(f"- {nxt[3]}")
                     be = nxt[0] - (nh["pre"] if nh else 30) - 20
                     q = int(be * FS / 1000) - len(x)
-                    if q > 0: out[q:q + len(x)] += x
+                    if q > 0: breaths.append((q, x))
     out = out[: int(total_ms * FS / 1000)]
+    # 全体の大きさを合わせる（声のある所の中央値を TARGET に）→ 息を足す
+    w = int(0.02 * FS); el = 10 * np.log10(uniform_filter1d(out ** 2, w)[::w] + 1e-12)
+    act = el[el > el.max() - 30]
+    out *= 10 ** ((TARGET - np.median(act)) / 20)
+    for q, x in breaths: out[q:q + len(x)] += x[: max(0, len(out) - q)]
     if not a.no_ride:
         out = ride(out, TARGET)
     out *= 0.5 / (np.abs(out).max() + 1e-9)
