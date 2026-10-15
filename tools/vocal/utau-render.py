@@ -24,6 +24,7 @@ from scipy.ndimage import median_filter, uniform_filter1d
 
 FS = 44100
 FP = 5.0  # WORLD のフレーム間隔（ミリ秒）
+AP_CAP = 1.0   # 声のある所の、3kHz より下のかすれの上限（--ap-cap。1＝上限なし）
 AP_POW = 1.0   # 声のある所の「かすれ（非周期成分）」を減らす強さ（1＝そのまま。大きいほど透き通る。--ap-power）
 
 VOWEL = {}
@@ -269,6 +270,13 @@ def seg_frames(an, o, length_ms, pcurve, seg_start_ms, keep_tail=False, micro=0.
         voiced = voiced | gap
     if AP_POW != 1.0:   # 声のある所だけ、かすれを減らす（子音・息はそのまま）
         ap2[voiced] = ap2[voiced] ** AP_POW
+    if AP_CAP < 1.0:
+        # 声のある所の、3kHz より下のかすれに上限（2026-10-16、人間の指摘「夜のまーちに の所、声にノイズ」）。
+        # テトの「い」の母音（ち・に・ひ・き・し）は録音の時点で息が多く（HNR 27〜30dB。「あ・お」は 36〜38dB）、
+        # 合成するとさらに濁って 9〜20dB まで落ちていた。3kHz より下は上限 AP_CAP、8kHz に向けて 1 まで戻す（高い所の息の感じは残す）
+        K = ap2.shape[1]; fr = np.arange(K) * FS / (2 * (K - 1))
+        cap = np.clip(AP_CAP + (1 - AP_CAP) * (fr - 3000) / 5000, AP_CAP, 1.0)
+        ap2[voiced] = np.minimum(ap2[voiced], cap[None, :])
     ti = ((seg_start_ms + jr) / FP).astype(int).clip(0, len(pcurve) - 1)
     cents = pcurve[ti] * 100 + micro * dev[ir] * (j >= fixed)
     return cents, sp2, ap2, voiced, int(fx / FP)
@@ -348,13 +356,13 @@ def main():
     ap_.add_argument("--breath", default=""); ap_.add_argument("--bpm", type=float, required=True); ap_.add_argument("--out", required=True)
     ap_.add_argument("--gain", default=""); ap_.add_argument("--cache", default="")
     ap_.add_argument("--total-bars", type=int, default=0); ap_.add_argument("--no-ride", action="store_true")
-    ap_.add_argument("--ap-power", type=float, default=3.0); ap_.add_argument("--breath-db", type=float, default=-200.0)  # 息は標準では入れない（ノイズに聞こえるため）
+    ap_.add_argument("--ap-power", type=float, default=3.0); ap_.add_argument("--ap-cap", type=float, default=0.05); ap_.add_argument("--breath-db", type=float, default=-200.0)  # 息は標準では入れない（ノイズに聞こえるため）
     ap_.add_argument("--no-tail", action="store_true"); ap_.add_argument("--no-noise-check", action="store_true")
     ap_.add_argument("--plain", action="store_true", help="表情（強弱・しゃくり・ビブラート）を付けない")
     ap_.add_argument("--soft", default="", help="静かなセクションの小節（例 88-96）")
     ap_.add_argument("--last", default="", help="最後のサビの小節（例 96-112）")
     a = ap_.parse_args()
-    global AP_POW; AP_POW = a.ap_power
+    global AP_POW, AP_CAP; AP_POW = a.ap_power; AP_CAP = a.ap_cap
     spec = importlib.util.spec_from_file_location("vocal", a.vocal); vocal = importlib.util.module_from_spec(spec); spec.loader.exec_module(vocal)
     vcv = Banks(a.vb); head = Banks([a.head_vb]); an = Analyzer(a.cache)
     breath = load_oto(a.breath) if a.breath else {}
@@ -441,6 +449,10 @@ def main():
                     c2, s2, a2, v2 = c2[:L2], s2[:L2], a2[:L2], v2[:L2]
                     ph.add(rs, c2, s2, a2, v2, max(15, r["ovl"]), min(80, L2 * FP * 0.6), 10 ** ((gain_db - 3) / 20))
             p0, y = ph.synth(); ph = Phrase()
+            # フレーズの両端を 5ms でなめらかにする（合成の最初・最後のサンプルが 0 でないと「プチッ」になる。2026-10-16 に 83.7秒で見つけた）
+            fz = min(len(y) // 4, int(0.005 * FS))
+            if fz > 1:
+                ramp = 0.5 - 0.5 * np.cos(np.linspace(0, np.pi, fz)); y[:fz] *= ramp; y[-fz:] *= ramp[::-1]
             out[p0:p0 + len(y)] += y[: len(out) - p0]
         # 息: 次の歌い出しまで 250ms 以上あいていれば、歌い出しの直前に小さく吸う
         if breath and nxt is not None and not cnext:

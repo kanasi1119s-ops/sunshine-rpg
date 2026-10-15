@@ -16,6 +16,7 @@
   ボッ     : （歌）声のいちばん低い音より下の短い塊（-55dBFS を超える）
   サー     : （歌）休みの所の雑音（声の大きさより 45dB 小さい所より大きく、音の形が平ら＝雑音）
   ザッ     : （歌）音符の中（子音を除く）で、音の形が平ら＝雑音になっている所（30ms 以上）。--notes が要る
+  かすれ   : （歌）母音のきれいさ（HNR）が 10dB より下の音。--notes が要る（praat-parselmouth）
   ジリッ   : （歌）8kHz より上が一瞬だけ跳ね上がる所（まわりより 18dB 以上。子音の「さ・し」は除く）
 """
 import argparse, json, sys, importlib.util
@@ -160,6 +161,20 @@ def main():
             zs = []
             for t in zs_mask:   # 30ms 以上続くもの（3フレーム）を1か所に
                 if sum(1 for u in zs_mask if t <= u < t + 0.035) >= 3 and (not zs or t - zs[-1] > 0.1): zs.append(t)
+            # かすれ: 音ごとの母音のきれいさ（HNR。頭の 0.06 秒と終わりの 0.05 秒を除いた中央値）が 10dB より下の音
+            try:
+                import parselmouth
+                hh = parselmouth.Sound(mono, fs).to_harmonicity_cc(time_step=0.01, minimum_pitch=200)
+                kasure = []
+                for s, d, p in notes:
+                    a_, e_ = s + 0.06, s + d - 0.05
+                    if e_ - a_ < 0.06: continue
+                    vals = [hh.get_value(t) for t in np.arange(a_, e_, 0.01)]
+                    vals = [q for q in vals if q is not None and np.isfinite(q) and q > -100]
+                    if vals and np.median(vals) < 10: kasure.append(s)
+                R.append(("かすれ", len(kasure) == 0, len(kasure), kasure, "母音のきれいさ（HNR）が 10dB より下の音（息の雑音が多く、ザラついて聞こえる）"))
+            except ImportError:
+                pass
             R.append(("ザッ", len(zs) == 0, len(zs), zs, "音符の中（子音を除く）で、音の形が平らな雑音になっている所（30ms 以上）"))
 
     ok = all(r[1] for r in R)
