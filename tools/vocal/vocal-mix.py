@@ -51,7 +51,7 @@ def main():
     # 透き通る声に（2026-10-15、人間の指示「ノイズを少なく、透き通る声に」）: 高域の持ち上げは控えめ（12kHz +1dB。かすれ・サーッも一緒に上がるため）、
     # ディエッサーで「シー」をおさえ、こもり（250Hz）を少し減らし、2.5kHz で言葉の輪郭を出す
     dry = Pedalboard([HighpassFilter(110), PeakFilter(250, -2.5, 1.0), PeakFilter(2500, 1.5, 0.9),
-                      HighShelfFilter(12000, 1.0, 0.7),
+                      HighShelfFilter(9000, -2.0, 0.7), LowpassFilter(16000),   # 合成のサーッという高域をおさえる（2026-10-15「マイクのノイズ」）
                       Compressor(threshold_db=-20, ratio=3.0, attack_ms=4, release_ms=70), Gain(3.0)])
     v = dry(vx[None, :], fs)[0]
     v = deess(v, fs, thr_db=a.deess_db)

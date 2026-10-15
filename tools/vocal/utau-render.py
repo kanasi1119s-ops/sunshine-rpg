@@ -237,7 +237,8 @@ def main():
     ap_.add_argument("--breath", default=""); ap_.add_argument("--bpm", type=float, required=True); ap_.add_argument("--out", required=True)
     ap_.add_argument("--gain", default=""); ap_.add_argument("--cache", default="")
     ap_.add_argument("--total-bars", type=int, default=0); ap_.add_argument("--no-ride", action="store_true")
-    ap_.add_argument("--ap-power", type=float, default=2.0); ap_.add_argument("--breath-db", type=float, default=-16.0)
+    ap_.add_argument("--ap-power", type=float, default=3.0); ap_.add_argument("--breath-db", type=float, default=-200.0)  # 息は標準では入れない（ノイズに聞こえるため）
+    ap_.add_argument("--no-tail", action="store_true")
     a = ap_.parse_args()
     global AP_POW; AP_POW = a.ap_power
     spec = importlib.util.spec_from_file_location("vocal", a.vocal); vocal = importlib.util.module_from_spec(spec); spec.loader.exec_module(vocal)
@@ -298,11 +299,17 @@ def main():
         gain_db = np.clip(PTARGET - lvl, -12, 12) + 20 * np.log10(g)
         ph.add(start, cents, sp2, ap2, voiced, (max(15, o["ovl"]) if cprev else 8), fout, 10 ** (gain_db / 20))
         if not cnext:   # フレーズの終わり: 母音を自然に切る → このフレーズを音にする
-            r = vcv.find(f"{vowel_of(k)} R")
+            r = None if a.no_tail else vcv.find(f"{vowel_of(k)} R")
             if r:
                 rs = s + d - 30 - max(15, r["ovl"])
                 c2, s2, a2, v2, _ = seg_frames(an, r, 240, pc, rs, keep_tail=True)
-                ph.add(rs, c2, s2, a2, v2, max(15, r["ovl"]), 140, 10 ** ((gain_db - 2) / 20))
+                # 声が止まったあとの部分（録音の部屋の雑音）は使わない: 声のある所の終わりで切る（2026-10-15「マイクのノイズみたいな音」）
+                e2 = 10 * np.log10(s2.sum(axis=1) + 1e-30)
+                keep = np.where(v2 & (e2 > e2[: max(1, int(r["ovl"] / FP))].max() - 18))[0]
+                L2 = int(keep.max()) + 1 if len(keep) else 0
+                if L2 >= 6:
+                    c2, s2, a2, v2 = c2[:L2], s2[:L2], a2[:L2], v2[:L2]
+                    ph.add(rs, c2, s2, a2, v2, max(15, r["ovl"]), min(80, L2 * FP * 0.6), 10 ** ((gain_db - 3) / 20))
             p0, y = ph.synth(); ph = Phrase()
             out[p0:p0 + len(y)] += y[: len(out) - p0]
         # 息: 次の歌い出しまで 250ms 以上あいていれば、歌い出しの直前に小さく吸う
