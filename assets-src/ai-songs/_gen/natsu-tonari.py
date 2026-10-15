@@ -256,13 +256,19 @@ PARTS = []
 def add(inst, role, vol, pan, secs, **kw):
     d = {"instrument": inst, "role": role, "volume": vol, "pan": pan, "notes": cat(secs, role)}; d.update(kw); PARTS.append(d)
 A = ARC
-DR = -4   # ドラムは -4dB（2026-10-15: 強弱・フィルが聞こえるよう -10/-11 から戻した。点数より人間の指示を優先）
+DR = -6   # ドラムは -6dB（2026-10-15: 「全体的に少し小さく」の指示で -4 から下げた）
 add("keys", "旋律（エレピ）", 0.24, -0.05, per(f_keys), barGain=A, reverb=0.25, gainDb=2)
-add("leadGuitar", "旋律（リードギター）", 0.16, 0.08, per(f_lead), barGain=A, gainDb=5, guitarTone="warm-lead-a")
+ACOUSTIC = _os.environ.get("ACOUSTIC") == "1"   # アコギ版（2026-10-15、人間の指示）。旋律のギターを生のアコギにし、1オクターブ下げて弾く
+def _oct_down(text): return " ".join(t if t.startswith("R:") else tr(t, -12) for t in text.split())
+if ACOUSTIC:
+    add("guitar", "旋律（アコギ）", 0.2, 0.08, [_oct_down(x) for x in per(f_lead)], barGain=A, gainDb=5, amp="clean", chorus=0, humanPitch=0, noRestrike=True,
+        reverb=0.26, fx=[{"type": "plate", "mix": 0.12}])
+else:
+    add("leadGuitar", "旋律（リードギター）", 0.16, 0.08, per(f_lead), barGain=A, gainDb=5, guitarTone="warm-lead-a")
 add("piano", "旋律（ピアノ・落ちサビ）", 0.2, -0.05, per(f_piano_mel), barGain=A, reverb=0.25, gainDb=2)
 add("bell", "きらめき（ベル）", 0.07, 0.35, per(f_bell), barGain=A, reverb=0.32)
 add("piano", "ピアノ（分散和音）", 0.15, -0.35, per(f_piano), barGain=A, reverb=0.18)
-add("guitar", "クリーンギター", 0.1, 0.65, per(f_clean), barGain=A, amp="jpopClean", chorus=0, reverb=0.2)
+add("guitar", "アコギ（アルペジオ）" if ACOUSTIC else "クリーンギター", 0.1, 0.65, per(f_clean), barGain=A, amp="clean" if ACOUSTIC else "jpopClean", chorus=0, reverb=0.2, humanPitch=0)
 add("strings", "弦（上）", 0.09, 0.55, per(strings(72, 2)), barGain=A, reverb=0.28)
 add("strings", "弦（下）", 0.08, -0.55, per(strings(57, 0)), barGain=A, reverb=0.28)
 add("bass", "ベース", 0.3, 0, per(f_bass), barGain=A)
@@ -273,10 +279,10 @@ add("crash", "クラッシュ", 0.1, 0, CRASH, barGain=DG, gainDb=DR)
 add("crash", "ライド", 0.07, 0.2, RIDE, barGain=DG, gainDb=DR)
 add("tom", "タム", 0.16, 0, TOM, barGain=DG, reverb=0, gainDb=DR)
 
-song = {"title": "あの夏のとなり（仮）",
+song = {"title": ("（アコギ版）" if ACOUSTIC else "") + "あの夏のとなり（仮）",
         "description": "（仮）夏を感じる、甘酸っぱい恋にたどり着くようなボカロ風の曲（歌なし）。BPM115・イ長調、最後のサビは半音上の変ロ長調。長7度の和音と C#7 で甘酸っぱく。旋律は Aメロ・Bメロ・ブリッジ・落ちサビがエレピ、サビ・間奏・ソロがリードギター（warm-lead-a）。入り方: 3（クリーンギターのアルペジオだけで2小節→ピアノとベルが入る→5小節目からドラムとベース）。終わり方: 長い和音で静かに。動機: A5:1 F#5:0.5 A5:0.5 C#6:1（サビ頭）。",
         "bpm": 115, "beats": 4, "chords": " ".join(chords), "barsPerChord": 1, "repeats": 1,
-        "tone": "pop", "feel": "vocaloid", "human": 0.3, "dynamics": "natural", "autoAccompaniment": False,
+        "tone": "pop", "feel": "vocaloid", "human": 0.3, "dynamics": "natural", "autoAccompaniment": False, **({"autoScoop": False} if ACOUSTIC else {}),
         "parts": PARTS}
 json.dump(song, open(sys.argv[1], "w"), ensure_ascii=False, indent=1)
 print("ok", len(PARTS), "parts", len(chords), "bars", round(len(chords) * 4 * 60 / 115), "sec")

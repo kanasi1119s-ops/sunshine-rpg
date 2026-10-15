@@ -955,7 +955,7 @@
     0.8,
     0.75
    ],
-   "gainDb": -4
+   "gainDb": -6
   },
   {
    "instrument": "snare",
@@ -1074,7 +1074,7 @@
     0.75
    ],
    "push": 0.025,
-   "gainDb": -4
+   "gainDb": -6
   },
   {
    "instrument": "hihat",
@@ -1193,7 +1193,7 @@
     0.75
    ],
    "push": -0.008,
-   "gainDb": -4
+   "gainDb": -6
   },
   {
    "instrument": "crash",
@@ -1311,7 +1311,7 @@
     0.8,
     0.75
    ],
-   "gainDb": -4
+   "gainDb": -6
   },
   {
    "instrument": "crash",
@@ -1429,7 +1429,7 @@
     0.8,
     0.75
    ],
-   "gainDb": -4
+   "gainDb": -6
   },
   {
    "instrument": "tom",
@@ -1548,7 +1548,7 @@
     0.75
    ],
    "reverb": 0,
-   "gainDb": -4
+   "gainDb": -6
   }
  ]
 }

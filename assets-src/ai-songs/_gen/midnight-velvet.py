@@ -205,9 +205,15 @@ PARTS = []
 def add(inst, role, vol, pan, secs, **kw):
     d = {"instrument": inst, "role": role, "volume": vol, "pan": pan, "notes": cat(secs, role)}; d.update(kw); PARTS.append(d)
 A = ARC
-DR = -4   # ドラムは -4dB（2026-10-15: 強弱・フィルが聞こえるよう -10/-11 から戻した。点数より人間の指示を優先）
+DR = -6   # ドラムは -6dB（2026-10-15: 「全体的に少し小さく」の指示で -4 から下げた）
 add("fmEpiano", "旋律（FMエレピ）", 0.22, -0.05, per(f_piano_mel), barGain=A, reverb=0.22, gainDb=2)
-add("leadGuitar", "旋律（リードギター）", 0.16, 0.08, per(f_lead), barGain=A, gainDb=5, guitarTone="warm-lead-b")
+ACOUSTIC = _os.environ.get("ACOUSTIC") == "1"   # アコギ版（2026-10-15、人間の指示）。旋律のギターを生のアコギにし、1オクターブ下げて弾く
+def _oct_down(text): return " ".join(t if t.startswith("R:") else tr(t, -12) for t in text.split())
+if ACOUSTIC:
+    add("guitar", "旋律（アコギ）", 0.2, 0.08, [_oct_down(x) for x in per(f_lead)], barGain=A, gainDb=5, amp="clean", chorus=0, humanPitch=0, noRestrike=True,
+        reverb=0.26, fx=[{"type": "plate", "mix": 0.12}])
+else:
+    add("leadGuitar", "旋律（リードギター）", 0.16, 0.08, per(f_lead), barGain=A, gainDb=5, guitarTone="warm-lead-b")
 add("keys", "エレピ（3度）", 0.12, -0.45, per(keys(0)), barGain=A, reverb=0.2)
 add("keys", "エレピ（7度）", 0.11, 0.45, per(keys(1)), barGain=A, reverb=0.2)
 add("strings", "弦（上）", 0.08, 0.6, per(strings(72, 2)), barGain=A, reverb=0.28)
@@ -220,10 +226,10 @@ add("crash", "クラッシュ", 0.1, 0, CRASH, barGain=DG, gainDb=DR)
 add("crash", "ライド", 0.07, 0.2, RIDE, barGain=DG, gainDb=DR)
 add("tom", "タム", 0.16, 0, TOM, barGain=DG, reverb=0, gainDb=DR)
 
-song = {"title": "ミッドナイト・ベルベット（仮）",
+song = {"title": ("（アコギ版）" if ACOUSTIC else "") + "ミッドナイト・ベルベット（仮）",
         "description": "（仮）大人っぽく少し色っぽい、ポップなボカロ風の曲（歌なし）。BPM110・ハ短調。16分の裏打ち・跳ねる指弾きベース・エレピの裏打ちの和音。7th 中心で G7 に ♭9。旋律はサビがリードギター（warm-lead-b）、Aメロ・Bメロ・ブリッジが FM エレピ。入り方: 6（ドラムのグルーブだけで2小節→ベースとエレピ）。最後のサビ2回は半音上（嬰ハ短調）。終わり方: サビの頭の動機で終わる。動機: G5:0.75 Ab5:0.25 G5:0.5 Eb5:0.5（サビ頭）。",
         "bpm": 110, "beats": 4, "chords": " ".join(chords), "barsPerChord": 1, "repeats": 1,
-        "tone": "pop", "feel": "pop", "human": 0.3, "dynamics": "natural", "autoAccompaniment": False,
+        "tone": "pop", "feel": "pop", "human": 0.3, "dynamics": "natural", "autoAccompaniment": False, **({"autoScoop": False} if ACOUSTIC else {}),
         "parts": PARTS}
 json.dump(song, open(sys.argv[1], "w"), ensure_ascii=False, indent=1)
 print("ok", len(PARTS), "parts", len(chords), "bars", round(len(chords) * 4 * 60 / 110), "sec")

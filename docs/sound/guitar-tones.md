@@ -17,3 +17,7 @@ AIソング形式のパートに `"guitarTone": "<名前>"` と書くと、ア�
 ```json
 { "instrument": "leadGuitar", "role": "旋律", "volume": 0.16, "pan": 0.08, "gainDb": 3, "guitarTone": "warm-lead-b", "notes": "..." }
 ```
+
+## アコギ版の作り方（2026-10-15）
+- 生成スクリプトに `ACOUSTIC=1` を付けると、旋律のギターを `instrument: guitar`・`amp: clean`・`humanPitch: 0`・`noRestrike: true`・プレート少し、にして1オクターブ下げて弾く（例: `_gen/natsu-tonari.py`・`_gen/midnight-velvet.py`）。
+- 音源: 鉄弦の生音は `--guitar shiny-acoustic`（Shinyguitar のマイク録音。CC0）、ナイロン弦は `--guitar nylon`（FreePats Spanish classical。CC0）。規約の分かる鉄弦アコギの多サンプル音源は見つからなかった。
