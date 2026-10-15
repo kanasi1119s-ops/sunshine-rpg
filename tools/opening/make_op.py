@@ -44,10 +44,10 @@ PARTY = [("ユーリ", "Yuri", "000", "灯りの相談所の新人調査員", (2
          ("オルカ", "Orca", "008", "鉱山で働いてきた力持ち", (230, 130, 60)), ("アヤメ", "Ayame", "010", "霜原の静かな案内人", (190, 150, 240))]
 FULL = [art(p[2]) for p in PARTY]
 SHEET_NAME = ["ユーリ", "レト", "ミナ", "ガイド", "オルカ", "アヤメ"]
-FIG = [(0.28, 0.69), (0.30, 0.71), (0.28, 0.69), (0.28, 0.69), (0.28, 0.69), (0.28, 0.69)]          # 全身が入る縦の帯（横の割合）
+CENTER = [0.47, 0.50, 0.555, 0.49, 0.485, 0.445]   # 全身の絵の、体のまん中（横の割合。シートを見て測った）
+FIG = [(c - min(c - 0.28, 0.705 - c, 0.2), c + min(c - 0.28, 0.705 - c, 0.2)) for c in CENTER]   # 体がまん中に来るように左右同じ幅で切る
 FACE = [(0.716, 0.016, 0.98, 0.82), (0.04, 0.016, 0.275, 0.82), (0.716, 0.47, 0.95, 0.935), (0.716, 0.006, 0.99, 0.855),
         (0.716, 0.006, 0.985, 0.875), (0.716, 0.006, 0.98, 0.875)]                                    # 顔の大写しの枠の内側
-CENTER = [0.47, 0.50, 0.53, 0.48, 0.47, 0.45]
 SHEET = [Image.open(f"{HERE}/chars/{n}.jpg").convert("RGBA") for n in SHEET_NAME]
 def fr(im, box): return im.crop((int(box[0] * im.width), int(box[1] * im.height), int(box[2] * im.width), int(box[3] * im.height)))
 FIGS = [fr(SHEET[k], (FIG[k][0], 0, FIG[k][1], 1)) for k in range(6)]
@@ -56,7 +56,10 @@ BLUR = [cover(SHEET[k].filter(ImageFilter.GaussianBlur(SHEET[k].width / 300)), W
 def fit_h(im, h): return im.resize((max(1, round(im.width * h / im.height)), h), Image.LANCZOS)
 FIGH = [fit_h(f, 700) for f in FIGS]
 FACEH = [fit_h(f, 400) for f in FACES]
-STRIP = [fit_h(fr(SHEET[k], (CENTER[k] - 0.1, 0.02, CENTER[k] + 0.1, 1.0)), 620) for k in range(6)]
+def strip_of(k, h=620):   # 6人並び用: 体のまん中を軸に、画面の 1/6 の幅ちょうどで切る（となりと重ならない）
+    sh = SHEET[k]; sc = h / (0.98 * sh.height); cw = (W / 6) / sc / sh.width
+    return fr(sh, (CENTER[k] - cw / 2, 0.02, CENTER[k] + cw / 2, 1.0)).resize((round(W / 6), h), Image.LANCZOS)
+STRIP = [strip_of(k) for k in range(6)]
 LOGO = Image.open(f"{HERE}/logo-native.png").convert("RGBA")
 LOGO5 = LOGO.resize((LOGO.width * 5, LOGO.height * 5), Image.NEAREST)
 # ボス（人間の指示 2026-10-16「ボスも神も予言の歪みだけ」）: 手直しと動き（歩く16コマ・攻撃3種類）のある「予言の歪み」1体だけを使う。
@@ -320,7 +323,7 @@ def frame(t):
             if j < 6:
                 bg_pan(c, BLUR[j], sub, dx=0.4); overlay(c, (12, 8, 24), 0.35)
                 face = FACEH[j]; side = 1 if j % 2 == 0 else -1
-                fx = W / 2 + side * 170 - face.width / 2 - side * 120 * (1 - eout(sub * 3))
+                fx = W / 2 - face.width / 2 - side * 120 * (1 - eout(sub * 3))   # 画面のまん中に止まる
                 fa = eout(sub * 6 + 0.15)
                 put(c, face, fx, (H - face.height) / 2 - 20, fa)
                 col = PARTY[j][4]
