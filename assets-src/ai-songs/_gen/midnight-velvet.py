@@ -201,6 +201,16 @@ for _sec in SEC:
 DG = drumkit.drum_gain(SEC, {"intro": (0.8, 0.85), "verse": (0.78, 0.88), "pre": (0.85, 1.02), "chorus": (0.95, 1.0), "inter": (0.9, 0.95),
                              "bridge": (0.7, 0.9), "outro": (0.9, 0.75)})
 
+
+# ---------------- カッティング（guitarcut.py。4弦の和音のストローク） ----------------
+import guitarcut
+def cut_pat(s, n, b):
+    if s in ("verse", "inter"): return "D.gUxgD.xUgDxgUx" if b % 2 == 0 else "D.gUxgD.xUgD.-U."
+    if s == "pre": return "D.......--------" if b == 7 else "D.xUD.xUD.xUD.xU"
+    if s == "chorus": return "gxDgxDgxDgxDgxDx" if b != 7 else "gxDgxDgxD.------"
+    return None
+CUT = guitarcut.cut_parts(SEC, chord_pcs, nm, cut_pat)
+
 PARTS = []
 def add(inst, role, vol, pan, secs, **kw):
     d = {"instrument": inst, "role": role, "volume": vol, "pan": pan, "notes": cat(secs, role)}; d.update(kw); PARTS.append(d)
@@ -218,6 +228,8 @@ add("keys", "エレピ（3度）", 0.12, -0.45, per(keys(0)), barGain=A, reverb=
 add("keys", "エレピ（7度）", 0.11, 0.45, per(keys(1)), barGain=A, reverb=0.2)
 add("strings", "弦（上）", 0.08, 0.6, per(strings(72, 2)), barGain=A, reverb=0.28)
 add("strings", "弦（下）", 0.07, -0.6, per(strings(57, 0)), barGain=A, reverb=0.28)
+for _i, _name in enumerate(["低", "中低", "中高", "高"]):
+    add("guitar", f"カッティング（{_name}い弦）", 0.07, 0.6, CUT[_i], barGain=A, amp="clean" if ACOUSTIC else "jpopClean", chorus=0, reverb=0.12, humanPitch=0, push=round(0.008 * _i, 3))
 add("bass", "ベース（指弾き・跳ねる16分）", 0.3, 0, per(f_bass), barGain=A)   # スラップより指弾きのほうが点数が高かった（7.92→8.14）
 add("kick", "キック", 0.3, 0, KICK, barGain=DG, gainDb=DR)
 add("snare", "スネア", 0.26, 0, SNARE, barGain=DG, push=0.025, gainDb=DR)

@@ -252,6 +252,17 @@ for _sec in SEC:
 DG = drumkit.drum_gain(SEC, {"intro": (0.75, 0.85), "verse": (0.78, 0.9), "pre": (0.85, 1.02), "chorus": (0.95, 1.0), "inter": (0.9, 0.95),
                              "bridge": (0.7, 0.85), "solo": (0.95, 1.02), "otosabi": (0.55, 1.0), "outro": (0.9, 0.7)})
 
+
+# ---------------- カッティング（guitarcut.py。4弦の和音のストローク） ----------------
+import guitarcut
+def cut_pat(s, n, b):
+    if s == "verse" and n >= 1: return "D.xU.UxUD.xU.UxU" if b % 2 == 0 else "D.xU.UxUD.xUxUD."
+    if s == "pre": return "D.......--------" if b == 7 else "D.xUD.xUD.xUD.xU"
+    if s in ("chorus", "solo"): return "D...xU.UD...xU.U" if b != 7 else "D.xU.UxUD.......".replace("D.......", "D.------")
+    if s == "inter": return "D.xU.UxUD.xU.UxU"
+    return None
+CUT = guitarcut.cut_parts(SEC, chord_pcs, nm, cut_pat)
+
 PARTS = []
 def add(inst, role, vol, pan, secs, **kw):
     d = {"instrument": inst, "role": role, "volume": vol, "pan": pan, "notes": cat(secs, role)}; d.update(kw); PARTS.append(d)
@@ -271,6 +282,8 @@ add("piano", "ピアノ（分散和音）", 0.15, -0.35, per(f_piano), barGain=A
 add("guitar", "アコギ（アルペジオ）" if ACOUSTIC else "クリーンギター", 0.1, 0.65, per(f_clean), barGain=A, amp="clean" if ACOUSTIC else "jpopClean", chorus=0, reverb=0.2, humanPitch=0)
 add("strings", "弦（上）", 0.09, 0.55, per(strings(72, 2)), barGain=A, reverb=0.28)
 add("strings", "弦（下）", 0.08, -0.55, per(strings(57, 0)), barGain=A, reverb=0.28)
+for _i, _name in enumerate(["低", "中低", "中高", "高"]):
+    add("guitar", f"カッティング（{_name}い弦）", 0.07, -0.6, CUT[_i], barGain=A, amp="clean" if ACOUSTIC else "jpopClean", chorus=0, reverb=0.12, humanPitch=0, push=round(0.008 * _i, 3))
 add("bass", "ベース", 0.3, 0, per(f_bass), barGain=A)
 add("kick", "キック", 0.3, 0, KICK, barGain=DG, gainDb=DR)
 add("snare", "スネア", 0.26, 0, SNARE, barGain=DG, push=0.02, gainDb=DR)
