@@ -1,11 +1,21 @@
 // 書き出しの合否表（master-report）とループの継ぎ目。docs/sound/mastering-guide.md の提案 10・11 を入れたもの。
-//   masterReport(wav, {lufs, tp, loop}) … I・TP・LRA・PLR・PSR・左右の相関・100Hz 以下の相関・継ぎ目を 1 行で ○／要直し
+//   masterReport(wav, {lufs, tp, loop}) … I・TP・LRA・PLR・PSR・左右の相関・100Hz 以下の相関・継ぎ目・雑音を 1 行で ○／要直し
 //   loopCheck(wav)                     … 先頭・末尾の段差、継ぎ目の前後の大きさの差
 //   loopTailWrap(wav, T)               … 書き出しの末尾（T 秒より後ろ＝残響の尾）を先頭に重ねて T 秒に切る（テールラップ）
 import { execSync } from "child_process";
 import fs from "fs";
 import { spectralMetrics } from "./spectral-metrics.mjs";
 import { genreJudge } from "./genre-targets.mjs";
+import { fileURLToPath } from "url";
+
+/** 雑音の検知（tools/audio-check/noise-check.py。音割れ・直流・超低域・プチッ）。Python がないなどで測れないときは null */
+export function noiseCheck(file, { vocal = false, notes = "", bpm = NaN } = {}) {
+  try {
+    const py = fileURLToPath(new URL("../audio-check/noise-check.py", import.meta.url));
+    const extra = `${vocal ? " --vocal" : ""}${notes ? ` --notes "${notes}"` : ""}${Number.isFinite(bpm) ? ` --bpm ${bpm}` : ""}`;
+    return JSON.parse(sh(`python3 "${py}" "${file}" --json${extra}`).trim().split("\n").pop());
+  } catch { return null; }
+}
 
 const sh = (cmd) => execSync(cmd, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 1 << 28 });
 
@@ -91,7 +101,7 @@ export function loopTailWrap(file, T) {
  * 書き出しの合否表。opts: lufs（目標）・tp（天井 dBTP。既定 -1）・loop（継ぎ目を見るか）・plrMin・psrMin・lowCutoff（低域相関を測る上限 Hz。既定 100）。
  * 戻り値: { ok, line, metrics, issues }
  */
-export function masterReport(file, { lufs = null, tp = -1, loop = false, plrMin = null, psrMin = null, lowCutoff = 100, genre = null, bpm = NaN } = {}) {
+export function masterReport(file, { lufs = null, tp = -1, loop = false, plrMin = null, psrMin = null, lowCutoff = 100, genre = null, bpm = NaN, noise = true } = {}) {
   const m = measureAll(file);
   const pcm = readPcm(file);
   const corr = correlation(pcm.L, pcm.R);
@@ -112,6 +122,9 @@ export function masterReport(file, { lufs = null, tp = -1, loop = false, plrMin 
   if (corr < 0.3) issues.push(`左右の相関 ${corr.toFixed(2)} が 0.3 未満（モノで薄くなる恐れ）`);
   if (lowCorr < 0.9) issues.push(`${lowCutoff}Hz 以下の左右の相関 ${lowCorr.toFixed(2)} が 0.9 未満（低音がモノで痩せる）`);
   if (seam && !seam.ok) issues.push(...seam.warnings);
+  // 雑音（2026-10-16、人間の指示「雑音検知する項目欲しい」）
+  const nz = noise ? noiseCheck(file, { bpm }) : null;
+  if (nz && !nz.ok) for (const it of nz.items.filter((x) => !x.ok)) issues.push(`雑音「${it.name}」${it.times.length ? it.times.length + "か所（" + it.times.slice(0, 3).map((t) => t.toFixed(2) + "秒").join("・") + "…）" : it.note}`);
   const f1 = (v) => (Number.isFinite(v) ? v.toFixed(1) : "-");
   // ざらつき(flat・2〜8kHz)と空気(8kHz以上)。ジャンルを渡すと、そのジャンルの目安（p10〜p90）からの外れを「ジャンル注意」として添える（合否には入れない）
   const sp = spectralMetrics(pcm.L, pcm.R, pcm.sr);
@@ -119,6 +132,6 @@ export function masterReport(file, { lufs = null, tp = -1, loop = false, plrMin 
   const g = genre ? genreJudge({ lra: m.LRA, plr: PLR, corr, flat: sp.flat, air: sp.air, intro: sp.intro, tail: sp.tail }, genre, { bpm }) : null;
   if (genre && !g) genreNote = `  [ジャンル「${genre}」の目標がありません]`;
   else if (g) { const ng = g.rows.filter((r) => !r.ok); genreNote = `  [ジャンル「${g.target.label}」${ng.length ? "注意: " + ng.map((r) => `${r.label} ${r.value}（目安 ${r.goal.split("（")[0]}）`).join("；") : "の目安に収まっています"}]`; }
-  const line = `${issues.length ? "要直し" : "○"} I ${f1(m.I)} / TP ${f1(m.TP)} / LRA ${f1(m.LRA)} / PLR ${f1(PLR)} / PSR ${f1(PSR)} / 相関 ${corr.toFixed(2)} / 低域相関 ${lowCorr.toFixed(2)} / 継ぎ目 ${seam ? (seam.ok ? "○" : "要直し") : "-"} / flat ${Number.isFinite(sp.flat) ? sp.flat.toFixed(2) : "-"} / 空気 ${f1(sp.air)}${issues.length ? "  → " + issues.join("；") : ""}${genreNote}`;
-  return { ok: issues.length === 0, line, issues, genre: g, metrics: { ...m, PLR, PSR, corr, lowCorr, seam, flat: sp.flat, air: sp.air, presence: sp.presence, intro: sp.intro, tail: sp.tail } };
+  const line = `${issues.length ? "要直し" : "○"} I ${f1(m.I)} / TP ${f1(m.TP)} / LRA ${f1(m.LRA)} / PLR ${f1(PLR)} / PSR ${f1(PSR)} / 相関 ${corr.toFixed(2)} / 低域相関 ${lowCorr.toFixed(2)} / 継ぎ目 ${seam ? (seam.ok ? "○" : "要直し") : "-"} / flat ${Number.isFinite(sp.flat) ? sp.flat.toFixed(2) : "-"} / 空気 ${f1(sp.air)} / 雑音 ${nz ? (nz.ok ? "○" : "要直し") : "-"}${issues.length ? "  → " + issues.join("；") : ""}${genreNote}`;
+  return { ok: issues.length === 0, line, issues, genre: g, metrics: { ...m, PLR, PSR, corr, lowCorr, seam, flat: sp.flat, air: sp.air, presence: sp.presence, intro: sp.intro, tail: sp.tail, noise: nz } };
 }

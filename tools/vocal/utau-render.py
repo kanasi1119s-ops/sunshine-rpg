@@ -18,7 +18,7 @@ UTAU の「リサンプラー（音の高さと長さを変える）」と「wav
   python3 tools/vocal/utau-render.py <vocal.py> --vb <滑らか音源>:滑 --vb <連続音> --head-vb <単独音> [--breath <エクストラ>]
      --bpm 150 --out 歌.wav [--gain "0-8:0.95,..."]（小節ごとの音量。0始まり、終わりは含まない）[--cache <分析の置き場>]
 """
-import argparse, hashlib, importlib.util, os
+import argparse, hashlib, importlib.util, os, sys
 import numpy as np, pyworld as pw, soundfile as sf
 from scipy.ndimage import median_filter, uniform_filter1d
 
@@ -349,7 +349,7 @@ def main():
     ap_.add_argument("--gain", default=""); ap_.add_argument("--cache", default="")
     ap_.add_argument("--total-bars", type=int, default=0); ap_.add_argument("--no-ride", action="store_true")
     ap_.add_argument("--ap-power", type=float, default=3.0); ap_.add_argument("--breath-db", type=float, default=-200.0)  # 息は標準では入れない（ノイズに聞こえるため）
-    ap_.add_argument("--no-tail", action="store_true")
+    ap_.add_argument("--no-tail", action="store_true"); ap_.add_argument("--no-noise-check", action="store_true")
     ap_.add_argument("--plain", action="store_true", help="表情（強弱・しゃくり・ビブラート）を付けない")
     ap_.add_argument("--soft", default="", help="静かなセクションの小節（例 88-96）")
     ap_.add_argument("--last", default="", help="最後のサビの小節（例 96-112）")
@@ -462,9 +462,9 @@ def main():
                     if q > 0: breaths.append((q, x))
     out = out[: int(total_ms * FS / 1000)]
     # 声のいちばん低い音より下（ボッという低い雑音）を切る（2026-10-16、人間の指摘「マイクのノイズ」）。
-    # 合成のつなぎ目で、声の高さが急に変わる所に 30〜150Hz の短い「ボッ」が出ていた（歌は D4＝294Hz より上なので声は削れない）
+    # 合成のつなぎ目で、声の高さが急に変わる所に 30〜150Hz の短い「ボッ」が出ていた。8次のフィルターで、いちばん低い音の 0.8 倍より下を切る
     from scipy.signal import butter, sosfiltfilt
-    lo_hz = min(180.0, 0.7 * 440.0 * 2 ** ((min(m for _, _, m in base_notes) - 69) / 12))
+    lo_hz = min(250.0, 0.8 * 440.0 * 2 ** ((min(m for _, _, m in base_notes) - 69) / 12))   # いちばん低い音の 0.8 倍（D4 なら 235Hz。声の基音は 0.1dB しか削れない）
     out = sosfiltfilt(butter(8, lo_hz, "highpass", fs=FS, output="sos"), out)
     # 全体の大きさを合わせる（声のある所の中央値を TARGET に）→ 息を足す
     w = int(0.02 * FS); el = 10 * np.log10(uniform_filter1d(out ** 2, w)[::w] + 1e-12)
@@ -479,6 +479,12 @@ def main():
     out *= 0.5 / (np.abs(out).max() + 1e-9)
     sf.write(a.out, out.astype(np.float32), FS, subtype="FLOAT")
     print("書き出し:", a.out, f"{len(out) / FS:.1f}秒", len(notes), "音", used)
+    # 雑音の検知（2026-10-16、人間の指示「雑音検知する項目欲しい」）。--no-noise-check で止める
+    if not a.no_noise_check:
+        import subprocess
+        chk = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "audio-check", "noise-check.py")
+        r = subprocess.run([sys.executable, chk, a.out, "--vocal", "--notes", a.vocal, "--bpm", str(a.bpm)], capture_output=True, text=True)
+        print("雑音:", r.stdout.strip() or r.stderr.strip()[-300:])
 
 if __name__ == "__main__":
     main()

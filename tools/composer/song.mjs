@@ -3,6 +3,7 @@
 //
 //   node tools/composer/song.mjs guide
 //       AIソング形式の説明（楽器の一覧・書き方・よい曲にするコツ）を表示する。曲を書く前に読む。
+//   node tools/composer/song.mjs noise <WAV> [--vocal] [--notes 歌.py] [--bpm N]  … 雑音の検知（音割れ・直流・超低域・プチッ、歌はボッ・サー・ジリッ・ザッも）
 //   node tools/composer/song.mjs build <曲.json> [--stems] [--out <フォルダ>] [--edition real|ps2|modern] [--wav] [--register <曲ID> --scene "<場面>"]
 //       AIソング形式のJSONを確かめて、作曲ソフトで開けるプロジェクト（.sunshine-song.json）とMIDIを書き出す。
 //       --bass finger|pick|rock|metal|jazz|jpop: ベースを FreePats のエレキベースの音源に。--sound punk-run|clear-guitar-rock|rock-4|pop-lead|jpop-bright|ballad-piano-strings|jazz-trio|funk-bass|house-duck|ambient-wide|orchestra-depth|game-battle|game-boss|game-town|game-dungeon（`sounds` で一覧）: サウンドセット（アンプ・音量・ミックス・ドラム・使う音源をまとめて当てはめる。--bass/--drums/--guitar を別に書けばそちらが優先）。--master-preset <名前>: 書き出しの仕上げ（大きさ・広がり・圧縮・EQ・天井）をまとめて決める。従来の 4 つ game=-14LUFS・rock=-10・loud=-8・calm=-16 のほか、ジャンル別の metal・punk・rock-clean・pop・jazz・orch・edm・hiphop・lofi・ambient・wafu・solo と、ゲーム用の game-field・game-battle・game-boss・game-dungeon・retro（`node tools/composer/song.mjs presets` で一覧）。--space hall|room|plate: 書き出しのWAVに畳み込みリバーブ（自作のIR）を足す。--space-wet 0〜1（既定0.25）が残響の量。--widen 1.8: 書き出しのWAVの左右の広がりを広げる（1=そのまま。master と一緒に使う。おすすめ 1.5〜2）。--master -9: 書き出しのWAVの大きさ（LUFS）をそろえる（サウンドセットに master があれば自動。ピークは約 -1.5dB 以下）。--orchestra vsco: 弦・金管・木管・ティンパニ・ハープ・マリンバ・オルガンを VSCO 2 CE（CC0）の録音に。--piano salamander: ピアノを Salamander Grand Piano（CC BY 3.0）に。--guitar gretsch|hofner: ジャズギター(26)・クリーンギター(27)を Karoryfer の生ギター（CC0）に。--drums muldjord|rock|metal|jazz|jpop|supra: ドラムを生ドラム（Muldjord Kit）に（省略は標準）。
@@ -52,6 +53,14 @@ const num = (name) => (opt(name) === undefined ? null : Number(opt(name)));
 if (args[0] === "report" && args[1]) {
   const { masterReport } = await import("./master-report.mjs");
   console.log(masterReport(args[1], { lufs: num("--lufs"), tp: num("--tp") ?? -1.5, loop: !args.includes("--no-loop"), genre: opt("--genre") ?? null, bpm: num("--bpm") ?? NaN }).line);
+  process.exit(0);
+}
+if (args[0] === "noise" && args[1]) {
+  // 雑音の検知（tools/audio-check/noise-check.py）。歌だけの WAV は --vocal（と --notes 歌.py --bpm N）
+  const { execFileSync } = await import("child_process");
+  const py = new URL("../audio-check/noise-check.py", import.meta.url).pathname;
+  const rest = args.slice(2);
+  process.stdout.write(execFileSync("python3", [py, args[1], ...rest], { encoding: "utf8", maxBuffer: 1 << 26 }));
   process.exit(0);
 }
 if (args[0] === "presets") {

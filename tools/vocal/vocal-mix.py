@@ -76,6 +76,11 @@ def main():
         g = gall
         sf.write(a.stems + "-歌のみ.wav", (vocal_bus * g).T.astype(np.float32), fs, subtype="PCM_16")
     sf.write(a.out, mix.T, fs, subtype="PCM_16")
+    # 雑音の検知（音割れ・直流・超低域・プチッ）。歌だけの雑音は utau-render.py の最後に出る
+    import subprocess, sys, os
+    chk = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "audio-check", "noise-check.py")
+    r = subprocess.run([sys.executable, chk, a.out, "--bpm", str(a.bpm)], capture_output=True, text=True)
+    print("雑音:", r.stdout.strip() or r.stderr.strip()[-300:])
     print(f"伴奏 {lb:.1f} LUFS / 歌 {lv:.1f} → 歌を伴奏{a.vocal_lu:+.1f}LU に / 完成 {meter.integrated_loudness(mix.T):.1f} LUFS → {a.out}")
 
 if __name__ == "__main__":

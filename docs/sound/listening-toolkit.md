@@ -5,6 +5,7 @@ Claude Code は音を耳で聞けない。そこで、数字では分かりに�
 | 道具 | 使い方 | 分かること |
 |---|---|---|
 | `tools/audio-check/see-audio.py` | `python3 tools/audio-check/see-audio.py <WAV> --start 秒 --dur 秒 --fmin 100 --fmax 1000` | スペクトログラム・ピッチ軌跡（セント）・音量の動き。ビブラートの形、ベンドの戻り、余韻が切れていないかが見える |
+| `tools/audio-check/noise-check.py` | `node tools/composer/song.mjs noise <WAV> [--vocal --notes 歌.py --bpm N]` | 雑音の検知（2026-10-16）。音割れ・直流・超低域・プチッ（クリック）、歌だけの WAV では ボッ（声より低い塊）・サー（休みの雑音）・ジリッ（8kHz より上の一瞬の跳ね）・ザッ（音符の中の雑音）。○／要直しと時刻・小節 |
 | `tools/audio-check/tag-audio.py` | `HF_HOME=/tmp/hf python3 tools/audio-check/tag-audio.py <WAV> --start 60 --dur 10` | CLAP（音と言葉のAI）で、「歪みギターか」「生ドラムか」などの言葉にどれだけ近いかの順位。初回だけモデル約600MB |
 
 ## 分かったこと（2026-10-14）
@@ -69,3 +70,10 @@ Claude Code は音を耳で聞けない。そこで、数字では分かりに�
 - 『あの夏のとなり』（夏の甘酸っぱいボカロ風・BPM115・4分44秒）: 7.81 → **7.99**（ドラム合計 -10dB・リードギター +2dB）。`--drums jpop --bass jpop --piano salamander --orchestra vsco --guitar gretsch --master-preset jpop-band`。
 - 『ミッドナイト・ベルベット』（色っぽいポップなボカロ風・BPM110・3分56秒）: 7.84 → **8.21**。**スラップベースを指弾きベース（`--bass finger`）にしたのが一番効いた（+0.22）**。ドラムは生ドラム（`--drums muldjord`）が jpop より +0.04。
 - 『ナイトドリフト』（フォンク・BPM140・2分58秒）: 標準のドラム音源（`--drums` なし）が **8.01** でいちばん高い（jpop 7.87・muldjord 7.86）。電子的な曲には録音のドラムより標準の音源が合う。
+
+## 雑音の検知（2026-10-16、人間の指示「雑音検知する項目欲しいかも」）
+- 道具: `tools/audio-check/noise-check.py`（`node tools/composer/song.mjs noise <WAV>`）。曲の書き出し（`build --wav` / `report`）の合否表に「雑音」の項目として入る（音割れ・直流・超低域・プチッ）。
+  歌は `utau-render.py` の最後に自動で全部の項目（ボッ・サー・ジリッ・ザッも）を見る。`vocal-mix.py` も完成の WAV を見る。
+- 見分け方の工夫: プチッは「予測の外れ（LPC の残差）が、まわり 20ms の 12 倍を超え、しかも ±15ms にほかの山がない 0.6ms 以下の点」（声帯のパルスや打楽器の立ち上がりを外す）。
+  ザッは声の高さの追跡ではなく「音の形の平らさ」（母音ほぼ 0・子音 0.2・白い雑音 0.6）で見る（追跡の外れを雑音と取り違えたため）。子音の所（音符の頭と、次の音の 0.25 秒前から）は除く。
+- 確かめ（わざと雑音を入れた歌・伴奏）: プチッ 10 個中 9〜10 個、ボッ 5 個とも、サー 1 か所、ジリッ 3 個とも、ザッ 3 個中 2 個を見つけた。きれいな伴奏・歌での誤検知は 0（歌のジリッ 1 か所は、8kHz より上だけ -51dBFS ほど上がる実際の跳ね）。
