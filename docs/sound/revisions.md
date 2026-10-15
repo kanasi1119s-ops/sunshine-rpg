@@ -5,3 +5,4 @@
 
 - 2026-10-15 scarlet-chapter-modern-long: 空間版・6分（チョーキングの代わりに半音の並び・32分のタッピング・スラップのソロ） → 現代版に作り変え: 旋律ピアノ＋リードギター warm-lead-b（ビブラート・チョーキングなし、サビは1オクターブ下でベルを重ねる）・タッピング→ピアノソロ・スラップ→指弾きベース・左右の歪みギターと弦・サビの厚いシンセ・セクションごとのドラムの型。--edition modern --drums jpop --bass pick --piano salamander --orchestra vsco --guitar emily --master-preset jpop-band → PQ 8.15（60秒ずつの平均。ドラム -3dB で 8.19 だが +0.04 なので採らず）・I -13.5 / TP -1.3 → 未（人間の感想待ち）
 - 2026-10-15 helter-skelter-rb: 新曲 → R&B×ロック・BPM138シャッフル・イ長調ブルース→ロ長調。--drums muldjord --bass finger --piano salamander --orchestra vsco --guitar emily --master-preset rock-clean → PQ 8.39（60秒ずつの平均）・I -13.5 → 未（人間の感想待ち）
+- 2026-10-15 spark-floor: 新曲 → ダンス×ロック・BPM126・ト短調。標準ドラム＋edm 仕上げ（-13.5）。生ドラム＋rock-clean は 7.89、標準ドラム＋rock-clean は 8.13 → PQ 8.14（60秒ずつの平均）。--edition modern --bass pick --piano salamander --guitar emily --master-preset edm --master -13.5 → 未（人間の感想待ち）
