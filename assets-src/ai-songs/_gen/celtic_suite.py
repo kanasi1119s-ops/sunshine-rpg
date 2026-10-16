@@ -324,6 +324,7 @@ def build(song, out):
         if sec.get("oct"): leads_used.add(sec["oct"])
     for name in [n for n in LEADS if n in leads_used and n != "piano"]:
         inst, extra, _, _ = LEADS[name]; mt = dict(LEAD_META[name]); fxn = mt.pop("fx"); vol = mt.pop("vol"); pan = mt.pop("pan")
+        if song.get("lead_db"): mt["gainDb"] = mt.get("gainDb", 0) + song["lead_db"]
         S.part("L_" + name, inst, f"旋律（{name}）", vol, pan, fx=FX[fxn], **extra, **mt)
     if band.get("drone") == "bagpipe" and "bagpipe" not in leads_used:
         S.part("L_bagpipe", "bagpipe", "旋律（bagpipe）", 0.13, 0.0, reverb=0.35, fx=FX["hall"])
@@ -336,12 +337,14 @@ def build(song, out):
         if "piano" in leads_used: S.part("L_piano", "piano", "ピアノ右手（旋律）", 0.13, 0.06, **PNO)
     if band.get("guitar"):
         for k, pan in (("g1", -0.5), ("g2", 0.5), ("g3", -0.5), ("g4", 0.5)):
+            # 2026-10-17 人間の指示「アコギもう少し音が柔らかいといいかも」: 高音をおさえ（bright -0.4・eq の high -2.5）、強い弾き（!）をやめた。
+            #   楽器ごとの点検で、6kHz より上が -14.7dB → 下がり、重心 3.1kHz → 下がったことを確かめる
             S.part(k, "guitar", f"アコギ（{k[1]}本目）", 0.08, pan, amp="crystal", chorus=0, sustain=1.0, reverb=0.22, autoScoop=False, humanPitch=0, push=0.008 * int(k[1]),
-                   fx=[{"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.01, "release": 0.12}])
+                   bright=round(-0.4 * song.get("gsoft", 1), 2), fx=[{"type": "eq", "high": round(-2.5 * song.get("gsoft", 1), 2)}, {"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.01, "release": 0.12}])
     if band.get("acc") and "acc" not in leads_used: S.part("L_acc", "accordion", "旋律（acc）", 0.15, 0.25, reverb=0.28, fx=FX["room"])
     if band.get("pizz"): S.part("pizz", "strings", "弦のピチカート", 0.13, -0.3, patch="pizzicato", reverb=0.3)
     if band.get("bass") == "finger": S.part("bass", "bass", "ベース（指弾き）", 0.24, 0, fx=[{"type": "compressor", "threshold": -18, "ratio": 3, "attack": 0.02, "release": 0.15}])
-    if band.get("cello") or band.get("drone") == "cello": S.part("cello", "strings", "チェロ", 0.13, -0.3, patch="cello", reverb=0.35, release=0.5,
+    if band.get("cello") or band.get("drone") == "cello": S.part("cello", "strings", "チェロ", 0.13, -0.3, patch="cello", reverb=0.35, release=0.5, gainDb=song.get("cello_db", 0),
                                                                fx=[{"type": "compressor", "threshold": -18, "ratio": 3, "attack": 0.01, "release": 0.15}])
     if band.get("contrabass"): S.part("cb", "strings", "コントラバス", 0.14, 0, patch="contrabass", reverb=0.3)
     if band.get("strings"):
@@ -388,7 +391,7 @@ def build(song, out):
                 while ms and max(ms) + 12 * o > hi_: o -= 1
                 while ms and min(ms) + 12 * o < lo_: o += 1
                 return " ".join(t if t.startswith("R:") else f"{nm(md(t.split(':')[0]) + 12 * o)}:{t.split(':')[1]}" for t in sq.split())
-            style = LEADS[ld][2]
+            style = "plain" if (song.get("plain_fiddle") and ld == "fiddle") else LEADS[ld][2]
             S.put("L_" + ld, bi, S.ornament(S.seq(fit(ld, seqs)), style, bi + 17 * p["si"], dens=0.4, legato=True) if style != "plain" else S.plain(S.seq(fit(ld, seqs)), legato=True))
             if sec.get("harm"):
                 h = []
@@ -460,11 +463,11 @@ def build(song, out):
             r0 = low(cp[0], 45)
             v = [low(br, 40), r0 + ((cp[2] - cp[0]) % 12), r0 + 12, r0 + 12 + ((cp[1] - cp[0]) % 12)]
             for gi, g in enumerate(("g1", "g2", "g3", "g4")):
-                if gi < 2 or is_end: S.put(g, bi, [tok(v[gi], U, "!")]); continue
+                if gi < 2 or is_end: S.put(g, bi, [tok(v[gi], U)]); continue
                 tk = []
                 for j, pl in enumerate(PLEN):
                     pat = [2, 1] * (pl // 3) if pl % 3 == 0 else ([1, 1] if pl == 2 else ([2, 1, 1] if pl == 4 else [pl]))
-                    for q, dd in enumerate(pat): tk.append(tok(v[gi], dd, ("!" if j == 0 else "") if q == 0 else ","))
+                    for q, dd in enumerate(pat): tk.append(tok(v[gi], dd, "" if q == 0 else ","))
                 S.put(g, bi, tk)
         # ---- アコーディオン（和音の3度をのばす）----
         if band.get("acc") == "hold" and on(sec, "acc", 3) and "L_acc" in S.parts and not (p["mel"] and (sec["lead"] == "acc" or sec.get("harm") == "acc")) and not (is_end and i > 0):
@@ -478,12 +481,8 @@ def build(song, out):
             ap = (rn - 1 if rn > r else rn + 1) if rn != r else r + 7
             if is_end: S.put("bass", bi, [tok(r, U)])
             else:
-                tk = []
-                for j, pl in enumerate(PLEN):
-                    m = r if j == 0 else (r + 7 if j % 2 == 1 else r + 12)
-                    if j == len(PLEN) - 1 and len(PLEN) > 1: m = ap
-                    tk.append(tok(m, pl, "!" if j == 0 else ""))
-                S.put("bass", bi, tk)
+                # 2026-10-17 人間の指示「ベースは普通のコード進行でいいかも」: コードの根音（分数コードは指定の低音）を、拍のまとまりごとに弾くだけ
+                S.put("bass", bi, [tok(r, pl, "" if j == 0 else ",") for j, pl in enumerate(PLEN)])
         if (band.get("cello") or band.get("drone") == "cello") and not (is_end and i > 0):
             if band.get("drone") == "cello" and on(sec, "drone", 1): S.put("cello", bi, [tok(low(mel.tonic + sh, 38), U)])
             elif band.get("cello") == "ost" and on(sec, "cello", 2) and not is_end:
@@ -606,15 +605,18 @@ if __name__ == "__main__":
     # 点数の試行で決めた最終の調整（2026-10-17）。分かったこと: 和音の3度をのばすだけのアコーディオン（acc="hold"）と、のばすバグパイプの
     #   ドローンは点数を下げた（03: 7.98→8.23、13: 7.99→8.26、16: 7.97→8.03）。アコーディオンが旋律の曲も、笛に替えると上がった（05・10・15）。
     #   ギターの刻み（静かな曲は指で弾く分散和音 "arp"）は上げた（02・04・06・12・14・17・19）。
-    FINAL = {"02": {"guitar": "arp"}, "03": {"strings": True, "acc": None}, "04": {"guitar": "arp"}, "05": {"swap": {"acc": "flute"}, "strings": True, "harp": True},
-             "06": {"guitar": True}, "10": {"swap": {"acc": "flute"}, "guitar": True}, "12": {"seed": "2", "guitar": "arp"}, "13": {"strings": True, "acc": None},
-             "14": {"guitar": "arp"}, "15": {"swap": {"acc": "flute"}, "strings": True}, "16": {"drone": None, "guitar": True, "bass": "finger"},
-             "17": {"acc": None, "guitar": "arp"}, "19": {"guitar": True}}
+    #   2026-10-17（人間の指示でベースを根音だけ・アコギをやわらかくしたあと）: 楽器ごとの点検（song.mjs inspect）で、17 はチェロがいちばん大きく（旋律より 8dB 上）
+    #   点数 7.54 だったので、チェロ -5dB・旋律 +2dB（02・04・11・17）。16 はピアノとハープを足し（7.99→8.03）、18 はアコギのやわらかさを 6 割に（7.99→8.05）。
+    FINAL = {"02": {"guitar": "arp", "cello_db": -5, "lead_db": 2}, "03": {"strings": True, "acc": None}, "04": {"guitar": "arp", "cello_db": -5, "lead_db": 2, "plain_fiddle": True},
+             "05": {"swap": {"acc": "flute"}, "strings": True, "harp": True}, "06": {"guitar": True}, "10": {"swap": {"acc": "flute"}, "guitar": True},
+             "11": {"cello_db": -5, "lead_db": 2}, "12": {"seed": "2", "guitar": "arp"}, "13": {"strings": True, "acc": None}, "14": {"guitar": "arp"},
+             "15": {"swap": {"acc": "flute"}, "strings": True}, "16": {"drone": None, "guitar": True, "bass": "finger", "piano": "pulse", "harp": True},
+             "17": {"acc": None, "guitar": "arp", "cello_db": -5, "lead_db": 2}, "18": {"gsoft": 0.6}, "19": {"guitar": True}}
     tune = json.loads(os.environ["C20_TUNE"]) if "C20_TUNE" in os.environ else FINAL   # 試し: C20_TUNE='{"02": {"guitar": "arp"}}' で band を上書き
     for n, s in enumerate(SONGS, 1):
         if which not in ("all", str(n), s["id"]): continue
         if f"{n:02d}" in tune:
-            t = dict(tune[f"{n:02d}"]); top = {k: t.pop(k) for k in ("seed", "bpm", "mel_range") if k in t}
+            t = dict(tune[f"{n:02d}"]); top = {k: t.pop(k) for k in ("seed", "bpm", "mel_range", "cello_db", "plain_fiddle", "lead_db", "gsoft") if k in t}
             sw = t.pop("swap", {})   # 旋律の楽器の入れかえ {"acc": "flute"}
             s = dict(s, band={**s["band"], **t}, **top)
             if sw:

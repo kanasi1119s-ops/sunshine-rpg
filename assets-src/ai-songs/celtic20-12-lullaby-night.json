@@ -773,7 +773,12 @@
    "autoScoop": false,
    "humanPitch": 0,
    "push": 0.008,
+   "bright": -0.4,
    "fx": [
+    {
+     "type": "eq",
+     "high": -2.5
+    },
     {
      "type": "compressor",
      "threshold": -20,
@@ -886,7 +891,12 @@
    "autoScoop": false,
    "humanPitch": 0,
    "push": 0.024,
+   "bright": -0.4,
    "fx": [
+    {
+     "type": "eq",
+     "high": -2.5
+    },
     {
      "type": "compressor",
      "threshold": -20,
@@ -995,6 +1005,7 @@
    "patch": "cello",
    "reverb": 0.35,
    "release": 0.5,
+   "gainDb": 0,
    "fx": [
     {
      "type": "compressor",

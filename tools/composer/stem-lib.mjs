@@ -40,17 +40,24 @@ export async function openStemSession(html, { soundfont = "game", bass = "std", 
   if (soundfont === "gu") await page.evaluate(() => window.__composer.setSoundfont("gu"));
   return {
     /** score（stemKey 付き）を描いて測る。busFile を渡せば全体の WAV をそこへ書く。 */
-    async render(score, edition, { windowSec = 0.25, busFile = null, fixedGainDb, timeoutMs = 600000 } = {}) {
+    async render(score, edition, { windowSec = 0.25, busFile = null, fixedGainDb, timeoutMs = 600000, keepStems = false } = {}) {
       // 1 回の描き出しが固まったときに、いつまでも待たない（ブラウザのメモリ不足などで止まることがある）
       let timer;
       const limit = new Promise((_, rej) => { timer = setTimeout(() => rej(new Error(`描き出しが ${Math.round(timeoutMs / 1000)} 秒で終わりませんでした（ブラウザが止まった可能性）`)), timeoutMs); });
       let r;
       try {
-        r = await Promise.race([page.evaluate(([s, e, o]) => window.__composer.renderStems(s, e, o), [score, edition, { windowSec, wantBus: !!busFile, fixedGainDb }]), limit]);
+        r = await Promise.race([page.evaluate(([s, e, o]) => window.__composer.renderStems(s, e, o), [score, edition, { windowSec, wantBus: !!busFile, fixedGainDb, keepStems }]), limit]);
       } finally { clearTimeout(timer); }
       if (busFile && r.busWav) fs.writeFileSync(busFile, Buffer.from(r.busWav, "base64"));
       delete r.busWav;
       return r;
+    },
+    /** render（keepStems: true）のあと、パートの音を WAV のファイルに書く（楽器ごとの点検用） */
+    async writeStem(key, file) {
+      const b64 = await page.evaluate((k) => window.__composer.stemWav(k), key);
+      if (!b64) return false;
+      fs.writeFileSync(file, Buffer.from(b64, "base64"));
+      return true;
     },
     close: () => browser.close(),
   };

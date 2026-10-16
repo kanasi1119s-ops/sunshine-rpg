@@ -1393,6 +1393,9 @@ function addAmpPlugin(data: unknown, announce: boolean): AmpPluginDef | null {
   }
 }
 
+/** パート別の描き出しで取っておく音（stemKey → 左右）。楽器ごとの点検で使う */
+const lastStems = new Map<string, [Float32Array, Float32Array]>();
+let lastStemRate = 44100;
 // Claude Code の song.mjs（--wav）から、曲をWAVにするための入口
 (window as unknown as { __composer: unknown }).__composer = {
   /** 録音音源を切りかえる（"game" か "gu"）。WAVの書き出し（song.mjs --soundfont）が使う。 */
@@ -1427,7 +1430,16 @@ function addAmpPlugin(data: unknown, announce: boolean): AmpPluginDef | null {
    * パートの音は、アンプ・エフェクターのあと、全体の仕上げ段（EQ・圧縮・残響）の前。MIDI の残響の送り（reverb）は含まない。
    * 同じ stemKey が複数のチャンネル（本体＋重ねの音）に分かれたときは、足し合わせて測る。
    */
-  async renderStems(score: Score, edition: State["edition"], opts?: { windowSec?: number; wantBus?: boolean; fixedGainDb?: number }): Promise<{ busWav: string | null; gainDb: number; seconds: number; channelsOf: Record<string, number[]>; analyses: Record<string, Analysis>; sampleRate: number }> {
+  /** renderStems（keepStems: true）で取っておいたパートの音を WAV（base64）で返す（楽器ごとの点検 inspect.mjs が使う）。 */
+  stemWav(key: string): string | null {
+    const st = lastStems.get(key);
+    if (!st) return null;
+    const bytes = encodeWav(st, lastStemRate);
+    let bin = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    return btoa(bin);
+  },
+  async renderStems(score: Score, edition: State["edition"], opts?: { windowSec?: number; wantBus?: boolean; fixedGainDb?: number; keepStems?: boolean }): Promise<{ busWav: string | null; gainDb: number; seconds: number; channelsOf: Record<string, number[]>; analyses: Record<string, Analysis>; sampleRate: number }> {
     if (!soundfontCopy) throw new Error("録音音源を読み込めていません");
     const usedNam = new Set(score.tracks.map((t) => t.amp?.model).filter((m): m is string => !!m && m in BUILTIN_NAM));
     if (usedNam.size) score = { ...score, namModels: { ...(score.namModels ?? {}), ...Object.fromEntries([...usedNam].map((k) => [k, BUILTIN_NAM[k].json])) } };
@@ -1443,6 +1455,7 @@ function addAmpPlugin(data: unknown, announce: boolean): AmpPluginDef | null {
     const k = Math.pow(10, gainDb / 20);
     const analyses: Record<string, Analysis> = {};
     const cache = new Map<string, Analysis>();
+    lastStems.clear(); lastStemRate = buffer.sampleRate;
     for (const [key, chans] of Object.entries(info.stemChannels)) {
       const id = chans.join(",");
       let a = cache.get(id);
@@ -1456,6 +1469,7 @@ function addAmpPlugin(data: unknown, announce: boolean): AmpPluginDef | null {
         }
         a = analyzeChannels(l, r, buffer.sampleRate, { windowSec: opts?.windowSec ?? 0.25 });
         cache.set(id, a);
+        if (opts?.keepStems) lastStems.set(key, [l, r]);
       }
       analyses[key] = a;
     }

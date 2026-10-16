@@ -27,6 +27,7 @@
 //   node tools/composer/song.mjs plan-check <plan.json> [曲.json]     … 設計図の検査（強さカーブ・音域表・曲との食い違い）
 //   旋律・対位法の道具: motif（動機の変形）・pattern（旋律の型の下書き）・counter（対旋律）・canon（カノン）・pedal（保持音）。詳しくは craft-cli.mjs の先頭
 //   node tools/composer/song.mjs novelty <曲.json> [--n 3] [--vs 曲名,曲名]  … 直前の曲と調・進行・入り方・終わり方・旋律の輪郭が同じでないか
+//   node tools/composer/song.mjs inspect <曲.json> [--aes] [--bass ... --drums ... --guitar ...]  … 楽器の種類ごとに音を分けて、大きさ・帯域・重心・出だしの硬さ・プチッ・ぶつかり（・--aes で楽器ごとの点数）を測る
 //   node tools/composer/song.mjs automix <曲.json> [--loop [N]] [--apply [出力.json]] ...  … パートごとに数字で測って、volume／gainDb・pan・duck・EQ を調整（元の曲は変えない）。最後に全体を測って preset を提案。使い方は引数なしで表示、詳しくは docs/sound/band-ensemble/auto-mix.md
 //   node tools/composer/song.mjs gate <曲.wav> [--genre <ジャンル名>|--song <曲.json>] [--bpm N] ...  … ジャンル別の目標（genre-targets.mjs）で判定。 genre-target <ジャンル名> [--bpm N] … 目標の幅を出す
 //   node tools/composer/song.mjs gate <曲.wav> [--target -14] [--save 曲ID] [--json]  … LUFS・真のピーク・LRA・PLR・相関・頭の大きさ・無音の合否表（○／要直し）
@@ -83,6 +84,12 @@ if (args[0] === "delays" && args[1]) {
     await kitTools.close();
   }
   process.exit(0);
+}
+// 楽器ごとの点検（楽器の種類ごとに音を分けて、帯域・重心・硬さ・プチッ・ぶつかり・点数を測る。tools/composer/inspect.mjs）
+if (args[0] === "inspect") {
+  const { runInspect } = await import("./inspect.mjs");
+  await runInspect(args.slice(1));
+  process.exit(process.exitCode ?? 0);
 }
 // 自動ミックス（パート別に数字で測って調整。tools/composer/automix.mjs）
 if (args[0] === "automix") {

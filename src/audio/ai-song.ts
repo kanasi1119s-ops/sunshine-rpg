@@ -412,6 +412,7 @@ export const AI_SONG_GUIDE = `あなたは、ブラウザのRPG用のBGMを作�
 - dynamics: true にすると、曲の出だし（最初の1/8、最大4小節）を小さく始めて上げ、中盤で一度引いてから戻す（曲の起伏）。同じ音量で続く曲を避けたいときに使う。
 - dynamics: "natural" にすると、人が弾いたような強弱を自動でつける（曲全体の山と谷・4小節フレーズごとの息づかい・拍の強弱・音ごとのわずかなばらつき。出だしと終わりは小さく、7割あたりが頂点）。ソロ・バラード・インストで、のっぺりした曲にしたくないときは基本これを使う。ドラムには半分の深さでかかる。
 - 勉強した内容のガイド（曲を書く前に、必要なものを読む）:（曲の設計図 <曲>.plan.json の書き方と点検は ai-composition-workflow.md。書き出し後は song.mjs gate・novelty・plan-check） docs/sound/ai-composition-workflow.md（AIで作曲する手順・点検）／chord-theory-deep.md（ジャンル別・場面別の進行。分数コード G/B、6・9・add9・m7b5・7sus4・maj9 も書ける）／bassline-guide.md（ジャンル別のベース）／drum-genre-guide.md（ジャンル別のドラムと drumMix）／sound-design-basics.md（音づくり・帯域）／mix-patterns.md（ミックスのパターン56個と症状別の直し方）／arrangement-deep.md（編曲）／mastering-guide.md（仕上げ）／amp-sim-guide.md（アンプ）。
+- 楽器ごとの点検: 「node tools/composer/song.mjs inspect <曲.json> [--aes] [--bass ... --guitar ...]」で、楽器の種類ごとに音を分けて、大きさ・帯域・重心・出だしの硬さ・プチッ（どの楽器から出ているか）・楽器どうしのぶつかり（・--aes で楽器ごとの点数）を表にする。点数が上がらない・ぐじゃぐじゃする・雑音が出るときに、どの楽器が原因かを探す。
 - 書き出しの仕上げ（コマンドの引数。曲のJSONには書かない）: --master-preset game（-14LUFS）・rock（-10）・loud（-8）・calm（-16）、--space hall|room|plate（自作IRの畳み込み残響）、--space-wet、--widen。natural の曲は圧縮をやさしくして強弱の起伏を残す。
 - parts: 自分で書くパート。1曲に1〜32パート（MIDIのチャンネルは16なので、同じ楽器は同じチャンネルにまとまる）。**ドラム以外のチャンネルは15まで**: 楽器（patch）・pan・reverb・chorus・bright・duck・detune・attack・release のどれかが違うパートは別のチャンネルになり、15を超えると後ろのパートが別の楽器の音で鳴る（書き出しで「MIDI のチャンネルが足りません」と出る）。同じ楽器の和音のパート（ピアノの右手3音など）は、これらの値をそろえて1つのチャンネルを共有させる。fx・gainDb もチャンネルごとなので、共有するパートは同じにする。
   - instrument: 楽器（下の一覧）。role: 「メロディ」「ハモリ」「ベースライン」など。

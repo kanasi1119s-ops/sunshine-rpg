@@ -301,6 +301,7 @@
    "patch": "cello",
    "reverb": 0.35,
    "release": 0.5,
+   "gainDb": 0,
    "fx": [
     {
      "type": "compressor",
