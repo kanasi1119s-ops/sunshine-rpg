@@ -88,6 +88,24 @@ export async function openSongKit() {
     warnings.push(...checkChordVariety(song.chords, loadOtherSongs(path.join(ROOT, "assets-src", "ai-songs"), name)));
     // 曲作りの流れの点検: 直前の曲と同じ選択・旋律と和音のぶつかり（アヴォイドノート）・同じ4小節の反復（tools/composer/workflow-check.mjs）
     warnings.push(...workflowWarnings(song, name, ROOT));
+    // MIDI のチャンネルあふれの点検（2026-10-16）: 楽器・左右・残響などが違うパートは別のチャンネルになり、15 を超えると
+    // 残りのパートが「同じ楽器のチャンネル」か 16番目のチャンネルへ回され、別の楽器の音で鳴ってしまう（ケルトの曲で、弦・チェロなどがアコーディオンの音になった）
+    {
+      const { scoreToMidiInfo } = await load("/src/audio/midi-export.ts");
+      const sc = edition === "real" ? realEdition(score) : edition === "ps2" ? ps2Edition(score) : score;
+      const info = scoreToMidiInfo(sc);
+      const byCh = new Map();
+      sc.tracks.forEach((t, i) => {
+        const ch = info.trackChannels[i];
+        if (ch === undefined || ch === 9) return;
+        const id = `${t.program ?? ""}:${t.instrument ?? t.waveform}`;
+        if (!byCh.has(ch)) byCh.set(ch, new Map());
+        byCh.get(ch).set(id, [...(byCh.get(ch).get(id) ?? []), t.name ?? t.instrument ?? String(i)]);
+      });
+      for (const [ch, ids] of byCh) {
+        if (ids.size > 1) warnings.push(`MIDI のチャンネルが足りません: チャンネル${ch + 1}に、別の楽器のパートが入っています（${[...ids.values()].map((v) => v.join("・")).join(" ／ ")}）。後ろのパートが前のパートの楽器の音で鳴ります。楽器の種類を減らすか、同じ楽器のパートの pan・reverb・chorus・bright・release などをそろえて、チャンネルを共有させてください（ドラム以外で15まで）`);
+      }
+    }
     const out = path.resolve(outDir ?? path.join(ROOT, "dist-songs"));
     fs.mkdirSync(out, { recursive: true });
     let reportLine = null;

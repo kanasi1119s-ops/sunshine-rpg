@@ -71,7 +71,9 @@ export type Instrument =
   // 打楽器の音程つきタム（2026-10-13）: ロートタム・キャノンタム・インチ違いのタム。鍵盤の高さ＝太鼓の基本の高さ（C2〜C6）
   | "rotoTom" | "cannonTom" | "inchTom"
   // バスドラのトリガー（打撃音の層）と、映画のインパクト（2026-10-13）
-  | "kickTrigger" | "impactHit";
+  | "kickTrigger" | "impactHit"
+  // 木琴・鉄琴・アコーディオン（2026-10-16、人間の指示「木琴、鉄琴、アコーディオンも音源追加して」）。録音音源は VCSL（CC0）と FreePats の Hohner（CC0）
+  | "xylophone" | "glockenspiel" | "accordion";
 
 /**
  * ジャンル別のアンプ（2026-09-30 追加）。ジャズ・ブルース・ファンク・クランチ・ハードロック・パンク・ファズ・

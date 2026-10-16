@@ -294,10 +294,29 @@ async function applyOverlay(slot: OverlaySlot, id: string): Promise<void> {
   await engine.setOverlaySoundfont(slot, url ? (bytesOf(url).buffer as ArrayBuffer) : null);
   try { window.localStorage.setItem(`sunshine-composer-${slot}`, id); } catch { /* 保存できなくてもよい */ }
 }
+/**
+ * 木琴・鉄琴・アコーディオン（2026-10-16、人間の指示「木琴、鉄琴、アコーディオンも音源追加して」）。
+ * 曲がその楽器（instrument: xylophone・glockenspiel・accordion。木琴とアコーディオンは patch でも）を使っているときだけ、録音音源を重ねる。
+ * 使っていない曲の音は変わらない（鐘 bell の GM 9 は、これまでどおり）。ピアノの音源の選択とも別なので、ピアノと一緒に鳴らせる。
+ */
+const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
+  xylophone: { programs: [13], url: xyloUrl }, glockenspiel: { programs: [], url: glockUrl }, accordion: { programs: [21], url: accordionUrl },
+};
+function extrasFor(score: Score): string[] {
+  return Object.keys(EXTRA_FONTS).filter((id) => score.tracks.some((t) => t.instrument === id || (typeof t.program === "number" && EXTRA_FONTS[id].programs.includes(t.program))));
+}
+let extraIds = "";
+async function applyExtras(score: Score): Promise<void> {
+  const want = extrasFor(score);
+  if (want.join() === extraIds) return;
+  for (const id of Object.keys(EXTRA_FONTS)) await engine.setOverlaySoundfont(`extra-${id}`, want.includes(id) ? (bytesOf(EXTRA_FONTS[id].url).buffer as ArrayBuffer) : null);
+  extraIds = want.join();
+}
 /** 書き出し（WAV）に使う、追加の音源。 */
-function overlayBuffers(): ArrayBuffer[] {
+function overlayBuffers(score?: Score): ArrayBuffer[] {
   // シンセの音色（patch で選ぶ GM のシンセ・パッド・FX）は、いつも入れておく
-  return [...[drumsId, bassId, guitarId, orchId, pianoId].flatMap((id, i) => { const u = [DRUM_FONTS, BASS_FONTS, GUITAR_FONTS, ORCH_FONTS, PIANO_FONTS][i][id]?.url; return u ? [bytesOf(u).buffer as ArrayBuffer] : []; }), bytesOf(synthsUrl).buffer as ArrayBuffer];
+  const extras = score ? extrasFor(score).map((id) => bytesOf(EXTRA_FONTS[id].url).buffer as ArrayBuffer) : [];
+  return [...[drumsId, bassId, guitarId, orchId, pianoId].flatMap((id, i) => { const u = [DRUM_FONTS, BASS_FONTS, GUITAR_FONTS, ORCH_FONTS, PIANO_FONTS][i][id]?.url; return u ? [bytesOf(u).buffer as ArrayBuffer] : []; }), ...extras, bytesOf(synthsUrl).buffer as ArrayBuffer];
 }
 // 無料のアンプシミュレーター（NAM）: ビルドのときに埋め込んだワークレットとWASMを渡す
 declare const __NAM_PROCESSOR__: string;
@@ -330,6 +349,7 @@ const INSTRUMENTS: [Instrument, string][] = [
   ["kick", "バスドラム"], ["snare", "スネア"], ["hihat", "ハイハット"], ["crash", "クラッシュ"], ["tom", "タム"],
   ["bass", "ベース"], ["slap", "スラップベース"], ["guitar", "クリーンギター"], ["crunch", "クランチギター"], ["distGuitar", "ディストーションギター"], ["leadGuitar", "リードギター"], ["echoGuitar", "エコーギター"],
   ["keys", "エレピ"], ["piano", "ピアノ"], ["harpsichord", "チェンバロ"], ["strings", "弦楽"], ["pad", "パッド"], ["choir", "合唱"], ["brass", "ブラス"], ["lead", "リード"], ["bell", "鐘"],
+  ["xylophone", "木琴（シロフォン）"], ["glockenspiel", "鉄琴（グロッケン）"], ["accordion", "アコーディオン"],
 ];
 const DRUMS = new Set<string>(["kick", "snare", "hihat", "crash", "tom"]);
 const instLabel = (i?: Instrument): string => INSTRUMENTS.find(([k]) => k === i)?.[1] ?? "音色なし";
@@ -420,8 +440,8 @@ function effectiveScore(): Score {
 const clipPlayer = new ClipPlayer(() => engine.audioContext(), () => engine.clipDestination(), () => engine.getBgmPositionSec(), () => namHost);
 function play(offset = 0): void {
   const score = effectiveScore();
-  engine.playBgm(score, offset);
-  clipPlayer.start(score);
+  const go = (): void => { engine.playBgm(score, offset); clipPlayer.start(score); };
+  if (extrasFor(score).join() !== extraIds) void applyExtras(score).then(go); else go();
   state.playing = true;
   state.paused = false;
   setPauseLook(false);
@@ -1149,7 +1169,7 @@ const exportBtn = h("button", { class: "primary", type: "button" }, "書き出�
 const safeName = (): string => (state.name || "song").replace(/[\\/:*?"<>|]+/g, "_");
 async function renderAudio(sampleRate: number): Promise<AudioBuffer> {
   if (!soundfontCopy) throw new Error("録音音源を読み込めていません");
-  return renderScoreOffline({ ...effectiveScore(), loop: false }, { soundfont: soundfontCopy, overlays: overlayBuffers(), processorUrl, edition: state.edition, nam: namHost, sampleRate });
+  return renderScoreOffline({ ...effectiveScore(), loop: false }, { soundfont: soundfontCopy, overlays: overlayBuffers(effectiveScore()), processorUrl, edition: state.edition, nam: namHost, sampleRate });
 }
 async function encodeOpus(buffer: AudioBuffer): Promise<Uint8Array> {
   const Encoder = (globalThis as unknown as { AudioEncoder?: typeof AudioEncoder }).AudioEncoder;
@@ -1393,7 +1413,7 @@ function addAmpPlugin(data: unknown, announce: boolean): AmpPluginDef | null {
     const usedNam = new Set(score.tracks.map((t) => t.amp?.model).filter((m): m is string => !!m && m in BUILTIN_NAM));
     if (usedNam.size) score = { ...score, namModels: { ...(score.namModels ?? {}), ...Object.fromEntries([...usedNam].map((k) => [k, BUILTIN_NAM[k].json])) } };
     const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
-    const buffer = await renderScoreOffline({ ...edited, loop: false }, { soundfont: soundfontCopy, overlays: overlayBuffers(), processorUrl, edition, nam: namHost });
+    const buffer = await renderScoreOffline({ ...edited, loop: false }, { soundfont: soundfontCopy, overlays: overlayBuffers(edited), processorUrl, edition, nam: namHost });
     const channels = [buffer.getChannelData(0), buffer.getChannelData(1)];
     if (!opts?.raw) normalizeLoudness(channels, buffer.sampleRate);
     const bytes = encodeWav(channels, buffer.sampleRate);
@@ -1415,7 +1435,7 @@ function addAmpPlugin(data: unknown, announce: boolean): AmpPluginDef | null {
     const info = scoreToMidiInfo({ ...edited, loop: false });
     const taps = [...new Set(Object.values(info.stemChannels).flat())].sort((a, b) => a - b);
     if (taps.length > 15) throw new Error(`パートが使うチャンネルが ${taps.length} 個あり、15 を超えています（パート別に分けて測れません）`);
-    const buffer = await renderScoreOffline({ ...edited, loop: false }, { soundfont: soundfontCopy, overlays: overlayBuffers(), processorUrl, edition, nam: namHost, stemChannels: taps });
+    const buffer = await renderScoreOffline({ ...edited, loop: false }, { soundfont: soundfontCopy, overlays: overlayBuffers(edited), processorUrl, edition, nam: namHost, stemChannels: taps });
     const bus = [buffer.getChannelData(0), buffer.getChannelData(1)];
     // 全体の大きさ合わせ（renderWav と同じ）。別の描き出し（ドラムだけ等）の音を同じ尺度で測るときは、fixedGainDb でその倍率をそのまま使う
     const gainDb = opts?.fixedGainDb !== undefined ? opts.fixedGainDb : normalizeLoudness(bus, buffer.sampleRate).gainDb;

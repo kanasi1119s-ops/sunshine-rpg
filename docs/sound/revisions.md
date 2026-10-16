@@ -7,3 +7,4 @@
 - 2026-10-15 helter-skelter-rb: 新曲 → R&B×ロック・BPM138シャッフル・イ長調ブルース→ロ長調。--drums muldjord --bass finger --piano salamander --orchestra vsco --guitar emily --master-preset rock-clean → PQ 8.39（60秒ずつの平均）・I -13.5 → 未（人間の感想待ち）
 - 2026-10-15 spark-floor: 新曲 → ダンス×ロック・BPM126・ト短調。標準ドラム＋edm 仕上げ（-13.5）。生ドラム＋rock-clean は 7.89、標準ドラム＋rock-clean は 8.13 → PQ 8.14（60秒ずつの平均）。--edition modern --bass pick --piano salamander --guitar emily --master-preset edm --master -13.5 → 未（人間の感想待ち）
 - 2026-10-15 spark-floor-karaoke: インストのみ → 重音テトの歌を追加（spark-floor-vocal.py、歌は D4〜Eb5 に書き直し）。伴奏は歌の所の旋律楽器を外した版（KARAOKE=1）。歌 utau-render --last 104-120、vocal-mix --vocal-lu 1.5 → PQ 8.18（60秒ずつの平均）。文字起こしはほぼ歌詞どおり（サビ頭の『さあ』だけ『ら』に聞こえる） → 未（人間の感想待ち）
+- 2026-10-16 celtic-epic-omen: PQ 7.52（楽器が17種類でチャンネルがあふれ、弦・チェロなどがアコーディオンの音で鳴っていた） → 同じ楽器のパートの pan・reverb・fx をそろえて15チャンネルに収め、遠いベル・インパクト・フィドル2を外し、不穏の所にアコギ、ティンパニと大太鼓を -4dB → PQ 8.01・プチッ 1か所（65秒） → 未確認（人間に聞いてもらう）

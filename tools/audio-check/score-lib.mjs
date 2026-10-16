@@ -12,7 +12,7 @@ export const RANGE = {
   bass: ["E1", "G3"], slap: ["E1", "G3"], sub808: ["C1", "C3"], guitar: ["E2", "E5"], crunch: ["E2", "E5"],
   distGuitar: ["E2", "E4"], leadGuitar: ["E3", "E6"], echoGuitar: ["E3", "E6"], keys: ["C2", "C6"], harpsichord: ["C2", "C6"],
   strings: ["C2", "C7"], pad: ["C2", "C6"], choir: ["C3", "C6"], brass: ["E2", "C6"], lead: ["C3", "C7"], bell: ["C4", "C7"],
-  sitar: ["C3", "C6"], koto: ["C3", "C6"], shamisen: ["C3", "C6"], banjo: ["C3", "C6"], harp: ["C2", "C7"], kalimba: ["C4", "C7"],
+  sitar: ["C3", "C6"], koto: ["C3", "C6"], shamisen: ["C3", "C6"], banjo: ["C3", "C6"], harp: ["C2", "C7"], xylophone: ["C4", "C8"], glockenspiel: ["G5", "C8"], accordion: ["F2", "A6"], kalimba: ["C4", "C7"],
   panflute: ["C4", "C7"], shakuhachi: ["C4", "C6"], ocarina: ["C4", "C7"], fiddle: ["G3", "E6"], bagpipe: ["A3", "A5"], piano: ["A0", "C8"],
 };
 

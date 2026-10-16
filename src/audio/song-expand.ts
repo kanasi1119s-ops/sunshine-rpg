@@ -34,7 +34,7 @@ export function guessKey(chords: string): { key: string; mode: "major" | "minor"
   return { key, mode: /^m(?!aj)/.test(m[3]) ? "minor" : "major" };
 }
 
-const OCTAVE_OF: Record<string, number> = { bass: 2, slap: 2, sub808: 2, guitar: 4, crunch: 4, distGuitar: 3, leadGuitar: 4, piano: 4, keys: 4, strings: 4, pad: 4, choir: 4, brass: 4, harpsichord: 4, lead: 5, bell: 5, harp: 5, kalimba: 5, koto: 4, shamisen: 4 };
+const OCTAVE_OF: Record<string, number> = { xylophone: 5, glockenspiel: 6, accordion: 4, bass: 2, slap: 2, sub808: 2, guitar: 4, crunch: 4, distGuitar: 3, leadGuitar: 4, piano: 4, keys: 4, strings: 4, pad: 4, choir: 4, brass: 4, harpsichord: 4, lead: 5, bell: 5, harp: 5, kalimba: 5, koto: 4, shamisen: 4 };
 
 interface MotifRef { id: string; at?: unknown; offset?: unknown; key?: string; octave?: number; transform?: unknown; repeat?: unknown; fill?: unknown }
 

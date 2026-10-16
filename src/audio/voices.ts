@@ -644,6 +644,19 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       out.push(lfo);
       break;
     }
+    // 木琴・鉄琴（2026-10-16）。録音音源がない環境のための簡易な合成（木琴＝短く乾いた音、鉄琴＝高く長く残る音）
+    case "xylophone":
+    case "glockenspiel": {
+      const glock = e.instrument === "glockenspiel";
+      const decay = glock ? Math.max(0.6, Math.min(d * 2, 2.2)) : Math.max(0.12, Math.min(d, 0.35));
+      const g = pluckGain(ctx, dest, t, v, 0.001, decay);
+      const lp = filter(ctx, "lowpass", glock ? 7000 : 4200, g);
+      const stop = t + decay + 0.05;
+      out.push(osc(ctx, "sine", f, t, stop, lp, 0.8));
+      out.push(osc(ctx, "sine", f * (glock ? 2.76 : 3.9), t, t + (glock ? 0.4 : 0.06), lp, glock ? 0.25 : 0.3));
+      break;
+    }
+    case "accordion":
     case "fiddle":
     case "bagpipe": {
       const pipe = e.instrument === "bagpipe";
