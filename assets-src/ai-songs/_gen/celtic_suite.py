@@ -384,7 +384,7 @@ def build(song, out):
         S.part("pnoL", "piano", "ピアノ左手（低音）", 0.12, 0.06, **PNO)
         if "piano" in leads_used: S.part("L_piano", "piano", "ピアノ右手（旋律）", 0.13, 0.06, **PNO)
     if band.get("guitar"):
-        for k, pan in (("g1", -0.5), ("g2", 0.5), ("g3", -0.5), ("g4", 0.5)):
+        for k, pan in (("g1", -0.5), ("g2", -0.5 if band.get("gring") else 0.5), ("g3", -0.5), ("g4", 0.5)):
             # 2026-10-17 人間の指示「アコギもう少し音が柔らかいといいかも」: 高音をおさえ（bright -0.4・eq の high -2.5）、強い弾き（!）をやめた。
             #   楽器ごとの点検で、6kHz より上が -14.7dB → 下がり、重心 3.1kHz → 下がったことを確かめる
             S.part(k, "guitar", f"アコギ（{k[1]}本目）", 0.08, pan, amp="crystal", chorus=0, sustain=1.0, reverb=0.22, autoScoop=False, humanPitch=0, push=0.008 * int(k[1]),
@@ -526,7 +526,15 @@ def build(song, out):
         if band.get("guitar") == "arp" and on(sec, "guitar", 2) and not (is_end and i > 0):   # 指で弾く分散和音（静かな曲）
             tl = tones(52, 76); n, d = (U, 1) if U <= 8 else ((U // 3, 3) if U % 3 == 0 else (U // 2, 2))
             S.put("g1", bi, [tok(low(br, 40), U, ",")])
-            if not is_end: S.put("g3", bi, [tok(tl[(j * 2 + bi) % len(tl)] if j % 2 else tl[(j + bi) % len(tl)], d, "," if j else "") for j in range(n)])
+            if not is_end and band.get("gring"):
+                # 2026-10-17 人間の指示「アコギの音少し伸ばして。伸びながら音が小さくなっていく感じ」: 1音ずつ切らず、2本に分けて
+                #   次の次の音まで鳴らしたままにする（弦を押さえたまま鳴らしっぱなしにする弾き方）。音は弦の減衰で自然に小さくなる
+                vs = {"g3": [], "g2": [f"R:{bt(d)}"]}
+                for j in range(n):
+                    m = tl[(j * 2 + bi) % len(tl)] if j % 2 else tl[(j + bi) % len(tl)]
+                    vs["g3" if j % 2 == 0 else "g2"].append(tok(m, min(2 * d, U - j * d), "," if j else ""))
+                for g, tk in vs.items(): S.put(g, bi, tk)
+            elif not is_end: S.put("g3", bi, [tok(tl[(j * 2 + bi) % len(tl)] if j % 2 else tl[(j + bi) % len(tl)], d, "," if j else "") for j in range(n)])
         elif band.get("guitar") and on(sec, "guitar", 3) and not (is_end and i > 0):
             r0 = low(cp[0], 45)
             v = [low(br, 40), r0 + ((cp[2] - cp[0]) % 12), r0 + 12, r0 + 12 + ((cp[1] - cp[0]) % 12)]
@@ -675,7 +683,7 @@ if __name__ == "__main__":
     #   ギターの刻み（静かな曲は指で弾く分散和音 "arp"）は上げた（02・04・06・12・14・17・19）。
     #   2026-10-17（人間の指示でベースを根音だけ・アコギをやわらかくしたあと）: 楽器ごとの点検（song.mjs inspect）で、17 はチェロがいちばん大きく（旋律より 8dB 上）
     #   点数 7.54 だったので、チェロ -5dB・旋律 +2dB（02・04・11・17）。16 はピアノとハープを足し（7.99→8.03）、18 はアコギのやわらかさを 6 割に（7.99→8.05）。
-    FINAL = {"02": {"guitar": "arp", "cello_db": -8, "lead_db": 3}, "03": {"strings": True, "acc": None}, "04": {"guitar": "arp", "cello_db": -5, "lead_db": 2, "plain_fiddle": True},
+    FINAL = {"02": {"guitar": "arp", "gring": True, "cello_db": -8, "lead_db": 3}, "03": {"strings": True, "acc": None}, "04": {"guitar": "arp", "cello_db": -5, "lead_db": 2, "plain_fiddle": True},
              "05": {"swap": {"acc": "flute"}, "strings": True, "harp": True}, "06": {"guitar": True}, "10": {"swap": {"acc": "flute"}, "guitar": True},
              "11": {"cello_db": -5, "lead_db": 2}, "12": {"seed": "2", "guitar": "arp"}, "13": {"strings": True, "acc": None}, "14": {"guitar": "arp"},
              "15": {"swap": {"acc": "flute"}, "strings": True}, "16": {"drone": None, "guitar": True, "bass": "finger", "piano": "pulse", "harp": True},
