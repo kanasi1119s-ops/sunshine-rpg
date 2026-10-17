@@ -679,9 +679,10 @@ if __name__ == "__main__":
              "05": {"swap": {"acc": "flute"}, "strings": True, "harp": True}, "06": {"guitar": True}, "10": {"swap": {"acc": "flute"}, "guitar": True},
              "11": {"cello_db": -5, "lead_db": 2}, "12": {"seed": "2", "guitar": "arp"}, "13": {"strings": True, "acc": None}, "14": {"guitar": "arp"},
              "15": {"swap": {"acc": "flute"}, "strings": True}, "16": {"drone": None, "guitar": True, "bass": "finger", "piano": "pulse", "harp": True},
-             "17": {"acc": None, "guitar": "arp", "cello_db": -5, "lead_db": 2}, "18": {"gsoft": 0.6}, "19": {"guitar": True, "seed": "2"},
+             "17": {"acc": None, "guitar": "arp", "cello_db": -5, "lead_db": 2}, "18": {"gsoft": 0.6}, "19": {"guitar": True, "seed": "2", "swap": {"acc": "fiddle"}},
              "08": {"guitar": "arp"}}   # 08・19 は音域を広げたあと 7.97・7.99 だったので、08 に指のアコギ（8.03）、19 は旋律の種を変えた（8.03）
     # 02 は旋律を直したあと 7.99。旋律はそのままで、チェロ -8dB・旋律 +3dB にして 8.01（鉄琴を外す案は 7.96、ホールの響きは 7.99）
+    # 19 は旋律を直したあと 7.97。旋律の楽器をアコーディオンからフィドルに替えて 8.17（チェロ -8dB・旋律 +3dB は 8.00、指のアコギは 7.91）
     tune = json.loads(os.environ["C20_TUNE"]) if "C20_TUNE" in os.environ else FINAL   # 試し: C20_TUNE='{"02": {"guitar": "arp"}}' で band を上書き
     for n, s in enumerate(SONGS, 1):
         if which not in ("all", str(n), s["id"]): continue
