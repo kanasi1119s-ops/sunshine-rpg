@@ -120,9 +120,12 @@ export async function openSongKit() {
       await renderWav(score, edition, files.wav, soundfont, bass, drums, guitar, orchestra, piano);
       // プチッ（1〜2サンプルだけ波形が飛ぶ点）を、前後の波形からなめらかに埋める（2026-10-17、人間の指示「雑音とれない？」）。
       //   オーケストラの録音（ホルン・コントラバスなど）の音の切りかわりに出る。残響（space）や仕上げの前の、乾いた音で直す。SUNSHINE_NO_DECLICK=1 で止める
-      if (!process.env.SUNSHINE_NO_DECLICK) {
+      //   残響や仕上げのあとにも、もう一度かける（乾いた音では目立たなかった点が、仕上げのあとに見つかることがある）
+      const declick = () => {
+        if (process.env.SUNSHINE_NO_DECLICK) return;
         try { execFileSync("python3", [path.join(ROOT, "tools/audio-check/declick.py"), files.wav], { stdio: "ignore", maxBuffer: 1 << 26 }); } catch { /* 直せなくても書き出しは続ける */ }
-      }
+      };
+      declick();
       // 仕上げの音量: 書き出しのときだけ、全体の大きさをそろえる（ゲーム中の再生やアプリの音は変わらない）。ピークは -1dB 以下に抑える
       // 空間（畳み込みリバーブ）: 自作のIRで、書き出しのときだけ残響を足す（hall / room / plate）
       if (space) {
@@ -174,6 +177,7 @@ export async function openSongKit() {
           if (loss > 3) warnings.push(`低域モノ化（${lm}Hz 以下）で、全体に対する低音の割合が ${loss.toFixed(1)}dB 減りました。左右が逆相気味の低音（chorus・ダブル・広い残響）があるかもしれません。低音パートの pan を 0 に、chorus を外してください。`);
         }
       }
+      declick();
       // 書き出しの合否表（I・TP・LRA・PLR・PSR・左右の相関・100Hz 以下の相関・継ぎ目を 1 行で）
       let rep = masterReport(files.wav, { lufs: masterOpts?.lufs ?? null, tp: masterOpts?.tp ?? -1.5, loop: true, lowCutoff });
       // 再調整のルーティン（人間の指示 2026-10-11）: 「つぶれ気味」（PLR・PSR が小さい）が出たら、仕上げをやさしくして最大2回やり直す
@@ -186,6 +190,7 @@ export async function openSongKit() {
           const next = { ...masterOpts, clip: 0, glue: LIGHTER[masterOpts.glue] ?? masterOpts.glue, lufs: masterOpts.lufs - 1.5 * k };
           fs.copyFileSync(rawFile, files.wav);
           masterFile(files.wav, next);
+          declick();
           rep = masterReport(files.wav, { lufs: next.lufs, tp: next.tp ?? -1.5, loop: true, lowCutoff });
           warnings.push(`つぶれ気味が出たので仕上げを再調整しました（${k}回目: クリップ 0・圧縮 ${next.glue}・目標 ${next.lufs}LUFS）→ ${rep.line}`);
         }
