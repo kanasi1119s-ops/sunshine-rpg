@@ -3,7 +3,7 @@
 import { createServer } from "vite";
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
+import { execSync, execFileSync } from "child_process";
 import { masterFile, resolvePreset } from "./master.mjs";
 import { masterReport, loopTailWrap, lowShareDb } from "./master-report.mjs";
 import { makeIr, writeWav, SPACES } from "./space-ir.mjs";
@@ -118,6 +118,11 @@ export async function openSongKit() {
     if (wav) {
       files.wav = path.join(out, `${name}.wav`);
       await renderWav(score, edition, files.wav, soundfont, bass, drums, guitar, orchestra, piano);
+      // プチッ（1〜2サンプルだけ波形が飛ぶ点）を、前後の波形からなめらかに埋める（2026-10-17、人間の指示「雑音とれない？」）。
+      //   オーケストラの録音（ホルン・コントラバスなど）の音の切りかわりに出る。残響（space）や仕上げの前の、乾いた音で直す。SUNSHINE_NO_DECLICK=1 で止める
+      if (!process.env.SUNSHINE_NO_DECLICK) {
+        try { execFileSync("python3", [path.join(ROOT, "tools/audio-check/declick.py"), files.wav], { stdio: "ignore", maxBuffer: 1 << 26 }); } catch { /* 直せなくても書き出しは続ける */ }
+      }
       // 仕上げの音量: 書き出しのときだけ、全体の大きさをそろえる（ゲーム中の再生やアプリの音は変わらない）。ピークは -1dB 以下に抑える
       // 空間（畳み込みリバーブ）: 自作のIRで、書き出しのときだけ残響を足す（hall / room / plate）
       if (space) {

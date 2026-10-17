@@ -155,9 +155,6 @@ function resolveRoot(x, midi, set) {
 
 function applyLoop(data, set) {
   const n = data.length;
-  // 頭が 0 から始まらない録音（ホルン・コントラバスなど）は、音を出した瞬間に「プチッ」と鳴るので、4ms でなめらかに立ち上げる（2026-10-17）
-  const fi = Math.min(Math.floor(SR * 0.004), n >> 2);
-  for (let i = 0; i < fi; i++) data[i] *= 0.5 - 0.5 * Math.cos((Math.PI * i) / fi);
   const fadeTail = Math.min(Math.floor(SR * 0.35), n >> 2);
   if (!set.loop || n < SR * 1.6) {
     // 余韻を自然に消す
