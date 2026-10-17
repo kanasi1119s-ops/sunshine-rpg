@@ -53,7 +53,7 @@ def main():
     src = sys.argv[1]; dst = sys.argv[2] if len(sys.argv) > 2 else src
     x, fs = sf.read(src, dtype="float64", always_2d=True)
     tot = 0
-    for _ in range(3):  # 埋めたあとに、となりの点が目立つことがあるので 3 回まで
+    for _ in range(5):  # 埋めたあとに、となりの点が目立つことがあるので 5 回まで
         idx = find(x.mean(1), fs)
         if not idx: break
         # LPC の残差は、飛びの少しあとに山が出ることがあるので、山の手前 3 サンプルの中で、波形がいちばんとがった点を埋める
