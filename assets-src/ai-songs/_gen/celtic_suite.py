@@ -244,11 +244,16 @@ class Mel:
                 notes = [first]
                 if key != "C" and key in mem and len(mem[key]) == len(nn) - 1: steps = mem[key]
                 else:
-                    steps = []; cur = first
+                    steps = []; cur = first; leap = 0
                     for j in range(1, len(nn)):
                         dirn = 1 if tg2 > cur + 1 else (-1 if tg2 < cur - 1 else rng.choice([-1, 1]))
-                        s = dirn * (1 if rng.random() < 0.68 else 2)
-                        if rng.random() < 0.15: s = -s
+                        if leap:   # 跳んだ直後は反対向きに1歩もどる（音域を広く使いつつ、歌える形に）
+                            s = -1 if leap > 0 else 1; leap = 0
+                        else:
+                            s = dirn * (1 if rng.random() < 0.62 else 2)
+                            if rng.random() < 0.15: s = -s
+                            # 2026-10-17 人間の指示「全体的に音域のスケールを広げて」: 1割ほどの確率で 4〜5度の跳躍（音階で3〜4歩）
+                            if rng.random() < 0.12 and j < len(nn) - 1: s = dirn * rng.choice([3, 4]); leap = s
                         steps.append(s); cur = pool[max(0, min(len(pool) - 1, pool.index(nearest(pool, cur)) + s))]
                     if key != "C": mem[key] = steps
                 idx = pool.index(first)
@@ -295,7 +300,8 @@ def build(song, out):
     MELS = {}; PROG16 = {}
     for kname, (f4, e1, e2) in song["progs"].items():
         ch16 = f4.split() + e1.split() + f4.split() + e2.split(); PROG16[kname] = ch16
-        lo, hi = song.get("mel_range", (62, 84))
+        # 2026-10-17 人間の指示「音域のスケールを広げて」: 旋律の音域を約1オクターブ半 → 約2オクターブ半（A3〜E6）に。B はさらに上（C4〜G6）
+        lo, hi = song.get("mel_range", (57, 88))
         if kname == "B": lo, hi = lo + 3, hi + 3
         if kname == "C": lo, hi = lo + 1, hi + 1
         MELS[kname] = mel.phrase16(ch16, lo, hi, peak=0.8 if kname == "A" else 1.0)
@@ -415,7 +421,7 @@ def build(song, out):
             S.put("L_" + ld, bi, [tok(t, U)])
         # ---- ハープ（分散和音。同じ高さを続けない）----
         if band.get("harp") and on(sec, "harp", 1) and not (is_end and i > 1):
-            tl = tones(50, 81); cyc = tl + tl[-2:0:-1]
+            tl = tones(45, 88); cyc = tl + tl[-2:0:-1]   # ハープも広く（A2〜E6）
             n = U if U <= 12 else U // 2; d = 1 if U <= 12 else 2
             st = (bi * 3) % len(cyc)
             if is_end: S.put("harp", bi, [tok(m, d) for m in tl[:n]] if len(tl) >= n else [tok(tl[0], U)])
@@ -615,7 +621,8 @@ if __name__ == "__main__":
              "05": {"swap": {"acc": "flute"}, "strings": True, "harp": True}, "06": {"guitar": True}, "10": {"swap": {"acc": "flute"}, "guitar": True},
              "11": {"cello_db": -5, "lead_db": 2}, "12": {"seed": "2", "guitar": "arp"}, "13": {"strings": True, "acc": None}, "14": {"guitar": "arp"},
              "15": {"swap": {"acc": "flute"}, "strings": True}, "16": {"drone": None, "guitar": True, "bass": "finger", "piano": "pulse", "harp": True},
-             "17": {"acc": None, "guitar": "arp", "cello_db": -5, "lead_db": 2}, "18": {"gsoft": 0.6}, "19": {"guitar": True}}
+             "17": {"acc": None, "guitar": "arp", "cello_db": -5, "lead_db": 2}, "18": {"gsoft": 0.6}, "19": {"guitar": True, "seed": "2"},
+             "08": {"guitar": "arp"}}   # 08・19 は音域を広げたあと 7.97・7.99 だったので、08 に指のアコギ（8.03）、19 は旋律の種を変えた（8.03）
     tune = json.loads(os.environ["C20_TUNE"]) if "C20_TUNE" in os.environ else FINAL   # 試し: C20_TUNE='{"02": {"guitar": "arp"}}' で band を上書き
     for n, s in enumerate(SONGS, 1):
         if which not in ("all", str(n), s["id"]): continue
