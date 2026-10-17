@@ -332,10 +332,10 @@
     <div class="panel">
       <h2>グリッド</h2>
       <label class="field" for="gridW">横のマス数</label>
-      <input type="number" id="gridW" min="4" max="256" value="12" />
+      <input type="number" id="gridW" min="4" max="384" value="12" />
       <div style="height:8px"></div>
       <label class="field" for="gridH">縦のマス数</label>
-      <input type="number" id="gridH" min="4" max="256" value="14" />
+      <input type="number" id="gridH" min="4" max="384" value="14" />
       <div style="height:8px"></div>
       <label class="field" for="resizeAnchor">広げる・削る基準</label>
       <select id="resizeAnchor">
@@ -817,7 +817,7 @@
 </tr>
 <tr>
 <td>PNGを読み込む</td>
-<td>1ドット＝1マスでそのままの色で読み込む（256×256まで。新しいレイヤーに、または新しい作品として）</td>
+<td>1ドット＝1マスでそのままの色で読み込む（384×384まで。新しいレイヤーに、または新しい作品として）</td>
 </tr>
 <tr>
 <td>文字の配列</td>
@@ -2037,8 +2037,8 @@
     $("gridW").value = w; $("gridH").value = h;
   }
   $("resizeBtn").addEventListener("click", function () {
-    var w = Math.max(4, Math.min(256, parseInt($("gridW").value, 10) || 12));
-    var h = Math.max(4, Math.min(256, parseInt($("gridH").value, 10) || 14));
+    var w = Math.max(4, Math.min(384, parseInt($("gridW").value, 10) || 12));
+    var h = Math.max(4, Math.min(384, parseInt($("gridH").value, 10) || 14));
     pushHistory();
     resizeCanvas(w, h, $("resizeAnchor").value);
     // 大きいグリッドでは、キャンバスが巨大にならないよう拡大率を自動で下げる
@@ -2183,7 +2183,7 @@
       if (!Array.isArray(rows) || rows.length === 0) throw new Error("empty");
       var w = Math.max.apply(null, rows.map(function (r) { return r.length; }));
       var h = rows.length;
-      if (w > 256 || h > 256) throw new Error("big");
+      if (w > 384 || h > 384) throw new Error("big");
       commitFloating();
       pushHistory();
       state.width = w;
@@ -2195,7 +2195,7 @@
       saveLocal();
       setStatus("読み込みました（" + w + "×" + h + "）");
     } catch (err) {
-      setStatus("読み込みに失敗しました。配列形式（[\"....\", ...]）で、256マスまでの絵を貼り付けてください");
+      setStatus("読み込みに失敗しました。配列形式（[\"....\", ...]）で、384マスまでの絵を貼り付けてください");
     }
   });
 
@@ -2213,7 +2213,7 @@
   function loadProject(data) {
     if (!data || typeof data !== "object") return false;
     var w = parseInt(data.width, 10), h = parseInt(data.height, 10);
-    if (!(w >= 1 && w <= 256 && h >= 1 && h <= 256)) return false;
+    if (!(w >= 1 && w <= 384 && h >= 1 && h <= 384)) return false;
     if (!Array.isArray(data.symbols)) return false;
     var syms = data.symbols.filter(function (s) { return s && typeof s.sym === "string" && typeof s.color === "string"; })
       .map(function (s) { return { sym: s.sym, label: String(s.label || s.sym), color: s.color }; });
@@ -2885,7 +2885,7 @@
   function scaleAll(up) {
     var w = state.width, h = state.height;
     var nw = up ? w * 2 : Math.max(1, Math.ceil(w / 2)), nh = up ? h * 2 : Math.max(1, Math.ceil(h / 2));
-    if (nw > 256 || nh > 256) { setStatus("256マスより大きくはできません"); return; }
+    if (nw > 384 || nh > 384) { setStatus("384マスより大きくはできません"); return; }
     mapAll(function (g) {
       var n = makeBlankGrid(nw, nh);
       for (var r = 0; r < nh; r++) for (var c = 0; c < nw; c++) n[r][c] = up ? g[r >> 1][c >> 1] : g[Math.min(h - 1, r * 2)][Math.min(w - 1, c * 2)];
@@ -3093,7 +3093,7 @@
     openModal("PNGを読み込む（そのままの色で）",
       '<label class="file-btn"><button type="button" id="pngPick" style="width:100%">画像を選ぶ</button><input type="file" id="pngFile" accept="image/png,image/gif,image/*" /></label>' +
       '<div style="height:10px"></div><label class="field" for="pngMode">入れ方</label><select id="pngMode"><option value="layer">新しいレイヤーに（大きさが同じとき）</option><option value="doc">新しい作品として</option></select>' +
-      '<p class="hint">1ドット＝1マスとして読み込みます（256×256まで）。半分より透明な所は透明になります。色が62色より多いときは減らします。大きな絵や絵画風の絵は、左の「画像から作る」を使ってください。</p><div class="status" id="pngStatus"></div>', []);
+      '<p class="hint">1ドット＝1マスとして読み込みます（384×384まで）。半分より透明な所は透明になります。色が62色より多いときは減らします。大きな絵や絵画風の絵は、左の「画像から作る」を使ってください。</p><div class="status" id="pngStatus"></div>', []);
     $("pngPick").addEventListener("click", function () { $("pngFile").click(); });
     $("pngFile").addEventListener("change", function (e) {
       var file = e.target.files && e.target.files[0];
@@ -3109,7 +3109,7 @@
   }
   function importPixels(img, mode) {
     var w = img.naturalWidth, h = img.naturalHeight;
-    if (w > 256 || h > 256) { $("pngStatus").textContent = "256×256より大きい画像です。「画像から作る」を使ってください"; return; }
+    if (w > 384 || h > 384) { $("pngStatus").textContent = "384×384より大きい画像です。「画像から作る」を使ってください"; return; }
     var c = document.createElement("canvas"); c.width = w; c.height = h;
     var x = c.getContext("2d"); x.drawImage(img, 0, 0);
     var d = x.getImageData(0, 0, w, h).data, cells = [], uniq = {};
@@ -3137,11 +3137,11 @@
   /* ---------- そのほかのダイアログ ---------- */
   function cmdNew() {
     openModal("新しい作品",
-      '<div class="grid2"><div><label class="field" for="nwW">横のマス数</label><input type="number" id="nwW" min="1" max="256" value="' + state.width + '" /></div>' +
-      '<div><label class="field" for="nwH">縦のマス数</label><input type="number" id="nwH" min="1" max="256" value="' + state.height + '" /></div></div>' +
+      '<div class="grid2"><div><label class="field" for="nwW">横のマス数</label><input type="number" id="nwW" min="1" max="384" value="' + state.width + '" /></div>' +
+      '<div><label class="field" for="nwH">縦のマス数</label><input type="number" id="nwH" min="1" max="384" value="' + state.height + '" /></div></div>' +
       '<p class="hint">いまの絵は「元に戻す」で戻せます。色（パレット）はそのまま使います。キャラの土台から始めるときは、左の「テンプレート」を使ってください。</p>',
       [{ label: "作る", primary: true, run: function () {
-        var w = num("nwW", 1, 256, 16), h = num("nwH", 1, 256, 16);
+        var w = num("nwW", 1, 384, 16), h = num("nwH", 1, 384, 16);
         stopPlay(); pushHistory(); newDocument(w, h, null); fitView(); saveLocal();
         setStatus(w + "×" + h + " の新しい作品を作りました");
       } }]);
@@ -3152,12 +3152,12 @@
   }
   function cmdCanvasSize() {
     openModal("キャンバスの大きさ",
-      '<div class="grid2"><div><label class="field" for="csW">横のマス数</label><input type="number" id="csW" min="1" max="256" value="' + state.width + '" />' +
-      '<div style="height:8px"></div><label class="field" for="csH">縦のマス数</label><input type="number" id="csH" min="1" max="256" value="' + state.height + '" /></div>' +
+      '<div class="grid2"><div><label class="field" for="csW">横のマス数</label><input type="number" id="csW" min="1" max="384" value="' + state.width + '" />' +
+      '<div style="height:8px"></div><label class="field" for="csH">縦のマス数</label><input type="number" id="csH" min="1" max="384" value="' + state.height + '" /></div>' +
       '<div><label class="field">基準（絵を寄せる場所）</label>' + anchorPicker("csA", "bc") + "</div></div>" +
       '<p class="hint">すべてのレイヤー・フレームが変わります。小さくすると、はみ出した所は消えます。</p>',
       [{ label: "変える", primary: true, run: function () {
-        var w = num("csW", 1, 256, state.width), h = num("csH", 1, 256, state.height);
+        var w = num("csW", 1, 384, state.width), h = num("csH", 1, 384, state.height);
         var a = document.querySelector('input[name="csA"]:checked');
         pushHistory(); resizeCanvas(w, h, a ? a.value : "tl"); fitView(); saveLocal();
         setStatus("キャンバスを " + w + "×" + h + " にしました");
