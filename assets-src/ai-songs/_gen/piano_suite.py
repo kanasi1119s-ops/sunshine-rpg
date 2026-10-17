@@ -2,8 +2,8 @@
 #   4〜5分程度で25曲作ってください。いろんな自然を想像できたり、季節、朝昼夜などの要素を入れてもらいたい」）。
 # 作り方はケルト20曲（celtic_suite.py）と同じ部品を使う（旋律の書き方・アヴォイド・ノートを避ける・音域を広く・やわらかいアコギ・根音のベース・
 #   ピアノの左手と右手・フィドルの音・FX）。ここでは曲ごとの設計（季節・時間・自然・拍子・テンポ・調と旋法・定番から外したコード進行）だけを書く。
-# ピアノ以外の7種類: 2つめの旋律（笛・クラリネット・オーボエ・フィドル・ホルンのどれか）、ハープ、弦（のばす）、チェロ、鉄琴、アコギ（指で弾く分散和音）、ベース。
-# ドラムなし。書き出しは「ホール」の響きで空間を出す（人間の指示「自然を感じる曲はその空間が感じるような感じに」「空気を感じる音楽に全部」）。
+# ピアノ以外の8種類: 2つめの旋律（笛・クラリネット・オーボエ・フィドル・ホルンのどれか）、ハープ、弦（のばす）、チェロ、鉄琴、アコギ（指で弾く分散和音）、ベース、ボーラン風の刻み。
+# ドラムはなし（ボーラン風の静かな刻みだけ）。書き出しは「ホール」の響き（--space hall 0.2）と仕上げ orch で空間を出す（人間の指示「自然を感じる曲はその空間が感じるような感じに」「空気を感じる音楽に全部」）。
 # 使い方: python3 piano_suite.py <番号か id か all> [出力フォルダ（省略は assets-src/ai-songs）]
 import sys, os, json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -29,7 +29,10 @@ def form(meter, bpm, lead2, intro=("piano", "harp", "glock")):
     return seq
 
 
-BAND = lambda lead2, **kw: dict(leads=["piano", lead2], harp=True, piano="flow", strings=True, cello=True, sparkle="glock", guitar="arp", bass="finger", **kw)
+# 2026-10-18 点数（Audiobox の PQ）の試し（07『ひぐらしの夕暮れ』）: そのまま 7.92。チェロ↓旋律↑ 7.91、弦なし 7.93、アコギなし 7.89、ベースなし 7.93、
+#   ピアノ +3dB 7.92、ハープなし 7.87、旋律の種を変える 7.94、ピアノの右手を和音 7.95、仕上げ orch 7.95・ambient 7.94、
+#   ドラム（盛り上がりだけ）8.03、ボーラン風の静かな刻み（中くらい以上の所）8.04 → ボーランと仕上げ orch を全曲に
+BAND = lambda lead2, **kw: dict(leads=["piano", lead2], harp=True, piano="flow", strings=True, cello=True, sparkle="glock", guitar="arp", bass="finger", drums="bodhran", **kw)
 
 def P(id, title, en, image, meter, bpm, key, mode, A, B, lead2, extra, **kw):
     s = S_(id, title, image, meter, bpm, key, mode, {"A": A, "B": B}, BAND(lead2), form(meter, bpm, lead2), extra, rit=True, cello_db=-5, **kw)
