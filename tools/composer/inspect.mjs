@@ -50,7 +50,12 @@ export async function runInspect(argv) {
     const partOfTrack = []; for (let t = 0; t < auto; t++) partOfTrack.push(-1);
     counts.forEach((c, i) => { for (let k = 0; k < c; k++) partOfTrack.push(i); });
     // 楽器の種類 → まとまり
-    const groupKey = (p) => (DRUMS.has(p.instrument) ? "drums" : `${p.instrument}${p.patch ? "-" + p.patch : ""}`);
+    // 楽器の種類ごと。種類が多い曲（フィドルの2本重ねなどでチャンネルが足りない）は、音色（patch）の違いをまとめて楽器名だけで分ける
+    let fine = true;
+    const keyOf = (p) => (DRUMS.has(p.instrument) ? "drums" : fine ? `${p.instrument}${p.patch ? "-" + p.patch : ""}` : p.instrument);
+    const extraCh = song.parts.filter((p) => p.doubleDetune).length;
+    if (new Set(song.parts.map(keyOf)).size + extraCh > 14) fine = false;
+    const groupKey = keyOf;
     const groups = new Map();
     song.parts.forEach((p, i) => {
       const k = groupKey(p);
@@ -70,11 +75,25 @@ export async function runInspect(argv) {
     session = await openStemSession(html, overlays);
     console.error("描き出し中…（曲の長さによって 2〜5 分）");
     const mix = path.join(out, `${name}-mix.wav`);
-    await session.render(keyed, edition, { busFile: mix, keepStems: true, timeoutMs: 1200000 });
+    // 取り出せるチャンネルは全部で 15 まで（音の入れ物の上限）。16 になる曲は、ドラムを別の描き出しで取る
+    const midi = await kit.load("/src/audio/midi-export.ts");
+    const tapsOf = (sc) => new Set(Object.values(midi.scoreToMidiInfo({ ...sc, loop: false }).stemChannels).flat()).size;
+    const drumIdx = gid.indexOf("drums");
+    const split = tapsOf(keyed) > 15 && drumIdx >= 0;
+    const first = split ? { ...keyed, tracks: keyed.tracks.map((t) => (t.stemKey === `g${drumIdx}` ? { ...t, stemKey: undefined } : t)) } : keyed;
+    const main = await session.render(first, edition, { busFile: mix, keepStems: true, timeoutMs: 1200000 });
     const man = { song: songPath, mix, groups: [] };
     for (const [i, k] of gid.entries()) {
+      if (split && i === drumIdx) continue;
       const file = path.join(out, `${name}-${k}.wav`);
       if (await session.writeStem(`g${i}`, file)) man.groups.push({ key: k, label: labelOf(groups.get(k)), parts: groups.get(k).parts.map((x) => x + 1), wav: file });
+    }
+    if (split) {
+      console.error("ドラムだけを描き出し中…");
+      const only = { ...keyed, tracks: keyed.tracks.filter((t) => t.stemKey === `g${drumIdx}`) };
+      await session.render(only, edition, { keepStems: true, fixedGainDb: main.gainDb, timeoutMs: 1200000 });
+      const file = path.join(out, `${name}-drums.wav`);
+      if (await session.writeStem(`g${drumIdx}`, file)) man.groups.push({ key: "drums", label: "ドラム", parts: groups.get("drums").parts.map((x) => x + 1), wav: file });
     }
     await session.close(); session = null;
     const manFile = path.join(out, `${name}.inspect.json`);
