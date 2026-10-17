@@ -207,6 +207,13 @@ SONGS = [
        "ゆっくりの笛の前奏から BPM118 のリール。♭VII の F、短調の Cm6。最後は全音上。"),
 ]
 
+# ================================================================ 人間の指摘で手で直した小節（曲id → {(区間, 16小節の中の番号): 音}）
+# 2026-10-17 人間の指示「全部旋律を合わせると単調になるから、違和感を感じたそこだけ修正して」。自動の決まりは変えず、ここに1小節ずつ書く。
+PATCH = {
+    # 『雨の修道院』前半（オーボエ）: 10小節目 G の上の F → E、12小節目 E の上で G# のすぐあとの G → B、19小節目 Esus4 の上の C → D と終わりの G → B
+    "rain-abbey": {("A", 5): "D5:1 E5:1 D5:2 B4:2", ("A", 7): "G#4:4 B4:2", ("A", 14): "B4:2 D5:1 A4:1 B4:2"},
+}
+
 # ================================================================ 旋律を書く
 class Mel:
     def __init__(self, song, rng):
@@ -305,6 +312,8 @@ def build(song, out):
         if kname == "B": lo, hi = lo + 3, hi + 3
         if kname == "C": lo, hi = lo + 1, hi + 1
         MELS[kname] = mel.phrase16(ch16, lo, hi, peak=0.8 if kname == "A" else 1.0)
+        for (kk, bar_i), fixed in PATCH.get(song["id"], {}).items():   # 人間が「合わない」と聞いた所だけを手で直す
+            if kk == kname: MELS[kname][bar_i] = fixed
     # 小節の表
     plan = []; tempo = []
     for si, sec in enumerate(song["form"]):
