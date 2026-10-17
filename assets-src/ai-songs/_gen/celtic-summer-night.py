@@ -121,9 +121,11 @@ def octv(seq_str, k): return " ".join(x if x.startswith("R:") else f"{nm(md(x.sp
 # ---------------- パート（チャンネル: 笛・フィドル・アコーディオン・鉄琴・木琴・ハープ・ピアノ・アコギ左・アコギ右・チェロ・ベース・弦上・弦下＝13）----------------
 S.part("flute", "panflute", "笛（旋律・ハモり）", 0.21, 0.15, reverb=0.4, gainDb=2, breath=True,
        fx=[{"type": "delay", "beats": 1, "mix": 0.12, "feedback": 0.28}, {"type": "plate", "mix": 0.1}])
-S.part("fiddle", "fiddle", "フィドル（旋律）", 0.19, -0.2, patch="violin", reverb=0.36, gainDb=1, fx=[{"type": "plate", "mix": 0.12}])
+# 2026-10-17 人間の指示: フィドルは「柔らかく力強く、透き通るように響かせる」（2本重ね・2.8kHz -2.5dB・芯 +2dB・ホール残響）、アコギはやわらかく（強い弾きなし・高音をおさえる）、
+#   音域を広く（ハープの分散和音を広げる）、自然を感じる曲は「その空間が感じられる」ように（全体をホールの残響に入れ、遠い楽器ほど深く）。
+S.part("fiddle", "fiddle", "フィドル（旋律）", 0.19, -0.2, patch="violin", reverb=0.5, gainDb=3, bright=-0.15, attack=0.35, release=0.7, doubleDetune={"cents": 5, "spread": 0.3}, fx=[{"type": "eq", "low": 2, "mid": -2.5, "midHz": 2800, "high": 0}, {"type": "delay", "beats": 0.6667, "mix": 0.08, "feedback": 0.2}, {"type": "reverb", "mix": 0.22}, {"type": "plate", "mix": 0.12}])
 S.part("acc", "accordion", "アコーディオン", 0.11, 0.3, reverb=0.28, fx=[{"type": "room", "mix": 0.12}])
-S.part("glock", "glockenspiel", "鉄琴（星）", 0.07, 0.4, reverb=0.4, sustain=4, release=0.8, fx=[{"type": "pingpong", "beats": 0.6667, "mix": 0.2, "feedback": 0.35}])
+S.part("glock", "glockenspiel", "鉄琴（星）", 0.07, 0.6, reverb=0.55, sustain=4, release=0.8, fx=[{"type": "pingpong", "beats": 0.6667, "mix": 0.2, "feedback": 0.35}])
 S.part("xylo", "xylophone", "木琴（祭りの跳ね回り）", 0.09, -0.4, reverb=0.25, fx=[{"type": "room", "mix": 0.1}])
 S.part("harp", "harp", "ハープ（6/8の分散和音）", 0.12, -0.35, reverb=0.38, bright=-0.4, sustain=4, release=0.8,
        fx=[{"type": "delay", "beats": 0.6667, "mix": 0.1, "feedback": 0.2}])
@@ -131,12 +133,11 @@ for _k in ("pno1", "pno2", "pno3"):
     S.part(_k, "piano", f"ピアノ右手（和音・{_k[3]}）", 0.09, 0.05, reverb=0.3, sustain=1.5, fx=[{"type": "plate", "mix": 0.15}])
 S.part("pnoL", "piano", "ピアノ左手（低音）", 0.12, 0.05, reverb=0.3, sustain=1.4, fx=[{"type": "plate", "mix": 0.15}])
 for _k, _pan in (("g1", -0.5), ("g2", 0.5), ("g3", -0.5), ("g4", 0.5)):
-    S.part(_k, "guitar", f"アコギ（{_k[1]}本目）", 0.08, _pan, amp="crystal", chorus=0, sustain=1.0, reverb=0.22, autoScoop=False, humanPitch=0, push=0.008 * int(_k[1]),
-           fx=[{"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.01, "release": 0.12}])
+    S.part(_k, "guitar", f"アコギ（{_k[1]}本目）", 0.08, _pan, amp="crystal", chorus=0, sustain=1.0, reverb=0.22, autoScoop=False, humanPitch=0, push=0.008 * int(_k[1]), bright=-0.4, fx=[{"type": "eq", "high": -2.5}, {"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.01, "release": 0.12}])
 S.part("cello", "strings", "チェロ", 0.13, -0.3, patch="cello", reverb=0.35, release=0.5)
 S.part("bass", "bass", "ベース（指弾き）", 0.24, 0, fx=[{"type": "compressor", "threshold": -18, "ratio": 3, "attack": 0.02, "release": 0.15}])
-S.part("sth", "strings", "弦（上・のばす）", 0.07, 0.55, patch="slowStrings", reverb=0.4, release=0.6)
-S.part("stl", "strings", "弦（下・のばす）", 0.07, -0.55, patch="slowStrings", reverb=0.4, release=0.6)
+S.part("sth", "strings", "弦（上・のばす）", 0.07, 0.35, patch="slowStrings", reverb=0.4, release=0.6)
+S.part("stl", "strings", "弦（下・のばす）", 0.07, 0.35, patch="slowStrings", reverb=0.4, release=0.6)   # 上と同じ設定にしてチャンネルを共有（フィドルの2本重ねで1つ増えたため）
 S.part("bodhran", "tom", "ボーラン風の刻み", 0.12, 0.1, reverb=0, gainDb=-8, bright=-0.4)
 S.part("kick", "kick", "キック", 0.26, 0, gainDb=-8)
 S.part("snare", "snare", "スネア", 0.18, 0, push=0.01, gainDb=-10)
@@ -197,8 +198,8 @@ for bi, p in enumerate(plan):
     if k == "coda" and 8 <= i < 12: S.put("acc", bi, [f"{nm(low(pcs[1], 57))}:2"])
     # ---- ハープ（6/8の分散和音。ゆっくりの所と、ジグ1の A）----
     if slowk:   # ジグでは鳴らさない（速い分散和音で音が切れてプチッと鳴った）
-        r = low(pcs[0], 50); t3 = r + ((pcs[1] - pcs[0]) % 12); t5 = r + ((pcs[2] - pcs[0]) % 12)
-        S.put("harp", bi, [f"{nm(x)}:{T3}" for x in (r, t5, r + 12, t3 + 12, t5 + 12, r + 24)])
+        r = low(pcs[0], 45); t3 = r + ((pcs[1] - pcs[0]) % 12); t5 = r + ((pcs[2] - pcs[0]) % 12)   # 音域を広く: A2 から 3 オクターブ
+        S.put("harp", bi, [f"{nm(x)}:{T3}" for x in (r, t5 + 12, r + 24, t3 + 24, t5 + 12, r + 12)])
     # ---- ピアノ（左手と右手）----
     pv = sorted(low(x, 60) for x in pcs[:3]); lr = low(bass_pc(ch), 36)
     if (k == "intro" and i >= 4) or k in ("air1", "air2", "slow", "coda"):
@@ -216,15 +217,15 @@ for bi, p in enumerate(plan):
         g0 = low(pcs[0], 45)
         v = [low(bass_pc(ch), 40), g0 + ((pcs[2] - pcs[0]) % 12), g0 + 12, g0 + 12 + ((pcs[1] - pcs[0]) % 12)]
         for gi, g in enumerate(("g1", "g2", "g3", "g4")):
-            if gi < 2 or k in ("air2", "slow"): S.put(g, bi, [f"{nm(v[gi])}:2" + ("!" if not slowk else ",")]); continue
-            S.put(g, bi, [f"{nm(v[gi])}:{fmt(2 / 3)}!", f"{nm(v[gi])}:{T3},", f"{nm(v[gi])}:{fmt(2 / 3)}", f"{nm(v[gi])}:{T3},"])
+            if gi < 2 or k in ("air2", "slow"): S.put(g, bi, [f"{nm(v[gi])}:2" + ("" if not slowk else ",")]); continue
+            S.put(g, bi, [f"{nm(v[gi])}:{fmt(2 / 3)}", f"{nm(v[gi])}:{T3},", f"{nm(v[gi])}:{fmt(2 / 3)}", f"{nm(v[gi])}:{T3},"])
     # ---- 低音: チェロ（ゆっくりの所）とベース（ジグ）----
     if slowk and not (k == "intro" and i < 4):
         S.put("cello", bi, [f"{nm(low(bass_pc(ch), 43) + (12 if k == 'slow' else 0))}:2"])
     if k in ("jig1", "jig2", "build", "jigC", "jigF") or (k == "call" and i >= 2):
         nx = chords[bi + 1] if bi + 1 < NB else ch; rn = low(bass_pc(nx), 28); r = low(bass_pc(ch), 28)
         ap = (rn - 1 if rn > r else rn + 1) if rn != r else r + 7
-        S.put("bass", bi, [f"{nm(r)}:{fmt(2 / 3)}", f"{nm(r)}:{T3},", f"{nm(r + 7)}:{fmt(2 / 3)}", f"{nm(ap)}:{T3}"] if k != "build" else [f"{nm(r)}:2"])
+        S.put("bass", bi, [f"{nm(r)}:1", f"{nm(r)}:1,"] if k != "build" else [f"{nm(r)}:2"])   # 根音だけ（2026-10-17 人間の指示）
     # ---- 弦（のばす）----
     if (k == "intro" and i >= 4) or k in ("air1", "air2", "slow", "jig2", "jigF", "coda", "build") or (k == "jigC" and i >= 8):
         S.put("sth", bi, [f"{nm(low(pcs[1], 66))}:2"]); S.put("stl", bi, [f"{nm(low(pcs[2], 57))}:2"])

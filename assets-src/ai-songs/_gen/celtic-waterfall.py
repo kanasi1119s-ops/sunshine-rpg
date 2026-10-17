@@ -101,9 +101,11 @@ def tones_in(pcs, lo, hi): return [m for m in range(lo, hi + 1) if m % 12 in pcs
 # ---------------- パート（チャンネル: 笛・フィドル・アコーディオン・鉄琴・ハープ・ピアノ・チェロ・コントラバス・弦上・弦下・パッド・ホルン・大太鼓＝13）----------------
 S.part("flute", "panflute", "笛（ロー・ホイッスル風の旋律）", 0.21, 0.12, reverb=0.42, gainDb=2, breath=True,
        fx=[{"type": "delay", "beats": 0.75, "mix": 0.14, "feedback": 0.3}, {"type": "plate", "mix": 0.12}])
-S.part("fiddle", "fiddle", "フィドル（旋律・急流の駆け回り）", 0.19, -0.18, patch="violin", reverb=0.38, gainDb=1, fx=[{"type": "plate", "mix": 0.14}])
-S.part("acc", "accordion", "アコーディオン（和音をのばす）", 0.1, 0.3, reverb=0.3, fx=[{"type": "room", "mix": 0.12}])
-S.part("glock", "glockenspiel", "鉄琴（しずく）", 0.07, 0.45, reverb=0.45, sustain=4, release=0.8,
+# 2026-10-17 人間の指示: フィドルは「柔らかく力強く、透き通るように響かせる」（2本重ね・2.8kHz -2.5dB・芯 +2dB・ホール残響）、アコギはやわらかく（強い弾きなし・高音をおさえる）、
+#   音域を広く（ハープの分散和音を広げる）、自然を感じる曲は「その空間が感じられる」ように（全体をホールの残響に入れ、遠い楽器ほど深く）。
+S.part("fiddle", "fiddle", "フィドル（旋律・急流の駆け回り）", 0.19, -0.18, patch="violin", reverb=0.5, gainDb=3, bright=-0.15, attack=0.35, release=0.7, doubleDetune={"cents": 5, "spread": 0.3}, fx=[{"type": "eq", "low": 2, "mid": -2.5, "midHz": 2800, "high": 0}, {"type": "delay", "beats": 0.75, "mix": 0.08, "feedback": 0.2}, {"type": "reverb", "mix": 0.22}, {"type": "plate", "mix": 0.12}])
+# アコーディオン（和音をのばす）は外した（2026-10-17: フィドルの2本重ねでチャンネルが16になったため。和音をのばすだけのアコーディオンは20曲の試行で点数を下げた）
+S.part("glock", "glockenspiel", "鉄琴（しずく）", 0.07, 0.65, reverb=0.6, sustain=4, release=0.8,
        fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.25, "feedback": 0.4}])
 S.part("harp", "harp", "ハープ（流れ落ちる16分）", 0.11, -0.35, reverb=0.4, bright=-0.4, sustain=3, release=0.8,
        fx=[{"type": "pingpong", "beats": 0.5, "mix": 0.1, "feedback": 0.2}])
@@ -111,14 +113,13 @@ for _k in ("pno1", "pno2", "pno3"):
     S.part(_k, "piano", f"ピアノ右手（和音・{_k[3]}）", 0.09, 0.08, reverb=0.32, sustain=1.6, fx=[{"type": "plate", "mix": 0.16}])
 S.part("pnoL", "piano", "ピアノ左手（低音の転がし）", 0.12, 0.08, reverb=0.32, sustain=1.4, fx=[{"type": "plate", "mix": 0.16}])
 for _k, _pan in (("g1", -0.5), ("g2", 0.5), ("g3", -0.5), ("g4", 0.5)):   # アコギ（B・急流・山場の刻み）
-    S.part(_k, "guitar", f"アコギ（{_k[1]}本目）", 0.08, _pan, amp="crystal", chorus=0, sustain=1.0, reverb=0.24, autoScoop=False, humanPitch=0, push=0.008 * int(_k[1]),
-           fx=[{"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.01, "release": 0.12}])
+    S.part(_k, "guitar", f"アコギ（{_k[1]}本目）", 0.08, _pan, amp="crystal", chorus=0, sustain=1.0, reverb=0.24, autoScoop=False, humanPitch=0, push=0.008 * int(_k[1]), bright=-0.4, fx=[{"type": "eq", "high": -2.5}, {"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.01, "release": 0.12}])
 S.part("cello", "strings", "チェロ", 0.13, -0.3, patch="cello", reverb=0.36, release=0.5,
        fx=[{"type": "compressor", "threshold": -18, "ratio": 3, "attack": 0.01, "release": 0.15}])
 S.part("cb", "strings", "コントラバス", 0.14, 0, patch="contrabass", reverb=0.3)
-S.part("sth", "strings", "弦（上・のばす）", 0.07, 0.55, patch="slowStrings", reverb=0.42, release=0.6)
-S.part("stl", "strings", "弦（下・のばす）", 0.07, -0.55, patch="slowStrings", reverb=0.42, release=0.6)
-S.part("pad", "pad", "パッド（霧）", 0.07, 0, patch="warmPad", reverb=0.5, sustain=2, fx=[{"type": "chorus", "mix": 0.2}])
+S.part("sth", "strings", "弦（上・のばす）", 0.07, 0.35, patch="slowStrings", reverb=0.42, release=0.6)
+S.part("stl", "strings", "弦（下・のばす）", 0.07, 0.35, patch="slowStrings", reverb=0.42, release=0.6)   # 上と同じ設定にしてチャンネルを共有
+S.part("pad", "pad", "パッド（霧）", 0.08, 0, patch="warmPad", reverb=0.7, sustain=2, fx=[{"type": "chorus", "mix": 0.2}, {"type": "reverb", "mix": 0.3}])   # 空間: 霧は遠く深く
 S.part("horn", "brass", "ホルン（山場の長い音）", 0.12, -0.1, patch="horn", reverb=0.38, breath=True, release=0.5, fx=[{"type": "reverb", "mix": 0.15}])
 S.part("big", "inchTom", "大太鼓（滝の響き）", 0.13, 0, patch="inchTom", reverb=0.15, gainDb=-9)
 S.part("bodhran", "tom", "ボーラン風の刻み", 0.12, 0.1, reverb=0, gainDb=-8, bright=-0.4)
@@ -163,7 +164,7 @@ for bi, p in enumerate(plan):
     if k == "peak" and i % 4 == 0: S.put("glock", bi, [f"{nm(x)}:1" for x in tones_in(pcs, 86, 100)[-4:][::-1]])
     # ---- ハープ（流れ落ちる16分。1小節に2回、和音の音を高い所から低い所へ）----
     if k != "pool" or i >= 4:
-        fall = sorted(tones_in(pcs, 50, 88), reverse=True)[:8]
+        fall = sorted(tones_in(pcs, 45, 93), reverse=True)[:8]   # 音域を広く（A2〜A6 の滝）
         if k == "coda" and i == 7: S.put("harp", bi, [f"{nm(m)}:0.25" for m in sorted(tones_in(pcs, 59, 90))[:8]] + [f"{nm(sorted(tones_in(pcs, 59, 90))[8])}:2"])
         elif k == "coda" and i == 6: S.put("harp", bi, [f"{nm(m)}:0.5" for m in fall])
         else: S.put("harp", bi, [f"{nm(m)}:0.25" + ("" if j % 8 == 0 else ",") for j, m in enumerate(fall + fall)])
@@ -182,11 +183,11 @@ for bi, p in enumerate(plan):
         g0 = low(pcs[0], 45)
         v = [low(br, 40), g0 + ((pcs[2] - pcs[0]) % 12), g0 + 12, g0 + 12 + ((pcs[1] - pcs[0]) % 12)]
         for gi, g in enumerate(("g1", "g2", "g3", "g4")):
-            if gi < 2 or k == "A": S.put(g, bi, [f"{nm(v[gi])}:4" + ("!" if gi < 2 else ",")]); continue
+            if gi < 2 or k == "A": S.put(g, bi, [f"{nm(v[gi])}:4" + ("" if gi < 2 else ",")]); continue
             n0 = nm(v[gi])
-            S.put(g, bi, [f"{n0}:1!", f"{n0}:0.5,", f"{n0}:1", f"{n0}:0.5,", f"{n0}:0.5", f"{n0}:0.5,"])
+            S.put(g, bi, [f"{n0}:1", f"{n0}:0.5,", f"{n0}:1", f"{n0}:0.5,", f"{n0}:0.5", f"{n0}:0.5,"])
     # ---- アコーディオン ----
-    if k == "B" or k == "pool" or k == "peak": S.put("acc", bi, [f"{nm(low(pcs[1], 57))}:4"])
+    pass  # （アコーディオンは外した）
     # ---- 低音 ----
     if k in ("mist", "A", "pool", "coda", "B"):
         S.put("cello", bi, [f"{nm(low(br, 43) + 12 if k == 'B' else low(br, 43))}:4"])
@@ -245,6 +246,6 @@ def _merge(notes, legato):
 _song = json.load(open(out, encoding="utf-8"))
 for _p in _song["parts"]:
     r = _p["role"]
-    if r.startswith(("弦（", "チェロ", "コントラバス", "アコーディオン", "パッド", "ホルン")):
+    if r.startswith(("弦（", "チェロ", "コントラバス", "パッド", "ホルン")):
         _p["notes"] = _merge(_p["notes"], legato=r.startswith(("弦（", "パッド")))
 json.dump(_song, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)

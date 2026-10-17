@@ -76,7 +76,7 @@ def low(pcx, lo): return lo + ((pcx - lo) % 12)
 def arp6(ch, lo=52):
     """ハープの6/8の分散和音（根音・5度・オクターブ・10度・オクターブ・5度）。"""
     p = chord_pcs(ch); r = low(p[0], 47); t3 = r + ((p[1] - p[0]) % 12); t5 = r + ((p[2] - p[0]) % 12)
-    return [r, t5, r + 12, t3 + 12, t5 + 12, r + 24]   # 6つとも違う高さ（同じ高さを弾き直すと前の音が切れてプチッと鳴った）
+    return [r - 12 if r - 12 >= 45 else r, t5, r + 12, t3 + 12, t5 + 12, r + 24]   # 6つとも違う高さ（弾き直すとプチッと鳴る）。2026-10-17 音域を広く（下を1オクターブ下げた）
 def diat(seq_str, ch, k):
     sc = scale_of(ch); out = []
     for x in seq_str.split():
@@ -93,12 +93,14 @@ def oct_(seq_str, k): return " ".join(x if x.startswith("R:") else f"{nm(md(x.sp
 # ---------------- パート ----------------
 S.part("flute", "panflute", "笛（ロー・ホイッスル風の旋律）", 0.21, 0.15, reverb=0.4, gainDb=2, breath=True,
        fx=[{"type": "delay", "beats": 1, "mix": 0.12, "feedback": 0.28}, {"type": "plate", "mix": 0.1}])   # 笛は標準のパンフルート（VSCO のフルート patch="flute" は音の変わり目でプチッと鳴った。2026-10-16 パートごとに書き出して確かめた）
-S.part("fiddle", "fiddle", "フィドル（旋律）", 0.19, -0.2, patch="violin", reverb=0.38, gainDb=1, fx=[{"type": "plate", "mix": 0.14}])
+# 2026-10-17 人間の指示: フィドルは「柔らかく力強く、透き通るように響かせる」（2本重ね・2.8kHz -2.5dB・芯 +2dB・ホール残響）、アコギはやわらかく（強い弾きなし・高音をおさえる）、
+#   音域を広く（ハープの分散和音を広げる）、自然を感じる曲は「その空間が感じられる」ように（全体をホールの残響に入れ、遠い楽器ほど深く）。
+S.part("fiddle", "fiddle", "フィドル（旋律）", 0.19, -0.2, patch="violin", reverb=0.5, gainDb=3, bright=-0.15, attack=0.35, release=0.7, doubleDetune={"cents": 5, "spread": 0.3}, fx=[{"type": "eq", "low": 2, "mid": -2.5, "midHz": 2800, "high": 0}, {"type": "delay", "beats": 0.6667, "mix": 0.08, "feedback": 0.2}, {"type": "reverb", "mix": 0.22}, {"type": "plate", "mix": 0.12}])
 # MIDI のチャンネルは（ドラム以外で）15まで。同じ楽器のパートは pan・reverb・fx をそろえて1つのチャンネルを共有させる（2026-10-16。あふれると別の楽器の音で鳴った）
 S.part("horn", "brass", "ホルン（旋律・対旋律）", 0.15, -0.1, patch="horn", reverb=0.35, breath=True, release=0.5, fx=[{"type": "reverb", "mix": 0.15}])
 S.part("horn2", "brass", "ホルン2（低い声部）", 0.12, -0.1, patch="horn", reverb=0.35, breath=True, release=0.5, fx=[{"type": "reverb", "mix": 0.15}])
 for _k, _pan in (("g1", -0.5), ("g2", 0.5), ("g3", -0.5), ("g4", 0.5)):   # アコギ（6/8の刻み。B から）
-    S.part(_k, "guitar", f"アコギ（{_k[1]}本目）", 0.08, _pan, amp="crystal", chorus=0, sustain=1.0, reverb=0.25, autoScoop=False, humanPitch=0, push=0.008 * int(_k[1]))
+    S.part(_k, "guitar", f"アコギ（{_k[1]}本目）", 0.08, _pan, amp="crystal", chorus=0, sustain=1.0, reverb=0.25, autoScoop=False, humanPitch=0, push=0.008 * int(_k[1]), bright=-0.4, fx=[{"type": "eq", "high": -2.5}, {"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.01, "release": 0.12}])
 S.part("harp", "harp", "ハープ（6/8の分散和音）", 0.13, 0.4, reverb=0.38, bright=-0.4, sustain=2.2, release=0.6,
        fx=[{"type": "pingpong", "beats": 0.6667, "mix": 0.12, "feedback": 0.25}])
 # ピアノは左手と右手で弾くイメージで（2026-10-16、人間の指示「ピアノ左手と右手で弾くイメージもあると曲の印象変わるかも」）:
@@ -108,12 +110,12 @@ for _k in ("pno1", "pno2", "pno3"):
 S.part("pnoL", "piano", "ピアノ左手（低音）", 0.12, 0.05, reverb=0.3, sustain=1.4, fx=[{"type": "plate", "mix": 0.15}])
 # アコーディオン（ケルトの伴奏と旋律の重ね）と、鉄琴（霧のきらめき・山場で旋律の1オクターブ上）。2026-10-16 に作曲ソフトへ足した音源
 S.part("acc", "accordion", "アコーディオン", 0.12, 0.3, reverb=0.3, fx=[{"type": "room", "mix": 0.12}])
-S.part("glock", "glockenspiel", "鉄琴", 0.07, 0.35, reverb=0.4, fx=[{"type": "delay", "beats": 0.6667, "mix": 0.15, "feedback": 0.3}])
+S.part("glock", "glockenspiel", "鉄琴", 0.07, 0.6, reverb=0.6, sustain=4, release=0.8, fx=[{"type": "pingpong", "beats": 0.6667, "mix": 0.2, "feedback": 0.35}])
 S.part("cello", "strings", "チェロ（持続・刻み）", 0.14, -0.35, patch="cello", reverb=0.35,
        fx=[{"type": "compressor", "threshold": -18, "ratio": 3, "attack": 0.01, "release": 0.15}])
 S.part("cb", "strings", "コントラバス", 0.15, 0, patch="contrabass", reverb=0.3)
-S.part("sth", "strings", "弦（上・のばす）", 0.08, 0.55, patch="slowStrings", reverb=0.4, release=0.6)
-S.part("stl", "strings", "弦（下・のばす）", 0.08, -0.55, patch="slowStrings", reverb=0.4, release=0.6)
+S.part("sth", "strings", "弦（上・のばす）", 0.08, 0.35, patch="slowStrings", reverb=0.4, release=0.6)
+S.part("stl", "strings", "弦（下・のばす）", 0.08, 0.35, patch="slowStrings", reverb=0.4, release=0.6)   # 上と同じ設定にしてチャンネルを共有（フィドルの2本重ねで1つ増えたため）
 S.part("choir", "choir", "合唱（遠く）", 0.07, 0, reverb=0.5, breath=True)   # 2026-10-16 点数の試行で外した（下の dump の前で消す）
 # 遠いベル（fmBell）は外した: MIDI のチャンネルは16までで、楽器が17種類になると別の楽器と同じチャンネルに入り、音が崩れた（点数 8.01→7.52）。霧のきらめきは鉄琴が受けもつ
 S.part("timp", "strings", "ティンパニ", 0.18, 0, patch="timpani", reverb=0.3, gainDb=-4)   # -4dB は点数の試行で決めた（7.98→8.01）
@@ -202,16 +204,16 @@ for bi, (k, i) in enumerate(plan):
     if k == "dread" or (k == "tag" and i < 10):   # 不穏の所は低い E と B を、刻みと同じ6/8で
         for gi, g in enumerate(("g1", "g2")):
             n0 = (40, 47)[gi]
-            S.put(g, bi, [f"{nm(n0)}:{fmt(1 / 3)}" + ("!" if j in (0, 3) else ",") for j in range(6)])
+            S.put(g, bi, [f"{nm(n0)}:{fmt(1 / 3)}" + ("" if j in (0, 3) else ",") for j in range(6)])
     if k in ("B", "B2", "A3") or (k == "A" and i >= 8):
         pp = chord_pcs(ch); gb = low(bass_pc(ch), 40); g0 = low(pp[0], 45)
         v = [gb, g0 + ((pp[2] - pp[0]) % 12), g0 + 12, g0 + 12 + ((pp[1] - pp[0]) % 12)]
         for gi, g in enumerate(("g1", "g2", "g3", "g4")):
             n0 = v[gi]
-            if gi < 2: S.put(g, bi, [f"{nm(n0)}:2!"]); continue
+            if gi < 2: S.put(g, bi, [f"{nm(n0)}:2"]); continue
             toks = []
             for beat in range(2):
-                toks += [f"{nm(n0)}:{fmt(2 / 3)}" + ("!" if beat == 0 else ""), f"{nm(n0)}:{fmt(1 / 3)},"]
+                toks += [f"{nm(n0)}:{fmt(2 / 3)}", f"{nm(n0)}:{fmt(1 / 3)},"]
             S.put(g, bi, toks)
     # ---- 低い弦 ----
     if k == "pro":
