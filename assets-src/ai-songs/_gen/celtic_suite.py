@@ -392,7 +392,7 @@ def build(song, out):
             #   鳴らしたままの分散和音（gring）は余韻も長く（release 0.68）
             ring = band.get("gring"); gs = song.get("gsoft", 1)
             S.part(k, "guitar", f"アコギ（{k[1]}本目）", 0.08, pan, amp="crystal", chorus=0, sustain=1.0, reverb=0.22, autoScoop=False, humanPitch=0, push=0.008 * int(k[1]),
-                   bright=round(-0.65 * gs, 2), attack=0.58, release=0.68 if ring else 0.6,
+                   bright=round(-0.65 * gs, 2), attack=0.58, release=0.68 if ring else 0.6, **({"gainDb": song["gdb"]} if song.get("gdb") else {}),
                    fx=[{"type": "eq", "low": 1, "mid": round(-1.5 * gs, 2), "midHz": 2600, "high": round(-4.5 * gs, 2)}, {"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.003, "release": 0.12}])
     if band.get("acc") and "acc" not in leads_used: S.part("L_acc", "accordion", "旋律（acc）", 0.15, 0.25, reverb=0.28, fx=FX["room"])
     if band.get("pizz"): S.part("pizz", "strings", "弦のピチカート", 0.13, -0.3, patch="pizzicato", reverb=0.3)
@@ -700,7 +700,7 @@ if __name__ == "__main__":
     for n, s in enumerate(SONGS, 1):
         if which not in ("all", str(n), s["id"]): continue
         if f"{n:02d}" in tune:
-            t = dict(tune[f"{n:02d}"]); top = {k: t.pop(k) for k in ("seed", "bpm", "mel_range", "cello_db", "plain_fiddle", "lead_db", "gsoft") if k in t}
+            t = dict(tune[f"{n:02d}"]); top = {k: t.pop(k) for k in ("seed", "bpm", "mel_range", "cello_db", "plain_fiddle", "lead_db", "gsoft", "gdb") if k in t}
             sw = t.pop("swap", {})   # 旋律の楽器の入れかえ {"acc": "flute"}
             s = dict(s, band={**s["band"], **t}, **top)
             if sw:
