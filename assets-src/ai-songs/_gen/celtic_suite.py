@@ -213,10 +213,14 @@ class Mel:
         self.m = METERS[song["meter"]]; self.U = self.m["beats"] * self.m["sub"]; self.rng = rng
         self.tonic = pc(song["key"]); self.mode = [(self.tonic + x) % 12 for x in MODES[song["mode"]]]
     def scale_for(self, ch):
+        # コードの音が音階にないとき（E の G#、Bbmaj7 の Bb など）は、半音となりの音階の音と入れかえる。
+        # 入れかえる相手は「そのコードの音でも主音でもない」ほうを選ぶ（2026-10-17: 以前は並び順で先の音を消していたため、
+        # A エオリアンの E で主音 A を消して G を残し、G# のすぐあとに G が鳴る「合わない音」が出た。『雨の修道院』12・44小節）。
         sc = list(self.mode); cp = chord_pcs(ch)
         for x in cp:
             if x in sc: continue
             near = [s for s in sc if min((s - x) % 12, (x - s) % 12) == 1]
+            near.sort(key=lambda s: (s in cp, s == self.tonic))   # コードの音・主音は消さない（後ろへ）
             if near: sc[sc.index(near[0])] = x
             else: sc.append(x)
         return sorted(set(sc))
@@ -233,8 +237,14 @@ class Mel:
                 if ph == 1 and b < 4:
                     bars.append(bars[b]); prev = midi_last(bars[b]); continue
                 ch = chords[gb]; sc = self.scale_for(ch)
-                pool = [x for x in range(lo, hi + 1) if x % 12 in sc]
-                cpcs = chord_pcs(ch); ct = [x for x in pool if x % 12 in cpcs[:3]] or pool
+                cpcs = chord_pcs(ch)
+                # アヴォイド・ノート（コードの音の半音上。E の F、G# の A など）は、弱い拍でも使わない（2026-10-17『雨の修道院』の指摘）
+                avoid = {(c + 1) % 12 for c in cpcs} - set(cpcs)
+                pool = [x for x in range(lo, hi + 1) if x % 12 in sc and x % 12 not in avoid]
+                if len({x % 12 for x in pool}) < 5:   # 音が少なすぎると1歩で大きく跳ぶので、避ける音を半音上の「根音の上」だけに絞る
+                    avoid = {(cpcs[0] + 1) % 12} - set(cpcs)
+                    pool = [x for x in range(lo, hi + 1) if x % 12 in sc and x % 12 not in avoid]
+                ct = [x for x in pool if x % 12 in cpcs[:3]] or pool
                 key = order[b]
                 rhythm = rng.choice(cads) if key == "C" else tpls[key % len(tpls)]
                 nn = [d for d in rhythm if d > 0]
@@ -254,10 +264,16 @@ class Mel:
                             if rng.random() < 0.15: s = -s
                             # 2026-10-17 人間の指示「全体的に音域のスケールを広げて」: 1割ほどの確率で 4〜5度の跳躍（音階で3〜4歩）
                             if rng.random() < 0.12 and j < len(nn) - 1: s = dirn * rng.choice([3, 4]); leap = s
-                        steps.append(s); cur = pool[max(0, min(len(pool) - 1, pool.index(nearest(pool, cur)) + s))]
+                        # 音階の音が少ないコード（A7 で D・F・Bb を避けると4音だけ）で、3〜4歩がオクターブ近く跳ばないように 7半音までに縮める
+                        ci = pool.index(nearest(pool, cur))
+                        while abs(s) > 1 and abs(pool[max(0, min(len(pool) - 1, ci + s))] - cur) > 7: s -= 1 if s > 0 else -1
+                        if leap: leap = s if abs(s) >= 3 else 0
+                        steps.append(s); cur = pool[max(0, min(len(pool) - 1, ci + s))]
                     if key != "C": mem[key] = steps
                 idx = pool.index(first)
                 for s in steps:
+                    ci = idx
+                    while abs(s) > 1 and abs(pool[max(0, min(len(pool) - 1, ci + s))] - pool[ci]) > 7: s -= 1 if s > 0 else -1
                     idx = max(0, min(len(pool) - 1, idx + s)); notes.append(pool[idx])
                 # 長い音・拍の頭の音は和音の音に
                 pos = 0; k = 0; out = []
@@ -304,6 +320,14 @@ def build(song, out):
         lo, hi = song.get("mel_range", (57, 88))
         if kname == "B": lo, hi = lo + 3, hi + 3
         if kname == "C": lo, hi = lo + 1, hi + 1
+        # その旋律を受けもつ楽器（ハモリは2音下、オクターブ上の重ねは+12）の音域に収める（外れた音をオクターブで折り返すと1音だけ跳ぶため）
+        for sec in song["form"]:
+            if sec.get("mel") != kname: continue
+            for nm_ in (sec["lead"] if isinstance(sec["lead"], list) else [sec["lead"]]):
+                lo, hi = max(lo, LEADS[nm_][3][0]), min(hi, LEADS[nm_][3][1])
+            if sec.get("harm"): lo, hi = max(lo, LEADS[sec["harm"]][3][0] + 4), min(hi, LEADS[sec["harm"]][3][1])
+            if sec.get("oct"): hi = min(hi, LEADS[sec["oct"]][3][1] - 12)
+        if hi - lo < 19: hi = lo + 19
         MELS[kname] = mel.phrase16(ch16, lo, hi, peak=0.8 if kname == "A" else 1.0)
     # 小節の表
     plan = []; tempo = []
@@ -394,15 +418,31 @@ def build(song, out):
             seqs = p["mel"]
             if sh: seqs = " ".join(t if t.startswith("R:") else f"{nm(md(t.split(':')[0]) + sh)}:{t.split(':')[1]}" for t in seqs.split())
             ld = sec["lead"]; ld = ld[(i // 16) % len(ld)] if isinstance(ld, list) else ld
-            def fit(name, sq, shift_oct=0):
+            def fit(name, sq, shift_oct=0, whole=None):
+                """楽器の音域に合わせてオクターブを動かす。2026-10-17: 小節ごとに動かすと小節の境目でオクターブ跳びが起きた（03・15 で多数）ので、
+                同じ区間の16小節ぶん（whole）をまとめて見て1つのオクターブを決め、それでも外れる音だけ個別に折り返す"""
                 lo_, hi_ = LEADS[name][3]
-                ms = [md(t.split(":")[0]) for t in sq.split() if not t.startswith("R:")]
+                ref = whole if whole is not None else sq
+                ms = [md(t.split(":")[0]) + sh for t in ref.split() if not t.startswith("R:")]
                 o = shift_oct
-                while ms and max(ms) + 12 * o > hi_: o -= 1
-                while ms and min(ms) + 12 * o < lo_: o += 1
-                return " ".join(t if t.startswith("R:") else f"{nm(md(t.split(':')[0]) + 12 * o)}:{t.split(':')[1]}" for t in sq.split())
+                if ms:
+                    c = (max(ms) + min(ms)) / 2; mid = (lo_ + hi_) / 2
+                    while c + 12 * o > mid + 6: o -= 1
+                    while c + 12 * o < mid - 6: o += 1
+                    # 下が楽器の音域から出るなら、上がまだ収まる範囲で1オクターブ上げる（折り返しで1音だけ跳ぶのを防ぐ）
+                    while min(ms) + 12 * o < lo_ and max(ms) + 12 * (o + 1) <= hi_: o += 1
+                    while max(ms) + 12 * o > hi_ and min(ms) + 12 * (o - 1) >= lo_: o -= 1
+                outk = []
+                for t in sq.split():
+                    if t.startswith("R:"): outk.append(t); continue
+                    m = md(t.split(":")[0]) + 12 * o
+                    while m > hi_: m -= 12
+                    while m < lo_: m += 12
+                    outk.append(f"{nm(m)}:{t.split(':')[1]}")
+                return " ".join(outk)
+            whole = " ".join(MELS[sec["mel"]]) if sec.get("mel") else None
             style = "plain" if (song.get("plain_fiddle") and ld == "fiddle") else LEADS[ld][2]
-            S.put("L_" + ld, bi, S.ornament(S.seq(fit(ld, seqs)), style, bi + 17 * p["si"], dens=0.4, legato=True) if style != "plain" else S.plain(S.seq(fit(ld, seqs)), legato=True))
+            S.put("L_" + ld, bi, S.ornament(S.seq(fit(ld, seqs, 0, whole)), style, bi + 17 * p["si"], dens=0.4, legato=True) if style != "plain" else S.plain(S.seq(fit(ld, seqs, 0, whole)), legato=True))
             if sec.get("harm"):
                 h = []
                 for t in seqs.split():
@@ -412,9 +452,13 @@ def build(song, out):
                     while c < 2:
                         m -= 1
                         if m % 12 in sc: c += 1
+                    avoid = {(x + 1) % 12 for x in cp} - set(cp)   # ハモリがアヴォイド・ノート（コードの音の半音上）に乗ったら、もう1段下げる
+                    if m % 12 in avoid:
+                        m -= 1
+                        while m % 12 not in sc: m -= 1
                     h.append(f"{nm(m)}:{d}")
-                S.put("L_" + sec["harm"], bi, S.plain(S.seq(fit(sec["harm"], " ".join(h))), legato=True))
-            if sec.get("oct"): S.put("L_" + sec["oct"], bi, S.plain(S.seq(fit(sec["oct"], seqs, 1)), legato=False))
+                S.put("L_" + sec["harm"], bi, S.plain(S.seq(fit(sec["harm"], " ".join(h), 0, whole)), legato=True))
+            if sec.get("oct"): S.put("L_" + sec["oct"], bi, S.plain(S.seq(fit(sec["oct"], seqs, 1, whole)), legato=False))
         if is_end and i == 0:
             ld = sec.get("lead") or band["leads"][0]
             lo_, hi_ = LEADS[ld][3]; t = nearest(tones(lo_ + 5, hi_ - 5, [cp[0]]), (lo_ + hi_) // 2)
