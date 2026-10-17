@@ -66,7 +66,10 @@ LEADS = {
 }
 LEAD_META = {   # 音量・左右・残響・FX（同じ楽器は同じ値＝チャンネルを共有）
     "flute": dict(vol=0.21, pan=0.15, reverb=0.4, gainDb=2, breath=True, fx="delay"), "ocarina": dict(vol=0.2, pan=0.15, reverb=0.42, gainDb=2, breath=True, fx="delay"),
-    "fiddle": dict(vol=0.19, pan=-0.18, reverb=0.36, gainDb=1, fx="plate"), "acc": dict(vol=0.15, pan=0.25, reverb=0.28, fx="room"),
+    # フィドル（2026-10-17、人間の指示「バイオリンは柔らかく力強く、音を透き通るように響かせる」）: フィドルだけを書き出して数値で比べた結果、
+    #   左右にわずかにずらした2本（doubleDetune 5セント）で点数 7.23→7.65（厚み＝力強さ）、2.8kHz を -2.5dB（刺さりを取る＝やわらかさ）、
+    #   高音は落とさず 200〜600Hz を +2dB（透き通る芯）、立ち上がりをゆるく・余韻を長く、ホールの残響＋薄いディレイ（響き）。
+    "fiddle": dict(vol=0.19, pan=-0.18, reverb=0.5, gainDb=3, bright=-0.15, attack=0.35, release=0.7, doubleDetune={"cents": 5, "spread": 0.3}, fx="fiddle"), "acc": dict(vol=0.15, pan=0.25, reverb=0.28, fx="room"),
     "oboe": dict(vol=0.19, pan=0.12, reverb=0.4, gainDb=1, breath=True, fx="plate"), "clarinet": dict(vol=0.19, pan=0.12, reverb=0.4, gainDb=1, breath=True, fx="plate"),
     "banjo": dict(vol=0.15, pan=0.3, reverb=0.22, fx="room"), "bagpipe": dict(vol=0.13, pan=0.0, reverb=0.35, fx="hall"),
     "horn": dict(vol=0.15, pan=-0.1, reverb=0.36, breath=True, release=0.5, fx="hall"), "xylo": dict(vol=0.1, pan=-0.35, reverb=0.25, fx="room"),
@@ -317,7 +320,8 @@ def build(song, out):
 
     # ---- パート ----
     FX = {"delay": [{"type": "delay", "beats": round(PLEN[0] / SUB, 4), "mix": 0.12, "feedback": 0.28}, {"type": "plate", "mix": 0.1}],
-          "plate": [{"type": "plate", "mix": 0.13}], "room": [{"type": "room", "mix": 0.12}], "hall": [{"type": "reverb", "mix": 0.15}]}
+          "plate": [{"type": "plate", "mix": 0.13}], "room": [{"type": "room", "mix": 0.12}], "hall": [{"type": "reverb", "mix": 0.15}],
+          "fiddle": [{"type": "eq", "low": 2, "mid": -2.5, "midHz": 2800, "high": 0}, {"type": "delay", "beats": round(PLEN[0] / SUB, 4), "mix": 0.08, "feedback": 0.2}, {"type": "reverb", "mix": 0.22}, {"type": "plate", "mix": 0.12}]}
     leads_used = set(band["leads"])
     for sec in song["form"]:
         if sec.get("harm"): leads_used.add(sec["harm"])
