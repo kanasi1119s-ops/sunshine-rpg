@@ -44,7 +44,7 @@
    ],
    "patch": "violin",
    "reverb": 0.5,
-   "gainDb": 5,
+   "gainDb": 6,
    "bright": -0.15,
    "attack": 0.35,
    "release": 0.7,
@@ -942,7 +942,7 @@
    "patch": "cello",
    "reverb": 0.35,
    "release": 0.5,
-   "gainDb": -5,
+   "gainDb": -8,
    "fx": [
     {
      "type": "compressor",
