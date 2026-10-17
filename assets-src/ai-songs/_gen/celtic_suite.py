@@ -688,7 +688,7 @@ if __name__ == "__main__":
     #   ギターの刻み（静かな曲は指で弾く分散和音 "arp"）は上げた（02・04・06・12・14・17・19）。
     #   2026-10-17（人間の指示でベースを根音だけ・アコギをやわらかくしたあと）: 楽器ごとの点検（song.mjs inspect）で、17 はチェロがいちばん大きく（旋律より 8dB 上）
     #   点数 7.54 だったので、チェロ -5dB・旋律 +2dB（02・04・11・17）。16 はピアノとハープを足し（7.99→8.03）、18 はアコギのやわらかさを 6 割に（7.99→8.05）。
-    FINAL = {"02": {"guitar": "arp", "gring": True, "cello_db": -8, "lead_db": 3}, "03": {"strings": True, "acc": None}, "04": {"guitar": "arp", "cello_db": -5, "lead_db": 2, "plain_fiddle": True},
+    FINAL = {"02": {"guitar": "arp", "gring": True, "cello_db": -8, "lead_db": 3, "strings": False}, "03": {"strings": True, "acc": None}, "04": {"guitar": "arp", "cello_db": -5, "lead_db": 2, "plain_fiddle": True},
              "05": {"swap": {"acc": "flute"}, "strings": True, "harp": True}, "06": {"guitar": True, "cello_db": -8, "lead_db": 3}, "10": {"swap": {"acc": "flute"}, "guitar": True},
              "11": {"cello_db": -8, "lead_db": 3}, "12": {"seed": "2", "guitar": "arp", "strings": False}, "13": {"strings": True, "acc": None}, "14": {"guitar": "arp"},
              "15": {"swap": {"acc": "flute"}, "strings": True}, "16": {"drone": None, "guitar": True, "bass": "finger", "piano": "pulse", "harp": True},
@@ -697,7 +697,8 @@ if __name__ == "__main__":
     # 02 は旋律を直したあと 7.99。旋律はそのままで、チェロ -8dB・旋律 +3dB にして 8.01（鉄琴を外す案は 7.96、ホールの響きは 7.99）
     # 19 は旋律を直したあと 7.97。旋律の楽器をアコーディオンからフィドルに替えて 8.17（チェロ -8dB・旋律 +3dB は 8.00、指のアコギは 7.91）
     # 2026-10-17 全曲にホールの響き（人間の指示「空気を感じる音楽に全部」）とやわらかいアコギを入れたあと、06・11・17 が 7.98〜7.99。
-    #   響きの量やアコギの音量では変わらず、チェロ -8dB・旋律 +3dB で 06: 8.02、11: 8.00、17: 8.01。12 はのばす弦を外して 8.00（チェロ案は 7.96）
+    #   響きの量やアコギの音量では変わらず、チェロ -8dB・旋律 +3dB で 06: 8.02、11: 8.00、17: 8.01。12 はのばす弦を外して 8.00（チェロ案は 7.96）。
+    #   02 はのばす弦を外して 7.98 どまり（響きの量・種類、ピアノやアコギの鳴らし方を変えても 7.97〜7.98）。人間の判断で「このままでよい」
     tune = json.loads(os.environ["C20_TUNE"]) if "C20_TUNE" in os.environ else FINAL   # 試し: C20_TUNE='{"02": {"guitar": "arp"}}' で band を上書き
     for n, s in enumerate(SONGS, 1):
         if which not in ("all", str(n), s["id"]): continue
