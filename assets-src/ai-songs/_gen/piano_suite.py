@@ -41,7 +41,7 @@ def P(id, title, en, image, meter, bpm, key, mode, A, B, lead2, extra, **kw):
 
 SONGS = [
     P("dawn-meadow", "朝霧の草原", "Misty Meadow at Dawn", "春・朝。朝霧がうすく残る草原に、最初の光がさしこむ", "4/4s", 70, "D", "lydian",
-      ("D E/D Bm7 Gmaj7", "Em7 A/C# Bm7 Asus4", "Gmaj7 E/G# Asus4 D"), ("Gmaj7 A/G F#m7 Bm7", "Em7 Gmaj7 Asus4 A", "Gmaj7 Gm6 Asus4 D"), "flute",
+      ("D E/D Bm7 Gmaj7", "Em7 A/C# Bm7 Asus4", "Gmaj7 E/G# Asus4 D"), ("Gmaj7 A/G F#m7 Bm7", "Em7 Gmaj7 Asus4 A", "Gmaj7 Gm6 Asus4 D"), "clarinet",   # 笛 7.96 → クラリネット 8.05（チェロ↓旋律↑ 7.93、ドラム 7.97）
       "リディアン（E のコード）で光がさす感じ。終わりは短調の Gm6 をくぐって D。"),
     P("cherry-river", "桜の川辺", "Cherry Blossom Riverside", "春・昼。川面に桜の花びらが流れていく、おだやかな昼", "3/4", 80, "F", "ionian",
       ("F C/E Dm7 Bbmaj7", "Gm7 C7sus4 Am7 Dm7", "Bbmaj7 Bbm6 C7sus4 F"), ("Bbmaj7 C/Bb Am7 Dm7", "Gm7 Eb C7sus4 C", "Bbmaj7 Db C7sus4 F"), "clarinet",
