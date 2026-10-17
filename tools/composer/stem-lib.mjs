@@ -16,6 +16,9 @@ function newestSource() {
     }
   };
   walk("src/audio");
+  // 音源（.sf3）を直したときも作り直す（2026-10-17: 直す前の音源で点検していた）
+  for (const f of fs.readdirSync(path.join(ROOT, "assets-src/soundfont/extra"))) if (f.endsWith(".sf3")) files.push(path.join("assets-src/soundfont/extra", f));
+  for (const f of fs.readdirSync(path.join(ROOT, "tools/composer"))) if (f.endsWith(".ts")) files.push(path.join("tools/composer", f));
   return Math.max(...files.map((f) => fs.statSync(path.join(ROOT, f)).mtimeMs));
 }
 
