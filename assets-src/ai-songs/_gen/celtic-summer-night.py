@@ -133,7 +133,7 @@ for _k in ("pno1", "pno2", "pno3"):
     S.part(_k, "piano", f"ピアノ右手（和音・{_k[3]}）", 0.09, 0.05, reverb=0.3, sustain=1.5, fx=[{"type": "plate", "mix": 0.15}])
 S.part("pnoL", "piano", "ピアノ左手（低音）", 0.12, 0.05, reverb=0.3, sustain=1.4, fx=[{"type": "plate", "mix": 0.15}])
 for _k, _pan in (("g1", -0.5), ("g2", 0.5), ("g3", -0.5), ("g4", 0.5)):
-    S.part(_k, "guitar", f"アコギ（{_k[1]}本目）", 0.08, _pan, amp="crystal", chorus=0, sustain=1.0, reverb=0.22, autoScoop=False, humanPitch=0, push=0.008 * int(_k[1]), bright=-0.4, fx=[{"type": "eq", "high": -2.5}, {"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.01, "release": 0.12}])
+    S.part(_k, "guitar", f"アコギ（{_k[1]}本目）", 0.08, _pan, amp="crystal", chorus=0, sustain=1.0, reverb=0.22, autoScoop=False, humanPitch=0, push=0.008 * int(_k[1]), bright=-0.65, attack=0.58, release=0.6, fx=[{"type": "eq", "low": 1, "mid": -1.5, "midHz": 2600, "high": -4.5}, {"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.003, "release": 0.12}])   # 2026-10-17 人間の指示「強くていいけど柔らかい音」: 高音と弾く瞬間を抑え、低めを少し足す
 S.part("cello", "strings", "チェロ", 0.13, -0.3, patch="cello", reverb=0.35, release=0.5)
 S.part("bass", "bass", "ベース（指弾き）", 0.24, 0, fx=[{"type": "compressor", "threshold": -18, "ratio": 3, "attack": 0.02, "release": 0.15}])
 S.part("sth", "strings", "弦（上・のばす）", 0.07, 0.35, patch="slowStrings", reverb=0.4, release=0.6)

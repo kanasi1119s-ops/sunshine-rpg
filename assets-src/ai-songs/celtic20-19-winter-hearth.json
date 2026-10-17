@@ -937,17 +937,22 @@
    "autoScoop": false,
    "humanPitch": 0,
    "push": 0.008,
-   "bright": -0.4,
+   "bright": -0.65,
+   "attack": 0.58,
+   "release": 0.6,
    "fx": [
     {
      "type": "eq",
-     "high": -2.5
+     "low": 1,
+     "mid": -1.5,
+     "midHz": 2600,
+     "high": -4.5
     },
     {
      "type": "compressor",
      "threshold": -20,
      "ratio": 2.5,
-     "attack": 0.01,
+     "attack": 0.003,
      "release": 0.12
     }
    ],
@@ -1075,17 +1080,22 @@
    "autoScoop": false,
    "humanPitch": 0,
    "push": 0.016,
-   "bright": -0.4,
+   "bright": -0.65,
+   "attack": 0.58,
+   "release": 0.6,
    "fx": [
     {
      "type": "eq",
-     "high": -2.5
+     "low": 1,
+     "mid": -1.5,
+     "midHz": 2600,
+     "high": -4.5
     },
     {
      "type": "compressor",
      "threshold": -20,
      "ratio": 2.5,
-     "attack": 0.01,
+     "attack": 0.003,
      "release": 0.12
     }
    ],
@@ -1213,17 +1223,22 @@
    "autoScoop": false,
    "humanPitch": 0,
    "push": 0.024,
-   "bright": -0.4,
+   "bright": -0.65,
+   "attack": 0.58,
+   "release": 0.6,
    "fx": [
     {
      "type": "eq",
-     "high": -2.5
+     "low": 1,
+     "mid": -1.5,
+     "midHz": 2600,
+     "high": -4.5
     },
     {
      "type": "compressor",
      "threshold": -20,
      "ratio": 2.5,
-     "attack": 0.01,
+     "attack": 0.003,
      "release": 0.12
     }
    ],
@@ -1351,17 +1366,22 @@
    "autoScoop": false,
    "humanPitch": 0,
    "push": 0.032,
-   "bright": -0.4,
+   "bright": -0.65,
+   "attack": 0.58,
+   "release": 0.6,
    "fx": [
     {
      "type": "eq",
-     "high": -2.5
+     "low": 1,
+     "mid": -1.5,
+     "midHz": 2600,
+     "high": -4.5
     },
     {
      "type": "compressor",
      "threshold": -20,
      "ratio": 2.5,
-     "attack": 0.01,
+     "attack": 0.003,
      "release": 0.12
     }
    ],

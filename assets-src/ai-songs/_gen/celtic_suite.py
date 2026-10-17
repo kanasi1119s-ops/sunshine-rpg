@@ -387,12 +387,13 @@ def build(song, out):
         for k, pan in (("g1", -0.5), ("g2", -0.5 if band.get("gring") else 0.5), ("g3", -0.5), ("g4", 0.5)):
             # 2026-10-17 人間の指示「アコギもう少し音が柔らかいといいかも」: 高音をおさえ（bright -0.4・eq の high -2.5）、強い弾き（!）をやめた。
             #   楽器ごとの点検で、6kHz より上が -14.7dB → 下がり、重心 3.1kHz → 下がったことを確かめる
-            # 2026-10-17 人間の指示「アコギの音、弾き始めも柔らかめで」（gring の曲）: 立ち上がりを少し遅く（attack 0.62）・余韻を長く（release 0.68）、
-            #   コンプは弾いた瞬間の「カツッ」を先に抑える速さ（attack 3ms）にする
-            ring = band.get("gring")
+            # 2026-10-17 人間の指示「アコギの音、弾き始めも柔らかめで」「強くていいんだけど柔らかい音に」: 弾く強さはそのままで、音色を柔らかく。
+            #   高音（bright -0.65・eq high -4.5）と弾いた瞬間の硬さ（2.6kHz を -1.5・コンプ attack 3ms）を抑え、低めを +1。立ち上がりを少し遅く（attack 0.58）。
+            #   鳴らしたままの分散和音（gring）は余韻も長く（release 0.68）
+            ring = band.get("gring"); gs = song.get("gsoft", 1)
             S.part(k, "guitar", f"アコギ（{k[1]}本目）", 0.08, pan, amp="crystal", chorus=0, sustain=1.0, reverb=0.22, autoScoop=False, humanPitch=0, push=0.008 * int(k[1]),
-                   bright=round(-0.4 * song.get("gsoft", 1), 2), **({"attack": 0.62, "release": 0.68} if ring else {}),
-                   fx=[{"type": "eq", "high": round(-2.5 * song.get("gsoft", 1), 2)}, {"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.003 if ring else 0.01, "release": 0.12}])
+                   bright=round(-0.65 * gs, 2), attack=0.58, release=0.68 if ring else 0.6,
+                   fx=[{"type": "eq", "low": 1, "mid": round(-1.5 * gs, 2), "midHz": 2600, "high": round(-4.5 * gs, 2)}, {"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.003, "release": 0.12}])
     if band.get("acc") and "acc" not in leads_used: S.part("L_acc", "accordion", "旋律（acc）", 0.15, 0.25, reverb=0.28, fx=FX["room"])
     if band.get("pizz"): S.part("pizz", "strings", "弦のピチカート", 0.13, -0.3, patch="pizzicato", reverb=0.3)
     if band.get("bass") == "finger": S.part("bass", "bass", "ベース（指弾き）", 0.24, 0, fx=[{"type": "compressor", "threshold": -18, "ratio": 3, "attack": 0.02, "release": 0.15}])
@@ -536,7 +537,7 @@ def build(song, out):
                 vs = {"g3": [], "g2": [f"R:{bt(d)}"]}
                 for j in range(n):
                     m = tl[(j * 2 + bi) % len(tl)] if j % 2 else tl[(j + bi) % len(tl)]
-                    vs["g3" if j % 2 == 0 else "g2"].append(tok(m, min(2 * d, U - j * d), ","))
+                    vs["g3" if j % 2 == 0 else "g2"].append(tok(m, min(2 * d, U - j * d), "," if j else ""))
                 for g, tk in vs.items(): S.put(g, bi, tk)
             elif not is_end: S.put("g3", bi, [tok(tl[(j * 2 + bi) % len(tl)] if j % 2 else tl[(j + bi) % len(tl)], d, "," if j else "") for j in range(n)])
         elif band.get("guitar") and on(sec, "guitar", 3) and not (is_end and i > 0):
