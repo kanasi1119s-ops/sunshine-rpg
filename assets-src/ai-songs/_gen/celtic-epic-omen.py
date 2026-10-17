@@ -194,9 +194,9 @@ for bi, (k, i) in enumerate(plan):
         elif k == "tag": S.put("pnoL", bi, [f"{nm(lr)}:1!", f"{nm(lr)}:1"] if i == 8 else [f"{nm(lr)}:2"])
         else: S.put("pnoL", bi, [f"{nm(x)}:{T3}" + ("!" if j == 0 else ("," if j in (2, 5) else "")) for j, x in enumerate((lr, lo5, lo8, lo5 + 12 if lo5 + 12 < 60 else lo5, lo8, lo5))])
     # ---- アコーディオン（A の後半は和音の3度をのばして息づかい、山場Aでは旋律の1オクターブ下）----
-    if k == "A" and i >= 8: S.put("acc", bi, [f"{nm(low(chord_pcs(ch)[1], 57))}:2"])
+    # （A の後半のアコーディオンの持続は外した: 和音をのばすだけのアコーディオンは点数を下げる。2026-10-17）
     if k == "A3": S.put("acc", bi, S.plain(S.seq(oct_(MA[i], -1)), legato=True))
-    if k == "B" and i >= 8: S.put("acc", bi, [f"{nm(low(chord_pcs(ch)[2], 57))}:{fmt(4 / 3)}", f"{nm(low(chord_pcs(ch)[1], 57))}:{fmt(2 / 3)},"])
+    if False and k == "B" and i >= 8: S.put("acc", bi, [f"{nm(low(chord_pcs(ch)[2], 57))}:{fmt(4 / 3)}", f"{nm(low(chord_pcs(ch)[1], 57))}:{fmt(2 / 3)},"])
     # ---- 鉄琴（前奏のきらめき、山場B で旋律の1オクターブ上）----
     if k == "pro" and i in (3, 5): S.put("glock", bi, [f"{nm(low(chord_pcs(ch)[2], 79))}:1", f"{nm(low(chord_pcs(ch)[0], 84))}:1"])
     if k == "B2": S.put("glock", bi, S.plain(S.seq(oct_(MB[i], 1)), legato=False))
