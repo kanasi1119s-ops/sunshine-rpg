@@ -109,13 +109,16 @@ class Bank:
 
 # ---------- WORLD の分析（キャッシュ） ----------
 _ANA = {}
+SP_DIM = 120  # スペクトル包絡を縮めて保存する次元（ディスクを節約。歌声には十分）
 def analyze(path):
+    """WORLD の分析（f0・スペクトル包絡・非周期性）。縮めた形で ~/.cache に保存して、次からはすぐ読む"""
     if path in _ANA: return _ANA[path]
     os.makedirs(CACHE, exist_ok=True)
-    key = hashlib.md5((path + str(os.path.getmtime(path))).encode()).hexdigest()
+    key = hashlib.md5((path + str(os.path.getmtime(path)) + f"v2-{SP_DIM}").encode()).hexdigest()
     cp = os.path.join(CACHE, key + ".npz")
     if os.path.exists(cp):
-        z = np.load(cp); r = (z["f0"], z["sp"], z["ap"], int(z["sr"]))
+        z = np.load(cp); f0 = z["f0"].astype(np.float64); sr = int(z["sr"])
+        csp = z["csp"].astype(np.float64); cap = z["cap"].astype(np.float64)
     else:
         x, sr = sf.read(path, dtype="float64")
         if x.ndim > 1: x = x.mean(axis=1)
@@ -123,8 +126,15 @@ def analyze(path):
         f0 = pw.stonemask(x, f0, t, sr)
         sp = pw.cheaptrick(x, f0, t, sr)
         ap = pw.d4c(x, f0, t, sr)
-        np.savez_compressed(cp, f0=f0, sp=sp.astype(np.float32), ap=ap.astype(np.float32), sr=sr)
-        r = (f0, sp.astype(np.float32), ap.astype(np.float32), sr)
+        csp = pw.code_spectral_envelope(sp, sr, SP_DIM)
+        cap = pw.code_aperiodicity(ap, sr)
+        np.savez_compressed(cp, f0=f0.astype(np.float32), csp=csp.astype(np.float16), cap=cap.astype(np.float16), sr=sr)
+        csp = csp.astype(np.float16).astype(np.float64); cap = cap.astype(np.float16).astype(np.float64)
+    fft = pw.get_cheaptrick_fft_size(sr)
+    sp = pw.decode_spectral_envelope(np.ascontiguousarray(csp), sr, fft).astype(np.float32)
+    ap = pw.decode_aperiodicity(np.ascontiguousarray(cap), sr, fft).astype(np.float32)
+    r = (f0, sp, ap, sr)
+    if len(_ANA) > 160: _ANA.pop(next(iter(_ANA)))
     _ANA[path] = r
     return r
 
@@ -234,7 +244,26 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
             ap2 = ap2 * (1 - wgt) + a2 * wgt
             fo = np.where(fo > 0, fo, np.where(f2 > 0, 0, 0))
     sp2 = np.exp(lsp2)
+    # 連続音の頭（前の母音の部分）が、録音で「ひ」などのあとのため、かすれた息の音になっていることがある
+    #   （例: 「い み」は「いひみ」から切り出していて、頭の「い」が息まじり）。重ねたときに「ザー」と雑音に聞こえるので、
+    #   頭の部分の「かすれ」を、この音の母音（伸ばす部分）と同じくらいまでに抑える
+    head = (tau < min(oto["ovl"] + 50, max(P_out - 20, 0))) & (fo > 0)
+    tailv = (tau >= C) & (fo > 0)
+    if head.any() and tailv.sum() >= 3:
+        ref = np.median(ap2[tailv], axis=0)
+        ap2 = np.where(head[:, None], np.minimum(ap2, ref[None, :] + 0.12), ap2)
     voiced = fo > 0
+    # 母音の「かすれ」の整理: WORLD の分析では、テトの「い」などで高い音のかすれ（非周期性）が 1 コマごとにばらつき、
+    #   作り直すと「サー」というザラついた雑音に聞こえる（2026-10-18、人間「空のあとに雑音」）。
+    #   有声のところだけ、時間方向にならし（約 45ms）、周波数ごとの上限で抑える。clean=0 で止める
+    cl = float((opts or {}).get("clean", 1.0))
+    if cl > 0 and voiced.sum() > 3:
+        nb0 = ap2.shape[1]; fq = np.arange(nb0) * (sr / 2) / (nb0 - 1)
+        from scipy.ndimage import uniform_filter1d
+        sm = uniform_filter1d(ap2, 9, axis=0, mode="nearest")
+        capf = 0.06 + 0.5 * np.clip((fq - 1500) / 6500, 0, 1)
+        cleaned = np.minimum(sm, capf[None, :])
+        ap2 = np.where(voiced[:, None], ap2 * (1 - cl) + cleaned * cl, ap2)
     # 元の録音の細かい揺れを、少しだけ残す
     med = np.median(fo[voiced]) if voiced.any() else 0
     jit = np.ones(k)
