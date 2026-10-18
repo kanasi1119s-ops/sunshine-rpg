@@ -249,12 +249,17 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
     L = out_len * 1000
     k = len(f0_target)
     tau = np.arange(k) * FP
-    P_out = min(oto["pre"], C)
-    lsp2, ap2, fo, sr = _frames(oto, tau, L, P_out, C)
+    # 先行発声を縮めたとき（短い音が続くとき）は、子音も同じ割合で縮める。縮めないと母音の頭がうしろにずれて、
+    #   リズムが「引っかかる」（2026-10-19、人間「霧の底に眠るがなめらかじゃない」）
+    P_out = min(oto.get("_pre_out", oto["pre"]), C)
+    fs = P_out / max(min(oto["pre"], C), 1e-6)
+    C_out = C * fs if fs < 0.999 else C
+    C = C_out
+    lsp2, ap2, fo, sr = _frames(oto, tau, L, P_out, C_out)
     bl = oto.get("_blend")
     if bl:
         o2, wgt = bl
-        l2, a2, f2, sr2 = _frames(o2, tau, L, P_out, C)
+        l2, a2, f2, sr2 = _frames(o2, tau, L, P_out, C_out)
         if sr2 == sr and l2.shape == lsp2.shape:
             # 2つの声の大きさの差は、母音のところの平均でそろえてから混ぜる
             vm = (fo > 0) & (f2 > 0)
@@ -279,16 +284,19 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
     nb1 = ap2.shape[1]; fq1 = np.arange(nb1) * (sr / 2) / (nb1 - 1)
     mid = (fq1 > 1000) & (fq1 < 4000)
     apm = ap2[:, mid].mean(1)
-    voiced = voiced & (apm < 0.5)
+    vfix = bool((opts or {}).get("voicingFix", True))
+    if vfix and is_unvoiced_cons((opts or {}).get("_lyric", "")): voiced = voiced & (apm < 0.5)   # 息の子音のときだけ
     # 母音（先行発声の少しあと〜）は、歌なので必ず声にする。日本語の「き」「く」「し」などは、録音で母音が
     #   ささやき声（無声化）になっていて、そのままだと「フーッ」と息を吹きかけるような音になる（2026-10-18、人間「息を吹きかけるようなノイズ」）
-    force = tau >= (P_out + 45)
+    force = (tau >= (P_out + 45)) if vfix else np.zeros(k, bool)
     voiced = voiced | force
     fo = np.where(voiced, np.where(fo > 0, fo, f0_target), 0.0)
     # 母音らしいコマ（声の大きさが母音に近い）だけを「整える」対象にする
     en = lsp2.max(1) if lsp2.ndim == 2 else np.zeros(k)
     vref = np.percentile(en[voiced], 80) if voiced.sum() > 3 else 0
     vowelish = (voiced & (en > vref - np.log(10 ** (8 / 10)))) | force
+    # ラ・ナ・マ・ヤ・ワ行などの有声の子音は、子音の所も「声」として整える（「り」の頭がザラつくため）
+    if not is_unvoiced_cons((opts or {}).get("_lyric", "x")): vowelish = vowelish | voiced
     # 母音の「かすれ」の整理: WORLD の分析では、テトの「い」などで高い音のかすれ（非周期性）が 1 コマごとにばらつき、
     #   作り直すと「サー」というザラついた雑音に聞こえる（2026-10-18、人間「空のあとに雑音」）。
     #   有声のところだけ、時間方向にならし（約 45ms）、周波数ごとの上限で抑える。clean=0 で止める
@@ -337,6 +345,17 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
     if abs(dyn) > 1e-3:
         tilt = (2.0 if dyn > 0 else 1.5) * dyn * np.clip(np.log2(np.maximum(freqs, 1) / 800) / 3, 0, 1)
         sp2 = sp2 * (10 ** (tilt / 10))[None, :]
+    if o.get("_params"):
+        # 1 本の声として合成するため、波形ではなく「声の設計図」（音程・スペクトル・かすれ）を返す
+        g = vel * 10 ** (dyn * 8 / 20)
+        sp2 = sp2 * g * g
+        # 子音の破裂（k・t・p）を、母音の大きさに合わせて抑える
+        E = sp2.sum(1); kc = tau < C
+        if kc.any() and (~kc).sum() > 2:
+            ref = np.median(E[~kc]) * float(o.get("burst", 0.9)) ** 2
+            sc = np.minimum(1.0, ref / (E + 1e-20)); sc[~kc] = 1.0
+            sp2 = sp2 * sc[:, None]
+        return {"f0": f0, "sp": sp2, "ap": np.clip(ap2, 0, 1), "sr": sr}
     y = pw.synthesize(np.ascontiguousarray(f0, dtype=np.float64), np.ascontiguousarray(sp2, dtype=np.float64), np.ascontiguousarray(np.clip(ap2, 0, 1), dtype=np.float64), sr, FP)
     if sr != sr_out:
         y = signal.resample_poly(y, sr_out, sr)
@@ -409,6 +428,8 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
             if pre - ovl > room > 0:
                 f = room / (pre - ovl); pre *= f; ovl *= f
         p["pre"], p["ovl"] = pre, max(ovl, 0.004)
+        if pre < p["oto"]["pre"] / 1000 - 1e-4:
+            p["oto"] = {**p["oto"], "_pre_out": pre * 1000}
     last_end = max(p["end"] for p in pieces)
     total = max(total_sec or 0, last_end + 1.5)
     vib0 = float(vdef.get("vibrato", 16)); scoop0 = float(vdef.get("scoop", 0.0))
@@ -425,51 +446,70 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
     semis = semis + float(vdef.get("transpose", 0))
     hz = 440.0 * 2 ** ((semis - 69) / 12)
     out = np.zeros(int(total * sr_out) + sr_out)
-    # 4) ピースごとに作って、重ねる
+    # 4) ピースごとの「声の設計図」を、フレーズごとに 1 本につないでから、まとめて合成する
+    #    （波形を重ねると、つなぎ目で 2 つの声が二重になって「引っかかる」ため。2026-10-19）
+    NF = len(hz)
+    phrases, cur = [], []
     for i, p in enumerate(pieces):
-        a = p["start"] - p["pre"]
-        nxt = pieces[i + 1] if i + 1 < len(pieces) else None
-        joined = nxt is not None and not nxt["head"]
-        if joined: b = nxt["start"] - nxt["pre"] + nxt["ovl"]
-        else: b = p["end"] + 0.03
-        b = max(b, a + 0.05)
-        k0 = int(a * 1000 / FP); k1 = int(b * 1000 / FP)
-        ft = hz[np.clip(np.arange(k0, k1), 0, len(hz) - 1)]
-        vel = np.mean([ev[3] for ev in p["events"]])
-        dyn = interp_map(vdef.get("dynamics"), p["beat"], 0.0) + 0.25 * (vel - 1) / 0.18 * 0.5
-        po = {**vdef, "_dyn": float(np.clip(dyn, -1, 1)), "_lyric": p["lyric"]}
-        y = render_piece(p["oto"], b - a, ft, vel, sr_out, po)
-        # 息つぎ: 前に 0.45 秒以上の休みがあるフレーズの頭で、小さく息を吸う
-        br = float(vdef.get("breath", 0.0))
-        if p["head"] and br > 0 and (i == 0 or p["start"] - pieces[i - 1]["end"] >= 0.45):
-            bl_ = breath_in(sr_out, 0.24, seed=i)
-            bs = int((a - 0.30) * sr_out)
-            if bs >= 0:
-                out[bs:bs + len(bl_)] += bl_ * 0.022 * br * (1 + 0.5 * max(0, po["_dyn"]))
-        n0 = int(a * sr_out); y = y[: max(0, int((b - a) * sr_out))]
-        env = np.ones(len(y))
-        fi = min(len(y), int(p["ovl"] * sr_out)) if not p["head"] else min(len(y), int(0.022 * sr_out))
-        if fi > 0: env[:fi] = np.sin(np.linspace(0, np.pi / 2, fi)) ** 2
-        fo = min(len(y), int(nxt["ovl"] * sr_out)) if joined else min(len(y), int(0.07 * sr_out))
-        if fo > 0: env[-fo:] *= np.cos(np.linspace(0, np.pi / 2, fo)) ** 2
-        if n0 < 0: y, env, n0 = y[-n0:], env[-n0:], 0
-        out[n0:n0 + len(y)] += (y * env)[: len(out) - n0]
-        # フレーズの終わり: 「母音 R」で自然に息を抜く
-        if not joined:
-            tl = bank.tail(p["vowel"])
-            if tl and bank2 is not None:
-                t2 = bank2.tail(p["vowel"])
-                if t2: tl = {**tl, "_blend": (t2, bamt)}
-            if tl:
-                ta = p["end"] - tl["pre"] / 1000; tb = p["end"] + float(vdef.get("tailLen", 0.12))
-                kk0, kk1 = int(ta * 1000 / FP), int(tb * 1000 / FP)
-                ft2 = hz[np.clip(np.arange(kk0, kk1), 0, len(hz) - 1)]
-                y2 = render_piece(tl, tb - ta, ft2, vel * 0.9, sr_out, {**po, "_lyric": ""})[: int((tb - ta) * sr_out)]
-                e2 = np.ones(len(y2)); f2 = min(len(y2), int(max(tl["ovl"], 30) / 1000 * sr_out) + int(0.03 * sr_out))
-                e2[:f2] = np.sin(np.linspace(0, np.pi / 2, f2)) ** 2
-                g2 = min(len(y2), int(0.11 * sr_out)); e2[-g2:] *= np.cos(np.linspace(0, np.pi / 2, g2)) ** 2
-                m0 = int(ta * sr_out)
-                out[m0:m0 + len(y2)] += (y2 * e2)[: len(out) - m0]
+        if p["head"] and cur: phrases.append(cur); cur = []
+        cur.append(i)
+    if cur: phrases.append(cur)
+    for ph in phrases:
+        items = []   # (k0, params, env)
+        for i in ph:
+            p = pieces[i]
+            a = p["start"] - p["pre"]
+            nxt = pieces[i + 1] if i + 1 < len(pieces) else None
+            joined = nxt is not None and not nxt["head"]
+            if joined: b = nxt["start"] - nxt["pre"] + nxt["ovl"]
+            else: b = p["end"] + 0.03
+            b = max(b, a + 0.05)
+            k0 = int(round(a * 1000 / FP)); k1 = int(round(b * 1000 / FP))
+            ft = hz[np.clip(np.arange(k0, k1), 0, NF - 1)]
+            vel = np.mean([ev[3] for ev in p["events"]])
+            dyn = interp_map(vdef.get("dynamics"), p["beat"], 0.0) + 0.25 * (vel - 1) / 0.18 * 0.5
+            po = {**vdef, "_dyn": float(np.clip(dyn, -1, 1)), "_lyric": p["lyric"], "_params": True}
+            pr = render_piece(p["oto"], (k1 - k0) * FP / 1000, ft, vel, sr_out, po)
+            n = len(pr["f0"]); env = np.ones(n)
+            fi = max(1, int(round((p["ovl"] if not p["head"] else 0.02) * 1000 / FP)))
+            fi = min(fi, n); env[:fi] = np.sin(np.linspace(0, np.pi / 2, fi + 1)[1:]) ** 2
+            fo = max(1, int(round((nxt["ovl"] if joined else 0.06) * 1000 / FP))); fo = min(fo, n)
+            env[n - fo:] *= np.cos(np.linspace(0, np.pi / 2, fo + 1)[:-1]) ** 2
+            items.append((k0, pr, env))
+            if not joined:
+                tl = bank.tail(p["vowel"])
+                if tl and bank2 is not None:
+                    t2 = bank2.tail(p["vowel"])
+                    if t2: tl = {**tl, "_blend": (t2, bamt)}
+                if tl:
+                    ta = p["end"] - tl["pre"] / 1000; tb = p["end"] + float(vdef.get("tailLen", 0.12))
+                    kk0 = int(round(ta * 1000 / FP)); kk1 = int(round(tb * 1000 / FP))
+                    ft2 = hz[np.clip(np.arange(kk0, kk1), 0, NF - 1)]
+                    pr2 = render_piece(tl, (kk1 - kk0) * FP / 1000, ft2, vel * 0.9, sr_out, {**po, "_lyric": ""})
+                    n2 = len(pr2["f0"]); e2 = np.ones(n2)
+                    f2 = min(n2, int(round((max(tl["ovl"], 30) / 1000 + 0.03) * 1000 / FP)))
+                    e2[:f2] = np.sin(np.linspace(0, np.pi / 2, f2 + 1)[1:]) ** 2
+                    g2 = min(n2, int(round(110 / FP))); e2[n2 - g2:] *= np.cos(np.linspace(0, np.pi / 2, g2 + 1)[:-1]) ** 2
+                    items.append((kk0, pr2, e2))
+        K0 = min(k for k, _, _ in items); K1 = max(k + len(pr["f0"]) for k, pr, _ in items)
+        srp = items[0][1]["sr"]; nb = items[0][1]["sp"].shape[1]
+        LS = np.zeros((K1 - K0, nb)); AP = np.zeros((K1 - K0, nb)); WS = np.zeros(K1 - K0)
+        FV = np.zeros(K1 - K0); WV = np.zeros(K1 - K0); WU = np.zeros(K1 - K0)
+        for k, pr, env in items:
+            sl = slice(k - K0, k - K0 + len(env)); w = env[:, None]
+            LS[sl] += np.log(np.maximum(pr["sp"], 1e-20)) * w; AP[sl] += pr["ap"] * w; WS[sl] += env
+            v = pr["f0"] > 0
+            FV[sl] += np.where(v, pr["f0"], 0) * env; WV[sl] += np.where(v, env, 0); WU[sl] += np.where(v, 0, env)
+        Wn = np.maximum(WS, 1e-9)
+        spF = np.exp(LS / Wn[:, None]) * np.minimum(WS, 1.0)[:, None] ** 2 + 1e-16
+        apF = np.clip(AP / Wn[:, None], 0, 1)
+        f0F = np.where(WV > WU, FV / np.maximum(WV, 1e-9), 0.0)
+        y = pw.synthesize(np.ascontiguousarray(f0F), np.ascontiguousarray(spF), np.ascontiguousarray(apF), srp, FP)
+        if srp != sr_out: y = signal.resample_poly(y, sr_out, srp)
+        n0 = int(round(K0 * FP / 1000 * sr_out))
+        if n0 < 0: y = y[-n0:]; n0 = 0
+        m = min(len(y), len(out) - n0)
+        out[n0:n0 + m] += y[:m]
     # 人間らしい音量のゆれ: 長い音は少しふくらんでから引く。ビブラートに合わせてわずかに大きさもゆれる
     amp = np.ones(len(t))
     for ev in events:
