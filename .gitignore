@@ -24,3 +24,6 @@ dist-composer/
 dist-songs/
 __pycache__/
 .claude/worktrees/
+
+# 歌声の音源（再配布禁止のため、リポジトリに入れない）
+assets-src/voicebanks/

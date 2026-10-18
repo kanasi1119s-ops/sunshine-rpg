@@ -113,6 +113,17 @@ export async function openSongKit() {
     fs.writeFileSync(files.project, JSON.stringify({ format: "sunshine-song", version: 1, name: song.title, edition, sources: { bass, drums, guitar, orchestra, piano }, score }));
     const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
     fs.writeFileSync(files.midi, scoreToMidi(edited));
+    // 歌の楽譜（UST）: UTAU・OpenUtau・Synthesizer V で開ける。歌が複数あれば 1 つずつ
+    if (Array.isArray(songData?.vocals) && songData.vocals.length) {
+      const tmpSong = path.join(out, `${name}.vocals.json`);
+      fs.writeFileSync(tmpSong, JSON.stringify({ bpm: songData.bpm, title: songData.title, vocals: songData.vocals }));
+      files.ust = [];
+      songData.vocals.forEach((_, i) => {
+        const u = path.join(out, `${name}-vocal${songData.vocals.length > 1 ? i + 1 : ""}.ust`);
+        try { execFileSync("python3", [path.join(ROOT, "tools/singer/sing.py"), "ust", tmpSong, u, "--index", String(i)], { stdio: "ignore" }); files.ust.push(u); } catch { /* 歌の楽譜が書けなくても続ける */ }
+      });
+      fs.rmSync(tmpSong, { force: true });
+    }
     // ゲーム内の曲の切り替え（BgmDirector）が読む、ループ点・導入と終わりの型・ボスの段階の表
     try { const { buildManifest } = await load("/src/audio/song-meta.ts"); files.manifest = path.join(out, `${name}.manifest.json`); fs.writeFileSync(files.manifest, JSON.stringify(buildManifest(name, song.title, score, getScoreDurationSec(score)))); } catch { /* 表が作れなくても曲の書き出しは続ける */ }
     if (wav) {
@@ -126,6 +137,14 @@ export async function openSongKit() {
         try { execFileSync("python3", [path.join(ROOT, "tools/audio-check/declick.py"), files.wav], { stdio: "ignore", maxBuffer: 1 << 26 }); } catch { /* 直せなくても書き出しは続ける */ }
       };
       declick();
+      // 歌（2026-10-18、人間の指示「作曲ソフトに歌う機能を追加しよう」）: 曲の "vocals" を歌声エンジン（tools/singer/sing.py）で歌わせ、
+      //   伴奏に混ぜる。残響（space）と仕上げ（master）は、歌と伴奏をまとめてかける
+      if (Array.isArray(songData?.vocals) && songData.vocals.length) {
+        const tmpSong = files.wav + ".song.json";
+        fs.writeFileSync(tmpSong, JSON.stringify({ bpm: songData.bpm, title: songData.title, vocals: songData.vocals, vocalLevel: songData.vocalLevel }));
+        execFileSync("python3", [path.join(ROOT, "tools/singer/sing.py"), "mix", tmpSong, files.wav], { stdio: "inherit", maxBuffer: 1 << 26 });
+        fs.rmSync(tmpSong, { force: true });
+      }
       // 仕上げの音量: 書き出しのときだけ、全体の大きさをそろえる（ゲーム中の再生やアプリの音は変わらない）。ピークは -1dB 以下に抑える
       // 空間（畳み込みリバーブ）: 自作のIRで、書き出しのときだけ残響を足す（hall / room / plate）
       if (space) {
