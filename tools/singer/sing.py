@@ -109,7 +109,7 @@ class Bank:
 
 # ---------- WORLD の分析（キャッシュ） ----------
 _ANA = {}
-SP_DIM = 120  # スペクトル包絡を縮めて保存する次元（ディスクを節約。歌声には十分）
+SP_DIM = 200  # スペクトル包絡を縮めて保存する次元（ディスクを節約。歌声には十分）
 def analyze(path):
     """WORLD の分析（f0・スペクトル包絡・非周期性）。縮めた形で ~/.cache に保存して、次からはすぐ読む"""
     if path in _ANA: return _ANA[path]
@@ -139,13 +139,13 @@ def analyze(path):
     return r
 
 # ---------- 楽譜を読む ----------
-NOTE_RE = re.compile(r"^([A-G])(#|b)?(-?\d)([!?]*)$")
+NOTE_RE = re.compile(r"^([A-G])(#|b)?(-?\d)([!?/~\\^]*)$")
 def midi_of(name):
     m = NOTE_RE.match(name)
     if not m: raise ValueError(f"音名が読めません「{name}」")
     n = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}[m.group(1)] + {"#": 1, "b": -1, None: 0}[m.group(2)]
     vel = 1.0 + 0.18 * m.group(4).count("!") - 0.2 * m.group(4).count("?")
-    return 12 * (int(m.group(3)) + 1) + n, vel
+    return 12 * (int(m.group(3)) + 1) + n, vel, m.group(4)
 
 def parse_notes(text):
     """"D4:1:よ R:1 E4:1:ー" → [{"beat","len","midi","lyric","vel"}]（休みは lyric=None）"""
@@ -153,51 +153,71 @@ def parse_notes(text):
     for tok in text.split():
         parts = tok.split(":")
         if parts[0] == "R":
-            ln = float(parts[1]); out.append({"beat": beat, "len": ln, "midi": None, "lyric": None, "vel": 1}); beat += ln; continue
+            ln = float(parts[1]); out.append({"beat": beat, "len": ln, "midi": None, "lyric": None, "vel": 1, "fl": ""}); beat += ln; continue
         if len(parts) < 3: raise ValueError(f"「音名:拍:歌詞」の形ではありません「{tok}」")
-        midi, vel = midi_of(parts[0]); ln = float(parts[1]); ly = parts[2]
-        out.append({"beat": beat, "len": ln, "midi": midi, "lyric": ly, "vel": vel}); beat += ln
+        midi, vel, fl = midi_of(parts[0]); ln = float(parts[1]); ly = parts[2]
+        out.append({"beat": beat, "len": ln, "midi": midi, "lyric": ly, "vel": vel, "fl": fl}); beat += ln
     return out
 
 # ---------- 音程の線 ----------
-def pitch_curve(events, total, rng, vib):
-    """events: [(start, end, midi)]（秒）。5ms ごとの半音の値を返す。音の切りかわりはなめらかに、長い音には控えめなビブラート"""
+def pitch_curve(events, total, rng, vdef):
+    """events: [{"s","e","m","fl","vib","head","scoop"}]（秒）。5ms ごとの半音の値を返す。
+    音の切りかわりはなめらかに。しゃくり（下からすくい上げる）・フォール・ビブラートは音ごとに"""
     n = int(total * 1000 / FP) + 2
     t = np.arange(n) * FP / 1000
     cur = np.full(n, np.nan)
-    for s, e, m in events:
-        cur[(t >= s) & (t < e)] = m
-    # 休みのところは近い音で埋める（息つぎの子音などのため）
+    for ev in events:
+        cur[(t >= ev["s"]) & (t < ev["e"])] = ev["m"]
     idx = np.where(~np.isnan(cur))[0]
     if len(idx) == 0: return t, np.full(n, 60.0)
     cur = np.interp(np.arange(n), idx, cur[idx])
     out = cur.copy()
     for i in range(1, len(events)):
-        ps, pe, pm = events[i - 1]; s, e, m = events[i]
+        pv, ev = events[i - 1], events[i]
+        ps, pe, pm = pv["s"], pv["e"], pv["m"]; s, e, m = ev["s"], ev["e"], ev["m"]
         if s - pe > 0.25 or pm == m: continue
         g = min(0.13, 0.45 * (e - s), 0.45 * (pe - ps)) * (1.0 + 0.04 * min(abs(m - pm), 7))
         a, b = s - 0.45 * g, s + 0.55 * g
         sel = (t >= a) & (t < b + 0.12)
         x = np.clip((t[sel] - a) / (b - a), 0, 1)
         sm = x * x * (3 - 2 * x)
-        # 少しだけ行きすぎて戻る（声らしさ）。大きく跳ぶほど少し大きく
         over = 0.06 * (m - pm) * np.exp(-np.clip((t[sel] - b), 0, None) / 0.05) * (t[sel] > b)
         out[sel] = pm + (m - pm) * sm + over
-    # ビブラート: 0.45 秒より長い音の、後ろ半分にだけ。深さは ±vib セント
-    if vib > 0:
-        for s, e, m in events:
-            d = e - s
-            if d < 0.45: continue
-            st = s + max(0.22, 0.38 * d)
+    vibfree = None; vibarr = np.zeros(n)
+    for ev in events:
+        s, e, m = ev["s"], ev["e"], ev["m"]; d = e - s
+        # しゃくり: 少し下から入って、すっと上がる
+        sc = ev.get("scoop", 0.0)
+        if sc > 0:
+            ln = min(0.16, 0.45 * d)
+            sel = (t >= s - 0.03) & (t < s + ln)
+            x = np.clip((t[sel] - (s - 0.03)) / (ln + 0.03), 0, 1)
+            out[sel] -= sc * (1 - x) ** 2
+        # フォール: 終わりで少し下げる
+        if "\\" in ev["fl"]:
+            sel = (t >= e - 0.18) & (t < e + 0.05)
+            x = np.clip((t[sel] - (e - 0.18)) / 0.23, 0, 1)
+            out[sel] -= 1.6 * x ** 2
+        # ビブラート: 長い音の後ろに。深さ（セント）は音ごと
+        vb = ev.get("vib", 0.0)
+        if vb > 0 and d >= 0.42:
+            st = s + max(0.2, 0.33 * d)
             sel = (t >= st) & (t < e)
             if not sel.any(): continue
             tt = t[sel] - st
-            ramp = np.clip(tt / 0.35, 0, 1) * np.clip((e - t[sel]) / 0.08, 0, 1)
-            rate = 5.3 + 0.25 * np.sin(2 * np.pi * 0.7 * tt)
-            out[sel] += (vib / 100.0) * ramp * np.sin(2 * np.pi * np.cumsum(rate) * FP / 1000)
-    # ゆっくりしたゆらぎ（±4 セントほど）
+            ramp = np.clip(tt / 0.4, 0, 1) ** 1.5 * np.clip((e - t[sel]) / 0.1, 0, 1)
+            rate = float(vdef.get("vibratoRate", 5.4)) + 0.3 * np.sin(2 * np.pi * 0.6 * tt + m)
+            vv = (vb / 100.0) * ramp * np.sin(2 * np.pi * np.cumsum(rate) * FP / 1000)
+            out[sel] += vv; vibarr[sel] += vv
     drift = np.convolve(rng.standard_normal(n), np.ones(80) / 80, mode="same") * 0.35
+    pitch_curve.vibpart = vibarr
     return t, out + drift
+
+def interp_map(mp, x, default):
+    """[[拍, 値], ...] を x 拍で読む（間はなめらかに）"""
+    if not mp: return default
+    xs = [float(a) for a, _ in mp]; ys = [float(b) for _, b in mp]
+    return float(np.interp(x, xs, ys))
 
 # ---------- 1 音分をつくる ----------
 def _frames(oto, tau, L, P_out, C_out):
@@ -261,7 +281,7 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
         nb0 = ap2.shape[1]; fq = np.arange(nb0) * (sr / 2) / (nb0 - 1)
         from scipy.ndimage import uniform_filter1d
         sm = uniform_filter1d(ap2, 9, axis=0, mode="nearest")
-        capf = 0.06 + 0.5 * np.clip((fq - 1500) / 6500, 0, 1)
+        capf = 0.03 + 0.42 * np.clip((fq - 1800) / 6500, 0, 1)
         cleaned = np.minimum(sm, capf[None, :])
         ap2 = np.where(voiced[:, None], ap2 * (1 - cl) + cleaned * cl, ap2)
     # 元の録音の細かい揺れを、少しだけ残す
@@ -295,10 +315,23 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
         # 高い帯域（サ行の「スー」）は強めない（強めると、かすれた雑音に聞こえる）
         fw = np.clip((6000 - freqs) / 3000, 0, 1)
         sp2 = sp2 * (1 + (cg ** 2 - 1) * cmask[:, None] * fw[None, :])
+    # 強弱（フォルテ・ピアノ）: 強いほど明るく、弱いほどやわらかく息まじりに
+    dyn = float(o.get("_dyn", 0.0))
+    if abs(dyn) > 1e-3:
+        tilt = (2.0 if dyn > 0 else 1.5) * dyn * np.clip(np.log2(np.maximum(freqs, 1) / 800) / 3, 0, 1)
+        sp2 = sp2 * (10 ** (tilt / 10))[None, :]
     y = pw.synthesize(np.ascontiguousarray(f0, dtype=np.float64), np.ascontiguousarray(sp2, dtype=np.float64), np.ascontiguousarray(np.clip(ap2, 0, 1), dtype=np.float64), sr, FP)
     if sr != sr_out:
         y = signal.resample_poly(y, sr_out, sr)
-    return y * vel
+    return y * vel * 10 ** (dyn * 8 / 20)
+
+def breath_in(sr, length=0.26, seed=0):
+    """息を吸う音（やわらかい雑音）"""
+    r = np.random.default_rng(seed); n = int(length * sr)
+    x = r.standard_normal(n)
+    b, a = signal.butter(2, [900 / (sr / 2), 5200 / (sr / 2)], "band"); x = signal.lfilter(b, a, x)
+    env = np.sin(np.linspace(0, np.pi, n)) ** 1.5 * np.linspace(0.6, 1.0, n)
+    return x * env / (np.max(np.abs(x)) + 1e-9)
 
 def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
     notes = parse_notes(vdef["notes"])
@@ -312,8 +345,8 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
         if n["lyric"] is None:
             prev_rest = True; continue
         if n["lyric"] in ("ー", "-", "~") and pieces and not prev_rest:
-            pieces[-1]["end"] = e; pieces[-1]["events"].append((s, e, n["midi"], n["vel"])); continue
-        pieces.append({"lyric": n["lyric"], "start": s, "end": e, "events": [(s, e, n["midi"], n["vel"])], "head": prev_rest})
+            pieces[-1]["end"] = e; pieces[-1]["events"].append((s, e, n["midi"], n["vel"], n["fl"], n["beat"])); continue
+        pieces.append({"lyric": n["lyric"], "start": s, "end": e, "events": [(s, e, n["midi"], n["vel"], n["fl"], n["beat"])], "head": prev_rest, "beat": n["beat"]})
         prev_rest = False
     if not pieces: return np.zeros((int(sr_out * (total_sec or 1)), 2))
     # 2) 音を選ぶ・前の母音（blend があれば、もう1つの声の同じ音も選んでおく）
@@ -343,9 +376,17 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
         p["pre"], p["ovl"] = pre, max(ovl, 0.004)
     last_end = max(p["end"] for p in pieces)
     total = max(total_sec or 0, last_end + 1.5)
-    events = [(s, e, m) for p in pieces for (s, e, m, v) in p["events"]]
-    vib = float(vdef.get("vibrato", 16))
-    t, semis = pitch_curve(events, total, rng, vib)
+    vib0 = float(vdef.get("vibrato", 16)); scoop0 = float(vdef.get("scoop", 0.0))
+    events, prevm = [], None
+    for p in pieces:
+        for k, (s, e, m, v, fl, bt) in enumerate(p["events"]):
+            vb = interp_map(vdef.get("vibratoMap"), bt, vib0) * (1.6 if "~" in fl else 1.0)
+            sc = 0.0
+            if "/" in fl: sc = 1.4
+            elif scoop0 > 0 and k == 0 and (p["head"] or (prevm is not None and m - prevm >= 4 and e - s >= 0.35)): sc = scoop0
+            events.append({"s": s, "e": e, "m": m, "fl": fl, "vib": vb, "scoop": sc})
+            prevm = m
+    t, semis = pitch_curve(events, total, rng, vdef)
     semis = semis + float(vdef.get("transpose", 0))
     hz = 440.0 * 2 ** ((semis - 69) / 12)
     out = np.zeros(int(total * sr_out) + sr_out)
@@ -359,8 +400,17 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
         b = max(b, a + 0.05)
         k0 = int(a * 1000 / FP); k1 = int(b * 1000 / FP)
         ft = hz[np.clip(np.arange(k0, k1), 0, len(hz) - 1)]
-        vel = np.mean([v for (_, _, _, v) in p["events"]])
-        y = render_piece(p["oto"], b - a, ft, vel, sr_out, vdef)
+        vel = np.mean([ev[3] for ev in p["events"]])
+        dyn = interp_map(vdef.get("dynamics"), p["beat"], 0.0) + 0.25 * (vel - 1) / 0.18 * 0.5
+        po = {**vdef, "_dyn": float(np.clip(dyn, -1, 1))}
+        y = render_piece(p["oto"], b - a, ft, vel, sr_out, po)
+        # 息つぎ: 前に 0.45 秒以上の休みがあるフレーズの頭で、小さく息を吸う
+        br = float(vdef.get("breath", 0.0))
+        if p["head"] and br > 0 and (i == 0 or p["start"] - pieces[i - 1]["end"] >= 0.45):
+            bl_ = breath_in(sr_out, 0.24, seed=i)
+            bs = int((a - 0.30) * sr_out)
+            if bs >= 0:
+                out[bs:bs + len(bl_)] += bl_ * 0.022 * br * (1 + 0.5 * max(0, po["_dyn"]))
         n0 = int(a * sr_out); y = y[: max(0, int((b - a) * sr_out))]
         env = np.ones(len(y))
         fi = min(len(y), int(p["ovl"] * sr_out)) if not p["head"] else min(len(y), int(0.006 * sr_out))
@@ -379,12 +429,24 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
                 ta = p["end"] - tl["pre"] / 1000; tb = p["end"] + 0.22
                 kk0, kk1 = int(ta * 1000 / FP), int(tb * 1000 / FP)
                 ft2 = hz[np.clip(np.arange(kk0, kk1), 0, len(hz) - 1)]
-                y2 = render_piece(tl, tb - ta, ft2, vel * 0.9, sr_out, vdef)[: int((tb - ta) * sr_out)]
+                y2 = render_piece(tl, tb - ta, ft2, vel * 0.9, sr_out, po)[: int((tb - ta) * sr_out)]
                 e2 = np.ones(len(y2)); f2 = min(len(y2), int(max(tl["ovl"], 30) / 1000 * sr_out) + int(0.03 * sr_out))
                 e2[:f2] = np.sin(np.linspace(0, np.pi / 2, f2)) ** 2
                 g2 = min(len(y2), int(0.06 * sr_out)); e2[-g2:] *= np.linspace(1, 0, g2)
                 m0 = int(ta * sr_out)
                 out[m0:m0 + len(y2)] += (y2 * e2)[: len(out) - m0]
+    # 人間らしい音量のゆれ: 長い音は少しふくらんでから引く。ビブラートに合わせてわずかに大きさもゆれる
+    amp = np.ones(len(t))
+    for ev in events:
+        d = ev["e"] - ev["s"]
+        if d < 0.6: continue
+        sel = (t >= ev["s"]) & (t < ev["e"] + 0.05)
+        x = (t[sel] - ev["s"]) / d
+        amp[sel] *= 10 ** ((1.4 * np.sin(np.pi * np.clip(x / 0.7, 0, 1)) * (x < 0.7) - 1.8 * np.clip((x - 0.7) / 0.3, 0, 1) ** 2) / 20)
+    vp = getattr(pitch_curve, "vibpart", np.zeros(len(t)))[: len(t)]
+    amp *= 1 + 0.35 * vp
+    ampS = np.interp(np.arange(len(out)) / sr_out, t[: len(amp)], amp)
+    out = out * ampS
     return out[: int(total * sr_out)]
 
 # ---------- 声の仕上げ（EQ・コンプ・残響） ----------
@@ -417,14 +479,16 @@ def polish(x, sr, vdef):
     win = int(0.02 * sr)
     rms = np.sqrt(np.convolve(x * x, np.ones(win) / win, mode="same") + 1e-12)
     lv = 20 * np.log10(rms + 1e-9)
-    thr = -24.0
-    gr = np.where(lv > thr, (thr - lv) * (1 - 1 / 3.0), 0.0)
+    thr = -17.0
+    gr = np.where(lv > thr, (thr - lv) * (1 - 1 / 1.8), 0.0)
     gr = signal.lfilter([0.002], [1, -0.998], gr) if False else gr
-    sm = np.zeros_like(gr); g = 0.0
-    att, rel = np.exp(-1 / (0.008 * sr)), np.exp(-1 / (0.12 * sr))
-    for i in range(0, len(gr), 32):
+    # 32 サンプルごとに追いかけ、その間はなめらかにつなぐ（段差があると「ジリジリ」とひずんで聞こえるため）
+    idx = np.arange(0, len(gr), 32); gs = np.zeros(len(idx)); g = 0.0
+    att, rel = np.exp(-32 / (0.010 * sr)), np.exp(-32 / (0.15 * sr))
+    for j, i in enumerate(idx):
         tgt = gr[i]; c = att if tgt < g else rel
-        g = tgt + (g - tgt) * c ** 32; sm[i:i + 32] = g
+        g = tgt + (g - tgt) * c; gs[j] = g
+    sm = np.interp(np.arange(len(gr)), idx, gs)
     x = x * 10 ** (sm / 20)
     return x
 
@@ -523,7 +587,7 @@ def main():
         v = v[:n]
         # 歌の大きさを、伴奏の大きさに合わせて場所ごとに乗せる（ミックスのフェーダー操作のかわり）:
         #   2 秒ごとに「歌 − 伴奏」の差が +3dB（vocalLevel で上下）になるよう合わせ、なめらかにつなぐ
-        win = int(2.0 * sr); hop = int(0.25 * sr)
+        win = int(4.0 * sr); hop = int(0.25 * sr)
         vm = np.abs(v).max(1); am = acc.mean(1); vv = v.mean(1)
         act = np.convolve((vm > 1e-3).astype(float), np.ones(int(0.05 * sr)), mode="same") > 0
         gains = []
@@ -536,7 +600,7 @@ def main():
         gd = np.array(gains)
         ok = ~np.isnan(gd)
         if ok.any():
-            med = np.median(gd[ok]); gd = np.where(ok, np.clip(gd, med - 6, med + 6), np.interp(np.arange(len(gd)), np.where(ok)[0], gd[ok]))
+            med = np.median(gd[ok]); gd = np.where(ok, np.clip(gd, med - 3, med + 3), np.interp(np.arange(len(gd)), np.where(ok)[0], gd[ok]))
             gd = np.convolve(np.pad(gd, 3, mode="edge"), np.ones(7) / 7, mode="valid")
             curve = np.interp(np.arange(n), np.arange(len(gd)) * hop, gd)
             v = v * (10 ** (curve / 20))[:, None]
