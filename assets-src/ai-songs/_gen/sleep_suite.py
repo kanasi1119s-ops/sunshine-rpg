@@ -185,6 +185,13 @@ SONGS = [
 
 # 点数（Audiobox の PQ）で決めた曲ごとの調整
 FINAL = {}
+# 2026-10-18 点数の試し（01『深海のゆりかご』・08『氷の洞窟』）: シンセのパッドを録音の弦に替えると 7.26→7.87（08）、くり返しを大きく（×2.8）で +0.03〜0.05。
+#   楽器ごとの点数: ハープ 8.02・弦 7.86 が高く、シンセのパッド 6.51 が低い。→ 全曲で、シンセのパッドは録音の弦に替える（曲ごとの色は、弦（ゆっくり）と合奏とで分ける）。
+#   人間の指示「今回は目安 7.5 でいい」。
+PAD_REC = {"warmPad": "strings", "halo": "strings", "newAge": "strings", "sweep": "ensemble", "bowedGlass": "ensemble", "atmosphere": "ensemble", "metalPad": "ensemble"}
+def base_tune(s):
+    t = {"pad": PAD_REC.get(s["pad"], s["pad"]), "volx": {"ost": 2.8}}
+    return dict(s, **t)
 
 
 # ================================================================ 音を書く
@@ -446,6 +453,7 @@ if __name__ == "__main__":
     tune = json.loads(os.environ["SLEEP_TUNE"]) if "SLEEP_TUNE" in os.environ else FINAL
     for n, s in enumerate(SONGS, 1):
         if which not in ("all", str(n), s["id"]): continue
+        s = base_tune(s)
         if f"{n:02d}" in tune: s = dict(s, **tune[f"{n:02d}"])
         out = os.path.join(outdir, f"sleep25-{n:02d}-{s['id']}.json")
         t = build(s, out)
