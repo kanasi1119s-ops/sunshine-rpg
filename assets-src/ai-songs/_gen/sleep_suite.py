@@ -194,7 +194,7 @@ class Part:
     def add(self, s, d, m, mark=""): self.ev.append((s, d, m, mark))
 
 
-def voicing(pcs, prev, lo=45, hi=69):
+def voicing(pcs, prev, lo=50, hi=72):
     """4声の和音。前の和音から動きがいちばん小さい形"""
     want = list(dict.fromkeys(pcs))[:4]
     if len(want) < 4: want = want + [want[0]] * (4 - len(want))
@@ -400,6 +400,13 @@ def build(song, out):
     if "mel2" in P: P["mel2"].base["pan"] = pans.get("mel2", -0.12)
     if "spark" in P: P["spark"].base["pan"] = pans.get("spark", 0.55)
     if "tex" in P: P["tex"].base["pan"] = pans.get("tex", -0.5)
+    # 2026-10-18 楽器ごとの点検（08『氷の洞窟』）: パッドがいちばん大きく（点数 6.51・低音とぶつかり 0.70）、くり返しは 24dB 下に埋もれていた。
+    #   → シンセのパッドを -8dB、弦のパッドを -3dB、くり返しときらめき +6dB、遠くの音 +8dB、旋律 +2.3dB に（パッドは低音の上の音域へ）
+    VOLX = {"pad": 0.4 if PAD[song["pad"]]["instrument"] == "pad" else 0.7, "ost": 2.0, "spark": 2.0, "tex": 2.5, "mel": 1.3, "mel2": 1.3, "drone": 1.0}
+    VOLX.update(song.get("volx", {}))
+    for k2, mul in VOLX.items():
+        for p in (P[k2] if isinstance(P.get(k2), list) else [P[k2]] if k2 in P else []): p.base["volume"] = round(p.base["volume"] * mul, 4)
+    P["drone"].base["attack"] = max(P["drone"].base.get("attack", 0), 0.5)
     for p in P["pad"]: emit(p)
     for k2 in ("drone", "ost", "mel", "mel2", "spark", "tex"):
         if k2 in P: emit(P[k2])
