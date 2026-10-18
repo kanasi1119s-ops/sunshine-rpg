@@ -58,17 +58,17 @@ DRONE = {   # 低い根音
     "lowpad": (dict(instrument="pad", patch="warmPad", volume=0.09, reverb=0.4, sustain=2.5, attack=0.8, release=1.0), (36, 48)),
 }
 OST = {   # ゆっくり流れつづけるくり返し。(設定, いちばん下の音)
-    "harp": (dict(instrument="harp", volume=0.11, reverb=0.45, bright=-0.4, sustain=3, release=0.8, fx=[{"type": "pingpong", "beats": 1.0, "mix": 0.12, "feedback": 0.25}]), 50),
-    "piano": (dict(instrument="piano", volume=0.1, reverb=0.36, sustain=2.2, fx=[{"type": "plate", "mix": 0.16}]), 52),
+    "harp": (dict(instrument="harp", volume=0.11, reverb=0.45, bright=-0.4, sustain=3, release=0.8, fx=[{"type": "pingpong", "beats": 1.0, "mix": 0.12, "feedback": 0.25}]), 57),
+    "piano": (dict(instrument="piano", volume=0.1, reverb=0.36, sustain=2.2, fx=[{"type": "plate", "mix": 0.16}]), 57),
     "kalimba": (dict(instrument="kalimba", volume=0.1, reverb=0.45, sustain=2.2, fx=[{"type": "pingpong", "beats": 1.5, "mix": 0.14, "feedback": 0.3}]), 62),
     "fmBell": (dict(instrument="fmBell", volume=0.055, reverb=0.5, sustain=3, release=1.0, bright=-0.3), 62),
-    "fmEpiano": (dict(instrument="fmEpiano", volume=0.09, reverb=0.4, sustain=2, fx=[{"type": "chorus", "mix": 0.25}]), 52),
+    "fmEpiano": (dict(instrument="fmEpiano", volume=0.09, reverb=0.4, sustain=2, fx=[{"type": "chorus", "mix": 0.25}]), 55),
     "glock": (dict(instrument="glockenspiel", volume=0.055, reverb=0.5, sustain=4, release=0.8, fx=[{"type": "pingpong", "beats": 1.0, "mix": 0.18, "feedback": 0.3}]), 81),
-    "marimba": (dict(instrument="harp", patch="marimba", volume=0.1, reverb=0.42, sustain=1.6), 50),
-    "nylon": (dict(instrument="guitar", patch="nylonGuitar", amp="clean", volume=0.1, reverb=0.36, sustain=1.8, bright=-0.35, chorus=0, autoScoop=False, humanPitch=0), 45),
+    "marimba": (dict(instrument="harp", patch="marimba", volume=0.1, reverb=0.42, sustain=1.6), 55),
+    "nylon": (dict(instrument="guitar", patch="nylonGuitar", amp="clean", volume=0.1, reverb=0.36, sustain=1.8, bright=-0.35, chorus=0, autoScoop=False, humanPitch=0), 52),
     "crystal": (dict(instrument="lead", patch="crystal", volume=0.05, reverb=0.55, sustain=1.4, fx=[{"type": "pingpong", "beats": 1.5, "mix": 0.2, "feedback": 0.3}]), 64),
-    "koto": (dict(instrument="koto", volume=0.1, reverb=0.42, sustain=2), 50),
-    "pizz": (dict(instrument="strings", patch="pizzicato", volume=0.11, reverb=0.42), 48),
+    "koto": (dict(instrument="koto", volume=0.1, reverb=0.42, sustain=2), 55),
+    "pizz": (dict(instrument="strings", patch="pizzicato", volume=0.11, reverb=0.42), 55),
 }
 MEL = {   # 長い音の旋律。(設定, 音域)
     "flute": (dict(instrument="panflute", patch="flute", volume=0.15, reverb=0.48, breath=True, attack=0.3, release=0.7, fx=[{"type": "delay", "beats": 1.5, "mix": 0.1, "feedback": 0.25}]), (62, 86)),
@@ -194,7 +194,7 @@ class Part:
     def add(self, s, d, m, mark=""): self.ev.append((s, d, m, mark))
 
 
-def voicing(pcs, prev, lo=52, hi=79):
+def voicing(pcs, prev, lo=45, hi=69):
     """4声の和音。前の和音から動きがいちばん小さい形"""
     want = list(dict.fromkeys(pcs))[:4]
     if len(want) < 4: want = want + [want[0]] * (4 - len(want))
@@ -344,7 +344,7 @@ def build(song, out):
         if "t" in lay and "tex" in P:
             ch = bar_ch[li * loop_bars]; r, cpcs, _ = chord(ch)
             m = 60 + ((cpcs[min(2, len(cpcs) - 1)] - 60) % 12) + 12
-            P["tex"].add(s0 + BU, min(loop_bars - 2, 4) * BU, m)
+            P["tex"].add(s0 + BU, max(sub, min(int(9 * bpm / 60) * sub, (loop_bars - 2) * BU)), m)   # 9 秒まで（息の長さ）
 
     # 音量: くり返しごとの強さ（なめらかに）×4小節ごとの呼吸×最初と最後のフェード
     lv = []
@@ -359,16 +359,21 @@ def build(song, out):
 
     # パートを、作曲ソフトの書式に
     parts = []
+    def rest(units):   # 長い休みは 8 拍ずつに分ける（作曲ソフトが読める長さ）
+        out = []
+        while units > 0:
+            d = min(units, 8 * sub); out.append(f"R:{fmt(d / sub)}"); units -= d
+        return out
     def emit(p, legato=False, onlay=None):
         ev = sorted(p.ev); toks = []; t = 0
         for i, (s, d, m, mk) in enumerate(ev):
             if s < t: continue
             if i + 1 < len(ev) and s + d > ev[i + 1][0]: d = ev[i + 1][0] - s
             if d <= 0: continue
-            if s > t: toks.append(f"R:{fmt((s - t) / sub)}")
+            if s > t: toks += rest(s - t)
             toks.append(f"{nm(m)}:{fmt(d / sub)}{mk}")
             t = s + d
-        if t < TU: toks.append(f"R:{fmt((TU - t) / sub)}")
+        if t < TU: toks += rest(TU - t)
         if not ev: return
         q = dict(p.base); q["role"] = p.role; q.setdefault("pan", 0); q["barGain"] = gain; q["notes"] = " ".join(toks)
         parts.append(q)
