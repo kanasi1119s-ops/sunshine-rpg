@@ -273,6 +273,18 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
         ref = np.median(ap2[tailv], axis=0)
         ap2 = np.where(head[:, None], np.minimum(ap2, ref[None, :] + 0.12), ap2)
     voiced = fo > 0
+    # 有声・無声の見直し: 声の高さの分析（harvest）は、サ行・カ行・ハ行の「息の音」まで有声と言うことがある。
+    #   有声のまま作ると、息の音が「ジジジ」というパルスの列になり、声でないひずみに聞こえる（2026-10-18、人間「声じゃないような歪」）。
+    #   1〜4kHz のかすれ（非周期性）が大きいコマは無声にする
+    nb1 = ap2.shape[1]; fq1 = np.arange(nb1) * (sr / 2) / (nb1 - 1)
+    mid = (fq1 > 1000) & (fq1 < 4000)
+    apm = ap2[:, mid].mean(1)
+    voiced = voiced & (apm < 0.5)
+    fo = np.where(voiced, fo, 0.0)
+    # 母音らしいコマ（声の大きさが母音に近い）だけを「整える」対象にする
+    en = lsp2.max(1) if lsp2.ndim == 2 else np.zeros(k)
+    vref = np.percentile(en[voiced], 80) if voiced.sum() > 3 else 0
+    vowelish = voiced & (en > vref - np.log(10 ** (8 / 10)))
     # 母音の「かすれ」の整理: WORLD の分析では、テトの「い」などで高い音のかすれ（非周期性）が 1 コマごとにばらつき、
     #   作り直すと「サー」というザラついた雑音に聞こえる（2026-10-18、人間「空のあとに雑音」）。
     #   有声のところだけ、時間方向にならし（約 45ms）、周波数ごとの上限で抑える。clean=0 で止める
@@ -283,7 +295,7 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
         sm = uniform_filter1d(ap2, 9, axis=0, mode="nearest")
         capf = 0.03 + 0.42 * np.clip((fq - 1800) / 6500, 0, 1)
         cleaned = np.minimum(sm, capf[None, :])
-        ap2 = np.where(voiced[:, None], ap2 * (1 - cl) + cleaned * cl, ap2)
+        ap2 = np.where(vowelish[:, None], ap2 * (1 - cl) + cleaned * cl, ap2)
     # 元の録音の細かい揺れを、少しだけ残す
     med = np.median(fo[voiced]) if voiced.any() else 0
     jit = np.ones(k)
@@ -413,7 +425,7 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
                 out[bs:bs + len(bl_)] += bl_ * 0.022 * br * (1 + 0.5 * max(0, po["_dyn"]))
         n0 = int(a * sr_out); y = y[: max(0, int((b - a) * sr_out))]
         env = np.ones(len(y))
-        fi = min(len(y), int(p["ovl"] * sr_out)) if not p["head"] else min(len(y), int(0.006 * sr_out))
+        fi = min(len(y), int(p["ovl"] * sr_out)) if not p["head"] else min(len(y), int(0.022 * sr_out))
         if fi > 0: env[:fi] = np.sin(np.linspace(0, np.pi / 2, fi)) ** 2
         fo = min(len(y), int(nxt["ovl"] * sr_out)) if joined else min(len(y), int(0.07 * sr_out))
         if fo > 0: env[-fo:] *= np.cos(np.linspace(0, np.pi / 2, fo)) ** 2
