@@ -347,6 +347,12 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
         sp2 = sp2 * (10 ** (tilt / 10))[None, :]
     if o.get("_params"):
         # 1 本の声として合成するため、波形ではなく「声の設計図」（音程・スペクトル・かすれ）を返す
+        # 録音ごとの大きさのちがいをそろえる: 母音の所の大きさを、どの音でも同じにしてから強弱をかける
+        #   （音源の録音は1つずつ大きさがちがい、そのままだと 1 音ごとに急に大きく・小さくなる。2026-10-19）
+        vm = (tau >= C) & (f0 > 0)
+        if vm.sum() >= 2:
+            ev = np.median(sp2[vm].sum(1))
+            sp2 = sp2 * (VOWEL_REF / (ev + 1e-20))
         g = vel * 10 ** (dyn * 8 / 20)
         sp2 = sp2 * g * g
         # 子音の破裂（k・t・p）を、母音の大きさに合わせて抑える
@@ -375,6 +381,7 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
         y[:cs] *= gs
     return y * vel * 10 ** (dyn * 8 / 20)
 
+VOWEL_REF = 1.0
 UNV = set("かきくけこさしすせそたちつてとはひふへほぱぴぷぺぽ")
 def is_unvoiced_cons(ly):
     return bool(ly) and ly[0] in UNV
@@ -505,6 +512,28 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
         apF = np.clip(AP / Wn[:, None], 0, 1)
         f0F = np.where(WV > WU, FV / np.maximum(WV, 1e-9), 0.0)
         y = pw.synthesize(np.ascontiguousarray(f0F), np.ascontiguousarray(spF), np.ascontiguousarray(apF), srp, FP)
+        # 1 音ずつの大きさを、強弱の設定どおりにそろえる（録音・母音・高さのちがいで急に大きく・小さくならないように。2026-10-19）
+        t0s = K0 * FP / 1000
+        pts = []
+        for i in ph:
+            p = pieces[i]
+            a_ = p["start"] + 0.05 - t0s; b_ = p["end"] - 0.02 - t0s
+            if b_ - a_ < 0.05: a_, b_ = p["start"] - t0s, p["end"] - t0s
+            seg = y[max(0, int(a_ * srp)):max(0, int(b_ * srp))]
+            if len(seg) < 64: continue
+            r = 20 * np.log10(np.sqrt(np.mean(seg ** 2)) + 1e-12)
+            dyn = interp_map(vdef.get("dynamics"), p["beat"], 0.0)
+            pts.append(((p["start"] + p["end"]) / 2 - t0s, r - dyn * 8, p["start"] - t0s, p["end"] - t0s))
+        if len(pts) >= 1:
+            ref = np.median([q[1] for q in pts])
+            cx = []; cg = []
+            for (c, r, s0_, e0_) in pts:
+                corr = float(np.clip(ref - r, -12, 12))
+                cx += [s0_ + 0.02, e0_ - 0.02]; cg += [corr, corr]
+            tt = np.arange(len(y)) / srp
+            gdb = np.interp(tt, cx, cg)
+            k = max(1, int(0.03 * srp)); gdb = np.convolve(np.pad(gdb, k, mode="edge"), np.ones(2 * k + 1) / (2 * k + 1), mode="valid")
+            y = y * 10 ** (gdb / 20)
         if srp != sr_out: y = signal.resample_poly(y, sr_out, srp)
         n0 = int(round(K0 * FP / 1000 * sr_out))
         if n0 < 0: y = y[-n0:]; n0 = 0
@@ -517,7 +546,7 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
         if d < 0.6: continue
         sel = (t >= ev["s"]) & (t < ev["e"] + 0.05)
         x = (t[sel] - ev["s"]) / d
-        amp[sel] *= 10 ** ((1.4 * np.sin(np.pi * np.clip(x / 0.7, 0, 1)) * (x < 0.7) - 1.8 * np.clip((x - 0.7) / 0.3, 0, 1) ** 2) / 20)
+        amp[sel] *= 10 ** ((0.8 * np.sin(np.pi * np.clip(x / 0.7, 0, 1)) * (x < 0.7) - 1.0 * np.clip((x - 0.7) / 0.3, 0, 1) ** 2) / 20)
     vp = getattr(pitch_curve, "vibpart", np.zeros(len(t)))[: len(t)]
     amp *= 1 + 0.35 * vp
     ampS = np.interp(np.arange(len(out)) / sr_out, t[: len(amp)], amp)
@@ -551,14 +580,14 @@ def polish(x, sr, vdef):
     red = np.convolve(red, np.ones(w5) / w5, mode="same")
     x = lo + hi * 10 ** (-red / 20)
     # なめらかなコンプ（RMS・比 3:1）
-    win = int(0.02 * sr)
+    win = int(0.05 * sr)
     rms = np.sqrt(np.convolve(x * x, np.ones(win) / win, mode="same") + 1e-12)
     lv = 20 * np.log10(rms + 1e-9)
     thr = -17.0
     gr = np.where(lv > thr, (thr - lv) * (1 - 1 / 1.8), 0.0)
     # 32 サンプルごとに追いかけ、その間はなめらかにつなぐ（段差があると「ジリジリ」とひずんで聞こえるため）
     idx = np.arange(0, len(gr), 32); gs = np.zeros(len(idx)); g = 0.0
-    att, rel = np.exp(-32 / (0.010 * sr)), np.exp(-32 / (0.15 * sr))
+    att, rel = np.exp(-32 / (0.030 * sr)), np.exp(-32 / (0.30 * sr))
     for j, i in enumerate(idx):
         tgt = gr[i]; c = att if tgt < g else rel
         g = tgt + (g - tgt) * c; gs[j] = g
