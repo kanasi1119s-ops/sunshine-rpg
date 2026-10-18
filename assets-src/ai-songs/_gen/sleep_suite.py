@@ -210,7 +210,14 @@ def voicing(pcs, prev, lo=45, hi=69):
         if len(set(cand)) < 4: continue
         cost = sum(abs(a - b) for a, b in zip(cand, prev)) if prev else sum(abs(x - (lo + 3 + i * 5)) for i, x in enumerate(cand))
         if best is None or cost < best[0]: best = (cost, cand)
-    return best[1] if best else sorted(want)
+    if best: return best[1]
+    # 4つの音が重なってしまうときは、下から順に積む（同じ音は1オクターブ上へ）
+    out = []
+    for p in want:
+        x = min(x for x in range(lo, hi + 13) if x % 12 == p)
+        while x in out: x += 12
+        out.append(x)
+    return sorted(out)
 
 
 def scale_for(scale, cpcs):
