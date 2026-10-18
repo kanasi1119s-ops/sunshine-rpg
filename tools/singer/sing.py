@@ -350,9 +350,12 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
         # 録音ごとの大きさのちがいをそろえる: 母音の所の大きさを、どの音でも同じにしてから強弱をかける
         #   （音源の録音は1つずつ大きさがちがい、そのままだと 1 音ごとに急に大きく・小さくなる。2026-10-19）
         vm = (tau >= C) & (f0 > 0)
-        if vm.sum() >= 2:
-            ev = np.median(sp2[vm].sum(1))
-            sp2 = sp2 * (VOWEL_REF / (ev + 1e-20))
+        if vm.sum() < 2: vm = f0 > 0                      # 母音が短い・息を抜く音（母音 R）など
+        if vm.sum() < 2: vm = np.ones(len(f0), bool)
+        E_ = sp2[vm].sum(1)
+        # 息を抜く音（母音 R）は、だんだん小さくなる録音なので、いちばん大きい所（頭の母音）を基準にする
+        ev = np.max(E_) if o.get("_tail") else np.median(E_)
+        sp2 = sp2 * (VOWEL_REF / (ev + 1e-20))
         g = vel * 10 ** (dyn * 8 / 20)
         sp2 = sp2 * g * g
         # 子音の破裂（k・t・p）を、母音の大きさに合わせて抑える
@@ -469,7 +472,7 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
             nxt = pieces[i + 1] if i + 1 < len(pieces) else None
             joined = nxt is not None and not nxt["head"]
             if joined: b = nxt["start"] - nxt["pre"] + nxt["ovl"]
-            else: b = p["end"] + 0.03
+            else: b = p["end"] + 0.12          # フレーズの終わりは、母音をそのまま自然に消す（息の音を足すと「ふっ」と引っかかるため）
             b = max(b, a + 0.05)
             k0 = int(round(a * 1000 / FP)); k1 = int(round(b * 1000 / FP))
             ft = hz[np.clip(np.arange(k0, k1), 0, NF - 1)]
@@ -480,10 +483,10 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
             n = len(pr["f0"]); env = np.ones(n)
             fi = max(1, int(round((p["ovl"] if not p["head"] else 0.02) * 1000 / FP)))
             fi = min(fi, n); env[:fi] = np.sin(np.linspace(0, np.pi / 2, fi + 1)[1:]) ** 2
-            fo = max(1, int(round((nxt["ovl"] if joined else 0.06) * 1000 / FP))); fo = min(fo, n)
+            fo = max(1, int(round((nxt["ovl"] if joined else 0.20) * 1000 / FP))); fo = min(fo, n)
             env[n - fo:] *= np.cos(np.linspace(0, np.pi / 2, fo + 1)[:-1]) ** 2
             items.append((k0, pr, env))
-            if not joined:
+            if not joined and vdef.get("tails", False):
                 tl = bank.tail(p["vowel"])
                 if tl and bank2 is not None:
                     t2 = bank2.tail(p["vowel"])
@@ -492,7 +495,7 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
                     ta = p["end"] - tl["pre"] / 1000; tb = p["end"] + float(vdef.get("tailLen", 0.12))
                     kk0 = int(round(ta * 1000 / FP)); kk1 = int(round(tb * 1000 / FP))
                     ft2 = hz[np.clip(np.arange(kk0, kk1), 0, NF - 1)]
-                    pr2 = render_piece(tl, (kk1 - kk0) * FP / 1000, ft2, vel * 0.9, sr_out, {**po, "_lyric": ""})
+                    pr2 = render_piece(tl, (kk1 - kk0) * FP / 1000, ft2, vel * 0.9, sr_out, {**po, "_lyric": "", "_tail": True})
                     n2 = len(pr2["f0"]); e2 = np.ones(n2)
                     f2 = min(n2, int(round((max(tl["ovl"], 30) / 1000 + 0.03) * 1000 / FP)))
                     e2[:f2] = np.sin(np.linspace(0, np.pi / 2, f2 + 1)[1:]) ** 2
@@ -617,8 +620,11 @@ def render_song(song, sr_out, total_sec=None, dry=False):
         bank = Bank(vd.get("voice", "teto"))
         v = build_vocal(vd, bpm, bank, sr_out, total_sec, seed=11 + i)
         v = polish(v, sr_out, vd)
-        pk = np.max(np.abs(v)) + 1e-9
-        v = v / pk * 0.5
+        # 大きさは「歌っている所の平均（RMS）」でそろえる（ピークでそろえると、一瞬のとがった音のせいで全体が小さくなる）
+        act = np.abs(v) > 1e-4
+        rms = np.sqrt(np.mean(v[act] ** 2)) + 1e-12 if act.any() else 1.0
+        v = v * (10 ** (-20 / 20) / rms)
+        v = np.tanh(v / 0.9) * 0.9                       # とがった所だけをやわらかく抑える
         st = reverb(v, sr_out, 0 if dry else float(vd.get("reverb", 0.22)), seed=5 + i)
         pan = float(vd.get("pan", 0)); g = float(vd.get("volume", 1.0))
         st[:, 0] *= g * math.cos((pan + 1) * math.pi / 4) * math.sqrt(2)
