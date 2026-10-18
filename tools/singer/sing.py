@@ -520,11 +520,31 @@ def main():
         n = len(acc)
         if len(v) < n: v = np.vstack([v, np.zeros((n - len(v), 2))])
         g = float(song.get("vocalLevel", 1.0))
-        # 歌は伴奏の大きさに合わせる: 伴奏の RMS に対して 歌の RMS を +2dB（歌のある所だけで比べる）
-        act = np.abs(v[:n]).max(1) > 1e-3
-        if act.any():
-            ra = np.sqrt(np.mean(acc[act] ** 2)) + 1e-9; rv = np.sqrt(np.mean(v[:n][act] ** 2)) + 1e-9
-            v = v * (ra / rv) * 10 ** ((2.0 + 20 * math.log10(g)) / 20)
+        v = v[:n]
+        # 歌の大きさを、伴奏の大きさに合わせて場所ごとに乗せる（ミックスのフェーダー操作のかわり）:
+        #   2 秒ごとに「歌 − 伴奏」の差が +3dB（vocalLevel で上下）になるよう合わせ、なめらかにつなぐ
+        win = int(2.0 * sr); hop = int(0.25 * sr)
+        vm = np.abs(v).max(1); am = acc.mean(1); vv = v.mean(1)
+        act = np.convolve((vm > 1e-3).astype(float), np.ones(int(0.05 * sr)), mode="same") > 0
+        gains = []
+        for i in range(0, n, hop):
+            seg = slice(max(0, i - win // 2), min(n, i + win // 2))
+            m = act[seg]
+            if m.sum() < 0.2 * sr: gains.append(np.nan); continue
+            ra = np.sqrt(np.mean(am[seg][m] ** 2)) + 1e-9; rv = np.sqrt(np.mean(vv[seg][m] ** 2)) + 1e-9
+            gains.append(20 * np.log10(ra / rv) + 3.0 + 20 * math.log10(g))
+        gd = np.array(gains)
+        ok = ~np.isnan(gd)
+        if ok.any():
+            med = np.median(gd[ok]); gd = np.where(ok, np.clip(gd, med - 6, med + 6), np.interp(np.arange(len(gd)), np.where(ok)[0], gd[ok]))
+            gd = np.convolve(np.pad(gd, 3, mode="edge"), np.ones(7) / 7, mode="valid")
+            curve = np.interp(np.arange(n), np.arange(len(gd)) * hop, gd)
+            v = v * (10 ** (curve / 20))[:, None]
+        # 歌のすき間を空ける: 歌っている間だけ、伴奏の 1.5〜4kHz（言葉が聞こえる帯域）を少し下げる（最大 -3dB）
+        b1, a1 = signal.butter(2, [1500 / (sr / 2), 4000 / (sr / 2)], "band")
+        mid = signal.lfilter(b1, a1, acc, axis=0)
+        env = np.convolve(act.astype(float), np.ones(int(0.15 * sr)) / int(0.15 * sr), mode="same")
+        acc = acc - mid * (1 - 10 ** (-3 / 20)) * env[:, None]
         out = acc + v[:n]
         pk = np.max(np.abs(out))
         if pk > 0.98: out *= 0.98 / pk
