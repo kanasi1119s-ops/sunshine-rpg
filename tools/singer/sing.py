@@ -280,11 +280,15 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
     mid = (fq1 > 1000) & (fq1 < 4000)
     apm = ap2[:, mid].mean(1)
     voiced = voiced & (apm < 0.5)
-    fo = np.where(voiced, fo, 0.0)
+    # 母音（先行発声の少しあと〜）は、歌なので必ず声にする。日本語の「き」「く」「し」などは、録音で母音が
+    #   ささやき声（無声化）になっていて、そのままだと「フーッ」と息を吹きかけるような音になる（2026-10-18、人間「息を吹きかけるようなノイズ」）
+    force = tau >= (P_out + 45)
+    voiced = voiced | force
+    fo = np.where(voiced, np.where(fo > 0, fo, f0_target), 0.0)
     # 母音らしいコマ（声の大きさが母音に近い）だけを「整える」対象にする
     en = lsp2.max(1) if lsp2.ndim == 2 else np.zeros(k)
     vref = np.percentile(en[voiced], 80) if voiced.sum() > 3 else 0
-    vowelish = voiced & (en > vref - np.log(10 ** (8 / 10)))
+    vowelish = (voiced & (en > vref - np.log(10 ** (8 / 10)))) | force
     # 母音の「かすれ」の整理: WORLD の分析では、テトの「い」などで高い音のかすれ（非周期性）が 1 コマごとにばらつき、
     #   作り直すと「サー」というザラついた雑音に聞こえる（2026-10-18、人間「空のあとに雑音」）。
     #   有声のところだけ、時間方向にならし（約 45ms）、周波数ごとの上限で抑える。clean=0 で止める
@@ -321,6 +325,7 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
         ap2 = ap2 + (1 - ap2) * wgt[None, :] * 0.6
     # 子音の強さ: 子音（伸ばさない部分）だけ大きく。「ぶ」「ば」などが埋もれないように
     cg = float(o.get("consonant", 1.0))
+    if is_unvoiced_cons(o.get("_lyric", "")): cg = 1.0   # カ・サ・タ・ハ・パ行は強めない（破裂の「プチッ」になる）
     if abs(cg - 1.0) > 1e-3:
         cmask = (tau < min(C, L)).astype(float)
         cmask = np.convolve(cmask, np.ones(5) / 5, mode="same")
@@ -335,7 +340,25 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
     y = pw.synthesize(np.ascontiguousarray(f0, dtype=np.float64), np.ascontiguousarray(sp2, dtype=np.float64), np.ascontiguousarray(np.clip(ap2, 0, 1), dtype=np.float64), sr, FP)
     if sr != sr_out:
         y = signal.resample_poly(y, sr_out, sr)
+    # 子音の破裂（k・t・p の「パチッ」）を、母音の大きさに合わせて抑える（2026-10-18、人間「細かいノイズが何回か」）
+    cs = int(min(C, L) / 1000 * sr_out)
+    if cs > 10 and len(y) > cs + 100:
+        vr = np.sqrt(np.mean(y[cs:] ** 2)) + 1e-9
+        w1 = max(1, int(0.001 * sr_out))
+        env = np.sqrt(np.convolve(y[:cs] ** 2, np.ones(w1) / w1, mode="same")) + 1e-9
+        lim = vr * float(o.get("burst", 0.9))
+        g = np.minimum(1.0, lim / env)
+        # なめらかに（すぐ下げ、ゆっくり戻す）
+        gs = np.empty_like(g); cur = 1.0
+        for i in range(len(g)):
+            cur = g[i] if g[i] < cur else cur + (g[i] - cur) * 0.004
+            gs[i] = cur
+        y[:cs] *= gs
     return y * vel * 10 ** (dyn * 8 / 20)
+
+UNV = set("かきくけこさしすせそたちつてとはひふへほぱぴぷぺぽ")
+def is_unvoiced_cons(ly):
+    return bool(ly) and ly[0] in UNV
 
 def breath_in(sr, length=0.26, seed=0):
     """息を吸う音（やわらかい雑音）"""
@@ -414,7 +437,7 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
         ft = hz[np.clip(np.arange(k0, k1), 0, len(hz) - 1)]
         vel = np.mean([ev[3] for ev in p["events"]])
         dyn = interp_map(vdef.get("dynamics"), p["beat"], 0.0) + 0.25 * (vel - 1) / 0.18 * 0.5
-        po = {**vdef, "_dyn": float(np.clip(dyn, -1, 1))}
+        po = {**vdef, "_dyn": float(np.clip(dyn, -1, 1)), "_lyric": p["lyric"]}
         y = render_piece(p["oto"], b - a, ft, vel, sr_out, po)
         # 息つぎ: 前に 0.45 秒以上の休みがあるフレーズの頭で、小さく息を吸う
         br = float(vdef.get("breath", 0.0))
@@ -438,13 +461,13 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
                 t2 = bank2.tail(p["vowel"])
                 if t2: tl = {**tl, "_blend": (t2, bamt)}
             if tl:
-                ta = p["end"] - tl["pre"] / 1000; tb = p["end"] + 0.22
+                ta = p["end"] - tl["pre"] / 1000; tb = p["end"] + float(vdef.get("tailLen", 0.12))
                 kk0, kk1 = int(ta * 1000 / FP), int(tb * 1000 / FP)
                 ft2 = hz[np.clip(np.arange(kk0, kk1), 0, len(hz) - 1)]
-                y2 = render_piece(tl, tb - ta, ft2, vel * 0.9, sr_out, po)[: int((tb - ta) * sr_out)]
+                y2 = render_piece(tl, tb - ta, ft2, vel * 0.9, sr_out, {**po, "_lyric": ""})[: int((tb - ta) * sr_out)]
                 e2 = np.ones(len(y2)); f2 = min(len(y2), int(max(tl["ovl"], 30) / 1000 * sr_out) + int(0.03 * sr_out))
                 e2[:f2] = np.sin(np.linspace(0, np.pi / 2, f2)) ** 2
-                g2 = min(len(y2), int(0.06 * sr_out)); e2[-g2:] *= np.linspace(1, 0, g2)
+                g2 = min(len(y2), int(0.11 * sr_out)); e2[-g2:] *= np.cos(np.linspace(0, np.pi / 2, g2)) ** 2
                 m0 = int(ta * sr_out)
                 out[m0:m0 + len(y2)] += (y2 * e2)[: len(out) - m0]
     # 人間らしい音量のゆれ: 長い音は少しふくらんでから引く。ビブラートに合わせてわずかに大きさもゆれる
@@ -493,7 +516,6 @@ def polish(x, sr, vdef):
     lv = 20 * np.log10(rms + 1e-9)
     thr = -17.0
     gr = np.where(lv > thr, (thr - lv) * (1 - 1 / 1.8), 0.0)
-    gr = signal.lfilter([0.002], [1, -0.998], gr) if False else gr
     # 32 サンプルごとに追いかけ、その間はなめらかにつなぐ（段差があると「ジリジリ」とひずんで聞こえるため）
     idx = np.arange(0, len(gr), 32); gs = np.zeros(len(idx)); g = 0.0
     att, rel = np.exp(-32 / (0.010 * sr)), np.exp(-32 / (0.15 * sr))
