@@ -59,7 +59,7 @@ function readStereo(file, sr = 48000) {
   return { L, R, sr };
 }
 
-const DRUM_GROUP = { kick: "kick", snare: "snare", hihat: "hihat", crash: "cymbal", cowbell: "cymbal", tom: "tom", rotoTom: "tom" };
+const DRUM_GROUP = { kick: "kick", snare: "snare", hihat: "hihat", crash: "cymbal", cowbell: "cymbal", tom: "tom", rotoTom: "tom", cajon: "tom" };
 const DRUM_INSTRUMENTS = new Set(Object.keys(DRUM_GROUP));
 
 export async function runAutomix(argv) {

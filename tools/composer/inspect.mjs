@@ -17,7 +17,7 @@ import { execFileSync } from "child_process";
 import { openSongKit, ROOT } from "./song-lib.mjs";
 import { ensureComposerHtml, openStemSession } from "./stem-lib.mjs";
 
-const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom", "cowbell", "rotoTom"]);
+const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom", "cowbell", "rotoTom", "cajon"]);
 
 export async function runInspect(argv) {
   const pos = []; const val = {}; const flag = new Set();

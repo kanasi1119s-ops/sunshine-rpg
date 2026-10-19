@@ -26,7 +26,7 @@ export interface AiPartLike {
   [k: string]: unknown;
 }
 
-const DRUM_INSTRUMENTS = new Set(["kick", "snare", "hihat", "crash", "tom", "rotoTom", "cowbell"]);
+const DRUM_INSTRUMENTS = new Set(["kick", "snare", "hihat", "crash", "tom", "rotoTom", "cajon", "cowbell"]);
 const BASS_INSTRUMENTS = new Set(["bass", "slap", "sub808"]);
 const GUITAR_INSTRUMENTS = new Set(["guitar", "echoGuitar", "crunch", "distGuitar", "leadGuitar"]);
 const KEYS_INSTRUMENTS = new Set(["piano", "keys", "harpsichord", "fmEpiano", "organ", "bell", "fmBell", "harp", "kalimba", "xylophone", "glockenspiel", "accordion", "marimba", "vibraphone"]);

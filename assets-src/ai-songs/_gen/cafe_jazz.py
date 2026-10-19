@@ -380,8 +380,10 @@ def build(song, out):
 
     # ---- 楽器
     lb, (llo, lhi) = INST[song["lead"]]
+    if song.get("oldfeel") and song["lead"] == "piano": lb = dict(lb, reverb=0.3, sustain=1.3); llo, lhi = 60, 86
     P = {"lead": Part(lb, f"旋律（{song['lead']}）")}
     comp_name = song["comp"]; cb, clo, chi, cpan = COMP[comp_name]
+    if song.get("oldfeel") and comp_name == "piano": cb = dict(cb, reverb=0.3, sustain=1.0)
     P["comp"] = [Part(cb, f"和音（{comp_name}・{i + 1}）") for i in range(4)]
     s2 = song["solo2"]
     if s2 != "none" and s2 != song["lead"]:
@@ -389,7 +391,8 @@ def build(song, out):
         P["solo2"] = Part(b2, f"ソロ（{s2}）")
     else: lo2, hi2 = llo, lhi
     if song["pad"] != "none":
-        pb = dict(PADS[song["pad"]]); pb.update(reverb=0.72, attack=max(pb.get("attack", 0.6), 0.9), release=1.8)
+        pb = dict(PADS[song["pad"]])
+        if not song.get("oldpad"): pb.update(reverb=0.72, attack=max(pb.get("attack", 0.6), 0.9), release=1.8)
         P["pad"] = [Part(pb, f"うしろの和音（{song['pad']}・{i + 1}）") for i in range(5)]   # 2026-10-19 人間「奥行き・スケール・余韻」
     if song["bass"] != "none":
         if song["bass"] == "stride": P["bass"] = Part(dict(INST["piano"][0], volume=0.12, bright=-0.4), "左手の低音（ピアノ）")
@@ -472,7 +475,7 @@ def build(song, out):
     def head_section(sec_bars_start, lo, hi, center, seed, kind):
         """8小節の旋律。kind: A（動機→くり返し→展開）・A2（A の最後2小節を変える）・B（新しい形、少し高く）"""
         r2 = random.Random(song["id"] + str(song.get("seed", "")) + seed)
-        if kind == "B": center += 5
+        if kind == "B": center += (3 if song.get("oldfeel") else 5)
         c1, c2 = r2.choice(vocab), r2.choice(vocab)
         c5, c6, c7 = r2.choice(vocab), r2.choice(vocab), r2.choice(vocab)
         if c2.endswith("-") or c2.endswith("x"): c2 = c2[:-2] + ".."      # 4小節目の終わりは息つぎ
@@ -627,7 +630,7 @@ def build(song, out):
                 if lh: m = snap(m, c, True, 48, 62)
                 P["comp"][k].add(t, d, m, mk)
         # うしろの和音: 小節の頭から、和音ごとにのばす
-        if "pad" in P:
+        if "pad" in P and not (song.get("oldfeel") and name == "intro"):
             for (c, s0, d) in bars[bi]:
                 pcs = [c["third"], c["tones"][3] if len(c["tones"]) > 3 else (c["r"] + 7) % 12, (c["r"] + 2) % 12 if c["q"] not in ("7b9", "dim7", "7alt") else c["tones"][2]]
                 want = list(dict.fromkeys(pcs))
@@ -646,6 +649,7 @@ def build(song, out):
                 for k in range(3): P["pad"][k].add(bi * BT + s0, dd, pv[k])
                 # 低い声（根音・5度、C2〜E3）と高い声（9度か5度、E5〜C6）で、上下に広げる
                 lowp = c["bass"] if (bi + s0) % 2 == 0 else c["r"]
+                if song.get("oldpad"): continue
                 P["pad"][3].add(bi * BT + s0, dd, min((x for x in range(40, 53) if x % 12 == lowp), key=lambda x: abs(x - 45)))
                 hp = (c["r"] + 2) % 12 if c["q"] not in ("7b9", "dim7", "7alt", "m7b5") else c["tones"][2]
                 P["pad"][4].add(bi * BT + s0, dd, min((x for x in range(76, 89) if x % 12 == hp), key=lambda x: abs(x - 81)))
@@ -743,16 +747,21 @@ def build(song, out):
                 if i == 1: D["crash"].add(bi * BT, 3 * BT, "x", ",")
                 continue
             t0 = bi * BT; L = BT // G
-            if name == "intro" and i < 2:
+            if name == "intro" and i < 2 and song.get("quietintro"):
                 if i == 1: D["crash"].add(t0 + BT - TPB, TPB, "x", ",")
                 continue
             last_of_sec = (i == 7) and name != "intro"
             intro_light = name == "intro"
-            first_A = bi < 4 + 32 and name == "A"
+            first_A = bi < 4 + 32 and name == "A" and not song.get("nobrushA")
             if first_A and has_ride:   # はじめの A: ライドを休み、ブラシの円とハイハット
                 dsty_b = dict(dsty, ride="", snare=BRUSH_SN, ghost=0.0)
-            elif first_A: dsty_b = dict(dsty, snare="", ghost=0.0)
+            elif first_A and song.get("thinA"): dsty_b = dict(dsty, snare="", ghost=0.0)
             else: dsty_b = dsty
+            if song.get("hat2ride") and not first_A:   # ハイハットの刻みをライドに（点数の試しでライドが効く。2026-10-19）
+                hp_ = dsty_b.get("hat", "")
+                if isinstance(hp_, str) and hp_:
+                    rp_ = "".join("x" if ch in "xX" else ("x" if ch in "oO" and k_ % 2 == 0 else ".") for k_, ch in enumerate(hp_))
+                    dsty_b = dict(dsty_b, ride=rp_, hat=("....x.......x..." if len(hp_) == 16 else ""))
             def grid(pat, inst, tok="x"):
                 if not pat: return
                 if isinstance(pat, list): pat = pat[bi % len(pat)]
@@ -785,7 +794,7 @@ def build(song, out):
             if rng.random() < dsty.get("bomb", 0): D["kick"].add(t0 + (L - 2) * G, G, "x", ",")
             # ときどきアクセント（2026-10-19 人間「ドラムはたまにアクセントも」）: 裏拍にスネアとキックを強く＋シンバルを短く鳴らす。
             #   はじめの A・イントロ・終わりでは入れず、テーマの B・後テーマ・ソロの盛り上がりで、4小節に1回くらい
-            if not first_A and name not in ("intro", "outro") and not last_of_sec and rng.random() < (0.3 if name in ("B", "SB") else 0.18):
+            if not song.get("noaccent") and not first_A and name not in ("intro", "outro") and not last_of_sec and rng.random() < (0.3 if name in ("B", "SB") else 0.18):
                 per = L // beats; spot = rng.choice([b_ for b_ in range(1, beats)])
                 j_ = spot * per - (per // 2 if not triplet else 1)   # 拍の前の裏
                 D["snare"].add(t0 + j_ * G, G, "x", "!"); D["kick"].add(t0 + j_ * G, G, "x", "")
@@ -804,11 +813,11 @@ def build(song, out):
                 if s_ < lo < s_ + d_ and p_ is not D.get("crash"): d_ = lo - s_
                 nev.append((s_, d_, m_, mk_))
             p_.ev = nev
-    if NB > 4 + 32 + 8 and bar_info[4 + 32][1] in ("lead", "solo2"):
+    if NB > 4 + 32 + 8 and bar_info[4 + 32][1] in ("lead", "solo2") and not song.get("nobreak"):
         brk = 4 + 32 - 1
         cut_bar(list(P["comp"]) + ([P["bass"]] if "bass" in P else []) + [D[k] for k in D], brk)
         if D: D["crash"].add(brk * BT, 2 * TPB, "x", ",")
-        if "pad" in P and n_solo >= 3:
+        if "pad" in P and n_solo >= 3 and not song.get("nopadout"):
             for b in range(4 + 32, 4 + 32 + 8): cut_bar(P["pad"], b, keep=0)
             for p_ in P["pad"]: p_.ev = [e for e in p_.ev if not (e[1] <= 0)]
 
@@ -816,7 +825,7 @@ def build(song, out):
     #   イントロ（小さく始めて上げる）→ テーマ A（控えめ）→ B（盛り上げる）→ ソロ（少しずつ上げる）→ 後テーマの B が頂点 → 終わり（静かに消える）
     lvl = []; n_s = sum(1 for (_, w_, _) in bar_info if w_ in ("lead", "solo2")); k_s = 0; heads_seen_ = 0
     for (name, who, i) in bar_info:
-        if name == "intro": g = 0.6 + 0.06 * i
+        if name == "intro": g = 0.8 + 0.03 * i   # 試し（2026-10-19）: 静かすぎるイントロは点数が下がる（0.6→0.8）
         elif name == "outro": g = 0.82 - 0.08 * i
         elif who in ("lead", "solo2"):
             g = 0.84 + 0.14 * (k_s / max(1, n_s - 1)); k_s += 1
@@ -825,6 +834,8 @@ def build(song, out):
         elif name == "A2": g = 0.84
         else: g = 0.8 if k_s == 0 else 0.9
         lvl.append(g)
+    if song.get("arc", 1.0) != 1.0:   # 強弱の幅（1＝そのまま、0.5＝半分）
+        lvl = [round(0.92 + song["arc"] * (g - 0.92), 3) for g in lvl]
     gain = [round(sum(lvl[max(0, k - 1):k + 2]) / len(lvl[max(0, k - 1):k + 2]), 3) for k in range(NB)]
     gain_pad = [round(min(1.15, 0.55 + 0.6 * (g - 0.55)), 3) for g in gain]          # うしろの弦は、ソロで引き、盛り上がりでふくらむ
     gain_pad = [round(gp * (0.82 if bar_info[k][1] in ("lead", "solo2") else 1.0), 3) for k, gp in enumerate(gain_pad)]
@@ -882,8 +893,8 @@ def build(song, out):
         elif r.startswith("ソロ（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("L:" + song["solo2"], -1.0)
         elif r.startswith("旋律の重ね"): q["gainDb"] = q.get("gainDb", 0) + float(song.get("double_db", -6.0))
         elif r.startswith("テーマの2声目"): q["gainDb"] = q.get("gainDb", 0) + cal_db("L:trombone", -3.0)
-        elif r.startswith("和音（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("C:" + comp_name, -8.5)
-        elif r.startswith("うしろの和音（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("P:" + song["pad"], -15.0)
+        elif r.startswith("和音（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("C:" + comp_name, song.get("comp_t", -8.5))
+        elif r.startswith("うしろの和音（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("P:" + song["pad"], song.get("pad_t", -15.0))
         elif r.startswith("左手の低音"): q["gainDb"] = q.get("gainDb", 0)
     tune = song.get("tune", {})
     for q in parts:
@@ -931,6 +942,7 @@ if __name__ == "__main__":
     for n, s in enumerate(SONGS, 1):
         if which not in ("all", str(n), s["id"]): continue
         if f"{n:02d}" in tune: s = dict(s, **tune[f"{n:02d}"])
-        out = os.path.join(outdir, f"cafe25-{n:02d}-{s['id']}.json")
+        if "JAZZ_EXTRA" in os.environ: s = dict(s, **json.loads(os.environ["JAZZ_EXTRA"]))
+        out = os.path.join(outdir, os.environ.get("JAZZ_PRE", "") + f"cafe25-{n:02d}-{s['id']}.json")
         t, nb, ns, ob = build(s, out)
         print(f"{n:02d} {s['id']} {t:.0f}秒 {nb}小節 ソロ{ns * 8} 後テーマ{ob}")

@@ -70,6 +70,8 @@ export type Instrument =
   | "fmBell" | "fmEpiano" | "drawbarOrgan" | "unisonSaw"
   // 打楽器の音程つきタム（2026-10-13）: ロートタム・キャノンタム・インチ違いのタム。鍵盤の高さ＝太鼓の基本の高さ（C2〜C6）
   | "rotoTom" | "cannonTom" | "inchTom"
+  // カホン（2026-10-19、人間「作曲ソフトの音源にカホンを追加して」）: 録音（VCSL Cajon, CC0）。鍵盤で打ち方を選ぶ（C3 付近＝低音・D3＝トーン・E3〜＝スラップ）
+  | "cajon"
   // バスドラのトリガー（打撃音の層）と、映画のインパクト（2026-10-13）
   | "kickTrigger" | "impactHit"
   // 木琴・鉄琴・アコーディオン（2026-10-16、人間の指示「木琴、鉄琴、アコーディオンも音源追加して」）。録音音源は VCSL（CC0）と FreePats の Hohner（CC0）

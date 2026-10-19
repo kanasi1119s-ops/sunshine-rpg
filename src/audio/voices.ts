@@ -692,6 +692,16 @@ function voice(ctx: Ctx, dest: AudioNode, e: ScheduledNote, t: number): Source[]
       }
       break;
     }
+    case "cajon": {
+      // カホン（録音の音源がないときの代わり）: 低い胴の「ドン」と、板を叩く「パシッ」。鍵盤で打ち方（E3 から上＝スラップ）
+      const slap = f >= 160;
+      const g = pluckGain(ctx, dest, t, v * (slap ? 0.5 : 1.0), 0.001, slap ? 0.09 : 0.22);
+      const body = osc(ctx, "sine", slap ? 190 : 95, t, t + 0.3, g, 1);
+      body.frequency.exponentialRampToValueAtTime(slap ? 160 : 70, t + 0.05);
+      out.push(body);
+      out.push(noise(ctx, t, t + (slap ? 0.12 : 0.05), filter(ctx, "bandpass", slap ? 3200 : 1200, pluckGain(ctx, dest, t, v * (slap ? 0.9 : 0.35), 0.001, slap ? 0.06 : 0.03), 0.9)));
+      break;
+    }
     case "rotoTom":
     case "cannonTom":
     case "inchTom": {

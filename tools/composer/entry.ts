@@ -70,6 +70,7 @@ import glockUrl from "../../assets-src/soundfont/extra/glockenspiel-vcsl.sf3?url
 import vibesUrl from "../../assets-src/soundfont/extra/vibraphone-vcsl.sf3?url";
 import saxTenorUrl from "../../assets-src/soundfont/extra/sax-tenor-vcsl.sf3?url";
 import kalimbaVcslUrl from "../../assets-src/soundfont/extra/kalimba-vcsl.sf3?url";
+import cajonUrl from "../../assets-src/soundfont/extra/cajon-vcsl.sf3?url";
 import marimbaUrl from "../../assets-src/soundfont/extra/marimba-vcsl.sf3?url";
 import xyloUrl from "../../assets-src/soundfont/extra/xylophone-vcsl.sf3?url";
 import accordionUrl from "../../assets-src/soundfont/extra/accordion-hohner.sf3?url";
@@ -305,6 +306,8 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   xylophone: { programs: [13], url: xyloUrl }, glockenspiel: { programs: [], url: glockUrl }, accordion: { programs: [21], url: accordionUrl },
   // 2026-10-19 人間「電子音は使わず、実際の楽器の音を」: ビブラフォン（VCSL）・テナーサックス（VCSL）・カリンバ（VCSL Tanzania）の録音を、使う曲だけ重ねる
   vibes: { programs: [11], url: vibesUrl }, tenorSax: { programs: [66], url: saxTenorUrl }, kalimba: { programs: [108], url: kalimbaVcslUrl },
+  // 2026-10-19 人間「作曲ソフトの音源にカホンを追加して」: VCSL Cajon（CC0）。低音・トーン・スラップ × 強さ3層 × 2回ずつの録音
+  cajon: { programs: [115], url: cajonUrl },
 };
 function extrasFor(score: Score): string[] {
   return Object.keys(EXTRA_FONTS).filter((id) => score.tracks.some((t) => t.instrument === id || (typeof t.program === "number" && EXTRA_FONTS[id].programs.includes(t.program))));

@@ -20,7 +20,7 @@ export const INSTRUMENT_RANGES: Record<string, InstrumentRange> = {
   strings: R("E1", "E7", "C2", "E6"), pad: R("C2", "C6", "C2", "C5"), choir: R("E2", "A5", "C3", "G5"),
   brass: R("E2", "Bb5", "G2", "Bb4"), lead: R("C4", "C7", "C4", "C6"), bell: R("C4", "C7"),
   xylophone: R("F3", "C8", "C4", "C7"), glockenspiel: R("C5", "C8", "G5", "C8"), accordion: R("F2", "A6", "F3", "C6"),
-  fmBell: R("C3", "C8", "C4", "C7"), fmEpiano: R("C2", "C7", "C3", "C6"), drawbarOrgan: R("C2", "C7", "C2", "C6"), unisonSaw: R("C1", "C7", "C2", "C6"), rotoTom: R("F1", "C4", "F2", "B3"), cannonTom: R("F1", "C4", "F2", "B3"), inchTom: R("F1", "C4", "F2", "B3"), kickTrigger: R("C1", "B3"), impactHit: R("E1", "C4"),
+  fmBell: R("C3", "C8", "C4", "C7"), fmEpiano: R("C2", "C7", "C3", "C6"), drawbarOrgan: R("C2", "C7", "C2", "C6"), unisonSaw: R("C1", "C7", "C2", "C6"), rotoTom: R("F1", "C4", "F2", "B3"), cannonTom: R("F1", "C4", "F2", "B3"), inchTom: R("F1", "C4", "F2", "B3"), cajon: R("A2", "G3", "A2", "G3"), kickTrigger: R("C1", "B3"), impactHit: R("E1", "C4"),
   sitar: R("C3", "C6", "C3", "C5"), koto: R("D3", "A5"), shamisen: R("C3", "C6", "C3", "C5"), banjo: R("D3", "C6", "D3", "G5"),
   harp: R("B0", "G#7", "C2", "C7"), kalimba: R("C4", "E6"), panflute: R("C4", "C7", "C4", "C6"),
   shakuhachi: R("D4", "E7", "D4", "D6"), ocarina: R("C4", "C7"), fiddle: R("G3", "E7", "G3", "B5"), bagpipe: R("A3", "A5", "G4", "A5"),
