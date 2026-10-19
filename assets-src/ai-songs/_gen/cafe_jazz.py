@@ -770,7 +770,8 @@ def build(song, out):
                         # ライドは次に叩くまで鳴らしつづける（2026-10-19、人間「ライドの鳴りをもう少し伸ばして鋭く」）
                         if inst == "ride": D["ride"].add(t0 + j * G, 4 * TPB, "D#3", "!" if ch == "X" else "," if ch == "o" else "")
                         elif inst == "bell": D["ride"].add(t0 + j * G, 4 * TPB, "F3", "!" if ch == "X" else "," if ch == "o" else "")
-                        else: D[inst].add(t0 + j * G, G, ch.lower() if ch != "O" else "O", "!" if ch == "X" else "," if ch == "o" else "")
+                        # スネアの強打（X）は強くしない（2026-10-19 人間「スネアの強い部分の音を少し抑えて」）
+                        else: D[inst].add(t0 + j * G, G, ch.lower() if ch != "O" else "O", ("" if inst == "snare" else "!") if ch == "X" else "," if ch == "o" else "")
             grid(dsty_b.get("ride", ""), "ride"); grid(dsty_b.get("bell", ""), "bell"); grid(dsty_b.get("hat", ""), "hat")
             grid(dsty_b.get("kick", ""), "kick")
             sn = dsty_b.get("snare", "")
@@ -797,9 +798,18 @@ def build(song, out):
             if not song.get("noaccent") and not first_A and name not in ("intro", "outro") and not last_of_sec and rng.random() < (0.3 if name in ("B", "SB") else 0.18):
                 per = L // beats; spot = rng.choice([b_ for b_ in range(1, beats)])
                 j_ = spot * per - (per // 2 if not triplet else 1)   # 拍の前の裏
-                D["snare"].add(t0 + j_ * G, G, "x", "!"); D["kick"].add(t0 + j_ * G, G, "x", "")
+                D["snare"].add(t0 + j_ * G, G, "x", ""); D["kick"].add(t0 + j_ * G, G, "x", "")
                 D["crash"].add(t0 + j_ * G, 2 * TPB, "x", "")
             if i == 0 and who == "head" and bi > 4: D["crash"].add(t0, 2 * BT, "x", ",")
+            if song.get("cajon") and not (name == "intro" and i < 2):   # カホン（録音）を重ねる: 低音＝1拍目と3拍目の前の裏、スラップ＝2・4拍、合間に弱いトーン
+                if "cajon" not in D: D["cajon"] = Part(dict(instrument="cajon", volume=round(0.32 * song.get("cajon_vol", 1.0), 3), reverb=0.18, pan=-0.15), "カホン")
+                per = L // beats
+                for bt_ in range(beats):
+                    j0 = bt_ * per
+                    if bt_ % 2 == 0: D["cajon"].add(t0 + j0 * G, per * G, "C3", "" if bt_ == 0 else ",")
+                    else: D["cajon"].add(t0 + j0 * G, per * G, "E3", "!" if bt_ == beats - 1 else "")
+                    if per >= 4 and rng.random() < 0.55: D["cajon"].add(t0 + (j0 + per - 1) * G, G, "D3", ",")
+                    elif per == 3 and rng.random() < 0.5: D["cajon"].add(t0 + (j0 + 2) * G, G, "D3", ",")
 
     # ================= ブレイク（はじめのテーマの最後の小節は、全員が1拍目で止まり、旋律だけが残る → ソロへ）と、
     #   ソロのはじめの8小節は、うしろの弦が抜ける（楽器の出入り）
@@ -879,7 +889,7 @@ def build(song, out):
     if "pad" in P:
         for p in P["pad"]: emit(p)
     if "bass" in P: emit(P["bass"])
-    for k in ("kick", "snare", "hat", "ride", "crash", "tom"):
+    for k in ("kick", "snare", "hat", "ride", "crash", "tom", "cajon"):
         if k in D: emit(D[k], drum=True)
     # 楽器ごとの大きさをそろえる（2026-10-19。楽器の音源ごとに、同じ volume でも大きさが 20dB 近くちがう。
     #   cafe_jazz_cal.json＝同じ音形を鳴らして測った、旋律のピアノとの差 dB）。旋律はピアノと同じ、ソロは -1、和音は -6.5、うしろの和音は -12 に
@@ -934,6 +944,19 @@ for _n, _s in enumerate(SONGS, 1):
     if _n == 9: FINAL[k] = {"lead": "piano", "solo2": "tenorSax"}
     if _n == 16: FINAL[k] = dict(seed=1, drums="straight", **_C)
     if _n == 24: FINAL[k] = {"seed": 1}
+
+# 2026-10-19 新しい音（本物の楽器・カホン・部屋の響き）で 8 点を超えた組み合わせ（書き出しは --space room --space-wet 0.28）
+_CJ = {"cajon": True}
+FINAL2 = {"02": _CJ, "05": _CJ, "24": _CJ, "25": _CJ,
+          "06": dict(_CJ, lead="vibes", solo2="piano"), "07": dict(_CJ, lead="vibes", solo2="horn"),
+          "09": dict(drums="swing2", seed=12), "11": dict(_CJ, drums="swing2", seed=12), "13": dict(seed=11),
+          "15": dict(drums="swing2", seed=12), "16": dict(_CJ, drums="swing2", lead="vibes", solo2="piano"),
+          "17": dict(drums="swing2"), "19": dict(seed=11), "20": dict(_CJ, seed=14),
+          "21": dict(_CJ, lead="vibes", solo2="piano"), "22": dict(_CJ, seed=13),
+          "03": _CJ, "04": _CJ,
+          "12": dict(_CJ, lead="vibes", solo2="flute", dvol=0.7, seed=12, bpm=80),
+          "23": dict(_CJ, lead="piano", solo2="cello", double=True, bpm=80, seed=15)}   # 23 は書き出しのあと高域を少し持ち上げる（highshelf 7kHz +2.5dB）
+for _k, _v in FINAL2.items(): FINAL[_k] = dict(FINAL.get(_k, {}), **_v)
 
 if __name__ == "__main__":
     which = sys.argv[1] if len(sys.argv) > 1 else "all"
