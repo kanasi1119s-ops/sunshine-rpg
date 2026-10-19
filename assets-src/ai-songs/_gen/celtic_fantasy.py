@@ -119,7 +119,7 @@ if __name__ == "__main__":
         if s["mood"] == "calm" and os.environ.get("CF_CALM", "1") == "1":
             tune.setdefault(f"{n:02d}", {}); tune[f"{n:02d}"] = {**CALM, "bpm": round(s["bpm"] * 1.22), **tune[f"{n:02d}"]}
         if f"{n:02d}" in tune:
-            t = dict(tune[f"{n:02d}"]); top = {k: t.pop(k) for k in ("seed", "bpm", "mel_range", "lead_db", "gsoft", "gdb", "cajon_vol", "lead_patch", "lift", "fmood") if k in t}
+            t = dict(tune[f"{n:02d}"]); top = {k: t.pop(k) for k in ("seed", "bpm", "mel_range", "lead_db", "gsoft", "gdb", "cajon_vol", "lead_patch", "lift", "fmood", "real_bass", "bass_vol") if k in t}
             s = dict(s, band={**s["band"], **t}, **top)
             if top.get("fmood"):   # 組み立てだけ別の雰囲気の形にする（ゆったりの曲を「中くらい」の形に、など）
                 s["form"] = form_for(top["fmood"], s["meter"], s.get("bpm", s["bpm"]), "fade" if s["mood"] == "calm" else "hit")

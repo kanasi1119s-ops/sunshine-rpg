@@ -275,7 +275,12 @@ def build(song, out):
     if band.get("acc") and "acc" not in leads_used: S.part("L_acc", "accordion", "旋律（acc）", 0.15, 0.25, reverb=0.28, fx=FX["room"])
     if band.get("pizz"): S.part("pizz", "strings", "弦のピチカート", 0.13, -0.3, patch="pizzicato", reverb=0.3)
     # ウッドベース（2026-10-20 楽器ごとの点検: 出だしが硬い 17.5dB・点数 6.63 → 立ち上がりをゆるく、高音を下げる）
-    if band.get("bass") == "upright": S.part("bass", "bass", "ウッドベース", 0.22, 0, amp="jazz", reverb=0.08, release=0.3, bright=-0.65, attack=0.04,
+    # 2026-10-20 楽器ごとの点検 2回目: エレキの音源（--bass jazz）では、どの曲もウッドベースだけ 6.6 前後と低い
+    #   → 本物のコントラバスのピチカートの録音（--bass upright。VSCO 2 CE）に。録音なのでアンプは通さず、軽いEQとコンプだけ
+    if band.get("bass") == "upright" and song.get("real_bass", False):
+        S.part("bass", "bass", "ウッドベース", round(0.26 * song.get("bass_vol", 1.0), 3), 0, reverb=0.1, release=0.35,
+               fx=[{"type": "eq", "low": 1.5, "mid": -1, "midHz": 350, "high": -2}, {"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.01, "release": 0.2}])
+    elif band.get("bass") == "upright": S.part("bass", "bass", "ウッドベース", 0.22, 0, amp="jazz", reverb=0.08, release=0.3, bright=-0.65, attack=0.04,
                                               fx=[{"type": "eq", "low": 1, "mid": 0, "midHz": 800, "high": -9}, {"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.02, "release": 0.2}])
     if band.get("drums") == "cajon": S.part("cajon", "cajon", "カホン", round(0.4 * song.get("cajon_vol", 1.0), 3), -0.05, reverb=0.14)
     if band.get("bass") == "finger": S.part("bass", "bass", "ベース（指弾き）", 0.24, 0, fx=[{"type": "compressor", "threshold": -18, "ratio": 3, "attack": 0.02, "release": 0.15}])

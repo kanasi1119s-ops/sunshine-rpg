@@ -1,0 +1,31 @@
+// VSCO 2 CE（Versilian Studios。CC0）の独奏コントラバスのピチカートを、作曲ソフトのウッドベースに（2026-10-20）
+// 録音ごとの大きさのばらつきを、出だし0.25秒の大きさでそろえる。強く弾いた録音（v3）がある音はそれを、ない音は弱い録音（v1）を使う（弱い録音を大きくすると雑音も上がるため）
+<control> default_path=./
+<region> sample=BKCtbss_Pizz_E0_v3_rr1.wav lokey=24 hikey=29 pitch_keycenter=28 lovel=1 hivel=127 volume=9.9 seq_length=2 seq_position=1
+<region> sample=BKCtbss_Pizz_E0_v3_rr2.wav lokey=24 hikey=29 pitch_keycenter=28 lovel=1 hivel=127 volume=12.3 seq_length=2 seq_position=2
+<region> sample=BKCtbss_Pizz_F#0_v3_rr1.wav lokey=30 hikey=30 pitch_keycenter=30 lovel=1 hivel=127 volume=14.3 seq_length=2 seq_position=1
+<region> sample=BKCtbss_Pizz_F#0_v3_rr2.wav lokey=30 hikey=30 pitch_keycenter=30 lovel=1 hivel=127 volume=12.3 seq_length=2 seq_position=2
+<region> sample=BKCtbss_Pizz_G0_v3_rr1.wav lokey=31 hikey=32 pitch_keycenter=31 lovel=1 hivel=127 volume=15.3 seq_length=2 seq_position=1
+<region> sample=BKCtbss_Pizz_G0_v3_rr2.wav lokey=31 hikey=32 pitch_keycenter=31 lovel=1 hivel=127 volume=13.2 seq_length=2 seq_position=2
+<region> sample=BKCtbss_Pizz_A#0_v3_rr1.wav lokey=33 hikey=35 pitch_keycenter=34 lovel=1 hivel=127 volume=7.0 seq_length=2 seq_position=1
+<region> sample=BKCtbss_Pizz_A#0_v3_rr2.wav lokey=33 hikey=35 pitch_keycenter=34 lovel=1 hivel=127 volume=11.1 seq_length=2 seq_position=2
+<region> sample=BKCtbss_Pizz_C1_v3_rr1.wav lokey=36 hikey=37 pitch_keycenter=36 lovel=1 hivel=127 volume=11.6 seq_length=2 seq_position=1
+<region> sample=BKCtbss_Pizz_C1_v3_rr2.wav lokey=36 hikey=37 pitch_keycenter=36 lovel=1 hivel=127 volume=12.2 seq_length=2 seq_position=2
+<region> sample=BKCtbss_Pizz_D1_v1_rr1.wav lokey=38 hikey=39 pitch_keycenter=38 lovel=1 hivel=127 volume=15.3 seq_length=2 seq_position=1
+<region> sample=BKCtbss_Pizz_D1_v1_rr2.wav lokey=38 hikey=39 pitch_keycenter=38 lovel=1 hivel=127 volume=14.3 seq_length=2 seq_position=2
+<region> sample=BKCtbss_Pizz_E1_v3_rr1.wav lokey=40 hikey=41 pitch_keycenter=40 lovel=1 hivel=127 volume=12.7 seq_length=2 seq_position=1
+<region> sample=BKCtbss_Pizz_E1_v3_rr2.wav lokey=40 hikey=41 pitch_keycenter=40 lovel=1 hivel=127 volume=11.7 seq_length=2 seq_position=2
+<region> sample=BKCtbss_Pizz_F#1_v1_rr1.wav lokey=42 hikey=43 pitch_keycenter=42 lovel=1 hivel=127 volume=18 seq_length=2 seq_position=1
+<region> sample=BKCtbss_Pizz_F#1_v1_rr2.wav lokey=42 hikey=43 pitch_keycenter=42 lovel=1 hivel=127 volume=18 seq_length=2 seq_position=2
+<region> sample=BKCtbss_Pizz_G#1_v1_rr1.wav lokey=44 hikey=44 pitch_keycenter=44 lovel=1 hivel=127 volume=7.6 seq_length=2 seq_position=1
+<region> sample=BKCtbss_Pizz_G#1_v1_rr2.wav lokey=44 hikey=44 pitch_keycenter=44 lovel=1 hivel=127 volume=10.5 seq_length=2 seq_position=2
+<region> sample=BKCtbss_Pizz_A1_v1_rr1.wav lokey=45 hikey=47 pitch_keycenter=45 lovel=1 hivel=127 volume=10.0 seq_length=2 seq_position=1
+<region> sample=BKCtbss_Pizz_A1_v1_rr2.wav lokey=45 hikey=47 pitch_keycenter=45 lovel=1 hivel=127 volume=10.4 seq_length=2 seq_position=2
+<region> sample=BKCtbss_Pizz_C#2_v1_rr1.wav lokey=48 hikey=50 pitch_keycenter=49 lovel=1 hivel=127 volume=15.9 seq_length=2 seq_position=1
+<region> sample=BKCtbss_Pizz_C#2_v1_rr2.wav lokey=48 hikey=50 pitch_keycenter=49 lovel=1 hivel=127 volume=14.8 seq_length=2 seq_position=2
+<region> sample=BKCtbss_Pizz_E2_v1_rr1.wav lokey=51 hikey=54 pitch_keycenter=52 lovel=1 hivel=127 volume=18 seq_length=2 seq_position=1
+<region> sample=BKCtbss_Pizz_E2_v1_rr2.wav lokey=51 hikey=54 pitch_keycenter=52 lovel=1 hivel=127 volume=18 seq_length=2 seq_position=2
+<region> sample=BKCtbss_Pizz_G#2_v1_rr1.wav lokey=55 hikey=57 pitch_keycenter=56 lovel=1 hivel=127 volume=18 seq_length=2 seq_position=1
+<region> sample=BKCtbss_Pizz_G#2_v1_rr2.wav lokey=55 hikey=57 pitch_keycenter=56 lovel=1 hivel=127 volume=18 seq_length=2 seq_position=2
+<region> sample=BKCtbss_Pizz_B2_v1_rr1.wav lokey=58 hikey=67 pitch_keycenter=59 lovel=1 hivel=127 volume=18 seq_length=2 seq_position=1
+<region> sample=BKCtbss_Pizz_B2_v1_rr2.wav lokey=58 hikey=67 pitch_keycenter=59 lovel=1 hivel=127 volume=18 seq_length=2 seq_position=2

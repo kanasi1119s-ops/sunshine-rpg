@@ -36,6 +36,7 @@ import guitarShinyUrl from "../../assets-src/soundfont/extra/guitar-shiny.sf3?ur
 import guitarShinyAcousticUrl from "../../assets-src/soundfont/extra/guitar-shiny-acoustic.sf3?url";
 import guitarNylonUrl from "../../assets-src/soundfont/extra/guitar-nylon-spanish.sf3?url";
 import bassGrowlyUrl from "../../assets-src/soundfont/extra/bass-growly.sf3?url";
+import bassUprightUrl from "../../assets-src/soundfont/extra/bass-upright.sf3?url";
 import drumsRockAuxUrl from "../../assets-src/soundfont/extra/drums-rock-aux.sf3?url";
 import drumsMuldjordAuxUrl from "../../assets-src/soundfont/extra/drums-muldjord-aux.sf3?url";
 import drumsJpopAuxUrl from "../../assets-src/soundfont/extra/drums-jpop-aux.sf3?url";
@@ -160,6 +161,8 @@ const BASS_FONTS: Record<string, { label: string; url: string | null }> = {
   jazz: { label: "ジャズベース", url: bassJazzUrl },
   jpop: { label: "J-POPベース", url: bassJpopUrl },
   growly: { label: "Growly Bass（Jazz Bass の指弾き。Karoryfer。CC0）", url: bassGrowlyUrl },
+  // 2026-10-20 ケルト曲のウッドベース: エレキの jazz では楽器ごとの点数が 6.6 と低く出だしが硬いので、本物のコントラバスのピチカート（VSCO 2 CE。CC0）を
+  upright: { label: "ウッドベース（コントラバスのピチカート。VSCO 2 CE。CC0）", url: bassUprightUrl },
 };
 const DRUM_FONTS: Record<string, { label: string; url: string | null }> = {
   std: { label: "標準（上の音源）", url: null },
