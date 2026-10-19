@@ -82,7 +82,7 @@ def voicing(pcs, prev, lo, hi):
 def P(**k): return k
 INST = {
     # 旋律
-    "piano": (P(instrument="piano", volume=0.2, reverb=0.3, sustain=1.3, bright=-0.25), (60, 86)),
+    "piano": (P(instrument="piano", volume=0.2, reverb=0.26, sustain=1.7, bright=-0.25), (57, 89)),
     "flute": (P(instrument="panflute", patch="flute", volume=0.2, reverb=0.38, breath=True, attack=0.06, release=0.45, bright=-0.2, fx=[{"type": "plate", "mix": 0.12}]), (62, 86)),
     "clarinet": (P(instrument="panflute", patch="clarinet", volume=0.21, reverb=0.35, breath=True, attack=0.06, release=0.45, fx=[{"type": "plate", "mix": 0.1}]), (55, 79)),
     "clarinetLow": (P(instrument="panflute", patch="clarinet", volume=0.22, reverb=0.4, breath=True, attack=0.08, release=0.5, bright=-0.25, fx=[{"type": "plate", "mix": 0.14}]), (52, 72)),
@@ -94,20 +94,19 @@ INST = {
     "viola": (P(instrument="strings", patch="viola", volume=0.19, reverb=0.42, attack=0.1, release=0.5), (55, 79)),
     "cello": (P(instrument="strings", patch="cello", volume=0.2, reverb=0.4, attack=0.1, release=0.5), (45, 69)),
     "jazzGuitar": (P(instrument="leadGuitar", patch="jazzGuitar", amp="jazz", volume=0.2, reverb=0.28, sustain=1.2, chorus=0, autoScoop=False, humanPitch=0, bright=-0.2), (55, 81)),
-    "fmEpiano": (P(instrument="fmEpiano", volume=0.18, reverb=0.4, sustain=1.6, bright=-0.25, fx=[{"type": "tremolo", "rate": 4.5, "depth": 0.18, "mix": 1.0}, {"type": "plate", "mix": 0.14}]), (60, 86)),
+    # 2026-10-19 人間「電子音系はなるべく使わず、実際の楽器音を」→ エレピ・オルガン・シンセのパッドをやめ、録音の楽器（VCSL ほか）にする
+    "vibes": (P(instrument="harp", patch="vibraphone", volume=0.2, reverb=0.42, sustain=1.8, bright=-0.2, fx=[{"type": "plate", "mix": 0.12}]), (57, 89)),
+    "tenorSax": (P(instrument="brass", patch="tenorSax", volume=0.18, reverb=0.4, breath=True, attack=0.05, release=0.5, bright=-0.3, fx=[{"type": "plate", "mix": 0.12}]), (46, 75)),
     "marimba": (P(instrument="harp", patch="marimba", volume=0.2, reverb=0.35, sustain=1.4), (57, 84)),
-    "kalimba": (P(instrument="kalimba", volume=0.2, reverb=0.4, sustain=1.8, bright=-0.3), (62, 86)),
+    "kalimba": (P(instrument="harp", patch="kalimbaReal", volume=0.2, reverb=0.4, sustain=1.8, bright=-0.2), (60, 88)),
     "accordion": (P(instrument="accordion", volume=0.15, reverb=0.35, attack=0.05, release=0.35), (57, 81)),
-    "keys": (P(instrument="keys", volume=0.17, reverb=0.35, sustain=1.4, bright=-0.25, fx=[{"type": "tremolo", "rate": 3.5, "depth": 0.15, "mix": 1.0}]), (60, 84)),
     "nylon": (P(instrument="leadGuitar", patch="nylonGuitar", amp="clean", volume=0.19, reverb=0.32, sustain=1.3, bright=-0.3, chorus=0, autoScoop=False, humanPitch=0), (55, 81)),
-    "organ": (P(instrument="drawbarOrgan", volume=0.12, reverb=0.3, attack=0.02, release=0.25, fx=[{"type": "rotary", "mix": 0.5}]), (55, 81)),
 }
 COMP = {   # 和音の楽器（4声）。(設定, 下, 上, パン)
-    "piano": (P(instrument="piano", volume=0.085, reverb=0.3, sustain=1.0, bright=-0.35), 50, 72, -0.35),
-    "keys": (P(instrument="keys", volume=0.09, reverb=0.32, sustain=1.2, bright=-0.25, fx=[{"type": "tremolo", "rate": 3.5, "depth": 0.15, "mix": 1.0}]), 50, 72, -0.4),
+    "piano": (P(instrument="piano", volume=0.085, reverb=0.38, sustain=1.5, bright=-0.35), 50, 72, -0.4),
+    "vibes": (P(instrument="harp", patch="vibraphone", volume=0.09, reverb=0.4, sustain=1.5, bright=-0.25), 53, 74, 0.4),
     "nylon": (P(instrument="guitar", patch="nylonGuitar", amp="clean", volume=0.085, reverb=0.28, sustain=1.0, bright=-0.35, chorus=0, autoScoop=False, humanPitch=0), 50, 70, -0.45),
     "jazzGuitar": (P(instrument="guitar", patch="jazzGuitar", amp="jazz", volume=0.08, reverb=0.25, sustain=0.9, bright=-0.3, chorus=0, autoScoop=False, humanPitch=0), 50, 69, 0.45),
-    "organ": (P(instrument="drawbarOrgan", volume=0.05, reverb=0.3, attack=0.03, release=0.3, fx=[{"type": "rotary", "mix": 0.45}]), 52, 72, -0.3),
     "marimba": (P(instrument="harp", patch="marimba", volume=0.09, reverb=0.32, sustain=1.0), 55, 74, -0.4),
     "pizz": (P(instrument="strings", patch="pizzicato", volume=0.1, reverb=0.35), 52, 74, -0.45),
     "accordion": (P(instrument="accordion", volume=0.06, reverb=0.3, attack=0.03, release=0.25), 55, 72, -0.4),
@@ -115,9 +114,6 @@ COMP = {   # 和音の楽器（4声）。(設定, 下, 上, パン)
 PADS = {   # うしろの長い和音（空間）
     "strings": P(instrument="strings", patch="slowStrings", volume=0.045, reverb=0.5, attack=0.6, release=1.0),
     "ensemble": P(instrument="strings", patch="stringEnsemble", volume=0.04, reverb=0.5, attack=0.6, release=1.0),
-    "warm": P(instrument="pad", patch="warmPad", volume=0.03, reverb=0.55, attack=0.8, release=1.2, sustain=2.0),
-    "organ": P(instrument="drawbarOrgan", volume=0.03, reverb=0.4, attack=0.2, release=0.6),
-    "choir": P(instrument="choir", volume=0.03, reverb=0.55, attack=0.6, release=1.0),
 }
 
 # ================================================================ 25曲の設計
@@ -141,27 +137,27 @@ SONGS = [
     S("midnight-ballad", "真夜中のバラード", "Midnight Ballad", "閉店まぎわ。灯りを少し落とした店で、静かに流れる", "4/4", 62, 0.7, "Eb",
       "Ebmaj7 | Cm9 | Fm9 | Bb7 | Gm7 C7b9 | Fm7 Bb7 | Ebmaj7 Abmaj7 | Fm7 Bb7sus4",
       "Abmaj7 | Abm6 | Gm7 | C7alt | Fm9 | Bb7 | Ebmaj7 | Fm7 Bb7",
-      "ballad", "ballad", "piano", "ballad", "trumpet", "piano", "strings", "バラード。やわらかいトランペットとピアノ、うしろに弦。"),
+      "ballad", "ballad", "piano", "ballad", "tenorSax", "piano", "strings", "バラード。息まじりのテナーサックスとピアノ、うしろに弦。"),
     S("library-five", "本棚の五拍子", "Five Beats on the Bookshelf", "本を一冊ぬき出して、ページをゆっくりめくる", "5/4", 132, 0.55, "C",
       "Cm9 | Cm9 | Abmaj7#11 | Abmaj7#11 | Fm9 | Bb7sus4 | Ebmaj7 | G7alt",
       "Abmaj7 | Gm7 | Fm9 | Bbm7 Eb7 | Abmaj7 | Dm7b5 G7b9 | Cm9 | G7sus4",
-      "five", "five", "piano", "five", "fmEpiano", "piano", "strings", "5拍子（3＋2）のクール・ジャズ。ビブラフォンのようなエレピの旋律。"),
+      "five", "five", "piano", "five", "vibes", "piano", "strings", "5拍子（3＋2）のクール・ジャズ。ビブラフォンの旋律。"),
     S("lamp-mode", "ランプの灯るモード", "Modal Lamplight", "ランプの灯りが、木のテーブルにまるく落ちている", "4/4", 108, 0.6, "D",
       "Dm11 | Dm11 | Dm11 | Dm11 | Ebmaj7#11 | Ebmaj7#11 | Dm11 | Dm11",
       "Em11 | Em11 | Fmaj7#11 | Fmaj7#11 | Em11 | Em11 | Ebmaj7#11 | A7alt",
-      "swing2", "walk", "keys", "modal", "jazzGuitar", "keys", "strings", "ドリアンのモード・ジャズ。和音はエレピ、旋律はジャズギター。"),
+      "swing2", "walk", "piano", "modal", "jazzGuitar", "vibes", "strings", "ドリアンのモード・ジャズ。ピアノの和音、ジャズギターとビブラフォン。"),
     S("neosoul-sunlight", "ネオソウルの陽だまり", "Neo-Soul Sunlight", "窓ぎわのソファ。日だまりの中で、少しうとうと", "4/4", 80, 0.32, "Ab",
       "Abmaj9 | Dbmaj9 | Cm9 | Fm9 | Bbm9 | Eb9sus4 | Abmaj9 | Gm7 C7alt",
       "Dbmaj9 | Dbm6 | Cm9 | F13 | Bbm9 | Eb13 | Abmaj9 | Eb9sus4",
-      "neosoul", "neosoul", "keys", "neosoul", "horn", "keys", "strings", "ゆるく跳ねるネオソウル。エレピの和音と、フリューゲルホルンのようなやわらかい金管。"),
+      "neosoul", "neosoul", "piano", "neosoul", "horn", "tenorSax", "strings", "ゆるく跳ねるネオソウル。ピアノの和音と、やわらかいホルンとテナーサックス。"),
     S("harbor-samba", "港のサンバ", "Harbor Samba", "港の見えるテラス。潮風がテーブルクロスをゆらす", "4/4", 104, 0.0, "G",
       "Gmaj7 | Gmaj7 | Am9 | D7 | Bm7 | E7b9 | Am9 | D7sus4",
       "Cmaj7 | Cm6 | Bm7 | E7 | Am9 | D7 | Gmaj7 E7b9 | Am7 D7",
       "samba", "samba", "nylon", "samba", "marimba", "piano", "strings", "ゆったりしたサンバ。マリンバの旋律と、ナイロン弦のギター。"),
-    S("blue-monday", "ブルーな月曜日", "Blue Monday Organ", "雨の月曜日。カウンターで、ゆっくりコーヒーを飲む", "4/4", 84, 0.66, "F",
+    S("blue-monday", "ブルーな月曜日", "Blue Monday Blues", "雨の月曜日。カウンターで、ゆっくりコーヒーを飲む", "4/4", 84, 0.66, "F",
       "F7 | Bb7 | F7 | Cm7 F7 | Bb7 | Bdim7 | F7 | Am7b5 D7b9",
       "Gm7 | C7 | F7 D7b9 | Gm7 C7 | F7 | Bb7 | F7 | Gm7 C7",
-      "shuffle", "walk", "organ", "organ", "jazzGuitar", "organ", "none", "オルガン・トリオのスロー・ブルース。ジャズギターが歌う。"),
+      "shuffle", "walk", "piano", "swing", "jazzGuitar", "tenorSax", "strings", "スロー・ブルース。ピアノとテナーサックスが歌う。"),
     S("moonlit-bolero", "月夜のボレロ", "Moonlit Bolero", "月の光がさしこむ、古いレンガの店", "4/4", 92, 0.0, "E",
       "Em9 | Em9 | Am9 | Am9 | F#m7b5 | B7b9 | Em9 | Cmaj7 B7",
       "Gmaj7 | Gmaj7 | Am9 | D7 | Gmaj7 | Cmaj7 | F#m7b5 | B7alt",
@@ -197,7 +193,7 @@ SONGS = [
     S("stride-cafe", "古い喫茶店のピアノ", "Old Café Piano", "古い喫茶店の、すみに置かれたアップライト・ピアノ", "4/4", 100, 0.62, "C",
       "C6 | A7 | Dm7 | G7 | C6 | C7 | F6 | Fm6",
       "Em7 | A7 | Dm7 | G7 | C6 | A7b9 | Dm7 | G7",
-      "stride", "stride", "piano", "stride", "piano", "piano", "none", "ストライド風のソロ・ピアノに、ブラシとベースを少し。"),
+      "stride", "stride", "piano", "stride", "piano", "piano", "strings", "ストライド風のソロ・ピアノに、ブラシとベースを少し。"),
     S("chamber-rain", "雨あがりの室内楽", "Chamber Jazz After the Rain", "雨があがって、木の床が少しひんやり", "4/4", 112, 0.58, "D",
       "Dmaj7 | Bm9 | Em9 | A7 | F#m7 | B7b9 | Em9 | A7sus4",
       "Gmaj7 | Gm6 | F#m7 | B7 | Em9 | A7 | Dmaj7 B7b9 | Em7 A7",
@@ -205,7 +201,7 @@ SONGS = [
     S("noir-fog", "霧の夜の探偵", "Foggy Noir", "霧の夜。窓の外を、帽子の人が通りすぎる", "4/4", 72, 0.7, "C",
       "Cm9 | Abmaj7 | Fm9 | G7alt | Cm9 | Dm7b5 G7b9 | Cm9 | Dm7b5 G7alt",
       "Ebmaj7 | Am7b5 D7b9 | Gm7 | C7b9 | Fm9 | Bb7 | Ebmaj7 | Dm7b5 G7alt",
-      "ballad", "two", "piano", "ballad", "clarinetLow", "piano", "strings", "フィルム・ノワール風のスロー・スウィング。低いクラリネット。"),
+      "ballad", "two", "piano", "ballad", "tenorSax", "clarinetLow", "strings", "フィルム・ノワール風のスロー・スウィング。テナーサックスと低いクラリネット。"),
     S("sunny-calypso", "日だまりのカリプソ", "Sunny Calypso", "日だまりのテラス。冷たいアイスコーヒー", "4/4", 116, 0.0, "G",
       "Gmaj7 | Em7 | Am7 | D7 | Gmaj7 | G7 | Cmaj7 | D7",
       "Cmaj7 | C#dim7 | Gmaj7 | E7 | Am7 | D7 | Gmaj7 | D7sus4",
@@ -213,7 +209,7 @@ SONGS = [
     S("mellow-funk", "夜ふけのメロウ・ファンク", "Mellow Late-Night Funk", "夜ふけのカフェ。デスクライトの下で、もう少しだけ", "4/4", 94, 0.0, "E",
       "Em9 | A13 | Em9 | A13 | Cmaj7 | B7alt | Em9 | A13",
       "Cmaj7 | Bm7 | Am9 | D9 | Gmaj7 | Cmaj7 | F#m7b5 | B7alt",
-      "funk", "funk", "keys", "funk", "flute", "jazzGuitar", "strings", "メロウなジャズ・ファンク。エレピとギターの刻み、フルートの旋律。"),
+      "funk", "funk", "piano", "funk", "flute", "vibes", "strings", "メロウなジャズ・ファンク。ピアノの刻み、フルートとビブラフォン。"),
     S("duo-cello", "ふたりのデュオ", "Duo for Two", "向かいあった二人。言葉のかわりに、音で話す", "4/4", 76, 0.62, "D",
       "Dmaj7 | Em9 | F#m7 | B7b9 | Em9 | A7 | Dmaj7 | A7sus4",
       "Gmaj7 | Gm6 | F#m7 | B7alt | Em9 | A7 | F#m7 B7 | Em7 A7",
@@ -221,12 +217,18 @@ SONGS = [
     S("gospel-sunday", "日曜日のゴスペル", "Sunday Gospel", "日曜日の朝。窓から教会の鐘が聞こえる", "12/8", 64, 0.0, "Ab",
       "Abmaj7 | Db/Ab | Abmaj7 | Fm9 | Bbm9 | Eb7sus4 | Abmaj7 | Eb7",
       "Dbmaj7 | Dbm6 | Cm7 | F7 | Bbm9 | Eb7 | Ab Fm7 | Bbm7 Eb7",
-      "gospel", "gospel", "organ", "gospel", "piano", "organ", "choir", "12/8 のゴスペル・バラード。ピアノの旋律、オルガンの和音、うしろに合唱。"),
+      "gospel", "gospel", "piano", "gospel", "piano", "tenorSax", "ensemble", "12/8 のゴスペル・バラード。ピアノとテナーサックス、うしろに弦の合奏。"),
     S("dawn-baiao", "夜明けのバイヨン", "Baião at Dawn", "夜明けの市場。パンの焼けるにおい", "4/4", 108, 0.0, "D",
       "D7 | D7 | C/D | C/D | D7 | G/D | A7sus4 | D7",
       "G | G | D | D | Em7 | A7 | D | A7sus4",
       "baiao", "baiao", "piano", "baiao", "accordion", "flute", "strings", "ブラジルのバイヨン。アコーディオンの旋律（ミクソリディアン）と、フルート。"),
 ]
+
+# 2026-10-19 点数の試し: ナイロンギター（7.39→7.79）・エレピ・ギターの和音は点数を下げる（音源の質）。和音はピアノを基本にする（オルガンの2曲は残す）
+COMP_OVERRIDE = {"rainy-bossa": "piano", "lamp-mode": "piano", "neosoul-sunlight": "piano", "moonlit-bolero": "piano", "cobblestone-swing": "piano",
+                 "guitar-trio": "piano", "chamber-rain": "piano", "mellow-funk": "piano"}
+for _s in SONGS:
+    if _s["id"] in COMP_OVERRIDE: _s["comp"] = COMP_OVERRIDE[_s["id"]]
 
 # ================================================================ 拍子
 METER = {"4/4": dict(beats=4, sub=4, split=[2, 2]), "3/4": dict(beats=3, sub=4, split=[2, 1]), "5/4": dict(beats=5, sub=4, split=[3, 2]),
@@ -350,8 +352,12 @@ def build(song, out):
     form += [("A", A, "head"), ("A2", A, "head"), ("B", B, "head"), ("A3", A, "head")]
     order = ["A", "A", "B", "A"]
     soloists = ["lead", "solo2"] if song["solo2"] != "none" else ["lead"]
+    s2_left = song.get("s2blocks", 99)   # 2つ目の楽器がソロをとる区間（8小節）の数の上限
     for i in range(n_solo):
         sec = order[i % 4]; who = soloists[(i // 2) % len(soloists)] if n_solo > 2 else "lead"
+        if who == "solo2":
+            if s2_left <= 0: who = "lead"
+            else: s2_left -= 1
         form.append(("S" + sec, A if sec == "A" else B, who))
     if out_bars == 32: form += [("A", A, "head"), ("A2", A, "head"), ("B", B, "head"), ("A3", A, "head")]
     else: form += [("B", B, "head"), ("A3", A, "head")]
@@ -382,7 +388,9 @@ def build(song, out):
         b2, (lo2, hi2) = INST[s2]
         P["solo2"] = Part(b2, f"ソロ（{s2}）")
     else: lo2, hi2 = llo, lhi
-    if song["pad"] != "none": P["pad"] = [Part(PADS[song["pad"]], f"うしろの和音（{song['pad']}・{i + 1}）") for i in range(3)]
+    if song["pad"] != "none":
+        pb = dict(PADS[song["pad"]]); pb.update(reverb=0.72, attack=max(pb.get("attack", 0.6), 0.9), release=1.8)
+        P["pad"] = [Part(pb, f"うしろの和音（{song['pad']}・{i + 1}）") for i in range(5)]   # 2026-10-19 人間「奥行き・スケール・余韻」
     if song["bass"] != "none":
         if song["bass"] == "stride": P["bass"] = Part(dict(INST["piano"][0], volume=0.12, bright=-0.4), "左手の低音（ピアノ）")
         else: P["bass"] = Part(dict(instrument="bass", amp="jazz", volume=0.22, reverb=0.03, release=0.15, bright=-0.45, attack=0.01, duck=0.3,
@@ -463,8 +471,8 @@ def build(song, out):
 
     def head_section(sec_bars_start, lo, hi, center, seed, kind):
         """8小節の旋律。kind: A（動機→くり返し→展開）・A2（A の最後2小節を変える）・B（新しい形、少し高く）"""
-        r2 = random.Random(song["id"] + seed)
-        if kind == "B": center += 3
+        r2 = random.Random(song["id"] + str(song.get("seed", "")) + seed)
+        if kind == "B": center += 5
         c1, c2 = r2.choice(vocab), r2.choice(vocab)
         c5, c6, c7 = r2.choice(vocab), r2.choice(vocab), r2.choice(vocab)
         if c2.endswith("-") or c2.endswith("x"): c2 = c2[:-2] + ".."      # 4小節目の終わりは息つぎ
@@ -485,8 +493,10 @@ def build(song, out):
         return n12 + n34 + n58
 
     def solo_section(sec_bars_start, lo, hi, center, seed):
-        r2 = random.Random(song["id"] + "solo" + seed)
+        r2 = random.Random(song["id"] + str(song.get("seed", "")) + "solo" + seed)
         sv = SOLO["ballad" if feel in ("ballad", "ecm", "duo") and not triplet else "12" if triplet else str(beats)]
+        if song.get("calm_solo"):   # ソロも、テーマのようにゆったり（細かい音を減らす）
+            sv = vocab
         cells = []
         for b in range(8):
             c = r2.choice(sv)
@@ -521,14 +531,14 @@ def build(song, out):
             sb, notes = cache[key_]
             mv = [(t + (b0 - sb) * BT, d, m) for (t, d, m) in notes]
             if kind in ("A2", "A3"):
-                r3 = random.Random(song["id"] + kind)
+                r3 = random.Random(song["id"] + str(song.get("seed", "")) + kind)
                 keep = [x for x in mv if x[0] < (b0 + 6) * BT]
                 tail = onsets_of(r3.choice(vocab) + endc, (b0 + 6) * BT)
                 prevm = keep[-1][2] if keep else lmid
                 tl = line(tail, llo, lhi, prevm, r3, arch=2, end_tonic=True)
                 mv = keep + tl
             # 後テーマの最初の A は、2つ目の楽器が吹く（同じ旋律を同じ音でくり返さない）
-            if out_head_start is not None and b0 == out_head_start and song["solo2"] not in ("none", song["lead"]):
+            if out_head_start is not None and b0 == out_head_start and song["solo2"] not in ("none", song["lead"]) and song.get("s2head", True):
                 mv2 = []
                 for (t, d, m) in mv:
                     while m > hi2: m -= 12
@@ -542,7 +552,7 @@ def build(song, out):
             sn = solo_section(b0, lo, hi, (lo + hi) // 2, f"{b0}")
             (LEAD if who == "lead" else S2).extend(sn)
         elif who == "outro":
-            r4 = random.Random(song["id"] + "outro")
+            r4 = random.Random(song["id"] + str(song.get("seed", "")) + "outro")
             tag = onsets_of(r4.choice(vocab) + endc[:2] + "-" * (len(endc) - 2) + endc.replace("x", "-"), b0 * BT)
             prevm = LEAD[-1][2] if LEAD else lmid
             tg = line(tag, llo, lhi, prevm, r4, arch=2, end_tonic=True)
@@ -550,7 +560,14 @@ def build(song, out):
                 t, d, m = tg[-1]; tg[-1] = (t, TU - t, m)
             LEAD += tg
         b0 += L
-    for (t, d, m) in LEAD: P["lead"].add(t, d, m, "~." if d >= 2 * TPB and song["lead"] not in ("jazzGuitar", "piano", "marimba", "kalimba", "fmEpiano") else "")
+    for (t, d, m) in LEAD: P["lead"].add(t, d, m, "~." if d >= 2 * TPB and song["lead"] not in ("jazzGuitar", "piano", "marimba", "kalimba", "vibes") else "")
+    if song.get("double") and song["lead"] != "piano":   # 旋律をピアノで小さく重ねる（音の芯）
+        P["dbl"] = Part(dict(INST["piano"][0], volume=0.2), "旋律の重ね（ピアノ）")
+        for (t, d, m) in LEAD:
+            mm = m
+            while mm > 84: mm -= 12
+            while mm < 60: mm += 12
+            P["dbl"].add(t, d, mm)
     tgt2 = P.get("solo2")
     s2_is_comp = (s2 == comp_name) or (s2 == "piano" and comp_name == "piano")
     solo2_bars = set()
@@ -610,7 +627,7 @@ def build(song, out):
                 if lh: m = snap(m, c, True, 48, 62)
                 P["comp"][k].add(t, d, m, mk)
         # うしろの和音: 小節の頭から、和音ごとにのばす
-        if "pad" in P and name not in ("intro",):
+        if "pad" in P:
             for (c, s0, d) in bars[bi]:
                 pcs = [c["third"], c["tones"][3] if len(c["tones"]) > 3 else (c["r"] + 7) % 12, (c["r"] + 2) % 12 if c["q"] not in ("7b9", "dim7", "7alt") else c["tones"][2]]
                 want = list(dict.fromkeys(pcs))
@@ -627,6 +644,11 @@ def build(song, out):
                 pv = best[1] if best else [64, 67, 71]; prevpad = pv
                 dd = d if name != "outro" else TU - (bi * BT + s0)
                 for k in range(3): P["pad"][k].add(bi * BT + s0, dd, pv[k])
+                # 低い声（根音・5度、C2〜E3）と高い声（9度か5度、E5〜C6）で、上下に広げる
+                lowp = c["bass"] if (bi + s0) % 2 == 0 else c["r"]
+                P["pad"][3].add(bi * BT + s0, dd, min((x for x in range(40, 53) if x % 12 == lowp), key=lambda x: abs(x - 45)))
+                hp = (c["r"] + 2) % 12 if c["q"] not in ("7b9", "dim7", "7alt", "m7b5") else c["tones"][2]
+                P["pad"][4].add(bi * BT + s0, dd, min((x for x in range(76, 89) if x % 12 == hp), key=lambda x: abs(x - 81)))
 
     # ================= ベース
     bstyle = song["bass"] if song["cstyle"] != "duo" else "duo"
@@ -708,14 +730,29 @@ def build(song, out):
         D["hat"] = Part(dict(instrument="hihat", volume=round(0.07 * dvol, 3)), "ハイハット")
         D["ride"] = Part(dict(instrument="crash", volume=round(0.055 * dvol, 3)), "ライド")
         D["crash"] = Part(dict(instrument="crash", volume=round(0.045 * dvol, 3)), "シンバル（区切り）")
+        D["tom"] = Part(dict(instrument="tom", volume=round(0.1 * dvol, 3), reverb=0.2), "タム・フロアタム（フィル）")
+        has_ride = bool(dsty.get("ride"))
+        BRUSH_SN = ("o.o.x.o.o.o.x.o." + "o.o.x.o.")[:BT // G] if not triplet else "o.ox.oo.ox.o"
+        # 単調にしない（2026-10-19 人間「単調な感じはなるべく少なく」）: はじめのテーマの A は軽く（ライドの曲はブラシ、
+        #   ほかの曲はスネアなし）→ A2 から本来の型へ。区間の終わりのフィルは、タム（高→低のフロアタム）とスネアを交互に
+        sec_count = [0]
         for bi in range(NB):
             name, who, i = bar_info[bi]
+            if bi == 4 + 32 and who in ("lead", "solo2"): D["crash"].add(bi * BT, 2 * BT, "x", "")   # ソロの入り
             if name == "outro" and i >= 1:
-                if i == 3: D["crash"].add(bi * BT, 2 * BT, "x", ",")
+                if i == 1: D["crash"].add(bi * BT, 3 * BT, "x", ",")
                 continue
             t0 = bi * BT; L = BT // G
+            if name == "intro" and i < 2:
+                if i == 1: D["crash"].add(t0 + BT - TPB, TPB, "x", ",")
+                continue
             last_of_sec = (i == 7) and name != "intro"
             intro_light = name == "intro"
+            first_A = bi < 4 + 32 and name == "A"
+            if first_A and has_ride:   # はじめの A: ライドを休み、ブラシの円とハイハット
+                dsty_b = dict(dsty, ride="", snare=BRUSH_SN, ghost=0.0)
+            elif first_A: dsty_b = dict(dsty, snare="", ghost=0.0)
+            else: dsty_b = dsty
             def grid(pat, inst, tok="x"):
                 if not pat: return
                 if isinstance(pat, list): pat = pat[bi % len(pat)]
@@ -725,30 +762,73 @@ def build(song, out):
                         if inst == "ride": D["ride"].add(t0 + j * G, 4 * TPB, "D#3", "!" if ch == "X" else "," if ch == "o" else "")
                         elif inst == "bell": D["ride"].add(t0 + j * G, 4 * TPB, "F3", "!" if ch == "X" else "," if ch == "o" else "")
                         else: D[inst].add(t0 + j * G, G, ch.lower() if ch != "O" else "O", "!" if ch == "X" else "," if ch == "o" else "")
-            grid(dsty.get("ride", ""), "ride"); grid(dsty.get("bell", ""), "bell"); grid(dsty.get("hat", ""), "hat")
-            grid(dsty.get("kick", ""), "kick")
-            sn = dsty.get("snare", "")
-            if last_of_sec and not intro_light:   # 区間の終わりに、小さなフィル（最後の1拍）
-                fill = ("o" * (L // beats)) if not triplet else "oox"
+            grid(dsty_b.get("ride", ""), "ride"); grid(dsty_b.get("bell", ""), "bell"); grid(dsty_b.get("hat", ""), "hat")
+            grid(dsty_b.get("kick", ""), "kick")
+            sn = dsty_b.get("snare", "")
+            if last_of_sec and not intro_light:   # 区間の終わりに、小さなフィル
                 base = (sn[bi % len(sn)] if isinstance(sn, list) else sn) or "." * L
-                sn = base[:L - len(fill)] + fill
+                nfill = sec_count[0] % 3; sec_count[0] += 1
+                per = L // beats
+                if nfill == 0:   # スネアの1拍
+                    fill = "o" * per if not triplet else "oox"; sn = base[:L - len(fill)] + fill
+                else:            # タム → フロアタム（1拍、ときどき2拍）
+                    nb_ = 2 if (nfill == 2 and beats >= 4) else 1
+                    sn = base[:L - per * nb_] + "." * (per * nb_)
+                    pitches = ["C4", "A3", "F3", "D3", "C4", "B3", "G3", "A2"] if nb_ == 2 else ["B3", "G3", "D3", "A2"]
+                    step = (per * nb_) // len(pitches) or 1
+                    for q_, pn in enumerate(pitches[:per * nb_]):
+                        D["tom"].add(t0 + (L - per * nb_ + q_ * step) * G, step * G, pn, "!" if q_ == len(pitches) - 1 else "")
             grid(sn, "snare")
             for j in range(L):   # ゴースト（合いの手）と、まれなキック
                 if j % (2 if triplet else 2) == (0 if triplet else 2 % 2) and j % (sub) != 0 and rng.random() < dsty.get("ghost", 0):
                     D["snare"].add(t0 + j * G, G, "o", ",")
             if rng.random() < dsty.get("bomb", 0): D["kick"].add(t0 + (L - 2) * G, G, "x", ",")
+            # ときどきアクセント（2026-10-19 人間「ドラムはたまにアクセントも」）: 裏拍にスネアとキックを強く＋シンバルを短く鳴らす。
+            #   はじめの A・イントロ・終わりでは入れず、テーマの B・後テーマ・ソロの盛り上がりで、4小節に1回くらい
+            if not first_A and name not in ("intro", "outro") and not last_of_sec and rng.random() < (0.3 if name in ("B", "SB") else 0.18):
+                per = L // beats; spot = rng.choice([b_ for b_ in range(1, beats)])
+                j_ = spot * per - (per // 2 if not triplet else 1)   # 拍の前の裏
+                D["snare"].add(t0 + j_ * G, G, "x", "!"); D["kick"].add(t0 + j_ * G, G, "x", "")
+                D["crash"].add(t0 + j_ * G, 2 * TPB, "x", "")
             if i == 0 and who == "head" and bi > 4: D["crash"].add(t0, 2 * BT, "x", ",")
 
-    # ================= 強弱（小節ごと）
-    lvl = []
+    # ================= ブレイク（はじめのテーマの最後の小節は、全員が1拍目で止まり、旋律だけが残る → ソロへ）と、
+    #   ソロのはじめの8小節は、うしろの弦が抜ける（楽器の出入り）
+    def cut_bar(parts_, b, keep=TPB):
+        lo, hi = b * BT, (b + 1) * BT
+        for p_ in parts_:
+            nev = []
+            for (s_, d_, m_, mk_) in p_.ev:
+                if lo < s_ < hi: continue
+                if s_ == lo and d_ > keep and p_ is not D.get("crash"): d_ = keep
+                if s_ < lo < s_ + d_ and p_ is not D.get("crash"): d_ = lo - s_
+                nev.append((s_, d_, m_, mk_))
+            p_.ev = nev
+    if NB > 4 + 32 + 8 and bar_info[4 + 32][1] in ("lead", "solo2"):
+        brk = 4 + 32 - 1
+        cut_bar(list(P["comp"]) + ([P["bass"]] if "bass" in P else []) + [D[k] for k in D], brk)
+        if D: D["crash"].add(brk * BT, 2 * TPB, "x", ",")
+        if "pad" in P and n_solo >= 3:
+            for b in range(4 + 32, 4 + 32 + 8): cut_bar(P["pad"], b, keep=0)
+            for p_ in P["pad"]: p_.ev = [e for e in p_.ev if not (e[1] <= 0)]
+
+    # ================= 強弱（小節ごと）: 曲全体で大きな山を作る（2026-10-19 人間「強弱を」）
+    #   イントロ（小さく始めて上げる）→ テーマ A（控えめ）→ B（盛り上げる）→ ソロ（少しずつ上げる）→ 後テーマの B が頂点 → 終わり（静かに消える）
+    lvl = []; n_s = sum(1 for (_, w_, _) in bar_info if w_ in ("lead", "solo2")); k_s = 0; heads_seen_ = 0
     for (name, who, i) in bar_info:
-        g = {"intro": 0.8, "outro": 0.85}.get(name, 0.9)
-        if name == "B": g = 0.95
-        if who in ("lead", "solo2"): g = 0.97
-        if name == "outro": g = 0.85 - 0.05 * i
+        if name == "intro": g = 0.6 + 0.06 * i
+        elif name == "outro": g = 0.82 - 0.08 * i
+        elif who in ("lead", "solo2"):
+            g = 0.84 + 0.14 * (k_s / max(1, n_s - 1)); k_s += 1
+        elif name == "B": g = 0.92 + 0.012 * i + (0.06 if k_s > 0 else 0)
+        elif name == "A3": g = 0.96 - 0.012 * i if k_s > 0 else 0.86
+        elif name == "A2": g = 0.84
+        else: g = 0.8 if k_s == 0 else 0.9
         lvl.append(g)
-    gain = [round(sum(lvl[max(0, k - 2):k + 3]) / len(lvl[max(0, k - 2):k + 3]), 3) for k in range(NB)]
-    for k in range(min(2, NB)): gain[k] = round(gain[k] * (0.85 + 0.075 * k), 3)
+    gain = [round(sum(lvl[max(0, k - 1):k + 2]) / len(lvl[max(0, k - 1):k + 2]), 3) for k in range(NB)]
+    gain_pad = [round(min(1.15, 0.55 + 0.6 * (g - 0.55)), 3) for g in gain]          # うしろの弦は、ソロで引き、盛り上がりでふくらむ
+    gain_pad = [round(gp * (0.82 if bar_info[k][1] in ("lead", "solo2") else 1.0), 3) for k, gp in enumerate(gain_pad)]
+    gain_dr = [round(max(0.3, 1.0 + 1.6 * (g - 0.9)), 3) for g in gain]               # ドラムは差を大きく
 
     # ================= 書き出し
     parts = []
@@ -770,23 +850,25 @@ def build(song, out):
             toks.append(f"{name_}:{fmt(d / TPB)}{mk}")
             t = s + d
         if t < TU: toks += rest(TU - t)
-        q = dict(p.base); q["role"] = p.role; q.setdefault("pan", 0); q["barGain"] = gain; q["notes"] = " ".join(toks)
+        q = dict(p.base); q["role"] = p.role; q.setdefault("pan", 0); q["notes"] = " ".join(toks)
+        q["barGain"] = gain_pad if p.role.startswith("うしろの和音") else gain_dr if drum else gain
         parts.append(q)
     P["lead"].base.update(pan=0.05, phrase=8)
     for k, p in enumerate(P["comp"]): p.base["pan"] = cpan
     if "solo2" in P: P["solo2"].base.update(pan=0.25 if cpan < 0 else -0.25, phrase=8)
     if "pad" in P:
-        for k, p in enumerate(P["pad"]): p.base["pan"] = [-0.7, 0.7, 0.0][k]
+        for k, p in enumerate(P["pad"]): p.base["pan"] = [-0.8, 0.8, -0.35, 0.0, 0.45][k]
     if "harm" in P: P["harm"].base.update(pan=-0.2, phrase=8, volume=0.14)
     if "bass" in P: P["bass"].base["pan"] = 0.05
     emit(P["lead"])
+    if "dbl" in P: P["dbl"].base.update(pan=-0.1, phrase=8); emit(P["dbl"])
     if "solo2" in P: emit(P["solo2"])
     if "harm" in P: emit(P["harm"])
     for p in P["comp"]: emit(p)
     if "pad" in P:
         for p in P["pad"]: emit(p)
     if "bass" in P: emit(P["bass"])
-    for k in ("kick", "snare", "hat", "ride", "crash"):
+    for k in ("kick", "snare", "hat", "ride", "crash", "tom"):
         if k in D: emit(D[k], drum=True)
     # 楽器ごとの大きさをそろえる（2026-10-19。楽器の音源ごとに、同じ volume でも大きさが 20dB 近くちがう。
     #   cafe_jazz_cal.json＝同じ音形を鳴らして測った、旋律のピアノとの差 dB）。旋律はピアノと同じ、ソロは -1、和音は -6.5、うしろの和音は -12 に
@@ -798,16 +880,17 @@ def build(song, out):
         r = q["role"]
         if r.startswith("旋律（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("L:" + song["lead"], 0.0)
         elif r.startswith("ソロ（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("L:" + song["solo2"], -1.0)
+        elif r.startswith("旋律の重ね"): q["gainDb"] = q.get("gainDb", 0) + float(song.get("double_db", -6.0))
         elif r.startswith("テーマの2声目"): q["gainDb"] = q.get("gainDb", 0) + cal_db("L:trombone", -3.0)
-        elif r.startswith("和音（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("C:" + comp_name, -6.5)
-        elif r.startswith("うしろの和音（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("P:" + song["pad"], -12.0)
+        elif r.startswith("和音（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("C:" + comp_name, -8.5)
+        elif r.startswith("うしろの和音（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("P:" + song["pad"], -15.0)
         elif r.startswith("左手の低音"): q["gainDb"] = q.get("gainDb", 0)
     tune = song.get("tune", {})
     for q in parts:
         for k2, v in tune.items():
             if q["role"].startswith(k2): q.update(v)
 
-    tempo = [{"bar": NB - 2, "bpm": round(bpm * 0.8), "ramp": 2}]
+    tempo = [{"bar": NB - 3, "bpm": round(bpm * 0.72), "ramp": 3}]
     secs = (NB - 3) * bar_s + 3 * bar_s / 0.88
     def safe(n):   # 作曲ソフトの和音の欄が読める書き方へ（表示と点検用。音はパートで書いている）
         for a, b in (("maj7#11", "maj7"), ("7b9", "7"), ("7alt", "7"), ("7#9", "7"), ("7#11", "7"), ("9sus4", "7sus4"), ("m11", "m9"), ("mM7", "m"), ("13", "7")):
@@ -818,17 +901,33 @@ def build(song, out):
          "description": f"（仮）カフェ用のジャズ。{song['image']}。{song['meter']}・BPM{bpm}・{song['key']}、約{int(secs // 60)}分{int(secs % 60):02d}秒。"
                         f"形: イントロ4・テーマ32・ソロ{n_solo * 8}・テーマ{out_bars}・終わり4。{song['desc']}",
          "bpm": bpm, "beats": beats, "chords": " ".join(bar_ch), "barsPerChord": 1, "repeats": 1, "tone": "rock", "feel": "rock",
-         "swing": song["swing"], "human": 0.2, "dynamics": "natural", "autoAccompaniment": False, "autoScoop": False, "guitarWobble": False,
+         "swing": song["swing"], "human": 0.2, "dynamics": song.get("dyn", False), "autoAccompaniment": False, "autoScoop": False, "guitarWobble": False,
          "drumMix": DRUMMIX, "parts": parts, "tempo": tempo, "instrumentCheck": False}
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     json.dump(j, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     return secs, NB, n_solo, out_bars
 
 
+# 曲ごとの決めた調整（2026-10-19、点数の試しで選んだもの）。L2＝旋律をピアノにして元の楽器はソロと後テーマへ、C＝ソロもゆったり・2つ目の楽器は後テーマだけ
+def _L2(s): return {"lead": "piano", "solo2": s["lead"]}
+_C = dict(s2blocks=0, s2head=True, calm_solo=True)
+FINAL = {}
+for _n, _s in enumerate(SONGS, 1):
+    k = f"{_n:02d}"
+    if _n in (2, 9, 10, 19, 22, 25, 6, 8): FINAL[k] = _L2(_s)
+    if _n in (2, 22, 25, 6): FINAL[k]["seed"] = 1
+    if _n in (3, 5, 7, 11, 13, 12, 17): FINAL[k] = dict(_L2(_s), seed={3: 1, 5: 1, 7: 1, 11: 1, 13: 2, 12: 2, 17: 1}[_n], **_C)
+    # 2026-10-19 テナーサックス（VCSL の録音）を入れたので、4・20 はサックスが旋律
+    if _n == 4: FINAL[k] = dict(seed=1, drums="swing2", cstyle="swing", bass="two", **_C)
+    if _n == 20: FINAL[k] = dict(seed=1, drums="swing2", cstyle="swing", bass="two", **_C)
+    if _n == 9: FINAL[k] = {"lead": "piano", "solo2": "tenorSax"}
+    if _n == 16: FINAL[k] = dict(seed=1, drums="straight", **_C)
+    if _n == 24: FINAL[k] = {"seed": 1}
+
 if __name__ == "__main__":
     which = sys.argv[1] if len(sys.argv) > 1 else "all"
     outdir = sys.argv[2] if len(sys.argv) > 2 else "assets-src/ai-songs"
-    tune = json.loads(os.environ.get("JAZZ_TUNE", "{}"))
+    tune = json.loads(os.environ["JAZZ_TUNE"]) if "JAZZ_TUNE" in os.environ else FINAL
     for n, s in enumerate(SONGS, 1):
         if which not in ("all", str(n), s["id"]): continue
         if f"{n:02d}" in tune: s = dict(s, **tune[f"{n:02d}"])
