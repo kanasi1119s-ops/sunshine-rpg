@@ -107,6 +107,10 @@ export interface AmpSetting {
   tight?: number;
   /** ノイズゲートの深さ（dB。0=なし、24=自然、60=ほぼ切る）。省略はロールの既定。 */
   gate?: number;
+  /** ゲートの検出の周波数（Hz。省略 1500、学習式アンプでは 600）。低いチューニングは 500 前後。2026-10-20 */
+  gateHz?: number;
+  /** tight の低音を削る周波数（Hz。省略は 100+200×tight）。低いチューニングで 120〜250。傾きはゆるく。2026-10-20 */
+  tightHz?: number;
   /** 前段ローパス（Hz。最初の歪みの前に入れる。省略はロールの既定。0で無効）。 */
   preLowpass?: number;
   /** 歪みの波形曲線（省略は tanh）。 */
@@ -116,6 +120,8 @@ export interface AmpSetting {
 }
 
 export interface Track {
+  /** true なら、歪みギター・クランチに5度とオクターブを自動で重ねない（単音の刻み）。2026-10-20 */
+  noPower?: boolean;
   /** 自動ミックスの解析用（auto-mix.ts）: 同じ値のトラックは同じ MIDI チャンネルに、違う値は別のチャンネルに分ける。普通の曲には付けない。 */
   stemKey?: string;
   waveform: Waveform;

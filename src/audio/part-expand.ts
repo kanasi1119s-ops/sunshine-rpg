@@ -445,6 +445,7 @@ export function partTrackExtras(p: AiPart, chordBars: string[], beatsPerBar: num
   const release = num(p.release);
   if (release !== null) out.release = clamp(release, 0, 1);
   if (typeof p.autoScoop === "boolean") out.autoScoop = p.autoScoop;
+  if (p.powerChord === false) out.noPower = true;
   const vib = vibratoSpecOf(p.vibrato);
   if (vib) out.vibratoSpec = vib;
   const gl = glideSpecOf(p.glide);

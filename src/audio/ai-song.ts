@@ -232,7 +232,7 @@ export interface AiSong extends RhythmSongFields, AiSongExtras, AiSongJpop {
 export const AI_INSTRUMENTS: Record<string, string> = {
   kick: "バスドラム（ドラム）", snare: "スネア（ドラム）", hihat: "ハイハット（ドラム）", crash: "クラッシュシンバル（ドラム）", tom: "タム（ドラム）",
   bass: "エレキベース（E1〜G3）", slap: "スラップベース（E1〜G3）", sub808: "808の重低音（C1〜C3）",
-  guitar: "クリーンギター（E2〜E5）", crunch: "クランチギター（E2〜E5）", distGuitar: "ディストーションギター・刻み（E2〜E4）", leadGuitar: "リードギター・ソロ（E3〜E6）", echoGuitar: "エコーギター（E3〜E6）",
+  guitar: "クリーンギター（E2〜E5）", crunch: "クランチギター（E2〜E5）", distGuitar: "ディストーションギター・刻み（E2〜E4。7弦・8弦の低いチューニングは F1 まで。8弦の単音の刻みは powerChord:false）", leadGuitar: "リードギター・ソロ（E3〜E6）", echoGuitar: "エコーギター（E3〜E6）",
   piano: "ピアノ（A0〜C8）", keys: "エレピ（C2〜C6）", harpsichord: "チェンバロ（C2〜C6）", strings: "弦楽（C2〜C7）", pad: "パッド（C2〜C6）", choir: "合唱（C3〜C6）", brass: "ブラス（E2〜C6）", lead: "シンセリード（C3〜C7）", bell: "鐘（C4〜C7）",
   sitar: "シタール（C3〜C6。インド風の撥弦。ドローンと旋律に）", koto: "琴（C3〜C6。和風の撥弦）", shamisen: "三味線（C3〜C6。歯切れのよい和の撥弦）", banjo: "バンジョー（C3〜C6）", harp: "ハープ（C2〜C7。分散和音に）", kalimba: "カリンバ（C4〜C7。やさしい指ピアノ）",
   fmBell: "FMのベル（C3〜C7。金属的で長く響く非整数倍音。鐘・きらめき・場面の合図に）", fmEpiano: "FMのエレピ（C2〜C6。すっきり丸い電気ピアノ。コード・アルペジオに）", drawbarOrgan: "ドローバーオルガン（C2〜C6。持続する厚い音。賛美歌・教会・ロック）", unisonSaw: "ユニゾンのノコギリ波（C2〜C6。5本重ねのぶ厚いシンセ。サビ・コードの厚み・リードに）",
@@ -244,8 +244,10 @@ export const AI_INSTRUMENTS: Record<string, string> = {
 const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom"]);
 /** AIソング形式で使えるアンプの名前（`AI_SONG_SCHEMA` の amp と同じ）。 */
 /** アンプの前の段（ゲート・ブースト）。2026-10-20 */
-function ampStages(p: AiPart): Pick<AmpSetting, "gate" | "tight"> {
+function ampStages(p: AiPart): Pick<AmpSetting, "gate" | "tight" | "gateHz" | "tightHz"> {
   return {
+    ...(Number(p.ampGateHz) > 0 ? { gateHz: Math.max(150, Math.min(4000, Number(p.ampGateHz))) } : {}),
+    ...(Number(p.ampTightHz) > 0 ? { tightHz: Math.max(60, Math.min(400, Number(p.ampTightHz))) } : {}),
     ...(Number(p.ampGate) > 0 ? { gate: Math.min(60, Number(p.ampGate)) } : {}),
     ...(Number(p.ampTight) > 0 ? { tight: Math.min(1, Number(p.ampTight)) } : {}),
   };
@@ -817,7 +819,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     if (length > total + 1e-6) warnings.push(`${where}: 曲の長さ（${total}拍）より長いので、${length}拍のうち後ろを切りました`);
     if (p.amp && !AI_AMPS.has(p.amp)) warnings.push(`${where}: アンプ「${p.amp}」は使えないので、おまかせ（auto）にしました`);
     const amp: AmpSetting | undefined = p.amp && p.amp in NAM_AMPS
-      ? { type: "nam", model: NAM_AMPS[p.amp as AiNamAmp], cab: (["closed", "open", "dark", "bright"].includes(String(p.ampCab)) ? String(p.ampCab) : "closed") as "closed", mic: "center", ...ampStages(p), ...(typeof p.ampCabIr === "string" && p.ampCabIr ? { cabIr: p.ampCabIr } : {}), ...(Number.isFinite(Number(p.ampTone)) && p.ampTone !== undefined ? { tone: Math.max(-12, Math.min(6, Number(p.ampTone))) } : {}), ...(Number(p.ampDrive) > 0 ? { drive: Math.min(2, Number(p.ampDrive)) } : {}), ...(Number.isFinite(Number(p.ampLevel)) && Number(p.ampLevel) > 0 ? { level: Math.min(1.5, Number(p.ampLevel)) } : {}) }
+      ? { type: "nam", model: NAM_AMPS[p.amp as AiNamAmp], cab: (["closed", "open", "dark", "bright"].includes(String(p.ampCab)) ? String(p.ampCab) : "closed") as "closed", mic: "center", ...ampStages(p), ...(typeof p.ampCabIr === "string" && p.ampCabIr ? { cabIr: p.ampCabIr } : {}), ...(Number.isFinite(Number(p.ampTone)) && p.ampTone !== undefined ? { tone: Math.max(-12, Math.min(6, Number(p.ampTone))) } : {}), ...(Number(p.ampDrive) > 0 ? { drive: Math.min(6, Number(p.ampDrive)) } : {}), ...(Number.isFinite(Number(p.ampLevel)) && Number(p.ampLevel) > 0 ? { level: Math.min(1.5, Number(p.ampLevel)) } : {}) }
       : p.amp && p.amp !== "auto" && AI_AMPS.has(p.amp) ? { type: p.amp as AmpSetting["type"], ...(Number(p.ampDrive) > 0 ? { drive: Math.min(2, Number(p.ampDrive)) } : {}), ...(Number(p.ampLevel) > 0 ? { level: Math.min(1.5, Number(p.ampLevel)) } : {}), ...(Number.isFinite(Number(p.ampTone)) && p.ampTone !== undefined ? { tone: Math.max(-12, Math.min(6, Number(p.ampTone))) } : {}), ...(typeof p.ampCabIr === "string" && p.ampCabIr ? { cabIr: p.ampCabIr } : {}), ...ampStages(p) } : undefined;
     const patchKey = p.patch ? String(p.patch) : "";
     if (patchKey && !(patchKey in SYNTH_PATCHES)) warnings.push(`${where}: シンセ音色「${patchKey}」は使えないので、楽器の音にしました`);

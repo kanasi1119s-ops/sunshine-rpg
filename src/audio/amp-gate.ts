@@ -4,9 +4,10 @@
  * しきい値より hysteresisDb 下がったら hold 秒待ってから、release 秒かけて depthDb だけ小さくする（-∞ 近くまで切るなら depthDb を大きく）。
  * 考え方は `docs/sound/amp-sim-guide.md` §5・提案4。`OfflineAudioContext`（書き出し）でも動く。
  */
-export // 2026-10-20: ゲートの開け閉めを、左右の大きいほうで決めるようにした（左だけを見ていたので、右に振ったギターではゲートが閉じたまま＝ほぼ無音になっていた）。
+// 2026-10-20: ゲートの開け閉めを、左右の大きいほうで決めるようにした（左だけを見ていたので、右に振ったギターではゲートが閉じたまま＝ほぼ無音になっていた）。
 //   ワークレットの中のコードは btoa（Latin1 だけ）で渡すので、その中には日本語を書かない。
-const GATE_PROCESSOR_NAME = "sunshine-gate";
+//   detectHz: 検出の高域強調の周波数（既定 1500Hz）。低いチューニング（7・8弦）は音のエネルギーが低いほうにあるので 500〜600Hz にする（伸ばした音の途中で閉じない）。
+export const GATE_PROCESSOR_NAME = "sunshine-gate";
 
 export interface GateOptions {
   /** しきい値（dBFS。既定 -52）。 */
@@ -21,6 +22,8 @@ export interface GateOptions {
   release?: number;
   /** 開く時間（秒。既定 0.001）。 */
   attack?: number;
+  /** 検出の高域強調の周波数（Hz。既定 1500）。 */
+  detectHz?: number;
 }
 
 export const GATE_PROCESSOR_CODE = `
@@ -36,7 +39,7 @@ class SunshineGate extends AudioWorkletProcessor {
     this.holdSamples = Math.round((o.hold === undefined ? 0.02 : o.hold) * sr);
     this.ca = 1 - Math.exp(-1 / Math.max(1, (o.attack === undefined ? 0.001 : o.attack) * sr));
     this.cr = 1 - Math.exp(-1 / Math.max(1, (o.release === undefined ? 0.12 : o.release) * sr));
-    this.hpA = 1 - Math.exp(-2 * Math.PI * 1500 / sr);
+    this.hpA = 1 - Math.exp(-2 * Math.PI * (o.detectHz === undefined ? 1500 : o.detectHz) / sr);
     this.envA = 1 - Math.exp(-1 / (0.0003 * sr));
     this.envR = 1 - Math.exp(-1 / (0.008 * sr));
     this.lp = 0; this.env = 0; this.gain = this.floor; this.open = false; this.hold = 0;

@@ -14,7 +14,7 @@ const R = (hl: string, hh: string, sl = hl, sh = hh): InstrumentRange => ({ hard
 
 export const INSTRUMENT_RANGES: Record<string, InstrumentRange> = {
   bass: R("B0", "G4", "E1", "D3"), slap: R("B0", "G4", "E1", "G3"), sub808: R("C1", "C3", "E1", "C3"),
-  guitar: R("E2", "E6", "E2", "E5"), crunch: R("E2", "E6", "E2", "E5"), distGuitar: R("E2", "E5", "E2", "E4"),
+  guitar: R("E2", "E6", "E2", "E5"), crunch: R("E2", "E6", "E2", "E5"), distGuitar: R("F1", "E5", "A#1", "E4"), // 2026-10-20: 7弦（B1・A#1）・8弦（F#1・F1）の低いチューニングも書ける
   leadGuitar: R("E2", "E6", "E3", "E6"), echoGuitar: R("E2", "E6", "E3", "E5"),
   piano: R("A0", "C8", "C2", "C7"), keys: R("C2", "C6", "C3", "C6"), harpsichord: R("F1", "F6", "C2", "C6"),
   strings: R("E1", "E7", "C2", "E6"), pad: R("C2", "C6", "C2", "C5"), choir: R("E2", "A5", "C3", "G5"),

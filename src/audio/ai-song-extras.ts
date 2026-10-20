@@ -20,6 +20,12 @@ export interface AiPartExtras extends GuitarTechPartFields {
   ampGate?: number;
   /** アンプの前の、低音を締めるブースト（0〜1）。歪みの前で低音を削り中域を上げる（実機のチューブスクリーマーの使い方）。 */
   ampTight?: number;
+  /** ゲートの検出の周波数（Hz）。低いチューニング（7・8弦）は 500 前後。 */
+  ampGateHz?: number;
+  /** ブーストが低音を削る周波数（Hz、120〜250）。低いチューニングほど高く。 */
+  ampTightHz?: number;
+  /** false にすると、歪みギター（distGuitar・crunch）に5度とオクターブを自動で重ねない（8弦の単音の刻み・旋律のリフ。2026-10-20） */
+  powerChord?: boolean;
   /** ドローン。曲の主音（tonic）の長い音を自動で作る。"root5" は主音と 5 度の 2 パート。notes は使わない。 */
   drone?: "root" | "root5";
   /** リズムの型の名前（son32・rumba32・tresillo・bembe・soleaCompas・taikoJi・taikoOmote・taiko2）。notes のかわりに展開される。 */
@@ -57,7 +63,7 @@ export interface AiSongExtras {
 
 const rec = { type: "object" } as const;
 export const AI_PART_EXTRA_SCHEMA = {
-  strum: rec, echo: rec, doubleDetune: { anyOf: [{ type: "boolean" }, rec] }, double: { anyOf: [{ type: "boolean" }, rec] }, ampGate: { type: "number" }, ampTight: { type: "number" }, drone: { type: "string", enum: ["root", "root5"] },
+  strum: rec, echo: rec, doubleDetune: { anyOf: [{ type: "boolean" }, rec] }, double: { anyOf: [{ type: "boolean" }, rec] }, ampGate: { type: "number" }, ampTight: { type: "number" }, ampGateHz: { type: "number" }, ampTightHz: { type: "number" }, powerChord: { type: "boolean" }, drone: { type: "string", enum: ["root", "root5"] },
   pattern: { type: "string" }, patternNote: { type: "string" }, snap: { anyOf: [{ type: "boolean" }, { type: "string", enum: ["nearest", "down", "up"] }] },
   detune: { type: "number" }, attack: { type: "number" }, release: { type: "number" },
   pedal: { type: "string", enum: ["chord", "bar", "none"] }, breath: { anyOf: [{ type: "boolean" }, { type: "number" }] }, autoArticulation: { type: "boolean" },

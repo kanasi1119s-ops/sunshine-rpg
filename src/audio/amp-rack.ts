@@ -287,14 +287,14 @@ export class AmpRack {
   }
 
   /** ノイズゲートを、用意ができたらその場でつなぎ替える（用意できるまでは素通し。曲の再生は止めない）。 */
-  private attachGate(gateIn: AudioNode, gateOut: AudioNode, depthDb: number): void {
+  private attachGate(gateIn: AudioNode, gateOut: AudioNode, depthDb: number, detectHz?: number): void {
     const ready = loadGate(this.ctx);
     if (!ready) return;
     const generation = this.generation;
     const deep = depthDb >= 40;
     const done = ready.then(() => {
       if (generation !== this.generation) return;
-      const node = createGate(this.ctx, { depthDb, thresholdDb: deep ? -48 : -52, hold: deep ? 0.015 : 0.02, release: deep ? 0.08 : 0.12 });
+      const node = createGate(this.ctx, { depthDb, thresholdDb: deep ? -48 : -52, hold: deep ? 0.015 : 0.02, release: deep ? 0.08 : 0.12, ...(detectHz ? { detectHz } : {}) });
       gateIn.disconnect();
       gateIn.connect(node);
       node.connect(gateOut);
@@ -531,7 +531,7 @@ export class AmpRack {
         const gateIn = this.gain(1), gateOut = this.gain(1);
         front.push(gateIn, gateOut);
         gateIn.connect(gateOut);
-        this.attachGate(gateIn, gateOut, override.amp.gate);
+        this.attachGate(gateIn, gateOut, override.amp.gate, override.amp.gateHz ?? 600);
       }
       if (override.amp.tight && override.amp.tight > 0) {
         // チューブスクリーマー系のブースト: 低音を削り（100〜300Hz のハイパス）、700Hz 前後を持ち上げ、ごく軽くつぶす。歪みの前で低音を締めると、刻みがにじまない
@@ -539,7 +539,8 @@ export class AmpRack {
         const boost = this.ctx.createWaveShaper();
         boost.curve = shapeCurve("softsqrt", 1.3, 0, 2048);
         boost.oversample = "2x";
-        extra.push(this.filter("highpass", 100 + 200 * t, 0, 0.8), this.filter("peaking", 750, 2 + 4 * t, 0.9), boost);
+        const hz = override.amp.tightHz && override.amp.tightHz > 0 ? override.amp.tightHz : 100 + 200 * t;
+        extra.push(this.filter("highpass", hz, 0, override.amp.tightHz ? 0.55 : 0.8), this.filter("peaking", 750, 2 + 4 * t, 0.9), boost);
       }
       input.connect(pre);
       let head: AudioNode = pre;
