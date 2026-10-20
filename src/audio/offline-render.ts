@@ -91,6 +91,8 @@ export async function renderScoreOffline(score: Score, options: OfflineRenderOpt
   rack.setNam(options.nam ?? null);
   rack.configure(programs, score.tone ?? "rock", 9, amps, score.namModels ?? {}, score.ampPlugins ?? {}, fx);
   await rack.whenReady();
+  // 2026-10-21: アンプ（NAM など）を用意できなかったときは、黙って元の音で書き出さず、失敗として止める（書き直せばたいてい通る）
+  if (rack.failures.length) throw new Error(`アンプを用意できなかったので書き出しを止めました: ${rack.failures.join(" / ")}`);
   // 録音トラック（実際の楽器・声）: 別のアンプラックを通して、曲の頭から予約する
   if (score.audioTracks?.length) {
     const audioRack = new AmpRack(ctx, bus);

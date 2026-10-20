@@ -18,6 +18,8 @@ export interface AiPartExtras extends GuitarTechPartFields {
   double?: boolean | { spread?: number; irR?: string; timing?: number; diR?: "emily" | "fsbs" | "shiny" | "gretsch" | "hofner" };
   /** このパートのギターの録音（2026-10-21）。emily＝ハムバッカーの太い音／fsbs＝シングルコイルの明るい音／shiny＝アーチトップ／gretsch＝明るいホロウ／hofner＝丸いホロウ。歪ませる前の録音なので、アンプ（amp）で音を作る。曲の diGuitar より優先。 */
   di?: "emily" | "fsbs" | "shiny" | "gretsch" | "hofner";
+  /** 和音（strum）を歪みのアンプに通すときの、入力の倍率（既定 0.6。1 で下げない）。和音を歪ませすぎると割れて聞こえるため。 */
+  chordGain?: number;
   /** true で、弦の雑音（音を止める音・指がすべる音）を、本物のギターで出る所にだけ小さく足す（Emilyguitar の録音。同じアンプを通す）。 */
   stringNoise?: boolean;
   /** アンプの前のノイズゲートの深さ（dB。0〜60。刻みの合間を静かにする。24＝自然、40＝ラウド）。 */
@@ -67,7 +69,7 @@ export interface AiSongExtras {
 
 const rec = { type: "object" } as const;
 export const AI_PART_EXTRA_SCHEMA = {
-  strum: rec, echo: rec, doubleDetune: { anyOf: [{ type: "boolean" }, rec] }, double: { anyOf: [{ type: "boolean" }, rec] }, di: { type: "string", enum: ["emily", "fsbs", "shiny", "gretsch", "hofner"] }, stringNoise: { type: "boolean" }, ampGate: { type: "number" }, ampTight: { type: "number" }, ampGateHz: { type: "number" }, ampTightHz: { type: "number" }, powerChord: { type: "boolean" }, drone: { type: "string", enum: ["root", "root5"] },
+  strum: rec, echo: rec, doubleDetune: { anyOf: [{ type: "boolean" }, rec] }, double: { anyOf: [{ type: "boolean" }, rec] }, di: { type: "string", enum: ["emily", "fsbs", "shiny", "gretsch", "hofner"] }, stringNoise: { type: "boolean" }, chordGain: { type: "number" }, ampGate: { type: "number" }, ampTight: { type: "number" }, ampGateHz: { type: "number" }, ampTightHz: { type: "number" }, powerChord: { type: "boolean" }, drone: { type: "string", enum: ["root", "root5"] },
   pattern: { type: "string" }, patternNote: { type: "string" }, snap: { anyOf: [{ type: "boolean" }, { type: "string", enum: ["nearest", "down", "up"] }] },
   detune: { type: "number" }, attack: { type: "number" }, release: { type: "number" },
   pedal: { type: "string", enum: ["chord", "bar", "none"] }, breath: { anyOf: [{ type: "boolean" }, { type: "number" }] }, autoArticulation: { type: "boolean" },

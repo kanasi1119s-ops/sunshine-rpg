@@ -797,6 +797,15 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     warnings.push(`parts[${i}]: アンプ「${p.amp}」は使えなくなったので「${to}」にしました（入手元の規約のため外しました）`);
     return { ...p, amp: to } as AiPart;
   });
+  // 2026-10-21 人間「歪強くて少し割れてるような感じに聞こえた部分があるかも」「1と2両方試そう」:
+  //   和音（ストローク・カッティング）を歪みに通すと、音どうしがぶつかって割れたように聞こえる。本物のギタリストと同じく、和音のパートはアンプへの入力を 6 割に下げる。
+  //   パートに chordGain（0.2〜1）を書けばその値、chordGain: 1 で下げない
+  const DIST_AMPS = new Set(["namA", "namB", "namDD", "overdrive", "distortion", "metal", "prs", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "loudmetal", "loudrock", "lead", "modernHigh"]);
+  if (Array.isArray(song.parts)) song.parts = song.parts.map((p) => {
+    if (!p || !p.strum || typeof p.amp !== "string" || !DIST_AMPS.has(p.amp)) return p;
+    const k = Number.isFinite(Number(p.chordGain)) && p.chordGain !== undefined ? Math.max(0.2, Math.min(1, Number(p.chordGain))) : 0.6;
+    return k >= 1 ? p : ({ ...p, ampDrive: Math.round((Number(p.ampDrive) > 0 ? Number(p.ampDrive) : 1) * k * 1000) / 1000 } as AiPart);
+  });
   const partList = Array.isArray(song.parts) ? expandParts(song.parts, expandCtx, warnings, DRUMS) : song.parts;
   const parts: Track[] = [];
   const explicitPush = new Set<Track>();

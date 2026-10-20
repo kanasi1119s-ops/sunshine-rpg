@@ -41,6 +41,17 @@ export class NamHost {
       outputChannelCount: [2],
       processorOptions: { wasmBinary: assets.wasm.slice(0), modelJson },
     });
+    // 2026-10-21: モデルの読み込み（ワークレットの中の WASM の準備とモデルの読み込み）が終わるまで待つ。
+    //   待たずに返していたので、書き出し（オフライン）が先に進むと、曲の頭（短い曲は全部）がアンプを通らない元の音のままになっていた
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error("NAMのモデルの読み込みが 60 秒で終わりませんでした")), 60000);
+      node.port.onmessage = (e: MessageEvent<{ type?: string; success?: boolean }>) => {
+        if (e.data?.type !== "modelLoaded") return;
+        clearTimeout(timer);
+        if (e.data.success) resolve();
+        else reject(new Error("NAMのモデルを読み込めませんでした"));
+      };
+    });
     return node;
   }
 }

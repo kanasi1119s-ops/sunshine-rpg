@@ -24,6 +24,7 @@ class FakeNode {
     this.outputs = [];
   }
   start(): void {}
+  setPeriodicWave(): void {}
   stop(): void {}
 }
 function fakeCtx() {
@@ -43,6 +44,7 @@ function fakeCtx() {
     createStereoPanner: make("panner"),
     createDelay: make("delay"),
     createOscillator: make("oscillator"),
+    createPeriodicWave: () => ({}),
     createConvolver: make("convolver"),
     createBuffer: (ch: number, len: number) => ({ numberOfChannels: ch, length: len, getChannelData: (i: number) => (buffers[`${ch}:${len}`] ??= Array.from({ length: ch }, () => new Float32Array(len)))[i] }),
   };
@@ -51,8 +53,8 @@ function fakeCtx() {
 }
 
 describe("追加のエフェクター（fx-extra）", () => {
-  it("9種類すべてが FX_TYPES・FX_INFO にあり、日本語の名前がある", () => {
-    expect(EXTRA_FX_TYPES.length).toBe(9);
+  it("11種類すべてが FX_TYPES・FX_INFO にあり、日本語の名前がある（2026-10-21 transgate・syncfilter を追加）", () => {
+    expect(EXTRA_FX_TYPES.length).toBe(11);
     for (const t of EXTRA_FX_TYPES) {
       expect(FX_TYPES).toContain(t);
       expect(FX_INFO[t].label.length).toBeGreaterThan(0);

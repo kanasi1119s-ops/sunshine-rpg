@@ -121,6 +121,8 @@ export class AmpRack {
   /** このラックが作った歪みの部品と、その bias（前段ローパス・DC除去を入れる位置を決める）。 */
   private shaperBias = new WeakMap<AudioNode, number>();
   private pending: Promise<unknown>[] = [];
+  /** 用意できなかったアンプ（NAM・追加したアンプ）の理由。書き出しでは、黙って元の音で鳴らさず、失敗として止める（2026-10-21）。 */
+  failures: string[] = [];
 
   /** destination にチャンネルごとの出口の関数を渡すと、チャンネルごとに別の出口へつなげる（自動ミックスのパート別の書き出し用）。 */
   private destination: AudioNode;
@@ -158,6 +160,7 @@ export class AmpRack {
     this.models = models;
     this.plugins = plugins;
     this.pending = [];
+    this.failures = [];
     for (let ch = 0; ch < 16; ch++) {
       const input = this.inputs[ch];
       input.disconnect();
@@ -571,7 +574,7 @@ export class AmpRack {
       dry.disconnect();
       this.built[this.built.findIndex((list) => list.includes(dry))]?.push(node, pre, ...front, ...extra, tone, ...cab, panner, out);
     });
-    this.pending.push(done.catch((error: unknown) => console.warn("NAMのアンプを用意できませんでした:", error)));
+    this.pending.push(done.catch((error: unknown) => { console.warn("NAMのアンプを用意できませんでした:", error); this.failures.push(`NAMのアンプ: ${String(error)}`); }));
     return nodes;
   }
 
@@ -607,7 +610,7 @@ export class AmpRack {
       dry.disconnect();
       this.built[this.built.findIndex((list) => list.includes(dry))]?.push(drive, ...chain, tone, panner, out);
     });
-    this.pending.push(done.catch((error: unknown) => console.warn("追加したアンプを用意できませんでした:", error)));
+    this.pending.push(done.catch((error: unknown) => { console.warn("追加したアンプを用意できませんでした:", error); this.failures.push(`追加したアンプ: ${String(error)}`); }));
     return nodes;
   }
 

@@ -563,7 +563,9 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       push(pitch, tick, velocity, len);
       if (layer && layerSpec) push(pitch, tick, Math.max(14, Math.round(velocity * layerSpec.gain)), len, layer);
       if ((inst === "crunch" || inst === "distGuitar") && !track.noPower) push(pitch + 7, tick, velocity, len); // パワーコードの5度
-      if (inst === "distGuitar" && score.tone !== "prs" && !track.noPower) push(pitch + 12, tick, Math.round(velocity * 0.45), len);
+      // 2026-10-21: 歪ませる前の録音（DI）で鳴らす曲・パートでは、上のオクターブを 0.3 に（0.45 だとパワーコードがザラついて割れたように聞こえる。人間の指摘）
+      const diPart = !!score.diGuitar || (track.program !== undefined && [112, 113, 114, 31, 23].includes(track.program));
+      if (inst === "distGuitar" && score.tone !== "prs" && !track.noPower) push(pitch + 12, tick, Math.round(velocity * (diPart ? 0.3 : 0.45)), len);
       // 重低音: メタルのベースには、1オクターブ下の音を重ねる
       if (score.tone !== "rock" && score.tone !== undefined && (inst === "bass" || inst === "slap") && pitch - 12 >= 23) push(pitch - 12, tick, Math.round(velocity * 0.6), len);
       // 重さ: ディストーションギターには、1オクターブ下の音を薄く重ねる
