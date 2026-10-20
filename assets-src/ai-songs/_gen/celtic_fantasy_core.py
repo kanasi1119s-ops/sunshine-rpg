@@ -59,12 +59,13 @@ TPL = {   # 旋律のリズムの型（単位。負の数は休み）
 
 # ================================================================ 楽器（旋律を受けもつもの）: 作曲ソフトの楽器・追加項目・飾り・音域
 LEADS = {
-    "flute": ("panflute", {}, "cut", (60, 88)), "ocarina": ("ocarina", {}, "cut", (60, 86)),
+    "flute": ("panflute", {}, "cut", (60, 84)), "ocarina": ("ocarina", {}, "cut", (60, 86)),
     "fiddle": ("fiddle", {"patch": "violin"}, "roll", (55, 91)), "acc": ("accordion", {}, "cut", (53, 84)),
     "oboe": ("panflute", {"patch": "oboe"}, "plain", (58, 89)), "clarinet": ("panflute", {"patch": "clarinet"}, "plain", (50, 89)),
     "banjo": ("banjo", {}, "plain", (55, 86)), "bagpipe": ("bagpipe", {}, "cut", (57, 81)), "horn": ("brass", {"patch": "horn"}, "plain", (48, 77)),
     "xylo": ("xylophone", {}, "plain", (65, 96)), "piano": ("piano", {}, "plain", (60, 88)),
-    "wflute": ("panflute", {}, "cut", (60, 90)),   # フルート（2026-10-20 点数の試し: VSCO の録音はプチッが10か所出て 7.73、笛の音源にして 7.83）
+    "wflute": ("panflute", {}, "cut", (60, 84)),   # 2026-10-20 高音が固い: 笛の音源の自然な音域（C6 まで）に収める（C#6〜E6 は音源を引きのばして硬くなっていた）
+      # フルート（2026-10-20 点数の試し: VSCO の録音はプチッが10か所出て 7.73、笛の音源にして 7.83）
     "gtrlead": ("guitar", {"amp": "crystal", "chorus": 0}, "plain", (52, 84)),   # アコギの旋律（間奏）
 }
 LEAD_META = {   # 音量・左右・残響・FX（同じ楽器は同じ値＝チャンネルを共有）
@@ -250,7 +251,11 @@ def build(song, out):
         if name == "wflute" and song.get("lead_patch"): extra = dict(extra, patch=song["lead_patch"])   # ゆったりの曲は本物のフルートの録音（長い音がきれい）
         if song.get("lead_db"): mt["gainDb"] = mt.get("gainDb", 0) + song["lead_db"]
         if name == "gtrlead" and band.get("gpatch"): extra = dict(extra, patch=band["gpatch"])   # アコギの旋律も同じ弦に
-        S.part("L_" + name, inst, f"旋律（{name}）", vol, pan, fx=FX[fxn], **extra, **mt)
+        fx_ = FX[fxn]
+        if name in ("wflute", "flute") and song.get("soft_high", True):
+            # 2026-10-20 人間「高音弾くときのフルートがちょっと音が固いかな」: 刺さりやすい 3〜4kHz と高い音域をおさえる（ディレイの前にEQ）
+            fx_ = [{"type": "eq", "low": 0, "mid": -3, "midHz": 3300, "high": -3}] + fx_
+        S.part("L_" + name, inst, f"旋律（{name}）", vol, pan, fx=fx_, **extra, **mt)
     if band.get("drone") == "bagpipe" and "bagpipe" not in leads_used:
         S.part("L_bagpipe", "bagpipe", "旋律（bagpipe）", 0.13, 0.0, reverb=0.35, fx=FX["hall"])
     if band.get("harp"): S.part("harp", "harp", "ハープ（分散和音）", 0.12, -0.35, reverb=0.38, bright=-0.4, sustain=3, release=0.8,
@@ -627,6 +632,15 @@ def build(song, out):
         if r.startswith(("弦（", "チェロ", "コントラバス", "ハープ")) or (r.startswith("旋律（acc") and band.get("acc") == "hold") or r.startswith("旋律（bagpipe") or r.startswith("旋律（horn"):
             if r.startswith("ハープ"): continue
             pt["notes"] = merge(pt["notes"], legato=r.startswith("弦（"))
+        if song.get("soft_high", True) and (r.startswith("旋律（wflute") or r.startswith("旋律（flute")):
+            # 高い音（A5 から上）は息を少し弱めて吹く: 強い印（!）のない音に「,」（C#6 から上は「,,」）を付ける
+            def _soft(tk):
+                if tk.startswith("R:") or ":" not in tk: return tk
+                m_ = md(tk.split(":")[0]); body = tk.split(":")[1]
+                if m_ is None or m_ < 81 or "!" in body or "," in body: return tk
+                mk = ",," if m_ >= 85 else ","
+                return tk[:-1] + mk + "_" if tk.endswith("_") else tk + mk
+            pt["notes"] = " ".join(_soft(t) for t in pt["notes"].split())
     json.dump(sj, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     return total
 
