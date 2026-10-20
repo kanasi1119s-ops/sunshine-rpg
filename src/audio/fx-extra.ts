@@ -13,7 +13,7 @@
 import { cabApproxSpec, type CabKind, type MicPos } from "./amp-cab";
 import type { BuiltFx, FxSpec } from "./fx-chain";
 
-export const EXTRA_FX_TYPES = ["tape", "rotary", "doubler", "pcomp", "harmtrem", "octup", "cabir", "springx", "envwah"] as const;
+export const EXTRA_FX_TYPES = ["tape", "rotary", "doubler", "pcomp", "harmtrem", "octup", "cabir", "springx", "envwah", "transgate", "syncfilter"] as const;
 export type ExtraFxType = (typeof EXTRA_FX_TYPES)[number];
 
 /** 日本語の呼び名と、向く場面と、標準の混ぜ具合（fx-chain.ts の FX_INFO に足される）。 */
@@ -27,9 +27,45 @@ export const EXTRA_FX_INFO: Record<ExtraFxType, { label: string; use: string; mi
   cabir: { label: "キャビネットIR", use: "スピーカーの箱とマイクの癖を足す（アンプ前の歪みペダルだけの音を仕上げる）", mix: 1 },
   springx: { label: "スプリング（ドリップ）", use: "ビヨンと鳴る本物らしい金属ばねの残響", mix: 0.22 },
   envwah: { label: "エンベロープ・フィルター", use: "強く弾くほどフィルターが開く「ニャウ」（ファンクのカッティング・ベース）。コンプより前に置く", mix: 1 },
+  // 2026-10-21 ロックとエレクトロの混ざった音（ギターを拍で刻む・拍に合わせてフィルターを動かす）
+  transgate: { label: "トランスゲート（拍で刻む）", use: "音を拍に合わせて切る（pattern の x＝鳴る・.＝切る、1文字＝beats 拍。例 beats 0.25・pattern \"x.xx.x.x\"）。depth＝切る深さ 0〜1。閉じ方は数msなめらか。曲の頭からの拍にそろう", mix: 1 },
+  syncfilter: { label: "拍に合わせて動くフィルター", use: "beats 拍で1往復する。kind＝lowpass／bandpass、freq＝中心、depth＝動く幅 0〜1。ゆっくり開く・閉じる、ワウのような揺れ", mix: 1 },
 };
 
 const clamp = (x: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, x));
+
+/**
+ * トランスゲートの1周ぶんの形（0〜1）を、Web Audio の PeriodicWave の係数にする（直流は別に返す）。テストできる純粋な関数。
+ * pattern の各文字（x＝鳴る、ほか＝切る）を1歩とし、切り替えの前後は1歩の edge 割合でなめらかにつなぐ（プチッと鳴らない）。
+ */
+export function gateWaveCoefficients(pattern: string, depth: number, edge = 0.06, harmonics = 128): { dc: number; real: Float32Array; imag: Float32Array } {
+  const steps = pattern.length || 1;
+  const N = 2048;
+  const shape = new Float64Array(N);
+  const on = (k: number): number => (pattern[((k % steps) + steps) % steps] === "x" || pattern[((k % steps) + steps) % steps] === "X" ? 1 : 1 - depth);
+  for (let i = 0; i < N; i++) {
+    const pos = (i / N) * steps;
+    const k = Math.floor(pos), frac = pos - k;
+    const a = on(k), b = on(k + 1);
+    // 1歩の終わりの edge だけ、次の歩へなめらかに移る
+    shape[i] = frac < 1 - edge ? a : a + (b - a) * (0.5 - 0.5 * Math.cos((Math.PI * (frac - (1 - edge))) / edge));
+  }
+  const real = new Float32Array(harmonics + 1), imag = new Float32Array(harmonics + 1);
+  let dc = 0;
+  for (let i = 0; i < N; i++) dc += shape[i];
+  dc /= N;
+  for (let h = 1; h <= harmonics; h++) {
+    let c = 0, s = 0;
+    for (let i = 0; i < N; i++) {
+      const w = (2 * Math.PI * h * i) / N;
+      c += shape[i] * Math.cos(w);
+      s += shape[i] * Math.sin(w);
+    }
+    real[h] = (2 * c) / N;
+    imag[h] = (2 * s) / N;
+  }
+  return { dc, real, imag };
+}
 const num = (x: unknown, def: number): number => (typeof x === "number" && Number.isFinite(x) ? x : def);
 const dbToGain = (db: number): number => Math.pow(10, db / 20);
 
@@ -250,6 +286,37 @@ export function buildExtraFx(ctx: BaseAudioContext, spec: FxSpec, mixDefault: nu
   };
 
   switch (type as ExtraFxType) {
+    case "transgate": {
+      // 音量を、pattern の形の周期波（PeriodicWave）で動かす。1周＝pattern の文字数 × 1歩（ms）。書き出しの頭（0秒）から回るので、曲の拍にそろう
+      const stepSec = clamp(num(spec.ms, 150), 20, 2000) / 1000;
+      const pattern = typeof spec.pattern === "string" && spec.pattern ? spec.pattern : "x.x.x.x.";
+      const { dc, real, imag } = gateWaveCoefficients(pattern, clamp(num(spec.depth, 1), 0, 1));
+      const g = gain(dc);
+      const osc = ctx.createOscillator();
+      osc.setPeriodicWave(ctx.createPeriodicWave(real, imag, { disableNormalization: true }));
+      osc.frequency.value = 1 / (stepSec * pattern.length);
+      osc.connect(g.gain);
+      osc.start(0);
+      nodes.push(osc);
+      return { input: g, output: g, nodes };
+    }
+    case "syncfilter": {
+      // フィルターの周波数を、三角波で beats 拍ごとに1往復させる（低い所から始まり、半周で一番開く）
+      const periodSec = clamp(num(spec.ms, 2000), 50, 16000) / 1000;
+      const center = clamp(num(spec.freq, 1200), 80, 12000);
+      const depth = clamp(num(spec.depth, 0.8), 0, 0.95);
+      const kind = spec.kind === "bandpass" ? "bandpass" : "lowpass";
+      const f = filt(kind, center, 0, clamp(num(spec.q, kind === "bandpass" ? 2 : 1.2), 0.3, 12));
+      const osc = ctx.createOscillator();
+      osc.type = "triangle";
+      osc.frequency.value = 1 / periodSec;
+      const g = gain(center * depth);
+      osc.connect(g);
+      g.connect(f.frequency);
+      osc.start(0);
+      nodes.push(osc);
+      return { input: f, output: f, nodes };
+    }
     case "tape": {
       // 入力 → 低音を少し削る → 遅れ（ゆらぐ）→ 高音を丸める → テープの飽和 →（くり返し）。くり返すたびに暗く・平らになる
       const f = frame(0.3);

@@ -49,6 +49,8 @@ export interface FxSpec {
   ir?: string;
   /** filter: "lowpass" | "highpass" | "bandpass"。 */
   kind?: "lowpass" | "highpass" | "bandpass";
+  /** transgate: 切る形（x＝鳴る・.＝切る。1文字＝beats 拍）。 */
+  pattern?: string;
   /** compressor／pcomp: 反応の速さ・戻りの速さ（秒）。省略は compressor が 0.012／0.2、pcomp が 0.005／0.12。 */
   attack?: number;
   release?: number;

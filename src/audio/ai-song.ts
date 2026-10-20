@@ -344,7 +344,7 @@ export const AI_SONG_SCHEMA = {
           chorus: { type: "number" },
           noRestrike: { type: "boolean" },
           gainDb: { type: "number" },
-          fx: { type: "array", items: { type: "object", additionalProperties: false, required: ["type"], properties: Object.fromEntries([["type", { type: "string" }], ...["mix", "ms", "beats", "feedback", "rate", "depth", "freq", "q", "gain", "level", "low", "mid", "midHz", "high", "threshold", "ratio", "bits", "size", "tone", "attack", "release"].map((k) => [k, { type: "number" }]), ["pre", { type: "boolean" }]]) } },
+          fx: { type: "array", items: { type: "object", additionalProperties: false, required: ["type"], properties: Object.fromEntries([["type", { type: "string" }], ...["mix", "ms", "beats", "feedback", "rate", "depth", "freq", "q", "gain", "level", "low", "mid", "midHz", "high", "threshold", "ratio", "bits", "size", "tone", "attack", "release"].map((k) => [k, { type: "number" }]), ["pre", { type: "boolean" }], ["pattern", { type: "string" }], ["kind", { type: "string" }]]) } },
           bright: { type: "number" },
           duck: { type: "number" },
           phrase: { type: "number" },

@@ -30,3 +30,15 @@ describe("弦の雑音（2026-10-21）", () => {
     expect((list[0] as { stringNoise?: unknown }).stringNoise).toBeUndefined();
   });
 });
+
+describe("トランスゲートの形（2026-10-21）", () => {
+  it("x は鳴り（1）、. は切れる（1-depth）。係数から戻した形が合う", async () => {
+    const { gateWaveCoefficients } = await import("./fx-extra");
+    const { dc, real, imag } = gateWaveCoefficients("x.", 1);
+    expect(dc).toBeGreaterThan(0.45);
+    expect(dc).toBeLessThan(0.55);
+    const at = (t: number): number => { let v = dc; for (let h = 1; h < real.length; h++) v += real[h] * Math.cos(2 * Math.PI * h * t) + imag[h] * Math.sin(2 * Math.PI * h * t); return v; };
+    expect(at(0.2)).toBeGreaterThan(0.9);
+    expect(at(0.7)).toBeLessThan(0.1);
+  });
+});
