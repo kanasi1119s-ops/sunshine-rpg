@@ -6,6 +6,9 @@ export const SPACES = {
   room: { rt60: 0.7, predelay: 0.008, bright: 0.55, early: 6 },
   hall: { rt60: 1.9, predelay: 0.022, bright: 0.45, early: 9 },
   plate: { rt60: 1.3, predelay: 0.004, bright: 0.8, early: 3 },
+  // 2026-10-20 人間「空間も感じれるといいな」（ケルト異世界ファンタジー）: 外の広い場所（丘・森・谷）。
+  //   最初の反射が遅く（遠くの地面や木）、長くやわらかく消える（高い音は早く消える）
+  vale: { rt60: 2.6, predelay: 0.045, bright: 0.38, early: 5 },
 };
 
 function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
