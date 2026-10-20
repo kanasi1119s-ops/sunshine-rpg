@@ -287,9 +287,13 @@ export function applyPalmMute(p: AiPart): AiPart {
   const { palmMute: _m, ...rest } = p;
   // 2026-10-20 ラウドロック: 学習式アンプ（namA・namB）のときは、アンプの前（DIの段階）で高音を落とす。
   //   本物のブリッジミュートは、手のひらで弦の高い倍音が止まり、低い音の芯だけが残る。それを歪ませると「ズンッ」と締まる（歪ませたあとで削ると、こもるだけ）
-  const nam = p.amp === "namA" || p.amp === "namB";
-  const pre = nam ? [{ type: "filter", kind: "lowpass", freq: 1300, q: 0.6, pre: true }, ...(p.fx ?? [])] : p.fx;
-  return { ...rest, sustain: p.sustain ?? (nam ? Math.min(v, 0.75) : v), bright: clamp((Number(p.bright) || 0) - 0.2, -1, 0.5), ...(pre ? { fx: pre } : {}) } as AiPart;
+  // 2026-10-21: 深さを3段に（"light"＝軽く触れる・"medium"＝ふつう・"heavy"＝深く）。DI の録音（di）や namDD でも同じように前段で高音を落とす
+  const depth = p.palmMute === "light" ? 0 : p.palmMute === "heavy" ? 2 : 1;
+  const nam = p.amp === "namA" || p.amp === "namB" || p.amp === "namDD" || p.di !== undefined;
+  const lp = [2000, 1300, 800][depth];
+  const pre = nam ? [{ type: "filter", kind: "lowpass", freq: lp, q: 0.6, pre: true }, ...(p.fx ?? [])] : p.fx;
+  const sus = typeof p.palmMute === "string" ? [0.85, 0.75, 0.6][depth] : nam ? Math.min(v, 0.75) : v;
+  return { ...rest, sustain: p.sustain ?? sus, bright: clamp((Number(p.bright) || 0) - 0.2, -1, 0.5), ...(pre ? { fx: pre } : {}) } as AiPart;
 }
 
 /** tremolo: 長い音（既定 1 拍以上）を、rate 拍（既定 0.25）の同音の連なりにする。余韻が重なるよう sustain の既定を 1.6 にする。 */
@@ -525,7 +529,7 @@ function applyGtrStyle(p: AiPart, warnings: string[]): AiPart {
   return out as unknown as AiPart;
 }
 
-const TECH_KEYS = ["gtrStyle", "rhythm", "tremolo", "swell", "palmMute", "harmonize", "power", "oct", "fingerpick"] as const;
+const TECH_KEYS = ["gtrStyle", "rhythm", "tremolo", "swell", "palmMute", "harmonize", "power", "oct", "fingerpick", "stringNoise"] as const;
 /** 展開が要るパートか（要らなければ手を入れない）。 */
 function needsTech(p: AiPart): boolean {
   return TECH_KEYS.some((k) => (p as unknown as Record<string, unknown>)[k] !== undefined && (p as unknown as Record<string, unknown>)[k] !== false) || String(p.notes ?? "").includes("@") || /u\([A-G]/.test(String(p.notes ?? ""));
@@ -543,12 +547,55 @@ export function expandGuitarTech(p: AiPart, ctx: ExpandCtx, warnings: string[]):
   else if (cur.tremolo !== undefined) delete cur.tremolo;
   if (cur.swell) cur = applySwellFlag(cur);
   else if (cur.swell !== undefined) delete cur.swell;
+  const noise = cur.stringNoise ? stringNoisePart(cur) : null;
+  if (cur.stringNoise !== undefined) delete cur.stringNoise;
   if (cur.palmMute) cur = applyPalmMute(cur);
   else if (cur.palmMute !== undefined) delete cur.palmMute;
   let list = expandUnisonBends(cur, warnings);
+  if (noise) list = [...list, noise];
   if (cur.harmonize) list = list.flatMap((q, i) => (i === 0 && q.harmonize ? expandHarmonize(q, q.harmonize, ctx, warnings) : [q]));
   if (cur.power || cur.oct) list = list.flatMap((q) => (q.power || q.oct ? expandPower(q, warnings) : [q]));
   return list;
+}
+
+// ───────── 弦の雑音（2026-10-21 人間「ギターの音はありとあらゆるものに対応できるようにしたい」）─────────
+/**
+ * 弦の雑音のパート（Emilyguitar の録音。CC0）を作る。音のところで鳴るのではなく、本物のギターで雑音が出るところにだけ小さく置く:
+ * - 0.5拍以上の音のあとに休みが来る所 … 弦を手で止める音（G2＝「止める」の録音）。ブリッジミュートのパートには置かない（もう止まっている）
+ * - 5半音以上の跳躍の直前 … 指が弦の上をすべる音（C2）
+ * パートと同じアンプを通す（歪ませれば、雑音も同じように歪む）。音量はパートの 0.45倍。パートの stringNoise: true で付ける。
+ */
+function stringNoisePart(p: AiPart): AiPart | null {
+  const toks = words(p.notes);
+  const ev: { at: number; key: string }[] = [];
+  let pos = 0, prevPitch: number | null = null;
+  for (let i = 0; i < toks.length; i++) {
+    const t = parseTok(toks[i]);
+    if (!t) continue;
+    if (isPitch(t.name)) {
+      const m = noteNameToMidi(t.name);
+      if (prevPitch !== null && Math.abs(m - prevPitch) >= 5 && pos >= 0.15) ev.push({ at: pos - 0.12, key: "C2" });
+      const next = i + 1 < toks.length ? parseTok(toks[i + 1]) : null;
+      if (!p.palmMute && t.dur >= 0.5 - 1e-9 && (!next || next.name === "R")) ev.push({ at: pos + t.dur - 0.03, key: "G2" });
+      prevPitch = m;
+    }
+    pos += t.dur;
+  }
+  if (!ev.length) return null;
+  ev.sort((a, b) => a.at - b.at);
+  const out: string[] = [];
+  let at = 0;
+  for (let k = 0; k < ev.length; k++) {
+    const e = ev[k];
+    if (e.at < at - 1e-6) continue;
+    if (e.at > at + 1e-6) out.push(tokStr("R", Math.round((e.at - at) * 1000) / 1000));
+    const nextAt = k + 1 < ev.length ? ev[k + 1].at : e.at + 0.25;
+    const d = Math.max(0.05, Math.min(0.25, Math.round((nextAt - e.at) * 1000) / 1000));
+    out.push(tokStr(e.key, d, ","));
+    at = e.at + d;
+  }
+  const { stringNoise: _n, palmMute: _m, double: _d, notes: _x, ...rest } = p;
+  return { ...rest, instrument: "guitar", role: `${p.role ?? p.instrument}・弦の雑音`, patch: "guitarNoise", powerChord: false, volume: Math.max(0.02, Math.round((Number(p.volume) || 0.1) * 0.45 * 1000) / 1000), notes: out.join(" ") } as AiPart;
 }
 
 // ───────── 音の列の自動処理（legato・ghost） ─────────
@@ -654,7 +701,7 @@ export interface GuitarTechPartFields {
   power?: boolean | "oct" | { oct?: boolean };
   oct?: boolean;
   /** パームミュート「ズンズン」。true か sustain の値（0.8〜1）。sustain を 0.9 に、bright を -0.2。 */
-  palmMute?: boolean | number;
+  palmMute?: boolean | number | "light" | "medium" | "heavy";
   /** トレモロ奏法。長い音（min 拍以上。既定 1）を rate 拍（既定 0.25）の同音に展開する。 */
   tremolo?: boolean | { rate?: number; min?: number };
   /** 音の型を一括で: "gallop"（0.5 0.25 0.25）・"rgallop"・"trem"（0.125 拍）・"trem16"（0.25 拍）。 */
@@ -686,7 +733,7 @@ export interface GuitarTechPartFields {
 const rec = { type: "object" } as const;
 const bool = { type: "boolean" } as const;
 export const GUITAR_TECH_PART_SCHEMA = {
-  power: { anyOf: [bool, { type: "string", enum: ["oct"] }, rec] }, oct: bool, palmMute: { anyOf: [bool, { type: "number" }] },
+  power: { anyOf: [bool, { type: "string", enum: ["oct"] }, rec] }, oct: bool, palmMute: { anyOf: [bool, { type: "number" }, { type: "string", enum: ["light", "medium", "heavy"] }] },
   tremolo: { anyOf: [bool, rec] }, rhythm: { type: "string", enum: ["gallop", "rgallop", "trem", "trem16"] }, swell: { anyOf: [bool, { type: "number" }] },
   legato: bool, ghost: { anyOf: [bool, { type: "number" }, rec] }, harmonize: { anyOf: [bool, rec] }, fingerpick: rec, capo: { type: "number" },
   mask: { anyOf: [{ type: "string" }, rec] }, gtrStyle: { type: "string", enum: Object.keys(GTR_STYLES) }, vibrato: rec, glide: { anyOf: [bool, rec] }, autoScoop: bool,
@@ -698,7 +745,7 @@ export const GUITAR_TECH_GUIDE = `
 - 自動しゃくり: \`autoScoop\` はパートにも書ける（\`false\` でそのパートだけ止める）。**\`strum\`・\`power\`・\`fingerpick\` で展開した和音のパートは、既定で自動しゃくりがかからない**（\`strum.scoop:true\` で戻す）。
 - パワーコード: \`{"instrument":"guitar","power":true,"notes":"A2:0.5 A2:0.5 C3:1"}\`。notes の音を根音にして5度のパートを足す（\`"power":"oct"\` か \`"oct":true\` でオクターブも。同時発音は6まで）。**distGuitar／crunch は書き出しで5度・オクターブが自動で重なるので使わない**（根音だけ書く）。
 - ギャロップ／トレモロ: 音に \`@gallop\`（\`E2:2@gallop\`＝1拍ごとに 0.5! 0.25 0.25 を2回）・\`@rgallop\`（0.25 0.25 0.5!）・\`@trem\`（0.125拍の同音）・\`@trem16\`（0.25拍）。パートに \`"rhythm":"gallop"\` と書くと、1拍以上の音すべてに適用。\`tremolo:true\`（または \`{"rate":0.25,"min":1}\`）は長い音を同音の連なりに。短い同音の連打は禁止の音に近いので、sustain を 1 以上に（\`tremolo\` は 1.6 が既定）。
-- パームミュート: \`"palmMute":true\`（または 0.8〜1 の sustain）。sustain 0.9・bright -0.2。\`'\`（スタッカート）の同音連打にしない。
+- パームミュート: \`"palmMute":true\`（または 0.8〜1 の sustain、深さ "light"・"medium"・"heavy"）。sustain 0.9・bright -0.2。\`'\`（スタッカート）の同音連打にしない。
 - デッドノート: 音名のかわりに \`x\`（\`x:0.25\`、強く \`x:0.25!\`、弱く \`x:0.25,\`）。音程のない「チッ」を、直前の音を低く（G3 以下）した短い弱い音で鳴らす。パート項目 \`"ghost":0.3\`（または \`{"density":0.3}\`）で、休符の16分の裏に自動で弱いデッドノートを足す。ファンクは3〜4音の和音のパートで（禁止の音 1 に注意）。
 - strum.pattern の型の名前: \`pop\`・\`folk6\`・\`skank\`・\`rasgueado\`・\`bossa\`・\`funk-cut\`・\`punk8\`（\`pop-punk\`）・\`waltz\`・\`ballad\`。step・spreadMs・strings の既定も付く（書いた値が優先）。型の文字に \`g\`（ゴースト）・\`m\`（パームミュート。短く切る）・\`>\`（次の1打をアクセント。例 \`>DxDU\`＝1打目だけアクセントのダウン）を追加。
 - 指弾き: \`"fingerpick":{"chords":"C Am F G","pattern":"travis","capo":0}\` → 親指のパートと指のパートに展開。型は travis・pima・pimi・arp6・bossaThumb か、p q i m a - . の文字（p/q＝低い弦の親指、i m a＝高い弦3本）。

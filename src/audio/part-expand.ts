@@ -294,7 +294,7 @@ export function expandDoubleDetune(p: AiPart, spec: DoubleDetuneSpec | true): Ai
  * MIDI の書き出しはチャンネルごとに別のばらつき（midi-export の trackSeed）を使うので、左右を別チャンネルにし、ずれ（humanTiming）を大きくする。
  * 音程は ±2 セントだけ（doubleDetune の ±8 セントのような「うなり」を出さない）。右は別のIR・少し暗い音色・少し浅い歪み（別のマイク・別の弾き方）。
  */
-export function expandDoubleTrack(p: AiPart, spec: true | { spread?: number; irR?: string; timing?: number }): AiPart[] {
+export function expandDoubleTrack(p: AiPart, spec: true | { spread?: number; irR?: string; timing?: number; diR?: AiPart["di"] }): AiPart[] {
   const s = spec === true ? {} : spec;
   const spread = clamp(s.spread === undefined ? 1 : Number(s.spread), 0, 1);
   const timing = clamp(s.timing === undefined ? 1.8 : Number(s.timing), 0.5, 3);
@@ -307,7 +307,7 @@ export function expandDoubleTrack(p: AiPart, spec: true | { spread?: number; irR
   return [
     { ...base, role: `${p.role ?? p.instrument}・L`, volume: vol, pan: clamp(pan0 - spread, -1, 1), detune: -2, humanTiming } as AiPart,
     { ...base, role: `${p.role ?? p.instrument}・R`, volume: vol, pan: clamp(pan0 + spread, -1, 1), detune: 2, humanTiming,
-      ...(irR ? { ampCabIr: irR } : {}), ampTone: (Number(p.ampTone) || 0) - 0.8, ...(Number(p.ampDrive) > 0 ? { ampDrive: Number(p.ampDrive) * 0.92 } : { ampDrive: 0.92 }) } as AiPart,
+      ...(irR ? { ampCabIr: irR } : {}), ...(s.diR ? { di: s.diR } : {}), ampTone: (Number(p.ampTone) || 0) - 0.8, ...(Number(p.ampDrive) > 0 ? { ampDrive: Number(p.ampDrive) * 0.92 } : { ampDrive: 0.92 }) } as AiPart,
   ];
 }
 

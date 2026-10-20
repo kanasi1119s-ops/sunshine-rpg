@@ -46,7 +46,7 @@ export const SYNTH_PATCHES: Record<string, number> = {
   honkyTonk: 3, clavinet: 7, celesta: 8, vibraphone: 11, tenorSax: 66, kalimbaReal: 108, xylophone: 13, percussiveOrgan: 17, rockOrgan: 18, accordion: 21, synthBrass1: 62, synthBrass2: 63,
   rotoTom: 117, cannonTom: 118, inchTom: 119, kickTrigger: 120, impactHit: 121,
   // 2026-10-20 ジャンル別の追加音源（作曲ソフトで使う曲だけ録音・合成の音源が重なる）
-  altoSax: 65, bariSax: 67, mutedTrumpet: 59, folkHarp: 111, tinWhistle: 78, frameDrum: 116, pluckSynth: 85, chipPulse25: 124, chipPulse12: 125, reeseBass: 34, fxRiser: 126,
+  guitarNoise: 2, altoSax: 65, bariSax: 67, mutedTrumpet: 59, folkHarp: 111, tinWhistle: 78, frameDrum: 116, pluckSynth: 85, chipPulse25: 124, chipPulse12: 125, reeseBass: 34, fxRiser: 126,
   iceRain: 96, soundtrack: 97, crystal: 98, atmosphere: 99, brightness: 100, goblin: 101, echoDrops: 102, starTheme: 103,
 };
 
@@ -827,7 +827,9 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
       : p.amp && p.amp !== "auto" && AI_AMPS.has(p.amp) ? { type: p.amp as AmpSetting["type"], ...(Number(p.ampDrive) > 0 ? { drive: Math.min(2, Number(p.ampDrive)) } : {}), ...(Number(p.ampLevel) > 0 ? { level: Math.min(1.5, Number(p.ampLevel)) } : {}), ...(Number.isFinite(Number(p.ampTone)) && p.ampTone !== undefined ? { tone: Math.max(-12, Math.min(6, Number(p.ampTone))) } : {}), ...(typeof p.ampCabIr === "string" && p.ampCabIr ? { cabIr: p.ampCabIr } : {}), ...ampStages(p) } : undefined;
     const patchKey = p.patch ? String(p.patch) : "";
     if (patchKey && !(patchKey in SYNTH_PATCHES)) warnings.push(`${where}: シンセ音色「${patchKey}」は使えないので、楽器の音にしました`);
-    const program = !drum && patchKey in SYNTH_PATCHES ? SYNTH_PATCHES[patchKey] : undefined;
+    // 2026-10-21 パートごとのギターの録音（di）: 作曲ソフトが使う曲だけ重ねる録音の番号（tools/composer/entry.ts の part-di-*）
+    const DI_PROGRAMS: Record<string, number> = { emily: 112, fsbs: 113, shiny: 114, gretsch: 31, hofner: 23 };
+    const program = !drum && patchKey in SYNTH_PATCHES ? SYNTH_PATCHES[patchKey] : !drum && p.di && p.di in DI_PROGRAMS ? DI_PROGRAMS[p.di] : undefined;
     const partSpec: PartSectionSpec | undefined = p.sections ? parsePartSections(p.sections, where, warnings) : undefined;
     const arranged = (notes: NoteEvent[]): NoteEvent[] => {
       let ns = notes;

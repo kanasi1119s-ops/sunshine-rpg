@@ -31,7 +31,11 @@ export interface GuitarTone {
   ampTight?: number;
   ampTightHz?: number;
   /** ダブルトラック（左右に別々に弾いた2本）。 */
-  double?: boolean | { spread?: number; irR?: string; timing?: number };
+  double?: boolean | { spread?: number; irR?: string; timing?: number; diR?: "emily" | "fsbs" | "shiny" | "gretsch" | "hofner" };
+  /** 弦の雑音を足す（パートの stringNoise と同じ）。 */
+  stringNoise?: boolean;
+  /** このパートのギターの録音（パートの di と同じ）。 */
+  partDi?: "emily" | "fsbs" | "shiny" | "gretsch" | "hofner";
   /** false でパワーコードを自動で重ねない（単音の刻み）。 */
   powerChord?: boolean;
   /** この音色は歪ませる前の録音（DI）で鳴らす前提。曲に diGuitar が無ければ、これを入れる。 */
@@ -152,7 +156,8 @@ export function applyGuitarTone<T extends Record<string, unknown>>(part: T, wher
     return part;
   }
   const out: Record<string, unknown> = { ...part };
-  for (const key of ["amp", "ampDrive", "ampTone", "ampCabIr", "reverb", "chorus", "humanPitch", "fx", "noRestrike", "ampGate", "ampGateHz", "ampTight", "ampTightHz", "double", "powerChord"] as const) {
+  if (tone.partDi && out.di === undefined) out.di = tone.partDi;
+  for (const key of ["amp", "ampDrive", "ampTone", "ampCabIr", "reverb", "chorus", "humanPitch", "fx", "noRestrike", "ampGate", "ampGateHz", "ampTight", "ampTightHz", "double", "powerChord", "stringNoise"] as const) {
     if (out[key] === undefined && tone[key] !== undefined) out[key] = Array.isArray(tone[key]) ? (tone[key] as AiFx[]).map((f) => ({ ...f })) : tone[key];
   }
   return out as T;

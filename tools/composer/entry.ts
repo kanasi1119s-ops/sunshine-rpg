@@ -76,6 +76,12 @@ import diEmilyUrl from "../../assets-src/soundfont/extra/guitar-di-emily-30.sf3?
 import diFsbsUrl from "../../assets-src/soundfont/extra/guitar-di-fsbs-30.sf3?url";
 import diEmily29Url from "../../assets-src/soundfont/extra/guitar-di-emily-29.sf3?url";
 import diFsbs29Url from "../../assets-src/soundfont/extra/guitar-di-fsbs-29.sf3?url";
+import partDiEmilyUrl from "../../assets-src/soundfont/extra/guitar-di-emily-112.sf3?url";
+import partDiFsbsUrl from "../../assets-src/soundfont/extra/guitar-di-fsbs-direct-113.sf3?url";
+import partDiShinyUrl from "../../assets-src/soundfont/extra/guitar-di-shiny-114.sf3?url";
+import partDiGretschUrl from "../../assets-src/soundfont/extra/guitar-di-gretsch-31.sf3?url";
+import partDiHofnerUrl from "../../assets-src/soundfont/extra/guitar-di-hofner-23.sf3?url";
+import guitarNoiseUrl from "../../assets-src/soundfont/extra/guitar-noise-emily.sf3?url";
 // 2026-10-20 人間「ジャズ、ケルト音楽、電子音楽、テクノポップ、ダンスミュージック、ボカロ向けの音源も追加して」（出どころと規約は docs/assets-credits.md）
 import saxAltoUrl from "../../assets-src/soundfont/extra/sax-alto-weresax.sf3?url";
 import saxBariUrl from "../../assets-src/soundfont/extra/sax-bari-bear.sf3?url";
@@ -342,6 +348,12 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   // 実楽器版（real-edition）は歪みギターを GM 27（クリーン＝アンプに通す前の音）で鳴らすので、GM 27 も DI の録音にする。
   //   これが無いと、標準の音源のクリーンギター（短いループの録音）をハイゲインに通すことになり、ループの周期で揺れて聞こえていた（2026-10-20）
   "di-emily-27": { programs: [], url: guitarEmilyUrl }, "di-fsbs-27": { programs: [], url: guitarFsbsDirectUrl },
+  // 2026-10-21 パートごとのギターの録音（パートの di。使われていない GM の番号に置き、使うパートだけ program をその番号にする）
+  //   112＝Emily（ハムバッカー・太い）・113＝FSBS（シングルコイル・明るい）・114＝Shiny（アーチトップ）・31＝Gretsch（明るいホロウ）・23＝Hofner（丸いホロウ）
+  "part-di-emily": { programs: [112], url: partDiEmilyUrl }, "part-di-fsbs": { programs: [113], url: partDiFsbsUrl }, "part-di-shiny": { programs: [114], url: partDiShinyUrl },
+  "part-di-gretsch": { programs: [31], url: partDiGretschUrl }, "part-di-hofner": { programs: [23], url: partDiHofnerUrl },
+  // 弦の雑音（Emilyguitar の noises・release。CC0）。C2＝指がすべる・C#2〜F2＝ミュートした弦（5種）・F#2＝ピックが弦に触れる・G2＝弦を止める
+  guitarNoise: { programs: [2], url: guitarNoiseUrl },
   // 2026-10-20 ジャンル別の追加音源（使う曲だけ重ねる。使っていない曲の音は変わらない）
   // ジャズ: アルトサックス（Karoryfer Weresax）・バリトンサックス（Karoryfer Bear Sax）・ハーマンミュートのトランペット（VSCO 2 CE）
   altoSax: { programs: [65], url: saxAltoUrl }, bariSax: { programs: [67], url: saxBariUrl }, mutedTrumpet: { programs: [59], url: trumpetHarmonUrl },
