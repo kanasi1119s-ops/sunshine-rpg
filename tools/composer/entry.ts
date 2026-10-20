@@ -74,6 +74,8 @@ import kalimbaVcslUrl from "../../assets-src/soundfont/extra/kalimba-vcsl.sf3?ur
 import cajonUrl from "../../assets-src/soundfont/extra/cajon-vcsl.sf3?url";
 import diEmilyUrl from "../../assets-src/soundfont/extra/guitar-di-emily-30.sf3?url";
 import diFsbsUrl from "../../assets-src/soundfont/extra/guitar-di-fsbs-30.sf3?url";
+import diEmily29Url from "../../assets-src/soundfont/extra/guitar-di-emily-29.sf3?url";
+import diFsbs29Url from "../../assets-src/soundfont/extra/guitar-di-fsbs-29.sf3?url";
 // 2026-10-20 人間「ジャズ、ケルト音楽、電子音楽、テクノポップ、ダンスミュージック、ボカロ向けの音源も追加して」（出どころと規約は docs/assets-credits.md）
 import saxAltoUrl from "../../assets-src/soundfont/extra/sax-alto-weresax.sf3?url";
 import saxBariUrl from "../../assets-src/soundfont/extra/sax-bari-bear.sf3?url";
@@ -335,6 +337,8 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   // 2026-10-20 ラウドロック: 歪みギター（GM 30）を「歪ませる前の録音（DI）」で鳴らす（曲の diGuitar で選んだときだけ。アンプ側で歪ませる）。
   //   今までの GM 30 は歪んだ録音で、さらにアンプで歪ませる二重の歪みになり、耳に痛く割れて聞こえていた
   "di-emily": { programs: [], url: diEmilyUrl }, "di-fsbs": { programs: [], url: diFsbsUrl },
+  // リードギター（GM 29。歪んだ録音）も同じく DI に（leadGuitar のアンプで歪ませる）
+  "di-emily-29": { programs: [], url: diEmily29Url }, "di-fsbs-29": { programs: [], url: diFsbs29Url },
   // 2026-10-20 ジャンル別の追加音源（使う曲だけ重ねる。使っていない曲の音は変わらない）
   // ジャズ: アルトサックス（Karoryfer Weresax）・バリトンサックス（Karoryfer Bear Sax）・ハーマンミュートのトランペット（VSCO 2 CE）
   altoSax: { programs: [65], url: saxAltoUrl }, bariSax: { programs: [67], url: saxBariUrl }, mutedTrumpet: { programs: [59], url: trumpetHarmonUrl },
@@ -344,7 +348,7 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   pluckSynth: { programs: [85], url: pluckEdmUrl }, chipPulse25: { programs: [124], url: chip25Url }, chipPulse12: { programs: [125], url: chip12Url }, reeseBass: { programs: [34], url: reeseUrl }, fxElectro: { programs: [126], url: fxElectroUrl },
 };
 function extrasFor(score: Score): string[] {
-  return Object.keys(EXTRA_FONTS).filter((id) => (score.diGuitar && id === `di-${score.diGuitar}`) || score.tracks.some((t) => t.instrument === id || (typeof t.program === "number" && EXTRA_FONTS[id].programs.includes(t.program))));
+  return Object.keys(EXTRA_FONTS).filter((id) => (score.diGuitar && (id === `di-${score.diGuitar}` || id === `di-${score.diGuitar}-29`)) || score.tracks.some((t) => t.instrument === id || (typeof t.program === "number" && EXTRA_FONTS[id].programs.includes(t.program))));
 }
 let extraIds = "";
 async function applyExtras(score: Score): Promise<void> {

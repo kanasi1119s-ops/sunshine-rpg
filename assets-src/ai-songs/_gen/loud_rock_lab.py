@@ -147,16 +147,16 @@ if RIG == "old":
         parts.append({"instrument": "distGuitar", "role": f"刻み（{side}）", "volume": 0.09, "pan": pan, "amp": "modernHigh", "notes": part_notes(gtr_bar)})
 else:
     # 新しい作り: 歪ませる前の録音（DI）→ ゲート → 低音を締めるブースト → 学習式アンプ（NAM）→ 録音のキャビネット2つを混ぜる
-    rig = {"amp": "namA", "ampGate": 40, "ampTight": 0.6, "ampCabIr": "dfc-bestplugins+dfc-axhom", "double": True}
+    rig = {"amp": "namDD", "ampGate": 40, "ampTight": 0.6, "ampCabIr": "dd-v30-2x12-mix-tight", "double": {"irR": "dd-v30-2x12-mix-balanced"}}
     parts.append({"instrument": "distGuitar", "role": "刻み", "volume": 0.1, "pan": 0, **rig, "notes": part_notes(gtr_bar, only=("intro", "pre", "chorus", "breakdown", "bridge", "outro"))})
     parts.append({"instrument": "distGuitar", "role": "刻み（ブリッジミュート）", "volume": 0.1, "pan": 0, **rig, "palmMute": True, "notes": part_notes(gtr_bar, only=("verse",))})
 parts += [
     {"instrument": "bass", "role": "ベース", "volume": 0.18, "pan": 0, "amp": "auto" if RIG == "old" else "bassSplit", "notes": part_notes(bass_bar)},
     {"instrument": "kick", "role": "キック", "volume": 0.22, "pan": 0, "amp": "auto", "trigger": "tack", "notes": grid(kick_bar)},
     {"instrument": "snare", "role": "スネア", "volume": 0.18, "pan": 0, "amp": "auto", "push": 0.02, "notes": grid(snare_bar)},
-    {"instrument": "hihat", "role": "ハイハット", "volume": 0.07, "pan": 0, "amp": "auto", "push": -0.01, "notes": grid(hat_bar)},
+    {"instrument": "hihat", "role": "ハイハット", "volume": 0.05, "pan": 0, "amp": "auto", "push": -0.01, "notes": grid(hat_bar)},
     {"instrument": "tom", "role": "タム", "volume": 0.16, "pan": 0, "amp": "auto", "notes": " ".join(tom_bar(i, s) for i, s in enumerate(SECBAR))},
-    {"instrument": "crash", "role": "シンバル（クラッシュ・ライド・チャイナ）", "volume": 0.09, "pan": 0, "amp": "auto", "notes": " ".join(cym_bar(i, s) for i, s in enumerate(SECBAR))},
+    {"instrument": "crash", "role": "シンバル（クラッシュ・ライド・チャイナ）", "volume": 0.057, "pan": 0, "amp": "auto", "notes": " ".join(cym_bar(i, s) for i, s in enumerate(SECBAR))},
     {"instrument": "leadGuitar", "role": "リード（サビの旋律）", "volume": 0.13, "pan": 0, "amp": "lead", "noRestrike": True, "reverb": 0.25,
      "fx": [{"type": "delay", "beats": 0.75, "mix": 0.18, "feedback": 0.3}], "notes": " ".join(lead_bar(i, s) for i, s in enumerate(SECBAR))},
     {"instrument": "pad", "role": "パッド（サビの厚み）", "volume": 0.07, "pan": 0, "amp": "auto", "reverb": 0.5,
