@@ -66,7 +66,7 @@ LEADS = {
     "xylo": ("xylophone", {}, "plain", (65, 96)), "piano": ("piano", {}, "plain", (60, 88)),
     "wflute": ("panflute", {}, "cut", (60, 84)),   # 2026-10-20 高音が固い: 笛の音源の自然な音域（C6 まで）に収める（C#6〜E6 は音源を引きのばして硬くなっていた）
       # フルート（2026-10-20 点数の試し: VSCO の録音はプチッが10か所出て 7.73、笛の音源にして 7.83）
-    "gtrlead": ("guitar", {"amp": "crystal", "chorus": 0}, "plain", (52, 84)),   # アコギの旋律（間奏）
+    "gtrlead": ("guitar", {"amp": "crystal", "chorus": 0}, "plain", (52, 81)),   # アコギの旋律（間奏）
 }
 LEAD_META = {   # 音量・左右・残響・FX（同じ楽器は同じ値＝チャンネルを共有）
     "flute": dict(vol=0.21, pan=0.15, reverb=0.4, gainDb=2, breath=True, fx="delay"), "ocarina": dict(vol=0.2, pan=0.15, reverb=0.42, gainDb=2, breath=True, fx="delay"),
@@ -632,6 +632,18 @@ def build(song, out):
         if r.startswith(("弦（", "チェロ", "コントラバス", "ハープ")) or (r.startswith("旋律（acc") and band.get("acc") == "hold") or r.startswith("旋律（bagpipe") or r.startswith("旋律（horn"):
             if r.startswith("ハープ"): continue
             pt["notes"] = merge(pt["notes"], legato=r.startswith("弦（"))
+        if song.get("soft_high", True) and (r.startswith("旋律（gtrlead") or r.startswith("アコギ")):
+            # 2026-10-20 人間「アコギの音もかなりの高音の所の音が少し強いのでもう少し柔らかく」: E5 から上は弱めに（A5 から上はさらに弱く）
+            def _gsoft(tk):
+                if tk.startswith("R:") or ":" not in tk: return tk
+                m_ = md(tk.split(":")[0]); body = tk.split(":")[1]
+                if m_ is None or m_ < 76 or "," in body: return tk
+                body = body.replace("!", ""); tk = tk.split(":")[0] + ":" + body
+                mk = ",," if m_ >= 81 else ","
+                return tk[:-1] + mk + "_" if tk.endswith("_") else tk + mk
+            pt["notes"] = " ".join(_gsoft(t) for t in pt["notes"].split())
+            for fx in pt.get("fx", []):
+                if fx.get("type") == "eq": fx["high"] = round(fx.get("high", 0) - 1.5, 2); fx["mid"] = round(fx.get("mid", 0) - 1.0, 2)   # 弦の高い倍音と弾いた瞬間の硬さを少しおさえる
         if song.get("soft_high", True) and (r.startswith("旋律（wflute") or r.startswith("旋律（flute")):
             # 高い音（A5 から上）は息を少し弱めて吹く: 強い印（!）のない音に「,」（C#6 から上は「,,」）を付ける
             def _soft(tk):
