@@ -718,6 +718,10 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   if (Array.isArray(song.parts)) {
     song.parts = song.parts.map((p, i) => applyGuitarTone(p as unknown as Record<string, unknown>, `parts[${i}]`, warnings) as unknown as AiPart);
     if (song.autoScoop === undefined && song.parts.some((p) => p.guitarTone && GUITAR_TONES[p.guitarTone]?.noScoop)) song.autoScoop = false;
+    // 2026-10-21: DI で鳴らす前提の音色（loud-*）があれば、曲に diGuitar を入れ、ギターの自動の揺れを止める
+    const diTone = song.parts.map((p) => (p.guitarTone ? GUITAR_TONES[p.guitarTone]?.di : undefined)).find(Boolean);
+    if (diTone && song.diGuitar === undefined) song.diGuitar = diTone;
+    if (diTone && song.guitarWobble === undefined) song.guitarWobble = false;
   }
   const bpm = Math.round(Number(song.bpm));
   if (!(bpm >= 40 && bpm <= 260)) errors.push(`bpm は 40〜260 にしてください（${song.bpm}）`);

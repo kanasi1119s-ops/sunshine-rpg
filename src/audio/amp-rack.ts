@@ -490,10 +490,13 @@ export class AmpRack {
    * 準備できたら、その場でつなぎ替える（曲の再生は止めない）。
    */
   private buildNam(input: AudioNode, override: ChannelAmp): AudioNode[] {
+    // 2026-10-21: モデルの用意（非同期）が終わったときには this.dest が全体の出口に戻っているので、いまの出口（エフェクトの入口）を控えておく。
+    //   控えていなかったため、学習式アンプのパートでは、アンプのあとのエフェクト（EQ・ディレイなど）が素通りになっていた
+    const dest = this.dest;
     const dry = this.gain(1);
     const hub = this.gain(1);
     input.connect(dry);
-    dry.connect(this.dest);
+    dry.connect(dest);
     const nodes: AudioNode[] = [dry, hub];
     const modelJson = override.amp.model ? this.models[override.amp.model] : undefined;
     const generation = this.generation;
@@ -563,7 +566,7 @@ export class AmpRack {
       }
       prev.connect(panner);
       panner.connect(out);
-      out.connect(this.dest);
+      out.connect(dest);
       // 音が出はじめたら、元の音（ドライ）を切る
       dry.disconnect();
       this.built[this.built.findIndex((list) => list.includes(dry))]?.push(node, pre, ...front, ...extra, tone, ...cab, panner, out);
@@ -577,9 +580,10 @@ export class AmpRack {
    * 定義が見つからない・読み込めないときは、元の音のまま。
    */
   private buildPlugin(input: AudioNode, override: ChannelAmp): AudioNode[] {
+    const dest = this.dest; // buildNam と同じ理由で、いまの出口を控える（2026-10-21）
     const dry = this.gain(1);
     input.connect(dry);
-    dry.connect(this.dest);
+    dry.connect(dest);
     const nodes: AudioNode[] = [dry];
     const def = override.amp.plugin ? this.plugins[override.amp.plugin] : undefined;
     if (!def) return nodes;
@@ -599,7 +603,7 @@ export class AmpRack {
       chain[chain.length - 1].connect(tone);
       tone.connect(panner);
       panner.connect(out);
-      out.connect(this.dest);
+      out.connect(dest);
       dry.disconnect();
       this.built[this.built.findIndex((list) => list.includes(dry))]?.push(drive, ...chain, tone, panner, out);
     });

@@ -25,7 +25,26 @@ export interface GuitarTone {
   noRestrike?: boolean;
   /** true なら、曲の autoScoop（長い音を半音下から持ち上げる自動のしゃくり）を、曲に書いていなければ止める。 */
   noScoop?: boolean;
+  // ── 2026-10-20 ラウドロックの音作り（DI → ゲート → ブースト → アンプ → 録音のキャビネットIR）──
+  ampGate?: number;
+  ampGateHz?: number;
+  ampTight?: number;
+  ampTightHz?: number;
+  /** ダブルトラック（左右に別々に弾いた2本）。 */
+  double?: boolean | { spread?: number; irR?: string; timing?: number };
+  /** false でパワーコードを自動で重ねない（単音の刻み）。 */
+  powerChord?: boolean;
+  /** この音色は歪ませる前の録音（DI）で鳴らす前提。曲に diGuitar が無ければ、これを入れる。 */
+  di?: "emily" | "fsbs";
 }
+
+/** 1音1音を聞き取りやすくする EQ（2026-10-21 人間「B と D は聞き取りにくいかも」）: 低い中域のこもり（300Hz）を削り、芯（1.5kHz）を少し出す。 */
+const CLARITY_EQ: AiFx[] = [
+  { type: "eq", low: 0, mid: -3.5, midHz: 300, high: 0 },
+  { type: "eq", low: 0, mid: 2.5, midHz: 1500, high: 0 },
+];
+/** ラウドロックの4つの音作りに共通の、DI で鳴らす設定（自動のしゃくり・音程の揺れなし）。 */
+const LOUD_BASE = { humanPitch: 0, noScoop: true, di: "emily" as const };
 
 /** 響かせるリードのディレイと残響（『ネオンハートビート』で決めた組み合わせ）。 */
 const RINGING_FX: AiFx[] = [
@@ -34,6 +53,30 @@ const RINGING_FX: AiFx[] = [
 ];
 
 export const GUITAR_TONES: Record<string, GuitarTone> = {
+  // ── 2026-10-21 人間「全部採用」: ラウドロックの4つの音作り（パワーコードの聞き比べ A〜D）。歪ませる前の録音（DI）で鳴らす ──
+  "loud-high": {
+    label: "ラウドロック A: ハイゲイン（締まった壁）",
+    description: "Dark Days のハイゲインアンプ（namDD）を強めに。ゲート 40・低音を締めるブースト・V30 2x12 のIR（左 tight／右 balanced）・左右のダブルトラック。刻み・ブレイクダウン向き。クレジット必要（Dark Days, CC BY 4.0）。",
+    amp: "namDD", ampGate: 40, ampTight: 0.6, ampCabIr: "dd-v30-2x12-mix-tight", double: { irR: "dd-v30-2x12-mix-balanced" }, ...LOUD_BASE,
+  },
+  "loud-mid": {
+    label: "ラウドロック B: 中くらいの歪み（左右で別のスピーカー）",
+    description: "namDD の入力を絞った中くらいの歪み。ゲートは浅く（20）、左 V30／右 Greenback のIR。1音1音が聞こえるよう 300Hz を削り 1.5kHz を少し出す。メロコア・ギターロック向き。クレジット必要（Dark Days, CC BY 4.0）。" +
+      "2026-10-21 パワーコードの聞き比べ B3 で人間「b3がめちゃくちゃいい」（学習式アンプのあとの EQ が効くよう直した版）。",
+    amp: "namDD", ampDrive: 0.45, ampGate: 20, ampTight: 0.6, ampTightHz: 140, ampCabIr: "dd-v30-2x12-mix-balanced", double: { irR: "jd-greenback-4x12-01" }, fx: CLARITY_EQ, ...LOUD_BASE,
+  },
+  "loud-builtin": {
+    label: "ラウドロック C: 内蔵アンプの太い歪み",
+    description: "作曲ソフト内蔵の loudrock（中域が厚い太い歪み）に、録音のIR（左 V30／右 Greenback）とダブルトラック。外部のアンプのクレジット不要（IR は Dark Days のため必要）。",
+    amp: "loudrock", ampGate: 20, ampCabIr: "dd-v30-2x12-mix-balanced", double: { irR: "jd-greenback-4x12-01" }, ...LOUD_BASE,
+  },
+  "loud-mid-b": {
+    label: "ラウドロック D: 別のハイゲインを絞った中くらいの歪み",
+    description: "ハイゲインB（NAM の見本モデル。MIT）の入力を絞った中くらいの歪み。左 V30／右 Greenback。300Hz を削り 1.5kHz を少し出して粒を立てる。",
+    // 2026-10-21 人間「D はまだ聴きにくい」: 入力 0.4 では上の倍音がほとんど出ず、1.6〜3.2kHz が B より 18dB 弱くて暗かった → 入力 0.7 にして 250Hz を少し削り 2kHz を少し出す
+    amp: "namB", ampDrive: 0.7, ampGate: 20, ampTight: 0.6, ampTightHz: 140, ampCabIr: "dd-v30-2x12-mix-balanced", double: { irR: "jd-greenback-4x12-01" },
+    fx: [{ type: "eq", low: 0, mid: -2, midHz: 250, high: 0 }, { type: "eq", low: 0, mid: 2, midHz: 2000, high: 0 }], ...LOUD_BASE,
+  },
   "warm-lead-a": {
     label: "響く温かいリード（浅い歪み・中域が太い）",
     description:
@@ -77,7 +120,7 @@ export function applyGuitarTone<T extends Record<string, unknown>>(part: T, wher
     return part;
   }
   const out: Record<string, unknown> = { ...part };
-  for (const key of ["amp", "ampDrive", "ampTone", "ampCabIr", "reverb", "chorus", "humanPitch", "fx", "noRestrike"] as const) {
+  for (const key of ["amp", "ampDrive", "ampTone", "ampCabIr", "reverb", "chorus", "humanPitch", "fx", "noRestrike", "ampGate", "ampGateHz", "ampTight", "ampTightHz", "double", "powerChord"] as const) {
     if (out[key] === undefined && tone[key] !== undefined) out[key] = Array.isArray(tone[key]) ? (tone[key] as AiFx[]).map((f) => ({ ...f })) : tone[key];
   }
   return out as T;
