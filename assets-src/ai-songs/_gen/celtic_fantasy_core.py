@@ -260,7 +260,12 @@ def build(song, out):
         for k in ("pno1", "pno2", "pno3"): S.part(k, "piano", f"ピアノ右手（和音・{k[3]}）", 0.09, 0.06, **PNO)
         S.part("pnoL", "piano", "ピアノ左手（低音）", 0.12, 0.06, **PNO)
         if "piano" in leads_used: S.part("L_piano", "piano", "ピアノ右手（旋律）", 0.13, 0.06, **PNO)
-    if band.get("guitar"):
+    if band.get("guitar") == "riff":
+        # 2026-10-20 人間「ギター単音だけのバージョンで一曲選んで試しに作ってみて」: 和音のストロークをやめ、単音のリフ1本だけにする（間奏の旋律も単音）
+        S.part("g3", "guitar", "アコギ（単音のリフ）", 0.13, -0.3, **({"patch": band["gpatch"]} if band.get("gpatch") else {}), amp="crystal", chorus=0, sustain=1.1, reverb=0.22,
+               autoScoop=False, humanPitch=0, push=0.008, bright=-0.5, attack=0.58, release=0.6,
+               fx=[{"type": "eq", "low": 0.5, "mid": -1, "midHz": 2600, "high": -3.5}, {"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.003, "release": 0.12}])
+    elif band.get("guitar"):
         for k, pan in (("g1", -0.5), ("g2", -0.5 if band.get("gring") else 0.5), ("g3", -0.5), ("g4", 0.5)):
             # 2026-10-17 人間の指示「アコギもう少し音が柔らかいといいかも」: 高音をおさえ（bright -0.4・eq の high -2.5）、強い弾き（!）をやめた。
             #   楽器ごとの点検で、6kHz より上が -14.7dB → 下がり、重心 3.1kHz → 下がったことを確かめる
@@ -303,6 +308,37 @@ def build(song, out):
         S.part("snare", "snare", "スネア", 0.17 if dr == "kit" else 0.2, 0, push=0.01, gainDb=-10)
         S.part("hat", "hihat", "ハイハット", 0.07, 0, gainDb=-9)
         S.part("crash", "crash", "クラッシュ", 0.09, 0, gainDb=-8)
+
+    # ---- 単音のリフ（guitar: "riff"）: 拍のまとまりごとのリズムと、和音の音の上り下りの型を、曲ごとに1つ決めて2小節でくり返す ----
+    rr = random.Random(song["id"] + "riff" + str(song.get("seed", "")))
+    RH = []   # 2小節ぶん: 拍のまとまりごとに、音の長さの並び（単位）
+    for _b in range(2):
+        bar_ = []
+        for pl in PLEN:
+            if pl % 3 == 0: opts = [[2, 1], [1, 1, 1], [3]] if pl == 3 else [[2, 1, 2, 1], [1, 1, 1, 3], [3, 2, 1]]
+            elif pl == 4: opts = [[2, 1, 1], [1, 1, 2], [2, 2], [3, 1]]
+            elif pl == 2: opts = [[1, 1], [2]]
+            else: opts = [[pl]]
+            bar_.append(rr.choice(opts))
+        RH.append(bar_)
+    CONT = rr.choice([[0, 2, 1, 2, 3, 2, 1, 0], [0, 1, 2, 3, 2, 1, 2, 1], [0, 2, 3, 2, 1, 2, 0, 1], [0, 1, 0, 2, 3, 2, 1, 2]])
+    def riff_bar(i, cp, nxt, lvl):
+        tl = [m for m in range(48, 70) if m % 12 in cp[:3]]
+        base = min(range(len(tl)), key=lambda k: abs(tl[k] - low(cp[0], 50)))
+        tk = []; c = 0
+        lens = [d for grp in RH[i % 2] for d in grp]
+        for j, d in enumerate(lens):
+            last_note = j == len(lens) - 1 and i % 2 == 1
+            if last_note:   # 2小節目の最後は、次の和音の根音へ音階で近づく
+                tgt = low(chord_pcs(nxt)[0], 50); m = tgt + (2 if tgt + 2 < 70 else -1)
+                m = min(S.scale and [x for x in range(46, 72) if x % 12 in S.scale] or [m], key=lambda x: abs(x - m))
+            else:
+                m = tl[min(len(tl) - 1, base + CONT[c % len(CONT)])]
+            mk = "" if j == 0 else ","
+            if lvl <= 2 and j % 2 == 1 and not last_note: tk.append(f"R:{bt(d)}")   # 静かな所は音を間引いて、間をあける
+            else: tk.append(tok(m, d, mk))
+            c += 1
+        return tk
 
     LV = {1: 0.62, 2: 0.74, 3: 0.86, 4: 0.96, 5: 1.03}
     arc = []
@@ -415,7 +451,12 @@ def build(song, out):
                     S.put("pnoL", bi, [tok(lr if j % 2 == 0 else (f5 if j % 4 == 1 else lr + 12), PLEN[j], "!" if j == 0 else "") for j in range(len(PUL))])
         if p["mel"] and sec["lead"] == "piano": pass
         # ---- アコギ ----
-        if band.get("guitar") == "arp" and on(sec, "guitar", 2) and not (is_end and i > 0):   # 指で弾く分散和音（静かな曲）
+        if band.get("guitar") == "riff" and on(sec, "guitar", 1) and not (is_end and i > 0):
+            gl = p["mel"] and sec.get("lead") == "gtrlead"
+            if is_end: S.put("g3", bi, [tok(low(cp[0], 52), U)])
+            elif not gl:   # 間奏（アコギの旋律）の区間はリフを休む
+                S.put("g3", bi, riff_bar(i, cp, nxt, lvl))
+        elif band.get("guitar") == "arp" and on(sec, "guitar", 2) and not (is_end and i > 0):   # 指で弾く分散和音（静かな曲）
             tl = tones(52, 76); n, d = (U, 1) if U <= 8 else ((U // 3, 3) if U % 3 == 0 else (U // 2, 2))
             gl = p["mel"] and sec.get("lead") == "gtrlead"   # アコギが旋律の区間は、伴奏のアコギを和音をのばすだけにする（半音でぶつからないように）
             if not (band.get("bass") == "upright" and on(sec, "bass", 2)): S.put("g1", bi, [tok(low(br, 40), U, ",")])   # ウッドベースがいる所は、低い音をベースにまかせる
