@@ -18,7 +18,7 @@ export interface AiPartExtras extends GuitarTechPartFields {
   double?: boolean | { spread?: number; irR?: string; timing?: number; diR?: "emily" | "fsbs" | "shiny" | "gretsch" | "hofner" };
   /** このパートのギターの録音（2026-10-21）。emily＝ハムバッカーの太い音／fsbs＝シングルコイルの明るい音／shiny＝アーチトップ／gretsch＝明るいホロウ／hofner＝丸いホロウ。歪ませる前の録音なので、アンプ（amp）で音を作る。曲の diGuitar より優先。 */
   di?: "emily" | "fsbs" | "shiny" | "gretsch" | "hofner";
-  /** 和音（strum）を歪みのアンプに通すときの、入力の倍率（既定 0.6。1 で下げない）。和音を歪ませすぎると割れて聞こえるため。 */
+  /** 和音（strum）を歪みのアンプに通すときの、入力の倍率（既定 0.4＝人間が聞き比べて選んだ値。1 で下げない）。和音を歪ませすぎると割れて聞こえるため。 */
   chordGain?: number;
   /** true で、弦の雑音（音を止める音・指がすべる音）を、本物のギターで出る所にだけ小さく足す（Emilyguitar の録音。同じアンプを通す）。 */
   stringNoise?: boolean;
