@@ -36,10 +36,14 @@ y *= np.sqrt(np.mean(x ** 2) / (np.mean(y ** 2) + 1e-12))
 lim = 10 ** (-1.5 / 20); pk = np.abs(y).max(axis=1)
 over = np.maximum(pk / lim, 1.0)
 if over.max() > 1.0:
-    # こえた所のまわり 10ms をなめらかに下げる（移動平均は累積和で速く）
-    w = SR // 100; e = np.pad(over, (w, w), mode="edge"); c = np.concatenate([[0], np.cumsum(e)])
-    env = (c[2 * w + 1:] - c[:-2 * w - 1]) / (2 * w + 1)
-    env = np.maximum(env[:n], over); y /= env[:, None]
+    # こえた所のまわりをなめらかに下げる（急に下げるとプチッと鳴るので）:
+    #   10ms ごとの区切りで最大を取り、となりの区切りとも最大を取ってから、10ms の移動平均でならす（どの点でも over 以上・段差なし）
+    w = SR // 100; nb = -(-n // w); pad = np.pad(over, (0, nb * w - n), mode="edge").reshape(nb, w).max(axis=1)
+    bm = np.maximum(np.maximum(pad, np.r_[pad[1:], pad[-1]]), np.r_[pad[0], pad[:-1]])
+    env = np.repeat(bm, w)[:n]
+    c = np.concatenate([[0], np.cumsum(np.pad(env, (w // 2, w - w // 2), mode="edge"))])
+    env = (c[w:] - c[:-w])[:n] / w
+    y /= np.maximum(env, 1.0)[:, None]
 p = subprocess.run(["ffmpeg", "-nostdin", "-y", "-v", "error", "-f", "f32le", "-ar", str(SR), "-ac", str(CH), "-i", "-", "-c:a", "pcm_s24le", dst], input=y.astype(np.float32).tobytes())
 ym = y.mean(axis=1); before = smooth(db, 60)[active]; after_db = 20 * np.log10(np.array([np.sqrt(np.mean(ym[i:i + hop] ** 2) + 1e-12) for i in range(0, n, hop)]) + 1e-9)
 print(f"level-ride: 30秒の窓での大きさの幅 {before.max() - before.min():.1f}dB → {smooth(after_db, 60)[active].max() - smooth(after_db, 60)[active].min():.1f}dB")
