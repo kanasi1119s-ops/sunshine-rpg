@@ -117,12 +117,19 @@ FINAL = {
 #   → テンポを約2割上げて 7.81、本物のフルートの録音で CE 6.58→7.24。ゆったりの7曲にこの組み合わせを入れる
 # 2026-10-20 人間「アコギはナイロンの録音の音を使おう」: 全曲のアコギを、ナイロン弦のスパニッシュギターの録音（FreePats。CC0）に。書き出しは --guitar nylon
 ALL_SONGS = {"gpatch": "nylonGuitar"}
+# 全音版（ギターが和音をかき鳴らす版）だけの上書き。CF_VER=full のとき FINAL に重ねる。
+#   2026-10-20 ゆったりの曲は和音のストロークで PQ が 7.9 台に下がるので、アコギを 2.5〜4dB 下げて全曲 8.00〜8.28（level-ride で音量の山をならしたあと）
+FINAL_FULL = {
+    "03": {"gdb": -2.5}, "07": {"gdb": -2.5}, "09": {"gdb": -2.5}, "13": {"gdb": -2.5}, "16": {"gdb": -4},
+    "18": {"gdb": -2.5}, "22": {"gdb": -2.5}, "25": {"bpm": 100, "gdb": -3},
+}
 CALM = {"guitar": True, "gring": False, "lift": 1, "lead_patch": "flute"}
 
 if __name__ == "__main__":
     which = sys.argv[1] if len(sys.argv) > 1 else "all"
     outdir = sys.argv[2] if len(sys.argv) > 2 else "assets-src/ai-songs"
-    tune = dict(FINAL, **(json.loads(os.environ["CF_TUNE"]) if "CF_TUNE" in os.environ else {}))
+    base = {k: {**FINAL.get(k, {}), **FINAL_FULL.get(k, {})} for k in set(FINAL) | set(FINAL_FULL)} if os.environ.get("CF_VER") == "full" else FINAL
+    tune = dict(base, **(json.loads(os.environ["CF_TUNE"]) if "CF_TUNE" in os.environ else {}))
     ALL = dict(ALL_SONGS, **json.loads(os.environ.get("CF_ALL", "{}")))   # 全曲に足す設定（曲ごとの設定より先に入れ、曲ごとの設定が優先）
     if ALL: tune = {f"{s['n']:02d}": {**ALL, **tune.get(f"{s['n']:02d}", {})} for s in SONGS}
     pre = os.environ.get("CF_PRE", "")
