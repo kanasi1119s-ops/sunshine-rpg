@@ -4,7 +4,9 @@
  * しきい値より hysteresisDb 下がったら hold 秒待ってから、release 秒かけて depthDb だけ小さくする（-∞ 近くまで切るなら depthDb を大きく）。
  * 考え方は `docs/sound/amp-sim-guide.md` §5・提案4。`OfflineAudioContext`（書き出し）でも動く。
  */
-export const GATE_PROCESSOR_NAME = "sunshine-gate";
+export // 2026-10-20: ゲートの開け閉めを、左右の大きいほうで決めるようにした（左だけを見ていたので、右に振ったギターではゲートが閉じたまま＝ほぼ無音になっていた）。
+//   ワークレットの中のコードは btoa（Latin1 だけ）で渡すので、その中には日本語を書かない。
+const GATE_PROCESSOR_NAME = "sunshine-gate";
 
 export interface GateOptions {
   /** しきい値（dBFS。既定 -52）。 */
@@ -44,7 +46,7 @@ class SunshineGate extends AudioWorkletProcessor {
     if (!input || input.length === 0) return true;
     const n = input[0].length;
     for (let i = 0; i < n; i++) {
-      // 2026-10-20: 左右の大きいほうで開け閉めを決める（左だけを見ていたので、右に振ったギターではゲートが閉じたまま＝ほぼ無音になっていた）
+      // use the louder of L/R (was left-only: hard-right guitars stayed gated)
       const l = input[0][i], r = input[1] ? input[1][i] : l;
       const x = Math.abs(l) >= Math.abs(r) ? l : r;
       this.lp += this.hpA * (x - this.lp);

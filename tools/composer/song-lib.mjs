@@ -304,7 +304,9 @@ export async function renderWav(score, edition, file, soundfont = "game", bass =
     await page.waitForFunction(() => "__composer" in window, undefined, { timeout: 240000 });
     await page.evaluate(([b, d, g, o, p]) => window.__composer.setOverlays(b, d, g, o, p), [bass, drums, guitar, orchestra, piano]);
     if (soundfont === "gu") await page.evaluate(() => window.__composer.setSoundfont("gu"));
-    const b64 = await page.evaluate(([s, e]) => window.__composer.renderWav(s, e), [score, edition]);
+    // SUNSHINE_RAW=1: ピークをそろえずに書き出す（音の段ごとの点検用。2026-10-20）
+    const raw = process.env.SUNSHINE_RAW === "1";
+    const b64 = await page.evaluate(([s, e, r]) => window.__composer.renderWav(s, e, { raw: r }), [score, edition, raw]);
     fs.writeFileSync(file, Buffer.from(b64, "base64"));
   } finally {
     await browser.close();

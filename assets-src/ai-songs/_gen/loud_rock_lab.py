@@ -173,5 +173,8 @@ song = {
 }
 if RIG != "old":
     song["diGuitar"] = "emily"
+    # 2026-10-20 人間「常にしゃくりみたいなビブラートみたいな何かをギターに感じる」: 自動のしゃくり・ギターの自動の揺れ（ビブラート・音程のずれ）を止める
+    song["autoScoop"] = False
+    song["guitarWobble"] = False
 json.dump(song, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print(out, BARS, "小節", round(BARS * 4 * 60 / 150, 1), "秒")

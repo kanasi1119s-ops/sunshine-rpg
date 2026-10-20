@@ -567,7 +567,8 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       // 重低音: メタルのベースには、1オクターブ下の音を重ねる
       if (score.tone !== "rock" && score.tone !== undefined && (inst === "bass" || inst === "slap") && pitch - 12 >= 23) push(pitch - 12, tick, Math.round(velocity * 0.6), len);
       // 重さ: ディストーションギターには、1オクターブ下の音を薄く重ねる
-      if ((inst === "distGuitar" || inst === "crunch") && pitch - 12 >= 28) push(pitch - 12, tick, Math.round(velocity * (score.tone === "prs" ? 0.25 : 0.45)), len);
+      // 2026-10-20: 歪ませる前の録音（diGuitar）でアンプに通す曲では、1オクターブ下を重ねない（本物のギターに無い低さで、歪みに通すと、うなり・揺れのような濁りになる。人間「常にしゃくりみたいなビブラートみたいな何かを感じる」）
+      if ((inst === "distGuitar" || inst === "crunch") && !score.diGuitar && pitch - 12 >= 28) push(pitch - 12, tick, Math.round(velocity * (score.tone === "prs" ? 0.25 : 0.45)), len);
       // 主旋律のエコー（付点8分・付点4分）。テンポに合わせて、少しずつ小さく
       if (inst && ECHO_INSTRUMENTS.has(inst) && !track.noRestrike && n.durationBeats >= 0.4) {
         for (const [beats, gain] of [[0.75, 0.42], [1.5, 0.22]] as const) {

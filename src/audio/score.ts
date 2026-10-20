@@ -85,7 +85,8 @@ export type GenreAmpType = "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "
 
 /** ギターなどの音づくり（アンプ）の設定。`auto`は、曲の音色（tone）と楽器から自動で選ぶ。 */
 export interface AmpSetting {
-  type: "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "nam" | GenreAmpType | KeysAmpType | "genre" | "plugin";
+  /** direct＝何も通さない（歪ませる前の録音そのもの。音の点検・あとでアンプに通す「リアンプ」用。2026-10-20） */
+  type: "auto" | "direct" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "nam" | GenreAmpType | KeysAmpType | "genre" | "plugin";
   /** type=plugin のとき、使うアンプ定義のID（`Score.ampPlugins` のキー）。 */
   plugin?: string;
   /** type=genre のとき、amp.ts のプリセット名（ジャンル別の種類は、なるべく上の直接の種類へ置きかえて鳴らす）。 */

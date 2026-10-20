@@ -182,6 +182,7 @@ export class AmpRack {
   }
 
   private roleFromType(type: AmpSetting["type"], program: number | undefined, tone: Tone): Role {
+    if (type === "direct") return "thru";
     if (type === "nam") return this.nam ? "nam" : this.roleOf(program, tone);
     if (type === "genre") return "genre";
     if (type === "plugin") return "plugin";
