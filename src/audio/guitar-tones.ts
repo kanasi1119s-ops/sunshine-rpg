@@ -77,6 +77,38 @@ export const GUITAR_TONES: Record<string, GuitarTone> = {
     amp: "namB", ampDrive: 0.7, ampGate: 20, ampTight: 0.6, ampTightHz: 140, ampCabIr: "dd-v30-2x12-mix-balanced", double: { irR: "jd-greenback-4x12-01" },
     fx: [{ type: "eq", low: 0, mid: -2, midHz: 250, high: 0 }, { type: "eq", low: 0, mid: 2, midHz: 2000, high: 0 }], ...LOUD_BASE,
   },
+  // ── 2026-10-21 バンドの音の質感を調べて作った出発点（出典つきの調査: ELLEGARDEN・Meshuggah・Bring Me The Horizon・Linkin Park・Mrs. GREEN APPLE）。
+  //    曲・リフはまねず、機材と音の作り方の傾向だけを数値にした。人間の耳での確認はまだ（試作）。──
+  "melodic-punk": {
+    label: "メロディックパンク（マーシャル系の中くらいの歪み・中域が前）",
+    description: "試作。ハムバッカー＋マーシャル系の中〜中の上の歪み（メタルより少ない）、中域を前に、低音を締める。ブーストは低音を削るためだけ。左 V30／右 Greenback の別テイク。パワーコードはルート＋5度＋オクターブ。マーシャルのモデルができたら差し替える。",
+    amp: "namDD", ampDrive: 0.4, ampGate: 15, ampTight: 0.5, ampTightHz: 120, ampCabIr: "dd-v30-2x12-mix-balanced", double: { irR: "jd-greenback-4x12-02" },
+    fx: [{ type: "eq", low: 0, mid: -2.5, midHz: 300, high: 0 }, { type: "eq", low: 0, mid: 1.5, midHz: 1000, high: -1.5 }], ...LOUD_BASE,
+  },
+  "djent-8": {
+    label: "8弦の低い刻み（ジェント・締まった壁）",
+    description: "試作。8弦の半音下げ（F1〜）を単音で刻む前提（パワーコードを重ねない）。DI の段階で 3kHz を +4dB（低く下げた録音のこもりを補う）→ ゲート（検出 500Hz で低い音でも途中で閉じない）→ 200Hz から下をゆるく削るブースト → ハイゲイン → V30 系の 4x12 に Greenback を混ぜたIR。",
+    amp: "namDD", ampDrive: 1.4, ampGate: 50, ampGateHz: 500, ampTight: 1, ampTightHz: 200, ampCabIr: "jd-brutal-4x12-01+jd-greenback-4x12-02", double: { irR: "jd-brutal-4x12-06+jd-brutal-4x12-12" },
+    powerChord: false, fx: [{ type: "eq", low: 0, mid: 4, midHz: 3000, high: 0, pre: true }], ...LOUD_BASE,
+  },
+  "modern-metalcore": {
+    label: "現代のメタルコア（明るく広い・シンセと混ざる）",
+    description: "試作。ゲインは多すぎず、ブーストでアンプを押す（140Hz から下を削る）。V30 の明るいマイクと太いマイクを混ぜたIR。アンプのあとで 300Hz を少し引き、2.5kHz と高域を少し出す（耳に痛い所は出しすぎない）。キックに合わせて少し凹ませる（duck）とシンセと一体になる。",
+    amp: "namDD", ampDrive: 0.6, ampGate: 25, ampTight: 0.7, ampTightHz: 140, ampCabIr: "jd-brutal-4x12-01+dd-v30-2x12-cone-1in", double: { irR: "jd-brutal-4x12-05+dd-v30-2x12-cone-1in" },
+    fx: [{ type: "eq", low: 0, mid: -2, midHz: 300, high: 1.5 }, { type: "eq", low: 0, mid: 2, midHz: 2500, high: 0 }], ...LOUD_BASE,
+  },
+  "nu-metal-wall": {
+    label: "2000年代のニューメタル（平らで太い壁・刻みの止めがそろう）",
+    description: "試作。レクチファイア系の深めの歪みを、ゲートで刻みの止めをそろえる（伸ばした音の途中では閉じない浅さ）。V30 の明るいマイクと暗いマイクを半々、右は Greenback を混ぜる。250Hz を引き 800Hz を少し出し、高域は暗め。",
+    amp: "namDD", ampDrive: 0.9, ampGate: 45, ampTight: 0.3, ampTightHz: 80, ampCabIr: "dd-v30-2x12-cap-1in+dd-v30-2x12-mix-deep", double: { irR: "dd-v30-2x12-mix-deep+jd-greenback-4x12-03" },
+    fx: [{ type: "eq", low: 0, mid: -2, midHz: 250, high: -2 }, { type: "eq", low: 0, mid: 1.5, midHz: 800, high: 0 }], ...LOUD_BASE,
+  },
+  "jpop-rock-drive": {
+    label: "J-POP のギターロックの歪み（浅め・コードが聞こえる）",
+    description: "試作。ラウドロックより明らかに浅い歪みで、1音1音とコードの響きが聞こえる量。低音は 140Hz から締め、300Hz を引いて 1.2kHz を少し出し、高域は少し落とす（歌の場所を空ける）。左 V30／右 Greenback の別テイク。サビの歪みのバッキング向き。",
+    amp: "namDD", ampDrive: 0.35, ampGate: 15, ampTight: 0.5, ampTightHz: 140, ampCabIr: "dd-v30-2x12-mix-balanced", double: { irR: "jd-greenback-4x12-01" },
+    fx: [{ type: "eq", low: 0, mid: -2.5, midHz: 300, high: -1.5 }, { type: "eq", low: 0, mid: 2, midHz: 1200, high: 0 }], ...LOUD_BASE,
+  },
   "warm-lead-a": {
     label: "響く温かいリード（浅い歪み・中域が太い）",
     description:
