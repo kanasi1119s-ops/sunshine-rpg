@@ -10,21 +10,25 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import celtic_fantasy_core as core
 from celtic_fantasy_core import S_, F, METERS
 
-TARGET = 200   # 1曲の長さの目安（秒）
+# 2026-10-20 人間「曲ですが4分から5分でお願いします」: 200秒 → 270秒（4分30秒）。区間は最大18まで並べ、
+#   同じ旋律が続きすぎないよう、A・B のほかに3つ目の旋律 C（B の2行目・A の1行目・A の終わりの行から作る進行）を入れる
+TARGET = 270
 
 def form_for(mood, meter, bpm, end="hit"):
-    """雰囲気ごとの組み立て。16小節の区間を、長さの目安に合うだけ並べる（同じ旋律のくり返しが多すぎないよう最大9区間）"""
+    """雰囲気ごとの組み立て。16小節の区間を、長さの目安（4〜5分）に合うだけ並べる。w＝笛の旋律、wf＝笛2本のハモリ、gl＝アコギの旋律"""
     bar = METERS[meter]["beats"] * 60 / bpm
-    blocks = {
+    W, WF, GL = ("wflute",), ("wflute", "flute"), ("gtrlead",)
+    seq = {
         # 踊る曲: アコギとカホンだけで入る → 旋律 → 間奏はアコギの旋律 → 2本の笛のハモリで盛り上げる
-        "dance": [("A", 3, "wflute"), ("B", 4, "wflute"), ("A", 3, "gtrlead"), ("A", 4, "wflute", "flute"), ("B", 5, "wflute", "flute"),
-                  ("A", 5, "wflute", "flute"), ("B", 4, "wflute"), ("A", 5, "wflute", "flute"), ("B", 5, "wflute", "flute")],
-        "mid": [("A", 3, "wflute"), ("B", 4, "wflute"), ("A", 3, "gtrlead"), ("A", 4, "wflute", "flute"), ("B", 4, "wflute", "flute"),
-                ("A", 5, "wflute", "flute"), ("B", 3, "wflute"), ("A", 4, "wflute", "flute")],
+        "dance": [("A", 3, W), ("B", 4, W), ("A", 3, GL), ("C", 4, W), ("A", 4, WF), ("B", 5, WF), ("A", 4, W), ("C", 3, GL), ("B", 4, W),
+                  ("A", 5, WF), ("C", 4, WF), ("B", 5, WF), ("A", 3, GL), ("B", 4, W), ("C", 5, WF), ("A", 5, WF), ("B", 5, WF), ("A", 5, WF)],
+        "mid": [("A", 3, W), ("B", 4, W), ("A", 3, GL), ("C", 3, W), ("A", 4, WF), ("B", 4, WF), ("A", 3, W), ("C", 4, WF), ("B", 3, W),
+                ("A", 4, GL), ("B", 4, WF), ("C", 4, W), ("A", 5, WF), ("B", 5, WF), ("A", 4, WF), ("B", 4, W)],
         # ゆったり: アコギの分散和音から。カホンは盛り上がる区間（3以上）だけ
-        "calm": [("A", 2, "wflute"), ("B", 3, "wflute"), ("A", 2, "gtrlead"), ("A", 3, "wflute", "flute"), ("B", 3, "wflute"),
-                 ("A", 2, "wflute"), ("B", 3, "wflute", "flute"), ("A", 2, "wflute")],
+        "calm": [("A", 2, W), ("B", 3, W), ("A", 2, GL), ("C", 2, W), ("A", 3, WF), ("B", 3, W), ("C", 3, GL), ("A", 2, W), ("B", 3, WF),
+                 ("C", 2, W), ("A", 3, GL), ("B", 3, WF), ("C", 2, W), ("A", 3, WF), ("B", 2, W)],
     }[mood]
+    blocks = [(m, lv, v[0]) + ((v[1],) if len(v) > 1 else ()) for m, lv, v in seq]
     intro = {"dance": F("intro", 8 if bar < 1.6 else 4, 3, only=["guitar", "drums"]), "mid": F("intro", 4, 2, only=["guitar", "bass"]),
              "calm": F("intro", 4, 1, only=["guitar"])}[mood]
     k = max(3, min(len(blocks), round((TARGET - (intro["bars"] + 4) * bar) / (16 * bar))))
@@ -39,7 +43,8 @@ def band(mood):
 
 def D(n, id, title, en, image, meter, bpm, key, mode, A, B, mood, end=None, **kw):
     end = end or ("fade" if mood == "calm" else "hit")
-    s = S_(id, title, image, meter, bpm, key, mode, {"A": A, "B": B}, band(mood), form_for(mood, meter, bpm, end),
+    C = (B[1], A[0], A[2])   # 3つ目の旋律の進行（4〜5分の曲で、A・B のくり返しばかりにならないように）
+    s = S_(id, title, image, meter, bpm, key, mode, {"A": A, "B": B, "C": C}, band(mood), form_for(mood, meter, bpm, end),
            f"入り方: {'アコギとカホン' if mood == 'dance' else 'アコギとウッドベース' if mood == 'mid' else 'アコギの分散和音だけ'}。"
            f"間奏はアコギが旋律、後半は2本の笛のハモリ。終わり方: {'全員で一発' if end == 'hit' else '静かに消える'}。", **kw)
     s.update(n=n, en=en, mood=mood); return s
@@ -99,21 +104,26 @@ SONGS = [
 
 # 点数（音質の採点 PQ 8点以上）の試しで決めた調整（曲番号 → band や曲の値の上書き）。試しは環境変数 CF_TUNE='{"03": {"seed": "2"}}' で
 FINAL = {
-    # 合格（PQ 8.00〜8.06）: テンポを約1割上げる・種（seed）を変える
-    "01": {"bpm": 123}, "02": {"bpm": 128, "seed": "2"}, "06": {"seed": "3"}, "08": {"bpm": 129}, "17": {"seed": "3"},
-    "19": {"bpm": 92}, "23": {"bpm": 110}, "24": {"seed": "2"},
-    "13": {"bpm": 104, "seed": "3"},
-    # 本物のウッドベース（書き出しは --bass upright）で合格: 03 8.00・18 8.01
-    "03": {"bpm": 116, "real_bass": True}, "18": {"bpm": 99, "lift": 2, "real_bass": True},
+    # 2026-10-20 4〜5分・ナイロンギターの録音で全曲 PQ 8.00〜8.29（書き出しは --guitar nylon。real_bass の曲だけ --bass upright、ほかは --bass jazz）
+    "01": {"bpm": 123}, "02": {"bpm": 128, "seed": "2"}, "03": {"bpm": 116}, "05": {"bpm": 83}, "06": {"seed": "3"},
+    "07": {"bpm": 84, "lift": 2, "meter": "6/8"}, "08": {"bpm": 129}, "09": {"bpm": 96, "lift": 2, "meter": "6/8"},
+    "11": {"bpm": 120, "real_bass": True}, "12": {"bpm": 110, "real_bass": True}, "13": {"bpm": 104, "seed": "3"},
+    "14": {"bpm": 130, "seed": "3"}, "16": {"bpm": 110, "lift": 2}, "17": {"seed": "3"}, "18": {"bpm": 99, "lift": 2, "real_bass": True},
+    "19": {"bpm": 92}, "20": {"bpm": 210, "seed": "3"}, "21": {"bpm": 140, "seed": "3", "real_bass": True},
+    "22": {"bpm": 80, "lift": 2, "meter": "6/8"}, "23": {"bpm": 110}, "24": {"seed": "2"}, "25": {"bpm": 91, "lift": 2},
 }
 # ゆったりの曲（2026-10-20 点数の試し『精霊の泉』）: 分散和音だけ 7.55 → やさしいストローク＋区間を1段にぎやかに（カホンが静かに入る）7.70
 #   → テンポを約2割上げて 7.81、本物のフルートの録音で CE 6.58→7.24。ゆったりの7曲にこの組み合わせを入れる
+# 2026-10-20 人間「アコギはナイロンの録音の音を使おう」: 全曲のアコギを、ナイロン弦のスパニッシュギターの録音（FreePats。CC0）に。書き出しは --guitar nylon
+ALL_SONGS = {"gpatch": "nylonGuitar"}
 CALM = {"guitar": True, "gring": False, "lift": 1, "lead_patch": "flute"}
 
 if __name__ == "__main__":
     which = sys.argv[1] if len(sys.argv) > 1 else "all"
     outdir = sys.argv[2] if len(sys.argv) > 2 else "assets-src/ai-songs"
     tune = dict(FINAL, **(json.loads(os.environ["CF_TUNE"]) if "CF_TUNE" in os.environ else {}))
+    ALL = dict(ALL_SONGS, **json.loads(os.environ.get("CF_ALL", "{}")))   # 全曲に足す設定（曲ごとの設定より先に入れ、曲ごとの設定が優先）
+    if ALL: tune = {f"{s['n']:02d}": {**ALL, **tune.get(f"{s['n']:02d}", {})} for s in SONGS}
     pre = os.environ.get("CF_PRE", "")
     for s in SONGS:
         n = s["n"]
@@ -121,8 +131,10 @@ if __name__ == "__main__":
         if s["mood"] == "calm" and os.environ.get("CF_CALM", "1") == "1":
             tune.setdefault(f"{n:02d}", {}); tune[f"{n:02d}"] = {**CALM, "bpm": round(s["bpm"] * 1.22), **tune[f"{n:02d}"]}
         if f"{n:02d}" in tune:
-            t = dict(tune[f"{n:02d}"]); top = {k: t.pop(k) for k in ("seed", "bpm", "mel_range", "lead_db", "gsoft", "gdb", "cajon_vol", "lead_patch", "lift", "fmood", "real_bass", "bass_vol") if k in t}
+            t = dict(tune[f"{n:02d}"]); top = {k: t.pop(k) for k in ("seed", "bpm", "mel_range", "lead_db", "gsoft", "gdb", "cajon_vol", "lead_patch", "lift", "fmood", "real_bass", "bass_vol", "meter") if k in t}
             s = dict(s, band={**s["band"], **t}, **top)
+            if top.get("bpm") and not top.get("fmood"):   # テンポを変えたら、4〜5分になるよう区間の数を数えなおす
+                s["form"] = form_for(s["mood"], s["meter"], s["bpm"], "fade" if s["mood"] == "calm" else "hit")
             if top.get("fmood"):   # 組み立てだけ別の雰囲気の形にする（ゆったりの曲を「中くらい」の形に、など）
                 s["form"] = form_for(top["fmood"], s["meter"], s.get("bpm", s["bpm"]), "fade" if s["mood"] == "calm" else "hit")
             if top.get("lift"):   # 区間の強さを1段上げる（ゆったりの曲でもカホンが静かに入る）
