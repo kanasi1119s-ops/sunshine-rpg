@@ -653,6 +653,17 @@ def build(song, out):
                 mk = ",," if m_ >= 85 else ","
                 return tk[:-1] + mk + "_" if tk.endswith("_") else tk + mk
             pt["notes"] = " ".join(_soft(t) for t in pt["notes"].split())
+            # 2026-10-20 人間「フルートの音強弱をつけるようにしようか」: 2小節ごとのフレーズに、出だし弱く→山で強く→終わりを引く強弱。
+            #   2拍以上のばす音は、息をふくらませるように音量を立ち上げる（<）
+            pt["phrase"] = M["beats"] * 2
+            def _swell(tk):
+                if tk.startswith("R:") or ":" not in tk: return tk
+                body = tk.split(":")[1]; num = "".join(ch for ch in body if ch.isdigit() or ch == ".")
+                try: L_ = float(num)
+                except ValueError: return tk
+                if L_ < 2 or "<" in body: return tk
+                return tk[:-1] + "<_" if tk.endswith("_") else tk + "<"
+            pt["notes"] = " ".join(_swell(t) for t in pt["notes"].split())
     json.dump(sj, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     return total
 
