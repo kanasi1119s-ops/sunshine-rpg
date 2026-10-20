@@ -16,7 +16,7 @@ const nam = await build({
 const namCode = (Array.isArray(nam) ? nam[0] : nam).output.find((o) => o.type === "chunk").code;
 const namWasm = fs.readFileSync(root + "node_modules/@opendaw/nam-wasm/dist/nam.wasm");
 // 同梱のNAMモデル（MIT。assets-src/nam-models/README.md）
-const NAM_MODELS = { "builtin:highgain-a": ["ハイゲインアンプA", "highgain-a.nam"], "builtin:highgain-b": ["ハイゲインアンプB", "highgain-b.nam"], "builtin:bass-preamp": ["ベース用プリアンプ", "bass-preamp.nam"], "builtin:darkdays-ss": ["トランジスタのハイゲイン（アンプのみ。キャビネットIRを通す）", "darkdays-ss-highgain-di.nam"] };  // Dark Days（CC BY 4.0・クレジット必要。docs/assets-credits.md）。Kay 703 は入手元の規約のため外した（2026-10-20）
+const NAM_MODELS = { "builtin:highgain-a": ["ハイゲインアンプA", "highgain-a.nam"], "builtin:highgain-b": ["ハイゲインアンプB", "highgain-b.nam"], "builtin:bass-preamp": ["ベース用プリアンプ", "bass-preamp.nam"], "builtin:darkdays-ss": ["トランジスタのハイゲイン（アンプのみ。キャビネットIRを通す）", "darkdays-ss-highgain-di.nam"], "builtin:jvm-g4": ["マーシャル系の中くらいの歪み（アンプのみ。キャビネットIRを通す）", "marshall-jvm-g4.nam"] };  // Dark Days（CC BY 4.0・クレジット必要。docs/assets-credits.md）。Kay 703 は入手元の規約のため外した（2026-10-20）
 const namModels = Object.fromEntries(Object.entries(NAM_MODELS).map(([k, [label, file]]) => [k, { label, json: fs.readFileSync(root + "assets-src/nam-models/" + file, "utf8") }]));
 // 見本のアンプ定義（assets-src/amp-plugins/）
 const ampDir = root + "assets-src/amp-plugins/";

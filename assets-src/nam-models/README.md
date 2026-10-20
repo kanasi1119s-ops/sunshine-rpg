@@ -29,3 +29,12 @@ MIT なので、商用利用・改変・再配布ができる（著作権表示�
 | `kay703-g10.nam` | ゲイン10 | `namKay10` | ひずみ（54%） |
 
 入力を小さくするとさらに浅くなる（`ampDrive`）。ハイゲインA・B（常に約27%）と違い、**弾く強さと入力でひずみが変わる**。軽い曲・クリアな曲向け。
+
+## 追加: Dark Days のハイゲイン（2026-10-20）
+`darkdays-ss-highgain-di.nam`（amp `namDD`）。入手元 https://darkdays.net 。CC BY 4.0（`LICENSE-darkdays-CC-BY-4.0.txt`）。クレジット必要: 「Amp capture by Dark Days — https://darkdays.net (CC BY 4.0)」。アンプだけ（キャビネットIRを通す）。
+
+## 追加: マーシャルの中くらいの歪み（2026-10-21、試用中）
+`marshall-jvm-g4.nam`（amp `namJVM`）。Marshall JVM 410H Dataset（CC BY 4.0、doi:10.5281/zenodo.7970723）の OD1・ゲイン4 から、この作曲ソフトで学習（neural-amp-modeler 0.13、WaveNet、ESR 0.050）。クレジットと注意点は `docs/assets-credits.md`。
+
+## 外したもの
+Kay 703（`kay703-g3〜g10.nam`）は、入手元 TONE3000 の利用規約が再配布・商用配布を禁止しているため、2026-10-20 に外した（docs/decisions.md）。

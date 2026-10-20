@@ -60,6 +60,8 @@ type PartSectionSpecJson = Partial<Record<SectionKind, number | boolean | { gain
  */
 const NAM_AMPS = {
   namA: "builtin:highgain-a", namB: "builtin:highgain-b", namDD: "builtin:darkdays-ss",
+  // 2026-10-21 マーシャル JVM410H（OD1・ゲイン4・トーン5）の録音データ（CC BY 4.0）から、この作曲ソフトで学習したモデル。アンプだけなので ampCabIr を通す
+  namJVM: "builtin:jvm-g4",
 } as const;
 /**
  * 2026-10-20 人間「他の物で代用しましょう」: Kay 703 の NAM（namKay3〜10）は、入手元（TONE3000）の利用規約が再配布・商用配布を禁止しているため外した。
@@ -111,13 +113,13 @@ export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   /** フレーズの山（拍。2〜32）。この長さごとに、出だしをやや弱く→山で強く→終わりを引く強弱をつける（歌うような表情）。ドラムでは使わない。 */
   phrase?: number;
   /** アンプ（ギター・ベース向け）。"auto" なら曲の音色から自動。 */
-  /** namA／namB／namDD のとき、NAM（学習式）アンプへの入力の大きさ（0〜2、既定1。小さいほど歪みが浅い）。 */
+  /** namA／namB／namDD／namJVM のとき、NAM（学習式）アンプへの入力の大きさ（0〜2、既定1。小さいほど歪みが浅い）。 */
   ampDrive?: number;
-  /** namA／namB／namDD のとき、出力の大きさの倍率（0〜1.5、既定1）。 */
+  /** namA／namB／namDD／namJVM のとき、出力の大きさの倍率（0〜1.5、既定1）。 */
   ampLevel?: number;
-  /** namA／namB／namDD のとき、高音の量（dB。-12〜+6、既定0。マイナスで丸く）。 */
+  /** namA／namB／namDD／namJVM のとき、高音の量（dB。-12〜+6、既定0。マイナスで丸く）。 */
   ampTone?: number;
-  /** namA／namB／namDD のとき、キャビネットの箱（closed/open/dark/bright）。 */
+  /** namA／namB／namDD／namJVM のとき、キャビネットの箱（closed/open/dark/bright）。 */
   ampCab?: string;
   /** 録音のキャビネットIRの名前（作曲ソフトのみ。例 "dfc-axhom"）。"none" で外す。省略すると歪み系のアンプは標準の IR を通す。 */
   ampCabIr?: string;
