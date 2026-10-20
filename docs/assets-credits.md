@@ -21,7 +21,6 @@
 | spessasynth_lib / spessasynth_core（サウンドフォント再生ライブラリ。npm） | https://github.com/spessasus/spessasynth_lib | 2026-09-30 | BGMの再生（`src/audio/sampled-engine.ts`） | Apache-2.0。商用利用・改変・再配布は可。ライセンス文を同梱する条件あり（`public/licenses/spessasynth-Apache-2.0.txt`） | 必要（README に表記） |
 | Neural Amp Modeler Core（WASM版 `@opendaw/nam-wasm`。npm） | https://github.com/sdatkinson/NeuralAmpModelerCore （WASM版: https://www.npmjs.com/package/@opendaw/nam-wasm ） | 2026-09-30 | 作曲ソフトのアンプシミュレーター（`src/audio/nam/`）。作曲ソフト（`tools/composer/`）にだけ埋め込み、ゲーム本体には入れない | MITライセンス（© 2023 Steven Atkinson）。商用利用・改変・再配布は可。著作権表示と許諾文を含める条件あり。.namモデルは同梱していない。利用者が読み込むモデルは、モデルごとに配布元の規約（商用利用・再配布）を確認する。ゲームにはモデルを入れない | 必要（README に表記） |
 | NAMの見本モデル3つ（NeuralAmpModelerCore の `example_models/` の `A2.nam`・`my_model.nam`・`wavenet.nam`） | https://github.com/sdatkinson/NeuralAmpModelerCore （コミット 0b3d3c9） | 2026-09-30 | 作曲ソフトの同梱アンプ（ハイゲインアンプA・B、ベース用プリアンプ）。元ファイルは `assets-src/nam-models/`。ゲーム本体には入れない | リポジトリ全体が MITライセンス（© 2023 Steven Atkinson）で、`example_models/` に別の規約はない。商用利用・改変・再配布は可。著作権表示と許諾文を含める（`assets-src/nam-models/LICENSE-NeuralAmpModelerCore.txt`、`public/licenses/NeuralAmpModelerCore-MIT.txt`）。モデル内の機材メーカー名は画面に出さない | 必要（README に表記） |
-| Kay 703 NAM Profiles（`.nam` 4つ。`assets-src/nam-models/kay703-g3/g5/g7/g10.nam`） | https://www.tone3000.com/tones/kay-703-6302 （@aazuspan） | 2026-10-12 | **CC0**（ページの表記「cco」。「with no conditions」）。商用利用・改変・再配布・ゲームへの組み込みに条件なし。クレジットは不要（`assets-src/nam-models/README.md` に記録） | 不要 | 作曲ソフトだけが埋め込む（ゲーム本体には入れない）。同ページで「TONE3000 の多くは T3K」だが、このモデルは CC0 と表記されているものだけを採用 |
 | Electron（デスクトップ版の土台）・Anthropic TypeScript SDK（AI作曲の通信）・Model Context Protocol SDK（コネクタ。開発用） | https://www.electronjs.org/ ・ https://github.com/anthropics/anthropic-sdk-typescript ・ https://github.com/modelcontextprotocol/typescript-sdk | 2026-09-30 | デスクトップ版（`desktop/`）とコネクタ（`tools/mcp/`）。ゲーム本体には入れない | すべて MIT（Electron に同梱の Chromium は、各部品のライセンスが `LICENSES.chromium.html` として配布物に入る）。商用利用・再配布は可。ライセンス文を配布物に含める（`desktop/copy-licenses.mjs` が `licenses/` にそろえる） | 必要（デスクトップ版の「ヘルプ」→「ライセンス」） |
 | LAME（lamejs、npm `@breezystack/lamejs` 1.2.7）・文字フォント Orbitron と JetBrains Mono（npm `@fontsource`） | https://lame.sourceforge.net/ ・ https://github.com/shijinyu/lamejs ・ https://fonts.google.com/specimen/Orbitron ・ https://www.jetbrains.com/lp/mono/ | 2026-09-30 | デスクトップ版だけ（MP3 の書き出し・画面の英数字の文字）。ゲーム本体には入れない | LAME: LGPL-3.0。商用可。条件（部品の説明による）: 本体と別ファイルで使う・LAME を使っていることと入手先を示す・改変したら公開する（改変していない）。LGPL/GPL の本文と表示を `licenses/` に同梱。フォント: SIL OFL 1.1（商用・同梱可。フォント単体の販売は不可。ライセンス文を同梱） | 必要（「ヘルプ」→「ライセンス」） |
 
@@ -195,6 +194,34 @@
 | VCSL のグロッケンシュピール・ビブラフォン（ハードマレット）・マリンバ・シロフォン（ミディアム）・ハンドチャイム・チェンバロ（フランス型 Harpsi2、イタリア型 Harpsichord_stop1） | https://github.com/sgossner/VCSL | 2026-10-14 | 同上で `glockenspiel-vcsl.sf3`（GM 9）・`vibraphone-vcsl.sf3`（11）・`marimba-vcsl.sf3`（12）・`xylophone-vcsl.sf3`（13）・`chimes-vcsl.sf3`（8）・`harpsichord-french.sf3`・`harpsichord-italian.sf3`（6）。VCSL の音名は 1 オクターブ低く書かれていたため、実測で +12 している。マリンバは録音レベルが低い（-15〜-68dB）ので、サンプルごとに音量をそろえた | CC0 1.0（同上） | 不要（任意で感謝） |
 | VCSL のテナーサックス（Non-Vibrato）・カリンバ（Tanzania）・カホン | https://github.com/sgossner/VCSL | 2026-10-19 | `gen-vcsl-sfz.py`／手書きの SFZ（`assets-src/soundfont/src/cajon-vcsl/cajon.sfz`）を `sfz-to-sf3.mjs` で `sax-tenor-vcsl.sf3`（GM 66）・`kalimba-vcsl.sf3`（GM 108）・`cajon-vcsl.sf3`（GM 115。C3 付近＝低音・D3＝トーン・E3〜＝スラップ、強さ3層×2回ずつ）。作曲ソフト専用（ゲーム本体には入れない） | CC0 1.0（リポジトリの LICENSE 本文を確認） | 不要（任意で感謝） |
 | **自作のシンセ音（アナログ風）**: ソーリード・スーパーソー・アルペジオ向けの短い音・ジュピター系ポリシンセ・シンセブラス・ストリングスマシン・ムーグ系ベース・アシッドベース | 外部の素材なし。`tools/soundfont/build-analog-synths.mjs` が、ソー波・パルス波（polyBLEP）→ ラダーフィルター → アンサンブルコーラスで合成 | 2026-10-14 | `synth-lead-saw.sf3`・`synth-lead-supersaw.sf3`・`synth-lead-arp.sf3`（GM 81）、`synth-poly-analog.sf3`（90）、`synth-brass-analog.sf3`（62）、`synth-strings-machine.sf3`（50）、`synth-bass-moog.sf3`（38）、`synth-bass-acid.sf3`（39） | 外部の著作物を含まない（このプロジェクトで書いたプログラムが作った波形）。実在のシンセの録音・プリセット・サンプルは使っていない | 不要 |
+
+## 作曲ソフト用の追加素材（2026-10-20、人間「現代のロック・ラウドロックに必要なものを全部やって」「ジャズ、ケルト音楽、電子音楽、テクノポップ、ダンスミュージック、ボカロ向けの音源も追加して」。作曲ソフト専用で、ゲーム本体 `dist/` には入れていない）
+規約は配布元のページと同梱のライセンス文で確認した。変換後の SF3 は `assets-src/soundfont/extra/`、IR は `assets-src/ir/`、NAM は `assets-src/nam-models/`。
+
+| 素材 | URL | 入手日 | 使い方 | 規約 | クレジット |
+|---|---|---|---|---|---|
+| Dark Days のハイゲインアンプの NAM（トランジスタアンプ・ゲイン最大。アンプのみの `DI.nam`） | https://darkdays.net （直接配布の zip） | 2026-10-20 | `assets-src/nam-models/darkdays-ss-highgain-di.nam`。AIソングの amp `namDD`（キャビネットIRを通す前提）。画面では機材名を出さない | CC BY 4.0（同梱の LICENSE.txt。商用・改変・再配布可。作者名とリンク、変更したことの表示が条件） | **必要**: 「Amp capture by Dark Days — https://darkdays.net (CC BY 4.0)」。この NAM で書き出した曲を公開するときは、概要欄・ゲーム内クレジットに書く |
+| Dark Days のキャビネットIR（2x12・V30。cap/cone/edge・ミックス3種のうち7つ） | 同上 | 2026-10-20 | `assets-src/ir/darkdays/` → `tools/composer/cab-irs.ts`（名前 `dd-v30-2x12-…`） | CC BY 4.0（同梱の LICENSE.txt） | **必要**: 「Cabinet IRs by Dark Days — https://darkdays.net (CC BY 4.0)」 |
+| Jester's Brutal Pack 1.0・Emerald Pack 1.0（4x12 のキャビネットIR。作者 Bastian Karschewski が自分で録音） | https://www.jester-dyne-productions.com/brutal-ir-pack/ ・ https://www.jester-dyne-productions.com/emerald-ir-pack/ | 2026-10-20 | `assets-src/ir/jester-dyne/`（元の名前は下品なものがあるので `brutal-4x12-01〜15`・`greenback-4x12-01〜06` に付け直した）→ `cab-irs.ts`（名前 `jd-…`） | CC0（同梱の手引き PDF「LICENSED 2022 UNDER: CC0」） | 不要 |
+| Weresax（Karoryfer。アルトサックス） | https://github.com/sfzinstruments/karoryfer.weresax | 2026-10-20 | `sax-alto-weresax.sf3`（GM 65、patch `altoSax`） | CC0 1.0（LICENSE） | 不要 |
+| Bear Sax（Karoryfer。1926年のバリトンサックス） | https://github.com/sfzinstruments/karoryfer.bear-sax | 2026-10-20 | `sax-bari-bear.sf3`（GM 67、patch `bariSax`。抜けていた C4 は B3 の録音で埋めた） | CC0 1.0（LICENSE） | 不要 |
+| D. Smolken's double bass（1958年 Otto Rubner のコントラバスのピチカート） | https://github.com/sfzinstruments/dsmolken.double-bass | 2026-10-20 | `bass-upright-rubner.sf3`（GM 33。書き出しの `--bass rubner`）。雑音の録音は除いた | CC0 1.0（LICENSE、readme「Royalty-free for all commercial and non-commercial use」） | 不要 |
+| VSCO 2 CE のトランペット（ハーマンミュート） | https://github.com/sgossner/VSCO-2-CE | 2026-10-20 | `trumpet-harmon-vsco.sf3`（GM 59、patch `mutedTrumpet`） | CC0（既存の VSCO 2 CE と同じ） | 不要 |
+| VCSL の Folk Harp・Baroque Soprano Recorder・Frame Drum | https://github.com/sgossner/VCSL | 2026-10-20 | `harp-folk-vcsl.sf3`（GM 111、`folkHarp`）・`whistle-recorder-vcsl.sf3`（GM 78、`tinWhistle`。ティンホイッスルの代わり）・`framedrum-vcsl.sf3`（GM 116、`frameDrum`。バウロンの代わり） | CC0 1.0（LICENSE） | 不要 |
+| FreePats Bagpipe（2026-08-06版。G のバグパイプの録音とドローン） | https://freepats.zenvoid.org/Ethnic/bagpipe.html | 2026-10-20 | `bagpipe-freepats.sf3`（GM 109。instrument `bagpipe` を使う曲で重なる） | CC0（README・LICENSE.txt） | 不要 |
+| FreePats Synthesizer Percussion（2022-07-18版。アナログのドラムマシン風の音を Yoshimi・Geonkick で作ったもの） | https://freepats.zenvoid.org/Percussion/electric-percussion.html | 2026-10-20 | `drums-electro.sf3`（ドラムのバンク 128。書き出しの `--drums electro`）。GM の鍵盤に並べ直し、ダンス向けのキック（36）はこのソフトで合成した音 | CC0（readme・LICENSE） | 不要 |
+| このソフトで合成した音（外部の録音なし） | `tools/soundfont/build-analog-synths.mjs`・効果音は Python で合成 | 2026-10-20 | `synth-pluck-edm.sf3`（GM 85、`pluckSynth`）・`synth-chip-pulse25/12.sf3`（GM 124・125）・`synth-bass-reese.sf3`（GM 34、`reeseBass`）・`fx-electro.sf3`（GM 126、`fxRiser`。ライザー・ダウンリフター・逆再生シンバル・サブドロップ・シュッ） | 自作（CC0 扱い） | 不要 |
+
+### 使わないと決めた素材（2026-10-20）
+| 素材 | URL | 理由 |
+|---|---|---|
+| Kay 703 NAM Profiles（以前 `kay703-g3〜g10.nam` として同梱） | https://www.tone3000.com/tones/kay-703-6302 | ページの表記は CC0 だが、TONE3000 の利用規約（2025-03-12 発効、https://www.tone3000.com/terms ）が「サイトから入手したトーンの再配布」と「作者と TONE3000 の書面の許可のない商用配布」を禁じている。人間の判断（2026-10-20「他の物で代用しましょう」）で外した。`namKay3〜10` は blues・crunch・lead・loudrock に置きかえ |
+| TONE3000 のほかの CC0／CC BY のキャプチャ | https://www.tone3000.com/ | 同じ利用規約のため。使うなら作者の別の配布元か書面の許可が必要 |
+| Origin Effects・Celestion・OwnHammer・God's Cab ほかの市販系キャビネットIR | 各社 | 改変・再配布の禁止、有料、または規約が読めない |
+| CrocellKit・Aasimonster（DrumGizmo。メタル向けドラム、CC BY 4.0） | https://drumgizmo.org/ | 使えるが、数GB と大きく、今回は見送り（候補） |
+| Cowsynth・Caveman Cosmonaut（Karoryfer、CC0） | https://github.com/sfzinstruments | 使えるが、プラックやシンセらしさは SFZ のフィルター・エンベロープ頼みで、録音だけを SF3 にするとバグパイプやオルガンの持続音になるため見送り。プラックは自作の合成にした |
+| smpldsnds/supersaw・Hydrogen のドラムキット・FreePats の古い SF2 | GitHub ほか | GPL（作曲ソフト全体に影響するおそれ） |
+| Michael Fischer の TR-808 サンプルほか「無料」とだけあるドラムマシンの音 | — | 再配布の許可が書かれていない |
 
 ## 使わないと決めた素材（2026-10-14、音源の調査で外したもの）
 

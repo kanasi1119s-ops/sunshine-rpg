@@ -285,7 +285,11 @@ export function expandPower(p: AiPart, warnings: string[]): AiPart[] {
 export function applyPalmMute(p: AiPart): AiPart {
   const v = typeof p.palmMute === "number" ? clamp(p.palmMute, 0.8, 1) : 0.9;
   const { palmMute: _m, ...rest } = p;
-  return { ...rest, sustain: p.sustain ?? v, bright: clamp((Number(p.bright) || 0) - 0.2, -1, 0.5) } as AiPart;
+  // 2026-10-20 ラウドロック: 学習式アンプ（namA・namB）のときは、アンプの前（DIの段階）で高音を落とす。
+  //   本物のブリッジミュートは、手のひらで弦の高い倍音が止まり、低い音の芯だけが残る。それを歪ませると「ズンッ」と締まる（歪ませたあとで削ると、こもるだけ）
+  const nam = p.amp === "namA" || p.amp === "namB";
+  const pre = nam ? [{ type: "filter", kind: "lowpass", freq: 1300, q: 0.6, pre: true }, ...(p.fx ?? [])] : p.fx;
+  return { ...rest, sustain: p.sustain ?? (nam ? Math.min(v, 0.75) : v), bright: clamp((Number(p.bright) || 0) - 0.2, -1, 0.5), ...(pre ? { fx: pre } : {}) } as AiPart;
 }
 
 /** tremolo: 長い音（既定 1 拍以上）を、rate 拍（既定 0.25）の同音の連なりにする。余韻が重なるよう sustain の既定を 1.6 にする。 */

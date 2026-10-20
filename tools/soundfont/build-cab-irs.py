@@ -5,7 +5,10 @@
 データは Float32 を base64 にしたもの。ゲーム本体には入れない（作曲ソフトの entry.ts だけが読み込む）。"""
 import base64, os, numpy as np, soundfile as sf
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-SETS = {"david-fau-casquel": ("dfc", "David Fau Casquel (CC BY 3.0)")}
+SETS = {"david-fau-casquel": ("dfc", "David Fau Casquel (CC BY 3.0)"),
+        # 2026-10-20 ラウドロック: 作者が自分で録ったキャビネットIR（docs/assets-credits.md）
+        "darkdays": ("dd", "Dark Days - https://darkdays.net (CC BY 4.0)"),
+        "jester-dyne": ("jd", "Jester Dyne Productions (CC0)")}
 N = 4096
 lines = ["// 自動生成（tools/soundfont/build-cab-irs.py）。手で書きかえない。",
          "// 録音のキャビネットIR。出どころと規約は docs/assets-credits.md と assets-src/ir/*/README.txt。", "",

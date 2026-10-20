@@ -193,6 +193,45 @@ const INSTR = {
       return y.map((v, i) => v * smooth(i / SR / 0.002));
     },
   },
+  // ── 2026-10-20 人間「電子音楽、テクノポップ、ダンスミュージック、ボカロ向けの音源も追加して」──
+  // EDM・ボカロのプラック（GM 85）: ソー 3 本（±12 セント）＋1 オクターブ上の薄いソー。フィルターが「ポン」と閉じて、0.9 秒で消える（ループなし）
+  "synth-pluck-edm": {
+    program: 85, loop: 0, total: 1.1, step: 4, keys: [36, 100], level: 0.95, release: 0.15, fade: 0.3,
+    render: ({ f0, cyc, L, n, rnd }) => {
+      const c0 = cyc(f0); const x = new Float64Array(n);
+      for (const d of [-12, 0, 12]) { const o = osc("saw", Math.round(c0 * cents(d)), L, n, rnd()); for (let i = 0; i < n; i++) x[i] += o[i] * 0.33; }
+      const up = osc("saw", cyc(f0 * 2), L, n, rnd()); for (let i = 0; i < n; i++) x[i] += up[i] * 0.12;
+      const y = ladder(highpass(x, 120), (t) => 200 + Math.min(11000, f0 * 10) * Math.exp(-t / 0.11), 0.6, 1.1);
+      return y.map((v, i) => { const t = i / SR; return v * smooth(t / 0.0015) * expEnv(t, 0.01, 1.0, 1, 0.004); });
+    },
+  },
+  // チップチューン（ファミコン風）のパルス波 25%（GM 124）: フィルターなしの角ばった音。ごく浅いビブラートは入れない（曲の ~ で付ける）
+  "synth-chip-pulse25": {
+    program: 124, loop: 88200, pre: 4410, step: 4, keys: [36, 100], level: 0.6, release: 0.05,
+    render: ({ f0, cyc, L, n, rnd }) => {
+      const p = osc("sq", cyc(f0), L, n, rnd(), 0.25);
+      return p.map((v, i) => v * smooth(i / SR / 0.002));
+    },
+  },
+  // チップチューンのパルス波 12.5%（GM 125）: 細く鼻にかかった音（伴奏・アルペジオ向き）
+  "synth-chip-pulse12": {
+    program: 125, loop: 88200, pre: 4410, step: 4, keys: [36, 100], level: 0.6, release: 0.05,
+    render: ({ f0, cyc, L, n, rnd }) => {
+      const p = osc("sq", cyc(f0), L, n, rnd(), 0.125);
+      return p.map((v, i) => v * smooth(i / SR / 0.002));
+    },
+  },
+  // リースベース（GM 34）: ソー 2 本を ±16 セントずらしてうねらせ（ドラムンベース・ダブステップ・ボカロの太いベース）、サブのサイン、ラダーで 900Hz 前後に
+  "synth-bass-reese": {
+    program: 34, loop: 88200, pre: 22050, step: 4, keys: [24, 72], level: 0.8, release: 0.15, even: true,
+    render: ({ f0, cyc, L, n, rnd }) => {
+      const c0 = cyc(f0); const x = new Float64Array(n);
+      for (const d of [-16, 16]) { const o = osc("saw", Math.round(c0 * cents(d)), L, n, rnd()); for (let i = 0; i < n; i++) x[i] += o[i] * 0.45; }
+      const sub = osc("sin", c0, L, n, 0); for (let i = 0; i < n; i++) x[i] += sub[i] * 0.5;
+      const y = ladder(x, () => Math.min(1400, 500 + f0 * 4), 0.4, 1.4);
+      return y.map((v, i) => v * smooth(i / SR / 0.004));
+    },
+  },
 };
 
 // ---------- 書き出し ----------

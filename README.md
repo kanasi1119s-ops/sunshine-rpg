@@ -47,4 +47,6 @@ npm run dev
 
 - 作曲ソフト（`tools/composer/`）のアンプシミュレーターに、Neural Amp Modeler Core（© 2023 Steven Atkinson、MITライセンス）と、そのリポジトリに同梱の見本のアンプモデル（同じくMIT）を使っています（ゲーム本体には入っていません）。
 
+- 作曲ソフト（`tools/composer/`）のアンプとキャビネットIRに、Dark Days のキャプチャ（https://darkdays.net 。CC BY 4.0）を使っています（ゲーム本体には入っていません。このアンプ（`namDD`）や IR（`dd-…`）を通して書き出した曲を公開・ゲームに入れるときは「Amp capture / Cabinet IRs by Dark Days — https://darkdays.net (CC BY 4.0)」を載せます）。ほかの追加音源（Jester Dyne の IR、Karoryfer・VCSL・VSCO 2 CE・FreePats の録音）は CC0 です。規約と記録は [`docs/assets-credits.md`](docs/assets-credits.md) にあります。
+
 - 作曲ソフト（`tools/composer/`）のオーケストラ音源に、VSCO 2 Community Edition（Versilian Studios。CC0）の録音を、ピアノ音源に、Salamander Grand Piano V3（Alexander Holm。CC BY 3.0）の録音を変換して使っています（ゲーム本体には入っていません。この音源で書き出した曲をゲームのBGMにするときは、ゲーム内のクレジットにも「Salamander Grand Piano V3 by Alexander Holm (CC BY 3.0)」を載せます）。規約と記録は [`docs/assets-credits.md`](docs/assets-credits.md) にあります。

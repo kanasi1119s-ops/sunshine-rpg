@@ -72,6 +72,23 @@ import vibesUrl from "../../assets-src/soundfont/extra/vibraphone-vcsl.sf3?url";
 import saxTenorUrl from "../../assets-src/soundfont/extra/sax-tenor-vcsl.sf3?url";
 import kalimbaVcslUrl from "../../assets-src/soundfont/extra/kalimba-vcsl.sf3?url";
 import cajonUrl from "../../assets-src/soundfont/extra/cajon-vcsl.sf3?url";
+import diEmilyUrl from "../../assets-src/soundfont/extra/guitar-di-emily-30.sf3?url";
+import diFsbsUrl from "../../assets-src/soundfont/extra/guitar-di-fsbs-30.sf3?url";
+// 2026-10-20 人間「ジャズ、ケルト音楽、電子音楽、テクノポップ、ダンスミュージック、ボカロ向けの音源も追加して」（出どころと規約は docs/assets-credits.md）
+import saxAltoUrl from "../../assets-src/soundfont/extra/sax-alto-weresax.sf3?url";
+import saxBariUrl from "../../assets-src/soundfont/extra/sax-bari-bear.sf3?url";
+import trumpetHarmonUrl from "../../assets-src/soundfont/extra/trumpet-harmon-vsco.sf3?url";
+import harpFolkUrl from "../../assets-src/soundfont/extra/harp-folk-vcsl.sf3?url";
+import whistleRecUrl from "../../assets-src/soundfont/extra/whistle-recorder-vcsl.sf3?url";
+import frameDrumUrl from "../../assets-src/soundfont/extra/framedrum-vcsl.sf3?url";
+import bagpipeRealUrl from "../../assets-src/soundfont/extra/bagpipe-freepats.sf3?url";
+import pluckEdmUrl from "../../assets-src/soundfont/extra/synth-pluck-edm.sf3?url";
+import chip25Url from "../../assets-src/soundfont/extra/synth-chip-pulse25.sf3?url";
+import chip12Url from "../../assets-src/soundfont/extra/synth-chip-pulse12.sf3?url";
+import reeseUrl from "../../assets-src/soundfont/extra/synth-bass-reese.sf3?url";
+import fxElectroUrl from "../../assets-src/soundfont/extra/fx-electro.sf3?url";
+import drumsElectroUrl from "../../assets-src/soundfont/extra/drums-electro.sf3?url";
+import bassRubnerUrl from "../../assets-src/soundfont/extra/bass-upright-rubner.sf3?url";
 import marimbaUrl from "../../assets-src/soundfont/extra/marimba-vcsl.sf3?url";
 import xyloUrl from "../../assets-src/soundfont/extra/xylophone-vcsl.sf3?url";
 import accordionUrl from "../../assets-src/soundfont/extra/accordion-hohner.sf3?url";
@@ -163,10 +180,14 @@ const BASS_FONTS: Record<string, { label: string; url: string | null }> = {
   growly: { label: "Growly Bass（Jazz Bass の指弾き。Karoryfer。CC0）", url: bassGrowlyUrl },
   // 2026-10-20 ケルト曲のウッドベース: エレキの jazz では楽器ごとの点数が 6.6 と低く出だしが硬いので、本物のコントラバスのピチカート（VSCO 2 CE。CC0）を
   upright: { label: "ウッドベース（コントラバスのピチカート。VSCO 2 CE。CC0）", url: bassUprightUrl },
+  // 2026-10-20 ジャズのウッドベース: 1958年のコントラバスの指弾き（D. Smolken。CC0）。弦の鳴りが太く、ジャズのウォーキング向き
+  rubner: { label: "ジャズのウッドベース（1958年のコントラバスの指弾き。D. Smolken。CC0）", url: bassRubnerUrl },
 };
 const DRUM_FONTS: Record<string, { label: string; url: string | null }> = {
   std: { label: "標準（上の音源）", url: null },
   muldjord: { label: "生ドラム Muldjord Kit", url: drumsMuldjordUrl },
+  // 2026-10-20 電子ドラム（テクノポップ・ダンス・ボカロ）: FreePats Synthesizer Percussion（CC0）＋このソフトで合成したダンス向けの締まったキック（36）
+  electro: { label: "電子ドラム（アナログのドラムマシン風。CC0）", url: drumsElectroUrl },
   rock: { label: "ロックドラム", url: drumsRockUrl },
   metal: { label: "メタルドラム", url: drumsMetalUrl },
   jazz: { label: "ジャズドラム", url: drumsJazzUrl },
@@ -311,9 +332,19 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   vibes: { programs: [11], url: vibesUrl }, tenorSax: { programs: [66], url: saxTenorUrl }, kalimba: { programs: [108], url: kalimbaVcslUrl },
   // 2026-10-19 人間「作曲ソフトの音源にカホンを追加して」: VCSL Cajon（CC0）。低音・トーン・スラップ × 強さ3層 × 2回ずつの録音
   cajon: { programs: [115], url: cajonUrl },
+  // 2026-10-20 ラウドロック: 歪みギター（GM 30）を「歪ませる前の録音（DI）」で鳴らす（曲の diGuitar で選んだときだけ。アンプ側で歪ませる）。
+  //   今までの GM 30 は歪んだ録音で、さらにアンプで歪ませる二重の歪みになり、耳に痛く割れて聞こえていた
+  "di-emily": { programs: [], url: diEmilyUrl }, "di-fsbs": { programs: [], url: diFsbsUrl },
+  // 2026-10-20 ジャンル別の追加音源（使う曲だけ重ねる。使っていない曲の音は変わらない）
+  // ジャズ: アルトサックス（Karoryfer Weresax）・バリトンサックス（Karoryfer Bear Sax）・ハーマンミュートのトランペット（VSCO 2 CE）
+  altoSax: { programs: [65], url: saxAltoUrl }, bariSax: { programs: [67], url: saxBariUrl }, mutedTrumpet: { programs: [59], url: trumpetHarmonUrl },
+  // ケルト: フォークハープ（VCSL）・ソプラノリコーダー（VCSL。ティンホイッスルの代わり）・枠太鼓（VCSL。バウロンの代わり）・バグパイプの本物の録音（FreePats 2026）
+  folkHarp: { programs: [111], url: harpFolkUrl }, tinWhistle: { programs: [78], url: whistleRecUrl }, frameDrum: { programs: [116], url: frameDrumUrl }, bagpipe: { programs: [109], url: bagpipeRealUrl },
+  // 電子音楽・テクノポップ・ダンス・ボカロ: プラック・チップチューンのパルス波 25%／12.5%・リースベース・効果音（ライザーなど）。すべてこのソフトで合成したもの
+  pluckSynth: { programs: [85], url: pluckEdmUrl }, chipPulse25: { programs: [124], url: chip25Url }, chipPulse12: { programs: [125], url: chip12Url }, reeseBass: { programs: [34], url: reeseUrl }, fxElectro: { programs: [126], url: fxElectroUrl },
 };
 function extrasFor(score: Score): string[] {
-  return Object.keys(EXTRA_FONTS).filter((id) => score.tracks.some((t) => t.instrument === id || (typeof t.program === "number" && EXTRA_FONTS[id].programs.includes(t.program))));
+  return Object.keys(EXTRA_FONTS).filter((id) => (score.diGuitar && id === `di-${score.diGuitar}`) || score.tracks.some((t) => t.instrument === id || (typeof t.program === "number" && EXTRA_FONTS[id].programs.includes(t.program))));
 }
 let extraIds = "";
 async function applyExtras(score: Score): Promise<void> {

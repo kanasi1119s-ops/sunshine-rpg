@@ -81,7 +81,7 @@ export type Instrument =
  * ジャンル別のアンプ（2026-09-30 追加）。ジャズ・ブルース・ファンク・クランチ・ハードロック・パンク・ファズ・
  * シューゲイザー・ローファイ・レトロ8bit・ラジオ。作り方は `amp-rack.ts`、向いている場面は `docs/sound/composition-notes.md`。
  */
-export type GenreAmpType = "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean";
+export type GenreAmpType = "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean" | "bassSplit";
 
 /** ギターなどの音づくり（アンプ）の設定。`auto`は、曲の音色（tone）と楽器から自動で選ぶ。 */
 export interface AmpSetting {
@@ -262,6 +262,8 @@ export interface Score {
   ampPlugins?: Record<string, AmpPluginDef>;
   /** 録音音源で鳴らすときのドラムセット（GMのドラムキット番号。0=標準、16=パワー、24=電子、25=TR-808、32=ジャズ）。省略時は0。 */
   drumKit?: number;
+  /** 歪みギター（GM 30）を歪ませる前の録音（DI）で鳴らす（作曲ソフトのみ。emily＝ハムバッカーの太い音／fsbs＝シングルの明るい音）。アンプで歪ませる前提。 */
+  diGuitar?: "emily" | "fsbs";
   /**
    * ドラムの太鼓ごとのミックス（録音音源のドラムNRPN）。level＝音量の倍率（1が標準。0〜1.5）、pan＝左右（-1〜1。叩き手から見た位置でなく聴き手から見た位置）、reverb＝残響の送り（0〜1）。
    * 例: ハイハットは小さく左、スネアは残響を足す。tom の spread（0〜1）は、高いタムを左・低いフロアを右へ振り分ける広がり。tune は音の高さを半音単位でずらす（-6〜6）。

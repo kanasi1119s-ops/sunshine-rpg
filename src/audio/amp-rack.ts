@@ -25,7 +25,7 @@ export interface ChannelAmp {
 type Role = "plugin" | "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru" | GenreAmpType | KeysAmpType;
 
 /** ジャンル別のアンプの種類（`score.ts` の `GenreAmpType` と同じ並び）。 */
-export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean"];
+export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", "bassSplit"];
 
 const STEP_CURVES = new Map<number, Float32Array<ArrayBuffer>>();
 /** 波形を階段状にする（ビットを落としたような粗い音）。levels は片側の段数。 */
@@ -447,6 +447,28 @@ export class AmpRack {
       case "sparkleClean":
         // きらびやかなクリーン: 歪ませない。中域のこもり（900Hz・1.6kHz）を少し引き、2.6kHz にわずかな抜け、低めを足し、弱い圧縮で粒をそろえる。高域は明るい箱で6kHz前後から急に落とす
         return this.chain(input, tail([this.filter("highpass", 80, 0, 0.7), this.filter("lowshelf", 250, 2, 0.7), this.filter("peaking", 900, -3, 0.8), this.filter("peaking", 1600, -2, 0.8), this.filter("peaking", 2600, 1, 0.9), this.compressor(-26, 2.5, 0.012, 0.2), this.gain(1.0)]));
+      case "bassSplit": {
+        // 2026-10-20 ラウドロックのベース（2本に分ける）: 220Hz より下はきれいなまま（低音の芯）、上だけを歪ませて（弦のゴリッとした輪郭）混ぜる。
+        //   歪んだギターの壁の中でもベースの音程と輪郭が聞こえ、低音は濁らない。最後に軽く圧縮して粒をそろえる
+        this.opt = null;
+        const lo1 = this.filter("lowpass", 220, 0, 0.7), lo2 = this.filter("lowpass", 220, 0, 0.7);
+        const hi1 = this.filter("highpass", 220, 0, 0.7), hi2 = this.filter("highpass", 220, 0, 0.7);
+        const loG = this.gain(1.0);
+        const drv = this.gain(3.2 * d);
+        const sh = this.shaper(4.5 * d, 0.03);
+        const post = [this.filter("peaking", 900, 3, 0.9), this.filter("peaking", 2400, 2, 1), this.filter("lowpass", 4800, 0, 0.7)];
+        const hiG = this.gain(0.32);
+        const sum = this.gain(1);
+        const comp = this.compressor(-20, 3, 0.01, 0.15);
+        const out = this.gain(1.1 * level);
+        input.connect(lo1); lo1.connect(lo2); lo2.connect(loG); loG.connect(sum);
+        input.connect(hi1); hi1.connect(hi2); hi2.connect(drv); drv.connect(sh);
+        let prev: AudioNode = sh;
+        for (const f of post) { prev.connect(f); prev = f; }
+        prev.connect(hiG); hiG.connect(sum);
+        sum.connect(comp); comp.connect(out); out.connect(this.dest);
+        return [lo1, lo2, loG, hi1, hi2, drv, sh, ...post, hiG, sum, comp, out];
+      }
       case "jpopClean":
         // J-POPのクリーン（2020年代の刻み・アルペジオ。jpop-clean-guitar-guide.md 提案1）: 歪ませない。100Hz未満を切り、300Hz付近のこもりを1.5dB引き、2kHzに1.5dBの輪郭を足し、
         // 8〜9kHz から落とす（刺さりを出さず、空気感は残す）。圧縮は 3:1／アタック5ms／リリース50ms／約3dB（粒をそろえる。出典9・8）
@@ -489,9 +511,48 @@ export class AmpRack {
       // 入力の大きさ（歪みの深さ）と、耳に痛い高音を丸めるキャビネットのかわりのフィルター
       const pre = this.gain(override.amp.drive ?? 1);
       // 付録: 7kHzのローパス1枚をやめて、キャビネット近似（周波数をずらした急なローパス）に（箱の無い「アンプのみ」の録りが多いため）
-      const cab = this.cabNodes(override.amp.cab ?? "closed", override.amp.mic ?? "center");
+      // 2026-10-20 ラウドロック: cabIr（録音のキャビネットIR。"a+b" で2つを混ぜる＝2本のマイク）があれば、近似の箱のかわりに録音のIRを通す。
+      //   アンプの前には、実機と同じ順に ノイズゲート（gate）→ 低音を締めるブースト（tight）を入れられる
+      const irData = override.amp.cabIr && override.amp.cabIr !== "none" ? recordedCabImpulse(override.amp.cabIr, this.ctx.sampleRate) : null;
+      let cab: AudioNode[];
+      if (irData) {
+        const buf = this.ctx.createBuffer(1, irData.length, this.ctx.sampleRate);
+        buf.getChannelData(0).set(irData);
+        const conv = this.ctx.createConvolver();
+        conv.normalize = false;
+        conv.buffer = buf;
+        // 録音のIRのあとの掃除: 80Hz 未満（箱鳴りのふくらみ）と、9kHz 以上（歪みのジリジリ）を落とす
+        cab = [conv, this.filter("highpass", 80, 0, 0.7), this.filter("lowpass", 9000, 0, 0.7)];
+      } else cab = this.cabNodes(override.amp.cab ?? "closed", override.amp.mic ?? "center");
+      const front: AudioNode[] = [];
+      const extra: AudioNode[] = [];
+      if (override.amp.gate && override.amp.gate > 0) {
+        const gateIn = this.gain(1), gateOut = this.gain(1);
+        front.push(gateIn, gateOut);
+        gateIn.connect(gateOut);
+        this.attachGate(gateIn, gateOut, override.amp.gate);
+      }
+      if (override.amp.tight && override.amp.tight > 0) {
+        // チューブスクリーマー系のブースト: 低音を削り（100〜300Hz のハイパス）、700Hz 前後を持ち上げ、ごく軽くつぶす。歪みの前で低音を締めると、刻みがにじまない
+        const t = Math.max(0, Math.min(1, override.amp.tight));
+        const boost = this.ctx.createWaveShaper();
+        boost.curve = shapeCurve("softsqrt", 1.3, 0, 2048);
+        boost.oversample = "2x";
+        extra.push(this.filter("highpass", 100 + 200 * t, 0, 0.8), this.filter("peaking", 750, 2 + 4 * t, 0.9), boost);
+      }
       input.connect(pre);
-      pre.connect(node);
+      let head: AudioNode = pre;
+      for (const n of [...front.slice(1), ...extra]) {
+        // front の gateIn は pre のすぐ後ろ。gateIn→gateOut は attachGate がつなぎ替える
+        if (n === front[1]) {
+          head.connect(front[0]);
+          head = front[1];
+          continue;
+        }
+        head.connect(n);
+        head = n;
+      }
+      head.connect(node);
       node.connect(tone);
       let prev: AudioNode = tone;
       for (const f of cab) {
@@ -503,7 +564,7 @@ export class AmpRack {
       out.connect(this.dest);
       // 音が出はじめたら、元の音（ドライ）を切る
       dry.disconnect();
-      this.built[this.built.findIndex((list) => list.includes(dry))]?.push(node, pre, tone, ...cab, panner, out);
+      this.built[this.built.findIndex((list) => list.includes(dry))]?.push(node, pre, ...front, ...extra, tone, ...cab, panner, out);
     });
     this.pending.push(done.catch((error: unknown) => console.warn("NAMのアンプを用意できませんでした:", error)));
     return nodes;

@@ -70,9 +70,9 @@ describe("stepCurve（階段状の波形）", () => {
 });
 
 describe("ジャンル別のアンプ", () => {
-  it("19種類ある（リード・モダン高ゲイン・きらびやかなクリーン・J-POPクリーンを含む）", () => {
-    expect(GENRE_AMP_TYPES).toHaveLength(19);
-    expect(new Set(GENRE_AMP_TYPES).size).toBe(19);
+  it("20種類ある（リード・モダン高ゲイン・きらびやかなクリーン・J-POPクリーン・ベースの2本分けを含む）", () => {
+    expect(GENRE_AMP_TYPES).toHaveLength(20);
+    expect(new Set(GENRE_AMP_TYPES).size).toBe(20);
     for (const t of ["lead", "modernHigh", "sparkleClean", "jpopClean"]) expect(GENRE_AMP_TYPES).toContain(t);
   });
 
@@ -248,7 +248,8 @@ describe("ゲイン階段（音割れの回帰を防ぐ）", () => {
   const peakDb = (r: string) => 20 * Math.log10(peakOf(staticOutput(rackWith(r as AmpSetting["type"]).path, input)));
 
   it("表のすべてのロールが GENRE_AMP_TYPES と基本のロールに対応している", () => {
-    expect(roles.sort()).toEqual([...["clean", "overdrive", "distortion", "metal", "prs"], ...GENRE_AMP_TYPES].sort());
+    // bassSplit（ベースの2本分け。2026-10-20）は並列の経路なので、1本道を前提にしたこの表では測らない
+    expect(roles.sort()).toEqual([...["clean", "overdrive", "distortion", "metal", "prs"], ...GENRE_AMP_TYPES.filter((t) => t !== "bassSplit")].sort());
   });
 
   it("各ロールの出口の山が、表の値から 1dB 以上動いていない（ゲインを上げすぎる回帰を防ぐ）", () => {

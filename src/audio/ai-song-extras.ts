@@ -12,6 +12,14 @@ export interface AiPartExtras extends GuitarTechPartFields {
   echo?: EchoSpec;
   /** 自動ダブル。同じ旋律を 2 パートにして左右に振り、±数セントずらす。true か { cents, spread }。 */
   doubleDetune?: DoubleDetuneSpec | true;
+  /** ダブルトラック（2026-10-20 ラウドロック）。同じリフを「2回別々に弾いた」ように、左右いっぱいに分けた 2 パートにする。
+   * doubleDetune と違い、音程はほとんどずらさず（±2セント）、1音ごとのタイミング・強さを左右で別々にばらつかせ、右だけ別のキャビネットIR・少し違う音色にする。
+   * true か { spread（0〜1、既定1）, irR（右のIR）, timing（タイミングのずれの倍率、既定1.8） }。 */
+  double?: boolean | { spread?: number; irR?: string; timing?: number };
+  /** アンプの前のノイズゲートの深さ（dB。0〜60。刻みの合間を静かにする。24＝自然、40＝ラウド）。 */
+  ampGate?: number;
+  /** アンプの前の、低音を締めるブースト（0〜1）。歪みの前で低音を削り中域を上げる（実機のチューブスクリーマーの使い方）。 */
+  ampTight?: number;
   /** ドローン。曲の主音（tonic）の長い音を自動で作る。"root5" は主音と 5 度の 2 パート。notes は使わない。 */
   drone?: "root" | "root5";
   /** リズムの型の名前（son32・rumba32・tresillo・bembe・soleaCompas・taikoJi・taikoOmote・taiko2）。notes のかわりに展開される。 */
@@ -49,7 +57,7 @@ export interface AiSongExtras {
 
 const rec = { type: "object" } as const;
 export const AI_PART_EXTRA_SCHEMA = {
-  strum: rec, echo: rec, doubleDetune: { anyOf: [{ type: "boolean" }, rec] }, drone: { type: "string", enum: ["root", "root5"] },
+  strum: rec, echo: rec, doubleDetune: { anyOf: [{ type: "boolean" }, rec] }, double: { anyOf: [{ type: "boolean" }, rec] }, ampGate: { type: "number" }, ampTight: { type: "number" }, drone: { type: "string", enum: ["root", "root5"] },
   pattern: { type: "string" }, patternNote: { type: "string" }, snap: { anyOf: [{ type: "boolean" }, { type: "string", enum: ["nearest", "down", "up"] }] },
   detune: { type: "number" }, attack: { type: "number" }, release: { type: "number" },
   pedal: { type: "string", enum: ["chord", "bar", "none"] }, breath: { anyOf: [{ type: "boolean" }, { type: "number" }] }, autoArticulation: { type: "boolean" },
@@ -70,6 +78,7 @@ export const AI_SONG_EXTRAS_GUIDE = `
 - 音階: 曲に \`scale:"miyako"\`・\`tonic:"D"\`（または \`"scale":"miyako@D"\`）を書くと、旋律の音階外の音・小節頭の外れ・特性音の有無・増2度の多用に注意が出る。音階名は docs/sound/scales-world-guide.md の2章（42種）。パートに \`snap:true\` で、音を音階にそろえる。ベンドの記号に . を付けると半分（\`^.\`＝1/4音、\`/.\`・\`\\.\` も同じ）。
 - ドローン: パートに \`drone:"root"\`（\`"root5"\` は主音＋5度）を書くと、曲の主音（tonic、なければ最初のコードの根音）の長い音を曲の長さぶん自動で作る。
 - リズムの型: ドラム／tom／音程のある楽器のパートに \`pattern:"son32"\`（rumba32・tresillo・bembe・soleaCompas・taikoJi・taikoOmote・taiko2）。
+- ダブルトラック（ラウドロックの壁）: \`"double":true\`（同じリフを2回弾いたように左右いっぱいに分ける。1音ごとのタイミング・強さは左右で別々。右は別のキャビネットIR \`"double":{"irR":"dfc-mixxx"}\`）。歪みギターは \`"amp":"namA","ampGate":40,"ampTight":0.6,"ampCabIr":"dfc-bestplugins+dfc-axhom"\`、曲に \`"diGuitar":"emily"\`（歪ませる前の録音で鳴らす）。ベースは \`"amp":"bassSplit"\`（低音はきれいなまま、上だけ歪ませる）。
 - 厚みと空間: \`doubleDetune:true\`（同じ旋律を2パートにして左右±0.5、±8セント）、\`echo:{"repeats":2,"time":"dotted8","decay":0.3}\`（遅れて小さくなるコピー）、\`detune\`（セント）、\`attack\`・\`release\`（0〜1、録音音源のCC73・CC72）。
 - コード: \`C5\`（パワーコード）、\`Bm7-5\`・\`Bm7b5\`、\`Cmmaj7\`・\`CmM7\`・\`CM7\` が読める。
 ` + GUITAR_TECH_GUIDE;

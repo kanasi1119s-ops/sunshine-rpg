@@ -288,6 +288,29 @@ export function expandDoubleDetune(p: AiPart, spec: DoubleDetuneSpec | true): Ai
   ];
 }
 
+/**
+ * ダブルトラック（2026-10-20 ラウドロック）: 同じリフを 2 回別々に弾いたように、左右いっぱいの 2 パートにする。
+ * 本物の重ね録りは「同じ音を同じタイミングで」ではなく、1音ごとに 5〜20ms ずれ、強さも違う。
+ * MIDI の書き出しはチャンネルごとに別のばらつき（midi-export の trackSeed）を使うので、左右を別チャンネルにし、ずれ（humanTiming）を大きくする。
+ * 音程は ±2 セントだけ（doubleDetune の ±8 セントのような「うなり」を出さない）。右は別のIR・少し暗い音色・少し浅い歪み（別のマイク・別の弾き方）。
+ */
+export function expandDoubleTrack(p: AiPart, spec: true | { spread?: number; irR?: string; timing?: number }): AiPart[] {
+  const s = spec === true ? {} : spec;
+  const spread = clamp(s.spread === undefined ? 1 : Number(s.spread), 0, 1);
+  const timing = clamp(s.timing === undefined ? 1.8 : Number(s.timing), 0.5, 3);
+  const { double: _d, ...base } = p;
+  const pan0 = Number(p.pan) || 0;
+  const vol = Math.max(0.02, Math.round((Number(p.volume) || 0.2) * 0.8 * 1000) / 1000);
+  const ir = typeof p.ampCabIr === "string" ? p.ampCabIr : undefined;
+  const irR = s.irR ?? (ir && ir.includes("+") ? ir.split("+").reverse().join("+") + "+dfc-mixxx" : ir);
+  const humanTiming = (Number(p.humanTiming) || 1) * timing;
+  return [
+    { ...base, role: `${p.role ?? p.instrument}・L`, volume: vol, pan: clamp(pan0 - spread, -1, 1), detune: -2, humanTiming } as AiPart,
+    { ...base, role: `${p.role ?? p.instrument}・R`, volume: vol, pan: clamp(pan0 + spread, -1, 1), detune: 2, humanTiming,
+      ...(irR ? { ampCabIr: irR } : {}), ampTone: (Number(p.ampTone) || 0) - 0.8, ...(Number(p.ampDrive) > 0 ? { ampDrive: Number(p.ampDrive) * 0.92 } : { ampDrive: 0.92 }) } as AiPart,
+  ];
+}
+
 // ───────── ドローン・リズムの型・音階への補正 ─────────
 /** ドローン: 主音（または主音＋5度）の長い持続音。曲の長さにぴったり合わせる（8 小節ずつ区切る）。 */
 export function expandDrone(p: AiPart, ctx: ExpandCtx, warnings: string[]): AiPart[] {
@@ -353,6 +376,7 @@ export function expandParts(parts: AiPart[], ctx: ExpandCtx, warnings: string[],
     if (!drum) list = list.flatMap((p) => expandGuitarTech(p, ctx, warnings));
     if (orig.strum && !drum) list = list.flatMap((p) => (p.strum ? expandStrum(p, p.strum, ctx, warnings) : [p]));
     if (orig.doubleDetune || orig.gtrStyle) list = list.flatMap((p) => (p.doubleDetune ? expandDoubleDetune(p, p.doubleDetune) : [p]));
+    if (orig.double && !drum) list = list.flatMap((p) => (p.double ? expandDoubleTrack(p, p.double) : [p]));
     if (orig.widen && !drum) list = list.flatMap((p) => (p.widen ? expandWiden(p, p.widen, ctx) : [p]));
     if (orig.echo) list = list.flatMap((p) => (p.echo ? expandEcho(p, p.echo, warnings, ctx.bpm) : [p]));
     if (orig.sectionFx && !drum) list = list.flatMap((p) => (p.sectionFx ? expandSectionFx(p, p.sectionFx, ctx, warnings) : [p]));

@@ -44,7 +44,9 @@ class SunshineGate extends AudioWorkletProcessor {
     if (!input || input.length === 0) return true;
     const n = input[0].length;
     for (let i = 0; i < n; i++) {
-      const x = input[0][i];
+      // 2026-10-20: 左右の大きいほうで開け閉めを決める（左だけを見ていたので、右に振ったギターではゲートが閉じたまま＝ほぼ無音になっていた）
+      const l = input[0][i], r = input[1] ? input[1][i] : l;
+      const x = Math.abs(l) >= Math.abs(r) ? l : r;
       this.lp += this.hpA * (x - this.lp);
       const a = Math.abs(x - this.lp);
       this.env += (a > this.env ? this.envA : this.envR) * (a - this.env);

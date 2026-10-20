@@ -45,6 +45,8 @@ export const SYNTH_PATCHES: Record<string, number> = {
   // 鍵盤系の追加音源（作曲ソフトで鍵盤の音源を選ぶと鳴る。選ばないと標準の音）
   honkyTonk: 3, clavinet: 7, celesta: 8, vibraphone: 11, tenorSax: 66, kalimbaReal: 108, xylophone: 13, percussiveOrgan: 17, rockOrgan: 18, accordion: 21, synthBrass1: 62, synthBrass2: 63,
   rotoTom: 117, cannonTom: 118, inchTom: 119, kickTrigger: 120, impactHit: 121,
+  // 2026-10-20 ジャンル別の追加音源（作曲ソフトで使う曲だけ録音・合成の音源が重なる）
+  altoSax: 65, bariSax: 67, mutedTrumpet: 59, folkHarp: 111, tinWhistle: 78, frameDrum: 116, pluckSynth: 85, chipPulse25: 124, chipPulse12: 125, reeseBass: 34, fxRiser: 126,
   iceRain: 96, soundtrack: 97, crystal: 98, atmosphere: 99, brightness: 100, goblin: 101, echoDrops: 102, starTheme: 103,
 };
 
@@ -52,11 +54,18 @@ export const SYNTH_PATCHES: Record<string, number> = {
 export const ORCHESTRA_PATCHES: string[] = ["violin", "viola", "cello", "contrabass", "pizzicato", "timpani", "stringEnsemble", "slowStrings", "trumpet", "trombone", "tuba", "horn", "brassSection", "oboe", "bassoon", "clarinet", "piccolo", "flute", "glockenspiel", "marimba", "churchOrgan", "reedOrgan", "rotoTom", "cannonTom", "inchTom", "kickTrigger", "impactHit"];
 
 type PartSectionSpecJson = Partial<Record<SectionKind, number | boolean | { gain?: number; octave?: number }>>;
-/** AIソング形式の amp 名 → 同梱のNAMモデル。namKay3〜10 は、ビンテージ真空管アンプ（Kay 703, CC0）のゲイン3・5・7・10。 */
+/**
+ * AIソング形式の amp 名 → 同梱のNAMモデル。
+ * namDD＝トランジスタのハイゲインアンプ（デスメタル・ラウド向け。Dark Days のキャプチャ、CC BY 4.0・クレジット必要）。アンプだけなので ampCabIr でキャビネットIRを必ず通す。
+ */
 const NAM_AMPS = {
-  namA: "builtin:highgain-a", namB: "builtin:highgain-b",
-  namKay3: "builtin:kay703-g3", namKay5: "builtin:kay703-g5", namKay7: "builtin:kay703-g7", namKay10: "builtin:kay703-g10",
+  namA: "builtin:highgain-a", namB: "builtin:highgain-b", namDD: "builtin:darkdays-ss",
 } as const;
+/**
+ * 2026-10-20 人間「他の物で代用しましょう」: Kay 703 の NAM（namKay3〜10）は、入手元（TONE3000）の利用規約が再配布・商用配布を禁止しているため外した。
+ * 古い曲が読めるよう、同じくらいの歪みの深さのアンプへ置きかえる（docs/decisions.md）。
+ */
+const NAM_AMP_REDIRECT: Record<string, string> = { namKay3: "blues", namKay5: "crunch", namKay7: "lead", namKay10: "loudrock" };
 type AiNamAmp = keyof typeof NAM_AMPS;
 const NAM_AMP_KEYS = Object.keys(NAM_AMPS) as AiNamAmp[];
 export interface AiFx extends Omit<FxSpec, "type"> {
@@ -102,19 +111,19 @@ export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   /** フレーズの山（拍。2〜32）。この長さごとに、出だしをやや弱く→山で強く→終わりを引く強弱をつける（歌うような表情）。ドラムでは使わない。 */
   phrase?: number;
   /** アンプ（ギター・ベース向け）。"auto" なら曲の音色から自動。 */
-  /** namA／namB／namKay3〜10 のとき、NAM（学習式）アンプへの入力の大きさ（0〜2、既定1。小さいほど歪みが浅い）。 */
+  /** namA／namB／namDD のとき、NAM（学習式）アンプへの入力の大きさ（0〜2、既定1。小さいほど歪みが浅い）。 */
   ampDrive?: number;
-  /** namA／namB／namKay3〜10 のとき、出力の大きさの倍率（0〜1.5、既定1）。 */
+  /** namA／namB／namDD のとき、出力の大きさの倍率（0〜1.5、既定1）。 */
   ampLevel?: number;
-  /** namA／namB／namKay3〜10 のとき、高音の量（dB。-12〜+6、既定0。マイナスで丸く）。 */
+  /** namA／namB／namDD のとき、高音の量（dB。-12〜+6、既定0。マイナスで丸く）。 */
   ampTone?: number;
-  /** namA／namB／namKay3〜10 のとき、キャビネットの箱（closed/open/dark/bright）。 */
+  /** namA／namB／namDD のとき、キャビネットの箱（closed/open/dark/bright）。 */
   ampCab?: string;
   /** 録音のキャビネットIRの名前（作曲ソフトのみ。例 "dfc-axhom"）。"none" で外す。省略すると歪み系のアンプは標準の IR を通す。 */
   ampCabIr?: string;
   /** ギターの音色プリセットの名前（guitar-tones.ts。例 "warm-lead-a"・"warm-lead-b"）。アンプ・歪み・キャビネット・残響・ディレイをまとめて入れる。パートに書いた項目が優先。 */
   guitarTone?: string;
-  amp: AiNamAmp | "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean" | KeysAmpType;
+  amp: AiNamAmp | "auto" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean" | "bassSplit" | KeysAmpType;
   /** セクションごとの出し入れ。{ intro: 0, verse: 0.6, chorus: 1, solo: { gain: 1, octave: 1 } }。数字＝音量の倍率（0＝休み）、octave＝オクターブずらし。書かなかったセクションは1。曲の sections（または scene）が必要。 */
   sections?: PartSectionSpecJson;
   /** false にすると、modulate（転調）でこのパートを上げない。 */
@@ -163,6 +172,8 @@ export interface AiSong extends RhythmSongFields, AiSongExtras, AiSongJpop {
   swing?: number;
   /** true なら、lead をシンセリード、pad をシンセパッドの音色にする（省略は false＝lead はフルート、pad は合唱に近い生楽器寄りの音色）。ダンス・電子音楽向け。 */
   synth?: boolean;
+  /** 歪みギター（distGuitar）を歪ませる前の録音（DI）で鳴らす（emily＝太いハムバッカー／fsbs＝明るいシングル）。学習式アンプ（namA・namB）と組み合わせる。作曲ソフトのみ。 */
+  diGuitar?: "emily" | "fsbs";
   /** true なら、曲の最初の1/8（最大4小節）を小さく始めて上げ、真ん中あたりで一度引いて戻す（曲の起伏。省略は false）。 */
   dynamics?: boolean | "natural";
   /** 人間らしさ（0〜1）。打ち込みらしい機械的な正確さをくずす（タイミング・強さ・音の長さ・音量の山・音程のわずかなずれ、バンド全体の走りと溜め）。0.3〜0.6が自然。録音音源で効く。 */
@@ -232,7 +243,14 @@ export const AI_INSTRUMENTS: Record<string, string> = {
 };
 const DRUMS = new Set(["kick", "snare", "hihat", "crash", "tom"]);
 /** AIソング形式で使えるアンプの名前（`AI_SONG_SCHEMA` の amp と同じ）。 */
-const AI_AMPS = new Set([...NAM_AMP_KEYS, "auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", ...KEYS_AMP_TYPES]);
+/** アンプの前の段（ゲート・ブースト）。2026-10-20 */
+function ampStages(p: AiPart): Pick<AmpSetting, "gate" | "tight"> {
+  return {
+    ...(Number(p.ampGate) > 0 ? { gate: Math.min(60, Number(p.ampGate)) } : {}),
+    ...(Number(p.ampTight) > 0 ? { tight: Math.min(1, Number(p.ampTight)) } : {}),
+  };
+}
+const AI_AMPS = new Set([...NAM_AMP_KEYS, "auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", "bassSplit", ...KEYS_AMP_TYPES]);
 
 /** 構造化出力（JSONスキーマ）。 */
 export const AI_SONG_SCHEMA = {
@@ -266,6 +284,7 @@ export const AI_SONG_SCHEMA = {
     bassDensity: { type: "boolean" },
     drumGenre: { type: "string", enum: Object.keys(DRUM_GENRES) },
     tone: { type: "string", enum: ["rock", "metal", "prs"] },
+    diGuitar: { type: "string", enum: ["emily", "fsbs"] },
     swing: { type: "number" },
     synth: { type: "boolean" },
     dynamics: { anyOf: [{ type: "boolean" }, { type: "string", enum: ["natural"] }] },
@@ -337,7 +356,7 @@ export const AI_SONG_SCHEMA = {
           ampCab: { type: "string" },
           ampCabIr: { type: "string" },
           guitarTone: { type: "string" },
-          amp: { type: "string", enum: [...NAM_AMP_KEYS, "auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", ...KEYS_AMP_TYPES] },
+          amp: { type: "string", enum: [...NAM_AMP_KEYS, "auto", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", "bassSplit", ...KEYS_AMP_TYPES] },
           ...AI_PART_EXTRA_SCHEMA,
           ...AI_PART_JPOP_SCHEMA,
           notes: { type: "string" },
@@ -463,7 +482,7 @@ ${Object.entries(AI_INSTRUMENTS).map(([k, v]) => `- ${k}: ${v}`).join("\n")}
     - 仕上げの確認: 最初の4小節で雰囲気が伝わるか、サビの最高音が Aメロより高いか、2回目の同じ進行で1つ変えたか、切り替わりにフィル・休符・crash があるか。
   - ボカロ風のバック（歌なし）: bpm 160〜200、feel は vocaloid（autoAccompaniment を true にすると、16分のハイハット・シンコペのキック・動くベース・16分のピアノ・8分のギター・左右の弦が付く）。歌のパートはシンセのリード（lead、synth: true）に任せ、声（choir）は使わない。メロディは音域を広く、8分・16分の早口のフレーズ、サビで高く、ブレスの休符を入れる。コードは1小節1コードで、短調なら Dm Bb F C のような進行。最後のサビの前に半音上げる。自動の伴奏は最初から最後まで同じなので、起伏が欲しいときは、導入（ピアノと弦だけ）→Aメロ（リズムを足す）→Bメロ（ギター）→サビ（全部）→間奏（リズムを抜く）と、パートをセクションごとに自分で書く（見本: assets-src/ai-songs/vocaloid-style-demo.json）。
   - ギターの音色（patch）: leadGuitar は標準だと歪んだ音色。クリーンなソロ・単音のメロディにしたいときは patch に cleanGuitar（クリーン）・jazzGuitar（丸い）・nylonGuitar（ナイロン弦のアコースティック）を指定し、amp は clean にする。steelGuitar・mutedGuitar はゲーム用の録音音源に入っておらず、ピアノの音になるので使わない。
-  - シンセの音色（パートの patch）: 指定すると楽器のかわりにシンセ音で鳴る（ドラム以外）。波形の性格: squareLead＝丸く芯のある角ばった音（旋律・8bit寄り）、sawLead＝明るくぎらつく音（旋律・サビ）、calliope/chiff＝息づかいのある柔らかいリード、charang＝歪んだ攻めのリード、fifths＝5度が重なる力強いリード、bassLead＝低音と旋律を兼ねる。パッド: warmPad（やわらかく広がる）、newAge＝きらめく、halo＝聖なる、sweep＝うねって広がる、metalPad＝冷たく金属的、bowedGlass＝ガラスのような弦。ベース: fretlessBass＝なめらかに歌うフレットレス（ベースで旋律を弾くとき）、acousticBass＝ウッド寄り、slapBass＝はじけるスラップ、synthBass1＝太く丸い、synthBass2＝硬く尖った。刻み: polysynth＝和音の刻み、synthStrings1/2＝厚い弦。飾り: crystal・iceRain・brightness・starTheme＝きらきらした余韻（ここぞの場面だけ）、atmosphere＝暗い空気、goblin・echoDrops・soundtrack＝不思議・映画的。使い分けの定石: パッドは sustain 2〜3 で長い音、ピッチは低めに；プラック（ぽん、と減衰する音）は polysynth か crystal に sustain 0.4；リードは ~（ビブラート）と phrase で歌わせる；ベースは根音を低く、旋律と音域を重ねない。声に聞こえる音は入れていない。
+  - シンセの音色（パートの patch）: 指定すると楽器のかわりにシンセ音で鳴る（ドラム以外）。波形の性格: squareLead＝丸く芯のある角ばった音（旋律・8bit寄り）、sawLead＝明るくぎらつく音（旋律・サビ）、calliope/chiff＝息づかいのある柔らかいリード、charang＝歪んだ攻めのリード、fifths＝5度が重なる力強いリード、bassLead＝低音と旋律を兼ねる。パッド: warmPad（やわらかく広がる）、newAge＝きらめく、halo＝聖なる、sweep＝うねって広がる、metalPad＝冷たく金属的、bowedGlass＝ガラスのような弦。ベース: fretlessBass＝なめらかに歌うフレットレス（ベースで旋律を弾くとき）、acousticBass＝ウッド寄り、slapBass＝はじけるスラップ、synthBass1＝太く丸い、synthBass2＝硬く尖った。刻み: polysynth＝和音の刻み、synthStrings1/2＝厚い弦。飾り: crystal・iceRain・brightness・starTheme＝きらきらした余韻（ここぞの場面だけ）、atmosphere＝暗い空気、goblin・echoDrops・soundtrack＝不思議・映画的。ジャンル別の追加音源（2026-10-20。録音・合成の音源で鳴る）: ジャズ＝altoSax（アルトサックス）・bariSax（バリトンサックス）・mutedTrumpet（ハーマンミュートのトランペット）、ウッドベースは書き出しの --bass rubner（1958年のコントラバスの指弾き）。ケルト＝folkHarp（フォークハープ）・tinWhistle（高い縦笛。ティンホイッスルの代わり。C5〜C7）・frameDrum（枠太鼓＝バウロンの代わり。C3＝大きい太鼓・C#3＝大きい太鼓のミュート・D3＝手のひら・E3〜F#3＝小さい太鼓の同じ順。音程は変わらない）。instrument bagpipe は本物の録音（ドローンは G2・G3）。電子音楽・テクノポップ・ダンス・ボカロ＝pluckSynth（ポンと減衰するプラック。sustain 0.4〜0.8）・chipPulse25／chipPulse12（ファミコン風のパルス波 25%／12.5%）・reeseBass（うなる太いベース）・fxRiser（効果音。C4＝4秒のライザー・D4＝8秒のライザー・E4＝ダウンリフター・F4＝逆再生シンバル（2.2秒。サビの頭の2拍前あたりで終わるよう置く）・G4＝サブドロップ（ドーン）・A4＝ホワイトノイズのシュッ）。ドラムは書き出しの --drums electro（アナログのドラムマシン風。キックは締まったダンスのキックに、別のアナログ風キックが薄く重なる。808 の長い低音は sub808 をキックの位置に）。使い分けの定石: パッドは sustain 2〜3 で長い音、ピッチは低めに；プラック（ぽん、と減衰する音）は polysynth か crystal に sustain 0.4；リードは ~（ビブラート）と phrase で歌わせる；ベースは根音を低く、旋律と音域を重ねない。声に聞こえる音は入れていない。
   - ブルース: 12小節（I I I I / IV IV I I / V IV I V）・7th・swing 0.5・ブルーノート。ワルツ: beats 3・1拍目が強い。チップチューン: 少ない音色・速いアルペジオ・短いフレーズのくり返し。
   - 音程つきのタム（rotoTom＝ロートタム・cannonTom＝キャノンタム・inchTom＝インチ違いのタム。instrument にも patch にも同じ名前を書く）: 鍵盤の音名がそのまま太鼓の基本の高さ。インチ ↔ 音名の目安は 18"＝F2・16"＝A2・14"＝C3・13"＝C#3・12"＝D#3・10"＝F3・8"＝A3・6"＝B3（高さは 1500÷インチ Hz）。フィルは大きいほうから小さいほうへ（F2→A2→C3→D#3→F3→A3）下ろす。ふつうの tom（kick／snare と同じドラムのパート）とは別に、パートを1つ使う。書き出しでは自動でオーケストラ音源が選ばれる。
   - オーケストラの楽器: パートの patch に violin・viola・cello・contrabass・pizzicato・stringEnsemble・slowStrings・trumpet・trombone・tuba・horn・brassSection・oboe・bassoon・clarinet・piccolo・flute・timpani・glockenspiel・marimba・churchOrgan・reedOrgan を選ぶと、録音のオーケストラ音源（VSCO 2 CE）で鳴る（書き出しでは自動で選ばれる）。instrument は音域の点検用に strings（弦）・brass（金管）・panflute（笛）などを合わせる。弦と木管は伸ばす音が得意（ループ再生）、ハープ・ピチカート・ティンパニ・マリンバは減衰する短い音。独奏は「1パート1旋律」、重ねたいときは stringEnsemble や instrument: strings（合奏）を足す。ピアノは書き出しの --piano salamander でグランドピアノの録音になる。
@@ -766,6 +785,12 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   const songScale = readSongScale(song.scale, song.tonic, warnings);
   const chordBars = chordBarsOf(song.chords, song.barsPerChord === 2 ? 2 : 1, repeats);
   const expandCtx: ExpandCtx = { bpm, beatsPerBar, totalBeats: total, chordBars, tonic: songScale ? songScale.tonic : song.tonic ? readSongScale("ionian", song.tonic, warnings)?.tonic ?? null : null, scale: songScale, sections: sectionList };
+  if (Array.isArray(song.parts)) song.parts = song.parts.map((p, i) => {
+    const to = p && typeof p.amp === "string" ? NAM_AMP_REDIRECT[p.amp] : undefined;
+    if (!to) return p;
+    warnings.push(`parts[${i}]: アンプ「${p.amp}」は使えなくなったので「${to}」にしました（入手元の規約のため外しました）`);
+    return { ...p, amp: to } as AiPart;
+  });
   const partList = Array.isArray(song.parts) ? expandParts(song.parts, expandCtx, warnings, DRUMS) : song.parts;
   const parts: Track[] = [];
   const explicitPush = new Set<Track>();
@@ -792,8 +817,8 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     if (length > total + 1e-6) warnings.push(`${where}: 曲の長さ（${total}拍）より長いので、${length}拍のうち後ろを切りました`);
     if (p.amp && !AI_AMPS.has(p.amp)) warnings.push(`${where}: アンプ「${p.amp}」は使えないので、おまかせ（auto）にしました`);
     const amp: AmpSetting | undefined = p.amp && p.amp in NAM_AMPS
-      ? { type: "nam", model: NAM_AMPS[p.amp as AiNamAmp], cab: (["closed", "open", "dark", "bright"].includes(String(p.ampCab)) ? String(p.ampCab) : "closed") as "closed", mic: "center", ...(Number.isFinite(Number(p.ampTone)) && p.ampTone !== undefined ? { tone: Math.max(-12, Math.min(6, Number(p.ampTone))) } : {}), ...(Number(p.ampDrive) > 0 ? { drive: Math.min(2, Number(p.ampDrive)) } : {}), ...(Number.isFinite(Number(p.ampLevel)) && Number(p.ampLevel) > 0 ? { level: Math.min(1.5, Number(p.ampLevel)) } : {}) }
-      : p.amp && p.amp !== "auto" && AI_AMPS.has(p.amp) ? { type: p.amp as AmpSetting["type"], ...(Number(p.ampDrive) > 0 ? { drive: Math.min(2, Number(p.ampDrive)) } : {}), ...(Number(p.ampLevel) > 0 ? { level: Math.min(1.5, Number(p.ampLevel)) } : {}), ...(Number.isFinite(Number(p.ampTone)) && p.ampTone !== undefined ? { tone: Math.max(-12, Math.min(6, Number(p.ampTone))) } : {}), ...(typeof p.ampCabIr === "string" && p.ampCabIr ? { cabIr: p.ampCabIr } : {}) } : undefined;
+      ? { type: "nam", model: NAM_AMPS[p.amp as AiNamAmp], cab: (["closed", "open", "dark", "bright"].includes(String(p.ampCab)) ? String(p.ampCab) : "closed") as "closed", mic: "center", ...ampStages(p), ...(typeof p.ampCabIr === "string" && p.ampCabIr ? { cabIr: p.ampCabIr } : {}), ...(Number.isFinite(Number(p.ampTone)) && p.ampTone !== undefined ? { tone: Math.max(-12, Math.min(6, Number(p.ampTone))) } : {}), ...(Number(p.ampDrive) > 0 ? { drive: Math.min(2, Number(p.ampDrive)) } : {}), ...(Number.isFinite(Number(p.ampLevel)) && Number(p.ampLevel) > 0 ? { level: Math.min(1.5, Number(p.ampLevel)) } : {}) }
+      : p.amp && p.amp !== "auto" && AI_AMPS.has(p.amp) ? { type: p.amp as AmpSetting["type"], ...(Number(p.ampDrive) > 0 ? { drive: Math.min(2, Number(p.ampDrive)) } : {}), ...(Number(p.ampLevel) > 0 ? { level: Math.min(1.5, Number(p.ampLevel)) } : {}), ...(Number.isFinite(Number(p.ampTone)) && p.ampTone !== undefined ? { tone: Math.max(-12, Math.min(6, Number(p.ampTone))) } : {}), ...(typeof p.ampCabIr === "string" && p.ampCabIr ? { cabIr: p.ampCabIr } : {}), ...ampStages(p) } : undefined;
     const patchKey = p.patch ? String(p.patch) : "";
     if (patchKey && !(patchKey in SYNTH_PATCHES)) warnings.push(`${where}: シンセ音色「${patchKey}」は使えないので、楽器の音にしました`);
     const program = !drum && patchKey in SYNTH_PATCHES ? SYNTH_PATCHES[patchKey] : undefined;
@@ -889,6 +914,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
     ...(mergedDrumMix ? { drumMix: mergedDrumMix } : {}),
     // synth: lead／pad をシンセ音色にする。style "electro" は、実楽器版（real-edition.ts）が電子音楽の音色を生楽器に置き換えないための印
     ...(song.synth === true ? { synth: true, style: "electro" } : {}),
+    ...(song.diGuitar === "emily" || song.diGuitar === "fsbs" ? { diGuitar: song.diGuitar } : {}),
     tracks,
   };
   return { score, song, warnings };

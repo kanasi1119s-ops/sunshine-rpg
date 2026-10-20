@@ -154,6 +154,17 @@ export function recordedCabIrNames(): string[] {
 }
 /** 録音IRを、出力のサンプルレートに直し（線形補間）、1kHz の大きさが 1 になるようにそろえて返す。なければ null。 */
 export function recordedCabImpulse(name: string, sampleRate: number): Float32Array | null {
+  // "a+b"（＋c…）: 2本のマイクを混ぜるように、それぞれをそろえてから平均する（2026-10-20 ラウドロック）
+  if (name.includes("+")) {
+    const list = name.split("+").map((n) => recordedCabImpulse(n.trim(), sampleRate)).filter((x): x is Float32Array => x !== null);
+    if (!list.length) return null;
+    const len = Math.max(...list.map((x) => x.length));
+    const mix = new Float32Array(len);
+    for (const x of list) for (let n = 0; n < x.length; n++) mix[n] += x[n] / list.length;
+    const mm = magnitudeAt(mix, 1000, sampleRate);
+    if (mm > 1e-6) for (let n = 0; n < len; n++) mix[n] /= mm;
+    return mix;
+  }
   const r = RECORDED_IRS.get(name);
   if (!r) return null;
   const ratio = r.rate / sampleRate;
