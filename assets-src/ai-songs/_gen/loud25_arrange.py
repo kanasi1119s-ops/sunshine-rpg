@@ -306,9 +306,28 @@ def build(spec):
                 for v in range(3): chd[v].append(f"{name(vs[v])}:{beats},")
             else:
                 for v in range(3): chd[v].append(S.rest())
-        if any(a != S.rest() for a in arp):
+        if any(a != S.rest() for a in arp) and cfg.get("arpGuitar"):
+            # 2026-10-22 人間「最初のキーボードの演奏なんか変えられないかな。いっそキーボードのところリードギターにしようか」
+            # 16分の機械的なくり返しをやめ、8分で上がって下がる分散和音を和音ごとに形を変えてギターで弾く
+            garp = []
+            shapes = [[0, 7, 12, "3", 19, "3", 12, 7], [0, 7, "3", 12, "3", 7, 12, 7], [12, 7, 0, 7, 12, "3", 12, 7], [0, 12, 7, "3", 7, 12, 0, 7]]
+            for i in range(NB):
+                ch = S.bars[i][2]; k = S.bars[i][3]
+                if not active(i, cfg.get("arp", "")):
+                    garp.append(S.rest()); continue
+                Rr = at_least(ch.root, midi(cfg.get("gArpLo", "B3")))
+                sh = shapes[(k + i // 4) % len(shapes)]
+                notes = [Rr + (12 + ch.third() if x == "3" else x) for x in sh]
+                notes = [m - 12 if m > midi("E6") else m for m in notes]
+                seq = (notes * 8)[: int(round(beats / 0.5))]
+                garp.append(" ".join(f"{name(m)}:0.5" + ("!" if j % 4 == 0 else "") for j, m in enumerate(seq)))
+            gp = {"instrument": "leadGuitar", "role": "リードギター（分散和音）", "volume": 0.11, "pan": -0.2, "double": False, "noRestrike": True,
+                  "notes": S.join(garp, "ギター分散和音")}
+            gp.update(cfg["arpGuitar"] if isinstance(cfg["arpGuitar"], dict) else {"guitarTone": lt})
+            parts.append(gp)
+        elif any(a != S.rest() for a in arp):
             parts.append({"instrument": "piano", "role": "キーボード（右手）", "volume": 0.09, "pan": 0.2, "reverb": 0.22, "notes": S.join(arp, "ピアノ右手")})
-        if any(c != S.rest() for c in chd[0]):
+        if any(c != S.rest() for c in chd[0]) and not cfg.get("noChords"):
             for v in range(3):
                 parts.append({"instrument": "piano", "role": f"キーボード（和音）{v + 1}", "volume": 0.07, "pan": -0.15, "reverb": 0.22, "notes": S.join(chd[v], "ピアノ和音")})
     if "strings" in X:
