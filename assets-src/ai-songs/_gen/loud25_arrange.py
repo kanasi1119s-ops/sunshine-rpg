@@ -72,6 +72,8 @@ def build(spec):
         t = typ(sid)
         # 2026-10-21 人間「なんでもブリッジの刻み入れればいいってもんじゃない。最初が聞きにくくてしょうがない」
         if t == "intro" and hook_intro and not sid.startswith("open"):
+            # 2026-10-22 人間「曲の始まりがものすごくつまらない」→ intro_pat があれば、伸ばすだけでなくアクセントのあるリフ（刻みではない）
+            if R.get("intro_pat"): return cyc(R["intro_pat"], k) if isinstance(R["intro_pat"], list) else R["intro_pat"]
             return "X" + "=" * (steps - 1)            # 導入: 伸ばした和音の上でサビのフックを聞かせる
         if t == "verse" and k < n // 2 and not R.get("verse_keep"):
             a = max(2, int(steps * 0.625)); b = max(1, int(steps * 0.25))
