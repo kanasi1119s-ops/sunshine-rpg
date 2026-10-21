@@ -7,7 +7,7 @@ for sp in SPECS:
     b = sp.get("beats", 4); res = sp.get("res", 0.25); st = int(round(b / res))
     def tot(m): return sum(float(t.split(":")[1].rstrip("!',")) for t in m.split())
     for k, v in sp["bass"].items():
-        if k == "drive": continue
+        if k in ("drive", "style"): continue
         for m in ([v] if isinstance(v, str) else v):
             if m != "-" and abs(tot(m) - b) > 1e-6: print(sp["no"], "ベース", k, tot(m), m); bad += 1
     for k, v in sp["rhythm"].items():
