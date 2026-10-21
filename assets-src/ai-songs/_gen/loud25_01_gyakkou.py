@@ -40,7 +40,7 @@ VERSE_B = VERSE_A[:4] + [
 VERSE2_A = [   # 2回目のAメロは1オクターブ近く上で、リズムを詰める（1回目と同じにしない）
     "R:0.5 D5:0.5 C6:0.5! R:0.5 A5:0.5 R:0.5 D#5:1",
     "G5:1 A#5:0.5 D6:0.5 R:0.5 A#5:0.5 G5:1",
-    "R:0.5 D5:0.5 C6:0.5! R:0.5 F6:0.5 R:0.5 D#6:1",
+    "R:0.5 D5:0.5 C6:0.5! R:0.5 A#5:0.5 R:0.5 D#6:1",
     "D6:1.5 A#5:0.5 G5:1 R:1",
 ] + VERSE_B[4:]
 PRE = [
@@ -144,7 +144,7 @@ SPEC = {
                     "s": ["........X.......", "........X.......", "........X.......", "........X...X...", "....X.......X...", "....X.......X...", "....X.......X...", "....X.......X..."],
                     "c": ["n.......n.......", "r...r...r...r...", "n.......n.......", "r...r...r...r...", "n.r.r.r.r.r.r.r.", "n...n...n...n...", "r.r.r.r.r.r.r.r.", "n...n...n...n..."], "fill": "tom"},
         "inter": {"k": "X.X.X.X.X.X.X.X.", "s": ["....X.......X...", "....X.......X..o"], "c": "n...n...n...n...", "fill": "kick"},
-        "bridge": {"k": ["X...............", "................", "X.........X.....", "................"], "s": ["................", "........o.......", "................", "........o...o.o."],
+        "bridge": {"k": ["X...............", "................", "X.........X.....", "................"], "s": ["................"],
                    "t": ["........3.......", "4.......4.......", "........3...3...", "4.......4...4.4."], "c": ["r...r...r...r..."], "crash": False, "fill": "snare"},
         "solo": {"k": ["X..x..X.X..x..x.", "XXXXXXXXX..x..x."], "s": "....X.......X...", "c": ["r.r.r.r.r.r.r.r.", "n.r.r.r.n.r.r.r."], "fill": "tom"},
         "outro": {"k": ["X.X.X.X.X.X.X.X."] * 6 + ["X...............", "................"], "s": ["....X.......X..."] * 6 + ["................"] * 2,
@@ -223,7 +223,7 @@ def make(path):
         a, _ = start[sid]
         rr = roots[a // beats: a // beats + nb]
         put(riff, a, a + nb * beats, poly_riff(rr, midi("D3"), cell0))
-        put(bass, a, a + nb * beats, poly_riff(rr, midi("D1"), cell0).replace("!", "!") )
+        put(bass, a, a + nb * beats, poly_riff(rr, midi("D2"), cell0))
     parts.insert(parts.index(rhythm) + 1, riff)
     # 後奏の最後2小節: 全員で D（長調の和音＝サビの明るさ）を1回鳴らして、ぱっと終わる
     a, _ = start["outro"]
@@ -236,6 +236,19 @@ def make(path):
     parts.insert(parts.index(k) + 1, heavy)
     # ベースは bassSplit（サビの抜粋で点が高かった）＋少し明るく
     bass.update({"amp": "bassSplit", "ampDrive": 0.6, "fx": [{"type": "eq", "low": 0, "mid": 3, "midHz": 2200, "high": 2}]})
+    # 長い休み（R:96 など）は作曲ソフトが読めないので、4拍ずつに分ける
+    def split_rests(n):
+        if n.startswith("g:"): return n
+        out = []
+        for tk in n.split():
+            m = re.match(r"^R:([\d.]+)$", tk)
+            if m and float(m.group(1)) > 4:
+                d = float(m.group(1))
+                while d > 4 + 1e-9: out.append("R:4"); d -= 4
+                out.append(f"R:{d:g}")
+            else: out.append(tk)
+        return " ".join(out)
+    for p in parts: p["notes"] = split_rests(p["notes"])
     song["parts"] = parts
     song["title"] = SPEC["title"]
     json.dump(song, open(path, "w"), ensure_ascii=False)
