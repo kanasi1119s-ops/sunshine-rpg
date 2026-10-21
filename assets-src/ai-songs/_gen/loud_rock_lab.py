@@ -191,6 +191,12 @@ if RIG == "v4":
         if q["instrument"] in ("kick", "snare", "hihat", "tom", "crash"): q["gainDb"] = -4
     parts.append({"instrument": "leadGuitar", "role": "Aメロの旋律（単音）", "volume": 0.08, "pan": -0.35, "guitarTone": "electro-rock", "double": False, "noRestrike": True, "reverb": 0.3,
                   "fx": [{"type": "delay", "beats": 0.5, "mix": 0.15, "feedback": 0.25}], "notes": " ".join(verse_lead_bar(i, s) for i, s in enumerate(SECBAR))})
+if RIG == "v4":
+    # 2026-10-21 人間「エレクトリックリードな部分 ブリングミーザホライゾンのギターにしようか」: 単音の旋律2本をメタルコアの音色（1本で弾く）に
+    for q in parts:
+        if q["instrument"] == "leadGuitar":
+            for k in ("amp", "ampDrive", "ampCabIr"): q.pop(k, None)
+            q["guitarTone"] = "modern-metalcore"; q["double"] = False
 song = {
     "title": "ラウドロックの試験曲" + ("（今までの作り）" if RIG == "old" else ("（新しい作り）" if RIG not in ("v3", "v4") else "（採用した音色）")),
     "description": "仮: 作曲ソフトのラウドロックの音づくりを確かめるための試験曲（ドロップC・bpm150）",
