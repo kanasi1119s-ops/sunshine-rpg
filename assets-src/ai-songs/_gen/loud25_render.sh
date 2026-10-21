@@ -10,7 +10,7 @@ for f in "$IN"/loud25-*.json; do
   if [ $# -gt 0 ]; then ok=0; for w in "$@"; do [ "$(printf %02d "$w")" = "$no" ] && ok=1; done; [ $ok = 1 ] || continue; fi
   name=$(basename "$f" .json)
   title=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['title'])" "$f")
-  flags="--drums muldjord --master-preset rock-clean"
+  flags="--drums muldjord --bass pick --master-preset rock-clean"
   grep -q '"instrument": "piano"' "$f" && flags="$flags --piano salamander"
   for try in 1 2; do
     node tools/composer/song.mjs build "$f" --wav $flags --out /tmp/loud25-out > "/tmp/loud25-out-$name.log" 2>&1 && [ -f "/tmp/loud25-out/$name.wav" ] && break

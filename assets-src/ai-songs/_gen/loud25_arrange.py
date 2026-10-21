@@ -144,7 +144,7 @@ def build(spec):
         if k == n - 1 and (sid + "_end") in B: motif = B[sid + "_end"]
         elif k == n - 1 and (typ(sid) + "_end") in B: motif = B[typ(sid) + "_end"]
         brow.append(S.bass_bar(motif, ch, S.nxt(i)))
-    parts.append({"instrument": "bass", "role": "ベース（旋律）", "volume": 0.19, "pan": 0, "amp": "bassSplit", "ampDrive": B.get("drive", 0.6), "notes": S.join(brow, "ベース")})
+    parts.append({"instrument": "bass", "role": "ベース（旋律）", "volume": 0.19, "pan": 0, "amp": "auto", "notes": S.join(brow, "ベース")})  # 2026-10-21 人間「もっと普通のベースでいいよ」（音だけ）: 歪ませない録音のエレキベース（--bass pick）
 
     # ── ドラム ──
     rows = {"k": [], "s": [], "h": []}
