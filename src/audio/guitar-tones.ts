@@ -117,6 +117,15 @@ export const GUITAR_TONES: Record<string, GuitarTone> = {
     amp: "namDD", ampDrive: 0.6, ampGate: 25, ampTight: 0.7, ampTightHz: 140, ampCabIr: "jd-brutal-4x12-01+dd-v30-2x12-cone-1in", double: { irR: "jd-brutal-4x12-05+dd-v30-2x12-cone-1in" },
     fx: [{ type: "eq", low: 0, mid: -2, midHz: 300, high: 1.5 }, { type: "eq", low: 0, mid: 2, midHz: 2500, high: 0 }], ...LOUD_BASE,
   },
+  "bmth-lead": {
+    label: "電子音と混ざる明るいリード（高めの歪み＋1オクターブ上＋左右に跳ねるやまびこ）",
+    description: "試作（2026-10-21 人間「エレクトリックリードな部分 ブリングミーザホライゾンのギターにしようか」→「リード変わってる感じがあんまりしない」）。" +
+      "刻みと同じ namDD では違いが出ないので、アンプを namJVM（マーシャル系の学習モデル）に変え、歪みを強め、明るい Greenback の箱。1オクターブ上を薄く混ぜてシンセのような芯を作り、" +
+      "1.8kHz を出して前へ。ピンポンディレイ（付点8分）とプレートで、奥行きのある電子的なリードにする。1本で弾く（左右に重ねない）。曲はまねない（音の作り方の参考だけ）。",
+    amp: "namJVM", ampDrive: 0.9, ampGate: 15, ampTight: 0.6, ampTightHz: 160, ampCabIr: "jd-greenback-4x12-01", double: false,
+    fx: [{ type: "octup", mix: 0.22 }, { type: "eq", low: -2, mid: 3, midHz: 1800, high: 2 }, { type: "pingpong", beats: 0.75, mix: 0.28, feedback: 0.38 }, { type: "plate", mix: 0.22 }],
+    reverb: 0.15, ...LOUD_BASE,
+  },
   "nu-metal-wall": {
     label: "2000年代のニューメタル（平らで太い壁・刻みの止めがそろう）",
     description: "試作。レクチファイア系の深めの歪みを、ゲートで刻みの止めをそろえる（伸ばした音の途中では閉じない浅さ）。V30 の明るいマイクと暗いマイクを半々、右は Greenback を混ぜる。250Hz を引き 800Hz を少し出し、高域は暗め。",

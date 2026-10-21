@@ -196,7 +196,8 @@ if RIG == "v4":
     for q in parts:
         if q["instrument"] == "leadGuitar":
             for k in ("amp", "ampDrive", "ampCabIr"): q.pop(k, None)
-            q["guitarTone"] = "modern-metalcore"; q["double"] = False
+            q["guitarTone"] = "bmth-lead"; q["double"] = False
+            for k in ("reverb", "fx"): q.pop(k, None)
 song = {
     "title": "ラウドロックの試験曲" + ("（今までの作り）" if RIG == "old" else ("（新しい作り）" if RIG not in ("v3", "v4") else "（採用した音色）")),
     "description": "仮: 作曲ソフトのラウドロックの音づくりを確かめるための試験曲（ドロップC・bpm150）",
