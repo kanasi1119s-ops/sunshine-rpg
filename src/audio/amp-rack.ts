@@ -25,7 +25,7 @@ export interface ChannelAmp {
 type Role = "plugin" | "genre" | "nam" | "overdrive" | "distortion" | "metal" | "prs" | "clean" | "bass" | "bassMetal" | "drumsRock" | "drumsMetal" | "thru" | GenreAmpType | KeysAmpType;
 
 /** ジャンル別のアンプの種類（`score.ts` の `GenreAmpType` と同じ並び）。 */
-export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", "bassSplit"];
+export const GENRE_AMP_TYPES: GenreAmpType[] = ["jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", "bassSplit", "bassGrind"];
 
 const STEP_CURVES = new Map<number, Float32Array<ArrayBuffer>>();
 /** 波形を階段状にする（ビットを落としたような粗い音）。levels は片側の段数。 */
@@ -472,6 +472,32 @@ export class AmpRack {
         prev.connect(hiG); hiG.connect(sum);
         sum.connect(comp); comp.connect(out); out.connect(this.dest);
         return [lo1, lo2, loG, hi1, hi2, drv, sh, ...post, hiG, sum, comp, out];
+      }
+      case "bassGrind": {
+        // 2026-10-21 人間「歪ませていいけど、音がこもっていてラウドのベースじゃなかった」: ラウドロックの明るいゴリゴリのベース。
+        //   bassSplit（220Hz で分け、上を歪ませて 4.8kHz で切る）はこもっていた。ここでは 160Hz で分け、上を強めに歪ませて 1.2kHz（ゴリッ）と 2.8kHz（弦の金属音）を出し、
+        //   9kHz まで残す。さらに歪ませない「弦のアタック」（1.5kHz より上）を薄く足して、指弾きの粒を聞かせる
+        this.opt = null;
+        const lo1 = this.filter("lowpass", 160, 0, 0.7), lo2 = this.filter("lowpass", 160, 0, 0.7);
+        const hi1 = this.filter("highpass", 160, 0, 0.7), hi2 = this.filter("highpass", 160, 0, 0.7);
+        const loG = this.gain(1.0);
+        const drv = this.gain(4.2 * d);
+        const sh = this.shaper(6 * d, 0.04);
+        const post = [this.filter("peaking", 500, -2, 0.9), this.filter("peaking", 1200, 4, 0.9), this.filter("peaking", 2800, 3.5, 1), this.filter("lowpass", 9000, 0, 0.7)];
+        const hiG = this.gain(0.42);
+        const at1 = this.filter("highpass", 1500, 0, 0.7);
+        const atG = this.gain(0.35);
+        const sum = this.gain(1);
+        const comp = this.compressor(-20, 4, 0.006, 0.12);
+        const out = this.gain(1.1 * level);
+        input.connect(lo1); lo1.connect(lo2); lo2.connect(loG); loG.connect(sum);
+        input.connect(hi1); hi1.connect(hi2); hi2.connect(drv); drv.connect(sh);
+        let prev: AudioNode = sh;
+        for (const f of post) { prev.connect(f); prev = f; }
+        prev.connect(hiG); hiG.connect(sum);
+        input.connect(at1); at1.connect(atG); atG.connect(sum);
+        sum.connect(comp); comp.connect(out); out.connect(this.dest);
+        return [lo1, lo2, loG, hi1, hi2, drv, sh, ...post, hiG, at1, atG, sum, comp, out];
       }
       case "jpopClean":
         // J-POPのクリーン（2020年代の刻み・アルペジオ。jpop-clean-guitar-guide.md 提案1）: 歪ませない。100Hz未満を切り、300Hz付近のこもりを1.5dB引き、2kHzに1.5dBの輪郭を足し、

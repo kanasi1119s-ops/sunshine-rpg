@@ -6,7 +6,7 @@
 #   ベース＝ジャズベースの音源（--bass growly）で、半音の経過音・7th の分散和音・ゴースト・Cメロのウォーキング。
 #   ツーバス＝連打を続けない。フレーズ終わりの短い連打、3+3+2 の区切り、ソロの山場の2小節だけ。
 # 使い方: python3 sky_metalcore.py <出力.json>
-#   書き出し: node tools/composer/song.mjs build <出力.json> --wav --drums muldjord --bass pick --piano salamander --master-preset rock-clean
+#   書き出し: node tools/composer/song.mjs build <出力.json> --wav --drums muldjord --bass finger --piano salamander --master-preset rock-clean
 import json, sys
 
 out = sys.argv[1]
@@ -581,7 +581,7 @@ parts = [
     {"instrument": "leadGuitar", "role": "スウィープとタッピング", "volume": 0.11, "pan": 0.12, "guitarTone": "bmth-lead", "noRestrike": True, "legato": True,
      "fx": [{"type": "eq", "low": -2, "mid": 3, "midHz": 1800, "high": 1}, {"type": "delay", "beats": 0.75, "mix": 0.12, "feedback": 0.2}, {"type": "plate", "mix": 0.12}],
      "notes": join([tech_bar(i) for i in range(NB)])},
-    {"instrument": "bass", "role": "ベース（旋律をバキバキに）", "volume": 0.19, "pan": 0, "amp": "auto", "notes": join([mel_bass_bar(i) for i in range(NB)])},  # 2026-10-21 人間「もっと普通のベースでいいよ」（音だけ）: 歪ませない録音のベース（--bass pick）
+    {"instrument": "bass", "role": "ベース（旋律をバキバキに）", "volume": 0.19, "pan": 0, "amp": "bassGrind", "ampDrive": 0.9, "notes": join([mel_bass_bar(i) for i in range(NB)])},  # 2026-10-21 人間「音がこもっていてラウドのベースじゃなかった」「指弾きの方がいい」: 明るい歪み＋指弾き（--bass finger）
     {"instrument": "kick", "role": "キック（ツーバスはところどころ）", "volume": 0.22, **drum, "trigger": "punch", "notes": grid(kick_bar)},
     {"instrument": "snare", "role": "スネア", "volume": 0.18, **drum, "push": 0.02, "notes": grid(snare_bar)},
     {"instrument": "hihat", "role": "ハイハット", "volume": 0.05, **drum, "push": -0.01, "notes": grid(hat_bar)},

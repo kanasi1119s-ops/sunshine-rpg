@@ -1,6 +1,6 @@
 # ラウドロック・ラウドメタル25曲の設計表（2026-10-21 人間の指示。曲調を全部変える。キーボードをバイオリン・チェロにした曲もある）
 # 使い方: python3 loud25.py <出力フォルダ> [番号...]   → <出力フォルダ>/loud25-01-xxx.json …
-#   書き出し: node tools/composer/song.mjs build <json> --wav --drums muldjord --bass pick [--piano salamander] --master-preset rock-clean
+#   書き出し: node tools/composer/song.mjs build <json> --wav --drums muldjord --bass finger [--piano salamander] --master-preset rock-clean
 # 曲どうしで変えたもの: テンポ（76〜220）・拍子（4/4・3/4・6/8・7/4）・調と旋法・チューニング（ドロップA〜E）・ノリ（ドラムの型）・
 #   刻みとリードの音色・足す楽器（ピアノ・バイオリンとチェロ・シンセ・合唱・加工ギター・なし）・入り方・終わり方・ベースの動機・技（スウィープ・タッピング・ソロ）
 import json, os, sys

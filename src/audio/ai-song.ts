@@ -125,7 +125,7 @@ export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   ampCabIr?: string;
   /** ギターの音色プリセットの名前（guitar-tones.ts。例 "warm-lead-a"・"warm-lead-b"）。アンプ・歪み・キャビネット・残響・ディレイをまとめて入れる。パートに書いた項目が優先。 */
   guitarTone?: string;
-  amp: AiNamAmp | "auto" | "direct" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean" | "bassSplit" | KeysAmpType;
+  amp: AiNamAmp | "auto" | "direct" | "clean" | "overdrive" | "distortion" | "metal" | "prs" | "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean" | "bassSplit" | "bassGrind" | KeysAmpType;
   /** セクションごとの出し入れ。{ intro: 0, verse: 0.6, chorus: 1, solo: { gain: 1, octave: 1 } }。数字＝音量の倍率（0＝休み）、octave＝オクターブずらし。書かなかったセクションは1。曲の sections（または scene）が必要。 */
   sections?: PartSectionSpecJson;
   /** false にすると、modulate（転調）でこのパートを上げない。 */
@@ -254,7 +254,7 @@ function ampStages(p: AiPart): Pick<AmpSetting, "gate" | "tight" | "gateHz" | "t
     ...(Number(p.ampTight) > 0 ? { tight: Math.min(1, Number(p.ampTight)) } : {}),
   };
 }
-const AI_AMPS = new Set([...NAM_AMP_KEYS, "auto", "direct", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", "bassSplit", ...KEYS_AMP_TYPES]);
+const AI_AMPS = new Set([...NAM_AMP_KEYS, "auto", "direct", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", "bassSplit", "bassGrind", ...KEYS_AMP_TYPES]);
 
 /** 構造化出力（JSONスキーマ）。 */
 export const AI_SONG_SCHEMA = {
@@ -360,7 +360,7 @@ export const AI_SONG_SCHEMA = {
           ampCab: { type: "string" },
           ampCabIr: { type: "string" },
           guitarTone: { type: "string" },
-          amp: { type: "string", enum: [...NAM_AMP_KEYS, "auto", "direct", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", "bassSplit", ...KEYS_AMP_TYPES] },
+          amp: { type: "string", enum: [...NAM_AMP_KEYS, "auto", "direct", "clean", "overdrive", "distortion", "metal", "prs", "jazz", "blues", "funk", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "lofi", "retro8bit", "radio", "loudmetal", "loudrock", "delicate", "crystal", "lead", "modernHigh", "sparkleClean", "jpopClean", "bassSplit", "bassGrind", ...KEYS_AMP_TYPES] },
           ...AI_PART_EXTRA_SCHEMA,
           ...AI_PART_JPOP_SCHEMA,
           notes: { type: "string" },

@@ -81,7 +81,7 @@ export type Instrument =
  * ジャンル別のアンプ（2026-09-30 追加）。ジャズ・ブルース・ファンク・クランチ・ハードロック・パンク・ファズ・
  * シューゲイザー・ローファイ・レトロ8bit・ラジオ。作り方は `amp-rack.ts`、向いている場面は `docs/sound/composition-notes.md`。
  */
-export type GenreAmpType = "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean" | "bassSplit";
+export type GenreAmpType = "jazz" | "blues" | "funk" | "crunch" | "hardrock" | "punk" | "fuzz" | "shoegaze" | "lofi" | "retro8bit" | "radio" | "loudmetal" | "loudrock" | "delicate" | "crystal" | "lead" | "modernHigh" | "sparkleClean" | "jpopClean" | "bassSplit" | "bassGrind";
 
 /** ギターなどの音づくり（アンプ）の設定。`auto`は、曲の音色（tone）と楽器から自動で選ぶ。 */
 export interface AmpSetting {
