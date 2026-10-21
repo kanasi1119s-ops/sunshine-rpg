@@ -61,3 +61,11 @@ describe("録音のキャビネットIRの大きさ", () => {
     }
   });
 });
+
+describe("ストロークの押さえ方を音名で書く", () => {
+  it("全弦開放（ドロップB）の6音を低い順に読む。読めない音は null", async () => {
+    const { explicitVoicing } = await import("./part-expand");
+    expect(explicitVoicing("B1.F#2.B2.E3.G#3.C#4")).toEqual([35, 42, 47, 52, 56, 61]);
+    expect(explicitVoicing("B1.H2")).toBeNull();
+  });
+});

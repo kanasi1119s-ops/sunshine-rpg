@@ -83,7 +83,7 @@ export const AI_SONG_EXTRA_SCHEMA = {
 export const AI_SONG_EXTRAS_GUIDE = `
 ## 楽器・音階・効果の追加機能（2026-10-11）
 - 点検: 書いたパートは、楽器の音域（hard の外は出ない音、safe の外は無理）・同時発音（ギター6・ハープ8・ピアノ10・ドラムは手2本）・息継ぎ（息の楽器が10秒以上休まない）・和楽器の音階（koto は平調子、shakuhachi は D F G A C）を、小節番号つきで点検する。\`instrumentCheck:false\` で止める。
-- ストローク: \`{"instrument":"guitar","role":"ストローク","volume":0.14,"pan":-0.3,"amp":"clean","notes":"","strum":{"pattern":"D.DU.UDU","spreadMs":12,"strings":5}}\`。chords を書かなければ曲のコード進行（1小節1コード）。型の文字: D ダウン・d 弱いダウン・U/u アップ（高い弦だけ・弱く）・x ミュート・. のばす・- 休み。1 文字＝0.5拍（step で変える）。開放弦のフォームがあるコード（C G Am Em D Dm E A F G7 ほか）はその形、ないコードはバレーの形になる。
+- ストローク: \`{"instrument":"guitar","role":"ストローク","volume":0.14,"pan":-0.3,"amp":"clean","notes":"","strum":{"pattern":"D.DU.UDU","spreadMs":12,"strings":5}}\`。chords を書かなければ曲のコード進行（1小節1コード）。型の文字: D ダウン・d 弱いダウン・U/u アップ（高い弦だけ・弱く）・x ミュート・. のばす・- 休み。1 文字＝0.5拍（step で変える）。開放弦のフォームがあるコード（C G Am Em D Dm E A F G7 ほか）はその形、ないコードはバレーの形になる。押さえ方を音名で直接書くなら chords に \"[B1.F#2.B2.E3.G#3.C#4]\"（低い弦から・点でくぎる。全弦開放の響きなど）。
 - 奏法の自動付与: 曲に \`autoArticulation:true\`（パートごとに true/false で上書き）。長い音の終わりのビブラート、弦の旋律のレガート、ギターのハンマリング/プルオフ風、スラップの拍頭アクセントなど。ピアノ・ハープは同時に始まる音の最高音を強く。
 - 息継ぎ: 息の楽器のパートに \`breath:true\`。休まず6秒を超えたら、1拍以上の音の終わりを0.25拍休符にする。
 - ペダル: ピアノ・エレピに \`pedal:"chord"\`（コードの変わり目で踏み替え）／\`"bar"\`／\`"none"\`（スタッカートが短くなる）。省略は4拍ごと。

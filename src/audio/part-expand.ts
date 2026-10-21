@@ -31,7 +31,7 @@ export interface ExpandCtx {
 }
 
 export interface StrumSpec {
-  /** 弾くコード（"C G Am F"）。書かなければ曲のコード進行。 */
+  /** 弾くコード（"C G Am F"）。書かなければ曲のコード進行。押さえ方を音名で直接書くときは "[B1.F#2.B2.E3.G#3.C#4]"（全弦開放など）。 */
   chords?: string;
   /** コード 1 つが続く小節数（chords を書いたときだけ。省略は 1）。 */
   bars?: number;
@@ -51,6 +51,13 @@ export interface StrumSpec {
   capo?: number;
   /** true にすると、展開した和音のパートにも自動しゃくり（autoScoop）をかける（省略は、かけない）。 */
   scoop?: boolean;
+}
+
+/** "B1.F#2.B2" のような音名の並びを、低い順の MIDI 番号にする（読めない音があれば null）。弦は 6 本まで。 */
+export function explicitVoicing(text: string): number[] | null {
+  const ms = text.split(".").map((t) => { try { return noteNameToMidi(t.trim()); } catch { return NaN; } });
+  if (!ms.length || ms.length > 6 || ms.some((m) => !Number.isFinite(m))) return null;
+  return ms.sort((x, y) => x - y);
 }
 
 export interface EchoSpec {
@@ -153,7 +160,9 @@ export function expandStrum(p: AiPart, rawSpec: StrumSpec, ctx: ExpandCtx, warni
   let filled = 0;
   for (let i = 0; filled < ctx.totalBeats - 1e-6 && i < 4096; i++) {
     const s = spans[i % spans.length];
-    const voicing = capo ? capoVoicing(s.chord, stringsN, capo) : strumVoicing(s.chord, stringsN);
+    // 押さえ方を音名で直接書く: "[B1.F#2.B2.E3.G#3.C#4]"（低い弦から。全弦開放など、コード名で書けない響き。2026-10-21）
+    const explicit = /^\[(.+)\]$/.exec(s.chord);
+    const voicing = explicit ? explicitVoicing(explicit[1]) : capo ? capoVoicing(s.chord, stringsN, capo) : strumVoicing(s.chord, stringsN);
     if (!voicing) {
       warnings.push(`${where}: コード「${s.chord}」を読めませんでした。strum を使わず、notes のままにしました`);
       return [p];

@@ -38,6 +38,8 @@ def at_least(pc, low):  # low（midi）以上で最も低い、その音名の�
 
 # ── 構成（小節）とコード（1小節ずつ）──
 SEC = [
+    # 2026-10-21 人間「全弦解放で最初スタートするのはどうかな？」: ドロップBの全弦開放（B F# B E G# C#）を1回かき鳴らして2小節響かせ、ライザーで導入へ
+    ("open", "全弦開放", 4, "Bsus4 Bsus4 Bsus4 Bsus4"),
     ("intro", "導入（シンセ）", 8, "Gmaj7 Gmaj7 Em9 Em9 Bm7 Bm7 Asus4 A"),
     ("introB", "導入（バンド・タッピング）", 8, "Bm Bm Gmaj7 Gmaj7 C C F#sus4 F#"),
     ("verse", "Aメロ", 16, "Bm Bm Gmaj7 Gmaj7 C C F# F# Bm Bm Gmaj7 Em7 C C F#sus4 F#"),
@@ -53,7 +55,7 @@ SEC = [
     ("chorus", "最後のサビ（半音上げ）", 16, "D D Em7 Em7 F#m7 F#m7 Gmaj7 Gmaj7 F#m7 Bm7 E E Gmaj7 Gmaj7 A A"),
     ("outro", "終わり", 8, "D D Gmaj7 Gmaj7 Em9 Em9 D D"),
 ]
-KIND = {"intro": "intro", "introB": "intro", "verse": "verse", "pre": "pre", "chorus": "chorus", "sweep": "interlude",
+KIND = {"open": "intro", "intro": "intro", "introB": "intro", "verse": "verse", "pre": "pre", "chorus": "chorus", "sweep": "interlude",
         "bridge": "bridge", "breakdown": "break", "solo": "solo", "outro": "outro"}
 BARS = []  # (section, chord, index_in_section, section_len, section_no)
 for no, (sec, _, n, chs) in enumerate(SEC):
@@ -220,6 +222,8 @@ def bass_bar(i):
     seventh = cap(R + (iv[3] if len(iv) > 3 and iv[3] < 12 else 12))
     third = cap(R + iv[1])
     ap = approach(i)
+    if sec == "open":
+        return f"{rn}:4!" if k == 0 else "R:4"
     if sec == "intro":
         return "R:4" if k < 4 else (f"{rn}:4" if k % 2 == 0 else f"{rn}:3 {ap}:1")
     if sec == "introB":
@@ -264,6 +268,8 @@ def phrase_end(i):
     return k == n - 1 or (k % 8 == 7)
 def kick_bar(i):
     sec, c, k, n, no = BARS[i]
+    if sec == "open":
+        return "X..............." if k == 0 else "................"
     if sec == "intro":
         return "................" if k < 6 else ("X...X...X...X..." if k == 6 else "X...X...X.X.XXXX")
     if sec == "introB":
@@ -379,6 +385,8 @@ def cym_bar(i):
     # C2 クラッシュ／D2 ライド／B2 チャイナ／A2 スプラッシュ
     sec, c, k, n, no = BARS[i]
     first = k == 0
+    if sec == "open":
+        return "C2:4!" if k == 0 else "R:4"
     if sec == "intro":
         return "R:4" if k < 7 else "R:4"
     if sec == "introB":
@@ -483,10 +491,10 @@ def riser_bar(i):
     nxt_sec = BARS[i + 2][0] if i + 2 < NB else None
     if BARS[i + 1][2] == 0 if i + 1 < NB else False:
         pass
-    # 次のセクションがサビ／導入（バンド）／最後のサビになる直前の2小節
-    if i + 2 < NB and BARS[i + 2][2] == 0 and BARS[i + 2][0] in ("chorus", "introB", "breakdown") and k == n - 2:
+    # 次のセクションがサビ／導入／最後のサビになる直前の2小節
+    if i + 2 < NB and BARS[i + 2][2] == 0 and BARS[i + 2][0] in ("chorus", "intro", "introB", "breakdown") and k == n - 2:
         return "C4:8"
-    if i + 1 < NB and BARS[i + 1][2] == 0 and BARS[i + 1][0] in ("chorus", "introB", "breakdown") and k == n - 1:
+    if i + 1 < NB and BARS[i + 1][2] == 0 and BARS[i + 1][0] in ("chorus", "intro", "introB", "breakdown") and k == n - 1:
         return None  # 前の小節の 8 拍に含まれる
     return "R:4"
 def riser_part():
@@ -517,14 +525,17 @@ parts = [
     {"instrument": "lead", "role": "シンセのアルペジオ（右・逆向き）", "patch": "glassPluck", "volume": 0.05, "breath": True, "pan": 0.5, "reverb": 0.45, "duck": 0.2,
      "fx": [{"type": "pingpong", "beats": 0.5, "mix": 0.3, "feedback": 0.42}, {"type": "reverb", "mix": 0.25}], "notes": join([arp_bar(i, True) for i in range(NB)])},
 ]
-for v in range(PAD_VOICES):
+# 2026-10-21 全弦開放のパートにチャンネルを空けるため、パッド（halo）はスーパーソーの壁が弱く鳴らす形にまとめた
+if False:
+  for v in range(PAD_VOICES):
     parts.append({"instrument": "pad", "role": f"パッド（空気）{v + 1}", "patch": "halo", "volume": 0.045, "pan": 0, "reverb": 0.65, "duck": 0.25,
                   "fx": [{"type": "widen", "mix": 0.8}, {"type": "reverb", "mix": 0.35}], "notes": pad_part(v)})
 # 現代的なスーパーソーの壁（サビ・導入・Bメロ後半・ソロ後半・終わり）。キックに合わせて凹ませ（サイドチェイン風）、左右に広げる
 def wall_voice(i, v):
     sec, c, k, n, no = BARS[i]
     on = sec == "chorus" or (sec == "intro" and k >= 4) or (sec == "pre" and k >= 4) or (sec == "solo" and k >= 8) or (sec == "outro" and k < 6)
-    if not on:
+    soft = not on and pad_voice(i, v) is not None and sec != "open"   # もとのパッドの場面は弱く（空気）
+    if not on and not soft:
         return None
     r, iv, q = chord(c)
     R = at_least(r, midi("B3"))
@@ -532,12 +543,12 @@ def wall_voice(i, v):
     top = R + (iv[3] if len(iv) > 3 and iv[3] < 12 else iv[2])
     if top <= third:
         top += 12
-    return name([R, third, top][v])
+    return name([R, third, top][v]) + ("," if soft else "")
 def wall_part(v):
     toks = []
     for i in range(NB):
         nn = wall_voice(i, v)
-        toks.append(f"{nn}:4" if nn else "R:4")
+        toks.append((f"{nn[:-1]}:4," if nn.endswith(",") else f"{nn}:4") if nn else "R:4")
     return join(toks)
 for v in range(PAD_VOICES):
     # 3つの声を左・中・右に置き、ダブラーで左右に二重にする（チャンネルは3つ使う）
@@ -547,6 +558,11 @@ for v in range(PAD_VOICES):
 if False: parts.append({"instrument": "lead", "role": "サビの旋律の重ね（明るいシンセ）", "patch": "sawLead", "volume": 0.04, "pan": 0, "reverb": 0.5,
               "fx": [{"type": "pingpong", "beats": 0.5, "mix": 0.25, "feedback": 0.35}, {"type": "widen", "mix": 0.6}],
               "notes": join([sky_bar(i) for i in range(NB)])})
+OPEN = ["B1", "F#2", "B2", "E3", "G#3", "C#4"]
+for j, nn in enumerate(OPEN):
+    notes = join([f"{nn}:4!" if (BARS[i][0] == "open" and BARS[i][2] == 0) else "R:4" for i in range(NB)]).replace(f"{nn}:4! R:4", f"{nn}:8! ", 1).replace("  ", " ")
+    parts.append({"instrument": "distGuitar", "role": f"全弦開放（{j + 1}弦目）", "volume": 0.07, "pan": 0, "guitarTone": "electro-rock", "double": False,
+                  "ampDrive": 0.25, "powerChord": False, "sustain": 2, "reverb": 0.4, "push": round(j * 12 / 1000 * BPM / 60, 3), "notes": notes})
 parts.append({"instrument": "pad", "role": "ライザー（場面の前の盛り上げ）", "patch": "fxRiser", "volume": 0.05, "pan": 0, "notes": riser_part()})
 
 chords = " ".join(simple(b[1]) for b in BARS)
