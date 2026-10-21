@@ -6,7 +6,7 @@
 #   ベース＝ジャズベースの音源（--bass growly）で、半音の経過音・7th の分散和音・ゴースト・Cメロのウォーキング。
 #   ツーバス＝連打を続けない。フレーズ終わりの短い連打、3+3+2 の区切り、ソロの山場の2小節だけ。
 # 使い方: python3 sky_metalcore.py <出力.json>
-#   書き出し: node tools/composer/song.mjs build <出力.json> --wav --drums muldjord --bass growly --master-preset rock-clean
+#   書き出し: node tools/composer/song.mjs build <出力.json> --wav --drums muldjord --piano salamander --master-preset rock-clean
 import json, sys
 
 out = sys.argv[1]
@@ -261,6 +261,66 @@ def bass_bar(i):
     if sec == "outro":
         return f"{rn}:4" if k < 2 else "R:4"
     return "R:4"
+
+# ── ベースの旋律（2026-10-21 人間「ベースは前の状態に戻そう（音色）。ベースでメロディラインをバッキバキに入れて欲しい」）──
+#   音色はジャズベースの録音をやめ、ラウドロックの試験曲と同じ標準のベース＋bassSplit（歪みを少し）に戻す。
+#   弾き方は、根音の刻みの合間に「次のコードへ駆け上がる／駆け下りる16分の音階」・オクターブの跳躍・5度と3度の歌う動きを入れる。
+SCALE_PC = [11, 1, 2, 4, 6, 7, 9]   # B マイナー＝D メジャーの音（B C# D E F# G A）
+LOW, HIGH = midi("B1"), midi("D3")
+def scale_notes():
+    return [m for m in range(LOW, HIGH + 1) if m % 12 in SCALE_PC]
+SN = scale_notes()
+def fold(m):
+    while m > HIGH: m -= 12
+    while m < LOW: m += 12
+    return m
+def run_to(target, n=4, up=None):
+    """target（次の根音）へ音階で近づく n 音（16分）。up=True で下から上る"""
+    t = min(SN, key=lambda x: abs(x - target))
+    j = SN.index(t)
+    if up is None:
+        up = j - n >= 0 and (j + n >= len(SN) or j % 2 == 0)
+    seq = [SN[max(0, min(len(SN) - 1, j - (n - q) if up else j + (n - q)))] for q in range(n)]
+    return seq
+def mel_bass_bar(i):
+    sec, c, k, n, no = BARS[i]
+    r, iv, q = chord(c)
+    R = at_least(r, LOW)
+    t3, t5, oc = fold(R + iv[1]), fold(R + 7), fold(R + 12)
+    t7 = fold(R + (iv[3] if len(iv) > 3 and iv[3] < 12 else 10 if "m" in q else 11))
+    nr = at_least(chord(nxt(i))[0], LOW)
+    rn = name(R)
+    run = " ".join(f"{name(m)}:0.25" + ("!" if q2 == 0 else "'") for q2, m in enumerate(run_to(nr)))
+    if sec == "verse":
+        if k % 2 == 0:
+            return f"{rn}:0.5! {rn}:0.25' {rn}:0.25' {name(t5)}:0.5! {rn}:0.25' {rn}:0.25' {name(oc)}:0.5! {name(t7)}:0.25' {name(t5)}:0.25' {rn}:0.5 {name(t3)}:0.5"
+        return f"{rn}:0.5! {rn}:0.25' {rn}:0.25' {name(t3)}:0.5 {name(t5)}:0.5! {name(oc)}:0.5 {rn}:0.5 " + run
+    if sec == "pre":
+        if k < 4:
+            up = run_to(oc, 4, up=True)
+            return f"{rn}:1! {name(t5)}:0.5 {name(oc)}:0.5! {name(t7)}:1 " + " ".join(f"{name(m)}:0.25'" for m in up)
+        if k < 7:
+            return f"{rn}:0.5! {name(oc)}:0.5' {rn}:0.5 {name(oc)}:0.5' {name(t5)}:0.5! {name(oc)}:0.5' " + " ".join(f"{name(m)}:0.25'" for m in run_to(nr, 2)) + f" {name(t3)}:0.5"
+        return f"{rn}:0.5! {rn}:0.5! {rn}:0.5! {rn}:0.5! {rn}:1! R:1"
+    if sec == "chorus":
+        if k % 4 == 3:
+            return f"{rn}:0.5! {name(oc)}:0.5 {name(t7)}:0.5 {name(t5)}:0.5 " + " ".join(f"{name(m)}:0.25" + ("!" if q2 % 4 == 0 else "'") for q2, m in enumerate(run_to(nr, 8)))
+        if k % 2 == 0:
+            return f"{rn}:1! {name(t5)}:0.5 {name(oc)}:0.5! {name(t7)}:0.5 {name(t5)}:0.5 {name(t3)}:0.5 {name(t5)}:0.5"
+        return f"{rn}:0.5! {rn}:0.5 {name(oc)}:0.5! {rn}:0.5 {name(t5)}:0.5! {name(t3)}:0.5 " + run
+    if sec == "sweep":
+        # スウィープと一緒に、ベースも分散和音で駆ける
+        return " ".join(f"{name(m)}:0.25" + ("!" if q2 % 4 == 0 else "'") for q2, m in enumerate([R, t3, t5, oc, t5, t3, R, t3, t5, oc, t7, oc, t5, t3, t5, R]))
+    if sec == "bridge":
+        if k < 8:   # ベースが主役で歌う（高めの音域で長い音と装飾）
+            hi = [oc, t7, t5, t3]
+            return f"{name(oc)}:1.5! {name(t7)}:0.5 {name(t5)}:1 " + " ".join(f"{name(m)}:0.25" + ("!" if q2 == 0 else "'") for q2, m in enumerate(run_to(nr, 4)))
+        if k < 12:
+            return f"{rn}:0.25! {name(t5)}:0.25' {name(oc)}:0.25' {name(t5)}:0.25' " * 2 + f"{name(t3)}:0.5 {name(t5)}:0.5 " + run
+        return f"{rn}:4" if k < 14 else f"{rn}:1 {rn}:1 {rn}:0.5 {rn}:0.5 {rn}:0.5 {rn}:0.5"
+    if sec == "solo":
+        return f"{rn}:0.5! {rn}:0.25' {rn}:0.25' {name(oc)}:0.5! {rn}:0.5 {name(t5)}:0.5! {rn}:0.5 " + run
+    return bass_bar(i)
 
 # ── ドラム（16分のグリッド）──
 def phrase_end(i):
@@ -521,7 +581,7 @@ parts = [
     {"instrument": "leadGuitar", "role": "スウィープとタッピング", "volume": 0.11, "pan": 0.12, "guitarTone": "bmth-lead", "noRestrike": True, "legato": True,
      "fx": [{"type": "eq", "low": -2, "mid": 3, "midHz": 1800, "high": 1}, {"type": "delay", "beats": 0.75, "mix": 0.12, "feedback": 0.2}, {"type": "plate", "mix": 0.12}],
      "notes": join([tech_bar(i) for i in range(NB)])},
-    {"instrument": "bass", "role": "ベース（ジャズっぽく）", "volume": 0.18, "pan": 0, "amp": "bassSplit", "ampDrive": 0.4, "notes": join([bass_bar(i) for i in range(NB)])},
+    {"instrument": "bass", "role": "ベース（旋律をバキバキに）", "volume": 0.19, "pan": 0, "amp": "bassSplit", "ampDrive": 0.6, "notes": join([mel_bass_bar(i) for i in range(NB)])},
     {"instrument": "kick", "role": "キック（ツーバスはところどころ）", "volume": 0.22, **drum, "trigger": "punch", "notes": grid(kick_bar)},
     {"instrument": "snare", "role": "スネア", "volume": 0.18, **drum, "push": 0.02, "notes": grid(snare_bar)},
     {"instrument": "hihat", "role": "ハイハット", "volume": 0.05, **drum, "push": -0.01, "notes": grid(hat_bar)},
