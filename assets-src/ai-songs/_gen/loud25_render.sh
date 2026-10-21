@@ -20,7 +20,7 @@ for f in "$IN"/loud25-*.json; do
   pq=""
   for t in 1 2 3; do
     sleep 20
-    pq=$(HF_HOME=/tmp/hf python3 tools/audio-check/aes-score.py "/tmp/loud25-out/$name.wav" 2>/dev/null | tail -1 | python3 -c "import sys,ast;l=sys.stdin.read();print(ast.literal_eval(l[l.index('{'):])['PQ'])" 2>/dev/null)
+    pq=$(HF_HOME=/tmp/hf python3 tools/audio-check/aes-score-lowmem.py "/tmp/loud25-out/$name.wav" 2>/dev/null | tail -1 | python3 -c "import sys,ast;l=sys.stdin.read();print(ast.literal_eval(l[l.index('{'):])['PQ'])" 2>/dev/null)
     [ -n "$pq" ] && break
   done
   ffmpeg -v error -y -i "/tmp/loud25-out/$name.wav" -b:a 256k "$OUT/${no} ${title}.mp3"
