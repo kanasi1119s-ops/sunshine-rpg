@@ -212,7 +212,7 @@
 | VCSL の Folk Harp・Baroque Soprano Recorder・Frame Drum | https://github.com/sgossner/VCSL | 2026-10-20 | `harp-folk-vcsl.sf3`（GM 111、`folkHarp`）・`whistle-recorder-vcsl.sf3`（GM 78、`tinWhistle`。ティンホイッスルの代わり）・`framedrum-vcsl.sf3`（GM 116、`frameDrum`。バウロンの代わり） | CC0 1.0（LICENSE） | 不要 |
 | FreePats Bagpipe（2026-08-06版。G のバグパイプの録音とドローン） | https://freepats.zenvoid.org/Ethnic/bagpipe.html | 2026-10-20 | `bagpipe-freepats.sf3`（GM 109。instrument `bagpipe` を使う曲で重なる） | CC0（README・LICENSE.txt） | 不要 |
 | FreePats Synthesizer Percussion（2022-07-18版。アナログのドラムマシン風の音を Yoshimi・Geonkick で作ったもの） | https://freepats.zenvoid.org/Percussion/electric-percussion.html | 2026-10-20 | `drums-electro.sf3`（ドラムのバンク 128。書き出しの `--drums electro`）。GM の鍵盤に並べ直し、ダンス向けのキック（36）はこのソフトで合成した音 | CC0（readme・LICENSE） | 不要 |
-| このソフトで合成した音（外部の録音なし） | `tools/soundfont/build-analog-synths.mjs`・効果音は Python で合成 | 2026-10-20 | `synth-pluck-edm.sf3`（GM 85、`pluckSynth`）・`synth-chip-pulse25/12.sf3`（GM 124・125）・`synth-bass-reese.sf3`（GM 34、`reeseBass`）・`fx-electro.sf3`（GM 126、`fxRiser`。ライザー・ダウンリフター・逆再生シンバル・サブドロップ・シュッ） | 自作（CC0 扱い） | 不要 |
+| このソフトで合成した音（外部の録音なし） | `tools/soundfont/build-analog-synths.mjs`・効果音は Python で合成 | 2026-10-20 | `synth-pluck-edm.sf3`（GM 85、`pluckSynth`）・`synth-chip-pulse25/12.sf3`（GM 124・125）・`synth-bass-reese.sf3`（GM 34、`reeseBass`）・`fx-electro.sf3`（GM 126、`fxRiser`。ライザー・ダウンリフター・逆再生シンバル・サブドロップ・シュッ）・2026-10-21 追加 `synth-pad-supersaw-air.sf3`（GM 122、`supersawPad`）・`synth-pluck-glass.sf3`（GM 123、`glassPluck`） | 自作（CC0 扱い） | 不要 |
 
 ### 使わないと決めた素材（2026-10-20）
 | 素材 | URL | 理由 |

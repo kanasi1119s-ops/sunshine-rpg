@@ -91,6 +91,8 @@ import whistleRecUrl from "../../assets-src/soundfont/extra/whistle-recorder-vcs
 import frameDrumUrl from "../../assets-src/soundfont/extra/framedrum-vcsl.sf3?url";
 import bagpipeRealUrl from "../../assets-src/soundfont/extra/bagpipe-freepats.sf3?url";
 import pluckEdmUrl from "../../assets-src/soundfont/extra/synth-pluck-edm.sf3?url";
+import superAirUrl from "../../assets-src/soundfont/extra/synth-pad-supersaw-air.sf3?url";
+import pluckGlassUrl from "../../assets-src/soundfont/extra/synth-pluck-glass.sf3?url";
 import chip25Url from "../../assets-src/soundfont/extra/synth-chip-pulse25.sf3?url";
 import chip12Url from "../../assets-src/soundfont/extra/synth-chip-pulse12.sf3?url";
 import reeseUrl from "../../assets-src/soundfont/extra/synth-bass-reese.sf3?url";
@@ -360,6 +362,8 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   // ケルト: フォークハープ（VCSL）・ソプラノリコーダー（VCSL。ティンホイッスルの代わり）・枠太鼓（VCSL。バウロンの代わり）・バグパイプの本物の録音（FreePats 2026）
   folkHarp: { programs: [111], url: harpFolkUrl }, tinWhistle: { programs: [78], url: whistleRecUrl }, frameDrum: { programs: [116], url: frameDrumUrl }, bagpipe: { programs: [109], url: bagpipeRealUrl },
   // 電子音楽・テクノポップ・ダンス・ボカロ: プラック・チップチューンのパルス波 25%／12.5%・リースベース・効果音（ライザーなど）。すべてこのソフトで合成したもの
+  // 2026-10-21 現代的な空間のシンセ（自作の合成。空き番号 122・123）
+  supersawPad: { programs: [122], url: superAirUrl }, glassPluck: { programs: [123], url: pluckGlassUrl },
   pluckSynth: { programs: [85], url: pluckEdmUrl }, chipPulse25: { programs: [124], url: chip25Url }, chipPulse12: { programs: [125], url: chip12Url }, reeseBass: { programs: [34], url: reeseUrl }, fxElectro: { programs: [126], url: fxElectroUrl },
 };
 function extrasFor(score: Score): string[] {

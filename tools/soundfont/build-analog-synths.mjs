@@ -205,6 +205,36 @@ const INSTR = {
       return y.map((v, i) => { const t = i / SR; return v * smooth(t / 0.0015) * expEnv(t, 0.01, 1.0, 1, 0.004); });
     },
   },
+  // ── 2026-10-21 人間「シンセの音をもうちょっと現代的な感じで空間を感じるようにして欲しい」（メタルコア向け）──
+  // 空気のスーパーソー・パッド（GM 122。空き番号）: ソー 9 本（±31 セント）＋1 オクターブ上の薄いソー 2 本。0.3 秒かけてふくらみ、放すと 1.4 秒で消える。
+  //   和音の厚み（メタルコアのサビの「壁」）。左右の広がりは曲側の widen・chorus・残響で作る
+  "synth-pad-supersaw-air": {
+    program: 122, loop: 88200, pre: 22050, step: 4, keys: [36, 96], level: 0.9, release: 1.4,
+    render: ({ f0, cyc, L, n, rnd }) => {
+      const c0 = cyc(f0); const x = new Float64Array(n);
+      const det = [-31, -22, -14, -7, 0, 7, 15, 23, 31], gn = [0.5, 0.62, 0.75, 0.88, 1, 0.88, 0.75, 0.62, 0.5];
+      det.forEach((d, k) => { const o = osc("saw", Math.round(c0 * cents(d)), L, n, rnd()); for (let i = 0; i < n; i++) x[i] += o[i] * gn[k] * 0.2; });
+      for (const d of [-9, 9]) { const o = osc("saw", Math.round(cyc(f0 * 2) * cents(d)), L, n, rnd()); for (let i = 0; i < n; i++) x[i] += o[i] * 0.07; }
+      const y = ladder(highpass(x, 160), () => Math.min(9000, f0 * 6 + 2400), 0.1, 1.0);
+      return y.map((v, i) => v * smooth(i / SR / 0.3));
+    },
+  },
+  // ガラスのプラック（GM 123。空き番号）: ソー 5 本（±10 セント）のフィルターが 0.25 秒で閉じる「ポン」に、2 倍・3 倍の正弦波（鐘のきらめき）を重ねる。
+  //   2 秒かけて消える長い尾。ディレイ・残響と合わせて、空間に散るアルペジオにする
+  "synth-pluck-glass": {
+    program: 123, loop: 0, total: 2.2, step: 4, keys: [36, 100], level: 0.9, release: 0.6, fade: 0.5,
+    render: ({ f0, cyc, L, n, rnd }) => {
+      const c0 = cyc(f0); const x = new Float64Array(n);
+      for (const d of [-10, -5, 0, 5, 10]) { const o = osc("saw", Math.round(c0 * cents(d)), L, n, rnd()); for (let i = 0; i < n; i++) x[i] += o[i] * 0.2; }
+      const y = ladder(highpass(x, 140), (t) => 300 + Math.min(9000, f0 * 8) * Math.exp(-t / 0.25), 0.35, 1.0);
+      const b2 = osc("sin", cyc(f0 * 2), L, n, 0), b3 = osc("sin", cyc(f0 * 3), L, n, 0.25);
+      return y.map((v, i) => {
+        const t = i / SR;
+        const bell = (b2[i] * 0.22 + b3[i] * 0.1) * Math.exp(-t / 0.7);
+        return (v * Math.exp(-t / 0.9) + bell) * smooth(t / 0.002);
+      });
+    },
+  },
   // チップチューン（ファミコン風）のパルス波 25%（GM 124）: フィルターなしの角ばった音。ごく浅いビブラートは入れない（曲の ~ で付ける）
   "synth-chip-pulse25": {
     program: 124, loop: 88200, pre: 4410, step: 4, keys: [36, 100], level: 0.6, release: 0.05,

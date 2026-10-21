@@ -419,7 +419,7 @@ def grid(fn):
     return "g:" + "".join(bars)
 
 # ── シンセ ──
-def arp_bar(i):
+def arp_bar(i, rev=False):
     sec, c, k, n, no = BARS[i]
     on = sec in ("intro", "verse", "pre", "chorus", "bridge", "outro") and not (sec == "outro" and k > 6)
     if not on:
@@ -434,6 +434,8 @@ def arp_bar(i):
     if sec == "verse" and k % 4 >= 2:
         return "R:4"   # Aメロは2小節鳴らして2小節休む（息継ぎ）
     pat = [m - 12 if m > midi("C6") else m for m in pat]
+    if rev:   # 右側は逆向き（上から下へ）にして、左右でからみ合わせる
+        pat = pat[4:] + pat[:4]
     toks = [f"{name(m)}:0.25" + ("!" if j % 4 == 0 else ",") for j, m in enumerate(pat * 2)]
     if k % 4 == 3:
         toks = toks[:12] + ["R:1"]   # 4小節ごとに1拍の息継ぎ
@@ -509,12 +511,41 @@ parts = [
     {"instrument": "hihat", "role": "ハイハット", "volume": 0.05, **drum, "push": -0.01, "notes": grid(hat_bar)},
     {"instrument": "tom", "role": "タム", "volume": 0.16, **drum, "notes": join([tom_bar(i) for i in range(NB)])},
     {"instrument": "crash", "role": "シンバル（クラッシュ・ライド・チャイナ）", "volume": 0.057, **drum, "notes": join([cym_bar(i) for i in range(NB)])},
-    {"instrument": "lead", "role": "シンセのアルペジオ（空のきらめき）", "patch": "pluckSynth", "volume": 0.07, "breath": True, "pan": -0.3, "reverb": 0.35,
-     "fx": [{"type": "pingpong", "beats": 0.75, "mix": 0.22, "feedback": 0.3}], "notes": join([arp_bar(i) for i in range(NB)])},
+    # 2026-10-21 人間「シンセの音をもうちょっと現代的な感じで空間を感じるように」: ガラスのプラック（長い尾）＋ピンポンディレイ＋左右の広げ＋ホール。キックで少し凹ませる
+    {"instrument": "lead", "role": "シンセのアルペジオ（左）", "patch": "glassPluck", "volume": 0.055, "breath": True, "pan": -0.5, "reverb": 0.45, "duck": 0.2,
+     "fx": [{"type": "pingpong", "beats": 0.75, "mix": 0.3, "feedback": 0.42}, {"type": "reverb", "mix": 0.25}], "notes": join([arp_bar(i) for i in range(NB)])},
+    {"instrument": "lead", "role": "シンセのアルペジオ（右・逆向き）", "patch": "glassPluck", "volume": 0.05, "breath": True, "pan": 0.5, "reverb": 0.45, "duck": 0.2,
+     "fx": [{"type": "pingpong", "beats": 0.5, "mix": 0.3, "feedback": 0.42}, {"type": "reverb", "mix": 0.25}], "notes": join([arp_bar(i, True) for i in range(NB)])},
 ]
 for v in range(PAD_VOICES):
-    parts.append({"instrument": "pad", "role": f"パッド（空気）{v + 1}", "patch": "halo", "volume": 0.05, "pan": 0, "reverb": 0.5, "notes": pad_part(v)})
-parts.append({"instrument": "lead", "role": "サビの旋律の重ね（明るいシンセ）", "patch": "sawLead", "volume": 0.045, "pan": 0.25, "reverb": 0.4,
+    parts.append({"instrument": "pad", "role": f"パッド（空気）{v + 1}", "patch": "halo", "volume": 0.045, "pan": 0, "reverb": 0.65, "duck": 0.25,
+                  "fx": [{"type": "widen", "mix": 0.8}, {"type": "reverb", "mix": 0.35}], "notes": pad_part(v)})
+# 現代的なスーパーソーの壁（サビ・導入・Bメロ後半・ソロ後半・終わり）。キックに合わせて凹ませ（サイドチェイン風）、左右に広げる
+def wall_voice(i, v):
+    sec, c, k, n, no = BARS[i]
+    on = sec == "chorus" or (sec == "intro" and k >= 4) or (sec == "pre" and k >= 4) or (sec == "solo" and k >= 8) or (sec == "outro" and k < 6)
+    if not on:
+        return None
+    r, iv, q = chord(c)
+    R = at_least(r, midi("B3"))
+    third = R + iv[1]
+    top = R + (iv[3] if len(iv) > 3 and iv[3] < 12 else iv[2])
+    if top <= third:
+        top += 12
+    return name([R, third, top][v])
+def wall_part(v):
+    toks = []
+    for i in range(NB):
+        nn = wall_voice(i, v)
+        toks.append(f"{nn}:4" if nn else "R:4")
+    return join(toks)
+for v in range(PAD_VOICES):
+    # 3つの声を左・中・右に置き、ダブラーで左右に二重にする（チャンネルは3つ使う）
+    parts.append({"instrument": "pad", "role": f"スーパーソーの壁 {v + 1}", "patch": "supersawPad", "volume": 0.04, "pan": [-0.45, 0, 0.45][v], "reverb": 0.4, "duck": 0.35,
+                  "fx": [{"type": "doubler", "mix": 0.5, "depth": 0.3, "ms": 18}, {"type": "eq", "low": -4, "mid": 0, "midHz": 1000, "high": 1.5}], "notes": wall_part(v)})
+# 2026-10-21 チャンネルが足りないので、サビの旋律の重ね（sawLead）は外す（リードの1オクターブ上が同じ役目をする）
+if False: parts.append({"instrument": "lead", "role": "サビの旋律の重ね（明るいシンセ）", "patch": "sawLead", "volume": 0.04, "pan": 0, "reverb": 0.5,
+              "fx": [{"type": "pingpong", "beats": 0.5, "mix": 0.25, "feedback": 0.35}, {"type": "widen", "mix": 0.6}],
               "notes": join([sky_bar(i) for i in range(NB)])})
 parts.append({"instrument": "pad", "role": "ライザー（場面の前の盛り上げ）", "patch": "fxRiser", "volume": 0.05, "pan": 0, "notes": riser_part()})
 
