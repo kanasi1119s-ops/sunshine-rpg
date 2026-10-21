@@ -218,6 +218,22 @@ class Song:
                 toks.append(f"{name(self.bass_tone(ch, nxtch, sym, midi('A1'), hi))}:{d}{mk}")
         return " ".join(toks)
 
+    def lock_bass(self, pattern, ch):
+        """刻みの型と同じリズムで、根音（ベースの低い音域）を弾く。数字・o などの動く音も、ベースは根音のまま（低音を重ねて濁らせない）"""
+        R = at_least(ch.root, midi("E1"))   # 刻みの1オクターブ下（ベースの低い音域 E1〜D#2）
+        toks = []; cur = None; dur = 0; mark = ""
+        def flush():
+            if cur is None: return
+            toks.append(f"{name(R)}:{dur * self.res:g}{mark}" if cur else f"R:{dur * self.res:g}")
+        for c in pattern:
+            if c == "=" and cur is not None:
+                dur += 1; continue
+            flush()
+            cur, dur = (c not in "-="), 1
+            mark = "!" if c == "X" else ("'" if c == "m" else "")
+        flush()
+        return " ".join(toks)
+
     def grid(self, rows, what):
         for i, r in enumerate(rows):
             assert len(r) == self.steps, (self.s["slug"], what, i, r, len(r))

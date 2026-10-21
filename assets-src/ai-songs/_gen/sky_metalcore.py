@@ -291,6 +291,11 @@ def mel_bass_bar(i):
     nr = at_least(chord(nxt(i))[0], LOW)
     rn = name(R)
     run = " ".join(f"{name(m)}:0.25" + ("!" if q2 == 0 else "'") for q2, m in enumerate(run_to(nr)))
+    if sec in ("verse", "pre"):
+        # 2026-10-21 人間「前半のリフとベースが重なりすぎてごちゃごちゃ」: 刻み（ブリッジミュート・Bメロの刻み）と同じリズムで根音だけ
+        import re as _re
+        g = palm_bar(i) if sec == "verse" else rhythm_bar(i)
+        return _re.sub(r"[A-G]#?-?\d(?=:)", rn, g)
     if sec == "verse":
         if k % 2 == 0:
             return f"{rn}:0.5! {rn}:0.25' {rn}:0.25' {name(t5)}:0.5! {rn}:0.25' {rn}:0.25' {name(oc)}:0.5! {name(t7)}:0.25' {name(t5)}:0.25' {rn}:0.5 {name(t3)}:0.5"

@@ -3,6 +3,7 @@ import random
 from loud25_lib import Song, name, midi, at_least, fold, merge_long, dur_of
 
 DRUM_INST = ("kick", "snare", "hihat", "tom", "crash")
+LOCK_TYPES = ("intro", "verse", "pre", "break", "inter")
 TOM = {"1": "C4", "2": "A3", "3": "F3", "4": "D3"}
 CYM = {"c": "C2", "g": "G2", "r": "D2", "R": "D2", "u": "F2", "n": "B2", "s": "A2"}
 
@@ -143,6 +144,11 @@ def build(spec):
         motif = cyc(m, k + o)
         if k == n - 1 and (sid + "_end") in B: motif = B[sid + "_end"]
         elif k == n - 1 and (typ(sid) + "_end") in B: motif = B[typ(sid) + "_end"]
+        # 2026-10-21 人間「前半のリフとベースが重なりすぎてごちゃごちゃになってた」: 刻みが動いている小節では、ベースは刻みと同じリズムで根音を弾く（旋律はサビ・Cメロ・ソロなど刻みが伸ばす場面に回す）
+        pat = riff_for(i)
+        if B.get("style") != "jazz" and pat and typ(sid) in LOCK_TYPES and sum(c not in "-=" for c in pat) >= 4:
+            brow.append(S.lock_bass(pat, ch))
+            continue
         brow.append(S.bass_bar(motif, ch, S.nxt(i)))
     # 2026-10-21 人間「メロディベースちょっと強いかも」: 0.19 → 0.15（約 -2dB）
     bpart = {"instrument": "bass", "role": "ベース（旋律）", "volume": 0.15, "pan": 0, "amp": "bassGrind", "ampDrive": B.get("drive", 0.75), "notes": S.join(brow, "ベース")}
