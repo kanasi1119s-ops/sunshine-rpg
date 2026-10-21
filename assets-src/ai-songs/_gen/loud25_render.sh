@@ -16,7 +16,13 @@ for f in "$IN"/loud25-*.json; do
     node tools/composer/song.mjs build "$f" --wav $flags --out /tmp/loud25-out > "/tmp/loud25-out-$name.log" 2>&1 && [ -f "/tmp/loud25-out/$name.wav" ] && break
   done
   if [ ! -f "/tmp/loud25-out/$name.wav" ]; then echo -e "$no\t$title\t書き出し失敗" >> "$OUT/scores.tsv"; continue; fi
-  pq=$(HF_HOME=/tmp/hf python3 tools/audio-check/aes-score.py "/tmp/loud25-out/$name.wav" 2>/dev/null | tail -1 | python3 -c "import sys,ast;l=sys.stdin.read();print(ast.literal_eval(l[l.index('{'):])['PQ'])" 2>/dev/null)
+  # 書き出しのすぐあとはブラウザがメモリを放すまで少し待つ（採点がメモリ不足で止まることがある）。だめなら2回まで試す
+  pq=""
+  for t in 1 2 3; do
+    sleep 20
+    pq=$(HF_HOME=/tmp/hf python3 tools/audio-check/aes-score.py "/tmp/loud25-out/$name.wav" 2>/dev/null | tail -1 | python3 -c "import sys,ast;l=sys.stdin.read();print(ast.literal_eval(l[l.index('{'):])['PQ'])" 2>/dev/null)
+    [ -n "$pq" ] && break
+  done
   ffmpeg -v error -y -i "/tmp/loud25-out/$name.wav" -b:a 256k "$OUT/${no} ${title}.mp3"
   echo -e "$no\t$title\t$pq" >> "$OUT/scores.tsv"
   echo "完了 $no $title PQ=$pq"
