@@ -1,5 +1,6 @@
 // 作曲ソフトの「曲を組み立てる・書き出す」部分。コマンド（song.mjs）とコネクタ（tools/mcp/server.mjs）の両方が使う。
 // ゲームと同じ TypeScript のコードを、vite で読み込んで使う。標準出力には何も書かない（コネクタの通信をこわさないため）。
+import { fileURLToPath } from "url";
 import { createServer } from "vite";
 import fs from "fs";
 import path from "path";
@@ -10,7 +11,7 @@ import { makeIr, writeWav, SPACES } from "./space-ir.mjs";
 import { checkChordVariety, loadOtherSongs } from "./chord-variety.mjs";
 import { workflowWarnings } from "./workflow-check.mjs";
 
-export const ROOT = path.resolve(new URL("../../", import.meta.url).pathname);
+export const ROOT = path.resolve(fileURLToPath(new URL("../../", import.meta.url)));
 const EDITIONS = ["real", "ps2", "modern"];
 
 export async function openSongKit() {

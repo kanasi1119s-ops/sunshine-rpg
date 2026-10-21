@@ -3,8 +3,9 @@
 import { build } from "vite";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
-const root = new URL("../../", import.meta.url).pathname;
+const root = fileURLToPath(new URL("../../", import.meta.url)).replace(/\\/g, "/"); // Windows でも C:/... の形にする（URL の pathname だと /C:/... になり組み立てに失敗した）
 const argv = process.argv.slice(2);
 const desktop = argv.includes("--desktop");
 const out = path.resolve(argv.find((a) => !a.startsWith("--")) || root + "dist-composer/index.html");

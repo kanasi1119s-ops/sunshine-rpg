@@ -5,11 +5,12 @@
 //   node tools/composer/song.mjs motif-ledger [--write]      … 主題の台帳（docs/sound/motif-ledger.md）を出す・書く
 //   node tools/composer/song.mjs loop-report <曲.json>       … ループ点の点検
 // vite で TypeScript を読み込む。扱ったら true を返す。
+import { fileURLToPath } from "url";
 import fs from "fs";
 import path from "path";
 import { createServer } from "vite";
 
-const ROOT = path.resolve(new URL("../../", import.meta.url).pathname);
+const ROOT = path.resolve(fileURLToPath(new URL("../../", import.meta.url)));
 const CMDS = ["phone-check", "suite-check", "type-check", "motif-ledger", "loop-report"];
 
 export async function runR2Command(args) {

@@ -8,12 +8,13 @@
 //   5) 16bit への最終変換にディザ
 // ffmpeg 6.1 の注意（検証済み）: asoftclip の oversample は 2 以上にすると約 6dB 小さくなるので 1 のまま使い、前後に自前で aresample=192000／48000 を挟む。
 //   adynamicequalizer は 6.1 では threshold の効きが連続でなく（0 で無効、1 以上で全域が一定に切れる）、動的 EQ としては使えないので使わない。
+import { fileURLToPath } from "url";
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
 
 const run = (cmd) => execSync(cmd, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 1 << 26 });
-const HERE = path.dirname(new URL(import.meta.url).pathname);
+const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 export function measureLufs(file) {
   const out = execSync(`ffmpeg -nostats -i "${file}" -af ebur128=peak=true -f null - 2>&1`, { encoding: "utf8", maxBuffer: 1 << 26 });

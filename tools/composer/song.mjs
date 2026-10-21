@@ -35,6 +35,7 @@
 //   node tools/composer/song.mjs log <曲ID> --before .. --change .. --after .. --ear ..  … 直しの記録を1行残す（docs/sound/revisions.md）
 //   node tools/audio-check/score-check.mjs <曲.json> --facts [--json]  … 楽譜の点検を、小節番号つきの事実の一覧で出す（アヴォイドノートなど）
 //   node tools/composer/chord-pick.mjs --scene battle --avoid-last 3  … 場面に合って直近の曲と違う進行の候補を出す
+import { fileURLToPath } from "url";
 import fs from "fs";
 import path from "path";
 import { openSongKit, ROOT } from "./song-lib.mjs";
@@ -59,7 +60,7 @@ if (args[0] === "report" && args[1]) {
 if (args[0] === "noise" && args[1]) {
   // 雑音の検知（tools/audio-check/noise-check.py）。歌だけの WAV は --vocal（と --notes 歌.py --bpm N）
   const { execFileSync } = await import("child_process");
-  const py = new URL("../audio-check/noise-check.py", import.meta.url).pathname;
+  const py = fileURLToPath(new URL("../audio-check/noise-check.py", import.meta.url));
   const rest = args.slice(2);
   process.stdout.write(execFileSync("python3", [py, args[1], ...rest], { encoding: "utf8", maxBuffer: 1 << 26 }));
   process.exit(0);
