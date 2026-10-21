@@ -130,13 +130,26 @@ LEAD_CHORUS = [
     "G4:1.5! G#4:0.5 G4:1 F4:0.5 D#4:0.5", "D#4:3_ R:1",
     "C5:1.5! A#4:0.5 G#4:1 G4:0.5 F4:0.5", "G4:3~ R:1",
     "G4:1.5! G#4:0.5 A#4:1 C5:0.5 D5:0.5", "D#5:2! D5:1 C5:1",
-    "A#4:1.5 C5:0.5 A#4:1 G#4:0.5 G4:0.5", "G4:3~ R:1",
+    "A#4:1.5 C5:0.5 A#4:1 G#4:0.5 G4:0.5", "G4:3 R:1",
 ]
 def lead_bar(i, sec):
     if sec != "chorus":
         return "R:4"
     k = sum(1 for j in range(i) if SECBAR[j] == "chorus") % 8
     return LEAD_CHORUS[k]
+
+# v4: Aメロにも旋律（ギターの単音・クリーン寄り。左に置き、刻みとぶつからない高さ）
+LEAD_VERSE = [
+    "R:1 D#5:0.5 D5:0.5 C5:1 G4:1", "A#4:1.5 C5:0.5 G4:2",
+    "R:1 C5:0.5 D#5:0.5 F5:1 D#5:1", "D5:3 R:1",
+    "R:1 D#5:0.5 D5:0.5 C5:1 G4:1", "G#4:1.5 A#4:0.5 C5:2",
+    "R:1 D5:0.5 D#5:0.5 F5:1 G5:1", "F5:2 D5:2",
+]
+def verse_lead_bar(i, sec):
+    if sec != "verse":
+        return "R:4"
+    k = sum(1 for j in range(i) if SECBAR[j] == "verse") % 8
+    return LEAD_VERSE[k]
 
 PAD_CH = ["C3:2 C3:2", "C3:2 C3:2", "G#2:4", "G#2:4", "D#3:4", "D#3:4", "A#2:4", "A#2:4"]
 
@@ -145,32 +158,50 @@ parts = []
 if RIG == "old":
     for side, pan in (("左", -0.95), ("右", 0.95)):
         parts.append({"instrument": "distGuitar", "role": f"刻み（{side}）", "volume": 0.09, "pan": pan, "amp": "modernHigh", "notes": part_notes(gtr_bar)})
+elif RIG in ("v3", "v4"):
+    # 2026-10-21 人間「全部採用」の音色で: Aメロの刻み＝左ハム右シングル（loud-mid-hs）、サビ・導入＝B3＋弦の雑音（loud-mid-noise）、
+    # Bメロだけ拍で刻む加工ギターを小さく重ねる（electro-rock-gated）
+    parts.append({"instrument": "distGuitar", "role": "刻み", "volume": 0.1, "pan": 0, "guitarTone": "loud-mid-noise", "notes": part_notes(gtr_bar, only=("intro", "pre", "chorus", "breakdown", "bridge", "outro"))})
+    parts.append({"instrument": "distGuitar", "role": "刻み（ブリッジミュート）", "volume": 0.1, "pan": 0, "guitarTone": "loud-mid-hs", "palmMute": True, "notes": part_notes(gtr_bar, only=("verse",))})
+    parts.append({"instrument": "guitar", "role": "加工ギター（Bメロの味付け）", "volume": 0.035, "pan": 0.3, "guitarTone": "electro-rock-gated",
+                  "notes": " ".join(("C4:2 D#4:2" if k % 2 == 0 else "G4:2 D#4:2") if sec == "pre" else "R:4" for k, sec in enumerate(SECBAR))})
 else:
     # 新しい作り: 歪ませる前の録音（DI）→ ゲート → 低音を締めるブースト → 学習式アンプ（NAM）→ 録音のキャビネット2つを混ぜる
     rig = {"amp": "namDD", "ampGate": 40, "ampTight": 0.6, "ampCabIr": "dd-v30-2x12-mix-tight", "double": {"irR": "dd-v30-2x12-mix-balanced"}}
     parts.append({"instrument": "distGuitar", "role": "刻み", "volume": 0.1, "pan": 0, **rig, "notes": part_notes(gtr_bar, only=("intro", "pre", "chorus", "breakdown", "bridge", "outro"))})
     parts.append({"instrument": "distGuitar", "role": "刻み（ブリッジミュート）", "volume": 0.1, "pan": 0, **rig, "palmMute": True, "notes": part_notes(gtr_bar, only=("verse",))})
 parts += [
-    {"instrument": "bass", "role": "ベース", "volume": 0.18, "pan": 0, "amp": "auto" if RIG == "old" else "bassSplit", "notes": part_notes(bass_bar)},
+    {"instrument": "bass", "role": "ベース", "volume": 0.18, "pan": 0, "amp": "auto" if RIG == "old" else "bassSplit", **({"ampDrive": 0.5} if RIG in ("v3", "v4") else {}), "notes": part_notes(bass_bar)},
     {"instrument": "kick", "role": "キック", "volume": 0.22, "pan": 0, "amp": "auto", "trigger": "tack", "notes": grid(kick_bar)},
     {"instrument": "snare", "role": "スネア", "volume": 0.18, "pan": 0, "amp": "auto", "push": 0.02, "notes": grid(snare_bar)},
     {"instrument": "hihat", "role": "ハイハット", "volume": 0.05, "pan": 0, "amp": "auto", "push": -0.01, "notes": grid(hat_bar)},
     {"instrument": "tom", "role": "タム", "volume": 0.16, "pan": 0, "amp": "auto", "notes": " ".join(tom_bar(i, s) for i, s in enumerate(SECBAR))},
     {"instrument": "crash", "role": "シンバル（クラッシュ・ライド・チャイナ）", "volume": 0.057, "pan": 0, "amp": "auto", "notes": " ".join(cym_bar(i, s) for i, s in enumerate(SECBAR))},
-    {"instrument": "leadGuitar", "role": "リード（サビの旋律）", "volume": 0.13, "pan": 0, "amp": "lead", "noRestrike": True, "reverb": 0.25,
+    {"instrument": "leadGuitar", "role": "リード（サビの旋律）", "volume": 0.13, "pan": 0, **({"amp": "namDD", "ampDrive": 0.6, "ampCabIr": "dd-v30-2x12-mix-balanced", "humanPitch": 0} if RIG in ("v3", "v4") else {"amp": "lead"}), "noRestrike": True, "reverb": 0.25,
      "fx": [{"type": "delay", "beats": 0.75, "mix": 0.18, "feedback": 0.3}], "notes": " ".join(lead_bar(i, s) for i, s in enumerate(SECBAR))},
     {"instrument": "pad", "role": "パッド（サビの厚み）", "volume": 0.07, "pan": 0, "amp": "auto", "reverb": 0.5,
      "sections": {"intro": 0, "verse": 0, "pre": 0.5, "chorus": 1, "bridge": 0.8, "outro": 0.6},
      "notes": " ".join(PAD_CH[i % 8] for i in range(BARS))},
 ]
+if RIG == "v4":
+    # 2026-10-21 点数の比べ（aes-tune）で最も高かった組み合わせ: 刻みはエレクトロロックの音色で -5dB、ドラムは -4dB（PQ 7.57）
+    for q in parts[:2]:
+        q["guitarTone"] = "electro-rock"; q["gainDb"] = -5
+    for q in parts:
+        if q["instrument"] in ("kick", "snare", "hihat", "tom", "crash"): q["gainDb"] = -4
+    parts.append({"instrument": "leadGuitar", "role": "Aメロの旋律（単音）", "volume": 0.08, "pan": -0.35, "guitarTone": "electro-rock", "double": False, "noRestrike": True, "reverb": 0.3,
+                  "fx": [{"type": "delay", "beats": 0.5, "mix": 0.15, "feedback": 0.25}], "notes": " ".join(verse_lead_bar(i, s) for i, s in enumerate(SECBAR))})
 song = {
-    "title": "ラウドロックの試験曲" + ("（今までの作り）" if RIG == "old" else "（新しい作り）"),
+    "title": "ラウドロックの試験曲" + ("（今までの作り）" if RIG == "old" else ("（新しい作り）" if RIG not in ("v3", "v4") else "（採用した音色）")),
     "description": "仮: 作曲ソフトのラウドロックの音づくりを確かめるための試験曲（ドロップC・bpm150）",
     "bpm": 150, "beats": 4, "chords": "Cm Cm Ab Ab Eb Eb Bb Bb", "barsPerChord": 1, "repeats": BARS // 8,
     "autoAccompaniment": False, "feel": "rock", "tone": "metal", "dynamics": True, "human": 0.35,
     "sections": [{"kind": KIND[k], "bars": b} for k, b in SEC],
     "parts": parts,
 }
+if RIG == "v4":
+    # ドラムに部屋の響き（スネアに少し残響、タムを左右に広げる）
+    song["drumMix"] = {"snare": {"reverb": 0.22}, "tom": {"spread": 0.7}, "crash": {"level": 0.85}}
 if RIG != "old":
     song["diGuitar"] = "emily"
     # 2026-10-20 人間「常にしゃくりみたいなビブラートみたいな何かをギターに感じる」: 自動のしゃくり・ギターの自動の揺れ（ビブラート・音程のずれ）を止める
