@@ -8,7 +8,9 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SETS = {"david-fau-casquel": ("dfc", "David Fau Casquel (CC BY 3.0)"),
         # 2026-10-20 ラウドロック: 作者が自分で録ったキャビネットIR（docs/assets-credits.md）
         "darkdays": ("dd", "Dark Days - https://darkdays.net (CC BY 4.0)"),
-        "jester-dyne": ("jd", "Jester Dyne Productions (CC0)")}
+        "jester-dyne": ("jd", "Jester Dyne Productions (CC0)"),
+        # 2026-10-21 クリーン〜クランチ向けの箱（機種は書かれていない。耳で選ぶ）
+        "adventure-kid": ("ak", "Kristoffer Ekstrand / Adventure Kid Research & Technology (CC BY 4.0)")}
 N = 4096
 lines = ["// 自動生成（tools/soundfont/build-cab-irs.py）。手で書きかえない。",
          "// 録音のキャビネットIR。出どころと規約は docs/assets-credits.md と assets-src/ir/*/README.txt。", "",
