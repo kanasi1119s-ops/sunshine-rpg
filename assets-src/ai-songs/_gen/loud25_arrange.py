@@ -121,7 +121,11 @@ def build(spec):
             lo, hi = midi(conf.get("lo", "A4")), midi(conf.get("hi", "A5"))
             if conf.get("up") and gn == len(groups) - 1 and len(groups) > 1:
                 lo += conf["up"]; hi += conf["up"]
-            if conf.get("mode") == "free":
+            if conf.get("notes"):
+                # 2026-10-22 人間「この曲没で旋律から作り直して」→ 手で書いた旋律（1小節ずつの音の並び）をそのまま使う。2回目以降は notes2 があればそちら
+                seq = conf["notes2"] if gn > 0 and conf.get("notes2") else conf["notes"]
+                rows = [seq[j] if j < len(seq) else S.rest() for j in range(len(bars_idx))]
+            elif conf.get("mode") == "free":
                 rows = S.melody(bars_idx, conf["rhythm"], lo, hi, peak_bar=conf.get("peak"), var=gn * 13 + conf.get("seed", 0))
             else:
                 rows = S.hook_melody(bars_idx, conf["rhythm"], lo, hi, var=gn)
