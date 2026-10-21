@@ -295,8 +295,8 @@ export function expandDoubleDetune(p: AiPart, spec: DoubleDetuneSpec | true): Ai
  * 音程は ±2 セントだけ（doubleDetune の ±8 セントのような「うなり」を出さない）。右は別のIR・少し暗い音色・少し浅い歪み（別のマイク・別の弾き方）。
  */
 // 歪ませる前の録音ごとの大きさの差（シングルコイルはハムバッカーより出力が小さい）。左右で違う録音を使うとき、右の音量をそろえる。
-//   2026-10-21 試聴セット「左ハム右シングル」で、ストローク・アルペジオ・カッティングの右が 3.5〜4.2dB 小さかったため
-const DI_LEVEL: Record<string, number> = { emily: 1, fsbs: 1.3, shiny: 1.15, gretsch: 1.1, hofner: 1.1 };
+//   2026-10-21 試聴セット「左ハム右シングル」で、ストローク・アルペジオ・カッティングの右（シングルコイル）が約 1.8dB 大きかったため（B3 の同じ設定との差）
+const DI_LEVEL: Record<string, number> = { emily: 1, fsbs: 0.8 };
 export function expandDoubleTrack(p: AiPart, spec: true | { spread?: number; irR?: string; timing?: number; diR?: AiPart["di"] }): AiPart[] {
   const s = spec === true ? {} : spec;
   const spread = clamp(s.spread === undefined ? 1 : Number(s.spread), 0, 1);
