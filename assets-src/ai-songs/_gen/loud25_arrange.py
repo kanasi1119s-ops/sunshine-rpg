@@ -144,7 +144,8 @@ def build(spec):
         if k == n - 1 and (sid + "_end") in B: motif = B[sid + "_end"]
         elif k == n - 1 and (typ(sid) + "_end") in B: motif = B[typ(sid) + "_end"]
         brow.append(S.bass_bar(motif, ch, S.nxt(i)))
-    bpart = {"instrument": "bass", "role": "ベース（旋律）", "volume": 0.19, "pan": 0, "amp": "bassGrind", "ampDrive": B.get("drive", 0.75), "notes": S.join(brow, "ベース")}
+    # 2026-10-21 人間「メロディベースちょっと強いかも」: 0.19 → 0.15（約 -2dB）
+    bpart = {"instrument": "bass", "role": "ベース（旋律）", "volume": 0.15, "pan": 0, "amp": "bassGrind", "ampDrive": B.get("drive", 0.75), "notes": S.join(brow, "ベース")}
     if B.get("style") == "jazz":
         # 2026-10-21 人間「ジャズの弾き方でグルーヴ乗った感じのも欲しい」「一音一音はっきりするといいかも」: 弱すぎる音を使わず、音と音を少し離す
         bpart.update({"role": "ベース（ジャズの弾き方）", "sustain": 0.8, "notes": bpart["notes"].replace(",", "")})
