@@ -802,11 +802,13 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   // 2026-10-21 人間「歪強くて少し割れてるような感じに聞こえた部分があるかも」「1と2両方試そう」:
   //   和音（ストローク・カッティング）を歪みに通すと、音どうしがぶつかって割れたように聞こえる。本物のギタリストと同じく、和音のパートはアンプへの入力を下げる。聞き比べ（直す前・6割・4割）で人間「4割だね」→ 標準 0.4。
   //   パートに chordGain（0.2〜1）を書けばその値、chordGain: 1 で下げない
-  const DIST_AMPS = new Set(["namA", "namB", "namDD", "overdrive", "distortion", "metal", "prs", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "loudmetal", "loudrock", "lead", "modernHigh"]);
+  const DIST_AMPS = new Set(["namA", "namB", "namDD", "namJVM", "overdrive", "distortion", "metal", "prs", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "loudmetal", "loudrock", "lead", "modernHigh"]);
   if (Array.isArray(song.parts)) song.parts = song.parts.map((p) => {
     if (!p || !p.strum || typeof p.amp !== "string" || !DIST_AMPS.has(p.amp)) return p;
     const k = Number.isFinite(Number(p.chordGain)) && p.chordGain !== undefined ? Math.max(0.2, Math.min(1, Number(p.chordGain))) : 0.4;
-    return k >= 1 ? p : ({ ...p, ampDrive: Math.round((Number(p.ampDrive) > 0 ? Number(p.ampDrive) : 1) * k * 1000) / 1000 } as AiPart);
+    // 入力を下げた分だけ音が小さくなり、ゲートが音の途中で閉じてバタつく（試聴セットのカッティングで見つかった）ので、和音のパートはゲートも浅くする
+    const gate = Number(p.ampGate) > 0 ? { ampGate: Math.round(Number(p.ampGate) * k) } : {};
+    return k >= 1 ? p : ({ ...p, ...gate, ampDrive: Math.round((Number(p.ampDrive) > 0 ? Number(p.ampDrive) : 1) * k * 1000) / 1000 } as AiPart);
   });
   const partList = Array.isArray(song.parts) ? expandParts(song.parts, expandCtx, warnings, DRUMS) : song.parts;
   const parts: Track[] = [];

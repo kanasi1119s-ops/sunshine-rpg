@@ -69,6 +69,11 @@ export const GUITAR_TONES: Record<string, GuitarTone> = {
       "2026-10-21 パワーコードの聞き比べ B3 で人間「b3がめちゃくちゃいい」（学習式アンプのあとの EQ が効くよう直した版）。",
     amp: "namDD", ampDrive: 0.45, ampGate: 20, ampTight: 0.6, ampTightHz: 140, ampCabIr: "dd-v30-2x12-mix-balanced", double: { irR: "jd-greenback-4x12-01" }, fx: CLARITY_EQ, ...LOUD_BASE,
   },
+  "marshall-mid": {
+    label: "マーシャル系の中くらいの歪み（中域が前に出る）",
+    description: "マーシャル JVM410H の録音データから学習したアンプ（namJVM、試用中）。B3（loud-mid）と同じ作り（ゲート浅め・低音を締めるブースト・左 V30／右 Greenback・300Hz を削り 1.5kHz を少し出す）。2026-10-21 試聴セットで人間「どっちも入れて」。曲を公開するときはデータの作者のクレジットが必要（docs/assets-credits.md）。",
+    amp: "namJVM", ampDrive: 1.0, ampGate: 15, ampTight: 0.5, ampTightHz: 120, ampCabIr: "dd-v30-2x12-mix-balanced", double: { irR: "jd-greenback-4x12-01" }, fx: CLARITY_EQ, ...LOUD_BASE,
+  },
   "loud-builtin": {
     label: "ラウドロック C: 内蔵アンプの太い歪み",
     description: "作曲ソフト内蔵の loudrock（中域が厚い太い歪み）に、録音のIR（左 V30／右 Greenback）とダブルトラック。外部のアンプのクレジット不要（IR は Dark Days のため必要）。",
