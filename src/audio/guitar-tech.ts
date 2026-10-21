@@ -588,7 +588,8 @@ function stringNoisePart(p: AiPart): AiPart | null {
   for (let k = 0; k < ev.length; k++) {
     const e = ev[k];
     if (e.at < at - 1e-6) continue;
-    if (e.at > at + 1e-6) out.push(tokStr("R", Math.round((e.at - at) * 1000) / 1000));
+    // 長い休みは 8 拍ずつに分ける（1つの音の長さには上限がある）
+    for (let rest = Math.round((e.at - at) * 1000) / 1000; rest > 1e-6; rest = Math.round((rest - 8) * 1000) / 1000) out.push(tokStr("R", Math.min(8, rest)));
     const nextAt = k + 1 < ev.length ? ev[k + 1].at : e.at + 0.25;
     const d = Math.max(0.05, Math.min(0.25, Math.round((nextAt - e.at) * 1000) / 1000));
     out.push(tokStr(e.key, d, ","));

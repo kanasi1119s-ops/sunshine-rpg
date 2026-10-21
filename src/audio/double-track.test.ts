@@ -28,6 +28,9 @@ describe("弦の雑音（2026-10-21）", () => {
     expect(String(n.notes)).toContain("G2:");
     expect(String(n.notes)).toContain("C2:");
     expect((list[0] as { stringNoise?: unknown }).stringNoise).toBeUndefined();
+    // 長い休みは 8 拍以下に分かれる
+    const far = expandGuitarTech({ ...p, notes: "R:8 R:8 R:8 E2:1 R:1 C3:1" } as unknown as AiPart, { bpm: 120, beatsPerBar: 4, totalBeats: 30, chordBars: [], tonic: null, scale: null }, []);
+    for (const tok of String(far[1].notes).split(" ")) expect(Number(tok.split(":")[1].replace(/[^0-9.]/g, ""))).toBeLessThanOrEqual(8);
   });
 });
 

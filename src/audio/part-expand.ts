@@ -294,6 +294,9 @@ export function expandDoubleDetune(p: AiPart, spec: DoubleDetuneSpec | true): Ai
  * MIDI の書き出しはチャンネルごとに別のばらつき（midi-export の trackSeed）を使うので、左右を別チャンネルにし、ずれ（humanTiming）を大きくする。
  * 音程は ±2 セントだけ（doubleDetune の ±8 セントのような「うなり」を出さない）。右は別のIR・少し暗い音色・少し浅い歪み（別のマイク・別の弾き方）。
  */
+// 歪ませる前の録音ごとの大きさの差（シングルコイルはハムバッカーより出力が小さい）。左右で違う録音を使うとき、右の音量をそろえる。
+//   2026-10-21 試聴セット「左ハム右シングル」で、ストローク・アルペジオ・カッティングの右が 3.5〜4.2dB 小さかったため
+const DI_LEVEL: Record<string, number> = { emily: 1, fsbs: 1.3, shiny: 1.15, gretsch: 1.1, hofner: 1.1 };
 export function expandDoubleTrack(p: AiPart, spec: true | { spread?: number; irR?: string; timing?: number; diR?: AiPart["di"] }): AiPart[] {
   const s = spec === true ? {} : spec;
   const spread = clamp(s.spread === undefined ? 1 : Number(s.spread), 0, 1);
@@ -306,7 +309,7 @@ export function expandDoubleTrack(p: AiPart, spec: true | { spread?: number; irR
   const humanTiming = (Number(p.humanTiming) || 1) * timing;
   return [
     { ...base, role: `${p.role ?? p.instrument}・L`, volume: vol, pan: clamp(pan0 - spread, -1, 1), detune: -2, humanTiming } as AiPart,
-    { ...base, role: `${p.role ?? p.instrument}・R`, volume: vol, pan: clamp(pan0 + spread, -1, 1), detune: 2, humanTiming,
+    { ...base, role: `${p.role ?? p.instrument}・R`, volume: s.diR && s.diR !== p.di ? Math.round(vol * (DI_LEVEL[s.diR] ?? 1) / (DI_LEVEL[p.di ?? "emily"] ?? 1) * 1000) / 1000 : vol, pan: clamp(pan0 + spread, -1, 1), detune: 2, humanTiming,
       ...(irR ? { ampCabIr: irR } : {}), ...(s.diR ? { di: s.diR } : {}), ampTone: (Number(p.ampTone) || 0) - 0.8, ...(Number(p.ampDrive) > 0 ? { ampDrive: Number(p.ampDrive) * 0.92 } : { ampDrive: 0.92 }) } as AiPart,
   ];
 }
