@@ -400,7 +400,9 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     // シンバルは、たたいたら次にたたくまで（最長 8 拍）鳴り続ける。すぐに止めない（人間の指摘 2026-10-14）
     // ドラム全般も同じ: 半分で切らず、次に同じ音をたたくまで（シンバル最長 8 拍、ほかの太鼓は最長 2 拍）鳴らす。閉じたハイハットだけ従来どおり短い
     const cymbalStarts: number[] = [];
-    if (isDrum && inst !== "hihat") { let bb = 0; for (const q of track.notes) { if (q.note !== REST) cymbalStarts.push(bb); bb += q.durationBeats; } }
+    // 2026-10-21 人間「シンバル系なりとか少し伸ばして」: 次に「同じシンバル」をたたくまで鳴らす（クラッシュのあとにライドを刻んでも、クラッシュは止めない）
+    const cymbalNotes: string[] = [];
+    if (isDrum && inst !== "hihat") { let bb = 0; for (const q of track.notes) { if (q.note !== REST) { cymbalStarts.push(bb); cymbalNotes.push(inst === "crash" ? (q.note[0] ?? "C").toUpperCase() : "x"); } bb += q.durationBeats; } }
     let cymbalIdx = 0;
     let beat = 0;
     for (const n of track.notes) {
@@ -458,7 +460,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
       // 音の長さのばらつき（人の弾き方）: 短い音は、少し短く切れたり、つながったり
       if (Hp > 0 && drumNote === undefined && n.gate === undefined && n.durationBeats <= 1) lenScale *= 1 - 0.14 * Hp * rnd(startBeat * 3.1 + trackSeed);
       let cymbalLen: number | undefined;
-      if (isDrum && inst !== "hihat") { const ci = cymbalStarts.indexOf(startBeat, cymbalIdx); if (ci >= 0) cymbalIdx = ci; const nxt = cymbalStarts[cymbalIdx + 1]; const cap = inst === "crash" ? 8 : 2; cymbalLen = Math.round(Math.min(cap, nxt !== undefined ? Math.max(inst === "crash" ? 0.5 : 0.1, nxt - startBeat) : cap) * PPQ); }
+      if (isDrum && inst !== "hihat") { const ci = cymbalStarts.indexOf(startBeat, cymbalIdx); if (ci >= 0) cymbalIdx = ci; let nj = cymbalIdx + 1; while (nj < cymbalStarts.length && cymbalNotes[nj] !== cymbalNotes[cymbalIdx]) nj++; const nxt = cymbalStarts[nj]; const cap = inst === "crash" ? 8 : 2; cymbalLen = Math.round(Math.min(cap, nxt !== undefined ? Math.max(inst === "crash" ? 0.5 : 0.1, nxt - startBeat) : cap) * PPQ); }
       const len = cymbalLen ?? Math.max(20, Math.round((n.open && inst === "hihat" ? Math.max(n.durationBeats, 0.5) : n.durationBeats) * PPQ * lenScale * (drumNote === undefined ? n.gate ?? 1 : 1)));
       const push = (pitch: number, at: number, vel: number, length: number, target: { channel: number; list: Ev[] } = { channel, list }): void => {
         const p = Math.max(0, Math.min(127, pitch));

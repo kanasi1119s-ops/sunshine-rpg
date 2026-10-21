@@ -363,7 +363,7 @@ def hat_bar(i):
             return "....x.x.x.x.x.x."            # 1拍目はクラッシュ
         if k == n - 1:
             return "x.x.x.x........."            # 後ろ2拍はタム
-        return "x.x.x.x.x.x.x.x." if k % 4 != 3 else "x.x.x.x.x.x.O..."
+        return "x.x.x.x.x.x.x.x." if k % 4 != 3 else "....x.x.x.x.O..."
     if sec == "pre" and 4 <= k < 7:
         return "x.x.x.x.x.x.x.x." if k != 4 and k != 6 else "....x.x.x.x.x.x."
     # Cメロ後半はライドで刻む（ハイハットは休む）
@@ -392,7 +392,9 @@ def cym_bar(i):
     if sec == "introB":
         return "C2:4!" if k % 4 == 0 else ("B2:0.75! B2:0.75 B2:0.5 R:2" if k % 4 == 3 else "D2:1 D2:1 D2:1 D2:1")
     if sec == "verse":
-        return "C2:4!" if first or k == 8 else "R:4"
+        if first or k == 8:
+            return "C2:4!"
+        return "B2:1! R:3" if k % 4 == 3 and k != n - 1 else "R:4"   # 開く小節の頭にチャイナ
     if sec == "pre":
         return "C2:4!" if k in (0, 4) else ("A2:1 R:3" if k == 6 else "R:4")
     if sec == "chorus":
@@ -400,6 +402,8 @@ def cym_bar(i):
             return "C2:1! D2:0.5 D2:0.5 D2:0.5 D2:0.5 D2:0.5 D2:0.5"
         if k == 11:
             return "C2:2! C2:2!"                 # E メジャーで空が開くところ
+        if k % 4 == 2:
+            return "B2:1! D2:0.5 D2:0.5 D2:0.5 D2:0.5 D2:0.5 B2:0.5!"   # チャイナのアクセント（頭と、次の小節への食い）
         return "D2:0.5! D2:0.5 D2:0.5 D2:0.5 D2:0.5! D2:0.5 D2:0.5 D2:0.5"
     if sec == "sweep":
         return "C2:4!" if k % 4 == 0 else "B2:1 B2:1 B2:1 B2:1"
@@ -416,6 +420,8 @@ def cym_bar(i):
             return "R:4"   # タム回し
         if k % 4 == 0:
             return "C2:4!"
+        if k < 14 and k % 4 == 2:
+            return "B2:1! D2:0.5 D2:0.5 B2:1! D2:0.5 D2:0.5"
         return "D2:0.5 D2:0.5 D2:0.5 D2:0.5 D2:0.5 D2:0.5 D2:0.5 D2:0.5" if k < 14 else ("B2:0.5! B2:0.5 B2:0.5! B2:0.5 B2:0.5! B2:0.5 B2:0.5! B2:0.5" if k == 14 else "C2:4!")
     if sec == "outro":
         return "C2:4!" if k == 0 else "R:4"
@@ -491,10 +497,12 @@ def riser_bar(i):
     nxt_sec = BARS[i + 2][0] if i + 2 < NB else None
     if BARS[i + 1][2] == 0 if i + 1 < NB else False:
         pass
-    # 次のセクションがサビ／導入／最後のサビになる直前の2小節
-    if i + 2 < NB and BARS[i + 2][2] == 0 and BARS[i + 2][0] in ("chorus", "intro", "introB", "breakdown") and k == n - 2:
-        return "C4:8"
-    if i + 1 < NB and BARS[i + 1][2] == 0 and BARS[i + 1][0] in ("chorus", "intro", "introB", "breakdown") and k == n - 1:
+    # 次のセクションがサビ／導入／ブレイクダウンになる直前の3小節（C4＝4秒のライザー。172bpm の 12 拍＝4.2秒で、頂点が次の頭に来る）
+    #   2026-10-21: 8 拍（2.8秒）では 4秒のライザーが頂点の前で切れて、ほとんど聞こえなかった
+    TARGET = ("chorus", "intro", "introB", "breakdown")
+    if i + 3 < NB and BARS[i + 3][2] == 0 and BARS[i + 3][0] in TARGET and k == n - 3:
+        return "C4:12"
+    if any(i + d < NB and BARS[i + d][2] == 0 and BARS[i + d][0] in TARGET and k == n - d for d in (1, 2)):
         return None  # 前の小節の 8 拍に含まれる
     return "R:4"
 def riser_part():
@@ -514,16 +522,14 @@ parts = [
      "fx": [{"type": "eq", "low": -2, "mid": 3, "midHz": 1800, "high": 1}, {"type": "delay", "beats": 0.75, "mix": 0.12, "feedback": 0.2}, {"type": "plate", "mix": 0.12}],
      "notes": join([tech_bar(i) for i in range(NB)])},
     {"instrument": "bass", "role": "ベース（ジャズっぽく）", "volume": 0.18, "pan": 0, "amp": "bassSplit", "ampDrive": 0.4, "notes": join([bass_bar(i) for i in range(NB)])},
-    {"instrument": "kick", "role": "キック（ツーバスはところどころ）", "volume": 0.22, **drum, "trigger": "tack", "notes": grid(kick_bar)},
+    {"instrument": "kick", "role": "キック（ツーバスはところどころ）", "volume": 0.22, **drum, "trigger": "punch", "notes": grid(kick_bar)},
     {"instrument": "snare", "role": "スネア", "volume": 0.18, **drum, "push": 0.02, "notes": grid(snare_bar)},
     {"instrument": "hihat", "role": "ハイハット", "volume": 0.05, **drum, "push": -0.01, "notes": grid(hat_bar)},
     {"instrument": "tom", "role": "タム", "volume": 0.16, **drum, "notes": join([tom_bar(i) for i in range(NB)])},
     {"instrument": "crash", "role": "シンバル（クラッシュ・ライド・チャイナ）", "volume": 0.057, **drum, "notes": join([cym_bar(i) for i in range(NB)])},
     # 2026-10-21 人間「シンセの音をもうちょっと現代的な感じで空間を感じるように」: ガラスのプラック（長い尾）＋ピンポンディレイ＋左右の広げ＋ホール。キックで少し凹ませる
-    {"instrument": "lead", "role": "シンセのアルペジオ（左）", "patch": "glassPluck", "volume": 0.055, "breath": True, "pan": -0.5, "reverb": 0.45, "duck": 0.2,
-     "fx": [{"type": "pingpong", "beats": 0.75, "mix": 0.3, "feedback": 0.42}, {"type": "reverb", "mix": 0.25}], "notes": join([arp_bar(i) for i in range(NB)])},
-    {"instrument": "lead", "role": "シンセのアルペジオ（右・逆向き）", "patch": "glassPluck", "volume": 0.05, "breath": True, "pan": 0.5, "reverb": 0.45, "duck": 0.2,
-     "fx": [{"type": "pingpong", "beats": 0.5, "mix": 0.3, "feedback": 0.42}, {"type": "reverb", "mix": 0.25}], "notes": join([arp_bar(i, True) for i in range(NB)])},
+    # 2026-10-21 人間「シンセのふわふわ強いかな。あれならキーボードに変えよう」: アルペジオと和音をピアノ（右手・左手）に
+    {"instrument": "piano", "role": "キーボード（右手のアルペジオ）", "volume": 0.09, "pan": 0.2, "reverb": 0.22, "notes": join([arp_bar(i) for i in range(NB)])},
 ]
 # 2026-10-21 全弦開放のパートにチャンネルを空けるため、パッド（halo）はスーパーソーの壁が弱く鳴らす形にまとめた
 if False:
@@ -548,12 +554,16 @@ def wall_part(v):
     toks = []
     for i in range(NB):
         nn = wall_voice(i, v)
-        toks.append((f"{nn[:-1]}:4," if nn.endswith(",") else f"{nn}:4") if nn else "R:4")
+        if not nn:
+            toks.append("R:4")
+        elif nn.endswith(","):
+            toks.append(f"{nn[:-1]}:4,")                    # 静かな場面は全音符で弱く
+        else:
+            toks.append(f"{nn}:1.5! {nn}:1 {nn}:1.5")       # キーボードらしく、刻みと同じシンコペーションで弾く
     return join(toks)
 for v in range(PAD_VOICES):
     # 3つの声を左・中・右に置き、ダブラーで左右に二重にする（チャンネルは3つ使う）
-    parts.append({"instrument": "pad", "role": f"スーパーソーの壁 {v + 1}", "patch": "supersawPad", "volume": 0.04, "pan": [-0.45, 0, 0.45][v], "reverb": 0.4, "duck": 0.35,
-                  "fx": [{"type": "doubler", "mix": 0.5, "depth": 0.3, "ms": 18}, {"type": "eq", "low": -4, "mid": 0, "midHz": 1000, "high": 1.5}], "notes": wall_part(v)})
+    parts.append({"instrument": "piano", "role": f"キーボード（和音）{v + 1}", "volume": 0.07, "pan": -0.15, "reverb": 0.22, "notes": wall_part(v)})
 # 2026-10-21 チャンネルが足りないので、サビの旋律の重ね（sawLead）は外す（リードの1オクターブ上が同じ役目をする）
 if False: parts.append({"instrument": "lead", "role": "サビの旋律の重ね（明るいシンセ）", "patch": "sawLead", "volume": 0.04, "pan": 0, "reverb": 0.5,
               "fx": [{"type": "pingpong", "beats": 0.5, "mix": 0.25, "feedback": 0.35}, {"type": "widen", "mix": 0.6}],
@@ -562,8 +572,8 @@ OPEN = ["B1", "F#2", "B2", "E3", "G#3", "C#4"]
 for j, nn in enumerate(OPEN):
     notes = join([f"{nn}:4!" if (BARS[i][0] == "open" and BARS[i][2] == 0) else "R:4" for i in range(NB)]).replace(f"{nn}:4! R:4", f"{nn}:8! ", 1).replace("  ", " ")
     parts.append({"instrument": "distGuitar", "role": f"全弦開放（{j + 1}弦目）", "volume": 0.07, "pan": 0, "guitarTone": "electro-rock", "double": False,
-                  "ampDrive": 0.25, "powerChord": False, "sustain": 2, "reverb": 0.4, "push": round(j * 12 / 1000 * BPM / 60, 3), "notes": notes})
-parts.append({"instrument": "pad", "role": "ライザー（場面の前の盛り上げ）", "patch": "fxRiser", "volume": 0.05, "pan": 0, "notes": riser_part()})
+                  "ampDrive": 0.25, "ampGate": 0, "powerChord": False, "sustain": 2, "reverb": 0.4, "push": round(j * 12 / 1000 * BPM / 60, 3), "notes": notes})
+parts.append({"instrument": "pad", "role": "ライザー（場面の前の盛り上げ）", "patch": "fxRiser", "volume": 0.09, "pan": 0, "notes": riser_part()})
 
 chords = " ".join(simple(b[1]) for b in BARS)
 song = {
@@ -574,6 +584,8 @@ song = {
     "sections": [{"kind": KIND[s], "bars": n} for s, _, n, _ in SEC],
     "modulate": {"at": "lastChorus", "semitones": 1},
     "diGuitar": "emily", "autoScoop": False, "guitarWobble": False,
+    # 2026-10-21 人間「シンバル系なりとか少し伸ばして鋭い音」「バスドラはトリガー入れて重い音に」
+    "drumMix": {"kick": {"level": 1.15}, "crash": {"level": 1.1}},
     "parts": parts,
 }
 json.dump(song, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
