@@ -184,6 +184,85 @@ class Song:
             out.append(" ".join(toks))
         return out
 
+    # ── 動機（フック）からの旋律（2026-10-21 人間「曲として成り立ってない」「自動でいいんだよただ、時間かけようよ」）──
+    #   くじ引きで1小節ずつ作るのをやめ、曲ごとに1つの「2小節の動機」を作って、A（動機）→ A'（3度上へ追いかける）→ B（伸ばして盛り上げる）→ C（動機の頭＋主音に落ち着く）
+    #   の8小節で組み立てる。同じ曲のどのセクションでも同じ動機を使う（導入でサビのフックを先に聞かせられる）
+    def motif_contour(self, n):
+        """動機の音の動き（音階の段の差）。曲の種（seed）だけで決まる。順次進行が中心で、跳躍は1回まで・跳んだら反対へ戻る"""
+        rng = random.Random(self.s["seed"] * 977 + 5)
+        shapes = [[0, 1, 2, 1, 0, -1, 0, 2, 1], [0, 2, 1, 0, 1, 3, 2, 1, 0], [0, -1, 0, 2, 4, 3, 2, 1, 2], [0, 0, 1, 2, 2, 1, 0, -1, 0],
+                  [0, 2, 4, 3, 2, 0, 1, 2, 1], [0, 1, 0, -2, -1, 0, 2, 1, 0], [0, 3, 2, 1, 2, 4, 3, 2, 1], [0, 1, 2, 4, 2, 1, 0, 1, 2]]
+        sh = rng.choice(shapes)
+        out = [sh[min(k, len(sh) - 1)] if k < len(sh) else sh[-1] + ((k - len(sh)) % 2) for k in range(n)]
+        return out
+    def snap(self, m, ch, strong, sc):
+        if strong:
+            ct = [x for x in sc if x % 12 in ch.pcs()]
+            return min(ct, key=lambda x: (abs(x - m), x)) if ct else m
+        if any((m - p) % 12 == 1 for p in ch.pcs()):   # 和音の半音上（ぶつかる音）は1段下げる
+            k = sc.index(m) if m in sc else 0
+            return sc[max(0, k - 1)]
+        return m
+    def realize(self, rhythm, ch, sc, start_k, steps):
+        toks = []; pos = 0.0; out_last = None
+        for q, d in enumerate(rhythm):
+            k = max(0, min(len(sc) - 1, start_k + steps[q % len(steps)]))
+            strong = (abs(pos - round(pos)) < 1e-6 and int(round(pos)) % 2 == 0) or d >= 1
+            m = self.snap(sc[k], ch, strong, sc)
+            toks.append(f"{name(m)}:{d:g}" + ("!" if q == 0 else ""))
+            out_last = m; pos += d
+        return " ".join(toks), out_last
+    def hook_melody(self, bars_idx, rhythms, lo, hi, var=0):
+        sc = self.scale_in(lo, hi)
+        r = rhythms
+        mot = [r[0], r[1 % len(r)]]
+        n_mot = len(mot[0]) + len(mot[1])
+        cont = self.motif_contour(n_mot)
+        contrast = r[2 % len(r)]; cad = r[-1]
+        # 動機の出発点: 音域の下から 3 割あたりにある、最初の小節のコードの音
+        ch0 = self.bars[bars_idx[0]][2]
+        cands = [k for k, m in enumerate(sc) if m % 12 in ch0.pcs()]
+        target = int(len(sc) * 0.3)
+        b0 = min(cands, key=lambda k: abs(k - target)) if cands else target
+        tonic_pcs = (self.key, (self.key + MODES[self.mode][2]) % 12)
+        out = []
+        n = len(bars_idx)
+        for p in range(0, n, 2):
+            role = ["A", "A2", "B", "C"][(p // 2) % 4]
+            cyc2 = (p // 8) % 2   # 16小節のときの後半（B を少し高く）
+            pair = bars_idx[p:p + 2]
+            if role in ("A", "A2"):
+                start = b0 + (2 if role == "A2" else 0)
+                for j, i in enumerate(pair):
+                    seg = cont[:len(mot[0])] if j == 0 else cont[len(mot[0]):]
+                    t, _ = self.realize(mot[j], self.bars[i][2], sc, start, seg)
+                    out.append(t)
+            elif role == "B":
+                top = b0 + 4 + cyc2 + (var % 2)
+                for j, i in enumerate(pair):
+                    steps = [-q for q in range(len(contrast))] if j == 1 else [0, 1, 0, -1, 1, 0][:len(contrast)]
+                    t, _ = self.realize(contrast, self.bars[i][2], sc, top - (2 if j == 1 else 0), steps)
+                    out.append(t)
+            else:   # C: 動機の1小節目＋落ち着く小節
+                i0 = pair[0]
+                t, last = self.realize(mot[0], self.bars[i0][2], sc, b0, cont[:len(mot[0])])
+                out.append(t)
+                if len(pair) > 1:
+                    i1 = pair[1]; ch = self.bars[i1][2]
+                    toks = []; pos = 0.0; cur = last
+                    for q, d in enumerate(cad):
+                        last_note = q == len(cad) - 1
+                        if last_note:
+                            stable = [m for m in sc if m % 12 in ch.pcs() and m % 12 in (ch.root, (ch.root + ch.third()) % 12)]
+                            m = min(stable, key=lambda x: abs(x - cur)) if stable else cur
+                        else:
+                            k = sc.index(min(sc, key=lambda x: abs(x - cur)))
+                            m = self.snap(sc[max(0, k - 1)], ch, True, sc)
+                        toks.append(f"{name(m)}:{d:g}" + ("!" if q == 0 else ""))
+                        cur = m; pos += d
+                    out.append(" ".join(toks))
+        return out[:n]
+
     # ── ベース（曲ごとの動機。度数の記号で書く）──
     # 記号: R 根音・5・8（オクターブ）・3・7・4・9（2度）・6・b（次のコードの根音へ半音で寄る）・n（次の根音）・- 休み。長さは「記号:拍」。印 ! ' は旋律と同じ
     def bass_tone(self, ch, nxtch, sym, lo, hi):

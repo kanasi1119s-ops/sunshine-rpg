@@ -15,6 +15,49 @@ def typ(sid):
 def cyc(lst, k):
     return lst[k % len(lst)]
 
+def smooth(pat, steps, res):
+    """刻みを和音の鳴らしに変える（2026-10-21 人間「刻みとミュート系がいやに聞きにくい」）。
+    16分の細かい刻みは8分にまとめ、短く切る音（m）はやめて次の音までのばす。1拍より短い休みはつなげる。強い音（X）はそのまま"""
+    if res != 0.25 or steps % 2:
+        return pat.replace("m", "x")
+    out = []
+    for j in range(0, steps, 2):
+        a, b = pat[j], pat[j + 1]
+        hit = next((c for c in (a, b) if c not in "-="), None)
+        if hit is None:
+            out.append(a + b if a in "-=" else "==")
+        else:
+            out.append(("X" if "X" in (a, b) else ("x" if hit == "m" else hit)) + "=")
+    q = "".join(out)
+    # 8分で続けて刻む小節（6回以上）は、拍の頭と強い音だけ残して、のばす（ジャーン、ジャーンと和音を鳴らす）
+    if sum(c not in "-=" for c in q) >= 6:
+        q = "".join(c if (c in "-=" or j % 4 == 0 or c == "X") else "=" for j, c in enumerate(q))
+        # 頭の休みのあとに続く「=」は休みのまま
+    # 1拍（4文字）より短い休みは、前の音をのばしてつなぐ
+    r = list(q); j = 0
+    while j < steps:
+        if r[j] == "-":
+            k = j
+            while k < steps and r[k] == "-": k += 1
+            if k - j < 4 and j > 0:
+                for t in range(j, k): r[t] = "="
+            j = k
+        else:
+            j += 1
+    return "".join(r)
+
+def intro_hook_conf(spec):
+    """導入に旋律も技もないとき、サビの旋律の設定（同じ動機）を導入にも使う。リフで始める曲（rhythm の intro_riff: True）は除く"""
+    secs = spec["lead"]["sections"]
+    if any("intro" in k.split(",") for k in secs) or "intro" in spec.get("tech", {}) or spec["rhythm"].get("intro_riff"):
+        return None
+    if not any(sid == "intro" for sid, _, _, _ in spec["form"]):
+        return None
+    for k, c in secs.items():
+        if any(x.startswith("chorus") for x in k.split(",")):
+            return dict(c)
+    return None
+
 def build(spec):
     S = Song(spec)
     NB, steps, beats, n16 = S.NB, S.steps, S.beats, S.n16
@@ -23,15 +66,23 @@ def build(spec):
     parts = []
 
     # ── 刻み ──
+    hook_intro = intro_hook_conf(spec) is not None
     def riff_for(i):
         sid, kind, ch, k, n, no = S.bars[i]
         t = typ(sid)
+        # 2026-10-21 人間「なんでもブリッジの刻み入れればいいってもんじゃない。最初が聞きにくくてしょうがない」
+        if t == "intro" and hook_intro and not sid.startswith("open"):
+            return "X" + "=" * (steps - 1)            # 導入: 伸ばした和音の上でサビのフックを聞かせる
+        if t == "verse" and k < n // 2 and not R.get("verse_keep"):
+            a = max(2, int(steps * 0.625)); b = max(1, int(steps * 0.25))
+            return R.get("verse_open") or ("X" + "=" * (a - 1) + "x" + "=" * (b - 1) + "-" * (steps - a - b))   # Aメロ前半: すき間のある和音
         pats = R.get(sid) or R.get(t)
         if pats is None: return None
         if isinstance(pats, str): pats = [pats]
         pt = cyc(pats, k)
-        return None if pt == "-" else pt
-    pm_types = set(R.get("pm", []))
+        if pt == "-": return None
+        return pt if R.get("keepChug") else smooth(pt, steps, S.res)
+    pm_types = set(R.get("pm", [])) if R.get("keepChug") else set()   # ブリッジミュートのパートは使わない（人間「刻みとミュート系がいやに聞きにくい」）
     open_rows, pm_rows = [], []
     for i in range(NB):
         sid, kind, ch, k, n, no = S.bars[i]
@@ -53,7 +104,11 @@ def build(spec):
     # ── 旋律（リード・バイオリンなど）──
     L = spec["lead"]
     mel_rows = {inst: [S.rest()] * NB for inst in ("lead", "violin", "keys", "synth", "cello")}
-    for sec_ids, conf in L["sections"].items():
+    msecs = dict(L["sections"])
+    ih = intro_hook_conf(spec)
+    if ih is not None:
+        msecs["intro"] = ih   # 導入でサビのフックを先に聞かせる（同じ動機）
+    for sec_ids, conf in msecs.items():
         idx = [i for i in range(NB) if S.sec_of(i) in sec_ids.split(",")]
         if not idx: continue
         # 同じ種類のセクションごとに作る（2回目以降は var を変える）
@@ -64,7 +119,10 @@ def build(spec):
             lo, hi = midi(conf.get("lo", "A4")), midi(conf.get("hi", "A5"))
             if conf.get("up") and gn == len(groups) - 1 and len(groups) > 1:
                 lo += conf["up"]; hi += conf["up"]
-            rows = S.melody(bars_idx, conf["rhythm"], lo, hi, peak_bar=conf.get("peak"), var=gn * 13 + conf.get("seed", 0))
+            if conf.get("mode") == "free":
+                rows = S.melody(bars_idx, conf["rhythm"], lo, hi, peak_bar=conf.get("peak"), var=gn * 13 + conf.get("seed", 0))
+            else:
+                rows = S.hook_melody(bars_idx, conf["rhythm"], lo, hi, var=gn)
             for j, i in enumerate(bars_idx):
                 mel_rows[inst][i] = rows[j]
     lt = L.get("tone", "bmth-lead")
