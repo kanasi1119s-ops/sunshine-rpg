@@ -51,7 +51,7 @@ describe("録音のキャビネットIRの大きさ", () => {
     const { recordedCabImpulse, bandLevel, registerCabIr } = await import("./fx-extra");
     const { CAB_IRS } = await import("../../tools/composer/cab-irs");
     for (const c of CAB_IRS) {
-      const bin = Uint8Array.from(Buffer.from(c.b64, "base64"));
+      const bin = Uint8Array.from(atob(c.b64), (ch) => ch.charCodeAt(0));
       registerCabIr(c.name, new Float32Array(bin.buffer), c.rate);
     }
     for (const name of ["dd-v30-2x12-mix-balanced", "jd-greenback-4x12-01", "jd-brutal-4x12-03"]) {

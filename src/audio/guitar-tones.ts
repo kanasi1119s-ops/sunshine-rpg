@@ -69,6 +69,17 @@ export const GUITAR_TONES: Record<string, GuitarTone> = {
       "2026-10-21 パワーコードの聞き比べ B3 で人間「b3がめちゃくちゃいい」（学習式アンプのあとの EQ が効くよう直した版）。",
     amp: "namDD", ampDrive: 0.45, ampGate: 20, ampTight: 0.6, ampTightHz: 140, ampCabIr: "dd-v30-2x12-mix-balanced", double: { irR: "jd-greenback-4x12-01" }, fx: CLARITY_EQ, ...LOUD_BASE,
   },
+  "loud-mid-noise": {
+    label: "ラウドロック B（B3）＋弦の雑音",
+    description: "採用（2026-10-21 人間「全部採用」）。B3 に、跳ぶ前に指が弦をこする音・音を止めるときの弦を押さえる音を足したもの。生の演奏らしさを足したいとき。",
+    amp: "namDD", ampDrive: 0.45, ampGate: 20, ampTight: 0.6, ampTightHz: 140, ampCabIr: "dd-v30-2x12-mix-balanced", double: { irR: "jd-greenback-4x12-01" }, fx: CLARITY_EQ, ...LOUD_BASE,
+    stringNoise: true,
+  },
+  "loud-mid-hs": {
+    label: "ラウドロック B（B3）・左ハムバッカー／右シングルコイル",
+    description: "採用（2026-10-21 人間「全部採用」）。B3 の二重録りの右だけ、シングルコイル（FSBS）の録音にする。左は太く、右は明るく、左右で音の色が分かれる。右の音量は自動でそろえる（DI_LEVEL）。",
+    amp: "namDD", ampDrive: 0.45, ampGate: 20, ampTight: 0.6, ampTightHz: 140, ampCabIr: "dd-v30-2x12-mix-balanced", double: { irR: "jd-greenback-4x12-01", diR: "fsbs" }, fx: CLARITY_EQ, ...LOUD_BASE,
+  },
   "marshall-mid": {
     label: "マーシャル系の中くらいの歪み（中域が前に出る）",
     description: "マーシャル JVM410H の録音データから学習したアンプ（namJVM、試用中）。B3（loud-mid）と同じ作り（ゲート浅め・低音を締めるブースト・左 V30／右 Greenback・300Hz を削り 1.5kHz を少し出す）。2026-10-21 試聴セットで人間「どっちも入れて」。曲を公開するときはデータの作者のクレジットが必要（docs/assets-credits.md）。",
