@@ -142,6 +142,18 @@ export function magnitudeAt(ir: Float32Array, freq: number, sampleRate: number):
 }
 
 /**
+ * IR の「ギターの帯域全体の大きさ」（150Hz〜5kHz を対数で 24 点とった振幅の二乗平均の平方根）。
+ * 2026-10-21: 1kHz の1点だけでそろえていたため、1kHz に谷がある箱（jd-greenback など）が、ほかより約 5dB 大きく鳴っていた
+ * （二重録りの左右で箱を変えると、片側だけ大きい）。帯域全体でそろえる。
+ */
+export function bandLevel(ir: Float32Array, sampleRate: number): number {
+  let sum = 0;
+  const N = 24;
+  for (let k = 0; k < N; k++) sum += magnitudeAt(ir, 150 * Math.pow(5000 / 150, k / (N - 1)), sampleRate) ** 2;
+  return Math.sqrt(sum / N);
+}
+
+/**
  * キャビネットのインパルス応答（モノラル）。amp-cab.ts のフィルターの並び（cabApproxSpec）を直列に通した応答に、マイク位置による癖を足す:
  *  off＝斜めのマイク（わずかな遅れの反射 → 2kHz 前後に浅い谷）／far＝遠いマイク（部屋の初期反射を3つ）。center・edge は足さない。
  * 最後に 1kHz の大きさが 1 になるようにそろえる（音量が変わらないように）。【推測】反射の数字は仮。
@@ -197,7 +209,7 @@ export function recordedCabImpulse(name: string, sampleRate: number): Float32Arr
     const len = Math.max(...list.map((x) => x.length));
     const mix = new Float32Array(len);
     for (const x of list) for (let n = 0; n < x.length; n++) mix[n] += x[n] / list.length;
-    const mm = magnitudeAt(mix, 1000, sampleRate);
+    const mm = bandLevel(mix, sampleRate);
     if (mm > 1e-6) for (let n = 0; n < len; n++) mix[n] /= mm;
     return mix;
   }
@@ -210,7 +222,7 @@ export function recordedCabImpulse(name: string, sampleRate: number): Float32Arr
     const x = n * ratio, i = Math.floor(x), f = x - i;
     out[n] = (r.data[i] ?? 0) * (1 - f) + (r.data[i + 1] ?? 0) * f;
   }
-  const m = magnitudeAt(out, 1000, sampleRate);
+  const m = bandLevel(out, sampleRate);
   if (m > 1e-6) for (let n = 0; n < len; n++) out[n] /= m;
   return out;
 }

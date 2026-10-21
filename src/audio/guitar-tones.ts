@@ -120,16 +120,18 @@ export const GUITAR_TONES: Record<string, GuitarTone> = {
   },
   "electro-rock": {
     label: "エレクトロとロックの混ざったリフ（中域が太い歪み・乾いた音）",
-    description: "試作（BOOM BOOM SATELLITES の音の作り方の調査から）。ライン録り＋アンプのプラグインの考え方。中域（700Hz〜2kHz）が太い、ゲインは高すぎない歪み。110Hz から下と 8kHz から上を切り、ギター本体は乾いた音（残響は送りで少しだけ）。左右に別テイク。",
+    description: "採用（2026-10-21 人間「1つ目はよい」。BOOM BOOM SATELLITES の音の作り方の調査から）。ライン録り＋アンプのプラグインの考え方。中域（700Hz〜2kHz）が太い、ゲインは高すぎない歪み。110Hz から下と 8kHz から上を切り、ギター本体は乾いた音（残響は送りで少しだけ）。左右に別テイク。",
     amp: "namDD", ampDrive: 0.5, ampGate: 25, ampTight: 0.6, ampTightHz: 110, ampCabIr: "jd-brutal-4x12-03", double: { irR: "jd-greenback-4x12-04" },
     fx: [{ type: "eq", low: -2, mid: 2, midHz: 1200, high: -3 }, { type: "filter", kind: "lowpass", freq: 8000, q: 0.7 }], ...LOUD_BASE,
   },
   "electro-rock-gated": {
     label: "拍で刻んだ加工ギター（ファズ＋帯域を絞る＋ビットを落とす＋16分のゲート）",
-    description: "試作。主役のリフより 8〜10dB 小さく混ぜる「味付け」の層。前段のファズ → キャビネットなし → 1.2kHz の帯域 → 8ビット → 16分のトランスゲート（pattern は曲に合わせて書きかえる）。区間の頭から入れる（弾いている途中で急に切らない）。",
+    description: "曲調によって使う（2026-10-21 人間「わるくはない」）。残響はほぼなし。主役のリフより 8〜10dB 小さく混ぜる「味付け」の層。前段のファズ → キャビネットなし → 1.2kHz の帯域 → 8ビット → 16分のトランスゲート（pattern は曲に合わせて書きかえる）。区間の頭から入れる（弾いている途中で急に切らない）。",
     amp: "direct", ampCabIr: "none",
     fx: [{ type: "fuzz", gain: 20, tone: 3500, level: -12, pre: true }, { type: "filter", kind: "bandpass", freq: 1200, q: 1.5 }, { type: "bitcrusher", bits: 8, mix: 0.25 },
       { type: "transgate", beats: 0.25, pattern: "x.xxx.x.x.xx.x.x", depth: 0.9 }], humanPitch: 0, noScoop: true, di: "emily",
+    // 2026-10-21 人間「曲調によってはよいかも。エコー強いかな」: 残響の送りをほぼなくし、刻みを乾いた音にする
+    reverb: 0.03,
   },
   "warm-lead-a": {
     label: "響く温かいリード（浅い歪み・中域が太い）",

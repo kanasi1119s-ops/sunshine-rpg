@@ -45,3 +45,19 @@ describe("トランスゲートの形（2026-10-21）", () => {
     expect(at(0.7)).toBeLessThan(0.1);
   });
 });
+
+describe("録音のキャビネットIRの大きさ", () => {
+  it("どの箱も、ギターの帯域全体の大きさがそろう（左右で箱を変えても片側だけ大きくならない）", async () => {
+    const { recordedCabImpulse, bandLevel, registerCabIr } = await import("./fx-extra");
+    const { CAB_IRS } = await import("../../tools/composer/cab-irs");
+    for (const c of CAB_IRS) {
+      const bin = Uint8Array.from(Buffer.from(c.b64, "base64"));
+      registerCabIr(c.name, new Float32Array(bin.buffer), c.rate);
+    }
+    for (const name of ["dd-v30-2x12-mix-balanced", "jd-greenback-4x12-01", "jd-brutal-4x12-03"]) {
+      const ir = recordedCabImpulse(name, 48000);
+      expect(ir).not.toBeNull();
+      expect(bandLevel(ir!, 48000)).toBeCloseTo(1, 3);
+    }
+  });
+});
