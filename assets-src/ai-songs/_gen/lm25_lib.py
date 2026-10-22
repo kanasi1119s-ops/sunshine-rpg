@@ -696,8 +696,12 @@ class Song:
                 fx = [dict(f) for f in p.get("fx", []) if f.get("type") not in ("delay", "pingpong")]
                 for f in fx:
                     if f.get("type") in ("plate", "reverb"): f["mix"] = round(f["mix"] * 0.35, 3)
+                # 厚みは「やまびこ」ではなく、小さな部屋の鳴り（ルーム）と、リードの重ね録り（左右に2回弾いたように）で出す
+                lead = p["role"].startswith("リード（旋律）") or p["role"].startswith("技のギター")
+                fx.append({"type": "room", "mix": 0.12 if lead else 0.08})
                 p["fx"] = fx
                 if "reverb" in p: p["reverb"] = round(p["reverb"] * 0.35, 3)
+                if p["role"].startswith("リード（旋律）"): p["double"] = {"spread": 0.4}
         if getattr(self, "pickups", None):
             for p in self.parts:
                 if p["instrument"] not in ("kick", "snare", "hihat", "tom", "crash") and not p["notes"].startswith("g:"):
