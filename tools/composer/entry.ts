@@ -43,6 +43,8 @@ import drumsJpopAuxUrl from "../../assets-src/soundfont/extra/drums-jpop-aux.sf3
 import drumsMetalAuxUrl from "../../assets-src/soundfont/extra/drums-metal-aux.sf3?url";
 import drumsJazzAuxUrl from "../../assets-src/soundfont/extra/drums-jazz-aux.sf3?url";
 import drumsSupraAuxUrl from "../../assets-src/soundfont/extra/drums-supra-aux.sf3?url";
+import bassBnbUrl from "../../assets-src/soundfont/extra/bass-bnb-finger.sf3?url";
+import bassBnbLoudUrl from "../../assets-src/soundfont/extra/bass-bnb-loud.sf3?url";
 import drumsCrocellUrl from "../../assets-src/soundfont/extra/drums-crocell.sf3?url";
 import drumsCrocellAuxUrl from "../../assets-src/soundfont/extra/drums-crocell-aux.sf3?url";
 import pianoUprightUrl from "../../assets-src/soundfont/extra/piano-upright-kw.sf3?url";
@@ -194,6 +196,11 @@ const BASS_FONTS: Record<string, { label: string; url: string | null }> = {
   upright: { label: "ウッドベース（コントラバスのピチカート。VSCO 2 CE。CC0）", url: bassUprightUrl },
   // 2026-10-20 ジャズのウッドベース: 1958年のコントラバスの指弾き（D. Smolken。CC0）。弦の鳴りが太く、ジャズのウォーキング向き
   rubner: { label: "ジャズのウッドベース（1958年のコントラバスの指弾き。D. Smolken。CC0）", url: bassRubnerUrl },
+  // 2026-10-22 Black And Blue Basses（Karoryfer。CC0）の5弦ベースの指弾き・ライン録音。強さ4層×録音2つ、低い B0 まで。
+  //   GM 37（パートの patch "bassMute"）に、ゴーストノート（強さ 1〜100。「,」「,,」の音）とスタッカート（101〜127。ふつうの音）の録音
+  bnb: { label: "5弦ベース 指弾き（Black And Blue Basses。強さ4層・B0 まで。CC0）", url: bassBnbUrl },
+  // ラウド向け: 同じ録音を明るくゴリッと（250Hz を引き、900Hz・2.5kHz を持ち上げ）。歪みはアンプで
+  "bnb-loud": { label: "5弦ベース 指弾き・ラウド向けに明るく（Black And Blue Basses。CC0）", url: bassBnbLoudUrl },
 };
 const DRUM_FONTS: Record<string, { label: string; url: string | null }> = {
   std: { label: "標準（上の音源）", url: null },

@@ -20,7 +20,7 @@ export interface DrumGenre {
   /** `--drums` の音源（std・muldjord・rock・metal・jazz・jpop・supra・crocell）。 */
   drums: "std" | "muldjord" | "rock" | "metal" | "jazz" | "jpop" | "supra" | "crocell";
   /** `--bass` の音源（std・finger・pick・rock・metal・jazz・jpop）。bassline-guide.md §6 に対応。 */
-  bass: "std" | "finger" | "pick" | "rock" | "metal" | "jazz" | "jpop";
+  bass: "std" | "finger" | "pick" | "rock" | "metal" | "jazz" | "jpop" | "bnb" | "bnb-loud";
   /** swing（曲全体）。範囲のときは [遅いテンポ側, 速いテンポ側]。 */
   swing: number | [number, number];
   human: number;
