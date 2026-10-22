@@ -689,6 +689,15 @@ class Song:
                 if p["role"] == "ベース（はじく音）": p["notes"] = let_ring(p["notes"], 0.75, 0.25, True, others)
                 elif p["role"] == "ベース（止めた音・ゴースト）": p["notes"] = let_ring(p["notes"], 0.5, 0.25, False, others)
                 else: p["notes"] = let_ring(p["notes"], 0.75, 0.25, False, others)
+        # ギターの響かせ方（ディレイ・ピンポン・深い残響）は「ゲームっぽい」ので外す（2026-10-23、人間「ギターの響かせ方がゲームに近いから取っ払おう」）。
+        # 残響はごく薄く（0.35倍）だけ残し、その場で鳴っている乾いた音にする
+        for p in self.parts:
+            if p["instrument"] in ("distGuitar", "guitar", "leadGuitar", "crunch", "echoGuitar") and p.get("patch") not in ("cymbalFx", "guitarFx"):
+                fx = [dict(f) for f in p.get("fx", []) if f.get("type") not in ("delay", "pingpong")]
+                for f in fx:
+                    if f.get("type") in ("plate", "reverb"): f["mix"] = round(f["mix"] * 0.35, 3)
+                p["fx"] = fx
+                if "reverb" in p: p["reverb"] = round(p["reverb"] * 0.35, 3)
         if getattr(self, "pickups", None):
             for p in self.parts:
                 if p["instrument"] not in ("kick", "snare", "hihat", "tom", "crash") and not p["notes"].startswith("g:"):
