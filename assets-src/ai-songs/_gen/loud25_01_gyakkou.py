@@ -1,259 +1,200 @@
-# ラウド25曲の1曲目（作り直し）「逆光プリズム」
-# 2026-10-22 人間「この曲没で旋律から作り直して」「既存の物にとらわれないでラウドロックの曲作って。旋律とか既存でよく聞くもの過ぎてつまらない」
-#   「単調になりやすい傾向あるから注意して」「リードは 2（マーシャル系）」「電子音感が強すぎる」「トリガーとは別に重みのあるバスドラ」
-#
-# 方針（定番から外す）
-# - 調: D。Aメロは暗いフリジアン（レ・ミ♭…）、サビで同じ D のまま明るいリディアン（ソ#が光る）に切りかわる＝「逆光」
-# - リフ: 7つの8分音符のかたまりを 4/4 の上でくり返す（ずれていき、区切りで戻る）。開放の D を鳴らしたまま、♭2 と ♯4 を混ぜる
-# - 和音: 短3度ずつ上がる D→F→A♭→B（Bメロ・ブリッジ）、サビは D→E→C#m7→B♭maj7 のように機能和声から外す
-# - 旋律: 手書き。7度・3全音の跳躍、裏拍から入る、休みも旋律の一部、サビの終わりは ♯4（ソ#）で解決させない
-# - 単調にしない: 区間ごとにドラム・編成・音域を変える（1回目と2回目のAメロ、3回目のサビも変える）
-import sys, json, copy, re
+# ラウド25曲の1曲目「逆光プリズム」（第2版）
+# 2026-10-22 人間「曲としてレベルが低い」→ 第1版は「定番から外す」ことを優先しすぎて、旋律が跳びすぎ・和音があちこちへ飛ぶ・区間ごとに素材がばらばら、だった。
+# 第2版の方針（調べたこと: soundfly「7 Melody Writing and Motivic Development Techniques」、secretsofsongwriting「Melody needs shape」「5 tips」）
+# - 4つの音の動機 M（5・6・5・4 度。短・短・長）を、リフ・Aメロ・Bメロ・サビ・ブリッジの全部で使う（まとまり）
+# - 同じ形を、Aメロでは暗いフリジアン（ラ・シ♭・ラ・ソ）、サビでは明るいリディアン（ラ・シ・ラ・ソ#）で鳴らす＝「逆光」。意外さはここ1つに絞る
+# - 旋律はほぼ順次進行。前の句は不安定な音で終わり、後の句で落ち着く（問いと答え）。山は区間の終わり近くに置く
+# - Aメロは低く主音を避け、サビは高く主音（レ）を使う。サビは2小節の短い句のくり返し
+# - 意外な和音は1区間に1つまで（サビの B♭、Bメロの E）。それ以外は旋律から和音が分かる流れ
+import sys, json, copy
 sys.path.insert(0, __file__.rsplit("/", 1)[0])
-from loud25_lib import midi, name, at_least, NAMES
+from loud25_lib import midi, name, at_least
 from loud25_arrange import build
+from loud25_hand import (LEAD_TONE, ARP_TONE, put, starts, cell_riff, retone_leads, add_heavy_kick, split_lead, part, finish, toks)
 
-LEAD_TONE = dict(humanPitch=0, noScoop=True, di="emily", double=False, chorus=0,   # 人間が選んだ「2 マーシャル系」（f3-t2-jvm）
-                 amp="namJVM", ampDrive=0.7, ampGate=10, ampTight=0.6, ampTightHz=150, ampCabIr="jd-greenback-4x12-01", reverb=0.12,
-                 fx=[{"type": "eq", "low": -2, "mid": 2.5, "midHz": 1000, "high": -1}, {"type": "filter", "kind": "lowpass", "freq": 7500, "q": 0.7},
-                     {"type": "delay", "beats": 0.75, "mix": 0.18, "feedback": 0.3}, {"type": "plate", "mix": 0.18}])
-ARP_TONE = dict(LEAD_TONE, ampDrive=0.35, fx=[{"type": "eq", "low": -3, "mid": 1.5, "midHz": 1000, "high": -1}, {"type": "filter", "kind": "lowpass", "freq": 7000, "q": 0.7},
-                                              {"type": "delay", "beats": 0.75, "mix": 0.22, "feedback": 0.35}, {"type": "plate", "mix": 0.24}])
-
-# ── 旋律（1小節＝4拍。手で書いた音） ──
-VERSE_A = [
-    "R:0.5 D4:0.5 C5:1! R:0.5 A4:0.5 D#4:1",     # Dm  レ→ド（7度）跳んで、ミ♭（♭2）へ落ちる
-    "G4:1.5 A#4:0.5 D5:1 R:1",                   # E♭
-    "R:0.5 D4:0.5 C5:1! R:0.5 F5:0.5 D#5:1",     # Dm
-    "D5:2 A#4:1 R:1",                            # E♭
-    "R:0.5 G4:0.5 F5:1! D5:1 A#4:1",             # Gm  ソ→ファ（7度）
-    "C5:1 D#5:1 G5:1.5 R:0.5",                   # E♭
-    "A4:1 D5:0.5 A4:0.5 G#4:2",                  # Dm  ソ#（♯4）をちらっと見せる＝サビの予告
-    "G#4:3 R:1",                                 # A♭
+# ── 旋律（1小節＝4拍） ──
+VERSE = [
+    "R:1 A4:0.5 A#4:0.5 A4:1 G4:1",     # Dm  動機 M（ラ・シ♭・ラ・ソ）
+    "G4:1.5 F4:0.5 G4:2",               # E♭
+    "R:1 A4:0.5 A#4:0.5 A4:1 C5:1",     # Dm  M の終わりを上へのばす
+    "C5:1.5 A#4:0.5 A4:2",              # C
+    "R:1 D5:0.5 C5:0.5 A#4:1 A4:1",     # B♭  下へ移した形
+    "G4:1.5 A4:0.5 C5:2",               # C
+    "A4:1 A#4:1 C5:1 D5:1",             # Dm  順に上がって山へ
+    "D#5:2 D5:1 R:1",                   # E♭  不安定な音で止める（問い）
 ]
-VERSE_B = VERSE_A[:4] + [
-    "R:0.5 G4:0.5 F5:1! A#5:1 G5:1",
-    "D#5:1 G5:1 A#5:1.5 R:0.5",
-    "A5:1 D5:0.5 A4:0.5 G#4:1 A4:1",
-    "C5:2 D#5:1 G#5:1",
+VERSE_2 = VERSE[:6] + [
+    "A4:1 A#4:1 C5:1 D5:0.5 C5:0.5",    # Dm
+    "A#4:2 A4:2",                       # E♭  答え（下りて落ち着く）
 ]
-VERSE2_A = [   # 2回目のAメロは1オクターブ近く上で、リズムを詰める（1回目と同じにしない）
-    "R:0.5 D5:0.5 C6:0.5! R:0.5 A5:0.5 R:0.5 D#5:1",
-    "G5:1 A#5:0.5 D6:0.5 R:0.5 A#5:0.5 G5:1",
-    "R:0.5 D5:0.5 C6:0.5! R:0.5 A#5:0.5 R:0.5 D#6:1",
-    "D6:1.5 A#5:0.5 G5:1 R:1",
-] + VERSE_B[4:]
 PRE = [
-    "F#4:3 A4:1", "D5:4",            # D（短調から急に長3度＝明るさの気配）
-    "A4:3 C5:1", "F5:4",             # F
-    "C5:3 D#5:1", "G#5:4",           # A♭
-    "D#5:2 F#5:2", "B5:2 A5:1 C#6:1",  # B
+    "D5:0.5 D#5:0.5 D5:1 C5:2",         # B♭  M を上へ移していく
+    "E5:0.5 F5:0.5 E5:1 D5:2",          # C
+    "F5:0.5 G5:0.5 F5:1 E5:1 D5:1",     # Dm
+    "A5:3 R:1",                         # Dm
+    "D5:0.5 D#5:0.5 D5:1 C5:2",         # B♭
+    "E5:0.5 F5:0.5 E5:1 G5:2",          # C
+    "G#5:2 B5:2",                       # E   ここで初めてソ#（明るさの予告）
+    "B5:3 R:1",                         # E
 ]
 CHORUS = [
-    "R:0.5 A5:0.5 E6:1.5! G#5:1.5",  # D     ラ→ミ（上へ5度）→ソ#（♯4）。裏拍から入る
-    "G#5:2 F#5:1 B5:1",              # E
-    "E5:1.5 G#5:0.5 C#6:2!",         # C#m7
-    "D6:2 A5:1 F5:1",                # B♭maj7（明るさが一瞬陰る）
-    "R:0.5 A5:0.5 E6:1.5! G#5:1.5",  # D
-    "B5:1 D#6:1 E6:2",               # E
-    "C#6:1.5 A5:0.5 F#5:2",          # F#m
-    "G#5:1 C6:1 D#6:2",              # A♭（3全音はなれた和音へ）
-    "D6:1.5 A5:0.5 F5:1 A5:1",       # B♭maj7
-    "G5:1 C6:1 E6:2!",               # C
-    "R:0.5 A5:0.5 E6:1.5! G#5:1.5",  # D
-    "G#5:2 B5:1 E6:1",               # E
-    "E6:1 C#6:1 G#5:1 B5:1",         # C#m7
-    "A5:2 D6:2",                     # B♭maj7
-    "G#5:4", "G#5:2 R:2",            # E E   ソ#で止める（解決しない）
+    "A5:1 B5:1 A5:2!",                  # D    M を長くした形（ラ・シ・ラ…）
+    "G#5:2 E5:1 F#5:1",                 # E    …ソ#（明るい M）
+    "F#5:1 G#5:1 F#5:2",                # Bm   1つ下へ移す
+    "E5:3 R:1",                         # A    問い
+    "A5:1 B5:1 A5:2!",                  # D
+    "G#5:1 B5:1 D6:2",                  # E    上へのばす
+    "D6:1.5 C6:0.5 A#5:2",              # B♭   暗い和音が一瞬（Aメロの色を思い出す）
+    "C6:2 D6:1 E6:1",                   # C    山へ
+    "D6:3 A5:1",                        # D    主音で言い切る
+    "B5:1 A5:1 G#5:2",                  # E
+    "F#5:1 G#5:1 A5:1 B5:1",            # Bm
+    "A5:2 E5:2",                        # A
+    "A5:1 B5:1 A5:2!",                  # D
+    "G#5:2 B5:1 C#6:1",                 # E
+    "D6:2 C6:1 A#5:1",                  # B♭
+    "A5:2 C#6:1 E6:1",                  # A    次へ投げる
 ]
-INTER = ["R:4"] * 4 + [
-    "R:0.5 D#5:0.5 A#5:1 R:0.5 G5:0.5 D5:1", "D#5:2 R:2",
-    "R:0.5 G#4:0.5 D#5:1 R:0.5 C5:0.5 G4:1", "G#4:3 R:1",
+BRIDGE = [
+    "D5:2 C5:1 D5:1", "E5:4", "F#5:2 E5:1 F#5:1", "A5:4",
+    "D6:2 C6:1 D6:1", "E6:4", "D6:1 B5:1 G#5:2", "B5:4",
+    "R:4", "R:4", "R:4", "R:4",         # 分散和音のギターだけ
+    "F5:2 A5:2", "G5:2 C6:2", "B5:2 D6:2", "E6:2 R:2",
 ]
-BRIDGE = [   # 半音・全音が交互の音階（レ・ミ♭・ファ・ファ#・ソ#・ラ・シ・ド）で、ゆっくり
-    "D5:3 D#5:1", "F#5:4", "F5:3 G#5:1", "A5:4", "G#5:3 B5:1", "C6:4", "B5:3 C6:1", "D6:2 D#6:2",
-    "R:4", "R:4", "R:4", "R:4",      # ギターの分散和音だけにして、すき間を作る
-    "G#5:1 B5:1 D6:2", "C6:2 D#6:2", "D#6:2 D6:2", "C6:1 A5:1 F#5:1 D#5:1",
-]
-INTRO = ["R:4"] * 8
-OUTRO = ["R:4"] * 6 + ["R:0.5 A5:0.5 E6:1.5! G#5:1.5", "G#5:1 R:3"]
+INTER = ["R:4"] * 4 + ["R:1 A#4:0.5 C5:0.5 A#4:1 A4:1", "G4:4", "R:1 A4:0.5 A#4:0.5 A4:1 G4:1", "A4:4"]
+OUTRO = ["R:4"] * 6 + ["A5:1 B5:1 A5:2!", "A5:4"]
 
+CH = "1add9 #2 #6m 5 1add9 #2 6 7 1add9 #2 #6m 5 1add9 #2 6 5"
 FORM = [
     ("intro", "intro", 8, "1m"),
-    ("verse1", "verse", 16, "1m 2 1m 2 4m 2 1m b5"),
-    ("pre1", "pre", 8, "1 1 3 3 b5 b5 #6 #6"),
-    ("chorus1", "chorus", 16, "1add9 #2 #7m7 6maj7 1add9 #2 #3m b5 6maj7 7 1add9 #2 #7m7 6maj7 #2 #2"),
-    ("inter", "interlude", 8, "1m 1m 1m 1m 2 2 b5 b5"),
-    ("verse2", "verse", 16, "1m 2 1m 2 4m 2 1m b5"),
-    ("pre2", "pre", 8, "1 1 3 3 b5 b5 #6 #6"),
-    ("chorus2", "chorus", 16, "1add9 #2 #7m7 6maj7 1add9 #2 #3m b5 6maj7 7 1add9 #2 #7m7 6maj7 #2 #2"),
-    ("bridge", "bridge", 16, "1 1 3 3 b5 b5 #6 #6"),
-    ("solo", "solo", 16, "1m 2 1m 2 4m 2 7 7"),
-    ("chorus3", "chorus", 16, "1add9 #2 #7m7 6maj7 1add9 #2 #3m b5 6maj7 7 1add9 #2 #7m7 6maj7 #2 #2"),
+    ("verse1", "verse", 16, "1m 2 1m 7 6 7 1m 2"),
+    ("pre1", "pre", 8, "6 7 1m 1m 6 7 #2 #2"),
+    ("chorus1", "chorus", 16, CH),
+    ("inter", "interlude", 8, "1m 1m 1m 1m 2 2 1m 1m"),
+    ("verse2", "verse", 16, "1m 2 1m 7 6 7 1m 2"),
+    ("pre2", "pre", 8, "6 7 1m 1m 6 7 #2 #2"),
+    ("chorus2", "chorus", 16, CH),
+    ("bridge", "bridge", 16, "6maj7 7 1 1 6maj7 7 #2 #2"),
+    ("solo", "solo", 16, "1m 2 1m 7 6 7 1m 2"),
+    ("chorus3", "chorus", 16, CH),
     ("outro", "outro", 8, "1m 1m 1m 1m 2 2 1 1"),
 ]
 
 SPEC = {
     "no": 1, "slug": "gyakkou-prism", "title": "逆光プリズム", "seed": 7101, "motifSeed": 7101,
     "bpm": 150, "key": "D", "mode": "phrygian", "tuning": "D2",
-    "desc": "暗いフリジアンのAメロから、同じ D のままサビで明るいリディアンに切りかわる。7つの8分音符のリフが 4/4 の上でずれていく",
+    "desc": "暗いフリジアンのAメロの動機（ラ・シ♭・ラ・ソ）が、サビで同じ形のまま明るいリディアン（ラ・シ・ラ・ソ#）になる",
     "form": [list(f) for f in FORM],
     "rhythm": {
         "tone": "loud-mid", "pm": [], "verse_keep": True,
         "intro": "-", "inter": "-", "bridge": "-", "outro": "-",
         "verse": ["X=====x=====X===", "X=======x===x==="],
-        "pre": "X===============",
-        "chorus": ["X=====x=====x===", "X=====x=====X==="],
+        "pre": ["X=======X=======", "X===x===X===x==="],
+        "chorus": ["X=======x=======", "X=====x=====x==="],
         "solo": ["X=======x=======", "X=====x=====x==="],
     },
     "lead": {"tone": "bmth-lead", "sections": {
-        "intro": {"notes": INTRO},
-        "verse1": {"notes": VERSE_A + VERSE_B},
-        "verse2": {"notes": VERSE2_A + VERSE_B},
+        "verse1,verse2": {"notes": VERSE + VERSE_2},
         "pre1,pre2": {"notes": PRE},
         "chorus1,chorus2,chorus3": {"notes": CHORUS},
         "inter": {"notes": INTER},
         "bridge": {"notes": BRIDGE},
         "outro": {"notes": OUTRO},
+        "intro": {"notes": ["R:4"] * 8},
     }},
     "tech": {"solo": "mmsmmmtt"},
     "bass": {
-        # Aメロ: すき間の多い、跳ねるベース（前半はギターなし）
-        "verse": ["R:0.75! -:0.25 R:0.5 8:0.5 -:0.5 R:0.5 b:0.5 5:0.5", "R:1! -:0.5 5:0.5 8:0.75 7:0.25 5:0.5 -:0.5"],
-        "pre": ["R:2! 5:2", "8:1! 5:1 3:1 5:1"],
-        "chorus": ["R:1.5! R:0.5 5:1 8:1", "R:1! 3:1 5:1.5 9:0.5"],
+        "verse": ["R:1.5! R:0.5 5:1 R:1", "R:1! 5:0.5 8:0.5 7:1 5:1"],
+        "pre": ["R:2! 5:2", "R:1! 5:1 8:1 5:1"],
+        "chorus": ["R:1.5! R:0.5 5:1 8:1", "R:1! 3:1 5:1.5 R:0.5"],
         "bridge": ["R:4!", "5:2 3:2"],
         "solo": ["R:0.5! R:0.5 8:0.5 R:0.5 5:0.5! R:0.5 7:0.5 b:0.5", "R:1! 5:0.5 8:0.5 R:1 b:1"],
         "intro": "R:4", "inter": "R:4", "outro": "R:4",
     },
     "drums": {
-        "intro": {"k": ["................"] * 4 + ["X...............", "X.........X.....", "X...............", "X.....X...X....."],
+        "intro": {"k": ["................"] * 4 + ["X.....X...X.....", "X.....X...X...X.", "X.....X...X.....", "X.....X...X.X.X."],
                   "s": ["................"] * 4 + ["........X.......", "........X.......", "........X.......", "........X...X..."],
-                  "c": ["................"] * 4 + ["n...............", "r...r...r...r...", "n...............", "r...r...r...r..."], "fill": "tom", "crash": False},
-        "verse1": {"k": "sync", "s": ["....X..o.o..X..o", "....X..o....X.o."], "h": ["x.x.x.xox.x.x.x.", "x.x.x.x.x.xox.x."], "fill": "snare", "crash": False},
-        "verse2": {"k": ["X..X....X.X.....", "X..X..X...X..X.."], "s": ["....X.......X..o", "....X..o....X..."], "c": "r.r.r.r.r.r.r.r.", "fill": "snare"},
-        "pre": {"k": ["X.......X.......", "X.......X.......", "X...X...X...X...", "X...X...X...X...", "X.X.X.X.X.X.X.X.", "X.X.X.X.X.X.X.X.", "XXXXXXXXXXXXXXXX", "XXXXXXXXXXXXXXXX"],
-                "s": ["........X.......", "........X.......", "....X.......X...", "....X.......X...", "....X.......X...", "....X...X...X...", "....X.X.X.X.XXXX", "XXXXXXXXXXXXXXXX"],
+                  "c": ["................"] * 4 + ["c...r...r...r...", "r...r...r...r...", "n...r...r...r...", "r...r...r...r..."], "fill": "tom", "crash": False},
+        "verse1": {"k": "sync", "s": ["....X..o....X...", "....X......oX..o"], "h": ["x.x.x.x.x.x.x.x.", "x.x.x.x.x.x.x.xo"], "fill": "snare", "crash": False},
+        "verse2": {"k": "sync", "s": ["....X..o....X...", "....X......oX..o"], "c": "r.r.r.r.r.r.r.r.", "fill": "snare"},
+        "pre": {"k": ["X.......X.......", "X.......X.......", "X...X...X...X...", "X...X...X...X...", "X.X.X.X.X.X.X.X.", "X.X.X.X.X.X.X.X.", "X.X.X.X.X.X.X.X.", "X.X.X.X.X.X.X.X."],
+                "s": ["........X.......", "........X.......", "....X.......X...", "....X.......X...", "....X.......X...", "....X.......X...", "....X...X...X...", "....X.X.X.X.XXXX"],
                 "h": ["x...x...x...x...", "x...x...x...x...", "x.x.x.x.x.x.x.x.", "x.x.x.x.x.x.x.x.", "................", "................", "................", "................"],
-                "c": ["................"] * 4 + ["r.r.r.r.r.r.r.r."] * 2 + ["................"] * 2, "fill": "stop", "crash": False},
+                "c": ["................"] * 4 + ["r.r.r.r.r.r.r.r."] * 3 + ["................"], "fill": "stop", "crash": False},
         "chorus1": {"k": ["X..x..X.X..x..x.", "X..x..X.X..x..x.", "X..x..X.X..x..x.", "X..x..X.X...XXXX"], "s": "....X.......X...",
                     "c": ["r.r.r.r.r.r.r.r.", "r.r.r.r.r.r.r.r.", "n.r.r.r.r.r.r.n.", "r.r.r.r.r.r.r.r."], "fill": "tom"},
         "chorus2": {"k": ["X..x..X.X..x..x.", "X..x..X.X..x..x.", "XXXXXXXXXXXXXXXX", "X..x..X.X...XXXX"], "s": "....X.......X...",
                     "c": ["n.r.r.r.n.r.r.r.", "r.r.r.r.r.r.r.r.", "n...n...n...n...", "r.r.r.r.r.r.r.r."], "fill": "tom"},
-        "chorus3": {"k": ["X...............", "X.........X.....", "X...............", "X.....X...X.....", "X..x..X.X..x..x.", "XXXXXXXXXXXXXXXX", "X..x..X.X..x..x.", "XXXXXXXXXXXXXXXX"],
+        "chorus3": {"k": ["X.....X...X.....", "X.....X...X.....", "X.....X...X.....", "X.....X...X.X.X.", "X..x..X.X..x..x.", "XXXXXXXXXXXXXXXX", "X..x..X.X..x..x.", "XXXXXXXXXXXXXXXX"],
                     "s": ["........X.......", "........X.......", "........X.......", "........X...X...", "....X.......X...", "....X.......X...", "....X.......X...", "....X.......X..."],
                     "c": ["n.......n.......", "r...r...r...r...", "n.......n.......", "r...r...r...r...", "n.r.r.r.r.r.r.r.", "n...n...n...n...", "r.r.r.r.r.r.r.r.", "n...n...n...n..."], "fill": "tom"},
-        "inter": {"k": "X.X.X.X.X.X.X.X.", "s": ["....X.......X...", "....X.......X..o"], "c": "n...n...n...n...", "fill": "kick"},
+        "inter": {"k": ["X.....X...X.....", "X.....X...X.X.X."], "s": "........X.......", "c": "n...r...r...r...", "fill": "kick"},
         "bridge": {"k": ["X...............", "................", "X.........X.....", "................"], "s": ["................"],
                    "t": ["........3.......", "4.......4.......", "........3...3...", "4.......4...4.4."], "c": ["r...r...r...r..."], "crash": False, "fill": "snare"},
         "solo": {"k": ["X..x..X.X..x..x.", "XXXXXXXXX..x..x."], "s": "....X.......X...", "c": ["r.r.r.r.r.r.r.r.", "n.r.r.r.n.r.r.r."], "fill": "tom"},
-        "outro": {"k": ["X.X.X.X.X.X.X.X."] * 6 + ["X...............", "................"], "s": ["....X.......X..."] * 6 + ["................"] * 2,
-                  "c": ["n...n...n...n..."] * 6 + ["c...............", "................"], "crash": False, "nofill": True},
+        "outro": {"k": ["X.....X...X....."] * 6 + ["X...............", "................"], "s": ["........X......."] * 6 + ["................"] * 2,
+                  "c": ["n...r...r...r..."] * 6 + ["c...............", "................"], "crash": False, "nofill": True},
     },
     "extras": {"piano": {"arp": "bridge", "arpGuitar": ARP_TONE, "noChords": True}},
 }
 
-# ── 7つの8分音符のリフ（4/4 の上でずれていく） ──
-CELL = [0, 0, 12, 1, 0, 7, 6]   # 開放の D・D・1オクターブ上・♭2・D・5度・♯4
-def poly_riff(bar_chords, low, start_cell=0):
-    """bar_chords: 小節ごとの根音（音名の数 0〜11）。8分音符を順に並べ、かたまりの頭に強弱をつける。最後の8分は根音で戻す"""
-    toks = []; n = len(bar_chords) * 8
-    for j in range(n):
-        root = at_least(bar_chords[j // 8], low)
-        idx = (j + start_cell) % 7
-        m = root + CELL[idx] if j < n - 1 else root
-        toks.append(f"{name(m)}:0.5" + ("!" if idx == 0 or j == n - 1 else ""))
-    return " ".join(toks)
-
-TOK = re.compile(r"^(.*):([\d.]+)([^\d.]*)$")
-def toks(notes):
-    out, t = [], 0.0
-    for tk in notes.split():
-        m = TOK.match(tk); out.append([t, float(m.group(2)), m.group(1), m.group(3)]); t += float(m.group(2))
-    return out
-def put(p, a, b, new=""):
-    """パート p の [a, b) 拍を new（音の並び。空なら休み）で置きかえる"""
-    n = p["notes"]
-    if n.startswith("g:"):
-        g = list(n[2:])
-        for i in range(int(a * 4), int(b * 4)): g[i] = "."
-        p["notes"] = "g:" + "".join(g); return
+# リフ: 動機 M を低い D の上で（1小節目 a・2小節目 b）。8分音符
+RIFF_A = [0, 0, 7, 8, 7, 5, 0, 12]       # D D A B♭ A G D D'
+RIFF_B = [0, 0, 7, 8, 7, 10, 8, 5]       # D D A B♭ A C B♭ G
+def riff_bars(roots, low):
     out = []
-    for t, d, h, suf in toks(n):
-        e = t + d
-        if e <= a + 1e-9 or t >= b - 1e-9: out.append(f"{h}:{d:g}{suf}"); continue
-        if t < a - 1e-9: out.append(f"{h}:{a - t:g}{suf}")
-        if t <= a + 1e-9 or t < a: out.append(new if new else f"R:{b - a:g}")
-        if e > b + 1e-9: out.append(f"R:{e - b:g}")
-    p["notes"] = " ".join(x for x in out if x)
+    for i, r in enumerate(roots):
+        cell = RIFF_A if i % 2 == 0 else RIFF_B
+        if i == len(roots) - 1 and len(roots) > 1: cell = RIFF_A[:6] + [0, None]
+        out.append(cell_riff(cell, [r], low, 0.5, end_root=False))
+    return " ".join(out)
+
+def harmony_below(notes, t0, S):
+    """旋律の各音の下に、その小節の和音の音のうち 3〜4 半音下（なければ 2〜9 半音下でいちばん近い音）を置く"""
+    out = []
+    for t, d, h, suf in toks(notes):
+        if h.startswith("R"): out.append(f"{h}:{d:g}{suf}"); continue
+        m = midi(h); ch = S.bars[int((t0 + t) // 4)][2]; pcs = ch.pcs()
+        cands = [m - k for k in range(2, 10) if (m - k) % 12 in pcs]
+        pick = next((c for c in cands if 3 <= m - c <= 4), cands[0] if cands else m - 3)
+        out.append(f"{name(pick)}:{d:g}{suf}")
+    return " ".join(out)
 
 def make(path):
     song, S = build(copy.deepcopy(SPEC))
-    beats = 4
-    start = {}; pos = 0
-    for sid, kind, n, prog in FORM: start[sid] = (pos * beats, n); pos += n
+    st = starts(FORM)
     roots = [S.bars[i][2].root for i in range(S.NB)]
-    parts = []
-    for p in song["parts"]:
-        if p["role"] in ("ライザー",): continue
-        if p["instrument"] == "leadGuitar" and p["role"] != "リードギター（分散和音）":
-            for k in ("guitarTone",): p.pop(k, None)
-            p.update(json.loads(json.dumps(LEAD_TONE)))
-        parts.append(p)
-    # リード: Aメロ・ブリッジは小さめの別パート（同じ音色）、サビ・Bメロは前へ
-    lead = [p for p in parts if p["role"] == "リード（旋律）"][0]
-    quiet = json.loads(json.dumps(lead)); quiet["role"] = "リード（Aメロ・ブリッジ）"; quiet["volume"] = 0.105
-    for sid in ("verse1", "verse2", "bridge"):
-        a, n = start[sid]; put(lead, a, a + n * beats)
-    keep = [start[s] for s in ("verse1", "verse2", "bridge")]
-    full = sum(n for _, _, n, _ in FORM) * beats
-    edges = sorted([0] + [a for a, n in keep] + [a + n * beats for a, n in keep] + [full])
-    inside = lambda x: any(a <= x < a + n * beats for a, n in keep)
-    for x0, x1 in zip(edges, edges[1:]):
-        if x1 > x0 and not inside(x0): put(quiet, x0, x1)
-    parts.insert(parts.index(lead) + 1, quiet)
-    # Aメロの前半8小節はギター（刻み）を抜く（ベース・ドラム・旋律だけ）
-    rhythm = [p for p in parts if p["role"].startswith("刻み")][0]
-    for sid in ("verse1", "verse2"):
-        a, n = start[sid]; put(rhythm, a, a + 8 * beats)
-    # 7つの8分のリフ（前奏・間奏・後奏の前半）: ギター（単音）とベース（1オクターブ下）で同じ形
-    riff = {"instrument": "distGuitar", "role": "リフ（7つの8分）", "volume": 0.1, "pan": 0, "guitarTone": "loud-mid", "gainDb": -4, "powerChord": False, "notes": f"R:{full}"}
-    bass = [p for p in parts if p["instrument"] == "bass"][0]
-    for sid, nb, cell0 in (("intro", 8, 0), ("inter", 8, 3), ("outro", 6, 5)):
-        a, _ = start[sid]
-        rr = roots[a // beats: a // beats + nb]
-        put(riff, a, a + nb * beats, poly_riff(rr, midi("D3"), cell0))
-        put(bass, a, a + nb * beats, poly_riff(rr, midi("D2"), cell0))
+    parts = [p for p in song["parts"] if p["role"] != "ライザー"]
+    retone_leads(parts)
+    lead, quiet = split_lead(parts, st, ("verse1", "verse2", "bridge", "inter"))
+    rhythm = part(parts, "刻み")
+    for sid in ("verse1", "verse2"):                       # Aメロ前半はギターを抜く
+        a, n = st[sid]; put(rhythm, a, a + 8 * 4)
+    full = st["outro"][0] + 8 * 4
+    riff = {"instrument": "distGuitar", "role": "リフ（動機）", "volume": 0.1, "pan": 0, "guitarTone": "loud-mid", "gainDb": -4, "powerChord": False, "notes": f"R:{full}"}
+    bass = part(parts, inst="bass")
+    for sid, nb in (("intro", 8), ("inter", 8), ("outro", 6)):
+        a, _ = st[sid]; rr = roots[a // 4: a // 4 + nb]
+        put(riff, a, a + nb * 4, riff_bars(rr, midi("D2")))
+        put(bass, a, a + nb * 4, riff_bars(rr, midi("D2")))
     parts.insert(parts.index(rhythm) + 1, riff)
-    # 後奏の最後2小節: 全員で D（長調の和音＝サビの明るさ）を1回鳴らして、ぱっと終わる
-    a, _ = start["outro"]
-    put(rhythm, a + 24, a + 32, "D2:4! R:4")
-    # 重みのあるバスドラ（トリガーとは別。録音のキックの低音だけ）
-    k = [p for p in parts if p["instrument"] == "kick"][0]
-    heavy = {kk: vv for kk, vv in k.items() if kk not in ("trigger", "triggerVolume")}
-    heavy.update({"role": "キック（重み）", "volume": 0.2, "gainDb": -3,
-                  "fx": [{"type": "eq", "low": 6, "mid": -4, "midHz": 400, "high": -8}, {"type": "filter", "kind": "lowpass", "freq": 180, "q": 0.9}]})
-    parts.insert(parts.index(k) + 1, heavy)
-    # ベースは bassSplit（サビの抜粋で点が高かった）＋少し明るく
+    a, _ = st["outro"]; put(rhythm, a + 24, a + 32, "D2:4! R:4")
+    # サビの後半8小節（2回目・3回目は全部）にリードの3度下のハモり
+    harm = json.loads(json.dumps(lead)); harm["role"] = "リード（ハモり）"; harm["volume"] = 0.085; harm["pan"] = 0.25
+    harm["notes"] = f"R:{full}"
+    for sid, frm in (("chorus1", 8), ("chorus2", 0), ("chorus3", 0)):
+        a, n = st[sid]; seg = []
+        for t, d, h, suf in toks(lead["notes"]):
+            if a + frm * 4 - 1e-9 <= t < a + n * 4 - 1e-9: seg.append(f"{h}:{d:g}{suf}")
+        put(harm, a + frm * 4, a + n * 4, harmony_below(" ".join(seg), a + frm * 4, S))
+    lead["pan"] = -0.1
+    parts.insert(parts.index(quiet) + 1, harm)
+    add_heavy_kick(parts)
     bass.update({"amp": "bassSplit", "ampDrive": 0.6, "fx": [{"type": "eq", "low": 0, "mid": 3, "midHz": 2200, "high": 2}]})
-    # 長い休み（R:96 など）は作曲ソフトが読めないので、4拍ずつに分ける
-    def split_rests(n):
-        if n.startswith("g:"): return n
-        out = []
-        for tk in n.split():
-            m = re.match(r"^R:([\d.]+)$", tk)
-            if m and float(m.group(1)) > 4:
-                d = float(m.group(1))
-                while d > 4 + 1e-9: out.append("R:4"); d -= 4
-                out.append(f"R:{d:g}")
-            else: out.append(tk)
-        return " ".join(out)
-    for p in parts: p["notes"] = split_rests(p["notes"])
-    song["parts"] = parts
-    song["title"] = SPEC["title"]
+    finish(song, parts, SPEC["title"])
     json.dump(song, open(path, "w"), ensure_ascii=False)
     return song
 
 if __name__ == "__main__":
     s = make(sys.argv[1] if len(sys.argv) > 1 else "/tmp/lr/opt/full/n1-gyakkou.json")
-    for p in s["parts"]: print(p["role"], p["instrument"], p["notes"][:90])
+    for p in s["parts"]: print(p["role"], p["notes"][:100])
