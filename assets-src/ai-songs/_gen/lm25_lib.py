@@ -698,7 +698,8 @@ def modernize_leads(song):
         if n:
             prev = ev[i - 1] if i else None
             nxt = ev[i + 1] if i + 1 < len(ev) else None
-            if L >= 1 and (prev is None or prev[2] is None) and not re.search(r"[/^\\~_]", m): m = m + "/"
+            if ">" in m or "(" in m or "@" in m: pass
+            elif L >= 1 and (prev is None or prev[2] is None) and not re.search(r"[/^\\~_]", m): m = m + "/"
             elif L <= 0.5 and nxt and nxt[2] and abs(midi(nxt[2]) - midi(n)) <= 2 and "_" not in m and "'" not in m and nxt[0] - (st + L) < 1e-6: m = m + "_"
         out.append((st, L, n, m, x))
     lead["notes"] = _join(out)
@@ -735,6 +736,29 @@ def modernize_leads(song):
             q["fx"] = [{"type": "filter", "kind": "highpass", "freq": 1500, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 9000, "q": 0.7}] + [f for f in lead.get("fx", []) if f.get("type") == "room"]
             q.pop("double", None)
             song.parts.append(q)
+    # 空気の層（2026-10-23 聞き比べ G を人間が採用）: サビ・Bメロ・ブリッジの後ろに、きれいな音の分散和音（根音・5度・9度・3度）を薄く。
+    #   この層だけ、付点8分のやまびこと長めの残響を付ける（リードには付けない）
+    amb, t = [], 0.0
+    for sc in secs:
+        bars = int(round((sc[3] - sc[2]) / B))
+        for i in range(bars):
+            bar_i = int(round(sc[2] / B)) + i
+            if sc[1] not in ("chorus", "pre", "bridge") or bar_i >= song.nb:
+                amb.append(f"R:{B:g}"); continue
+            r, q, _b = parse_chord(song.chord_at(bar_i))
+            root = next(m for m in range(midi("E3"), midi("E4")) if m % 12 == PC[r] % 12)
+            fifth = 6 if q in ("dim", "dim7", "m7b5", "b5") else 7
+            third = None if (q.startswith("sus") or q == "5") else (3 if (q.startswith("m") and not q.startswith("maj")) or q in ("dim", "dim7", "m7b5") else 4)
+            ninth = None if q in ("dim", "dim7", "7b9") else 14
+            voic = [root, root + fifth, root + (ninth or 12), root + 12 + (third if third is not None else fifth)]
+            order = (0, 1, 2, 3, 2, 1)
+            n8 = int(round(B * 2))
+            amb.append(" ".join(f"{nm(voic[order[j % len(order)]], 'b' in r)}:0.5" for j in range(n8)) + (f" R:{B - n8 * 0.5:g}" if B - n8 * 0.5 > 1e-6 else ""))
+    if any(not x.startswith("R") for x in " ".join(amb).split()):
+        song.parts.append({"role": "きれいな音の分散和音（空気の層）", "instrument": "distGuitar", "notes": " ".join(amb), "volume": 0.055, "pan": 0.35,
+                           "di": "emily", "amp": "namJVM", "ampDrive": 0.05, "ampCabIr": "jd-greenback-4x12-01", "noRestrike": True, "humanPitch": 0,
+                           "noScoop": True, "chorus": 0, "sustain": 2.0, "release": 0.9, "attack": 0.5,
+                           "fx": [{"type": "eq", "low": -4, "mid": -1, "midHz": 500, "high": 2}, {"type": "delay", "beats": 0.75, "mix": 0.25, "feedback": 0.35}, {"type": "reverb", "mix": 0.4}]})
     # リフを低いチューニングへ
     for p in song.parts:
         if p["role"] in ("看板リフ", "看板リフ（透明感の層）"):
