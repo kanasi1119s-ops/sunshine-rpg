@@ -12,6 +12,18 @@ import { makeTempoClock } from "./tempo-map";
  */
 
 const PPQ = 480;
+/** 本物のシンバルの効果音（patch cymbalFx）の GM 番号と、音名（12音の位置）→ 鍵盤（tools/soundfont/build-cymbal-fx.mjs の並び）。 */
+const CYMBAL_FX_PROGRAM = 127;
+const REV_LENS = [0.25, 0.35, 0.5, 0.7, 1, 1.4, 2, 2.8, 4];
+const SWELL_LENS = [...REV_LENS, 5.6, 8];
+const CYMBAL_FX_FAMILY: { key: number; lens?: number[] }[] = [
+  { key: 36, lens: REV_LENS }, { key: 36, lens: REV_LENS }, // C・C#＝逆再生クラッシュ
+  { key: 48, lens: REV_LENS }, { key: 48, lens: REV_LENS }, // D・D#＝逆再生チャイナ
+  { key: 60, lens: SWELL_LENS }, // E＝スウェル（ロールのクレッシェンド）
+  { key: 72 }, { key: 73 }, { key: 74 }, { key: 75 }, // F＝クラッシュ1の一打・F#＝クラッシュ2・G＝チャイナ1・G#＝チャイナ2
+  { key: 76 }, { key: 76 }, // A・A#＝サスペンデッドシンバルのふちの強打
+  { key: 77 }, // B＝ロールのディミヌエンド（約21秒）
+];
 const DRUM_CHANNEL = 9;
 /** ピッチベンドの幅（半音）。チャンネルごとに RPN で設定する。±12半音を 0〜16383 に割りあてる。 */
 const BEND_RANGE = 12;
@@ -477,6 +489,24 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         // 厚みとパンチ: キックは別のバスドラムを重ね、スネアはポップ・ロック系のセットで手拍子を薄く重ねる
         if (inst === "kick") push(35, tick, Math.round(velocity * 0.55), len);
         if (inst === "snare" && [8, 16, 24, 25].includes(score.drumKit ?? 0)) push(score.tone === "metal" || score.tone === "prs" ? 40 : 39, tick, Math.round(velocity * (score.tone === "metal" || score.tone === "prs" ? 0.55 : 0.32)), len);
+        continue;
+      }
+      // 2026-10-22 本物のシンバルの効果音（patch cymbalFx＝GM 127。fx-cymbal-real.sf3）: 逆再生・スウェルは、音符の「終わり」に山（打った瞬間）が来るよう、
+      //   音符の長さ（秒）にいちばん近い録音の長さを選び、その長さぶん手前から鳴らす。一打（F〜B）は書いた所から鳴らす
+      if (program === CYMBAL_FX_PROGRAM) {
+        const pc = ((noteNameToMidi(n.note) % 12) + 12) % 12;
+        const fam = CYMBAL_FX_FAMILY[pc];
+        if (fam.lens) {
+          const endSec = clock.beatToSec(startBeat + n.durationBeats);
+          const want = Math.max(0.05, endSec - secStart);
+          let idx = 0;
+          fam.lens.forEach((L, i) => { if (Math.abs(Math.log(L / want)) < Math.abs(Math.log(fam.lens![idx] / want))) idx = i; });
+          const endTick = Math.round((startBeat + n.durationBeats) * PPQ) + grooveTicks + drift;
+          const startTick = Math.max(0, Math.round(clock.secToBeat(endSec - fam.lens[idx]) * PPQ) + grooveTicks + drift);
+          push(fam.key + idx, startTick, velocity, Math.max(10, endTick - startTick + 4));
+        } else {
+          push(fam.key, tick, velocity, Math.max(len, Math.round(PPQ * 2)));
+        }
         continue;
       }
       const pitch = noteNameToMidi(n.note);

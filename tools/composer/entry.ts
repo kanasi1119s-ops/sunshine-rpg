@@ -43,6 +43,7 @@ import drumsJpopAuxUrl from "../../assets-src/soundfont/extra/drums-jpop-aux.sf3
 import drumsMetalAuxUrl from "../../assets-src/soundfont/extra/drums-metal-aux.sf3?url";
 import drumsJazzAuxUrl from "../../assets-src/soundfont/extra/drums-jazz-aux.sf3?url";
 import drumsSupraAuxUrl from "../../assets-src/soundfont/extra/drums-supra-aux.sf3?url";
+import fxCymbalRealUrl from "../../assets-src/soundfont/extra/fx-cymbal-real.sf3?url";
 import guitarFxEgiptUrl from "../../assets-src/soundfont/extra/guitar-fx-egipt.sf3?url";
 import bassBnbUrl from "../../assets-src/soundfont/extra/bass-bnb-finger.sf3?url";
 import bassBnbLoudUrl from "../../assets-src/soundfont/extra/bass-bnb-loud.sf3?url";
@@ -372,6 +373,8 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   guitarNoise: { programs: [2], url: guitarNoiseUrl },
   // 2026-10-22 ギターの飾り（EG-IPT の DI 録音。CC BY 4.0）: 15＝ピックスクレイプ・弦こすり・手でたたく・ナチュラルハーモニクス、22＝全音スライド上、64＝全音スライド下
   guitarFx: { programs: [15, 22, 64], url: guitarFxEgiptUrl },
+  // 2026-10-22 本物のシンバルの効果音（逆再生・スウェル・長い一打。CrocellKit とオスロ大学の録音。CC BY 4.0）。合成のライザー（fxElectro）の代わりに
+  cymbalFx: { programs: [127], url: fxCymbalRealUrl },
   // 2026-10-20 ジャンル別の追加音源（使う曲だけ重ねる。使っていない曲の音は変わらない）
   // ジャズ: アルトサックス（Karoryfer Weresax）・バリトンサックス（Karoryfer Bear Sax）・ハーマンミュートのトランペット（VSCO 2 CE）
   altoSax: { programs: [65], url: saxAltoUrl }, bariSax: { programs: [67], url: saxBariUrl }, mutedTrumpet: { programs: [59], url: trumpetHarmonUrl },
