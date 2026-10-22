@@ -664,6 +664,7 @@ def _join(evs):
 
 
 BMTH_EQ = [{"type": "filter", "kind": "highpass", "freq": 60.0, "q": 0.7}, {"type": "eq", "low": 0, "mid": 11.21, "midHz": 258.5, "high": 0}, {"type": "eq", "low": 0, "mid": -14.94, "midHz": 491.0, "high": 0}, {"type": "eq", "low": 0, "mid": 5.35, "midHz": 2500.0, "high": 0}, {"type": "eq", "low": 0, "mid": -14.95, "midHz": 4353.8, "high": 0}, {"type": "filter", "kind": "lowpass", "freq": 11989.0, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 11989.0, "q": 0.7}]
+GUITAR_REF_EQ = {"bmth": BMTH_EQ}   # 参考の曲を測って計算した EQ（曲ごとに選ぶ）
 
 
 def modernize_leads(song):
@@ -765,9 +766,11 @@ def modernize_leads(song):
     # ギターの帯域を BMTH の数値へ（2026-10-23 聞き比べ H を人間が採用「Hいいね」）。参考の曲と聞き比べ G のギターを音源分離して
     #   1/3オクターブごとに測り（/tmp/ref/analyze.py・fit.py）、差を埋める EQ を計算した: 低い中域を太く・箱っぽい中域と耳に刺さる帯域を深く削る。
     #   リフとリズムは左右いっぱいの別テイク（参考は左右の相関 -0.17 と広い）
-    for p in song.parts:
+    #   2026-10-23 人間「いいね＝25曲の基本の音ではない」→ 曲ごとに song.guitar_ref = "bmth" のように選んだ曲だけに当てる（既定は当てない＝聞き比べ G の音）
+    ref_eq = GUITAR_REF_EQ.get(getattr(song, "guitar_ref", None) or "")
+    for p in (song.parts if ref_eq else []):
         if p["instrument"] == "distGuitar" and p.get("patch") not in ("cymbalFx", "guitarFx") and "空気の層" not in p["role"]:
-            p["fx"] = [dict(f) for f in BMTH_EQ] + [f for f in p.get("fx", []) if f.get("type") == "room"]
+            p["fx"] = [dict(f) for f in ref_eq] + [f for f in p.get("fx", []) if f.get("type") == "room"]
             if p["role"].startswith("看板リフ"): p["double"] = {"spread": 1.0}
             elif p["role"].startswith("リズム"):
                 p["double"] = {"spread": 1.0, "irR": "jd-greenback-4x12-01", **({"diR": "fsbs"} if p.get("guitarTone") == "loud-mid-hs" else {})}
