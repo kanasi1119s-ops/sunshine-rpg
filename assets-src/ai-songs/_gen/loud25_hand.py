@@ -81,6 +81,16 @@ def retone_leads(parts, tone=LEAD_TONE, skip=("リードギター（分散和音
     for p in parts:
         if p["instrument"] == "leadGuitar" and p["role"] not in skip:
             p.pop("guitarTone", None); p.update(json.loads(json.dumps(tone)))
+    plain_guitars(parts)
+
+def plain_guitars(parts):
+    """2026-10-22 人間「一番ラウドっぽくないのはギターのピロピロする音」（分散和音のギターとリード）:
+    leadGuitar には、自動のハンマリング・プルオフ（短い2音の50%）・自動ビブラート・音の揺れ（モジュレーション）・しゃくりが付く。
+    リードと分散和音は distGuitar（同じ DI 録音＋学習アンプ）の単音で鳴らし、自動の奏法を付けない。表情は手で書いた ^（チョーキング）だけ"""
+    for p in parts:
+        if p["instrument"] == "leadGuitar":
+            p["instrument"] = "distGuitar"; p["powerChord"] = False; p["double"] = False
+            p.setdefault("di", "emily"); p["autoScoop"] = False
 
 def add_heavy_kick(parts, volume=0.2):
     k = [p for p in parts if p["instrument"] == "kick"][0]

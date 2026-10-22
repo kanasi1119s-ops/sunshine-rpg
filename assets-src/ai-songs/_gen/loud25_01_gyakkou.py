@@ -13,7 +13,7 @@ import sys, json, copy
 sys.path.insert(0, __file__.rsplit("/", 1)[0])
 from loud25_lib import midi, name, at_least
 from loud25_arrange import build
-from loud25_hand import (LEAD_TONE, ARP_TONE, put, starts, retone_leads, add_heavy_kick, split_lead, part, finish, toks, total)
+from loud25_hand import (LEAD_TONE, ARP_TONE, put, starts, retone_leads, plain_guitars, add_heavy_kick, split_lead, part, finish, toks, total)
 
 # ── 旋律（歌の代わりのリード。1小節＝4拍） ──
 VERSE = [  # 中心はラ4。主音（レ）を避け、低めで語るように。サビのフックと同じ「頭を抜いて8分3つ」の入り方
@@ -214,6 +214,7 @@ def make(path):
     quiet["attack"] = 0.25
     add_heavy_kick(parts)
     bass.update({"amp": "bassSplit", "ampDrive": 0.6, "duck": 0.25, "fx": [{"type": "eq", "low": 0, "mid": 3, "midHz": 2200, "high": 2}]})
+    plain_guitars(parts)
     song["dynamics"] = "natural"
     finish(song, parts, SPEC["title"])
     json.dump(song, open(path, "w"), ensure_ascii=False)
