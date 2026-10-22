@@ -351,6 +351,19 @@ def make(path, vocal=False):   # 2026-10-22 人間「歌入りは後程で、イ
         put(bass, at, at + 2, "D2:2!")
     parts.insert(parts.index(part(parts, inst="crash")) + 1, big)
     song["drumMix"] = {**song.get("drumMix", {}), "kick": {"level": 1.0}, "snare": {"level": 1.0}, "crash": {"level": 0.9}}
+    # 2026-10-22 人間「もう少しドラムの音にエフェクトかけていいかも」（docs/sound/modern-loud-rock/production.md 4章の値を目安に）
+    DRUM_FX = {
+        "kick": [{"type": "compressor", "threshold": -16, "ratio": 4, "attack": 0.005, "release": 0.08},
+                 {"type": "eq", "low": 2, "mid": -3, "midHz": 400, "high": 2}],
+        "snare": [{"type": "pcomp", "threshold": -30, "ratio": 12, "attack": 0.002, "release": 0.12, "mix": 0.3},
+                  {"type": "room", "mix": 0.14, "size": 0.8}, {"type": "plate", "mix": 0.18}],
+        "tom": [{"type": "room", "mix": 0.12, "size": 0.9}, {"type": "reverb", "mix": 0.22}],
+        "hihat": [{"type": "eq", "low": -3, "mid": 0, "midHz": 1000, "high": 1}],
+        "crash": [{"type": "eq", "low": -3, "mid": -1, "midHz": 400, "high": 1}, {"type": "room", "mix": 0.12, "size": 0.9}],
+    }
+    for p_ in parts:
+        if p_["instrument"] in DRUM_FX and not p_["role"].endswith("（重み）"):
+            p_["fx"] = json.loads(json.dumps(DRUM_FX[p_["instrument"]]))
     add_heavy_kick(parts)
     bass.update({"amp": "bassSplit", "ampDrive": 0.6, "duck": 0.25, "fx": [{"type": "eq", "low": 0, "mid": 3, "midHz": 2200, "high": 2}]})
     plain_guitars(parts)
