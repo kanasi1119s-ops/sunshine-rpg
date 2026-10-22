@@ -115,23 +115,22 @@ SPEC = {
             "s": ["................"] * 6 + ["................", "....X.X.X.X....."] + ["....X.......X..."] * 8,
             "t": ["................"] * 6 + ["4...4...3...3...", "................"] + ["................"] * 8,
             "c": ["................"] * 8 + ["c.r.r.r.r.r.r.r.", "r.r.r.r.r.r.r.r.", "n.r.r.r.r.r.r.r.", "r.r.r.r.r.r.r.r."] * 2, "fill": "tom", "crash": False},
-        # 2026-10-22 人間「ドラムもうちょい激しくして」: ハイハット16分・小節の終わりにツーバスの連打・2回目のAメロは倍のノリ・サビはほぼずっとツーバス
-        "verse1": {"k": ["X..X..X...X.X...", "X..X..X...X.XXXX"], "s": ["....X..o....X...", "....X......oX..o"], "h": ["XxxxXxxxXxxxXxxx", "XxxxXxxxXxxxXx.."], "fill": "snare", "crash": False},
-        "verse2": {"k": ["X.X.X.X.X.X.X.X.", "X.X.X.X.X.XXXXXX"], "s": ["..X...X...X...X.", "..X...X...X.X.XX"], "c": ["n.r.r.r.r.r.r.r.", "r.r.r.r.n.r.r.r."], "fill": "snare"},
+        "verse1": {"k": "sync", "s": ["....X..o....X...", "....X......oX..o"], "h": ["x.x.x.x.x.x.x.x.", "x.x.x.x.x.x.x.xo"], "fill": "snare", "crash": False},
+        "verse2": {"k": "sync", "s": ["....X..o....X..o", "....X..o.o..X..."], "c": "r.r.r.r.r.r.r.r.", "fill": "snare"},
         "pre1": {"k": ["X.......X......."] * 2 + ["X...X...X...X..."] * 2 + ["X.X.X.X.X.X.X.X."] * 3 + ["X.X.X.X.X.X....."],
                  "s": ["........X......."] * 2 + ["....X.......X..."] * 2 + ["....X.......X...", "....X.......X...", "....X...X...X...", "....X.X.X.X....."],
                  "h": ["x...x...x...x..."] * 4 + ["................"] * 4, "c": ["................"] * 4 + ["r.r.r.r.r.r.r.r."] * 3 + ["r.r.r.r.r.r....."], "fill": "stop", "crash": False},
         "pre2": {"k": ["X...X...X...X..."] * 4 + ["XXXXXXXXXXXXXXXX"] * 3 + ["X.X.X.X.X.X....."],
                  "s": ["....X.......X..."] * 4 + ["....X.......X...", "....X.......X...", "....X.X.X.X.X.X.", "XXXXXXXXXXXX...."],
                  "c": ["r.r.r.r.r.r.r.r."] * 4 + ["n...n...n...n..."] * 3 + ["................"], "fill": "stop", "crash": False},
-        "chorus1": {"k": ["X..x..X.X..x..x.", "XXXXXXXXXXXXXXXX", "X..x..X.X..x..x.", "XXXXXXXXXXXXXXXX"], "s": "....X.......X...",
-                    "c": ["c.r.r.r.n.r.r.r.", "n...n...n...n...", "n.r.r.r.n.r.r.r.", "n...n...n...n..."], "fill": "tom"},
-        "chorus2": {"k": ["XXXXXXXXXXXXXXXX", "XXXXXXXXXXXXXXXX", "XXXXXXXXXXXXXXXX", "XXXXXXXXXXXX.XXX"], "s": ["....X.......X...", "....X.......X...", "..X...X...X...X.", "..X...X...X.XXXX"],
+        "chorus1": {"k": ["X..x..X.X..x..x.", "X..x..X.X..x..x.", "X..x..X.X..x..x.", "X..x..X.X...XXXX"], "s": "....X.......X...",
+                    "c": ["c.r.r.r.r.r.r.r.", "r.r.r.r.r.r.r.r.", "n.r.r.r.r.r.r.r.", "r.r.r.r.r.r.r.r."], "fill": "tom"},
+        "chorus2": {"k": ["X..x..X.X..x..x.", "X..x..X.X..x..x.", "XXXXXXXXXXXXXXXX", "XXXXXXXXXXXX.XXX"], "s": "....X.......X...",
                     "c": ["c.r.r.r.n.r.r.r.", "r.r.r.r.r.r.r.r.", "n...n...n...n...", "r.r.r.r.r.r.r.r."], "fill": "tom"},
         "chorus3": {"k": ["X...X...X...X..."] * 4 + ["X..x..X.X..x..x.", "XXXXXXXXXXXXXXXX", "X..x..X.X..x..x.", "XXXXXXXXXXXXXXXX"],
                     "s": ["................"] * 4 + ["....X.......X..."] * 4,
                     "c": ["................"] * 4 + ["c.r.r.r.n.r.r.r.", "n...n...n...n...", "r.r.r.r.r.r.r.r.", "n...n...n...n..."], "fill": "tom", "crash": False},
-        "inter1": {"k": ["X.X.X.X.X.X.X.X.", "X.X.X.X.X.XXXXXX"], "s": "....X.......X...", "c": ["n...n...n...n...", "n...n...n...nnnn"], "fill": "snare"},
+        "inter1": {"k": ["X.....X...X.....", "X.....X...X.X.X."], "s": "........X.......", "c": ["n...r...r...r...", "r...r...r...r..."], "fill": "snare"},
         "bridge": {"k": ["X...............", "................", "X.........X.....", "................"], "s": ["................"],
                    "t": ["........4.......", "4.......4.......", "........3...4...", "4.......4...3.4."], "c": ["r.......r......."], "crash": False, "fill": "stop"},
         "break": {"k": ["X..X..X...X.X...", "X..X..X...X.....", "X..X..X...X.X...", "X..X..X.........", "X..X..X...X.X...", "X..X..X...X.....", "X..X..X.........", "X..............."],
@@ -240,22 +239,32 @@ def make(path, vocal=False):   # 2026-10-22 人間「歌入りは後程で、イ
                       "bars": 2, "pattern": "D.............--", "step": 0.5, "strings": 6, "ringMax": 8, "spreadMs": 18}}
     parts.insert(0, ring)
     # 2026-10-22 人間「前奏にプログレのテク入れて、曲が入る時に大きな入りにしよう」
-    # (1) 1〜4小節: 伸ばした和音の上で、3つずつのタッピング（16分。4拍子の上でずれて回る）。4小節目の4拍目は休み
-    def taps(cells, n16):
-        return " ".join(f"{cells[j % 3]}:0.25" + ("!" if j % 3 == 0 else ",") for j in range(n16))
-    lead_ = part(parts, "リード（旋律）")
-    put(lead_, a, a + 8, taps(["D6", "A5", "F5"], 32))
-    put(lead_, a + 8, a + 16, taps(["C6", "A#5", "F5"], 28) + " R:1")
     # (2) 7〜8小節: バンド全員で「5・5・6」の区切りの一撃をそろえる（変則のユニゾン）。8小節目の4拍目は全員休み（リードの駆け上がりだけ）
-    U7, U8 = "D2:1.25! D2:1.25! D2:1.5!", "D2:1.25! D2:1.25! D2:0.5! R:1"
+    U7, U8 = "D2:1.25! D2:1.25! D2:1.5!", "D2:1.25! D2:1.25! R:1.5"
     UNI = (a, U7 + " " + U8)
-    G7, G8 = "X....X....X.....", "X....X....X....."
+    # 2026-10-22 人間「ドラムの前奏を激しくしてプログレ要素入れてってこと」→ 前奏のドラムを小節ごとに組み直す
+    #   1〜2: タムとキックを 3・3・2 の区切りで回す（区切りの頭にチャイナ）／3〜4: ツーバス16分＋スネアを5つごとに（4拍子とずれる）
+    #   5〜6: ツーバス16分＋チャイナを7つごとに／7〜8: 5・5・6 の全員ユニゾン、8小節目は2発のあとタムを駆け下りて最後の1拍は全員止まる
+    #   9〜16: ツーバス16分とチャイナで全開
+    D = "." * 16
+    def g(pos, n=32, ch="X"):
+        return "".join(ch if i in pos else "." for i in range(n))
+    KK = ["X..X..X.X..X..X.", "X..X..X.X..X..XX", "X" * 16, "X" * 12 + "....", "X" * 16, "X" * 16, "X....X....X.....", "X....X.........."] + ["X" * 16] * 3 + ["X" * 12 + "X.X."] + ["X" * 16] * 3 + ["X" * 12 + "XXXX"]
+    snare_p = g({4, 9, 14, 19, 24, 29} - {28, 29, 30, 31})
+    SN = [D, "............xxxX", snare_p[:16], snare_p[16:28] + "....", "....X.......X...", "....X.......X.X.", "X....X....X.....", "X....X.........."] + ["....X.......X..."] * 3 + ["....X...X.X.XXXX"] + ["....X.......X..."] * 3 + ["....X.X.X.XXXXXX"]
+    kick_g = "".join(KK); snare_g = "".join(SN)
     for p_ in parts:
-        if p_["instrument"] == "kick": put(p_, a + 24, a + 32, G7 + G8)
-        if p_["instrument"] == "snare": put(p_, a + 24, a + 32, G7 + G8)
-        if p_["instrument"] == "hihat": put(p_, a + 24, a + 32)
-    put(part(parts, inst="tom"), a + 24, a + 32)
-    put(part(parts, inst="crash"), a + 24, a + 32, "B2:1.25! B2:1.25! B2:1.5! B2:1.25! B2:1.25! B2:1.5!")
+        if p_["instrument"] == "kick": put(p_, a, a + 64, kick_g)
+        if p_["instrument"] == "snare": put(p_, a, a + 64, snare_g)
+        if p_["instrument"] == "hihat": put(p_, a, a + 64)
+    TOM12 = "A3:0.25! A3:0.25 A3:0.25 D3:0.25! D3:0.25 D3:0.25 A3:0.25! A3:0.25 D3:0.25! D3:0.25 D3:0.25 A3:0.25! A3:0.25 A3:0.25 D3:0.25! D3:0.25"
+    put(part(parts, inst="tom"), a, a + 64, TOM12 + " " + TOM12.replace("D3:0.25! D3:0.25", "D3:0.25! D3:0.25", 1) + " R:4 R:4 R:4 R:4 R:4 R:1.5 C4:0.25! C4:0.25 A3:0.25 A3:0.25 F3:0.25 F3:0.25 R:1" + " R:4" * 8)
+    CHINA_332 = "B2:0.75! B2:0.75! B2:0.5! B2:0.75! B2:0.75! B2:0.5!"
+    china7 = "B2:1.75! B2:1.75! B2:1.75! B2:1.75! B2:1"
+    put(part(parts, inst="crash"), a, a + 64, " ".join([CHINA_332, CHINA_332, "B2:1! B2:1! B2:1! B2:1!", "B2:1! B2:1! B2:2!", china7,
+                                                     "B2:1.25! B2:1.25! B2:1.5! B2:1.25! B2:1.25! R:1.5",
+                                                     "C2:1! B2:1! B2:1! B2:1!", "B2:1! B2:1! B2:1! B2:1!", "B2:1! B2:1! B2:1! B2:1!", "B2:1! B2:1! B2:1! R:1",
+                                                     "C2:1! B2:1! B2:1! B2:1!", "B2:1! B2:1! B2:1! B2:1!", "B2:1! B2:1! B2:1! B2:1!", "B2:1! B2:1! R:2"]))
     riff = {"instrument": "distGuitar", "role": "看板リフ", "volume": 0.11, "pan": 0, "guitarTone": "loud-mid", "gainDb": -3, "powerChord": False, "notes": f"R:{full}"}
     for sid, frm, nb in (("intro", 4, 4), ("inter1", 0, 8), ("outro", 0, 2)):
         a, _ = st[sid]; put(riff, a + frm * 4, a + (frm + nb) * 4, sig(nb))
