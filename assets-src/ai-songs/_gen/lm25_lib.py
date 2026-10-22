@@ -114,6 +114,17 @@ def parse_chord(ch):
     return m.group(1), q, base or m.group(1)
 
 
+def tr_chord(ch, semi):
+    """和音の名前を半音で動かす（シャープで書く）"""
+    def one(x):
+        m = re.match(r"^([A-G][#b]?)(.*)$", x)
+        return SHARP[(PC[m.group(1)] + semi) % 12] + m.group(2)
+    if "/" in ch:
+        a, b = ch.split("/")
+        return one(a) + "/" + SHARP[(PC[b] + semi) % 12]
+    return one(ch)
+
+
 def chord_pcs(ch):
     r, q, b = parse_chord(ch)
     s = {(PC[r] + i) % 12 for i in QUAL[q]}
