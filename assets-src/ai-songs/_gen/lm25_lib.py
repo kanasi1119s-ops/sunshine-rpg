@@ -503,7 +503,8 @@ class Song:
         self.nb = len(self.secs)
         self.parts = []
         self.extra = {}
-        self.flags = ""      # 書き出しに足す引数（例 "--space hall --space-wet 0.18"）。<json>.flags に書く
+        self.flags = ""
+        self.kinds = {}      # 区間の名前 → 作曲ソフトの区間の種類（intro・verse・pre・chorus・interlude・bridge・break・outro・solo）      # 書き出しに足す引数（例 "--space hall --space-wet 0.18"）。<json>.flags に書く
 
     def chord_at(self, idx):
         n, i = self.secs[idx]
@@ -530,7 +531,7 @@ class Song:
                 "human": 0.35, "humanProfile": "role", "humanDist": "triangle", "diGuitar": "emily", "autoScoop": False, "guitarWobble": False,
                 "drumMix": {"kick": {"level": 1.0}, "crash": {"level": 0.9}, "snare": {"level": 1.0}},
                 "chords": " ".join(simple_chord(self.chord_at(i)) for i in range(self.nb)),
-                "sections": [{"kind": kind(n) if kind(n) in KINDS else "verse", "bars": c} for n, c in self.form],
+                "sections": [{"kind": self.kinds.get(n) or (kind(n) if kind(n) in KINDS else "verse"), "bars": c} for n, c in self.form],
                 "parts": self.parts}
         song.update(self.extra)
         return song
