@@ -160,6 +160,8 @@ export function expandStrum(p: AiPart, rawSpec: StrumSpec, ctx: ExpandCtx, warni
   let filled = 0;
   for (let i = 0; filled < ctx.totalBeats - 1e-6 && i < 4096; i++) {
     const s = spans[i % spans.length];
+    // 2026-10-22「-」はその小節（bars 分）を休む（前奏だけ和音を鳴らす、など）
+    if (s.chord === "-") { forms.push({ voicing: [], beats: Math.min(s.beats, ctx.totalBeats - filled) }); filled += s.beats; continue; }
     // 押さえ方を音名で直接書く: "[B1.F#2.B2.E3.G#3.C#4]"（低い弦から。全弦開放など、コード名で書けない響き。2026-10-21）
     const explicit = /^\[(.+)\]$/.exec(s.chord);
     const voicing = explicit ? explicitVoicing(explicit[1]) : capo ? capoVoicing(s.chord, stringsN, capo) : strumVoicing(s.chord, stringsN);
@@ -170,7 +172,7 @@ export function expandStrum(p: AiPart, rawSpec: StrumSpec, ctx: ExpandCtx, warni
     forms.push({ voicing, beats: Math.min(s.beats, ctx.totalBeats - filled) });
     filled += s.beats;
   }
-  const voiceCount = Math.max(...forms.map((f) => f.voicing.length));
+  const voiceCount = Math.max(1, ...forms.map((f) => f.voicing.length));
   const spreadBeats = Math.min((clamp(Number(spec.spreadMs) || 12, 0, 60) / 1000) * (ctx.bpm / 60), 0.1 / Math.max(1, voiceCount - 1));
   const spreadT = Math.round(spreadBeats * TICKS);
   // 型を「打つ音（のばしを含む）」と「休み」のならびにする。先頭の「.」は休み扱い
