@@ -96,7 +96,7 @@ class Library:
 
     def pick(self, kind=None, bpm=None, relax=True, **cond):
         """条件に合うものから1つ選ぶ（直前と同じものは使わない）。見つからなければ条件をゆるめる"""
-        avoid = set(cond.pop("avoid", ()))
+        avoid = set(cond.pop("avoid", None) or ())
         if self.last: avoid.add(self.last["id"])
         tries = [cond]
         if relax:
@@ -139,7 +139,13 @@ class Library:
                     e = c.get("energy") or KIND.get(kind, {}).get("energy")
                     if not e or e[0] - 0.1 <= q["energy"] <= e[1] + 0.1:
                         p = q; self._use(p)
-            if p is None: p = self.pick(kind=kind, bpm=bpm, **c)
+            if p is None:
+                # 8小節より短く使うときは、使う小節の中にライド・タムがあるかも確かめる（無ければ別のものを選び直す）
+                bad = set()
+                for _ in range(30):
+                    p = self.pick(kind=kind, bpm=bpm, avoid=bad, **c)
+                    if take == 8 or _slice_ok(p["bars"][8 - take:] if last_chunk else p["bars"][:take], c): break
+                    bad.add(p["id"]); self.used[p["id"]] -= 1; self.used[_perf(p["id"])] -= 1
             bars = [dict(b) for b in (p["bars"][8 - take:] if last_chunk else p["bars"][:take])]
             for b in bars: b["_id"] = p["id"]
             out += bars; prev = p; left -= take
@@ -165,6 +171,13 @@ class Library:
             cs.append(p)
         if not cs: return None
         p = self.rnd.choice(cs); b = dict(p["bars"][-1]); b["_id"] = p["id"]; return b
+
+def _slice_ok(bars, c):
+    ride = sum(1 for b in bars for ch in b["c"] if ch in "rRuU"); toms = sum(1 for b in bars for ch in b["t"] if ch != ".")
+    if c.get("need_ride") and ride < 2: return False
+    if c.get("need_ride") is False and ride >= 2: return False
+    if c.get("need_toms") and toms < 1: return False
+    return True
 
 def soften(bars):
     """一段弱く: X→x、ハイハットの x→o（ゴーストは残す）、シンバルの強打をふつうに"""
