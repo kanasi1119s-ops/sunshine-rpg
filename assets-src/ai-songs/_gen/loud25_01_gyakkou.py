@@ -152,6 +152,49 @@ BD_B = "D2:0.75! D2:0.75! D2:1! D2:1.5!"                 # 0・3・6・10
 BD_C = "D2:0.75! D2:0.75! D2:2.5!"                       # 0・3・6 で伸ばす
 BD_END = "D2:0.75! R:3.25"                               # 1拍目の一撃だけ（あとは休み）
 
+# ── 歌（2026-10-22 人間「1・2・3だね」→ 1曲目は歌入りのバンドの曲。旋律は歌が運び、リードギターは前奏と間奏だけ）──
+# 歌詞はオリジナル。テーマ: 閉じこもった部屋に差しこむ一筋の光が、プリズムで色に分かれる（逆光）
+# 旋律は歌える高さへ1オクターブ下げる（Aメロ ラ3〜、サビ レ4〜ミ5。テトは B3〜E5 が楽）
+LYRICS = {
+    "verse1": ["とじこめたへやで", "かぞえたためいき", "ことばをなくして", "ゆびさきこごえる", "すきまにさしこむ", "ひとすじのいろ"],
+    "verse2": ["ふるえるてのひら", "かざしたまぶた"],
+    "pre": ["いまはまだ", "とおくても", "このむねの", "おくでひかる"],
+    "chorus": ["ひかりきりさく", "うしろのひかり", "まだとおくへ", "ぷりずむになれ", "なみだもひかる", "くだけたいろあつめ", "そらへはなて", "ぼくらのいろで"],
+    "bridge": ["かげごとだきしめて"],
+}
+SMALL = set("ゃゅょぁぃぅぇぉ")
+def morae(line):
+    out = []
+    for ch in line:
+        if ch in SMALL and out: out[-1] += ch
+        else: out.append(ch)
+    return out
+
+def vocal_notes(lead_notes, st, sids_lyrics, full):
+    """リードの音（同じ場所）を1オクターブ下げ、歌詞を1音ずつ付けた "vocals" の notes を作る"""
+    out = []; pos = 0.0
+    def rest(d):
+        nonlocal pos
+        while d > 1e-9:
+            x = min(4, d); out.append(f"R:{x:g}"); d -= x; pos += x
+    events = toks(lead_notes)
+    for sid, lines in sids_lyrics:
+        a, n = st[sid]; b = a + n * 4
+        seq = [m for line in lines for m in morae(line)]
+        notes = [(t, d, h, suf) for t, d, h, suf in events if a - 1e-9 <= t < b - 1e-9 and not h.startswith("R")]
+        assert len(seq) == len(notes), (sid, len(seq), len(notes), [h for _, _, h, _ in notes])
+        for (t, d, h, suf), syl in zip(notes, seq):
+            if t > pos + 1e-9: rest(t - pos)
+            nm = name(midi(h) - 12); bang = "!" if "!" in suf else ""
+            bend = suf.count("^")
+            if bend and d > 0.5:
+                out.append(f"{nm}{bang}:0.5:{syl}"); out.append(f"{name(midi(h) - 12 + bend)}:{d - 0.5:g}:ー")
+            else:
+                out.append(f"{nm}{bang}:{d:g}:{syl}")
+            pos = t + d
+    if full > pos: rest(full - pos)
+    return " ".join(out)
+
 def harmony(notes, t0, S, above=True):
     """各音に、その小節の和音の音のうち 3〜4 半音上（above）か下の音を合わせる"""
     out = []
@@ -167,7 +210,7 @@ def harmony(notes, t0, S, above=True):
 def seg(p, a, b):
     return " ".join(f"{h}:{d:g}{suf}" for t, d, h, suf in toks(p["notes"]) if a - 1e-9 <= t < b - 1e-9)
 
-def make(path):
+def make(path, vocal=True):
     song, S = build(copy.deepcopy(SPEC))
     st = starts(FORM)
     full = st["outro"][0] + 4 * 4
@@ -264,12 +307,30 @@ def make(path):
     add_heavy_kick(parts)
     bass.update({"amp": "bassSplit", "ampDrive": 0.6, "duck": 0.25, "fx": [{"type": "eq", "low": 0, "mid": 3, "midHz": 2200, "high": 2}]})
     plain_guitars(parts)
+    if vocal:
+        # 歌の旋律（リード2本を合わせた音）→ 歌に。リードギターは前奏の先出しだけ残し、ハモり・オクターブ下は歌に任せて外す
+        merged = {"notes": f"R:{full}"}
+        for p_ in (quiet, lead):
+            for t, d, h, suf in toks(p_["notes"]):
+                if not h.startswith("R"): put(merged, t, t + d, f"{h}:{d:g}{suf}")
+        L = LYRICS
+        sids = [("verse1", L["verse1"]), ("pre1", L["pre"]), ("chorus1", L["chorus"]), ("verse2", L["verse2"]), ("pre2", L["pre"]),
+                ("chorus2", L["chorus"]), ("bridge", L["bridge"]), ("chorus3", L["chorus"])]
+        vn = vocal_notes(merged["notes"], st, sids, full)
+        song["vocals"] = [{"voice": "teto", "notes": vn, "volume": 1.0, "pan": 0, "reverb": 0.2}]
+        song["vocalLevel"] = 1.0
+        for sid, _ in sids:
+            a, n = st[sid]; put(lead, a, a + n * 4); put(quiet, a, a + n * 4)
+        parts[:] = [p_ for p_ in parts if p_["role"] not in ("リード（ハモり）", "リード（オクターブ下）")]
     song["dynamics"] = "natural"
     finish(song, parts, SPEC["title"])
     json.dump(song, open(path, "w"), ensure_ascii=False)
     return song, st
 
 if __name__ == "__main__":
-    s, st = make(sys.argv[1] if len(sys.argv) > 1 else "/tmp/lr/opt/full/n3-gyakkou.json")
+    out = sys.argv[1] if len(sys.argv) > 1 else "/tmp/lr/opt/full/n7-gyakkou.json"
+    s, st = make(out)
+    inst = json.loads(json.dumps(s)); inst.pop("vocals", None); inst.pop("vocalLevel", None)
+    json.dump(inst, open(out.replace(".json", "-inst.json"), "w"), ensure_ascii=False)   # 伴奏だけ（パソコンで書き出す）
     for p in s["parts"]: print(p["role"], p["notes"][:90])
     print("小節", sum(f[2] for f in FORM), "秒", round(sum(f[2] for f in FORM) * 4 * 60 / SPEC["bpm"]), "最初のサビ", round(st["chorus1"][0] * 60 / SPEC["bpm"]), "秒")
