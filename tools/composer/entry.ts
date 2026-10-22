@@ -50,6 +50,10 @@ import bassBnbLoudUrl from "../../assets-src/soundfont/extra/bass-bnb-loud.sf3?u
 import drumsCrocellUrl from "../../assets-src/soundfont/extra/drums-crocell.sf3?url";
 import drumsCrocellAuxUrl from "../../assets-src/soundfont/extra/drums-crocell-aux.sf3?url";
 import drumsCrocellPunchUrl from "../../assets-src/soundfont/extra/drums-crocell-punch.sf3?url";
+import drumsNakedUrl from "../../assets-src/soundfont/extra/drums-naked.sf3?url";
+import drumsNakedPunchUrl from "../../assets-src/soundfont/extra/drums-naked-punch.sf3?url";
+import drumsNakedPunchFsUrl from "../../assets-src/soundfont/extra/drums-naked-punch-fs.sf3?url";
+import drumsNakedPunchStackUrl from "../../assets-src/soundfont/extra/drums-naked-punch-stack.sf3?url";
 import pianoUprightUrl from "../../assets-src/soundfont/extra/piano-upright-kw.sf3?url";
 import pianoUprightBrightUrl from "../../assets-src/soundfont/extra/piano-upright-kw-bright.sf3?url";
 import epianoCp80Url from "../../assets-src/soundfont/extra/epiano-cp80.sf3?url";
@@ -154,7 +158,7 @@ import { CHORD_SHAPES, chordIntervals } from "../../src/audio/chord-input";
 import { addNotes, copyNotes, moveNotes, quantizeNotes, notesInRange, notesToEvents, noteStartAt, pasteNotes, removeNotes, resizeNote, setNotesLength, trackToNotes, trackTotalBeats, type RollNote } from "../../src/audio/edit";
 import { composeFinale, FINALES } from "../../src/audio/finale";
 import { GM_PROGRAM } from "../../src/audio/gm-map";
-import { scoreToMidi, scoreToMidiInfo } from "../../src/audio/midi-export";
+import { scoreToMidi, scoreToMidiInfo, setHihatHalfKey } from "../../src/audio/midi-export";
 import { analyzeChannels, type Analysis } from "../../src/audio/auto-mix";
 import { AMP_PRESETS, AMP_PRESET_NAMES, type AmpPresetName } from "../../src/audio/amp";
 import { NamHost } from "../../src/audio/nam/nam-host";
@@ -226,6 +230,11 @@ const DRUM_FONTS: Record<string, { label: string; url: string | null }> = {
   crocell: { label: "生ドラム CrocellKit（メタル向け。チャイナ2・スプラッシュ2・クラッシュ3＋止め打ち）", url: drumsCrocellUrl },
   "crocell-punch": { label: "生ドラム CrocellKit（乾いてパンチ。部屋の鳴りなし・太鼓ごとに音作り済み）", url: drumsCrocellPunchUrl },
   "crocell-aux": { label: "CrocellKit＋録音の小物", url: drumsCrocellAuxUrl },
+  // 2026-10-22 Naked Drums（Wilkinson Audio。SFZ 化 kinwie。CC BY 4.0・クレジット必要）＋Frankensnare（Karoryfer。CC0）のスネア。鍵盤は docs/sound/drum-keys-naked.md
+  naked: { label: "生ドラム Naked Drums（素直な混ぜ方。タム5つ・チャイナ2・スプラッシュ2＋止め打ち）", url: drumsNakedUrl },
+  "naked-punch": { label: "生ドラム Naked Drums（乾いてパンチ。部屋は潰して少し・太鼓ごとに音作り済み）", url: drumsNakedPunchUrl },
+  "naked-punch-fs": { label: "Naked Drums（乾いてパンチ）＋スネアを Frankensnare の 14x8 アルミに（強さ 118 以上でリムショット）", url: drumsNakedPunchFsUrl },
+  "naked-punch-stack": { label: "Naked Drums（乾いてパンチ）＋スネアに Frankensnare の 14x8 アルミを重ねる", url: drumsNakedPunchStackUrl },
 };
 // ギター（ジャズギター26・クリーンギター27）の音源。Karoryfer Samples「Black And Green Guitars」（CC0）の録音
 const GUITAR_FONTS: Record<string, { label: string; url: string | null }> = {
@@ -344,6 +353,8 @@ type OverlaySlot = "bass" | "drums" | "guitar" | "orchestra" | "piano";
 async function applyOverlay(slot: OverlaySlot, id: string): Promise<void> {
   const table = slot === "bass" ? BASS_FONTS : slot === "guitar" ? GUITAR_FONTS : slot === "orchestra" ? ORCH_FONTS : slot === "piano" ? PIANO_FONTS : DRUM_FONTS;
   if (slot === "bass") bassId = id; else if (slot === "guitar") guitarId = id; else if (slot === "orchestra") orchId = id; else if (slot === "piano") pianoId = id; else drumsId = id;
+  // 半開きのハイハット（グリッドの h）: 鍵盤 95 に半開きの録音がある音源（CrocellKit・Naked Drums）は 95、ほかはオープン（46）
+  if (slot === "drums") setHihatHalfKey(/^(crocell|naked)/.test(id) ? 95 : 46);
   const url = table[id]?.url;
   await engine.setOverlaySoundfont(slot, url ? (bytesOf(url).buffer as ArrayBuffer) : null);
   try { window.localStorage.setItem(`sunshine-composer-${slot}`, id); } catch { /* 保存できなくてもよい */ }
