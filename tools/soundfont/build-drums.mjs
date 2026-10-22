@@ -184,7 +184,7 @@ const PROFILES = {
     eq: "highpass=f=28",
     snareEq: "highpass=f=90,equalizer=f=190:t=q:w=1:g=3,equalizer=f=650:t=q:w=1.3:g=-7,equalizer=f=5500:t=q:w=1:g=4,highshelf=f=8000:g=7,acompressor=threshold=-20dB:ratio=4:attack=3:release=60:makeup=2",
     kindEq: {
-      kick: "highpass=f=85,highpass=f=85,highpass=f=75,equalizer=f=120:t=q:w=1:g=3,equalizer=f=380:t=q:w=1.2:g=-8,equalizer=f=3500:t=q:w=1:g=6,equalizer=f=7500:t=q:w=0.8:g=11,acompressor=threshold=-18dB:ratio=4:attack=5:release=60:makeup=2",
+      kick: "highpass=f=48,highpass=f=48,highpass=f=42,equalizer=f=65:t=q:w=1:g=1.5,equalizer=f=110:t=q:w=1:g=2.5,equalizer=f=380:t=q:w=1.2:g=-6.5,equalizer=f=3500:t=q:w=1:g=3.0,equalizer=f=7500:t=q:w=0.8:g=4.5,acompressor=threshold=-18dB:ratio=4:attack=5:release=60:makeup=2",
       tom: "highpass=f=60,equalizer=f=500:t=q:w=1.3:g=-7,equalizer=f=4000:t=q:w=1:g=4,acompressor=threshold=-20dB:ratio=3:attack=5:release=80",
       hat: "highpass=f=300,highshelf=f=7000:g=7",
       // シンバルは録音の自然な音のまま（人間の決まり「鳴りを伸ばす」。2026-10-22「これはシンバルの音じゃないな」を受けて、持ち上げ・圧縮・クリップはしない）
@@ -192,10 +192,11 @@ const PROFILES = {
     },
     // 2026-10-22 追加（人間「もうちょっとだけ頑張って近づけよう」）: キックの中のマイク（ビーター側）を強め、録音に無い「カチッ」を合成のクリックで足す。
     // 帯域の補正・アタックの強調・軽いクリップは naked-punch と同じしくみ（数値は 1打ずつ測って合わせた）
-    micMul: { KDrumInside: 2.0 },
+    micMul: { KDrumInside: 1.5 },
+    // 2026-10-22 人間「バスドラの音がこれだと高すぎ」: 低音を切る周波数を 85→48Hz に下げて胴の低さを戻し、カチッ（3.5k・7.5k・クリック・ビーター側のマイク）を控えめにした（細かい刻みで調整）
     // クリックを 10dB にすると、キックの 6k〜12kHz は目標に近づくが、全体の高域とクレストが目標から離れた（2026-10-22 の8ビートで比べて 6dB にした）
-    click: { kick: { db: 6, ms: 15, rise: 2, lo: 3000, hi: 12000 } },
-    bandEq: { kick: [-2, -8, 0, 10, 8, 10, 8, 6, 6, 8], snare: [0, 10, 0, -9, -16, -10, -8, -7, -3, 0] },
+    click: { kick: { db: 2.5, ms: 15, rise: 2, lo: 3000, hi: 12000 } },
+    bandEq: { kick: [0, 0, 0, 4.5, 3.5, 4.5, 3.5, 2.5, 2.5, 3.0], snare: [0, 10, 0, -9, -16, -10, -8, -7, -3, 0] },
     attack: { kick: 4, snare: 3, tom: 3 },
     clip: { kick: 2.5, snare: 2, tom: 2 },
     gain: { snare: 16 } },
