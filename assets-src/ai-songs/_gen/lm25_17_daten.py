@@ -29,6 +29,7 @@ song.desc += " 物語: 悪魔と天使が言い争い、戦い、天使が落ち
 song.kinds = {"demon": "verse", "angel": "verse", "dchorus": "chorus", "achorus": "chorus", "demon2": "verse", "angel2": "verse",
               "battle": "solo", "fall": "bridge", "merge": "chorus"}
 SECS, NB = song.secs, song.nb
+song.pickups = ['V3', 'V5']   # 8分3つの上りの型を、この曲だけのリズムに（lm25_lib.vary_pickups）
 
 D_RIFF = {"F#m": [bar("F#2:0.5! A2:0.5 G2:0.5 F#2:0.5 C#3:0.5 D3:0.5 C#3:0.5 G2:0.5"), bar("F#2:0.5! A2:0.5 G2:0.5 F#2:0.5 E3:0.5 D3:0.5 C#3:0.5 A2:0.5")],
           "G": [bar("G2:0.5! B2:0.5 A2:0.5 G2:0.5 D3:0.5 E3:0.5 D3:0.5 A2:0.5")] * 2,

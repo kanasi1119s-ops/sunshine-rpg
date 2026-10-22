@@ -37,6 +37,7 @@ song = Song("路地裏の灯（仮）",
             BPM, BEATS, FORM, CH)
 song.desc += " 物語: 夜の路地に迷いこんだ旅人が、裏口でサックス吹きに出会い、追われ、窓に朝の光を見る。"
 SECS = song.secs
+song.pickups = ['V3', 'V1']   # 8分3つの上りの型を、この曲だけのリズムに（lm25_lib.vary_pickups）
 NB = song.nb
 
 # ---------------- 看板リフ ----------------

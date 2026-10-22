@@ -31,6 +31,7 @@ song = Song("裏通りのサイレン（仮）",
 song.desc += " 物語: 逃げる者と追う者。サイレンが近づき、路地に隠れ、見つかり、最後は突然の無音。"
 song.kinds = {"run": "pre", "inter2": "interlude", "siren": "break"}
 SECS, NB = song.secs, song.nb
+song.pickups = ['V1', 'V2']   # 8分3つの上りの型を、この曲だけのリズムに（lm25_lib.vary_pickups）
 
 RIFF = {"Em": [bar("E2:0.5! E3:0.5 D3:0.5 B2:0.5 G2:0.5 A2:0.5 B2:0.5 D3:0.5"), bar("E2:0.5! E3:0.5 D3:0.5 B2:0.5 G2:0.5 B2:0.5 E3:0.5 F#3:0.5")],
         "C": [bar("C2:0.5! C3:0.5 B2:0.5 G2:0.5 E2:0.5 G2:0.5 B2:0.5 C3:0.5")] * 2,

@@ -29,6 +29,7 @@ song = Song("成層圏の手紙（仮）",
             BPM, BEATS, FORM, CH)
 song.desc += " 物語: 草原の空を、風に乗った手紙が馬と一緒に渡っていく。"
 SECS, NB = song.secs, song.nb
+song.pickups = ['V1', 'V3']   # 8分3つの上りの型を、この曲だけのリズムに（lm25_lib.vary_pickups）
 
 RIFF = {"A": bar("A2:0.5! E3:0.5 A3:0.5 B3:0.5 C#4:0.5 B3:0.5 A3:0.5 E3:0.5"),
         "G/A": bar("A2:0.5! D3:0.5 G3:0.5 A3:0.5 B3:0.5 A3:0.5 G3:0.5 D3:0.5"),

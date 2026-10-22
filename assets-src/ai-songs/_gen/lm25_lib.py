@@ -586,6 +586,36 @@ def humanize_drums(kit, secs, kinds, seed=0, beats=4):
         kit.K[b], kit.S[b], kit.H[b], kit.C[b] = "".join(k), "".join(s), "".join(h), " ".join(new)
 
 
+_TPL = re.compile(r"^[A-G][#b]?-?\d$")
+
+
+def vary_pickups(notes, styles, beats):
+    """「8分休み＋8分3つの上り＋2拍の長い音」（どの曲にも出てしまう型）を、曲ごとに決めた別のリズムへ置きかえる
+    （2026-10-23、人間「曲調は似ないように」「単調にならないように」）。音の高さはそのまま。styles は小節番号でかわるがわる使う"""
+    toks = notes.split()
+    out, t, j = [], 0.0, 0
+    while j < len(toks):
+        x = toks[j]
+        at_bar = abs(t / beats - round(t / beats)) < 1e-6
+        win = toks[j:j + 5]
+        if at_bar and len(win) == 5 and win[0] == "R:0.5" and all(tok_beats(y) == 0.5 and _TPL.match(tok_note(y)) for y in win[1:4]) \
+                and tok_beats(win[4]) == 2 and _TPL.match(tok_note(win[4])):
+            st = styles[int(round(t / beats)) % len(styles)]
+            a_, b_, c_, d_ = win[1:5]
+            na, nb, nc = (tok_note(y) for y in (a_, b_, c_))
+            ma, mb, mc = (tok_marks(y) for y in (a_, b_, c_))
+            rep = {"V0": win,
+                   "V1": [f"{na}:1{ma}", f"{nb}:0.5{mb}", f"{nc}:0.5{mc}", d_],
+                   "V2": ["R:0.25", f"{na}:0.25{ma}", f"{nb}:0.5{mb}", f"{nc}:1{mc}", d_],
+                   "V3": [f"{na}:0.75{ma}", f"{nb}:0.75{mb}", f"{nc}:0.5{mc}", d_],
+                   "V4": ["R:1", f"{nb}:0.5{mb}", f"{nc}:0.5{mc}", d_],
+                   "V5": [f"{na}:0.5{ma}", "R:0.5", f"{nb}:0.5{mb}", f"{nc}:0.5{mc}", d_]}[st]
+            out += rep; t += 4 * 0 + sum(tok_beats(y) for y in win); j += 5
+            continue
+        out.append(x); t += tok_beats(x); j += 1
+    return " ".join(out)
+
+
 class Song:
     def __init__(self, title, desc, bpm, beats, form, chords):
         """form: [(区間の名前, 小節数)]。chords: 区間の名前 → 小節ごとの和音のリスト"""
@@ -618,6 +648,10 @@ class Song:
 
     def to_json(self):
         self.check_lengths()
+        if getattr(self, "pickups", None):
+            for p in self.parts:
+                if p["instrument"] not in ("kick", "snare", "hihat", "tom", "crash") and not p["notes"].startswith("g:"):
+                    p["notes"] = vary_pickups(p["notes"], self.pickups, self.beats)
         if LAST_KIT and not self.extra.get("_noHumanDrums"):
             kit = LAST_KIT[0]
             humanize_drums(kit, self.secs, self.kinds, seed=sum(map(ord, self.title)), beats=self.beats)

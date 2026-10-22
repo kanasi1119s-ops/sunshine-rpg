@@ -26,6 +26,7 @@ song.desc += " 物語: 眠りの中で月の裏へ漂い、夢が悪夢に変わ
 song.flags = "--space hall --space-wet 0.15"
 song.kinds = {"dream": "verse", "dream2": "pre", "fall": "bridge", "riff": "interlude", "night": "verse", "night2": "solo", "wake": "break", "dream3": "verse"}
 SECS, NB = song.secs, song.nb
+song.pickups = ['V4', 'V3']   # 8分3つの上りの型を、この曲だけのリズムに（lm25_lib.vary_pickups）
 
 RIFF = {"C#m": [bar("C#2:1.5! C#2:0.5 D2:1 C#2:0.5 G#2:0.5"), bar("C#2:1.5! C#2:0.5 E2:0.5 D2:0.5 C#2:1")],
         "D": [bar("D2:1.5! D2:0.5 A2:1 G#2:0.5 D2:0.5")] * 2, "G#7": [bar("G#1:1.5! G#1:0.5 C2:1 D#2:0.5 F#2:0.5")] * 2}

@@ -30,6 +30,7 @@ song = Song("羽の落ちる速さ（仮）",
 song.extra["modulate"] = {"at": "lastChorus", "semitones": 1}   # 見せ場: 最後のサビで半音上へ（天へ上がる）
 song.desc += " 物語: 天使が地上へ落ち、タッピングで再び飛び立ち、最後のサビで半音上の空へ。"
 SECS, NB = song.secs, song.nb
+song.pickups = ['V3', 'V0', 'V2']   # 8分3つの上りの型を、この曲だけのリズムに（lm25_lib.vary_pickups）
 
 RIFF = {"E": bar("E2:0.5! B3:0.5 A#3:0.5 F#3:0.5 E2:0.5! G#3:0.5 F#3:0.5 D#3:0.5"),
         "F#/E": bar("E2:0.5! C#4:0.5 A#3:0.5 F#3:0.5 E2:0.5! A#3:0.5 G#3:0.5 F#3:0.5"),

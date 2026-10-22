@@ -29,6 +29,7 @@ song = Song("嵐の背骨（仮）",
 song.extra["modulate"] = {"at": "lastChorus", "semitones": 2}   # 見せ場: 最後のサビで全音上へ（嵐の頂点）
 song.desc += " 物語: 嵐の海の船。嵐の目で一瞬静まり（チェロ）、二度目の波が来て、最後のサビで全音上へ。"
 SECS, NB = song.secs, song.nb
+song.pickups = ['V2', 'V1']   # 8分3つの上りの型を、この曲だけのリズムに（lm25_lib.vary_pickups）
 
 RIFF = {
     "Dm": [bar("D2:0.5! D3:0.5 D2:0.5 C3:0.5 D2:0.5! A2:0.5 A#2:0.5 A2:0.5"), bar("D2:0.5! D3:0.5 D2:0.5 F3:0.5 E3:0.5 D3:0.5 A2:0.5 C3:0.5")],

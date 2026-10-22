@@ -30,6 +30,7 @@ song = Song("塹壕の朝（仮）",
             BPM, BEATS, FORM, CH)
 song.desc += " 物語: 夜の塹壕、ラッパの合図、突撃、そして夜明け（D 長調）。"
 SECS, NB = song.secs, song.nb
+song.pickups = ['V2']   # 8分3つの上りの型を、この曲だけのリズムに（lm25_lib.vary_pickups）
 
 RIFF = {"Dm": [bar("D2:1! D#2:0.5 D2:0.5 A2:1 A#2:0.5 A2:0.5"), bar("D2:1! F2:0.5 G2:0.5 A2:1 C3:0.5 A#2:0.5")],
         "Eb/D": [bar("D2:1! D#2:0.5 G2:0.5 A#2:1 A2:0.5 G2:0.5")] * 2,

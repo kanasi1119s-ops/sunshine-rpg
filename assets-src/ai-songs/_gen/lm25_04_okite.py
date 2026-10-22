@@ -30,6 +30,7 @@ song = Song("沈黙の掟（仮）",
             BPM, BEATS, FORM, CH)
 song.desc += " 物語: 掟を破った男の告白。ピアノは組織の長、ベースは告白する男。"
 SECS, NB = song.secs, song.nb
+song.pickups = ['V1']   # 8分3つの上りの型を、この曲だけのリズムに（lm25_lib.vary_pickups）
 
 RIFF = {"Am": [bar("A1:1.5! G#2:0.5 A2:0.5 C3:0.5 B2:0.5 G#2:0.5"), bar("A1:1.5! E2:0.5 F2:1.5 E2:0.5")],
         "Dm": [bar("D2:1.5! F2:0.5 A2:0.5 C3:0.5 A2:0.5 F2:0.5")] * 2,

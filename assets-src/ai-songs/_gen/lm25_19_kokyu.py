@@ -27,6 +27,7 @@ song = Song("最後の呼吸（仮）",
 song.desc += " 物語: 最期の瞬間から始まり、人生を巻き戻し、もう一度いまへ戻って、最後の一息で終わる。"
 song.kinds = {"climax": "chorus", "breath": "break", "adult": "verse", "adult2": "pre", "youth": "solo", "child": "bridge", "return": "pre", "climax2": "chorus", "last": "outro"}
 SECS, NB = song.secs, song.nb
+song.pickups = ['V1']   # 8分3つの上りの型を、この曲だけのリズムに（lm25_lib.vary_pickups）
 
 CLIMAX_MEL = [bar("B5:2! A5:1 G5:1"), bar("F#5:3 D5:1"), bar("G5:1 B5:1 D6:2!"), bar("B5:3 F#5:1"),
               bar("E6:2! D6:1 B5:1"), bar("C#6:2 A5:1 E5:1"), bar("B5:2 C#6:2"), bar("A#5:4")]

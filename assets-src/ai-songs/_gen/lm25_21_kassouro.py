@@ -31,6 +31,7 @@ song = Song("群青の滑走路（仮）",
 song.desc += " 物語: 滑走路で待ち、走り出し、離陸し、雲の中を抜け、雲の上へ、さらに高く。"
 song.kinds = {"cloud": "interlude", "above": "bridge"}
 SECS, NB = song.secs, song.nb
+song.pickups = ['V2', 'V4']   # 8分3つの上りの型を、この曲だけのリズムに（lm25_lib.vary_pickups）
 
 RIFF = {"D": bar("D2:0.5! A2:0.5 D3:0.5 E3:0.5 F#3:0.5 E3:0.5 D3:0.5 A2:0.5"), "Bm": bar("B1:0.5! F#2:0.5 B2:0.5 C#3:0.5 D3:0.5 C#3:0.5 B2:0.5 F#2:0.5"),
         "A": bar("A1:0.5! E2:0.5 A2:0.5 B2:0.5 C#3:0.5 B2:0.5 A2:0.5 E2:0.5"), "G": bar("G1:0.5! D2:0.5 G2:0.5 A2:0.5 B2:0.5 A2:0.5 G2:0.5 D2:0.5"),

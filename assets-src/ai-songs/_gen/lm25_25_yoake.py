@@ -36,6 +36,7 @@ song.desc += " 物語: 全25曲の終わり。闇市に朝が来る。"
 song.kinds = {"riff": "interlude", "market": "bridge", "tap": "solo", "trade": "solo", "still": "break", "dawn": "interlude", "chorusM": "chorus"}
 song.flags = "--space hall --space-wet 0.12"
 SECS, NB = song.secs, song.nb
+song.pickups = ['V1']   # 8分3つの上りの型を、この曲だけのリズムに（lm25_lib.vary_pickups）
 
 # 13「闇市の値札」の看板リフ（B♭ → E へ移す）
 RIFF = {"Em7": [bar("E2:0.5! R:0.25 E2:0.25 G2:0.5 A2:0.25 A#2:0.25 B2:0.5 R:0.5 D3:0.25 B2:0.25 E3:0.5"),
