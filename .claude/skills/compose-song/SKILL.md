@@ -11,6 +11,11 @@ APIキーは使わない。曲は、あなた（Claude Code）が「AIソング�
 
 1. **形式を読む**: `node tools/composer/song.mjs guide` を実行し、書き方・楽器の一覧・よい曲にするコツを読む。見本は `assets-src/ai-songs/harbor-night.json`。
 2. **依頼を整理する**: 場面・雰囲気・テンポ・長さ（指定がなければ60〜90秒）・使いたい楽器。あいまいなら、RPGの場面に合わせて自分で決めてよい。
+2.2 **ジャンルの決まりごとを先に学ぶ（2026-10-23 人間の指示。必ず行う）**: 曲を書く前に、そのジャンルの決まりごと（楽器ごとの音域・チューニング、リフや和音の押さえ方、旋律の置き場所、セクションごとの層、ドラム・ベースの型、音作り）を確かめる。
+   - まず `docs/sound/` にそのジャンルの手引きがあるか探す（例: 現代のラウドロック・ラウドメタル＝`docs/sound/modern-loud-rock/`、ジャンル全般＝`docs/sound/genre-guides.md`）。あれば読み、設計表に「どの決まりごとを使うか・どれを外すか（理由）」を書く。
+   - **無ければ、書く前に調べて学習する**: 実在のバンド・作り手のインタビュー、制作の解説、教本などを複数あたり、数字（音域の音名・Hz・BPM・層の数）で `docs/sound/genres/<ジャンル>.md` にまとめてから作る（出典を書く。曲そのもののメロディ・進行は写さない＝CLAUDE.md 1-1）。
+   - 決まりごとはすべて当てはめる必要はない（見本）。ただし、外すときは理由を書く。人間が嫌いと言った音（`docs/sound/banned-sounds.md`）は、決まりごとより優先して外す。
+   - よくある失敗: 旋律楽器（ギターのリードなど）を、ゲーム音楽のように高い音域でずっと歌わせる。現代のロックでは、旋律は歌の高さ（おおむね G3〜D5）に置き、山場だけ上げる。
 2.5. **設計図と進行を先に決める**（曲の個性が決まる所。docs/sound/ai-composition-workflow.md の 2・3 節）: `node tools/composer/chord-pick.mjs --scene <場面> --avoid-last 3` で直近の曲と違う進行の候補を出し、`node tools/composer/song.mjs plan-template` の雛形から `assets-src/ai-songs/<名前>.plan.json`（属性カードとセクション表）を書いて、`node tools/composer/song.mjs plan-check <plan.json>` で直す。description に「入り方: 5。終わり方: …。動機: E4:1 G4:1 A4:2」を書く。コードごとの長さ `Am*2`・セクション別の進行 `sectionChords`・転調 `modulate`・ループの継ぎ目 `loopTail` が使える（`song.mjs guide`）。
 3. **曲を書く**: `assets-src/ai-songs/<英小文字の名前>.json` に書く。
    - **完全なオリジナルにする**（CLAUDE.md 1-1）。既存曲のメロディ・特徴的なコード進行を写さない。「〜風」はジャンルと雰囲気だけを参考にする。
