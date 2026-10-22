@@ -121,7 +121,7 @@ def part(parts, role_prefix=None, inst=None):
 
 def finish(song, parts, title):
     for p in parts: p["notes"] = split_rests(p["notes"])
-    lens = {p["role"]: total(p["notes"]) for p in parts}
+    lens = {p["role"]: total(p["notes"]) for p in parts if not p.get("strum")}   # かき鳴らし（strum）は notes を使わない
     assert len(set(lens.values())) == 1, lens
     song["parts"] = parts; song["title"] = title
     return song

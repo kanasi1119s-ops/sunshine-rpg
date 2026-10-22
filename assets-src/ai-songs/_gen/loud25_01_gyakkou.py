@@ -20,6 +20,7 @@ from loud25_hand import (LEAD_TONE, ARP_TONE, put, starts, retone_leads, plain_g
 #   1フレーズ＝2小節（4〜9音＋2拍以上の休み）、8小節＝A・A'・B・A''、奇数番目は和音にない音で止める（問い）・偶数番目は和音の音（答え）、
 #   半分以上は裏拍から入る、同じ音の16分の連打（リズムで語る）＋上への跳躍の動機を全区間で使う、チョーキングは1フレーズに1回まで
 CELL = "R:0.5 {n}:0.25 {n}:0.25 R:0.25 {n}:0.25"     # 動機の頭（裏から入って同じ音を3つ）＝2拍
+RUN = "R:3 A4:0.25 C5:0.25 D5:0.25 E5:0.25"            # 2026-10-22 人間が選んだ入り方「1 駆け上がって入る」（前の小節の4拍目で16分の駆け上がり）
 def cell(n, rest): return CELL.format(n=n) + " " + rest
 VERSE_B = [  # 中心はラ4〜ド5。主音（レ）は避ける
     cell("A4", "C5:0.5 E5:1 C5:0.5 A4:0.5"),   # Dm   A（ミ＝9度の色）
@@ -40,32 +41,32 @@ PRE = [  # 動機を長くした形（同じ音を3つ→上へ）を、和音�
     "R:1 G5:0.5 G5:0.5 G5:1 E5:1",             # C
     "E5:2 R:2",                                # C
     "R:0.5 F5:0.5 G5:0.5 A5:0.5 G5:1 F5:1",    # Csus4
-    "E5:3 R:1",                                # C    最後の1拍は全員休み
+    RUN,                                       # C    最後の1拍で駆け上がってサビへ（入り方1）
 ]
-CHORUS = [
-    cell("D5", "F5:0.5 A5:1.5! G5:0.5"),       # B♭add9  A: 同じ音を3つ→ラへ跳ぶ（ラ＝maj7 の色）
-    "G5:1.5 R:2.5",                            #          問い（6度で止める）
-    cell("C5", "F5:0.5 A5:1.5! F5:0.5"),       # F       A': 同じ形を1つ下から
-    "F5:1.5 R:2.5",                            #          答え（根音）
-    "R:1 B5:0.5 A5:0.5 B5:1 D6:1!",            # G       B: シ（借用の長三和音の3度）で光が差す
-    "D6:2!^^ B5:1 R:1",                        #          レからミへチョーキング（問い）
-    cell("A5", "G5:0.5 E5:1.5 D5:0.5"),        # Asus4   A'': 高い所から下りる
-    "C#5:2.5! R:1.5",                          # A       答え（導音で次へ）
-    cell("D5", "F5:0.5 A5:1.5! G5:0.5"),       # B♭add9  A
-    "G5:1.5 R:2.5",
-    cell("C5", "F5:0.5 C6:1.5!/ A5:0.5"),      # F       A'（ドまで跳ぶ。スライドで入る）
-    "G5:1 F5:0.5 E5:0.5 R:2",                  #          問い（maj7 で止める）
-    "R:1 E5:0.5 G5:0.5 C6:1 D6:1!^^",          # C       B: いちばん高いミ6はチョーキングで1回だけ
-    "E6:2 D6:1 R:1",
-    cell("A5", "G5:0.5 F5:1 E5:1"),            # Dm(add9) A''
-    "D5:3! R:1",                               #          やっと主音で言い切る
+CHORUS = [  # 第8版: 駆け上がって長い音に着地する入り方。和音は2小節ごと
+    "F5:3! D5:1",                              # B♭add9  駆け上がりの着地（長い音）
+    "C5:1 D5:1 A4:2",
+    "R:1 C5:0.5 D5:0.5 F5:1 A5:1",             # F
+    "G5:3 R:1",
+    "R:2 B4:0.5 D5:0.5 G5:1",                  # G       シ（借用の長三和音の3度）
+    "F#5:3 R:0.75 A4:0.25",
+    "D5:1 R:2 A4:0.25 B4:0.25 C#5:0.25 D5:0.25",   # Asus4   もう一度駆け上がる
+    "E5:3! A4:0.25 C5:0.25 D5:0.25 E5:0.25",   # A       着地して、後半へまた駆け上がる
+    "F5:3! D5:1",                              # B♭add9
+    "C5:1 D5:1 A4:2",
+    "R:1 C5:0.5 D5:0.5 F5:1 C6:1!",            # F       ドまで上がる
+    "A5:3 R:1",
+    "R:2 E5:0.5 G5:0.5 C6:1",                  # C
+    "B5:1 A5:1 G5:1 E5:0.25 F5:0.25 G5:0.25 A5:0.25",  # 最後の駆け上がり
+    "A5:3! E5:1",                              # Dm(add9)
+    "D5:4!",                                   #          やっと主音で言い切る
 ]
 BRIDGE = ["D5:4", "F5:4", "G5:4", "E5:2 R:2", "D5:4", "F5:2 A5:2", "G5:4", "E5:4"]
-INTRO = ["R:4", "R:4", cell("D5", "F5:0.5 A5:1.5! G5:0.5"), "G5:1.5 R:2.5"] + ["R:4"] * 4   # サビのフックの先出し
+INTRO = ["R:4"] * 7 + [RUN] + CHORUS[:8]   # 2026-10-22 人間「前奏もうちょっと長くしようか」→ 16小節。9〜16小節でサビを先に聞かせる
 
 CH = "6add9 6add9 3 3 4 4 5sus4 5 6add9 6add9 3 3 7 7 1madd9 1madd9"
 FORM = [
-    ("intro", "intro", 8, "1madd9 1madd9 6add9 6add9 1m 1m 1m 1m"),
+    ("intro", "intro", 16, "1madd9 1madd9 6add9 6add9 1m 1m 1m 1m 6add9 6add9 3 3 4 4 5sus4 5"),
     ("verse1", "verse", 16, "1m b2 1m 7 6 7 1m 1m 1m b2 1m 7 6 7 4m 5"),
     ("pre1", "pre", 8, "4m 4m 6 6 7 7 7sus4 7"),
     ("chorus1", "chorus", 16, CH),
@@ -88,7 +89,7 @@ SPEC = {
     "form": [list(f) for f in FORM],
     "rhythm": {
         "tone": "loud-mid", "pm": [], "verse_keep": True,
-        "intro": "-", "inter1": "-", "bridge": "-", "break": "-", "outro": "-",
+        "intro": ["-"] * 8 + ["X===============", "X=======x======="] * 4, "inter1": "-", "bridge": "-", "break": "-", "outro": "-",
         "verse": ["X=====x=====X===", "X=======x===x==="],
         "pre": ["X===============", "X=======X======="],
         "chorus": ["X===============", "X=======x======="],
@@ -106,12 +107,14 @@ SPEC = {
     "bass": {
         "verse": ["R:1.5! R:0.5 5:1 R:1", "R:1! 5:0.5 8:0.5 7:1 5:1"],
         "pre": "R:4", "chorus": ["R:1! R:0.5 R:0.5 R:1 R:1", "R:1! R:1 5:1 8:1"],
-        "intro": "R:4", "inter": "R:4", "bridge": ["R:4!"], "break": "R:4", "outro": "R:4",
+        "intro": ["R:1.5! R:0.5 5:1 8:1", "R:1! 3:1 5:1.5 R:0.5"], "inter": "R:4", "bridge": ["R:4!"], "break": "R:4", "outro": "R:4",
     },
     "drums": {
-        "intro": {"k": ["................", "................", "................", "................", "X.....X...X.....", "X.....X...X...X.", "X.....X...X.....", "X.....X...X.X.X."],
-                  "s": ["................"] * 4 + ["....X.......X...", "....X.......X...", "....X.......X...", "....X.......X..."],
-                  "c": ["................"] * 4 + ["c...r...r...r...", "r...r...r...r...", "n...r...r...r...", "r...r...r...r..."], "fill": "tom", "crash": False},
+        "intro": {  # 16小節: 1〜6は休み（和音の響き→リフだけ）、7〜8でタムとスネアで盛り上げ（8小節目の4拍目は駆け上がりのために空ける）、9〜16はサビのノリ
+            "k": ["................"] * 6 + ["X...X...X...X...", "X.X.X.X.X.X....."] + ["X..x..X.X..x..x."] * 3 + ["X..x..X.X...XXXX"] + ["X..x..X.X..x..x."] * 4,
+            "s": ["................"] * 6 + ["................", "....X.X.X.X....."] + ["....X.......X..."] * 8,
+            "t": ["................"] * 6 + ["4...4...3...3...", "................"] + ["................"] * 8,
+            "c": ["................"] * 8 + ["c.r.r.r.r.r.r.r.", "r.r.r.r.r.r.r.r.", "n.r.r.r.r.r.r.r.", "r.r.r.r.r.r.r.r."] * 2, "fill": "tom", "crash": False},
         "verse1": {"k": "sync", "s": ["....X..o....X...", "....X......oX..o"], "h": ["x.x.x.x.x.x.x.x.", "x.x.x.x.x.x.x.xo"], "fill": "snare", "crash": False},
         "verse2": {"k": "sync", "s": ["....X..o....X..o", "....X..o.o..X..."], "c": "r.r.r.r.r.r.r.r.", "fill": "snare"},
         "pre1": {"k": ["X.......X......."] * 2 + ["X...X...X...X..."] * 2 + ["X.X.X.X.X.X.X.X."] * 3 + ["X.X.X.X.X.X....."],
@@ -210,7 +213,7 @@ def harmony(notes, t0, S, above=True):
 def seg(p, a, b):
     return " ".join(f"{h}:{d:g}{suf}" for t, d, h, suf in toks(p["notes"]) if a - 1e-9 <= t < b - 1e-9)
 
-def make(path, vocal=True):
+def make(path, vocal=False):   # 2026-10-22 人間「歌入りは後程で、インストにしよう」
     song, S = build(copy.deepcopy(SPEC))
     st = starts(FORM)
     full = st["outro"][0] + 4 * 4
@@ -220,7 +223,7 @@ def make(path, vocal=True):
     lead["fx"] = [{"type": "eq", "low": -2, "mid": 2.5, "midHz": 1200, "high": -1}, {"type": "filter", "kind": "lowpass", "freq": 7500, "q": 0.7},
                   {"type": "pingpong", "beats": 0.75, "mix": 0.2, "feedback": 0.25}, {"type": "plate", "mix": 0.16}]
     lead["phrase"] = 8
-    lead, quiet = split_lead(parts, st, ("verse1", "verse2", "bridge", "intro"), volume=0.1, role="リード（Aメロ・ブリッジ）")
+    lead, quiet = split_lead(parts, st, ("verse1", "verse2", "bridge"), volume=0.1, role="リード（Aメロ・ブリッジ）")
     rhythm = part(parts, "刻み")
     bass = part(parts, inst="bass")
     arp = part(parts, "リードギター（分散和音）")
@@ -228,8 +231,13 @@ def make(path, vocal=True):
     a, n = st["verse1"]; put(rhythm, a, a + 8 * 4); put(arp, a + 8 * 4, a + n * 4)
     # ラストサビの頭4小節: リズムギター・ベースを抜く（リードと分散和音とキックだけ）。分散和音はその4小節だけ
     a, n = st["chorus3"]; put(rhythm, a, a + 16); put(bass, a, a + 16); put(arp, a + 16, a + n * 4)
-    # イントロ: 1〜4小節は分散和音とリード（サビの先出し）。4小節目の4拍目は全員休み。5〜8小節は看板リフ
-    a, _ = st["intro"]; put(arp, a + 16, a + 32); put(arp, a + 15, a + 16); put(bass, a, a + 16)
+    # イントロ（16小節）: 1〜4は開放弦を混ぜた和音を鳴らして伸ばす（人間「ギターの始まり方やだな」→ ポロポロの分散和音をやめた）、
+    #   5〜8は看板リフ（ギターとベースだけ）、9〜16は全員でサビを先に聞かせる。4小節目の4拍目は全員休み
+    a, _ = st["intro"]; put(arp, a, a + 64); put(bass, a, a + 16)
+    ring = {"instrument": "distGuitar", "role": "前奏の和音（かき鳴らし）", "notes": "", "powerChord": False, "guitarTone": "loud-mid", "ampGate": 0, "volume": 0.12, "pan": 0, "double": False,
+            "strum": {"chords": " ".join(["[D2.A2.D3.E3.A3.D4]", "[A#1.F2.A#2.C3.F3.A#3]"] + ["-"] * (sum(f[2] for f in FORM) // 2 - 2)),
+                      "bars": 2, "pattern": "D.............--", "step": 0.5, "strings": 6, "ringMax": 8, "spreadMs": 18}}
+    parts.insert(0, ring)
     riff = {"instrument": "distGuitar", "role": "看板リフ", "volume": 0.11, "pan": 0, "guitarTone": "loud-mid", "gainDb": -3, "powerChord": False, "notes": f"R:{full}"}
     for sid, frm, nb in (("intro", 4, 4), ("inter1", 0, 8), ("outro", 0, 2)):
         a, _ = st[sid]; put(riff, a + frm * 4, a + (frm + nb) * 4, sig(nb))
