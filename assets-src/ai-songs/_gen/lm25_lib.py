@@ -663,6 +663,9 @@ def _join(evs):
     return " ".join(f"R:{L:g}" if n is None else f"{n}:{L:g}{m}" for _, L, n, m, _x in evs)
 
 
+BMTH_EQ = [{"type": "filter", "kind": "highpass", "freq": 60.0, "q": 0.7}, {"type": "eq", "low": 0, "mid": 11.21, "midHz": 258.5, "high": 0}, {"type": "eq", "low": 0, "mid": -14.94, "midHz": 491.0, "high": 0}, {"type": "eq", "low": 0, "mid": 5.35, "midHz": 2500.0, "high": 0}, {"type": "eq", "low": 0, "mid": -14.95, "midHz": 4353.8, "high": 0}, {"type": "filter", "kind": "lowpass", "freq": 11989.0, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 11989.0, "q": 0.7}]
+
+
 def modernize_leads(song):
     """現代ラウドの決まりごと（docs/sound/modern-loud-rock/、2026-10-23 人間「ゲームの音っぽい」「音が高すぎる」）を、全曲のギターに当てる:
     1. リードの高さ: 区間ごとに、音の真ん中を歌の高さ（サビ B4・Aメロ G4・ほか A4）に近づける（1オクターブ下げるかどうか。一番上は A5 まで。ソロはそのまま）
@@ -759,6 +762,15 @@ def modernize_leads(song):
                            "di": "emily", "amp": "namJVM", "ampDrive": 0.05, "ampCabIr": "jd-greenback-4x12-01", "noRestrike": True, "humanPitch": 0,
                            "noScoop": True, "chorus": 0, "sustain": 2.0, "release": 0.9, "attack": 0.5,
                            "fx": [{"type": "eq", "low": -4, "mid": -1, "midHz": 500, "high": 2}, {"type": "delay", "beats": 0.75, "mix": 0.25, "feedback": 0.35}, {"type": "reverb", "mix": 0.4}]})
+    # ギターの帯域を BMTH の数値へ（2026-10-23 聞き比べ H を人間が採用「Hいいね」）。参考の曲と聞き比べ G のギターを音源分離して
+    #   1/3オクターブごとに測り（/tmp/ref/analyze.py・fit.py）、差を埋める EQ を計算した: 低い中域を太く・箱っぽい中域と耳に刺さる帯域を深く削る。
+    #   リフとリズムは左右いっぱいの別テイク（参考は左右の相関 -0.17 と広い）
+    for p in song.parts:
+        if p["instrument"] == "distGuitar" and p.get("patch") not in ("cymbalFx", "guitarFx") and "空気の層" not in p["role"]:
+            p["fx"] = [dict(f) for f in BMTH_EQ] + [f for f in p.get("fx", []) if f.get("type") == "room"]
+            if p["role"].startswith("看板リフ"): p["double"] = {"spread": 1.0}
+            elif p["role"].startswith("リズム"):
+                p["double"] = {"spread": 1.0, "irR": "jd-greenback-4x12-01", **({"diR": "fsbs"} if p.get("guitarTone") == "loud-mid-hs" else {})}
     # リフを低いチューニングへ
     for p in song.parts:
         if p["role"] in ("看板リフ", "看板リフ（透明感の層）"):
