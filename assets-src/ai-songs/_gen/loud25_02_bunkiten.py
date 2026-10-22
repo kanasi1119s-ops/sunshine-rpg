@@ -72,8 +72,13 @@ def drums_for(name, i, n):
         k = "X..X..X.X..X..X." if i % 2 == 0 else "X..X..X.X..X.xX."
         s = "....X.......X..." if i % 4 != 3 else "....X..o..X.X.oX"
         cym = "F2:0.75! F2:0.75 D2:0.5 F2:0.75! F2:0.75 D2:0.5" if i % 4 != 0 else "C2:1.5! F2:1.5! D2:0.5 D2:0.5"
-        if name == "intro" and i < 2:   # 頭の2小節はキックとベルだけで、静かに入る
-            s = "................"; cym = "F2:0.75 F2:0.75 D2:0.5 F2:0.75 F2:0.75 D2:0.5"
+        if name == "intro" and i < 2:   # 頭の2小節: 全員で 3・3・2 の一撃（クラッシュ＋キック＋スネア）。人間「前奏だけもう少しインパクト」
+            if i == 0:
+                k = "X.....X.....X..."; s = "X.....X.....X..."; cym = "C2:1.5! C2:1.5! C2:1!"
+            else:
+                k = "X.....X.....X.X."; s = "X.....X........."; cym = "C2:1.5! C2:1.5! R:1"
+                tom = "R:3 A3:0.25! F3:0.25! D3:0.25! A2:0.25!"
+        if name == "intro" and i == 2: cym = "C2:1.5! F2:1.5! D2:0.5 D2:0.5"   # リフが入る所でもう一度クラッシュ
         if name == "outro" and last:
             k = "X..............."; s = "X..............."; cym = "C2:4!";
         elif last and name != "outro":
@@ -201,6 +206,7 @@ for idx, (name, i) in enumerate(SECS):
     # リフ
     if name in ("intro", "inter", "outro") and not (name == "outro" and last):
         rf = RIFF[i % 4] if not (name == "inter" and i >= 4) else RIFF_HI[i % 4]
+        if name == "intro" and i < 2: rf = bar("E2:1.5! E2:1.5! E2:1!") if i == 0 else bar("E2:1.5! E2:1.5! R:1")
         if last and name != "outro": rf = bar("E2:0.75! E3:0.75 G3:0.5", "R:2")
         P["riff"].append(rf)
     elif name == "break":
@@ -227,6 +233,10 @@ for idx, (name, i) in enumerate(SECS):
         P["rhythm_in"].append(REST)
     elif name == "break":
         P["rhythm"].append(P["riff"][-1]); P["rhythm_in"].append(P["riff"][-1])
+    elif name == "intro":   # 前奏: 頭の一撃は全員で、リフの下は伸ばす和音の壁（インパクト）
+        if i < 2: P["rhythm"].append(P["riff"][-1]); P["rhythm_in"].append(P["riff"][-1])
+        elif last: P["rhythm"].append(bar("E2:2! R:2")); P["rhythm_in"].append(REST)
+        else: P["rhythm"].append(bar("E2:1.5! E2:1.5 E2:1")); P["rhythm_in"].append(REST)
     else:
         P["rhythm"].append(REST); P["rhythm_in"].append(REST)
     # 分散和音（Aメロ・ブリッジ）
@@ -257,7 +267,7 @@ for idx, (name, i) in enumerate(SECS):
     b = BASS_LOW[r]
     if name in ("intro", "inter", "outro", "break"):
         src = RIFF[i % 4] if name in ("intro", "inter") and not last else P["riff"][-1]   # ベースは高い版のリフに付いていかない
-        P["bass"].append(" ".join((up(t.split(":")[0], -1) + ":" + t.split(":", 1)[1]) if not t.startswith("R") else t for t in src.split()) if not (name == "intro" and i < 2) else bar("E1:4!") if i == 0 else bar("E1:2 E1:1.5 E1:0.5"))
+        P["bass"].append(" ".join((up(t.split(":")[0], -1) + ":" + t.split(":", 1)[1]) if not t.startswith("R") else t for t in src.split()) if not (name == "intro" and i < 2) else bar("E1:1.5! E1:1.5! E1:1!") if i == 0 else bar("E1:1.5! E1:1.5! R:1"))
     elif name in ("verse", "verse2"):
         b5 = {"E": "B1", "C": "G1", "A": "E2", "B": "F#2"}[r]
         P["bass"].append(bar(f"{b}:1.5! {b}:0.5 {b5}:1 {up(b,1)}:0.5 {b5}:0.5") if not last else bar(f"{b}:1! {b}:1 R:2"))
