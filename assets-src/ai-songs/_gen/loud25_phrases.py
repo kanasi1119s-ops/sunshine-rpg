@@ -111,7 +111,7 @@ def ref_of(ph, low):
 
 def render_voices(ph, chords, key=None, mode=None, low="E2", bars=None, snap=True):
     """型を音の並びにする。和音（複数の音）の型は、低い順に声部（パート1本ずつ）に分けて返す（list[str]）"""
-    nb = bars or ph["bars"]
+    nb = bars or max(ph["bars"], len(chords) if isinstance(chords, (list, tuple)) else 1)
     chs = [parse_chord(c, key, mode) for c in (chords if isinstance(chords, (list, tuple)) else [chords])]
     chs = [chs[i % len(chs)] for i in range(nb + 1)]   # 最後の1つは「次の和音」（近づきの音に使う）
     ref = ref_of(ph, low)
@@ -136,6 +136,15 @@ def render_voices(ph, chords, key=None, mode=None, low="E2", bars=None, snap=Tru
             cp = chord_pcs(ch)
             ms = []
             cur_cp = chord_pcs(chs[min(bi, nb - 1)])   # その小節で実際に鳴っている和音
+            if len(ivs) > 1 and all(isinstance(x, int) for x in ivs):
+                # 和音（パワーコード・オクターブ）は形をくずさない: いちばん低い音だけ音階に合わせ、ほかは同じだけずらす
+                lo_m = root_m + ivs[0]
+                m0 = _snap(lo_m, scale_pcs, cp, prev) if (ph.get("rel") != "first" and ivs[0] % 12 != 0) else lo_m
+                ms = [m0 + (x - ivs[0]) for x in ivs]
+                prev = ms[0]
+                for v in range(nvo):
+                    voices[v].append((T, D, ms[v] if v < len(ms) else "rest", mk))
+                continue
             for iv in ivs:
                 m = _resolve(iv, root_m, nxt.root, ref)
                 if m is not None and isinstance(iv, int):
@@ -308,6 +317,13 @@ def unison_bass(gph):
     return {"id": gph["id"] + "-uni", "inst": "bass", "role": "ユニゾン", "kind": "ユニゾン（その場で作成）", "bars": gph["bars"], "rel": gph.get("rel", "bar"),
             "ref": "E1", "fits": gph["fits"], "ev": ev, "sections": gph["sections"], "energy": gph.get("energy", 0.5), "feel": gph.get("feel", "ふつう"), "tech": ["ユニゾン"], "src": "gen:unison", "family": gph.get("family")}
 
+def guitar_from_bass(bph, voicing=(0, 7, 12)):
+    """ベースの型（ブレイクダウン・ペダルなど）と同じリズムで、パワーコードを弾くギターの型を作る（キック・ベース・ギターを一致させる）"""
+    ev = [[t, d, [x + v for v in voicing] if isinstance(x, int) else [0], mk] for t, d, (x, *_), mk in bph["ev"]]
+    return {"id": bph["id"] + "-gtr", "inst": "guitar", "role": "リフ", "kind": "ベースと一致（その場で作成）", "bars": bph["bars"], "rel": bph.get("rel", "bar"), "ref": "low",
+            "fits": bph["fits"], "ev": ev, "sections": bph["sections"], "energy": bph.get("energy", 0.5), "feel": bph.get("feel", "ふつう"), "tech": ["キックと一致"],
+            "src": "gen:from-bass", "family": bph.get("family"), "pc": True, "chug": 0, "kick": bph.get("kick")}
+
 def attacks_per_bar(ph):
     return len(ph["ev"]) / ph["bars"]
 
@@ -319,6 +335,14 @@ def pick_pair(section, chords, key=None, mode=None, energy=0.6, low="E2", bass_l
     返り値: {"guitar": {"phrase", "notes"（いちばん低い声部）, "voices"（全部の声部）}, "bass": {"phrase", "notes"}, "how"}"""
     nb = bars or len(chords)
     rng = random.Random(seed * 7919 + 13)
+    if section == "ブレイクダウン" and how in ("auto", "unison") and not guitar_role:
+        # ブレイクダウン: ベースの型（キックの位置つき）を先に選び、ギターを同じリズムのパワーコードにする
+        b = pick("bass", role="ブレイクダウン", energy=energy, avoid=avoid, seed=rng.randrange(10 ** 6))
+        if b:
+            g = guitar_from_bass(b)
+            gv = render_voices(g, chords, key, mode, low, nb)
+            return {"how": "unison", "guitar": {"phrase": g, "notes": gv[0], "voices": gv, "powerChord": True},
+                    "bass": {"phrase": b, "notes": render(b, chords, key, mode, bass_low, nb)}, "kick": (b.get("kick") or []) * max(1, nb // b["bars"])}
     roles = [guitar_role] if guitar_role else GUITAR_ROLE_FOR.get(section, ["リフ"])
     g = None
     for i, r in enumerate(roles if not guitar_role else roles):
