@@ -57,8 +57,11 @@ CHORUS_MEL = [bar("R:0.5 F5:0.5 A#5:0.5 C6:0.5 D6:2!"), bar("C6:1 A#5:1 F5:2"),
 CHORUS2_MEL = list(CHORUS_MEL)
 CHORUS2_MEL[1] = bar("C6:1 D6:1 A#5:2")
 CHORUS2_MEL[9] = bar("C6:0.5 D6:0.5 C6:0.5 A#5:0.5 F5:2")
-CHORUS3_MEL = [bar("D6:4!"), bar("C6:2 A#5:2"), bar("C6:4!"), bar("A5:2 F5:2")] + CHORUS_MEL[4:8] + \
-    [bar("D6:1 C6:0.5 A#5:0.5 D6:2!"), bar("F5:1 A#5:1 D6:2"), bar("R:0.5 G5:0.5 C6:0.5 D6:0.5 E6:2!"), bar("E6:1 D6:1 C6:2")] + CHORUS_MEL[12:]
+CHORUS2_MEL[5] = bar("C6:0.5 D6:0.5 C6:0.5 A#5:0.5 G5:2")
+CHORUS2_MEL[13] = bar("G5:1 A#5:1 D6:2")
+CHORUS2_MEL[14] = bar("C#6:1 A5:1 E5:1.5 G5:0.5")
+CHORUS3_MEL = [bar("D6:4!"), bar("C6:2 A#5:2"), bar("C6:4!"), bar("A5:2 F5:2")] + CHORUS_MEL[4:6] + [bar("A5:2 D6:2"), CHORUS_MEL[7]] + \
+    [bar("D6:1 C6:0.5 A#5:0.5 D6:2!"), bar("F5:1 A#5:1 D6:2"), bar("R:0.5 G5:0.5 C6:0.5 D6:0.5 E6:2!"), bar("E6:1 D6:1 C6:2")] + CHORUS_MEL[12:14] + [bar("E5:0.5 G5:0.5 A5:0.5 C#6:0.5 E6:2!"), CHORUS_MEL[15]]
 
 CELLO_BRIDGE = [bar("D4:2 F4:1 A4:1"), bar("G4:3 E4:1"), bar("F4:2 D4:1 A#3:1"), bar("A3:4"),
                 bar("D4:1 F4:1 A4:1 C5:1"), bar("C5:3 A4:1"), bar("A#4:2 G4:1 F4:1"), bar("E4:2 D4:2")]

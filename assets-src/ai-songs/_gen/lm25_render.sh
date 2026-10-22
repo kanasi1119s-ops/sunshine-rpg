@@ -2,7 +2,9 @@
 # ラウド25曲（第2シリーズ）を1曲ずつ書き出して採点し、mp3 にする（2曲同時はメモリが足りないので順番に）。
 # 使い方: bash lm25_render.sh <曲の生成.py>...   → /tmp/lm25/out/<名前>.wav・<mp3の出力フォルダ>/<番号> <曲名>.mp3・scores.tsv
 #   書き出しの設定は「白い分岐点」と同じ: --drums naked --bass bnb-loud --master -13.5 --widen 1.0（ピアノがあれば --piano salamander）
+ARGS=(); for a in "$@"; do ARGS+=("$(cd "$(dirname "$a")" && pwd)/$(basename "$a")"); done
 cd "$(dirname "$0")/../../.." || exit 1
+set -- "${ARGS[@]}"
 OUT="${LM25_MP3:-/mnt/user-data/outputs/lm25}"
 mkdir -p "$OUT" /tmp/lm25/out
 for py in "$@"; do

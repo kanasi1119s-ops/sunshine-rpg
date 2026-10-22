@@ -141,7 +141,7 @@ def fifth_of(ch, lo="E1", hi="D#2"):
     r, q, b = parse_chord(ch)
     iv = 6 if q in ("m7b5", "dim", "dim7", "b5") else 7
     pc = (PC[r] + iv) % 12
-    for m in range(midi(lo), midi(hi) + 7):
+    for m in range(midi(lo), midi(hi) + 13):
         if m % 12 == pc and m >= midi(root_note(ch, lo, hi)): return nm(m, "b" in r)
     raise ValueError(ch)
 
