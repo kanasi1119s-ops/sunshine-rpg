@@ -472,7 +472,11 @@ def bassmute_part(notes, vol=0.2, role="ベース（止めた音・ゴースト�
                 fx=[{"type": "eq", "low": 0, "mid": 3, "midHz": 2200, "high": 2}])
 
 
+LAST_KIT = []
+
+
 def drum_parts(kit):
+    LAST_KIT[:] = [kit]
     return [part("キック", "kick", "g:" + "".join(kit.K), **DRUM_SET["kick"]),
             part("スネア", "snare", "g:" + "".join(kit.S), **DRUM_SET["snare"]),
             part("ハイハット", "hihat", "g:" + "".join(kit.H), **DRUM_SET["hihat"]),
@@ -501,6 +505,85 @@ def simple_chord(ch):
     r, q, b = parse_chord(ch)
     q2 = SIMPLE.get(q, q)
     return r + q2 + ("/" + base[1] if len(base) > 1 else "")
+
+
+def _tok_starts(cym):
+    out, t = [], 0.0
+    for x in cym.split():
+        out.append((t, x)); t += tok_beats(x)
+    return out
+
+
+def humanize_drums(kit, secs, kinds, seed=0, beats=4):
+    """人が叩いたような強弱（2026-10-23、人間「人間っぽさ」「強弱・アクセント・ゴースト」「単調にしない」）。
+    区間の種類で強さを変え、ハイハットは小節ごとに強弱の型を変え、スネアの間にゴーストを足し、フィルはだんだん強く。
+    プログレの要素として、ブリッジ・ソロの一部の小節ではハイハットのアクセントを3つおき（4拍子の上に3のまとまり）にする。"""
+    import random
+    n = kit.n
+    kindof = lambda nm_: kinds.get(nm_) or re.sub(r"\d+$", "", nm_)
+    LEVEL = {"intro": 0, "verse": 0, "interlude": 1, "inter": 1, "pre": 1, "bridge": 1, "solo": 2, "chorus": 2, "break": 0, "outro": 1}
+    for b, (sec, i) in enumerate(secs):
+        rng = random.Random(seed * 1000 + b)
+        kd = kindof(sec)
+        lv = LEVEL.get(kd, 1)
+        k, s, h = list(kit.K[b]), list(kit.S[b]), list(kit.H[b])
+        tom_busy = [False] * n
+        for t0, x in _tok_starts(kit.T[b]):
+            if not x.startswith("R"): tom_busy[min(n - 1, int(round(t0 * 4)))] = True
+        is_fill = any(tom_busy)
+        cyms = _tok_starts(kit.C[b])
+        cym_at = [False] * n
+        ride_bar = False
+        for t0, x in cyms:
+            if not x.startswith("R"):
+                cym_at[min(n - 1, int(round(t0 * 4)))] = True
+                if tok_note(x) in ("D2", "F2"): ride_bar = True
+        # キック: 拍の頭は強く、裏は少し弱く（連打の X/x はそのまま）
+        hits_k = [j for j, c in enumerate(k) if c != "."]
+        if len(hits_k) < 10:
+            for j in hits_k:
+                if k[j] in "Xx": k[j] = "X" if (j % 4 == 0 or j == 0) else "x"
+        # ハイハット: 小節ごとに型を変える
+        hh = [j for j, c in enumerate(h) if c in "xX"]
+        if hh:
+            three = kd in ("bridge", "solo") and len(hh) >= 6 and rng.random() < 0.35
+            style = rng.choice(["down", "down", "push"] if lv == 2 else ["down", "soft"])
+            for j in hh:
+                if three: h[j] = "X" if (j % 12) % 3 == 0 and j % 2 == 0 or j % 6 == 0 else "x"
+                elif j % 4 == 0: h[j] = "X" if (lv == 2 or j == 0 or style == "down") else "x"
+                elif j % 2 == 0: h[j] = "X" if style == "push" else ("x" if lv >= 1 or style == "down" else "o")
+                else: h[j] = "o"
+            # 区間の4小節目の終わりでオープン
+            last8 = n - 2
+            if i % 4 == 3 and h[last8] != "." and not is_fill and rng.random() < 0.6: h[last8] = "O"
+        # スネアのゴースト
+        backs = [j for j, c in enumerate(s) if c == "X"]
+        if backs and not is_fill and (hh or ride_bar) and kd not in ("break", "intro"):
+            want = {0: 2, 1: 2, 2: 1}[lv] + (1 if rng.random() < 0.4 else 0)
+            if len(hits_k) >= 10: want = 1
+            want = max(0, want - sum(1 for c in s if c == "o"))
+            cand = []
+            for j in range(n):
+                if s[j] != "." or cym_at[j] or tom_busy[j]: continue
+                if h[j] in "xXoO" and cym_at[j]: continue
+                if any(abs(j - q) == 1 and s[q] == "X" and j > q for q in backs): continue   # バックビートの直後は空ける
+                w = 3 if any(q - j == 1 for q in backs) else (2 if j % 4 == 3 else (1 if j % 4 == 1 else 0))
+                if w: cand += [j] * w
+            got = set()
+            while cand and len(got) < want:
+                j = rng.choice(cand); got.add(j); cand = [c for c in cand if c != j]
+            for j in got: s[j] = "o"
+        # フィル（スネアの連打）はだんだん強く
+        roll = [j for j, c in enumerate(s) if c != "." and j >= n // 2]
+        adj = sum(1 for a_, b_ in zip(roll, roll[1:]) if b_ - a_ == 1)
+        if len(roll) >= 4 and adj >= 2:
+            for r_, j in enumerate(roll): s[j] = "o" if r_ < len(roll) // 3 else ("x" if r_ < len(roll) - 2 else "X")
+        # ライドの裏は弱く
+        new = []
+        for t0, x in cyms:
+            if not x.startswith("R") and tok_note(x) == "D2" and abs(t0 - round(t0)) > 1e-6 and "!" not in x and "," not in x: x = x + ","
+            new.append(x)
+        kit.K[b], kit.S[b], kit.H[b], kit.C[b] = "".join(k), "".join(s), "".join(h), " ".join(new)
 
 
 class Song:
@@ -535,11 +618,19 @@ class Song:
 
     def to_json(self):
         self.check_lengths()
+        if LAST_KIT and not self.extra.get("_noHumanDrums"):
+            kit = LAST_KIT[0]
+            humanize_drums(kit, self.secs, self.kinds, seed=sum(map(ord, self.title)), beats=self.beats)
+            names = {"kick": "K", "snare": "S", "hihat": "H"}
+            for p in self.parts:
+                if p["instrument"] in names: p["notes"] = "g:" + "".join(getattr(kit, names[p["instrument"]]))
+                elif p["instrument"] == "crash" and p["role"] == "シンバル": p["notes"] = " ".join(kit.C)
+            LAST_KIT.clear()
         kind = lambda n: re.sub(r"\d+$", "", n).replace("inter", "interlude").replace("breakdown", "break")
         KINDS = {"intro", "verse", "pre", "chorus", "interlude", "bridge", "break", "outro", "solo"}
         song = {"title": self.title, "description": self.desc, "bpm": self.bpm, "beats": self.beats, "barsPerChord": 1, "repeats": 1,
                 "autoAccompaniment": False, "feel": "rock", "tone": "metal", "dynamics": "natural",
-                "human": 0.35, "humanProfile": "role", "humanDist": "triangle", "diGuitar": "emily", "autoScoop": False, "guitarWobble": False,
+                "human": 0.42, "humanProfile": "role", "humanDist": "triangle", "diGuitar": "emily", "autoScoop": False, "guitarWobble": False,
                 "drumMix": {"kick": {"level": 1.0}, "crash": {"level": 0.9}, "snare": {"level": 1.0}},
                 "chords": " ".join(simple_chord(self.chord_at(i)) for i in range(self.nb)),
                 "sections": [{"kind": self.kinds.get(n) or (kind(n) if kind(n) in KINDS else "verse"), "bars": c} for n, c in self.form],
