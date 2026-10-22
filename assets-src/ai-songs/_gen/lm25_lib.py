@@ -462,7 +462,7 @@ def bass_part(notes, vol=0.15, role="ベース", bright=0.0):
 
 def slap_pop_part(notes, vol=0.12, role="ベース（はじく音）"):
     """スラップのはじく音（同じ bnb の指弾きの録音を、高域を出して短く。親指の音はふつうのベースのパートで）"""
-    return part(role, "bass", notes, volume=vol, pan=0, amp="bassSplit", ampDrive=0.5, sustain=0.5, release=0.12,
+    return part(role, "bass", notes, volume=vol, pan=0, amp="bassSplit", ampDrive=0.5, sustain=0.9, release=0.28,
                 fx=[{"type": "filter", "kind": "highpass", "freq": 120, "q": 0.7}, {"type": "eq", "low": -4, "mid": 4, "midHz": 2500, "high": 6},
                     {"type": "compressor", "threshold": -18, "ratio": 4, "attack": 0.002, "release": 0.08}])
 
@@ -586,6 +586,39 @@ def humanize_drums(kit, secs, kinds, seed=0, beats=4):
         kit.K[b], kit.S[b], kit.H[b], kit.C[b] = "".join(k), "".join(s), "".join(h), " ".join(new)
 
 
+def onsets(notes):
+    out, t = [], 0.0
+    for x in notes.split():
+        if not x.startswith("R"): out.append(round(t, 4))
+        t += tok_beats(x)
+    return out
+
+
+def let_ring(notes, maxlen=0.75, short=0.5, drop_staccato=False, stops=()):
+    """短い音（short 拍以下）のあとの休みを、maxlen 拍まで音の伸びにする（2026-10-23、人間「スラップ・ミュートはもう少し音を伸ばす」）。
+    stops（ほかのパートの音の出だし）の手前で止める（1本のベースなので重ねない）"""
+    import bisect
+    st = sorted(set(stops))
+    toks = notes.split()
+    out = []
+    j = 0; t = 0.0
+    while j < len(toks):
+        x = toks[j]
+        if not x.startswith("R") and tok_beats(x) <= short + 1e-9 and j + 1 < len(toks) and toks[j + 1].startswith("R"):
+            d = tok_beats(x); r = tok_beats(toks[j + 1])
+            k = bisect.bisect_right(st, round(t + 1e-6, 4))
+            room = (st[k] - t) if k < len(st) else 1e9
+            add = max(0.0, min(r, maxlen - d, room - d))
+            t += d + r
+            marks = tok_marks(x).replace("'", "") if drop_staccato else tok_marks(x)
+            out.append(f"{tok_note(x)}:{d + add:g}{marks}")
+            if r - add > 1e-9: out.append(f"R:{r - add:g}")
+            j += 2
+            continue
+        out.append(x); t += tok_beats(x); j += 1
+    return " ".join(out)
+
+
 _TPL = re.compile(r"^[A-G][#b]?-?\d$")
 
 
@@ -648,6 +681,14 @@ class Song:
 
     def to_json(self):
         self.check_lengths()
+        if any(p["role"] == "ベース（はじく音）" for p in self.parts):
+            bp = [p for p in self.parts if p["role"] in ("ベース", "ベース（はじく音）", "ベース（止めた音・ゴースト）")]
+            on = {id(p): onsets(p["notes"]) for p in bp}
+            for p in bp:
+                others = [o for q in bp if q is not p for o in on[id(q)]]
+                if p["role"] == "ベース（はじく音）": p["notes"] = let_ring(p["notes"], 0.75, 0.25, True, others)
+                elif p["role"] == "ベース（止めた音・ゴースト）": p["notes"] = let_ring(p["notes"], 0.5, 0.25, False, others)
+                else: p["notes"] = let_ring(p["notes"], 0.75, 0.25, False, others)
         if getattr(self, "pickups", None):
             for p in self.parts:
                 if p["instrument"] not in ("kick", "snare", "hihat", "tom", "crash") and not p["notes"].startswith("g:"):
