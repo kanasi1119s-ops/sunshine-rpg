@@ -249,22 +249,25 @@ def make(path, vocal=False):   # 2026-10-22 人間「歌入りは後程で、イ
     D = "." * 16
     def g(pos, n=32, ch="X"):
         return "".join(ch if i in pos else "." for i in range(n))
-    KK = ["X..X..X.X..X..X.", "X..X..X.X..X..XX", "X" * 16, "X" * 12 + "....", "X" * 16, "X" * 16, "X....X....X.....", "X....X.........."] + ["X" * 16] * 3 + ["X" * 12 + "X.X."] + ["X" * 16] * 3 + ["X" * 12 + "XXXX"]
-    snare_p = g({4, 9, 14, 19, 24, 29} - {28, 29, 30, 31})
-    SN = [D, "............xxxX", snare_p[:16], snare_p[16:28] + "....", "....X.......X...", "....X.......X.X.", "X....X....X.....", "X....X.........."] + ["....X.......X..."] * 3 + ["....X...X.X.XXXX"] + ["....X.......X..."] * 3 + ["....X.X.X.XXXXXX"]
+    # 2026-10-22 人間「激しすぎかな。音が強すぎるね。もうちょっと繊細さも入れよう」→ ずれ・区切りの仕掛けは残し、強さを落とす
+    #   キックは区切りの頭だけ強く（X）ほかは弱く（x）、スネアは弱い音（o・x）中心、チャイナの連打はライドに、ツーバスの16分連打はやめる
+    KK = ["X..x..x.X..x..x.", "X..x..x.X..x....", "X....x....x....x", "....x....x......", "X.x.x.x.X.x.x.x.", "X.x.x.x.X.x.X.X.", "X....X....X.....", "X....X.........."] + \
+         ["X..x..X.X..x..x."] * 3 + ["X..x..X.X...X.X."] + ["X..x..X.X..x..x."] * 3 + ["X..x..X.X..xXXXX"]
+    snare_p = "".join("x" if i in {4, 9, 14, 19, 24} else ("o" if i in {7, 17, 22} else ".") for i in range(32))
+    SN = [D, "..........o.oxxX", snare_p[:16], snare_p[16:28] + "....", "....X..o....X..o", "....X..o....X.o.", "X....X....X.....", "X....X.........."] + \
+         ["....X..o....X..."] * 3 + ["....X..o..x.XxxX"] + ["....X..o....X..."] * 3 + ["....X.o.x.xXxxxX"]
     kick_g = "".join(KK); snare_g = "".join(SN)
     for p_ in parts:
         if p_["instrument"] == "kick": put(p_, a, a + 64, kick_g)
         if p_["instrument"] == "snare": put(p_, a, a + 64, snare_g)
         if p_["instrument"] == "hihat": put(p_, a, a + 64)
-    TOM12 = "A3:0.25! A3:0.25 A3:0.25 D3:0.25! D3:0.25 D3:0.25 A3:0.25! A3:0.25 D3:0.25! D3:0.25 D3:0.25 A3:0.25! A3:0.25 A3:0.25 D3:0.25! D3:0.25"
-    put(part(parts, inst="tom"), a, a + 64, TOM12 + " " + TOM12.replace("D3:0.25! D3:0.25", "D3:0.25! D3:0.25", 1) + " R:4 R:4 R:4 R:4 R:4 R:1.5 C4:0.25! C4:0.25 A3:0.25 A3:0.25 F3:0.25 F3:0.25 R:1" + " R:4" * 8)
-    CHINA_332 = "B2:0.75! B2:0.75! B2:0.5! B2:0.75! B2:0.75! B2:0.5!"
-    china7 = "B2:1.75! B2:1.75! B2:1.75! B2:1.75! B2:1"
-    put(part(parts, inst="crash"), a, a + 64, " ".join([CHINA_332, CHINA_332, "B2:1! B2:1! B2:1! B2:1!", "B2:1! B2:1! B2:2!", china7,
-                                                     "B2:1.25! B2:1.25! B2:1.5! B2:1.25! B2:1.25! R:1.5",
-                                                     "C2:1! B2:1! B2:1! B2:1!", "B2:1! B2:1! B2:1! B2:1!", "B2:1! B2:1! B2:1! B2:1!", "B2:1! B2:1! B2:1! R:1",
-                                                     "C2:1! B2:1! B2:1! B2:1!", "B2:1! B2:1! B2:1! B2:1!", "B2:1! B2:1! B2:1! B2:1!", "B2:1! B2:1! R:2"]))
+    TOM12 = "A3:0.25! A3:0.25, A3:0.25, D3:0.25! D3:0.25, D3:0.25, A3:0.25 A3:0.25, D3:0.25! D3:0.25, D3:0.25, A3:0.25 A3:0.25, A3:0.25, D3:0.25 D3:0.25,"
+    put(part(parts, inst="tom"), a, a + 64, TOM12 + " " + TOM12 + " R:4 R:4 R:4 R:4 R:4 R:1.5 C4:0.25! C4:0.25 A3:0.25 A3:0.25 F3:0.25 F3:0.25 R:1" + " R:4" * 8)
+    RIDE332 = "D2:0.75! D2:0.75 D2:0.5 D2:0.75! D2:0.75 D2:0.5"
+    put(part(parts, inst="crash"), a, a + 64, " ".join([RIDE332, RIDE332, "D2:1! D2:1 D2:1 D2:1", "D2:1! D2:1 D2:2", "D2:1.75! D2:1.75 D2:1.75! D2:1.75 D2:1",
+                                                     "B2:1.25! D2:1.25 D2:1.5 C2:1.25! D2:1.25 R:1.5",
+                                                     "C2:1! D2:1 D2:1 D2:1", "D2:1! D2:1 D2:1 D2:1", "D2:1! D2:1 D2:1 D2:1", "D2:1! D2:1 D2:1 R:1",
+                                                     "G2:1! D2:1 D2:1 D2:1", "D2:1! D2:1 D2:1 D2:1", "D2:1! D2:1 D2:1 D2:1", "D2:1! D2:1 R:2"]))
     riff = {"instrument": "distGuitar", "role": "看板リフ", "volume": 0.11, "pan": 0, "guitarTone": "loud-mid", "gainDb": -3, "powerChord": False, "notes": f"R:{full}"}
     for sid, frm, nb in (("intro", 4, 4), ("inter1", 0, 8), ("outro", 0, 2)):
         a, _ = st[sid]; put(riff, a + frm * 4, a + (frm + nb) * 4, sig(nb))
@@ -341,13 +344,13 @@ def make(path, vocal=False):   # 2026-10-22 人間「歌入りは後程で、イ
         a, n = st[sid]; put(bass, a + (n - 1) * 4, a + n * 4, "D2:3!\\ R:1")
     song["human"] = 0.3
     # (3) 大きな入り（前奏9小節目・各サビの頭・ブレイクダウンの頭）: クラッシュにチャイナを重ね、ベースは最低音を2拍伸ばす
-    big = {"instrument": "crash", "role": "シンバル（大きな入り）", "volume": 0.06, "pan": 0, "amp": "auto", "gainDb": -3, "notes": f"R:{full}"}
+    big = {"instrument": "crash", "role": "シンバル（大きな入り）", "volume": 0.03, "pan": 0, "amp": "auto", "gainDb": -3, "notes": f"R:{full}"}
     for at in [st["intro"][0] + 32, st["chorus1"][0], st["chorus2"][0], st["chorus3"][0], st["break"][0]]:
         put(big, at, at + 4, "B2:4!")
     for at in [st["intro"][0] + 32, st["chorus1"][0], st["chorus2"][0]]:
         put(bass, at, at + 2, "D2:2!")
     parts.insert(parts.index(part(parts, inst="crash")) + 1, big)
-    song["drumMix"] = {**song.get("drumMix", {}), "kick": {"level": 1.2}, "snare": {"level": 1.1}, "crash": {"level": 1.1}}
+    song["drumMix"] = {**song.get("drumMix", {}), "kick": {"level": 1.0}, "snare": {"level": 1.0}, "crash": {"level": 0.9}}
     add_heavy_kick(parts)
     bass.update({"amp": "bassSplit", "ampDrive": 0.6, "duck": 0.25, "fx": [{"type": "eq", "low": 0, "mid": 3, "midHz": 2200, "high": 2}]})
     plain_guitars(parts)
@@ -367,6 +370,19 @@ def make(path, vocal=False):   # 2026-10-22 人間「歌入りは後程で、イ
             a, n = st[sid]; put(lead, a, a + n * 4); put(quiet, a, a + n * 4)
         parts[:] = [p_ for p_ in parts if p_["role"] not in ("リード（ハモり）", "リード（オクターブ下）")]
     song["dynamics"] = "natural"
+    # 区間ごとの強弱（人間「もうちょっと繊細さも入れよう」）: バンド（リード以外）の強さを小節ごとに変える。Aメロは弱く→Bメロで上げる→サビで最大、ブリッジがいちばん弱い
+    NBARS = sum(f[2] for f in FORM)
+    def lvl(sid, k, n):
+        if sid == "intro": return 0.8 if k < 8 else 0.95
+        if sid.startswith("verse"): return 0.75 if k < n // 2 else 0.82
+        if sid.startswith("pre"): return 0.8 + 0.2 * k / max(1, n - 1)
+        return {"chorus1": 0.92, "chorus2": 0.97, "chorus3": 1.0, "inter1": 0.88, "bridge": 0.7, "break": 1.0, "outro": 0.95}.get(sid, 1.0)
+    bar_gain = []
+    for sid, kind, n, prog in FORM:
+        bar_gain += [round(lvl(sid, k, n), 3) for k in range(n)]
+    assert len(bar_gain) == NBARS
+    for p_ in parts:
+        if not p_["role"].startswith("リード"): p_["barGain"] = bar_gain
     finish(song, parts, SPEC["title"])
     json.dump(song, open(path, "w"), ensure_ascii=False)
     return song, st
