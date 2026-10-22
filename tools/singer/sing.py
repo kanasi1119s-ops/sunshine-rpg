@@ -313,7 +313,8 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
     jit = np.ones(k)
     if med > 0:
         r = np.where(voiced, fo / med, 1.0)
-        r = r / np.convolve(r, np.ones(15) / 15, mode="same")
+        w = max(1, min(15, len(r)))   # 2026-10-22 とても短い音（16分）で、窓が音より長いと形が合わず止まっていた
+        r = r / np.convolve(r, np.ones(w) / w, mode="same")
         jit = np.clip(r, 0.985, 1.015) ** 0.6
     f0 = np.where(voiced, f0_target * jit, 0.0)
     o = opts or {}
