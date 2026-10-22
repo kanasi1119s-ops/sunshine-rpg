@@ -17,8 +17,8 @@ export interface DrumGenre {
   label: string;
   /** 曲JSONの drumMix にそのまま入れられる。 */
   drumMix: DrumMix;
-  /** `--drums` の音源（std・muldjord・rock・metal・jazz・jpop・supra）。 */
-  drums: "std" | "muldjord" | "rock" | "metal" | "jazz" | "jpop" | "supra";
+  /** `--drums` の音源（std・muldjord・rock・metal・jazz・jpop・supra・crocell）。 */
+  drums: "std" | "muldjord" | "rock" | "metal" | "jazz" | "jpop" | "supra" | "crocell";
   /** `--bass` の音源（std・finger・pick・rock・metal・jazz・jpop）。bassline-guide.md §6 に対応。 */
   bass: "std" | "finger" | "pick" | "rock" | "metal" | "jazz" | "jpop";
   /** swing（曲全体）。範囲のときは [遅いテンポ側, 速いテンポ側]。 */

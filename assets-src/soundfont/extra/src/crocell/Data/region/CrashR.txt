@@ -1,0 +1,8 @@
+#define $instr CrashR
+group_label=$instr
+
+<region> lovel=$v2000l hivel=$v2000h region_label=4 sample=$instr/4-$instr-$mic.$ext power=0.000861349 seq_position=1
+<region> lovel=$v2001l hivel=$v2001h region_label=8 sample=$instr/8-$instr-$mic.$ext power=0.00183986 seq_position=1
+<region> lovel=$v2002l hivel=$v2002h region_label=12 sample=$instr/12-$instr-$mic.$ext power=0.00400972 seq_position=1
+<region> lovel=$v2003l hivel=$v2003h region_label=16 sample=$instr/16-$instr-$mic.$ext power=0.00661231 seq_position=1
+<region> lovel=$v2004l hivel=$v2004h region_label=20 sample=$instr/20-$instr-$mic.$ext power=0.00918145 seq_position=1

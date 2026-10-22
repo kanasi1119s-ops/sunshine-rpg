@@ -1,0 +1,8 @@
+#define $instr ChinaR
+group_label=$instr
+
+<region> lovel=$v1600l hivel=$v1600h region_label=5 sample=$instr/5-$instr-$mic.$ext power=0.000547298 seq_position=1
+<region> lovel=$v1601l hivel=$v1601h region_label=9 sample=$instr/9-$instr-$mic.$ext power=0.00138484 seq_position=1
+<region> lovel=$v1602l hivel=$v1602h region_label=14 sample=$instr/14-$instr-$mic.$ext power=0.00319484 seq_position=1
+<region> lovel=$v1603l hivel=$v1603h region_label=18 sample=$instr/18-$instr-$mic.$ext power=0.005467 seq_position=1
+<region> lovel=$v1604l hivel=$v1604h region_label=23 sample=$instr/23-$instr-$mic.$ext power=0.00987934 seq_position=1

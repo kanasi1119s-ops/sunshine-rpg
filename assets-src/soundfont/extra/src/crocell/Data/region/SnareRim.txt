@@ -1,0 +1,6 @@
+#define $instr SnareRim
+group_label=$instr
+
+<region> lovel=$v500l hivel=$v500h region_label=4 sample=$instr/4-$instr-$mic.$ext power=0.0269733 seq_position=1
+<region> lovel=$v501l hivel=$v501h region_label=10 sample=$instr/10-$instr-$mic.$ext power=0.0722391 seq_position=1
+<region> lovel=$v502l hivel=$v502h region_label=16 sample=$instr/16-$instr-$mic.$ext power=0.152136 seq_position=1

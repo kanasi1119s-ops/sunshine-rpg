@@ -1,0 +1,7 @@
+#define $instr SplashR
+group_label=$instr
+
+<region> lovel=$v1800l hivel=$v1800h region_label=2 sample=$instr/2-$instr-$mic.$ext power=0.00081888 seq_position=1
+<region> lovel=$v1801l hivel=$v1801h region_label=4 sample=$instr/4-$instr-$mic.$ext power=0.00858952 seq_position=1
+<region> lovel=$v1802l hivel=$v1802h region_label=6 sample=$instr/6-$instr-$mic.$ext power=0.0206619 seq_position=1
+<region> lovel=$v1803l hivel=$v1803h region_label=8 sample=$instr/8-$instr-$mic.$ext power=0.0372428 seq_position=1

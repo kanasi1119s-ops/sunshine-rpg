@@ -1,0 +1,7 @@
+#define $instr CrashRXtra
+group_label=$instr
+
+<region> lovel=$v2100l hivel=$v2100h region_label=2 sample=$instr/2-$instr-$mic.$ext power=0.00106935 seq_position=1
+<region> lovel=$v2101l hivel=$v2101h region_label=4 sample=$instr/4-$instr-$mic.$ext power=0.00628848 seq_position=1
+<region> lovel=$v2102l hivel=$v2102h region_label=6 sample=$instr/6-$instr-$mic.$ext power=0.0268416 seq_position=1
+<region> lovel=$v2103l hivel=$v2103h region_label=8 sample=$instr/8-$instr-$mic.$ext power=0.066566 seq_position=1

@@ -1,0 +1,13 @@
+#define $instr HihatClosed
+group_label=$instr
+
+<region> lovel=$v1100l hivel=$v1100h region_label=8 sample=$instr/8-$instr-$mic.$ext power=0.0188049 seq_position=1
+<region> lovel=$v1100l hivel=$v1100h region_label=7 sample=$instr/7-$instr-$mic.$ext power=0.0152086 seq_position=2
+<region> lovel=$v1101l hivel=$v1101h region_label=15 sample=$instr/15-$instr-$mic.$ext power=0.0621507 seq_position=1
+<region> lovel=$v1101l hivel=$v1101h region_label=14 sample=$instr/14-$instr-$mic.$ext power=0.0548271 seq_position=2
+<region> lovel=$v1102l hivel=$v1102h region_label=23 sample=$instr/23-$instr-$mic.$ext power=0.107283 seq_position=1
+<region> lovel=$v1102l hivel=$v1102h region_label=22 sample=$instr/22-$instr-$mic.$ext power=0.103766 seq_position=2
+<region> lovel=$v1103l hivel=$v1103h region_label=30 sample=$instr/30-$instr-$mic.$ext power=0.142253 seq_position=1
+<region> lovel=$v1103l hivel=$v1103h region_label=29 sample=$instr/29-$instr-$mic.$ext power=0.137801 seq_position=2
+<region> lovel=$v1104l hivel=$v1104h region_label=38 sample=$instr/38-$instr-$mic.$ext power=0.20213 seq_position=1
+<region> lovel=$v1104l hivel=$v1104h region_label=37 sample=$instr/37-$instr-$mic.$ext power=0.199629 seq_position=2

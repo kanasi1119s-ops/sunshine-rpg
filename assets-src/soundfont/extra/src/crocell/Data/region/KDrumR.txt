@@ -1,0 +1,19 @@
+#define $instr KDrumR
+group_label=$instr
+
+<region> lovel=$v200l hivel=$v200h region_label=7 sample=$instr/7-$instr-$mic.$ext power=0.337554 seq_position=1
+<region> lovel=$v200l hivel=$v200h region_label=6 sample=$instr/6-$instr-$mic.$ext power=0.295371 seq_position=2
+<region> lovel=$v201l hivel=$v201h region_label=13 sample=$instr/13-$instr-$mic.$ext power=0.622671 seq_position=1
+<region> lovel=$v201l hivel=$v201h region_label=12 sample=$instr/12-$instr-$mic.$ext power=0.570584 seq_position=2
+<region> lovel=$v202l hivel=$v202h region_label=18 sample=$instr/18-$instr-$mic.$ext power=0.859598 seq_position=1
+<region> lovel=$v202l hivel=$v202h region_label=17 sample=$instr/17-$instr-$mic.$ext power=0.852756 seq_position=2
+<region> lovel=$v203l hivel=$v203h region_label=24 sample=$instr/24-$instr-$mic.$ext power=1.37812 seq_position=1
+<region> lovel=$v203l hivel=$v203h region_label=23 sample=$instr/23-$instr-$mic.$ext power=1.1901 seq_position=2
+<region> lovel=$v204l hivel=$v204h region_label=30 sample=$instr/30-$instr-$mic.$ext power=1.87012 seq_position=1
+<region> lovel=$v204l hivel=$v204h region_label=29 sample=$instr/29-$instr-$mic.$ext power=1.73131 seq_position=2
+<region> lovel=$v205l hivel=$v205h region_label=35 sample=$instr/35-$instr-$mic.$ext power=2.8324 seq_position=1
+<region> lovel=$v205l hivel=$v205h region_label=34 sample=$instr/34-$instr-$mic.$ext power=2.61231 seq_position=2
+<region> lovel=$v206l hivel=$v206h region_label=41 sample=$instr/41-$instr-$mic.$ext power=3.66706 seq_position=1
+<region> lovel=$v206l hivel=$v206h region_label=40 sample=$instr/40-$instr-$mic.$ext power=3.49278 seq_position=2
+<region> lovel=$v207l hivel=$v207h region_label=47 sample=$instr/47-$instr-$mic.$ext power=4.38277 seq_position=1
+<region> lovel=$v207l hivel=$v207h region_label=46 sample=$instr/46-$instr-$mic.$ext power=4.36538 seq_position=2

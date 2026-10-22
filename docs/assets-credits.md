@@ -252,3 +252,11 @@ Naked Drums（Wilkinson Audio、CC BY 4.0、1.3GB）、DRS Kit（CC BY 4.0）、
 | 素材 | 入手元 | 規約の要点 | 扱い |
 |---|---|---|---|
 | 重音テト UTAU 音源（通常 単独音＋連続音 TETO-tougou-110401・弱音源 TETO-jakuongen210725・滑らか音源 TETO-namerakaongen211125） | https://kasaneteto.jp/utau/ （規約: https://kasaneteto.jp/guidelines/voice.html ） | 個人が歌わせた曲を動画サイトに投稿・広告収入を得る・同人で販売・配信するのは許諾不要（公式は「今のところ商用利用に当たらない」）。**音源そのものの配布・販売は、改変の有無を問わず禁止**。企業の商用利用・規約の範囲を超える利用は別途許諾（窓口: クリプトン・フューチャー・メディア）。犯罪・自殺系など問題のある作品、第三者を傷つける作品には使わない。「重音テト」の表記は必須ではない | **リポジトリに入れない**（再配布になるため）。各自が公式から入手して `assets-src/voicebanks/teto/`（gitignore 済み）か `~/voicebanks/teto/`、または環境変数 `SUNSHINE_VOICEBANKS` の場所に置く。歌声エンジン（`tools/singer/sing.py`）は書き出しのときにだけ読む。**ゲーム本体（dist/）には入れない**。ゲームの販売に歌声を使う場合は、別途の許諾が必要か窓口に確認してから（人間の承認が必要） |
+
+## 作曲ソフト用の追加音源（2026-10-22、ラウドロック・メタル向け。人間〔旭さん〕が候補から4つを選んで承認）
+作曲ソフト専用で、ゲーム本体 `dist/` には入れていない。元の録音はリポジトリに入れず（必要な分だけ取り出して変換し、変換後に消した）、変換結果の SF3 は `assets-src/soundfont/extra/`、規約の本文の写しは `assets-src/soundfont/extra/src/licenses/`。
+**CC BY のものは作曲ソフト専用で、その音を使った曲をゲームに入れるとき（や公開するとき）はクレジットが必要。** どれも耳での確認は未実施（数値で鳴ること・音程・クリップしないことだけ確認）。
+
+| 素材 | URL | 入手日 | 使い方 | 規約 | クレジット |
+|---|---|---|---|---|---|
+| CrocellKit 1.1（DrumGizmo。キット: Crocell のドラマー Andreas、マイク: Jacob Olsen〔JBOSound〕、サンプリングと編集: Lars Muldjord） | https://drumgizmo.org/wiki/doku.php?id=kits:crocellkit （本体 https://drumgizmo.org/kits/CrocellKit/CrocellKit1_1.zip） | 2026-10-22 | zip（5.6GB）は落とさず、`tools/soundfont/dg-extract.py` で必要な152打の頭だけを Range で取り出し（通信 815MB）、`build-drums.mjs --kit crocell` で `drums-crocell.sf3`（6.6MB）・`drums-crocell-aux.sf3`（8.1MB。補助打楽器は既存の VCSL・FreePats の録音）にした。作曲ソフトの `--drums crocell`。鍵盤は `docs/sound/drum-keys-crocell.md` | CC BY 4.0（同梱 README と wiki に明記。写し: `licenses/README-CrocellKit-CCBY4.md`・`licenses/CC-BY-4.0-legalcode.txt`）。商用・改変・再配布・組み込み可。表示と変更の明記が条件 | **必要**: 「Drum samples: CrocellKit by DrumGizmo.org (Lars Muldjord / JBOSound), CC BY 4.0。ミックス・切り出しの加工あり」 |

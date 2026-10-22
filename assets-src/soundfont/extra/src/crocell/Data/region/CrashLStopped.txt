@@ -1,0 +1,6 @@
+#define $instr CrashLStopped
+group_label=$instr
+
+<region> lovel=$v2200l hivel=$v2200h region_label=3 sample=$instr/3-$instr-$mic.$ext power=0.0269968 seq_position=1
+<region> lovel=$v2201l hivel=$v2201h region_label=7 sample=$instr/7-$instr-$mic.$ext power=0.128574 seq_position=1
+<region> lovel=$v2202l hivel=$v2202h region_label=11 sample=$instr/11-$instr-$mic.$ext power=0.217578 seq_position=1

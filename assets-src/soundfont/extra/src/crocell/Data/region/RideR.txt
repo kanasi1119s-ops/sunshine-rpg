@@ -1,0 +1,13 @@
+#define $instr RideR
+group_label=$instr
+
+<region> lovel=$v2400l hivel=$v2400h region_label=7 sample=$instr/7-$instr-$mic.$ext power=0.0142698 seq_position=1
+<region> lovel=$v2400l hivel=$v2400h region_label=6 sample=$instr/6-$instr-$mic.$ext power=0.00729045 seq_position=2
+<region> lovel=$v2401l hivel=$v2401h region_label=13 sample=$instr/13-$instr-$mic.$ext power=0.0538114 seq_position=1
+<region> lovel=$v2401l hivel=$v2401h region_label=12 sample=$instr/12-$instr-$mic.$ext power=0.0450747 seq_position=2
+<region> lovel=$v2402l hivel=$v2402h region_label=20 sample=$instr/20-$instr-$mic.$ext power=0.0948674 seq_position=1
+<region> lovel=$v2402l hivel=$v2402h region_label=19 sample=$instr/19-$instr-$mic.$ext power=0.0899278 seq_position=2
+<region> lovel=$v2403l hivel=$v2403h region_label=27 sample=$instr/27-$instr-$mic.$ext power=0.163742 seq_position=1
+<region> lovel=$v2403l hivel=$v2403h region_label=26 sample=$instr/26-$instr-$mic.$ext power=0.159953 seq_position=2
+<region> lovel=$v2404l hivel=$v2404h region_label=34 sample=$instr/34-$instr-$mic.$ext power=0.243892 seq_position=1
+<region> lovel=$v2404l hivel=$v2404h region_label=33 sample=$instr/33-$instr-$mic.$ext power=0.24332 seq_position=2

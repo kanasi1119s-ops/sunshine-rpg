@@ -1,0 +1,7 @@
+#define $instr HihatOpen
+group_label=$instr
+
+<region> lovel=$v1300l hivel=$v1300h region_label=10 sample=$instr/10-$instr-$mic.$ext power=0.0261592 seq_position=1
+<region> lovel=$v1301l hivel=$v1301h region_label=20 sample=$instr/20-$instr-$mic.$ext power=0.08067 seq_position=1
+<region> lovel=$v1302l hivel=$v1302h region_label=31 sample=$instr/31-$instr-$mic.$ext power=0.117793 seq_position=1
+<region> lovel=$v1303l hivel=$v1303h region_label=42 sample=$instr/42-$instr-$mic.$ext power=0.183345 seq_position=1

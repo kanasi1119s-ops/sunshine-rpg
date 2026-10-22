@@ -1,0 +1,9 @@
+#define $instr Tom2
+group_label=$instr
+
+<region> lovel=$v800l hivel=$v800h region_label=7 sample=$instr/7-$instr-$mic.$ext power=0.198075 seq_position=1
+<region> lovel=$v801l hivel=$v801h region_label=13 sample=$instr/13-$instr-$mic.$ext power=0.670448 seq_position=1
+<region> lovel=$v802l hivel=$v802h region_label=19 sample=$instr/19-$instr-$mic.$ext power=1.51298 seq_position=1
+<region> lovel=$v803l hivel=$v803h region_label=25 sample=$instr/25-$instr-$mic.$ext power=1.85013 seq_position=1
+<region> lovel=$v804l hivel=$v804h region_label=31 sample=$instr/31-$instr-$mic.$ext power=2.33905 seq_position=1
+<region> lovel=$v805l hivel=$v805h region_label=37 sample=$instr/37-$instr-$mic.$ext power=3.62368 seq_position=1

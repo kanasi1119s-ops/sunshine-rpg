@@ -1,0 +1,9 @@
+#define $instr FTom2
+group_label=$instr
+
+<region> lovel=$v1000l hivel=$v1000h region_label=6 sample=$instr/6-$instr-$mic.$ext power=0.0776824 seq_position=1
+<region> lovel=$v1001l hivel=$v1001h region_label=11 sample=$instr/11-$instr-$mic.$ext power=0.20557 seq_position=1
+<region> lovel=$v1002l hivel=$v1002h region_label=16 sample=$instr/16-$instr-$mic.$ext power=0.526058 seq_position=1
+<region> lovel=$v1003l hivel=$v1003h region_label=21 sample=$instr/21-$instr-$mic.$ext power=0.947051 seq_position=1
+<region> lovel=$v1004l hivel=$v1004h region_label=26 sample=$instr/26-$instr-$mic.$ext power=1.26133 seq_position=1
+<region> lovel=$v1005l hivel=$v1005h region_label=32 sample=$instr/32-$instr-$mic.$ext power=2.42739 seq_position=1

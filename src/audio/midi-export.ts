@@ -402,7 +402,7 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
     const cymbalStarts: number[] = [];
     // 2026-10-21 人間「シンバル系なりとか少し伸ばして」: 次に「同じシンバル」をたたくまで鳴らす（クラッシュのあとにライドを刻んでも、クラッシュは止めない）
     const cymbalNotes: string[] = [];
-    if (isDrum && inst !== "hihat") { let bb = 0; for (const q of track.notes) { if (q.note !== REST) { cymbalStarts.push(bb); cymbalNotes.push(inst === "crash" ? (q.note[0] ?? "C").toUpperCase() : "x"); } bb += q.durationBeats; } }
+    if (isDrum && inst !== "hihat") { let bb = 0; for (const q of track.notes) { if (q.note !== REST) { cymbalStarts.push(bb); cymbalNotes.push(inst === "crash" ? (["B3", "A3", "C3", "C#2", "G#2", "DB2", "AB2"].includes(q.note.toUpperCase()) ? q.note.toUpperCase() : (q.note[0] ?? "C").toUpperCase()) : "x"); } bb += q.durationBeats; } }
     let cymbalIdx = 0;
     let beat = 0;
     for (const n of track.notes) {
@@ -451,6 +451,11 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         // 音名で種類を選ぶ: C2（既定）クラッシュ／D2 ライド／E2 ライド2／F2 ライドのカップ／G2 クラッシュ2／A2 スプラッシュ／B2 チャイナ
         const CYM: Record<string, number> = { D: 51, E: 59, F: 53, G: 57, A: 55, B: 52 };
         if (n.note !== "C2") drumKey = CYM[n.note[0]?.toUpperCase() ?? ""] ?? drumKey;
+        // 2026-10-22 2枚目のシンバルと止め打ち（GM に無いので空きキー 90〜94。CrocellKit＝--drums crocell だけが鳴らす。docs/sound/drum-keys-crocell.md）
+        //   B3 チャイナ2／A3 スプラッシュ2／C3 クラッシュ3／C#2 クラッシュ1の止め打ち／G#2 クラッシュ2の止め打ち
+        const CYM_EXTRA: Record<string, number> = { B3: 90, A3: 91, C3: 92, "C#2": 93, "G#2": 94, DB2: 93, AB2: 94 };
+        const extra = CYM_EXTRA[n.note.toUpperCase()];
+        if (extra !== undefined) drumKey = extra;
       }
       // 曲の頭の2拍は強く（聴き手をつかむ、最初の一撃）
       const strike = score.opening && startBeat < 2 ? 1.22 : 1;

@@ -1,0 +1,6 @@
+#define $instr SnareRest
+group_label=$instr
+
+<region> lovel=$v600l hivel=$v600h region_label=3 sample=$instr/3-$instr-$mic.$ext power=0.244293 seq_position=1
+<region> lovel=$v601l hivel=$v601h region_label=6 sample=$instr/6-$instr-$mic.$ext power=0.469822 seq_position=1
+<region> lovel=$v602l hivel=$v602h region_label=10 sample=$instr/10-$instr-$mic.$ext power=0.712932 seq_position=1

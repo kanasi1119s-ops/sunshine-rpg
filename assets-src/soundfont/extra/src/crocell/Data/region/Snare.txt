@@ -1,0 +1,19 @@
+#define $instr Snare
+group_label=$instr
+
+<region> lovel=$v300l hivel=$v300h region_label=15 sample=$instr/15-$instr-$mic.$ext power=0.236576 seq_position=1
+<region> lovel=$v300l hivel=$v300h region_label=14 sample=$instr/14-$instr-$mic.$ext power=0.22282 seq_position=2
+<region> lovel=$v301l hivel=$v301h region_label=26 sample=$instr/26-$instr-$mic.$ext power=0.509356 seq_position=1
+<region> lovel=$v301l hivel=$v301h region_label=25 sample=$instr/25-$instr-$mic.$ext power=0.435408 seq_position=2
+<region> lovel=$v302l hivel=$v302h region_label=37 sample=$instr/37-$instr-$mic.$ext power=0.70297 seq_position=1
+<region> lovel=$v302l hivel=$v302h region_label=36 sample=$instr/36-$instr-$mic.$ext power=0.687897 seq_position=2
+<region> lovel=$v303l hivel=$v303h region_label=48 sample=$instr/48-$instr-$mic.$ext power=1.07069 seq_position=1
+<region> lovel=$v303l hivel=$v303h region_label=47 sample=$instr/47-$instr-$mic.$ext power=1.03336 seq_position=2
+<region> lovel=$v304l hivel=$v304h region_label=59 sample=$instr/59-$instr-$mic.$ext power=1.24029 seq_position=1
+<region> lovel=$v304l hivel=$v304h region_label=58 sample=$instr/58-$instr-$mic.$ext power=1.15901 seq_position=2
+<region> lovel=$v305l hivel=$v305h region_label=70 sample=$instr/70-$instr-$mic.$ext power=1.66366 seq_position=1
+<region> lovel=$v305l hivel=$v305h region_label=69 sample=$instr/69-$instr-$mic.$ext power=1.57376 seq_position=2
+<region> lovel=$v306l hivel=$v306h region_label=81 sample=$instr/81-$instr-$mic.$ext power=2.10502 seq_position=1
+<region> lovel=$v306l hivel=$v306h region_label=80 sample=$instr/80-$instr-$mic.$ext power=2.06474 seq_position=2
+<region> lovel=$v307l hivel=$v307h region_label=93 sample=$instr/93-$instr-$mic.$ext power=2.79034 seq_position=1
+<region> lovel=$v307l hivel=$v307h region_label=92 sample=$instr/92-$instr-$mic.$ext power=2.74751 seq_position=2

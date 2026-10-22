@@ -1,0 +1,7 @@
+#define $instr HihatSemiOpen
+group_label=$instr
+
+<region> lovel=$v1200l hivel=$v1200h region_label=8 sample=$instr/8-$instr-$mic.$ext power=0.0248958 seq_position=1
+<region> lovel=$v1201l hivel=$v1201h region_label=16 sample=$instr/16-$instr-$mic.$ext power=0.103404 seq_position=1
+<region> lovel=$v1202l hivel=$v1202h region_label=24 sample=$instr/24-$instr-$mic.$ext power=0.181451 seq_position=1
+<region> lovel=$v1203l hivel=$v1203h region_label=32 sample=$instr/32-$instr-$mic.$ext power=0.281184 seq_position=1

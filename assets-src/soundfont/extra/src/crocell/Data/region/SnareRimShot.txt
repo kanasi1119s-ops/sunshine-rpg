@@ -1,0 +1,7 @@
+#define $instr SnareRimShot
+group_label=$instr
+
+<region> lovel=$v400l hivel=$v400h region_label=3 sample=$instr/3-$instr-$mic.$ext power=0.427527 seq_position=1
+<region> lovel=$v401l hivel=$v401h region_label=6 sample=$instr/6-$instr-$mic.$ext power=0.976914 seq_position=1
+<region> lovel=$v402l hivel=$v402h region_label=9 sample=$instr/9-$instr-$mic.$ext power=2.50341 seq_position=1
+<region> lovel=$v403l hivel=$v403h region_label=12 sample=$instr/12-$instr-$mic.$ext power=3.85223 seq_position=1

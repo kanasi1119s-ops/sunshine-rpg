@@ -1,0 +1,7 @@
+#define $instr RideRBell
+group_label=$instr
+
+<region> lovel=$v2500l hivel=$v2500h region_label=4 sample=$instr/4-$instr-$mic.$ext power=0.0286793 seq_position=1
+<region> lovel=$v2501l hivel=$v2501h region_label=8 sample=$instr/8-$instr-$mic.$ext power=0.114028 seq_position=1
+<region> lovel=$v2502l hivel=$v2502h region_label=12 sample=$instr/12-$instr-$mic.$ext power=0.239489 seq_position=1
+<region> lovel=$v2503l hivel=$v2503h region_label=16 sample=$instr/16-$instr-$mic.$ext power=0.565791 seq_position=1
