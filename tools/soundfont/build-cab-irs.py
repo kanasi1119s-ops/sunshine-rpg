@@ -10,7 +10,9 @@ SETS = {"david-fau-casquel": ("dfc", "David Fau Casquel (CC BY 3.0)"),
         "darkdays": ("dd", "Dark Days - https://darkdays.net (CC BY 4.0)"),
         "jester-dyne": ("jd", "Jester Dyne Productions (CC0)"),
         # 2026-10-21 クリーン〜クランチ向けの箱（機種は書かれていない。耳で選ぶ）
-        "adventure-kid": ("ak", "Kristoffer Ekstrand / Adventure Kid Research & Technology (CC BY 4.0)")}
+        "adventure-kid": ("ak", "Kristoffer Ekstrand / Adventure Kid Research & Technology (CC BY 4.0)"),
+        # 2026-10-22 EG-IPT の DI とマイク録音の組から計算で作った 4x12（V30）の IR（tools/soundfont/egipt-cab-ir.py）
+        "egipt": ("eg", "EG-IPT Dataset by M. Fiorini, N. Brochec, J. Borg, R. Pasini (CC BY 4.0), doi:10.5281/zenodo.15205644. IR computed from DI/mic pairs")}
 N = 4096
 lines = ["// 自動生成（tools/soundfont/build-cab-irs.py）。手で書きかえない。",
          "// 録音のキャビネットIR。出どころと規約は docs/assets-credits.md と assets-src/ir/*/README.txt。", "",
