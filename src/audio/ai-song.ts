@@ -565,15 +565,16 @@ export function parseNotes(text: string, drum: boolean, errors: string[], where:
   if (!drum) text = expandNoteSugar(text);
   let lastPitched: string | null = null;
   for (const token of text.trim().split(/\s+/).filter(Boolean)) {
-    // ドラムのグリッド記法: g:x...x...  1文字が16分音符（0.25拍）。x＝打つ、X＝強く、o＝弱く（ゴーストノート）、O＝オープンハイハット（ハイハットだけ。強め）、. か - ＝休み
+    // ドラムのグリッド記法: g:x...x...  1文字が16分音符（0.25拍）。x＝打つ、X＝強く、o＝弱く（ゴーストノート）、O＝オープンハイハット（ハイハットだけ。強め）、
+    // h＝半開きのハイハット（ハイハットだけ。2026-10-22 追加。鍵盤 95 の録音が無い音源ではオープンで鳴る）、. か - ＝休み
     if (drum && /^g:/i.test(token)) {
       const cells = token.slice(2);
-      if (!/^[xXoO.\-]+$/.test(cells)) {
-        errors.push(`${where}: グリッドは x X o O . - だけで書きます「${token}」`);
+      if (!/^[xXoOh.\-]+$/.test(cells)) {
+        errors.push(`${where}: グリッドは x X o O h . - だけで書きます「${token}」`);
         continue;
       }
       for (const c of cells) {
-        out.push(c === "." || c === "-" ? { note: REST, durationBeats: 0.25 } : { note: "C2", durationBeats: 0.25, ...(c === "X" ? { velocity: 1.3 } : c === "O" ? { velocity: 1.25, open: true } : c === "o" ? { velocity: 0.5 } : {}) });
+        out.push(c === "." || c === "-" ? { note: REST, durationBeats: 0.25 } : { note: "C2", durationBeats: 0.25, ...(c === "X" ? { velocity: 1.3 } : c === "O" ? { velocity: 1.25, open: true } : c === "h" ? { velocity: 1.1, half: true } : c === "o" ? { velocity: 0.5 } : {}) });
       }
       continue;
     }

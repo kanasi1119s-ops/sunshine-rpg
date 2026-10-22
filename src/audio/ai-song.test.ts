@@ -94,6 +94,15 @@ describe("ドラムのグリッド記法・音の伸び・グルーブ", () => {
     parseNotes("g:xz", true, errors, "t");
     expect(errors.length).toBe(1);
   });
+  it("g: の h は半開きのハイハット（half）。O はオープンのまま", () => {
+    const errors: string[] = [];
+    const ev = parseNotes("g:hO", true, errors, "t");
+    expect(errors).toEqual([]);
+    expect(ev[0].half).toBe(true);
+    expect(ev[0].open).toBeUndefined();
+    expect(ev[1].open).toBe(true);
+    expect(ev[1].half).toBeUndefined();
+  });
   it("アクセントの強さは1.3倍までで、音量が極端に大きくならない", () => {
     expect(parseNotes("X:1", true, [], "t")[0].velocity).toBe(1.3);
   });

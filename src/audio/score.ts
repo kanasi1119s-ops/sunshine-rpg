@@ -46,6 +46,8 @@ export interface NoteEvent {
   fallAt?: number;
   /** オープンハイハット（ハイハットだけ。開いて長く鳴らす）。録音音源（MIDI経由）で鳴らすときに働く。 */
   open?: boolean;
+  /** 半開きのハイハット（ハイハットだけ。グリッドの h）。鍵盤 95 の録音がある音源（crocell・naked 系）では半開きの録音、ほかの音源ではオープン（46）で鳴る。 */
+  half?: boolean;
 }
 
 export type Waveform = "square" | "triangle" | "sawtooth" | "sine";
