@@ -215,12 +215,12 @@ for idx, (name, i) in enumerate(SECS):
         if name == "chorus3" and i < 4:
             P["rhythm"].append(bar(f"{low}:4!"))
         elif i in (7, 15):
-            P["rhythm"].append(bar(f"{low}:1.5! {low}:0.5 R:2") if not (name == "chorus3" and i == 15) else bar("E2:4!"))
+            P["rhythm"].append(bar(f"{low}:2! R:2") if not (name == "chorus3" and i == 15) else bar("E2:4!"))
         else:
             P["rhythm"].append(bar(f"{low}:1.5! {low}:1.5 {low}:1"))
         P["rhythm_in"].append(P["rhythm"][-1] if not (name == "chorus3" and i < 4) else REST)
     elif name in ("pre", "pre2"):
-        P["rhythm"].append(bar(f"{low}:2! {low}:2") if not last else bar(f"{low}:0.5! {low}:0.5 {low}:0.5 {low}:0.5 {low}:1! R:1"))
+        P["rhythm"].append(bar(f"{low}:2! {low}:2") if not last else bar(f"{low}:2! {low}:1! R:1"))
         P["rhythm_in"].append(REST)
     elif name == "verse" and i >= 4 or name == "verse2":
         P["rhythm"].append(bar(f"{low}:4") if not last else bar(f"{low}:2! R:2"))
@@ -292,11 +292,11 @@ drum_ref = json.load(open(__file__.rsplit("/", 2)[0] + "/drum-refs/prog100-naked
 dset = {p["instrument"]: {k: v for k, v in p.items() if k not in ("notes", "role", "instrument")} for p in drum_ref["parts"]}
 
 parts = [
-    part("看板リフ", "distGuitar", " ".join(P["riff"]), volume=0.11, pan=0, guitarTone="loud-mid", gainDb=-3, powerChord=False, ampDrive=0.44, fx=[{"type": "filter", "kind": "highpass", "freq": 85, "q": 0.7}, {"type": "eq", "low": 0, "mid": -5, "midHz": 320, "high": 0}, {"type": "eq", "low": 0, "mid": 2.5, "midHz": 1500, "high": 0}, {"type": "eq", "low": 0, "mid": 2, "midHz": 3500, "high": 4}, {"type": "plate", "mix": 0.08}]),
-    part("看板リフ（透明感の層）", "distGuitar", " ".join(P["riff"]), **{**LEAD_BASE, "volume": 0.07, "pan": 0, "ampDrive": 0.18, "phrase": None, "reverb": 0.1, "fx": [{"type": "filter", "kind": "highpass", "freq": 140, "q": 0.7}, {"type": "eq", "low": -3, "mid": -3, "midHz": 400, "high": 3}, {"type": "plate", "mix": 0.12}]}),
-    part("リズム（左右）", "distGuitar", " ".join(P["rhythm"]), volume=0.1, pan=0, guitarTone="loud-mid", gainDb=-5, ampDrive=0.44, fx=[{"type": "eq", "low": 0, "mid": -3.5, "midHz": 300, "high": 0}, {"type": "eq", "low": 0, "mid": 2.5, "midHz": 1500, "high": 0}, {"type": "eq", "low": 0, "mid": 2, "midHz": 3200, "high": 3}]),
-    part("リズム（内側の2本）", "distGuitar", " ".join(P["rhythm_in"]), volume=0.1, pan=0, guitarTone="loud-mid-hs", gainDb=-10, ampDrive=0.44, fx=[{"type": "eq", "low": 0, "mid": -3.5, "midHz": 300, "high": 0}, {"type": "eq", "low": 0, "mid": 2.5, "midHz": 1500, "high": 0}, {"type": "eq", "low": 0, "mid": 2, "midHz": 3200, "high": 3}]),
-    part("分散和音のギター", "distGuitar", " ".join(P["arp"]), **{**LEAD_BASE, "volume": 0.1, "pan": -0.2, "ampDrive": 0.34, "phrase": None,
+    part("看板リフ", "distGuitar", " ".join(P["riff"]), volume=0.11, pan=0, guitarTone="loud-mid", gainDb=-3, powerChord=False, sustain=1.4, release=0.5, ampDrive=0.44, fx=[{"type": "filter", "kind": "highpass", "freq": 85, "q": 0.7}, {"type": "eq", "low": 0, "mid": -5, "midHz": 320, "high": 0}, {"type": "eq", "low": 0, "mid": 2.5, "midHz": 1500, "high": 0}, {"type": "eq", "low": 0, "mid": 2, "midHz": 3500, "high": 4}, {"type": "plate", "mix": 0.08}]),
+    part("看板リフ（透明感の層）", "distGuitar", " ".join(P["riff"]), **{**LEAD_BASE, "volume": 0.07, "pan": 0, "ampDrive": 0.18, "phrase": None, "reverb": 0.1, "sustain": 1.4, "release": 0.5, "fx": [{"type": "filter", "kind": "highpass", "freq": 140, "q": 0.7}, {"type": "eq", "low": -3, "mid": -3, "midHz": 400, "high": 3}, {"type": "plate", "mix": 0.12}]}),
+    part("リズム（左右）", "distGuitar", " ".join(P["rhythm"]), volume=0.1, pan=0, guitarTone="loud-mid", gainDb=-5, sustain=1.4, release=0.5, ampDrive=0.44, fx=[{"type": "eq", "low": 0, "mid": -3.5, "midHz": 300, "high": 0}, {"type": "eq", "low": 0, "mid": 2.5, "midHz": 1500, "high": 0}, {"type": "eq", "low": 0, "mid": 2, "midHz": 3200, "high": 3}]),
+    part("リズム（内側の2本）", "distGuitar", " ".join(P["rhythm_in"]), volume=0.1, pan=0, guitarTone="loud-mid-hs", gainDb=-10, sustain=1.4, release=0.5, ampDrive=0.44, fx=[{"type": "eq", "low": 0, "mid": -3.5, "midHz": 300, "high": 0}, {"type": "eq", "low": 0, "mid": 2.5, "midHz": 1500, "high": 0}, {"type": "eq", "low": 0, "mid": 2, "midHz": 3200, "high": 3}]),
+    part("分散和音のギター", "distGuitar", " ".join(P["arp"]), **{**LEAD_BASE, "volume": 0.1, "pan": -0.2, "ampDrive": 0.34, "phrase": None, "sustain": 1.6, "release": 0.6,
          "fx": [{"type": "eq", "low": -3, "mid": 1.5, "midHz": 1000, "high": 1.5}, {"type": "filter", "kind": "lowpass", "freq": 9500, "q": 0.7},
                 {"type": "delay", "beats": 0.75, "mix": 0.22, "feedback": 0.35}, {"type": "plate", "mix": 0.24}]}),
     part("リード（旋律）", "distGuitar", " ".join(P["lead"]), **{**LEAD_BASE, "volume": 0.13, "pan": -0.05}),
