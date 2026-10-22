@@ -649,6 +649,103 @@ def vary_pickups(notes, styles, beats):
     return " ".join(out)
 
 
+def _events_full(notes):
+    """(開始拍, 長さ, 音名 or None, 記号, 元の字句)"""
+    out, t = [], 0.0
+    for x in notes.split():
+        L = tok_beats(x)
+        out.append((t, L, None if x.startswith("R") else tok_note(x), "" if x.startswith("R") else tok_marks(x), x))
+        t += L
+    return out
+
+
+def _join(evs):
+    return " ".join(f"R:{L:g}" if n is None else f"{n}:{L:g}{m}" for _, L, n, m, _x in evs)
+
+
+def modernize_leads(song):
+    """現代ラウドの決まりごと（docs/sound/modern-loud-rock/、2026-10-23 人間「ゲームの音っぽい」「音が高すぎる」）を、全曲のギターに当てる:
+    1. リードの高さ: 区間ごとに、音の真ん中を歌の高さ（サビ B4・Aメロ G4・ほか A4）に近づける（1オクターブ下げるかどうか。一番上は A5 まで。ソロはそのまま）
+    2. ハモリ: 1オクターブ下の重ねをやめ、和音の音から3度上あたりを選ぶ。サビの2回目以降の、区間の後半だけ
+    3. 最後のサビだけ、1オクターブ上を薄く（帯域を絞って）重ねる
+    4. 表情: フレーズの最初の長い音にすべり込み（/）、近い音へ動く短い音はレガート（_）でつなぐ
+    5. リフ: 低いチューニング（ドロップC〜7弦・8弦の F#）の音域へ。区間の一番低い音が F2 以上なら、F#1 を下回らない範囲で1オクターブ下げる"""
+    B = song.beats
+    kindof = lambda n: song.kinds.get(n) or re.sub(r"\d+$", "", n).replace("inter", "interlude")
+    secs, t = [], 0
+    for n, c in song.form:
+        secs.append((n, kindof(n), t * B, (t + c) * B)); t += c
+    def sec_at(x):
+        for sc in secs:
+            if sc[2] - 1e-6 <= x < sc[3] - 1e-6: return sc
+        return secs[-1]
+    lead = next((p for p in song.parts if p["role"] == "リード（旋律）"), None)
+    if not lead: return
+    ev = _events_full(lead["notes"])
+    shift = {}
+    for sc in secs:
+        ms = [midi(n) for st, L, n, m, x in ev if n and sc[2] - 1e-6 <= st < sc[3] - 1e-6]
+        if not ms or sc[1] == "solo": shift[sc[0]] = 0; continue
+        # 区間の音の真ん中を、歌の高さの目安へ（サビ B4・Aメロ G4・ほか A4）。一番上が A5 を超えるなら必ず下げる
+        med = sorted(ms)[len(ms) // 2]
+        tgt = {"chorus": midi("B4"), "verse": midi("G4")}.get(sc[1], midi("A4"))
+        best = min((0, -12), key=lambda d: (max(ms) + d > midi("A5"), min(ms) + d < midi("E3"), abs(med + d - tgt)))
+        shift[sc[0]] = best
+    ev = [(st, L, (nm(midi(n) - 0 + shift[sec_at(st)[0]], "b" in n[1:2]) if n else None), m, x) for st, L, n, m, x in ev]
+    # 表情
+    out = []
+    for i, (st, L, n, m, x) in enumerate(ev):
+        if n:
+            prev = ev[i - 1] if i else None
+            nxt = ev[i + 1] if i + 1 < len(ev) else None
+            if L >= 1 and (prev is None or prev[2] is None) and not re.search(r"[/^\\~_]", m): m = m + "/"
+            elif L <= 0.5 and nxt and nxt[2] and abs(midi(nxt[2]) - midi(n)) <= 2 and "_" not in m and "'" not in m and nxt[0] - (st + L) < 1e-6: m = m + "_"
+        out.append((st, L, n, m, x))
+    lead["notes"] = _join(out)
+    ev = out
+    # ハモリ
+    chorus_no = {}
+    k = 0
+    for sc in secs:
+        if sc[1] == "chorus": k += 1; chorus_no[sc[0]] = k
+    def harm_note(n, st):
+        bar = min(int(st // B), song.nb - 1)
+        pcs = chord_pcs(song.chord_at(bar))
+        m0 = midi(n)
+        for d in (3, 4, 5, 2, 6, 7):
+            if (m0 + d) % 12 in pcs: return nm(m0 + d, "b" in n[1:2])
+        return None
+    for p in song.parts:
+        if p["role"] in ("リード（オクターブ下）", "リード（和音の音のハモリ）"):
+            hv = []
+            for st, L, n, m, x in ev:
+                sc = sec_at(st)
+                use = n and sc[1] == "chorus" and chorus_no.get(sc[0], 1) >= 2 and st >= (sc[2] + sc[3]) / 2 - 1e-6
+                h = harm_note(n, st) if use else None
+                hv.append((st, L, h, m.replace("/", "") if h else "", x))
+            p["notes"] = _join(hv)
+            p["role"] = "リード（3度上のハモリ）"
+            p["volume"] = round(lead.get("volume", 0.13) * 0.62, 3)
+    last = [sc for sc in secs if sc[1] == "chorus"]
+    if last:
+        sc = last[-1]
+        ov = [(st, L, (nm(midi(n) + 12) if n and sc[2] - 1e-6 <= st < sc[3] - 1e-6 and midi(n) + 12 <= midi("E6") else None), "", x) for st, L, n, m, x in ev]
+        if any(n for _, _, n, _, _ in ov):
+            q = dict(lead); q["role"] = "リード（最後のサビの1オクターブ上）"; q["notes"] = _join(ov); q["volume"] = round(lead.get("volume", 0.13) * 0.35, 3)
+            q["fx"] = [{"type": "filter", "kind": "highpass", "freq": 1500, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 9000, "q": 0.7}] + [f for f in lead.get("fx", []) if f.get("type") == "room"]
+            q.pop("double", None)
+            song.parts.append(q)
+    # リフを低いチューニングへ
+    for p in song.parts:
+        if p["role"] in ("看板リフ", "看板リフ（透明感の層）"):
+            evr = _events_full(p["notes"])
+            for sc in secs:
+                ms = [midi(n) for st, L, n, m, x in evr if n and sc[2] - 1e-6 <= st < sc[3] - 1e-6]
+                if ms and min(ms) >= midi("F2") and min(ms) - 12 >= midi("F#1"):
+                    evr = [(st, L, (nm(midi(n) - 12, "b" in n[1:2]) if n and sc[2] - 1e-6 <= st < sc[3] - 1e-6 else n), m, x) for st, L, n, m, x in evr]
+            p["notes"] = _join(evr)
+
+
 class Song:
     def __init__(self, title, desc, bpm, beats, form, chords):
         """form: [(区間の名前, 小節数)]。chords: 区間の名前 → 小節ごとの和音のリスト"""
@@ -706,6 +803,7 @@ class Song:
             for p in self.parts:
                 if p["instrument"] not in ("kick", "snare", "hihat", "tom", "crash") and not p["notes"].startswith("g:"):
                     p["notes"] = vary_pickups(p["notes"], self.pickups, self.beats)
+        if not self.extra.get("_noModern"): modernize_leads(self)
         if LAST_KIT and not self.extra.get("_noHumanDrums"):
             kit = LAST_KIT[0]
             humanize_drums(kit, self.secs, self.kinds, seed=sum(map(ord, self.title)), beats=self.beats)
