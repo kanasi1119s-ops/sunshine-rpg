@@ -13,7 +13,7 @@ import sys, json, copy
 sys.path.insert(0, __file__.rsplit("/", 1)[0])
 from loud25_lib import midi, name, at_least
 from loud25_arrange import build
-from loud25_hand import (LEAD_TONE, ARP_TONE, put, starts, retone_leads, plain_guitars, add_heavy_kick, split_lead, part, finish, toks, total)
+from loud25_hand import (LEAD_TONE, ARP_TONE, put, starts, retone_leads, plain_guitars, drum_detail, add_heavy_kick, split_lead, part, finish, toks, total)
 
 # ── 旋律（歌の代わりのリード。1小節＝4拍） ──
 VERSE = [  # 中心はラ4。主音（レ）を避け、低めで語るように。サビのフックと同じ「頭を抜いて8分3つ」の入り方
@@ -24,7 +24,7 @@ VERSE = [  # 中心はラ4。主音（レ）を避け、低めで語るように
     "R:0.5 F4:0.25 F4:0.25 A#4:0.5 C5:0.5 D5:1 C5:1",  # B♭
     "C5:1.5 A#4:0.5 G4:2",                             # C
     "R:0.5 A4:0.5 C5:0.5 A4:0.5 F4:1 G4:1",            # Dm
-    "A4:2 R:2",                                        # Dm   息つぎ
+    "A4:2\\ R:2",                                      # Dm   息つぎ（終わりを下へ滑らせる）
 ]
 VERSE_B = VERSE[:6] + [
     "R:0.5 A#4:0.5 D5:0.5 A#4:0.5 G4:1 A4:1",          # Gm
@@ -39,17 +39,17 @@ PRE = [  # 低音は D のまま（ペダル）。旋律は小節ごとに上が
 CHORUS = [  # 2小節のフック（頭を抜いて8分3つ→長い音）。和音は2小節ごと。主和音 Dm は最後まで取っておく
     "R:0.5 F4:0.5 A#4:0.5 C5:0.5 D5:2!",               # B♭add9  フック
     "D5:1.5 C5:0.5 A#4:1 C5:1",
-    "R:0.5 C5:0.5 F5:1! E5:1 C5:1",                    # F       答え（4度跳んで順に下りる）
+    "R:0.5 C5:0.5 F5:1!/ E5:1 C5:1",                   # F       答え（4度跳んで順に下りる。スライドで入る）
     "A4:3 R:1",
     "R:0.5 F4:0.5 A#4:0.5 C5:0.5 D5:2!",               # G       フック（同じ形）
-    "D5:1 E5:1 F#5:2!",                                #         ファ#＝借用の長三和音で光が差す
+    "D5:1 E5:1 E5:2!^^",                               #         ミからファ#へチョーキング＝借用の長三和音で光が差す
     "G5:2! E5:1 D5:1",                                 # Asus4
     "C#5:3 R:1",                                       # A       問い
     "R:0.5 F4:0.5 A#4:0.5 C5:0.5 D5:2!",               # B♭add9
     "D5:1.5 C5:0.5 A#4:1 C5:1",
     "R:0.5 C5:0.5 F5:1! E5:1 C5:1",                    # F
     "A4:2 C5:1 E5:1",
-    "R:0.5 E5:0.5 G5:1! A5:1.5 G5:0.5",                # C       いちばん高い音（ラ5）は1回だけ
+    "R:0.5 E5:0.5 G5:1! G5:1.5^^ G5:0.5",              # C       いちばん高い音（ラ5）はチョーキングで1回だけ
     "E5:2 D5:1 C5:1",
     "D5:3! E5:1",                                      # Dm(add9) やっと主音で言い切る
     "D5:2 R:2",
@@ -72,6 +72,8 @@ FORM = [
     ("chorus3", "chorus", 16, CH),
     ("outro", "outro", 4, "1m"),
 ]
+
+FORM_D = [(f[0], f[3]) for f in FORM]
 
 SPEC = {
     "no": 1, "slug": "gyakkou-prism", "title": "逆光プリズム", "seed": 7101, "motifSeed": 7101,
@@ -212,6 +214,47 @@ def make(path):
     parts.insert(parts.index(quiet) + 1, harm); parts.insert(parts.index(harm) + 1, octv)
     # ブリッジのリードはゆっくり立ち上がる（ボリューム奏法の代わりに attack）
     quiet["attack"] = 0.25
+    # ── 作り込み（docs/sound/modern-loud-rock/arrangement-detail.md）──
+    drum_detail(parts, st, FORM, ("verse1", "verse2", "chorus1", "chorus2", "chorus3", "inter1"))
+    # サビ2 → ブリッジ: 1拍目に全員の一撃、残りはたたかずに鳴らし切る（いちばん大きな落差）
+    a, n = st["chorus2"]; lb = a + (n - 1) * 4
+    for p in parts:
+        if p["instrument"] in ("kick", "snare"): put(p, lb, lb + 4, "X")
+        if p["instrument"] == "hihat": put(p, lb, lb + 4)
+    put(part(parts, inst="tom"), lb, lb + 4); put(part(parts, inst="crash"), lb, lb + 4, "C2:4!")
+    # 看板リフを育てる: 看板リフの区間の後半4小節は1オクターブ上（変えるのは高さだけ）
+    a, _ = st["inter1"]
+    up = " ".join((f"{name(midi(h) + 12)}:{d:g}{suf}" if not h.startswith("R") else f"{h}:{d:g}{suf}") for t, d, h, suf in toks(seg(riff, a + 16, a + 32)))
+    put(riff, a + 16, a + 32, up)
+    # ブリッジの後半4小節: 看板リフの頭3音だけを、長さ2倍・分散和音のギターで（切り詰め＋引きのばし）
+    a, n = st["bridge"]
+    put(arp, a + 16, a + 32, " ".join(["D4:1! D5:1 D4:1 F5:1"] * 2 + ["D4:1! D5:1 D4:1 G5:1", "D4:1! A4:1 D5:2"]))
+    # 伸ばす高い層（E-Bow 風。サビ2とラストサビの5小節目から）: 和音の3度か9度を2小節ずつ、ゆっくり立ち上げる
+    pad = {"instrument": "distGuitar", "role": "伸ばす高い層", "volume": 0.05, "pan": 0.45, "powerChord": False, "double": False, "di": "emily", "autoScoop": False,
+           "attack": 0.4, "reverb": 0.4, **{k: v for k, v in LEAD_TONE.items() if k in ("amp", "ampCabIr", "ampGate", "humanPitch", "noScoop")}, "ampDrive": 0.4,
+           "fx": [{"type": "filter", "kind": "lowpass", "freq": 6000, "q": 0.7}, {"type": "delay", "beats": 0.75, "mix": 0.25, "feedback": 0.35}, {"type": "plate", "mix": 0.3}],
+           "notes": f"R:{full}"}
+    PADN = {"6": "D6", "6add9": "C6", "3": "A5", "4": "B5", "5sus4": "D6", "5": "C#6", "7": "E5", "1madd9": "E5"}
+    for sid, frm in (("chorus2", 0), ("chorus3", 4)):
+        a, n = st[sid]; chs = dict(FORM_D)[sid].split()
+        for b in range(frm, n, 2):
+            put(pad, a + b * 4, a + (b + 2) * 4, f"{PADN.get(chs[b], 'A5')}:8")
+    parts.insert(parts.index(arp), pad)
+    # 耳のごちそう: リードが休んでいる拍にハーモニクス（12フレット相当の高い音、余韻長め）。4小節目と8小節目の後半
+    harmo = {"instrument": "distGuitar", "role": "ハーモニクス（飾り）", "volume": 0.05, "pan": -0.5, "powerChord": False, "double": False, "di": "emily", "autoScoop": False,
+             "amp": "clean", "reverb": 0.55, "fx": [{"type": "delay", "beats": 0.75, "mix": 0.3, "feedback": 0.4}], "notes": f"R:{full}"}
+    for sid in ("verse1", "verse2", "chorus1", "chorus2", "chorus3", "pre1"):
+        a, n = st[sid]
+        for b in range(3, n, 4):
+            pos = a + b * 4 + 3
+            busy = any(not h.startswith("R") and t0 < pos + 1 and t0 + d > pos for t0, d, h, suf in toks(lead["notes"]) + toks(quiet["notes"]))
+            if not busy:
+                put(harmo, pos, pos + 1, ["D6:1!", "A5:1!", "F#6:1!", "E6:1!"][(b // 4) % 4] if sid.startswith("chorus") else ["D6:1!", "A5:1!"][(b // 4) % 2])
+    parts.insert(parts.index(arp), harmo)
+    # ベースのスライド: Bメロの最後の伸ばす根音の終わりを下へ滑らせる（サビの頭へ）
+    for sid in ("pre1", "pre2"):
+        a, n = st[sid]; put(bass, a + (n - 1) * 4, a + n * 4, "D2:3!\\ R:1")
+    song["human"] = 0.3
     add_heavy_kick(parts)
     bass.update({"amp": "bassSplit", "ampDrive": 0.6, "duck": 0.25, "fx": [{"type": "eq", "low": 0, "mid": 3, "midHz": 2200, "high": 2}]})
     plain_guitars(parts)

@@ -125,3 +125,64 @@ def finish(song, parts, title):
     assert len(set(lens.values())) == 1, lens
     song["parts"] = parts; song["title"] = title
     return song
+
+# ── ドラムの作り込み（docs/sound/modern-loud-rock/arrangement-detail.md 5章・6章）──
+# 「プロの曲は同じ区間の中でも止まっていない」: 8小節ごとの予定表で、2・6小節目のゴースト、3小節目のキック、
+# 4小節目の小さいフィル（最後の1拍）、5小節目の2枚目のクラッシュ、7小節目のライドのカップ、8小節目の大きいフィル（最後の2拍・種類を回す）
+SMALL_FILLS = [  # 最後の1拍（16分4つ）: (スネア, タム（音の並び）, キック)
+    ("..xX", None, None), (None, "C4:0.25! A3:0.25 F3:0.25 D3:0.25", None), ("xxxX", None, None), (None, "A3:0.25! A3:0.25 D3:0.5", "X..."),
+]
+BIG_FILLS = ["toms", "snareup", "unison", "gap", "kicks", "toms2"]
+
+def _grid_bars(p):
+    g = p["notes"][2:]; return [g[i:i + 16] for i in range(0, len(g), 16)]
+def _set_grid(p, bars): p["notes"] = "g:" + "".join(bars)
+
+def drum_detail(parts, st, form, sids, seed=0):
+    """sids の区間に、小節ごとの変化を書き込む（区間の最後の小節は、もとのフィルのまま触らない）"""
+    k = part(parts, inst="kick"); s = part(parts, inst="snare"); h = part(parts, inst="hihat")
+    t = part(parts, inst="tom"); c = part(parts, inst="crash")
+    K, S_, H = _grid_bars(k), _grid_bars(s), _grid_bars(h)
+    nfill = seed; nsmall = seed
+    def clear_hands(bi, a16, b16):
+        S_[bi] = S_[bi][:a16] + "." * (b16 - a16) + S_[bi][b16:]
+        H[bi] = H[bi][:a16] + "." * (b16 - a16) + H[bi][b16:]
+        put(c, bi * 4 + a16 / 4, bi * 4 + b16 / 4)
+    for sid in sids:
+        if sid not in st: continue
+        a0, n = st[sid]; b0 = int(a0 // 4)
+        for kk in range(n - 1):              # 最後の小節は触らない
+            bi = b0 + kk; j = kk % 8
+            if j in (1, 5):                  # ゴーストの位置を変える
+                pos = 7 if j == 1 else 11
+                if S_[bi][pos] == "." and S_[bi][pos - 1] == ".": S_[bi] = S_[bi][:pos] + "o" + S_[bi][pos + 1:]
+            if j == 2 and K[bi][14] == "." and K[bi][12] == ".":   # キックを1つ足す
+                K[bi] = K[bi][:14] + "x" + K[bi][15:]
+            if j == 3:                       # 小さいフィル（最後の1拍）
+                sn, tm, kc = SMALL_FILLS[nsmall % len(SMALL_FILLS)]; nsmall += 1
+                clear_hands(bi, 12, 16)
+                if sn: S_[bi] = S_[bi][:12] + sn
+                if tm: put(t, bi * 4 + 3, bi * 4 + 4, tm)
+                if kc: K[bi] = K[bi][:12] + kc
+            if j == 4 and kk > 0:            # 5小節目: 2枚目のクラッシュ（小節頭のシンバルを替える）
+                put(c, bi * 4, bi * 4 + 1, "G2:1!")
+                H[bi] = "." + H[bi][1:]
+            if j == 6:                       # 7小節目: 4拍目の裏のハイハットを強く（開き気味の合図）
+                if H[bi][14] != ".": H[bi] = H[bi][:14] + "X" + H[bi][15:]
+            if j == 7 and kk != n - 1:       # 8小節目: 大きいフィル（最後の2拍）
+                kind = BIG_FILLS[nfill % len(BIG_FILLS)]; nfill += 1
+                clear_hands(bi, 8, 16)
+                if kind == "toms":
+                    put(t, bi * 4 + 2, bi * 4 + 4, "C4:0.25! C4:0.25 C4:0.25 A3:0.25 A3:0.25! A3:0.25 F3:0.25 F3:0.25"); K[bi] = K[bi][:8] + "x...x..."
+                elif kind == "toms2":
+                    put(t, bi * 4 + 2, bi * 4 + 4, "A3:0.5! F3:0.5 D3:0.5! D3:0.5"); K[bi] = K[bi][:8] + "X...X..."
+                elif kind == "snareup":
+                    S_[bi] = S_[bi][:8] + "x.x.xxxX"
+                elif kind == "unison":
+                    S_[bi] = S_[bi][:8] + "X..X..X."; K[bi] = K[bi][:8] + "X..X..X."; put(c, bi * 4 + 2, bi * 4 + 4, "B2:0.75! B2:0.75! B2:0.5!")
+                elif kind == "gap":
+                    S_[bi] = S_[bi][:8] + "X.......";  K[bi] = K[bi][:8] + "X......."
+                elif kind == "kicks":
+                    K[bi] = K[bi][:8] + "XXXXXXXX"; S_[bi] = S_[bi][:8] + "X...X..."
+    for kp in [p for p in parts if p["instrument"] == "kick"]: _set_grid(kp, K)
+    _set_grid(s, S_); _set_grid(h, H)
