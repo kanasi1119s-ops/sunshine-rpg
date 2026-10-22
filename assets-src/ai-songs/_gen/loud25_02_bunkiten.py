@@ -22,17 +22,17 @@ CH = {
     "verse2":  ["Em9", "Em9", "Cmaj7", "Cmaj7", "Am9", "Am9", "Bsus4", "B7"],
     "pre2":    ["C", "D", "B7sus4", "B7"],
     "chorus2": ["C", "C", "D", "D", "Bm", "Bm", "Em", "Em", "C", "C", "D", "D", "F", "F", "B", "B"],
-    "bridge":  ["Am9", "Am9", "G", "G", "F#m7b5", "F#m7b5", "B7", "B7"],
+    "bridge":  ["Am9", "Am9", "G", "G", "D/F#", "D/F#", "B7", "B7"],
     "break":   ["E5"] * 4,
     "chorus3": ["C", "C", "D", "D", "Bm", "Bm", "Em", "Em", "C", "C", "D", "D", "F", "F", "B", "E5"],
     "outro":   ["E5"] * 4,
 }
 ROOT = {"E5": "E", "Em9": "E", "Em": "E", "Cmaj7": "C", "C": "C", "Am9": "A", "Bsus4": "B", "B7": "B", "B7sus4": "B",
-        "D": "D", "Bm": "B", "F": "F", "B": "B", "G": "G", "F#m7b5": "F#"}
+        "D": "D", "Bm": "B", "F": "F", "B": "B", "G": "G", "F#m7b5": "F#", "D/F#": "F#"}
 TONES = {  # 分散和音の音（低い方から）
-    "Em9": ["E3", "B3", "D4", "F#4", "G4"], "Cmaj7": ["C3", "G3", "B3", "E4", "G4"], "Am9": ["A2", "E3", "G3", "B3", "C4"],
+    "Em9": ["E3", "B3", "D4", "F#4", "G4"], "Cmaj7": ["C3", "G3", "E4", "G4", "B4"], "Am9": ["A2", "E3", "G3", "B3", "C4"],
     "Bsus4": ["B2", "F#3", "B3", "E4", "F#4"], "B7": ["B2", "F#3", "A3", "D#4", "F#4"], "G": ["G2", "D3", "G3", "B3", "D4"],
-    "F#m7b5": ["F#2", "C3", "E3", "A3", "C4"],
+    "F#m7b5": ["F#2", "C3", "E3", "A3", "C4"], "D/F#": ["F#2", "A2", "D3", "F#3", "A3"],
 }
 BASS_LOW = {"E": "E1", "C": "C2", "A": "A1", "B": "B1", "D": "D2", "F": "F1", "G": "G1", "F#": "F#1"}
 GTR_LOW = {"E": "E2", "C": "C3", "A": "A2", "B": "B2", "D": "D3", "F": "F2", "G": "G2", "F#": "F#2"}
@@ -183,7 +183,7 @@ CHORUS_MEL = [
     bar("F#5:2! D#5:2"),
     bar("B4:2 R:2"),
 ]
-BRIDGE_MEL = [bar("E5:4!"), bar("C5:2 D5:2"), bar("B4:4"), bar("R:2 G5:2!"), bar("A5:3 G5:0.5 E5:0.5"), bar("C5:4"), bar("D#5:2! F#5:2"), bar("A5:2^ R:2")]
+BRIDGE_MEL = [bar("E5:4!"), bar("C5:2 D5:2"), bar("B4:4"), bar("R:2 G5:2!"), bar("A5:3 G5:0.5 F#5:0.5"), bar("D5:4"), bar("D#5:2! F#5:2"), bar("A5:2^ R:2")]
 
 def arp(chord, i):
     """分散和音（8分）。小節ごとに上がり方・下がり方を変える"""
@@ -239,13 +239,16 @@ for idx, (name, i) in enumerate(SECS):
         m = CHORUS_MEL[i]
         # 2回目・3回目のサビは同じ4小節にしない（人間「単調になりやすい」）: 2回目はフックの終わりを変え、3回目の頭（ハーフ）は長い音で
         if name == "chorus2" and i in (0, 2, 8):
-            m = {0: bar("R:0.5 E5:0.5 D5:0.5 E5:0.5 G5:1.5! A5:0.5"), 2: bar("R:0.5 F#5:0.5 E5:0.5 F#5:0.5 A5:1.5! B5:0.5"), 8: bar("R:0.5 G5:0.5 F#5:0.5 G5:0.5 B5:2!")}[i]
+            m = {0: bar("R:0.5 E5:0.5 D5:0.5 E5:0.5 G5:1.5! A5:0.5"), 2: bar("R:0.5 F#5:0.5 E5:0.5 F#5:0.5 A5:1.5! B5:0.5"), 8: bar("R:0.5 E5:0.5 G5:0.5 E5:0.5 G5:2!")}[i]
         if name == "chorus3" and i < 4:
             m = [bar("G5:4!"), bar("E5:2 C5:2"), bar("A5:4!"), bar("F#5:2 D5:2")][i]
         if name == "chorus3" and i == 15: m = bar("E5:4!")
         P["lead"].append(m)
         # 2回目と3回目のサビは、3度下のハモりを入れる（和音の音から選ぶ代わりに、旋律の1オクターブ下を薄く）
-        P["harm"].append(" ".join((up(t.split(":")[0], -1) + ":" + t.split(":", 1)[1]) if not t.startswith("R") else t for t in m.split()) if name != "chorus" else REST)
+        def low8(t):
+            if t.startswith("R") or beats(t) < 1: return "R:" + t.split(":")[1].rstrip("!,'^/\\_~")
+            return up(t.split(":")[0], -1) + ":" + t.split(":", 1)[1]
+        P["harm"].append(" ".join(low8(t) for t in m.split()) if name != "chorus" else REST)
     elif name == "bridge":
         P["lead"].append(BRIDGE_MEL[i]); P["harm"].append(REST)
     else:
@@ -267,7 +270,10 @@ for idx, (name, i) in enumerate(SECS):
             P["bass"].append(bar(f"{b}:1.5! {b}:0.5 R:2") if not (name == "chorus3" and i == 15) else bar("E1:4!"))
         else:
             nxt = BASS_LOW[ROOT[CH[name][i + 1]]] if i + 1 < n else b
-            appr = nxt if nxt != b else up(b, 1)
+            NOTE = {"C": 0, "C#": 1, "D": 2, "D#": 3, "E": 4, "F": 5, "F#": 6, "G": 7, "G#": 8, "A": 9, "A#": 10, "B": 11}
+            iv = (NOTE[ROOT[CH[name][i + 1]]] - NOTE[r]) % 12 if i + 1 < n else 0
+            FIFTH = {"E": "B1", "C": "G1", "A": "E2", "B": "F#2", "D": "A1", "F": "C2", "G": "D2", "F#": "C#2"}
+            appr = FIFTH[r] if iv in (1, 6, 11) else (nxt if nxt != b else up(b, 1))
             P["bass"].append(bar(f"{b}:0.5! {b}:0.5 {b}:0.5 {up(b,1)}:0.5 {b}:0.5! {b}:0.5 {b}:0.5 {appr}:0.5"))
     elif name == "bridge":
         P["bass"].append(bar(f"{b}:4") if i % 2 == 0 else bar(f"{b}:2 {up(b,1)}:2"))
@@ -314,8 +320,7 @@ song = {
     "human": 0.35, "humanProfile": "role", "humanDist": "triangle",
     "diGuitar": "emily", "autoScoop": False, "guitarWobble": False,
     "drumMix": {"kick": {"level": 1.0}, "crash": {"level": 0.9}, "snare": {"level": 1.0}},
-    "chords": " ".join(c if not c.endswith("5") else "Em" for n, _ in FORM for c in []) or " ".join(
-        {"E5": "Em", "Em9": "Em9", "Cmaj7": "Cmaj7", "Am9": "Am9", "Bsus4": "Bsus4", "B7sus4": "B7sus4", "F#m7b5": "F#m7b5"}.get(CH[n][i], CH[n][i]) for n, i in SECS),
+    "chords": " ".join({"E5": "Em", "D/F#": "D/F#"}.get(CH[n][i], CH[n][i]) for n, i in SECS),
     "sections": [{"kind": {"verse2": "verse", "pre2": "pre", "chorus2": "chorus", "chorus3": "chorus", "inter": "interlude"}.get(n, n), "bars": b} for n, b in FORM],
     "parts": parts,
 }
