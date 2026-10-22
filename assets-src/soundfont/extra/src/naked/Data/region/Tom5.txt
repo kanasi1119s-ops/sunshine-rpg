@@ -1,0 +1,9 @@
+#define $instr Tom5
+group_label=$instr
+
+<region> lovel=$v231l hivel=$v231h sample=$instr/11-$instr-$mic.$ext seq_position=1
+<region> lovel=$v231l hivel=$v231h sample=$instr/12-$instr-$mic.$ext seq_position=2
+<region> lovel=$v232l hivel=$v232h sample=$instr/21-$instr-$mic.$ext seq_position=1
+<region> lovel=$v232l hivel=$v232h sample=$instr/22-$instr-$mic.$ext seq_position=2
+<region> lovel=$v233l hivel=$v233h sample=$instr/31-$instr-$mic.$ext seq_position=1
+<region> lovel=$v233l hivel=$v233h sample=$instr/32-$instr-$mic.$ext seq_position=2

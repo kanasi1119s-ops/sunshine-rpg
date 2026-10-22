@@ -1,0 +1,210 @@
+//kitpiece volume trim
+
+#define $TRIM_DI_KICK_IN 0
+#define $TRIM_DI_KICK_SUB 0
+#define $TRIM_DI_SNR_TOP1 0
+#define $TRIM_DI_SNR_TOP2 0
+#define $TRIM_DI_SNR_BOT 0
+#define $TRIM_DI_TOM1 0
+#define $TRIM_DI_TOM2 0
+#define $TRIM_DI_TOM3 0
+#define $TRIM_DI_TOM4 0
+#define $TRIM_DI_TOM5 0
+#define $TRIM_DI_HH -12
+#define $TRIM_DI_RD -9
+
+#define $TRIM_OH_KICK 6
+#define $TRIM_OH_SNR 0
+#define $TRIM_OH_TOM1 0
+#define $TRIM_OH_TOM2 0
+#define $TRIM_OH_TOM3 0
+#define $TRIM_OH_TOM4 0
+#define $TRIM_OH_TOM5 7
+#define $TRIM_OH_HH 0
+#define $TRIM_OH_RD -3
+#define $TRIM_OH_CRS1 -3
+#define $TRIM_OH_CRS2 -3
+#define $TRIM_OH_SPL1 -3
+#define $TRIM_OH_SPL2 -3
+#define $TRIM_OH_CHN1 -3
+#define $TRIM_OH_CHN2 -3
+
+#define $TRIM_CR_KICK 0
+#define $TRIM_CR_SNR 0
+#define $TRIM_CR_TOM1 0
+#define $TRIM_CR_TOM2 0
+#define $TRIM_CR_TOM3 0
+#define $TRIM_CR_TOM4 0
+#define $TRIM_CR_TOM5 7
+#define $TRIM_CR_HH 0
+#define $TRIM_CR_RD -3
+#define $TRIM_CR_CRS1 -3
+#define $TRIM_CR_CRS2 -3
+#define $TRIM_CR_SPL1 -9
+#define $TRIM_CR_SPL2 -3
+#define $TRIM_CR_CHN1 -3
+#define $TRIM_CR_CHN2 -3
+
+#define $TRIM_FR_KICK 0
+#define $TRIM_FR_SNR 0
+#define $TRIM_FR_TOM1 0
+#define $TRIM_FR_TOM2 0
+#define $TRIM_FR_TOM3 0
+#define $TRIM_FR_TOM4 0
+#define $TRIM_FR_TOM5 7
+#define $TRIM_FR_HH 0
+#define $TRIM_FR_RD -3
+#define $TRIM_FR_CRS1 -3
+#define $TRIM_FR_CRS2 -3
+#define $TRIM_FR_SPL1 -9
+#define $TRIM_FR_SPL2 -3
+#define $TRIM_FR_CHN1 -3
+#define $TRIM_FR_CHN2 -3
+
+#define $TRIM_MS_KICK 0
+#define $TRIM_MS_SNR 0
+#define $TRIM_MS_TOM1 0
+#define $TRIM_MS_TOM2 0
+#define $TRIM_MS_TOM3 0
+#define $TRIM_MS_TOM4 0
+#define $TRIM_MS_TOM5 7
+#define $TRIM_MS_HH 0
+#define $TRIM_MS_RD -6
+#define $TRIM_MS_CRS1 -3
+#define $TRIM_MS_CRS2 -3
+#define $TRIM_MS_SPL1 -9
+#define $TRIM_MS_SPL2 -3
+#define $TRIM_MS_CHN1 -3
+#define $TRIM_MS_CHN2 -3
+
+#define $TRIM_CH_HH 0
+#define $TRIM_CH_RD 0
+#define $TRIM_CH_CRS1 0
+#define $TRIM_CH_CRS2 0
+#define $TRIM_CH_SPL1 0
+#define $TRIM_CH_SPL2 0
+#define $TRIM_CH_CHN1 0
+#define $TRIM_CH_CHN2 0
+//off time
+
+#define $OTM_DI_KICK 1.5
+#define $OTM_DI_SNR 1.5
+#define $OTM_DI_TOM1 2
+#define $OTM_DI_TOM2 2.5
+#define $OTM_DI_TOM3 3
+#define $OTM_DI_TOM4 3.5
+#define $OTM_DI_TOM5 4
+#define $OTM_DI_HH 0.2
+#define $OTM_DI_RD 0.49
+
+#define $OTM_OH_KICK 1.6
+#define $OTM_OH_SNR 1.6
+#define $OTM_OH_TOM1 2.1
+#define $OTM_OH_TOM2 2.6
+#define $OTM_OH_TOM3 3.1
+#define $OTM_OH_TOM4 3.6
+#define $OTM_OH_TOM5 4.1
+#define $OTM_OH_HH 0.3
+#define $OTM_OH_RD 0.5
+#define $OTM_OH_CRS1_EDG 0.6
+#define $OTM_OH_CRS1_BEL 0.3
+#define $OTM_OH_CRS2_EDG 0.6
+#define $OTM_OH_CRS2_BEL 0.3
+#define $OTM_OH_SPL1 0.2
+#define $OTM_OH_SPL2 0.2
+#define $OTM_OH_CHN1 0.4
+#define $OTM_OH_CHN2 0.4
+
+#define $OTM_CR_KICK 1.65
+#define $OTM_CR_SNR 1.65
+#define $OTM_CR_TOM1 2.15
+#define $OTM_CR_TOM2 2.65
+#define $OTM_CR_TOM3 3.15
+#define $OTM_CR_TOM4 3.65
+#define $OTM_CR_TOM5 4.15
+#define $OTM_CR_HH 0.35
+#define $OTM_CR_RD 0.51
+#define $OTM_CR_CRS1_EDG 0.65
+#define $OTM_CR_CRS1_BEL 0.31
+#define $OTM_CR_CRS2_EDG 0.65
+#define $OTM_CR_CRS2_BEL 0.31
+#define $OTM_CR_SPL1 0.21
+#define $OTM_CR_SPL2 0.21
+#define $OTM_CR_CHN1 0.41
+#define $OTM_CR_CHN2 0.41
+
+#define $OTM_FR_KICK 1.8
+#define $OTM_FR_SNR 1.8
+#define $OTM_FR_TOM1 2.3
+#define $OTM_FR_TOM2 2.8
+#define $OTM_FR_TOM3 3.3
+#define $OTM_FR_TOM4 3.8
+#define $OTM_FR_TOM5 4.3
+#define $OTM_FR_HH 0.5
+#define $OTM_FR_RD 0.53
+#define $OTM_FR_CRS1_EDG 0.8
+#define $OTM_FR_CRS1_BEL 0.33
+#define $OTM_FR_CRS2_EDG 0.8
+#define $OTM_FR_CRS2_BEL 0.33
+#define $OTM_FR_SPL1 0.23
+#define $OTM_FR_SPL2 0.23
+#define $OTM_FR_CHN1 0.43
+#define $OTM_FR_CHN2 0.43
+
+#define $OTM_MS_KICK 1.7
+#define $OTM_MS_SNR 1.7
+#define $OTM_MS_TOM1 2.2
+#define $OTM_MS_TOM2 2.7
+#define $OTM_MS_TOM3 3.2
+#define $OTM_MS_TOM4 3.7
+#define $OTM_MS_TOM5 4.2
+#define $OTM_MS_HH 0.4
+#define $OTM_MS_RD 0.52
+#define $OTM_MS_CRS1_EDG 0.7
+#define $OTM_MS_CRS1_BEL 0.32
+#define $OTM_MS_CRS2_EDG 0.7
+#define $OTM_MS_CRS2_BEL 0.32
+#define $OTM_MS_SPL1 0.22
+#define $OTM_MS_SPL2 0.22
+#define $OTM_MS_CHN1 0.42
+#define $OTM_MS_CHN2 0.42
+
+#define $OTM_CH_HH 0.45
+#define $OTM_CH_RD 0.525
+#define $OTM_CH_CRS1_EDG 0.75
+#define $OTM_CH_CRS1_BEL 0.325
+#define $OTM_CH_CRS2_EDG 0.75
+#define $OTM_CH_CRS2_BEL 0.325
+#define $OTM_CH_SPL1 0.225
+#define $OTM_CH_SPL2 0.225
+#define $OTM_CH_CHN1 0.425
+#define $OTM_CH_CHN2 0.425
+//toms tuning in cents
+
+#define $TUN_TOM1 0
+#define $TUN_TOM2 0
+#define $TUN_TOM3 -200
+#define $TUN_TOM4 -70
+#define $TUN_TOM5 0
+//velocity range
+
+#define $V11L 1            #define $V11H 127
+
+#define $V21L 1            #define $V21H 85
+#define $V22L 86          #define $V22H 127
+
+#define $V31L 1            #define $V31H 43
+#define $V32L 44          #define $V32H 85
+#define $V33L 86          #define $V33H 127
+
+#define $V51L 1            #define $V51H 27
+#define $V52L 28          #define $V52H 52
+#define $V53L 53          #define $V53H 77
+#define $V54L 78          #define $V54H 102
+#define $V55L 103        #define $V55H 127
+
+//---------------------------------------
+//variable hh range
+
+#define $LOPED1 0       #define $HIPED1 43
+#define $LOPED2 44     #define $HIPED2 85

@@ -1,0 +1,9 @@
+#define $instr Crash1
+group_label=$instr
+
+<region> lovel=$v261l hivel=$v261h sample=$instr/11-$instr-$mic.$ext seq_position=1
+<region> lovel=$v261l hivel=$v261h sample=$instr/12-$instr-$mic.$ext seq_position=2
+<region> lovel=$v262l hivel=$v262h sample=$instr/21-$instr-$mic.$ext seq_position=1
+<region> lovel=$v262l hivel=$v262h sample=$instr/22-$instr-$mic.$ext seq_position=2
+<region> lovel=$v263l hivel=$v263h sample=$instr/31-$instr-$mic.$ext seq_position=1
+<region> lovel=$v263l hivel=$v263h sample=$instr/32-$instr-$mic.$ext seq_position=2

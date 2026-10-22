@@ -1,0 +1,5 @@
+#define $instr Crash2Choke
+group_label=$instr
+
+<region> lovel=$v301l hivel=$v301h sample=$instr/11-$instr-$mic.$ext seq_position=1
+<region> lovel=$v301l hivel=$v301h sample=$instr/12-$instr-$mic.$ext seq_position=2

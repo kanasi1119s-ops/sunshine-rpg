@@ -1,0 +1,15 @@
+#define $instr FsAlu
+group_label=$instr
+
+<region> lovel=$v352l hivel=$v352h sample=$instr/21-$instr-$mic.$ext seq_position=1
+<region> lovel=$v352l hivel=$v352h sample=$instr/22-$instr-$mic.$ext seq_position=2
+<region> lovel=$v354l hivel=$v354h sample=$instr/41-$instr-$mic.$ext seq_position=1
+<region> lovel=$v354l hivel=$v354h sample=$instr/42-$instr-$mic.$ext seq_position=2
+<region> lovel=$v356l hivel=$v356h sample=$instr/61-$instr-$mic.$ext seq_position=1
+<region> lovel=$v356l hivel=$v356h sample=$instr/62-$instr-$mic.$ext seq_position=2
+<region> lovel=$v358l hivel=$v358h sample=$instr/81-$instr-$mic.$ext seq_position=1
+<region> lovel=$v358l hivel=$v358h sample=$instr/82-$instr-$mic.$ext seq_position=2
+<region> lovel=$v360l hivel=$v360h sample=$instr/101-$instr-$mic.$ext seq_position=1
+<region> lovel=$v360l hivel=$v360h sample=$instr/102-$instr-$mic.$ext seq_position=2
+<region> lovel=$v361l hivel=$v361h sample=$instr/111-$instr-$mic.$ext seq_position=1
+<region> lovel=$v361l hivel=$v361h sample=$instr/112-$instr-$mic.$ext seq_position=2

@@ -1,0 +1,9 @@
+#define $instr HihatTight
+group_label=$instr
+
+<region> lovel=$v151l hivel=$v151h sample=$instr/11-$instr-$mic.$ext seq_position=1
+<region> lovel=$v151l hivel=$v151h sample=$instr/12-$instr-$mic.$ext seq_position=2
+<region> lovel=$v152l hivel=$v152h sample=$instr/21-$instr-$mic.$ext seq_position=1
+<region> lovel=$v152l hivel=$v152h sample=$instr/22-$instr-$mic.$ext seq_position=2
+<region> lovel=$v153l hivel=$v153h sample=$instr/31-$instr-$mic.$ext seq_position=1
+<region> lovel=$v153l hivel=$v153h sample=$instr/32-$instr-$mic.$ext seq_position=2

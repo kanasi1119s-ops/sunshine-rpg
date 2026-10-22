@@ -1,0 +1,9 @@
+#define $instr China2
+group_label=$instr
+
+<region> lovel=$v341l hivel=$v341h sample=$instr/11-$instr-$mic.$ext seq_position=1
+<region> lovel=$v341l hivel=$v341h sample=$instr/12-$instr-$mic.$ext seq_position=2
+<region> lovel=$v342l hivel=$v342h sample=$instr/21-$instr-$mic.$ext seq_position=1
+<region> lovel=$v342l hivel=$v342h sample=$instr/22-$instr-$mic.$ext seq_position=2
+<region> lovel=$v343l hivel=$v343h sample=$instr/31-$instr-$mic.$ext seq_position=1
+<region> lovel=$v343l hivel=$v343h sample=$instr/32-$instr-$mic.$ext seq_position=2

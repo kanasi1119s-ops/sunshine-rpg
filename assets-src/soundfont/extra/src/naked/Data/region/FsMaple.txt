@@ -1,0 +1,15 @@
+#define $instr FsMaple
+group_label=$instr
+
+<region> lovel=$v392l hivel=$v392h sample=$instr/21-$instr-$mic.$ext seq_position=1
+<region> lovel=$v392l hivel=$v392h sample=$instr/22-$instr-$mic.$ext seq_position=2
+<region> lovel=$v394l hivel=$v394h sample=$instr/41-$instr-$mic.$ext seq_position=1
+<region> lovel=$v394l hivel=$v394h sample=$instr/42-$instr-$mic.$ext seq_position=2
+<region> lovel=$v396l hivel=$v396h sample=$instr/61-$instr-$mic.$ext seq_position=1
+<region> lovel=$v396l hivel=$v396h sample=$instr/62-$instr-$mic.$ext seq_position=2
+<region> lovel=$v398l hivel=$v398h sample=$instr/81-$instr-$mic.$ext seq_position=1
+<region> lovel=$v398l hivel=$v398h sample=$instr/82-$instr-$mic.$ext seq_position=2
+<region> lovel=$v400l hivel=$v400h sample=$instr/101-$instr-$mic.$ext seq_position=1
+<region> lovel=$v400l hivel=$v400h sample=$instr/102-$instr-$mic.$ext seq_position=2
+<region> lovel=$v401l hivel=$v401h sample=$instr/111-$instr-$mic.$ext seq_position=1
+<region> lovel=$v401l hivel=$v401h sample=$instr/112-$instr-$mic.$ext seq_position=2

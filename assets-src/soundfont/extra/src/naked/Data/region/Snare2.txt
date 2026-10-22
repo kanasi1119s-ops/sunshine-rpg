@@ -1,0 +1,13 @@
+#define $instr Snare2
+group_label=$instr
+
+<region> lovel=$v121l hivel=$v121h sample=$instr/11-$instr-$mic.$ext seq_position=1
+<region> lovel=$v121l hivel=$v121h sample=$instr/12-$instr-$mic.$ext seq_position=2
+<region> lovel=$v122l hivel=$v122h sample=$instr/21-$instr-$mic.$ext seq_position=1
+<region> lovel=$v122l hivel=$v122h sample=$instr/22-$instr-$mic.$ext seq_position=2
+<region> lovel=$v123l hivel=$v123h sample=$instr/31-$instr-$mic.$ext seq_position=1
+<region> lovel=$v123l hivel=$v123h sample=$instr/32-$instr-$mic.$ext seq_position=2
+<region> lovel=$v124l hivel=$v124h sample=$instr/41-$instr-$mic.$ext seq_position=1
+<region> lovel=$v124l hivel=$v124h sample=$instr/42-$instr-$mic.$ext seq_position=2
+<region> lovel=$v125l hivel=$v125h sample=$instr/51-$instr-$mic.$ext seq_position=1
+<region> lovel=$v125l hivel=$v125h sample=$instr/52-$instr-$mic.$ext seq_position=2

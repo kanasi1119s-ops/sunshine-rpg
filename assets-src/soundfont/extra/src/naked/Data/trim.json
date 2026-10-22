@@ -1,0 +1,125 @@
+{
+ "Kick": {
+  "KickIn": 0.0,
+  "KickSub": 0.0,
+  "OH": 6.0,
+  "CR": 0.0
+ },
+ "Snare": {
+  "SnareTop1": 0.0,
+  "SnareTop2": 0.0,
+  "SnareBot": 0.0,
+  "OH": 0.0,
+  "CR": 0.0
+ },
+ "Snare2": {
+  "SnareTop1": 0.0,
+  "SnareTop2": -2.0,
+  "SnareBot": 0.0,
+  "OH": -7.0,
+  "CR": 0.0
+ },
+ "SideStick": {
+  "SnareTop1": -12.0,
+  "SnareTop2": -12.0,
+  "SnareBot": -12.0,
+  "OH": -12.0,
+  "CR": -12.0
+ },
+ "HihatClosed": {
+  "Hats": -11.0,
+  "OH": 1.0,
+  "CR": 1.0
+ },
+ "HihatTight": {
+  "Hats": -16.0,
+  "OH": -4.0,
+  "CR": -4.0
+ },
+ "HihatPedal": {
+  "Hats": -12.0,
+  "OH": 0.0,
+  "CR": 0.0
+ },
+ "HihatHalf": {
+  "Hats": -5.0,
+  "OH": 7.0,
+  "CR": 7.0
+ },
+ "HihatOpen": {
+  "Hats": -4.0,
+  "OH": 8.0,
+  "CR": 8.0
+ },
+ "Tom1": {
+  "Tom": 0.0,
+  "OH": 0.0,
+  "CR": 0.0
+ },
+ "Tom2": {
+  "Tom": 0.0,
+  "OH": 0.0,
+  "CR": 0.0
+ },
+ "Tom3": {
+  "Tom": 0.0,
+  "OH": 0.0,
+  "CR": 0.0
+ },
+ "Tom4": {
+  "Tom": 0.0,
+  "OH": 0.0,
+  "CR": 0.0
+ },
+ "Tom5": {
+  "Tom": 0.0,
+  "OH": 7.0,
+  "CR": 7.0
+ },
+ "Ride": {
+  "Ride": -9.0,
+  "OH": -3.0,
+  "CR": -3.0
+ },
+ "RideBell": {
+  "Ride": -7.0,
+  "OH": -1.0,
+  "CR": -1.0
+ },
+ "Crash1": {
+  "OH": -3.0,
+  "CR": -3.0
+ },
+ "Crash2": {
+  "OH": -3.0,
+  "CR": -3.0
+ },
+ "Crash1Bell": {
+  "OH": -15.0,
+  "CR": -15.0
+ },
+ "Crash1Choke": {
+  "OH": -15.0,
+  "CR": -3.0
+ },
+ "Crash2Choke": {
+  "OH": -15.0,
+  "CR": -15.0
+ },
+ "Splash1": {
+  "OH": -3.0,
+  "CR": -9.0
+ },
+ "Splash2": {
+  "OH": -3.0,
+  "CR": -3.0
+ },
+ "China1": {
+  "OH": -3.0,
+  "CR": -3.0
+ },
+ "China2": {
+  "OH": -3.0,
+  "CR": -3.0
+ }
+}

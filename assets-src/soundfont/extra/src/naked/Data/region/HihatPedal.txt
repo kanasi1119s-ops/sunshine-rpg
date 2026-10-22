@@ -1,0 +1,5 @@
+#define $instr HihatPedal
+group_label=$instr
+
+<region> lovel=$v161l hivel=$v161h sample=$instr/11-$instr-$mic.$ext seq_position=1
+<region> lovel=$v161l hivel=$v161h sample=$instr/12-$instr-$mic.$ext seq_position=2

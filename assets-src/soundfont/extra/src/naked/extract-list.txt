@@ -1,0 +1,509 @@
+# 元のファイル	楽器	番号	マイク	長さ（naked-extract.py が書く）
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_10_one-TEQT.flac	Kick	11	KickIn	1.2s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_10_two-K29K.flac	Kick	12	KickIn	1.2s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_20_one-II9X.flac	Kick	21	KickIn	1.2s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_20_two-N3VW.flac	Kick	22	KickIn	1.2s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_30_one-NLNF.flac	Kick	31	KickIn	1.2s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_30_two-VYTH.flac	Kick	32	KickIn	1.2s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_40_one-HLYB.flac	Kick	41	KickIn	1.2s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_40_two-G626.flac	Kick	42	KickIn	1.2s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_50_one-V4WI.flac	Kick	51	KickIn	1.2s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_50_two-LN2C.flac	Kick	52	KickIn	1.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_10_one-FHW3.flac	Kick	11	KickSub	1.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_10_two-MYGT.flac	Kick	12	KickSub	1.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_20_one-PHDM.flac	Kick	21	KickSub	1.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_20_two-9O0E.flac	Kick	22	KickSub	1.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_30_one-IULU.flac	Kick	31	KickSub	1.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_30_two-F9P6.flac	Kick	32	KickSub	1.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_40_one-IJQP.flac	Kick	41	KickSub	1.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_40_two-GQSQ.flac	Kick	42	KickSub	1.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_50_one-6FQE.flac	Kick	51	KickSub	1.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_50_two-R6DM.flac	Kick	52	KickSub	1.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_10_one-H05H.flac	Kick	11	OH	1.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_10_two-G937.flac	Kick	12	OH	1.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_20_one-35AH.flac	Kick	21	OH	1.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_20_two-U6FG.flac	Kick	22	OH	1.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_30_one-YFZG.flac	Kick	31	OH	1.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_30_two-OI7B.flac	Kick	32	OH	1.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_40_one-DSR6.flac	Kick	41	OH	1.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_40_two-KXZE.flac	Kick	42	OH	1.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_50_one-Q5Q2.flac	Kick	51	OH	1.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_50_two-338Q.flac	Kick	52	OH	1.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_10_one-J072.flac	Kick	11	CR	1.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_10_two-EM90.flac	Kick	12	CR	1.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_20_one-PVK2.flac	Kick	21	CR	1.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_20_two-2H0L.flac	Kick	22	CR	1.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_30_one-SWH3.flac	Kick	31	CR	1.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_30_two-EY4G.flac	Kick	32	CR	1.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_40_one-IKSQ.flac	Kick	41	CR	1.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_40_two-OMH2.flac	Kick	42	CR	1.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_50_one-5AX8.flac	Kick	51	CR	1.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_50_two-2V3Q.flac	Kick	52	CR	1.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_10_one-NDOX.flac	Snare	11	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_10_two-QJ6N.flac	Snare	12	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_20_one-9XTQ.flac	Snare	21	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_20_two-40CU.flac	Snare	22	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_30_one-D1ZY.flac	Snare	31	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_30_two-C48O.flac	Snare	32	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_40_one-J3ZS.flac	Snare	41	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_40_two-R0CX.flac	Snare	42	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_50_one-TPAQ.flac	Snare	51	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_50_two-JA3U.flac	Snare	52	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_10_one-OSS0.flac	Snare	11	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_10_two-4J7J.flac	Snare	12	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_20_one-HB9E.flac	Snare	21	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_20_two-QFXY.flac	Snare	22	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_30_one-IS9S.flac	Snare	31	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_30_two-D3FT.flac	Snare	32	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_40_one-48P4.flac	Snare	41	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_40_two-6N0Y.flac	Snare	42	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_50_one-VYUZ.flac	Snare	51	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_50_two-UL5O.flac	Snare	52	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_10_one-1J07.flac	Snare	11	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_10_two-TD31.flac	Snare	12	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_20_one-9PUL.flac	Snare	21	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_20_two-O1FN.flac	Snare	22	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_30_one-BZ42.flac	Snare	31	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_30_two-Z8QN.flac	Snare	32	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_40_one-T3PW.flac	Snare	41	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_40_two-29CD.flac	Snare	42	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_50_one-S0K8.flac	Snare	51	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_50_two-KPMM.flac	Snare	52	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_10_one-UD4F.flac	Snare	11	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_10_two-D1EG.flac	Snare	12	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_20_one-ZUBL.flac	Snare	21	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_20_two-1NDI.flac	Snare	22	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_30_one-YSQC.flac	Snare	31	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_30_two-QKVP.flac	Snare	32	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_40_one-HF7Z.flac	Snare	41	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_40_two-QHJY.flac	Snare	42	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_50_one-QGEQ.flac	Snare	51	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_50_two-J3TL.flac	Snare	52	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_10_one-PSJF.flac	Snare	11	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_10_two-2NDJ.flac	Snare	12	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_20_one-QNTW.flac	Snare	21	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_20_two-1H3X.flac	Snare	22	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_30_one-NL00.flac	Snare	31	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_30_two-14K0.flac	Snare	32	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_40_one-0M73.flac	Snare	41	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_40_two-TGQP.flac	Snare	42	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_50_one-8FHS.flac	Snare	51	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_50_two-DLMC.flac	Snare	52	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_10_one-1IJA.flac	Snare2	11	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_10_two-YMMS.flac	Snare2	12	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_20_one-F0M6.flac	Snare2	21	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_20_two-R6BP.flac	Snare2	22	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_30_one-V6JZ.flac	Snare2	31	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_30_two-HV8G.flac	Snare2	32	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_40_one-YBO6.flac	Snare2	41	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_40_two-82QJ.flac	Snare2	42	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_50_one-19ON.flac	Snare2	51	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_Black_D2_50_two-W165.flac	Snare2	52	SnareTop1	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_10_one-J658.flac	Snare2	11	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_10_two-TD8K.flac	Snare2	12	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_20_one-BJ9L.flac	Snare2	21	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_20_two-XRHQ.flac	Snare2	22	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_30_one-Q8NF.flac	Snare2	31	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_30_two-K2KR.flac	Snare2	32	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_40_one-4VQU.flac	Snare2	41	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_40_two-ZZMW.flac	Snare2	42	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_50_one-K0QA.flac	Snare2	51	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-TopTwo_Black_D2_50_two-3T8D.flac	Snare2	52	SnareTop2	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_10_one-PDJ1.flac	Snare2	11	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_10_two-EZM0.flac	Snare2	12	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_20_one-25DJ.flac	Snare2	21	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_20_two-DW04.flac	Snare2	22	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_30_one-3EYD.flac	Snare2	31	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_30_two-KUGY.flac	Snare2	32	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_40_one-2SF4.flac	Snare2	41	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_40_two-AX08.flac	Snare2	42	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_50_one-8BQQ.flac	Snare2	51	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-Bottom_Black_D2_50_two-3MI9.flac	Snare2	52	SnareBot	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_10_one-6TJD.flac	Snare2	11	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_10_two-EU4B.flac	Snare2	12	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_20_one-CEG2.flac	Snare2	21	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_20_two-DBU0.flac	Snare2	22	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_30_one-07LL.flac	Snare2	31	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_30_two-D2HG.flac	Snare2	32	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_40_one-18HN.flac	Snare2	41	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_40_two-4FRE.flac	Snare2	42	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_50_one-8VZB.flac	Snare2	51	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-OH_Black_D2_50_two-PJ9B.flac	Snare2	52	OH	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_10_one-3S62.flac	Snare2	11	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_10_two-VS1O.flac	Snare2	12	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_20_one-8IAO.flac	Snare2	21	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_20_two-2MU3.flac	Snare2	22	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_30_one-HEWH.flac	Snare2	31	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_30_two-BBFY.flac	Snare2	32	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_40_one-ZQSK.flac	Snare2	41	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_40_two-GOMB.flac	Snare2	42	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_50_one-GJ6U.flac	Snare2	51	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_Black_D2_50_two-84CE.flac	Snare2	52	CR	1.3s
+Wilkinson Audio/Naked Drums/Samples/TopOne_Black_D2_50_one-94P3.flac	SideStick	11	SnareTop1	0.6s
+Wilkinson Audio/Naked Drums/Samples/TopOne_Black_D2_50_two-UWYS.flac	SideStick	12	SnareTop1	0.6s
+Wilkinson Audio/Naked Drums/Samples/TopTwo_Black_D2_50_one-8HC4.flac	SideStick	11	SnareTop2	0.6s
+Wilkinson Audio/Naked Drums/Samples/TopTwo_Black_D2_50_two-QDRJ.flac	SideStick	12	SnareTop2	0.6s
+Wilkinson Audio/Naked Drums/Samples/Bottom_Black_D2_50_one-T8E0.flac	SideStick	11	SnareBot	0.6s
+Wilkinson Audio/Naked Drums/Samples/Bottom_Black_D2_50_two-SDF7.flac	SideStick	12	SnareBot	0.6s
+Wilkinson Audio/Naked Drums/Samples/OH_Black_D2_50_one-GMS9.flac	SideStick	11	OH	0.6s
+Wilkinson Audio/Naked Drums/Samples/OH_Black_D2_50_two-D5FN.flac	SideStick	12	OH	0.6s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_Black_D2_50_one-Y5TO.flac	SideStick	11	CR	0.6s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_Black_D2_50_two-OJU2.flac	SideStick	12	CR	0.6s
+Wilkinson Audio/Naked Drums/Samples/HatMic_A2_10_one-7G28.flac	HihatClosed	11	Hats	0.8s
+Wilkinson Audio/Naked Drums/Samples/HatMic_A2_10_two-OJDH.flac	HihatClosed	12	Hats	0.8s
+Wilkinson Audio/Naked Drums/Samples/HatMic_A2_20_one-GU63.flac	HihatClosed	21	Hats	0.8s
+Wilkinson Audio/Naked Drums/Samples/HatMic_A2_20_two-VJNC.flac	HihatClosed	22	Hats	0.8s
+Wilkinson Audio/Naked Drums/Samples/HatMic_A2_30_one-G62L.flac	HihatClosed	31	Hats	0.8s
+Wilkinson Audio/Naked Drums/Samples/HatMic_A2_30_two-EQGU.flac	HihatClosed	32	Hats	0.8s
+Wilkinson Audio/Naked Drums/Samples/OH_A2_10_one-CWG6.flac	HihatClosed	11	OH	0.8s
+Wilkinson Audio/Naked Drums/Samples/OH_A2_10_two-X129.flac	HihatClosed	12	OH	0.8s
+Wilkinson Audio/Naked Drums/Samples/OH_A2_20_one-4I2D.flac	HihatClosed	21	OH	0.8s
+Wilkinson Audio/Naked Drums/Samples/OH_A2_20_two-88YK.flac	HihatClosed	22	OH	0.8s
+Wilkinson Audio/Naked Drums/Samples/OH_A2_30_one-PF2U.flac	HihatClosed	31	OH	0.8s
+Wilkinson Audio/Naked Drums/Samples/OH_A2_30_two-LX20.flac	HihatClosed	32	OH	0.8s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_A2_10_one-DCIU.flac	HihatClosed	11	CR	0.8s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_A2_10_two-88O7.flac	HihatClosed	12	CR	0.8s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_A2_20_one-TDWE.flac	HihatClosed	21	CR	0.8s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_A2_20_two-SO5X.flac	HihatClosed	22	CR	0.8s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_A2_30_one-OEEK.flac	HihatClosed	31	CR	0.8s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_A2_30_two-A7FW.flac	HihatClosed	32	CR	0.8s
+Wilkinson Audio/Naked Drums/Samples/HatMic_D2_10_one-2LZ3.flac	HihatTight	11	Hats	0.6s
+Wilkinson Audio/Naked Drums/Samples/HatMic_D2_10_two-UTVY.flac	HihatTight	12	Hats	0.6s
+Wilkinson Audio/Naked Drums/Samples/HatMic_D2_20_one-BMQY.flac	HihatTight	21	Hats	0.6s
+Wilkinson Audio/Naked Drums/Samples/HatMic_D2_20_two-AHJA.flac	HihatTight	22	Hats	0.6s
+Wilkinson Audio/Naked Drums/Samples/HatMic_D2_30_one-QZ60.flac	HihatTight	31	Hats	0.6s
+Wilkinson Audio/Naked Drums/Samples/HatMic_D2_30_two-NI2D.flac	HihatTight	32	Hats	0.6s
+Wilkinson Audio/Naked Drums/Samples/OH_D2_10_one-KK98.flac	HihatTight	11	OH	0.6s
+Wilkinson Audio/Naked Drums/Samples/OH_D2_10_two-HWUV.flac	HihatTight	12	OH	0.6s
+Wilkinson Audio/Naked Drums/Samples/OH_D2_20_one-ZD4X.flac	HihatTight	21	OH	0.6s
+Wilkinson Audio/Naked Drums/Samples/OH_D2_20_two-XPXE.flac	HihatTight	22	OH	0.6s
+Wilkinson Audio/Naked Drums/Samples/OH_D2_30_one-AB2U.flac	HihatTight	31	OH	0.6s
+Wilkinson Audio/Naked Drums/Samples/OH_D2_30_two-N0T0.flac	HihatTight	32	OH	0.6s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D2_10_one-KMBD.flac	HihatTight	11	CR	0.6s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D2_10_two-ZK2E.flac	HihatTight	12	CR	0.6s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D2_20_one-DSV8.flac	HihatTight	21	CR	0.6s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D2_20_two-XYXZ.flac	HihatTight	22	CR	0.6s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D2_30_one-1M2K.flac	HihatTight	31	CR	0.6s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D2_30_two-BN1L.flac	HihatTight	32	CR	0.6s
+Wilkinson Audio/Naked Drums/Samples/HatMic_E2_10_one-3DLM.flac	HihatPedal	11	Hats	0.6s
+Wilkinson Audio/Naked Drums/Samples/HatMic_E2_10_two-GHNL.flac	HihatPedal	12	Hats	0.6s
+Wilkinson Audio/Naked Drums/Samples/OH_E2_10_one-TCLW.flac	HihatPedal	11	OH	0.6s
+Wilkinson Audio/Naked Drums/Samples/OH_E2_10_two-8NXR.flac	HihatPedal	12	OH	0.6s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_E2_10_one-FQT9.flac	HihatPedal	11	CR	0.6s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_E2_10_two-ANEL.flac	HihatPedal	12	CR	0.6s
+Wilkinson Audio/Naked Drums/Samples/HatMic_G2_10_one-W526.flac	HihatHalf	11	Hats	1.8s
+Wilkinson Audio/Naked Drums/Samples/HatMic_G2_10_two-V853.flac	HihatHalf	12	Hats	1.8s
+Wilkinson Audio/Naked Drums/Samples/HatMic_G2_20_one-LV5Z.flac	HihatHalf	21	Hats	1.8s
+Wilkinson Audio/Naked Drums/Samples/HatMic_G2_20_two-GAU0.flac	HihatHalf	22	Hats	1.8s
+Wilkinson Audio/Naked Drums/Samples/HatMic_G2_30_one-12YE.flac	HihatHalf	31	Hats	1.8s
+Wilkinson Audio/Naked Drums/Samples/HatMic_G2_30_two-YOMI.flac	HihatHalf	32	Hats	1.8s
+Wilkinson Audio/Naked Drums/Samples/OH_G2_10_one-6LWM.flac	HihatHalf	11	OH	1.8s
+Wilkinson Audio/Naked Drums/Samples/OH_G2_10_two-PKF7.flac	HihatHalf	12	OH	1.8s
+Wilkinson Audio/Naked Drums/Samples/OH_G2_20_one-JHXI.flac	HihatHalf	21	OH	1.8s
+Wilkinson Audio/Naked Drums/Samples/OH_G2_20_two-LGYT.flac	HihatHalf	22	OH	1.8s
+Wilkinson Audio/Naked Drums/Samples/OH_G2_30_one-H357.flac	HihatHalf	31	OH	1.8s
+Wilkinson Audio/Naked Drums/Samples/OH_G2_30_two-GB8V.flac	HihatHalf	32	OH	1.8s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_G2_10_one-T46Q.flac	HihatHalf	11	CR	1.8s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_G2_10_two-E2RW.flac	HihatHalf	12	CR	1.8s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_G2_20_one-5GZV.flac	HihatHalf	21	CR	1.8s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_G2_20_two-IU68.flac	HihatHalf	22	CR	1.8s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_G2_30_one-58XX.flac	HihatHalf	31	CR	1.8s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_G2_30_two-424Y.flac	HihatHalf	32	CR	1.8s
+Wilkinson Audio/Naked Drums/Samples/HatMic_F2_10_one-CP1T.flac	HihatOpen	11	Hats	3.2s
+Wilkinson Audio/Naked Drums/Samples/HatMic_F2_10_two-LV3M.flac	HihatOpen	12	Hats	3.2s
+Wilkinson Audio/Naked Drums/Samples/HatMic_F2_20_one-35LR.flac	HihatOpen	21	Hats	3.2s
+Wilkinson Audio/Naked Drums/Samples/HatMic_F2_20_two-DSEK.flac	HihatOpen	22	Hats	3.2s
+Wilkinson Audio/Naked Drums/Samples/HatMic_F2_30_one-343P.flac	HihatOpen	31	Hats	3.2s
+Wilkinson Audio/Naked Drums/Samples/HatMic_F2_30_two-L9AT.flac	HihatOpen	32	Hats	3.2s
+Wilkinson Audio/Naked Drums/Samples/OH_F2_10_one-UFYV.flac	HihatOpen	11	OH	3.2s
+Wilkinson Audio/Naked Drums/Samples/OH_F2_10_two-1Y6T.flac	HihatOpen	12	OH	3.2s
+Wilkinson Audio/Naked Drums/Samples/OH_F2_20_one-GZYD.flac	HihatOpen	21	OH	3.2s
+Wilkinson Audio/Naked Drums/Samples/OH_F2_20_two-J722.flac	HihatOpen	22	OH	3.2s
+Wilkinson Audio/Naked Drums/Samples/OH_F2_30_one-KL3V.flac	HihatOpen	31	OH	3.2s
+Wilkinson Audio/Naked Drums/Samples/OH_F2_30_two-JQDP.flac	HihatOpen	32	OH	3.2s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_F2_10_one-NU49.flac	HihatOpen	11	CR	3.2s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_F2_10_two-ZAKK.flac	HihatOpen	12	CR	3.2s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_F2_20_one-QXOE.flac	HihatOpen	21	CR	3.2s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_F2_20_two-V8S5.flac	HihatOpen	22	CR	3.2s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_F2_30_one-E41T.flac	HihatOpen	31	CR	3.2s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_F2_30_two-B8SN.flac	HihatOpen	32	CR	3.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_10_one-NU9V.flac	Tom1	11	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_10_two-9BTS.flac	Tom1	12	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_20_one-SPLR.flac	Tom1	21	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_20_two-IHZS.flac	Tom1	22	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_30_one-XPRP.flac	Tom1	31	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_30_two-NJUD.flac	Tom1	32	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_10_one-K58E.flac	Tom1	11	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_10_two-13GW.flac	Tom1	12	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_20_one-SCPM.flac	Tom1	21	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_20_two-L6OO.flac	Tom1	22	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_30_one-E1OL.flac	Tom1	31	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_30_two-QZVT.flac	Tom1	32	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_10_one-ZRZJ.flac	Tom1	11	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_10_two-BTMQ.flac	Tom1	12	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_20_one-ESF6.flac	Tom1	21	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_20_two-C9Z9.flac	Tom1	22	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_30_one-1PQO.flac	Tom1	31	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_30_two-7D56.flac	Tom1	32	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_10_one-NHRO.flac	Tom2	11	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_10_two-S2EZ.flac	Tom2	12	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_20_one-P2LC.flac	Tom2	21	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_20_two-DJ8Z.flac	Tom2	22	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_30_one-LMST.flac	Tom2	31	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_30_two-XI5N.flac	Tom2	32	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_10_one-C75T.flac	Tom2	11	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_10_two-FS99.flac	Tom2	12	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_20_one-6XRU.flac	Tom2	21	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_20_two-Q5N1.flac	Tom2	22	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_30_one-G8NW.flac	Tom2	31	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_30_two-SU67.flac	Tom2	32	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_10_one-O1YY.flac	Tom2	11	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_10_two-51IJ.flac	Tom2	12	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_20_one-YJUC.flac	Tom2	21	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_20_two-XX7J.flac	Tom2	22	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_30_one-JL9H.flac	Tom2	31	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_30_two-G9KR.flac	Tom2	32	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_10_one-ZNU9.flac	Tom3	11	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_10_two-2VXX.flac	Tom3	12	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_20_one-UKXC.flac	Tom3	21	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_20_two-9SFY.flac	Tom3	22	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_30_one-9BS2.flac	Tom3	31	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_30_two-1O11.flac	Tom3	32	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_10_one-9AG1.flac	Tom3	11	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_10_two-QZGS.flac	Tom3	12	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_20_one-OJXT.flac	Tom3	21	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_20_two-D5W6.flac	Tom3	22	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_30_one-AATE.flac	Tom3	31	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_30_two-HNZ0.flac	Tom3	32	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_10_one-A8UW.flac	Tom3	11	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_10_two-VYIW.flac	Tom3	12	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_20_one-H55B.flac	Tom3	21	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_20_two-0WCK.flac	Tom3	22	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_30_one-LV8W.flac	Tom3	31	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_30_two-I64K.flac	Tom3	32	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_10_one-DJ8O.flac	Tom4	11	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_10_two-PY2E.flac	Tom4	12	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_20_one-N5ZE.flac	Tom4	21	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_20_two-53HU.flac	Tom4	22	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_30_one-A4DQ.flac	Tom4	31	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_30_two-C1VH.flac	Tom4	32	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_10_one-MKLJ.flac	Tom4	11	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_10_two-QS1A.flac	Tom4	12	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_20_one-K1TI.flac	Tom4	21	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_20_two-4P9B.flac	Tom4	22	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_30_one-AW1C.flac	Tom4	31	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_30_two-GNFU.flac	Tom4	32	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_10_one-3XMK.flac	Tom4	11	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_10_two-R583.flac	Tom4	12	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_20_one-GMZ1.flac	Tom4	21	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_20_two-AKYL.flac	Tom4	22	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_30_one-RHC9.flac	Tom4	31	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_30_two-HH61.flac	Tom4	32	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_10_one-KH0Z.flac	Tom5	11	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_10_two-AV1C.flac	Tom5	12	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_20_one-YM4F.flac	Tom5	21	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_20_two-V9FL.flac	Tom5	22	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_30_one-6AWO.flac	Tom5	31	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-TopOne_D3_30_two-R7DP.flac	Tom5	32	Tom	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_10_one-38X2.flac	Tom5	11	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_10_two-03VR.flac	Tom5	12	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_20_one-1KRF.flac	Tom5	21	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_20_two-MTCO.flac	Tom5	22	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_30_one-ZWA5.flac	Tom5	31	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-OH_D3_30_two-7Q5A.flac	Tom5	32	OH	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_10_one-DR5O.flac	Tom5	11	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_10_two-AIXF.flac	Tom5	12	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_20_one-7PFB.flac	Tom5	21	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_20_two-MRQ7.flac	Tom5	22	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_30_one-H8HX.flac	Tom5	31	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/-CloseRoom_D3_30_two-X39X.flac	Tom5	32	CR	2.2s
+Wilkinson Audio/Naked Drums/Samples/RideMic_D3_10_one-ZAHP.flac	Ride	11	Ride	4.0s
+Wilkinson Audio/Naked Drums/Samples/RideMic_D3_10_two-PM2V.flac	Ride	12	Ride	4.0s
+Wilkinson Audio/Naked Drums/Samples/RideMic_D3_20_one-WPGL.flac	Ride	21	Ride	4.0s
+Wilkinson Audio/Naked Drums/Samples/RideMic_D3_20_two-F47L.flac	Ride	22	Ride	4.0s
+Wilkinson Audio/Naked Drums/Samples/RideMic_D3_30_one-KDE4.flac	Ride	31	Ride	4.0s
+Wilkinson Audio/Naked Drums/Samples/RideMic_D3_30_two-JK2D.flac	Ride	32	Ride	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_10_one-KXMA.flac	Ride	11	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_10_two-76VA.flac	Ride	12	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_20_one-NF8L.flac	Ride	21	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_20_two-XGZR.flac	Ride	22	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_30_one-2HUY.flac	Ride	31	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_30_two-LZL0.flac	Ride	32	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_10_one-DVUI.flac	Ride	11	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_10_two-WBJ0.flac	Ride	12	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_20_one-8ARJ.flac	Ride	21	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_20_two-CMV0.flac	Ride	22	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_30_one-NXZO.flac	Ride	31	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_30_two-5AFZ.flac	Ride	32	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/RideMic_E3_10_one-A5YV.flac	RideBell	11	Ride	4.0s
+Wilkinson Audio/Naked Drums/Samples/RideMic_E3_10_two-K673.flac	RideBell	12	Ride	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_E3_10_one-DJ89.flac	RideBell	11	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_E3_10_two-W99L.flac	RideBell	12	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_E3_10_one-1XK0.flac	RideBell	11	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_E3_10_two-09LR.flac	RideBell	12	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_10_one-H2DR.flac	Crash1	11	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_10_two-AMP1.flac	Crash1	12	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_20_one-CX1I.flac	Crash1	21	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_20_two-6MEQ.flac	Crash1	22	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_30_one-W5TF.flac	Crash1	31	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_30_two-5R9X.flac	Crash1	32	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_10_one-5ASI.flac	Crash1	11	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_10_two-60XX.flac	Crash1	12	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_20_one-3H14.flac	Crash1	21	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_20_two-Z9T3.flac	Crash1	22	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_30_one-32EV.flac	Crash1	31	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_30_two-3ZIT.flac	Crash1	32	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_10_one-6447.flac	Crash2	11	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_10_two-HPJV.flac	Crash2	12	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_20_one-T1YU.flac	Crash2	21	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_20_two-NLZQ.flac	Crash2	22	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_30_one-2TAZ.flac	Crash2	31	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_30_two-VL4B.flac	Crash2	32	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_10_one-1V3V.flac	Crash2	11	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_10_two-NDTW.flac	Crash2	12	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_20_one-IKY5.flac	Crash2	21	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_20_two-TY8Y.flac	Crash2	22	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_30_one-XG4E.flac	Crash2	31	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_30_two-F0XY.flac	Crash2	32	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_E3_10_one-Y9XF.flac	Crash1Bell	11	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_E3_10_two-I30V.flac	Crash1Bell	12	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_E3_10_one-QH8G.flac	Crash1Bell	11	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_E3_10_two-IHLU.flac	Crash1Bell	12	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_F3_10_one-15SA.flac	Crash1Choke	11	OH	1.2s
+Wilkinson Audio/Naked Drums/Samples/OH_F3_10_two-AM2N.flac	Crash1Choke	12	OH	1.2s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_F3_10_one-M1CZ.flac	Crash1Choke	11	CR	1.2s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_F3_10_two-VJYP.flac	Crash1Choke	12	CR	1.2s
+Wilkinson Audio/Naked Drums/Samples/OH_F3_10_one-YVO4.flac	Crash2Choke	11	OH	1.2s
+Wilkinson Audio/Naked Drums/Samples/OH_F3_10_two-S69Y.flac	Crash2Choke	12	OH	1.2s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_F3_10_one-M646.flac	Crash2Choke	11	CR	1.2s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_F3_10_two-6Z75.flac	Crash2Choke	12	CR	1.2s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_20_one-8T96.flac	Splash1	11	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_20_two-3B82.flac	Splash1	12	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_30_one-BN9R.flac	Splash1	21	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_30_two-DM56.flac	Splash1	22	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_20_one-G73D.flac	Splash1	11	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_20_two-KUHX.flac	Splash1	12	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_30_one-07G1.flac	Splash1	21	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_30_two-9MOW.flac	Splash1	22	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_20_one-6SJT.flac	Splash2	11	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_20_two-OY6Q.flac	Splash2	12	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_30_one-LHYV.flac	Splash2	21	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_30_two-7P5U.flac	Splash2	22	OH	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_20_one-L6IJ.flac	Splash2	11	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_20_two-5YP4.flac	Splash2	12	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_30_one-7MS6.flac	Splash2	21	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_30_two-RE2Y.flac	Splash2	22	CR	4.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_10_one-KI3W.flac	China1	11	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_10_two-MPG9.flac	China1	12	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_20_one-ZI80.flac	China1	21	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_20_two-Y466.flac	China1	22	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_30_one-DYXB.flac	China1	31	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_30_two-XBCZ.flac	China1	32	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_10_one-ZXEH.flac	China1	11	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_10_two-0NMK.flac	China1	12	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_20_one-901O.flac	China1	21	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_20_two-58CQ.flac	China1	22	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_30_one-EL4U.flac	China1	31	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_30_two-611R.flac	China1	32	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_10_one-N9U8.flac	China2	11	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_10_two-SISL.flac	China2	12	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_20_one-CWBO.flac	China2	21	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_20_two-IQF4.flac	China2	22	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_30_one-IDJL.flac	China2	31	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/OH_D3_30_two-DU8L.flac	China2	32	OH	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_10_one-RHM3.flac	China2	11	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_10_two-77T4.flac	China2	12	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_20_one-4PW1.flac	China2	21	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_20_two-6UG6.flac	China2	22	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_30_one-0SWJ.flac	China2	31	CR	5.0s
+Wilkinson Audio/Naked Drums/Samples/CloseRoom_D3_30_two-06CD.flac	China2	32	CR	5.0s
+Samples/14a_basic/top/sn_vl2_rr1.flac	FsAlu	21	FsTop	1.3s
+Samples/14a_basic/top/sn_vl2_rr2.flac	FsAlu	22	FsTop	1.3s
+Samples/14a_basic/top/sn_vl4_rr1.flac	FsAlu	41	FsTop	1.3s
+Samples/14a_basic/top/sn_vl4_rr2.flac	FsAlu	42	FsTop	1.3s
+Samples/14a_basic/top/sn_vl6_rr1.flac	FsAlu	61	FsTop	1.3s
+Samples/14a_basic/top/sn_vl6_rr2.flac	FsAlu	62	FsTop	1.3s
+Samples/14a_basic/top/sn_vl8_rr1.flac	FsAlu	81	FsTop	1.3s
+Samples/14a_basic/top/sn_vl8_rr2.flac	FsAlu	82	FsTop	1.3s
+Samples/14a_basic/top/sn_vl10_rr1.flac	FsAlu	101	FsTop	1.3s
+Samples/14a_basic/top/sn_vl10_rr2.flac	FsAlu	102	FsTop	1.3s
+Samples/14a_basic/top/sn_vl11_rr1.flac	FsAlu	111	FsTop	1.3s
+Samples/14a_basic/top/sn_vl11_rr2.flac	FsAlu	112	FsTop	1.3s
+Samples/14a_basic/btm/sn_vl2_rr1.flac	FsAlu	21	FsBtm	1.3s
+Samples/14a_basic/btm/sn_vl2_rr2.flac	FsAlu	22	FsBtm	1.3s
+Samples/14a_basic/btm/sn_vl4_rr1.flac	FsAlu	41	FsBtm	1.3s
+Samples/14a_basic/btm/sn_vl4_rr2.flac	FsAlu	42	FsBtm	1.3s
+Samples/14a_basic/btm/sn_vl6_rr1.flac	FsAlu	61	FsBtm	1.3s
+Samples/14a_basic/btm/sn_vl6_rr2.flac	FsAlu	62	FsBtm	1.3s
+Samples/14a_basic/btm/sn_vl8_rr1.flac	FsAlu	81	FsBtm	1.3s
+Samples/14a_basic/btm/sn_vl8_rr2.flac	FsAlu	82	FsBtm	1.3s
+Samples/14a_basic/btm/sn_vl10_rr1.flac	FsAlu	101	FsBtm	1.3s
+Samples/14a_basic/btm/sn_vl10_rr2.flac	FsAlu	102	FsBtm	1.3s
+Samples/14a_basic/btm/sn_vl11_rr1.flac	FsAlu	111	FsBtm	1.3s
+Samples/14a_basic/btm/sn_vl11_rr2.flac	FsAlu	112	FsBtm	1.3s
+Samples/14a_basic/oh/sn_vl2_rr1.flac	FsAlu	21	OH	1.3s
+Samples/14a_basic/oh/sn_vl2_rr2.flac	FsAlu	22	OH	1.3s
+Samples/14a_basic/oh/sn_vl4_rr1.flac	FsAlu	41	OH	1.3s
+Samples/14a_basic/oh/sn_vl4_rr2.flac	FsAlu	42	OH	1.3s
+Samples/14a_basic/oh/sn_vl6_rr1.flac	FsAlu	61	OH	1.3s
+Samples/14a_basic/oh/sn_vl6_rr2.flac	FsAlu	62	OH	1.3s
+Samples/14a_basic/oh/sn_vl8_rr1.flac	FsAlu	81	OH	1.3s
+Samples/14a_basic/oh/sn_vl8_rr2.flac	FsAlu	82	OH	1.3s
+Samples/14a_basic/oh/sn_vl10_rr1.flac	FsAlu	101	OH	1.3s
+Samples/14a_basic/oh/sn_vl10_rr2.flac	FsAlu	102	OH	1.3s
+Samples/14a_basic/oh/sn_vl11_rr1.flac	FsAlu	111	OH	1.3s
+Samples/14a_basic/oh/sn_vl11_rr2.flac	FsAlu	112	OH	1.3s
+Samples/14a_rimshot/top/sr_vl1_rr1.flac	FsAluRim	11	FsTop	1.3s
+Samples/14a_rimshot/top/sr_vl1_rr2.flac	FsAluRim	12	FsTop	1.3s
+Samples/14a_rimshot/top/sr_vl2_rr1.flac	FsAluRim	21	FsTop	1.3s
+Samples/14a_rimshot/top/sr_vl2_rr2.flac	FsAluRim	22	FsTop	1.3s
+Samples/14a_rimshot/top/sr_vl3_rr1.flac	FsAluRim	31	FsTop	1.3s
+Samples/14a_rimshot/top/sr_vl3_rr2.flac	FsAluRim	32	FsTop	1.3s
+Samples/14a_rimshot/btm/sr_vl1_rr1.flac	FsAluRim	11	FsBtm	1.3s
+Samples/14a_rimshot/btm/sr_vl1_rr2.flac	FsAluRim	12	FsBtm	1.3s
+Samples/14a_rimshot/btm/sr_vl2_rr1.flac	FsAluRim	21	FsBtm	1.3s
+Samples/14a_rimshot/btm/sr_vl2_rr2.flac	FsAluRim	22	FsBtm	1.3s
+Samples/14a_rimshot/btm/sr_vl3_rr1.flac	FsAluRim	31	FsBtm	1.3s
+Samples/14a_rimshot/btm/sr_vl3_rr2.flac	FsAluRim	32	FsBtm	1.3s
+Samples/14a_rimshot/oh/sr_vl1_rr1.flac	FsAluRim	11	OH	1.3s
+Samples/14a_rimshot/oh/sr_vl1_rr2.flac	FsAluRim	12	OH	1.3s
+Samples/14a_rimshot/oh/sr_vl2_rr1.flac	FsAluRim	21	OH	1.3s
+Samples/14a_rimshot/oh/sr_vl2_rr2.flac	FsAluRim	22	OH	1.3s
+Samples/14a_rimshot/oh/sr_vl3_rr1.flac	FsAluRim	31	OH	1.3s
+Samples/14a_rimshot/oh/sr_vl3_rr2.flac	FsAluRim	32	OH	1.3s
+Samples/14p_basic/top/sn_vl2_rr1.flac	FsMaple	21	FsTop	1.3s
+Samples/14p_basic/top/sn_vl2_rr2.flac	FsMaple	22	FsTop	1.3s
+Samples/14p_basic/top/sn_vl4_rr1.flac	FsMaple	41	FsTop	1.3s
+Samples/14p_basic/top/sn_vl4_rr2.flac	FsMaple	42	FsTop	1.3s
+Samples/14p_basic/top/sn_vl6_rr1.flac	FsMaple	61	FsTop	1.3s
+Samples/14p_basic/top/sn_vl6_rr2.flac	FsMaple	62	FsTop	1.3s
+Samples/14p_basic/top/sn_vl8_rr1.flac	FsMaple	81	FsTop	1.3s
+Samples/14p_basic/top/sn_vl8_rr2.flac	FsMaple	82	FsTop	1.3s
+Samples/14p_basic/top/sn_vl10_rr1.flac	FsMaple	101	FsTop	1.3s
+Samples/14p_basic/top/sn_vl10_rr2.flac	FsMaple	102	FsTop	1.3s
+Samples/14p_basic/top/sn_vl11_rr1.flac	FsMaple	111	FsTop	1.3s
+Samples/14p_basic/top/sn_vl11_rr2.flac	FsMaple	112	FsTop	1.3s
+Samples/14p_basic/btm/sn_vl2_rr1.flac	FsMaple	21	FsBtm	1.3s
+Samples/14p_basic/btm/sn_vl2_rr2.flac	FsMaple	22	FsBtm	1.3s
+Samples/14p_basic/btm/sn_vl4_rr1.flac	FsMaple	41	FsBtm	1.3s
+Samples/14p_basic/btm/sn_vl4_rr2.flac	FsMaple	42	FsBtm	1.3s
+Samples/14p_basic/btm/sn_vl6_rr1.flac	FsMaple	61	FsBtm	1.3s
+Samples/14p_basic/btm/sn_vl6_rr2.flac	FsMaple	62	FsBtm	1.3s
+Samples/14p_basic/btm/sn_vl8_rr1.flac	FsMaple	81	FsBtm	1.3s
+Samples/14p_basic/btm/sn_vl8_rr2.flac	FsMaple	82	FsBtm	1.3s
+Samples/14p_basic/btm/sn_vl10_rr1.flac	FsMaple	101	FsBtm	1.3s
+Samples/14p_basic/btm/sn_vl10_rr2.flac	FsMaple	102	FsBtm	1.3s
+Samples/14p_basic/btm/sn_vl11_rr1.flac	FsMaple	111	FsBtm	1.3s
+Samples/14p_basic/btm/sn_vl11_rr2.flac	FsMaple	112	FsBtm	1.3s
+Samples/14p_basic/oh/sn_vl2_rr1.flac	FsMaple	21	OH	1.3s
+Samples/14p_basic/oh/sn_vl2_rr2.flac	FsMaple	22	OH	1.3s
+Samples/14p_basic/oh/sn_vl4_rr1.flac	FsMaple	41	OH	1.3s
+Samples/14p_basic/oh/sn_vl4_rr2.flac	FsMaple	42	OH	1.3s
+Samples/14p_basic/oh/sn_vl6_rr1.flac	FsMaple	61	OH	1.3s
+Samples/14p_basic/oh/sn_vl6_rr2.flac	FsMaple	62	OH	1.3s
+Samples/14p_basic/oh/sn_vl8_rr1.flac	FsMaple	81	OH	1.3s
+Samples/14p_basic/oh/sn_vl8_rr2.flac	FsMaple	82	OH	1.3s
+Samples/14p_basic/oh/sn_vl10_rr1.flac	FsMaple	101	OH	1.3s
+Samples/14p_basic/oh/sn_vl10_rr2.flac	FsMaple	102	OH	1.3s
+Samples/14p_basic/oh/sn_vl11_rr1.flac	FsMaple	111	OH	1.3s
+Samples/14p_basic/oh/sn_vl11_rr2.flac	FsMaple	112	OH	1.3s

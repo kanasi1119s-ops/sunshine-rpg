@@ -1,0 +1,9 @@
+#define $instr FsAluRim
+group_label=$instr
+
+<region> lovel=$v371l hivel=$v371h sample=$instr/11-$instr-$mic.$ext seq_position=1
+<region> lovel=$v371l hivel=$v371h sample=$instr/12-$instr-$mic.$ext seq_position=2
+<region> lovel=$v372l hivel=$v372h sample=$instr/21-$instr-$mic.$ext seq_position=1
+<region> lovel=$v372l hivel=$v372h sample=$instr/22-$instr-$mic.$ext seq_position=2
+<region> lovel=$v373l hivel=$v373h sample=$instr/31-$instr-$mic.$ext seq_position=1
+<region> lovel=$v373l hivel=$v373h sample=$instr/32-$instr-$mic.$ext seq_position=2

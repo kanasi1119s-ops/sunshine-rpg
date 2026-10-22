@@ -1,0 +1,13 @@
+#define $instr Kick
+group_label=$instr
+
+<region> lovel=$v101l hivel=$v101h sample=$instr/11-$instr-$mic.$ext seq_position=1
+<region> lovel=$v101l hivel=$v101h sample=$instr/12-$instr-$mic.$ext seq_position=2
+<region> lovel=$v102l hivel=$v102h sample=$instr/21-$instr-$mic.$ext seq_position=1
+<region> lovel=$v102l hivel=$v102h sample=$instr/22-$instr-$mic.$ext seq_position=2
+<region> lovel=$v103l hivel=$v103h sample=$instr/31-$instr-$mic.$ext seq_position=1
+<region> lovel=$v103l hivel=$v103h sample=$instr/32-$instr-$mic.$ext seq_position=2
+<region> lovel=$v104l hivel=$v104h sample=$instr/41-$instr-$mic.$ext seq_position=1
+<region> lovel=$v104l hivel=$v104h sample=$instr/42-$instr-$mic.$ext seq_position=2
+<region> lovel=$v105l hivel=$v105h sample=$instr/51-$instr-$mic.$ext seq_position=1
+<region> lovel=$v105l hivel=$v105h sample=$instr/52-$instr-$mic.$ext seq_position=2
