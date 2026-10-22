@@ -26,6 +26,8 @@ song = Song("嵐の背骨（仮）",
             "仮: ラウド25曲（第2シリーズ）の3曲目。イメージは嵐。D 自然的短音階・138。開放 D のペダルが波のように上下する看板リフ、サビは B♭→F/A→Gm と下りる低音と ♭II の光。"
             "間奏とソロはスウィープ、ブリッジは嵐の目（チェロの旋律）。別の楽器はチェロ。インスト（歌は後日）。自作",
             BPM, BEATS, FORM, CH)
+song.extra["modulate"] = {"at": "lastChorus", "semitones": 2}   # 見せ場: 最後のサビで全音上へ（嵐の頂点）
+song.desc += " 物語: 嵐の海の船。嵐の目で一瞬静まり（チェロ）、二度目の波が来て、最後のサビで全音上へ。"
 SECS, NB = song.secs, song.nb
 
 RIFF = {
@@ -60,7 +62,7 @@ CHORUS2_MEL[9] = bar("C6:0.5 D6:0.5 C6:0.5 A#5:0.5 F5:2")
 CHORUS2_MEL[5] = bar("C6:0.5 D6:0.5 C6:0.5 A#5:0.5 G5:2")
 CHORUS2_MEL[13] = bar("G5:1 A#5:1 D6:2")
 CHORUS2_MEL[14] = bar("C#6:1 A5:1 E5:1.5 G5:0.5")
-CHORUS3_MEL = [bar("D6:4!"), bar("C6:2 A#5:2"), bar("C6:4!"), bar("A5:2 F5:2")] + CHORUS_MEL[4:6] + [bar("A5:2 D6:2"), CHORUS_MEL[7]] + \
+CHORUS3_MEL = [bar("R:0.5 F5:0.5 A#5:0.5 C6:0.5 D6:2!"), bar("C6:1 D6:1 F5:2"), bar("R:0.5 E5:0.5 F5:0.5 A5:0.5 C6:2"), bar("A5:1 C6:1 F5:2")] + CHORUS_MEL[4:6] + [bar("A5:2 D6:2"), CHORUS_MEL[7]] + \
     [bar("D6:1 C6:0.5 A#5:0.5 D6:2!"), bar("F5:1 A#5:1 D6:2"), bar("R:0.5 G5:0.5 C6:0.5 D6:0.5 E6:2!"), bar("E6:1 D6:1 C6:2")] + CHORUS_MEL[12:14] + [bar("E5:0.5 G5:0.5 A5:0.5 C#6:0.5 E6:2!"), CHORUS_MEL[15]]
 
 CELLO_BRIDGE = [bar("D4:2 F4:1 A4:1"), bar("G4:3 E4:1"), bar("F4:2 D4:1 A#3:1"), bar("A3:4"),
@@ -129,10 +131,10 @@ for idx, (name, i) in enumerate(SECS):
     elif name in ("pre", "pre2"):
         s = bar(f"{groot}:1.5! {groot}:1.5 {groot}:1") if not last else bar(f"{groot}:1! {groot}:1! R:2")
     elif name.startswith("chorus"):
-        if name == "chorus3" and i < 4: s = bar(f"{groot}:4!")
+        if False: s = bar(f"{groot}:4!")
         elif last and name != "chorus3": s = bar(f"{groot}:2! R:2")
         else: s = bar(f"{groot}:1.5! {groot}:1.5 {groot}:1")
-        si = s if not (name == "chorus3" and i < 4) else R4
+        si = s if not (False) else R4
     elif name == "solo":
         s = bar(f"{groot}:4")
     elif name == "inter" and i >= 4:
@@ -173,7 +175,7 @@ for idx, (name, i) in enumerate(SECS):
     elif name in ("verse", "verse2", "pre", "pre2", "solo"):
         b = bass_root8(ch, BEATS, nxt, lo="D1", hi="C#2") if not last else bar(f"{root}:0.5! {root}:0.5 {root}:0.5 {root}:0.5 {root}:1! R:1")
     elif name.startswith("chorus"):
-        if name == "chorus3" and i < 4: b = bar(f"{root}:3! {root}:1")
+        if False: b = bar(f"{root}:3! {root}:1")
         elif last and name != "chorus3": b = bar(f"{root}:1.5! {root}:0.5 R:2")
         else: b = bass_root8(ch, BEATS, nxt, lo="D1", hi="C#2")
     elif name == "bridge":
@@ -229,7 +231,7 @@ for idx, (name, i) in enumerate(SECS):
             k = "XXXXXXXXXXXX...."; s = "................"; tom = "R:3 " + tom_16_down(1)[:-1] if False else "R:3 A2:0.25! A2:0.25! A2:0.25! A2:0.25!"
             cym = f"{CHINA}:1! {CHINA}:1 {CHINA}:1! R:1"
     elif name.startswith("chorus"):
-        half = name == "chorus3" and i < 4
+        half = False
         if half:
             k = "X.......X.x....."; s = "........X......."
             cym = f"{CR}:2! {RIDE}:1 {RIDE}:1" if i == 0 else f"{RIDE}:1! {RIDE}:1 {BELL}:1! {RIDE}:1"

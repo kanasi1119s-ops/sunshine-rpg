@@ -16,7 +16,8 @@ for py in "$@"; do
   title=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['title'])" "$json")
   flags="--drums naked --bass bnb-loud --master -13.5 --widen 1.0"
   grep -q '"instrument": "piano"' "$json" && flags="$flags --piano salamander"
-  grep -q '"patch": "violin"\|"patch": "cello"' "$json" && flags="$flags --orchestra vsco"
+  grep -qE '"patch": "(violin|viola|cello|contrabass|pizzicato|stringEnsemble|slowStrings|trumpet|trombone|tuba|horn|brassSection|oboe|bassoon|clarinet|piccolo|flute|timpani|marimba|churchOrgan|reedOrgan)"' "$json" && flags="$flags --orchestra vsco"
+  [ -f "$json.flags" ] && flags="$flags $(cat "$json.flags")"
   rm -f "/tmp/lm25/out/$name.wav"
   for try in 1 2; do
     node tools/composer/song.mjs build "$json" --wav $flags --out /tmp/lm25/out > "/tmp/lm25/$base.build.log" 2>&1 && [ -f "/tmp/lm25/out/$name.wav" ] && break

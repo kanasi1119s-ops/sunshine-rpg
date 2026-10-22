@@ -1,5 +1,5 @@
 # ラウド25曲（第2シリーズ）06「鐘と偶像」（仮）。イメージ: 宗教（祈りと偶像）。B 短調・84・6/4（3+3）。インスト
-# 設計表: docs/sound/lm25-plan.md。別の楽器: オルガン（ドローバーオルガン。和音の伸ばしと、ブリッジの聖歌のような4声）
+# 設計表: docs/sound/lm25-plan.md。別の楽器: オルガン（教会のパイプオルガンの録音 VSCO 2 CE。和音の伸ばしと、ブリッジの聖歌のような4声）
 # しかけ:
 #   - 6拍子を 3+3 で数える。前奏は全員の一撃とオルガンの和音 → 大きなタムの行進 → 看板リフ
 #   - 看板リフ: B の低い開放から、C♯・D・G・C（ナポリの ♭II）へ。重く、刻まない
@@ -27,6 +27,7 @@ song = Song("鐘と偶像（仮）",
             "仮: ラウド25曲（第2シリーズ）の6曲目。イメージは宗教（祈りと偶像）。B 短調・84・6/4（3+3）。全員の一撃とオルガンの和音、大きなタムの行進、"
             "B の低い開放からナポリの ♭II（C）へ動く看板リフ。ベースは旋律、サビは G から C へ下りる低音と Cmaj7 の光、ブリッジはオルガンの聖歌。別の楽器はオルガン。インスト（歌は後日）。自作",
             BPM, BEATS, FORM, CH)
+song.desc += " 物語: 巡礼者が偶像の前で祈り、偶像が崩れ、最後は鐘とオルガンだけが残る。"
 SECS, NB = song.secs, song.nb
 
 RIFF = {"Bm": [bar("B1:1.5! B1:0.5 D2:0.5 C#2:0.5", "B1:1.5! F#2:0.5 G2:1"), bar("B1:1.5! B1:0.5 D2:0.5 E2:0.5", "F#2:1.5! E2:0.5 D2:0.5 C#2:0.5")],
@@ -83,7 +84,7 @@ for idx, (name, i) in enumerate(SECS):
     if name in ("intro", "inter", "outro"):
         if name == "intro" and i == 0: rf = bar("B1:6!")
         elif name == "intro" and i == 1: rf = R6
-        elif name == "outro" and last: rf = bar("B1:6!")
+        elif name == "outro" and last: rf = R6
         else:
             key = base_ch if base_ch in RIFF else "Bm"
             rf = RIFF[key][i % 2]
@@ -122,6 +123,8 @@ for idx, (name, i) in enumerate(SECS):
     ov = [R6, R6, R6]
     if name == "bridge":
         ov = CHORALE[i]
+    elif name == "outro" and last:
+        ov = [bar("F#4:6"), bar("B4:6"), bar("D5:6")]
     elif (name == "intro" and i < 2) or name in ("chorus", "chorus2", "chorus3") or (name == "verse" and i < 3):
         v = ORG.get(ch)
         if v:
@@ -134,7 +137,7 @@ for idx, (name, i) in enumerate(SECS):
     # ----- ベース（旋律） -----
     if name in ("intro", "inter", "outro"):
         if name == "intro" and i < 2: b = bar("B0:6!") if i == 0 else bar("B0:3 B0:1.5 F#1:1.5")
-        elif name == "outro" and last: b = bar("B0:6!")
+        elif name == "outro" and last: b = R6
         else: b = unison_low(P["riff"][-1], -1, "B0")
     elif name == "verse": b = VERSE_BASS[i]
     elif name == "verse2": b = VERSE_BASS[i] if i < 3 else bar("F#1:3 F#1:1 A1:1 C#2:1")
@@ -161,7 +164,7 @@ for idx, (name, i) in enumerate(SECS):
             tom = "A2:1! D3:0.5 A2:0.5 A2:1 A2:1! D3:0.5 A2:0.5 " + tom_16_down(1)
             k = g24(0, 12); cym = f"{BELL}:1 {BELL}:1 {BELL}:1 {BELL}:1 R:2"
         elif name == "outro" and last:
-            k = g24(0); s = g24(0); cym = f"{CR}:6!"
+            cym = f"{BELL}:1.5 {BELL}:1.5, {BELL}:1.5, {BELL}:1.5,"      # 見せ場の後: バンドが抜け、鐘とオルガンだけ
         else:
             k = g24(0, 6, 12, 18) if i % 2 == 0 else g24(0, 6, 12, 16, 18)
             s = g24(8, 20); s = g24(*[p for p in (11, 23) if k[p] == "."], ch="o", base=s)
@@ -232,7 +235,7 @@ song.add(riff_parts(J("riff")))
 song.add(rhythm_parts(J("rhy"), J("rhy_in")))
 song.add(lead_part(J("lead")))
 song.add(lead_part(J("harm8"), vol=0.07, pan=0.3, role="リード（オクターブ下）"))
-song.add([part(f"オルガン（{['上', '中', '下'][j]}）", "drawbarOrgan", J(f"o{j}"), volume=0.07, pan=[-0.25, 0.25, 0][j], reverb=0.4, attack=0.06, release=0.6,
+song.add([part(f"オルガン（{['上', '中', '下'][j]}）", "keys", J(f"o{j}"), patch="churchOrgan", volume=0.07, pan=[-0.25, 0.25, 0][j], reverb=0.4, attack=0.06, release=0.6,
                fx=[{"type": "eq", "low": -4, "mid": -1, "midHz": 600, "high": 0}, {"type": "reverb", "mix": 0.25}]) for j in range(3)])
 song.add(bass_part(J("bass")))
 song.add(drum_parts(kit))

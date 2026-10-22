@@ -471,7 +471,7 @@ def drum_parts(kit):
 
 def cymfx_part(notes, vol=0.06):
     """本物のシンバルの効果音（C＝逆再生クラッシュ・E＝スウェル。音符の終わりに山）"""
-    return part("シンバルの効果音", "guitar", notes, patch="cymbalFx", volume=vol, pan=0)
+    return part("シンバルの効果音", "guitar", notes, patch="cymbalFx", volume=vol, pan=0, modulate=False)   # 音名で種類を選ぶので転調させない
 
 
 def gfx_part(notes, vol=0.06, role="ギターの効果音"):
@@ -503,6 +503,7 @@ class Song:
         self.nb = len(self.secs)
         self.parts = []
         self.extra = {}
+        self.flags = ""      # 書き出しに足す引数（例 "--space hall --space-wet 0.18"）。<json>.flags に書く
 
     def chord_at(self, idx):
         n, i = self.secs[idx]
@@ -537,6 +538,7 @@ class Song:
     def write(self, path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         json.dump(self.to_json(), open(path, "w"), ensure_ascii=False)
+        open(path + ".flags", "w").write(self.flags)
         sec = self.nb * self.beats * 60 / self.bpm
         print(f"{self.title}: {self.nb}小節・{int(sec // 60)}分{int(sec % 60):02d}秒 → {path}")
 

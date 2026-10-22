@@ -26,6 +26,7 @@ song = Song("罰の階段（仮）",
             "仮: ラウド25曲（第2シリーズ）の9曲目。イメージは罪と罰。C 短調・92（重いハーフタイム）。低音が半音ずつ下りる「階段」、C のペダルと下りる上の音が交互の看板リフ、"
             "サビはタムの3連で 3対2 のポリリズムと D♭（♭II）の光。ブリッジはチェンバロの分散和音とベースの階段。別の楽器はチェンバロ。インスト（歌は後日）。自作",
             BPM, BEATS, FORM, CH)
+song.desc += " 物語: 絞首台へ一段ずつ下りる。法廷のチェンバロ、最後は無音のあとの最後の一段。"
 SECS, NB = song.secs, song.nb
 
 RIFF = {"Cm": [bar("C2:0.5! C3:0.5 B2:0.5 C3:0.5 A#2:0.5 C3:0.5 A2:0.5 G#2:0.5"), bar("C2:0.5! C3:0.5 B2:0.5 C3:0.5 A#2:0.5 C3:0.5 D3:0.5 D#3:0.5")],
@@ -81,7 +82,7 @@ for idx, (name, i) in enumerate(SECS):
     rf = R4
     if name in ("intro", "inter", "outro"):
         if name == "intro" and i < 2: rf = bar("C2:4!") if i == 0 else R4
-        elif name == "outro" and last: rf = bar("C2:4!")
+        elif name == "outro" and last: rf = bar("R:2 C2:2!")
         else: rf = RIFF[base_ch if base_ch in RIFF else "Cm"][i % 2]
     elif name == "break":
         rf = bar("C2:1.5! C2:1.5! C#2:1!") if i < n - 1 else bar("C2:1.5! C#2:0.5! R:2")
@@ -120,7 +121,7 @@ for idx, (name, i) in enumerate(SECS):
 
     if name in ("intro", "inter", "outro"):
         if name == "intro" and i < 2: b = bar("C1:4!") if i == 0 else bar("C1:4")
-        elif name == "outro" and last: b = bar("C1:4!")
+        elif name == "outro" and last: b = bar("R:2 C1:2!")
         else: b = unison_low(P["riff"][-1], -1, "B0")
     elif name in ("verse", "verse2", "solo"):
         # 階段: 1小節に1段、4分で押す
@@ -147,7 +148,7 @@ for idx, (name, i) in enumerate(SECS):
         elif name == "intro" and i == 1:
             cym = f"{RIDE}:1 {RIDE}:1 {RIDE}:1 R:1"; tom = "R:2 " + tom_triplets_down(2)
         elif name == "outro" and last:
-            k = "X..............."; s = "X..............."; cym = f"{CR}:4!"
+            k = "........X......."; s = "........X......."; cym = f"R:2 {CHINA}:2!"
         else:
             k = "X.....X.X......." if i % 2 == 0 else "X.....X.X.x....."
             s = "........X......."
