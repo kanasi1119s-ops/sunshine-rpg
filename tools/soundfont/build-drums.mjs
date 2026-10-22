@@ -104,6 +104,19 @@ const PROFILES = {
   crocell: { kit: "crocell", out: "drums-crocell", label: "CrocellKit", overhead: 1.0, ohc: 0.5, amb: 0.4, kick: 1.15, snare: 1.1, tom: 1.0, hat: 1, cym: 1, sec: 1, fade: 0.6,
     eq: "highpass=f=28",
     kindEq: { kick: "highpass=f=28,equalizer=f=55:t=q:w=1:g=3,equalizer=f=400:t=q:w=1.5:g=-3,equalizer=f=4000:t=q:w=1:g=2.5" } },
+  // 2026-10-22 CrocellKit の「乾いてパンチのある版」（人間「空間を感じすぎる」「NEW ERA みたいなドラム」）。
+  // 部屋マイクは使わない・太鼓の OH は少しだけ。作曲ソフトのドラムは1本の通り道を共有して太鼓ごとに fx を掛けられないので、
+  // 太鼓ごとの音作り（EQ・1打ごとの圧縮）をここで録音に焼き込む。目標の数値は docs/sound/drum-sound-target.md
+  "crocell-punch": { kit: "crocell", out: "drums-crocell-punch", label: "CrocellKit（乾いてパンチ）", overhead: 0.3, ohKind: { kick: 0.12, snare: 0.3, tom: 0.25, hat: 0.5, cym: 0.85 }, ohc: 0, amb: 0,
+    kick: 1.35, snare: 0.95, tom: 0.85, hat: 0.9, cym: 0.75, sec: 1, fade: 0.6,
+    eq: "highpass=f=28",
+    snareEq: "highpass=f=90,equalizer=f=190:t=q:w=1:g=3,equalizer=f=650:t=q:w=1.3:g=-7,equalizer=f=5500:t=q:w=1:g=3,equalizer=f=10000:t=q:w=1:g=3,acompressor=threshold=-20dB:ratio=4:attack=3:release=60:makeup=2",
+    kindEq: {
+      kick: "highpass=f=45,highpass=f=45,equalizer=f=75:t=q:w=1:g=2,equalizer=f=380:t=q:w=1.2:g=-7,equalizer=f=4500:t=q:w=1:g=5,equalizer=f=8000:t=q:w=1:g=6,acompressor=threshold=-18dB:ratio=4:attack=5:release=60:makeup=2",
+      tom: "highpass=f=55,equalizer=f=500:t=q:w=1.3:g=-6,equalizer=f=4000:t=q:w=1:g=3,acompressor=threshold=-20dB:ratio=3:attack=5:release=80",
+      hat: "highpass=f=300,equalizer=f=9000:t=q:w=1:g=2",
+      cym: "highpass=f=250,equalizer=f=3500:t=q:w=1:g=-3,equalizer=f=10000:t=q:w=1:g=3",
+    } },
   "crocell-aux": { kit: "crocell", base: "drums-muldjord-aux", out: "drums-crocell-aux", label: "CrocellKit＋録音の小物", overhead: 1.0, ohc: 0.5, amb: 0.4, kick: 1.15, snare: 1.1, tom: 1.0, hat: 1, cym: 1, sec: 1, fade: 0.6,
     eq: "highpass=f=28",
     kindEq: { kick: "highpass=f=28,equalizer=f=55:t=q:w=1:g=3,equalizer=f=400:t=q:w=1.5:g=-3,equalizer=f=4000:t=q:w=1:g=2.5" } },
@@ -145,7 +158,9 @@ function hit(inst, idx, cfg, prof) {
   const len = Math.round(cfg.sec * SR);
   const L = new Float32Array(len), R = new Float32Array(len);
   const add = (buf, gl, gr) => { for (let i = 0; i < Math.min(len, buf.length); i++) { L[i] += buf[i] * gl; R[i] += buf[i] * gr; } };
-  add(read("OHL"), prof.overhead, 0); add(read("OHR"), 0, prof.overhead);
+  // ohKind: 楽器の種類ごとの OH（上のマイク）の量。太鼓は近接マイク中心で乾いた音に、シンバルは OH から鳴らす（crocell-punch）
+  const oh = prof.ohKind?.[kindOf(inst)] ?? prof.overhead;
+  add(read("OHL"), oh, 0); add(read("OHR"), 0, oh);
   add(read("AmbL"), prof.amb, 0); add(read("AmbR"), 0, prof.amb);
   if (prof.ohc && fs.existsSync(file("OHC"))) { const c = read("OHC"); add(c, prof.ohc * 0.7071, prof.ohc * 0.7071); }
   const ang = ((cfg.pan + 1) * Math.PI) / 4; // 一定パワーのパン

@@ -49,6 +49,7 @@ import bassBnbUrl from "../../assets-src/soundfont/extra/bass-bnb-finger.sf3?url
 import bassBnbLoudUrl from "../../assets-src/soundfont/extra/bass-bnb-loud.sf3?url";
 import drumsCrocellUrl from "../../assets-src/soundfont/extra/drums-crocell.sf3?url";
 import drumsCrocellAuxUrl from "../../assets-src/soundfont/extra/drums-crocell-aux.sf3?url";
+import drumsCrocellPunchUrl from "../../assets-src/soundfont/extra/drums-crocell-punch.sf3?url";
 import pianoUprightUrl from "../../assets-src/soundfont/extra/piano-upright-kw.sf3?url";
 import pianoUprightBrightUrl from "../../assets-src/soundfont/extra/piano-upright-kw-bright.sf3?url";
 import epianoCp80Url from "../../assets-src/soundfont/extra/epiano-cp80.sf3?url";
@@ -223,6 +224,7 @@ const DRUM_FONTS: Record<string, { label: string; url: string | null }> = {
   // 2026-10-22 CrocellKit（DrumGizmo。メタルのアルバム録音のキット。CC BY 4.0・クレジット必要）: チャイナ2枚・スプラッシュ2枚・クラッシュ3枚＋止め打ち・ライドのベル。
   //   crash パートの音名: B3＝チャイナ2・A3＝スプラッシュ2・C3＝クラッシュ3・C#2／G#2＝クラッシュ1／2の止め打ち（docs/sound/drum-keys-crocell.md）
   crocell: { label: "生ドラム CrocellKit（メタル向け。チャイナ2・スプラッシュ2・クラッシュ3＋止め打ち）", url: drumsCrocellUrl },
+  "crocell-punch": { label: "生ドラム CrocellKit（乾いてパンチ。部屋の鳴りなし・太鼓ごとに音作り済み）", url: drumsCrocellPunchUrl },
   "crocell-aux": { label: "CrocellKit＋録音の小物", url: drumsCrocellAuxUrl },
 };
 // ギター（ジャズギター26・クリーンギター27）の音源。Karoryfer Samples「Black And Green Guitars」（CC0）の録音
