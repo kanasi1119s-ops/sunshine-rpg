@@ -973,7 +973,7 @@ class Song:
             LAST_KIT.clear()
         kind = lambda n: re.sub(r"\d+$", "", n).replace("inter", "interlude").replace("breakdown", "break")
         KINDS = {"intro", "verse", "pre", "chorus", "interlude", "bridge", "break", "outro", "solo"}
-        song = {"title": self.title, "description": self.desc, "bpm": self.bpm, "beats": self.beats, "barsPerChord": 1, "repeats": 1,
+        song = {"title": getattr(self, "display_title", None) or self.title, "description": self.desc, "bpm": self.bpm, "beats": self.beats, "barsPerChord": 1, "repeats": 1,
                 "autoAccompaniment": False, "feel": "rock", "tone": "metal", "dynamics": "natural",
                 "human": 0.42, "humanProfile": "role", "humanDist": "triangle", "diGuitar": "emily", "autoScoop": False, "guitarWobble": False,
                 "drumMix": {"kick": {"level": 1.0}, "crash": {"level": 0.9}, "snare": {"level": 1.0}},
@@ -991,7 +991,7 @@ class Song:
         # フェード（秒）。書き出しのあとで WAV にかける（lm25_render.sh）
         open(path + ".fade", "w").write(f"{getattr(self, 'fade_in', 0) or 0} {getattr(self, 'fade_out', 0) or 0}")
         sec = song_seconds(self)
-        print(f"{self.title}: {self.nb}小節・{int(sec // 60)}分{int(sec % 60):02d}秒 → {path}")
+        print(f"{getattr(self, 'display_title', None) or self.title}: {self.nb}小節・{int(sec // 60)}分{int(sec % 60):02d}秒 → {path}")
 
 
 # ---------------- 点検（不協和音） ----------------

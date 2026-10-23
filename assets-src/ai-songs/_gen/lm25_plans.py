@@ -582,11 +582,26 @@ PHR_POLICY = {
 }
 
 
+# 曲名（2026-10-23 人間「曲名もなんかゲームの曲名だよね。そのイメージも取っ払って」）。
+# 「〇〇の〇〇」の形をやめ、今のラウドの曲名のように: 英語の短い言い切り・長い一文・漢字の熟語・日本語の命令や言い切り。
+# 中身（物語）は変えない。乱数の種はもとの曲名（song.title）のまま（書き出しの結果がずれないように）
+TITLES = {
+    "01": "灰皿にネオン", "02": "PALE ORBIT", "03": "EYEWALL", "04": "口を縫え", "05": "Seven Horns, No Halo",
+    "06": "偶像崩落", "07": "Terminal Velocity of a Feather", "08": "心拍、加速、停止", "09": "Down Is the Only Way",
+    "10": "Airmail to Nowhere", "11": "Crush Depth", "12": "Ceasefire at 5AM", "13": "No Receipts", "14": "SIREN//LOOP",
+    "15": "Sleep Where the Moon Can't See", "16": "喪服と雨", "17": "Q.E.D. (Fallen)", "18": "Pray Louder",
+    "19": "Rewind My Last Breath", "20": "Clowns Don't Apologize", "21": "V1, Rotate", "22": "Survivors Sing Off-Key",
+    "23": "Anthem for Ashes", "24": "Guilty Until Proven", "25": "Last Deal Before Sunrise", "26": "BACHI",
+}
+
+
 def apply_plan(song, no):
     if no not in PLANS: return
     song.plan = PLANS[no]
     song.key_mode = KEYS.get(no) or (None, None)
     song.phr_policy = PHR_POLICY.get(no, "rare")
+    song.display_title = TITLES.get(no)
+    if song.display_title: song.desc = f"もとの仮題「{song.title}」。" + song.desc
     song.desc += " " + DESC[no]
     fi, fo = FADE.get(no, (0, 0))
     song.fade_in, song.fade_out = fi, fo
