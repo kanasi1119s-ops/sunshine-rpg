@@ -343,14 +343,14 @@ PLANS["16"] = [
     ("intro", "intro", {"bpm": 116, "drums": "own"}),
     ("verse", "verse", {}),
     ("pre", "pre", {}),
-    ("chorus", "chorus", {}),
+    ("chorus", "chorus", {"calm": True}),
     ("inter", "inter", {"drums": "double"}),
     ("verse", "verse2", {"drums": "own"}),
     ("pre", "pre2", {}),
-    ("chorus", "chorus2", {}),
+    ("chorus", "chorus2", {"calm": True}),
     ("bridge", "bridge", {"drums": "tribal"}),
     ("kime", ("chorus3", 0, 2), {"kime": [0, 1.5, 3, 4.5, 6]}),
-    ("chorus", "chorus3", {}),
+    ("chorus", "chorus3", {"calm": True}),
     ("funeral", "funeral", {"bpm": (76, 2), "drums": "half", "kind": "outro"}),
     ("outro", "outro", {"bpm": 72, "keep": ["extra", "bass"]}),
 ]
@@ -595,11 +595,16 @@ TITLES = {
 }
 
 
+# 曲ごとの音量の好み（割合）。16: 人間「16ドラムの音3落とそう」（×0.97）・「サビでドラムのガチャガチャした感じを抑えよう」（サビは calm）
+GAINS = {"16": {"drums": 0.97}}
+
+
 def apply_plan(song, no):
     if no not in PLANS: return
     song.plan = PLANS[no]
     song.key_mode = KEYS.get(no) or (None, None)
     song.phr_policy = PHR_POLICY.get(no, "rare")
+    song.gains = GAINS.get(no, {})
     song.display_title = TITLES.get(no)
     if song.display_title: song.desc = f"もとの仮題「{song.title}」。" + song.desc
     song.desc += " " + DESC[no]

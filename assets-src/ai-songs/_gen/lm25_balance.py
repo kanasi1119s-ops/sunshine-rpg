@@ -104,6 +104,13 @@ def balance(song):
 if __name__ == "__main__":
     path = sys.argv[1]
     song = json.load(open(path))
+    # 曲ごとの音量の好み（<曲.json>.gains。例 {"drums": 0.97}。人間「16ドラムの音3落とそう」）
+    import os
+    gp = sys.argv[2] if len(sys.argv) > 2 else path + ".gains"
+    if os.path.exists(gp):
+        for g_, k_ in json.load(open(gp)).items():
+            for p in song["parts"]:
+                if group(p) == g_: p["volume"] = round(p.get("volume", 0) * k_, 5)
     log = balance(song)
     json.dump(song, open(path, "w"), ensure_ascii=False)
     print("組の大きさを直しました:", ", ".join(log) or "（上限の内側）")

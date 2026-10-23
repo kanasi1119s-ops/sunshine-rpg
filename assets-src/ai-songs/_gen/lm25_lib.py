@@ -1006,6 +1006,7 @@ class Song:
         open(path + ".flags", "w").write(self.flags)
         open(path + ".reftone", "w").write(getattr(self, "ref_tone", "") or "")
         # フェード（秒）。書き出しのあとで WAV にかける（lm25_render.sh）
+        open(path + ".gains", "w").write(json.dumps(getattr(self, "gains", {}) or {}))
         open(path + ".fade", "w").write(f"{getattr(self, 'fade_in', 0) or 0} {getattr(self, 'fade_out', 0) or 0}")
         sec = song_seconds(self)
         print(f"{getattr(self, 'display_title', None) or self.title}: {self.nb}小節・{int(sec // 60)}分{int(sec % 60):02d}秒 → {path}")
@@ -1420,6 +1421,8 @@ def lib_section(song, nsec, kind, bpm, mode, opt):
     elif mode == "toms": cond["need_toms"] = True
     elif mode == "sparse": kd = "quiet"; dyn = dyn or "soft"
     if opt.get("energy"): cond["energy"] = opt["energy"]
+    if opt.get("calm"):                 # ガチャガチャさせない（強さを抑え、ゴーストを少なく）
+        cond["energy"] = opt.get("energy") or (0.4, 0.7); cond["max_ghost"] = 1.0
     if opt.get("fills"): cond["fill_kinds"] = opt["fills"]
     need = nsec if B == 4 else nsec + 1
     bars = lib.fit(need, kind=kd, bpm=bpm, dynamics=dyn, crash_start=opt.get("crash", True), **cond)
