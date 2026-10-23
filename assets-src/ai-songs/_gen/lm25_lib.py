@@ -1259,7 +1259,7 @@ def rearrange(song):
         # 弾き方を変えるかどうかは決まりではなく、曲ごとの考え方で（2026-10-23 人間「必ず弾き方が変わる必要性があるわけじゃない。柔軟に」）:
         #   keep＝看板のリフを最後まで守る（変化は旋律・ドラム・強弱で）／rare＝ここぞの1〜2か所だけ変える／often＝場面ごとにどんどん変える
         policy = getattr(song, "phr_policy", "rare")
-        auto_ok = opt.get("phr") is None and src_name in seen_src and new_kinds[name] not in ("intro", "outro") \
+        auto_ok = opt.get("phr") is None and src_name in seen_src and new_kinds[name] not in ("intro", "outro") and nsec >= 4 \
             and not opt.get("kime") and not opt.get("keep") and not opt.get("bed")
         if auto_ok and policy == "rare":
             import random

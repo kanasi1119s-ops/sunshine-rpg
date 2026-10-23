@@ -360,7 +360,9 @@ FADE["16"] = (0, 8)
 # 17 堕天の証明（136）: 縮まるかけ合い（ストレッタ）。悪魔と天使が8小節→4小節→2小節→1小節と交代を速め、最後に一つに溶ける。終わりは決めで止める
 DESC["17"] = "展開: 縮まるかけ合い（悪魔＝重いハーフタイムと、天使＝合唱が、8小節→4小節→2小節→1小節と交代を速めていき、最後に一つに溶け合う）。終わりはピタッと止める。"
 PLANS["17"] = ([
-    ("intro", "intro", {"drums": "own"}),
+    ("intro", ("angel", 0, 4), {"keep": ["extra", "fx"], "kind": "intro"}),        # 人間「17の前奏、ピロピロやめて空間がだんだん広がるように」: 天使の合唱だけで始まり
+    ("intro", ("angel", 4, 8), {"keep": ["extra", "fx", "bass", "drums"], "drums": "sparse", "kind": "intro"}),   # 低い音と薄いドラムが加わって
+    ("intro", "intro", {"drop": ["gtr"], "drums": "own"}),                          # リフが入って空間がいっぱいに（速弾きは外す）
     ("demon", "demon", {"drums": "half"}),
     ("angel", "angel", {"drums": "ride"}),
     ("demon", "dchorus", {}),
@@ -565,6 +567,7 @@ PLANS["26"] = ([
     ("送り火", "intro", {"keep": ["extra"], "semi": 1, "kind": "outro"}),
 ])
 FADE["26"] = (0, 10)
+FADE["17"] = (6, 0)    # 前奏は6秒かけて、遠くから近づくように
 
 
 KEYS = {"01": ("C#", "dorian"), "02": ("F#", "aeolian"), "03": ("D", "aeolian"), "04": ("A", "aeolian"), "05": ("E", "phrygian"),
