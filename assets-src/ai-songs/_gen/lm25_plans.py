@@ -316,24 +316,15 @@ PLANS["20"] = [   # 2026-10-24 素材から作り直し: 見世物小屋の演�
 ]
 
 # 21 群青の滑走路（140）: 離陸・巡航・着陸（テンポの山）。ベースだけのエンジン音（110）から加速して離陸、雲の上はドラムなし、着陸でテンポが下がり、ベースとバイオリンが残ってフェードアウト
-DESC["21"] = "展開: 離陸・巡航・着陸（ベースだけのエンジン音＝テンポ110から 140 まで加速して離陸、雲の中はドラムなし、雲の上は全音上がる、着陸で 100→90 へ減速）。終わりはベースとバイオリンがフェードアウト。"
-PLANS["21"] = [
-    ("taxi", ("intro", 0, 4), {"keep": ["bass"], "bpm": 110, "kind": "intro"}),
-    ("taxi", ("intro", 4, 8), {"keep": ["bass", "drums", "extra"], "drums": "sparse", "bpm": (140, 4), "kind": "intro"}),
-    ("takeoff", "pre", {"drums": "build", "kind": "pre"}),
-    ("chorus", "chorus", {"from": "stopBeat"}),
-    ("verse", "verse", {"drums": "ride"}),
-    ("pre", "pre2", {}),
-    ("chorus", "chorus2", {}),
-    ("cloud", "cloud", {"keep": ["riff", "gtr", "bass", "extra", "fx"]}),
-    ("above", "above", {"drums": "ride"}),
-    ("above", "above", {"semi": 2, "drums": "toms"}),
-    ("solo", "solo", {"semi": 2, "drums": "double"}),
-    ("verse", "verse2", {"drums": "half"}),
-    ("chorus", "chorus3", {"from": "stopBeat"}),
-    ("chorus", ("chorus2", 8, 16), {"semi": 2}),
-    ("landing", "outro", {"bpm": (100, 8), "drums": "half", "semi": 2}),
-    ("landing", "intro", {"keep": ["bass", "extra"], "bpm": 90, "semi": 2, "kind": "outro"}),
+DESC["21"] = "展開: 止まらない一本道（エンジン → 滑走 → 機首上げ → 雲の中＝ドラムなし → 雲の上＝半音上 → さらに高く＝もう半音上。同じ区間に戻らず上り続ける）。ベースのエンジン音で始まり、空に残るバイオリンでフェードアウト。"
+PLANS["21"] = [   # 2026-10-24 素材から作り直し: 止まらない一本道（調が2回上がって上り続ける。静かなのは雲の中だけ）
+    ("taxi", "taxi", {"drums": "none", "lv": 1, "kind": "intro"}),
+    ("runway", "runway", {"drums": "build", "lv": 2, "kind": "pre"}),
+    ("rotate", "rotate", {"drums": "double", "lv": 3, "kind": "chorus", "from": "break1bar"}),
+    ("cloud", "cloud", {"drums": "none", "lv": 0, "kind": "bridge"}),
+    ("above", "above", {"drums": "lib", "lv": 2, "kind": "verse", "semi": 1}),
+    ("higher", "higher", {"drums": "double", "lv": 3, "kind": "chorus", "semi": 2, "from": "stopBeat"}),
+    ("sky", "sky", {"drums": "none", "lv": 1, "kind": "outro", "semi": 2}),
 ]
 FADE["21"] = (0, 10)
 
