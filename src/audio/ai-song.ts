@@ -100,6 +100,10 @@ export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   pan: number;
   /** 音の伸び（鳴らす長さの倍率 0.2〜3。省略は1。小さいと歯切れよく、大きいと次の音まで余韻が重なる）。ドラムでは使わない。 */
   sustain?: number;
+  /** 単音の楽器として弾く（2026-10-23）: 次の音が鳴ったら前の音を止める（sustain で伸ばした音が次の音に重ならない）。
+   *  歪んだリードギターで音が重なると、2つの音が歪みの中でぶつかって濁る（人間「高音に近づけるときと、高音から下げて音が重なってるときに濁る」）。
+   *  休符の前の音は sustain のぶんだけ伸びるので、余韻は残る。 */
+  mono?: boolean;
   /** シンセの音色（SYNTH_PATCHES のキー）。指定すると、楽器の音のかわりにこのシンセ音で鳴る。 */
   patch?: string;
   /** タイミングのずれ（拍。-0.1〜0.1）。+＝あと乗り（スネア・バックビート）、-＝前のめり（ハイハット・刻み）。省略は0。 */
@@ -342,6 +346,7 @@ export const AI_SONG_SCHEMA = {
           volume: { type: "number" },
           pan: { type: "number" },
           sustain: { type: "number" },
+          mono: { type: "boolean" },
           patch: { type: "string", enum: Object.keys(SYNTH_PATCHES) },
           push: { type: "number" },
           barGain: { type: "array", items: { type: "number" } },
@@ -673,6 +678,23 @@ export function applySustain(events: NoteEvent[], sustain: number): NoteEvent[] 
   return events.map((e) => (e.note === REST || e.gate !== undefined ? e : { ...e, gate }));
 }
 
+/** 単音の楽器として、伸ばした音（gate）が次の音の始まりを越えないように切る（休符の前の音はそのまま伸びる）。 */
+export function applyMono(events: NoteEvent[]): NoteEvent[] {
+  const starts: number[] = [];
+  let pos = 0;
+  for (const e of events) { starts.push(pos); pos += e.durationBeats; }
+  return events.map((e, i) => {
+    if (e.note === REST || !(e.durationBeats > 0)) return e;
+    let j = i + 1;
+    while (j < events.length && events[j].note === REST) j++;
+    if (j >= events.length) return e;
+    if (j > i + 1) return e; // 休符をはさむ: 余韻を残す（休符の長さまでで次の音にはほぼ届かない）
+    const room = (starts[j] - starts[i]) / e.durationBeats;
+    const gate = e.gate ?? 1;
+    return gate > room * 0.98 ? { ...e, gate: Math.max(0.2, Math.round(room * 0.98 * 1000) / 1000) } : e;
+  });
+}
+
 /** AIソングを確かめて、曲（Score）に組み立てる。おかしなところがあれば、全部まとめてエラーにする。 */
 /** フレーズごとの強弱（出だし 0.88 → 山 1.1 → 終わり 0.8）を、休符以外の音の強さに掛ける。 */
 export function applyPhrase(events: NoteEvent[], phraseBeats: number): NoteEvent[] {
@@ -887,7 +909,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
       ...(!drum && Number(p.bright) ? { bright: Math.max(-1, Math.min(0.5, Number(p.bright))) } : {}),
       ...(!drum && Number(p.duck) > 0 ? { duck: Math.min(0.95, Number(p.duck)) } : {}),
       ...(!drum ? partTrackExtras(p, chordBars, beatsPerBar) : {}),
-      notes: arranged(applySustain(drum ? fitToLength(events, total) : applyPhrase(shiftEvents(fitToLength(events, total), Number(p.shift)), Number(p.phrase)), drum ? 1 : Number(p.sustain))),
+      notes: arranged(((ev: NoteEvent[]) => (!drum && p.mono === true ? applyMono(ev) : ev))(applySustain(drum ? fitToLength(events, total) : applyPhrase(shiftEvents(fitToLength(events, total), Number(p.shift)), Number(p.phrase)), drum ? 1 : Number(p.sustain)))),
     };
     if (rollOpts && p.instrument === "hihat") track.notes = arranged(applyTrapRolls([{ ...track, notes: applySustain(fitToLength(events, total), 1) }], beatsPerBar, rollOpts)[0].notes);
     handRoles.push(String(p.role ?? p.instrument));

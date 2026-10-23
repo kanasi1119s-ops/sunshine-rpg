@@ -1662,11 +1662,11 @@ export function applyRefTone(score: Score, tone: RefTone): Score {
  */
 export const LEAD_GUITAR = {
   amp: "namArchonL1",
-  ampDrive: 0.45,
+  ampDrive: 0.38, // 2026-10-23 人間「歪がちょっと濁っている」→ 0.45 から浅く。低い中域（濁りの帯域）も少し多めに削る
   ampGate: 3,
   fx: [
-    { type: "filter", kind: "highpass", freq: 120, q: 0.7 },
-    { type: "eq", low: 0, mid: -2.5, midHz: 350, high: 0 },
+    { type: "filter", kind: "highpass", freq: 150, q: 0.7 },
+    { type: "eq", low: 0, mid: -3.5, midHz: 320, high: 0 },
     { type: "eq", low: 0, mid: 2.0, midHz: 1600, high: 0 },
     { type: "eq", low: 0, mid: -2.0, midHz: 4200, high: 0 },
     { type: "filter", kind: "lowpass", freq: 11500, q: 0.6 },
@@ -1701,7 +1701,7 @@ export function applyRefToneToSong<T extends { parts?: SongPart[] }>(song: T, to
     }
     if (p.patch === "cymbalFx" || p.patch === "guitarFx") return p;   // 本物のシンバル・ギターの効果音は変えない
     // リードギター（歌の代わり）は、歌の EQ ではなくリード専用の音作り（LEAD_GUITAR）。6つの参考の音で共通（2026-10-23 人間「これで音源6個を合わせて」）
-    if (g === "vocal" && GUITARS.has(ins)) return scaled({ ...p, ...LEAD_GUITAR, fx: LEAD_GUITAR.fx.map((f) => ({ ...f })), sustain: Math.max(Number(p.sustain ?? 0), 2), release: Math.max(Number(p.release ?? 0), 0.9), reverb: Math.max(Number(p.reverb ?? 0), 0.25) }, tone.balanceDb?.vocal);
+    if (g === "vocal" && GUITARS.has(ins)) return scaled({ ...p, ...LEAD_GUITAR, fx: LEAD_GUITAR.fx.map((f) => ({ ...f })), sustain: Math.max(Number(p.sustain ?? 0), 2), mono: true, release: 0.35, reverb: Math.max(Number(p.reverb ?? 0), 0.25) }, tone.balanceDb?.vocal);
     if (g === "vocal") return scaled({ ...p, fx: roomOnly(tone.vocal) }, tone.balanceDb?.vocal);
     // ベースは、アンプのあとの圧縮などを先に、EQ をあとに（再現2と同じ順番）
     if (g === "bass") return scaled({ ...p, fx: [...(p.fx ?? []).filter((f) => f.type !== "eq" && f.type !== "filter"), ...tone.bass.map((f) => ({ ...f }))] }, tone.balanceDb?.bass);

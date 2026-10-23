@@ -38,8 +38,9 @@ def steps(song):
     yield "同じ楽器の重ね（ギター以外）", lambda: any(unify(P, lambda p, k=k: inst(p) == k) for k, v in groups.items() if k[0] not in ("distGuitar", "guitar", "bass"))
     # 2) クリーンの和音・分散和音のギター
     yield "クリーン・分散和音のギター", lambda: unify(P, lambda p: p.get("instrument") == "distGuitar" and ("クリーン" in p["role"] or "分散和音のギター" in p["role"]))
-    # 3) リードの重ね（ハモリ・オクターブ）をリードに
-    yield "リードの重ね", lambda: unify(P, lambda p: p.get("instrument") == "distGuitar" and p["role"].startswith("リード"))
+    # 3) リードの重ね（オクターブ）をリードに。ハモリはここではそろえない（2026-10-23）: 同じチャンネル＝同じアンプに
+    #   3度のハモリが入ると、歪みの中で2音がぶつかって濁る（人間「高音から下げて音が重なってるときに濁る」）。足りないときだけ最後に
+    yield "リードの重ね", lambda: unify(P, lambda p: p.get("instrument") == "distGuitar" and p["role"].startswith("リード") and "ハモリ" not in p["role"])
     # 4) ベースの重ね
     yield "ベースの重ね", lambda: unify(P, lambda p: p.get("instrument") == "bass" and p.get("patch") != "bassMute")
     # 5) 透明感の層の別テイクをやめる
@@ -51,6 +52,8 @@ def steps(song):
     yield "透明感の層の別テイク", no_double
     # 6) 技のギターをリードに
     yield "技のギター", lambda: unify(P, lambda p: p.get("instrument") == "distGuitar" and (p["role"].startswith("リード") or p["role"].startswith("技") or "ギター（" in p["role"] and "空気" not in p["role"]))
+    # 7) それでも足りなければ、ハモリもリードと同じチャンネルに（濁りやすいので最後の手）
+    yield "リードのハモリ（最後の手）", lambda: unify(P, lambda p: p.get("instrument") == "distGuitar" and p["role"].startswith("リード"))
 
 
 def fit(path):

@@ -22,13 +22,17 @@ BASS_GAIN = 1.4      # 2026-10-23 人間「ベースの音小さくて聞きに�
 LEAD_TONE = [{"type": "eq", "low": 0, "mid": 1.5, "midHz": 850, "high": -2.5}, {"type": "filter", "kind": "lowpass", "freq": 8500, "q": 0.6}]
 # 2026-10-23 人間「歪が汚い」: アンプの前のオーバードライブを外し、コンプはごく軽く、アンプへの入力を浅く（0.5）
 # 2026-10-23 聞き比べで人間が③を選んだ（PRS Archon リード1・コンプなし・いちばん浅い歪み）
-LEAD_CHAIN = [{"type": "filter", "kind": "highpass", "freq": 120, "q": 0.7},
-              {"type": "eq", "low": 0, "mid": -2.5, "midHz": 350, "high": 0},                                    # 濁り
+# 2026-10-23 人間（01 を聞いて）「歪がちょっと濁っている」: 歪みを 0.45→0.38 に浅く、低い中域をもう少し削る。
+#   ハモリ（3度上など）を同じ歪みで重ねると、2本の音がぶつかって濁りが増えるので、ハモリは歪みをさらに浅く・音量を 0.7 倍に
+LEAD_CHAIN = [{"type": "filter", "kind": "highpass", "freq": 150, "q": 0.7},
+              {"type": "eq", "low": 0, "mid": -3.5, "midHz": 320, "high": 0},                                    # 濁り
               {"type": "eq", "low": 0, "mid": 2.0, "midHz": 1600, "high": 0},                                    # 歌う帯域（鋭さ）
               {"type": "eq", "low": 0, "mid": -2.0, "midHz": 4200, "high": 0},                                   # 刺さる所だけ細く
               {"type": "filter", "kind": "lowpass", "freq": 11500, "q": 0.6},                                    # 空気感は残す
               {"type": "delay", "beats": 0.75, "mix": 0.16, "feedback": 0.3}]                                    # 余韻
-LEAD_DRIVE = 0.45
+LEAD_DRIVE = 0.38
+HARM_DRIVE = 0.28
+HARM_GAIN = 0.7
 LEAD_AMP = "namArchonL1"   # PRS Archon（手元だけのモデル。無い環境ではマーシャル系で鳴る）
 LEAD_TAIL = [{"type": "delay", "beats": 0.75, "mix": 0.12, "feedback": 0.22}, {"type": "plate", "mix": 0.2}]
 DRUM_GAIN = 0.9
@@ -114,10 +118,18 @@ def balance(song):
             p["fx"] = [dict(f) for f in LEAD_CHAIN]
             p["ampGate"] = 3                                   # 余韻を切らない
             p["ampDrive"] = LEAD_DRIVE
+            # 2026-10-23 人間「この濁り、高音に近づけるときと、高音から下げて音が重なってるときに聞こえる。全曲共通かも」:
+            #   sustain 2 と release 0.9 で前の音が次の音に重なり、歪みの中で2音がぶつかっていた。
+            #   単音の楽器として弾き（mono: 次の音で前の音を止める）、離したあとの尾は短く。余韻は休符の前の伸び・プレート・やまびこ（アンプのあと＝濁らない）で出す
             p["sustain"] = max(p.get("sustain", 1.0), 2.0)
-            p["release"] = max(p.get("release", 0.3), 0.9)
+            p["mono"] = True
+            p["release"] = 0.35
             p["reverb"] = max(p.get("reverb", 0), 0.25)
             if LEAD_AMP: p["amp"] = LEAD_AMP
+            if "ハモリ" in p.get("role", ""):
+                p["ampDrive"] = HARM_DRIVE
+                p["pan"] = round(min(1.0, (p.get("pan") or 0) + 0.22), 2)   # 別のチャンネル＝別のアンプで鳴らす（同じアンプで3度が歪むと濁る）
+                p["volume"] = round(p.get("volume", 0) * HARM_GAIN, 5)
             p["_toned"] = True
     for p in ps:
         p.pop("_feat", None); p.pop("_toned", None)
