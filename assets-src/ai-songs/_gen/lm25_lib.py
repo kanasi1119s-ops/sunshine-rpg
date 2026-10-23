@@ -1026,7 +1026,7 @@ def check_clash(song, roles=None, min_len=1.0, verbose=True):
     B = song.beats
     long_notes = []
     for p in song.parts:
-        if p["instrument"] in ("kick", "snare", "hihat", "tom", "crash") or p.get("patch") in ("cymbalFx", "guitarFx", "bassMute"): continue
+        if p["instrument"] in ("kick", "snare", "hihat", "tom", "crash") or p.get("patch") in ("cymbalFx", "guitarFx", "bassMute", "fxRiser"): continue
         if roles and p["role"] not in roles: continue
         for t, b, m in events(p["notes"], B):
             if b >= min_len - 1e-6: long_notes.append((t, t + b, m, p["role"]))
@@ -1074,6 +1074,7 @@ GTR_INST = ("distGuitar", "guitar", "leadGuitar", "crunch", "echoGuitar")
 
 def role_group(p):
     if p["instrument"] in DRUM_INST: return "drums"
+    if p["role"].startswith("ダンスの要素"): return "fx"
     if p.get("patch") in ("cymbalFx", "guitarFx"): return "fx"
     r = p["role"]
     if r.startswith("ベース"): return "bass"
@@ -1593,6 +1594,15 @@ def add_dance_air(song):
         if a > cur: toks.append(f"R:{a - cur:g}")
         toks.append(f"{n}:{L:g}"); cur = a + L
     if total_beats - cur > 1e-6: toks.append(f"R:{total_beats - cur:g}")
+    # 長い休みは作曲ソフトが読めないので、小節ごとに切る
+    pcs = _bar_pieces(" ".join(toks), B, nb)
+    toks = []
+    for br in pcs:
+        for n_, d_, m_, c_ in br:
+            if n_ is None: toks.append(f"R:{d_:g}")
+            elif c_: toks.append(f"R:{d_:g}")          # 小節をまたいだ続きは、ライザーの録音が鳴り続けるので休みでよい
+            else: toks.append(f"{n_}:{d_:g}")
+    toks = [t_ for t_ in toks]
     if ev:
         song.parts.append(part("ダンスの要素（ライザー）", "pad", " ".join(toks), patch="fxRiser", volume=0.05, pan=0, reverb=0.25))
     # ポンプする空気
