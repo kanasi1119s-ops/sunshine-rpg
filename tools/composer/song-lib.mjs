@@ -33,7 +33,7 @@ export async function openSongKit() {
   }
 
   /** 曲（AIソング形式のオブジェクト）を確かめて、プロジェクト・MIDI（・WAV）を書き出す。 */
-  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", orchestra = "std", piano = "std", sound = "", master = null, widen = null, space = "", spaceWet = null, masterPreset = "", tp = null, lowmono = null, sideHpf = null, clip = null, hpf = null, lpf = null, matchEq = "", matchAmount = null, loopTail = false, genre = "", autoRetune = true } = {}) {
+  async function build(songData, { name, edition = "real", outDir, wav = false, soundfont = "game", bass = "std", drums = "std", guitar = "std", orchestra = "std", piano = "std", sound = "", master = null, widen = null, space = "", spaceWet = null, masterPreset = "", tp = null, lowmono = null, sideHpf = null, clip = null, hpf = null, lpf = null, matchEq = "", matchAmount = null, loopTail = false, genre = "", autoRetune = true, refTone = "" } = {}) {
     if (!EDITIONS.includes(edition)) throw new Error("edition は real・ps2・modern のどれか");
     if (!/^[a-z0-9][a-z0-9-]*$/.test(name ?? "")) throw new Error(`name は英小文字・数字・「-」だけ（${name}）`);
     const { aiSongToScore } = await load("/src/audio/ai-song.ts");
@@ -56,6 +56,13 @@ export async function openSongKit() {
     const { ORCHESTRA_PATCHES } = await load("/src/audio/ai-song.ts");
     if (orchestra === "std" && Array.isArray(songData?.parts) && songData.parts.some((p) => ORCHESTRA_PATCHES.includes(p?.patch))) orchestra = "vsco";
     let { score, song, warnings } = aiSongToScore(songData);
+    // 参考の音（--ref-tone）: 参考録音を測った数値で、ギター・ベース・ドラムなどの EQ を置きかえる（src/audio/ref-tones.ts）
+    if (refTone) {
+      const { REF_TONES, applyRefTone } = await load("/src/audio/ref-tones.ts");
+      const tone = REF_TONES[refTone];
+      if (!tone) throw new Error(`参考の音がありません: ${refTone}（${Object.keys(REF_TONES).join("・")}）`);
+      score = applyRefTone(score, tone);
+    }
     // サウンドセット: アンプ・音量・ミックス・ドラムの設定と、使う音源（ベース・ドラム・ギター）をまとめて当てはめる
     if (sound) {
       const { SOUND_SETS, applySoundSet } = await load("/src/audio/sound-sets.ts");

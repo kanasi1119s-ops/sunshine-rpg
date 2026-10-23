@@ -13,6 +13,7 @@ import drumsMetalUrl from "../../assets-src/soundfont/extra/drums-metal.sf3?url"
 import bassJazzUrl from "../../assets-src/soundfont/extra/bass-jazz.sf3?url";
 import drumsJazzUrl from "../../assets-src/soundfont/extra/drums-jazz.sf3?url";
 import { SOUND_SETS, applySoundSet } from "../../src/audio/sound-sets";
+import { REF_TONES, applyRefTone } from "../../src/audio/ref-tones";
 import guitarGretschUrl from "../../assets-src/soundfont/extra/guitar-gretsch.sf3?url";
 import guitarHofnerUrl from "../../assets-src/soundfont/extra/guitar-hofner.sf3?url";
 import guitarPluckClearUrl from "../../assets-src/soundfont/extra/guitar-pluck-clear.sf3?url";
@@ -676,6 +677,17 @@ soundSetSel.onchange = () => {
     renderAll(); save();
     if (was) play(0);
   });
+};
+// 参考の音（2026-10-23）: 参考録音を測った数値で、ギター・ベース・ドラムなどの EQ を置きかえる（音符・音量は変えない）
+const refToneSel = select([["", "（選ばない）"], ...Object.values(REF_TONES).map((t) => [t.id, t.label] as [string, string])], "");
+refToneSel.title = "参考録音を測った数値で、ギター・ベース・ドラムの音の帯域（EQ）をまとめて置きかえます。音符と音量は変えません";
+refToneSel.onchange = () => {
+  const tone = REF_TONES[refToneSel.value];
+  if (!tone) return;
+  const was = state.playing;
+  state.score = applyRefTone(state.score, tone);
+  renderAll(); save();
+  if (was) play(0);
 };
 const volIn = h("input", { type: "range", min: "0", max: "100", value: "60", "aria-label": "音量" });
 volIn.oninput = () => engine.setBgmVolume(Number(volIn.value) / 100);
@@ -2290,7 +2302,7 @@ app.append(
     // 音源の選択欄は数が多いので、折りたたむ（固定表示の上の帯が画面を占領しないように）
     h("details", { class: "topopts" },
       h("summary", {}, "音源・サウンドの設定（録音音源・ベース・ドラム・ギター・オーケストラ・ピアノ・サウンドセット）"),
-      h("div", { class: "row", style: "margin-top:8px" }, field("サウンド", editionSel), field("録音音源", soundfontSel), field("ベース音源", bassSel), field("ドラム音源", drumsSel), field("ギター音源", guitarSel), field("オーケストラ音源", orchSel), field("ピアノ音源", pianoSel), field("サウンドセット", soundSetSel))),
+      h("div", { class: "row", style: "margin-top:8px" }, field("サウンド", editionSel), field("録音音源", soundfontSel), field("ベース音源", bassSel), field("ドラム音源", drumsSel), field("ギター音源", guitarSel), field("オーケストラ音源", orchSel), field("ピアノ音源", pianoSel), field("サウンドセット", soundSetSel), field("参考の音", refToneSel))),
   ),
   h("div", { class: "daw" },
     panel("TRK", "トラック", ui.trackBox, h("div", { class: "row", style: "margin-top:8px" }, addTrackBtn),
