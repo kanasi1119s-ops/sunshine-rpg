@@ -102,23 +102,15 @@ PLANS["05"] = [   # 2026-10-24 素材から作り直し: 呪文（三味線の�
 ]
 
 # 06 鐘と偶像（84・6拍子）: 二部構成。前半はドラムなしの賛美歌（72）、鐘の一打で区切り、後半は偶像が崩れる重い曲（96）。最後はオルガンだけが遅くなって消える
-DESC["06"] = "展開: 二部構成（前半＝ドラムのないオルガンの賛美歌・テンポ72／鐘の一打／後半＝偶像が崩れる重い曲・テンポ96）。終わりはオルガンだけがゆっくり遅くなって消える。"
-PLANS["06"] = [
-    ("hymn", "intro", {"keep": ["extra", "bass", "fx"], "bpm": 72, "kind": "intro"}),
-    ("hymn", "verse", {"keep": ["extra", "lead", "bass"], "soft": ["lead"], "kind": "verse"}),
-    ("hymn", "chorus", {"keep": ["extra", "lead", "bass", "drums"], "drums": "sparse", "kind": "chorus"}),
-    ("hymn", "bridge", {"keep": ["extra", "bass"], "kind": "bridge"}),
-    ("bell", ("break", 0, 2), {"kime": [0], "kind": "break"}),
-    ("verse", "verse", {"bpm": 96}),
-    ("pre", "pre", {}),
-    ("chorus", "chorus", {}),
-    ("inter", "inter", {"drums": "double"}),
-    ("verse", "verse2", {"drums": "own"}),
-    ("pre", "pre2", {"drums": "build"}),
-    ("chorus", "chorus2", {}),
-    ("break", "break", {"stop": True, "drums": "own"}),
-    ("chorus", "chorus3", {"from": "stopBeat"}),
-    ("outro", "intro", {"keep": ["extra"], "bpm": (64, 3), "kind": "outro"}),
+DESC["06"] = "展開: 聖歌の行進（遅く重い）→ 説教 → 二度目の行進 → ひび → 崩落（144 の倍の速さ・ブラスト）→ 瓦礫。オルガンの和音で始まり、オルガンの1音で終わる。"
+PLANS["06"] = [   # 2026-10-24 素材から作り直し: 聖歌の行進 → 崩落（倍の速さ）→ 瓦礫
+    ("bells", "bells", {"drums": "none", "lv": 0, "kind": "intro"}),
+    ("procession", "procession", {"drums": "tribal", "lv": 2, "kind": "chorus"}),
+    ("sermon", "sermon", {"drums": "sparse", "lv": 1, "kind": "verse"}),
+    ("procession2", "procession2", {"drums": "half", "lv": 2, "kind": "chorus", "from": "stopBeat"}),
+    ("crack", "crack", {"drums": "build", "lv": [2, 2, 3, 3], "kind": "pre"}),
+    ("collapse", "collapse", {"drums": "double", "lv": 3, "kind": "break", "bpm": 144, "from": "break1bar"}),
+    ("rubble", "rubble", {"drums": "none", "lv": 0, "kind": "outro", "bpm": 72}),
 ]
 FADE["06"] = (0, 8)
 
