@@ -294,21 +294,13 @@ PLANS["18"] = [   # 2026-10-24 素材から作り直し: 霧の独奏 → 行進
 ]
 
 # 19 最後の呼吸（104）: 人生を巻き戻す（山場→大人→若い頃→子ども→戻る→山場）。若い頃は速く（116）、子どもの頃はドラムなしで、最後は息が止まるように遅くなって終わる
-DESC["19"] = "展開: 人生を巻き戻す（死の間際の山場から始まり、大人→若い頃＝テンポ116→子ども＝ドラムなし→記憶の中でテーマを弦がささやく→今へ戻る→山場）。終わりは息が細くなるように遅くなって止まる。"
-PLANS["19"] = [
-    ("climax", "climax", {"drums": "own"}),
-    ("breath", "breath", {"keep": ["extra"]}),
-    ("adult", "adult", {"drums": "half"}),
-    ("adult", "adult2", {}),
-    ("youth", "youth", {"bpm": 116, "drums": "double"}),
-    ("youth", ("youth", 0, 8), {"drums": "toms", "semi": 2}),
-    ("child", "child", {"bpm": 96, "keep": ["extra", "bass", "gtr"]}),
-    ("memory", ("climax", 0, 8), {"keep": ["extra", "bass"], "soft": ["extra"], "kind": "bridge"}),
-    ("return", "return", {"bpm": 104}),
-    ("climax", "climax2", {"from": "stopBeat"}),
-    ("climax", ("climax2", 8, 16), {"semi": 1, "drums": "double"}),
-    ("breath", "breath", {"keep": ["extra"], "semi": 1}),
-    ("last", "last", {"bpm": (72, 3), "semi": 1, "drums": "sparse"}),
+DESC["19"] = "展開: 逆再生（最期の息＝いちばん大きい所から始まり、大人＝現代のヘヴィ → 若い頃＝132 の速いハードロック → 子ども＝D 長調の弦だけ → 生まれた瞬間の最初の息で終わる。さかのぼるほど小さく素朴になる）。"
+PLANS["19"] = [   # 2026-10-24 素材から作り直し: 逆再生（最期＝いちばん大きい → 時代をさかのぼるほど小さく素朴に → 最初の息）
+    ("last", "last", {"drums": "lib", "lv": [3] * 12 + [2, 1, 1, 0], "kind": "chorus"}),
+    ("adult", "adult", {"drums": "half", "lv": 2, "kind": "verse", "from": "break1bar"}),
+    ("young", "young", {"drums": "lib", "lv": [2] * 16 + [1] * 16, "kind": "solo", "bpm": 132, "styles": ["rock", "punk", "loudrock"]}),
+    ("child", "child", {"drums": "none", "lv": 0, "kind": "bridge", "bpm": 96}),
+    ("birth", "birth", {"drums": "none", "lv": 0, "kind": "outro"}),
 ]
 
 # 20 赦しの値段（120・5拍子）: サーカスの演目のメドレー。幕が上がって始まり、綱渡り（ライド）→猛獣使い（タムの太鼓）→空中ぶらんこ（4つ打ち）→ピエロの悲しい芸（テンポ96）→フィナーレ。最後は笑い声でぷつりと切れる
