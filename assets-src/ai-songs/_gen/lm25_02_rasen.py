@@ -296,6 +296,8 @@ add_layer(song, "piano", "めまいの中で、遠くの鍵盤が同じ和音を
 # 展開の型（2026-10-23 人間「展開が全曲同じ」「4分から5分」）。lm25_plans.py
 from lm25_plans import apply_plan
 apply_plan(song, "02")
+# 2026-10-23 人間「ダンスも入れよう」（BBS 寄りの音に、ダンスの要素としてのサー）
+song.dance_air = True
 
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "/tmp/lm25/lm25-02-rasen.json"

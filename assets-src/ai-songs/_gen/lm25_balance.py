@@ -10,6 +10,7 @@ OTHER_MAX = 0.5      # 重ね（追加の楽器: ピアノ・弦・合唱など�
 FEATURE_LEVEL = 0.9  # その曲だけの楽器（サックス・シタール・三味線など）は主役: 合計をギターの 0.9 倍（リードと同じ）にそろえる
 # 2026-10-23 人間「一つだけ出す楽器の音はその曲のメインになるように、音量上げていいからね」
 LEAD_MAX = 0.9
+TECH_LEVEL = 0.75    # 速弾きのギターの合計をギターの 0.75 倍に
 RIFF_GAIN = 1.05
 BASS_GAIN = 1.4      # 2026-10-23 人間「ベースの音小さくて聞きにくいかも」（+約3dB）
 # リードの余韻（2026-10-23 人間「ギターの高音をリードで弾くときは少し余韻を残すように響かせよう」）:
@@ -40,6 +41,9 @@ def group(p):
     if ins in DRUMS: return "drums"
     if ins in BASSES: return "bass"
     if ins in GUITARS:
+        # 速弾き（スウィープ・タッピング・レガート）は、ソロの楽器としてはっきり聞こえる大きさに（2026-10-23 人間「ピロピロの速弾きのギターの音が聞こえないの、小さすぎて」）。
+        #   やまびこが付いているため「そのほか」に入り、重ねと一緒に小さく縮められていた
+        if any(w in role for w in ("技のギター", "タッピング", "スウィープ", "レガート", "速弾き")): return "tech"
         if "空気の層" in role or any(f.get("type") in ("delay", "pingpong") for f in p.get("fx", [])) and not role.startswith(("看板リフ", "リズム", "リード")): return "other"
         if role.startswith("リード"): return "lead"
         return "guitar"
@@ -79,6 +83,12 @@ def balance(song):
         for p in ps:
             if p.get("_feat"): p["volume"] = round(p["volume"] * k, 5)
         log.append(f"主役の楽器 ×{k:.3f}")
+    T = sum(p.get("volume", 0) for p in ps if group(p) == "tech")
+    if G > 0 and T > 0:
+        k = TECH_LEVEL * G / T
+        for p in ps:
+            if group(p) == "tech": p["volume"] = round(p["volume"] * k, 5)
+        log.append(f"速弾き ×{k:.3f}")
     if G > 0:
         for g, mx in (("other", OTHER_MAX), ("lead", LEAD_MAX)):
             s = tot(g)
