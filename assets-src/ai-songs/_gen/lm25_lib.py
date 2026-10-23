@@ -1603,7 +1603,7 @@ def add_dance_air(song):
             b = t + i
             if k == "chorus":
                 r, q, _b = parse_chord(song.chord_at(b))
-                root = next(m for m in range(midi("C5"), midi("C6")) if m % 12 == PC[r] % 12)
+                root = next(m for m in range(midi("C4"), midi("C5")) if m % 12 == PC[r] % 12)
                 air.append(f"{nm(root, 'b' in r)}:{B:g}")
             else:
                 air.append(f"R:{B:g}")
