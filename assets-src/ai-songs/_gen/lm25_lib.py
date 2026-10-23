@@ -1679,7 +1679,10 @@ def add_screams(song):
                     ch = song.chord_at(b); r = parse_chord(ch)[0]
                     first = nm(next(m for m in range(midi("F#4"), midi("F#5")) if m % 12 == PC[r] % 12))
                 top = up(first, 1)
-                bars[b] = [(first, 1.0, "!>" + top, False), (top, B - 1.0, "", False)]
+                if getattr(song, "scream_style", "key") == "slide":
+                    bars[b] = [(first, 1.0, "!>" + top, False), (top, B - 1.0, "", False)]      # きゅいーん（すべり上がる）
+                else:
+                    bars[b] = [(top, B, "!", False)]       # きーーーーーん！（人間 2026-10-23。すべらず、いきなり1オクターブ上を鋭く伸ばし切る）
             else:
                 bars[b] = [(None, B, "", False)]
         toks = []
