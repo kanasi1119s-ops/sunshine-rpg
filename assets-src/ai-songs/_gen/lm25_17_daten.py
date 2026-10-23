@@ -128,9 +128,11 @@ for idx, (name, i) in enumerate(SECS):
             lo, hi = SWEEP_R[base_ch]
             tech = bar(sweep(ch, lo, hi, 2), sweep(ch, lo, hi, 2)) if i % 2 == 0 else bar(sweep(ch, lo, hi, 2), f"{chord_tones(ch, lo, hi)[-1]}:2")
         else:
-            tri = TAP_T[base_ch]
-            tech = bar(tap(tri, 3, pattern=(2, 1, 0, 1)), f"{tri[2]}:1")
-        if i >= 20: tech = bar(tap(TAP_T["C#"], 2, pattern=(2, 1, 0, 1)), sweep("C#7", "F4", "F5", 2)) if i < 23 else bar("C#6:4!")
+            # 2026-10-23 人間「17のギターの速弾きをスイープなどに変えてもいい」: 長三和音の小節も、タッピングの連打ではなく
+            #   2オクターブの大きなスイープ（上って下りる）と、てっぺんの伸ばし。小節ごとに大きさと向きを変える
+            top = chord_tones(ch, "E4", "E6")[-1]
+            tech = bar(sweep(ch, "E4", "E6", 3), f"{top}:1!") if i % 2 == 0 else bar(sweep(ch, "G4", "G5", 2, down=False), sweep(ch, "E4", "E6", 2))
+        if i >= 20: tech = bar(sweep("C#7", "E4", "E6", 2), sweep("C#7", "F4", "F5", 2)) if i < 23 else bar("C#6:4!")
     elif name in ("intro",) and i < 2: tech = bar(tap(TAP_T["F#"], 4, pattern=(0, 1, 2, 1)))
     if (name in ("angel", "angel2", "achorus", "fall", "merge", "outro")) or (name == "intro" and i < 2):
         v = CHOIR_V.get(base_ch)
