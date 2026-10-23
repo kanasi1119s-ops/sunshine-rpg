@@ -23,45 +23,35 @@ DESC = {}
 FADE = {}
 
 # 01 路地裏の灯（96）: ロンド「路地の角を曲がるたびに、同じ看板（サビ）に出会う」。ベースだけで始まり、サックスだけ残ってフェードアウト
-DESC["01"] = "展開: ロンド形式（サビ→Aメロ→サビ→サックス→サビ→ソロ→…と、路地の角を曲がるたびに同じ看板＝サビに戻る）。始まりはベースとピアノ、終わりはサックスだけが残ってフェードアウト。"
-PLANS["01"] = [
-    # 人間「01の前奏、音量マックスでも最初ほとんど聞こえない」: ベースだけの前奏は低い音しかなく、小さい再生機では聞こえない。
-    #   ピアノ（追加の楽器）を最初から重ねて、中域の音で「始まった」と分かるように
-    ("intro", ("intro", 0, 4), {"keep": ["bass", "extra"]}),
-    ("intro", ("intro", 4, 8), {"keep": ["bass", "drums", "extra"], "drums": "ride", "crash": False}),
-    ("chorus", "chorus", {"from": "stopBeat"}),
-    ("inter", "inter", {"drums": "toms"}),
-    ("verse", "verse", {"drums": "ride", "dyn": "soft"}),
-    ("chorus", "chorus2", {"drums": "half"}),
-    ("bridge", "bridge", {"drums": "shuffle"}),
-    ("pre", "pre2", {"from": "stopBeat"}),
-    ("chorus", "chorus", {"scream": [7]}),          # 人間「17〜18秒、キー一気に上げてきゅいーーーん！」（このサビの最後の小節）
-    ("solo", "solo", {"drums": "half"}),
-    ("verse", "verse2", {"keep": ["bass", "extra", "drums", "lead"], "drums": "sparse", "soft": ["lead"]}),
-    ("break", "break", {"stop": True, "drums": "own"}),
-    ("chorus", "chorus3", {"semi": 1, "from": "stopBeat"}),
-    ("chorus", "chorus3", {"semi": 1, "drums": "double"}),
-    ("outro", "solo", {"keep": ["extra", "bass"], "semi": 1}),
+DESC["01"] = "展開: ロンド（看板＝サビに4回戻り、毎回ようすが違う: 眩しい・サックスと重なる・傷ついて欠ける・サックスと同じ旋律）。雨のクリーンとベースで始まり、夜明けにサックスだけ残ってフェードアウト。"
+PLANS["01"] = [   # 2026-10-24 素材から作り直し。FORM の順のまま、場面ごとのドラムと強さ（lv）だけを決める
+    ("rain", "rain", {"drums": "own", "lv": 0, "kind": "intro"}),
+    ("neon", "neon", {"drums": "lib", "lv": 2, "kind": "chorus"}),
+    ("alley", "alley", {"drums": "half", "lv": 1, "kind": "verse", "fills": None}),
+    ("neon2", "neon2", {"drums": "lib", "lv": 2, "kind": "chorus", "from": "stopBeat"}),
+    ("fight", ("fight", 0, 6), {"drums": "double", "lv": 3, "kind": "break"}),
+    ("fight2", ("fight", 6, 12), {"drums": "half", "lv": 3, "kind": "break", "stop": True}),
+    ("neon3", "neon3", {"drums": "sparse", "lv": 1, "kind": "chorus"}),
+    ("backdoor", ("backdoor", 0, 8), {"drums": "own", "lv": 1, "kind": "solo"}),
+    ("backdoor2", ("backdoor", 8, 16), {"drums": "shuffle", "lv": 2, "kind": "solo"}),
+    ("neon4", ("neon4", 0, 8), {"drums": "lib", "lv": 2, "kind": "chorus", "from": "break1bar"}),
+    ("tag", ("neon4", 8, 12), {"drums": "double", "lv": 3, "kind": "chorus"}),
+    ("dawn", "dawn", {"drums": "own", "lv": 0, "kind": "outro"}),
 ]
 FADE["01"] = (0, 14)
 
 # 02 白い螺旋（128・7拍子）: 転調の階段（螺旋を上る）。ドラムだけで始まり、半音ずつ4回上がる。終わりはドラムとシタールでフェードアウト
-DESC["02"] = "展開: 転調の階段（サビが来るたびに半音ずつ上がり、4段上って螺旋を登りきる）。始まりはドラムだけ、Aメロは4つ打ち。終わりはドラムとシタールだけでフェードアウト。"
-PLANS["02"] = [
-    # 2026-10-23 人間「2の曲前奏のドラムの後ろの音が聞こえない」→ ドラムだけでなく、シタールとベースを後ろに（リフは入れない）
-    ("intro", "intro", {"keep": ["drums", "fx", "extra", "bass"]}),
-    ("verse", "verse", {"drums": "kick4"}),
-    ("pre", "pre", {"drums": "build"}),
-    ("chorus", "chorus", {}),
-    ("inter", "inter", {"semi": 1, "drums": "toms"}),
-    ("verse", "verse2", {"semi": 1, "drums": "kick4"}),
-    ("pre", "pre2", {"semi": 1, "drums": "build"}),
-    ("chorus", "chorus2", {"semi": 1}),
-    ("bridge", "bridge", {"semi": 2, "drums": "half"}),
-    ("break", "break", {"semi": 3, "stop": True, "drums": "own"}),
-    ("chorus", "chorus3", {"semi": 3}),
-    ("chorus", "chorus", {"semi": 4, "drums": "double"}),
-    ("outro", "intro", {"semi": 4, "keep": ["drums", "extra", "bass"], "drums": "kick4"}),
+DESC["02"] = "展開: 螺旋（サビという区切りなし。同じ16小節が半音ずつ上がって4周。3周目のはじめで全部消え、4周目で全開、最後はタッピングが螺旋を描く）。シタールだけで始まり、ドラムとシタールでフェードアウト。"
+PLANS["02"] = [   # 2026-10-24 素材から作り直し: 同じ16小節を半音ずつ上げて4周する螺旋
+    ("intro", "intro", {"drums": "none", "lv": 0, "kind": "intro"}),
+    ("lap1", "lap1", {"drums": "sparse", "lv": 1, "kind": "verse"}),
+    ("lap2", "lap2", {"drums": "lib", "lv": 2, "kind": "chorus", "semi": 1, "from": "stopBeat"}),
+    ("void", ("lap3", 0, 4), {"drums": "heart", "lv": 0, "kind": "bridge", "semi": 2}),
+    ("return", ("lap3", 4, 12), {"drums": "sparse", "lv": 1, "kind": "bridge", "semi": 2}),
+    ("return2", ("lap3", 12, 16), {"drums": "build", "lv": 2, "kind": "pre", "semi": 2}),
+    ("lap4", ("lap4", 0, 12), {"drums": "double", "lv": 3, "kind": "chorus", "semi": 3, "from": "break1bar"}),
+    ("spiral", ("lap4", 12, 16), {"drums": "half", "lv": 3, "kind": "chorus", "semi": 3}),
+    ("outro", "outro", {"drums": "lib", "lv": 1, "kind": "outro"}),
 ]
 FADE["02"] = (0, 12)
 

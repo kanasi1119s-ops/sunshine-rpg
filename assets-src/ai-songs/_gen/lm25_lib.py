@@ -690,7 +690,7 @@ def modernize_leads(song):
     shift = {}
     for sc in secs:
         ms = [midi(n) for st, L, n, m, x in ev if n and sc[2] - 1e-6 <= st < sc[3] - 1e-6]
-        if not ms or sc[1] == "solo": shift[sc[0]] = 0; continue
+        if not ms or sc[1] == "solo" or not getattr(song, "auto_range", True): shift[sc[0]] = 0; continue
         # 区間の音の真ん中を、歌の高さの目安へ（サビ B4・Aメロ G4・ほか A4）。一番上が A5 を超えるなら必ず下げる
         med = sorted(ms)[len(ms) // 2]
         tgt = {"chorus": midi("B4"), "verse": midi("G4")}.get(sc[1], midi("A4"))
@@ -701,7 +701,7 @@ def modernize_leads(song):
     # 表情
     out = []
     for i, (st, L, n, m, x) in enumerate(ev):
-        if n:
+        if n and getattr(song, "auto_expr", True):
             prev = ev[i - 1] if i else None
             nxt = ev[i + 1] if i + 1 < len(ev) else None
             if ">" in m or "(" in m or "@" in m: pass
@@ -727,7 +727,9 @@ def modernize_leads(song):
             h_ = m0 + d
             if h_ % 12 in pcs and (h_ - root_pc) % 12 not in (1, 11): return nm(h_, "b" in n[1:2])
         return None
-    for p in song.parts:
+    # 2026-10-24: 型（全曲で同じ場所にハモリ・オクターブ上・空気の層）が似た曲の原因になるので、曲ごとに切れるように
+    #   song.auto_harm / auto_oct / auto_air / auto_expr / auto_range = False で、その曲では自分で書いたものだけを使う
+    for p in (song.parts if getattr(song, "auto_harm", True) else []):
         if p["role"] in ("リード（オクターブ下）", "リード（和音の音のハモリ）"):
             hv = []
             for st, L, n, m, x in ev:
@@ -739,7 +741,7 @@ def modernize_leads(song):
             p["role"] = "リード（3度上のハモリ）"
             p["volume"] = round(p.get("volume", 0.07) * 0.6, 4)       # ハモリは後ろに（歪んだ2本の重なりの濁りを減らす）
             p["volume"] = round(lead.get("volume", 0.13) * 0.62, 3)
-    last = [sc for sc in secs if sc[1] == "chorus"]
+    last = [sc for sc in secs if sc[1] == "chorus"] if getattr(song, "auto_oct", True) else []
     if last:
         sc = last[-1]
         ov = [(st, L, (nm(midi(n) + 12) if n and sc[2] - 1e-6 <= st < sc[3] - 1e-6 and midi(n) + 12 <= midi("E6") else None), "", x) for st, L, n, m, x in ev]
@@ -780,7 +782,7 @@ def modernize_leads(song):
                 amb.append(f"{f_(voic[0])}:{B:g}")
             else:
                 amb.append(f"R:{B:g}")
-    if any(not x.startswith("R") for x in " ".join(amb).split()) and not getattr(song, "dance_air", False):   # ダンスの「サー」を入れる曲では、空気の層はその役に任せる
+    if any(not x.startswith("R") for x in " ".join(amb).split()) and not getattr(song, "dance_air", False) and getattr(song, "auto_air", True):   # ダンスの「サー」を入れる曲では、空気の層はその役に任せる
         # 荒さと雰囲気: 歪みをほぼなくし、高い所（5kHz より上のザラつき）を落として、残響はホールの長い尾ではなくプレートを短めに
         # 人間「空気の層がきれいじゃないかな」→ 歪みギター（高ゲインのアンプの模型。弱く鳴らしても雑音の「サー」が残る）をやめ、
         #   録音のクリーンギターを透き通るクリーンのアンプ（crystal＝2〜4kHz の刺さりを抑える）で。コーラスはかけない（人間の好み）
@@ -1246,6 +1248,9 @@ def rearrange(song):
         src_name = srcsec[bars[0]]
         new_kinds[name] = opt.get("kind") or song.kinds.get(src_name) or re.sub(r"\d+$", "", src_name).replace("inter", "interlude").replace("breakdown", "break")
         if opt.get("from"): new_from[name] = opt["from"]
+        # 場面ごとの強さ（2026-10-24 人間「場面場面で必要な強弱違うでしょ」）: lv＝0（ささやき）〜3（爆発）。数か、小節ごとの並び
+        if "lv" in opt:
+            song.scene_dyn = getattr(song, "scene_dyn", {}); song.scene_dyn[name] = opt["lv"]
         for sb in opt.get("scream", ()):
             song.screams = getattr(song, "screams", []) + [bar_no + sb]
         if "bpm" in opt:
@@ -1442,7 +1447,13 @@ def lib_section(song, nsec, kind, bpm, mode, opt):
     dyn = opt.get("dyn")
     # 2026-10-23 人間「ドラムの音ダイナミックな音もほしいけど、その中に繊細さを忘れてはダメ。ほかの音が犠牲になるようなドラムの音は考えなきゃいけない」:
     #   静かな区間（前奏・Aメロ・ブリッジ・終わり）は、指定がなければ一段弱く叩く（強打は区切りだけ、刻みのハットはゴースト寄り）
-    if dyn is None and kind in ("intro", "verse", "bridge", "outro"): dyn = "soft"
+    lvv = opt.get("lv")
+    if isinstance(lvv, (list, tuple)): lvv = max(lvv)
+    if dyn is None and lvv is not None:               # 場面の強さ（lv）から: 0〜1＝弱く叩く・2＝ふつう・3＝強く
+        dyn = "soft" if lvv <= 1 else (None if lvv == 2 else "hard")
+        if lvv == 0: cond["energy"] = (0.15, 0.45); cond["max_ghost"] = 1.0
+        elif lvv == 3: cond["energy"] = (0.75, 1.0)
+    elif dyn is None and kind in ("intro", "verse", "bridge", "outro"): dyn = "soft"
     if mode == "half": cond["feel"] = "half"
     elif mode == "double": cond["feel"] = "double"
     elif mode == "shuffle": cond["feel"] = "shuffle"
@@ -1570,9 +1581,15 @@ def section_dynamics(song):
     B = song.beats
     kindof = lambda n: song.kinds.get(n) or re.sub(r"\d+$", "", n).replace("inter", "interlude")
     lv = []
+    scene = getattr(song, "scene_dyn", {}) or {}
     for n, c in song.form:
         k = kindof(n)
-        for i in range(c): lv.append((DYN_LEVEL.get(k, 1), k, i, c))
+        for i in range(c):
+            if n in scene:
+                v = scene[n]; v = v[min(i, len(v) - 1)] if isinstance(v, (list, tuple)) else v
+                lv.append((v, "scene", i, c))
+            else:
+                lv.append((DYN_LEVEL.get(k, 1), k, i, c))
     rng = random.Random(sum(map(ord, song.title)))
     for p in song.parts:
         g_ = role_group(p)
@@ -1583,7 +1600,8 @@ def section_dynamics(song):
             if x.startswith("R"): out.append(x); t += L; continue
             b = min(int((t + 1e-6) // B), len(lv) - 1); pos = t - b * B
             level, k, i, c = lv[b]
-            if k == "pre": level = 0 if i < c / 2 else (1 if i < c - 1 else 2)      # だんだん強く
+            if k == "scene": pass                                                     # 場面の中身で決めた強さをそのまま
+            elif k == "pre": level = 0 if i < c / 2 else (1 if i < c - 1 else 2)      # だんだん強く
             elif i == c - 1 and level < 2 and c >= 4: level += 1                     # 区間の終わりは次へ向けて
             n_, m_ = tok_note(x), tok_marks(x)
             on_beat = abs(pos - round(pos)) < 1e-6
@@ -1595,8 +1613,10 @@ def section_dynamics(song):
                 if not on_beat and g_ in ("bass", "rhythm", "riff", "gtr") and rng.random() < 0.5: add = ",,"
             elif level == 1:
                 add = "," if not on_beat and rng.random() < 0.6 else ""
-            else:
+            elif level == 2:
                 add = "!" if strong and g_ != "lead" else ("," if not on_beat and rng.random() < 0.3 else "")
+            else:   # 3: 爆発（拍の頭はすべて強く、裏も抜かない）
+                add = "!" if on_beat and g_ != "lead" else ""
             out.append(f"{n_}:{L:g}{m_}{add}"); t += L
         p["notes"] = " ".join(out)
 
