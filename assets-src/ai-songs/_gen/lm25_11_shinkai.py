@@ -215,6 +215,10 @@ song.add(bass_part(J("bass")))
 song.add(drum_parts(kit))
 song.add(cymfx_part(" ".join(FX)))
 
+# 参考の音と追加の楽器（2026-10-23 人間「残り24曲、作った音源のどれかに合わせて」「プラスで何か楽器を追加」）
+song.ref_tone = "glossy-jrock"
+add_layer(song, "synthpad", "深い海の水圧のような、厚い和音。")
+
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "/tmp/lm25/lm25-11-shinkai.json"
     song.write(out)

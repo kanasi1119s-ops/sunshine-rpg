@@ -289,6 +289,10 @@ song.add(bassmute_part(J("mute")))
 song.add(drum_parts(kit))
 song.add(cymfx_part(" ".join(FX)))
 
+# 参考の音と追加の楽器（2026-10-23 人間「残り24曲、作った音源のどれかに合わせて」「プラスで何か楽器を追加」）
+song.ref_tone = "dark-electro-rock"
+add_layer(song, "piano", "めまいの中で、遠くの鍵盤が同じ和音をくり返す。")
+
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "/tmp/lm25/lm25-02-rasen.json"
     song.write(out)

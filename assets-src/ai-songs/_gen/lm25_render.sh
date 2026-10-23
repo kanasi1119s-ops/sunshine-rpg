@@ -12,6 +12,8 @@ for py in "$@"; do
   no=$(echo "$base" | cut -d_ -f2)
   json="/tmp/lm25/${base//_/-}.json"
   python3 "$py" "$json" > "/tmp/lm25/$base.gen.log" 2>&1 || { echo "生成失敗 $py"; continue; }
+  # 参考の音（曲の .py で song.ref_tone）を、書き出しの前に JSON へ当てる
+  if [ -s "$json.reftone" ]; then npx tsx tools/composer/apply-ref-tone.mts "$json" "$(cat "$json.reftone")" > /dev/null || { echo "参考の音の失敗 $py"; continue; }; fi
   name=$(basename "$json" .json)
   title=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['title'])" "$json")
   flags="--drums naked --bass bnb-loud --master -13.5 --widen 1.0"

@@ -785,6 +785,114 @@ def modernize_leads(song):
             p["notes"] = _join(evr)
 
 
+# ---------------- 追加の楽器の層（2026-10-23 人間「プラスで何か楽器を追加」）----------------
+LAYER_KINDS = {
+    "piano": "ピアノ（左手の根音と右手の和音。Aメロは分散和音、サビは和音を打つ）",
+    "strings": "弦の合奏（サビ・ブリッジで長い和音）",
+    "choir": "合唱（サビとブリッジで「アー」の和音）",
+    "synthpad": "シンセの厚い和音（スーパーソー。サビとブリッジの壁）",
+    "synth-arp": "ガラスのようなシンセの分散和音（前奏・Bメロ・ブリッジで16分）",
+    "organ": "オルガン（Bメロ・サビ・ブリッジで持続する和音）",
+    "fmbell": "FMのベル（前奏・ブリッジ・後奏で、小節の頭に1音）",
+}
+
+
+def add_layer(song, kind, story=""):
+    """追加の楽器の層を予約する（実際の音は、旋律の高さ・ハモリが決まったあと＝書き出しの直前に作る。ほかの楽器と半音でぶつからないように）"""
+    if not hasattr(song, "_layers"): song._layers = []
+    song._layers.append(kind)
+    song.desc += f" 追加の楽器: {LAYER_KINDS[kind]}。" + (f"{story}" if story else "")
+
+
+def _build_layer(song, kind):
+    """曲のコード進行と区間から、追加の楽器の層を作って足す。区間の種類で鳴らす所と強さを変える"""
+    B = song.beats
+    kindof = lambda n: song.kinds.get(n) or re.sub(r"\d+$", "", n).replace("inter", "interlude")
+    where = {"piano": {"intro", "verse", "pre", "chorus", "bridge", "outro", "interlude", "solo"},
+             "strings": {"pre", "chorus", "bridge", "outro"}, "choir": {"chorus", "bridge"},
+             "synthpad": {"chorus", "bridge", "outro"}, "synth-arp": {"intro", "pre", "bridge", "interlude"},
+             "organ": {"pre", "chorus", "bridge"}, "fmbell": {"intro", "bridge", "outro", "interlude"}}[kind]
+    n_v = 3
+    voices = [[] for _ in range(n_v)]; lh = []; mono = []
+    # 小節ごとに、リフ・ベース・リズムが鳴らしている音（半拍以上）を集める。それと半音でぶつかる音は使わない
+    busy = [set() for _ in range(song.nb)]
+    for p_ in song.parts:
+        if p_["notes"].startswith("g:") or p_["instrument"] in ("kick", "snare", "hihat", "tom", "crash") or p_.get("patch") in ("cymbalFx", "guitarFx", "bassMute"): continue
+        t = 0.0
+        for x in p_["notes"].split():
+            L = tok_beats(x)
+            if not x.startswith("R") and L >= 0.5:
+                for bi in range(int(t // B), min(song.nb, int((t + L - 1e-6) // B) + 1)): busy[bi].add(midi(tok_note(x)) % 12)
+            t += L
+    def ok(n, bi): return all((midi(n) - q) % 12 not in (1, 11) for q in busy[bi])
+    def triad(ch):
+        r_, q_, _b = parse_chord(ch)
+        third = 3 if (q_.startswith("m") and not q_.startswith("maj")) or q_ in ("dim", "dim7", "m7b5") else (None if q_.startswith("sus") or q_ == "5" else 4)
+        fifth = 6 if q_ in ("dim", "dim7", "m7b5", "b5") else 7
+        return {PC[r_] % 12, (PC[r_] + fifth) % 12} | ({(PC[r_] + third) % 12} if third is not None else set())
+    for idx, (name, i) in enumerate(song.secs):
+        kd = kindof(name); ch = song.chord_at(idx)
+        on = kd in where
+        pcs = triad(ch)
+        cand = [nm(m, "b" in ch[1:2]) for m in range(midi("C4"), midi("B5") + 1) if m % 12 in pcs]
+        cand = [x for x in cand if ok(x, idx)]
+        if not cand:   # どの音もぶつかる小節は休む
+            for v in voices: v.append(f"R:{B:g}")
+            lh.append(f"R:{B:g}"); mono.append(f"R:{B:g}"); continue
+        t3 = cand[:3]
+        while len(t3) < 3: t3.append(t3[-1])
+        rr_ = parse_chord(ch)[0]
+        root = next(nm(m, "b" in rr_) for m in range(midi("E1"), midi("E2")) if m % 12 == PC[rr_] % 12)
+        if not ok(root, idx): root = None
+        if not on:
+            for v in voices: v.append(f"R:{B:g}")
+            lh.append(f"R:{B:g}"); mono.append(f"R:{B:g}"); continue
+        if kind == "piano":
+            lh.append(f"{up(root, 1)}:{B:g}" if root else f"R:{B:g}")
+            if kd in ("verse", "intro", "outro"):
+                seq = [nm(m) for m in range(midi("C4"), midi("C6") + 1) if m % 12 in pcs and ok(nm(m), idx)] or t3
+                n8 = int(round(B * 2)); notes = [seq[j % len(seq)] for j in (0, 1, 2, 3, 2, 1, 0, 2, 1, 3, 2, 1, 0, 1)[:n8]]
+                mono.append(" ".join(f"{x}:0.5{',' if j % 2 else ''}" for j, x in enumerate(notes)) + (f" R:{B - n8 * 0.5:g}" if B - n8 * 0.5 > 1e-6 else ""))
+                for v in voices: v.append(f"R:{B:g}")
+            else:
+                mono.append(f"R:{B:g}")
+                h1 = int(B // 2); h2 = B - h1
+                for v in range(3): voices[v].append(f"{t3[v]}:{h1:g}! {t3[v]}:{h2:g}" if h1 else f"{t3[v]}:{B:g}!")
+        elif kind in ("strings", "choir", "synthpad", "organ"):
+            for v in range(3): voices[v].append(f"{t3[v]}:{B:g}")
+            lh.append(f"R:{B:g}"); mono.append(f"R:{B:g}")
+        elif kind == "synth-arp":
+            seq = [nm(m) for m in range(midi("C4"), midi("C6") + 1) if m % 12 in pcs and ok(nm(m), idx)] or t3; seq = seq + seq[-2:0:-1]
+            n16 = int(round(B * 4))
+            mono.append(" ".join(f"{seq[j % len(seq)]}:0.25{'!' if j % 4 == 0 else ''}" for j in range(n16)))
+            for v in voices: v.append(f"R:{B:g}")
+            lh.append(f"R:{B:g}")
+        elif kind == "fmbell":
+            hi = next((x for x in cand if midi(x) >= midi("C5")), t3[-1])
+            mono.append(f"{hi}:1 R:{B - 1:g}")
+            for v in voices: v.append(f"R:{B:g}")
+            lh.append(f"R:{B:g}")
+    J = lambda xs: " ".join(xs)
+    label = LAYER_KINDS[kind].split("（")[0]
+    role = f"追加の楽器: {label}"
+    if kind == "piano":
+        song.add(part(f"{role}（左手）", "piano", J(lh), volume=0.07, pan=-0.12, reverb=0.3))
+        song.add(part(f"{role}（右手の分散和音）", "piano", J(mono), volume=0.06, pan=0.12, reverb=0.3))
+        song.add([part(f"{role}（右手の和音{v + 1}）", "piano", J(voices[v]), volume=0.045, pan=0.1, reverb=0.3) for v in range(3)])
+    elif kind == "strings":
+        song.add([part(f"{role}{v + 1}", "strings", J(voices[v]), patch="stringEnsemble", volume=0.05, pan=(-0.35, 0.0, 0.35)[v], reverb=0.4, attack=0.6, release=0.8) for v in range(3)])
+    elif kind == "choir":
+        song.add([part(f"{role}{v + 1}", "choir", J(voices[v]), volume=0.05, pan=(-0.3, 0.0, 0.3)[v], reverb=0.45) for v in range(3)])
+    elif kind == "synthpad":
+        song.add([part(f"{role}{v + 1}", "pad", J(voices[v]), patch="supersawPad", volume=0.04, pan=(-0.4, 0.0, 0.4)[v], reverb=0.35, duck=0.3) for v in range(3)])
+    elif kind == "organ":
+        song.add([part(f"{role}{v + 1}", "drawbarOrgan", J(voices[v]), volume=0.045, pan=(-0.25, 0.0, 0.25)[v], reverb=0.3) for v in range(3)])
+    elif kind == "synth-arp":
+        song.add(part(role, "keys", J(mono), patch="glassPluck", volume=0.05, pan=0.3, reverb=0.3))
+    elif kind == "fmbell":
+        song.add(part(role, "fmBell", J(mono), volume=0.05, pan=-0.3, reverb=0.5))
+
+
 class Song:
     def __init__(self, title, desc, bpm, beats, form, chords):
         """form: [(区間の名前, 小節数)]。chords: 区間の名前 → 小節ごとの和音のリスト"""
@@ -843,6 +951,8 @@ class Song:
                 if p["instrument"] not in ("kick", "snare", "hihat", "tom", "crash") and not p["notes"].startswith("g:"):
                     p["notes"] = vary_pickups(p["notes"], self.pickups, self.beats)
         if not self.extra.get("_noModern"): modernize_leads(self)
+        for kind in getattr(self, "_layers", []): _build_layer(self, kind)
+        self._layers = []
         if LAST_KIT and not self.extra.get("_noHumanDrums"):
             kit = LAST_KIT[0]
             humanize_drums(kit, self.secs, self.kinds, seed=sum(map(ord, self.title)), beats=self.beats)
@@ -867,6 +977,7 @@ class Song:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         json.dump(self.to_json(), open(path, "w"), ensure_ascii=False)
         open(path + ".flags", "w").write(self.flags)
+        open(path + ".reftone", "w").write(getattr(self, "ref_tone", "") or "")
         sec = self.nb * self.beats * 60 / self.bpm
         print(f"{self.title}: {self.nb}小節・{int(sec // 60)}分{int(sec % 60):02d}秒 → {path}")
 

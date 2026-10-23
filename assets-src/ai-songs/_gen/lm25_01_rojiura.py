@@ -344,6 +344,10 @@ if any(m != R4 for m in P["mute"]): song.add(bassmute_part(J("mute")))
 song.add(drum_parts(kit))
 song.add(cymfx_part(" ".join(FX)))
 
+# 参考の音と追加の楽器（2026-10-23 人間「残り24曲、作った音源のどれかに合わせて」「プラスで何か楽器を追加」）
+song.ref_tone = "bright-nu-wall"
+add_layer(song, "piano", "裏口の酒場で、古いピアノが旅人を迎える。")
+
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "/tmp/lm25/lm25-01-rojiura.json"
     song.write(out)

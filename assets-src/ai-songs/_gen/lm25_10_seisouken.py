@@ -230,6 +230,10 @@ song.add(bass_part(J("bass")))
 song.add(drum_parts(kit))
 song.add(cymfx_part(" ".join(FX)))
 
+# 参考の音と追加の楽器（2026-10-23 人間「残り24曲、作った音源のどれかに合わせて」「プラスで何か楽器を追加」）
+song.ref_tone = "bright-pop-rock"
+add_layer(song, "fmbell", "草原の空に、風の鈴がときどき光る。")
+
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "/tmp/lm25/lm25-10-seisouken.json"
     song.write(out)
