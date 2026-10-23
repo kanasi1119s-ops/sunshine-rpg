@@ -17,6 +17,15 @@ BASS_GAIN = 1.4      # 2026-10-23 人間「ベースの音小さくて聞きに�
 # リードの音色（2026-10-23 人間「鋭いけど、優しい心に響く感じ」）: 輪郭（2kHz 前後）は残して鋭さを保ち、
 #   耳に刺さる 4.5kHz より上を少し丸め、800Hz あたりに温かさを足す
 LEAD_TONE = [{"type": "eq", "low": 0, "mid": 1.5, "midHz": 850, "high": -2.5}, {"type": "filter", "kind": "lowpass", "freq": 8500, "q": 0.6}]
+LEAD_CHAIN = [{"type": "compressor", "pre": True, "threshold": -28, "ratio": 5, "attack": 0.005, "release": 0.25},   # 伸び（音を均す）
+              {"type": "tubescreamer", "pre": True, "gain": 0.3, "level": 1.0},                                   # 中域を締めて、なめらかに歪ませる
+              {"type": "filter", "kind": "highpass", "freq": 120, "q": 0.7},
+              {"type": "eq", "low": 0, "mid": -2.5, "midHz": 350, "high": 0},                                    # 濁り
+              {"type": "eq", "low": 0, "mid": 2.0, "midHz": 1600, "high": 0},                                    # 歌う帯域（鋭さ）
+              {"type": "eq", "low": 0, "mid": -2.0, "midHz": 4200, "high": 0},                                   # 刺さる所だけ細く
+              {"type": "filter", "kind": "lowpass", "freq": 11500, "q": 0.6},                                    # 空気感は残す
+              {"type": "delay", "beats": 0.75, "mix": 0.16, "feedback": 0.3}]                                    # 余韻
+LEAD_AMP = None   # 聞き比べで決める（"namArchonL2" など）。None なら曲のまま（namJVM）
 LEAD_TAIL = [{"type": "delay", "beats": 0.75, "mix": 0.12, "feedback": 0.22}, {"type": "plate", "mix": 0.2}]
 DRUM_GAIN = 0.9
 GUITARS = {"distGuitar", "crunch", "leadGuitar", "echoGuitar", "guitar"}
@@ -83,17 +92,16 @@ def balance(song):
         if group(p) == "drums": p["volume"] = round(p.get("volume", 0) * DRUM_GAIN, 5)
         if group(p) == "bass": p["volume"] = round(p.get("volume", 0) * BASS_GAIN, 5)
         if group(p) == "lead" and not p.get("_toned"):
-            # fx は最大8個: 参考の音の EQ（ハイパス・EQ 4つ・ローパス2つ）＋ルーム。ローパスを1つにまとめ、温かさの EQ を足し、高い所の丸めは1つ目の EQ に合わせる
-            fx = [dict(f) for f in (p.get("fx") or [])]
-            lps = [f for f in fx if f.get("type") == "filter" and f.get("kind") == "lowpass"]
-            rest = [f for f in fx if f not in lps and f.get("type") != "room"]
-            eqs = [f for f in rest if f.get("type") == "eq"]
-            if eqs: eqs[0]["high"] = round(eqs[0].get("high", 0) - 2.5, 2)
-            lp = {"type": "filter", "kind": "lowpass", "freq": min([8500] + [f.get("freq", 20000) for f in lps]), "q": 0.6}
-            new = rest + [{"type": "eq", "low": 0, "mid": 1.5, "midHz": 850, "high": 0}, lp] + [f for f in fx if f.get("type") == "room"][:1]
-            p["fx"] = new[:8]
-            p["reverb"] = max(p.get("reverb", 0), 0.22)      # 余韻は残響の送りで
-            p["release"] = max(p.get("release", 0.3), 0.6)
+            # リード専用の音作り（2026-10-23 人間「問題なのは高音。歪があるんだけど透き通るような伸びが欲しくて、余韻も感じたい。
+            #   チョーキングしても、そのまましっかり伸び切った鋭く透き通った高い音に」）。参考の音の「歌の EQ」（2.5k・3.9k を -12dB、
+            #   4.5k より上を +9dB）は、リードの抜ける帯域を削ってザラつきだけ残していたので使わない。
+            p["fx"] = [dict(f) for f in LEAD_CHAIN]
+            p["ampGate"] = 3                                   # 余韻を切らない
+            p["ampDrive"] = min(p.get("ampDrive", 0.8), 0.8)
+            p["sustain"] = max(p.get("sustain", 1.0), 2.0)
+            p["release"] = max(p.get("release", 0.3), 0.9)
+            p["reverb"] = max(p.get("reverb", 0), 0.25)
+            if LEAD_AMP: p["amp"] = LEAD_AMP
             p["_toned"] = True
     for p in ps:
         p.pop("_feat", None); p.pop("_toned", None)
