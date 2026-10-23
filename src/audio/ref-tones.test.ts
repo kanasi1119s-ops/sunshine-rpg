@@ -56,6 +56,7 @@ describe("参考の音", () => {
     ] };
     const out = applyRefToneToSong(song, tone) as typeof song & { parts: (typeof song.parts[number] & { double?: unknown })[] };
     expect(out.parts[0].double).toEqual({ spread: 1 });
+    expect(out.parts[0].volume).toBeCloseTo(0.1 * 1.1, 3);   // BMTH のリフは 1.1倍
     expect(out.parts[0].fx?.map((f) => f.type)).not.toContain("plate");
     expect(out.parts[1].fx?.filter((f) => f.type !== "room")).toEqual(tone.vocal);
     expect(out.parts[1].volume).toBeCloseTo(0.13 * Math.pow(10, (tone.balanceDb?.vocal ?? 0) / 20), 3);

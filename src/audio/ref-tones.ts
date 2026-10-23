@@ -29,6 +29,8 @@ export interface RefTone {
    */
   /** 2026-10-23 人間「個人的にベースを50ぐらい上げてほしい」→ bass は計算値に +3.5dB（音量 1.5倍）した値。 */
   balanceDb?: { bass: number; drums: number; vocal: number; other: number };
+  /** リフ（role が「看板リフ」で始まる歪みギター）の音量に掛ける量（dB）。2026-10-23 人間「bmth のリフの音量 1.1倍にしよう」。書き出し（曲の JSON）でだけ効く。 */
+  riffDb?: number;
   /** 参考録音そのものの楽器ごとの大きさ（ギターを 0dB とした dB。音源分離 demucs htdemucs_6s。曲の音量のつり合いの目安）。 */
   refLevelsDb?: { bass: number; drums: number; vocals: number; piano: number; other: number };
 }
@@ -36,6 +38,7 @@ export interface RefTone {
 export const REF_TONES: Record<string, RefTone> = {
   "wide-dark-wall": {
     "id": "wide-dark-wall",
+    "riffDb": 0.83,
     "label": "左右いっぱいの暗く太い壁（参考1）",
     "description": "低い中域（160〜250Hz）が太く、400〜800Hz を深くえぐり、4kHz から上を丸める。リフ・リズムは左右いっぱいの別テイク。",
     "source": "人間が渡した参考録音（Bring Me The Horizon）を音源分離（demucs htdemucs_6s）して1/3オクターブごとに測り、聞き比べ G との差を埋める EQ を計算した数値（tools/audio-check/guitar-ref-fit.py。2026-10-23）。音そのものは取り込んでいない",
@@ -1668,7 +1671,7 @@ export function applyRefToneToSong<T extends { parts?: SongPart[] }>(song: T, to
     // 歪みギターと歌の代わりのリードは、EQ のあとにルーム（小さな部屋の鳴り）だけを残す（再現2と同じ。プレートなどの残響は外す）
     const roomOnly = (eq: FxSpec[] | undefined): FxSpec[] | undefined => (eq ? [...eq.map((f) => ({ ...f })), ...(p.fx ?? []).filter((f) => f.type === "room")] : p.fx);
     if (g === "guitar") {
-      const n: SongPart = { ...p, fx: roomOnly(tone.guitar) };
+      const n: SongPart = scaled({ ...p, fx: roomOnly(tone.guitar) }, /^看板リフ/.test(p.role ?? "") ? tone.riffDb : undefined);
       if (tone.guitarWide && ins === "distGuitar" && /^(看板リフ|リズム)/.test(p.role ?? "")) {
         const base = typeof p.double === "object" && p.double ? (p.double as Record<string, unknown>) : {};
         n.double = { ...(/^リズム/.test(p.role ?? "") ? { irR: "jd-greenback-4x12-01" } : {}), ...base, spread: 1.0 };
