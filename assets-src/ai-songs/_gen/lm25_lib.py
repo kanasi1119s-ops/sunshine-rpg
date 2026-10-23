@@ -717,10 +717,15 @@ def modernize_leads(song):
         if sc[1] == "chorus": k += 1; chorus_no[sc[0]] = k
     def harm_note(n, st):
         bar = min(int(st // B), song.nb - 1)
-        pcs = chord_pcs(song.chord_at(bar))
+        ch_ = song.chord_at(bar)
+        pcs = chord_pcs(ch_)
+        root_pc = PC[parse_chord(ch_)[0]] % 12
         m0 = midi(n)
-        for d in (3, 4, 5, 2, 6, 7):
-            if (m0 + d) % 12 in pcs: return nm(m0 + d, "b" in n[1:2])
+        # 歪んだ2本で重ねると、根音と半音・長7度でぶつかる音（長7度の和音の7度など）は濁る（2026-10-23 人間「17〜18秒のギターの歪というか濁りが気になる」）。
+        #   根音・リズムギターとぶつからない音だけを選び、歪みの中で澄む4度・5度を先に、3度はその次に
+        for d in (5, 7, 3, 4):
+            h_ = m0 + d
+            if h_ % 12 in pcs and (h_ - root_pc) % 12 not in (1, 11): return nm(h_, "b" in n[1:2])
         return None
     for p in song.parts:
         if p["role"] in ("リード（オクターブ下）", "リード（和音の音のハモリ）"):
@@ -732,6 +737,7 @@ def modernize_leads(song):
                 hv.append((st, L, h, m.replace("/", "") if h else "", x))
             p["notes"] = _join(hv)
             p["role"] = "リード（3度上のハモリ）"
+            p["volume"] = round(p.get("volume", 0.07) * 0.6, 4)       # ハモリは後ろに（歪んだ2本の重なりの濁りを減らす）
             p["volume"] = round(lead.get("volume", 0.13) * 0.62, 3)
     last = [sc for sc in secs if sc[1] == "chorus"]
     if last:
