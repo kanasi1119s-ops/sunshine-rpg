@@ -146,9 +146,23 @@ if __name__ == "__main__":
     import os
     gp = sys.argv[2] if len(sys.argv) > 2 else path + ".gains"
     if os.path.exists(gp):
-        for g_, k_ in json.load(open(gp)).items():
+        gains_ = json.load(open(gp))
+        gtr_delay = gains_.pop("_guitar_delay", None)
+        for g_, k_ in gains_.items():
             for p in song["parts"]:
                 if group(p) == g_: p["volume"] = round(p.get("volume", 0) * k_, 5)
+    else:
+        gtr_delay = None
     log = balance(song)
+    # 曲ごとのギターのやまびこ（<曲.json>.gains の "_guitar_delay": 混ぜる量）。2026-10-23 人間（01）「ギターにほんの少しディレイ入れよう」
+    #   リフ・リズム・分散和音・クリーンのギター（リードはもとから付いている）に、付点8分のうすいやまびこを、アンプのあとに足す
+    if gtr_delay:
+        for p in song["parts"]:
+            if group(p) == "guitar" or (p.get("instrument") in GUITARS and group(p) == "other" and "空気" not in p.get("role", "")):
+                fx = p.setdefault("fx", [])
+                if not any(f.get("type") in ("delay", "pingpong") for f in fx):
+                    fx.append({"type": "delay", "beats": 0.75, "mix": gtr_delay, "feedback": 0.22})
+                    fit_fx(p)
+        log.append(f"ギターのやまびこ {gtr_delay}")
     json.dump(song, open(path, "w"), ensure_ascii=False)
     print("組の大きさを直しました:", ", ".join(log) or "（上限の内側）")
