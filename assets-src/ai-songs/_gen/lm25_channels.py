@@ -6,7 +6,7 @@
 import json, subprocess, sys, os
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-SAME = ("pan", "reverb", "chorus", "bright", "duck", "detune", "attack", "release")
+SAME = ("pan", "reverb", "chorus", "bright", "duck", "detune", "attack", "release", "gainDb")   # gainDb もチャンネルごと
 
 
 def overflow(path):

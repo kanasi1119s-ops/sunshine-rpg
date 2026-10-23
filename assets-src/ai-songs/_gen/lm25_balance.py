@@ -36,6 +36,23 @@ HARM_GAIN = 0.7
 LEAD_AMP = "namArchonL1"   # PRS Archon（手元だけのモデル。無い環境ではマーシャル系で鳴る）
 LEAD_TAIL = [{"type": "delay", "beats": 0.75, "mix": 0.12, "feedback": 0.22}, {"type": "plate", "mix": 0.2}]
 DRUM_GAIN = 0.9
+# 2026-10-23 人間「ピロピロ大きくなってないな…原因調べて」→ 原因は2つ:
+#   (1) 作曲ソフトはパートの volume を 0.5 で頭打ちにする（ai-song.ts）。リード 1.03・速弾き 1.22・シタール 2.54 などは、すべて 0.5 で鳴っていた
+#       （速弾きを何倍にしても、リードと同じ 0.5 のまま。和楽器が負けていたのも同じ理由）
+#   (2) 速弾きのギターに、参考の音の「そのほかの楽器」の EQ（参考の曲のシンセ用。533Hz・2kHz・5.9kHz を -10〜-15dB、高い方を -11dB）が
+#       掛かり、ギターの抜ける帯域がほとんど削られていた
+#   直し: 速弾きは専用の音作り（TECH_CHAIN）にし、0.5 を超えた分は、パートの gainDb（チャンネルの音量。-12〜+18dB）で鳴らす。
+#   ただしリードなどは、人間が今の大きさ（0.5 で頭打ちの音）を聞いて判断しているので、今のまま（0.5）にする
+VOL_MAX = 0.5
+TECH_DB = 3.0          # 速弾き: リードより 3dB 前に
+FEATURE_DB_MAX = 6.0   # 主役の楽器（和楽器・サックスなど）: 0.5 を超えた分を最大 +6dB まで
+TECH_CHAIN = [{"type": "filter", "kind": "highpass", "freq": 110, "q": 0.7},
+              {"type": "eq", "low": 0, "mid": -2.5, "midHz": 320, "high": 0},
+              {"type": "eq", "low": 0, "mid": 2.5, "midHz": 1800, "high": 0},
+              {"type": "eq", "low": 0, "mid": -1.5, "midHz": 4500, "high": 0},
+              {"type": "filter", "kind": "lowpass", "freq": 11000, "q": 0.6},
+              {"type": "delay", "beats": 0.5, "mix": 0.12, "feedback": 0.2},
+              {"type": "room", "mix": 0.1}]
 GUITARS = {"distGuitar", "crunch", "leadGuitar", "echoGuitar", "guitar"}
 DRUMS = {"kick", "snare", "hihat", "tom", "crash", "cymbal", "kickTrigger"}
 BASSES = {"bass", "slap", "sub808"}
@@ -139,21 +156,67 @@ def balance(song):
     return log
 
 
+def chan_key(p):
+    return tuple(p.get(k) for k in ("instrument", "patch", "pan", "reverb", "chorus", "bright", "duck", "detune", "attack", "release"))
+
+
+def headroom(song):
+    """速弾きの音作りを差しかえ、主役の楽器の深い削り（参考の曲のシンセ用の EQ）を浅くし、0.5 を超えた分を gainDb に移す"""
+    import math
+    log = []
+    ps = song["parts"]
+    for p in ps:
+        if group(p) == "tech":
+            p["fx"] = [dict(f) for f in TECH_CHAIN]; p["ampGate"] = min(p.get("ampGate", 10), 6)
+        elif featured(p):
+            fx = []
+            for f in p.get("fx", []):
+                if f.get("type") == "eq":
+                    f = dict(f)
+                    if f.get("mid", 0) < -6: f["mid"] = -3.0
+                    if f.get("high", 0) < -6: f["high"] = -3.0
+                fx.append(f)
+            p["fx"] = fx
+    # リードの組（旋律・ハモリ・オクターブ）は、組ごとまとめて 0.5 に収める。チャンネルごとに頭打ちにすると、
+    #   ハモリ（0.45）が旋律（1.03→0.5）とほぼ同じ大きさになり、2本の重なりが前に出て濁っていた
+    L = [p for p in ps if group(p) == "lead"]
+    top = max([p.get("volume", 0) for p in L] or [0])
+    if top > VOL_MAX:
+        for p in L: p["volume"] = round(max(0.02, p["volume"] * VOL_MAX / top), 5)
+        log.append(f"リードの組 ×{VOL_MAX / top:.3f}（比はそのまま）")
+    # チャンネルごとに、いちばん大きいパートで gainDb を決め、同じチャンネルのパートは同じ gainDb・音量の比はそのまま
+    chans = {}
+    for p in ps:
+        if p.get("instrument") in DRUMS: continue
+        chans.setdefault(chan_key(p), []).append(p)
+    for k, grp in chans.items():
+        top = max(p.get("volume", 0) for p in grp)
+        if top <= VOL_MAX: continue
+        if any(group(p) == "tech" for p in grp): add = TECH_DB
+        elif any(featured(p) for p in grp): add = min(FEATURE_DB_MAX, 20 * math.log10(top / VOL_MAX))
+        else: add = 0.0
+        scale = VOL_MAX / top
+        for p in grp:
+            p["volume"] = round(max(0.02, p.get("volume", 0) * scale), 5)
+            if add: p["gainDb"] = round((p.get("gainDb") or 0) + add, 2)
+        if add: log.append(f"{grp[0].get('role')} +{add:.1f}dB")
+    return log
+
+
 if __name__ == "__main__":
     path = sys.argv[1]
     song = json.load(open(path))
     # 曲ごとの音量の好み（<曲.json>.gains。例 {"drums": 0.97}。人間「16ドラムの音3落とそう」）
     import os
     gp = sys.argv[2] if len(sys.argv) > 2 else path + ".gains"
-    if os.path.exists(gp):
-        gains_ = json.load(open(gp))
-        gtr_delay = gains_.pop("_guitar_delay", None)
-        for g_, k_ in gains_.items():
-            for p in song["parts"]:
-                if group(p) == g_: p["volume"] = round(p.get("volume", 0) * k_, 5)
-    else:
-        gtr_delay = None
+    gains_ = json.load(open(gp)) if os.path.exists(gp) else {}
+    gtr_delay = gains_.pop("_guitar_delay", None)
     log = balance(song)
+    log += headroom(song)
+    # 曲ごとの音量の好みは、0.5 の頭打ちのあとに掛ける（前に掛けると、0.5 を超えているパートでは効かなかった。01 のリード -15% など）
+    for g_, k_ in gains_.items():
+        for p in song["parts"]:
+            if group(p) == g_: p["volume"] = round(p.get("volume", 0) * k_, 5)
     # 曲ごとのリフのやまびこ（<曲.json>.gains の "_guitar_delay": 混ぜる量）。2026-10-23 人間（01）「ギターにほんの少しディレイ入れよう」「リフ」
     #   看板リフ（と透明感の層）だけに、付点8分のうすいやまびこを、アンプのあとに足す。やまびこはチャンネルごとなので、
     #   リズムのギターと同じチャンネルにならないよう、看板リフの残響をわずかに変えて別のチャンネルにする
