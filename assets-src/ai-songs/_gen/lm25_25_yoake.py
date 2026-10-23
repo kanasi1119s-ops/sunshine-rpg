@@ -41,7 +41,7 @@ def to_major(s):
 
 DAWN = [to_major(x) for x in NIGHT]
 FORM = [("clock", 4), ("h1", 24), ("h2", 20), ("h3", 12), ("h4", 8), ("deal", 4), ("dawnA", 8), ("dawnB", 28), ("morning", 8)]
-CH = {"clock": ["Em"] * 4, "h1": NIGHT_CH * 3, "h2": ["Em", "Am", "B7", "Em"] * 5, "h3": ["Em", "C", "Am", "B7"] * 3, "h4": ["Em", "C", "B7", "Em"] * 2,
+CH = {"clock": ["Em"] * 4, "h1": NIGHT_CH * 3, "h2": ["Em", "Am", "B7", "Em"] * 5, "h3": (NIGHT_CH * 2)[:12], "h4": ["Em", "C", "B7", "Em"] * 2,
       "deal": ["C", "B7", "C", "B7"], "dawnA": DAWN_CH, "dawnB": DAWN_CH * 3 + ["A", "B", "E", "E"], "morning": ["E", "A", "E", "E"] * 2}
 song = Song("夜明けの闇市（仮）",
             "仮: ラウド26曲の25曲目（2026-10-24 素材から作り直し）。ダークなメタル＋バイオリン。E 短調 → E 長調・112 → 120。夜明け前の闇市の秒読み: 1時・2時・3時・4時の場面が"
@@ -90,8 +90,9 @@ for idx, (name, i) in enumerate(SECS):
     g = LOW[ch]; root = root_note(ch)
     if name == "clock":
         clean = bar("E5:0.25 R:0.75 B4:0.25 R:0.75 E5:0.25 R:0.75 B4:0.25 R:0.75")      # 時計の音
-        vln = bar("B4:4") if i == 2 else (bar("B4:2 D#5:2") if i == 3 else R4)
-        b = R4
+        bell = bar("E6:0.25 R:0.75 B5:0.25 R:0.75 E6:0.25 R:0.75 B5:0.25 R:0.75")       # 時計の針（はっきり聞こえる高い音）
+        vln = bar(["R:1 B4:3", "B4:4", "C5:2 B4:2", "B4:2 F#4:2"][i])
+        b = bar("E1:4,") if i >= 2 else R4
     elif name == "h1":
         if i == 0: bell = strikes(1)
         riff = rhy = bar(f"{g}:1.5! {g}:0.5 R:1 {tr(g, 1)}:0.5 {g}:0.5") if i >= 4 else bar(f"{g}:4!")
@@ -110,8 +111,10 @@ for idx, (name, i) in enumerate(SECS):
         tones = (chord_tones(ch, "E3", "E4") * 2)[:4]
         clean = bar(" ".join(f"{t}:0.5" for t in tones + tones[::-1]))
         # バイオリンのはじく音（夜の旋律の音だけを短く）
-        vln = bar(" ".join(x if x.startswith("R") else x.split(":")[0] + ":0.25 R:" + f"{tok_beats(x) - 0.25:g}" for x in NIGHT[i % 8].split()).replace(" R:0 ", " "))
-        b = bar(f"{root}:2, R:2") if i % 2 == 0 else R4
+        # バイオリン: はじく音（夜の旋律の音だけを短く）と、弓で弾く音を1小節ずつ交互に（はじく音だけだと小さすぎた）
+        if i % 2 == 0: vln = bar(" ".join(x if x.startswith("R") else x.split(":")[0] + ":0.25 R:" + f"{tok_beats(x) - 0.25:g}" for x in NIGHT[i % 8].split()).replace(" R:0 ", " "))
+        else: vln = bar(strip_marks(NIGHT[i % 8]))
+        b = bar(f"{root}:4,")
     elif name == "h4":
         if i == 0: bell = strikes(4)
         riff = rhy = bar(" ".join(f"{g}:0.25{'!' if j % 4 == 0 else ''}" for j in range(16)))
