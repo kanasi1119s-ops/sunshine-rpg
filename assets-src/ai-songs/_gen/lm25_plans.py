@@ -283,19 +283,14 @@ PLANS["17"] = [   # 2026-10-24 素材から作り直し: 証明（悪魔の主�
 ]
 
 # 18 祈りの音量（90・3拍子）: ボレロ型（一つのテーマを何度もくり返し、そのたびに楽器と音量が増える）。最初はギターとベースだけでささやき、バグパイプが受け継ぎ、最後は全音上がって全員で
-DESC["18"] = "展開: ボレロ型（サビのテーマを6回くり返し、そのたびに楽器と音量が増えていく。1回目はギターとベースだけのささやき、3回目はバグパイプが歌い、最後の2回は全音上がって全員で）。"
-PLANS["18"] = [
-    ("intro", "intro", {"drums": "own"}),
-    ("theme", "chorus", {"keep": ["lead", "bass"], "soft": ["lead"], "kind": "verse"}),
-    ("theme", "chorus2", {"keep": ["lead", "bass", "drums", "extra"], "drums": "sparse", "kind": "verse"}),
-    ("lament", "lament", {"drums": "own"}),
-    ("theme", "chorus", {"give": ("lead", "バグパイプ"), "drop": ["riff"], "drums": "ride", "kind": "pre"}),
-    ("prayer", "prayer", {"drums": "own"}),
-    ("pre", "pre", {"drums": "build"}),
-    ("theme", "chorus2", {"kind": "chorus"}),
-    ("theme", "chorus3", {"semi": 2, "kind": "chorus"}),
-    ("theme", "chorus3", {"semi": 2, "drums": "double", "kind": "chorus"}),
-    ("outro", "outro", {"semi": 2, "stop": True, "drums": "own"}),
+DESC["18"] = "展開: 霧の独奏（バグパイプとドローン）→ 3拍子の行進（一定の強さ）→ 戦い（倍の速さ）→ 倒れた者（ドローンだけ）→ 全員でバグパイプの旋律を歌う（大きいが荒くない）→ 風。"
+PLANS["18"] = [   # 2026-10-24 素材から作り直し: 霧の独奏 → 行進 → 戦い → 倒れた者 → 全員の歌 → 風
+    ("mist", "mist", {"drums": "none", "lv": 0, "kind": "intro"}),
+    ("march", "march", {"drums": "own", "lv": 2, "kind": "verse"}),
+    ("battle", "battle", {"drums": "double", "lv": 3, "kind": "chorus", "from": "break1bar"}),
+    ("fallen", "fallen", {"drums": "none", "lv": 0, "kind": "bridge"}),
+    ("hymn", "hymn", {"drums": "half", "lv": 2, "kind": "chorus", "calm": True}),
+    ("wind", "wind", {"drums": "none", "lv": 0, "kind": "outro"}),
 ]
 
 # 19 最後の呼吸（104）: 人生を巻き戻す（山場→大人→若い頃→子ども→戻る→山場）。若い頃は速く（116）、子どもの頃はドラムなしで、最後は息が止まるように遅くなって終わる
