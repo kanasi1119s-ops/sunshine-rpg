@@ -6,7 +6,7 @@
 #   GAP 9→6dB、MAX 9→12dB に。上げすぎて音が割れないよう、前奏の山（ピーク）が 0.97 を超えない所までにする
 import sys, numpy as np, soundfile as sf
 from scipy.signal import butter, sosfilt
-GAP, MAX = 6.0, 12.0
+GAP, MAX = 6.0, 15.0   # 2026-10-24: 12 では、ハープだけの前奏（07）がまだ小さかった
 p = sys.argv[1]
 x, sr = sf.read(p, always_2d=True)
 m0 = x.mean(1); hop = sr * 3
