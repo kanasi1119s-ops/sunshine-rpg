@@ -981,6 +981,7 @@ class Song:
                 if p["instrument"] not in ("kick", "snare", "hihat", "tom", "crash") and not p["notes"].startswith("g:"):
                     p["notes"] = vary_pickups(p["notes"], self.pickups, self.beats)
         if not self.extra.get("_noModern"): modernize_leads(self)
+        if getattr(self, "screams", None): add_screams(self)
         for kind in getattr(self, "_layers", []):
             n0 = len(self.parts); _build_layer(self, kind)
             for p in self.parts[n0:]: p["volume"] = round(p.get("volume", 0.05) * 1.7, 4)   # 追加の楽器は前に（人間「表に音が出てこないと」）
@@ -1244,6 +1245,8 @@ def rearrange(song):
         src_name = srcsec[bars[0]]
         new_kinds[name] = opt.get("kind") or song.kinds.get(src_name) or re.sub(r"\d+$", "", src_name).replace("inter", "interlude").replace("breakdown", "break")
         if opt.get("from"): new_from[name] = opt["from"]
+        for sb in opt.get("scream", ()):
+            song.screams = getattr(song, "screams", []) + [bar_no + sb]
         if "bpm" in opt:
             v = opt["bpm"]; v, ramp = (v if isinstance(v, tuple) else (v, 0))
             tempo.append({"bar": bar_no + 1, "bpm": v, **({"ramp": ramp} if ramp else {})})
@@ -1656,3 +1659,46 @@ def add_dance_air(song):
                   fx=[{"type": "filter", "kind": "highpass", "freq": 1500, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 9000, "q": 0.6}])
     song.parts.append(part("ダンスの要素（ポンプする空気・根音）", "pad", " ".join(air), volume=0.03, **common))
     song.parts.append(part("ダンスの要素（ポンプする空気・5度）", "pad", " ".join(fifth), volume=0.03, **common))
+
+
+# ---------------- きゅいーん（2026-10-23 人間「17〜18（秒）キー一気に上げて、きゅいーーーーーン！ってしてもいいと思う」） ----------------
+def add_screams(song):
+    """plan の scream で決めた小節で、リードが小節の頭の音から1オクターブ上へ一気にすべり上がり、上の音を伸ばし切る。ハモリはその小節だけ休む"""
+    B = song.beats
+    lead = next((p for p in song.parts if p["role"] == "リード（旋律）"), None)
+    if not lead: return
+    nb = song.nb
+    for p in song.parts:
+        if not p["role"].startswith("リード"): continue
+        bars = _bar_pieces(p["notes"], B, nb)
+        for b in song.screams:
+            if b >= nb: continue
+            if p is lead:
+                first = next((n for n, d, m, c in bars[b] if n), None)
+                if first is None:
+                    ch = song.chord_at(b); r = parse_chord(ch)[0]
+                    first = nm(next(m for m in range(midi("F#4"), midi("F#5")) if m % 12 == PC[r] % 12))
+                top = up(first, 1)
+                bars[b] = [(first, 1.0, "!>" + top, False), (top, B - 1.0, "", False)]
+            else:
+                bars[b] = [(None, B, "", False)]
+        toks = []
+        for br in bars:
+            for n, d, m, c in br:
+                if n is None: toks.append(f"R:{d:g}")
+                elif m.startswith("!>"): toks.append(f"{n}:{d:g}!{m[1:]}")
+                else: toks.append(f"{n}:{round(d, 4):g}{m}")
+        p["notes"] = merge_rests_bar(toks, B)
+
+
+def merge_rests_bar(toks, B):
+    """休みは小節の中だけでまとめる（長い休みは作曲ソフトが読めない）"""
+    out, t = [], 0.0
+    for x in toks:
+        L_ = tok_beats(x) if not x.startswith("R") else float(x[2:])
+        if x.startswith("R") and out and out[-1].startswith("R") and int((t - 1e-6) // B) == int((t + L_ - 1e-6) // B) and abs(t % B) > 1e-6:
+            out[-1] = f"R:{float(out[-1][2:]) + L_:g}"
+        else:
+            out.append(x)
+        t += L_
+    return " ".join(out)

@@ -20,14 +20,15 @@ BASS_GAIN = 1.4      # 2026-10-23 人間「ベースの音小さくて聞きに�
 # リードの音色（2026-10-23 人間「鋭いけど、優しい心に響く感じ」）: 輪郭（2kHz 前後）は残して鋭さを保ち、
 #   耳に刺さる 4.5kHz より上を少し丸め、800Hz あたりに温かさを足す
 LEAD_TONE = [{"type": "eq", "low": 0, "mid": 1.5, "midHz": 850, "high": -2.5}, {"type": "filter", "kind": "lowpass", "freq": 8500, "q": 0.6}]
-LEAD_CHAIN = [{"type": "compressor", "pre": True, "threshold": -28, "ratio": 5, "attack": 0.005, "release": 0.25},   # 伸び（音を均す）
-              {"type": "tubescreamer", "pre": True, "gain": 0.3, "level": 1.0},                                   # 中域を締めて、なめらかに歪ませる
+# 2026-10-23 人間「歪が汚い」: アンプの前のオーバードライブを外し、コンプはごく軽く、アンプへの入力を浅く（0.5）
+LEAD_CHAIN = [{"type": "compressor", "pre": True, "threshold": -24, "ratio": 3, "attack": 0.01, "release": 0.3},    # 伸び（ごく軽く）
               {"type": "filter", "kind": "highpass", "freq": 120, "q": 0.7},
               {"type": "eq", "low": 0, "mid": -2.5, "midHz": 350, "high": 0},                                    # 濁り
               {"type": "eq", "low": 0, "mid": 2.0, "midHz": 1600, "high": 0},                                    # 歌う帯域（鋭さ）
               {"type": "eq", "low": 0, "mid": -2.0, "midHz": 4200, "high": 0},                                   # 刺さる所だけ細く
               {"type": "filter", "kind": "lowpass", "freq": 11500, "q": 0.6},                                    # 空気感は残す
               {"type": "delay", "beats": 0.75, "mix": 0.16, "feedback": 0.3}]                                    # 余韻
+LEAD_DRIVE = 0.5
 LEAD_AMP = None   # 聞き比べで決める（"namArchonL2" など）。None なら曲のまま（namJVM）
 LEAD_TAIL = [{"type": "delay", "beats": 0.75, "mix": 0.12, "feedback": 0.22}, {"type": "plate", "mix": 0.2}]
 DRUM_GAIN = 0.9
@@ -112,7 +113,7 @@ def balance(song):
             #   4.5k より上を +9dB）は、リードの抜ける帯域を削ってザラつきだけ残していたので使わない。
             p["fx"] = [dict(f) for f in LEAD_CHAIN]
             p["ampGate"] = 3                                   # 余韻を切らない
-            p["ampDrive"] = min(p.get("ampDrive", 0.8), 0.8)
+            p["ampDrive"] = LEAD_DRIVE
             p["sustain"] = max(p.get("sustain", 1.0), 2.0)
             p["release"] = max(p.get("release", 0.3), 0.9)
             p["reverb"] = max(p.get("reverb", 0), 0.25)

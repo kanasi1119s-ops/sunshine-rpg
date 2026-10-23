@@ -33,7 +33,7 @@ PLANS["01"] = [
     ("chorus", "chorus2", {"drums": "half"}),
     ("bridge", "bridge", {"drums": "shuffle"}),
     ("pre", "pre2", {"from": "stopBeat"}),
-    ("chorus", "chorus", {}),
+    ("chorus", "chorus", {"scream": [7]}),          # 人間「17〜18秒、キー一気に上げてきゅいーーーん！」（このサビの最後の小節）
     ("solo", "solo", {"drums": "half"}),
     ("verse", "verse2", {"keep": ["bass", "extra", "drums", "lead"], "drums": "sparse", "soft": ["lead"]}),
     ("break", "break", {"stop": True, "drums": "own"}),
