@@ -81,24 +81,24 @@ PLANS["04"] = [   # 2026-10-24 素材から作り直し: 葬儀・密談・裏�
 ]
 
 # 05 七つの角（112・5拍子）: ブレイクダウンが主役。2回目のブレイクダウンはテンポが落ちていき、決めで止まってから元の速さで戻る
-DESC["05"] = "展開: ブレイクダウン中心（サビのあとに重い落とし、2回目はテンポが 112→84→70 と沈んでいく。決めで止めて、元の速さで最後のサビ）。ブリッジは三味線とタムの太鼓。"
-PLANS["05"] = [
-    ("intro", "intro", {"drums": "own"}),
-    ("verse", "verse", {}),
-    ("pre", "pre", {}),
-    ("chorus", "chorus", {}),
-    ("bd", "break", {"drums": "half", "kind": "break"}),
-    ("bd", "inter", {"drums": "half", "kind": "break"}),
-    ("verse", "verse2", {"drums": "ride"}),
-    ("pre", "pre2", {"drums": "build"}),
-    ("chorus", "chorus2", {}),
-    ("bridge", "bridge", {"drums": "tribal"}),
-    ("solo", "solo", {"drums": "double"}),
-    ("bd", "break", {"drums": "half", "bpm": 84, "kind": "break"}),
-    ("bd", "break", {"bpm": (70, 2), "kime": [0, 1, 2.5, 4], "kind": "break"}),
-    ("chorus", "chorus3", {"bpm": 112, "from": "stopBeat"}),
-    ("chorus", "chorus3", {"semi": 1, "drums": "double"}),
-    ("outro", "outro", {"stop": True, "drums": "own"}),
+DESC["05"] = "展開: 呪文（三味線の呼びかけ4小節とバンドの答え8小節を7回。答えるたびに旋律の音が1つ増え、5回目は全部消える罠、7回目で七本の角がそろう）。三味線の一打で始まり、全員の一撃と三味線の一打で終わる。"
+PLANS["05"] = [   # 2026-10-24 素材から作り直し: 呪文（三味線の呼びかけ＋バンドの答え）×7。5回目は罠
+    ("summon", "summon", {"drums": "none", "lv": 0, "kind": "intro"}),
+    ("call1", "call1", {"drums": "none", "lv": 0, "kind": "interlude", "crash": False}),
+    ("answer1", "answer1", {"drums": "half", "lv": 1, "kind": "chorus"}),
+    ("call2", "call2", {"drums": "tribal", "lv": 1, "kind": "interlude", "crash": False}),
+    ("answer2", "answer2", {"drums": "lib", "lv": 1, "kind": "chorus"}),
+    ("call3", "call3", {"drums": "tribal", "lv": 1, "kind": "interlude", "crash": False}),
+    ("answer3", "answer3", {"drums": "lib", "lv": 2, "kind": "chorus"}),
+    ("call4", "call4", {"drums": "tribal", "lv": 2, "kind": "interlude", "crash": False}),
+    ("answer4", "answer4", {"drums": "double", "lv": [2, 2, 2, 2, 3, 3, 3, 3], "kind": "chorus"}),
+    ("call5", "call5", {"drums": "heart", "lv": 0, "kind": "interlude", "crash": False}),
+    ("answer5", "answer5", {"drums": "heart", "lv": 0, "kind": "bridge"}),
+    ("call6", "call6", {"drums": "tribal", "lv": 2, "kind": "interlude", "crash": False}),
+    ("answer6", "answer6", {"drums": "double", "lv": 3, "kind": "chorus", "from": "stopBeat"}),
+    ("call7", "call7", {"drums": "tribal", "lv": 2, "kind": "interlude", "crash": False}),
+    ("answer7", "answer7", {"drums": "double", "lv": 3, "kind": "chorus"}),
+    ("crown", "crown", {"drums": "double", "lv": 3, "kind": "outro", "stop": True}),
 ]
 
 # 06 鐘と偶像（84・6拍子）: 二部構成。前半はドラムなしの賛美歌（72）、鐘の一打で区切り、後半は偶像が崩れる重い曲（96）。最後はオルガンだけが遅くなって消える
