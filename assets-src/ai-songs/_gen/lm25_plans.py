@@ -172,22 +172,14 @@ PLANS["10"] = [   # 2026-10-24 素材から作り直し: 手紙を読む／回�
 FADE["10"] = (0, 10)
 
 # 11 深海の時計（86・6拍子）: 沈んでいく（テンポが 86→80→72→66→60→56 と下がる）。琴1人で始まり、深い所では時計の針（ライド）だけが刻み、琴だけが残って消える
-DESC["11"] = "展開: 沈んでいく（区間ごとにテンポが 86→56 まで下がり、深海へ沈む）。始まりは琴1人、深い所は時計の針のようなライドとハーフタイム、終わりは琴だけが残ってフェードアウト。"
-PLANS["11"] = [
-    ("intro", "intro", {"keep": ["extra"]}),
-    ("intro", "intro", {"drums": "own"}),
-    ("verse", "verse", {}),
-    ("pre", "pre", {}),
-    ("chorus", "chorus", {}),
-    ("inter", "inter", {"bpm": 80, "drums": "toms"}),
-    ("verse", "verse2", {"drums": "half"}),
-    ("pre", "pre2", {}),
-    ("chorus", "chorus2", {"drums": "half"}),
-    ("bridge", "bridge", {"bpm": 72, "drums": "ride"}),
-    ("break", "break", {"stop": True, "drums": "own"}),
-    ("chorus", "chorus3", {"bpm": 66, "drums": "half"}),
-    ("outro", "outro", {"keep": ["extra", "fx", "drums"], "drums": "ride", "bpm": 60}),
-    ("outro", "intro", {"keep": ["extra"], "bpm": 56, "kind": "outro"}),
+DESC["11"] = "展開: 沈降（海面・100m・300m・700m・1000m。深くなるほど 86→48 へ遅く、低く、音数が少なく、小さくなる）。海面の明るい揺れで始まり、圧壊の一撃と琴の最後の一音で終わる。"
+PLANS["11"] = [   # 2026-10-24 素材から作り直し: 沈降（深くなるほど遅く・低く・まばらに）。最後に圧壊
+    ("surface", "surface", {"drums": "lib", "lv": 2, "kind": "intro"}),
+    ("d100", "d100", {"drums": "half", "lv": 2, "kind": "chorus"}),
+    ("d300", "d300", {"drums": "sparse", "lv": 1, "kind": "verse", "bpm": 72}),
+    ("d700", "d700", {"drums": "heart", "lv": [1] * 5 + [0] * 5, "kind": "bridge", "bpm": 60}),
+    ("d1000", "d1000", {"drums": "none", "lv": 0, "kind": "outro", "bpm": 48}),
+    ("crush", "crush", {"drums": "own", "lv": 3, "kind": "break"}),
 ]
 FADE["11"] = (0, 10)
 
