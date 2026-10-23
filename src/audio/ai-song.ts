@@ -102,7 +102,7 @@ export interface AiPart extends RhythmPartFields, AiPartExtras, AiPartJpop {
   sustain?: number;
   /** 単音の楽器として弾く（2026-10-23）: 次の音が鳴ったら前の音を止める（sustain で伸ばした音が次の音に重ならない）。
    *  歪んだリードギターで音が重なると、2つの音が歪みの中でぶつかって濁る（人間「高音に近づけるときと、高音から下げて音が重なってるときに濁る」）。
-   *  休符の前の音は sustain のぶんだけ伸びるので、余韻は残る。 */
+   *  休符の前の音は、次の音の頭まで（sustain の長さまで）伸びるので、余韻は残る。 */
   mono?: boolean;
   /** シンセの音色（SYNTH_PATCHES のキー）。指定すると、楽器の音のかわりにこのシンセ音で鳴る。 */
   patch?: string;
@@ -688,7 +688,8 @@ export function applyMono(events: NoteEvent[]): NoteEvent[] {
     let j = i + 1;
     while (j < events.length && events[j].note === REST) j++;
     if (j >= events.length) return e;
-    if (j > i + 1) return e; // 休符をはさむ: 余韻を残す（休符の長さまでで次の音にはほぼ届かない）
+    // 休符をはさむときも、次の音の頭までで止める（休符の間は伸びて余韻が残る）。2026-10-23 人間（14）「Aメロ〜Bメロのリードに2〜3か所、謎の歪の濁り」:
+    //   「F#5:1 R:1 → E4」のように休符が伸ばした長さより短いと、前の音が次の音に重なり、歪みの中で7度がぶつかっていた
     const room = (starts[j] - starts[i]) / e.durationBeats;
     const gate = e.gate ?? 1;
     return gate > room * 0.98 ? { ...e, gate: Math.max(0.2, Math.round(room * 0.98 * 1000) / 1000) } : e;
