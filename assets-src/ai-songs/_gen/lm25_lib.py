@@ -773,7 +773,7 @@ def modernize_leads(song):
                 amb.append(f"{f_(voic[0])}:{B:g}")
             else:
                 amb.append(f"R:{B:g}")
-    if any(not x.startswith("R") for x in " ".join(amb).split()):
+    if any(not x.startswith("R") for x in " ".join(amb).split()) and not getattr(song, "dance_air", False):   # ダンスの「サー」を入れる曲では、空気の層はその役に任せる
         # 荒さと雰囲気: 歪みをほぼなくし、高い所（5kHz より上のザラつき）を落として、残響はホールの長い尾ではなくプレートを短めに
         # 人間「空気の層がきれいじゃないかな」→ 歪みギター（高ゲインのアンプの模型。弱く鳴らしても雑音の「サー」が残る）をやめ、
         #   録音のクリーンギターを透き通るクリーンのアンプ（crystal＝2〜4kHz の刺さりを抑える）で。コーラスはかけない（人間の好み）
@@ -978,6 +978,7 @@ class Song:
             n0 = len(self.parts); _build_layer(self, kind)
             for p in self.parts[n0:]: p["volume"] = round(p.get("volume", 0.05) * 1.7, 4)   # 追加の楽器は前に（人間「表に音が出てこないと」）
         self._layers = []
+        if getattr(self, "dance_air", False): add_dance_air(self)
         if LAST_KIT and not self.extra.get("_noHumanDrums"):
             kit = LAST_KIT[0]
             humanize_drums(kit, self.secs, self.kinds, seed=sum(map(ord, self.title)), beats=self.beats)
@@ -1564,3 +1565,55 @@ def section_dynamics(song):
                 add = "!" if strong and g_ != "lead" else ("," if not on_beat and rng.random() < 0.3 else "")
             out.append(f"{n_}:{L:g}{m_}{add}"); t += L
         p["notes"] = " ".join(out)
+
+
+# ---------------- ダンスの要素としての「サー」（2026-10-23 人間「あのサーって音、ダンス系の要素として入れたらよいかもしれない」） ----------------
+# ずっと流れる残響の「サー」ではなく、ダンス音楽の道具として、場所を決めて入れる:
+#   1. ライザー（4秒でせり上がるノイズ）を、サビの頭のちょうど手前で終わるように。サビの頭にダウンリフター（下がるノイズ）
+#   2. サビの間だけ、高い所の空気（スーパーソーの高い和音を 1.5kHz より下を切って薄く）を、キックに合わせて大きく凹ませる（ポンプ）
+def add_dance_air(song):
+    B = song.beats
+    kindof = lambda n: song.kinds.get(n) or re.sub(r"\d+$", "", n).replace("inter", "interlude")
+    starts, t = [], 0
+    for n, c in song.form:
+        if kindof(n) == "chorus" and t > 0: starts.append(t)
+        t += c
+    nb = song.nb
+    total_beats = nb * B
+    riser_beats = round(4 * song.bpm / 60 * 4) / 4         # 4秒ぶんの拍
+    ev = []                                                 # (始まりの拍, 長さ, 音名)
+    for st in starts:
+        a = st * B - riser_beats
+        if a > 0: ev.append((a, riser_beats, "C4"))
+        ev.append((st * B, min(2 * B, total_beats - st * B), "E4"))
+    ev.sort()
+    toks, cur = [], 0.0
+    for a, L, n in ev:
+        if a < cur - 1e-6: continue
+        if a > cur: toks.append(f"R:{a - cur:g}")
+        toks.append(f"{n}:{L:g}"); cur = a + L
+    if total_beats - cur > 1e-6: toks.append(f"R:{total_beats - cur:g}")
+    if ev:
+        song.parts.append(part("ダンスの要素（ライザー）", "pad", " ".join(toks), patch="fxRiser", volume=0.05, pan=0, reverb=0.25))
+    # ポンプする空気
+    air, t = [], 0
+    for n, c in song.form:
+        k = kindof(n)
+        for i in range(c):
+            b = t + i
+            if k == "chorus":
+                r, q, _b = parse_chord(song.chord_at(b))
+                root = next(m for m in range(midi("C5"), midi("C6")) if m % 12 == PC[r] % 12)
+                air.append(f"{nm(root, 'b' in r)}:{B:g}")
+            else:
+                air.append(f"R:{B:g}")
+        t += c
+    v2 = [x for x in air]
+    fifth = []
+    for i, x in enumerate(air):
+        if x.startswith("R"): fifth.append(x)
+        else: n_ = tok_note(x); fifth.append(f"{tr(n_, 7)}:{B:g}")
+    common = dict(patch="supersawPad", pan=0, reverb=0.3, duck=0.8, attack=0.05, release=0.3,
+                  fx=[{"type": "filter", "kind": "highpass", "freq": 1500, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 9000, "q": 0.6}])
+    song.parts.append(part("ダンスの要素（ポンプする空気・根音）", "pad", " ".join(air), volume=0.03, **common))
+    song.parts.append(part("ダンスの要素（ポンプする空気・5度）", "pad", " ".join(fifth), volume=0.03, **common))
