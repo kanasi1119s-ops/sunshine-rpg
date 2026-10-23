@@ -1212,8 +1212,19 @@ def rearrange(song):
         cur_bpm = (tempo[-1]["bpm"] if tempo else song.bpm)
         libbars = lib_section(song, nsec, new_kinds[name], cur_bpm, mode0, opt) if (kit and mode0 in LIB_MODES and on_drums(opt)) else None
         seen_src = getattr(song, "_seen_src", set())
-        want_phr = opt.get("phr") or (opt.get("phr") is None and src_name in seen_src and new_kinds[name] not in ("intro", "outro")
-                                      and not opt.get("kime") and not opt.get("keep") and not opt.get("bed"))
+        # 弾き方を変えるかどうかは決まりではなく、曲ごとの考え方で（2026-10-23 人間「必ず弾き方が変わる必要性があるわけじゃない。柔軟に」）:
+        #   keep＝看板のリフを最後まで守る（変化は旋律・ドラム・強弱で）／rare＝ここぞの1〜2か所だけ変える／often＝場面ごとにどんどん変える
+        policy = getattr(song, "phr_policy", "rare")
+        auto_ok = opt.get("phr") is None and src_name in seen_src and new_kinds[name] not in ("intro", "outro") \
+            and not opt.get("kime") and not opt.get("keep") and not opt.get("bed")
+        if auto_ok and policy == "rare":
+            import random
+            n_done = getattr(song, "_phr_count", 0)
+            auto_ok = n_done < 2 and random.Random(sum(map(ord, song.title)) * 31 + bar_no).random() < 0.4
+        elif policy == "keep":
+            auto_ok = False
+        want_phr = opt.get("phr") or auto_ok
+        if want_phr: song._phr_count = getattr(song, "_phr_count", 0) + 1
         seen_src.add(src_name); song._seen_src = seen_src
         gb = lib_guitar_bass(song, [song.chord_at(b) for b in bars], new_kinds[name], opt, seed=sum(map(ord, song.title)) + bar_no) if want_phr else None
         give = opt.get("give")

@@ -573,10 +573,20 @@ KEYS = {"01": ("C#", "dorian"), "02": ("F#", "aeolian"), "03": ("D", "aeolian"),
         "21": None, "22": ("E", "aeolian"), "23": ("C", "aeolian"), "24": ("B", "aeolian"), "25": None, "26": ("E", "phrygian")}
 
 
+# ギター・ベースの弾き方をどれだけ変えるか（曲の物語で決める。決まりにしない）
+PHR_POLICY = {
+    # 看板のリフを守り通す: 螺旋は同じリフのまま上っていく／クラブのループは同じループが命／ボレロは伴奏を変えないのが型／アーチは鏡なので同じ物が戻る
+    "02": "keep", "14": "keep", "18": "keep", "15": "keep", "04": "keep",
+    # 場面ごとにどんどん変える: サーカスの演目／時刻の組曲／船の場面転換／天使と悪魔の戦い／壊れていく国歌／人生の各時代
+    "20": "often", "25": "often", "22": "often", "23": "often", "19": "often",
+}
+
+
 def apply_plan(song, no):
     if no not in PLANS: return
     song.plan = PLANS[no]
     song.key_mode = KEYS.get(no) or (None, None)
+    song.phr_policy = PHR_POLICY.get(no, "rare")
     song.desc += " " + DESC[no]
     fi, fo = FADE.get(no, (0, 0))
     song.fade_in, song.fade_out = fi, fo
