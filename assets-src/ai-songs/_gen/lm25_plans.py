@@ -304,21 +304,15 @@ PLANS["19"] = [   # 2026-10-24 素材から作り直し: 逆再生（最期＝�
 ]
 
 # 20 赦しの値段（120・5拍子）: サーカスの演目のメドレー。幕が上がって始まり、綱渡り（ライド）→猛獣使い（タムの太鼓）→空中ぶらんこ（4つ打ち）→ピエロの悲しい芸（テンポ96）→フィナーレ。最後は笑い声でぷつりと切れる
-DESC["20"] = "展開: サーカスの演目のメドレー（幕開け→綱渡り＝ライド→猛獣使い＝タムの太鼓→空中ぶらんこ＝4つ打ち→ピエロの悲しい芸＝テンポ96のハーフタイム→フィナーレは半音上）。終わりは木琴の笑い声でぷつりと切れる。"
-PLANS["20"] = [
-    ("curtain", "curtain", {"kind": "intro", "drums": "own"}),
-    ("intro", "intro", {"drums": "own"}),
-    ("act1", "verse", {"drums": "ride", "kind": "verse"}),
-    ("act1", "chorus", {"kind": "chorus"}),
-    ("laugh", "laugh", {"drums": "own"}),
-    ("act2", "inter", {"drums": "tribal", "kind": "interlude"}),
-    ("act2", "verse2", {"drums": "toms", "kind": "verse"}),
-    ("pre", "pre", {"drums": "build"}),
-    ("act3", "chorus2", {"drums": "kick4", "kind": "chorus"}),
-    ("circus", "circus", {"drums": "own"}),
-    ("act4", "circus", {"semi": 1, "drums": "half", "bpm": 96, "drop": ["riff"], "kind": "bridge"}),
-    ("chorus", "chorus3", {"bpm": 120, "semi": 1, "from": "stopBeat"}),
-    ("laugh", "laugh", {"semi": 1, "stop": True, "drums": "own"}),
+DESC["20"] = "展開: 見世物小屋の演目（口上 → 綱渡り → 道化＝96 で急に小さく → 空中ぶらんこ＝144 → 猛獣使い＝108 のタムの太鼓 → 大団円＝132・半音上 → 幕）。木琴の呼びこみで始まり、木琴の笑い声でぷつりと切れる。"
+PLANS["20"] = [   # 2026-10-24 素材から作り直し: 見世物小屋の演目（場面ごとに速さと感じが変わる）
+    ("barker", "barker", {"drums": "none", "lv": 1, "kind": "intro"}),
+    ("rope", "rope", {"drums": "lib", "lv": 2, "kind": "verse"}),
+    ("clown", "clown", {"drums": "ride", "lv": [0] * 8 + [1] * 4, "kind": "bridge", "bpm": 96}),
+    ("trapeze", "trapeze", {"drums": "shuffle", "lv": 3, "kind": "chorus", "bpm": 144}),
+    ("beasts", "beasts", {"drums": "tribal", "lv": 3, "kind": "break", "bpm": 108}),
+    ("finale", "finale", {"drums": "double", "lv": 3, "kind": "chorus", "bpm": 132, "semi": 1, "from": "break1bar"}),
+    ("curtain", "curtain", {"drums": "none", "lv": 1, "kind": "outro", "semi": 1}),
 ]
 
 # 21 群青の滑走路（140）: 離陸・巡航・着陸（テンポの山）。ベースだけのエンジン音（110）から加速して離陸、雲の上はドラムなし、着陸でテンポが下がり、ベースとバイオリンが残ってフェードアウト
