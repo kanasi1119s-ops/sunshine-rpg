@@ -16,6 +16,8 @@ for py in "$@"; do
   if [ -s "$json.reftone" ]; then npx tsx tools/composer/apply-ref-tone.mts "$json" "$(cat "$json.reftone")" > /dev/null || { echo "参考の音の失敗 $py"; continue; }; fi
   # 組どうしの大きさの上限と、人間の好み（リフ +5%・ドラム -10%）
   python3 "$(dirname "$py")/lm25_balance.py" "$json" > /dev/null || { echo "大きさの直しの失敗 $py"; continue; }
+  # MIDI のチャンネルあふれを直す（ピアノがシンバルの効果音で鳴るなど）
+  python3 "$(dirname "$py")/lm25_channels.py" "$json" > "/tmp/lm25/$base.ch.log" 2>&1 || { echo "チャンネルの直しの失敗 $py"; continue; }
   name=$(basename "$json" .json)
   title=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['title'])" "$json")
   flags="--drums naked --bass bnb-loud --master -13.5 --widen 1.0"
