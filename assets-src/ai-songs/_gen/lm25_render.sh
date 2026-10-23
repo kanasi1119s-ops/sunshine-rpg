@@ -19,7 +19,7 @@ for py in "$@"; do
   # MIDI のチャンネルあふれを直す（ピアノがシンバルの効果音で鳴るなど）
   python3 "$(dirname "$py")/lm25_channels.py" "$json" > "/tmp/lm25/$base.ch.log" 2>&1 || { echo "チャンネルの直しの失敗 $py"; continue; }
   name=$(basename "$json" .json)
-  title=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['title'])" "$json")
+  title=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['title'])" "$json"); title=${title//\//／}
   flags="--drums naked --bass bnb-loud --master -13.5 --widen 1.0"
   grep -qE '"instrument": ?"piano"' "$json" && flags="$flags --piano salamander"
   grep -qE '"patch": ?"(violin|viola|cello|contrabass|pizzicato|stringEnsemble|slowStrings|trumpet|trombone|tuba|horn|brassSection|oboe|bassoon|clarinet|piccolo|flute|timpani|marimba|churchOrgan|reedOrgan)"' "$json" && flags="$flags --orchestra vsco"
