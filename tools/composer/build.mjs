@@ -19,6 +19,12 @@ const namWasm = fs.readFileSync(root + "node_modules/@opendaw/nam-wasm/dist/nam.
 // 同梱のNAMモデル（MIT。assets-src/nam-models/README.md）
 const NAM_MODELS = { "builtin:highgain-a": ["ハイゲインアンプA", "highgain-a.nam"], "builtin:highgain-b": ["ハイゲインアンプB", "highgain-b.nam"], "builtin:bass-preamp": ["ベース用プリアンプ", "bass-preamp.nam"], "builtin:darkdays-ss": ["トランジスタのハイゲイン（アンプのみ。キャビネットIRを通す）", "darkdays-ss-highgain-di.nam"], "builtin:jvm-g4": ["マーシャル系の中くらいの歪み（アンプのみ。キャビネットIRを通す）", "marshall-jvm-g4.nam"] };  // Dark Days（CC BY 4.0・クレジット必要。docs/assets-credits.md）。Kay 703 は入手元の規約のため外した（2026-10-20）
 const namModels = Object.fromEntries(Object.entries(NAM_MODELS).map(([k, [label, file]]) => [k, { label, json: fs.readFileSync(root + "assets-src/nam-models/" + file, "utf8") }]));
+// 手元だけのNAMモデル（assets-src/nam-local/。git に入れない。再配布できない規約のもの。docs/assets-credits.md）。ファイルがあるときだけ埋め込む
+const LOCAL_NAM = { "local:archon-lead1": ["PRS Archon リード1（ゲイン5・明るめ）", "archon-lead1.nam"], "local:archon-lead2": ["PRS Archon リード2（ゲイン5）", "archon-lead2.nam"], "local:archon-lead3": ["PRS Archon リード3（ゲイン7）", "archon-lead3.nam"], "local:archon-clean2": ["PRS Archon クリーン2", "archon-clean2.nam"], "local:archon-mk2-boost": ["PRS Archon MKII ブースト・ハイゲイン", "archon-mk2-boost.nam"] };
+for (const [k, [label, file]] of Object.entries(LOCAL_NAM)) {
+  const f = root + "assets-src/nam-local/" + file;
+  if (fs.existsSync(f)) namModels[k] = { label, json: fs.readFileSync(f, "utf8") };
+}
 // 見本のアンプ定義（assets-src/amp-plugins/）
 const ampDir = root + "assets-src/amp-plugins/";
 const ampSamples = fs.readdirSync(ampDir).filter((f) => f.endsWith(".sunshine-amp.json")).map((f) => JSON.parse(fs.readFileSync(ampDir + f, "utf8")));

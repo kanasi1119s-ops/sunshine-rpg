@@ -429,6 +429,11 @@ void engine.setOverlaySoundfont("synth", bytesOf(synthsUrl).buffer as ArrayBuffe
 let namHost: NamHost | null = null;
 /** 同梱のNAMモデル（NAM作者のリポジトリにMITライセンスで入っている見本。docs/assets-credits.md）。キーは "builtin:〇〇"。 */
 const BUILTIN_NAM: Record<string, { label: string; json: string }> = typeof __NAM_MODELS__ === "object" ? __NAM_MODELS__ : {};
+/** 手元だけのモデル（"local:〇〇"）が、このビルドに入っていないときは、マーシャル系の歪み（builtin:jvm-g4）で代わりに鳴らす（素通しのクリーンにしない）。 */
+function localNamFallback<T extends { tracks: { amp?: { model?: string } }[] }>(sc: T): T {
+  for (const t of sc.tracks) if (t.amp?.model?.startsWith("local:") && !(t.amp.model in BUILTIN_NAM)) t.amp.model = "builtin:jvm-g4";
+  return sc;
+}
 try {
   if (typeof __NAM_PROCESSOR__ === "string" && typeof __NAM_WASM__ === "string") {
     const bin = atob(__NAM_WASM__);
@@ -530,7 +535,7 @@ function effectiveScore(): Score {
   const tracks = state.score.tracks.map((t, i) => ({ t, i })).filter(({ i }) => !state.muted.has(i) && (!soloOn || state.solo.has(i))).map(({ t }) => t);
   const base: Score = { ...state.score, tracks: tracks.length > 0 ? tracks : [{ waveform: "sine", volume: 0, notes: [{ note: REST, durationBeats: trackTotalBeats(state.score.tracks[0]) }] }] };
   // 同梱のNAMモデルは、プロジェクトには入れず、鳴らすときにだけ渡す
-  const used = new Set(base.tracks.map((t) => t.amp?.model).filter((m): m is string => !!m && m in BUILTIN_NAM));
+  const used = new Set(localNamFallback(base).tracks.map((t) => t.amp?.model).filter((m): m is string => !!m && m in BUILTIN_NAM));
   if (used.size) base.namModels = { ...(base.namModels ?? {}), ...Object.fromEntries([...used].map((k) => [k, BUILTIN_NAM[k].json])) };
   return state.edition === "ps2" ? ps2Edition(base) : state.edition === "real" ? realEdition(base) : base;
 }
@@ -1521,7 +1526,7 @@ let lastStemRate = 44100;
   async renderWav(score: Score, edition: State["edition"], opts?: { raw?: boolean }): Promise<string> {
     if (!soundfontCopy) throw new Error("録音音源を読み込めていません");
     // 同梱のNAMモデルは、曲のファイルには入れず、書き出すときにだけ渡す（effectiveScore と同じ）
-    const usedNam = new Set(score.tracks.map((t) => t.amp?.model).filter((m): m is string => !!m && m in BUILTIN_NAM));
+    const usedNam = new Set(localNamFallback(score).tracks.map((t) => t.amp?.model).filter((m): m is string => !!m && m in BUILTIN_NAM));
     if (usedNam.size) score = { ...score, namModels: { ...(score.namModels ?? {}), ...Object.fromEntries([...usedNam].map((k) => [k, BUILTIN_NAM[k].json])) } };
     const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
     const buffer = await renderScoreOffline({ ...edited, loop: false }, { soundfont: soundfontCopy, overlays: overlayBuffers(edited), processorUrl, edition, nam: namHost });
@@ -1549,7 +1554,7 @@ let lastStemRate = 44100;
   },
   async renderStems(score: Score, edition: State["edition"], opts?: { windowSec?: number; wantBus?: boolean; fixedGainDb?: number; keepStems?: boolean }): Promise<{ busWav: string | null; gainDb: number; seconds: number; channelsOf: Record<string, number[]>; analyses: Record<string, Analysis>; sampleRate: number }> {
     if (!soundfontCopy) throw new Error("録音音源を読み込めていません");
-    const usedNam = new Set(score.tracks.map((t) => t.amp?.model).filter((m): m is string => !!m && m in BUILTIN_NAM));
+    const usedNam = new Set(localNamFallback(score).tracks.map((t) => t.amp?.model).filter((m): m is string => !!m && m in BUILTIN_NAM));
     if (usedNam.size) score = { ...score, namModels: { ...(score.namModels ?? {}), ...Object.fromEntries([...usedNam].map((k) => [k, BUILTIN_NAM[k].json])) } };
     const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
     const info = scoreToMidiInfo({ ...edited, loop: false });

@@ -68,6 +68,10 @@ const NAM_AMPS = {
   namA: "builtin:highgain-a", namB: "builtin:highgain-b", namDD: "builtin:darkdays-ss",
   // 2026-10-21 マーシャル JVM410H（OD1・ゲイン4・トーン5）の録音データ（CC BY 4.0）から、この作曲ソフトで学習したモデル。アンプだけなので ampCabIr を通す
   namJVM: "builtin:jvm-g4",
+  // 2026-10-23 人間「リードギターの音が気になってしょうがない。prs の音源とかないかな」: PRS Archon の NAM（TONE3000、T3K 規約）。
+  //   手元だけに置く（assets-src/nam-local/。再配布できないので git に入れない）。無い環境では namJVM の代わりに鳴る（下の NAM_FALLBACK）
+  namArchonL1: "local:archon-lead1", namArchonL2: "local:archon-lead2", namArchonL3: "local:archon-lead3",
+  namArchonC2: "local:archon-clean2", namArchonBoost: "local:archon-mk2-boost",
 } as const;
 /**
  * 2026-10-20 人間「他の物で代用しましょう」: Kay 703 の NAM（namKay3〜10）は、入手元（TONE3000）の利用規約が再配布・商用配布を禁止しているため外した。
