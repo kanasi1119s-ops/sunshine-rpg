@@ -199,53 +199,16 @@ PLANS["12"] = [   # 2026-10-24 素材から作り直し: 前半が戦い、後�
 ]
 
 # 13 闇市の値札（108）: 値切りのかけ合い。サックスとベースで始まり、ギターとサックスが2小節→1小節と交互に言い合って、決めの一撃で「商談成立」
-DESC["13"] = "展開: かけ合い（値切り）。始まりはサックスとベースだけ、2番のAメロとソロでギターとバリトンサックスが2小節ずつ、最後は1小節ずつ言い合い、決めの一撃で商談成立。終わりはサックスがフェードアウト。"
-PLANS["13"] = ([
-    ("intro", "intro", {"keep": ["extra", "bass", "drums"], "drums": "ride"}),
-    ("intro", "intro", {"drums": "own"}),
-    ("verse", "verse", {"give": ("lead", "バリトンサックス"), "drums": "sparse"}),
-    ("verse", "verse", {}),
-    ("pre", "pre", {}),
-    ("chorus", "chorus", {}),
-    ("inter", "inter", {"drums": "half"}),
-] + alt("verse2", "verse2", 8, 2, {}, {"give": ("lead", "バリトンサックス")}, "haggle", "haggle") + [
-    ("pre", "pre2", {"drums": "build"}),
-    ("chorus", "chorus2", {}),
-    ("bridge", "bridge", {"drums": "shuffle"}),
-] + alt("solo", "solo", 4, 2, {}, {"give": ("lead", "バリトンサックス")}, "trade", "trade")
-  + alt("solo", "solo", 4, 1, {"drums": "double"}, {"give": ("lead", "バリトンサックス"), "drums": "double"}, "trade", "trade", start=4) + [
-    ("deal", "break", {"kime": [0, 0.5, 1.5, 3]}),
-    ("chorus", "chorus3", {"from": "stopBeat"}),
-    ("chorus", "chorus2", {"semi": 1, "drums": "double"}),
-    ("outro", "outro", {"drums": "own"}),
-    ("outro", ("intro", 0, 4), {"keep": ["extra"], "kind": "outro"}),
-])
-FADE["13"] = (0, 6)
-
-# 14 裏通りのサイレン（140）: クラブのドロップ型。サイレンのタッピングだけで始まり、4つ打ちのループ→スネアの助走→全員が抜けた1小節→ドロップ、を3回。終わりはループのフェードアウト
-DESC["14"] = "展開: クラブのドロップ型（4つ打ちのループ→スネアがだんだん細かくなる助走→1小節の空白→ドロップ、を3回）。始まりは遠くの空気だけで、低い音・心拍・リフの助走と空間が広がって盛大に始まる（タッピングなし）。終わりは4つ打ちのループがフェードアウト。"
-PLANS["14"] = [
-    # 2026-10-23 人間（14）「前奏が違う。だんだん小さい音が空間を広げて大きくなって盛大にスタートする感じ。ピロピロはいらない」:
-    #   タッピングのサイレンをやめ、遠くの空気（シンセの層）だけ → 低い音と心拍のキックが加わる → リフとドラムの助走で一気にふくらみ → 走るリフで盛大に始まる
-    ("intro", "intro", {"keep": ["extra", "fx"], "kind": "intro"}),
-    ("intro", "intro", {"keep": ["extra", "fx", "bass", "drums"], "drums": "heart", "kind": "intro"}),
-    ("intro", ("inter", 0, 4), {"keep": ["extra", "fx", "bass", "drums", "riff"], "drums": "build", "kind": "pre"}),
-    ("loop", "inter", {"drums": "kick4", "from": "break1bar"}),
-    ("loop", "inter2", {"drums": "kick4", "keep": ["drums", "bass", "riff"]}),
-    ("verse", "verse", {"drums": "kick4"}),
-    ("build", "run", {"drums": "build", "kind": "pre"}),
-    ("drop", "chorus", {"from": "break1bar", "kind": "chorus"}),
-    ("loop", "inter2", {"drums": "half"}),
-    ("verse", "verse2", {"drums": "kick4"}),
-    ("build", "run", {"drums": "build", "kind": "pre"}),
-    ("drop", "chorus2", {"from": "stopBeat", "drums": "double", "kind": "chorus"}),
-    ("bridge", "bridge", {"drums": "sparse"}),
-    ("siren", "siren", {"drums": "own"}),
-    ("loop", "inter", {"drums": "toms", "keep": ["drums", "bass", "riff", "extra"]}),
-    ("solo", "solo", {}),
-    ("build", ("run", 4, 8), {"drums": "build", "kind": "pre"}),
-    ("drop", "chorus3", {"from": "break1bar", "kind": "chorus"}),
-    ("outro", "inter", {"keep": ["riff", "drums", "bass"], "drums": "kick4", "kind": "outro"}),
+DESC["13"] = "展開: 値切りのかけ合い（売り手のサックスと買い手のリードが、2小節 → 1小節 → 2拍 → 同時と、言い返す間を短くしていく）。にらみ合いの無音、商談成立の決め。サックスのうなりで始まり、去っていくサックスのブルースで終わる。"
+PLANS["13"] = [   # 2026-10-24 素材から作り直し: 値切りのかけ合い（交代がだんだん短く → 同時 → 無音 → 決め）
+    ("stall", "stall", {"drums": "none", "lv": 1, "kind": "intro"}),
+    ("pitch", "pitch", {"drums": "lib", "lv": 2, "kind": "verse", "styles": ["funk", "hiphop", "rock"]}),
+    ("counter", "counter", {"drums": "lib", "lv": 2, "kind": "pre", "styles": ["funk", "rock", "loudrock"]}),
+    ("heat", "heat", {"drums": "double", "lv": 3, "kind": "chorus"}),
+    ("shout", "shout", {"drums": "double", "lv": 3, "kind": "chorus", "stop": True}),
+    ("stare", "stare", {"drums": "none", "lv": 0, "kind": "break"}),
+    ("deal", "deal", {"drums": "own", "lv": 3, "kind": "break", "kime": [0, 0.75, 1.5]}),
+    ("leave", "leave", {"drums": "ride", "lv": 1, "kind": "outro"}),
 ]
 FADE["14"] = (0, 10)
 
