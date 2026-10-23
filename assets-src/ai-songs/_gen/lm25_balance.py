@@ -157,13 +157,16 @@ if __name__ == "__main__":
     # 曲ごとのリフのやまびこ（<曲.json>.gains の "_guitar_delay": 混ぜる量）。2026-10-23 人間（01）「ギターにほんの少しディレイ入れよう」「リフ」
     #   看板リフ（と透明感の層）だけに、付点8分のうすいやまびこを、アンプのあとに足す。やまびこはチャンネルごとなので、
     #   リズムのギターと同じチャンネルにならないよう、看板リフの残響をわずかに変えて別のチャンネルにする
+    #   ただしチャンネルが足りない曲（01）では、別のチャンネルを増やすとハモリがリードのアンプに戻されて濁るので、
+    #   看板リフと同じ旋律を重ねる「透明感の層」（もとから別のチャンネル）があれば、そこにだけ少し多め（1.4倍）に掛ける
     if gtr_delay:
+        layer = [p for p in song["parts"] if p.get("instrument") in GUITARS and p.get("role", "").startswith("看板リフ（透明感")]
         for p in song["parts"]:
-            if p.get("instrument") in GUITARS and p.get("role", "").startswith("看板リフ"):
+            if p.get("instrument") in GUITARS and p.get("role", "").startswith("看板リフ") and (not layer or p in layer):
                 if p.get("role") == "看板リフ": p["reverb"] = round((p.get("reverb") or 0) + 0.01, 3)
                 fx = p.setdefault("fx", [])
                 if not any(f.get("type") in ("delay", "pingpong") for f in fx):
-                    fx.append({"type": "delay", "beats": 0.75, "mix": gtr_delay, "feedback": 0.22})
+                    fx.append({"type": "delay", "beats": 0.75, "mix": round(gtr_delay * (1.4 if layer else 1.0), 3), "feedback": 0.22})
                     fit_fx(p)
         log.append(f"リフのやまびこ {gtr_delay}")
     json.dump(song, open(path, "w"), ensure_ascii=False)
