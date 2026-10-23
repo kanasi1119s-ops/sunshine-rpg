@@ -25,7 +25,7 @@ CH = {"intro": ["Em", "Em", "C", "B7"], "inter": RIFFCH, "verse": VERSE, "run": 
       "chorus2": CHORUS, "bridge": ["Am7", "Em7", "Am7", "Em7", "Cmaj7", "Bm7", "Am7", "B7sus4", "Am7", "Em7", "Cmaj7", "B7"],
       "siren": ["Em", "Em", "C", "B7"], "solo": ["Em", "C", "D", "B7"] * 3, "chorus3": CHORUS, "outro": ["E5", "E5"]}
 song = Song("裏通りのサイレン（仮）",
-            "仮: ラウド25曲（第2シリーズ）の14曲目。イメージは裏通りの追跡劇。E 短調・140。曲の頭からタッピングのサイレン、8分の単音で走るリフ、倍のノリの Aメロ、"
+            "仮: ラウド25曲（第2シリーズ）の14曲目。イメージは裏通りの追跡劇。E 短調・140。遠くの空気から空間が広がって盛大に始まり、8分の単音で走るリフ、倍のノリの Aメロ、"
             "サビは C から開け F（♭Ⅱ）で目がくらむ。路地に隠れる場面はミュートのトランペット。最後は突然の無音。別の楽器はミュートのトランペット。インスト（歌は後日）。自作",
             BPM, BEATS, FORM, CH)
 song.desc += " 物語: 逃げる者と追う者。サイレンが近づき、路地に隠れ、見つかり、最後は突然の無音。"
@@ -207,6 +207,16 @@ song.add([clean_part(J(f"c{j}"), vol=0.07, pan=[-0.3, 0.3, 0.05][j], role=f"ク�
 song.add(bass_part(J("bass")))
 song.add(drum_parts(kit))
 song.add(cymfx_part(" ".join(FX)))
+
+# 前奏の空気（2026-10-23 人間「だんだん小さい音が空間を広げて大きくなって盛大にスタートする感じ。ピロピロはいらない」）:
+#   うねって広がるパッドが、1つの和音ごとにゆっくりふくらみ（attack 長め）、ガラスのようなプラックが左右に散って空間を広げる。前奏の小節だけで鳴る
+INTRO_PAD = [["E3", "E3", "C3", "B2"], ["G3", "B3", "G3", "F#3"], ["B3", "E4", "E4", "D#4"]]
+INTRO_GLASS = ["R:2 B5:1 R:1", "R:1 E6:1 R:0.5 B5:0.5 R:1", "R:0.5 G5:0.5 R:0.5 E6:0.5 R:0.5 B5:0.5 R:1", "R:0.5 D#6:0.5 B5:0.5 F#5:0.5 R:0.5 A5:0.5 F#6:0.5 R:0.5"]
+for v in range(3):
+    seq = [bar(f"{INTRO_PAD[v][i]}:4") if name == "intro" else R4 for name, i in SECS]
+    song.add(part(f"追加の楽器: 前奏の空気（{v + 1}）", "pad", " ".join(seq), patch="sweep", volume=0.06, pan=0, reverb=0.6, attack=1.2, release=2.0, sustain=1.0))
+song.add(part("追加の楽器: 前奏のきらめき", "pad", " ".join(bar(INTRO_GLASS[i]) if name == "intro" else R4 for name, i in SECS), patch="glassPluck", volume=0.05, pan=0.2, reverb=0.5,
+              fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.3, "feedback": 0.4}]))
 
 # 参考の音と追加の楽器（2026-10-23 人間「残り24曲、作った音源のどれかに合わせて」「プラスで何か楽器を追加」）
 song.ref_tone = "dark-electro-rock"
