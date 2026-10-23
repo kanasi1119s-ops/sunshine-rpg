@@ -1653,6 +1653,27 @@ export function applyRefTone(score: Score, tone: RefTone): Score {
   return { ...score, tracks, refTone: tone.id } as Score;
 }
 
+/**
+ * リードギター専用の音作り（6つの参考の音で共通。2026-10-23 の聞き比べで人間が選んだ③）。
+ * 参考の音の「歌の EQ」は 2.5k・3.9k を深く削り 4.5k より上を持ち上げるため、リードギターでは抜ける帯域が消えてザラつきだけが残った
+ * （人間「歪があるんだけど透き通るような伸びが欲しくて、余韻も感じたい」「歪が汚い」）。
+ * アンプは PRS Archon のリード1（手元だけのモデル。無い環境ではマーシャル系で代わりに鳴る）を浅い歪み（0.45）で。
+ * 濁り（350Hz）を少し削り、歌う帯域（1.6kHz）を出し、刺さる 4.2kHz だけを細く削って、11.5kHz までの空気感は残す。付点8分の薄いやまびこと残響の送りで余韻。
+ */
+export const LEAD_GUITAR = {
+  amp: "namArchonL1",
+  ampDrive: 0.45,
+  ampGate: 3,
+  fx: [
+    { type: "filter", kind: "highpass", freq: 120, q: 0.7 },
+    { type: "eq", low: 0, mid: -2.5, midHz: 350, high: 0 },
+    { type: "eq", low: 0, mid: 2.0, midHz: 1600, high: 0 },
+    { type: "eq", low: 0, mid: -2.0, midHz: 4200, high: 0 },
+    { type: "filter", kind: "lowpass", freq: 11500, q: 0.6 },
+    { type: "delay", beats: 0.75, mix: 0.16, feedback: 0.3 },
+  ] as FxSpec[],
+};
+
 /** AIソング形式のパート（JSON）。 */
 interface SongPart { role?: string; instrument?: string; patch?: string; volume?: number; fx?: FxSpec[]; double?: unknown; [k: string]: unknown }
 
@@ -1679,6 +1700,8 @@ export function applyRefToneToSong<T extends { parts?: SongPart[] }>(song: T, to
       return n;
     }
     if (p.patch === "cymbalFx" || p.patch === "guitarFx") return p;   // 本物のシンバル・ギターの効果音は変えない
+    // リードギター（歌の代わり）は、歌の EQ ではなくリード専用の音作り（LEAD_GUITAR）。6つの参考の音で共通（2026-10-23 人間「これで音源6個を合わせて」）
+    if (g === "vocal" && GUITARS.has(ins)) return scaled({ ...p, ...LEAD_GUITAR, fx: LEAD_GUITAR.fx.map((f) => ({ ...f })), sustain: Math.max(Number(p.sustain ?? 0), 2), release: Math.max(Number(p.release ?? 0), 0.9), reverb: Math.max(Number(p.reverb ?? 0), 0.25) }, tone.balanceDb?.vocal);
     if (g === "vocal") return scaled({ ...p, fx: roomOnly(tone.vocal) }, tone.balanceDb?.vocal);
     // ベースは、アンプのあとの圧縮などを先に、EQ をあとに（再現2と同じ順番）
     if (g === "bass") return scaled({ ...p, fx: [...(p.fx ?? []).filter((f) => f.type !== "eq" && f.type !== "filter"), ...tone.bass.map((f) => ({ ...f }))] }, tone.balanceDb?.bass);

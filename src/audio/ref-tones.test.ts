@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { REF_TONES, applyRefTone, applyRefToneToSong } from "./ref-tones";
+import { LEAD_GUITAR, REF_TONES, applyRefTone, applyRefToneToSong } from "./ref-tones";
 import type { Score } from "./score";
 import type { FxSpec } from "./fx-chain";
 
@@ -58,7 +58,8 @@ describe("参考の音", () => {
     expect(out.parts[0].double).toEqual({ spread: 1 });
     expect(out.parts[0].volume).toBeCloseTo(0.1 * 1.1, 3);   // BMTH のリフは 1.1倍
     expect(out.parts[0].fx?.map((f) => f.type)).not.toContain("plate");
-    expect(out.parts[1].fx?.filter((f) => f.type !== "room")).toEqual(tone.vocal);
+    expect(out.parts[1].fx).toEqual(LEAD_GUITAR.fx);   // リードギターは、歌の EQ ではなくリード専用の音作り（6つで共通）
+    expect((out.parts[1] as { amp?: string }).amp).toBe("namArchonL1");
     expect(out.parts[1].volume).toBeCloseTo(0.13 * Math.pow(10, (tone.balanceDb?.vocal ?? 0) / 20), 3);
     expect(out.parts[2].fx?.some((f) => f.type === "delay")).toBe(true);
     expect(out.parts[3]).toEqual(song.parts[3]);
