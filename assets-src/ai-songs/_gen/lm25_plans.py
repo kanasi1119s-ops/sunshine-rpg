@@ -115,21 +115,15 @@ PLANS["06"] = [   # 2026-10-24 素材から作り直し: 聖歌の行進 → 崩
 FADE["06"] = (0, 8)
 
 # 07 羽の落ちる速さ（120）: 逆さ構成。いきなり最後のサビから始まり、だんだん楽器が減り、テンポも落ちて、ハープだけが舞い落ちて終わる
-DESC["07"] = "展開: 逆さ構成（いきなり最後のサビの山場から始まり、Aメロ→静かなサビ→ハープだけ、と羽が落ちるように音が減っていく。テンポも 120→108→92 と遅くなる）。"
-PLANS["07"] = [
-    ("chorus", "chorus3", {}),
-    ("break", "break", {"kime": [0, 1.5, 3]}),
-    ("inter", "inter", {}),
-    ("verse", "verse2", {}),
-    ("pre", "pre2", {}),
-    ("chorus", "chorus2", {"drums": "half"}),
-    ("solo", "solo", {"drums": "double"}),
-    ("bridge", "bridge", {"drums": "sparse"}),
-    ("inter", "inter", {"drums": "half", "drop": ["lead"]}),
-    ("verse", "verse", {"drums": "ride", "drop": ["rhythm"]}),
-    ("pre", "pre", {"soft": ["lead"], "drums": "sparse"}),
-    ("chorus", "chorus", {"keep": ["lead", "bass", "extra", "gtr"], "soft": ["lead"], "bpm": (108, 4)}),
-    ("outro", "bridge", {"keep": ["extra"], "bpm": (92, 6), "kind": "outro"}),
+DESC["07"] = "展開: 一本の長い落下（成層圏・雲・風・急降下・地面の直前と、場面ごとに 84→132 へ速く、音域は低く、厚みは重く）。ハープだけで始まり、着地の1小節の無音のあと、ハープだけで終わる。"
+PLANS["07"] = [   # 2026-10-24 素材から作り直し: 一本の長い落下（速く・低く・重くなる）
+    ("strato", "strato", {"drums": "none", "lv": 0, "kind": "intro"}),
+    ("cloud", "cloud", {"drums": "sparse", "lv": 1, "kind": "verse", "bpm": 96}),
+    ("wind", "wind", {"drums": "lib", "lv": 2, "kind": "chorus", "bpm": 108}),
+    ("dive", "dive", {"drums": "double", "lv": 3, "kind": "chorus", "bpm": 120}),
+    ("ground", "ground", {"drums": "half", "lv": 3, "kind": "break", "bpm": 132}),
+    ("impact", "impact", {"drums": "none", "lv": 0, "kind": "break"}),
+    ("feather", "feather", {"drums": "none", "lv": 0, "kind": "outro", "bpm": 84}),
 ]
 FADE["07"] = (0, 6)
 

@@ -138,8 +138,8 @@ for idx, (name, i) in enumerate(SECS):
     root = root_note(ch)
     riff = rhy = rhy_in = clean = lead = sax = mute = R4
     if name == "rain":
-        clean = RAIN[i]
-        b = bar(f"C#1:4,") if i < 4 else (bar(f"{root}:4") if not last else bar(f"{root}:2 R:1 C#2:0.5! C#2:0.5!"))
+        clean = " ".join(x if x.startswith("R") else x + "!" for x in RAIN[i].split())   # 雨粒ははっきり（前奏が聞こえないと言われた。人間「01の前奏、音量マックスでも最初ほとんど聞こえない」）
+        b = bar(f"C#1:4") if i < 4 else (bar(f"{root}:4") if not last else bar(f"{root}:2 R:1 C#2:0.5! C#2:0.5!"))
     elif name.startswith("neon"):
         seq = RIFF[ch]; riff = seq[i % len(seq)]
         if name == "neon3":                                  # 傷ついた看板: リフは小節の頭の一撃だけ
@@ -213,6 +213,16 @@ song.add(part("アルトサックス", "brass", J("sax"), patch="altoSax", volum
               fx=[{"type": "eq", "low": -2, "mid": 1, "midHz": 1500, "high": 0}, {"type": "delay", "beats": 0.75, "mix": 0.1, "feedback": 0.2}, {"type": "plate", "mix": 0.18}]))
 song.add(bass_part(J("bass")))
 song.add(bassmute_part(J("mute")))
+# 雨の空気（前奏と夜明けだけ）: 暗いパッドで和音を薄く敷き、路地の湿った空間を作る（小さいスピーカーでも前奏が聞こえるように中域を持たせる）
+AIR = []
+for idx, (name, i) in enumerate(SECS):
+    ch = song.chords[name][i]
+    if name in ("rain", "dawn") and not (name == "dawn" and i >= 10):
+        t = chord_tones(ch, "G#3", "G#4")[:3]
+        AIR.append(bar(f"{t[0]}:4") if i % 2 == 0 else bar(f"{t[1]}:4"))
+    else:
+        AIR.append(R4)
+song.add(part("追加の楽器: 雨の空気", "pad", " ".join(AIR), patch="atmosphere", volume=0.09, pan=0, reverb=0.5, attack=1.0, release=2.0))
 song.add(drum_parts(kit))
 song.add(cymfx_part(" ".join(FX)))
 
