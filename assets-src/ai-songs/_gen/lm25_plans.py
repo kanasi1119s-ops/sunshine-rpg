@@ -56,25 +56,16 @@ PLANS["02"] = [   # 2026-10-24 素材から作り直し: 同じ16小節を半音
 FADE["02"] = (0, 12)
 
 # 03 嵐の背骨（138）: 積み上げと「嵐の目」。チェロ1本から始まり、少しずつ楽器が増えて嵐になり、途中で全部が止んで目に入り、雷のドラムソロ、最後はいきなり切れる
-DESC["03"] = "展開: 積み上げ型（チェロ1本→風→雨→嵐と楽器が増える）。途中で全部が止む『嵐の目』（チェロとパッドだけ）、雷のドラムソロ、最後の嵐はいきなり切れて終わる。"
-PLANS["03"] = [
-    ("intro", "bridge", {"keep": ["extra"], "kind": "intro"}),
-    ("intro", "intro", {"keep": ["extra", "drums", "bass"], "drums": "sparse"}),
-    ("verse", "verse", {"drums": "half"}),
-    ("pre", "pre", {"drums": "build"}),
-    ("chorus", "chorus", {}),
-    ("inter", "inter", {"drums": "toms"}),
-    ("verse", "verse2", {}),
-    ("pre", "pre2", {"drums": "build", "from": "riser"}),
-    ("chorus", "chorus2", {"drums": "double"}),
-    ("break", ("break", 0, 4), {"kime": [0, 1.5, 3], "semi": 0}),
-    ("eye", "bridge", {"keep": ["extra", "gtr"], "kind": "bridge", "from": "break1bar"}),
-    ("solo", "solo", {}),
-    ("thunder", ("break", 0, 4), {"keep": ["drums"], "drums": "solo", "kind": "break"}),
-    ("chorus", "chorus3", {"from": "stopBeat"}),
-    ("chorus", ("chorus3", 8, 16), {"semi": 2}),
-    ("inter", "inter", {"semi": 2, "drums": "double"}),
-    ("outro", "break", {"semi": 2, "stop": True, "drums": "own"}),
+DESC["03"] = "展開: 台風の通過（外側の暴風の壁＝速いスラッシュ → 目＝72 に落ちて完全な静けさ → 背後の壁＝100 のドゥームで前半より重い。サビは背後の壁の頂点に1回だけ）。チェロのトレモロで近づき、拍の頭で突然切れて終わる。"
+PLANS["03"] = [   # 2026-10-24 素材から作り直し: 台風の通過（外側の壁・目・背後の壁）
+    ("approach", "approach", {"drums": "own", "lv": [0, 0, 0, 0, 1, 1, 1, 1], "kind": "intro"}),
+    ("wall1", ("wall1", 0, 8), {"drums": "double", "lv": 2, "kind": "chorus"}),
+    ("wall1b", ("wall1", 8, 24), {"drums": "double", "lv": 3, "kind": "chorus"}),
+    ("wall1c", ("wall1", 24, 32), {"drums": "lib", "lv": 3, "kind": "chorus", "stop": True}),
+    ("eye", "eye", {"drums": "own", "lv": 0, "kind": "bridge", "bpm": 72}),
+    ("wall2", ("wall2", 0, 16), {"drums": "half", "lv": 3, "kind": "break", "bpm": 100, "from": "break1bar"}),
+    ("peak", ("wall2", 16, 32), {"drums": "lib", "lv": 3, "kind": "chorus"}),
+    ("tail", ("wall2", 32, 40), {"drums": "half", "lv": 3, "kind": "break"}),
 ]
 
 # 04 沈黙の掟（88）: 沈黙（全休止）が主役。ピアノ1人で始まり、重い音の間に「何も鳴らない小節」が入る。最後もピアノだけで、ぷつりと終わる
