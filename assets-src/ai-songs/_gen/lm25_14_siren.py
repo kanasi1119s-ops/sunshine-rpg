@@ -41,30 +41,32 @@ RIFF = {"Em": [bar("E2:0.5! E3:0.5 D3:0.5 B2:0.5 G2:0.5 A2:0.5 B2:0.5 D3:0.5"), 
 SIREN = {"Em": [["B4", "E5", "G5"], ["E5", "G5", "B5"]], "C": [["C5", "E5", "G5"], ["G4", "C5", "E5"]], "B7": [["D#5", "F#5", "A5"], ["A4", "D#5", "F#5"]],
          "D": [["D5", "F#5", "A5"], ["A4", "D5", "F#5"]]}
 
-VERSE_MEL = [bar("R:0.5 B4:0.5 B4:0.5 A4:0.5 G4:1 E4:1"), bar("R:0.5 E4:0.5 G4:0.5 A4:0.5 B4:2"), bar("R:0.5 C5:0.5 C5:0.5 B4:0.5 G4:1 E4:1"), bar("F#4:1 A4:1 D5:2"),
-             bar("R:0.5 B4:0.5 D5:0.5 E5:0.5 D5:1 B4:1"), bar("G4:1 A4:0.5 B4:0.5 E4:2"), bar("R:0.5 C5:0.5 E5:0.5 C5:0.5 A4:2"), bar("D#5:2 F#5:1 R:1")]
-VERSE2_MEL = [bar("R:0.5 E5:0.5 E5:0.5 D5:0.5 B4:1 G4:1"), bar("R:0.5 G4:0.5 B4:0.5 D5:0.5 E5:2"), bar("R:0.5 E5:0.5 E5:0.5 D5:0.5 C5:1 G4:1"), bar("A4:1 D5:1 F#5:2"),
-              bar("R:0.5 E5:0.5 G5:0.5 B5:0.5 A5:1 G5:1"), bar("E5:1 F#5:0.5 G5:0.5 B4:2"), bar("R:0.5 E5:0.5 A5:0.5 E5:0.5 C5:2"), bar("D#5:2 B5:1 R:1")]
-RUN_MEL = [bar("E5:1 G5:1 C5:2"), bar("F#5:1 A5:1 D5:2"), bar("G5:1.5 F#5:0.5 E5:2"), bar("B4:1 E5:1 G5:2"),
-           bar("C6:1 G5:1 E5:2"), bar("D6:1 A5:1 F#5:2"), bar("E5:2 F#5:2"), bar("D#5:2 R:2")]
-CHORUS_MEL = [bar("E5:1 G5:1 C6:2!"), bar("B5:1 A5:0.5 G5:0.5 D5:2"), bar("C6:1 B5:0.5 A5:0.5 E5:2"), bar("G5:1 F#5:0.5 E5:0.5 B4:2"),
-              bar("F5:1 A5:1 C6:2!"), bar("E6:2! D6:1 C6:1"), bar("A5:1 F#5:1 D6:2"), bar("D#6:2 B5:1 R:1"),
-              bar("R:0.5 E5:0.5 G5:0.5 C6:0.5 G5:2"), bar("R:0.5 F#5:0.5 A5:0.5 D6:0.5 C6:2"), bar("B5:4"), bar("E5:2 R:2")]
+# 2026-10-24 旋律を作り直し（人間「似た曲を作らない」。前の旋律は「4分4分2分」など、シリーズの多くの曲と同じリズムだった）:
+#   インダストリアルの合唱のような、裏拍の短い突き（16分2つ＋休み）と、オクターブの跳躍。小節の終わりは休む
+STAB = [[-0.5, 0.25, 0.25, -0.5, 0.5, -0.25, 0.25, 0.5, -1], [0.25, 0.25, -0.5, 0.25, 0.25, -0.5, 0.75, -1.25],
+        [-0.25, 0.25, 0.25, 0.25, -0.5, 0.5, 0.5, -0.5, 0.25, 0.25, -0.5], [-1, 0.25, 0.25, 0.5, -0.5, 0.25, 0.25, 0.5, -0.5]]
+EMIN = scale_pcs("E", "aeolian")
+VERSE_MEL = [bar(x) for x in melody_walk(EMIN, "B4", "E4", STAB, 1, CH["verse"], contour=(0, 0, 2, -2, 1, -1, 4, -4), lo="D4", hi="D5")]
+VERSE2_MEL = [bar(x) for x in melody_walk(EMIN, "E5", "G4", STAB, 2, CH["verse2"], contour=(0, 0, -2, 2, -1, 1, -4, 4), lo="E4", hi="E5")]
+RUN_MEL = [bar(x) for x in melody_walk(EMIN, "G4", "D5", STAB, 3, CH["run"], contour=(0, 1, 1, -1, 2, 0), lo="E4", hi="E5")]
+CHORUS_MEL = [bar("R:0.5 E5:0.25 E5:0.25 R:0.5 G5:0.5 R:0.25 E5:0.25 D5:0.5 R:1"), bar("R:0.5 D5:0.25 D5:0.25 R:0.5 B4:0.75 R:0.25 G4:0.5 R:1"),
+              bar("R:0.5 C5:0.25 C5:0.25 R:0.5 E5:0.5 R:0.25 C5:0.25 A4:0.5 R:1"), bar("B4:0.25 B4:0.25 R:0.5 G4:0.25 B4:0.25 R:0.5 E5:0.75 R:1.25"),
+              bar("R:0.5 C5:0.25 C5:0.25 R:0.5 F5:0.5 R:0.25 C5:0.25 A4:0.5 R:1"), bar("E5:0.25 E5:0.25 R:0.5 C5:0.25 E5:0.25 R:0.5 G4:0.75 R:1.25"),
+              bar("R:0.5 F#5:0.25 F#5:0.25 R:0.5 D5:0.5 R:0.25 A4:0.25 D5:0.5 R:1"), bar("D#5:0.25 D#5:0.25 R:0.5 F#4:0.25 B4:0.25 R:0.5 D#5:0.75 R:1.25"),
+              bar("R:0.5 E5:0.25 E5:0.25 R:0.5 G5:0.5 R:0.25 E5:0.25 C5:0.5 R:1"), bar("R:0.5 F#5:0.25 F#5:0.25 R:0.5 C5:0.5 R:0.25 A4:0.25 F#4:0.5 R:1"),
+              bar("R:0.5 E5:0.25 E5:0.25 R:0.5 B4:0.5 R:0.25 G4:0.25 E4:0.5 R:1"), bar("E5:0.25 R:0.25 E4:0.25 R:3.25")]
 CHORUS2_MEL = list(CHORUS_MEL)
-CHORUS2_MEL[1] = bar("B5:1 D6:0.5 B5:0.5 G5:2")
-CHORUS2_MEL[3] = bar("G5:1 B5:0.5 G5:0.5 E5:2")
-CHORUS2_MEL[10] = bar("B5:2 E6:2!")
-CHORUS2_MEL[6] = bar("A5:1 D6:1 F#5:2")
-CHORUS3_MEL = list(CHORUS_MEL)
-CHORUS3_MEL[0] = bar("E5:0.5 G5:0.5 C6:1 E6:2!")
-CHORUS3_MEL[8] = bar("R:0.5 G5:0.5 C6:0.5 E6:0.5 D6:2")
-CHORUS3_MEL[5] = bar("E6:1 G5:1 C6:2")
-CHORUS3_MEL[10] = bar("B5:2 D6:1 E6:1")
-CHORUS3_MEL[11] = bar("E6:2! R:2")
-# 隠れる路地: ミュートのトランペット
-TRUMPET = [bar("R:1 E4:0.5 G4:0.5 C5:2"), bar("B4:2 G4:1 R:1"), bar("R:0.5 A4:0.5 C5:0.5 E5:0.5 G4:2"), bar("F#4:1 G4:1 B4:2"),
-           bar("R:1 B4:0.5 G4:0.5 E4:2"), bar("F#4:2 A4:1 D5:1"), bar("C5:3 B4:1"), bar("E4:2 F#4:2"),
-           bar("R:1 C5:0.5 E5:0.5 G4:2"), bar("B4:4"), bar("R:0.5 E4:0.5 G4:0.5 B4:0.5 E5:2"), bar("D#5:2 R:2")]
+CHORUS2_MEL[1] = bar("R:0.5 D5:0.25 D5:0.25 R:0.25 G5:0.25 D5:0.5 R:0.25 B4:0.25 G4:0.5 R:1")
+CHORUS2_MEL[3] = bar("B4:0.25 B4:0.25 R:0.25 E5:0.25 G4:0.25 B4:0.25 R:0.5 E5:0.75 R:1.25")
+CHORUS2_MEL[10] = bar("R:0.5 E5:0.25 E5:0.25 R:0.25 B4:0.25 E5:0.5 R:0.25 G4:0.25 E4:0.5 R:1")
+CHORUS3_MEL = list(CHORUS2_MEL)
+CHORUS3_MEL[0] = bar("E5:0.25 E5:0.25 R:0.25 E5:0.25 R:0.5 G5:0.5 R:0.25 E5:0.25 D5:0.5 R:1")
+CHORUS3_MEL[8] = bar("E5:0.25 E5:0.25 R:0.25 E5:0.25 R:0.5 G5:0.5 R:0.25 E5:0.25 C5:0.5 R:1")
+CHORUS3_MEL[11] = bar("E5:0.5! R:0.5 E4:0.5! R:2.5")
+# 隠れる路地: ミュートのトランペット（2026-10-24 リズムを作り直し: 小節の終わりで伸ばさず、裏から入って途中で切る）
+TRUMPET = [bar("R:1 E4:0.5 G4:0.25 C5:1.25 R:1"), bar("B4:0.75 G4:0.25 R:0.5 E4:0.5 G4:1 R:1"), bar("R:0.5 A4:0.25 C5:0.25 E5:0.5 R:0.25 G4:1.25 R:1"),
+           bar("F#4:0.5 G4:0.5 R:0.5 B4:1.5 R:1"), bar("R:1.5 B4:0.25 G4:0.25 E4:1 R:1"), bar("F#4:0.75 R:0.25 A4:0.5 D5:1 R:1.5"), bar("C5:1.5 B4:0.5 R:2"),
+           bar("R:0.5 E4:0.5 F#4:0.5 G4:0.5 R:2"), bar("R:1 C5:0.25 E5:0.25 G4:1.5 R:1"), bar("B4:2.5 R:1.5"), bar("R:0.5 E4:0.25 G4:0.25 B4:0.5 E5:1 R:1.5"), bar("D#5:1.5 R:2.5")]
 VOICE = {"Am7": ["E3", "G3", "C4"], "Em7": ["D3", "G3", "B3"], "Cmaj7": ["E3", "G3", "B3"], "Bm7": ["D3", "F#3", "A3"], "B7sus4": ["E3", "F#3", "A3"], "B7": ["D#3", "F#3", "A3"]}
 SOLO_MEL = {3: bar("D#5:0.5 F#5:0.5 A5:0.5 B5:0.5 D#6:2"), 7: bar("B5:2^^ R:2"), 11: bar("F#5:0.5 A5:0.5 B5:1 D#6:2")}
 
@@ -108,8 +110,8 @@ for idx, (name, i) in enumerate(SECS):
     elif name == "verse2": lead = VERSE2_MEL[i]
     elif name == "run": lead = RUN_MEL[i]
     elif name == "chorus": lead = CHORUS_MEL[i]
-    elif name == "chorus2": lead = CHORUS2_MEL[i]; harm8 = shift_oct(strip_marks(lead), -1)
-    elif name == "chorus3": lead = CHORUS3_MEL[i]; harm8 = shift_oct(strip_marks(lead), -1)
+    elif name == "chorus2": lead = CHORUS2_MEL[i]
+    elif name == "chorus3": lead = CHORUS3_MEL[i]
     elif name in ("intro", "siren"):
         tri = SIREN[{"Em": "Em", "C": "C", "B7": "B7"}[base_ch]][i % 2]
         tapn = bar(tap(tri, 4, pattern=(0, 1, 2, 1) if i % 2 == 0 else (2, 1, 0, 1)))
@@ -225,6 +227,7 @@ add_layer(song, "synthpad", "サイレンの残響が、街の空気をふるわ
 # 展開の型（2026-10-23 人間「展開が全曲同じ」「4分から5分」）。lm25_plans.py
 from lm25_plans import apply_plan
 apply_plan(song, "14")
+song.auto_harm = song.auto_oct = song.auto_air = song.auto_range = False    # 2026-10-24: 型（自動のハモリ・オクターブ上・空気の層）は使わない
 
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "/tmp/lm25/lm25-14-siren.json"

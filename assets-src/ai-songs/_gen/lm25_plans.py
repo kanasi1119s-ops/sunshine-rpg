@@ -210,6 +210,31 @@ PLANS["13"] = [   # 2026-10-24 素材から作り直し: 値切りのかけ合�
     ("deal", "deal", {"drums": "own", "lv": 3, "kind": "break", "kime": [0, 0.75, 1.5]}),
     ("leave", "leave", {"drums": "ride", "lv": 1, "kind": "outro"}),
 ]
+# 14 裏通りのサイレン（140）: クラブのドロップ型。サイレンのタッピングだけで始まり、4つ打ちのループ→スネアの助走→全員が抜けた1小節→ドロップ、を3回。終わりはループのフェードアウト
+DESC["14"] = "展開: クラブのドロップ型（4つ打ちのループ→スネアがだんだん細かくなる助走→1小節の空白→ドロップ、を3回）。始まりは遠くの空気だけで、低い音・心拍・リフの助走と空間が広がって盛大に始まる（タッピングなし）。終わりは4つ打ちのループがフェードアウト。"
+PLANS["14"] = [
+    # 2026-10-23 人間（14）「前奏が違う。だんだん小さい音が空間を広げて大きくなって盛大にスタートする感じ。ピロピロはいらない」:
+    #   タッピングのサイレンをやめ、遠くの空気（シンセの層）だけ → 低い音と心拍のキックが加わる → リフとドラムの助走で一気にふくらみ → 走るリフで盛大に始まる
+    ("intro", "intro", {"keep": ["extra", "fx"], "kind": "intro"}),
+    ("intro", "intro", {"keep": ["extra", "fx", "bass", "drums"], "drums": "heart", "kind": "intro"}),
+    ("intro", ("inter", 0, 4), {"keep": ["extra", "fx", "bass", "drums", "riff"], "drums": "build", "kind": "pre"}),
+    ("loop", "inter", {"drums": "kick4", "from": "break1bar"}),
+    ("loop", "inter2", {"drums": "kick4", "keep": ["drums", "bass", "riff"]}),
+    ("verse", "verse", {"drums": "kick4"}),
+    ("build", "run", {"drums": "build", "kind": "pre"}),
+    ("drop", "chorus", {"from": "break1bar", "kind": "chorus"}),
+    ("loop", "inter2", {"drums": "half"}),
+    ("verse", "verse2", {"drums": "kick4"}),
+    ("build", "run", {"drums": "build", "kind": "pre"}),
+    ("drop", "chorus2", {"from": "stopBeat", "drums": "double", "kind": "chorus"}),
+    ("bridge", "bridge", {"drums": "sparse"}),
+    ("siren", "siren", {"drums": "own"}),
+    ("loop", "inter", {"drums": "toms", "keep": ["drums", "bass", "riff", "extra"]}),
+    ("solo", "solo", {}),
+    ("build", ("run", 4, 8), {"drums": "build", "kind": "pre"}),
+    ("drop", "chorus3", {"from": "break1bar", "kind": "chorus"}),
+    ("outro", "inter", {"keep": ["riff", "drums", "bass"], "drums": "kick4", "kind": "outro"}),
+]
 FADE["14"] = (0, 10)
 
 # 15 月の裏で眠る（82）: アーチ形式（鏡のように折り返す）。鉄琴で始まり、夢→落下→夜→真ん中の山場→夜→落下→夢と同じ道を戻って、始まりの鉄琴でフェードアウト
