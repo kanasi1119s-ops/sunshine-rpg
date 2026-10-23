@@ -27,7 +27,7 @@ export interface RefTone {
    * 楽器どうしの大きさの比を参考に合わせるために、パートの音量に掛ける量（dB。ギターが基準）。2026-10-23 人間「楽器同士の大きさの比も保存して」。
    * こちらの音（聞き比べ G＝ラウド25曲の土台）にこの EQ を当てたあとの大きさと、参考録音の楽器ごとの大きさ（音源分離）の差から計算した。
    */
-  /** 2026-10-23 人間「個人的にベースを50ぐらい上げてほしい」→ bass は計算値に +3.5dB（音量 1.5倍）した値。 */
+  /** 2026-10-23 人間「個人的にベースを50ぐらい上げてほしい」→ bass は計算値に +3.5dB（1.5倍）→ 人間「全部に 1.5 は強いかな…1.2 にしよう」で +1.6dB（音量 1.2倍）にした値。 */
   balanceDb?: { bass: number; drums: number; vocal: number; other: number };
   /** リフ（role が「看板リフ」で始まる歪みギター）の音量に掛ける量（dB）。2026-10-23 人間「bmth のリフの音量 1.1倍にしよう」。書き出し（曲の JSON）でだけ効く。 */
   riffDb?: number;
@@ -284,7 +284,7 @@ export const REF_TONES: Record<string, RefTone> = {
       }
     ],
     "balanceDb": {
-      "bass": -13.8,
+      "bass": -15.7,
       "drums": -2.2,
       "vocal": 12.2,
       "other": 12.6
@@ -544,7 +544,7 @@ export const REF_TONES: Record<string, RefTone> = {
       }
     ],
     "balanceDb": {
-      "bass": -14.5,
+      "bass": -16.4,
       "drums": -15.7,
       "vocal": -1.7,
       "other": -2.1
@@ -804,7 +804,7 @@ export const REF_TONES: Record<string, RefTone> = {
       }
     ],
     "balanceDb": {
-      "bass": -11.1,
+      "bass": -13.0,
       "drums": 0.1,
       "vocal": 13.3,
       "other": -5.7
@@ -1064,7 +1064,7 @@ export const REF_TONES: Record<string, RefTone> = {
       }
     ],
     "balanceDb": {
-      "bass": -5.1,
+      "bass": -7.0,
       "drums": -0.4,
       "vocal": 18.0,
       "other": 18.0
@@ -1324,7 +1324,7 @@ export const REF_TONES: Record<string, RefTone> = {
       }
     ],
     "balanceDb": {
-      "bass": -14.5,
+      "bass": -16.4,
       "drums": -12.5,
       "vocal": 4.7,
       "other": 9.0
@@ -1584,7 +1584,7 @@ export const REF_TONES: Record<string, RefTone> = {
       }
     ],
     "balanceDb": {
-      "bass": -10.3,
+      "bass": -12.2,
       "drums": -11.0,
       "vocal": 3.0,
       "other": -1.7

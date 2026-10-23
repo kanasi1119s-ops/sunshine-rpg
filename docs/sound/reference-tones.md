@@ -6,7 +6,7 @@
 - データ: `src/audio/ref-tones.ts`。計算の道具: `tools/audio-check/guitar-ref-analyze.py`・`guitar-ref-fit.py`・`ref-balance.py`。
 - 人間の評価: 再現2 の wide-dark-wall（参考1）を「めっちゃいい」（2026-10-23）。
 - 人間の好み（2026-10-23「bmth のリフの音量 1.1倍にしよう」）: wide-dark-wall の riffDb = +0.83dB（リフ＝「看板リフ」で始まるパートを 1.1倍。書き出しで効く）。
-- 人間の好み（2026-10-23「個人的にベースを50ぐらい上げてほしい」）: `src/audio/ref-tones.ts` の balanceDb.bass は、下の表の計算値に +3.5dB（音量 1.5倍）した値。
+- 人間の好み（2026-10-23「個人的にベースを50ぐらい上げてほしい」）: `src/audio/ref-tones.ts` の balanceDb.bass は、下の表の計算値に +1.6dB（音量 1.2倍）した値（はじめ 1.5倍 → 人間「全部に 1.5 は強いかな…1.2 にしよう」）。
 
 ## 楽器どうしの大きさ
 
