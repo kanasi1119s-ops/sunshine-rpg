@@ -51,7 +51,7 @@ def steps(song):
         return ch
     yield "透明感の層の別テイク", no_double
     # 6) 技のギターをリードに
-    yield "技のギター", lambda: unify(P, lambda p: p.get("instrument") == "distGuitar" and (p["role"].startswith("リード") or p["role"].startswith("技") or "ギター（" in p["role"] and "空気" not in p["role"]))
+    yield "技のギター", lambda: unify(P, lambda p: p.get("instrument") == "distGuitar" and (p["role"].startswith("リード") or p["role"].startswith("技") or "ギター（" in p["role"] and "空気" not in p["role"]) and "ハモリ" not in p["role"])
     # 7) それでも足りなければ、ハモリもリードと同じチャンネルに（濁りやすいので最後の手）
     yield "リードのハモリ（最後の手）", lambda: unify(P, lambda p: p.get("instrument") == "distGuitar" and p["role"].startswith("リード"))
 
