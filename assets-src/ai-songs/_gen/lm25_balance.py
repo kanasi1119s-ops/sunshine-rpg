@@ -11,6 +11,10 @@ FEATURE_LEVEL = 0.9  # その曲だけの楽器（サックス・シタール・
 # 2026-10-23 人間「一つだけ出す楽器の音はその曲のメインになるように、音量上げていいからね」
 LEAD_MAX = 0.9
 RIFF_GAIN = 1.05
+BASS_GAIN = 1.4      # 2026-10-23 人間「ベースの音小さくて聞きにくいかも」（+約3dB）
+# リードの余韻（2026-10-23 人間「ギターの高音をリードで弾くときは少し余韻を残すように響かせよう」）:
+#   参考の音はリードに部屋の鳴り（ルーム）しか残さないので、短めのプレートと、付点8分のうすいやまびこを足し、音の終わりを少し長く
+LEAD_TAIL = [{"type": "delay", "beats": 0.75, "mix": 0.12, "feedback": 0.22}, {"type": "plate", "mix": 0.2}]
 DRUM_GAIN = 0.9
 GUITARS = {"distGuitar", "crunch", "leadGuitar", "echoGuitar", "guitar"}
 DRUMS = {"kick", "snare", "hihat", "tom", "crash", "cymbal", "kickTrigger"}
@@ -59,6 +63,10 @@ def balance(song):
     for p in ps:
         if group(p) == "guitar" and p.get("role", "").startswith(("看板リフ", "リズム")): p["volume"] = round(p.get("volume", 0) * RIFF_GAIN, 5)
         if group(p) == "drums": p["volume"] = round(p.get("volume", 0) * DRUM_GAIN, 5)
+        if group(p) == "bass": p["volume"] = round(p.get("volume", 0) * BASS_GAIN, 5)
+        if group(p) == "lead" and not any(f.get("type") == "plate" for f in p.get("fx", [])):
+            p["fx"] = (p.get("fx") or []) + [dict(f) for f in LEAD_TAIL]
+            p["release"] = max(p.get("release", 0.3), 0.6)
     for p in ps: p.pop("_feat", None)
     return log
 

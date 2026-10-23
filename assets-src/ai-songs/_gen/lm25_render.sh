@@ -40,6 +40,8 @@ for py in "$@"; do
       ffmpeg -v error -y -i "/tmp/lm25/out/$name.wav" -af "$af" "/tmp/lm25/out/$name.fade.wav" && mv "/tmp/lm25/out/$name.fade.wav" "/tmp/lm25/out/$name.wav"
     fi
   fi
+  # 前奏が小さすぎないか（人間「前奏が小さすぎる曲があるから、作るときチェックして」）
+  python3 "$(dirname "$py")/lm25_intro_lift.py" "/tmp/lm25/out/$name.wav" | tee -a "/tmp/lm25/$base.build.log"
   pq=""
   for t in 1 2 3; do
     sleep 15
