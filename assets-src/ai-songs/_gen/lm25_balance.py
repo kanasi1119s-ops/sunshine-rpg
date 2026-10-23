@@ -9,8 +9,10 @@ import json, sys
 OTHER_MAX = 0.5      # 重ね（追加の楽器: ピアノ・弦・合唱など）・空気の層・ダンスの要素
 FEATURE_LEVEL = 0.9  # その曲だけの楽器（サックス・シタール・三味線など）は主役: 合計をギターの 0.9 倍（リードと同じ）にそろえる
 # 2026-10-23 人間「一つだけ出す楽器の音はその曲のメインになるように、音量上げていいからね」
-LEAD_MAX = 0.9
-TECH_LEVEL = 0.75    # 速弾きのギターの合計をギターの 0.75 倍に
+LEAD_MAX = None      # 2026-10-23 人間が「全体的にはいい」と言った 02（BBS の音・ベース1.5倍）は、参考の音で測った比のとおり
+                     #   リードがギターの約4.4倍だった。リードは測った比のまま（上限をかけない）
+TECH_LEVEL = 0.75    # 速弾きのギターの合計を、ギターの 0.75 倍とリードの 0.6 倍の大きい方に
+TECH_OF_LEAD = 0.6
 RIFF_GAIN = 1.05
 BASS_GAIN = 1.4      # 2026-10-23 人間「ベースの音小さくて聞きにくいかも」（+約3dB）
 # リードの余韻（2026-10-23 人間「ギターの高音をリードで弾くときは少し余韻を残すように響かせよう」）:
@@ -77,23 +79,26 @@ def balance(song):
     tot = lambda g: sum(p.get("volume", 0) for p in ps if group(p) == g and not p.get("_feat"))
     G = tot("guitar")
     log = []
+    L = tot("lead")
     F = sum(p.get("volume", 0) for p in ps if p.get("_feat"))
-    if G > 0 and F > 0:
+    if G > 0 and F > 0 and F < FEATURE_LEVEL * G:      # 主役の楽器は、小さすぎるときだけ上げる（参考の音で大きいならそのまま）
         k = FEATURE_LEVEL * G / F
         for p in ps:
             if p.get("_feat"): p["volume"] = round(p["volume"] * k, 5)
         log.append(f"主役の楽器 ×{k:.3f}")
     T = sum(p.get("volume", 0) for p in ps if group(p) == "tech")
     if G > 0 and T > 0:
-        k = TECH_LEVEL * G / T
+        k = max(TECH_LEVEL * G, TECH_OF_LEAD * L) / T
         for p in ps:
             if group(p) == "tech": p["volume"] = round(p["volume"] * k, 5)
         log.append(f"速弾き ×{k:.3f}")
     if G > 0:
         for g, mx in (("other", OTHER_MAX), ("lead", LEAD_MAX)):
+            if mx is None: continue
             s = tot(g)
-            if s > mx * G:
-                k = mx * G / s
+            cap = mx * G
+            if s > cap:
+                k = cap / s
                 for p in ps:
                     if group(p) == g and not p.get("_feat"): p["volume"] = round(p["volume"] * k, 5)
                 log.append(f"{g} ×{k:.3f}")
