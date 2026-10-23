@@ -382,30 +382,17 @@ PLANS["25"] = [
 FADE["25"] = (0, 8)
 
 # 26 鬼灯の撥（128）: 祖母と孫のかけ合い。祖母の三味線と尺八だけで始まり、Aメロを祖母が歌い、2番は孫とギターが2小節ずつ交代、櫓の太鼓、最後は二人の撥が重なり、送り火（はじめの音）がフェードアウト
-DESC["26"] = "展開: 祖母と孫のかけ合い（始まりは祖母の三味線と尺八だけ、1番のAメロは祖母の三味線が歌い、2番は孫の三味線とギターが2小節ずつ交代、ブリッジは櫓の太鼓、最後は二人の撥が重なって半音上へ）。終わりは送り火＝はじめの音がフェードアウト。"
-PLANS["26"] = ([
-    ("intro", "intro", {"drums": "own"}),
-    ("riff", "riff", {"drums": "own"}),
-    ("verse", "verse", {"give": ("lead", "三味線（祖母"), "drums": "ride"}),
-    ("pre", "pre", {}),
-    ("chorus", "chorus", {}),
-    ("inter", "inter", {"drums": "toms"}),
-] + alt("verse2", "verse2", 8, 2, {}, {"give": ("lead", "三味線（孫")}, "verse", "verse") + [
-    ("pre", "pre2", {"drums": "build"}),
-    ("chorus", "chorus2", {}),
-    ("bridge", "bridge", {"drums": "tribal"}),
-    ("bridge", "bridge", {"drums": "solo", "keep": ["drums", "extra"], "kind": "break"}),
-    ("solo", "solo", {}),
-    ("verse", "verse", {"give": ("lead", "三味線（孫"), "drums": "half", "phr": False}),
-    ("pre", "pre", {"drums": "build"}),
-    ("chorus", "chorus", {"drums": "own"}),
-    ("solo", "solo", {"semi": 1, "drums": "double"}),
-    ("kime", ("chorus3", 0, 2), {"kime": [0, 0.75, 1.5, 3], "semi": 1}),
-    ("chorus", "chorus3", {"semi": 1, "from": "stopBeat"}),
-    ("outro", "outro", {"semi": 1, "drums": "own"}),
-    ("送り火", "intro", {"keep": ["extra"], "semi": 1, "kind": "outro"}),
-])
-FADE["26"] = (0, 10)
+DESC["26"] = "展開: 追いかけっこ（迎え火＝祖母の三味線と尺八 → 孫が1拍遅れで同じ旋律を追う → 盆踊り → 孫ひとりの叩き → 140 で半拍遅れに縮む → 櫓の太鼓 → 二人の撥がぴったり重なる → 送り火＝祖母の音が2拍遅れのこだまになって消える）。"
+PLANS["26"] = [   # 2026-10-24 素材から作り直し: 追いかけっこ（ずれが 1拍 → 半拍 → 0 に縮まる）
+    ("welcome", "welcome", {"drums": "none", "lv": 0, "kind": "intro"}),
+    ("chase1", "chase1", {"drums": "lib", "lv": [1] * 4 + [2] * 20, "kind": "verse"}),
+    ("ondo", "ondo", {"drums": "shuffle", "lv": 2, "kind": "interlude"}),
+    ("tataki", "tataki", {"drums": "sparse", "lv": [1] * 4 + [2] * 8, "kind": "solo"}),
+    ("chase2", "chase2", {"drums": "build", "lv": [2] * 16 + [3] * 8, "kind": "pre", "bpm": 140}),
+    ("yagura", "yagura", {"drums": "tribal", "lv": 3, "kind": "break"}),
+    ("reach", "reach", {"drums": "double", "lv": 3, "kind": "chorus", "from": "break1bar"}),
+    ("farewell", "farewell", {"drums": "none", "lv": 0, "kind": "outro"}),
+]
 
 
 KEYS = {"01": ("C#", "dorian"), "02": ("F#", "aeolian"), "03": ("D", "aeolian"), "04": ("A", "aeolian"), "05": ("E", "phrygian"),
