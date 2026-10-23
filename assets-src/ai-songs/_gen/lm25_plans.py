@@ -270,26 +270,17 @@ PLANS["16"] = [   # 2026-10-24 素材から作り直し: 決闘の儀式（ほ�
 ]
 
 # 17 堕天の証明（136）: 縮まるかけ合い（ストレッタ）。悪魔と天使が8小節→4小節→2小節→1小節と交代を速め、最後に一つに溶ける。終わりは決めで止める
-DESC["17"] = "展開: 縮まるかけ合い（悪魔＝重いハーフタイムと、天使＝合唱が、8小節→4小節→2小節→1小節と交代を速めていき、最後に一つに溶け合う）。終わりはピタッと止める。"
-PLANS["17"] = ([
-    ("intro", ("angel", 0, 4), {"keep": ["extra", "fx"], "kind": "intro"}),        # 人間「17の前奏、ピロピロやめて空間がだんだん広がるように」: 天使の合唱だけで始まり
-    ("intro", ("angel", 4, 8), {"keep": ["extra", "fx", "bass", "drums"], "drums": "sparse", "kind": "intro"}),   # 低い音と薄いドラムが加わって
-    ("intro", "intro", {"drop": ["gtr"], "drums": "own"}),                          # リフが入って空間がいっぱいに（速弾きは外す）
-    ("demon", "demon", {"drums": "half"}),
-    ("angel", "angel", {"drums": "ride"}),
-    ("demon", "dchorus", {}),
-    ("angel", "achorus", {}),
-] + alt("demon2", "angel2", 8, 4, {"drums": "half"}, {"drums": "ride"}, "demon", "angel")
-  + [("battle", ("battle", 0, 8), {})]
-  + alt("dchorus", "achorus", 8, 2, {"drums": "half"}, {}, "demon", "angel")
-  + alt("dchorus", "achorus", 8, 1, {"drums": "double"}, {"drums": "double"}, "demon", "angel")
-  + [("battle", ("battle", 8, 24), {"drums": "own"}),
-     ("fall", "fall", {"bpm": (110, 2), "drums": "sparse"}),
-     ("angel", "angel", {"keep": ["extra", "lead", "bass"], "soft": ["lead"], "kind": "bridge"}),
-     ("demon", "demon", {"bpm": 136, "drums": "half"}),
-     ("merge", "merge", {"bpm": 136, "from": "stopBeat"}),
-     ("merge", ("merge", 8, 16), {"semi": 1, "drums": "double"}),
-     ("outro", "outro", {"semi": 1, "stop": True, "drums": "own"})])
+DESC["17"] = "展開: 証明（悪魔の主題＝短調の低い半音の刻み、天使の主題＝長調の高く跳ぶ歌を別々に示し、スウィープの戦い、天使の墜落、最後に悪魔の主題が長調に変わって天使の主題と同時に鳴る）。合唱だけで始まり空間が広がり、最後はピタッと止める。"
+PLANS["17"] = [   # 2026-10-24 素材から作り直し: 証明（悪魔の主題・天使の主題・戦い・墜落・二つを同時に）
+    ("intro", ("intro", 0, 4), {"drums": "none", "lv": 0, "kind": "intro"}),        # 人間「17の前奏、ピロピロやめて空間がだんだん広がるように」: 合唱だけ
+    ("intro2", ("intro", 4, 8), {"drums": "sparse", "lv": 1, "kind": "intro"}),     # 低い音と薄いドラム
+    ("intro3", ("intro", 8, 12), {"drums": "build", "lv": 2, "kind": "pre"}),       # リフが入って空間がいっぱいに
+    ("devil", "devil", {"drums": "half", "lv": 2, "kind": "verse", "from": "break1bar"}),
+    ("angel", "angel", {"drums": "ride", "lv": [1] * 8 + [2] * 16, "kind": "chorus"}),
+    ("war", "war", {"drums": "double", "lv": 3, "kind": "solo", "from": "stopBeat"}),
+    ("fall", "fall", {"drums": "none", "lv": [1] * 4 + [0] * 8, "kind": "bridge"}),
+    ("qed", "qed", {"drums": "lib", "lv": 3, "kind": "chorus", "from": "break1bar"}),
+]
 
 # 18 祈りの音量（90・3拍子）: ボレロ型（一つのテーマを何度もくり返し、そのたびに楽器と音量が増える）。最初はギターとベースだけでささやき、バグパイプが受け継ぎ、最後は全音上がって全員で
 DESC["18"] = "展開: ボレロ型（サビのテーマを6回くり返し、そのたびに楽器と音量が増えていく。1回目はギターとベースだけのささやき、3回目はバグパイプが歌い、最後の2回は全音上がって全員で）。"
@@ -479,7 +470,6 @@ PLANS["26"] = ([
     ("送り火", "intro", {"keep": ["extra"], "semi": 1, "kind": "outro"}),
 ])
 FADE["26"] = (0, 10)
-FADE["17"] = (6, 0)    # 前奏は6秒かけて、遠くから近づくように
 
 
 KEYS = {"01": ("C#", "dorian"), "02": ("F#", "aeolian"), "03": ("D", "aeolian"), "04": ("A", "aeolian"), "05": ("E", "phrygian"),
