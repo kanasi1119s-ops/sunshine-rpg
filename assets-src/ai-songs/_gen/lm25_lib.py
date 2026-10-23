@@ -775,9 +775,11 @@ def modernize_leads(song):
                 amb.append(f"R:{B:g}")
     if any(not x.startswith("R") for x in " ".join(amb).split()):
         # 荒さと雰囲気: 歪みをほぼなくし、高い所（5kHz より上のザラつき）を落として、残響はホールの長い尾ではなくプレートを短めに
-        song.parts.append({"role": "きれいな音の分散和音（空気の層）", "instrument": "distGuitar", "notes": " ".join(amb), "volume": 0.05, "pan": 0.35,
-                           "di": "emily", "amp": "namJVM", "ampDrive": 0.02, "ampCabIr": "jd-greenback-4x12-01", "noRestrike": True, "humanPitch": 0,
-                           "noScoop": True, "chorus": 0, "sustain": 2.0, "release": 0.9, "attack": 0.35,
+        # 人間「空気の層がきれいじゃないかな」→ 歪みギター（高ゲインのアンプの模型。弱く鳴らしても雑音の「サー」が残る）をやめ、
+        #   録音のクリーンギターを透き通るクリーンのアンプ（crystal＝2〜4kHz の刺さりを抑える）で。コーラスはかけない（人間の好み）
+        song.parts.append({"role": "きれいな音の分散和音（空気の層）", "instrument": "guitar", "notes": " ".join(amb), "volume": 0.07, "pan": 0.35,
+                           "amp": "crystal", "noRestrike": True, "humanPitch": 0,
+                           "noScoop": True, "chorus": 0, "sustain": 2.0, "release": 0.9, "attack": 0.2,
                            "fx": [{"type": "eq", "low": -4, "mid": -1, "midHz": 500, "high": -3}, {"type": "filter", "kind": "lowpass", "freq": 5200, "q": 0.6},
                                   {"type": "delay", "beats": 0.75, "mix": 0.2, "feedback": 0.25}, {"type": "plate", "mix": 0.28}]})
     # ギターの帯域を BMTH の数値へ（2026-10-23 聞き比べ H を人間が採用「Hいいね」）。参考の曲と聞き比べ G のギターを音源分離して
