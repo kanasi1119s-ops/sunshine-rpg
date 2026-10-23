@@ -523,6 +523,7 @@ def humanize_drums(kit, secs, kinds, seed=0, beats=4):
     kindof = lambda nm_: kinds.get(nm_) or re.sub(r"\d+$", "", nm_)
     LEVEL = {"intro": 0, "verse": 0, "interlude": 1, "inter": 1, "pre": 1, "bridge": 1, "solo": 2, "chorus": 2, "break": 0, "outro": 1}
     for b, (sec, i) in enumerate(secs):
+        if b in LIB_BARS: continue          # 学んだフレーズ集の小節は、叩き手の強弱をそのまま使う
         rng = random.Random(seed * 1000 + b)
         kd = kindof(sec)
         lv = LEVEL.get(kd, 1)
@@ -928,6 +929,10 @@ class Song:
 
     def to_json(self):
         self.check_lengths()
+        rearrange(self)
+        self.check_lengths()
+        feature_extras(self)
+        section_dynamics(self)
         if any(p["role"] == "ベース（はじく音）" for p in self.parts):
             bp = [p for p in self.parts if p["role"] in ("ベース", "ベース（はじく音）", "ベース（止めた音・ゴースト）")]
             on = {id(p): onsets(p["notes"]) for p in bp}
@@ -954,7 +959,9 @@ class Song:
                 if p["instrument"] not in ("kick", "snare", "hihat", "tom", "crash") and not p["notes"].startswith("g:"):
                     p["notes"] = vary_pickups(p["notes"], self.pickups, self.beats)
         if not self.extra.get("_noModern"): modernize_leads(self)
-        for kind in getattr(self, "_layers", []): _build_layer(self, kind)
+        for kind in getattr(self, "_layers", []):
+            n0 = len(self.parts); _build_layer(self, kind)
+            for p in self.parts[n0:]: p["volume"] = round(p.get("volume", 0.05) * 1.7, 4)   # 追加の楽器は前に（人間「表に音が出てこないと」）
         self._layers = []
         if LAST_KIT and not self.extra.get("_noHumanDrums"):
             kit = LAST_KIT[0]
@@ -971,7 +978,7 @@ class Song:
                 "human": 0.42, "humanProfile": "role", "humanDist": "triangle", "diGuitar": "emily", "autoScoop": False, "guitarWobble": False,
                 "drumMix": {"kick": {"level": 1.0}, "crash": {"level": 0.9}, "snare": {"level": 1.0}},
                 "chords": " ".join(simple_chord(self.chord_at(i)) for i in range(self.nb)),
-                "sections": [{"kind": self.kinds.get(n) or (kind(n) if kind(n) in KINDS else "verse"), "bars": c} for n, c in self.form],
+                "sections": [{"kind": self.kinds.get(n) or (kind(n) if kind(n) in KINDS else "verse"), "bars": c, **({"from": getattr(self, "sec_from", {})[n]} if n in getattr(self, "sec_from", {}) else {})} for n, c in self.form],
                 "parts": self.parts}
         song.update(self.extra)
         return song
@@ -981,7 +988,9 @@ class Song:
         json.dump(self.to_json(), open(path, "w"), ensure_ascii=False)
         open(path + ".flags", "w").write(self.flags)
         open(path + ".reftone", "w").write(getattr(self, "ref_tone", "") or "")
-        sec = self.nb * self.beats * 60 / self.bpm
+        # フェード（秒）。書き出しのあとで WAV にかける（lm25_render.sh）
+        open(path + ".fade", "w").write(f"{getattr(self, 'fade_in', 0) or 0} {getattr(self, 'fade_out', 0) or 0}")
+        sec = song_seconds(self)
         print(f"{self.title}: {self.nb}小節・{int(sec // 60)}分{int(sec % 60):02d}秒 → {path}")
 
 
@@ -1030,3 +1039,502 @@ def check_clash(song, roles=None, min_len=1.0, verbose=True):
         for x in outside[:12]: print("  外:", x)
         for x in clash[:12]: print("  ぶつかり:", x)
     return outside, clash
+
+
+# ---------------- 展開の組みかえ（2026-10-23、人間「展開が全曲同じような感じ」「いろんな技術やテクニックを」「1曲4分から5分」） ----------------
+# 曲のファイルで作った小節（もとの FORM）を材料にして、曲ごとに違う「展開の型」に並べかえる。
+# song.plan = [(新しい区間の名前, もとの区間 or (もとの区間, 始め, 終わり) or [それらの並び], {しかけ}), ...]
+# しかけ（dict）:
+#   kind: 作曲ソフトの区間の種類 / keep: 鳴らす組（ほかは休み）/ drop: 休ませる組
+#     組: drums・bass・riff・rhythm・lead・gtr（技・分散和音・クリーン）・extra（追加の楽器）・fx（効果音）
+#   semi: 半音で移す（転調）/ drums: keep・none・half（ハーフタイム）・double（倍の速さの感じ）・tribal（タムの太鼓）・
+#     kick4（4つ打ち）・build（スネアがだんだん細かく）・sparse（キックとハイハットだけ）・ride（ライドで刻む）・stop（最後の小節の後半を全員止める）
+#   bpm: そこからのテンポ（数 or (数, 何小節かけて)）/ give: (渡す組, 受け取るパートの役名の一部) 旋律を別の楽器に渡す
+#   soft: 弱く弾く組 / hold: 小節の最初の音を伸ばすだけにする組（壁のような白玉）/ oct: {組: オクターブ}
+#   from: 作曲ソフトのつなぎ（stopBeat・break1bar・riser・kime）
+DRUM_INST = ("kick", "snare", "hihat", "tom", "crash")
+GTR_INST = ("distGuitar", "guitar", "leadGuitar", "crunch", "echoGuitar")
+
+
+def role_group(p):
+    if p["instrument"] in DRUM_INST: return "drums"
+    if p.get("patch") in ("cymbalFx", "guitarFx"): return "fx"
+    r = p["role"]
+    if r.startswith("ベース"): return "bass"
+    if r.startswith("リード"): return "lead"
+    if r.startswith("看板リフ"): return "riff"
+    if r.startswith("リズム"): return "rhythm"
+    if p["instrument"] in GTR_INST: return "gtr"
+    return "extra"
+
+
+def _bar_pieces(s, beats, nb):
+    """音の列 → 小節ごとの [(音名 or None, 長さ, 記号, 前の小節からの続きか)]"""
+    bars = [[] for _ in range(nb)]
+    t = 0.0
+    for x in s.split():
+        L = tok_beats(x); n = None if x.startswith("R") else tok_note(x); m = "" if n is None else tok_marks(x)
+        cont = False
+        while L > 1e-9:
+            bi = int((t + 1e-6) // beats)
+            if bi >= nb: break
+            room = (bi + 1) * beats - t
+            d = min(L, room)
+            bars[bi].append((n, d, m if not cont else m.replace("!", "").replace("/", ""), cont))
+            t += d; L -= d; cont = True
+    return bars
+
+
+def _drum_bar(mode, k, s, h, tom, cym, i, nsec, beats):
+    n = beats * 4
+    R = f"R:{beats:g}"
+    g = lambda pos, ch="X": "".join(ch if j in pos else "." for j in range(n))
+    beat_pos = list(range(0, n, 4))
+    last = i == nsec - 1
+    if mode == "none": return "." * n, "." * n, "." * n, R, R
+    if mode == "half":
+        kk = g({0, 10 % n} if n >= 12 else {0})
+        mid = (n // 2) // 4 * 4 if beats % 2 == 0 else (beats // 2) * 4 + (4 if beats > 4 else 0)
+        mid = min(mid, n - 4)
+        ss = g({mid})
+        hh = "".join("x" if j % 4 == 0 else "." for j in range(n))
+        return kk, ss, hh, tom if last else R, cym
+    if mode == "double":
+        kk = g(set(beat_pos))
+        ss = g({p + 2 for p in beat_pos})
+        return kk, ss, "." * n, tom if last else R, cym if cym.strip() != R else " ".join(["D2:0.5"] * (beats * 2))
+    if mode == "tribal":
+        toks = []
+        for b_ in range(beats):
+            toks += ["A2:0.5!" if b_ % 2 == 0 else "D3:0.5", "A2:0.25", "A2:0.25"]
+        return g({0}), "." * n, "." * n, " ".join(toks), cym
+    if mode == "kick4":
+        kk = g(set(beat_pos))
+        ss = g({4, 12} if n == 16 else {p for p in beat_pos if (p // 4) % 2 == 1})
+        hh = "".join("x" if j % 4 == 2 else "." for j in range(n))
+        return kk, ss, hh, R, cym
+    if mode == "build":
+        step = 4 if i < nsec / 3 else (2 if i < 2 * nsec / 3 else 1)
+        if last: step = 1
+        ss = "".join(("X" if j % 4 == 0 else "x") if j % step == 0 else "." for j in range(n))
+        return g(set(beat_pos)), ss, "." * n, R, R if i else cym
+    if mode == "solo":
+        import random
+        rng = random.Random(i * 7 + nsec)
+        pat = rng.choice(["KTSTKTST", "SKTTSKTT", "KKSTTKST", "TTSKTTSK"])
+        kk, ss = ["."] * n, ["."] * n
+        toks, last_t = [], 0.0
+        ti = 0
+        for j in range(n):
+            c_ = pat[(j + i) % len(pat)]
+            if j % 4 == 2 and i % 2 == 0: continue          # 小節ごとに隙間の位置を変える
+            if c_ == "K": kk[j] = "X" if j % 4 == 0 else "x"
+            elif c_ == "S": ss[j] = "X" if j % 4 == 0 else ("o" if j % 3 else "x")
+            else:
+                t0 = j / 4
+                if t0 > last_t: toks.append(f"R:{t0 - last_t:g}")
+                toks.append(f"{TOMS[(ti + i) % len(TOMS)]}:0.25{'!' if j % 4 == 0 else ''}"); ti += 1; last_t = t0 + 0.25
+        if beats - last_t > 1e-9: toks.append(f"R:{beats - last_t:g}")
+        return "".join(kk), "".join(ss), "." * n, " ".join(toks) if toks else R, (cym if i == 0 else R)
+    if mode == "sparse":
+        hh = "".join("x" if j % 2 == 0 else "." for j in range(n))
+        return g({0}), "." * n, hh, R, cym
+    if mode == "ride":
+        rt = " ".join(("D2:0.5!" if j % 2 == 0 else "D2:0.5") for j in range(beats * 2))
+        if not cym.startswith("R") and cym.split()[0][:2] in ("C2", "G2", "B2"):
+            rt = cym.split()[0].split(":")[0] + ":0.5! " + " ".join(rt.split()[1:])
+        return k, s, "." * n, tom, rt
+    return k, s, h, tom, cym
+
+
+LIB_BARS = set()
+
+
+def on_drums(opt):
+    keep = opt.get("keep"); return (keep is None or "drums" in keep) and "drums" not in opt.get("drop", ())
+
+
+def rearrange(song):
+    plan = getattr(song, "plan", None)
+    if not plan: return
+    LIB_BARS.clear()
+    B, NB = song.beats, song.nb
+    starts, t = {}, 0
+    for nm_, c in song.form: starts[nm_] = (t, c); t += c
+    def src_bars(src):
+        if isinstance(src, list): return [b for x in src for b in src_bars(x)]
+        if isinstance(src, tuple): nm_, a, b = src; s0, c = starts[nm_]; return list(range(s0 + a, s0 + min(b, c)))
+        s0, c = starts[src]; return list(range(s0, s0 + c))
+    srcsec = {}
+    for nm_, c in song.form:
+        for j in range(c): srcsec[starts[nm_][0] + j] = nm_
+    kit = LAST_KIT[0] if LAST_KIT else None
+    groups = [role_group(p) for p in song.parts]
+    # フレーズ集で鳴らすときのいちばん低い弦・ベースの低さ（その曲のもとのリズムギター・ベースの一番低い音）
+    def _low(gs, dflt):
+        ms = [midi(tok_note(x)) for p, g_ in zip(song.parts, groups) if g_ in gs for x in p["notes"].split() if not x.startswith("R") and not p["notes"].startswith("g:")]
+        return nm(min(ms)) if ms else dflt
+    song.gtr_low = getattr(song, "gtr_low", None) or _low(("rhythm",), "D2")
+    song.bass_low = getattr(song, "bass_low", None) or _low(("bass",), "D1")
+    pieces = [None if g_ == "drums" else _bar_pieces(p["notes"], B, NB) for p, g_ in zip(song.parts, groups)]
+    # 旋律を渡す先の高さ（曲全体の真ん中）
+    med = {}
+    for p, pc in zip(song.parts, pieces):
+        if pc is None: continue
+        ms = [midi(n) for bar_ in pc for n, d, m, c in bar_ if n]
+        med[p["role"]] = sorted(ms)[len(ms) // 2] if ms else None
+    new_form, new_chords, new_kinds, new_from = [], {}, {}, {}
+    new_bars = [[] for _ in song.parts]
+    K, S, H, T, C = [], [], [], [], []
+    tempo = []
+    prev_src = None
+    used = {}
+    bar_no = 0
+    for name, src, opt in plan:
+        bars = src_bars(src)
+        if name in used: used[name] += 1; name = f"{name}{used[name]}"
+        else: used[name] = 1
+        nsec = len(bars)
+        new_form.append((name, nsec))
+        semi = opt.get("semi", 0)
+        cb = src_bars(opt["bed"]) if opt.get("bed") and opt.get("bed_chords", True) else None
+        cbars = [cb[i % len(cb)] for i in range(len(bars))] if cb else bars
+        new_chords[name] = [tr_chord(song.chord_at(b), semi) if semi else song.chord_at(b) for b in cbars]
+        src_name = srcsec[bars[0]]
+        new_kinds[name] = opt.get("kind") or song.kinds.get(src_name) or re.sub(r"\d+$", "", src_name).replace("inter", "interlude").replace("breakdown", "break")
+        if opt.get("from"): new_from[name] = opt["from"]
+        if "bpm" in opt:
+            v = opt["bpm"]; v, ramp = (v if isinstance(v, tuple) else (v, 0))
+            tempo.append({"bar": bar_no + 1, "bpm": v, **({"ramp": ramp} if ramp else {})})
+        keep = opt.get("keep"); drop = set(opt.get("drop", ()))
+        on = lambda g_: (g_ in keep if keep is not None else True) and g_ not in drop
+        mode0 = opt.get("drums", "lib")
+        cur_bpm = (tempo[-1]["bpm"] if tempo else song.bpm)
+        libbars = lib_section(song, nsec, new_kinds[name], cur_bpm, mode0, opt) if (kit and mode0 in LIB_MODES and on_drums(opt)) else None
+        seen_src = getattr(song, "_seen_src", set())
+        want_phr = opt.get("phr") or (opt.get("phr") is None and src_name in seen_src and new_kinds[name] not in ("intro", "outro")
+                                      and not opt.get("kime") and not opt.get("keep") and not opt.get("bed"))
+        seen_src.add(src_name); song._seen_src = seen_src
+        gb = lib_guitar_bass(song, [song.chord_at(b) for b in bars], new_kinds[name], opt, seed=sum(map(ord, song.title)) + bar_no) if want_phr else None
+        give = opt.get("give")
+        bed = src_bars(opt["bed"]) if opt.get("bed") else None
+        bed_groups = set(opt.get("bed_groups", ("riff", "rhythm", "bass", "drums")))
+        for i, b0 in enumerate(bars):
+            b = b0
+            contiguous = prev_src is not None and b == prev_src + 1 and opt is getattr(rearrange, "_last_opt", None)
+            for pi, (p, g_) in enumerate(zip(song.parts, groups)):
+                if g_ == "drums": continue
+                b = bed[i % len(bed)] if bed and g_ in bed_groups else b0
+                pcs = pieces[pi][b]
+                if gb:
+                    if g_ == "rhythm": pcs = gb["gtr"][i]
+                    elif g_ == "riff": pcs = [(None, B, "", False)]
+                    elif g_ == "bass": pcs = gb["bass"][i] if p["role"] == "ベース" else [(None, B, "", False)]
+                if not on(g_) and not (give and p["role"].find(give[1]) >= 0):
+                    new_bars[pi].append([(None, B, "", False)]); continue
+                if give and p["role"].find(give[1]) >= 0:
+                    srcp = next(pj for pj, q in enumerate(song.parts) if groups[pj] == give[0])
+                    pcs = pieces[srcp][b]
+                    ms = [midi(n) for n, d, m, c in pcs if n]
+                    want = med.get(p["role"])
+                    o = 0
+                    if ms and want is not None:
+                        o = min((-24, -12, 0, 12), key=lambda o_: abs(sorted(ms)[len(ms) // 2] + o_ - want))
+                    pcs = [(nm(midi(n) + o, "b" in n[1:2]) if n else None, d, m.replace("/", ""), c) for n, d, m, c in pcs]
+                elif give and g_ == give[0]:
+                    new_bars[pi].append([(None, B, "", False)]); continue
+                if semi and g_ != "fx": pcs = [(tr(n, semi) if n else None, d, m, c) for n, d, m, c in pcs]
+                oc = opt.get("oct", {}).get(g_, 0)
+                if oc: pcs = [(up(n, oc) if n else None, d, m, c) for n, d, m, c in pcs]
+                if g_ in opt.get("soft", ()): pcs = [(n, d, (m.replace("!", "") + ("," if n and "," not in m else "")) if n else m, c) for n, d, m, c in pcs]
+                if g_ in opt.get("hold", ()):
+                    first = next(((n, m) for n, d, m, c in pcs if n), None)
+                    pcs = [(first[0], B, "!" if i == 0 else "", False)] if first else [(None, B, "", False)]
+                if opt.get("kime") and g_ in ("riff", "rhythm", "bass", "gtr"):
+                    first = next((n for n, d, m, c in pcs if n), None)
+                    pos = sorted(opt["kime"]); out_, tt = [], 0.0
+                    for q_i, q in enumerate(pos):
+                        if q > tt + 1e-9: out_.append((None, q - tt, "", False))
+                        L_ = min(0.5, (pos[q_i + 1] if q_i + 1 < len(pos) else B) - q)
+                        out_.append((first, L_, "!", False) if first else (None, L_, "", False)); tt = q + L_
+                    if B - tt > 1e-9: out_.append((None, B - tt, "", False))
+                    pcs = out_
+                # 続きの音: 前の小節がもとでも直前の小節のときだけつなぐ（ほかは休みに）
+                if pcs and pcs[0][3] and not (contiguous and new_bars[pi] and new_bars[pi][-1] and new_bars[pi][-1][-1][0] == pcs[0][0] and pcs[0][0]):
+                    pcs = [(None, pcs[0][1], "", False)] + pcs[1:]
+                new_bars[pi].append(list(pcs))
+            b = bed[i % len(bed)] if bed and "drums" in bed_groups else b0
+            if kit:
+                k, s, h, tom, cym = kit.K[b], kit.S[b], kit.H[b], kit.T[b], kit.C[b]
+                mode = opt.get("drums", "lib")
+                if not on("drums"): mode = "none"
+                if libbars and mode in LIB_MODES:
+                    k, s, h, tom, cym = libbars[i]; LIB_BARS.add(len(K))
+                else:
+                    k, s, h, tom, cym = _drum_bar(mode, k, s, h, tom, cym, i, nsec, B)
+                if opt.get("kime"):
+                    pos = {int(round(q * 4)) for q in opt["kime"]}
+                    k = "".join("X" if j in pos else "." for j in range(B * 4)); s = k
+                    h = "." * (B * 4); tom = f"R:{B:g}"
+                    toks, tt = [], 0.0
+                    for q in sorted(opt["kime"]):
+                        if q > tt + 1e-9: toks.append(f"R:{q - tt:g}")
+                        toks.append(f"{'C2' if q == min(opt['kime']) else 'B2'}:0.25!"); tt = q + 0.25
+                    if B - tt > 1e-9: toks.append(f"R:{B - tt:g}")
+                    cym = " ".join(toks)
+                if i == 0 and opt.get("crash") and cym.startswith("R"):
+                    cym = f"C2:{B:g}!"
+                K.append(k); S.append(s); H.append(h); T.append(tom); C.append(cym)
+            prev_src = b0
+            rearrange._last_opt = opt
+        if opt.get("drums") == "stop" or opt.get("stop"):
+            # 最後の小節の後半を全員止める
+            half = B / 2
+            for pi, (p, g_) in enumerate(zip(song.parts, groups)):
+                if g_ == "drums": continue
+                bar_ = new_bars[pi][-1]; out, tt = [], 0.0
+                for n, d, m, c in bar_:
+                    if tt >= half - 1e-9: break
+                    d2 = min(d, half - tt); out.append((n, d2, m, c)); tt += d2
+                out.append((None, B - tt, "", False)); new_bars[pi][-1] = out
+            if kit:
+                hn = (B * 4) // 2
+                K[-1] = K[-1][:hn] + "." * (B * 4 - hn); S[-1] = S[-1][:hn] + "." * (B * 4 - hn); H[-1] = H[-1][:hn] + "." * (B * 4 - hn)
+                T[-1] = f"R:{B:g}"; C[-1] = C[-1] if C[-1].startswith("R") else f"{C[-1].split()[0].split(':')[0]}:{B / 2:g}! R:{B / 2:g}"
+        bar_no += nsec
+    rearrange._last_opt = None
+    # 書き戻す
+    for pi, (p, g_) in enumerate(zip(song.parts, groups)):
+        if g_ == "drums": continue
+        toks = []   # (音名, 長さ, 記号, 小節番号)
+        for bi_, bar_ in enumerate(new_bars[pi]):
+            for n, d, m, c in bar_:
+                if c and toks and n and toks[-1][0] == n:
+                    toks[-1] = (n, toks[-1][1] + d, toks[-1][2], toks[-1][3]); continue
+                if n is None and toks and toks[-1][0] is None and toks[-1][3] == bi_:
+                    toks[-1] = (None, toks[-1][1] + d, "", bi_); continue
+                toks.append((n, d, m, bi_))
+        p["notes"] = " ".join(f"R:{round(d, 4):g}" if n is None else f"{n}:{round(d, 4):g}{m}" for n, d, m, _b in toks)
+    if kit:
+        kit.K, kit.S, kit.H, kit.T, kit.C = K, S, H, T, C
+        kit.FX = [f"R:{B:g}"] * len(K)
+        for p in song.parts:
+            if p["instrument"] == "tom": p["notes"] = " ".join(T)
+            if p["instrument"] == "crash" and p["role"] == "シンバル": p["notes"] = " ".join(C)
+            if p["instrument"] in ("kick", "snare", "hihat"): p["notes"] = "g:" + "".join({"kick": K, "snare": S, "hihat": H}[p["instrument"]])
+    song.form = new_form
+    song.chords = new_chords
+    song.kinds = {**song.kinds, **new_kinds}
+    song.secs = [(n, i) for n, c in new_form for i in range(c)]
+    song.nb = len(song.secs)
+    song.sec_from = new_from
+    if tempo:
+        if tempo[0]["bar"] == 1: song.bpm = tempo[0]["bpm"]; tempo = tempo[1:]
+        song.extra["tempo"] = tempo
+    song.plan = None
+
+
+def song_seconds(song):
+    tp = {t["bar"]: t["bpm"] for t in song.extra.get("tempo", [])}
+    bpm, s = song.bpm, 0.0
+    for b in range(song.nb):
+        bpm = tp.get(b + 1, bpm); s += song.beats * 60 / bpm
+    return s
+
+
+# ---------------- ドラム: 学んだフレーズ集（GMD＋自作 2,628個・フィル647個）から区間ごとに選ぶ ----------------
+# 2026-10-23 人間「ドラムも固定化されてる」「1000パターン学習してきたのは何だったの？」「フィルあんなにあったのに。学習してきたものを使え」
+# 区間ごとに Library.fit で8小節のフレーズを選ぶ（4・8小節目のフィル、小節ごとに変わるキック・スネア・ハット、ゴースト、ライド・タム）。
+# 4拍子以外の曲は、1小節ごとに「4拍のフレーズ＋次の小節の頭（5〜7拍子）」「4拍のフレーズの頭（3拍子）」で拍子に合わせ、
+# 区間の最後の小節は、フレーズの最後（フィル）で終わるように後ろから切る。
+REF_STYLES = {
+    "wide-dark-wall": ["metalcore", "loudrock", "rock", "metal"],
+    "deep-scoop-djent": ["metal", "metalcore", "loudrock", "rock", "funk"],
+    "bright-nu-wall": ["rock", "hiphop", "loudrock", "funk"],
+    "bright-pop-rock": ["rock", "pop", "funk", "soul", "punk"],
+    "dark-electro-rock": ["rock", "dance", "funk", "hiphop", "afrobeat"],
+    "glossy-jrock": ["rock", "punk", "pop", "loudrock"],
+}
+LIB_MODES = {"lib", "half", "double", "ride", "sparse", "toms", "shuffle"}
+_LIB = {}
+
+
+def _grid_notes(g, table, n):
+    toks = []; j = 0
+    while j < n:
+        c = g[j]; m = j + 1
+        while m < n and g[m] == ".": m += 1
+        d = (m - j) * 0.25
+        if c == ".": toks.append(f"R:{d:g}")
+        else:
+            key = c.lower() if c.lower() in table else ("1234"["ABCD".index(c)] if c in "ABCD" else c)
+            toks.append(f"{table.get(key, 'C2')}:{d:g}" + ("!" if c.isupper() else ""))
+        j = m
+    return " ".join(toks)
+
+
+def lib_section(song, nsec, kind, bpm, mode, opt):
+    import loud25_drums as D
+    seed = sum(map(ord, song.title))
+    lib = _LIB.get(seed) or _LIB.setdefault(seed, D.Library(seed=seed))
+    B = song.beats
+    kd = {"interlude": "inter"}.get(kind, kind)
+    if kd not in D.KIND: kd = "verse"
+    cond = {}
+    styles = opt.get("styles") or REF_STYLES.get(getattr(song, "ref_tone", ""), None)
+    if styles: cond["styles"] = styles
+    dyn = opt.get("dyn")
+    if mode == "half": cond["feel"] = "half"
+    elif mode == "double": cond["feel"] = "double"
+    elif mode == "shuffle": cond["feel"] = "shuffle"
+    elif mode == "ride": cond["need_ride"] = True
+    elif mode == "toms": cond["need_toms"] = True
+    elif mode == "sparse": kd = "quiet"; dyn = dyn or "soft"
+    if opt.get("energy"): cond["energy"] = opt["energy"]
+    if opt.get("fills"): cond["fill_kinds"] = opt["fills"]
+    need = nsec if B == 4 else nsec + 1
+    bars = lib.fit(need, kind=kd, bpm=bpm, dynamics=dyn, crash_start=opt.get("crash", True), **cond)
+    n = B * 4
+    if B == 4: chunks = bars[-nsec:]
+    else:
+        # 小節ごとに拍子へ合わせる（頭は毎小節そろえる）。最後の小節はフィルが入るようにフレーズの最後で終える
+        chunks = []
+        for i in range(nsec):
+            a = bars[i]; b = bars[i + 1] if i + 1 < len(bars) else bars[i]
+            if i == nsec - 1:
+                a, b = bars[-2], bars[-1]
+                cat = {k: (a[k] + b[k]) for k in "kshtc"}
+                chunks.append({k: cat[k][-n:] for k in "kshtc"}); continue
+            cat = {k: (a[k] + b[k]) for k in "kshtc"}
+            chunks.append({k: cat[k][:n] for k in "kshtc"})
+    out = []
+    for c in chunks:
+        k = c["k"].replace("o", "x"); sn = c["s"]; h = c["h"]
+        out.append((k, sn, h, _grid_notes(c["t"], D.TOM, n), _grid_notes(c["c"], D.CYM, n)))
+    return out
+
+
+# ---------------- 追加の楽器（とくに和楽器）をギターに負けさせない（2026-10-23 人間「ギターの音に追加した和楽器の音とか負けてる」） ----------------
+WA = ("三味線", "琴", "尺八", "篠笛", "和太鼓", "笙")
+
+
+def feature_extras(song):
+    """追加の楽器は雰囲気を作る主役なので前に出す（2026-10-23 人間「追加する楽器ってそれが雰囲気作るから表に音が出てこないと」）:
+    和楽器は +8dB、そのほかの追加の楽器は +6dB（空気の層などの重ねは _build_layer で）。追加の楽器が旋律を弾いている小節は、リフ・リズムのギターを弱く弾く（場所をゆずる）"""
+    B = song.beats
+    wa_bars = set()
+    for p in song.parts:
+        if role_group(p) != "extra" or p["notes"].startswith("g:"): continue
+        wa = any(w in p["role"] for w in WA)
+        p["volume"] = round(p.get("volume", 0.1) * (2.5 if wa else 2.0), 4)
+        if wa or any(midi(tok_note(x)) >= midi("C4") for x in p["notes"].split()[:400] if not x.startswith("R")):
+            t = 0.0
+            for x in p["notes"].split():
+                if not x.startswith("R"):
+                    for b in range(int(t // B), int((t + tok_beats(x) - 1e-6) // B) + 1): wa_bars.add(b)
+                t += tok_beats(x)
+    if not wa_bars: return
+    for p in song.parts:
+        if role_group(p) not in ("riff", "rhythm"): continue
+        out, t = [], 0.0
+        for x in p["notes"].split():
+            if not x.startswith("R") and int(t // B) in wa_bars:
+                n_, m_ = tok_note(x), tok_marks(x)
+                x = f"{n_}:{tok_beats(x):g}{m_.replace('!', '')}{'' if ',' in m_ else ','}"
+            out.append(x); t += tok_beats(x)
+        p["notes"] = " ".join(out)
+
+
+# ---------------- ギターとベース: 学んだフレーズ集（ギター 2,855・ベース 2,175）から区間ごとに選ぶ ----------------
+# 2026-10-23 人間「ギターの演奏方だってあんなにいろいろあったのに、同じのばっかり使う」
+# 同じ区間を2回目以降に使うとき（と plan で phr を書いた区間）は、リフ・リズムのギターとベースを、フレーズ集の別の型にかえる
+# （付点・2拍3連・ペダルトーン・オクターブ・5と7のかたまり・不協和・伸ばすバッキング・分散和音・ブレイクダウンのユニゾン など）。
+SEC_JA = {"intro": "前奏", "verse": "Aメロ", "pre": "Bメロ", "chorus": "サビ", "interlude": "看板リフ", "bridge": "ブリッジ", "break": "ブレイクダウン",
+          "solo": "サビ", "outro": "前奏"}
+SEC_EN = {"intro": 0.35, "verse": 0.5, "pre": 0.65, "chorus": 0.85, "interlude": 0.7, "bridge": 0.4, "break": 0.9, "solo": 0.75, "outro": 0.4}
+_GB_USED = {}
+
+
+def _fit_beats(notes4, nb, B):
+    """4/4 で鳴らした音の列を、B 拍子の nb 小節へ。4拍子以外は、1小節を「同じ和音の4/4の2小節」から作る
+    （前の小節＋次の小節の頭で5〜7拍子、前の小節の頭だけで3拍子）。小節の頭はいつもそろう"""
+    if B == 4: return _bar_pieces(notes4, 4, nb)
+    bars4 = _bar_pieces(notes4, 4, nb * 2)
+    out = []
+    for i in range(nb):
+        seq = [(n, d, m, False) for n, d, m, c in bars4[2 * i]] + [(n, d, m, False) for n, d, m, c in bars4[2 * i + 1]]
+        bar_, t = [], 0.0
+        for n, d, m, c in seq:
+            if t >= B - 1e-9: break
+            d2 = min(d, B - t); bar_.append((n, d2, m, False)); t += d2
+        if t < B - 1e-9: bar_.append((None, B - t, "", False))
+        out.append(bar_)
+    return out
+
+
+def lib_guitar_bass(song, chords, kind, opt, seed):
+    import loud25_phrases as P
+    B = song.beats
+    nb = len(chords)
+    key, mode = getattr(song, "key_mode", (None, None)) if getattr(song, "use_key", False) else (None, None)
+    sec = SEC_JA.get(kind, "Aメロ")
+    phr = opt.get("phr") if isinstance(opt.get("phr"), dict) else {}
+    used = _GB_USED.setdefault(song.title, [])
+    ch4 = [c for c in chords for _ in (0, 1)] if B != 4 else list(chords)
+    ch4 = [simple_chord(c).split("/")[0] for c in ch4]
+    low, blow = getattr(song, "gtr_low", "D2"), getattr(song, "bass_low", "D1")
+    # 実演（GuitarSet のアコースティックの伴奏）は経過音が多く、パワーコードで鳴らすと濁るので、ギターは自作の型だけ
+    if not getattr(P, "_gen_only", False):
+        _orig = P.pick
+        P.pick = lambda inst, *a, **k: _orig(inst, *a, **{**k, "src": k.get("src") or ("gen" if inst == "guitar" else None)})
+        P._gen_only = True
+    try:
+        pp = P.pick_pair(sec, ch4, key=key, mode=mode, energy=phr.get("energy", SEC_EN.get(kind, 0.6)), low=low, bass_low=blow,
+                         how=phr.get("how", "auto"), avoid=used, seed=seed, guitar_role=phr.get("role"), bass_role=phr.get("bass"))
+    except Exception as e:
+        print("フレーズ集から選べませんでした:", kind, e); return None
+    used += [pp["guitar"]["phrase"]["id"], pp["bass"]["phrase"]["id"]]
+    song._phr_log = getattr(song, "_phr_log", []) + [f"{kind}: ギター {P.describe(pp['guitar']['phrase'])[:80]} / ベース {pp['bass']['phrase']['id']} {pp['bass']['phrase']['role']}"]
+    return {"gtr": _fit_beats(pp["guitar"]["notes"], nb, B), "bass": _fit_beats(pp["bass"]["notes"], nb, B)}
+
+
+# ---------------- 場面ごとの強弱（人が弾いているように）（2026-10-23 人間「楽器の音もその音楽の場面場面で強弱ある」「人間が演奏しているみたいに」） ----------------
+# 区間の種類で弾く強さを変え（Aメロ・前奏・ブリッジ・終わりは弱く、サビ・ソロ・ブレイクダウンは強く）、
+# Bメロは後半に向けてだんだん強く（クレッシェンド）、区間の最後の小節は次へ向けて少し強める。フレーズの中では拍の頭を立て、裏は少し抜く。
+DYN_LEVEL = {"intro": 0, "verse": 0, "bridge": 0, "outro": 0, "pre": 1, "interlude": 1, "solo": 2, "chorus": 2, "break": 2}
+
+
+def section_dynamics(song):
+    import random
+    B = song.beats
+    kindof = lambda n: song.kinds.get(n) or re.sub(r"\d+$", "", n).replace("inter", "interlude")
+    lv = []
+    for n, c in song.form:
+        k = kindof(n)
+        for i in range(c): lv.append((DYN_LEVEL.get(k, 1), k, i, c))
+    rng = random.Random(sum(map(ord, song.title)))
+    for p in song.parts:
+        g_ = role_group(p)
+        if g_ in ("drums", "fx") or p["notes"].startswith("g:"): continue
+        out, t = [], 0.0
+        for x in p["notes"].split():
+            L = tok_beats(x)
+            if x.startswith("R"): out.append(x); t += L; continue
+            b = min(int((t + 1e-6) // B), len(lv) - 1); pos = t - b * B
+            level, k, i, c = lv[b]
+            if k == "pre": level = 0 if i < c / 2 else (1 if i < c - 1 else 2)      # だんだん強く
+            elif i == c - 1 and level < 2 and c >= 4: level += 1                     # 区間の終わりは次へ向けて
+            n_, m_ = tok_note(x), tok_marks(x)
+            on_beat = abs(pos - round(pos)) < 1e-6
+            strong = abs(pos) < 1e-6 or (B % 2 == 0 and abs(pos - B / 2) < 1e-6)
+            if "," in m_ or "!" in m_: out.append(x); t += L; continue
+            add = ""
+            if level == 0:
+                add = "," if (not strong or g_ in ("riff", "rhythm")) else ""
+                if not on_beat and g_ in ("bass", "rhythm", "riff", "gtr") and rng.random() < 0.5: add = ",,"
+            elif level == 1:
+                add = "," if not on_beat and rng.random() < 0.6 else ""
+            else:
+                add = "!" if strong and g_ != "lead" else ("," if not on_beat and rng.random() < 0.3 else "")
+            out.append(f"{n_}:{L:g}{m_}{add}"); t += L
+        p["notes"] = " ".join(out)

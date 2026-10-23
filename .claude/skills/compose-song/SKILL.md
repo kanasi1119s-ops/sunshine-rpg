@@ -17,6 +17,11 @@ APIキーは使わない。曲は、あなた（Claude Code）が「AIソング�
    - 決まりごとはすべて当てはめる必要はない（見本）。ただし、外すときは理由を書く。人間が嫌いと言った音（`docs/sound/banned-sounds.md`）は、決まりごとより優先して外す。
    - 参考の音（`docs/sound/reference-tones.md`）: 人間が渡した参考録音を測った EQ と楽器どうしの大きさの比。ラウドの曲は書き出しで `--ref-tone <id>` を使える（人間が「めっちゃいい」と言ったのは wide-dark-wall）。新しい参考録音をもらったら、同じ手順（音源分離→測る→EQ と大きさの比を計算）で増やす。
    - よくある失敗: 旋律楽器（ギターのリードなど）を、ゲーム音楽のように高い音域でずっと歌わせる。現代のロックでは、旋律は歌の高さ（おおむね G3〜D5）に置き、山場だけ上げる。
+2.6 **展開・ドラム・ギター・追加の楽器・強弱を曲ごとに変える（2026-10-23 人間の指示。必ず行う）**: `docs/sound/arrangement-variety.md` を読む。
+   - 曲ごとに「展開の型」「始まり方」「終わり方」を決め、同じシリーズで同じ型は2曲まで。全部を「前奏→Aメロ→Bメロ→サビ→…」にしない。長さの指定がなければ、ラウドは4〜5分。
+   - ドラムは学んだフレーズ集（`docs/sound/drum-phrase-library.md`）、ギターとベースもフレーズ集（`docs/sound/guitar-bass-phrase-library.md`）から区間ごとに選び、同じ型を続けない。
+   - 追加の楽器は雰囲気の主役なので前に出す。場面ごとに強弱をつけ、人が弾いているようにする。
+   - 決まりごとは床であって天井ではない。1曲に1つ以上、わざと崩す所を作り、設計に書く。
 2.5. **設計図と進行を先に決める**（曲の個性が決まる所。docs/sound/ai-composition-workflow.md の 2・3 節）: `node tools/composer/chord-pick.mjs --scene <場面> --avoid-last 3` で直近の曲と違う進行の候補を出し、`node tools/composer/song.mjs plan-template` の雛形から `assets-src/ai-songs/<名前>.plan.json`（属性カードとセクション表）を書いて、`node tools/composer/song.mjs plan-check <plan.json>` で直す。description に「入り方: 5。終わり方: …。動機: E4:1 G4:1 A4:2」を書く。コードごとの長さ `Am*2`・セクション別の進行 `sectionChords`・転調 `modulate`・ループの継ぎ目 `loopTail` が使える（`song.mjs guide`）。
 3. **曲を書く**: `assets-src/ai-songs/<英小文字の名前>.json` に書く。
    - **完全なオリジナルにする**（CLAUDE.md 1-1）。既存曲のメロディ・特徴的なコード進行を写さない。「〜風」はジャンルと雰囲気だけを参考にする。

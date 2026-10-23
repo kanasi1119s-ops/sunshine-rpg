@@ -219,6 +219,10 @@ song.add(cymfx_part(" ".join(FX)))
 song.ref_tone = "glossy-jrock"
 add_layer(song, "synthpad", "深い海の水圧のような、厚い和音。")
 
+# 展開の型（2026-10-23 人間「展開が全曲同じ」「4分から5分」）。lm25_plans.py
+from lm25_plans import apply_plan
+apply_plan(song, "11")
+
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "/tmp/lm25/lm25-11-shinkai.json"
     song.write(out)

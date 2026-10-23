@@ -186,6 +186,10 @@ song.add(cymfx_part(" ".join(FX)))
 song.ref_tone = "glossy-jrock"
 add_layer(song, "choir", "戦場のバグパイプに、祈りの声が加わる。")
 
+# 展開の型（2026-10-23 人間「展開が全曲同じ」「4分から5分」）。lm25_plans.py
+from lm25_plans import apply_plan
+apply_plan(song, "18")
+
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "/tmp/lm25/lm25-18-inori.json"
     song.write(out)

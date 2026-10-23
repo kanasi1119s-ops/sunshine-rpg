@@ -25,6 +25,17 @@ for py in "$@"; do
     node tools/composer/song.mjs build "$json" --wav $flags --out /tmp/lm25/out > "/tmp/lm25/$base.build.log" 2>&1 && [ -f "/tmp/lm25/out/$name.wav" ] && break
   done
   if [ ! -f "/tmp/lm25/out/$name.wav" ]; then echo -e "$no\t$title\t書き出し失敗" >> "$OUT/scores.tsv"; echo "失敗 $no"; continue; fi
+  # フェードイン・フェードアウト（曲の .py で song.fade_in / song.fade_out 秒）
+  if [ -s "$json.fade" ]; then
+    read fi fo < "$json.fade"
+    if [ "$fi" != "0" ] || [ "$fo" != "0" ]; then
+      dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "/tmp/lm25/out/$name.wav")
+      st=$(python3 -c "print(max(0,float('$dur')-float('$fo')-0.3))")
+      af="afade=t=in:st=0:d=${fi}"; [ "$fi" = "0" ] && af="anull"
+      [ "$fo" != "0" ] && af="$af,afade=t=out:st=${st}:d=${fo}:curve=qsin"
+      ffmpeg -v error -y -i "/tmp/lm25/out/$name.wav" -af "$af" "/tmp/lm25/out/$name.fade.wav" && mv "/tmp/lm25/out/$name.fade.wav" "/tmp/lm25/out/$name.wav"
+    fi
+  fi
   pq=""
   for t in 1 2 3; do
     sleep 15

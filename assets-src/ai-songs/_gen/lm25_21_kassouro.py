@@ -224,6 +224,10 @@ song.add(cymfx_part(" ".join(FX)))
 song.ref_tone = "bright-nu-wall"
 add_layer(song, "synth-arp", "滑走路の誘導灯が、16分で流れていく。")
 
+# 展開の型（2026-10-23 人間「展開が全曲同じ」「4分から5分」）。lm25_plans.py
+from lm25_plans import apply_plan
+apply_plan(song, "21")
+
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "/tmp/lm25/lm25-21-kassouro.json"
     song.write(out)
