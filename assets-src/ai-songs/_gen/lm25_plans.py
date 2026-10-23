@@ -601,7 +601,9 @@ TITLES = {
 
 # 曲ごとの音量の好み（割合）。16: 人間「16ドラムの音3落とそう」（×0.97）・「サビでドラムのガチャガチャした感じを抑えよう」（サビは calm）
 GAINS = {"16": {"drums": 0.97}}
-HAT_DELICATE = {"16"}   # 人間「16のハイハットのシャッフルは少し繊細な音に変えよう。強弱をつけよう」
+HAT_DELICATE = {"16"}
+# 「きーーーん」を入れない曲（静けさが主役・眠り・深海）。人間「良い場面だけ使えるといい」
+NO_SCREAM = {"04", "11", "15"}   # 人間「16のハイハットのシャッフルは少し繊細な音に変えよう。強弱をつけよう」
 
 
 def apply_plan(song, no):
@@ -611,6 +613,7 @@ def apply_plan(song, no):
     song.phr_policy = PHR_POLICY.get(no, "rare")
     song.gains = GAINS.get(no, {})
     song.hat_delicate = no in HAT_DELICATE
+    song.auto_scream = no not in NO_SCREAM
     song.display_title = TITLES.get(no)
     if song.display_title: song.desc = f"もとの仮題「{song.title}」。" + song.desc
     song.desc += " " + DESC[no]

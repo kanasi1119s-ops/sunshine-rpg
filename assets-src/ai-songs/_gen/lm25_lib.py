@@ -981,6 +981,7 @@ class Song:
                 if p["instrument"] not in ("kick", "snare", "hihat", "tom", "crash") and not p["notes"].startswith("g:"):
                     p["notes"] = vary_pickups(p["notes"], self.pickups, self.beats)
         if not self.extra.get("_noModern"): modernize_leads(self)
+        if not getattr(self, "screams", None) and getattr(self, "auto_scream", True): pick_scream(self)
         if getattr(self, "screams", None): add_screams(self)
         for kind in getattr(self, "_layers", []):
             n0 = len(self.parts); _build_layer(self, kind)
@@ -1705,3 +1706,21 @@ def merge_rests_bar(toks, B):
             out.append(x)
         t += L_
     return " ".join(out)
+
+
+def pick_scream(song):
+    """「きーーーん」を、その曲のいちばんの山場だけに（2026-10-23 人間「こういったキーンっての他の曲でも、良い場面だけ使えるといいな」）:
+    最後のサビ（8小節以上）の最後の小節で、リードが鳴っている所。見つからなければ入れない"""
+    B = song.beats
+    lead = next((p for p in song.parts if p["role"] == "リード（旋律）"), None)
+    if not lead: return
+    bars = _bar_pieces(lead["notes"], B, song.nb)
+    kindof = lambda n: song.kinds.get(n) or re.sub(r"\d+$", "", n).replace("inter", "interlude")
+    t, cand = 0, None
+    for n, c in song.form:
+        if kindof(n) == "chorus" and c >= 8:
+            last = t + c - 1
+            full = any(any(x[0] for x in _bar_pieces(q["notes"], B, song.nb)[last]) for q in song.parts if role_group(q) == "rhythm")
+            if full and (any(x[0] for x in bars[last]) or any(x[0] for x in bars[last - 1])): cand = last   # バンド全員が鳴っている山場だけ
+        t += c
+    if cand is not None: song.screams = [cand]
