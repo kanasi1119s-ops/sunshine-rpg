@@ -123,6 +123,8 @@ def balance(song):
             #   単音の楽器として弾き（mono: 次の音で前の音を止める）、離したあとの尾は短く。余韻は休符の前の伸び・プレート・やまびこ（アンプのあと＝濁らない）で出す
             p["sustain"] = max(p.get("sustain", 1.0), 2.0)
             p["mono"] = True
+            # リードの左右の別テイク（double）もやめる: 1本のリードを2本で重ねると、わずかなずれが歪みの中で揺れて濁り、チャンネルも2つ使う
+            if p.get("double"): p["double"] = False
             p["release"] = 0.35
             p["reverb"] = max(p.get("reverb", 0), 0.25)
             if LEAD_AMP: p["amp"] = LEAD_AMP
