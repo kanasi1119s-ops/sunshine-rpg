@@ -694,7 +694,8 @@ def modernize_leads(song):
         # 区間の音の真ん中を、歌の高さの目安へ（サビ B4・Aメロ G4・ほか A4）。一番上が A5 を超えるなら必ず下げる
         med = sorted(ms)[len(ms) // 2]
         tgt = {"chorus": midi("B4"), "verse": midi("G4")}.get(sc[1], midi("A4"))
-        best = min((0, -12), key=lambda d: (max(ms) + d > midi("A5"), min(ms) + d < midi("E3"), abs(med + d - tgt)))
+        # 一番上は F#5 まで（2026-10-23 人間「リードギターの高音を少しだけ低い音にして、鋭いけど優しい、心に響く感じに」。前は A5）
+        best = min((0, -12), key=lambda d: (max(ms) + d > midi("F#5"), min(ms) + d < midi("E3"), abs(med + d - tgt)))
         shift[sc[0]] = best
     ev = [(st, L, (nm(midi(n) - 0 + shift[sec_at(st)[0]], "b" in n[1:2]) if n else None), m, x) for st, L, n, m, x in ev]
     # 表情

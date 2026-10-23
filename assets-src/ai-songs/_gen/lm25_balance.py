@@ -14,6 +14,9 @@ RIFF_GAIN = 1.05
 BASS_GAIN = 1.4      # 2026-10-23 人間「ベースの音小さくて聞きにくいかも」（+約3dB）
 # リードの余韻（2026-10-23 人間「ギターの高音をリードで弾くときは少し余韻を残すように響かせよう」）:
 #   参考の音はリードに部屋の鳴り（ルーム）しか残さないので、短めのプレートと、付点8分のうすいやまびこを足し、音の終わりを少し長く
+# リードの音色（2026-10-23 人間「鋭いけど、優しい心に響く感じ」）: 輪郭（2kHz 前後）は残して鋭さを保ち、
+#   耳に刺さる 4.5kHz より上を少し丸め、800Hz あたりに温かさを足す
+LEAD_TONE = [{"type": "eq", "low": 0, "mid": 1.5, "midHz": 850, "high": -2.5}, {"type": "filter", "kind": "lowpass", "freq": 8500, "q": 0.6}]
 LEAD_TAIL = [{"type": "delay", "beats": 0.75, "mix": 0.12, "feedback": 0.22}, {"type": "plate", "mix": 0.2}]
 DRUM_GAIN = 0.9
 GUITARS = {"distGuitar", "crunch", "leadGuitar", "echoGuitar", "guitar"}
@@ -32,6 +35,21 @@ def group(p):
         if role.startswith("リード"): return "lead"
         return "guitar"
     return "other"
+
+
+def fit_fx(p):
+    """fx は作曲ソフトで最大8個。参考の音のローパス2段を1つにまとめ、それでも多ければ残響系を part の reverb（送り）へ移す"""
+    fx = p.get("fx") or []
+    if len(fx) <= 8: return
+    idx = [i for i, f in enumerate(fx) if f.get("type") == "filter" and f.get("kind") == "lowpass"]
+    if len(idx) >= 2:
+        keep = dict(fx[idx[0]]); keep["freq"] = min(fx[i].get("freq", 20000) for i in idx)
+        fx = [keep if i == idx[0] else f for i, f in enumerate(fx) if i not in idx[1:]]
+    while len(fx) > 8:
+        rv = next((f for f in fx if f.get("type") in ("reverb", "plate", "room", "spring")), None)
+        if rv is None: fx = fx[:8]; break
+        p["reverb"] = max(p.get("reverb", 0), round(rv.get("mix", 0.2), 3)); fx.remove(rv)
+    p["fx"] = fx
 
 
 def featured(p):
@@ -64,10 +82,22 @@ def balance(song):
         if group(p) == "guitar" and p.get("role", "").startswith(("看板リフ", "リズム")): p["volume"] = round(p.get("volume", 0) * RIFF_GAIN, 5)
         if group(p) == "drums": p["volume"] = round(p.get("volume", 0) * DRUM_GAIN, 5)
         if group(p) == "bass": p["volume"] = round(p.get("volume", 0) * BASS_GAIN, 5)
-        if group(p) == "lead" and not any(f.get("type") == "plate" for f in p.get("fx", [])):
-            p["fx"] = (p.get("fx") or []) + [dict(f) for f in LEAD_TAIL]
+        if group(p) == "lead" and not p.get("_toned"):
+            # fx は最大8個: 参考の音の EQ（ハイパス・EQ 4つ・ローパス2つ）＋ルーム。ローパスを1つにまとめ、温かさの EQ を足し、高い所の丸めは1つ目の EQ に合わせる
+            fx = [dict(f) for f in (p.get("fx") or [])]
+            lps = [f for f in fx if f.get("type") == "filter" and f.get("kind") == "lowpass"]
+            rest = [f for f in fx if f not in lps and f.get("type") != "room"]
+            eqs = [f for f in rest if f.get("type") == "eq"]
+            if eqs: eqs[0]["high"] = round(eqs[0].get("high", 0) - 2.5, 2)
+            lp = {"type": "filter", "kind": "lowpass", "freq": min([8500] + [f.get("freq", 20000) for f in lps]), "q": 0.6}
+            new = rest + [{"type": "eq", "low": 0, "mid": 1.5, "midHz": 850, "high": 0}, lp] + [f for f in fx if f.get("type") == "room"][:1]
+            p["fx"] = new[:8]
+            p["reverb"] = max(p.get("reverb", 0), 0.22)      # 余韻は残響の送りで
             p["release"] = max(p.get("release", 0.3), 0.6)
-    for p in ps: p.pop("_feat", None)
+            p["_toned"] = True
+    for p in ps:
+        p.pop("_feat", None); p.pop("_toned", None)
+        fit_fx(p)
     return log
 
 
