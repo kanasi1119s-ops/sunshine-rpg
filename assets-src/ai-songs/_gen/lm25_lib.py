@@ -1007,12 +1007,13 @@ class Song:
         song = {"title": getattr(self, "display_title", None) or self.title, "description": self.desc, "bpm": self.bpm, "beats": self.beats, "barsPerChord": 1, "repeats": 1,
                 "autoAccompaniment": False, "feel": "rock", "tone": "metal", "dynamics": "natural",
                 "human": 0.42, "humanProfile": "role", "humanDist": "triangle", "diGuitar": "emily", "autoScoop": False, "guitarWobble": False,
-                "drumMix": {"kick": {"level": 1.0}, "crash": {"level": 0.9}, "snare": {"level": 1.0}},
+                # シンバルとハットは控えめに（ほかの楽器の高い所をつぶさない。人間「ほかの音が犠牲になるようなドラムの音は考えなきゃ」）
+                "drumMix": {"kick": {"level": 1.0}, "crash": {"level": 0.75}, "snare": {"level": 0.95}, "hat": {"level": 0.85}},
                 "chords": " ".join(simple_chord(self.chord_at(i)) for i in range(self.nb)),
                 "sections": [{"kind": self.kinds.get(n) or (kind(n) if kind(n) in KINDS else "verse"), "bars": c, **({"from": getattr(self, "sec_from", {})[n]} if n in getattr(self, "sec_from", {}) else {})} for n, c in self.form],
                 "parts": self.parts}
         song.update(self.extra)
-        if getattr(self, "hat_delicate", False): song["drumMix"]["hat"] = {"level": 0.8}
+        if getattr(self, "hat_delicate", False): song["drumMix"]["hat"] = {"level": 0.72}
         return song
 
     def write(self, path):
@@ -1429,6 +1430,9 @@ def lib_section(song, nsec, kind, bpm, mode, opt):
     styles = opt.get("styles") or REF_STYLES.get(getattr(song, "ref_tone", ""), None)
     if styles: cond["styles"] = styles
     dyn = opt.get("dyn")
+    # 2026-10-23 人間「ドラムの音ダイナミックな音もほしいけど、その中に繊細さを忘れてはダメ。ほかの音が犠牲になるようなドラムの音は考えなきゃいけない」:
+    #   静かな区間（前奏・Aメロ・ブリッジ・終わり）は、指定がなければ一段弱く叩く（強打は区切りだけ、刻みのハットはゴースト寄り）
+    if dyn is None and kind in ("intro", "verse", "bridge", "outro"): dyn = "soft"
     if mode == "half": cond["feel"] = "half"
     elif mode == "double": cond["feel"] = "double"
     elif mode == "shuffle": cond["feel"] = "shuffle"
