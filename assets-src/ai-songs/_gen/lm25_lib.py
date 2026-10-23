@@ -987,6 +987,20 @@ class Song:
             for p in self.parts:
                 if p["instrument"] in names: p["notes"] = "g:" + "".join(getattr(kit, names[p["instrument"]]))
                 elif p["instrument"] == "crash" and p["role"] == "シンバル": p["notes"] = " ".join(kit.C)
+            if getattr(self, "hat_delicate", False):
+                # ハイハットを繊細に、強弱をつけて（2026-10-23 人間「16のハイハットのシャッフルは少し繊細な音に変えよう。強弱をつけよう」）:
+                #   拍の頭はふつう・2つ目の拍と裏は弱く（o）・ところどころ一段強く。開いた音は弱い閉じた音に
+                n_ = self.beats * 4
+                for p in self.parts:
+                    if p["instrument"] != "hihat": continue
+                    g_ = list(p["notes"][2:])
+                    for i_, c_ in enumerate(g_):
+                        if c_ == ".": continue
+                        j_ = i_ % n_
+                        if j_ == 0: g_[i_] = "x"
+                        elif j_ % 4 == 0: g_[i_] = "x" if (j_ // 4) % 2 == 0 else "o"
+                        else: g_[i_] = "o"
+                    p["notes"] = "g:" + "".join(g_)
             LAST_KIT.clear()
         kind = lambda n: re.sub(r"\d+$", "", n).replace("inter", "interlude").replace("breakdown", "break")
         KINDS = {"intro", "verse", "pre", "chorus", "interlude", "bridge", "break", "outro", "solo"}
@@ -998,6 +1012,7 @@ class Song:
                 "sections": [{"kind": self.kinds.get(n) or (kind(n) if kind(n) in KINDS else "verse"), "bars": c, **({"from": getattr(self, "sec_from", {})[n]} if n in getattr(self, "sec_from", {}) else {})} for n, c in self.form],
                 "parts": self.parts}
         song.update(self.extra)
+        if getattr(self, "hat_delicate", False): song["drumMix"]["hat"] = {"level": 0.8}
         return song
 
     def write(self, path):

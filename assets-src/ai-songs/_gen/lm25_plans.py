@@ -597,6 +597,7 @@ TITLES = {
 
 # 曲ごとの音量の好み（割合）。16: 人間「16ドラムの音3落とそう」（×0.97）・「サビでドラムのガチャガチャした感じを抑えよう」（サビは calm）
 GAINS = {"16": {"drums": 0.97}}
+HAT_DELICATE = {"16"}   # 人間「16のハイハットのシャッフルは少し繊細な音に変えよう。強弱をつけよう」
 
 
 def apply_plan(song, no):
@@ -605,6 +606,7 @@ def apply_plan(song, no):
     song.key_mode = KEYS.get(no) or (None, None)
     song.phr_policy = PHR_POLICY.get(no, "rare")
     song.gains = GAINS.get(no, {})
+    song.hat_delicate = no in HAT_DELICATE
     song.display_title = TITLES.get(no)
     if song.display_title: song.desc = f"もとの仮題「{song.title}」。" + song.desc
     song.desc += " " + DESC[no]
