@@ -351,27 +351,19 @@ PLANS["23"] = [   # 2026-10-24 素材から作り直し: 国歌の変奏（毎�
     ("last", "last", {"drums": "none", "lv": 0, "kind": "outro"}),
 ]
 
-# 24 錆びた天秤（126）: 溜めて最後に一度だけ解放。鐘だけで始まり、判決の場面は2回とも決めの一撃だけ（サビを鳴らさない）、裁きの天秤とソロをはさんで、最後の判決で初めて全員のサビ
-DESC["24"] = "展開: 溜めて最後に解放（鐘だけで始まり、罪→言い訳→判決が2回くるが、判決は決めの一撃だけでサビを鳴らさない。天秤とソロで溜めて、最後の判決で初めて全員のサビが3回続く）。終わりは鐘だけが残る。"
+# 24 錆びた天秤（126）: 2026-10-24 素材から作り直し。裁判の手続き（起訴・証人3人・評議・無音・判決・刑）
+DESC["24"] = "展開: 裁判の手続き（鐘 → 起訴＝検事の早口 → 証人3人がそれぞれ違う場面＝友の悲しい歌・見知らぬ男のずれたうねり・母と鐘 → 評議で詰まる → 判決の前の無音 → 判決の鐘と一撃 → 刑＝いちばん重いブレイクダウン）。終わりは鐘だけが残る。"
 PLANS["24"] = [
-    ("bell", "bell", {"drums": "own"}),
-    ("intro", "intro", {"drums": "own"}),
-    ("sin", "sin", {}),
-    ("excuse", "excuse", {"drums": "half"}),
-    ("verdict", ("verdict", 0, 4), {"kime": [0, 1.5, 3], "kind": "break"}),
-    ("sin", "sin2", {"drums": "ride"}),
-    ("excuse", "excuse2", {}),
-    ("verdict", ("verdict2", 0, 4), {"kime": [0, 0.75, 1.5, 3], "kind": "break"}),
-    ("weigh", "weigh", {"drums": "toms"}),
-    ("sin", "sin", {"drums": "half", "keep": ["riff", "drums", "bass"]}),
-    ("solo", "solo", {"drums": "double"}),
-    ("bell", "bell", {"stop": True, "drums": "own"}),
-    ("verdict", "verdict3", {"from": "stopBeat", "kind": "chorus"}),
-    ("verdict", "verdict2", {"semi": 1, "kind": "chorus"}),
-    ("weigh", "weigh", {"semi": 1, "drums": "double"}),
-    ("verdict", "verdict3", {"semi": 1, "kind": "chorus"}),
-    ("end", "end", {"semi": 1, "drums": "own"}),
-    ("bell", "bell", {"keep": ["extra"], "semi": 1, "kind": "outro"}),
+    ("bells", "bells", {"drums": "none", "lv": 1, "kind": "intro"}),
+    ("charge", "charge", {"drums": "lib", "lv": [1] * 4 + [2] * 16, "kind": "verse"}),
+    ("friend", "friend", {"drums": "half", "lv": 1, "kind": "bridge", "calm": True}),
+    ("stranger", "stranger", {"drums": "lib", "lv": 2, "kind": "pre"}),
+    ("mother", "mother", {"drums": "none", "lv": 0, "kind": "bridge"}),
+    ("jury", "jury", {"drums": "toms", "lv": [2] * 8 + [3] * 8, "kind": "pre"}),
+    ("hush", "hush", {"drums": "none", "lv": 0, "kind": "break"}),
+    ("verdict", "verdict", {"drums": "own", "lv": 3, "kind": "break"}),
+    ("sentence", "sentence", {"drums": "half", "lv": 3, "kind": "chorus"}),
+    ("toll", "toll", {"drums": "none", "lv": 1, "kind": "outro"}),
 ]
 
 # 25 夜明けの闇市（112）: 時刻の組曲（0時＝ハーフタイム／2時＝ライドとシャッフル／3時＝ドラムが薄い／4時＝タムの太鼓／夜明け＝テンポ120で全員）。最後は朝のバイオリンとクリーンでフェードアウト

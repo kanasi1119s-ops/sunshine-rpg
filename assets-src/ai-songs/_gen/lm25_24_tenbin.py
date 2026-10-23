@@ -1,14 +1,19 @@
-# ラウド25曲（第2シリーズ）24「錆びた天秤」（仮）。イメージ: 罪と罰。B フリジアン・126・4/4。インスト
-# 設計表: docs/sound/lm25-plan.md。別の楽器: 鐘（判決の鐘）
-#   ※ 設計表では F♯ フリジアン・7/4 だったが、02「白い螺旋」（F♯ フリジアン・7/4・スラップ・リニアのフィル）と似すぎるので、
-#     B フリジアン・4/4 にして、「テンポの感じが天秤のように揺れる」曲にした（ハーフタイム ⇔ 倍のノリ ⇔ 付点4分の拍）。
-# 物語: 天秤の片側は「罪」（ハーフタイムの重いリフ、B のペダルに ♭2 の C）、もう片側は「言い訳」（倍のノリ、スラップ、スウィープ、明るい和音）。
-#   2つのAメロが交互に重くなり、サビで鐘が判決を告げる。間奏では拍そのものが傾く（付点4分の拍＝メトリック・モジュレーション）。
-#   最後は演奏が止まり、鐘だけが鳴り、判決の一撃で終わる。
-# しかけ（ほかの曲と変える）:
-#   - Aメロが2種類（罪＝ハーフタイム／言い訳＝倍のノリ）で、交互に来る
-#   - 間奏（12小節）は付点4分の拍で全員が打つ。3小節で一回りして元の拍に戻る
-#   - ギターの技はスウィープ（言い訳の小節の終わりと、ソロの前半）。ベースは言い訳でスラップ、ほかはコードに沿う
+# ラウド26曲 24「Guilty Until Proven」（仮。もとの仮題「錆びた天秤」）。2026-10-24 素材から作り直し
+# スタイル: デスコア寄りのメタルコア（低い刻みとブレイクダウン）＋鐘。B フリジアン・126・4/4
+# 物語: 裁判。鐘、起訴（検事の早口）、三人の証人（友・見知らぬ男・母）、評議、判決の前の無音、判決の鐘、刑。
+# 形: 裁判の手続き（起訴 → 証人3人＝3つの違う場面 → 評議 → 無音 → 判決 → 刑）。ほかの曲と骨組みを変える
+# 場面と、そこで必要な強さ:
+#   鐘（1）: 法廷の鐘だけ
+#   起訴（2）: 低い刻みの上で、リードが検事の早口（同じ音の16分の連打）
+#   証人1・友（1）: クリーンの悲しい歌
+#   証人2・見知らぬ男（2）: ずれたうねり（シンコペーション）
+#   証人3・母（0）: 鐘とクリーンだけ
+#   評議（2→3）: だんだん詰まる
+#   判決の前（0）: 2小節の無音
+#   判決（3）: 鐘と全員の一撃
+#   刑（3）: いちばん重いブレイクダウン。リードは判決の長い音
+#   鐘（1）: 鐘だけが残る
+# 旋律の性格: 検事＝同じ音の16分の連打（早口）、判決＝長い音、証人ごとに歌い方が違う
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lm25_lib import *
@@ -17,217 +22,104 @@ BPM, BEATS = 126, 4
 bar = Bars(BEATS)
 R4 = bar.rest()
 
-FORM = [("intro", 4), ("sin", 8), ("excuse", 8), ("verdict", 8), ("sin2", 8), ("excuse2", 8), ("verdict2", 8),
-        ("weigh", 12), ("solo", 16), ("bell", 2), ("verdict3", 8), ("end", 4)]
-SIN = ["Bm", "Bm", "C", "Bm", "Bm", "Bm", "Am", "C"]
-EXC = ["G", "Bm", "Em", "D", "G", "Bm", "Am", "C"]
-VER = ["Bm", "C", "G", "D", "Em", "Am", "C", "C"]
-CH = {"intro": ["Bm", "Bm", "Bm", "C"], "sin": SIN, "excuse": EXC, "verdict": VER, "sin2": SIN, "excuse2": EXC, "verdict2": VER,
-      "weigh": ["Bm", "Bm", "Bm", "C", "C", "C", "Am", "Am", "Am", "Em", "F#7", "F#7"],
-      "solo": ["Bm", "G", "Em", "F#7", "Bm", "G", "C", "F#7", "Bm", "C", "G", "D", "Em", "C", "Am", "F#7"],
-      "bell": ["Bm", "Bm"], "verdict3": VER, "end": ["C", "C", "Bm", "Bm"]}
+FORM = [("bells", 4), ("charge", 20), ("friend", 16), ("stranger", 16), ("mother", 16), ("jury", 16), ("hush", 2), ("verdict", 4), ("sentence", 28), ("toll", 6)]
+CH = {"bells": ["Bm"] * 4, "charge": ["Bm", "C", "Bm", "A"] * 5, "friend": ["G", "D", "Em", "Bm"] * 4, "stranger": ["Bm", "C", "D", "C"] * 4,
+      "mother": ["Em", "Bm", "C", "Bm"] * 4, "jury": ["Bm", "C"] * 8, "hush": ["Bm", "Bm"], "verdict": ["C", "C", "Bm", "Bm"],
+      "sentence": ["Bm", "Bm", "C", "Bm"] * 7, "toll": ["Bm"] * 6}
 song = Song("錆びた天秤（仮）",
-            "仮: ラウド25曲（第2シリーズ）の24曲目。イメージは罪と罰。B フリジアン・126。罪（ハーフタイムの重いリフ、B のペダルに ♭2 の C）と"
-            "言い訳（倍のノリ、スラップ、スウィープ）の2つのAメロが交互に来て、サビで鐘が判決を告げる。間奏は付点4分の拍で全員が打つ（拍が傾く）。"
-            "最後は鐘だけが鳴り、判決の一撃。別の楽器は鐘。インスト（歌は後日）。自作",
+            "仮: ラウド26曲の24曲目（2026-10-24 素材から作り直し）。デスコア寄りのメタルコア＋鐘。B フリジアン・126。鐘、起訴（検事の早口）、証人3人（友・見知らぬ男・母）、"
+            "評議、判決の前の無音、判決の鐘、刑（いちばん重いブレイクダウン）。自作",
             BPM, BEATS, FORM, CH)
-song.desc += " 物語: 天秤の両側（罪と言い訳）が交互に重くなり、鐘が判決を告げる。"
-song.kinds = {"sin": "verse", "excuse": "pre", "verdict": "chorus", "sin2": "verse", "excuse2": "pre", "verdict2": "chorus",
-              "weigh": "bridge", "bell": "break", "verdict3": "chorus", "end": "outro"}
+song.desc += " 物語: 裁判。起訴、三人の証人、評議、判決の前の無音、判決の鐘、刑。"
+song.kinds = {"bells": "intro", "charge": "verse", "friend": "bridge", "stranger": "pre", "mother": "bridge", "jury": "pre", "hush": "break", "verdict": "break", "sentence": "chorus", "toll": "outro"}
 SECS, NB = song.secs, song.nb
-
-RIFF = {"Bm": [bar("B1:1.5! B1:0.5 C2:1! B1:0.5 D2:0.5"), bar("B1:1.5! F#2:0.5 E2:1 D2:0.5 C2:0.5")],
-        "C": [bar("C2:1.5! C2:0.5 D2:1! C2:0.5 B1:0.5"), bar("C2:1.5! G2:0.5 E2:1 D2:0.5 B1:0.5")],
-        "Am": [bar("A2:1.5! A2:0.5 B2:1! A2:0.5 G2:0.5"), bar("A2:1.5! E2:0.5 G2:1 E2:0.5 C2:0.5")]}
-SIN_MEL = [bar("R:2 F#4:1 B4:1"), bar("D5:2 B4:2"), bar("E5:1.5 D5:0.5 C5:2"), bar("B4:4"),
-           bar("R:2 D5:1 B4:1"), bar("F#5:2 E5:1 D5:1"), bar("C5:2 A4:2"), bar("G4:2 E4:2")]
-SIN2_MEL = [bar("R:2 D5:1 B4:1"), bar("F#5:2 D5:2"), bar("G5:1.5 E5:0.5 C5:2"), bar("D5:2 B4:2"),
-            bar("R:2 D5:1 F#5:1"), bar("B5:2 A5:1 F#5:1"), bar("E5:2 C5:2"), bar("E5:2 G5:2")]
-EXC_MEL = [bar("B4:0.5 D5:0.5 G5:1 F#5:0.5 E5:0.5 D5:1"), bar("A4:0.5 D5:0.5 F#5:1 E5:1 D5:1"),
-           bar("E5:0.5 G5:0.5 B5:1 A5:0.5 G5:0.5 E5:1"), bar("F#5:2 R:2"),
-           bar("B5:0.5 A5:0.5 G5:1 D5:1 B4:1"), bar("A5:0.5 F#5:0.5 D5:1 F#5:1 A5:1"), bar("C6:1 B5:0.5 A5:0.5 E5:2"), R4]
-VER_MEL = [bar("B4:1 D5:1 F#5:2"), bar("G5:1.5 E5:0.5 C5:2"), bar("D5:1 G5:1 B5:2"), bar("A5:1.5 F#5:0.5 D5:2"),
-           bar("E5:1 G5:1 B5:1 E6:1"), bar("E6:2 C6:1 A5:1"), bar("G5:1.5 C6:0.5 E5:2"), bar("G5:2^^ R:2")]
-# 2回目のサビ: 前半4小節の音域とリズムを変える（同じ4小節を3回くり返さない）
-VER2_MEL = [bar("B4:0.5 D5:0.5 F#5:1 B5:2"), bar("G5:1 C6:1 E5:2"), bar("D5:0.5 G5:0.5 B5:1 D6:2"), bar("A5:1 D6:1 F#5:2")] + VER_MEL[4:]
-VER3_MEL = VER_MEL[:6] + [bar("A5:1 C6:1 E6:2!"), bar("E6:2^^ R:2")]
-SOLO_MEL = [bar("F#5:1 B5:1 D6:2"), bar("E6:1.5 D6:0.5 C6:2"), bar("B5:1 D6:1 G5:2"), bar("F#5:1 A5:1 D6:2"),
-            bar("G5:0.5 B5:0.5 E6:1 D6:1 B5:1"), bar("C6:1 E6:1 G5:2"), bar("A5:1 C6:1 E6:2^^"), bar("F#5:1 A#5:1 C#6:1 E6:1")]
-SLAP = ["T.gPT.gP.TgPT.gP", "T..PgT.PT.gP.TgS", "TgP.T.gPTgP.T.SP", "T.gP.TgPT.gPTgP."]
+BP = scale_pcs("B", "phrygian")
 
 
-def harm_below(line, ch, gap=3):
-    """旋律の下で、和音の音からいちばん近い音を選ぶ（休みはそのまま）"""
-    pcs = chord_pcs(ch)
-    out = []
-    for t in line.split():
-        n = tok_note(t)
-        if n == "R": out.append(t); continue
-        m = midi(n) - gap
-        while m % 12 not in pcs: m -= 1
-        out.append(nm(m) + ":" + t.split(":", 1)[1].replace("!", "").replace("^", ""))
-    return " ".join(out)
+def rapid(note, pattern):
+    """検事の早口: 同じ音の16分の連打と休み（pattern の 1＝音・0＝休み、16個）"""
+    toks = []
+    for j, c in enumerate(pattern):
+        if c != "1": toks.append("R:0.25"); continue
+        last = j == 15 or pattern[j + 1] == "0"          # 連打の終わりは、隣の音へ突く（半音上・3度下と交互）
+        nn = (tr(note, 1) if (j // 4) % 2 == 0 else tr(note, -3)) if last else note
+        toks.append(f"{nn}:0.25{'!' if j % 4 == 0 or last else ''}")
+    return bar(merge_rests(" ".join(toks)))
 
 
-def split_slap(b):
-    pt, mt = [], []
-    for t in b.split():
-        if t.endswith("'"): pt.append(t); mt.append("R:" + t.split(":")[1].rstrip("'"))
-        else: pt.append("R:" + t.split(":")[1].rstrip("!'")); mt.append(t)
-    return merge_rests(" ".join(mt)), merge_rests(" ".join(pt))
+CHARGE_PAT = ["1111000011110000", "0011110000111100", "1111111100000000", "0000111111110000", "1010111100001111"]
+CHARGE_NOTES = {"Bm": ["B4", "D5", "F#4"], "C": ["C5", "E5", "G4"], "A": ["A4", "C#5", "E4"]}
+FRIEND = [bar(x) for x in melody_walk(scale_pcs("B", "aeolian"), "F#4", "D5", [[-1, 1.5, 0.5, 1], [2, -0.5, 0.5, 1], [-0.5, 0.5, 1.5, 0.5, -1]], 1, CH["friend"],
+                                       contour=(1, 1, -1, 2, -1), lo="D4", hi="E5")]
+STRANGER = [bar(x) for x in melody_walk(BP, "B4", "F#4", [[-0.75, 0.75, 0.5, -0.25, 0.75, 1], [0.75, 0.75, -0.5, 0.75, 0.25, -1], [-0.25, 0.75, 0.75, 0.25, -0.5, 0.5, -1]], 2,
+                                         CH["stranger"], contour=(-1, 2, -2, 1), lo="D4", hi="D5")]
+SENT = [bar(x) for x in melody_walk(BP, "F#5", "B4", [[3, -1], [-1, 3], [2.5, -1.5], [4]], 3, CH["sentence"], contour=(-1, 1, -2, -1), lo="B4", hi="F#5")]
 
-
-def dotted(note, j):
-    """付点4分の拍（3小節で一回り）。j は一回りの中の小節番号"""
-    return [bar(f"{note}:1.5! {note}:1.5! {note}:1!"), bar(f"R:0.5 {note}:1.5! {note}:1.5! {note}:0.5!"), bar(f"R:1 {note}:1.5! {note}:1.5!")][j]
-
-
-P = {k: [] for k in ["riff", "rhy", "rhy_in", "lead", "harm", "tech", "bass", "pop", "mute", "bell"]}
+LOW = {"Bm": "B1", "C": "C2", "A": "A1", "G": "G1", "D": "D2", "Em": "E2"}
+P = {k: [] for k in ["riff", "rhy", "lead", "clean", "bell", "bass", "mute"]}
 kit = Kit(BEATS)
-RIDE, BELL, CR, CR2, CHINA = "D2", "F2", "C2", "G2", "B2"
-g16 = lambda *pos, ch="X", base=None: kit.grid(pos, ch, base)
-fill_seed = 0
-
 for idx, (name, i) in enumerate(SECS):
-    n = dict(FORM)[name]
-    ch = song.chords[name][i]
-    nxt = song.chord_at(idx + 1) if idx + 1 < NB else ch
-    last = i == n - 1
-    base_ch = ch.split("/")[0]
-    root = root_note(ch)
-    groot = up(root, 1) if midi(up(root, 1)) <= midi("D3") else root
-    kind = name.rstrip("23")
-    broot = root_note(ch, "C4", "B4")
-
-    rf = s = si = lead = harm = tech = bl = R4
-    b = R4; pop = mute = R4
-    if kind == "intro":
-        if i >= 2: rf = RIFF[base_ch][i % 2]
-        if i < 2: bl = bar(f"{broot}:4")
-    elif kind == "sin":
-        rf = RIFF.get(base_ch, [bar(f"{groot}:2! {groot}:2")] * 2)[i % 2]
-        lead = (SIN_MEL if name == "sin" else SIN2_MEL)[i]
-        if last: bl = bar(f"{broot}:4")
-    elif kind == "excuse":
-        s = si = bar(f"{groot}:0.5'! R:1 {groot}:0.5' R:0.5 {groot}:0.5' R:1")
-        lead = EXC_MEL[i]
-        if name == "excuse2" and i not in (3, 7): harm = harm_below(lead, ch)
-        if i == 3: tech = "R:2 " + sweep(ch, "B3", "B5", 2)
-        if i == 7: tech = sweep(ch, "C4", "C6", 2) + " " + sweep(ch, "G3", "G5", 2); s = si = bar(f"{groot}:4!")
-    elif kind == "verdict":
-        s = si = bar(f"{groot}:2! {groot}:2") if not (last and name == "verdict3") else bar(f"{groot}:4!")
-        lead = {"verdict": VER_MEL, "verdict2": VER2_MEL, "verdict3": VER3_MEL}[name][i]
-        if name != "verdict": harm = harm_below(strip_marks(lead), ch)
-        bl = bar(f"{broot}:4")
-    elif kind == "weigh":
-        rf = dotted(groot, i % 3); s = si = rf
-        if i % 3 == 0: bl = bar(f"{broot}:4")
-    elif kind == "solo":
-        if i < 8:
-            tech = sweep(ch, "B3", "B5", 2) + " " + sweep(ch, "F#3", "F#5", 2)
-            s = si = bar(f"{groot}:2! {groot}:2")
-        else:
-            lead = SOLO_MEL[i - 8]; s = si = bar(f"{groot}:2! {groot}:2")
-    elif kind == "bell":
-        bl = bar(f"{broot}:4") if i == 0 else bar("F#4:4")
-    elif kind == "end":
-        s = si = bar(f"{groot}:1! R:3") if not last else bar(f"{groot}:4!")
-        rf = s
-        bl = bar(f"{broot}:4")
-    P["riff"].append(rf); P["rhy"].append(s); P["rhy_in"].append(si); P["lead"].append(lead); P["harm"].append(harm)
-    P["tech"].append(tech); P["bell"].append(bl)
-
-    # ベース
-    if kind in ("intro", "sin", "weigh", "end"): b = unison_low(rf, -1, "B0") if rf != R4 else R4
-    elif kind == "excuse":
-        bb, mute = bass_slap_bar(ch, BEATS, SLAP[i % 4]); b, pop = split_slap(bb)
-    elif kind == "verdict": b = bass_root8(ch, 4, nxt) if not (last and name == "verdict3") else bar(f"{root}:4!")
-    elif kind == "solo": b = bass_root8(ch, 4, nxt)
-    P["bass"].append(b); P["pop"].append(pop); P["mute"].append(mute)
-
-    # ドラム
-    k = sn = h = None; tom = cym = None
-    fill = last and kind in ("sin", "excuse", "verdict") and not (name == "verdict3")
-    if kind == "intro":
-        if i == 2: k = g16(0, 10); sn = g16(8); cym = f"{CR}:2! {RIDE}:1 {RIDE}:1"
-        if i == 3: k = g16(0); sn = g16(8, 10, 12, 13, 14, 15); cym = f"{CHINA}:1! {RIDE}:1 R:2"
-    elif kind == "sin":
-        # 罪: ハーフタイム（スネアは3拍目）
-        k = g16(0, 3, 10) if i % 2 == 0 else g16(0, 6, 7, 10); sn = g16(8); sn = g16(14, ch="o", base=sn)
-        h = g16(0, 4, 8, 12, ch="x")
-        if i == 0: cym = f"{CR}:2! R:2"; h = g16(8, 12, ch="x")
-    elif kind == "excuse":
-        # 言い訳: 倍のノリ（スネアは2・4拍目、ライドのベルで8分）
-        k = g16(0, 3, 8, 11); sn = g16(4, 12); sn = g16(7, 15, ch="o", base=sn)
-        cym = " ".join([f"{BELL}:0.5!" if j % 2 == 0 else f"{RIDE}:0.5" for j in range(8)])
-        if i == 0: cym = f"{CR2}:0.5! " + " ".join([f"{BELL}:0.5!" if j % 2 == 0 else f"{RIDE}:0.5" for j in range(1, 8)])
-    elif kind == "verdict":
-        k = g16(0, 2, 8, 10, 11); sn = g16(4, 12)
-        h = g16(*range(0, 16, 2), ch="x")
-        if i % 2 == 0: cym = (f"{CR}:1! " if i % 4 == 0 else f"{CR2}:1! ") + "R:3"; h = g16(4, 6, 8, 10, 12, 14, ch="x")
-        if name == "verdict3" and last: k = g16(0); sn = g16(0); h = None; cym = f"{CR}:4!"
-    elif kind == "weigh":
-        # 付点4分の拍: キックは全員の打点、スネアは1つおき、ライドは打点ごと
-        j = i % 3
-        hits = [(0, 6, 12), (2, 8, 14), (4, 10)][j]
-        k = g16(*hits); sn = g16(*[(6,), (2, 14), (10,)][j])
-        k = "".join("." if sn[x] != "." else c for x, c in enumerate(k))
-        toks, t = [], 0.0
-        for p in hits:
-            if p / 4 > t: toks.append(f"R:{p / 4 - t:g}")
-            toks.append(f"{CHINA if (j == 0 and p == 0) else RIDE}:1.5!" if p / 4 + 1.5 <= 4 else f"{RIDE}:{4 - p / 4:g}!")
-            t = min(4, p / 4 + 1.5)
-        if t < 4: toks.append(f"R:{4 - t:g}")
-        cym = " ".join(toks)
-        if last: k, sn, tom = linear_fill(kit, 2, 3); cym = None
-    elif kind == "solo":
-        if i < 8:
-            k = "".join("X" if x % 4 == 0 else "x" for x in range(16)); sn = g16(4, 12)
-            k = "".join("." if sn[x] != "." else c for x, c in enumerate(k))
-            cym = f"{RIDE}:1! {RIDE}:1 {RIDE}:1! {RIDE}:1" if i % 4 else f"{CR}:1! {RIDE}:1 {RIDE}:1! {RIDE}:1"
-        else:
-            k = g16(0, 10); sn = g16(8); h = g16(0, 2, 4, 6, 8, 10, 12, 14, ch="x")
-            if i == 8: cym = f"{CR}:2! R:2"; h = g16(8, 10, 12, 14, ch="x")
-            if i == 11: tom = "R:2 " + tom_triplets_down(2); h = g16(0, 2, 4, 6, ch="x"); sn = g16()
-        if last: k, sn, tom = linear_fill(kit, 2, 1); h = None; cym = f"{RIDE}:1! {RIDE}:1 R:2"
-    elif kind == "bell":
-        cym = f"R:2 E4:2".replace("E4", "R")
-        cym = None
-    elif kind == "end":
-        k = g16(0); sn = g16(0); cym = f"{CR}:4!"
-    if fill:
-        k, sn, tom = linear_fill(kit, 2, fill_seed); fill_seed += 1
-        k = g16(0, 3, base=k); sn = g16(4, base=sn) if kind != "sin" else sn
-        h = None; cym = f"{CR2 if kind != 'sin' else CR}:1! R:3" if kind != "sin" else None
-    kit.add(k, sn, h, tom, cym)
-
-FX = []
-for idx, (name, i) in enumerate(SECS):
-    n = dict(FORM)[name]
-    nx = SECS[idx + 1][0] if idx + 1 < NB else ""
-    if i == n - 1 and nx.startswith("verdict"): FX.append(bar("R:2 C4:2"))
-    elif name == "solo" and i == n - 1: FX.append(bar("E4:4"))
-    else: FX.append(R4)
+    n = dict(FORM)[name]; ch = song.chords[name][i]
+    riff = rhy = lead = clean = bell = mute = R4
+    g = LOW[ch]; root = root_note(ch)
+    chug = bar(f"{g}:0.25! {g}:0.25 R:0.5 {g}:0.25 {g}:0.25 R:0.5 {g}:0.5! R:0.25 {g}:0.25 {tr(g, 1)}:0.5 R:0.5")
+    if name == "bells":
+        bell = bar("B4:4") if i % 2 == 0 else bar("F#4:4")
+        b = bar("B0:4,") if i >= 2 else R4
+    elif name == "charge":
+        riff = rhy = chug if i >= 4 else bar(f"{g}:0.5! R:3.5")
+        lead = rapid(CHARGE_NOTES[ch][i % 3], CHARGE_PAT[i % 5]) if i >= 4 else R4
+        b = unison_low(chug, -1, "B0")
+    elif name == "friend":
+        lead = FRIEND[i]
+        tones = (chord_tones(ch, "D3", "D4") * 2)[:4]
+        clean = bar(" ".join(f"{t}:0.5" for t in tones + tones[::-1]))
+        b = bar(f"{root}:4,") if i >= 4 else R4
+    elif name == "stranger":
+        riff = rhy = bar(f"R:0.25 {g}:0.5! {g}:0.25 R:0.75 {g}:0.75! R:0.5 {g}:0.5 R:0.5")
+        lead = STRANGER[i]
+        b = unison_low(riff, -1, "B0")
+        mute = bar("R:2.25 B1:0.25, R:1.5") if i % 2 else R4
+    elif name == "mother":
+        bell = bar(f"{chord_tones(ch, 'B4', 'B5')[0]}:4") if i % 4 == 0 else R4
+        tones = (chord_tones(ch, "E3", "E4") * 2)[:3]
+        clean = bar(f"{tones[0]}:2 {tones[1]}:1 {tones[2]}:1")
+        b = bar(f"{root}:4,") if i % 2 == 0 else R4
+    elif name == "jury":
+        riff = rhy = chug if i >= 8 else bar(f"{g}:1! R:1 {g}:1! R:1")
+        bell = bar(f"{chord_tones(ch, 'B4', 'B5')[0]}:2 R:2") if i % 4 == 3 else R4
+        b = unison_low(riff, -1, "B0")
+    elif name == "hush":
+        b = R4
+    elif name == "verdict":
+        bell = bar("C5:4") if i == 0 else (bar("B4:4") if i == 2 else R4)
+        riff = rhy = bar(f"{g}:1! R:3") if i in (0, 2) else R4
+        b = bar(f"{root}:1! R:3") if i in (0, 2) else R4
+    elif name == "sentence":
+        riff = rhy = bar(f"{g}:0.75! {g}:0.75! {g}:0.5! R:0.5 {g}:0.5! {tr(g, 1)}:0.5! {g}:0.5!")
+        lead = SENT[i] if i >= 8 else R4
+        b = unison_low(riff, -1, "B0")
+    else:   # toll
+        bell = bar("B4:4") if i in (0, 2, 4) else R4
+        b = R4
+    P["riff"].append(riff); P["rhy"].append(rhy); P["lead"].append(lead); P["clean"].append(clean); P["bell"].append(bell); P["bass"].append(b); P["mute"].append(mute)
+    kit.add("X.......X.......", "....X.......X...", "x.x.x.x.x.x.x.x.")
 
 J = lambda k: " ".join(P[k])
 song.add(riff_parts(J("riff")))
-song.add(rhythm_parts(J("rhy"), J("rhy_in")))
+song.add(rhythm_parts(J("rhy"), J("rhy")))
 song.add(lead_part(J("lead")))
-song.add(lead_part(J("harm"), vol=0.08, pan=0.3, role="リード（和音の音のハモリ）"))
-song.add(tech_part(J("tech"), role="技のギター（スウィープ）"))
+song.add(clean_part(J("clean"), vol=0.08, pan=0.25, role="クリーンの和音（証人）"))
 song.add(part("鐘（判決）", "bell", J("bell"), volume=0.15, pan=0.1, reverb=0.5, sustain=2.5, release=1.5,
               fx=[{"type": "eq", "low": -3, "mid": 0, "midHz": 800, "high": 0}, {"type": "reverb", "mix": 0.3}]))
 song.add(bass_part(J("bass")))
-song.add(slap_pop_part(J("pop")))
 song.add(bassmute_part(J("mute")))
 song.add(drum_parts(kit))
-song.add(cymfx_part(" ".join(FX)))
 
-# 参考の音と追加の楽器（2026-10-23 人間「残り24曲、作った音源のどれかに合わせて」「プラスで何か楽器を追加」）
+song.auto_harm = song.auto_oct = song.auto_air = song.auto_range = False
+song.auto_scream = False
 song.ref_tone = "dark-electro-rock"
-add_layer(song, "synth-arp", "天秤の針が、時を刻むように揺れる。")
 
-# 展開の型（2026-10-23 人間「展開が全曲同じ」「4分から5分」）。lm25_plans.py
 from lm25_plans import apply_plan
 apply_plan(song, "24")
 
