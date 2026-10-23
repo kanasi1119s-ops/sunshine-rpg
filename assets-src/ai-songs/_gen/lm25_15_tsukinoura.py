@@ -31,19 +31,19 @@ song.pickups = ['V4', 'V3']   # 8分3つの上りの型を、この曲だけの�
 RIFF = {"C#m": [bar("C#2:1.5! C#2:0.5 D2:1 C#2:0.5 G#2:0.5"), bar("C#2:1.5! C#2:0.5 E2:0.5 D2:0.5 C#2:1")],
         "D": [bar("D2:1.5! D2:0.5 A2:1 G#2:0.5 D2:0.5")] * 2, "G#7": [bar("G#1:1.5! G#1:0.5 C2:1 D#2:0.5 F#2:0.5")] * 2}
 
-DREAM_MEL = [bar("R:1 G#4:0.5 B4:0.5 C#5:2"), bar("B4:1 G#4:1 E4:2"), bar("R:1 B4:0.5 E5:0.5 D#5:2"), bar("C#5:1 A4:1 E4:2"),
-             bar("R:1 E4:0.5 G#4:0.5 D#5:2"), bar("C#5:1 B4:1 G#4:2"), bar("F#4:1 E4:1 F#4:2"), bar("D#4:2 R:2")]
-DREAM2_MEL = [bar("E5:1 C#5:1 G#4:2"), bar("B4:1 D#5:1 F#5:2"), bar("G#5:2 F#5:1 C#5:1"), bar("E5:4"),
-              bar("R:1 A4:0.5 C#5:0.5 E5:2"), bar("D#5:1 B4:1 G#4:2"), bar("A4:1 C#5:1 E5:2"), bar("F#5:2 C#5:2")]
-DREAM3_MEL = [bar("R:1 C#5:0.5 E5:0.5 G#5:2"), bar("E5:1 C#5:1 G#4:2"), bar("R:1 E5:0.5 G#5:0.5 D#5:2"), bar("E5:1 C#5:1 A4:2"),
-              bar("R:1 G#4:0.5 C#5:0.5 D#5:2"), bar("E5:1 C#5:1 G#4:2"), bar("B4:1 E5:1 F#5:2"), bar("D#5:2 F#5:1 R:1")]
-NIGHT_MEL = [bar("R:0.5 C#4:0.5 E4:0.5 G#4:0.5 C#5:2"), bar("D5:1 A4:1 F#4:2"), bar("R:0.5 E4:0.5 G#4:0.5 B4:0.5 C#5:2"), bar("C5:2 D#5:1 R:1"),
-             bar("R:0.5 G#4:0.5 C#5:0.5 E5:0.5 G#5:2"), bar("F#5:1 D5:1 A4:2"), bar("B4:1 D5:1 F#5:2"), bar("F#5:1 D#5:1 C5:1 R:1")]
-NIGHT2_MEL = [bar("R:0.5 C#5:0.5 F#5:0.5 A5:0.5 C#6:2"), bar("C6:1 G#5:1 D#5:2"), bar("R:0.5 C#5:0.5 E5:0.5 A5:0.5 C#6:2"), bar("C6:2 F#5:1 R:1"),
-              bar("A5:1 F#5:1 C#5:2"), bar("D#5:1 F#5:1 C6:2"), bar("F#5:1 A5:1 C#6:2"), bar("C6:2 D#6:1 R:1")]
-CHORUS_MEL = [bar("R:0.5 C#5:0.5 E5:0.5 A5:0.5 C#6:2!"), bar("B5:1 G#5:0.5 E5:0.5 B5:2"), bar("A5:1.5 F#5:0.5 C#6:2"), bar("G#5:1 E5:1 C#5:2"),
-              bar("R:0.5 D5:0.5 F#5:0.5 A5:0.5 D6:2!"), bar("E6:2! C#6:1 A5:1"), bar("B5:2 E5:1 F#5:1"), bar("D#5:2 F#5:1 R:1"),
-              bar("C#6:2 B5:1 A5:1"), bar("G#5:2 E5:1 B5:1"), bar("A5:2 C#6:2"), bar("C#6:4!")]
+# 2026-10-24 旋律を作り直し（人間「似た曲を作らない」。前の旋律は「4分4分2分」など、シリーズの多くの曲と同じリズムだった）:
+#   夢の中で拍がほどける感じに、4分の3連（2拍に3つ）を小節線にまたがって使う（3対4のずれ）。小節の終わりは休むか、動いている
+CSM = scale_pcs("C#", "aeolian")
+DRM = [[-0.5, 0.6667, 0.6667, 0.6666, 1, -0.5], [1, 0.6667, 0.6667, 0.6666, -1], [-1, 1.3333, 0.6667, -1], [0.6667, 0.6667, 0.6666, 0.5, 0.5, -1]]
+NGT = [[-0.75, 0.25, 0.6667, 0.6667, 0.6666, -1], [0.25, 0.25, 0.5, -0.5, 1.3333, 0.6667, -0.5], [-0.5, 0.25, 0.25, 0.6667, 0.6667, 0.6666, -1]]
+CHR = [[0.6667] * 5 + [0.6665], [1.3333, 1.3333, 1.3334], [-0.5, 0.5, 0.6667, 0.6667, 0.6666, 1], [0.6667, 0.6667, 0.6666, -2]]
+W = lambda st, en, rh, seed, chs, ct, lo="G#3", hi="F#5": [bar(x) for x in melody_walk(CSM, st, en, rh, seed, chs, contour=ct, lo=lo, hi=hi)]
+DREAM_MEL = W("G#4", "C#5", DRM, 1, CH["dream"], (1, 1, -2, 1, 2, -1))
+DREAM2_MEL = W("C#5", "E5", DRM, 2, CH["dream2"], (-1, 2, 1, -2, 1))
+DREAM3_MEL = W("E5", "G#4", DRM, 3, CH["dream3"], (1, -1, -1, 2, -2))
+NIGHT_MEL = W("C#4", "G#4", NGT, 4, CH["night"], (0, 1, 2, -1, -2, 1), lo="G#3", hi="E5")
+NIGHT2_MEL = W("F#4", "C#5", NGT, 5, CH["night2"], (1, 1, -1, 2, -2), lo="A3", hi="F#5")
+CHORUS_MEL = W("C#5", "E5", CHR, 6, CH["chorus"], (1, 2, -1, 1, -2, 2, -1))
 
 
 def glock_spark(ch):
@@ -95,7 +95,7 @@ for idx, (name, i) in enumerate(SECS):
     elif name == "dream2": dlead = DREAM2_MEL[i]
     elif name == "dream3": dlead = DREAM3_MEL[i]
     elif name in ("night", "night2"): lead = NIGHT_MEL[i] if name == "night" else NIGHT2_MEL[i]
-    elif name == "chorus": lead = CHORUS_MEL[i]; harm8 = shift_oct(strip_marks(lead), -1)
+    elif name == "chorus": lead = CHORUS_MEL[i]
     if name in ("intro", "dream", "dream2", "wake", "dream3"):
         clean = clean_arp(ch)
     if name in ("intro", "dream", "dream3", "wake"):
@@ -190,6 +190,7 @@ add_layer(song, "piano", "月の裏側で、ひとりで弾くピアノ。")
 # 展開の型（2026-10-23 人間「展開が全曲同じ」「4分から5分」）。lm25_plans.py
 from lm25_plans import apply_plan
 apply_plan(song, "15")
+song.auto_harm = song.auto_oct = song.auto_air = song.auto_range = False    # 2026-10-24: 型は使わない
 
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "/tmp/lm25/lm25-15-tsukinoura.json"
