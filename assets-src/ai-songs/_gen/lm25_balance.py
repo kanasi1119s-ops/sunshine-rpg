@@ -21,15 +21,15 @@ BASS_GAIN = 1.4      # 2026-10-23 人間「ベースの音小さくて聞きに�
 #   耳に刺さる 4.5kHz より上を少し丸め、800Hz あたりに温かさを足す
 LEAD_TONE = [{"type": "eq", "low": 0, "mid": 1.5, "midHz": 850, "high": -2.5}, {"type": "filter", "kind": "lowpass", "freq": 8500, "q": 0.6}]
 # 2026-10-23 人間「歪が汚い」: アンプの前のオーバードライブを外し、コンプはごく軽く、アンプへの入力を浅く（0.5）
-LEAD_CHAIN = [{"type": "compressor", "pre": True, "threshold": -24, "ratio": 3, "attack": 0.01, "release": 0.3},    # 伸び（ごく軽く）
-              {"type": "filter", "kind": "highpass", "freq": 120, "q": 0.7},
+# 2026-10-23 聞き比べで人間が③を選んだ（PRS Archon リード1・コンプなし・いちばん浅い歪み）
+LEAD_CHAIN = [{"type": "filter", "kind": "highpass", "freq": 120, "q": 0.7},
               {"type": "eq", "low": 0, "mid": -2.5, "midHz": 350, "high": 0},                                    # 濁り
               {"type": "eq", "low": 0, "mid": 2.0, "midHz": 1600, "high": 0},                                    # 歌う帯域（鋭さ）
               {"type": "eq", "low": 0, "mid": -2.0, "midHz": 4200, "high": 0},                                   # 刺さる所だけ細く
               {"type": "filter", "kind": "lowpass", "freq": 11500, "q": 0.6},                                    # 空気感は残す
               {"type": "delay", "beats": 0.75, "mix": 0.16, "feedback": 0.3}]                                    # 余韻
-LEAD_DRIVE = 0.5
-LEAD_AMP = None   # 聞き比べで決める（"namArchonL2" など）。None なら曲のまま（namJVM）
+LEAD_DRIVE = 0.45
+LEAD_AMP = "namArchonL1"   # PRS Archon（手元だけのモデル。無い環境ではマーシャル系で鳴る）
 LEAD_TAIL = [{"type": "delay", "beats": 0.75, "mix": 0.12, "feedback": 0.22}, {"type": "plate", "mix": 0.2}]
 DRUM_GAIN = 0.9
 GUITARS = {"distGuitar", "crunch", "leadGuitar", "echoGuitar", "guitar"}
