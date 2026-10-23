@@ -6,7 +6,9 @@
 # 人間の好み: リフ（看板リフ・リズム）を 5% 上げ、ドラムを 10% 下げる（「リフが弱い。5ぐらい上げて」「ドラムの音を10下げよう」＝割合）。
 import json, sys
 
-OTHER_MAX = 0.7
+OTHER_MAX = 0.5      # 重ね（追加の楽器: ピアノ・弦・合唱など）・空気の層・ダンスの要素
+FEATURE_LEVEL = 0.9  # その曲だけの楽器（サックス・シタール・三味線など）は主役: 合計をギターの 0.9 倍（リードと同じ）にそろえる
+# 2026-10-23 人間「一つだけ出す楽器の音はその曲のメインになるように、音量上げていいからね」
 LEAD_MAX = 0.9
 RIFF_GAIN = 1.05
 DRUM_GAIN = 0.9
@@ -28,22 +30,36 @@ def group(p):
     return "other"
 
 
+def featured(p):
+    r = p.get("role", "")
+    return group(p) == "other" and p.get("instrument") not in GUITARS and not r.startswith(("追加の楽器", "ダンスの要素")) and "空気の層" not in r
+
+
 def balance(song):
     ps = song["parts"]
-    tot = lambda g: sum(p.get("volume", 0) for p in ps if group(p) == g)
+    for p in ps:
+        if featured(p): p["_feat"] = True
+    tot = lambda g: sum(p.get("volume", 0) for p in ps if group(p) == g and not p.get("_feat"))
     G = tot("guitar")
     log = []
+    F = sum(p.get("volume", 0) for p in ps if p.get("_feat"))
+    if G > 0 and F > 0:
+        k = FEATURE_LEVEL * G / F
+        for p in ps:
+            if p.get("_feat"): p["volume"] = round(p["volume"] * k, 5)
+        log.append(f"主役の楽器 ×{k:.3f}")
     if G > 0:
         for g, mx in (("other", OTHER_MAX), ("lead", LEAD_MAX)):
             s = tot(g)
             if s > mx * G:
                 k = mx * G / s
                 for p in ps:
-                    if group(p) == g: p["volume"] = round(p["volume"] * k, 5)
+                    if group(p) == g and not p.get("_feat"): p["volume"] = round(p["volume"] * k, 5)
                 log.append(f"{g} ×{k:.3f}")
     for p in ps:
         if group(p) == "guitar" and p.get("role", "").startswith(("看板リフ", "リズム")): p["volume"] = round(p.get("volume", 0) * RIFF_GAIN, 5)
         if group(p) == "drums": p["volume"] = round(p.get("volume", 0) * DRUM_GAIN, 5)
+    for p in ps: p.pop("_feat", None)
     return log
 
 
