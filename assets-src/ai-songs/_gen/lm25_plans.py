@@ -142,22 +142,19 @@ PLANS["08"] = [   # 2026-10-24 素材から作り直し: 速さそのものが�
 FADE["08"] = (0, 5)
 
 # 09 罰の階段（92）: 下る転調。チェンバロ1人で始まり、区間ごとに半音ずつ下がって（地下へ降りる階段）、一番下で決めの一撃
-DESC["09"] = "展開: 下る転調（区間ごとに半音ずつ下がり、罰の階段を地下へ降りていく。全部で3段）。始まりはチェンバロ1人、最下段は重いハーフタイムと決めの一撃で終わる。"
-PLANS["09"] = [
-    ("intro", "bridge", {"keep": ["extra"], "kind": "intro"}),
-    ("intro", "intro", {"drums": "own"}),
-    ("verse", "verse", {}),
-    ("pre", "pre", {}),
-    ("chorus", "chorus", {}),
-    ("inter", "inter", {"semi": -1, "drums": "toms"}),
-    ("verse", "verse2", {"semi": -1, "drums": "ride"}),
-    ("pre", "pre2", {"semi": -1}),
-    ("chorus", "chorus2", {"semi": -1}),
-    ("solo", "solo", {"semi": -2, "drums": "half"}),
-    ("break", "break", {"semi": -3, "kime": [0, 1, 2, 3]}),
-    ("chorus", "chorus3", {"semi": -3, "drums": "half"}),
-    ("chorus", "chorus3", {"semi": -3, "drums": "double"}),
-    ("outro", "outro", {"semi": -3, "stop": True, "drums": "own"}),
+DESC["09"] = "展開: 9段の階段（パッサカリア。低音が C から E まで半音ずつ下り続け、段ごとに主題を変奏。重さが段ごとに増し、8段目がいちばん遅く重く、9段目で主題が逆さに上る）。チェンバロの主題で始まり、判決の槌の一撃とチェンバロの1音で終わる。"
+PLANS["09"] = [   # 2026-10-24 素材から作り直し: 9段の階段（低音が半音ずつ下り続けるパッサカリア）
+    ("door", "door", {"drums": "none", "lv": 0, "kind": "intro"}),
+    ("step1", "step1", {"drums": "none", "lv": 0}),
+    ("step2", "step2", {"drums": "none", "lv": 1}),
+    ("step3", "step3", {"drums": "sparse", "lv": 1}),
+    ("step4", "step4", {"drums": "half", "lv": 2}),
+    ("step5", "step5", {"drums": "lib", "lv": 2}),
+    ("step6", "step6", {"drums": "lib", "lv": [2, 2, 2, 2, 2, 3, 3, 3, 3, 3]}),
+    ("step7", "step7", {"drums": "double", "lv": 3}),
+    ("step8", "step8", {"drums": "half", "lv": 3}),
+    ("step9", "step9", {"drums": "lib", "lv": 3}),
+    ("verdict", "verdict", {"drums": "own", "lv": 3, "kind": "outro"}),
 ]
 
 # 10 成層圏の手紙（132）: 一本道（同じ区間をそのままくり返さない）。サビの旋律を途中で馬頭琴が引き継ぎ、全音上がって成層圏へ、最後は馬頭琴だけが飛んでいく

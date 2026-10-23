@@ -1744,3 +1744,40 @@ def pick_scream(song):
             if full and (any(x[0] for x in bars[last]) or any(x[0] for x in bars[last - 1])): cand = last   # バンド全員が鳴っている山場だけ
         t += c
     if cand is not None: song.screams = [cand]
+
+
+# ---------------- 旋律を歩かせる（2026-10-24 作り直しで追加）----------------
+def melody_walk(scale_pcs, start, end, rhythms, seed, chords, contour=(-1, -1, -1, 2), beats=4, long_snap=0.9, lo="E3", hi="F#5", marks=None):
+    """音階（scale_pcs: 0〜11 の集合）の上を、contour の歩幅（音階の段）でくり返し歩き、start から end へ少しずつ寄せる。
+    rhythms: 小節ごとの長さの並び（負は休み）を、(小節 + seed) の順に使う（同じ形が続かない）。chords: 小節ごとの和音（1拍以上の音は和音の音へ寄せる）。
+    marks: 小節ごとの記号を付ける関数 (bar, j) → "" / "!" など。返り値: 小節ごとの文字列（拍は beats にそろえる）"""
+    sc = [m for m in range(midi(lo), midi(hi) + 1) if m % 12 in scale_pcs]
+    i0 = min(range(len(sc)), key=lambda j: abs(sc[j] - midi(start)))
+    i1 = min(range(len(sc)), key=lambda j: abs(sc[j] - midi(end)))
+    nb = len(chords)
+    total_notes = sum(len([d for d in rhythms[(b + seed) % len(rhythms)] if d > 0]) for b in range(nb))
+    out, pos, step, k = [], i0, 0, 0
+    for b in range(nb):
+        r = rhythms[(b + seed) % len(rhythms)]
+        toks = []
+        for j, d in enumerate(r):
+            if d < 0: toks.append(f"R:{-d:g}"); continue
+            target = i0 + (i1 - i0) * k / max(1, total_notes - 1)
+            pos = max(min(pos + contour[step % len(contour)], len(sc) - 1), 0); step += 1
+            if pos > target + 2: pos -= 1
+            if pos < target - 2: pos += 1
+            if d >= long_snap and chords[b]:
+                pcs = chord_pcs(chords[b].split("/")[0])
+                pos = min((q for q in range(max(0, pos - 2), min(len(sc), pos + 3)) if sc[q] % 12 in pcs), key=lambda q: abs(q - pos), default=pos)
+            mk = marks(b, j) if marks else ""
+            toks.append(f"{nm(sc[pos])}:{d:g}{mk}"); k += 1
+        out.append(fix_len(" ".join(toks), beats))
+    return out
+
+
+def scale_pcs(tonic, mode):
+    steps = {"aeolian": (0, 2, 3, 5, 7, 8, 10), "harmonic": (0, 2, 3, 5, 7, 8, 11), "dorian": (0, 2, 3, 5, 7, 9, 10), "phrygian": (0, 1, 3, 5, 7, 8, 10),
+             "lydian": (0, 2, 4, 6, 7, 9, 11), "ionian": (0, 2, 4, 5, 7, 9, 11), "mixolydian": (0, 2, 4, 5, 7, 9, 10), "phrygdom": (0, 1, 4, 5, 7, 8, 10),
+             "miyako": (0, 1, 5, 7, 8), "minpenta": (0, 3, 5, 7, 10), "blues": (0, 3, 5, 6, 7, 10)}[mode]
+    t = PC[tonic] % 12
+    return {(t + s) % 12 for s in steps}
