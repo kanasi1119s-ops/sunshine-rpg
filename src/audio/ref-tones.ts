@@ -23,6 +23,13 @@ export interface RefTone {
   vocal?: FxSpec[];
   /** そのほかの楽器（シンセ・民族楽器・空気の層など）。無いときは当てない。 */
   other?: FxSpec[];
+  /**
+   * 楽器どうしの大きさの比を参考に合わせるために、パートの音量に掛ける量（dB。ギターが基準）。2026-10-23 人間「楽器同士の大きさの比も保存して」。
+   * こちらの音（聞き比べ G＝ラウド25曲の土台）にこの EQ を当てたあとの大きさと、参考録音の楽器ごとの大きさ（音源分離）の差から計算した。
+   */
+  balanceDb?: { bass: number; drums: number; vocal: number; other: number };
+  /** 参考録音そのものの楽器ごとの大きさ（ギターを 0dB とした dB。音源分離 demucs htdemucs_6s。曲の音量のつり合いの目安）。 */
+  refLevelsDb?: { bass: number; drums: number; vocals: number; piano: number; other: number };
 }
 
 export const REF_TONES: Record<string, RefTone> = {
@@ -175,7 +182,116 @@ export const REF_TONES: Record<string, RefTone> = {
         "freq": 11775.0,
         "q": 0.7
       }
-    ]
+    ],
+    "vocal": [
+      {
+        "type": "filter",
+        "kind": "highpass",
+        "freq": 199.9,
+        "q": 0.7
+      },
+      {
+        "type": "eq",
+        "low": -11.96,
+        "mid": -11.99,
+        "midHz": 294.9,
+        "high": 11.96
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 566.1,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 2500.0,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 4250.0,
+        "high": 0
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11994.5,
+        "q": 0.7
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11994.5,
+        "q": 0.7
+      }
+    ],
+    "other": [
+      {
+        "type": "filter",
+        "kind": "highpass",
+        "freq": 40.0,
+        "q": 0.7
+      },
+      {
+        "type": "eq",
+        "low": 4.97,
+        "mid": 3.48,
+        "midHz": 293.4,
+        "high": -5.27
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 614.0,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -10.29,
+        "midHz": 2500.0,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 6000.0,
+        "high": 0
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11999.9,
+        "q": 0.7
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11999.9,
+        "q": 0.7
+      }
+    ],
+    "balanceDb": {
+      "bass": -17.3,
+      "drums": -2.2,
+      "vocal": 12.2,
+      "other": 12.6
+    },
+    "refLevelsDb": {
+      "bass": -13.3,
+      "drums": -3.1,
+      "vocals": -2.6,
+      "piano": -51.5,
+      "other": -13.7
+    }
   },
   "bright-pop-rock": {
     "id": "bright-pop-rock",
@@ -326,7 +442,116 @@ export const REF_TONES: Record<string, RefTone> = {
         "freq": 11732.8,
         "q": 0.7
       }
-    ]
+    ],
+    "vocal": [
+      {
+        "type": "filter",
+        "kind": "highpass",
+        "freq": 159.0,
+        "q": 0.7
+      },
+      {
+        "type": "eq",
+        "low": -7.21,
+        "mid": 12.0,
+        "midHz": 200.0,
+        "high": 11.96
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 528.5,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 2500.0,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 3993.0,
+        "high": 0
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11487.6,
+        "q": 0.7
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11487.6,
+        "q": 0.7
+      }
+    ],
+    "other": [
+      {
+        "type": "filter",
+        "kind": "highpass",
+        "freq": 140.1,
+        "q": 0.7
+      },
+      {
+        "type": "eq",
+        "low": 11.96,
+        "mid": -10.48,
+        "midHz": 200.0,
+        "high": 11.97
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -9.59,
+        "midHz": 581.0,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 2499.4,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 5802.0,
+        "high": 0
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11460.1,
+        "q": 0.7
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11460.1,
+        "q": 0.7
+      }
+    ],
+    "balanceDb": {
+      "bass": -18.0,
+      "drums": -15.7,
+      "vocal": -1.7,
+      "other": -2.1
+    },
+    "refLevelsDb": {
+      "bass": -2.2,
+      "drums": -5.0,
+      "vocals": 0.8,
+      "piano": -52.3,
+      "other": -16.4
+    }
   },
   "deep-scoop-djent": {
     "id": "deep-scoop-djent",
@@ -477,7 +702,116 @@ export const REF_TONES: Record<string, RefTone> = {
         "freq": 11685.2,
         "q": 0.7
       }
-    ]
+    ],
+    "vocal": [
+      {
+        "type": "filter",
+        "kind": "highpass",
+        "freq": 194.0,
+        "q": 0.7
+      },
+      {
+        "type": "eq",
+        "low": -11.26,
+        "mid": -11.99,
+        "midHz": 349.6,
+        "high": 11.96
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 510.0,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 2500.0,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 4325.7,
+        "high": 0
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11723.3,
+        "q": 0.7
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11723.3,
+        "q": 0.7
+      }
+    ],
+    "other": [
+      {
+        "type": "filter",
+        "kind": "highpass",
+        "freq": 115.4,
+        "q": 0.7
+      },
+      {
+        "type": "eq",
+        "low": 11.96,
+        "mid": 11.68,
+        "midHz": 200.0,
+        "high": 11.24
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -6.64,
+        "midHz": 381.7,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 2500.0,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 4647.5,
+        "high": 0
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11451.0,
+        "q": 0.7
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11451.0,
+        "q": 0.7
+      }
+    ],
+    "balanceDb": {
+      "bass": -14.6,
+      "drums": 0.1,
+      "vocal": 13.3,
+      "other": -5.7
+    },
+    "refLevelsDb": {
+      "bass": -13.9,
+      "drums": -5.5,
+      "vocals": -4.3,
+      "piano": -63.8,
+      "other": -26.5
+    }
   },
   "dark-electro-rock": {
     "id": "dark-electro-rock",
@@ -628,7 +962,116 @@ export const REF_TONES: Record<string, RefTone> = {
         "freq": 8930.1,
         "q": 0.7
       }
-    ]
+    ],
+    "vocal": [
+      {
+        "type": "filter",
+        "kind": "highpass",
+        "freq": 199.7,
+        "q": 0.7
+      },
+      {
+        "type": "eq",
+        "low": -11.93,
+        "mid": -5.69,
+        "midHz": 344.5,
+        "high": 11.94
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.95,
+        "midHz": 487.2,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.95,
+        "midHz": 2496.5,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.94,
+        "midHz": 3927.0,
+        "high": 0
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11677.4,
+        "q": 0.7
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11677.4,
+        "q": 0.7
+      }
+    ],
+    "other": [
+      {
+        "type": "filter",
+        "kind": "highpass",
+        "freq": 40.1,
+        "q": 0.7
+      },
+      {
+        "type": "eq",
+        "low": 11.96,
+        "mid": 5.48,
+        "midHz": 200.0,
+        "high": -8.94
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -8.07,
+        "midHz": 458.7,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -12.0,
+        "midHz": 2500.0,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 5403.7,
+        "high": 0
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11999.9,
+        "q": 0.7
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11999.9,
+        "q": 0.7
+      }
+    ],
+    "balanceDb": {
+      "bass": -8.6,
+      "drums": -0.4,
+      "vocal": 18.0,
+      "other": 18.0
+    },
+    "refLevelsDb": {
+      "bass": 7.6,
+      "drums": 6.0,
+      "vocals": 16.8,
+      "piano": -5.5,
+      "other": 13.8
+    }
   },
   "bright-nu-wall": {
     "id": "bright-nu-wall",
@@ -779,7 +1222,116 @@ export const REF_TONES: Record<string, RefTone> = {
         "freq": 11996.6,
         "q": 0.7
       }
-    ]
+    ],
+    "vocal": [
+      {
+        "type": "filter",
+        "kind": "highpass",
+        "freq": 167.8,
+        "q": 0.7
+      },
+      {
+        "type": "eq",
+        "low": -6.9,
+        "mid": -7.62,
+        "midHz": 349.6,
+        "high": 11.96
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.95,
+        "midHz": 564.4,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.95,
+        "midHz": 2494.4,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.94,
+        "midHz": 3997.1,
+        "high": 0
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11515.9,
+        "q": 0.7
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11515.9,
+        "q": 0.7
+      }
+    ],
+    "other": [
+      {
+        "type": "filter",
+        "kind": "highpass",
+        "freq": 81.7,
+        "q": 0.7
+      },
+      {
+        "type": "eq",
+        "low": 10.77,
+        "mid": -7.18,
+        "midHz": 204.6,
+        "high": -8.3
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -8.03,
+        "midHz": 509.0,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -12.0,
+        "midHz": 2500.0,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 4800.3,
+        "high": 0
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11999.9,
+        "q": 0.7
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11999.9,
+        "q": 0.7
+      }
+    ],
+    "balanceDb": {
+      "bass": -18.0,
+      "drums": -12.5,
+      "vocal": 4.7,
+      "other": 9.0
+    },
+    "refLevelsDb": {
+      "bass": -7.8,
+      "drums": -4.8,
+      "vocals": 2.2,
+      "piano": -13.2,
+      "other": -7.1
+    }
   },
   "glossy-jrock": {
     "id": "glossy-jrock",
@@ -930,7 +1482,116 @@ export const REF_TONES: Record<string, RefTone> = {
         "freq": 11689.2,
         "q": 0.7
       }
-    ]
+    ],
+    "vocal": [
+      {
+        "type": "filter",
+        "kind": "highpass",
+        "freq": 200.0,
+        "q": 0.7
+      },
+      {
+        "type": "eq",
+        "low": -11.96,
+        "mid": -1.7,
+        "midHz": 350.0,
+        "high": 11.96
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 517.1,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.91,
+        "midHz": 2500.0,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 4470.6,
+        "high": 0
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11546.9,
+        "q": 0.7
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11546.9,
+        "q": 0.7
+      }
+    ],
+    "other": [
+      {
+        "type": "filter",
+        "kind": "highpass",
+        "freq": 65.3,
+        "q": 0.7
+      },
+      {
+        "type": "eq",
+        "low": 11.11,
+        "mid": 7.57,
+        "midHz": 200.1,
+        "high": 6.03
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.93,
+        "midHz": 570.8,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.96,
+        "midHz": 2490.6,
+        "high": 0
+      },
+      {
+        "type": "eq",
+        "low": 0,
+        "mid": -11.94,
+        "midHz": 4267.9,
+        "high": 0
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11497.3,
+        "q": 0.7
+      },
+      {
+        "type": "filter",
+        "kind": "lowpass",
+        "freq": 11497.3,
+        "q": 0.7
+      }
+    ],
+    "balanceDb": {
+      "bass": -13.8,
+      "drums": -11.0,
+      "vocal": 3.0,
+      "other": -1.7
+    },
+    "refLevelsDb": {
+      "bass": -7.0,
+      "drums": -2.6,
+      "vocals": 1.5,
+      "piano": -34.6,
+      "other": -12.0
+    }
   }
 } as unknown as Record<string, RefTone>;
 
@@ -947,21 +1608,78 @@ function withEq(t: Track, eq: FxSpec[]): Track {
   return { ...t, fx: [...eq.map((f) => ({ ...f })), ...keep] };
 }
 
-/** 曲に参考の音を当てる（元の曲は変えず、新しい曲を返す）。何度当てても同じ結果。 */
+const dbGain = (db: number | undefined): number => Math.pow(10, (db ?? 0) / 20);
+const scaled = <T extends { volume?: number }>(t: T, db: number | undefined): T => (db ? { ...t, volume: Math.round((t.volume ?? 0) * dbGain(db) * 10000) / 10000 } : t);
+
+type Group = "guitar" | "bass" | "drums" | "vocal" | "other";
+/** パートの役割を決める。歌の代わりのリード（role が「リード」で始まる歪みギター）は vocal。やまびこの付いたギター（空気の層）は other。 */
+function groupOf(ins: string, fx: FxSpec[] | undefined, role?: string, patch?: string): Group {
+  if (patch === "cymbalFx") return "drums";
+  if (GUITARS.has(ins)) {
+    if ((fx ?? []).some((f) => f.type === "delay" || f.type === "pingpong") || /空気の層/.test(role ?? "")) return "other";
+    if (/^リード/.test(role ?? "")) return "vocal";
+    return "guitar";
+  }
+  if (BASSES.has(ins)) return "bass";
+  if (DRUMS.has(ins)) return "drums";
+  if (VOCALS.has(ins)) return "vocal";
+  return "other";
+}
+
+/**
+ * 曲に参考の音を当てる（組み立てたあとの曲。作曲ソフトの「参考の音」）。元の曲は変えず、新しい曲を返す。
+ * 組み立てたあとは役割（role）が分からないので、歪みギターのリードは「ギター」として扱う（書き出しの --ref-tone は役割まで見る applyRefToneToSong）。
+ * 音量のつり合い（balanceDb）は、ベース・ドラム・歌の楽器・そのほかに掛ける。
+ */
 export function applyRefTone(score: Score, tone: RefTone): Score {
-  const tracks = score.tracks.map((t) => {
-    const ins = t.instrument ?? "";
-    if (GUITARS.has(ins)) {
-      const isAmbient = (t.fx ?? []).some((f) => f.type === "delay" || f.type === "pingpong");   // 空気の層（やまびこ付き）は「そのほか」
-      if (isAmbient) return tone.other ? withEq(t, tone.other) : t;
+  // 選びなおしても音量が重ならないように、前に当てた参考の音の大きさの比をいったん戻してから当てる
+  const prev = REF_TONES[(score as Score & { refTone?: string }).refTone ?? ""];
+  const tracks = score.tracks.map((t0) => {
+    const ins = t0.instrument ?? "";
+    const g = groupOf(ins, t0.fx);
+    const t = prev && g !== "guitar" ? scaled(t0, -(prev.balanceDb?.[g] ?? 0)) : t0;
+    if (g === "guitar") {
       const n = withEq(t, tone.guitar);
       if (tone.guitarWide && ins !== "guitar" && t.pan !== undefined && Math.abs(t.pan) >= 0.3) n.pan = Math.sign(t.pan);
       return n;
     }
-    if (BASSES.has(ins)) return withEq(t, tone.bass);
-    if (DRUMS.has(ins)) return withEq(t, tone.drums);
-    if (VOCALS.has(ins)) return tone.vocal ? withEq(t, tone.vocal) : t;
-    return tone.other ? withEq(t, tone.other) : t;
+    const eq = { bass: tone.bass, drums: tone.drums, vocal: tone.vocal, other: tone.other }[g];
+    return scaled(eq ? withEq(t, eq) : t, tone.balanceDb?.[g]);
   });
-  return { ...score, tracks };
+  return { ...score, tracks, refTone: tone.id } as Score;
+}
+
+/** AIソング形式のパート（JSON）。 */
+interface SongPart { role?: string; instrument?: string; patch?: string; volume?: number; fx?: FxSpec[]; double?: unknown; [k: string]: unknown }
+
+/**
+ * 曲（AIソング形式の JSON）に参考の音を当てる（書き出しの --ref-tone。2026-10-23 の「再現2」と同じ処理）。役割まで見る:
+ * 歪みギター（リフ・リズム・分散和音・速弾き）＝ギターの EQ、「リード」で始まる歪みギター＝歌の EQ と大きさ、空気の層・民族楽器・鍵盤など＝そのほかの EQ と大きさ、
+ * ベース・ドラム＝それぞれの EQ と大きさ。guitarWide なら、リフ・リズムを左右いっぱいの別テイクにする。EQ とフィルター以外の fx（ルーム・やまびこなど）は残す。
+ */
+export function applyRefToneToSong<T extends { parts?: SongPart[] }>(song: T, tone: RefTone): T {
+  if (!Array.isArray(song.parts)) return song;
+  const eqOnly = (fx: FxSpec[] | undefined, eq: FxSpec[] | undefined): FxSpec[] | undefined =>
+    eq ? [...eq.map((f) => ({ ...f })), ...(fx ?? []).filter((f) => f.type !== "eq" && f.type !== "filter")] : fx;
+  const parts = song.parts.map((p) => {
+    const ins = p.instrument ?? "";
+    const g = groupOf(ins, p.fx, p.role, p.patch);
+    // 歪みギターと歌の代わりのリードは、EQ のあとにルーム（小さな部屋の鳴り）だけを残す（再現2と同じ。プレートなどの残響は外す）
+    const roomOnly = (eq: FxSpec[] | undefined): FxSpec[] | undefined => (eq ? [...eq.map((f) => ({ ...f })), ...(p.fx ?? []).filter((f) => f.type === "room")] : p.fx);
+    if (g === "guitar") {
+      const n: SongPart = { ...p, fx: roomOnly(tone.guitar) };
+      if (tone.guitarWide && ins === "distGuitar" && /^(看板リフ|リズム)/.test(p.role ?? "")) {
+        const base = typeof p.double === "object" && p.double ? (p.double as Record<string, unknown>) : {};
+        n.double = { ...(/^リズム/.test(p.role ?? "") ? { irR: "jd-greenback-4x12-01" } : {}), ...base, spread: 1.0 };
+      }
+      return n;
+    }
+    if (p.patch === "cymbalFx" || p.patch === "guitarFx") return p;   // 本物のシンバル・ギターの効果音は変えない
+    if (g === "vocal") return scaled({ ...p, fx: roomOnly(tone.vocal) }, tone.balanceDb?.vocal);
+    // ベースは、アンプのあとの圧縮などを先に、EQ をあとに（再現2と同じ順番）
+    if (g === "bass") return scaled({ ...p, fx: [...(p.fx ?? []).filter((f) => f.type !== "eq" && f.type !== "filter"), ...tone.bass.map((f) => ({ ...f }))] }, tone.balanceDb?.bass);
+    const eq = { bass: tone.bass, drums: tone.drums, other: tone.other }[g];
+    return scaled({ ...p, fx: eqOnly(p.fx, eq) }, tone.balanceDb?.[g]);
+  });
+  return { ...song, parts };
 }

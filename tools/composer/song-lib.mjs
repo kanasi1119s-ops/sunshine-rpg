@@ -55,19 +55,13 @@ export async function openSongKit() {
     // オーケストラの patch（violin・cello・flute・horn など）を使う曲は、オーケストラ音源を自動で選ぶ
     const { ORCHESTRA_PATCHES } = await load("/src/audio/ai-song.ts");
     if (orchestra === "std" && Array.isArray(songData?.parts) && songData.parts.some((p) => ORCHESTRA_PATCHES.includes(p?.patch))) orchestra = "vsco";
-    // 参考の音で左右いっぱいにする音は、曲を組み立てる前に、リフ・リズムの歪みギターを左右の別テイクにしておく（中央の1本も2本にできる）
-    if (refTone && Array.isArray(songData?.parts)) {
-      const { REF_TONES } = await load("/src/audio/ref-tones.ts");
-      if (REF_TONES[refTone]?.guitarWide) songData = { ...songData, parts: songData.parts.map((p) => (p?.instrument === "distGuitar" && /^(看板リフ|リズム)/.test(p.role ?? "") ? { ...p, double: { ...(/^リズム/.test(p.role) ? { irR: "jd-greenback-4x12-01" } : {}), ...(typeof p.double === "object" && p.double ? p.double : {}), spread: 1.0 } } : p)) };
+    // 参考の音（--ref-tone）: 曲を組み立てる前に、役割（リフ・リズム・リード・空気の層・ベース・ドラム）ごとに EQ と大きさの比を当てる（src/audio/ref-tones.ts の applyRefToneToSong）
+    if (refTone) {
+      const { REF_TONES, applyRefToneToSong } = await load("/src/audio/ref-tones.ts");
+      if (!REF_TONES[refTone]) throw new Error(`参考の音がありません: ${refTone}（${Object.keys(REF_TONES).join("・")}）`);
+      songData = applyRefToneToSong(songData, REF_TONES[refTone]);
     }
     let { score, song, warnings } = aiSongToScore(songData);
-    // 参考の音（--ref-tone）: 参考録音を測った数値で、ギター・ベース・ドラムなどの EQ を置きかえる（src/audio/ref-tones.ts）
-    if (refTone) {
-      const { REF_TONES, applyRefTone } = await load("/src/audio/ref-tones.ts");
-      const tone = REF_TONES[refTone];
-      if (!tone) throw new Error(`参考の音がありません: ${refTone}（${Object.keys(REF_TONES).join("・")}）`);
-      score = applyRefTone(score, tone);
-    }
     // サウンドセット: アンプ・音量・ミックス・ドラムの設定と、使う音源（ベース・ドラム・ギター）をまとめて当てはめる
     if (sound) {
       const { SOUND_SETS, applySoundSet } = await load("/src/audio/sound-sets.ts");

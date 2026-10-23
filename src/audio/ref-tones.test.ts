@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { REF_TONES, applyRefTone } from "./ref-tones";
+import { REF_TONES, applyRefTone, applyRefToneToSong } from "./ref-tones";
 import type { Score } from "./score";
+import type { FxSpec } from "./fx-chain";
 
 const score = (): Score => ({
   bpm: 120, beatsPerBar: 4,
@@ -27,9 +28,39 @@ describe("参考の音", () => {
     expect(out.tracks[2].fx).toEqual(tone.bass);
     expect(out.tracks[3].fx).toEqual(tone.drums);
   });
-  it("やまびこの付いたギター（空気の層）は、そのほかの値が無ければ変えない", () => {
-    const out = applyRefTone(score(), REF_TONES["bright-pop-rock"]);
-    expect(out.tracks[1].fx).toEqual([{ type: "delay", mix: 0.25 }]);
+  it("やまびこの付いたギター（空気の層）は「そのほか」の EQ と大きさにし、やまびこは残す", () => {
+    const tone = REF_TONES["bright-pop-rock"];
+    const out = applyRefTone(score(), tone);
+    expect(out.tracks[1].fx?.filter((f) => f.type === "eq" || f.type === "filter")).toEqual(tone.other);
+    expect(out.tracks[1].fx?.some((f) => f.type === "delay")).toBe(true);
+    expect(out.tracks[1].volume).toBeCloseTo(0.05 * Math.pow(10, (tone.balanceDb?.other ?? 0) / 20), 3);
+  });
+  it("ベース・ドラムは大きさの比（balanceDb）を掛ける", () => {
+    const tone = REF_TONES["wide-dark-wall"];
+    const out = applyRefTone(score(), tone);
+    expect(out.tracks[2].volume).toBeCloseTo(0.1 * Math.pow(10, (tone.balanceDb?.bass ?? 0) / 20), 3);
+    expect(out.tracks[3].volume).toBeCloseTo(0.1 * Math.pow(10, (tone.balanceDb?.drums ?? 0) / 20), 3);
+  });
+  it("別の参考の音に選びなおしても、音量は重ならない", () => {
+    const a = REF_TONES["wide-dark-wall"], b = REF_TONES["glossy-jrock"];
+    const twice = applyRefTone(applyRefTone(score(), a), b), once = applyRefTone(score(), b);
+    twice.tracks.forEach((t, i) => expect(t.volume).toBeCloseTo(once.tracks[i].volume, 3));
+  });
+  it("書き出し用（曲の JSON）: リードは歌、空気の層はそのほか、リフ・リズムは左右いっぱい（wide のとき）", () => {
+    const tone = REF_TONES["wide-dark-wall"];
+    const song: { parts: { role: string; instrument: string; patch?: string; volume: number; fx?: FxSpec[] }[] } = { parts: [
+      { role: "看板リフ", instrument: "distGuitar", volume: 0.1, fx: [{ type: "plate", mix: 0.03 }, { type: "room", mix: 0.08 }] },
+      { role: "リード（旋律）", instrument: "distGuitar", volume: 0.13, fx: [{ type: "room", mix: 0.12 }] },
+      { role: "きれいな音の分散和音（空気の層）", instrument: "distGuitar", volume: 0.055, fx: [{ type: "delay", mix: 0.25 }] },
+      { role: "シンバルの効果音", instrument: "guitar", patch: "cymbalFx", volume: 0.06 },
+    ] };
+    const out = applyRefToneToSong(song, tone) as typeof song & { parts: (typeof song.parts[number] & { double?: unknown })[] };
+    expect(out.parts[0].double).toEqual({ spread: 1 });
+    expect(out.parts[0].fx?.map((f) => f.type)).not.toContain("plate");
+    expect(out.parts[1].fx?.filter((f) => f.type !== "room")).toEqual(tone.vocal);
+    expect(out.parts[1].volume).toBeCloseTo(0.13 * Math.pow(10, (tone.balanceDb?.vocal ?? 0) / 20), 3);
+    expect(out.parts[2].fx?.some((f) => f.type === "delay")).toBe(true);
+    expect(out.parts[3]).toEqual(song.parts[3]);
   });
   it("guitarWide なら左右に分かれた歪みギターを左右いっぱいに", () => {
     const out = applyRefTone(score(), REF_TONES["wide-dark-wall"]);

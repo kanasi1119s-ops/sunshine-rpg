@@ -1,11 +1,10 @@
-# 使い方: python3 tools/audio-check/guitar-ref-fit.py <参考の guitar.wav> <こちらの guitar.wav> [出力.json]（どちらも demucs htdemucs_6s で分けた guitar）
+# 使い方: [FIT_GAIN=9 FIT_HPMIN=30 FIT_HPMAX=45] python3 tools/audio-check/guitar-ref-fit.py <参考の楽器.wav> <こちらの楽器.wav> [出力.json]（どちらも demucs htdemucs_6s で分けた同じ楽器。ギター以外にも使える）
 # 参考とこちらの帯域ごとの差を、作曲ソフトの fx（highpass・eq の peaking・lowpass。WebAudio の biquad と同じ式）で埋める数値を探す
 import sys, os, json, numpy as np
 from scipy.optimize import minimize
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from importlib import import_module
-stats = import_module("guitar-ref-analyze").stats; BANDS = import_module("guitar-ref-analyze").BANDS
-# from analyze import stats, BANDS
+_an = import_module("guitar-ref-analyze"); stats, BANDS = _an.stats, _an.BANDS
 
 SR = 44100
 f = np.array(BANDS, float)
@@ -39,8 +38,9 @@ def resp_db(chain, freqs):
 
 
 def chain_of(p):
-    hp, g1, f1, g2, f2, g3, f3, g4, f4, lp = p
-    return [("highpass", hp, 0, 0.7), ("peaking", f1, g1, 0.9), ("peaking", f2, g2, 0.9), ("peaking", f3, g3, 0.9), ("peaking", f4, g4, 0.9),
+    hp, g1, f1, g2, f2, g3, f3, g4, f4, lp = p[:10]
+    gl, gh = (p[10], p[11]) if len(p) > 10 else (0, 0)
+    return [("highpass", hp, 0, 0.7), ("lowshelf", 150, gl), ("highshelf", 4500, gh), ("peaking", f1, g1, 0.9), ("peaking", f2, g2, 0.9), ("peaking", f3, g3, 0.9), ("peaking", f4, g4, 0.9),
             ("lowpass", lp, 0, 0.7), ("lowpass", lp, 0, 0.7)]
 
 
@@ -51,22 +51,25 @@ def fit(ref, ours):
     def loss(p):
         r = resp_db(chain_of(p), f)
         d = (r - target); d = d - np.average(d, weights=w)
-        bad = sum(max(0, abs(p[i]) - 15) for i in (1, 3, 5, 7))
+        bad = 0
         return float(np.average(d ** 2, weights=w)) + 10 * bad
-    p0 = [110, 3, 230, -10, 550, -8, 800, -5, 1800, 3500]
+    p0 = [110, 3, 230, -10, 550, -8, 800, -5, 1800, 3500, 0, 0]
     best = None
     for hp0 in (90, 120, 150):
         for lp0 in (2800, 3500, 4500):
             p0[0], p0[9] = hp0, lp0
-            bnds = [(60, 200), (-15, 15), (200, 350), (-15, 15), (350, 900), (-15, 15), (700, 2500), (-15, 15), (1200, 6000), (2000, 12000)]
+            import os
+            G = float(os.environ.get("FIT_GAIN", 15)); HPMAX = float(os.environ.get("FIT_HPMAX", 200)); HPMIN = float(os.environ.get("FIT_HPMIN", 60))
+            p0[0] = min(max(p0[0], HPMIN), HPMAX)
+            bnds = [(HPMIN, HPMAX), (-G, G), (200, 350), (-G, G), (350, 900), (-G, G), (700, 2500), (-G, G), (1200, 6000), (2000, 12000), (-G, G), (-G, G)]
             r = minimize(loss, p0, method="Powell", bounds=bnds, options={"maxiter": 20000, "xtol": 0.1, "ftol": 1e-4})
             if best is None or r.fun < best.fun: best = r
     p = best.x
     r = resp_db(chain_of(p), f); d = r - target; d -= np.average(d, weights=w)
     print("残りの差（dB、帯域ごと）:", " ".join(f"{int(c)}:{x:+.1f}" for c, x in zip(f, d)))
-    hp, g1, f1, g2, f2, g3, f3, g4, f4, lp = p
+    hp, g1, f1, g2, f2, g3, f3, g4, f4, lp, gl, gh = p
     fx = [{"type": "filter", "kind": "highpass", "freq": round(hp, 1), "q": 0.7},
-          {"type": "eq", "low": 0, "mid": round(g1, 2), "midHz": round(f1, 1), "high": 0},
+          {"type": "eq", "low": round(gl, 2), "mid": round(g1, 2), "midHz": round(f1, 1), "high": round(gh, 2)},
           {"type": "eq", "low": 0, "mid": round(g2, 2), "midHz": round(f2, 1), "high": 0},
           {"type": "eq", "low": 0, "mid": round(g3, 2), "midHz": round(f3, 1), "high": 0},
           {"type": "eq", "low": 0, "mid": round(g4, 2), "midHz": round(f4, 1), "high": 0},
