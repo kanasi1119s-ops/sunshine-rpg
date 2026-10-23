@@ -115,35 +115,29 @@ PLANS["06"] = [   # 2026-10-24 素材から作り直し: 聖歌の行進 → 崩
 FADE["06"] = (0, 8)
 
 # 07 羽の落ちる速さ（120）: 逆さ構成。いきなり最後のサビから始まり、だんだん楽器が減り、テンポも落ちて、ハープだけが舞い落ちて終わる
-DESC["07"] = "展開: 一本の長い落下（成層圏・雲・風・急降下・地面の直前と、場面ごとに 84→132 へ速く、音域は低く、厚みは重く）。ハープだけで始まり、着地の1小節の無音のあと、ハープだけで終わる。"
+DESC["07"] = "展開: 一本の長い落下（成層圏・雲・風・急降下・地面の直前と、速さは 100 のまま、ドラムの感じがハーフ→ふつう→倍と詰まり、音域は低く、厚みは重く）。ハープだけで始まり、着地の1小節の無音のあと、ハープだけで終わる。"
 PLANS["07"] = [   # 2026-10-24 素材から作り直し: 一本の長い落下（速く・低く・重くなる）
     ("strato", "strato", {"drums": "none", "lv": 0, "kind": "intro"}),
-    ("cloud", "cloud", {"drums": "sparse", "lv": 1, "kind": "verse", "bpm": 96}),
-    ("wind", "wind", {"drums": "lib", "lv": 2, "kind": "pre", "bpm": 108}),
-    ("dive", "dive", {"drums": "double", "lv": 3, "kind": "chorus", "bpm": 120}),
-    ("ground", "ground", {"drums": "half", "lv": 3, "kind": "solo", "bpm": 132}),
+    ("cloud", "cloud", {"drums": "sparse", "lv": 1, "kind": "verse"}),
+    ("wind", "wind", {"drums": "half", "lv": 2, "kind": "pre"}),
+    ("dive", "dive", {"drums": "lib", "lv": 3, "kind": "chorus"}),
+    ("ground", "ground", {"drums": "double", "lv": 3, "kind": "solo"}),
     ("impact", "impact", {"drums": "none", "lv": 0, "kind": "interlude"}),
-    ("feather", "feather", {"drums": "none", "lv": 0, "kind": "outro", "bpm": 84}),
+    ("feather", "feather", {"drums": "none", "lv": 0, "kind": "outro"}),
 ]
 FADE["07"] = (0, 6)
 
 # 08 鼓動の前（100・7拍子）: 加速する鼓動。心臓の音だけで始まり、区間ごとにテンポが 80→88→96→104→112→120 と上がり、一瞬止まって（心停止）、ゆっくりの心臓で終わる
-DESC["08"] = "展開: 加速（心臓の音だけで始まり、区間ごとにテンポが 80→120 まで上がっていく）。山場で一瞬すべてが止まり（無音）、最後はゆっくりの心臓とバイオリンで終わる。"
-PLANS["08"] = [
-    ("heart", ("intro", 0, 4), {"keep": ["drums"], "drums": "heart", "bpm": 80, "kind": "intro"}),
-    ("intro", "intro", {"drums": "heart"}),
-    ("verse", "verse", {"bpm": 88}),
-    ("pre", "pre", {}),
-    ("chorus", "chorus", {}),
-    ("inter", "inter", {"bpm": 96, "drums": "own"}),
-    ("verse", "verse2", {}),
-    ("pre", "pre2", {"drums": "build"}),
-    ("chorus", "chorus2", {"bpm": 104}),
-    ("bridge", "bridge", {"bpm": 112, "drums": "double"}),
-    ("break", "break", {"bpm": 120, "drums": "own"}),
-    ("chorus", "chorus3", {}),
-    ("flat", ("break", 0, 1), {"keep": [], "kind": "break"}),
-    ("heart", ("outro", 0, 3), {"keep": ["drums", "extra"], "drums": "heart", "bpm": 72, "kind": "outro"}),
+DESC["08"] = "展開: 速さが物語（鼓動 80 → 早まる 96 → 走る 120 → 動悸 144 → 限界 160 → 停止（心電図の平らな音）→ 蘇生 60）。心音とバイオリンの「ドクン」で始まり、蘇生がいちばん大きな歌になり、全員の「ドクン」の一打で切れて終わる。"
+PLANS["08"] = [   # 2026-10-24 素材から作り直し: 速さそのものが物語（80→160→停止→60）
+    ("pulse", "pulse", {"drums": "own", "lv": [0, 0, 0, 1, 1, 1], "kind": "intro"}),
+    ("quicken", "quicken", {"drums": "sparse", "lv": 1, "kind": "verse", "bpm": 96}),
+    ("race", "race", {"drums": "lib", "lv": 2, "kind": "pre", "bpm": 120}),
+    ("panic", "panic", {"drums": "double", "lv": 3, "kind": "chorus", "bpm": 144}),
+    ("peak", "peak", {"drums": "double", "lv": 3, "kind": "break", "bpm": 160, "stop": True}),
+    ("flat", "flat", {"drums": "none", "lv": 0, "kind": "interlude"}),
+    ("revive", "revive", {"drums": "half", "lv": [1, 1, 2, 2, 2, 2, 3, 3, 3, 3], "kind": "chorus", "bpm": 60}),
+    ("beat", "beat", {"drums": "own", "lv": 3, "kind": "break"}),
 ]
 FADE["08"] = (0, 5)
 

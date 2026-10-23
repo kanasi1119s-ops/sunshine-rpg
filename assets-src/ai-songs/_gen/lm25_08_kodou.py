@@ -1,244 +1,135 @@
-# ラウド25曲（第2シリーズ）08「鼓動の前」（仮）。イメージ: 生と死。G 短調・100・7/4（3+2+2）。インスト
-# 設計表: docs/sound/lm25-plan.md。別の楽器: バイオリン（柔らかく力強く透き通る。前奏の嘆き・Aメロ2の対旋律・最後のサビの高い線）
-# しかけ:
-#   - 7拍子を 3+2+2 で数える。キックの「ドクッ」（2つ続けた打ち）が心臓の鼓動。かたまりの頭ごとに鳴る
-#   - 看板リフ: G の低い開放から B♭・A と下り、2つ目と3つ目のかたまりで F・E♭（死の側）へ傾く
-#   - サビ: E♭ → B♭/D → Cm7 → Gm/B♭ と下りる低音、5小節目に ♭II（A♭。ナポリ）で光、D7 で止める
-#   - ブリッジ: ジャズの ii-V（Cm7 → F7 → B♭maj7 …）にウォーキングのベース、ギターはスウィープ
-#   - 最後は G 長調の和音で終わる（死から生へ。ピカルディの3度）
+# ラウド26曲 08「心拍、加速、停止」（仮。もとの仮題「鼓動の前」）。2026-10-24 素材から作り直し
+# スタイル: マスコア（3+3+2 でずれる刻み・急な止め・速さの変化）＋バイオリン。G 短調・80 → 160 → 停止 → 60・7/4（3+2+2）
+# 物語: 心臓の鼓動がだんだん速くなり、限界で止まる。心電図の平らな音。そして、ゆっくり動き出す。
+# 形: 速さそのものが物語（80・96・120・144・160 と上がり、停止、60 で蘇る）。ほかの曲と骨組みを変える
+# 場面と、そこで必要な強さ:
+#   鼓動（0→1）: キックの心音とバイオリンの「ドクン」だけ
+#   早まる（1→2）: バンドが入る。刻みはまばら
+#   走る（2）: リードが「ドクン」を細かくした線で
+#   動悸（3）: 3+3+2 の刻みが拍とずれて暴れる
+#   限界（3）: いちばん速い。最後の拍で止まる
+#   停止: 心電図の平らな音（バイオリンの高い1音）と無音
+#   蘇生（1→3）: 60 の重いハーフタイム。「ドクン」が長い歌になり、この曲でいちばん大きな歌になる
+#   脈（3）: 全員で「ドクン」を4回たたき、最後の一打で切れる（静かに消えない）
+# 旋律の性格: 「短い・長い」の2音（ドクン）が核。場面ごとに細かく（8分 → 16分）、最後は長く歌う
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lm25_lib import *
 
-BPM, BEATS = 100, 7
+BPM, BEATS = 80, 7
 bar = Bars(BEATS)
 R7 = bar.rest()
 
-FORM = [("intro", 4), ("verse", 6), ("pre", 3), ("chorus", 6), ("inter", 3), ("verse2", 4), ("pre2", 3), ("chorus2", 6),
-        ("bridge", 6), ("break", 2), ("chorus3", 8), ("outro", 3)]
-VERSE = ["Gm", "Eb", "Gm", "Cm", "Bb/D", "D7"]
-PRE = ["Ebmaj7", "Cm7", "D7sus4"]
-CHORUS = ["Eb", "Bb/D", "Cm7", "Gm/Bb", "Ab", "D7"]
-CH = {"intro": ["Gm", "Gm", "Eb", "D7"], "verse": VERSE, "pre": PRE, "chorus": CHORUS, "inter": ["Gm", "Eb", "D7"],
-      "verse2": VERSE[:4], "pre2": PRE, "chorus2": CHORUS, "bridge": ["Cm7", "F7", "Bbmaj7", "Ebmaj7", "Am7b5", "D7"],
-      "break": ["G5", "G5"], "chorus3": ["Eb", "Bb/D", "Cm7", "Gm/Bb", "Ab", "Fm", "D7sus4", "D7"], "outro": ["Gm", "Eb", "G"]}
+FORM = [("pulse", 6), ("quicken", 12), ("race", 12), ("panic", 12), ("peak", 8), ("flat", 2), ("revive", 10), ("beat", 4)]
+CH = {"pulse": ["Gm"] * 6, "quicken": ["Gm", "Gm", "Eb", "D7"] * 3, "race": ["Gm", "Eb", "Cm", "D7"] * 3,
+      "panic": ["Gm", "Ab", "Gm", "Ab", "Eb", "D7"] * 2, "peak": ["Gm", "Ab", "Gm", "Ab", "Gm", "Ab", "D7", "D7"],
+      "flat": ["Gm", "Gm"], "revive": ["Gm", "Eb", "Bb", "F", "Cm", "Eb", "D7", "D7", "Gm", "Gm"], "beat": ["Gm"] * 4}
 song = Song("鼓動の前（仮）",
-            "仮: ラウド25曲（第2シリーズ）の8曲目。イメージは生と死。G 短調・100・7/4（3+2+2）。キックの「ドクッ」が心臓の鼓動、G から F・E♭ へ傾く看板リフ、"
-            "サビは E♭ から下りる低音と ♭II（A♭）の光。ブリッジはジャズの ii-V とウォーキングのベース、ギターはスウィープ。最後は G 長調で終わる。別の楽器はバイオリン。インスト（歌は後日）。自作",
+            "仮: ラウド26曲の8曲目（2026-10-24 素材から作り直し）。マスコア＋バイオリン。G 短調・7/4（3+2+2）。80 から 160 まで速くなり、止まり、60 で蘇る。"
+            "旋律は「ドクン」の2音が核で、場面ごとに細かくなり、最後は長く歌う。自作",
             BPM, BEATS, FORM, CH)
-song.desc += " 物語: 生まれる前と死ぬ前の鼓動。走馬灯（ジャズ）のあと、G 長調で生まれ直す。"
+song.desc += " 物語: 鼓動がだんだん速くなり、限界で止まり、心電図の平らな音のあと、ゆっくり動き出す。"
+song.kinds = {"pulse": "intro", "quicken": "verse", "race": "pre", "panic": "chorus", "peak": "break", "flat": "interlude", "revive": "chorus", "beat": "break"}
 SECS, NB = song.secs, song.nb
 
-RIFF = {"Gm": [bar("G2:0.5! G2:0.5 A#2:0.5 A2:0.5 G2:0.5 D3:0.5", "G2:0.5! F3:0.5 D#3:1", "G2:0.5! D3:0.5 C3:0.5 A#2:0.5"),
-               bar("G2:0.5! G2:0.5 A#2:0.5 A2:0.5 G2:0.5 D3:0.5", "G2:0.5! F3:0.5 D#3:1", "D3:0.5! C3:0.5 A#2:0.5 A2:0.5")],
-        "Eb": [bar("D#2:0.5! D#2:0.5 G2:0.5 F2:0.5 D#2:0.5 A#2:0.5", "D#2:0.5! D3:0.5 C3:1", "D#2:0.5! A#2:0.5 G2:0.5 F2:0.5")] * 2,
-        "D7": [bar("D2:0.5! D2:0.5 F#2:0.5 A2:0.5 D2:0.5 C3:0.5", "D2:0.5! A2:0.5 F#2:1", "D2:1! R:1")] * 2}
-
-VERSE_MEL = [bar("R:1 D4:0.5 G4:0.5 A#4:1", "A4:1 G4:1", "D4:2"), bar("D#4:1.5 G4:0.5 A#4:1", "C5:1 A#4:1", "G4:2"),
-             bar("R:0.5 A#4:0.5 D5:0.5 C5:0.5 A#4:1", "A4:2", "G4:2"), bar("C5:1.5 D#5:0.5 G5:1", "F5:1 D#5:1", "C5:2"),
-             bar("D5:2 F5:1", "A#4:2", "R:2"), bar("A4:1 C5:1 F#5:1", "D5:2", "R:2")]
-VERSE2_MEL = [bar("R:1 G4:0.5 A#4:0.5 D5:1", "C5:1 A#4:1", "G4:2"), bar("G4:1.5 A#4:0.5 D#5:1", "F5:1 D#5:1", "A#4:2"),
-              bar("R:0.5 D5:0.5 G5:0.5 F5:0.5 D5:1", "A4:2", "A#4:2"), bar("D#5:1.5 G5:0.5 C6:1", "A#5:1 G5:1", "D#5:2")]
-PRE_MEL = [bar("G4:1 A#4:1 D5:1", "D#5:2", "D5:2"), bar("C5:1 D#5:1 G5:1", "A#5:2", "G5:2"), bar("A5:1 G5:1 D5:1", "C5:2", "R:2")]
-CHORUS_MEL = [bar("A#5:3!", "G5:1 F5:0.5 D#5:0.5", "G5:2"), bar("F5:2 D5:1", "A#4:2", "F5:2"),
-              bar("D#5:3", "G5:1 A#5:1", "C6:2!"), bar("A#5:2 A5:1", "G5:2", "D5:2"),
-              bar("D#5:1 G#5:1 C6:1", "D#6:2!", "C6:2"), bar("D6:2 C6:1", "A5:1 F#5:1", "D5:2")]
-CHORUS2_MEL = list(CHORUS_MEL)
-CHORUS2_MEL[1] = bar("F5:1 A#5:1 D6:1", "A#5:2", "F5:2")
-CHORUS2_MEL[3] = bar("A#5:1 D6:1 A#5:1", "G5:2", "A#5:2")
-CHORUS3_MEL = [bar("A#5:7!"), bar("F5:4 D5:3")] + CHORUS_MEL[2:5] + [bar("F5:2 G#5:1", "C6:2", "G#5:2"), bar("G5:3", "A5:2", "D6:2"), bar("F#5:7")]
-
-# バイオリン
-VLN_INTRO = [bar("D5:3 C5:1 A#4:1 A4:2"), bar("G4:4 A4:1 A#4:2"), bar("G5:3 F5:1 D#5:3"), bar("C5:3 A4:2 F#4:2")]
-VLN_V2 = [bar("R:3 D5:2 A#4:2"), bar("A#4:3 G4:2 R:2"), bar("R:3 G5:2 D5:2"), bar("D#5:3 C5:2 R:2")]
-VLN_C3 = {4: bar("C6:3 D#6:2 C6:2"), 5: bar("C6:3 G#5:2 F5:2"), 6: bar("A5:3 C6:2 D6:2"), 7: bar("C6:3 A5:2 F#5:2")}
+LOW = {"Gm": "G1", "Eb": "D#2", "Cm": "C2", "D7": "D2", "Ab": "G#1", "Bb": "A#1", "F": "F2"}
+DUB = {"Gm": ("G4", "D5"), "Eb": ("G4", "D#5"), "Cm": ("G4", "C5"), "D7": ("F#4", "D5"), "Ab": ("G#4", "D#5"), "Bb": ("F4", "D5"), "F": ("F4", "C5")}
 
 
-def walk7(ch, nxt):
-    """7拍のウォーキング（根音から和音の音と経過音で上がり、最後の1拍で次の根音へ近づく）"""
-    r = root_note(ch)
-    tones = chord_tones(ch, r, up(r, 1))
-    rr, q, _ = parse_chord(ch)
-    mode = {"7": "mixolydian", "m7": "dorian", "m7b5": "locrian", "maj7": "ionian"}.get(q, "aeolian")
-    sc = scale_notes(rr, mode, r, up(r, 1), flat="b" in rr)
-    line = [r, tones[1], sc[3] if len(sc) > 3 else tones[2], tones[2], sc[5] if len(sc) > 5 else tones[2], tones[-1] if len(tones) > 3 else up(r, 1)]
-    return " ".join(f"{x}:1{'!' if j == 0 else ''}" for j, x in enumerate(line)) + f" {approach_note(ch, nxt)}:1"
+def math_riff(ch, var):
+    """16分の 3+3+2・3+3+2・3+3+2・4（7拍＝28）で、拍とずれて当たる"""
+    r = LOW[ch]; grp = [3, 3, 2, 3, 3, 2, 3, 3, 2, 4] if var % 2 == 0 else [2, 3, 3, 2, 3, 3, 4, 3, 3, 2]
+    notes = [r, r, tr(r, 6), r, r, tr(r, 1), r, tr(r, 7), r, r]
+    toks = []
+    for j, g in enumerate(grp):
+        hit = min(g, 2) * 0.25
+        toks.append(f"{notes[j]}:{hit:g}!");
+        if g * 0.25 - hit > 1e-9: toks.append(f"R:{g * 0.25 - hit:g}")
+    return bar(" ".join(toks))
 
 
-BRIDGE_SWEEP = {"Cm7": ("G4", "G5"), "F7": ("A4", "A5"), "Bbmaj7": ("F4", "F5"), "Ebmaj7": ("G4", "G5"), "Am7b5": ("G4", "G5"), "D7": ("F#4", "F#5")}
+def dub(ch, unit, pattern_seed):
+    """「ドクン」: 短い・長い の2音を unit の細かさでくり返す（休みも入れる）"""
+    a, b = DUB[ch]
+    if unit == 1:      # 4分の短い＋2分の長い（ゆっくりの心臓）
+        return bar(f"{a}:0.5! {b}:1 R:1.5 {a}:0.5! {b}:1 R:2.5")
+    if unit == 0.5:
+        return bar(f"{a}:0.25! {b}:0.75 R:0.5 {a}:0.25! {b}:0.75 R:1 {a}:0.25! {b}:0.75 {up(a, 1) if pattern_seed % 2 else b}:0.5 R:2")
+    pats = [f"{a}:0.25! {b}:0.5 R:0.25 {a}:0.25! {b}:0.5 R:0.25 {a}:0.25 {b}:0.25 {a}:0.25 {b}:0.5 R:0.25 {a}:0.25! {b}:0.5 R:0.25 {a}:0.25 {b}:0.25 {up(a, 1)}:0.5 R:1.5",
+            f"R:0.5 {a}:0.25! {b}:0.5 {a}:0.25 {b}:0.5 R:0.5 {b}:0.25 {a}:0.25 {b}:0.5! R:0.5 {a}:0.25 {b}:0.25 {a}:0.25 {b}:0.75 R:1.5"]
+    return bar(pats[pattern_seed % 2])
 
-P = {k: [] for k in ["riff", "rhy", "rhy_in", "lead", "harm8", "tech", "vln", "bass"]}
+
+# 蘇生: 「ドクン」が長い歌になる（10小節）
+REVIVE = [bar("G4:1 D5:2 R:1 D5:0.5 C5:0.5 A#4:2"), bar("G4:1 D#5:2 R:1 D5:0.5 C5:0.5 G4:2"),
+          bar("F4:1 D5:2 R:1 C5:0.5 A#4:0.5 F4:2"), bar("A4:1 C5:2 R:1 D5:1 F5:2"),
+          bar("G4:1 D#5:2 R:0.5 D5:0.5 C5:1 G4:2"), bar("G4:1 A#4:1 D#5:2 R:1 C5:1 A#4:1"),
+          bar("A4:1 F#4:2 R:1 A4:1 C5:2"), bar("D5:3 R:4"),
+          bar("G4:1 D5:2 R:1 G5:1 F5:1 D5:1"), bar("D5:3 R:4")]
+
+P = {k: [] for k in ["riff", "rhy", "lead", "vln", "bass"]}
 kit = Kit(BEATS)
-RIDE, BELL, CR, CR2, CHINA = "D2", "F2", "C2", "G2", "B2"
-HEADS = (0, 12, 20)
-
-
-def g28(*pos, ch="X", base=None):
-    return kit.grid(pos, ch, base)
-
-
-def beat_kick(extra=()):
-    """鼓動（ドクッ）: かたまりの頭とその16分あと"""
-    return g28(*[p for h in HEADS for p in (h, h + 1)], *extra)
-
-
-RIDE322 = f"{BELL}:1! {RIDE}:1 {RIDE}:1 {BELL}:1! {RIDE}:1 {BELL}:1! {RIDE}:1"
-
 for idx, (name, i) in enumerate(SECS):
-    n = dict(FORM)[name]
-    ch = song.chords[name][i]
-    nxt = song.chord_at(idx + 1) if idx + 1 < NB else ch
-    last = i == n - 1
-    base_ch = ch.split("/")[0]
+    n = dict(FORM)[name]; ch = song.chords[name][i]
+    riff = rhy = lead = vln = R7
     root = root_note(ch)
-    groot = up(root, 1)
-
-    rf = R7
-    if name in ("intro", "inter", "outro"):
-        if name == "intro" and i < 2: rf = R7
-        elif name == "outro" and last: rf = bar("G2:7!")
-        else: rf = RIFF[base_ch if base_ch in RIFF else "Gm"][i % 2]
-    elif name == "break":
-        rf = bar("G2:3! G2:2! G#2:2!") if i < n - 1 else bar("G2:3! G#2:2! R:2")
-    P["riff"].append(rf)
-
-    s = si = R7
-    if name in ("verse", "verse2") and (i >= 3 or name == "verse2"):
-        s = bar(f"{groot}:3 {groot}:2 {groot}:2") if not last else bar(f"{groot}:3! R:4")
-    elif name in ("pre", "pre2"):
-        s = bar(f"{groot}:3! {groot}:4") if not last else bar(f"{groot}:3! {groot}:2! R:2")
-    elif name.startswith("chorus"):
-        if name == "chorus3" and i < 2: s = bar(f"{groot}:7!")
-        elif last and name != "chorus3": s = bar(f"{groot}:3! R:4")
-        else: s = bar(f"{groot}:3! {groot}:2 {groot}:2")
-        si = s if not (name == "chorus3" and i < 2) else R7
-    elif name == "bridge":
-        s = bar(f"{groot}:7")
-    elif name == "break":
-        s = si = P["riff"][-1]
-    elif name == "outro" and last:
-        s = si = bar("G2:7!")
-    P["rhy"].append(s); P["rhy_in"].append(si)
-
-    lead = harm8 = tech = vln = R7
-    if name == "verse": lead = VERSE_MEL[i]
-    elif name == "verse2": lead = VERSE2_MEL[i]; vln = VLN_V2[i]
-    elif name in ("pre", "pre2"): lead = PRE_MEL[i]
-    elif name == "chorus": lead = CHORUS_MEL[i]
-    elif name == "chorus2": lead = CHORUS2_MEL[i]; harm8 = shift_oct(strip_marks(lead), -1)
-    elif name == "chorus3":
-        lead = CHORUS3_MEL[i]; vln = VLN_C3.get(i, R7)
-        if i >= 2: harm8 = shift_oct(strip_marks(lead), -1)
-    elif name == "intro": vln = VLN_INTRO[i]
-    elif name == "outro" and last: vln = bar("B5:7")
-    elif name == "bridge":
-        lo, hi = BRIDGE_SWEEP[ch]
-        top = chord_tones(ch, lo, hi)[-1]
-        tech = bar(sweep(ch, lo, hi, 2), sweep(ch, lo, hi, 2), f"{top}:3" if i < n - 1 else f"{top}:2 R:1")
-    P["lead"].append(lead); P["harm8"].append(harm8); P["tech"].append(tech); P["vln"].append(vln)
-
-    if name in ("intro", "inter", "outro"):
-        if name == "intro" and i < 2: b = bar("G1:3! G1:2 G1:2") if i == 0 else bar("G1:3! A#1:2 D2:2")
-        elif name == "outro" and last: b = bar("G1:7!")
-        else: b = unison_low(P["riff"][-1], -1, "B0")
-    elif name in ("verse", "verse2", "pre", "pre2") or (name.startswith("chorus") and not (name == "chorus3" and i < 2)):
-        if last and name != "chorus3":
-            b = bar(f"{root}:0.5! {root}:0.5 {root}:0.5 {root}:0.5 {root}:1! R:4")
-        else:
-            toks = [f"{root}:0.5{'!' if j in (0, 6, 10) else ''}" for j in range(14)]
-            if root_note(nxt) != root: toks[-1] = f"{approach_note(ch, nxt)}:0.5"
-            b = bar(" ".join(toks))
-    elif name == "chorus3": b = bar(f"{root}:3! {root}:4")
-    elif name == "bridge": b = bar(walk7(ch, nxt))
-    elif name == "break": b = unison_low(P["riff"][-1], -1, "B0")
-    else: b = R7
-    P["bass"].append(b)
-
-    k = s = h = None; tom = cym = None
-    if name in ("intro", "inter", "outro"):
-        if name == "intro" and i < 2:
-            k = beat_kick() if i == 1 else g28(0, 1)
-            cym = f"{BELL}:3 {BELL}:2 {BELL}:2" if i == 0 else RIDE322
-            if i == 1: tom = "R:5 " + tom_16_down(2)
-        elif name == "outro" and last:
-            k = g28(0); s = g28(0); cym = f"{CR}:7!"
-        else:
-            k = beat_kick(); s = g28(8, 16, 24); s = g28(*[p for p in (11, 27) if k[p] == "."], ch="o", base=s)
-            cym = RIDE322
-            if (name == "intro" and i == 2) or (name == "inter" and i == 0): cym = f"{CR}:1! " + RIDE322.split(" ", 1)[1]
-            if last and name != "outro":
-                k = beat_kick()[:20] + "........"; s = g28(8, 16); tom = "R:5 " + tom_triplets_down(2)
-                cym = f"{BELL}:1! {RIDE}:1 {RIDE}:1 {BELL}:1! {RIDE}:1 R:2"
-    elif name in ("verse", "verse2"):
-        k = beat_kick((6,)) if i % 2 == 0 else beat_kick((26,))
-        s = g28(8, 16, 24); s = g28(*[p for p in (5, 15, 23) if k[p] == "."], ch="o", base=s)
-        h = "".join("X" if j in HEADS else ("x" if j % 2 == 0 else ".") for j in range(28)) if name == "verse" else None
-        if name == "verse2": cym = RIDE322
-        if i == 0: cym = f"{CR2}:1! " + (RIDE322.split(" ", 1)[1] if name == "verse2" else "R:6")
-        if last: k = beat_kick()[:20] + "........"; s = g28(8, 16); h = None; tom = "R:5 " + tom_triplets_down(2); cym = None
-    elif name in ("pre", "pre2"):
-        k = [g28(0, 12, 20), g28(*range(0, 28, 4)), g28(*range(0, 24))][i]
-        s = [g28(8, 24), g28(8, 16, 24), g28(24, 25, 26, 27)][i]
-        h = [g28(*range(0, 28, 2), ch="x"), g28(*range(0, 28), ch="x"), None][i]
-        if i == 0: cym = f"{CR2}:3! R:4"
-        if i == 2: cym = f"{CHINA}:1! {CHINA}:1 {CHINA}:1! {CHINA}:1 {CHINA}:1! R:2"
-    elif name.startswith("chorus"):
-        half = name == "chorus3" and i < 2
-        if half:
-            k = g28(0, 1, 12, 13); s = g28(12)
-            cym = f"{CR}:7!" if i == 0 else f"{RIDE}:1! {RIDE}:1 {RIDE}:1 {BELL}:1! {RIDE}:1 {BELL}:1! {RIDE}:1"
-        else:
-            # 5つずつのかたまり（16分5つ）のキックが小節線をまたぐ。スネアはかたまりの2つ目に
-            off = ({"chorus": 0, "chorus2": 6, "chorus3": 12}[name] + i) * 28
-            k = "".join("X" if (off + j) % 5 == 0 else ("x" if (off + j) % 5 == 2 else ".") for j in range(28))
-            s = g28(8, 16, 24); k = "".join("." if s[j] != "." else c for j, c in enumerate(k))
-            cym = f"{RIDE}:0.5! {RIDE}:0.5 {BELL}:0.5 {RIDE}:0.5 " * 3 + f"{RIDE}:0.5! {RIDE}:0.5"
-            cym = cym.strip()
-            if i % 2 == 0: cym = (f"{CR}:1! " if i % 4 == 0 else f"{CR2}:1! ") + f"{BELL}:0.5 {RIDE}:0.5 " * 5 + f"{RIDE}:0.5 {BELL}:0.5"
-            cym = cym.strip()
-        if last and name != "chorus3":
-            k = beat_kick()[:20] + "........"; s = g28(8, 16); tom = "R:5 " + tom_triplets_down(2); cym = f"{RIDE}:1 {RIDE}:1 {RIDE}:1 {RIDE}:1 {RIDE}:1 R:2"
-    elif name == "bridge":
-        # ジャズの区間: ライドのレガート、キックは弱く、スネアは会話するゴースト
-        k = g28(0, 20, ch="o"); s = g28(6, 14, 22, ch="o")
-        cym = f"{RIDE}:1! {RIDE}:0.75 {RIDE}:0.25 {RIDE}:1! {RIDE}:0.75 {RIDE}:0.25 {RIDE}:1! {RIDE}:0.75 {RIDE}:0.25 {RIDE}:1"
-        if i == 0: cym = f"{CR2}:1! {RIDE}:0.75 {RIDE}:0.25 {RIDE}:1! {RIDE}:0.75 {RIDE}:0.25 {RIDE}:1! {RIDE}:0.75 {RIDE}:0.25 {RIDE}:1"
-        if last: tom = "R:4 " + tom_triplets_down(3); cym = f"{RIDE}:1! {RIDE}:1 {RIDE}:1 {RIDE}:1 R:3"; s = g28(6, 14, ch="o")
-    elif name == "break":
-        k = g28(0, 12, 20) if i < n - 1 else g28(0, 12)
-        s = g28(12) if i < n - 1 else g28()
-        cym = f"{CHINA}:3! {CHINA}:2! {CHINA}:2!" if i < n - 1 else f"{CHINA}:3! {CHINA}:2! R:2"
-        if i == 0: cym = f"{CR}:3! {CHINA}:2! {CHINA}:2!"
-    kit.add(k, s, h, tom, cym)
-
-FX = []
-for idx, (name, i) in enumerate(SECS):
-    n = dict(FORM)[name]
-    nx = SECS[idx + 1][0] if idx + 1 < NB else ""
-    if i == n - 1 and nx in ("chorus", "chorus2"): FX.append(bar("R:4 C4:3"))
-    elif i == n - 1 and nx == "break": FX.append(bar("R:5 D4:2"))
-    else: FX.append(R7)
+    if name == "pulse":
+        vln = dub(ch, 1, i) if i >= 2 else R7
+        b = R7
+    elif name == "quicken":
+        vln = dub(ch, 0.5, i)
+        riff = bar(f"{LOW[ch]}:0.5! R:2.5 {LOW[ch]}:0.5! R:1.5 {LOW[ch]}:0.5! R:1.5") if i < 6 else math_riff(ch, i)
+        b = bar(f"{root}:0.5! R:2.5 {root}:0.5! R:1.5 {root}:0.5! R:1.5")
+    elif name == "race":
+        riff = rhy = math_riff(ch, i); lead = dub(ch, 0.25, i)
+        vln = bar(f"{DUB[ch][1]}:3 {DUB[ch][0]}:4") if i % 2 == 0 else R7
+        b = unison_low(riff, -1, "B0")
+    elif name == "panic":
+        riff = rhy = math_riff(ch, i + 1); lead = dub(ch, 0.25, i + 1)
+        vln = shift_oct(strip_marks(lead), 1) if i >= 6 else R7
+        b = unison_low(riff, -1, "B0")
+    elif name == "peak":
+        r = LOW[ch]
+        riff = rhy = bar(" ".join(f"{r}:0.25{'!' if j % 4 == 0 else ''}" for j in range(28))) if i < n - 1 else bar(f"{r}:0.5! R:6.5")
+        lead = dub(ch, 0.25, i) if i < n - 1 else R7
+        b = unison_low(riff, -1, "B0")
+    elif name == "flat":
+        vln = bar("A6:7") if i == 0 else bar("A6:3 R:4")              # 心電図の平らな音
+        b = R7
+    elif name == "revive":
+        lead = REVIVE[i]
+        vln = shift_oct(strip_marks(REVIVE[i]), -1) if i >= 4 else R7
+        if i >= 2:
+            r = LOW[ch]; riff = rhy = bar(f"{r}:1.5! R:0.5 {r}:1 {r}:2! R:2") if i % 2 == 0 else bar(f"{r}:3! {tr(r, 7)}:2 R:2")
+        b = bar(f"{root}:3 {root}:4") if i >= 1 else R7
+    else:   # beat: 全員で「ドクン」
+        r = LOW[ch]
+        riff = rhy = bar(f"{r}:0.5! {r}:1! R:5.5") if i < n - 1 else bar(f"{r}:0.5! R:6.5")
+        lead = bar("G4:0.5! D5:1! R:5.5") if i < n - 1 else bar("G5:0.5! R:6.5")
+        vln = strip_marks(lead)
+        b = unison_low(riff, -1, "B0")
+    P["riff"].append(riff); P["rhy"].append(rhy); P["lead"].append(lead); P["vln"].append(vln); P["bass"].append(b)
+    # 心音（ドクン）: 鼓動・蘇生のはじめ・脈の場面のキック
+    if name in ("pulse", "beat") or (name == "revive" and i < 2):
+        kit.add("X..X........................" [:28], "." * 28, "." * 28)
+    else:
+        kit.add("X" + "." * 11 + "X" + "." * 15, "." * 12 + "X" + "." * 15, "".join("x" if j % 4 == 0 else "." for j in range(28)))
 
 J = lambda k: " ".join(P[k])
 song.add(riff_parts(J("riff")))
-song.add(rhythm_parts(J("rhy"), J("rhy_in")))
+song.add(rhythm_parts(J("rhy"), J("rhy")))
 song.add(lead_part(J("lead")))
-song.add(lead_part(J("harm8"), vol=0.07, pan=0.3, role="リード（オクターブ下）"))
-song.add(tech_part(J("tech"), role="スウィープのギター", vol=0.11, pan=0.05))
-# バイオリン（banned-sounds 21 の出発点: 2本重ね・柔らかく力強く透き通る）
-song.add(part("バイオリン", "strings", J("vln"), patch="violin", volume=0.16, pan=-0.15, reverb=0.5, gainDb=3, bright=-0.15, attack=0.35, release=0.7,
+song.add(part("バイオリン", "strings", J("vln"), patch="violin", volume=0.16, pan=-0.15, reverb=0.5, gainDb=3, bright=-0.15, attack=0.08, release=0.7,
               doubleDetune={"cents": 5, "spread": 0.3}, phrase=8,
               fx=[{"type": "eq", "low": 2, "mid": -2.5, "midHz": 2800, "high": 0}, {"type": "delay", "beats": 1, "mix": 0.08, "feedback": 0.2},
                   {"type": "reverb", "mix": 0.22}, {"type": "plate", "mix": 0.12}]))
 song.add(bass_part(J("bass")))
 song.add(drum_parts(kit))
-song.add(cymfx_part(" ".join(FX)))
 
-# 参考の音と追加の楽器（2026-10-23 人間「残り24曲、作った音源のどれかに合わせて」「プラスで何か楽器を追加」）
+song.auto_harm = song.auto_oct = song.auto_air = song.auto_range = False
+song.auto_scream = False
 song.ref_tone = "deep-scoop-djent"
-add_layer(song, "synth-arp", "心臓の電気信号のように、細かい音が脈打つ。")
 
-# 展開の型（2026-10-23 人間「展開が全曲同じ」「4分から5分」）。lm25_plans.py
 from lm25_plans import apply_plan
 apply_plan(song, "08")
 
