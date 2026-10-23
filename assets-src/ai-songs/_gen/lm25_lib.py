@@ -753,20 +753,33 @@ def modernize_leads(song):
             r, q, _b = parse_chord(song.chord_at(bar_i))
             root = next(m for m in range(midi("E3"), midi("E4")) if m % 12 == PC[r] % 12)
             fifth = 6 if q in ("dim", "dim7", "m7b5", "b5") else 7
-            third = None if (q.startswith("sus") or q == "5") else (3 if (q.startswith("m") and not q.startswith("maj")) or q in ("dim", "dim7", "m7b5") else 4)
+            third = None if ("sus" in q or q == "5") else (3 if (q.startswith("m") and not q.startswith("maj")) or q in ("dim", "dim7", "m7b5") else 4)
             ninth = None if q in ("dim", "dim7", "7b9") else 14
             voic = [root, root + fifth, root + (ninth or 12), root + 12 + (third if third is not None else fifth)]
             # リード（旋律・ハモリ）と半音でぶつかる音は、根音のオクターブ上に置きかえる
             lead_pcs = {midi(n_) % 12 for st_, L_, n_, m_, x_ in ev if n_ and bar_i * B - 1e-6 <= st_ < (bar_i + 1) * B - 1e-6}
             voic = [v_ if all((v_ - q_) % 12 not in (1, 11) for q_ in lead_pcs) else root + 12 for v_ in voic]
-            order = (0, 1, 2, 3, 2, 1)
-            n8 = int(round(B * 2))
-            amb.append(" ".join(f"{nm(voic[order[j % len(order)]], 'b' in r)}:0.5" for j in range(n8)) + (f" R:{B - n8 * 0.5:g}" if B - n8 * 0.5 > 1e-6 else ""))
+            # 入れ方（2026-10-23 人間「サーって流れてる音」「荒さと雰囲気を変えたほうがいい」「あと音の入れ方」）:
+            #   ずっと8分で流し続けない。サビは4小節の後半2小節（旋律の答えの所）だけ、ゆっくりの分散（付点4分・付点4分・4分）。
+            #   Bメロは最後の小節だけ上りの分散で次へ渡す。ブリッジは1小節おきに、2音（根音と9度）をふわっと伸ばす。
+            f_ = lambda m_: nm(m_, 'b' in r)
+            if sc[1] == "chorus" and i % 4 in (2, 3) and B >= 4:
+                seq = [(voic[0], 1.5), (voic[1], 1.5), (voic[2], B - 3)] if i % 4 == 2 else [(voic[3], 1.5), (voic[2], 1.5), (voic[1], B - 3)]
+                amb.append(" ".join(f"{f_(m_)}:{d_:g}" for m_, d_ in seq))
+            elif sc[1] == "pre" and i == bars - 1:
+                step = B / 4
+                amb.append(" ".join(f"{f_(voic[j])}:{step:g}" for j in range(4)))
+            elif sc[1] == "bridge" and i % 2 == 0:
+                amb.append(f"{f_(voic[0])}:{B:g}")
+            else:
+                amb.append(f"R:{B:g}")
     if any(not x.startswith("R") for x in " ".join(amb).split()):
-        song.parts.append({"role": "きれいな音の分散和音（空気の層）", "instrument": "distGuitar", "notes": " ".join(amb), "volume": 0.055, "pan": 0.35,
-                           "di": "emily", "amp": "namJVM", "ampDrive": 0.05, "ampCabIr": "jd-greenback-4x12-01", "noRestrike": True, "humanPitch": 0,
-                           "noScoop": True, "chorus": 0, "sustain": 2.0, "release": 0.9, "attack": 0.5,
-                           "fx": [{"type": "eq", "low": -4, "mid": -1, "midHz": 500, "high": 2}, {"type": "delay", "beats": 0.75, "mix": 0.25, "feedback": 0.35}, {"type": "reverb", "mix": 0.4}]})
+        # 荒さと雰囲気: 歪みをほぼなくし、高い所（5kHz より上のザラつき）を落として、残響はホールの長い尾ではなくプレートを短めに
+        song.parts.append({"role": "きれいな音の分散和音（空気の層）", "instrument": "distGuitar", "notes": " ".join(amb), "volume": 0.05, "pan": 0.35,
+                           "di": "emily", "amp": "namJVM", "ampDrive": 0.02, "ampCabIr": "jd-greenback-4x12-01", "noRestrike": True, "humanPitch": 0,
+                           "noScoop": True, "chorus": 0, "sustain": 2.0, "release": 0.9, "attack": 0.35,
+                           "fx": [{"type": "eq", "low": -4, "mid": -1, "midHz": 500, "high": -3}, {"type": "filter", "kind": "lowpass", "freq": 5200, "q": 0.6},
+                                  {"type": "delay", "beats": 0.75, "mix": 0.2, "feedback": 0.25}, {"type": "plate", "mix": 0.28}]})
     # ギターの帯域を BMTH の数値へ（2026-10-23 聞き比べ H を人間が採用「Hいいね」）。参考の曲と聞き比べ G のギターを音源分離して
     #   1/3オクターブごとに測り（/tmp/ref/analyze.py・fit.py）、差を埋める EQ を計算した: 低い中域を太く・箱っぽい中域と耳に刺さる帯域を深く削る。
     #   リフとリズムは左右いっぱいの別テイク（参考は左右の相関 -0.17 と広い）
