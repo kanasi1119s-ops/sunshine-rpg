@@ -69,23 +69,15 @@ PLANS["03"] = [   # 2026-10-24 素材から作り直し: 台風の通過（外�
 ]
 
 # 04 沈黙の掟（88）: 沈黙（全休止）が主役。ピアノ1人で始まり、重い音の間に「何も鳴らない小節」が入る。最後もピアノだけで、ぷつりと終わる
-DESC["04"] = "展開: 沈黙が主役（重い一撃のあいだに、全員が黙る小節・決めの一撃を置く）。始まりはピアノ1人、途中に1小節まるごとの無音、終わりもピアノだけでぷつりと切れる。"
-PLANS["04"] = [
-    ("intro", "intro", {"keep": ["extra"]}),
-    ("verse", "verse", {"drums": "sparse", "drop": ["rhythm"]}),
-    ("pre", "pre", {"from": "break1bar"}),
-    ("chorus", "chorus", {"stop": True}),
-    ("inter", "inter", {"drums": "ride"}),
-    ("kime", ("break", 0, 4), {"kime": [0, 0.75, 2.5]}),
-    ("verse", "verse2", {"drums": "half"}),
-    ("pre", "pre2", {}),
-    ("chorus", "chorus2", {"from": "break1bar"}),
-    ("bridge", "bridge", {"keep": ["extra", "bass"]}),
-    ("solo", "solo", {"drums": "half"}),
-    ("silence", ("break", 0, 1), {"keep": [], "kind": "break"}),
-    ("chorus", "chorus3", {}),
-    ("chorus", "chorus", {"drums": "double", "stop": True}),
-    ("outro", "intro", {"keep": ["extra"]}),
+DESC["04"] = "展開: 一筆書き（葬儀・密談・裏切り・処刑・沈黙。同じ区間を2度使わない。5小節の句）。ピアノだけで始まり、処刑のあと全員が黙り、ピアノの単音でぷつりと終わる。"
+PLANS["04"] = [   # 2026-10-24 素材から作り直し: 葬儀・密談・裏切り・処刑・沈黙の一筆書き（5小節の句）
+    ("funeral", "funeral", {"drums": "none", "lv": 0, "kind": "intro"}),
+    ("meeting", "meeting", {"drums": "sparse", "lv": 1, "kind": "verse", "crash": False}),
+    ("betrayal", "betrayal", {"drums": "half", "lv": 2, "kind": "chorus", "from": "stopBeat"}),
+    ("execution", ("execution", 0, 6), {"drums": "double", "lv": 3, "kind": "break"}),
+    ("execution2", ("execution", 6, 13), {"drums": "half", "lv": 3, "kind": "break"}),
+    ("hush", ("execution", 13, 15), {"drums": "none", "lv": 0, "kind": "break"}),
+    ("silence", "silence", {"drums": "none", "lv": 0, "kind": "outro"}),
 ]
 
 # 05 七つの角（112・5拍子）: ブレイクダウンが主役。2回目のブレイクダウンはテンポが落ちていき、決めで止まってから元の速さで戻る
@@ -600,7 +592,7 @@ def apply_plan(song, no):
     song.phr_policy = PHR_POLICY.get(no, "rare")
     song.gains = GAINS.get(no, {})
     song.hat_delicate = no in HAT_DELICATE
-    song.auto_scream = no not in NO_SCREAM
+    if not hasattr(song, "auto_scream"): song.auto_scream = no not in NO_SCREAM   # 曲のファイルで決めていれば、そちらを使う
     song.display_title = TITLES.get(no)
     if song.display_title: song.desc = f"もとの仮題「{song.title}」。" + song.desc
     song.desc += " " + DESC[no]
