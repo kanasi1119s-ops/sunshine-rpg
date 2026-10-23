@@ -83,9 +83,10 @@ for idx, (name, i) in enumerate(SECS):
     riff = rhy = lead = cello = clean = R4
     root = root_note(ch)
     if name == "approach":
-        cello = bar(" ".join(["D2:0.25,"] * 16)) if i >= 2 else R4
-        b = R4 if i < 4 else bar("D1:4,")
-        tom = "R:4" if i < 4 else ("R:3 A1:0.25, A1:0.25, G1:0.25, G1:0.25," if i % 2 else "R:4")
+        # 2026-10-24: 前奏が小さすぎないように（人間「前奏が小さすぎる曲があるから、作るときチェックして」）。チェロのうなりは1小節目から
+        cello = bar(" ".join(["D2:0.25" + ("!" if j % 4 == 0 else "") for j in range(16)]))
+        b = bar("D1:4,") if i < 4 else bar("D1:4")
+        tom = ("R:3 A1:0.25, A1:0.25, G1:0.25, G1:0.25," if i % 2 else "R:4") if i >= 2 else "R:4"
         kit.add(None, None, None, tom, (f"C2:4" if last else None))
     elif name == "wall1":
         riff = thrash(ch, i // 2)
