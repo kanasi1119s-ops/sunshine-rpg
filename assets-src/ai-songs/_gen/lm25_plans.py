@@ -340,21 +340,15 @@ PLANS["22"] = [   # 2026-10-24 素材から作り直し: 舟歌 → 嵐 → 難�
 ]
 
 # 23 焼け野原の国歌（80）: 壊れていく変奏。ピアノの国歌（そのまま）で始まり、行進→重い本編→半音下がる→国歌が決めの破片になる→国歌の全力→ピアノの国歌が途中で途切れて終わる
-DESC["23"] = "展開: 壊れていく変奏（はじめはピアノだけの国歌、行進・本編と進むうちに半音・全音と調が下がって崩れ、国歌が決めの一撃の破片になる）。終わりはピアノの国歌が途中で途切れる。"
-PLANS["23"] = [
-    ("anthem", "intro", {"keep": ["extra"], "kind": "intro"}),
-    ("march", "march", {"drums": "build"}),
-    ("verse", "verse", {}),
-    ("chorus", "chorus", {}),
-    ("inter", "inter", {"drums": "toms"}),
-    ("verse", "verse2", {"drums": "half"}),
-    ("chorus", "chorus2", {"drums": "half", "semi": -1}),
-    ("roll", "roll", {"drums": "own", "semi": -1}),
-    ("solo", "solo", {"semi": -1, "drums": "double"}),
-    ("broken", ("anthem", 0, 4), {"kime": [0, 1.5, 3], "semi": -1}),
-    ("anthem", "anthem", {"semi": -1, "from": "stopBeat"}),
-    ("anthem", "anthem", {"semi": -2, "drums": "half", "bpm": 72}),
-    ("outro", ("intro", 0, 5), {"keep": ["extra"], "bpm": 68, "semi": -2, "kind": "outro"}),
+DESC["23"] = "展開: 国歌の変奏（焼け跡のピアノ＝音が欠ける → 葬列＝前半だけ → 短調で重く → 決めの一撃だけ → 灰の中のピアノ → 全員で長調の国歌を一度だけ歌いきる）。ピアノで始まり、ピアノの最後の音で終わる。"
+PLANS["23"] = [   # 2026-10-24 素材から作り直し: 国歌の変奏（毎回ちがう壊れ方、最後に一度だけ全員で）
+    ("ruin", "ruin", {"drums": "none", "lv": 0, "kind": "intro"}),
+    ("march", "march", {"drums": "own", "lv": 1, "kind": "verse"}),
+    ("dark", "dark", {"drums": "half", "lv": 2, "kind": "pre", "calm": True}),
+    ("shards", "shards", {"drums": "own", "lv": [2] * 6 + [3] * 6, "kind": "break"}),
+    ("ash", "ash", {"drums": "none", "lv": 0, "kind": "bridge"}),
+    ("anthem", "anthem", {"drums": "lib", "lv": 3, "kind": "chorus", "from": "break1bar"}),
+    ("last", "last", {"drums": "none", "lv": 0, "kind": "outro"}),
 ]
 
 # 24 錆びた天秤（126）: 溜めて最後に一度だけ解放。鐘だけで始まり、判決の場面は2回とも決めの一撃だけ（サビを鳴らさない）、裁きの天秤とソロをはさんで、最後の判決で初めて全員のサビ
