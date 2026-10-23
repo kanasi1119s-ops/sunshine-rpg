@@ -158,25 +158,16 @@ PLANS["09"] = [   # 2026-10-24 素材から作り直し: 9段の階段（低音�
 ]
 
 # 10 成層圏の手紙（132）: 一本道（同じ区間をそのままくり返さない）。サビの旋律を途中で馬頭琴が引き継ぎ、全音上がって成層圏へ、最後は馬頭琴だけが飛んでいく
-DESC["10"] = "展開: 一本道（同じ区間をそのままくり返さず、手紙が空を進むように場面が変わり続ける）。2回目のサビは馬頭琴が歌い、後半は全音上がって成層圏へ。終わりは馬頭琴だけが遠ざかってフェードアウト。"
-PLANS["10"] = [
-    ("intro", "intro", {"drums": "own"}),
-    ("verse", "verse", {}),
-    ("pre", "pre", {}),
-    ("chorus", "chorus", {}),
-    ("bridge", "bridge", {"drums": "own"}),
-    ("inter", "inter", {"drums": "toms"}),
-    ("verse", "verse2", {"drums": "half"}),
-    ("pre", "pre2", {"drums": "build"}),
-    ("chorus", ("chorus2", 0, 8), {"give": ("lead", "馬頭琴の代わり（チェロの録音）"), "drums": "ride"}),
-    ("chorus", ("chorus2", 8, 16), {}),
-    ("solo", "solo", {"drums": "double"}),
-    ("solo", "solo", {"semi": 2, "drums": "own"}),
-    ("inter", "inter", {"semi": 2}),
-    ("break", "break", {"semi": 2, "stop": True, "drums": "own"}),
-    ("chorus", "chorus3", {"semi": 2, "from": "stopBeat"}),
-    ("outro", "outro", {"semi": 2}),
-    ("outro", "bridge", {"keep": ["extra"], "semi": 2, "kind": "outro"}),
+DESC["10"] = "展開: 手紙を読む（いま）と回想（あの日）を3回くり返し、三通目でたどり着いた一言を、最後に一度だけのサビでぶちまける。クリーンのギターと話すようなリードで始まり、追伸の馬頭琴だけで終わる。"
+PLANS["10"] = [   # 2026-10-24 素材から作り直し: 手紙を読む／回想の交互、サビは最後に一度だけ
+    ("read1", "read1", {"drums": "sparse", "lv": 1, "kind": "verse"}),
+    ("mem1", "mem1", {"drums": "ride", "lv": [1] * 6 + [2] * 8, "kind": "bridge"}),
+    ("read2", "read2", {"drums": "sparse", "lv": 1, "kind": "verse"}),
+    ("mem2", "mem2", {"drums": "half", "lv": 2, "kind": "bridge"}),
+    ("read3", "read3", {"drums": "none", "lv": 0, "kind": "verse"}),
+    ("mem3", "mem3", {"drums": "lib", "lv": [2] * 8 + [3] * 8, "kind": "pre"}),
+    ("chorus", "chorus", {"drums": "lib", "lv": 3, "kind": "chorus", "from": "break1bar"}),
+    ("ps", "ps", {"drums": "none", "lv": 0, "kind": "outro"}),
 ]
 FADE["10"] = (0, 10)
 
