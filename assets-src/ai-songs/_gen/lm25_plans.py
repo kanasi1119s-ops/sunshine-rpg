@@ -329,26 +329,15 @@ PLANS["21"] = [   # 2026-10-24 素材から作り直し: 止まらない一本�
 FADE["21"] = (0, 10)
 
 # 22 難破船の歌（96・6拍子）: 船歌のメドレー→嵐→難破→生き残りの歌。フィドル1人で始まり、ジグはテンポ120、嵐は全音上がって荒れ、難破で1小節の無音、生き残りはドラムなしでフィドルがサビを歌う
-DESC["22"] = "展開: 物語の場面転換（フィドル1人→船歌→陽気なジグ＝テンポ120→嵐＝104・112でだんだん荒れる→難破＝1小節の無音→生き残り＝ドラムなし・テンポ80でフィドルがサビを歌う→最後のサビ）。終わりはフィドルとベースがフェードアウト。"
-PLANS["22"] = [
-    ("intro", "intro", {"keep": ["extra"]}),
-    ("verse", "verse", {}),
-    ("chorus", "chorus", {}),
-    ("jig", "jig", {"bpm": 120, "drums": "own"}),
-    ("jig", "jig", {"drums": "double"}),
-    ("jig", "jig", {"semi": 2, "drums": "own"}),
-    ("verse", "verse2", {"bpm": 96, "drums": "ride"}),
-    ("chorus", "chorus2", {}),
-    ("storm", "storm", {"bpm": 104, "drums": "own"}),
-    ("storm", "storm", {"bpm": 112, "drums": "double", "semi": 1}),
-    ("wreck", "wreck", {"bpm": 96, "stop": True, "drums": "own"}),
-    ("silence", ("wreck", 0, 1), {"keep": [], "kind": "break"}),
-    ("survivor", "survivor", {"bpm": 80, "keep": ["gtr", "extra", "bass"]}),
-    ("survivor", "chorus", {"keep": ["extra", "gtr", "lead"], "soft": ["lead"], "give": ("lead", "フィドル"), "kind": "bridge"}),
-    ("chorus", "chorus3", {"bpm": 96, "from": "stopBeat"}),
-    ("outro", "outro", {"keep": ["extra", "bass"]}),
+DESC["22"] = "展開: 舟歌（甲板の陽気な 3+3）→ フィドルのジグ → 嵐（2+2+2 のヘミオラ・いちばん大きい）→ 難破（ほぼ無音）→ 生き残った者が調子はずれの小さな声で同じ舟歌（最後まで小さいまま）。"
+PLANS["22"] = [   # 2026-10-24 素材から作り直し: 舟歌 → 嵐 → 難破 → 生き残りの歌（最後まで小さいまま）
+    ("deck", "deck", {"drums": "lib", "lv": 2, "kind": "verse", "styles": ["rock", "funk", "metal"]}),
+    ("jig", "jig", {"drums": "shuffle", "lv": 2, "kind": "interlude"}),
+    ("storm", "storm", {"drums": "double", "lv": 3, "kind": "chorus", "from": "break1bar"}),
+    ("wreck", "wreck", {"drums": "own", "lv": 0, "kind": "break"}),
+    ("survivors", "survivors", {"drums": "none", "lv": [0] * 8 + [1] * 8, "kind": "bridge"}),
+    ("last", "last", {"drums": "none", "lv": 0, "kind": "outro"}),
 ]
-FADE["22"] = (0, 8)
 
 # 23 焼け野原の国歌（80）: 壊れていく変奏。ピアノの国歌（そのまま）で始まり、行進→重い本編→半音下がる→国歌が決めの破片になる→国歌の全力→ピアノの国歌が途中で途切れて終わる
 DESC["23"] = "展開: 壊れていく変奏（はじめはピアノだけの国歌、行進・本編と進むうちに半音・全音と調が下がって崩れ、国歌が決めの一撃の破片になる）。終わりはピアノの国歌が途中で途切れる。"
