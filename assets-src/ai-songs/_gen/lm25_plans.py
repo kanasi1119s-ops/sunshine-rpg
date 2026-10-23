@@ -119,10 +119,10 @@ DESC["07"] = "展開: 一本の長い落下（成層圏・雲・風・急降下�
 PLANS["07"] = [   # 2026-10-24 素材から作り直し: 一本の長い落下（速く・低く・重くなる）
     ("strato", "strato", {"drums": "none", "lv": 0, "kind": "intro"}),
     ("cloud", "cloud", {"drums": "sparse", "lv": 1, "kind": "verse", "bpm": 96}),
-    ("wind", "wind", {"drums": "lib", "lv": 2, "kind": "chorus", "bpm": 108}),
+    ("wind", "wind", {"drums": "lib", "lv": 2, "kind": "pre", "bpm": 108}),
     ("dive", "dive", {"drums": "double", "lv": 3, "kind": "chorus", "bpm": 120}),
-    ("ground", "ground", {"drums": "half", "lv": 3, "kind": "break", "bpm": 132}),
-    ("impact", "impact", {"drums": "none", "lv": 0, "kind": "break"}),
+    ("ground", "ground", {"drums": "half", "lv": 3, "kind": "solo", "bpm": 132}),
+    ("impact", "impact", {"drums": "none", "lv": 0, "kind": "interlude"}),
     ("feather", "feather", {"drums": "none", "lv": 0, "kind": "outro", "bpm": 84}),
 ]
 FADE["07"] = (0, 6)

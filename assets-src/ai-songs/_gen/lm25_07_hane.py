@@ -30,13 +30,13 @@ song = Song("羽の落ちる速さ（仮）",
             "着地で無音、ハープだけが残る。旋律は息つぎのない、ゆれながら下りる線。自作",
             BPM, BEATS, FORM, CH)
 song.desc += " 物語: 天使の羽が一枚、空の一番高い所から落ち、地面の直前でいちばん重くなり、着地のあと羽だけが残る。"
-song.kinds = {"strato": "intro", "cloud": "verse", "wind": "chorus", "dive": "chorus", "ground": "break", "impact": "break", "feather": "outro"}
+song.kinds = {"strato": "intro", "cloud": "verse", "wind": "pre", "dive": "chorus", "ground": "solo", "impact": "interlude", "feather": "outro"}
 SECS, NB = song.secs, song.nb
 
 SCALE = [m for m in range(midi("B2"), midi("E6") + 1) if (m - midi("E2")) % 12 in (0, 2, 4, 6, 7, 9, 11)]
 
 
-def fall_line(start, end, nbars, rhythms, seed):
+def fall_line(start, end, nbars, rhythms, seed, chords=None):
     """ゆれながら下りる線: 3つ下りて1つ上がる（羽のゆれ）をくり返し、start から end へ。小節ごとに rhythms から形を選ぶ"""
     import random
     rng = random.Random(seed)
@@ -46,7 +46,7 @@ def fall_line(start, end, nbars, rhythms, seed):
     total_notes = sum(len([d for d in rhythms[b % len(rhythms)] if d > 0]) for b in range(nbars))
     k = 0
     for b in range(nbars):
-        r = rhythms[(b + rng.randrange(len(rhythms))) % len(rhythms)]
+        r = rhythms[(b + seed) % len(rhythms)]
         toks = []
         for d in r:
             if d < 0: toks.append(f"R:{-d:g}"); continue
@@ -55,6 +55,9 @@ def fall_line(start, end, nbars, rhythms, seed):
             pos = max(min(pos + sway, len(SCALE) - 1), 0)
             if pos > target + 2: pos -= 1
             if pos < target - 2: pos += 1
+            if chords and d >= 1:                      # 1拍以上の音は和音の音に（長7度・半音でぶつからない）
+                pcs = chord_pcs(chords[b].split("/")[0])
+                pos = min((q for q in range(max(0, pos - 2), min(len(SCALE), pos + 3)) if SCALE[q] % 12 in pcs), key=lambda q: abs(q - pos), default=pos)
             toks.append(f"{nm(SCALE[pos])}:{d:g}"); k += 1
         out.append(bar(" ".join(toks)))
     return out
@@ -64,14 +67,14 @@ R8 = [[0.5] * 8, [1, 0.5, 0.5, 0.5, 0.5, 1], [0.5, 0.5, 1, 0.5, 0.5, 0.5, 0.5], 
 S16 = [[0.25] * 8 + [0.5] * 4, [0.5, 0.25, 0.25, 0.5, 0.25, 0.25, 0.25, 0.25, 0.5, 0.5, 0.25, 0.25], [0.25] * 16, [0.75, 0.25, 0.25, 0.25, 0.5] * 2]
 
 
-def line_T3(start, end, nb, seed):
+def line_T3(start, end, nb, seed, chords=None):
     rs = [[1 / 3] * 3 + [0.5, 0.5] + [1 / 3] * 3 + [1], [1, 1 / 3, 1 / 3, 1 / 3, 1, 1 / 3, 1 / 3, 1 / 3], [0.5, 0.5] + [1 / 3] * 6 + [1]]
     rs = [[0.3333 if abs(x - 1 / 3) < 1e-6 else x for x in r] for r in rs]
-    raw = fall_line_free(start, end, nb, rs, seed)
+    raw = fall_line_free(start, end, nb, rs, seed, chords)
     return [bar(fix_len(s, 4)) for s in raw]
 
 
-def fall_line_free(start, end, nbars, rhythms, seed):
+def fall_line_free(start, end, nbars, rhythms, seed, chords=None):
     import random
     rng = random.Random(seed)
     i0 = min(range(len(SCALE)), key=lambda j: abs(SCALE[j] - midi(start)))
@@ -79,7 +82,7 @@ def fall_line_free(start, end, nbars, rhythms, seed):
     out = []; pos = i0; step = 0; k = 0
     total_notes = sum(len(rhythms[b % len(rhythms)]) for b in range(nbars))
     for b in range(nbars):
-        r = rhythms[(b + rng.randrange(len(rhythms))) % len(rhythms)]
+        r = rhythms[(b + seed) % len(rhythms)]
         toks = []
         for d in r:
             target = i0 + (i1 - i0) * k / max(1, total_notes - 1)
@@ -87,15 +90,18 @@ def fall_line_free(start, end, nbars, rhythms, seed):
             pos = max(min(pos + sway, len(SCALE) - 1), 0)
             if pos > target + 2: pos -= 1
             if pos < target - 2: pos += 1
+            if chords and d >= 0.9:
+                pcs = chord_pcs(chords[b].split("/")[0])
+                pos = min((q for q in range(max(0, pos - 2), min(len(SCALE), pos + 3)) if SCALE[q] % 12 in pcs), key=lambda q: abs(q - pos), default=pos)
             toks.append(f"{nm(SCALE[pos])}:{d:g}"); k += 1
         out.append(" ".join(toks))
     return out
 
 
-MEL = {"strato": fall_line("F#5", "C#5", 24, R8, 1), "cloud": fall_line("C#5", "G#4", 20, R8, 2)}
-MEL["wind"] = line_T3("A4", "E4", 20, 3)
-MEL["dive"] = fall_line("E4", "G#3", 20, S16, 4)
-MEL["ground"] = [bar(f"{n}:0.25! " + " ".join([f'{n}:0.25'] * 15)) for n in ["E3", "E3", "F#3", "F#3", "E3", "E3", "F#3", "E3"]]
+MEL = {"strato": fall_line("F#5", "C#5", 24, R8, 1, CH["strato"]), "cloud": fall_line("C#5", "G#4", 20, R8, 2, CH["cloud"])}
+MEL["wind"] = line_T3("A4", "E4", 20, 3, CH["wind"])
+MEL["dive"] = fall_line("E4", "G#3", 20, S16, 4, CH["dive"])
+MEL["ground"] = fall_line("G#3", "E3", 7, S16, 5, CH["ground"]) + [bar("E3:4!")]
 
 LOW = {"E": "E2", "F#/E": "E2", "Emaj7": "E2", "C#m": "C#2", "B": "B1", "A#dim": "A#1", "F#": "F#1", "G#m": "G#1"}
 
