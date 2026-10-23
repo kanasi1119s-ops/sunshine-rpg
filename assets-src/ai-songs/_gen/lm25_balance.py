@@ -154,15 +154,17 @@ if __name__ == "__main__":
     else:
         gtr_delay = None
     log = balance(song)
-    # 曲ごとのギターのやまびこ（<曲.json>.gains の "_guitar_delay": 混ぜる量）。2026-10-23 人間（01）「ギターにほんの少しディレイ入れよう」
-    #   リフ・リズム・分散和音・クリーンのギター（リードはもとから付いている）に、付点8分のうすいやまびこを、アンプのあとに足す
+    # 曲ごとのリフのやまびこ（<曲.json>.gains の "_guitar_delay": 混ぜる量）。2026-10-23 人間（01）「ギターにほんの少しディレイ入れよう」「リフ」
+    #   看板リフ（と透明感の層）だけに、付点8分のうすいやまびこを、アンプのあとに足す。やまびこはチャンネルごとなので、
+    #   リズムのギターと同じチャンネルにならないよう、看板リフの残響をわずかに変えて別のチャンネルにする
     if gtr_delay:
         for p in song["parts"]:
-            if group(p) == "guitar" or (p.get("instrument") in GUITARS and group(p) == "other" and "空気" not in p.get("role", "")):
+            if p.get("instrument") in GUITARS and p.get("role", "").startswith("看板リフ"):
+                if p.get("role") == "看板リフ": p["reverb"] = round((p.get("reverb") or 0) + 0.01, 3)
                 fx = p.setdefault("fx", [])
                 if not any(f.get("type") in ("delay", "pingpong") for f in fx):
                     fx.append({"type": "delay", "beats": 0.75, "mix": gtr_delay, "feedback": 0.22})
                     fit_fx(p)
-        log.append(f"ギターのやまびこ {gtr_delay}")
+        log.append(f"リフのやまびこ {gtr_delay}")
     json.dump(song, open(path, "w"), ensure_ascii=False)
     print("組の大きさを直しました:", ", ".join(log) or "（上限の内側）")
