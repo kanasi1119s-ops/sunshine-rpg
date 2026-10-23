@@ -19,12 +19,12 @@ BPM, BEATS = 86, 6
 bar = Bars(BEATS)
 R6 = bar.rest()
 
-FORM = [("surface", 8), ("d100", 12), ("d300", 12), ("d700", 10), ("d1000", 8), ("crush", 2)]
+FORM = [("surface", 8), ("d100", 12), ("d300", 12), ("d700", 10), ("d1000", 6), ("crush", 2)]
 CH = {"surface": ["Fm", "Db", "Fm", "Eb", "Fm", "Db", "Bbm", "C"],
       "d100": ["Fm", "Db", "Ab", "Eb", "Fm", "Db", "Bbm", "C", "Fm", "Db", "Bbm", "C"],
       "d300": ["Fm", "Fm", "Db", "Db", "Bbm", "Bbm", "C", "C", "Fm", "Fm", "Db", "C"],
       "d700": ["Fm", "Fm", "Fm", "Db", "Db", "Fm", "Fm", "Bbm", "C", "C"],
-      "d1000": ["Fm"] * 8, "crush": ["Fm", "Fm"]}
+      "d1000": ["Fm", "Fm", "Fm", "Db", "Fm", "Fm"], "crush": ["Fm", "Fm"]}
 song = Song("深海の時計（仮）",
             "仮: ラウド26曲の11曲目（2026-10-24 素材から作り直し）。スラッジ／ドローン＋琴。F 短調・6/4（3+3）。海面・100m・300m・700m・1000m と沈み、"
             "86 から 48 へ遅く、低く、音数が少なくなり、最後に圧壊の一撃。旋律は伸ばす音だけで、深くなるほど減る。自作",
@@ -66,11 +66,11 @@ def breathe(b_):
 
 SURF, D100, D300, D700 = ([breathe(x) for x in L] for L in (SURF, D100, D300, D700))
 
-P = {k: [] for k in ["riff", "rhy", "lead", "koto", "bass"]}
+P = {k: [] for k in ["riff", "rhy", "lead", "koto", "bass", "cello"]}
 kit = Kit(BEATS)
 for idx, (name, i) in enumerate(SECS):
     n = dict(FORM)[name]; ch = song.chords[name][i]
-    riff = rhy = lead = R6
+    riff = rhy = lead = cello = R6
     g = LOW[ch]; root = root_note(ch)
     if name == "surface":
         riff = rhy = bar(f"{g}:1.5! {g}:0.5 {g}:1 {tr(g, 7)}:1.5! {g}:0.5 {g}:1")
@@ -88,14 +88,18 @@ for idx, (name, i) in enumerate(SECS):
     elif name == "d700":
         koto = koto_clock(ch, 0.25); lead = D700[i]
         b = bar(f"{root}:6,") if i % 2 == 0 else R6
+        if i >= 5: cello = bar(f"{root}:6,")
     elif name == "d1000":
+        # 深海: 水圧の低い響き（チェロ）と、船体のきしみ（リードがずり上がる長い音）。まばらでも、聞こえる音で
         koto = koto_clock(ch, 0.1) if i % 2 == 0 else R6
-        b = bar("F1:6,") if i < 6 else R6
+        cello = bar(["F2:6", "F2:3 G#2:3", "F2:6", "C#2:6", "C2:6", "F2:6,"][i])
+        lead = bar(["R:6", "R:2 C5:4/", "R:6", "R:3 G#4:3/", "R:1 C5:5/", "R:6"][i])
+        b = bar(f"{root}:6,")
     else:   # crush
         riff = rhy = bar("F2:6!") if i == 0 else R6
         koto = R6 if i == 0 else bar("R:4 F5:2,")                     # 圧壊のあと、時計の最後の一音
         b = bar("F1:6!") if i == 0 else R6
-    P["riff"].append(riff); P["rhy"].append(rhy); P["lead"].append(lead); P["koto"].append(koto); P["bass"].append(b)
+    P["riff"].append(riff); P["rhy"].append(rhy); P["lead"].append(lead); P["koto"].append(koto); P["bass"].append(b); P["cello"].append(cello)
     kit.add("X" + "." * 23, "." * 12 + "X" + "." * 11, "".join("x" if j % 4 == 0 else "." for j in range(24)))
 
 J = lambda k: " ".join(P[k])
@@ -104,6 +108,8 @@ song.add(rhythm_parts(J("rhy"), J("rhy")))
 song.add(lead_part(J("lead")))
 song.add(part("琴", "koto", J("koto"), volume=0.12, pan=-0.25, reverb=0.45, attack=0.002, release=1.0,
               fx=[{"type": "eq", "low": -3, "mid": 1, "midHz": 2200, "high": 1}, {"type": "delay", "beats": 1.5, "mix": 0.18, "feedback": 0.3}, {"type": "plate", "mix": 0.22}]))
+song.add(part("チェロ（水圧）", "strings", J("cello"), patch="cello", volume=0.18, pan=-0.15, reverb=0.5, attack=0.4, release=1.0, phrase=8,
+              fx=[{"type": "eq", "low": 1, "mid": -2, "midHz": 400, "high": -1}, {"type": "reverb", "mix": 0.3}]))
 song.add(bass_part(J("bass")))
 song.add(drum_parts(kit))
 
