@@ -18,14 +18,20 @@ end = next((i for i, r in enumerate(rms) if r >= target), 0)
 if end == 0:
     print(f"前奏の大きさ: そのまま（真ん中 {med:.1f} dB）"); sys.exit(0)
 intro = float(np.mean(rms[:end])); gain = min(MAX, target - intro)
-pk = np.abs(x[:end * hop]).max()
-if pk > 0: gain = min(gain, 20 * np.log10(0.97 / pk))
+# 2026-10-24: 山（ピーク）で上げ幅を止めると、雨粒のような粒の立った前奏は +4dB ほどしか上がらず、まだ聞こえにくかった。
+#   上げ幅は止めず、前奏の山だけをやわらかく丸める（tanh のソフトクリップ。0.9 を超える所だけ）
 if gain < 1.0:
     print(f"前奏の大きさ: そのまま（前奏 {intro:.1f} / 真ん中 {med:.1f} dB）"); sys.exit(0)
 g = np.ones(len(m)); a = end * hop; ramp = 2 * sr
 g[:a] = 10 ** (gain / 20)
 r0 = max(0, a - ramp); g[r0:a] = np.linspace(10 ** (gain / 20), 1.0, a - r0)
 y = x * g[:, None]
+seg = y[:a]
+lim = 0.9
+over = np.abs(seg) > lim
+if over.any():
+    seg[over] = np.sign(seg[over]) * (lim + (1 - lim) * np.tanh((np.abs(seg[over]) - lim) / (1 - lim)))
+    y[:a] = seg
 peak = np.abs(y).max()
 if peak > 0.98: y *= 0.98 / peak
 sf.write(p, y, sr, subtype="PCM_16")
