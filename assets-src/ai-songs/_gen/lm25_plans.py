@@ -83,8 +83,8 @@ PLANS["04"] = [   # 2026-10-24 素材から作り直し: 葬儀・密談・裏�
 # 05 七つの角（112・5拍子）: ブレイクダウンが主役。2回目のブレイクダウンはテンポが落ちていき、決めで止まってから元の速さで戻る
 DESC["05"] = "展開: 呪文（三味線の呼びかけ4小節とバンドの答え8小節を7回。答えるたびに旋律の音が1つ増え、5回目は全部消える罠、7回目で七本の角がそろう）。三味線の一打で始まり、全員の一撃と三味線の一打で終わる。"
 PLANS["05"] = [   # 2026-10-24 素材から作り直し: 呪文（三味線の呼びかけ＋バンドの答え）×7。5回目は罠
-    ("summon", "summon", {"drums": "none", "lv": 0, "kind": "intro"}),
-    ("call1", "call1", {"drums": "none", "lv": 0, "kind": "interlude", "crash": False}),
+    ("summon", "summon", {"drums": "tribal", "lv": 1, "kind": "intro", "crash": False}),
+    ("call1", "call1", {"drums": "tribal", "lv": 1, "kind": "interlude", "crash": False}),
     ("answer1", "answer1", {"drums": "half", "lv": 1, "kind": "chorus"}),
     ("call2", "call2", {"drums": "tribal", "lv": 1, "kind": "interlude", "crash": False}),
     ("answer2", "answer2", {"drums": "lib", "lv": 1, "kind": "chorus"}),

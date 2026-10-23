@@ -77,12 +77,13 @@ for idx, (name, i) in enumerate(SECS):
     riff = rhy = lead = shami = R5
     root = root_note(ch)
     if name == "summon":
-        shami = call(1, i) if i >= 2 else (bar("E4:0.5! R:4.5") if i == 0 else bar("R:2 E4:0.5! R:1 E4:0.5! R:1"))
-        b = R5
+        # 2026-10-24: 前奏が小さすぎた（三味線のまばらな音だけだった）→ 低いうなり（ベースの持続）と、儀式の太鼓を最初から
+        shami = call(1, i)
+        b = bar("E1:5")
     elif name.startswith("call"):
         k = int(name[4:])
         shami = call(k, i)
-        b = bar(f"E1:3, R:2") if k >= 3 else R5
+        b = bar(f"E1:3, R:2") if k >= 2 else bar("E1:5")
         if k >= 6: riff = bar(f"E2:0.5! R:2.5 E2:0.5! R:1.5")      # 角がそろうころ: 呪文の合間に一撃
     elif name.startswith("answer"):
         k = int(name[6:])
