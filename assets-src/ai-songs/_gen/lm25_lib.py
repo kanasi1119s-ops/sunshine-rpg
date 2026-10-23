@@ -755,6 +755,9 @@ def modernize_leads(song):
             third = None if (q.startswith("sus") or q == "5") else (3 if (q.startswith("m") and not q.startswith("maj")) or q in ("dim", "dim7", "m7b5") else 4)
             ninth = None if q in ("dim", "dim7", "7b9") else 14
             voic = [root, root + fifth, root + (ninth or 12), root + 12 + (third if third is not None else fifth)]
+            # リード（旋律・ハモリ）と半音でぶつかる音は、根音のオクターブ上に置きかえる
+            lead_pcs = {midi(n_) % 12 for st_, L_, n_, m_, x_ in ev if n_ and bar_i * B - 1e-6 <= st_ < (bar_i + 1) * B - 1e-6}
+            voic = [v_ if all((v_ - q_) % 12 not in (1, 11) for q_ in lead_pcs) else root + 12 for v_ in voic]
             order = (0, 1, 2, 3, 2, 1)
             n8 = int(round(B * 2))
             amb.append(" ".join(f"{nm(voic[order[j % len(order)]], 'b' in r)}:0.5" for j in range(n8)) + (f" R:{B - n8 * 0.5:g}" if B - n8 * 0.5 > 1e-6 else ""))
