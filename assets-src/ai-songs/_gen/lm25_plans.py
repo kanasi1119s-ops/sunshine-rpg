@@ -184,26 +184,19 @@ PLANS["11"] = [   # 2026-10-24 素材から作り直し: 沈降（深くなる�
 FADE["11"] = (0, 10)
 
 # 12 塹壕の朝（124）: 三部構成（突撃→休戦→再突撃）。スネアの行進だけで始まり、真ん中で金管だけの休戦（テンポ96）、スネアのロールで再突撃、最後は朝の金管でフェードアウト
-DESC["12"] = "展開: 三部構成（突撃／休戦／再突撃）。始まりはスネアの行進だけ、真ん中で銃声が止み金管とギターだけの休戦（テンポ96）、スネアのロールで再突撃。終わりは朝の金管がフェードアウト。"
-PLANS["12"] = [
-    ("march", ("intro", 0, 4), {"keep": ["drums"], "drums": "build", "kind": "intro"}),
-    ("intro", "intro", {"drums": "own"}),
-    ("verse", "verse", {}),
-    ("pre", "pre", {}),
-    ("chorus", "chorus", {}),
-    ("inter", "inter", {"drums": "toms"}),
-    ("verse", "verse2", {"drums": "double"}),
-    ("pre", "pre2", {}),
-    ("chorus", "chorus2", {}),
-    ("truce", "bridge", {"keep": ["extra"], "bpm": 96, "kind": "bridge"}),
-    ("truce", "verse", {"keep": ["lead", "bass", "extra"], "soft": ["lead"], "kind": "verse"}),
-    ("charge", ("break", 0, 4), {"keep": ["drums", "bass"], "drums": "build", "bpm": (124, 2), "kind": "pre"}),
-    ("solo", "solo", {}),
-    ("chorus", "chorus3", {"from": "stopBeat"}),
-    ("outro", "outro", {"drums": "own"}),
-    ("dawn", ("bridge", 0, 4), {"keep": ["extra"], "bpm": 90, "kind": "outro"}),
+DESC["12"] = "展開: 前半が戦い（ラッパ・総攻撃・砲撃）、停戦の合図のあと、後ろの3分の1以上は誰も撃たない静かな朝（76・クリーンの歌）。遠い砲声で始まり、金管の静かな聖歌でフェードアウト。"
+FADE["12"] = (0, 12)
+PLANS["12"] = [   # 2026-10-24 素材から作り直し: 前半が戦い、後ろ3分の1以上が静かな朝
+    ("night", "night", {"drums": "own", "lv": 0, "kind": "intro"}),
+    ("bugle", "bugle", {"drums": "none", "lv": 1, "kind": "interlude"}),
+    ("assault", ("assault", 0, 16), {"drums": "double", "lv": 3, "kind": "chorus", "from": "break1bar"}),
+    ("trench", ("assault", 16, 20), {"drums": "sparse", "lv": 2, "kind": "break"}),
+    ("assault2", ("assault", 20, 32), {"drums": "double", "lv": 3, "kind": "chorus"}),
+    ("barrage", "barrage", {"drums": "half", "lv": 3, "kind": "break", "stop": True}),
+    ("signal", "signal", {"drums": "none", "lv": 1, "kind": "interlude"}),
+    ("morning", "morning", {"drums": "sparse", "lv": [0] * 8 + [1] * 24, "kind": "verse", "bpm": 76, "calm": True}),
+    ("light", "light", {"drums": "none", "lv": 0, "kind": "outro"}),
 ]
-FADE["12"] = (0, 8)
 
 # 13 闇市の値札（108）: 値切りのかけ合い。サックスとベースで始まり、ギターとサックスが2小節→1小節と交互に言い合って、決めの一撃で「商談成立」
 DESC["13"] = "展開: かけ合い（値切り）。始まりはサックスとベースだけ、2番のAメロとソロでギターとバリトンサックスが2小節ずつ、最後は1小節ずつ言い合い、決めの一撃で商談成立。終わりはサックスがフェードアウト。"
