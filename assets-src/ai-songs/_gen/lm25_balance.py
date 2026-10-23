@@ -46,6 +46,11 @@ DRUM_GAIN = 0.9
 VOL_MAX = 0.5
 TECH_DB = 3.0          # 速弾き: リードより 3dB 前に
 FEATURE_DB_MAX = 6.0   # 主役の楽器（和楽器・サックスなど）: 0.5 を超えた分を最大 +6dB まで
+# はじく楽器（三味線・琴など）は、鳴った瞬間だけ大きくすぐ消えるので、伸び続ける歪みギターと同じ「音量の数値」では、
+#   耳ではずっと小さく聞こえる（2026-10-24 人間「和楽器の音小さい原因は何だ？」）。数値をそろえたうえで、さらに前へ出す
+PLUCK = {"shamisen", "koto", "biwa", "harp", "xylophone", "marimba", "harpsichord", "musicBox"}
+PLUCK_DB = 6.0         # はじく主役の楽器: 減衰のぶんを足す
+PLUCK_BITE_HZ = (1500, 5500)   # 撥・爪の当たる帯域。参考の音の EQ で削らない（ここで抜ける）
 TECH_CHAIN = [{"type": "filter", "kind": "highpass", "freq": 110, "q": 0.7},
               {"type": "eq", "low": 0, "mid": -2.5, "midHz": 320, "high": 0},
               {"type": "eq", "low": 0, "mid": 2.5, "midHz": 1800, "high": 0},
@@ -169,13 +174,20 @@ def headroom(song):
         if group(p) == "tech":
             p["fx"] = [dict(f) for f in TECH_CHAIN]; p["ampGate"] = min(p.get("ampGate", 10), 6)
         elif featured(p):
+            pluck = p.get("instrument") in PLUCK
             fx = []
             for f in p.get("fx", []):
                 if f.get("type") == "eq":
                     f = dict(f)
                     if f.get("mid", 0) < -6: f["mid"] = -3.0
                     if f.get("high", 0) < -6: f["high"] = -3.0
+                    if pluck and PLUCK_BITE_HZ[0] <= f.get("midHz", 0) <= PLUCK_BITE_HZ[1] and f.get("mid", 0) < 0: f["mid"] = 0.0
+                    if pluck and f.get("high", 0) < 0: f["high"] = 0.0
                 fx.append(f)
+            if pluck:
+                fx.insert(1, {"type": "eq", "low": 0, "mid": 2.5, "midHz": 2800, "high": 0})     # 撥の当たりを前へ
+                p["gainDb"] = round((p.get("gainDb") or 0) + PLUCK_DB, 2)
+                log.append(f"{p.get('role')}（はじく主役の楽器）+{PLUCK_DB:.0f}dB・撥の帯域を削らない")
             p["fx"] = fx
     # リードの組（旋律・ハモリ・オクターブ）は、組ごとまとめて 0.5 に収める。チャンネルごとに頭打ちにすると、
     #   ハモリ（0.45）が旋律（1.03→0.5）とほぼ同じ大きさになり、2本の重なりが前に出て濁っていた
