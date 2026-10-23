@@ -366,29 +366,18 @@ PLANS["24"] = [
     ("toll", "toll", {"drums": "none", "lv": 1, "kind": "outro"}),
 ]
 
-# 25 夜明けの闇市（112）: 時刻の組曲（0時＝ハーフタイム／2時＝ライドとシャッフル／3時＝ドラムが薄い／4時＝タムの太鼓／夜明け＝テンポ120で全員）。最後は朝のバイオリンとクリーンでフェードアウト
-DESC["25"] = "展開: 時刻の組曲（0時＝重いハーフタイム、2時＝ライドとシャッフルの酒場、3時＝人の消えた市場、4時＝タムの太鼓と取引、夜明け＝テンポ120で全員）。終わりは朝のバイオリンとクリーンギターでフェードアウト。"
+# 25 夜明けの闇市（112 → 120）: 2026-10-24 素材から作り直し。秒読み（時刻の場面がだんだん短くなり、取引の一撃のあと夜が明けて長調）
+DESC["25"] = "展開: 秒読み（時計 → 1時＝重いハーフタイムで夜の旋律 24小節 → 2時＝シャッフルの掛け合い 20小節 → 3時＝ドラムなしの人の消えた市場 12小節 → 4時＝タムの太鼓と16分の速い旋律 8小節 → 取引の一撃 → 夜明け＝120・長調で夜の旋律を歌いきる → 朝）。"
 PLANS["25"] = [
-    ("0時", "intro", {"drums": "half", "kind": "intro"}),
-    ("0時", "riff", {"drums": "half", "kind": "intro"}),
-    ("verse", "verse", {"drums": "half"}),
-    ("pre", "pre", {}),
-    ("chorus", "chorus", {"drums": "half"}),
-    ("1時", "riff", {"drums": "toms", "kind": "interlude"}),
-    ("2時", "market", {"drums": "shuffle", "kind": "interlude"}),
-    ("verse", "verse2", {"drums": "ride"}),
-    ("pre", "pre2", {"drums": "build"}),
-    ("chorus", "chorus2", {}),
-    ("3時", "market", {"keep": ["extra", "bass", "drums", "gtr"], "drums": "sparse", "kind": "bridge"}),
-    ("4時", "tap", {"drums": "tribal", "kind": "solo"}),
-    ("4時", "trade", {"drums": "double", "kind": "solo"}),
-    ("4時", "tap", {"drums": "own", "semi": 2, "kind": "solo"}),
-    ("still", "still", {"stop": True, "drums": "own"}),
-    ("dawn", "dawn", {"bpm": 120, "drums": "own"}),
-    ("chorus", "chorusM", {"from": "stopBeat"}),
-    ("chorus", "chorusM", {"drums": "double"}),
-    ("outro", "outro", {"drums": "own"}),
-    ("朝", "intro", {"keep": ["extra", "gtr"], "kind": "outro"}),
+    ("clock", "clock", {"drums": "none", "lv": 1, "kind": "intro"}),
+    ("h1", "h1", {"drums": "half", "lv": [1] * 8 + [2] * 16, "kind": "verse"}),
+    ("h2", "h2", {"drums": "shuffle", "lv": 2, "kind": "pre"}),
+    ("h3", "h3", {"drums": "none", "lv": 0, "kind": "bridge"}),
+    ("h4", "h4", {"drums": "tribal", "lv": 3, "kind": "solo"}),
+    ("deal", "deal", {"drums": "own", "lv": 3, "kind": "break"}),
+    ("dawnA", "dawnA", {"drums": "build", "lv": 2, "kind": "verse", "bpm": 120}),
+    ("dawnB", "dawnB", {"drums": "double", "lv": 3, "kind": "chorus", "from": "break1bar"}),
+    ("morning", "morning", {"drums": "none", "lv": 0, "kind": "outro"}),
 ]
 FADE["25"] = (0, 8)
 
