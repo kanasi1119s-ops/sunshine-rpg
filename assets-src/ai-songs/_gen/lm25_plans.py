@@ -257,25 +257,17 @@ PLANS["15"] = [
 FADE["15"] = (0, 10)
 
 # 16 仁義の雨（116・7拍子）: 回想形式。葬列（テンポ80）で始まり、昔の抗争（116）を思い出し、また葬列に戻ってアコーディオンが消える
-DESC["16"] = "展開: 回想形式（葬列の場面＝テンポ80のハーフタイムで始まり、昔の抗争＝116の速い本編を思い出し、最後にまた葬列へ戻る）。終わりはアコーディオンとベースだけがフェードアウト。"
-PLANS["16"] = [
-    ("funeral", "funeral", {"bpm": 80, "drums": "half", "kind": "intro"}),
-    ("funeral", "inter", {"drums": "half", "kind": "intro"}),
-    ("intro", "intro", {"bpm": 116, "drums": "own"}),
-    ("verse", "verse", {}),
-    ("pre", "pre", {}),
-    ("chorus", "chorus", {"calm": True}),
-    ("inter", "inter", {"drums": "double"}),
-    ("verse", "verse2", {"drums": "own"}),
-    ("pre", "pre2", {}),
-    ("chorus", "chorus2", {"calm": True}),
-    ("bridge", "bridge", {"drums": "tribal"}),
-    ("kime", ("chorus3", 0, 2), {"kime": [0, 1.5, 3, 4.5, 6]}),
-    ("chorus", "chorus3", {"calm": True}),
-    ("funeral", "funeral", {"bpm": (76, 2), "drums": "half", "kind": "outro"}),
-    ("outro", "outro", {"bpm": 72, "keep": ["extra", "bass"]}),
+DESC["16"] = "展開: 決闘の儀式（雨・向かい合う・にらみ合い・手をかける・短い決闘・銃声のあとの1小節の無音・弔い・葬列。ほとんどが抑えた緊張で、爆発は決闘の一度だけ短く）。アコーディオンの嘆きで始まり、葬列の一撃で終わる。"
+PLANS["16"] = [   # 2026-10-24 素材から作り直し: 決闘の儀式（ほとんどが抑えた緊張、爆発は一度だけ短く）
+    ("rain", "rain", {"drums": "none", "lv": 0, "kind": "intro"}),
+    ("face", "face", {"drums": "sparse", "lv": 1, "kind": "verse", "calm": True}),
+    ("stare", "stare", {"drums": "half", "lv": [1] * 6 + [2] * 6, "kind": "pre", "calm": True}),
+    ("draw", "draw", {"drums": "own", "lv": 2, "kind": "break", "kime": [0, 1.5, 3]}),
+    ("duel", "duel", {"drums": "double", "lv": 3, "kind": "chorus"}),
+    ("shot", "shot", {"drums": "own", "lv": 3, "kind": "break"}),
+    ("mourn", "mourn", {"drums": "none", "lv": [0] * 8 + [1] * 8, "kind": "bridge"}),
+    ("burial", "burial", {"drums": "half", "lv": 2, "kind": "outro", "calm": True}),
 ]
-FADE["16"] = (0, 8)
 
 # 17 堕天の証明（136）: 縮まるかけ合い（ストレッタ）。悪魔と天使が8小節→4小節→2小節→1小節と交代を速め、最後に一つに溶ける。終わりは決めで止める
 DESC["17"] = "展開: 縮まるかけ合い（悪魔＝重いハーフタイムと、天使＝合唱が、8小節→4小節→2小節→1小節と交代を速めていき、最後に一つに溶け合う）。終わりはピタッと止める。"
