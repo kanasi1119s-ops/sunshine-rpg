@@ -60,10 +60,14 @@ for k, (a, b) in TOP.items():
 THEME = ["G5:0.5 F5:0.5 D#5:0.5 D5:0.5 C5:1 R:1", "D#5:0.5 D5:0.5 C5:0.5 B4:0.5 C5:1 R:1", "C5:0.5 A#4:0.5 G#4:0.5 G4:0.5 F4:1 R:1", "G4:0.5 G#4:0.5 B4:0.5 D5:0.5 C5:1 R:1"]
 
 
-def hps_arp(ch):
-    t = chord_tones(ch.split("/")[0], "C4", "C6")[:4]
+def hps_arp(ch, band=False):
+    """チェンバロの分散和音。バンドが鳴っている所（band）は、歪んだギターとリードの帯域を避けて1オクターブ上（C5〜C7）で、8分に間引く
+    （2026-10-24 人間「09 の 1:29 あたりの音の重なりが大分濁ってる」: 4段目からリフ・リード・チェンバロの16分・チェンバロの左手の低音が
+    同じ中低域に重なっていた）"""
+    t = chord_tones(ch.split("/")[0], "C5" if band else "C4", "C7" if band else "C6")[:4]
     while len(t) < 4: t.append(up(t[-3], 1))
     seq = [t[0], t[1], t[2], t[3], t[2], t[1]] * 3
+    if band: return bar(" ".join(f"{n}:0.5" for n in seq[:8]))
     return bar(" ".join(f"{n}:0.25" for n in seq[:16]))
 
 
@@ -85,13 +89,16 @@ for idx, (name, i) in enumerate(SECS):
         if k <= 2:
             th = THEME[i % 4] if k == 1 else THEME[i % 4].replace("C5:1", "B4:1").replace("D#5", "D5")   # 2段目（低音 B）は、主題の終わりを B に
             hr = bar(th) if i % 5 != 4 else hps_arp(ch)
-        elif k in (3, 4):
+        elif k == 3:
             hr = hps_arp(ch) if i % 2 == 0 else bar(THEME[i % 4])
+        elif k == 4:
+            hr = hps_arp(ch, True) if i % 2 == 0 else bar(shift_oct(THEME[i % 4], 1))
         elif k in (5, 6):
-            hr = R4 if i % 2 == 0 else hps_arp(ch)          # リードと受け答え
+            hr = R4 if i % 2 == 0 else hps_arp(ch, True)    # リードと受け答え
         elif k == 9:
-            hr = hps_arp(ch)
-        hl = bar(f"{ped}3:2 {ped}2:2") if k <= 3 else (bar(f"{ped}2:4") if i % 2 == 0 else R4)
+            hr = hps_arp(ch, True)
+        # チェンバロの左手の低い音は、バンドが入ったら（4段目から）弾かない（ベースと同じ低い所で重なって濁る）
+        hl = bar(f"{ped}3:2 {ped}2:2") if k <= 3 else R4
         if k >= 2: clean = bar(" ".join(f"{t}:1" for t in (chord_tones(ch.split('/')[0], 'G3', 'G4') * 2)[:4])) if k <= 3 else R4
         if k >= 3: lead = LEAD[k][i] if k in LEAD else R4
         if k >= 4:
@@ -100,7 +107,10 @@ for idx, (name, i) in enumerate(SECS):
             elif k == 7:
                 riff = rhy = bar(" ".join(f"{pg}:0.25{'!' if j % 3 == 0 else ''}" for j in range(16)))
             else:
-                riff = rhy = bar(f"{pg}:0.75! {pg}:0.25 R:0.5 {pg}:0.5! {tr(pg, 3)}:0.5 {pg}:0.5 R:0.5 {tr(pg, 1)}:0.5")
+                # 最後の音は半音上（♭2）だと、上の和音（F/A・D7/A など）の A とぶつかって濁るので、オクターブ上の低音へ
+                #   途中の音も、短3度に決め打ちせず、上の和音にある音（3〜7半音上）を選ぶ（5・6段目で B と C、B♭ と B がぶつかっていた）
+                cp = chord_pcs(ch.split("/")[0]); iv = next((d for d in (3, 4, 5, 7) if (midi(pg) + d) % 12 in cp), 7)
+                riff = rhy = bar(f"{pg}:0.75! {pg}:0.25 R:0.5 {pg}:0.5! {tr(pg, iv)}:0.5 {pg}:0.5 R:0.5 {up(pg, 1)}:0.5")
         b = bar(f"{ped}1:4") if k <= 2 else (bar(f"{ped}1:2! {ped}1:2") if k != 7 else bar(" ".join(f"{ped}1:0.5{'!' if j % 2 == 0 else ''}" for j in range(8))))
         if k >= 4 and k != 7 and k != 8: b = unison_low(riff, -1, "B0")
     P["riff"].append(riff); P["rhy"].append(rhy); P["lead"].append(lead); P["clean"].append(clean); P["hr"].append(hr); P["hl"].append(hl); P["bass"].append(b)
