@@ -43,6 +43,8 @@ BASS_MID_KEEP = (500, 2600)    # この帯域の削りは外す
 BASS_GROWL = [{"type": "eq", "low": 0, "mid": 4.0, "midHz": 900, "high": 0},     # ゴリッ
               {"type": "eq", "low": 0, "mid": 2.5, "midHz": 1900, "high": 0},    # 指の粒
               {"type": "eq", "low": 0, "mid": -2.0, "midHz": 200, "high": 0}]    # こもり（100〜250Hz の出すぎ）
+SAX_PATCHES = {"altoSax", "tenorSax", "bariSax", "sopranoSax"}
+SAX_DB = 5.0           # 2026-10-24 人間「サックスの音かなり小さいからそれも大きくして」: 参考の音の EQ が 2.5k・5.4k・高い方を -3dB 削っていた分も戻す
 SHAMISEN_DB = 4.0      # 2026-10-24 人間「三味線もっと音大きくていいよ」（はじく楽器の +6dB に、さらに）
 DRUM_GAIN = 0.9
 # 2026-10-23 人間「ピロピロ大きくなってないな…原因調べて」→ 原因は2つ:
@@ -206,9 +208,13 @@ def headroom(song):
                     f = dict(f)
                     if f.get("mid", 0) < -6: f["mid"] = -3.0
                     if f.get("high", 0) < -6: f["high"] = -3.0
-                    if pluck and PLUCK_BITE_HZ[0] <= f.get("midHz", 0) <= PLUCK_BITE_HZ[1] and f.get("mid", 0) < 0: f["mid"] = 0.0
-                    if pluck and f.get("high", 0) < 0: f["high"] = 0.0
+                    # 主役の楽器の「抜ける帯域」（1.5〜5.5kHz）と高い方は、参考の音の EQ で削らない（はじく楽器も、サックスも、ここで聞こえる）
+                    if PLUCK_BITE_HZ[0] <= f.get("midHz", 0) <= PLUCK_BITE_HZ[1] and f.get("mid", 0) < 0: f["mid"] = 0.0
+                    if f.get("high", 0) < 0: f["high"] = 0.0
                 fx.append(f)
+            if p.get("patch") in SAX_PATCHES:
+                p["gainDb"] = round((p.get("gainDb") or 0) + SAX_DB, 2)
+                log.append(f"{p.get('role')}（サックス）+{SAX_DB:.0f}dB・抜ける帯域を削らない")
             if pluck:
                 fx.insert(1, {"type": "eq", "low": 0, "mid": 2.5, "midHz": 2800, "high": 0})     # 撥の当たりを前へ
                 p["gainDb"] = round((p.get("gainDb") or 0) + PLUCK_DB + (SHAMISEN_DB if p.get("instrument") == "shamisen" else 0), 2)
