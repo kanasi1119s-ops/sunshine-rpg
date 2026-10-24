@@ -64,6 +64,14 @@ MOURN = [bar(x) for x in melody_walk(scale_pcs("G#", "harmonic"), "B4", "G#4", [
 BURIAL_MEL = [bar(x) for x in melody_walk(scale_pcs("G#", "harmonic"), "D#5", "G#4", [[3, -0.5, 0.5, 1.5, -1.5], [-1, 0.5, 0.5, 3, -2], [1.5, 1.5, 2.5, -1.5]], 2,
                                           CH["burial"], contour=(-1, -1, 2, -1), lo="F4", hi="E5", beats=7)]
 
+# ベースの旋律（2026-10-24 人間「ベースでメロディ作るのもありかも」）: リード＝一人目の男、ベース＝もう一人の男。
+#   にらみ合いでは、リードが息をつぐ間にベースが低い声で言い返す。弔いの後半は、撃たれた男の声としてベースが低く歌う
+GH = scale_pcs("G#", "harmonic")
+STARE_BASS = [bar(x) for x in melody_walk(GH, "G#2", "D#2", [[2, 1, 1, 1.5, 1.5], [1.5, 1.5, 1, 3], [3, 1, 1.5, 1.5], [1, 1, 1, 2, 2]], 3, CH["stare"],
+                                         contour=(-1, 2, -1, -1, 1, 1), lo="C#2", hi="C#3", beats=7, marks=lambda b, j: "!" if j == 0 else "")]
+MOURN_BASS = [bar(x) for x in melody_walk(GH, "B2", "G#2", [[3.5, 3.5], [2, 1.5, 3.5], [1.5, 1.5, 1, 3]], 4, CH["mourn"][8:],
+                                         contour=(-1, 1, -2, 1), lo="E2", hi="E3", beats=7)]
+
 P = {k: [] for k in ["riff", "rhy", "lead", "clean", "amel", "a0", "a1", "a2", "bass"]}
 kit = Kit(BEATS)
 for idx, (name, i) in enumerate(SECS):
@@ -79,7 +87,7 @@ for idx, (name, i) in enumerate(SECS):
     elif name == "stare":
         riff = rhy = tango(ch, False); lead = STARE_MEL[i]
         acc = [bar(f"{x}:7,") for x in v] if i % 2 == 0 else [R7] * 3
-        b = bar(f"{root}:3.5 {root}:3.5")
+        b = STARE_BASS[i]
     elif name == "draw":
         g = LOW[ch]
         riff = rhy = bar(f"{g}:0.5! R:1 {g}:0.5! R:1 {g}:0.5! R:3.5") if i < 3 else bar(f"{g}:0.25! {g}:0.25! {g}:0.25! {g}:0.25! R:6")
@@ -97,7 +105,7 @@ for idx, (name, i) in enumerate(SECS):
         amel = MOURN[i]
         tones = (chord_tones(ch, "G#3", "G#4") * 2)[:4]
         clean = bar(" ".join(f"{t}:1.5" if j % 2 == 0 else f"{t}:1" for j, t in enumerate(tones[:3])) + f" {tones[3]}:3") if i >= 4 else R7
-        b = bar(f"{root}:7,") if i >= 8 else R7
+        b = MOURN_BASS[i - 8] if i >= 8 else R7
     else:   # burial
         g = LOW[ch]
         riff = rhy = bar(f"{g}:3! {tr(g, 7)}:2 {g}:2") if i < n - 1 else bar(f"{g}:7!")

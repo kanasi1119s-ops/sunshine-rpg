@@ -27,14 +27,23 @@ LEAD_TONE = [{"type": "eq", "low": 0, "mid": 1.5, "midHz": 850, "high": -2.5}, {
 LEAD_CHAIN = [{"type": "filter", "kind": "highpass", "freq": 150, "q": 0.7},
               {"type": "eq", "low": 0, "mid": -3.5, "midHz": 320, "high": 0},                                    # 濁り
               {"type": "eq", "low": 0, "mid": 2.0, "midHz": 1600, "high": 0},                                    # 歌う帯域（鋭さ）
-              {"type": "eq", "low": 0, "mid": -2.0, "midHz": 4200, "high": 0},                                   # 刺さる所だけ細く
-              {"type": "filter", "kind": "lowpass", "freq": 11500, "q": 0.6},                                    # 空気感は残す
+              {"type": "eq", "low": 0, "mid": 2.0, "midHz": 3000, "high": 0},                                    # 粒（2026-10-24 人間「リードの高音の部分がもう少し粒が立って透き通るように」）
+              {"type": "eq", "low": 0, "mid": -1.0, "midHz": 4600, "high": 0},                                   # 刺さる所だけ、ほんの少し（-2→-1）
+              {"type": "filter", "kind": "lowpass", "freq": 13500, "q": 0.6},                                    # 透き通る空気感（11.5k→13.5k）
               {"type": "delay", "beats": 0.75, "mix": 0.16, "feedback": 0.3}]                                    # 余韻
 LEAD_DRIVE = 0.38
 HARM_DRIVE = 0.28
 HARM_GAIN = 0.7
 LEAD_AMP = "namArchonL1"   # PRS Archon（手元だけのモデル。無い環境ではマーシャル系で鳴る）
 LEAD_TAIL = [{"type": "delay", "beats": 0.75, "mix": 0.12, "feedback": 0.22}, {"type": "plate", "mix": 0.2}]
+# ベースの音作り（2026-10-24 人間「点数低い曲ベースが埋もれてないかな」）: 測ると、点の低い曲ほど 100〜250Hz が全体の大半（-1〜-2dB）で、
+#   600〜1500Hz（ベースの「ゴリッ」と指の粒が聞こえる帯域）が -14〜-17dB しかなかった。参考の音の EQ がベースの 730・810・1850Hz を
+#   それぞれ -9dB 削っていたため、低い音の量はあるのに、ベースの輪郭が聞こえず埋もれていた。中域の削りは外し、ゴリッと指の粒を足す
+BASS_MID_KEEP = (500, 2600)    # この帯域の削りは外す
+BASS_GROWL = [{"type": "eq", "low": 0, "mid": 4.0, "midHz": 900, "high": 0},     # ゴリッ
+              {"type": "eq", "low": 0, "mid": 2.5, "midHz": 1900, "high": 0},    # 指の粒
+              {"type": "eq", "low": 0, "mid": -2.0, "midHz": 200, "high": 0}]    # こもり（100〜250Hz の出すぎ）
+SHAMISEN_DB = 4.0      # 2026-10-24 人間「三味線もっと音大きくていいよ」（はじく楽器の +6dB に、さらに）
 DRUM_GAIN = 0.9
 # 2026-10-23 人間「ピロピロ大きくなってないな…原因調べて」→ 原因は2つ:
 #   (1) 作曲ソフトはパートの volume を 0.5 で頭打ちにする（ai-song.ts）。リード 1.03・速弾き 1.22・シタール 2.54 などは、すべて 0.5 で鳴っていた
@@ -132,7 +141,23 @@ def balance(song):
     for p in ps:
         if group(p) == "guitar" and p.get("role", "").startswith(("看板リフ", "リズム")): p["volume"] = round(p.get("volume", 0) * RIFF_GAIN, 5)
         if group(p) == "drums": p["volume"] = round(p.get("volume", 0) * DRUM_GAIN, 5)
-        if group(p) == "bass": p["volume"] = round(p.get("volume", 0) * BASS_GAIN, 5)
+        if group(p) == "bass":
+            p["volume"] = round(p.get("volume", 0) * BASS_GAIN, 5)
+            if p.get("instrument") == "bass" and not p.get("_bassed"):
+                fx, free = [], []
+                for f in p.get("fx", []):
+                    f = dict(f)
+                    if f.get("type") == "eq" and BASS_MID_KEEP[0] <= f.get("midHz", 0) <= BASS_MID_KEEP[1] and f.get("mid", 0) < 0:
+                        if not f.get("low") and not f.get("high"): free.append(len(fx))     # 削りだけの EQ は、ゴリッの EQ に置きかえる
+                        f["mid"] = 0.0
+                    fx.append(f)
+                rest = []
+                for g in BASS_GROWL:
+                    if free: fx[free.pop(0)] = dict(g)
+                    else: rest.append(dict(g))
+                k = next((j for j, f in enumerate(fx) if f.get("type") == "filter" and f.get("kind") == "lowpass"), len(fx))
+                p["fx"] = fx[:k] + rest + fx[k:]
+                p["_bassed"] = True
         if group(p) == "lead" and not p.get("_toned"):
             # リード専用の音作り（2026-10-23 人間「問題なのは高音。歪があるんだけど透き通るような伸びが欲しくて、余韻も感じたい。
             #   チョーキングしても、そのまましっかり伸び切った鋭く透き通った高い音に」）。参考の音の「歌の EQ」（2.5k・3.9k を -12dB、
@@ -156,7 +181,7 @@ def balance(song):
                 p["volume"] = round(p.get("volume", 0) * HARM_GAIN, 5)
             p["_toned"] = True
     for p in ps:
-        p.pop("_feat", None); p.pop("_toned", None)
+        p.pop("_feat", None); p.pop("_toned", None); p.pop("_bassed", None)
         fit_fx(p)
     return log
 
@@ -186,7 +211,7 @@ def headroom(song):
                 fx.append(f)
             if pluck:
                 fx.insert(1, {"type": "eq", "low": 0, "mid": 2.5, "midHz": 2800, "high": 0})     # 撥の当たりを前へ
-                p["gainDb"] = round((p.get("gainDb") or 0) + PLUCK_DB, 2)
+                p["gainDb"] = round((p.get("gainDb") or 0) + PLUCK_DB + (SHAMISEN_DB if p.get("instrument") == "shamisen" else 0), 2)
                 log.append(f"{p.get('role')}（はじく主役の楽器）+{PLUCK_DB:.0f}dB・撥の帯域を削らない")
             p["fx"] = fx
     # リードの組（旋律・ハモリ・オクターブ）は、組ごとまとめて 0.5 に収める。チャンネルごとに頭打ちにすると、

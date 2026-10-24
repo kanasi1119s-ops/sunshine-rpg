@@ -53,6 +53,8 @@ MORNING = [bar("R:1 A4:0.5 F4:0.5 D4:1 E4:0.5 F4:0.5"), bar("D4:1.5 R:0.5 F4:0.5
            bar("R:0.5 C5:0.5 A4:0.5 F4:0.5 G4:1 A4:0.5 R:0.5"), bar("G4:1.5 E4:0.5 C4:1 R:1"),
            bar("R:1 A4:0.5 D5:0.5 C5:1 A4:0.5 F4:0.5"), bar("D4:1 F4:0.5 A#4:0.5 D5:1 R:1"),
            bar("R:0.5 D5:0.5 C5:0.5 A#4:0.5 G4:1 A#4:0.5 R:0.5"), bar("A4:1.5 C#5:0.5 E5:1 R:1")]
+MORNING_BASS = [bar(x) for x in melody_walk(scale_pcs("D", "aeolian"), "A2", "D2", [[1.5, 0.5, 2], [1, 1, 1, 1], [2, 1, 1], [3, 1]], 5,
+                                             (["Dm", "Bb", "F", "C", "Dm", "Bb", "Gm", "A"] * 2)[4:16], contour=(-1, -1, 2, -1, 1), lo="C2", hi="D3")]
 CHORALE = {"Bb": ["D5", "A#4", "F4"], "F": ["C5", "A4", "F4"], "Gm": ["D5", "A#4", "G4"], "Dm": ["D5", "A4", "F4"], "D": ["D5", "A4", "F#4"],
            "Eb": ["D#5", "A#4", "G4"], "A": ["C#5", "A4", "E4"], "C": ["C5", "G4", "E4"]}
 
@@ -81,9 +83,16 @@ for idx, (name, i) in enumerate(SECS):
     elif name == "signal":
         tp = SIGNAL[i]; b = R4
     elif name == "morning":
-        clean = MORNING[i % 8] if i >= 4 else R4
+        # 2026-10-24 人間「ベースでメロディ作るのもありかも」: 朝の歌を、途中からベースが受けつぐ（生き残った兵士の低い声）。
+        #   12〜19小節目はベースが朝の歌（2オクターブ下）、クリーンは和音に回る。20小節目からは金管の聖歌の下で、ベースが動く対旋律
+        if 12 <= i < 20:
+            b = bar(shift_oct(strip_marks(MORNING[i % 8]), -2))
+            tones = (chord_tones(ch, "D4", "D5") * 2)[:4]
+            clean = bar(" ".join(f"{t}:1" for t in tones))
+        else:
+            clean = MORNING[i % 8] if i >= 4 else R4
+            b = MORNING_BASS[i - 20] if i >= 20 else (bar(f"{root}:2 {fifth_of(ch)}:2") if i >= 8 else (bar(f"{root}:4,") if i >= 2 else R4))
         if i >= 20: br = [bar(f"{x}:4,") if i % 2 == 0 else R4 for x in CHORALE.get(ch, CHORALE["Dm"])]
-        b = bar(f"{root}:2 {fifth_of(ch)}:2") if i >= 8 else (bar(f"{root}:4,") if i >= 2 else R4)
     else:   # light
         br = [bar(f"{x}:4,") for x in CHORALE[ch]]
         clean = bar(" ".join(f"{t}:1" for t in (chord_tones(ch, 'D4', 'D5') * 2)[:4])) if i < 5 else bar("D4:4")
