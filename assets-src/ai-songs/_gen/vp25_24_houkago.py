@@ -47,7 +47,7 @@ BAR_M = {n: K.mel(m, oct=4) for n, m in MOT.items()}
 for n in CH:
     for i, b in enumerate(S.sc(n)):
         if i % 2 == 0: PZ.bar(b, K.mel(MOT[n] if i % 4 == 0 else seq_up(MOT[n], K, 2 if n != "クール" else -1), oct=4))
-        elif n in ("元気", "おっちょこちょい"): PZ2.bar(b, K.mel(MOT[n], oct=5 if n == "元気" else 4))
+        elif n in ("元気", "おっちょこちょい"): PZ2.bar(b, K.mel(MOT[n], oct=4))   # 2026-10-25: 元気の2本目を1オクターブ下げた（10秒ごとの点 5.4）
 # 歌の役: 人ごとの短い歌（後半の8小節）
 SONGS = {"元気": ["5:0.5 5:0.5 6:0.5 1':0.5 2':1 1':1", "6:1 5:1 3:2", "4:0.5 4:0.5 5:0.5 6:0.5 1':1 6:1", "5:4"],
          "のんびり": ["3':2 2':1 1':1", "6:4", "2':2 1':1 6:1", "5:4"],
@@ -80,7 +80,7 @@ for b in range(S.nb):
     ch = S.chords[b]; r = low(ch, "E1"); v = voice(ch, 64, 3)
     if n == "元気":
         BASS.bar(b, bass_line(S, b, "oct8"))
-        for j in range(3): EP[j].bar(b, "R:0.5 X:0.5 R:0.5 X:0.5 R:0.5 X:0.5 R:0.5 X:0.5".replace("X", nm(v[j], True)))
+        for j in range(3): EP[j].bar(b, "X:1.5 X:2.5".replace("X", nm(v[j], True)))   # 2026-10-25: 裏打ちの短い和音 → のばす和音
     elif n == "のんびり":
         BASS.bar(b, f"{nm(r, True)}:1.5 {nm(r + 7, True)}:0.5 {nm(r + 7, True)}:1.5 {nm(r, True)}:0.5")
         NY.bar(b, f"{nm(v[0], True)}:0.5 R:0.5 {nm(v[1], True)}:0.75 {nm(v[2], True)}:0.75 R:0.5 {nm(v[1], True)}:1")
@@ -100,9 +100,9 @@ for b in range(S.nb):
     elif n == "全員":
         BASS.bar(b, bass_line(S, b, "oct8" if i < 16 else "root8"))
         for j in range(3): EP[j].bar(b, "X:1.5 X:1 X:1.5".replace("X", nm(v[j], True)))
-        if i >= 16:
+        if i >= 16:   # 2026-10-25: 8分の刻み → のばす和音（全員で鳴る場面の点 6.6〜6.9）
             pw = power(ch, "E2")
-            for j in range(2): GT[j].bar(b, " ".join(f"{nm(pw[j], True)}:0.5" + ("!" if q % 2 == 0 else "") for q in range(8)))
+            for j in range(2): GT[j].bar(b, f"{nm(pw[j], True)}:2.5! {nm(pw[j], True)}:1.5")
     elif n == "帰り道":
         if i < 12: BASS.bar(b, f"{nm(r, True)}:2 {nm(r + 7, True)}:2")
         if i < 14:
@@ -114,7 +114,7 @@ for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     last = i == L - 1
     if n == "元気":
-        put_groove(D, b, "four", ghosts=0.2, seed=b, hat_vary=False); D.H[b] = "x.O.x.O.x.O.x.O."
+        put_groove(D, b, "four", ghosts=0.2, seed=b, hat_vary=False); D.H[b] = "x.x.x.x.x.x.x.O." if i % 2 == 1 else "x.x.x.x.x.x.x.x."
         if i == 0: crash(D, b)
     elif n == "のんびり":
         D.set(b, "X..X....X..X....", "...x..x....x..x." if i >= 4 else "." * 16, "x.xxx.xxx.xxx.xx")         # ボサノバ（スネアはリムの代わりに弱く）
