@@ -82,11 +82,11 @@ for idx, (name, i) in enumerate(SECS):
         b = bar(f"{root}:0.5! R:2.5 {root}:0.5! R:1.5 {root}:0.5! R:1.5")
     elif name == "race":
         riff = rhy = math_riff(ch, i); lead = dub(ch, 0.25, i)
-        vln = bar(f"{DUB[ch][1]}:3 {DUB[ch][0]}:4") if i % 2 == 0 else R7
+        vln = bar(f"{DUB[ch][1]}:3 {DUB[ch][0]}:4") if i % 2 == 0 else bar(f"{up(DUB[ch][0], 1)}:4 {DUB[ch][1]}:3")   # 1小節おきに消えていた（途中で小さくなる）
         b = unison_low(riff, -1, "B0")
     elif name == "panic":
         riff = rhy = math_riff(ch, i + 1); lead = dub(ch, 0.25, i + 1)
-        vln = shift_oct(strip_marks(lead), 1) if i >= 6 else R7
+        vln = shift_oct(strip_marks(lead), 1) if i >= 6 else bar(f"{up(DUB[ch][1], 1)}:7")
         b = unison_low(riff, -1, "B0")
     elif name == "peak":
         r = LOW[ch]
@@ -98,7 +98,9 @@ for idx, (name, i) in enumerate(SECS):
         b = R7
     elif name == "revive":
         lead = REVIVE[i]
-        vln = shift_oct(strip_marks(REVIVE[i]), -1) if i >= 4 else R7
+        # 2026-10-24 人間「08 は途中でバイオリンの音が小さくなるから、そこが少しこもって聞こえる」: 1オクターブ下（G3〜F4）で
+        #   歪んだギターの帯域に埋もれていた。蘇生の歌は1オクターブ上で、透き通るように重ねる
+        vln = shift_oct(strip_marks(REVIVE[i]), 1) if i >= 2 else R7
         if i >= 2:
             r = LOW[ch]; riff = rhy = bar(f"{r}:1.5! R:0.5 {r}:1 {r}:2! R:2") if i % 2 == 0 else bar(f"{r}:3! {tr(r, 7)}:2 R:2")
         b = bar(f"{root}:3 {root}:4") if i >= 1 else R7
@@ -119,9 +121,9 @@ J = lambda k: " ".join(P[k])
 song.add(riff_parts(J("riff")))
 song.add(rhythm_parts(J("rhy"), J("rhy")))
 song.add(lead_part(J("lead")))
-song.add(part("バイオリン", "strings", J("vln"), patch="violin", volume=0.16, pan=-0.15, reverb=0.5, gainDb=3, bright=-0.15, attack=0.08, release=0.7,
+song.add(part("バイオリン", "strings", J("vln"), patch="violin", volume=0.16, pan=-0.15, reverb=0.5, gainDb=3, bright=0.0, attack=0.08, release=0.7,
               doubleDetune={"cents": 5, "spread": 0.3}, phrase=8,
-              fx=[{"type": "eq", "low": 2, "mid": -2.5, "midHz": 2800, "high": 0}, {"type": "delay", "beats": 1, "mix": 0.08, "feedback": 0.2},
+              fx=[{"type": "eq", "low": -1, "mid": 1.5, "midHz": 3200, "high": 0.5}, {"type": "delay", "beats": 1, "mix": 0.08, "feedback": 0.2},
                   {"type": "reverb", "mix": 0.22}, {"type": "plate", "mix": 0.12}]))
 song.add(bass_part(J("bass")))
 song.add(drum_parts(kit))
