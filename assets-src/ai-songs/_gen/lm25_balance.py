@@ -14,6 +14,7 @@ LEAD_MAX = None      # 2026-10-23 人間が「全体的にはいい」と言っ�
 TECH_LEVEL = 0.75    # 速弾きのギターの合計を、ギターの 0.75 倍とリードの 0.6 倍の大きい方に
 TECH_OF_LEAD = 0.6
 RIFF_GAIN = 1.05
+GTR_LOW_MAX = 4.0     # ギターの EQ の低い方の持ち上げの上限（dB）
 BASS_GAIN = 1.9      # 2026-10-23 人間「ベースの音小さくて聞きにくいかも」（1.4）。2026-10-24 重低音の棚を +9→+3dB にして約4dB下がった分を戻す（1.9）
 # リードの余韻（2026-10-23 人間「ギターの高音をリードで弾くときは少し余韻を残すように響かせよう」）:
 #   参考の音はリードに部屋の鳴り（ルーム）しか残さないので、短めのプレートと、付点8分のうすいやまびこを足し、音の終わりを少し長く
@@ -146,6 +147,13 @@ def balance(song):
                 log.append(f"{g} ×{k:.3f}")
     for p in ps:
         if group(p) == "guitar" and p.get("role", "").startswith(("看板リフ", "リズム")): p["volume"] = round(p.get("volume", 0) * RIFF_GAIN, 5)
+        if group(p) == "guitar":
+            # 2026-10-24 測ると、参考の音 deep-scoop-djent の曲（05・08・16・20）は、点の低い5曲のうち3曲。リフのギターに低い棚 +9dB と
+            #   223Hz +11dB（合わせて約 +20dB）が掛かり、100〜250Hz が全体の大半（-2dB）を占めて、ベースの音の動きを隠していた。低い方の持ち上げは +4dB まで
+            for f in p.get("fx", []):
+                if f.get("type") != "eq": continue
+                if f.get("low", 0) > GTR_LOW_MAX: f["low"] = GTR_LOW_MAX
+                if f.get("midHz", 1000) < 320 and f.get("mid", 0) > GTR_LOW_MAX: f["mid"] = GTR_LOW_MAX
         if group(p) == "drums": p["volume"] = round(p.get("volume", 0) * DRUM_GAIN, 5)
         if group(p) == "bass":
             p["volume"] = round(p.get("volume", 0) * BASS_GAIN, 5)
