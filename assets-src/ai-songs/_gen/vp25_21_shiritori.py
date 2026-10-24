@@ -8,7 +8,7 @@
 from vp25_lib import *
 
 S = Song("21", "shiritori", "しりとり（仮）", "Word Chain", 136, 4, "A", "major", "J-POP")
-S.kit = "naked"
+S.kit = "jpop"   # 2026-10-25: 切り抜きで naked 6.83 → jpop 7.07
 K = S.key
 P1 = ["A", "F#m7", "Dmaj7", "E", "C#m7", "F#m7", "Bm7", "E7sus4"]
 P2 = ["Dmaj7", "E/D", "C#m7", "F#m7", "Bm7", "C#7", "F#m7", "E"]
@@ -21,10 +21,10 @@ S.scene("輪になる", 20, "outro", P1 + ["Dmaj7", "E", "Dmaj7", "E", "A", "A",
 S.tempo = [{"bar": S.sc("二回目")[0] + 1, "bpm": 142}, {"bar": S.sc("三回目")[0] + 1, "bpm": 148}, {"bar": S.sc("もう一度")[0] + 1, "bpm": 152},
            {"bar": S.sc("輪になる")[8] + 1, "bpm": 152}, {"bar": S.sc("輪になる")[9] + 1, "bpm": 126, "ramp": 8}]
 S.extra.update({"tone": "rock", "diGuitar": "emily"})
-S.flags = "--bass bnb-loud " + S.flags
+S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags   # 2026-10-25: 参考の音で 7.07 → 7.62（09 の切り抜き）
 
 VO = {
-    "わたし": S.track("主役: マリンバ（わたし）", "marimba", patch="marimba", volume=0.27, pan=-0.1, reverb=0.3, gainDb=6, sustain=1.4),
+    "わたし": S.track("主役: マリンバ（わたし）", "harp", patch="marimba", volume=0.27, pan=-0.1, reverb=0.3, gainDb=6, sustain=1.4),
     "母": S.track("リード（母・歌の役）", "lead", **lead_spec("calliope", vol=0.18, pan=0.15, delay=0.75)),
     "父": S.track("ピアノ（父）", "piano", volume=0.2, pan=-0.3, reverb=0.25, gainDb=3, mono=True),
     "兄": S.track("ギター（兄）", "distGuitar", **lead_gtr_spec(0.14, 0.3)),

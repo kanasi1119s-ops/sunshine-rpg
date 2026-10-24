@@ -77,7 +77,7 @@ for b in S.sc("たくさんの玉") + S.sc("工場の朝")[:4]:
     t = tones(S.chords[b], "C6", "C7")
     toks = []
     for q in range(8):
-        toks.append(f"{nm(rnd.choice(t))}:0.5" if rnd.random() < (0.7 if b in S.sc("たくさんの玉") else 0.35) else "R:0.5")
+        toks.append(f"{nm(rnd.choice(t))}:0.5" if rnd.random() < (0.45 if b in S.sc("たくさんの玉") else 0.35) else "R:0.5")
     GP2.bar(b, merge_rests(" ".join(toks)))
 
 # ---------- 厚い和音: ドロップでは和音の刻み（ドラムに合わせて）、膨らむでは伸ばす ----------
@@ -145,8 +145,8 @@ for b in range(S.nb):
         D.set(b, "X.......X......." if frac < 0.75 else "X...X...X...X...", sn, "." * 16)
         if last: D.set(b, "." * 16, "." * 16, "." * 16)            # はじける前の1小節の息
         continue
-    if n == "たくさんの玉" and i >= 12:
-        D.set(b, "X...............", "................", "..x...x...x...x.")
+    if n == "たくさんの玉":
+        D.set(b, "X.........X.....", "................", "..x...x...x...x." if i >= 4 else "................")
         continue
     if n == "最後の一個":
         if i < 6: D.set(b, "X.......X.......", "x...x...x...x..." if i < 4 else "xxxxxxxxxxxxxxxx", "." * 16)

@@ -118,7 +118,7 @@ for b in range(S.nb):
         for j in range(2): PAD[j].bar(b, f"{nm(voice(ch, 58, 2)[j])}:4")
 rnd = random.Random(25)
 for b in range(S.nb):
-    t = tones(S.chords[b], "C#6", "C#8")
+    t = tones(S.chords[b], "C#6", "B7")
     STAR.bar(b, merge_rests(" ".join(f"{nm(rnd.choice(t))}:0.5" if rnd.random() < 0.18 else "R:0.5" for _ in range(8))))
 for sc_ in ("ダンスブレイク", "キャッチ"): riser(FX, S.sc(sc_)[0], 8, "D4"); cym_swell(CYM, S.sc(sc_)[0], 2, "C4")
 for sc_ in ("逃す1", "逃す2", "逃す3"): FX.bar(S.sc(sc_)[0], "E4:4")       # 消えていく（ダウンリフター）

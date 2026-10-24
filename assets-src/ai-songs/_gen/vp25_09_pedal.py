@@ -8,7 +8,7 @@
 from vp25_lib import *
 
 S = Song("09", "pedal", "ペダルを止めるな（仮）", "Don't Stop Pedaling", 140, 4, "E", "major", "ロック")
-S.kit = "naked"
+S.kit = "jpop"   # 2026-10-25: 切り抜きで naked 6.83 → jpop 7.07
 K = S.key
 UP1 = ["E", "E/G#", "A", "B", "C#m", "B/D#", "E", "F#m7"]
 UP2 = ["A", "B", "C#m", "D", "E", "F#m7", "G#m7", "B7sus4"]
@@ -26,7 +26,7 @@ S.scene("ブレーキ", 6, "outro", ["F", "F", "F", "F", "F", "F"])
 b_down = S.sc("下り坂1")[0]
 S.tempo = [{"bar": b_down + 1, "bpm": 195}, {"bar": S.sc("ブレーキ")[2] + 1, "bpm": 195}, {"bar": S.sc("ブレーキ")[3] + 1, "bpm": 150, "ramp": 2}]
 S.extra.update({"tone": "rock", "diGuitar": "emily"})
-S.flags = "--bass bnb-loud " + S.flags
+S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags   # 2026-10-25: 参考の音で 7.07 → 7.62（09 の切り抜き）
 K2 = K.up(1)
 
 BR = [S.track(f"主役: ブラス{i + 1}", "brass", patch="brassSection", volume=0.2, pan=[-0.25, 0.25, 0][i], reverb=0.25, gainDb=4, phrase=4,

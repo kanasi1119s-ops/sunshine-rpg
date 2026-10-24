@@ -8,7 +8,7 @@
 from vp25_lib import *
 
 S = Song("20", "parade", "パレードが通る（仮）", "Here Comes the Parade", 150, 4, "D", "major", "J-POP（マーチ）")
-S.kit = "naked"
+S.kit = "jpop"   # 2026-10-25: 切り抜きで naked 6.83 → jpop 7.07
 K = S.key
 MARCH = ["D", "G/D", "A7", "D", "Bm", "E7", "A", "A7"]
 MARCH2 = ["D", "D/F#", "G", "Gm6", "D/A", "B7", "Em7", "A7"]
@@ -21,7 +21,7 @@ S.scene("山車", 24, "bridge", FLOAT)
 S.scene("子ども会", 24, "verse", KIDS)
 S.scene("遠ざかる", 24, "outro", MARCH + MARCH2 + MARCH)
 S.scene("静けさ", 8, "outro", ["D"] * 8)
-S.flags = "--bass bnb-loud " + S.flags
+S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags   # 2026-10-25: 参考の音で 7.07 → 7.62（09 の切り抜き）
 KG = Key("G", "major")
 
 # 距離（0＝遠い〜1＝目の前）と、左右の位置（-1 左〜1 右）

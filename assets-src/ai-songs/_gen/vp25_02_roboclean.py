@@ -54,7 +54,7 @@ for i, b in enumerate(S.sc("台所")):
 for i, b in enumerate(S.sc("居間")):
     m = DNM[i % 8]
     if i >= 16: m = seq_up(m, K, 2) if i % 8 < 6 else m
-    LEAD.bar(b, K.mel(m, oct=5))
+    LEAD.bar(b, K.mel(m, oct=4 if i < 16 else 5))
 # 壁: 一撃と、動機の2音だけ（向きを変える合図）
 for sc_, mel in (("壁1", ["1':0.5 6:0.5 R:3", "R:4", "6:0.5 1':0.5 R:3", "R:4"]), ("壁2", ["1':0.5 6:0.5 R:3", "R:4", "1:0.5 #4:0.5 R:3", "R:4"])):
     for i, b in enumerate(S.sc(sc_)): LEAD.bar(b, K.mel(mel[i]))
@@ -158,7 +158,7 @@ for b in range(S.nb):
         sv = voice(S.chords[b], 66, 3)
         pat = "X:0.75 X:0.75 X:0.5 R:0.5 X:0.75 X:0.75" if n == "ベランダ" else "X:4"
         for j in range(3): SSAW[j].bar(b, pat.replace("X", nm(sv[j])))
-    if n == "充電台" and i < 2:
+    if n == "充電台" and i < 5:
         for j in range(3): PAD[j].bar(b, f"{nm(pv[b][j])}:4")
 
 riser(FX, S.sc("ベランダ")[0], 8, "D4"); cym_swell(CYM, S.sc("ベランダ")[0], 2, "C4")
@@ -182,7 +182,7 @@ for b in range(S.nb):
         continue
     if n == "居間":
         put_groove(D, b, "four", ghosts=0.3, seed=b)
-        D.H[b] = "..x...x...x...x." if i < 8 else "x.O.x.O.x.O.x.O."
+        D.H[b] = "..x...x...x...x." if i < 8 else "x.x.x.x.x.x.x.x."      # 2026-10-25: 居間の PQ が 7.3 と低いので、開いたハットをやめる
         if i in (0, 8, 16): crash(D, b)
         if i % 8 == 7: put_fill(D, b, "tomdown" if last else "small")
         continue
@@ -209,6 +209,7 @@ for b in range(S.nb):
         continue
 
 S.flags += " --space room --space-wet 0.12"
+S.fade_out = 6
 S.desc = ("仮: ボカロ曲のインスト25曲の02。テクノポップ。D長調→ベランダで E長調・132（電池が減ると112へ）。主役の楽器はチェンバロ。"
           "ロボット掃除機が台所（包丁のような16分の刻み）・居間（アルベルティ）・ソファの下（7つの16分でひと回りする型で迷子）をへて、日の当たるベランダへ。"
           "壁にぶつかるたびに歌の役の2音の動機が上下反転する。最後は充電台の電子音1つ。自作")

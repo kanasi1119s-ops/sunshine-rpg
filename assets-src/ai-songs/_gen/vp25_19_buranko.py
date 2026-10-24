@@ -8,7 +8,7 @@
 from vp25_lib import *
 
 S = Song("19", "buranko", "ぶらんこ（仮）", "The Swing", 168, 3, "F", "major", "J-POP（3拍子）")
-S.kit = "naked"
+S.kit = "jpop"   # 2026-10-25: 切り抜きで naked 6.83 → jpop 7.07
 K = S.key
 P1 = ["F", "F", "Am7", "Am7", "Bbmaj7", "Bbmaj7", "C7sus4", "C7"]
 P2 = ["Dm7", "Dm7", "Bbmaj7", "Bbmaj7", "Gm7", "Gm7", "C7sus4", "C7"]
@@ -26,7 +26,7 @@ S.scene("止まる", 16, "outro", ["G"] * 16)
 b_slow = S.sc("夕焼け")[16]
 S.tempo = [{"bar": b_slow + 1, "bpm": 168}, {"bar": b_slow + 2, "bpm": 120, "ramp": 40}]
 S.extra.update({"tone": "rock", "diGuitar": "emily"})
-S.flags = "--bass bnb-loud " + S.flags
+S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags   # 2026-10-25: 参考の音で 7.07 → 7.62（09 の切り抜き）
 KG = K.up(2)
 
 AC = S.track("主役: アコーディオン", "accordion", volume=0.25, pan=-0.1, reverb=0.28, gainDb=5, phrase=6, mono=True,

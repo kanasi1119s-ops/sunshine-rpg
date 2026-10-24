@@ -323,7 +323,7 @@ class Song:
         js = self.to_json()
         nch = len({(p["instrument"], p.get("patch")) for p in js["parts"] if p["instrument"] not in DRUM_INST})
         json.dump(js, open(path, "w"), ensure_ascii=False)
-        drums = {"electro": "--drums electro", "naked": "--drums naked"}.get(self.kit, "")
+        drums = {"electro": "--drums electro", "naked": "--drums naked", "jpop": "--drums jpop"}.get(self.kit, "")
         open(path + ".flags", "w").write(f"{drums} {self.flags}".strip())
         open(path + ".fade", "w").write(f"{self.fade_in} {self.fade_out}")
         open(path + ".meta", "w").write(json.dumps({"no": self.no, "title": self.title, "en": self.en}, ensure_ascii=False))

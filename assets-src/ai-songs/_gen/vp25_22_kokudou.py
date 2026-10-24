@@ -8,7 +8,7 @@
 from vp25_lib import *
 
 S = Song("22", "kokudou", "海沿いの国道、夕方五時（仮）", "Coast Road, 5 PM", 112, 4, "Eb", "major", "J-POP（シティポップ）")
-S.kit = "naked"
+S.kit = "jpop"   # 2026-10-25: 切り抜きで naked 6.83 → jpop 7.07
 K = S.key
 COAST = ["Abmaj7", "G7", "Cm7", "Bbm7", "Eb7", "Abmaj7", "Db9", "Ebmaj7"]
 SIGNAL = ["Abmaj7", "Abmaj7", "Gm7", "Gm7", "Fm7", "Fm7", "Bb7sus4", "Bb7sus4"]
@@ -25,7 +25,7 @@ S.scene("海が見える", 32, "chorus", SEA)
 S.scene("夕日", 24, "solo", DUSK)
 S.scene("波", 8, "outro", ["Ebmaj7"] * 8)
 S.extra.update({"tone": "rock", "diGuitar": "emily", "swing16": 0.12})
-S.flags = "--bass bnb-loud " + S.flags
+S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags   # 2026-10-25: 参考の音で 7.07 → 7.62（09 の切り抜き）
 TUN = set(S.sc("トンネル"))
 MUFF = [{"type": "filter", "kind": "lowpass", "freq": 700, "q": 0.8}, {"type": "reverb", "mix": 0.3}]
 

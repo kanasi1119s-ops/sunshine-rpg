@@ -9,7 +9,7 @@
 from vp25_lib import *
 
 S = Song("24", "houkago", "放課後の五人（仮）", "Five After School", 118, 4, "Ab", "major", "K-POP")
-S.kit = "naked"
+S.kit = "jpop"   # 2026-10-25: 切り抜きで naked 6.83 → jpop 7.07
 K = S.key
 CH = {"元気": ["Ab", "Bbm7", "Cm7", "Db"], "のんびり": ["Dbmaj7", "Cm7", "Bbm7", "Eb7sus4"], "クール": ["Fm", "Fm", "Db", "Eb"],
       "おっちょこちょい": ["Ab7", "Db9", "Ab7", "Eb7"], "リーダー": ["Db", "Eb", "Fm", "Ab/C", "Db", "Eb", "Ab", "Ab"]}
@@ -20,7 +20,7 @@ ALL = ["Bb", "F/A", "Ebmaj7", "F", "Gm7", "Dm7", "Ebmaj7", "F7sus4"]
 S.scene("全員", 32, "chorus", ALL)
 S.scene("帰り道", 16, "outro", ["Ebmaj7", "Dm7", "Cm7", "F7sus4", "Ebmaj7", "Dm7", "Cm7", "Bb"] * 2)
 S.extra.update({"tone": "rock", "diGuitar": "emily"})
-S.flags = "--bass bnb-loud " + S.flags
+S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags   # 2026-10-25: 参考の音で 7.07 → 7.62（09 の切り抜き）
 KB = K.up(2)
 T3, T3b = "0.3333", "0.3334"
 

@@ -97,7 +97,7 @@ for b in range(S.nb):
         pat = "R:0.5 X:0.25 R:0.75 X:0.5 R:0.5 X:0.25 R:0.75 X:0.5" if i % 2 == 0 else "R:0.5 X:0.25 R:0.25 X:0.5 R:0.5 X:0.5 R:0.5 X:0.25 X:0.75"
         for j in range(3): EP[j].bar(b, pat.replace("X", nm(v[j])))
     if n == "脱水":
-        for j in range(3): EP[j].bar(b, " ".join(f"{nm(v[j])}:0.25{'!' if q % 4 == 0 else ','}" for q in range(16)) if i >= 12 else "R:0.5 X:0.5 R:0.5 X:0.5 R:0.5 X:0.5 R:0.5 X:0.5".replace("X", nm(v[j])))
+        for j in range(3): EP[j].bar(b, "R:0.5 X:0.5 R:0.5 X:0.5 R:0.5 X:0.5 R:0.5 X:0.5".replace("X", nm(v[j])))
     if n == "干す":
         for j in range(3): EP[j].bar(b, "R:0.75 X:0.25 R:0.75 X:0.25 R:0.75 X:0.25 R:0.75 X:0.25".replace("X", nm(v[j])))
     sv = voice(S.chords[b], 70, 2)
@@ -109,7 +109,7 @@ for b in range(S.nb):
 for i, b in enumerate(S.sc("脱水")):
     if i < 22:
         t = tones(S.chords[b], "E5", "E7")
-        ARP.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.25" for q in [0, 1, 2, 3] * 4 if True) if i >= 8 else "R:4")
+        ARP.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in [0, 1, 2, 3, 2, 3, 1, 2]) if i >= 8 else "R:4")
 riser(FX, b_spin + 20, 8, "D4")
 FX.bar(S.sc("風")[0], "A4:2 R:2")
 cym_swell(CYM, S.sc("洗う")[0], 2, "C4"); cym_swell(CYM, S.sc("すすぐ")[0], 2, "C4"); cym_swell(CYM, b_spin, 2, "C4")
@@ -133,7 +133,7 @@ for b in range(S.nb):
         if last: put_fill(D, b, "lift")
         continue
     if n == "脱水":
-        put_groove(D, b, ("X...X...X...X...", "....X.......X...", "xxOxxxOxxxOxxxOx"), ghosts=0.5, seed=b, hat_vary=False)
+        put_groove(D, b, ("X...X...X...X...", "....X.......X...", "x.O.x.O.x.O.x.O."), ghosts=0.4, seed=b, hat_vary=False)
         if i % 4 == 0: crash(D, b, "C2" if i % 8 == 0 else "G2")
         if i % 4 == 3: put_fill(D, b, "snare16" if i < 20 else "build")
         if i == 23: D.set(b, "X" + "." * 15, "X" + "." * 15, "." * 16); crash(D, b, "C2", 1)

@@ -59,7 +59,7 @@ for b in range(S.nb):
     elif n == "正午": pat = STAB_PATS[(i // 2) % 4]
     elif n in ("午前", "午後"): pat = STAB_PATS[i % 2 * 2]
     elif n == "夕方": pat = STAB_PATS[0] if i < 8 else "X:2 X:2"
-    else: pat = "X:4" if i < 4 else "R:4"
+    else: pat = "X:4"
     for j in range(3):
         PR[j].bar(b, pat.replace("X", nm(v[j])))
         PD[j].bar(b, pat.replace("X", nm(v[j])))
@@ -100,7 +100,7 @@ pv = chord_voices(S, range(S.nb), center=57, n=3)
 sv = chord_voices(S, range(S.nb), center=69, n=2)
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
-    if n in ("夜明け", "朝", "夕方", "日没", "止まる") and not (n == "日没" and i > 4):
+    if n in ("夜明け", "朝", "夕方", "日没", "止まる"):
         for j in range(3): PAD[j].bar(b, f"{nm(pv[b][j])}:4")
     if n in ("正午", "午前") and not (n == "午前" and i < 12):
         for j in range(2): STR[j].bar(b, f"{nm(sv[b][j])}:4")
@@ -139,7 +139,7 @@ for b in range(S.nb):
         put_groove(D, b, ("X...X...X...X...", "................", "..x...x...x...x." if i < 8 else "................"), seed=b, hat_vary=False)
         continue
     if n == "日没":
-        D.set(b, "X...X...X...X..." if i < 8 else "X...............", "." * 16, "." * 16)
+        D.set(b, "X...X...X...X..." if i < 6 else "." * 16, "." * 16, "." * 16)
 
 S.fade_out = 12
 S.flags += " --space hall --space-wet 0.12"

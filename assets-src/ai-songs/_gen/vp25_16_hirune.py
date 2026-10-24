@@ -8,7 +8,7 @@
 from vp25_lib import *
 
 S = Song("16", "hirune", "縁側と昼寝の猫（仮）", "The Cat Napping on the Veranda", 88, 4, "Eb", "major", "ヒップホップ（ブーンバップ）")
-S.kit = "naked"
+S.kit = "jpop"   # 2026-10-25: 切り抜きで naked 6.83 → jpop 7.07
 K = S.key
 LOOP = ["Abmaj7", "Gm7", "Cm7", "F9"]
 LOOP2 = ["Abmaj7", "Bb/Ab", "Gm7", "C7"]
@@ -68,7 +68,7 @@ for b in range(S.nb):
     v = voice(S.chords[b], 62, 4)
     if n == "走り出す": pat = "X:0.5 R:0.25 X:0.25 R:0.5 X:0.5 R:1 X:0.5 R:0.5"
     elif n == "夢": pat = "X:4"
-    elif n == "また寝る" and i >= 8: pat = "X:4" if i == 8 else "R:4"
+    elif n == "また寝る" and i >= 8: pat = "X:4"
     else: pat = "R:0.25 X:1.25 R:0.5 X:0.75 X:1.25" if i % 2 == 0 else "X:1.5 R:0.5 X:2"
     for j in range(4): EP[j].bar(b, pat.replace("X", nm(v[j], True)))
 
@@ -111,6 +111,7 @@ for b in range(S.nb):
     if n == "また寝る" and i < 8:
         D.set(b, BBK[i % 4], "....X.......X..." if i < 4 else "." * 16, "x...x...x...x..." if i < 6 else "." * 16)
 
+S.fade_out = 8
 S.desc = ("仮: ボカロ曲のインスト25曲の16。ブーンバップのヒップホップ。E♭長調・88（はねる）。主役の楽器はクラリネット。夏の昼下がり、縁側で昼寝する猫の気まぐれ。"
           "寝る→伸び→毛づくろい→急に走り出す（8小節だけ倍速のトラップ）→戻る→魚の夢（調が変わる）→あくび→また寝る（いびきのベースの長い音）。"
           "クラリネットは後ろにもたれた3連と、ため息のような下降。自作")

@@ -8,7 +8,7 @@
 from vp25_lib import *
 
 S = Song("12", "watage", "たんぽぽの綿毛飛行（仮）", "A Dandelion Seed's Flight", 252, 6, "D", "major", "ロック（6/8）")
-S.kit = "naked"
+S.kit = "jpop"   # 2026-10-25: 切り抜きで naked 6.83 → jpop 7.07
 K = S.key
 WIND = ["D", "Bm/D", "G/D", "D"]
 SKY = ["D", "F#m", "G", "A", "Bm", "F#m/A", "G", "A7sus4"]
@@ -26,7 +26,7 @@ S.scene("春", 24, "pre", SPRING)
 S.scene("もう一度", 40, "chorus", SKY2)
 S.scene("凪の終わり", 12, "outro", ["E", "E", "A/E", "E", "E", "E", "E", "E", "E", "E", "E", "E"])
 S.extra.update({"tone": "rock", "diGuitar": "emily"})
-S.flags = "--bass bnb-loud " + S.flags
+S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags   # 2026-10-25: 参考の音で 7.07 → 7.62（09 の切り抜き）
 K2 = K.up(2)
 B = 6
 

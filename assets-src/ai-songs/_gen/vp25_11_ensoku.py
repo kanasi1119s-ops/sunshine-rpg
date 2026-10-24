@@ -8,7 +8,7 @@
 from vp25_lib import *
 
 S = Song("11", "ensoku", "遠足のしおり（仮）", "The Field Trip Itinerary", 182, 4, "B", "major", "ロック（ポップパンク）")
-S.kit = "naked"
+S.kit = "jpop"   # 2026-10-25: 切り抜きで naked 6.83 → jpop 7.07
 K = S.key
 GATHER = ["B", "E", "F#", "B"]
 BUS = ["B", "D#m", "E", "F#", "G#m", "E", "C#m7", "F#sus4"]
@@ -25,7 +25,7 @@ S.scene("山頂", 40, "chorus", TOP)
 S.scene("帰りのバス", 32, "verse", HOME)
 S.scene("眠る", 24, "outro", SLEEP)
 S.extra.update({"tone": "rock", "diGuitar": "emily"})
-S.flags = "--bass bnb-loud " + S.flags
+S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags   # 2026-10-25: 参考の音で 7.07 → 7.62（09 の切り抜き）
 
 # 帰り道の眠気: 小節ごとの音量（帰りのバスの後半から、だんだん小さく）
 SLEEPY = []

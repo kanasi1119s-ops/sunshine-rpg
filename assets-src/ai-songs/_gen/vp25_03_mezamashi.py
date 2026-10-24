@@ -28,6 +28,10 @@ KA = K.up(2)
 
 BELLP = S.track("主役: FMベル（目覚まし）", "fmBell", volume=0.24, pan=0.0, reverb=0.25, sustain=0.9, gainDb=4,
                 fx=[{"type": "eq", "low": -4, "mid": 2, "midHz": 2600, "high": 0}])
+# 2026-10-25: 10秒ごとの PQ で、目覚ましの場面だけ 5.5〜6.9 と低かった（高いベルの16分の連打が耳に痛い）。
+#   目覚ましは別のパートにして、小さく・高い所を丸く・連打をまばらにする
+ALARM = S.track("目覚ましのベル", "fmBell", volume=0.14, pan=0.1, reverb=0.3, sustain=0.8, gainDb=1,
+                fx=[{"type": "filter", "kind": "lowpass", "freq": 5000, "q": 0.7}, {"type": "eq", "low": -4, "mid": 1, "midHz": 2000, "high": -2}])
 BELLD = S.track("FMベル（夢の中のきらめき）", "fmBell", volume=0.16, pan=-0.35, reverb=0.45, sustain=2.0, gainDb=2,
                 fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.22, "feedback": 0.35}])
 LEADD = S.track("リード（夢の歌）", "lead", **lead_spec("calliope", vol=0.19, pan=0.05, delay=1.0))
@@ -42,19 +46,19 @@ D = S.drumkit()
 
 # ---------- ベル（同じ音の16分の連打。3回とも少しずつ形が詰まる） ----------
 def ring(b, top, n_burst):
-    """1小節に n_burst 回の連打（各 1拍＝16分×4）。休みが「チリリリ…」の間"""
+    """1小節に n_burst 回の「チリッ」（各 1拍＝16分2つと休み）"""
     toks = []
     for k in range(4):
-        if k < n_burst: toks.append(" ".join(f"{top}:0.25{'!' if j == 0 else ''}" for j in range(4)))
+        if k < n_burst: toks.append(f"{top}:0.25! {top}:0.25 R:0.5")
         else: toks.append("R:1")
     return " ".join(toks)
 
 
 for sc_, tops, lv in (("ベル1", ["D6", "D6", "E6", "D6"], 2), ("ベル2", ["D6", "E6", "F#6", "G6"], 3), ("ベル3", ["G6", "G6", "A6", "B6"], 4)):
     for i, b in enumerate(S.sc(sc_)):
-        if sc_ == "ベル1" and i == 0: BELLP.bar(b, "R:3 D6:1!"); continue                  # 無音のあとの一撃
-        if i >= 8: BELLP.bar(b, ring(b, "D6", 4) if i == 8 else "D6:0.25! D6:0.25 D6:0.25 D6:0.25 R:3"); continue
-        BELLP.bar(b, ring(b, tops[i % 4], lv if i % 2 == 0 else lv - 1))
+        if sc_ == "ベル1" and i == 0: BELLP.bar(b, "R:1 D6:3!"); continue                  # 無音（1拍）のあとの一撃
+        if i >= 8: ALARM.bar(b, ring(b, "D6", 4) if i == 8 else "D6:0.25! D6:0.25 R:3.5"); continue
+        ALARM.bar(b, ring(b, tops[i % 4], lv if i % 2 == 0 else lv - 1))
 
 # ---------- 夢: 和音と旋律を2倍に引き延ばす（半分の速さに聞こえる）。高い所の長いレガート ----------
 DM1 = ["3':4", "2':2 1':2", "7:3 5:1", "7:2 1':2", "1':4", "6:2 7:2", "1':4", "6:2 R:2",
@@ -101,7 +105,7 @@ for i, b in enumerate(S.sc("靴")):
     if i >= 22: m = ["1':4!", "1':1 R:3"][i - 22]
     LEADW.bar(b, KA.mel(m, oct=5 if i < 16 else 5))
     t = tones(S.chords[b], "A5", "A6")
-    if i < 22: BELLP.bar(b, " ".join(f"{nm(t[k % len(t)])}:0.25" for k in [0, 1, 2, 1] * 2) + " R:2")
+    if i < 22: BELLP.bar(b, " ".join(f"{nm(t[k % len(t)])}:0.5" for k in [0, 1, 2, 1]) + " R:2")
 BELLP.bar(S.sc("靴")[-1], "A6:0.25! A6:0.25 A6:0.25 A6:0.25 R:3")
 
 # ---------- ベース ----------
@@ -109,7 +113,7 @@ for b in range(S.nb):
     n, i, L, kind = S.scene_of(b)
     if n.startswith("ベル"):
         if n == "ベル1" and i == 0: continue
-        BASS.bar(b, bass_line(S, b, "pulse" if i < 8 else "long")); continue
+        BASS.bar(b, bass_line(S, b, "oct8" if i < 8 else "long")); continue
     if n.startswith("夢"):
         if i < 4: continue
         BASS.bar(b, f"{nm(low(S.chords[b]))}:4" if i % 2 == 0 else "R:4"); continue
@@ -141,12 +145,12 @@ for b in range(S.nb):
     n, i, L, kind = S.scene_of(b)
     last = i == L - 1
     if n.startswith("ベル"):
-        if n == "ベル1" and i == 0: D.set(b, "............X...", "............X...", "................"); continue
+        if n == "ベル1" and i == 0: D.set(b, "....X...........", "....X...........", "................"); continue
         if i >= 8:
             D.set(b, "X" + "." * 15, "X" + "." * 15, "." * 16)
             if i == 8: crash(D, b, "C2"); D.cym(b, "R:4")
             continue
-        put_groove(D, b, ("X...X...X...X...", "....X.......X...", "xxxxxxxxxxxxxxxx"), seed=b)
+        put_groove(D, b, ("X...X...X...X...", "....X.......X...", "x.x.x.x.x.x.x.x."), seed=b)
         if i == 0 or (n == "ベル1" and i == 1): crash(D, b)
         if i == 7: stop(D, b)       # 目覚ましを止める（バン）
         continue

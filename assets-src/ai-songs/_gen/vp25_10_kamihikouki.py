@@ -9,7 +9,7 @@
 from vp25_lib import *
 
 S = Song("10", "kamihikouki", "紙ひこうき選手権（仮）", "The Paper Airplane Championship", 168, 4, "C", "major", "ロック")
-S.kit = "naked"
+S.kit = "jpop"   # 2026-10-25: 切り抜きで naked 6.83 → jpop 7.07
 K = S.key
 OPEN = ["C", "F/C", "G/C", "C", "C", "F/C", "G", "G"]
 STRAIGHT = ["C", "Em/B", "F/A", "G", "C", "Bb", "F", "G"]
@@ -29,7 +29,7 @@ S.scene("休憩", 16, "solo", BREAK)
 S.scene("優勝機", 56, "chorus", WIN + WIN + WIN + ["F", "G", "A", "A"] + WIN2 + WIN2 + WIN2)
 S.scene("空の向こう", 8, "outro", ["D", "G/D", "D", "D", "D", "D", "D", "D"])
 S.extra.update({"tone": "rock", "diGuitar": "emily"})
-S.flags = "--bass bnb-loud " + S.flags
+S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags   # 2026-10-25: 参考の音で 7.07 → 7.62（09 の切り抜き）
 K2 = K.up(2)
 
 ORG = [S.track(f"主役: オルガン{i + 1}", "drawbarOrgan", volume=0.15, pan=[-0.3, 0.3, 0.0, 0.0][i], reverb=0.2, gainDb=4, sustain=1.0,
