@@ -81,18 +81,18 @@ class Silence:
 
 
 # ---------------- 歌の役のシンセ ----------------
-def voice_lead_spec(vol=0.21, pan=0.0, delay=0.75, bright=0.0, patch="popLeadClear"):
+def voice_lead_spec(vol=0.21, pan=0.0, delay=0.75, bright=0.0, patch="picoLeadRound"):
     """歌の役（2026-10-25 人間「リードをもう少しクリアのがいい」「この感じいい」→ 25曲もこれで）: クリアなポップのリード（popLeadClear）。
     うねり・歪み・下の重ねなし。EQ は 3kHz を少しだけ。ピンポンディレイ 10%・プレート 14%、ビブラートは浅く音の後半だけ"""
     fx = [{"type": "filter", "kind": "highpass", "freq": 170, "q": 0.7},
           {"type": "eq", "low": 0, "mid": 1.0 + bright, "midHz": 3000, "high": 0},
-          {"type": "pingpong", "beats": delay, "mix": 0.10, "feedback": 0.2},
-          {"type": "plate", "mix": 0.14}]
+          {"type": "pingpong", "beats": delay, "mix": 0.16, "feedback": 0.3},
+          {"type": "plate", "mix": 0.18}]
     return P(patch=patch, volume=vol, pan=pan, phrase=8, reverb=0.14, noRestrike=True, mono=True, gainDb=3, fx=fx,
              vibrato={"rate": 5.5, "depth": 14, "delay": 0.5}, autoScoop=False, breath=True)
 
 
-def voice_low_spec(vol=0.21, patch="popLeadClear"):
+def voice_low_spec(vol=0.21, patch="picoLeadRound"):
     """1オクターブ下の重ね（ローパス 2kHz、−9dB 相当）"""
     fx = [{"type": "filter", "kind": "highpass", "freq": 120, "q": 0.7},
           {"type": "filter", "kind": "lowpass", "freq": 2000, "q": 0.7},
@@ -138,7 +138,7 @@ class _NoTrack:
 
 class Voice:
     """歌の役（本体＋1オクターブ下の重ね）。v.bar(b, 音の並び) で両方に置く。lo=False で重ねなし"""
-    def __init__(self, song, vol=0.21, delay=0.75, bright=0.0, patch="popLeadClear", low=False):
+    def __init__(self, song, vol=0.21, delay=0.75, bright=0.0, patch="picoLeadRound", low=False):
         self.main = song.track("歌の役（声のシンセ）", "lead", **voice_lead_spec(vol, 0.0, delay, bright, patch))
         # 重ねのパートはいつも作る（台本が V.low に直接書く「こもった歌」に使う）。low=False のときは、歌の役を写して重ねない
         self.double = low
@@ -271,10 +271,31 @@ def season(S, bar, kind, beats=16, vol=0.09, pan=0.0, every=None):
     return t
 
 
+def depth(S):
+    """深み・スケール・頭の中を支配する感じ（2026-10-25 人間「音に深みとスケール、頭の中を支配する感じが欲しい」）。
+    ・左右いっぱいの深いパッド（低めの和音をのばす。小さく）を、止め・ブレイク以外の全場面に
+    ・サビ（chorus）では高いきらめき（C6〜C7 のベル。2小節に1回）
+    ・空間はホールを薄く（--space hall --space-wet 0.15。曲に空間の指定があればそちら）"""
+    if getattr(S, "no_depth", False): return
+    PADD = [S.track(f"深いパッド{i + 1}", "pad", patch="modernPad", volume=0.04, pan=[-0.75, 0.75][i], reverb=0.5) for i in range(2)]
+    SPK = S.track("高いきらめき", "bell", patch="popBell", volume=0.045, pan=0.5, reverb=0.6)
+    for b in range(S.nb):
+        n, i, L, k = S.scene_of(b)
+        if k in ("break",): continue
+        ch = S.chords[b].split("|")[0]
+        w = voice(ch, 55, 2, spread=True)
+        for j in range(2): PADD[j].bar(b, f"{nm(w[j])}:{S.beats}")
+        if k in ("chorus", "drop") and i % 2 == 1:
+            t = tones(ch, "C6", "C7")[:S.beats]
+            SPK.bar(b, " ".join(f"{nm(x)}:1" for x in t))
+    if "--space" not in S.flags: S.flags += " --space hall --space-wet 0.15"
+
+
 def vwrite(S, extra_flags=""):
     """vb25 の名前で書き出す。S.kit が crocell-punch のときもフラグを書く"""
     path = sys.argv[1] if len(sys.argv) > 1 else f"/tmp/vp25/vb25-{S.no}-{S.slug}.json"
     playable(S)
+    depth(S)
     modernize(S)
     kitflag = {"electro": "--drums electro", "naked": "--drums naked", "jpop": "--drums jpop", "crocell-punch": "--drums crocell-punch",
                "crocell": "--drums crocell"}.get(S.kit, "")

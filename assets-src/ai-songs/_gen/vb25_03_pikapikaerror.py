@@ -45,7 +45,8 @@ V = Voice(S, vol=0.22, delay=0.75)
 VOCO_FX = [{"type": "filter", "kind": "highpass", "freq": 200, "q": 0.7},
            {"type": "eq", "low": 0, "mid": 5, "midHz": 800, "high": 0}, {"type": "eq", "low": 0, "mid": 4, "midHz": 1600, "high": -2},
            {"type": "filter", "kind": "lowpass", "freq": 4500, "q": 0.8}, {"type": "plate", "mix": 0.25}]
-VOCO = [S.track(f"ボコーダー風パッド{i + 1}", "pad", patch="polysynth", volume=0.06, pan=0.0, reverb=0.3, sustain=1.2, duck=0.3, fx=VOCO_FX) for i in range(3)]
+VOCO = [S.track(f"ボコーダー風パッド{i + 1}", "pad", patch="polysynth", volume=0.03,  # 2026-10-25: 抜くと 7.00→7.48（点数を下げていた）ので半分に
+ pan=0.0, reverb=0.3, sustain=1.2, duck=0.3, fx=VOCO_FX) for i in range(3)]
 MUF = [S.track(f"こもったパッド{i + 1}（朝の点検）", "pad", patch="polysynth", volume=0.07, pan=0.0, reverb=0.35, sustain=1.5,
                fx=[{"type": "filter", "kind": "lowpass", "freq": 800, "q": 0.9}]) for i in range(3)]
 COIN = S.track("FMベル（自販機の電子音・コイン）", "fmBell", volume=0.1, pan=0.25, reverb=0.35, sustain=0.6, gainDb=1)
