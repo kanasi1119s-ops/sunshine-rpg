@@ -394,7 +394,13 @@ def teto(S, LY, V, transpose=0, level=None, special=None, vib=None, lead_vol=0.1
     """BGM（歌の役なし）か歌の版（テト＋小さなリード）を書き出す。VB_VOCAL=1 で歌の版。
     level: 場面の種類ごとの強さ（−1〜1）。special: 場面の名前ごとの強さ。vib: 種類ごとのビブラートの深さ（セント）"""
     if VOCAL:
-        if V is not None: V.main.spec["volume"] = lead_vol
+        if V is not None:
+            # 2026-10-26 人間「全体的にリードの歪みが強くて歌声が聴きにくい」: 歌の版では、歌の下のリードを小さく・丸くして、
+            #   声の聞こえる帯域（2〜4kHz）を空ける。1オクターブ下の重ねは外す
+            V.main.spec["volume"] = lead_vol * 0.6
+            V.main.spec["fx"] = [f for f in V.main.spec["fx"] if not (f.get("type") == "eq" and f.get("midHz") == 3000)] + \
+                [{"type": "eq", "low": 0, "mid": -4, "midHz": 2800, "high": -3}, {"type": "filter", "kind": "lowpass", "freq": 3800, "q": 0.7}]
+            S.tracks = [t for t in S.tracks if t is not V.low]
     elif V is not None:
         S.tracks = [t for t in S.tracks if t not in (V.main, V.low)]
     vwrite(S)

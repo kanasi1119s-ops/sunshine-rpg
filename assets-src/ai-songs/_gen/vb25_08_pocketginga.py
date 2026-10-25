@@ -47,9 +47,10 @@ V = Voice(S, vol=0.22, delay=0.75, patch="voiceLeadModern", low=True)   # 2026-1
 NY = [S.track(f"アコギ（ナイロン弦）{i + 1}", "guitar", patch="nylonGuitar", volume=0.12, pan=0.35, amp="clean", chorus=0, reverb=0.25,
               humanPitch=0, sustain=1.6, fx=[{"type": "filter", "kind": "highpass", "freq": 110, "q": 0.7}, {"type": "eq", "low": 0, "mid": -2, "midHz": 3200, "high": -2}])
       for i in range(4)]
-GL = [S.track(f"ギター左（{['根音', '5度'][i]}）", "distGuitar", **rock_gtr_spec(0.085, -0.6)) for i in range(2)]
-GR = [S.track(f"ギター右（{['根音', 'オクターブ'][i]}）", "distGuitar", **rock_gtr_spec(0.085, 0.6)) for i in range(2)]
-LG = S.track("リードギター（リフ・ソロ・歌の受け渡し）", "distGuitar", **lead_gtr_spec(0.14, -0.08))
+GL = [S.track(f"ギター左（{['根音', '5度'][i]}）", "distGuitar", **rock_gtr_spec(0.085, -0.6, drive=0.26)) for i in range(2)]
+GR = [S.track(f"ギター右（{['根音', 'オクターブ'][i]}）", "distGuitar", **rock_gtr_spec(0.085, 0.6, drive=0.26)) for i in range(2)]
+LG2 = S.track("リフのギター（サビの下で回る・小さめ）", "distGuitar", **{**lead_gtr_spec(0.085, 0.3), "ampDrive": 0.6})
+LG = S.track("リードギター（リフ・ソロ・歌の受け渡し）", "distGuitar", **{**lead_gtr_spec(0.14, -0.08), "ampDrive": 0.75})   # 2026-10-26 人間「08のギターの音少しだけ歪み抑えよう」: バッキング 0.35→0.26、リード 1.0→0.75
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.21))
 GLK = S.track("グロッケン（星）", "glockenspiel", volume=0.1, pan=0.3, reverb=0.45, sustain=1.6)
 STR = [S.track(f"ストリングス{i + 1}", "strings", **strings_spec(0.085, -0.3)) for i in range(3)]
@@ -61,7 +62,7 @@ FX = S.track("効果音", "pad", patch="fxRiser", volume=0.075, pan=0, reverb=0.
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 # 流れ星を待つ: こもった音（ローパス 800Hz の写しに入れかえる）
 LPF = {"type": "filter", "kind": "lowpass", "freq": 800, "q": 0.8}
-GM = [S.track(f"こもったギター{i + 1}", "distGuitar", **{**rock_gtr_spec(0.085, 0.0), "fx": rock_gtr_spec()["fx"] + [LPF]}) for i in range(2)]
+GM = [S.track(f"こもったギター{i + 1}", "distGuitar", **{**rock_gtr_spec(0.085, 0.0, drive=0.26), "fx": rock_gtr_spec()["fx"] + [LPF]}) for i in range(2)]
 STM = [S.track(f"こもったストリングス{i + 1}", "strings", **{**strings_spec(0.09, 0.3), "fx": [LPF]}) for i in range(3)]
 D = S.drumkit()
 SIL = Silence(S)
@@ -138,6 +139,20 @@ SOLO = ["5:1 1':0.5 2':0.5 3':1 2':0.5 1':0.5", "7:1.5 1':0.5 2':2", "3':0.5 5':
         "5':0.75 3':0.25 2':0.5 7:0.5 5':0.75 3':0.25 2':1", "1':2 3':1 5':1",
         " ".join(["5':0.125"] * 8) + " " + " ".join(["6':0.125"] * 8) + " 5':1 3':1", "2':1 3':1 5':1 6':1", "1'':2 7':1 5':1", "5':4"]
 for i, b in enumerate(S.sc("ギターソロ")): LG.bar(b, K.mel(SOLO[i], oct=3))
+# 2026-10-26 人間「ギターのリフも入れた方が08いいかも」: 前奏のリフの形（8分で上下して、3度で跳ねる）を和音に合わせて動かし、
+#   サビの下（歌より低い G3〜E4 あたり）と、流れ星を待つ後半・帰り道で回す
+def riff_on(ch, last=False):
+    r = low(ch, "F#3"); third = 3 if ("m" in ch.split("/")[0].replace("maj", "")) else 4
+    off = [0, -5, 2, -5, third, 2, 0, -5]
+    ln = [0.5, 0.5, 0.5, 0.5, 0.75, 0.25, 0.5, 0.5]
+    if last: return f"{nm(r)}:0.5 {nm(r - 5)}:0.5 {nm(r + 2)}:0.5 {nm(r - 5)}:0.5 {nm(r + third)}:2"
+    return " ".join(f"{nm(r + o)}:{d}" for o, d in zip(off, ln))
+for name in ("銀河", "銀河2", "流れ星"):
+    for i, b in enumerate(S.sc(name)): LG2.bar(b, riff_on(S.chords[b], last=(i % 8 == 7)))
+for i, b in enumerate(S.sc("流れ星を待つ")):
+    if i >= 4: LG2.bar(b, riff_on(S.chords[b]))
+for i, b in enumerate(S.sc("帰り道")):
+    if i < 8 and i % 4 != 3: LG.bar(b, riff_on(S.chords[b]))
 # 合いの手（Aメロの4小節ごと・サビの8小節ごと）
 for name in ("星を数える", "星を数える2"):
     for i, b in enumerate(S.sc(name)):
@@ -158,6 +173,26 @@ def strum(b, ch, pat, lo="G3", hi="G4"):
     while len(t) < 4: t.append(t[-1] + 12)
     for j in range(4):
         NY[j].bar(b, " ".join(f"{nm(t[j])}:{x}" for x in pat.split()), off=0.025 * j)
+
+
+def mbass(b, style):
+    """歌うベース（E1〜D3）。r＝根音、c1・c2＝根音の上の和音の音、o＝オクターブ、a＝次の根音へ寄る音（半音か全音）"""
+    ch = S.chords[b]; r = low(ch, "E1")
+    nx = low(S.chords[b + 1], "E1") if b + 1 < S.nb else r
+    if nx - r > 6: nx -= 12
+    if r - nx > 6: nx += 12
+    up = [t for t in tones(ch, nm(r + 1), nm(r + 12))]
+    c1 = up[0] if up else r + 4; c2 = up[1] if len(up) > 1 else r + 7
+    o = r + 12 if r + 12 <= 50 else r
+    a = nx - 1 if nx > r else (nx + 1 if nx < r else nx + 2)
+    w = nx - 2 if nx > r else nx + 2
+    P_ = {"walk": [(r, 1, "!"), (c2, 0.5, ""), (o, 0.5, ""), (c1 + 12 if c1 + 12 <= 50 else c1, 1, ""), (w, 0.5, ""), (a, 0.5, "")],
+          "climb": [(r, 0.5, "!"), (r, 0.5, ""), (c1, 0.5, ""), (c2, 0.5, ""), (o, 1, "!"), (c2, 0.5, ""), (a, 0.5, "")],
+          "drive": [(r, 0.5, "!"), (r, 0.5, ""), (o, 0.5, ""), (r, 0.5, ""), (c2, 0.5, "!"), (o, 0.5, ""), (c1 + 12 if c1 + 12 <= 50 else c2, 0.5, ""), (a, 0.5, "")],
+          "run": [(r, 0.5, "!"), (c1, 0.5, ""), (c2, 0.5, ""), (o, 0.5, ""), (c2 + 0, 0.5, ""), (c1, 0.5, ""), (w, 0.5, ""), (a, 0.5, "")],
+          "ride": [(r, 1.5, "!"), (c2, 0.5, ""), (o, 1, ""), (a, 1, "")]}[style]
+    fix = lambda m: m + 12 if m < 28 else (m - 12 if m > 50 else m)   # E1〜D3 に収める
+    return " ".join(f"{nm(fix(m))}:{d}{acc}" for m, d, acc in P_)
 
 
 for b in range(S.nb):
@@ -205,18 +240,18 @@ for b in range(S.nb):
     if n == "流れ星を待つ":
         vv = voice(ch, 67, 3)
         for j in range(3): STM[j].bar(b, f"{nm(vv[j])}:4")
-    # ベース
-    if n == "自転車で": BASS.bar(b, bass_line(S, b, "root8") if i >= 4 else f"{nm(low(ch, 'E1'))}:4")
-    elif n in ("星を数える", "星を数える2"): BASS.bar(b, bass_line(S, b, "root8" if i >= 8 else "half"))
+    # ベース（2026-10-26 人間「08はベースにメロディ入れようか」: 根音から和音の音をたどって、次の和音の根音へ半音・全音で寄っていく歌うベース）
+    if n == "自転車で": BASS.bar(b, mbass(b, "ride") if i >= 4 else f"{nm(low(ch, 'E1'))}:4")
+    elif n in ("星を数える", "星を数える2"): BASS.bar(b, mbass(b, "walk" if i < 8 else "climb"))
     elif n.startswith("夜風"):
         r = low(ch, "E1")
         BASS.bar(b, f"{nm(r)}:1 {nm(r)}:0.6667 {nm(r + 7)}:0.3333 {nm(r)}:1 {nm(r + 12)}:0.6667 {nm(r + 7)}:0.3333" if i < 7 else f"{nm(r)}:2 R:2")
-    elif n in ("銀河", "銀河2", "流れ星"): BASS.bar(b, bass_line(S, b, "oct8"))
-    elif n == "寄り道": BASS.bar(b, bass_line(S, b, "push"))
+    elif n in ("銀河", "銀河2", "流れ星"): BASS.bar(b, mbass(b, "drive" if i % 4 != 3 else "run"))
+    elif n == "寄り道": BASS.bar(b, mbass(b, "run" if i % 2 else "ride"))
     elif n == "花火の燃えかす": BASS.bar(b, bass_line(S, b, "long") if i >= 4 and i < 8 else (bass_line(S, b, "half") if i >= 8 else "R:4"))
-    elif n == "ギターソロ": BASS.bar(b, bass_line(S, b, "root8"))
+    elif n == "ギターソロ": BASS.bar(b, mbass(b, "drive" if i % 2 == 0 else "climb"))
     elif n == "流れ星を待つ": BASS.bar(b, bass_line(S, b, "long" if i < 6 else "root8"))
-    elif n == "帰り道": BASS.bar(b, bass_line(S, b, "half") if i < 8 else (f"{nm(low(ch, 'E1'))}:4" if i == 8 else "R:4"))
+    elif n == "帰り道": BASS.bar(b, mbass(b, "walk") if i < 8 else (f"{nm(low(ch, 'E1'))}:4" if i == 8 else "R:4"))
 
 # 虫の声（空き地・花火の燃えかすの頭・最後）
 for b in S.sc("空き地"): BUG.bar(b, CHIRP)
