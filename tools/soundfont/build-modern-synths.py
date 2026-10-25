@@ -368,6 +368,60 @@ def _(f0, L, n, rnd):
     return out[0] * e, out[1] * e
 
 
+@instr("synth-pop-lead", program=93, keys=(48, 96), step=3, loop=88200, pre=1.2, release=0.15, level=0.75)
+def _(f0, L, n, rnd):
+    """ポップなリード（2026-10-25 人間「ポップな音も欲しい」）: 矩形 50%＋矩形 25%（1オクターブ上を小さく）＋ソー、デチューン ±6 で少しだけ。
+    鳴り始めに明るいアタック（フィルターが 12kHz から 0.08 秒で 5kHz へ）と、1オクターブ上のベルの「チン」を 0.15 秒だけ重ねる。
+    はずむ、かわいく明るい音（Kawaii Future Bass・アイドルポップのリード）"""
+    l1, r1 = unison("sq", f0, L, n, 2, 6, 0.3, rnd)
+    c2 = max(1, round(2 * f0 * L / SR)); hi = osc("sq", c2, L, n, rnd.random(), 0.25) * 0.25
+    c = max(1, round(f0 * L / SR)); saw = osc("saw", c, L, n, rnd.random()) * 0.3
+    t = np.arange(n) / SR
+    bell = np.sin(2 * np.pi * f0 * 4 * t + 1.5 * np.exp(-t / 0.05) * np.sin(2 * np.pi * f0 * 8 * t)) * np.exp(-t / 0.15) * 0.35
+    fc = 5000 + 7000 * np.exp(-t / 0.08)
+    out = []
+    for x in (l1 + hi + saw, r1 + hi + saw):
+        y = svf_lp(x, fc, 0.8) + bell
+        y = peak(y, 2500, 2.5, 0.9); y = peak(y, 400, -2.5, 0.8); y = sat(y, 1.3)
+        out.append(hp(y, 160))
+    e = env_adr(n, 0.003, 0.2, 0.82)
+    return out[0] * e, out[1] * e
+
+
+@instr("synth-pop-keys", program=94, keys=(36, 108), step=3, total=2.4, release=0.4, level=0.7)
+def _(f0, L, n, rnd):
+    """ポップなシンセの鍵盤（明るい FM のエレピ×シンセピアノ）: FM 1:1（深さが 0.3 秒で減る）＋1:14 のきらめきを一瞬＋ソーを小さく。
+    和音の刻み・Aメロの伴奏に"""
+    t = np.arange(n) / SR
+    out = []
+    for side in (0, 1):
+        dt = 1 + (0.001 if side else -0.001)
+        body = np.sin(2 * np.pi * f0 * dt * t + 1.8 * np.exp(-t / 0.3) * np.sin(2 * np.pi * f0 * dt * t))
+        tine = np.sin(2 * np.pi * f0 * 14 * t) * np.exp(-t / 0.02) * 0.25
+        ph = (f0 * dt * t + rnd.random()) % 1; saw = (2 * ph - 1) * 0.12 * np.exp(-t / 0.5)
+        x = (body * np.exp(-t / 1.1) + tine + saw)
+        out.append(hp(lp(x, 10000), 90))
+    a = np.minimum(1, t / 0.002)
+    return out[0] * a, out[1] * a
+
+
+@instr("synth-pop-stab", program=95, keys=(36, 96), step=3, total=0.9, release=0.12, level=0.7)
+def _(f0, L, n, rnd):
+    """ポップな和音のスタブ（ハウスのオルガン×シンセ）: ソー 3 本（±10）＋オルガン風の 2倍・3倍のサイン。0.25 秒で減衰、
+    フィルター 8kHz → 2kHz。裏打ちの和音・キメに"""
+    t = np.arange(n) / SR
+    out = []
+    for side in (0, 1):
+        x = np.zeros(n)
+        for d in (-10, 0, 10):
+            ph = (f0 * cents(d + (2 if side else -2)) * t + rnd.random()) % 1; x += (2 * ph - 1 - blep(ph, f0 / SR)) / 3
+        x += (np.sin(2 * np.pi * f0 * 2 * t) * 0.35 + np.sin(2 * np.pi * f0 * 3 * t) * 0.2)
+        fc = 2000 + 6000 * np.exp(-t / 0.07)
+        out.append(hp(svf_lp(x, fc, 0.9), 150))
+    e = np.minimum(1, t / 0.002) * np.exp(-t / 0.25)
+    return out[0] * e, out[1] * e
+
+
 # ---------------- 書き出し ----------------
 class R:
     def __init__(self, seed): self.r = np.random.default_rng(seed)
