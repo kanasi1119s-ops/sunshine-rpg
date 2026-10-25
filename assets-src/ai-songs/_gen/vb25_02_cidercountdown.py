@@ -57,10 +57,11 @@ PC = [piano(f"ピアノ（和音{i + 1}）", 0.1) for i in range(3)]
 MUF = [S.track(f"こもったピアノ{i + 1}（導火線）", "piano", volume=0.13, pan=-0.12, reverb=0.3,
                fx=[{"type": "filter", "kind": "lowpass", "freq": 800, "q": 0.9}, {"type": "eq", "low": -2, "mid": 0, "midHz": 500, "high": 0}]) for i in range(2)]
 STR = [S.track(f"ストリングス{i + 1}", "strings", patch="stringEnsemble", volume=0.085, pan=0.3, reverb=0.35, sustain=1.6) for i in range(4)]
-GT = [S.track(f"ギター（{['根音', '5度'][i]}・中域の太い乾いた歪み）", "distGuitar", **{**rock_gtr_spec(0.095, 0.0, tone="electro-rock"), "ampGate": 8}) for i in range(2)]
+GT = [S.track(f"ギター（{['根音', '5度'][i]}・中域の太い乾いた歪み）", "distGuitar", **{**rock_gtr_spec(0.074, 0.0, tone="electro-rock"), "ampGate": 8}) for i in range(2)]
 # 2026-10-26 人間「ギターも途切れて前半聞こえるからちょっと聞きづらい」: ノイズゲートを浅くして（25 → 8）音の終わりを切らない
 # 2026-10-25 人間「ドラム、ギターはブンブンサテライツにしよう」→ 中域の太い乾いた歪み（electro-rock）と、拍で刻んだ加工ギターの層（味付け・小さく）
-GTG = S.track("ギター（拍で刻んだ加工の層）", "distGuitar", **rock_gtr_spec(0.035, 0.25, tone="electro-rock-gated"))
+GTG = S.track("ギター（拍で刻んだ加工の層）", "distGuitar", **rock_gtr_spec(0.045, 0.25, tone="electro-rock-gated"))
+# 2026-10-26 人間（02）「ギターのリフ音でかいかな」→ 歪みギター 0.095→0.074。「バックの電子音ほんの少しだけ大きくてもいい」→ 加工の層 0.035→0.045
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.21))
 BUG = S.track("夏の虫の声（パルス波）", "lead", patch="chipPulse12", volume=0.035, pan=0.45, reverb=0.4, mono=True,
               fx=[{"type": "filter", "kind": "highpass", "freq": 1200, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 6000, "q": 0.7}])
@@ -223,11 +224,11 @@ for b in range(S.nb):
     pw = power(S.chords[b], "E2")
     # ビッグビートのギター: 刻んで止める（休みで弾む）。Aメロ・Bメロは短く刺すだけ
     # 2026-10-26: 刻んで止める形は途切れて聞こえたので、Aメロ・Bメロはのばして響かせ、サビも休みを入れずに8分でつなぐ
-    if n in ("下駄の音", "金魚すくい") or n.startswith("坂道"): pat = ["X:2! X:1.5 X:0.5", "X:3! X:1"][i % 2]
-    elif n == "射的とりんご飴" and i < 8: pat = "X:1.5! X:1 X:1.5"
-    elif i == L - 1 and n != "打ち上げ": pat = "X:0.5! X:0.5 X:0.5 X:0.5 X:2!"
-    else: pat = ["X:0.5! X:0.5 X:0.5 X:0.5 X:0.5! X:0.5 X:0.5 X:0.5", "X:1! X:0.5 X:0.5 X:0.5! X:0.5 X:1"][i % 2]
-    if n == "射的とりんご飴" and i >= 8: GTG.bar(b, f"{nm(pw[0] + 12)}:4")   # 拍で刻んだ加工の層は、ソロの後半だけ（前半には置かない）
+    # 2026-10-26 人間「ギター刻むなら刻む、伸ばすなら伸ばすにした方がいいかも」: 場面ごとにどちらか1つに決める
+    #   のばす＝Aメロ・Bメロ・ソロの前半（全音符で響かせる）／刻む＝前奏・間奏・サビ・ソロの後半（8分を休みなく。拍の頭だけ強く）
+    if n in ("下駄の音", "金魚すくい") or n.startswith("坂道") or (n == "射的とりんご飴" and i < 8): pat = "X:4!"
+    else: pat = "X:0.5! X:0.5 X:0.5! X:0.5 X:0.5! X:0.5 X:0.5! X:0.5"
+    if n in ("出発", "屋台の灯り") or (n == "射的とりんご飴" and i >= 8): GTG.bar(b, f"{nm(pw[0] + 12)}:4")   # 拍で刻んだ加工の層（前奏・間奏・ソロの後半）
     for j in range(2): GT[j].bar(b, pat.replace("X", nm(pw[j])))
 
 # ================= ベース =================
