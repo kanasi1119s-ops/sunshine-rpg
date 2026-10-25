@@ -57,10 +57,11 @@ S.scene("もう一段", 24, "chorus", [tr_chord(c, 2) for c in C_CH + ["Amaj7", 
 S.scene("目覚まし", 2, "outro", ["F#", "F#"])
 
 # ================= パート =================
-V = Voice(S, vol=0.22, delay=0.75, bright=0.3, patch="picoLeadRound", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
+V = Voice(S, vol=0.22, delay=0.75, bright=0.0, patch="picoLeadRound", low=True)
+V.main.spec["fx"].insert(1, {"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.7})   # 2026-10-26 人間「４も３と同様にリードの歪をちょっと抑えよう」   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 DIST = S.track("のこぎり波のリード（主旋律の受け渡し・リフ）", "lead", patch="surgeHappySaws", volume=0.11, pan=0.0, reverb=0.12, mono=True, gainDb=1, breath=True,
-               fx=[{"type": "filter", "kind": "highpass", "freq": 180, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 4800, "q": 0.7},
-                   {"type": "eq", "low": 0, "mid": -3, "midHz": 2800, "high": -2}, {"type": "pingpong", "beats": 0.75, "mix": 0.1, "feedback": 0.2}])
+               fx=[{"type": "filter", "kind": "highpass", "freq": 180, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 4300, "q": 0.7},
+                   {"type": "eq", "low": 0, "mid": -4.5, "midHz": 2800, "high": -3}, {"type": "pingpong", "beats": 0.75, "mix": 0.1, "feedback": 0.2}])
 ALARM = S.track("目覚まし（ベル）", "pad", patch="surgeBell1", volume=0.08, pan=0.2, reverb=0.15, mono=True,
                 fx=[{"type": "filter", "kind": "highpass", "freq": 400, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 6000, "q": 0.7}])
 BASS = S.track("太いシンセベース", "bass", **synth_bass_spec("surgeBassModernDirtyFat", vol=0.23, duck=0.3))

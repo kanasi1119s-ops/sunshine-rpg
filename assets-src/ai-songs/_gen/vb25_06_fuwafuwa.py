@@ -31,6 +31,7 @@ D_CH = ["Emaj7", "F#6", "D#m7", "G#m9", "Emaj7", "F#", "D#7", "G#m"]            
 GAP = ["Emaj9", "Emaj9", "C#m9", "C#m9", "Emaj9", "Emaj9", "C#m9", "D#7sus4"]
 UP_CH = ["Emaj7", "F#", "D#m7", "G#m7", "C#m7", "D#m7", "Baug", "D#7"]             # Baug＝増三和音
 
+S.scene("バスドラ2回", 1, "intro", [D_CH[-1]])        # 2026-10-26 人間「バスドラ２回踏んでから曲はいろうか」
 S.scene("短いサビ", 8, "intro", D_CH)
 S.scene("綿あめの朝", 16, "verse", A_CH)
 S.scene("足元ふわふわ", 8, "pre", B_CH)
@@ -46,10 +47,13 @@ S.scene("最後のドロップ", 32, "chorus", D_CH)
 S.scene("風", 8, "outro", ["Emaj9", "Emaj9", "G#m9", "G#m9", "G#m9", "G#m9", "G#m9", "G#m9"])
 
 # ================= パート =================
-V = Voice(S, vol=0.22, delay=0.75, patch="picoLead", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
+V = Voice(S, vol=0.22, delay=0.75, patch="picoLead", low=True)
+# 2026-10-26 人間（06）「リードが歪強いから少し抑えよう」: 歌の役とチョップの高い所のざらつきを削る
+V.main.spec["fx"].insert(1, {"type": "filter", "kind": "lowpass", "freq": 5800, "q": 0.7}); V.main.spec["fx"].insert(2, {"type": "eq", "low": 0, "mid": -2.5, "midHz": 3200, "high": -1})   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 CHOP = S.track("声のチョップ風シンセ", "lead", patch="surgeTropics", volume=0.12, pan=0.12, reverb=0.2, mono=True, gainDb=1,
                fx=[{"type": "filter", "kind": "highpass", "freq": 220, "q": 0.7}, {"type": "eq", "low": 0, "mid": 5, "midHz": 520, "high": 0},
-                   {"type": "eq", "low": 0, "mid": 3.5, "midHz": 1150, "high": -1}, {"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.7},
+                   {"type": "eq", "low": 0, "mid": 3.5, "midHz": 1150, "high": -1}, {"type": "filter", "kind": "lowpass", "freq": 5200, "q": 0.7},
+                   {"type": "eq", "low": 0, "mid": -2, "midHz": 3000, "high": 0},
                    {"type": "pingpong", "beats": 0.5, "mix": 0.16, "feedback": 0.25}])
 BELL = S.track("ベル（主旋律の受け渡し・きらめき）", "pad", patch="surgeKeysBellPiano", volume=0.09, pan=-0.2, reverb=0.45, sustain=1.0)
 SAW = [S.track(f"スーパーソウ{i + 1}", "pad", **pad_spec("surgeChordFreeform", vol=0.055, pan=0.0, duck=0.6, sustain=0.8)) for i in range(4)]
@@ -204,7 +208,8 @@ cym_swell(CYM, S.sc("鳥と並んで")[0], 2, "C4")
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     last = i == L - 1
-    if n == "短いサビ":
+    if n == "バスドラ2回": D.set(b, "........X...X...", "." * 16, "." * 16)   # 3拍目・4拍目にバスドラだけ
+    elif n == "短いサビ":
         vgroove(D, b, "four", seed=b)
         if i == 0: crash(D, b)
         if last: put_fill(D, b, "small")
@@ -253,7 +258,7 @@ S.desc = ("仮: ボカロ曲インスト25曲（作り直し）の06。ダンス
           "恋に落ちて、足もとがふわりと浮く気持ち。ドロップの先取りで始まり、歌とチョップが掛け合う Aメロ、フィルターが閉じていく Bメロ、「ふわり」の呼びかけのドロップ、"
           "ベルの間奏、ハーフのサビ、1拍の無音と足がすくむ静けさ、落ちサビ、フィルターが開いていく上り坂、最後のドロップ、風だけ残す。Surge の音。自作")
 # 季節の音（2026-10-25 人間「季節を感じれる様な音も欲しい」）
-season(S, 0, "そよ風", S.beats * 8, vol=0.08)
+season(S, S.sc("短いサビ")[0], "そよ風", S.beats * 8, vol=0.08)
 season(S, S.nb - 6, "そよ風", S.beats * 6, vol=0.08)
 S.flags += " --space sky --space-wet 0.18"
 teto(S, LY, V, special={"最後のドロップ": 0.55, "雲が切れて": -0.6, "落ちサビ": -0.45, "短いサビ": 0.1}, vib={"build": 30})

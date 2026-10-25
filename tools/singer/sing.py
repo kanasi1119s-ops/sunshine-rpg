@@ -177,6 +177,7 @@ def pitch_curve(events, total, rng, vdef):
         ps, pe, pm = pv["s"], pv["e"], pv["m"]; s, e, m = ev["s"], ev["e"], ev["m"]
         if s - pe > 0.25 or pm == m: continue
         g = min(0.13, 0.45 * (e - s), 0.45 * (pe - ps)) * (1.0 + 0.04 * min(abs(m - pm), 7))
+        g *= float(vdef.get("glide", 1.0))   # 2026-10-26 人間「歌がもっと滑らかだといい」: 音と音の間の高さの移り方をゆっくりにする（1＝そのまま）
         a, b = s - 0.45 * g, s + 0.55 * g
         sel = (t >= a) & (t < b + 0.12)
         x = np.clip((t[sel] - a) / (b - a), 0, 1)
@@ -472,7 +473,8 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
             a = p["start"] - p["pre"]
             nxt = pieces[i + 1] if i + 1 < len(pieces) else None
             joined = nxt is not None and not nxt["head"]
-            if joined: b = nxt["start"] - nxt["pre"] + nxt["ovl"]
+            LG = float(vdef.get("legato", 0.0))   # 2026-10-26: つなぎ目の重ね（秒）を足して、前の音の母音から次の音へなめらかに移る
+            if joined: b = nxt["start"] - nxt["pre"] + nxt["ovl"] + LG
             else: b = p["end"] + 0.12          # フレーズの終わりは、母音をそのまま自然に消す（息の音を足すと「ふっ」と引っかかるため）
             b = max(b, a + 0.05)
             k0 = int(round(a * 1000 / FP)); k1 = int(round(b * 1000 / FP))
@@ -482,9 +484,9 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
             po = {**vdef, "_dyn": float(np.clip(dyn, -1, 1)), "_lyric": p["lyric"], "_params": True}
             pr = render_piece(p["oto"], (k1 - k0) * FP / 1000, ft, vel, sr_out, po)
             n = len(pr["f0"]); env = np.ones(n)
-            fi = max(1, int(round((p["ovl"] if not p["head"] else 0.02) * 1000 / FP)))
+            fi = max(1, int(round(((p["ovl"] + LG) if not p["head"] else 0.02) * 1000 / FP)))
             fi = min(fi, n); env[:fi] = np.sin(np.linspace(0, np.pi / 2, fi + 1)[1:]) ** 2
-            fo = max(1, int(round((nxt["ovl"] if joined else 0.20) * 1000 / FP))); fo = min(fo, n)
+            fo = max(1, int(round(((nxt["ovl"] + LG) if joined else 0.20) * 1000 / FP))); fo = min(fo, n)
             env[n - fo:] *= np.cos(np.linspace(0, np.pi / 2, fo + 1)[:-1]) ** 2
             items.append((k0, pr, env))
             if not joined and vdef.get("tails", False):
@@ -536,7 +538,7 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
                 cx += [s0_ + 0.02, e0_ - 0.02]; cg += [corr, corr]
             tt = np.arange(len(y)) / srp
             gdb = np.interp(tt, cx, cg)
-            k = max(1, int(0.03 * srp)); gdb = np.convolve(np.pad(gdb, k, mode="edge"), np.ones(2 * k + 1) / (2 * k + 1), mode="valid")
+            k = max(1, int(float(vdef.get("gainSmooth", 0.03)) * srp)); gdb = np.convolve(np.pad(gdb, k, mode="edge"), np.ones(2 * k + 1) / (2 * k + 1), mode="valid")
             y = y * 10 ** (gdb / 20)
         if srp != sr_out: y = signal.resample_poly(y, sr_out, srp)
         n0 = int(round(K0 * FP / 1000 * sr_out))

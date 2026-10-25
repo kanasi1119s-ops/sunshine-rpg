@@ -49,7 +49,8 @@ S.scene("木馬が止まる", 5, "outro", [tr_chord(c, 1) for c in ["Bbmaj7", "C
 S.tempo = [{"bar": S.sc("閉園のアナウンス")[0] + 1, "bpm": 93}, {"bar": S.sc("夜明けまで")[0] + 1, "bpm": 124}]
 
 # ================= パート =================
-V = Voice(S, vol=0.22, delay=0.75, patch="popLeadClear", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
+V = Voice(S, vol=0.22, delay=0.75, patch="popLeadClear", low=True)
+V.main.spec["fx"].insert(1, {"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.7})   # 2026-10-26 人間「０５もリードの歪ちょっと抑えよう」   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 SLAP = S.track("スラップベース", "slap", volume=0.2, pan=0.0, duck=0.15,
                fx=[{"type": "eq", "low": -2, "mid": 3, "midHz": 900, "high": 0}, {"type": "eq", "low": 0, "mid": 2.5, "midHz": 2200, "high": 1.5}])
 BR = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.13, pan=0.0, reverb=0.25, gainDb=2,
@@ -61,7 +62,8 @@ MUF = [S.track(f"こもったオルガン{i + 1}（夜明けまで）", "drawbar
 GTR = [S.track(f"カッティングのギター{i + 1}", "guitar", **clean_gtr_spec(0.085, 0.4)) for i in range(2)]
 for g_ in GTR: g_.spec["sustain"] = 0.4
 CAL = S.track("回転木馬のカリオペ", "lead", patch="calliope", volume=0.1, pan=0.15, reverb=0.3, mono=True, breath=True,
-              fx=[{"type": "filter", "kind": "highpass", "freq": 250, "q": 0.7}, {"type": "eq", "low": 0, "mid": 2, "midHz": 1200, "high": -2}])
+              fx=[{"type": "filter", "kind": "highpass", "freq": 250, "q": 0.7}, {"type": "eq", "low": 0, "mid": 2, "midHz": 1200, "high": -2}, {"type": "eq", "low": 0, "mid": -2.5, "midHz": 3200, "high": 0},
+                  {"type": "filter", "kind": "lowpass", "freq": 5500, "q": 0.7}])
 CHIME = S.track("アナウンスのチャイム・きらめき", "glockenspiel", volume=0.08, pan=0.2, reverb=0.45, sustain=1.2)
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.075, pan=0, reverb=0.3)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
