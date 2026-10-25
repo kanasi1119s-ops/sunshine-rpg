@@ -45,7 +45,7 @@ S.scene("鳥の声", 8, "outro", ["Emaj7", "Emaj7", "Amaj7", "Amaj7", "Emaj7", "
 b_run = S.sc("走り出す")[0]
 S.tempo = [{"bar": b_run + 1, "bpm": 176}]
 
-V = Voice(S, vol=0.22, delay=0.75)
+V = Voice(S, vol=0.22, delay=0.75, patch="popLeadClear")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 EPS = dict(volume=0.11, pan=-0.3, reverb=0.3, sustain=1.0, fx=[{"type": "eq", "low": -3, "mid": -1.5, "midHz": 400, "high": -0.5},
                                                                    {"type": "tape", "mix": 0.1}])
 EP = [S.track(f"エレピの和音{i + 1}", "fmEpiano", **EPS) for i in range(3)]

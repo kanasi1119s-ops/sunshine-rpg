@@ -46,7 +46,7 @@ S.scene("6人目", 8, "build", SIX)
 S.scene("6人連弾", 24, "chorus", trs(C_CH + C_CH2 + END8, 3))
 S.scene("ピアノだけ残る", 8, "outro", ["Dbmaj7", "Cm7", "Bbm7", "Ebsus4", "Dbmaj7", "Eb/Db", "Abmaj7", "Abmaj7"])
 
-V = Voice(S, vol=0.22, delay=0.75)
+V = Voice(S, vol=0.22, delay=0.75, patch="voiceLeadModern")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 PL = [S.track("ピアノ1台目（右手）", "piano", **piano_spec(0.12, -0.35, 0.22)), S.track("ピアノ1台目（左手）", "piano", **piano_spec(0.12, -0.35, 0.22))]
 PR = [S.track(f"ピアノ2台目（和音{i + 1}）", "piano", **piano_spec(0.1, 0.35, 0.22)) for i in range(3)]
 PRH = S.track("ピアノ2台目（高いきらめき）", "piano", **piano_spec(0.1, 0.35, 0.22))

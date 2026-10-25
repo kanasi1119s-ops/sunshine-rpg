@@ -40,7 +40,7 @@ S.scene("流れ星", 24, "chorus", C_CH + C_CH2 + STAR3)
 S.scene("帰り道", 12, "outro", OUT)
 S.scene("虫の声と1音", 4, "outro", ["Gadd9"] * 4)
 
-V = Voice(S, vol=0.22, delay=0.75)
+V = Voice(S, vol=0.22, delay=0.75, patch="voiceLeadModern")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 NY = [S.track(f"アコギ（ナイロン弦）{i + 1}", "guitar", patch="nylonGuitar", volume=0.12, pan=0.35, amp="clean", chorus=0, reverb=0.25,
               humanPitch=0, sustain=1.6, fx=[{"type": "filter", "kind": "highpass", "freq": 110, "q": 0.7}, {"type": "eq", "low": 0, "mid": -2, "midHz": 3200, "high": -2}])
       for i in range(4)]

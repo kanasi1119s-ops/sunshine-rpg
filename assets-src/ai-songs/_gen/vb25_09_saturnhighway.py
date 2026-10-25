@@ -44,7 +44,7 @@ S.scene("輪っかを抜ける", 24, "chorus", up2(C_CH + C_CH2 + LAST3))
 S.scene("掛け声3", 8, "interlude", up2(SHOUT))
 S.scene("着陸", 12, "outro", up2(SHOUT + SHOUT[:4]))
 
-V = Voice(S, vol=0.22, delay=0.5)
+V = Voice(S, vol=0.22, delay=0.5, patch="voiceLeadModern")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 GL = [S.track(f"ギター左（{['根音', '5度'][i]}）", "distGuitar", **rock_gtr_spec(0.085, -0.6)) for i in range(2)]
 GR = [S.track(f"ギター右（{['根音', 'オクターブ'][i]}）", "distGuitar", **rock_gtr_spec(0.085, 0.6)) for i in range(2)]
 LG = S.track("リードギター（リフ・ソロ）", "distGuitar", **lead_gtr_spec(0.14, -0.08))

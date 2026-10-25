@@ -44,7 +44,7 @@ S.scene("最後のドロップ", 32, "chorus", D_CH)
 S.scene("風", 8, "outro", ["Emaj9", "Emaj9", "G#m9", "G#m9", "G#m9", "G#m9", "G#m9", "G#m9"])
 
 # ================= パート =================
-V = Voice(S, vol=0.22, delay=0.75)
+V = Voice(S, vol=0.22, delay=0.75, patch="picoLead")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 CHOP = S.track("声のチョップ風シンセ", "lead", patch="chiff", volume=0.12, pan=0.12, reverb=0.2, mono=True, gainDb=1,
                fx=[{"type": "filter", "kind": "highpass", "freq": 220, "q": 0.7}, {"type": "eq", "low": 0, "mid": 5, "midHz": 520, "high": 0},
                    {"type": "eq", "low": 0, "mid": 3.5, "midHz": 1150, "high": -1}, {"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.7},

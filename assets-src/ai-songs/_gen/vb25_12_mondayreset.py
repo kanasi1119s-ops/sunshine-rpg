@@ -43,7 +43,7 @@ S.scene("上書き中", 8, "build", OVER)
 S.scene("リセット", 24, "chorus", up1(C_CH + C_CH2) + TAG)
 S.scene("スキップで出かける", 8, "outro", ["Fmaj7", "G", "Em7", "Am7", "Fmaj7", "G", "C", "C"])
 
-V = Voice(S, vol=0.22, delay=0.75)
+V = Voice(S, vol=0.22, delay=0.75, patch="picoLeadRound")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 PN = [S.track(f"ハウスのピアノ{i + 1}", "piano", **piano_spec(0.11, -0.15, 0.2)) for i in range(4)]
 PNM = S.track("ハウスのピアノ（歌の受け渡し）", "piano", **piano_spec(0.17, -0.15, 0.2))
 BELL = S.track("ベル", "fmBell", volume=0.1, pan=0.35, reverb=0.4, sustain=1.2, gainDb=1)

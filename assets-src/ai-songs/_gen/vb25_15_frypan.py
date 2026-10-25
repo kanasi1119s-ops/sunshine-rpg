@@ -38,7 +38,7 @@ S.scene("全部の鍋", 16, "chorus", LAST)
 S.scene("盛りつけ", 4, "outro", ["Fmaj7", "G", "Em7", "Am7"])
 S.scene("いただきます", 2, "outro", ["Cmaj9", "Cmaj9"])
 
-V = Voice(S, vol=0.22, delay=0.75)
+V = Voice(S, vol=0.22, delay=0.75, patch="picoLead")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 PZS = dict(patch="pizzicato", volume=0.12, pan=0.35, reverb=0.3, sustain=0.6)
 PZ = [S.track(f"ピッツィカート{i + 1}", "strings", **PZS) for i in range(2)]
 PZM = S.track("ピッツィカート（歌の受け渡し）", "strings", **PZS)

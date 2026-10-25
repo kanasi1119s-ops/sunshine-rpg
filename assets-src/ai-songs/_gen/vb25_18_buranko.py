@@ -40,7 +40,7 @@ S.scene("子どものころ", 16, "bridge", CHILD)
 S.scene("もっと高く", 32, "chorus", LAST)
 S.scene("着地", 12, "outro", ["Dmaj7", "E", "C#m7", "F#m7", "Dmaj7", "E", "A", "A", "A", "A", "A", "A"])
 
-V = Voice(S, vol=0.22, delay=1.0)
+V = Voice(S, vol=0.22, delay=1.0, patch="popLeadClear")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 ACS = dict(volume=0.12, pan=-0.3, reverb=0.28, phrase=6, fx=[{"type": "eq", "low": -4, "mid": 2, "midHz": 2000, "high": 0.5}])
 AC = S.track("アコーディオン（旋律）", "accordion", **ACS)
 AC2 = [S.track(f"アコーディオン（和音{i + 1}）", "accordion", **ACS) for i in range(2)]

@@ -34,7 +34,7 @@ S.scene("カラス", 8, "bridge", CROW)
 S.scene("屋根の上の大合唱", 16, "chorus", C_CH + LAST2)
 S.scene("夜明け前", 6, "outro", ["Fm9", "Dbmaj7", "Bbm7", "C7sus4", "Fm9", "Fm9"])
 
-V = Voice(S, vol=0.22, delay=0.75)
+V = Voice(S, vol=0.22, delay=0.75, patch="popLeadClear")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 EPS = dict(volume=0.11, pan=-0.25, reverb=0.25, sustain=0.9, fx=[{"type": "eq", "low": -3, "mid": -1.5, "midHz": 400, "high": 0.5}])
 EP = [S.track(f"エレピの和音{i + 1}", "fmEpiano", **EPS) for i in range(3)]
 EPM = S.track("エレピ（歌の受け渡し）", "fmEpiano", **EPS)

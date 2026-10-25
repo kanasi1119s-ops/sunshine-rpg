@@ -39,7 +39,7 @@ S.scene("サーバーの夜景", 16, "solo", NIGHT)
 S.scene("光回線", 24, "chorus", LAST + LAST2 + LAST)
 S.scene("ログアウト", 8, "outro", ["Amaj7", "E", "F#m", "D", "Amaj7", "E", "Amaj7", "Amaj7"])
 
-V = Voice(S, vol=0.22, delay=0.75)
+V = Voice(S, vol=0.22, delay=0.75, patch="picoLeadRound")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 ARP = S.track("デジタルのアルペジオ", "pad", patch="kawaiiArp", volume=0.075, pan=0.35, reverb=0.25,
               fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.18, "feedback": 0.3}])
 ARP2 = S.track("アルペジオ（ソロ）", "lead", patch="modernPluck", volume=0.13, pan=-0.1, reverb=0.25, mono=True,

@@ -41,7 +41,7 @@ S.scene("新しい言葉のサビ", 20, "chorus", C_CH + ["Fmaj7", "G7", "Cmaj7"
 S.scene("ありがとう", 6, "outro", ["Fmaj7", "G7", "Em7", "Am7", "Fmaj9", "Fmaj9"])
 
 # ================= パート =================
-V = Voice(S, vol=0.22, delay=0.75)
+V = Voice(S, vol=0.22, delay=0.75, patch="picoLeadRound")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 VOCO_FX = [{"type": "filter", "kind": "highpass", "freq": 200, "q": 0.7},
            {"type": "eq", "low": 0, "mid": 5, "midHz": 800, "high": 0}, {"type": "eq", "low": 0, "mid": 4, "midHz": 1600, "high": -2},
            {"type": "filter", "kind": "lowpass", "freq": 4500, "q": 0.8}, {"type": "plate", "mix": 0.25}]

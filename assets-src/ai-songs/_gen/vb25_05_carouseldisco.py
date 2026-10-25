@@ -48,7 +48,7 @@ S.scene("木馬が止まる", 6, "outro", [tr_chord(c, 1) for c in ["Bbmaj7", "C
 S.tempo = [{"bar": S.sc("閉園のアナウンス")[0] + 1, "bpm": 96}, {"bar": S.sc("夜明けまで")[0] + 1, "bpm": 128}]
 
 # ================= パート =================
-V = Voice(S, vol=0.22, delay=0.75)
+V = Voice(S, vol=0.22, delay=0.75, patch="popLeadClear")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 SLAP = S.track("スラップベース", "slap", volume=0.2, pan=0.0, duck=0.15,
                fx=[{"type": "eq", "low": -2, "mid": 3, "midHz": 900, "high": 0}, {"type": "eq", "low": 0, "mid": 2.5, "midHz": 2200, "high": 1.5}])
 BR = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.13, pan=0.0, reverb=0.25, gainDb=2,

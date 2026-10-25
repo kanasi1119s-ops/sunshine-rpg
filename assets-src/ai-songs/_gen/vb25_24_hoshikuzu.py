@@ -59,7 +59,7 @@ S.scene("最後のレジ", 24, "chorus", LAST_CH)
 S.scene("ありがとうございました", 8, "outro", ["Cm7", "D7", "Gm", "Eb7", "Cm7", "D7", "Gm6", "Gm6"])
 SHUF = set(S.sc("入店") + S.sc("夜中の棚") + S.sc("何を買う？") + S.sc("レジが鳴る") + S.sc("店内放送") + S.sc("閉まったドアの前") + S.sc("ありがとうございました"))
 
-V = Voice(S, vol=0.22, delay=0.75)
+V = Voice(S, vol=0.22, delay=0.75, patch="picoLeadRound")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 BR = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.13, pan=0.25, reverb=0.22, gainDb=3, phrase=4,
               fx=[{"type": "eq", "low": -3, "mid": 2, "midHz": 1800, "high": 0.5}]) for i in range(3)]
 BRM = S.track("ブラス（リフ・ソロ）", "brass", patch="brassSection", volume=0.2, pan=0.25, reverb=0.22, gainDb=3, phrase=4,

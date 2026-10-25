@@ -40,7 +40,7 @@ S.scene("最後の決心", 24, "chorus", LAST + LAST2 + LAST)
 S.scene("ゲームの外", 12, "outro", ["Gm", "Eb", "F", "Gm"])
 S.scene("電源オフ", 1, "outro", ["Gm"])
 
-V = Voice(S, vol=0.22, delay=0.75)
+V = Voice(S, vol=0.22, delay=0.75, patch="picoLeadRound")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 CHIP = S.track("チップのリフ（矩形波 25%）", "lead", patch="chipPulse25", volume=0.13, pan=-0.2, reverb=0.12, mono=True, gainDb=1,
                fx=[{"type": "filter", "kind": "highpass", "freq": 250, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 4800, "q": 0.7},
                    {"type": "pingpong", "beats": 0.75, "mix": 0.12, "feedback": 0.2}, {"type": "plate", "mix": 0.14}])   # 2026-10-25: 前奏とソロの点が低い（7.4〜7.6）→ 高い所を丸める

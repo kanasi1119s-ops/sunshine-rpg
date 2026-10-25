@@ -43,7 +43,7 @@ S.scene("明日へ", 8, "bridge", ["F#m7", "G#m7", "Amaj7", "B", "C", "D", "Bbma
 S.scene("文化祭の朝", 32, "chorus", LAST)
 S.scene("チャイムで止める", 4, "outro", ["F"] * 4)
 
-V = Voice(S, vol=0.22, delay=0.75)
+V = Voice(S, vol=0.22, delay=0.75, patch="popLeadClear")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 BR = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.13, pan=-0.3, reverb=0.22, gainDb=2,
               fx=[{"type": "eq", "low": -3, "mid": 2, "midHz": 1600, "high": 0.5}]) for i in range(3)]
 GT = [S.track(f"ギター（{['根音', '5度'][i]}）", "distGuitar", **rock_gtr_spec(0.08, 0.0), double=True) for i in range(2)]

@@ -44,7 +44,7 @@ S.scene("東の空", 8, "build", ["E", "B/D#", "F#", "G#m", "E", "B/D#", "C#m7",
 S.scene("朝日", 24, "chorus", LAST_CH)
 S.scene("朝", 10, "outro", OUT_CH)
 
-V = Voice(S, vol=0.22, delay=0.75)
+V = Voice(S, vol=0.22, delay=0.75, patch="picoLead")   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 PIANO_FX = [{"type": "eq", "low": -3, "mid": -2, "midHz": 400, "high": 1}]
 PN = S.track("ピアノ（右手）", "piano", volume=0.12, pan=-0.15, reverb=0.22, fx=PIANO_FX)
 PNC = [S.track(f"ピアノ（右手の和音{i + 2}）", "piano", volume=0.1, pan=-0.15, reverb=0.22, fx=PIANO_FX) for i in range(2)]
