@@ -156,6 +156,13 @@ class Voice:
         self.low = song.track("歌の役（こもった写し）", "pad", **voice_low_spec(vol, lowp))
 
     def bar(self, b, s, off=0.0, low=True):
+        # 2026-10-26 人間（03）「後半のテトの低い声に合わせてるリードの音がデカくて歪みが強いため、声が聞こえにくい」:
+        #   歌の版では、歌が低い（真ん中の音が E4 より下の）小節は、歌の下のリードを鳴らさない（低い声はリードに埋もれやすい）
+        if _os.environ.get("VB_VOCAL") == "1":
+            ps = [midi(t.split(":")[0].rstrip("~/\\!,")) for t in s.split() if t and t[0] in "ABCDEFG"]
+            if ps and sorted(ps)[len(ps) // 2] < 64:
+                if low and self.double: self.low.bar(b, shift_oct(plain(s), -1), off)
+                return
         self.main.bar(b, sing(s), off)
         if low and self.double: self.low.bar(b, shift_oct(plain(s), -1), off)
 
