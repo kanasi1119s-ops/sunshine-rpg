@@ -120,6 +120,7 @@ import clearPadUrl from "../../assets-src/soundfont/extra/synth-clear-pad.sf3?ur
 import seasonFxUrl from "../../assets-src/soundfont/extra/season-fx.sf3?url";
 import voiceLeadAUrl from "../../assets-src/soundfont/extra/synth-voice-lead-a.sf3?url";
 import voiceLeadUUrl from "../../assets-src/soundfont/extra/synth-voice-lead-u.sf3?url";
+import voiceLeadModernUrl from "../../assets-src/soundfont/extra/synth-voice-lead-modern.sf3?url";
 import pluckGlassUrl from "../../assets-src/soundfont/extra/synth-pluck-glass.sf3?url";
 import chip25Url from "../../assets-src/soundfont/extra/synth-chip-pulse25.sf3?url";
 import chip12Url from "../../assets-src/soundfont/extra/synth-chip-pulse12.sf3?url";
@@ -418,7 +419,7 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   // 2026-10-25 クリアで揺れの少ないシンセ（113・114）と、季節を感じる音・小さな打楽器（105。鍵盤ごとに別の音）
   clearLead: { programs: [113], url: clearLeadUrl }, clearPad: { programs: [114], url: clearPadUrl }, seasonFx: { programs: [105], url: seasonFxUrl },
   // 2026-10-25 声のように聞こえるリード（ボカロらしい歌の役。声ではなくシンセ。母音「あ」54・「う」91）
-  voiceLeadA: { programs: [54], url: voiceLeadAUrl }, voiceLeadU: { programs: [91], url: voiceLeadUUrl },
+  voiceLeadA: { programs: [54], url: voiceLeadAUrl }, voiceLeadU: { programs: [91], url: voiceLeadUUrl }, voiceLeadModern: { programs: [92], url: voiceLeadModernUrl },
   pluckSynth: { programs: [85], url: pluckEdmUrl }, chipPulse25: { programs: [124], url: chip25Url }, chipPulse12: { programs: [125], url: chip12Url }, reeseBass: { programs: [34], url: reeseUrl }, fxElectro: { programs: [126], url: fxElectroUrl },
 };
 function extrasFor(score: Score): string[] {

@@ -337,6 +337,37 @@ def _(f0, L, n, rnd):
     return _voice(f0, L, n, rnd, ((420, 1.0, 70), (1400, 0.45, 110), (2700, 0.25, 170), (3800, 0.1, 250)), breath=0.07, bright=2.0)
 
 
+def _ott(x, amt=0.6):
+    """OTT 風の上向きのコンプ（小さい音を持ち上げて、つぶれた現代的な密度に）。3帯域に分けて、それぞれの包絡で持ち上げる"""
+    bands = [lp(x, 300), hp(lp(x, 3000), 300), hp(x, 3000)]
+    out = np.zeros_like(x)
+    for b in bands:
+        env = np.sqrt(lfilter([0.002], [1, -0.998], b * b) + 1e-9)
+        g = (np.clip(env, 1e-4, None) / (np.max(env) + 1e-9)) ** (-0.5 * amt)
+        out += b * np.minimum(g, 6.0)
+    return out
+
+
+@instr("synth-voice-lead-modern", program=92, keys=(48, 96), step=3, loop=88200, pre=1.2, release=0.15, level=0.75)
+def _(f0, L, n, rnd):
+    """現代のボカロ曲らしい歌の役（2026-10-25 人間「声のリードは昭和っぽい」）: 古い声の響き（細い帯域の山）をやめて、
+    明るいソーのユニゾン（4本 ±8 セント）を主に、母音「あ」の山は広く浅く（+4dB 程度）だけ重ねる。
+    OTT 風の上向きのコンプで密度、10kHz から上の空気（+5dB）、2.8kHz の明るさ。広がりは狭く（歌は真ん中）"""
+    l1, r1 = unison("saw", f0, L, n, 4, 8, 0.25, rnd, side_db=-2)
+    c = max(1, round(f0 * L / SR)); pulse = osc("sq", c, L, n, rnd.random(), 0.25) * 0.3
+    t = np.arange(n) / SR
+    out = []
+    for x in (l1 + pulse, r1 + pulse):
+        y = peak(x, 900, 4.0, 1.2); y = peak(y, 1600, 2.5, 1.4); y = peak(y, 2800, 3.0, 1.0)
+        y = peak(y, 400, -3.0, 0.9)
+        y = sat(y * 0.9, 1.8)
+        y = _ott(y, 0.6)
+        y = lp(y, 15000, 2); y = y + hp(y, 10000, 2) * 0.8          # 空気
+        out.append(hp(y, 160))
+    e = env_adr(n, 0.006, 0.2, 0.92)
+    return out[0] * e, out[1] * e
+
+
 # ---------------- 書き出し ----------------
 class R:
     def __init__(self, seed): self.r = np.random.default_rng(seed)
