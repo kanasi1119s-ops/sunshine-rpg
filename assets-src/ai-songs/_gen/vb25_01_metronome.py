@@ -439,10 +439,12 @@ if VOCAL:
         if n_ == "明日会おう": v0 = 0.55
         if k_ == "pre": dyn_map += [[b0 * S.beats, -0.2], [(b0 + L_) * S.beats - 0.5, 0.25]]
         else: dyn_map += [[b0 * S.beats, v0], [(b0 + L_) * S.beats - 0.5, v0 + (0.1 if k_ == "chorus" else 0.0)]]
-    vib_map = [[b0 * S.beats, {"verse": 12, "pre": 14, "chorus": 20, "bridge": 18, "break": 16}.get(k_, 16)] for n_, b0, L_, k_ in S.scenes]
+    vib_map = [[b0 * S.beats, {"verse": 26, "pre": 28, "chorus": 36, "bridge": 32, "break": 30}.get(k_, 16)] for n_, b0, L_, k_ in S.scenes]
     _js["vocals"] = [{"voice": "teto", "notes": " ".join(toks), "volume": 1.0, "pan": 0, "reverb": 0.2,
-                      "blend": {"voice": "teto-soft", "amount": 0.3}, "formant": 1.075, "breathy": 0.0, "vibrato": 16, "vibratoRate": 5.6, "vibratoMap": vib_map,
-                      "scoop": 0.5, "dynamics": dyn_map, "consonant": 1.4, "air": 3.5}]
+                      "blend": {"voice": "teto-soft", "amount": 0.3}, "formant": 1.075, "breathy": 0.1, "vibrato": 34, "vibratoRate": 5.3, "vibratoMap": vib_map,
+                      "eq": [["peak", 220, 0.8, 3], ["peak", 1600, 1.2, 2], ["peak", 2000, 2.0, 9], ["hshelf", 6500, 0.7, 10]], "deess": -3.0,
+                      "scoop": 0.5, "dynamics": dyn_map, "consonant": 1.4, "air": 4.0}]
+    # 2026-10-25 人間が渡した参考の声（重音テト）を測った差で寄せた（2kHz の抜け +9・6.5kHz より上 +10・息まじり 0.1・ビブラート 34 セント 5.3 回）。人間「この声で曲を作っていこう」
     # 2026-10-25 人間「声を透き通るようにしてアニメ声にもう少しして」→ 声の響きをさらに上げて若く軽く（formant 1.055→1.075）、
     #   やわらかい声を少し戻して透き通らせ（0.18→0.3）、息まじりなし（濁らせない）、高い所の空気を +3.5dB
     # 2026-10-25 人間「伴奏に対して声がでかすぎる」→ 歌は伴奏より +3dB だったのを約 +0.5dB に（vocalLevel 0.75）
