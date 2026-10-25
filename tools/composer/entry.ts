@@ -51,6 +51,7 @@ import bassBnbLoudUrl from "../../assets-src/soundfont/extra/bass-bnb-loud.sf3?u
 import drumsCrocellUrl from "../../assets-src/soundfont/extra/drums-crocell.sf3?url";
 import drumsCrocellAuxUrl from "../../assets-src/soundfont/extra/drums-crocell-aux.sf3?url";
 import drumsCrocellPunchUrl from "../../assets-src/soundfont/extra/drums-crocell-punch.sf3?url";
+import drumsCrocellPunchHeavyUrl from "../../assets-src/soundfont/extra/drums-crocell-punch-heavy.sf3?url";
 import drumsNakedUrl from "../../assets-src/soundfont/extra/drums-naked.sf3?url";
 import drumsNakedPunchUrl from "../../assets-src/soundfont/extra/drums-naked-punch.sf3?url";
 import drumsNakedPunchFsUrl from "../../assets-src/soundfont/extra/drums-naked-punch-fs.sf3?url";
@@ -348,6 +349,7 @@ const DRUM_FONTS: Record<string, { label: string; url: string | null }> = {
   //   crash パートの音名: B3＝チャイナ2・A3＝スプラッシュ2・C3＝クラッシュ3・C#2／G#2＝クラッシュ1／2の止め打ち（docs/sound/drum-keys-crocell.md）
   crocell: { label: "生ドラム CrocellKit（メタル向け。チャイナ2・スプラッシュ2・クラッシュ3＋止め打ち）", url: drumsCrocellUrl },
   "crocell-punch": { label: "生ドラム CrocellKit（乾いてパンチ。部屋の鳴りなし・太鼓ごとに音作り済み）", url: drumsCrocellPunchUrl },
+  "crocell-punch-heavy": { label: "生ドラム CrocellKit（乾いてパンチ・キックのカチッを控えて胴の重さを足した版）", url: drumsCrocellPunchHeavyUrl },
   "crocell-aux": { label: "CrocellKit＋録音の小物", url: drumsCrocellAuxUrl },
   // 2026-10-22 Naked Drums（Wilkinson Audio。SFZ 化 kinwie。CC BY 4.0・クレジット必要）＋Frankensnare（Karoryfer。CC0）のスネア。鍵盤は docs/sound/drum-keys-naked.md
   naked: { label: "生ドラム Naked Drums（素直な混ぜ方。タム5つ・チャイナ2・スプラッシュ2＋止め打ち）", url: drumsNakedUrl },

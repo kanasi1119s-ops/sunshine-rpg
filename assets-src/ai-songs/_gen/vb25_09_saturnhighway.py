@@ -10,9 +10,11 @@
 # ほかの曲とちがう所: いちばん勢いのあるポップパンク。2ビート、オルガン、手拍子、歌とオルガンの言い合い。
 from vb25_lib import *
 
-S = Song("09", "saturnhighway", "ゴーゴー土星ハイウェイ（仮）", "Go-Go Saturn Highway", 208, 4, "A", "major", "ポップパンク（ボカロ）")
+S = Song("09", "saturnhighway", "ゴーゴー土星ハイウェイ（仮）", "Go-Go Saturn Highway", 208, 4, "A", "major", "ラップロック／ニューメタル（ボカロ）")
 S.kit = "crocell-punch"
-S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags
+# 2026-10-26 人間「09の音リンキン・パークに変えようか」: ニューメタル／ラップロックの音（参考の音 bright-nu-wall・ギター nu-metal-wall）。
+#   曲そのもの（旋律・コード・フレーズ）はまねず、音の作り方と編成だけ（重い歪みの壁＋暗いシンセ＋ピアノのフック＋ヒップホップ寄りのドラム＋スクラッチ風の飾り）
+S.flags = "--bass bnb-loud --ref-tone bright-nu-wall " + S.flags
 S.extra.update({"tone": "rock"})
 K = S.key
 K2 = K.up(2)           # 最後のサビ（B長調）
@@ -47,15 +49,19 @@ S.scene("掛け声3", 8, "interlude", up2(SHOUT))
 S.scene("着陸", 12, "outro", up2(SHOUT + SHOUT[:4]))
 
 V = Voice(S, vol=0.22, delay=0.5, patch="voiceLeadModern", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
-GL = [S.track(f"ギター左（{['根音', '5度'][i]}）", "distGuitar", **rock_gtr_spec(0.085, -0.6)) for i in range(2)]
-GR = [S.track(f"ギター右（{['根音', 'オクターブ'][i]}）", "distGuitar", **rock_gtr_spec(0.085, 0.6)) for i in range(2)]
-LG = S.track("リードギター（リフ・ソロ）", "distGuitar", **lead_gtr_spec(0.14, -0.08))
-BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.21))
-ORG = [S.track(f"オルガン{i + 1}", "drawbarOrgan", volume=0.08, pan=0.3, reverb=0.25, sustain=1.0,
-               fx=[{"type": "filter", "kind": "highpass", "freq": 180, "q": 0.7}, {"type": "rotary", "mix": 0.35}]) for i in range(3)]
-ORGM = S.track("オルガン（歌の受け渡し）", "drawbarOrgan", volume=0.13, pan=0.0, reverb=0.25, sustain=1.0, mono=True,
-               fx=[{"type": "filter", "kind": "highpass", "freq": 180, "q": 0.7}, {"type": "rotary", "mix": 0.35}])
-CLAP = S.track("手拍子（カホンのスラップ）", "cajon", volume=0.13, pan=-0.2, reverb=0.3)
+GL = [S.track(f"ギター左（{['根音', '5度'][i]}・ニューメタルの壁）", "distGuitar", **rock_gtr_spec(0.08, -0.6, tone="nu-metal-wall")) for i in range(2)]
+GR = [S.track(f"ギター右（{['根音', 'オクターブ'][i]}・ニューメタルの壁）", "distGuitar", **rock_gtr_spec(0.08, 0.6, tone="nu-metal-wall")) for i in range(2)]
+# 2026-10-26 人間「リフは少し音を小さくしよう」: リフ 0.14→0.10。ソロは別のパート
+LG = S.track("リードギター（リフ）", "distGuitar", **lead_gtr_spec(0.10, -0.08))
+LGS = S.track("リードギター（ソロ）", "distGuitar", **lead_gtr_spec(0.15, 0.0))
+# 2026-10-26 人間「09はベース表に出すようなメロディ入れようか」: ベースを大きく（0.21→0.26）、旋律を弾く
+BASS = S.track("ベース（指弾き・旋律）", "bass", **rock_bass_spec(0.26))
+# オルガンのかわりに、暗いシンセのパッド（和音）とピアノ（フック・歌の受け渡し）
+ORG = [S.track(f"暗いシンセのパッド{i + 1}", "pad", patch="surgePadNewtonWasEvil", volume=0.07, pan=0.0, reverb=0.3, sustain=2.0, duck=0.3,
+               fx=[{"type": "filter", "kind": "highpass", "freq": 200, "q": 0.7}]) for i in range(3)]
+ORGM = S.track("ピアノ（フック・歌の受け渡し）", "piano", volume=0.15, pan=-0.1, reverb=0.3, fx=[{"type": "eq", "low": -3, "mid": -1.5, "midHz": 400, "high": 1}])
+# 手拍子のかわりに、スクラッチ風の飾り（ギターのピックで弦をこする音を短く）
+CLAP = S.track("スクラッチ風の飾り（ピックスクレイプ）", "guitar", patch="guitarFx", volume=0.07, pan=0.25, amp="clean", chorus=0, reverb=0.15)
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.075, pan=0, reverb=0.3)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 D = S.drumkit()
@@ -72,12 +78,12 @@ VERSE = ["R:1 1:0.5 1:0.5 3:0.5 1:0.5 5,:1", "7,:1 3:1.5 R:1.5",
          "R:1 6:0.5 6:0.5 5:0.5 4:0.5 6:1", "5:1 2:1.5 R:1.5",
          "R:1 3:0.5 4:0.5 5:0.5 6:0.5 5:1", "3:2 R:2",
          "R:1 4:0.5 3:0.5 2:0.5 1:0.5 2:1", "5,:1 7,:1.5 R:1.5"]
-V1 = "めんきょとりたて/ちちのくるまで/よなかのはいうぇい/ふたりではしる/そつぎょうしたら/ばらばらだねと/わらうきみの/よこがおみてた"
-V2 = "らじおのおとを/おおきくしたら/まどからよかぜが/ふきこんでくる/みらいのことは/まだわからない/いまはただね/このみちをいく"
+V1 = "めんきょとりたて/ちちのくるまで/よなかのはいうぇい/ふたりではしる/さくらがさけば/ちがうほしだと/わらうきみの/よこがおみてた"
+V2 = "らじおのおとを/おおきくしたら/まどからよかぜが/ふきこんでくる/みらいのちずは/まだしろいまま/いまはただね/このみちをいく"
 BM = ["R:0.5 4:0.5 4:0.5 6:0.5 1':1 6:1", "5:2 R:2", "R:0.5 6:0.5 6:0.5 7:0.5 1':1 7:1", "5:2 R:2",
       "R:0.5 6:0.5 6:0.5 6:0.5 1':1 2':1", "1':1 7:1.5 R:1.5", "R:0.5 6:0.5 1':0.5 2':0.5 3':1 2':1", "7:2 R:2"]
 P1 = "あしたのこと/いまはいいよ/あくせるふんで/はしりだそう"
-P2 = "ふあんなんて/わらいとばせ/こえをあわせて/うたおうよね"
+P2 = "くもりぼしも/わらいとばせ/こえをあわせて/うたおうよね"
 CH1 = ["R:0.5 1':0.5 1':0.5 1':0.5 R:0.5 6:0.5 1':1", "R:0.5 2':0.5 2':0.5 2':0.5 R:0.5 7:0.5 5:1",
        "R:0.5 3:0.5 5:0.5 1':0.5 7:1 5:1", "6:1.5 5:0.5 6:2",
        "R:0.5 1':0.5 1':0.5 1':0.5 R:0.5 6:0.5 1':1", "R:0.5 2':0.5 2':0.5 2':0.5 3':1 2':1",
@@ -89,16 +95,16 @@ CH2 = CH1[:6] + ["1':0.5 2':0.5 1':0.5 6:0.5 5:1.5 R:0.5", "5:2 3:1 5:1"]
 CH2b = CH1b[:4] + ["2':1 1':0.5 6:0.5 2':1 3':1", "3':1 2':1 7:1.5 R:0.5", "6:1 1':1 2':1 3':1", "1':2 R:2"]
 LASTX = ["R:0.5 1':0.5 1':0.5 1':0.5 2':1 1':1", "R:0.5 2':0.5 2':0.5 2':0.5 1':1 7:1", "6:1 1':1 2':2", "b7:1 1':1 2':2",
          "R:0.5 1':0.5 1':0.5 1':0.5 R:0.5 6:0.5 1':1", "2':1 1':1 7:1 5:1", "1':4", "R:4"]
-C1 = "どこまでも/いけるよね/どせいのわっかまで/とばしてく/ごーごーはいうぇいよるへ/ふあんだって/のせてゆく/ちずにないみちへ/ふみだしていこう/いますぐ"
-C2 = "どこまでも/いけるよね/よあけのそらまで/とばしてく/ごーごーはいうぇいだよ/いこう/ふあんだって/のせてゆく/ちずにないみちへ/ふみだしていこう/このみちを"
-CL = "どこまでも/いけるよね/どせいのわっかまで/とばしてく/ごーごーはいうぇいよるへ/ふあんだって/のせてゆく/ちずにないみちへ/ふみだしていこう/いますぐ/どこまでも/いけるんだあさひのなか/ごーごーはいうぇいへと"
+C1 = "どこまでも/いけるよね/どせいのわっかまで/とばしてく/ごーごーはいうぇいよるへ/くもりぼし/のせてゆく/ちずにないみちへ/ふみだしていこう/いますぐ"
+C2 = "どこまでも/いけるよね/よあけのそらまで/とばしてく/ごーごーはいうぇいだよ/いこう/くもりぼし/のせてゆく/ちずにないみちへ/ふみだしていこう/このみちを"
+CL = "どこまでも/いけるよね/どせいのわっかまで/とばしてく/ごーごーはいうぇいよるへ/くもりぼし/のせてゆく/ちずにないみちへ/ふみだしていこう/いますぐ/どこまでも/いけるんだあさひのなか/ごーごーはいうぇいへと"
 SH = ["1':0.5 R:0.5 1':0.5 R:0.5 5:0.5 6:0.5 1':1", "b7:0.5 R:0.5 b7:0.5 R:0.5 4:0.5 5:0.5 b7:1",
       "6:0.5 R:0.5 6:0.5 R:0.5 4:0.5 2:0.5 4:1", "5:2 R:2",
       "1':0.5 R:0.5 1':0.5 R:0.5 2':0.5 1':0.5 5:1", "b7:0.5 R:0.5 b7:0.5 R:0.5 2':0.5 1':0.5 b7:1",
       "6:0.5 R:0.5 1':0.5 R:0.5 2':1 1':1", "7:2 R:2"]
 FL = ["R:2 3:1 5:1", "6:3 R:1", "5:2 3:1 1:1", "2:3 R:1", "4:1 5:1 6:1 1':1", "7:2 5:1 R:1", "6:1 5:1 4:1 6:1", "5:3 R:1",
       "6:1 1':1 3':2", "2':2 1':1 R:1", "6:1 1':1 2':1 3':1", "3':3 R:1", "2':1 1':1 6:1 4:1", "5:2 7:1 R:1", "1':1 2':1 3':2", "2':3 R:1"]
-FLV = "ほしが/ちかいね/このよるがね/おわらなきゃ/いいのにな/でもあした/ぼくらはまた/すすむよ"
+FLV = "ほしが/ちかいね/このよるがね/とまるなら/いいのにな/でもあした/ぼくらはまた/ちらばる"
 RE = ["4:1 6:1 1':2", "7:1 5:1 7:1 R:1", "6:1 1':1 3':2", "1':3 R:1", "2':1 1':1 6:1 4:1", "5:2 7:1 R:1", "6:1 1':1 2':1 3':1", "2':2 R:2"]
 REV = "なんどでもね/ここから/ちずのそとへ/とびだそう"
 LAND = ["5:2 3:2", "2:3 R:1", "1:2 3:1 5:1", "5:3 R:1", "1':2 7:1 5:1", "b7:3 R:1", "6:1 4:1 6:1 1':1", "2':3 R:1",
@@ -146,7 +152,27 @@ SOLO = ["5:0.5 1':0.5 3':0.5 5':0.5 3':1 1':1", "3':0.5 5':0.5 7':0.5 5':0.5 3':
         "1':0.25 2':0.25 3':0.25 5':0.25 3':0.25 2':0.25 1':0.5 5:0.5 1':0.5 3':1", "5':1.5 3':0.5 5':1 7':1", "1'':2 6':1 4':1", "b6':1 4':1 1':1 7:1",
         "5':0.5 5':0.5 6':0.5 5':0.5 3':0.5 5':0.5 1'':1", "7':0.5 7':0.5 1'':0.5 7':0.5 5':0.5 3':0.5 5':1", "6':0.5 1'':0.5 6':0.5 4':0.5 1':0.5 4':0.5 6':1", "4':2 b3':1 1':1",
         " ".join(["1'':0.125"] * 8) + " " + " ".join(["7':0.125"] * 8) + " 5':1 3':1", "3':1 5':1 7':1 1'':1", "6':1 1'':1 6':1 5':1", "5':4"]
-for i, b in enumerate(S.sc("ギターソロ")): LG.bar(b, K.mel(SOLO[i], oct=3))
+for i, b in enumerate(S.sc("ギターソロ")): LGS.bar(b, K.mel(SOLO[i], oct=3))
+
+def mbass(b, style):
+    """表に出る歌うベース（E1〜D3）。r＝根音、c1・c2＝根音の上の和音の音、o＝オクターブ、a＝次の根音へ寄る音"""
+    ch = S.chords[b]; r = low(ch, "E1")
+    nx = low(S.chords[b + 1], "E1") if b + 1 < S.nb else r
+    if nx - r > 6: nx -= 12
+    if r - nx > 6: nx += 12
+    up = tones(ch, nm(r + 1), nm(r + 12))
+    c1 = up[0] if up else r + 4; c2 = up[1] if len(up) > 1 else r + 7
+    o = r + 12
+    a = nx - 1 if nx > r else (nx + 1 if nx < r else nx + 2)
+    w = nx - 2 if nx > r else nx + 2
+    P_ = {"walk": [(r, 1, "!"), (c2, 0.5, ""), (o, 0.5, ""), (c1 + 12, 1, ""), (w, 0.5, ""), (a, 0.5, "")],
+          "climb": [(r, 0.5, "!"), (r, 0.5, ""), (c1, 0.5, ""), (c2, 0.5, ""), (o, 1, "!"), (c2, 0.5, ""), (a, 0.5, "")],
+          "drive": [(r, 0.5, "!"), (r, 0.5, ""), (o, 0.5, ""), (r, 0.5, ""), (c2, 0.5, "!"), (o, 0.5, ""), (c1 + 12, 0.5, ""), (a, 0.5, "")],
+          "run": [(r, 0.5, "!"), (c1, 0.5, ""), (c2, 0.5, ""), (o, 0.5, ""), (c2 + 12, 0.5, ""), (o, 0.5, ""), (w, 0.5, ""), (a, 0.5, "")],
+          "ride": [(r, 1.5, "!"), (c2, 0.5, ""), (o, 1, ""), (a, 1, "")]}[style]
+    fix = lambda m: m + 12 if m < 30 else (m - 12 if m > 52 else m)   # 書き出しで 7半音下がるので、B0 より下に行かないように
+    return " ".join(f"{nm(fix(m))}:{d}{acc}" for m, d, acc in P_)
+
 
 # ================= 伴奏 =================
 for b in range(S.nb):
@@ -156,16 +182,17 @@ for b in range(S.nb):
     v = voice(ch, 64, 3)
     # 歪みのギター（パワーコード。ポップパンクの8分）
     gpat = None
-    if n in ("発射", "無重力"): gpat = " ".join("X:0.5" + ("!" if j % 2 == 0 else "") for j in range(8))
-    elif n.startswith("大気圏"): gpat = "X:1! R:1 X:1! R:1" if i < 8 else "X:1.5! X:0.5 X:1 X:1"
-    elif n.startswith("加速"): gpat = ("X:0.5! X:0.5 " * 4).strip() if i < 7 else "X:2! R:2"
-    elif n in ("輪っか", "輪っかを抜ける"): gpat = " ".join("X:0.5" + ("!" if j % 2 == 0 else "") for j in range(8))
-    elif n == "輪っか2": gpat = "X:2! X:1.5 X:0.5"                       # Half feel: のばす和音
-    elif n.startswith("掛け声") or (n == "着陸" and i >= 8): gpat = "X:0.5! R:0.5 X:0.5! R:0.5 X:0.5 X:0.5 X:1"
+    # ニューメタルの壁: Aメロの前半はギターを休み（シンセ・ピアノ・ベース・ドラムだけ）、後半から重い和音。サビは大きくのばす壁
+    if n in ("発射", "無重力"): gpat = "X:1.5! X:1 X:1.5" if not (n == "無重力" and i >= 8) else None
+    elif n.startswith("大気圏"): gpat = None if i < 8 else "X:2! X:2"
+    elif n.startswith("加速"): gpat = "X:4!" if i < 7 else "X:2! R:2"
+    elif n in ("輪っか", "輪っかを抜ける"): gpat = "X:1.5! X:1 X:1.5"
+    elif n == "輪っか2": gpat = "X:4!"                                   # Half feel: のばす壁
+    elif n.startswith("掛け声") or (n == "着陸" and i >= 8): gpat = "X:1.5! X:1 X:1.5"
     elif n == "ただよう" and i >= 8: gpat = "X:4!"
-    elif n == "ギターソロ": gpat = "X:1.5! X:1 X:1.5"
-    elif n == "再突入": gpat = "X:2! X:2" if i < 4 else ("X:0.5 " * 8).strip()
-    elif n == "着陸": gpat = " ".join("X:0.5" + ("!" if j % 2 == 0 else "") for j in range(8))
+    elif n == "ギターソロ": gpat = "X:2! X:2"
+    elif n == "再突入": gpat = "X:4!" if i < 4 else "X:2! X:2"
+    elif n == "着陸": gpat = "X:1.5! X:1 X:1.5"
     if n == "着陸" and i == L - 1: gpat = "X:1! R:3"
     if gpat:
         for j in range(2):
@@ -179,28 +206,28 @@ for b in range(S.nb):
     elif n == "無重力": opat = "X:4" if i < 8 else None
     elif n == "ただよう": opat = "X:4"
     elif n == "再突入": opat = "X:4"
+    if n.startswith("大気圏"): opat = "X:4"                        # Aメロは暗いパッドをのばす
     if opat:
-        if n.startswith("大気圏2") and i < 8: opat = None          # オルガンが歌を受け取る所は和音を休む
+        if n.startswith("大気圏2") and i < 8 and not VOCAL: opat = None     # BGM: ピアノが歌を受け取る所は和音を休む
     if opat:
         for j in range(3): ORG[j].bar(b, opat.replace("X", nm(v[j])))
     # ベース（根音に沿わせる。サビは8分のオクターブ）
     r = low(ch, "E1")
     if n == "秒読み": BASS.bar(b, f"{nm(r)}:4" if i == 3 else "R:4")
-    elif n in ("発射", "無重力"): BASS.bar(b, bass_line(S, b, "root8"))
-    elif n.startswith("大気圏"): BASS.bar(b, bass_line(S, b, "push" if i < 8 else "root8"))
+    elif n in ("発射", "無重力"): BASS.bar(b, mbass(b, "run" if i % 2 else "drive"))
+    elif n.startswith("大気圏"): BASS.bar(b, mbass(b, "walk" if i % 2 == 0 else "climb"))
     elif n.startswith("加速"): BASS.bar(b, bass_line(S, b, "root8") if i < 7 else f"{nm(r)}:2 R:2")
-    elif n in ("輪っか", "輪っかを抜ける"): BASS.bar(b, bass_line(S, b, "oct8"))
-    elif n == "輪っか2": BASS.bar(b, bass_line(S, b, "half"))
+    elif n in ("輪っか", "輪っかを抜ける"): BASS.bar(b, mbass(b, "drive" if i % 4 != 3 else "run"))
+    elif n == "輪っか2": BASS.bar(b, mbass(b, "ride"))
     elif n.startswith("掛け声"): BASS.bar(b, f"{nm(r)}:0.5 R:0.5 {nm(r)}:0.5 R:0.5 {nm(r)}:0.5 {nm(r)}:0.5 {nm(r + 12)}:1")
     elif n == "ただよう": BASS.bar(b, bass_line(S, b, "long") if i < 8 else bass_line(S, b, "half"))
-    elif n == "ギターソロ": BASS.bar(b, bass_line(S, b, "root8"))
+    elif n == "ギターソロ": BASS.bar(b, mbass(b, "climb" if i % 2 else "walk"))
     elif n == "再突入": BASS.bar(b, bass_line(S, b, "long" if i < 4 else "root8"))
     elif n == "着陸": BASS.bar(b, bass_line(S, b, "root8") if i < L - 1 else f"{nm(r)}:1 R:3")
-    # 手拍子（2拍・4拍。掛け声の所は細かく）
-    if n.startswith("掛け声"): CLAP.bar(b, "R:1 G3:1 R:1 F3:0.5 E3:0.5" if i % 2 else "R:1 G3:1 R:1 G3:0.5 F3:0.5")
-    elif n in ("輪っか", "輪っかを抜ける") and i % 8 >= 4: CLAP.bar(b, "R:1 G3:1 R:1 G3:1")
-    elif n == "発射" and i >= 4: CLAP.bar(b, "R:1 G3:1 R:1 G3:1")
-    elif n == "秒読み" and i == 3: CLAP.bar(b, "R:2 E3:0.5 F3:0.5 G3:0.5 G3:0.5")
+    # スクラッチ風の飾り（ピックスクレイプの短い音を、区切りの手前と掛け声の裏に）
+    if n.startswith("掛け声") and i % 2 == 1: CLAP.bar(b, "R:2.5 D2:0.25 D#2:0.25 R:0.5 D2:0.5")
+    elif n.startswith("大気圏") and i % 4 == 3: CLAP.bar(b, "R:3 D2:0.25 R:0.25 D#2:0.5")
+    elif n == "秒読み" and i == 3: CLAP.bar(b, "R:2 C2:2")
 
 riser(FX, S.sc("輪っか")[0], 4, "C4"); riser(FX, S.sc("輪っかを抜ける")[0], 16, "D4")
 FX.bar(S.sc("ただよう")[0], "G4:4")                         # 宇宙に出た「ドーン」（サブドロップ）
@@ -223,7 +250,8 @@ for b in range(S.nb):
         if n == "無重力" and i >= 4: ride8(b, "C2" if i == 4 else "D2")
         if last: put_fill(D, b, "tomdown")
     elif n.startswith("大気圏"):
-        vgroove(D, b, "beat8" if i < 8 else "vrock2", ghosts=0.4, seed=b)
+        # ヒップホップ寄りの Half feel（キックがはねる・スネアは3拍目）。後半は重く
+        vgroove(D, b, "halfdrive" if i >= 8 else "half", ghosts=0.45, seed=b, k="X.....X...X..X.." if i < 8 else None)
         if i == 0: crash(D, b)
         if i == 7: put_fill(D, b, "small")
         if last: put_fill(D, b, "snare16")
@@ -232,8 +260,8 @@ for b in range(S.nb):
         if i == 4: crash(D, b, "G2")
         if i == 6: put_fill(D, b, "build")
         if last: halt(D, b, 1); D.cym(b, "C2:1")
-    elif n == "輪っか":                            # 1回目: 8ビート
-        vgroove(D, b, "beat8", ghosts=0.3, seed=b)
+    elif n == "輪っか":                            # 1回目: 重い8ビート
+        vgroove(D, b, "vrock2", ghosts=0.3, seed=b)
         if i % 8 == 0: crash(D, b, "C2" if i == 0 else "G2")
         if i % 8 == 7: put_fill(D, b, "snare16" if i == 7 else "tomdown")
     elif n == "輪っか2":                           # 2回目: Half feel（サビごとにリズムを入れかえる）
@@ -260,8 +288,8 @@ for b in range(S.nb):
         if i >= 4: D.set(b, "X...X...X...X...", "....X.......X...", "xxxxxxxxxxxxxxxx")
         if i == 6: put_fill(D, b, "build")
         if last: D.set(b, "X...X...X.......", "xxxxXXXXXXXX....", "." * 16)
-    elif n == "輪っかを抜ける":                     # 最後: 2ビート（ポップパンク）
-        vgroove(D, b, "punk", ghosts=0.3, seed=b)
+    elif n == "輪っかを抜ける":                     # 最後: 重い4分のキック（壁）
+        vgroove(D, b, "vrock", ghosts=0.3, seed=b)
         if i % 8 == 0: crash(D, b, "C2" if i % 16 == 0 else "G2")
         if 8 <= i < 16: ride8(b, "D2")
         if i % 8 == 7 and not last: put_fill(D, b, "snare16" if i % 16 == 7 else "tomdown")
@@ -279,7 +307,7 @@ SIL.add(S.sc("着陸")[-1], 1, 4)                    # 急に止める
 SIL.apply()
 
 S.fade_out = 0
-S.desc = ("仮: ボカロ曲インスト25曲（作り直し）の09。ポップパンク。D長調・208（最後のサビは E長調 +2）。免許を取りたての友だちと夜中のハイウェイを走り、将来の不安を笑い飛ばす。"
+S.desc = ("仮: ボカロ曲インスト25曲（作り直し）の09。ラップロック／ニューメタル（重い歪みの壁・暗いシンセ・ピアノ・歌うベース）。D長調・208（最後のサビは E長調 +2）。免許を取りたての友だちと夜中のハイウェイを走り、将来の不安を笑い飛ばす。"
           "秒読みで始まり、8分で語る Aメロ、止めのある Bメロ、休みで区切る呼びかけのサビ、歌とオルガンの掛け声、Half feel の2サビ、星が近い Cメロ、ギターソロ、+2 の最後のサビ、夜明けに急に止める。自作")
 S.no_depth = True
 teto(S, LY, V, transpose=-7, special={"輪っかを抜ける": 0.55, "ただよう": -0.45, "掛け声": 0.3, "掛け声2": 0.3, "掛け声3": 0.5, "着陸": -0.1})

@@ -1,3 +1,4 @@
+import random as _random
 # ボカロ曲インスト25曲（作り直し・vb25）の部品（2026-10-25）。
 # 表は docs/sound/vp25b-plan.md、依頼文は docs/sound/vocaloid-inst-prompt.md、学んだ型は docs/sound/vocaloid-study.md。
 # vp25_lib（場面・度数・ドラムの型）を土台に、ボカロ曲のための部品を足す:
@@ -298,14 +299,49 @@ def depth(S):
     if "--space" not in S.flags: S.flags += " --space hall --space-wet 0.15"
 
 
+def spice(S):
+    """2026-10-26 人間「ドラム全体的にもう少し遊びと言うかアクセントあってもいいかも。単調な部分が多すぎる。単調の方がいい部分もあるけどね」:
+    同じ形の小節が続く所だけ、続いた数に合わせて少しずつ遊びを足す（1小節目はそのまま＝単調のよさを残す）。
+    Aメロ（verse）・静かな所（break・bridge・outro）は控えめ（4小節に1回の開いたハイハットだけ）。サビ・間奏・ソロ・Bメロは、
+    キックの食い（4拍目の裏）・裏拍のハイハットのアクセント・スネアのゴースト・2拍の短いフィルを、ずらしながら入れる"""
+    D = getattr(S, "drums", None)
+    if D is None or D.n != 16: return
+    rng = _random.Random(int(S.no) * 7 + 3); n = 0; run = 0
+    for b in range(1, S.nb):
+        sk = lambda g: "".join(c if c in "XO" else "." for c in g)   # 強い打ちだけの骨組み（ゴーストの散らし方のちがいは同じとみなす）
+        same = sk(D.K[b]) == sk(D.K[b - 1]) and sk(D.S[b]) == sk(D.S[b - 1]) and (D.K[b] + D.S[b]).strip(".") != "" \
+            and D.H[b].strip(".") != "" and b - 1 >= 0
+        run = run + 1 if same else 0
+        if not same: continue
+        try: name, i, L, kind = S.scene_of(b)
+        except Exception: continue
+        k, sn, h = list(D.K[b]), list(D.S[b]), list(D.H[b])
+        calm = kind in ("verse", "break", "bridge", "outro", "intro")
+        if run % 4 == 3 and h[14] in "xX" and k[14] == ".": h[14] = "o"; n += 1                      # 4小節目の終わりに開いたハイハット
+        if not calm:
+            if run % 2 == 1 and k[14] == "." and sn[14] == "." and k[12] == ".": k[14] = "x"; n += 1     # 4拍目の裏で次の小節へ食う
+            if run % 4 == 2:
+                for q in (2, 6, 10, 14):
+                    if h[q] == "x": h[q] = "X"                                                       # 裏拍のアクセントで前へ押す
+                if sn[7] == "." and k[7] == ".": sn[7] = "x"; n += 1                                    # スネアのゴースト
+            if run % 8 == 7 and i != L - 1:
+                fill = rng.choice(["..x.xXxX", "x.x.X.X.", ".xx.XxXX"])                               # 小さな2拍のフィル（3拍目〜）
+                for q, c in enumerate(fill):
+                    if c != ".": sn[8 + q] = c; h[8 + q] = "." if c in "Xx" else h[8 + q]
+                n += 1
+        D.K[b], D.S[b], D.H[b] = "".join(k), "".join(sn), "".join(h)
+    if n: print(f"  ドラムに遊びを足した: {n}か所")
+
+
 def vwrite(S, extra_flags=""):
     """vb25 の名前で書き出す。S.kit が crocell-punch のときもフラグを書く"""
     path = sys.argv[1] if len(sys.argv) > 1 else f"/tmp/vp25/vb25-{S.no}-{S.slug}.json"
+    spice(S)
     playable(S)
     depth(S)
     modernize(S)
     kitflag = {"electro": "--drums electro", "naked": "--drums naked", "jpop": "--drums jpop", "crocell-punch": "--drums crocell-punch",
-               "crocell": "--drums crocell"}.get(S.kit, "")
+               "crocell": "--drums crocell", "crocell-punch-heavy": "--drums crocell-punch-heavy"}.get(S.kit, "")
     kit0 = S.kit
     if S.kit not in ("electro", "naked", "jpop"): S.kit = "jpop"   # 太鼓の設定（音量など）は jpop と同じ扱い
     S.write(path)

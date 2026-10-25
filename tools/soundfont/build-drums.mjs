@@ -200,6 +200,29 @@ const PROFILES = {
     attack: { kick: 4, snare: 3, tom: 3 },
     clip: { kick: 2.5, snare: 2, tom: 2 },
     gain: { snare: 16 } },
+  // 2026-10-26 人間「07 08 10、トリガーの音がバスドラの重さを掻き消しちゃってる。トリガー無くさなくていいんだけどね」:
+  //   crocell-punch から、キックの「カチッ」（合成のクリック 2.5→0.8dB・ビーター側のマイク 1.5→1.15 倍・3.5k／7.5k の持ち上げ）を控え、胴（58〜100Hz）を足した版
+  "crocell-punch-heavy": { kit: "crocell", out: "drums-crocell-punch-heavy", label: "CrocellKit（乾いてパンチ・キックの重さ）", overhead: 0.3, ohKind: { kick: 0.12, snare: 0.3, tom: 0.25, hat: 0.5, cym: 0.85 }, ohc: 0, amb: 0,
+    kick: 1.35, snare: 0.95, tom: 0.85, hat: 0.9, cym: 0.75, sec: 1, fade: 0.6,
+    eq: "highpass=f=28",
+    snareEq: "highpass=f=90,equalizer=f=190:t=q:w=1:g=3,equalizer=f=650:t=q:w=1.3:g=-7,equalizer=f=5500:t=q:w=1:g=4,highshelf=f=8000:g=7,acompressor=threshold=-20dB:ratio=4:attack=3:release=60:makeup=2",
+    kindEq: {
+      kick: "highpass=f=36,highpass=f=36,equalizer=f=58:t=q:w=1:g=4.0,equalizer=f=100:t=q:w=1:g=3.0,equalizer=f=380:t=q:w=1.2:g=-6.5,equalizer=f=3500:t=q:w=1:g=1.0,equalizer=f=7500:t=q:w=0.8:g=1.5,acompressor=threshold=-18dB:ratio=4:attack=5:release=60:makeup=2",
+      tom: "highpass=f=60,equalizer=f=500:t=q:w=1.3:g=-7,equalizer=f=4000:t=q:w=1:g=4,acompressor=threshold=-20dB:ratio=3:attack=5:release=80",
+      hat: "highpass=f=300,highshelf=f=7000:g=7",
+      // シンバルは録音の自然な音のまま（人間の決まり「鳴りを伸ばす」。2026-10-22「これはシンバルの音じゃないな」を受けて、持ち上げ・圧縮・クリップはしない）
+      cym: "highpass=f=250",
+    },
+    // 2026-10-22 追加（人間「もうちょっとだけ頑張って近づけよう」）: キックの中のマイク（ビーター側）を強め、録音に無い「カチッ」を合成のクリックで足す。
+    // 帯域の補正・アタックの強調・軽いクリップは naked-punch と同じしくみ（数値は 1打ずつ測って合わせた）
+    micMul: { KDrumInside: 1.15 },
+    // 2026-10-22 人間「バスドラの音がこれだと高すぎ」: 低音を切る周波数を 85→48Hz に下げて胴の低さを戻し、カチッ（3.5k・7.5k・クリック・ビーター側のマイク）を控えめにした（細かい刻みで調整）
+    // クリックを 10dB にすると、キックの 6k〜12kHz は目標に近づくが、全体の高域とクレストが目標から離れた（2026-10-22 の8ビートで比べて 6dB にした）
+    click: { kick: { db: 0.8, ms: 15, rise: 2, lo: 3000, hi: 12000 } },
+    bandEq: { kick: [1.5, 3.0, 1.0, 3.0, 3.5, 4.5, 2.0, 0.5, 0.0, 1.0], snare: [0, 10, 0, -9, -16, -10, -8, -7, -3, 0] },
+    attack: { kick: 4, snare: 3, tom: 3 },
+    clip: { kick: 2.5, snare: 2, tom: 2 },
+    gain: { snare: 16 } },
   // 2026-10-22 Naked Drums の素直な混ぜ方: 近接マイク＋OH＋部屋（Close Room）少し。元の SFZ の音量の補正（trim.json）どおり
   naked: { kit: "naked", out: "drums-naked", label: "Naked Drums", overhead: 0.9, amb: 0.35, kick: 1.1, snare: 1.0, tom: 1.0, hat: 1, cym: 1, sec: 1, fade: 0.6,
     eq: "highpass=f=28" },
