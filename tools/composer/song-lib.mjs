@@ -204,8 +204,10 @@ export async function openSongKit() {
         }
       }
       declick();
-      // 書き出しの合否表（I・TP・LRA・PLR・PSR・左右の相関・100Hz 以下の相関・継ぎ目を 1 行で）
-      let rep = masterReport(files.wav, { lufs: masterOpts?.lufs ?? null, tp: masterOpts?.tp ?? -1.5, loop: true, lowCutoff });
+      // 書き出しの合否表（I・TP・LRA・PLR・PSR・左右の相関・100Hz 以下の相関。継ぎ目はゲームのループ曲のときだけ）
+      // 2026-10-25 人間「ソフトをゲーム曲も作れるソフトに変えよう。ゲームはあくまで作れるだけ」→ ふつうの曲では継ぎ目を見ない
+      const isLoop = Boolean(songData.loop) || songData.use === "game";
+      let rep = masterReport(files.wav, { lufs: masterOpts?.lufs ?? null, tp: masterOpts?.tp ?? -1.5, loop: isLoop, lowCutoff });
       // 再調整のルーティン（人間の指示 2026-10-11）: 「つぶれ気味」（PLR・PSR が小さい）が出たら、仕上げをやさしくして最大2回やり直す
       //   1回目: クリップ 0・圧縮を一段やさしく・目標を 1.5LU 下げる ／ 2回目: さらに 3LU 下げる。それでも出たら、元の音（アンプ・音量の合計）が原因なので見直しを促す
       const crushed = (r) => r.issues.some((t) => t.includes("つぶれ気味"));
@@ -217,7 +219,7 @@ export async function openSongKit() {
           fs.copyFileSync(rawFile, files.wav);
           masterFile(files.wav, next);
           declick();
-          rep = masterReport(files.wav, { lufs: next.lufs, tp: next.tp ?? -1.5, loop: true, lowCutoff });
+          rep = masterReport(files.wav, { lufs: next.lufs, tp: next.tp ?? -1.5, loop: isLoop, lowCutoff });
           warnings.push(`つぶれ気味が出たので仕上げを再調整しました（${k}回目: クリップ 0・圧縮 ${next.glue}・目標 ${next.lufs}LUFS）→ ${rep.line}`);
         }
         if (crushed(rep)) warnings.push(`再調整しても「つぶれ気味」が残りました。元の音がつぶれています（最初: ${first}）。歪みギターのアンプ（punk は高域の割れが出やすい。loudrock・crunch を試す）、パートの音量の合計（0.7 前後）、同じ音を重ねすぎていないかを見直してください`);

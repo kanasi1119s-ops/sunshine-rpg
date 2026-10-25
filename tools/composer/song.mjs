@@ -9,8 +9,8 @@
 //       --bass finger|pick|rock|metal|jazz|jpop|growly|upright|rubner: ベースを録音の音源に（finger〜jpop＝FreePats のエレキベース、growly＝Karoryfer の Jazz Bass、upright＝ウッドベース＝VSCO 2 CE のコントラバスのピチカート、rubner＝ジャズのウッドベース（1958年のコントラバスの指弾き）、bnb＝5弦ベースの指弾き（Black And Blue Basses。強さ4層・B0 まで。CC0）、bnb-loud＝同じ録音をラウド向けに明るくゴリッと。bnb のときはパートの patch "bassMute" でスタッカート（ふつうの音）・ゴーストノート（「,」「,,」の弱い音）の録音が鳴る（ほかのベース音源では鳴らない）。--drums electro＝電子ドラム（テクノポップ・ダンス・ボカロ））。--ref-tone wide-dark-wall|bright-pop-rock|deep-scoop-djent|dark-electro-rock|bright-nu-wall|glossy-jrock: 参考の音（参考録音を測った数値で、ギター・ベース・ドラムの EQ を置きかえる。src/audio/ref-tones.ts）。--sound punk-run|clear-guitar-rock|rock-4|pop-lead|jpop-bright|ballad-piano-strings|jazz-trio|funk-bass|house-duck|ambient-wide|orchestra-depth|game-battle|game-boss|game-town|game-dungeon（`sounds` で一覧）: サウンドセット（アンプ・音量・ミックス・ドラム・使う音源をまとめて当てはめる。--bass/--drums/--guitar を別に書けばそちらが優先）。--master-preset <名前>: 書き出しの仕上げ（大きさ・広がり・圧縮・EQ・天井）をまとめて決める。従来の 4 つ game=-14LUFS・rock=-10・loud=-8・calm=-16 のほか、ジャンル別の metal・punk・rock-clean・pop・jazz・orch・edm・hiphop・lofi・ambient・wafu・solo と、ゲーム用の game-field・game-battle・game-boss・game-dungeon・retro（`node tools/composer/song.mjs presets` で一覧）。--space hall|room|plate|vale: 書き出しのWAVに畳み込みリバーブ（vale＝丘や谷の広い外の響き）（自作のIR）を足す。--space-wet 0〜1（既定0.25）が残響の量。--widen 1.8: 書き出しのWAVの左右の広がりを広げる（1=そのまま。master と一緒に使う。おすすめ 1.5〜2）。--master -9: 書き出しのWAVの大きさ（LUFS）をそろえる（サウンドセットに master があれば自動。ピークは約 -1.5dB 以下）。--orchestra vsco: 弦・金管・木管・ティンパニ・ハープ・マリンバ・オルガンを VSCO 2 CE（CC0）の録音に。--piano salamander: ピアノを Salamander Grand Piano（CC BY 3.0）に。--guitar gretsch|hofner: ジャズギター(26)・クリーンギター(27)を Karoryfer の生ギター（CC0）に。--drums muldjord|rock|metal|jazz|jpop|supra: ドラムを生ドラム（Muldjord Kit）に（省略は標準）。--drums crocell|crocell-aux: メタル向けの生ドラム CrocellKit（CC BY 4.0。チャイナ2枚・スプラッシュ2枚・クラッシュ3枚＋止め打ち。crash パートの B3／A3／C3／C#2／G#2。docs/sound/drum-keys-crocell.md）。
 //       仕上げの細かい指定（プリセットの値を上書き。--master 系と一緒に使う）: --tp -1.5: 真のピークの天井(dBTP)。--lowmono 140: この周波数(Hz)より下をモノに（0=切る）。--side-hpf 150: サイドだけをこの周波数より上に（M/S ワイド。--widen がサイドの倍率 slev になる）。--clip 1.5: ソフトクリップに使うゲイン(dB、0=なし)。--hpf 25・--lpf 19000: 掃除(Hz)。--match-eq rock|punk|edm|hiphop|jazz|lofi|ambient|game-battle: 帯域の量を家族別の目標の傾き（docs/sound/data/mix-targets.json。数字だけ）に寄せるマッチング EQ（--match-amount 0.4: 強さ。0.5 が上限、各帯域 ±3dB で切る）。--loop-tail: 曲の長さより後ろの残響の尾を先頭に重ねる（ループの継ぎ目をなじませる。仕上げの前）。
 //       書き出した WAV は、最後に 1 行の合否表（○／要直し: I・TP・LRA・PLR・PSR・左右の相関・100Hz 以下の相関・継ぎ目）を表示する。サウンドセット（--sound）の master に preset・space・spaceWet があれば、同じ引数を書いたことになる（引数が優先）。
-//   node tools/composer/song.mjs report <WAV> [--lufs -14] [--tp -1.5] [--no-loop] [--genre <ジャンル名> --bpm N]（flat・空気も出す。--genre でジャンル目安からの外れも添える）
-//       すでにある WAV の合否表だけを表示する（ループの継ぎ目も見る。ループしない曲は --no-loop）。
+//   node tools/composer/song.mjs report <WAV> [--lufs -14] [--tp -1.5] [--loop] [--genre <ジャンル名> --bpm N]（flat・空気も出す。--genre でジャンル目安からの外れも添える）
+//       すでにある WAV の合否表だけを表示する（ゲームのループ曲は --loop で継ぎ目も見る。2026-10-25 からふつうの曲が既定）。
 //   node tools/composer/song.mjs presets
 //       書き出しの仕上げのプリセット一覧（大きさ・天井・広がり・圧縮・EQ）を表示する。
 //   node tools/composer/song.mjs delays <BPM>
@@ -54,7 +54,7 @@ const num = (name) => (opt(name) === undefined ? null : Number(opt(name)));
 
 if (args[0] === "report" && args[1]) {
   const { masterReport } = await import("./master-report.mjs");
-  console.log(masterReport(args[1], { lufs: num("--lufs"), tp: num("--tp") ?? -1.5, loop: !args.includes("--no-loop"), genre: opt("--genre") ?? null, bpm: num("--bpm") ?? NaN }).line);
+  console.log(masterReport(args[1], { lufs: num("--lufs"), tp: num("--tp") ?? -1.5, loop: args.includes("--loop"), genre: opt("--genre") ?? null, bpm: num("--bpm") ?? NaN }).line);
   process.exit(0);
 }
 if (args[0] === "noise" && args[1]) {
