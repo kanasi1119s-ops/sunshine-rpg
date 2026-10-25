@@ -330,7 +330,9 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
         }
       } else if (!list.some((e) => e.bytes[0] === (0xc0 | channel))) {
         const pan = Math.round(64 + (track.pan ?? 0) * 63);
-        list.push({ tick: 0, order: 0, bytes: [0xc0 | channel, prog] });
+        // 128 以上の番号は「バンク×128＋番号」（2026-10-25。GM の 0〜127 が足りなくなったので、追加の音源はバンク 1 以上にも置く）
+        if (prog >= 128) list.push({ tick: 0, order: -1, bytes: [0xb0 | channel, 0, Math.min(127, prog >> 7)] });
+        list.push({ tick: 0, order: 0, bytes: [0xc0 | channel, prog & 127] });
         list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 7, Math.round(118 * gainBoost)] });
         list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 10, Math.max(0, Math.min(127, pan))] });
         list.push({ tick: 0, order: 0, bytes: [0xb0 | channel, 91, track.reverb !== undefined ? clamp127(track.reverb * 127) : inst ? REVERB[inst] ?? 30 : 30] });

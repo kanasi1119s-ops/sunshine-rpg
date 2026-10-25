@@ -84,15 +84,15 @@ import vibesUrl from "../../assets-src/soundfont/extra/vibraphone-vcsl.sf3?url";
 import saxTenorUrl from "../../assets-src/soundfont/extra/sax-tenor-vcsl.sf3?url";
 import kalimbaVcslUrl from "../../assets-src/soundfont/extra/kalimba-vcsl.sf3?url";
 import cajonUrl from "../../assets-src/soundfont/extra/cajon-vcsl.sf3?url";
-import diEmilyUrl from "../../assets-src/soundfont/extra/guitar-di-emily-30.sf3?url";
-import diFsbsUrl from "../../assets-src/soundfont/extra/guitar-di-fsbs-30.sf3?url";
-import diEmily29Url from "../../assets-src/soundfont/extra/guitar-di-emily-29.sf3?url";
-import diFsbs29Url from "../../assets-src/soundfont/extra/guitar-di-fsbs-29.sf3?url";
-import partDiEmilyUrl from "../../assets-src/soundfont/extra/guitar-di-emily-112.sf3?url";
-import partDiFsbsUrl from "../../assets-src/soundfont/extra/guitar-di-fsbs-direct-113.sf3?url";
-import partDiShinyUrl from "../../assets-src/soundfont/extra/guitar-di-shiny-114.sf3?url";
-import partDiGretschUrl from "../../assets-src/soundfont/extra/guitar-di-gretsch-31.sf3?url";
-import partDiHofnerUrl from "../../assets-src/soundfont/extra/guitar-di-hofner-23.sf3?url";
+const diEmilyUrl = `${guitarEmilyUrl}#p30`;   // 同じ録音を番号 30 で（埋め込みは1つ）
+const diFsbsUrl = `${guitarFsbsDirectUrl}#p30`;   // 同じ録音を番号 30 で（埋め込みは1つ）
+const diEmily29Url = `${guitarEmilyUrl}#p29`;   // 同じ録音を番号 29 で（埋め込みは1つ）
+const diFsbs29Url = `${guitarFsbsDirectUrl}#p29`;   // 同じ録音を番号 29 で（埋め込みは1つ）
+const partDiEmilyUrl = `${guitarEmilyUrl}#p112`;   // 同じ録音を番号 112 で（埋め込みは1つ）
+const partDiFsbsUrl = `${guitarFsbsDirectUrl}#p113`;   // 同じ録音を番号 113 で（埋め込みは1つ）
+const partDiShinyUrl = `${guitarShinyUrl}#p114`;   // 同じ録音を番号 114 で（埋め込みは1つ）
+const partDiGretschUrl = `${guitarGretschUrl}#p31`;   // 同じ録音を番号 31 で（埋め込みは1つ）
+const partDiHofnerUrl = `${guitarHofnerUrl}#p23`;   // 同じ録音を番号 23 で（埋め込みは1つ）
 import guitarNoiseUrl from "../../assets-src/soundfont/extra/guitar-noise-emily.sf3?url";
 // 2026-10-20 人間「ジャズ、ケルト音楽、電子音楽、テクノポップ、ダンスミュージック、ボカロ向けの音源も追加して」（出どころと規約は docs/assets-credits.md）
 import saxAltoUrl from "../../assets-src/soundfont/extra/sax-alto-weresax.sf3?url";
@@ -119,6 +119,18 @@ import brightLeadUrl from "../../assets-src/soundfont/extra/synth-modern-brightl
 import surgeDnaSeqUrl from "../../assets-src/soundfont/extra/surge-lead-dnaseq.sf3?url";
 import surgeParaphonicUrl from "../../assets-src/soundfont/extra/surge-lead-paraphonic.sf3?url";
 import surgeResofestUrl from "../../assets-src/soundfont/extra/surge-lead-resofest.sf3?url";
+// 2026-10-25 Surge XT のプラック（人間が聴いて 7・8・11・15 以外を選んだ）。番号は 128 以上＝バンク 1（バンク×128＋番号）
+import surgePopcornUrl from "../../assets-src/soundfont/extra/surge-pluck-popcorn-pluck.sf3?url";
+import surgeBell1Url from "../../assets-src/soundfont/extra/surge-pluck-bell-1.sf3?url";
+import surgeGuzhengUrl from "../../assets-src/soundfont/extra/surge-pluck-guzhengish.sf3?url";
+import surgeRetroWaveUrl from "../../assets-src/soundfont/extra/surge-pluck-retro-wave.sf3?url";
+import surgeConvexUrl from "../../assets-src/soundfont/extra/surge-pluck-convex.sf3?url";
+import surgeWoodyUrl from "../../assets-src/soundfont/extra/surge-pluck-woody.sf3?url";
+import surgeFantasyBellUrl from "../../assets-src/soundfont/extra/surge-pluck-fantasy-bell.sf3?url";
+import surgeNicePluckUrl from "../../assets-src/soundfont/extra/surge-pluck-nice-pluck-1.sf3?url";
+import surgeWaveguideUrl from "../../assets-src/soundfont/extra/surge-pluck-simple-waveguide.sf3?url";
+import surgeFriendlyUrl from "../../assets-src/soundfont/extra/surge-pluck-friendly.sf3?url";
+import surgeMixedFeelingsUrl from "../../assets-src/soundfont/extra/surge-pluck-mixed-feelings.sf3?url";
 // import clearPadUrl from "../../assets-src/soundfont/extra/synth-clear-pad.sf3?url";
 import seasonFxUrl from "../../assets-src/soundfont/extra/season-fx.sf3?url";
 import surgeTropicsUrl from "../../assets-src/soundfont/extra/surge-lead-tropics.sf3?url";
@@ -205,10 +217,34 @@ import { normalizeLoudness } from "../../src/audio/loudness";
 
 // 1ファイルのHTMLでは外部ファイルを読み込めないので、埋め込んだ素材（データURL）を録音音源の再生に渡す
 function bytesOf(dataUrl: string): Uint8Array {
-  const bin = atob(dataUrl.slice(dataUrl.indexOf(",") + 1));
+  // 「…#p30」のように後ろに番号がついていたら、音源の楽器の番号を書きかえて返す（同じ録音を別の番号で使うとき、埋め込みを1つで済ませる）
+  const hash = dataUrl.lastIndexOf("#p");
+  const remap = hash > 0 ? Number(dataUrl.slice(hash + 2)) : null;
+  const body = hash > 0 ? dataUrl.slice(0, hash) : dataUrl;
+  const bin = atob(body.slice(body.indexOf(",") + 1));
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
+  return remap === null ? out : reprogram(out, remap);
+}
+/** SF2/SF3 の楽器の見出し（phdr）の番号を書きかえる（128 以上は バンク×128＋番号）。2026-10-25 埋め込みが V8 の文字列の上限を超えたので、同じ録音の重複をなくすため */
+function reprogram(buf: Uint8Array, program: number): Uint8Array {
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  const tag = (o: number): string => String.fromCharCode(buf[o], buf[o + 1], buf[o + 2], buf[o + 3]);
+  const walk = (start: number, end: number): boolean => {
+    let o = start;
+    while (o + 8 <= end) {
+      const id = tag(o); const size = dv.getUint32(o + 4, true);
+      if (id === "LIST") { if (walk(o + 12, o + 8 + size)) return true; }
+      else if (id === "phdr") {
+        for (let r = o + 8; r + 38 <= o + 8 + size - 38; r += 38) { dv.setUint16(r + 20, program & 127, true); dv.setUint16(r + 22, program >> 7, true); }
+        return true;
+      }
+      o += 8 + size + (size & 1);
+    }
+    return false;
+  };
+  walk(12, buf.byteLength);
+  return buf;
 }
 // 録音音源の切りかえ（作曲ソフトのサウンド欄）。game＝ゲームと同じ音源（FluidR3）、gu＝GeneralUser GS
 type SoundfontId = "game" | "gu";
@@ -432,6 +468,8 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   surgeTropics: { programs: [54], url: surgeTropicsUrl }, surgeHappySaws: { programs: [91], url: surgeHappySawsUrl }, voiceLeadModern: { programs: [92], url: voiceLeadModernUrl },
   // 2026-10-25 ポップな音（自作の合成）
   surgeFormantPulse: { programs: [93], url: surgeFormantPulseUrl }, popKeys: { programs: [94], url: popKeysUrl }, surgeParaphonic: { programs: [95], url: surgeParaphonicUrl }, popLeadClear: { programs: [96], url: popLeadClearUrl }, picoLead: { programs: [97], url: picoLeadUrl }, picoLeadRound: { programs: [98], url: picoLeadRoundUrl },
+  // 2026-10-25 Surge XT のプラック（バンク 1）
+  surgePopcorn: { programs: [128], url: surgePopcornUrl }, surgeBell1: { programs: [129], url: surgeBell1Url }, surgeGuzheng: { programs: [130], url: surgeGuzhengUrl }, surgeRetroWave: { programs: [131], url: surgeRetroWaveUrl }, surgeConvex: { programs: [132], url: surgeConvexUrl }, surgeWoody: { programs: [133], url: surgeWoodyUrl }, surgeFantasyBell: { programs: [134], url: surgeFantasyBellUrl }, surgeNicePluck: { programs: [135], url: surgeNicePluckUrl }, surgeWaveguide: { programs: [136], url: surgeWaveguideUrl }, surgeFriendly: { programs: [137], url: surgeFriendlyUrl }, surgeMixedFeelings: { programs: [138], url: surgeMixedFeelingsUrl },
   pluckSynth: { programs: [85], url: pluckEdmUrl }, chipPulse25: { programs: [124], url: chip25Url }, chipPulse12: { programs: [125], url: chip12Url }, reeseBass: { programs: [34], url: reeseUrl }, fxElectro: { programs: [126], url: fxElectroUrl },
 };
 function extrasFor(score: Score): string[] {

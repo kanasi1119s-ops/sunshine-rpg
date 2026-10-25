@@ -132,7 +132,9 @@ const base = loadBank(path.resolve("src/audio/soundfont/game.sf3"));
 const out = new BasicSoundBank();
 out.soundBankInfo = { ...base.soundBankInfo, name: outName };
 const preset = emptyPresetFrom(base, out, { program: 27 });
-preset.program = PROGRAM;
+preset.program = PROGRAM & 127;
+// 128 以上は「バンク×128＋番号」（2026-10-25。--bank でも指定できる）
+preset.bankMSB = Number(opt("--bank", PROGRAM >> 7));
 preset.name = outName;
 const inst = preset.zones[0].instrument;
 while (inst.zones.length) inst.deleteZone(0, true);

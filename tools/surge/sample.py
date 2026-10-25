@@ -3,7 +3,7 @@
 2026-10-25 人間「プロ仕様のシンセ入ってると思ってたよ」→ Surge XT の音を作曲ソフトの音源にする。
 
 使い方: python3 tools/surge/sample.py <プリセット(.fxp。DATA からの相対パスでもよい)> <出力名> --program N [--lo 36 --hi 96 --step 3]
-        [--keep-space]（プリセットの中のリバーブ・ディレイを残す。ふだんは切る＝空間は曲の側でつける）
+        [--strip-space]（プリセットの中のリバーブ・ディレイを切る。ふだんはプリセットのまま＝聴いて選んだ音と同じ）
 出力: assets-src/soundfont/extra/<出力名>.sf3（sfz-to-sf3.mjs を使う）
 """
 import argparse, os, subprocess, sys
@@ -19,19 +19,8 @@ SR = 44100
 SPACE_FX = ("reverb", "delay", "echo")
 
 
-def strip_space(p):
-    """FX のうち、リバーブ・ディレイの種類のものを切る（音色の歪み・コーラス・EQ などは残す）"""
-    off = []
-    for k, prm in p.parameters.items():
-        if k.endswith("_fx_type"):
-            v = str(getattr(p, k)).lower()
-            if any(s in v for s in SPACE_FX):
-                setattr(p, k, "Off"); off.append(f"{k}={v}")
-    return off
-
-
 def render_note(p, k, hold, tail, vel=100):
-    p([Message("control_change", control=123, value=0)], duration=0.6, sample_rate=SR, reset=False)
+    p([], duration=0.8, sample_rate=SR, reset=False)   # 前の音の尾を流す（CC123＝全部の音を止める、はプリセットによって音が出なくなるので使わない）
     a = p([Message("note_on", note=k, velocity=vel, time=0.0), Message("note_off", note=k, velocity=0, time=hold)],
           duration=hold + tail, sample_rate=SR, reset=False)
     return a.T.astype(np.float64)
@@ -64,17 +53,17 @@ def main():
     ap.add_argument("preset"); ap.add_argument("name")
     ap.add_argument("--program", type=int, required=True)
     ap.add_argument("--lo", type=int, default=36); ap.add_argument("--hi", type=int, default=96); ap.add_argument("--step", type=int, default=3)
-    ap.add_argument("--keep-space", action="store_true")
+    ap.add_argument("--strip-space", action="store_true")   # 2026-10-25: ふだんはプリセットのまま（人間が聴いて選んだ音と同じにする）
     ap.add_argument("--q", default="7")
     ap.add_argument("--work", default="/tmp/surge-sample")
     a = ap.parse_args()
     path = a.preset if os.path.exists(a.preset) else os.path.join(DATA, a.preset)
     p = pedalboard.load_plugin(VST)
-    S.load_fxp(p, path); p([], duration=0.3, sample_rate=SR, reset=False)
-    if not a.keep_space:
-        print("切った FX:", strip_space(p) or "なし")
+    cut = S.load_fxp(p, path, strip_space=a.strip_space); p([], duration=0.3, sample_rate=SR, reset=False)
+    print("切ったリバーブ・ディレイ:", cut)
     p([], duration=0.3, sample_rate=SR, reset=False)
     # 伸ばす音か、減っていく音かを決める（真ん中の音を 4 秒のばして、終わりの大きさを見る）
+    render_note(p, 60, 1.0, 0.5)                                   # 読みこみ直後の1回目は鳴らないことがあるので捨てる
     t = render_note(p, 60, 4.0, 0.5)
     env = np.sqrt(np.convolve(t.mean(1) ** 2, np.ones(2205) / 2205, "same"))
     sustain = env[int(3.4 * SR):int(3.9 * SR)].mean() > env.max() * 10 ** (-24 / 20)

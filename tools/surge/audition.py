@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """ふるいの点数（PQ）の上位のプリセットを、ステレオで同じフレーズで鳴らして、1本の聴き比べ（mp3）にする。
-曲に入れるときと同じ条件（プリセットの中のリバーブ・ディレイを切る→同じ小さな部屋の響きを少し）で鳴らす。
+プリセットのまま（中のリバーブ・ディレイも含めて）鳴らし、同じ小さな部屋の響きを少しだけ足す。
 使い方: python3 tools/surge/audition.py ふるいのフォルダ 役割 上位の数 出力.mp3
 """
 import ast, csv, os, re, subprocess, sys
@@ -8,7 +8,6 @@ import numpy as np, soundfile as sf, pedalboard
 from scipy.signal import butter, sosfilt, fftconvolve
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import surgestate as S, screen
-from sample import strip_space
 
 SR = 44100
 
@@ -40,8 +39,7 @@ def main():
     msgs = screen.messages(notes)
     pieces = []; listing = []
     for i, (pq, rel) in enumerate(top, 1):
-        S.load_fxp(p, os.path.join(screen.DATA, rel)); p([], duration=0.3, sample_rate=SR, reset=False)
-        strip_space(p); p([], duration=0.3, sample_rate=SR, reset=False)
+        S.load_fxp(p, os.path.join(screen.DATA, rel), strip_space=False); p([], duration=0.3, sample_rate=SR, reset=False)
         a = p(msgs, duration=dur, sample_rate=SR, reset=False).T.astype(np.float64)
         p([pedalboard_cc()], duration=1.0, sample_rate=SR, reset=False)
         wet = np.stack([fftconvolve(a[:, c], ir[:, c])[:len(a)] for c in (0, 1)], 1)
