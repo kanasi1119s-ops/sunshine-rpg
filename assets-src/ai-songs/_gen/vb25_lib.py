@@ -81,21 +81,18 @@ class Silence:
 
 
 # ---------------- 歌の役のシンセ ----------------
-def voice_lead_spec(vol=0.21, pan=0.0, delay=0.75, bright=0.0, patch="modernLead"):
-    """声のように聞こえるリード（docs/sound/vocaloid-study.md の 3・19〜22）。
-    矩形波（squareLead）に、母音「あ」の響きの山（900Hz・1800Hz）と、歌の明るさ（3kHz）を EQ で作る。150Hz より下を切る"""
-    fx = [{"type": "filter", "kind": "highpass", "freq": 150, "q": 0.7},
-          {"type": "eq", "low": 0, "mid": 2.5, "midHz": 900, "high": 0},      # 2026-10-25: 現代的なリード（modernLead）に替えたので、母音の山は控えめに
-          {"type": "eq", "low": 0, "mid": 1.5, "midHz": 1800, "high": 0},
-          {"type": "eq", "low": -1, "mid": 2.0 + bright, "midHz": 3000, "high": -1.0},
-          {"type": "filter", "kind": "lowpass", "freq": 8500, "q": 0.7},
-          {"type": "pingpong", "beats": delay, "mix": 0.14, "feedback": 0.22},
-          {"type": "plate", "mix": 0.15}]
-    return P(patch=patch, volume=vol, pan=pan, phrase=8, reverb=0.15, noRestrike=True, mono=True, gainDb=3, fx=fx,
-             vibrato={"rate": 5.8, "depth": 24, "delay": 0.45}, autoScoop=False, breath=True)
+def voice_lead_spec(vol=0.21, pan=0.0, delay=0.75, bright=0.0, patch="popLeadClear"):
+    """歌の役（2026-10-25 人間「リードをもう少しクリアのがいい」「この感じいい」→ 25曲もこれで）: クリアなポップのリード（popLeadClear）。
+    うねり・歪み・下の重ねなし。EQ は 3kHz を少しだけ。ピンポンディレイ 10%・プレート 14%、ビブラートは浅く音の後半だけ"""
+    fx = [{"type": "filter", "kind": "highpass", "freq": 170, "q": 0.7},
+          {"type": "eq", "low": 0, "mid": 1.0 + bright, "midHz": 3000, "high": 0},
+          {"type": "pingpong", "beats": delay, "mix": 0.10, "feedback": 0.2},
+          {"type": "plate", "mix": 0.14}]
+    return P(patch=patch, volume=vol, pan=pan, phrase=8, reverb=0.14, noRestrike=True, mono=True, gainDb=3, fx=fx,
+             vibrato={"rate": 5.5, "depth": 14, "delay": 0.5}, autoScoop=False, breath=True)
 
 
-def voice_low_spec(vol=0.21, patch="modernLead"):
+def voice_low_spec(vol=0.21, patch="popLeadClear"):
     """1オクターブ下の重ね（ローパス 2kHz、−9dB 相当）"""
     fx = [{"type": "filter", "kind": "highpass", "freq": 120, "q": 0.7},
           {"type": "filter", "kind": "lowpass", "freq": 2000, "q": 0.7},
@@ -132,19 +129,28 @@ def plain(s):
     return " ".join(out)
 
 
+class _NoTrack:
+    """重ねなしのときの空のパート（台本が V.low に書いても鳴らない）"""
+    spec = {}; ev = []
+    def bar(self, *a, **k): return 0
+    def at(self, *a, **k): return 0
+
+
 class Voice:
     """歌の役（本体＋1オクターブ下の重ね）。v.bar(b, 音の並び) で両方に置く。lo=False で重ねなし"""
-    def __init__(self, song, vol=0.21, delay=0.75, bright=0.0, patch="modernLead", low=True):
+    def __init__(self, song, vol=0.21, delay=0.75, bright=0.0, patch="popLeadClear", low=False):
         self.main = song.track("歌の役（声のシンセ）", "lead", **voice_lead_spec(vol, 0.0, delay, bright, patch))
-        self.low = song.track("歌の役（1オクターブ下の重ね）", "pad", **voice_low_spec(vol, patch)) if low else None
+        # 重ねのパートはいつも作る（台本が V.low に直接書く「こもった歌」に使う）。low=False のときは、歌の役を写して重ねない
+        self.double = low
+        self.low = song.track("歌の役（こもった写し）", "pad", **voice_low_spec(vol, patch))
 
     def bar(self, b, s, off=0.0, low=True):
         self.main.bar(b, sing(s), off)
-        if low and self.low is not None: self.low.bar(b, shift_oct(plain(s), -1), off)
+        if low and self.double: self.low.bar(b, shift_oct(plain(s), -1), off)
 
     def at(self, beat, s, low=True):
         self.main.at(beat, sing(s))
-        if low and self.low is not None: self.low.at(beat, shift_oct(plain(s), -1))
+        if low and self.double: self.low.at(beat, shift_oct(plain(s), -1))
 
 
 def melody(S, K, bars, lines, oct=4):
