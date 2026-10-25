@@ -64,7 +64,8 @@ DIST = S.track("のこぎり波のリード（主旋律の受け渡し・リフ�
                    {"type": "eq", "low": 0, "mid": -4.5, "midHz": 2800, "high": -3}, {"type": "pingpong", "beats": 0.75, "mix": 0.1, "feedback": 0.2}])
 ALARM = S.track("目覚まし（ベル）", "pad", patch="surgeBell1", volume=0.08, pan=0.2, reverb=0.15, mono=True,
                 fx=[{"type": "filter", "kind": "highpass", "freq": 400, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 6000, "q": 0.7}])
-BASS = S.track("太いシンセベース", "bass", **synth_bass_spec("surgeBassModernDirtyFat", vol=0.23, duck=0.3))
+# 2026-10-26 人間（04）「ほんのほんの少しだけベースの音大きく」→ 0.23→0.242（1.05倍）
+BASS = S.track("太いシンセベース", "bass", **synth_bass_spec("surgeBassModernDirtyFat", vol=0.242, duck=0.3))
 SAW = [S.track(f"厚い和音{i + 1}", "pad", **pad_spec("surgeChordUnisonMinority", vol=0.05, pan=0.0, duck=0.45, sustain=0.9)) for i in range(3)]
 PLK = S.track("プラック（歌の受け渡し・アルペジオ）", "pad", **pluck_spec("surgeConvex", vol=0.09, pan=0.3, delay=0.75, sustain=0.5))
 GLI = S.track("グリッチ（ビットクラッシャーのプラック）", "pad", patch="surgeRetroWave", volume=0.07, pan=-0.3, sustain=0.3, reverb=0.15,
