@@ -55,7 +55,7 @@ S.scene("アンコール", 16, "chorus", L1_CH)
 S.scene("アンコール2", 16, "chorus", L2_CH)
 S.scene("全員でのばす", 12, "outro", OUT_CH)
 
-V = Voice(S, vol=0.23, delay=0.75, patch="voiceLeadModern", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
+V = Voice(S, vol=0.23, delay=0.75, patch="horn", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 PIANO_FX = [{"type": "eq", "low": -3, "mid": -2, "midHz": 400, "high": 1}]
 PN = S.track("ピアノ（右手）", "piano", volume=0.12, pan=-0.2, reverb=0.25, fx=PIANO_FX)
 PNC = [S.track(f"ピアノ（右手の和音{i + 2}）", "piano", volume=0.1, pan=-0.2, reverb=0.25, fx=PIANO_FX) for i in range(2)]

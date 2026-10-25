@@ -41,7 +41,7 @@ S.scene("北の町に届く", 32, "chorus", LAST)
 S.scene("笑顔のリレー", 8, "outro", ["A", "B/A", "G#m7", "C#m7", "Amaj7", "B", "C#m7", "B/D#"])
 S.scene("全員でテンションの和音", 4, "outro", ["Emaj9"] * 4)
 
-V = Voice(S, vol=0.22, delay=0.75, patch="popLeadClear", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
+V = Voice(S, vol=0.22, delay=0.75, patch="brightLead", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 PNS = piano_spec(0.12, -0.25)
 PN = [S.track(f"ピアノ（右手{i + 1}）", "piano", **PNS) for i in range(2)]
 PNL = S.track("ピアノ（左手）", "piano", **PNS)

@@ -42,7 +42,7 @@ S.scene("全部の虹", 24, "chorus", C_CH + C_CH2 + TAG)
 S.scene("水面が戻る", 8, "outro", POOL * 2)
 S.scene("しずく1つ", 2, "outro", ["Dmaj7", "Dmaj7"])
 
-V = Voice(S, vol=0.22, delay=0.75, patch="picoLeadRound", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
+V = Voice(S, vol=0.22, delay=0.75, patch="popLeadClear", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 GLASS = S.track("ガラスの音（しずく・きらめき）", "pad", patch="surgeChordXyloChill", volume=0.08, pan=0.45, sustain=1.2, reverb=0.5,
                 fx=[{"type": "filter", "kind": "highpass", "freq": 400, "q": 0.7}, {"type": "pingpong", "beats": 0.75, "mix": 0.25, "feedback": 0.35}])
 HARP = S.track("ハープ", "harp", volume=0.13, pan=-0.35, reverb=0.35, sustain=1.6)

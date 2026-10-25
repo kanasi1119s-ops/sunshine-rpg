@@ -47,7 +47,7 @@ S.scene("最後のドロップ", 32, "chorus", D_CH)
 S.scene("風", 8, "outro", ["Emaj9", "Emaj9", "G#m9", "G#m9", "G#m9", "G#m9", "G#m9", "G#m9"])
 
 # ================= パート =================
-V = Voice(S, vol=0.22, delay=0.75, patch="picoLead", low=True)
+V = Voice(S, vol=0.22, delay=0.75, patch="surgeResofest", low=True)
 # 2026-10-26 人間（06）「リードが歪強いから少し抑えよう」: 歌の役とチョップの高い所のざらつきを削る
 V.main.spec["fx"].insert(1, {"type": "filter", "kind": "lowpass", "freq": 5800, "q": 0.7}); V.main.spec["fx"].insert(2, {"type": "eq", "low": 0, "mid": -2.5, "midHz": 3200, "high": -1})   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 CHOP = S.track("声のチョップ風シンセ", "lead", patch="surgeTropics", volume=0.12, pan=0.12, reverb=0.2, mono=True, gainDb=1,

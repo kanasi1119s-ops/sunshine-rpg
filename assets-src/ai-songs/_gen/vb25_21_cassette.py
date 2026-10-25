@@ -52,7 +52,7 @@ b_end = S.sc("テープの終わり")[0]
 S.tempo = [{"bar": b_stop + 3, "bpm": 70, "ramp": 2}, {"bar": b_stop + 5, "bpm": 132},
            {"bar": b_end + 5, "bpm": 62, "ramp": 2}]
 
-V = Voice(S, vol=0.22, delay=0.75, patch="popLeadClear", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
+V = Voice(S, vol=0.22, delay=0.75, patch="chiff", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 EP = [S.track(f"エレピ{i + 1}", "fmEpiano", volume=0.1, pan=-0.3, reverb=0.2, sustain=0.9) for i in range(3)]
 BR = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.14, pan=0.3, reverb=0.22, gainDb=3, phrase=4,
               fx=[{"type": "eq", "low": -3, "mid": 2, "midHz": 1800, "high": 0.5}]) for i in range(3)]

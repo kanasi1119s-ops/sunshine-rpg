@@ -47,7 +47,7 @@ S.scene("花火のあと", 9, "outro", OUT_CH + OUT_CH + ["F#"])
 S.tempo = [{"bar": 1, "bpm": 80}, {"bar": S.sc("出発")[0] + 1, "bpm": 178}]
 
 # ================= パート =================
-V = Voice(S, vol=0.22, delay=0.75, patch="popLeadClear", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
+V = Voice(S, vol=0.22, delay=0.75, patch="surgeTropics", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 PNFX = [{"type": "eq", "low": -2, "mid": -1.5, "midHz": 350, "high": 1}]
 def piano(role, vol): return S.track(role, "piano", volume=vol, pan=-0.12, reverb=0.24, fx=PNFX)
 PR = piano("ピアノ（右手・分散和音）", 0.11)

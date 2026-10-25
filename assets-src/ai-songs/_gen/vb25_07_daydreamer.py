@@ -55,7 +55,7 @@ S.scene("最後の全力ダッシュ", 8, "interlude", [tr_chord(c, 1) for c in 
 S.scene("扉が閉まる", 4, "outro", ["Ab", "Bb", "Bb", "Ebadd9"])
 
 # ================= パート =================
-V = Voice(S, vol=0.22, delay=0.75, patch="voiceLeadModern", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
+V = Voice(S, vol=0.22, delay=0.75, patch="fifths", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 GT = [S.track(f"ギター1（{['根音', '5度', 'オクターブ'][i]}）", "distGuitar", **rock_gtr_spec(0.095, 0.0)) for i in range(3)]
 LG = S.track("ギター2（リフ・ソロ）", "leadGuitar", **lead_gtr_spec(0.13, -0.05))
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.21))

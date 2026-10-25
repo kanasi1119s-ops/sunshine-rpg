@@ -146,7 +146,10 @@ class Voice:
         self.main = song.track("歌の役（声のシンセ）", "lead", **voice_lead_spec(vol, 0.0, delay, bright, patch))
         # 重ねのパートはいつも作る（台本が V.low に直接書く「こもった歌」に使う）。low=False のときは、歌の役を写して重ねない
         self.double = low
-        self.low = song.track("歌の役（こもった写し）", "pad", **voice_low_spec(vol, patch))
+        # 2026-10-26 人間「どの曲もリードの音が同じなのが気になる」→ 曲ごとに歌の役の音色を変えた（生楽器も使う）。
+        #   生楽器（笛・弦・金管・サックスなど）は1オクターブ下が出ないので、下の重ねはやわらかいシンセにする
+        lowp = patch if patch.startswith(("pico", "pop", "voice", "modern", "bright", "surge", "chip")) else "modernPad"
+        self.low = song.track("歌の役（こもった写し）", "pad", **voice_low_spec(vol, lowp))
 
     def bar(self, b, s, off=0.0, low=True):
         self.main.bar(b, sing(s), off)

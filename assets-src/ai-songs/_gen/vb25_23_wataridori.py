@@ -44,7 +44,7 @@ S.scene("島が見えた", 16, "chorus", LAST_CH)
 S.scene("島に着く", 8, "outro", ["B", "C#", "D#m7", "F#", "B", "C#", "F#", "F#"])
 S.scene("波", 8, "outro", ["F#maj7"] * 8)
 
-V = Voice(S, vol=0.22, delay=0.75, patch="popLeadClear", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
+V = Voice(S, vol=0.22, delay=0.75, patch="viola", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 PLK = S.track("プラック（群れ）", "pad", **pluck_spec("pluckSynth", vol=0.08, pan=0.4, delay=0.75, sustain=0.5))
 PLM = S.track("プラック（歌の受け渡し・ソロ）", "pad", **pluck_spec("pluckSynth", vol=0.15, pan=0.4, delay=0.75, sustain=0.5))
 DROP = S.track("しずく（ガラスのプラック）", "pad", patch="glassPluck", volume=0.08, pan=-0.45, sustain=1.0, reverb=0.5)

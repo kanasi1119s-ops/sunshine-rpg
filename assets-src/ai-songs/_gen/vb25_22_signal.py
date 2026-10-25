@@ -47,7 +47,7 @@ S.scene("倍のノリ", 16, "chorus", LAST_CH)
 S.scene("まだ踊る", 4, "outro", ["Bmaj7", "Db", "Ebm", "Ebm"])
 S.scene("信号が戻る", 4, "outro", ["Ebm", "Ebm", "Ebm", "Ebm"])
 
-V = Voice(S, vol=0.22, delay=0.75, patch="popLeadClear", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
+V = Voice(S, vol=0.22, delay=0.75, patch="vocalChop", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 SB = [S.track(f"シンセのブラス{i + 1}", "pad", patch="polysynth", volume=0.075, pan=0.0, reverb=0.18, sustain=0.6, duck=0.2,
               fx=[{"type": "filter", "kind": "highpass", "freq": 200, "q": 0.7}, {"type": "eq", "low": 0, "mid": 3, "midHz": 1400, "high": 1}]) for i in range(3)]
 BRM = S.track("ブラス（フック・歌の受け渡し）", "brass", patch="brassSection", volume=0.2, pan=-0.2, reverb=0.22, gainDb=3, phrase=4,
