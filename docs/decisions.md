@@ -239,3 +239,9 @@
 - 変更: `recordedCabImpulse` を、150Hz〜5kHz の対数 24 点の振幅の二乗平均でそろえる（`bandLevel`）。
 - 影響: greenback 系を使う音色（loud-mid＝B3 の右側、electro-rock の右側など）は右が約 7dB 小さくなり、左右がそろう。dd-v30（B3 の左）はほぼ変わらない（+0.6dB）。B3 の音の印象が変わる可能性があるので、人間に聞き直してもらう。
 - あわせて: 加工ギター（electro-rock-gated）の残響の送りを 0.03 に（人間「エコー強いかな」）。エレクトロロック（electro-rock）は採用（人間「1つ目はよい」）。
+
+## 2026-10-25 作曲ソフトの電子音に、プロ用のシンセ Surge XT の音を入れる
+- 理由: 人間「全部違うね。ゲームになりそうな感じが強い」「プロ仕様のシンセ入ってると思ってたよ」。自作の合成（単純な波形の重ね）は、作り方を細かくしてもゲームの BGM っぽさが残った。
+- やったこと: Surge XT（GPL3・無料。鳴らした音は自由に使える。docs/assets-credits.md）のプリセット約1,860個を役割ごとのフレーズで鳴らし、音質の点数（PQ）でふるいにかけ、上位を人間が耳で選んだ。選ばれたものを `tools/surge/sample.py` で3半音ごとに録って SF3 にした。
+- リード（人間の選択）: 2 Raving In The Tropics・5 Happy Saws・9 Formant Pulse（よい）、10 DNA Sequencer（ポップ感に）、14 Paraphonic NL Bandpass Lead（フォンクに）、15 Resofest 1（宇宙の曲に）。
+- GM の番号が足りないので、曲で使っていなかった自作の音（voiceLeadA 54・voiceLeadU 91・popLead 93・popStab 95・clearLead 113・clearPad 114）の番号を Surge のリードに渡した（影響: その6つの patch 名は使えなくなった。使っている曲はなかった）。

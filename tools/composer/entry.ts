@@ -115,15 +115,18 @@ import vocalChopUrl from "../../assets-src/soundfont/extra/synth-modern-chop.sf3
 import modernPadUrl from "../../assets-src/soundfont/extra/synth-modern-pad.sf3?url";
 import kawaiiArpUrl from "../../assets-src/soundfont/extra/synth-modern-arp.sf3?url";
 import brightLeadUrl from "../../assets-src/soundfont/extra/synth-modern-brightlead.sf3?url";
-import clearLeadUrl from "../../assets-src/soundfont/extra/synth-clear-lead.sf3?url";
-import clearPadUrl from "../../assets-src/soundfont/extra/synth-clear-pad.sf3?url";
+// 2026-10-25 Surge XT のリード（プロ用の無料シンセ。人間が聴いて選んだ 2・5・9・10。tools/surge/sample.py で録った）
+import surgeDnaSeqUrl from "../../assets-src/soundfont/extra/surge-lead-dnaseq.sf3?url";
+import surgeParaphonicUrl from "../../assets-src/soundfont/extra/surge-lead-paraphonic.sf3?url";
+import surgeResofestUrl from "../../assets-src/soundfont/extra/surge-lead-resofest.sf3?url";
+// import clearPadUrl from "../../assets-src/soundfont/extra/synth-clear-pad.sf3?url";
 import seasonFxUrl from "../../assets-src/soundfont/extra/season-fx.sf3?url";
-import voiceLeadAUrl from "../../assets-src/soundfont/extra/synth-voice-lead-a.sf3?url";
-import voiceLeadUUrl from "../../assets-src/soundfont/extra/synth-voice-lead-u.sf3?url";
+import surgeTropicsUrl from "../../assets-src/soundfont/extra/surge-lead-tropics.sf3?url";
+import surgeHappySawsUrl from "../../assets-src/soundfont/extra/surge-lead-happysaws.sf3?url";
 import voiceLeadModernUrl from "../../assets-src/soundfont/extra/synth-voice-lead-modern.sf3?url";
-import popLeadUrl from "../../assets-src/soundfont/extra/synth-pop-lead.sf3?url";
+import surgeFormantPulseUrl from "../../assets-src/soundfont/extra/surge-lead-formantpulse.sf3?url";
 import popKeysUrl from "../../assets-src/soundfont/extra/synth-pop-keys.sf3?url";
-import popStabUrl from "../../assets-src/soundfont/extra/synth-pop-stab.sf3?url";
+// import popStabUrl from "../../assets-src/soundfont/extra/synth-pop-stab.sf3?url";
 import popLeadClearUrl from "../../assets-src/soundfont/extra/synth-pop-lead-clear.sf3?url";
 import picoLeadUrl from "../../assets-src/soundfont/extra/synth-pico-lead.sf3?url";
 import picoLeadRoundUrl from "../../assets-src/soundfont/extra/synth-pico-lead-round.sf3?url";
@@ -423,11 +426,12 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   // 2026-10-25 現代的なシンセ（自作の合成。ステレオ。GM の空き番号 1・5・10・23・31・44・69・74・76・112）
   modernLead: { programs: [1], url: modernLeadUrl }, modernSupersaw: { programs: [5], url: modernSupersawUrl }, fbChord: { programs: [10], url: fbChordUrl }, modernPluck: { programs: [23], url: modernPluckUrl }, popBell: { programs: [31], url: popBellUrl }, modernBass: { programs: [44], url: modernBassUrl }, vocalChop: { programs: [69], url: vocalChopUrl }, modernPad: { programs: [74], url: modernPadUrl }, kawaiiArp: { programs: [76], url: kawaiiArpUrl }, brightLead: { programs: [112], url: brightLeadUrl },
   // 2026-10-25 クリアで揺れの少ないシンセ（113・114）と、季節を感じる音・小さな打楽器（105。鍵盤ごとに別の音）
-  clearLead: { programs: [113], url: clearLeadUrl }, clearPad: { programs: [114], url: clearPadUrl }, seasonFx: { programs: [105], url: seasonFxUrl },
+  surgeDnaSeq: { programs: [113], url: surgeDnaSeqUrl }, surgeResofest: { programs: [114], url: surgeResofestUrl }, seasonFx: { programs: [105], url: seasonFxUrl },
   // 2026-10-25 声のように聞こえるリード（ボカロらしい歌の役。声ではなくシンセ。母音「あ」54・「う」91）
-  voiceLeadA: { programs: [54], url: voiceLeadAUrl }, voiceLeadU: { programs: [91], url: voiceLeadUUrl }, voiceLeadModern: { programs: [92], url: voiceLeadModernUrl },
+  // 2026-10-25 自作の声リード（あ・う）とポップリード・クリアリードは使っていなかったので、番号を Surge XT のリードに渡した
+  surgeTropics: { programs: [54], url: surgeTropicsUrl }, surgeHappySaws: { programs: [91], url: surgeHappySawsUrl }, voiceLeadModern: { programs: [92], url: voiceLeadModernUrl },
   // 2026-10-25 ポップな音（自作の合成）
-  popLead: { programs: [93], url: popLeadUrl }, popKeys: { programs: [94], url: popKeysUrl }, popStab: { programs: [95], url: popStabUrl }, popLeadClear: { programs: [96], url: popLeadClearUrl }, picoLead: { programs: [97], url: picoLeadUrl }, picoLeadRound: { programs: [98], url: picoLeadRoundUrl },
+  surgeFormantPulse: { programs: [93], url: surgeFormantPulseUrl }, popKeys: { programs: [94], url: popKeysUrl }, surgeParaphonic: { programs: [95], url: surgeParaphonicUrl }, popLeadClear: { programs: [96], url: popLeadClearUrl }, picoLead: { programs: [97], url: picoLeadUrl }, picoLeadRound: { programs: [98], url: picoLeadRoundUrl },
   pluckSynth: { programs: [85], url: pluckEdmUrl }, chipPulse25: { programs: [124], url: chip25Url }, chipPulse12: { programs: [125], url: chip12Url }, reeseBass: { programs: [34], url: reeseUrl }, fxElectro: { programs: [126], url: fxElectroUrl },
 };
 function extrasFor(score: Score): string[] {
