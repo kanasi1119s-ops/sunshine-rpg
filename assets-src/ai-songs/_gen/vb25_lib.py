@@ -410,7 +410,9 @@ def teto(S, LY, V, transpose=0, level=None, special=None, vib=None, lead_vol=0.1
         fx_ = 0; B_ = S.beats; ev = []
         for st, L, nn, kana in LY.ev:
             bar = min(int(st // B_ + 1e-6), S.nb - 1); pcs = chord_pcs(S.chords[bar].split("|")[0]); m0 = midi(nn); pos = st - bar * B_
-            if (L >= 1 - 1e-6 or abs(pos) < 1e-6 or abs(pos - 2) < 1e-6) and m0 % 12 not in pcs and (m0 - 1) % 12 in pcs: nn = nm(m0 - 1); fx_ += 1
+            if (L >= 1 - 1e-6 or abs(pos) < 1e-6 or abs(pos - 2) < 1e-6) and m0 % 12 not in pcs and (m0 - 1) % 12 in pcs:
+                nn = nm(m0 - 1); fx_ += 1
+                if _os.environ.get("VB_DEBUG"): print(f"    直し {bar + 1}小節 {pos:g}拍 {nm(m0)}→{nn}（{S.chords[bar]}）")
             ev.append((st, L, nn, kana))
         if fx_: print(f"  歌のアヴォイドノートを直した: {fx_}か所")
         ev = sorted(ev); toks = []; t = 0.0; prev_m = None; prev_end = -9; flip = False; moved = 0
