@@ -125,6 +125,8 @@ import popLeadUrl from "../../assets-src/soundfont/extra/synth-pop-lead.sf3?url"
 import popKeysUrl from "../../assets-src/soundfont/extra/synth-pop-keys.sf3?url";
 import popStabUrl from "../../assets-src/soundfont/extra/synth-pop-stab.sf3?url";
 import popLeadClearUrl from "../../assets-src/soundfont/extra/synth-pop-lead-clear.sf3?url";
+import picoLeadUrl from "../../assets-src/soundfont/extra/synth-pico-lead.sf3?url";
+import picoLeadRoundUrl from "../../assets-src/soundfont/extra/synth-pico-lead-round.sf3?url";
 import pluckGlassUrl from "../../assets-src/soundfont/extra/synth-pluck-glass.sf3?url";
 import chip25Url from "../../assets-src/soundfont/extra/synth-chip-pulse25.sf3?url";
 import chip12Url from "../../assets-src/soundfont/extra/synth-chip-pulse12.sf3?url";
@@ -425,7 +427,7 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   // 2026-10-25 声のように聞こえるリード（ボカロらしい歌の役。声ではなくシンセ。母音「あ」54・「う」91）
   voiceLeadA: { programs: [54], url: voiceLeadAUrl }, voiceLeadU: { programs: [91], url: voiceLeadUUrl }, voiceLeadModern: { programs: [92], url: voiceLeadModernUrl },
   // 2026-10-25 ポップな音（自作の合成）
-  popLead: { programs: [93], url: popLeadUrl }, popKeys: { programs: [94], url: popKeysUrl }, popStab: { programs: [95], url: popStabUrl }, popLeadClear: { programs: [96], url: popLeadClearUrl },
+  popLead: { programs: [93], url: popLeadUrl }, popKeys: { programs: [94], url: popKeysUrl }, popStab: { programs: [95], url: popStabUrl }, popLeadClear: { programs: [96], url: popLeadClearUrl }, picoLead: { programs: [97], url: picoLeadUrl }, picoLeadRound: { programs: [98], url: picoLeadRoundUrl },
   pluckSynth: { programs: [85], url: pluckEdmUrl }, chipPulse25: { programs: [124], url: chip25Url }, chipPulse12: { programs: [125], url: chip12Url }, reeseBass: { programs: [34], url: reeseUrl }, fxElectro: { programs: [126], url: fxElectroUrl },
 };
 function extrasFor(score: Score): string[] {

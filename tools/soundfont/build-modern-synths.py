@@ -437,6 +437,35 @@ def _(f0, L, n, rnd):
     return y * e, y * e
 
 
+def _pico(f0, L, n, rnd, pw, oct_pw, oct_g, blip=12, crush=False):
+    """現代的なピコピコのリード（2026-10-25 人間「リードの音、現代的のピコピコにしてほしい」）: うねらない1本のパルス波（チップ）を、
+    今の音質で（折り返しを抑えたパルス・1オクターブ上の細いパルスを小さく重ねる・鳴り始めに上から 10ms で落ちる「ピッ」）。
+    歪みなし、高い所は 11kHz まで素直に。crush=True で 10 ビット相当のざらつきを少しだけ"""
+    c = max(1, round(f0 * L / SR)); c2 = max(1, round(2 * f0 * L / SR))
+    x = osc("sq", c, L, n, 0.0, pw) * 0.7 + osc("sq", c2, L, n, 0.25, oct_pw) * oct_g
+    t = np.arange(n) / SR
+    # 鳴り始めの「ピッ」: blip 半音上のパルスが 12ms で消える
+    cb = max(1, round(f0 * 2 ** (blip / 12) * L / SR))
+    x = x + osc("sq", cb, L, n, 0.0, 0.5) * 0.35 * np.exp(-t / 0.012)
+    if crush:
+        x = np.round(x * 512) / 512
+    y = lp(x, 11000, 2); y = peak(y, 2600, 1.5, 0.9); y = peak(y, 350, -2.0, 0.8); y = hp(y, 180)
+    e = env_adr(n, 0.002, 0.15, 0.8)
+    return y * e, y * e
+
+
+@instr("synth-pico-lead", program=97, keys=(48, 96), step=3, loop=88200, pre=1.2, release=0.08, level=0.72)
+def _(f0, L, n, rnd):
+    """ピコピコのリード（明るい）: パルス 25%＋1オクターブ上のパルス 12.5%（小さく）"""
+    return _pico(f0, L, n, rnd, 0.25, 0.125, 0.22)
+
+
+@instr("synth-pico-lead-round", program=98, keys=(48, 96), step=3, loop=88200, pre=1.2, release=0.08, level=0.72)
+def _(f0, L, n, rnd):
+    """ピコピコのリード（丸い）: パルス 50%＋1オクターブ上の 25%（小さく）、ほんの少しのざらつき"""
+    return _pico(f0, L, n, rnd, 0.5, 0.25, 0.18, crush=True)
+
+
 # ---------------- 書き出し ----------------
 class R:
     def __init__(self, seed): self.r = np.random.default_rng(seed)
