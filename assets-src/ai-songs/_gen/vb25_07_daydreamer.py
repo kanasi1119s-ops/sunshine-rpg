@@ -138,7 +138,7 @@ for i, b in enumerate(S.sc("青信号")):
     else: V.bar(b, KE.mel(GRE[i - 6], oct=4))
 LAST_L = [l.replace("1'':", "6':") for l in CH + CH[:8]] + LASTX
 for i, b in enumerate(S.sc("駅に滑り込む")): V.bar(b, KE.mel(LAST_L[i], oct=4))
-for i, b in enumerate(S.sc("最後の全力ダッシュ")): V.bar(b, KC.mel((DASHm if i < 4 else DASH)[i % 4], oct=3))
+for i, b in enumerate(S.sc("最後の全力ダッシュ")): V.bar(b, KC.mel((DASHm if i < 4 else DASH)[i % 4], oct=4))   # C は B より半音上なので oct=4
 
 # ================= ギター =================
 # リフ（ギター2）: 16分＋休符の刻みと、オクターブの跳び。D3〜D5
@@ -160,7 +160,7 @@ SOLO = ["1':0.5 2':0.5 3':0.5 5':0.5 4':1 3':1", "6:0.5 1':0.5 3':0.5 6':0.5 5':
 chk(RIFF, RIFF8, SOLO)
 for name in ("寝坊だ", "全力ダッシュ", "ヒーローのリフ", "全力ダッシュ2"):
     for i, b in enumerate(S.sc(name)): LG.bar(b, K.mel((RIFF if i % 8 < 4 else RIFF8)[i % 4], oct=3))
-for i, b in enumerate(S.sc("最後の全力ダッシュ")): LG.bar(b, KC.mel((RIFF if i < 4 else RIFF8)[i % 4], oct=3))
+for i, b in enumerate(S.sc("最後の全力ダッシュ")): LG.bar(b, KC.mel((RIFF if i < 4 else RIFF8)[i % 4], oct=4))
 for i, b in enumerate(S.sc("必殺のギター")): LG.bar(b, K.mel(SOLO[i], oct=3))
 # サビの4小節目ごとに、ギター2の短い合いの手（歌の伸ばしの所）
 for name, kk in (("あと500メートル", KD), ("あと300メートル", KD), ("駅に滑り込む", KE)):

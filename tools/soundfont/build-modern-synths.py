@@ -277,6 +277,31 @@ def _(f0, L, n, rnd):
     return out[0] * e, out[1] * e
 
 
+@instr("synth-clear-lead", program=113, keys=(48, 96), step=3, loop=88200, pre=1.2, release=0.2, level=0.72)
+def _(f0, L, n, rnd):
+    """クリアで揺れの少ないリード（2026-10-25 人間「クリアで揺れの少ないシンセも欲しい」）: デチューンなしの1本。
+    三角波＋ソー（小さく）＋サインの1オクターブ上を少し。ローパス 6kHz、歪みなし。ユニゾンのうねりがない、まっすぐな音"""
+    c = max(1, round(f0 * L / SR)); c2 = max(1, round(2 * f0 * L / SR))
+    x = osc("tri", c, L, n, 0) * 0.8 + osc("saw", c, L, n, 0) * 0.22 + osc("sin", c2, L, n, 0) * 0.12
+    y = lp(x, 6000, 2); y = hp(y, 140); y = peak(y, 2500, 1.5, 0.9)
+    e = env_adr(n, 0.008, 0.2, 0.9)
+    return y * e, y * e
+
+
+@instr("synth-clear-pad", program=114, keys=(36, 96), step=3, loop=88200, pre=1.2, release=1.0, level=0.62)
+def _(f0, L, n, rnd):
+    """クリアで揺れの少ない和音の音: ソー2本（±3 セントだけ）を左右に、三角の1オクターブ上。ローパス 4kHz、アタック 0.08 秒。
+    スーパーソウのような厚いうねりはない、透き通った和音"""
+    l, r = unison("saw", f0, L, n, 2, 3, 0.7, rnd)
+    c2 = max(1, round(2 * f0 * L / SR)); t2 = osc("tri", c2, L, n, 0) * 0.35
+    out = []
+    for x in (l + t2, r + t2):
+        y = lp(x, 4000, 2); y = hp(y, 160); y = peak(y, 350, -2.5, 0.8); out.append(y)
+    t = np.arange(n) / SR
+    e = np.minimum(1, t / 0.08)
+    return out[0] * e, out[1] * e
+
+
 # ---------------- 書き出し ----------------
 class R:
     def __init__(self, seed): self.r = np.random.default_rng(seed)
