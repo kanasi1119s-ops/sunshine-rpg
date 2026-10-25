@@ -95,8 +95,8 @@ for b in range(S.nb):
         for j in range(3): EP[j].bar(b, ("R:0.25 X:0.25 R:0.5 X:0.25 R:0.75 R:2" if stop_ else "R:0.25 X:0.25 R:0.5 X:0.25 R:0.75 R:0.25 X:0.25 R:0.5 X:0.25 R:0.75").replace("X", nm(v[j], True)))
     elif n == "リーダー":
         BASS.bar(b, bass_line(S, b, "root8"))
-        pw = power(ch, "E2")
-        for j in range(2): GT[j].bar(b, " ".join(f"{nm(pw[j], True)}:0.5" + ("!" if q % 2 == 0 else "") for q in range(8)))
+        pw = power(ch, "E2")   # 2026-10-25: 8分の刻み → 付点のリズムでのばす和音（10秒ごとの点 7.0）
+        for j in range(2): GT[j].bar(b, f"{nm(pw[j], True)}:1.5! {nm(pw[j], True)}:1.5 {nm(pw[j], True)}:1")
     elif n == "全員":
         BASS.bar(b, bass_line(S, b, "oct8" if i < 16 else "root8"))
         for j in range(3): EP[j].bar(b, "X:1.5 X:1 X:1.5".replace("X", nm(v[j], True)))
