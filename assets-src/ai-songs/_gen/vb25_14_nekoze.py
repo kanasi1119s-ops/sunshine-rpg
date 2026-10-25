@@ -40,7 +40,7 @@ EP = [S.track(f"エレピの和音{i + 1}", "fmEpiano", **EPS) for i in range(3)
 EPM = S.track("エレピ（歌の受け渡し）", "fmEpiano", **EPS)
 BR = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.12, pan=0.3, reverb=0.25, gainDb=2,
               fx=[{"type": "eq", "low": -3, "mid": 2, "midHz": 1600, "high": 0}]) for i in range(3)]
-BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.22))
+BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.2))
 SCR = S.track("スクラッチ風の音", "guitar", patch="guitarFx", volume=0.07, pan=0.15, reverb=0.1, modulate=False)
 PAD = [S.track(f"月のパッド{i + 1}", "pad", **pad_spec("warmPad", vol=0.06, pan=-0.5, duck=0.25)) for i in range(2)]
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.07, pan=0, reverb=0.3)

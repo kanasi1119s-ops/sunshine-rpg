@@ -53,6 +53,8 @@ export const SYNTH_PATCHES: Record<string, number> = {
   cymbalFx: 127,
   // 2026-10-22 ベースのミュート系の短い音（--bass bnb／bnb-loud のときだけ本物の録音: 強さ 1〜100＝ゴーストノート、101〜127＝スタッカート）
   bassMute: 37,
+  // 2026-10-25 現代的なシンセ（自作の合成・ステレオ。ボカロ・J-POP・フューチャーベース向け。docs/sound/modern-synth-study.md）
+  modernLead: 1, modernSupersaw: 5, fbChord: 10, modernPluck: 23, popBell: 31, modernBass: 44, vocalChop: 69, modernPad: 74, kawaiiArp: 76, brightLead: 112,
   iceRain: 96, soundtrack: 97, crystal: 98, atmosphere: 99, brightness: 100, goblin: 101, echoDrops: 102, starTheme: 103,
 };
 

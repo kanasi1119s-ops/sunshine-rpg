@@ -104,6 +104,17 @@ import frameDrumUrl from "../../assets-src/soundfont/extra/framedrum-vcsl.sf3?ur
 import bagpipeRealUrl from "../../assets-src/soundfont/extra/bagpipe-freepats.sf3?url";
 import pluckEdmUrl from "../../assets-src/soundfont/extra/synth-pluck-edm.sf3?url";
 import superAirUrl from "../../assets-src/soundfont/extra/synth-pad-supersaw-air.sf3?url";
+// 2026-10-25 現代的なシンセ（ボカロ・J-POP・フューチャーベース向け。自作の合成。tools/soundfont/build-modern-synths.py）
+import modernLeadUrl from "../../assets-src/soundfont/extra/synth-modern-lead.sf3?url";
+import modernSupersawUrl from "../../assets-src/soundfont/extra/synth-modern-supersaw.sf3?url";
+import fbChordUrl from "../../assets-src/soundfont/extra/synth-modern-fbchord.sf3?url";
+import modernPluckUrl from "../../assets-src/soundfont/extra/synth-modern-pluck.sf3?url";
+import popBellUrl from "../../assets-src/soundfont/extra/synth-modern-bell.sf3?url";
+import modernBassUrl from "../../assets-src/soundfont/extra/synth-modern-bass.sf3?url";
+import vocalChopUrl from "../../assets-src/soundfont/extra/synth-modern-chop.sf3?url";
+import modernPadUrl from "../../assets-src/soundfont/extra/synth-modern-pad.sf3?url";
+import kawaiiArpUrl from "../../assets-src/soundfont/extra/synth-modern-arp.sf3?url";
+import brightLeadUrl from "../../assets-src/soundfont/extra/synth-modern-brightlead.sf3?url";
 import pluckGlassUrl from "../../assets-src/soundfont/extra/synth-pluck-glass.sf3?url";
 import chip25Url from "../../assets-src/soundfont/extra/synth-chip-pulse25.sf3?url";
 import chip12Url from "../../assets-src/soundfont/extra/synth-chip-pulse12.sf3?url";
@@ -397,6 +408,8 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   // 電子音楽・テクノポップ・ダンス・ボカロ: プラック・チップチューンのパルス波 25%／12.5%・リースベース・効果音（ライザーなど）。すべてこのソフトで合成したもの
   // 2026-10-21 現代的な空間のシンセ（自作の合成。空き番号 122・123）
   supersawPad: { programs: [122], url: superAirUrl }, glassPluck: { programs: [123], url: pluckGlassUrl },
+  // 2026-10-25 現代的なシンセ（自作の合成。ステレオ。GM の空き番号 1・5・10・23・31・44・69・74・76・112）
+  modernLead: { programs: [1], url: modernLeadUrl }, modernSupersaw: { programs: [5], url: modernSupersawUrl }, fbChord: { programs: [10], url: fbChordUrl }, modernPluck: { programs: [23], url: modernPluckUrl }, popBell: { programs: [31], url: popBellUrl }, modernBass: { programs: [44], url: modernBassUrl }, vocalChop: { programs: [69], url: vocalChopUrl }, modernPad: { programs: [74], url: modernPadUrl }, kawaiiArp: { programs: [76], url: kawaiiArpUrl }, brightLead: { programs: [112], url: brightLeadUrl },
   pluckSynth: { programs: [85], url: pluckEdmUrl }, chipPulse25: { programs: [124], url: chip25Url }, chipPulse12: { programs: [125], url: chip12Url }, reeseBass: { programs: [34], url: reeseUrl }, fxElectro: { programs: [126], url: fxElectroUrl },
 };
 function extrasFor(score: Score): string[] {

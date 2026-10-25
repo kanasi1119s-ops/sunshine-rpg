@@ -50,7 +50,12 @@ LG = S.track("リードギター（リフ・ソロ・歌の受け渡し）", "di
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.21))
 GLK = S.track("グロッケン（星）", "glockenspiel", volume=0.1, pan=0.3, reverb=0.45, sustain=1.6)
 STR = [S.track(f"ストリングス{i + 1}", "strings", **strings_spec(0.085, -0.3)) for i in range(3)]
-BUG = S.track("虫の声", "crickets", volume=0.05, pan=0.4, reverb=0.4)
+# 虫の声: 高いパルス波を細かく震わせる（トレモロ 15Hz）
+BUG = S.track("虫の声（シンセ）", "lead", patch="chipPulse12", volume=0.035, pan=0.5, reverb=0.45, mono=True,
+              fx=[{"type": "filter", "kind": "highpass", "freq": 1800, "q": 0.7}, {"type": "tremolo", "rate": 15, "depth": 1.0},
+                  {"type": "filter", "kind": "lowpass", "freq": 6000, "q": 0.7}, {"type": "reverb", "mix": 0.4}])
+CHIRP = "A6:1.25 R:0.75 A6:0.75 R:1.25"
+CHIRP2 = "R:0.5 G6:1 R:1 A6:1.25 R:0.25"
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.075, pan=0, reverb=0.3)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 # 流れ星を待つ: こもった音（ローパス 800Hz の写しに入れかえる）
@@ -93,11 +98,11 @@ BM = ["3:0.6667 4:0.3333 5:1 5:0.6667 6:0.3333 5:1",
       "7:1 6:0.6667 5:0.3333 3:1 5:0.6667 6:0.3333",
       "7:2 R:0.6667 5:0.3333 7:0.6667 1':0.3333",
       "2':0.6667 1':0.3333 7:1 1':0.6667 7:0.3333 6:1",
-      "#5:0.6667 6:0.3333 7:1 2':0.6667 1':0.3333 7:1",
+      "#5:0.6667 6:0.3333 7:1 2':0.6667 3':0.3333 2':1",
       "1':1 3':1 2':0.6667 1':0.3333 7:0.6667 6:0.3333",
       "5:1 7:1 R:2"]
 BM2 = BM[:4] + ["3':0.6667 2':0.3333 1':1 2':0.6667 1':0.3333 7:1",
-                "#5:0.6667 7:0.3333 2':1 1':0.6667 7:0.3333 6:1",
+                "#5:0.6667 7:0.3333 2':1 3':0.6667 2':0.3333 7:1",
                 "1':0.6667 2':0.3333 3':2 R:1",
                 "2':1 R:3"]
 # サビ: 同じ音の3連打 → 高く跳んでのばす
@@ -227,9 +232,9 @@ for b in range(S.nb):
     elif n == "帰り道": BASS.bar(b, bass_line(S, b, "half") if i < 8 else (f"{nm(low(ch, 'E1'))}:4" if i == 8 else "R:4"))
 
 # 虫の声（空き地・花火の燃えかすの頭・最後）
-for b in S.sc("空き地"): BUG.bar(b, "C6:4")
-for b in S.sc("花火の燃えかす")[:6]: BUG.bar(b, "C6:4")
-for b in S.sc("帰り道")[8:] + S.sc("虫の声と1音"): BUG.bar(b, "C6:4")
+for b in S.sc("空き地"): BUG.bar(b, CHIRP)
+for j, b in enumerate(S.sc("花火の燃えかす")[:6]): BUG.bar(b, CHIRP if j % 2 == 0 else CHIRP2)
+for j, b in enumerate(S.sc("帰り道")[8:] + S.sc("虫の声と1音")): BUG.bar(b, CHIRP if j % 2 == 0 else CHIRP2)
 GLK.bar(S.sc("虫の声と1音")[1], K.mel("5:4", oct=5))           # 最後の1音（星がひとつ）
 # 効果音
 riser(FX, S.sc("銀河")[0], 4, "C4"); riser(FX, S.sc("銀河2")[0], 4, "C4"); riser(FX, S.sc("流れ星")[0], 16, "D4")
@@ -265,7 +270,7 @@ for b in range(S.nb):
     elif n.startswith("夜風"):
         D.set(b, "." * 16, "." * 16, "." * 16)
         if i < 7:
-            TRIP[b] = ("X....xX....x" if i % 2 == 0 else "X.....X..x..", "...X.o...X.o" if i < 6 else "...X.o..oXXX", "XoxOoxXoxOox")
+            TRIP[b] = ("X....xX....x" if i % 2 == 0 else "X.....X..x..", "...X.o...X.o" if i < 6 else "...X.o..oXXX", (".oxOoxXoxOox" if i in (0, 4) else "XoxOoxXoxOox"))
             if i == 0: D.cym(b, "C2:4")
             if i == 4: D.cym(b, "G2:4")
         else:
@@ -282,7 +287,7 @@ for b in range(S.nb):
         if i < 8: D.set(b, "." * 16, "." * 16, "." * 16)
         else:
             vgroove(D, b, "half", ghosts=0.45, seed=b, h="x...x...x...x...")
-            D.cym(b, ("B2:1 " if i == 8 else "D2:1 ") + "D2:1 D2:1 D2:1"); D.H[b] = "." * 16
+            if i < 15: D.cym(b, ("B2:1 " if i == 8 else "D2:1 ") + "D2:1 D2:1 D2:1"); D.H[b] = "." * 16
         if i == 7: D.set(b, "." * 16, "........oooxxxXX", "." * 16)
         if i == 15: put_fill(D, b, "lift")
     elif n == "ギターソロ":

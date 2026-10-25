@@ -81,13 +81,13 @@ class Silence:
 
 
 # ---------------- 歌の役のシンセ ----------------
-def voice_lead_spec(vol=0.21, pan=0.0, delay=0.75, bright=0.0, patch="squareLead"):
+def voice_lead_spec(vol=0.21, pan=0.0, delay=0.75, bright=0.0, patch="modernLead"):
     """声のように聞こえるリード（docs/sound/vocaloid-study.md の 3・19〜22）。
     矩形波（squareLead）に、母音「あ」の響きの山（900Hz・1800Hz）と、歌の明るさ（3kHz）を EQ で作る。150Hz より下を切る"""
     fx = [{"type": "filter", "kind": "highpass", "freq": 150, "q": 0.7},
-          {"type": "eq", "low": 0, "mid": 5.0, "midHz": 900, "high": 0},
-          {"type": "eq", "low": 0, "mid": 3.5, "midHz": 1800, "high": 0},
-          {"type": "eq", "low": -1, "mid": 2.5 + bright, "midHz": 3000, "high": -1.5},
+          {"type": "eq", "low": 0, "mid": 2.5, "midHz": 900, "high": 0},      # 2026-10-25: 現代的なリード（modernLead）に替えたので、母音の山は控えめに
+          {"type": "eq", "low": 0, "mid": 1.5, "midHz": 1800, "high": 0},
+          {"type": "eq", "low": -1, "mid": 2.0 + bright, "midHz": 3000, "high": -1.0},
           {"type": "filter", "kind": "lowpass", "freq": 8500, "q": 0.7},
           {"type": "pingpong", "beats": delay, "mix": 0.14, "feedback": 0.22},
           {"type": "plate", "mix": 0.15}]
@@ -95,7 +95,7 @@ def voice_lead_spec(vol=0.21, pan=0.0, delay=0.75, bright=0.0, patch="squareLead
              vibrato={"rate": 5.8, "depth": 24, "delay": 0.45}, autoScoop=False, breath=True)
 
 
-def voice_low_spec(vol=0.21, patch="squareLead"):
+def voice_low_spec(vol=0.21, patch="modernLead"):
     """1オクターブ下の重ね（ローパス 2kHz、−9dB 相当）"""
     fx = [{"type": "filter", "kind": "highpass", "freq": 120, "q": 0.7},
           {"type": "filter", "kind": "lowpass", "freq": 2000, "q": 0.7},
@@ -134,7 +134,7 @@ def plain(s):
 
 class Voice:
     """歌の役（本体＋1オクターブ下の重ね）。v.bar(b, 音の並び) で両方に置く。lo=False で重ねなし"""
-    def __init__(self, song, vol=0.21, delay=0.75, bright=0.0, patch="squareLead", low=True):
+    def __init__(self, song, vol=0.21, delay=0.75, bright=0.0, patch="modernLead", low=True):
         self.main = song.track("歌の役（声のシンセ）", "lead", **voice_lead_spec(vol, 0.0, delay, bright, patch))
         self.low = song.track("歌の役（1オクターブ下の重ね）", "pad", **voice_low_spec(vol, patch)) if low else None
 
@@ -174,9 +174,84 @@ def vtag(S):
     pass
 
 
+def playable(S):
+    """人間が叩ける打ち込みにする（2026-10-25 人間「テンポは速いけど、打ち込みの数も多い必要はない。人間が絶対叩けない打ち込みが多すぎるのも違う」）。
+    ・16分のハイハットは、16分の速さが 1秒に 10 打を超える（テンポ 150 より上）と片手では刻めないので、8分にする（強い打ちは残す）
+    ・キックの16分の連打（となりどうし）は、テンポ 150 より上では後ろを消す（1つの足で踏めない）
+    ・スネア・タムは両手なので16分のフィルはよいが、32分（0.125 拍）の連打は消す（テンポ 120 より上）
+    S.allow_fast（場面の名前の集合）に入れた場面だけは、そのまま（トラップのハットの細かい連打など、打ち込みの音楽として作る所）"""
+    D = S.drums
+    if D is None: return 0
+    n = D.n; B = S.beats; changed = 0
+    allow = getattr(S, "allow_fast", set())
+    tmap = {e["bar"] - 1: e["bpm"] for e in S.tempo}
+    bpm = S.bpm
+    for b in range(S.nb):
+        if b in tmap: bpm = tmap[b]
+        name = S.scene_of(b)[0]
+        if name in allow: continue
+        rate = bpm / 60 * (n / B)          # 1秒の16分の数
+        if rate > 10:
+            h = list(D.H[b])
+            for i in range(1, n, 2):
+                if h[i] != "." and h[i] != "O": h[i] = "."; changed += 1
+                elif h[i] == "O" and h[i - 1] == ".": h[i - 1] = "O"; h[i] = "."; changed += 1
+            D.H[b] = "".join(h)
+            k = list(D.K[b])
+            for i in range(1, n):
+                if k[i] != "." and k[i - 1] != ".": k[i] = "."; changed += 1
+            D.K[b] = "".join(k)
+    if bpm > 120:
+        for tr_ in (D.T,):
+            tr_.ev = [e for e in tr_.ev if e[1] > 0.13]
+    if changed: print(f"  人間が叩ける打ち込みにした: {changed}打を減らした")
+    return changed
+
+
+# 2026-10-25 人間「電子音をもっと現代的に。ボカロっぽいシンセじゃない」→ 作曲ソフトに現代的なシンセ10種を足した（docs/sound/modern-synth-study.md）。
+# 書き出しのときに、古いシンセの音色を新しいものへ置きかえる（台本の中の名前はそのままでよい）。チップチューンの音はそのまま（わざとの懐かしい音）
+MODERN = {"squareLead": "modernLead", "sawLead": "brightLead", "supersawPad": "modernSupersaw", "pluckSynth": "modernPluck",
+          "warmPad": "modernPad", "synthBass1": "modernBass", "synthBass2": "modernBass", "polysynth": "fbChord"}
+
+
+def modernize(S):
+    n = 0
+    for t in S.tracks:
+        p = t.spec.get("patch")
+        if p in MODERN and not getattr(S, "keep_old_synth", False):
+            t.spec["patch"] = MODERN[p]; n += 1
+    if n: print(f"  現代的なシンセに置きかえた: {n}パート")
+
+
+def muffle(S, tracks, bars, freq=800):
+    """最後のサビの前の「こもり」: tracks の、bars の間の音を、ローパスを掛けた写しのパートへ移す（写しは1つの楽器に1つ作る）"""
+    bars = set(bars); B = S.beats
+    for t in tracks:
+        cp = S.track(t.role + "（こもり）", t.inst, **dict(t.spec))
+        fx = [f for f in cp.spec.get("fx", []) if f.get("kind") != "lowpass"]
+        cp.spec["fx"] = [{"type": "filter", "kind": "lowpass", "freq": freq, "q": 0.9}] + fx
+        keep = []
+        for e in t.ev:
+            if int(e[0] // B) in bars: cp.ev.append(e)
+            else: keep.append(e)
+        t.ev = keep
+    return S
+
+
+def ride(D, b, pattern="x.x.x.x.", note="D2"):
+    """ライド（8分の型。x=ふつう・X=強く・B=ベル）。シンバルのパートに書く"""
+    step = D.song.beats / len(pattern)
+    for i, c in enumerate(pattern):
+        if c == ".": continue
+        nn = "F2" if c == "B" else note
+        D.C.at(b * D.song.beats + i * step, f"{nn}:{step:g}" + ("!" if c in "XB" else ""))
+
+
 def vwrite(S, extra_flags=""):
     """vb25 の名前で書き出す。S.kit が crocell-punch のときもフラグを書く"""
     path = sys.argv[1] if len(sys.argv) > 1 else f"/tmp/vp25/vb25-{S.no}-{S.slug}.json"
+    playable(S)
+    modernize(S)
     kitflag = {"electro": "--drums electro", "naked": "--drums naked", "jpop": "--drums jpop", "crocell-punch": "--drums crocell-punch",
                "crocell": "--drums crocell"}.get(S.kit, "")
     kit0 = S.kit

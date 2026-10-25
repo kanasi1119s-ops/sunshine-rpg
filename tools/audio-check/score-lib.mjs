@@ -63,7 +63,7 @@ export function parseNotes(str, drum = false) {
       continue;
     }
     const [n, d = ""] = tok.split(":");
-    const m = /^(\d+(?:\.\d+)?)([!,'_~^/\\*]*)$/.exec(d);
+    const m = /^(\d+(?:\.\d+)?)([!,'_~^/\\*@.0-9]*)$/.exec(d);
     if (!m) continue;
     const dur = Number(m[1]);
     if (!(dur > 0)) continue;
