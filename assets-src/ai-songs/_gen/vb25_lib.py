@@ -338,6 +338,27 @@ class Lyrics:
         if ks and k != len(ks):
             self.bad += 1; print(f"  注意: {b + 1}小節目の歌詞の数が合いません（音 {k}・歌詞 {len(ks)}「{words}」）")
 
+    def flow(self, bars, mel, text, tag=""):
+        """歌詞を句（/ で区切る）ごとに、旋律の音へ順に置く。句の終わりが旋律の息つぎ（休み）と合わないときは知らせる"""
+        notes = []
+        for b, line in zip(bars, mel):
+            t = b * self.S.beats
+            for x in line.split():
+                L = tok_beats(x)
+                if not x.startswith("R"): notes.append((t, L, _re.sub(r"[!?/~\\]+$", "", x.split(":")[0])))
+                t += L
+        phrases = [morae(p) for p in text.split("/") if p.strip()]
+        k = 0
+        for pi, ph in enumerate(phrases):
+            for kana in ph:
+                if k >= len(notes): break
+                st, L, nn = notes[k]; self.ev.append((st, L, nn, kana)); k += 1
+            if 0 < k < len(notes):
+                gap = notes[k][0] - (notes[k - 1][0] + notes[k - 1][1])
+                if gap < 0.45: self.bad += 1; print(f"  注意: {tag} {pi + 1}つ目の句「{''.join(ph)}」の終わりが息つぎと合いません（{int(notes[k - 1][0] // self.S.beats) + 1}小節目）")
+        total = sum(len(p) for p in phrases)
+        if total != len(notes): self.bad += 1; print(f"  注意: {tag} 歌詞の数 {total}・音の数 {len(notes)}")
+
     def lines(self, bars, mel, words):
         for b, m, w in zip(bars, mel, words):
             if w: self.bar(b, m, w)
