@@ -422,6 +422,21 @@ def _(f0, L, n, rnd):
     return out[0] * e, out[1] * e
 
 
+@instr("synth-pop-lead-clear", program=96, keys=(48, 96), step=3, loop=88200, pre=1.2, release=0.15, level=0.75)
+def _(f0, L, n, rnd):
+    """クリアなポップのリード（2026-10-25 人間「リードをもう少しクリアのがいい」）: デチューンなしの矩形 50% 1本＋三角（芯）、
+    歪みなし・ユニゾンなし（うねらない）。鳴り始めの明るさ（フィルター 12kHz → 7kHz、0.06 秒）とベルの「チン」は残す"""
+    c = max(1, round(f0 * L / SR))
+    x = osc("sq", c, L, n, 0.0, 0.5) * 0.55 + osc("tri", c, L, n, 0.0) * 0.6
+    t = np.arange(n) / SR
+    bell = np.sin(2 * np.pi * f0 * 4 * t + 1.2 * np.exp(-t / 0.05) * np.sin(2 * np.pi * f0 * 8 * t)) * np.exp(-t / 0.12) * 0.25
+    fc = 7000 + 5000 * np.exp(-t / 0.06)
+    y = svf_lp(x, fc, 0.7) + bell
+    y = peak(y, 2800, 1.5, 0.9); y = peak(y, 400, -2.0, 0.8); y = hp(y, 170)
+    e = env_adr(n, 0.003, 0.2, 0.85)
+    return y * e, y * e
+
+
 # ---------------- 書き出し ----------------
 class R:
     def __init__(self, seed): self.r = np.random.default_rng(seed)

@@ -257,6 +257,25 @@ export const SOUND_SETS: Record<string, SoundSet> = {
     master: { lufs: -16, widen: 1.1, preset: "wafu", space: "hall", spaceWet: 0.2 },
     tempoHint: [60, 100],
   },
+  "celtic-fantasy": {
+    id: "celtic-fantasy",
+    label: "ケルト：静かな幻想（夜の書斎）",
+    description: "撥弦（ハープ・ナイロン弦）を真ん中の芯に、笛と弦の持続を左右に広げ、低い弦で支える。高域（3kHz より上）は控えめにして暗く温かく、残響は広め。打楽器は枠太鼓とシェイカーを小さく。",
+    source: "2026-10-25 人間が画面収録で渡した幻想ケルトの BGM（他者の作品）を音源分離（demucs htdemucs_6s）して楽器ごとに測った数値だけ。録音そのものは保存も使用もしていない（CLAUDE.md 1-1）。docs/sound/celtic-sound-set.md",
+    overlays: { bass: "upright", drums: "std", guitar: "std", orchestra: "vsco", piano: "salamander" },
+    tone: "prs",
+    human: 0.4,
+    parts: {
+      harp: { volume: 0.13, reverb: 0.4, bright: -0.15, panWidth: 0.35 }, guitar: { volume: 0.1, reverb: 0.35, bright: -0.2, panWidth: 0.45 },
+      fiddle: { volume: 0.09, reverb: 0.45, bright: -0.15, panWidth: 0.6 }, strings: { volume: 0.07, reverb: 0.5, bright: -0.25, duck: 0, panWidth: 0.7 },
+      panflute: { volume: 0.09, reverb: 0.45, bright: -0.1, panWidth: 0.5 }, lead: { volume: 0.09, reverb: 0.45, bright: -0.1, panWidth: 0.5 },
+      piano: { volume: 0.06, reverb: 0.45, bright: -0.25, panWidth: 0.7 }, bass: { volume: 0.08, reverb: 0.2, bright: -0.35 },
+      pad: { volume: 0.04, reverb: 0.55, bright: -0.3, panWidth: 0.7 }, tom: { volume: 0.04, reverb: 0.3 },
+    },
+    drumMix: { kick: { level: 0.5 }, snare: { level: 0.35 }, hat: { level: 0.4 }, crash: { level: 0.4 } },
+    master: { lufs: -16, widen: 1.0, space: "hall", spaceWet: 0.22 },
+    tempoHint: [60, 96],
+  },
   "game-battle": {
     id: "game-battle",
     label: "ゲーム：戦闘",
@@ -378,6 +397,16 @@ export interface PartRecipe {
   fx?: { echo?: { repeats?: number; time?: string | number; decay?: number; ms?: number }; doubleDetune?: { cents?: number; spread?: number }; widen?: { mode?: "dimension"; ms?: number; width?: number; chorus?: number } };
 }
 export const PART_RECIPES: Record<string, PartRecipe> = {
+  // 2026-10-25 ケルト用（人間「この曲で使ってる音源を楽器ごとに作って。ケルト用に保存して」）。数値の出どころは docs/sound/celtic-sound-set.md
+  "celtic-harp": { label: "ケルトの撥弦ハープ（真ん中の芯・250〜500Hz が太い・3kHz より上は控えめ）", instruments: ["harp"], mix: { volume: 0.13, reverb: 0.4, bright: -0.15, panWidth: 0.35 }, hint: { patch: "folkHarp", register: "C2〜G4（中心 D3）", pattern: "分散和音（8分）。1小節に2〜4打" } },
+  "celtic-nylon": { label: "ケルトのナイロン弦（ハープの代わり・重ね。暗く温かく）", instruments: ["guitar"], mix: { volume: 0.1, reverb: 0.35, bright: -0.2, panWidth: 0.45 }, hint: { patch: "nylonGuitar", register: "D2〜G4" } },
+  "celtic-whistle": { label: "ケルトの笛（ティンホイッスル風。ゆっくり立ち上がり、浅いビブラート）", instruments: ["panflute", "lead"], mix: { volume: 0.09, reverb: 0.45, bright: -0.1, panWidth: 0.5 }, hint: { patch: "tinWhistle", register: "G4〜B5", sustain: 1.5 } },
+  "celtic-fiddle": { label: "ケルトのフィドル（柔らかく力強く透き通る。左右に広げる）", instruments: ["fiddle", "strings"], mix: { volume: 0.09, reverb: 0.45, bright: -0.15, panWidth: 0.6 }, hint: { patch: "violin", register: "G3〜B5" } },
+  "celtic-strings": { label: "ケルトの弦の持続（立ち上がり約 110ms・広い・暗め）", instruments: ["strings"], mix: { volume: 0.07, reverb: 0.5, bright: -0.25, panWidth: 0.7 }, hint: { patch: "slowStrings", register: "G2〜D5", sustain: 3 } },
+  "celtic-piano": { label: "ケルトのピアノ（遠く・広く・暗め。きらめきは足さない）", instruments: ["piano"], mix: { volume: 0.06, reverb: 0.45, bright: -0.25, panWidth: 0.7 }, hint: { register: "C2〜B5" } },
+  "celtic-low": { label: "ケルトの低い支え（ウッドベースかチェロ。60〜120Hz の山・とても暗い）", instruments: ["bass", "strings"], mix: { volume: 0.08, reverb: 0.2, bright: -0.35 }, hint: { patch: "cello", register: "B1〜F2", sustain: 2 } },
+  "celtic-drum": { label: "ケルトの枠太鼓（バウロン風。低く小さく）", instruments: ["harp", "pad"], mix: { volume: 0.05, reverb: 0.3 }, hint: { patch: "frameDrum", pattern: "1拍目と3拍目の裏に弱く。手のひらの音を間に" } },
+  "celtic-pad": { label: "ケルトの空気のパッド（とても小さく、広く、暗く）", instruments: ["pad"], mix: { volume: 0.04, reverb: 0.55, bright: -0.3, panWidth: 0.7 }, hint: { patch: "modernPad", sustain: 3 } },
   "soft-pad": { label: "やわらかい弦パッド（遅い立ち上がり・広い・凹む）", instruments: ["strings", "pad", "choir"], mix: { volume: 0.06, reverb: 0.5, bright: -0.25, chorus: 0.2, duck: 0.25, panWidth: 0.4 } },
   "pluck-arp": { label: "プラックのアルペジオ（明るく短い・左右に）", instruments: ["harp", "guitar", "keys", "piano"], mix: { volume: 0.07, reverb: 0.3, bright: 0, duck: 0, panWidth: 0.5 } },
   "strings-ensemble": { label: "弦のアンサンブル（厚く広がる・ほかを凹ませる）", instruments: ["strings", "pad"], mix: { volume: 0.07, reverb: 0.3, chorus: 0.3, duck: 0.3, panWidth: 0.5 } },
