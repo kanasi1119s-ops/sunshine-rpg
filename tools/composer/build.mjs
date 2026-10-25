@@ -28,8 +28,26 @@ for (const [k, [label, file]] of Object.entries(LOCAL_NAM)) {
 // 見本のアンプ定義（assets-src/amp-plugins/）
 const ampDir = root + "assets-src/amp-plugins/";
 const ampSamples = fs.readdirSync(ampDir).filter((f) => f.endsWith(".sunshine-amp.json")).map((f) => JSON.parse(fs.readFileSync(ampDir + f, "utf8")));
+// 2026-10-25: 埋め込みが V8 の文字列の上限（約 536MB）を超えたので、音源（assets-src/soundfont の .sf2/.sf3）は JS の本体に入れず、
+// HTML の中の <script type="text/plain"> に1つずつ base64 で置く（JS からは "asset:キー" という文字で指し、bytesOf が読む）
+const assets = new Map();
+const assetPlugin = {
+  name: "sunshine-soundfont-assets", enforce: "pre",
+  async resolveId(src, importer) {
+    if (!/\.(sf2|sf3)\?url$/.test(src)) return null;
+    const r = await this.resolve(src.replace(/\?url$/, ""), importer, { skipSelf: true });
+    if (r && r.id.replace(/\\/g, "/").includes("/assets-src/soundfont/")) return "\0sasset:" + r.id;
+    return null;
+  },
+  load(id) {
+    if (!id.startsWith("\0sasset:")) return null;
+    const f = id.slice("\0sasset:".length);
+    if (!assets.has(f)) assets.set(f, "a" + assets.size);
+    return `export default "asset:${assets.get(f)}";`;
+  },
+};
 const result = await build({
-  root, configFile: false, logLevel: "warn",
+  root, configFile: false, logLevel: "warn", plugins: [assetPlugin],
   define: {
     __NAM_PROCESSOR__: JSON.stringify("data:text/javascript;base64," + Buffer.from(namCode).toString("base64")),
     __NAM_WASM__: JSON.stringify(namWasm.toString("base64")),
@@ -58,7 +76,14 @@ fs.mkdirSync(path.dirname(out), { recursive: true });
 {
   const at = html.indexOf("/*BUNDLE*/");
   const fd = fs.openSync(out, "w");
-  fs.writeSync(fd, html.slice(0, at));
+  const sAt = html.lastIndexOf("<script", at);
+  fs.writeSync(fd, html.slice(0, sAt));
+  for (const [f, key] of assets) {
+    fs.writeSync(fd, `<script type="text/plain" id="asset-${key}">`);
+    fs.writeSync(fd, fs.readFileSync(f).toString("base64"));
+    fs.writeSync(fd, "</script>\n");
+  }
+  fs.writeSync(fd, html.slice(sAt, at));
   fs.writeSync(fd, js);
   fs.writeSync(fd, html.slice(at + "/*BUNDLE*/".length));
   fs.closeSync(fd);

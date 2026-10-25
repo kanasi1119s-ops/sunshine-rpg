@@ -119,6 +119,21 @@ import brightLeadUrl from "../../assets-src/soundfont/extra/synth-modern-brightl
 import surgeDnaSeqUrl from "../../assets-src/soundfont/extra/surge-lead-dnaseq.sf3?url";
 import surgeParaphonicUrl from "../../assets-src/soundfont/extra/surge-lead-paraphonic.sf3?url";
 import surgeResofestUrl from "../../assets-src/soundfont/extra/surge-lead-resofest.sf3?url";
+// 2026-10-25 Surge XT のパッド（人間が聴いて 11 以外を選んだ。バンク 1）
+import surgePadHineVertigoUrl from "../../assets-src/soundfont/extra/surge-pad-hine-s-vertigo-110-bpm.sf3?url";
+import surgePadNeverendingUrl from "../../assets-src/soundfont/extra/surge-pad-neverending.sf3?url";
+import surgePadSparklyUrl from "../../assets-src/soundfont/extra/surge-pad-sparkly.sf3?url";
+import surgePadVerbPadUrl from "../../assets-src/soundfont/extra/surge-pad-verb-pad.sf3?url";
+import surgePadCrystalsUrl from "../../assets-src/soundfont/extra/surge-pad-crystals.sf3?url";
+import surgePadNewtonWasEvilUrl from "../../assets-src/soundfont/extra/surge-pad-newton-was-evil.sf3?url";
+import surgePadStringPadUrl from "../../assets-src/soundfont/extra/surge-pad-string-pad.sf3?url";
+import surgePadMwPulsatingUrl from "../../assets-src/soundfont/extra/surge-pad-mw-pulsating.sf3?url";
+import surgePadBellPadUrl from "../../assets-src/soundfont/extra/surge-pad-bell-pad.sf3?url";
+import surgePadBrightUrl from "../../assets-src/soundfont/extra/surge-pad-bright.sf3?url";
+import surgePadFifths6Url from "../../assets-src/soundfont/extra/surge-pad-fifths-6.sf3?url";
+import surgePadClassicStringsUrl from "../../assets-src/soundfont/extra/surge-pad-classic-strings.sf3?url";
+import surgePadBowedUrl from "../../assets-src/soundfont/extra/surge-pad-bowed.sf3?url";
+import surgePadPad2MwUrl from "../../assets-src/soundfont/extra/surge-pad-pad-2-mw.sf3?url";
 // 2026-10-25 Surge XT のプラック（人間が聴いて 7・8・11・15 以外を選んだ）。番号は 128 以上＝バンク 1（バンク×128＋番号）
 import surgePopcornUrl from "../../assets-src/soundfont/extra/surge-pluck-popcorn-pluck.sf3?url";
 import surgeBell1Url from "../../assets-src/soundfont/extra/surge-pluck-bell-1.sf3?url";
@@ -221,7 +236,9 @@ function bytesOf(dataUrl: string): Uint8Array {
   const hash = dataUrl.lastIndexOf("#p");
   const remap = hash > 0 ? Number(dataUrl.slice(hash + 2)) : null;
   const body = hash > 0 ? dataUrl.slice(0, hash) : dataUrl;
-  const bin = atob(body.slice(body.indexOf(",") + 1));
+  // "asset:キー" は HTML の <script type="text/plain" id="asset-キー"> に置いた base64（build.mjs）
+  const b64 = body.startsWith("asset:") ? (document.getElementById("asset-" + body.slice(6))?.textContent ?? "") : body.slice(body.indexOf(",") + 1);
+  const bin = atob(b64);
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return remap === null ? out : reprogram(out, remap);
@@ -468,6 +485,8 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   surgeTropics: { programs: [54], url: surgeTropicsUrl }, surgeHappySaws: { programs: [91], url: surgeHappySawsUrl }, voiceLeadModern: { programs: [92], url: voiceLeadModernUrl },
   // 2026-10-25 ポップな音（自作の合成）
   surgeFormantPulse: { programs: [93], url: surgeFormantPulseUrl }, popKeys: { programs: [94], url: popKeysUrl }, surgeParaphonic: { programs: [95], url: surgeParaphonicUrl }, popLeadClear: { programs: [96], url: popLeadClearUrl }, picoLead: { programs: [97], url: picoLeadUrl }, picoLeadRound: { programs: [98], url: picoLeadRoundUrl },
+  // 2026-10-25 Surge XT のパッド（バンク 1）
+  surgePadHineVertigo: { programs: [139], url: surgePadHineVertigoUrl }, surgePadNeverending: { programs: [140], url: surgePadNeverendingUrl }, surgePadSparkly: { programs: [141], url: surgePadSparklyUrl }, surgePadVerbPad: { programs: [142], url: surgePadVerbPadUrl }, surgePadCrystals: { programs: [143], url: surgePadCrystalsUrl }, surgePadNewtonWasEvil: { programs: [144], url: surgePadNewtonWasEvilUrl }, surgePadStringPad: { programs: [145], url: surgePadStringPadUrl }, surgePadMwPulsating: { programs: [146], url: surgePadMwPulsatingUrl }, surgePadBellPad: { programs: [147], url: surgePadBellPadUrl }, surgePadBright: { programs: [148], url: surgePadBrightUrl }, surgePadFifths6: { programs: [149], url: surgePadFifths6Url }, surgePadClassicStrings: { programs: [150], url: surgePadClassicStringsUrl }, surgePadBowed: { programs: [151], url: surgePadBowedUrl }, surgePadPad2Mw: { programs: [152], url: surgePadPad2MwUrl },
   // 2026-10-25 Surge XT のプラック（バンク 1）
   surgePopcorn: { programs: [128], url: surgePopcornUrl }, surgeBell1: { programs: [129], url: surgeBell1Url }, surgeGuzheng: { programs: [130], url: surgeGuzhengUrl }, surgeRetroWave: { programs: [131], url: surgeRetroWaveUrl }, surgeConvex: { programs: [132], url: surgeConvexUrl }, surgeWoody: { programs: [133], url: surgeWoodyUrl }, surgeFantasyBell: { programs: [134], url: surgeFantasyBellUrl }, surgeNicePluck: { programs: [135], url: surgeNicePluckUrl }, surgeWaveguide: { programs: [136], url: surgeWaveguideUrl }, surgeFriendly: { programs: [137], url: surgeFriendlyUrl }, surgeMixedFeelings: { programs: [138], url: surgeMixedFeelingsUrl },
   pluckSynth: { programs: [85], url: pluckEdmUrl }, chipPulse25: { programs: [124], url: chip25Url }, chipPulse12: { programs: [125], url: chip12Url }, reeseBass: { programs: [34], url: reeseUrl }, fxElectro: { programs: [126], url: fxElectroUrl },
