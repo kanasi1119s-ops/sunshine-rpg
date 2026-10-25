@@ -59,9 +59,10 @@ PC = [piano(f"ピアノ（和音{i + 1}）", 0.125) for i in range(3)]
 MUF = [S.track(f"こもったピアノ{i + 1}（導火線）", "piano", volume=0.13, pan=-0.12, reverb=0.3,
                fx=[{"type": "filter", "kind": "lowpass", "freq": 800, "q": 0.9}, {"type": "eq", "low": -2, "mid": 0, "midHz": 500, "high": 0}]) for i in range(2)]
 STR = [S.track(f"ストリングス{i + 1}", "strings", patch="stringEnsemble", volume=0.085, pan=0.3, reverb=0.35, sustain=1.6) for i in range(4)]
-GT = [S.track(f"ギター（{['根音', '5度'][i]}・中域の太い乾いた歪み）", "distGuitar", **{**rock_gtr_spec(0.070, 0.0, tone="electro-rock"), "ampGate": 8}) for i in range(2)]
+GT = [S.track(f"ギター（{['根音', '5度'][i]}・中域の太い乾いた歪み）", "distGuitar", **{**rock_gtr_spec(0.072, 0.0, tone="electro-rock"), "ampGate": 8}) for i in range(2)]
 # 2026-10-26 人間「ギターも途切れて前半聞こえるからちょっと聞きづらい」: ノイズゲートを浅くして（25 → 8）音の終わりを切らない
 # 2026-10-25 人間「ドラム、ギターはブンブンサテライツにしよう」→ 中域の太い乾いた歪み（electro-rock）と、拍で刻んだ加工ギターの層（味付け・小さく）
+# 2026-10-26 人間（02）「リフギターほんの本当にほんの少し気持ち程度に音量大きく」→ 0.070→0.072（1.03倍）
 # 2026-10-26 人間（02）「リフ少し音を小さく。ほんの少し」→ 歪みギター 0.074→0.070、ピアノのリフ 0.17→0.158（別のパートに分けた）
 GTG = S.track("ギター（拍で刻んだ加工の層）", "distGuitar", **rock_gtr_spec(0.045, 0.25, tone="electro-rock-gated"))
 # 2026-10-26 人間（02）「ギターのリフ音でかいかな」→ 歪みギター 0.095→0.074。「バックの電子音ほんの少しだけ大きくてもいい」→ 加工の層 0.035→0.045
