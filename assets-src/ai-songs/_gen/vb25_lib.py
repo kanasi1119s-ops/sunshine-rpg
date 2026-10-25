@@ -321,9 +321,10 @@ _PC = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
 
 
 def morae(txt):
+    """歌詞を音の単位に分ける。小さい「ゃゅょ」などは前の字に、「っ」も前の字につける（「っ」の音は無いので、前の音を短く切って表す）"""
     out = []
     for c in txt.replace(" ", "").replace("　", ""):
-        if c in _SMALL and out: out[-1] += c
+        if (c in _SMALL or c == "っ") and out: out[-1] += c
         else: out.append(c)
     return out
 
@@ -337,7 +338,8 @@ class Lyrics:
         for x in line.split():
             L = tok_beats(x)
             if not x.startswith("R"):
-                self.ev.append((t, L, _re.sub(r"[!?/~\\]+$", "", x.split(":")[0]), ks[k] if k < len(ks) else "ー")); k += 1
+                kk = ks[k] if k < len(ks) else "ー"
+                self.ev.append((t, L * 0.6 if kk.endswith("っ") else L, _re.sub(r"[!?/~\\]+$", "", x.split(":")[0]), kk.rstrip("っ") or "ー")); k += 1
             t += L
         if ks and k != len(ks):
             self.bad += 1; print(f"  注意: {b + 1}小節目の歌詞の数が合いません（音 {k}・歌詞 {len(ks)}「{words}」）")
@@ -356,7 +358,8 @@ class Lyrics:
         for pi, ph in enumerate(phrases):
             for kana in ph:
                 if k >= len(notes): break
-                st, L, nn = notes[k]; self.ev.append((st, L, nn, kana)); k += 1
+                st, L, nn = notes[k]
+                self.ev.append((st, L * 0.6 if kana.endswith("っ") else L, nn, kana.rstrip("っ") or "ー")); k += 1   # 「っ」は前の音を短く切る
             if 0 < k < len(notes):
                 gap = notes[k][0] - (notes[k - 1][0] + notes[k - 1][1])
                 if gap < 0.45: self.bad += 1; print(f"  注意: {tag} {pi + 1}つ目の句「{''.join(ph)}」の終わりが息つぎと合いません（{int(notes[k - 1][0] // self.S.beats) + 1}小節目）")
