@@ -14,6 +14,7 @@ from vb25_lib import *
 S = Song("02", "cidercountdown", "サイダーカウントダウン（仮）", "Cider Countdown", 178, 4, "E", "major", "J-POP（疾走ピアノ・ボカロ）")
 S.kit = "crocell-punch"
 S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags + " --piano salamander"
+S.extra.update({"diGuitar": "emily"})
 K = S.key                    # E 長調
 KF = Key("F#", "major")      # 最後のサビ（+2）
 
@@ -49,14 +50,16 @@ S.tempo = [{"bar": 1, "bpm": 80}, {"bar": S.sc("出発")[0] + 1, "bpm": 178}]
 V = Voice(S, vol=0.22, delay=0.75, patch="popLeadClear", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 PNFX = [{"type": "eq", "low": -2, "mid": -1.5, "midHz": 350, "high": 1}]
 def piano(role, vol): return S.track(role, "piano", volume=vol, pan=-0.12, reverb=0.24, fx=PNFX)
-PR = piano("ピアノ（右手・16分の分散和音）", 0.13)
+PR = piano("ピアノ（右手・分散和音）", 0.11)
 PL = piano("ピアノ（左手・8分のオクターブ）", 0.12)
 PM = piano("ピアノ（リフ・歌の受け渡し・ソロ）", 0.17)
 PC = [piano(f"ピアノ（和音{i + 1}）", 0.1) for i in range(3)]
 MUF = [S.track(f"こもったピアノ{i + 1}（導火線）", "piano", volume=0.13, pan=-0.12, reverb=0.3,
                fx=[{"type": "filter", "kind": "lowpass", "freq": 800, "q": 0.9}, {"type": "eq", "low": -2, "mid": 0, "midHz": 500, "high": 0}]) for i in range(2)]
 STR = [S.track(f"ストリングス{i + 1}", "strings", patch="stringEnsemble", volume=0.085, pan=0.3, reverb=0.35, sustain=1.6) for i in range(4)]
-GT = [S.track(f"ギター（{['根音', '5度'][i]}）", "distGuitar", **rock_gtr_spec(0.09, 0.0)) for i in range(2)]
+GT = [S.track(f"ギター（{['根音', '5度'][i]}・中域の太い乾いた歪み）", "distGuitar", **rock_gtr_spec(0.095, 0.0, tone="electro-rock")) for i in range(2)]
+# 2026-10-25 人間「ドラム、ギターはブンブンサテライツにしよう」→ 中域の太い乾いた歪み（electro-rock）と、拍で刻んだ加工ギターの層（味付け・小さく）
+GTG = S.track("ギター（拍で刻んだ加工の層）", "distGuitar", **rock_gtr_spec(0.035, 0.25, tone="electro-rock-gated"))
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.21))
 BUG = S.track("夏の虫の声（パルス波）", "lead", patch="chipPulse12", volume=0.035, pan=0.45, reverb=0.4, mono=True,
               fx=[{"type": "filter", "kind": "highpass", "freq": 1200, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 6000, "q": 0.7}])
@@ -69,41 +72,36 @@ SIL = Silence(S)
 
 # ================= 歌の旋律（E長調の度数。oct=4 で 1 = E4）と歌詞 =================
 # Aメロ: 2小節で1つの句（前の小節に4〜5音、後ろの小節に1〜2音をのばして息つぎ）
-VERSE = ["R:1 3:0.5 3:0.5 3:1 2:1", "1:1 2:2 R:1",
-         "R:1 3:0.5 4:0.5 5:0.5 5:0.5 6:1", "5:1 3:2 R:1",
-         "R:1 1:0.5 1:0.5 1:0.5 2:0.5 3:1", "2:1 6,:2 R:1",
-         "R:1 6,:0.5 7,:0.5 1:0.5 2:0.5 3:1", "4:1 3:1.5 R:1.5",
-         "R:1 3:0.5 3:0.5 3:0.5 4:0.5 5:1", "6:1 5:2 R:1",
-         "R:1 5:0.5 6:0.5 1':0.5 7:0.5 6:1", "5:1 3:2 R:1",
-         "R:1 4:0.5 3:0.5 2:1 4:1", "3:3 R:1",
+# 2026-10-25 人間「歌い方とか既読メトロノームみたいな感じの歌い方にしようか」→ 句の頭を16分の2つで弾ませて入る（01 と同じ歌い方）。
+VERSE = ["R:1 3:0.5 3:0.5 3:0.5 2:0.5 1:1", "2:2 R:2",
+         "R:1 3:0.25 4:0.25 5:0.5 5:0.5 6:0.5 5:1", "3:2 R:2",
+         "R:1 1:0.25 1:0.25 1:0.5 2:0.5 3:0.5 2:1", "7,:2 R:2",
+         "R:1 6,:0.25 7,:0.25 1:0.5 2:0.5 3:0.5 4:1", "3:2 R:2",
+         "R:1 3:0.25 3:0.25 3:0.5 4:0.5 5:0.5 6:1", "5:2 R:2",
+         "R:1 5:0.25 6:0.25 1':0.5 7:0.5 6:0.5 5:1", "6:2 R:2",
+         "R:1 4:0.5 3:0.5 2:1 4:1", "3:2 R:2",
          "R:1 4:0.5 3:0.5 2:0.5 2:0.5 3:1", "7,:2 R:2"]
-V1 = ["あとすこ", "しで", "はなびがあ", "がる", "ゆかたのそ", "でを", "ゆびでつま", "んだ",
-      "となりのき", "みは", "そらをみて", "いる", "いえるか", "な", "いえないか", "な"]
-V2 = ["りんごあ", "めを", "ふたりでわ", "けた", "ちいさいこ", "ろの", "ゆびきりの", "うた",
-      "おとなにな", "るの", "すこしこわ", "くて", "いまなら", "ば", "いえそうな", "の"]
+V1 = "あとすこしで/はなびがあがる/ゆかたのそでを/ゆびでつまんだ/となりのきみは/そらをみている/いえるかな/いえないかな"
+V2 = "りんごあめを/ふたりでわけた/ちいさいころの/ゆびきりのうた/おとなになるの/すこしこわくて/いまならば/いえそうなの"
 # Bメロ: 「じゅう、きゅう、はち」の数え歌で上がっていく。最後は sus4 の上で止まる
 BM = ["R:1 3:0.5 4:0.5 5:1 5:1", "5:3 R:1", "R:1 5:0.5 6:0.5 7:1 7:1", "1':3 R:1",
       "R:1 2':0.5 2':0.5 1':0.5 1':0.5 7:0.5 7:0.5", "R:1 6:0.5 6:0.5 5:0.5 5:0.5 #4:1", "R:1 4:0.5 5:0.5 6:1 7:1", "1':2 R:2"]
 P1 = ["かぞえて", "る", "むねのな", "か", "じゅうきゅうはち", "ななろくご", "とまらな", "い"]
 P2 = ["ほんとう", "は", "きみのこ", "と", "いつからかな", "わからない", "とまらな", "い"]
-# サビ（最高音は 1'＝E5。最後のサビの F# で F#5）
-CH = ["R:0.5 5:0.5 5:0.5 5:0.5 6:1 1':1", "1':1.5 7:0.5 R:2",
-      "R:0.5 6:0.5 6:0.5 6:0.5 5:1 3:1", "5:3 R:1",
-      "R:0.5 5:0.5 5:0.5 5:0.5 6:1 1':1", "7:1 6:1.5 R:1.5",
-      "R:0.5 6:0.5 5:0.5 4:0.5 3:1 4:1", "5:1 7:2 R:1",
+# サビ（最高音は 1'＝E5。最後のサビの F# で F#5）。句の頭は16分の2つで弾ませる（01 の歌い方）
+CH = ["R:0.5 5:0.25 5:0.25 5:0.5 6:0.5 1':0.5 7:1 R:0.5", "1':2 R:2",
+      "R:0.5 6:0.25 6:0.25 6:0.5 5:0.5 3:0.5 5:1 R:0.5", "6:2 R:2",
+      "R:0.5 5:0.25 5:0.25 5:0.5 6:0.5 1':0.5 7:1 R:0.5", "6:2 R:2",
+      "R:0.5 6:0.25 5:0.25 4:0.5 3:0.5 4:0.5 5:1 R:0.5", "7:2 R:2",
       "R:0.5 1':0.5 1':0.5 7:0.5 1':2", "R:0.5 1':0.5 1':0.5 7:0.5 6:2",
-      "R:0.5 6:0.5 6:0.5 6:0.5 7:1 1':1", "7:1 5:2 R:1",
-      "R:0.5 5:0.5 5:0.5 6:0.5 5:0.5 3:0.5 5:1", "6:1 5:2 R:1",
-      "R:0.5 4:0.5 5:0.5 6:0.5 1':1 7:1", "1':1 7:2 R:1"]
-CH_END = CH[:14] + ["R:0.5 5:0.5 5:0.5 6:0.5 1':0.5 1':0.5 7:0.5 6:0.5", "7:0.5 6:0.5 1':3"]
-C1 = ["さんにいい", "ちで", "いうよきみ", "に", "はなびのお", "とに", "まけないよ", "うに",
-      "すきだよ", "すきだよ", "とどけそら", "まで", "はじけるさい", "だー", "このむねの", "おと"]
-C2 = ["きいてほし", "いの", "むかしから", "ね", "ゆびきりの", "うた", "まだおぼえ", "てる",
-      "すきだよ", "すきだよ", "とどけほし", "まで", "はじけるさい", "だー", "このむねの", "おと"]
-C3 = ["さんにいい", "ちで", "いうよいま", "ね", "はなびのお", "とに", "かきけされ", "ても",
-      "すきだよ", "すきだよ", "ちゃんととど", "いた", "きみがわらう", "から", "このむねの", "おと"]
-C4 = ["さんにいい", "ちで", "はなびがさ", "く", "ふたりのそ", "らに", "ひかりのは", "なが",
-      "すきだよ", "すきだよ", "なんどもい", "うよ", "はじけるさい", "だー", "なつのかうんと", "だうん"]
+      "R:0.5 6:0.25 6:0.25 6:0.5 7:0.5 1':0.5 7:1 R:0.5", "6:2 R:2",
+      "R:0.5 5:0.25 5:0.25 6:0.5 5:0.5 3:0.5 5:0.5 6:0.5 R:0.5", "5:2 R:2",
+      "R:0.5 4:0.25 5:0.25 6:0.5 1':0.5 1':0.5 7:1 R:0.5", "7:2 R:2"]
+CH_END = CH[:14] + ["R:0.5 5:0.25 5:0.25 6:0.5 1':0.5 1':0.5 7:0.5 6:0.5 R:0.5", "7:0.5 6:0.5 1':3"]
+C1 = "さんにいいちで/いうよきみにね/はなびのおとに/まけないように/すきだよ/すきだよ/とどけそらまで/はじけるさいだー/このむねのおと"
+C2 = "きいてほしいの/むかしからだよ/ゆびきりのうた/まだおぼえてる/すきだよ/すきだよ/とどけほしまで/はじけるさいだー/このむねのおと"
+C3 = "さんにいいちで/いうよいまなら/はなびのおとに/かきけされても/すきだよ/すきだよ/ちゃんととどいた/きみがわらうから/このむねのおと"
+C4 = "さんにいいちで/はなびがさいた/ふたりのそらに/ひかりのはなが/すきだよ/すきだよ/なんどもいうよ/はじけるさいだー/なつのかうんとだうん"
 # Cメロ「もしも」: Half feel。長い音で、空を見上げるように（最高音 2'＝F#5 は「わすれない」の1回だけ）
 HM = ["R:1 3:1 5:1 6:1", "5:3 R:1", "R:0.5 6:0.5 6:0.5 1':0.5 2':1 1':1", "6:1 5:2 R:1",
       "R:1 4:1 5:1 6:1", "1':1 7:2 R:1", "R:1 6:1 7:1 1':1", "1':1 2':2 R:1",
@@ -112,30 +110,25 @@ HM = ["R:1 3:1 5:1 6:1", "5:3 R:1", "R:0.5 6:0.5 6:0.5 1':0.5 2':1 1':1", "6:1 5
 HV = ["もしも", "ね", "とどかなく", "ても", "このな", "つを", "わすれ", "ない",
       "きみのとな", "りで", "みあげたそ", "らは", "いつま", "でも", "ひかる", "から"]
 LY = Lyrics(S)
-
-for i, b in enumerate(S.sc("下駄の音")): V.bar(b, K.mel(VERSE[i], oct=4))
-for i, b in enumerate(S.sc("金魚すくい")):
-    if i < 8 and not VOCAL: PM.bar(b, shift_oct(K.mel(VERSE[i], oct=4), 1))   # BGM: 2番の前半は、ピアノが歌を受け取る（1オクターブ上で）
-    else: V.bar(b, K.mel(VERSE[i], oct=4))
-for name in ("坂道", "坂道2"):
-    for i, b in enumerate(S.sc(name)): V.bar(b, K.mel(BM[i], oct=4))
-for name in ("あと5分", "あと3分"):
-    for i, b in enumerate(S.sc(name)): V.bar(b, K.mel(CH[i], oct=4))
-for i, b in enumerate(S.sc("見上げる空")): V.bar(b, K.mel(HM[i], oct=4), low=(i >= 8))
+def put(name, key, lines, text, low=True):
+    bars = S.sc(name); mel = [key.mel(x, oct=4) for x in lines]
+    for b, m in zip(bars, mel): V.bar(b, m, low=low)
+    LY.flow(bars, mel, text, name)
+put("下駄の音", K, VERSE, V1)
+if VOCAL: put("金魚すくい", K, VERSE, V2)
+else:
+    for i, b in enumerate(S.sc("金魚すくい")):
+        if i < 8: PM.bar(b, shift_oct(K.mel(VERSE[i], oct=4), 1))   # BGM: 2番の前半は、ピアノが歌を受け取る（1オクターブ上で）
+        else: V.bar(b, K.mel(VERSE[i], oct=4))
+put("坂道", K, BM, "".join(P1)); put("坂道2", K, BM, "".join(P2))
+put("あと5分", K, CH, C1); put("あと3分", K, CH, C2)
+put("見上げる空", K, HM, "".join(HV), low=False)
 # 導火線: こもった声（1オクターブ下の重ねのパートだけ。ローパス 2kHz）で、元の高さのまま上がっていく（BGM では消える）
 FL = ["3:1 4:1 5:1 6:1", "5:1 6:1 7:1 1':1", "6:2 7:1 1':1", "6:1 b2':1 3':2"]
 for i, b in enumerate(S.sc("導火線")): V.low.bar(b, K.mel(FL[i], oct=4))
-for i, b in enumerate(S.sc("打ち上げ")): V.bar(b, KF.mel((CH + CH_END)[i], oct=4))
-
-LY.lines(S.sc("下駄の音"), [K.mel(x, oct=4) for x in VERSE], V1)
-LY.lines(S.sc("金魚すくい"), [K.mel(x, oct=4) for x in VERSE], V2)
-LY.lines(S.sc("坂道"), [K.mel(x, oct=4) for x in BM], P1)
-LY.lines(S.sc("坂道2"), [K.mel(x, oct=4) for x in BM], P2)
-LY.lines(S.sc("あと5分"), [K.mel(x, oct=4) for x in CH], C1)
-LY.lines(S.sc("あと3分"), [K.mel(x, oct=4) for x in CH], C2)
-LY.lines(S.sc("見上げる空"), [K.mel(x, oct=4) for x in HM], HV)
-LY.lines(S.sc("打ち上げ"), [KF.mel(x, oct=4) for x in CH + CH_END], C3 + C4)
-
+bars = S.sc("打ち上げ"); mel = [KF.mel(x, oct=4) for x in CH + CH_END]
+for b, m in zip(bars, mel): V.bar(b, m)
+LY.flow(bars, mel, C3 + "/" + C4, "打ち上げ")
 
 # ================= ピアノ =================
 # 出発: 10 から数え下ろすリフ（8分の下行 → 最後に跳ね上がる）
@@ -168,20 +161,20 @@ for b in range(S.nb):
     if n == "縁側の時計": continue
     v = voice(ch, 66, 3)
     if n in ("出発", "屋台の灯り"):
-        PR.bar(b, piano_arp16(ch, "B3", "B5", (0, 2, 1, 2, 3, 2, 1, 2))); PL.bar(b, piano_left8(ch, "E2"))
+        t = tones(ch, "B4", "B5"); PR.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 2, 1, 3, 2, 1, 3, 2))); PL.bar(b, piano_left8(ch, "E2"))
     elif n in ("下駄の音", "金魚すくい"):
         if i < 8:
             # 前半: 和音の刻み（2拍半の伸ばしと裏）。左手は2分の根音
             for j in range(3): PC[j].bar(b, f"{nm(v[j])}:1.5 {nm(v[j])}:1 {nm(v[j])}:1.5")
             r = low(ch, "E2"); PL.bar(b, f"{nm(r)}:2 {nm(r + 12)}:1.5 {nm(r + 7)}:0.5")
         else:
-            PR.bar(b, piano_arp16(ch, "B3", "B5")); PL.bar(b, piano_left8(ch, "E2"))
+            t = tones(ch, "B4", "B5"); PR.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 1, 2, 1, 3, 2, 1, 2))); PL.bar(b, f"{nm(low(ch, 'E2'))}:2 {nm(low(ch, 'E2') + 12)}:2")
     elif n.startswith("坂道"):
         if i == 7: continue                               # サビ直前の1小節は、ベースと歌の役だけ
-        PR.bar(b, piano_arp16(ch, "C#4", "C#6", (0, 1, 2, 3, 4, 3, 2, 1))); PL.bar(b, piano_left8(ch, "E2"))
+        t = tones(ch, "C#5", "C#6"); PR.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 1, 2, 3, 2, 1, 2, 3))); PL.bar(b, piano_left8(ch, "E2"))
     elif n in ("あと5分", "あと3分", "打ち上げ"):
         if n == "打ち上げ" and i >= 28: continue
-        PR.bar(b, piano_arp16(ch, "C#4", "C#6")); PL.bar(b, piano_left8(ch, "E2"))
+        t = tones(ch, "E5", "E6"); PR.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 2, 1, 3, 0, 2, 1, 3))); PL.bar(b, f"{nm(low(ch, 'E2'))}:1.5 {nm(low(ch, 'E2') + 12)}:1 {nm(low(ch, 'E2') + 7)}:1.5")
     elif n == "射的とりんご飴":
         r = low(ch, "E2"); PL.bar(b, f"{nm(r)}:0.5 {nm(r + 12)}:0.5 R:0.5 {nm(r)}:0.5 {nm(r + 7)}:0.5 {nm(r + 12)}:0.5 R:0.5 {nm(r)}:0.5")
         for j in range(3): PC[j].bar(b, f"R:0.5 {nm(v[j])}:0.5 R:1 R:0.5 {nm(v[j])}:0.5 R:1")
@@ -208,8 +201,9 @@ for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     ch = S.chords[b]
     v = voice(ch, 62, 3)
-    if n in ("あと5分", "あと3分", "打ち上げ", "見上げる空", "屋台の灯り") or (n.startswith("坂道") and i < 7):
+    if n in ("あと5分", "あと3分", "打ち上げ", "見上げる空") or (n.startswith("坂道") and i < 7):
         if n == "打ち上げ" and i >= 28: continue
+        if n in ("あと5分", "あと3分") and i < 8: continue        # 「伴奏が聞きにくい」→ サビの前半は弦なし（重ねすぎない）
         for j in range(3): STR[j].bar(b, f"{nm(v[j])}:4")
     if n == "下駄の音" and i >= 8:
         for j in range(2): STR[j].bar(b, f"{nm(v[j + 1])}:4")
@@ -221,12 +215,17 @@ for i, b in enumerate(S.sc("打ち上げ")):
 # ================= ギター（サビとソロだけ。明るいパワーコード） =================
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
-    if n not in ("あと5分", "あと3分", "射的とりんご飴", "打ち上げ"): continue
+    if n not in ("あと5分", "あと3分", "射的とりんご飴", "打ち上げ", "出発", "屋台の灯り", "下駄の音", "金魚すくい", "坂道", "坂道2"): continue
     if n == "打ち上げ" and i >= 28: continue
+    if n in ("下駄の音", "金魚すくい") and i < 8: continue
+    if n.startswith("坂道") and i == 7: continue
     pw = power(S.chords[b], "E2")
-    if n == "射的とりんご飴" and i < 8: pat = "X:1.5! X:1 X:1.5"
+    # ビッグビートのギター: 刻んで止める（休みで弾む）。Aメロ・Bメロは短く刺すだけ
+    if n in ("下駄の音", "金魚すくい") or n.startswith("坂道"): pat = ["X:0.5! R:1 X:0.25 X:0.25 R:2", "R:1.5 X:0.5! R:1.5 X:0.25 X:0.25"][i % 2]
+    elif n == "射的とりんご飴" and i < 8: pat = "X:1.5! X:1 X:1.5"
     elif i == L - 1 and n != "打ち上げ": pat = "X:0.5! X:0.5 X:0.5 X:0.5 X:2!"
-    else: pat = " ".join("X:0.5" + ("!" if j % 2 == 0 else "") for j in range(8))
+    else: pat = ["X:0.5! X:0.25 X:0.25 R:0.5 X:0.5! R:0.5 X:0.5 X:0.5! R:0.5", "X:0.5! R:0.5 X:0.25 X:0.25 X:0.5 R:0.5 X:0.5! X:0.5 R:0.5"][i % 2]
+    if n in ("出発", "屋台の灯り", "射的とりんご飴"): GTG.bar(b, f"{nm(pw[0] + 12)}:4")
     for j in range(2): GT[j].bar(b, pat.replace("X", nm(pw[j])))
 
 # ================= ベース =================
@@ -276,7 +275,7 @@ for b in range(S.nb):
         if last: D.set(b, "." * 16, "........x.x.XXXX", "." * 16)          # 本編へのつなぎ（80 のまま、スネアの助走）
         continue
     if n in ("出発", "屋台の灯り"):
-        vgroove(D, b, "vrock2", ghosts=0.35, seed=b)
+        vgroove(D, b, "break1", ghosts=0.35, seed=b)
         if i == 0: crash(D, b)
         if i == 4: crash(D, b, "G2")
         if n == "屋台の灯り" and 4 <= i < 7:
@@ -284,17 +283,17 @@ for b in range(S.nb):
         if last: put_fill(D, b, "tomdown")
     elif n in ("下駄の音", "金魚すくい"):
         if i < 8:
-            vgroove(D, b, "beat8", ghosts=0.45, seed=b, h="x.x.x.x.x.x.x.x.")
+            vgroove(D, b, "break2", ghosts=0.45, seed=b)
             if n == "金魚すくい":
                 D.cym(b, ("F2:0.5 " if i % 4 == 0 else "D2:0.5 ") + "D2:0.5 " * 7); D.H[b] = "." * 16
         else:
-            vgroove(D, b, "vrock2", ghosts=0.35, seed=b)
+            vgroove(D, b, "break1", ghosts=0.35, seed=b)
         if i == 0: crash(D, b)
         if i == 7: put_fill(D, b, "small")
         if last: put_fill(D, b, "snare16")
     elif n.startswith("坂道"):
         if i < 4: vgroove(D, b, "half", ghosts=0.3, seed=b)
-        elif i < 7: vgroove(D, b, "vrock2", ghosts=0.3, seed=b)
+        elif i < 7: vgroove(D, b, "break1", ghosts=0.3, seed=b)
         if i == 0: crash(D, b, "G2")
         if i == 6: put_fill(D, b, "build")
         if last: D.set(b, "." * 16, "............xXXX", "." * 16)            # サビ直前の1小節は、ベースと歌の役だけ（最後の1拍だけ助走）
@@ -302,15 +301,15 @@ for b in range(S.nb):
         if n == "打ち上げ" and i >= 28:
             if i == 28: D.set(b, "X" + "." * 15, "X" + "." * 15, "." * 16); crash(D, b, "C2", 8)
             continue
-        name = "vrock"
-        if n == "あと3分" and i < 8: name = "punk"                         # 2回目のサビの前半は2ビート寄りに入れかえる
-        if n == "打ち上げ" and 16 <= i < 24: name = "vrock2"
+        name = "bigbeat"
+        if n == "あと3分" and i < 8: name = "break2"                       # 2回目のサビの前半はブレイクビーツに入れかえる
+        if n == "打ち上げ" and 16 <= i < 24: name = "break1"
         vgroove(D, b, name, ghosts=0.3, seed=b)
         if i % 8 == 0: crash(D, b, "C2" if i % 16 == 0 else "G2")
         if i % 8 == 7 and not last: put_fill(D, b, "snare16" if i % 16 == 7 else "tomtrip")
         if last and n != "打ち上げ": put_fill(D, b, "tomdown")
     elif n == "射的とりんご飴":
-        vgroove(D, b, "vrock2" if i < 8 else "vrock", ghosts=0.4, seed=b)
+        vgroove(D, b, "break1" if i < 8 else "bigbeat", ghosts=0.4, seed=b)
         if i in (0, 8): crash(D, b)
         if 4 <= i < 8: D.cym(b, "D2:0.5 " * 8); D.H[b] = "." * 16
         if i == 7: put_fill(D, b, "tomtrip")
@@ -351,4 +350,4 @@ season(S, 0, "夕方の蝉", S.beats * 4, vol=0.08)
 season(S, S.nb - 4, "鈴虫", S.beats * 4, vol=0.08)
 S.no_depth = True   # 2026-10-25: 深いパッドを足すと MIDI のチャンネルがあふれるので、空間だけ
 S.flags += " --space hall --space-wet 0.15"
-teto(S, LY, V, special={"打ち上げ": 0.55, "見上げる空": -0.5})
+teto(S, LY, V, special={"打ち上げ": 0.55, "見上げる空": -0.5})   # 2026-10-25「伴奏が聞きにくい」「声が圧倒的に大きい」→ 既定（0.6）で歌を下げる

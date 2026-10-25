@@ -25,6 +25,10 @@ VGROOVE = {
     "boombap": ("X.....x...X..x..", "....X.......X...", "x.x.x.x.x.x.x.x."),
     "shuffle": ("X.....X...X.....", "....X.......X...", "x..x..x.x..x..x."),
     "twostep": ("X.......x.x.....", "....X.......X...", "x.xox.x.x.xox.x."),
+    # 2026-10-25 人間「ドラム、ギターはブンブンサテライツにしよう」→ ビッグビート（ブレイクビーツを太く鳴らすロック）の型
+    "bigbeat": ("X.....X.X.......", "....X.......X...", "x.O.x.x.x.O.x.x."),
+    "break1": ("X.........X.X...", "....X..x.x..X...", "x.x.x.x.x.x.x.xO"),
+    "break2": ("X.X.......X.....", "....X......xX..x", "x.xOx.x.x.xOx.x."),
     "none": ("................", "................", "................"),
 }
 
@@ -383,7 +387,7 @@ _NOPITCH = {"kick", "snare", "hihat", "tom", "crash"}
 _NOPITCH_PATCH = {"cymbalFx", "seasonFx", "fxRiser"}
 
 
-def teto(S, LY, V, transpose=0, level=None, special=None, vib=None, lead_vol=0.12, vocal_level=0.85, lo=57, hi=78, settings=None):
+def teto(S, LY, V, transpose=0, level=None, special=None, vib=None, lead_vol=0.12, vocal_level=0.6, lo=57, hi=78, settings=None):
     """BGM（歌の役なし）か歌の版（テト＋小さなリード）を書き出す。VB_VOCAL=1 で歌の版。
     level: 場面の種類ごとの強さ（−1〜1）。special: 場面の名前ごとの強さ。vib: 種類ごとのビブラートの深さ（セント）"""
     if VOCAL:
@@ -445,13 +449,14 @@ def teto(S, LY, V, transpose=0, level=None, special=None, vib=None, lead_vol=0.1
             else: dyn += [[b0 * S.beats, v0], [(b0 + L_) * S.beats - 0.5, v0 + (0.1 if k_ == "chorus" else 0.0)]]
         VB = {"verse": 26, "pre": 28, "chorus": 36, "bridge": 32, "break": 30}; VB.update(vib or {})
         vib_map = [[b0 * S.beats, VB.get(k_, 24)] for n_, b0, L_, k_ in S.scenes]
-        voc = {"voice": "teto", "notes": " ".join(toks), "volume": 1.0, "pan": 0, "reverb": 0.2,
-               "blend": {"voice": "teto-soft", "amount": 0.3}, "formant": 1.075, "breathy": 0.1, "vibrato": 34, "vibratoRate": 5.3, "vibratoMap": vib_map,
+        # 2026-10-25 人間（03）「もう少し1文字1文字の言葉をはっきり」→ 子音 1.4→1.6・やわらかい声 0.3→0.22・残響 0.2→0.16
+        voc = {"voice": "teto", "notes": " ".join(toks), "volume": 1.0, "pan": 0, "reverb": 0.16,
+               "blend": {"voice": "teto-soft", "amount": 0.22}, "formant": 1.075, "breathy": 0.1, "vibrato": 34, "vibratoRate": 5.3, "vibratoMap": vib_map,
                "eq": [["peak", 220, 0.8, 3], ["peak", 1600, 1.2, 2], ["peak", 2000, 2.0, 9], ["hshelf", 6500, 0.7, 10]], "deess": -3.0,
-               "scoop": 0.5, "dynamics": dyn, "consonant": 1.4, "air": 4.0}
+               "scoop": 0.5, "dynamics": dyn, "consonant": 1.6, "air": 4.0}
         voc.update(settings or {})
         js["vocals"] = [voc]
-        js["vocalLevel"] = vocal_level
+        js["vocalLevel"] = vocal_level   # 2026-10-25 人間「全体に、伴奏より圧倒的に声が大きく聞こえる」→ 既定 0.85→0.6（耳の重みで歌は伴奏より約 −5.4dB）
         js["title"] = js["title"].replace("（仮）", "（歌：重音テト・仮）")
     _json.dump(js, open(path, "w"), ensure_ascii=False)
     print(("  歌（重音テト）を入れた" if VOCAL else "  BGM（歌の役なし）") + (f"・{transpose:+d}半音" if transpose else "") + (f"・歌詞の数が合わない小節 {LY.bad}" if LY and LY.bad else ""))

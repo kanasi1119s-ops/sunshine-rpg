@@ -440,17 +440,17 @@ if VOCAL:
         if k_ == "pre": dyn_map += [[b0 * S.beats, -0.2], [(b0 + L_) * S.beats - 0.5, 0.25]]
         else: dyn_map += [[b0 * S.beats, v0], [(b0 + L_) * S.beats - 0.5, v0 + (0.1 if k_ == "chorus" else 0.0)]]
     vib_map = [[b0 * S.beats, {"verse": 26, "pre": 28, "chorus": 36, "bridge": 32, "break": 30}.get(k_, 16)] for n_, b0, L_, k_ in S.scenes]
-    _js["vocals"] = [{"voice": "teto", "notes": " ".join(toks), "volume": 1.0, "pan": 0, "reverb": 0.2,
-                      "blend": {"voice": "teto-soft", "amount": 0.3}, "formant": 1.075, "breathy": 0.1, "vibrato": 34, "vibratoRate": 5.3, "vibratoMap": vib_map,
+    _js["vocals"] = [{"voice": "teto", "notes": " ".join(toks), "volume": 1.0, "pan": 0, "reverb": 0.16,
+                      "blend": {"voice": "teto-soft", "amount": 0.22}, "formant": 1.075, "breathy": 0.1, "vibrato": 34, "vibratoRate": 5.3, "vibratoMap": vib_map,
                       "eq": [["peak", 220, 0.8, 3], ["peak", 1600, 1.2, 2], ["peak", 2000, 2.0, 9], ["hshelf", 6500, 0.7, 10]], "deess": -3.0,
-                      "scoop": 0.5, "dynamics": dyn_map, "consonant": 1.4, "air": 4.0}]
+                      "scoop": 0.5, "dynamics": dyn_map, "consonant": 1.6, "air": 4.0}]
     # 2026-10-25 人間が渡した参考の声（重音テト）を測った差で寄せた（2kHz の抜け +9・6.5kHz より上 +10・息まじり 0.1・ビブラート 34 セント 5.3 回）。人間「この声で曲を作っていこう」
     # 2026-10-25 人間「声を透き通るようにしてアニメ声にもう少しして」→ 声の響きをさらに上げて若く軽く（formant 1.055→1.075）、
     #   やわらかい声を少し戻して透き通らせ（0.18→0.3）、息まじりなし（濁らせない）、高い所の空気を +3.5dB
     # 2026-10-25 人間「伴奏に対して声がでかすぎる」→ 歌は伴奏より +3dB だったのを約 +0.5dB に（vocalLevel 0.75）
     #   「一字一字聞こえやすく」「もう少しアニメ声に」→ 子音を強め（1.2→1.4。カ・サ・タ・ハ・パ行は強めない＝ノイズにしない）、
     #   声を明るく軽く（formant 1.055）、やわらかい声の混ぜを減らす（0.35→0.18）、息まじりを減らす（0.05→0.02）
-    _js["vocalLevel"] = 0.85   # 2026-10-25「声がまだでかい」→ 耳の感じ方の重みで、歌は伴奏より約 −2.4dB
+    _js["vocalLevel"] = 0.6    # 2026-10-25「全体に、伴奏より圧倒的に声が大きく聞こえる」→ 0.85→0.6。「1文字1文字はっきり」→ 子音 1.6・やわらかい声 0.22・残響 0.16   # 2026-10-25「声がまだでかい」→ 耳の感じ方の重みで、歌は伴奏より約 −2.4dB
     _js["title"] = _js["title"].replace("（仮）", "（歌：重音テト・仮）")
 _json.dump(_js, open(_path, "w"), ensure_ascii=False)
 print("  3半音下げた" + ("・歌（重音テト）を入れた" if VOCAL else "・BGM（リードなし）"))

@@ -42,7 +42,8 @@ S.scene("新しい言葉のサビ", 20, "chorus", C_CH + ["Fmaj7", "G7", "Cmaj7"
 S.scene("ありがとう", 6, "outro", ["Fmaj7", "G7", "Em7", "Am7", "Fmaj9", "Fmaj9"])
 
 # ================= パート =================
-V = Voice(S, vol=0.22, delay=0.75, patch="picoLeadRound", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
+V = Voice(S, vol=0.22, delay=0.75, patch="picoLeadRound", low=True)
+V.main.spec["fx"].insert(1, {"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.7})   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 VOCO_FX = [{"type": "filter", "kind": "highpass", "freq": 200, "q": 0.7},
            {"type": "eq", "low": 0, "mid": 5, "midHz": 800, "high": 0}, {"type": "eq", "low": 0, "mid": 4, "midHz": 1600, "high": -2},
            {"type": "filter", "kind": "lowpass", "freq": 4500, "q": 0.8}, {"type": "plate", "mix": 0.25}]
@@ -54,7 +55,8 @@ COIN = S.track("鍵盤の電子音（グロッケンのような）", "pad", pat
               fx=[{"type": "filter", "kind": "highpass", "freq": 400, "q": 0.7}, {"type": "pingpong", "beats": 0.75, "mix": 0.18, "feedback": 0.25}])
 COW = S.track("カウベル風（ベルを短く）", "pad", patch="surgeBell1", volume=0.06, pan=-0.3, reverb=0.12, sustain=0.12,
               fx=[{"type": "eq", "low": -6, "mid": 5, "midHz": 820, "high": -2}])
-CHIP = S.track("ポップなプラックのフック", "pad", patch="surgePopcorn", volume=0.1, pan=-0.15, reverb=0.2, sustain=0.5,
+# 2026-10-25 人間（03）「リードの音が少し歪みが強いから、ほんの少し抑えたい」→ フックのプラックと歌の役の高い所のざらつきを削る（下の fx）
+CHIP = S.track("ポップなプラックのフック", "pad", patch="surgePopcorn", volume=0.095, pan=-0.15, reverb=0.2, sustain=0.5,
                fx=[{"type": "filter", "kind": "highpass", "freq": 250, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 7000, "q": 0.7},
                    {"type": "pingpong", "beats": 0.75, "mix": 0.12, "feedback": 0.2}])
 BASS = S.track("シンセベース（跳ねる）", "bass", **synth_bass_spec("surgeBassPasty", vol=0.24, duck=0.25))
@@ -287,4 +289,5 @@ S.desc = ("仮: ボカロ曲インスト25曲（作り直し）の03。テクノ
           "緊張すると言いまちがえる「わたし」が、まちがいも自分の色だと笑えるようになるまで。電子音1つ「ピッ」で始まり、8分で語る Aメロ、言いよどみが入るサビ（「お、お、おはよう」）、4つ打ちの1サビ、カウベルの間奏、"
           "ジャージークラブでクラスじゅうが笑う2サビ（いちばんの山）、プラックのソロ、夜のひとり練習（Half feel）、こもった朝、2ステップから4つ打ちの最後のサビ、「ありがとう」の和音で切る。Surge の音。自作")
 S.flags += " --space sky --space-wet 0.14"
+CHIP.spec["fx"] = [f for f in CHIP.spec["fx"] if f.get("kind") != "lowpass"] + [{"type": "filter", "kind": "lowpass", "freq": 5200, "q": 0.7}, {"type": "eq", "low": 0, "mid": -2.5, "midHz": 3200, "high": -1.5}]
 teto(S, LY, V, special={"新しい言葉のサビ": 0.5, "夜の自販機": -0.5})
