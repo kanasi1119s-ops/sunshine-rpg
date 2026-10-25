@@ -349,6 +349,17 @@ def vwrite(S, extra_flags=""):
     for t in S.tracks:
         if t.inst == "distGuitar" and not any(w in t.role for w in ("リード", "ソロ")) and not getattr(t, "_gtr_scaled", False):
             t.spec["volume"] = round(t.spec.get("volume", 0.1) * 0.88, 4); t._gtr_scaled = True
+    # 2026-10-26 人間「リフギターが目立つ曲はベースが全体的に埋もれがち」: 歪みギター（リフ・刻み）のある曲では、
+    #   ベースを 1.2 倍（人間の好み「1.2」）にして、ギターの 100Hz より下と 250Hz のこもりを削ってベースの居場所を空ける
+    if any(t.inst in ("distGuitar", "leadGuitar") for t in S.tracks) and not getattr(S, "_bass_room", False):
+        S._bass_room = True
+        for t in S.tracks:
+            if t.inst == "bass":
+                t.spec["volume"] = round(t.spec.get("volume", 0.2) * 1.2, 4)
+                t.spec["fx"] = list(t.spec.get("fx", [])) + [{"type": "eq", "low": 1.5, "mid": 1.5, "midHz": 700, "high": 0}]
+            elif t.inst in ("distGuitar", "leadGuitar"):
+                t.spec["fx"] = [{"type": "filter", "kind": "highpass", "freq": 100, "q": 0.7},
+                                {"type": "eq", "low": 0, "mid": -2.5, "midHz": 250, "high": 0}] + list(t.spec.get("fx", []))
     # 場面の始まりの秒（書き出しのあとの「場面ごとの大きさの段差」の直しに使う。vb25_level.py）
     secs, sec, bpm = [], 0.0, S.bpm
     tmap = {e["bar"] - 1: e for e in S.tempo}; starts = {b0: (n_, k_) for n_, b0, L_, k_ in S.scenes}
