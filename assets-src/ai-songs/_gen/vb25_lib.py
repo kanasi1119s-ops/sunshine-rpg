@@ -247,6 +247,24 @@ def ride(D, b, pattern="x.x.x.x.", note="D2"):
         D.C.at(b * D.song.beats + i * step, f"{nn}:{step:g}" + ("!" if c in "XB" else ""))
 
 
+SEASON = {"蝉": "C4", "夕方の蝉": "C#4", "鈴虫": "D4", "コオロギ": "D#4", "雨": "E4", "風鈴": "F4", "小鳥": "F#4", "波": "G4",
+          "雪の鈴": "G#4", "秋風": "A4", "そよ風": "A#4", "手拍子": "B4", "カウベル": "C5", "指パッチン": "C#5", "花火": "D5"}
+
+
+def season(S, bar, kind, beats=16, vol=0.09, pan=0.0, every=None):
+    """季節の音（作曲ソフトの seasonFx。2026-10-25 人間「季節を感じれる様な音も欲しい」）。
+    bar 小節目から beats 拍ぶん。every を書くと、その拍ごとに鳴らし直す（長い雨や虫の声をつなぐ）"""
+    key = f"season-{kind}"
+    t = getattr(S, "_season", {}).get(key)
+    if t is None:
+        t = S.track(f"季節の音（{kind}）", "pad", patch="seasonFx", volume=vol, pan=pan, reverb=0.15, modulate=False)
+        S.__dict__.setdefault("_season", {})[key] = t
+    st = bar * S.beats; step = every or beats; k = 0
+    while k < beats - 1e-6:
+        L = min(step, beats - k); t.at(st + k, f"{SEASON[kind]}:{L:g}"); k += L
+    return t
+
+
 def vwrite(S, extra_flags=""):
     """vb25 の名前で書き出す。S.kit が crocell-punch のときもフラグを書く"""
     path = sys.argv[1] if len(sys.argv) > 1 else f"/tmp/vp25/vb25-{S.no}-{S.slug}.json"

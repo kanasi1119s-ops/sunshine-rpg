@@ -302,6 +302,41 @@ def _(f0, L, n, rnd):
     return out[0] * e, out[1] * e
 
 
+def _voice(f0, L, n, rnd, formants, breath=0.05, bright=3.0):
+    """声のように聞こえる伸ばす音（2026-10-25 人間「もっとボカロっぽい感じのが欲しい」）。声ではない。
+    声帯の代わりのパルス列（ソー＋細い矩形）を、母音の響きの山（固定の Hz。音程が変わっても山は動かない＝声と同じ）に通す。
+    息のノイズはループの長さで繰り返す（つなぎ目が切れない）。2.8〜3.2kHz の歌の明るさを足す"""
+    c = max(1, round(f0 * L / SR))
+    out = []
+    for side in (0, 1):
+        ph = rnd.random()
+        src = osc("saw", c, L, n, ph) * 0.75 + osc("sq", c, L, n, ph, 0.12) * 0.25
+        nb = np.random.default_rng(int(f0 * 10) + side).standard_normal(L)
+        src = src + np.resize(nb, n) * breath
+        y = np.zeros(n)
+        for f, g, bw in formants:
+            q = f / bw; w = 2 * np.pi * f / SR; al = np.sin(w) / (2 * q)
+            b = [al, 0, -al]; a = [1 + al, -2 * np.cos(w), 1 - al]
+            y += lfilter(np.array(b) / a[0], np.array(a) / a[0], src) * g
+        y = peak(y, 3000, bright, 1.2)
+        y = y + src * 0.04                       # ほんの少し元の音（芯）
+        out.append(hp(lp(y, 9000), 150))
+    e = env_adr(n, 0.02, 0.15, 0.9)
+    return out[0] * e, out[1] * e
+
+
+@instr("synth-voice-lead-a", program=54, keys=(48, 96), step=3, loop=88200, pre=1.2, release=0.15, level=0.75)
+def _(f0, L, n, rnd):
+    """歌の役（ボカロらしい声のようなリード・母音「あ」）: 女性の「あ」850/1220/2810/3900Hz"""
+    return _voice(f0, L, n, rnd, ((850, 1.0, 90), (1220, 0.7, 110), (2810, 0.32, 170), (3900, 0.16, 250)))
+
+
+@instr("synth-voice-lead-u", program=91, keys=(48, 96), step=3, loop=88200, pre=1.2, release=0.15, level=0.75)
+def _(f0, L, n, rnd):
+    """歌の役（やわらかい声のようなリード・母音「う」寄り）: 日本語の「う」400/1400/2700Hz（唇を丸めない）"""
+    return _voice(f0, L, n, rnd, ((420, 1.0, 70), (1400, 0.45, 110), (2700, 0.25, 170), (3800, 0.1, 250)), breath=0.07, bright=2.0)
+
+
 # ---------------- 書き出し ----------------
 class R:
     def __init__(self, seed): self.r = np.random.default_rng(seed)

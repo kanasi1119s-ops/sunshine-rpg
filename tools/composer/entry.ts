@@ -118,6 +118,8 @@ import brightLeadUrl from "../../assets-src/soundfont/extra/synth-modern-brightl
 import clearLeadUrl from "../../assets-src/soundfont/extra/synth-clear-lead.sf3?url";
 import clearPadUrl from "../../assets-src/soundfont/extra/synth-clear-pad.sf3?url";
 import seasonFxUrl from "../../assets-src/soundfont/extra/season-fx.sf3?url";
+import voiceLeadAUrl from "../../assets-src/soundfont/extra/synth-voice-lead-a.sf3?url";
+import voiceLeadUUrl from "../../assets-src/soundfont/extra/synth-voice-lead-u.sf3?url";
 import pluckGlassUrl from "../../assets-src/soundfont/extra/synth-pluck-glass.sf3?url";
 import chip25Url from "../../assets-src/soundfont/extra/synth-chip-pulse25.sf3?url";
 import chip12Url from "../../assets-src/soundfont/extra/synth-chip-pulse12.sf3?url";
@@ -415,6 +417,8 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   modernLead: { programs: [1], url: modernLeadUrl }, modernSupersaw: { programs: [5], url: modernSupersawUrl }, fbChord: { programs: [10], url: fbChordUrl }, modernPluck: { programs: [23], url: modernPluckUrl }, popBell: { programs: [31], url: popBellUrl }, modernBass: { programs: [44], url: modernBassUrl }, vocalChop: { programs: [69], url: vocalChopUrl }, modernPad: { programs: [74], url: modernPadUrl }, kawaiiArp: { programs: [76], url: kawaiiArpUrl }, brightLead: { programs: [112], url: brightLeadUrl },
   // 2026-10-25 クリアで揺れの少ないシンセ（113・114）と、季節を感じる音・小さな打楽器（105。鍵盤ごとに別の音）
   clearLead: { programs: [113], url: clearLeadUrl }, clearPad: { programs: [114], url: clearPadUrl }, seasonFx: { programs: [105], url: seasonFxUrl },
+  // 2026-10-25 声のように聞こえるリード（ボカロらしい歌の役。声ではなくシンセ。母音「あ」54・「う」91）
+  voiceLeadA: { programs: [54], url: voiceLeadAUrl }, voiceLeadU: { programs: [91], url: voiceLeadUUrl },
   pluckSynth: { programs: [85], url: pluckEdmUrl }, chipPulse25: { programs: [124], url: chip25Url }, chipPulse12: { programs: [125], url: chip12Url }, reeseBass: { programs: [34], url: reeseUrl }, fxElectro: { programs: [126], url: fxElectroUrl },
 };
 function extrasFor(score: Score): string[] {
