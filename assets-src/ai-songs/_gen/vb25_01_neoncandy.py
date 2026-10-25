@@ -38,12 +38,12 @@ S.scene("ボーナスステージ", 16, "interlude", RIFF_CH)
 S.scene("落ちサビ", 8, "break", C_CH)
 S.scene("最後の決心", 24, "chorus", LAST + LAST2 + LAST)
 S.scene("ゲームの外", 12, "outro", ["Gm", "Eb", "F", "Gm"])
-S.scene("電源オフ", 2, "outro", ["Gm", "Gm"])
+S.scene("電源オフ", 1, "outro", ["Gm"])
 
 V = Voice(S, vol=0.22, delay=0.75)
 CHIP = S.track("チップのリフ（矩形波 25%）", "lead", patch="chipPulse25", volume=0.13, pan=-0.2, reverb=0.12, mono=True, gainDb=1,
-               fx=[{"type": "filter", "kind": "highpass", "freq": 250, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 7500, "q": 0.7},
-                   {"type": "pingpong", "beats": 0.75, "mix": 0.12, "feedback": 0.2}])
+               fx=[{"type": "filter", "kind": "highpass", "freq": 250, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 4800, "q": 0.7},
+                   {"type": "pingpong", "beats": 0.75, "mix": 0.12, "feedback": 0.2}, {"type": "plate", "mix": 0.14}])   # 2026-10-25: 前奏とソロの点が低い（7.4〜7.6）→ 高い所を丸める
 CHIP2 = CHIP   # 合いの手もチップのリフのパートで（チャンネルの数を節約）
 PN = S.track("ピアノ（右手）", "piano", volume=0.13, pan=-0.1, reverb=0.22, fx=[{"type": "eq", "low": -3, "mid": -2, "midHz": 400, "high": 1}])
 PNL = S.track("ピアノ（左手）", "piano", volume=0.11, pan=-0.1, reverb=0.22, fx=[{"type": "eq", "low": -3, "mid": -2, "midHz": 400, "high": 1}])
@@ -143,7 +143,7 @@ for b in range(S.nb):
     if n == "電源オフ": continue
     v = voice(ch, 64, 3)
     # ベース
-    if n in ("起動", "ステージ2", "ボーナスステージ"): BASS.bar(b, bass_line(S, b, "oct8"))
+    if n in ("起動", "ステージ2", "ボーナスステージ"): BASS.bar(b, bass_line(S, b, "oct8" if not (n == "起動" and i < 4) else "long"))
     elif n in ("ゲームの中の毎日", "2周目"): BASS.bar(b, bass_line(S, b, "root8" if i < 8 else "oct8"))
     elif n.startswith("穴を見つける"): BASS.bar(b, bass_line(S, b, "push" if i < 7 else "long"))
     elif n.startswith("決心") or n == "最後の決心": BASS.bar(b, bass_line(S, b, "oct8"))
@@ -151,6 +151,8 @@ for b in range(S.nb):
     elif n == "外の世界": BASS.bar(b, bass_line(S, b, "house"))
     elif n == "ゲームの外": BASS.bar(b, bass_line(S, b, "half"))
     # 厚い和音（サビだけ）
+    if n == "ボーナスステージ" or (n == "起動" and i >= 4):   # ソロと前奏の後半に、のばす和音を下に（2026-10-25）
+        for j in range(2): PAD[j].bar(b, f"{nm(v[j])}:4")
     if n.startswith("決心") or n == "最後の決心" or (n == "外の世界" and i >= 8):
         for j in range(3): SAW[j].bar(b, f"{nm(v[j])}:1.5 {nm(v[j])}:1 {nm(v[j])}:1.5")
     # ピアノ（右手16分の分散和音・左手8分のオクターブ）
@@ -173,7 +175,7 @@ for b in S.sc("決心2")[-2:]: WOB.bar(b, f"{nm(low(S.chords[b], 'E1'))}:4")
 # 効果音
 riser(FX, S.sc("決心")[0] - 2, 8, "C4"); riser(FX, S.sc("決心2")[0] - 2, 8, "C4"); riser(FX, S.sc("最後の決心")[0] - 4, 16, "D4")
 cym_swell(CYM, S.sc("外の世界")[0] - 1, 2, "C4"); cym_swell(CYM, S.sc("最後の決心")[0] - 1, 2, "C4")
-FX.bar(S.sc("電源オフ")[0], "E4:4 R:4")                 # 電源が切れる（ダウンリフター）
+FX.bar(S.sc("電源オフ")[0], "E4:4")                 # 電源が切れる（ダウンリフター）
 
 # ================= ドラム =================
 for b in range(S.nb):
@@ -228,7 +230,7 @@ for b in range(S.nb):
 # 1拍の完全な無音（穴に落ちる直前）と、Bメロの最後の止め
 SIL.add(S.sc("穴に落ちる")[0] - 1, 3, 4)
 for name in ("穴を見つける", "穴を見つける2"): SIL.add(S.sc(name)[-1], 2, 4)
-SIL.add(S.sc("電源オフ")[0], 1, 8)       # 電源が切れたら、何も鳴らない
+SIL.add(S.sc("電源オフ")[0], 1, 4)       # 電源が切れたら、何も鳴らない
 SIL.apply()
 
 S.fade_out = 0
