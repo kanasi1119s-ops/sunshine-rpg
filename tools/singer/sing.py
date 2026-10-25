@@ -696,9 +696,21 @@ def main():
         g = float(song.get("vocalLevel", 1.0))
         v = v[:n]
         # 歌の大きさを、伴奏の大きさに合わせて場所ごとに乗せる（ミックスのフェーダー操作のかわり）:
-        #   2 秒ごとに「歌 − 伴奏」の差が +3dB（vocalLevel で上下）になるよう合わせ、なめらかにつなぐ
+        #   2 秒ごとに「歌 − 伴奏」の差を合わせ（下の K 特性の重みで）、なめらかにつなぐ
         win = int(4.0 * sr); hop = int(0.25 * sr)
-        vm = np.abs(v).max(1); am = acc.mean(1); vv = v.mean(1)
+        vm = np.abs(v).max(1)
+        # 2026-10-25 人間「伴奏に対して声がでかすぎる」「声の大きさ変わってないんじゃない？」: 音の強さ（RMS）でそろえると、
+        #   低い音の多い伴奏（ベース・キック）は耳には小さく、声は大きく聞こえる（分けて測ると、声が伴奏より 5〜6 LU 大きかった）。
+        #   耳の感じ方に近い重み（K 特性: 100Hz より下を弱め、1.5kHz より上を +4dB）を掛けてから比べ、
+        #   「歌 − 伴奏」が −1dB（vocalLevel で上下。1＝−1dB）になるように合わせる
+        def kw(x):
+            bh, ah = signal.butter(2, 100 / (sr / 2), "high"); y = signal.lfilter(bh, ah, x)
+            w0 = 2 * np.pi * 1500 / sr; A = 10 ** (4 / 40); al = np.sin(w0) / 2 * np.sqrt(2)
+            cs = np.cos(w0); sq = 2 * np.sqrt(A) * al
+            b = [A * ((A + 1) + (A - 1) * cs + sq), -2 * A * ((A - 1) + (A + 1) * cs), A * ((A + 1) + (A - 1) * cs - sq)]
+            a_ = [(A + 1) - (A - 1) * cs + sq, 2 * ((A - 1) - (A + 1) * cs), (A + 1) - (A - 1) * cs - sq]
+            return signal.lfilter(np.array(b) / a_[0], np.array(a_) / a_[0], y)
+        am = kw(acc.mean(1)); vv = kw(v.mean(1))
         act = np.convolve((vm > 1e-3).astype(float), np.ones(int(0.05 * sr)), mode="same") > 0
         gains = []
         for i in range(0, n, hop):
@@ -706,7 +718,7 @@ def main():
             m = act[seg]
             if m.sum() < 0.2 * sr: gains.append(np.nan); continue
             ra = np.sqrt(np.mean(am[seg][m] ** 2)) + 1e-9; rv = np.sqrt(np.mean(vv[seg][m] ** 2)) + 1e-9
-            gains.append(20 * np.log10(ra / rv) + 3.0 + 20 * math.log10(g))
+            gains.append(20 * np.log10(ra / rv) - 1.0 + 20 * math.log10(g))
         gd = np.array(gains)
         ok = ~np.isnan(gd)
         if ok.any():

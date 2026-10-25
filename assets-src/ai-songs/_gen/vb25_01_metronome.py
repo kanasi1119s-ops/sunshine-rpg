@@ -13,6 +13,11 @@
 #   Bメロの最後は息を止めるように切る／最後のサビの前は1拍の完全な無音のあと、通知の2音と転調で全員が入る。
 # この曲だけの形: 始まりは胸の音（木のメトロノームの刻み）がだんだん速くなる。終わりは刻みがだんだん遅くなって止まる。
 from vb25_lib import *
+import os, re, sys, json as _json
+# 2026-10-25 人間「ここで作った曲の BGM と重音テトが歌う2種類にしよう」「BGM にはリードいらない。テトが歌うのにはリード入れてね」
+#   VB_VOCAL=1 で歌の版（テトの歌＋リード）、ふだんは BGM（リードなし）。どちらも全体を 3 半音下げる（テトの楽な音域 B3〜F#5 に歌を入れるため）
+VOCAL = os.environ.get("VB_VOCAL") == "1"
+TRANSPOSE = -3
 
 S = Song("01", "metronome", "既読メトロノーム（仮）", "Read Receipt Metronome", 164, 4, "C#", "minor", "テクノポップ（ボカロ）")
 S.kit = "electro"
@@ -49,38 +54,54 @@ V = Voice(S, vol=0.22, delay=0.75, bright=1.5, patch="surgeFormantPulse", low=Tr
 V.main.spec["fx"].insert(2, {"type": "eq", "low": -1, "mid": 0, "midHz": 1000, "high": 3})
 TICK = S.track("胸の音（木のメトロノーム）", "pad", patch="surgeWoody", volume=0.12, pan=0.25, reverb=0.25, sustain=0.5,
                fx=[{"type": "filter", "kind": "highpass", "freq": 300, "q": 0.7}, {"type": "pingpong", "beats": 0.75, "mix": 0.18, "feedback": 0.25}])
-PN = S.track("ピアノ（右手）", "piano", volume=0.13, pan=-0.15, reverb=0.22, fx=[{"type": "eq", "low": -3, "mid": -2, "midHz": 400, "high": 3}])
-PN2 = S.track("ピアノ（右手の和音の上）", "piano", volume=0.13, pan=-0.15, reverb=0.22, fx=[{"type": "eq", "low": -3, "mid": -2, "midHz": 400, "high": 3}])
-PNL = S.track("ピアノ（左手）", "piano", volume=0.13, pan=-0.15, reverb=0.22, fx=[{"type": "eq", "low": -3, "mid": -2, "midHz": 400, "high": 3}])
+PN = S.track("ピアノ（右手）", "piano", volume=0.13, pan=-0.15, reverb=0.22, fx=[{"type": "eq", "low": -3, "mid": -2, "midHz": 400, "high": 4.5}])
+PN2 = S.track("ピアノ（右手の和音の上）", "piano", volume=0.13, pan=-0.15, reverb=0.22, fx=[{"type": "eq", "low": -3, "mid": -2, "midHz": 400, "high": 4.5}])
+PNL = S.track("ピアノ（左手）", "piano", volume=0.13, pan=-0.15, reverb=0.22, fx=[{"type": "eq", "low": -3, "mid": -2, "midHz": 400, "high": 4.5}])
 PNM = S.track("ピアノ（歌を受け取る）", "piano", volume=0.17, pan=-0.15, reverb=0.22, fx=[{"type": "eq", "low": -3, "mid": -2, "midHz": 400, "high": 3}])
 BASS = S.track("シンセベース", "bass", **synth_bass_spec("surgeBassAnalogBassImaged", vol=0.25, duck=0.3))
-CSPEC = dict(patch="surgeChordHappyOldVibe", volume=0.055, pan=0.0, reverb=0.25, sustain=0.9, duck=0.35,
+BASS.spec["fx"].append({"type": "eq", "low": 0, "mid": -2.5, "midHz": 320, "high": 0})   # 低い中域のこもりを引く
+CSPEC = dict(patch="surgeChordEldorado", volume=0.055, pan=0.0, reverb=0.25, sustain=0.9, duck=0.35,
              fx=[{"type": "filter", "kind": "highpass", "freq": 230, "q": 0.7}, {"type": "eq", "low": 0, "mid": -3, "midHz": 420, "high": 2}])
 CHD = [S.track(f"サビの和音{i + 1}", "pad", **dict(CSPEC)) for i in range(3)]
-GSPEC = dict(patch="surgePadSparkly", volume=0.045, pan=0.0, reverb=0.4, sustain=2.0, fx=[{"type": "filter", "kind": "highpass", "freq": 300, "q": 0.7}])
+GSPEC = dict(patch="surgePadSparkly", volume=0.055, pan=0.0, reverb=0.4, sustain=2.0, fx=[{"type": "filter", "kind": "highpass", "freq": 300, "q": 0.7}])
 GLOW = [S.track(f"きらめくパッド{i + 1}", "pad", **dict(GSPEC)) for i in range(3)]
 BSPEC = dict(patch="surgePadBowed", volume=0.06, pan=0.0, reverb=0.45, sustain=2.5)
 BOW = [S.track(f"弓のパッド{i + 1}", "pad", **dict(BSPEC)) for i in range(3)]
 STR = [S.track(f"ストリングス{i + 1}", "strings", **dict(volume=0.065, pan=0.0, reverb=0.4, sustain=1.6)) for i in range(2)]
 BELL = S.track("きらめき（ベル）", "pad", patch="surgeFantasyBell", volume=0.06, pan=0.4, reverb=0.4, sustain=1.0,
                fx=[{"type": "filter", "kind": "highpass", "freq": 600, "q": 0.7}, {"type": "pingpong", "beats": 0.75, "mix": 0.25, "feedback": 0.3}])
+SPARK = S.track("きらめきの分散和音（高い所）", "pad", patch="surgeNicePluck", volume=0.05, pan=-0.4, reverb=0.35, sustain=0.6,
+                fx=[{"type": "filter", "kind": "highpass", "freq": 700, "q": 0.7}, {"type": "pingpong", "beats": 0.75, "mix": 0.28, "feedback": 0.3}])
+DIG = S.track("デジタルの刻み（画面の光）", "lead", patch="surgeDnaSeq", volume=0.07, pan=-0.3, reverb=0.2, mono=True,
+              fx=[{"type": "filter", "kind": "highpass", "freq": 500, "q": 0.7}, {"type": "bitcrusher", "bits": 10, "mix": 0.3},
+                  {"type": "pingpong", "beats": 0.375, "mix": 0.3, "feedback": 0.35}])
+GATE = [S.track(f"刻まれるパッド{i + 1}", "pad", **dict(patch="surgePadSparkly", volume=0.05, pan=0.0, reverb=0.3, sustain=1.0,
+                                                       fx=[{"type": "transgate", "beats": 0.25, "pattern": "x.xxx.x.x.xx.x.x", "depth": 0.85}, {"type": "filter", "kind": "highpass", "freq": 300, "q": 0.7}])) for i in range(3)]
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 D = S.drumkit()
 SIL = Silence(S)
 
 # ---------------- 歌の役 ----------------
-VA = ["R:0.5 5,:0.25 1:0.25 1:0.25 2:0.25 3:0.5 R:0.25 2:0.25 1:0.5 R:1",             # 既読がついた
-      "R:0.25 1:0.25 1:0.25 3:0.25 4:0.25 4:0.25 3:0.25 1:0.25 3:1 R:1",               # まだ返事はない
-      "R:0.5 2:0.25 2:0.25 4:0.25 5:0.5 4:0.25 2:0.5 R:0.5 7,:0.25 1:0.25 2:0.5",      # 砂時計の砂が
-      "2:1 1:0.5 7,:0.5 5,:1.5 R:0.5",                                                 # 落ちてく
-      "R:0.5 3:0.25 3:0.25 3:0.25 4:0.25 5:0.5 R:0.25 4:0.25 3:0.5 R:1",               # 心の音が
-      "R:0.25 3:0.25 3:0.25 5:0.25 6:0.5 5:0.25 3:0.25 5:1 R:1",                       # うるさくなる
-      "R:0.5 6:0.25 6:0.25 5:0.25 4:0.5 3:0.25 4:0.5 R:0.5 3:0.25 2:0.25 1:0.5",       # 何度も画面を
-      "#7,:1.5 2:0.5 5:2"]                                                              # 見てしまう
-VA_END = VA[:7] + ["5:1 #7:1 2':2"]
-VERSE = VA + VA_END
+# 2026-10-25 人間「この歌、人間が歌うと歌いにくい。Aメロ Bメロあたり。早口すぎる」→ Aメロを 16分の早口から、8分と4分の歌いやすい形に書き直した
+#   （1小節に言葉は2〜5つまで。2小節で1つの句、句の終わりは長くのばして息つぎ）
+VERSE = ["R:1 3:0.5 3:0.5 2:0.5 1:1 R:0.5",          # 既読の
+         "3:1 4:0.5 3:1.5 R:1",                       # しるし
+         "R:0.5 2:0.5 4:0.5 5:0.5 5:2",               # 返事は
+         "4:1 2:1.5 R:1.5",                           # まだ
+         "R:0.5 3:0.5 3:0.5 4:0.5 5:1 3:1",           # 砂時計
+         "6:1 5:0.5 3:1.5 R:1",                       # 落ちて
+         "R:0.5 4:0.5 3:3",                           # ゆく
+         "R:4",
+         "R:1 3:0.5 3:0.5 4:0.5 5:1.5",               # 心の
+         "6:1 5:0.5 3:1.5 R:1",                       # 音が
+         "R:0.5 4:0.5 4:0.5 5:0.5 7:2",               # うるさく
+         "5:2 R:2",                                   # て
+         "R:0.5 3:0.5 3:0.5 3:0.5 5:2",               # 何度も
+         "6:1 5:0.5 3:0.5 3:2",                       # 画面を
+         "R:0.5 4:0.5 3:0.5 4:0.5 6:2",               # 見てしま
+         "5:1 #7:1 2':2"]                             # う
 BM = ["3:1 4:0.5 3:0.5 6:1.5 R:0.5", "4:1 5:0.5 4:0.5 7:1.5 R:0.5", "5:1 7:0.5 1':0.5 2':1 1':1", "1':2 R:1 5:0.5 6:0.5",
-      "6:1 1':0.5 6:0.5 3':1.5 R:0.5", "#7:1 2':0.5 #7:0.5 4':1.5 R:0.5", "3':1 2':0.5 1':0.5 3':1 4':1", "5':2 R:2"]
+      "6:1 1':0.5 6:0.5 3':1.5 R:0.5", "#7:1 2':0.5 #7:0.5 4':1.5 R:0.5", "3':1.5 2':0.5 3':1 4':1", "5':2 R:2"]
 # サビ（E 長調の度数）
 CH = ["R:0.5 6:0.25 6:0.25 6:0.5 1':0.5 6:0.5 5:0.5 R:1",          # それでも待ってる
       "R:0.5 5:0.25 5:0.25 5:0.5 7:0.5 5:0.5 4:0.5 R:1",           # それでも待ってる
@@ -106,7 +127,7 @@ CM = ["3':4", "2':2 1':2", "1':2 6:2", "5:4", "3':4", "4':2 2':2", "3':3 R:1", "
 for name in ("既読", "時計の針"):
     for i, b in enumerate(S.sc(name)):
         line = K.mel(VERSE[i], oct=4)
-        if name == "時計の針" and i < 8: PNM.bar(b, shift_oct(line, 1))       # 2番の前半は、ピアノが歌を受け取る
+        if name == "時計の針" and i < 8 and not VOCAL: PNM.bar(b, shift_oct(line, 1))       # 2番の前半は、ピアノが歌を受け取る（歌の版はテトが歌う）
         else: V.bar(b, line)
 for name in ("消したい言葉", "消したい言葉2"):
     for i, b in enumerate(S.sc(name)): V.bar(b, K.mel(BM[i], oct=4))
@@ -150,7 +171,7 @@ COMP = [  # Aメロの右手の和音の刻み（4種類を順に。同じ型を
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     ch = S.chords[b]
-    v = [nm(x) for x in voice(ch, 66, 3)]
+    v = [nm(x) for x in voice(ch, 71, 3)]
     if n in ("既読", "時計の針") and not (n == "時計の針" and i < 8):
         f = COMP[(i // 2 + (b % 3)) % 4]
         PN.bar(b, f(v)); PNL.bar(b, f"{nm(low(ch, 'C2'))}:2 {nm(low(ch, 'C2') + 12)}:1 {nm(low(ch, 'C2') + 7)}:1" if i % 4 != 3 else f"{nm(low(ch, 'C2'))}:4")
@@ -191,14 +212,14 @@ for b in range(S.nb):
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     ch = S.chords[b]
-    v = voice(ch, 64, 3)
+    v = voice(ch, 70, 3)
     if n in ("それでも待ってる", "明日会おう"):
         r = "R:0.5 {0}:1 R:0.5 {0}:1 R:0.5 {0}:0.5" if i % 4 != 3 else "{0}:1.5 {0}:1 R:1.5"
         for j in range(3): CHD[j].bar(b, r.format(nm(v[j])))
     if n == "待つのがこわい":                                        # 2番のサビは重いリズムに（和音は長く、裏で1回だけ）
         for j in range(3): CHD[j].bar(b, f"{nm(v[j])}:2.5 R:0.5 {nm(v[j])}:1")
     if n in ("それでも待ってる", "待つのがこわい", "明日会おう", "画面を見る"):
-        w = voice(ch, 72, 3)
+        w = voice(ch, 79, 3)
         for j in range(3): GLOW[j].bar(b, f"{nm(w[j])}:4")
     if n == "眠れない夜" or (n == "送信" and i >= 4):
         for j in range(3): BOW[j].bar(b, f"{nm(v[j])}:4")
@@ -206,9 +227,33 @@ for b in range(S.nb):
         w = voice(ch, 74, 2)
         for j in range(2): STR[j].bar(b, f"{nm(w[j])}:4")
     # きらめき（ベル）: サビの長い音のときだけ、上で小さく答える（毎回少しちがう形）
-    if n in ("それでも待ってる", "待つのがこわい", "明日会おう") and i % 4 == 3:
+    if n in ("それでも待ってる", "待つのがこわい", "明日会おう") and i % 2 == 1:
         t = tones(ch, "E6", "E7")
         BELL.bar(b, ["R:2 {0}:0.5 {1}:0.5 {2}:1", "R:2.5 {2}:0.5 {1}:0.5 {0}:0.5", "R:2 {1}:0.25 {2}:0.25 {1}:0.5 {0}:1", "R:3 {2}:1"][(i // 4) % 4].format(*[nm(x) for x in t[:3]]))
+
+
+# 2026-10-25 人間「伴奏をもうちょっと音が煌めく感じに。伴奏があまり明るくない」→ 高い所（B5〜B6）で8分の分散和音を小さく。
+#   Aメロは2小節に1回だけ（歌のすき間を残す）、サビは毎小節で、2小節ごとに上り・下りの形を変える
+for b in range(S.nb):
+    n, i, L, k = S.scene_of(b)
+    t = tones(S.chords[b], "B5", "B6")
+    up = " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 1, 2, 3, 2, 3, 1, 2))
+    dn = " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (3, 2, 1, 0, 1, 0, 2, 1))
+    if n in ("それでも待ってる", "待つのがこわい", "明日会おう", "画面を見る"): SPARK.bar(b, up if (i // 2) % 2 == 0 else dn)
+    elif n in ("既読", "時計の針") and i % 2 == 1: SPARK.bar(b, "R:2 " + " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 2, 1, 3)))
+
+
+# 2026-10-25 人間「前奏の音ももう少しデジタル感あってもいい」→ 送信（前奏）と画面を見る（間奏）に、
+#   画面の光のようなデジタルの刻み（ビットの崩れ＋付点16分のこだま。胸の音の1オクターブ上を裏で）と、16分で刻まれるパッドを足す
+for name in ("送信", "画面を見る"):
+    for i, b in enumerate(S.sc(name)):
+        ch = S.chords[b]; t = tones(ch, "C#5", "C#6")
+        if name == "画面を見る" or i >= 2:
+            DIG.bar(b, " ".join((f"{nm(t[q % len(t)])}:0.25" if q % 3 != 2 else "R:0.25") for q in range(16)) if (name == "画面を見る" or i >= 6)
+                    else " ".join(f"R:0.5 {nm(t[q % len(t)])}:0.5" for q in range(4)))
+        if name == "画面を見る" or i >= 4:
+            w = voice(ch, 72, 3)
+            for j in range(3): GATE[j].bar(b, f"{nm(w[j])}:4")
 
 # 通知が届く（最後のサビの直前）: 1拍の完全な無音のあと、明るいベルの2音（物語の大事な一瞬。1回だけ）
 nb = S.sc("明日会おう")[0]
@@ -273,6 +318,135 @@ S.desc = ("仮: ボカロ曲インスト25曲（作り直し）の01。テクノ
           "木のメトロノームの刻みがだんだん速くなる始まり、言葉のリズムで書いた Aメロ、同じ言葉を2回くり返し3回目で跳ぶサビ、借りてきた短調の和音と倚音、"
           "2番はピアノが歌を受け取り、2番のサビは重いリズム、ピアノの間奏、胸の音だけがゆっくりになる Cメロ、ピアノと歌の落ちサビ、1拍の無音と通知の2音から +1 の最後のサビ、刻みが遅くなって止まる終わり。歌の役は声のようなシンセ。自作")
 S.flags += " --space sky --space-wet 0.18"
-# 2026-10-25 人間「リードなしにして」→ 歌の役（シンセのリード）を外す（ボカロ曲のインスト＝歌のない伴奏）。旋律の下書きは台本に残す
-S.tracks = [t for t in S.tracks if t not in (V.main, V.low)]
+
+# ---------------- 歌（重音テト） ----------------
+SMALL = set("ゃゅょぁぃぅぇぉゎ")
+def morae(txt):
+    out = []
+    for c in txt.replace(" ", "").replace("　", ""):
+        if c in SMALL and out: out[-1] += c
+        else: out.append(c)
+    return out
+
+V1 = ["きどくの", "しるし", "へんじは", "まだ", "すなどけい", "おちて", "ゆく", "", "こころの", "おとが", "うるさく", "て", "なんども", "がめんを", "みてしま", "うーー"]
+V2 = ["とけいの", "はりが", "おおきく", "なる", "めをとじて", "みても", "きみ", "", "わすれた", "ふりを", "してても", "ね", "そとはね", "あまおと", "やんだよ", "ねーー"]
+P1 = ["けしたい", "ことばと", "ほんとうの", "ことば", "いえたら", "らくなの", "ちがうの", "よ"]
+P2 = ["とどいて", "ほしくて", "こわいのに", "ねがう", "あしたの", "きみにも", "あいたい", "ね"]
+C1 = ["それでもまつ", "それでもまつ", "きみからの", "ひとことを", "ねむれないよる", "かぞえている", "このむねの", "めとろ",
+      "それでもまつ", "それでもまつ", "そのさきに", "あすが", "なりやまないの", "このおと", "きいてよ", "ね"]
+C2 = ["それでもまつ", "それでもまつ", "こわくても", "このよるを", "ひとりのへやで", "ひかるがめん", "このむねの", "めとろ",
+      "それでもまつ", "それでもまつ", "あきらめず", "まつよ", "なりやまないの", "このおと", "とどけて", "よ"]
+C3 = ["ごめんねてた", "あしたあおう", "そのことば", "とけていく", "ねむれないよる", "あけてゆくよ", "このむねの", "めとろ",
+      "ごめんねてた", "あしたあおう", "くりかえし", "よむの", "なりやまないの", "このおと", "あしたも", "ね"]
+C4 = ["ごめんねてた", "あしたあおう", "まちあわせ", "あさのえき", "なにをきてこう", "かんがえてる", "このむねの", "めとろ",
+      "ごめんねてた", "あしたあおう", "ようやくね", "ねむる", "なりやまないの", "めとろ", "のーむ", "ー"]
+CMV = {2: "もう", 3: "い", 4: "い", 5: "かな", 6: "と", 8: "おもう", 9: "けれど", 10: "まだね", 11: "なるの", 12: "このむね", 13: "のおくで", 14: "ね"}
+# 最後のサビの終わり: テトの楽な高さに収める（リードは元の高い旋律のまま＝上で重なる）
+CH_END_V = CH_END[:13] + ["2':1 3':1 3':2", "3':2 2':1 1':1", "1':4~"]
+VOX = []
+def sing_bar(b, line, words):
+    ks = morae(words); t = b * S.beats; k = 0
+    for x in line.split():
+        L = tok_beats(x)
+        if not x.startswith("R"):
+            VOX.append((t, L, x.split(":")[0], ks[k] if k < len(ks) else "ー")); k += 1
+        t += L
+    if not ks: return
+    if k != len(ks): print(f"  注意: {b + 1}小節目の歌詞の数が合いません（音 {k}・歌詞 {len(ks)}「{words}」）")
+
+if VOCAL:
+    for name, words in (("既読", V1), ("時計の針", V2)):
+        for i, b in enumerate(S.sc(name)): sing_bar(b, K.mel(VERSE[i], oct=4), words[i])
+    for name, words in (("消したい言葉", P1), ("消したい言葉2", P2)):
+        for i, b in enumerate(S.sc(name)): sing_bar(b, K.mel(BM[i], oct=4), words[i])
+    for name, words in (("それでも待ってる", C1), ("待つのがこわい", C2)):
+        for i, b in enumerate(S.sc(name)): sing_bar(b, KE.mel(CH[i], oct=4), words[i])
+    for i, b in enumerate(S.sc("眠れない夜")):
+        if i in CMV: sing_bar(b, K.mel(CM[i], oct=4) if i < 8 else KE.mel(CM[i], oct=3), CMV[i])
+    for i, b in enumerate(S.sc("それでも")): sing_bar(b, KE.mel(CH[i], oct=4), C1[i])
+    for i, b in enumerate(S.sc("明日会おう")):
+        sing_bar(b, KF.mel((CH + CH_END_V)[i], oct=4), (C3 + C4)[i])
+    # 歌の版のリード: 歌を邪魔しないよう小さく（サビは歌の下を支え、最後のサビの終わりは元の高い旋律で上に重なる）
+    V.main.spec["volume"] = 0.12
+else:
+    # BGM（2026-10-25 人間「リードなしにして」「BGM にはリードいらない」）: 歌の役（シンセのリード）を外す
+    S.tracks = [t for t in S.tracks if t not in (V.main, V.low)]
 vwrite(S)
+
+# ---------------- 全体を 3 半音下げる（JSON の音名と和音を書きかえる）＋歌を入れる ----------------
+_path = sys.argv[1] if len(sys.argv) > 1 else f"/tmp/vp25/vb25-{S.no}-{S.slug}.json"
+_js = _json.load(open(_path))
+FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
+PC = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
+def tr_note(nn):
+    m = midi(nn) + TRANSPOSE
+    return f"{FLAT[m % 12]}{m // 12 - 1}"
+def tr_tok(x):
+    if x.startswith("R") or x.startswith("-") or x.startswith("g:"): return x
+    mm = re.match(r"^([A-G][#b]?-?\d)(.*)$", x)
+    return tr_note(mm.group(1)) + mm.group(2) if mm else x
+def tr_root(r):
+    p = (PC[r[0]] + (1 if r[1:2] == "#" else -1 if r[1:2] == "b" else 0) + TRANSPOSE) % 12
+    return FLAT[p]
+def tr_chord(c):
+    mm = re.match(r"^([A-G][#b]?)([^/]*)(?:/([A-G][#b]?))?$", c)
+    if not mm: return c
+    return tr_root(mm.group(1)) + mm.group(2) + ("/" + tr_root(mm.group(3)) if mm.group(3) else "")
+DRUMS = {"kick", "snare", "hihat", "tom", "crash"}
+def up_if_low(x, lo=60):
+    mm = re.match(r"^([A-G][#b]?-?\d)(.*)$", x)
+    if not mm or x.startswith("R"): return x
+    m = midi(mm.group(1))
+    while m < lo: m += 12
+    return f"{FLAT[m % 12]}{m // 12 - 1}{mm.group(2)}"
+for p_ in _js["parts"]:
+    if p_["instrument"] in DRUMS or p_.get("patch") == "cymbalFx": continue
+    p_["notes"] = " ".join(tr_tok(x) for x in p_["notes"].split())
+    if p_["role"].startswith("歌の役"):          # リードの出ない低い音（C4 より下）は1オクターブ上へ
+        p_["notes"] = " ".join(up_if_low(x) for x in p_["notes"].split())
+_js["chords"] = " ".join(tr_chord(c) for c in _js["chords"].split())
+if VOCAL:
+    # 歌の表情（2026-10-25 人間「抑揚が少なかったり、ビブラート・しゃくりなんかも丁寧に入れるんだよ」「テトの声はノイズが入りやすいから注意」）:
+    #   しゃくり（/）: 4半音以上の上への跳躍で 0.5 拍以上の音と、サビの句の頭 ／ ビブラート（~）: 1.5 拍以上の長い音
+    #   フォール（\\）: Aメロの句の終わりの長い音（1か所おき）／ 強く（!）: サビのフックの頭と最高音 ／ 弱く（?）: Aメロの句の終わり
+    #   抑揚（dynamics）: 場面ごとの強さの線（Aメロ −0.35・Bメロで上げる・サビ +0.35・Cメロ −0.55・落ちサビ −0.4・最後のサビ +0.55）
+    sec_of = {}
+    for n_, b0, L_, k_ in S.scenes:
+        for bb in range(b0, b0 + L_): sec_of[bb] = (n_, k_)
+    ev = sorted(VOX); toks = []; t = 0.0; prev_m = None; prev_end = -9; fall_flip = False
+    for idx, (st, L, nn, kana) in enumerate(ev):
+        if st > t + 1e-6: toks.append(f"R:{st - t:g}")
+        m = midi(nn) + TRANSPOSE
+        while m < 57: m += 12                 # テトの出る音域（A3 より下は1オクターブ上へ）
+        while m > 78: m -= 12                 # F#5 より上は1オクターブ下へ
+        name_, kind_ = sec_of.get(int(st // S.beats), ("", ""))
+        head = st - prev_end > 0.4             # 休みのあとの句の頭
+        nxt_gap = (ev[idx + 1][0] - (st + L)) if idx + 1 < len(ev) else 9
+        tail = nxt_gap > 0.4                   # 句の終わり
+        mk = ""
+        if kana != "ー" and ((prev_m is not None and m - prev_m >= 4 and L >= 0.5) or (head and kind_ == "chorus" and idx % 2 == 0)): mk += "/"
+        if L >= 1.5: mk += "~"
+        if kind_ == "chorus" and head and "!" not in mk: mk += "!"
+        if kind_ == "verse" and tail:
+            if L >= 1.0 and fall_flip: mk += "\\"
+            elif L < 1.0: mk += "?"
+            fall_flip = not fall_flip
+        toks.append(f"{FLAT[m % 12]}{m // 12 - 1}{mk}:{L:g}:{kana}"); t = st + L; prev_m = m; prev_end = st + L
+    LEVEL = {"verse": -0.35, "pre": 0.0, "chorus": 0.35, "bridge": -0.55, "break": -0.4}
+    dyn_map = []
+    for n_, b0, L_, k_ in S.scenes:
+        v0 = LEVEL.get(k_, 0.0)
+        if n_ == "明日会おう": v0 = 0.55
+        if k_ == "pre": dyn_map += [[b0 * S.beats, -0.2], [(b0 + L_) * S.beats - 0.5, 0.25]]
+        else: dyn_map += [[b0 * S.beats, v0], [(b0 + L_) * S.beats - 0.5, v0 + (0.1 if k_ == "chorus" else 0.0)]]
+    vib_map = [[b0 * S.beats, {"verse": 12, "pre": 14, "chorus": 20, "bridge": 18, "break": 16}.get(k_, 16)] for n_, b0, L_, k_ in S.scenes]
+    _js["vocals"] = [{"voice": "teto", "notes": " ".join(toks), "volume": 1.0, "pan": 0, "reverb": 0.2,
+                      "blend": {"voice": "teto-soft", "amount": 0.18}, "formant": 1.055, "breathy": 0.02, "vibrato": 16, "vibratoRate": 5.6, "vibratoMap": vib_map,
+                      "scoop": 0.5, "dynamics": dyn_map, "consonant": 1.4, "air": 2.0}]
+    # 2026-10-25 人間「伴奏に対して声がでかすぎる」→ 歌は伴奏より +3dB だったのを約 +0.5dB に（vocalLevel 0.75）
+    #   「一字一字聞こえやすく」「もう少しアニメ声に」→ 子音を強め（1.2→1.4。カ・サ・タ・ハ・パ行は強めない＝ノイズにしない）、
+    #   声を明るく軽く（formant 1.055）、やわらかい声の混ぜを減らす（0.35→0.18）、息まじりを減らす（0.05→0.02）
+    _js["vocalLevel"] = 0.85   # 2026-10-25「声がまだでかい」→ 耳の感じ方の重みで、歌は伴奏より約 −2.4dB
+    _js["title"] = _js["title"].replace("（仮）", "（歌：重音テト・仮）")
+_json.dump(_js, open(_path, "w"), ensure_ascii=False)
+print("  3半音下げた" + ("・歌（重音テト）を入れた" if VOCAL else "・BGM（リードなし）"))
