@@ -343,4 +343,6 @@ S.desc = ("仮: ボカロ曲インスト25曲（作り直し）の02。J-POP（�
 # 季節の音（2026-10-25 人間「季節を感じれる様な音も欲しい」）
 season(S, 0, "夕方の蝉", S.beats * 4, vol=0.08)
 season(S, S.nb - 4, "鈴虫", S.beats * 4, vol=0.08)
+S.no_depth = True   # 2026-10-25: 深いパッドを足すと MIDI のチャンネルがあふれるので、空間だけ
+S.flags += " --space hall --space-wet 0.15"
 vwrite(S)
