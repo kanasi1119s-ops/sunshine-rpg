@@ -50,11 +50,12 @@ S.tempo = [{"bar": 1, "bpm": 80}, {"bar": S.sc("出発")[0] + 1, "bpm": 178}]
 V = Voice(S, vol=0.22, delay=0.75, patch="surgeTropics", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 PNFX = [{"type": "eq", "low": -2, "mid": -1.5, "midHz": 350, "high": 1}]
 def piano(role, vol): return S.track(role, "piano", volume=vol, pan=-0.12, reverb=0.24, fx=PNFX)
-PR = piano("ピアノ（右手・分散和音）", 0.11)
-PL = piano("ピアノ（左手・8分のオクターブ）", 0.12)
-PM = piano("ピアノ（歌の受け渡し・ソロ）", 0.17)
-PMR = piano("ピアノ（数え下ろすリフ）", 0.158)
-PC = [piano(f"ピアノ（和音{i + 1}）", 0.1) for i in range(3)]
+# 2026-10-26 人間（02）「ピアノの音ももっと大きくていい」→ ピアノ全部を 1.25 倍
+PR = piano("ピアノ（右手・分散和音）", 0.138)
+PL = piano("ピアノ（左手・8分のオクターブ）", 0.15)
+PM = piano("ピアノ（歌の受け渡し・ソロ）", 0.212)
+PMR = piano("ピアノ（数え下ろすリフ）", 0.198)
+PC = [piano(f"ピアノ（和音{i + 1}）", 0.125) for i in range(3)]
 MUF = [S.track(f"こもったピアノ{i + 1}（導火線）", "piano", volume=0.13, pan=-0.12, reverb=0.3,
                fx=[{"type": "filter", "kind": "lowpass", "freq": 800, "q": 0.9}, {"type": "eq", "low": -2, "mid": 0, "midHz": 500, "high": 0}]) for i in range(2)]
 STR = [S.track(f"ストリングス{i + 1}", "strings", patch="stringEnsemble", volume=0.085, pan=0.3, reverb=0.35, sustain=1.6) for i in range(4)]
@@ -64,7 +65,8 @@ GT = [S.track(f"ギター（{['根音', '5度'][i]}・中域の太い乾いた�
 # 2026-10-26 人間（02）「リフ少し音を小さく。ほんの少し」→ 歪みギター 0.074→0.070、ピアノのリフ 0.17→0.158（別のパートに分けた）
 GTG = S.track("ギター（拍で刻んだ加工の層）", "distGuitar", **rock_gtr_spec(0.045, 0.25, tone="electro-rock-gated"))
 # 2026-10-26 人間（02）「ギターのリフ音でかいかな」→ 歪みギター 0.095→0.074。「バックの電子音ほんの少しだけ大きくてもいい」→ 加工の層 0.035→0.045
-BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.21))
+# 2026-10-26 人間（02）「ベースもメロディ入れてもう少し大きい音で」→ 0.21→0.24（リフギターの曲の 1.2 倍がさらに掛かる）。下の「ベース」で歌うベースに
+BASS = S.track("ベース（指弾き・歌うベース）", "bass", **rock_bass_spec(0.24))
 BUG = S.track("夏の虫の声（パルス波）", "lead", patch="chipPulse12", volume=0.035, pan=0.45, reverb=0.4, mono=True,
               fx=[{"type": "filter", "kind": "highpass", "freq": 1200, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 6000, "q": 0.7}])
 GLK = S.track("グロッケン（花火のきらめき）", "glockenspiel", volume=0.09, pan=0.25, reverb=0.45)
@@ -233,18 +235,24 @@ for b in range(S.nb):
     if n in ("出発", "屋台の灯り") or (n == "射的とりんご飴" and i >= 8): GTG.bar(b, f"{nm(pw[0] + 12)}:4")   # 拍で刻んだ加工の層（前奏・間奏・ソロの後半）
     for j in range(2): GT[j].bar(b, pat.replace("X", nm(pw[j])))
 
-# ================= ベース =================
+# ================= ベース（歌うベース） =================
+# 2026-10-26: 根音の8分だけだったのを、場面ごとに旋律のあるベースに。歌が伸ばす所・休む所でベースが動き、歌が細かい所では支える
+#   出発・屋台（リフ）: 数え下ろすピアノに対して、ベースは上って押し返す（climb / drive、4小節目と8小節目は駆ける）
+#   Aメロ: 前半は歩く（walk）で語りに寄りそう／後半は上る。Bメロ: 数え歌といっしょに上っていく
+#   サビ: 歌が「すきだよ」で伸ばす偶数小節で駆ける（run）、ほかは押す（drive）。ソロ: 前半 walk・後半 drive。Cメロ: Half feel のまま
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     r = low(S.chords[b], "E1")
     if n in ("縁側の時計", "坂の上"): continue
-    if n in ("出発", "屋台の灯り"): BASS.bar(b, bass_line(S, b, "oct8"))
-    elif n in ("下駄の音", "金魚すくい"): BASS.bar(b, bass_line(S, b, "push" if i < 8 else "root8"))
-    elif n.startswith("坂道"): BASS.bar(b, bass_line(S, b, "root8") if i < 7 else f"{nm(r)}:3 {nm(r + 12)}:0.5 {nm(r + 10)}:0.5")
+    if n in ("出発", "屋台の灯り"): BASS.bar(b, sing_bass(S, b, "run" if i % 4 == 3 else ("climb" if i % 2 == 0 else "drive")))
+    elif n in ("下駄の音", "金魚すくい"):
+        if i < 8: BASS.bar(b, sing_bass(S, b, "walk") if i % 2 == 1 else bass_line(S, b, "push"))
+        else: BASS.bar(b, sing_bass(S, b, "climb" if i % 2 == 0 else "fall"))
+    elif n.startswith("坂道"): BASS.bar(b, sing_bass(S, b, "climb") if i < 7 else f"{nm(r)}:3 {nm(r + 12)}:0.5 {nm(r + 10)}:0.5")
     elif n in ("あと5分", "あと3分", "打ち上げ"):
         if n == "打ち上げ" and i >= 28: BASS.bar(b, f"{nm(r)}:4") if i == 28 else None; continue
-        BASS.bar(b, bass_line(S, b, "oct8"))
-    elif n == "射的とりんご飴": BASS.bar(b, bass_line(S, b, "walk" if i < 8 else "oct8"))
+        BASS.bar(b, sing_bass(S, b, "run" if i % 2 == 1 else "drive"))
+    elif n == "射的とりんご飴": BASS.bar(b, sing_bass(S, b, "walk" if i < 8 else ("drive" if i % 2 == 0 else "run")))
     elif n == "見上げる空": BASS.bar(b, bass_line(S, b, "half"))
     elif n == "導火線": BASS.bar(b, f"{nm(r)}:4" if i < 3 else bass_line(S, b, "pulse"))
     elif n == "花火のあと" and i < 4: BASS.bar(b, f"{nm(r)}:4")

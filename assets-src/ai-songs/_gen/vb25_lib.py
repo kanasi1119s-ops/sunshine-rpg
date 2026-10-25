@@ -551,3 +551,25 @@ def phrase_counts(lines, beats=4):
             t += L
     if n: out.append(n)
     return out
+
+
+def sing_bass(S, b, style, lo=28, hi=52):
+    """歌うベース（既定 E1〜E3）。08 の作り方を共通にしたもの。r＝根音、c1・c2＝根音の上の和音の音、o＝オクターブ、a・w＝次の根音へ寄る音。
+    style: walk（歩く）/ climb（上る）/ drive（押す8分）/ run（駆ける8分）/ ride（ゆったり）/ fall（下る）"""
+    ch = S.chords[b].split("|")[0]; r = low(ch, "E1")
+    nx = low(S.chords[b + 1].split("|")[0], "E1") if b + 1 < S.nb else r
+    if nx - r > 6: nx -= 12
+    if r - nx > 6: nx += 12
+    up = [t for t in tones(ch, nm(r + 1), nm(r + 12))]
+    c1 = up[0] if up else r + 4; c2 = up[1] if len(up) > 1 else r + 7
+    o = r + 12
+    a = nx - 1 if nx > r else (nx + 1 if nx < r else nx + 2)
+    w = nx - 2 if nx > r else nx + 2
+    P_ = {"walk": [(r, 1, "!"), (c2, 0.5, ""), (o, 0.5, ""), (c1 + 12, 1, ""), (w, 0.5, ""), (a, 0.5, "")],
+          "climb": [(r, 0.5, "!"), (r, 0.5, ""), (c1, 0.5, ""), (c2, 0.5, ""), (o, 1, "!"), (c2, 0.5, ""), (a, 0.5, "")],
+          "drive": [(r, 0.5, "!"), (r, 0.5, ""), (o, 0.5, ""), (r, 0.5, ""), (c2, 0.5, "!"), (o, 0.5, ""), (c1 + 12, 0.5, ""), (a, 0.5, "")],
+          "run": [(r, 0.5, "!"), (c1, 0.5, ""), (c2, 0.5, ""), (o, 0.5, ""), (c2, 0.5, ""), (c1, 0.5, ""), (w, 0.5, ""), (a, 0.5, "")],
+          "fall": [(o, 0.5, "!"), (c2, 0.5, ""), (c1, 0.5, ""), (r, 0.5, ""), (o, 1, "!"), (c2, 0.5, ""), (a, 0.5, "")],
+          "ride": [(r, 1.5, "!"), (c2, 0.5, ""), (o, 1, ""), (a, 1, "")]}[style]
+    fix = lambda m: m + 12 if m < lo else (m - 12 if m > hi else m)
+    return " ".join(f"{nm(fix(m))}:{d:g}{acc}" for m, d, acc in P_)
