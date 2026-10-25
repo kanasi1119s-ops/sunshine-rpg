@@ -61,7 +61,9 @@ SAWC = [S.track(f"閉じたスーパーソウ{i + 1}（800Hz）", "pad", patch="
                 fx=[{"type": "filter", "kind": "lowpass", "freq": 800, "q": 0.9}]) for i in range(3)]
 SAWH = [S.track(f"半分ひらいたスーパーソウ{i + 1}（2kHz）", "pad", patch="surgeChordFreeform", volume=0.058, pan=0.0, reverb=0.35, sustain=0.8, duck=0.5,
                 fx=[{"type": "filter", "kind": "lowpass", "freq": 2000, "q": 0.9}]) for i in range(3)]
-BASS = S.track("シンセベース", "bass", **synth_bass_spec("surgeBassWarmSquare", vol=0.24, duck=0.35))
+# 2026-10-26 人間（06）「もうすこしベースの音大きくしていい」→ 0.24→0.29（1.2倍）、バスドラでの沈み 0.35→0.25、輪郭の 800Hz を少し足す
+BASS = S.track("シンセベース", "bass", **synth_bass_spec("surgeBassWarmSquare", vol=0.29, duck=0.25))
+BASS.spec["fx"] = list(BASS.spec.get("fx", [])) + [{"type": "eq", "low": 0, "mid": 2, "midHz": 800, "high": 0}]
 ARP = S.track("プラックのアルペジオ", "pad", **pluck_spec("surgeWaveguide", vol=0.075, pan=0.35, delay=0.75, sustain=0.5))
 PAD = [S.track(f"雲のパッド{i + 1}", "pad", **pad_spec("surgePadCrystals", vol=0.07, pan=0.0, duck=0.0, sustain=2.5)) for i in range(3)]
 FX = S.track("効果音（風のノイズ・ライザー）", "pad", patch="fxRiser", volume=0.075, pan=0, reverb=0.4)
