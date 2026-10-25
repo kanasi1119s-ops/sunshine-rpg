@@ -119,6 +119,21 @@ import brightLeadUrl from "../../assets-src/soundfont/extra/synth-modern-brightl
 import surgeDnaSeqUrl from "../../assets-src/soundfont/extra/surge-lead-dnaseq.sf3?url";
 import surgeParaphonicUrl from "../../assets-src/soundfont/extra/surge-lead-paraphonic.sf3?url";
 import surgeResofestUrl from "../../assets-src/soundfont/extra/surge-lead-resofest.sf3?url";
+// 2026-10-25 Surge XT の鍵盤（人間が聴いて 9 以外を選んだ。バンク 1）
+import surgeKeysDxEpUrl from "../../assets-src/soundfont/extra/surge-keys-dx-ep.sf3?url";
+import surgeKeysDxTonezUrl from "../../assets-src/soundfont/extra/surge-keys-dx-tonez.sf3?url";
+import surgeKeysNanowave2OscsUrl from "../../assets-src/soundfont/extra/surge-keys-nanowave-2-oscs.sf3?url";
+import surgeKeysBellKeys3135Url from "../../assets-src/soundfont/extra/surge-keys-bell-keys-3-1-3-5.sf3?url";
+import surgeKeysElectricNightmaresUrl from "../../assets-src/soundfont/extra/surge-keys-electric-nightmares.sf3?url";
+import surgeKeysGluckophoneUrl from "../../assets-src/soundfont/extra/surge-keys-gluckophone.sf3?url";
+import surgeKeysFmPiano1Url from "../../assets-src/soundfont/extra/surge-keys-fm-piano-1.sf3?url";
+import surgeKeysNanowaveWithNimbusUrl from "../../assets-src/soundfont/extra/surge-keys-nanowave-with-nimbus.sf3?url";
+import surgeKeysBellPianoUrl from "../../assets-src/soundfont/extra/surge-keys-bell-piano.sf3?url";
+import surgeKeysAliasGlassPiano2Url from "../../assets-src/soundfont/extra/surge-keys-alias-glass-piano-2.sf3?url";
+import surgeKeysFmEPiano135Url from "../../assets-src/soundfont/extra/surge-keys-fm-e-piano-1-3-5.sf3?url";
+import surgeKeysDizzyUrl from "../../assets-src/soundfont/extra/surge-keys-dizzy.sf3?url";
+import surgeKeysBellKeys2156Url from "../../assets-src/soundfont/extra/surge-keys-bell-keys-2-1-5-6.sf3?url";
+import surgeKeysLightEpUrl from "../../assets-src/soundfont/extra/surge-keys-light-ep.sf3?url";
 // 2026-10-25 Surge XT のパッド（人間が聴いて 11 以外を選んだ。バンク 1）
 import surgePadHineVertigoUrl from "../../assets-src/soundfont/extra/surge-pad-hine-s-vertigo-110-bpm.sf3?url";
 import surgePadNeverendingUrl from "../../assets-src/soundfont/extra/surge-pad-neverending.sf3?url";
@@ -487,6 +502,8 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   surgeFormantPulse: { programs: [93], url: surgeFormantPulseUrl }, popKeys: { programs: [94], url: popKeysUrl }, surgeParaphonic: { programs: [95], url: surgeParaphonicUrl }, popLeadClear: { programs: [96], url: popLeadClearUrl }, picoLead: { programs: [97], url: picoLeadUrl }, picoLeadRound: { programs: [98], url: picoLeadRoundUrl },
   // 2026-10-25 Surge XT のパッド（バンク 1）
   surgePadHineVertigo: { programs: [139], url: surgePadHineVertigoUrl }, surgePadNeverending: { programs: [140], url: surgePadNeverendingUrl }, surgePadSparkly: { programs: [141], url: surgePadSparklyUrl }, surgePadVerbPad: { programs: [142], url: surgePadVerbPadUrl }, surgePadCrystals: { programs: [143], url: surgePadCrystalsUrl }, surgePadNewtonWasEvil: { programs: [144], url: surgePadNewtonWasEvilUrl }, surgePadStringPad: { programs: [145], url: surgePadStringPadUrl }, surgePadMwPulsating: { programs: [146], url: surgePadMwPulsatingUrl }, surgePadBellPad: { programs: [147], url: surgePadBellPadUrl }, surgePadBright: { programs: [148], url: surgePadBrightUrl }, surgePadFifths6: { programs: [149], url: surgePadFifths6Url }, surgePadClassicStrings: { programs: [150], url: surgePadClassicStringsUrl }, surgePadBowed: { programs: [151], url: surgePadBowedUrl }, surgePadPad2Mw: { programs: [152], url: surgePadPad2MwUrl },
+  // 2026-10-25 Surge XT の鍵盤（バンク 1）
+  surgeKeysDxEp: { programs: [153], url: surgeKeysDxEpUrl }, surgeKeysDxTonez: { programs: [154], url: surgeKeysDxTonezUrl }, surgeKeysNanowave2Oscs: { programs: [155], url: surgeKeysNanowave2OscsUrl }, surgeKeysBellKeys3135: { programs: [156], url: surgeKeysBellKeys3135Url }, surgeKeysElectricNightmares: { programs: [157], url: surgeKeysElectricNightmaresUrl }, surgeKeysGluckophone: { programs: [158], url: surgeKeysGluckophoneUrl }, surgeKeysFmPiano1: { programs: [159], url: surgeKeysFmPiano1Url }, surgeKeysNanowaveWithNimbus: { programs: [160], url: surgeKeysNanowaveWithNimbusUrl }, surgeKeysBellPiano: { programs: [161], url: surgeKeysBellPianoUrl }, surgeKeysAliasGlassPiano2: { programs: [162], url: surgeKeysAliasGlassPiano2Url }, surgeKeysFmEPiano135: { programs: [163], url: surgeKeysFmEPiano135Url }, surgeKeysDizzy: { programs: [164], url: surgeKeysDizzyUrl }, surgeKeysBellKeys2156: { programs: [165], url: surgeKeysBellKeys2156Url }, surgeKeysLightEp: { programs: [166], url: surgeKeysLightEpUrl },
   // 2026-10-25 Surge XT のプラック（バンク 1）
   surgePopcorn: { programs: [128], url: surgePopcornUrl }, surgeBell1: { programs: [129], url: surgeBell1Url }, surgeGuzheng: { programs: [130], url: surgeGuzhengUrl }, surgeRetroWave: { programs: [131], url: surgeRetroWaveUrl }, surgeConvex: { programs: [132], url: surgeConvexUrl }, surgeWoody: { programs: [133], url: surgeWoodyUrl }, surgeFantasyBell: { programs: [134], url: surgeFantasyBellUrl }, surgeNicePluck: { programs: [135], url: surgeNicePluckUrl }, surgeWaveguide: { programs: [136], url: surgeWaveguideUrl }, surgeFriendly: { programs: [137], url: surgeFriendlyUrl }, surgeMixedFeelings: { programs: [138], url: surgeMixedFeelingsUrl },
   pluckSynth: { programs: [85], url: pluckEdmUrl }, chipPulse25: { programs: [124], url: chip25Url }, chipPulse12: { programs: [125], url: chip12Url }, reeseBass: { programs: [34], url: reeseUrl }, fxElectro: { programs: [126], url: fxElectroUrl },
