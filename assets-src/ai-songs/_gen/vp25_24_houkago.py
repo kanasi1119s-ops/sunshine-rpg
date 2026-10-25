@@ -92,7 +92,7 @@ for b in range(S.nb):
         stop_ = i % 4 == 3
         BASS.bar(b, (f"{nm(r, True)}:0.5 R:0.25 {nm(r + 12, True)}:0.25 R:0.5 {nm(r + 10, True)}:0.5 R:2") if stop_ else
                  f"{nm(r, True)}:0.5 R:0.25 {nm(r + 12, True)}:0.25 R:0.5 {nm(r + 10, True)}:0.5 {nm(r + 7, True)}:0.5 R:0.25 {nm(r, True)}:0.25 {nm(r + 3, True)}:0.5 {nm(r + 4, True)}:0.5")
-        for j in range(3): EP[j].bar(b, ("R:0.25 X:0.25 R:0.5 X:0.25 R:0.75 R:2" if stop_ else "R:0.25 X:0.25 R:0.5 X:0.25 R:0.75 R:0.25 X:0.25 R:0.5 X:0.25 R:0.75").replace("X", nm(v[j], True)))
+        for j in range(3): EP[j].bar(b, ("R:0.25 X:0.5 R:0.25 X:0.75 R:0.25 R:2" if stop_ else "R:0.25 X:0.5 R:0.25 X:0.75 R:0.25 R:0.25 X:0.5 R:0.25 X:0.75 R:0.25").replace("X", nm(v[j], True)))
     elif n == "リーダー":
         BASS.bar(b, bass_line(S, b, "root8"))
         pw = power(ch, "E2")   # 2026-10-25: 8分の刻み → 付点のリズムでのばす和音（10秒ごとの点 7.0）
@@ -121,8 +121,8 @@ for b in range(S.nb):
     elif n == "クール":
         put_groove(D, b, ("X.....X...X.....", "........X.......", "x.x.x.x.xxxxx.x."), seed=b, hat_vary=False)
     elif n == "おっちょこちょい":
-        put_groove(D, b, ("X.....X...X.....", "....X......oX..o", "xoxoxoxoxoxoxoxo"), ghosts=0.6, seed=b, hat_vary=False)
-        if i % 4 == 3: D.set(b, "X.....X.........", "....X...........", "xoxoxoxo........")
+        put_groove(D, b, ("X.....X...X.....", "....X......oX..o", "x.x.x.x.x.x.xox."), ghosts=0.6, seed=b, hat_vary=False)   # 2026-10-25: 開いたハットの連続をやめた
+        if i % 4 == 3: D.set(b, "X.....X.........", "....X...........", "x.x.x.x.........")
     elif n == "リーダー":
         put_groove(D, b, "vocarock", ghosts=0.3, seed=b, hat_vary=False)
         if i % 8 == 0: crash(D, b, "C2")
