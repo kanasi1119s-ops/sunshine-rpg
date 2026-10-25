@@ -574,13 +574,16 @@ def polish(x, sr, vdef):
     air = float(vdef.get("air", 1.5))
     for kind, f, q, db in [("hp", 110, 0.7, 0), ("peak", 280, 1.0, -2.5 - 0.5 * air), ("peak", 3000, 0.9, 2.0), ("peak", 7200, 3.0, -2.5), ("hshelf", 10500, 0.7, air)]:
         b, a = biquad(kind, f, sr, q, db); x = signal.lfilter(b, a, x)
+    # 追加の EQ（2026-10-25 人間「この声に近づけられるかな？」→ 参考の声を測った差を埋めるため）: [["peak", Hz, Q, dB], ["hshelf", Hz, Q, dB], ...]
+    for kind, f, q, db in vdef.get("eq", []):
+        b, a = biquad(kind, float(f), sr, float(q), float(db)); x = signal.lfilter(b, a, x)
     # ディエッサー: サ行・シ・ツの「シー」が強すぎる所だけ、4.5kHz より上を下げる（最大 -9dB）
     b, a = signal.butter(4, 4500 / (sr / 2), "high"); hi = signal.lfilter(b, a, x); lo = x - hi
     w5 = int(0.005 * sr)
     eh = np.sqrt(np.convolve(hi * hi, np.ones(w5) / w5, mode="same") + 1e-12)
     ea = np.sqrt(np.convolve(x * x, np.ones(w5 * 8) / (w5 * 8), mode="same") + 1e-12)
     ratio_db = 20 * np.log10(eh / ea)
-    red = np.clip(ratio_db - (-6.0), 0, 9)
+    red = np.clip(ratio_db - float(vdef.get("deess", -6.0)), 0, 9)   # deess: ここより強いシーを下げる（大きいほどゆるい）
     red = np.convolve(red, np.ones(w5) / w5, mode="same")
     x = lo + hi * 10 ** (-red / 20)
     # なめらかなコンプ（RMS・比 3:1）
