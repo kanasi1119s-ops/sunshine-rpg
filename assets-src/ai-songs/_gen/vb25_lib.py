@@ -304,3 +304,131 @@ def vwrite(S, extra_flags=""):
     S.write(path)
     S.kit = kit0
     open(path + ".flags", "w").write(f"{kitflag} {S.flags} {extra_flags}".strip())
+
+
+# ================= 歌（重音テト）の版と BGM の版（2026-10-25。01 で決めた作り方を、25曲で使えるように部品にした） =================
+# 人間「ここで作った曲の BGM と重音テトが歌う2種類にしよう」「BGM にはリードいらない。テトが歌うのにはリード入れてね」
+#   「テトの声はノイズが入りやすいから注意」「抑揚・ビブラート・しゃくりを丁寧に」「この声で曲を作っていこう」（参考の声に寄せた設定）
+import os as _os, re as _re, json as _json
+VOCAL = _os.environ.get("VB_VOCAL") == "1"
+_SMALL = set("ゃゅょぁぃぅぇぉゎ")
+FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
+_PC = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
+
+
+def morae(txt):
+    out = []
+    for c in txt.replace(" ", "").replace("　", ""):
+        if c in _SMALL and out: out[-1] += c
+        else: out.append(c)
+    return out
+
+
+class Lyrics:
+    """歌詞と旋律を小節ごとに合わせて記録する（音の数＝歌詞の拍の数。ー は前の音をのばす）"""
+    def __init__(self, S): self.S = S; self.ev = []; self.bad = 0
+
+    def bar(self, b, line, words):
+        ks = morae(words); t = b * self.S.beats; k = 0
+        for x in line.split():
+            L = tok_beats(x)
+            if not x.startswith("R"):
+                self.ev.append((t, L, _re.sub(r"[!?/~\\]+$", "", x.split(":")[0]), ks[k] if k < len(ks) else "ー")); k += 1
+            t += L
+        if ks and k != len(ks):
+            self.bad += 1; print(f"  注意: {b + 1}小節目の歌詞の数が合いません（音 {k}・歌詞 {len(ks)}「{words}」）")
+
+    def lines(self, bars, mel, words):
+        for b, m, w in zip(bars, mel, words):
+            if w: self.bar(b, m, w)
+
+
+def _tr_note(nn, T):
+    m = midi(nn) + T
+    return f"{FLAT[m % 12]}{m // 12 - 1}"
+
+
+def _tr_root(r, T):
+    return FLAT[(_PC[r[0]] + (1 if r[1:2] == "#" else -1 if r[1:2] == "b" else 0) + T) % 12]
+
+
+def _tr_chord(c, T):
+    mm = _re.match(r"^([A-G][#b]?)([^/]*)(?:/([A-G][#b]?))?$", c)
+    if not mm: return c
+    return _tr_root(mm.group(1), T) + mm.group(2) + ("/" + _tr_root(mm.group(3), T) if mm.group(3) else "")
+
+
+_NOPITCH = {"kick", "snare", "hihat", "tom", "crash"}
+_NOPITCH_PATCH = {"cymbalFx", "seasonFx", "fxRiser"}
+
+
+def teto(S, LY, V, transpose=0, level=None, special=None, vib=None, lead_vol=0.12, vocal_level=0.85, lo=57, hi=78, settings=None):
+    """BGM（歌の役なし）か歌の版（テト＋小さなリード）を書き出す。VB_VOCAL=1 で歌の版。
+    level: 場面の種類ごとの強さ（−1〜1）。special: 場面の名前ごとの強さ。vib: 種類ごとのビブラートの深さ（セント）"""
+    if VOCAL:
+        if V is not None: V.main.spec["volume"] = lead_vol
+    elif V is not None:
+        S.tracks = [t for t in S.tracks if t not in (V.main, V.low)]
+    vwrite(S)
+    path = sys.argv[1] if len(sys.argv) > 1 else f"/tmp/vp25/vb25-{S.no}-{S.slug}.json"
+    js = _json.load(open(path))
+    if transpose:
+        for p in js["parts"]:
+            if p["instrument"] in _NOPITCH or p.get("patch") in _NOPITCH_PATCH: continue
+            out = []
+            for x in p["notes"].split():
+                mm = _re.match(r"^([A-G][#b]?-?\d)(.*)$", x)
+                out.append(_tr_note(mm.group(1), transpose) + mm.group(2) if mm and not x.startswith("R") else x)
+            p["notes"] = " ".join(out)
+        js["chords"] = " ".join(_tr_chord(c, transpose) for c in js["chords"].split())
+    if VOCAL:
+        sec_of = {}
+        for n_, b0, L_, k_ in S.scenes:
+            for bb in range(b0, b0 + L_): sec_of[bb] = (n_, k_)
+        # 歌の役（リード）と同じ「アヴォイドノート」の直しを歌にも（強い拍か1拍以上の音が、和音の音の半音上でぶつかるとき半音下へ）
+        fx_ = 0; B_ = S.beats; ev = []
+        for st, L, nn, kana in LY.ev:
+            bar = min(int(st // B_ + 1e-6), S.nb - 1); pcs = chord_pcs(S.chords[bar].split("|")[0]); m0 = midi(nn); pos = st - bar * B_
+            if (L >= 1 - 1e-6 or abs(pos) < 1e-6 or abs(pos - 2) < 1e-6) and m0 % 12 not in pcs and (m0 - 1) % 12 in pcs: nn = nm(m0 - 1); fx_ += 1
+            ev.append((st, L, nn, kana))
+        if fx_: print(f"  歌のアヴォイドノートを直した: {fx_}か所")
+        ev = sorted(ev); toks = []; t = 0.0; prev_m = None; prev_end = -9; flip = False; moved = 0
+        for idx, (st, L, nn, kana) in enumerate(ev):
+            if st > t + 1e-6: toks.append(f"R:{st - t:g}")
+            m = midi(nn) + transpose
+            while m < lo: m += 12; moved += 1
+            while m > hi: m -= 12; moved += 1
+            name_, kind_ = sec_of.get(int(st // S.beats), ("", ""))
+            head = st - prev_end > 0.4
+            nxt_gap = (ev[idx + 1][0] - (st + L)) if idx + 1 < len(ev) else 9
+            tail = nxt_gap > 0.4
+            mk = ""
+            # しゃくり（/）: 4半音以上の上への跳躍で 0.5拍以上の音、サビの句の頭（1つおき）
+            if kana != "ー" and ((prev_m is not None and m - prev_m >= 4 and L >= 0.5) or (head and kind_ == "chorus" and idx % 2 == 0)): mk += "/"
+            if L >= 1.5: mk += "~"                                   # ビブラート: 1.5拍以上の音
+            if kind_ == "chorus" and head and "!" not in mk: mk += "!"  # 強く: サビの句の頭
+            if kind_ in ("verse", "bridge") and tail:                 # Aメロ・Cメロの句の終わり: 長い音は1つおきにフォール、短い音は弱く
+                if L >= 1.0 and flip: mk += "\\"
+                elif L < 1.0: mk += "?"
+                flip = not flip
+            toks.append(f"{FLAT[m % 12]}{m // 12 - 1}{mk}:{L:g}:{kana}"); t = st + L; prev_m = m; prev_end = st + L
+        if moved: print(f"  注意: テトの音域の外の音を {moved} 回オクターブで動かした（旋律を見直す）")
+        LV = {"verse": -0.35, "pre": 0.0, "chorus": 0.35, "bridge": -0.55, "break": -0.4, "outro": -0.3, "solo": 0.0}
+        LV.update(level or {})
+        dyn = []
+        for n_, b0, L_, k_ in S.scenes:
+            v0 = (special or {}).get(n_, LV.get(k_, 0.0))
+            if k_ == "pre": dyn += [[b0 * S.beats, v0 - 0.2], [(b0 + L_) * S.beats - 0.5, v0 + 0.25]]
+            else: dyn += [[b0 * S.beats, v0], [(b0 + L_) * S.beats - 0.5, v0 + (0.1 if k_ == "chorus" else 0.0)]]
+        VB = {"verse": 26, "pre": 28, "chorus": 36, "bridge": 32, "break": 30}; VB.update(vib or {})
+        vib_map = [[b0 * S.beats, VB.get(k_, 24)] for n_, b0, L_, k_ in S.scenes]
+        voc = {"voice": "teto", "notes": " ".join(toks), "volume": 1.0, "pan": 0, "reverb": 0.2,
+               "blend": {"voice": "teto-soft", "amount": 0.3}, "formant": 1.075, "breathy": 0.1, "vibrato": 34, "vibratoRate": 5.3, "vibratoMap": vib_map,
+               "eq": [["peak", 220, 0.8, 3], ["peak", 1600, 1.2, 2], ["peak", 2000, 2.0, 9], ["hshelf", 6500, 0.7, 10]], "deess": -3.0,
+               "scoop": 0.5, "dynamics": dyn, "consonant": 1.4, "air": 4.0}
+        voc.update(settings or {})
+        js["vocals"] = [voc]
+        js["vocalLevel"] = vocal_level
+        js["title"] = js["title"].replace("（仮）", "（歌：重音テト・仮）")
+    _json.dump(js, open(path, "w"), ensure_ascii=False)
+    print(("  歌（重音テト）を入れた" if VOCAL else "  BGM（歌の役なし）") + (f"・{transpose:+d}半音" if transpose else "") + (f"・歌詞の数が合わない小節 {LY.bad}" if LY and LY.bad else ""))
