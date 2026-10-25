@@ -463,3 +463,19 @@ def teto(S, LY, V, transpose=0, level=None, special=None, vib=None, lead_vol=0.1
         js["title"] = js["title"].replace("（仮）", "（歌：重音テト・仮）")
     _json.dump(js, open(path, "w"), ensure_ascii=False)
     print(("  歌（重音テト）を入れた" if VOCAL else "  BGM（歌の役なし）") + (f"・{transpose:+d}半音" if transpose else "") + (f"・歌詞の数が合わない小節 {LY.bad}" if LY and LY.bad else ""))
+
+
+def phrase_counts(lines, beats=4):
+    """旋律の行（1小節ずつ）を、息つぎ（0.45拍以上の休み）で句に分けて、句ごとの音の数を返す（歌詞の拍の数を合わせるため）"""
+    out, n, t, last_end = [], 0, 0.0, None
+    for line in lines:
+        for x in line.split():
+            L = tok_beats(x)
+            if x.startswith("R"):
+                pass
+            else:
+                if last_end is not None and t - last_end >= 0.45 and n: out.append(n); n = 0
+                n += 1; last_end = t + L
+            t += L
+    if n: out.append(n)
+    return out
