@@ -245,3 +245,4 @@
 - やったこと: Surge XT（GPL3・無料。鳴らした音は自由に使える。docs/assets-credits.md）のプリセット約1,860個を役割ごとのフレーズで鳴らし、音質の点数（PQ）でふるいにかけ、上位を人間が耳で選んだ。選ばれたものを `tools/surge/sample.py` で3半音ごとに録って SF3 にした。
 - リード（人間の選択）: 2 Raving In The Tropics・5 Happy Saws・9 Formant Pulse（よい）、10 DNA Sequencer（ポップ感に）、14 Paraphonic NL Bandpass Lead（フォンクに）、15 Resofest 1（宇宙の曲に）。
 - GM の番号が足りないので、曲で使っていなかった自作の音（voiceLeadA 54・voiceLeadU 91・popLead 93・popStab 95・clearLead 113・clearPad 114）の番号を Surge のリードに渡した（影響: その6つの patch 名は使えなくなった。使っている曲はなかった）。
+- 2026-10-25 追記: 人間「あくまでもあれは、使える音が多いなってだけ」。Surge の音は選べる音の候補を増やしただけで、曲に使う決まりではない。音源は曲ごとにジャンルと物語から決める。
