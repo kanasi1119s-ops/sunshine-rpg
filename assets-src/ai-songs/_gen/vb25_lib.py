@@ -472,6 +472,10 @@ def teto(S, LY, V, transpose=0, level=None, special=None, vib=None, lead_vol=0.1
     vwrite(S)
     path = sys.argv[1] if len(sys.argv) > 1 else f"/tmp/vp25/vb25-{S.no}-{S.slug}.json"
     js = _json.load(open(path))
+    dg = getattr(S, "drum_scale", 1.0)   # 曲ごとのドラム全体の音量（キック・スネア・ハイハット・シンバル・タム）
+    if abs(dg - 1.0) > 1e-6:
+        for p in js["parts"]:
+            if p["instrument"] in ("kick", "snare", "hihat", "crash", "tom", "ride"): p["volume"] = round(p.get("volume", 0.1) * dg, 4)
     if transpose:
         for p in js["parts"]:
             if p["instrument"] in _NOPITCH or p.get("patch") in _NOPITCH_PATCH: continue
