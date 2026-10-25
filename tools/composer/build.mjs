@@ -42,7 +42,9 @@ const output = (Array.isArray(result) ? result[0] : result).output.find((o) => o
 const js = output.code.replace(/<\/script/gi, "<\\/script");
 // アイコン（desktop/build/icon.svg）を、左上のロゴに使う
 const icon = "data:image/svg+xml;base64," + fs.readFileSync(root + "desktop/build/icon.svg").toString("base64");
-let html = fs.readFileSync(root + "tools/composer/template.html", "utf8").replace("/*ICON*/", () => `'${icon}'`).replace("/*BUNDLE*/", () => js);
+// 2026-10-25: 作曲ソフトが大きくなり（約 520MB）、文字列を何度も写すとメモリが足りなくなった（クラウドの 8GB で落ちた）。
+// 本体（js）は差しこまず、テンプレートの前後と本体を順に書く
+let html = fs.readFileSync(root + "tools/composer/template.html", "utf8").replace("/*ICON*/", () => `'${icon}'`);
 if (desktop) {
   // デスクトップ版: 外への通信は画面からはしない（AIとのやりとりは本体の側）。読み込めるものを、埋め込んだ部品と文字のフォントだけにする
   const csp = "default-src 'none'; script-src 'unsafe-inline' data: 'wasm-unsafe-eval'; worker-src data: blob:; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; media-src data: blob:; connect-src data: blob:";
@@ -53,7 +55,14 @@ if (desktop) {
   html = html.replace('<meta charset="utf-8">', `<meta charset="utf-8">\n<meta http-equiv="Content-Security-Policy" content="${csp}">`);
 }
 fs.mkdirSync(path.dirname(out), { recursive: true });
-fs.writeFileSync(out, html);
+{
+  const at = html.indexOf("/*BUNDLE*/");
+  const fd = fs.openSync(out, "w");
+  fs.writeSync(fd, html.slice(0, at));
+  fs.writeSync(fd, js);
+  fs.writeSync(fd, html.slice(at + "/*BUNDLE*/".length));
+  fs.closeSync(fd);
+}
 // SE ラボ（合成 SE の一覧・調整・書き出し。サウンドフォント不要の小さな1ファイル）。出力は作曲ソフトと同じ場所の sfx-lab.html
 const lab = await build({
   root, configFile: false, logLevel: "warn",
@@ -63,4 +72,4 @@ const labJs = (Array.isArray(lab) ? lab[0] : lab).output.find((o) => o.type === 
 const labOut = path.join(path.dirname(out), "sfx-lab.html");
 fs.writeFileSync(labOut, fs.readFileSync(root + "tools/composer/sfx-lab.html", "utf8").replace("/*BUNDLE*/", () => labJs));
 console.log("書き出し:", labOut, (fs.statSync(labOut).size / 1024).toFixed(0) + "KB");
-console.log("書き出し:", out, (html.length / 1024).toFixed(0) + "KB");
+console.log("書き出し:", out, (fs.statSync(out).size / 1024).toFixed(0) + "KB");
