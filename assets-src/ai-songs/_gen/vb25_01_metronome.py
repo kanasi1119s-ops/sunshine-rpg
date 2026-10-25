@@ -441,8 +441,10 @@ if VOCAL:
         else: dyn_map += [[b0 * S.beats, v0], [(b0 + L_) * S.beats - 0.5, v0 + (0.1 if k_ == "chorus" else 0.0)]]
     vib_map = [[b0 * S.beats, {"verse": 12, "pre": 14, "chorus": 20, "bridge": 18, "break": 16}.get(k_, 16)] for n_, b0, L_, k_ in S.scenes]
     _js["vocals"] = [{"voice": "teto", "notes": " ".join(toks), "volume": 1.0, "pan": 0, "reverb": 0.2,
-                      "blend": {"voice": "teto-soft", "amount": 0.18}, "formant": 1.055, "breathy": 0.02, "vibrato": 16, "vibratoRate": 5.6, "vibratoMap": vib_map,
-                      "scoop": 0.5, "dynamics": dyn_map, "consonant": 1.4, "air": 2.0}]
+                      "blend": {"voice": "teto-soft", "amount": 0.3}, "formant": 1.075, "breathy": 0.0, "vibrato": 16, "vibratoRate": 5.6, "vibratoMap": vib_map,
+                      "scoop": 0.5, "dynamics": dyn_map, "consonant": 1.4, "air": 3.5}]
+    # 2026-10-25 人間「声を透き通るようにしてアニメ声にもう少しして」→ 声の響きをさらに上げて若く軽く（formant 1.055→1.075）、
+    #   やわらかい声を少し戻して透き通らせ（0.18→0.3）、息まじりなし（濁らせない）、高い所の空気を +3.5dB
     # 2026-10-25 人間「伴奏に対して声がでかすぎる」→ 歌は伴奏より +3dB だったのを約 +0.5dB に（vocalLevel 0.75）
     #   「一字一字聞こえやすく」「もう少しアニメ声に」→ 子音を強め（1.2→1.4。カ・サ・タ・ハ・パ行は強めない＝ノイズにしない）、
     #   声を明るく軽く（formant 1.055）、やわらかい声の混ぜを減らす（0.35→0.18）、息まじりを減らす（0.05→0.02）
