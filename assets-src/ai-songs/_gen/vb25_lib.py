@@ -67,8 +67,11 @@ class Silence:
                         cut = (a, z); break
                 if cut is None: keep.append((st, L, x)); continue
                 a, z = cut
-                if st < a - 1e-6: keep.append((st, a - st, x))   # 前は短くする
-                # 無音の中で始まる音は消す。無音の後ろにはみ出す長い音は鳴らし直さない（無音のあとは新しい音で入る）
+                # 2026-10-26 人間「不自然に曲の音が小さくなるところがあったりして気になる」: 止めの所で、鳴っている音までぷつっと切ると
+                #   急に音が消えたように聞こえる。止めの前から鳴っている音は、止めの終わりまで自然に鳴らす（新しい音を入れないだけにする）。
+                #   太鼓は下で止める（バンドが「ジャン」と止めて、和音の響きが残る形）
+                if st < a - 1e-6: keep.append((st, min(en, z) - st, x))
+                # 無音の中で始まる音は消す
             t.ev = keep
         D = self.song.drums
         if D:
@@ -342,6 +345,19 @@ def vwrite(S, extra_flags=""):
     modernize(S)
     kitflag = {"electro": "--drums electro", "naked": "--drums naked", "jpop": "--drums jpop", "crocell-punch": "--drums crocell-punch",
                "crocell": "--drums crocell", "crocell-punch-heavy": "--drums crocell-punch-heavy"}.get(S.kit, "")
+    # 2026-10-26 人間「何曲かギターの音がデカすぎて聞こえてこない音とかもある」: 歪みギターのバッキング（リード・ソロ以外）を全曲で 0.88 倍
+    for t in S.tracks:
+        if t.inst == "distGuitar" and not any(w in t.role for w in ("リード", "ソロ")) and not getattr(t, "_gtr_scaled", False):
+            t.spec["volume"] = round(t.spec.get("volume", 0.1) * 0.88, 4); t._gtr_scaled = True
+    # 場面の始まりの秒（書き出しのあとの「場面ごとの大きさの段差」の直しに使う。vb25_level.py）
+    secs, sec, bpm = [], 0.0, S.bpm
+    tmap = {e["bar"] - 1: e for e in S.tempo}; starts = {b0: (n_, k_) for n_, b0, L_, k_ in S.scenes}
+    for b in range(S.nb):
+        if b in tmap: bpm = tmap[b]["bpm"]
+        if b in starts: secs.append({"t": round(sec, 3), "name": starts[b][0], "kind": starts[b][1], "bar": b})
+        sec += S.beats * 60 / bpm
+    secs.append({"t": round(sec, 3), "name": "_end", "kind": "end", "bar": S.nb})
+    open(path + ".secs", "w").write(_json.dumps(secs, ensure_ascii=False))
     kit0 = S.kit
     if S.kit not in ("electro", "naked", "jpop"): S.kit = "jpop"   # 太鼓の設定（音量など）は jpop と同じ扱い
     S.write(path)

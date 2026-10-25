@@ -735,8 +735,9 @@ def main():
         b1, a1 = signal.butter(2, [1500 / (sr / 2), 4000 / (sr / 2)], "band")
         mid = signal.lfilter(b1, a1, acc, axis=0)
         env = np.convolve(act.astype(float), np.ones(int(0.15 * sr)) / int(0.15 * sr), mode="same")
-        # 2026-10-26 人間「リードの歪みが強くて歌声が聴きにくい」: 下げる量を -3 → -5dB に（vocalDuck で曲ごとに変えられる）
-        acc = acc - mid * (1 - 10 ** (-float(song.get("vocalDuck", 5.0)) / 20)) * env[:, None]
+        # 2026-10-26 人間「リードの歪みが強くて歌声が聴きにくい」で -3 → -5dB にしたが、「前奏から Aメロに入るタイミングで音が小さくなる」
+        #   （歌が入った瞬間に伴奏の中域が下がる）ので -2.5dB に。声の通り道は、リードを小さく丸くした方で空ける（vocalDuck で曲ごとに変えられる）
+        acc = acc - mid * (1 - 10 ** (-float(song.get("vocalDuck", 2.5)) / 20)) * env[:, None]
         out = acc + v[:n]
         pk = np.max(np.abs(out))
         if pk > 0.98: out *= 0.98 / pk
