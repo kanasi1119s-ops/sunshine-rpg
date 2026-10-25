@@ -49,14 +49,23 @@ S.scene("木馬が止まる", 5, "outro", [tr_chord(c, 1) for c in ["Bbmaj7", "C
 S.tempo = [{"bar": S.sc("閉園のアナウンス")[0] + 1, "bpm": 93}, {"bar": S.sc("夜明けまで")[0] + 1, "bpm": 124}]
 
 # ================= パート =================
-V = Voice(S, vol=0.22, delay=0.75, patch="altoSax", low=True)
-V.main.spec["fx"].insert(1, {"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.7})   # 2026-10-26 人間「０５もリードの歪ちょっと抑えよう」   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
+V = Voice(S, vol=0.33, delay=0.75, patch="altoSax", low=False)
+# 2026-10-26 人間（05）「サックス埋まってて全然聞こえない」→ サックスを前に: 音量 0.22→0.33、下の重ね（こもったシンセ）を外す、
+#   響き（ディレイ・プレート）を減らして近くで鳴らす、1.6kHz の芯と 4kHz の息を足す（ローパスは 6.5k→9k）。
+#   ブラスの刻みとオルガンは 1.6〜1.8kHz を少しへこませて、サックスの居場所を空ける
+V.main.spec["fx"] = [{"type": "filter", "kind": "highpass", "freq": 150, "q": 0.7},
+                     {"type": "eq", "low": 0, "mid": 3.5, "midHz": 1600, "high": 0},
+                     {"type": "eq", "low": 0, "mid": 1.5, "midHz": 4000, "high": 0},
+                     {"type": "filter", "kind": "lowpass", "freq": 9000, "q": 0.7},
+                     {"type": "pingpong", "beats": 0.75, "mix": 0.08, "feedback": 0.25},
+                     {"type": "plate", "mix": 0.1}]
+V.main.spec["reverb"] = 0.1   # 2026-10-26 人間「０５もリードの歪ちょっと抑えよう」   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 SLAP = S.track("スラップベース", "slap", volume=0.2, pan=0.0, duck=0.15,
                fx=[{"type": "eq", "low": -2, "mid": 3, "midHz": 900, "high": 0}, {"type": "eq", "low": 0, "mid": 2.5, "midHz": 2200, "high": 1.5}])
-BR = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.13, pan=0.0, reverb=0.25, gainDb=2,
-              fx=[{"type": "eq", "low": -3, "mid": 2, "midHz": 1800, "high": 1}]) for i in range(3)]
+BR = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.13 if i == 0 else 0.12, pan=0.0 if i == 0 else (-0.3 if i == 1 else 0.3), reverb=0.25, gainDb=2,
+              fx=[{"type": "eq", "low": -3, "mid": 2 if i == 0 else -2, "midHz": 1800, "high": 1}]) for i in range(3)]   # 刻みのブラスは左右に分けて真ん中（サックス）を空ける
 STR = [S.track(f"ストリングス{i + 1}", "strings", patch="stringEnsemble", volume=0.09, pan=0.25, reverb=0.35, sustain=1.5) for i in range(4)]
-ORG = [S.track(f"オルガン{i + 1}", "drawbarOrgan", volume=0.07, pan=-0.25, reverb=0.2) for i in range(3)]
+ORG = [S.track(f"オルガン{i + 1}", "drawbarOrgan", volume=0.07, pan=-0.25, reverb=0.2, fx=[{"type": "eq", "low": 0, "mid": -2.5, "midHz": 1600, "high": 0}]) for i in range(3)]
 MUF = [S.track(f"こもったオルガン{i + 1}（夜明けまで）", "drawbarOrgan", volume=0.08, pan=-0.25, reverb=0.3,
                fx=[{"type": "filter", "kind": "lowpass", "freq": 800, "q": 0.9}]) for i in range(3)]
 GTR = [S.track(f"カッティングのギター{i + 1}", "guitar", **clean_gtr_spec(0.085, 0.4)) for i in range(2)]
@@ -283,4 +292,4 @@ S.desc = ("仮: ボカロ曲インスト25曲（作り直し）の05。ダンス
           "テンポが遅くなるアナウンスの場面、こもった夜明け前と1拍の無音、+1 の最後のサビ、カリオペで木馬が止まる。スラップベース・ブラス・ギター・オルガン・ストリングス。自作")
 S.no_depth = True
 S.flags += " --space hall --space-wet 0.16"
-teto(S, LY, V, special={"全部の木馬": 0.55, "閉園のアナウンス": -0.5, "夜明けまで": 0.05})
+teto(S, LY, V, lead_vol=0.17, special={"全部の木馬": 0.55, "閉園のアナウンス": -0.5, "夜明けまで": 0.05})
