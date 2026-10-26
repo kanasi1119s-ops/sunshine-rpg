@@ -47,12 +47,13 @@ V = Voice(S, vol=0.22, delay=0.75, patch="flute", low=True)   # 2026-10-25 人�
 NY = [S.track(f"アコギ（ナイロン弦）{i + 1}", "guitar", patch="nylonGuitar", volume=0.12, pan=0.35, amp="clean", chorus=0, reverb=0.25,
               humanPitch=0, sustain=1.6, fx=[{"type": "filter", "kind": "highpass", "freq": 110, "q": 0.7}, {"type": "eq", "low": 0, "mid": -2, "midHz": 3200, "high": -2}])
       for i in range(4)]
-GL = [S.track(f"ギター左（{['根音', '5度'][i]}）", "distGuitar", **rock_gtr_spec(0.085, -0.6, drive=0.26)) for i in range(2)]
-GR = [S.track(f"ギター右（{['根音', 'オクターブ'][i]}）", "distGuitar", **rock_gtr_spec(0.085, 0.6, drive=0.26)) for i in range(2)]
+# 2026-10-26 人間（08）「ギターの音でかすぎかな」→ 歪みギターを全部 約0.85 倍（伴奏 0.085→0.072・リード 0.14→0.12・リフ 0.085→0.075）
+GL = [S.track(f"ギター左（{['根音', '5度'][i]}）", "distGuitar", **rock_gtr_spec(0.072, -0.6, drive=0.26)) for i in range(2)]
+GR = [S.track(f"ギター右（{['根音', 'オクターブ'][i]}）", "distGuitar", **rock_gtr_spec(0.072, 0.6, drive=0.26)) for i in range(2)]
 # 2026-10-26 人間「08のギターの高い方の音少し、ほんの少し優しくてもいいかも」: 歪みギターの 3.5〜8kHz を少しだけ丸める（下の SOFT を各ギターの fx の最後に足す）
 SOFT = [{"type": "eq", "low": 0, "mid": -2, "midHz": 4200, "high": -2.5}, {"type": "filter", "kind": "lowpass", "freq": 7000, "q": 0.7}]
-LG2 = S.track("リフのギター（サビの下で回る・小さめ）", "distGuitar", **{**lead_gtr_spec(0.085, 0.3), "ampDrive": 0.6})
-LG = S.track("リードギター（リフ・ソロ・歌の受け渡し）", "distGuitar", **{**lead_gtr_spec(0.14, -0.08), "ampDrive": 0.75})   # 2026-10-26 人間「08のギターの音少しだけ歪み抑えよう」: バッキング 0.35→0.26、リード 1.0→0.75
+LG2 = S.track("リフのギター（サビの下で回る・小さめ）", "distGuitar", **{**lead_gtr_spec(0.075, 0.3), "ampDrive": 0.6})
+LG = S.track("リードギター（リフ・ソロ・歌の受け渡し）", "distGuitar", **{**lead_gtr_spec(0.12, -0.08), "ampDrive": 0.75})   # 2026-10-26 人間「08のギターの音少しだけ歪み抑えよう」: バッキング 0.35→0.26、リード 1.0→0.75
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.21))
 GLK = S.track("グロッケン（星）", "glockenspiel", volume=0.1, pan=0.3, reverb=0.45, sustain=1.6)
 STR = [S.track(f"ストリングス{i + 1}", "strings", **strings_spec(0.085, -0.3)) for i in range(3)]
@@ -64,7 +65,7 @@ FX = S.track("効果音", "pad", patch="fxRiser", volume=0.075, pan=0, reverb=0.
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 # 流れ星を待つ: こもった音（ローパス 800Hz の写しに入れかえる）
 LPF = {"type": "filter", "kind": "lowpass", "freq": 800, "q": 0.8}
-GM = [S.track(f"こもったギター{i + 1}", "distGuitar", **{**rock_gtr_spec(0.085, 0.0, drive=0.26), "fx": rock_gtr_spec()["fx"] + [LPF]}) for i in range(2)]
+GM = [S.track(f"こもったギター{i + 1}", "distGuitar", **{**rock_gtr_spec(0.072, 0.0, drive=0.26), "fx": rock_gtr_spec()["fx"] + [LPF]}) for i in range(2)]
 STM = [S.track(f"こもったストリングス{i + 1}", "strings", **{**strings_spec(0.09, 0.3), "fx": [LPF]}) for i in range(3)]
 D = S.drumkit()
 for _t in GL + GR + GM + [LG, LG2]: _t.spec["fx"] = list(_t.spec.get("fx", [])) + SOFT
