@@ -339,7 +339,7 @@ def kick_vary(S):
         elif hk == {0, 2, 4, 8, 10, 12}: fam = "six"
         elif 0 in hk and 8 in hk and 2 <= len(hk) <= 3 and hk <= {0, 2, 6, 8, 10, 14}: fam = "two"
         else: fam = None
-        if fam is None or kind in ("break", "intro", "outro") or i == L - 1 or (fam == "four" and four_floor_ok(S)):   # 2026-10-26「その曲に合ったドラム」: 踊る4つ打ちはくずさない
+        if fam is None or kind in ("break", "intro", "outro") or i == L - 1 or (fam == "four" and four_floor_ok(S)) or name in getattr(S, "plain_scenes", ()):   # 2026-10-26「その曲に合ったドラム」: 踊る4つ打ちはくずさない
             run, prev = 0, None; continue
         key = (g.upper(), "".join("x" if c in "Xx" else "." for c in D.S[b]))
         run = run + 1 if key == prev else 0
@@ -379,6 +379,7 @@ def spice(S):
         if not same: continue
         try: name, i, L, kind = S.scene_of(b)
         except Exception: continue
+        if name in getattr(S, "plain_scenes", ()): continue   # 台本で「ふつうのまま」と決めた場面には遊びを足さない
         k, sn, h = list(D.K[b]), list(D.S[b]), list(D.H[b])
         calm = kind in ("verse", "break", "bridge", "outro", "intro")
         if run % 4 == 3 and h[14] in "xX" and k[14] == ".": h[14] = "o"; n += 1                      # 4小節目の終わりに開いたハイハット

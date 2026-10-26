@@ -49,7 +49,8 @@ S.scene("花火のあと", 9, "outro", OUT_CH + OUT_CH + ["F#"])
 # 2026-10-26 人間「エイトビートもライドで刻むとか、ハイハット以外もつかって曲に合うように変えてほしい。これ重要」:
 #   下駄の音（Aメロ）は4分に減らして歌と下駄の音を聞かせ、坂道は裏の開いたハイハットで前へ、2回目のサビはライドのカップで明るく、最後の打ち上げはクラッシュの4分（花火）。数え歌のように、刻みがだんだん大きくなる
 # 2026-10-26 人間「オープンとクローズのハイハットの使い分けとかね」: あと5分=open24
-S.keepers = {'下駄の音': 'quarter', '坂道': 'open', '坂道2': 'open', 'あと3分': 'bell', '打ち上げ': 'wash', 'あと5分': 'open24'}
+S.plain_scenes = {"出発", "下駄の音"}   # 2026-10-26 人間「43秒までは普通のエイトビート」→ 自動の遊び（キックの置きかえ・遊び）も入れない
+S.keepers = {'坂道': 'open', '坂道2': 'open', 'あと3分': 'bell', '打ち上げ': 'wash', 'あと5分': 'open24'}
 # 2026-10-26 人間「シンプルなドラムのフレーズ色々入れて欲しい」「曲に合ったものを」「全部同じにするとつまらなくなる」:
 #   屋台の灯り（間奏）の前半は、低い太鼓の祭り太鼓の型で屋台のにぎわいを。導火線の最後は「さん、にい、いち」とスネアとキックを3つそろえて打つ
 S.dmoves = [('屋台の灯り', 'tribal', 0, 3), ('導火線', 'fill', 'count3')]
@@ -181,7 +182,7 @@ for b in range(S.nb):
     v = voice(ch, 66, 3)
     if n in ("出発", "屋台の灯り"):
         t = tones(ch, "B4", "B5"); PR.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 2, 1, 3, 2, 1, 3, 2))); PL.bar(b, piano_left8(ch, "E2"))
-    elif n in ("下駄の音", "金魚すくい"):
+    elif n in ("金魚すくい",):
         if i < 8:
             # 前半: 和音の刻み（2拍半の伸ばしと裏）。左手は2分の根音
             for j in range(3): PC[j].bar(b, f"{nm(v[j])}:1.5 {nm(v[j])}:1 {nm(v[j])}:1.5")
@@ -258,7 +259,7 @@ for b in range(S.nb):
     r = low(S.chords[b], "E1")
     if n in ("縁側の時計", "坂の上"): continue
     if n in ("出発", "屋台の灯り"): BASS.bar(b, sing_bass(S, b, "run" if i % 4 == 3 else ("climb" if i % 2 == 0 else "drive")))
-    elif n in ("下駄の音", "金魚すくい"):
+    elif n in ("金魚すくい",):
         if i < 8: BASS.bar(b, sing_bass(S, b, "walk") if i % 2 == 1 else bass_line(S, b, "push"))
         else: BASS.bar(b, sing_bass(S, b, "climb" if i % 2 == 0 else "fall"))
     elif n.startswith("坂道"): BASS.bar(b, sing_bass(S, b, "climb") if i < 7 else f"{nm(r)}:3 {nm(r + 12)}:0.5 {nm(r + 10)}:0.5")
@@ -301,15 +302,20 @@ for b in range(S.nb):
     if n == "縁側の時計":
         if last: D.set(b, "." * 16, "........x.x.XXXX", "." * 16)          # 本編へのつなぎ（80 のまま、スネアの助走）
         continue
-    if n in ("出発", "屋台の灯り"):
-        # 2026-10-26 人間（02）「前奏もうちょい勢いあるといい」→ 出発はビッグビート（4つ打ち寄り）で走り出す
-        vgroove(D, b, "bigbeat" if n == "出発" else "break1", ghosts=0.35, seed=b)
+    if n in ("出発", "下駄の音"):
+        # 2026-10-26 人間（02）「43秒までのドラムは普通のエイトビートで工夫しなくていい。たまにハイハットのアクセント入れるだけで」:
+        #   出発・下駄の音（〜44秒）は、ゴーストもフィルもない、ふつうの8ビート。ハイハットは拍の頭を強く、4小節目の終わりだけ開く
+        vgroove(D, b, "beat8", ghosts=0.0, seed=b)
+        if i == 0: crash(D, b)
+        continue
+    if n in ("屋台の灯り",):
+        vgroove(D, b, "break1", ghosts=0.35, seed=b)
         if i == 0: crash(D, b)
         if i == 4: crash(D, b, "G2")
         if n == "屋台の灯り" and 4 <= i < 7:
             D.cym(b, "D2:0.5 " * 8); D.H[b] = "." * 16                       # ライド
         if last: put_fill(D, b, "tomdown")
-    elif n in ("下駄の音", "金魚すくい"):
+    elif n in ("金魚すくい",):
         if i < 8:
             vgroove(D, b, "break2", ghosts=0.45, seed=b)
             if n == "金魚すくい":
