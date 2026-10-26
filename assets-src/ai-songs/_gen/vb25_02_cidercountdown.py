@@ -50,6 +50,7 @@ S.scene("花火のあと", 9, "outro", OUT_CH + OUT_CH + ["F#"])
 #   下駄の音（Aメロ）は4分に減らして歌と下駄の音を聞かせ、坂道は裏の開いたハイハットで前へ、2回目のサビはライドのカップで明るく、最後の打ち上げはクラッシュの4分（花火）。数え歌のように、刻みがだんだん大きくなる
 # 2026-10-26 人間「オープンとクローズのハイハットの使い分けとかね」: あと5分=open24
 S.plain_scenes = {"出発", "下駄の音"}
+S.ride_vol = 0.04   # 最後のサビのクラッシュの4分（ライドのパート）が詰まって聞こえないよう 0.05→0.04
 S.open_hat_vol = 0.55   # 2026-10-26 人間（02）「オープンとクローズの動作で出すハイハットの音、もっと繊細でいい」→ 開いたハイハットを別のパートにして ×0.55   # 2026-10-26 人間「43秒までは普通のエイトビート」→ 自動の遊び（キックの置きかえ・遊び）も入れない
 S.keepers = {'坂道': 'open', '坂道2': 'open', 'あと3分': 'bell', '打ち上げ': 'wash', 'あと5分': 'open24'}
 # 2026-10-26 人間「シンプルなドラムのフレーズ色々入れて欲しい」「曲に合ったものを」「全部同じにするとつまらなくなる」:
@@ -83,7 +84,9 @@ BASS = S.track("ベース（指弾き・歌うベース）", "bass", **rock_bass
 BUG = S.track("夏の虫の声（パルス波）", "lead", patch="chipPulse12", volume=0.035, pan=0.45, reverb=0.4, mono=True,
               fx=[{"type": "filter", "kind": "highpass", "freq": 1200, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 6000, "q": 0.7}])
 GLK = S.track("グロッケン（花火のきらめき）", "glockenspiel", volume=0.09, pan=0.25, reverb=0.45)
-BOOM = S.track("花火の音（インパクト）", "impactHit", volume=0.1, pan=0.0, reverb=0.4)
+# 2026-10-26 人間（02）「3分23秒、音がなんかつぶれてる」→ 最後のサビの8小節目の花火の「ドン」で、低い音が大きく入り、
+#   仕上げのリミッターが全体を押しつぶしていた。花火の音を 0.1→0.065、低い所（60Hz より下）を切り、サビの途中の「ドン」は16小節目だけに
+BOOM = S.track("花火の音（インパクト）", "impactHit", volume=0.065, pan=0.0, reverb=0.4, fx=[{"type": "filter", "kind": "highpass", "freq": 60, "q": 0.7}])
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.075, pan=0, reverb=0.3)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 D = S.drumkit()
@@ -298,7 +301,7 @@ for b in S.sc("坂の上"): bugs(b, 4, ("B6", "A6"))
 for b in S.sc("花火のあと")[4:8]: bugs(b)
 # 花火: 最後のサビの頭と、8小節ごとに「ドン」。グロッケンが光の粒を散らす
 for i, b in enumerate(S.sc("打ち上げ")):
-    if i in (0, 8, 16, 24): BOOM.bar(b, "C2:4")
+    if i in (0, 16): BOOM.bar(b, "C2:4")
     if i % 4 == 2 and i < 28: GLK.bar(b, KF.mel("R:2 5'':0.5 3'':0.5 1'':0.5 5':0.5", oct=4))
 for i, b in enumerate(S.sc("あと5分") + S.sc("あと3分")):
     if i % 8 == 7: GLK.bar(b, K.mel("R:3 5':0.25 1'':0.25 3'':0.5", oct=4))
