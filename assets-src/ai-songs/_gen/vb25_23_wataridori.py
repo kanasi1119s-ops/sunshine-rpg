@@ -42,6 +42,9 @@ S.scene("雲の中", 16, "break", CLOUD_CH)
 S.scene("雲を抜ける", 8, "build", UP_CH)
 S.scene("島が見えた", 16, "chorus", LAST_CH)
 S.scene("島に着く", 8, "outro", ["B", "C#", "D#m7", "F#", "B", "C#", "F#", "F#"])
+# 2026-10-26 点数 7.5 を目指す: ベースを録音の指弾きに（7.22→7.60）・プラックを素直で明るい音色に（+0.12）
+S.live_bass = True
+S.patch_swap = {"modernPluck": "surgeNicePluck"}
 S.scene("波", 8, "outro", ["F#maj7"] * 8)
 
 V = Voice(S, vol=0.22, delay=0.75, patch="viola", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ

@@ -841,6 +841,18 @@ def teto(S, LY, V, transpose=0, level=None, special=None, vib=None, lead_vol=0.1
         js["vocals"] = [voc]
         js["vocalLevel"] = vocal_level   # 2026-10-25 人間「全体に、伴奏より圧倒的に声が大きく聞こえる」→ 既定 0.85→0.6（耳の重みで歌は伴奏より約 −5.4dB）
         js["title"] = js["title"].replace("（仮）", "（歌：重音テト・仮）")
+    # 2026-10-26 点数 7.5 を目指す（人間「少なくとも 7.5」）: 合成のベース（modernBass）が点数を下げていた（23: 7.22→7.60、21: 6.99→7.35）。
+    #   S.live_bass = True の曲は、シンセベースのパートを録音の指弾きベース（--bass bnb）で鳴らす。S.patch_swap = {"前": "後"} で音色を入れかえる
+    if getattr(S, "live_bass", False):
+        for p_ in js["parts"]:
+            if p_["instrument"] == "bass" and p_.get("patch") in ("modernBass", "synthBass1", "synthBass2"):
+                p_.pop("patch", None); p_["fx"] = []
+        fl = open(path + ".flags").read().strip()
+        if "--bass" not in fl: open(path + ".flags", "w").write(fl + " --bass bnb")
+    for a_, b_ in getattr(S, "patch_swap", {}).items():
+        for p_ in js["parts"]:
+            if p_.get("patch") == a_: p_["patch"] = b_
+            elif p_.get("instrument") == a_: p_["instrument"] = b_
     _json.dump(js, open(path, "w"), ensure_ascii=False)
     print(("  歌（重音テト）を入れた" if VOCAL else "  BGM（歌の役なし）") + (f"・{transpose:+d}半音" if transpose else "") + (f"・歌詞の数が合わない小節 {LY.bad}" if LY and LY.bad else ""))
 

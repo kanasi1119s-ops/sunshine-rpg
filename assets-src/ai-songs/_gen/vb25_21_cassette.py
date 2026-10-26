@@ -46,6 +46,9 @@ S.scene("ダンスブレイク", 8, "interlude", ["Fm", "Fm", "Db", "Eb", "Fm", 
 S.scene("もう一度", 4, "build", ["Gbmaj7", "Ab", "Bbm7", "E7"])
 S.scene("最後の再生", 16, "chorus", LAST_CH)
 S.scene("テープの終わり", 6, "outro", ["F#m7", "Dmaj7", "F#m7", "Dmaj7", "E", "F#m"])
+# 2026-10-26 点数 7.5 を目指す: ベースを録音の指弾きに（6.99→7.35）・エレピを生のピアノに（+0.09）・ブラスを少し下げる（+0.04）
+S.live_bass = True
+S.patch_swap = {"fmEpiano": "piano"}
 # 2026-10-26 人間「全部変えるんじゃなくて、曲に合わせて変えて」: レトロポップの語る場面（Aメロ・Cメロ）だけ、人が叩いた演奏（ファンク・ソウル・ポップ）に。
 #   サビは台本の打ち込みのまま。ゴーストの多い演奏は細かくなりすぎるので、ふつう程度まで
 S.pro_scenes = {"ひとりごと", "ひとりごと2", "押し入れの暗がり"}
@@ -58,7 +61,7 @@ S.tempo = [{"bar": b_stop + 3, "bpm": 70, "ramp": 2}, {"bar": b_stop + 5, "bpm":
 
 V = Voice(S, vol=0.22, delay=0.75, patch="chiff", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 EP = [S.track(f"エレピ{i + 1}", "fmEpiano", volume=0.1, pan=-0.3, reverb=0.2, sustain=0.9) for i in range(3)]
-BR = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.14, pan=0.3, reverb=0.22, gainDb=3, phrase=4,
+BR = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.112, pan=0.3, reverb=0.22, gainDb=3, phrase=4,
               fx=[{"type": "eq", "low": -3, "mid": 2, "midHz": 1800, "high": 0.5}]) for i in range(3)]
 BRM = S.track("ブラス（歌の受け渡し・フック）", "brass", patch="brassSection", volume=0.2, pan=0.3, reverb=0.22, gainDb=3, phrase=4,
               fx=[{"type": "eq", "low": -3, "mid": 2, "midHz": 1800, "high": 0.5}])
