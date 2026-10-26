@@ -213,14 +213,14 @@ for k in range(0, GB_HMAX, 7): grad[k:k + 2, :, 3] *= 0.35                      
 seq = json.load(open(SEQ))
 tfr = {}
 def teto(k):
-    if k not in tfr: tfr[k] = cv2.imread(f"{TM}/{k:03d}.png", cv2.IMREAD_UNCHANGED).astype(np.float32)
+    if k not in tfr: tfr[k] = cv2.imread(f"{TM}/{k:03d}.png", cv2.IMREAD_UNCHANGED)   # uint8 のまま持つ（float だと 240 コマで 1.8GB になり、メモリが足りなくなる）
     return tfr[k]
-t0 = teto(0); al = t0[..., 3]; ys = np.where(al.max(1) > 128)[0]; xs = np.where(al.max(0) > 128)[0]
+t0 = teto(0); al = t0[..., 3].astype(np.float32); ys = np.where(al.max(1) > 128)[0]; xs = np.where(al.max(0) > 128)[0]
 TX = 1434 - (xs.min() + xs.max()) // 2; TY = 862 - ys.max()
 
 def blend_bgra(dst, s, x, y):
     h, w = s.shape[:2]; x0, y0 = max(0, x), max(0, y); x1, y1 = min(W, x + w), min(H, y + h)
-    s = s[y0 - y:y1 - y, x0 - x:x1 - x]; a = s[..., 3:4] / 255.0
+    s = s[y0 - y:y1 - y, x0 - x:x1 - x].astype(np.float32); a = s[..., 3:4] / 255.0
     dst[y0:y1, x0:x1] = (s[..., :3] * a + dst[y0:y1, x0:x1].astype(np.float32) * (1 - a)).astype(np.uint8)
 
 fE18 = font(FONT_E, 16)
