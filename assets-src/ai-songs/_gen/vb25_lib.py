@@ -309,6 +309,55 @@ def depth(S):
     if "--space" not in S.flags: S.flags += " --space hall --space-wet 0.15"
 
 
+
+def kick_vary(S):
+    """2026-10-26 人間「ずったん！ずったん！っていう感じのツービートぽいのドラムパターン多いけど、音数を増やしすぎずもう少し工夫できないかな。
+    単調でちょっと…バスドラのパターンをちょっと変えると…」:
+    いちばん多かったのは、4つ打ち（X...X...X...X...）と、その8分の足し（X.X.X...X.X.X...）にスネアの 2・4拍が乗った「ずったん」の続き。
+    同じキックの形が続く所で、キックの置き場所だけを変える（音の数は同じか少なく。2・4拍のスネアとはなるべく重ねない＝スネアが抜けて聞こえる）。
+    4小節を1つの句として「元の形 → 変えた形 → 元の形 → 句の終わりの形」（1・3小節目は元のまま＝単調のよさを残す）。8小節ごとに別の形を選ぶ。
+    曲ごとに選ぶ形を変える。エレクトロのキット（踊る4つ打ちが芯の曲）は、サビの4つ打ちには手をつけない"""
+    if getattr(S, "no_spice", False): return
+    D = getattr(S, "drums", None)
+    if D is None or D.n != 16: return
+    FOUR = ["X.....X.X.....x.", "X..x....X.x.....", "X.......X.x..x..", "X.x.....X.....x.", "X..x..x.X.......", "X.......X..x..x.",
+            "X.....x...x.....", "X.x...x.X.......", "X......xX.....x.", "X..x....X...x..."]
+    SIX = ["X.x...x.X.x.....", "X.x.....X.x..x..", "X..x..x.X.x.....", "X.x.....X.x...x.", "X.x...x...x..x..", "X..x....X.x...x."]
+    TWO = ["X.........x.....", "X......x........", "X.........x.x...", "X..x......x.....", "X.....x.........", "X.......x..x....", "X..x....x.......", "X......x...x...."]
+    THREE = ["X.....x.x.......", "X..x....x.......", "X.......x.x.....", "X......x..x.....", "X.x.......x.....", "X.......x....x..", "X..x......x..x..", "X.....x...x....."]
+    rng = _random.Random(int(S.no) * 31 + 11)
+    hits = lambda g: {j for j, c in enumerate(g) if c in "Xx"}
+    run, prev, n, choice = 0, None, 0, {}
+    for b in range(S.nb):
+        g = D.K[b]; hk = hits(g)
+        try: name, i, L, kind = S.scene_of(b)
+        except Exception: run, prev = 0, None; continue
+        if hk == {0, 4, 8, 12}: fam = "four"
+        elif hk == {0, 2, 4, 8, 10, 12}: fam = "six"
+        elif 0 in hk and 8 in hk and 2 <= len(hk) <= 3 and hk <= {0, 2, 6, 8, 10, 14}: fam = "two"
+        else: fam = None
+        if fam is None or kind in ("break", "intro", "outro") or i == L - 1 or (fam == "four" and S.kit == "electro" and kind in ("chorus", "drop")):
+            run, prev = 0, None; continue
+        key = (g.upper(), "".join("x" if c in "Xx" else "." for c in D.S[b]))
+        run = run + 1 if key == prev else 0
+        prev = key
+        pos = run % 4
+        if pos in (0, 2): continue
+        calm = kind in ("verse", "bridge")
+        pool = {"four": FOUR, "six": SIX, "two": TWO if calm else TWO + THREE}[fam]
+        ck = (name, fam, run // 8, pos)
+        if ck not in choice: choice[ck] = rng.randrange(len(pool))
+        sn = hits(D.S[b]) - {0}
+        for t in range(len(pool)):
+            cand = pool[(choice[ck] + t) % len(pool)]
+            hc = hits(cand)
+            if hc & sn or len(hc) > len(hk) + (1 if fam == "two" else 0): continue
+            k2 = list(cand)
+            if g[0] == "x": k2[0] = "x"
+            D.K[b] = "".join(k2); n += 1
+            break
+    if n: print(f"  キックの置き場所を変えた: {n}小節")
+
 def spice(S):
     """2026-10-26 人間「ドラム全体的にもう少し遊びと言うかアクセントあってもいいかも。単調な部分が多すぎる。単調の方がいい部分もあるけどね」:
     同じ形の小節が続く所だけ、続いた数に合わせて少しずつ遊びを足す（1小節目はそのまま＝単調のよさを残す）。
@@ -347,6 +396,7 @@ def spice(S):
 def vwrite(S, extra_flags=""):
     """vb25 の名前で書き出す。S.kit が crocell-punch のときもフラグを書く"""
     path = sys.argv[1] if len(sys.argv) > 1 else f"/tmp/vp25/vb25-{S.no}-{S.slug}.json"
+    kick_vary(S)
     spice(S)
     playable(S)
     depth(S)
