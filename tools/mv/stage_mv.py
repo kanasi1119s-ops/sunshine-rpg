@@ -195,13 +195,12 @@ def put(t, f, xy, col, glow=None):
     global st
     im = text_img(t, f, col + (255,), glow=glow); st.alpha_composite(im, (xy[0] - 12, xy[1] - 12))
 put(ALBUM_E, font(FONT_E, 32), (BX0, 146), PINK, glow=(255, 40, 100, 170))
-put(f"{ALBUM_J}  ／  {KIND_J} / {KIND_E}", font(FONT_J, 19), (BX0 + 2, 194), GRAY)
+put(ALBUM_J, font(FONT_J, 19), (BX0 + 2, 194), GRAY)   # 人間「音楽ジャンルは動画からすべて外してほしい」（2026-10-26）
 put(f"♪", font(FONT_J, 30), (BX0, 244), PINK)
 put(f"{int(NO):02d} / {TOTAL}", font(FONT_E, 28), (BX0 + 36, 246), PINK2)
 put(TJ, fit_font(FONT_J, TJ, 58, LYW), (BX0, 290), WHITE, glow=(255, 60, 120, 120))
 put(TE, fit_font(FONT_E, TE, 28, LYW), (BX0 + 2, 364), (230, 215, 230))
-put(f"{GJ}  /  {GE}", fit_font(FONT_J, f"{GJ}  /  {GE}", 22, LYW), (BX0 + 2, 410), GRAY)
-put("歌：重音テト  /  Vocal: Kasane Teto", font(FONT_J, 22), (BX0 + 2, 442), PINK2)
+put("歌：重音テト  /  Vocal: Kasane Teto", font(FONT_J, 22), (BX0 + 2, 418), PINK2)
 d = ImageDraw.Draw(st)
 for k in range(0, BX1 - BX0, 6): d.line([(BX0 + k, 484), (BX0 + k + 3, 484)], fill=(255, 70, 120, 150), width=2)
 # テトの影（台の上）
