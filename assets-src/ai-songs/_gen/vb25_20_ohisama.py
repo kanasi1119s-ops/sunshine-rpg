@@ -264,10 +264,12 @@ for i, b in enumerate(S.sc("朝日")):
     if 8 <= i < 16: STRC.bar(b, K.mel(CM1[i - 8], oct=3))
     elif 16 <= i < 23: STRC.bar(b, K.mel(CM2[i - 16], oct=3))
 # 合いの手（ピアノ）: Aメロの句の終わり（歌が2拍目から休む小節）に、高い短い句
+# 合いの手は歌の役より小さく（0.12。歌の受け渡しの 0.18 とは別のパート。設定は同じなので同じチャンネル）
+PNA = S.track("ピアノ（合いの手）", "piano", volume=0.12, pan=-0.15, reverb=0.22, fx=PIANO_FX)
 FILL = ["R:2.5 5':0.25 3':0.25 2':0.5 1':0.5", "R:2.5 1':0.25 2':0.25 3':0.5 5':0.5"]
 for name in ("夜の町を回る", "2つ目の通り"):
     for i, b in enumerate(S.sc(name)):
-        if i in (5, 9) and not (name == "2つ目の通り" and i < 8 and not VOCAL): PNM.bar(b, K.mel(FILL[i // 8], oct=4))
+        if i in (5, 9) and not (name == "2つ目の通り" and i < 8 and not VOCAL): PNA.bar(b, K.mel(FILL[i // 8], oct=4))
 
 # ================= ドラム =================
 for b in range(S.nb):
