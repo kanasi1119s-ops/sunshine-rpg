@@ -65,6 +65,12 @@ SAW = [S.track(f"厚い和音{i + 1}", "pad", **pad_spec("supersawPad", vol=0.04
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.07, pan=0, reverb=0.3)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 BIRD = S.track("朝の鳥（ピッコロ）", "panflute", patch="piccolo", volume=0.1, pan=0.35, reverb=0.45, gainDb=1, mono=True)
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 最後のサビの高い対旋律（ストリングス。背景なので 0.07。ピアノ（左 -0.15）と反対の右へ）
+STRC = S.track("ストリングス（最後のサビの対旋律）", "strings", patch="stringEnsemble", **strings_spec(0.07, 0.35))
+T_ = -7   # 書き出しの前に全体を 7半音下げる。ベースは下げたあと E1〜E3 に入るよう、書く高さを B1〜B3 にする
+BL = nm(28 - T_)
+sb = lambda b, st: sing_bass(S, b, st, lo=28 - T_, hi=52 - T_)
+bl = lambda b, st: bass_line(S, b, st, lo=BL)
 RIDE = S.track("ライド", "crash", **{k: v for k, v in NAKED["crash"].items() if k != "human"})
 D = S.drumkit()
 SIL = Silence(S)
@@ -151,7 +157,8 @@ for b in range(S.nb):
     v = voice(ch, 62, 3)
     # シンセのアルペジオ（プログラムの音）: 起動・Aメロ・サビ
     t = tones(ch, "B3", "B5")
-    if n == "起動" or n in ("夜の町を回る",) or n.startswith("朝のプログラム") or n == "朝日" or n == "屋根づたい":
+    # 2026-10-26 人間「後半に行くにつれて曲の始まり方似てない？」→ 「起動」のシンセのアルペジオ（11 と同じ入り方）をやめた。始まりはカウントと手拍子（下）
+    if n in ("夜の町を回る",) or n.startswith("朝のプログラム") or n == "朝日" or n == "屋根づたい":
         seq = [t[q % len(t)] for q in (0, 2, 4, 2, 1, 3, 5, 3, 0, 2, 4, 2, 6, 4, 3, 1)]
         if n.startswith("朝") or n == "朝日": seq = [x + 12 if x < 64 and x + 12 <= midi("B5") else x for x in seq]
         ARP.bar(b, " ".join(f"{nm(x)}:0.25" for x in seq))
@@ -162,14 +169,14 @@ for b in range(S.nb):
         ARPF.bar(b, " ".join(f"{nm(tf[q % len(tf)])}:0.25" for q in (0, 2, 4, 2, 1, 3, 5, 3, 0, 2, 4, 2, 6, 4, 3, 1)))
     # ピアノ
     if n == "起動" and i >= 4:
-        stab(b, ch, "X:1.5 X:1 X:1.5"); PNL.bar(b, piano_left8(ch, "C2"))
+        stab(b, ch, "X:1.5 X:1 X:1.5"); PNL.bar(b, piano_left8(ch, "A2"))
     elif n in ("夜の町を回る", "2つ目の通り"):
-        if n == "2つ目の通り" and i < 8: PNL.bar(b, f"{nm(low(ch, 'C2'))}:2 {nm(low(ch, 'C2') + 12)}:2")
+        if n == "2つ目の通り" and i < 8: PNL.bar(b, f"{nm(low(ch, 'A2'))}:2 {nm(low(ch, 'A2') + 12)}:2")
         else:
             stab(b, ch, "R:0.5 X:0.5 R:0.5 X:0.5 R:0.5 X:0.5 R:0.5 X:0.5" if i < 8 else "X:0.75 X:0.75 X:0.5 R:0.5 X:0.75 X:0.75")
-            PNL.bar(b, f"{nm(low(ch, 'C2'))}:1.5 {nm(low(ch, 'C2') + 12)}:1 {nm(low(ch, 'C2'))}:1.5")
+            PNL.bar(b, f"{nm(low(ch, 'A2'))}:1.5 {nm(low(ch, 'A2') + 12)}:1 {nm(low(ch, 'A2'))}:1.5")
     elif n.startswith("時計をセット") or n.startswith("朝のプログラム") or n == "朝日":
-        PN.bar(b, piano_arp16(ch, "D#4", "D#6")); PNL.bar(b, piano_left8(ch, "C2"))
+        PN.bar(b, piano_arp16(ch, "D#4", "D#6")); PNL.bar(b, piano_left8(ch, "A2"))
         if n.startswith("時計") and i == L - 1: PN.bar(b, f"{nm(v[2] + 12)}:2 R:2")
         for j in range(2):
             if n.startswith("朝") or n == "朝日": PNC[j].bar(b, f"{nm(voice(ch, 64, 2)[j])}:2 {nm(voice(ch, 64, 2)[j])}:2")
@@ -177,25 +184,36 @@ for b in range(S.nb):
         # 和音を左手と右手で（M7 の色を足す）
         vv = voice(ch, 64, 3)
         for j, tr_ in enumerate([PN] + PNC): tr_.bar(b, f"R:{0.5 * j} {nm(vv[j])}:{4 - 0.5 * j}")
-        PNL.bar(b, f"{nm(low(ch, 'C2'))}:2 {nm(low(ch, 'C2') + 7)}:2")
+        PNL.bar(b, f"{nm(low(ch, 'A2'))}:2 {nm(low(ch, 'A2') + 7)}:2")
     elif n == "東の空":
-        PNF.bar(b, piano_arp16(ch, "D#4", "D#6")); PNL.bar(b, f"{nm(low(ch, 'C2'))}:4")
+        PNF.bar(b, piano_arp16(ch, "D#4", "D#6")); PNL.bar(b, f"{nm(low(ch, 'A2'))}:4")
     elif n == "朝":
-        if i < 6: stab(b, ch, "X:2 X:2"); PNL.bar(b, f"{nm(low(ch, 'C2'))}:4")
+        if i < 6: stab(b, ch, "X:2 X:2"); PNL.bar(b, f"{nm(low(ch, 'A2'))}:4")
         elif i == 6:
             vv = voice("Badd9", 66, 3)
             for j, tr_ in enumerate([PN] + PNC): tr_.bar(b, f"R:{0.25 * j} {nm(vv[j])}:{16 - 0.25 * j}")
-            PNL.bar(b, "B1:16")
-    # ベース（根音に沿わせる。サビは8分のオクターブ）
-    if n == "起動": BASS.bar(b, bass_line(S, b, "root8") if i >= 4 else "R:4")
-    elif n in ("夜の町を回る", "2つ目の通り"): BASS.bar(b, bass_line(S, b, "push" if i < 8 else "root8"))
-    elif n.startswith("時計をセット"): BASS.bar(b, bass_line(S, b, "root8") if i < L - 1 else f"{nm(low(ch, 'E1'))}:2 R:2")
-    elif n.startswith("朝のプログラム") or n == "朝日" or n == "時計台" or n == "屋根づたい": BASS.bar(b, bass_line(S, b, "oct8"))
-    elif n == "止まった時計": BASS.bar(b, bass_line(S, b, "half"))
-    elif n == "東の空": BASS.bar(b, bass_line(S, b, "long" if i < 4 else "root8"))
-    elif n == "朝" and i < 7: BASS.bar(b, bass_line(S, b, "half" if i < 6 else "long"))
+            PNL.bar(b, "B2:16")
+    # ベース（歌うベース）
+    # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 根音の8分・オクターブだけだったのを、場面ごとに旋律のあるベースに（音量 0.2 はそのまま）。
+    #   書き出しの前の −7半音で A0 まで下がっていた（ベースに出ない音）のを、書く高さを B1〜B3 にして、下げたあと E1〜E3 に入れた。
+    #   起動: 手拍子のあと、ピアノといっしょにキックに合わせて押す／Aメロ前半: 押す形と歩く形を交互、後半: 上る・下る
+    #   Bメロ: 上っていく／サビ: 押す、句の終わりで駆ける／屋根づたい・時計台: 前半は歩く、後半は押す
+    #   止まった時計: Half feel のまま、後半ゆったり／東の空: のばしてから上る
+    if n == "起動": BASS.bar(b, (bl(b, "push") if i < 8 else sb(b, "drive")) if i >= 4 else "R:4")
+    elif n in ("夜の町を回る", "2つ目の通り"):
+        if i < 8: BASS.bar(b, sb(b, "walk") if i % 2 == 1 else bl(b, "push"))
+        else: BASS.bar(b, sb(b, "climb" if i % 2 == 0 else "fall"))
+    elif n.startswith("時計をセット"): BASS.bar(b, sb(b, "climb") if i < L - 1 else f"{nm(low(ch, BL))}:2 R:2")
+    elif n.startswith("朝のプログラム") or n == "朝日":
+        if n == "朝日" and i >= 22: BASS.bar(b, sb(b, "ride") if i == 22 else f"{nm(low(ch, BL))}:4")
+        else: BASS.bar(b, sb(b, "run" if i % 4 == 3 else "drive"))
+    elif n in ("時計台", "屋根づたい"): BASS.bar(b, sb(b, "walk" if (n == "時計台" and i < 8) else ("run" if i % 4 == 3 else "drive")))
+    elif n == "止まった時計": BASS.bar(b, bl(b, "half") if i < 8 else sb(b, "ride"))
+    elif n == "東の空": BASS.bar(b, bl(b, "long") if i < 4 else sb(b, "climb"))
+    elif n == "朝" and i < 7: BASS.bar(b, bl(b, "half" if i < 6 else "long"))
     # ギター（パワーコード）。曲の頭や Aメロでは刻まない
-    pw = power(ch, "E2")
+    # 2026-10-26 ミックス: 書く高さ E2 は下げたあと A1 になり、ギターの出ない音になっていたので F2（下げたあと A#1〜）に
+    pw = power(ch, "F2")
     pat = None
     if (n == "起動" and i >= 8) or n == "屋根づたい": pat = "X:1.5! X:1 X:1.5!"
     elif n.startswith("朝のプログラム") or n == "朝日" or n == "時計台":
@@ -224,11 +242,39 @@ BIRDS = ["R:1 G6:0.125 A6:0.125 G6:0.125 R:0.625 E6:0.25 G6:0.5 R:1.25", "R:2.5 
          "R:0.5 E6:0.25 G6:0.25 R:1 G6:0.125 A6:0.125 G6:0.25 R:1.5", "R:3 A6:0.125 G6:0.125 E6:0.25 R:0.5"]
 for i, b in enumerate(S.sc("朝")[4:]): BIRD.bar(b, BIRDS[i % 4])
 
+# 2026-10-26 人間「後半に行くにつれて曲の始まり方似てない？」→ 「起動」のシンセのアルペジオをやめて、
+#   1小節目はハイハットでカウント（4つ。作曲ソフトにスティックの音がないので、ハイハットを閉じて刻む）、2小節目から手拍子。
+#   3小節目で手拍子が増え（裏も打つ人が出てくる）、4小節目でキックが足踏みのように入って、5小節目からピアノとベースが加わる。
+#   手拍子は起動の終わりまで続く（明るく、人が集まってくる感じ）。音量 0.08（効果音の範囲）
+CLAP = season(S, S.sc("起動")[1], "手拍子", 0.5, vol=0.08)
+for i, b in enumerate(S.sc("起動")):
+    if i == 0: continue
+    qs = (1, 3) if i == 1 else ((1, 2.5, 3, 3.5) if i in (2, 3) or i % 4 == 3 else (1, 3))
+    for q in qs:
+        if i == 1 and q == 0: continue
+        CLAP.at(S.bar_beat(b) + q, "B4:0.5")
+# season() が置いた2小節目の頭の1打は、手拍子の始まりの合図として残す
+
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 最後のサビ（9〜23小節目）に、歌より上の高い対旋律（B長調の度数・下げたあと E5〜D#6）。
+#   和音の音（3度・5度）を長い音に置き、歌が細かい所は全音符でのばす
+CM1 = ["6'':4", "5'':2 3'':2", "2'':4", "3'':2 1'':2", "4'':2 6'':2", "5'':4", "#4'':2 6'':2", "7'':2 5'':2"]
+CM2 = ["6'':4", "5'':4", "#4'':2 6'':2", "5'':4", "4'':2 6'':2", "b6'':4", "1'':4"]
+for i, b in enumerate(S.sc("朝日")):
+    if 8 <= i < 16: STRC.bar(b, K.mel(CM1[i - 8], oct=3))
+    elif 16 <= i < 23: STRC.bar(b, K.mel(CM2[i - 16], oct=3))
+# 合いの手（ピアノ）: Aメロの句の終わり（歌が2拍目から休む小節）に、高い短い句
+FILL = ["R:2.5 5':0.25 3':0.25 2':0.5 1':0.5", "R:2.5 1':0.25 2':0.25 3':0.5 5':0.5"]
+for name in ("夜の町を回る", "2つ目の通り"):
+    for i, b in enumerate(S.sc(name)):
+        if i in (5, 9) and not (name == "2つ目の通り" and i < 8 and not VOCAL): PNM.bar(b, K.mel(FILL[i // 8], oct=4))
+
 # ================= ドラム =================
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     last = i == L - 1
     if n == "起動":
+        if i == 0: D.set(b, "." * 16, "." * 16, "X...X...X...X..."); continue          # カウント
+        if i == 3: D.set(b, "X...X...X...X...", "............xxXX", "." * 16); continue   # 足踏みのキックと、スネアの助走
         if i < 4: continue
         vgroove(D, b, "beat8", ghosts=0.3, seed=b)
         if i == 4: crash(D, b)
@@ -281,6 +327,23 @@ for b in range(S.nb):
             vgroove(D, b, "half", ghosts=0.2, seed=b)
             if i == 0: crash(D, b)
         elif i == 6: D.set(b, "X" + "." * 15, "." * 16, "." * 16); crash(D, b, "C2", 8)
+
+# 2026-10-26 人間「ドラム強弱、アクセント、余韻も上手く使ってね」→ 場面ごとの強弱と、止めのあとのシンバルの余韻
+#   Aメロ: ハイハットは句の頭（4小節ごとの1拍目）だけ強く、ほかは軽く／Bメロ: 前半4小節は軽く、後半で強く（溜める）
+#   止め（Bメロの最後の2拍）: 止める1打にクラッシュを鳴らしたまま残す／サビ: 8小節ごとの頭のクラッシュを6拍のばす
+def soft_hat(b, keep_head=True):
+    h = list(D.H[b])
+    for q in range(16):
+        if h[q] == "X" and not (keep_head and q == 0): h[q] = "x"
+    D.H[b] = "".join(h)
+for b in range(S.nb):
+    n, i, L, k = S.scene_of(b)
+    if n in ("夜の町を回る", "2つ目の通り"): soft_hat(b, keep_head=(i % 4 == 0))
+    elif n.startswith("時計をセット") and i < 4: soft_hat(b, keep_head=(i == 0))
+for name in ("時計をセット", "時計をセット2"): crash(D, S.sc(name)[-1], "C2", 8)
+for name in ("朝のプログラム", "朝のプログラム2"):
+    for i, b in enumerate(S.sc(name)):
+        if i % 8 == 0: crash(D, b, "C2" if i % 16 == 0 else "G2", 6)
 
 # 1拍の完全な無音（時計台のソロの終わり）と、Bメロの最後の止め
 SIL.add(S.sc("時計台")[-1], 3, 4)
