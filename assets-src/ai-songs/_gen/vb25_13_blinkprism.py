@@ -3,7 +3,7 @@
 #   テトの声に合うよう、曲全体を D長調から 8半音下げて F#長調にした（書くのは D長調の度数のまま、書き出しの前に下げる）。
 # 物語: 雨上がりの帰り道。きのうのけんかで、ごめんねの一言が言えない。水たまりの虹をのぞいてまばたきすると、別の街に君が見える気がする。
 #   会いたいけれどこわい。鏡の中の自分に背中を押されて、虹の橋をこえて謝りに行く。最後は仲直りの虹。
-# 場面と強さ: しずく（ガラスの音だけ）→ 水たまり（ハープとしずく）→ 帰り道（Aメロ）→ 言えない（Bメロ・溜め・止め）→ まばたき（サビ）
+# 場面と強さ: しずく（逆再生のふくらみ・光が差す）→ 水たまり（ハープとまばたきのきらめき）→ 帰り道（Aメロ）→ 言えない（Bメロ・溜め・止め）→ まばたき（サビ）
 #   → まばたき（間奏・グリッチ）→ 別の街（2番。BGM はハープが歌を受け取る）→ Bメロ2 → サビ2（2ステップ・止め）→ しずくの音（静けさ）
 #   → 逆さまの街（Cメロ・Half feel）→ 鏡の街（逆再生・溜め）→ 1拍の無音 → 全部の虹（最後のサビ）→ 水面が戻る → しずく1つ
 # 旋律の性格: 光が散るような5度・6度の跳躍と、短い句のくり返し。Bメロは「ごめんね」を言いかけては止まる下がる句。最高音 F#5。
@@ -47,10 +47,13 @@ GLASS = S.track("ガラスの音（しずく・きらめき）", "pad", patch="s
                 fx=[{"type": "filter", "kind": "highpass", "freq": 400, "q": 0.7}, {"type": "pingpong", "beats": 0.75, "mix": 0.25, "feedback": 0.35}])
 HARP = S.track("ハープ", "harp", volume=0.13, pan=-0.35, reverb=0.35, sustain=1.6)
 HARPM = S.track("ハープ（歌の受け渡し）", "harp", volume=0.18, pan=-0.35, reverb=0.35, sustain=1.6)
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 最後のサビで、虹の橋をかけるハープのグリッサンド（主役より小さく 0.1。ハープと同じ設定なので MIDI のチャンネルを分け合う）
+HGL = S.track("ハープ（虹の橋のグリッサンド）", "harp", volume=0.1, pan=-0.35, reverb=0.35, sustain=1.6)
 GLT = S.track("グリッチ（ビットクラッシュの刻み）", "lead", patch="surgeMixedFeelings", volume=0.07, pan=0.2, sustain=0.4, reverb=0.15,
               fx=[{"type": "filter", "kind": "highpass", "freq": 300, "q": 0.7}, {"type": "bitcrusher", "bits": 6, "mix": 0.45}])
 PAD = [S.track(f"パッド{i + 1}", "pad", **pad_spec("surgePadBellPad", vol=0.055, pan=0.0, duck=0.35, sustain=1.8)) for i in range(3)]
 BASS = S.track("シンセベース", "bass", **synth_bass_spec("surgeBassCatBass", vol=0.22, duck=0.25))
+BLO, BR = "C2", {"lo": 36, "hi": 60}   # ベースを書く高さ（8半音下げたあとで E1〜E3。E1 から書くと A0・Ab0 まで下がり、出ない音になっていた）
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.075, pan=0, reverb=0.3)
 CYM = S.track("シンバルの効果音（逆再生）", "guitar", patch="cymbalFx", volume=0.07, pan=0, modulate=False)
 D = S.drumkit()
@@ -124,7 +127,12 @@ for b in range(S.nb):
         HARP.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.25" for q in (0, 1, 2, 3, 4, 3, 2, 1, 2, 3, 4, 5, 4, 3, 2, 3)))
 # しずく（ガラスの音）: まばらに、左右のディレイで散る
 DROPS = ["R:1 5':0.5 R:2.5", "R:2.5 3'':0.5 R:1", "R:0.5 1'':0.5 R:1.5 6':0.5 R:1", "R:3 2'':0.5 R:0.5"]
-for name in ("しずく", "水たまり", "しずくの音", "水面が戻る"):
+# 2026-10-26 人間「後半に行くにつれて曲の始まり方似てない？」（13 と 16 がどちらも雨としずくで始まっていた）→ 始まりは雨としずくをやめて、
+#   逆再生のふくらみ（水たまりに光が差す）から、まばたきのような「2回きらっ」と光る音へ。しずくの音は、まん中の静けさと終わりにだけ残す
+BLINKS = ["R:1 5'':0.25 5'':0.25 R:2.5", "R:2.5 3'':0.25 3'':0.25 R:1", "R:0.5 1'':0.25 1'':0.25 R:1.5 6':0.25 6':0.25 R:1", "R:3 2'':0.25 2'':0.25 R:0.5"]
+for i, b in enumerate(S.sc("水たまり")): GLASS.bar(b, K.mel(BLINKS[i % 4], oct=4))
+GLASS.bar(S.sc("水たまり")[0], K.mel("1'':0.25 1'':0.25 R:3.5", oct=4))   # 光が差しきった所で、最初のまばたき
+for name in ("しずくの音", "水面が戻る"):
     for i, b in enumerate(S.sc(name)): GLASS.bar(b, K.mel(DROPS[(b + i) % 4], oct=4))
 for name in ("のぞきこむ", "別の街"):
     for i, b in enumerate(S.sc(name)):
@@ -151,28 +159,52 @@ for b in range(S.nb):
     ch = S.chords[b]
     v = voice(ch, 62, 3)
     r = low(ch, "E1")
-    if n in ("水たまり", "虹が見える", "虹が見える2", "虹がつながる", "虹がつながる2", "全部の虹", "逆さまの街", "鏡の街", "水面が戻る") \
+    if n in ("しずく", "水たまり", "虹が見える", "虹が見える2", "虹がつながる", "虹がつながる2", "全部の虹", "逆さまの街", "鏡の街", "水面が戻る") \
             and not (n.startswith("虹が見える") and i == L - 1):
         for j in range(3): PAD[j].bar(b, f"{nm(v[j])}:4")
+    # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 根音の8分（root8・oct8）だけだった所を歌うベースに。
+    #   Aメロの後半は、歌が「R:2」で休む奇数小節でベースが上る・歩く。Bメロ（虹が見える）は「ごめんね」を言いかける歌の下で上っていく（溜め）。
+    #   サビは歌が細かい小節を押し（drive）、伸ばす小節で駆け（run）、8小節目は下りる（fall）。2回目のサビ（2ステップ）は押しと歩きを交互に
+    r = low(ch, BLO)
     if n == "水たまり": BASS.bar(b, f"{nm(r)}:4" if i >= 4 else "R:4")
-    elif n in ("のぞきこむ", "別の街"): BASS.bar(b, bass_line(S, b, "push" if i < 8 else "root8"))
-    elif n.startswith("虹が見える"): BASS.bar(b, bass_line(S, b, "house") if i < L - 1 else f"{nm(r)}:2 R:2")
-    elif n in ("虹がつながる", "全部の虹"): BASS.bar(b, bass_line(S, b, "oct8"))
-    elif n == "虹がつながる2": BASS.bar(b, bass_line(S, b, "push"))
-    elif n == "まばたき": BASS.bar(b, bass_line(S, b, "house"))
-    elif n == "逆さまの街": BASS.bar(b, bass_line(S, b, "half"))
-    elif n == "鏡の街": BASS.bar(b, bass_line(S, b, "long") if i < 4 else bass_line(S, b, "root8"))
-    elif n == "水面が戻る": BASS.bar(b, bass_line(S, b, "half") if i < 6 else "R:4")
+    elif n in ("のぞきこむ", "別の街"):
+        BASS.bar(b, bass_line(S, b, "push", lo=BLO) if (i < 8 or i % 2 == 0) else sing_bass(S, b, "climb" if i % 4 == 1 else "walk", **BR))
+    elif n.startswith("虹が見える"): BASS.bar(b, sing_bass(S, b, "climb", **BR) if i < L - 1 else f"{nm(r)}:2 R:2")
+    elif n in ("虹がつながる", "全部の虹"):
+        if n == "全部の虹" and i >= 22: BASS.bar(b, f"{nm(r)}:4")
+        else: BASS.bar(b, sing_bass(S, b, "fall" if i % 8 == 7 else ("run" if i % 2 == 1 else "drive"), **BR))
+    elif n == "虹がつながる2": BASS.bar(b, bass_line(S, b, "push", lo=BLO) if i % 2 == 0 else sing_bass(S, b, "walk", **BR))
+    elif n == "まばたき": BASS.bar(b, bass_line(S, b, "house", lo=BLO))
+    elif n == "逆さまの街": BASS.bar(b, bass_line(S, b, "half", lo=BLO))
+    elif n == "鏡の街": BASS.bar(b, bass_line(S, b, "long", lo=BLO) if i < 4 else sing_bass(S, b, "climb", **BR))
+    elif n == "水面が戻る": BASS.bar(b, bass_line(S, b, "half", lo=BLO) if i < 6 else "R:4")
 
 # 逆再生（逆再生のクラッシュ・逆再生チャイナ）と、ライザー
 for b in S.sc("鏡の街")[1::2]: cym_swell(CYM, b + 1, 2, "C4" if b % 4 == 1 else "D4")
 cym_swell(CYM, S.sc("虹がつながる")[0], 2, "C4"); cym_swell(CYM, S.sc("まばたき")[0], 1, "D4"); cym_swell(CYM, S.sc("逆さまの街")[0], 4, "E4")
 riser(FX, S.sc("虹がつながる2")[0], 4, "C4"); riser(FX, S.sc("全部の虹")[0], 8, "D4")
 FX.bar(S.sc("しずくの音")[0], "E4:4")                  # ダウンリフター（静けさへ落ちる）
+# 始まり: 逆再生のクラッシュが2小節かけてふくらみ、水たまりの頭で光が差す（山の所にクラッシュを重ねる）
+cym_swell(CYM, S.sc("水たまり")[0], 8, "C4")
+# 最後のサビ: 頭と、最後の8小節（ありがとう）の頭へ、ハープが下から上へ駆け上がる（虹の橋。1拍の32分）
+GL = " ".join(f"{x}:0.125" for x in ["1", "2", "3", "5", "6", "1'", "2'", "3'"])
+for b in (S.sc("全部の虹")[0], S.sc("全部の虹")[16]): HGL.at(b * S.beats - 1, K.mel(GL, oct=4))
 # しずく1つ（最後の1音）
 GLASS.bar(S.sc("しずく1つ")[0], K.mel("R:1 5':3", oct=4))
 
 # ================= ドラム（電子のドラム） =================
+def shape(b, kind, i, L):
+    """2026-10-26 人間「ドラム強弱、アクセント、余韻も上手く使ってね」: 場面の強さに合わせた叩き分け（型を置いた直後に呼ぶ）。
+    Aメロ・Cメロ: スネアは句の頭の小節（4小節に1回）だけ強く（X）、ほかはふつう（x）。ハイハットは拍の頭だけ強く。Bメロは前半を抑えて後半で上げる"""
+    s_, h_ = list(D.S[b]), list(D.H[b])
+    if kind in ("verse", "bridge"):
+        if i % 4: s_ = ["x" if c == "X" else c for c in s_]
+        h_ = [c if j % 4 == 0 else ("x" if c == "X" else c) for j, c in enumerate(h_)]
+    elif kind == "pre" and i < L // 2:
+        s_ = ["x" if c == "X" else c for c in s_]
+    D.S[b], D.H[b] = "".join(s_), "".join(h_)
+
+
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     last = i == L - 1
@@ -180,19 +212,22 @@ for b in range(S.nb):
     elif n in ("水たまり", "水面が戻る"):
         if i < 4: D.set(b, "X.........X.....", "." * 16, "..x...x...x...x.")
         else: vgroove(D, b, "twostep", ghosts=0.3, seed=b)
+        if n == "水たまり" and i == 0: crash(D, b, "C2", 8)                    # 光が差す所（逆再生のふくらみの山）。鳴りを長く
         if i == 4: crash(D, b, "G2")
         if n == "水面が戻る" and i >= 6: D.set(b, "." * 16, "." * 16, "." * 16)
         if last and n == "水たまり": put_fill(D, b, "snare16")
     elif n in ("のぞきこむ", "別の街"):
         vgroove(D, b, "twostep" if i < 8 else "four16", ghosts=0.35, seed=b)
+        shape(b, k, i, L)
         if i == 0: crash(D, b)
         if i == 7: put_fill(D, b, "small")
         if last: put_fill(D, b, "snare16")
     elif n.startswith("虹が見える"):
         vgroove(D, b, "half" if i < 4 else "four", ghosts=0.3, seed=b)
+        shape(b, k, i, L)
         if i == 4: crash(D, b, "G2")
         if i == 6: put_fill(D, b, "build")
-        if last: halt(D, b, 2); D.cym(b, "A2:2")
+        if last: halt(D, b, 2); D.cym(b, "A2:4")                            # 余韻: 止めのシンバルを切らずに止めの終わりまで（2→4拍）
     elif n == "虹がつながる":                      # 1回目: 4つ打ち
         vgroove(D, b, "four16", ghosts=0.3, seed=b)
         if i % 8 == 0: crash(D, b, "C2" if i == 0 else "G2")
@@ -209,6 +244,7 @@ for b in range(S.nb):
         if i == 3 or i == 7: put_fill(D, b, "small" if i == 3 else "snare16")
     elif n == "逆さまの街":
         vgroove(D, b, "half", ghosts=0.45, seed=b, h="x...x...x...x...")
+        shape(b, k, i, L)
         if not last: D.cym(b, ("B2:1 " if i == 0 else "D2:1 ") + "D2:1 D2:1 D2:1"); D.H[b] = "." * 16
         if last: put_fill(D, b, "lift")
     elif n == "鏡の街":
@@ -219,7 +255,7 @@ for b in range(S.nb):
         vgroove(D, b, "four16" if i < 16 else "jersey", ghosts=0.3, seed=b)
         if i % 8 == 0: crash(D, b, "C2" if i % 16 == 0 else "G2")
         if i % 8 == 7 and not last: put_fill(D, b, "snare16" if i % 16 == 7 else "tomdown")
-        if last: D.set(b, "X" + "." * 15, "X" + "." * 15, "." * 16); D.cym(b, "C2:4")
+        if last: D.set(b, "X" + "." * 15, "X" + "." * 15, "." * 16); D.cym(b, "C2:8")   # 余韻: 水面が戻る所へ鳴りを伸ばす（4→8拍）
 
 # 止め2回・1拍の完全な無音
 SIL.add(S.sc("虹が見える")[-1], 2, 4)
@@ -229,10 +265,10 @@ SIL.apply()
 
 S.fade_out = 0
 S.desc = ("仮: ボカロ曲インスト25曲（作り直し）の13。グリッチポップ。F#長調（Aメロは D#短調）・148・転調なし。"
-          "けんかした友だちに「ごめんね」を言いに行く雨上がり。ガラスのしずくで始まり、跳ねる Aメロ、言いかけては止まる Bメロ、光が散るような跳躍のサビ、グリッチの間奏、"
+          "けんかした友だちに「ごめんね」を言いに行く雨上がり。逆再生のふくらみ（水たまりに光が差す）とまばたきのきらめきで始まり、跳ねる Aメロ、言いかけては止まる Bメロ、光が散るような跳躍のサビ、グリッチの間奏、"
           "2ステップの2サビ、逆さまの街の Cメロ、鏡の街の逆再生と1拍の無音、仲直りの最後のサビ、しずく1つで終わる。ハープと Surge の音。自作")
 # 季節の音（2026-10-25 人間「季節を感じれる様な音も欲しい」）
-season(S, 0, "雨", S.beats * 6, vol=0.08)
+# 2026-10-26: 始まりの雨は外した（雨は 16 で使う。始まりを光のふくらみにした）。終わりの小鳥（雨上がり）は残す
 season(S, S.nb - 6, "小鳥", S.beats * 6, vol=0.06)
 S.flags += " --space sky --space-wet 0.16"
 teto(S, LY, V, transpose=-8, special={"全部の虹": 0.55, "逆さまの街": -0.5, "鏡の街": -0.15, "水面が戻る": -0.45})
