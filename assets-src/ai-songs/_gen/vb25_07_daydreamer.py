@@ -66,6 +66,18 @@ LGS.spec["fx"] = [{"type": "tubescreamer", "pre": True, "gain": 0.45, "level": 0
 # 2026-10-26 人間（07）「ピロピロ音小さくてよく聞こえない」→ 16分の速い合いの手（サビのギター・ピアノの駆け下り）を別のパートにして前に
 LGF = S.track("ギター2（サビの合いの手）", "leadGuitar", **lead_gtr_spec(0.2, 0.08))
 PMF = S.track("ピアノ（16分の駆け下り）", "piano", volume=0.23, pan=-0.1, reverb=0.2, fx=[{"type": "eq", "low": -3, "mid": 2, "midHz": 2500, "high": 1.5}])
+# 2026-10-26 人間（07）「ピロピロ聞こえないかな」（サビのギターの合いの手・ピアノの駆け下り・前奏と間奏のギターのリフ・ギターソロの4つとも）:
+#   音量を上げるだけでは歪みの壁と同じ高さでぶつかって埋もれるので、ミックスで場所を作る:
+#   ① 速いフレーズの4パートは 1.25 倍（リフ 0.13→0.16・ソロ 0.19→0.24・合いの手 0.2→0.25・ピアノ 0.23→0.29）と、輪郭の 2.5kHz を +3dB
+#   ② 伴奏の歪みギター（パワーコード）は、速いフレーズの居場所の 2〜3kHz を −3.5dB へこませ、音量を 0.095→0.085 に
+#   ③ ピアノの駆け下りは左（−0.3）へ寄せて、真ん中のギターとぶつからないように
+for t_ in (LG, LGS, LGF):
+    t_.spec["volume"] = round(t_.spec["volume"] * 1.25, 3)
+    t_.spec["fx"] = list(t_.spec["fx"]) + [{"type": "eq", "low": 0, "mid": 3, "midHz": 2500, "high": 0.5}]
+PMF.spec["volume"] = 0.29; PMF.spec["pan"] = -0.3
+for g_ in GT:
+    g_.spec["volume"] = 0.085
+    g_.spec["fx"] = list(g_.spec["fx"]) + [{"type": "eq", "low": 0, "mid": -3.5, "midHz": 2400, "high": 0}]
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.21))
 PNFX = [{"type": "eq", "low": -2, "mid": -1.5, "midHz": 350, "high": 1}]
 PM = S.track("ピアノ（合いの手・歌の受け渡し）", "piano", volume=0.15, pan=-0.15, reverb=0.22, fx=PNFX)
