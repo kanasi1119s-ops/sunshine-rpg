@@ -123,6 +123,11 @@ while k < len(notes):
     if best is None: best = min(j, len(notes) - 1)
     lines.append(notes[k:best + 1]); k = best + 1
 LS = [l[0][0] for l in lines]; LE = [l[-1][1] for l in lines]
+# 英訳（人間「歌詞も英訳を載せよう」2026-10-26）: 行と同じ数・同じ順の JSON（MV_EN）。いま歌っている行の下に出す
+EN = None
+if os.environ.get("MV_EN") and os.path.exists(os.environ["MV_EN"]):
+    EN = json.load(open(os.environ["MV_EN"], encoding="utf-8"))
+    if len(EN) != len(lines): print(f"注意: 英訳の行数 {len(EN)} が歌詞の行数 {len(lines)} とちがうので、英訳を出しません"); EN = None
 
 # ---------- 文字の絵 ----------
 def text_img(t, f, color, glow=None, stroke=0):
@@ -161,6 +166,12 @@ def line_imgs(i, big):
     if len(cache) > 12: cache.pop(next(iter(cache)))
     return r
 
+en_cache = {}
+def en_img(i):
+    if i not in en_cache:
+        t = EN[i]; f = fit_font(FONT_J, t, 27, LYW)
+        en_cache[i] = np.asarray(text_img(t, f, (255, 205, 220, 245), glow=(0, 0, 0, 255), stroke=2)).astype(np.float32)
+    return en_cache[i]
 def blend(dst, src, x, y, alpha=1.0):
     h, w = src.shape[:2]
     x0, y0 = max(0, x), max(0, y); x1, y1 = min(dst.shape[1], x + w), min(dst.shape[0], y + h)
@@ -250,10 +261,10 @@ for i in ([int(x * FPS) for x in STILL] if STILL else range(N)):
     else: ci_show = ci if ci >= 0 else None
     nxt = (ci + 1) if ci + 1 < len(lines) else None
     if ci_show is not None and ci_show - 1 >= 0 and t < LE[ci_show] + 1.6:
-        blend(img, line_imgs(ci_show - 1, False), BX0 - 12, 548, 0.6)
+        blend(img, line_imgs(ci_show - 1, False), BX0 - 12, 534, 0.6)
     if ci_show is not None:
         bimg, himg, xe, xs_ = line_imgs(ci_show, True)
-        blend(img, bimg, BX0 - 12, 610)
+        blend(img, bimg, BX0 - 12, 592)
         # ぬる位置: 音の頭から終わりにかけて、その文字の左端から右端へ
         wx = 0
         for k, n in enumerate(lines[ci_show]):
@@ -261,11 +272,12 @@ for i in ([int(x * FPS) for x in STILL] if STILL else range(N)):
             elif t >= n[0]:
                 wx = xs_[k] + (xe[k] - xs_[k]) * min(1, (t - n[0]) / max(0.08, min(0.35, n[1] - n[0]))); break
             else: break
-        if wx > 0: blend(img, himg[:, :int(wx)], BX0 - 12, 610)
+        if wx > 0: blend(img, himg[:, :int(wx)], BX0 - 12, 592)
+        if EN: blend(img, en_img(ci_show), BX0 - 12, 662)
     if nxt is not None:
         al_ = 0.9 if ci_show is None else 0.75
-        blend(img, line_imgs(nxt, False), BX0 - 12, 700, al_)
-        if nxt + 1 < len(lines) and ci_show is not None: blend(img, line_imgs(nxt + 1, False), BX0 - 12, 756, 0.45)
+        blend(img, line_imgs(nxt, False), BX0 - 12, 716 if EN else 690, al_)
+        if nxt + 1 < len(lines) and ci_show is not None: blend(img, line_imgs(nxt + 1, False), BX0 - 12, 772 if EN else 746, 0.45)
     # PLAYING の進み具合と時間
     px0, px1, py0 = 768, 888, 158
     img[py0:py0 + 9, px0:px0 + int((px1 - px0) * t / dur)] = (90, 70, 255)
