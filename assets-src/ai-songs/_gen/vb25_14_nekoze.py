@@ -50,6 +50,15 @@ FX = S.track("効果音", "pad", patch="fxRiser", volume=0.07, pan=0, reverb=0.3
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 D = S.drumkit()
 SIL = Silence(S)
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ この曲の物語でしか出てこない音: 帰り道の足音（枠太鼓の手のひら・胴を小さく）。
+#   はじめは1人、Bメロ「ひとりふたりと」で2人・3人とふえ、夜明け前に1人ずつ帰っていく。3人の足音は高さと左右を変える
+STEP = [S.track(f"足音{i + 1}（{['ぼく', 'となりの人', 'うしろの人'][i]}）", "harp", patch="frameDrum", volume=[0.05, 0.042, 0.038][i],
+                pan=[-0.15, 0.45, -0.5][i], reverb=0.3) for i in range(3)]
+STEP_KEY = ["D3", "F#3", "C#3"]          # 手のひら（大）・手のひら（小）・ミュート（大）＝ぼく・軽い足・重い足
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 最後のサビにだけ足す新しい音: 高い笛の対旋律（口笛のように歌のすき間を流れる）
+FLUTE = S.track("笛（最後のサビの対旋律）", "panflute", patch="flute", volume=0.075, pan=0.35, reverb=0.4, breath=True, attack=0.06, release=0.45, bright=-0.2)
+TR = -3                                   # 書き出しの前に全体を下げる半音（teto の transpose と同じ）
+BLO, BHI = 28 - TR, 52 - TR               # 歌うベースの音域（下げたあとで E1〜E3 になるように書く）
 
 # ================= 歌の旋律と歌詞（F の短調の度数・oct 4 で 1 = F4。サビは A♭長調。書き出しの前に全体を 3半音下げる） =================
 PA1 = ["R:0.5 1:0.5 1:0.25 1:0.25 3:0.5 1:0.5 7,:0.5 1:1", "3:0.5 4:0.5 3:1 R:2"]
@@ -110,6 +119,38 @@ for name in ("屋根へ", "2回目の屋根", "屋根の上の大合唱"):
             for j in range(3): BR[j].bar(b, f"{nm(v[j])}:0.5! R:3.5")
 b_crow = S.sc("カラス")[0]
 for j, m in enumerate(voice("Edim7", 66, 3)): BR[j].bar(b_crow, f"{nm(m)}:0.5! R:3.5")      # カラスの一声（とがった和音）
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ リード（曲の顔）: 塀の上のブラスのフックを、前奏（ドラムが入る所）と最後にも戻す。
+#   前奏は1本だけで小さく（2本目は 2回目から）、最後は夜明け前の歌が終わったあとに1本だけ、遠くで鳴らす
+for i, b in enumerate(S.sc("路地の入口")[4:]):
+    BR[0].bar(b, K.mel(HOOK[i], oct=4))
+    if i >= 2: BR[1].bar(b, K.mel(seq_up(HOOK[i], K, -2), oct=4))
+BR[0].bar(S.sc("夜明け前")[4], K.mel(HOOK[0], oct=4)); BR[0].bar(S.sc("夜明け前")[5], K.mel("1':0.5 7:0.25 5:0.25 1':3", oct=4))
+
+# 合いの手: Aメロの句の終わり（歌が2拍休む所）に、エレピの短い返事。スクラッチ（8小節目）と交互に、4小節目と6小節目だけ
+LICK = {"C7": "R:2 G5:0.25 Bb5:0.25 C6:0.5 Bb5:0.25 G5:0.25 E5:0.5", "Dbmaj7": "R:2 Ab5:0.25 C6:0.25 Db6:0.5 C6:0.25 Ab5:0.25 F5:0.5"}
+for name in ("ぶらぶら", "2周目"):
+    for i, b in enumerate(S.sc(name)):
+        if i % 8 in (3, 5) and S.chords[b] in LICK: EPM.bar(b, LICK[S.chords[b]])
+
+# 最後のサビの対旋律（笛）: 後半の8小節、歌が細かい所の上で長い音をのばす（A♭長調の音名で書く。書き出しで 3半音下がる）
+FLM = ["C6:2 Ab5:2", "G5:2 E5:1 G5:1", "Ab5:3 C6:1", "Eb6:2 C6:1 R:1", "Db6:2 C6:1 Bb5:1", "Bb5:3 R:1", "C6:2 Eb6:2", "Db6:2 G5:2"]
+for i, b in enumerate(S.sc("屋根の上の大合唱")[8:]): FLUTE.bar(b, FLM[i])
+
+# 足音（物語の音）。1人目は前奏の頭から（ベースと2人だけ）、Bメロでふえ、夜明け前に1人ずつ帰る
+def steps(who, b, pat="R"):
+    k = STEP_KEY[who]
+    s = {"R": f"{k}:1! {k}:1 {k}:1! {k}:1", "L": f"R:0.5 {k}:1 {k}:1 {k}:1 {k}:0.5", "H": f"{k}:1! {k}:1 R:2"}[pat]
+    STEP[who].bar(b, s)
+for b in S.sc("路地の入口")[:4]: steps(0, b, "R")
+for i, b in enumerate(S.sc("集まってくる") + S.sc("集まってくる2")):
+    if i % 8 == 7: continue                                       # 止めの小節は足音も止まる
+    steps(0, b, "R")
+    if i % 8 >= 2: steps(1, b, "L")
+    if i % 8 >= 4: steps(2, b, "R")
+for i, b in enumerate(S.sc("夜明け前")):
+    if i < 2: steps(2, b, "R")
+    if i < 4: steps(1, b, "L")
+    if i < 5: steps(0, b, "R" if i < 4 else "H")
 
 # ================= エレピ（ブームバップの和音） =================
 COMP = ["R:0.5 X:1.5 R:0.75 X:1.25", "X:0.75 X:0.75 R:1 X:1.5", "R:0.5 X:1 R:0.5 X:0.5 X:1.5", "X:1.5 R:0.5 X:0.75 X:1.25"]
@@ -145,14 +186,21 @@ for b in range(S.nb):
     ch = S.chords[b]; r = low(ch, "E1")
     if n in ("路地の入口", "ぶらぶら", "2周目", "塀の上") and ch in BRIFF:
         BASS.bar(b, BRIFF[ch] if not (n == "ぶらぶら" and i % 8 == 7) else "C2:0.75! C2:0.25 R:0.5 G1:0.5 Bb1:0.5 C2:0.5 E2:0.5 G2:0.5")
+    # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 歌うベース: Bメロの後半は上っていき（人が集まってくる）、
+    #   サビは押すリズム（キックと合う）を芯に、歌が伸ばす2小節目はゆったり歌い（ride）、4小節目は次の句へ歩く（walk）。音域は下げたあと E1〜E3
     elif n.startswith("集まってくる"):
-        BASS.bar(b, bass_line(S, b, "half") if i < 7 else f"{nm(r)}:1.5! R:2.5")
+        if i < 4: BASS.bar(b, bass_line(S, b, "half"))
+        elif i < 7: BASS.bar(b, sing_bass(S, b, "climb", BLO, BHI))
+        else: BASS.bar(b, f"{nm(r)}:1.5! R:2.5")
     elif n in ("屋根へ", "屋根の上の大合唱"):
-        BASS.bar(b, bass_line(S, b, "push") if i % 4 != 3 else bass_line(S, b, "walk"))
+        if i % 4 == 1: BASS.bar(b, sing_bass(S, b, "ride", BLO, BHI))
+        elif i % 4 == 3: BASS.bar(b, sing_bass(S, b, "walk", BLO, BHI))
+        else: BASS.bar(b, bass_line(S, b, "push"))
     elif n == "2回目の屋根":
         BASS.bar(b, f"{nm(r)}:2.5! {nm(r + 12)}:0.5 {nm(r + 7)}:1")     # ハーフのリズム: 長く伸ばす 808 風
     elif n == "カラス":
-        if i >= 2: BASS.bar(b, f"{nm(r)}:4")
+        if 2 <= i < 7: BASS.bar(b, f"{nm(r)}:4")
+        elif i == 7: BASS.bar(b, sing_bass(S, b, "climb", BLO, BHI))     # 大合唱へ上っていく（2026-10-26 作り込み）
     elif n == "夜明け前":
         BASS.bar(b, BRIFF.get(ch, f"{nm(r)}:4") if i < 4 else f"{nm(r)}:4")
 
@@ -188,13 +236,13 @@ for b in range(S.nb):
     elif n.startswith("集まってくる"):
         vgroove(D, b, "boombap", ghosts=0.3, seed=b, h="x.x.x.x.x.x.x.x." if i < 4 else "xxxxxxxxxxxxxxxx")
         if i == 6: put_fill(D, b, "snare16")
-        if last: halt(D, b, 1.5)                             # 止め（1拍半だけ叩いて全員休み）
+        if last: halt(D, b, 1.5); crash(D, b, "G2", 6)       # 止め（1拍半だけ叩いて全員休み）。2026-10-26 シンバルは止めの間も鳴らし続ける（余韻）
     elif n in ("屋根へ", "屋根の上の大合唱"):
         # 倍のハット（16分）。最後のサビは8小節目からライド
         vgroove(D, b, "boombap", ghosts=0.35, seed=b, h="XxxxXxxxXxxxXxxx")
         if n == "屋根の上の大合唱" and 9 <= i < 15:
             D.cym(b, "D2:0.5 " * 8); D.H[b] = "." * 16
-        if i % 8 == 0: crash(D, b, "C2" if i == 0 else "G2")
+        if i % 8 == 0: crash(D, b, "C2" if i == 0 else "G2", 6 if i == 0 else 4)   # 2026-10-26 サビ頭のクラッシュは長く伸ばす
         if i % 8 == 7 and not last: put_fill(D, b, "tomdown" if i == 7 else "snare16")
         if last and n == "屋根へ": put_fill(D, b, "small")
         if last and n == "屋根の上の大合唱": put_fill(D, b, "tomdown")
@@ -209,7 +257,7 @@ for b in range(S.nb):
         if i % 4 == 3 and not last: D.over(b, h="            XXXX")
         if last: put_fill(D, b, "build")
     elif n == "カラス":
-        if i == 0: D.set(b, "X" + "." * 15, "X" + "." * 15, "." * 16); crash(D, b, "B2", 4)
+        if i == 0: D.set(b, "X" + "." * 15, "X" + "." * 15, "." * 16); crash(D, b, "B2", 8)   # 2026-10-26 カラスの一撃のあと、シンバルの余韻を2小節残す
         elif i < 4: D.set(b, "." * 16, "." * 16, "x...x...x...x...")
         else:
             vgroove(D, b, "half", ghosts=0.3, seed=b, h="x.x.x.x.x.x.x.x.")

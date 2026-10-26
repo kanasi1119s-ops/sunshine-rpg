@@ -135,19 +135,31 @@ def sb(b, ch, pat, center=66):
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     ch = S.chords[b]
-    r = low(ch, "C1")
+    # 2026-10-26 人間「ミックスのバランスをよくするのが大事」: 書き出しで 6半音下がるため、C1 から数えた 808 は F#0〜F1 になり、
+    #   808 の出る音域（C1〜C3）の外の音が 229 個あった（鳴らない・聞こえない＝低音が抜ける）。F#1 から数えて、鳴る高さを C1〜B1 に収める
+    r = low(ch, "F#1")
     # 808（キックの位置から長く）と、うなりのシンセベース
     if n in ("青信号", "点滅"): B808.bar(b, f"{nm(r)}:1.5 {nm(r)}:1 {nm(r)}:1.5")
     elif n.startswith("交差点"): B808.bar(b, f"{nm(r)}:2.5 {nm(r)}:1.5" if i % 2 == 0 else f"{nm(r)}:1.5 {nm(r)}:0.5 {nm(r + 12)}:1 {nm(r)}:1")
-    elif n.startswith("黄色"): B808.bar(b, f"{nm(r)}:4" if i < L - 1 else f"{nm(r)}:2 R:2")
+    elif n.startswith("黄色"):
+        B808.bar(b, f"{nm(r)}:4" if i < L - 1 else f"{nm(r)}:2 R:2")
+        # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ Bメロの後半はシンセベースが上っていき、赤信号の止めへ溜める
+        #   （歌うベース。書き出しで 6半音下がるので、音域は lo=30・hi=54 で書く＝鳴る高さは C1〜C3。音量は元の 0.14 のまま）
+        if 4 <= i < L - 1: BASS.bar(b, sing_bass(S, b, "climb", lo=30, hi=54))
     elif n.startswith("7色ドロップ"):
         B808.bar(b, f"{nm(r)}:0.75 {nm(r)}:0.75 {nm(r + 12)}:0.5 {nm(r)}:1 {nm(r)}:1")
-        BASS.bar(b, bass_line(S, b, "house"))
+        # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ ドロップの後半（2回目は前半のジャージークラブも）は歌うベースに。
+        #   歌が伸ばす・休む小節（4小節ごとの終わり）で駆け上がり、ほかは押す。1回目の前半はハウスの裏のまま（引き算）
+        if n == "7色ドロップ" and i < 8: BASS.bar(b, bass_line(S, b, "house"))
+        elif n == "7色ドロップ2" and i < 8: BASS.bar(b, sing_bass(S, b, "ride", lo=30, hi=54))
+        else: BASS.bar(b, sing_bass(S, b, "run" if i % 4 == 3 else "drive", lo=30, hi=54))
     elif n == "ブレイクダンス": B808.bar(b, f"{nm(r)}:0.75 {nm(r)}:0.25 R:0.5 {nm(r)}:0.5 R:0.5 {nm(r + 12)}:0.5 {nm(r)}:1")
-    elif n == "夜明けの点滅": BASS.bar(b, bass_line(S, b, "half"))
+    elif n == "夜明けの点滅": BASS.bar(b, bass_line(S, b, "half", lo="F#1"))   # 2026-10-26: 808 と同じ理由で、鳴る高さを C1 からに
     elif n in ("倍のノリ", "まだ踊る"):
         B808.bar(b, f"{nm(r)}:1 {nm(r)}:1 {nm(r)}:1 {nm(r)}:1")
-        BASS.bar(b, bass_line(S, b, "oct8"))                                    # 8分のオクターブで倍のノリを走らせる
+        # 8分のオクターブで倍のノリを走らせる。2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 倍のノリは歌うベース（押す／4小節目で駆ける）
+        BASS.bar(b, sing_bass(S, b, "run" if i % 4 == 3 else "drive", lo=30, hi=54) if n == "倍のノリ" else bass_line(S, b, "oct8", lo="F#1"))
+        if n == "まだ踊る" and i == L - 1: BASS.ev = [e for e in BASS.ev if not (b * 4 <= e[0] < b * 4 + 4)]; BASS.bar(b, f"{nm(low(ch, 'F#1'))}:1")
     # シンセのブラス（和音の刻み）
     if n in ("青信号", "点滅"): sb(b, ch, "X:0.25 R:0.5 X:0.25 R:1 X:0.25 R:0.5 X:0.25 R:1")
     elif n.startswith("交差点") and i >= 8: sb(b, ch, "R:0.5 X:0.25 R:1.25 R:0.5 X:0.25 R:1.25")

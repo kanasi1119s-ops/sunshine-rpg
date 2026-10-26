@@ -56,6 +56,9 @@ PR = [S.track(f"ピアノ2台目（和音{i + 1}）", "piano", **piano_spec(0.1,
 PRH = S.track("ピアノ2台目（高いきらめき）", "piano", **piano_spec(0.1, 0.35, 0.22))
 PM = S.track("ピアノ（主旋律の受け渡し）", "piano", **piano_spec(0.17, 0.0, 0.22))
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.21))
+BLO, BR = "Bb1", {"lo": 34, "hi": 58}   # ベースを書く高さ（6半音下げたあとで E1〜E3）
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ バンドが入る所（2人目）と6人連弾の頭に「ドン」（控えめ 0.08）
+BOOM = S.track("インパクト（ドン）", "impactHit", volume=0.08, pan=0.0, reverb=0.4)
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.07, pan=0, reverb=0.3)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 D = S.drumkit()
@@ -167,25 +170,25 @@ for b in range(S.nb):
     v = voice(ch, 66, 3)
     rh = lh = None
     # 1台目: 右手16分の分散和音・左手8分のオクターブ（疾走ピアノ）
-    if n == "1人きり": lh = f"{nm(low(ch, 'C2'))}:2 {nm(low(ch, 'C2') + 12)}:2"
-    elif n == "2人目": rh = piano_arp16(ch, "C4", "C6") if i >= 4 else None; lh = piano_left8(ch, "C2")
+    if n == "1人きり": lh = f"{nm(low(ch, LH))}:2 {nm(low(ch, LH) + 12)}:2"
+    elif n == "2人目": rh = piano_arp16(ch, "C4", "C6") if i >= 4 else None; lh = piano_left8(ch, LH)
     elif n in ("Aメロ", "Aメロ2"):
         if i >= 8 or n == "Aメロ2": rh = piano_arp16(ch, "C4", "C6", (0, 2, 1, 3, 2, 1, 2, 3))
-        lh = f"{nm(low(ch, 'C2'))}:1.5 {nm(low(ch, 'C2') + 12)}:1 {nm(low(ch, 'C2'))}:1.5" if i < 8 else piano_left8(ch, "C2")
+        lh = f"{nm(low(ch, LH))}:1.5 {nm(low(ch, LH) + 12)}:1 {nm(low(ch, LH))}:1.5" if i < 8 else piano_left8(ch, LH)
     elif n.startswith("Bメロ"):
-        rh = piano_arp16(ch, "D4", "D6", (0, 1, 2, 3, 4, 3, 2, 1)); lh = piano_left8(ch, "C2")
-        if i == L - 1: rh = f"{nm(v[2])}:1.5 R:2.5"; lh = f"{nm(low(ch, 'C2'))}:1.5 R:2.5"
+        rh = piano_arp16(ch, "D4", "D6", (0, 1, 2, 3, 4, 3, 2, 1)); lh = piano_left8(ch, LH)
+        if i == L - 1: rh = f"{nm(v[2])}:1.5 R:2.5"; lh = f"{nm(low(ch, LH))}:1.5 R:2.5"
     elif n in ("サビ", "サビ2", "6人連弾"):
-        rh = piano_arp16(ch, "C4", "C6"); lh = piano_left8(ch, "C2")
+        rh = piano_arp16(ch, "C4", "C6"); lh = piano_left8(ch, LH)
     elif n == "隣に座る":
-        lh = f"{nm(low(ch, 'C2'))}:4" if i < 8 else f"{nm(low(ch, 'C2'))}:2 {nm(low(ch, 'C2') + 12)}:2"
+        lh = f"{nm(low(ch, LH))}:4" if i < 8 else f"{nm(low(ch, LH))}:2 {nm(low(ch, LH) + 12)}:2"
         if i >= 8: rh = " ".join(f"{nm(x)}:0.5" for x in tones(ch, "C4", "C6")[:4] * 2)
-    elif n == "ピアノのソロ": lh = piano_left8(ch, "C2")
-    elif n == "6人目": rh = piano_arp16(ch, "C4", "C6"); lh = piano_left8(ch, "C2")
+    elif n == "ピアノのソロ": lh = piano_left8(ch, LH)
+    elif n == "6人目": rh = piano_arp16(ch, "C4", "C6"); lh = piano_left8(ch, LH)
     elif n == "ピアノだけ残る":
         t = tones(ch, "Ab3", "Ab5")
         rh = " ".join(f"{nm(t[q % len(t)])}:{0.5 if i < 4 else 1}" for q in ((0, 2, 1, 3, 2, 4, 3, 1) if i < 4 else (0, 2, 1, 3)))
-        lh = f"{nm(low(ch, 'C2'))}:4"
+        lh = f"{nm(low(ch, LH))}:4"
         if i >= 6: rh = lh = None
     if rh and not n.startswith("掛け合い"): PL[0].bar(b, rh)
     if lh: PL[1].bar(b, lh)
@@ -205,15 +208,25 @@ for b in range(S.nb):
     # 6人連弾: 2台目の高いきらめき（右手の16分を1オクターブ上で）
     if n == "6人連弾" and i % 4 != 3: PRH.bar(b, piano_arp16(ch, "C6", "C7", (3, 2, 1, 0, 1, 2, 3, 2)))
     # ベース
-    r = low(ch, "E1")
-    if n == "2人目": BASS.bar(b, bass_line(S, b, "root8") if i >= 4 else f"{nm(r)}:4")
-    elif n in ("Aメロ", "Aメロ2"): BASS.bar(b, bass_line(S, b, "half" if i < 8 and n == "Aメロ" else "root8"))
-    elif n.startswith("Bメロ"): BASS.bar(b, bass_line(S, b, "push") if i < L - 1 else f"{nm(r)}:1.5 R:2.5")
-    elif n in ("サビ", "サビ2", "6人連弾"): BASS.bar(b, bass_line(S, b, "oct8"))
-    elif n.startswith("掛け合い"): BASS.bar(b, bass_line(S, b, "walk"))
-    elif n == "隣に座る": BASS.bar(b, bass_line(S, b, "long") if i < 8 else bass_line(S, b, "half"))
-    elif n == "ピアノのソロ": BASS.bar(b, bass_line(S, b, "root8"))
-    elif n == "6人目": BASS.bar(b, bass_line(S, b, "root8"))
+    # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 根音の8分（root8・oct8）だけだった所を、歌うベースに（02・08 の作り方）。
+    #   歌が細かい小節は押す（push・drive）で支え、歌が伸ばす・休む小節（Aメロ・サビの奇数小節）でベースが動く（walk・climb・run）。
+    #   句の終わり（サビの8小節目）は下りて次の句へ返す（fall）。静かな所（1番の Aメロ前半・隣に座る）は長い音のまま。
+    #   あわせて音域を直した: この曲は書き出しの前に 6半音下げるので、E1 から書くと B0・Bb0（ベースの出ない音）になっていた。
+    #   書く高さを Bb1〜Bb3（下げたあとで E1〜E3）にそろえる。音量はそのまま
+    r = low(ch, BLO)
+    if n == "2人目": BASS.bar(b, (sing_bass(S, b, "climb" if i % 2 == 0 else "drive", **BR) if i < 7 else sing_bass(S, b, "run", **BR)) if i >= 4 else f"{nm(r)}:4")
+    elif n in ("Aメロ", "Aメロ2"):
+        if i < 8 and n == "Aメロ": BASS.bar(b, bass_line(S, b, "half", lo=BLO))
+        elif i < 8: BASS.bar(b, sing_bass(S, b, "ride" if i % 2 == 0 else "walk", **BR))          # 2番の前半（BGM はピアノが歌う）: ゆったり歩く
+        else: BASS.bar(b, bass_line(S, b, "push", lo=BLO) if i % 2 == 0 else sing_bass(S, b, "walk" if i % 4 == 1 else "climb", **BR))
+    elif n.startswith("Bメロ"): BASS.bar(b, sing_bass(S, b, "climb", **BR) if i < L - 1 else f"{nm(r)}:1.5 R:2.5")
+    elif n in ("サビ", "サビ2", "6人連弾"):
+        if n == "6人連弾" and i >= 22: BASS.bar(b, f"{nm(r)}:4")
+        else: BASS.bar(b, sing_bass(S, b, "fall" if i % 8 == 7 else ("run" if i % 2 == 1 else "drive"), **BR))
+    elif n.startswith("掛け合い"): BASS.bar(b, sing_bass(S, b, "walk" if i % 2 == 0 else "climb", **BR))
+    elif n == "隣に座る": BASS.bar(b, bass_line(S, b, "long", lo=BLO) if i < 8 else bass_line(S, b, "half", lo=BLO))
+    elif n == "ピアノのソロ": BASS.bar(b, sing_bass(S, b, "run" if i % 4 == 3 else "drive", **BR))
+    elif n == "6人目": BASS.bar(b, f"{nm(r)}:4" if i < 4 else sing_bass(S, b, "climb", **BR))
 
 # 終わり: ピアノだけで、テンションの和音（A♭maj7(9, #11)）を長くのばす
 b_end = S.sc("ピアノだけ残る")[6]
@@ -223,6 +236,18 @@ PM.bar(b_end, "D5:8")
 # 効果音
 riser(FX, S.sc("サビ")[0], 4, "C4"); riser(FX, S.sc("6人連弾")[0], 8, "D4")
 cym_swell(CYM, S.sc("2人目")[0], 2, "C4"); cym_swell(CYM, S.sc("ピアノのソロ")[0], 4, "E4")
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 始まりの勢い: ピアノだけの「1人きり」から、バンドが入る「2人目」の頭に「ドン」。
+#   最後の6人連弾の頭にも。書き出しの前に 6半音下げるので F#2 で書く（鳴るのは C2）
+BOOM.bar(S.sc("2人目")[0], "F#2:4"); BOOM.bar(S.sc("6人連弾")[0], "F#2:4")
+riser(FX, S.sc("2人目")[0], 4, "C4")
+
+
+def claps(bars, vol=0.07):
+    """通りの人の手拍子（2拍目と4拍目。季節の音の録音の一打 B4）"""
+    t = season(S, bars[0], "手拍子", 1, vol=vol); t.ev = [e for e in t.ev if e[0] != bars[0] * S.beats]
+    for b in bars:
+        for q in (1, 3): t.at(b * S.beats + q, "B4:1")
+    return t
 
 # ================= ドラム =================
 def ride8(b, first="C2"):
