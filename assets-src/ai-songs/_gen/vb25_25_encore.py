@@ -159,7 +159,18 @@ for name in ("前奏", "掛け合い"):
     for i, b in enumerate(S.sc(name)):
         if name == "掛け合い" and i % 2 == 1: STRM.bar(b, K.mel(RIFF[i % 4], oct=3))     # 弦が1小節ずつ答える
         else: LG.bar(b, K.mel(RIFF[i % 4], oct=3))
+# 2026-10-26 人間「どっかでハーモニクスとキーン！ていうチョーキングもあるといいなー」（どこか1曲で。25 に入れる）:
+#   ・ソロの入り: いちばん高い所で全音のチョーキング（7''→1'' へ持ち上げて、のばしたまま戻さない＝「キーン！」）。
+#   ・ソロの終わり: #6'（G）を全音持ち上げて導音 A（#7'）でのばす。どちらも戻さない（人間「上がって落ちる」は気になる）。ビブラートなし
+#   ・名前を呼ぶ（Half feel）の最後の2小節: 本物のナチュラルハーモニクスが和音の音で鳴って、静かにソロへつなぐ
+SOLO = ["7'':2!^^ 5':0.5 3':0.5 1':1"] + SOLO[1:15] + ["#6':3!^^ R:1"]
 for i, b in enumerate(S.sc("ギターのソロ")): LG.bar(b, K.mel(SOLO[i], oct=3))
+HARM = S.track("ギターのハーモニクス", "guitar", patch="guitarFx", volume=0.1, pan=0.3, reverb=0.35, modulate=False,
+               fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.2, "feedback": 0.3}, {"type": "plate", "mix": 0.2}])
+for k_, b in enumerate(S.sc("名前を呼ぶ")[-2:]):
+    t_ = tones(S.chords[b], "E4", "E6")
+    pick = [t_[-1], t_[-3], t_[-2], t_[-4]] if len(t_) >= 4 else t_
+    HARM.bar(b, " ".join(f"{nm(m)}:1" for m in pick[:4]))
 # 弦の対旋律（サビ。歌が長い音のとき動く）
 CM_STR = ["3:2 4:1 5:1", "4:2 2:1 1:1", "1:2 2:1 3:1", "5,:4", "3:2 4:1 5:1", "3:2 1:2", "4:2 6:2", "5:4"]
 for name, kk in (("流星群", KD), ("流星群2", KD), ("アンコール", KDD), ("アンコール2", KE)):
