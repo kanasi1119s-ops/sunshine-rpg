@@ -67,7 +67,7 @@ CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.0
 BIRD = S.track("朝の鳥（ピッコロ）", "panflute", patch="piccolo", volume=0.1, pan=0.35, reverb=0.45, gainDb=1, mono=True)
 # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 最後のサビの高い対旋律。歌の版で MIDI のチャンネルが 15 をこえるので、
 #   新しい楽器（弦）は足さず、サビでは休んでいるパッドと同じ設定（同じチャンネル・音量 0.055）のパートで、高い所をのばして動く
-STRC = S.track("パッド（最後のサビの対旋律）", "pad", **pad_spec("warmPad", vol=0.055, pan=0.0, duck=0.2))
+STRC = S.track("パッド（最後のサビの高い声部）", "pad", **pad_spec("warmPad", vol=0.055, pan=0.0, duck=0.2))
 T_ = -7   # 書き出しの前に全体を 7半音下げる。ベースは下げたあと E1〜E3 に入るよう、書く高さを B1〜B3 にする
 BL = nm(28 - T_)
 sb = lambda b, st: sing_bass(S, b, st, lo=28 - T_, hi=52 - T_)
@@ -213,8 +213,8 @@ for b in range(S.nb):
     elif n == "東の空": BASS.bar(b, bl(b, "long") if i < 4 else sb(b, "climb"))
     elif n == "朝" and i < 7: BASS.bar(b, bl(b, "half" if i < 6 else "long"))
     # ギター（パワーコード）。曲の頭や Aメロでは刻まない
-    # 2026-10-26 ミックス: 書く高さ E2 は下げたあと A1 になり、ギターの出ない音になっていたので F2（下げたあと A#1〜）に
-    pw = power(ch, "F2")
+    # 2026-10-26 ミックス: 書く高さ E2 は下げたあと A1 になり、ギターの出ない音・ベースとの低音のにごりになっていたので B2（下げたあと E2〜。ギターのふつうの低い音）に
+    pw = power(ch, "B2")
     pat = None
     if (n == "起動" and i >= 8) or n == "屋根づたい": pat = "X:1.5! X:1 X:1.5!"
     elif n.startswith("朝のプログラム") or n == "朝日" or n == "時計台":

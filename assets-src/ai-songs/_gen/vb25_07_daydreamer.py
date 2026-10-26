@@ -61,6 +61,8 @@ LG = S.track("ギター2（リフ）", "leadGuitar", **lead_gtr_spec(0.13, -0.05
 # 2026-10-26 人間（07）「リフのギターの音が強すぎて、楽器のソロパートが聞こえなくなっちゃってる」:
 #   → 続けて「リフの音いい感じするから、ソロの音を大きくした方がいいかも」: リフと刻みはそのまま、ソロだけ別のパートで大きく（0.13→0.19）
 LGS = S.track("ギター2（ソロ）", "leadGuitar", **lead_gtr_spec(0.19, 0.0))
+LGS.spec["fx"] = [{"type": "tubescreamer", "pre": True, "gain": 0.45, "level": 0.6}] + list(LGS.spec["fx"]) + \
+    [{"type": "pingpong", "beats": 0.75, "mix": 0.22, "feedback": 0.35}, {"type": "reverb", "mix": 0.16}]   # ソロだけペダルを踏みかえる
 # 2026-10-26 人間（07）「ピロピロ音小さくてよく聞こえない」→ 16分の速い合いの手（サビのギター・ピアノの駆け下り）を別のパートにして前に
 LGF = S.track("ギター2（サビの合いの手）", "leadGuitar", **lead_gtr_spec(0.2, 0.08))
 PMF = S.track("ピアノ（16分の駆け下り）", "piano", volume=0.23, pan=-0.1, reverb=0.2, fx=[{"type": "eq", "low": -3, "mid": 2, "midHz": 2500, "high": 1.5}])
@@ -160,7 +162,12 @@ chk(RIFF, RIFF8, SOLO)
 for name in ("寝坊だ", "全力ダッシュ", "ヒーローのリフ", "全力ダッシュ2"):
     for i, b in enumerate(S.sc(name)): LG.bar(b, K.mel((RIFF if i % 8 < 4 else RIFF8)[i % 4], oct=3))
 for i, b in enumerate(S.sc("最後の全力ダッシュ")): LG.bar(b, KC.mel((RIFF if i < 4 else RIFF8)[i % 4], oct=4))
-for i, b in enumerate(S.sc("必殺のギター")): LGS.bar(b, K.mel(SOLO[i], oct=3))
+# 2026-10-26 人間「どこかの曲でギターリフからのギターソロとかもあっていいかも」「ソロのところでエフェクト変える感じ」:
+#   必殺のギターの頭4小節は、ギター2がリフ（乾いた音のまま）を弾き、5小節目からソロへ（ソロの音はペダルを踏みかえる:
+#   オーバードライブのペダルで中域を押し出し、付点8分のピンポンディレイとホールの残響で広げる）
+for i, b in enumerate(S.sc("必殺のギター")):
+    if i < 4: LG.bar(b, K.mel(RIFF[i], oct=3))
+    else: LGS.bar(b, K.mel(SOLO[i], oct=3))
 # サビの4小節目ごとに、ギター2の短い合いの手（歌の伸ばしの所）
 for name, kk in (("あと500メートル", KD), ("あと300メートル", KD), ("駅に滑り込む", KE)):
     for i, b in enumerate(S.sc(name)):

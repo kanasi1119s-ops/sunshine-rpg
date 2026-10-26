@@ -50,7 +50,7 @@ PNM = S.track("ピアノ（歌の受け渡し）", "piano", **PNS)
 PNC = [S.track(f"ピアノ（右手の和音{i + 1}）", "piano", **{**PNS, "volume": 0.085}) for i in range(3)]   # 3音の和音なので1本あたり 0.085（3本で分散和音 0.12 の1本と同じくらいの大きさ）
 STR = [S.track(f"ストリングス{i + 1}", "strings", patch="stringEnsemble", **strings_spec(0.08, 0.5)) for i in range(3)]
 # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 最後のサビの高い対旋律（ストリングスの4本目。ほかの弦と同じ設定・0.08 より小さく 0.07）
-STRC = S.track("ストリングス（最後のサビの対旋律）", "strings", patch="stringEnsemble", **strings_spec(0.07, 0.5))
+STRC = S.track("ストリングス（最後のサビの高い声部）", "strings", patch="stringEnsemble", **strings_spec(0.07, 0.5))
 T_ = -8   # 書き出しの前に全体を 8半音下げる。ベースは「下げたあと」に E1〜E3 に入るよう、書く高さを C2〜C4 にする
 BL = nm(28 - T_)
 BR = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.13, pan=0.3, reverb=0.22, gainDb=2,
@@ -227,8 +227,8 @@ for i, b in enumerate(S.sc("北の町に届く")):
 # ================= ギター（パワーコード） =================
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
-    # 2026-10-26 ミックス: 書く高さ E2 は下げたあと G#1 になり、ギターの出ない音・ベースとの低音の二重になっていたので F#2（下げたあと A#1〜。ギターのいちばん低い音）に
-    pw = power(S.chords[b], "F#2")
+    # 2026-10-26 ミックス: 書く高さ E2 は下げたあと G#1 になり、ギターの出ない音・ベースとの低音の二重になっていたので C3（下げたあと E2〜。ギターのふつうの低い音）に
+    pw = power(S.chords[b], "C3")
     if n in ("予報図", "予報士がひと息"): continue
     if n == "全員でテンションの和音":
         if i == 0:

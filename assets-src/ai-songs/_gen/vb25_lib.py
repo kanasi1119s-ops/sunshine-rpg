@@ -601,6 +601,7 @@ def teto(S, LY, V, transpose=0, level=None, special=None, vib=None, lead_vol=0.1
         VB = {"verse": 26, "pre": 28, "chorus": 36, "bridge": 32, "break": 30}; VB.update(vib or {})
         vib_map = [[b0 * S.beats, VB.get(k_, 24)] for n_, b0, L_, k_ in S.scenes]
         # 2026-10-25 人間（03）「もう少し1文字1文字の言葉をはっきり」→ 子音 1.4→1.6・やわらかい声 0.3→0.22・残響 0.2→0.16
+        toks = join_tail(toks)
         voc = {"voice": "teto", "notes": " ".join(toks), "volume": 1.0, "pan": 0, "reverb": 0.16,
                "blend": {"voice": "teto-soft", "amount": 0.22}, "formant": 1.075, "breathy": 0.1, "vibrato": 34, "vibratoRate": 5.3, "vibratoMap": vib_map,
                "eq": [["peak", 220, 0.8, 3], ["peak", 1600, 1.2, 2], ["peak", 2000, 2.0, 9], ["hshelf", 6500, 0.7, 10]], "deess": -3.0,
@@ -649,3 +650,35 @@ def sing_bass(S, b, style, lo=28, hi=52):
           "ride": [(r, 1.5, "!"), (c2, 0.5, ""), (o, 1, ""), (a, 1, "")]}[style]
     fix = lambda m: m + 12 if m < lo else (m - 12 if m > hi else m)
     return " ".join(f"{nm(fix(m))}:{d:g}{acc}" for m, d, acc in P_)
+
+
+def join_tail(toks):
+    """2026-10-26 人間（02）「曲調はいいのに歌詞、歌がスムーズに聞こえない」: 句の最後の1音だけが、半拍〜1拍の休みのあとに取り残されて
+    「さんにいいち（休み）で」のように言葉の途中で息つぎしていた。休みのあとの1音だけの句（その次も休み）は、前の句の最後の音をのばして
+    休みをなくし、ひと続きに歌う（前の句が2音以上のときだけ。「ご、ご」のような1音ずつの掛け声はそのまま）"""
+    def grp(ts):
+        gs, cur = [], []
+        for k, t in enumerate(ts):
+            if t.startswith("R:"):
+                if float(t[2:]) >= 0.45 - 1e-6 and cur: gs.append(cur); cur = []
+                continue
+            cur.append(k)
+        if cur: gs.append(cur)
+        return gs
+    n = 0
+    for _ in range(50):
+        gs = grp(toks); done = False
+        for gi in range(1, len(gs)):
+            g, pg = gs[gi], gs[gi - 1]
+            if len(g) != 1 or len(pg) < 2: continue
+            rk = [k for k in range(pg[-1] + 1, g[0]) if toks[k].startswith("R:")]
+            r = sum(float(toks[k][2:]) for k in rk)
+            if not (0.45 - 1e-6 <= r <= 1.0 + 1e-6): continue
+            last = toks[pg[-1]].split(":")
+            last[1] = f"{float(last[1]) + r:g}"
+            toks[pg[-1]] = ":".join(last)
+            for k in sorted(rk, reverse=True): del toks[k]
+            n += 1; done = True; break
+        if not done: break
+    if n: print(f"  句の最後の1音の前の息つぎをなくした: {n}か所")
+    return toks
