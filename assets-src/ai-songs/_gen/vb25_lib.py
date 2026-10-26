@@ -7,6 +7,7 @@ import random as _random
 #   ・ボカロのドラムの型（16分の4つ打ちロック・ハーフ・ジャージークラブ・ドラムンベース・トラップ・ディスコ・8ビート）
 #   ・止め（全員休み）・1拍の完全な無音・最後のサビ前の「こもり」（ローパスの写しへの入れかえ）
 from vp25_lib import *
+from vp25_lib import put_fill as _vp25_put_fill
 from lm25_lib import midi, nm, shift_oct, tok_beats
 
 VGROOVE = {
@@ -396,6 +397,157 @@ def spice(S):
     if n: print(f"  ドラムに遊びを足した: {n}か所")
 
 
+# 2026-10-26 人間「フィルもただ回すだけの単調なフィルじゃなくて、アクセントになるようなカッコいいフィルにして欲しい」:
+#   台本の put_fill（small・snare16・tomdown・tomtrip）を、アクセント（キックと同時に打つ強い音）と「間（休み）」のあるフィルに置きかえる。
+#   1つの種類につき形を数個用意し、曲の番号と小節で選ぶ（同じ曲の中で同じ形を続けない・曲ごとに出方が変わる）。
+#   K・S は 16文字（"." は元の小節のまま、" " は休みにする）、T はタムの音の並び（4拍分）、keep はハイハットを残す長さ
+FILL_VARIANTS = {
+    "small": [
+        dict(K="............X...", S="....X.......X.XX", keep=12),                        # タ・タタッ（キックと同時の頭）
+        dict(K="..............X.", S="....X......oX.X ", keep=12),                        # 4拍目の裏をキックで蹴って次へ
+        dict(K="............X..X", S="....X.......X.X.", keep=12),                        # ドン・タ・ドン
+    ],
+    "snare16": [
+        dict(K="........X..X..X.", S="....X...XooXooX ", keep=8),                         # 3・3・2 のキメ（ドン、ドン、ドン）＋間のゴースト
+        dict(K="........X.....X.", S="....X...X.oX..XX", keep=8),                         # タッ・タタッ・タタ（休みを入れる）
+        dict(K="..........X...X.", S="....X...oxXo.xXX", keep=8),                         # 裏で強く打って前へ押す
+        dict(K="........X...X...", S="....X...XxxXXxxX", keep=8),                         # 拍の頭にアクセントの連打
+    ],
+    "tomdown": [
+        dict(K="........X..X..X.", S="....X...........", T="R:2 C4:0.25! A3:0.25 A3:0.25 F3:0.25! F3:0.25 D3:0.25 A2:0.25! A2:0.25", keep=8),   # 3・3・2 で下る
+        dict(K="........X.....X.", S="....X.......X...", T="R:2 C4:0.25! A3:0.25 F3:0.25 R:0.25 R:0.5 D3:0.25 A2:0.25!", keep=8),        # 下って一瞬止まり、スネアで「タン」→ 低い太鼓
+        dict(K="..........X...X.", S="....X...X.......", T="R:2.25 A3:0.25 F3:0.25! D3:0.25 R:0.25 D3:0.25 A2:0.5!", keep=8),           # スネアのアクセントから下る
+        dict(K="........X...X...", S="....X...........", T="R:2 C4:0.25! C4:0.25 A3:0.25 A3:0.25 F3:0.25! F3:0.25 D3:0.25! A2:0.25!", keep=8),   # ふつうの下りに強弱
+    ],
+    "tomtrip": [
+        dict(K="........X.....X.", S="....X...........", T="R:2 C4:0.3333! A3:0.3333 A3:0.3334 F3:0.3333! D3:0.3333 A2:0.3334!", keep=8),   # 3連の頭にアクセント
+        dict(K="........X...X...", S="....X.......X...", T="R:2 C4:0.3333! A3:0.3333 F3:0.3334 R:1 ", keep=8),                       # 3連で下りて、スネアの「タン」
+        dict(K="...........X..X.", S="....X...X.......", T="R:2.6667 F3:0.3333! D3:0.3333 D3:0.3334 A2:0.6666!", keep=8),              # スネアから3連で落ちる
+    ],
+}
+_fill_last = {}
+
+
+def put_fill(D, b, kind):
+    vs = FILL_VARIANTS.get(kind)
+    if not vs:
+        return _vp25_put_fill(D, b, kind)
+    S = D.song
+    rnd = _random.Random(int(S.no) * 97 + b * 13)
+    order = list(range(len(vs))); rnd.shuffle(order)
+    last = _fill_last.get((S.no, kind))
+    i = order[0] if order[0] != last or len(order) == 1 else order[1]
+    _fill_last[(S.no, kind)] = i
+    v = vs[i]; n = D.n; keep = v["keep"]
+    def merge(old, new, lo):
+        return "".join(("." if c == " " else (c if c != "." else (old[j] if j < lo else "."))) for j, c in enumerate(new))
+    D.K[b] = merge(D.K[b], v["K"], 8 if v.get("T") else keep)
+    D.S[b] = merge(D.S[b], v["S"], keep)
+    D.H[b] = D.H[b][:keep] + "." * (n - keep)
+    if v.get("T"):
+        D.T.ev = [e for e in D.T.ev if not (b * S.beats - 1e-6 <= e[0] < (b + 1) * S.beats - 1e-6)]
+        D.tom(b, v["T"])
+
+
+# 2026-10-26 人間「ドラムで学んだ演奏ってプログレッシブのテクニックだから曲に合わない。シンプルなドラムのフレーズ色々入れて欲しい」
+#   「曲に合ったものを入れて欲しい」「全部同じにするとつまらなくなる（同じでもいいけど）」:
+#   シンプルな形の部品。曲の台本で S.dmoves = [("場面", "技", 引数...)] と、その曲に合うものだけを選んで書く（全曲に同じものは入れない）
+DM_BEAT = {
+    "2beat":   ("X...X...X...X...", "..X...X...X...X.", "X.x.X.x.X.x.X.x."),   # ドッタ・ドッタ（ポップパンクの2ビート）
+    "8sync":   ("X.....X...X.....", "....X.......X...", "X.x.X.x.X.x.X.x."),   # 8ビート（キックが食う）
+    "8sparse": ("X.......X.......", "....X.......X...", "X.x.X.x.X.x.X.x."),   # 8ビート（キックは1・3拍だけ。すき間が多い）
+    "march":   ("X.......X.......", "....X..xx...X.xx", "x...x...x...x..."),   # マーチ（吹奏楽のスネア）
+    "shuffle": ("X.....X...X.....", "....X.......X...", "x..x..x.x..x..x."),   # はねる（3連の刻み）
+    "kickhat": ("X.......X.......", "................", "X.x.X.x.X.x.X.x."),   # キックとハイハットだけ（スネアは後から入る）
+    "kick":    ("X.......X.......", "................", "................"),   # キックだけ（心臓の音）
+    "tick":    ("................", "................", "X...x...x...x..."),   # ハイハットの4分だけ（時計の秒針）
+}
+DM_FILL = {
+    # 名前: (キック, スネア, タム, ハイハットを残す長さ)  None はさわらない
+    "snare4": (None, "....X.......XXXX", None, 12),                 # タカタカ（4拍目だけ）
+    "snare8": (None, "....X...xxxXXXXX", None, 8),                  # タカタカタカタカ（だんだん強く）
+    "count3": ("....X...X...X...", "....X...X...X...", None, 0),     # タン・タン・タン（さん、にい、いち）
+    "ks":     ("X.......X.X.X.X.", "....X....X.X.X.X", None, 8),     # ドタドタドタドタ（キックとスネアの交互）
+    "tomup":  (None, "....X...........", "R:2 A2:0.25 A2:0.25 D3:0.25 D3:0.25 F3:0.25 F3:0.25 A3:0.25 C4:0.25!", 8),   # 低い太鼓から高い太鼓へ（流れ星）
+    "stop":   (None, None, None, None),                               # 4拍目だけドラムを止める
+}
+
+
+def dmoves(S):
+    """S.dmoves の技を当てはめる。技:
+      beat 名前 [i0 i1]     … 場面の i0〜i1 小節目（省略で全部）の土台を、DM_BEAT の形に（ハイハットの強弱は put_groove が付ける）
+      fill 名前 [i]         … 場面の i 小節目（省略で最後）にフィル
+      build16               … 場面の全体で、スネアを 4分 → 8分 → 16分 と細かく強く（盛り上げ）
+      tribal [i0 i1]        … 低いタムで祭り太鼓のような型（キック＋フロア／ロータム）
+      kui                   … この場面へ半拍前から食って入る（前の小節の4拍目の裏にキックとクラッシュ、頭のクラッシュは消す）
+      lift                  … この場面の前の小節だけ、ハイハットを16分に（ためて入る）"""
+    plan = getattr(S, "dmoves", None)
+    D = getattr(S, "drums", None)
+    if not plan or D is None or D.n != 16: return
+    B = S.beats; done = []
+    def rng_of(name):
+        out = []
+        for n, b0, L, k in S.scenes:
+            if n == name: out.append((b0, L))
+        assert out, ("場面がない", name)
+        return out
+    for mv in plan:
+        name, op, args = mv[0], mv[1], list(mv[2:])
+        for b0, L in rng_of(name):
+            if op == "beat":
+                g = args[0]; i0, i1 = (args[1], args[2]) if len(args) > 2 else (0, L - 1)
+                for i in range(i0, min(i1, L - 1) + 1):
+                    b = b0 + i
+                    if b in getattr(S, "keep_drums", set()): continue
+                    keep_crash = D.K[b][0] if D.K[b][0] != "." else "X"
+                    put_groove(D, b, DM_BEAT[g], ghosts=0.0 if g in ("kick", "tick", "kickhat") else 0.25, seed=b, hat_vary=g not in ("tick",))
+                    D.T.ev = [e for e in D.T.ev if not (b * B - 1e-6 <= e[0] < (b + 1) * B - 1e-6)]
+            elif op == "fill":
+                g = args[0]; i = args[1] if len(args) > 1 else L - 1
+                b = b0 + i
+                k, s_, tm, keep = DM_FILL[g]
+                if g == "stop":
+                    D.K[b] = D.K[b][:12] + "...."; D.S[b] = D.S[b][:12] + "...."; D.H[b] = D.H[b][:12] + "...."
+                    D.T.ev = [e for e in D.T.ev if not (b * B + 3 - 1e-6 <= e[0] < (b + 1) * B - 1e-6)]
+                else:
+                    cut = 4 if g == "count3" else (8 if tm else (keep or 0))
+                    if k: D.K[b] = D.K[b][:cut] + k[cut:]
+                    if s_: D.S[b] = D.S[b][:4] + s_[4:]
+                    if keep is not None: D.H[b] = D.H[b][:keep] + "." * (16 - keep)
+                    if tm:
+                        D.T.ev = [e for e in D.T.ev if not (b * B - 1e-6 <= e[0] < (b + 1) * B - 1e-6)]
+                        D.T.bar(b, tm)
+            elif op == "build16":
+                for i in range(L):
+                    b = b0 + i; f = i / max(1, L - 1)
+                    pat = "x...x...x...x..." if f < 0.34 else ("x.x.x.x.x.x.x.x." if f < 0.67 else "xxxxxxxxxxxxXXXX")
+                    if i == L - 1: pat = "xxxxxxxxXXXXXXXX"
+                    D.S[b] = pat; D.H[b] = "." * 16
+            elif op == "tribal":
+                i0, i1 = (args[0], args[1]) if len(args) > 1 else (0, L - 2)
+                for i in range(i0, min(i1, L - 1) + 1):
+                    b = b0 + i
+                    D.K[b] = "X.......X......."; D.S[b] = "............X..."; D.H[b] = "x...x...x...x..."
+                    D.T.ev = [e for e in D.T.ev if not (b * B - 1e-6 <= e[0] < (b + 1) * B - 1e-6)]
+                    D.T.bar(b, "A2:0.5! D3:0.25 D3:0.25 A2:0.5 D3:0.5 A2:0.5! D3:0.25 D3:0.25 R:0.5 D3:0.5")
+            elif op == "kui":
+                if b0 == 0: continue
+                p = b0 - 1
+                D.K[p] = D.K[p][:14] + "X" + D.K[p][15]; D.S[p] = D.S[p][:14] + "X" + D.S[p][15]
+                D.H[p] = D.H[p][:14] + ".."
+                D.C.ev = [e for e in D.C.ev if not (abs(e[0] - b0 * B) < 1e-6)]
+                D.C.at(p * B + 3.5, "C2:4!")
+                D.K[b0] = "." + D.K[b0][1:]
+            elif op == "lift":
+                if b0 == 0: continue
+                p = b0 - 1
+                if p in getattr(S, "keep_drums", set()): continue
+                h = D.H[p]
+                D.H[p] = "".join(("X" if j % 4 == 0 else "x") if (h[j] != "." or (j and h[j - 1] != ".")) else "." for j in range(16))
+        done.append(f"{name}={op}" + ("(" + ",".join(map(str, args)) + ")" if args else ""))
+    print("  シンプルなドラムの技: " + "・".join(done))
+
+
 def keepers(S):
     """2026-10-26 人間「エイトビートもライドで刻むとか、ハイハット以外もつかって曲に合うように変えてほしい。これ重要」:
     曲の台本で S.keepers = {"場面の名前": "刻み方"} と決めた場面だけ、ハイハットの刻みを別の楽器に持ちかえる（全曲・全場面に同じことはしない）。
@@ -405,6 +557,9 @@ def keepers(S):
       wash   … 4分でクラッシュを刻む（シンバルの壁。最後のサビなど一番大きい所）。ハイハットは足だけ
       open   … 裏拍だけ開いたハイハット（跳ねて前へ進む）
       quarter… ハイハットを4分だけに減らす（間をあけて、歌を聞かせる）
+      openq  … 表拍で開いたハイハット「シャー」、裏で閉じる「チ」
+      open24 … 2拍目と4拍目の裏だけ開く「チッチッチッチャー」。ほかは閉じる
+      closed … 開くのをやめて閉じた刻みだけ（引きしめる）
       floor  … フロアタムで8分を刻む（低く太く、ためる所）。最後の小節（フィル）は台本のまま
     クラッシュ（シンバルのパート）はそのまま残り、ライドとは別のパートなので鳴りが止まらない。すでにライドを書いてある小節・止め・キメの小節はさわらない"""
     plan = getattr(S, "keepers", None)
@@ -445,6 +600,12 @@ def keepers(S):
                 D.H[b] = "".join("o" if (FOOT[j] == "o" and D.S[b][j] not in "xX") else "." for j in range(16))
             elif mode == "open":
                 D.H[b] = "".join(("O" if j % 4 == 2 and c in "xXoO" else c) for j, c in enumerate(h))
+            elif mode == "openq":     # 2026-10-26 人間「オープンとクローズのハイハットの使い分け」: 表拍を開いて「シャー」、裏は閉じて「チ」（大きなサビ）
+                D.H[b] = "".join(("O" if j % 4 == 0 and c != "." else ("x" if c in "Oo" else c)) for j, c in enumerate(h))
+            elif mode == "open24":    # 2拍目と4拍目の裏だけ開く「チッチッチッチャー」（ロックの定番。ほかは閉じる）
+                D.H[b] = "".join(("O" if j in (6, 14) and c != "." else ("x" if c == "O" else c)) for j, c in enumerate(h))
+            elif mode == "closed":    # 開くのをやめて、ぴったり閉じた刻みだけ（Aメロを引きしめる）
+                D.H[b] = h.replace("O", "x")
             elif mode == "quarter":
                 D.H[b] = "".join(("X" if j == 0 else "x") if j % 4 == 0 and h[j] != "." else "." for j in range(16))
             elif mode == "floor":
@@ -461,6 +622,7 @@ def vwrite(S, extra_flags=""):
     pro_drums(S)
     kick_vary(S)
     spice(S)
+    dmoves(S)
     keepers(S)
     playable(S)
     depth(S)
