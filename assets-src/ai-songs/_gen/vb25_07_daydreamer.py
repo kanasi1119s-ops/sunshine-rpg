@@ -84,7 +84,10 @@ PMF.spec["fx"] = list(PMF.spec["fx"]) + [{"type": "delay", "beats": 0.75, "mix":
 for g_ in GT:
     g_.spec["volume"] = 0.085
     g_.spec["fx"] = list(g_.spec["fx"]) + [{"type": "eq", "low": 0, "mid": -3.5, "midHz": 2400, "high": 0}]
-BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.21))
+BASS = S.track("ベース（指弾き・歌うベース）", "bass", **rock_bass_spec(0.25))
+# 2026-10-26 人間（07）「ベースを表に出してメロディ聞こえるようにしよう」→ 0.21→0.25（リフギターの曲の 1.2 倍で 0.30）、
+#   指の当たりの 1.2kHz を +2.5dB（低い所だけでなく旋律の輪郭が聞こえるように）。下の「ベース」で場面ごとに旋律にした
+BASS.spec["fx"] = list(BASS.spec["fx"]) + [{"type": "eq", "low": 0, "mid": 2.5, "midHz": 1200, "high": 0}]
 PNFX = [{"type": "eq", "low": -2, "mid": -1.5, "midHz": 350, "high": 1}]
 PM = S.track("ピアノ（合いの手・歌の受け渡し）", "piano", volume=0.15, pan=-0.15, reverb=0.22, fx=PNFX)
 PC = [S.track(f"ピアノ（和音{i + 1}）", "piano", volume=0.1, pan=-0.15, reverb=0.22, fx=PNFX) for i in range(3)]
@@ -239,17 +242,37 @@ for i, b in enumerate(S.sc("駅に滑り込む")):
     for j in range(3): STR[j].bar(b, f"{nm(v[j])}:4")
 
 # ================= ベース =================
+def bfold(line, lo=28, hi=52):
+    """ベースの音域（E1〜E3）に収める（低すぎる音は1オクターブ上、高すぎる音は1オクターブ下）"""
+    out = []
+    for t in line.split():
+        nm_, rest = t.split(":", 1)
+        if nm_ == "R": out.append(t); continue
+        mm = midi(nm_)
+        while mm < lo: mm += 12
+        while mm > hi: mm -= 12
+        out.append(f"{nm(mm)}:{rest}")
+    return " ".join(out)
+
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     r = low(S.chords[b], "E1")
     if n in ("目覚まし三秒前", "信号待ち"): continue
-    if n == "寝坊だ": BASS.bar(b, f"{nm(r)}:2 {nm(r)}:2" if i < 4 else bass_line(S, b, "root8"))
-    elif n in ("玄関を飛び出す", "商店街を駆け抜け"): BASS.bar(b, bass_line(S, b, "push" if i < 8 else "root8"))
-    elif n.startswith("空想スイッチ"): BASS.bar(b, bass_line(S, b, "root8") if i < 7 else f"{nm(r)}:0.5 {nm(r)}:0.5 R:3")
-    elif n in ("あと500メートル", "あと300メートル", "駅に滑り込む"): BASS.bar(b, bass_line(S, b, "oct8"))
-    elif n.startswith("全力ダッシュ") or n in ("ヒーローのリフ", "必殺のギター", "最後の全力ダッシュ"): BASS.bar(b, bass_line(S, b, "root8"))
+    # 2026-10-26: 根音の8分だけだったのを、場面ごとに歌うベースに（sing_bass の walk/climb/drive/run/fall/ride）
+    #   リフの場面（全力ダッシュ・ヒーローのリフ・最後の全力ダッシュ）は、ギター2のリフを2オクターブ下でいっしょに弾く（ユニゾンのリフ）
+    if n == "寝坊だ": BASS.bar(b, f"{nm(r)}:2 {nm(r)}:2" if i < 4 else sing_bass(S, b, "run" if i % 4 == 3 else "drive"))
+    elif n in ("玄関を飛び出す", "商店街を駆け抜け"):
+        BASS.bar(b, sing_bass(S, b, ("walk" if i % 2 == 0 else "fall") if i < 8 else ("climb" if i % 2 == 0 else "drive")))
+    elif n.startswith("空想スイッチ"): BASS.bar(b, sing_bass(S, b, "climb") if i < 7 else f"{nm(r)}:0.5 {nm(r)}:0.5 R:3")
+    elif n in ("あと500メートル", "あと300メートル", "駅に滑り込む"):
+        if n == "駅に滑り込む" and i >= 24: BASS.bar(b, sing_bass(S, b, "ride"))
+        else: BASS.bar(b, sing_bass(S, b, "run" if i % 4 == 1 else "drive"))
+    elif n in ("全力ダッシュ", "全力ダッシュ2", "ヒーローのリフ"):
+        BASS.bar(b, bfold(K.mel((RIFF if i % 8 < 4 else RIFF8)[i % 4], oct=1)))
+    elif n == "最後の全力ダッシュ": BASS.bar(b, bfold(KC.mel((RIFF if i < 4 else RIFF8)[i % 4], oct=1)))
+    elif n == "必殺のギター": BASS.bar(b, bfold(K.mel(RIFF[i], oct=1)) if i < 4 else sing_bass(S, b, "walk" if i < 8 else ("drive" if i % 2 == 0 else "climb")))
     elif n == "空想の戦い": BASS.bar(b, bass_line(S, b, "half"))
-    elif n == "青信号": BASS.bar(b, bass_line(S, b, "root8") if i < 7 else f"{nm(r)}:1 R:3")
+    elif n == "青信号": BASS.bar(b, sing_bass(S, b, "climb") if i < 7 else f"{nm(r)}:1 R:3")
     elif n == "扉が閉まる": BASS.bar(b, {0: f"{nm(r)}:0.5 R:0.5 {nm(r)}:0.5 R:2.5", 1: f"{nm(r)}:4", 2: "R:4", 3: f"{nm(r)}:1 R:3"}[i])
 
 # ================= 扉が閉まる =================
