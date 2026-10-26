@@ -1,85 +1,126 @@
 #!/usr/bin/env python3
 """花火の効果音を合成で作る（2026-10-26 人間「花火の効果音って作れる？」）。録音の素材は使わない。
-  launch … 打ち上げ「ヒュ〜」（笛のように上がる音＋火の粉のシュー）
-  boom   … 開く「ドーン」（低い胴の音＋破裂の雑音＋遠くの山に返るこだま）
-  crackle… 「パチパチ」（星が散るときの小さな破裂。左右にばらまく）
-  full   … 3つを順に
+
+2版目（同日、人間「音の感じが花火の音と根本的に違う」）。1版目は「ドン」を 46Hz の正弦波で作っていたため、
+バスドラムのような楽器の音に聞こえていた。本物の花火の音は、楽器のような「音の高さ」を持たない。
+次の3つでできている（屋外の爆発音の性質に合わせて作り直した）。
+  1. 衝撃波 … 一瞬の空気の押し（N の字の形の波。数ミリ秒）。高さのない「バンッ」
+  2. 距離   … 空気は高い音ほど吸いこむので、遠くの花火は高い音が削れて「ドーン」と丸くなる
+  3. 反射   … 地面・建物・山に何度も当たって、遅れて不規則に返ってくる「…ゴロゴロゴロ」。これがいちばんの特徴
+打ち上げの笛「ヒュ〜」も、正弦波ではなく、倍音の多い（少しかすれた）笛の音にし、同じ屋外の響きに通す。
+
+  launch        … 筒から出る「ポンッ（ドン）」＋笛の「ヒュ〜〜〜」
+  launch_plain  … 笛なし（「ポンッ」＋昇っていくかすかな「シュルル」）
+  boom          … 開く「ドーン…ゴロゴロ」
+  crackle       … 「パチパチパチ」（星が細かくはじける。1つ1つは 1 ミリ秒もない破裂）
+  full          … 打ち上げ→ドーン→パチパチを順に
 使い方: python3 fireworks_sfx.py <出力フォルダ>"""
 import sys, os, numpy as np, soundfile as sf
 from scipy import signal
-SR = 48000; rng = np.random.default_rng(7)
-def bp(x, lo, hi, o=2): return signal.sosfilt(signal.butter(o, [lo, hi], "band", fs=SR, output="sos"), x, axis=0)
+SR = 48000; rng = np.random.default_rng(11)
 def lp(x, f, o=2): return signal.sosfilt(signal.butter(o, f, "low", fs=SR, output="sos"), x, axis=0)
 def hp(x, f, o=2): return signal.sosfilt(signal.butter(o, f, "high", fs=SR, output="sos"), x, axis=0)
-def env(n, a, d):
-    t = np.arange(n) / SR; return np.minimum(1, t / max(a, 1e-4)) * np.exp(-t / d)
-def reverb(x, sec=2.6, wet=0.35):
-    n = int(sec * SR); t = np.arange(n) / SR
-    ir = np.stack([rng.standard_normal(n), rng.standard_normal(n)], 1) * np.exp(-t / (sec / 5.5))[:, None]
-    ir = lp(ir, 5000); ir[:int(0.02 * SR)] = 0; ir /= np.sqrt((ir ** 2).sum(0))
-    y = np.stack([signal.fftconvolve(x[:, c], ir[:, c]) for c in range(2)], 1)
-    out = np.zeros_like(y); out[:len(x)] = x
-    return out * (1 - wet) + y * wet * 0.9
-def resonate(src, fc, q):
-    """雑音を、高さが動く細い共鳴（笛の管のような響き）に通す。fc と q はサンプルごとの配列"""
-    y = np.zeros(len(src)); y1 = y2 = 0.0
-    for i in range(len(src)):
-        w = 2 * np.pi * fc[i] / SR; r = np.exp(-w / (2 * q[i]))
-        y0 = src[i] * (1 - r) + 2 * r * np.cos(w) * y1 - r * r * y2
-        y[i] = y0; y2, y1 = y1, y0
-    return y
-def launch(sec=2.0, kind="whistle"):
-    """打ち上げの「ヒュ〜」。本物の笛（筒の中で火薬が燃える音）に近づけるため、
-    きれいな正弦波ではなく、雑音を細い共鳴に通した「息の入った笛」の音にする。
-      whistle … ヒュ〜〜（すっと上がる）
-      warble  … ヒュルルル〜（回りながら上がるので、高さと大きさが細かくゆれる）
-    最初に筒から出る小さな「ポン」、上がるにつれて遠くなる（高い音がこもり、小さくなる）"""
+def bp(x, lo, hi, o=2): return signal.sosfilt(signal.butter(o, [lo, hi], "band", fs=SR, output="sos"), x, axis=0)
+
+def nwave(ms, rough=0.15):
+    """衝撃波（N の字）: 一気に押して、まっすぐ引いて、ぷつっと戻る。長さ ms ミリ秒"""
+    n = max(4, int(ms / 1000 * SR)); w = np.linspace(1, -1, n)
+    w += rough * rng.standard_normal(n) * np.linspace(1, 0.3, n)
+    return np.concatenate([w, np.zeros(int(0.002 * SR))])
+
+def outdoor_ir(sec=5.0, dist=1.0, roll=1.0, seed=0):
+    """屋外の響き（左右2ch）。dist: 遠さ（大きいほど高い音が削れる）、roll: ゴロゴロの多さ
+    直接の音 → 地面の反射（すぐ後ろ）→ 建物・山からの不規則なこだま → 低くうなる長い尾"""
+    r = np.random.default_rng(seed); n = int(sec * SR); ir = np.zeros((n, 2))
+    ir[0] = 1.0
+    g = int(r.uniform(0.004, 0.009) * SR); ir[g] += 0.55                     # 地面の反射
+    # 不規則なこだま: 0.15〜3.5 秒に、まばらに。遅いものほど小さく暗い
+    for _ in range(int(60 * roll)):
+        t = r.gamma(2.0, 0.55) + 0.12
+        if t >= sec - 0.2: continue
+        i = int(t * SR); a = r.uniform(0.04, 0.22) * np.exp(-t / 1.3) * (1 if r.random() < 0.8 else -1)
+        L = int(r.uniform(0.01, 0.06) * SR)                                     # こだま1つも少しにじむ
+        sm = r.standard_normal(L) * np.exp(-np.arange(L) / (L / 3)); sm /= np.abs(sm).max()
+        sm = lp(sm, r.uniform(300, 1500) / (1 + t))                             # 遠回りしたものほど暗い
+        p = r.uniform(-0.8, 0.8)
+        ir[i:i + L, 0] += sm * a * np.sqrt(0.5 - p / 2); ir[i:i + L, 1] += sm * a * np.sqrt(0.5 + p / 2)
+    # 低くうなる長い尾（ゴロゴロ）: ゆっくり大きさがゆれる低い雑音
+    t = np.arange(n) / SR
+    m = lp(r.standard_normal(n), 3.0); m /= m.std() + 1e-9
+    am = np.clip(0.65 + 0.35 * m, 0.1, 1.5)
+    tail = lp(r.standard_normal((n, 2)), 260, 3) * (am * np.minimum(1, t / 0.25) * np.exp(-t / (0.9 * roll + 0.4)))[:, None]
+    tail /= np.sqrt((tail ** 2).sum(0)).max() + 1e-9
+    ir += tail * 0.22 * roll
+    ir = lp(ir, 9000 / dist, 1)                                                 # 空気が高い音を吸う
+    return ir
+
+def conv(x, ir):
+    if x.ndim == 1: x = np.stack([x, x], 1)
+    return np.stack([signal.fftconvolve(x[:, c], ir[:, c]) for c in range(2)], 1)
+
+def boom(dist=1.4, roll=1.0, seed=1):
+    """開く「ドーン…ゴロゴロ」。衝撃波を、遠さで丸くして、屋外の響きに通す"""
+    src = np.zeros(int(0.08 * SR))
+    for k in range(3):                                                          # 大玉は割れる瞬間が少しだけずれて重なる
+        w = nwave(rng.uniform(5, 9)) * (1, 0.5, 0.3)[k]; o = int(rng.uniform(0, 0.006) * SR) * k
+        src[o:o + len(w)] += w
+    src = lp(src, 3500 / dist, 2) + 0.25 * hp(lp(src, 7000 / dist), 1500)    # 遠いほど高い音が削れる。破裂の「パ」も少し残す
+    m = len(src); cr = hp(rng.standard_normal(m), 900) * np.exp(-np.arange(m) / (0.012 * SR)) * 0.35   # 破裂の「パンッ」（はじけた瞬間の乾いた音）
+    src = src + lp(cr, 6000 / dist)
+    y = conv(src, outdoor_ir(5.5, dist, roll, seed))
+    y = hp(y, 28)
+    # 星が飛び散る「シャー」（燃えながら散る火の粉）をうすく
+    n = len(y); t = np.arange(n) / SR
+    sh = bp(rng.standard_normal((n, 2)), 1500, 6000) * (np.minimum(1, t / 0.3) * np.exp(-t / 1.0))[:, None] * 0.012
+    return y + sh
+
+def whistle(sec=2.3):
+    """笛の「ヒュ〜〜〜」。倍音が多く、少しかすれる。高さは、はじめ速く上がり、あとはゆっくり"""
     n = int(sec * SR); t = np.arange(n) / SR; u = t / sec
-    jit = lp(rng.standard_normal(n), 6) ; jit = jit / (np.abs(jit).max() + 1e-9)          # ゆっくりした揺らぎ（毎回少しちがう）
-    f = 950 + 1550 * (1 - (1 - u) ** 1.6) + 25 * jit                                      # はじめ速く、上に行くほどゆっくり上がる
-    am = np.ones(n)
-    if kind == "warble":
-        wr = 11 + 4 * u                                                                    # 回る速さが少しずつ上がる
-        ph = 2 * np.pi * np.cumsum(wr) / SR
-        f = f * (1 + 0.035 * np.sin(ph)); am = 0.62 + 0.38 * (0.5 + 0.5 * np.sin(ph + 0.6)) ** 1.5
-    src = rng.standard_normal(n)
-    tone = resonate(src, f, np.full(n, 70.0)) + 0.25 * resonate(src, 2 * f, np.full(n, 90.0))
-    tone /= np.abs(tone).max() + 1e-9
-    hiss = bp(rng.standard_normal(n), 2500, 8000) * 0.10                                   # 火の粉のかすかなシュー
-    e = np.minimum(1, t / 0.12) ** 1.5 * (1 - 0.55 * u) * np.clip((sec - t) / 0.35, 0, 1) ** 1.3   # 遠ざかって小さく
-    x = (tone * am * 0.8 + hiss) * e
-    # 遠くなるほど高い音がこもる（前半はそのまま、後半ほど 9k→3.5k）
-    k = np.clip((u - 0.35) / 0.6, 0, 1); x = x * (1 - k) + lp(x, 3800) * k
-    pon = lp(rng.standard_normal(int(0.08 * SR)), 900) * env(int(0.08 * SR), 0.001, 0.018) * 0.9   # 筒から出る「ポン」
-    x[:len(pon)] += pon
-    pan = np.linspace(-0.2, 0.05, n)
-    st = np.stack([x * np.sqrt(0.5 - pan / 2), x * np.sqrt(0.5 + pan / 2)], 1)
-    return reverb(st, 2.2, 0.28)
-def boom(sec=3.0):
-    n = int(sec * SR); t = np.arange(n) / SR
-    f = 46 + 30 * np.exp(-t / 0.06)                                                            # 胴の「ドン」
-    body = np.sin(2 * np.pi * np.cumsum(f) / SR) * env(n, 0.004, 0.45) * 0.9
-    crack = lp(rng.standard_normal(n), 2500) * env(n, 0.001, 0.09) * 0.8                     # 破裂の「バン」
-    rumble = lp(rng.standard_normal(n), 300) * env(n, 0.02, 0.9) * 0.6                        # 空気がふるえる低いゴロゴロ
-    x = hp(body + crack + rumble, 32)
-    st = np.stack([x, x], 1)
-    echo = np.zeros_like(st); d = int(0.42 * SR); echo[d:] = lp(st[:-d], 900) * 0.35           # 山に返るこだま
-    return reverb(st + echo, 3.2, 0.4)
-def crackle(sec=2.2, count=170):
+    f0 = 780 + 1450 * (1 - np.exp(-u * 3.2)) / (1 - np.exp(-3.2))
+    f0 *= 1 + 0.006 * lp(rng.standard_normal(n), 25) / 0.02                    # 燃え方のむらで高さが細かくふるえる
+    ph = 2 * np.pi * np.cumsum(f0) / SR
+    tone = sum(np.sin(k * ph) / k ** 1.25 for k in range(1, 9))
+    rasp = 1 + 0.35 * lp(rng.standard_normal(n), 900) / 0.1                    # かすれ（息の入った感じ）
+    tone = tone * np.clip(rasp, 0, 2)
+    tone = lp(tone, 7000) + 0.12 * bp(rng.standard_normal(n), 2000, 7000)
+    e = np.minimum(1, t / 0.08) * (1 - 0.5 * u) * np.clip((sec - t) / 0.18, 0, 1)
+    return tone * e / np.abs(tone).max()
+
+def launch(kind="whistle"):
+    """筒から出る「ポンッ」→（笛）→ 上がるにつれて遠く・暗く"""
+    pon = lp(nwave(4.0, 0.3), 700, 2) * 1.0                                      # 筒の中から出るので、こもった低い「ポンッ」
+    if kind == "whistle":
+        w = whistle(); gap = int(0.05 * SR)
+    else:                                                                        # 笛なし: 昇っていくかすかな「シュルル」
+        sec = 2.0; n = int(sec * SR); t = np.arange(n) / SR
+        w = bp(rng.standard_normal(n), 900, 4000) * (0.5 + 0.5 * np.sin(2 * np.pi * (7 + 3 * t / sec) * t)) ** 2
+        w *= np.minimum(1, t / 0.1) * np.exp(-t / 0.9) * 0.35; gap = int(0.03 * SR)
+    x = np.zeros(len(pon) + gap + len(w)); x[:len(pon)] += pon; x[len(pon) + gap:] += w * 0.5
+    u = np.clip(np.arange(len(x)) / len(x), 0, 1)
+    x = x * (1 - u * 0.6) + lp(x, 2500) * u * 0.6                               # 遠ざかるほど暗く
+    y = conv(x, outdoor_ir(2.2, 1.0, 0.45, 2)); return y[:len(x) + int(1.2 * SR)] * np.clip((len(x) + int(1.2 * SR) - np.arange(len(x) + int(1.2 * SR)))[:, None] / (0.6 * SR), 0, 1)
+
+def crackle(sec=2.4, count=420):
+    """「パチパチ」: 1 ミリ秒もない小さな衝撃波を、空いっぱいにばらまく。はじめ多く、だんだんまばらに"""
     n = int(sec * SR); x = np.zeros((n, 2))
     for _ in range(count):
-        s = int(rng.beta(1.3, 2.6) * (n - 3000)); L = int(rng.uniform(0.002, 0.012) * SR)
-        b = rng.standard_normal(L) * np.exp(-np.arange(L) / (L / 4)) * rng.uniform(0.2, 1.0)
-        b = bp(b, rng.uniform(1500, 3500), 9000, 1)
-        p = rng.uniform(-0.9, 0.9); x[s:s + L, 0] += b * np.sqrt(0.5 - p / 2); x[s:s + L, 1] += b * np.sqrt(0.5 + p / 2)
-    x *= (1 - np.arange(n) / n)[:, None] ** 0.7
-    return reverb(x * 0.9, 1.8, 0.3)
+        s = int(rng.beta(1.2, 2.2) * (n - 400)); w = nwave(rng.uniform(0.25, 0.9), 0.4) * rng.uniform(0.15, 1.0) ** 1.5
+        p = rng.uniform(-0.95, 0.95); L = len(w)
+        x[s:s + L, 0] += w * np.sqrt(0.5 - p / 2); x[s:s + L, 1] += w * np.sqrt(0.5 + p / 2)
+    x = hp(lp(x, 6500), 400)
+    y = np.stack([signal.fftconvolve(x[:, c], outdoor_ir(3.0, 1.6, 0.35, 3)[:, c]) for c in range(2)], 1)
+    return y
+
 def norm(x, peak=0.8): return x / (np.abs(x).max() + 1e-9) * peak
-out = sys.argv[1] if len(sys.argv) > 1 else "."; os.makedirs(out, exist_ok=True)
-L, B, C = launch(), boom(), crackle(); LW = launch(kind="warble")
-full = np.zeros((len(L) + int(0.1 * SR) + max(len(B), int(0.25 * SR) + len(C)), 2))
-full[:len(L)] += norm(L, 0.35)
-o = len(L) + int(0.1 * SR); full[o:o + len(B)] += norm(B, 0.85); full[o + int(0.25 * SR):o + int(0.25 * SR) + len(C)] += norm(C, 0.4)
-for name, x in (("fireworks_launch", norm(L, 0.6)), ("fireworks_launch_warble", norm(LW, 0.6)), ("fireworks_boom", norm(B, 0.85)), ("fireworks_crackle", norm(C, 0.6)), ("fireworks_full", norm(full, 0.85))):
-    sf.write(os.path.join(out, name + ".wav"), x.astype(np.float32), SR, subtype="PCM_24")
-print("ok", out)
+
+if __name__ == "__main__":
+    out = sys.argv[1] if len(sys.argv) > 1 else "."; os.makedirs(out, exist_ok=True)
+    L, LP, B, C = launch("whistle"), launch("plain"), boom(), crackle()
+    tl = len(L) - int(0.85 * SR); full = np.zeros((tl + max(len(B), int(0.35 * SR) + len(C)), 2))
+    full[:len(L)] += norm(L, 0.3); full[tl:tl + len(B)] += norm(B, 0.9)
+    o = tl + int(0.35 * SR); full[o:o + len(C)] += norm(C, 0.28)
+    for name, x in (("fireworks_launch", norm(L, 0.6)), ("fireworks_launch_plain", norm(LP, 0.6)),
+                    ("fireworks_boom", norm(B, 0.9)), ("fireworks_crackle", norm(C, 0.6)), ("fireworks_full", norm(full, 0.9))):
+        sf.write(os.path.join(out, name + ".wav"), x.astype(np.float32), SR, subtype="PCM_24")
+    print("ok", out)
