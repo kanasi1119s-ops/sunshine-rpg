@@ -399,15 +399,43 @@ def breath_in(sr, length=0.26, seed=0):
     env = np.sin(np.linspace(0, np.pi, n)) ** 1.5 * np.linspace(0.6, 1.0, n)
     return x * env / (np.max(np.abs(x)) + 1e-9)
 
-def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1):
+def tempo_clock(bpm, tempo=None, beats=4):
+    """拍 → 秒（作曲ソフトの tempo-map.ts と同じ計算。ramp は 1/8 拍ごとの階段）。
+    2026-10-26 人間（02）「歌の音程もこれで合ってるのか気になってきた」→ 調べると、テンポが途中で変わる曲（02・05・16・21）で、
+    歌だけが一定のテンポで計算されていて、伴奏とずれていた（02 は前奏が 80 なので、歌が 6.6 秒早く入っていた）"""
+    if not tempo: return lambda b: b * 60.0 / bpm
+    segs = [[0.0, float(bpm)]]
+    def put(beat, v):
+        beat = max(0.0, round(beat * 1e6) / 1e6); v = max(20.0, min(300.0, float(v)))
+        if beat <= segs[-1][0] + 1e-9: segs[-1][1] = v; return
+        if abs(segs[-1][1] - v) < 1e-9: return
+        segs.append([beat, v])
+    pts = sorted(({"beat": (round(float(x["bar"])) - 1) * beats, "bpm": float(x["bpm"]), "ramp": float(x.get("ramp", 0) or 0) * beats} for x in tempo), key=lambda p: p["beat"])
+    for p in pts:
+        frm = segs[-1][1]; ramp = p["ramp"]
+        if ramp > 0:
+            n = max(1, math.ceil(ramp / 0.125 - 1e-9))
+            for i in range(n): put(p["beat"] + i * ramp / n, frm + (p["bpm"] - frm) * ((i + 0.5) / n))
+            put(p["beat"] + ramp, p["bpm"])
+        else: put(p["beat"], p["bpm"])
+    sec = [0.0]
+    for i in range(1, len(segs)): sec.append(sec[-1] + (segs[i][0] - segs[i - 1][0]) * 60.0 / segs[i - 1][1])
+    def f(b):
+        b = max(0.0, b); i = len(segs) - 1
+        while i > 0 and segs[i][0] > b + 1e-12: i -= 1
+        return sec[i] + (b - segs[i][0]) * 60.0 / segs[i][1]
+    return f
+
+def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1, tempo=None, beats=4):
     notes = parse_notes(vdef["notes"])
     spb = 60.0 / bpm
+    b2s = tempo_clock(bpm, tempo, beats)
     rng = np.random.default_rng(seed)
     # 1) 歌う音を「ひとかたまり（ピース）」にまとめる（「ー」は前の音のピースに足す）
     pieces = []  # {lyric, start, end, events:[(s,e,midi,vel)], phrase_start}
     prev_rest = True
     for n in notes:
-        s, e = n["beat"] * spb, (n["beat"] + n["len"]) * spb
+        s, e = b2s(n["beat"]), b2s(n["beat"] + n["len"])
         if n["lyric"] is None:
             prev_rest = True; continue
         if n["lyric"] in ("ー", "-", "~") and pieces and not prev_rest:
@@ -624,7 +652,7 @@ def render_song(song, sr_out, total_sec=None, dry=False):
     mix = None
     for i, vd in enumerate(song.get("vocals", [])):
         bank = Bank(vd.get("voice", "teto"))
-        v = build_vocal(vd, bpm, bank, sr_out, total_sec, seed=11 + i)
+        v = build_vocal(vd, bpm, bank, sr_out, total_sec, seed=11 + i, tempo=song.get("tempo"), beats=int(song.get("beats", 4)))
         v = polish(v, sr_out, vd)
         # 大きさは「歌っている所の平均（RMS）」でそろえる（ピークでそろえると、一瞬のとがった音のせいで全体が小さくなる）
         act = np.abs(v) > 1e-4

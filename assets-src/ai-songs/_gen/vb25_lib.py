@@ -850,6 +850,17 @@ def teto(S, LY, V, transpose=0, level=None, special=None, vib=None, lead_vol=0.1
                 p_.pop("patch", None); p_["fx"] = []
         fl = open(path + ".flags").read().strip()
         if "--bass" not in fl: open(path + ".flags", "w").write(fl + " --bass bnb")
+    # 2026-10-26 人間（02）「オープンとクローズの動作で出すハイハットの音もっと繊細でいい」: S.open_hat_vol の曲は、
+    #   開いたハイハット（O）を別のパートに分けて小さくする（閉じた刻みはそのまま）
+    ohv = getattr(S, "open_hat_vol", None)
+    if ohv:
+        for p_ in list(js["parts"]):
+            if p_["instrument"] == "hihat" and p_["notes"].startswith("g:") and "O" in p_["notes"]:
+                g_ = p_["notes"][2:]
+                op = dict(p_); op["role"] = "ハイハット（開く）"; op["notes"] = "g:" + "".join("O" if c == "O" else "." for c in g_)
+                op["volume"] = round(p_.get("volume", 0.07) * ohv, 4)
+                p_["notes"] = "g:" + "".join("." if c == "O" else c for c in g_)
+                js["parts"].append(op)
     for a_, b_ in getattr(S, "patch_swap", {}).items():
         for p_ in js["parts"]:
             if p_.get("patch") == a_: p_["patch"] = b_

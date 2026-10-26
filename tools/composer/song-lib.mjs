@@ -123,7 +123,7 @@ export async function openSongKit() {
     // 歌の楽譜（UST）: UTAU・OpenUtau・Synthesizer V で開ける。歌が複数あれば 1 つずつ
     if (Array.isArray(songData?.vocals) && songData.vocals.length) {
       const tmpSong = path.join(out, `${name}.vocals.json`);
-      fs.writeFileSync(tmpSong, JSON.stringify({ bpm: songData.bpm, title: songData.title, vocals: songData.vocals }));
+      fs.writeFileSync(tmpSong, JSON.stringify({ bpm: songData.bpm, tempo: songData.tempo, beats: songData.beats, title: songData.title, vocals: songData.vocals }));
       files.ust = [];
       songData.vocals.forEach((_, i) => {
         const u = path.join(out, `${name}-vocal${songData.vocals.length > 1 ? i + 1 : ""}.ust`);
@@ -148,7 +148,7 @@ export async function openSongKit() {
       //   伴奏に混ぜる。残響（space）と仕上げ（master）は、歌と伴奏をまとめてかける
       if (Array.isArray(songData?.vocals) && songData.vocals.length) {
         const tmpSong = files.wav + ".song.json";
-        fs.writeFileSync(tmpSong, JSON.stringify({ bpm: songData.bpm, title: songData.title, vocals: songData.vocals, vocalLevel: songData.vocalLevel }));
+        fs.writeFileSync(tmpSong, JSON.stringify({ bpm: songData.bpm, tempo: songData.tempo, beats: songData.beats, title: songData.title, vocals: songData.vocals, vocalLevel: songData.vocalLevel }));
         execFileSync("python3", [path.join(ROOT, "tools/singer/sing.py"), "mix", tmpSong, files.wav], { stdio: "inherit", maxBuffer: 1 << 26 });
         fs.rmSync(tmpSong, { force: true });
       }
