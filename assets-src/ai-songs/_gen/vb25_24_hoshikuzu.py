@@ -182,14 +182,23 @@ for b in range(S.nb):
         else:
             for j in range(3): PN[j].bar(b, f"R:0.5 {nm(vv[j])}:0.5 R:0.5 {nm(vv[j])}:0.5 R:0.5 {nm(vv[j])}:0.5 R:0.5 {nm(vv[j])}:0.5")
     # ウッドベース風（シャッフルは4分のウォーキング、ストレートは8分のオクターブ）
+    # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 歌うベース（sing_bass。音域は元と同じ E1 から）を場面ごとに:
+    #   シャッフルの所は、1小節おきに8分の跳ねるつなぎ（オクターブ上へ跳んで次の根音へ寄る walk。跳ねる長さに直す）を混ぜて、4分だけの歩きにしない
+    #   ストレートの所: 2番の後半は上って下りる、サビ2と最後のサビは押す（drive）と、歌が伸ばす4小節目で駆ける（run）、ソロの後半は押す
+    sw = lambda st: swing(sing_bass(S, b, st))
     if b in SHUF:
         if n == "入店" and i < 4: BASS.bar(b, f"{nm(r)}:1 R:3" if i == 0 else bass_line(S, b, "walk"))
         elif n == "閉まったドアの前": BASS.bar(b, bass_line(S, b, "half") if i >= 4 else f"{nm(r)}:4")
         elif n == "ありがとうございました": BASS.bar(b, bass_line(S, b, "walk") if i < 6 else (f"{nm(r)}:8" if i == 6 else ""))
         elif n.startswith("何を買う") and i == L - 1: BASS.bar(b, f"{nm(r)}:2 R:2")
+        elif (n == "夜中の棚" and i >= 8) or n in ("店内放送", "レジが鳴る") or (n == "何を買う？" and i >= 4):
+            BASS.bar(b, sw("walk") if i % 2 == 1 else bass_line(S, b, "walk"))
         else: BASS.bar(b, bass_line(S, b, "walk"))
     else:
         if n.startswith("何を買う") and i == L - 1: BASS.bar(b, f"{nm(r)}:2 R:2")
+        elif n == "星のダンス" and i >= 8: BASS.bar(b, sing_bass(S, b, "climb" if i % 2 == 0 else "fall"))
+        elif n in ("レジが鳴る2", "最後のレジ"): BASS.bar(b, sing_bass(S, b, "run" if i % 4 == 3 else "drive"))
+        elif n == "星屑のソロ" and i >= 8: BASS.bar(b, sing_bass(S, b, "drive" if i % 2 == 0 else "run"))
         else: BASS.bar(b, bass_line(S, b, "oct8" if (n.startswith("レジ") or n == "最後のレジ" or n == "星屑のソロ") else "root8"))
     # パッド
     if n in ("閉まったドアの前",) or n.startswith("何を買う") or n.startswith("レジ") or n == "最後のレジ":
@@ -220,6 +229,43 @@ for j in range(3): PN[j].bar(bx, f"R:{0.25 * j} {nm(voice('Gm6', 70, 3)[j])}:{8 
 PNL.bar(bx, "G2:8"); BASS.bar(bx, "G1:8")
 for i, b in enumerate(S.sc("ありがとうございました")):
     if i < 6: V.bar(b, swing(K.mel(["5:1 4:0.5 3:0.5 4:2", "#7,:1 2:1 4:2", "3:1 2:0.5 1:0.5 5,:2", "6,:1 1:1 b5:2", "6:1 5:0.5 4:0.5 6:2", "#7:2 2':2"][i], oct=4)), low=False)
+
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 足した工夫:
+#   ・合いの手: Aメロで歌が2拍休む所に、ピアノ（歌の受け渡しのパート）の短い答え（和音の音で。弱く。シャッフルは跳ねる）
+#   ・Bメロ（何を買う？）の前半: 歌が4拍目で休む所に、ブラスの「パッ」（溜め）
+#   ・この曲の物語でしか出ない音: 店内放送の「ピンポンパンポーン」（はじめは上がり、終わりは下がる。作った和音の上下）
+#   ・星屑: 閉まったドアの前（夜明け・ドラムなし）にグロッケンの流れ星。最後のサビは、歌が休む所にグロッケンの高い答え（新しい音）
+def fill(tr_, b, k, lo="D5", hi="D6", swing_=False):
+    tt = tones(S.chords[b], lo, hi)
+    pats = [[(2, 0.5), (1, 0.5), (0, 1)], [(None, 0.5), (0, 0.5), (1, 0.5), (2, 0.5)], [(3, 0.5), (2, 0.5), (1, 0.5), (None, 0.5)], [(1, 0.5), (2, 0.5), (4, 1)]]
+    sss = "R:2 " + " ".join(f"R:{L:g}" if q is None else f"{nm(tt[min(q, len(tt) - 1)])}:{L:g}," for q, L in pats[k % 4])
+    tr_.bar(b, swing(sss) if swing_ else sss)
+for i, b in enumerate(S.sc("夜中の棚")):
+    if i in (5, 7, 9, 15): fill(PNM, b, i // 2, swing_=True)
+for i, b in enumerate(S.sc("星のダンス")):
+    if i in (9, 15): fill(PNM, b, i // 2 + 1)
+for i, b in enumerate(S.sc("何を買う？")):
+    if i < 4:
+        vv = voice(S.chords[b], 64, 3)
+        for j in range(3): put(BR[j], b, f"R:3 {nm(vv[j])}:0.5' R:0.5")
+for i, b in enumerate(S.sc("何を買う？2")):
+    if i < 4 and i % 2 == 1:
+        vv = voice(S.chords[b], 64, 3)
+        for j in range(3): put(BR[j], b, f"R:3 {nm(vv[j])}:0.5' R:0.5")
+put(BELL, S.sc("店内放送")[0], "Bb5:0.5, D6:0.5, F6:0.5, Bb6:1.5, R:1")
+put(BELL, S.sc("店内放送")[-1], "R:2 A5:0.5, F#5:0.5, D5:0.5, A4:0.5,")
+GLK = S.track("グロッケン（星屑）", "glockenspiel", volume=0.06, pan=0.35, reverb=0.45)
+for i, b in enumerate(S.sc("閉まったドアの前")):
+    if i < 4: put(GLK, b, K.mel(["R:1 5:0.5 3:0.5 1:1 R:1", "R:2 1':0.5 6:0.5 4:1", "R:0.5 3':0.5 1':0.5 6:0.5 5:2", "R:4"][i], oct=6))
+for i, b in enumerate(S.sc("最後のレジ")):
+    if i % 4 == 3 and i < 20: GLK.bar(b, K.mel(["R:2 5:0.5 1':0.5 3':1", "R:2 2':0.5 1':0.5 6:1", "R:2 3':0.5 5':0.5 3':1", "R:2 6:0.5 5:0.5 3:1", "R:2 5:0.5 7:0.5 2':1"][i // 4], oct=6))
+    if i == 23: GLK.bar(b, K.mel("R:1 5:0.5 1':0.5 3':1 5':1", oct=6))
+# 2026-10-26 人間「ミックスのバランスをよくするのが大事」: サビでブラスの和音が鳴る2拍（4小節目の後半）は、同じ高さのピアノの右手を休ませて、
+#   ブラスに場所をゆずる（同じ音域の重なりを時間で受け渡す）
+for name in ("レジが鳴る", "レジが鳴る2", "最後のレジ"):
+    for i, b in enumerate(S.sc(name)):
+        if i % 4 == 3:
+            for t_ in PN: t_.ev = [e for e in t_.ev if not (b * 4 + 2 - 1e-6 <= e[0] < b * 4 + 4)]
 
 # ================= ドラム =================
 def hats_cut(b, a, z):
@@ -281,6 +327,10 @@ for b in range(S.nb):
     if last and n != "ありがとうございました":
         if n.startswith("何を買う"): halt(D, b, 2); RIDE.ev = [e for e in RIDE.ev if not (b * 4 + 2 - 1e-6 <= e[0] < b * 4 + 4)]; SNG.ev = [e for e in SNG.ev if not (b * 4 + 2 - 1e-6 <= e[0] < b * 4 + 4)]
         else: put_fill(D, b, "tomtrip"); RIDE.ev = [e for e in RIDE.ev if not (b * 4 + 2 - 1e-6 <= e[0] < b * 4 + 4)]; SNG.ev = [e for e in SNG.ev if not (b * 4 + 2 - 1e-6 <= e[0] < b * 4 + 4)]
+
+# 2026-10-26 人間「ドラム強弱、アクセント、余韻も上手く使ってね」: 24 はジャズにしたばかりなので形は変えず、余韻だけ:
+#   クラッシュの一打を、次のシンバルまで最大 8拍のばす（すぐ止めない）
+D.C.ev = [(st, max(L, 8.0), x) for st, L, x in D.C.ev]
 
 # 止め（Bメロの最後 ×2）・1拍の完全な無音（自動ドアが閉まる直前）
 for name in ("何を買う？", "何を買う？2"): SIL.add(S.sc(name)[-1], 2, 4)

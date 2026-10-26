@@ -59,6 +59,13 @@ FX = S.track("効果音", "pad", patch="fxRiser", volume=0.07, pan=0, reverb=0.3
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 D = S.drumkit()
 SIL = Silence(S)
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 足したパート:
+#   ・ブランコが風を切る「シュッ」（左右にゆれる2本。往復ごとに左と右から。効果音なので小さく）
+#   ・最後のサビにだけ足す新しい音: バイオリンの高い対旋律（柔らかく力強く、透き通るように。歌より小さく、ストリングスの右 0.5 とアコーディオンの左 0.3 の間）
+SW = [S.track(f"ブランコの風（{['左', '右'][i]}）", "pad", patch="fxRiser", volume=0.06, pan=[-0.6, 0.6][i], reverb=0.35) for i in range(2)]
+SWQ = S.track("ブランコの風（着地・小さく）", "pad", patch="fxRiser", volume=0.04, pan=0.3, reverb=0.45)
+VLN = S.track("バイオリン（最後のサビの対旋律）", "fiddle", patch="violin", volume=0.08, pan=-0.12, reverb=0.42, gainDb=1, bright=-0.3, attack=0.08, release=0.5)
+TR = -7                                   # 書き出しの前に全体を下げる半音（teto の transpose と同じ）
 
 # ================= 歌の旋律と歌詞（A♭長調の度数。oct=4 で 1 = A♭4。書き出しの前に全体を 7半音下げる） =================
 VERSE = ["R:1 3:0.5 3:0.5 2:0.5 1:0.5", "2:1 7,:1.5 R:0.5", "R:1 3:0.5 4:0.5 5:0.5 6:0.5", "5:1.5 R:1.5",
@@ -131,6 +138,14 @@ for b in range(S.nb):
     elif n.startswith("勢いを"):
         for j in range(2): AC2[j].bar(b, f"R:0.5 {nm(v[j])}:0.5 {nm(v[j])}:0.5 R:0.5 {nm(v[j])}:0.5 {nm(v[j])}:0.5" if i < 7 else f"{nm(v[j])}:1 R:2")
 
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 合いの手: Aメロの句の終わり（歌が伸ばして休む所）に短い返事。
+#   1番はオルゴール（グロッケン）、2番はアコーディオンが受け取る（楽器の受け渡しで 2番を少し変える）
+ANS = {3: "R:1.5 7:0.5 5:0.5 3:0.5", 7: "R:2 5:0.5 1':0.5", 11: "R:1.5 5:0.5 3:0.5 7,:0.5"}
+for i, b in enumerate(S.sc("こぎ始め")):
+    if i in ANS: MB.bar(b, K.mel(ANS[i], oct=5))
+for i, b in enumerate(S.sc("もう一度こぐ")):
+    if i in ANS: AC.bar(b, K.mel(ANS[i], oct=4))
+
 # ================= ピアノ（サビは8分の分散、Aメロは左手の低音） =================
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
@@ -155,23 +170,46 @@ for b in range(S.nb):
         v = voice(S.chords[b], 67, 3)
         for j in range(3): STR[j].bar(b, f"{nm(v[j])}:3")
 
-# ================= ベース（ワルツ: 1拍目、サビは 1拍目と3拍目） =================
+# ================= ベース（ワルツ。歌うベース） =================
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 3拍子の歌うベースに書きなおした（共通の sing_bass は4拍子用なので、曲の中で書く）。
+#   前は E1 から数えて書いていたので、書き出しで 7半音下がると A0〜D#1（4弦のベースより低い）になっていた。B1 から数えて、下げたあと E1〜E3 に収める。
+#   waltz＝1拍目と3拍目／long＝のばす／step＝和音を上っていく／lead＝次の和音へ寄っていく（歌が伸ばす小節で動く）／
+#   six・sixrun＝6/8 の付点4分2つと、後ろを駆ける形／ch＝サビの形（前のまま）
+BL = nm(28 - TR)
+def b3(b, style):
+    ch = S.chords[b].split("|")[0]; r = low(ch, BL)
+    nx = low(S.chords[b + 1].split("|")[0], BL) if b + 1 < S.nb else r
+    if nx - r > 6: nx -= 12
+    if r - nx > 6: nx += 12
+    up = tones(ch, nm(r + 1), nm(r + 12)); c1 = up[0] if up else r + 4; c2 = up[1] if len(up) > 1 else r + 7
+    o, f5 = r + 12, r + 7
+    a = nx - 1 if nx > r else (nx + 1 if nx < r else f5)
+    N = nm
+    return {"waltz": f"{N(r)}:1! R:1 {N(f5)}:1", "long": f"{N(r)}:2 {N(o)}:1", "step": f"{N(r)}:1! {N(c1)}:1 {N(c2)}:1",
+            "lead": f"{N(o)}:1 {N(f5)}:1 {N(a)}:1", "six": f"{N(r)}:1.5! {N(f5)}:1.5", "sixrun": f"{N(r)}:1.5! {N(f5)}:0.5 {N(o)}:0.5 {N(a)}:0.5",
+            "ch": f"{N(r)}:1! {N(o)}:1 {N(f5)}:0.5 {N(a)}:0.5", "hold": f"{N(r)}:6", "end": f"{N(r)}:1! R:2"}[style]
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
-    ch = S.chords[b]; r = low(ch, "E1")
     if n in ("オルゴール",): continue
     if n == "止まったブランコ":
-        if i % 2 == 0: BASS.bar(b, f"{nm(r)}:6")
+        if i % 2 == 0: BASS.bar(b, b3(b, "hold"))
     elif n.startswith("勢いを"):
-        BASS.bar(b, f"{nm(r)}:1.5! {nm(r + 7)}:1.5" if i < 7 else f"{nm(r)}:1! R:2")     # 6/8: 付点4分で2つ
-    elif n in ("空へ", "いちばん高く", "もっと高く", "風を切る", "子どものころ"):
-        nx = low(S.chords[b + 1], "E1") if b + 1 < S.nb else r
-        BASS.bar(b, f"{nm(r)}:1! {nm(r + 12)}:1 {nm(r + 7)}:0.5 {nm(nx - 1 if nx > r else nx + 1)}:0.5")
+        BASS.bar(b, b3(b, "end") if i == 7 else b3(b, "six" if i % 2 == 0 else "sixrun"))
+    elif n in ("空へ", "いちばん高く", "もっと高く", "風を切る") or (n == "子どものころ" and i >= 8):
+        BASS.bar(b, b3(b, {1: "step", 3: "lead"}.get(i % 4, "ch")))
+    elif n == "子どものころ":
+        BASS.bar(b, b3(b, "long" if i % 2 == 0 else "lead"))
     elif n == "着地":
-        if i < 8: BASS.bar(b, f"{nm(r)}:1! R:1 {nm(r + 7)}:1")
-        elif i == 8: BASS.bar(b, f"{nm(r)}:6")
+        if i < 8: BASS.bar(b, b3(b, "waltz"))
+        elif i == 8: BASS.bar(b, b3(b, "hold"))
+    elif n in ("こぎ始め", "もう一度こぐ") and i >= 8:
+        BASS.bar(b, b3(b, "step" if i % 2 == 0 else "lead"))
+    elif n == "もう一度こぐ":
+        BASS.bar(b, b3(b, "waltz" if i % 2 == 0 else "lead"))
+    elif n == "風の中":
+        BASS.bar(b, b3(b, "waltz" if i % 2 == 0 else ("lead" if i % 4 == 3 else "long")))
     else:
-        BASS.bar(b, f"{nm(r)}:1! R:1 {nm(r + 7)}:1" if i % 2 == 0 else f"{nm(r)}:2 {nm(r + 12)}:1")
+        BASS.bar(b, b3(b, "waltz" if i % 2 == 0 else "long"))
 
 # ブランコのきしみ（弦をこする長い音・短い音）
 for i, b in enumerate(S.sc("オルゴール")):
@@ -180,6 +218,16 @@ for i, b in enumerate(S.sc("止まったブランコ")):
     if i in (0, 6, 12): CREAK.bar(b, "F2:1 R:2")
 for i, b in enumerate(S.sc("着地")):
     if i in (8, 10): CREAK.bar(b, "E2:3" if i == 8 else "F2:1.5 R:1.5")
+
+# ブランコが風を切る（物語の音）: 1往復＝2小節。風を切る・最後のサビの前半でゆれ、着地でだんだん小さく・まばらになる
+for name, bars in (("風を切る", range(8)), ("もっと高く", range(8))):
+    for i in bars:
+        SW[i % 2].bar(S.sc(name)[i], "A4:1 R:2")
+for i in (0, 2, 5): SWQ.bar(S.sc("着地")[i], "A4:1 R:2")
+# 最後のサビの対旋律（A長調の音名で書く。書き出しで 7半音下がる）。後半の16小節
+VLM = ["F#6:3", "E6:1.5 D6:1.5", "B5:3", "G#5:1.5 B5:1.5", "E6:3", "G#6:1.5 E6:1.5", "C#6:3", "A5:1.5 C#6:1.5",
+       "D6:3", "D6:1.5 B5:1.5", "C#6:3", "F6:3", "F#6:3", "F6:1.5 D6:1.5", "C#6:3", "A5:3"]
+for i, b in enumerate(S.sc("もっと高く")[16:]): VLN.bar(b, VLM[i])
 
 # 効果音
 riser(FX, S.sc("空へ")[0], 3, "C4"); riser(FX, S.sc("いちばん高く")[0], 3, "C4"); riser(FX, S.sc("もっと高く")[0], 6, "D4")
@@ -248,10 +296,33 @@ for b in range(S.nb):
         if i == 0: crash(D, b, "C2", 3)
         if i == 7: D.set(b, "X...........", "X...........", "." * 12); crash(D, b, "C2", 6)
 
+# 2026-10-26 人間「ドラム強弱、アクセント、余韻も上手く使ってね」→ 3拍子のドラムは共通の遊び（kick_vary・spice は4拍子用）が入らないので、
+#   ここで小さく足す: 同じ形が続く句の4小節目は3拍目の裏で開いたハイハットと次の小節へのキックの食い、6小節目はスネアのゴースト。
+#   Aメロの前半はスネアを弱く（x）、サビの句の頭（8小節ごと）は強く
+for b in range(S.nb):
+    n, i, L, k = S.scene_of(b)
+    if n not in ("こぎ始め", "もう一度こぐ", "空へ", "いちばん高く", "もっと高く", "風の中") or i == L - 1: continue
+    kk, ss, hh = list(D.K[b]), list(D.S[b]), list(D.H[b])
+    if i % 8 == 3:
+        if kk[10] == ".": kk[10] = "x"
+        if hh[10] in "xX": hh[10] = "O"
+    if i % 8 == 5 and ss[7] == ".": ss[7] = "o"
+    if n in ("空へ", "いちばん高く", "もっと高く") and i % 8 == 0: kk[0] = "X"; ss[4] = "X" if ss[4] != "." else ss[4]
+    D.K[b], D.S[b], D.H[b] = "".join(kk), "".join(ss), "".join(hh)
+
 # 止め: 勢いをつけるの最後（1拍だけ）・子どものころの最後（1拍だけ）。1拍の完全な無音: 止まったブランコの最後の拍
 for name in ("勢いをつける", "勢いをつける2", "子どものころ"): SIL.add(S.sc(name)[-1], 1, 3)
 SIL.add(S.sc("止まったブランコ")[-1], 2, 3)
 SIL.apply()
+# 止めのあと: シンバルの鳴りを止めずに伸ばす（止めの消去のあとで、止めの小節の頭に長いクラッシュを置き直す）
+for name in ("勢いをつける", "勢いをつける2", "子どものころ"):
+    b = S.sc(name)[-1]
+    D.C.ev = [e for e in D.C.ev if abs(e[0] - b * S.beats) > 1e-6]; D.cym(b, "C2:3")
+# 書き出しの前の移調（−7半音）は、ブランコのきしみ（guitarFx の鍵盤＝こすり方の種類）を E2・F2 から A1・B♭1（種類の外）へずらしていた。先に +7 しておく
+def keep_key(tracks, T):
+    for t in tracks:
+        t.ev = [(st, L, nm(midi(x.split(":")[0]) + T) + ":" + x.split(":", 1)[1]) for st, L, x in t.ev]
+keep_key([CREAK], -TR)
 
 S.fade_out = 0
 S.desc = ("仮: ボカロ曲インスト25曲（作り直し）の18。J-POP（3拍子）。D♭長調・144・3/4（Bメロは 6/8 のノリ）・最後のサビ +1（D）。"

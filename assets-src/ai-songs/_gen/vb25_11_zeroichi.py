@@ -55,7 +55,9 @@ CHOP = S.track("声のようなシンセ", "lead", patch="surgeFormantPulse", vo
 REPLY = S.track("君の返事（声のようなシンセ・対旋律）", "lead", patch="surgeFormantPulse", volume=0.07, mono=True, pan=-0.25, reverb=0.3)
 FB = [S.track(f"フューチャーベースの和音{i + 1}", "pad", patch="surgeChordVisitorPlayground", volume=0.05, pan=[-0.6, 0.6, 0][i], reverb=0.3, duck=0.5) for i in range(3)]
 SAW = [S.track(f"厚い和音{i + 1}", "pad", patch="surgePadNeverending", volume=0.045, pan=[-0.7, 0.7][i], reverb=0.3, duck=0.45) for i in range(2)]
-PAD = [S.track(f"こもったパッド{i + 1}", "pad", patch="surgePadVerbPad", volume=0.06, pan=[-0.5, 0.5][i], reverb=0.4,
+# 2026-10-26: 歌の版で MIDI のチャンネルが1つ足りず、シンバルの効果音がパッドの音で鳴っていた（点検の注意）。
+#   こもったパッド2本の左右（-0.5・0.5）を真ん中にそろえて、1つのチャンネルを分け合う（ローパスの奥の音なので、真ん中でも歌のじゃまをしない）
+PAD = [S.track(f"こもったパッド{i + 1}", "pad", patch="surgePadVerbPad", volume=0.06, pan=0.0, reverb=0.4,
                fx=[{"type": "filter", "kind": "lowpass", "freq": 900, "q": 0.8}]) for i in range(2)]
 BELL = S.track("ガラスのような鍵盤（データの粒）", "pad", patch="surgeKeysAliasGlassPiano2", volume=0.07, pan=0.25, reverb=0.45)
 GLITCH = S.track("グリッチ（ビットの崩れ）", "lead", patch="surgeDnaSeq", volume=0.06, pan=0.0, mono=True,
@@ -176,8 +178,8 @@ for name in ("データの川", "キャッシュの迷路"):
 FX.bar(S.sc("ログイン")[0] - 1, "A4:4")
 FX.bar(S.sc("ログイン")[0], "G4:4")                    # 2026-10-26: 電源が入る「ドーン」（サブドロップ）。起動のベルから一気に走り出す
 # 最後のサビ（光回線）の9〜22小節目: 君の返事の対旋律（歌が伸ばす所でゆっくり動く2分音符・全音符。A長調の度数）
-RP = ["3:2 6:2", "5:2 7:2", "5:2 3:2", "6:4", "4:2 6:2", "5:1 6:1 7:2", "1':4", "7:4"]
-RP2 = ["3:2 6:2", "5:2 7:2", "5:2 3:2", "6:4", "6:2 3:2", "5:1 6:1 7:2"]
+RP = ["3:2 6:2", "5:2 7:2", "5:2 3:2", "6:3 R:1", "4:2 6:2", "5:1 6:1 7:2", "1':4", "7:3 R:1"]   # 4小節ごとに息つぎ
+RP2 = ["3:2 6:2", "5:2 7:2", "5:2 3:2", "6:3 R:1", "6:2 3:2", "5:1 6:1 7:1 R:1"]
 for i, b in enumerate(S.sc("光回線")):
     if 8 <= i < 16: REPLY.bar(b, KA.mel(RP[i - 8], oct=4))
     elif 16 <= i < 22: REPLY.bar(b, KA.mel(RP2[i - 16], oct=4))

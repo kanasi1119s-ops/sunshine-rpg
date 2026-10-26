@@ -53,6 +53,12 @@ CG = [S.track(f"カッティング（クリーン{i + 1}）", "guitar", **clean_
 PNS = piano_spec(0.11, -0.25)
 PN = [S.track(f"ピアノ（右手{i + 1}）", "piano", **PNS) for i in range(2)]
 PNL = S.track("ピアノ（左手）", "piano", **PNS)
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ ピアノの右手の和音（3音）。PN と同じ設定で同じチャンネル。3本なので1本 0.08（分散和音 0.11 の1本と同じくらい）
+PNC = [S.track(f"ピアノ（右手の和音{i + 1}）", "piano", **{**PNS, "volume": 0.08}) for i in range(3)]
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 最後のサビの高い対旋律（ストリングス。背景なので 0.07・ブラスと反対の右へ）
+STRC = S.track("ストリングス（最後のサビの対旋律）", "strings", patch="stringEnsemble", **strings_spec(0.07, 0.4))
+T_ = -4   # 書き出しの前に全体を 4半音下げる。ベースは下げたあと E1〜E3 に入るよう、書く高さを G#1〜G#3 にする
+BL = nm(28 - T_)
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.2))
 CHIME = S.track("チャイム（FM ベル）", "fmBell", volume=0.12, pan=0, reverb=0.45, sustain=1.6)
 TIMP = S.track("ティンパニ（吹奏楽の打楽器）", "pad", patch="timpani", volume=0.12, pan=0.2, reverb=0.3)
@@ -206,28 +212,55 @@ for b in range(S.nb):
     if n in ("夜の教室で1人",):
         v = voice(ch, 64, 2)
         for j in range(2): PN[j].bar(b, f"{nm(v[j])}:1 {nm(v[j])}:1 {nm(v[j])}:2" if i % 2 == 0 else f"{nm(v[j])}:4")
-        PNL.bar(b, f"{nm(low(ch, 'C2'))}:4")
-    elif n in ("全部の部活", "2回目のサビ", "文化祭の朝", "前日の夕方", "前日の夕方2", "明日へ"):
-        PN[0].bar(b, piano_arp16(ch, "C#4", "C#6")); PNL.bar(b, piano_left8(ch, "C2"))
+        PNL.bar(b, f"{nm(low(ch, 'A2'))}:4")
+    # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ ピアノのコード弾き（右手の和音と左手）を場面で弾き分ける。
+    #   左手の書く高さ C2 → A2（下げたあと F2 から。G#1 まで下がって歌うベースと重なっていた）
+    #   Bメロ: 右手は和音で溜める（前半は2分、後半は4分で一歩ずつ）／サビの後半8小節: 和音を裏で押す（前半は分散和音）
+    elif n.startswith("前日の夕方") or n == "明日へ":
+        v = voice(ch, 66, 3)
+        if i < L - 1:
+            for j in range(3): PNC[j].bar(b, f"{nm(v[j])}:1! {nm(v[j])}:1 {nm(v[j])}:1 {nm(v[j])}:1" if i >= 4 else f"{nm(v[j])}:2 {nm(v[j])}:2")
+        else:
+            for j in range(3): PNC[j].bar(b, f"{nm(v[j])}:1! R:3")
+        PNL.bar(b, piano_left8(ch, "A2") if i < L - 1 else f"{nm(low(ch, 'A2'))}:1 R:3")
+    elif n in ("全部の部活", "2回目のサビ", "文化祭の朝"):
+        if i % 16 >= 8 and not (n == "文化祭の朝" and i >= 24):
+            v = voice(ch, 66, 3)
+            for j in range(3): PNC[j].bar(b, f"{nm(v[j])}:0.5! R:0.5 {nm(v[j])}:0.5 {nm(v[j])}:0.5 R:0.5 {nm(v[j])}:0.5 {nm(v[j])}:1")
+        else: PN[0].bar(b, piano_arp16(ch, "C#4", "C#6"))
+        PNL.bar(b, piano_left8(ch, "A2"))
     elif n == "軽音部と美術部" and i >= 8:
         v = voice(ch, 64, 2)
         for j in range(2): PN[j].bar(b, f"R:0.5 {nm(v[j])}:1 R:1 {nm(v[j])}:1.5")
 
-# ================= ベース =================
+# ================= ベース（歌うベース） =================
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 根音の8分・オクターブだけだったのを、場面ごとに旋律のあるベースに（音量 0.2 はそのまま）。
+#   書き出しの前の −4半音で C1 まで下がっていた（ベースの自然な音域の外）のを、書く高さを G#1〜G#3 にして、下げたあと E1〜E3 に入れた。
+#   準備開始: 前半はキックに合わせて押す、後半は押す・駆ける／Aメロ: 吹奏楽部（マーチ）の前半は2分のまま、演劇部の後半は歩く・上る
+#   Bメロ: 上っていく／サビ1: 前半はディスコのオクターブ（4つ打ちのダンスロック）、後半は押す・駆ける
+#   ダンス部: ジャージークラブの前半はハウスの裏打ちのまま、リフの後半は押す／2番: 押す形と歩く形を交互、後半は上る・下る
+#   サビ2（2ビート）: 押す・駆ける／ソロ: 前半は歩く、後半は押す／夜の教室: 前半は全音符、後半ゆったり動く／文化祭の朝: 押す、句の終わりで駆ける
+sb = lambda b, st: sing_bass(S, b, st, lo=28 - T_, hi=52 - T_)
+bl = lambda b, st: bass_line(S, b, st, lo=BL)
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
-    ch = S.chords[b]; r = low(ch, "E1")
+    ch = S.chords[b]; r = low(ch, BL)
     if n == "チャイム": continue
     if n == "チャイムで止める":
         if i < 2: BASS.bar(b, f"{nm(r)}:0.5! R:0.5 {nm(r)}:0.5! R:1 {nm(r)}:0.5 {nm(r + 12)}:1")
         elif i == 2: BASS.bar(b, f"{nm(r)}:4")
         continue
-    if n == "吹奏楽部と演劇部": BASS.bar(b, bass_line(S, b, "half" if i < 8 else "root8"))
-    elif n.startswith("前日の夕方") or n == "明日へ": BASS.bar(b, bass_line(S, b, "root8") if i < 7 else f"{nm(r)}:1! R:3")
-    elif n in ("全部の部活", "ダンス部"): BASS.bar(b, bass_line(S, b, "disco" if n == "全部の部活" else "house"))
-    elif n == "夜の教室で1人": BASS.bar(b, f"{nm(r)}:4")
-    elif n == "2回目のサビ": BASS.bar(b, bass_line(S, b, "oct8"))
-    else: BASS.bar(b, bass_line(S, b, "oct8" if n in ("文化祭の朝", "軽音部のギターソロ") else "push"))
+    if n == "準備開始": BASS.bar(b, bl(b, "push") if i < 4 else sb(b, "run" if i % 4 == 3 else "drive"))
+    elif n == "吹奏楽部と演劇部": BASS.bar(b, bl(b, "half") if i < 8 else sb(b, "walk" if i % 2 == 0 else "climb"))
+    elif n.startswith("前日の夕方") or n == "明日へ": BASS.bar(b, sb(b, "climb") if i < 7 else f"{nm(r)}:1! R:3")
+    elif n == "全部の部活": BASS.bar(b, bl(b, "disco") if i < 8 else sb(b, "run" if i % 4 == 3 else "drive"))
+    elif n == "ダンス部": BASS.bar(b, bl(b, "house") if i < 8 else sb(b, "run" if i % 4 == 3 else "drive"))
+    elif n == "夜の教室で1人": BASS.bar(b, f"{nm(r)}:4" if i < 8 else sb(b, "ride"))
+    elif n == "軽音部と美術部":
+        if i < 8: BASS.bar(b, sb(b, "walk") if i % 2 == 1 else bl(b, "push"))
+        else: BASS.bar(b, sb(b, "climb" if i % 2 == 0 else "fall"))
+    elif n == "軽音部のギターソロ": BASS.bar(b, sb(b, "walk" if i < 8 else ("run" if i % 4 == 3 else "drive")))
+    else: BASS.bar(b, sb(b, "run" if i % 4 == 3 else "drive"))
 
 # 効果音
 riser(FX, S.sc("全部の部活")[0], 4, "C4"); riser(FX, S.sc("2回目のサビ")[0], 4, "C4")
