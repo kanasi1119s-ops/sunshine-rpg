@@ -75,6 +75,12 @@ for t_ in (LG, LGS, LGF):
     t_.spec["volume"] = round(t_.spec["volume"] * 1.25, 3)
     t_.spec["fx"] = list(t_.spec["fx"]) + [{"type": "eq", "low": 0, "mid": 3, "midHz": 2500, "high": 0.5}]
 PMF.spec["volume"] = 0.29; PMF.spec["pan"] = -0.3
+# 2026-10-26 人間（07）「聞こえるけどもう少し響かせてもいいかも」→ 速いフレーズに響きを足す:
+#   リフと合いの手のギターは付点8分のピンポンディレイ（0.75拍・18%）とプレート（22%）、ピアノの駆け下りは残響 0.2→0.34 と短いディレイ
+for t_ in (LG, LGF):
+    t_.spec["fx"] = list(t_.spec["fx"]) + [{"type": "pingpong", "beats": 0.75, "mix": 0.18, "feedback": 0.3}, {"type": "plate", "mix": 0.22}]
+PMF.spec["reverb"] = 0.34
+PMF.spec["fx"] = list(PMF.spec["fx"]) + [{"type": "delay", "beats": 0.75, "mix": 0.14, "feedback": 0.25}]
 for g_ in GT:
     g_.spec["volume"] = 0.085
     g_.spec["fx"] = list(g_.spec["fx"]) + [{"type": "eq", "low": 0, "mid": -3.5, "midHz": 2400, "high": 0}]
