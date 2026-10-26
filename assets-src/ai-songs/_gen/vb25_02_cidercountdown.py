@@ -314,7 +314,12 @@ for b in range(S.nb):
         elif i < 7: vgroove(D, b, "break1", ghosts=0.3, seed=b)
         if i == 0: crash(D, b, "G2")
         if i == 6: put_fill(D, b, "build")
-        if last: D.set(b, "." * 16, "............xXXX", "." * 16)            # サビ直前の1小節は、ベースと歌の役だけ（最後の1拍だけ助走）
+        if last:
+            # 2026-10-26 人間（02）「さびに入る前のアクションとかも入れてほしい」→ サビ直前の1小節に、全員の「キメ」:
+            #   1拍目・2拍目の裏・3拍目の裏で全員が「ジャン、ジャ、ジャン」とそろえて打ち、4拍目はスネアの16分で駆け上がってサビへ。
+            #   キメのたびにクラッシュ（鳴りは伸ばす）。下の「サビ前のキメ」でギター・ベース・ピアノも同じ所を弾く
+            D.set(b, "X.....X...X.....", "X.....X...X.xxXX", "." * 16)
+            D.cym(b, "C2:1.5! G2:1! C2:1.5!")
     elif n in ("あと5分", "あと3分", "打ち上げ"):
         if n == "打ち上げ" and i >= 28:
             if i == 28: D.set(b, "X" + "." * 15, "X" + "." * 15, "." * 16); crash(D, b, "C2", 8)
@@ -349,6 +354,18 @@ for b in range(S.nb):
             if i == 0: crash(D, b, "C2", 8)
         elif i == 4: D.cym(b, "E2:4")
 
+# サビ前のキメ（坂道・坂道2 の最後の小節。ドラムは上のドラムの所で書いた）: 全員で「ジャン（1拍目）、ジャ（2拍目の裏）、ジャン（3拍目の裏）」
+S.keep_drums = set()
+for name in ("坂道", "坂道2"):
+    b = S.sc(name)[-1]; S.keep_drums.add(b)
+    ch = S.chords[b]; pw = power(ch, "E2"); r = low(ch, "E1"); vv = voice(ch, 66, 3)
+    KIME = "X:1.5! X:1! X:1.5!"
+    for j in range(2): GT[j].bar(b, KIME.replace("X", nm(pw[j])))
+    BASS.ev = [e for e in BASS.ev if not (b * 4 - 1e-6 <= e[0] < (b + 1) * 4)]
+    BASS.bar(b, KIME.replace("X", nm(r)))
+    for j in range(3): PC[j].bar(b, KIME.replace("X", nm(vv[j])))
+    PL.bar(b, KIME.replace("X", nm(low(ch, "E2"))))
+cym_swell(CYM, S.sc("あと5分")[0], 1, "C4"); cym_swell(CYM, S.sc("あと3分")[0], 1, "C4")   # 逆再生のシンバルがサビの頭に吸いこまれる
 # 坂の上: 1拍目のあとは全員休み（虫の声だけ残す）
 SIL.add(S.sc("坂の上")[0], 1, 4)
 # 導火線の最後の1拍は、完全な無音（虫の声も、何もかも）

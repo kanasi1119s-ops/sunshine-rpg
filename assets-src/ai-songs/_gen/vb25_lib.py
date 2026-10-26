@@ -51,6 +51,7 @@ class Silence:
     """1拍の完全な無音や止めを記録して、全パートの音をその拍から消す（write の前に apply）"""
     def __init__(self, song):
         self.song = song; self.spans = []
+        song._silences = getattr(song, "_silences", []) + [self]   # pro_drums が止め・無音の小節をよけるため
 
     def add(self, b, from_beat, to_beat):
         B = self.song.beats
@@ -317,6 +318,7 @@ def kick_vary(S):
     同じキックの形が続く所で、キックの置き場所だけを変える（音の数は同じか少なく。2・4拍のスネアとはなるべく重ねない＝スネアが抜けて聞こえる）。
     4小節を1つの句として「元の形 → 変えた形 → 元の形 → 句の終わりの形」（1・3小節目は元のまま＝単調のよさを残す）。8小節ごとに別の形を選ぶ。
     曲ごとに選ぶ形を変える。エレクトロのキット（踊る4つ打ちが芯の曲）は、サビの4つ打ちには手をつけない"""
+    if getattr(S, "_pro", False): return   # プロの演奏のフレーズを当てはめた曲は、自動の遊びを重ねない
     if getattr(S, "no_spice", False): return
     D = getattr(S, "drums", None)
     if D is None or D.n != 16: return
@@ -336,7 +338,7 @@ def kick_vary(S):
         elif hk == {0, 2, 4, 8, 10, 12}: fam = "six"
         elif 0 in hk and 8 in hk and 2 <= len(hk) <= 3 and hk <= {0, 2, 6, 8, 10, 14}: fam = "two"
         else: fam = None
-        if fam is None or kind in ("break", "intro", "outro") or i == L - 1 or (fam == "four" and S.kit == "electro" and kind in ("chorus", "drop")):
+        if fam is None or kind in ("break", "intro", "outro") or i == L - 1 or (fam == "four" and four_floor_ok(S)):   # 2026-10-26「その曲に合ったドラム」: 踊る4つ打ちはくずさない
             run, prev = 0, None; continue
         key = (g.upper(), "".join("x" if c in "Xx" else "." for c in D.S[b]))
         run = run + 1 if key == prev else 0
@@ -363,6 +365,7 @@ def spice(S):
     同じ形の小節が続く所だけ、続いた数に合わせて少しずつ遊びを足す（1小節目はそのまま＝単調のよさを残す）。
     Aメロ（verse）・静かな所（break・bridge・outro）は控えめ（4小節に1回の開いたハイハットだけ）。サビ・間奏・ソロ・Bメロは、
     キックの食い（4拍目の裏）・裏拍のハイハットのアクセント・スネアのゴースト・2拍の短いフィルを、ずらしながら入れる"""
+    if getattr(S, "_pro", False): return   # プロの演奏のフレーズを当てはめた曲は、自動の遊びを重ねない
     if getattr(S, "no_spice", False): return   # 曲の台本の側で叩き方を細かく変えている曲（24 のジャズのドラムなど）は足さない
     D = getattr(S, "drums", None)
     if D is None or D.n != 16: return
@@ -396,6 +399,7 @@ def spice(S):
 def vwrite(S, extra_flags=""):
     """vb25 の名前で書き出す。S.kit が crocell-punch のときもフラグを書く"""
     path = sys.argv[1] if len(sys.argv) > 1 else f"/tmp/vp25/vb25-{S.no}-{S.slug}.json"
+    pro_drums(S)
     kick_vary(S)
     spice(S)
     playable(S)
@@ -734,3 +738,87 @@ def declutter(S):
         elif t.inst in MID and (t.spec.get("patch") or "") not in ("guitarFx", "cymbalFx"):
             t.spec["fx"] = list(t.spec.get("fx", [])) + [{"type": "eq", "low": 0, "mid": -1.5, "midHz": 320, "high": 0}]; n += 1
     if n: print(f"  こもりの元を削った: {n}パート")
+
+
+def pro_drums(S):
+    """2026-10-26 人間「ドラム、ライド使ってる場面はライド使ってほしいし、フィルはあってもいいと思うし、アクセントって大事。
+    あれだけドラムの素材勉強してきたのに生かされてないね」:
+    学んだドラムのフレーズ集（プロのドラマーの8小節の演奏 2,628個。docs/sound/drum-phrase-library.md）から、場面に合う演奏を選んで当てはめる。
+    ・場面の種類で強さを選ぶ（Aメロは軽く、Bメロは中くらい、サビは強く。Aメロ・Cメロは一段弱く、サビは2・4拍を強く）
+    ・台本でライドを使っていた場面、Cメロはライドの演奏を選ぶ／Half feel の場面は half の演奏を選ぶ
+    ・場面の最後の小節にフィル（プロの演奏の、4・8小節目のフィル）。直前と同じ演奏・同じ種類のフィルは続けない
+    ・止め・1拍の無音・ドラムの無い小節・場面の頭の特別な入り（前奏の最初・ブレイク）は、台本のまま残す
+    S.no_pro_drums = True の曲（24 のジャズ・3拍子の曲など）は何もしない"""
+    if getattr(S, "no_pro_drums", False) or getattr(S, "no_spice", False): return
+    D = getattr(S, "drums", None)
+    if D is None or D.n != 16 or S.beats != 4: return
+    styles = drum_styles(S)
+    if not styles:
+        print("  プロの演奏のフレーズ: この曲のジャンル（" + S.genre + "）は打ち込みのドラムが芯なので、台本のまま"); return
+    try:
+        from loud25_drums import Library, _notes, TOM, CYM
+    except Exception as e:
+        print("  プロの演奏のフレーズ: 読めない", e); return
+    lib = Library(seed=int(S.no) * 13 + 5)
+    B = S.beats
+    sil = [sp for sl in getattr(S, "_silences", []) for sp in sl.spans]
+    def silent(b): return any(a < (b + 1) * B - 1e-6 and z > b * B + 1e-6 for a, z in sil)
+    def hits(g): return sum(1 for c in g if c in "xXoO")
+    def groove(b):
+        return hits(D.K[b]) >= 2 and sum(1 for c in D.S[b] if c in "xX") >= 1 and not silent(b) and b not in getattr(S, "keep_drums", set())   # keep_drums: 台本で決めた小節（キメなど）
+    KMAP = {"verse": "verse", "pre": "pre", "chorus": "chorus", "interlude": "inter", "solo": "solo", "bridge": "bridge",
+            "build": "pre", "drop": "chorus", "intro": "intro", "outro": "outro"}
+    n_bars = 0; ids = []
+    for name, b0, L, kind in S.scenes:
+        if kind not in KMAP: continue
+        runs, cur = [], []
+        for b in range(b0, b0 + L):
+            if groove(b): cur.append(b)
+            elif cur: runs.append(cur); cur = []
+        if cur: runs.append(cur)
+        for run in runs:
+            if len(run) < 2: continue
+            a, z = run[0] * B, (run[-1] + 1) * B
+            ride = any(a - 1e-6 <= e[0] < z and str(e[2]).startswith("D2") for e in D.C.ev)
+            half = sum(1 for b in run if D.S[b][8] in "xX" and D.S[b][4] not in "xX" and D.S[b][12] not in "xX") >= len(run) / 2
+            cond = {}
+            if ride or kind == "bridge": cond["need_ride"] = True
+            if half: cond["feel"] = "half"
+            dyn = "soft" if kind in ("verse", "bridge", "intro", "outro") else ("hard" if kind in ("chorus", "drop") else None)
+            cond["styles"] = styles
+            try:
+                bars = lib.fit(len(run), kind=KMAP[kind], bpm=S.bpm, dynamics=dyn, crash_start=(run[0] == b0), **cond)
+            except Exception as e:
+                print("  プロの演奏のフレーズ: 選べない", name, e); continue
+            for t in (D.T, D.C):
+                t.ev = [e for e in t.ev if not (a - 1e-6 <= e[0] < z - 1e-6)]
+            for b, bar in zip(run, bars):
+                D.K[b], D.S[b], D.H[b] = bar["k"], bar["s"], bar["h"]
+                if bar["t"].strip("."): D.T.bar(b, _notes(bar["t"], TOM))
+                if bar["c"].strip("."): D.C.bar(b, _notes(bar["c"], CYM))
+            n_bars += len(run); ids += [x for x in dict.fromkeys(bb.get("_id") for bb in bars) if x]
+    if n_bars:
+        S._pro = True
+        print(f"  プロの演奏のフレーズを当てはめた: {n_bars}小節・{len(set(ids))}種類")
+
+
+def drum_styles(S):
+    """2026-10-26 人間「その曲に合ったドラムにしてほしい」: 曲のジャンルに合う、プロの演奏のジャンル（フレーズ集の style）を選ぶ。
+    バンドで叩くジャンル（ロック・J-POP のバンド・ピアノロック・ニューメタル・ダンスロック）、ブームバップ、レトロポップだけ当てはめる。
+    ダンス（ディスコ・ハウス・フューチャーベース・EDM）・テクノポップ・エレクトロニカ・トラップ・ドラムンベース・ジャズ・3拍子は、
+    打ち込みのドラム（4つ打ちなど）がそのジャンルの芯なので当てはめない（None）。S.drum_styles で曲ごとに上書きできる"""
+    if hasattr(S, "drum_styles"): return S.drum_styles
+    g = S.genre
+    if any(w in g for w in ("3拍子", "スウィング", "ジャズ")): return None
+    if "ニューメタル" in g or "ラップロック" in g: return ["rock", "loudrock", "hiphop", "funk"]
+    if "ブームバップ" in g: return ["hiphop", "funk", "soul"]
+    if "レトロポップ" in g: return ["funk", "soul", "pop", "dance"]
+    if "ダンスロック" in g or "テクノ×バンド" in g: return ["rock", "dance", "pop", "funk"]
+    if any(w in g for w in ("ロック", "J-POP")) and not any(w in g for w in ("ダンス（", "ハウス", "トラップ", "ドラムンベース")): return ["rock", "pop", "funk"]
+    return None
+
+
+def four_floor_ok(S):
+    """ダンス系（4つ打ちが芯）の曲か"""
+    g = S.genre
+    return any(w in g for w in ("ダンス", "ディスコ", "ハウス", "フューチャーベース", "テクノポップ", "エレクトロ", "ハイパーポップ", "グリッチ", "K-POP"))
