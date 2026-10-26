@@ -38,6 +38,7 @@ def frags(b, ts, dd, off_s, seq0):
     for t, i, sz, h in boxes(b):
         if t == "moof" and first is None: first = i
         if first is None: continue
+        if t == "mfra": continue   # 曲ごとの目次は入れない（入れると、再生ソフトが1曲目の終わりで動画が終わると読んでしまう。2026-10-27）
         chunk = bytearray(b[i:i + sz])
         if t == "moof":
             for t2, j, s2, h2 in boxes(chunk, h, sz):
