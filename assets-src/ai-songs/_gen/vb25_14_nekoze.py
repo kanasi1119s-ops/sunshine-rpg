@@ -141,7 +141,11 @@ def steps(who, b, pat="R"):
     k = STEP_KEY[who]
     s = {"R": f"{k}:1! {k}:1 {k}:1! {k}:1", "L": f"R:0.5 {k}:1 {k}:1 {k}:1 {k}:0.5", "H": f"{k}:1! {k}:1 R:2"}[pat]
     STEP[who].bar(b, s)
-for b in S.sc("路地の入口")[:4]: steps(0, b, "R")
+# 2026-10-26 人間「後半に行くにつれて曲の始まり方似てない？」→ 前奏の頭は、足音とベースの掛け合い:
+#   1小節目＝足音だけ（とぼとぼ）→ 2小節目＝ベースが答える（足は止まる）→ 3小節目＝2歩だけ歩いて、ベースが後ろ半分で答える → 4小節目＝いっしょに歩き出す
+IN_STEP = ["R", None, "H", "R"]
+for i, b in enumerate(S.sc("路地の入口")[:4]):
+    if IN_STEP[i]: steps(0, b, IN_STEP[i])
 for i, b in enumerate(S.sc("集まってくる") + S.sc("集まってくる2")):
     if i % 8 == 7: continue                                       # 止めの小節は足音も止まる
     steps(0, b, "R")
@@ -184,6 +188,8 @@ BRIFF = {"Fm9": "F1:0.75! F1:0.25 R:0.5 Ab1:0.5 C2:0.75 F2:0.25 Eb2:0.5 C2:0.5",
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     ch = S.chords[b]; r = low(ch, "E1")
+    if n == "路地の入口" and i == 0: continue                       # 掛け合い: 1小節目は足音だけ
+    if n == "路地の入口" and i == 2: BASS.bar(b, "R:2 " + " ".join(BRIFF[ch].split()[4:])); continue   # 後ろ半分で答える
     if n in ("路地の入口", "ぶらぶら", "2周目", "塀の上") and ch in BRIFF:
         BASS.bar(b, BRIFF[ch] if not (n == "ぶらぶら" and i % 8 == 7) else "C2:0.75! C2:0.25 R:0.5 G1:0.5 Bb1:0.5 C2:0.5 E2:0.5 G2:0.5")
     # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 歌うベース: Bメロの後半は上っていき（人が集まってくる）、

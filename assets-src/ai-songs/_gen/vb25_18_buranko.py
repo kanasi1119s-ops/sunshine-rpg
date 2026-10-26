@@ -117,7 +117,9 @@ put("もっと高く", KA, VCL, CL)
 put("着地", KA, VOUT, "ふわり/おりて/ただいまって", low=lambda i: i < 4)
 
 # ================= オルゴール（グロッケン） =================
-for i, b in enumerate(S.sc("オルゴール")): MB.bar(b, K.mel(VC[i], oct=5))
+# 2026-10-26 人間「後半に行くにつれて曲の始まり方似てない？」→ オルゴールのぜんまいが巻かれて鳴り出す:
+#   1小節目は、ぜんまいを巻く「ジジッ、ジジッ」（ピックで弦をこする短い音）のあと、3拍目でオルゴールが1音だけ鳴り出し、2小節目から旋律
+for i, b in enumerate(S.sc("オルゴール")): MB.bar(b, K.mel(VC[i], oct=5) if i else K.mel("R:2 1':1", oct=5))
 for i, b in enumerate(S.sc("止まったブランコ")):
     if i % 4 == 0: MB.bar(b, K.mel(["5:1 1':1 3':1", "4:1 1':1 4':1", "3:1 5:1 1':1", "6:1 1':1 4':1"][i // 4], oct=5))
 MB.bar(S.sc("着地")[9], KA.mel("1':3", oct=5))                # 最後の1音
@@ -214,6 +216,7 @@ for b in range(S.nb):
 # ブランコのきしみ（弦をこする長い音・短い音）
 for i, b in enumerate(S.sc("オルゴール")):
     if i % 4 == 3: CREAK.bar(b, "R:1.5 E2:1.5")
+CREAK.bar(S.sc("オルゴール")[0], "D2:0.25 D2:0.25 R:0.25 D2:0.25 D2:0.25 R:0.25 D#2:0.5 R:1")   # ぜんまい
 for i, b in enumerate(S.sc("止まったブランコ")):
     if i in (0, 6, 12): CREAK.bar(b, "F2:1 R:2")
 for i, b in enumerate(S.sc("着地")):

@@ -347,6 +347,21 @@ for b in range(S.nb):
         if i < 8 and D.S[b][4] == "X": D.S[b] = D.S[b][:4] + "x" + D.S[b][5:]
     elif (n.startswith("前線") or n == "北の町へ") and i < 4: soft_hat(b, keep_head=(i == 0))
     elif n == "予報士がひと息": soft_hat(b, keep_head=False)
+# 2026-10-26 人間「後半に行くにつれて曲の始まり方似てない？」→ 全員の一撃（25 と同じ入り方）をやめて、「ドラムだけ」で始める。
+#   速報の前の4小節は、タムを回すドラムの独奏（と歌）。5小節目の2回目の「はっぴーえんど」でクラッシュとともにバンドが入る
+TOMS = ["R:0.5 C4:0.5 R:0.5 A3:0.25 A3:0.25 F3:0.5 D3:0.5 R:0.5 A2:0.5!",
+        "R:0.5 C4:0.25 C4:0.25 R:0.5 A3:0.5 F3:0.5 R:0.5 D3:0.25 D3:0.25 A2:0.5",
+        "R:0.5 C4:0.5 R:0.5 A3:0.25 F3:0.25 R:0.5 D3:0.5 R:0.5 A2:0.25 A2:0.25"]
+for i, b in enumerate(S.sc("速報")[:4]):
+    if i < 3:
+        D.set(b, "X.....X...X.....", "....X.......X..." if i != 2 else "....X.......X.o.", "." * 16); D.tom(b, TOMS[i])
+    else:
+        D.set(b, "X.......X.......", "....X...xxXXxXXX", "." * 16)
+intro_end = S.bar_beat(S.sc("速報")[4])
+for t in S.tracks:
+    if t in (V.main, V.low) or "季節の音" in t.role: continue
+    t.ev = [e for e in t.ev if e[0] >= intro_end - 1e-6]
+crash(D, S.sc("速報")[4], "C2", 6)
 for name in ("前線が近づく", "前線が近づく2"): crash(D, S.sc(name)[-1], "C2", 8)
 crash(D, S.sc("北の町へ")[-1], "G2", 8)
 for name in ("九州・四国が笑顔", "関東が笑顔"):

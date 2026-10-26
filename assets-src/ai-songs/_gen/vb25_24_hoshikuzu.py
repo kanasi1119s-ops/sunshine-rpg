@@ -246,11 +246,11 @@ for i, b in enumerate(S.sc("星のダンス")):
     if i in (9, 15): fill(PNM, b, i // 2 + 1)
 for i, b in enumerate(S.sc("何を買う？")):
     if i < 4:
-        vv = voice(S.chords[b], 64, 3)
+        vv = voice(S.chords[b], 61, 3)   # ブラスの自然な音域に収める
         for j in range(3): put(BR[j], b, f"R:3 {nm(vv[j])}:0.5' R:0.5")
 for i, b in enumerate(S.sc("何を買う？2")):
     if i < 4 and i % 2 == 1:
-        vv = voice(S.chords[b], 64, 3)
+        vv = voice(S.chords[b], 61, 3)   # ブラスの自然な音域に収める
         for j in range(3): put(BR[j], b, f"R:3 {nm(vv[j])}:0.5' R:0.5")
 put(BELL, S.sc("店内放送")[0], "Bb5:0.5, D6:0.5, F6:0.5, Bb6:1.5, R:1")
 put(BELL, S.sc("店内放送")[-1], "R:2 A5:0.5, F#5:0.5, D5:0.5, A4:0.5,")

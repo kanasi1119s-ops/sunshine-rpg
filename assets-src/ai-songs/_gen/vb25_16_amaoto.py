@@ -148,7 +148,10 @@ for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     ch = S.chords[b]; v = voice(ch, 63, 3)
     pat = None
-    if n in ("雨音とエレピ", "軒下の雨宿り", "鳥の声"): pat = "X:4"
+    # 2026-10-26 人間「後半に行くにつれて曲の始まり方似てない？」→ 前奏は、雨粒がだんだんエレピの和音に変わっていく:
+    #   1小節目＝雨粒だけ／2小節目＝雨粒の落ちる所でエレピが和音の音を1つずつ（下の「雨粒が和音に」）／3小節目＝後ろ半分で和音／4小節目＝和音をのばす
+    if n == "雨音とエレピ": pat = None if i < 2 else ("R:2 X:2" if i == 2 else "X:4")
+    elif n in ("軒下の雨宿り", "鳥の声"): pat = "X:4"
     elif n in ("傘をさして", "傘の上の雨粒") or (n == "2回目の帰り道" and i >= 4): pat = COMP[i % 4]
     elif n == "2回目の帰り道": pat = "X:2 X:2"
     elif n in ("水たまり", "足取り"): pat = "X:1 X:1 X:1 X:1" if not (n == "足取り" and i == 3) else "X:2 R:2"
@@ -199,6 +202,14 @@ for b in range(S.nb):
 rnd = random.Random(16)
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
+    if n == "雨音とエレピ":
+        # 雨粒が和音に: 1小節目は雨粒6つ、2小節目からは雨粒が減り、そのかわりエレピが同じように落ちる音で和音の音を鳴らす
+        ts = tones(S.chords[b], "C5", "C7")
+        for j in range((6, 4, 2, 2)[i]):
+            DROP.at(S.bar_beat(b) + rnd.choice([x * 0.25 for x in range(16)]), f"{nm(rnd.choice(ts))}:0.25")
+        if i == 1: EPM.bar(b, " ".join(f"R:0.5 {nm(m)}:0.5" for m in tones(S.chords[b], "Eb4", "Eb5")[:4]))
+        if i == 2: EPM.bar(b, " ".join(f"{nm(m)}:0.5" for m in tones(S.chords[b], "Eb4", "Eb5")[:4]) + " R:2")
+        continue
     dens = {"雨音とエレピ": 6, "傘の上の雨粒": 6, "軒下の雨宿り": 4, "傘をさして": 3, "2回目の帰り道": 3, "水たまり": 2, "くるくる": 2, "足取り": 2}.get(n, 0)
     ts = tones(S.chords[b], "C5", "C7")
     for j in range(dens):
