@@ -283,3 +283,16 @@ Naked Drums（Wilkinson Audio、CC BY 4.0、1.3GB）、DRS Kit（CC BY 4.0）、
 | DotGothic16（歌詞・日本語の文字。デジタル風） | Google Fonts（https://github.com/google/fonts/tree/main/ofl/dotgothic16） | SIL OFL 1.1。商用可・動画の文字に使ってよい・同梱可（ライセンス文を一緒に置く）。フォント単体の販売は不可 | 動画への表記は不要。`tools/mv/fonts/OFL-DotGothic16.txt` |
 | Orbitron（英語の文字） | Google Fonts（https://github.com/google/fonts/tree/main/ofl/orbitron） | SIL OFL 1.1（同上） | 不要。`tools/mv/fonts/OFL-Orbitron.txt` |
 - 舞台の背景の絵と、テトの動画（元の動き）は人間が用意したもの（リポジトリには入れない）。
+
+## AI の歌声 DiffSinger（2026-10-27 追加。人間「作曲ソフトに使えそうなボカロソフトは？」「使えるようにできない？」→ OpenUtau＋DiffSinger を選んだ。作曲ソフト専用で、ゲーム本体 `dist/` には入れていない）
+
+動かし方は `tools/singer/ds_engine.py`（OpenUtau〔MIT〕の DiffSinger の書き出しと同じ手順を、onnxruntime で直接動かす）。歌の書き方で `"voice": "ds:ruko"` とすると使える。
+
+| 素材 | 入手元 | 規約の要点 | クレジット |
+|---|---|---|---|
+| 欲音ルコ♀ DiffSinger Ver.2.00（声。Normal・Soft） | 公式 long-sleeper.net（配布 zip を雲から直接） | 無料。ガイドライン https://long-sleeper.net/index.php?id=22 。個人の活動なら、動画・音楽配信で収益を得るのは問い合わせなしで可。それ以外の商用は事前の問い合わせが必要。同梱 Readme:「想定されたソフトウェア以外」で使うことの制限はない。**ほかのモデルの元（転移学習・ファインチューニング）にするのは禁止**。再配布は不可（作者と連絡が取れない場合のみ可）→ リポジトリには入れない | 収益化するときは「featuring 欲音ルコ」などを、できる限り表示する。ラベリング: カノン様・ちかの様 |
+| BigVGAN v2（44.1kHz・128本・hop 512。声を波形にする部分） | NVIDIA 公式 huggingface.co/nvidia/bigvgan_v2_44khz_128band_512x | MIT ライセンス（商用可） | 不要（MIT の著作権表示は同梱の LICENSE） |
+
+- **ゲームに入れて売る場合**は、ルコのガイドラインの「それ以外の商用」に当たるので、使う前に欲音ルコの窓口へ問い合わせる（人間の判断）。
+- **使わないと決めたもの**: openvpi の NSF-HiFiGAN（DiffSinger で標準のボコーダー）。重みの規約が CC BY-NC-SA 4.0（非営利のみ）で、書き出した音への扱いもはっきりしないため。代わりに BigVGAN で鳴らす（DiffSinger のメル〔40〜16000Hz〕を BigVGAN のメル〔0〜22050Hz〕に周波数で読みかえる。本物の歌声で確かめたら、劣化は本物のメルを使った時とほぼ同じ: 8.02dB 対 8.07dB）。
+- 候補として調べたほかの声（波音リツ・星野花見・No.7・戯白メリー・レウィ・筆音クミ・西蓮ガルド）と、外した理由は会話の記録（2026-10-27）に。

@@ -22,6 +22,7 @@ import soundfile as sf
 import pyworld as pw
 from scipy import signal
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 FP = 5.0  # WORLD のフレーム間隔（ミリ秒）
 CACHE = os.path.expanduser("~/.cache/sunshine-singer")
@@ -651,8 +652,12 @@ def render_song(song, sr_out, total_sec=None, dry=False):
     bpm = float(song["bpm"])
     mix = None
     for i, vd in enumerate(song.get("vocals", [])):
-        bank = Bank(vd.get("voice", "teto"))
-        v = build_vocal(vd, bpm, bank, sr_out, total_sec, seed=11 + i, tempo=song.get("tempo"), beats=int(song.get("beats", 4)))
+        if str(vd.get("voice", "")).startswith("ds:"):   # DiffSinger の声（ds_sing.py）。2026-10-27
+            import ds_sing
+            v = ds_sing.build_vocal_ds(vd, bpm, sr_out, total_sec, seed=11 + i, tempo=song.get("tempo"), beats=int(song.get("beats", 4)))
+        else:
+            bank = Bank(vd.get("voice", "teto"))
+            v = build_vocal(vd, bpm, bank, sr_out, total_sec, seed=11 + i, tempo=song.get("tempo"), beats=int(song.get("beats", 4)))
         v = polish(v, sr_out, vd)
         # 大きさは「歌っている所の平均（RMS）」でそろえる（ピークでそろえると、一瞬のとがった音のせいで全体が小さくなる）
         act = np.abs(v) > 1e-4
