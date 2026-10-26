@@ -139,18 +139,34 @@ for b in range(S.nb):
     elif n.startswith("風に乗る"): chords3(PN, b, ch, "X:2 X:2" if i < L - 1 else "X:2 R:2")
     elif n.startswith("島が見え"):
         chords3(PN, b, ch, "R:0.5 X:0.5 R:0.5 X:0.5 R:0.5 X:0.5 R:0.5 X:0.5" if (n != "島が見える？2" or i >= 8) else "X:0.75 X:0.75 X:0.5 X:0.75 X:0.75 X:0.5")
-        r = low(ch, "C2"); PNL.bar(b, f"{nm(r)}:1.5 {nm(r + 12)}:1 {nm(r)}:1.5")
+        # 2026-10-26 人間「ミックスのバランスをよくするのが大事」: ピアノの左手が書き出しで F1〜E2 まで下がってベースとにごっていた（低音のにごり 48%）。
+        #   G2 から数えて、鳴る高さを C2〜B2 に上げる（ベースの居場所を空ける）
+        r = low(ch, "G2"); PNL.bar(b, f"{nm(r)}:1.5 {nm(r + 12)}:1 {nm(r)}:1.5")
     elif n == "渡りの途中": chords3(PN, b, ch, "X:0.75 X:0.75 X:0.5 R:0.5 X:0.75 X:0.75")
     elif n == "雲を抜ける": chords3(PN, b, ch, "X:1 X:1 X:1 X:1" if i < 4 else "X:0.5 X:0.5 X:0.5 X:0.5 X:0.5 X:0.5 X:0.5 X:0.5")
     elif n == "島に着く": chords3(PN, b, ch, "R:0.5 X:0.5 R:0.5 X:0.5 R:0.5 X:0.5 R:0.5 X:0.5" if i < 6 else ("X:8" if i == 6 else ""))
     # ベース（根音。サビはオクターブ、Aメロはハウスの裏）
-    if n == "出発": BASS.bar(b, bass_line(S, b, "house") if i >= 4 else "R:4")
-    elif n in ("群れのおしゃべり", "夜の海"): BASS.bar(b, bass_line(S, b, "house" if i < 8 else "push"))
-    elif n.startswith("風に乗る"): BASS.bar(b, bass_line(S, b, "long") if i < L - 1 else f"{nm(low(ch, 'E1'))}:2 R:2")
-    elif n.startswith("島が見え") or n == "渡りの途中": BASS.bar(b, bass_line(S, b, "oct8"))
-    elif n == "雲の中" and i >= 8: BASS.bar(b, bass_line(S, b, "long"))
-    elif n == "雲を抜ける": BASS.bar(b, bass_line(S, b, "root8"))
-    elif n == "島に着く" and i < 7: BASS.bar(b, bass_line(S, b, "half" if i < 6 else "long"))
+    # 2026-10-26 人間「ミックスのバランスをよくするのが大事」: 書き出しで 7半音下がるため、E1 から数えたベースは A0〜G#1 になり、
+    #   出ない音（A0・A#0）と自然な音域より低い音が 264 個あった（低音が抜ける）。B1 から数えて、鳴る高さを E1〜D#2 にする（LB）
+    # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 歌うベース（sing_bass。lo=35・hi=59 で書く＝鳴る高さ E1〜E3）を場面ごとに:
+    #   Aメロ後半は、歌が休む小節で歩き（walk）、語る小節は押す（push）／Bメロ後半は上っていく／サビ1は前半オクターブのまま、後半から押す・駆ける／
+    #   サビ2（ジャージークラブ）は付点で弾む ride／最後のサビは全部押す・駆ける／ソロは上って下りる／雲を抜ける所の後半は上っていく
+    LB = "B1"; SB_ = lambda st: sing_bass(S, b, st, lo=35, hi=59)
+    if n == "出発": BASS.bar(b, bass_line(S, b, "house", lo=LB) if i >= 4 else "R:4")
+    elif n in ("群れのおしゃべり", "夜の海"):
+        if i < 8: BASS.bar(b, bass_line(S, b, "house", lo=LB))
+        else: BASS.bar(b, SB_("walk") if i % 2 == 1 else bass_line(S, b, "push", lo=LB))
+    elif n.startswith("風に乗る"):
+        if i < 4: BASS.bar(b, bass_line(S, b, "long", lo=LB))
+        elif i < L - 1: BASS.bar(b, SB_("climb"))
+        else: BASS.bar(b, f"{nm(low(ch, LB))}:2 R:2")
+    elif n == "島が見える？": BASS.bar(b, bass_line(S, b, "oct8", lo=LB) if i < 8 else SB_("run" if i % 2 == 1 else "drive"))
+    elif n == "島が見える？2": BASS.bar(b, SB_("run" if i % 4 == 3 else "ride"))
+    elif n == "島が見えた": BASS.bar(b, SB_("run" if i % 2 == 1 else "drive"))
+    elif n == "渡りの途中": BASS.bar(b, SB_("climb" if i % 2 == 0 else "fall"))
+    elif n == "雲の中" and i >= 8: BASS.bar(b, bass_line(S, b, "long", lo=LB))
+    elif n == "雲を抜ける": BASS.bar(b, bass_line(S, b, "root8", lo=LB) if i < 4 else SB_("climb"))
+    elif n == "島に着く" and i < 7: BASS.bar(b, bass_line(S, b, "half" if i < 6 else "long", lo=LB))
     # パッド（空）
     if n in ("雲の中", "風に乗る", "風に乗る2", "雲を抜ける", "波", "出発") or n.startswith("島が見え") or n == "島に着く":
         vv = voice(ch, 58, 3)
@@ -185,6 +201,31 @@ riser(FX, S.sc("島が見える？")[0], 4, "C4"); riser(FX, S.sc("島が見え�
 cym_swell(CYM, S.sc("島が見える？2")[0], 2, "C4"); cym_swell(CYM, S.sc("島が見えた")[0], 2, "C4"); cym_swell(CYM, S.sc("雲を抜ける")[0], 4, "E4")
 for b in S.sc("波"): WAVE.bar(b, "A4:4")
 for b in S.sc("島に着く")[4:]: WAVE.bar(b, "A4:4")
+
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ この曲の物語でしか出ない音:
+#   ・駅前の発車のチャイム（作った短い旋律。しずくのガラスのプラックで）を、羽ばたきの上に（旅立ちの駅）
+#   ・夜の電車の「ガタン、ゴトン」（カホンのトーンと低音を弱く）を、2番の前半（夜の電車の窓から海が見える）に
+#   ・雲の中の胸の音「ドクン」（キックを弱く）が、迷っている間に少しずつ速くなる（下のドラム）
+#   ・島に着いたら、波の音に小鳥の声（群れが降り立つ）
+DROP.bar(0, K.mel("R:1 3':0.5 5':0.5 1'':1 6':1", oct=4)); DROP.bar(1, K.mel("5':1.5 3':0.5 2':2", oct=4))
+for i, b in enumerate(S.sc("夜の海")):
+    if i < 8: PERC.bar(b, "D3:0.25, D3:0.25 R:1.5 A2:0.25, A2:0.25 R:1.5" if i % 4 != 3 else "D3:0.25, D3:0.25 R:0.75 D3:0.25, A2:0.25, A2:0.25 R:0.75 A2:0.25, D3:0.5,")
+season(S, S.sc("波")[0], "小鳥", S.beats * 8, vol=0.06, pan=-0.3, every=16)   # 右にプラック・カホンが多いので左に
+# 合いの手: Bメロで歌が3拍のばす小節に、プラックが風のように上る（1回目）・下りる（2回目）。弱く
+for name, pat in (("風に乗る", "R:1.5 3':0.25, 5':0.25, 6':0.5, 1'':0.5, R:1"), ("風に乗る2", "R:1.5 1'':0.25, 6':0.25, 5':0.5, 3':0.5, R:1")):
+    for i, b in enumerate(S.sc(name)):
+        if i in (1, 3): PLM.bar(b, K.mel(pat, oct=4))
+# 最後のサビ: 歌が伸ばす・休む所に、しずく（ガラスのプラック）の高い答え（新しい音）。2拍の答えと、1拍の「きらっ」
+for i, b in enumerate(S.sc("島が見えた")):
+    if i in (3, 7, 11): DROP.bar(b, KF.mel(["R:2 3':0.5 5':0.5 1'':1", "R:2 2':0.5 3':0.5 5':1", "R:2 6':0.5 5':0.5 3':1"][i // 4], oct=4))
+    elif i in (1, 5, 13): DROP.bar(b, KF.mel("R:3 5':0.5 1'':0.5", oct=4))
+# 出発: ドラムが入る小節（5小節目）の前にライザー、頭に「ドン」。+2 の最後のサビの頭（1拍のブレイクのあと）にも「ドン」。音量 0.08
+IMP = S.track("インパクト（ドン）", "impactHit", volume=0.08, pan=0.0, reverb=0.4)
+riser(FX, S.sc("出発")[4], 4, "C4")
+IMP.bar(S.sc("出発")[4], "D2:4"); IMP.bar(S.sc("島が見えた")[0], "D2:4")
+# 2026-10-26 人間「ミックスのバランスをよくするのが大事」: カホンは書き出しで 7半音下がるので、もとの D3（トーン）が G2 になって鳴っていなかった
+#   （カホンは鍵盤で打ち方を選ぶ楽器）。全部を +7 半音で書き直して、書き出しのあとに書いたとおりの打ち方（A2〜C#3 低音・D3 トーン・E3〜G3 スラップ）になるようにする
+PERC.ev = [(st, L, nm(midi(x.split(":")[0]) + 7) + ":" + x.split(":", 1)[1]) for st, L, x in PERC.ev]
 
 # ================= ドラム =================
 for b in range(S.nb):
@@ -221,7 +262,9 @@ for b in range(S.nb):
         if i == 3: put_fill(D, b, "small")
         if last: put_fill(D, b, "build")
     elif n == "雲の中":
-        if i >= 12: D.set(b, "X...X...X...X..." if i >= 14 else "X.......X.......", "." * 16, "." * 16)
+        # 2026-10-26: 迷っている胸の音「ドクン」が、ベースが入る所（9小節目）から弱く鳴り、少しずつ速くなって、4つ打ちへつながる
+        if 8 <= i < 12: D.set(b, "x..o............" if i < 10 else "x..o....x..o....", "." * 16, "." * 16)
+        elif i >= 12: D.set(b, "X...X...X...X..." if i >= 14 else "X..x....X..x....", "." * 16, "." * 16)
     elif n == "雲を抜ける":
         D.set(b, "X...X...X...X...", "....X.......X..." if i >= 2 else "." * 16, "x.x.x.x.x.x.x.x." if i >= 4 else "." * 16)
         if i == 6: put_fill(D, b, "build")
@@ -230,6 +273,24 @@ for b in range(S.nb):
         vgroove(D, b, "four" if i < 6 else "none", seed=b)
         if i == 0: crash(D, b)
         if i == 6: D.set(b, "X" + "." * 15, "." * 16, "." * 16); crash(D, b, "C2", 8)
+
+# 2026-10-26 人間「ドラム強弱、アクセント、余韻も上手く使ってね」:
+#   ・Aメロ1番の前半（4つ打ち）と Bメロの前半（Half feel）は軽く: 強打（X）を4小節の句の頭の1打だけ残して x に
+#   ・サビは、2小節ごとの頭のキックと、次の小節へ押し出すスネアの最後の一打を強く
+#   ・余韻: クラッシュは次のシンバルまで、最大 8拍のばす
+def lighten(b, head):
+    for arr in (D.K, D.S):
+        arr[b] = "".join(("x" if c == "X" and not (head and j == 0) else c) for j, c in enumerate(arr[b]))
+for b in range(S.nb):
+    n, i, L, k = S.scene_of(b)
+    if (n == "群れのおしゃべり" and i < 8) or (n.startswith("風に乗る") and i < 4): lighten(b, i % 4 == 0)
+    elif n.startswith("島が見え"):
+        kk = list(D.K[b]); ss = list(D.S[b])
+        if kk[0] in "xX" and i % 2 == 0: kk[0] = "X"
+        ls = max([j for j, c in enumerate(ss) if c in "xX"], default=None)
+        if ls is not None and i % 2 == 1: ss[ls] = "X"
+        D.K[b] = "".join(kk); D.S[b] = "".join(ss)
+D.C.ev = [(st, max(L, 8.0), x) for st, L, x in D.C.ev]
 
 # 1拍の完全な無音（雲に入る所）・Bメロの最後の止め・+2 の直前の1拍のブレイク
 SIL.add(S.sc("雲の中")[0] - 1, 3, 4)

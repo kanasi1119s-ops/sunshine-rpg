@@ -46,7 +46,8 @@ PZ = [S.track(f"ピッツィカート{i + 1}", "strings", **PZS) for i in range(
 PZM = S.track("ピッツィカート（歌の受け渡し）", "strings", **PZS)
 B808 = S.track("808", "sub808", volume=0.2, pan=0, sustain=1.0, fx=[{"type": "filter", "kind": "highpass", "freq": 30, "q": 0.7},
                                                                         {"type": "eq", "low": -2, "mid": 3, "midHz": 900, "high": 0}])
-KNIFE = S.track("包丁とまな板（カホン）", "cajon", volume=0.14, pan=-0.3, reverb=0.12)
+# 2026-10-26: 移調のずれを直して包丁が本来の高く鋭いスラップで鳴るようになり、前より耳に立つので 0.14→0.125（歌より前に出ないように）
+KNIFE = S.track("包丁とまな板（カホン）", "cajon", volume=0.125, pan=-0.3, reverb=0.12)
 POT = S.track("鍋（大小のロートタム）", "rotoTom", patch="rotoTom", volume=0.13, pan=0.15, reverb=0.2)
 LID = S.track("鍋のふた（短いベル）", "pad", patch="surgeBell1", volume=0.045, pan=-0.45, reverb=0.15, sustain=0.25,
               fx=[{"type": "filter", "kind": "highpass", "freq": 900, "q": 0.7}])
@@ -57,6 +58,10 @@ FX = S.track("効果音", "pad", patch="fxRiser", volume=0.07, pan=0, reverb=0.3
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 D = S.drumkit()
 SIL = Silence(S)
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 最後のサビにだけ足す新しい音: バイオリンの高い対旋律（柔らかく力強く、透き通るように。
+#   歌より小さく、歌が細かい所の上で長い音をのばす。ピッツィカートと同じ弦の仲間で、はじく音から弓で弾く音へ受け渡す）
+VLN = S.track("バイオリン（最後のサビの対旋律）", "fiddle", patch="violin", volume=0.085, pan=-0.3, reverb=0.42, gainDb=1, bright=-0.3, attack=0.08, release=0.5)
+TR = -7                                   # 書き出しの前に全体を下げる半音（teto の transpose と同じ）
 
 # ================= 歌の旋律と歌詞（G の短調の度数・oct 4 で 1 = G4。サビは B♭長調、最後は C長調 oct 5。書き出しの前に全体を 7半音下げる） =================
 Pa = ["R:0.5 1:0.25 1:0.25 3:0.5 1:0.5 4:0.3333 3:0.3333 1:0.3334 3:1", "2:0.5 1:0.5 7,:1 R:2"]
@@ -124,6 +129,15 @@ for i, b in enumerate(S.sc("包丁")): KNIFE.bar(b, KN[i % 2] if i < 6 else ("A2
 for name in ("下ごしらえ", "2品目"):
     for i, b in enumerate(S.sc(name)):
         if i % 2 == 0: KNIFE.bar(b, "R:3 E3:0.25! F3:0.25, E3:0.25 E3:0.25")
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ この曲の物語でしか出てこない音:
+#   ・ガスコンロの火をつける「カチッ、カチッ、ボッ」: Bメロ（火をつける・火を強く）の直前、歌が休む2拍に（カホンの縁の高いスラップ2つ＋シュッ）
+#   ・2番「なべがことことうたうよ」: 鍋のふたが「ことこと」鳴る（短いベルを、包丁と交互の小節の終わりに小さく）
+for b in (S.sc("火をつける")[0] - 1, S.sc("火を強く")[0] - 1):
+    KNIFE.bar(b, "R:2.5 G3:0.25! R:0.25 G3:0.25! R:0.75")
+    FX.bar(b, "R:3.5 A4:0.5")
+for i, b in enumerate(S.sc("2品目")):
+    if i % 2 == 1 and i < 7: LID.bar(b, "R:3 D6:0.25 D6:0.25 R:0.25 D6:0.25")
+
 # 鍋のふた（短い FM ベル）: サビの裏拍
 for name in ("鍋がそろう", "全部の鍋", "鍋のソロ"):
     for i, b in enumerate(S.sc(name)):
@@ -185,7 +199,15 @@ for b in range(S.nb):
     elif n.startswith("火を"):
         B808.bar(b, f"{nm(r)}:2! {nm(r)}:2" if i < 7 else f"{nm(r)}:1! R:3")
     elif n in ("鍋がそろう", "全部の鍋", "盛りつけ"):
-        B808.bar(b, f"{nm(r)}:1.5! {nm(r)}:0.5 {nm(r)}:0.5 {nm(r + 12)}:0.5 {nm(r)}:1")
+        # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 歌う 808: 歌が伸ばして休む小節（4小節の2小節目）だけ、5度・オクターブ・7度で歌い、
+        #   次の和音の根音へ寄っていく（ほかの小節は今までどおりキックに合わせて支える）
+        if i % 4 == 1 and n != "盛りつけ":
+            nx = low(S.chords[b + 1], "C1")
+            if nx < midi("D1"): nx += 12
+            ap = nx + 1 if nx < r else (nx - 1 if nx > r else r + 7)
+            B808.bar(b, f"{nm(r)}:1.5! {nm(r + 7)}:0.5 {nm(r + 12)}:0.5 {nm(r + 10)}:0.5 {nm(r + 7)}:0.5 {nm(ap)}:0.5")
+        else:
+            B808.bar(b, f"{nm(r)}:1.5! {nm(r)}:0.5 {nm(r)}:0.5 {nm(r + 12)}:0.5 {nm(r)}:1")
     elif n == "強火":
         B808.bar(b, " ".join(f"{nm(r + (12 if q % 2 else 0))}:0.5" for q in range(8)))       # 倍のノリ: 8分のオクターブ
     elif n == "お湯がわくまで":
@@ -197,6 +219,15 @@ for b in range(S.nb):
 riser(FX, S.sc("鍋がそろう")[0], 4, "C4"); riser(FX, S.sc("強火")[0], 4, "C4")
 FX.bar(S.sc("お湯がわくまで")[0], "G4:4")                    # 火を止めた「ドーン」
 cym_swell(CYM, S.sc("全部の鍋")[0], 4, "E4"); cym_swell(CYM, S.sc("鍋のソロ")[0], 2, "C4")
+
+# 最後のサビのバイオリン（C長調の音名で書く。書き出しで 7半音下がる）。後半8小節
+VLM = ["A5:2 C6:1 E6:1", "D6:3 B5:1", "E6:2 D6:1 C6:1", "C#6:3 E6:1", "F6:2 E6:1 D6:1", "D6:2 B5:2", "C6:2 A5:1 F5:1", "G5:2 B5:1 D6:1"]
+for i, b in enumerate(S.sc("全部の鍋")[8:]): VLN.bar(b, VLM[i])
+VLN.bar(S.sc("盛りつけ")[0], "C6:4"); VLN.bar(S.sc("盛りつけ")[1], "B5:2 D6:2")
+# 終わり方: 「いただきます」の和音のあと、箸を置く小さな音（カホンの縁のスラップ2つ）と、グラスの1音
+b_end = S.sc("いただきます")[-1]
+KNIFE.bar(b_end, "R:1 F3:0.25 R:0.25 E3:0.25 R:2.25")
+GLS.bar(b_end, "R:2.5 E6:1.5")
 
 # ================= ドラム（電子のドラム・トラップ） =================
 TRAPH = ["xxxxxxxxxxxxXxXx", "x.x.xxxxx.x.XXXX", "xxxxx.x.xxxxx.xx", "x.x.x.x.xxxxXXXX"]
@@ -218,7 +249,7 @@ for b in range(S.nb):
     elif n in ("鍋がそろう", "全部の鍋"):
         vgroove(D, b, "trap", ghosts=0.2, seed=b, h=TRAPH[(i + 1) % 4], vary=False,
                 k="X.......X.X....." if i % 4 != 3 else "X.....X.X...X.X.")
-        if i % 8 == 0: crash(D, b, "C2" if i == 0 else "G2")
+        if i % 8 == 0: crash(D, b, "C2" if i == 0 else "G2", 6 if (i == 0 and n == "全部の鍋") else 4)   # 2026-10-26 1拍の無音のあとの頭は長く
         if i % 8 == 7 and not last: put_fill(D, b, "tomdown")
         if last and n == "鍋がそろう": D.set(b, "X.......X.......", "........X.......", "x.x.x.x.x.x.....")
     elif n == "強火":
@@ -226,7 +257,7 @@ for b in range(S.nb):
         vgroove(D, b, "dnb", ghosts=0.35, seed=b, s="....X..o.o..X...")
         if i % 8 == 0: crash(D, b, "C2")
         if i % 4 == 3 and not last: put_fill(D, b, "snare16")
-        if last: D.set(b, "X...............", "X...............", "................")
+        if last: D.set(b, "X...............", "X...............", "................"); crash(D, b, "C2", 6)   # 2026-10-26 止めのあとのシンバルを長く残す（余韻）
     elif n == "お湯がわくまで":
         D.set(b, "X......." * 2 if i >= 4 else "X" + "." * 15, "." * 16, "x...x...x...x..." if i >= 2 else "." * 16)
         if last: put_fill(D, b, "lift")
@@ -251,4 +282,10 @@ S.desc = ("仮: ボカロ曲インスト25曲（作り直し）の15。ヒップ
           "ひとり暮らしの台所で、母の手書きのレシピの味をまねる。包丁の音で始まり、ラップのように語る Aメロ、止めのある Bメロ、「じゅうじゅう」のサビ、お湯がわくまでの静けさ、"
           "倍のノリの2サビ、鍋のソロ、1拍の無音から +2 の最後のサビ、盛りつけ、「いただきます」の和音。台所の音・808・ピッツィカート。自作")
 S.no_depth = True
+# 2026-10-26: 書き出しの前の移調（−7半音）が、カホン（鍵盤で打ち方を選ぶ）とロートタム（鍋の大きさ）までずらし、
+#   包丁のスラップ（E3・F3）が低音の胴（A2・B♭2）に、いちばん大きい鍋（F2）が音域の外（B♭1）になっていた。この2つだけ先に +7 して元の高さで鳴らす
+def keep_key(tracks, T):
+    for t in tracks:
+        t.ev = [(st, L, nm(midi(x.split(":")[0]) + T) + ":" + x.split(":", 1)[1]) for st, L, x in t.ev]
+keep_key([KNIFE, POT], -TR)
 teto(S, LY, V, transpose=-7, level={"verse": -0.2}, special={"全部の鍋": 0.55, "お湯がわくまで": -0.55, "盛りつけ": 0.0, "いただきます": -0.2})

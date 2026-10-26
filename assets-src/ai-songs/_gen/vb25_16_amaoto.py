@@ -63,6 +63,11 @@ FX = S.track("効果音", "pad", patch="fxRiser", volume=0.07, pan=0, reverb=0.3
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 D = S.drumkit()
 SIL = Silence(S)
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 最後のサビにだけ足す新しい音: 高いストリングスの対旋律（晴れた空が広がる）。
+#   背景なので小さく奥に（パッドの 0.055 と同じくらい）、ナイロンギター（右 0.35）・エレピ（左 0.3）とぶつからない高い音域と少し右に
+STRC = S.track("ストリングス（晴れた空の対旋律）", "strings", patch="stringEnsemble", volume=0.06, pan=0.15, reverb=0.4, sustain=1.6)
+TR = -4                                   # 書き出しの前に全体を下げる半音（teto の transpose と同じ）
+BLO, BHI = 28 - TR, 52 - TR               # 歌うベースの音域（下げたあとで E1〜E3）
 
 # ================= 歌の旋律と歌詞（E♭長調の度数。oct=4 で 1 = E♭4。書き出しの前に全体を 4半音下げる） =================
 def stretch(lines):
@@ -168,16 +173,26 @@ for b in range(S.nb):
     if n == "雨音とエレピ": continue
     if n in ("傘をさして", "2回目の帰り道", "傘の上の雨粒"):
         BASS.bar(b, f"{nm(r)}:1.5! {nm(r)}:0.5 R:0.5 {nm(r5)}:0.5 {nm(r + 12)}:0.5 {nm(r5)}:0.5" if i % 2 == 0 else f"{nm(r)}:2.5! {nm(r5)}:0.5 {nm(r)}:1")
-    elif n in ("水たまり", "足取り"):
-        BASS.bar(b, bass_line(S, b, "root8") if not (n == "足取り" and i == 3) else f"{nm(r)}:2! R:2")
+    # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 歌うベース（音域は下げたあと E1〜E3。音量はそのまま）:
+    #   水たまり＝雨音といっしょに上っていく（最後の小節は駆ける）／くるくる＝歌が伸ばす偶数小節で歩く／晴れ間＝ギターのソロにゆったり寄りそう／
+    #   倍テン＝4小節目は駆けて次の句へ／もう待てない＝後半で上っていく
+    elif n == "水たまり":
+        BASS.bar(b, sing_bass(S, b, "climb" if i < 3 else "run", BLO, BHI))
+    elif n == "足取り":
+        BASS.bar(b, bass_line(S, b, "root8") if i != 3 else f"{nm(r)}:2! R:2")
     elif n == "くるくる":
-        BASS.bar(b, bass_line(S, b, "push"))
+        BASS.bar(b, bass_line(S, b, "push") if i % 2 == 0 else sing_bass(S, b, "walk", BLO, BHI))
     elif n in ("走り出す", "晴れた空", "早口の帰り道"):
         # ドラムンベース: 1小節目は伸ばし、2小節目は8分で走る
-        BASS.bar(b, f"{nm(r)}:2.5! {nm(r5)}:0.5 {nm(r + 12)}:1" if i % 2 == 0 else bass_line(S, b, "oct8"))
-    elif n == "晴れ間": BASS.bar(b, bass_line(S, b, "half"))
+        if i % 2 == 0: BASS.bar(b, f"{nm(r)}:2.5! {nm(r5)}:0.5 {nm(r + 12)}:1")
+        elif i % 4 == 3 and i != L - 1: BASS.bar(b, sing_bass(S, b, "run", BLO, BHI))
+        else: BASS.bar(b, bass_line(S, b, "oct8"))
+    elif n == "晴れ間": BASS.bar(b, sing_bass(S, b, "ride" if i % 2 == 0 else "walk", BLO, BHI))
     elif n == "軒下の雨宿り": BASS.bar(b, f"{nm(r)}:4" if i % 2 == 0 or ch != S.chords[b - 1] else "R:4")
-    elif n == "もう待てない": BASS.bar(b, bass_line(S, b, "root8") if i < 7 else f"{nm(r)}:2! R:2")
+    elif n == "もう待てない":
+        if i < 4: BASS.bar(b, bass_line(S, b, "root8"))
+        elif i < 7: BASS.bar(b, sing_bass(S, b, "climb", BLO, BHI))
+        else: BASS.bar(b, f"{nm(r)}:2! R:2")
     elif n == "鳥の声": BASS.bar(b, f"{nm(r)}:4" if i < 7 else f"{nm(r)}:4")
 
 # ================= 雨粒・鳥 =================
@@ -192,6 +207,30 @@ for i, b in enumerate(S.sc("晴れ間") + S.sc("鳥の声")):
     if i % 2 == 0: BIRD.bar(b, f"R:{(i % 3) + 0.5:g} E6:0.125 G6:0.125 E6:0.125 G6:0.25 R:0.375 A6:0.125 C7:0.375")
 for i, b in enumerate(S.sc("晴れた空")):
     if i % 8 == 4: BIRD.bar(b, "R:1 G6:0.125 A6:0.125 G6:0.25 R:2.5")
+
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ この曲の物語でしか出てこない音と展開:
+#   ・傘を開く「バサッ」（Aメロの直前の半拍）。閉じる「シュッ」（倍テンの直前）と対になる
+#   ・水たまりを跳びこえる「ぴちゃん」（倍テンのサビの頭と、最後のサビの頭。雨粒の高い音を短く散らす）
+#   ・にわか雨: 軒下の雨宿りで、いったんやんだ雨（季節の音）がもう一度降る。もう待てないで、またやむ
+#   ・終わり: 鳥の声のあと、軒先から最後のひとしずく
+FX.bar(S.sc("傘をさして")[0] - 1, "R:3.5 A4:0.5")
+for b in (S.sc("走り出す")[0], S.sc("晴れた空")[0]): DROP.bar(b, "C7:0.125 G6:0.125 E7:0.125 C7:0.25 R:3.375")
+DROP.bar(S.sc("鳥の声")[-1], "R:3 G6:1")
+season(S, S.sc("軒下の雨宿り")[0], "雨", S.beats * 16, vol=0.08, every=11)
+# 合いの手: Aメロの句の終わり（歌が2拍休む所）にエレピの短い返事。倍テンの Aメロは、歌が1小節まるごと休む所に（書き出しで 4半音下がる）
+LICK = {"Gm7": "R:2 D5:0.25 F5:0.25 G5:0.5 Bb5:0.5 G5:0.5"}
+LICK2 = {"Gm7": "D5:0.5 F5:0.5 G5:0.5 Bb5:0.5 D6:1 Bb5:1", "Bb7sus4": "F5:0.5 Ab5:0.5 Bb5:0.5 Eb6:0.5 F6:1 Eb6:1"}
+for name, idx in (("傘をさして", (1, 5)), ("2回目の帰り道", (5,))):
+    for i in idx:
+        b = S.sc(name)[i]
+        if S.chords[b] in LICK: EPM.bar(b, LICK[S.chords[b]])
+for i, b in enumerate(S.sc("早口の帰り道")):
+    if i % 4 == 3 and S.chords[b] in LICK2: EPM.bar(b, LICK2[S.chords[b]])
+# 最後のサビの対旋律（E長調の音名で書く。2小節で1つの和音）
+STRM = ["G#5:3 B5:1", "D6:4", "C#6:3 E6:1", "G#5:4", "A5:3 C#6:1", "E6:2 C#6:2", "D#6:4", "A5:2 B5:2",
+        "E6:4", "C#6:4", "C6:3 D#6:1", "F#6:2 D#6:2", "E6:3 C#6:1", "B5:4", "D6:4", "C#6:2 A5:2",
+        "B5:3 D6:1", "G#5:4", "A5:2 C#6:2", "E6:4", "C#6:3 A5:1", "E6:2 F#6:2", "E6:4", "D#6:4"]
+for i, b in enumerate(S.sc("晴れた空")[8:]): STRC.bar(b, STRM[i])
 
 # 効果音
 FX.bar(S.sc("走り出す")[0] - 1, "R:2 A4:1 R:1")                 # 傘を閉じる「シュッ」（無音の直前）
@@ -228,7 +267,7 @@ for b in range(S.nb):
         else: vgroove(D, b, "dnb", ghosts=0.4, seed=b, k="..X.......X.....", s="....X..o.o..X..o")
         if n == "早口の帰り道" and i % 4 < 2:
             D.cym(b, "D2:0.5 " * 8); D.H[b] = "." * 16                                  # ライドで走る
-        if i % 8 == 0 and not (n == "早口の帰り道" and i % 4 < 2): crash(D, b, "C2" if i % 16 == 0 else "G2")
+        if i % 8 == 0 and not (n == "早口の帰り道" and i % 4 < 2): crash(D, b, "C2" if i % 16 == 0 else "G2", 8 if (i == 0 and n != "早口の帰り道") else 4)   # 2026-10-26 無音・止めのあとのサビ頭はシンバルを長く残す
         if i % 8 == 7 and not last: put_fill(D, b, "tomdown" if i % 16 == 15 else "snare16")
         if last and n == "走り出す": put_fill(D, b, "small")
         if last and n == "早口の帰り道": put_fill(D, b, "tomdown")

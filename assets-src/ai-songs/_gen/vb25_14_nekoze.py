@@ -56,7 +56,7 @@ STEP = [S.track(f"足音{i + 1}（{['ぼく', 'となりの人', 'うしろの�
                 pan=[-0.15, 0.45, -0.5][i], reverb=0.3) for i in range(3)]
 STEP_KEY = ["D3", "F#3", "C#3"]          # 手のひら（大）・手のひら（小）・ミュート（大）＝ぼく・軽い足・重い足
 # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 最後のサビにだけ足す新しい音: 高い笛の対旋律（口笛のように歌のすき間を流れる）
-FLUTE = S.track("笛（最後のサビの対旋律）", "panflute", patch="flute", volume=0.075, pan=0.35, reverb=0.4, breath=True, attack=0.06, release=0.45, bright=-0.2)
+FLUTE = S.track("笛（最後のサビの対旋律）", "panflute", patch="flute", volume=0.065, pan=0.35, reverb=0.4, breath=True, attack=0.06, release=0.45, bright=-0.2)
 TR = -3                                   # 書き出しの前に全体を下げる半音（teto の transpose と同じ）
 BLO, BHI = 28 - TR, 52 - TR               # 歌うベースの音域（下げたあとで E1〜E3 になるように書く）
 
@@ -257,7 +257,7 @@ for b in range(S.nb):
         if i % 4 == 3 and not last: D.over(b, h="            XXXX")
         if last: put_fill(D, b, "build")
     elif n == "カラス":
-        if i == 0: D.set(b, "X" + "." * 15, "X" + "." * 15, "." * 16); crash(D, b, "B2", 8)   # 2026-10-26 カラスの一撃のあと、シンバルの余韻を2小節残す
+        if i == 0: D.set(b, "X" + "." * 15, "X" + "." * 15, "." * 16); crash(D, b, "B2", 4)
         elif i < 4: D.set(b, "." * 16, "." * 16, "x...x...x...x...")
         else:
             vgroove(D, b, "half", ghosts=0.3, seed=b, h="x.x.x.x.x.x.x.x.")
@@ -272,6 +272,8 @@ for name in ("集まってくる", "集まってくる2"): SIL.add(S.sc(name)[-1
 SIL.add(S.sc("2回目の屋根")[-1], 3, 4)
 SIL.add(b_crow, 1, 4)
 SIL.apply()
+# 2026-10-26 人間「ドラム強弱、アクセント、余韻も上手く使ってね」→ カラスの一撃のシンバルは、止めの間も切らずに2小節のばす（止めの消去のあとで置き直す）
+D.C.ev = [e for e in D.C.ev if abs(e[0] - b_crow * S.beats) > 1e-6]; D.cym(b_crow, "B2:8")
 
 S.fade_out = 12
 S.desc = ("仮: ボカロ曲インスト25曲（作り直し）の14。ヒップホップ（ブームバップ）。Dm（サビは F）・96。"
@@ -279,4 +281,9 @@ S.desc = ("仮: ボカロ曲インスト25曲（作り直し）の14。ヒップ
           "「ねこぜのぱれーど」のサビ、ブラスとスクラッチの間奏、ハーフの2サビ、カラスの止め、大合唱、夜明け前のフェードアウト。生ドラム・ベース・エレピ・ブラス。自作")
 # 季節の音（2026-10-25 人間「季節を感じれる様な音も欲しい」）
 season(S, S.nb - 8, "コオロギ", S.beats * 8, vol=0.06)
+# 2026-10-26: 書き出しの前の移調（−3半音）は、枠太鼓の鍵盤（打ち方の種類）までずらしてしまうので、足音だけ先に +3 しておく
+def keep_key(tracks, T):
+    for t in tracks:
+        t.ev = [(st, L, nm(midi(x.split(":")[0]) + T) + ":" + x.split(":", 1)[1]) for st, L, x in t.ev]
+keep_key(STEP, -TR)
 teto(S, LY, V, transpose=-3, level={"verse": -0.2}, special={"屋根の上の大合唱": 0.5, "カラス": -0.5, "夜明け前": -0.45})

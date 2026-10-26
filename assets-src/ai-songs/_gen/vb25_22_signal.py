@@ -125,6 +125,37 @@ for name in ("青信号", "点滅"):
 for i, b in enumerate(S.sc("ブレイクダンス")):
     if i >= 8: BRM.bar(b, K.mel(HOOK[i % 4], oct=4))
 
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ ブラスの合いの手: 歌が休む小節の後半2拍だけ、和音の音で短く答える（弱く＝「,」）。
+#   Aメロ1番は前半4小節を引き算して 5小節目から。2番は後半だけ（BGM では前半のブラスが歌を受け取るため）。
+#   ドロップは句の終わりの「伸ばし」のあとに。1回目は8小節に1回、2回目は4小節に1回（2回目で少し増やす）
+ANS = [[(2, 0.25), (1, 0.25), (0, 0.5), (None, 1)], [(None, 0.5), (0, 0.25), (1, 0.25), (2, 1)],
+       [(1, 0.5), (2, 0.5), (3, 0.5), (None, 0.5)], [(None, 1), (3, 0.25), (2, 0.25), (1, 0.5)]]
+def answer(b, k, lo="F4", hi="E5"):   # 書き出しで 6半音下がって B3〜A#4（ブラスの自然な音域の中）
+    tt = tones(S.chords[b], lo, hi)
+    BRM.bar(b, "R:2 " + " ".join(f"R:{L:g}" if q is None else f"{nm(tt[min(q, len(tt) - 1)])}:{L:g}," for q, L in ANS[k % len(ANS)]))
+for i, b in enumerate(S.sc("交差点のラップ")):
+    if i in (5, 7, 9, 11, 15): answer(b, i // 2)
+for i, b in enumerate(S.sc("交差点のラップ2")):
+    if i in (9, 11, 15): answer(b, i // 2 + 1)
+for i, b in enumerate(S.sc("7色ドロップ")):
+    if i % 8 == 3: answer(b, i, "G4", "E5")
+for i, b in enumerate(S.sc("7色ドロップ2")):
+    if i % 4 == 3 and i != 15: answer(b, i + 1, "G4", "E5")
+
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ この曲の物語でしか出ない音: 横断歩道の「ピヨ、ピヨ」（青になった合図）。
+#   グロッケンで短く高く（作った音。既存の誘導音のまねではない）。青信号の頭・ふたりで渡る最後のサビの頭・曲の最後（あしたもこの道で）。
+#   最後のサビでは、歌が休む小節の後半にグロッケンの高い対旋律（星のように小さく）。音量 0.06（効果音の大きさ）
+GLK = S.track("グロッケン（横断歩道の音・光の対旋律）", "glockenspiel", volume=0.06, pan=0.3, reverb=0.4)
+CHIRP = "E7:0.25 C#7:0.5, R:0.25"            # 書き出しで 6半音下がって A#6→G6
+GLK.bar(S.sc("青信号")[0], f"{CHIRP} {CHIRP} R:2")
+GLK.bar(S.sc("倍のノリ")[0], f"{CHIRP} {CHIRP} R:2")
+GCM = ["R:2 3:0.5 5:0.5 1':1", "R:2 2:0.5 3:0.5 5:1", "R:2 6:0.5 5:0.5 3:1", "R:2 2:0.5 1:0.5 2:1"]
+for i, b in enumerate(S.sc("倍のノリ")):
+    if i % 2 == 1 and i < 15: GLK.bar(b, KG.mel(GCM[(i // 2) % 4], oct=6))
+# インパクト（ドン）: ドロップの頭（2回）と、1拍の無音のあとの倍のノリの頭。音量 0.08
+IMP = S.track("インパクト（ドン）", "impactHit", volume=0.08, pan=0.0, reverb=0.4)
+for name in ("7色ドロップ", "7色ドロップ2", "倍のノリ"): IMP.bar(S.sc(name)[0], "D2:4")
+
 # ================= 伴奏 =================
 def sb(b, ch, pat, center=66):
     vv = voice(ch, center, 3)
@@ -159,7 +190,10 @@ for b in range(S.nb):
         B808.bar(b, f"{nm(r)}:1 {nm(r)}:1 {nm(r)}:1 {nm(r)}:1")
         # 8分のオクターブで倍のノリを走らせる。2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 倍のノリは歌うベース（押す／4小節目で駆ける）
         BASS.bar(b, sing_bass(S, b, "run" if i % 4 == 3 else "drive", lo=30, hi=54) if n == "倍のノリ" else bass_line(S, b, "oct8", lo="F#1"))
-        if n == "まだ踊る" and i == L - 1: BASS.ev = [e for e in BASS.ev if not (b * 4 <= e[0] < b * 4 + 4)]; BASS.bar(b, f"{nm(low(ch, 'F#1'))}:1")
+        if n == "まだ踊る" and i == L - 1:
+            # 2026-10-26: ドラムの「ジャン」の止めに合わせて、ベースと 808 も1拍目だけ鳴らして長く残す（そのあとは信号の音だけ）
+            for t_ in (BASS, B808): t_.ev = [e for e in t_.ev if not (b * 4 <= e[0] < b * 4 + 4)]
+            BASS.bar(b, f"{nm(low(ch, 'F#1'))}:2"); B808.bar(b, f"{nm(r)}:3")
     # シンセのブラス（和音の刻み）
     if n in ("青信号", "点滅"): sb(b, ch, "X:0.25 R:0.5 X:0.25 R:1 X:0.25 R:0.5 X:0.25 R:1")
     elif n.startswith("交差点") and i >= 8: sb(b, ch, "R:0.5 X:0.25 R:1.25 R:0.5 X:0.25 R:1.25")
@@ -183,6 +217,7 @@ for i, b in enumerate(S.sc("指パッチン")):
 SIG.bar(S.sc("赤信号")[0], "A5:0.5 R:0.5 A5:0.5 R:2.5")
 for i, b in enumerate(S.sc("信号が戻る")):
     SIG.bar(b, ["Bb5:0.5 R:1.5 Eb6:0.5 R:1.5", "Bb5:0.5 R:1.5 Eb6:0.5 R:1.5", "Bb5:0.5 R:0.5 Bb5:0.5 R:0.5 Bb5:0.5 R:0.5 Bb5:0.5 R:0.5", "Eb6:1 R:3"][i])
+GLK.bar(S.sc("信号が戻る")[-1], f"R:1.5 {CHIRP} {CHIRP} R:0.5")   # 2026-10-26: 終わり方 — 信号が青に戻って「ピヨ、ピヨ」（あしたもこの道で）
 riser(FX, S.sc("7色ドロップ")[0], 4, "C4"); riser(FX, S.sc("倍のノリ")[0], 8, "D4")
 FX.bar(S.sc("ブレイクダンス")[0], "G4:4")             # サブドロップ（ドーン）
 cym_swell(CYM, S.sc("7色ドロップ2")[0], 2, "C4"); cym_swell(CYM, S.sc("倍のノリ")[0], 2, "C4")
@@ -233,6 +268,24 @@ for b in range(S.nb):
         if n == "まだ踊る" and i == 3: D.set(b, "X" + "." * 15, "X" + "." * 15, "." * 16); crash(D, b, "C2", 8)
     elif n == "信号が戻る":
         pass
+
+# 2026-10-26 人間「ドラム強弱、アクセント、余韻も上手く使ってね」:
+#   ・Aメロ（交差点）の前半のトラップと、Bメロ前半の Half feel は軽く: キック・スネアの強打（X）を、4小節の句の頭の1打だけ残して x に
+#   ・ドロップと倍のノリは、2小節目ごとの頭のキックとスネアの最後の一打を強く（句の頭と、次の句へ押し出す所）
+#   ・余韻: シンバル（クラッシュ）は次のシンバルまで、最大 8拍のばす（すぐ止めない。止めのあとも鳴りを残す）
+def lighten(b, head):
+    for arr in (D.K, D.S):
+        g_ = arr[b]; arr[b] = "".join(("x" if c == "X" and not (head and j == 0) else c) for j, c in enumerate(g_))
+for b in range(S.nb):
+    n, i, L, k = S.scene_of(b)
+    if (n.startswith("交差点") and i < 8) or (n.startswith("黄色") and i < 4): lighten(b, i % 4 == 0)
+    elif n.startswith("7色ドロップ") or n == "倍のノリ":
+        kk = list(D.K[b]); ss = list(D.S[b])
+        if kk[0] in "xX" and i % 2 == 0: kk[0] = "X"
+        last_s = max([j for j, c in enumerate(ss) if c in "xX"], default=None)
+        if last_s is not None and i % 2 == 1: ss[last_s] = "X"
+        D.K[b] = "".join(kk); D.S[b] = "".join(ss)
+D.C.ev = [(st, max(L, 8.0), x) for st, L, x in D.C.ev]
 
 # 止め: 黄色の最後（2回）・赤信号の1小節（頭の一打のあと）・倍のノリの直前の1拍の無音
 for name in ("黄色", "黄色2"): SIL.add(S.sc(name)[-1], 2, 4)

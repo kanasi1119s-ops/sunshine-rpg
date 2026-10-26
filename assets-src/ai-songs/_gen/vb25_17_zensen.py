@@ -46,8 +46,8 @@ PNS = piano_spec(0.12, -0.25)
 PN = [S.track(f"ピアノ（右手{i + 1}）", "piano", **PNS) for i in range(2)]
 PNL = S.track("ピアノ（左手）", "piano", **PNS)
 PNM = S.track("ピアノ（歌の受け渡し）", "piano", **PNS)
-# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ ピアノの右手の和音（3音）を足す。PN と同じ設定なので同じチャンネル・同じ音量（0.12）
-PNC = [S.track(f"ピアノ（右手の和音{i + 1}）", "piano", **PNS) for i in range(3)]
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ ピアノの右手の和音（3音）を足す。PN と同じ設定なので同じチャンネル
+PNC = [S.track(f"ピアノ（右手の和音{i + 1}）", "piano", **{**PNS, "volume": 0.085}) for i in range(3)]   # 3音の和音なので1本あたり 0.085（3本で分散和音 0.12 の1本と同じくらいの大きさ）
 STR = [S.track(f"ストリングス{i + 1}", "strings", patch="stringEnsemble", **strings_spec(0.08, 0.5)) for i in range(3)]
 # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 最後のサビの高い対旋律（ストリングスの4本目。ほかの弦と同じ設定・0.08 より小さく 0.07）
 STRC = S.track("ストリングス（最後のサビの対旋律）", "strings", patch="stringEnsemble", **strings_spec(0.07, 0.5))
@@ -171,30 +171,30 @@ for b in range(S.nb):
         if i == 0:
             v = voice("Emaj9", 66, 2)
             for j in range(2): PN[j].bar(b, f"{nm(v[j])}:12")
-            PNL.bar(b, "E2:12")
+            PNL.bar(b, "E3:12")
         continue
     if n in ("南の島",) and i < 8:
         v = voice(ch, 66, 2)
         for j in range(2): PN[j].bar(b, f"R:0.5 {nm(v[j])}:1 R:1 {nm(v[j])}:1.5")
-        PNL.bar(b, f"{nm(low(ch, 'C2'))}:2 {nm(low(ch, 'C2') + 7)}:2"); continue
+        PNL.bar(b, f"{nm(low(ch, 'D3'))}:2 {nm(low(ch, 'D3') + 7)}:2"); continue
     if n == "予報士がひと息":
         v = voice(ch, 64, 2)
         for j in range(2): PN[j].bar(b, f"{nm(v[j])}:1 {nm(v[j])}:1 {nm(v[j])}:2")
-        PNL.bar(b, f"{nm(low(ch, 'C2'))}:4"); continue
+        PNL.bar(b, f"{nm(low(ch, 'D3'))}:4"); continue
     if n == "予報図": continue
     # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ ピアノはコード弾き（左手と右手）を場面で弾き分ける。
-    #   左手は書く高さを C2 → A2 に（下げたあと C#2 から。歌うベースと低い所で重ならない）
+    #   左手は書く高さを C2 → D3 に（下げたあと F#2 から。下げたあと E1 まで下がって歌うベースと重なり、低音がにごっていた）
     #   Aメロ後半: 右手の和音の付点の刻み（分散和音から受け渡す）／サビの後半8小節: 和音を8分の裏で押す（前半は分散和音のまま）
     if n in ("南の島", "関西・東海") and i >= 8:
         v = voice(ch, 67, 3)
         for j in range(3): PNC[j].bar(b, f"{nm(v[j])}:1.5 {nm(v[j])}:1 {nm(v[j])}:1.5" if i % 2 == 0 else f"{nm(v[j])}:1.5 {nm(v[j])}:0.5 R:2")
-        r = low(ch, "A2"); PNL.bar(b, f"{nm(r)}:1.5 {nm(r + 12)}:1 {nm(r + 7)}:1.5"); continue
+        r = low(ch, "D3"); PNL.bar(b, f"{nm(r)}:1.5 {nm(r + 12)}:1 {nm(r + 7)}:1.5"); continue
     if n in ("九州・四国が笑顔", "関東が笑顔", "北の町に届く") and i % 16 >= 8 and not (n == "北の町に届く" and i >= 24):
         v = voice(ch, 67, 3)
         for j in range(3): PNC[j].bar(b, f"{nm(v[j])}:0.5! {nm(v[j])}:0.5 R:0.5 {nm(v[j])}:0.5 R:0.5 {nm(v[j])}:0.5 {nm(v[j])}:1")
-        PNL.bar(b, piano_left8(ch, "A2")); continue
+        PNL.bar(b, piano_left8(ch, "D3")); continue
     PN[0].bar(b, piano_arp16(ch, "D4", "D6"))
-    PNL.bar(b, piano_left8(ch, "A2"))
+    PNL.bar(b, piano_left8(ch, "D3"))
 
 # 合いの手（ピアノ）: Aメロの句の終わり（歌が 2.5拍目から休む小節。グロッケンの小節とは別の小節）に、高い短い句
 FILL = ["R:2.75 3'':0.25 2'':0.25 1'':0.25 5':0.5", "R:2.75 6':0.25 1'':0.25 2'':0.25 3'':0.5",
@@ -227,7 +227,8 @@ for i, b in enumerate(S.sc("北の町に届く")):
 # ================= ギター（パワーコード） =================
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
-    pw = power(S.chords[b], "E2")
+    # 2026-10-26 ミックス: 書く高さ E2 は下げたあと G#1 になり、ギターの出ない音・ベースとの低音の二重になっていたので F#2（下げたあと A#1〜。ギターのいちばん低い音）に
+    pw = power(S.chords[b], "F#2")
     if n in ("予報図", "予報士がひと息"): continue
     if n == "全員でテンションの和音":
         if i == 0:

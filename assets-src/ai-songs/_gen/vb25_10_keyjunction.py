@@ -52,10 +52,14 @@ S.scene("ピアノだけ残る", 8, "outro", ["Dbmaj7", "Cm7", "Bbm7", "Ebsus4",
 
 V = Voice(S, vol=0.22, delay=0.75, patch="violin", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 PL = [S.track("ピアノ1台目（右手）", "piano", **piano_spec(0.12, -0.35, 0.22)), S.track("ピアノ1台目（左手）", "piano", **piano_spec(0.12, -0.35, 0.22))]
-PR = [S.track(f"ピアノ2台目（和音{i + 1}）", "piano", **piano_spec(0.1, 0.35, 0.22)) for i in range(3)]
+# 2026-10-26 人間「ミックスのバランスをよくするのが大事」→ 2台目の和音（3音の刻み）は背景なので 0.1→0.09（1台目の分散和音と主旋律のピアノを前に）
+PR = [S.track(f"ピアノ2台目（和音{i + 1}）", "piano", **piano_spec(0.09, 0.35, 0.22)) for i in range(3)]
 PRH = S.track("ピアノ2台目（高いきらめき）", "piano", **piano_spec(0.1, 0.35, 0.22))
 PM = S.track("ピアノ（主旋律の受け渡し）", "piano", **piano_spec(0.17, 0.0, 0.22))
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.21))
+# 2026-10-26 人間「ミックスのバランスをよくするのが大事」→ 1台目の左手（8分のオクターブ）が C2 から書かれていて、6半音下げると F#1〜F2 になり、
+#   ベースと同じ低い所でにごっていた（「自然な音域の外」の注意も出ていた）。左手を F#2 から書く（鳴るのは C2〜）。ベースの居場所を空ける
+LH = "F#2"
 BLO, BR = "Bb1", {"lo": 34, "hi": 58}   # ベースを書く高さ（6半音下げたあとで E1〜E3）
 # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ バンドが入る所（2人目）と6人連弾の頭に「ドン」（控えめ 0.08）
 BOOM = S.track("インパクト（ドン）", "impactHit", volume=0.08, pan=0.0, reverb=0.4)
@@ -184,7 +188,9 @@ for b in range(S.nb):
         lh = f"{nm(low(ch, LH))}:4" if i < 8 else f"{nm(low(ch, LH))}:2 {nm(low(ch, LH) + 12)}:2"
         if i >= 8: rh = " ".join(f"{nm(x)}:0.5" for x in tones(ch, "C4", "C6")[:4] * 2)
     elif n == "ピアノのソロ": lh = piano_left8(ch, LH)
-    elif n == "6人目": rh = piano_arp16(ch, "C4", "C6"); lh = piano_left8(ch, LH)
+    elif n == "6人目":
+        # 2026-10-26: ソロのあと、いったん引いてから（前半は右手の16分を休んで、和音と左手の伸ばしだけ）、ひとりずつ座るように後半で戻す
+        rh = piano_arp16(ch, "C4", "C6") if i >= 4 else None; lh = piano_left8(ch, LH) if i >= 4 else f"{nm(low(ch, LH))}:2 {nm(low(ch, LH) + 12)}:2"
     elif n == "ピアノだけ残る":
         t = tones(ch, "Ab3", "Ab5")
         rh = " ".join(f"{nm(t[q % len(t)])}:{0.5 if i < 4 else 1}" for q in ((0, 2, 1, 3, 2, 4, 3, 1) if i < 4 else (0, 2, 1, 3)))
@@ -240,6 +246,8 @@ cym_swell(CYM, S.sc("2人目")[0], 2, "C4"); cym_swell(CYM, S.sc("ピアノの�
 #   最後の6人連弾の頭にも。書き出しの前に 6半音下げるので F#2 で書く（鳴るのは C2）
 BOOM.bar(S.sc("2人目")[0], "F#2:4"); BOOM.bar(S.sc("6人連弾")[0], "F#2:4")
 riser(FX, S.sc("2人目")[0], 4, "C4")
+# ピアノのソロ → 6人目（溜め）の変わり目が弱かったので、逆再生のシンバルで吸い込んでから入る
+cym_swell(CYM, S.sc("6人目")[0], 2, "C4")
 
 
 def claps(bars, vol=0.07):
@@ -250,6 +258,19 @@ def claps(bars, vol=0.07):
     return t
 
 # ================= ドラム =================
+def shape(b, kind, i, L):
+    """2026-10-26 人間「ドラム強弱、アクセント、余韻も上手く使ってね」: 場面の強さに合わせた叩き分け（型を置いた直後に呼ぶ。フィルは後から上に書く）。
+    Aメロ・Cメロ: スネアの2・4拍は句の頭の小節（4小節に1回）だけ強く（X）、ほかはふつう（x）。ハイハットは拍の頭だけ強く、裏は軽く。
+    Bメロ: 前半はふつう（x）で抑え、後半で強く（X）に上げていく（溜め）。サビはいまの強さのまま（いちばん強い）"""
+    s_, h_ = list(D.S[b]), list(D.H[b])
+    if kind in ("verse", "bridge"):
+        if i % 4: s_ = ["x" if c == "X" else c for c in s_]
+        h_ = [c if j % 4 == 0 else ("x" if c == "X" else c) for j, c in enumerate(h_)]
+    elif kind == "pre" and i < L // 2:
+        s_ = ["x" if c == "X" else c for c in s_]
+    D.S[b], D.H[b] = "".join(s_), "".join(h_)
+
+
 def ride8(b, first="C2"):
     D.cym(b, f"{first}:0.5 " + "D2:0.5 " * 7); D.H[b] = "." * 16
 
@@ -267,22 +288,24 @@ for b in range(S.nb):
         if last: put_fill(D, b, "tomdown")
     elif n in ("Aメロ", "Aメロ2"):
         vgroove(D, b, "beat8" if i < 8 else "vrock2", ghosts=0.4, seed=b, h="x.x.x.x.x.x.x.x." if i < 8 else None)
+        shape(b, k, i, L)
         if n == "Aメロ2" and i >= 8: ride8(b, "C2" if i == 8 else "D2")
         if i == 0: crash(D, b)
         if i == 7: put_fill(D, b, "small")
         if last: put_fill(D, b, "snare16")
     elif n.startswith("Bメロ"):
         vgroove(D, b, "half" if i < 4 else "vrock2", ghosts=0.3, seed=b)
+        shape(b, k, i, L)
         if i == 4: crash(D, b, "G2")
         if i == 6: put_fill(D, b, "build")
-        if last: halt(D, b, 1.5 if n == "Bメロ" else 3); D.cym(b, "C2:1.5" if n == "Bメロ" else "R:4")
+        if last: halt(D, b, 1.5 if n == "Bメロ" else 3); D.cym(b, "C2:4" if n == "Bメロ" else "R:4")   # 余韻: 止めのクラッシュは切らずに止めの終わりまで鳴らす（1.5→4拍）
     elif n in ("サビ", "サビ2", "6人連弾"):
         vgroove(D, b, "vrock" if n != "サビ2" or i >= 8 else "vrock2", ghosts=0.3, seed=b)
         if i % 8 == 0: crash(D, b, "C2" if i % 16 == 0 else "G2")
         if n == "6人連弾" and 16 <= i < 22: ride8(b, "C2" if i == 16 else "D2")
         if i % 8 == 7 and not last: put_fill(D, b, "snare16" if i % 16 == 7 else "tomdown")
         if last and n != "6人連弾": put_fill(D, b, "tomdown")
-        if last and n == "6人連弾": D.set(b, "X" + "." * 15, "X" + "." * 15, "." * 16); D.cym(b, "C2:4")
+        if last and n == "6人連弾": D.set(b, "X" + "." * 15, "X" + "." * 15, "." * 16); D.cym(b, "C2:8")   # 余韻: ピアノだけ残る所へ鳴りを伸ばす（4→8拍）
     elif n.startswith("掛け合い"):
         vgroove(D, b, "vrock2", ghosts=0.4, seed=b)
         if i == 0: crash(D, b)
@@ -291,6 +314,7 @@ for b in range(S.nb):
         if i < 8: D.set(b, "X...........X...", "." * 16, "x...x...x...x..." if i >= 2 else "." * 16)
         else:
             vgroove(D, b, "half", ghosts=0.45, seed=b, h="x...x...x...x...")
+            shape(b, k, i, L)
             if not last: D.cym(b, ("B2:1 " if i == 8 else "D2:1 ") + "D2:1 D2:1 D2:1"); D.H[b] = "." * 16
         if last: put_fill(D, b, "lift")
     elif n == "ピアノのソロ":
@@ -309,6 +333,9 @@ SIL.add(S.sc("Bメロ")[-1], 1.5, 4)
 SIL.add(S.sc("Bメロ2")[-1], 3, 4)
 SIL.add(S.sc("6人目")[-1], 3, 4)
 SIL.apply()
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ この物語でしか出てこない音: 6人連弾の後半（「ろくにんのおとで まちがうたうよ」）で、
+#   足をとめて聞いていた通りの人たちが手拍子で加わる（2・4拍。0.07 の控えめな音。最後の2小節は和音を伸ばすので手拍子も止める）
+claps(S.sc("6人連弾")[16:22])
 
 S.fade_out = 0
 S.desc = ("仮: ボカロ曲インスト25曲（作り直し）の10。ピアノロック。B長調・184。2番のサビは半音下（B♭）、最後のサビは短3度上（D）。"

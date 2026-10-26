@@ -50,6 +50,9 @@ ARP = S.track("デジタルのアルペジオ", "pad", patch="surgeKeysNanowave2
 ARP2 = S.track("アルペジオ（ソロ）", "lead", patch="surgeKeysDizzy", volume=0.12, pan=-0.1, reverb=0.25, mono=True,
                fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.15, "feedback": 0.25}])
 CHOP = S.track("声のようなシンセ", "lead", patch="surgeFormantPulse", volume=0.1, mono=True, pan=-0.25, reverb=0.3)
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 最後のサビで「画面の向こうの君」が返事をするように、声のようなシンセの対旋律。
+#   主役（歌）より小さく 0.07。上の「声のようなシンセ」と同じ設定（音量だけちがう）なので、MIDI のチャンネルを分け合う（チャンネルを増やさない）
+REPLY = S.track("君の返事（声のようなシンセ・対旋律）", "lead", patch="surgeFormantPulse", volume=0.07, mono=True, pan=-0.25, reverb=0.3)
 FB = [S.track(f"フューチャーベースの和音{i + 1}", "pad", patch="surgeChordVisitorPlayground", volume=0.05, pan=[-0.6, 0.6, 0][i], reverb=0.3, duck=0.5) for i in range(3)]
 SAW = [S.track(f"厚い和音{i + 1}", "pad", patch="surgePadNeverending", volume=0.045, pan=[-0.7, 0.7][i], reverb=0.3, duck=0.45) for i in range(2)]
 PAD = [S.track(f"こもったパッド{i + 1}", "pad", patch="surgePadVerbPad", volume=0.06, pan=[-0.5, 0.5][i], reverb=0.4,
@@ -58,6 +61,7 @@ BELL = S.track("ガラスのような鍵盤（データの粒）", "pad", patch=
 GLITCH = S.track("グリッチ（ビットの崩れ）", "lead", patch="surgeDnaSeq", volume=0.06, pan=0.0, mono=True,
                  fx=[{"type": "bitcrusher", "bits": 6, "mix": 0.8}, {"type": "filter", "kind": "highpass", "freq": 500, "q": 0.7}])
 BASS = S.track("シンセベース", "bass", **synth_bass_spec("surgeBassEmulation", vol=0.22, duck=0.25))
+BLO, BR = "A1", {"lo": 33, "hi": 57}   # ベースを書く高さ（書き出しの前に 5半音下げたあとで E1〜E3。E1 から書くと B0 まで下がっていた）
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.07, pan=0, reverb=0.3)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 D = S.drumkit()
@@ -119,6 +123,9 @@ SOLO = ["1:0.25 3:0.25 5:0.25 1':0.25 " * 2 + "2:0.25 4:0.25 6:0.25 2':0.25 " * 
 for i, b in enumerate(S.sc("サーバーの夜景")):
     s_ = SOLO[i % 4].strip() if i < 12 else ["5':0.25 3':0.25 1':0.25 5:0.25 " * 4, "6':0.25 4':0.25 1':0.25 6:0.25 " * 4,
                                              "7':0.5 5':0.5 2':0.5 7:0.5 5:0.5 2:0.5 7,:1", "#4:4"][i - 12].strip()
+    # 2026-10-26: 同じ4小節が3回続いていた（点検の注意）ので、2回目は逆から（下りの分散和音）、3回目の前半は1オクターブ上で
+    if 4 <= i < 8: s_ = retro(s_)
+    if 8 <= i < 10: s_ = shift_oct(K.mel(s_, oct=4), 1); ARP2.bar(b, s_); continue
     ARP2.bar(b, K.mel(s_, oct=4))
 for i, b in enumerate(S.sc("バグの嵐")):
     if i % 2 == 0: GLITCH.bar(b, K.mel(" ".join(["1':0.125"] * 8 + ["b2':0.125"] * 8) + " R:2", oct=4))
@@ -136,12 +143,17 @@ for b in range(S.nb):
     if n not in ("バグの嵐", "再起動", "サーバーの夜景") and not (n == "起動" and i < 2):
         ARP.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.25" for q in (0, 2, 1, 3, 2, 4, 3, 1) * 2))
     # ベース
-    if n in ("ログイン", "データの川", "キャッシュの迷路"): BASS.bar(b, bass_line(S, b, "push" if i < 8 else "oct8"))
-    elif n.startswith("ファイアウォール"): BASS.bar(b, bass_line(S, b, "push" if i < 7 else "long"))
-    elif n.startswith("ネットの空") or n == "光回線": BASS.bar(b, bass_line(S, b, "oct8"))
-    elif n == "バグの嵐": BASS.bar(b, bass_line(S, b, "half"))
-    elif n in ("再起動", "サーバーの夜景"): BASS.bar(b, bass_line(S, b, "long" if n == "再起動" else "house"))
-    elif n == "ログアウト" and i < 6: BASS.bar(b, bass_line(S, b, "half"))
+    # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 根音の8分（oct8）だけだった所を歌うベースに。Aメロの後半は、歌が「R:2」で休む
+    #   奇数小節でベースが上る（climb・walk）。サビは歌が細かい偶数小節を押して（drive）、伸ばす奇数小節で駆ける（run）、句の終わりは下りる（fall）。
+    #   ファイアウォール（Bメロ）は歌といっしょに上っていく。ログイン・夜景はハウスの裏のまま（場面の色）。音量はそのまま
+    if n == "ログイン": BASS.bar(b, bass_line(S, b, "push", lo=BLO))
+    elif n in ("データの川", "キャッシュの迷路"):
+        BASS.bar(b, bass_line(S, b, "push", lo=BLO) if (i < 8 or i % 2 == 0) else sing_bass(S, b, "climb" if i % 4 == 1 else "walk", **BR))
+    elif n.startswith("ファイアウォール"): BASS.bar(b, sing_bass(S, b, "climb", **BR) if i < 7 else bass_line(S, b, "long", lo=BLO))
+    elif n.startswith("ネットの空") or n == "光回線": BASS.bar(b, sing_bass(S, b, "fall" if i % 8 == 7 else ("run" if i % 2 == 1 else "drive"), **BR))
+    elif n == "バグの嵐": BASS.bar(b, bass_line(S, b, "half", lo=BLO))
+    elif n in ("再起動", "サーバーの夜景"): BASS.bar(b, bass_line(S, b, "long" if n == "再起動" else "house", lo=BLO))
+    elif n == "ログアウト" and i < 6: BASS.bar(b, bass_line(S, b, "half", lo=BLO))
     # フューチャーベースの和音（サビ）・厚い和音（光回線）
     if n.startswith("ネットの空") or n == "光回線":
         for j in range(3): FB[j].bar(b, f"{nm(v[j])}:0.75 {nm(v[j])}:0.75 {nm(v[j])}:0.5 R:0.5 {nm(v[j])}:1.5")
@@ -156,12 +168,36 @@ for b in range(S.nb):
     if n in ("起動", "ネットの空", "ネットの空2", "光回線") and i % 2 == 1:
         BELL.bar(b, " ".join(f"{nm(x)}:0.5" for x in tones(ch, "B5", "B6")[:4]) + " R:2")
 BELL.bar(0, "R:2 B5:2")
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ この物語でしか出てこない音: Aメロで歌が休む所（2・6・10・14小節目の後半）に、
+#   画面に君の文字が届く「ぽろん」（ガラスの鍵盤の上がる2音。0.07 のまま）。「既読」の合図のように、歌のすき間だけで鳴らす
+for name in ("データの川", "キャッシュの迷路"):
+    for i, b in enumerate(S.sc(name)):
+        if i % 4 == 1: BELL.bar(b, K.mel("R:2.5 5':0.5 1'':1", oct=4))
 FX.bar(S.sc("ログイン")[0] - 1, "A4:4")
+FX.bar(S.sc("ログイン")[0], "G4:4")                    # 2026-10-26: 電源が入る「ドーン」（サブドロップ）。起動のベルから一気に走り出す
+# 最後のサビ（光回線）の9〜22小節目: 君の返事の対旋律（歌が伸ばす所でゆっくり動く2分音符・全音符。A長調の度数）
+RP = ["3:2 6:2", "5:2 7:2", "5:2 3:2", "6:4", "4:2 6:2", "5:1 6:1 7:2", "1':4", "7:4"]
+RP2 = ["3:2 6:2", "5:2 7:2", "5:2 3:2", "6:4", "6:2 3:2", "5:1 6:1 7:2"]
+for i, b in enumerate(S.sc("光回線")):
+    if 8 <= i < 16: REPLY.bar(b, KA.mel(RP[i - 8], oct=4))
+    elif 16 <= i < 22: REPLY.bar(b, KA.mel(RP2[i - 16], oct=4))
 riser(FX, S.sc("ネットの空")[0] - 2, 8, "C4"); riser(FX, S.sc("ネットの空2")[0] - 2, 8, "C4"); riser(FX, S.sc("光回線")[0] - 4, 16, "D4")
 cym_swell(CYM, S.sc("ネットの空")[0] - 1, 2, "C4"); cym_swell(CYM, S.sc("光回線")[0] - 1, 2, "C4")
 FX.bar(S.sc("ログアウト")[-1], "E4:4")                  # 電源が落ちる（ダウンリフター）
 
 # ================= ドラム =================
+def shape(b, kind, i, L):
+    """2026-10-26 人間「ドラム強弱、アクセント、余韻も上手く使ってね」: 場面の強さに合わせた叩き分け（型を置いた直後に呼ぶ）。
+    Aメロ・Cメロ: スネアは句の頭の小節（4小節に1回）だけ強く（X）、ほかはふつう（x）。ハイハットは拍の頭だけ強く。Bメロは前半を抑えて後半で上げる"""
+    s_, h_ = list(D.S[b]), list(D.H[b])
+    if kind in ("verse", "bridge"):
+        if i % 4: s_ = ["x" if c == "X" else c for c in s_]
+        h_ = [c if j % 4 == 0 else ("x" if c == "X" else c) for j, c in enumerate(h_)]
+    elif kind == "pre" and i < L // 2:
+        s_ = ["x" if c == "X" else c for c in s_]
+    D.S[b], D.H[b] = "".join(s_), "".join(h_)
+
+
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     last = i == L - 1
@@ -169,15 +205,18 @@ for b in range(S.nb):
         D.set(b, "................", "................", "................" if i < 2 else "x.x.x.x.x.x.x.x.")
     elif n == "ログイン":
         vgroove(D, b, "four", seed=b, s="................" if i < 4 else None)
+        if i == 0: crash(D, b, "C2", 8)                                    # 電源が入る所。クラッシュを長く鳴らす
         if last: put_fill(D, b, "snare16")
     elif n in ("データの川", "キャッシュの迷路"):
         vgroove(D, b, "twostep" if i < 8 else "four", ghosts=0.3, seed=b)
+        shape(b, k, i, L)
         if i == 0: crash(D, b)
         if i % 8 == 7: put_fill(D, b, "small")
     elif n.startswith("ファイアウォール"):
         vgroove(D, b, "half" if i < 4 else "four16", ghosts=0.2, seed=b)
+        shape(b, k, i, L)
         if i == 6: put_fill(D, b, "build")
-        if last: halt(D, b, 2)
+        if last: halt(D, b, 2); crash(D, b, "G2", 4)                       # 余韻: 止めのあとも、クラッシュの鳴りを止めの終わりまで残す
     elif n.startswith("ネットの空") or n == "光回線":
         name = "jersey" if (n == "ネットの空2" and i < 8) else "four16"
         vgroove(D, b, name, ghosts=0.25, seed=b)
@@ -189,6 +228,7 @@ for b in range(S.nb):
         if i % 2 == 1: D.S[b] = "....X...xxxxXXXX"
     elif n == "再起動":
         vgroove(D, b, "half", seed=b, h="x...x...x...x...")
+        shape(b, k, i, L)
         if last: put_fill(D, b, "build")
     elif n == "サーバーの夜景":
         vgroove(D, b, "four", seed=b)
@@ -198,6 +238,7 @@ for b in range(S.nb):
     elif n == "ログアウト":
         vgroove(D, b, "half", seed=b) if i < 6 else D.set(b, "X" + "." * 15, "." * 16, "." * 16)
         if i == 0: crash(D, b)
+        if i == 6: crash(D, b, "C2", 8)                                    # 余韻: 電源が落ちる最後の2小節は、シンバルの鳴りだけ長く残す
 
 # こもり（再起動の場面は、ベルとアルペジオがないので、歌の役と和音だけ。光回線の前4小節）
 muffle(S, [ARP2, BASS], S.sc("サーバーの夜景")[-4:], 800)
