@@ -12,7 +12,7 @@
 from vb25_lib import *
 
 S = Song("24", "hoshikuzu", "星屑コンビニエンス（仮）", "Stardust Convenience", 152, 4, "G", "minor", "テクノポップ（エレクトロスウィング）")
-S.kit = "electro"
+S.kit = "jazz"   # 2026-10-26 人間「24のドラムジャズっぽいのにしよう」（もとは electro）
 S.flags = "--ref-tone glossy-jrock " + S.flags + " --piano salamander"
 K = S.key   # G 短調（oct=4 で 1＝G4）
 
@@ -228,58 +228,59 @@ def hats_cut(b, a, z):
         t.ev = [e for e in t.ev if not (b * 4 + a - 1e-6 <= e[0] < b * 4 + z - 1e-6)]
 
 
-SWING_HAT = swing("x:0.5 x:0.5 X:0.5 x:0.5 x:0.5 x:0.5 X:0.5 x:0.5")
+# 2026-10-26 人間（24）「24のドラムジャズっぽいのにしよう」→ ジャズのドラムに（キットは jazz）。
+#   ライド: 2・4拍に重みを置く「チーン、チッキ、チーン、チッキ」（シャッフルの所は3連で跳ね、ストレートの所は8分）。鳴りは伸ばす
+#   ハイハット: 足で 2・4拍を「チッ」。キック: 4分をごく弱く（フェザリング）、ときどき裏で「ドン」（ボム）。
+#   スネア: 小節ごとに形を変える合いの手（コンピング）とゴースト。場面の強さで、ライドの強さと合いの手の数を変える
+def rideb(b, strong=False, straight=False):
+    a_ = "!" if strong else ""
+    if straight: RIDE.bar(b, " ".join(f"D2:0.5{a_ if q in (2, 6) else ''}" for q in range(8)))
+    else: RIDE.bar(b, f"D2:1 D2:0.6667{a_} D2:0.3333 D2:1 D2:0.6667{a_} D2:0.3333")
+COMP = ["R:1.5 o:0.5 R:2", "R:2.5 x:0.5 R:1", "R:0.5 o:0.5 R:2 o:0.5 o:0.5", "R:3.5 x:0.5", "R:1 o:0.5 o:0.5 R:1.5 o:0.5",
+        "R:1.5 x:0.5 R:1.5 o:0.5", "R:2 o:0.5 R:0.5 o:0.5 x:0.5", "R:0.5 x:0.5 R:3"]
+COMP_SOFT = ["R:1.5 o:0.5 R:2", "R:3.5 o:0.5", "R:2.5 o:0.5 R:1", "R:4"]
+def compb(b, i, busy, straight):
+    pool = COMP if busy else COMP_SOFT
+    c = pool[(i * 3 + b) % len(pool)]
+    SNG.bar(b, c if straight else swing(c))
+def kickb(b, i, busy):
+    k = list("o...o...o...o...")
+    if busy and i % 4 == 2: k[14] = "x"          # ボム（4拍目の裏）
+    if busy and i % 8 == 5: k[6] = "x"           # ボム（2拍目の裏）
+    return "".join(k)
+HH24 = "....x.......x..."
+S.no_spice = True   # 合いの手は小節ごとに変えているので、全曲共通の「遊び」は足さない（ロックの食いが入るため）
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     last = i == L - 1
     if n == "自動ドア": continue
-    if b in SHUF:
-        # シャッフル: キックは4つ打ち、スネアは2・4拍、ハイハットとゴーストは3連の跳ね（別のパート）
-        if n == "閉まったドアの前":
-            if i < 4: continue
-            D.set(b, "X.........X.....", "........X.......", "." * 16)
-            RIDE.bar(b, swing("D2:1! D2:0.5 D2:0.5 D2:1 D2:0.5 D2:0.5"))
-            SNG.bar(b, swing("R:1.5 o:0.5 R:2"))
-            if i == 4: crash(D, b); RIDE.ev = [e for e in RIDE.ev if not (abs(e[0] - b * 4) < 1e-6)]
-            if last: put_fill(D, b, "tomtrip"); RIDE.ev = [e for e in RIDE.ev if not (b * 4 + 2 - 1e-6 <= e[0] < b * 4 + 4)]; SNG.ev = [e for e in SNG.ev if not (b * 4 <= e[0] < b * 4 + 4)]
-            continue
-        if n == "入店" and i < 4:
-            D.set(b, "X...X...X...X...", "." * 16, "." * 16); HATS.bar(b, SWING_HAT if i >= 2 else "R:4")
-            continue
-        D.set(b, "X...X...X...X...", "....X.......X...", "." * 16)
-        HATS.bar(b, SWING_HAT)
-        SNG.bar(b, swing("R:1.5 o:0.5 R:1.5 o:0.5") if i % 2 else swing("R:0.5 o:0.5 R:2.5 o:0.5"))
-        if i == 0 or (n.startswith("レジ") and i % 8 == 0) or (n == "入店" and i == 4):
-            crash(D, b, "C2" if i % 16 == 0 else "G2"); hats_cut(b, 0, 0.5)
-        if i % 8 == 7 and not last: put_fill(D, b, "small"); hats_cut(b, 3, 4)
-        if last and n not in ("ありがとうございました",):
-            if n.startswith("何を買う"): halt(D, b, 2); hats_cut(b, 2, 4)
-            else: put_fill(D, b, "tomtrip"); hats_cut(b, 2, 4)
-        if n == "ありがとうございました":
-            if i == 6: D.set(b, "X" + "." * 15, "." * 16, "." * 16); crash(D, b, "C2", 8); HATS.ev = [e for e in HATS.ev if not (b * 4 <= e[0] < b * 4 + 8)]
-            if i == 7: D.set(b, "." * 16, "." * 16, "." * 16); HATS.ev = [e for e in HATS.ev if not (b * 4 <= e[0] < b * 4 + 4)]
+    straight = b not in SHUF
+    busy = n.startswith("レジ") or n == "最後のレジ" or n == "星屑のソロ" or n == "店内放送"
+    if n == "入店" and i < 4:
+        D.set(b, "o...o...o...o...", "." * 16, HH24 if i >= 2 else "." * 16)
+        if i >= 2: rideb(b)
         continue
-    # ストレート
-    if n == "星のダンス":
-        vgroove(D, b, "four16" if i < 8 else "vrock2", ghosts=0.4, seed=b)
-        if i == 0: crash(D, b)
-        if i == 7: put_fill(D, b, "small")
-        if last: put_fill(D, b, "tomdown")
-    elif n.startswith("何を買う"):
-        vgroove(D, b, "half" if i < 4 else "four", ghosts=0.3, seed=b)
-        if i == 6: put_fill(D, b, "build")
-        if last: halt(D, b, 2)
-    elif n.startswith("レジ") or n == "最後のレジ":
-        vgroove(D, b, "four16", ghosts=0.3, seed=b)
-        if i % 8 == 0: crash(D, b, "C2" if i % 16 == 0 else "G2")
-        if i % 8 == 7 and not last: put_fill(D, b, "snare16")
-        if last: put_fill(D, b, "tomdown")
-    elif n == "星屑のソロ":
-        vgroove(D, b, "disco", ghosts=0.4, seed=b)
-        if i >= 8: D.H[b] = "." * 16; RIDE.bar(b, " ".join(("D2:0.5!" if q % 2 == 0 else "D2:0.5") for q in range(8)))
-        if i % 8 == 0: crash(D, b, "B2" if i else "C2")
-        if i % 4 == 3 and not last: put_fill(D, b, "small")
-        if last: put_fill(D, b, "build")
+    if n == "閉まったドアの前":
+        if i < 4: continue
+        D.set(b, "o.......o.......", "." * 16, HH24)          # 静かな所: ライドは拍だけ、ゴーストを少し
+        RIDE.bar(b, "D2:1 D2:1 D2:1 D2:1"); compb(b, i, False, straight)
+        if i == 4: crash(D, b, "C2", 8); RIDE.ev = [e for e in RIDE.ev if not (abs(e[0] - b * 4) < 1e-6)]
+        if last: put_fill(D, b, "tomtrip"); RIDE.ev = [e for e in RIDE.ev if not (b * 4 + 2 - 1e-6 <= e[0] < b * 4 + 4)]; SNG.ev = [e for e in SNG.ev if not (b * 4 <= e[0] < b * 4 + 4)]
+        continue
+    if n == "ありがとうございました" and i >= 6:
+        if i == 6: D.set(b, "X" + "." * 15, "X" + "." * 15, "." * 16); crash(D, b, "C2", 8)
+        else: D.set(b, "." * 16, "." * 16, "." * 16)
+        continue
+    D.set(b, kickb(b, i, busy), "." * 16, HH24)
+    rideb(b, strong=busy, straight=straight)
+    compb(b, i, busy or n in ("夜中の棚", "星のダンス") and i >= 8, straight)
+    if i == 0 or (busy and i % 8 == 0):
+        crash(D, b, "C2" if i % 16 == 0 else "G2"); RIDE.ev = [e for e in RIDE.ev if not (abs(e[0] - b * 4) < 1e-6)]
+    if i % 8 == 7 and not last:
+        put_fill(D, b, "small"); SNG.ev = [e for e in SNG.ev if not (b * 4 + 3 - 1e-6 <= e[0] < b * 4 + 4)]
+    if last and n != "ありがとうございました":
+        if n.startswith("何を買う"): halt(D, b, 2); RIDE.ev = [e for e in RIDE.ev if not (b * 4 + 2 - 1e-6 <= e[0] < b * 4 + 4)]; SNG.ev = [e for e in SNG.ev if not (b * 4 + 2 - 1e-6 <= e[0] < b * 4 + 4)]
+        else: put_fill(D, b, "tomtrip"); RIDE.ev = [e for e in RIDE.ev if not (b * 4 + 2 - 1e-6 <= e[0] < b * 4 + 4)]; SNG.ev = [e for e in SNG.ev if not (b * 4 + 2 - 1e-6 <= e[0] < b * 4 + 4)]
 
 # 止め（Bメロの最後 ×2）・1拍の完全な無音（自動ドアが閉まる直前）
 for name in ("何を買う？", "何を買う？2"): SIL.add(S.sc(name)[-1], 2, 4)

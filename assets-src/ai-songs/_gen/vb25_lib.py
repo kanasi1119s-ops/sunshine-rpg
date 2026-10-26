@@ -314,6 +314,7 @@ def spice(S):
     同じ形の小節が続く所だけ、続いた数に合わせて少しずつ遊びを足す（1小節目はそのまま＝単調のよさを残す）。
     Aメロ（verse）・静かな所（break・bridge・outro）は控えめ（4小節に1回の開いたハイハットだけ）。サビ・間奏・ソロ・Bメロは、
     キックの食い（4拍目の裏）・裏拍のハイハットのアクセント・スネアのゴースト・2拍の短いフィルを、ずらしながら入れる"""
+    if getattr(S, "no_spice", False): return   # 曲の台本の側で叩き方を細かく変えている曲（24 のジャズのドラムなど）は足さない
     D = getattr(S, "drums", None)
     if D is None or D.n != 16: return
     rng = _random.Random(int(S.no) * 7 + 3); n = 0; run = 0
@@ -351,11 +352,25 @@ def vwrite(S, extra_flags=""):
     depth(S)
     modernize(S)
     kitflag = {"electro": "--drums electro", "naked": "--drums naked", "jpop": "--drums jpop", "crocell-punch": "--drums crocell-punch",
-               "crocell": "--drums crocell", "crocell-punch-heavy": "--drums crocell-punch-heavy"}.get(S.kit, "")
+               "crocell": "--drums crocell", "crocell-punch-heavy": "--drums crocell-punch-heavy", "jazz": "--drums jazz"}.get(S.kit, "")
     # 2026-10-26 人間「何曲かギターの音がデカすぎて聞こえてこない音とかもある」: 歪みギターのバッキング（リード・ソロ以外）を全曲で 0.88 倍
     for t in S.tracks:
         if t.inst == "distGuitar" and not any(w in t.role for w in ("リード", "ソロ")) and not getattr(t, "_gtr_scaled", False):
             t.spec["volume"] = round(t.spec.get("volume", 0.1) * 0.88, 4); t._gtr_scaled = True
+    # 2026-10-26 人間「25の曲と同じギターサウンド使ってる場合すこし歪みを優しくしよう。で軽く透明感あるといいな」:
+    #   25 と同じ音（バッキング jpop-rock-drive・リード warm-lead-a）の曲では、歪みを約 0.8 倍に浅くし、
+    #   こもる 400Hz を少し引いて、空気の高域（8kHz 〜）を少し足す（軽く透き通る音に）
+    if not getattr(S, "_gtr_clear", False):
+        S._gtr_clear = True
+        for t in S.tracks:
+            tone = t.spec.get("guitarTone")
+            if tone == "jpop-rock-drive" and t.inst == "distGuitar":
+                t.spec["ampDrive"] = round(float(t.spec.get("ampDrive", 0.35)) * 0.8, 3)
+            elif tone == "warm-lead-a" and t.inst in ("distGuitar", "leadGuitar"):
+                t.spec["ampDrive"] = round(float(t.spec.get("ampDrive", 1.0)) * 0.8, 3)
+            else: continue
+            t.spec["fx"] = list(t.spec.get("fx", [])) + [{"type": "eq", "low": 0, "mid": -1.5, "midHz": 400, "high": 0},
+                                                         {"type": "eq", "low": 0, "mid": 1.0, "midHz": 5000, "high": 1.5}]
     # 2026-10-26 人間「リフギターが目立つ曲はベースが全体的に埋もれがち」: 歪みギター（リフ・刻み）のある曲では、
     #   ベースを 1.2 倍（人間の好み「1.2」）にして、ギターの 100Hz より下と 250Hz のこもりを削ってベースの居場所を空ける
     if any(t.inst in ("distGuitar", "leadGuitar") for t in S.tracks) and not getattr(S, "_bass_room", False):
