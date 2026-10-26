@@ -276,3 +276,10 @@ Naked Drums（Wilkinson Audio、CC BY 4.0、1.3GB）、DRS Kit（CC BY 4.0）、
 - 雲: `/opt/surge-xt` に Linux 版を展開、`/usr/share/surge-xt` にリンク。pip の pedalboard（Spotify・GPL3）で VST3 を読みこんで鳴らす。
 - パソコン: Windows 版のインストーラーを `ダウンロード\surge-xt\` に置いた（入れるのは人間）。
 - 作曲ソフトに入れるのは、プリセットを 3半音ごとに録った SF3（`tools/surge/sample.py`）。
+
+## 動画用の文字フォント（2026-10-26 追加。YouTube 用の歌の動画『SCARLET FREQUENCY』）
+| 素材 | 入手元 | 規約の要点 | クレジット |
+|---|---|---|---|
+| DotGothic16（歌詞・日本語の文字。デジタル風） | Google Fonts（https://github.com/google/fonts/tree/main/ofl/dotgothic16） | SIL OFL 1.1。商用可・動画の文字に使ってよい・同梱可（ライセンス文を一緒に置く）。フォント単体の販売は不可 | 動画への表記は不要。`tools/mv/fonts/OFL-DotGothic16.txt` |
+| Orbitron（英語の文字） | Google Fonts（https://github.com/google/fonts/tree/main/ofl/orbitron） | SIL OFL 1.1（同上） | 不要。`tools/mv/fonts/OFL-Orbitron.txt` |
+- 舞台の背景の絵と、テトの動画（元の動き）は人間が用意したもの（リポジトリには入れない）。

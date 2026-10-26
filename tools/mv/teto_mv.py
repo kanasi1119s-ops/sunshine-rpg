@@ -28,13 +28,15 @@ def src(k): return cv2.imread(f"{FR}/{k + 1:03d}.png")
 
 # ---- 姿勢の近さ（口のまわりを除いた、小さく縮めた絵どうしの差）----
 MX0, MY0 = 342, 291
-small = []
-for k in range(K):
+CACHE = os.path.join(FR, "pose_small.npy")
+small = list(np.load(CACHE)) if os.path.exists(CACHE) else []
+for k in (range(K) if not small else []):
     g = cv2.cvtColor(src(k), cv2.COLOR_BGR2GRAY).astype(np.float32)
     _, dx, dy, _, _ = trk[k]; mx, my = MX0 + dx, MY0 + dy
     g[my - 45:my + 45, mx - 55:mx + 55] = 255                                  # 口のちがいは姿勢の差に入れない
     small.append(cv2.resize(g, (72, 128), interpolation=cv2.INTER_AREA).ravel())
 small = np.array(small)
+if not os.path.exists(CACHE): np.save(CACHE, small)
 D = np.sqrt(((small[:, None, :] - small[None, :, :]) ** 2).mean(2))
 step = np.median([D[k, k + 1] for k in range(K - 1)])                          # となりのコマどうしのふつうの差
 Dn = D / step                                                                   # 1.0 ＝ となりのコマくらいの差
@@ -148,6 +150,7 @@ for k in range(K):
     frames[k] = (OC * OA + img.astype(np.float32) * (1 - OA)).astype(np.uint8).tobytes()
 sing = want > 0; sing_open = np.mean(state[seq][sing] > 0) if sing.any() else 1
 print(f"歌っている所で口が開いている {sing_open:.0%} / 1分ごとに使ったコマの種類", [len(set(seq[a:a + 1440])) for a in range(0, N, 1440)])
+json.dump([int(k) for k in seq], open(OUT + ".seq.json", "w"))   # コマの並び（舞台の動画づくりでも使う）
 if os.environ.get("MV_DRY"): sys.exit(0)
 proc = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", "720x1280", "-r", str(FPS), "-i", "-", "-i", AUDIO,
                          "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-shortest", OUT], stdin=subprocess.PIPE)

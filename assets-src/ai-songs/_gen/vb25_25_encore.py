@@ -80,6 +80,7 @@ BR = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.13, p
 HALO = [S.track(f"合唱風のパッド{i + 1}", "pad", **pad_spec("halo", vol=0.06, pan=0.0, duck=0.25, sustain=2.5)) for i in range(2)]
 GT = [S.track(f"ギター（{['根音', '5度', 'オクターブ'][i]}）", "distGuitar", **rock_gtr_spec(0.09, 0.0)) for i in range(3)]
 LG = S.track("リードギター（リフ・ソロ）", "distGuitar", **lead_gtr_spec(0.15, -0.05))
+# 2026-10-26 人間（25）「少し音が強いかな。丸みが少しあるといいな」→ 同じギターの音の曲すべてで丸くする（vb25_lib.vwrite）
 BASS = S.track("ベース", "bass", **rock_bass_spec(0.2))
 STAR = S.track("流れ星（ガラスのプラック）", "pad", patch="glassPluck", volume=0.07, pan=0.5, sustain=1.0, reverb=0.5)
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.07, pan=0, reverb=0.3)

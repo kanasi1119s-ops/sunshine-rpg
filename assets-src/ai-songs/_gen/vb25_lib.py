@@ -646,8 +646,15 @@ def vwrite(S, extra_flags=""):
             elif tone == "warm-lead-a" and t.inst in ("distGuitar", "leadGuitar"):
                 t.spec["ampDrive"] = round(float(t.spec.get("ampDrive", 1.0)) * 0.8, 3)
             else: continue
-            t.spec["fx"] = list(t.spec.get("fx", [])) + [{"type": "eq", "low": 0, "mid": -1.5, "midHz": 400, "high": 0},
-                                                         {"type": "eq", "low": 0, "mid": 1.0, "midHz": 5000, "high": 1.5}]
+            # 2026-10-26 人間「このギター音源の曲全体的に丸み変えてもらってもいいかな。ちょっと音が強いんだよね」:
+            #   前の「空気の高域を足す」（5kHz +1・高い所 +1.5）をやめ、3.5kHz の持ち上げも外して、6kHz（リードは 6.5kHz）から上をなだらかに落とす。
+            #   大きさも 0.9 倍（少し弱く）
+            lead = tone == "warm-lead-a"
+            t.spec["volume"] = round(t.spec.get("volume", 0.1) * 0.9, 4)
+            t.spec["fx"] = [f for f in t.spec.get("fx", []) if not (f.get("type") == "eq" and f.get("midHz") in (3000, 3500) and f.get("mid", 0) > 0)] + \
+                [{"type": "eq", "low": 0, "mid": -1.5, "midHz": 400, "high": 0},
+                 {"type": "eq", "low": 0, "mid": -1.0, "midHz": 3500, "high": -2},
+                 {"type": "filter", "kind": "lowpass", "freq": 6500 if lead else 6000, "q": 0.6}]
     # 2026-10-26 人間「リフギターが目立つ曲はベースが全体的に埋もれがち」: 歪みギター（リフ・刻み）のある曲では、
     #   ベースを 1.2 倍（人間の好み「1.2」）にして、ギターの 100Hz より下と 250Hz のこもりを削ってベースの居場所を空ける
     if any(t.inst in ("distGuitar", "leadGuitar") for t in S.tracks) and not getattr(S, "_bass_room", False):
