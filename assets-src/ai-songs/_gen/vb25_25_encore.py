@@ -163,7 +163,22 @@ for i, b in enumerate(S.sc("ギターのソロ")): LG.bar(b, K.mel(SOLO[i], oct=
 # 弦の対旋律（サビ。歌が長い音のとき動く）
 CM_STR = ["3:2 4:1 5:1", "4:2 2:1 1:1", "1:2 2:1 3:1", "5,:4", "3:2 4:1 5:1", "3:2 1:2", "4:2 6:2", "5:4"]
 for name, kk in (("流星群", KD), ("流星群2", KD), ("アンコール", KDD), ("アンコール2", KE)):
-    for i, b in enumerate(S.sc(name)): STRM.bar(b, kk.mel(CM_STR[i % 8], oct=4))
+    # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 最後の最後（アンコール2の後半）は、弦の対旋律を1オクターブ上へ（空いっぱいに広がる）
+    for i, b in enumerate(S.sc(name)): STRM.bar(b, kk.mel(CM_STR[i % 8], oct=5 if (name == "アンコール2" and i >= 8) else 4))
+
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 足した工夫:
+#   ・合いの手: Aメロで歌が2拍休む所に、1番はリードギターの短い答え、2番の後半は弦の答え（楽器の受け渡し）。弱く（「,」）
+#   ・名前を呼ぶ（Half feel）: パワーコードが半音ずつ下りるのに合わせて、弦の1本の線も3度上で半音ずつ下りる（名前を一人ずつ呼ぶように）
+ANS = [[(2, 0.5), (1, 0.5), (0, 1)], [(None, 0.5), (0, 0.5), (1, 0.5), (2, 0.5)], [(1, 0.25), (2, 0.25), (3, 0.5), (2, 1)], [(3, 0.5), (2, 0.5), (1, 0.5), (None, 0.5)]]
+def answer(tr_, b, k, lo, hi):
+    tt = tones(S.chords[b], lo, hi)
+    tr_.bar(b, "R:2 " + " ".join(f"R:{L:g}" if q is None else f"{nm(tt[min(q, len(tt) - 1)])}:{L:g}," for q, L in ANS[k % 4]))
+for i, b in enumerate(S.sc("集まりはじめる")):
+    if i in (5, 9, 11): answer(LG, b, i // 2, "F3", "F4")
+for i, b in enumerate(S.sc("24の灯り")):
+    if i in (9, 11, 15): answer(STRM, b, i // 2 + 1, "F4", "F5")
+for i, b in enumerate(S.sc("名前を呼ぶ")):
+    if i < 8: STRM.bar(b, ["Db4:4", "C4:4", "B3:4", "Bb3:4", "A3:4", "Ab3:4", "A3:2 Bb3:2", "Ab3:4"][i])
 
 # ================= 伴奏 =================
 def chords(trs, b, ch, pat, center):
@@ -181,7 +196,8 @@ for b in range(S.nb):
     last = i == L - 1
     # オーケストラ: 弦の和音（サビ・前奏・Half feel）、ブラスの一撃と伸ばし、ティンパニ
     if n in BIG or n in ("前奏", "名前を呼ぶ", "全員でのばす") or n.startswith("空を見上げる"):
-        if not (n == "全員でのばす" and i >= 10): chords(STR, b, ch, "X:4", 62)
+        # 2026-10-26: 名前を呼ぶの前半8小節は、弦の和音のかわりに、弦の1本の線が半音ずつ下りる（下の「名前を呼ぶ」。同じ音域を重ねない）
+        if not (n == "全員でのばす" and i >= 10) and not (n == "名前を呼ぶ" and i < 8): chords(STR, b, ch, "X:4", 62)
     if n in BIG and i % 4 == 0: chords(BR, b, ch, "X:1.5 X:2.5", 60)
     if n in BIG and i % 8 == 7: TIMP.bar(b, f"R:2 {nm(low(ch, 'F2'))}:0.5 {nm(low(ch, 'F2'))}:0.5 {nm(low(ch, 'F2'))}:1")
     if n == "前奏" and i % 4 == 0: TIMP.bar(b, f"{nm(low(ch, 'F2'))}:2 R:2")
@@ -216,9 +232,19 @@ for b in range(S.nb):
             PNL.bar(b, "Eb2:8")
     # ベース（根音。サビは8分のオクターブ）
     if n == "一撃": BASS.bar(b, f"{nm(low(ch, 'E1'))}:4" if i == 0 else "R:4")
-    elif n in ("前奏", "掛け合い", "ギターのソロ") or n in BIG: BASS.bar(b, bass_line(S, b, "oct8"))
-    elif n in ("集まりはじめる", "24の灯り"): BASS.bar(b, bass_line(S, b, "push" if i < 8 else "root8"))
-    elif n.startswith("空を見上げる"): BASS.bar(b, bass_line(S, b, "root8") if not last else f"{nm(low(ch, 'E1'))}:2 R:2")
+    # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 歌うベース（sing_bass。音域は元と同じ E1 から）を場面ごとに:
+    #   サビ: 押す（drive）と、歌が伸ばす4小節目で駆ける（run）。前奏と間奏はリフに合わせてオクターブのまま、ソロの後半は押す／
+    #   Aメロの後半: 1番は上る・下りる、2番は歩く（1番と変える）／Bメロ: 前半は根音の8分、後半は上っていって止めへ
+    if n in BIG: BASS.bar(b, sing_bass(S, b, "run" if i % 4 == 3 else "drive"))
+    elif n == "ギターのソロ" and i >= 8: BASS.bar(b, sing_bass(S, b, "drive" if i % 2 == 0 else "run"))
+    elif n in ("前奏", "掛け合い", "ギターのソロ"): BASS.bar(b, bass_line(S, b, "oct8"))
+    elif n in ("集まりはじめる", "24の灯り"):
+        if i < 8: BASS.bar(b, bass_line(S, b, "push"))
+        elif n == "集まりはじめる": BASS.bar(b, sing_bass(S, b, "climb" if i % 2 == 0 else "fall"))
+        else: BASS.bar(b, sing_bass(S, b, "walk"))
+    elif n.startswith("空を見上げる"):
+        if last: BASS.bar(b, f"{nm(low(ch, 'E1'))}:2 R:2")
+        else: BASS.bar(b, bass_line(S, b, "root8") if i < 4 else sing_bass(S, b, "climb"))
     elif n == "名前を呼ぶ": BASS.bar(b, bass_line(S, b, "half"))
     elif n == "夜明けの手前": BASS.bar(b, bass_line(S, b, "long" if i < 4 else "root8"))
     elif n == "全員でのばす": BASS.bar(b, bass_line(S, b, "oct8" if i < 4 else "half") if i < 10 else ("Eb2:8" if i == 10 else ""))
@@ -234,8 +260,15 @@ for b in range(S.nb):
         for j in range(3): GT[j].bar(b, pat.replace("X", nm(pw[j])))
 
 # オーケストラの一撃（1小節目: 弦・ブラス・ティンパニ・ギター・クラッシュがいっせいに）
+# 2026-10-26 人間「後半に行くにつれて曲の始まり方似てない？」→ 一撃はこの曲だけに残す。アルバムの最後らしく、いちばん大きく開ける:
+#   ブラスは1拍で切らずに3拍のばし、合唱風のパッド・ピアノの低いオクターブ・弦の高い音（B♭5）も加えて、
+#   インパクト（ドン。0.1）と本物のクラッシュの長い一打（シンバルの効果音 F。8拍のばす）を重ねる。音のない所から全員で客席を開くように
 b0 = 0
-chords(STR, b0, "Bbm", "X:4", 62); chords(BR, b0, "Bbm", "X:1 R:3", 60); TIMP.bar(b0, "Bb2:0.25 Bb2:0.25 Bb2:0.25 F2:3.25")
+chords(STR, b0, "Bbm", "X:4", 62); chords(BR, b0, "Bbm", "X:3! R:1", 60); TIMP.bar(b0, "Bb2:0.25 Bb2:0.25 Bb2:0.25 F2:3.25")
+for j in range(2): HALO[j].bar(b0, f"{nm(voice('Bbm', 60, 2)[j])}:4")
+PNL.bar(b0, "Bb1:4!"); PN.bar(b0, "Bb3:4!"); STRM.bar(b0, "Bb5:4")
+IMP = S.track("インパクト（ドン）", "impactHit", volume=0.1, pan=0.0, reverb=0.4)
+IMP.bar(b0, "Bb1:4"); CYM.bar(b0, "F4:8")
 for j in range(3): GT[j].bar(b0, f"{nm(power('Bbm', 'E2')[j])}:4!")
 # 一撃のあと: 流星群が流れ始める（ガラスのプラックが上から下へ）
 STARS = ["R:1 Bb5:0.25 F5:0.25 Db5:0.25 Bb4:0.25 R:2", "R:2.5 Ab5:0.25 F5:0.25 Db5:0.5 R:0.5", "R:0.5 Bb5:0.25 Gb5:0.25 Eb5:0.5 R:2.5", "R:3 C6:0.25 A5:0.25 F5:0.5"]
@@ -246,6 +279,10 @@ for name in ("流星群", "流星群2", "アンコール", "アンコール2"):
 riser(FX, S.sc("流星群")[0], 4, "C4"); riser(FX, S.sc("アンコール")[0], 16, "D4")
 cym_swell(CYM, S.sc("流星群2")[0], 2, "C4"); cym_swell(CYM, S.sc("アンコール2")[0], 2, "C4"); cym_swell(CYM, S.sc("ギターのソロ")[0], 2, "C4")
 CYM.bar(S.sc("全員でのばす")[10], "B4:8")          # ロールのディミヌエンド（のばした和音の下で）
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ この曲の物語でしか出ない音: 客席の手拍子。
+#   夜明けの手前（「みんなで うたおう」）で客席が手拍子を始め（1拍の無音で止まる）、最後の和音がのびる所で、アンコールの手拍子が鳴る（終わり方）
+season(S, S.sc("夜明けの手前")[2], "手拍子", S.beats * 6, vol=0.07)
+season(S, S.sc("全員でのばす")[11], "手拍子", S.beats * 1, vol=0.06)
 # 最後の和音（全員でのばす）: 弦とブラスとパッドも
 bx = S.sc("全員でのばす")[10]
 chords(STR, bx, "Ebadd9", "X:8", 62); chords(BR, bx, "Ebadd9", "X:8", 58)
@@ -307,6 +344,24 @@ for b in range(S.nb):
         elif i == 10:
             D.set(b, "X" + "." * 15, "X" + "." * 15, "." * 16); crash(D, b, "C2", 8)
             D.tom(b, "R:2 C4:0.25 A3:0.25 F3:0.25 D3:0.25 A2:1!")
+
+# 2026-10-26 人間「ドラム強弱、アクセント、余韻も上手く使ってね」:
+#   ・Aメロの前半と Bメロの前半は軽く: 強打（X）を4小節の句の頭の1打だけ残して x に（ライドの所は元のまま）
+#   ・サビは、2小節ごとの頭のキックと、次の小節へ押し出すスネアの最後の一打を強く
+#   ・余韻: クラッシュは次のシンバルまで、最大 8拍のばす（止めのあとも鳴りを残す）
+def lighten(b, head):
+    for arr in (D.K, D.S):
+        arr[b] = "".join(("x" if c == "X" and not (head and j == 0) else c) for j, c in enumerate(arr[b]))
+for b in range(S.nb):
+    n, i, L, k = S.scene_of(b)
+    if (n in ("集まりはじめる", "24の灯り") and i < 8) or (n.startswith("空を見上げる") and i < 4): lighten(b, i % 4 == 0)
+    elif n in BIG:
+        kk = list(D.K[b]); ss = list(D.S[b])
+        if kk[0] in "xX" and i % 2 == 0: kk[0] = "X"
+        ls = max([j for j, c in enumerate(ss) if c in "xX"], default=None)
+        if ls is not None and i % 2 == 1: ss[ls] = "X"
+        D.K[b] = "".join(kk); D.S[b] = "".join(ss)
+D.C.ev = [(st, max(L, 8.0), x) for st, L, x in D.C.ev]
 
 # 止め・1拍の無音: Bメロの最後（1回目は止め、2回目は1拍の完全な無音）・最後のサビの前（2回の転調の直前に1拍ずつ）
 SIL.add(S.sc("空を見上げる")[-1], 2, 4)
