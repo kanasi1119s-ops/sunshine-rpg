@@ -48,7 +48,7 @@ S.scene("最後の再生", 16, "chorus", LAST_CH)
 S.scene("テープの終わり", 6, "outro", ["F#m7", "Dmaj7", "F#m7", "Dmaj7", "E", "F#m"])
 # 2026-10-26 点数 7.5 を目指す: ベースを録音の指弾きに（6.99→7.35）・エレピを生のピアノに（+0.09）・ブラスを少し下げる（+0.04）
 S.live_bass = True
-S.patch_swap = {"fmEpiano": "piano"}
+S.patch_swap = {"fmEpiano": "piano", "modernPluck": "surgeNicePluck", "modernPad": "surgePadPad2Mw"}   # 合成の音色（modern*）を、録った音色に（23 でプラックを替えて +0.12）
 # 2026-10-26 人間「全部変えるんじゃなくて、曲に合わせて変えて」: レトロポップの語る場面（Aメロ・Cメロ）だけ、人が叩いた演奏（ファンク・ソウル・ポップ）に。
 #   サビは台本の打ち込みのまま。ゴーストの多い演奏は細かくなりすぎるので、ふつう程度まで
 S.pro_scenes = {"ひとりごと", "ひとりごと2", "押し入れの暗がり"}
