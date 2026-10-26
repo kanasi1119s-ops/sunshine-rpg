@@ -11,7 +11,9 @@
 from vb25_lib import *
 
 S = Song("08", "pocketginga", "からっぽのポケットに銀河（仮）", "Galaxy in an Empty Pocket", 172, 4, "G", "major", "疾走ギターロック（ボカロ）")
-S.kit = "crocell-punch-heavy"   # 2026-10-26 人間「トリガーの音がバスドラの重さを掻き消しちゃってる。トリガー無くさなくていい」
+# 2026-10-26 人間「ドラムの音がデジタルすぎるのも原因かもね」: 07・18 で試すと、素直な生ドラム（Naked Drums）で点数が +0.3（07: 7.12→7.44、18: 7.22→7.51）
+#   → 太鼓ごとに作り込んだ crocell-punch をやめて、Naked Drums に（太鼓の音量などの設定は今までと同じ）
+S.kit = "naked-x"   # 前: "crocell-punch-heavy"   # 2026-10-26 人間「トリガーの音がバスドラの重さを掻き消しちゃってる。トリガー無くさなくていい」
 S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags
 S.extra.update({"tone": "rock"})
 K = S.key

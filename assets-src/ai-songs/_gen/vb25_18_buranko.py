@@ -14,7 +14,9 @@
 from vb25_lib import *
 
 S = Song("18", "buranko", "ブランコ・リバース（仮）", "Swing Reverse", 144, 3, "Ab", "major", "J-POP（3拍子・ボカロ）")
-S.kit = "crocell-punch"
+# 2026-10-26 人間「ドラムの音がデジタルすぎるのも原因かもね」: 07・18 で試すと、素直な生ドラム（Naked Drums）で点数が +0.3（07: 7.12→7.44、18: 7.22→7.51）
+#   → 太鼓ごとに作り込んだ crocell-punch をやめて、Naked Drums に（太鼓の音量などの設定は今までと同じ）
+S.kit = "naked-x"   # 前: "crocell-punch"
 S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags + " --piano salamander"
 S.extra.update({"tone": "rock"})
 K = S.key                    # A♭長調

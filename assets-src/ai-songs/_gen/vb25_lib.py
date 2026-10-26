@@ -628,7 +628,7 @@ def vwrite(S, extra_flags=""):
     depth(S)
     modernize(S)
     kitflag = {"electro": "--drums electro", "naked": "--drums naked", "jpop": "--drums jpop", "crocell-punch": "--drums crocell-punch",
-               "crocell": "--drums crocell", "crocell-punch-heavy": "--drums crocell-punch-heavy", "jazz": "--drums jazz"}.get(S.kit, "")
+               "crocell": "--drums crocell", "crocell-punch-heavy": "--drums crocell-punch-heavy", "jazz": "--drums jazz", "naked-x": "--drums naked"}.get(S.kit, "")
     # 2026-10-26 人間「何曲かギターの音がデカすぎて聞こえてこない音とかもある」: 歪みギターのバッキング（リード・ソロ以外）を全曲で 0.88 倍
     for t in S.tracks:
         if t.inst == "distGuitar" and not any(w in t.role for w in ("リード", "ソロ")) and not getattr(t, "_gtr_scaled", False):

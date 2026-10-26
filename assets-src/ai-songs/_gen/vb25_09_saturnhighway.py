@@ -11,7 +11,9 @@
 from vb25_lib import *
 
 S = Song("09", "saturnhighway", "ゴーゴー土星ハイウェイ（仮）", "Go-Go Saturn Highway", 208, 4, "A", "major", "ラップロック／ニューメタル（ボカロ）")
-S.kit = "crocell-punch"
+# 2026-10-26 人間「ドラムの音がデジタルすぎるのも原因かもね」: 07・18 で試すと、素直な生ドラム（Naked Drums）で点数が +0.3（07: 7.12→7.44、18: 7.22→7.51）
+#   → 太鼓ごとに作り込んだ crocell-punch をやめて、Naked Drums に（太鼓の音量などの設定は今までと同じ）
+S.kit = "naked-x"   # 前: "crocell-punch"
 # 2026-10-26 人間「09の音リンキン・パークに変えようか」: ニューメタル／ラップロックの音（参考の音 bright-nu-wall・ギター nu-metal-wall）。
 #   曲そのもの（旋律・コード・フレーズ）はまねず、音の作り方と編成だけ（重い歪みの壁＋暗いシンセ＋ピアノのフック＋ヒップホップ寄りのドラム＋スクラッチ風の飾り）
 S.flags = "--bass bnb-loud --ref-tone bright-nu-wall " + S.flags

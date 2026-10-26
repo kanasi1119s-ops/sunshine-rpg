@@ -13,7 +13,9 @@
 from vb25_lib import *
 
 S = Song("10", "keyjunction", "鍵盤ジャンクション（仮）", "Keyboard Junction", 184, 4, "F", "major", "ピアノロック（ボカロ）")
-S.kit = "crocell-punch-heavy"   # 2026-10-26 人間「トリガーの音がバスドラの重さを掻き消しちゃってる。トリガー無くさなくていい」
+# 2026-10-26 人間「ドラムの音がデジタルすぎるのも原因かもね」: 07・18 で試すと、素直な生ドラム（Naked Drums）で点数が +0.3（07: 7.12→7.44、18: 7.22→7.51）
+#   → 太鼓ごとに作り込んだ crocell-punch をやめて、Naked Drums に（太鼓の音量などの設定は今までと同じ）
+S.kit = "naked-x"   # 前: "crocell-punch-heavy"   # 2026-10-26 人間「トリガーの音がバスドラの重さを掻き消しちゃってる。トリガー無くさなくていい」
 S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags + " --piano salamander"
 S.extra.update({"tone": "rock"})
 K = S.key                 # F
