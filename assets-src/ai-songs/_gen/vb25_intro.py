@@ -9,7 +9,7 @@
 # 上げ下げは 1.5秒でなめらかにつなぎ、前奏の終わりの 1.2秒で元に戻す
 import sys, json, numpy as np, soundfile as sf
 from scipy.signal import butter, sosfilt
-UP, LOW, MAX, CUT = 1.5, 6.0, 15.0, 9.0
+UP, LOW, MAX, CUT = 1.0, 6.0, 15.0, 9.0   # 2026-10-26: 1.5 では 12・13・17・24 で前奏の後半が Aメロより 3〜5dB 大きいまま残った → 1.0 と、ならしを 3秒→1秒に
 p, sp = sys.argv[1], sys.argv[2]
 x, sr = sf.read(p, always_2d=True)
 secs = json.load(open(sp))
@@ -30,7 +30,7 @@ ref = gated(T + 0.3, min(nxt, T + 16) - 0.3)
 if ref is None:
     print("前奏の大きさ: 目安を測れない（そのまま）"); sys.exit(0)
 nI = int(T / 0.1)
-k = 30                                            # 3秒でならす
+k = 10                                            # 1秒でならす（3秒だと前奏の後半の山を見のがした）
 sm = np.convolve(pw, np.ones(k) / k, mode="same")
 E = 10 * np.log10(sm[:nI] + 1e-12)
 gdb = np.zeros(nI)
@@ -39,10 +39,10 @@ gdb[E > hi_] = -(E[E > hi_] - hi_)
 gdb[E < lo_] = np.minimum(MAX, lo_ - E[E < lo_])
 gdb[E < ref - 45] = 0.0                           # 無音（曲の頭の空白など）は上げない
 gdb = np.clip(gdb, -CUT, MAX)
-s = 15
+s = 8
 gdb = np.convolve(np.pad(gdb, (s, s), mode="edge"), np.ones(s) / s, mode="same")[s:-s]   # 1.5秒でなめらかに
-r = min(nI, 12)
-gdb[-r:] *= np.linspace(1, 0, r)                  # 前奏の終わり 1.2秒で元へ
+r = min(nI, 4)   # 2026-10-26: 1.2秒かけて戻すと、前奏の最後の山がそのまま残った → 0.4秒
+gdb[-r:] *= np.linspace(1, 0, r)                  # 前奏の終わり 0.4秒で元へ
 g = np.ones(len(m))
 t_hop = np.arange(nI) * hop
 g[:nI * hop] = np.interp(np.arange(nI * hop), t_hop, 10 ** (gdb / 20))

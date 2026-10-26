@@ -441,6 +441,7 @@ def vwrite(S, extra_flags=""):
         sec += S.beats * 60 / bpm
     secs.append({"t": round(sec, 3), "name": "_end", "kind": "end", "bar": S.nb})
     open(path + ".secs", "w").write(_json.dumps(secs, ensure_ascii=False))
+    declutter(S)
     sep_channels(S)
     kit0 = S.kit
     if S.kit not in ("electro", "naked", "jpop"): S.kit = "jpop"   # 太鼓の設定（音量など）は jpop と同じ扱い
@@ -712,3 +713,24 @@ def sep_channels(S):
                 if keyf(t) not in used: break
             used.add(keyf(t)); n += 1
     if n: print(f"  エフェクトのちがうパートを別のチャンネルに分けた: {n}パート")
+
+
+def declutter(S):
+    """2026-10-26 人間「ミックスのバランスをよくするのが大事」: 品質チェックで、後半の曲に 200〜500Hz のこもりが多かった（14・15・16）。
+    パートごとに、こもりの元になる低い中域を少しずつ削る（ベース・キック・歌の役・効果音はそのまま）:
+      パッド・ストリングス・オルガン・ブラス … 低い棚 −3dB・320Hz −2.5dB（背景は奥へ）
+      ピアノ・エレピ・ギター・アコギ・ハープ … 320Hz −1.5dB（芯は残す）
+    S.no_declutter = True の曲は何もしない"""
+    if getattr(S, "no_declutter", False) or getattr(S, "_decluttered", False): return
+    S._decluttered = True
+    BG = ("pad", "strings", "drawbarOrgan", "organ", "brass", "choir")
+    MID = ("piano", "epiano", "keys", "guitar", "distGuitar", "acousticGuitar", "nylonGuitar", "harp", "accordion", "marimba", "pizzicato")
+    n = 0
+    for t in S.tracks:
+        r = t.role
+        if any(w in r for w in ("歌の役", "効果音", "季節", "ベース", "キック")): continue
+        if t.inst in BG and (t.spec.get("patch") or "") not in ("fxRiser", "seasonFx", "cymbalFx"):
+            t.spec["fx"] = list(t.spec.get("fx", [])) + [{"type": "eq", "low": -3, "mid": -2.5, "midHz": 320, "high": 0}]; n += 1
+        elif t.inst in MID and (t.spec.get("patch") or "") not in ("guitarFx", "cymbalFx"):
+            t.spec["fx"] = list(t.spec.get("fx", [])) + [{"type": "eq", "low": 0, "mid": -1.5, "midHz": 320, "high": 0}]; n += 1
+    if n: print(f"  こもりの元を削った: {n}パート")
