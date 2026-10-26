@@ -47,6 +47,9 @@ S.scene("再突入", 8, "build", ["D", "E", "F#m", "D", "Bm7", "C#m7", "D", "E"]
 S.scene("輪っかを抜ける", 24, "chorus", up2(C_CH + C_CH2 + LAST3))
 S.scene("掛け声3", 8, "interlude", up2(SHOUT))
 S.scene("着陸", 12, "outro", up2(SHOUT + SHOUT[:4]))
+# 2026-10-26 人間「エイトビートもライドで刻むとか、ハイハット以外もつかって曲に合うように変えてほしい。これ重要」:
+#   加速（Bメロ）は裏の開いたハイハット、最初のサビ（輪っか）はライドのカップ、ギターのソロはライド、再突入はフロアタムの8分で低くためる
+S.keepers = {'加速': 'open', '加速2': 'open', '輪っか': 'bell', 'ギターソロ': 'ride', '再突入': 'floor'}
 
 V = Voice(S, vol=0.22, delay=0.5, patch="voiceLeadModern", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 GL = [S.track(f"ギター左（{['根音', '5度'][i]}・ニューメタルの壁）", "distGuitar", **rock_gtr_spec(0.08, -0.6, tone="nu-metal-wall")) for i in range(2)]

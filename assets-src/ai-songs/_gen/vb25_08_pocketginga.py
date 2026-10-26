@@ -42,6 +42,9 @@ S.scene("流れ星を待つ", 8, "build", WAIT)
 S.scene("流れ星", 24, "chorus", C_CH + C_CH2 + STAR3)
 S.scene("帰り道", 12, "outro", OUT)
 S.scene("虫の声と1音", 4, "outro", ["Gadd9"] * 4)
+# 2026-10-26 人間「エイトビートもライドで刻むとか、ハイハット以外もつかって曲に合うように変えてほしい。これ重要」:
+#   夜の空き地の Aメロは4分で静かに、最初のサビはライドのカップで星がまたたくように、ギターのソロは裏の開いたハイハット、流れ星の最後のサビはクラッシュの4分
+S.keepers = {'星を数える': 'quarter', '銀河': 'bell', 'ギターソロ': 'open', '流れ星': 'wash'}
 
 V = Voice(S, vol=0.22, delay=0.75, patch="flute", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
 NY = [S.track(f"アコギ（ナイロン弦）{i + 1}", "guitar", patch="nylonGuitar", volume=0.12, pan=0.35, amp="clean", chorus=0, reverb=0.25,

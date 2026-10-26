@@ -48,6 +48,9 @@ S.scene("隣に座る", 16, "bridge", SIT)
 S.scene("ピアノのソロ", 16, "solo", SOLO_CH)
 S.scene("6人目", 8, "build", SIX)
 S.scene("6人連弾", 24, "chorus", trs(C_CH + C_CH2 + END8, 3))
+# 2026-10-26 人間「エイトビートもライドで刻むとか、ハイハット以外もつかって曲に合うように変えてほしい。これ重要」:
+#   1人目の Aメロは4分で間をあけ、Bメロは裏の開いたハイハット、2回目のサビはライドのカップ、ピアノのソロはライド、6人目が来る所はフロアタムでためる
+S.keepers = {'Aメロ': 'quarter', 'Bメロ': 'open', 'Bメロ2': 'open', 'サビ2': 'bell', 'ピアノのソロ': 'ride', '6人目': 'floor'}
 S.scene("ピアノだけ残る", 8, "outro", ["Dbmaj7", "Cm7", "Bbm7", "Ebsus4", "Dbmaj7", "Eb/Db", "Abmaj7", "Abmaj7"])
 
 V = Voice(S, vol=0.22, delay=0.75, patch="violin", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ

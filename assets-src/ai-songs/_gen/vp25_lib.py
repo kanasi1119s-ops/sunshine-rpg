@@ -190,6 +190,7 @@ class Drums:
         self.K = ["." * self.n for _ in range(song.nb)]; self.S = list(self.K); self.H = list(self.K)
         self.T = Track(song, "タム", "tom", {}); self.C = Track(song, "シンバル", "crash", {})
         self.P = Track(song, "パーカッション", "tom", {})
+        self.R = Track(song, "ライド", "crash", {})   # 2026-10-26 刻み用のライド・シンバル（クラッシュの鳴りを止めないよう別パート）
 
     def set(self, b, k=None, s=None, h=None):
         for g, arr in ((k, self.K), (s, self.S), (h, self.H)):
@@ -306,6 +307,8 @@ class Song:
             parts.append({"role": "ハイハット", "instrument": "hihat", "notes": "g:" + "".join(D.H), **ds("hihat")})
             if D.T.ev: parts.append({"role": "タム", "instrument": "tom", "notes": D.T.render(TB), **ds("tom")})
             if D.C.ev: parts.append({"role": "シンバル", "instrument": "crash", "notes": D.C.render(TB), **ds("crash")})
+            if D.R.ev: parts.append({"role": "ライド（刻み）", "instrument": "crash", "notes": D.R.render(TB),
+                                     **ds("crash", volume=getattr(self, "ride_vol", 0.05), pan=0.22)})
         sections = [{"kind": k, "bars": L} for n, b0, L, k in self.scenes]
         song = {"title": self.title, "description": self.desc, "bpm": self.bpm, "beats": self.beats,
                 "chords": " ".join(simple_chord(c.split("|")[0]) for c in self.chords), "barsPerChord": 1, "repeats": 1,

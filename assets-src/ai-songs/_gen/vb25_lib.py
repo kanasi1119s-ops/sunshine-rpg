@@ -396,12 +396,72 @@ def spice(S):
     if n: print(f"  ドラムに遊びを足した: {n}か所")
 
 
+def keepers(S):
+    """2026-10-26 人間「エイトビートもライドで刻むとか、ハイハット以外もつかって曲に合うように変えてほしい。これ重要」:
+    曲の台本で S.keepers = {"場面の名前": "刻み方"} と決めた場面だけ、ハイハットの刻みを別の楽器に持ちかえる（全曲・全場面に同じことはしない）。
+    刻む位置と強弱（アクセント）は、台本と遊び（spice）で決まったハイハットのものをそのまま使う。
+      ride   … ライドの弓（胴）で刻む。ハイハットは足で2・4拍に軽く
+      bell   … 表拍をライドのカップ（ベル）、裏をライドの弓で。明るく前に出る
+      wash   … 4分でクラッシュを刻む（シンバルの壁。最後のサビなど一番大きい所）。ハイハットは足だけ
+      open   … 裏拍だけ開いたハイハット（跳ねて前へ進む）
+      quarter… ハイハットを4分だけに減らす（間をあけて、歌を聞かせる）
+      floor  … フロアタムで8分を刻む（低く太く、ためる所）。最後の小節（フィル）は台本のまま
+    クラッシュ（シンバルのパート）はそのまま残り、ライドとは別のパートなので鳴りが止まらない。すでにライドを書いてある小節・止め・キメの小節はさわらない"""
+    plan = getattr(S, "keepers", None)
+    D = getattr(S, "drums", None)
+    if not plan or D is None or D.n != 16: return
+    B = S.beats; n = 0
+    sil = [sp for sl in getattr(S, "_silences", []) for sp in sl.spans]
+    def silent(b): return any(a < (b + 1) * B - 1e-6 and z > b * B + 1e-6 for a, z in sil)
+    def cym_at(b, j, names): return any(abs(e[0] - (b * B + j / 4)) < 1e-6 and str(e[2]).split(":")[0] in names for e in D.C.ev)
+    has_ride = lambda b: any(b * B - 1e-6 <= e[0] < (b + 1) * B - 1e-6 and str(e[2]).startswith(("D2", "F2")) for e in D.C.ev)
+    FOOT = "....o.......o..."
+    for name, b0, L, kind in S.scenes:
+        mode = plan.get(name)
+        if not mode: continue
+        for b in range(b0, b0 + L):
+            h = D.H[b]
+            if h.strip(".") == "" or silent(b) or has_ride(b) or b in getattr(S, "keep_drums", set()): continue
+            if mode in ("ride", "bell", "wash"):
+                toks = []
+                for j in range(16):
+                    c = h[j]
+                    if mode == "wash":
+                        hit = j % 4 == 0 and not cym_at(b, j, ("C2", "G2", "B2"))
+                        nt = "G2"; acc = j == 0 or c == "X"
+                    else:
+                        hit = c in "xXoO"
+                        nt = "F2" if (mode == "bell" and j % 4 == 0) else "D2"
+                        acc = (j == 0) if nt == "F2" else c in "XO"   # カップは強く鳴るので、毎拍は強めない（小節の頭だけ）
+                    toks.append((j, nt, acc) if hit else None)
+                hits_ = [x for x in toks if x]
+                if not hits_: continue
+                s = []; pos = 0
+                for i, (j, nt, acc) in enumerate(hits_):
+                    if j > pos: s.append(f"R:{(j - pos) / 4:g}")
+                    nxt = hits_[i + 1][0] if i + 1 < len(hits_) else 16
+                    s.append(f"{nt}:{(nxt - j) / 4:g}" + ("!" if acc else "")); pos = nxt
+                D.R.bar(b, " ".join(s))
+                D.H[b] = "".join("o" if (FOOT[j] == "o" and D.S[b][j] not in "xX") else "." for j in range(16))
+            elif mode == "open":
+                D.H[b] = "".join(("O" if j % 4 == 2 and c in "xXoO" else c) for j, c in enumerate(h))
+            elif mode == "quarter":
+                D.H[b] = "".join(("X" if j == 0 else "x") if j % 4 == 0 and h[j] != "." else "." for j in range(16))
+            elif mode == "floor":
+                if b == b0 + L - 1 or any(b * B - 1e-6 <= e[0] < (b + 1) * B - 1e-6 for e in D.T.ev): continue
+                D.T.bar(b, " ".join(f"D3:0.5" + ("!" if j % 4 == 0 else "") for j in range(0, 16, 2)))
+                D.H[b] = "." * 16
+            n += 1
+    if n: print(f"  刻みの楽器を持ちかえた: {n}小節（" + "・".join(f"{k}={v}" for k, v in plan.items()) + "）")
+
+
 def vwrite(S, extra_flags=""):
     """vb25 の名前で書き出す。S.kit が crocell-punch のときもフラグを書く"""
     path = sys.argv[1] if len(sys.argv) > 1 else f"/tmp/vp25/vb25-{S.no}-{S.slug}.json"
     pro_drums(S)
     kick_vary(S)
     spice(S)
+    keepers(S)
     playable(S)
     depth(S)
     modernize(S)
