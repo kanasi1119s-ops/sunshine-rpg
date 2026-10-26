@@ -196,7 +196,7 @@ TIMP.bar(S.sc("吹奏楽部と演劇部")[0], "C#2:1! R:3")
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     # 2026-10-26 ミックス: 書く高さ E2 は下げたあと C2 になり、歌うベースと低い所でにごるので G#2（下げたあと E2〜。ギターのふつうの低い音）に
-    pw = power(S.chords[b], "G#2")
+    pw = power(S.chords[b].split("/")[0], "G#2")   # 分数コードは上の和音で（C/E で E と B を弾くと C の和音とぶつかる）
     if n in ("チャイム", "夜の教室で1人"): continue
     if n == "チャイムで止める":
         if i < 3:

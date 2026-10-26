@@ -214,7 +214,7 @@ for b in range(S.nb):
     elif n == "朝" and i < 7: BASS.bar(b, bl(b, "half" if i < 6 else "long"))
     # ギター（パワーコード）。曲の頭や Aメロでは刻まない
     # 2026-10-26 ミックス: 書く高さ E2 は下げたあと A1 になり、ギターの出ない音・ベースとの低音のにごりになっていたので B2（下げたあと E2〜。ギターのふつうの低い音）に
-    pw = power(ch, "B2")
+    pw = power(ch.split("/")[0], "B2")   # 分数コードは上の和音で（B/D# で D# と A# を弾くと B の和音とぶつかる）
     pat = None
     if (n == "起動" and i >= 8) or n == "屋根づたい": pat = "X:1.5! X:1 X:1.5!"
     elif n.startswith("朝のプログラム") or n == "朝日" or n == "時計台":

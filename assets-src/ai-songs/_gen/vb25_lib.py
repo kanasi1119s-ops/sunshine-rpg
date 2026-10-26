@@ -441,6 +441,7 @@ def vwrite(S, extra_flags=""):
         sec += S.beats * 60 / bpm
     secs.append({"t": round(sec, 3), "name": "_end", "kind": "end", "bar": S.nb})
     open(path + ".secs", "w").write(_json.dumps(secs, ensure_ascii=False))
+    sep_channels(S)
     kit0 = S.kit
     if S.kit not in ("electro", "naked", "jpop"): S.kit = "jpop"   # 太鼓の設定（音量など）は jpop と同じ扱い
     S.write(path)
@@ -682,3 +683,32 @@ def join_tail(toks):
         if not done: break
     if n: print(f"  句の最後の1音の前の息つぎをなくした: {n}か所")
     return toks
+
+
+def sep_channels(S):
+    """2026-10-26（作り込みの見直しで見つかった不具合）: 書き出しの MIDI では、音色・左右・残響などが同じパートは1つのチャンネルを分け合い、
+    エフェクト（fx）・アンプ・音量の持ち上げはチャンネルに1つだけ＝最後に置いたパートのものになる。そのため、こもらせたパートのローパスや
+    ソロのペダルが、同じチャンネルのほかのパートにも掛かることがあった。エフェクトなどがちがうパートは、左右を 0.01 ずつずらして別のチャンネルにする"""
+    keyf = lambda t: (t.spec.get("patch") or t.inst, round(float(t.spec.get("pan", 0) or 0), 2), t.inst, t.spec.get("reverb"), t.spec.get("chorus"),
+                      t.spec.get("bright"), t.spec.get("duck"), t.spec.get("detune"), t.spec.get("attack"), t.spec.get("release"))
+    sig = lambda t: _json.dumps({k: t.spec.get(k) for k in ("fx", "gainDb", "amp", "ampDrive", "ampTone", "ampGate", "guitarTone", "ampCabIr")}, sort_keys=True, default=str)
+    used = set(); n = 0
+    groups = {}
+    for t in S.tracks:
+        if t.inst in ("kick", "snare", "hihat", "tom", "crash", "ride"): continue
+        groups.setdefault(keyf(t), []).append(t)
+    for t in S.tracks: used.add(keyf(t))
+    for k, ts in groups.items():
+        sigs = []
+        for t in ts:
+            sg = sig(t)
+            if sg not in sigs: sigs.append(sg)
+            j = sigs.index(sg)
+            if j == 0: continue
+            pan = round(float(t.spec.get("pan", 0) or 0), 2); step = 0
+            while True:
+                step += 1; cand = round(pan + (0.01 * step if pan <= 0 else -0.01 * step), 2)
+                t.spec["pan"] = cand
+                if keyf(t) not in used: break
+            used.add(keyf(t)); n += 1
+    if n: print(f"  エフェクトのちがうパートを別のチャンネルに分けた: {n}パート")

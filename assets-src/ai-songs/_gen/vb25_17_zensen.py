@@ -228,7 +228,8 @@ for i, b in enumerate(S.sc("北の町に届く")):
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     # 2026-10-26 ミックス: 書く高さ E2 は下げたあと G#1 になり、ギターの出ない音・ベースとの低音の二重になっていたので C3（下げたあと E2〜。ギターのふつうの低い音）に
-    pw = power(S.chords[b], "C3")
+    pw = power(S.chords[b].split("/")[0], "C3")   # 分数コードは上の和音で（A/G で G と D を弾くと A の和音とぶつかる）
+    if n == "日本列島を横切る": pw = power(S.chords[b].split("/")[0], "F#2")   # ギターのソロの下では1オクターブ下へよけて、リードとぶつからない
     if n in ("予報図", "予報士がひと息"): continue
     if n == "全員でテンションの和音":
         if i == 0:
