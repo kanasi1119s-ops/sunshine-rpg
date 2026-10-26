@@ -749,7 +749,13 @@ def pro_drums(S):
     ・場面の最後の小節にフィル（プロの演奏の、4・8小節目のフィル）。直前と同じ演奏・同じ種類のフィルは続けない
     ・止め・1拍の無音・ドラムの無い小節・場面の頭の特別な入り（前奏の最初・ブレイク）は、台本のまま残す
     S.no_pro_drums = True の曲（24 のジャズ・3拍子の曲など）は何もしない"""
-    if getattr(S, "no_pro_drums", False) or getattr(S, "no_spice", False): return
+    # 2026-10-26 人間（02）「曲がぐじゃぐじゃに聞こえる。前の方がよいかも。全部変えるんじゃなくて、曲に合わせて変えてほしい」:
+    #   全曲に当てはめるのをやめ、曲ごとに S.pro_scenes（当てはめる場面の名前の集まり）を書いた曲・場面だけにする。
+    #   02 では、合う演奏が見つからないとき条件をゆるめて、ハーフの演奏・ファンク・細かく刻む演奏（double）・
+    #   速さのちがう演奏まで混ざっていた → 台本と同じ感じ（ふつう／ハーフ）・速さ 0.88〜1.15 倍・選んだジャンルだけに限り、
+    #   見つからない場面は台本のまま残す
+    want = getattr(S, "pro_scenes", None)
+    if not want or getattr(S, "no_pro_drums", False) or getattr(S, "no_spice", False): return
     D = getattr(S, "drums", None)
     if D is None or D.n != 16 or S.beats != 4: return
     styles = drum_styles(S)
@@ -775,7 +781,7 @@ def pro_drums(S):
             "build": "pre", "drop": "chorus", "intro": "intro", "outro": "outro"}
     n_bars = 0; ids = []
     for name, b0, L, kind in S.scenes:
-        if kind not in KMAP: continue
+        if kind not in KMAP or name not in want: continue
         runs, cur = [], []
         for b in range(b0, b0 + L):
             if groove(b): cur.append(b)
@@ -789,13 +795,25 @@ def pro_drums(S):
             half = sum(1 for b in run if D.S[b][8] in "xX" and D.S[b][4] not in "xX" and D.S[b][12] not in "xX") >= len(run) / 2
             cond = {}
             if ride or kind == "bridge": cond["need_ride"] = True
-            if half: cond["feel"] = "half"
+            cond["feel"] = "half" if half else "normal"
             dyn = "soft" if kind in ("verse", "bridge", "intro", "outro") else ("hard" if kind in ("chorus", "drop") else None)
             cond["styles"] = styles
+            if hasattr(S, "pro_max_ghost"): cond["max_ghost"] = S.pro_max_ghost   # ゴーストが多すぎて細かくなりすぎないように
+            if S.bpm >= 150: cond["styles"] = [s for s in styles if s != "funk"] or styles   # 速い曲にファンクの演奏は合わない
+            # 条件をゆるめない（合わない演奏が混ざるのを防ぐ）。速さの近い演奏だけ
+            pool = [p for p in lib.candidates(kind=KMAP[kind], **cond) if 0.88 <= S.bpm / p["bpm"] <= 1.15]
+            if not pool:
+                print(f"  プロの演奏のフレーズ: {name} は合う演奏がないので台本のまま"); continue
+            ok_ids = {p["id"] for p in pool}
+            bk = (lib.all, lib.by_id); lib.all = pool; lib.by_id = {p["id"]: p for p in pool}
             try:
                 bars = lib.fit(len(run), kind=KMAP[kind], bpm=S.bpm, dynamics=dyn, crash_start=(run[0] == b0), **cond)
             except Exception as e:
-                print("  プロの演奏のフレーズ: 選べない", name, e); continue
+                print("  プロの演奏のフレーズ: 選べない", name, e); bars = None
+            finally:
+                lib.all, lib.by_id = bk
+            if not bars or any(b.get("_id") not in ok_ids for b in bars):
+                print(f"  プロの演奏のフレーズ: {name} は合う演奏がそろわないので台本のまま"); continue
             for t in (D.T, D.C):
                 t.ev = [e for e in t.ev if not (a - 1e-6 <= e[0] < z - 1e-6)]
             for b, bar in zip(run, bars):
