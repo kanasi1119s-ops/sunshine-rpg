@@ -64,6 +64,12 @@ PLK = S.track("プラック", "pad", **pluck_spec("pluckSynth", vol=0.08, pan=0.
 TAPE = S.track("テープの回転音", "pad", patch="fxRiser", volume=0.05, pan=0, reverb=0.2, modulate=False)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 KNOCK = S.track("テープを入れる音（ボディをたたく音）", "guitar", patch="guitarFx", volume=0.12, pan=0.1, amp="clean", chorus=0, reverb=0.15)
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 最後のサビの高い声部（ストリングス。背景なので 0.07。ブラスと反対の左へ）
+STRC = S.track("ストリングス（最後のサビの高い声部）", "strings", patch="stringEnsemble", **strings_spec(0.07, -0.35))
+T_ = -7   # 書き出しの前に全体を 7半音下げる。ベースは下げたあと E1〜E3 に入るよう、書く高さを B1〜B3 にする
+BL = nm(28 - T_)
+sb = lambda b, st: sing_bass(S, b, st, lo=28 - T_, hi=52 - T_)
+bl = lambda b, st: bass_line(S, b, st, lo=BL)
 RIDE = S.track("ライド", "crash", **{k: v for k, v in NAKED["crash"].items() if k != "human"})
 D = S.drumkit()
 SIL = Silence(S)
@@ -147,6 +153,18 @@ for name in ("再生ボタン", "再生ボタン2", "最後の再生"):
             vv = voice(S.chords[b], 70, 3)
             for j in range(3): BR[j].bar(b, f"R:2.5 {nm(vv[j])}:0.25' R:0.25 {nm(vv[j])}:1")
 
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ Aメロの句の終わり（歌が3拍目から休む小節）に、ブラス1本の短い合いの手
+#   （BGM の2番の前半はブラスが歌を受け取っているので入れない）
+AFILL = ["R:2.5 5':0.25 4':0.25 3':0.5 1':0.5", "R:2.5 3':0.25 4':0.25 5':0.5 b7':0.5", "R:2.5 1'':0.25 7':0.25 6':0.5 5':0.5", "R:2.5 4':0.25 3':0.25 1':0.5 5:0.5"]
+for name in ("ひとりごと", "ひとりごと2"):
+    for i, b in enumerate(S.sc(name)):
+        if i in (1, 5, 9, 11) and not (name == "ひとりごと2" and i < 8 and not VOCAL): BR[0].bar(b, K.mel(AFILL[(i // 4) % 4], oct=4))
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 最後のサビ（5〜16小節目）に、歌より上の高い声部（A長調の度数・下げたあと F#5〜E6）。
+#   和音の3度・7度を長い音に置き、「プレイ プレイ」の細かい所では全音符でのばす
+CMA = ["3':4", "#5':4", "6':2 5':2", "5':2 b7':2", "6':4", "7':2 #5':2", "1'':4", "2'':2 7':2"]
+for i, b in enumerate(S.sc("最後の再生")):
+    if i >= 4: STRC.bar(b, KB.mel(CMA[i % 8], oct=4))
+
 # ================= 伴奏 =================
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
@@ -166,17 +184,25 @@ for b in range(S.nb):
     if pat:
         for j in range(3):
             EP[j].bar(b, " ".join(("R:" + x.split(":")[1]) if x.startswith("R") else f"{nm(v3[j])}:{x.split(':')[1]}" for x in pat.split()))
-    # シンセベース（根音。サビはオクターブ、ダンスブレイクはディスコの16分）
-    if n == "回り出す": BASS.bar(b, bass_line(S, b, "push") if i >= 4 else "R:4")
-    elif n.startswith("ひとりごと"): BASS.bar(b, bass_line(S, b, "push" if i < 8 else "root8"))
-    elif n.startswith("気づいて"): BASS.bar(b, bass_line(S, b, "root8") if i < L - 1 else f"{nm(low(ch, 'E1'))}:2 R:2")
-    elif n.startswith("再生ボタン") or n == "最後の再生": BASS.bar(b, bass_line(S, b, "oct8"))
-    elif n == "早送り": BASS.bar(b, bass_line(S, b, "house"))
-    elif n == "テープが止まる": BASS.bar(b, bass_line(S, b, "oct8") if i < 2 else (f"{nm(low(ch, 'E1'))}:4\\" if i == 2 else "R:4"))
-    elif n == "押し入れの暗がり": BASS.bar(b, bass_line(S, b, "half") if i >= 4 else "R:4")
-    elif n == "ダンスブレイク": BASS.bar(b, bass_line(S, b, "disco"))
-    elif n == "もう一度": BASS.bar(b, bass_line(S, b, "long") if i < 3 else f"{nm(low(ch, 'E1'))}:1 {nm(low(ch, 'E1') + 12)}:1 {nm(low(ch, 'E1'))}:1 {nm(low(ch, 'E1') + 7)}:1")
-    elif n == "テープの終わり" and i < 5: BASS.bar(b, bass_line(S, b, "half"))
+    # シンセベース（歌うベース）
+    # 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ 根音の8分・オクターブだけだったのを、場面ごとに旋律のあるベースに（音量 0.23 はそのまま）。
+    #   書き出しの前の −7半音で A0 まで下がっていた（ベースに出ない音）のを、書く高さを B1〜B3 にして、下げたあと E1〜E3 に入れた。
+    #   Aメロ前半: 押す形と歩く形を交互（ひとりごとに寄りそう）、後半: 上る・下る／Bメロ: 上っていく
+    #   サビ: 押す、「プレイ プレイ」の句の終わり（4小節目）で駆ける／早送り・ダンスブレイク: ハウス・ディスコのまま（踊る所）
+    #   押し入れの暗がり: Half feel のまま、後半はゆったり動く／最後のサビ: 押す・駆ける
+    if n == "回り出す": BASS.bar(b, bl(b, "push") if i >= 4 else "R:4")
+    elif n.startswith("ひとりごと"):
+        if i < 8: BASS.bar(b, sb(b, "walk") if i % 2 == 1 else bl(b, "push"))
+        else: BASS.bar(b, sb(b, "climb" if i % 2 == 0 else "fall"))
+    elif n.startswith("気づいて"): BASS.bar(b, sb(b, "climb") if i < L - 1 else f"{nm(low(ch, BL))}:2 R:2")
+    elif n.startswith("再生ボタン") or n == "最後の再生": BASS.bar(b, sb(b, "run" if i % 4 == 3 else "drive"))
+    elif n == "早送り": BASS.bar(b, bl(b, "house"))
+    elif n == "テープが止まる": BASS.bar(b, sb(b, "drive") if i < 2 else (f"{nm(low(ch, BL))}:4\\" if i == 2 else "R:4"))
+    elif n == "押し入れの暗がり": BASS.bar(b, (bl(b, "half") if i < 12 else sb(b, "ride")) if i >= 4 else "R:4")
+    elif n == "ダンスブレイク": BASS.bar(b, bl(b, "disco"))
+    elif n == "もう一度":
+        r = low(ch, BL); BASS.bar(b, bl(b, "long") if i < 3 else f"{nm(r)}:1 {nm(r + 12)}:1 {nm(r)}:1 {nm(r + 7)}:1")
+    elif n == "テープの終わり" and i < 5: BASS.bar(b, bl(b, "half"))
     # パッド（暗がり・Bメロ・サビ）
     if n in ("押し入れの暗がり", "もう一度") or n.startswith("気づいて") or n.startswith("再生ボタン") or n == "最後の再生" or (n == "テープの終わり" and i < 5):
         vv = voice(ch, 58, 3)
@@ -186,7 +212,9 @@ for b in range(S.nb):
         t = tones(ch, "C4", "C6"); PLK.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 2, 1, 3, 2, 4, 3, 1)))
 
 # テープを入れる音（コツ、コツ）と、回転音（ホワイトノイズのシュッを長く）
-KNOCK.bar(0, "G#2:1 R:0.5 G#2:0.5 R:2"); KNOCK.bar(1, "R:2 F#2:1 R:1")
+# 2026-10-26: 書き出しの前の −7半音で、ボディをたたく音（G#2）がピックスクレイプ（C#2）に、F#2 が出ない B1 に変わっていたので、
+#   7半音上に書いて、下げたあと G#2（ボディをたたく）・F#2（弦を手でたたく「ジャッ」）になるようにした
+KNOCK.bar(0, "D#3:1 R:0.5 D#3:0.5 R:2"); KNOCK.bar(1, "R:2 C#3:1 R:1")
 TAPE.bar(1, "A4:4")
 for b in S.sc("押し入れの暗がり")[:4]: TAPE.bar(b, "A4:4")
 TAPE.bar(S.sc("テープが止まる")[2], "E4:8")                # ダウンリフター（回転が落ちる）
@@ -249,11 +277,32 @@ for b in range(S.nb):
         if i == 0: crash(D, b)
         if i == 4: D.set(b, "X" + "." * 15, "." * 16, "." * 16); crash(D, b, "C2", 8)
 
+# 2026-10-26 人間「ドラム強弱、アクセント、余韻も上手く使ってね」→ 場面ごとの強弱と、止めのあとのシンバルの余韻
+#   Aメロ: ハイハットは句の頭（4小節ごとの1拍目）だけ強く、ほかは軽く／Bメロ: 前半4小節は軽く、後半で強く（溜める）
+#   止め（Bメロの最後の2拍）: 止める1打にクラッシュを鳴らしたまま残す／サビ: 8小節ごとの頭のクラッシュを6拍のばす
+def soft_hat(b, keep_head=True):
+    h = list(D.H[b])
+    for q in range(16):
+        if h[q] == "X" and not (keep_head and q == 0): h[q] = "x"
+    D.H[b] = "".join(h)
+for b in range(S.nb):
+    n, i, L, k = S.scene_of(b)
+    if n.startswith("ひとりごと"): soft_hat(b, keep_head=(i % 4 == 0))
+    elif n.startswith("気づいて") and i < 4: soft_hat(b, keep_head=(i == 0))
+for name in ("気づいてほしい", "気づいてほしい2"): crash(D, S.sc(name)[-1], "C2", 8)
+for name in ("再生ボタン", "再生ボタン2", "最後の再生"):
+    for i, b in enumerate(S.sc(name)):
+        if i % 8 == 0: crash(D, b, "C2" if i % 16 == 0 else "G2", 6)
+
 # 止め（Bメロの最後）・1拍の完全な無音（テープが止まり切る所）
 for name in ("気づいてほしい", "気づいてほしい2"): SIL.add(S.sc(name)[-1], 2, 4)
 SIL.add(S.sc("テープが止まる")[-1], 2, 4)
 SIL.add(S.sc("もう一度")[-1], 3, 4)          # 半音上がる直前の1拍のブレイク
 SIL.apply()
+# 2026-10-26 人間「後半の曲の作り込みが低く感じる」→ この曲の物語でしか出てこない音: サビ（場面の名前は「再生ボタン」）の直前、
+#   止めの静けさの中で、デッキの再生ボタンを押す「カチッ」（ボディをたたく短い音。下げたあと G#2）。止めの消去のあとに置く
+for name in ("気づいてほしい", "気づいてほしい2", "もう一度"):
+    KNOCK.at(S.bar_beat(S.sc(name)[-1]) + 3.5, "D#3:0.5")
 
 S.fade_out = 0
 S.desc = ("仮: ボカロ曲インスト25曲（作り直し）の21。K-POP（レトロポップ）。B♭ 短調・132（サビは D♭、最後のサビは半音上の D）。昔の恋人と作ったテープを聞いて、"
