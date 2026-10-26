@@ -753,8 +753,13 @@ def pro_drums(S):
     D = getattr(S, "drums", None)
     if D is None or D.n != 16 or S.beats != 4: return
     styles = drum_styles(S)
+    # 2026-10-26 人間「打ち込みの単純作業を入れただけのドラムだとさみしい曲がある。特にエイトビート、2ビート系」:
+    #   ダンス系の曲でも、4つ打ちでない場面（エイトビート・2ビート）は、人が叩いた演奏に置きかえる（4つ打ちの場面は打ち込みのまま）
+    only_beat = False
     if not styles:
-        print("  プロの演奏のフレーズ: この曲のジャンル（" + S.genre + "）は打ち込みのドラムが芯なので、台本のまま"); return
+        if any(w in S.genre for w in ("トラップ", "ドラムンベース", "3拍子", "スウィング", "ジャズ")):
+            print("  プロの演奏のフレーズ: この曲のジャンル（" + S.genre + "）は打ち込みのドラムが芯なので、台本のまま"); return
+        styles = ["pop", "dance", "funk", "rock"]; only_beat = True
     try:
         from loud25_drums import Library, _notes, TOM, CYM
     except Exception as e:
@@ -778,6 +783,7 @@ def pro_drums(S):
         if cur: runs.append(cur)
         for run in runs:
             if len(run) < 2: continue
+            if only_beat and sum(1 for b in run if {j for j, c in enumerate(D.K[b]) if c in "xX"} >= {0, 4, 8, 12}) >= len(run) / 2: continue   # 4つ打ちの場面はそのまま
             a, z = run[0] * B, (run[-1] + 1) * B
             ride = any(a - 1e-6 <= e[0] < z and str(e[2]).startswith("D2") for e in D.C.ev)
             half = sum(1 for b in run if D.S[b][8] in "xX" and D.S[b][4] not in "xX" and D.S[b][12] not in "xX") >= len(run) / 2
