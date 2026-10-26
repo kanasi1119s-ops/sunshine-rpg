@@ -51,8 +51,9 @@ S.tempo = [{"bar": 1, "bpm": 80}, {"bar": S.sc("出発")[0] + 1, "bpm": 178}]
 
 # ================= パート =================
 V = Voice(S, vol=0.22, delay=0.75, patch="surgeTropics", low=True)   # 2026-10-25 人間「全部にこのリードを入れるわけじゃないよね」→ 曲に合わせて選ぶ
-PNFX = [{"type": "eq", "low": -2, "mid": -1.5, "midHz": 350, "high": 1}]
-def piano(role, vol): return S.track(role, "piano", volume=vol, pan=-0.12, reverb=0.24, fx=PNFX)
+# 2026-10-26 人間（02）「ピアノの音もっと表に出していいと思う」→ ピアノ全部を 1.2 倍、3.2kHz を +2dB（打鍵の輪郭）、残響を少し減らして手前に
+PNFX = [{"type": "eq", "low": -2, "mid": -1.5, "midHz": 350, "high": 1}, {"type": "eq", "low": 0, "mid": 2, "midHz": 3200, "high": 0}]
+def piano(role, vol): return S.track(role, "piano", volume=round(vol * 1.2, 4), pan=-0.12, reverb=0.2, fx=PNFX)
 # 2026-10-26 人間（02）「ピアノの音ももっと大きくていい」→ ピアノ全部を 1.25 倍
 PR = piano("ピアノ（右手・分散和音）", 0.138)
 PL = piano("ピアノ（左手・8分のオクターブ）", 0.15)
@@ -397,5 +398,5 @@ S.drum_scale = 0.97   # 2026-10-26 人間（02）「ドラムの音もほん、�
 #   ピアノ（1.25 倍にしたので歌とぶつかる）の言葉の聞こえる帯域 2.5kHz を −2.5dB へこませる
 if VOCAL:
     for t_ in [PR, PL, PM, PMR] + PC:
-        t_.spec["fx"] = list(t_.spec.get("fx", [])) + [{"type": "eq", "low": 0, "mid": -2.5, "midHz": 2500, "high": 0}]
+        t_.spec["fx"] = list(t_.spec.get("fx", [])) + [{"type": "eq", "low": 0, "mid": -1.5, "midHz": 2500, "high": 0}]   # 歌の版: 歌の通り道を少しあける（ピアノを前に出したので −2.5 → −1.5）
 teto(S, LY, V, vocal_level=0.68, settings={"legato": 0.035, "glide": 1.3, "gainSmooth": 0.07, "consonant": 1.9}, special={"打ち上げ": 0.55, "見上げる空": -0.5, "下駄の音": 0.3, "金魚すくい": 0.3})   # 2026-10-25「伴奏が聞きにくい」「声が圧倒的に大きい」→ 既定（0.6）で歌を下げる
