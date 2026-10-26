@@ -26,6 +26,9 @@ Kasane Teto takes the neon stage for 25 all-original songs, each with its own st
 フォント: DotGothic16・Orbitron（SIL Open Font License）
 
 #重音テト #KasaneTeto #UTAU
+
+■ タグ（YouTubeのタグ欄に貼る）
+重音テト, テト, Kasane Teto, Teto, UTAU, UTAUオリジナル曲, ボカロ, ボカロ曲, オリジナル曲, 歌詞付き, 英訳付き, 歌詞 英語, 全25曲, 1時間49分, メドレー, 作業用BGM, 歌入り, SCARLET FREQUENCY, スカーレット・フリークエンシー, original song, lyrics, English lyrics, English subtitles, vocal synth, Japanese song, 25 songs, Sunshine Pixel Sound
 """
 open("/tmp/yt/SCARLET FREQUENCY 説明文.txt", "w", encoding="utf-8").write(out)
 print(out)
