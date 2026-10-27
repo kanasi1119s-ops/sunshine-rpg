@@ -9,10 +9,11 @@ def dur(p): return float(subprocess.run(["ffprobe", "-v", "error", "-show_entrie
 def ts(t):
     t = int(t); h, m, s = t // 3600, t // 60 % 60, t % 60
     return f"{h}:{m:02d}:{s:02d}" if h else f"{m:02d}:{s:02d}"
+PAD = float(os.environ.get("PAD", "0"))   # つないだ動画では1曲ごとに映像と音の長いほうに合わせるので、少しずつ長くなる（BARジャズでは1曲あたり約0.103秒）
 tl, acc = [], 0
 for p in files:
     n = int(os.path.basename(p)[:2]); s = SONGS[n - 1]
-    tl.append(f"{ts(acc)} {s['title']} - {s['en']}"); acc += dur(p)
+    tl.append(f"{ts(acc)} {s['title']} - {s['en']}"); acc += dur(p) + PAD
 h, m = int(acc // 3600), int(acc % 3600 // 60); N = len(files)
 out = f"""【作業用BGM】琥珀色のバー・ジャズ 全{N}曲・約{h}時間{m}分 | 本物の楽器の録音音源 | Amber Bar Jazz - {N} Original Songs, {h}h {m}min
 
