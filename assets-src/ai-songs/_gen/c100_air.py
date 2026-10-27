@@ -42,6 +42,45 @@ def env_db(x, win=3.0):
     e = np.sqrt(np.convolve(m ** 2, np.ones(k) / k, "same") + 1e-12)
     return 20 * np.log10(e)
 
+def verb_ir(rt=4.0, hp=600, seed=1):
+    """低音を含まない、左右で違う長い残響の形（雑音の指数減衰）"""
+    rng = np.random.default_rng(seed); n = int(rt * 1.2 * SR); t = np.arange(n) / SR
+    ir = rng.standard_normal((n, 2)) * np.exp(-6.9 * t / rt)[:, None]
+    ir = filt(ir, hp, 9000); ir[: int(0.03 * SR)] *= np.linspace(0, 1, int(0.03 * SR))[:, None]
+    return ir / np.sqrt(np.sum(ir ** 2, axis=0, keepdims=True) + 1e-9)
+
+def fx_layers(M, N, pre, ref, fx):
+    """透明な空間音。glass＝高い倍音がゆっくりふくらんで消える（長い残響つき）／shimmer＝音楽の高域を1オクターブ上げて長い残響へ"""
+    from scipy.signal import fftconvolve
+    out = np.zeros((N, 2)); t = np.arange(N) / SR
+    if fx.get("glass"):
+        g = fx["glass"]; x = np.zeros((N, 2)); rng = np.random.default_rng(7)
+        for k, f in enumerate(g["hz"]):
+            for det, pan in ((-0.6, -0.5), (0.7, 0.5)):
+                per = 9 + 5 * rng.random(); ph = rng.random() * 6.28
+                a = (0.5 + 0.5 * np.sin(2 * np.pi * t / per + ph)) ** 2
+                v = np.sin(2 * np.pi * (f + det) * t) * a
+                x[:, 0] += v * (1 - pan) * 0.5; x[:, 1] += v * (1 + pan) * 0.5
+        x = fftconvolve(x, verb_ir(g.get("rt", 5.0), 500, 3)[:, :1].repeat(2, 1)[:, :], mode="full", axes=0)[:N] if False else x
+        L = fftconvolve(x[:, 0], verb_ir(g.get("rt", 5.0), 500, 3)[:, 0])[:N]; R = fftconvolve(x[:, 1], verb_ir(g.get("rt", 5.0), 500, 4)[:, 1])[:N]
+        y = np.stack([L, R], 1); y *= 10 ** ((ref + g.get("db", -24) - rms_db(y)) / 20)
+        out += y * np.clip((t - g.get("start", 0)) / 6, 0, 1)[:, None]
+    if fx.get("shimmer"):
+        g = fx["shimmer"]; hi = filt(M, 1500, None)
+        import soundfile as sf, tempfile
+        tf = tempfile.mktemp(suffix=".wav"); sf.write(tf, hi.astype(np.float32), SR)
+        up = load_cmd(["-i", tf, "-af", "asetrate=88200,atempo=0.5,aresample=44100"]); os.remove(tf)
+        up = np.concatenate([up, np.zeros((max(0, len(M) - len(up)), 2))])[:len(M)]
+        ir = verb_ir(g.get("rt", 6.0), 800, 5)
+        y = np.stack([fftconvolve(up[:, 0], ir[:, 0])[:len(M) + 3 * SR], fftconvolve(up[:, 1], ir[:, 1])[:len(M) + 3 * SR]], 1)
+        y = y * 10 ** ((ref + g.get("db", -26) - rms_db(y)) / 20)
+        z = np.zeros((N, 2)); z[pre:pre + min(len(y), N - pre)] = y[:N - pre]; out += z
+    return out
+
+def load_cmd(args):
+    raw = subprocess.run(["ffmpeg", "-v", "error"] + args + ["-f", "f32le", "-ac", "2", "-ar", str(SR), "-"], capture_output=True).stdout
+    return np.frombuffer(raw, np.float32).reshape(-1, 2).astype(np.float64)
+
 def main(mus, spec, outp):
     M = load(mus); pre = int(spec.get("pre", 3.0) * SR); tail = int(spec.get("tail", 6.0) * SR)
     N = pre + len(M) + tail
@@ -73,6 +112,7 @@ def main(mus, spec, outp):
         f = min(len(x) // 3, int(1.5 * SR)); x[:f] *= np.linspace(0, 1, f)[:, None]; x[-f:] *= np.linspace(1, 0, f)[:, None]
         pan = ev.get("pan", 0.0); x[:, 0] *= min(1, 1 - pan); x[:, 1] *= min(1, 1 + pan)
         s = pre + int(ev["t"] * SR); air[s:s + len(x)] += x[:max(0, N - s)]
+    if spec.get("fx"): air += fx_layers(M, N, pre, ref, spec["fx"])
     out = music + air
     pk = np.abs(out).max()
     if pk > 0.98: out *= 0.98 / pk
