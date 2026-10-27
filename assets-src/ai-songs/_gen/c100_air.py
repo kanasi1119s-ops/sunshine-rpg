@@ -142,6 +142,10 @@ def main(mus, spec, outp):
         pan = ev.get("pan", 0.0); x[:, 0] *= min(1, 1 - pan); x[:, 1] *= min(1, 1 + pan)
         s = pre + int(ev["t"] * SR); air[s:s + len(x)] += x[:max(0, N - s)]
     if spec.get("fx"): air += fx_layers(M, N, pre, ref, spec["fx"])
+    ig = spec.get("intro_db", 0)
+    if ig:   # 前奏が小さすぎないように、はじめの数十秒だけ音楽を持ち上げる（なめらかに戻す）
+        tt = np.arange(N) / SR; hold = spec.get("intro_hold", 22); ramp = spec.get("intro_ramp", 10)
+        music = music * (10 ** (ig * np.clip(1 - (tt - hold) / ramp, 0, 1) / 20))[:, None]
     out = music + air
     pk = np.abs(out).max()
     if pk > 0.98: out *= 0.98 / pk
