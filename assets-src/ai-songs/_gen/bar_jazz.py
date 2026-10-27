@@ -296,7 +296,7 @@ def build(song, out):
     if song["bass"] != "none":
         if song["bass"] == "stride": P["bass"] = Part(dict(INST["piano"][0], volume=0.12, bright=-0.4), "左手の低音（ピアノ）")
         else: P["bass"] = Part(dict(instrument="bass", amp="direct", volume=0.22, reverb=0.03, release=0.15, bright=0.0, attack=0.01,
-                                     fx=[{"type": "eq", "low": 1, "mid": float(os.environ.get("BASS_MID", 3.5)), "midHz": float(os.environ.get("BASS_HZ", 2200)), "high": -1}, {"type": "compressor", "threshold": -20, "ratio": 1.5, "attack": 0.07, "release": 0.2}]), "ベース")   # 2026-10-27 指弾き感: 弦をはじく2kHz台を持ち上げ、圧縮の出だしをゆるめて指の「パチッ」を通す
+                                     fx=[{"type": "filter", "kind": "highpass", "freq": 48, "q": 0.7}, {"type": "eq", "low": -1.5, "mid": 1.5, "midHz": 300, "high": 0}, {"type": "eq", "low": 0, "mid": float(os.environ.get("BASS_MID", 1.5)), "midHz": float(os.environ.get("BASS_HZ", 2200)), "high": -1}, {"type": "compressor", "threshold": -20, "ratio": 1.5, "attack": 0.07, "release": 0.2}]), "ベース")   # 2026-10-27 指弾き感: 弦をはじく2kHz台を持ち上げ、圧縮の出だしをゆるめて指の「パチッ」を通す
             # 2026-10-19 点数の試し（『朝のエスプレッソ』）: ベースの出だしをやわらかく 7.88→7.89、書き出しを --bass finger（指弾きの録音）に 8.11（いちばん効いた）
     if song["cstyle"] == "duo": P["bass"] = Part(dict(INST["piano"][0], volume=0.11, bright=-0.45), "左手の低音（ピアノ）")
     if song.get("horns"): P["harm"] = Part(INST["trombone"][0], "テーマの2声目（トロンボーン）")
@@ -560,7 +560,7 @@ def build(song, out):
 
     # ================= ベース
     bstyle = song["bass"] if song["cstyle"] != "duo" else "duo"
-    BLO, BHI = (28, 50) if bstyle not in ("stride", "duo") else (36, 55)
+    BLO, BHI = (31, 50) if bstyle not in ("stride", "duo") else (36, 55)   # E1・F1は「ブンブン」と響くので G1 から（2026-10-27）
     def bnote(pc_, ref):
         return min((x for x in range(BLO, BHI + 1) if x % 12 == pc_), key=lambda x: abs(x - ref))
     BPAT = {   # (拍, 長さ, 何の音) R=根音 5=5度 3=3度 7=7度 O=オクターブ上 A=次の根音への半音
@@ -827,7 +827,7 @@ def build(song, out):
         elif r.startswith("和音（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("C:" + comp_name, song.get("comp_t", -8.5))
         elif r.startswith("うしろの和音（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("P:" + song["pad"], song.get("pad_t", -15.0))
         elif r.startswith("左手の低音"): q["gainDb"] = q.get("gainDb", 0)
-        elif r == "ベース": q["gainDb"] = q.get("gainDb", 0) + float(song.get("bass_db", -8.0))   # ウッドベースの録音は大きいので下げる（2026-10-27、1曲目で -8dB が点数・強弱とも最良）
+        elif r == "ベース": q["gainDb"] = q.get("gainDb", 0) + float(song.get("bass_db", -5.0))   # ウッドベースの録音は大きいので下げる（2026-10-27、1曲目で -8dB が点数・強弱とも最良）
     tune = song.get("tune", {})
     for q in parts:
         for k2, v in tune.items():
