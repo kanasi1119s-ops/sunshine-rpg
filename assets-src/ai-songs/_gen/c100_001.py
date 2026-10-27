@@ -1,3 +1,4 @@
+import re
 # ケルト・フルート100曲「銀の笛と百の夜」001 銀の笛 The Silver Flute（2026-10-28）。表は docs/sound/celtic-flute-100-plan.md
 # 物語: 祖父の箱から銀の笛を出す夕暮れ。笛に最初のひと息を吹き込む。3音の問いが、少しずつ伸びて、やがて答えが返り、また静かになる。
 # 強さ: 息(pp)→問い(pp)→伸びる(p)→答え(mp→mf。いちばん大きい)→1拍の無音→余韻(pp)→終わり(ppp)
@@ -59,10 +60,28 @@ A = [
  ["3':1 2':1 1':1 7:1", "6:1 5:1 4:1 3:1", "2:1 3:1 4:1 2:1", "1:4"],
 ]
 T = ["1:2 3:2", "4:4", "R:4", "3:2 1:2", "2:3 R:1", "R:4", "1:2 3:2", "4:2 3:2", "2:4", "R:4", "1:4", "R:4"]
+_N = {"C":0,"D":2,"E":4,"F":5,"G":7,"A":9,"B":11}
+def _midi(tok):
+    m = re.match(r"^([A-G])([#b]?)(-?\d+):", tok)
+    if not m: return None
+    return (int(m.group(3)) + 1) * 12 + _N[m.group(1)] + (1 if m.group(2) == "#" else -1 if m.group(2) == "b" else 0)
+def shift(txt, d):
+    out = []
+    for tok in txt.split():
+        m = re.match(r"^([A-G][#b]?)(-?\d+)(:.*)$", tok)
+        out.append(f"{m.group(1)}{int(m.group(2)) + d}{m.group(3)}" if m else tok)
+    return " ".join(out)
+def fold_phrase(bars_txt, hi=84):
+    """パンフルートの音域（〜C6）より高い音が1つでもあるフレーズは、まるごと1オクターブ下げる（旋律の形を保つ。高い音は小さくしか鳴らないため。2026-10-28）"""
+    ps = [_midi(t) for txt in bars_txt for t in txt.split()]
+    ps = [p for p in ps if p is not None]
+    if ps and max(ps) > hi and min(ps) - 12 >= 60: return [shift(t, -1) for t in bars_txt]
+    return bars_txt
 def put(scene, phr, oct_):
     bars = S.sc(scene)
     for p, ph in enumerate(phr):
-        for j, s in enumerate(ph): FLUTE.bar(bars[p * 4 + j], K.mel(s, oct=oct_))
+        txt = fold_phrase([K.mel(x, oct=oct_) for x in ph])
+        for j, t in enumerate(txt): FLUTE.bar(bars[p * 4 + j], t)
 put("問い", Q, 5); put("伸びる", E, 5); put("答え", A, 5)
 for i, b in enumerate(S.sc("余韻")): FLUTE.bar(b, K.mel(T[i], oct=4 if i < 6 else 5))
 for i, b in enumerate(S.sc("終わり")):
