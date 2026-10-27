@@ -122,12 +122,16 @@ for b in range(NB):
             v = voice(ch, 62, 3, spread=True)
             for j in range(3): STR[j].bar(b, f"{nm(v[j])}:4")
     elif n == "答え":
-        HARP.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 2, 4, 6, 7, 6, 4, 2)))
-        HARP2.bar(b, " ".join(f"{nm(x)}:0.5" for x in [t[-1], t[-2], t[-3], t[-2]] * 2) if i % 2 == 0 else f"{nm(t[-1])}:4")
+        if i < 8:
+            HARP.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 2, 4, 6, 7, 6, 4, 2)))
+            HARP2.bar(b, " ".join(f"{nm(x)}:0.5" for x in [t[-1], t[-2], t[-3], t[-2]] * 2) if i % 2 == 0 else f"{nm(t[-1])}:4")
+        else:   # 答えの終わりの4小節：笛が下りてくるので、竪琴は細かく動かず、ゆっくりにする（笛が埋もれていた。2026-10-28）
+            HARP.bar(b, f"{nm(t[0])}:2 {nm(t[2])}:2")
+            if i % 2 == 0: HARP2.bar(b, f"{nm(t[-1])}:4")
         LOW.bar(b, f"{nm(lo + 12 if lo < 40 else lo)}:4")
         v = voice(ch, 62, 3, spread=True)
         for j in range(3): STR[j].bar(b, f"{nm(v[j])}:4")
-        if i % 2 == 1: BELL.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "C6", "C7")[:4]))
+        if i % 2 == 1 and i < 8: BELL.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "C6", "C7")[:4]))
     elif n == "余韻":
         if i % 2 == 0: HARP2.bar(b, f"{nm(t[-1])}:2 {nm(t[-3])}:2")
         if i < 8: HARP.bar(b, f"{nm(t[0])}:4")
