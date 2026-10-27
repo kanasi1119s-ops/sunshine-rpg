@@ -34,7 +34,7 @@ ACC = [0.4 if s0["答え"] + 7 <= b < s0["余韻"] else 0.72 if s0["答え"] <= 
 def g(extra=None):
     return [round(d * ACC[b] * (extra[b] if extra else 1), 3) for b, d in enumerate(DYN)]
 
-FLUTE = S.track("フルート", "panflute", patch="flute", volume=0.42, bright=-0.6, pan=-0.05, reverb=0.5, breath=True, barGain=[round(max(d, 0.82) * (1.18 if s0["答え"] <= b < s0["余韻"] else (1.4 if s0["問い"] <= b < s0["答え"] else 1.0)), 3) for b, d in enumerate(DYN)])
+FLUTE = S.track("フルート", "panflute", patch="flute", volume=0.42, bright=-0.6, pan=-0.05, reverb=0.5, breath=True, noRestrike=True, mono=True, sustain=1.12, phrase=16, gainDb=2, barGain=[round(max(d, 0.82) * (1.18 if s0["答え"] <= b < s0["余韻"] else (1.4 if s0["問い"] <= b < s0["答え"] else 1.0)), 3) for b, d in enumerate(DYN)])
 HARP = S.track("ハープ", "harp", patch="folkHarp", recipe="celtic-harp", volume=0.105, pan=-0.1, reverb=0.45, barGain=g())
 HARP2 = S.track("ハープ（高い響き）", "harp", patch="folkHarp", volume=0.055, pan=0.4, reverb=0.6, barGain=g())
 STR = [S.track(f"弦の持続{i}", "strings", patch="slowStrings", recipe="celtic-strings", volume=0.03, pan=[-0.7, 0.7, 0][i], reverb=0.55, barGain=g([1.6 if b < s0["問い"] else 1.0 for b in range(NB)])) for i in range(3)]   # 弦が大きくて笛が埋もれていた（人間の指摘 2026-10-28）。前奏だけは今までの大きさ
@@ -107,6 +107,20 @@ def _lowboost():
         m = sum(ps) / len(ps)
         k = min(1.0, max(0.35, (72 - m) / 8))
         bg[b] = round(bg[b] * (1 + 1.6 * k), 3)
+
+# 高い音ほどやさしく吹く（強く吹くと硬く、ただ吹いているだけに聞こえる）。小節の平均の高さで、息の強さ（ベロシティ）を下げる（2026-10-28 人間の指摘）
+def _gentle_high():
+    import collections
+    pb = collections.defaultdict(list)
+    for st, L, x in FLUTE.ev:
+        p = _midi(x if ":" in x else x + ":1")
+        if p is not None: pb[int(st // 4)].append(p)
+    bg = FLUTE.spec["barGain"]
+    for b, ps in pb.items():
+        m = sum(ps) / len(ps)
+        k = min(1.0, max(0.0, (m - 74) / 10))
+        bg[b] = round(bg[b] * (1 - 0.35 * k), 3)
+_gentle_high()
 
 # ---------- 伴奏 ----------
 for b in range(NB):
