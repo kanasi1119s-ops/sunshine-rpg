@@ -74,6 +74,8 @@ for b in range(NB):
     if n == "息":
         if i in (0, 2): HARP.bar(b, f"{nm(t[0])}:4")
         if i in (1, 3): HARP2.bar(b, f"{nm(t[-3])}:4")
+        v = voice(ch, 62, 3, spread=True)
+        for j in range(3): STR[j].bar(b, f"{nm(v[j])}:4")
     elif n == "問い":
         HARP.bar(b, f"{nm(t[0])}:4" if i % 2 == 0 else f"{nm(t[2])}:2 R:2")
         if i % 4 == 3: HARP2.bar(b, f"R:2 {nm(t[-2])}:2")
