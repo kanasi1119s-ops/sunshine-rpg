@@ -75,6 +75,35 @@ def fx_layers(M, N, pre, ref, fx):
         y = np.stack([fftconvolve(up[:, 0], ir[:, 0])[:len(M) + 3 * SR], fftconvolve(up[:, 1], ir[:, 1])[:len(M) + 3 * SR]], 1)
         y = y * 10 ** ((ref + g.get("db", -26) - rms_db(y)) / 20)
         z = np.zeros((N, 2)); z[pre:pre + min(len(y), N - pre)] = y[:N - pre]; out += z
+    if fx.get("band"):      # 空気の帯: 高域だけの息のようなノイズを、ゆっくり動くバンドパスで揺らす（広さ担当）
+        g = fx["band"]; rng = np.random.default_rng(11); n = rng.standard_normal((N, 2))
+        fc = g.get("hz", 6500); per = g.get("per", 23)
+        lo = fc * (1 + 0.25 * np.sin(2 * np.pi * t / per)); y = np.zeros((N, 2)); blk = SR // 2
+        for a in range(0, N, blk):
+            f0 = float(lo[min(a, N - 1)]); seg = n[a:a + blk]
+            y[a:a + blk] = filt(seg, f0 * 0.7, min(f0 * 1.4, 18000))
+        y *= (0.5 + 0.5 * np.sin(2 * np.pi * t / (per * 1.7) + 1.0)) [:, None]
+        y *= 10 ** ((ref + g.get("db", -34) - rms_db(y)) / 20); out += y
+    if fx.get("far"):       # 遠い反射: 音楽を遅らせて暗くし、遠い壁から返る響きにする（遠さ担当）
+        g = fx["far"]; d = int(g.get("delay", 0.18) * SR)
+        y = filt(np.roll(M, d, axis=0), 200, g.get("lp", 3000))
+        ir = verb_ir(g.get("rt", 3.0), 300, 9)
+        y = np.stack([fftconvolve(y[:, 0], ir[:, 0])[:len(M)], fftconvolve(y[:, 1], ir[:, 1])[:len(M)]], 1)[:, ::-1]
+        y *= 10 ** ((ref + g.get("db", -22) - rms_db(y)) / 20)
+        z = np.zeros((N, 2)); z[pre:pre + len(y)] = y; out += z
+    if fx.get("haze"):      # 和音の霞: 音楽の中域をぼかして伸ばし、霧のような層にする
+        g = fx["haze"]; y = filt(M, 250, 2500); k = int(g.get("smooth", 1.5) * SR)
+        y = np.stack([np.convolve(np.abs(y[:, c]), np.ones(k) / k, "same") * np.sign(np.roll(y[:, c], 0)) for c in (0, 1)], 1) if False else y
+        ir = verb_ir(g.get("rt", 8.0), 250, 13)
+        y = np.stack([fftconvolve(y[:, 0], ir[:, 0])[:len(M)], fftconvolve(y[:, 1], ir[:, 1])[:len(M)]], 1)
+        y *= 10 ** ((ref + g.get("db", -24) - rms_db(y)) / 20)
+        z = np.zeros((N, 2)); z[pre:pre + len(y)] = y; out += z
+    for sw in fx.get("swells", []):   # 逆再生の吸い込み: 山の直前に、音楽の高域を逆再生して置く（t=山の頭の秒）
+        a = int((sw["t"] - sw.get("len", 4)) * SR) + pre; n_ = int(sw.get("len", 4) * SR)
+        seg = filt(M[max(0, a - pre):max(0, a - pre) + n_], 600, 9000)[::-1].copy()
+        seg *= np.linspace(0, 1, len(seg))[:, None] ** 2
+        seg *= 10 ** ((ref + sw.get("db", -20) - rms_db(seg + 1e-9)) / 20)
+        out[a:a + len(seg)] += seg
     return out
 
 def load_cmd(args):
