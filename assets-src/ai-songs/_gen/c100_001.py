@@ -88,6 +88,21 @@ for i, b in enumerate(S.sc("終わり")):
     if i == 1: FLUTE.bar(b, K.mel("1:4", oct=5))
     if i == 2: FLUTE.bar(b, K.mel("R:4", oct=5))
 
+# 笛の低い音（E4〜A4あたり）は、同じ強さで鳴らしても小さく聞こえる。小節ごとの平均の高さで音量を足す（2026-10-28。答えの後半・余韻が小さかった）
+def _lowboost():
+    import collections
+    pb = collections.defaultdict(list)
+    for st, L, x in FLUTE.ev:
+        p = _midi(x if ":" in x else x + ":1")
+        if p is not None: pb[int(st // 4)].append(p)
+    bg = FLUTE.spec["barGain"]
+    for b, ps in pb.items():
+        if not (s0["答え"] + 7 <= b < s0["余韻"]): continue   # 測って小さかった所（答えの後半）だけ
+        m = sum(ps) / len(ps)
+        k = min(1.0, max(0.35, (72 - m) / 8))
+        bg[b] = round(bg[b] * (1 + 1.6 * k), 3)
+_lowboost()
+
 # ---------- 伴奏 ----------
 for b in range(NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
