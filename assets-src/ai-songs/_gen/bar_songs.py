@@ -151,7 +151,7 @@ SONGS = [
     S("white-breath", "白い吐息", "White Breath", "息を吐く。冬の空気で白くなる", "4/4", 60, 0.0, "B",
       "Bm9 | Gmaj7 | F#m7 | Em9 | Bm9 | Gmaj7#11 | C#m7b5 | F#7sus4",
       "Dmaj7 | A/C# | Gmaj7 | F#m7 | Em7 | A7 | Dmaj7 | F#7b9",
-      "none", "none", "nylon", "ballad", "flute", "nylon", "none", "フルートとナイロンギターのバラード。", seed=35, heads=ABA, arc=0.75, intro_lead=True),
+      "none", "two", "nylon", "ballad", "flute", "nylon", "strings", "フルートとナイロンギターのバラード。やわらかい弦と2拍子のウッドベースを足した。", seed=35, heads=ABA, arc=0.75, intro_lead=True),
     S("distillery-morning", "蒸留所の午前", "Morning at the Distillery", "ゆっくり蒸留されて、熟成していく", "4/4", 108, 0.5, "A",
       "Am7 | D7 | Gmaj7 | Cmaj7 | F#m7b5 | B7b9 | Em7 Am7 | Bm7b5 E7b9",
       "Fmaj7 | Bb7 | Em7 | Am7 | Dm7 | G7 | Cmaj7 | B7alt",
