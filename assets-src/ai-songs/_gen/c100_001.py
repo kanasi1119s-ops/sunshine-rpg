@@ -40,7 +40,6 @@ HARP2 = S.track("ハープ（高い響き）", "harp", patch="folkHarp", volume=
 STR = [S.track(f"弦の持続{i}", "strings", patch="slowStrings", recipe="celtic-strings", volume=0.05, pan=[-0.7, 0.7, 0][i], reverb=0.55, barGain=g()) for i in range(3)]
 LOW = S.track("チェロ", "strings", patch="cello", recipe="celtic-low", volume=0.07, pan=-0.15, reverb=0.35, barGain=g())
 BELL = S.track("ベル", "bell", patch="glockenspiel", volume=0.03, pan=0.35, reverb=0.7, barGain=g())
-CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.05, pan=0, modulate=False)
 SIL = Silence(S)
 
 # ---------- 旋律（E ドリアン。3音の問い：1 3 4） ----------
@@ -149,8 +148,6 @@ for b in range(NB):
         if i == 0: HARP.bar(b, f"{nm(t[0])}:4")
         if i == 3: HARP2.bar(b, f"{nm(t[-3])}:4")
         if i == 5: BELL.bar(b, f"{nm(tones(ch, 'C6', 'C7')[2])}:4")
-cym_swell(CYM, s0["答え"] + 4, 4, "E4")
-CYM.bar(NB - 3, "B4:12")
 SIL.add(s0["余韻"] - 1, 3, 4)
 SIL.apply()
 S.fade_out = 0
