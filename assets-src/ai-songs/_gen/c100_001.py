@@ -29,11 +29,11 @@ s0 = {n: S.sc(n)[0] for n in ("息", "問い", "伸びる", "答え", "余韻", 
 DYN = curve([(0, 0.72), (s0["問い"], 0.68), (s0["伸びる"], 0.72), (s0["答え"], 0.82), (s0["答え"] + 6, 1.0), (s0["余韻"] - 1, 0.9),
              (s0["余韻"], 0.45), (s0["終わり"], 0.4), (NB - 1, 0.3)])
 # 伴奏は、答えの山でフルートを埋めないように 0.72 倍に抑える（フルートが小さい件。2026-10-28）
-ACC = [0.72 if s0["答え"] <= b < s0["余韻"] else 1.0 for b in range(NB)]
+ACC = [0.72 if s0["答え"] <= b < s0["余韻"] else (0.5 if s0["問い"] <= b < s0["答え"] else 1.0) for b in range(NB)]
 def g(extra=None):
     return [round(d * ACC[b] * (extra[b] if extra else 1), 3) for b, d in enumerate(DYN)]
 
-FLUTE = S.track("フルート", "panflute", patch="flute", volume=0.36, pan=-0.05, reverb=0.5, breath=True, barGain=[round(max(d, 0.82) * (1.18 if s0["答え"] <= b < s0["余韻"] else 1.0), 3) for b, d in enumerate(DYN)])
+FLUTE = S.track("フルート", "panflute", patch="flute", volume=0.36, pan=-0.05, reverb=0.5, breath=True, barGain=[round(max(d, 0.82) * (1.18 if s0["答え"] <= b < s0["余韻"] else (1.4 if s0["問い"] <= b < s0["答え"] else 1.0)), 3) for b, d in enumerate(DYN)])
 HARP = S.track("ハープ", "harp", patch="folkHarp", recipe="celtic-harp", volume=0.105, pan=-0.1, reverb=0.45, barGain=g())
 HARP2 = S.track("ハープ（高い響き）", "harp", patch="folkHarp", volume=0.055, pan=0.4, reverb=0.6, barGain=g())
 STR = [S.track(f"弦の持続{i}", "strings", patch="slowStrings", recipe="celtic-strings", volume=0.05, pan=[-0.7, 0.7, 0][i], reverb=0.55, barGain=g()) for i in range(3)]
