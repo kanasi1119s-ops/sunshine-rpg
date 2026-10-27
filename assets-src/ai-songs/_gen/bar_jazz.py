@@ -6,7 +6,7 @@ import sys, os, re, json, math, random, itertools
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from celtic_lib import nm, fmt
 
-SOFT = float(os.environ.get("JAZZ_SOFT", "0.4"))
+SOFT = float(os.environ.get("JAZZ_SOFT", "0.3"))
 ARC = float(os.environ.get("JAZZ_ARC", "1.45"))
 TPB = 12                       # 1拍 = 12 刻み（8分・16分・3連符を全部表せる）
 TARGET = (255.0, 292.0)        # 曲の長さ（秒）
@@ -86,7 +86,7 @@ INST = {
     "violin": (P(instrument="fiddle", patch="violin", volume=0.17, reverb=0.42, gainDb=1, bright=-0.3, attack=0.08, release=0.5), (62, 86)),
     "viola": (P(instrument="strings", patch="viola", volume=0.19, reverb=0.42, attack=0.1, release=0.5), (55, 79)),
     "cello": (P(instrument="strings", patch="cello", volume=0.2, reverb=0.4, attack=0.1, release=0.5), (45, 69)),
-    "jazzGuitar": (P(instrument="leadGuitar", patch="jazzGuitar", amp="jazz", volume=0.2, reverb=0.3, sustain=1.5, chorus=0, autoScoop=False, humanPitch=0, bright=-0.4, attack=0.012, release=0.5, fx=[{"type": "eq", "low": 2, "mid": -2, "midHz": 2800, "high": -6}, {"type": "compressor", "threshold": -24, "ratio": 1.8, "attack": 0.04, "release": 0.25}, {"type": "plate", "mix": 0.14}]), (55, 81)),
+    "jazzGuitar": (P(instrument="leadGuitar", patch="jazzGuitar", amp="jazz", volume=0.2, reverb=0.3, sustain=1.5, chorus=0, autoScoop=False, humanPitch=0, bright=-0.4, attack=0.012, release=0.5, fx=[{"type": "eq", "low": 2, "mid": -2, "midHz": 2800, "high": -4}, {"type": "compressor", "threshold": -24, "ratio": 1.8, "attack": 0.04, "release": 0.25}, {"type": "plate", "mix": 0.14}]), (55, 81)),
     # 2026-10-19 人間「電子音系はなるべく使わず、実際の楽器音を」→ エレピ・オルガン・シンセのパッドをやめ、録音の楽器（VCSL ほか）にする
     "vibes": (P(instrument="harp", patch="vibraphone", volume=0.2, reverb=0.42, sustain=1.8, bright=-0.2, fx=[{"type": "plate", "mix": 0.12}]), (57, 89)),
     "tenorSax": (P(instrument="brass", patch="tenorSax", volume=0.18, reverb=0.4, breath=True, attack=0.05, release=0.5, bright=-0.3, fx=[{"type": "plate", "mix": 0.12}]), (46, 75)),
@@ -99,10 +99,10 @@ INST = {
     "nylon": (P(instrument="leadGuitar", patch="nylonGuitar", amp="clean", volume=0.19, reverb=0.32, sustain=1.3, bright=-0.3, chorus=0, autoScoop=False, humanPitch=0), (55, 81)),
 }
 COMP = {   # 和音の楽器（4声）。(設定, 下, 上, パン)
-    "piano": (P(instrument="piano", volume=0.085, reverb=0.38, sustain=1.5, bright=-0.35), 46, 76, -0.4),
+    "piano": (P(instrument="piano", volume=0.085, reverb=0.38, sustain=1.5, bright=-0.35), 52, 76, -0.4),
     "vibes": (P(instrument="harp", patch="vibraphone", volume=0.09, reverb=0.4, sustain=1.5, bright=-0.25), 53, 74, 0.4),
     "nylon": (P(instrument="guitar", patch="nylonGuitar", amp="clean", volume=0.085, reverb=0.28, sustain=1.0, bright=-0.35, chorus=0, autoScoop=False, humanPitch=0), 50, 70, -0.45),
-    "jazzGuitar": (P(instrument="guitar", patch="jazzGuitar", amp="jazz", volume=0.08, reverb=0.3, sustain=1.1, bright=-0.45, chorus=0, autoScoop=False, humanPitch=0, release=0.45, fx=[{"type": "eq", "low": 2, "mid": -2, "midHz": 2800, "high": -6}, {"type": "compressor", "threshold": -24, "ratio": 1.8, "attack": 0.04, "release": 0.25}, {"type": "plate", "mix": 0.14}]), 50, 69, 0.45),
+    "jazzGuitar": (P(instrument="guitar", patch="jazzGuitar", amp="jazz", volume=0.08, reverb=0.3, sustain=1.1, bright=-0.45, chorus=0, autoScoop=False, humanPitch=0, release=0.45, fx=[{"type": "eq", "low": 2, "mid": -2, "midHz": 2800, "high": -4}, {"type": "compressor", "threshold": -24, "ratio": 1.8, "attack": 0.04, "release": 0.25}, {"type": "plate", "mix": 0.14}]), 50, 69, 0.45),
     "marimba": (P(instrument="harp", patch="marimba", volume=0.09, reverb=0.32, sustain=1.0), 55, 74, -0.4),
     "pizz": (P(instrument="strings", patch="pizzicato", volume=0.1, reverb=0.35), 52, 74, -0.45),
     "accordion": (P(instrument="accordion", volume=0.06, reverb=0.3, attack=0.03, release=0.25), 55, 72, -0.4),
@@ -296,7 +296,7 @@ def build(song, out):
     if song["bass"] != "none":
         if song["bass"] == "stride": P["bass"] = Part(dict(INST["piano"][0], volume=0.12, bright=-0.4), "左手の低音（ピアノ）")
         else: P["bass"] = Part(dict(instrument="bass", amp="direct", volume=0.22, reverb=float(os.environ.get("BASS_REV", 0.14)), release=0.15, bright=0.0, attack=0.01,
-                                     fx=[{"type": "filter", "kind": "highpass", "freq": 48, "q": 0.7}, {"type": "eq", "low": -1.5, "mid": 1.5, "midHz": 300, "high": 0}, {"type": "eq", "low": 0, "mid": float(os.environ.get("BASS_MID", 1.5)), "midHz": float(os.environ.get("BASS_HZ", 2200)), "high": -1}, {"type": "compressor", "threshold": -20, "ratio": 1.5, "attack": 0.07, "release": 0.2}]), "ベース")   # 2026-10-27 指弾き感: 弦をはじく2kHz台を持ち上げ、圧縮の出だしをゆるめて指の「パチッ」を通す
+                                     fx=[{"type": "filter", "kind": "highpass", "freq": 55, "q": 0.7}, {"type": "eq", "low": -3, "mid": 1.5, "midHz": 300, "high": 0}, {"type": "eq", "low": 0, "mid": float(os.environ.get("BASS_MID", 1.5)), "midHz": float(os.environ.get("BASS_HZ", 2200)), "high": -1}, {"type": "compressor", "threshold": -20, "ratio": 1.5, "attack": 0.07, "release": 0.2}]), "ベース")   # 2026-10-27 指弾き感: 弦をはじく2kHz台を持ち上げ、圧縮の出だしをゆるめて指の「パチッ」を通す
             # 2026-10-19 点数の試し（『朝のエスプレッソ』）: ベースの出だしをやわらかく 7.88→7.89、書き出しを --bass finger（指弾きの録音）に 8.11（いちばん効いた）
     if song["cstyle"] == "duo": P["bass"] = Part(dict(INST["piano"][0], volume=0.11, bright=-0.45), "左手の低音（ピアノ）")
     if song.get("horns"): P["harm"] = Part(INST["trombone"][0], "テーマの2声目（トロンボーン）")
@@ -642,7 +642,7 @@ def build(song, out):
     dsty = DR.get(song["drums"])
     D = {}
     if dsty:
-        dvol = song.get("dvol", 1.0)
+        dvol = song.get("dvol", 0.82)
         D["kick"] = Part(dict(instrument="kick", volume=round(0.08 * dvol, 3), reverb=0.12), "キック")   # 2026-10-19 試し: キックを半分＋ベースを凹ませると +0.14（ベースとキックのぶつかり）
         D["snare"] = Part(dict(instrument="snare", volume=round(0.12 * dvol, 3)), "スネア（ブラシのつもり）")
         D["hat"] = Part(dict(instrument="hihat", volume=round(0.07 * dvol, 3), reverb=0.2), "ハイハット")
@@ -835,7 +835,7 @@ def build(song, out):
         elif r.startswith("ソロ（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("L:" + song["solo2"], -1.0)
         elif r.startswith("旋律の重ね"): q["gainDb"] = q.get("gainDb", 0) + float(song.get("double_db", -6.0))
         elif r.startswith("テーマの2声目"): q["gainDb"] = q.get("gainDb", 0) + cal_db("L:trombone", -3.0)
-        elif r.startswith("和音（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("C:" + comp_name, song.get("comp_t", -8.5))
+        elif r.startswith("和音（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("C:" + comp_name, song.get("comp_t", -6.5))
         elif r.startswith("うしろの和音（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("P:" + song["pad"], song.get("pad_t", -15.0))
         elif r.startswith("左手の低音"): q["gainDb"] = q.get("gainDb", 0)
         elif r == "ベース": q["gainDb"] = q.get("gainDb", 0) + float(song.get("bass_db", -5.0))   # ウッドベースの録音は大きいので下げる（2026-10-27、1曲目で -8dB が点数・強弱とも最良）
