@@ -34,12 +34,12 @@ ACC = [0.4 if s0["答え"] + 7 <= b < s0["余韻"] else 0.72 if s0["答え"] <= 
 def g(extra=None):
     return [round(d * ACC[b] * (extra[b] if extra else 1), 3) for b, d in enumerate(DYN)]
 
-FLUTE = S.track("フルート", "panflute", patch="flute", volume=0.42, pan=-0.05, reverb=0.5, breath=True, barGain=[round(max(d, 0.82) * (1.18 if s0["答え"] <= b < s0["余韻"] else (1.4 if s0["問い"] <= b < s0["答え"] else 1.0)), 3) for b, d in enumerate(DYN)])
+FLUTE = S.track("フルート", "panflute", patch="flute", volume=0.42, bright=-0.6, pan=-0.05, reverb=0.5, breath=True, barGain=[round(max(d, 0.82) * (1.18 if s0["答え"] <= b < s0["余韻"] else (1.4 if s0["問い"] <= b < s0["答え"] else 1.0)), 3) for b, d in enumerate(DYN)])
 HARP = S.track("ハープ", "harp", patch="folkHarp", recipe="celtic-harp", volume=0.105, pan=-0.1, reverb=0.45, barGain=g())
 HARP2 = S.track("ハープ（高い響き）", "harp", patch="folkHarp", volume=0.055, pan=0.4, reverb=0.6, barGain=g())
 STR = [S.track(f"弦の持続{i}", "strings", patch="slowStrings", recipe="celtic-strings", volume=0.05, pan=[-0.7, 0.7, 0][i], reverb=0.55, barGain=g()) for i in range(3)]
 LOW = S.track("チェロ", "strings", patch="cello", recipe="celtic-low", volume=0.07, pan=-0.15, reverb=0.35, barGain=g())
-BELL = S.track("ベル", "bell", patch="glockenspiel", volume=0.045, pan=0.35, reverb=0.7, barGain=g())
+BELL = S.track("ベル", "bell", patch="glockenspiel", volume=0.03, pan=0.35, reverb=0.7, barGain=g())
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.05, pan=0, modulate=False)
 SIL = Silence(S)
 
@@ -77,10 +77,17 @@ def fold_phrase(bars_txt, hi=84):
     ps = [p for p in ps if p is not None]
     if ps and max(ps) > hi and min(ps) - 12 >= 60: return [shift(t, -1) for t in bars_txt]
     return bars_txt
+def hi_soft(txt, top=84):
+    """C6より高い音（硬く耳が痛い）は1オクターブ下げる。小節ごとに1〜3音だけなので、旋律の形はほぼ保たれる（2026-10-28）"""
+    out = []
+    for tok in txt.split():
+        p = _midi(tok)
+        out.append(shift(tok, -1) if p is not None and p > top else tok)
+    return " ".join(out)
 def put(scene, phr, oct_):
     bars = S.sc(scene)
     for p, ph in enumerate(phr):
-        txt = [K.mel(x, oct=oct_) for x in ph]   # 実測：笛は高い音（〜F#6）のほうが大きく鳴る。下げると小さくなる（2026-10-28）
+        txt = [hi_soft(K.mel(x, oct=oct_)) for x in ph]   # 実測：笛は高い音（〜F#6）のほうが大きく鳴る。下げると小さくなる（2026-10-28）
         for j, t in enumerate(txt): FLUTE.bar(bars[p * 4 + j], t)
 put("問い", Q, 5); put("伸びる", E, 5); put("答え", A, 5)
 for i, b in enumerate(S.sc("余韻")): FLUTE.bar(b, K.mel(T[i], oct=4 if i < 6 else 5))
@@ -149,4 +156,5 @@ SIL.apply()
 S.fade_out = 0
 S.flags = "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.0"
 S.desc = "ケルト・フルート100曲の001。祖父の箱から銀の笛を出す夕暮れ。E ドリアン・54。3音の問いが少しずつ伸びて、答えが返り、静けさに戻る。"
+S.no_depth = True   # 自動の深いパッド・高いきらめき（シンセ系）は入れない。笛より大きく聞こえた（2026-10-28 人間の指摘）
 vwrite(S)
