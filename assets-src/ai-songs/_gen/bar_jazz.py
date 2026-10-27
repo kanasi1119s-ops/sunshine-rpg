@@ -1,3 +1,4 @@
+import os
 # BARに合うジャズ 50曲（2026-10-27、人間の依頼「BARに合うジャズ曲を50曲。楽器は何種類でも。4〜5分。同じ曲・似た曲なし。8点以上」）。
 # 曲を決める表: docs/sound/bar-jazz-plan.md。cafe_jazz.py をもとに、形（テーマの並び・イントロ）・拍子（7/4）・楽器（アルト／バリトン／ミュートトランペット）を増やした。
 # 使い方: python3 bar_jazz.py <番号か id か all> [出力フォルダ]   環境変数 JAZZ_TUNE（JSON）で曲ごとの調整、JAZZ_EXTRA で全曲に足す設定
@@ -85,7 +86,7 @@ INST = {
     "violin": (P(instrument="fiddle", patch="violin", volume=0.17, reverb=0.42, gainDb=1, bright=-0.3, attack=0.08, release=0.5), (62, 86)),
     "viola": (P(instrument="strings", patch="viola", volume=0.19, reverb=0.42, attack=0.1, release=0.5), (55, 79)),
     "cello": (P(instrument="strings", patch="cello", volume=0.2, reverb=0.4, attack=0.1, release=0.5), (45, 69)),
-    "jazzGuitar": (P(instrument="leadGuitar", patch="jazzGuitar", amp="jazz", volume=0.2, reverb=0.28, sustain=1.2, chorus=0, autoScoop=False, humanPitch=0, bright=-0.2), (55, 81)),
+    "jazzGuitar": (P(instrument="leadGuitar", patch="jazzGuitar", amp="jazz", volume=0.2, reverb=0.3, sustain=1.5, chorus=0, autoScoop=False, humanPitch=0, bright=-0.4, attack=0.012, release=0.5, fx=[{"type": "eq", "low": 2, "mid": -2, "midHz": 2800, "high": -6}, {"type": "compressor", "threshold": -24, "ratio": 1.8, "attack": 0.04, "release": 0.25}, {"type": "plate", "mix": 0.14}]), (55, 81)),
     # 2026-10-19 人間「電子音系はなるべく使わず、実際の楽器音を」→ エレピ・オルガン・シンセのパッドをやめ、録音の楽器（VCSL ほか）にする
     "vibes": (P(instrument="harp", patch="vibraphone", volume=0.2, reverb=0.42, sustain=1.8, bright=-0.2, fx=[{"type": "plate", "mix": 0.12}]), (57, 89)),
     "tenorSax": (P(instrument="brass", patch="tenorSax", volume=0.18, reverb=0.4, breath=True, attack=0.05, release=0.5, bright=-0.3, fx=[{"type": "plate", "mix": 0.12}]), (46, 75)),
@@ -101,7 +102,7 @@ COMP = {   # 和音の楽器（4声）。(設定, 下, 上, パン)
     "piano": (P(instrument="piano", volume=0.085, reverb=0.38, sustain=1.5, bright=-0.35), 46, 76, -0.4),
     "vibes": (P(instrument="harp", patch="vibraphone", volume=0.09, reverb=0.4, sustain=1.5, bright=-0.25), 53, 74, 0.4),
     "nylon": (P(instrument="guitar", patch="nylonGuitar", amp="clean", volume=0.085, reverb=0.28, sustain=1.0, bright=-0.35, chorus=0, autoScoop=False, humanPitch=0), 50, 70, -0.45),
-    "jazzGuitar": (P(instrument="guitar", patch="jazzGuitar", amp="jazz", volume=0.08, reverb=0.25, sustain=0.9, bright=-0.3, chorus=0, autoScoop=False, humanPitch=0), 50, 69, 0.45),
+    "jazzGuitar": (P(instrument="guitar", patch="jazzGuitar", amp="jazz", volume=0.08, reverb=0.3, sustain=1.1, bright=-0.45, chorus=0, autoScoop=False, humanPitch=0, release=0.45, fx=[{"type": "eq", "low": 2, "mid": -2, "midHz": 2800, "high": -6}, {"type": "compressor", "threshold": -24, "ratio": 1.8, "attack": 0.04, "release": 0.25}, {"type": "plate", "mix": 0.14}]), 50, 69, 0.45),
     "marimba": (P(instrument="harp", patch="marimba", volume=0.09, reverb=0.32, sustain=1.0), 55, 74, -0.4),
     "pizz": (P(instrument="strings", patch="pizzicato", volume=0.1, reverb=0.35), 52, 74, -0.45),
     "accordion": (P(instrument="accordion", volume=0.06, reverb=0.3, attack=0.03, release=0.25), 55, 72, -0.4),
@@ -169,18 +170,19 @@ COMPPAT = {
     "baiao": [("x--x--x-x--x--x-", 1)],
     "stride": [("....x---....x---", 1)],
     "pizz": [("x...x.......x...", 1), ("x.......x...x...", 1)],
+    "green": [("x--.X...x--.X...", 1)],
 }
 
 # ================================================================ ドラムの型（1文字＝16分。12/8 は 3連の8分）
 DR = {
-    "swing": dict(ride="x...X.x.x...X.x.", hat="....x.......x...", kick="", snare="", ghost=0.22, bomb=0.06),
-    "swing2": dict(ride="x...X.x.x...X.x.", hat="....x.......x...", kick="", snare="", ghost=0.12, bomb=0.03),
-    "swing3": dict(ride="x...X.x.x...X.x.", hat="....x.......x...", kick="", snare="", ghost=0.32, bomb=0.12),
+    "swing": dict(ride="x...x.o.x...x.o.", hat="....x.......x...", kick="o...o...o...o...", snare="", ghost=0.22, bomb=0.06),
+    "swing2": dict(ride="x...x.o.x...x.o.", hat="....x.......x...", kick="o...o...o...o...", snare="", ghost=0.12, bomb=0.03),
+    "swing3": dict(ride="x...x.o.x...x.o.", hat="....x.......x...", kick="o...o...o...o...", snare="", ghost=0.32, bomb=0.12),
     "brushes": dict(ride="", hat="....x.......x...", kick="", snare="o.o.X.o.o.o.X.o.", ghost=0.0, bomb=0.03),
     "ballad": dict(ride="x.......x.......", hat="....x.......x...", kick="", snare="o...o.o.o...o.o.", ghost=0.0, bomb=0.0),
     "brushballad": dict(ride="", hat="....x.......x...", kick="o...............", snare="o.o.x.o.o.o.x.o.", ghost=0.0, bomb=0.0),
-    "waltz": dict(ride="x...X.x.x...", hat="....x...x...", kick="o...........", snare="", ghost=0.18, bomb=0.0),
-    "five": dict(ride="x...X.x.x...X...X.x.", hat="........x.......x...", kick="o...........o.......", snare="", ghost=0.15, bomb=0.0),
+    "waltz": dict(ride="x...x.o.x...", hat="....x...x...", kick="o...........", snare="", ghost=0.18, bomb=0.0),
+    "five": dict(ride="x...x.o.x...x...x.o.", hat="........x.......x...", kick="o...........o.......", snare="", ghost=0.15, bomb=0.0),
     "bossa": dict(ride="", hat="o.o.o.o.o.o.o.o.", kick="x.....x.x.....x.", snare=["x.....x.....x...", "....x.....x....."], ghost=0.0, bomb=0.0),
     "neosoul": dict(ride="", hat="o.x.o.x.o.x.o.x.", kick="X.....o...X..o..", snare="....X..o....X...", ghost=0.0, bomb=0.0),
     "samba": dict(ride="", hat="xoooxoooxoooxooo", kick="o.......x.......", snare="..o.x..o.o.x..o.", ghost=0.0, bomb=0.0),
@@ -195,7 +197,7 @@ DR = {
     "gospel": dict(ride="", hat="xooxooxooxoo", kick="x.....x.....", snare="...X.....X..", ghost=0.0, bomb=0.0),
     "baiao": dict(ride="", hat="xoxoxoxoxoxoxoxo", kick="x..x....x..x....", snare="....o.......o...", ghost=0.0, bomb=0.0),
     "stride": dict(ride="", hat="....x.......x...", kick="", snare="o.o.x.o.o.o.x.o.", ghost=0.0, bomb=0.0),
-    "seven": dict(ride="x...X.x.x...X.x.x...X.x.x...", hat="....x.......x.......x...", kick="o...........o...........", snare="", ghost=0.15, bomb=0.04),
+    "seven": dict(ride="x...x.o.x...x.o.x...x.o.x...", hat="....x.......x.......x...", kick="o...........o...........", snare="", ghost=0.15, bomb=0.04),
     "mambo": dict(bell="x.x.x.x.x.x.x.x.", hat="....x.......x...", kick="x.......x..x....", snare="....o.......x...", ghost=0.0, bomb=0.0),
     "tango": dict(ride="", hat="o.o.o.o.o.o.o.o.", kick="x...x...x...x...", snare="..o...o...o...x.", ghost=0.0, bomb=0.0),
     "none": None,
@@ -293,8 +295,8 @@ def build(song, out):
         P["pad"] = [Part(pb, f"うしろの和音（{song['pad']}・{i + 1}）") for i in range(5)]   # 2026-10-19 人間「奥行き・スケール・余韻」
     if song["bass"] != "none":
         if song["bass"] == "stride": P["bass"] = Part(dict(INST["piano"][0], volume=0.12, bright=-0.4), "左手の低音（ピアノ）")
-        else: P["bass"] = Part(dict(instrument="bass", amp="jazz", volume=0.22, reverb=0.03, release=0.15, bright=-0.45, attack=0.01, duck=0.3,
-                                     fx=[{"type": "eq", "low": 1, "mid": 0, "midHz": 800, "high": -6}, {"type": "compressor", "threshold": -20, "ratio": 2.5, "attack": 0.02, "release": 0.2}]), "ベース")
+        else: P["bass"] = Part(dict(instrument="bass", amp="jazz", volume=0.22, reverb=0.03, release=0.15, bright=-0.1, attack=0.01, duck=0.3,
+                                     fx=[{"type": "eq", "low": 1, "mid": float(os.environ.get("BASS_MID", 3.5)), "midHz": float(os.environ.get("BASS_HZ", 2200)), "high": -1}, {"type": "compressor", "threshold": -20, "ratio": 1.5, "attack": 0.07, "release": 0.2}]), "ベース")   # 2026-10-27 指弾き感: 弦をはじく2kHz台を持ち上げ、圧縮の出だしをゆるめて指の「パチッ」を通す
             # 2026-10-19 点数の試し（『朝のエスプレッソ』）: ベースの出だしをやわらかく 7.88→7.89、書き出しを --bass finger（指弾きの録音）に 8.11（いちばん効いた）
     if song["cstyle"] == "duo": P["bass"] = Part(dict(INST["piano"][0], volume=0.11, bright=-0.45), "左手の低音（ピアノ）")
     if song.get("horns"): P["harm"] = Part(INST["trombone"][0], "テーマの2声目（トロンボーン）")
@@ -499,6 +501,7 @@ def build(song, out):
 
     # ================= 和音
     pats = COMPPAT[feel]
+    if feel == "swing" and song["comp"] in ("jazzGuitar", "nylon"): pats = [("x--.X...x--.X...", 5)] + list(pats)   # フレディ・グリーン式: 1・3拍は長め、2・4拍は短くわずかに強く（2026-10-27 調査）
     prev = None; prevpad = None
     for bi in range(NB):
         name, who, i = bar_info[bi]
@@ -606,7 +609,17 @@ def build(song, out):
                         pool = [x for x in range(BLO, BHI + 1) if x % 12 in c["tones"] or (x % 12 in c["scale"] and rng.random() < 0.3)]
                         cand = sorted(pool, key=lambda x: abs(x - prevb) + (3 if x == prevb else 0) + rng.random() * 3)
                         m = cand[0]
-                    P["bass"].add(t, TPB, m, "" if k % 2 == 0 else ","); prevb = m
+                    # 指弾きらしさ（2026-10-27 人間「ウッドベースが指弾きしてる感じがしない」）: 1拍目と和音の変わり目を少し強く、
+                    #   音は少し短めに切って弦の鳴りをはっきり、ときどき「跳ねる」形（2・4拍目を3連の長短にして、うしろに弱い合いの手）
+                    accent = "!" if (k == 0 and rng.random() < 0.55) or (ch_at(t - 1)["name"] != c["name"] and rng.random() < 0.5) else ""
+                    if k % 2 == 1 and k < n - 1 and rng.random() < 0.28:
+                        d1 = int(TPB * 0.62); P["bass"].add(t, d1, m, accent); P["bass"].add(t + int(TPB * 0.67), int(TPB * 0.3), m, ",")
+                    else:
+                        P["bass"].add(t, int(TPB * rng.choice([0.8, 0.88, 0.94])), m, accent)
+                        # 指のひっかけ: 次の拍の直前に、半音下から入る弱い音（ゴーストの経過音）をときどき
+                        if k < n - 1 and rng.random() < 0.2 and not chord_change_next:
+                            P["bass"].add(t + int(TPB * 0.84), int(TPB * 0.14), max(BLO, m - 1), ",")
+                    prevb = m
             else:
                 pat = BPAT.get(bstyle, BPAT["two"])
                 if beats == 3 and bstyle != "waltz": pat = BPAT["waltz"]
@@ -769,6 +782,11 @@ def build(song, out):
             if d <= 0: continue
             if s > t: toks += rest(s - t)
             name_ = m if isinstance(m, str) else nm(m)
+            # 一音ずつ丁寧に（2026-10-27）: 息の楽器・弓の楽器の長い音（1.5拍以上）に、ごく弱いビブラート「~.」と、
+            #   2拍以上は終わりへ減っていく「>」を付けて、音の頭から尾まで表情をつける。強い記号が付いている音には足さない
+            if (not drum) and p.base.get("breath") or p.base.get("instrument") in ("fiddle", "strings"):
+                if p.base.get("patch") not in ("trumpet", "mutedTrumpet") and p.role.startswith(("旋律（", "ソロ（", "テーマの2声目", "旋律の重ね")) and d >= 1.5 * TPB and not any(ch in mk for ch in "~^/\\'!,"):
+                    mk = mk + "~." + (">" if d >= 2.0 * TPB else "")
             toks.append(f"{name_}:{fmt(d / TPB)}{mk}")
             t = s + d
         if t < TU: toks += rest(TU - t)
@@ -826,7 +844,7 @@ def build(song, out):
          "description": f"BAR用のジャズ。{song['image']}。{song['meter']}・BPM{bpm}・{song['key']}、約{int(secs // 60)}分{int(secs % 60):02d}秒。"
                         f"形: イントロ4・テーマ{hb}・ソロ{n_solo * 8}・テーマ{out_bars}・終わり4。{song['desc']}",
          "bpm": bpm, "beats": beats, "chords": " ".join(bar_ch), "barsPerChord": 1, "repeats": 1, "tone": "rock", "feel": "rock",
-         "swing": song["swing"], "human": 0.2, "dynamics": song.get("dyn", False), "autoAccompaniment": False, "autoScoop": False, "guitarWobble": False,
+         "swing": song["swing"], "human": float(song.get("human", 0.35)), "humanProfile": "role", "dynamics": song.get("dyn", False), "autoAccompaniment": False, "autoScoop": False, "guitarWobble": False,
          "drumMix": DRUMMIX, "parts": parts, "tempo": tempo, "instrumentCheck": False}
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     json.dump(j, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
