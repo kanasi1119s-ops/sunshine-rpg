@@ -295,7 +295,7 @@ def build(song, out):
         P["pad"] = [Part(pb, f"うしろの和音（{song['pad']}・{i + 1}）") for i in range(5)]   # 2026-10-19 人間「奥行き・スケール・余韻」
     if song["bass"] != "none":
         if song["bass"] == "stride": P["bass"] = Part(dict(INST["piano"][0], volume=0.12, bright=-0.4), "左手の低音（ピアノ）")
-        else: P["bass"] = Part(dict(instrument="bass", amp="jazz", volume=0.22, reverb=0.03, release=0.15, bright=-0.1, attack=0.01, duck=0.3,
+        else: P["bass"] = Part(dict(instrument="bass", amp="direct", volume=0.22, reverb=0.03, release=0.15, bright=0.0, attack=0.01,
                                      fx=[{"type": "eq", "low": 1, "mid": float(os.environ.get("BASS_MID", 3.5)), "midHz": float(os.environ.get("BASS_HZ", 2200)), "high": -1}, {"type": "compressor", "threshold": -20, "ratio": 1.5, "attack": 0.07, "release": 0.2}]), "ベース")   # 2026-10-27 指弾き感: 弦をはじく2kHz台を持ち上げ、圧縮の出だしをゆるめて指の「パチッ」を通す
             # 2026-10-19 点数の試し（『朝のエスプレッソ』）: ベースの出だしをやわらかく 7.88→7.89、書き出しを --bass finger（指弾きの録音）に 8.11（いちばん効いた）
     if song["cstyle"] == "duo": P["bass"] = Part(dict(INST["piano"][0], volume=0.11, bright=-0.45), "左手の低音（ピアノ）")
