@@ -6,8 +6,8 @@ import sys, os, re, json, math, random, itertools
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from celtic_lib import nm, fmt
 
-SOFT = float(os.environ.get("JAZZ_SOFT", "0.3"))
-ARC = float(os.environ.get("JAZZ_ARC", "1.25"))
+SOFT = float(os.environ.get("JAZZ_SOFT", "0.4"))
+ARC = float(os.environ.get("JAZZ_ARC", "1.45"))
 TPB = 12                       # 1拍 = 12 刻み（8分・16分・3連符を全部表せる）
 TARGET = (255.0, 292.0)        # 曲の長さ（秒）
 
@@ -202,8 +202,8 @@ DR = {
     "tango": dict(ride="", hat="o.o.o.o.o.o.o.o.", kick="x...x...x...x...", snare="..o...o...o...x.", ghost=0.0, bomb=0.0),
     "none": None,
 }
-DRUMMIX = {"kick": {"level": 0.55}, "snare": {"level": 0.6, "reverb": 0.12, "tune": 1}, "hat": {"level": 0.6, "pan": 0.25},
-           "tom": {"spread": 0.5, "tune": -2}, "crash": {"level": 0.6, "pan": -0.25, "reverb": 0.22}}
+DRUMMIX = {"kick": {"level": 0.55}, "snare": {"level": 0.5, "reverb": 0.2, "tune": 1}, "hat": {"level": 0.52, "pan": 0.25},
+           "tom": {"spread": 0.5, "tune": -2}, "crash": {"level": 0.5, "pan": -0.25, "reverb": 0.26}}
 
 
 # ================================================================ 組み立て
@@ -295,7 +295,7 @@ def build(song, out):
         P["pad"] = [Part(pb, f"うしろの和音（{song['pad']}・{i + 1}）") for i in range(5)]   # 2026-10-19 人間「奥行き・スケール・余韻」
     if song["bass"] != "none":
         if song["bass"] == "stride": P["bass"] = Part(dict(INST["piano"][0], volume=0.12, bright=-0.4), "左手の低音（ピアノ）")
-        else: P["bass"] = Part(dict(instrument="bass", amp="direct", volume=0.22, reverb=0.03, release=0.15, bright=0.0, attack=0.01,
+        else: P["bass"] = Part(dict(instrument="bass", amp="direct", volume=0.22, reverb=float(os.environ.get("BASS_REV", 0.14)), release=0.15, bright=0.0, attack=0.01,
                                      fx=[{"type": "filter", "kind": "highpass", "freq": 48, "q": 0.7}, {"type": "eq", "low": -1.5, "mid": 1.5, "midHz": 300, "high": 0}, {"type": "eq", "low": 0, "mid": float(os.environ.get("BASS_MID", 1.5)), "midHz": float(os.environ.get("BASS_HZ", 2200)), "high": -1}, {"type": "compressor", "threshold": -20, "ratio": 1.5, "attack": 0.07, "release": 0.2}]), "ベース")   # 2026-10-27 指弾き感: 弦をはじく2kHz台を持ち上げ、圧縮の出だしをゆるめて指の「パチッ」を通す
             # 2026-10-19 点数の試し（『朝のエスプレッソ』）: ベースの出だしをやわらかく 7.88→7.89、書き出しを --bass finger（指弾きの録音）に 8.11（いちばん効いた）
     if song["cstyle"] == "duo": P["bass"] = Part(dict(INST["piano"][0], volume=0.11, bright=-0.45), "左手の低音（ピアノ）")
@@ -643,10 +643,10 @@ def build(song, out):
     D = {}
     if dsty:
         dvol = song.get("dvol", 1.0)
-        D["kick"] = Part(dict(instrument="kick", volume=round(0.08 * dvol, 3)), "キック")   # 2026-10-19 試し: キックを半分＋ベースを凹ませると +0.14（ベースとキックのぶつかり）
+        D["kick"] = Part(dict(instrument="kick", volume=round(0.08 * dvol, 3), reverb=0.12), "キック")   # 2026-10-19 試し: キックを半分＋ベースを凹ませると +0.14（ベースとキックのぶつかり）
         D["snare"] = Part(dict(instrument="snare", volume=round(0.12 * dvol, 3)), "スネア（ブラシのつもり）")
-        D["hat"] = Part(dict(instrument="hihat", volume=round(0.07 * dvol, 3)), "ハイハット")
-        D["ride"] = Part(dict(instrument="crash", volume=round(0.055 * dvol, 3)), "ライド")
+        D["hat"] = Part(dict(instrument="hihat", volume=round(0.07 * dvol, 3), reverb=0.2), "ハイハット")
+        D["ride"] = Part(dict(instrument="crash", volume=round(0.055 * dvol, 3), reverb=0.2), "ライド")
         D["crash"] = Part(dict(instrument="crash", volume=round(0.045 * dvol, 3)), "シンバル（区切り）")
         D["tom"] = Part(dict(instrument="tom", volume=round(0.1 * dvol, 3), reverb=0.2), "タム・フロアタム（フィル）")
         has_ride = bool(dsty.get("ride"))
@@ -685,7 +685,14 @@ def build(song, out):
                         if inst == "ride": D["ride"].add(t0 + j * G, 4 * TPB, "D#3", "!" if ch == "X" else "," if ch == "o" else "")
                         elif inst == "bell": D["ride"].add(t0 + j * G, 4 * TPB, "F3", "!" if ch == "X" else "," if ch == "o" else "")
                         # スネアの強打（X）は強くしない（2026-10-19 人間「スネアの強い部分の音を少し抑えて」）
-                        else: D[inst].add(t0 + j * G, G, ch.lower() if ch != "O" else "O", ("" if inst == "snare" else "!") if ch == "X" else "," if ch == "o" else "")
+                        elif inst == "snare":
+                            # 2026-10-27 人間「スネアをもっと繊細に。強弱をつけて」: 1打ごとに強さを変える（弱い「,,」・やや弱い「,」・ふつう・まれに強い「!」）
+                            r_ = rng.random()
+                            if ch == "o": mk_ = ",," if r_ < 0.55 else ","
+                            elif ch == "X": mk_ = "!" if r_ < 0.2 else ("" if r_ < 0.8 else ",")
+                            else: mk_ = "," if r_ < 0.4 else ("" if r_ < 0.9 else "!")
+                            D[inst].add(t0 + j * G, G, ch.lower() if ch != "O" else "O", mk_)
+                        else: D[inst].add(t0 + j * G, G, ch.lower() if ch != "O" else "O", "!" if ch == "X" else "," if ch == "o" else "")
             grid(dsty_b.get("ride", ""), "ride"); grid(dsty_b.get("bell", ""), "bell"); grid(dsty_b.get("hat", ""), "hat")
             grid(dsty_b.get("kick", ""), "kick")
             sn = dsty_b.get("snare", "")
@@ -705,7 +712,7 @@ def build(song, out):
             grid(sn, "snare")
             for j in range(L):   # ゴースト（合いの手）と、まれなキック
                 if j % (2 if triplet else 2) == (0 if triplet else 2 % 2) and j % (sub) != 0 and rng.random() < dsty.get("ghost", 0):
-                    D["snare"].add(t0 + j * G, G, "o", ",")
+                    D["snare"].add(t0 + j * G, G, "o", ",," if rng.random() < 0.6 else ",")
             if rng.random() < dsty.get("bomb", 0): D["kick"].add(t0 + (L - 2) * G, G, "x", ",")
             # ときどきアクセント（2026-10-19 人間「ドラムはたまにアクセントも」）: 裏拍にスネアとキックを強く＋シンバルを短く鳴らす。
             #   はじめの A・イントロ・終わりでは入れず、テーマの B・後テーマ・ソロの盛り上がりで、4小節に1回くらい
@@ -787,6 +794,10 @@ def build(song, out):
             if (not drum) and p.base.get("breath") or p.base.get("instrument") in ("fiddle", "strings"):
                 if p.base.get("patch") not in ("trumpet", "mutedTrumpet") and p.role.startswith(("旋律（", "ソロ（", "テーマの2声目", "旋律の重ね")) and d >= 1.5 * TPB and not any(ch in mk for ch in "~^/\\'!,"):
                     mk = mk + "~." + (">" if d >= 2.0 * TPB else "")
+            # 滑らかさ（2026-10-27 人間「滑らかさも欲しい」）: 休みなしに次の音へ続く旋律・ソロの音は、切らずにつなげる（レガート「_」）
+            if (not drum) and (p.base.get("breath") or p.base.get("instrument") in ("fiddle", "strings")) and p.role.startswith(("旋律（", "ソロ（", "テーマの2声目", "旋律の重ね")) \
+               and nx is not None and s + d >= nx and d <= 2.0 * TPB and not any(ch in mk for ch in "'!,_"):
+                mk = mk + "_"
             toks.append(f"{name_}:{fmt(d / TPB)}{mk}")
             t = s + d
         if t < TU: toks += rest(TU - t)
