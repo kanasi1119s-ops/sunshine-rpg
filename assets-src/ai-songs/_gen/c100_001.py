@@ -26,7 +26,7 @@ def curve(points):
         else: out.append(pts[-1][1])
     return out
 s0 = {n: S.sc(n)[0] for n in ("息", "問い", "伸びる", "答え", "余韻", "終わり")}
-DYN = curve([(0, 0.5), (s0["問い"], 0.5), (s0["伸びる"], 0.6), (s0["答え"], 0.78), (s0["答え"] + 6, 1.0), (s0["余韻"] - 1, 0.9),
+DYN = curve([(0, 0.72), (s0["問い"], 0.68), (s0["伸びる"], 0.72), (s0["答え"], 0.82), (s0["答え"] + 6, 1.0), (s0["余韻"] - 1, 0.9),
              (s0["余韻"], 0.45), (s0["終わり"], 0.4), (NB - 1, 0.3)])
 def g(extra=None):
     return [round(d * (extra[b] if extra else 1), 3) for b, d in enumerate(DYN)]
@@ -72,8 +72,8 @@ for b in range(NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     lo = low(ch, "C2"); t = tones(ch, "D3", "D6")
     if n == "息":
-        if i == 2: HARP.bar(b, f"{nm(t[0])}:4")
-        if i == 3: HARP2.bar(b, f"{nm(t[-3])}:4")
+        if i in (0, 2): HARP.bar(b, f"{nm(t[0])}:4")
+        if i in (1, 3): HARP2.bar(b, f"{nm(t[-3])}:4")
     elif n == "問い":
         HARP.bar(b, f"{nm(t[0])}:4" if i % 2 == 0 else f"{nm(t[2])}:2 R:2")
         if i % 4 == 3: HARP2.bar(b, f"R:2 {nm(t[-2])}:2")
