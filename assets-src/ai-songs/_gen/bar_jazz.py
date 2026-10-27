@@ -5,6 +5,8 @@ import sys, os, re, json, math, random, itertools
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from celtic_lib import nm, fmt
 
+SOFT = float(os.environ.get("JAZZ_SOFT", "0.3"))
+ARC = float(os.environ.get("JAZZ_ARC", "1.25"))
 TPB = 12                       # 1拍 = 12 刻み（8分・16分・3連符を全部表せる）
 TARGET = (255.0, 292.0)        # 曲の長さ（秒）
 
@@ -96,7 +98,7 @@ INST = {
     "nylon": (P(instrument="leadGuitar", patch="nylonGuitar", amp="clean", volume=0.19, reverb=0.32, sustain=1.3, bright=-0.3, chorus=0, autoScoop=False, humanPitch=0), (55, 81)),
 }
 COMP = {   # 和音の楽器（4声）。(設定, 下, 上, パン)
-    "piano": (P(instrument="piano", volume=0.085, reverb=0.38, sustain=1.5, bright=-0.35), 50, 72, -0.4),
+    "piano": (P(instrument="piano", volume=0.085, reverb=0.38, sustain=1.5, bright=-0.35), 46, 76, -0.4),
     "vibes": (P(instrument="harp", patch="vibraphone", volume=0.09, reverb=0.4, sustain=1.5, bright=-0.25), 53, 74, 0.4),
     "nylon": (P(instrument="guitar", patch="nylonGuitar", amp="clean", volume=0.085, reverb=0.28, sustain=1.0, bright=-0.35, chorus=0, autoScoop=False, humanPitch=0), 50, 70, -0.45),
     "jazzGuitar": (P(instrument="guitar", patch="jazzGuitar", amp="jazz", volume=0.08, reverb=0.25, sustain=0.9, bright=-0.3, chorus=0, autoScoop=False, humanPitch=0), 50, 69, 0.45),
@@ -445,6 +447,10 @@ def build(song, out):
                 S2 += mv2
             else:
                 LEAD += mv
+        elif name == "intro" and song.get("intro_lead"):   # イントロから旋律の楽器が入る（ドラム・ベースのない曲で前奏が小さくなるのを防ぐ）
+            r5 = random.Random(song["id"] + str(song.get("seed", "")) + "intro")
+            on_i = onsets_of(r5.choice(vocab) + r5.choice(vocab) + r5.choice(vocab) + endc, b0 * BT)
+            LEAD += line(on_i, llo, lhi, lmid - 2, r5, arch=3, end_tonic=True)
         elif who in ("lead", "solo2"):
             lo, hi = (llo, lhi) if who == "lead" else (lo2, hi2)
             sn = solo_section(b0, lo, hi, (lo + hi) // 2, f"{b0}")
@@ -739,8 +745,8 @@ def build(song, out):
         elif name == "A2": g = 0.84
         else: g = 0.8 if k_s == 0 else 0.9
         lvl.append(g)
-    if song.get("arc", 1.0) != 1.0:   # 強弱の幅（1＝そのまま、0.5＝半分）
-        lvl = [round(0.92 + song["arc"] * (g - 0.92), 3) for g in lvl]
+    if song.get("arc", ARC) != 1.0:   # 強弱の幅（1＝そのまま、0.5＝半分）
+        lvl = [round(0.92 + song.get("arc", ARC) * (g - 0.92), 3) for g in lvl]
     gain = [round(sum(lvl[max(0, k - 1):k + 2]) / len(lvl[max(0, k - 1):k + 2]), 3) for k in range(NB)]
     gain_pad = [round(min(1.15, 0.55 + 0.6 * (g - 0.55)), 3) for g in gain]          # うしろの弦は、ソロで引き、盛り上がりでふくらむ
     gain_pad = [round(gp * (0.82 if bar_info[k][1] in ("lead", "solo2") else 1.0), 3) for k, gp in enumerate(gain_pad)]
@@ -767,6 +773,7 @@ def build(song, out):
             t = s + d
         if t < TU: toks += rest(TU - t)
         q = dict(p.base); q["role"] = p.role; q.setdefault("pan", 0); q["notes"] = " ".join(toks)
+        if not drum and song.get("soft", SOFT) and p.base.get("instrument") not in ("bass",): q["bright"] = round(q.get("bright", 0) - song.get("soft", SOFT), 3)   # 2026-10-27 人間「硬さを抜いて、柔らかく包み込む音色」
         q["barGain"] = gain_pad if p.role.startswith("うしろの和音") else gain_dr if drum else gain
         parts.append(q)
     P["lead"].base.update(pan=0.05, phrase=8)
@@ -802,6 +809,7 @@ def build(song, out):
         elif r.startswith("和音（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("C:" + comp_name, song.get("comp_t", -8.5))
         elif r.startswith("うしろの和音（"): q["gainDb"] = q.get("gainDb", 0) + cal_db("P:" + song["pad"], song.get("pad_t", -15.0))
         elif r.startswith("左手の低音"): q["gainDb"] = q.get("gainDb", 0)
+        elif r == "ベース": q["gainDb"] = q.get("gainDb", 0) + float(song.get("bass_db", -8.0))   # ウッドベースの録音は大きいので下げる（2026-10-27、1曲目で -8dB が点数・強弱とも最良）
     tune = song.get("tune", {})
     for q in parts:
         for k2, v in tune.items():
