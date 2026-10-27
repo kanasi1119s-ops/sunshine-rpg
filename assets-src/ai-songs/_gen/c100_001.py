@@ -37,7 +37,7 @@ def g(extra=None):
 FLUTE = S.track("フルート", "panflute", patch="flute", volume=0.42, bright=-0.6, pan=-0.05, reverb=0.5, breath=True, barGain=[round(max(d, 0.82) * (1.18 if s0["答え"] <= b < s0["余韻"] else (1.4 if s0["問い"] <= b < s0["答え"] else 1.0)), 3) for b, d in enumerate(DYN)])
 HARP = S.track("ハープ", "harp", patch="folkHarp", recipe="celtic-harp", volume=0.105, pan=-0.1, reverb=0.45, barGain=g())
 HARP2 = S.track("ハープ（高い響き）", "harp", patch="folkHarp", volume=0.055, pan=0.4, reverb=0.6, barGain=g())
-STR = [S.track(f"弦の持続{i}", "strings", patch="slowStrings", recipe="celtic-strings", volume=0.05, pan=[-0.7, 0.7, 0][i], reverb=0.55, barGain=g()) for i in range(3)]
+STR = [S.track(f"弦の持続{i}", "strings", patch="slowStrings", recipe="celtic-strings", volume=0.03, pan=[-0.7, 0.7, 0][i], reverb=0.55, barGain=g([1.6 if b < s0["問い"] else 1.0 for b in range(NB)]))   # 弦が大きくて笛が埋もれていた（人間の指摘 2026-10-28）。前奏だけは今までの大きさ for i in range(3)]
 LOW = S.track("チェロ", "strings", patch="cello", recipe="celtic-low", volume=0.07, pan=-0.15, reverb=0.35, barGain=g())
 BELL = S.track("ベル", "bell", patch="glockenspiel", volume=0.03, pan=0.35, reverb=0.7, barGain=g())
 SIL = Silence(S)
