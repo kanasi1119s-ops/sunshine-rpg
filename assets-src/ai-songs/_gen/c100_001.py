@@ -31,12 +31,12 @@ DYN = curve([(0, 0.72), (s0["問い"], 0.68), (s0["伸びる"], 0.72), (s0["答�
 def g(extra=None):
     return [round(d * (extra[b] if extra else 1), 3) for b, d in enumerate(DYN)]
 
-FLUTE = S.track("フルート", "lead", patch="flute", volume=0.2, pan=-0.05, reverb=0.5, barGain=g())
-HARP = S.track("ハープ", "harp", patch="folkHarp", recipe="celtic-harp", volume=0.15, pan=-0.1, reverb=0.45, barGain=g())
-HARP2 = S.track("ハープ（高い響き）", "harp", patch="folkHarp", volume=0.08, pan=0.4, reverb=0.6, barGain=g())
-STR = [S.track(f"弦の持続{i}", "strings", patch="slowStrings", recipe="celtic-strings", volume=0.07, pan=[-0.7, 0.7, 0][i], reverb=0.55, barGain=g()) for i in range(3)]
-LOW = S.track("チェロ", "strings", patch="cello", recipe="celtic-low", volume=0.1, pan=-0.15, reverb=0.35, barGain=g())
-BELL = S.track("ベル", "bell", patch="glockenspiel", volume=0.06, pan=0.35, reverb=0.7, barGain=g())
+FLUTE = S.track("フルート", "panflute", patch="flute", volume=0.36, pan=-0.05, reverb=0.5, breath=True, barGain=[round(max(d, 0.82), 3) for d in DYN])
+HARP = S.track("ハープ", "harp", patch="folkHarp", recipe="celtic-harp", volume=0.105, pan=-0.1, reverb=0.45, barGain=g())
+HARP2 = S.track("ハープ（高い響き）", "harp", patch="folkHarp", volume=0.055, pan=0.4, reverb=0.6, barGain=g())
+STR = [S.track(f"弦の持続{i}", "strings", patch="slowStrings", recipe="celtic-strings", volume=0.05, pan=[-0.7, 0.7, 0][i], reverb=0.55, barGain=g()) for i in range(3)]
+LOW = S.track("チェロ", "strings", patch="cello", recipe="celtic-low", volume=0.07, pan=-0.15, reverb=0.35, barGain=g())
+BELL = S.track("ベル", "bell", patch="glockenspiel", volume=0.045, pan=0.35, reverb=0.7, barGain=g())
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.05, pan=0, modulate=False)
 SIL = Silence(S)
 
