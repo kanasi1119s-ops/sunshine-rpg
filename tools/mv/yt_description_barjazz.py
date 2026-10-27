@@ -15,7 +15,7 @@ for p in files:
     n = int(os.path.basename(p)[:2]); s = SONGS[n - 1]
     tl.append(f"{ts(acc)} {s['title']} - {s['en']}"); acc += dur(p) + PAD
 h, m = int(acc // 3600), int(acc % 3600 // 60); N = len(files)
-out = f"""【作業用BGM】琥珀色のバー・ジャズ 全{N}曲・約{h}時間{m}分 | 本物の楽器の録音音源 | Amber Bar Jazz - {N} Original Songs, {h}h {m}min
+out = f"""【Amber Bar Jazz】琥珀色のバー・ジャズ 全{N}曲・約{h}時間{m}分 | 作業用BGM・本物の楽器の録音音源 | {N} Original Songs, {h}h {m}min
 
 夜のバーのカウンターで、グラスの氷とウイスキーの香りとともに流れる、全{N}曲のオリジナル・ジャズです。
 スウィング、バラード、ボサ・ノヴァ、ワルツ、タンゴ、ブルース、モードまで、曲ごとにちがう物語と編成でお届けします。
