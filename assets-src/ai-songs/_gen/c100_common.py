@@ -126,14 +126,14 @@ def put_bars(c, scene, lines, oct_):
         c.FLUTE.bar(b, hi_soft(c.S.key.mel(s, oct=oct_)))
 
 
-def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=99, silences=(), skip_scenes=(), double=True):
+def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=99, silences=(), skip_scenes=(), double=True, fill=True, pads=True, pad_scenes=None):
     S = c.S; NB = c.NB
     # 変に音が小さくなる所を作らない（2026-10-28 人間の指摘）：弦の持続が休んでいる小節には、小さな和音をのばして埋める。
     # 終わりの場面も最後まで弦とパッドをのばし、消え方は曲の最後のフェードにまかせる（ぷつっと落ちない）
     have = {int(st // S.beats) for st, L, x in c.STR[0].ev if not x.startswith("R")}
     for b in range(NB):
         n = c.scene_of_bar[b]
-        if b in have or n in skip_scenes or n == c.intro: continue      # 始まりの場面は曲ごとに作るので、自動では埋めない（始まり方を曲ごとに変える。2026-10-28 人間の指摘）
+        if not fill or b in have or n in skip_scenes or n == c.intro: continue      # 始まりの場面は曲ごとに作るので、自動では埋めない（始まり方を曲ごとに変える。2026-10-28 人間の指摘）
         v = voice(S.chords[b].split("|")[0], 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:{S.beats}")
     # 高い小節ほど息をやわらかく
@@ -153,7 +153,9 @@ def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=99, sile
                      barGain=[round(x * 0.85, 3) for x in c.FLUTE.spec["barGain"]])
         import random as _r
         rg = _r.Random(7)
-        for st, L, x in list(c.FLUTE.ev): F2.at(st + rg.uniform(0.0, 0.05), x)   # 一律にずらさず、1音ずつ少しランダムに（layering-study.md）
+        for st, L, x in list(c.FLUTE.ev):
+            if L < 0.2 * S.beats / 4 * (2 if S.beats in (6, 9) else 1): continue      # 装飾音は重ねない
+            F2.at(st + rg.uniform(0.0, 0.05), x)   # 一律にずらさず、1音ずつ少しランダムに（layering-study.md）
     # 旋律の1オクターブ下を竪琴がなぞる
     HM = S.track("竪琴（旋律の下）", "harp", patch="folkHarp", volume=0.05, pan=0.2, reverb=0.5, barGain=c.g())
     if harm_scenes:
@@ -162,13 +164,14 @@ def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=99, sile
         for st, L, x in list(c.FLUTE.ev):
             if lo <= st < hi:
                 p = midi_of(x)
-                if p is not None and p - 12 >= 52: HM.at(st, shift_tok(x, -1))
+                if p is not None and p - 12 >= 52 and L >= 0.4: HM.at(st, shift_tok(x, -1))
     # 広がりのパッド（小）。終わりの手前まで（自然の音だけにならないように）
     PADS = [S.track(f"広がりのパッド{i + 1}", "pad", patch="modernPad", volume=0.03, pan=[-0.75, 0.75][i], reverb=0.5) for i in range(2)]
     for b in range(NB):
         n, i, L, k = S.scene_of(b)
         if tail_scene and n == tail_scene and i >= tail_keep: continue
-        if n in skip_scenes or n == c.intro: continue
+        if not pads or n in skip_scenes or n == c.intro: continue
+        if pad_scenes is not None and n not in pad_scenes: continue
         w = voice(S.chords[b].split("|")[0], 55, 2, spread=True)
         for j in range(2): PADS[j].bar(b, f"{nm(w[j])}:{S.beats}")
     for (b, a, z) in silences: c.SIL.add(b, a, z)
@@ -204,7 +207,7 @@ def rich(c, choir_scenes=(), pulse_scenes=(), choir_vol=0.13, guitar=True, pizz=
     lo_b = {n: (c.s0[n], c.s0[n] + c.sc_len[n]) for n in choir_scenes}
     for st, L, x in list(c.FLUTE.ev):
         p = midi_of(x)
-        if p is None: continue
+        if p is None or L < 0.4: continue
         bar = int(st // B)
         if not any(a <= bar < z for a, z in lo_b.values()): continue
         pcs = chord_pcs(S.chords[bar].split("|")[0])
