@@ -56,13 +56,19 @@ play_melody(c, "満天", TH + ["1':3 7:3 5:3", "3:9", "R:9", "R:9"], 5, "air", d
 canon(GLOCK, c.s0["星2"] + 2, 6)
 canon(c.HARP2, c.s0["星3"] + 4, 5)
 canon(PIZZ, c.s0["星4"] + 6, 4)
-GLOCK.bar(c.s0["一つ目"], "G6:9")          # 最初の星
+STAR1 = S.track("最初の星", "bell", patch="glockenspiel", volume=0.075, pan=0.3, reverb=0.8, barGain=c.g())
+STAR1.bar(c.s0["一つ目"], "G6:9")          # 最初の星（はっきり見える一つ目）
 
 B = S.beats
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    if n == "一つ目": continue
     CELLO.bar(b, "C2:9" if n != "静止" or i < 3 else "R:9")
+    if n == "一つ目":   # 夜空そのもの：うすい弦の和音（星が出る前の空）
+        for j, m in enumerate((55, 64, 71)): c.STR[j].bar(b, f"{nm(m)}:9")
+        continue
+    if n in ("星1", "星2", "星3", "星4"):   # 空の床：うすい弦2声
+        v = voice(ch.split("/")[0] if "/" not in ch else "D", 60, 2, spread=True)
+        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:9")
     if n in ("満天", "静止"):
         v = voice(ch.split("/")[0] if "/" not in ch else "D", 67, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:9" if not (n == "静止" and i == 3) else "R:9")
@@ -71,4 +77,4 @@ for b in range(c.NB):
 rich(c, choir_scenes=["満天"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の009（第2版）。甲板で星を数える。9/8・付点4分＝48、C リディア。輪唱：同じ節を、笛→グロッケン→竪琴の倍音→ピチカートが2小節ずつ遅れて順に歌い出し、満天の星になって静止する。",
-       harm_scenes=None, tail_scene="静止", fill=False, pads=True, pad_scenes=["星3", "星4", "満天"])
+       harm_scenes=None, tail_scene="静止", fill=False, pads=True, pad_scenes=["一つ目", "星1", "星2", "星3", "星4", "満天"])
