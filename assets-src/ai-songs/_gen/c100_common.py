@@ -126,8 +126,77 @@ def put_bars(c, scene, lines, oct_):
         c.FLUTE.bar(b, hi_soft(c.S.key.mel(s, oct=oct_)))
 
 
-def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=99, silences=(), skip_scenes=(), double=True, fill=True, pads=True, pad_scenes=None):
+# ---------- 1回目で合格しやすくする「伴奏の厚さ」の床（2026-10-29 人間の指示：041番以降は最初から伴奏の厚さをそろえる） ----------
+# 001〜040 を直してわかったこと（PQ が目標に届かなかった原因）:
+#   ・前奏が楽器1つだけ（竪琴だけ・ピアノだけ・太鼓だけ）→ -35〜-50dB で「前奏が小さい」。ピアノの音源は特に小さい（×2.2 が要る）
+#   ・笛が休む小節・止まる小節（問いかけ・ストップタイム・耳をすます）に何も残らない → 急に小さい所
+#   ・終わりの場面が長く消えていく → 「段差大」
+#   ・弦が2声だけ、チェロなし、パッドなし → 薄くて静の曲が 6.8〜7.1 に止まる
+#   ・速い曲で太鼓とギターのストロークがない → 7.3 前後（7.8 に届くのは 012 の厚さ：ボーラン＋ギター＋竪琴＋チェロ＋弦＋笛の和声）
+#   ・作った効果音・大きな環境音は CE（楽しさ）を下げる（空間は音楽の音で支配する。2026-10-29）
+W_ROLE = {"piano": 0.45, "bell": 0.5, "pad": 0.6}
+def _bar_weight(c):
+    """小節ごとの伴奏の厚さ（笛以外の楽器の、音量×鳴っているかの合計）"""
+    S = c.S; B = S.beats; w = [0.0] * c.NB
+    for tr in S.tracks:
+        if getattr(tr, "inst", "") == "panflute": continue
+        v = tr.spec.get("volume", 0.05) * W_ROLE.get(tr.inst, 1.0)
+        bars = set()
+        for st, L, x in tr.ev:
+            if x.startswith("R") or x.startswith("-"): continue
+            b0 = int(st // B); b1 = int((st + L - 1e-6) // B)
+            for b in range(b0, min(b1, c.NB - 1) + 1): bars.add(b)
+        bg = tr.spec.get("barGain")
+        for b in bars: w[b] += v * (bg[b] if bg and b < len(bg) else 1.0)
+    return w
+
+def floor_bed(c, min_w=0.11, skip=(), lo=52):
+    """伴奏が薄い小節に、うすい弦3声とチェロの根音を足す（前奏も含む。曲の形は変えず、床だけ敷く）"""
+    S = c.S; w = _bar_weight(c); n_add = 0
+    for b in range(c.NB):
+        if c.scene_of_bar[b] in skip or w[b] >= min_w: continue
+        ch = S.chords[b].split("|")[0]
+        busy = {int(st // S.beats) for tr in c.STR for st, L, x in tr.ev if not x.startswith("R")}
+        if b not in busy:
+            v = voice(ch, lo, 3, spread=True)
+            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:{S.beats}")
+        r = low(ch, "C2"); r = r + 12 if r < 40 else r
+        if not any(int(st // S.beats) == b for st, L, x in c.LOW.ev if not x.startswith("R")): c.LOW.bar(b, f"{nm(r)}:{S.beats}")
+        n_add += 1
+    return n_add
+
+def thickness_report(c):
+    """書き出す前に、薄い小節を数えて出す（1回目で合格しやすくするための自己検査）"""
+    w = _bar_weight(c); B = c.S.beats
+    thin = [b for b in range(c.NB) if w[b] < 0.09]
+    intro = [b for b in range(c.NB) if c.scene_of_bar[b] == c.intro]
+    iw = sum(w[b] for b in intro) / max(1, len(intro)) if intro else None
+    print(f"厚さ検査: 薄い小節 {len(thin)}/{c.NB}" + (f"（{thin[:12]}…）" if thin else "") + (f"／前奏の厚さ {iw:.3f}" if iw is not None else ""))
+
+def drive(c, scenes, kind="reel", soft_scenes=(), drum_vol=0.1, gtr_vol=0.05):
+    """速い曲の推進力：ボーラン＋ギターの開放和音のストローク（012 の厚さ）。kind: reel/jig/slipjig/hornpipe/waltz/polka"""
+    S = c.S; B = S.beats
+    if not hasattr(c, "DRUM"):
+        c.DRUM = S.track("ボーラン", "guitar", patch="frameDrum", volume=drum_vol, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
+        c.GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=gtr_vol, pan=0.35 + 0.04 * i, reverb=0.35, barGain=c.g()) for i in range(5)]
+    from c100_v2 import bodhran, strum, JIG_STRUM
+    PAT = {"reel": [(0, 1, "d", "!"), (1, 0.5, "d", ","), (1.5, 0.5, "u", ","), (2, 1, "d", ""), (3, 0.5, "d", ","), (3.5, 0.5, "u", ",")],
+           "hornpipe": [(0, 1, "d", "!"), (1, 0.5, "d", ","), (1.5, 0.5, "u", ","), (2, 1, "d", ""), (3, 0.5, "d", ","), (3.5, 0.5, "u", ",")],
+           "jig": JIG_STRUM, "slipjig": [(0, 3, "d", "!"), (3, 3, "d", ""), (6, 2, "d", ","), (8, 1, "u", ",")],
+           "waltz": [(0, 1, "d", "!"), (1, 1, "d", ","), (2, 1, "u", ",")], "polka": [(0, 0.5, "d", "!"), (0.5, 0.5, "u", ","), (1, 0.5, "d", ""), (1.5, 0.5, "u", ",")]}
+    for b in range(c.NB):
+        n = c.scene_of_bar[b]
+        if n not in scenes: continue
+        ch = S.chords[b].split("|")[0]; i = S.scene_of(b)[1]
+        if kind == "polka": c.DRUM.bar(b, "D3:0.5! A3:0.5, D3:0.5 A3:0.5," if n not in soft_scenes else "D3:0.5, R:0.5 D3:0.5, R:0.5")
+        else: bodhran(c.DRUM, b, B, kind, var=1 if i % 8 == 7 else 0, soft=n in soft_scenes)
+        strum(c.GTR, b, B, ch, PAT[kind] if n not in soft_scenes else PAT[kind][:1] + [p for p in PAT[kind][1:] if p[3] == ""])
+
+def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=99, silences=(), skip_scenes=(), double=True, fill=True, pads=True, pad_scenes=None, floor=False, floor_skip=()):
     S = c.S; NB = c.NB
+    if floor:   # 041番以降：伴奏が薄い小節に床を敷く（前奏も）
+        k = floor_bed(c, skip=floor_skip)
+        print(f"床（弦3声＋チェロ）を足した小節: {k}")
     # 変に音が小さくなる所を作らない（2026-10-28 人間の指摘）：弦の持続が休んでいる小節には、小さな和音をのばして埋める。
     # 終わりの場面も最後まで弦とパッドをのばし、消え方は曲の最後のフェードにまかせる（ぷつっと落ちない）
     have = {int(st // S.beats) for st, L, x in c.STR[0].ev if not x.startswith("R")}
@@ -188,6 +257,7 @@ def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=99, sile
     S.flags = flags
     S.desc = desc
     S.no_depth = True
+    thickness_report(c)
     vwrite(S)
 
 
