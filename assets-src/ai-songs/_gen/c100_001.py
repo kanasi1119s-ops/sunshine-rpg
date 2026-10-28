@@ -162,8 +162,15 @@ for b in range(NB):
         if i == 0: HARP.bar(b, f"{nm(t[0])}:4")
         if i == 3: HARP2.bar(b, f"{nm(t[-3])}:4")
         if i == 5: BELL.bar(b, f"{nm(tones(ch, 'C6', 'C7')[2])}:4")
+# 笛の旋律を1オクターブ下で、竪琴がそっとなぞる（伸びる・答え）。厚みと温かさ（点数が7.31だったため。2026-10-28）
+HM = S.track("竪琴（旋律の下）", "harp", patch="folkHarp", volume=0.05, pan=0.2, reverb=0.5, barGain=g())
+_lo, _hi = s0["伸びる"], s0["余韻"]
+for st, L, x in list(FLUTE.ev):
+    if _lo * 4 <= st < _hi * 4:
+        p = _midi(x if ":" in x else x + ":1")
+        if p is not None and p - 12 >= 52: HM.at(st, shift(x, -1))
 # 厚みを戻す（点数が7.01に落ちたため）：低めの和音を、小さく左右に広げてのばす。前の版の半分の大きさ（2026-10-28）
-PADS = [S.track(f"広がりのパッド{i + 1}", "pad", patch="modernPad", volume=0.02, pan=[-0.75, 0.75][i], reverb=0.5) for i in range(2)]
+PADS = [S.track(f"広がりのパッド{i + 1}", "pad", patch="modernPad", volume=0.03, pan=[-0.75, 0.75][i], reverb=0.5) for i in range(2)]
 for b in range(NB):
     n, i, L, k = S.scene_of(b)
     if n in ("終わり",): continue
