@@ -45,7 +45,7 @@ def canon(track, start, oct_, stop, key=None, orn=0.6, seed=1):
 a = c.s0["一匹"]
 canon(c.FLUTE, a, 4, END + 6, orn=0.8, seed=2401)          # 笛1：夜への6小節目まで
 canon(F2, a + 8, 4, END + 4, orn=0.6, seed=2402)            # 笛2：4小節目まで
-canon(F3, a + 12, 3, END + 2, orn=0.5, seed=2403)           # 笛3（1オクターブ下）：2小節目まで
+canon(F3, a + 12, 4, END + 2, orn=0.5, seed=2403)           # 笛3（左・やわらかい音色）：2小節目まで（笛の低音は鳴りにくいので同じ高さ）
 
 B = S.beats
 for b in range(c.NB):
