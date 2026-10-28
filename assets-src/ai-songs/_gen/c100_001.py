@@ -21,12 +21,12 @@ Bc = ["G", "D", "Em", "A", "G", "D", "Bm", "Em"]
 S.scene("前置き", 2, "intro", ["Em", "Em"])
 S.scene("1周目", 32, "verse", A1c + A2c + Bc + A2c)
 S.scene("2周目", 24, "verse", A1c + Bc + A2c)
-S.scene("余韻", 3, "outro", ["Em", "Em", "Em"])
+S.scene("余韻", 2, "outro", ["Em", "Em"])
 NAMES = ["前置き", "1周目", "2周目", "余韻"]
 
 c = make(S, NAMES,
          [("前置き", 0, 0.6), ("1周目", 0, 0.62), ("1周目", 20, 0.7), ("1周目", 31, 0.62), ("2周目", 0, 0.66), ("2周目", 12, 0.78), ("2周目", 23, 0.62),
-          ("余韻", 0, 0.5), ("余韻", 2, 0.35)],
+          ("余韻", 0, 0.5), ("余韻", 1, 0.38)],
          {}, flute_gain={n: 1.25 for n in NAMES}, intro="前置き", passing=True, tension=False)
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.09, pan=0.2, reverb=0.5, barGain=c.g())
 DR = [S.track(f"ドローン（弦）{i + 1}", "strings", patch="slowStrings", volume=0.05, pan=[-0.5, 0.5][i], reverb=0.65, barGain=c.g()) for i in range(2)]
@@ -47,14 +47,14 @@ B = S.beats; prev = 52
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     t = tones(ch, "E3", "E5"); r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    if n == "前置き":
-        if i == 1: c.HARP.bar(b, "R:2 E3:2")
-        DR[0].bar(b, "E3:4")
+    if n == "前置き":           # 前奏が小さすぎないように：弦のドローンとチェロが息のすぐあとから
+        drone(DR, b, B, 52); CELLO.bar(b, "E2:4")
+        c.HARP.bar(b, "R:2 E3:2" if i == 0 else "E3:2 B3:2")
         continue
     if n in ("1周目", "2周目"):
         drone(DR, b, B, 52); CELLO.bar(b, "E2:4") if n == "1周目" else None
     if n == "1周目":
-        c.HARP.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2" if i % 2 == 0 else f"{nm(r)}:4")
+        c.HARP.bar(b, f"{nm(r)}:2 {nm(r + 7)}:1 {nm(r + 12)}:1" if i % 2 == 0 else f"{nm(r)}:2 {nm(r + 12)}:2")
     elif n == "2周目":
         c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[2])))
         cand = [m for m in range(40, 57) if m % 12 in chord_pcs(ch)]
@@ -68,4 +68,4 @@ for b in range(c.NB):
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の001（第2版）。夕暮れ、祖父の箱から銀の笛を取り出す。E ドリア・4/4・♩=54、テンポのゆれ。息の音→問いの動機「1・3・4」のスロー・エア AABA→2周目は竪琴とチェロが答える→竪琴の1音。",
-       harm_scenes=None, tail_scene="余韻", fill=False, pads=True, pad_scenes=["2周目"])
+       harm_scenes=None, tail_scene="余韻", fill=False, pads=True, pad_scenes=["1周目", "2周目"])
