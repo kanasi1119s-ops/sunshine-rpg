@@ -35,6 +35,8 @@ c = make(S, NAMES,
          {}, flute_gain={n: 1.2 for n in NAMES}, intro="暗い海", passing=True, tension=False)
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.09, pan=0.15, reverb=0.45, barGain=c.g())
 PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.055, pan=-0.35, reverb=0.4, barGain=c.g())
+for tr in c.STR + [c.LOW]:   # 灯りの少ない前半も、土台の弦で空間を満たす（前半が薄く、点数が低かった）
+    tr.spec["barGain"] = [round(min(1.0, x * (1.45 if b < 4 + 32 else 1.0)), 3) for b, x in enumerate(tr.spec["barGain"])]
 BELL = S.track("灯りのベル", "bell", patch="glockenspiel", volume=0.03, pan=0.35, reverb=0.7, barGain=c.g())
 
 TH = ["5,:2 1:1", "2:1.5 3:0.5 4:1", "5:2 4:1", "3:3", "2:2 3:1", "4:1 3:1 2:1", "1:2 7,:1", "1:3",
@@ -71,4 +73,4 @@ for b in range(c.NB):
 rich(c, choir_scenes=["灯り3"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の006（第2版）。灯台守が灯りを一つずつともす。3/4・♩=56、B ドリア。主題と変奏：同じ節を5回、回ごとに楽器が1つ増え、音域が上がる（3回目は D ドリアへ）。最後は竪琴の上昇アルペジオといちばん高いベル。",
-       harm_scenes=None, tail_scene="光", fill=False, pads=True, pad_scenes=["灯り2", "灯り3", "灯り4", "光"])
+       harm_scenes=None, tail_scene="光", fill=False, pads=True, pad_scenes=["灯り0", "灯り1", "灯り2", "灯り3", "灯り4", "光"])
