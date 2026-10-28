@@ -160,6 +160,9 @@ for b in range(NB):
             for j in range(2): STR[j].bar(b, f"{nm(v[j])}:4")
     elif n == "終わり":
         if i == 0: HARP.bar(b, f"{nm(t[0])}:4")
+        if i < 6:
+            v = voice(ch, 62, 3, spread=True)
+            for j in range(3): STR[j].bar(b, f"{nm(v[j])}:4")
         if i == 3: HARP2.bar(b, f"{nm(t[-3])}:4")
         if i == 5: BELL.bar(b, f"{nm(tones(ch, 'C6', 'C7')[2])}:4")
 # 笛の旋律を1オクターブ下で、竪琴がそっとなぞる（伸びる・答え）。厚みと温かさ（点数が7.31だったため。2026-10-28）
@@ -173,7 +176,7 @@ for st, L, x in list(FLUTE.ev):
 PADS = [S.track(f"広がりのパッド{i + 1}", "pad", patch="modernPad", volume=0.03, pan=[-0.75, 0.75][i], reverb=0.5) for i in range(2)]
 for b in range(NB):
     n, i, L, k = S.scene_of(b)
-    if n in ("終わり",): continue
+    if n == "終わり" and i > 5: continue   # 終わりも、自然の音だけにならないよう、最後の2小節手前まで和音をのばす（2026-10-28 人間の指摘）
     w = voice(S.chords[b].split("|")[0], 55, 2, spread=True)
     for j in range(2): PADS[j].bar(b, f"{nm(w[j])}:4")
 SIL.add(s0["余韻"] - 1, 3, 4)
