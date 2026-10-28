@@ -45,18 +45,19 @@ for b in range(c.NB):
         v = voice(ch, 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
     if n in ("空1", "空2") or (n == "星" and i < 5): CELLO.bar(b, "D2:4")
+    if n == "空2": roving_thumb(c.HARP2, b, B, ch, up=(i % 2 == 0))   # 夜空がゆっくり回る
     if n == "空2" and i % 4 == 1: c.HARP.bar(b, f"R:2 {nm(tones(ch, 'D5', 'D6')[1])}:2")
     if n == "星":
         hi = tones(ch, "C6", "C7")
         GLOCK.bar(b, " ".join(f"{nm(hi[(i + q) % len(hi)])}:1" for q in range(min(4, i + 1))) + (" R:" + str(4 - min(4, i + 1)) if i < 3 else ""))
-rich(c, choir_scenes=["空2"], pulse_scenes=[], guitar=False, pizz=False, inner=False, choir_vol=0.1)
+rich(c, choir_scenes=["空2"], pulse_scenes=["空1", "空2"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の020（第2版）。夜の草原に寝ころぶ。4/4・♩=52、D リディア。スロー・エア AABA。拍を刻むのは虫の声だけ（楽器の打楽器はなし）。最後は空いっぱいの星（高いグロッケン）。",
        harm_scenes=None, tail_scene="星", fill=False, pads=True, pad_scenes=["空1", "空2", "星"])
 BEAT = 60 / BPM; t0 = c.s0["空1"] * 4 * BEAT; t1 = c.s0["星"] * 4 * BEAT + 3 * 4 * BEAT
 air = {"pre": 2.0, "tail": 7.0, "layers": [{"file": "0114", "db": -33, "hp": 150, "lp": 7000, "wide": 0.012, "duck": 0.3, "fade": 10},
                                            {"file": "0908", "db": -40, "hp": 150, "lp": 5000, "wide": 0.014, "pan": 0.25, "duck": 0.3, "fade": 6, "end": 20}],
-       "events": [{"t": 0, "pulse": {"from": round(t0, 2), "to": round(t1, 2), "every": round(BEAT, 4), "hz": 4400, "burst": 0.04, "n": 3, "db": -29, "pan": 0.45}}],
+       "events": [{"t": 0, "pulse": {"from": round(t0, 2), "to": round(t1, 2), "every": round(BEAT, 4), "hz": 3700, "burst": 0.035, "n": 2, "db": -35, "pan": 0.45}}],
        "fx": {"glass": {"hz": [293.7, 587.3, 880.0], "db": -27, "rt": 7.0, "start": 4}, "shimmer": {"db": -26, "rt": 9.0}, "far": {"db": -25, "delay": 0.3, "lp": 2400, "rt": 5.0},
               "haze": {"db": -26, "rt": 9.0}, "band": {"db": -37, "hz": 7000, "per": 29}}, "intro_db": 8.5}
 json.dump(air, open("/tmp/cel/w/air020.json", "w"), ensure_ascii=False)
