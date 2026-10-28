@@ -33,10 +33,11 @@ c = make(S, NAMES,
          [("暗い", 0, 0.62), ("夜の回転", 0, 0.66), ("白む", 0, 0.68), ("白む", 31, 0.76), ("朝の回転", 0, 0.78), ("光1", 0, 0.84), ("光2", 0, 0.9), ("光2", 28, 0.95),
           ("朝", 0, 0.86), ("朝", 7, 0.5)],
          {}, flute_gain={n: 1.1 for n in NAMES}, intro="暗い", passing=True, tension=False)
-PL = S.track("ピアノ（拍頭の低音）", "piano", volume=0.22, pan=-0.2, reverb=0.4, barGain=c.g())
-PR = S.track("ピアノ（裏拍の和音）", "piano", volume=0.16, pan=-0.12, reverb=0.4, barGain=c.g())
-PR2 = S.track("ピアノ（裏拍の和音2）", "piano", volume=0.14, pan=-0.08, reverb=0.4, barGain=c.g())
+PL = S.track("ピアノ（拍頭の低音）", "piano", volume=0.5, pan=-0.2, reverb=0.4, barGain=c.g())
+PR = S.track("ピアノ（裏拍の和音）", "piano", volume=0.37, pan=-0.12, reverb=0.4, barGain=c.g())
+PR2 = S.track("ピアノ（裏拍の和音2）", "piano", volume=0.32, pan=-0.08, reverb=0.4, barGain=c.g())
 PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.055, pan=0.35, reverb=0.35, barGain=c.g())
+DRUM = S.track("ボーラン（水車の軸）", "guitar", patch="frameDrum", volume=0.09, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
 GLOCK = S.track("グロッケン（朝の光）", "bell", patch="glockenspiel", volume=0.026, pan=0.35, reverb=0.65, barGain=c.g())
 
 A1 = ["1:1 3:1 5:1", "6:2 5:1", "4:1 3:1 2:1", "3:3", "1:1 3:1 5:1", "1':2 7:1", "6:1 5:1 4:1", "5:3"]
@@ -60,6 +61,11 @@ for b in range(c.NB):
     PL.at(b * B, f"{nm(r if n in ('暗い', '夜の回転') else r + 12)}:1")
     PR.at(b * B + 1, f"{nm(hi[0])}:1'"); PR.at(b * B + 2, f"{nm(hi[0])}:1'")
     PR2.at(b * B + 1, f"{nm(hi[1])}:1'"); PR2.at(b * B + 2, f"{nm(hi[1])}:1'")
+    if n != "暗い" and n != "朝": bodhran(DRUM, b, B, "waltz") if n in ("朝の回転", "光1", "光2") else DRUM.bar(b, "D3:1, R:2")
+    if n in ("暗い", "夜の回転"):   # 夜の小屋の空気：低い弦とチェロ
+        v = voice(ch, 50, 2, spread=True)
+        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:3")
+        c.LOW.bar(b, f"{nm(r)}:3")
     if n in ("夜の回転", "光1", "光2"): PIZZ.bar(b, f"{nm(r + 12)}:1 R:2")
     if n in ("白む", "朝の回転", "光1", "光2", "朝"):
         v = voice(ch, 57, 3, spread=True)
@@ -68,10 +74,10 @@ for b in range(c.NB):
     if n in ("朝の回転", "光1", "光2"):
         t = tones(ch, "G4", "G6"); c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in t[:6]))
         if i % 4 == 0: GLOCK.bar(b, f"{nm(tones(ch, 'C6', 'C7')[0])}:3")
-rich(c, choir_scenes=["光1", "光2"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
+rich(c, choir_scenes=["朝の回転", "光1", "光2"], pulse_scenes=["夜の回転", "白む", "朝の回転", "光1", "光2"], guitar=True, pizz=False, inner=True)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の030（第2版・明るく速めの曲）。夜明けの水車。速いワルツ（3/4・♩=132）。水車の回転＝ズン・チャ・チャ。同じ節が暗い E エオリアから、空が白んで G リディアの明るい長調に生まれ変わり、朝日の山へ。",
-       harm_scenes=None, tail_scene="朝", fill=False, pads=True, pad_scenes=["白む", "朝の回転", "光1", "光2"])
+       harm_scenes=None, tail_scene="朝", fill=False, pads=True, pad_scenes=["夜の回転", "白む", "朝の回転", "光1", "光2"])
 import json
 d = {"pre": 1.0, "tail": 6.0, "layers": [{"file": "0864", "db": -35, "hp": 150, "lp": 7000, "wide": 0.014, "duck": 0.4, "fade": 6},
                                          {"file": "0222", "db": -36, "hp": 400, "lp": 9000, "wide": 0.012, "pan": 0.25, "duck": 0.4, "start": 95, "fade": 25}],
