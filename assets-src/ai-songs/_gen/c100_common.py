@@ -190,7 +190,7 @@ def _dia(S, m, k):
     return x
 
 
-def rich(c, choir_scenes=(), pulse_scenes=(), choir_vol=0.13, guitar=True):
+def rich(c, choir_scenes=(), pulse_scenes=(), choir_vol=0.13, guitar=True, pizz=True, inner=True):
     """音を重ねて深みと細やかさを出す（2026-10-28 人間の提案：笛が主体のまま、音数を多く繊細に。一人で何声も重ねるような重ね方）。
     ・笛の和声：主旋律の下に、和音の音になる3度下（だめなら4度・5度下）を2本目・3本目の笛で重ねる（左右に分け、小さく）
     ・ナイロンギター：8分音符のやわらかい分散和音（右寄り）
@@ -228,7 +228,8 @@ def rich(c, choir_scenes=(), pulse_scenes=(), choir_vol=0.13, guitar=True):
         a = cand[-1]
         z = a - 1
         while z % 12 not in sc: z -= 1
-        IN.bar(b, f"{nm(a)}:2 {nm(z)}:2" if b % 2 == 0 else f"{nm(z)}:2 {nm(a)}:2")
+        h1 = {3: 2, 6: 3}.get(B, 2); h2 = B - h1
+        if inner: IN.bar(b, f"{nm(a)}:{h1} {nm(z)}:{h2}" if b % 2 == 0 else f"{nm(z)}:{h1} {nm(a)}:{h2}")
     GT = S.track("ナイロンギター（刻み）", "guitar", patch="nylonGuitar", volume=0.055, pan=0.45, reverb=0.4, barGain=c.g())
     PZ = S.track("弦のピチカート", "strings", patch="pizzicato", volume=0.06, pan=-0.45, reverb=0.35, barGain=c.g())
     for b in range(c.NB):
@@ -236,6 +237,10 @@ def rich(c, choir_scenes=(), pulse_scenes=(), choir_vol=0.13, guitar=True):
         ch = S.chords[b].split("|")[0]
         t = tones(ch, "G3", "G5")
         if len(t) < 4: t = t + [q + 12 for q in t]
-        if guitar: GT.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 2, 1, 3, 2, 1, 3, 2)))
+        # 拍子に合わせた刻み（4/4：8分×8、3/4：8分×6、6/8（1拍＝8分）：8分×6）
+        GP = {4: ((0, 2, 1, 3, 2, 1, 3, 2), 0.5), 3: ((0, 2, 1, 3, 2, 1), 0.5), 6: ((0, 2, 3, 1, 2, 3), 1)}.get(B, ((0, 2, 1, 3), B / 4))
+        if guitar: GT.bar(b, " ".join(f"{nm(t[q % len(t)])}:{GP[1]}" for q in GP[0]))
         z = tones(ch, "C4", "C5")
-        PZ.bar(b, " ".join(f"{nm(z[q % len(z)])}:1" for q in ((0, 1, 2, 1) if b % 2 == 0 else (2, 1, 0, 1))))
+        PP = {4: ((0, 1, 2, 1), 1), 3: ((0, 1, 2), 1), 6: ((0, 2), 3)}.get(B, ((0,), B))
+        seq = PP[0] if b % 2 == 0 else tuple(reversed(PP[0]))
+        if pizz: PZ.bar(b, " ".join(f"{nm(z[q % len(z)])}:{PP[1]}" for q in seq))
