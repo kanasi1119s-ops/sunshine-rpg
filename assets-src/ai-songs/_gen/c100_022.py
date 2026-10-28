@@ -35,13 +35,14 @@ c = make(S, NAMES,
 S.extra["rubato"] = 0.0
 PIZZ = S.track("ピチカート（回る）", "strings", patch="pizzicato", volume=0.07, pan=-0.3, reverb=0.4, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.45, barGain=c.g())
-DR = [S.track(f"ドローン{i + 1}", "strings", patch="slowStrings", volume=0.07, pan=[-0.4, 0.4][i], reverb=0.6, barGain=c.g()) for i in range(2)]
+DR = [S.track(f"ドローン{i + 1}", "strings", patch="slowStrings", volume=0.11, pan=[-0.4, 0.4][i], reverb=0.6, barGain=c.g()) for i in range(2)]
 
 W1 = ["1:1 2:1 3:1", "5:2 4:1", "3:1 2:1 1:1", "7,:3", "1:1 3:1 5:1", "6:2 5:1", "4:1 3:1 2:1", "3:3",
       "5:1 6:1 7:1", "1':2 7:1", "6:1 5:1 4:1", "5:3", "4:1 3:1 2:1", "3:1 2:1 1:1", "7,:1 1:1 2:1", "1:3"]
 W2 = ["3:1 4:1 5:1", "7:2 6:1", "5:1 4:1 3:1", "2:3", "3:1 5:1 7:1", "1':2 7:1", "6:1 5:1 4:1", "5:3"]
 play_melody(c, "静止", ["R:3", "5:3", "4:1.5 3:1.5", "2:3", "R:3", "1:3", "7,:1.5 1:1.5", "2:3"], 4, "air", density=0.6, seed=2201)
-play_melody(c, "回りだす", ["R:3", "R:3", "R:3", "R:3", "1:1 2:1 3:1", "5:3", "4:1 3:1 2:1", "1:3"], 4, "air", density=0.4, seed=2202)
+play_melody(c, "軋み", ["3:3", "R:1.5 2:1.5", "5:3", "4:3"], 4, "air", density=0.4, seed=2207)   # 笛が水車に「起きて」と呼びかける
+play_melody(c, "回りだす", ["5:3", "R:3", "3:1.5 4:1.5", "5:3", "1:1 2:1 3:1", "5:3", "4:1 3:1 2:1", "1:3"], 4, "air", density=0.4, seed=2202)
 play_melody(c, "回る1", W1, 4, "air", density=0.6, seed=2203)
 play_melody(c, "回る2", W1, 4, "air", density=1.0, seed=2204)
 play_melody(c, "山", W2, 4, "air", density=1.0, seed=2205)
@@ -55,6 +56,8 @@ for b in range(c.NB):
     if n in ("静止", "軋み"):
         drone(DR, b, B, 50)
         CELLO.bar(b, "D2:3")
+        v = voice(ch, 53, 3, spread=True)       # 止まった時間の中の、ひんやりした小屋の空気
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3")
         if n == "軋み": c.HARP.bar(b, f"{nm(r)}:1 R:2" if i % 2 == 0 else f"R:1 {nm(r)}:2")
         continue
     if n == "回りだす":
@@ -62,6 +65,8 @@ for b in range(c.NB):
         PIZZ.bar(b, f"{nm(r)}:1 R:2" if i < 2 else (f"{nm(r)}:1 {nm(t[1])}:1 R:1" if i < 4 else f"{nm(r)}:1 {nm(t[1])}:1 {nm(t[2])}:1"))
         c.HARP.bar(b, f"{nm(r)}:3" if i < 4 else f"{nm(r)}:1 {nm(t[2])}:1 {nm(t[3 % len(t)])}:1")
         CELLO.bar(b, f"{nm(r)}:3")
+        v = voice(ch, 55, 3, spread=True)
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3")
         continue
     PIZZ.bar(b, f"{nm(r)}:1 {nm(t[1])}:1 {nm(t[2])}:1")
     c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in (t[0], t[2], t[4 % len(t)], t[2], t[3 % len(t)], t[2])) if n != "回転" or i < 14 else f"{nm(r)}:3")
@@ -72,7 +77,7 @@ for b in range(c.NB):
 rich(c, choir_scenes=["山"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の022（第2版）。錆びて止まった水車が、笛の語りかけで回りだす。拍のない前奏（低いドローンときしみ）→回りだす瞬間に3拍子が始まり、テンポが♩=40→60へ。D エオリア。最後は勢いよく回る（山）。",
-       harm_scenes=None, tail_scene="回転", fill=False, pads=True, pad_scenes=["回る2", "山", "回転"])
+       harm_scenes=None, tail_scene="回転", fill=False, pads=True, pad_scenes=["軋み", "回りだす", "回る1", "回る2", "山", "回転"])
 # 空気：きしみ（戸棚・ドアのきしみの録音）を軋みの場面と回りだしに
 sec_bar = 3 * 60 / 40
 t_kishi = 8 * sec_bar
