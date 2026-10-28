@@ -1,7 +1,7 @@
 # ケルト・フルート100曲「銀の笛と百の夜」042 風の刻んだ文字 Letters Cut by Wind（2026-10-29）
 # イメージ: 石の輪の中の一つに、古い文字が刻まれている。長い年月の風で、ところどころ欠けて読めない。
 #   エイラは指でなぞりながら、欠けた所を想像でつないでいく。何度もなぞるうちに、文がひと続きに読めるようになる。
-# 形: 欠けた旋律が、回るたびに埋まっていく（1回目は半分の音が休み、2回目は4分の1、3回目で完成、最後は和声つき）。3/4・♩=56。G ドリア。山なし。
+# 形: 欠けた旋律が、回るたびに埋まっていく（1回目は半分の音が休み、2回目は4分の1、3回目で完成、最後は和声つき）。3/4・♩=52。G ドリア。山なし。
 # ただひとつ: 同じ16小節の旋律の「欠け（休符）」が、回るたびに埋まる。欠けた所はギターの指弾きが和音で受けとめる（音は落とさない）。
 # 編曲の表:
 #   なぞる  : ナイロンギターの指弾きの分散和音＋チェロ＋うすい弦（はじまりから厚く）
@@ -14,7 +14,7 @@ import sys, json
 from c100_common import *
 from c100_v2 import *
 
-BPM = 56
+BPM = 52
 S = Song("C100", "042-letters-cut-by-wind", "風の刻んだ文字", "Letters Cut by Wind", BPM, 3, "G", "dorian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
 S.extra.update({"human": 0.4, "rubato": 0.2})
@@ -77,7 +77,7 @@ for b in range(c.NB):
     for j in range(nv): c.STR[j].bar(b, f"{nm(v[j])}:3")
 rich(c, choir_scenes=["読めた"], pulse_scenes=["欠け2", "読める", "読めた"], guitar=False, pizz=False, inner=True, choir_vol=0.11)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.33 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の042。風で欠けた碑文を、指でなぞって読む。3/4・♩=56、G ドリア。同じ旋律が、1回目は半分の音が欠け（休み）、2回目は4分の1、3回目で完成し、最後は和声つきでひと続きに読める。欠けた所は竪琴の高い音がかすれた文字のように鳴る。",
+       "ケルト・フルート100曲の042。風で欠けた碑文を、指でなぞって読む。3/4・♩=52、G ドリア。同じ旋律が、1回目は半分の音が欠け（休み）、2回目は4分の1、3回目で完成し、最後は和声つきでひと続きに読める。欠けた所は竪琴の高い音がかすれた文字のように鳴る。",
        harm_scenes=None, tail_scene="息", fill=False, pads=True, pad_scenes=["欠け1", "欠け2", "読める", "読めた", "息"], floor=True)
 air = {"pre": 0.8, "tail": 6.0, "layers": [{"file": "0595", "db": -35, "hp": 150, "lp": 6000, "wide": 0.014, "duck": 0.35, "fade": 8}],
        "fx": {"shimmer": {"db": -28, "rt": 7.0}, "far": {"db": -25, "delay": 0.25, "lp": 2600, "rt": 4.5}}, "intro_db": 6.0}
