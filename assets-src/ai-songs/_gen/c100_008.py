@@ -31,10 +31,10 @@ c = make(S, NAMES,
          [("見送り", 0, 0.78), ("手を振る", 0, 0.74), ("遠ざかる1", 0, 0.68), ("遠ざかる2", 0, 0.62), ("遠ざかる2", 11, 0.6),
           ("岬", 0, 0.66), ("岬", 4, 0.8), ("岬", 7, 0.66), ("一人", 0, 0.6), ("一人", 7, 0.45)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro=None, passing=True, tension=False)
-PR = S.track("ピアノ（右手）", "piano", volume=0.2, pan=-0.15, reverb=0.45, barGain=c.g())
-PR2 = S.track("ピアノ（右手2）", "piano", volume=0.17, pan=-0.12, reverb=0.45, barGain=c.g())
-PL = S.track("ピアノ（左手）", "piano", volume=0.2, pan=-0.2, reverb=0.45, barGain=c.g())
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.45, barGain=c.g())
+PR = S.track("ピアノ（右手）", "piano", volume=0.42, pan=-0.15, reverb=0.45, barGain=c.g())
+PR2 = S.track("ピアノ（右手2）", "piano", volume=0.34, pan=-0.12, reverb=0.45, barGain=c.g())
+PL = S.track("ピアノ（左手）", "piano", volume=0.42, pan=-0.2, reverb=0.45, barGain=c.g())
+CELLO = S.track("チェロ", "strings", patch="cello", volume=0.11, pan=0.2, reverb=0.45, barGain=c.g())
 PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.055, pan=-0.35, reverb=0.4, barGain=c.g())
 
 TA = ["5:1.5 4:0.5 3:1 2:1", "3:2 1:2", "6,:1 7,:1 1:1 2:1", "3:3 R:1",
@@ -54,14 +54,16 @@ for b in range(c.NB):
     r = low(ch, "C2"); r = r + 12 if r < 40 else r
     t = tones(ch, "D3", "D5"); hi = [x for x in range(60, 74) if x % 12 in chord_pcs(ch)]
     lvl = NAMES.index(n)
-    if n == "一人": continue
+    if n == "一人":
+        if i < 6: CELLO.bar(b, f"{nm(r)}:4")
+        continue
     if lvl <= 1 or n == "岬":
         PL.at(b * B, f"{nm(r)}:2"); PL.at(b * B + 2, f"{nm(r + 7)}:2")
     if lvl <= 2 or n == "岬":
         PR.at(b * B, f"{nm(hi[1])}:2"); PR.at(b * B + 2, f"{nm(hi[2 % len(hi)])}:2")
         PR2.at(b * B, f"{nm(hi[0])}:4")
+    CELLO.bar(b, f"{nm(r)}:4")   # 岸の地面：チェロは最後の一人まで残る（響きの床）
     if lvl <= 3 or n == "岬":
-        CELLO.bar(b, f"{nm(r)}:4")
         v = voice(ch, 52 if lvl == 3 else 57, 3 if lvl < 3 or n == "岬" else 2, spread=True)
         for j in range(len(v)): c.STR[j].bar(b, f"{nm(v[j])}:4")
     if lvl <= 1: c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[2])))
@@ -69,4 +71,4 @@ for b in range(c.NB):
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の008（第2版）。港の見送り。4/4・♩=58、A エオリア。全員で始まり、舟が遠ざかるにつれて楽器が1つずつ抜けていく（逆アーチ）。岬を回る前に最後に大きく手を振り、一人の笛が残る。",
-       harm_scenes=None, tail_scene="一人", fill=False, pads=True, pad_scenes=["見送り", "手を振る", "岬"])
+       harm_scenes=["岬"], tail_scene="一人", fill=False, pads=True, pad_scenes=NAMES)
