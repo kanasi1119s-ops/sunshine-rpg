@@ -20,7 +20,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE); import lyric_mouth as LM
 sp = importlib.util.spec_from_file_location("sing", os.path.join(HERE, "../singer/sing.py")); SG = importlib.util.module_from_spec(sp); sp.loader.exec_module(SG)
 FONT_J = os.path.join(HERE, "fonts/DotGothic16-Regular.ttf"); FONT_E = os.path.join(HERE, "fonts/Orbitron.ttf")
-W, H, FPS = 1920, 1080, 24
+W, H, FPS = 1920, 1080, int(os.environ.get("MV_FPS", "24"))   # 2026-10-29: なめらかにするため 48 コマ/秒も（MV_SMOOTH=1 と一緒に）
 ALBUM_J, ALBUM_E, KIND_J, KIND_E = "スカーレット・フリークエンシー", "SCARLET FREQUENCY", "ボカロ曲", "Vocaloid Songs"   # 人間が選んだアルバム名（2026-10-26）
 rows = {r[0]: r for r in (l.rstrip("\n").split("\t") for l in open(TSV, encoding="utf-8")) if r and r[0]}
 _, TJ, TE, GJ, GE = rows[NO]; TOTAL = len(rows)
@@ -221,6 +221,7 @@ for k in range(0, GB_HMAX, 7): grad[k:k + 2, :, 3] *= 0.35                      
 
 # ---------- テト ----------
 seq = json.load(open(SEQ))
+SMOOTH = os.environ.get("MV_SMOOTH") == "1"
 tfr = {}
 def teto(k):
     if k not in tfr: tfr[k] = cv2.imread(f"{TM}/{k:03d}.png", cv2.IMREAD_UNCHANGED)   # uint8 のまま持つ（float だと 240 コマで 1.8GB になり、メモリが足りなくなる）
@@ -233,10 +234,18 @@ def blend_bgra(dst, s, x, y):
     s = s[y0 - y:y1 - y, x0 - x:x1 - x].astype(np.float32); a = s[..., 3:4] / 255.0
     dst[y0:y1, x0:x1] = (s[..., :3] * a + dst[y0:y1, x0:x1].astype(np.float32) * (1 - a)).astype(np.uint8)
 
+if SMOOTH:   # なめらかな動き（smooth_motion.py）: 位置を小数で持ち、となりのコマのあいだをオプティカルフローで補間。飛ぶ所は溶かして切りかえ
+    import smooth_motion as SMO
+    PLAN = SMO.frame_plan(seq, 24, FPS); KMAX = max(int(x) for x in seq)
+    INTP = SMO.Interp(teto)
+    def teto_at(i):
+        p1, p2, t = PLAN[min(i, len(PLAN) - 1)]
+        a = INTP.at(p1, KMAX)
+        return a if p2 is None else SMO.crossfade(a, INTP.at(p2, KMAX), t)
 fE18 = font(FONT_E, 16)
 def mmss(t): return f"{int(t // 60)}:{int(t % 60):02d}"
 proc = None if os.environ.get("MV_STILL") else subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-", "-i", AUDIO,
-                         "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-tune", "animation", "-pix_fmt", "yuv420p", "-g", "48",
+                         "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-tune", "animation", "-pix_fmt", "yuv420p", "-g", str(FPS * 2),
                          "-c:a", "aac", "-b:a", "256k", "-ar", "48000", "-shortest", OUT], stdin=subprocess.PIPE)
 time_cache = {}
 STILL = [float(x) for x in os.environ.get("MV_STILL", "").split(",") if x]
@@ -285,7 +294,7 @@ for i in ([int(x * FPS) for x in STILL] if STILL else range(N)):
         time_cache.clear(); time_cache[sec] = np.asarray(text_img(f"{mmss(t)} / {mmss(dur)}", fE18, (255, 150, 180, 255))).astype(np.float32)
     blend(img, time_cache[sec], 760, 172)
     # テト
-    blend_bgra(img, teto(int(seq[min(i, len(seq) - 1)])), TX, TY)
+    blend_bgra(img, teto_at(i) if SMOOTH else teto(int(seq[min(i * 24 // FPS, len(seq) - 1)])), TX, TY)
     if STILL: cv2.imwrite(f"{OUT}.still{t:.0f}.png", img); continue
     proc.stdin.write(img.tobytes())
 if proc: proc.stdin.close(); proc.wait()
