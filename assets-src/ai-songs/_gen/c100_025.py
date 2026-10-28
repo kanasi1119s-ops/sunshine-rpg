@@ -37,11 +37,11 @@ c = make(S, NAMES,
          [("ひと跳び", 0, 0.66), ("ポルカ1-1", 0, 0.68), ("ポルカ1-2", 0, 0.74), ("よろけ", 0, 0.62), ("ポルカ2-1", 0, 0.74), ("ポルカ2-2", 0, 0.8),
           ("ポルカ1-3", 0, 0.86), ("ポルカ1-3", 28, 0.95), ("対岸", 0, 0.9), ("対岸", 3, 0.5)],
          {}, flute_gain={n: 1.05 for n in NAMES}, intro="ひと跳び", passing=True, tension=False)
-GT = S.track("ギター（裏拍）", "guitar", patch="nylonGuitar", volume=0.055, pan=0.35, reverb=0.3, barGain=c.g())
-GT2 = S.track("ギター（裏拍2）", "guitar", patch="nylonGuitar", volume=0.045, pan=0.42, reverb=0.3, barGain=c.g())
+GT = S.track("ギター（裏拍）", "guitar", patch="nylonGuitar", volume=0.085, pan=0.35, reverb=0.3, barGain=c.g())
+GT2 = S.track("ギター（裏拍2）", "guitar", patch="nylonGuitar", volume=0.07, pan=0.42, reverb=0.3, barGain=c.g())
 PIZZ = S.track("ピチカート（低音）", "strings", patch="pizzicato", volume=0.075, pan=-0.2, reverb=0.3, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.075, pan=0.15, reverb=0.35, barGain=c.g())
-DRUM = S.track("枠太鼓", "guitar", patch="frameDrum", volume=0.05, pan=-0.1, reverb=0.3, modulate=False, barGain=c.g())
+DRUM = S.track("枠太鼓", "guitar", patch="frameDrum", volume=0.1, pan=-0.1, reverb=0.3, modulate=False, barGain=c.g())
 
 def st(bars): return [" ".join(t + ("'" if float(t.split(":")[1]) <= 0.5 and not t.startswith("R") else "") for t in s.split()) for s in bars]
 A1 = ["5:0.5 3:0.5 5:0.5 3:0.5", "1':1 5:1", "4:0.5 6:0.5 4:0.5 6:0.5", "5:1 3:1", "2:0.5 4:0.5 6:0.5 4:0.5", "3:0.5 5:0.5 1':1", "7:0.5 6:0.5 5:0.5 4:0.5", "3:1 1:1"]
@@ -65,7 +65,9 @@ for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     r = low(ch, "C2"); r = r + 12 if r < 40 else r
     t = tones(ch, "E3", "E5")
-    if n == "ひと跳び": continue
+    if n == "ひと跳び":
+        if i == 1: PIZZ.bar(b, f"{nm(r)}:0.5 R:0.5 {nm(r + 7)}:0.5 R:0.5"); GT.bar(b, f"R:0.5 {nm(t[1])}:0.5' R:0.5 {nm(t[1])}:0.5'"); DRUM.bar(b, "D3:0.5, R:0.5 D3:0.5, A3:0.5,")
+        continue
     if n == "よろけ":
         PIZZ.bar(b, f"{nm(r)}:1 R:1" if i % 2 == 0 else f"R:1 {nm(t[2])}:1")
         v = voice(ch, 55, 2, spread=True)
@@ -80,16 +82,21 @@ for b in range(c.NB):
         continue
     PIZZ.bar(b, f"{nm(r)}:0.5 R:0.5 {nm(r + 7)}:0.5 R:0.5")
     GT.bar(b, f"R:0.5 {nm(t[1])}:0.5' R:0.5 {nm(t[1])}:0.5'"); GT2.bar(b, f"R:0.5 {nm(t[2])}:0.5' R:0.5 {nm(t[2])}:0.5'")
+    DRUM.bar(b, "D3:0.5! A3:0.5, D3:0.5 A3:0.5," if n != "ポルカ1-1" or i >= 16 else "D3:0.5, R:0.5 D3:0.5, R:0.5")   # 跳ぶ足どり
+    if n in ("ポルカ1-1", "ポルカ2-1"): c.HARP2.bar(b, f"R:1 {nm(t[2] + 12)}:0.5 {nm(t[1] + 12)}:0.5")   # 水のはね
+    if n in ("ポルカ1-2", "ポルカ2-1"):
+        v = voice(ch, 53, 2, spread=True)
+        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:2")
+    if n == "ポルカ1-2": CELLO.bar(b, f"{nm(r)}:1 {nm(r + 7)}:1")
     if n in ("ポルカ1-2", "ポルカ2-2", "ポルカ1-3"): c.HARP.bar(b, f"{nm(t[0] + 12)}:0.5 {nm(t[2] + 12)}:0.5 {nm(t[1] + 12)}:0.5 {nm(t[2] + 12)}:0.5")
     if n in ("ポルカ2-1", "ポルカ2-2", "ポルカ1-3"): CELLO.bar(b, f"{nm(r)}:1 {nm(r + 7)}:1")
     if n in ("ポルカ2-2", "ポルカ1-3"):
         v = voice(ch, 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:2")
-    if n == "ポルカ1-3": DRUM.bar(b, "D3:0.5! A3:0.5, D3:0.5 A3:0.5,")
-rich(c, choir_scenes=["ポルカ1-3"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
+rich(c, choir_scenes=["ポルカ2-2", "ポルカ1-3"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.26 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の025（第2版・明るく速めの曲）。小川の飛び石を、ぴょんぴょん渡る。ポルカ（2/4・♩=88）のセット：C のポルカ→よろける短調の8小節→F のポルカ→D へ上がって最初のポルカ。最後は対岸で全員がぴょんと止まる。",
-       harm_scenes=None, tail_scene="対岸", fill=False, pads=False)
+       harm_scenes=None, tail_scene="対岸", fill=False, pads=True, pad_scenes=["ポルカ1-2", "ポルカ2-1", "ポルカ2-2", "ポルカ1-3"])
 # 空気：跳ぶたびの水のはね（小川の録音を短く切って、よろけの所と所々に）
 BAR = 2 * 60 / BPM
 ev = [{"t": round((c.s0["ひと跳び"] + 1) * BAR, 2), "file": "0864", "db": -20, "len": 0.8, "pan": 0.2, "seek": 3.0, "hp": 300, "lp": 9000}]
@@ -98,5 +105,5 @@ for sc in ("ポルカ1-1", "ポルカ2-1"):
     for j in range(7, 32, 8): ev.append({"t": round((c.s0[sc] + j) * BAR + 0.5, 2), "file": "0864", "db": -27, "len": 0.7, "pan": 0.35, "seek": 9.0 + j, "hp": 300, "lp": 9000})
 air = {"pre": 0.3, "tail": 6.0, "layers": [{"file": "0213", "db": -36, "hp": 200, "lp": 8000, "wide": 0.014, "duck": 0.45, "fade": 6}], "events": ev,
        "fx": {"glass": {"hz": [523.3, 1046.5, 1568.0], "db": -31, "rt": 5.0, "start": 4}, "shimmer": {"db": -30, "rt": 6.0},
-              "far": {"db": -27, "delay": 0.2, "lp": 3000, "rt": 3.0}, "haze": {"db": -30, "rt": 6.0}}, "intro_db": 4.0}
+              "far": {"db": -27, "delay": 0.2, "lp": 3000, "rt": 3.0}, "haze": {"db": -30, "rt": 6.0}}, "intro_db": 8.5}
 json.dump(air, open("/tmp/cel/w/air025.json", "w"), ensure_ascii=False)
