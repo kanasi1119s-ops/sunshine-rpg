@@ -137,6 +137,14 @@ def main(mus, spec, outp):
         w = np.clip((np.arange(N) - s0) / fd, 0, 1) * np.clip((s1 - np.arange(N)) / fd, 0, 1)
         air += x * (g * w)[:, None]
     for ev in spec.get("events", []):
+        if ev.get("breath"):   # 息の音（笛を口に当てる前の、やわらかい息）：雑音を息の帯域に絞り、ふくらんで消える形にする
+            n = int(ev.get("len", 1.4) * SR); rng = np.random.default_rng(int(ev["t"] * 10))
+            x = filt(rng.standard_normal((n, 2)) * 0.3, ev.get("hp", 500), ev.get("lp", 3200))
+            env = np.sin(np.linspace(0, np.pi, n)) ** 1.6
+            x *= env[:, None]; x *= 10 ** ((ref + ev.get("db", -26) - rms_db(x)) / 20)
+            pan = ev.get("pan", -0.05); x[:, 0] *= min(1, 1 - pan); x[:, 1] *= min(1, 1 + pan)
+            s = pre + int(ev["t"] * SR); air[s:s + len(x)] += x[:max(0, N - s)]
+            continue
         x = clip(ev["file"]); a = int(ev.get("seek", 0) * SR); n = int(ev.get("len", 8) * SR)
         if ev.get("semi"):   # 音の高さを変える（録音の鈴を曲の和音の音に合わせる。再生の速さも変わる）
             r = 2 ** (ev["semi"] / 12.0); idx = np.arange(0, (len(x) - 1), r)
