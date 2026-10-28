@@ -72,4 +72,4 @@ for b in range(c.NB):
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.0",
        "ケルト・フルート100曲の003。祖父の手紙を読む。D エオリアン・52。語りかけるような旋律、沈黙、決意。最後にほんの少し明るむ。",
-       harm_scenes=["語り2", "決意"], tail_scene="終わり", tail_keep=6)
+       harm_scenes=["語り2", "決意"], tail_scene="終わり", tail_keep=8)
