@@ -32,7 +32,7 @@ c = make(S, NAMES,
          [("鈴", 0, 0.6), ("呼ぶ1", 0, 0.62), ("応える", 0, 0.66), ("二人", 0, 0.7), ("二人", 16, 0.76), ("二人", 23, 0.68),
           ("呼ぶ2", 0, 0.64), ("遠ざかる", 0, 0.6), ("遠ざかる", 11, 0.45), ("終わり", 0, 0.42), ("終わり", 5, 0.3)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro="鈴", passing=True, tension=False)
-GT = S.track("ナイロンギター（舟のゆれ）", "guitar", patch="nylonGuitar", volume=0.06, pan=0.35, reverb=0.4, barGain=c.g())
+GT = S.track("ナイロンギター（舟のゆれ）", "guitar", patch="nylonGuitar", volume=0.11, pan=0.35, reverb=0.4, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.075, pan=0.2, reverb=0.45, barGain=c.g())
 
 p = [["R:3 2:1 3:2", "5:3 6:1 5:2", "3:2 2:1 1:3"], ["R:3 3:1 5:2", "6:2 7:1 1':3", "7:2 6:1 5:3"],
@@ -55,17 +55,20 @@ for b in range(c.NB):
     r = low(ch, "C2"); r = r + 12 if r < 40 else r
     t = tones(ch, "D3", "D5")
     if n == "鈴" and i < 2: continue
-    if n not in ("終わり",) or i < 3:
+    if n not in ("終わり",) or i < 4:
         c.HARP.bar(b, f"{nm(r)}:3 {nm(r + 7)}:3")
         GT.bar(b, " ".join(f"{nm(t[x % len(t)])}:1" for x in (1, 2, 3, 4, 3, 2)))
     if n == "二人":
         v = voice(ch, 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
+    elif n != "鈴" and not (n == "終わり" and i >= 4):   # 空間の床：うすい弦（笛が休む小節で音が落ちすぎないように）
+        v = voice(ch, 52, 2, spread=True)
+        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:6")
     if n in ("呼ぶ2", "二人"): CELLO.bar(b, f"{nm(r)}:6")
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の005（第2版）。港の小舟の鈴と笛の掛け合い。6/8・付点4分＝46（舟のゆれ）。G ミクソリディア。鈴は本物の録音を和音の音に合わせ、呼ぶ→答える→一緒に→遠ざかる。最後は笛が鈴をまねて消える。",
-       harm_scenes=None, tail_scene="終わり", fill=False, pads=True, pad_scenes=["二人", "呼ぶ2"])
+       harm_scenes=None, tail_scene="終わり", fill=False, pads=True, pad_scenes=["呼ぶ1", "応える", "二人", "呼ぶ2", "遠ざかる"])
 
 # ---------- 鈴（本物の録音 0292 を、和音の音に合わせて置く） ----------
 BAR = B * 60 / BPM
