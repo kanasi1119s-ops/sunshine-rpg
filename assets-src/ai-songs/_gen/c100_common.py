@@ -110,7 +110,7 @@ def put_bars(c, scene, lines, oct_):
         c.FLUTE.bar(b, hi_soft(c.S.key.mel(s, oct=oct_)))
 
 
-def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=6, silences=(), skip_scenes=()):
+def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=6, silences=(), skip_scenes=(), double=False):
     S = c.S; NB = c.NB
     # 高い小節ほど息をやわらかく
     pb = collections.defaultdict(list)
@@ -122,6 +122,12 @@ def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=6, silen
         m = sum(ps) / len(ps)
         k = min(1.0, max(0.0, (m - 74) / 10))
         bg[b] = round(bg[b] * (1 - 0.35 * k), 3)
+    # 笛を2重にして深みを出す（2026-10-28 人間の提案）：同じ旋律を、少し遅らせて（0.04拍）、右寄り・小さめ・息の音なし・明るさを下げて重ねる
+    if double:
+        F2 = S.track("フルート（重ね）", "panflute", patch="flute", volume=0.22, bright=-0.8, pan=0.3, reverb=0.65, breath=False,
+                     noRestrike=True, mono=True, sustain=1.12, phrase=16, gainDb=0, push=0.04,
+                     barGain=[round(x * 0.85, 3) for x in c.FLUTE.spec["barGain"]])
+        for st, L, x in list(c.FLUTE.ev): F2.at(st, x)
     # 旋律の1オクターブ下を竪琴がなぞる
     HM = S.track("竪琴（旋律の下）", "harp", patch="folkHarp", volume=0.05, pan=0.2, reverb=0.5, barGain=c.g())
     if harm_scenes:

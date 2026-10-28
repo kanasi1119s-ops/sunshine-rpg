@@ -95,4 +95,4 @@ for b in range(c.NB):
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.0",
        "ケルト・フルート100曲の002。灯室へのらせん階段。A ドリアン・60。一段ずつ上がる4音の型。足音は上るほど間があいて消え、最後に灯りがともる。",
-       harm_scenes=["らせん2", "らせん3", "灯室"], tail_scene="余韻", tail_keep=6)
+       harm_scenes=["らせん2", "らせん3", "灯室"], tail_scene="余韻", tail_keep=6, double=("--double" in sys.argv))
