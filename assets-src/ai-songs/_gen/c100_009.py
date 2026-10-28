@@ -76,4 +76,4 @@ for b in range(c.NB):
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.0",
        "ケルト・フルート100曲の009。甲板で星を一つずつ数える。C リディア・50。星（グロッケンと竪琴の高い音）の点だけが場面ごとに増え、最後に静止する。",
-       harm_scenes=["数える1", "数える2", "数える3"], tail_scene="静止", tail_keep=3)
+       harm_scenes=["数える1", "数える2", "数える3"], tail_scene="静止")

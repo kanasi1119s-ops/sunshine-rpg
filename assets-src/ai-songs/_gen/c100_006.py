@@ -79,4 +79,4 @@ for b in range(c.NB):
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.0",
        "ケルト・フルート100曲の006。夜の岬で灯台守が灯りを一つずつともす。B ドリア・56。灯りの数だけ鈴の点が増え、中盤に山、最後は竪琴の上昇アルペジオ。",
-       harm_scenes=["灯り1", "灯り2", "静まり", "灯りが満ちる"], tail_scene="余韻", tail_keep=6)
+       harm_scenes=["灯り1", "灯り2", "静まり", "灯りが満ちる"], tail_scene="余韻")

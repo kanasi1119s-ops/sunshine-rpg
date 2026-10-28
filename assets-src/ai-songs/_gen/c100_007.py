@@ -75,4 +75,4 @@ for b in range(c.NB):
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.0",
        "ケルト・フルート100曲の007。引き潮の砂浜。D ドリア・64。笛とナイロンギター。旋律の上下と波の満ち引きが同じ8小節の周期で、2回の小さな山。",
-       harm_scenes=["引く1", "満ちる1", "引く2", "満ちる2"], tail_scene="波に戻る", tail_keep=6)
+       harm_scenes=["引く1", "満ちる1", "引く2", "満ちる2"], tail_scene="波に戻る")

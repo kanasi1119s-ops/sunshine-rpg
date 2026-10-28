@@ -110,8 +110,16 @@ def put_bars(c, scene, lines, oct_):
         c.FLUTE.bar(b, hi_soft(c.S.key.mel(s, oct=oct_)))
 
 
-def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=6, silences=(), skip_scenes=(), double=False):
+def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=99, silences=(), skip_scenes=(), double=True):
     S = c.S; NB = c.NB
+    # 変に音が小さくなる所を作らない（2026-10-28 人間の指摘）：弦の持続が休んでいる小節には、小さな和音をのばして埋める。
+    # 終わりの場面も最後まで弦とパッドをのばし、消え方は曲の最後のフェードにまかせる（ぷつっと落ちない）
+    have = {int(st // S.beats) for st, L, x in c.STR[0].ev if not x.startswith("R")}
+    for b in range(NB):
+        n = c.scene_of_bar[b]
+        if b in have or n in skip_scenes: continue
+        v = voice(S.chords[b].split("|")[0], 57, 3, spread=True)
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:{S.beats}")
     # 高い小節ほど息をやわらかく
     pb = collections.defaultdict(list)
     for st, L, x in c.FLUTE.ev:
@@ -122,7 +130,7 @@ def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=6, silen
         m = sum(ps) / len(ps)
         k = min(1.0, max(0.0, (m - 74) / 10))
         bg[b] = round(bg[b] * (1 - 0.35 * k), 3)
-    # 笛を2重にして深みを出す（2026-10-28 人間の提案）：同じ旋律を、少し遅らせて（0.04拍）、右寄り・小さめ・息の音なし・明るさを下げて重ねる
+    # 笛を2重にして深みを出す（2026-10-28 人間の提案。2026-10-28 18:57「音に深みが欲しい」で、全曲の既定にした）：同じ旋律を、少し遅らせて（0.04拍）、右寄り・小さめ・息の音なし・明るさを下げて重ねる
     if double:
         F2 = S.track("フルート（重ね）", "panflute", patch="flute", volume=0.22, bright=-0.8, pan=0.3, reverb=0.65, breath=False,
                      noRestrike=True, mono=True, sustain=1.12, phrase=16, gainDb=0, push=0.04,
