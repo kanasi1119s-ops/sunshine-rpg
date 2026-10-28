@@ -23,6 +23,8 @@ c = make(S, NAMES,
          {"呼ぶ1": 0.62, "呼ぶ2": 0.64, "呼ぶ3": 0.66, "見つけた": 0.68, "安堵": 0.6},
          flute_gain={"呼ぶ1": 1.3, "呼ぶ2": 1.25, "呼ぶ3": 1.25, "見つけた": 1.2, "安堵": 1.2}, intro="霧", passing=True, tension=True)
 
+PIZ = S.track("ピチカート（足どり）", "strings", patch="pizzicato", volume=0.09, pan=-0.2, reverb=0.4, barGain=c.g())
+
 # ---------- 笛（A ドリア。上がる呼びかけ→耳をすます） ----------
 CALL1 = [["R:1 1:1 3:1 5:1", "6:3 R:1", "R:4", "R:4"],
          ["5:1 7:1 2':1 7:1", "4:1 6:1 1':1 6:1", "R:4", "R:4"],
@@ -46,6 +48,10 @@ put_bars(c, "安堵", ["5:1 3:1 1:2", "6:3 R:1", "5:1 3:1 1:2", "3:4", "2:1 4:1 
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     lo = low(ch, "C2"); t = tones(ch, "D3", "D6")
+    if n == "霧":   # 始まり：ピチカートだけが、手さぐりの足どりのように（歩いては止まる）
+        z = tones(ch, "A3", "A4")
+        PIZ.bar(b, f"{nm(z[0])}:1 {nm(z[1])}:1 R:2" if i % 2 == 0 else f"{nm(z[2])}:1 R:1 {nm(z[1])}:1 R:1")
+        continue
     v = voice(ch, 57, 3, spread=True)
     for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
     if n == "霧":
@@ -77,7 +83,7 @@ for n in ("呼ぶ1", "呼ぶ2", "呼ぶ3"):
         ev.append({"t": round(b * BAR + 0.5, 2), "file": "0821", "db": round(-40 + 12 * near, 1), "len": 3.0, "pan": round(0.5 - 0.4 * near, 2),
                    "seek": SEEK[k % len(SEEK)], "hp": 300, "lp": int(2500 + 4500 * near)})
         k += 1
-air = {"pre": 1.2, "tail": 5.0, "layers": [
+air = {"pre": 1.5, "tail": 5.0, "layers": [
     {"file": "0908", "db": -36, "hp": 150, "lp": 5000, "lfo": [40, 0.4], "wide": 0.014, "duck": 0.35, "fade": 10}],
     "events": ev,
     "fx": {"glass": {"hz": [440.0, 880.0, 1318.5], "db": -27, "rt": 6.0, "start": 4}, "shimmer": {"db": -30, "rt": 7.0},

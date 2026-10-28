@@ -27,6 +27,7 @@ HORN = S.track("ホルン（支え）", "brass", patch="horn", volume=0.07, pan=
 TIMP = S.track("ティンパニ", "strings", patch="timpani", volume=0.09, pan=0, reverb=0.4, gainDb=-4, barGain=c.g())
 
 # ---------- 旋律（G ミクソリディア。開放的に上がる旋律を2回、2回目は高く） ----------
+put_bars(c, "静けさ", ["1:1 2:1 3:1 5:1", "6:2 5:1 3:1", "4:1 6:1 1':1 6:1", "5:3 R:1"], 4)
 put_melody(c, "帆を上げる", [
     ["R:1 1:1 2:1 3:1", "4:1 5:1 6:1 4:1", "5:1 6:1 5:1 3:1", "5:3 R:1"],
     ["3:1 5:1 6:1 5:1", "4:1 6:1 1':1 6:1", "5:1 4:1 3:1 2:1", "1:3 R:1"],
@@ -53,6 +54,13 @@ ROLL = c.s0["出航"] + 7          # 山：ティンパニが転がる小節。�
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     lo = low(ch, "C2"); t = tones(ch, "D3", "D6")
+    if n == "静けさ":   # 始まり：いきなり全員で、帆を上げる旋律から（前奏の静けさを置かない）
+        v = voice(ch, 55, 3, spread=True)
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
+        c.HARP.bar(b, f"{nm(t[0])}:1 {nm(t[2])}:1 {nm(t[4 % len(t)])}:1 {nm(t[2])}:1")
+        c.LOW.bar(b, f"{nm(lo + 12 if lo < 40 else lo)}:4")
+        h = tones(ch, "G3", "D4"); HORN.bar(b, f"{nm(h[0])}:4")
+        continue
     if n == "静けさ":
         v = voice(ch, 55, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")

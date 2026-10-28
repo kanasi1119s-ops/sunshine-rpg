@@ -18,6 +18,8 @@ c = make(S, NAMES,
          [("独り言", 0, 0.62), ("語り", 0, 0.62), ("思い", 0, 0.66), ("空", 0, 0.7), ("空", 15, 0.66), ("独り言に戻る", 0, 0.56), ("独り言に戻る", 7, 0.3)],
          {"語り": 0.58, "思い": 0.6, "空": 0.62, "独り言に戻る": 0.55},
          flute_gain={"独り言": 1.3, "語り": 1.35, "思い": 1.3, "空": 1.25, "独り言に戻る": 1.25}, intro="独り言", passing=True, tension=True)
+FA = S.track("笛の和音1", "panflute", patch="flute", volume=0.15, bright=-0.9, pan=-0.35, reverb=0.65, breath=False, mono=True, barGain=c.g())
+FB = S.track("笛の和音2", "panflute", patch="flute", volume=0.13, bright=-0.9, pan=0.35, reverb=0.65, breath=False, mono=True, barGain=c.g())
 CELLO = S.track("チェロ（相づち）", "strings", patch="cello", volume=0.085, pan=0.25, reverb=0.45, barGain=c.g())
 
 # ---------- 笛（E エオリア。低めの所だけ） ----------
@@ -44,6 +46,10 @@ prev = 52
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     lo = low(ch, "C2"); t = tones(ch, "D3", "D6")
+    if n == "独り言":   # 始まり：笛だけの和音（3本の笛がのばす）の上で、低い笛が独り言をはじめる
+        w = voice(ch, 62, 2, spread=False)
+        FA.bar(b, f"{nm(w[0])}:4"); FB.bar(b, f"{nm(w[1])}:4")
+        continue
     v = voice(ch, 55, 3, spread=True)
     for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
     if n != "独り言" and not (n == "独り言に戻る" and i >= 6):

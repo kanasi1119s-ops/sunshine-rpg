@@ -68,6 +68,9 @@ for n, idx, s in [("目覚め", 1, "R:1 2':0.25 3':0.75 1':1 R:1"), ("目覚め"
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     lo = low(ch, "C2"); t = tones(ch, "D3", "D6")
+    if n == "目覚め":   # 始まり：小さな「鳥の笛」と本物の鳥だけ。最後の小節で歩く拍が入る
+        if i == 3: STEP.bar(b, "R:2 D3:1 D3:1")
+        continue
     v = voice(ch, 55, 3, spread=True)
     for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
     if n == "目覚め":

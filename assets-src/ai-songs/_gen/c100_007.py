@@ -50,6 +50,9 @@ put_bars(c, "波に戻る", ["3:1 2:1 1:2", "R:4", "5,:1 6,:1 1:2", "R:4", "1:4"
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     lo = low(ch, "C2"); t = tones(ch, "D3", "D6")
+    if n == "波":   # 始まり：ナイロンギターだけが、波の形の分散和音を弾く
+        GTR.bar(b, f"{nm(t[0])}:0.5 {nm(t[1])}:0.5 {nm(t[2])}:0.5 {nm(t[3])}:0.5 {nm(t[4 % len(t)])}:1 {nm(t[2])}:1" if i % 2 == 0 else f"{nm(t[3])}:1 {nm(t[2])}:1 {nm(t[1])}:2")
+        continue
     if n == "波":
         v = voice(ch, 58, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")

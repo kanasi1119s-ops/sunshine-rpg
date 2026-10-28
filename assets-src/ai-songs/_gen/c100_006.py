@@ -50,6 +50,10 @@ LIGHTS = {"灯り1": 1, "灯り2": 2, "静まり": 3, "灯りが満ちる": 4}
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     lo = low(ch, "C2"); t = tones(ch, "D3", "D6"); hi = tones(ch, "C6", "C7")
+    if n == "暗い海":   # 始まり：低いチェロだけが、一音ずつ（灯りの消えた海）。最後の小節で最初の灯り
+        c.LOW.bar(b, f"{nm(lo + 12 if lo < 40 else lo)}:4" if i % 2 == 0 else f"R:2 {nm((lo + 12 if lo < 40 else lo) + 7)}:2")
+        if i == 3: BELL.bar(b, f"R:2 {nm(hi[0])}:2")
+        continue
     if n == "暗い海":
         v = voice(ch, 58, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")

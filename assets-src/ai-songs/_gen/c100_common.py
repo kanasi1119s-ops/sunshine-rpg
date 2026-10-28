@@ -133,7 +133,7 @@ def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=99, sile
     have = {int(st // S.beats) for st, L, x in c.STR[0].ev if not x.startswith("R")}
     for b in range(NB):
         n = c.scene_of_bar[b]
-        if b in have or n in skip_scenes: continue
+        if b in have or n in skip_scenes or n == c.intro: continue      # 始まりの場面は曲ごとに作るので、自動では埋めない（始まり方を曲ごとに変える。2026-10-28 人間の指摘）
         v = voice(S.chords[b].split("|")[0], 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:{S.beats}")
     # 高い小節ほど息をやわらかく
@@ -168,7 +168,7 @@ def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=99, sile
     for b in range(NB):
         n, i, L, k = S.scene_of(b)
         if tail_scene and n == tail_scene and i >= tail_keep: continue
-        if n in skip_scenes: continue
+        if n in skip_scenes or n == c.intro: continue
         w = voice(S.chords[b].split("|")[0], 55, 2, spread=True)
         for j in range(2): PADS[j].bar(b, f"{nm(w[j])}:{S.beats}")
     for (b, a, z) in silences: c.SIL.add(b, a, z)

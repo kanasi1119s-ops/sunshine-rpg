@@ -45,6 +45,9 @@ put_bars(c, "風に還る", ["3:1 2:1 1:2", "R:4", "5,:1 6,:1 1:2", "R:4", "1:4"
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     lo = low(ch, "C2"); t = tones(ch, "D3", "D6")
+    if n == "風":   # 始まり：竪琴だけが、草のなびきのように流れる分散和音
+        c.HARP.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in ((0, 2, 4, 5, 4, 2, 3, 2) if i % 2 == 0 else (1, 3, 5, 3, 4, 2, 3, 1))))
+        continue
     v = voice(ch, 57, 3, spread=True)
     for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
     if n == "風":

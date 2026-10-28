@@ -45,6 +45,10 @@ DENS = {"数える1": 1, "数える2": 2, "数える3": 3, "満天": 4}
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     lo = low(ch, "C2"); t = tones(ch, "D3", "D6"); hi = tones(ch, "C6", "C7")
+    if n == "一つ目の星":   # 始まり：何もない夜空に、星（グロッケン）が一つ、また一つ。竪琴の高い響きだけが添う
+        if i in (0, 2): STAR.bar(b, f"R:1 {nm(hi[1 + i // 2])}:3")
+        if i in (1, 3): c.HARP2.bar(b, f"{nm(hi[0] - 12)}:2 {nm(hi[2] - 12)}:2")
+        continue
     if n == "一つ目の星":
         v = voice(ch, 60, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
