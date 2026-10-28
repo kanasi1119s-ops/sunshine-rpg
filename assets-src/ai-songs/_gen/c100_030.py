@@ -33,9 +33,9 @@ c = make(S, NAMES,
          [("暗い", 0, 0.62), ("夜の回転", 0, 0.66), ("白む", 0, 0.68), ("白む", 31, 0.76), ("朝の回転", 0, 0.78), ("光1", 0, 0.84), ("光2", 0, 0.9), ("光2", 28, 0.95),
           ("朝", 0, 0.86), ("朝", 7, 0.5)],
          {}, flute_gain={n: 1.1 for n in NAMES}, intro="暗い", passing=True, tension=False)
-PL = S.track("ピアノ（拍頭の低音）", "piano", volume=0.11, pan=-0.2, reverb=0.4, barGain=c.g())
-PR = S.track("ピアノ（裏拍の和音）", "piano", volume=0.08, pan=-0.12, reverb=0.4, barGain=c.g())
-PR2 = S.track("ピアノ（裏拍の和音2）", "piano", volume=0.07, pan=-0.08, reverb=0.4, barGain=c.g())
+PL = S.track("ピアノ（拍頭の低音）", "piano", volume=0.22, pan=-0.2, reverb=0.4, barGain=c.g())
+PR = S.track("ピアノ（裏拍の和音）", "piano", volume=0.16, pan=-0.12, reverb=0.4, barGain=c.g())
+PR2 = S.track("ピアノ（裏拍の和音2）", "piano", volume=0.14, pan=-0.08, reverb=0.4, barGain=c.g())
 PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.055, pan=0.35, reverb=0.35, barGain=c.g())
 GLOCK = S.track("グロッケン（朝の光）", "bell", patch="glockenspiel", volume=0.026, pan=0.35, reverb=0.65, barGain=c.g())
 

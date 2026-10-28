@@ -32,10 +32,10 @@ c = make(S, NAMES,
          [("前置き", 0, 0.6), ("語り1", 0, 0.62), ("語り1", 15, 0.62), ("語り2", 0, 0.64), ("語り2", 12, 0.72), ("沈黙", 0, 0.58),
           ("決意", 0, 0.66), ("決意", 12, 0.8), ("終わり", 0, 0.66), ("終わり", 3, 0.45)],
          {}, flute_gain={n: 1.25 for n in NAMES}, intro="前置き", passing=True, tension=False)
-PR = S.track("ピアノ（右手）", "piano", volume=0.13, pan=-0.12, reverb=0.45, barGain=c.g())
-PR2 = S.track("ピアノ（右手の和音）", "piano", volume=0.1, pan=-0.08, reverb=0.45, barGain=c.g())
-PL = S.track("ピアノ（左手）", "piano", volume=0.11, pan=-0.2, reverb=0.45, barGain=c.g())
-PL2 = S.track("ピアノ（左手の上）", "piano", volume=0.08, pan=-0.16, reverb=0.45, barGain=c.g())
+PR = S.track("ピアノ（右手）", "piano", volume=0.39, pan=-0.12, reverb=0.45, barGain=c.g())
+PR2 = S.track("ピアノ（右手の和音）", "piano", volume=0.3, pan=-0.08, reverb=0.45, barGain=c.g())
+PL = S.track("ピアノ（左手）", "piano", volume=0.33, pan=-0.2, reverb=0.45, barGain=c.g())
+PL2 = S.track("ピアノ（左手の上）", "piano", volume=0.24, pan=-0.16, reverb=0.45, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.08, pan=0.25, reverb=0.45, barGain=c.g())
 
 TH = ["5,:1 1:1 2:1 3:1", "4:2 3:1 2:1", "3:1.5 2:0.5 1:1 7,:1", "5,:4",
@@ -66,6 +66,9 @@ for b in range(c.NB):
         PR2.at(b * B, f"{nm(hi[0])}:4")                      # 右手：3度・6度の長い和音（2つのパートに分ける）
         if n != "語り1": PR.at(b * B, f"{nm(hi[1])}:4")
     if n == "語り2" and i >= 8: c.HARP.bar(b, f"{nm(r)}:4")
+    if n == "語り1" and i >= 4:      # 祖父の声の下に、ごくうすい弦（空間を満たす）
+        v = voice(ch, 50, 2, spread=True)
+        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:4")
     if n == "沈黙":
         v = voice(ch, 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")

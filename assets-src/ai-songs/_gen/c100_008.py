@@ -31,9 +31,9 @@ c = make(S, NAMES,
          [("見送り", 0, 0.78), ("手を振る", 0, 0.74), ("遠ざかる1", 0, 0.68), ("遠ざかる2", 0, 0.62), ("遠ざかる2", 11, 0.6),
           ("岬", 0, 0.66), ("岬", 4, 0.8), ("岬", 7, 0.66), ("一人", 0, 0.6), ("一人", 7, 0.45)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro=None, passing=True, tension=False)
-PR = S.track("ピアノ（右手）", "piano", volume=0.1, pan=-0.15, reverb=0.45, barGain=c.g())
-PR2 = S.track("ピアノ（右手2）", "piano", volume=0.085, pan=-0.12, reverb=0.45, barGain=c.g())
-PL = S.track("ピアノ（左手）", "piano", volume=0.1, pan=-0.2, reverb=0.45, barGain=c.g())
+PR = S.track("ピアノ（右手）", "piano", volume=0.2, pan=-0.15, reverb=0.45, barGain=c.g())
+PR2 = S.track("ピアノ（右手2）", "piano", volume=0.17, pan=-0.12, reverb=0.45, barGain=c.g())
+PL = S.track("ピアノ（左手）", "piano", volume=0.2, pan=-0.2, reverb=0.45, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.45, barGain=c.g())
 PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.055, pan=-0.35, reverb=0.4, barGain=c.g())
 

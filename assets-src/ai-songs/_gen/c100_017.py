@@ -31,9 +31,9 @@ c = make(S, NAMES,
          [("晴れ1", 0, 0.62), ("晴れ2", 0, 0.66), ("雲", 0, 0.66), ("影", 0, 0.66), ("影", 15, 0.72), ("夕立前", 0, 0.78), ("夕立前", 5, 0.9),
           ("夕立前", 7, 0.74), ("影に入る", 0, 0.62), ("影に入る", 7, 0.36)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro=None, passing=True, tension=False)
-PR = S.track("ピアノ（右手）", "piano", volume=0.1, pan=-0.15, reverb=0.45, barGain=c.g())
-PR2 = S.track("ピアノ（右手2）", "piano", volume=0.085, pan=-0.12, reverb=0.45, barGain=c.g())
-PL = S.track("ピアノ（左手）", "piano", volume=0.1, pan=-0.2, reverb=0.45, barGain=c.g())
+PR = S.track("ピアノ（右手）", "piano", volume=0.2, pan=-0.15, reverb=0.45, barGain=c.g())
+PR2 = S.track("ピアノ（右手2）", "piano", volume=0.17, pan=-0.12, reverb=0.45, barGain=c.g())
+PL = S.track("ピアノ（左手）", "piano", volume=0.2, pan=-0.2, reverb=0.45, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.45, barGain=c.g())
 TIMP = S.track("遠いティンパニ", "strings", patch="timpani", volume=0.06, pan=0.3, reverb=0.7, gainDb=-6, barGain=c.g())
 
