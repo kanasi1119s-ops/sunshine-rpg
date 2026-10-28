@@ -29,9 +29,9 @@ c = make(S, NAMES,
          [("水", 0, 0.6), ("祈り1", 0, 0.64), ("祈り1", 15, 0.68), ("祈り2", 0, 0.72), ("祈り2", 11, 0.9), ("祈り2", 15, 0.74), ("溶ける", 0, 0.7),
           ("澄んだ音", 0, 0.62), ("澄んだ音", 11, 0.36)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro="水", passing=True, tension=False)
-# 溶ける：笛がだんだん小さく、聞こえなくなる
+# 溶ける：笛がだんだん遠く（小さくしすぎない。主役は消さない。2026-10-28 人間の指示：笛を伴奏より小さくしない）
 s0 = c.s0["溶ける"]
-c.FLUTE.spec["barGain"] = [round(x * (max(0.15, 1 - 0.2 * (b - s0)) if s0 <= b < s0 + 8 else 1.0), 3) for b, x in enumerate(c.FLUTE.spec["barGain"])]
+c.FLUTE.spec["barGain"] = [round(x * (max(0.55, 1 - 0.07 * (b - s0)) if s0 <= b < s0 + 8 else 1.0), 3) for b, x in enumerate(c.FLUTE.spec["barGain"])]
 CELLO = S.track("チェロ（コラールの低い声）", "strings", patch="cello", volume=0.09, pan=0.1, reverb=0.5, barGain=c.g())
 
 P1 = ["5,:1 6,:1 7,:2", "1:1 2:1 3:2", "2:4", "R:4", "3:1 4:1 5:2", "6:1 7:1 1':2", "7:4", "R:4",
@@ -52,14 +52,17 @@ for b in range(c.NB):
         for j in range(3): c.STR[j].at(b * B + 2 * h, f"{nm(v[j])}:2")
         r = low(ch, "C2"); r = r + 12 if r < 40 else r
         if n != "水" and not (n == "澄んだ音" and i >= 10): CELLO.at(b * B + 2 * h, f"{nm(r)}:2")
+    if n == "祈り1" and i % 4 == 3:   # 祈りの句のあとの息：竪琴がそっと和音をなでる
+        t = tones(chs[0], "D4", "D6"); c.HARP2.bar(b, " ".join(f"{nm(x)}:{0.2 if j < 3 else 3.4}" for j, x in enumerate(t[:4])))
     if n == "祈り2" or (n == "澄んだ音" and 2 <= i < 8):
         t = tones(chs[0], "D3", "D5"); c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[2])))
+rich(c, choir_scenes=["祈り2"], pulse_scenes=["祈り1", "祈り2"], guitar=False, pizz=False, inner=True, choir_vol=0.11)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の026（第2版）。森の小さな滝の前の祈り。4/4・♩=54、B ドリア。弦のコラールの上で、少しずつ上がっては止まる祈りの節。途中で笛が滝の音の中に溶けて聞こえなくなり、やがて水の中から澄んだ長い音が浮かび上がる。",
        harm_scenes=None, tail_scene="澄んだ音", fill=False, pads=True, pad_scenes=["祈り1", "祈り2", "溶ける", "澄んだ音"])
 BAR = 4 * 60 / BPM; t_melt = c.s0["溶ける"] * BAR
-air = {"pre": 2.5, "tail": 8.0, "layers": [{"file": "0219", "db": -30, "hp": 120, "lp": 8000, "wide": 0.016, "duck": 0.3, "fade": 6},
-                                           {"file": "0219", "db": -22, "hp": 120, "lp": 9000, "wide": 0.02, "duck": 0.0, "start": round(t_melt, 1), "end": round(t_melt + 8 * BAR, 1), "fade": 9, "pan": 0.1}],
+air = {"pre": 2.5, "tail": 8.0, "layers": [{"file": "0219", "db": -37, "hp": 120, "lp": 8000, "wide": 0.016, "duck": 0.3, "fade": 6},
+                                           {"file": "0219", "db": -30, "hp": 120, "lp": 9000, "wide": 0.02, "duck": 0.0, "start": round(t_melt, 1), "end": round(t_melt + 8 * BAR, 1), "fade": 9, "pan": 0.1}],
        "fx": {"glass": {"hz": [493.9, 987.8, 1480.0], "db": -27, "rt": 7.0, "start": 4}, "shimmer": {"db": -26, "rt": 9.0}, "far": {"db": -25, "delay": 0.3, "lp": 2600, "rt": 5.0},
               "haze": {"db": -26, "rt": 9.0}, "band": {"db": -37, "hz": 6500, "per": 23}}, "intro_db": 8.5}
 json.dump(air, open("/tmp/cel/w/air026.json", "w"), ensure_ascii=False)
