@@ -150,6 +150,6 @@ for b in range(c.NB):
 
 # 笛の和声（ジグ2-2のBだけ）
 rich(c, choir_scenes=["ジグ2-2"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.25 --master -15 --widen 1.0",
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.32 --master -15 --widen 1.25 --side-hpf 220",
        "ケルト・フルート100曲の012（第2版の試作）。朝霧の丘で羊を集めて歩き出す。G→C・6/8 のジグ2曲のセット（付点4分＝80）。笛の装飾（カット・タップ・ロール）とジグのはずみ。楽器は場面ごとに出入りし、最後は上の調で最初の節が戻って一斉に止まる。",
        harm_scenes=None, tail_scene="結び", fill=False, pads=False)
