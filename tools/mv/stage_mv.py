@@ -241,7 +241,7 @@ if SMOOTH:   # なめらかな動き（smooth_motion.py）: 位置を小数で�
     def teto_at(i):
         p1, p2, t = PLAN[min(i, len(PLAN) - 1)]
         a = INTP.at(p1, KMAX)
-        return a if p2 is None else SMO.crossfade(a, INTP.at(p2, KMAX), t)
+        return a if p2 is None else INTP.morph(a, INTP.at(p2, KMAX), t)
 fE18 = font(FONT_E, 16)
 def mmss(t): return f"{int(t // 60)}:{int(t % 60):02d}"
 proc = None if os.environ.get("MV_STILL") else subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-", "-i", AUDIO,

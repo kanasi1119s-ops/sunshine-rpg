@@ -20,7 +20,7 @@ from PIL import Image, ImageDraw, ImageFont
 FR, TRK, VOC, AUDIO, TITLE, OUT = sys.argv[1:7]
 SONG = sys.argv[7] if len(sys.argv) > 8 else None; UST = sys.argv[8] if len(sys.argv) > 8 else None
 FPS = 24
-import os; REV = float(os.environ.get("MV_REV", "3.0")); JUMP = float(os.environ.get("MV_JUMP", "2.0")); JNEAR = float(os.environ.get("MV_JNEAR", "1.6")); HOLD = float(os.environ.get("MV_HOLD", "1.2"))
+import os; REV = float(os.environ.get("MV_REV", "6.0")); JUMP = float(os.environ.get("MV_JUMP", "4.0")); JNEAR = float(os.environ.get("MV_JNEAR", "1.6")); HOLD = float(os.environ.get("MV_HOLD", "1.2"))
 trk = json.load(open(TRK)); K = len(trk)
 mo = np.array([t[4] for t in trk], float)
 state = np.where(mo < 80, 0, np.where(mo < 300, 1, 2))

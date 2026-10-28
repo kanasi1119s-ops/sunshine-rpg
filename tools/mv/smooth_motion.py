@@ -16,7 +16,12 @@
 """
 import numpy as np, cv2
 
-def smooth_positions(seq, fps_in=24, fps_out=48, sigma=1.6, jump=3):
+import os
+SIGMA = float(os.environ.get("MV_SIGMA", "2.5"))   # 2026-10-29: 1.6→2.5（加速度のぶれが約2割へる）
+FADE = int(os.environ.get("MV_FADE", "6"))          # 飛ぶ所の切りかえのコマ数（48コマ/秒で約0.12秒）
+
+def smooth_positions(seq, fps_in=24, fps_out=48, sigma=None, jump=3):
+    sigma = SIGMA if sigma is None else sigma
     """seq: 24コマ/秒の整数のコマ番号 → 48コマ/秒の [(位置, 区切りの番号)]"""
     s = np.asarray(seq, float); n = len(s)
     cut = [0] + [i + 1 for i in range(n - 1) if abs(s[i + 1] - s[i]) >= jump] + [n]
@@ -64,6 +69,21 @@ class Interp:
         mx = gx + fl[..., 0] * t; my = gy + fl[..., 1] * t
         return cv2.remap(im, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
 
+    def morph(self, A, B, t):
+        """離れた2つの絵のあいだを、動きの流れで形を寄せながら切りかえる（ただ重ねると二重に見えるので）"""
+        A = A.astype(np.float32); B = B.astype(np.float32)
+        def pm(x): x = x.copy(); x[..., :3] *= x[..., 3:4] / 255; return x
+        gA = self._gray(A.astype(np.uint8)); gB = self._gray(B.astype(np.uint8))
+        fab = self.dis.calc(gB, gA, None); fba = self.dis.calc(gA, gB, None)
+        # 流れが大きすぎる所（読みちがい）は弱める
+        for fl in (fab, fba):
+            m = np.linalg.norm(fl, axis=2, keepdims=True); fl *= np.minimum(1, 40 / np.maximum(m, 1e-3))
+        e = t * t * (3 - 2 * t)                       # 始めと終わりをゆっくり
+        Aw = self._warp(pm(A), fba, -e); Bw = self._warp(pm(B), fab, -(1 - e))
+        C = Aw * (1 - e) + Bw * e; a = C[..., 3:4]
+        C[..., :3] = np.where(a > 0.5, C[..., :3] * 255 / np.maximum(a, 1e-3), 0)
+        return np.clip(C, 0, 255).astype(np.uint8)
+
     def at(self, p, kmax):
         """位置 p（小数）の絵（BGRA・uint8）"""
         k = int(np.floor(p)); f = p - k
@@ -94,7 +114,8 @@ def crossfade(A, B, t):
     return np.clip(C, 0, 255).astype(np.uint8)
 
 
-def frame_plan(seq, fps_in=24, fps_out=48, fade=4):
+def frame_plan(seq, fps_in=24, fps_out=48, fade=None):
+    fade = FADE if fade is None else fade
     """書き出しの各コマで、どの位置の絵を（必要なら2つを混ぜて）出すか: [(p1, p2 または None, 混ぜる割合)]"""
     pos = smooth_positions(seq, fps_in, fps_out)
     plan = [(p, None, 0.0) for p, g in pos]
