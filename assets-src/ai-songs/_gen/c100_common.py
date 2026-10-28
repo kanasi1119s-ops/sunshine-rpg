@@ -160,3 +160,51 @@ def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=99, sile
     S.desc = desc
     S.no_depth = True
     vwrite(S)
+
+
+def _dia(S, m, k):
+    """m（MIDI）から音階の上で k 段ずらした音（k<0 は下）"""
+    sc = [(S.key.t + x) % 12 for x in S.key.steps]
+    step = 1 if k > 0 else -1; n = abs(k); x = m
+    while n:
+        x += step
+        if x % 12 in sc: n -= 1
+    return x
+
+
+def rich(c, choir_scenes=(), pulse_scenes=(), choir_vol=0.13):
+    """音を重ねて深みと細やかさを出す（2026-10-28 人間の提案：笛が主体のまま、音数を多く繊細に。一人で何声も重ねるような重ね方）。
+    ・笛の和声：主旋律の下に、和音の音になる3度下（だめなら4度・5度下）を2本目・3本目の笛で重ねる（左右に分け、小さく）
+    ・ナイロンギター：8分音符のやわらかい分散和音（右寄り）
+    ・弦のピチカート：4分音符の軽い刻み（左寄り）
+    どれも小さく、それぞれ別の音域・別の左右に置いて、笛の前に出ないようにする"""
+    S = c.S; B = S.beats
+    CH1 = S.track("笛の和声1", "panflute", patch="flute", volume=choir_vol, bright=-0.8, pan=-0.38, reverb=0.6, breath=False,
+                  noRestrike=True, mono=True, sustain=1.12, phrase=16, barGain=c.g())
+    CH2 = S.track("笛の和声2", "panflute", patch="flute", volume=choir_vol * 0.85, bright=-0.9, pan=0.4, reverb=0.65, breath=False,
+                  noRestrike=True, mono=True, sustain=1.12, phrase=16, barGain=c.g())
+    lo_b = {n: (c.s0[n], c.s0[n] + c.sc_len[n]) for n in choir_scenes}
+    for st, L, x in list(c.FLUTE.ev):
+        p = midi_of(x)
+        if p is None: continue
+        bar = int(st // B)
+        if not any(a <= bar < z for a, z in lo_b.values()): continue
+        pcs = chord_pcs(S.chords[bar].split("|")[0])
+        cands = [_dia(S, p, -k) for k in (2, 3, 4, 5)]
+        ok = [q for q in cands if q % 12 in pcs]
+        h1 = ok[0] if ok else cands[0]
+        rest = [q for q in ok if q < h1 - 2]
+        h2 = rest[0] if rest else _dia(S, h1, -2)
+        v = x.split(":", 1)[1]
+        if h1 >= 55: CH1.at(st, f"{nm(h1)}:{v}")
+        if h2 >= 55 and L >= 1: CH2.at(st, f"{nm(h2)}:{v}")
+    GT = S.track("ナイロンギター（刻み）", "guitar", patch="nylonGuitar", volume=0.055, pan=0.45, reverb=0.4, barGain=c.g())
+    PZ = S.track("弦のピチカート", "strings", patch="pizzicato", volume=0.06, pan=-0.45, reverb=0.35, barGain=c.g())
+    for b in range(c.NB):
+        if c.scene_of_bar[b] not in pulse_scenes: continue
+        ch = S.chords[b].split("|")[0]
+        t = tones(ch, "G3", "G5")
+        if len(t) < 4: t = t + [q + 12 for q in t]
+        GT.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 2, 1, 3, 2, 1, 3, 2)))
+        z = tones(ch, "C4", "C5")
+        PZ.bar(b, " ".join(f"{nm(z[q % len(z)])}:1" for q in ((0, 1, 2, 1) if b % 2 == 0 else (2, 1, 0, 1))))

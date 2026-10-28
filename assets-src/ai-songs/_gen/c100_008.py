@@ -58,6 +58,8 @@ for b in range(c.NB):
             for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
         if i in (1, 3): c.HARP.bar(b, f"{nm(t[1])}:4")
 
+rich(c, choir_scenes=["手を振る", "遠ざかる", "水平線"], pulse_scenes=["手を振る", "遠ざかる", "水平線"])
+
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.0",
        "ケルト・フルート100曲の008。港で旅立つ人を見送る。A エオリア・58。舟が遠ざかり、最後は一人の笛。",
        harm_scenes=["手を振る", "遠ざかる", "水平線"], tail_scene="一人の笛")

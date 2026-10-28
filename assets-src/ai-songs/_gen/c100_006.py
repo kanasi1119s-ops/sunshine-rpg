@@ -77,6 +77,8 @@ for b in range(c.NB):
         if i in (1, 3, 5): BELL.bar(b, f"{nm(hi[(i // 2) % 3])}:4")
         if i == 6: BELL.bar(b, f"{nm(hi[2])}:4")
 
+rich(c, choir_scenes=["灯り2", "灯りが満ちる"], pulse_scenes=["灯り1", "灯り2", "静まり", "灯りが満ちる"])
+
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.0",
        "ケルト・フルート100曲の006。夜の岬で灯台守が灯りを一つずつともす。B ドリア・56。灯りの数だけ鈴の点が増え、中盤に山、最後は竪琴の上昇アルペジオ。",
        harm_scenes=["灯り1", "灯り2", "静まり", "灯りが満ちる"], tail_scene="余韻")
