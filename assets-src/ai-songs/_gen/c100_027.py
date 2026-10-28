@@ -29,8 +29,9 @@ c = make(S, NAMES,
          [("足取り", 0, 0.64), ("親", 0, 0.68), ("子1", 0, 0.72), ("子2", 0, 0.76), ("子3", 0, 0.8), ("巣", 0, 0.84), ("巣", 7, 0.6)],
          {}, flute_gain={n: 1.1 for n in NAMES}, intro="足取り", passing=True, tension=False)
 KID = S.track("子の笛（小さな笛）", "panflute", patch="flute", volume=0.26, bright=-0.7, pan=0.45, reverb=0.5, breath=False, noRestrike=True, mono=True, sustain=1.05, barGain=c.g())
-GLOCK = S.track("子のグロッケン", "bell", patch="glockenspiel", volume=0.03, pan=-0.35, reverb=0.6, barGain=c.g())
+GLOCK = S.track("子のグロッケン", "bell", patch="glockenspiel", volume=0.045, pan=-0.35, reverb=0.6, barGain=c.g())
 PZ = S.track("子のピチカート", "strings", patch="pizzicato", volume=0.08, pan=-0.15, reverb=0.35, barGain=c.g())
+DRUM = S.track("ボーラン（水かき）", "guitar", patch="frameDrum", volume=0.085, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
 GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.045, pan=0.3 + 0.04 * i, reverb=0.3, barGain=c.g()) for i in range(4)]
 
 A = ["1:2 3:1 5:2 3:1", "4:2 6:1 5:3", "3:2 5:1 1':2 5:1", "5:3 2:3", "1:2 3:1 5:2 3:1", "4:2 6:1 5:2 4:1", "3:2 2:1 7,:2 2:1", "1:6"]
@@ -62,13 +63,19 @@ for b in range(c.NB):
     r = low(ch, "C2"); r = r + 12 if r < 40 else r
     t = tones(ch, "F3", "F5")
     if n == "足取り":
-        PZ.bar(b, f"{nm(r + 12)}:1 R:2 {nm(r + 19)}:1 R:2" if i < 3 else f"{nm(r + 12)}:1 R:1 {nm(r + 12)}:1 {nm(r + 19)}:1 R:2"); continue
+        PZ.bar(b, f"{nm(r + 12)}:1 R:2 {nm(r + 19)}:1 R:2" if i < 3 else f"{nm(r + 12)}:1 R:1 {nm(r + 12)}:1 {nm(r + 19)}:1 R:2")
+        if i >= 1: strum(GTR, b, B, ch, [(0, 3, "d", ","), (3, 3, "d", ",")])
+        if i >= 2: c.HARP.bar(b, f"{nm(t[0])}:2 {nm(t[2])}:1 {nm(t[4 % len(t)])}:2 {nm(t[2])}:1")
+        c.LOW.bar(b, f"{nm(r)}:6")
+        continue
+    if n != "親": bodhran(DRUM, b, B, "jig", var=1 if i % 8 == 7 else 0, soft=(n == "子1"))
     c.HARP.bar(b, f"{nm(t[0])}:2 {nm(t[2])}:1 {nm(t[4 % len(t)])}:2 {nm(t[2])}:1")
-    strum(GTR, b, B, ch, [(0, 2, "d", ","), (3, 2, "d", ",")] if n != "巣" or i < 7 else [(0, 3, "d", "!"), (3, 3, "d", "!")])
-    if n in ("子2", "子3", "巣"):
-        v = voice(ch, 57, 3, spread=True)
+    strum(GTR, b, B, ch, ([(0, 2, "d", ","), (3, 2, "d", ",")] if n == "親" else JIG_STRUM) if n != "巣" or i < 7 else [(0, 3, "d", "!"), (3, 3, "d", "!")])
+    if n in ("子1", "子2", "子3", "巣"):
+        v = voice(ch, 53 if n == "子1" else 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
-    if n in ("子3", "巣"): c.LOW.bar(b, f"{nm(r)}:3 {nm(r + 7)}:3")
+    if n in ("親", "子1"): c.LOW.bar(b, f"{nm(r)}:6")
+    if n in ("子2", "子3", "巣"): c.LOW.bar(b, f"{nm(r)}:3 {nm(r + 7)}:3")
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.28 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の027（第2版・明るく速めの曲）。川面を行く鴨の親子。6/8・付点4分＝72、F イオニア。母の笛のあとを、子の声（小さな笛・グロッケン・ピチカート）が1拍・1小節・1小節半遅れて追いかけ、子が増えていく。最後は巣でみんなそろって止まる。",
-       harm_scenes=None, tail_scene="巣", fill=False, pads=False, double=False)
+       harm_scenes=None, tail_scene="巣", fill=False, pads=True, pad_scenes=["子1", "子2", "子3", "巣"], double=False)
