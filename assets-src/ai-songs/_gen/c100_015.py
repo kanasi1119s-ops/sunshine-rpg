@@ -13,7 +13,7 @@ import sys
 from c100_common import *
 from c100_v2 import *
 
-S = Song("C100", "015-cradle-of-the-barley", "麦のゆりかご", "Cradle of the Barley", 56, 3, "F", "major", "ケルト（幻想）")
+S = Song("C100", "015-cradle-of-the-barley", "麦のゆりかご", "Cradle of the Barley", 54, 3, "F", "major", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
 S.extra.update({"human": 0.4, "rubato": 0.3})
 AC = ["F", "Bb", "F", "C", "F", "Dm", "C", "F"]
@@ -70,6 +70,7 @@ for b in range(c.NB):
         for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:3")
 # 最後の小節は2拍だけ：3拍目から先は、全部の音を止める
 c.SIL.add(c.s0["眠り"] + 5, 2, 3)
+rich(c, choir_scenes=["歌3"], pulse_scenes=["歌2", "歌3", "歌4"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の015（第2版）。麦畑の午後の子守歌。3/4・♩=56、F イオニア。竪琴のゆりかごのゆれの上で、主題と小さな変奏。だんだんゆっくりになり、最後は眠りに落ちた所で歌が途中で止まる（最後の小節が2拍だけ）。",
-       harm_scenes=None, tail_scene="眠り", fill=False, pads=True, pad_scenes=["歌1", "歌2", "歌3", "歌4"])
+       "ケルト・フルート100曲の015（第2版）。麦畑の午後の子守歌。3/4・♩=54、F イオニア。竪琴のゆりかごのゆれの上で、主題と小さな変奏。だんだんゆっくりになり、最後は眠りに落ちた所で歌が途中で止まる（最後の小節が2拍だけ）。",
+       harm_scenes=None, tail_scene="眠り", fill=False, pads=True, pad_scenes=["歌1", "歌2", "歌3", "歌4"], floor=True)

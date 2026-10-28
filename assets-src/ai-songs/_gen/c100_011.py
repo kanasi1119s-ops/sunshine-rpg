@@ -77,4 +77,4 @@ for tr in (c.HARP2,): tr.spec["barGain"] = wg()
 rich(c, choir_scenes=[], pulse_scenes=["草原2", "草原3"], guitar=True, pizz=False, inner=True)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の011（第2版）。一面の草原を風がなでる。4/4・♩=60、D ドリア。笛だけの合唱（主の笛の下に和音の笛が2〜3本）。強さは8小節周期の風のうねり。山はなく、風の強弱だけ。",
-       harm_scenes=None, tail_scene="風に還る", fill=False, pads=True, pad_scenes=["草原1", "草原2", "風の道", "草原3", "風に還る"])
+       harm_scenes=None, tail_scene="風に還る", fill=False, pads=True, pad_scenes=["草原1", "草原2", "風の道", "草原3", "風に還る"], floor=True)

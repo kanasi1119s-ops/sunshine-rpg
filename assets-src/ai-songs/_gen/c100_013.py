@@ -86,6 +86,7 @@ for b in range(c.NB):
             w = voice(ch, 64, 2, spread=False)
             FA.bar(b, f"{nm(w[0])}:3"); FB.bar(b, f"{nm(w[1])}:3")
 
+rich(c, choir_scenes=["空"], pulse_scenes=["語り2", "空"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の013（第2版の試作）。丘の上に一人きりの羊飼い。E エオリア・3/4・♩=56、ゆるやかなテンポのゆれ。独奏のエア（AABA）→竪琴とチェロが答える→3本の笛の和音で空へ→ひとりに戻る。",
-       harm_scenes=None, tail_scene="ひとりに戻る", fill=False, pads=True, pad_scenes=["語り1", "語り2", "空"])
+       harm_scenes=None, tail_scene="ひとりに戻る", fill=False, pads=True, pad_scenes=["語り1", "語り2", "空"], floor=True)

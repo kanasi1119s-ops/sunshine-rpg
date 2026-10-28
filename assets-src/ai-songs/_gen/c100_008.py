@@ -69,6 +69,7 @@ for b in range(c.NB):
     if lvl <= 1: c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[2])))
     if lvl == 0: PIZZ.bar(b, f"{nm(t[1])}:1 R:1 {nm(t[2])}:1 R:1")
 
+rich(c, choir_scenes=["手を振る", "岬"], pulse_scenes=["見送り", "手を振る", "遠ざかる1", "遠ざかる2", "岬"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の008（第2版）。港の見送り。4/4・♩=58、A エオリア。全員で始まり、舟が遠ざかるにつれて楽器が1つずつ抜けていく（逆アーチ）。岬を回る前に最後に大きく手を振り、一人の笛が残る。",
-       harm_scenes=["岬"], tail_scene="一人", fill=False, pads=True, pad_scenes=NAMES)
+       harm_scenes=["岬"], tail_scene="一人", fill=False, pads=True, pad_scenes=NAMES, floor=True)
