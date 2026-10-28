@@ -24,15 +24,16 @@ S.scene("前置き", 3, "intro", ["Em", "Em", "Em"])
 S.scene("語り1", 32, "verse", A1 + A2 + BB + A2)
 S.scene("語り2", 32, "verse", A1 + A2 + BB + A2)
 S.scene("空", 16, "chorus", BB + A2)
-S.scene("ひとりに戻る", 9, "outro", ["Em", "Em", "C", "D", "Em", "Em", "Em", "Em", "Em"])
+S.scene("ひとりに戻る", 7, "outro", ["Em", "Em", "C", "D", "Em", "Em", "Em"])
 NAMES = ["前置き", "語り1", "語り2", "空", "ひとりに戻る"]
 
 c = make(S, NAMES,
          [("前置き", 0, 0.6), ("語り1", 0, 0.62), ("語り1", 20, 0.7), ("語り1", 31, 0.62), ("語り2", 0, 0.66), ("語り2", 20, 0.76), ("語り2", 31, 0.68),
-          ("空", 0, 0.78), ("空", 4, 0.9), ("空", 15, 0.72), ("ひとりに戻る", 0, 0.6), ("ひとりに戻る", 8, 0.35)],
+          ("空", 0, 0.78), ("空", 4, 0.9), ("空", 15, 0.72), ("ひとりに戻る", 0, 0.62), ("ひとりに戻る", 6, 0.4)],
          {}, flute_gain={n: 1.25 for n in NAMES}, intro="前置き", passing=True, tension=False)
-CELLO = S.track("チェロ（ドローンと対旋律）", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.45, barGain=c.g())
+CELLO = S.track("チェロ（ドローンと対旋律）", "strings", patch="cello", volume=0.11, pan=0.2, reverb=0.45, barGain=c.g())
 CELLO2 = S.track("チェロ（5度）", "strings", patch="cello", volume=0.06, pan=-0.1, reverb=0.45, barGain=c.g())
+DR = [S.track(f"ドローン（弦）{i + 1}", "strings", patch="slowStrings", volume=0.05, pan=[-0.4, 0.4][i], reverb=0.6, barGain=c.g()) for i in range(2)]
 FA = S.track("笛の和音1", "panflute", patch="flute", volume=0.16, bright=-0.9, pan=-0.35, reverb=0.65, breath=False, mono=True, noRestrike=True, sustain=1.12, barGain=c.g())
 FB = S.track("笛の和音2", "panflute", patch="flute", volume=0.14, bright=-0.9, pan=0.35, reverb=0.65, breath=False, mono=True, noRestrike=True, sustain=1.12, barGain=c.g())
 
@@ -48,7 +49,7 @@ play_melody(c, "前置き", ["R:3", "R:3", "R:2 5,:1"], 4, "air", density=0)
 play_melody(c, "語り1", L_A1 + L_A2 + L_B + L_A2, 4, "air", density=0.8, seed=31)
 play_melody(c, "語り2", L_A1 + L_A2 + L_B + L_A2, 4, "air", density=1.0, seed=32)
 play_melody(c, "空", L_B + L_A3, 4, "air", density=0.9, seed=33)
-play_melody(c, "ひとりに戻る", ["5,:1 1:1.5 2:0.5", "3:2 2:0.5 1:0.5", "6,:1.5 7,:0.5 1:1", "2:1.5 3:0.5 2:1", "1:3", "R:3", "R:3", "R:3", "R:3"], 4, "air", density=0.6, seed=34)
+play_melody(c, "ひとりに戻る", ["5,:1 1:1.5 2:0.5", "3:2 2:0.5 1:0.5", "6,:1.5 7,:0.5 1:1", "2:1.5 3:0.5 2:1", "1:6", "R:3", "R:3"], 4, "air", density=0.6, seed=34)
 
 # ---------- 伴奏 ----------
 B = S.beats
@@ -58,9 +59,13 @@ for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     t = tones(ch, "E3", "E5")
     if n in ("前置き", "語り1", "ひとりに戻る"):
-        if n == "ひとりに戻る" and i >= 7: continue
         CELLO.bar(b, "E2:3")
         if n != "前置き" or i >= 1: CELLO2.bar(b, "B2:3")
+        drone(DR, b, B, 52)                         # 弦のうすいドローン（E と B）で、空間を満たす
+        if n == "語り1" and i >= 16:                 # 2回目のA（B）から、遠くの竪琴が根音と5度を置く
+            c.HARP.bar(b, f"{nm(t[0])}:1 R:1 {nm(t[2])}:1" if i % 4 != 3 else " ".join(f"{nm(x)}:{0.15 if j < 3 else 3 - 0.45}" for j, x in enumerate(t[:4])))
+        if n == "ひとりに戻る" and i >= 4:
+            c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in t[:3]) if i == 4 else f"{nm(t[0] + 12)}:3")
     elif n == "語り2":
         # 竪琴：1拍目に根音、区切り（4・8小節目）でロールした和音
         if i % 4 == 3: c.HARP.bar(b, " ".join(f"{nm(x)}:{0.15 if j < 3 else 3 - 0.45}" for j, x in enumerate(t[:4])))
