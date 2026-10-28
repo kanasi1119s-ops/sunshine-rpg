@@ -174,6 +174,14 @@ def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=99, sile
         if pad_scenes is not None and n not in pad_scenes: continue
         w = voice(S.chords[b].split("|")[0], 55, 2, spread=True)
         for j in range(2): PADS[j].bar(b, f"{nm(w[j])}:{S.beats}")
+    # 笛（panflute）の音域は C4 から。C4 より低い音は1オクターブ上げる（低すぎる音は鳴らないか、質が落ちる）
+    for tr in S.tracks:
+        if getattr(tr, "inst", "") == "panflute":
+            ev2 = []
+            for st, L, x in tr.ev:
+                p = midi_of(x)
+                ev2.append((st, L, shift_tok(x, 1) if p is not None and p < 60 else x))
+            tr.ev = ev2
     for (b, a, z) in silences: c.SIL.add(b, a, z)
     c.SIL.apply()
     S.fade_out = 0
