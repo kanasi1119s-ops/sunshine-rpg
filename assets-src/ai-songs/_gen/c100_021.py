@@ -25,14 +25,14 @@ S.scene("連なる", 16, "verse", FC)
 S.scene("流れ1", 16, "verse", FC)
 S.scene("流れ2", 16, "chorus", FC)
 S.scene("流れ3", 16, "chorus", FC)
-S.scene("小川", 12, "outro", ["A", "G", "A", "A", "D", "A", "A", "A", "A", "A", "A", "A"])
+S.scene("小川", 8, "outro", ["A", "G", "A", "A", "D", "G", "A", "A"])
 NAMES = ["一滴", "滴", "連なる", "流れ1", "流れ2", "流れ3", "小川"]
 
 c = make(S, NAMES,
          [("一滴", 0, 0.6), ("滴", 0, 0.6), ("連なる", 0, 0.64), ("流れ1", 0, 0.68), ("流れ2", 0, 0.72), ("流れ3", 0, 0.76), ("流れ3", 15, 0.72),
-          ("小川", 0, 0.64), ("小川", 11, 0.36)],
+          ("小川", 0, 0.64), ("小川", 7, 0.36)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro="一滴", passing=True, tension=False)
-DROP = S.track("滴（グロッケン）", "bell", patch="glockenspiel", volume=0.03, pan=0.3, reverb=0.75, barGain=c.g())
+DROP = S.track("滴（グロッケン）", "bell", patch="glockenspiel", volume=0.06, pan=0.3, reverb=0.75, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.075, pan=0.15, reverb=0.45, barGain=c.g())
 PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.05, pan=-0.35, reverb=0.4, barGain=c.g())
 
@@ -53,7 +53,7 @@ play_melody(c, "連なる", LINK, 4, "air", density=0.3, seed=2101)
 play_melody(c, "流れ1", F1 + F2, 4, "air", density=0.7, seed=2102)
 play_melody(c, "流れ2", F1 + F2, 4, "air", density=0.9, seed=2103)
 play_melody(c, "流れ3", F2 + F1, 4, "air", density=1.0, seed=2104)
-play_melody(c, "小川", ["5:3 3:3", "2:6", "1:6", "R:6", "R:6", "R:6", "R:6", "R:6", "R:6", "R:6", "R:6", "R:6"], 4, "air", density=0.4, seed=2105)
+play_melody(c, "小川", ["5:3 3:3", "2:6", "3:2 4:1 5:3", "1:6", "4:3 3:3", "2:6", "1:6", "R:6"], 4, "air", density=0.4, seed=2105)
 
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
@@ -69,13 +69,16 @@ for b in range(c.NB):
             s.append(f"{nm(hi[rg.randrange(len(hi))])}:1"); t0 = p + 1
         if t0 < 6: s.append(f"R:{6 - t0}")
         tr.bar(b, " ".join(s))
-        if n != "一滴":
-            v = voice(ch, 52, 2, spread=True)
-            for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:6")
+        v = voice(ch, 52 if n != "一滴" else 57, 3, spread=True)   # 森の奥の空気（岩のすき間の、ひんやりした響き）
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
+        CELLO.bar(b, f"{nm(r)}:6")
         if n == "連なる": c.HARP.bar(b, " ".join(f"{nm(t[x % len(t)])}:1" for x in (0, 2)) + " R:1 " + " ".join(f"{nm(t[x % len(t)])}:1" for x in (1, 3)) + " R:1")
-    if n in ("流れ1", "流れ2", "流れ3") or (n == "小川" and i < 10):
+    if n in ("流れ1", "流れ2", "流れ3") or (n == "小川" and i < 7):
         c.HARP.bar(b, " ".join(f"{nm(t[x % len(t)])}:1" for x in ((0, 2, 4, 5, 4, 2) if i % 2 == 0 else (1, 3, 5, 3, 4, 2))))
-        if n != "小川" or i < 6: CELLO.bar(b, f"{nm(r)}:6")
+        CELLO.bar(b, f"{nm(r)}:6")
+        if n == "小川":
+            v = voice(ch, 55, 3, spread=True)
+            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
     if n in ("流れ2", "流れ3"):
         v = voice(ch, 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
@@ -84,4 +87,4 @@ for b in range(c.NB):
 rich(c, choir_scenes=["流れ3"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の021（第2版）。湧き水から小川が生まれる。6/8・付点4分＝44、A ミクソリディア。ぽつんとした水滴の音（竪琴・グロッケン）がだんだん連なり、笛も1音ずつ→2〜3音→なめらかな旋律へ。流れになって走り出す。",
-       harm_scenes=None, tail_scene="小川", fill=False, pads=True, pad_scenes=["流れ1", "流れ2", "流れ3"])
+       harm_scenes=None, tail_scene="小川", fill=False, pads=True, pad_scenes=["滴", "連なる", "流れ1", "流れ2", "流れ3", "小川"])
