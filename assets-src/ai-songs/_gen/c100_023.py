@@ -27,10 +27,13 @@ NAMES = ["きらめき", "1周目", "2周目", "3周目", "川底"]
 c = make(S, NAMES,
          [("きらめき", 0, 0.62), ("1周目", 0, 0.68), ("2周目", 0, 0.78), ("2周目", 28, 0.92), ("3周目", 0, 0.78), ("3周目", 28, 0.88), ("川底", 0, 0.7), ("川底", 3, 0.45)],
          {}, flute_gain={n: 1.1 for n in NAMES}, intro="きらめき", passing=True, tension=False)
-GLOCK = S.track("きらめき（グロッケン）", "bell", patch="glockenspiel", volume=0.028, pan=0.35, reverb=0.7, barGain=c.g())
+GLOCK = S.track("きらめき（グロッケン）", "bell", patch="glockenspiel", volume=0.05, pan=0.35, reverb=0.7, barGain=c.g())
 PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.06, pan=-0.35, reverb=0.35, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.4, barGain=c.g())
 
+DRUM = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.1, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
+GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.05, pan=0.35 + 0.04 * i, reverb=0.35, barGain=c.g()) for i in range(5)]
+REEL_STRUM = [(0, 1, "d", "!"), (1, 0.5, "d", ","), (1.5, 0.5, "u", ","), (2, 1, "d", ""), (3, 0.5, "d", ","), (3.5, 0.5, "u", ",")]
 A = ["5:0.5 1':0.5 2':0.5 1':0.5 7:0.5 5:0.5 6:0.5 7:0.5", "1':0.5 5:0.5 3:0.5 5:0.5 1':0.5 2':0.5 3':1",
      "2':0.5 1':0.5 7:0.5 2':0.5 1':0.5 7:0.5 6:0.5 5:0.5", "6:0.5 4:0.5 2:0.5 4:0.5 6:1 5:1",
      "5:0.5 1':0.5 2':0.5 1':0.5 7:0.5 5:0.5 6:0.5 7:0.5", "1':0.5 5:0.5 3:0.5 5:0.5 6:0.5 7:0.5 1':0.5 2':0.5",
@@ -54,6 +57,9 @@ for b in range(c.NB):
         hi = tones(ch, "E5", "E7")
         GLOCK.bar(b, " ".join(f"{nm(hi[(i * 3 + q) % len(hi)])}:0.5" for q in (0, 2, 4)) + " R:2.5")
         c.HARP2.bar(b, "R:1.5 " + " ".join(f"{nm(hi[(i + q) % len(hi)] - 12)}:0.5" for q in (1, 3, 5)) + " R:1")
+        v = voice(ch, 59, 3, spread=True)       # 昼の光そのもの：高い弦のうすい和音
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
+        if i >= 2: DRUM.bar(b, "D3:2, R:1 A3:0.5, A3:0.5," if i == 3 else "D3:2, R:2")
         continue
     if n == "川底":
         c.HARP.bar(b, f"{nm(r)}:4"); CELLO.bar(b, f"{nm(r)}:4" if i < 3 else "R:4")
@@ -63,13 +69,16 @@ for b in range(c.NB):
     lowp = (n == "3周目" and i >= 4)
     base = "E3" if lowp else "E4"
     harp_ostinato(c.HARP, b, B, tones(ch, base, "E6")[:3])
+    bodhran(DRUM, b, B, "reel", var=1 if i % 8 == 7 else 0)
+    strum(GTR, b, B, ch, REEL_STRUM if n != "1周目" or i >= 16 else [(0, 2, "d", "!"), (2, 2, "d", ",")])
+    if n == "1周目": CELLO.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2")
     PIZZ.bar(b, f"{nm(r + 12)}:0.5 R:0.5 {nm(r + 19)}:0.5 R:0.5 {nm(r + 12)}:0.5 R:0.5 {nm(r + 19)}:0.5 R:0.5")
     if n in ("2周目", "3周目"):
         v = voice(ch, 52 if lowp else 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
         CELLO.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2")
     if n == "2周目" and i % 4 == 0: GLOCK.bar(b, f"{nm(tones(ch, 'E6', 'E7')[0])}:1 R:3")
-rich(c, choir_scenes=["2周目"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
+rich(c, choir_scenes=["2周目", "3周目"], pulse_scenes=["2周目", "3周目"], guitar=False, pizz=False, inner=True)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の023（第2版・明るく速めの曲）。昼の川面のきらめき。リール AABB、4/4・♩=100、E ミクソリディア。笛の細かい装飾音（カット・ロール）が光の雨になり、高い所から川底の低い音へ沈んでいく。",
-       harm_scenes=None, tail_scene="川底", fill=False, pads=False)
+       harm_scenes=None, tail_scene="川底", fill=False, pads=True, pad_scenes=["1周目", "2周目", "3周目"])
