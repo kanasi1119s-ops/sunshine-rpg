@@ -30,8 +30,8 @@ S.extra["rit"] = {"bar": 4 + 16 * 4 + 1, "bars": 6, "to": 0.72, "aTempo": False}
 c = make(S, NAMES,
          [("ゆれ", 0, 0.6), ("歌1", 0, 0.62), ("歌2", 0, 0.66), ("歌3", 0, 0.68), ("歌3", 15, 0.64), ("歌4", 0, 0.58), ("眠り", 0, 0.5), ("眠り", 5, 0.35)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro="ゆれ", passing=True, tension=False)
-GT = S.track("ナイロンギター", "guitar", patch="nylonGuitar", volume=0.055, pan=0.35, reverb=0.4, barGain=c.g())
-GT2 = S.track("ナイロンギター2", "guitar", patch="nylonGuitar", volume=0.045, pan=0.4, reverb=0.4, barGain=c.g())
+GT = S.track("ナイロンギター", "guitar", patch="nylonGuitar", volume=0.085, pan=0.35, reverb=0.4, barGain=c.g())
+GT2 = S.track("ナイロンギター2", "guitar", patch="nylonGuitar", volume=0.07, pan=0.4, reverb=0.4, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.075, pan=0.15, reverb=0.45, barGain=c.g())
 GLOCK = S.track("オルゴールの木霊", "bell", patch="glockenspiel", volume=0.022, pan=0.4, reverb=0.75, barGain=c.g())
 
@@ -53,7 +53,14 @@ for b in range(c.NB):
     c.HARP.bar(b, f"{nm(r)}:1 {nm(t[3 % len(t)])}:1 {nm(t[2])}:1" if not last else f"{nm(r)}:1 {nm(t[2])}:1 R:1")
     if n in ("歌1", "歌2", "歌3") or (n == "歌4" and i < 8):
         GT.bar(b, f"R:1 {nm(t[1])}:2"); GT2.bar(b, f"R:1 {nm(t[2])}:2")
-    if n in ("歌2", "歌3"): CELLO.bar(b, f"{nm(r)}:3")
+    if n in ("ゆれ", "歌1", "歌2", "歌3", "歌4"): CELLO.bar(b, f"{nm(r)}:3")
+    if n == "ゆれ":   # 午後の光：うすい弦と、竪琴の高いゆれ（ゆりかごの上の麦の穂）
+        v = voice(ch, 57, 3, spread=True)
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3")
+        c.HARP2.bar(b, f"R:1 {nm(t[2] + 12)}:1 {nm(t[1] + 12)}:1")
+    if n in ("歌1", "歌2"):
+        v = voice(ch, 53, 2, spread=True)
+        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:3")
     if n == "歌3":
         v = voice(ch, 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3")
@@ -65,4 +72,4 @@ for b in range(c.NB):
 c.SIL.add(c.s0["眠り"] + 5, 2, 3)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の015（第2版）。麦畑の午後の子守歌。3/4・♩=56、F イオニア。竪琴のゆりかごのゆれの上で、主題と小さな変奏。だんだんゆっくりになり、最後は眠りに落ちた所で歌が途中で止まる（最後の小節が2拍だけ）。",
-       harm_scenes=None, tail_scene="眠り", fill=False, pads=True, pad_scenes=["歌2", "歌3", "歌4"])
+       harm_scenes=None, tail_scene="眠り", fill=False, pads=True, pad_scenes=["歌1", "歌2", "歌3", "歌4"])
