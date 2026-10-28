@@ -84,7 +84,7 @@ def make(S, names, dyn_points, acc, flute_gain=None, intro=None, passing=False):
         return [round(d * c.ACC[b] * (extra[b] if extra else 1), 3) for b, d in enumerate(c.DYN)]
     c.g = g
     c.FLUTE = S.track("フルート", "panflute", patch="flute", volume=0.42, bright=-0.6, pan=-0.05, reverb=0.5, breath=True,
-                      noRestrike=True, mono=True, sustain=1.12, phrase=16, gainDb=2,
+                      noRestrike=True, mono=True, sustain=1.12, phrase=16, gainDb=4.5,   # 主旋律なのでもう少し表に（2026-10-28 人間の指示。2→4.5）
                       barGain=[round(max(d, 0.82) * c.FG[b], 3) for b, d in enumerate(c.DYN)])
     c.HARP = S.track("ハープ", "harp", patch="folkHarp", recipe="celtic-harp", volume=0.105, pan=-0.1, reverb=0.45, barGain=g())
     c.HARP2 = S.track("ハープ（高い響き）", "harp", patch="folkHarp", volume=0.055, pan=0.4, reverb=0.6, barGain=g())
