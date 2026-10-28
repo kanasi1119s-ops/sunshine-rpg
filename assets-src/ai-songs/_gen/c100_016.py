@@ -32,7 +32,7 @@ c = make(S, NAMES,
          [("足取り", 0, 0.64), ("1周目", 0, 0.68), ("1周目", 31, 0.72), ("角1", 0, 0.6), ("2周目", 0, 0.74), ("2周目", 31, 0.8), ("角2", 0, 0.62),
           ("3周目", 0, 0.84), ("3周目", 24, 0.94), ("3周目", 31, 0.9), ("終わり", 0, 0.88), ("終わり", 2, 0.5)],
          {}, flute_gain={n: 1.1 for n in NAMES}, intro="足取り", passing=True, tension=False)
-DRUM = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.13, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
+DRUM = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.1, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
 GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.05, pan=0.35 + 0.04 * i, reverb=0.35, barGain=c.g()) for i in range(5)]
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.4, barGain=c.g())
 
@@ -79,7 +79,7 @@ for b in range(c.NB):
     if n == "3周目":
         v = voice(ch, 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-rich(c, choir_scenes=["2周目", "3周目"], pulse_scenes=["2周目", "3周目"], guitar=False, pizz=True, inner=True)
+rich(c, choir_scenes=["3周目"], pulse_scenes=[], guitar=False, pizz=False, inner=False)   # 2026-10-29: ピチカート・内声・パッドを足したら 7.48→7.25 に下がったので戻す（速い曲は重ねすぎると点が下がる）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.28 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の016（第2版・明るく速めの曲）。古い石垣に沿ってはずむ足どり。ホーンパイプ（付点ではねる）AABB、4/4・♩=96、D ミクソリディア→E。1周ごとに曲がり角で一瞬止まり、最後の曲がり角でほんとうに止まる。",
-       harm_scenes=None, tail_scene="終わり", fill=False, pads=True, pad_scenes=["1周目", "2周目", "3周目"])
+       harm_scenes=None, tail_scene="終わり", fill=False, pads=False)
