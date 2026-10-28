@@ -114,6 +114,8 @@ def main(mus, spec, outp):
     M = load(mus); pre = int(spec.get("pre", 3.0) * SR); tail = int(spec.get("tail", 6.0) * SR)
     N = pre + len(M) + tail
     music = np.zeros((N, 2)); music[pre:pre + len(M)] = M
+    mf = int(spec.get("music_fade", 3.0) * SR)   # 曲の最後を、ぷつっと切らず、なめらかに消す（品質検査の「段差大」の対策。2026-10-28）
+    if mf > 0: music[pre + len(M) - mf:pre + len(M)] *= np.linspace(1, 0, mf)[:, None] ** 1.5
     ref = rms_db(M)
     e = env_db(music[::1]) ; med = np.median(e[pre:pre + len(M)])
     air = np.zeros((N, 2))
