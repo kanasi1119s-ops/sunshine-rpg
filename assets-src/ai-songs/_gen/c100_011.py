@@ -64,12 +64,17 @@ for b in range(c.NB):
     if n in ("風", "風の道") or (n == "風に還る" and i < 6):
         v = voice(ch, 62, 3, spread=False)
         for j in range(3): CH[j].bar(b, f"{nm(v[j])}:4")
-    if n != "風" and not (n == "風に還る" and i >= 6):
+    if not (n == "風に還る" and i >= 7):
         CELLO.bar(b, "D2:4")
         v = voice(ch, 50, 3, spread=True)
-        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:4")
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
+    # 草のなびき：竪琴がゆっくり上り下りする（風の周期に合わせて強弱）
+    if n in ("草原1", "草原2", "草原3", "風の道"):
+        roving_thumb(c.HARP2, b, B, ch, up=(b % 2 == 0))
     if n in ("草原2", "草原3") and i % 4 == 1: c.HARP.bar(b, f"R:2 {nm(tones(ch, 'D5', 'D6')[1])}:2")
 
+for tr in (c.HARP2,): tr.spec["barGain"] = wg()
+rich(c, choir_scenes=[], pulse_scenes=["草原2", "草原3"], guitar=True, pizz=False, inner=True)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の011（第2版）。一面の草原を風がなでる。4/4・♩=60、D ドリア。笛だけの合唱（主の笛の下に和音の笛が2〜3本）。強さは8小節周期の風のうねり。山はなく、風の強弱だけ。",
-       harm_scenes=None, tail_scene="風に還る", fill=False, pads=True, pad_scenes=["草原2", "風の道", "草原3"])
+       harm_scenes=None, tail_scene="風に還る", fill=False, pads=True, pad_scenes=["草原1", "草原2", "風の道", "草原3", "風に還る"])
