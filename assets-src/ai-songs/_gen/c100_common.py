@@ -110,7 +110,7 @@ def put_bars(c, scene, lines, oct_):
         c.FLUTE.bar(b, hi_soft(c.S.key.mel(s, oct=oct_)))
 
 
-def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=6, silences=()):
+def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=6, silences=(), skip_scenes=()):
     S = c.S; NB = c.NB
     # 高い小節ほど息をやわらかく
     pb = collections.defaultdict(list)
@@ -136,6 +136,7 @@ def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=6, silen
     for b in range(NB):
         n, i, L, k = S.scene_of(b)
         if tail_scene and n == tail_scene and i >= tail_keep: continue
+        if n in skip_scenes: continue
         w = voice(S.chords[b].split("|")[0], 55, 2, spread=True)
         for j in range(2): PADS[j].bar(b, f"{nm(w[j])}:{S.beats}")
     for (b, a, z) in silences: c.SIL.add(b, a, z)
