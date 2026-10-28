@@ -1,4 +1,4 @@
-# ケルト・フルート100曲「銀の笛と百の夜」018 干し草の匂い Scent of Hay — 第2版（2026-10-28）
+# ケルト・フルート100曲「銀の笛と百の夜」018 干し草の匂い Scent of Hay — 第3版（2026-10-29: 6.97→ のんびりにも弦とチェロの床・内声・終わりを短く浅く）
 # イメージ: 昼下がりの納屋。干し草の上でうとうとする。外では鳥。笛とギターが、のんびり世間話をするように。
 #   ときどき低いチェロが「うん、うん」と眠そうにあいづちを打つ。だんだんまぶたが重くなり、テンポがゆるんで眠りに近づいていく。
 # 形（台帳）: 2つの楽器のデュエット（笛とギター）。6/8・付点4分＝40（のんびり）。G ミクソリディア。始め：鳥／終わり：眠気（テンポがゆるむ）。山なし。
@@ -13,7 +13,7 @@ import sys
 from c100_common import *
 from c100_v2 import *
 
-BPM = 120   # 8分音符＝120（付点4分＝40）
+BPM = 116   # 8分音符＝116（付点4分＝約39。2026-10-29 長さを4分以上に）
 S = Song("C100", "018-scent-of-hay", "干し草の匂い", "Scent of Hay", BPM, 6, "G", "mixolydian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
 S.extra.update({"human": 0.45, "rubato": 0.3, "rit": {"bar": 3 + 16 * 3 + 16 + 6, "bars": 6, "to": 0.7, "aTempo": False}})
@@ -28,7 +28,7 @@ S.scene("夢うつつ", 12, "outro", ["G", "F", "G", "G", "C", "G", "C", "G", "F
 NAMES = ["鳥", "のんびり1", "のんびり2", "のんびり3", "昼寝", "夢うつつ"]
 
 c = make(S, NAMES,
-         [("鳥", 0, 0.6), ("のんびり1", 0, 0.64), ("のんびり2", 0, 0.66), ("のんびり3", 0, 0.68), ("昼寝", 0, 0.62), ("夢うつつ", 0, 0.56), ("夢うつつ", 11, 0.32)],
+         [("鳥", 0, 0.6), ("のんびり1", 0, 0.64), ("のんびり2", 0, 0.66), ("のんびり3", 0, 0.68), ("昼寝", 0, 0.62), ("夢うつつ", 0, 0.6), ("夢うつつ", 11, 0.46)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro="鳥", passing=True, tension=False)
 GB = S.track("ギター（低音の歩み）", "guitar", patch="nylonGuitar", volume=0.1, pan=0.25, reverb=0.35, barGain=c.g())
 GA = S.track("ギター（指弾き）", "guitar", patch="nylonGuitar", volume=0.085, pan=0.35, reverb=0.35, barGain=c.g())
@@ -69,16 +69,21 @@ for b in range(c.NB):
     if n in ("のんびり1", "のんびり2", "のんびり3"):
         GB.bar(b, f"{nm(r)}:3 {nm(r + 7)}:3" if not (n == "のんびり3" and i % 2) else f"{nm(r)}:6")
         GA.bar(b, " ".join(f"{nm(t[x % len(t)])}:1" for x in (2, 3, 4, 2, 3, 4) if True))
+        v = voice(ch, 52 if n == "のんびり1" else 55, 2 if n == "のんびり1" else 3, spread=True)   # 干し草の上の午後の空気（うすい弦）
+        for j in range(len(v)): c.STR[j].bar(b, f"{nm(v[j])}:6")
+        if n == "のんびり3" or (n == "のんびり2" and i % 4 != 3): CELLO.bar(b, f"{nm(r)}:6")
         if n == "のんびり2" and i % 4 == 3: CELLO.bar(b, f"R:2 {nm(r)}:2 {nm(r - 5 if r - 5 >= 36 else r + 7)}:2")
     if n == "昼寝":
         GB.bar(b, f"{nm(r)}:6"); GA.bar(b, f"{nm(t[2])}:3 {nm(t[3])}:3")
         if i % 8 == 7: CELLO.bar(b, f"R:3 {nm(r)}:3")
     if n == "夢うつつ" and i < 11:
         GB.bar(b, f"{nm(r)}:6"); GA.bar(b, f"R:3 {nm(t[2])}:3" if i % 2 == 0 else f"{nm(t[3])}:6")
-    if n in ("昼寝", "夢うつつ") and not (n == "夢うつつ" and i >= 11):   # 午後の光にまどろむ：うすい弦の和音
+    if n in ("昼寝", "夢うつつ"):   # 午後の光にまどろむ：うすい弦の和音
         v = voice(ch, 55, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
-        CELLO.bar(b, f"{nm(r)}:6") if n == "夢うつつ" else None
+        CELLO.bar(b, f"{nm(r)}:6") if n == "夢うつつ" or i % 8 != 7 else None
+rich(c, choir_scenes=["のんびり3"], pulse_scenes=["のんびり2", "のんびり3", "昼寝"], guitar=False, pizz=False, inner=True)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の018（第2版）。昼下がりの納屋で、干し草の上でうとうと。6/8・付点4分＝40、G ミクソリディア。笛とギターのデュエット（ギターは低音の歩みと指弾き）、チェロが眠そうにあいづち。だんだんテンポがゆるんで眠りへ。",
-       harm_scenes=None, tail_scene="夢うつつ", fill=False, pads=True, pad_scenes=["のんびり1", "のんびり2", "のんびり3", "昼寝", "夢うつつ"])
+       harm_scenes=None, tail_scene="夢うつつ", fill=False, pads=True, pad_scenes=["のんびり1", "のんびり2", "のんびり3", "昼寝", "夢うつつ"], floor=True)
+

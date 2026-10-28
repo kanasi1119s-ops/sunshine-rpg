@@ -1,0 +1,1 @@
+{"pre": 0.8, "tail": 8.0, "layers": [{"file": "0598", "db": -40, "hp": 120, "lp": 4000, "wide": 0.014, "duck": 0.35, "fade": 8}], "fx": {"shimmer": {"db": -28, "rt": 9.0}, "far": {"db": -24, "delay": 0.35, "lp": 2400, "rt": 5.5}}, "intro_db": 6.0}

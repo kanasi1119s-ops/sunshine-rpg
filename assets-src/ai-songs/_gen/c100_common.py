@@ -325,3 +325,17 @@ def rich(c, choir_scenes=(), pulse_scenes=(), choir_vol=0.13, guitar=True, pizz=
         PP = {4: ((0, 1, 2, 1), 1), 3: ((0, 1, 2), 1), 6: ((0, 2), 3)}.get(B, ((0,), B))
         seq = PP[0] if b % 2 == 0 else tuple(reversed(PP[0]))
         if pizz: PZ.bar(b, " ".join(f"{nm(z[q % len(z)])}:{PP[1]}" for q in seq))
+
+
+def dshift(line, k):
+    """度数の旋律（"5':2 4':1" など）を、音階の上で k 段ずらす（k<0 は下。3度下＝-2）。臨時記号はそのまま"""
+    out = []
+    for tok in line.split():
+        m = re.match(r"^([b#]?)([1-7])([',]*)(:.*)$", tok)
+        if not m: out.append(tok); continue
+        acc, d, marks, rest = m.groups()
+        o = marks.count("'") - marks.count(",")
+        z = (int(d) - 1) + k + 7 * o
+        o2, d2 = divmod(z, 7)
+        out.append(f"{acc}{d2 + 1}{chr(39) * o2 if o2 > 0 else ',' * (-o2)}{rest}")
+    return " ".join(out)

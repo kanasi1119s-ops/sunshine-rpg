@@ -1,4 +1,4 @@
-# ケルト・フルート100曲「銀の笛と百の夜」017 夕立の予感 A Hint of Rain — 第2版（2026-10-28）
+# ケルト・フルート100曲「銀の笛と百の夜」017 夕立の予感 A Hint of Rain — 第3版（2026-10-29: 7.05→ 前奏の床・ピアノ2倍・晴れ2から弦・最後まで弦）
 # イメージ: 明るい午後の草原。ふと西の空が暗くなる。同じ景色なのに、雲がかかると色が変わって見える。
 #   ＝同じ旋律が、明るい長調から、くもったミクソリディア、影の短調へと移っていく。夕立の直前に短い影の山（遠い雷のようなティンパニ）、
 #   そして雨の最初の粒が落ちはじめる所で、影の中に入って終わる。
@@ -31,9 +31,9 @@ c = make(S, NAMES,
          [("晴れ1", 0, 0.62), ("晴れ2", 0, 0.66), ("雲", 0, 0.66), ("影", 0, 0.66), ("影", 15, 0.72), ("夕立前", 0, 0.78), ("夕立前", 5, 0.9),
           ("夕立前", 7, 0.74), ("影に入る", 0, 0.62), ("影に入る", 7, 0.36)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro=None, passing=True, tension=False)
-PR = S.track("ピアノ（右手）", "piano", volume=0.4, pan=-0.15, reverb=0.45, barGain=c.g())
-PR2 = S.track("ピアノ（右手2）", "piano", volume=0.32, pan=-0.12, reverb=0.45, barGain=c.g())
-PL = S.track("ピアノ（左手）", "piano", volume=0.4, pan=-0.2, reverb=0.45, barGain=c.g())
+PR = S.track("ピアノ（右手）", "piano", volume=0.85, pan=-0.15, reverb=0.45, barGain=c.g())
+PR2 = S.track("ピアノ（右手2）", "piano", volume=0.7, pan=-0.12, reverb=0.45, barGain=c.g())
+PL = S.track("ピアノ（左手）", "piano", volume=0.85, pan=-0.2, reverb=0.45, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.45, barGain=c.g())
 TIMP = S.track("遠いティンパニ", "strings", patch="timpani", volume=0.06, pan=0.3, reverb=0.7, gainDb=-6, barGain=c.g())
 
@@ -56,12 +56,14 @@ for b in range(c.NB):
     r = low(ch, "C2"); r = r + 12 if r < 40 else r
     hi = [x for x in range(60, 76) if x % 12 in chord_pcs(ch)]
     t = tones(ch, "D3", "D5")
-    if n == "晴れ1": continue
+    if n == "晴れ1":   # 明るい午後の空気（竪琴の分散和音を小さく）
+        if i >= 2: c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[2])))
+        continue
     if n in ("晴れ2", "雲", "影"):
         PL.at(b * B, f"{nm(r if n != '晴れ2' else r + 12)}:2"); PL.at(b * B + 2, f"{nm(r + 7)}:2")
         PR.at(b * B, f"{nm(hi[1])}:2"); PR.at(b * B + 2, f"{nm(hi[2 % len(hi)])}:2"); PR2.at(b * B, f"{nm(hi[0])}:4")
     if n == "晴れ2": c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[2])))
-    if n in ("雲", "影", "夕立前"):
+    if n in ("晴れ2", "雲", "影", "夕立前"):
         v = voice(ch, 55 if n == "雲" else 52, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4" if n != "夕立前" else " ".join(f"{nm(v[j])}:0.5" for _ in range(8)))
     if n == "雲": CELLO.bar(b, f"{nm(r)}:4")
@@ -69,9 +71,9 @@ for b in range(c.NB):
     if n == "夕立前" and i in (3, 6): TIMP.bar(b, "R:2 " + " ".join(f"{nm(r)}:0.25" for _ in range(8)))
     if n == "影に入る":
         v = voice("Bm", 50, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4" if i < 7 else "R:4")
-        if i < 7: CELLO.bar(b, "B1:4" if False else "B2:4")
-rich(c, choir_scenes=["雲", "影", "夕立前"], pulse_scenes=["雲", "影"], guitar=False, pizz=False, inner=True)
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4" if i < 7 else f"{nm(v[j])}:3 R:1")
+        CELLO.bar(b, "B2:4")
+rich(c, choir_scenes=["晴れ2", "雲", "影", "夕立前"], pulse_scenes=["雲", "影"], guitar=False, pizz=False, inner=True)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の017（第2版）。西の空が暗くなる午後。4/4・♩=56。主題と変奏：同じ旋律が D 長調→ミクソリディア→B 短調→C♮の影へ。夕立の前に短い影の山（遠いティンパニ）、雨が降りはじめる所で影の中に入って終わる。",
-       harm_scenes=None, tail_scene="影に入る", fill=False, pads=True, pad_scenes=["晴れ2", "雲", "影", "夕立前", "影に入る"])
+       harm_scenes=None, tail_scene="影に入る", fill=False, pads=True, floor=True, pad_scenes=["晴れ1", "晴れ2", "雲", "影", "夕立前", "影に入る"])
