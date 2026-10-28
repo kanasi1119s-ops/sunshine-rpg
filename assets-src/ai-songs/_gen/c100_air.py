@@ -171,7 +171,12 @@ def main(mus, spec, outp):
         f = min(len(x) // 3, int(1.5 * SR)); x[:f] *= np.linspace(0, 1, f)[:, None]; x[-f:] *= np.linspace(1, 0, f)[:, None]
         pan = ev.get("pan", 0.0); x[:, 0] *= min(1, 1 - pan); x[:, 1] *= min(1, 1 + pan)
         s = pre + int(ev["t"] * SR); air[s:s + len(x)] += x[:max(0, N - s)]
-    if spec.get("fx"): air += fx_layers(M, N, pre, ref, spec["fx"])
+    if spec.get("fx"):
+        fxo = fx_layers(M, N, pre, ref, spec["fx"])
+        rp = spec["fx"].get("ramp")
+        if rp:   # 曲が進むほど空間の層を深くする（例: [0.3, 2.5]＝始めは弱く、終わりは強く）
+            fxo *= np.linspace(rp[0], rp[1], N)[:, None]
+        air += fxo
     ig = spec.get("intro_db", 0)
     if ig:   # 前奏が小さすぎないように、はじめの数十秒だけ音楽を持ち上げる（なめらかに戻す）
         tt = np.arange(N) / SR; hold = spec.get("intro_hold", 22); ramp = spec.get("intro_ramp", 10)
