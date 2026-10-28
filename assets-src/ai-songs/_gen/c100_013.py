@@ -1,69 +1,87 @@
-# ケルト・フルート100曲「銀の笛と百の夜」013 丘の上の孤独 Alone on the Hill（2026-10-28）。表は docs/sound/celtic-flute-100-plan.md
-# 物語: 丘の上に一人きりの羊飼い。広い空の下で、誰に聞かせるでもなく、ぽつりぽつりと独り言を笛で語る。チェロが少し離れて、低い声で相づちを打つ。
-# 型: 低い声域の静かな語り。笛は E4〜G5 の低めの所だけで書ききる（始め：低い笛／終わり：同じ低い笛）。山なし。
-#     笛は001と同じく一音ずつなめらかに。チェロの対旋律は2分音符で一歩ずつ動く。重ね方は「音の重ね方の勉強ノート」どおり。
+# ケルト・フルート100曲「銀の笛と百の夜」013 丘の上の孤独 Alone on the Hill — 第2版の試作（ゆったりした曲）（2026-10-28）
+# 物語: 丘の上に一人きりの羊飼い。最初は誰もいない所で、ドローンだけを相手に節を歌う（エア）。
+#       2回目は遠くの竪琴とチェロが、少し離れて答える。空を見上げる所（B）で、3本の笛が和音になって広がり、
+#       最後はまた一人に戻って、最初の節の前半だけを吹いて止める。
+# 形: 「独奏のエア→合奏」（docs/sound/celtic-study の D①）。3/4・♩=56、ゆるやかなテンポのゆれ（rubato）。
+#     旋律は AABA（Bで上のオクターブへ持ち上がる。Bの最後の2小節は Aの結び）。笛の装飾はエア用（すべり込み・ゆっくりした tap）。
+# 編曲の表:
+#   前置き  : 低いチェロの E のドローンだけ（2小節）→ 笛の弱起
+#   語り1   : 笛＋チェロのドローン（E と B）だけ。AABA
+#   語り2   : 竪琴（根音と、区切りでロールした和音）＋チェロの対旋律（笛と反対向きに2分音符で動く）。Bから弦が小さく
+#   空      : Bを3本の笛の和音（コラール）で。最後のAは全員で、笛は1オクターブ上を少し
+#   ひとりに戻る: 笛とドローンだけ。Aの前半4小節＋結び
 import sys
 from c100_common import *
+from c100_v2 import *
 
-S = Song("C100", "013-alone-on-the-hill", "丘の上の孤独", "Alone on the Hill", 50, 4, "E", "minor", "ケルト（幻想）")
+S = Song("C100", "013-alone-on-the-hill", "丘の上の孤独", "Alone on the Hill", 56, 3, "E", "minor", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.scene("独り言", 4, "intro", ["Em", "Em", "C", "Em"])
-S.scene("語り", 16, "verse", ["Em", "C", "G", "D", "Em", "Am", "Bm", "Em", "C", "G", "Am", "Em", "C", "D", "Em", "Em"])
-S.scene("思い", 16, "verse", ["Am", "Em", "C", "G", "Am", "D", "G", "G", "C", "Bm", "Am", "Em", "Am", "Bm", "Em", "Em"])
-S.scene("空", 16, "chorus", ["Cmaj7", "G", "D", "Em", "C", "D", "D", "D", "Am", "Em", "C", "G", "Am", "Bm", "Em", "Em"])
-S.scene("独り言に戻る", 8, "outro", ["Em", "Am", "Em", "Em", "Em", "Em", "Em", "Em"])
-NAMES = ["独り言", "語り", "思い", "空", "独り言に戻る"]
+S.extra.update({"rubato": 0.45, "human": 0.45})
+A1 = ["Em", "Em", "C", "D", "Em", "Em", "D", "Em"]
+A2 = ["Em", "Em", "C", "D", "Em", "C", "D", "Em"]
+BB = ["G", "G", "D", "Em", "C", "C", "D", "Em"]
+S.scene("前置き", 3, "intro", ["Em", "Em", "Em"])
+S.scene("語り1", 32, "verse", A1 + A2 + BB + A2)
+S.scene("語り2", 32, "verse", A1 + A2 + BB + A2)
+S.scene("空", 16, "chorus", BB + A2)
+S.scene("ひとりに戻る", 9, "outro", ["Em", "Em", "C", "D", "Em", "Em", "Em", "Em", "Em"])
+NAMES = ["前置き", "語り1", "語り2", "空", "ひとりに戻る"]
 
 c = make(S, NAMES,
-         [("独り言", 0, 0.62), ("語り", 0, 0.62), ("思い", 0, 0.66), ("空", 0, 0.7), ("空", 15, 0.66), ("独り言に戻る", 0, 0.56), ("独り言に戻る", 7, 0.3)],
-         {"語り": 0.58, "思い": 0.6, "空": 0.62, "独り言に戻る": 0.55},
-         flute_gain={"独り言": 1.3, "語り": 1.35, "思い": 1.3, "空": 1.25, "独り言に戻る": 1.25}, intro="独り言", passing=True, tension=True)
-FA = S.track("笛の和音1", "panflute", patch="flute", volume=0.15, bright=-0.9, pan=-0.35, reverb=0.65, breath=False, mono=True, barGain=c.g())
-FB = S.track("笛の和音2", "panflute", patch="flute", volume=0.13, bright=-0.9, pan=0.35, reverb=0.65, breath=False, mono=True, barGain=c.g())
-CELLO = S.track("チェロ（相づち）", "strings", patch="cello", volume=0.085, pan=0.25, reverb=0.45, barGain=c.g())
+         [("前置き", 0, 0.6), ("語り1", 0, 0.62), ("語り1", 20, 0.7), ("語り1", 31, 0.62), ("語り2", 0, 0.66), ("語り2", 20, 0.76), ("語り2", 31, 0.68),
+          ("空", 0, 0.78), ("空", 4, 0.9), ("空", 15, 0.72), ("ひとりに戻る", 0, 0.6), ("ひとりに戻る", 8, 0.35)],
+         {}, flute_gain={n: 1.25 for n in NAMES}, intro="前置き", passing=True, tension=False)
+CELLO = S.track("チェロ（ドローンと対旋律）", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.45, barGain=c.g())
+CELLO2 = S.track("チェロ（5度）", "strings", patch="cello", volume=0.06, pan=-0.1, reverb=0.45, barGain=c.g())
+FA = S.track("笛の和音1", "panflute", patch="flute", volume=0.16, bright=-0.9, pan=-0.35, reverb=0.65, breath=False, mono=True, noRestrike=True, sustain=1.12, barGain=c.g())
+FB = S.track("笛の和音2", "panflute", patch="flute", volume=0.14, bright=-0.9, pan=0.35, reverb=0.65, breath=False, mono=True, noRestrike=True, sustain=1.12, barGain=c.g())
 
-# ---------- 笛（E エオリア。低めの所だけ） ----------
-put_bars(c, "独り言", ["R:1 1:1 2:1 3:1", "2:3 R:1", "3:1 2:1 1:1 2:1", "1:3 R:1"], 4)
-put_melody(c, "語り", [
-    ["1:1 3:1 5:1 3:1", "6:1 5:1 4:1 3:1", "3:1 5:1 7:1 5:1", "4:3 R:1"],
-    ["5:1 3:1 1:1 3:1", "4:1 6:1 1':1 6:1", "5:1 4:1 2:1 4:1", "3:3 R:1"],
-    ["3:1 5:1 6:1 5:1", "3:1 5:1 7:1 5:1", "4:1 6:1 1':1 6:1", "5:3 R:1"],
-    ["6:1 5:1 3:1 6:1", "7:1 6:1 4:1 2:1", "3:1 2:1 1:1 2:1", "1:3 R:1"]], 4)
-put_melody(c, "思い", [
-    ["4:1 6:1 1':1 6:1", "5:1 3:1 1:1 3:1", "3:1 5:1 6:1 5:1", "7:3 R:1"],
-    ["1':1 6:1 4:1 6:1", "7:1 4:1 2:1 4:1", "3:1 5:1 7:1 5:1", "3:3 R:1"],
-    ["6:1 1':1 3':1 1':1", "2':1 1':1 7:1 5:1", "6:1 4:1 1:1 4:1", "5:3 R:1"],
-    ["4:1 6:1 1':1 6:1", "5:1 7:1 2':1 7:1", "1':1 7:1 5:1 3:1", "1:3 R:1"]], 4)
-put_melody(c, "空", [
-    ["3:1 5:1 7:1 1':1", "7:1 5:1 3:1 5:1", "4:1 6:1 7:1 6:1", "5:3 R:1"],
-    ["6:1 1':1 3':1 1':1", "7:1 1':1 7:1 5:1", "4:1 6:1 2':1 6:1", "4:3 R:1"],
-    ["1':1 6:1 4:1 6:1", "5:1 7:1 1':1 7:1", "6:1 5:1 3:1 5:1", "7:3 R:1"],
-    ["6:1 4:1 1:1 4:1", "5:1 4:1 2:1 4:1", "3:1 2:1 1:1 2:1", "1:3 R:1"]], 4)
-put_bars(c, "独り言に戻る", ["3:1 2:1 1:2", "R:4", "2:1 3:1 1:2", "R:4", "1:4", "R:4", "R:4", "R:4"], 4)
+# ---------- 旋律（E エオリア・3/4。弱起から） ----------
+L_A1 = ["5,:1 1:1.5 2:0.5", "3:2 2:0.5 1:0.5", "6,:1.5 7,:0.5 1:1", "2:3",
+        "5,:1 1:1.5 2:0.5", "3:1 5:1.5 4:0.5", "3:1 2:1 7,:1", "1:2 5,:1"]
+L_A2 = ["5,:1 1:1.5 2:0.5", "3:2 2:0.5 1:0.5", "6,:1.5 7,:0.5 1:1", "2:3",
+        "5,:1 1:1.5 2:0.5", "3:1 5:1 6:1", "5:1.5 3:0.5 2:1", "1:2 3:0.5 5:0.5"]
+L_B = ["5:1 6:1 7:1", "1':2 7:0.5 6:0.5", "5:1 6:1.5 7:0.5", "2':2 1':1",
+       "7:1.5 6:0.5 5:1", "6:1 4:1 2:1", "3:1 2:1 7,:1", "1:2 5,:1"]
+L_A3 = L_A2[:7] + ["1:3"]
+play_melody(c, "前置き", ["R:3", "R:3", "R:2 5,:1"], 4, "air", density=0)
+play_melody(c, "語り1", L_A1 + L_A2 + L_B + L_A2, 4, "air", density=0.8, seed=31)
+play_melody(c, "語り2", L_A1 + L_A2 + L_B + L_A2, 4, "air", density=1.0, seed=32)
+play_melody(c, "空", L_B + L_A3, 4, "air", density=0.9, seed=33)
+play_melody(c, "ひとりに戻る", ["5,:1 1:1.5 2:0.5", "3:2 2:0.5 1:0.5", "6,:1.5 7,:0.5 1:1", "2:1.5 3:0.5 2:1", "1:3", "R:3", "R:3", "R:3", "R:3"], 4, "air", density=0.6, seed=34)
 
-# ---------- 伴奏（チェロの相づち＝2分音符で一歩ずつ動く対旋律） ----------
+# ---------- 伴奏 ----------
+B = S.beats
 prev = 52
+LB = L_B
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    lo = low(ch, "C2"); t = tones(ch, "D3", "D6")
-    if n == "独り言":   # 始まり：笛だけの和音（3本の笛がのばす）の上で、低い笛が独り言をはじめる
-        w = voice(ch, 62, 2, spread=False)
-        FA.bar(b, f"{nm(w[0])}:4"); FB.bar(b, f"{nm(w[1])}:4")
-        continue
-    v = voice(ch, 55, 3, spread=True)
-    for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-    if n != "独り言" and not (n == "独り言に戻る" and i >= 6):
-        cand = [m for m in range(43, 60) if m % 12 in chord_pcs(ch.split("|")[0])]
+    t = tones(ch, "E3", "E5")
+    if n in ("前置き", "語り1", "ひとりに戻る"):
+        if n == "ひとりに戻る" and i >= 7: continue
+        CELLO.bar(b, "E2:3")
+        if n != "前置き" or i >= 1: CELLO2.bar(b, "B2:3")
+    elif n == "語り2":
+        # 竪琴：1拍目に根音、区切り（4・8小節目）でロールした和音
+        if i % 4 == 3: c.HARP.bar(b, " ".join(f"{nm(x)}:{0.15 if j < 3 else 3 - 0.45}" for j, x in enumerate(t[:4])))
+        else: c.HARP.bar(b, f"{nm(t[0])}:1 R:1 {nm(t[2])}:1")
+        # チェロの対旋律：笛と反対向き。2分音符＋4分
+        cand = [m for m in range(40, 57) if m % 12 in chord_pcs(ch)]
         a = min(cand, key=lambda m: abs(m - prev)); z = min([m for m in cand if m != a], key=lambda m: abs(m - a))
-        CELLO.bar(b, f"{nm(a)}:2 {nm(z)}:2"); prev = z
-    if n in ("語り", "思い", "空"):
-        c.HARP.bar(b, f"{nm(t[0])}:2 {nm(t[2])}:2" if i % 2 == 0 else f"R:2 {nm(t[1])}:2")
-        c.LOW.bar(b, f"{nm(lo + 12 if lo < 40 else lo)}:4")
-    elif n == "独り言に戻る" and i in (0, 2):
-        c.HARP.bar(b, f"{nm(t[0])}:4")
-
-rich(c, choir_scenes=["思い", "空"], pulse_scenes=["思い", "空"], guitar=False)
+        CELLO.bar(b, f"{nm(a)}:2 {nm(z)}:1"); prev = z
+        CELLO2.bar(b, f"{nm(low(ch, 'C2') + 12 if low(ch, 'C2') < 40 else low(ch, 'C2'))}:3")
+        if i >= 16:
+            v = voice(ch, 55, 3, spread=True)
+            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3")
+    elif n == "空":
+        v = voice(ch, 55, 3, spread=True)
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3")
+        CELLO2.bar(b, f"{nm(low(ch, 'C2') + 12 if low(ch, 'C2') < 40 else low(ch, 'C2'))}:3")
+        c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)])))
+        if i < 8:   # B を3本の笛の和音で（主旋律の下に3度と6度）
+            w = voice(ch, 64, 2, spread=False)
+            FA.bar(b, f"{nm(w[0])}:3"); FB.bar(b, f"{nm(w[1])}:3")
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.0",
-       "ケルト・フルート100曲の013。丘の上に一人きりの羊飼い。E エオリア・50。低めの所だけで語る笛に、チェロが少し離れて相づちを打つ。山なし。",
-       harm_scenes=["語り", "思い", "空"], tail_scene="独り言に戻る")
+       "ケルト・フルート100曲の013（第2版の試作）。丘の上に一人きりの羊飼い。E エオリア・3/4・♩=56、ゆるやかなテンポのゆれ。独奏のエア（AABA）→竪琴とチェロが答える→3本の笛の和音で空へ→ひとりに戻る。",
+       harm_scenes=None, tail_scene="ひとりに戻る", fill=False, pads=True, pad_scenes=["語り2", "空"])
