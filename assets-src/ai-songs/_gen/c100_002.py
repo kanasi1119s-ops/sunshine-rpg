@@ -34,6 +34,7 @@ c = make(S, NAMES,
          [("前置き", 0, 0.6), ("1周目", 0, 0.62), ("1周目", 23, 0.66), ("上り1", 0, 0.66), ("2周目", 0, 0.68), ("2周目", 23, 0.74),
           ("上り2", 0, 0.74), ("3周目", 0, 0.76), ("3周目", 16, 0.88), ("3周目", 23, 0.74), ("灯室", 0, 0.62), ("灯室", 3, 0.42)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro="前置き", passing=True, tension=False)
+c.HARP.spec["barGain"] = [round(x * (1.5 if b < 4 else 1.0), 3) for b, x in enumerate(c.HARP.spec["barGain"])]
 STEP = S.track("足音（枠太鼓の手のひら）", "guitar", patch="frameDrum", volume=0.07, pan=-0.2, reverb=0.45, modulate=False, barGain=c.g())
 CELLO = S.track("チェロ（対旋律）", "strings", patch="cello", volume=0.085, pan=0.25, reverb=0.45, barGain=c.g())
 PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.055, pan=-0.35, reverb=0.4, barGain=c.g())
@@ -59,6 +60,9 @@ for b_ in range(c.NB):
     if n in ("前置き", "1周目", "2周目", "3周目"):
         c.HARP.bar(b_, f"{nm(r)}:1 {nm(r + 7)}:1 {nm(r + 12)}:1")      # 低い竪琴：根音・5度・オクターブ（段を踏む形）
     if n in ("前置き", "1周目"): STEP.bar(b_, "D3:1 R:2")
+    if n == "前置き":           # 前奏が小さすぎないように：低い弦がうすく床をつくる
+        v = voice(ch, 50, 3, spread=True)
+        for j in range(3): c.STR[j].bar(b_, f"{nm(v[j])}:3")
     if n == "2周目": STEP.bar(b_, "D3:1 R:1 D3:1,")
     if n == "3周目": STEP.bar(b_, "D3:1 D3:1, D3:1,")
     if n in ("2周目", "3周目"):
