@@ -53,7 +53,11 @@ for b in range(c.NB):
     r = low(ch, "C2"); r = r + 12 if r < 40 else r
     t = tones(ch, "E3", "E5"); pz = tones(ch, "A3", "A4")
     if n == "霧":
-        PIZZ.bar(b, f"{nm(pz[0])}:1 {nm(pz[1])}:1 R:2" if i % 2 == 0 else f"{nm(pz[2])}:1 R:1 {nm(pz[1])}:1 R:1")
+        PIZZ.bar(b, f"{nm(pz[0])}:1 {nm(pz[1])}:1 {nm(pz[2])}:1 R:1" if i % 2 == 0 else f"{nm(pz[2])}:1 R:1 {nm(pz[1])}:1 {nm(pz[0])}:1")
+        v = voice(ch, 55, 3, spread=True)       # 霧そのもの：弦の和音がうすく丘をおおう
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
+        CELLO.bar(b, f"{nm(r)}:4")
+        c.HARP2.bar(b, f"R:2 {nm(t[4 % len(t)] + 12)}:2" if i % 2 else "R:4")   # 霧の中の水滴
         continue
     if n in ("探す1", "探す2", "探す3"):
         ph = i % 4
@@ -67,9 +71,10 @@ for b in range(c.NB):
             PIZZ.bar(b, f"{nm(pz[0])}:1 R:3"); c.HARP.bar(b, f"{nm(r)}:1 R:3"); CELLO.bar(b, f"{nm(r)}:1 R:3")
             v = voice(ch, 52, 3, spread=True)
             for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:1 R:3" if j else f"{nm(v[j])}:4")
-        else:                # 耳をすます：弦のごく弱い持続だけ
-            v = voice(ch, 57, 2, spread=True)
-            for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:4")
+        else:                # 耳をすます：弦の持続（音は止めず、息をひそめる）
+            v = voice(ch, 57, 3, spread=True)
+            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
+            CELLO.bar(b, f"{nm(r)}:4")
     if n == "見つけた":
         c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in (t[0], t[2], t[4 % len(t)], t[2]) * 2))
         v = voice(ch, 57, 3, spread=True)
@@ -84,7 +89,7 @@ for b in range(c.NB):
 rich(c, choir_scenes=["見つけた"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の014（第2版）。霧の丘ではぐれた子羊を探す。4/4・♩=62、A ドリア。ストップタイム：歩く2小節→全員が1拍目だけ鳴らして止まり笛が呼ぶ→耳をすます。呼ぶたびに本物の鳴き声が近づき、見つけた所で小さな山。",
-       harm_scenes=None, tail_scene="安堵", fill=False, pads=True, pad_scenes=["探す2", "探す3", "見つけた", "安堵"])
+       harm_scenes=None, tail_scene="安堵", fill=False, pads=True, pad_scenes=["探す1", "探す2", "探す3", "見つけた", "安堵"])
 
 # ---------- 空気：耳をすます小節に、遠くの鳴き声（呼ぶたびに近づく） ----------
 BAR = 4 * 60 / BPM
