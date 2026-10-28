@@ -1,75 +1,75 @@
-# ケルト・フルート100曲「銀の笛と百の夜」011 草を渡る風 Wind Through the Grass（2026-10-28）。表は docs/sound/celtic-flute-100-plan.md
-# 物語: 一面の草原を、風が通り抜けていく。草がなびくたびに、笛の息も強くなったり弱くなったりする。始め：竪琴だけ／終わり：風。山なし。
-# 曲調を他の曲と変える（2026-10-28 人間「なるべく曲調を似させないでね」）:
-#   ・6/8 拍子（ほかの曲は 4/4）。「長・短」のゆれ（4分＋8分）で、草が風に倒れて戻る動き
-#   ・伴奏の主役はピアノの流れる分散和音（竪琴は始まりだけ）。ギターの刻みは使わない
-#   ・笛と伴奏の強さを、8小節の周期で風のうねりに合わせてゆらす。環境音の風も同じ周期
+# ケルト・フルート100曲「銀の笛と百の夜」011 草を渡る風 Wind Through the Grass — 第2版（2026-10-28）
+# イメージ: 一面の草原を、風がなでていく。草がいっせいになびいて、また起き上がる。その「なびき」を、何本もの笛の息で描く。
+#   風が強まると和音がふくらみ、弱まると1本の笛だけが残る。山はなく、風の強弱だけがある。
+# 形（台帳）: 笛だけの合唱（コラール）。主の笛の下に、和音の笛が2〜3本。4/4・♩=60。D ドリア。
+#   強さは8小節＝32秒の周期で「風のうねり」をつくり、環境音の風も同じ周期で動かす。
+# 編曲の表:
+#   風      : 風の音→笛の和音だけがふくらんで、しぼむ（旋律なし）
+#   草原1   : 主の笛＋和音の笛2本。うすい弦とチェロの低い D が地面
+#   草原2   : ＋低い笛（3本目）＋竪琴がときどき1音（草の露）
+#   風の道  : 旋律なし。笛の和音だけが大きくうねる（強い風が通り抜ける）
+#   草原3   : 主の笛がいちばん高い所まで。和音の笛3本
+#   風      : 笛の和音がしぼみ、風の音に戻る
 import sys, math
 from c100_common import *
+from c100_v2 import *
 
-# 6/8 は「1拍＝8分音符」で書く（1小節＝6）。♪=150（付点4分＝50）
-S = Song("C100", "011-wind-through-the-grass", "草を渡る風", "Wind Through the Grass", 150, 6, "D", "dorian", "ケルト（幻想）")
+S = Song("C100", "011-wind-through-the-grass", "草を渡る風", "Wind Through the Grass", 60, 4, "D", "dorian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.scene("風", 4, "intro", ["Dm", "Dm", "C", "Dm"])
-S.scene("草原1", 16, "verse", ["Dm", "G", "Dm", "C", "F", "G", "Am", "Dm", "Dm", "C", "G", "Am", "F", "G", "Dm", "Dm"])
-S.scene("草原2", 16, "verse", ["F", "C", "G", "Dm", "Am", "G", "F", "G", "Dm", "Em", "F", "G", "C", "G", "Dm", "Dm"])
-S.scene("草原3", 16, "chorus", ["Dm", "G", "Am", "Em", "F", "C", "G", "Am", "F", "G", "Em", "Am", "G", "C", "Dm", "Dm"])
-S.scene("草原4", 16, "verse", ["Dm", "G", "Dm", "C", "F", "G", "Am", "Dm", "Dm", "C", "G", "Am", "F", "G", "Dm", "Dm"])
-S.scene("草原5", 16, "chorus", ["Dm", "G", "Am", "Em", "F", "C", "G", "Am", "F", "G", "Em", "Am", "G", "C", "Dm", "Dm"])
-S.scene("風に還る", 12, "outro", ["Dm", "C", "Dm", "Dm", "C", "Dm", "Dm", "Dm", "Dm", "Dm", "Dm", "Dm"])
-NAMES = ["風", "草原1", "草原2", "草原3", "草原4", "草原5", "風に還る"]
+S.extra.update({"human": 0.4, "rubato": 0.25})
+G1c = ["Dm", "Dm", "C", "G", "Dm", "C", "Am", "Am"]
+G2c = ["F", "C", "Am", "G", "Dm", "C", "G", "Dm"]
+G3c = ["Am", "Am", "F", "G", "Dm", "G", "C", "Am"]
+G4c = ["G", "C", "G", "Dm", "Am", "C", "G", "Dm"]
+S.scene("風", 4, "intro", ["Dm", "C", "Dm", "Dm"])
+S.scene("草原1", 16, "verse", G1c + G2c)
+S.scene("草原2", 16, "verse", G3c + G4c)
+S.scene("風の道", 8, "break", ["Dm", "C", "F", "G", "Dm", "C", "G", "Dm"])
+S.scene("草原3", 16, "chorus", G3c + G2c)
+S.scene("風に還る", 8, "outro", ["Dm", "C", "Dm", "Dm", "Dm", "Dm", "Dm", "Dm"])
+NAMES = ["風", "草原1", "草原2", "風の道", "草原3", "風に還る"]
 
 c = make(S, NAMES,
-         [("風", 0, 0.62), ("草原1", 0, 0.64), ("草原2", 0, 0.68), ("草原3", 0, 0.72), ("草原3", 15, 0.66), ("草原4", 0, 0.62), ("草原5", 0, 0.7), ("草原5", 15, 0.66), ("風に還る", 0, 0.55), ("風に還る", 11, 0.3)],
-         {"草原1": 0.64, "草原2": 0.64, "草原3": 0.66, "草原4": 0.62, "草原5": 0.66, "風に還る": 0.6},
-         flute_gain={"草原1": 1.3, "草原2": 1.3, "草原3": 1.25, "草原4": 1.3, "草原5": 1.25, "風に還る": 1.15}, intro="風", passing=True, tension=True)
-PIANO = S.track("ピアノ（流れる分散和音）", "piano", volume=0.11, pan=-0.12, reverb=0.45, barGain=c.g())
-WIND = [0.92 + 0.08 * math.sin(2 * math.pi * (b - 2) / 8) for b in range(c.NB)]
-for tr in (c.FLUTE, PIANO):
-    tr.spec["barGain"] = [round(x * WIND[b], 3) for b, x in enumerate(tr.spec["barGain"])]
+         [("風", 0, 0.58), ("草原1", 0, 0.64), ("草原2", 0, 0.68), ("風の道", 0, 0.72), ("草原3", 0, 0.72), ("風に還る", 0, 0.6), ("風に還る", 7, 0.32)],
+         {}, flute_gain={n: 1.2 for n in NAMES}, intro="風", passing=True, tension=False)
+WIND = [0.86 + 0.14 * math.sin(2 * math.pi * (b - 2) / 8) for b in range(c.NB)]
+def wg(): return [round(g * WIND[b], 3) for b, g in enumerate(c.g())]
+CH = [S.track(f"和音の笛{i + 1}", "panflute", patch="flute", volume=[0.17, 0.15, 0.13][i], bright=-0.9, pan=[-0.4, 0.4, -0.15][i], reverb=0.65,
+              breath=(i == 0), noRestrike=True, mono=True, sustain=1.12, phrase=16, barGain=wg()) for i in range(3)]
+CELLO = S.track("チェロ（地面）", "strings", patch="cello", volume=0.07, pan=0.1, reverb=0.5, barGain=c.g())
+c.FLUTE.spec["barGain"] = [round(x * WIND[b], 3) for b, x in enumerate(c.FLUTE.spec["barGain"])]
 
-# ---------- 旋律（D ドリア・6/8。「長・短」のゆれで一音ずつ） ----------
-M1 = [
-    ["R:3 1:2 2:1", "3:2 4:1 5:2 4:1", "3:2 2:1 1:2 2:1", "2:6"],
-    ["3:2 4:1 5:2 3:1", "4:2 5:1 6:2 4:1", "5:2 3:1 1:2 3:1", "1:6"],
-    ["5:2 4:1 3:2 4:1", "4:2 3:1 2:2 3:1", "4:2 6:1 5:2 4:1", "5:6"],
-    ["5:2 4:1 3:2 5:1", "4:2 5:1 6:2 5:1", "3:2 2:1 1:2 2:1", "1:6"]]
-put_melody(c, "草原1", M1, 5)
-put_melody(c, "草原4", M1, 5)
-put_melody(c, "草原2", [
-    ["3:2 5:1 7:2 5:1", "4:2 2:1 7,:2 2:1", "4:2 6:1 5:2 4:1", "3:6"],
-    ["5:2 3:1 1:2 3:1", "4:2 6:1 7:2 6:1", "5:2 7:1 5:2 3:1", "4:6"],
-    ["5:2 4:1 3:2 5:1", "6:2 5:1 4:2 2:1", "3:2 5:1 7:2 5:1", "6:6"],
-    ["7:2 6:1 5:2 4:1", "6:2 5:1 4:2 6:1", "5:2 4:1 3:2 2:1", "1:6"]], 5)
-M3 = [
-    ["1:2 3:1 5:2 7:1", "6:2 5:1 4:2 6:1", "5:2 7:1 5:2 3:1", "2:6"],
-    ["3:2 5:1 7:2 5:1", "4:2 2:1 7,:2 2:1", "4:2 6:1 7:2 6:1", "5:6"],
-    ["5:2 7:1 6:2 5:1", "4:2 6:1 5:2 4:1", "2:2 4:1 6:2 4:1", "5:6"],
-    ["4:2 6:1 5:2 4:1", "2:2 4:1 7,:2 2:1", "3:2 2:1 1:2 2:1", "1:6"]]
-put_melody(c, "草原3", M3, 5)
-put_melody(c, "草原5", M3, 5)
-put_bars(c, "風に還る", ["3:2 2:1 1:3", "R:6", "5,:2 6,:1 1:3", "R:6", "3:2 2:1 1:3", "2:6", "1:6", "R:6", "R:6", "R:6", "R:6", "R:6"], 5)
+G1 = ["R:2 5:2", "6:3 5:1", "4:2 3:2", "2:4", "R:2 3:2", "4:3 5:1", "6:2 7:1 6:1", "5:4"]
+G2 = ["R:2 5:2", "7:3 6:1", "5:2 6:2", "4:4", "R:2 3:2", "5:3 4:1", "3:2 2:1 1:1", "1:4"]
+G3 = ["R:2 5:2", "7:3 6:1", "5:2 7:2", "6:4", "R:2 4:2", "6:3 5:1", "4:2 3:1 2:1", "3:4"]
+G4 = ["R:2 2:2", "4:3 3:1", "2:2 7,:2", "1:4", "R:2 5,:2", "7,:3 1:1", "2:2 3:2", "1:4"]
+mel = {}
+mel["草原1"] = play_melody(c, "草原1", G1 + G2, 5, "air", density=0.6, seed=1101)
+mel["草原2"] = play_melody(c, "草原2", G3 + G4, 5, "air", density=0.7, seed=1102)
+mel["草原3"] = play_melody(c, "草原3", G3 + G2, 5, "air", density=0.8, seed=1103)
 
-# ---------- 伴奏（ピアノの流れる分散和音＝草のなびき） ----------
+B = S.beats
+# 旋律のある所：主の笛の音ごとに、その下の和音の音を和音の笛が吹く（コラール）
+for sc, notes in mel.items():
+    nv = 2 if sc == "草原1" else 3
+    for t, L, m, mk in notes:
+        if L < 0.9: continue
+        bar = int(t // B); pcs = chord_pcs(S.chords[bar])
+        below = [x for x in range(m - 14, m - 1) if x % 12 in pcs]
+        below = sorted(below, reverse=True)[:nv]
+        for j, x in enumerate(below): CH[j].at(round(t + 0.02 * (j + 1), 3), f"{nm(x)}:{L}")
+# 旋律のない所：和音の笛がふくらんで、しぼむ
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    lo = low(ch, "C2"); t = tones(ch, "D3", "D6")
-    if n == "風":   # 始まり：竪琴だけが、草のなびきのように流れる
-        c.HARP.bar(b, " ".join(f"{nm(t[q % len(t)])}:1" for q in ((0, 2, 4, 5, 4, 2) if i % 2 == 0 else (1, 3, 5, 3, 4, 2))))
-        continue
-    v = voice(ch, 57, 3, spread=True)
-    for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
-    if n.startswith("草原"):
-        p = tones(ch, "A2", "A5")
-        PIANO.bar(b, " ".join(f"{nm(p[q % len(p)])}:1" for q in ((0, 2, 4, 5, 4, 2) if i % 2 == 0 else (0, 3, 5, 6, 5, 3))))
-        if i % 4 == 3: c.HARP2.bar(b, f"R:3 {nm(t[-2])}:3")
-        c.LOW.bar(b, f"{nm(lo + 12 if lo < 40 else lo)}:6")
-    elif n == "風に還る":
-        if i in (0, 2, 4):
-            p = tones(ch, "A2", "A5"); PIANO.bar(b, " ".join(f"{nm(p[q % len(p)])}:1" for q in (0, 2, 4, 6, 4, 2)))
+    if n in ("風", "風の道") or (n == "風に還る" and i < 6):
+        v = voice(ch, 62, 3, spread=False)
+        for j in range(3): CH[j].bar(b, f"{nm(v[j])}:4")
+    if n != "風" and not (n == "風に還る" and i >= 6):
+        CELLO.bar(b, "D2:4")
+        v = voice(ch, 50, 3, spread=True)
+        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:4")
+    if n in ("草原2", "草原3") and i % 4 == 1: c.HARP.bar(b, f"R:2 {nm(tones(ch, 'D5', 'D6')[1])}:2")
 
-rich(c, choir_scenes=["草原3", "草原5"], pulse_scenes=["草原2", "草原3", "草原5"], guitar=False, pizz=False)
-
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.0",
-       "ケルト・フルート100曲の011。一面の草原を風が渡る。D ドリア・6/8（付点4分＝50）。ピアノの流れる分散和音の上で、笛が「長・短」のゆれで歌う。強さは8小節周期の風のうねりに合わせてゆれる。",
-       harm_scenes=["草原1", "草原2", "草原3", "草原4", "草原5"], tail_scene="風に還る")
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.25 --side-hpf 220",
+       "ケルト・フルート100曲の011（第2版）。一面の草原を風がなでる。4/4・♩=60、D ドリア。笛だけの合唱（主の笛の下に和音の笛が2〜3本）。強さは8小節周期の風のうねり。山はなく、風の強弱だけ。",
+       harm_scenes=None, tail_scene="風に還る", fill=False, pads=True, pad_scenes=["草原2", "風の道", "草原3"])
