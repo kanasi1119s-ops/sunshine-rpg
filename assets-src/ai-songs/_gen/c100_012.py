@@ -37,12 +37,12 @@ c = make(S, NAMES,
           ("ジグ2-1", 0, 0.78), ("ジグ2-1", 31, 0.84), ("ジグ2-2", 0, 0.86), ("ジグ2-2", 31, 0.9), ("帰り道", 0, 0.8), ("帰り道", 15, 0.92),
           ("結び", 0, 0.9), ("結び", 3, 0.5)],
          {}, flute_gain={n: 1.15 for n in NAMES}, intro="鳥", passing=True, tension=False)
-BIRD = S.track("鳥の笛", "panflute", patch="flute", volume=0.18, bright=-0.7, pan=0.45, reverb=0.7, breath=False, mono=True, barGain=c.g())
+BIRD = S.track("鳥の笛", "panflute", patch="flute", volume=0.27, bright=-0.7, pan=0.45, reverb=0.7, breath=False, mono=True, barGain=c.g())
 DRUM = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.075, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
 GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.05, pan=0.35 + 0.04 * i, reverb=0.35, barGain=c.g()) for i in range(5)]
 PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.06, pan=-0.4, reverb=0.35, barGain=c.g())
 GLOCK = S.track("グロッケン", "bell", patch="glockenspiel", volume=0.028, pan=0.3, reverb=0.6, barGain=c.g())
-DR = [S.track(f"ドローン{i + 1}", "strings", patch="slowStrings", volume=0.035, pan=[-0.3, 0.3][i], reverb=0.6) for i in range(2)]
+DR = [S.track(f"ドローン{i + 1}", "strings", patch="slowStrings", volume=0.09, pan=[-0.3, 0.3][i], reverb=0.6) for i in range(2)]
 
 # ---------- 旋律（度数・8分＝1） ----------
 # ジグ1：動機 a＝「下から駆け上がって3度で止まる」(5, 1 2 3)。前半4小節は2度で開いて終わり、後半は主音で閉じる
@@ -75,7 +75,7 @@ play_melody(c, "ジグ2-2", J2_A + J2_A + J2_B + J2_B, 4, "jig", key=K2, density
 play_melody(c, "帰り道", J1_A + J1_A[:7] + ["1:3 1:3"], 4, "jig", key=K2, density=1.0, seed=31)
 play_melody(c, "結び", ["1:3 1:3", "1:6", "R:6", "R:6"], 4, "jig", key=K2, density=0)
 # 鳥の笛：始まりの呼び合いと、ジグ1-2のBでの3度下のハモり、結びのひと声
-for idx, s in [(0, "R:1 2':0.5 3':1.5 1':2 R:1"), (1, "R:3 7:0.5 1':1 2':1.5"), (2, "R:1 1':0.5 2':1.5 6:2 R:1")]:
+for idx, s in [(0, "R:1 2':0.5 3':1.5 1':2 R:1"), (1, "R:3 7:0.5 1':1 2':1.5"), (2, "R:1 1':0.5 2':1.5 6:2 R:1"), (3, "5:1 6:0.5 1':1.5 R:3")]:
     BIRD.bar(c.s0["鳥"] + idx, S.key.mel(s, oct=4))
 harm = [s for s in J1_B + J1_B]
 for t, L, m in section_events(c, "ジグ1-2", J1_A * 2 + J1_B * 2, 4):
@@ -83,6 +83,7 @@ for t, L, m in section_events(c, "ジグ1-2", J1_A * 2 + J1_B * 2, 4):
     if bar >= 16 and L >= 1:
         h = [x for x in range(m - 5, m - 2) if x % 12 in chord_pcs(S.chords[int(t // 6)])]
         if h: BIRD.at(round(t + 0.03, 3), f"{nm(h[-1])}:{L}")
+BIRD.bar(c.s0["つなぎ"], S.key.mel("R:1 2':0.5 3':1.5 1':3", oct=4))
 BIRD.bar(c.s0["結び"] + 2, K2.mel("R:2 2':0.5 3':1.5 1':2", oct=4))
 
 # ---------- 伴奏（編曲の表どおりに出し入れ） ----------
@@ -91,7 +92,8 @@ for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     root = [x for x in range(36, 48) if x % 12 == PC[ch.rstrip("m")[:2] if len(ch) > 1 and ch[1] in "#b" else ch[0]]][0]
     if n == "鳥":
-        if i >= 2: bodhran(DRUM, b, B, "slow", soft=True)
+        bodhran(DRUM, b, B, "slow", var=i % 2, soft=True)
+        drone(DR, b, B, 55)
     elif n == "ジグ1-1":
         bodhran(DRUM, b, B, "jig", var=1 if i % 8 == 7 else 0, soft=True)
         if i < 16: GTR[0].bar(b, f"{nm(root + 12)}:3, {nm(root + 19)}:3,"); GTR[1].bar(b, f"R:3 {nm(root + 24)}:3,")
@@ -103,7 +105,8 @@ for b in range(c.NB):
         if i % 2 == 0: PIZZ.bar(b, f"{nm(root + 12)}:3 {nm(root + 19)}:3")
     elif n == "つなぎ":
         drone(DR, b, B, 55)
-        if i == 1: DRUM.bar(b, "R:3 D3:3,")
+        c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (43, 50, 55, 59, 62, 67)) if i == 0 else "G4:6")
+        DRUM.bar(b, "D3:3, R:3" if i == 0 else "R:3 D3:3,")
     elif n in ("ジグ2-1", "ジグ2-2"):
         full = n == "ジグ2-2" or i >= 16
         bodhran(DRUM, b, B, "jig", var=1 if i % 4 == 3 else 0)
@@ -135,10 +138,12 @@ for b in range(c.NB):
             DRUM.bar(b, "D3:3! D3:3!"); c.LOW.bar(b, f"{nm(root + 12)}:3 {nm(root + 12)}:3")
             v = voice(ch, 57, 3, spread=True)
             for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3 {nm(v[j])}:3")
-        if i == 1:
+        if i >= 1:   # 止めのあとは、弦と竪琴の響きが残って、ゆっくり消える
             v = voice(ch, 57, 3, spread=True)
             for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
-            c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, 'C4', 'C6')[:6]))
+            drone(DR, b, B, 48)
+            if i == 1: c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, 'C4', 'C6')[:6]))
+            if i == 2: c.HARP.bar(b, f"{nm(tones(ch, 'C5', 'C6')[0])}:6")
 
 # 笛の和声（ジグ2-2のBだけ）
 rich(c, choir_scenes=["ジグ2-2"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
