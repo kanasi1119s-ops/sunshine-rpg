@@ -145,6 +145,23 @@ def main(mus, spec, outp):
             pan = ev.get("pan", -0.05); x[:, 0] *= min(1, 1 - pan); x[:, 1] *= min(1, 1 + pan)
             s = pre + int(ev["t"] * SR); air[s:s + len(x)] += x[:max(0, N - s)]
             continue
+        if ev.get("pulse"):    # 虫の拍：高い音の短いさえずりを、拍ごとに置く（虫の声が拍を刻む）
+            g = ev["pulse"]; rng = np.random.default_rng(5)
+            t0, t1, per = g["from"], g["to"], g["every"]; hz = g.get("hz", 4300)
+            burst = g.get("burst", 0.045); nb = g.get("n", 3)
+            one = int(burst * SR); tt = np.arange(one) / SR
+            chirp = np.sin(2 * np.pi * hz * tt) * np.sin(np.pi * tt / burst) ** 2
+            unit = np.zeros(int((burst * 1.6) * nb * SR) + one)
+            for q in range(nb): a0 = int(q * burst * 1.6 * SR); unit[a0:a0 + one] += chirp * (0.8 + 0.2 * rng.random())
+            x = np.zeros((N, 2)); k = 0
+            for tb in np.arange(t0, t1, per):
+                s0 = pre + int((tb + rng.uniform(-0.01, 0.01)) * SR)
+                if s0 + len(unit) >= N: break
+                pan = g.get("pan", 0.4) * (1 if k % 2 == 0 else -0.6)
+                x[s0:s0 + len(unit), 0] += unit * (1 - pan) * 0.5; x[s0:s0 + len(unit), 1] += unit * (1 + pan) * 0.5; k += 1
+            x *= 10 ** ((ref + g.get("db", -30) - rms_db(x[pre + int(t0 * SR):pre + int(t1 * SR)] + 1e-12)) / 20)
+            air += x
+            continue
         x = clip(ev["file"]); a = int(ev.get("seek", 0) * SR); n = int(ev.get("len", 8) * SR)
         if ev.get("semi"):   # 音の高さを変える（録音の鈴を曲の和音の音に合わせる。再生の速さも変わる）
             r = 2 ** (ev["semi"] / 12.0); idx = np.arange(0, (len(x) - 1), r)
