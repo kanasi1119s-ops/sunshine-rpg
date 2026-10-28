@@ -21,7 +21,7 @@ c = make(S, NAMES,
           ("静まり", 0, 0.6), ("静まり", 11, 0.64), ("灯りが満ちる", 0, 0.72), ("灯りが満ちる", 8, 0.84), ("灯りが満ちる", 11, 0.62),
           ("余韻", 0, 0.5), ("余韻", 7, 0.3)],
          {"灯り1": 0.6, "灯り2": 0.65, "静まり": 0.6, "灯りが満ちる": 0.65, "余韻": 0.8},
-         flute_gain={"灯り1": 1.3, "灯り2": 1.2, "静まり": 1.3, "灯りが満ちる": 1.2, "余韻": 1.1}, intro="暗い海", passing=True)
+         flute_gain={"灯り1": 1.3, "灯り2": 1.2, "静まり": 1.3, "灯りが満ちる": 1.2, "余韻": 1.1}, intro="暗い海", passing=True, tension=True)
 BELL = S.track("灯りの鈴", "bell", patch="glockenspiel", volume=0.032, pan=0.35, reverb=0.7, barGain=c.g())
 BELL2 = S.track("灯りの鈴（遠い）", "bell", patch="glockenspiel", volume=0.022, pan=-0.4, reverb=0.8, barGain=c.g())
 

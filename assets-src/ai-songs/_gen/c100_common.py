@@ -190,7 +190,7 @@ def _dia(S, m, k):
     return x
 
 
-def rich(c, choir_scenes=(), pulse_scenes=(), choir_vol=0.13):
+def rich(c, choir_scenes=(), pulse_scenes=(), choir_vol=0.13, guitar=True):
     """音を重ねて深みと細やかさを出す（2026-10-28 人間の提案：笛が主体のまま、音数を多く繊細に。一人で何声も重ねるような重ね方）。
     ・笛の和声：主旋律の下に、和音の音になる3度下（だめなら4度・5度下）を2本目・3本目の笛で重ねる（左右に分け、小さく）
     ・ナイロンギター：8分音符のやわらかい分散和音（右寄り）
@@ -236,6 +236,6 @@ def rich(c, choir_scenes=(), pulse_scenes=(), choir_vol=0.13):
         ch = S.chords[b].split("|")[0]
         t = tones(ch, "G3", "G5")
         if len(t) < 4: t = t + [q + 12 for q in t]
-        GT.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 2, 1, 3, 2, 1, 3, 2)))
+        if guitar: GT.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 2, 1, 3, 2, 1, 3, 2)))
         z = tones(ch, "C4", "C5")
         PZ.bar(b, " ".join(f"{nm(z[q % len(z)])}:1" for q in ((0, 1, 2, 1) if b % 2 == 0 else (2, 1, 0, 1))))

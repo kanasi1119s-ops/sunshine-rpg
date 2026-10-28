@@ -19,7 +19,7 @@ c = make(S, NAMES,
          [("一つ目の星", 0, 0.62), ("数える1", 0, 0.6), ("数える2", 0, 0.64), ("数える3", 0, 0.68), ("数える3", 11, 0.76),
           ("満天", 0, 0.8), ("満天", 7, 0.7), ("静止", 0, 0.5), ("静止", 3, 0.3)],
          {"数える1": 0.62, "数える2": 0.62, "数える3": 0.66, "満天": 0.7, "静止": 0.7},
-         flute_gain={"数える1": 1.3, "数える2": 1.25, "数える3": 1.2, "満天": 1.15}, intro="一つ目の星", passing=True)
+         flute_gain={"数える1": 1.3, "数える2": 1.25, "数える3": 1.2, "満天": 1.15}, intro="一つ目の星", passing=True, tension=True)
 STAR = S.track("星（グロッケン）", "bell", patch="glockenspiel", volume=0.03, pan=0.4, reverb=0.75, barGain=c.g())
 STAR2 = S.track("星（遠いグロッケン）", "bell", patch="glockenspiel", volume=0.02, pan=-0.45, reverb=0.85, barGain=c.g())
 
@@ -73,6 +73,8 @@ for b in range(c.NB):
             for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
             STAR.bar(b, f"{nm(hi[2])}:4")
         if i == 1: c.HARP.bar(b, f"{nm(t[2])}:4")
+
+rich(c, choir_scenes=["数える2", "数える3", "満天"], pulse_scenes=["数える1", "数える2", "数える3", "満天"])
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.0",
        "ケルト・フルート100曲の009。甲板で星を一つずつ数える。C リディア・50。星（グロッケンと竪琴の高い音）の点だけが場面ごとに増え、最後に静止する。",

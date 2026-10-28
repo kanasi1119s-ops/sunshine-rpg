@@ -20,7 +20,7 @@ c = make(S, NAMES,
           ("引く2", 0, 0.56), ("引く2", 12, 0.5), ("満ちる2", 0, 0.64), ("満ちる2", 10, 0.9), ("満ちる2", 15, 0.6),
           ("波に戻る", 0, 0.5), ("波に戻る", 7, 0.3)],
          {"引く1": 0.65, "満ちる1": 0.7, "引く2": 0.65, "満ちる2": 0.7, "波に戻る": 0.8},
-         flute_gain={"引く1": 1.3, "満ちる1": 1.2, "引く2": 1.3, "満ちる2": 1.2, "波に戻る": 1.1}, intro="波", passing=True)
+         flute_gain={"引く1": 1.3, "満ちる1": 1.2, "引く2": 1.3, "満ちる2": 1.2, "波に戻る": 1.1}, intro="波", passing=True, tension=True)
 GTR = S.track("ナイロンギター", "guitar", patch="nylonGuitar", volume=0.07, pan=0.25, reverb=0.4, barGain=c.g())
 
 # ---------- 旋律（D ドリア。8小節で1回の波：下がる→上がる。001と同じく、一つ一つの音を4分音符で弾いてなめらかにつなぐ） ----------
@@ -72,6 +72,8 @@ for b in range(c.NB):
             for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
         if i in (0, 2): GTR.bar(b, f"{nm(t[0])}:1 {nm(t[1])}:1 {nm(t[2])}:2")
         if i in (1, 3): c.HARP.bar(b, f"{nm(t[1])}:4")
+
+rich(c, choir_scenes=["満ちる1", "満ちる2"], pulse_scenes=["引く1", "満ちる1", "引く2", "満ちる2"], guitar=False)
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.0",
        "ケルト・フルート100曲の007。引き潮の砂浜。D ドリア・64。笛とナイロンギター。旋律の上下と波の満ち引きが同じ8小節の周期で、2回の小さな山。",
