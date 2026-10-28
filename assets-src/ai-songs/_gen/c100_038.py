@@ -24,10 +24,10 @@ S.scene("歌1", 16, "verse", AC * 2)
 S.scene("歌2", 16, "verse", BC + AC)
 S.scene("静けさ", 8, "break", AC)
 S.scene("歌3", 8, "verse", AC)
-S.scene("最後の一滴", 6, "outro", ["E"] * 6)
+S.scene("最後の一滴", 4, "outro", ["A", "E", "E", "E"])
 NAMES = ["一滴", "雫", "歌1", "歌2", "静けさ", "歌3", "最後の一滴"]
 
-c = make(S, NAMES, [("一滴", 0, 0.62), ("歌1", 0, 0.62), ("歌2", 0, 0.66), ("静けさ", 0, 0.6), ("歌3", 0, 0.62), ("最後の一滴", 0, 0.56), ("最後の一滴", 5, 0.4)],
+c = make(S, NAMES, [("一滴", 0, 0.62), ("歌1", 0, 0.62), ("歌2", 0, 0.66), ("静けさ", 0, 0.6), ("歌3", 0, 0.62), ("最後の一滴", 0, 0.56), ("最後の一滴", 3, 0.45)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro=None, passing=True, tension=False)
 DROPH = S.track("雫（竪琴の高い音）", "harp", patch="folkHarp", volume=0.08, pan=0.3, reverb=0.75, barGain=c.g())
 DROPP = S.track("雫（ピチカート）", "strings", patch="pizzicato", volume=0.06, pan=-0.3, reverb=0.7, barGain=c.g())
@@ -46,23 +46,30 @@ for b in range(c.NB):
     r = low(ch, "C2"); r = r + 12 if r < 40 else r
     hi = tones(ch, "E5", "E6")
     if n == "一滴":
-        if i == 0: DROPH.bar(b, f"R:2 {nm(hi[0])}:2"); 
+        if i == 0: DROPH.bar(b, f"R:2 {nm(hi[0])}:2")
+        if i == 1: DROPH.bar(b, f"R:1 {nm(hi[1])}:1 R:1 {nm(hi[2])}:1")
+        v = voice(ch, 52, 3, spread=True)        # 夜の森の空気：低い弦とチェロ（はじまりが小さすぎないように）
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
+        CELLO.bar(b, f"{nm(r)}:4")
         continue
     if n == "最後の一滴":
-        if i in (0, 2, 4): DROPH.bar(b, f"{nm(hi[i % len(hi)])}:4")
-        if i < 4:
-            v = voice(ch, 55, 2, spread=True)
-            for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:4")
+        if i in (0, 1, 3): DROPH.bar(b, f"{nm(hi[i % len(hi)])}:2 R:2")
+        if i < 3:
+            v = voice(ch, 55, 3, spread=True)
+            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
+            CELLO.bar(b, f"{nm(r)}:4")
         continue
     # 雫：1拍ごとに、竪琴とピチカートが交互（雫の間隔＝拍）
     DROPH.bar(b, f"{nm(hi[(b) % len(hi)])}:1 R:1 {nm(hi[(b + 1) % len(hi)])}:1 R:1")
     DROPP.bar(b, f"R:1 {nm(hi[(b + 2) % len(hi)] - 12)}:1 R:1 {nm(hi[(b + 1) % len(hi)] - 12)}:1")
     v = voice(ch, 55, 3 if n in ("歌2", "歌3") else 2, spread=True)
     for j in range(len(v)): c.STR[j].bar(b, f"{nm(v[j])}:4")
-    if n in ("歌2", "歌3"): CELLO.bar(b, f"{nm(r)}:4")
+    if n in ("雫", "歌1", "歌2", "静けさ", "歌3"): CELLO.bar(b, f"{nm(r)}:4")
+play_melody(c, "最後の一滴", ["3:2 2:2", "1:4", "R:4", "R:4"], 4, "air", density=0.2, seed=3804)
+rich(c, choir_scenes=["歌2"], pulse_scenes=["歌2", "静けさ", "歌3"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の038（第2版）。夜の森の葉先の雫。4/4・♩=60、E ミクソリディア。雫の音（高い竪琴とピチカートが交互）が1拍ごとに落ち、その間隔がそのまま曲の拍になる。笛はその上でゆっくり歌い、最後の一滴で終わる。",
-       harm_scenes=None, tail_scene="最後の一滴", fill=False, pads=True, pad_scenes=["歌1", "歌2", "静けさ", "歌3"])
+       harm_scenes=None, tail_scene="最後の一滴", fill=False, pads=True, pad_scenes=["雫", "歌1", "歌2", "静けさ", "歌3", "最後の一滴"], floor=True)
 json.dump({"pre": 1.5, "tail": 8.0, "layers": [{"file": "0621", "db": -33, "hp": 120, "lp": 6000, "wide": 0.014, "duck": 0.3, "fade": 6}],
            "fx": {"glass": {"hz": [329.6, 659.3, 987.8], "db": -28, "rt": 7.0, "start": 4}, "shimmer": {"db": -26, "rt": 9.0}, "far": {"db": -24, "delay": 0.3, "lp": 2400, "rt": 5.0},
                   "haze": {"db": -26, "rt": 9.0}, "band": {"db": -38, "hz": 6500, "per": 29}}, "intro_db": 8.5}, open("/tmp/cel/w/air038.json", "w"))
