@@ -56,7 +56,9 @@ for b in range(c.NB):
     if n == "畏れ" and i % 2 == 1: TIMP.bar(b, "R:2 " + " ".join(f"{nm(r + 12)}:0.25" for _ in range(8)))
     if n == "近づく":
         CELLO.bar(b, f"{nm(r + 12)}:2 {nm(r + 19)}:2")
-        if i % 2 == 0: HORN2.bar(b, f"{nm(tones(ch, 'C3', 'C4')[0])}:4")
+        HORN2.bar(b, f"{nm(tones(ch, 'C3', 'C4')[0])}:4")                       # 主の気配は途切れない
+        if i % 4 in (0, 3): c.HARP.bar(b, " ".join(f"{nm(x)}:{0.3 if j < 3 else 3.1}" for j, x in enumerate(tones(ch, "C3", "C5")[:4])))   # 足もとの枝
+        if i % 4 == 3: c.HARP2.bar(b, "R:2 " + " ".join(f"{nm(x)}:0.5" for x in tones(ch, "C5", "C6")[:4]))
     if n == "森の主":
         CELLO.bar(b, f"{nm(r + 12)}:4"); HORN2.bar(b, f"{nm(tones(ch, 'C3', 'C4')[0])}:4")
         if i % 4 == 0: TIMP.bar(b, f"{nm(r + 12)}:2 R:2")
@@ -64,9 +66,10 @@ for b in range(c.NB):
     if n in ("認められる", "長音"):
         CELLO.bar(b, f"{nm(r + 12)}:4")
         c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "C3", "C5")[:4]))
+rich(c, choir_scenes=["認められる"], pulse_scenes=["近づく", "森の主", "認められる"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の037（第2版）。森の奥の千年の古木、森の主。4/4・♩=50、C エオリア→C ドリア。荘厳な行進。主の声（低いホルン）の旋律に、笛が一度だけ同じ音で重なる所がいちばん深い山。主に認められて重さがやわらぎ、笛のやさしい長い音で終わる。",
-       harm_scenes=None, tail_scene="長音", fill=False, pads=True, pad_scenes=["森の主", "認められる"])
+       harm_scenes=None, tail_scene="長音", fill=False, pads=True, pad_scenes=["近づく", "森の主", "認められる", "長音"], floor=True)
 json.dump({"pre": 1.0, "tail": 8.0, "layers": [{"file": "0136", "db": -33, "hp": 80, "lp": 4000, "wide": 0.018, "duck": 0.3, "fade": 8}],
            "fx": {"glass": {"hz": [261.6, 523.3, 784.0], "db": -29, "rt": 7.0, "start": 4}, "shimmer": {"db": -28, "rt": 9.0}, "far": {"db": -23, "delay": 0.35, "lp": 2000, "rt": 6.0},
                   "haze": {"db": -25, "rt": 10.0}, "band": {"db": -38, "hz": 5000, "per": 31}}, "intro_db": 8.5}, open("/tmp/cel/w/air037.json", "w"))
