@@ -75,9 +75,8 @@ for b in range(c.NB):
         a = min(cand, key=lambda m: abs(m - prev)); z = min([m for m in cand if m != a], key=lambda m: abs(m - a))
         CELLO.bar(b, f"{nm(a)}:2 {nm(z)}:1"); prev = z
         CELLO2.bar(b, f"{nm(low(ch, 'C2') + 12 if low(ch, 'C2') < 40 else low(ch, 'C2'))}:3")
-        if i >= 16:
-            v = voice(ch, 55, 3, spread=True)
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3")
+        v = voice(ch, 55 if i >= 16 else 52, 3 if i >= 16 else 2, spread=True)
+        for j in range(len(v)): c.STR[j].bar(b, f"{nm(v[j])}:3")
     elif n == "空":
         v = voice(ch, 55, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3")
@@ -89,4 +88,4 @@ for b in range(c.NB):
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の013（第2版の試作）。丘の上に一人きりの羊飼い。E エオリア・3/4・♩=56、ゆるやかなテンポのゆれ。独奏のエア（AABA）→竪琴とチェロが答える→3本の笛の和音で空へ→ひとりに戻る。",
-       harm_scenes=None, tail_scene="ひとりに戻る", fill=False, pads=True, pad_scenes=["語り2", "空"])
+       harm_scenes=None, tail_scene="ひとりに戻る", fill=False, pads=True, pad_scenes=["語り1", "語り2", "空"])
