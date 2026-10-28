@@ -49,6 +49,10 @@ def verb_ir(rt=4.0, hp=600, seed=1):
     ir = filt(ir, hp, 9000); ir[: int(0.03 * SR)] *= np.linspace(0, 1, int(0.03 * SR))[:, None]
     return ir / np.sqrt(np.sum(ir ** 2, axis=0, keepdims=True) + 1e-9)
 
+# 2026-10-29 人間の指示：「空間を支配する」は、空間の音（効果・環境音）で支配するのではなく、
+#   音楽の音そのもので耳を気持ちよくして支配すること。→ 作った効果音（glass の倍音・band の息の雑音）は使わない。
+#   shimmer・haze はひかえめに。far（音楽そのものの遠い響き）は残す。環境音・録音の出来事は 6dB 下げて、景色の気配にとどめる。
+MUSIC_FIRST = {"drop": ("glass", "band"), "fx_db": {"shimmer": -5, "haze": -5, "far": 0}, "air_db": -6, "ramp_max": 1.2}
 def fx_layers(M, N, pre, ref, fx):
     """透明な空間音。glass＝高い倍音がゆっくりふくらんで消える（長い残響つき）／shimmer＝音楽の高域を1オクターブ上げて長い残響へ"""
     from scipy.signal import fftconvolve
@@ -171,9 +175,13 @@ def main(mus, spec, outp):
         f = min(len(x) // 3, int(1.5 * SR)); x[:f] *= np.linspace(0, 1, f)[:, None]; x[-f:] *= np.linspace(1, 0, f)[:, None]
         pan = ev.get("pan", 0.0); x[:, 0] *= min(1, 1 - pan); x[:, 1] *= min(1, 1 + pan)
         s = pre + int(ev["t"] * SR); air[s:s + len(x)] += x[:max(0, N - s)]
+    air *= 10 ** (MUSIC_FIRST["air_db"] / 20)
     if spec.get("fx"):
-        fxo = fx_layers(M, N, pre, ref, spec["fx"])
-        rp = spec["fx"].get("ramp")
+        fx = {k: (dict(v, db=v.get("db", -28) + MUSIC_FIRST["fx_db"].get(k, 0)) if isinstance(v, dict) else v)
+              for k, v in spec["fx"].items() if k not in MUSIC_FIRST["drop"]}
+        fxo = fx_layers(M, N, pre, ref, fx)
+        rp = fx.get("ramp")
+        if rp: rp = [min(rp[0], MUSIC_FIRST["ramp_max"]), min(rp[1], MUSIC_FIRST["ramp_max"])]
         if rp:   # 曲が進むほど空間の層を深くする（例: [0.3, 2.5]＝始めは弱く、終わりは強く）
             fxo *= np.linspace(rp[0], rp[1], N)[:, None]
         air += fxo
