@@ -103,6 +103,27 @@ def rough_bg(im, k):
     lav = (ribbon > 0) & (b_ - g_ > 7) & (r_ - g_ > 7) & (mn > 120) & (sat < 60) & (redish == 0)   # むらさき＝緑がいちばん少ない
     lav = cv2.morphologyEx(lav.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8)) > 0
     bg[lav] = 0; body = np.maximum(body, lav.astype(np.uint8))
+    # ---- 最後の仕上げ（2026-10-29 人間「詰めが甘い。徹底して、リボン以外の白いところを取り除いて」）----
+    # 色のない白（背景の白）は、リボン本体・白目・歯のほかは、どこにあっても背景にする。
+    #   白目と歯は、目と口の枠の中にあり、まわり（輪）が髪の赤でないもの。肌の光は少し色があるので残る
+    neutral = ((mn > 218) & (sat < 13)).astype(np.uint8)
+    face = np.zeros((h, w), np.uint8)
+    face[max(0, my - 100):my - 25, max(0, mx - 88):mx + 88] = 1
+    face[max(0, my - 22):my + 30, max(0, mx - 45):mx + 45] = 1
+    n3, lab3, st3, _ = cv2.connectedComponentsWithStats(neutral * (1 - body))
+    for i in range(1, n3):
+        x, y, w_, h_, area = st3[i]
+        sl = (slice(max(0, y - 4), y + h_ + 4), slice(max(0, x - 4), x + w_ + 4))
+        comp = lab3[sl] == i
+        if face[sl][comp].mean() > 0.8:
+            m = comp.astype(np.uint8); ring = cv2.dilate(m, np.ones((5, 5), np.uint8)) - m
+            rr = redish[sl][ring > 0]
+            if not (len(rr) and rr.mean() > 0.5): continue                 # 白目・歯（まわりが髪でない）
+        bg[lab3 == i] = 1
+    # 背景のとなりの、白に近い薄い色（にじみ）も背景へ。3回広げる（リボン本体はのぞく）
+    pale3 = ((mn > 200) & (sat < 32)).astype(np.uint8) * (1 - body)
+    for _ in range(3):
+        bg = np.maximum(bg, pale3 * cv2.dilate(bg, np.ones((3, 3), np.uint8)))
     rough_bg.ribbon_body = body
     return bg, keep
 
@@ -129,7 +150,7 @@ def matte(im, k):
     C = im.astype(np.float32)
     # 体の色の推定: 縁のすぐ内側（輪郭線）の色を、いちばん近い所から取る（遠くの服の色を使うと、輪郭線が灰色にうすまる）
     F = spread_color(C, sure_fg)
-    dark = cv2.erode(np.where(sure_fg[..., None] > 0, C, 255).astype(np.float32), np.ones((3, 3), np.uint8))
+    dark = cv2.erode(np.where(sure_fg[..., None] > 0, C, 255).astype(np.float32), np.ones((7, 7), np.uint8))   # 3ピクセル以内のいちばん暗い色＝輪郭線
     F = np.where(((band > 0) & (dark.sum(2) < F.sum(2)))[..., None], dark, F)
     num = np.clip(WHITE - C, 0, None).sum(2)
     den = np.clip(WHITE - F, 0, None).sum(2)
@@ -147,6 +168,8 @@ def matte(im, k):
     a3 = alpha[..., None]
     Fc = np.where(a3 > 0.08, (C - (1 - a3) * WHITE) / np.maximum(a3, 1e-3), F)
     Fc = np.clip(Fc, 0, 255)
+    wgt = np.clip(alpha / 0.35, 0, 1)[..., None]                          # α が小さい所は、戻した色がぶれやすいので、推定した体の色に寄せる
+    Fc = Fc * wgt + F * (1 - wgt)
     Fc = np.where((band > 0)[..., None], Fc, C)
     Fc[rb] = C[rb]
     return Fc, alpha
