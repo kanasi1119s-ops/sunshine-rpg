@@ -82,6 +82,6 @@ for b_ in range(c.NB):
         for j in range(3): c.STR[j].bar(b_, f"{nm(v[j])}:3")
         c.HARP2.bar(b_, " ".join(f"{nm(x)}:1" for x in tones(ch, "C5", "C7")[i:i + 3]))
 
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.25 --side-hpf 220",
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の002（第2版）。灯台のらせん階段を上る。3/4・♩=60。同じ節を3回、ひと回りごとに全音上がる（A→B→C# ドリア）。足音は枠太鼓の手のひら。灯室に着くと足音が止み、高い笛が残る。",
        harm_scenes=None, tail_scene="灯室", fill=False, pads=True, pad_scenes=["2周目", "3周目", "灯室"])

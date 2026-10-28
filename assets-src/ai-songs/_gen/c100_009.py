@@ -69,6 +69,6 @@ for b in range(c.NB):
     if n == "静止" and i == 0:
         c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (48, 55, 60, 64, 67, 71, 74, 76, 79)))
 rich(c, choir_scenes=["満天"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.25 --side-hpf 220",
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の009（第2版）。甲板で星を数える。9/8・付点4分＝48、C リディア。輪唱：同じ節を、笛→グロッケン→竪琴の倍音→ピチカートが2小節ずつ遅れて順に歌い出し、満天の星になって静止する。",
        harm_scenes=None, tail_scene="静止", fill=False, pads=True, pad_scenes=["星3", "星4", "満天"])

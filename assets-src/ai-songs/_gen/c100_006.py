@@ -69,6 +69,6 @@ for b in range(c.NB):
         if i >= 2: BELL.bar(b, f"{nm(tones(ch, 'C6', 'C7')[-1])}:3")
 # 笛の和声は灯り3だけ
 rich(c, choir_scenes=["灯り3"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.25 --side-hpf 220",
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の006（第2版）。灯台守が灯りを一つずつともす。3/4・♩=56、B ドリア。主題と変奏：同じ節を5回、回ごとに楽器が1つ増え、音域が上がる（3回目は D ドリアへ）。最後は竪琴の上昇アルペジオといちばん高いベル。",
        harm_scenes=None, tail_scene="光", fill=False, pads=True, pad_scenes=["灯り2", "灯り3", "灯り4", "光"])

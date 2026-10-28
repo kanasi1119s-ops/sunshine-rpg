@@ -93,6 +93,6 @@ for b in range(c.NB):
 # 山の最後の1拍：全部が息をのむ
 c.SIL.add(c.s0["山"] + 3, 5, 6)
 rich(c, choir_scenes=["B2", "A3"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.25 --side-hpf 220",
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の010（第2版）。帆を上げて船が海へ出る。6/8 の行進（付点4分＝52）、G ミクソリディア。A–A–B–B–A′：竪琴だけの静けさ→行進の節→帆が風をはらむ（ホルン）→全員の行進→ティンパニのロールと1拍の無音→広い海原。",
        harm_scenes=None, tail_scene="海原", fill=False, pads=True, pad_scenes=["B1", "B2", "A3", "海原"])

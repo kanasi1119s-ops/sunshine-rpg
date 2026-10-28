@@ -76,6 +76,6 @@ for b in range(c.NB):
         if n == "決意": c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in (t[0], t[2], t[4 % len(t)], t[2]) * 2))
         CELLO.bar(b, f"{nm(r)}:4")
 
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.25 --side-hpf 220",
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の003（第2版）。祖父の手紙を読む。D・4/4・♩=52。ピアノが祖父の声のように節を語り、2回目に笛が答える。読み終えて黙り、旅に出ると決める所で同じ節が長調に明るむ。最後は笛の長い音。",
        harm_scenes=None, tail_scene="終わり", fill=False, pads=True, pad_scenes=["語り2", "決意", "終わり"])

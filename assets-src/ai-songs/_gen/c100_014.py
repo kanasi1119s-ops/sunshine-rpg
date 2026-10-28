@@ -82,7 +82,7 @@ for b in range(c.NB):
         if i % 2 == 0 and i < 10: c.HARP.bar(b, f"{nm(r)}:4")
         if i < 8: CELLO.bar(b, f"{nm(r)}:4")
 rich(c, choir_scenes=["見つけた"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.25 --side-hpf 220",
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の014（第2版）。霧の丘ではぐれた子羊を探す。4/4・♩=62、A ドリア。ストップタイム：歩く2小節→全員が1拍目だけ鳴らして止まり笛が呼ぶ→耳をすます。呼ぶたびに本物の鳴き声が近づき、見つけた所で小さな山。",
        harm_scenes=None, tail_scene="安堵", fill=False, pads=True, pad_scenes=["探す2", "探す3", "見つけた", "安堵"])
 

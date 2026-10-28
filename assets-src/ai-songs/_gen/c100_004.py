@@ -62,6 +62,6 @@ c.SIL.add(SB, 0, 2.4)
 v = voice("F", 60, 3, spread=True)
 for j in range(3): c.STR[j].at(SB * B + 2.4, f"{nm(v[j])}:1.6")
 
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.25 --side-hpf 220",
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の004（第2版）。風が止まった夕空。低い F の持続の上で旋法だけが変わる（リディア→ミクソリディア→エオリア→リディア）。4/4・♩=48。途中で3秒だけ、すべての音が消える。最後は波の音。",
        harm_scenes=None, tail_scene="終わり", fill=False, pads=True, pad_scenes=["凪1", "凪2", "翳り", "凪3"])

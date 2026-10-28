@@ -70,6 +70,6 @@ for b in range(c.NB):
         for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:4")
     if n in ("草原2", "草原3") and i % 4 == 1: c.HARP.bar(b, f"R:2 {nm(tones(ch, 'D5', 'D6')[1])}:2")
 
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.25 --side-hpf 220",
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の011（第2版）。一面の草原を風がなでる。4/4・♩=60、D ドリア。笛だけの合唱（主の笛の下に和音の笛が2〜3本）。強さは8小節周期の風のうねり。山はなく、風の強弱だけ。",
        harm_scenes=None, tail_scene="風に還る", fill=False, pads=True, pad_scenes=["草原2", "風の道", "草原3"])
