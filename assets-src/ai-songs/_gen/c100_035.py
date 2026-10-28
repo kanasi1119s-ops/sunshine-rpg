@@ -1,7 +1,7 @@
 # ケルト・フルート100曲「銀の笛と百の夜」035 光る茸 Glowing Mushrooms — 第2版（2026-10-28）
 # イメージ: 森の暗がりで、小さな茸がぽっ、ぽっと光りはじめる。光るたびに、場所が右になったり左になったりする（音の左右の位置が変わる）。
 #   だんだん数が増え、最後は茸の光が輪になって、ぐるりと一周する（左から右へ回る分散和音）。
-# 形（台帳）: 点描（灯る音ごとに左右の位置が変わる）→最後に光の輪。4/4・♩=58。B リディア（E♯の不思議な明るさ）。始め：暗闇（低い持続）／終わり：光の輪。山なし。
+# 形（台帳）: 点描（灯る音ごとに左右の位置が変わる）→最後に光の輪。4/4・♩=54。B リディア（E♯の不思議な明るさ）。始め：暗闇（低い持続）／終わり：光の輪。山なし。
 # 編曲の表:
 #   暗闇   : 低い弦の持続だけ
 #   ひとつ : 1小節に1つ、どこかで光る（グロッケン・竪琴の倍音を、左右5か所のどれかで）。笛はまばら
@@ -12,7 +12,7 @@ import sys, json, random
 from c100_common import *
 from c100_v2 import *
 
-S = Song("C100", "035-glowing-mushrooms", "光る茸", "Glowing Mushrooms", 58, 4, "B", "lydian", "ケルト（幻想）")
+S = Song("C100", "035-glowing-mushrooms", "光る茸", "Glowing Mushrooms", 54, 4, "B", "lydian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
 S.extra.update({"human": 0.35, "rubato": 0.2})
 C4_ = ["B", "C#/B", "B", "G#m"]
@@ -64,7 +64,7 @@ for b in range(c.NB):
             d = q % 5 if (i % 2 == 0) else 4 - q % 5
             DOTS[d].at(b * B + q * 0.5, f"{nm(arp[(q + i) % len(arp)] - (12 if d % 2 else 0))}:0.5")
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の035（第2版）。森の暗がりで小さな茸が光る。4/4・♩=58、B リディア。点描：灯る音ごとに左右の位置が変わり（5か所）、数がだんだん増える。最後は茸の光が輪になって、左から右へ回る分散和音。",
+       "ケルト・フルート100曲の035（第2版）。森の暗がりで小さな茸が光る。4/4・♩=54、B リディア。点描：灯る音ごとに左右の位置が変わり（5か所）、数がだんだん増える。最後は茸の光が輪になって、左から右へ回る分散和音。",
        harm_scenes=None, tail_scene="光の輪", fill=False, pads=True, pad_scenes=["ふえる", "灯り", "光の輪"])
 json.dump({"pre": 1.0, "tail": 8.0, "layers": [{"file": "0621", "db": -34, "hp": 120, "lp": 6000, "wide": 0.014, "duck": 0.3, "fade": 6}, {"file": "0424", "db": -40, "hp": 1500, "lp": 9000, "wide": 0.012, "pan": 0.3, "duck": 0.3, "fade": 6}],
            "fx": {"glass": {"hz": [493.9, 987.8, 1480.0], "db": -27, "rt": 7.0, "start": 3}, "shimmer": {"db": -26, "rt": 9.0}, "far": {"db": -24, "delay": 0.3, "lp": 2400, "rt": 5.0},
