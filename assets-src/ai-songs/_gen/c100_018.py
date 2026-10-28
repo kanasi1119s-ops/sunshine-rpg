@@ -16,7 +16,7 @@ from c100_v2 import *
 BPM = 120   # 8分音符＝120（付点4分＝40）
 S = Song("C100", "018-scent-of-hay", "干し草の匂い", "Scent of Hay", BPM, 6, "G", "mixolydian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.45, "rubato": 0.3, "rit": {"bar": 3 + 16 * 3 + 16 + 5, "bars": 7, "to": 0.7, "aTempo": False}})
+S.extra.update({"human": 0.45, "rubato": 0.3, "rit": {"bar": 3 + 16 * 3 + 16 + 6, "bars": 6, "to": 0.7, "aTempo": False}})
 AC = ["G", "F", "C", "G", "Em", "F", "C", "G"]
 BC = ["C", "G", "F", "G", "C", "Am", "F", "G"]
 S.scene("鳥", 3, "intro", ["G", "G", "G"])
@@ -24,14 +24,14 @@ S.scene("のんびり1", 16, "verse", AC + BC)
 S.scene("のんびり2", 16, "verse", AC + BC)
 S.scene("のんびり3", 16, "verse", BC + AC)
 S.scene("昼寝", 16, "verse", ["G", "G", "F", "F", "C", "C", "G", "G", "C", "C", "F", "F", "G", "G", "G", "G"])
-S.scene("夢うつつ", 12, "outro", ["G", "F", "G", "G", "C", "G", "G", "G", "G", "G", "G", "G"])
+S.scene("夢うつつ", 12, "outro", ["G", "F", "G", "G", "C", "G", "C", "G", "F", "G", "G", "G"])
 NAMES = ["鳥", "のんびり1", "のんびり2", "のんびり3", "昼寝", "夢うつつ"]
 
 c = make(S, NAMES,
          [("鳥", 0, 0.6), ("のんびり1", 0, 0.64), ("のんびり2", 0, 0.66), ("のんびり3", 0, 0.68), ("昼寝", 0, 0.62), ("夢うつつ", 0, 0.56), ("夢うつつ", 11, 0.32)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro="鳥", passing=True, tension=False)
-GB = S.track("ギター（低音の歩み）", "guitar", patch="nylonGuitar", volume=0.075, pan=0.25, reverb=0.35, barGain=c.g())
-GA = S.track("ギター（指弾き）", "guitar", patch="nylonGuitar", volume=0.06, pan=0.35, reverb=0.35, barGain=c.g())
+GB = S.track("ギター（低音の歩み）", "guitar", patch="nylonGuitar", volume=0.1, pan=0.25, reverb=0.35, barGain=c.g())
+GA = S.track("ギター（指弾き）", "guitar", patch="nylonGuitar", volume=0.085, pan=0.35, reverb=0.35, barGain=c.g())
 CELLO = S.track("チェロ（あいづち）", "strings", patch="cello", volume=0.08, pan=-0.2, reverb=0.45, barGain=c.g())
 
 A = ["1:3 2:1 3:2", "4:2 3:1 2:3", "3:3 5:1 3:2", "2:2 1:1 5,:3", "6,:2 7,:1 1:2 2:1", "3:2 4:1 5:3", "4:2 3:1 2:2 7,:1", "1:6"]
@@ -56,7 +56,7 @@ play_melody(c, "のんびり1", A + Bm, 4, "air", density=0.6, seed=1801)
 play_melody(c, "のんびり2", A + Bm, 4, "air", density=0.8, seed=1802)
 play_melody(c, "のんびり3", Bh + A, 4, "air", density=0.8, seed=1803)
 play_melody(c, "昼寝", slow(A), 4, "air", density=0.5, seed=1804)
-play_melody(c, "夢うつつ", ["1:3 2:1 3:2", "4:6", "R:6", "3:3 2:3", "1:6", "R:6", "5,:6", "1:6", "R:6", "R:6", "R:6", "R:6"], 4, "air", density=0.3, seed=1805)
+play_melody(c, "夢うつつ", ["1:3 2:1 3:2", "4:6", "3:3 2:3", "1:6", "R:3 5,:3", "1:6", "3:3 4:3", "3:6", "R:3 2:3", "1:6", "R:6", "R:6"], 4, "air", density=0.3, seed=1805)
 
 B = S.beats
 for b in range(c.NB):
@@ -73,8 +73,12 @@ for b in range(c.NB):
     if n == "昼寝":
         GB.bar(b, f"{nm(r)}:6"); GA.bar(b, f"{nm(t[2])}:3 {nm(t[3])}:3")
         if i % 8 == 7: CELLO.bar(b, f"R:3 {nm(r)}:3")
-    if n == "夢うつつ" and i < 9:
-        GB.bar(b, f"{nm(r)}:6"); GA.bar(b, f"R:3 {nm(t[2])}:3" if i % 2 == 0 else "R:6")
+    if n == "夢うつつ" and i < 11:
+        GB.bar(b, f"{nm(r)}:6"); GA.bar(b, f"R:3 {nm(t[2])}:3" if i % 2 == 0 else f"{nm(t[3])}:6")
+    if n in ("昼寝", "夢うつつ") and not (n == "夢うつつ" and i >= 11):   # 午後の光にまどろむ：うすい弦の和音
+        v = voice(ch, 55, 3, spread=True)
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
+        CELLO.bar(b, f"{nm(r)}:6") if n == "夢うつつ" else None
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の018（第2版）。昼下がりの納屋で、干し草の上でうとうと。6/8・付点4分＝40、G ミクソリディア。笛とギターのデュエット（ギターは低音の歩みと指弾き）、チェロが眠そうにあいづち。だんだんテンポがゆるんで眠りへ。",
-       harm_scenes=None, tail_scene="夢うつつ", fill=False, pads=True, pad_scenes=["のんびり2", "のんびり3", "昼寝", "夢うつつ"])
+       harm_scenes=None, tail_scene="夢うつつ", fill=False, pads=True, pad_scenes=["のんびり1", "のんびり2", "のんびり3", "昼寝", "夢うつつ"])
