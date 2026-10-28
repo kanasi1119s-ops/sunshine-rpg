@@ -61,6 +61,10 @@ for b in range(c.NB):
     t = tones(ch, "D3", "D6")
     if n == "静けさ":
         c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[2], t[4 % len(t)], t[2])))
+        c.HARP2.bar(b, f"{nm(r)}:3 {nm(r + 7)}:3")          # 竪琴の左手（低い所で船をつなぐ綱）
+        CELLO.bar(b, f"{nm(r)}:6")                            # 岸の下の水（うすく）
+        v = voice(ch, 55, 2, spread=True)
+        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:6")
         continue
     if n in ("A1", "A2", "A3"):
         c.HARP.bar(b, f"{nm(t[0])}:2 {nm(t[2])}:1 {nm(t[4 % len(t)])}:2 {nm(t[2])}:1")
