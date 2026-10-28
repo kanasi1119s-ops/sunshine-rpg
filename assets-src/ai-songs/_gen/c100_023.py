@@ -1,4 +1,4 @@
-# ケルト・フルート100曲「銀の笛と百の夜」023 水面の光 Light on the Water — 第3版（明るく速めの曲）（2026-10-29: 7.27→ 前奏にチェロと竪琴、1周目から弦、速い曲なのでパッドと内声を外す、終わりまで弦）
+# ケルト・フルート100曲「銀の笛と百の夜」023 水面の光 Light on the Water — 第3版（明るく速めの曲）（2026-10-29: 7.27→ 前奏にチェロと竪琴、1周目から弦、速い曲なのでパッドと内声を外す、終わりまで弦。7.39→ 前奏にギターのやわらかいストローク、2・3周目に厚い弦とコントラバス）
 # イメージ: 昼の川面に、日の光が細かくきらめく。きらめきは、笛の細かい装飾音（カット・ロール）の雨になって降る。
 #   はじめは高い所でちらちら光り、だんだん深い所へ光がしずんでいって、最後は川底の低い音で終わる。
 # 形（台帳）: リール（装飾音の雨）AABB。4/4・♩=100。E ミクソリディア（D♮）。始め：高い音のきらめき／終わり：低い音。2周目と最後に山。
@@ -31,6 +31,8 @@ GLOCK = S.track("きらめき（グロッケン）", "bell", patch="glockenspiel
 PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.06, pan=-0.35, reverb=0.35, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.4, barGain=c.g())
 
+THICK = [S.track(f"厚い弦{i + 1}", "strings", patch="slowStrings", volume=0.045, pan=[-0.55, 0.55, 0.0][i], reverb=0.55, barGain=c.g()) for i in range(3)]
+CB = S.track("コントラバス", "strings", patch="contrabass", volume=0.07, pan=0.0, reverb=0.4, barGain=c.g())
 DRUM = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.1, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
 GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.05, pan=0.35 + 0.04 * i, reverb=0.35, barGain=c.g()) for i in range(5)]
 REEL_STRUM = [(0, 1, "d", "!"), (1, 0.5, "d", ","), (1.5, 0.5, "u", ","), (2, 1, "d", ""), (3, 0.5, "d", ","), (3.5, 0.5, "u", ",")]
@@ -59,6 +61,7 @@ for b in range(c.NB):
         c.HARP2.bar(b, "R:1.5 " + " ".join(f"{nm(hi[(i + q) % len(hi)] - 12)}:0.5" for q in (1, 3, 5)) + " R:1")
         v = voice(ch, 59, 3, spread=True)       # 昼の光そのもの：高い弦のうすい和音
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
+        strum(GTR, b, B, ch, [(0, 2, "d", ","), (2, 2, "d", ",")])
         CELLO.bar(b, f"{nm(r)}:4"); c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "E3", "E5")[:4]))
         if i >= 2: DRUM.bar(b, "D3:2, R:1 A3:0.5, A3:0.5," if i == 3 else "D3:2, R:2")
         continue
@@ -81,6 +84,9 @@ for b in range(c.NB):
         v = voice(ch, 52 if lowp else 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
         CELLO.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2")
+        w = voice(ch, 50 if lowp else 52, 3, spread=True)
+        for j in range(3): THICK[j].bar(b, f"{nm(w[j])}:4")
+        CB.bar(b, f"{nm(r - 12 if r - 12 >= 28 else r)}:4")
     if n == "2周目" and i % 4 == 0: GLOCK.bar(b, f"{nm(tones(ch, 'E6', 'E7')[0])}:1 R:3")
 rich(c, choir_scenes=["2周目", "3周目"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.32 --side-hpf 200",
