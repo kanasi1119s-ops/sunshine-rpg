@@ -26,14 +26,14 @@ S.scene("満ちる1", 16, "chorus", FC_)
 S.scene("凪ぎ", 8, "break", ["Dm", "C", "Dm", "Am", "Dm", "C", "Dm", "Dm"])
 S.scene("引く2", 16, "verse", PC_)
 S.scene("満ちる2", 16, "chorus", FC_)
-S.scene("波に戻る", 8, "outro", ["Dm", "C", "Dm", "Dm", "Dm", "Dm", "Dm", "Dm"])
+S.scene("波に戻る", 6, "outro", ["Dm", "C", "Dm", "Dm", "Dm", "Dm"])
 NAMES = ["波", "引く1", "満ちる1", "凪ぎ", "引く2", "満ちる2", "波に戻る"]
 
 c = make(S, NAMES,
          [("波", 0, 0.6), ("引く1", 0, 0.62), ("引く1", 15, 0.58), ("満ちる1", 0, 0.62), ("満ちる1", 7, 0.78), ("満ちる1", 15, 0.62),
-          ("凪ぎ", 0, 0.56), ("引く2", 0, 0.62), ("満ちる2", 0, 0.66), ("満ちる2", 7, 0.88), ("満ちる2", 15, 0.66), ("波に戻る", 0, 0.56), ("波に戻る", 7, 0.32)],
+          ("凪ぎ", 0, 0.56), ("引く2", 0, 0.62), ("満ちる2", 0, 0.66), ("満ちる2", 7, 0.88), ("満ちる2", 15, 0.66), ("波に戻る", 0, 0.56), ("波に戻る", 5, 0.34)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro="波", passing=True, tension=False)
-GT = S.track("ナイロンギター", "guitar", patch="nylonGuitar", volume=0.075, pan=0.3, reverb=0.4, barGain=c.g())
+GT = S.track("ナイロンギター", "guitar", patch="nylonGuitar", volume=0.13, pan=0.3, reverb=0.4, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.08, pan=0.2, reverb=0.45, barGain=c.g())
 
 PULL = ["5':3 4':1 3':2", "2':2 1':1 7:3", "6:3 5:1 4:2", "5:6",
@@ -50,7 +50,7 @@ play_melody(c, "満ちる1", FLOW, 4, "air", density=0.9, seed=702)
 play_melody(c, "凪ぎ", ["5,:6", "1:3 2:3", "3:6", "2:6", "1:3 7,:3", "1:6", "R:6", "R:6"], 4, "air", density=0.5, seed=703)
 play_melody(c, "引く2", PULL, 4, "air", density=0.9, seed=704)
 play_melody(c, "満ちる2", FLOW2, 4, "air", density=1.0, seed=705)
-play_melody(c, "波に戻る", ["5:3 4:1 3:2", "2:6", "1:6", "R:6", "R:6", "R:6", "R:6", "R:6"], 4, "air", density=0.5, seed=706)
+play_melody(c, "波に戻る", ["5:3 4:1 3:2", "2:6", "1:6", "1:6", "R:6", "R:6"], 4, "air", density=0.5, seed=706)
 
 B = S.beats; prev = 48
 for b in range(c.NB):
@@ -58,10 +58,13 @@ for b in range(c.NB):
     r = low(ch, "C2"); r = r + 12 if r < 40 else r
     t = tones(ch, "D3", "D5")
     if n in ("引く1", "引く2", "凪ぎ") or (n == "波" and i < 2) or (n == "波に戻る" and i >= 3):
-        if not (n == "波に戻る" and i >= 6):
+        if not (n == "波に戻る" and i >= 5):
             GT.bar(b, f"{nm(t[0])}:1 {nm(t[2])}:1 {nm(t[3])}:1 {nm(t[4 % len(t)])}:3")        # 1本ずつ、最後は長く
     else:
         GT.bar(b, " ".join(f"{nm(t[x % len(t)])}:1" for x in ((0, 2, 3, 4, 3, 2) if i % 2 == 0 else (1, 3, 4, 5, 4, 3))))
+    if n in ("波", "凪ぎ", "引く1") or (n == "波に戻る" and i < 5):   # 空間の床：うすい弦（前奏と凪ぎで音が落ちすぎないように）
+        v = voice(ch, 52, 2, spread=True)
+        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:6")
     if n in ("満ちる1", "満ちる2"):
         c.HARP.bar(b, f"{nm(r)}:3 {nm(r + 12)}:3")
         c.HARP2.bar(b, f"R:3 {nm(tones(ch, 'D5', 'D6')[0])}:3") if i % 2 == 1 else None
@@ -75,4 +78,4 @@ for b in range(c.NB):
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の007（第2版）。引き潮と満ち潮の砂浜。ゆっくりのジグ（6/8・付点4分＝42）、D ドリア。8小節で1つの波（旋律が下りる→上がる）を2回。2回目の満ち潮はより高く。ナイロンギターの1本ずつのアルペジオ。",
-       harm_scenes=None, tail_scene="波に戻る", fill=False, pads=True, pad_scenes=["満ちる1", "満ちる2", "引く2"])
+       harm_scenes=None, tail_scene="波に戻る", fill=False, pads=True, pad_scenes=["引く1", "満ちる1", "凪ぎ", "満ちる2", "引く2"])
