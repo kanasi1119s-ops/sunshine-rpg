@@ -57,7 +57,7 @@ for b in range(c.NB):
         if n != "手を振る" or i >= 4:
             for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
         # オーボエの合いの手：笛がのばしている4小節目の終わりに、低めの2音で応える。遠ざかるの後半からは無し
-        if i % 4 == 3 and (n == "手を振る" or (n == "遠ざかる" and i < 8)):
+        if "--nooboe" not in sys.argv and i % 4 == 3 and (n == "手を振る" or (n == "遠ざかる" and i < 8)):
             o = tones(ch, "C4", "C5"); OBOE.bar(b, f"R:2 {nm(o[1])}:1 {nm(o[0])}:1")
     elif n == "一人の笛":
         if i < 2:
