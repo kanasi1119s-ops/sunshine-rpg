@@ -32,7 +32,7 @@ c = make(S, NAMES,
          [("足取り", 0, 0.64), ("1周目", 0, 0.68), ("1周目", 31, 0.72), ("角1", 0, 0.6), ("2周目", 0, 0.74), ("2周目", 31, 0.8), ("角2", 0, 0.62),
           ("3周目", 0, 0.84), ("3周目", 24, 0.94), ("3周目", 31, 0.9), ("終わり", 0, 0.88), ("終わり", 2, 0.5)],
          {}, flute_gain={n: 1.1 for n in NAMES}, intro="足取り", passing=True, tension=False)
-DRUM = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.075, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
+DRUM = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.13, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
 GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.05, pan=0.35 + 0.04 * i, reverb=0.35, barGain=c.g()) for i in range(5)]
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.4, barGain=c.g())
 
@@ -54,8 +54,11 @@ HP = [(0, 1, "d", "!"), (1, 0.5, "d", ","), (1.5, 0.5, "u", ","), (2, 1, "d", ""
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     r = [x for x in range(36, 48) if x % 12 == PC[ch[0] if len(ch) == 1 or ch[1] not in "#b" else ch[:2]]][0]
-    if n == "足取り":
-        bodhran(DRUM, b, B, "hornpipe"); continue
+    if n == "足取り":   # 足取り：ボーランと、チェロの低い D が「歩き出す前の地面」、ギターの小さな刻み
+        bodhran(DRUM, b, B, "hornpipe")
+        CELLO.bar(b, f"{nm(r + 12)}:1.5 R:0.5 {nm(r + 12)}:1.5 R:0.5")
+        if i >= 2: strum(GTR, b, B, ch, [(0, 1, "d", ","), (2, 1, "d", ",")])
+        continue
     if n in ("角1", "角2"):
         DRUM.bar(b, "R:2 D3:1, R:1"); continue          # 曲がり角：全員止まって、足音が1つ
     if n == "終わり":
@@ -66,13 +69,17 @@ for b in range(c.NB):
         continue
     bodhran(DRUM, b, B, "hornpipe")
     strum(GTR, b, B, ch, HP if n != "1周目" else [(0, 1, "d", "!"), (2, 1, "d", ",")])
+    if n == "1周目": CELLO.bar(b, f"{nm(r + 12)}:2 {nm(r + 19)}:2")
+    if n == "2周目":
+        v = voice(ch, 50, 2, spread=True)
+        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:4")
     if n in ("2周目", "3周目"):
         harp_ostinato(c.HARP, b, B, tones(ch, "D4", "D5")[:3])
         CELLO.bar(b, f"{nm(r + 12)}:1.5 R:0.5 {nm(r + 19)}:1.5 R:0.5")
     if n == "3周目":
         v = voice(ch, 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-rich(c, choir_scenes=["3周目"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
+rich(c, choir_scenes=["2周目", "3周目"], pulse_scenes=["2周目", "3周目"], guitar=False, pizz=True, inner=True)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.28 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の016（第2版・明るく速めの曲）。古い石垣に沿ってはずむ足どり。ホーンパイプ（付点ではねる）AABB、4/4・♩=96、D ミクソリディア→E。1周ごとに曲がり角で一瞬止まり、最後の曲がり角でほんとうに止まる。",
-       harm_scenes=None, tail_scene="終わり", fill=False, pads=False)
+       harm_scenes=None, tail_scene="終わり", fill=False, pads=True, pad_scenes=["1周目", "2周目", "3周目"])
