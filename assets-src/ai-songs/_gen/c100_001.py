@@ -66,6 +66,6 @@ for b in range(c.NB):
         drone(DR, b, B, 52)
         if i == 0: c.HARP.bar(b, "E4:4")       # 箱のふたを閉じるように、竪琴の1音
 
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.4 --side-hpf 160",
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.25 --side-hpf 220",
        "ケルト・フルート100曲の001（第2版）。夕暮れ、祖父の箱から銀の笛を取り出す。E ドリア・4/4・♩=54、テンポのゆれ。息の音→問いの動機「1・3・4」のスロー・エア AABA→2周目は竪琴とチェロが答える→竪琴の1音。",
        harm_scenes=None, tail_scene="余韻", fill=False, pads=True, pad_scenes=["2周目"])

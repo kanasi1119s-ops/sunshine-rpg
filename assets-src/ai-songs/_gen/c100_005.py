@@ -63,7 +63,7 @@ for b in range(c.NB):
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
     if n in ("呼ぶ2", "二人"): CELLO.bar(b, f"{nm(r)}:6")
 
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.4 --side-hpf 160",
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.25 --side-hpf 220",
        "ケルト・フルート100曲の005（第2版）。港の小舟の鈴と笛の掛け合い。6/8・付点4分＝46（舟のゆれ）。G ミクソリディア。鈴は本物の録音を和音の音に合わせ、呼ぶ→答える→一緒に→遠ざかる。最後は笛が鈴をまねて消える。",
        harm_scenes=None, tail_scene="終わり", fill=False, pads=True, pad_scenes=["二人", "呼ぶ2"])
 

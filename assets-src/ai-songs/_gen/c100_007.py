@@ -73,6 +73,6 @@ for b in range(c.NB):
         v = voice(ch, 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
 
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.4 --side-hpf 160",
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.25 --side-hpf 220",
        "ケルト・フルート100曲の007（第2版）。引き潮と満ち潮の砂浜。ゆっくりのジグ（6/8・付点4分＝42）、D ドリア。8小節で1つの波（旋律が下りる→上がる）を2回。2回目の満ち潮はより高く。ナイロンギターの1本ずつのアルペジオ。",
        harm_scenes=None, tail_scene="波に戻る", fill=False, pads=True, pad_scenes=["満ちる1", "満ちる2", "引く2"])
