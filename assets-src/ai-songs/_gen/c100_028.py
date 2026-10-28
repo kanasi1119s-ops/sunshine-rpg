@@ -17,7 +17,7 @@ S = Song("C100", "028-river-in-the-dusk-haze", "夕もやの川", "River in the 
 S.kit = "naked"; S.keep_old_synth = True
 S.extra.update({"human": 0.4, "rubato": 0.3})
 MC = ["Am", "Am", "G", "D", "Am", "Em", "G", "Am", "C", "G", "D", "Am", "C", "G", "Em", "Am"]
-S.scene("鮮明", 8, "intro", MC[:8])
+S.scene("鮮明", 4, "intro", MC[:4])
 S.scene("川1", 16, "verse", MC)
 S.scene("川2", 16, "verse", MC)
 S.scene("もや", 16, "verse", ["Am", "Am", "Am", "Am", "G", "G", "D", "D", "Am", "Am", "Em", "Em", "G", "G", "Am", "Am"])
@@ -27,7 +27,9 @@ NAMES = ["鮮明", "川1", "川2", "もや", "霞"]
 c = make(S, NAMES,
          [("鮮明", 0, 0.66), ("川1", 0, 0.64), ("川2", 0, 0.64), ("もや", 0, 0.62), ("霞", 0, 0.56), ("霞", 7, 0.32)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro="鮮明", passing=True, tension=False)
-P = [S.track(f"ピアノ{i + 1}", "piano", volume=[0.26, 0.234, 0.208][i], pan=[-0.2, -0.1, 0.0][i], reverb=0.5, barGain=c.g()) for i in range(3)]
+PB = S.track("ピアノ（左手の低音）", "piano", volume=0.5, pan=-0.15, reverb=0.5, barGain=c.g())
+CELLO = S.track("チェロ（川の深さ）", "strings", patch="cello", volume=0.075, pan=0.15, reverb=0.5, barGain=c.g())
+P = [S.track(f"ピアノ{i + 1}", "piano", volume=[0.6, 0.54, 0.48][i], pan=[-0.2, -0.1, 0.0][i], reverb=0.5, barGain=c.g()) for i in range(3)]
 M1 = ["5:2 4:1 3:1", "2:2 1:2", "7,:1 1:1 2:1 3:1", "4:4", "5:2 6:1 5:1", "4:1 3:1 2:2", "3:3 2:1", "1:4"]
 M2 = ["3:2 5:2", "6:3 5:1", "4:2 3:2", "2:4", "3:2 4:1 5:1", "6:2 7:2", "6:3 5:1", "5:4"]
 def stretch(bars):
@@ -55,14 +57,18 @@ for b in range(c.NB):
     seq = (t[0], t[2], t[4 % len(t)], t[3 % len(t)])
     for q, x in enumerate(seq):
         P[q % 3].at(b * B + q, f"{nm(x)}:{LEN[n]}")
-    if n in ("川2", "もや") or (n == "霞" and i < 6):
-        v = voice(ch, 55, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
+    r = low(ch, "C2"); r = r + 12 if r < 40 else r
+    PB.at(b * B, f"{nm(r)}:{max(2, LEN[n])}")
+    if n != "鮮明": CELLO.bar(b, f"{nm(r)}:4")
+    if n in ("鮮明", "川1", "川2", "もや") or (n == "霞" and i < 6):
+        v = voice(ch, 52 if n in ("鮮明", "川1") else 55, 3 if n not in ("鮮明",) else 2, spread=True)
+        for j in range(len(v)): c.STR[j].bar(b, f"{nm(v[j])}:4")
+rich(c, choir_scenes=[], pulse_scenes=["川1", "川2"], guitar=False, pizz=False, inner=True)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の028（第2版）。夕暮れの川に川霧が濃くなる。4/4・♩=52、A ドリア。スロー・エア。ピアノの音ははじめ一粒ずつはっきりしているのが、ペダルで重なってぼやけ、空間の霞がだんだん深くなる。最後は残響の霞だけ。",
-       harm_scenes=None, tail_scene="霞", fill=False, pads=True, pad_scenes=["川2", "もや", "霞"])
+       harm_scenes=None, tail_scene="霞", fill=False, pads=True, pad_scenes=["川1", "川2", "もや", "霞"])
 air = {"pre": 0.4, "tail": 9.0, "layers": [{"file": "0864", "db": -37, "hp": 150, "lp": 5000, "wide": 0.014, "duck": 0.35, "fade": 8},
                                            {"file": "0114", "db": -39, "hp": 200, "lp": 6000, "wide": 0.012, "pan": 0.2, "duck": 0.3, "start": 120, "fade": 30}],
        "fx": {"glass": {"hz": [440.0, 880.0, 1318.5], "db": -28, "rt": 8.0, "start": 4}, "shimmer": {"db": -26, "rt": 10.0}, "far": {"db": -24, "delay": 0.35, "lp": 2200, "rt": 6.0},
-              "haze": {"db": -24, "rt": 10.0}, "band": {"db": -37, "hz": 6000, "per": 29}, "ramp": [0.35, 2.2]}, "intro_db": 5.0}
+              "haze": {"db": -24, "rt": 10.0}, "band": {"db": -37, "hz": 6000, "per": 29}, "ramp": [0.35, 1.5]}, "intro_db": 8.5}
 json.dump(air, open("/tmp/cel/w/air028.json", "w"), ensure_ascii=False)
