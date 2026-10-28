@@ -28,7 +28,7 @@ NAMES = ["夜", "問答1", "問答2", "二人", "梟"]
 c = make(S, NAMES,
          [("夜", 0, 0.6), ("問答1", 0, 0.62), ("問答2", 0, 0.66), ("二人", 0, 0.7), ("二人", 15, 0.66), ("梟", 0, 0.56), ("梟", 3, 0.36)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro="夜", passing=True, tension=False)
-DR = [S.track(f"ドローン{i + 1}", "strings", patch="slowStrings", volume=0.07, pan=[-0.4, 0.4][i], reverb=0.6, barGain=c.g()) for i in range(2)]
+DR = [S.track(f"ドローン{i + 1}", "strings", patch="slowStrings", volume=0.1, pan=[-0.4, 0.4][i], reverb=0.6, barGain=c.g()) for i in range(2)]
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.08, pan=0.1, reverb=0.5, barGain=c.g())
 
 # 笛の答え：梟の高さ（F♯＝5度）から始める
@@ -46,26 +46,30 @@ for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     r = low(ch, "C2"); r = r + 12 if r < 40 else r
     drone(DR, b, B, 47)
-    if n in ("問答1", "問答2", "二人"):
+    if n in ("夜", "問答1", "問答2", "二人") or (n == "梟" and i < 3):
         CELLO.bar(b, f"{nm(r)}:4")
-        v = voice(ch, 55, 2, spread=True)
-        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:4")
+        v = voice(ch, 55 if n != "夜" else 50, 3, spread=True)
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
+    # 梟が鳴く小節（笛が休む）：竪琴がそっと和音をなでて、森の奥行きを残す
+    if (n == "問答1" and i % 4 == 0) or (n == "問答2" and i % 4 == 3):
+        t = tones(ch, "B3", "B5"); c.HARP.bar(b, "R:1.5 " + " ".join(f"{nm(x)}:{0.25 if j < 3 else 1.75}" for j, x in enumerate(t[:4])))
     if n == "二人" and i % 2 == 1: c.HARP2.bar(b, f"R:2 {nm(tones(ch, 'B5', 'B6')[0])}:2")
     if n == "梟" and i == 3: DR[0].bar(b, "R:4"); DR[1].bar(b, "R:4")
+rich(c, choir_scenes=["二人"], pulse_scenes=["問答2", "二人"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の033（第2版）。夜の森で、梟と笛の問答。4/4・♩=48、B エオリア。本物の梟の声（約370Hz＝F♯）に、笛が同じ高さから答える。やがて笛が問い、梟が答え、打ちとけていく。最後は梟の声だけ。",
-       harm_scenes=None, tail_scene="梟", fill=False, pads=True, pad_scenes=["問答2", "二人"])
+       harm_scenes=None, tail_scene="梟", fill=False, pads=True, pad_scenes=["問答1", "問答2", "二人", "梟"])
 BAR = 4 * 60 / BPM
 SEEK = [0.3, 3.4, 6.2, 8.8, 11.5, 14.2, 17.1, 19.7, 22.6]
 ev = []; q = 0
-def owl(b, beat=0.0, db=-16, pan=0.35):
+def owl(b, beat=0.0, db=-20, pan=0.35):
     global q
     ev.append({"t": round(b * BAR + beat * 60 / BPM, 2), "file": "0936", "db": db, "len": 1.2, "pan": pan, "seek": SEEK[q % len(SEEK)], "hp": 200, "lp": 3000}); q += 1
 owl(c.s0["夜"] + 1, 0)
 for j in range(0, 16, 4): owl(c.s0["問答1"] + j, 0.5)
-for j in range(3, 16, 4): owl(c.s0["問答2"] + j, 0.5, -17, 0.4)
-for j in range(1, 16, 2): owl(c.s0["二人"] + j, 2.5, -21, 0.45)
-owl(c.s0["梟"], 0.5, -16, 0.35); owl(c.s0["梟"] + 2, 0.5, -19, 0.5)
+for j in range(3, 16, 4): owl(c.s0["問答2"] + j, 0.5, -21, 0.4)
+for j in range(1, 16, 2): owl(c.s0["二人"] + j, 2.5, -24, 0.45)
+owl(c.s0["梟"], 0.5, -20, 0.35); owl(c.s0["梟"] + 2, 0.5, -23, 0.5)
 air = {"pre": 1.5, "tail": 8.0, "layers": [{"file": "0621", "db": -33, "hp": 120, "lp": 6000, "wide": 0.014, "duck": 0.3, "fade": 6},
                                            {"file": "0425", "db": -40, "hp": 1500, "lp": 9000, "wide": 0.012, "pan": -0.25, "duck": 0.3, "fade": 8}],
        "events": ev,
