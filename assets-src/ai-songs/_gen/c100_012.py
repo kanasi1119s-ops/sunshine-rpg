@@ -37,7 +37,7 @@ c = make(S, NAMES,
           ("ジグ2-1", 0, 0.78), ("ジグ2-1", 31, 0.84), ("ジグ2-2", 0, 0.86), ("ジグ2-2", 31, 0.9), ("帰り道", 0, 0.8), ("帰り道", 15, 0.92),
           ("結び", 0, 0.9), ("結び", 3, 0.5)],
          {}, flute_gain={n: 1.15 for n in NAMES}, intro="鳥", passing=True, tension=False)
-BIRD = S.track("鳥の笛", "panflute", patch="flute", volume=0.27, bright=-0.7, pan=0.45, reverb=0.7, breath=False, mono=True, barGain=c.g())
+BIRD = S.track("鳥の笛", "panflute", patch="flute", volume=0.4, bright=-0.7, pan=0.45, reverb=0.7, breath=False, mono=True, barGain=c.g())
 DRUM = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.075, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
 GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.05, pan=0.35 + 0.04 * i, reverb=0.35, barGain=c.g()) for i in range(5)]
 PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.06, pan=-0.4, reverb=0.35, barGain=c.g())
@@ -94,6 +94,7 @@ for b in range(c.NB):
     if n == "鳥":
         bodhran(DRUM, b, B, "slow", var=i % 2, soft=True)
         drone(DR, b, B, 55)
+        if i >= 1: roving_thumb(c.HARP, b, B, ch, up=(i % 2 == 1))
     elif n == "ジグ1-1":
         bodhran(DRUM, b, B, "jig", var=1 if i % 8 == 7 else 0, soft=True)
         if i < 16: GTR[0].bar(b, f"{nm(root + 12)}:3, {nm(root + 19)}:3,"); GTR[1].bar(b, f"R:3 {nm(root + 24)}:3,")
@@ -105,6 +106,8 @@ for b in range(c.NB):
         if i % 2 == 0: PIZZ.bar(b, f"{nm(root + 12)}:3 {nm(root + 19)}:3")
     elif n == "つなぎ":
         drone(DR, b, B, 55)
+        strum(GTR, b, B, ch, [(0, 6, "d", ",")] if i == 0 else [(0, 3, "d", ","), (3, 3, "d", ",")])
+        c.LOW.bar(b, "G2:6")
         c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (43, 50, 55, 59, 62, 67)) if i == 0 else "G4:6")
         DRUM.bar(b, "D3:3, R:3" if i == 0 else "R:3 D3:3,")
     elif n in ("ジグ2-1", "ジグ2-2"):
