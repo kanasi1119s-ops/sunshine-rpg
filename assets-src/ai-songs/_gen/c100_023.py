@@ -1,4 +1,4 @@
-# ケルト・フルート100曲「銀の笛と百の夜」023 水面の光 Light on the Water — 第2版（明るく速めの曲）（2026-10-28）
+# ケルト・フルート100曲「銀の笛と百の夜」023 水面の光 Light on the Water — 第3版（明るく速めの曲）（2026-10-29: 7.27→ 前奏にチェロと竪琴、1周目から弦、速い曲なのでパッドと内声を外す、終わりまで弦）
 # イメージ: 昼の川面に、日の光が細かくきらめく。きらめきは、笛の細かい装飾音（カット・ロール）の雨になって降る。
 #   はじめは高い所でちらちら光り、だんだん深い所へ光がしずんでいって、最後は川底の低い音で終わる。
 # 形（台帳）: リール（装飾音の雨）AABB。4/4・♩=100。E ミクソリディア（D♮）。始め：高い音のきらめき／終わり：低い音。2周目と最後に山。
@@ -59,26 +59,30 @@ for b in range(c.NB):
         c.HARP2.bar(b, "R:1.5 " + " ".join(f"{nm(hi[(i + q) % len(hi)] - 12)}:0.5" for q in (1, 3, 5)) + " R:1")
         v = voice(ch, 59, 3, spread=True)       # 昼の光そのもの：高い弦のうすい和音
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
+        CELLO.bar(b, f"{nm(r)}:4"); c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "E3", "E5")[:4]))
         if i >= 2: DRUM.bar(b, "D3:2, R:1 A3:0.5, A3:0.5," if i == 3 else "D3:2, R:2")
         continue
     if n == "川底":
-        c.HARP.bar(b, f"{nm(r)}:4"); CELLO.bar(b, f"{nm(r)}:4" if i < 3 else "R:4")
+        c.HARP.bar(b, f"{nm(r)}:4"); CELLO.bar(b, f"{nm(r)}:4")
         v = voice(ch, 50, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4" if i < 3 else "R:4")
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
         continue
     lowp = (n == "3周目" and i >= 4)
     base = "E3" if lowp else "E4"
     harp_ostinato(c.HARP, b, B, tones(ch, base, "E6")[:3])
     bodhran(DRUM, b, B, "reel", var=1 if i % 8 == 7 else 0)
     strum(GTR, b, B, ch, REEL_STRUM if n != "1周目" or i >= 16 else [(0, 2, "d", "!"), (2, 2, "d", ",")])
-    if n == "1周目": CELLO.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2")
+    if n == "1周目":
+        CELLO.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2")
+        v = voice(ch, 55, 2, spread=True)
+        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:4")
     PIZZ.bar(b, f"{nm(r + 12)}:0.5 R:0.5 {nm(r + 19)}:0.5 R:0.5 {nm(r + 12)}:0.5 R:0.5 {nm(r + 19)}:0.5 R:0.5")
     if n in ("2周目", "3周目"):
         v = voice(ch, 52 if lowp else 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
         CELLO.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2")
     if n == "2周目" and i % 4 == 0: GLOCK.bar(b, f"{nm(tones(ch, 'E6', 'E7')[0])}:1 R:3")
-rich(c, choir_scenes=["2周目", "3周目"], pulse_scenes=["2周目", "3周目"], guitar=False, pizz=False, inner=True)
+rich(c, choir_scenes=["2周目", "3周目"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の023（第2版・明るく速めの曲）。昼の川面のきらめき。リール AABB、4/4・♩=100、E ミクソリディア。笛の細かい装飾音（カット・ロール）が光の雨になり、高い所から川底の低い音へ沈んでいく。",
-       harm_scenes=None, tail_scene="川底", fill=False, pads=True, pad_scenes=["1周目", "2周目", "3周目"])
+       harm_scenes=None, tail_scene="川底", fill=False, pads=False, floor=True)

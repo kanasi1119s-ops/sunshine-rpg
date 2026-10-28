@@ -1,4 +1,4 @@
-# ケルト・フルート100曲「銀の笛と百の夜」022 止まった水車 The Silent Mill — 第2版（2026-10-28）
+# ケルト・フルート100曲「銀の笛と百の夜」022 止まった水車 The Silent Mill — 第3版（2026-10-29: 7.03→ 回る1から弦、内声、回る2から笛の和声、床）
 # イメージ: 錆びついて止まった水車小屋。最初は拍がない（時間が止まっている）。笛が水車に話しかけるように歌うと、
 #   木がきしみ、輪がぎくしゃくと動きはじめる。ゆっくり→だんだん速く回りだした瞬間に3拍子が始まる。最後は勢いよく回り続ける（山）。
 # 形（台帳）: 拍のない前奏→水車が回りだす瞬間に3拍子が始まり、だんだん回る。3/4・♩=40→60（回りだすところで速くなる）。D エオリア。終盤に山。
@@ -71,13 +71,13 @@ for b in range(c.NB):
     PIZZ.bar(b, f"{nm(r)}:1 {nm(t[1])}:1 {nm(t[2])}:1")
     c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in (t[0], t[2], t[4 % len(t)], t[2], t[3 % len(t)], t[2])) if n != "回転" or i < 14 else f"{nm(r)}:3")
     CELLO.bar(b, f"{nm(r)}:3")
-    if n in ("回る2", "山", "回転"):
-        v = voice(ch, 57, 3, spread=True)
+    if n in ("回る1", "回る2", "山", "回転"):
+        v = voice(ch, 57 if n != "回る1" else 54, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3")
-rich(c, choir_scenes=["山"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
+rich(c, choir_scenes=["回る2", "山"], pulse_scenes=["回る1", "回る2", "山"], guitar=False, pizz=False, inner=True)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の022（第2版）。錆びて止まった水車が、笛の語りかけで回りだす。拍のない前奏（低いドローンときしみ）→回りだす瞬間に3拍子が始まり、テンポが♩=40→60へ。D エオリア。最後は勢いよく回る（山）。",
-       harm_scenes=None, tail_scene="回転", fill=False, pads=True, pad_scenes=["軋み", "回りだす", "回る1", "回る2", "山", "回転"])
+       harm_scenes=None, tail_scene="回転", fill=False, pads=True, pad_scenes=["軋み", "回りだす", "回る1", "回る2", "山", "回転"], floor=True)
 # 空気：きしみ（戸棚・ドアのきしみの録音）を軋みの場面と回りだしに
 sec_bar = 3 * 60 / 40
 t_kishi = 8 * sec_bar
