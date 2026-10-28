@@ -25,12 +25,12 @@ S.scene("回りだす", 8, "verse", ["Dm", "Dm", "C", "Dm", "Dm", "Bb", "C", "Dm
 S.scene("回る1", 16, "verse", WC)
 S.scene("回る2", 16, "verse", WC)
 S.scene("山", 8, "chorus", ["Bb", "C", "Dm", "Am", "Bb", "C", "Dm", "Dm"])
-S.scene("回転", 8, "outro", ["Dm", "C", "Dm", "Dm", "Dm", "C", "Dm", "Dm"])
+S.scene("回転", 16, "outro", ["Dm", "C", "Dm", "Am", "Dm", "Bb", "C", "Dm", "Dm", "C", "Dm", "Dm", "Dm", "C", "Dm", "Dm"])
 NAMES = ["静止", "軋み", "回りだす", "回る1", "回る2", "山", "回転"]
 
 c = make(S, NAMES,
          [("静止", 0, 0.6), ("軋み", 0, 0.6), ("回りだす", 0, 0.62), ("回りだす", 7, 0.7), ("回る1", 0, 0.7), ("回る2", 0, 0.76), ("山", 0, 0.84), ("山", 5, 0.95),
-          ("回転", 0, 0.8), ("回転", 7, 0.5)],
+          ("回転", 0, 0.8), ("回転", 15, 0.45)],
          {}, flute_gain={n: 1.15 for n in NAMES}, intro="静止", passing=True, tension=False)
 S.extra["rubato"] = 0.0
 PIZZ = S.track("ピチカート（回る）", "strings", patch="pizzicato", volume=0.07, pan=-0.3, reverb=0.4, barGain=c.g())
@@ -45,7 +45,7 @@ play_melody(c, "回りだす", ["R:3", "R:3", "R:3", "R:3", "1:1 2:1 3:1", "5:3"
 play_melody(c, "回る1", W1, 4, "air", density=0.6, seed=2203)
 play_melody(c, "回る2", W1, 4, "air", density=1.0, seed=2204)
 play_melody(c, "山", W2, 4, "air", density=1.0, seed=2205)
-play_melody(c, "回転", ["1:1 2:1 3:1", "5:2 4:1", "3:1 2:1 1:1", "1:3", "R:3", "R:3", "R:3", "R:3"], 4, "air", density=0.5, seed=2206)
+play_melody(c, "回転", W1[:8] + ["1:1 2:1 3:1", "5:2 4:1", "3:1 2:1 1:1", "1:3", "R:3", "R:3", "R:3", "R:3"], 4, "air", density=0.5, seed=2206)
 
 B = S.beats
 for b in range(c.NB):
@@ -64,7 +64,7 @@ for b in range(c.NB):
         CELLO.bar(b, f"{nm(r)}:3")
         continue
     PIZZ.bar(b, f"{nm(r)}:1 {nm(t[1])}:1 {nm(t[2])}:1")
-    c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in (t[0], t[2], t[4 % len(t)], t[2], t[3 % len(t)], t[2])) if n != "回転" or i < 6 else f"{nm(r)}:3")
+    c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in (t[0], t[2], t[4 % len(t)], t[2], t[3 % len(t)], t[2])) if n != "回転" or i < 14 else f"{nm(r)}:3")
     CELLO.bar(b, f"{nm(r)}:3")
     if n in ("回る2", "山", "回転"):
         v = voice(ch, 57, 3, spread=True)
