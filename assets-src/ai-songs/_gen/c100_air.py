@@ -136,6 +136,9 @@ def main(mus, spec, outp):
         air += x * (g * w)[:, None]
     for ev in spec.get("events", []):
         x = clip(ev["file"]); a = int(ev.get("seek", 0) * SR); n = int(ev.get("len", 8) * SR)
+        if ev.get("semi"):   # 音の高さを変える（録音の鈴を曲の和音の音に合わせる。再生の速さも変わる）
+            r = 2 ** (ev["semi"] / 12.0); idx = np.arange(0, (len(x) - 1), r)
+            x = np.stack([np.interp(idx, np.arange(len(x)), x[:, k]) for k in range(2)], axis=1)
         x = filt(x[a:a + n], ev.get("hp", 120), ev.get("lp", 12000))
         x *= 10 ** ((ref + ev.get("db", -24) - rms_db(x)) / 20)
         f = min(len(x) // 3, int(1.5 * SR)); x[:f] *= np.linspace(0, 1, f)[:, None]; x[-f:] *= np.linspace(1, 0, f)[:, None]
