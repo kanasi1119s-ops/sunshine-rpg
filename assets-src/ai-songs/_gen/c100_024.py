@@ -1,4 +1,4 @@
-# ケルト・フルート100曲「銀の笛と百の夜」024 川辺の蛙たち The Frogs at Dusk — 第2版（2026-10-28）
+# ケルト・フルート100曲「銀の笛と百の夜」024 川辺の蛙たち The Frogs at Dusk — 第3版（2026-10-29: 7.12→ チェロの持続の根音、最後まで弦、床）
 # イメージ: 夕方の水辺。一匹の蛙が鳴きはじめると、あちこちから仲間が加わり、いつのまにか大合唱。
 #   笛も蛙に調子を合わせて、同じ節を、1本・2本・3本と、4小節ずつ遅れて歌い出す（輪唱）。夜になると、笛は一本ずつ帰っていき、蛙の声が残る。
 # 形（台帳）: 輪唱（蛙の合唱に、3本の笛が加わる）。4/4・♩=58。G ドリア（i と ♭VII が2小節ずつ）。始め：蛙の声／終わり：蛙の声。山なし。
@@ -58,13 +58,14 @@ for b in range(c.NB):
     if n in ("蛙", "一匹", "二匹", "合唱"):   # 夕方の水辺の空気：うすい弦
         v = voice(ch, 50 if n in ("蛙", "一匹") else 53, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-    if n in ("もっと",) or (n == "夜へ" and i < 7):
+    c.LOW.bar(b, f"{nm(r)}:4")   # 水辺の低い響き（チェロの持続）
+    if n in ("もっと", "夜へ"):
         v = voice(ch, 55, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
 rich(c, choir_scenes=[], pulse_scenes=["合唱", "もっと"], guitar=True, pizz=False, inner=True)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の024（第2版）。夕方の水辺の蛙の大合唱。4/4・♩=58、G ドリア。蛙の声（録音）とチェロのピチカートの拍に、3本の笛が4小節ずつ遅れて加わる輪唱。夜になると笛が1本ずつ帰り、蛙の声が残る。",
-       harm_scenes=None, tail_scene="夜へ", fill=False, pads=True, pad_scenes=["一匹", "二匹", "合唱", "もっと", "夜へ"], double=False)
+       harm_scenes=None, tail_scene="夜へ", fill=False, pads=True, pad_scenes=["一匹", "二匹", "合唱", "もっと", "夜へ"], double=False, floor=True)
 BEAT = 60 / BPM
 ev = [{"t": round((b * 4 + q) * BEAT + 0.05, 2), "file": "0819", "db": -24 - (3 if q else 0), "len": 0.6, "pan": [-0.3, 0.35][(b + q) % 2], "seek": 0.0, "hp": 200, "lp": 7000}
       for b in range(0, 6) for q in (0, 2)]
