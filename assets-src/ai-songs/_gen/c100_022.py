@@ -82,5 +82,5 @@ ev = [{"t": round(t_kishi + 0.3, 2), "file": "0306", "db": -22, "len": 3.5, "pan
 air = {"pre": 1.0, "tail": 7.0, "layers": [{"file": "0864", "db": -35, "hp": 150, "lp": 6000, "wide": 0.014, "duck": 0.35, "fade": 10}],
        "events": ev,
        "fx": {"glass": {"hz": [293.7, 587.3, 880.0], "db": -28, "rt": 6.0, "start": 4}, "shimmer": {"db": -27, "rt": 8.0},
-              "far": {"db": -25, "delay": 0.25, "lp": 2600, "rt": 4.5}, "haze": {"db": -27, "rt": 8.0}, "band": {"db": -37, "hz": 6500, "per": 23}}, "intro_db": 6.0}
+              "far": {"db": -25, "delay": 0.25, "lp": 2600, "rt": 4.5}, "haze": {"db": -27, "rt": 8.0}, "band": {"db": -37, "hz": 6500, "per": 23}}, "intro_db": 8.5}
 json.dump(air, open("/tmp/cel/w/air022.json", "w"), ensure_ascii=False)

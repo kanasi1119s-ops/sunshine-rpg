@@ -88,6 +88,6 @@ air = {"pre": 0.4, "tail": 6.0, "layers": [
     "events": ev,
     "fx": {"glass": {"hz": [784.0, 1568.0, 2349.3], "db": -27, "rt": 6.0, "start": 4}, "shimmer": {"db": -27, "rt": 8.0},
            "far": {"db": -25, "delay": 0.25, "lp": 2600, "rt": 4.5}, "haze": {"db": -27, "rt": 8.0}, "band": {"db": -37, "hz": 6500, "per": 23}},
-    "intro_db": 6.0}
+    "intro_db": 8.5}
 json.dump(air, open("/tmp/cel/w/air005.json", "w"), ensure_ascii=False)
 print("鈴の録音を置いた回数:", len(ev))

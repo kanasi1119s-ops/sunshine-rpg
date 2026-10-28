@@ -66,5 +66,5 @@ ev = [{"t": round((b * 4 + q) * BEAT + 0.05, 2), "file": "0819", "db": -24 - (3 
 air = {"pre": 2.5, "tail": 9.0, "layers": [{"file": "0997", "db": -29, "hp": 150, "lp": 7000, "wide": 0.014, "duck": 0.25, "fade": 6}],
        "events": ev,
        "fx": {"glass": {"hz": [392.0, 784.0, 1174.7], "db": -29, "rt": 6.0, "start": 4}, "shimmer": {"db": -28, "rt": 8.0},
-              "far": {"db": -25, "delay": 0.25, "lp": 2600, "rt": 4.5}, "haze": {"db": -27, "rt": 8.0}, "band": {"db": -38, "hz": 6500, "per": 23}}, "intro_db": 6.0}
+              "far": {"db": -25, "delay": 0.25, "lp": 2600, "rt": 4.5}, "haze": {"db": -27, "rt": 8.0}, "band": {"db": -38, "hz": 6500, "per": 23}}, "intro_db": 8.5}
 json.dump(air, open("/tmp/cel/w/air024.json", "w"), ensure_ascii=False)

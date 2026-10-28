@@ -61,5 +61,5 @@ BAR = 4 * 60 / BPM; t_melt = c.s0["溶ける"] * BAR
 air = {"pre": 2.5, "tail": 8.0, "layers": [{"file": "0219", "db": -30, "hp": 120, "lp": 8000, "wide": 0.016, "duck": 0.3, "fade": 6},
                                            {"file": "0219", "db": -22, "hp": 120, "lp": 9000, "wide": 0.02, "duck": 0.0, "start": round(t_melt, 1), "end": round(t_melt + 8 * BAR, 1), "fade": 9, "pan": 0.1}],
        "fx": {"glass": {"hz": [493.9, 987.8, 1480.0], "db": -27, "rt": 7.0, "start": 4}, "shimmer": {"db": -26, "rt": 9.0}, "far": {"db": -25, "delay": 0.3, "lp": 2600, "rt": 5.0},
-              "haze": {"db": -26, "rt": 9.0}, "band": {"db": -37, "hz": 6500, "per": 23}}, "intro_db": 6.0}
+              "haze": {"db": -26, "rt": 9.0}, "band": {"db": -37, "hz": 6500, "per": 23}}, "intro_db": 8.5}
 json.dump(air, open("/tmp/cel/w/air026.json", "w"), ensure_ascii=False)

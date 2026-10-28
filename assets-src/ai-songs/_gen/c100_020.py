@@ -58,5 +58,5 @@ air = {"pre": 2.0, "tail": 7.0, "layers": [{"file": "0114", "db": -33, "hp": 150
                                            {"file": "0908", "db": -40, "hp": 150, "lp": 5000, "wide": 0.014, "pan": 0.25, "duck": 0.3, "fade": 6, "end": 20}],
        "events": [{"t": 0, "pulse": {"from": round(t0, 2), "to": round(t1, 2), "every": round(BEAT, 4), "hz": 4400, "burst": 0.04, "n": 3, "db": -29, "pan": 0.45}}],
        "fx": {"glass": {"hz": [293.7, 587.3, 880.0], "db": -27, "rt": 7.0, "start": 4}, "shimmer": {"db": -26, "rt": 9.0}, "far": {"db": -25, "delay": 0.3, "lp": 2400, "rt": 5.0},
-              "haze": {"db": -26, "rt": 9.0}, "band": {"db": -37, "hz": 7000, "per": 29}}, "intro_db": 6.0}
+              "haze": {"db": -26, "rt": 9.0}, "band": {"db": -37, "hz": 7000, "per": 29}}, "intro_db": 8.5}
 json.dump(air, open("/tmp/cel/w/air020.json", "w"), ensure_ascii=False)

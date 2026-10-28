@@ -101,6 +101,6 @@ air = {"pre": 1.5, "tail": 6.0, "layers": [{"file": "0908", "db": -35, "hp": 150
                                            {"file": "0904", "db": -40, "hp": 100, "lp": 3000, "lfo": [53, 0.3], "phase": 1.0, "wide": 0.012, "duck": 0.35, "fade": 10}],
        "events": ev,
        "fx": {"glass": {"hz": [440.0, 880.0, 1318.5], "db": -28, "rt": 6.0, "start": 4}, "shimmer": {"db": -27, "rt": 8.0},
-              "far": {"db": -25, "delay": 0.25, "lp": 2600, "rt": 4.5}, "haze": {"db": -27, "rt": 8.0}, "band": {"db": -37, "hz": 6500, "per": 23}}, "intro_db": 6.0}
+              "far": {"db": -25, "delay": 0.25, "lp": 2600, "rt": 4.5}, "haze": {"db": -27, "rt": 8.0}, "band": {"db": -37, "hz": 6500, "per": 23}}, "intro_db": 8.5}
 json.dump(air, open("/tmp/cel/w/air014.json", "w"), ensure_ascii=False)
 print("鳴き声:", len(ev))
