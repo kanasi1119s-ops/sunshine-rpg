@@ -51,9 +51,25 @@ class C:
     pass
 
 
-def make(S, names, dyn_points, acc, flute_gain=None, intro=None, passing=False):
+TENSION = {"m": "m9", "m7": "m9", "": "add9", "maj7": "maj9", "7": "9"}
+
+
+def tension_chord(ch):
+    """伴奏の和音にテンションを足す（maj7→maj9、m→m9、長三和音→add9、7→9）。笛の旋律は素直なまま（docs/sound/layering-study.md）"""
+    out = []
+    for part in ch.split("|"):
+        bass = None
+        if "/" in part: part, bass = part.split("/")
+        m = re.match(r"^([A-G][#b]?)(.*)$", part)
+        q = TENSION.get(m.group(2), m.group(2))
+        out.append(m.group(1) + q + (("/" + bass) if bass else ""))
+    return "|".join(out)
+
+
+def make(S, names, dyn_points, acc, flute_gain=None, intro=None, passing=False, tension=False):
     """names: 場面名の並び。dyn_points: [(場面名, オフセット, 強さ)]。acc/flute_gain: 場面名→倍率。intro: 前奏の場面名（弦を大きめに）"""
     c = C(); c.S = S; NB = S.nb; c.NB = NB
+    if tension: S.chords = [tension_chord(x) for x in S.chords]
     if passing:
         # 一段ずつ上がる型など、1拍の経過音は和音の外でもよい（長い音と小節頭の長めの音だけ、アヴォイドノートを直す）
         import types
@@ -133,9 +149,11 @@ def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=99, sile
     # 笛を2重にして深みを出す（2026-10-28 人間の提案。2026-10-28 18:57「音に深みが欲しい」で、全曲の既定にした）：同じ旋律を、少し遅らせて（0.04拍）、右寄り・小さめ・息の音なし・明るさを下げて重ねる
     if double:
         F2 = S.track("フルート（重ね）", "panflute", patch="flute", volume=0.22, bright=-0.8, pan=0.3, reverb=0.65, breath=False,
-                     noRestrike=True, mono=True, sustain=1.12, phrase=16, gainDb=0, push=0.04,
+                     noRestrike=True, mono=True, sustain=1.12, phrase=16, gainDb=0,
                      barGain=[round(x * 0.85, 3) for x in c.FLUTE.spec["barGain"]])
-        for st, L, x in list(c.FLUTE.ev): F2.at(st, x)
+        import random as _r
+        rg = _r.Random(7)
+        for st, L, x in list(c.FLUTE.ev): F2.at(st + rg.uniform(0.0, 0.05), x)   # 一律にずらさず、1音ずつ少しランダムに（layering-study.md）
     # 旋律の1オクターブ下を竪琴がなぞる
     HM = S.track("竪琴（旋律の下）", "harp", patch="folkHarp", volume=0.05, pan=0.2, reverb=0.5, barGain=c.g())
     if harm_scenes:
@@ -198,6 +216,19 @@ def rich(c, choir_scenes=(), pulse_scenes=(), choir_vol=0.13):
         v = x.split(":", 1)[1]
         if h1 >= 55: CH1.at(st, f"{nm(h1)}:{v}")
         if h2 >= 55 and L >= 1: CH2.at(st, f"{nm(h2)}:{v}")
+    # 内声の動き：弦の1本が、和音の中のテンション（9th・maj7・6th）から一音ずつ動く（maj7→6、9→1 のように。クリシェ）
+    IN = S.track("内声の動き（弦）", "strings", patch="slowStrings", volume=0.032, pan=0.15, reverb=0.55, barGain=c.g())
+    sc = [(S.key.t + x) % 12 for x in S.key.steps]
+    for b in range(c.NB):
+        if c.scene_of_bar[b] not in pulse_scenes: continue
+        ch = S.chords[b].split("|")[0]
+        pcs = chord_pcs(ch)
+        cand = [m for m in range(60, 70) if m % 12 in pcs]
+        if not cand: continue
+        a = cand[-1]
+        z = a - 1
+        while z % 12 not in sc: z -= 1
+        IN.bar(b, f"{nm(a)}:2 {nm(z)}:2" if b % 2 == 0 else f"{nm(z)}:2 {nm(a)}:2")
     GT = S.track("ナイロンギター（刻み）", "guitar", patch="nylonGuitar", volume=0.055, pan=0.45, reverb=0.4, barGain=c.g())
     PZ = S.track("弦のピチカート", "strings", patch="pizzicato", volume=0.06, pan=-0.45, reverb=0.35, barGain=c.g())
     for b in range(c.NB):
