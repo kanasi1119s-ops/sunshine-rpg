@@ -162,6 +162,13 @@ for b in range(NB):
         if i == 0: HARP.bar(b, f"{nm(t[0])}:4")
         if i == 3: HARP2.bar(b, f"{nm(t[-3])}:4")
         if i == 5: BELL.bar(b, f"{nm(tones(ch, 'C6', 'C7')[2])}:4")
+# 厚みを戻す（点数が7.01に落ちたため）：低めの和音を、小さく左右に広げてのばす。前の版の半分の大きさ（2026-10-28）
+PADS = [S.track(f"広がりのパッド{i + 1}", "pad", patch="modernPad", volume=0.02, pan=[-0.75, 0.75][i], reverb=0.5) for i in range(2)]
+for b in range(NB):
+    n, i, L, k = S.scene_of(b)
+    if n in ("終わり",): continue
+    w = voice(S.chords[b].split("|")[0], 55, 2, spread=True)
+    for j in range(2): PADS[j].bar(b, f"{nm(w[j])}:4")
 SIL.add(s0["余韻"] - 1, 3, 4)
 SIL.apply()
 S.fade_out = 0
