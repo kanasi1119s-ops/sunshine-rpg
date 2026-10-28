@@ -7,6 +7,11 @@ description: サンシャイン作曲ソフトの形式で、Claude Code 自身�
 
 APIキーは使わない。曲は、あなた（Claude Code）が「AIソング形式」のJSONで書き、`tools/composer/song.mjs` で確かめて書き出す。
 
+## はじめに必ず読む（2026-10-29 人間「音の重ね方・作り方のテクニックをすべて共有できるように」）
+- `docs/sound/composer-preferences.md` … 旭さんの好みと決まり（使わない音・ドラム・ギター・歌・点数の目標・渡し方）
+- `docs/sound/layering-techniques.md` … 音の重ね方・空間・強弱・検査の技術（学んで確かめたことのまとめ）
+- 歌（テト）の動画を作るときは `tools/mv/README-teto.md`
+
 ## 手順
 
 1. **形式を読む**: `node tools/composer/song.mjs guide` を実行し、書き方・楽器の一覧・よい曲にするコツを読む。見本は `assets-src/ai-songs/harbor-night.json`。

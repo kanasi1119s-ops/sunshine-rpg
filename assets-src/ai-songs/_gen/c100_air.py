@@ -53,6 +53,7 @@ def verb_ir(rt=4.0, hp=600, seed=1):
 #   音楽の音そのもので耳を気持ちよくして支配すること。→ 作った効果音（glass の倍音・band の息の雑音）は使わない。
 #   shimmer・haze はひかえめに。far（音楽そのものの遠い響き）は残す。環境音・録音の出来事は 6dB 下げて、景色の気配にとどめる。
 MUSIC_FIRST = {"drop": ("glass", "band"), "fx_db": {"shimmer": -5, "haze": -5, "far": 0}, "air_db": -6, "ramp_max": 1.2}
+if os.environ.get("C100_FX_ORIG") == "1": MUSIC_FIRST = {"drop": (), "fx_db": {}, "air_db": 0, "ramp_max": 99}   # 比べるとき用
 def fx_layers(M, N, pre, ref, fx):
     """透明な空間音。glass＝高い倍音がゆっくりふくらんで消える（長い残響つき）／shimmer＝音楽の高域を1オクターブ上げて長い残響へ"""
     from scipy.signal import fftconvolve
