@@ -14,7 +14,7 @@ import sys, json
 from c100_common import *
 from c100_v2 import *
 
-S = Song("C100", "038-night-dew", "夜露", "Night Dew", 60, 4, "E", "mixolydian", "ケルト（幻想）")
+S = Song("C100", "038-night-dew", "夜露", "Night Dew", 57, 4, "E", "mixolydian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
 S.extra.update({"human": 0.25})
 AC = ["E", "D", "A", "E", "E", "D", "B", "E"]; BC = ["A", "E", "D", "A", "C#m", "D", "B", "E"]
@@ -68,7 +68,7 @@ for b in range(c.NB):
 play_melody(c, "最後の一滴", ["3:2 2:2", "1:4", "R:4", "R:4"], 4, "air", density=0.2, seed=3804)
 rich(c, choir_scenes=["歌2"], pulse_scenes=["歌2", "静けさ", "歌3"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の038（第2版）。夜の森の葉先の雫。4/4・♩=60、E ミクソリディア。雫の音（高い竪琴とピチカートが交互）が1拍ごとに落ち、その間隔がそのまま曲の拍になる。笛はその上でゆっくり歌い、最後の一滴で終わる。",
+       "ケルト・フルート100曲の038（第2版）。夜の森の葉先の雫。4/4・♩=57、E ミクソリディア。雫の音（高い竪琴とピチカートが交互）が1拍ごとに落ち、その間隔がそのまま曲の拍になる。笛はその上でゆっくり歌い、最後の一滴で終わる。",
        harm_scenes=None, tail_scene="最後の一滴", fill=False, pads=True, pad_scenes=["雫", "歌1", "歌2", "静けさ", "歌3", "最後の一滴"], floor=True)
 json.dump({"pre": 1.5, "tail": 8.0, "layers": [{"file": "0621", "db": -33, "hp": 120, "lp": 6000, "wide": 0.014, "duck": 0.3, "fade": 6}],
            "fx": {"glass": {"hz": [329.6, 659.3, 987.8], "db": -28, "rt": 7.0, "start": 4}, "shimmer": {"db": -26, "rt": 9.0}, "far": {"db": -24, "delay": 0.3, "lp": 2400, "rt": 5.0},
