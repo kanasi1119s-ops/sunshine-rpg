@@ -31,7 +31,7 @@ c = make(S, NAMES,
          {}, flute_gain={n: 1.15 for n in NAMES}, intro="蛙", passing=True, tension=False)
 F2 = S.track("笛2", "panflute", patch="flute", volume=0.32, bright=-0.6, pan=0.4, reverb=0.55, breath=True, noRestrike=True, mono=True, sustain=1.1, phrase=16, gainDb=2, barGain=c.g())
 F3 = S.track("笛3", "panflute", patch="flute", volume=0.3, bright=-0.75, pan=-0.4, reverb=0.6, breath=True, noRestrike=True, mono=True, sustain=1.1, phrase=16, gainDb=2, barGain=c.g())
-PZ = S.track("チェロのピチカート（蛙の拍）", "strings", patch="pizzicato", volume=0.08, pan=0.1, reverb=0.35, barGain=c.g())
+PZ = S.track("チェロのピチカート（蛙の拍）", "strings", patch="pizzicato", volume=0.11, pan=0.1, reverb=0.35, barGain=c.g())
 
 K = ["1:1 R:0.5 3:0.5 5:1 3:1", "4:1.5 3:0.5 2:2", "3:1 5:1 7:1 5:1", "6:2 5:2",
      "4:1 R:0.5 5:0.5 6:1 4:1", "5:1.5 4:0.5 3:2", "2:1 3:1 4:1 2:1", "1:4"]
@@ -54,12 +54,17 @@ for b in range(c.NB):
     t = tones(ch, "D3", "D5")
     PZ.bar(b, f"{nm(r)}:1 R:1 {nm(r + 7)}:1 R:1" if n != "もっと" else f"{nm(r)}:0.5 R:0.5 {nm(r + 7)}:0.5 {nm(r + 12)}:0.5 R:1 {nm(r + 7)}:1")
     if n in ("合唱", "もっと") or (n == "夜へ" and i < 6): c.HARP.bar(b, f"{nm(t[0])}:2 {nm(t[2])}:2")
+    elif n in ("蛙", "一匹", "二匹"): c.HARP.bar(b, f"{nm(t[0])}:1 {nm(t[2])}:1 {nm(t[4 % len(t)])}:2")   # 水面の輪
+    if n in ("蛙", "一匹", "二匹", "合唱"):   # 夕方の水辺の空気：うすい弦
+        v = voice(ch, 50 if n in ("蛙", "一匹") else 53, 3, spread=True)
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
     if n in ("もっと",) or (n == "夜へ" and i < 7):
         v = voice(ch, 55, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
+rich(c, choir_scenes=[], pulse_scenes=["合唱", "もっと"], guitar=True, pizz=False, inner=True)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の024（第2版）。夕方の水辺の蛙の大合唱。4/4・♩=58、G ドリア。蛙の声（録音）とチェロのピチカートの拍に、3本の笛が4小節ずつ遅れて加わる輪唱。夜になると笛が1本ずつ帰り、蛙の声が残る。",
-       harm_scenes=None, tail_scene="夜へ", fill=False, pads=True, pad_scenes=["合唱", "もっと"], double=False)
+       harm_scenes=None, tail_scene="夜へ", fill=False, pads=True, pad_scenes=["一匹", "二匹", "合唱", "もっと", "夜へ"], double=False)
 BEAT = 60 / BPM
 ev = [{"t": round((b * 4 + q) * BEAT + 0.05, 2), "file": "0819", "db": -24 - (3 if q else 0), "len": 0.6, "pan": [-0.3, 0.35][(b + q) % 2], "seek": 0.0, "hp": 200, "lp": 7000}
       for b in range(0, 6) for q in (0, 2)]
