@@ -14,7 +14,7 @@ import sys, json, math
 from c100_common import *
 from c100_v2 import *
 
-BPM = 138   # 8分音符＝138（付点4分＝46）
+BPM = 129   # 8分音符＝129（付点4分＝43）
 S = Song("C100", "005-little-boat-bell", "小舟の鈴", "The Little Boat Bell", BPM, 6, "G", "mixolydian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
 S.extra.update({"human": 0.4})
@@ -24,13 +24,13 @@ S.scene("呼ぶ1", 16, "verse", P)
 S.scene("応える", 16, "verse", ["C", "G", "F", "G", "Am", "F", "G", "G", "C", "G", "Am", "F", "F", "C", "G", "G"])
 S.scene("二人", 24, "chorus", P + ["C", "G", "F", "G", "F", "C", "G", "G"])
 S.scene("呼ぶ2", 16, "verse", P)
-S.scene("遠ざかる", 12, "verse", ["G", "F", "G", "C", "G", "F", "G", "G", "F", "G", "G", "G"])
-S.scene("終わり", 6, "outro", ["G"] * 6)
+S.scene("遠ざかる", 8, "verse", ["G", "F", "G", "C", "G", "F", "G", "G"])
+S.scene("終わり", 4, "outro", ["C", "G", "G", "G"])
 NAMES = ["鈴", "呼ぶ1", "応える", "二人", "呼ぶ2", "遠ざかる", "終わり"]
 
 c = make(S, NAMES,
          [("鈴", 0, 0.6), ("呼ぶ1", 0, 0.62), ("応える", 0, 0.66), ("二人", 0, 0.7), ("二人", 16, 0.76), ("二人", 23, 0.68),
-          ("呼ぶ2", 0, 0.64), ("遠ざかる", 0, 0.6), ("遠ざかる", 11, 0.45), ("終わり", 0, 0.42), ("終わり", 5, 0.3)],
+          ("呼ぶ2", 0, 0.64), ("遠ざかる", 0, 0.64), ("遠ざかる", 7, 0.58), ("終わり", 0, 0.56), ("終わり", 3, 0.42)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro="鈴", passing=True, tension=False)
 GT = S.track("ナイロンギター（舟のゆれ）", "guitar", patch="nylonGuitar", volume=0.11, pan=0.35, reverb=0.4, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.075, pan=0.2, reverb=0.45, barGain=c.g())
@@ -46,8 +46,8 @@ play_melody(c, "呼ぶ1", call, 4, "air", density=0.7, seed=501)
 play_melody(c, "応える", resp, 4, "air", density=0.8, seed=502)
 play_melody(c, "二人", both, 4, "air", density=0.9, seed=503)
 play_melody(c, "呼ぶ2", call, 4, "air", density=0.8, seed=504)
-play_melody(c, "遠ざかる", ["R:6", "5:3 3:3", "R:6", "2:3 1:3", "R:6", "R:6", "5:3 6:3", "R:6", "3:6", "R:6", "R:6", "R:6"], 4, "air", density=0.5, seed=505)
-play_melody(c, "終わり", ["1':1 R:5", "R:3 5:1 R:2", "1':1 R:5", "R:6", "5:1 R:5", "R:6"], 4, "air", density=0)
+play_melody(c, "遠ざかる", ["5:3 3:3", "2:6", "3:3 4:3", "5:6", "5:3 6:3", "5:3 3:3", "2:3 1:3", "1:6"], 4, "air", density=0.5, seed=505)
+play_melody(c, "終わり", ["1':1 R:2 5:1 R:2", "1':3 5:3", "1':6", "R:6"], 4, "air", density=0)
 
 B = S.beats
 for b in range(c.NB):
@@ -66,9 +66,10 @@ for b in range(c.NB):
         for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:6")
     if n in ("呼ぶ2", "二人"): CELLO.bar(b, f"{nm(r)}:6")
 
+rich(c, choir_scenes=["二人"], pulse_scenes=["応える", "二人", "呼ぶ2"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の005（第2版）。港の小舟の鈴と笛の掛け合い。6/8・付点4分＝46（舟のゆれ）。G ミクソリディア。鈴は本物の録音を和音の音に合わせ、呼ぶ→答える→一緒に→遠ざかる。最後は笛が鈴をまねて消える。",
-       harm_scenes=None, tail_scene="終わり", fill=False, pads=True, pad_scenes=["呼ぶ1", "応える", "二人", "呼ぶ2", "遠ざかる"])
+       harm_scenes=None, tail_scene="終わり", fill=False, pads=True, pad_scenes=["呼ぶ1", "応える", "二人", "呼ぶ2", "遠ざかる", "終わり"], floor=True)
 
 # ---------- 鈴（本物の録音 0292 を、和音の音に合わせて置く） ----------
 BAR = B * 60 / BPM
