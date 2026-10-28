@@ -42,14 +42,19 @@ for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     r = low(ch, "C2")
     CB.bar(b, f"{nm(r if r >= 28 else r + 12)}:3" if not (n == "土" and i == 3) else "R:3")
-    if n != "低音" and not (n == "土" and i >= 2): CELLO.bar(b, f"{nm(r + 12)}:3")
+    if n == "低音" or (n == "土" and i < 3):   # 苔の下の土の温かさ：低い弦の和音（前奏・終わりが小さすぎないように）
+        v = voice(ch, 50, 3, spread=True)
+        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3")
+    if not (n == "土" and i >= 3): CELLO.bar(b, f"{nm(r + 12)}:3")
     if n in ("沈む1", "沈む2", "苔"):
         v = voice(ch, 52 if n != "苔" else 48, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3")
+    if n == "沈む1" and i % 2 == 0: c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "F#3", "F#5")[:3]))
     if n in ("沈む2", "苔"): c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "F#2", "F#4")[:3]))
+rich(c, choir_scenes=["沈む1"], pulse_scenes=["沈む1", "沈む2", "苔"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の034（第2版）。倒木をおおう苔の絨毯。3/4・♩=42、F♯ エオリア。スロー・エアの旋律が、ゆっくり低い方へ沈んでいき、最後は笛のいちばん低い音とコントラバスが苔の下の土のように鳴る。",
-       harm_scenes=None, tail_scene="土", fill=False, pads=True, pad_scenes=["沈む2", "苔"])
+       harm_scenes=None, tail_scene="土", fill=False, pads=True, pad_scenes=["沈む1", "沈む2", "苔", "土"], floor=True)
 json.dump({"pre": 1.0, "tail": 8.0, "layers": [{"file": "0136", "db": -34, "hp": 80, "lp": 4000, "wide": 0.016, "duck": 0.3, "fade": 8}],
            "fx": {"glass": {"hz": [185.0, 370.0, 554.4], "db": -29, "rt": 7.0, "start": 4}, "shimmer": {"db": -28, "rt": 9.0}, "far": {"db": -24, "delay": 0.3, "lp": 2000, "rt": 5.0},
                   "haze": {"db": -25, "rt": 9.0}, "band": {"db": -38, "hz": 5000, "per": 31}}, "intro_db": 8.5}, open("/tmp/cel/w/air034.json", "w"))
