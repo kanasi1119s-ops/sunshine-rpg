@@ -31,9 +31,9 @@ c = make(S, NAMES,
          [("晴れ1", 0, 0.62), ("晴れ2", 0, 0.66), ("雲", 0, 0.66), ("影", 0, 0.66), ("影", 15, 0.72), ("夕立前", 0, 0.78), ("夕立前", 5, 0.9),
           ("夕立前", 7, 0.74), ("影に入る", 0, 0.62), ("影に入る", 7, 0.36)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro=None, passing=True, tension=False)
-PR = S.track("ピアノ（右手）", "piano", volume=0.2, pan=-0.15, reverb=0.45, barGain=c.g())
-PR2 = S.track("ピアノ（右手2）", "piano", volume=0.17, pan=-0.12, reverb=0.45, barGain=c.g())
-PL = S.track("ピアノ（左手）", "piano", volume=0.2, pan=-0.2, reverb=0.45, barGain=c.g())
+PR = S.track("ピアノ（右手）", "piano", volume=0.4, pan=-0.15, reverb=0.45, barGain=c.g())
+PR2 = S.track("ピアノ（右手2）", "piano", volume=0.32, pan=-0.12, reverb=0.45, barGain=c.g())
+PL = S.track("ピアノ（左手）", "piano", volume=0.4, pan=-0.2, reverb=0.45, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.45, barGain=c.g())
 TIMP = S.track("遠いティンパニ", "strings", patch="timpani", volume=0.06, pan=0.3, reverb=0.7, gainDb=-6, barGain=c.g())
 
@@ -64,12 +64,14 @@ for b in range(c.NB):
     if n in ("雲", "影", "夕立前"):
         v = voice(ch, 55 if n == "雲" else 52, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4" if n != "夕立前" else " ".join(f"{nm(v[j])}:0.5" for _ in range(8)))
+    if n == "雲": CELLO.bar(b, f"{nm(r)}:4")
     if n in ("影", "夕立前"): CELLO.bar(b, f"{nm(r)}:4" if n == "影" else f"{nm(r - 12 if r - 12 >= 36 else r)}:4")
     if n == "夕立前" and i in (3, 6): TIMP.bar(b, "R:2 " + " ".join(f"{nm(r)}:0.25" for _ in range(8)))
     if n == "影に入る":
         v = voice("Bm", 50, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4" if i < 7 else "R:4")
         if i < 7: CELLO.bar(b, "B1:4" if False else "B2:4")
+rich(c, choir_scenes=["雲", "影", "夕立前"], pulse_scenes=["雲", "影"], guitar=False, pizz=False, inner=True)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の017（第2版）。西の空が暗くなる午後。4/4・♩=56。主題と変奏：同じ旋律が D 長調→ミクソリディア→B 短調→C♮の影へ。夕立の前に短い影の山（遠いティンパニ）、雨が降りはじめる所で影の中に入って終わる。",
-       harm_scenes=None, tail_scene="影に入る", fill=False, pads=True, pad_scenes=["雲", "影", "夕立前", "影に入る"])
+       harm_scenes=None, tail_scene="影に入る", fill=False, pads=True, pad_scenes=["晴れ2", "雲", "影", "夕立前", "影に入る"])
