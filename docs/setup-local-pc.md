@@ -42,3 +42,12 @@ Python の部品: `numpy scipy soundfile librosa pyworld pyyaml onnxruntime torc
 ## 6. 動作の確認（クラウドの値と比べる）
 - ケルト: 019（c100_019.py）→ PQ 7.35 前後
 - 歌入りやバンドの曲も、それぞれ1曲書き出して、クラウドの点数と近いかを見る
+
+## 7. Windows で実際にやってわかったこと（2026-10-29 パソコンで試して追記）
+- **日本語の読み込み**: Windows の Python は既定が cp932 なので、日本語の JSON が読めずに落ちる。実行前に `PYTHONUTF8=1` を設定する（`tools/celtic100/run.ps1` は設定済み）
+- **python3 の問題**: 作曲ソフトは歌の合成などで `python3` を呼ぶ。Windows の `python3` は Microsoft Store の別の Python（3.14・部品なし）を指し、`soundfile が見つからない` で歌の合成が落ちる。しかも落ちると歌のない伴奏だけの WAV が残り、点数だけ出てしまうので気づきにくい
+  → 対策: `python -m venv --system-site-packages C:\Users\<名前>\composer-work\venv` を作り、`venv\Scripts\python.exe` を `python3.exe` という名前でコピーして、その `Scripts` を PATH の先頭に置く（`.cmd` の橋渡しでは Node が見つけられない）
+- **歌入りの書き出し**: `VB_VOCAL=1` をつけて `vb25_NN_*.py <出力JSON>` を動かし、できた JSON と `.flags` で `song.mjs build` する。書き出しのログに「×」が出ていないか、音量（歌が入ると約 5dB 大きくなる）で確かめる
+- **Playwright**: リポジトリの package.json に入っていないので `npm i --no-save playwright` と `npx playwright install chromium`
+- **音源の置き場所**: テトは zip の中の名前が Shift_JIS。`zipfile.ZipFile(f, metadata_encoding="cp932")` で日本語名のまま展開すると `assets-src/voicebanks/teto/重音テト音声ライブラリー/` になる
+- 試した結果: ケルト019 PQ 7.52（約15分・クラウド 7.35）／ラウド「逆光プリズム」PQ 7.89（約10分）／歌入り「サイダーカウントダウン」PQ 7.93（約6分）。CPU 12・メモリ 15GB のノートで、同時に書き出すのは 3 曲まで

@@ -12,7 +12,8 @@ import os, sys
 import numpy as np
 import torch, librosa
 
-VDIR = os.path.join(os.environ.get("SUNSHINE_VOICEBANKS", "/home/claude/voicebanks"), "ds/_vocoders/bigvgan-v2-44k")
+_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+VDIR = os.path.join(os.environ.get("SUNSHINE_VOICEBANKS", os.path.join(_ROOT, "assets-src", "voicebanks")), "ds/_vocoders/bigvgan-v2-44k")
 _model = None
 
 def load(vdir=VDIR):

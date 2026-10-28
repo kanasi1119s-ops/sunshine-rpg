@@ -8,7 +8,7 @@ import sys, json, subprocess, os
 import numpy as np
 from scipy.signal import butter, sosfilt
 SR = 44100
-AMB = os.environ.get("AMB_DIR", "/home/claude/wt-mix/assets-src/ambience")
+AMB = os.environ.get("AMB_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "ambience"))
 
 def load(path):
     raw = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-f", "f32le", "-ac", "2", "-ar", str(SR), "-"], capture_output=True).stdout

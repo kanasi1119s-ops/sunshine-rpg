@@ -10,6 +10,7 @@ if steps[:-3].max() > 7: flag.append("段差大")
 if r[:-3].max()-r[:-3].min() < 3: flag.append("強弱が少ない")
 print("注意:", flag or "なし")
 import numpy as np
-S=np.abs(np.fft.rfft(x[:len(x)//2*2][:sr*240].reshape(-1,sr)*np.hanning(sr)[None,:],axis=1)).mean(0)
+seg=x[:sr*240]; seg=seg[:len(seg)//sr*sr]  # 1秒の整数倍に切る（半端だと reshape が落ちる）
+S=np.abs(np.fft.rfft(seg.reshape(-1,sr)*np.hanning(sr)[None,:],axis=1)).mean(0)
 f=np.fft.rfftfreq(sr,1/sr); cen=(f*S).sum()/S.sum(); hi=10*np.log10((S[(f>4000)&(f<12000)]**2).sum()/(S**2).sum())
 print(f"明るさの重心{cen:.0f}Hz 4k-12k比{hi:.1f}dB")
