@@ -37,7 +37,7 @@ S.fix_avoid = lambda t: 0      # リディアの A♯ を直されないよう�
 B = S.beats
 GLS = [S.track(f"グロッケン（星{j + 1}）", "strings", patch="glockenspiel", volume=0.05, pan=[0.45, -0.3, 0.15, -0.55][j], reverb=0.7,
               barGain=[round(x * (3.0 if c.scene_of_bar[b] in ("一番星", "最後の星") else 1.0), 3) for b, x in enumerate(c.g())]) for j in range(4)]   # 星が重なっても前の星を切らないよう、4つのパートに順に置く
-HH = [S.track(f"竪琴の倍音{j + 1}", "harp", patch="folkHarp", volume=0.07, pan=-0.35 + 0.25 * j, reverb=0.7, sustain=3.0, barGain=c.g()) for j in range(3)]
+HH = [S.track(f"竪琴の倍音{j + 1}", "harp", patch="folkHarp", volume=0.07, pan=-0.35 + 0.25 * (j % 3), reverb=0.7, sustain=3.0, barGain=c.g()) for j in range(6)]   # 句ごとに3つずつ交互に使い、前の句の響きを切らない
 HA = S.track("竪琴（星の川の流れ）", "harp", patch="folkHarp", volume=0.06, pan=-0.2, reverb=0.65, sustain=2.0, barGain=c.g())
 rg = random.Random(9)
 STAR = [m for m in range(76, 96) if (m - 64) % 12 in (0, 2, 4, 6, 7, 9, 11)]   # 星の高さ（E5〜B6 のリディア）
@@ -50,9 +50,10 @@ def star(t, m=None, soft=True):
 # ---------- 一番星 ----------
 s0 = c.s0["一番星"]
 star(0, 88, soft=False)                                     # E6 の1音
-for j, m in enumerate([52, 59, 66]): HH[j].at(s0 * B + 3 + j * 0.4, f"{nm(m)}:15")   # 一番星のすぐあとに、竪琴の倍音（E・B・F♯）。前奏が沈まないように（layering-techniques.md）
+for j, m in enumerate([52, 59, 66]): HH[j].at(s0 * B + 1.5 + j * 0.4, f"{nm(m)}:16.5")   # 一番星のすぐあとに、竪琴の倍音（E・B・F♯）。前奏が沈まないように（layering-techniques.md）
 
 # ---------- 数える ----------
+_hs = [0]
 t = c.s0["数える"] * B
 for k, nb in enumerate(CNT_BARS, start=1):
     line = " ".join(f"{d}:3" for d in M[:k])
@@ -61,8 +62,10 @@ for k, nb in enumerate(CNT_BARS, start=1):
     span = nb * B
     for q in range(k):                                         # 句 k には星が k 個（句の中にちらばる）
         star(t + rg.uniform(0, span - 1.5))
-    for j, m in enumerate([52, 59, 66 if k % 2 else 68]):     # 句のはじめに竪琴の倍音（E・B・F♯ か G♯）
-        HH[j].at(round(t + j * 0.4, 3), f"{nm(m)}:{span},")
+    for o_ in range(0, span, 18):                             # 竪琴の倍音（E・B・F♯ か G♯）を2小節ごとに。2組を交互に使い、前の響きを切らない
+        _hs[0] += 1                                            # （1回目は句の切れ目と長い句の後半が -40dB 前後に沈んだ）
+        for j, m in enumerate([52, 59, 66 if k % 2 else 68]):
+            HH[j + 3 * (_hs[0] % 2)].at(round(t + o_ + j * 0.4, 3), f"{nm(m)}:{min(22.5, span - o_ + 4.5)}{',' if o_ else ''}")
     t += span
 
 # ---------- 星の川：数えきれなくなって、節がつながる ----------
