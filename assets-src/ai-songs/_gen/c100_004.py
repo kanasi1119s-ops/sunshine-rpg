@@ -1,67 +1,69 @@
-# ケルト・フルート100曲「銀の笛と百の夜」004 嵐の前の凪 Calm Before the Gale — 第2版（2026-10-28）
-# イメージ: 風がぴたりと止まった夕空。海も鳥も息をひそめる。空の色だけが、少しずつ変わっていく（明るい凪→くもり→暗い影）。
-#   そして、すべての音が3秒だけ消える（嵐の前の、ほんとうの無音）。そのあと、また静かな凪が戻り、最後は波の音だけ。
-# 形（台帳）: ドローンの瞑想。低い F の持続の上で、和音はほとんど変えず、旋法だけを変える（F リディア→ミクソリディア→エオリア→リディア）。
-#   4/4・♩=48。始め：弦の持続／終わり：何も無い1拍→波。山なし。
-# 編曲の表:
-#   弦の息 : 弦の持続（F と C、上に高い倍音）とチェロの低い F
-#   凪1    : ＋笛。竪琴がときどき1音（水面のきらめき）。リディア（明るく浮かぶ B♮）
-#   凪2    : ミクソリディア（E♭が混ざり、空がくもる）。竪琴がゆっくりした分散和音
-#   翳り   : エオリア（A♭・D♭、影が落ちる）。チェロが低い所で動く
-#   無音   : 3秒だけ、すべての音が消える
-#   凪3    : リディアに戻る。笛はやさしく、だんだん少なくなる
-#   終わり : 弦の持続だけが消えていき、最後は波の音
-import sys
+# ケルト・フルート100曲「銀の笛と百の夜」004 嵐の前の凪 Calm Before the Gale — 第3版（2026-10-29 作り直し。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 旅立ちの前の夕方。風がぴたりと止まり、海も鳥も息をひそめる。エイラは岬で笛を吹く。
+#   低い持続の音（ドローン）は、凪いだ海そのもの。笛はその上でほとんど動かず、少しずつ海から離れていく。
+#   いちばん張りつめた所で、海の音（ドローン）がふっと切れる。残るのは笛の1音だけ＝嵐の来る前の一瞬。
+# 調べ: あいだ。形: ドローンの上でほとんど動かない旋律（瞑想）→ ドローンが急に切れる。
+# 拍子・速さ: 4/4 だが拍は感じさせない。♩=44 前後でゆれる（息の長さで）。旋法: G エオリア。
+# 主役は笛（低い木の笛・長い音・息のゆらぎ）。伴奏はバグパイプのドローン（本物の録音。G2・G3）と、遠い低弦（チェロとコントラバス）だけ。
+#   竪琴・ギター・ピアノ・弦の和音・パッド・打楽器・2本目の笛は使わない。
+# この曲だけ: 和音を一度も変えない。緊張と解決は、笛とドローンの距離だけで作る
+#   （G・D・B♭＝溶ける／A・C・E♭・F＝離れる）。息1は溶ける音ばかり、息2で少し離れ、張りで高く離れた音に長くとどまる。
+# 山: 平ら → 最後に張りつめる（ドローンが切れる直前）。最初が大きくてだんだん小さくなる形にはしない。
+import sys, json
 from c100_common import *
 from c100_v2 import *
 
-S = Song("C100", "004-calm-before-gale", "嵐の前の凪", "Calm Before the Gale", 48, 4, "F", "lydian", "ケルト（幻想）")
+S = Song("C100", "004-calm-before-gale", "嵐の前の凪", "Calm Before the Gale", 44, 4, "G", "minor", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"rubato": 0.3, "human": 0.4})
-S.scene("弦の息", 4, "intro", ["F", "F", "G/F", "F"])
-S.scene("凪1", 16, "verse", ["F", "F", "G/F", "F", "F", "Am/F", "G/F", "F", "F", "Em/F", "G/F", "F", "F", "G/F", "F", "F"])
-S.scene("凪2", 12, "verse", ["F", "Eb/F", "F", "Eb/F", "Bb/F", "F", "Eb/F", "F", "F", "Gm/F", "Eb/F", "F"])
-S.scene("翳り", 8, "chorus", ["Fm", "Db/F", "Fm", "Eb/F", "Fm", "Db/F", "Eb/F", "Fm"])
-S.scene("無音", 1, "break", ["Fm"])
-S.scene("凪3", 12, "verse", ["F", "F", "G/F", "F", "F", "Am/F", "G/F", "F", "F", "F", "F", "F"])
-S.scene("終わり", 4, "outro", ["F", "F", "F", "F"])
-NAMES = ["弦の息", "凪1", "凪2", "翳り", "無音", "凪3", "終わり"]
+S.extra.update({"rubato": 0.4, "human": 0.4})
+S.scene("凪の前", 3, "intro", ["Gm"] * 3)
+S.scene("息1", 14, "verse", ["Gm"] * 14)
+S.scene("息2", 14, "verse", ["Gm"] * 14)
+S.scene("張り", 13, "chorus", ["Gm"] * 13)
+S.scene("切れる", 3, "outro", ["Gm"] * 3)
+NAMES = ["凪の前", "息1", "息2", "張り", "切れる"]
+S.fix_avoid = lambda t: 0      # この曲は「和音の外の音にとどまる」ことが仕掛けなので、和音の外の音を直す処理を止める
+S.tempo = [{"bar": 1, "bpm": 43}, {"bar": 10, "bpm": 45, "ramp": 4}, {"bar": 20, "bpm": 43, "ramp": 4}, {"bar": 32, "bpm": 45, "ramp": 4},
+           {"bar": 40, "bpm": 47, "ramp": 4}, {"bar": 46, "bpm": 40}]
 
 c = make(S, NAMES,
-         [("弦の息", 0, 0.62), ("凪1", 0, 0.62), ("凪1", 15, 0.66), ("凪2", 0, 0.66), ("凪2", 11, 0.7), ("翳り", 0, 0.72), ("翳り", 7, 0.74),
-          ("無音", 0, 0.6), ("凪3", 0, 0.6), ("凪3", 11, 0.5), ("終わり", 0, 0.48), ("終わり", 3, 0.3)],
-         {}, flute_gain={n: 1.25 for n in NAMES}, intro="弦の息", passing=True, tension=False)
-CELLO = S.track("チェロ（低い F）", "strings", patch="cello", volume=0.1, pan=0.1, reverb=0.5, barGain=c.g())
-
-K = S.key; KM = K.__class__("F", "mixolydian", 5); KA = K.__class__("F", "minor", 5)
-play_melody(c, "凪1", ["R:2 5:2", "3:4", "4:2 3:1 2:1", "3:4", "R:2 5:2", "6:3 5:1", "4:2 5:1 6:1", "5:4",
-                       "R:2 1':2", "7:3 6:1", "5:2 4:1 3:1", "2:4", "R:2 3:1 4:1", "5:3 4:1", "3:2 2:1 1:1", "1:4"], 4, "air", density=0.7, seed=401)
-play_melody(c, "凪2", ["R:2 1:1 2:1", "3:3 4:1", "5:4", "7:2 6:1 5:1", "4:2 5:1 6:1", "7:4", "6:2 5:1 4:1", "5:4",
-                       "R:2 3:1 4:1", "5:2 7:2", "6:3 4:1", "5:4"], 4, "air", key=KM, density=0.8, seed=402)
-play_melody(c, "翳り", ["R:2 5:2", "6:3 5:1", "4:2 3:2", "2:4", "R:2 1:1 2:1", "3:3 2:1", "7,:2 1:2", "1:4"], 4, "air", key=KA, density=0.8, seed=403)
-play_melody(c, "凪3", ["R:2 5:2", "3:4", "4:3 3:1", "2:4", "R:2 5:2", "6:2 5:2", "4:3 2:1", "1:4", "R:4", "5,:2 1:2", "1:4", "R:4"], 4, "air", density=0.6, seed=404)
-
+         [("凪の前", 0, 0.68), ("息1", 0, 0.68), ("息1", 13, 0.68), ("息2", 0, 0.7), ("息2", 13, 0.74),
+          ("張り", 0, 0.76), ("張り", 8, 0.86), ("張り", 12, 0.92), ("切れる", 0, 0.8), ("切れる", 2, 0.7)],
+         {}, flute_gain={n: 1.2 for n in NAMES}, intro="凪の前", passing=False, tension=False)
 B = S.beats
-for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b].split("/")[0]
-    if n == "無音": continue
-    hold = not (n == "終わり" and i == 3)
-    if hold:
-        v = voice(ch, 60, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-        CELLO.bar(b, "F2:4")
-    if n == "凪1" and i % 4 == 2: c.HARP.bar(b, f"R:2 {nm(tones(ch, 'C5', 'C6')[1])}:2")
-    if n == "凪2": c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "F3", "F5")[:4]))
-    if n == "翳り":
-        CELLO.bar(b, f"{nm(tones(ch, 'C3', 'C4')[0])}:2 {nm(tones(ch, 'C3', 'C4')[1])}:2")
-        c.HARP.bar(b, f"{nm(tones(ch, 'F3', 'F4')[0])}:4")
-    if n == "凪3" and i % 4 == 0: c.HARP.bar(b, f"R:2 {nm(tones(ch, 'C5', 'C6')[2])}:2")
-# 無音：前の小節から鳴っている音も、無音の小節の頭で止める（3秒＝2.4拍）。その後は弦がそっと戻る
-SB = c.s0["無音"]
-c.SIL.add(SB, 0, 2.4)
-v = voice("F", 60, 3, spread=True)
-for j in range(3): c.STR[j].at(SB * B + 2.4, f"{nm(v[j])}:1.6")
+# バグパイプのドローン（本物の録音）。ほんの少し左右に分けて、2本の管に聞こえるように。切れる所は release を短く（ふっと消える）
+DR = [S.track(f"ドローン（{nm_}）", "bagpipe", volume=v, pan=p, reverb=0.45, attack=0.6, release=0.06,
+              fx=[{"type": "eq", "low": -1, "mid": -2, "midHz": 2500, "high": -2.5}], barGain=c.g())
+      for nm_, v, p in [("G2", 0.075, -0.12), ("G3", 0.055, 0.14)]]
+# 遠い低弦：息2から。凪の海の深さ。張りで少しふくらむ
+VC = S.track("遠いチェロ", "strings", patch="cello", volume=0.06, pan=-0.45, reverb=0.7, barGain=c.g())
+CB = S.track("遠いコントラバス", "strings", patch="contrabass", volume=0.07, pan=0.45, reverb=0.7, barGain=c.g())
 
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の004（第2版）。風が止まった夕空。低い F の持続の上で旋法だけが変わる（リディア→ミクソリディア→エオリア→リディア）。4/4・♩=48。途中で3秒だけ、すべての音が消える。最後は波の音。",
-       harm_scenes=None, tail_scene="終わり", fill=False, pads=True, pad_scenes=["凪1", "凪2", "翳り", "凪3"])
+cut = c.s0["切れる"] * B           # ここでドローンが切れる
+DR[0].at(0, f"G2:{cut}")
+DR[1].at(0, f"G3:{cut}")
+s2 = c.s0["息2"]
+for b in range(s2, c.s0["切れる"]):
+    n, i, Lb, k = S.scene_of(b)
+    if n == "息2" and i % 2 == 1: continue      # 息2：2小節に1回だけ、遠くで（息をするように）
+    CB.at(b * B, f"G1:{B * (2 if n == '息2' else 1)}")
+    if n == "張り": VC.at(b * B, f"{'D3' if i % 2 else 'G2'}:{B}")
+
+# ---------- 笛（G エオリア。1=G。オクターブ4＝G4） ----------
+N1 = ["R:2 1:2", "1:4", "2:3 1:1", "1:4", "R:2 7,:1 1:1", "3:4", "2:2 1:2", "1:4",
+      "R:2 5,:2", "7,:3 1:1", "3:4", "3:2 2:1 1:1", "1:4", "R:4"]                       # 溶ける音（G・B♭・D）ばかり。A は通りすぎるだけ
+N2 = ["R:2 3:2", "4:4", "5:3 4:1", "3:4", "R:2 4:1 5:1", "6:4", "5:2 4:2", "5:4",
+      "R:2 7:2", "6:3 5:1", "4:4", "2:3 3:1", "2:4", "R:4"]                             # C・E♭・F・A に少しとどまる
+N3 = ["R:1 5:1 7:1 1':1", "2':4", "1':2 7:2", "6:4", "R:1 6:1 7:1 2':1", "3':4", "2':4", "3':3 2':1",
+      "2':4", "7:2 6:2", "6:4", "5:2 6:2", "6:4"]                                         # 高い A に長く。最後は E♭ にとどまったまま切れる
+play_melody(c, "息1", N1, 4, "air", density=0.25, seed=401)
+play_melody(c, "息2", N2, 4, "air", density=0.3, seed=402)
+play_melody(c, "張り", N3, 4, "air", density=0.2, seed=403)
+play_melody(c, "切れる", ["R:2 5:2", "5:4", "R:4"], 4, "air", density=0.0)          # ドローンが切れたあとの、笛の1音（D）
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.3 --master -15 --widen 1.2 --side-hpf 200",
+       "ケルト・フルート100曲の004（第3版）。嵐の前の凪。岬で笛を吹く。バグパイプのドローン（G）の上で、笛はほとんど動かず、和音は一度も変わらない。緊張と解決は笛とドローンの距離だけ。いちばん張りつめた所でドローンがふっと切れ、笛の1音だけが残る。G エオリア、♩=44 前後でゆれる。",
+       harm_scenes=None, tail_scene="切れる", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 7.0, "layers": [{"file": "1046", "db": -46, "hp": 120, "lp": 3500, "wide": 0.012, "duck": 0.4, "fade": 8}],
+       "fx": {"far": {"db": -27, "delay": 0.26, "lp": 2600, "rt": 3.4}}}
+json.dump(air, open("/tmp/cel/w/air004.json", "w"), ensure_ascii=False)

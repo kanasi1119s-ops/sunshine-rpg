@@ -1,89 +1,95 @@
-# ケルト・フルート100曲「銀の笛と百の夜」003 祖父の手紙 Grandfather's Letter — 第2版（2026-10-28）
-# イメージ: 机の引き出しから、祖父の手紙が出てくる。ピアノが祖父の声のように手紙の節を語り（笛はまだ聞いているだけ）、
-#   2回目にエイラの笛がその節をなぞって答える。読み終えて、しばらく黙る（ピアノの和音だけが残る）。
-#   そして「旅に出よう」と決める所で、同じ節が長調に変わって明るむ。最後は笛の長い音。
-# 形（台帳）: ピアノ組曲（笛は2周目から）・短調→最後に長調。4/4・♩=52。D エオリア→D イオニア。山なし・最後に明るむ。
-# 編曲の表:
-#   前置き : ピアノの低音（D のオクターブと5度）。紙をめくる音（空気の層）
-#   語り1  : ピアノだけ（右手が旋律、左手は5度とオクターブ）
-#   語り2  : 笛が同じ節で答える。ピアノは右手を3度・6度の長い和音に、左手はそのまま。B で竪琴の根音
-#   沈黙   : 笛は休み、ピアノの和音と弦がのびるだけ（読み終えて黙る）
-#   決意   : 同じ節が長調に。弦・竪琴の分散和音・チェロ。笛は少し高い所で
-#   終わり : 笛の長い音とピアノの和音
-import sys
+# ケルト・フルート100曲「銀の笛と百の夜」003 祖父の手紙 Grandfather's Letter — 第3版（2026-10-29 作り直し。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 灯台の机の引き出しから、祖父の手紙が出てくる。手紙の終わりには、祖父がいつも口ずさんでいた節が書いてある。
+#   ピアノが祖父の節を弾き、エイラの笛が手紙を読み進めるように、その上に自分の節を重ねていく。
+# 調べ: 悲しみ。形: ウェールズの「伴奏の旋律に別の旋律を重ねる」型（ハープが決まった旋律を弾き、歌い手が数小節遅れて別の旋律で入る）。
+#   3/4・♩=66。F イオニア。
+# 楽器はピアノと笛だけ。ピアノ＝祖父（右手が旋律、左手が低音と中の和音）。弦・竪琴・チェロ・パッド・打楽器・2本目の笛は使わない。
+# この曲だけ: ピアノは祖父の16小節の節を、5回とも一音も変えずに弾く（強さだけが変わる）。笛の対旋律だけが毎回ちがう＝手紙を読み進める。
+#   1回目: ピアノだけで4小節（手紙を開くまで）→ 笛が5小節目から低く、長い音で入る（読みはじめ）
+#   2回目: 祖父が長くのばす所で笛が動く（会話のように）
+#   3回目: 笛が上に出て、高い所で長くうたう（1つめの小さな山）
+#   4回目: 笛はほとんど黙り、祖父の句の終わりにだけ、低く小さくこたえる（手紙を胸に、しばらく読めない）
+#   5回目: いちばん高く広く（2つめの小さな山）→ 最後の行（後半8小節）をもう一度。ここで笛が祖父の節そのものを吹き、ピアノと重なる（祖父の歌を受け継ぐ）
+#   結び: ピアノの完全終止の和音だけが残る
+# 山: 2つの小さな山（3回目の頭と5回目の真ん中）。最初が大きくてだんだん小さくなる形にはしない。
+import sys, json
 from c100_common import *
 from c100_v2 import *
 
-S = Song("C100", "003-grandfathers-letter", "祖父の手紙", "Grandfather's Letter", 52, 4, "D", "minor", "ケルト（幻想）")
+S = Song("C100", "003-grandfathers-letter", "祖父の手紙", "Grandfather's Letter", 66, 3, "F", "major", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"rubato": 0.35, "human": 0.4})
-TA = ["Dm", "Bb", "Gm", "A", "Dm", "Bb", "C", "Dm"]
-TB = ["F", "C", "Bb", "F", "Gm", "Dm", "C", "Dm"]
-MA = ["D", "G", "Em", "A", "D", "G", "A", "D"]
-S.scene("前置き", 2, "intro", ["Dm", "Dm"])
-S.scene("語り1", 16, "verse", TA + TA)
-S.scene("語り2", 16, "verse", TA + TB)
-S.scene("沈黙", 2, "break", ["Bb", "A"])
-S.scene("決意", 16, "chorus", MA + ["G", "D", "Em", "A", "G", "D", "A", "D"])
-S.scene("終わり", 4, "outro", ["D", "G", "D", "D"])
-NAMES = ["前置き", "語り1", "語り2", "沈黙", "決意", "終わり"]
+S.extra.update({"rubato": 0.3, "human": 0.4})
+TUNE_CH = ["F", "Bb", "F", "C", "F", "Bb", "C", "F", "Dm", "Bb", "F", "C", "F", "Bb", "C", "F"]
+# 祖父の節（右手）。賛美歌のような長い息の4句：a・a'・b（6小節目の高いファが節の一番高い所）・a''。最後は C → F の完全終止
+TUNE = ["1:2 3:1", "4:2 6:1", "5:1 3:1 1:1", "2:3",
+        "1:2 3:1", "4:2 6:1", "5:1 4:1 2:1", "1:3",
+        "6:1 5:1 6:1", "1':2 6:1", "5:2 3:1", "2:3",
+        "1:2 3:1", "4:1 6:1 1':1", "5:1 3:1 2:1", "1:3"]
+ROUNDS = ["手紙1", "手紙2", "手紙3", "手紙4", "手紙5"]
+for n in ROUNDS: S.scene(n, 16, "chorus" if n in ("手紙3", "手紙5") else "verse", TUNE_CH)
+S.scene("最後の行", 8, "verse", TUNE_CH[8:])
+S.scene("結び", 2, "outro", ["F", "F"])
+NAMES = ROUNDS + ["最後の行", "結び"]
+S.tempo = [{"bar": 1, "bpm": 66}, {"bar": 84, "bpm": 61, "ramp": 4}, {"bar": 89, "bpm": 54, "ramp": 2}]
 
 c = make(S, NAMES,
-         [("前置き", 0, 0.6), ("語り1", 0, 0.62), ("語り1", 15, 0.62), ("語り2", 0, 0.64), ("語り2", 12, 0.72), ("沈黙", 0, 0.58),
-          ("決意", 0, 0.66), ("決意", 12, 0.8), ("終わり", 0, 0.66), ("終わり", 3, 0.45)],
-         {}, flute_gain={n: 1.25 for n in NAMES}, intro="前置き", passing=True, tension=False)
-def pg(): return [round(x * (2.2 if c.scene_of_bar[b] in ("前置き", "語り1") else 1.0), 3) for b, x in enumerate(c.g())]   # ピアノだけの場面は、ピアノを大きく（音源が小さいため）
-PR = S.track("ピアノ（右手）", "piano", volume=0.39, pan=-0.12, reverb=0.45, barGain=pg())
-PR2 = S.track("ピアノ（右手の和音）", "piano", volume=0.3, pan=-0.08, reverb=0.45, barGain=pg())
-PL = S.track("ピアノ（左手）", "piano", volume=0.33, pan=-0.2, reverb=0.45, barGain=pg())
-PL2 = S.track("ピアノ（左手の上）", "piano", volume=0.24, pan=-0.16, reverb=0.45, barGain=pg())
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.08, pan=0.25, reverb=0.45, barGain=c.g())
-
-TH = ["5,:1 1:1 2:1 3:1", "4:2 3:1 2:1", "3:1.5 2:0.5 1:1 7,:1", "5,:4",
-      "5,:1 1:1 2:1 3:1", "5:2 4:1 3:1", "2:1 3:1 4:1 2:1", "1:4"]
-TH2 = ["3:1 4:1 5:1 6:1", "7:2 6:1 5:1", "4:1 5:1 6:1 4:1", "5:4",
-       "6:1 5:1 4:1 3:1", "4:2 3:1 2:1", "3:1 2:1 7,:1 2:1", "1:4"]
-# 語り1：ピアノの右手が節を語る（祖父の声）
-for t, L, m in section_events(c, "語り1", TH + TH[:7] + ["1:4"], 4):
-    PR.at(t, f"{nm(m)}:{L}")
-# 語り2：笛が答える
-play_melody(c, "語り2", TH + TH2, 4, "air", density=0.8, seed=301)
-# 決意：同じ節が長調に（D イオニア）。少し高い所で
-KM = S.key.__class__("D", "major", 5)
-play_melody(c, "決意", TH + TH2[:7] + ["1:4"], 4, "air", key=KM, density=1.0, seed=302)
-play_melody(c, "終わり", ["5:2 3:2", "1:4", "1:4", "R:4"], 4, "air", key=KM, density=0)
-
+         [("手紙1", 0, 0.64), ("手紙1", 8, 0.62), ("手紙2", 0, 0.66), ("手紙2", 15, 0.76), ("手紙3", 2, 0.84), ("手紙3", 15, 0.68),
+          ("手紙4", 0, 0.62), ("手紙4", 15, 0.64), ("手紙5", 4, 0.82), ("手紙5", 9, 0.92), ("手紙5", 15, 0.8),
+          ("最後の行", 0, 0.72), ("最後の行", 7, 0.64), ("結び", 0, 0.62), ("結び", 1, 0.58)],
+         {}, flute_gain={n: 1.2 for n in NAMES}, intro="手紙1", passing=True, tension=False)
+def pg(k=1.6):   # ピアノの音源は小さいので大きめに。ただし主役は笛：笛が入ってからは祖父の節を奥へ（思い出の声）。ピアノだけの最初の4小節は ×2.2
+    return [round(x * (2.2 if b < 4 else k), 3) for b, x in enumerate(c.g())]
+PM = S.track("ピアノ（祖父の節）", "piano", volume=0.3, pan=-0.1, reverb=0.4, sustain=1.25, barGain=pg())
+PI = S.track("ピアノ（右手の内声）", "piano", volume=0.2, pan=-0.06, reverb=0.4, sustain=1.25, barGain=pg())
+PB = S.track("ピアノ（左手の低音）", "piano", volume=0.32, pan=-0.2, reverb=0.4, sustain=1.6, barGain=pg())
+PCH = [S.track(f"ピアノ（左手の和音{j + 1}）", "piano", volume=0.17, pan=-0.14 + 0.05 * j, reverb=0.4, sustain=1.2, barGain=pg()) for j in range(2)]   # 同時に鳴らす音は別のパートに
 B = S.beats
-for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    if n == "前置き":
-        PL.at(b * B, "D2:4"); PL2.at(b * B, "D3:2"); PL2.at(b * B + 2, "A3:2")
-        continue
-    # 左手：5度とオクターブをゆっくり
-    PL.at(b * B, f"{nm(r)}:4"); PL2.at(b * B + 1, f"{nm(r + 7)}:1"); PL2.at(b * B + 2, f"{nm(r + 12)}:2")
-    if n == "語り1":   # 祖父の右手の下の、やわらかい和音
-        hi = [x for x in range(55, 67) if x % 12 in chord_pcs(ch)][:2]
-        PR2.at(b * B, f"{nm(hi[0])}:2"); PR2.at(b * B + 2, f"{nm(hi[1])}:2")
-    if n in ("語り2", "決意", "終わり", "沈黙"):
-        hi = [x for x in range(62, 76) if x % 12 in chord_pcs(ch)][:3]
-        PR2.at(b * B, f"{nm(hi[0])}:4")                      # 右手：3度・6度の長い和音（2つのパートに分ける）
-        if n != "語り1": PR.at(b * B, f"{nm(hi[1])}:4")
-    if n == "語り2" and i >= 8: c.HARP.bar(b, f"{nm(r)}:4")
-    if n == "語り1":      # 祖父の声の下に、うすい弦とチェロ（夕方の部屋の空気）
-        v = voice(ch, 50, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-        CELLO.bar(b, f"{nm(r)}:4")
-    if n == "沈黙":
-        v = voice(ch, 57, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-    if n in ("決意", "終わり"):
-        v = voice(ch, 57, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-        t = tones(ch, "D3", "D5")
-        if n == "決意": c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in (t[0], t[2], t[4 % len(t)], t[2]) * 2))
-        CELLO.bar(b, f"{nm(r)}:4")
 
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の003（第2版）。祖父の手紙を読む。D・4/4・♩=52。ピアノが祖父の声のように節を語り、2回目に笛が答える。読み終えて黙り、旅に出ると決める所で同じ節が長調に明るむ。最後は笛の長い音。",
-       harm_scenes=None, tail_scene="終わり", fill=False, pads=True, pad_scenes=["語り2", "決意", "終わり"])
+# ---------- 祖父の節（毎回まったく同じ） ----------
+tune_bars = {}
+for n in ROUNDS + ["最後の行"]:
+    lines = TUNE if n != "最後の行" else TUNE[8:]
+    for t, L, m in section_events(c, n, lines, 4):
+        PM.at(t, f"{nm(m)}:{L}")
+        tune_bars.setdefault(int(t // B), []).append((t, L, m))
+for b in range(c.NB):
+    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
+    pcs = chord_pcs(ch)
+    root = re.match(r"^([A-G][#b]?)", ch).group(1)
+    r = 41 + (PC[root] - 5) % 12                     # 低音：F2〜E3
+    if n == "結び":   # 完全終止の和音を下からゆっくり広げる（1回だけ）
+        if i == 0:
+            for q, (tr, m) in enumerate([(PB, 41), (PCH[0], 48), (PCH[1], 53), (PI, 57), (PM, 60), (PI, 65)]):
+                tr.at(round(b * B + q * 0.16, 3), f"{nm(m)}:{round(6 - q * 0.16, 2)}")
+        continue
+    PB.at(b * B, f"{nm(r)}:3")
+    mid = [x for x in range(52, 64) if x % 12 in pcs and x > r + 4][:2]   # 中の和音（2拍目から2拍）
+    mel_lo = min(m for t, L, m in tune_bars.get(b, [(0, 0, 72)]))
+    mid = [x for x in mid if x < mel_lo - 2] or mid[:1]
+    for j, x in enumerate(mid): PCH[j].at(b * B + 1, f"{nm(x)}:2,")
+    for t, L, m in tune_bars.get(b, []):           # 長い旋律の音の下に、和音の内声を1つ
+        if L >= 2 and abs(t - b * B) < 1e-6:
+            inner = [x for x in range(m - 9, m - 2) if x % 12 in pcs]
+            if inner: PI.at(t + 0.03, f"{nm(inner[-1])}:{L},")
+
+# ---------- 笛の対旋律（毎回ちがう。F イオニア・オクターブ4＝F4 から） ----------
+R1 = ["R:3"] * 4 + ["R:2 5:1", "1':3", "7,:3", "6,:3"] + ["3:3", "4:3", "3:2 1:1", "7,:3", "R:1 5,:1 6,:1", "1:3", "7,:2 5,:1", "3:3"]
+R2 = ["R:1 5:1 6:1", "1':3", "7:1 6:1 5:1", "5:2 4:1", "3:2 5:1", "6:2 4:1", "7,:1 2:1 5:1", "6:1 5:2",
+      "R:1 1':1 2':1", "3':2 1':1", "1':2 6:1", "7:3", "3':2 5:1", "6:1 4:1 6:1", "7:2 5:1", "6:3"]
+R3 = ["5:1 6:1 1':1", "2':2 1':1", "3':3", "7:2 5:1", "3':2 1':1", "2':2 4':1", "3':1 2':1 7:1", "6:1 5:2",
+      "3':1 2':1 1':1", "6:1 5:1 4:1", "3:2 5:1", "5:3", "6:2 5:1", "1':3", "7:1 6:1 5:1", "3:3"]
+R4 = ["R:3", "R:3", "R:3", "R:1 5,:1 6,:1", "3:3", "R:3", "R:3", "R:1 3:1 5:1",
+      "1:3", "R:3", "R:3", "R:1 5,:1 7,:1", "3:3", "R:3", "R:3", "R:1 5,:1 6,:1"]
+R5 = ["3:1 5:1 1':1", "2':2 1':1", "1':1 2':1 3':1", "5:1 6:1 7:1", "3':3", "1':1 2':1 4':1", "2':1 1':1 7:1", "5:3",
+      "R:1 2':1 3':1", "4':3", "3':2 1':1", "7:3", "3':2 6:1", "1':2 4:1", "2':2 7:1", "5:3"]
+LAST = TUNE[8:]   # 最後の行：笛が祖父の節そのものを吹く（受け継ぐ）。ピアノと同じ高さで重なる
+for n, line, d, sd in [("手紙1", R1, 0.25, 301), ("手紙2", R2, 0.45, 302), ("手紙3", R3, 0.5, 303), ("手紙4", R4, 0.15, 304),
+                       ("手紙5", R5, 0.6, 305), ("最後の行", LAST, 0.35, 306)]:
+    play_melody(c, n, line, 4, "air", density=d, seed=sd)
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space hall --space-wet 0.3 --master -15 --widen 1.15 --side-hpf 200",
+       "ケルト・フルート100曲の003（第3版）。祖父の手紙を読む。ウェールズの「伴奏の旋律に別の旋律を重ねる」型、3/4・♩=66、F イオニア。ピアノは祖父の16小節の節を5回とも一音も変えずに弾き、笛の対旋律だけが毎回変わる（手紙を読み進める）。楽器はピアノと笛だけ。3回目と5回目に小さな山。主役は笛で、最後の行では笛が祖父の節そのものを吹いて受け継ぎ、ピアノの完全終止で終わる。",
+       harm_scenes=None, tail_scene="結び", double=False, fill=False, pads=False)
+air = {"pre": 0.4, "tail": 7.0, "layers": [{"file": "0595", "db": -46, "hp": 180, "lp": 3500, "wide": 0.012, "duck": 0.4, "fade": 8}],
+       "fx": {"far": {"db": -29, "delay": 0.18, "lp": 2800, "rt": 2.6}}}
+json.dump(air, open("/tmp/cel/w/air003.json", "w"), ensure_ascii=False)
