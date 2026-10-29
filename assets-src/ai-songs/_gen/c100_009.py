@@ -37,6 +37,7 @@ S.fix_avoid = lambda t: 0      # リディアの A♯ を直されないよう�
 B = S.beats
 GLS = [S.track(f"グロッケン（星{j + 1}）", "strings", patch="glockenspiel", volume=0.05, pan=[0.45, -0.3, 0.15, -0.55][j], reverb=0.7,
               barGain=[round(x * (3.0 if c.scene_of_bar[b] in ("一番星", "最後の星") else 1.0), 3) for b, x in enumerate(c.g())]) for j in range(4)]   # 星が重なっても前の星を切らないよう、4つのパートに順に置く
+# 竪琴の倍音は1オクターブ上（E4・B4・F♯5）。E3 からの低い和音は小さく、句の切れ目と前奏が -40〜-56dB に沈んだ（2回目）
 HH = [S.track(f"竪琴の倍音{j + 1}", "harp", patch="folkHarp", volume=0.07, pan=-0.35 + 0.25 * (j % 3), reverb=0.7, sustain=3.0, barGain=c.g()) for j in range(6)]   # 句ごとに3つずつ交互に使い、前の句の響きを切らない
 HA = S.track("竪琴（星の川の流れ）", "harp", patch="folkHarp", volume=0.06, pan=-0.2, reverb=0.65, sustain=2.0, barGain=c.g())
 rg = random.Random(9)
@@ -50,7 +51,7 @@ def star(t, m=None, soft=True):
 # ---------- 一番星 ----------
 s0 = c.s0["一番星"]
 star(0, 88, soft=False)                                     # E6 の1音
-for j, m in enumerate([52, 59, 66]): HH[j].at(s0 * B + 1.5 + j * 0.4, f"{nm(m)}:16.5")   # 一番星のすぐあとに、竪琴の倍音（E・B・F♯）。前奏が沈まないように（layering-techniques.md）
+for j, m in enumerate([64, 71, 78]): HH[j].at(s0 * B + 1.5 + j * 0.4, f"{nm(m)}:16.5")   # 一番星のすぐあとに、竪琴の倍音（E・B・F♯）。前奏が沈まないように（layering-techniques.md）
 
 # ---------- 数える ----------
 _hs = [0]
@@ -64,7 +65,7 @@ for k, nb in enumerate(CNT_BARS, start=1):
         star(t + rg.uniform(0, span - 1.5))
     for o_ in range(0, span, 18):                             # 竪琴の倍音（E・B・F♯ か G♯）を2小節ごとに。2組を交互に使い、前の響きを切らない
         _hs[0] += 1                                            # （1回目は句の切れ目と長い句の後半が -40dB 前後に沈んだ）
-        for j, m in enumerate([52, 59, 66 if k % 2 else 68]):
+        for j, m in enumerate([64, 71, 78 if k % 2 else 80]):
             HH[j + 3 * (_hs[0] % 2)].at(round(t + o_ + j * 0.4, 3), f"{nm(m)}:{min(22.5, span - o_ + 4.5)}{',' if o_ else ''}")
     t += span
 
@@ -93,7 +94,7 @@ for b in range(c.s0["星の川"], c.NB):
         if i < 3:
             for q in range(3 - i): star(b * B + rg.uniform(0, 6))
             if i == 0:
-                for j, m in enumerate([52, 59, 64]): HH[j].at(round(b * B + j * 0.4, 3), f"{nm(m)}:18,")
+                for j, m in enumerate([64, 71, 76]): HH[j].at(round(b * B + j * 0.4, 3), f"{nm(m)}:18,")
         else: star(b * B, 88, soft=False)
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.2 --side-hpf 200",
