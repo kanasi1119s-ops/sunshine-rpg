@@ -1,4 +1,4 @@
-# ケルト・フルート100曲「銀の笛と百の夜」008 港の別れ Parting at the Pier — 第2版（2026-10-28）
+# ケルト・フルート100曲「銀の笛と百の夜」008 港の別れ Parting at the Pier — 第2版（2026-10-28） 2026-10-29: 7.00→ ピアノを2倍（Salamander は小さい）
 # イメージ: 港で旅立つ人を見送る。はじめは岸の人みんなで手を振っている（全員で始まる）。舟が遠ざかるにつれ、声がひとつ、またひとつ聞こえなくなる
 #   （楽器が1つずつ抜けていく）。岬を回る直前、最後に大きく手を振る（やわらかい山）。そして一人の笛だけが残る。
 # 形（台帳）: 細くなっていく逆アーチ。4/4・♩=58。A エオリア。始め：見送りの全員／終わり：一人の笛。
@@ -31,9 +31,9 @@ c = make(S, NAMES,
          [("見送り", 0, 0.78), ("手を振る", 0, 0.74), ("遠ざかる1", 0, 0.68), ("遠ざかる2", 0, 0.62), ("遠ざかる2", 11, 0.6),
           ("岬", 0, 0.66), ("岬", 4, 0.8), ("岬", 7, 0.66), ("一人", 0, 0.6), ("一人", 7, 0.45)],
          {}, flute_gain={n: 1.2 for n in NAMES}, intro=None, passing=True, tension=False)
-PR = S.track("ピアノ（右手）", "piano", volume=0.42, pan=-0.15, reverb=0.45, barGain=c.g())
-PR2 = S.track("ピアノ（右手2）", "piano", volume=0.34, pan=-0.12, reverb=0.45, barGain=c.g())
-PL = S.track("ピアノ（左手）", "piano", volume=0.42, pan=-0.2, reverb=0.45, barGain=c.g())
+PR = S.track("ピアノ（右手）", "piano", volume=0.85, pan=-0.15, reverb=0.45, barGain=c.g())
+PR2 = S.track("ピアノ（右手2）", "piano", volume=0.7, pan=-0.12, reverb=0.45, barGain=c.g())
+PL = S.track("ピアノ（左手）", "piano", volume=0.85, pan=-0.2, reverb=0.45, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.11, pan=0.2, reverb=0.45, barGain=c.g())
 PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.055, pan=-0.35, reverb=0.4, barGain=c.g())
 
@@ -55,7 +55,7 @@ for b in range(c.NB):
     t = tones(ch, "D3", "D5"); hi = [x for x in range(60, 74) if x % 12 in chord_pcs(ch)]
     lvl = NAMES.index(n)
     if n == "一人":
-        if i < 6: CELLO.bar(b, f"{nm(r)}:4")
+        CELLO.bar(b, f"{nm(r)}:4")
         continue
     if lvl <= 1 or n == "岬":
         PL.at(b * B, f"{nm(r)}:2"); PL.at(b * B + 2, f"{nm(r + 7)}:2")
