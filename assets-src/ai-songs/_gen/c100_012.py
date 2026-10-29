@@ -32,9 +32,9 @@ c = make(S, NAMES,
          [("夜明け", 0, 0.66), ("夜明け", n1 - 1, 0.72), ("放牧", 0, 0.74), ("放牧", n2 - 1, 0.82), ("祭り", 0, 0.84), ("祭り", P3 * 2 - 1, 0.95), ("止まる", 0, 0.95)],
          {}, flute_gain={n: 1.1 for n in NAMES}, intro="夜明け", passing=True, tension=False)
 B = S.beats
-FD = S.track("フィドル（応答）", "strings", patch="violin", volume=0.16, gainDb=4, pan=0.3, reverb=0.4, barGain=c.g())
-FD2 = S.track("2本目のフィドル（1オクターブ下）", "strings", patch="violin", volume=0.13, gainDb=4, pan=0.45, reverb=0.45, barGain=c.g())
-DRN = [S.track(f"フィドルの重音{j + 1}", "strings", patch="violin", volume=0.08, pan=-0.3 + 0.1 * j, reverb=0.5, barGain=c.g()) for j in range(2)]
+FD = S.track("フィドル（応答）", "strings", patch="violin", volume=0.16, gainDb=4, pan=0.3, reverb=0.4, barGain=[round(min(1.9, x * 2.0), 3) for x in c.g()])   # 1回目は夜明けの応答が -44dB（録音の弦は強さ 1.3〜1.9 で笛と並ぶ）
+FD2 = S.track("2本目のフィドル（1オクターブ下）", "strings", patch="violin", volume=0.13, gainDb=4, pan=0.45, reverb=0.45, barGain=[round(min(1.7, x * 1.7), 3) for x in c.g()])
+DRN = [S.track(f"フィドルの重音{j + 1}", "strings", patch="violin", volume=0.08, pan=-0.3 + 0.1 * j, reverb=0.5, barGain=[round(min(1.5, x * 1.6), 3) for x in c.g()]) for j in range(2)]
 CL = S.track("手拍子", "pad", patch="seasonFx", volume=0.15, pan=-0.25, reverb=0.3, barGain=c.g())
 WD = S.track("木の打音", "guitar", patch="surgeWoody", volume=0.07, pan=0.12, reverb=0.3, barGain=c.g())
 
