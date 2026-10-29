@@ -135,6 +135,9 @@ for b in range(c.NB):
         strum(GT, b, B, ch, [(0, 1, "d", "!"), (1, 0.5, "d", ","), (1.5, 0.5, "u", ","), (2, 1, "d", ""), (3, 0.5, "d", ","), (3.5, 0.5, "u", ",")])
         CB.bar(b, f"{nm(r)}:1 {nm(r + 7 - (12 if r + 7 > 50 else 0))}:1, {nm(r)}:1 {nm(r + 7 - (12 if r + 7 > 50 else 0))}:1,")
 
+# 枠太鼓の音：D3（手のひら）はとても小さく、A3 は鳴らない（2026-10-30 に試しの書き出しで測った）。低い打ち＝C3、高い打ち＝E3 に
+for _tr in (DR, DR2):
+    _tr.ev = [(st, L, x.replace("D3:", "C3:", 1) if x.startswith("D3:") else x.replace("A3:", "E3:", 1) if x.startswith("A3:") else x) for st, L, x in _tr.ev]
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.22 --master -15 --widen 1.25 --side-hpf 200",
        "ケルト・フルート100曲の010（第3版）。第1章の終わり、朝の港から船出する。マーチ（D）→ ジグ（E ミクソリディア）→ リール（A）の3つの踊りの曲をつないだセットで、曲が変わるたびに調が一段上がり、速くなる（帆が風をつかむ）。伴奏の主役はボーラン、脇にギターのストロークとコントラバス。ジグの2回目から2本目の笛。ボーランの連打で始まり、最後は全員で1拍だけ鳴らして切る。",
        harm_scenes=None, tail_scene="リール", double=False, fill=False, pads=False)

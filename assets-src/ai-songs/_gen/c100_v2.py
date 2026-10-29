@@ -153,21 +153,22 @@ def play_melody(c, scene, bars, oct_, kind, key=None, density=1.0, seed=1, track
 # ---------------- 伴奏の型 ----------------
 
 def bodhran(tr, b, beats, kind, var=0, soft=False):
-    """ボーラン（枠太鼓）。低い音＝D3（下の打ち）、高い音＝A3（上の打ち）。
+    """ボーラン（枠太鼓）。低い音＝C3（大きい太鼓）、高い音＝E3（小さい太鼓）。
+    2026-10-30: 以前の D3（手のひら）はとても小さく、A3・C#3・F#3 は鳴らないと測って分かったので、C3・E3 に直した。
     jig: 下上下・下上下（1・4拍目アクセント）。var=1 で4拍目の前に3連の詰め。slow: 1小節に1〜2打。hornpipe: 下（休）上"""
     w = "," if soft else ""
     if kind == "jig":
-        s = f"D3:1!{w} A3:1, D3:1, D3:1! A3:1, D3:1" if var == 0 else f"D3:1!{w} A3:1, D3:1, D3:0.5 D3:0.5 A3:1, D3:1,"
+        s = f"C3:1!{w} E3:1, C3:1, C3:1! E3:1, C3:1" if var == 0 else f"C3:1!{w} E3:1, C3:1, C3:0.5 C3:0.5 E3:1, C3:1,"
     elif kind == "slipjig":
-        s = "D3:1! A3:1, D3:1, D3:1 A3:1, D3:1, D3:1! A3:1, D3:1,"
+        s = "C3:1! E3:1, C3:1, C3:1 E3:1, C3:1, C3:1! E3:1, C3:1,"
     elif kind == "reel":
-        s = " ".join(["D3:0.5! A3:0.5, D3:0.5, A3:0.5"] * 2) if var == 0 else "D3:0.5 A3:0.5! D3:0.5, A3:0.5 D3:0.5 A3:0.5! D3:0.5, A3:0.5"
+        s = " ".join(["C3:0.5! E3:0.5, C3:0.5, E3:0.5"] * 2) if var == 0 else "C3:0.5 E3:0.5! C3:0.5, E3:0.5 C3:0.5 E3:0.5! C3:0.5, E3:0.5"
     elif kind == "hornpipe":
-        s = "D3:0.75! R:0.25 A3:1, D3:0.75! R:0.25 A3:1,"
+        s = "C3:0.75! R:0.25 E3:1, C3:0.75! R:0.25 E3:1,"
     elif kind == "waltz":
-        s = "D3:1! A3:1, A3:1,"
+        s = "C3:1! E3:1, E3:1,"
     else:  # slow
-        s = f"D3:{beats / 2}{w} R:{beats / 2}" if var == 0 else f"D3:{beats / 2 + 1}{w} A3:{beats / 2 - 1},"
+        s = f"C3:{beats / 2}{w} R:{beats / 2}" if var == 0 else f"C3:{beats / 2 + 1}{w} E3:{beats / 2 - 1},"
     tr.bar(b, s)
 
 
