@@ -37,9 +37,10 @@ c = make(S, NAMES,
          {}, flute_gain={n: 1.15 for n in NAMES}, intro="灯をともす", passing=True, tension=False)
 B = S.beats
 def g2(k_intro=2.2): return [round(x * (k_intro if c.scene_of_bar[b] == "灯をともす" else 1.0), 3) for b, x in enumerate(c.g())]
-VC = S.track("チェロ（ピチカートの歩み）", "strings", patch="pizzicato", volume=0.12, pan=-0.2, reverb=0.4, barGain=g2())
+VC = S.track("チェロ（ピチカートの歩み）", "strings", patch="pizzicato", volume=0.12, pan=-0.2, reverb=0.4, barGain=g2(3.6))   # 1回目 ×2.2 で前奏 -34dB
 CBS = S.track("コントラバス（ピチカート）", "strings", patch="contrabass", volume=0.08, pan=0.1, reverb=0.4, sustain=0.5, barGain=g2(1.6))
-HN = S.track("遠いホルン", "brass", patch="horn", volume=0.055, pan=0.5, reverb=0.8, barGain=c.g())
+HN = S.track("遠いホルン", "brass", patch="horn", volume=0.055, pan=0.5, reverb=0.8,
+             barGain=[round(x * (2.2 if c.scene_of_bar[b] in ("見回り", "夜明け") else 1.0), 3) for b, x in enumerate(c.g())])   # 笛が休む所と最後は、ホルンが主役の代わりに聞こえるように（1回目 -36〜-47dB）
 VA = [S.track(f"ビオラ（灯の回転{j + 1}）", "strings", patch="viola", volume=0.035, pan=p, reverb=0.65, barGain=c.g())
       for j, p in enumerate([-0.85, -0.3, 0.3, 0.85])]
 
