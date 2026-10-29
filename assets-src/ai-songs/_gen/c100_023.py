@@ -89,6 +89,7 @@ for b in range(c.NB):
         CB.bar(b, f"{nm(r - 12 if r - 12 >= 28 else r)}:4")
     if n == "2周目" and i % 4 == 0: GLOCK.bar(b, f"{nm(tones(ch, 'E6', 'E7')[0])}:1 R:3")
 rich(c, choir_scenes=["2周目", "3周目"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
+sparkle(c)   # 2026-10-29: 速い曲にも高いきらめき（厚い弦のあと 7.5〜7.66 で止まったので）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の023（第2版・明るく速めの曲）。昼の川面のきらめき。リール AABB、4/4・♩=100、E ミクソリディア。笛の細かい装飾音（カット・ロール）が光の雨になり、高い所から川底の低い音へ沈んでいく。",
        harm_scenes=None, tail_scene="川底", fill=False, pads=False, floor=True)

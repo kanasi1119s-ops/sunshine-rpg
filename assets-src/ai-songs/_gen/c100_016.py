@@ -85,6 +85,7 @@ for b in range(c.NB):
         v = voice(ch, 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
 rich(c, choir_scenes=["3周目"], pulse_scenes=[], guitar=False, pizz=False, inner=False)   # 2026-10-29: ピチカート・内声・パッドを足したら 7.48→7.25 に下がったので戻す（速い曲は重ねすぎると点が下がる）
+sparkle(c)   # 2026-10-29: 速い曲にも高いきらめき（厚い弦のあと 7.5〜7.66 で止まったので）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.28 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の016（第2版・明るく速めの曲）。古い石垣に沿ってはずむ足どり。ホーンパイプ（付点ではねる）AABB、4/4・♩=96、D ミクソリディア→E。1周ごとに曲がり角で一瞬止まり、最後の曲がり角でほんとうに止まる。",
        harm_scenes=None, tail_scene="終わり", fill=False, pads=False)

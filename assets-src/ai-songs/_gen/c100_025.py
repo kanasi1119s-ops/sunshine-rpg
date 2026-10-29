@@ -105,6 +105,7 @@ for b in range(c.NB):
         v = voice(ch, 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:2")
 rich(c, choir_scenes=["ポルカ2-2", "ポルカ1-3"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
+sparkle(c)   # 2026-10-29: 速い曲にも高いきらめき（厚い弦のあと 7.5〜7.66 で止まったので）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.26 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の025（第2版・明るく速めの曲）。小川の飛び石を、ぴょんぴょん渡る。ポルカ（2/4・♩=88）のセット：C のポルカ→よろける短調の8小節→F のポルカ→D へ上がって最初のポルカ。最後は対岸で全員がぴょんと止まる。",
        harm_scenes=None, tail_scene="対岸", fill=False, pads=False, floor=True)
