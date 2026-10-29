@@ -15,8 +15,15 @@ import c100_v2 as _v2
 _oc = _v2.open_chord
 _v2.open_chord = lambda ch, lo=52, hi=76: _oc(ch, lo, hi)   # ギターの最低音を E2 以上に（010 で D2 が出た）
 
-BPM = 312
-S = Song("C100", "011-wind-through-the-grass", "草を渡る風", "Wind Through the Grass", BPM, 9, "G", "lydian", "ケルト（幻想）")
+# 作曲ソフトの速さの上限は 260 なので、1拍＝付点4分（♩.=104）、1小節＝3拍で書く。8分音符＝1/3拍（旋律は8分＝1で書いて e2b で直す）
+BPM = 104
+S = Song("C100", "011-wind-through-the-grass", "草を渡る風", "Wind Through the Grass", BPM, 3, "G", "lydian", "ケルト（幻想）")
+def e2b(bars):
+    out = []
+    for s_ in bars:
+        out.append(" ".join(f"{t.split(':')[0]}:{round(float(t.split(':')[1]) / 3, 4)}" for t in s_.split()))
+    return out
+T3 = 1 / 3
 S.kit = "naked"; S.keep_old_synth = True
 S.extra.update({"human": 0.4})
 K = Key("G", "lydian", 4)
@@ -52,32 +59,32 @@ def drop(bars):
     out[0] = " ".join(["R:1", f"{n}:{float(L) - 1:g}"] + t[1:]) if float(L) > 1 else " ".join(["R:1"] + t[1:])
     return out
 DENS = {1: 0.4, 2: 0.6, 3: 0.35, 4: 0.7}
-play_melody(c, "風のはじまり", drop(Bp), 4, "slipjig", key=K, density=0.3, seed=1100)
+play_melody(c, "風のはじまり", e2b(drop(Bp)), 4, "march", key=K, density=0.3, seed=1100)
 for r in range(1, 5):
-    play_melody(c, f"{r}回目A", A + A[:7] + ["1:2 3:1 2:3 5,:3"], 4, "slipjig", key=K, density=DENS[r], seed=1100 + 10 * r)
-    nb = play_melody(c, f"{r}回目B", drop(Bp) + drop(Bp), 4, "slipjig", key=K, density=DENS[r], seed=1105 + 10 * r)
+    play_melody(c, f"{r}回目A", e2b(A + A[:7] + ["1:2 3:1 2:3 5,:3"]), 4, "march", key=K, density=DENS[r], seed=1100 + 10 * r)
+    nb = play_melody(c, f"{r}回目B", e2b(drop(Bp) + drop(Bp)), 4, "march", key=K, density=DENS[r], seed=1105 + 10 * r)
     if r in (2, 4):                                   # ホイッスルが笛と同じ旋律で（短い音だけ。長い音は 1.5 拍まで）
         for st, L, m, mk in nb:
-            if L >= 0.9: WH.at(round(st + 0.01, 3), f"{nm(m if m >= 72 else m + 12)}:{min(L, 1.5)}{mk}")
+            if L >= 0.3: WH.at(round(st + 0.01, 3), f"{nm(m if m >= 72 else m + 12)}:{round(min(L, 0.5), 4)}{mk}")
 # 3回目 A：羊飼いの子のホイッスルが1人で A を吹き、笛は休む（呼びかけ）。後半8小節は笛が答える
 s3 = c.s0["3回目A"]
 c.FLUTE.ev = [e for e in c.FLUTE.ev if not (s3 * B <= e[0] < (s3 + 8) * B)]
-for t, L, m in section_events(c, "3回目A", A, 5, key=K):
-    WH.at(t, f"{nm(m)}:{min(L, 1.5)}")
-play_melody(c, "のばす", ["1:9", "1:6 R:3"], 4, "air", key=K, density=0.0)
+for t, L, m in section_events(c, "3回目A", e2b(A), 5, key=K):
+    WH.at(round(t, 4), f"{nm(m)}:{round(min(L, 0.5), 4)}")
+play_melody(c, "のばす", ["1:3", "1:2 R:1"], 4, "air", key=K, density=0.0)
 
 # ---------- ギター ----------
-SJ = [(0, 3, "d", "!"), (3, 3, "d", ""), (6, 2, "d", ","), (8, 1, "u", ",")]
-SJ_R = [(3, 2, "d", ","), (6, 2, "d", ","), (8, 1, "u", ",")]          # 右は2つ目・3つ目の拍に（左とずらす）
+SJ = [(0, 1, "d", "!"), (1, 1, "d", ""), (2, 2 * T3, "d", ","), (2 + 2 * T3, T3, "u", ",")]
+SJ_R = [(1, 2 * T3, "d", ","), (2, 2 * T3, "d", ","), (2 + 2 * T3, T3, "u", ",")]          # 右は2つ目・3つ目の拍に（左とずらす）
 for b in range(c.NB):
     n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
     head = (n.endswith("B") or n == "風のはじまり") and i % 8 == 0     # B 部の頭：8分1つ、全員が抜ける
-    off = 1 if head else 0
+    off = T3 if head else 0
     if n == "のばす":
-        strum(GL, b, B, ch, [(0, 9 if i == 0 else 6, "d", "!" if i == 0 else ",")]); continue
+        strum(GL, b, B, ch, [(0, 3 if i == 0 else 2, "d", "!" if i == 0 else ",")]); continue
     if n.startswith("3回目"):                     # 3回目：指弾きの分散和音だけ（風が弱まる）
         v = _v2.open_chord(ch)
-        GP.bar(b, " ".join(f"{nm(v[q % len(v)])}:1{',' if q % 3 else ''}" for q in (0, 2, 3, 1, 2, 4, 1, 3, 2)))
+        GP.bar(b, " ".join(f"{nm(v[q % len(v)])}:{round(T3, 4)}{',' if q % 3 else ''}" for q in (0, 2, 3, 1, 2, 4, 1, 3, 2)))
         continue
     strum(GL, b, B, ch, [(max(p, off), L - (off if p < off else 0), d, mk) for p, L, d, mk in SJ])
     if n.startswith("2回目") or n.startswith("4回目"): strum(GR, b, B, ch, SJ_R)
@@ -88,3 +95,12 @@ finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space va
 air = {"pre": 0.2, "tail": 5.0, "layers": [{"file": "0595", "db": -46, "hp": 200, "lp": 4000, "wide": 0.012, "duck": 0.4, "fade": 6}],
        "fx": {"far": {"db": -29, "delay": 0.2, "lp": 3000, "rt": 2.4}}}
 json.dump(air, open("/tmp/cel/w/air011.json", "w"), ensure_ascii=False)
+
+# 1/3 拍の位置を丸めると「R:0」ができて書き出しが止まる（010 で分かった）。長さ0の休みを取りのぞく
+_p = sys.argv[1] if len(sys.argv) > 1 else None
+if _p:
+    _d = json.load(open(_p))
+    for _pt in _d["parts"]:
+        if isinstance(_pt.get("notes"), str):
+            _pt["notes"] = " ".join(t for t in _pt["notes"].split() if not re.match(r"^R:0(\.0*)?$", t))
+    json.dump(_d, open(_p, "w"), ensure_ascii=False)
