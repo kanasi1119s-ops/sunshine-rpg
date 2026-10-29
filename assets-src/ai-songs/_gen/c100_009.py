@@ -1,80 +1,101 @@
-# ケルト・フルート100曲「銀の笛と百の夜」009 星を数える Counting the Stars — 第2版（2026-10-28）
-# イメージ: 甲板に寝ころんで夜空を見上げる。ひとつ、またひとつ星が見えてくる。最初の星（ひとつの音）から、満天の星まで。
-#   見えた星は消えずに残り、またたき続ける＝同じ節を、楽器が2小節ずつ遅れて順に歌い出す（輪唱）。最後に全部が静止する。
-# 形（台帳）: 輪唱（笛→グロッケン→竪琴の倍音→ピチカート→笛の和声）。9/8（付点4分＝48）。C リディア（F♯のきらめき）。山なし・音数だけが増える。
-# 編曲の表:
-#   一つ目 : グロッケンの1音だけ（最初の星）
-#   星1    : 笛が節を歌う（低い C の持続がうすく支える）
-#   星2    : ＋グロッケンが2小節遅れて同じ節（1オクターブ上）
-#   星3    : ＋竪琴の倍音（高い音）が、さらに2小節遅れて
-#   星4    : ＋ピチカートが低い所で
-#   満天   : ＋笛の和声と弦の高い持続。すべての星がまたたく
-#   静止   : すべてが1つの和音で止まり、消えていく
-import sys
+# ケルト・フルート100曲「銀の笛と百の夜」009 星を数える Counting the Stars — 第3版（2026-10-29 作り直し。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 旅立ちの前の夜。眠れないエイラは、灯台の上で星を数える。祖父に教わった数え方で、ひとつ、ふたつ…。
+#   数えるたびに星がひとつ増え、笛の節もひとつずつ長くなる。数えきれなくなったころ、空は星でいっぱいになり、エイラは眠る。
+# 調べ: 眠り。形: 句ごとに音が1つずつ増える（数を数える歌）→ 星の川 → 満天 → 最後の星。
+# 拍子・速さ: 9/8・付点4分＝58（8分＝174）。旋法: E リディア（A♯ が、夜空の少し浮いた明るさ）。
+# 主役は笛: 高めでも柔らかく（E4〜C♯6。高い所は息を少なく）。装飾はほとんどなし。
+# 伴奏: 竪琴の倍音のような高く小さな和音（響かせる）と、グロッケンの点（星）だけ。
+#   ギター・ピアノ・弦・パッド・打楽器・2本目の笛は使わない。
+# この曲だけ: 1句目は1音、2句目は2音…13句目は13音。句ごとに最初から数え直し、1音ずつ足していく。
+#   グロッケンの星も、句ごとに1つずつ増える（1句目は1つ、13句目は13）。
+# 始まり: グロッケンの1音（一番星）→ 満天 → 終わり: グロッケンの最後の1音。
+# 山: 平原 → 終盤に満天（いちばん星が多く、笛がいちばん高い）。最初が大きい形にはしない。
+import sys, json, random
 from c100_common import *
 from c100_v2 import *
 
-BPM = 144   # 8分音符＝144（付点4分＝48）
-S = Song("C100", "009-counting-the-stars", "星を数える", "Counting the Stars", BPM, 9, "C", "lydian", "ケルト（幻想）")
+BPM = 174
+S = Song("C100", "009-counting-the-stars", "星を数える", "Counting the Stars", BPM, 9, "E", "lydian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.35})
-CH12 = (["Cmaj7", "Cmaj7", "D/C", "D/C"] * 3)
-S.scene("一つ目", 2, "intro", ["Cmaj7", "Cmaj7"])
-S.scene("星1", 12, "verse", CH12)
-S.scene("星2", 12, "verse", CH12)
-S.scene("星3", 12, "verse", CH12)
-S.scene("星4", 12, "verse", CH12)
-S.scene("満天", 12, "chorus", CH12)
-S.scene("静止", 4, "outro", ["Cmaj7"] * 4)
-NAMES = ["一つ目", "星1", "星2", "星3", "星4", "満天", "静止"]
-
+S.extra.update({"human": 0.35, "rubato": 0.2})
+K = Key("E", "lydian", 4)
+# 数える歌（13音）。句 k はこの最初の k 音を、1音＝付点4分（8分3つ）で吹き、1音ぶん息をつく
+M = ["5", "6", "5", "3", "2", "3", "5", "1'", "7", "6", "4", "5", "1"]
+CNT_BARS = [-(-(3 * k + 3) // 9) for k in range(1, 14)]          # 句ごとの小節数（1,1,2,2,2,3,3,3,4,4,4,5,5）
+NC = sum(CNT_BARS)
+S.scene("一番星", 2, "intro", ["E", "E"])
+S.scene("数える", NC, "verse", [("E" if j % 4 < 2 else "F#/E") for j in range(NC)])
+S.scene("星の川", 20, "verse", ["E", "F#/E", "C#m", "B", "E", "F#/E", "G#m", "B", "A", "F#", "C#m", "B", "E", "F#/E", "C#m", "B", "A", "B", "E", "E"])
+S.scene("満天", 12, "chorus", ["E", "F#", "G#m", "B", "A", "F#", "C#m", "B", "E", "F#/E", "E", "E"])
+S.scene("最後の星", 4, "outro", ["E", "E", "E", "E"])
+NAMES = ["一番星", "数える", "星の川", "満天", "最後の星"]
 c = make(S, NAMES,
-         [("一つ目", 0, 0.6), ("星1", 0, 0.62), ("星2", 0, 0.64), ("星3", 0, 0.67), ("星4", 0, 0.7), ("満天", 0, 0.74), ("満天", 11, 0.74),
-          ("静止", 0, 0.62), ("静止", 3, 0.4)],
-         {}, flute_gain={n: 1.2 for n in NAMES}, intro="一つ目", passing=True, tension=False)
-GLOCK = S.track("星（グロッケン）", "bell", patch="glockenspiel", volume=0.032, pan=0.4, reverb=0.75, barGain=c.g())
-PIZZ = S.track("星（ピチカート）", "strings", patch="pizzicato", volume=0.06, pan=-0.4, reverb=0.5, barGain=c.g())
-CELLO = S.track("低い C", "strings", patch="cello", volume=0.07, pan=0.0, reverb=0.5, barGain=c.g())
-
-TH = ["1:2 2:1 3:2 5:1 6:3", "5:2 3:1 2:3 1:3", "3:2 5:1 7:2 6:1 5:3", "4:2 5:1 3:3 2:3",
-      "1':2 7:1 5:2 3:1 5:3", "6:2 5:1 4:3 2:3", "3:2 4:1 5:2 7:1 1':3", "7:3 5:3 3:3"]
-s_start = c.s0["星1"]; s_end = c.s0["静止"]
-def canon(track, entry_bar, oct_, key=None, octup=0):
-    """entry_bar から、節（8小節）をくり返して静止の前まで置く"""
-    key = key or S.key; B = S.beats; b = entry_bar; j = 0
-    while b < s_end:
-        for t, L, m in mel_events(key, TH[j % 8], oct_, b * B):
-            m = m + 12 * octup
-            track.at(round(t, 3), f"{nm(m)}:{L}")
-        b += 1; j += 1
-# 笛（主役）：装飾つきで、星1から満天まで
-play_melody(c, "星1", TH + TH[:4], 5, "air", density=0.5, seed=901)
-play_melody(c, "星2", TH[4:] + TH, 5, "air", density=0.7, seed=902)
-play_melody(c, "星3", TH + TH[:4], 5, "air", density=0.7, seed=903)
-play_melody(c, "星4", TH[4:] + TH, 5, "air", density=0.8, seed=904)
-play_melody(c, "満天", TH + ["1':3 7:3 5:3", "3:9", "R:9", "R:9"], 5, "air", density=0.9, seed=905)
-canon(GLOCK, c.s0["星2"] + 2, 6)
-canon(c.HARP2, c.s0["星3"] + 4, 5)
-canon(PIZZ, c.s0["星4"] + 6, 4)
-STAR1 = S.track("最初の星", "bell", patch="glockenspiel", volume=0.075, pan=0.3, reverb=0.8, barGain=c.g())
-STAR1.bar(c.s0["一つ目"], "G6:9")          # 最初の星（はっきり見える一つ目）
-
+         [("一番星", 0, 0.62), ("数える", 0, 0.64), ("数える", NC - 1, 0.68), ("星の川", 0, 0.7), ("星の川", 19, 0.76),
+          ("満天", 0, 0.8), ("満天", 6, 0.88), ("満天", 11, 0.78), ("最後の星", 0, 0.66), ("最後の星", 3, 0.6)],
+         {}, flute_gain={n: 1.1 for n in NAMES}, intro="一番星", passing=True, tension=False)
+S.fix_avoid = lambda t: 0      # リディアの A♯ を直されないように
 B = S.beats
-for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    CELLO.bar(b, "C2:9" if n != "静止" or i < 3 else "R:9")
-    if n == "一つ目":   # 夜空そのもの：うすい弦の和音（星が出る前の空）
-        for j, m in enumerate((55, 64, 71)): c.STR[j].bar(b, f"{nm(m)}:9")
-        continue
-    if n in ("星1", "星2", "星3", "星4"):   # 空の床：うすい弦2声
-        v = voice(ch.split("/")[0] if "/" not in ch else "D", 60, 2, spread=True)
-        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:9")
-    if n in ("満天", "静止"):
-        v = voice(ch.split("/")[0] if "/" not in ch else "D", 67, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:9" if not (n == "静止" and i == 3) else "R:9")
-    if n == "静止" and i == 0:
-        c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (48, 55, 60, 64, 67, 71, 74, 76, 79)))
-rich(c, choir_scenes=["満天"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の009（第2版）。甲板で星を数える。9/8・付点4分＝48、C リディア。輪唱：同じ節を、笛→グロッケン→竪琴の倍音→ピチカートが2小節ずつ遅れて順に歌い出し、満天の星になって静止する。",
-       harm_scenes=None, tail_scene="静止", fill=False, pads=True, pad_scenes=["一つ目", "星1", "星2", "星3", "星4", "満天"])
+GLS = [S.track(f"グロッケン（星{j + 1}）", "strings", patch="glockenspiel", volume=0.05, pan=[0.45, -0.3, 0.15, -0.55][j], reverb=0.7,
+              barGain=[round(x * (1.8 if c.scene_of_bar[b] in ("一番星", "最後の星") else 1.0), 3) for b, x in enumerate(c.g())]) for j in range(4)]   # 星が重なっても前の星を切らないよう、4つのパートに順に置く
+HH = [S.track(f"竪琴の倍音{j + 1}", "harp", patch="folkHarp", volume=0.07, pan=-0.35 + 0.25 * j, reverb=0.7, sustain=3.0, barGain=c.g()) for j in range(3)]
+HA = S.track("竪琴（星の川の流れ）", "harp", patch="folkHarp", volume=0.06, pan=-0.2, reverb=0.65, sustain=2.0, barGain=c.g())
+rg = random.Random(9)
+STAR = [m for m in range(76, 96) if (m - 64) % 12 in (0, 2, 4, 6, 7, 9, 11)]   # 星の高さ（E5〜B6 のリディア）
+
+_n = [0]
+def star(t, m=None, soft=True):
+    GL = GLS[_n[0] % 4]; _n[0] += 1
+    GL.at(round(t, 3), f"{nm(m or rg.choice(STAR))}:3{',' if soft else ''}")
+
+# ---------- 一番星 ----------
+s0 = c.s0["一番星"]
+star(0, 88, soft=False)                                     # E6 の1音
+for j, m in enumerate([52, 59, 66]): HH[j].at(s0 * B + 9 + j * 0.4, f"{nm(m)}:9,")   # 2小節目から、竪琴の倍音（E・B・F♯）
+
+# ---------- 数える ----------
+t = c.s0["数える"] * B
+for k, nb in enumerate(CNT_BARS, start=1):
+    line = " ".join(f"{d}:3" for d in M[:k])
+    for st, L, m in mel_events(K, line, 4, t):
+        c.FLUTE.at(round(st, 3), f"{nm(m)}:{L}")
+    span = nb * B
+    for q in range(k):                                         # 句 k には星が k 個（句の中にちらばる）
+        star(t + rg.uniform(0, span - 1.5))
+    for j, m in enumerate([52, 59, 66 if k % 2 else 68]):     # 句のはじめに竪琴の倍音（E・B・F♯ か G♯）
+        HH[j].at(round(t + j * 0.4, 3), f"{nm(m)}:{span},")
+    t += span
+
+# ---------- 星の川：数えきれなくなって、節がつながる ----------
+RIVER = ["5:3 6:3 1':3", "2':6 1':3", "7:3 6:3 5:3", "4:6 5:3",
+         "5:3 6:3 1':3", "3':6 2':3", "1':3 7:3 5:3", "6:9",
+         "6:3 5:3 4:3", "4:6 6:3", "5:3 3:3 2:3", "2:9",
+         "3:3 5:3 1':3", "2':6 4':3", "3':3 2':3 7:3", "1':6 5:3",
+         "6:3 1':3 4':3", "3':6 2':3", "1':3 7:3 5:3", "1':9"]
+play_melody(c, "星の川", RIVER, 4, "air", key=K, density=0.15, seed=901)
+MAN = ["5':6 3':3", "4':6 2':3", "3':9", "2':6 1':3", "1':6 7:3", "6:6 4':3", "3':6 2':3", "1':9",
+       "5:3 6:3 1':3", "2':9", "1':9", "R:9"]                     # 満天：いちばん高い所で長く（息は少なく）
+play_melody(c, "満天", MAN, 4, "air", key=K, density=0.1, seed=902)
+
+for b in range(c.s0["星の川"], c.NB):
+    n, i, Lb, kk = S.scene_of(b); ch = S.chords[b].split("/")[0]
+    tn = [x for x in range(52, 76) if x % 12 in chord_pcs(ch)]
+    if n == "星の川":                     # 星は小節に2〜4つ。竪琴が付点4分で上へ流れる
+        for q in range(2 + i // 6): star(b * B + rg.uniform(0, 7.5))
+        HA.bar(b, " ".join(f"{nm(tn[q + (i % 2)])}:3{',' if q else ''}" for q in range(3)))
+    elif n == "満天":                     # 満天：星は小節に5〜7つ。竪琴の倍音を下から広げる
+        for q in range(5 + (i % 3)): star(b * B + rg.uniform(0, 8))
+        for j in range(3): HH[j].at(round(b * B + j * 0.35, 3), f"{nm(tn[j * 2 + 1] if j * 2 + 1 < len(tn) else tn[-1])}:9,")
+        HA.at(b * B + 4.5, f"{nm(tn[0])}:4.5,")
+    elif n == "最後の星":                 # 星が減っていき、最後の1音
+        if i < 3:
+            for q in range(3 - i): star(b * B + rg.uniform(0, 6))
+            if i == 0:
+                for j, m in enumerate([52, 59, 64]): HH[j].at(round(b * B + j * 0.4, 3), f"{nm(m)}:18,")
+        else: star(b * B, 88, soft=False)
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.2 --side-hpf 200",
+       "ケルト・フルート100曲の009（第3版）。眠れない夜、灯台の上で星を数える。数える歌の形で、1句目は1音、2句目は2音…13句目は13音。グロッケンの星も句ごとに1つずつ増える。9/8・付点4分＝58、E リディア。数えきれなくなると節がつながり（星の川）、満天でいちばん高くなって、最後はグロッケンの1音。伴奏は竪琴の倍音とグロッケンだけ。",
+       harm_scenes=None, tail_scene="最後の星", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 8.0, "layers": [{"file": "0595", "db": -50, "hp": 200, "lp": 3000, "wide": 0.012, "duck": 0.4, "fade": 8}],
+       "fx": {"far": {"db": -27, "delay": 0.3, "lp": 3200, "rt": 4.0}}}
+json.dump(air, open("/tmp/cel/w/air009.json", "w"), ensure_ascii=False)
