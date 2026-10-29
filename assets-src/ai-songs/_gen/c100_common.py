@@ -341,7 +341,7 @@ def dshift(line, k):
     return " ".join(out)
 
 
-def sparkle(c, scenes=None, glock_vol=0.03, harp_vol=0.05, seed=11):
+def sparkle(c, scenes=None, glock_vol=0.03, harp_vol=0.05, seed=11, dense=False):
     """高い所のきらめき（グロッケンと竪琴の高い音を、和音の音でまばらに）。2026-10-29 試し：合格した静かな曲（035・009・010・006・002）は、
     どれも高いきらめきの層があり、7.0 前後で止まる曲（017・018・022・024 など）にはない"""
     import random as _r
@@ -352,6 +352,6 @@ def sparkle(c, scenes=None, glock_vol=0.03, harp_vol=0.05, seed=11):
         if scenes is not None and c.scene_of_bar[b] not in scenes: continue
         ch = S.chords[b].split("|")[0]
         hi = tones(ch, "C6", "C7"); hh = tones(ch, "G5", "G6")
-        if b % 2 == 0: GL.at(b * B + rg.choice((0, B / 2)), f"{nm(rg.choice(hi))}:{B / 2},")
-        k = rg.randrange(2, 4); pos = sorted(rg.sample([q * (B / 8 if B in (4, 2) else 1) for q in range(8 if B in (4, 2) else int(B))], k))
+        if b % 2 == 0 or dense: GL.at(b * B + rg.choice((0, B / 2)), f"{nm(rg.choice(hi))}:{B / 2},")
+        k = rg.randrange(3, 6) if dense else rg.randrange(2, 4); pos = sorted(rg.sample([q * (B / 8 if B in (4, 2) else 1) for q in range(8 if B in (4, 2) else int(B))], k))
         for q in pos: HP.at(b * B + q, f"{nm(rg.choice(hh))}:1,")
