@@ -74,6 +74,7 @@ for b in range(c.NB):
     if n == "影が薄れる": c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in (t[0], t[2], t[4 % len(t)], t[5 % len(t)], t[4 % len(t)], t[2], t[3 % len(t)], t[2])))
     if n == "笛だけ": c.HARP.bar(b, f"{nm(t[0])}:4" if i == 6 else f"{nm(t[0])}:2 {nm(t[2])}:2")
 rich(c, choir_scenes=["追う2"], pulse_scenes=["追う2", "影が薄れる"], guitar=False, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の056。霧の向こうに、笛を吹く祖父の影。4/4・♩=56、F# エオリア。遠いホルンが祖父の節を吹き、エイラの笛が1小節遅れで追いかける。影が薄れて祖父の節が消えると、笛だけが残りの句を吹き終え、5度の音で止まる。",
        harm_scenes=None, tail_scene="笛だけ", fill=False, pads=True, pad_scenes=["呼びかけ", "追う1", "追う2", "影が薄れる", "笛だけ"], floor=True)

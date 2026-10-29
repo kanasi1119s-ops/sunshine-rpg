@@ -77,6 +77,7 @@ for b in range(c.NB):
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
 
 rich(c, choir_scenes=["満ちる1", "満ちる2"], pulse_scenes=["引く1", "満ちる1", "引く2", "満ちる2"], guitar=False, pizz=False, inner=True, choir_vol=0.11)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の007（第2版）。引き潮と満ち潮の砂浜。ゆっくりのジグ（6/8・付点4分＝42）、D ドリア。8小節で1つの波（旋律が下りる→上がる）を2回。2回目の満ち潮はより高く。ナイロンギターの1本ずつのアルペジオ。",
        harm_scenes=None, tail_scene="波に戻る", fill=False, pads=True, pad_scenes=["引く1", "満ちる1", "凪ぎ", "満ちる2", "引く2", "波に戻る"], floor=True)

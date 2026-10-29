@@ -76,6 +76,7 @@ for b in range(c.NB):
         c.HARP2.bar(b, f"{nm(tones(ch, 'D5', 'D6')[1])}:3")
         PL.bar(b, f"{nm(r)}:3")
 rich(c, choir_scenes=["坂3"], pulse_scenes=["坂2", "坂3", "水辺"], guitar=False, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の051。霧の中、草の斜面を湖へ下りていく。3/4・♩=52、D エオリア。坂を下る旋律が、回るたびに3度ずつ低い所から歌いだし、3回目で初めて主音に着く（湖に着く）。笛が下りるほど弦は上へ開き、水辺では笛は低く、空は高く広がる。",
        harm_scenes=None, tail_scene="水面", fill=False, pads=True, pad_scenes=["坂1", "坂2", "坂3", "水辺", "水面"], floor=True)

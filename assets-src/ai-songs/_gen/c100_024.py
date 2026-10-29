@@ -63,6 +63,7 @@ for b in range(c.NB):
         v = voice(ch, 55, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
 rich(c, choir_scenes=[], pulse_scenes=["合唱", "もっと"], guitar=True, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の024（第2版）。夕方の水辺の蛙の大合唱。4/4・♩=58、G ドリア。蛙の声（録音）とチェロのピチカートの拍に、3本の笛が4小節ずつ遅れて加わる輪唱。夜になると笛が1本ずつ帰り、蛙の声が残る。",
        harm_scenes=None, tail_scene="夜へ", fill=False, pads=True, pad_scenes=["一匹", "二匹", "合唱", "もっと", "夜へ"], double=False, floor=True)

@@ -99,6 +99,7 @@ for b in range(c.NB):
     if n == "強まる":
         hi = tones(ch, "B4", "B5"); PR.bar(b, f"{nm(hi[0])}:2 {nm(hi[1])}:2")
 rich(c, choir_scenes=["強まる"], pulse_scenes=["雨の歌2", "強まる"], guitar=False, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の054。静かな湖に小雨が落ちる。4/4・♩=58、E エオリア。雨粒（グロッケン・竪琴・ピチカートの高い音）がふぞろいに落ち、笛の音の頭はかならず雨粒と同じ時に鳴る。雨は強まり（終盤の山）、やがて上がって、最後の一粒で終わる。",
        harm_scenes=None, tail_scene="最後の一粒", fill=False, pads=True, pad_scenes=["雨の歌1", "雨の歌2", "強まる", "上がる", "最後の一粒"], floor=True)

@@ -76,6 +76,7 @@ for b in range(c.NB):
     if n in ("読む2", "胸が熱く1", "胸が熱く2") and not rest:
         c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[5 % len(t)], t[4 % len(t)], t[2])))
 rich(c, choir_scenes=["胸が熱く2"], pulse_scenes=["胸が熱く1", "胸が熱く2"], guitar=False, pizz=False, inner=True, choir_vol=0.11)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.33 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の045。塔の石段で、祖父の記録を声に出して読む。6/8・付点4分＝44、C リディア。3小節の一文と1小節のひと息をくり返し、ひと息はピアノの両手の和音と、ページをめくるような竪琴が受けとめる。胸が熱くなる一節で2つの小さな山。最後はピアノの和音で本を閉じる。",
        harm_scenes=None, tail_scene="本を閉じる", fill=False, pads=True, pad_scenes=["読む1", "読む2", "胸が熱く1", "読む3", "胸が熱く2"], floor=True)

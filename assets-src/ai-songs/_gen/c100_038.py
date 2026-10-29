@@ -67,6 +67,7 @@ for b in range(c.NB):
     if n in ("雫", "歌1", "歌2", "静けさ", "歌3"): CELLO.bar(b, f"{nm(r)}:4")
 play_melody(c, "最後の一滴", ["3:2 2:2", "1:4", "R:4", "R:4"], 4, "air", density=0.2, seed=3804)
 rich(c, choir_scenes=["歌2"], pulse_scenes=["歌2", "静けさ", "歌3"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の038（第2版）。夜の森の葉先の雫。4/4・♩=57、E ミクソリディア。雫の音（高い竪琴とピチカートが交互）が1拍ごとに落ち、その間隔がそのまま曲の拍になる。笛はその上でゆっくり歌い、最後の一滴で終わる。",
        harm_scenes=None, tail_scene="最後の一滴", fill=False, pads=True, pad_scenes=["雫", "歌1", "歌2", "静けさ", "歌3", "最後の一滴"], floor=True)

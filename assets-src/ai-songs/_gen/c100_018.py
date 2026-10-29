@@ -83,6 +83,7 @@ for b in range(c.NB):
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
         CELLO.bar(b, f"{nm(r)}:6") if n == "夢うつつ" or i % 8 != 7 else None
 rich(c, choir_scenes=["のんびり3"], pulse_scenes=["のんびり2", "のんびり3", "昼寝"], guitar=False, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の018（第2版）。昼下がりの納屋で、干し草の上でうとうと。6/8・付点4分＝40、G ミクソリディア。笛とギターのデュエット（ギターは低音の歩みと指弾き）、チェロが眠そうにあいづち。だんだんテンポがゆるんで眠りへ。",
        harm_scenes=None, tail_scene="夢うつつ", fill=False, pads=True, pad_scenes=["のんびり1", "のんびり2", "のんびり3", "昼寝", "夢うつつ"], floor=True)

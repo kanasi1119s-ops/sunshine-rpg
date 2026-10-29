@@ -75,6 +75,7 @@ for b in range(c.NB):
         v = voice(ch, 57 if n != "回る1" else 54, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3")
 rich(c, choir_scenes=["回る2", "山"], pulse_scenes=["回る1", "回る2", "山"], guitar=False, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の022（第2版）。錆びて止まった水車が、笛の語りかけで回りだす。拍のない前奏（低いドローンときしみ）→回りだす瞬間に3拍子が始まり、テンポが♩=40→60へ。D エオリア。最後は勢いよく回る（山）。",
        harm_scenes=None, tail_scene="回転", fill=False, pads=True, pad_scenes=["軋み", "回りだす", "回る1", "回る2", "山", "回転"], floor=True)

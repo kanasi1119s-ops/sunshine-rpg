@@ -52,6 +52,7 @@ for b in range(c.NB):
     if n == "沈む1" and i % 2 == 0: c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "F#3", "F#5")[:3]))
     if n in ("沈む2", "苔"): c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "F#2", "F#4")[:3]))
 rich(c, choir_scenes=["沈む1"], pulse_scenes=["沈む1", "沈む2", "苔"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の034（第2版）。倒木をおおう苔の絨毯。3/4・♩=42、F♯ エオリア。スロー・エアの旋律が、ゆっくり低い方へ沈んでいき、最後は笛のいちばん低い音とコントラバスが苔の下の土のように鳴る。",
        harm_scenes=None, tail_scene="土", fill=False, pads=True, pad_scenes=["沈む1", "沈む2", "苔", "土"], floor=True)

@@ -71,6 +71,7 @@ for b in range(c.NB):
 # 最後の小節は2拍だけ：3拍目から先は、全部の音を止める
 c.SIL.add(c.s0["眠り"] + 5, 2, 3)
 rich(c, choir_scenes=["歌3"], pulse_scenes=["歌2", "歌3", "歌4"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の015（第2版）。麦畑の午後の子守歌。3/4・♩=54、F イオニア。竪琴のゆりかごのゆれの上で、主題と小さな変奏。だんだんゆっくりになり、最後は眠りに落ちた所で歌が途中で止まる（最後の小節が2拍だけ）。",
        harm_scenes=None, tail_scene="眠り", fill=False, pads=True, pad_scenes=["歌1", "歌2", "歌3", "歌4"], floor=True)

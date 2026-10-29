@@ -76,6 +76,7 @@ for b in range(c.NB):
     v = voice(ch, 55, nv, spread=True)
     for j in range(nv): c.STR[j].bar(b, f"{nm(v[j])}:3")
 rich(c, choir_scenes=["読めた"], pulse_scenes=["欠け2", "読める", "読めた"], guitar=False, pizz=False, inner=True, choir_vol=0.11)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.33 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の042。風で欠けた碑文を、指でなぞって読む。3/4・♩=52、G ドリア。同じ旋律が、1回目は半分の音が欠け（休み）、2回目は4分の1、3回目で完成し、最後は和声つきでひと続きに読める。欠けた所は竪琴の高い音がかすれた文字のように鳴る。",
        harm_scenes=None, tail_scene="息", fill=False, pads=True, pad_scenes=["欠け1", "欠け2", "読める", "読めた", "息"], floor=True)

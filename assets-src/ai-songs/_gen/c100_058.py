@@ -76,6 +76,7 @@ for b in range(c.NB):
     if n == "白む" and i >= 4:
         hh = tones(ch, "C6", "C7"); c.HARP2.bar(b, f"{nm(hh[0])}:1 {nm(hh[1])}:1 {nm(hh[2 % len(hh)])}:2")
 rich(c, choir_scenes=["待つ2"], pulse_scenes=["待つ2", "白む"], guitar=False, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の058。夜明け前、湖の霧が少しずつうすくなる。4/4・♩=50、F リディア。弦の和音に混ぜた「となりあう音（にごり＝霧）」が、場面ごとに一つずつ外れていき、最後は5度とオクターブだけの澄んだ響きになる。笛は長い音でゆるく上がっていく。",
        harm_scenes=None, tail_scene="澄む", fill=False, pads=True, pad_scenes=["待つ1", "待つ2", "白む"], floor=True)

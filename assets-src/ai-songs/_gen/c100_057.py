@@ -78,6 +78,7 @@ for b in range(c.NB):
     if n in ("ひとり", "1小節ずれ", "1拍ずれ"): c.HARP.bar(b, f"{nm(t[0])}:1.5 {nm(t[2])}:1.5")
     if n == "同じ息": c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in (t[0], t[2], t[4 % len(t)], t[5 % len(t)], t[4 % len(t)], t[2])))
 rich(c, choir_scenes=[], pulse_scenes=["1拍ずれ", "同じ息"], guitar=False, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の057。消えた祖父の笛と、同じ息で吹く。3/4・♩=54、G ドリア（旋律は G のマイナー・ペンタトニックだけ）。もう一本の幻の笛が、はじめは1小節遅れ、次は1拍遅れで追い、最後はふたりが同時に3度の和音で吹いて、一斉に止める。",
        harm_scenes=None, tail_scene="止める", fill=False, pads=True, pad_scenes=["ひとり", "1小節ずれ", "1拍ずれ", "同じ息", "止める"], floor=True)

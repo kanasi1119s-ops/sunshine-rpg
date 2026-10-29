@@ -66,6 +66,7 @@ for b in range(c.NB):
     if n in ("見張り1", "見張り2") and i % 4 != 3: c.HARP.bar(b, f"{nm(t[0])}:2 {nm(t[2])}:1 {nm(t[4 % len(t)])}:1")
     if n == "遠い灯": c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[5 % len(t)])))
 rich(c, choir_scenes=[], pulse_scenes=["見張り2", "遠い灯"], guitar=False, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の047。塔の上の見張り台から、夜の海を見る。4/4・♩=46、B エオリア。笛が長い音で遠くへ呼びかけると、はるか向こうの見張り台の笛が同じ音で小さく返事をする。最後は二人の笛が和音で寄りそう。山なし。",
        harm_scenes=None, tail_scene="夜明け前", fill=False, pads=True, pad_scenes=["見張り1", "見張り2", "遠い灯", "夜明け前"], floor=True)

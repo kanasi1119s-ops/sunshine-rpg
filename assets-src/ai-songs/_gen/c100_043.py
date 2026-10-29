@@ -88,6 +88,7 @@ for b in range(c.NB):
         hv = voice(ch, 52, 2, spread=False)
         for j in range(2): HORN[j].bar(b, f"{nm(hv[j])}:6")
 rich(c, choir_scenes=["思い出"], pulse_scenes=["対話2", "思い出"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.35 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の043。崩れた塔の、年老いた鐘守の記憶。6/8・付点4分＝43、A エオリア。笛（エイラ）が問い、チェロ（鐘守の声）が答える対話。2小節ずつ→1小節ずつ→ふたりで一緒に歌う思い出の山→鐘守の声が静かに石の中へ帰っていく。遠い鐘ではじまり、鐘の余韻で終わる。",
        harm_scenes=None, tail_scene="鐘の余韻", fill=False, pads=True, pad_scenes=["対話1", "対話2", "思い出", "石へ", "鐘の余韻"], floor=True)

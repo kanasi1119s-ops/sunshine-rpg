@@ -55,6 +55,7 @@ for b in range(c.NB):
         hi = tones(ch, "A5", "A7")
         GLOCK.bar(b, f"R:{1 + (i % 2)} {nm(hi[(i + lv) % len(hi)])}:{2 - (i % 2)}")
 rich(c, choir_scenes=["光の帯"], pulse_scenes=["葉のすき間", "光の帯", "一筋"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の049。蔦におおわれた窓から、光が射しこむ。3/4・♩=54、A リディア。影から光へ、旋律も竪琴の3音のオスティナートも場面ごとに上へ上がっていく。最後に、笛のいちばん高い長い音が4小節のびて、光の筋になる。",
        harm_scenes=None, tail_scene="一筋", fill=False, pads=True, pad_scenes=["影から", "葉のすき間", "光の帯", "一筋"], floor=True)

@@ -51,6 +51,7 @@ for b in range(c.NB):
         hi = tones(ch, "C6", "C7")
         GLOCK.bar(b, " ".join(f"{nm(hi[(i + q) % len(hi)])}:1" for q in range(min(4, i + 1))) + (" R:" + str(4 - min(4, i + 1)) if i < 3 else ""))
 rich(c, choir_scenes=["空2"], pulse_scenes=["空1", "空2"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の020（第2版）。夜の草原に寝ころぶ。4/4・♩=52、D リディア。スロー・エア AABA。打楽器はなし（虫の声は景色の気配だけ。作った虫の拍は 2026-10-29 に外した）。最後は空いっぱいの星（高いグロッケン）。",
        harm_scenes=None, tail_scene="星", fill=False, pads=True, pad_scenes=["空1", "空2", "星"], floor=True)

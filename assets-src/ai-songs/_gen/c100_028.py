@@ -64,6 +64,7 @@ for b in range(c.NB):
         v = voice(ch, 52 if n in ("鮮明", "川1") else 55, 3 if n not in ("鮮明",) else 2, spread=True)
         for j in range(len(v)): c.STR[j].bar(b, f"{nm(v[j])}:4")
 rich(c, choir_scenes=[], pulse_scenes=["川1", "川2"], guitar=False, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の028（第2版）。夕暮れの川に川霧が濃くなる。4/4・♩=52、A ドリア。スロー・エア。ピアノの音ははじめ一粒ずつはっきりしているのが、ペダルで重なってぼやけ、空間の霞がだんだん深くなる。最後は残響の霞だけ。",
        harm_scenes=None, tail_scene="霞", fill=False, pads=True, pad_scenes=["川1", "川2", "もや", "霞"])

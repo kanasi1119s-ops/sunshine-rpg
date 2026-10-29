@@ -61,6 +61,7 @@ for b in range(c.NB):
             for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:9")
             CELLO.bar(b, f"{nm(r)}:9")
 rich(c, choir_scenes=["4周目"], pulse_scenes=["2周目", "3周目"], guitar=False, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の029（第2版）。迷ったエイラが小川の流れについていく。9/8・付点4分＝54、E ドリア→F# ドリア。下りていく旋律が道になり、ひと回りごとに水が増えて楽器が増え、最後に全音上がって海の気配。",
        harm_scenes=None, tail_scene="海の予感", fill=False, pads=True, pad_scenes=["1周目", "2周目", "3周目", "4周目", "海の予感"])

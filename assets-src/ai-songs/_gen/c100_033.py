@@ -56,6 +56,7 @@ for b in range(c.NB):
     if n == "二人" and i % 2 == 1: c.HARP2.bar(b, f"R:2 {nm(tones(ch, 'B5', 'B6')[0])}:2")
     if n == "梟" and i == 3: DR[0].bar(b, "R:4"); DR[1].bar(b, "R:4")
 rich(c, choir_scenes=["二人"], pulse_scenes=["問答2", "二人"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の033（第2版）。夜の森で、梟と笛の問答。4/4・♩=48、B エオリア。本物の梟の声（約370Hz＝F♯）に、笛が同じ高さから答える。やがて笛が問い、梟が答え、打ちとけていく。最後は梟の声だけ。",
        harm_scenes=None, tail_scene="梟", fill=False, pads=True, pad_scenes=["問答1", "問答2", "二人", "梟"])

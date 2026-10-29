@@ -80,6 +80,7 @@ for b in range(c.NB):
         if i == 0: TIMP.bar(b, " ".join("D2:0.25" for _ in range(8)) + " D2:2")
         if i == 6: TIMP.bar(b, "D2:4")
 rich(c, choir_scenes=["光"], pulse_scenes=["光"], guitar=False, pizz=False, inner=True, choir_vol=0.11)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の041。丘の上の石の輪に、朝の光が通る。4/4・♩=48、D ミクソリディア。3度のない5度だけの古い響き（笛の下に4度下の笛が平行に重なるオルガヌム）で進み、光が石のすき間を通る山で初めて3度が鳴る。最後は5度の響きに戻る。",
        harm_scenes=None, tail_scene="石に戻る", fill=False, pads=True, pad_scenes=["古い歌1", "古い歌2", "光", "石に戻る"], floor=True)

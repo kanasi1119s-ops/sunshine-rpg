@@ -76,6 +76,7 @@ for b in range(c.NB):
         hv = voice(ch, 50, 2, spread=False)
         for j in range(2): HORN[j].bar(b, f"{nm(hv[j])}:4")
 rich(c, choir_scenes=["目覚め"], pulse_scenes=["歌1", "目覚め"], guitar=False, pizz=False, inner=True, choir_vol=0.11)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.35 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の050（第5章の終わり）。石壁に刻まれた古い歌が目を覚ます。4/4・♩=52、G エオリア。石をたたく音（音の高さのない打音）が先に旋律のリズムを刻み、竪琴が音の高さをつけ、笛が歌になり、全員で静かな山。打音は最後まで歌のリズムをなぞる。",
        harm_scenes=None, tail_scene="歌になる", fill=False, pads=True, pad_scenes=["音がつく", "歌1", "目覚め", "歌になる"], floor=True)

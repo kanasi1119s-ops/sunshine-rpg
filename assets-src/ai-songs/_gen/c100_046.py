@@ -72,6 +72,7 @@ for b in range(c.NB):
         lo = {"祈り2": 0, "光の柱": 2, "空へ": 3}[n]
         c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in (t[lo], t[lo + 2], t[lo + 4], t[lo + 5], t[lo + 4], t[lo + 2])))
 rich(c, choir_scenes=["光の柱", "空へ"], pulse_scenes=["祈り2", "光の柱", "空へ"], guitar=False, pizz=False, inner=True, choir_vol=0.11)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の046。屋根の落ちた礼拝堂の祈り。3/4・♩=50、F イオニア。弦4声の祈りの和音の上で、笛が祈りの節。和音の並べ方が場面ごとに広がり（1オクターブ→4オクターブ）、最後は屋根のない空いっぱいに開いていく。",
        harm_scenes=None, tail_scene="青空", fill=False, pads=True, pad_scenes=["祈り1", "祈り2", "光の柱", "空へ", "青空"], floor=True)

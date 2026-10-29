@@ -85,6 +85,7 @@ for b in range(c.NB):
 lv = {"霧": 0, "灯が見える": 0.55, "近づく": 0.85, "灯のそば": 1.0, "見送る": 0.8, "霧に残る": 0.65}
 FLAME.spec["barGain"] = [round(g * lv[c.scene_of_bar[b]], 3) for b, g in enumerate(FLAME.spec["barGain"])]
 rich(c, choir_scenes=["灯のそば"], pulse_scenes=["近づく", "灯のそば", "見送る"], guitar=False, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の053。霧の湖に、小さな灯がひとつゆれている。6/8・8分＝112、A ドリア。ピアノの高い2音の小さなゆらぎが灯の炎で、笛はそのまわりを回るように中心の音のまわりを小さく行き来する。近づき、そばを通りすぎ、最後は灯だけが霧の中に残る。",
        harm_scenes=None, tail_scene="霧に残る", fill=False, pads=True, pad_scenes=["灯が見える", "近づく", "灯のそば", "見送る", "霧に残る"], floor=True)

@@ -57,6 +57,7 @@ for b in range(c.NB):
     if n == "祈り2" or (n == "澄んだ音" and 2 <= i < 8):
         t = tones(chs[0], "D3", "D5"); c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[2])))
 rich(c, choir_scenes=["祈り2"], pulse_scenes=["祈り1", "祈り2"], guitar=False, pizz=False, inner=True, choir_vol=0.11)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の026（第2版）。森の小さな滝の前の祈り。4/4・♩=54、B ドリア。弦のコラールの上で、少しずつ上がっては止まる祈りの節。途中で笛が滝の音の中に溶けて聞こえなくなり、やがて水の中から澄んだ長い音が浮かび上がる。",
        harm_scenes=None, tail_scene="澄んだ音", fill=False, pads=True, pad_scenes=["祈り1", "祈り2", "溶ける", "澄んだ音"])

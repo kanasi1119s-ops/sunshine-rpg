@@ -67,6 +67,7 @@ for b in range(c.NB):
     if n in ("呼ぶ2", "二人"): CELLO.bar(b, f"{nm(r)}:6")
 
 rich(c, choir_scenes=["二人"], pulse_scenes=["応える", "二人", "呼ぶ2"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の005（第2版）。港の小舟の鈴と笛の掛け合い。6/8・付点4分＝46（舟のゆれ）。G ミクソリディア。鈴は本物の録音を和音の音に合わせ、呼ぶ→答える→一緒に→遠ざかる。最後は笛が鈴をまねて消える。",
        harm_scenes=None, tail_scene="終わり", fill=False, pads=True, pad_scenes=["呼ぶ1", "応える", "二人", "呼ぶ2", "遠ざかる", "終わり"], floor=True)

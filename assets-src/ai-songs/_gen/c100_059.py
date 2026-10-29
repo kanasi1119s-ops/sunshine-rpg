@@ -86,6 +86,7 @@ for b in range(c.NB):
         c.HARP.bar(b, " ".join(f"{nm(t[q % len(t)])}:1" for q in (0, 2, 4, 2, 4, 5, 4, 2, 4, 2, 1, 2)))
         PL.bar(b, f"{nm(r)}:3 {nm(r + 7)}:3 {nm(r + 12)}:3 {nm(r + 7)}:3")
 rich(c, choir_scenes=["開く"], pulse_scenes=["映る", "開く"], guitar=False, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の059。白みはじめた入り江に浮かぶ睡蓮。12/8・8分＝150、E♭ イオニア。「映る」から、ピアノの高い音が笛の旋律を上下さかさまにした鏡の旋律を同時に弾き、花と水に映った花がいっしょにゆれる。最後は竪琴の和音のロールで閉じる。",
        harm_scenes=None, tail_scene="閉じる", fill=False, pads=True, pad_scenes=["浮かぶ", "映る", "開く", "閉じる"], floor=True)

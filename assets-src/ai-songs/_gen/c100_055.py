@@ -76,6 +76,7 @@ for b in range(c.NB):
         c.HARP2.bar(b, f"{nm(hi[0])}:2 {nm(hi[1])}:2 {nm(hi[2 % len(hi)])}:2" if i % 2 == 0 else f"{nm(hi[1])}:3 {nm(hi[0])}:3")
     if n == "湖底" and i in (3, 4, 5): TIMP.bar(b, " ".join(f"{nm(r)}:0.5" for _ in range(12)) if i == 4 else f"{nm(r)}:6")
 rich(c, choir_scenes=[], pulse_scenes=["沈む", "湖底"], guitar=False, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の055。澄んだ湖の底に、沈んだ鐘の影を見る。6/8・8分＝104、C エオリア。水面の上と下が入れかわる：前半は笛が高く弦が低い。沈むにつれて笛は下り、弦は上がり、湖底では笛がいちばん低い音域で歌い、弦は高い所で水面の光になる。最後は高い弦だけが残る。",
        harm_scenes=None, tail_scene="水面だけ", fill=False, pads=True, pad_scenes=["のぞく", "沈む", "湖底", "見上げる", "水面だけ"], floor=True)

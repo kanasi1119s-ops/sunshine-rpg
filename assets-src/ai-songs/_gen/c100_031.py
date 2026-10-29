@@ -81,6 +81,7 @@ for b in range(c.NB):
             v = voice(ch, 45, 3, spread=True)
             for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4" if i < 3 else "R:4")
             CELLO.bar(b, f"{nm(r)}:4" if i < 3 else "R:4")
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の031（第2版）。古い森の入口で立ち止まる。4/4・♩=54、E ドリア。笛が短く問いかけ、森（低い弦とチェロ）が答える。答えは回ごとに低く暗くなる。ためらったあと一歩ずつ進み、森の中へ足を踏み入れる。",
        harm_scenes=None, tail_scene="森へ", fill=False, pads=True, pad_scenes=["問い2", "ためらい", "一歩"])

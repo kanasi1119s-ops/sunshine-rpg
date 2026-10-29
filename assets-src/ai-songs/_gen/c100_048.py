@@ -73,6 +73,7 @@ for b in range(c.NB):
     if n == "開く":
         c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in (t[0], t[2], t[4], t[6 % len(t)], t[7 % len(t)], t[9 % len(t)]) * 2))
 rich(c, choir_scenes=["扉", "開く"], pulse_scenes=["探す2", "扉"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の048。塔の床下の、秘密の入口。6/8・付点4分＝44、D ドリア→D 長調。笛の問い（上がって止まる）が、鐘の音をきっかけに、答え（下りて閉じる）に変わっていく。鐘の響き（D と短3度上の F）を高い弦が引き継ぎ、扉が開く所で長3度に変わる。",
        harm_scenes=None, tail_scene="開く", fill=False, pads=True, pad_scenes=["探す1", "鐘の音", "探す2", "扉", "開く"], floor=True)

@@ -74,6 +74,7 @@ for b in range(c.NB):
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4" if i < 7 else f"{nm(v[j])}:3 R:1")
         CELLO.bar(b, "B2:4")
 rich(c, choir_scenes=["晴れ2", "雲", "影", "夕立前"], pulse_scenes=["雲", "影"], guitar=False, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の017（第2版）。西の空が暗くなる午後。4/4・♩=56。主題と変奏：同じ旋律が D 長調→ミクソリディア→B 短調→C♮の影へ。夕立の前に短い影の山（遠いティンパニ）、雨が降りはじめる所で影の中に入って終わる。",
        harm_scenes=None, tail_scene="影に入る", fill=False, pads=True, floor=True, pad_scenes=["晴れ1", "晴れ2", "雲", "影", "夕立前", "影に入る"])

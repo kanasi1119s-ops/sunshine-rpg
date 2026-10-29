@@ -67,6 +67,7 @@ for b in range(c.NB):
         CELLO.bar(b, f"{nm(r + 12)}:4")
         c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "C3", "C5")[:4]))
 rich(c, choir_scenes=["認められる"], pulse_scenes=["近づく", "森の主", "認められる"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の037（第2版）。森の奥の千年の古木、森の主。4/4・♩=50、C エオリア→C ドリア。荘厳な行進。主の声（低いホルン）の旋律に、笛が一度だけ同じ音で重なる所がいちばん深い山。主に認められて重さがやわらぎ、笛のやさしい長い音で終わる。",
        harm_scenes=None, tail_scene="長音", fill=False, pads=True, pad_scenes=["近づく", "森の主", "認められる", "長音"], floor=True)

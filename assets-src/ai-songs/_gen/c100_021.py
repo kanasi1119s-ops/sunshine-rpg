@@ -85,6 +85,7 @@ for b in range(c.NB):
         if i % 2 == 1: PIZZ.bar(b, f"R:3 {nm(t[1])}:1 {nm(t[2])}:1 R:1")
     if n in ("流れ3",) and i % 4 == 0: DROP.bar(b, f"{nm(hi[0])}:3 R:3")
 rich(c, choir_scenes=["流れ2", "流れ3"], pulse_scenes=["流れ1", "流れ2", "流れ3"], guitar=False, pizz=False, inner=True)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の021（第2版）。湧き水から小川が生まれる。6/8・付点4分＝44、A ミクソリディア。ぽつんとした水滴の音（竪琴・グロッケン）がだんだん連なり、笛も1音ずつ→2〜3音→なめらかな旋律へ。流れになって走り出す。",
        harm_scenes=None, tail_scene="小川", fill=False, pads=True, pad_scenes=["滴", "連なる", "流れ1", "流れ2", "流れ3", "小川"], floor=True)

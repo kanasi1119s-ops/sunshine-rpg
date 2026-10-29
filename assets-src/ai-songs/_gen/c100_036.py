@@ -63,6 +63,7 @@ for b in range(c.NB):
     if n == "4回目": PIZZ.bar(b, f"{nm(hi[0])}:1 R:1.5 {nm(hi[1])}:0.5 R:1")
     if n in ("5回目", "出口"): c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "G3", "G5")[:4]))
 rich(c, choir_scenes=["5回目", "出口"], pulse_scenes=["2回目", "3回目", "4回目", "5回目", "出口"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
+sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の036（第2版）。森で同じ道に何度も戻ってくる。4/4・♩=56、G ドリア。同じ旋律を5回、毎回ちがう和音（素直・明るい・暗い・不安・やさしい）で巡り、6回目で初めて出口の G の長三和音が来る。",
        harm_scenes=None, tail_scene="抜けた", fill=False, pads=True, pad_scenes=[n for n in NAMES if n != "抜けた"], floor=True)
