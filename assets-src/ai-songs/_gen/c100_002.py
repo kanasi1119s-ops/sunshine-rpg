@@ -35,6 +35,14 @@ c = make(S, NAMES,
           ("灯室", 0, 0.9), ("灯室", 4, 0.88), ("灯室", 7, 0.8)],
          {}, flute_gain={n: 1.15 for n in NAMES}, intro="足元", passing=True, tension=False)
 GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.06, pan=-0.3 - 0.04 * i, reverb=0.3, barGain=c.g()) for i in range(5)]
+# 右のギター（3階から。上の音域の開いた和音）。左のギターと左右で、上るほど階段の吹きぬけが広がる（1・2回目は左だけで 7.3 に止まった）
+GR = [S.track(f"右のギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.05, pan=0.3 + 0.05 * i, reverb=0.32, barGain=c.g()) for i in range(4)]
+def strum_r(b, ch, pattern):
+    v = open_chord(ch, lo=57, hi=79)[1:5]
+    for pos, L, d, mk in pattern:
+        order = range(len(GR)) if d == "d" else reversed(range(len(GR)))
+        for j, i in enumerate(order):
+            if i < len(v): GR[i].at(round(b * B + pos + 0.025 * j, 4), f"{nm(v[i])}:{L}{mk}")
 GP = S.track("ギター（指で1音ずつ）", "guitar", patch="nylonGuitar", volume=0.075, pan=-0.25, reverb=0.32,
              barGain=[round(x * (2.4 if c.scene_of_bar[b] in ("足元", "1階") else 1.0), 3) for b, x in enumerate(c.g())])   # 指弾きだけの場面は大きく（1回目 -37〜-25dB で小さかった）
 STEP = S.track("足音（ピチカート）", "strings", patch="pizzicato", volume=0.065, pan=0.35, reverb=0.3, barGain=c.g())
@@ -89,8 +97,8 @@ for b in range(c.NB):
         if n != "踊り場1": CB.bar(b, f"{nm(v[0] - 12 if v[0] - 12 >= 28 else v[0])}:4")
         continue
     if n == "灯室":
-        if i < 7: strum(GTR, b, B, ch, DOT if i < 4 else [(0, 2, "d", "!"), (2, 2, "d", "")])
-        else: strum(GTR, b, B, ch, [(0, 4, "d", "!")])
+        if i < 4: strum(GTR, b, B, ch, DOT); strum_r(b, ch, DOT)
+        else: strum(GTR, b, B, ch, [(0, 4, "d", "!" if i == 4 else "")]); strum_r(b, ch, [(0.06, 4, "d", "")])   # 頂上：全員が和音をのばす
         CB.bar(b, f"{nm(v[0] - 12 if v[0] - 12 >= 28 else v[0])}:4")
         STEP.bar(b, f"{nm(v[2] + 12)}:1 R:1 {nm(v[1] + 12)}:1 R:1" if i < 7 else f"{nm(v[2] + 12)}:4")
         continue
@@ -101,6 +109,8 @@ for b in range(c.NB):
         if i >= 8: STEP.bar(b, f"{nm(v[1] + 12)}:1, R:1 {nm(v[1] + 12)}:1, R:1")
     else:            # 2階から：付点のストローク
         strum(GTR, b, B, ch, DOT)
+        if floor == 3: strum_r(b, ch, [(1, 1, "d", ","), (3, 1, "d", ",")])      # 3階：右のギターが2拍目と4拍目に
+        if floor == 4: strum_r(b, ch, DOT)                                     # 4階：左右そろって付点のストローク
         STEP.bar(b, f"{nm(v[1] + 12)}:1 R:1 {nm(v[1] + 12)}:1 R:1" if floor == 2 else f"{nm(v[1] + 12)}:1 R:0.5 {nm(v[2] + 12)}:0.5 {nm(v[1] + 12)}:1 R:1")
     if floor >= 3: CB.bar(b, f"{nm(v[0] - 12 if v[0] - 12 >= 28 else v[0])}:1.5 R:0.5 {nm(v[1] - 12 if v[1] - 12 >= 28 else v[1])}:2")
     if i in (7, 15): wind(b, k)   # 節の休み（後半2拍）にぜんまい
