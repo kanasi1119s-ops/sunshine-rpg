@@ -66,7 +66,7 @@ def tension_chord(ch):
     return "|".join(out)
 
 
-def make(S, names, dyn_points, acc, flute_gain=None, intro=None, passing=False, tension=False):
+def make(S, names, dyn_points, acc, flute_gain=None, intro=None, passing=False, tension=False, intro_str=1.6):
     """names: 場面名の並び。dyn_points: [(場面名, オフセット, 強さ)]。acc/flute_gain: 場面名→倍率。intro: 前奏の場面名（弦を大きめに）"""
     c = C(); c.S = S; NB = S.nb; c.NB = NB
     if tension: S.chords = [tension_chord(x) for x in S.chords]
@@ -105,7 +105,7 @@ def make(S, names, dyn_points, acc, flute_gain=None, intro=None, passing=False, 
     c.HARP = S.track("ハープ", "harp", patch="folkHarp", recipe="celtic-harp", volume=0.105, pan=-0.1, reverb=0.45, barGain=g())
     c.HARP2 = S.track("ハープ（高い響き）", "harp", patch="folkHarp", volume=0.055, pan=0.4, reverb=0.6, barGain=g())
     c.STR = [S.track(f"弦の持続{i}", "strings", patch="slowStrings", recipe="celtic-strings", volume=0.03, pan=[-0.7, 0.7, 0][i], reverb=0.55,
-                     barGain=g([1.6 if c.scene_of_bar[b] == intro else 1.0 for b in range(NB)])) for i in range(3)]
+                     barGain=g([intro_str if c.scene_of_bar[b] == intro else 1.0 for b in range(NB)])) for i in range(3)]   # intro_str：前奏の弦の倍率は曲ごとに決める
     c.LOW = S.track("チェロ", "strings", patch="cello", recipe="celtic-low", volume=0.07, pan=-0.15, reverb=0.35, barGain=g())
     c.SIL = Silence(S)
     return c
@@ -194,7 +194,7 @@ def drive(c, scenes, kind="reel", soft_scenes=(), drum_vol=0.1, gtr_vol=0.05):
 
 def finish(c, flags, desc, harm_scenes=None, tail_scene=None, tail_keep=99, silences=(), skip_scenes=(), double=True, fill=True, pads=True, pad_scenes=None, floor=False, floor_skip=()):
     S = c.S; NB = c.NB
-    if floor:   # 041番以降：伴奏が薄い小節に床を敷く（前奏も）
+    if floor:   # 伴奏が薄い小節に床を敷く。前奏に敷くかは曲ごとに決める（前奏に敷かないなら floor_skip に前奏の場面名を入れる）
         k = floor_bed(c, skip=floor_skip)
         print(f"床（弦3声＋チェロ）を足した小節: {k}")
     # 変に音が小さくなる所を作らない（2026-10-28 人間の指摘）：弦の持続が休んでいる小節には、小さな和音をのばして埋める。
@@ -341,7 +341,7 @@ def dshift(line, k):
     return " ".join(out)
 
 
-def sparkle(c, scenes=None, glock_vol=0.03, harp_vol=0.05, seed=11, dense=False):
+def sparkle(c, scenes=None, glock_vol=0.03, harp_vol=0.05, seed=11, dense=False, intro=True):
     """高い所のきらめき（グロッケンと竪琴の高い音を、和音の音でまばらに）。2026-10-29 試し：合格した静かな曲（035・009・010・006・002）は、
     どれも高いきらめきの層があり、7.0 前後で止まる曲（017・018・022・024 など）にはない"""
     import random as _r
@@ -350,6 +350,7 @@ def sparkle(c, scenes=None, glock_vol=0.03, harp_vol=0.05, seed=11, dense=False)
     HP = S.track("きらめき（竪琴の高い音）", "harp", patch="folkHarp", volume=harp_vol, pan=-0.45, reverb=0.7, barGain=c.g())
     for b in range(c.NB):
         if scenes is not None and c.scene_of_bar[b] not in scenes: continue
+        if not intro and c.scene_of_bar[b] == c.intro: continue      # intro=False で前奏には入れない（曲ごとに決める）
         ch = S.chords[b].split("|")[0]
         hi = tones(ch, "C6", "C7"); hh = tones(ch, "G5", "G6")
         if b % 2 == 0 or dense: GL.at(b * B + rg.choice((0, B / 2)), f"{nm(rg.choice(hi))}:{B / 2},")
@@ -369,3 +370,19 @@ def thick(c, scenes=None, lo=50, vol=0.045, cb_vol=0.07):
         for j in range(3): TH[j].bar(b, f"{nm(w[j])}:{B}")
         r = low(ch, "C2"); r = r + 12 if r < 36 else r
         CBt.bar(b, f"{nm(r)}:{B}")
+
+
+def opener(c, keep, gain=1.0):
+    """前奏（c.intro の場面）を、その曲の「始まり方」の楽器だけにする（2026-10-29 人間「始まり方また似てない？」）。
+    keep: 残す楽器の役名の一部（例 ("竪琴",) や ("ピチカート", "フルート")）。ほかの楽器の前奏の音は消す。
+    gain: 残した楽器の前奏の音量の倍率（小さすぎるときだけ。始まりを大きくしすぎない）"""
+    S = c.S; B = S.beats
+    if not c.intro: return
+    a = c.s0[c.intro] * B; z = (c.s0[c.intro] + c.sc_len[c.intro]) * B
+    for tr in S.tracks:
+        if any(k in tr.role for k in keep):
+            if gain != 1.0 and tr.spec.get("barGain"):
+                bg = tr.spec["barGain"]
+                for b in range(c.s0[c.intro], c.s0[c.intro] + c.sc_len[c.intro]): bg[b] = round(bg[b] * gain, 3)
+            continue
+        tr.ev = [(st, L, x) for st, L, x in tr.ev if not (a <= st < z)]

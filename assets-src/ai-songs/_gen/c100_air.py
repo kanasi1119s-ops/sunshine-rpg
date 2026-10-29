@@ -186,7 +186,7 @@ def main(mus, spec, outp):
         if rp:   # 曲が進むほど空間の層を深くする（例: [0.3, 2.5]＝始めは弱く、終わりは強く）
             fxo *= np.linspace(rp[0], rp[1], N)[:, None]
         air += fxo
-    ig = spec.get("intro_db", 0)
+    ig = spec.get("intro_db", 0)   # 曲ごとに決める（2026-10-29 人間：最初が大きくてだんだん小さくなる曲が多い＝全曲に 6〜8.5dB 入れていたのが原因。必要な曲だけ小さく使う）
     if ig:   # 前奏が小さすぎないように、はじめの数十秒だけ音楽を持ち上げる（なめらかに戻す）
         tt = np.arange(N) / SR; hold = spec.get("intro_hold", 22); ramp = spec.get("intro_ramp", 10)
         music = music * (10 ** (ig * np.clip(1 - (tt - hold) / ramp, 0, 1) / 20))[:, None]
