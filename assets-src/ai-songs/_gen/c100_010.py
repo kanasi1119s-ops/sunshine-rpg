@@ -33,9 +33,10 @@ c = make(S, NAMES,
           ("つなぎ2", 0, 0.86), ("リール", 0, 0.88), ("リール", 40, 0.94), ("リール", 47, 0.96)],
          {}, flute_gain={n: 1.1 for n in NAMES}, intro="帆を張る", passing=True, tension=False)
 B = S.beats
-DR = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.1, pan=-0.12, reverb=0.3, modulate=False,
-             barGain=[round(x * (1.6 if c.scene_of_bar[b] == "帆を張る" else 1.0), 3) for b, x in enumerate(c.g())])
-DR2 = S.track("ボーラン（交互）", "guitar", patch="frameDrum", volume=0.1, pan=-0.12, reverb=0.3, modulate=False, barGain=DR.spec["barGain"])
+DR = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.3,   # 0.1 では全体の中でほとんど聞こえなかった（前奏 -61dB）
+             pan=-0.12, reverb=0.3, modulate=False,
+             barGain=[round(x * (2.2 if c.scene_of_bar[b] == "帆を張る" else 1.0), 3) for b, x in enumerate(c.g())])
+DR2 = S.track("ボーラン（交互）", "guitar", patch="frameDrum", volume=0.3, pan=-0.12, reverb=0.3, modulate=False, barGain=DR.spec["barGain"])
 _hn = [0]
 def hit(t, note, mk="", L=0.75):
     """枠太鼓の1打。短い音（1回目の 0.25〜0.33 拍）は鳴らなかったので、2つのパートに交互に置いて、1打を長めにする"""
@@ -107,7 +108,7 @@ for b in range(c.NB):
     n, i, Lb, k = S.scene_of(b); ch = S.chords[b]; r = rt(ch)
     if n == "帆を張る":       # ボーランの連打。16分で、だんだん強く
         for q in range(16 if i == 0 else 12):
-            hit(b * B + q * 0.25, 'D3' if q % 4 == 0 else 'A3', ',,' if (i == 0 and q < 8) else ',' if i == 0 else '')
+            hit(b * B + q * 0.25, 'D3' if q % 4 == 0 else 'A3', ',' if (i == 0 and q < 8) else '')
         if i == 1: hit(b * B + 3, "D3", "!", 1)
         continue
     if n in ("つなぎ1", "つなぎ2"):   # つなぎ：ボーランだけが次の拍子を打つ（ジグは3つずつ、リールは2つずつ）
