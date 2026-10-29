@@ -10,3 +10,6 @@
 
 run.sh / q.sh / chk.sh / next.sh はクラウド（Linux）で使っていた手順そのまま。パソコン（Windows）では、同じ流れを PowerShell か Node で書き直して使う。
 同時に何曲書き出すかは CPU の数で決める（1曲あたり CPU 1〜2個・メモリ 3〜4GB が目安）。
+
+## パソコンへの保存待ち（つながっていない間に完成した曲。SendUserFile の file_uuid）
+- 007_潮の呼び声.mp3 → 1c8bdc13-acc0-4d51-bfa6-e9d99eab20dd
