@@ -1,91 +1,108 @@
-# ケルト・フルート100曲「銀の笛と百の夜」002 灯室への階段 Stairway to the Lamp — 第2版（2026-10-28）
-# イメージ: 笛を手に、灯台のらせん階段を上っていく。同じ景色が、ひと回りごとに少し高い所から見える。
-#   ＝同じ節を3回。ひと回りごとに全音ずつ上がる（A→B→C#）。足音は枠太鼓の手のひら。最上階の灯室に着くと、足音が止み、高い笛が残る。
-# 形（台帳）: 1周ごとに全音上がるらせん。3/4・♩=60。A ドリア→B ドリア→C# ドリア。始め：低い竪琴／終わり：高い笛。終盤に小さな山。
-# 旋律: 段を上る動機「1 2 3 → 5」「2 3 4 → 6」。8小節の型 a b a' c、続けて b' c'（前半は2度で開き、後半は主音で閉じる）。
-# 編曲の表:
-#   前置き  : 低い竪琴のオスティナート（根音・5度・オクターブ）＋足音
-#   1周目   : 笛＋低い竪琴＋足音（毎小節1打）
-#   上り1   : 竪琴が音階を駆け上がり、調が全音上がる
-#   2周目   : ＋チェロの対旋律（笛と反対向き）＋ピチカート。足音は1小節に2打（急ぎ足）
-#   上り2   : 同じく全音上がる
-#   3周目   : ＋弦の持続＋グロッケン。足音は1小節に3打。後半で小さな山、最後は高い音で止まる
-#   灯室    : 足音が止み、高い笛の長い音と竪琴の倍音だけ
-import sys
+# ケルト・フルート100曲「銀の笛と百の夜」002 灯室への階段 Stairway to the Lamp — 第3版（2026-10-29 作り直し。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 笛を手にしたエイラは、灯台のらせん階段を灯室まで上る。祖父がかつて30分ごとに上り下りし、灯を回すぜんまいを巻いた階段。
+#   一つの階を上るごとに、ぜんまいを巻く「カチ、カチ、カチ、コン」が聞こえ、景色（調）が一段上がる。最後に灯室の扉を開けると、灯が明るくともる。
+# 調べ: 喜び。形: アン・ドロ型（短い節を何度もくり返し、少しずつ足していく）。4/4・♩=80、はずむ付点。
+# 旋法: ミクソリディア（♭7）。階ごとに全音上がる（G → A → B → C♯）。灯室で半音上の D イオニア（長調）に開ける。
+# 笛: 中音域、カットで歯切れよく。階が上がるほど装飾が増える。4階の後半から2本目の笛が3度下で加わる。
+# 伴奏の主役: 開いた和音（3度を抜いた）のナイロン弦ギター。足元＝指で1音ずつ、1階＝指弾き、2階から付点のストローク。
+#   ピチカート（足音）は2階から、コントラバスのピチカートは3階から。打楽器・竪琴・弦の持続・パッドは使わない。
+# この曲だけ: ぜんまいを巻く4音（ピチカートの高い音）が各階の8小節目・16小節目と踊り場で鳴り、そのたびに一段高い所から節が始まる。
+# 山: 階段（階ごとに一段ずつ）。最後の灯室がいちばん明るい。
+import sys, json
 from c100_common import *
 from c100_v2 import *
-from lm25_lib import tr_chord
 
-S = Song("C100", "002-lamp-stairs", "灯室への階段", "Stairway to the Lamp", 60, 3, "A", "dorian", "ケルト（幻想）")
+BPM = 80
+S = Song("C100", "002-stairway-to-the-lamp", "灯室への階段", "Stairway to the Lamp", BPM, 4, "G", "mixolydian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.4})
-RC = ["Am", "Am", "D", "D", "G", "Em", "Am", "Em", "Am", "Am", "Em", "D", "D", "G", "Em", "Am",
-      "G", "Em", "D", "Em", "D", "G", "Em", "Am"]
-S.scene("前置き", 4, "intro", ["Am"] * 4)
-S.scene("1周目", 24, "verse", RC)
-S.scene("上り1", 2, "break", ["D", "E"])
-S.scene("2周目", 24, "verse", [tr_chord(x, 2) for x in RC])
-S.scene("上り2", 2, "break", ["E", "F#"])
-S.scene("3周目", 24, "chorus", [tr_chord(x, 4) for x in RC])
-S.scene("灯室", 4, "outro", ["C#m"] * 4)
-NAMES = ["前置き", "1周目", "上り1", "2周目", "上り2", "3周目", "灯室"]
+S.extra.update({"human": 0.35})
+FLOORS = [("1階", "G"), ("2階", "A"), ("3階", "B"), ("4階", "C#")]
+def fl_chords(t):
+    k = Key(t, "mixolydian", 4)
+    T, VII, IV = t, k.up(10).tonic, k.up(5).tonic
+    return [T, VII] * 6 + [IV, VII, T, T]
+S.scene("足元", 4, "intro", ["G", "F", "G", "F"])
+for idx, (nm_, t) in enumerate(FLOORS):
+    S.scene(nm_, 16, "verse" if idx < 3 else "chorus", fl_chords(t))
+    if idx < 3:
+        nxt = FLOORS[idx + 1][1]
+        S.scene(f"踊り場{idx + 1}", 2, "break", [t, nxt])
+S.scene("灯室", 8, "outro", ["D", "A", "G", "D", "D", "G", "D", "D"])
+NAMES = ["足元", "1階", "踊り場1", "2階", "踊り場2", "3階", "踊り場3", "4階", "灯室"]
 
 c = make(S, NAMES,
-         [("前置き", 0, 0.6), ("1周目", 0, 0.62), ("1周目", 23, 0.66), ("上り1", 0, 0.66), ("2周目", 0, 0.68), ("2周目", 23, 0.74),
-          ("上り2", 0, 0.74), ("3周目", 0, 0.76), ("3周目", 16, 0.88), ("3周目", 23, 0.74), ("灯室", 0, 0.62), ("灯室", 3, 0.42)],
-         {}, flute_gain={n: 1.2 for n in NAMES}, intro="前置き", passing=True, tension=False)
-c.HARP.spec["barGain"] = [round(x * (1.5 if b < 4 else 1.0), 3) for b, x in enumerate(c.HARP.spec["barGain"])]
-STEP = S.track("足音（枠太鼓の手のひら）", "guitar", patch="frameDrum", volume=0.07, pan=-0.2, reverb=0.45, modulate=False, barGain=c.g())
-CELLO = S.track("チェロ（対旋律）", "strings", patch="cello", volume=0.085, pan=0.25, reverb=0.45, barGain=c.g())
-PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.055, pan=-0.35, reverb=0.4, barGain=c.g())
-GLOCK = S.track("グロッケン", "bell", patch="glockenspiel", volume=0.026, pan=0.35, reverb=0.65, barGain=c.g())
+         [("足元", 0, 0.62), ("1階", 0, 0.64), ("2階", 0, 0.7), ("3階", 0, 0.76), ("4階", 0, 0.82), ("4階", 15, 0.86),
+          ("灯室", 0, 0.9), ("灯室", 4, 0.88), ("灯室", 7, 0.8)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="足元", passing=True, tension=False)
+GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.06, pan=-0.3 - 0.04 * i, reverb=0.3, barGain=c.g()) for i in range(5)]
+GP = S.track("ギター（指で1音ずつ）", "guitar", patch="nylonGuitar", volume=0.075, pan=-0.25, reverb=0.32, barGain=c.g())
+STEP = S.track("足音（ピチカート）", "strings", patch="pizzicato", volume=0.065, pan=0.35, reverb=0.3, barGain=c.g())
+WIND = S.track("ぜんまい（ピチカートの高い音）", "strings", patch="pizzicato", volume=0.07, pan=0.55, reverb=0.45, barGain=c.g())
+CB = S.track("コントラバス（ピチカート）", "strings", patch="contrabass", volume=0.075, pan=0.0, reverb=0.3, barGain=c.g())
+F2 = S.track("2本目の笛", "panflute", patch="flute", volume=0.26, bright=-0.8, pan=0.3, reverb=0.55, breath=False,
+             noRestrike=True, mono=True, sustain=1.1, phrase=16, barGain=c.g())
 
-a  = ["1:1 2:1 3:1", "5:2 3:1", "2:1 3:1 4:1", "6:2 5:1"]
-b  = ["4:1 5:1 6:1", "7:2 6:1", "5:1 4:1 3:1", "2:3"]
-a2 = ["1:1 2:1 3:1", "5:2 6:1", "7:1 6:1 5:1", "6:2 4:1"]
-cc = ["5:1 4:1 3:1", "2:1 3:1 4:1", "3:1.5 2:0.5 7,:1", "1:3"]
-b2 = ["4:1 5:1 6:1", "1':2 7:1", "6:1 5:1 4:1", "5:3"]
-c2 = ["6:1 5:1 4:1", "3:1 4:1 5:1", "4:1.5 3:0.5 2:1", "1:3"]
-top = ["4:1 5:1 6:1", "7:1 6:1 5:1", "6:1.5 7:0.5 6:1", "5:3"]           # 3周目の最後：高い所で止まる
-play_melody(c, "1周目", a + b + a2 + cc + b2 + c2, 4, "air", density=0.7, seed=201)
-play_melody(c, "2周目", a + b + a2 + cc + b2 + c2, 4, "air", density=0.9, seed=202, lift=2)
-play_melody(c, "3周目", a + b + a2 + cc + b2 + top, 4, "air", density=1.0, seed=203, lift=4)
-play_melody(c, "灯室", ["5:3", "5:3", "R:3", "R:3"], 4, "air", density=0, lift=4)
+# ---------- 旋律（8小節。2小節ずつ4つの句。最後の句の後半2拍は休み＝ぜんまいの音） ----------
+M = ["1:1 2:0.5 3:0.5 5:1 4:0.5 3:0.5", "2:1 1:0.5 2:0.5 3:2",
+     "5:1 6:0.5 5:0.5 4:1 3:1", "2:1.5 3:0.5 1:2",
+     "3:0.5 4:0.5 5:1 7:1 6:0.5 5:0.5", "4:1 5:1 6:2",
+     "7:1 6:0.5 5:0.5 4:1 2:1", "1:2 R:2"]
+M2 = M[:6] + ["7:0.5 1':0.5 7:0.5 6:0.5 5:1 4:0.5 2:0.5", "1:2 R:2"]     # くり返しの2回目は終わりの句を少し変える
+DENS = [0.3, 0.6, 0.85, 1.05]
+for idx, (nm_, t) in enumerate(FLOORS):
+    k = Key(t, "mixolydian", 4)
+    notes = play_melody(c, nm_, M + M2, 4, "hornpipe", key=k, density=DENS[idx], seed=200 + idx)
+    if idx == 3:   # 4階の後半：2本目の笛が3度下で寄りそう
+        a = (c.s0[nm_] + 8) * S.beats
+        for st, L, m, mk in notes:
+            if st >= a and L >= 0.4:
+                h = m - 3 if (m - 3 - k.t) % 12 in [(x) % 12 for x in k.steps] else m - 4
+                F2.at(round(st + 0.02, 3), f"{nm(h)}:{round(L, 3)}")
+# 灯室：D イオニア。最後の句を長く、高い所で
+KD = Key("D", "major", 4)
+play_melody(c, "灯室", ["5:1 6:1 1':2", "2':2 1':1 6:1", "5:1 6:0.5 5:0.5 3:2", "2:2 1:2", "5:1 6:1 1':2", "3':4", "2':2 1':2", "1':4"],
+            4, "air", key=KD, density=0.4, seed=210)
+play_melody(c, "灯室", ["3:1 4:1 5:2", "6:2 5:1 3:1", "2:1 3:0.5 2:0.5 1:2", "7,:2 5,:2", "3:1 4:1 5:2", "1':4", "6:2 5:2", "5:4"],
+            4, "air", key=KD, density=0.0, track=F2)
 
-B = S.beats; prev = 48
-for b_ in range(c.NB):
-    n, i, L, k = S.scene_of(b_); ch = S.chords[b_]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    t = tones(ch, "E3", "E5")
-    if n in ("前置き", "1周目", "2周目", "3周目"):
-        c.HARP.bar(b_, f"{nm(r)}:1 {nm(r + 7)}:1 {nm(r + 12)}:1")      # 低い竪琴：根音・5度・オクターブ（段を踏む形）
-    if n in ("前置き", "1周目"): STEP.bar(b_, "D3:1 R:2")
-    if n == "前置き":           # 前奏が小さすぎないように：低い弦がうすく床をつくる
-        v = voice(ch, 50, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b_, f"{nm(v[j])}:3")
-    if n == "2周目": STEP.bar(b_, "D3:1 R:1 D3:1,")
-    if n == "3周目": STEP.bar(b_, "D3:1 D3:1, D3:1,")
-    if n in ("2周目", "3周目"):
-        cand = [m for m in range(43, 60) if m % 12 in chord_pcs(ch)]
-        a_ = min(cand, key=lambda m: abs(m - prev)); z = min([m for m in cand if m != a_], key=lambda m: abs(m - a_))
-        CELLO.bar(b_, f"{nm(a_)}:2 {nm(z)}:1"); prev = z
-        if i % 2 == 1: PIZZ.bar(b_, f"R:1 {nm(t[1])}:1 {nm(t[2])}:1")
-    if n == "3周目":
-        v = voice(ch, 57, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b_, f"{nm(v[j])}:3")
-        if i % 4 == 0: GLOCK.bar(b_, f"{nm(tones(ch, 'C6', 'C7')[0])}:3")
-    if n in ("上り1", "上り2"):    # 竪琴が音階を駆け上がる（次の調の入口へ）
-        base = 45 + (2 if n == "上り1" else 4) + (2 if i == 1 else 0)
-        sc = [base + x for x in (0, 2, 3, 5, 7, 9)]
-        c.HARP.bar(b_, " ".join(f"{nm(x)}:0.5" for x in sc))
-        STEP.bar(b_, "D3:1 R:2" if i == 0 else "D3:1 D3:1, R:1")
-        v = voice(ch, 57, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b_, f"{nm(v[j])}:3")
+# ---------- 伴奏 ----------
+B = S.beats
+DOT = [(0, 0.75, "d", "!"), (0.75, 0.25, "u", ","), (1, 0.75, "d", ""), (1.75, 0.25, "u", ","), (2, 1, "d", ""), (3, 0.75, "d", ","), (3.75, 0.25, "u", ",")]
+def wind(b, k, at=2.0):
+    """ぜんまいを巻く4音：カチ・カチ・カチ・コン（その階の主音の2オクターブ上のあたり）"""
+    r = 72 + (k.t - 72) % 12
+    WIND.at(b * B + at, f"{nm(r)}:0.25"); WIND.at(b * B + at + 0.5, f"{nm(r + 2)}:0.25")
+    WIND.at(b * B + at + 1.0, f"{nm(r)}:0.25"); WIND.at(b * B + at + 1.5, f"{nm(r + 7)}:0.5")
+for b in range(c.NB):
+    n, i, Lb, kk = S.scene_of(b); ch = S.chords[b]
+    v = open_chord(ch)
+    if n == "足元":   # ギターが指で1音ずつ（根音・5度・オクターブ・9度）、2小節目と4小節目にぜんまい
+        GP.bar(b, " ".join(f"{nm(x)}:0.5{',' if q % 2 else ''}" for q, x in enumerate([v[0], v[1], v[2], v[3], v[2], v[1], v[2], v[3]])))
+        if i % 2 == 1: wind(b, Key("G", "mixolydian", 4))
+        continue
+    if n.startswith("踊り場"):   # 踊り場：ぜんまいを巻く。2小節目で次の階の和音
+        strum(GTR, b, B, ch, [(0, 4, "d", ",")])
+        wind(b, Key(ch, "mixolydian", 4), at=0.0); wind(b, Key(ch, "mixolydian", 4), at=2.0)
+        if n != "踊り場1": CB.bar(b, f"{nm(v[0] - 12 if v[0] - 12 >= 28 else v[0])}:4")
+        continue
     if n == "灯室":
-        v = voice(ch, 61, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b_, f"{nm(v[j])}:3")
-        c.HARP2.bar(b_, " ".join(f"{nm(x)}:1" for x in tones(ch, "C5", "C7")[i:i + 3]))
-
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の002（第2版）。灯台のらせん階段を上る。3/4・♩=60。同じ節を3回、ひと回りごとに全音上がる（A→B→C# ドリア）。足音は枠太鼓の手のひら。灯室に着くと足音が止み、高い笛が残る。",
-       harm_scenes=None, tail_scene="灯室", fill=False, pads=True, pad_scenes=["2周目", "3周目", "灯室"])
+        if i < 7: strum(GTR, b, B, ch, DOT if i < 4 else [(0, 2, "d", "!"), (2, 2, "d", "")])
+        else: strum(GTR, b, B, ch, [(0, 4, "d", "!")])
+        CB.bar(b, f"{nm(v[0] - 12 if v[0] - 12 >= 28 else v[0])}:4")
+        STEP.bar(b, f"{nm(v[2] + 12)}:1 R:1 {nm(v[1] + 12)}:1 R:1" if i < 7 else f"{nm(v[2] + 12)}:4")
+        continue
+    floor = int(n[0])
+    k = Key(dict(FLOORS)[n], "mixolydian", 4)
+    if floor == 1:   # 1階：指弾き（2拍ずつ、低い音と上の2音）
+        GP.bar(b, f"{nm(v[0])}:1 {nm(v[2])}:0.5, {nm(v[3])}:0.5, {nm(v[1])}:1 {nm(v[2])}:0.5, {nm(v[3])}:0.5,")
+    else:            # 2階から：付点のストローク
+        strum(GTR, b, B, ch, DOT)
+        STEP.bar(b, f"{nm(v[1] + 12)}:1 R:1 {nm(v[1] + 12)}:1 R:1" if floor == 2 else f"{nm(v[1] + 12)}:1 R:0.5 {nm(v[2] + 12)}:0.5 {nm(v[1] + 12)}:1 R:1")
+    if floor >= 3: CB.bar(b, f"{nm(v[0] - 12 if v[0] - 12 >= 28 else v[0])}:1.5 R:0.5 {nm(v[1] - 12 if v[1] - 12 >= 28 else v[1])}:2")
+    if i in (7, 15): wind(b, k)   # 節の休み（後半2拍）にぜんまい
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.26 --master -15 --widen 1.25 --side-hpf 200",
+       "ケルト・フルート100曲の002（第3版）。灯台のらせん階段を灯室まで上る。アン・ドロ型（短い節のくり返しに少しずつ足していく）、4/4・♩=80、付点のはずみ。G→A→B→C♯のミクソリディアで、階ごとに全音上がり、灯室で D の長調に開ける。伴奏は開いた和音のナイロン弦ギターと、ピチカートの足音。ぜんまいを巻く4音が各階で鳴り、そのたびに一段高い所から節が始まる。",
+       harm_scenes=None, tail_scene="灯室", double=True, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 6.0, "layers": [{"file": "0595", "db": -44, "hp": 200, "lp": 4000, "wide": 0.012, "duck": 0.4, "fade": 6}],
+       "fx": {"far": {"db": -29, "delay": 0.16, "lp": 3000, "rt": 2.4}}}
+json.dump(air, open("/tmp/cel/w/air002.json", "w"), ensure_ascii=False)
