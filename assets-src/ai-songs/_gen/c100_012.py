@@ -1,155 +1,85 @@
-# ケルト・フルート100曲「銀の笛と百の夜」012 羊飼いの朝 Shepherd's Morning — 第2版の作り方の最初の試作（2026-10-28）
-# 物語: 朝霧の丘。鳥の声で目を覚まし、羊を集めて歩き出す（ジグ1）。丘の上で一息ついて（ドローンだけのつなぎ）、
-#       足どりが軽くなり、調が4度上がって2つ目のジグへ（ジグ2）。最後は最初のジグの節が上の調で戻り、全員で「ジャン・ジャン」と止まる。
-# 形: 「ゆっくり→速い」ではなく「ジグ2曲のセット＋キー・リフト」（docs/sound/celtic-study の C・D）。6/8。付点4分＝80（明るく、走らない）。
-# 編曲の表（場面ごとに鳴る楽器。全部を鳴らしっぱなしにしない）:
-#   鳥        : 小さな鳥の笛と本物の鳥。最後の2小節でボーランが小さく入る
-#   ジグ1-1回目: 笛＋ボーラン（小）＋ギター（Aは5度だけの軽い打ち、Bで開放和音のストローク）
-#   ジグ1-2回目: ＋竪琴（ローヴィング・サム）＋ピチカート。Bでは鳥の笛が3度下でハモる。笛の装飾が増える
-#   つなぎ     : ドローン（弦の主音と5度）だけ＋笛の弱起
-#   ジグ2-1回目: 4度上（G→C）。竪琴の3音オスティナート＋ギター＋チェロの低音。Bから持続の弦
-#   ジグ2-2回目: 全員。Bは和声の笛。グロッケンが要所を光らせる
-#   帰り道     : ジグ1のAが上の調で戻る。最初の4小節はストップタイム（全員は1拍目だけ、あとは笛ひとり）→全員
-#   結び       : 「付点4分・付点4分」の一斉の止め×2 → 鳥の笛がひと声
-import sys
+# ケルト・フルート100曲「銀の笛と百の夜」012 羊飼いの朝 Shepherd's Morning — 第3版（2026-10-30 作り直し。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 草原の夏の放牧小屋。夜明けに、エイラの笛が丘の向こうへ呼びかける。羊飼いたちが、フィドルと手拍子でいつもの短い句を返す。
+#   呼べば答える。答えが返るたびに人が増え、やりとりはだんだん速くなり、最後は祭りのようになって、全員でぴたりと止まる。
+#   （「笛が人に届く」章の、はじめて人が答えてくれる曲）
+# 調べ: 喜び。形: 呼びかけと応答がだんだん速くなる（夏の放牧小屋の歌）。4/4・♩=92 → 120。A イオニアの5音（A・B・C♯・E・F♯）。
+# 主役は笛（呼びかけ。毎回ちがう節）。伴奏の主役: フィドルの応答（いつも同じ短い句）と手拍子・木の打音（打）。
+#   放牧から2本目のフィドル（1オクターブ下）と、呼びかけの下でフィドルの重音（A と E の長い音）。竪琴・ギター・ピアノ・パッド・低弦は使わない。
+# この曲だけ: 応答はいつも同じ短い句。速くなるほど、その句の装飾だけが増えていく。最後は呼びかけと応答が1小節ずつになり、追いかけあう。
+# 始まり: 笛ひとりの呼びかけ → 終わり: 加速の頂点で全員が1拍鳴らして止まる。
+# 山: だんだん速く・だんだん大きく（最後が頂点）。
+# 試しの書き出し（probe.py。笛と並べて）: バイオリンは立ち上がりが遅く笛より約8dB小さい → volume 0.16・gainDb 4。
+#   手拍子（seasonFx の B4）は打つ所だけで笛より約8dB小さい（打楽器として丁度よい）。木の打音（surgeWoody）は笛より大きいので volume 0.07。
+import sys, json
 from c100_common import *
 from c100_v2 import *
 
-BPM = 240   # 8分音符＝240（付点4分＝80）
-S = Song("C100", "012-shepherds-morning", "羊飼いの朝", "Shepherd's Morning", BPM, 6, "G", "major", "ケルト（幻想）")
+S = Song("C100", "012-shepherds-morning", "羊飼いの朝", "Shepherd's Morning", 92, 4, "A", "major", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-J1A = ["G", "G", "C", "D", "G", "G", "C", "G"]          # ジグ1 A（8小節）
-J1B = ["C", "C", "F", "G", "C", "G", "C", "G"]          # ジグ1 B（F＝♭VII の色）
-J2A = ["C", "C", "F", "C", "C", "F", "G", "C"]          # ジグ2 A（C）
-J2B = ["F", "G", "Am", "C", "F", "G", "G", "C"]         # ジグ2 B
-S.scene("鳥", 4, "intro", ["G", "G", "C", "G"])
-S.scene("ジグ1-1", 32, "verse", J1A * 2 + J1B * 2)
-S.scene("ジグ1-2", 32, "verse", J1A * 2 + J1B * 2)
-S.scene("つなぎ", 2, "break", ["G", "G"])
-S.scene("ジグ2-1", 32, "chorus", J2A * 2 + J2B * 2)
-S.scene("ジグ2-2", 32, "chorus", J2A * 2 + J2B * 2)
-S.scene("帰り道", 16, "chorus", ["C", "C", "F", "G", "C", "C", "F", "C"] * 2)
-S.scene("結び", 4, "outro", ["C", "C", "C", "C"])
-NAMES = ["鳥", "ジグ1-1", "ジグ1-2", "つなぎ", "ジグ2-1", "ジグ2-2", "帰り道", "結び"]
-
+S.extra.update({"human": 0.4})
+K = Key("A", "major", 4)
+CALL_C = ["A", "E", "D", "A"]
+P1, P2, P3 = 8, 12, 20          # 夜明け（3小節×8）・放牧（3小節×12）・祭り（2小節×20）
+S.scene("夜明け", P1 * 3, "verse", (["A", "D", "E"] * P1))
+S.scene("放牧", P2 * 3, "verse", (["A", "D", "E"] * P2))
+S.scene("祭り", P3 * 2, "chorus", (["A", "E"] * P3))
+S.scene("止まる", 1, "outro", ["A"])
+NAMES = ["夜明け", "放牧", "祭り", "止まる"]
+n1, n2 = P1 * 3, P2 * 3
+S.tempo = [{"bar": 1, "bpm": 92}, {"bar": 1 + n1, "bpm": 100, "ramp": n1}, {"bar": 1 + n1 + n2, "bpm": 110, "ramp": n2},
+           {"bar": 1 + n1 + n2 + P3 * 2, "bpm": 120, "ramp": P3 * 2}]
 c = make(S, NAMES,
-         [("鳥", 0, 0.6), ("ジグ1-1", 0, 0.66), ("ジグ1-1", 31, 0.7), ("ジグ1-2", 0, 0.74), ("ジグ1-2", 31, 0.78), ("つなぎ", 0, 0.6),
-          ("ジグ2-1", 0, 0.78), ("ジグ2-1", 31, 0.84), ("ジグ2-2", 0, 0.86), ("ジグ2-2", 31, 0.9), ("帰り道", 0, 0.8), ("帰り道", 15, 0.92),
-          ("結び", 0, 0.9), ("結び", 3, 0.5)],
-         {}, flute_gain={n: 1.15 for n in NAMES}, intro="鳥", passing=True, tension=False)
-BIRD = S.track("鳥の笛", "panflute", patch="flute", volume=0.4, bright=-0.7, pan=0.45, reverb=0.7, breath=False, mono=True, barGain=c.g())
-DRUM = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.075, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
-GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.05, pan=0.35 + 0.04 * i, reverb=0.35, barGain=c.g()) for i in range(5)]
-PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.06, pan=-0.4, reverb=0.35, barGain=c.g())
-GLOCK = S.track("グロッケン", "bell", patch="glockenspiel", volume=0.028, pan=0.3, reverb=0.6, barGain=c.g())
-DR = [S.track(f"ドローン{i + 1}", "strings", patch="slowStrings", volume=0.09, pan=[-0.3, 0.3][i], reverb=0.6) for i in range(2)]
-
-# ---------- 旋律（度数・8分＝1） ----------
-# ジグ1：動機 a＝「下から駆け上がって3度で止まる」(5, 1 2 3)。前半4小節は2度で開いて終わり、後半は主音で閉じる
-J1_A = ["5,:1 1:1 2:1 3:2 1:1", "2:1 3:1 4:1 5:3",
-        "6:1 5:1 3:1 4:1 3:1 2:1", "1:1 2:1 3:1 2:3",
-        "5,:1 1:1 2:1 3:2 1:1", "2:1 3:1 4:1 5:2 6:1",
-        "1':2 6:1 5:1 3:1 2:1", "1:3 1:2 5,:1"]
-# B（ターン）：上の音域で始め、最高音は5小節目、最後の2小節は A の結び
-J1_B = ["5:1 6:1 1':1 2':2 1':1", "6:1 1':1 6:1 5:3",
-        "4:1 5:1 6:1 1':2 6:1", "5:1 3:1 2:1 3:3",
-        "5:1 6:1 1':1 2':1 3':1 2':1", "1':2 6:1 5:3",
-        "1':2 6:1 5:1 3:1 2:1", "1:3 1:2 5,:1"]
-# ジグ2（C）：動機 b＝「分散和音で跳ね上がって、同じ音を叩いて下りる」
-J2_A = ["1:1 3:1 5:1 1':2 5:1", "6:1 5:1 3:1 5:3",
-        "4:1 6:1 1':1 6:1 4:1 6:1", "5:1 3:1 1:1 2:3",
-        "1:1 3:1 5:1 1':2 5:1", "6:1 1':1 6:1 5:1 3:1 5:1",
-        "4:1 3:1 2:1 5,:1 7,:1 2:1", "1:3 1:2 5,:1"]
-J2_B = ["3:1 4:1 5:1 6:2 5:1", "4:1 5:1 6:1 7:3",
-        "1':2 7:1 6:1 5:1 4:1", "3:1 5:1 3:1 2:3",
-        "3:1 4:1 5:1 6:2 1':1", "7:1 6:1 5:1 6:3",
-        "4:1 3:1 2:1 5,:1 7,:1 2:1", "1:3 1:2 5,:1"]
-END = ["1:3 1:3", "5,:3 1:3"]
-
-play_melody(c, "ジグ1-1", J1_A + J1_A + J1_B + J1_B, 4, "jig", density=0.6, seed=11)
-play_melody(c, "ジグ1-2", J1_A + J1_A + J1_B + J1_B, 4, "jig", density=1.0, seed=12)
-play_melody(c, "つなぎ", ["R:6", "R:3 5,:1 6,:1 7,:1"], 4, "jig", density=0)
-K2 = S.key.up(5)   # G→C（4度上）
-play_melody(c, "ジグ2-1", J2_A + J2_A + J2_B + J2_B, 4, "jig", key=K2, density=0.7, seed=21)
-play_melody(c, "ジグ2-2", J2_A + J2_A + J2_B + J2_B, 4, "jig", key=K2, density=1.0, seed=22)
-play_melody(c, "帰り道", J1_A + J1_A[:7] + ["1:3 1:3"], 4, "jig", key=K2, density=1.0, seed=31)
-play_melody(c, "結び", ["1:3 1:3", "1:6", "R:6", "R:6"], 4, "jig", key=K2, density=0)
-# 鳥の笛：始まりの呼び合いと、ジグ1-2のBでの3度下のハモり、結びのひと声
-for idx, s in [(0, "R:1 2':0.5 3':1.5 1':2 R:1"), (1, "R:3 7:0.5 1':1 2':1.5"), (2, "R:1 1':0.5 2':1.5 6:2 R:1"), (3, "5:1 6:0.5 1':1.5 R:3")]:
-    BIRD.bar(c.s0["鳥"] + idx, S.key.mel(s, oct=4))
-harm = [s for s in J1_B + J1_B]
-for t, L, m in section_events(c, "ジグ1-2", J1_A * 2 + J1_B * 2, 4):
-    bar = int(t // 6) - c.s0["ジグ1-2"]
-    if bar >= 16 and L >= 1:
-        h = [x for x in range(m - 5, m - 2) if x % 12 in chord_pcs(S.chords[int(t // 6)])]
-        if h: BIRD.at(round(t + 0.03, 3), f"{nm(h[-1])}:{L}")
-BIRD.bar(c.s0["つなぎ"], S.key.mel("R:1 2':0.5 3':1.5 1':3", oct=4))
-BIRD.bar(c.s0["結び"] + 2, K2.mel("R:2 2':0.5 3':1.5 1':2", oct=4))
-
-# ---------- 伴奏（編曲の表どおりに出し入れ） ----------
+         [("夜明け", 0, 0.66), ("夜明け", n1 - 1, 0.72), ("放牧", 0, 0.74), ("放牧", n2 - 1, 0.82), ("祭り", 0, 0.84), ("祭り", P3 * 2 - 1, 0.95), ("止まる", 0, 0.95)],
+         {}, flute_gain={n: 1.1 for n in NAMES}, intro="夜明け", passing=True, tension=False)
 B = S.beats
-for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    root = [x for x in range(36, 48) if x % 12 == PC[ch.rstrip("m")[:2] if len(ch) > 1 and ch[1] in "#b" else ch[0]]][0]
-    if n == "鳥":
-        bodhran(DRUM, b, B, "slow", var=i % 2, soft=True)
-        drone(DR, b, B, 55)
-        if i >= 1: roving_thumb(c.HARP, b, B, ch, up=(i % 2 == 1))
-    elif n == "ジグ1-1":
-        bodhran(DRUM, b, B, "jig", var=1 if i % 8 == 7 else 0, soft=True)
-        if i < 16: GTR[0].bar(b, f"{nm(root + 12)}:3, {nm(root + 19)}:3,"); GTR[1].bar(b, f"R:3 {nm(root + 24)}:3,")
-        else: strum(GTR, b, B, ch, JIG_STRUM)
-    elif n == "ジグ1-2":
-        bodhran(DRUM, b, B, "jig", var=1 if i % 4 == 3 else 0)
-        strum(GTR, b, B, ch, JIG_STRUM)
-        roving_thumb(c.HARP, b, B, ch, up=(i % 2 == 0))
-        if i % 2 == 0: PIZZ.bar(b, f"{nm(root + 12)}:3 {nm(root + 19)}:3")
-    elif n == "つなぎ":
-        drone(DR, b, B, 55)
-        strum(GTR, b, B, ch, [(0, 6, "d", ",")] if i == 0 else [(0, 3, "d", ","), (3, 3, "d", ",")])
-        c.LOW.bar(b, "G2:6")
-        c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (43, 50, 55, 59, 62, 67)) if i == 0 else "G4:6")
-        DRUM.bar(b, "D3:3, R:3" if i == 0 else "R:3 D3:3,")
-    elif n in ("ジグ2-1", "ジグ2-2"):
-        full = n == "ジグ2-2" or i >= 16
-        bodhran(DRUM, b, B, "jig", var=1 if i % 4 == 3 else 0)
-        strum(GTR, b, B, ch, JIG_STRUM)
-        t3 = tones(ch, "G4", "G5")[:3]
-        harp_ostinato(c.HARP, b, B, t3)
-        c.LOW.bar(b, f"{nm(root + 12)}:3 {nm(root + 19)}:3")
-        if full:
-            v = voice(ch, 57, 3, spread=True)
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
-        if n == "ジグ2-2":
-            PIZZ.bar(b, f"{nm(root + 12)}:1 R:2 {nm(root + 19)}:1 R:2")
-            if i % 4 == 0: GLOCK.bar(b, f"{nm(tones(ch, 'C6', 'C7')[0])}:3 R:3")
-    elif n == "帰り道":
-        if i < 4:   # ストップタイム：全員は1拍目だけ
-            strum(GTR, b, B, ch, [(0, 1, "d", "!")])
-            DRUM.bar(b, "D3:1! R:5"); c.LOW.bar(b, f"{nm(root + 12)}:1 R:5")
-        else:
-            bodhran(DRUM, b, B, "jig", var=1 if i % 4 == 3 else 0)
-            strum(GTR, b, B, ch, JIG_STRUM)
-            harp_ostinato(c.HARP, b, B, tones(ch, "G4", "G5")[:3])
-            c.LOW.bar(b, f"{nm(root + 12)}:3 {nm(root + 19)}:3")
-            v = voice(ch, 57, 3, spread=True)
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
-            if i % 4 == 0: GLOCK.bar(b, f"{nm(tones(ch, 'C6', 'C7')[0])}:3 R:3")
-    elif n == "結び":
-        if i == 0:   # 「ジャン・ジャン」と一斉に止める
-            strum(GTR, b, B, ch, [(0, 2.5, "d", "!"), (3, 3, "d", "!")])
-            DRUM.bar(b, "D3:3! D3:3!"); c.LOW.bar(b, f"{nm(root + 12)}:3 {nm(root + 12)}:3")
-            v = voice(ch, 57, 3, spread=True)
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3 {nm(v[j])}:3")
-        if i >= 1:   # 止めのあとは、弦と竪琴の響きが残って、ゆっくり消える
-            v = voice(ch, 57, 3, spread=True)
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
-            drone(DR, b, B, 48)
-            if i == 1: c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, 'C4', 'C6')[:6]))
-            if i == 2: c.HARP.bar(b, f"{nm(tones(ch, 'C5', 'C6')[0])}:6")
+FD = S.track("フィドル（応答）", "strings", patch="violin", volume=0.16, gainDb=4, pan=0.3, reverb=0.4, barGain=c.g())
+FD2 = S.track("2本目のフィドル（1オクターブ下）", "strings", patch="violin", volume=0.13, gainDb=4, pan=0.45, reverb=0.45, barGain=c.g())
+DRN = [S.track(f"フィドルの重音{j + 1}", "strings", patch="violin", volume=0.08, pan=-0.3 + 0.1 * j, reverb=0.5, barGain=c.g()) for j in range(2)]
+CL = S.track("手拍子", "pad", patch="seasonFx", volume=0.15, pan=-0.25, reverb=0.3, barGain=c.g())
+WD = S.track("木の打音", "guitar", patch="surgeWoody", volume=0.07, pan=0.12, reverb=0.3, barGain=c.g())
 
-# 笛の和声（ジグ2-2のBだけ）
-rich(c, choir_scenes=["ジグ2-2"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.32 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の012（第2版の試作）。朝霧の丘で羊を集めて歩き出す。G→C・6/8 のジグ2曲のセット（付点4分＝80）。笛の装飾（カット・タップ・ロール）とジグのはずみ。楽器は場面ごとに出入りし、最後は上の調で最初の節が戻って一斉に止まる。",
-       harm_scenes=None, tail_scene="結び", fill=False, pads=False)
+# ---------- 呼びかけ（笛。毎回ちがう節）と応答（フィドル。いつも同じ句） ----------
+M = [["1:1 2:0.5 3:0.5 5:2", "6:1 5:1 3:2"], ["5:1 6:0.5 5:0.5 3:1 2:1", "1:2 R:2"], ["3:0.5 5:0.5 6:1 1':2", "6:1 5:1 6:2"],
+     ["1':1 6:1 5:1 3:1", "2:1 3:1 5:2"], ["6,:1 1:1 2:1 3:1", "5:3 R:1"], ["5:0.5 6:0.5 1':1 2':1 1':1", "6:2 5:2"],
+     ["3:1 2:0.5 1:0.5 6,:1 1:1", "2:3 R:1"], ["1':1.5 6:0.5 5:1 6:1", "1':3 R:1"]]
+RESP = "1':0.5 6:0.5 5:1 3:0.5 2:0.5 1:1"
+def sub(name, start, n):
+    c.s0[name] = start; c.sc_len[name] = n
+u = 0
+for ph, units, ln in (("夜明け", P1, 3), ("放牧", P2, 3), ("祭り", P3, 2)):
+    for k in range(units):
+        b0 = c.s0[ph] + k * ln
+        mot = M[u % 8]
+        call = mot if ln == 3 else [mot[0]]
+        sub(f"呼{u}", b0, len(call)); sub(f"答{u}", b0 + len(call), 1)
+        play_melody(c, f"呼{u}", call, 4 if not (ph == "放牧" and k % 3 == 2) else 5 if all("'" not in x for x in call) else 4,
+                    "march", key=K, density=0.3 + 0.4 * u / 40, seed=1200 + u)
+        dens = min(1.0, 0.05 + u / 40)             # 速くなるほど、応答の装飾だけが増える
+        play_melody(c, f"答{u}", [RESP], 4, "march", key=K, density=dens, seed=1300 + u, track=FD)
+        if ph != "夜明け":
+            play_melody(c, f"答{u}", [RESP], 3, "march", key=K, density=dens * 0.6, seed=1400 + u, track=FD2)
+        rb = b0 + len(call)
+        # 手拍子：夜明けの4つ目の応答から、応答の2・4拍目。放牧から呼びかけの裏にも。祭りは8分で
+        if ph == "夜明け" and k >= 3: CL.bar(rb, "R:1 B4:1 R:1 B4:1")
+        if ph == "放牧":
+            CL.bar(rb, "R:1 B4:1 R:1 B4:1")
+            for j in range(len(call)): CL.bar(b0 + j, "R:0.5 B4:0.5, R:1 R:0.5 B4:0.5, R:1")
+            WD.bar(rb, "A4:1 R:1 A4:1 R:1")
+        if ph == "祭り":
+            for j in range(2): CL.bar(b0 + j, " ".join(["B4:0.5, B4:0.5"] * 4)); WD.bar(b0 + j, "A4:1! R:1 E4:1 R:1")
+        # 放牧と祭り：呼びかけの下でフィドルの重音（A と E）
+        if ph != "夜明け":
+            for j in range(len(call)):
+                DRN[0].at((b0 + j) * B, "A3:4,"); DRN[1].at((b0 + j) * B, "E4:4,")
+        u += 1
+# 止まる：加速の頂点で、全員が1拍
+sb = c.s0["止まる"]
+c.FLUTE.at(sb * B, "A5:1!"); FD.at(sb * B, "A5:1!"); FD2.at(sb * B, "A4:1!"); CL.at(sb * B, "B4:1"); WD.at(sb * B, "A4:1!")
+DRN[0].at(sb * B, "A3:1"); DRN[1].at(sb * B, "E4:1")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.24 --master -15 --widen 1.2 --side-hpf 200",
+       "ケルト・フルート100曲の012（第3版）。草原の夏の放牧小屋の朝。エイラの笛が呼びかけ、羊飼いたちがフィドルと手拍子でいつもの短い句を返す。呼びかけは毎回ちがい、応答はいつも同じ句で、速くなるほど装飾だけが増える。4/4・♩=92 → 120、A の5音。最後は呼びかけと応答が1小節ずつになり、加速の頂点で全員が1拍鳴らして止まる。",
+       harm_scenes=None, tail_scene="止まる", double=False, fill=False, pads=False)
+air = {"pre": 0.2, "tail": 4.0, "layers": [{"file": "0595", "db": -46, "hp": 200, "lp": 4000, "wide": 0.012, "duck": 0.4, "fade": 6}],
+       "fx": {"far": {"db": -29, "delay": 0.24, "lp": 3000, "rt": 2.6}}}
+json.dump(air, open("/tmp/cel/w/air012.json", "w"), ensure_ascii=False)
