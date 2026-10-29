@@ -35,7 +35,8 @@ c = make(S, NAMES,
           ("灯室", 0, 0.9), ("灯室", 4, 0.88), ("灯室", 7, 0.8)],
          {}, flute_gain={n: 1.15 for n in NAMES}, intro="足元", passing=True, tension=False)
 GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.06, pan=-0.3 - 0.04 * i, reverb=0.3, barGain=c.g()) for i in range(5)]
-GP = S.track("ギター（指で1音ずつ）", "guitar", patch="nylonGuitar", volume=0.075, pan=-0.25, reverb=0.32, barGain=c.g())
+GP = S.track("ギター（指で1音ずつ）", "guitar", patch="nylonGuitar", volume=0.075, pan=-0.25, reverb=0.32,
+             barGain=[round(x * (2.4 if c.scene_of_bar[b] in ("足元", "1階") else 1.0), 3) for b, x in enumerate(c.g())])   # 指弾きだけの場面は大きく（1回目 -37〜-25dB で小さかった）
 STEP = S.track("足音（ピチカート）", "strings", patch="pizzicato", volume=0.065, pan=0.35, reverb=0.3, barGain=c.g())
 WIND = S.track("ぜんまい（ピチカートの高い音）", "strings", patch="pizzicato", volume=0.07, pan=0.55, reverb=0.45, barGain=c.g())
 CB = S.track("コントラバス（ピチカート）", "strings", patch="contrabass", volume=0.075, pan=0.0, reverb=0.3, barGain=c.g())
@@ -81,7 +82,9 @@ for b in range(c.NB):
         if i % 2 == 1: wind(b, Key("G", "mixolydian", 4))
         continue
     if n.startswith("踊り場"):   # 踊り場：ぜんまいを巻く。2小節目で次の階の和音
-        strum(GTR, b, B, ch, [(0, 4, "d", ",")])
+        strum(GTR, b, B, ch, [(0, 2, "d", "!"), (2, 2, "d", "")])          # 1回目は全音符1つで、ここが急に小さくなった
+        STEP.bar(b, f"{nm(v[1] + 12)}:1 R:1 {nm(v[1] + 12)}:1 R:1")
+        if n == "踊り場1": GP.bar(b, " ".join(f"{nm(x)}:0.5," for x in [v[0], v[1], v[2], v[3], v[2], v[1], v[2], v[3]]))
         wind(b, Key(ch, "mixolydian", 4), at=0.0); wind(b, Key(ch, "mixolydian", 4), at=2.0)
         if n != "踊り場1": CB.bar(b, f"{nm(v[0] - 12 if v[0] - 12 >= 28 else v[0])}:4")
         continue
@@ -93,8 +96,9 @@ for b in range(c.NB):
         continue
     floor = int(n[0])
     k = Key(dict(FLOORS)[n], "mixolydian", 4)
-    if floor == 1:   # 1階：指弾き（2拍ずつ、低い音と上の2音）
+    if floor == 1:   # 1階：指弾き（2拍ずつ、低い音と上の2音）。後半8小節から足音が小さく入る（上り始め）
         GP.bar(b, f"{nm(v[0])}:1 {nm(v[2])}:0.5, {nm(v[3])}:0.5, {nm(v[1])}:1 {nm(v[2])}:0.5, {nm(v[3])}:0.5,")
+        if i >= 8: STEP.bar(b, f"{nm(v[1] + 12)}:1, R:1 {nm(v[1] + 12)}:1, R:1")
     else:            # 2階から：付点のストローク
         strum(GTR, b, B, ch, DOT)
         STEP.bar(b, f"{nm(v[1] + 12)}:1 R:1 {nm(v[1] + 12)}:1 R:1" if floor == 2 else f"{nm(v[1] + 12)}:1 R:0.5 {nm(v[2] + 12)}:0.5 {nm(v[1] + 12)}:1 R:1")
