@@ -34,14 +34,18 @@ B = S.beats
 # バグパイプのドローン（本物の録音）。ほんの少し左右に分けて、2本の管に聞こえるように。切れる所は release を短く（ふっと消える）
 DR = [S.track(f"ドローン（{nm_}）", "bagpipe", volume=v, pan=p, reverb=0.45, attack=0.6, release=0.06,
               fx=[{"type": "eq", "low": -1, "mid": -2, "midHz": 2500, "high": -2.5}], barGain=c.g())
-      for nm_, v, p in [("G2", 0.075, -0.12), ("G3", 0.055, 0.14)]]
+      for nm_, v, p in [("G2", 0.075, -0.12), ("G3", 0.055, 0.14), ("G2・つなぎ", 0.075, -0.12), ("G3・つなぎ", 0.055, 0.14)]]
 # 遠い低弦：息2から。凪の海の深さ。張りで少しふくらむ
 VC = S.track("遠いチェロ", "strings", patch="cello", volume=0.06, pan=-0.45, reverb=0.7, barGain=c.g())
 CB = S.track("遠いコントラバス", "strings", patch="contrabass", volume=0.07, pan=0.45, reverb=0.7, barGain=c.g())
 
 cut = c.s0["切れる"] * B           # ここでドローンが切れる
-DR[0].at(0, f"G2:{cut}")
-DR[1].at(0, f"G3:{cut}")
+# 1つの音は64拍までなので、約60拍ごとに2つのパートで重ねてつなぐ（重なり4拍。attack 0.6 で継ぎ目を目立たせない）
+st, k = 0, 0
+while st < cut:
+    en = min(cut, st + 62)
+    DR[0 + 2 * (k % 2)].at(st, f"G2:{en - st}"); DR[1 + 2 * (k % 2)].at(st, f"G3:{en - st}")
+    st = en - 4 if en < cut else cut; k += 1
 s2 = c.s0["息2"]
 for b in range(s2, c.s0["切れる"]):
     n, i, Lb, k = S.scene_of(b)
