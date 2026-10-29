@@ -33,7 +33,7 @@ c = make(S, NAMES,
 B = S.beats
 # バグパイプのドローン（本物の録音）。ほんの少し左右に分けて、2本の管に聞こえるように。切れる所は release を短く（ふっと消える）
 DG = [round(x * 3.2, 3) for x in c.g()]   # 1回目はドローンが -45dB と小さすぎ、前奏と笛の休みが沈んだ（6.70）。ドローンはこの曲の伴奏の主役なので大きく
-DR = [S.track(f"ドローン（{nm_}）", "bagpipe", volume=v, pan=p, reverb=0.45, attack=0.6, release=0.06,
+DR = [S.track(f"ドローン（{nm_}）", "bagpipe", volume=v, pan=p, reverb=0.45, attack=0.35, release=0.06,
               fx=[{"type": "eq", "low": -1, "mid": -2, "midHz": 2500, "high": -2.5}], barGain=DG)
       for nm_, v, p in [("G2", 0.075, -0.12), ("G3", 0.055, 0.14), ("G2・つなぎ", 0.075, -0.12), ("G3・つなぎ", 0.055, 0.14)]]
 # 遠い低弦：息2から。凪の海の深さ。張りで少しふくらむ
@@ -41,12 +41,13 @@ VC = S.track("遠いチェロ", "strings", patch="cello", volume=0.06, pan=-0.45
 CB = S.track("遠いコントラバス", "strings", patch="contrabass", volume=0.07, pan=0.45, reverb=0.7, barGain=c.g())
 
 cut = c.s0["切れる"] * B           # ここでドローンが切れる
-# 1つの音は64拍までなので、約60拍ごとに2つのパートで重ねてつなぐ（重なり4拍。attack 0.6 で継ぎ目を目立たせない）
-st, k = 0, 0
-while st < cut:
-    en = min(cut, st + 62)
-    DR[0 + 2 * (k % 2)].at(st, f"G2:{en - st}"); DR[1 + 2 * (k % 2)].at(st, f"G3:{en - st}")
-    st = en - 4 if en < cut else cut; k += 1
+# バグパイプの録音は約4秒で消える（ループしない。2026-10-30 に試しの書き出しで測った）。1・2回目はドローンがほとんど鳴っていなかった。
+# 2拍ごとに2つのパートで交互に鳴らし直し、3拍ずつ重ねて途切れないようにする。最後は cut でぴたりと止める
+st, k = 0.0, 0
+while st < cut - 0.01:
+    en = min(cut, st + 3)
+    DR[0 + 2 * (k % 2)].at(round(st, 3), f"G2:{round(en - st, 3)}"); DR[1 + 2 * (k % 2)].at(round(st + 0.05, 3), f"G3:{round(en - st - 0.05, 3)}")
+    st += 2; k += 1
 s2 = c.s0["息1"]
 for b in range(s2, c.s0["切れる"]):
     n, i, Lb, k = S.scene_of(b)
