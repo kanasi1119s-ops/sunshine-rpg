@@ -73,7 +73,7 @@ for b in range(c.NB):
     n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
     r = rt(ch); tn = [x for x in range(r, r + 26) if x % 12 in chord_pcs(ch)]
     if n == "うねり":       # 低い弦のうねり：長い音から、3小節目でチェロがゆっくり波を打ちはじめる
-        if i < 2: VC.at(b * B, f"{nm(r)}:6")
+        if i < 2: VC.at(b * B, f"{nm(r + 12)}:6")      # D2 の長い音は D3 より約20dB小さく鳴る（試しの書き出しで測った）。前奏は1オクターブ上で
         else: VC.bar(b, " ".join(f"{nm(x)}:2{',' if q else ''}" for q, x in enumerate([tn[0], tn[1], tn[2]]))); VA.at(b * B + 3 * (i % 2), f"{nm(tn[2] + 12 if tn[2] + 12 < 70 else tn[2])}:{6 - 3 * (i % 2) + 3},")
         continue
     if n == "引き潮" and i >= 4:   # 5度で止まる：チェロは A と E、ビオラは E を長く
