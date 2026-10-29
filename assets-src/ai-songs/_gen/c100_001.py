@@ -38,9 +38,9 @@ for tr in (HR, HD):
     bg = tr.spec["barGain"]
     for b in range(c.s0["歌A"]): bg[b] = round(bg[b] * 2.5, 3)
 
-def roll(tr, b, notes, start=0.0, step=0.22, L=3.0):
+def roll(tr, b, notes, start=0.0, step=0.22, L=3.0, soft=True):
     """竪琴の和音を下からずらして鳴らす（上の音ほど少し遅く）"""
-    for k, m in enumerate(notes): tr.at(round(b * B + start + k * step, 3), f"{nm(m)}:{L}{',' if k else ''}")
+    for k, m in enumerate(notes): tr.at(round(b * B + start + k * step, 3), f"{nm(m)}:{L}{',' if (k and soft) else ''}")
 
 # ---------- 前奏：竪琴が3回呼ぶ ----------
 D2, A2, D3, E3, A3, G2, B2, G3 = 38, 45, 50, 52, 57, 43, 47, 55
@@ -48,12 +48,12 @@ s1 = c.s0["呼ぶ1"]
 roll(HR, s1 + 0, [D2, A2, D3, E3, A3], step=0.3)
 roll(HR, s1 + 1, [G2, D3, A3, 59])
 HD.bar(s1 + 2, "D4:1 E4:1 A4:1"); HR.at((s1 + 2) * B + 2, "A4:3")          # 1回目の呼びかけ（レ・ミ・ラ）
-roll(HR, s1 + 3, [D2, A2, D3], step=0.4)                                     # 返事がない（低い D の響きだけ）
+roll(HR, s1 + 3, [D2, A2, D3, A3], step=0.4, soft=False)                     # 返事がない（低い D の響き。音は落とさない）
 s2 = c.s0["呼ぶ2"]
 roll(HR, s2 + 0, [G2, D3, A3, 62], step=0.3)
 roll(HR, s2 + 1, [A2, E3, B2 + 12, 64], step=0.26)
 HD.bar(s2 + 2, "G4:1 A4:1 D5:1"); HR.at((s2 + 2) * B + 2, "D5:3")          # 2回目（1段高い所から）
-roll(HR, s2 + 3, [G2, D3, G3], step=0.4)
+roll(HR, s2 + 3, [G2, D3, G3, D3 + 12], step=0.4, soft=False)
 s3 = c.s0["呼ぶ3"]
 roll(HR, s3 + 0, [D2, A2, D3, E3, A3], step=0.3)
 HD.bar(s3 + 1, "A4:1 B4:1 E5:1"); HR.at((s3 + 1) * B + 2, "E5:3")          # 3回目
@@ -101,8 +101,9 @@ for b in range(c.s0["歌A"], c.NB):   # 前奏（呼ぶ1〜3）は上で書い�
         if i % 4 == 3: HD.at(b * B + 1, f"{nm(d[1] + 12)}:1,")
     elif n == "余韻":
         if i == 0: HR.at(b * B, f"{nm(d[0])}:3"); HR.at(b * B + 0.2, f"{nm(d[1])}:3,")
+        if i == 2: roll(HR, b, [d[0], d[1], d[2]], step=0.35, soft=False)   # 笛が黙る小節も、竪琴の響きで音を落とさない
         if i == 3: HR.at(b * B, f"{nm(d[0] + 12)}:3,")
-        if i == 6: HR.at(b * B, f"{nm(d[0])}:3,"); HR.at(b * B + 0.3, f"{nm(d[1])}:3,")   # 息が消えたあとも、竪琴の低い響きが少し残る
+        if i in (6, 7): roll(HR, b, [d[0], d[1], d[2]] if i == 6 else [d[0], d[1]], step=0.4, soft=False)   # 息が消えたあとも、竪琴の低い響きが少し残る
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.32 --master -15 --widen 1.2 --side-hpf 200",
        "ケルト・フルート100曲の001（第3版）。夕暮れの灯台の部屋、祖父の箱から銀の笛を取り出す。古い竪琴が自由な前奏で3回呼び、3回目に笛が初めて答える（問いの3音 レ・ミ・ラ）。エア A・B・A'、3/4・♩=56、D イオニア。楽器は笛と金属弦の竪琴だけ。最後は問いの3音をもう一度吹き、ラで息が消える。",
