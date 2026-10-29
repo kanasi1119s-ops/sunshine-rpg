@@ -33,7 +33,8 @@ c = make(S, NAMES,
 B = S.beats
 # バグパイプのドローン（本物の録音）。ほんの少し左右に分けて、2本の管に聞こえるように。切れる所は release を短く（ふっと消える）
 DG = [round(x * 3.2, 3) for x in c.g()]   # 1回目はドローンが -45dB と小さすぎ、前奏と笛の休みが沈んだ（6.70）。ドローンはこの曲の伴奏の主役なので大きく
-DR = [S.track(f"ドローン（{nm_}）", "bagpipe", volume=v, pan=p, reverb=0.45, attack=0.35, release=0.06,
+DR = [S.track(f"ドローン（{nm_}）", "bagpipe", volume=v, pan=p, reverb=0.45, attack=0.35, release=0.06, gainDb=18,   # 録音が小さい。+18 で笛より約6dB下（試しの書き出しで測った）
+
               fx=[{"type": "eq", "low": -1, "mid": -2, "midHz": 2500, "high": -2.5}], barGain=DG)
       for nm_, v, p in [("G2", 0.075, -0.12), ("G3", 0.055, 0.14), ("G2・つなぎ", 0.075, -0.12), ("G3・つなぎ", 0.055, 0.14)]]
 # 遠い低弦：息2から。凪の海の深さ。張りで少しふくらむ
