@@ -920,7 +920,9 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
         ns = ns.map((n) => {
           const g = Number(p.barGain![Math.floor((pos + 1e-9) / beatsPerBar)]);
           pos += n.durationBeats;
-          return n.note === REST || !Number.isFinite(g) || g === 1 ? n : { ...n, velocity: (n.velocity ?? 1) * Math.max(0, g) };
+          // 2026-10-30: 強さが 2 を超えると velocityScale が「MIDI の数字（0〜127）」とみなして 1/100 にしてしまい、
+          // barGain を大きくした小節がほぼ無音になっていた（ケルト100曲の 004・007・010 の前奏）。2 で止める
+          return n.note === REST || !Number.isFinite(g) || g === 1 ? n : { ...n, velocity: Math.min(2, (n.velocity ?? 1) * Math.max(0, g)) };
         });
       }
       if (mutes.length && p.keepBreak !== true) ns = applyMutesToNotes(ns, mutes);

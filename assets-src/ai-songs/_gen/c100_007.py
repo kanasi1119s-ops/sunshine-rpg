@@ -38,9 +38,9 @@ pts += [("引き潮", 0, 0.66), ("引き潮", 4, 0.62), ("引き潮", 7, 0.56)]
 c = make(S, NAMES, pts, {}, flute_gain={n: 1.15 for n in NAMES}, intro="うねり", passing=True, tension=False)
 S.fix_avoid = lambda t: 0      # 海の節の F・C（ドリア）を和音に合わせて直されないように
 B = S.beats
-def gi(k): return [round(x * (k if c.scene_of_bar[b] == "うねり" else 1.8 if c.scene_of_bar[b] == "呼び声" else 1.0), 3) for b, x in enumerate(c.g())]   # 前奏と呼び声（笛が少ない）は大きめに。3回目まで -34〜-49dB   # 1回目は前奏が -47dB（長い音2つだけ）
-VC = S.track("チェロ（波）", "strings", patch="cello", volume=0.1, pan=-0.3, reverb=0.5, barGain=gi(5.0))
-VA = S.track("ビオラ（もう1つの波）", "strings", patch="viola", volume=0.075, pan=0.35, reverb=0.55, barGain=gi(5.0))
+def gi(k): return [round(x * (k if c.scene_of_bar[b] == "うねり" else 1.3 if c.scene_of_bar[b] == "呼び声" else 1.0), 3) for b, x in enumerate(c.g())]   # 前奏と呼び声（笛が少ない）は大きめに。3回目まで -34〜-49dB   # 1回目は前奏が -47dB（長い音2つだけ）
+VC = S.track("チェロ（波）", "strings", patch="cello", volume=0.1, pan=-0.3, reverb=0.5, barGain=gi(1.5))
+VA = S.track("ビオラ（もう1つの波）", "strings", patch="viola", volume=0.075, pan=0.35, reverb=0.55, barGain=gi(1.5))
 
 # ---------- 旋律（1＝D4。陸はイオニア、海はドリアで、同じ度数が別の音になる） ----------
 L1 = ["1:2 2:1 3:2 5:1", "6:3 5:2 3:1", "2:2 3:1 5:2 6:1", "5:6"]

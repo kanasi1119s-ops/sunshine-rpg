@@ -32,10 +32,12 @@ c = make(S, NAMES,
          {}, flute_gain={n: 1.2 for n in NAMES}, intro="凪の前", passing=False, tension=False)
 B = S.beats
 # バグパイプのドローン（本物の録音）。ほんの少し左右に分けて、2本の管に聞こえるように。切れる所は release を短く（ふっと消える）
-DG = [round(x * 3.2, 3) for x in c.g()]   # 1回目はドローンが -45dB と小さすぎ、前奏と笛の休みが沈んだ（6.70）。ドローンはこの曲の伴奏の主役なので大きく
-DR = [S.track(f"ドローン（{nm_}）", "bagpipe", volume=v, pan=p, reverb=0.45, attack=0.35, release=0.06, gainDb=18,   # 録音が小さい。+18 で笛より約6dB下（試しの書き出しで測った）
+DG3 = [round(x * 0.18, 3) for x in c.g()]; DG2 = [round(x * 0.3, 3) for x in c.g()]
+# 2026-10-30: 強さ（velocity×barGain）が 2 を超えると、作曲ソフトがほぼ無音にしていた（ai-song.ts を直した）。1〜3回目のドローンが小さかった本当の原因。
+#   直したあとに笛と並べて測ると、ドローンは barGain 0.7 で笛より約10dB大きい → G3 は ×0.18、G2 は ×0.3（G2 は G3 より小さく鳴る）で笛の少し下に
+DR = [S.track(f"ドローン（{nm_}）", "bagpipe", volume=v, pan=p, reverb=0.45, attack=0.35, release=0.06,
 
-              fx=[{"type": "eq", "low": -1, "mid": -2, "midHz": 2500, "high": -2.5}], barGain=DG)
+              fx=[{"type": "eq", "low": -1, "mid": -2, "midHz": 2500, "high": -2.5}], barGain=DG2 if "G2" in nm_ else DG3)
       for nm_, v, p in [("G2", 0.075, -0.12), ("G3", 0.055, 0.14), ("G2・つなぎ", 0.075, -0.12), ("G3・つなぎ", 0.055, 0.14)]]
 # 遠い低弦：息2から。凪の海の深さ。張りで少しふくらむ
 VC = S.track("遠いチェロ", "strings", patch="cello", volume=0.06, pan=-0.45, reverb=0.7, barGain=c.g())
