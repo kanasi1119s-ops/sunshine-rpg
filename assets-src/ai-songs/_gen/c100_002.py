@@ -48,6 +48,8 @@ GP = S.track("ギター（指で1音ずつ）", "guitar", patch="nylonGuitar", v
 STEP = S.track("足音（ピチカート）", "strings", patch="pizzicato", volume=0.065, pan=0.35, reverb=0.3, barGain=c.g())
 WIND = S.track("ぜんまい（ピチカートの高い音）", "strings", patch="pizzicato", volume=0.07, pan=0.55, reverb=0.45, barGain=c.g())
 CB = S.track("コントラバス（ピチカート）", "strings", patch="contrabass", volume=0.075, pan=0.0, reverb=0.3, barGain=c.g())
+# 石の壁の響き：2階から、チェロが弓で長い根音をのばす（はじく音ばかりで、のびる音が笛しかなかった。2回目まで 7.26〜7.30）
+VCA = S.track("チェロ（石壁の響き）", "strings", patch="cello", volume=0.06, pan=0.15, reverb=0.5, barGain=c.g())
 F2 = S.track("2本目の笛", "panflute", patch="flute", volume=0.26, bright=-0.8, pan=0.3, reverb=0.55, breath=False,
              noRestrike=True, mono=True, sustain=1.1, phrase=16, barGain=c.g())
 
@@ -100,6 +102,7 @@ for b in range(c.NB):
         if i < 4: strum(GTR, b, B, ch, DOT); strum_r(b, ch, DOT)
         else: strum(GTR, b, B, ch, [(0, 4, "d", "!" if i == 4 else "")]); strum_r(b, ch, [(0.06, 4, "d", "")])   # 頂上：全員が和音をのばす
         CB.bar(b, f"{nm(v[0] - 12 if v[0] - 12 >= 28 else v[0])}:4")
+        VCA.at(b * B, f"{nm(v[0] if v[0] >= 36 else v[0] + 12)}:4")
         STEP.bar(b, f"{nm(v[2] + 12)}:1 R:1 {nm(v[1] + 12)}:1 R:1" if i < 7 else f"{nm(v[2] + 12)}:4")
         continue
     floor = int(n[0])
@@ -113,6 +116,9 @@ for b in range(c.NB):
         if floor == 4: strum_r(b, ch, DOT)                                     # 4階：左右そろって付点のストローク
         STEP.bar(b, f"{nm(v[1] + 12)}:1 R:1 {nm(v[1] + 12)}:1 R:1" if floor == 2 else f"{nm(v[1] + 12)}:1 R:0.5 {nm(v[2] + 12)}:0.5 {nm(v[1] + 12)}:1 R:1")
     if floor >= 3: CB.bar(b, f"{nm(v[0] - 12 if v[0] - 12 >= 28 else v[0])}:1.5 R:0.5 {nm(v[1] - 12 if v[1] - 12 >= 28 else v[1])}:2")
+    if floor >= 2:
+        lo_ = v[0] if v[0] >= 36 else v[0] + 12
+        VCA.at(b * B, f"{nm(lo_)}:4," if floor == 2 else f"{nm(lo_ if i % 2 == 0 else lo_ + 7)}:4")
     if i in (7, 15): wind(b, k)   # 節の休み（後半2拍）にぜんまい
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.26 --master -15 --widen 1.25 --side-hpf 200",
        "ケルト・フルート100曲の002（第3版）。灯台のらせん階段を灯室まで上る。アン・ドロ型（短い節のくり返しに少しずつ足していく）、4/4・♩=80、付点のはずみ。G→A→B→C♯のミクソリディアで、階ごとに全音上がり、灯室で D の長調に開ける。伴奏は開いた和音のナイロン弦ギターと、ピチカートの足音。ぜんまいを巻く4音が各階で鳴り、そのたびに一段高い所から節が始まる。",
