@@ -35,6 +35,15 @@ c = make(S, NAMES,
 B = S.beats
 DR = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.1, pan=-0.12, reverb=0.3, modulate=False,
              barGain=[round(x * (1.6 if c.scene_of_bar[b] == "帆を張る" else 1.0), 3) for b, x in enumerate(c.g())])
+DR2 = S.track("ボーラン（交互）", "guitar", patch="frameDrum", volume=0.1, pan=-0.12, reverb=0.3, modulate=False, barGain=DR.spec["barGain"])
+_hn = [0]
+def hit(t, note, mk="", L=0.75):
+    """枠太鼓の1打。短い音（1回目の 0.25〜0.33 拍）は鳴らなかったので、2つのパートに交互に置いて、1打を長めにする"""
+    tr = (DR, DR2)[_hn[0] % 2]; _hn[0] += 1
+    tr.at(round(t, 4), f"{note}:{L}{mk}")
+import c100_v2 as _v2
+_oc = _v2.open_chord
+_v2.open_chord = lambda ch, lo=52, hi=76: _oc(ch, lo, hi)   # ギターの最低音を E2 以上に（1回目は D2 が出て音域の外）
 GT = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.055, pan=0.3 + 0.05 * i, reverb=0.3, barGain=c.g()) for i in range(5)]
 CB = S.track("コントラバス", "strings", patch="contrabass", volume=0.08, pan=0.0, reverb=0.3, barGain=c.g())
 F2 = S.track("2本目の笛", "panflute", patch="flute", volume=0.26, bright=-0.8, pan=0.3, reverb=0.5, breath=False,
@@ -98,12 +107,12 @@ for b in range(c.NB):
     n, i, Lb, k = S.scene_of(b); ch = S.chords[b]; r = rt(ch)
     if n == "帆を張る":       # ボーランの連打。16分で、だんだん強く
         for q in range(16 if i == 0 else 12):
-            DR.at(round(b * B + q * 0.25, 3), f"{'D3' if q % 4 == 0 else 'A3'}:0.25{',,' if (i == 0 and q < 8) else ',' if i == 0 else ''}")
-        if i == 1: DR.at(b * B + 3, "D3:1!")
+            hit(b * B + q * 0.25, 'D3' if q % 4 == 0 else 'A3', ',,' if (i == 0 and q < 8) else ',' if i == 0 else '')
+        if i == 1: hit(b * B + 3, "D3", "!", 1)
         continue
     if n in ("つなぎ1", "つなぎ2"):   # つなぎ：ボーランだけが次の拍子を打つ（ジグは3つずつ、リールは2つずつ）
         if n == "つなぎ1":
-            for q in range(12): DR.at(round(b * B + q * T3, 4), f"{'D3' if q % 3 == 0 else 'A3'}:{round(T3, 4)}{'!' if q % 3 == 0 else ','}")
+            for q in range(12): hit(b * B + q * T3, 'D3' if q % 3 == 0 else 'A3', '!' if q % 3 == 0 else ',')
         else:
             for q in range(8): DR.at(b * B + q * 0.5, f"{'D3' if q % 2 == 0 else 'A3'}:0.5{'!' if q % 4 == 0 else ','}")
         CB.at(b * B, f"{nm(r)}:4,")
@@ -115,7 +124,7 @@ for b in range(c.NB):
     elif n == "ジグ":         # 1拍＝付点4分。ジグの1小節：下・上・上・下・上・上
         for half in (0, 2):
             for q, (nn, mk) in enumerate([("D3", "!"), ("A3", ","), ("A3", ","), ("D3", ""), ("A3", ","), ("A3", ",")]):
-                DR.at(round(b * B + half + q * T3, 4), f"{nn}:{round(T3, 4)}{mk}")
+                hit(b * B + half + q * T3, nn, mk)
             strum(GT, b, B, ch, [(half, 1, "d", "!"), (half + 1, 2 * T3, "d", ""), (half + 1 + 2 * T3, T3, "u", ",")])
             CB.at(b * B + half, f"{nm(r)}:1"); CB.at(b * B + half + 1, f"{nm(r + 7 - (12 if r + 7 > 50 else 0))}:1,")
     elif n == "リール":
