@@ -132,3 +132,11 @@ finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space va
 air = {"pre": 0.2, "tail": 4.0, "layers": [{"file": "1046", "db": -44, "hp": 110, "lp": 5000, "wide": 0.012, "duck": 0.4, "fade": 6}],
        "fx": {"far": {"db": -30, "delay": 0.16, "lp": 3000, "rt": 2.0}}}
 json.dump(air, open("/tmp/cel/w/air010.json", "w"), ensure_ascii=False)
+# 1/3 拍の位置を丸めると「R:0」ができて書き出しが止まる（1回目）。長さ0の休みを取りのぞく
+_p = sys.argv[1] if len(sys.argv) > 1 else None
+if _p:
+    _d = json.load(open(_p))
+    for _pt in _d["parts"]:
+        if isinstance(_pt.get("notes"), str):
+            _pt["notes"] = " ".join(t for t in _pt["notes"].split() if not re.match(r"^R:0(\.0*)?$", t))
+    json.dump(_d, open(_p, "w"), ensure_ascii=False)
