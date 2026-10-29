@@ -1,71 +1,112 @@
-# ケルト・フルート100曲「銀の笛と百の夜」001 銀の笛 The Silver Flute — 第2版（2026-10-28）
-# イメージ: 夕暮れの灯台の部屋。少女エイラが祖父の古い箱を開け、銀の笛を取り出す。口に当てる前の、ひとつの息。
-#   はじめて吹く節は、問いかけのように「1・3・4」と上がって止まる。2回目は少し慣れて、3回目（B）で窓の外の海へ伸びていく。
-#   最後は竪琴が1音だけ、箱のふたを閉じるように鳴る。山なし・ごく静か（静の型、点数 7.2 以上をめざす）。
-# 形（台帳）: スロー・エア AABA（テンポのゆれ）→2周目は短く ABA。4/4・♩=54。E ドリア。
-# 編曲の表:
-#   前置き : 息の音（空気の層で作る）→竪琴の根音1つ
-#   1周目  : 笛＋竪琴の根音のドローン（1小節に1〜2回）＋弦とチェロのうすいドローン（E と B）。空間で上下を満たす
-#   2周目  : 竪琴がゆっくりした分散和音に、チェロが笛と反対向きの対旋律、B ではホルンの長い和音が遠くで温める
-#   余韻   : 竪琴の E の1音だけ
-import sys
+# ケルト・フルート100曲「銀の笛と百の夜」001 銀の笛 The Silver Flute — 第3版（2026-10-29 作り直し。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 夕暮れの灯台の部屋。エイラが祖父の箱から銀の笛を取り出す。部屋の古い竪琴が、笛を呼ぶように鳴る。
+#   2回呼んでも笛は黙ったまま。3回目に、エイラは初めて息を入れる。
+# 調べ: あいだ。形: 古い竪琴の自由な前奏（呼ぶ×3）→ エア A・B・A' → 余韻。3/4・♩=56（前奏は♩=46）。D イオニア。
+# 楽器は2つだけ: 笛（1本。重ねの笛なし）と、金属弦の竪琴（長く鳴らす手・止める手。歌Bだけ高い竪琴の鐘）。
+#   弦・チェロ・パッド・グロッケン・打楽器は使わない。前奏の持ち上げも使わない。
+# 竪琴の和音は3度を抜く（レとラ、ソとレ…）。長調とも短調とも決まらない響き。
+# この曲だけ: 竪琴が3回呼び、3回目でやっと笛が答える。問いの3音「レ・ミ・ラ」は 087 で答えに、099 でふたたび戻る。
+# 山: 歌Bの頭（曲の約半分の所）で一番高いラ。最初が大きくてだんだん小さくなる形にはしない。
+import sys, json
 from c100_common import *
 from c100_v2 import *
 
-S = Song("C100", "001-silver-flute", "銀の笛", "The Silver Flute", 54, 4, "E", "dorian", "ケルト（幻想）")
+S = Song("C100", "001-silver-flute", "銀の笛", "The Silver Flute", 56, 3, "D", "major", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"rubato": 0.4, "human": 0.45})
-A1c = ["Em", "Em", "D", "D", "Em", "A", "D", "Em"]
-A2c = ["Em", "Em", "D", "D", "Em", "A", "D", "Em"]
-Bc = ["G", "D", "Em", "A", "G", "D", "Bm", "Em"]
-S.scene("前置き", 2, "intro", ["Em", "Em"])
-S.scene("1周目", 32, "verse", A1c + A2c + Bc + A2c)
-S.scene("2周目", 24, "verse", A1c + Bc + A2c)
-S.scene("余韻", 2, "outro", ["Em", "Em"])
-NAMES = ["前置き", "1周目", "2周目", "余韻"]
+S.extra.update({"rubato": 0.35, "human": 0.45})
+S.tempo = [{"bar": 1, "bpm": 46}, {"bar": 15, "bpm": 56, "ramp": 2}]
+S.scene("呼ぶ1", 6, "intro", ["D", "G", "A", "D", "D", "D"])
+S.scene("呼ぶ2", 6, "intro", ["G", "D", "A", "G", "G", "G"])
+S.scene("呼ぶ3", 4, "intro", ["D", "A", "D", "D"])
+CA = ["D", "D", "G", "A", "D", "G", "Bm", "A", "Bm", "G", "D", "A", "D", "G", "A", "D"]
+S.scene("歌A", 16, "verse", CA)
+S.scene("歌B", 20, "chorus", ["D", "Bm", "G", "D", "Em", "D", "G", "A", "G", "D", "Em", "A", "D", "G", "A", "D", "D", "G", "A", "D"])
+S.scene("語り", 16, "verse", CA)
+S.scene("余韻", 8, "outro", ["D", "D", "D", "D", "D", "D", "D", "D"])
+NAMES = ["呼ぶ1", "呼ぶ2", "呼ぶ3", "歌A", "歌B", "語り", "余韻"]
 
 c = make(S, NAMES,
-         [("前置き", 0, 0.6), ("1周目", 0, 0.62), ("1周目", 20, 0.7), ("1周目", 31, 0.62), ("2周目", 0, 0.66), ("2周目", 12, 0.78), ("2周目", 23, 0.62),
-          ("余韻", 0, 0.5), ("余韻", 1, 0.38)],
-         {}, flute_gain={n: 1.25 for n in NAMES}, intro="前置き", passing=True, tension=False)
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.09, pan=0.2, reverb=0.5, barGain=c.g())
-DR = [S.track(f"ドローン（弦）{i + 1}", "strings", patch="slowStrings", volume=0.05, pan=[-0.5, 0.5][i], reverb=0.65, barGain=c.g()) for i in range(2)]
-HORN = S.track("ホルン（遠く）", "brass", patch="horn", volume=0.05, pan=-0.3, reverb=0.7, breath=False, attack=0.4, release=1.0, bright=-0.6, barGain=c.g())
+         [("呼ぶ1", 0, 0.58), ("呼ぶ2", 0, 0.6), ("呼ぶ3", 0, 0.62), ("歌A", 0, 0.66), ("歌A", 15, 0.72),
+          ("歌B", 0, 0.8), ("歌B", 5, 0.9), ("歌B", 12, 0.8), ("歌B", 19, 0.7), ("語り", 0, 0.62), ("語り", 15, 0.6), ("余韻", 0, 0.58), ("余韻", 7, 0.5)],
+         {}, flute_gain={n: 1.25 for n in NAMES}, intro="呼ぶ1", passing=True, tension=False)
+# 金属弦の竪琴：長く鳴らす手（余韻3拍ほど）と、止める手（弾いてすぐ消す）
+HR = S.track("竪琴（響かせる）", "harp", patch="folkHarp", volume=0.13, pan=-0.18, reverb=0.55, sustain=2.6, barGain=c.g())
+HD = S.track("竪琴（止める）", "harp", patch="folkHarp", volume=0.11, pan=-0.05, reverb=0.4, sustain=0.45, barGain=c.g())
+HB = S.track("竪琴（高い鐘）", "harp", patch="folkHarp", volume=0.06, pan=0.35, reverb=0.7, sustain=3.0, barGain=c.g())
+B = S.beats
 
-# ---------- 旋律（E ドリア・4/4。問いの動機「1・3・4」） ----------
-A1 = ["R:1 1:1 3:1.5 4:0.5", "5:3 4:0.5 3:0.5", "2:1.5 3:0.5 4:1 2:1", "5,:3.5 R:0.5",
-      "R:1 1:1 3:1.5 4:0.5", "5:2 7:1.5 6:0.5", "5:1 4:1 3:1 2:1", "1:3.5 R:0.5"]
-A2 = ["R:1 1:1 3:1.5 4:0.5", "5:3 4:0.5 3:0.5", "2:1.5 3:0.5 4:1 2:1", "5,:3.5 R:0.5",
-      "R:1 1:1 3:1.5 4:0.5", "5:1 6:1 7:1 1':1", "7:1.5 5:0.5 4:1 2:1", "1:4"]
-BL = ["3:1 5:1 7:1.5 1':0.5", "2':3 1':0.5 7:0.5", "6:1.5 7:0.5 1':1 5:1", "6:3.5 R:0.5",
-      "7:1 1':1 2':1.5 3':0.5", "2':2 1':1 7:1", "5:1 4:1 3:1 2:1", "1:3.5 R:0.5"]
-play_melody(c, "1周目", A1 + A2 + BL + A2, 4, "air", density=0.8, seed=101)
-play_melody(c, "2周目", A1 + BL + A2[:7] + ["1:4"], 4, "air", density=1.0, seed=102)
+def roll(tr, b, notes, start=0.0, step=0.22, L=3.0):
+    """竪琴の和音を下からずらして鳴らす（上の音ほど少し遅く）"""
+    for k, m in enumerate(notes): tr.at(round(b * B + start + k * step, 3), f"{nm(m)}:{L}{',' if k else ''}")
 
-# ---------- 伴奏 ----------
-B = S.beats; prev = 52
-for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    t = tones(ch, "E3", "E5"); r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    if n == "前置き":           # 前奏が小さすぎないように：弦のドローンとチェロが息のすぐあとから
-        drone(DR, b, B, 52); CELLO.bar(b, "E2:4")
-        c.HARP.bar(b, "R:2 E3:2" if i == 0 else "E3:2 B3:2")
-        continue
-    if n in ("1周目", "2周目"):
-        drone(DR, b, B, 52); CELLO.bar(b, "E2:4") if n == "1周目" else None
-    if n == "1周目":
-        c.HARP.bar(b, f"{nm(r)}:2 {nm(r + 7)}:1 {nm(r + 12)}:1" if i % 2 == 0 else f"{nm(r)}:2 {nm(r + 12)}:2")
-    elif n == "2周目":
-        c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[2])))
-        cand = [m for m in range(40, 57) if m % 12 in chord_pcs(ch)]
-        a = min(cand, key=lambda m: abs(m - prev)); z = min([m for m in cand if m != a], key=lambda m: abs(m - a))
-        CELLO.bar(b, f"{nm(a)}:2 {nm(z)}:2"); prev = z
-        if 8 <= i < 16: HORN.bar(b, f"{nm(tones(ch, 'G3', 'D4')[0])}:4")
-        if i % 8 == 7: c.HARP2.bar(b, f"R:2 {nm(tones(ch, 'E5', 'E6')[0])}:2")
+# ---------- 前奏：竪琴が3回呼ぶ ----------
+D2, A2, D3, E3, A3, G2, B2, G3 = 38, 45, 50, 52, 57, 43, 47, 55
+s1 = c.s0["呼ぶ1"]
+roll(HR, s1 + 0, [D2, A2, D3, E3])
+roll(HR, s1 + 1, [G2, D3, A3])
+roll(HR, s1 + 2, [A2, E3, A3, 59])
+roll(HR, s1 + 3, [D2, A2, D3, A3, 64], step=0.3)
+HD.bar(s1 + 4, "D4:1 E4:1 A4:1"); HR.at((s1 + 4) * B + 2, "A4:3")          # 1回目の呼びかけ（レ・ミ・ラ）
+HR.at((s1 + 5) * B, "D2:3,")                                                # 返事がない（低い D の響きだけ）
+s2 = c.s0["呼ぶ2"]
+roll(HR, s2 + 0, [G2, D3, A3, 62])
+roll(HR, s2 + 1, [D2, A2, E3, A3])
+roll(HR, s2 + 2, [A2, E3, B2 + 12, 64], step=0.26)
+roll(HR, s2 + 3, [G2, D3, G3, A3])
+HD.bar(s2 + 4, "G4:1 A4:1 D5:1"); HR.at((s2 + 4) * B + 2, "D5:3")          # 2回目（1段高い所から）
+HR.at((s2 + 5) * B, "G2:3,")
+s3 = c.s0["呼ぶ3"]
+roll(HR, s3 + 0, [D2, A2, D3, E3, A3], step=0.3)
+HD.bar(s3 + 1, "A4:1 B4:1 E5:1"); HR.at((s3 + 1) * B + 2, "E5:3")          # 3回目
+HR.at((s3 + 2) * B, "D2:3,"); HR.at((s3 + 3) * B, "A2:3,")
+
+# ---------- 旋律（D イオニア・3/4。問いの3音「1・2・5」） ----------
+Q = "1:1 2:1 5:1"
+A = [Q, "5:2 6:1", "5:1 4:0.5 3:0.5 2:1", "2:3",
+     Q, "6:1 1':1.5 7:0.5", "6:1 5:1 3:1", "5:3",
+     "3:1.5 4:0.5 5:1", "6:1 5:1 4:1", "3:1 2:1 1:1", "3:2 2:1",
+     "1:1 2:1 3:1", "5:2 4:1", "3:1.5 2:0.5 1:1", "1:3"]
+Bm_ = ["5:1 1':1 2':1", "3':2 2':1", "1':1 7:1 6:1", "5:3",
+       "6:1 1':1 3':1", "5':2 4':1", "3':1 2':1 1':1", "2':3",
+       "1':1 6:1 5:1", "6:1.5 5:0.5 3:1", "2:1 3:1 5:1", "5:3",
+       "3:1 2:1 1:1", "2:2 3:1", "5:1 3:1 2:1", "1:3",
+       "5:1 1':1 2':1", "2':3", "1':1 6:1 5:1", "5:3"]
+A2 = [Q, "5:3", "5:1 3:1 2:1", "2:3",
+      Q, "6:1 5:2", "3:1 2:1 1:1", "2:3",
+      "3:2 5:1", "6:2 5:1", "3:1 2:1 1:1", "2:3",
+      "1:1 2:1 3:1", "5:3", "3:1.5 2:0.5 1:1", "1:3"]
+play_melody(c, "呼ぶ3", ["R:3", "R:3", Q, "5:3"], 4, "air", density=0.0)
+play_melody(c, "歌A", A, 4, "air", density=0.2, seed=101)
+play_melody(c, "歌B", Bm_, 4, "air", density=0.3, seed=102)
+play_melody(c, "語り", A2, 4, "air", density=0.1, seed=103)
+play_melody(c, "余韻", [Q, "5:3", "R:3", Q, "5:3", "5:3", "R:3", "R:3"], 4, "air", density=0.0)
+
+# ---------- 竪琴の伴奏（場面ごとに弾き方を変える） ----------
+def dyad(ch, lo=38):
+    """3度を抜いた和音：根音・5度・オクターブ・9度"""
+    r = PC[re.match(r"^([A-G][#b]?)", ch).group(1)]
+    m = lo + (r - lo) % 12
+    return [m, m + 7, m + 12, m + 14]
+for b in range(c.s0["歌A"], c.NB):
+    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
+    d = dyad(ch)
+    if n == "歌A":   # 1拍目に低い2音を響かせ、3拍目に高い9度を止める手で。句の終わりは止めて間をあける
+        HR.at(b * B, f"{nm(d[0])}:3"); HR.at(b * B + 0.12, f"{nm(d[1])}:3,")
+        if i % 4 != 3: HD.at(b * B + 2, f"{nm(d[3] + 12)}:1,")
+    elif n == "歌B":   # 下から上へ流れる6つの8分（開いた和音）。山の4小節は高い鐘
+        seq = [d[0], d[1], d[2], d[3], d[2] + 7, d[3] + 12]
+        HR.bar(b, " ".join(f"{nm(x)}:0.5{',' if q else ''}" for q, x in enumerate(seq)))
+        if 4 <= i < 8: HB.at(b * B, f"{nm(d[2] + 24)}:3")
+    elif n == "語り":   # 低音だけで語る（2小節に1つ）。句の終わりは止める手で1音
+        if i % 2 == 0: HR.at(b * B, f"{nm(d[0])}:3")
+        if i % 4 == 3: HD.at(b * B + 1, f"{nm(d[1] + 12)}:1,")
     elif n == "余韻":
-        drone(DR, b, B, 52)
-        if i == 0: c.HARP.bar(b, "E4:4")       # 箱のふたを閉じるように、竪琴の1音
+        if i == 0: HR.at(b * B, f"{nm(d[0])}:3"); HR.at(b * B + 0.2, f"{nm(d[1])}:3,")
+        if i == 3: HR.at(b * B, f"{nm(d[0] + 12)}:3,")
 
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の001（第2版）。夕暮れ、祖父の箱から銀の笛を取り出す。E ドリア・4/4・♩=54、テンポのゆれ。息の音→問いの動機「1・3・4」のスロー・エア AABA→2周目は竪琴とチェロが答える→竪琴の1音。",
-       harm_scenes=None, tail_scene="余韻", fill=False, pads=True, pad_scenes=["1周目", "2周目"])
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.32 --master -15 --widen 1.2 --side-hpf 200",
+       "ケルト・フルート100曲の001（第3版）。夕暮れの灯台の部屋、祖父の箱から銀の笛を取り出す。古い竪琴が自由な前奏で3回呼び、3回目に笛が初めて答える（問いの3音 レ・ミ・ラ）。エア A・B・A'、3/4・♩=56、D イオニア。楽器は笛と金属弦の竪琴だけ。最後は問いの3音をもう一度吹き、ラで息が消える。",
+       harm_scenes=None, tail_scene="余韻", double=False, fill=False, pads=False)
+air = {"pre": 0.4, "tail": 7.0, "layers": [{"file": "1046", "db": -42, "hp": 120, "lp": 4500, "wide": 0.012, "duck": 0.4, "fade": 8}],
+       "fx": {"far": {"db": -27, "delay": 0.22, "lp": 2800, "rt": 3.2}}}
+json.dump(air, open("/tmp/cel/w/air001.json", "w"), ensure_ascii=False)
