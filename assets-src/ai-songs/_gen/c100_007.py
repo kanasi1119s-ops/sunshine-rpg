@@ -38,8 +38,9 @@ pts += [("引き潮", 0, 0.66), ("引き潮", 4, 0.62), ("引き潮", 7, 0.56)]
 c = make(S, NAMES, pts, {}, flute_gain={n: 1.15 for n in NAMES}, intro="うねり", passing=True, tension=False)
 S.fix_avoid = lambda t: 0      # 海の節の F・C（ドリア）を和音に合わせて直されないように
 B = S.beats
-VC = S.track("チェロ（波）", "strings", patch="cello", volume=0.1, pan=-0.3, reverb=0.5, barGain=c.g())
-VA = S.track("ビオラ（もう1つの波）", "strings", patch="viola", volume=0.075, pan=0.35, reverb=0.55, barGain=c.g())
+def gi(k): return [round(x * (k if c.scene_of_bar[b] == "うねり" else 1.0), 3) for b, x in enumerate(c.g())]   # 1回目は前奏が -47dB（長い音2つだけ）
+VC = S.track("チェロ（波）", "strings", patch="cello", volume=0.1, pan=-0.3, reverb=0.5, barGain=gi(3.5))
+VA = S.track("ビオラ（もう1つの波）", "strings", patch="viola", volume=0.075, pan=0.35, reverb=0.55, barGain=gi(3.5))
 
 # ---------- 旋律（1＝D4。陸はイオニア、海はドリアで、同じ度数が別の音になる） ----------
 L1 = ["1:2 2:1 3:2 5:1", "6:3 5:2 3:1", "2:2 3:1 5:2 6:1", "5:6"]
@@ -71,8 +72,9 @@ def rt(ch, lo=38):
 for b in range(c.NB):
     n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
     r = rt(ch); tn = [x for x in range(r, r + 26) if x % 12 in chord_pcs(ch)]
-    if n == "うねり":       # 低い弦のうねり：長い音がふくらむ
-        VC.at(b * B, f"{nm(r)}:6"); VA.at(b * B + 3 * (i % 2), f"{nm(tn[2] + 12 if tn[2] + 12 < 70 else tn[2])}:{6 - 3 * (i % 2) + 3},")
+    if n == "うねり":       # 低い弦のうねり：長い音から、3小節目でチェロがゆっくり波を打ちはじめる
+        if i < 2: VC.at(b * B, f"{nm(r)}:6")
+        else: VC.bar(b, " ".join(f"{nm(x)}:2{',' if q else ''}" for q, x in enumerate([tn[0], tn[1], tn[2]]))); VA.at(b * B + 3 * (i % 2), f"{nm(tn[2] + 12 if tn[2] + 12 < 70 else tn[2])}:{6 - 3 * (i % 2) + 3},")
         continue
     if n == "引き潮" and i >= 4:   # 5度で止まる：チェロは A と E、ビオラは E を長く
         if i == 4: VC.at(b * B, "A2:12"); VA.at(b * B, "E4:12")
