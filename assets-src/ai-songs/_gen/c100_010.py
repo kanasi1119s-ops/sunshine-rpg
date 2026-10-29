@@ -1,102 +1,134 @@
-# ケルト・フルート100曲「銀の笛と百の夜」010 出航 Setting Sail — 第2版（2026-10-28）
-# イメージ: 帆を上げる朝。綱を引く人々の行進の足どり（6/8 の行進）。帆が風をはらみ、船が岸を離れる（B：上の音域へ）。
-#   もう一度行進の節が戻り、全員の力で岬を越える所で、ティンパニが転がり、1拍だけ全部が息をのむ。そして目の前に広い海原。
-# 形（台帳）: 行進・物語型 A–A–B–B–A′–山–コーダ。6/8・付点4分＝52。G ミクソリディア（F♮の帆の色）。
-# 編曲の表:
-#   静けさ : 竪琴だけ（まだ岸に結ばれた船）
-#   A1     : 笛の行進の節＋竪琴＋低い弦
-#   A2     : ＋ピチカートの足どり（付点4分の行進）＋チェロ
-#   B1     : 帆が風をはらむ：ホルンの長い和音、笛は上の音域
-#   B2     : ＋弦のうねり。ティンパニが区切りで1打
-#   A3     : 行進が全員で戻る（弦のトレモロ風の刻み）
-#   山     : ティンパニのロール→1拍の無音
-#   海原   : 広い海：笛の長い音、弦の広い和音、グロッケンと竪琴の倍音、遠いホルン
-import sys
+# ケルト・フルート100曲「銀の笛と百の夜」010 出航 Setting Sail — 第3版（2026-10-29 作り直し。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 第1章の終わり。朝の港で、エイラは船に乗る。綱を引く人たちの行進（マーチ）、帆が上がって船が動きだす（ジグ）、
+#   帆が風をつかんで沖へ走りだす（リール）。曲が変わるたびに調が一段上がり、船が速くなる。
+# 調べ: 喜び。形: マーチ → ジグ → リール（3つの踊りの曲をつないだ「セット」。だんだん速くなる）。
+# 拍子・速さ: マーチ 2/4・♩=96（4/4 の小節に2小節ずつ書く）→ ジグ 6/8・付点4分＝112（1拍＝付点4分。4拍の小節にジグ2小節）→ リール 4/4・♩=112。
+# 調: マーチ D イオニア → ジグ E ミクソリディア → リール A イオニア（一段ずつ上がる）。
+# 主役は笛: 装飾多め（カット・ロール）。ジグの2回目から2本目の笛が3度下で入り、リールは2本で。
+# 伴奏の主役: ボーラン（枠太鼓）。脇: ナイロン弦ギターのストローク、コントラバス。竪琴・ピアノ・弦の和音・パッドは使わない。
+# この曲だけ: 曲が変わるたびに調が一つ上がり、速くなる（帆が風をつかむ）。つなぎの1小節はボーランだけが次の拍子を打って導く。
+# 始まり: ボーランの連打（だんだん強く）→ 終わり: 全員で1拍だけ鳴らして切る。
+# 山: 階段（曲が変わるたびに一段）。
+import sys, json
 from c100_common import *
 from c100_v2 import *
 
-BPM = 156   # 8分音符＝156（付点4分＝52）
-S = Song("C100", "010-setting-sail", "出航", "Setting Sail", BPM, 6, "G", "mixolydian", "ケルト（幻想）")
+S = Song("C100", "010-setting-sail", "出航", "Setting Sail", 96, 4, "D", "major", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.35})
-AC = ["G", "C", "G", "Am", "F", "Dm", "F", "G", "G", "C", "Am", "F", "G", "Dm", "F", "G"]
-BC = ["C", "G", "Dm", "Am", "C", "G", "F", "G", "C", "G", "F", "Em", "G", "C", "Dm", "G"]
-S.scene("静けさ", 6, "intro", ["G", "G", "F", "G", "C", "G"])
-S.scene("A1", 16, "verse", AC)
-S.scene("A2", 16, "verse", AC)
-S.scene("B1", 16, "chorus", BC)
-S.scene("B2", 16, "chorus", BC)
-S.scene("A3", 16, "verse", AC)
-S.scene("山", 4, "break", ["F", "C", "D", "D"])
-S.scene("海原", 16, "outro", ["G", "C", "G", "F", "G", "C", "F", "G", "G", "G", "C", "G", "G", "G", "G", "G"])
-NAMES = ["静けさ", "A1", "A2", "B1", "B2", "A3", "山", "海原"]
-
+S.extra.update({"human": 0.4})
+MAC, MBC = ["D", "D", "G", "A", "D", "D", "A", "D"], ["D", "A", "D", "A", "D", "G", "A", "D"]
+JAC, JBC = ["E", "D", "E", "A", "E", "D", "A", "E"], ["E", "A", "D", "E", "A", "A", "D", "E"]   # ジグは1小節（4拍）にジグ2小節：和音はその2小節で1つ
+RAC, RBC = ["A", "D", "A", "E", "A", "D", "E", "A"], ["A", "E", "D", "E", "A", "E", "E", "A"]
+S.scene("帆を張る", 2, "intro", ["D", "D"])
+S.scene("マーチ", 24, "verse", MAC + MBC + MAC)
+S.scene("つなぎ1", 1, "break", ["E"])
+S.scene("ジグ", 32, "chorus", (JAC[:4] + JAC[4:] + JBC[:4] + JBC[4:]) * 2)
+S.scene("つなぎ2", 1, "break", ["A"])
+S.scene("リール", 48, "chorus", RAC + RAC + RBC + RBC + RAC + RBC)
+NAMES = ["帆を張る", "マーチ", "つなぎ1", "ジグ", "つなぎ2", "リール"]
+J0 = 1 + 2 + 24 + 1; R0 = J0 + 32 + 1
+S.tempo = [{"bar": 1, "bpm": 96}, {"bar": J0, "bpm": 112}, {"bar": R0, "bpm": 112}]
 c = make(S, NAMES,
-         [("静けさ", 0, 0.58), ("A1", 0, 0.62), ("A2", 0, 0.68), ("B1", 0, 0.72), ("B2", 0, 0.78), ("A3", 0, 0.82), ("A3", 15, 0.86),
-          ("山", 0, 0.88), ("山", 3, 0.95), ("海原", 0, 0.8), ("海原", 8, 0.66), ("海原", 15, 0.4)],
-         {}, flute_gain={n: 1.15 for n in NAMES}, intro="静けさ", passing=True, tension=False)
-HORN = S.track("ホルン", "brass", patch="horn", volume=0.07, pan=-0.25, reverb=0.55, breath=False, attack=0.25, release=0.8, bright=-0.5, barGain=c.g())
-HORN2 = S.track("ホルン2", "brass", patch="horn", volume=0.055, pan=-0.15, reverb=0.55, breath=False, attack=0.25, release=0.8, bright=-0.5, barGain=c.g())
-TIMP = S.track("ティンパニ", "strings", patch="timpani", volume=0.1, pan=0, reverb=0.4, gainDb=-4, barGain=c.g())
-PIZZ = S.track("ピチカート（足どり）", "strings", patch="pizzicato", volume=0.06, pan=-0.35, reverb=0.4, barGain=c.g())
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.45, barGain=c.g())
-GLOCK = S.track("グロッケン", "bell", patch="glockenspiel", volume=0.028, pan=0.35, reverb=0.7, barGain=c.g())
-
-A = ["1:2 3:1 5:2 3:1", "4:2 6:1 5:3", "3:2 5:1 1':2 7:1", "6:3 5:3", "4:2 6:1 5:2 3:1", "2:2 4:1 3:2 1:1", "7,:2 2:1 5:2 4:1", "3:3 1:3",
-     "1:2 3:1 5:2 3:1", "4:2 6:1 5:3", "1':2 7:1 6:2 5:1", "4:3 6:3", "5:2 3:1 1:2 3:1", "2:2 4:1 7,:2 2:1", "1:2 5,:1 7,:2 2:1", "1:6"]
-Bm = ["5:3 1':3", "7:2 6:1 5:3", "6:3 2':3", "1':2 7:1 6:3", "5:2 6:1 7:2 1':1", "2':3 1':3", "7:2 6:1 5:2 4:1", "5:6",
-      "5:3 1':3", "2':2 1':1 7:3", "6:2 7:1 1':2 2':1", "3':6", "2':2 1':1 7:2 6:1", "5:2 4:1 3:3", "2:2 3:1 4:2 7,:1", "1:6"]
-play_melody(c, "A1", A, 4, "jig", density=0.4, seed=1001)
-play_melody(c, "A2", A, 4, "jig", density=0.7, seed=1002)
-play_melody(c, "B1", Bm, 4, "air", density=0.6, seed=1003)
-play_melody(c, "B2", Bm, 4, "air", density=0.9, seed=1004)
-play_melody(c, "A3", A, 4, "jig", density=0.9, seed=1005)
-play_melody(c, "山", ["4:6", "5:6", "6:6", "6:5 R:1"], 4, "air", density=0)
-play_melody(c, "海原", ["1':6", "3':6", "2':3 1':3", "7:6", "1':6", "6:3 5:3", "4:6", "5:6", "1':6", "R:6", "5:6", "1':6", "R:6", "R:6", "R:6", "R:6"], 4, "air", density=0.6, seed=1006)
-
+         [("帆を張る", 0, 0.66), ("マーチ", 0, 0.7), ("マーチ", 23, 0.75), ("つなぎ1", 0, 0.76), ("ジグ", 0, 0.8), ("ジグ", 31, 0.85),
+          ("つなぎ2", 0, 0.86), ("リール", 0, 0.88), ("リール", 40, 0.94), ("リール", 47, 0.96)],
+         {}, flute_gain={n: 1.1 for n in NAMES}, intro="帆を張る", passing=True, tension=False)
 B = S.beats
+DR = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.1, pan=-0.12, reverb=0.3, modulate=False,
+             barGain=[round(x * (1.6 if c.scene_of_bar[b] == "帆を張る" else 1.0), 3) for b, x in enumerate(c.g())])
+GT = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.055, pan=0.3 + 0.05 * i, reverb=0.3, barGain=c.g()) for i in range(5)]
+CB = S.track("コントラバス", "strings", patch="contrabass", volume=0.08, pan=0.0, reverb=0.3, barGain=c.g())
+F2 = S.track("2本目の笛", "panflute", patch="flute", volume=0.26, bright=-0.8, pan=0.3, reverb=0.5, breath=False,
+             noRestrike=True, mono=True, sustain=1.05, phrase=16, barGain=c.g())
+
+# ---------- マーチ（D イオニア。4/4 の1小節＝マーチ2小節） ----------
+KD, KE, KA = Key("D", "major", 4), Key("E", "mixolydian", 4), Key("A", "major", 4)
+MA = ["1:1 3:0.75 2:0.25 1:1 5,:1", "1:0.5 2:0.5 3:0.5 4:0.5 5:2", "6:1 5:0.75 4:0.25 3:1 1:1", "2:1.5 3:0.5 2:2",
+      "1:1 3:0.75 2:0.25 1:1 5,:1", "1:0.5 2:0.5 3:0.5 4:0.5 5:1 1':1", "7:1 6:0.75 5:0.25 4:1 2:1", "1:2 R:2"]
+MB = ["5:1 1':0.75 7:0.25 1':1 3':1", "2':1 1':0.5 7:0.5 6:2", "5:1 6:0.75 7:0.25 1':1 5:1", "4:0.5 5:0.5 6:0.5 7:0.5 1':2",
+      "3':1 2':0.75 1':0.25 7:1 5:1", "6:1 1':0.5 7:0.5 6:1 4:1", "5:1 3:0.75 2:0.25 1:1 7,:1", "1:2 R:2"]
+play_melody(c, "マーチ", MA + MB + MA[:7] + ["1:2 5:1 7,:1"], 4, "march", key=KD, density=0.6, seed=1001)
+play_melody(c, "つなぎ1", ["1:4"], 4, "air", key=KD, density=0.0)
+
+# ---------- ジグ（E ミクソリディア。1拍＝付点4分、8分＝1/3拍） ----------
+def jig(bars8):
+    """8分を1とした6/8の小節（2つで4拍の小節1つ）を、1拍＝付点4分の長さに直す"""
+    out = []
+    for a, b in zip(bars8[0::2], bars8[1::2]):
+        toks = []
+        for s in (a, b):
+            for t in s.split():
+                n, L = t.split(":"); toks.append(f"{n}:{round(float(L) / 3, 4)}")
+        out.append(" ".join(toks))
+    return out
+JA = ["1:2 3:1 5:2 3:1", "6:2 5:1 3:2 2:1", "1:2 3:1 5:2 1':1", "7:3 5:3",
+      "1:2 3:1 5:2 3:1", "6:2 5:1 6:2 1':1", "7:2 5:1 4:2 2:1", "1:3 R:3"]
+JB = ["5:2 1':1 2':2 1':1", "3':2 2':1 1':2 7:1", "6:2 1':1 2':2 1':1", "7:3 5:3",
+      "5:2 1':1 2':2 3':1", "4':2 3':1 2':2 1':1", "7:2 5:1 4:2 2:1", "1:3 R:3"]
+jl = jig(JA) + jig(JA) + jig(JB) + jig(JB)
+n1 = play_melody(c, "ジグ", jl + jl, 4, "march", key=KE, density=0.8, seed=1002)
+j2 = c.s0["ジグ"] * B + 16 * B                 # 2回目から2本目の笛（3度下）
+for st, L, m, mk in n1:
+    if st >= j2 and L >= 0.3:
+        h = m - 3 if (m - 3 - KE.t) % 12 in [x % 12 for x in KE.steps] else m - 4
+        F2.at(round(st + 0.015, 4), f"{nm(h)}:{round(L, 4)}")
+play_melody(c, "つなぎ2", ["5:4"], 4, "air", key=KE, density=0.0)
+
+# ---------- リール（A イオニア） ----------
+RA = ["1:0.5 3:0.5 5:0.5 3:0.5 1':0.5 5:0.5 3:0.5 5:0.5", "6:0.5 5:0.5 4:0.5 3:0.5 2:0.5 3:0.5 4:0.5 2:0.5",
+      "1:0.5 3:0.5 5:0.5 3:0.5 1':0.5 5:0.5 3:0.5 1:0.5", "2:0.5 7,:0.5 5,:0.5 7,:0.5 2:1 1:0.5 7,:0.5",
+      "1:0.5 3:0.5 5:0.5 3:0.5 1':0.5 5:0.5 3:0.5 5:0.5", "6:0.5 1':0.5 6:0.5 4:0.5 5:0.5 3:0.5 2:0.5 1:0.5",
+      "2:0.5 4:0.5 6:0.5 4:0.5 5:0.5 3:0.5 2:0.5 7,:0.5", "1:1 3:0.5 2:0.5 1:2"]
+RB = ["1':0.5 7:0.5 6:0.5 5:0.5 6:0.5 1':0.5 2':0.5 1':0.5", "7:0.5 5:0.5 3:0.5 5:0.5 7:1 6:0.5 5:0.5",
+      "6:0.5 4:0.5 2:0.5 4:0.5 6:0.5 1':0.5 2':0.5 1':0.5", "7:0.5 6:0.5 5:0.5 3:0.5 2:1 5:1",
+      "1':0.5 7:0.5 6:0.5 5:0.5 6:0.5 1':0.5 2':0.5 1':0.5", "7:0.5 5:0.5 3:0.5 5:0.5 6:0.5 4:0.5 2:0.5 4:0.5",
+      "5:0.5 3:0.5 1:0.5 3:0.5 2:0.5 4:0.5 7,:0.5 2:0.5", "1:1 3:0.5 2:0.5 1:2"]
+RB_END = RB[:7] + ["1':1 R:3"]                  # 最後：全員で1拍だけ鳴らして切る
+nr = play_melody(c, "リール", RA + RA + RB + RB + RA + RB_END, 4, "reel", key=KA, density=0.9, seed=1003)
+for st, L, m, mk in nr:                          # リールは2本で（3度下。速い装飾音は重ねない）
+    if L >= 0.4:
+        h = m - 3 if (m - 3 - KA.t) % 12 in [x % 12 for x in KA.steps] else m - 4
+        F2.at(round(st + 0.015, 4), f"{nm(h)}:{round(L, 4)}")
+
+# ---------- 伴奏 ----------
+def rt(ch, lo=40):
+    r = PC[re.match(r"^([A-G][#b]?)", ch).group(1)]
+    return lo + (r - lo) % 12
+T3 = 1 / 3
 for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    t = tones(ch, "D3", "D6")
-    if n == "静けさ":
-        c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[2], t[4 % len(t)], t[2])))
-        c.HARP2.bar(b, f"{nm(r)}:3 {nm(r + 7)}:3")          # 竪琴の左手（低い所で船をつなぐ綱）
-        CELLO.bar(b, f"{nm(r)}:6")                            # 岸の下の水（うすく）
-        v = voice(ch, 55, 2, spread=True)
-        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:6")
+    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]; r = rt(ch)
+    if n == "帆を張る":       # ボーランの連打。16分で、だんだん強く
+        for q in range(16 if i == 0 else 12):
+            DR.at(round(b * B + q * 0.25, 3), f"{'D3' if q % 4 == 0 else 'A3'}:0.25{',,' if (i == 0 and q < 8) else ',' if i == 0 else ''}")
+        if i == 1: DR.at(b * B + 3, "D3:1!")
         continue
-    if n in ("A1", "A2", "A3"):
-        c.HARP.bar(b, f"{nm(t[0])}:2 {nm(t[2])}:1 {nm(t[4 % len(t)])}:2 {nm(t[2])}:1")
-        v = voice(ch, 50 if n != "A3" else 57, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6" if n != "A3" else " ".join(f"{nm(v[j])}:1" for _ in range(6)))
-        if n != "A1": PIZZ.bar(b, f"{nm(r + 12)}:3 {nm(r + 19)}:3"); CELLO.bar(b, f"{nm(r)}:6")
-    if n in ("B1", "B2"):
-        h = tones(ch, "G3", "G4"); HORN.bar(b, f"{nm(h[0])}:6"); HORN2.bar(b, f"{nm(h[1])}:6")
-        c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[5 % len(t)], t[4 % len(t)], t[2])))
-        CELLO.bar(b, f"{nm(r)}:6")
-        if n == "B2":
-            v = voice(ch, 57, 3, spread=True)
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
-            if i % 8 == 7: TIMP.bar(b, f"R:3 {nm(r)}:3")
-    if n == "A3" and i % 4 == 0: TIMP.bar(b, f"{nm(r)}:3 R:3")
-    if n == "山":
-        v = voice(ch, 57, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
-        h = tones(ch, "G3", "G4"); HORN.bar(b, f"{nm(h[0])}:6"); HORN2.bar(b, f"{nm(h[1])}:6")
-        CELLO.bar(b, f"{nm(r)}:6")
-        if i >= 2: TIMP.bar(b, " ".join("D3:0.5" for _ in range(12 if i == 2 else 10)) + (" R:1" if i == 3 else ""))
-    if n == "海原":
-        v = voice(ch, 60, 3, spread=True)
-        if i < 14:
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
-            CELLO.bar(b, f"{nm(r)}:6")
-        if i < 8: h = tones(ch, "G3", "G4"); HORN.bar(b, f"{nm(h[0])}:6")
-        if i % 2 == 0 and i < 12: GLOCK.bar(b, f"{nm(tones(ch, 'C6', 'C7')[i // 2 % 3])}:6")
-        if i % 2 == 1 and i < 13: c.HARP2.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "G4", "G6")[:6]))
-# 山の最後の1拍：全部が息をのむ
-c.SIL.add(c.s0["山"] + 3, 5, 6)
-rich(c, choir_scenes=["B2", "A3"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の010（第2版）。帆を上げて船が海へ出る。6/8 の行進（付点4分＝52）、G ミクソリディア。A–A–B–B–A′：竪琴だけの静けさ→行進の節→帆が風をはらむ（ホルン）→全員の行進→ティンパニのロールと1拍の無音→広い海原。",
-       harm_scenes=None, tail_scene="海原", fill=False, pads=True, pad_scenes=["B1", "B2", "A3", "海原"])
+    if n in ("つなぎ1", "つなぎ2"):   # つなぎ：ボーランだけが次の拍子を打つ（ジグは3つずつ、リールは2つずつ）
+        if n == "つなぎ1":
+            for q in range(12): DR.at(round(b * B + q * T3, 4), f"{'D3' if q % 3 == 0 else 'A3'}:{round(T3, 4)}{'!' if q % 3 == 0 else ','}")
+        else:
+            for q in range(8): DR.at(b * B + q * 0.5, f"{'D3' if q % 2 == 0 else 'A3'}:0.5{'!' if q % 4 == 0 else ','}")
+        CB.at(b * B, f"{nm(r)}:4,")
+        continue
+    if n == "マーチ":
+        DR.bar(b, "D3:1! A3:1, D3:1 A3:0.5, A3:0.5,")
+        strum(GT, b, B, ch, [(0, 1, "d", "!"), (1, 1, "d", ","), (2, 1, "d", ""), (3, 1, "d", ",")])
+        CB.bar(b, f"{nm(r)}:1 R:1 {nm(r + 7 - (12 if r + 7 > 50 else 0))}:1 R:1")
+    elif n == "ジグ":         # 1拍＝付点4分。ジグの1小節：下・上・上・下・上・上
+        for half in (0, 2):
+            for q, (nn, mk) in enumerate([("D3", "!"), ("A3", ","), ("A3", ","), ("D3", ""), ("A3", ","), ("A3", ",")]):
+                DR.at(round(b * B + half + q * T3, 4), f"{nn}:{round(T3, 4)}{mk}")
+            strum(GT, b, B, ch, [(half, 1, "d", "!"), (half + 1, 2 * T3, "d", ""), (half + 1 + 2 * T3, T3, "u", ",")])
+            CB.at(b * B + half, f"{nm(r)}:1"); CB.at(b * B + half + 1, f"{nm(r + 7 - (12 if r + 7 > 50 else 0))}:1,")
+    elif n == "リール":
+        if i == 47:            # 最後：全員で1拍だけ
+            DR.at(b * B, "D3:1!"); strum(GT, b, B, ch, [(0, 1, "d", "!")]); CB.at(b * B, f"{nm(r)}:1!")
+            continue
+        bodhran(DR, b, B, "reel", var=1 if i % 8 == 7 else 0)
+        strum(GT, b, B, ch, [(0, 1, "d", "!"), (1, 0.5, "d", ","), (1.5, 0.5, "u", ","), (2, 1, "d", ""), (3, 0.5, "d", ","), (3.5, 0.5, "u", ",")])
+        CB.bar(b, f"{nm(r)}:1 {nm(r + 7 - (12 if r + 7 > 50 else 0))}:1, {nm(r)}:1 {nm(r + 7 - (12 if r + 7 > 50 else 0))}:1,")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.22 --master -15 --widen 1.25 --side-hpf 200",
+       "ケルト・フルート100曲の010（第3版）。第1章の終わり、朝の港から船出する。マーチ（D）→ ジグ（E ミクソリディア）→ リール（A）の3つの踊りの曲をつないだセットで、曲が変わるたびに調が一段上がり、速くなる（帆が風をつかむ）。伴奏の主役はボーラン、脇にギターのストロークとコントラバス。ジグの2回目から2本目の笛。ボーランの連打で始まり、最後は全員で1拍だけ鳴らして切る。",
+       harm_scenes=None, tail_scene="リール", double=False, fill=False, pads=False)
+air = {"pre": 0.2, "tail": 4.0, "layers": [{"file": "1046", "db": -44, "hp": 110, "lp": 5000, "wide": 0.012, "duck": 0.4, "fade": 6}],
+       "fx": {"far": {"db": -30, "delay": 0.16, "lp": 3000, "rt": 2.0}}}
+json.dump(air, open("/tmp/cel/w/air010.json", "w"), ensure_ascii=False)
