@@ -34,6 +34,8 @@ c = make(S, NAMES,
          {}, flute_gain={n: 1.1 for n in NAMES}, intro="足取り", passing=True, tension=False)
 DRUM = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.1, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
 GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.05, pan=0.35 + 0.04 * i, reverb=0.35, barGain=c.g()) for i in range(5)]
+THICK = [S.track(f"厚い弦{i + 1}", "strings", patch="slowStrings", volume=0.045, pan=[-0.55, 0.55, 0.0][i], reverb=0.5, barGain=c.g()) for i in range(3)]   # 2026-10-29: 023 で 7.27→7.53
+CB = S.track("コントラバス", "strings", patch="contrabass", volume=0.07, pan=0.0, reverb=0.4, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.4, barGain=c.g())
 
 A = ["1:0.5 3:0.5 5:0.5 3:0.5 4:0.5 6:0.5 5:0.5 4:0.5", "3:0.5 5:0.5 1':0.5 5:0.5 6:1 5:1",
@@ -54,6 +56,9 @@ HP = [(0, 1, "d", "!"), (1, 0.5, "d", ","), (1.5, 0.5, "u", ","), (2, 1, "d", ""
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     r = [x for x in range(36, 48) if x % 12 == PC[ch[0] if len(ch) == 1 or ch[1] not in "#b" else ch[:2]]][0]
+    w = voice(ch, 50, 3, spread=True)   # 厚い弦（低めの3声）：曲がり角でも小さく残す（落ちない）
+    for j in range(3): THICK[j].bar(b, f"{nm(w[j])}:4")
+    if n not in ("足取り",): CB.bar(b, f"{nm(r)}:4")
     if n == "足取り":   # 足取り：ボーランと、チェロの低い D が「歩き出す前の地面」、ギターの小さな刻み
         bodhran(DRUM, b, B, "hornpipe")
         CELLO.bar(b, f"{nm(r + 12)}:1.5 R:0.5 {nm(r + 12)}:1.5 R:0.5")
