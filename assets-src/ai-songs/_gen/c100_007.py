@@ -1,83 +1,99 @@
-# ケルト・フルート100曲「銀の笛と百の夜」007 潮の呼び声 Call of the Tide — 第2版（2026-10-28）
-# イメージ: 夕方の砂浜。潮がゆっくり引いていき（旋律が上から下りてくる）、また満ちてくる（下から上がっていく）。
-#   それが2回。2回目の満ち潮は、1回目より高い所まで来る。最後は波の音に戻る。
-# 形（台帳）: ゆっくりのジグ（6/8・付点4分＝42）。8小節で1つの波（下りる→上がる）。2回の満ち引き＝2つの小さな山。D ドリア。
-# 編曲の表:
-#   波      : 波の音→ナイロンギターだけ（1本ずつのアルペジオ）
-#   引く1   : 笛が上から下りる。ギターはまばら（付点4分2つ）
-#   満ちる1 : 笛が下から上がる。ギターは8分で細かく、竪琴が加わる（山1）
-#   凪ぎ    : 引き切った浜。笛は低い所で、ギターとチェロだけ
-#   引く2   : もう一度下りる。チェロが笛と反対向きに上がる
-#   満ちる2 : いちばん高い所まで（山2）。弦と竪琴
-#   波に戻る: 笛の短い結びのあと、ギターがゆっくりになり、波の音
-import sys
+# ケルト・フルート100曲「銀の笛と百の夜」007 潮の呼び声 Call of the Tide — 第3版（2026-10-29 作り直し。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 夕方の浜。沖の岩で、アザラシが鳴いている。この海辺には「アザラシの民」の昔話がある（陸に上がると人になり、やがて海に帰っていく）。
+#   エイラは舟歌を吹く。陸の節と、海の節が交互に来る。陸の節は長調、海の節は同じ形のまま暗い色（ドリア）に変わる。
+#   やがて歌は沖へ引かれ、海の節だけになる。最後に陸の節に戻ろうとするが、主音に帰りきらずに、5度で止まる。
+# 調べ: あいだ。形: 舟歌（4小節の陸の節と4小節の海の節が交互）。6/8・付点4分＝56（8分＝168）。
+# 旋法: 陸＝D イオニア（F♯・C♯）、海＝D ドリア（F・C）。（表では「6度だけ変わる」と書いたが、イオニアとドリアは3度と7度が変わる。表を直した）
+# 主役は笛: 低め・うねる（D4〜F♯5）。装飾は少なめ、すべり込みで。
+# 伴奏: ビオラとチェロの二重奏だけ（波）。チェロは6つの8分で上がって下がる波、ビオラは付点4分2つの、もう1つの波。
+#   竪琴・ギター・ピアノ・パッド・弦の和音の持続・打楽器・2本目の笛は使わない。
+# 始まり: 低い弦のうねり（チェロとビオラの長い音がふくらむ）→ 終わり: 5度（ラ）で止まり、解決しない。
+# 山: 小さなうねりのくり返し（4小節ごとにふくらむ）。舟歌B（真ん中）が少しだけ高い。最初が大きい形にはしない。
+import sys, json
 from c100_common import *
 from c100_v2 import *
 
-BPM = 126   # 8分音符＝126（付点4分＝42）
-S = Song("C100", "007-call-of-the-tide", "潮の呼び声", "Call of the Tide", BPM, 6, "D", "dorian", "ケルト（幻想）")
+BPM = 168
+S = Song("C100", "007-call-of-the-tide", "潮の呼び声", "Call of the Tide", BPM, 6, "D", "major", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.4})
-PC_ = ["Dm", "C", "Am", "Dm", "C", "Am", "G", "Dm", "F", "C", "G", "Am", "Dm", "C", "G", "Dm"]
-FC_ = ["Dm", "G", "Am", "C", "Am", "F", "G", "Am", "F", "C", "Dm", "G", "Dm", "G", "C", "Dm"]
-S.scene("波", 4, "intro", ["Dm", "Dm", "C", "Dm"])
-S.scene("引く1", 16, "verse", PC_)
-S.scene("満ちる1", 16, "chorus", FC_)
-S.scene("凪ぎ", 8, "break", ["Dm", "C", "Dm", "Am", "Dm", "C", "Dm", "Dm"])
-S.scene("引く2", 16, "verse", PC_)
-S.scene("満ちる2", 16, "chorus", FC_)
-S.scene("波に戻る", 6, "outro", ["Dm", "C", "Dm", "Dm", "Dm", "Dm"])
-NAMES = ["波", "引く1", "満ちる1", "凪ぎ", "引く2", "満ちる2", "波に戻る"]
+S.extra.update({"human": 0.4, "rubato": 0.2})
+KL = Key("D", "major", 4); KS = Key("D", "dorian", 4)
+L1C, S1C = ["D", "G", "Em", "A"], ["Dm", "C", "C", "Dm"]
+L2C, S2C = ["D", "A", "Em", "D"], ["Am", "Dm", "C", "Dm"]
+LBC, SBC = ["D", "G", "A", "D"], ["Dm", "Am", "G", "Am"]
+OKI = ["Dm", "C", "Dm", "Am"] * 4
+S.scene("うねり", 4, "intro", ["D", "D", "Dm", "Dm"])
+S.scene("呼び声", 4, "verse", S1C)
+S.scene("舟歌A", 32, "verse", (L1C + S1C + L2C + S2C) * 2)
+S.scene("舟歌B", 32, "chorus", (LBC + SBC) * 4)
+S.scene("沖", 16, "verse", OKI)
+S.scene("舟歌A2", 16, "verse", L1C + S1C + L2C + S2C)
+S.scene("引き潮", 8, "outro", ["D", "G", "Em", "A", "A", "A", "A", "A"])
+NAMES = ["うねり", "呼び声", "舟歌A", "舟歌B", "沖", "舟歌A2", "引き潮"]
+pts = [("うねり", 0, 0.6), ("呼び声", 0, 0.62)]
+for n, base in [("舟歌A", 0.68), ("舟歌B", 0.76), ("沖", 0.66), ("舟歌A2", 0.72)]:
+    for q in range(0, {"舟歌A": 32, "舟歌B": 32, "沖": 16, "舟歌A2": 16}[n], 4):   # 4小節ごとに小さくふくらむ（波）
+        pts += [(n, q, base - 0.03), (n, q + 2, base + 0.04)]
+pts += [("引き潮", 0, 0.66), ("引き潮", 4, 0.62), ("引き潮", 7, 0.56)]
+c = make(S, NAMES, pts, {}, flute_gain={n: 1.15 for n in NAMES}, intro="うねり", passing=True, tension=False)
+S.fix_avoid = lambda t: 0      # 海の節の F・C（ドリア）を和音に合わせて直されないように
+B = S.beats
+VC = S.track("チェロ（波）", "strings", patch="cello", volume=0.1, pan=-0.3, reverb=0.5, barGain=c.g())
+VA = S.track("ビオラ（もう1つの波）", "strings", patch="viola", volume=0.075, pan=0.35, reverb=0.55, barGain=c.g())
 
-c = make(S, NAMES,
-         [("波", 0, 0.6), ("引く1", 0, 0.62), ("引く1", 15, 0.58), ("満ちる1", 0, 0.62), ("満ちる1", 7, 0.78), ("満ちる1", 15, 0.62),
-          ("凪ぎ", 0, 0.56), ("引く2", 0, 0.62), ("満ちる2", 0, 0.66), ("満ちる2", 7, 0.88), ("満ちる2", 15, 0.66), ("波に戻る", 0, 0.56), ("波に戻る", 5, 0.34)],
-         {}, flute_gain={n: 1.2 for n in NAMES}, intro="波", passing=True, tension=False)
-GT = S.track("ナイロンギター", "guitar", patch="nylonGuitar", volume=0.13, pan=0.3, reverb=0.4, barGain=c.g())
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.08, pan=0.2, reverb=0.45, barGain=c.g())
+# ---------- 旋律（1＝D4。陸はイオニア、海はドリアで、同じ度数が別の音になる） ----------
+L1 = ["1:2 2:1 3:2 5:1", "6:3 5:2 3:1", "2:2 3:1 5:2 6:1", "5:6"]
+S1 = ["5:2 3:1 2:2 1:1", "7,:3 1:2 3:1", "4:2 3:1 2:2 7,:1", "1:6"]
+L2 = ["3:2 5:1 6:2 1':1", "7:3 6:2 5:1", "6:2 5:1 3:2 2:1", "3:6"]
+S2 = ["5:2 6:1 7:2 6:1", "5:3 3:3", "4:2 3:1 1:2 7,:1", "1:6"]
+LB = ["5:2 6:1 1':3", "2':2 1':1 6:3", "5:2 6:1 1':2 2':1", "3':6"]
+SB = ["3':2 2':1 1':3", "7:2 6:1 5:3", "4:2 5:1 7:2 6:1", "5:6"]
+def sing(scene, blocks, dens, seed):
+    """blocks: [(節, 'L' か 'S')] を4小節ずつ置く。陸はイオニア、海はドリアの鍵で"""
+    s0 = c.s0[scene]; S_ = S
+    for q, (bl, side) in enumerate(blocks):
+        sub = f"{scene}_{q}"
+        c.s0[sub] = s0 + 4 * q; c.sc_len[sub] = 4
+        play_melody(c, sub, bl, 4, "air", key=KL if side == "L" else KS, density=dens, seed=seed + q)
+sing("呼び声", [(["R:6", "R:3 5:3", "4:2 3:1 2:2 7,:1", "1:6"], "S")], 0.1, 700)        # アザラシの呼び声（海の節のかけら）
+sing("舟歌A", [(L1, "L"), (S1, "S"), (L2, "L"), (S2, "S")] * 2, 0.25, 710)
+sing("舟歌B", [(LB, "L"), (SB, "S")] * 4, 0.35, 730)
+OK = ["5:6", "4:3 3:3", "1:6", "R:6", "7,:6", "1:3 3:3", "4:6", "R:6",
+      "5:3 7:3", "1':6", "7:3 5:3", "R:6", "4:3 3:3", "1:6", "7,:6", "R:6"]           # 沖：海の節だけ。長い音で引かれていく
+sing("沖", [(OK[q * 4:(q + 1) * 4], "S") for q in range(4)], 0.15, 750)
+sing("舟歌A2", [(L1, "L"), (S1, "S"), (L2, "L"), (S2, "S")], 0.3, 760)
+sing("引き潮", [(L1[:3] + ["5:6"], "L"), (["5:6", "R:6", "R:6", "R:6"], "L")], 0.2, 770)   # 陸の節に戻るが、5（ラ）で止まる
 
-PULL = ["5':3 4':1 3':2", "2':2 1':1 7:3", "6:3 5:1 4:2", "5:6",
-        "4':3 3':1 2':2", "1':2 7:1 6:3", "5:3 4:1 3:2", "4:6",
-        "3':3 2':1 1':2", "7:2 6:1 5:3", "4:3 3:1 2:2", "3:6",
-        "5:3 6:1 7:2", "1':2 7:1 6:3", "5:2 4:1 3:2 2:1", "1:6"]
-FLOW = ["1:3 2:1 3:2", "4:2 5:1 6:3", "5:3 6:1 7:2", "1':6",
-        "7:3 1':1 2':2", "3':2 2':1 1':3", "2':3 3':1 4':2", "5':6",
-        "4':3 3':1 2':2", "3':2 2':1 1':3", "7:3 6:1 5:2", "6:6",
-        "5:3 4:1 3:2", "4:2 3:1 2:3", "3:2 2:1 1:2 7,:1", "1:6"]
-FLOW2 = FLOW[:4] + ["1':3 2':1 3':2", "4':2 5':1 6':3", "5':3 6':1 7':2", "6':6"] + FLOW[8:]
-play_melody(c, "引く1", PULL, 4, "air", density=0.7, seed=701)
-play_melody(c, "満ちる1", FLOW, 4, "air", density=0.9, seed=702)
-play_melody(c, "凪ぎ", ["5,:6", "1:3 2:3", "3:6", "2:6", "1:3 7,:3", "1:6", "R:6", "R:6"], 4, "air", density=0.5, seed=703)
-play_melody(c, "引く2", PULL, 4, "air", density=0.9, seed=704)
-play_melody(c, "満ちる2", FLOW2, 4, "air", density=1.0, seed=705)
-play_melody(c, "波に戻る", ["5:3 4:1 3:2", "2:6", "1:6", "1:6", "R:6", "R:6"], 4, "air", density=0.5, seed=706)
-
-B = S.beats; prev = 48
+# ---------- ビオラとチェロの二重奏（波） ----------
+def rt(ch, lo=38):
+    r = PC[re.match(r"^([A-G][#b]?)", ch).group(1)]
+    return lo + (r - lo) % 12
 for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    t = tones(ch, "D3", "D5")
-    if n in ("引く1", "引く2", "凪ぎ") or (n == "波" and i < 2) or (n == "波に戻る" and i >= 3):
-        if not (n == "波に戻る" and i >= 5):
-            GT.bar(b, f"{nm(t[0])}:1 {nm(t[2])}:1 {nm(t[3])}:1 {nm(t[4 % len(t)])}:3")        # 1本ずつ、最後は長く
+    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
+    r = rt(ch); tn = [x for x in range(r, r + 26) if x % 12 in chord_pcs(ch)]
+    if n == "うねり":       # 低い弦のうねり：長い音がふくらむ
+        VC.at(b * B, f"{nm(r)}:6"); VA.at(b * B + 3 * (i % 2), f"{nm(tn[2] + 12 if tn[2] + 12 < 70 else tn[2])}:{6 - 3 * (i % 2) + 3},")
+        continue
+    if n == "引き潮" and i >= 4:   # 5度で止まる：チェロは A と E、ビオラは E を長く
+        if i == 4: VC.at(b * B, "A2:12"); VA.at(b * B, "E4:12")
+        if i == 6: VC.at(b * B, "E3:9,"); VA.at(b * B, "A3:9,")
+        continue
+    # チェロ：6つの8分で上がって下がる波。沖では1小節に2つの長い音（ゆっくりした大きな波）
+    if n == "沖":
+        VC.at(b * B, f"{nm(r)}:3"); VC.at(b * B + 3, f"{nm(tn[1])}:3,")
     else:
-        GT.bar(b, " ".join(f"{nm(t[x % len(t)])}:1" for x in ((0, 2, 3, 4, 3, 2) if i % 2 == 0 else (1, 3, 4, 5, 4, 3))))
-    if n in ("波", "凪ぎ", "引く1") or (n == "波に戻る" and i < 5):   # 空間の床：うすい弦（前奏と凪ぎで音が落ちすぎないように）
-        v = voice(ch, 52, 2, spread=True)
-        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:6")
-    if n in ("満ちる1", "満ちる2"):
-        c.HARP.bar(b, f"{nm(r)}:3 {nm(r + 12)}:3")
-        c.HARP2.bar(b, f"R:3 {nm(tones(ch, 'D5', 'D6')[0])}:3") if i % 2 == 1 else None
-    if n in ("凪ぎ", "引く2", "満ちる2", "波に戻る") and not (n == "波に戻る" and i >= 5):
-        cand = [m for m in range(40, 57) if m % 12 in chord_pcs(ch)]
-        a = min(cand, key=lambda m: abs(m - prev)); z = min([m for m in cand if m != a], key=lambda m: abs(m - a))
-        CELLO.bar(b, f"{nm(a)}:3 {nm(z)}:3"); prev = z
-    if n == "満ちる2" or (n == "満ちる1" and i >= 4):
-        v = voice(ch, 57, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
+        seq = [tn[0], tn[1], tn[2], tn[3], tn[2], tn[1]]
+        VC.bar(b, " ".join(f"{nm(x)}:1{'' if q in (0, 3) else ','}" for q, x in enumerate(seq)))
+    # ビオラ：付点4分2つ。旋律が長い音の所で動き、句の終わりの小節は休む（笛に場所をあける）
+    vt = [x for x in range(55, 70) if x % 12 in chord_pcs(ch)]
+    if n == "呼び声": VA.at(b * B, f"{nm(vt[0])}:6,"); continue
+    if i % 4 == 3 and n != "沖": VA.at(b * B, f"{nm(vt[1])}:6,"); continue
+    a, z = (vt[0], vt[1]) if (b // 2) % 2 == 0 else (vt[2] if len(vt) > 2 else vt[1], vt[0])
+    VA.at(b * B, f"{nm(a)}:3"); VA.at(b * B + 3, f"{nm(z)}:3,")
 
-rich(c, choir_scenes=["満ちる1", "満ちる2"], pulse_scenes=["引く1", "満ちる1", "引く2", "満ちる2"], guitar=False, pizz=False, inner=True, choir_vol=0.11)
-sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の007（第2版）。引き潮と満ち潮の砂浜。ゆっくりのジグ（6/8・付点4分＝42）、D ドリア。8小節で1つの波（旋律が下りる→上がる）を2回。2回目の満ち潮はより高く。ナイロンギターの1本ずつのアルペジオ。",
-       harm_scenes=None, tail_scene="波に戻る", fill=False, pads=True, pad_scenes=["引く1", "満ちる1", "凪ぎ", "満ちる2", "引く2", "波に戻る"], floor=True)
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.3 --master -15 --widen 1.2 --side-hpf 200",
+       "ケルト・フルート100曲の007（第3版）。夕方の浜で、アザラシの民の昔話を思いながら吹く舟歌。陸の節（D イオニア）と海の節（D ドリア）が4小節ずつ交互に来る。6/8・付点4分＝56。伴奏はチェロとビオラの二重奏の波だけ。沖では海の節だけになり、最後は陸の節に戻ろうとして5度（ラ）で止まる。",
+       harm_scenes=None, tail_scene="引き潮", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 7.0, "layers": [{"file": "1046", "db": -40, "hp": 100, "lp": 5000, "lfo": [round(4 * 6 * 60 / BPM, 1), 0.3], "wide": 0.012, "duck": 0.4, "fade": 8}],
+       "fx": {"far": {"db": -28, "delay": 0.22, "lp": 2800, "rt": 3.0}}}
+json.dump(air, open("/tmp/cel/w/air007.json", "w"), ensure_ascii=False)
