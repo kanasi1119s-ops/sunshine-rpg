@@ -46,18 +46,17 @@ play_melody(c, "澄んだ音", ["R:4", "R:2 5:2", "1':4", "1':4", "7:2 6:2", "5:
 B = S.beats
 for b in range(c.NB):
     n, i, L, k = S.scene_of(b); chs = S.chords[b].split("|")
-    if n == "水" and i == 0: continue
     for h, ch in enumerate(chs if len(chs) == 2 else chs * 2):
         v = voice(ch, 55 if n != "祈り2" or i < 8 else 59, 3, spread=True)
         for j in range(3): c.STR[j].at(b * B + 2 * h, f"{nm(v[j])}:2")
         r = low(ch, "C2"); r = r + 12 if r < 40 else r
-        if n != "水" and not (n == "澄んだ音" and i >= 10): CELLO.at(b * B + 2 * h, f"{nm(r)}:2")
+        if not (n == "澄んだ音" and i >= 11): CELLO.at(b * B + 2 * h, f"{nm(r)}:2")
     if n == "祈り1" and i % 4 == 3:   # 祈りの句のあとの息：竪琴がそっと和音をなでる
         t = tones(chs[0], "D4", "D6"); c.HARP2.bar(b, " ".join(f"{nm(x)}:{0.2 if j < 3 else 3.4}" for j, x in enumerate(t[:4])))
     if n == "祈り2" or (n == "澄んだ音" and 2 <= i < 8):
         t = tones(chs[0], "D3", "D5"); c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[2])))
 rich(c, choir_scenes=["祈り2"], pulse_scenes=["祈り1", "祈り2"], guitar=False, pizz=False, inner=True, choir_vol=0.11)
-sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
+sparkle(c, dense=True)   # 7.11 のあと：前奏の1小節目から弦、濃く。2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の026（第2版）。森の小さな滝の前の祈り。4/4・♩=54、B ドリア。弦のコラールの上で、少しずつ上がっては止まる祈りの節。途中で笛が滝の音の中に溶けて聞こえなくなり、やがて水の中から澄んだ長い音が浮かび上がる。",
        harm_scenes=None, tail_scene="澄んだ音", fill=False, pads=True, pad_scenes=["祈り1", "祈り2", "溶ける", "澄んだ音"])
