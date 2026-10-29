@@ -32,7 +32,7 @@ c = make(S, NAMES,
          {}, flute_gain={n: 1.2 for n in NAMES}, intro="凪の前", passing=False, tension=False)
 B = S.beats
 # バグパイプのドローン（本物の録音）。ほんの少し左右に分けて、2本の管に聞こえるように。切れる所は release を短く（ふっと消える）
-DG3 = [round(x * 0.18, 3) for x in c.g()]; DG2 = [round(x * 0.3, 3) for x in c.g()]
+DG3 = [round(x * 0.8, 3) for x in c.g()]; DG2 = [round(x * 1.15, 3) for x in c.g()]   # 5回目は ×0.18・×0.3 で笛より24dB小さかった。probe で笛の約6dB下になる値に
 # 2026-10-30: 強さ（velocity×barGain）が 2 を超えると、作曲ソフトがほぼ無音にしていた（ai-song.ts を直した）。1〜3回目のドローンが小さかった本当の原因。
 #   直したあとに笛と並べて測ると、ドローンは barGain 0.7 で笛より約10dB大きい → G3 は ×0.18、G2 は ×0.3（G2 は G3 より小さく鳴る）で笛の少し下に
 DR = [S.track(f"ドローン（{nm_}）", "bagpipe", volume=v, pan=p, reverb=0.45, attack=0.35, release=0.06,
