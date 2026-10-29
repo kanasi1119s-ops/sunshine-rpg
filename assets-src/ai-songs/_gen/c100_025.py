@@ -17,7 +17,7 @@ from c100_common import *
 from c100_v2 import *
 from lm25_lib import tr_chord
 
-BPM = 88
+BPM = 86
 S = Song("C100", "025-stepping-stones", "飛び石", "Stepping Stones", BPM, 2, "C", "major", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
 S.extra.update({"human": 0.3})
