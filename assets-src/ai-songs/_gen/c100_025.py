@@ -1,4 +1,4 @@
-# ケルト・フルート100曲「銀の笛と百の夜」025 飛び石 Stepping Stones — 第2版（明るく速めの曲）（2026-10-28）
+# ケルト・フルート100曲「銀の笛と百の夜」025 飛び石 Stepping Stones — 第3版（明るく速めの曲）（2026-10-29: 7.26→ 023 で効いた厚い弦＋コントラバス、1周目から弦とチェロ、パッドを外す、終わりは弦の響き）
 # イメージ: 小川にならんだ飛び石を、ぴょん、ぴょんと渡っていく。跳ぶたびに足もとで水がはねる。途中でちょっとよろけて（短調の8小節）、
 #   また元気に跳んでいく。最後は対岸に着いて、みんなで「ぴょん」と止まる。
 # 形（台帳）: ポルカ（2/4・スタッカートの軽い跳び）。2曲のセット（C のポルカ → F のポルカ → C のポルカを全音上の D で）。
@@ -41,6 +41,8 @@ GT = S.track("ギター（裏拍）", "guitar", patch="nylonGuitar", volume=0.08
 GT2 = S.track("ギター（裏拍2）", "guitar", patch="nylonGuitar", volume=0.07, pan=0.42, reverb=0.3, barGain=c.g())
 PIZZ = S.track("ピチカート（低音）", "strings", patch="pizzicato", volume=0.075, pan=-0.2, reverb=0.3, barGain=c.g())
 CELLO = S.track("チェロ", "strings", patch="cello", volume=0.075, pan=0.15, reverb=0.35, barGain=c.g())
+THICK = [S.track(f"厚い弦{i + 1}", "strings", patch="slowStrings", volume=0.045, pan=[-0.55, 0.55, 0.0][i], reverb=0.5, barGain=c.g()) for i in range(3)]
+CB = S.track("コントラバス", "strings", patch="contrabass", volume=0.07, pan=0.0, reverb=0.4, barGain=c.g())
 DRUM = S.track("枠太鼓", "guitar", patch="frameDrum", volume=0.1, pan=-0.1, reverb=0.3, modulate=False, barGain=c.g())
 
 def st(bars): return [" ".join(t + ("'" if float(t.split(":")[1]) <= 0.5 and not t.startswith("R") else "") for t in s.split()) for s in bars]
@@ -68,7 +70,12 @@ for b in range(c.NB):
     if n == "ひと跳び":
         if i == 1: PIZZ.bar(b, f"{nm(r)}:0.5 R:0.5 {nm(r + 7)}:0.5 R:0.5"); GT.bar(b, f"R:0.5 {nm(t[1])}:0.5' R:0.5 {nm(t[1])}:0.5'"); DRUM.bar(b, "D3:0.5, R:0.5 D3:0.5, A3:0.5,")
         continue
+    if n in ("よろけ", "対岸"):
+        w = voice(ch, 52, 3, spread=True)
+        for j in range(3): THICK[j].bar(b, f"{nm(w[j])}:2")
+        CB.bar(b, f"{nm(r - 12 if r - 12 >= 28 else r)}:2")
     if n == "よろけ":
+        CELLO.bar(b, f"{nm(r)}:2")
         PIZZ.bar(b, f"{nm(r)}:1 R:1" if i % 2 == 0 else f"R:1 {nm(t[2])}:1")
         v = voice(ch, 55, 2, spread=True)
         for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:2")
@@ -84,8 +91,12 @@ for b in range(c.NB):
     GT.bar(b, f"R:0.5 {nm(t[1])}:0.5' R:0.5 {nm(t[1])}:0.5'"); GT2.bar(b, f"R:0.5 {nm(t[2])}:0.5' R:0.5 {nm(t[2])}:0.5'")
     DRUM.bar(b, "D3:0.5! A3:0.5, D3:0.5 A3:0.5," if n != "ポルカ1-1" or i >= 16 else "D3:0.5, R:0.5 D3:0.5, R:0.5")   # 跳ぶ足どり
     if n in ("ポルカ1-1", "ポルカ2-1"): c.HARP2.bar(b, f"R:1 {nm(t[2] + 12)}:0.5 {nm(t[1] + 12)}:0.5")   # 水のはね
-    if n in ("ポルカ1-2", "ポルカ2-1"):
-        v = voice(ch, 53, 2, spread=True)
+    w = voice(ch, 52, 3, spread=True)
+    for j in range(3): THICK[j].bar(b, f"{nm(w[j])}:2")
+    if n != "ポルカ1-1": CB.bar(b, f"{nm(r - 12 if r - 12 >= 28 else r)}:2")
+    if n == "ポルカ1-1": CELLO.bar(b, f"{nm(r)}:2")
+    if n in ("ポルカ1-1", "ポルカ1-2", "ポルカ2-1"):
+        v = voice(ch, 55, 2, spread=True)
         for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:2")
     if n == "ポルカ1-2": CELLO.bar(b, f"{nm(r)}:1 {nm(r + 7)}:1")
     if n in ("ポルカ1-2", "ポルカ2-2", "ポルカ1-3"): c.HARP.bar(b, f"{nm(t[0] + 12)}:0.5 {nm(t[2] + 12)}:0.5 {nm(t[1] + 12)}:0.5 {nm(t[2] + 12)}:0.5")
@@ -96,7 +107,7 @@ for b in range(c.NB):
 rich(c, choir_scenes=["ポルカ2-2", "ポルカ1-3"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.26 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の025（第2版・明るく速めの曲）。小川の飛び石を、ぴょんぴょん渡る。ポルカ（2/4・♩=88）のセット：C のポルカ→よろける短調の8小節→F のポルカ→D へ上がって最初のポルカ。最後は対岸で全員がぴょんと止まる。",
-       harm_scenes=None, tail_scene="対岸", fill=False, pads=True, pad_scenes=["ポルカ1-2", "ポルカ2-1", "ポルカ2-2", "ポルカ1-3"])
+       harm_scenes=None, tail_scene="対岸", fill=False, pads=False, floor=True)
 # 空気：跳ぶたびの水のはね（小川の録音を短く切って、よろけの所と所々に）
 BAR = 2 * 60 / BPM
 ev = [{"t": round((c.s0["ひと跳び"] + 1) * BAR, 2), "file": "0864", "db": -20, "len": 0.8, "pan": 0.2, "seek": 3.0, "hp": 300, "lp": 9000}]
