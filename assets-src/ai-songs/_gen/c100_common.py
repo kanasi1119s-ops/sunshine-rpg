@@ -355,3 +355,17 @@ def sparkle(c, scenes=None, glock_vol=0.03, harp_vol=0.05, seed=11, dense=False)
         if b % 2 == 0 or dense: GL.at(b * B + rg.choice((0, B / 2)), f"{nm(rg.choice(hi))}:{B / 2},")
         k = rg.randrange(3, 6) if dense else rg.randrange(2, 4); pos = sorted(rg.sample([q * (B / 8 if B in (4, 2) else 1) for q in range(8 if B in (4, 2) else int(B))], k))
         for q in pos: HP.at(b * B + q, f"{nm(rg.choice(hh))}:1,")
+
+
+def thick(c, scenes=None, lo=50, vol=0.045, cb_vol=0.07):
+    """速い曲の厚さ：低めの弦3声（左右と中央）＋コントラバスの根音を、場面の全小節に（2026-10-29: 023 7.27→7.53、025 7.26→7.66）"""
+    S = c.S; B = S.beats
+    TH = [S.track(f"厚い弦{i + 1}", "strings", patch="slowStrings", volume=vol, pan=[-0.55, 0.55, 0.0][i], reverb=0.5, barGain=c.g()) for i in range(3)]
+    CBt = S.track("コントラバス（厚さ）", "strings", patch="contrabass", volume=cb_vol, pan=0.0, reverb=0.4, barGain=c.g())
+    for b in range(c.NB):
+        if scenes is not None and c.scene_of_bar[b] not in scenes: continue
+        ch = S.chords[b].split("|")[0]
+        w = voice(ch, lo, 3, spread=True)
+        for j in range(3): TH[j].bar(b, f"{nm(w[j])}:{B}")
+        r = low(ch, "C2"); r = r + 12 if r < 36 else r
+        CBt.bar(b, f"{nm(r)}:{B}")

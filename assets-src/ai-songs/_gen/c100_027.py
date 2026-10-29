@@ -76,6 +76,7 @@ for b in range(c.NB):
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
     if n in ("親", "子1"): c.LOW.bar(b, f"{nm(r)}:6")
     if n in ("子2", "子3", "巣"): c.LOW.bar(b, f"{nm(r)}:3 {nm(r + 7)}:3")
+thick(c); sparkle(c)   # 2026-10-29: 7.61→ 速い曲の厚さ（023・025 で効いた）＋高いきらめき
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.28 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の027（第2版・明るく速めの曲）。川面を行く鴨の親子。6/8・付点4分＝72、F イオニア。母の笛のあとを、子の声（小さな笛・グロッケン・ピチカート）が1拍・1小節・1小節半遅れて追いかけ、子が増えていく。最後は巣でみんなそろって止まる。",
        harm_scenes=None, tail_scene="巣", fill=False, pads=True, pad_scenes=["子1", "子2", "子3", "巣"], double=False)
