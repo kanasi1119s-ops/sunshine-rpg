@@ -37,7 +37,7 @@ c = make(S, NAMES,
           ("小さなB", 0, 0.6), ("小さなB", 15, 0.62), ("約束", 0, 0.74), ("約束", 16, 0.82), ("約束", 28, 0.92), ("約束", 31, 0.88)],
          {}, flute_gain={n: 1.15 for n in NAMES}, intro="ひとりで", passing=True, tension=False)
 B = S.beats
-def gi(k=1.8): return [round(x * (k if c.scene_of_bar[b] == "ひとりで" else 1.0), 3) for b, x in enumerate(c.g())]
+def gi(k=1.0): return [round(x * (k if c.scene_of_bar[b] == "ひとりで" else 1.0), 3) for b, x in enumerate(c.g())]   # 1回目は ×1.8 で前奏が -17dB、次のワルツA が -25dB と「最初が大きい」形になった
 AM = S.track("アコーディオン（右手の節）", "accordion", volume=0.12, pan=-0.15, reverb=0.35, attack=0.05, release=0.35, barGain=gi())
 AB = S.track("アコーディオン（左手の低音）", "accordion", volume=0.09, pan=-0.2, reverb=0.3, attack=0.03, release=0.3, barGain=gi())
 AC = [S.track(f"アコーディオン（左手の和音{j + 1}）", "accordion", volume=0.05, pan=-0.2, reverb=0.3, attack=0.03, release=0.25, barGain=gi()) for j in range(3)]
