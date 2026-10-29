@@ -33,10 +33,11 @@ c = make(S, NAMES,
           ("つなぎ2", 0, 0.86), ("リール", 0, 0.88), ("リール", 40, 0.94), ("リール", 47, 0.96)],
          {}, flute_gain={n: 1.1 for n in NAMES}, intro="帆を張る", passing=True, tension=False)
 B = S.beats
-DR = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.3,   # 0.1 では全体の中でほとんど聞こえなかった（前奏 -61dB）
+DR = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.35, gainDb=18,   # 0.1 では全体の中でほとんど聞こえなかった（前奏 -61dB）
              pan=-0.12, reverb=0.3, modulate=False,
              barGain=[round(x * (2.2 if c.scene_of_bar[b] == "帆を張る" else 1.0), 3) for b, x in enumerate(c.g())])
-DR2 = S.track("ボーラン（交互）", "guitar", patch="frameDrum", volume=0.3, pan=-0.12, reverb=0.3, modulate=False, barGain=DR.spec["barGain"])
+DR2 = S.track("ボーラン（交互）", "guitar", patch="frameDrum", volume=0.35, gainDb=18,   # 枠太鼓の録音はとても小さい（vol 0.3 で笛より 37dB 小さかった）。gainDb の上限 +18 まで
+              pan=-0.12, reverb=0.3, modulate=False, barGain=DR.spec["barGain"])
 _hn = [0]
 def hit(t, note, mk="", L=0.75):
     """枠太鼓の1打。短い音（1回目の 0.25〜0.33 拍）は鳴らなかったので、2つのパートに交互に置いて、1打を長めにする"""
