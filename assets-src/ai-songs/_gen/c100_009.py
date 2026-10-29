@@ -39,6 +39,7 @@ GLS = [S.track(f"グロッケン（星{j + 1}）", "strings", patch="glockenspie
               barGain=[round(x * (3.0 if c.scene_of_bar[b] in ("一番星", "最後の星") else 1.0), 3) for b, x in enumerate(c.g())]) for j in range(4)]   # 星が重なっても前の星を切らないよう、4つのパートに順に置く
 # 竪琴の倍音は1オクターブ上（E4・B4・F♯5）。E3 からの低い和音は小さく、句の切れ目と前奏が -40〜-56dB に沈んだ（2回目）
 HH = [S.track(f"竪琴の倍音{j + 1}", "harp", patch="folkHarp", volume=0.07, pan=-0.35 + 0.25 * (j % 3), reverb=0.7, sustain=3.0, barGain=c.g()) for j in range(6)]   # 句ごとに3つずつ交互に使い、前の句の響きを切らない
+EC = S.track("竪琴（こだま）", "harp", patch="folkHarp", volume=0.15, pan=0.25, reverb=0.8, sustain=2.5, barGain=[round(x * 1.5, 3) for x in c.g()])   # 息の間を埋める。0.06 では小さく、間が -39dB に沈んだ（4回目）
 HA = S.track("竪琴（星の川の流れ）", "harp", patch="folkHarp", volume=0.06, pan=-0.2, reverb=0.65, sustain=2.0, barGain=c.g())
 rg = random.Random(9)
 STAR = [m for m in range(76, 96) if (m - 64) % 12 in (0, 2, 4, 6, 7, 9, 11)]   # 星の高さ（E5〜B6 のリディア）
@@ -52,7 +53,7 @@ def star(t, m=None, soft=True):
 s0 = c.s0["一番星"]
 star(0, 88, soft=False)                                     # E6 の1音
 for j, m in enumerate([64, 71, 78]): HH[j].at(s0 * B + 1.5 + j * 0.4, f"{nm(m)}:16.5")
-HA.at(s0 * B + 6, "B5:3,"); HA.at(s0 * B + 10.5, "E5:3,")              # 一番星のあと、竪琴が2つ小さく光る（前奏の 2〜6 秒が -48〜-65dB に沈んだ）   # 一番星のすぐあとに、竪琴の倍音（E・B・F♯）。前奏が沈まないように（layering-techniques.md）
+EC.at(s0 * B + 6, "B5:3,"); EC.at(s0 * B + 10.5, "E5:3,")              # 一番星のあと、竪琴が2つ小さく光る（前奏の 2〜6 秒が -48〜-65dB に沈んだ）   # 一番星のすぐあとに、竪琴の倍音（E・B・F♯）。前奏が沈まないように（layering-techniques.md）
 
 # ---------- 数える ----------
 _hs = [0]
@@ -65,8 +66,8 @@ for k, nb in enumerate(CNT_BARS, start=1):
     # 数え終わって息をつく間（最大 3 秒）：竪琴が、いま数えた最後の音を高い所でこだまする（星が答える）。
     #   2〜3回目は、この間が -40dB 前後に沈んだ（竪琴の和音は数秒で消える）
     rest0 = t + 3 * k; last = mel_events(K, f"{M[k - 1]}:1", 5, 0)[0][2]
-    if span - 3 * k >= 3: HA.at(round(rest0 + 0.4, 3), f"{nm(last)}:3,")
-    if span - 3 * k >= 6: HA.at(round(rest0 + 3.4, 3), f"{nm(mel_events(K, '5:1', 5, 0)[0][2])}:3,")
+    if span - 3 * k >= 3: EC.at(round(rest0 + 0.4, 3), f"{nm(last)}:3,")
+    if span - 3 * k >= 6: EC.at(round(rest0 + 3.4, 3), f"{nm(mel_events(K, '5:1', 5, 0)[0][2])}:3,")
     for q in range(k):                                         # 句 k には星が k 個（句の中にちらばる）
         star(t + rg.uniform(0, span - 1.5))
     for o_ in range(0, span, 18):                             # 竪琴の倍音（E・B・F♯ か G♯）を2小節ごとに。2組を交互に使い、前の響きを切らない
