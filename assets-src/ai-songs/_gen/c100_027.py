@@ -14,7 +14,7 @@ import sys
 from c100_common import *
 from c100_v2 import *
 
-BPM = 216
+BPM = 207   # 2026-10-29 長さを4分以上に（216→207）
 S = Song("C100", "027-ducklings-in-a-row", "鴨の親子", "Ducklings in a Row", BPM, 6, "F", "major", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
 S.extra.update({"human": 0.3})
