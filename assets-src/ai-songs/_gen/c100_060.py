@@ -119,6 +119,7 @@ for b in range(c.NB):
         PIZZ.bar(b, f"{nm(r + 12)}:0.5 R:0.5 {nm(r + 19)}:0.5 R:0.5")
         if n == "ポルカ3" and i % 8 == 0: GLOCK.bar(b, f"{nm(tones(ch, 'C6', 'C7')[0])}:1 R:1")
 rich(c, choir_scenes=["ポルカ3"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
+thick(c); sparkle(c)   # 2026-10-29: 速い曲の厚さ（023 7.27→7.53・025 7.26→7.66）＋高いきらめき
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の060（明るく速めの曲）。霧が晴れ、対岸の岸に舟が着く。2/4・♩=116、E ミクソリディア。霧の中では笛ひとりでゆっくり歌っていた節が、霧が晴れると同じ節のままポルカで踊りだす（AABB ×3）。最後は音楽が止まり、枠太鼓の3歩（地面を踏む足音）で終わる。",
        harm_scenes=None, tail_scene="足音", fill=False, pads=False, floor=True)

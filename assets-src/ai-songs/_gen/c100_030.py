@@ -75,6 +75,7 @@ for b in range(c.NB):
         t = tones(ch, "G4", "G6"); c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in t[:6]))
         if i % 4 == 0: GLOCK.bar(b, f"{nm(tones(ch, 'C6', 'C7')[0])}:3")
 rich(c, choir_scenes=["朝の回転", "光1", "光2"], pulse_scenes=["夜の回転", "白む", "朝の回転", "光1", "光2"], guitar=True, pizz=False, inner=True)
+thick(c); sparkle(c)   # 2026-10-29: 速い曲の厚さ（023 7.27→7.53・025 7.26→7.66）＋高いきらめき
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の030（第2版・明るく速めの曲）。夜明けの水車。速いワルツ（3/4・♩=132）。水車の回転＝ズン・チャ・チャ。同じ節が暗い E エオリアから、空が白んで G リディアの明るい長調に生まれ変わり、朝日の山へ。",
        harm_scenes=None, tail_scene="朝", fill=False, pads=True, pad_scenes=["夜の回転", "白む", "朝の回転", "光1", "光2"])

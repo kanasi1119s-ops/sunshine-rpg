@@ -70,6 +70,7 @@ for b in range(c.NB):
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:9")
         CELLO.bar(b, f"{nm(r)}:9")
 rich(c, choir_scenes=["3周目"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
+thick(c); sparkle(c)   # 2026-10-29: 速い曲の厚さ（023 7.27→7.53・025 7.26→7.66）＋高いきらめき
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の032（第2版・明るく速めの曲）。昼の森の木漏れ日。スリップ・ジグ（9/8・付点4分＝90）AABB、A ドリア。光が揺れるたびに高い所で1つ瞬き（グロッケン）、風がやむと全員が1つの和音で静止する。",
        harm_scenes=None, tail_scene="ゆらぎ2", fill=False, pads=False)

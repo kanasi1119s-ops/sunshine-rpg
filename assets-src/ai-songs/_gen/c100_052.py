@@ -119,6 +119,7 @@ for b in range(c.NB):
         if n in ("1曲目-2", "2曲目-2"): PIZZ.bar(b, f"{nm(r + 12)}:1 R:2 {nm(r + 19)}:1 R:2 {nm(r + 12)}:1 R:2")
         if n.startswith("2") and i % 4 == 0: GLOCK.bar(b, f"{nm(tones(ch, 'C6', 'C7')[0])}:3 R:6")
 rich(c, choir_scenes=["1曲目-2", "2曲目-2"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
+thick(c); sparkle(c)   # 2026-10-29: 速い曲の厚さ（023 7.27→7.53・025 7.26→7.66）＋高いきらめき
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の052（明るく速めの曲）。湖のほとりで舟を押し、漕ぎ出す。9/8 のスリップ・ジグ2曲のセット（付点4分＝100）。全員の「せーの」の3回の打ちで舟を押し、舟が浮いた所から1曲目が流れだす。岸を離れる所で調が D→E へ上がり、最後は櫂の3回の打ちで止まる。",
        harm_scenes=None, tail_scene="漕ぐ", fill=False, pads=False, floor=True)

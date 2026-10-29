@@ -75,6 +75,7 @@ for b in range(c.NB):
         if i == 0: strum(GTR, b, B, ch, [(0, 6, "d", "!")]); DRUM.bar(b, "D3:3! R:3")
         if i < 3: c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "D4", "D6")[i * 2:i * 2 + 6]))
 rich(c, choir_scenes=["ジグ2"], pulse_scenes=["エア", "ジグ2"], guitar=False, pizz=False, inner=True)
+thick(c); sparkle(c)   # 2026-10-29: 速い曲の厚さ（023 7.27→7.53・025 7.26→7.66）＋高いきらめき
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.32 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の039（第2版・明るく速めの曲）。夜の草地の、小さな光の輪の踊り。6/8・付点4分＝78、D ドリア。ジグ→エア→ジグ：輪の外から遠くの踊りを眺め（小さく遠い）、輪の真ん中で時間がゆっくりになり、輪の中で一緒に踊る（全員）。虫の声が6拍子と重なる。",
        harm_scenes=None, tail_scene="輪の中", fill=False, pads=True, pad_scenes=["ジグ1", "エア", "ジグ2"], floor=True)

@@ -85,6 +85,7 @@ for b in range(c.NB):
         v = voice(ch, 57, 3, spread=True)
         for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
 rich(c, choir_scenes=["2周目", "3周目"], pulse_scenes=["2周目", "3周目"], guitar=False, pizz=False, inner=True)
+thick(c); sparkle(c)   # 2026-10-29: 速い曲の厚さ（023 7.27→7.53・025 7.26→7.66）＋高いきらめき
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.28 --master -15 --widen 1.32 --side-hpf 200",
        "ケルト・フルート100曲の040（第2版・明るく速めの曲）。長い夜が明ける森。リズムから積み上げるリール（4/4・♩=100）、A イオニア。夜の名残の静かな節→鳥が目を覚ますたびに楽器が1つずつ加わり、最後は鳥の大合唱と明るい朝の和音。",
        harm_scenes=None, tail_scene="鳥の合唱", fill=False, pads=True, pad_scenes=["1周目", "2周目", "3周目"], floor=True)
