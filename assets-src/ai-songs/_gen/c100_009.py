@@ -36,7 +36,7 @@ c = make(S, NAMES,
 S.fix_avoid = lambda t: 0      # リディアの A♯ を直されないように
 B = S.beats
 GLS = [S.track(f"グロッケン（星{j + 1}）", "strings", patch="glockenspiel", volume=0.05, pan=[0.45, -0.3, 0.15, -0.55][j], reverb=0.7,
-              barGain=[round(x * (1.8 if c.scene_of_bar[b] in ("一番星", "最後の星") else 1.0), 3) for b, x in enumerate(c.g())]) for j in range(4)]   # 星が重なっても前の星を切らないよう、4つのパートに順に置く
+              barGain=[round(x * (3.0 if c.scene_of_bar[b] in ("一番星", "最後の星") else 1.0), 3) for b, x in enumerate(c.g())]) for j in range(4)]   # 星が重なっても前の星を切らないよう、4つのパートに順に置く
 HH = [S.track(f"竪琴の倍音{j + 1}", "harp", patch="folkHarp", volume=0.07, pan=-0.35 + 0.25 * j, reverb=0.7, sustain=3.0, barGain=c.g()) for j in range(3)]
 HA = S.track("竪琴（星の川の流れ）", "harp", patch="folkHarp", volume=0.06, pan=-0.2, reverb=0.65, sustain=2.0, barGain=c.g())
 rg = random.Random(9)
@@ -50,7 +50,7 @@ def star(t, m=None, soft=True):
 # ---------- 一番星 ----------
 s0 = c.s0["一番星"]
 star(0, 88, soft=False)                                     # E6 の1音
-for j, m in enumerate([52, 59, 66]): HH[j].at(s0 * B + 9 + j * 0.4, f"{nm(m)}:9,")   # 2小節目から、竪琴の倍音（E・B・F♯）
+for j, m in enumerate([52, 59, 66]): HH[j].at(s0 * B + 3 + j * 0.4, f"{nm(m)}:15")   # 一番星のすぐあとに、竪琴の倍音（E・B・F♯）。前奏が沈まないように（layering-techniques.md）
 
 # ---------- 数える ----------
 t = c.s0["数える"] * B
