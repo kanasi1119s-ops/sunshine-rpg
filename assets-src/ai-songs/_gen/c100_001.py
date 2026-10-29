@@ -11,12 +11,12 @@ import sys, json
 from c100_common import *
 from c100_v2 import *
 
-S = Song("C100", "001-silver-flute", "銀の笛", "The Silver Flute", 56, 3, "D", "major", "ケルト（幻想）")
+S = Song("C100", "001-silver-flute", "銀の笛", "The Silver Flute", 54, 3, "D", "major", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
 S.extra.update({"rubato": 0.35, "human": 0.45})
-S.tempo = [{"bar": 1, "bpm": 46}, {"bar": 15, "bpm": 56, "ramp": 2}]
-S.scene("呼ぶ1", 6, "intro", ["D", "G", "A", "D", "D", "D"])
-S.scene("呼ぶ2", 6, "intro", ["G", "D", "A", "G", "G", "G"])
+S.tempo = [{"bar": 1, "bpm": 50}, {"bar": 11, "bpm": 54, "ramp": 2}]
+S.scene("呼ぶ1", 4, "intro", ["D", "G", "D", "D"])
+S.scene("呼ぶ2", 4, "intro", ["G", "A", "G", "G"])
 S.scene("呼ぶ3", 4, "intro", ["D", "A", "D", "D"])
 CA = ["D", "D", "G", "A", "D", "G", "Bm", "A", "Bm", "G", "D", "A", "D", "G", "A", "D"]
 S.scene("歌A", 16, "verse", CA)
@@ -34,6 +34,9 @@ HR = S.track("竪琴（響かせる）", "harp", patch="folkHarp", volume=0.13, 
 HD = S.track("竪琴（止める）", "harp", patch="folkHarp", volume=0.11, pan=-0.05, reverb=0.4, sustain=0.45, barGain=c.g())
 HB = S.track("竪琴（高い鐘）", "harp", patch="folkHarp", volume=0.06, pan=0.35, reverb=0.7, sustain=3.0, barGain=c.g())
 B = S.beats
+for tr in (HR, HD):
+    bg = tr.spec["barGain"]
+    for b in range(c.s0["歌A"]): bg[b] = round(bg[b] * 2.5, 3)
 
 def roll(tr, b, notes, start=0.0, step=0.22, L=3.0):
     """竪琴の和音を下からずらして鳴らす（上の音ほど少し遅く）"""
@@ -42,19 +45,15 @@ def roll(tr, b, notes, start=0.0, step=0.22, L=3.0):
 # ---------- 前奏：竪琴が3回呼ぶ ----------
 D2, A2, D3, E3, A3, G2, B2, G3 = 38, 45, 50, 52, 57, 43, 47, 55
 s1 = c.s0["呼ぶ1"]
-roll(HR, s1 + 0, [D2, A2, D3, E3])
-roll(HR, s1 + 1, [G2, D3, A3])
-roll(HR, s1 + 2, [A2, E3, A3, 59])
-roll(HR, s1 + 3, [D2, A2, D3, A3, 64], step=0.3)
-HD.bar(s1 + 4, "D4:1 E4:1 A4:1"); HR.at((s1 + 4) * B + 2, "A4:3")          # 1回目の呼びかけ（レ・ミ・ラ）
-HR.at((s1 + 5) * B, "D2:3,")                                                # 返事がない（低い D の響きだけ）
+roll(HR, s1 + 0, [D2, A2, D3, E3, A3], step=0.3)
+roll(HR, s1 + 1, [G2, D3, A3, 59])
+HD.bar(s1 + 2, "D4:1 E4:1 A4:1"); HR.at((s1 + 2) * B + 2, "A4:3")          # 1回目の呼びかけ（レ・ミ・ラ）
+roll(HR, s1 + 3, [D2, A2, D3], step=0.4)                                     # 返事がない（低い D の響きだけ）
 s2 = c.s0["呼ぶ2"]
-roll(HR, s2 + 0, [G2, D3, A3, 62])
-roll(HR, s2 + 1, [D2, A2, E3, A3])
-roll(HR, s2 + 2, [A2, E3, B2 + 12, 64], step=0.26)
-roll(HR, s2 + 3, [G2, D3, G3, A3])
-HD.bar(s2 + 4, "G4:1 A4:1 D5:1"); HR.at((s2 + 4) * B + 2, "D5:3")          # 2回目（1段高い所から）
-HR.at((s2 + 5) * B, "G2:3,")
+roll(HR, s2 + 0, [G2, D3, A3, 62], step=0.3)
+roll(HR, s2 + 1, [A2, E3, B2 + 12, 64], step=0.26)
+HD.bar(s2 + 2, "G4:1 A4:1 D5:1"); HR.at((s2 + 2) * B + 2, "D5:3")          # 2回目（1段高い所から）
+roll(HR, s2 + 3, [G2, D3, G3], step=0.4)
 s3 = c.s0["呼ぶ3"]
 roll(HR, s3 + 0, [D2, A2, D3, E3, A3], step=0.3)
 HD.bar(s3 + 1, "A4:1 B4:1 E5:1"); HR.at((s3 + 1) * B + 2, "E5:3")          # 3回目
@@ -87,7 +86,7 @@ def dyad(ch, lo=38):
     r = PC[re.match(r"^([A-G][#b]?)", ch).group(1)]
     m = lo + (r - lo) % 12
     return [m, m + 7, m + 12, m + 14]
-for b in range(c.s0["歌A"], c.NB):
+for b in range(c.s0["歌A"], c.NB):   # 前奏（呼ぶ1〜3）は上で書いた
     n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
     d = dyad(ch)
     if n == "歌A":   # 1拍目に低い2音を響かせ、3拍目に高い9度を止める手で。句の終わりは止めて間をあける
@@ -103,6 +102,7 @@ for b in range(c.s0["歌A"], c.NB):
     elif n == "余韻":
         if i == 0: HR.at(b * B, f"{nm(d[0])}:3"); HR.at(b * B + 0.2, f"{nm(d[1])}:3,")
         if i == 3: HR.at(b * B, f"{nm(d[0] + 12)}:3,")
+        if i == 6: HR.at(b * B, f"{nm(d[0])}:3,"); HR.at(b * B + 0.3, f"{nm(d[1])}:3,")   # 息が消えたあとも、竪琴の低い響きが少し残る
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.32 --master -15 --widen 1.2 --side-hpf 200",
        "ケルト・フルート100曲の001（第3版）。夕暮れの灯台の部屋、祖父の箱から銀の笛を取り出す。古い竪琴が自由な前奏で3回呼び、3回目に笛が初めて答える（問いの3音 レ・ミ・ラ）。エア A・B・A'、3/4・♩=56、D イオニア。楽器は笛と金属弦の竪琴だけ。最後は問いの3音をもう一度吹き、ラで息が消える。",
