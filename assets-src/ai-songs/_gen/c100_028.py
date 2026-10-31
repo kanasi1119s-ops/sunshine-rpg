@@ -1,74 +1,72 @@
-# ケルト・フルート100曲「銀の笛と百の夜」028 夕もやの川 River in the Dusk Haze — 第3版（2026-10-29: 6.74→ ピアノを大きく、霞の終わりまで弦とチェロ、川2に笛の和声、きらめきを濃く、床）
-# イメージ: 日が沈むころの川。はじめは対岸の木々までくっきり見えているのに、川霧がだんだん濃くなって、すべての輪郭がぼやけていく。
-#   ピアノの音も、はじめは一粒ずつはっきりしているのが、ペダルをふんだまま重なっていき、最後は残響の霞だけが残る。
-# 形（台帳）: スロー・エア・曲が進むほど残響が深くなり、輪郭がぼやける。4/4・♩=52。A ドリア。始め：はっきりしたピアノ／終わり：霞。山なし。
-# 編曲の表:
-#   鮮明   : ピアノの分散和音だけ（短く、粒がはっきり）
-#   川1    : ＋笛。ピアノの音が少し長くなる
-#   川2    : 笛の音が長くなる。弦がうすく。ピアノはペダルで重なる
-#   もや   : 同じ節を倍の長さで。ピアノは長い音が重なり合う。霞の層が濃くなる
-#   霞     : 笛の最後の音が霞に溶け、残響だけが残る
-import sys, json
+# ケルト・フルート100曲「銀の笛と百の夜」028 夕もやの川 The River in Evening Mist — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 鴨の親子と別れた夕方。川から白いもやが立ちのぼり、向こう岸の木も、水車小屋の灯も、少しずつ輪郭がぼやけていく。
+#   エイラの笛も、もやの中に溶けて、最後はどこで鳴っているのか分からない響きだけが残る。
+# 調べ: 眠り。形: スロー・エア（12小節の節を4回。音がだんだんぼやけていく）→ 響き。
+# 拍子・速さ: 4/4・♩=52。旋法: A ドリア。
+# 主役は笛（輪郭がだんだん柔らかく。前半ははっきりした笛、後半は響きの多い柔らかい笛に持ちかえる）。
+# 伴奏の主役: ピアノの分散和音（8分のまま、音の長さだけが場面ごとに倍になる＝ペダルで重なっていく）。
+#   竪琴・ギター・弦・パッド・打楽器・2本目の笛は使わない。
+# この曲だけ: ピアノの音の長さが場面ごとに倍（0.5 → 1 → 2 → 4 → 8拍）になり、輪郭が霞んでいく。分散和音の速さは変えない。
+# 始まり: はっきりしたピアノ（短く切った8分）→ 終わり: 響きだけが残る（ピアノの重なった響きと、遠い笛の1音）。
+# 山: なし（平ら。響きが重なるぶん、後半ほど少し厚くなる）。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
 
-BPM = 52
-S = Song("C100", "028-river-in-the-dusk-haze", "夕もやの川", "River in the Dusk Haze", BPM, 4, "A", "dorian", "ケルト（幻想）")
+S = Song("C100", "028-the-river-in-evening-mist", "夕もやの川", "The River in Evening Mist", 52, 4, "A", "dorian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.4, "rubato": 0.3})
-MC = ["Am", "Am", "G", "D", "Am", "Em", "G", "Am", "C", "G", "D", "Am", "C", "G", "Em", "Am"]
-S.scene("鮮明", 4, "intro", MC[:4])
-S.scene("川1", 16, "verse", MC)
-S.scene("川2", 16, "verse", MC)
-S.scene("もや", 16, "verse", ["Am", "Am", "Am", "Am", "G", "G", "D", "D", "Am", "Am", "Em", "Em", "G", "G", "Am", "Am"])
-S.scene("霞", 8, "outro", ["Am", "G", "Am", "Am", "Am", "Am", "Am", "Am"])
-NAMES = ["鮮明", "川1", "川2", "もや", "霞"]
-
+S.extra.update({"human": 0.35, "rubato": 0.2})
+K = Key("A", "dorian", 4)
+CH = ["Am", "D", "Am", "G", "D", "Am", "Em", "Am", "C", "D", "G", "Am"]
+SC = [("はっきり", 12, "verse", CH), ("もや1", 12, "verse", CH), ("もや2", 12, "verse", CH), ("もや3", 12, "verse", CH), ("響き", 6, "outro", ["Am", "D", "Am", "Am", "Am", "Am"])]
+for n, L, kd, ch in SC: S.scene(n, L, kd, ch)
+NAMES = [x[0] for x in SC]
 c = make(S, NAMES,
-         [("鮮明", 0, 0.66), ("川1", 0, 0.64), ("川2", 0, 0.64), ("もや", 0, 0.62), ("霞", 0, 0.56), ("霞", 7, 0.32)],
-         {}, flute_gain={n: 1.2 for n in NAMES}, intro="鮮明", passing=True, tension=False)
-PB = S.track("ピアノ（左手の低音）", "piano", volume=0.85, pan=-0.15, reverb=0.5, barGain=c.g())
-CELLO = S.track("チェロ（川の深さ）", "strings", patch="cello", volume=0.075, pan=0.15, reverb=0.5, barGain=c.g())
-P = [S.track(f"ピアノ{i + 1}", "piano", volume=[0.95, 0.85, 0.75][i], pan=[-0.2, -0.1, 0.0][i], reverb=0.5, barGain=c.g()) for i in range(3)]
-M1 = ["5:2 4:1 3:1", "2:2 1:2", "7,:1 1:1 2:1 3:1", "4:4", "5:2 6:1 5:1", "4:1 3:1 2:2", "3:3 2:1", "1:4"]
-M2 = ["3:2 5:2", "6:3 5:1", "4:2 3:2", "2:4", "3:2 4:1 5:1", "6:2 7:2", "6:3 5:1", "5:4"]
-def stretch(bars):
-    out = []
-    for s in bars:
-        a, b_, acc = [], [], 0
-        for tok in s.split():
-            d, L = tok.split(":"); L2 = float(L) * 2
-            if acc + L2 <= 4 + 1e-6: a.append(f"{d}:{L2:g}"); acc += L2
-            elif acc < 4 - 1e-6: a.append(f"{d}:{4 - acc:g}"); b_.append(f"{d}:{L2 - (4 - acc):g}"); acc = 4
-            else: b_.append(f"{d}:{L2:g}")
-        out += [" ".join(a), " ".join(b_)]
-    return out
-play_melody(c, "川1", M1 + M2, 4, "air", density=0.7, seed=2801)
-play_melody(c, "川2", M2 + M1, 4, "air", density=0.7, seed=2802)
-play_melody(c, "もや", stretch(M1), 4, "air", density=0.4, seed=2803)
-play_melody(c, "霞", ["3:4", "2:4", "1:4", "1:4", "R:4", "R:4", "R:4", "R:4"], 4, "air", density=0)
-
+         [("はっきり", 0, 0.68), ("もや1", 0, 0.68), ("もや2", 0, 0.7), ("もや3", 0, 0.7), ("響き", 0, 0.68), ("響き", 5, 0.62)],
+         {}, flute_gain={"はっきり": 1.15, "もや1": 1.15, "もや2": 0.0, "もや3": 0.0, "響き": 0.0}, intro="はっきり", passing=True, tension=False)
+S.fix_avoid = lambda t: 0
 B = S.beats
-LEN = {"鮮明": 0.5, "川1": 1.0, "川2": 2.0, "もや": 4.0, "霞": 6.0}     # ピアノの音の長さ（ペダルで重なっていく）
+G = c.g()
+LEN = {"はっきり": 0.5, "もや1": 1, "もや2": 2, "もや3": 4, "響き": 8}
+# 柔らかい笛（もや2から持ちかえる。響きを多く、明るさを落とす）
+FS = S.track("柔らかい笛（もやの中）", "panflute", patch="flute", volume=0.3, bright=-0.8, pan=0.05, reverb=0.8, breath=True,
+             barGain=[round(x * (1.15 if b >= c.s0["もや2"] else 0), 3) for b, x in enumerate(G)])
+# ピアノ：和音の4つの音それぞれに、重なりのぶんだけパートを分ける（同じ音が2拍ごとに鳴り直すので、8拍の長さには4本ずつ要る）
+# 試し書き出し: 短い8分の分散和音（4音）で笛とほぼ同じ大きさ → 0.13→0.075。音が長く重なるほど厚くなるので、場面ごとに少しずつ下げる
+PSC = {"はっきり": 1.3, "もや1": 1.15, "もや2": 1.0, "もや3": 0.9, "響き": 0.9}
+PN = [[S.track(f"ピアノ（{v + 1}つ目の音・{j + 1}）", "piano", volume=0.075, pan=-0.25 + 0.15 * v, reverb=0.5, sustain=1.6,
+               barGain=[round(x * PSC[S.scene_of(b)[0]], 3) for b, x in enumerate(G)])
+       for j in range(4)] for v in range(4)]
+
+# ---------- 旋律（A ドリア。1=A4。12小節） ----------
+M = ["5:2 4:1 3:1", "2:3 1:1", "3:2 5:2", "4:4", "6:2 5:1 4:1", "5:3 3:1", "2:2 1:1 7,:1", "1:4",
+     "3:1 4:1 5:2", "6:2 1':2", "7:2 6:1 5:1", "5:4"]
+play_melody(c, "はっきり", M, 4, "air", key=K, density=0.35, seed=2801)
+play_melody(c, "もや1", M, 4, "air", key=K, density=0.25, seed=2802)
+play_melody(c, "もや2", M, 4, "air", key=K, density=0.12, seed=2803, track=FS)
+play_melody(c, "もや3", M, 4, "air", key=K, density=0.05, seed=2804, track=FS)
+play_melody(c, "響き", ["5:4", "3:4", "1:4", "R:4", "R:4", "R:4"], 4, "air", key=K, density=0.0, track=FS)
+
+# ---------- ピアノの分散和音（8分のまま。音の長さだけが倍になっていく） ----------
+ROOT = {"Am": 45, "D": 50, "G": 43, "Em": 40, "C": 48}
+def voicing(ch):
+    m = re.match(r"^([A-G][#b]?)(m?)", ch); r = ROOT[ch]
+    th = (3 if m.group(2) else 4)
+    return [r, r + 7, r + 12 + th, r + 19 + (0 if r + 19 <= 72 else -12)]     # 根音・5度・上の3度・上の5度（9度は使わずに澄ませる）
 for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    t = tones(ch, "A2", "A5")
-    seq = (t[0], t[2], t[4 % len(t)], t[3 % len(t)])
-    for q, x in enumerate(seq if not (n == "霞" and i >= 4) else seq[:1]):
-        P[q % 3].at(b * B + q, f"{nm(x)}:{LEN[n]}")
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    PB.at(b * B, f"{nm(r)}:{max(2, LEN[n])}")
-    if n != "鮮明": CELLO.bar(b, f"{nm(r)}:4")
-    if True:
-        v = voice(ch, 52 if n in ("鮮明", "川1") else 55, 3 if n not in ("鮮明",) else 2, spread=True)
-        for j in range(len(v)): c.STR[j].bar(b, f"{nm(v[j])}:4")
-rich(c, choir_scenes=["川2"], pulse_scenes=["川1", "川2"], guitar=False, pizz=False, inner=True)
-sparkle(c, dense=True)   # 6.74 のあと濃く。 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の028（第2版）。夕暮れの川に川霧が濃くなる。4/4・♩=52、A ドリア。スロー・エア。ピアノの音ははじめ一粒ずつはっきりしているのが、ペダルで重なってぼやけ、空間の霞がだんだん深くなる。最後は残響の霞だけ。",
-       harm_scenes=None, tail_scene="霞", fill=False, pads=True, pad_scenes=["川1", "川2", "もや", "霞"], floor=True)
-air = {"pre": 0.4, "tail": 9.0, "layers": [{"file": "0864", "db": -37, "hp": 150, "lp": 5000, "wide": 0.014, "duck": 0.35, "fade": 8},
-                                           {"file": "0114", "db": -39, "hp": 200, "lp": 6000, "wide": 0.012, "pan": 0.2, "duck": 0.3, "start": 120, "fade": 30}],
-       "fx": {"glass": {"hz": [440.0, 880.0, 1318.5], "db": -28, "rt": 8.0, "start": 4}, "shimmer": {"db": -26, "rt": 10.0}, "far": {"db": -24, "delay": 0.35, "lp": 2200, "rt": 6.0},
-              "haze": {"db": -24, "rt": 10.0}, "band": {"db": -37, "hz": 6000, "per": 29}, "ramp": [0.35, 1.5]}, "intro_db": 8.5}
+    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
+    v = voicing(ch); L = LEN[n]
+    if n == "響き" and i >= 3:                                         # 響きの最後：もう鳴らさず、重なった響きだけ
+        continue
+    for q in range(8):                                                  # 8分で、根音 → 5度 → 3度 → 5度 と上がっていく（同じ音は2拍ごと）
+        vi = q % 4
+        track = PN[vi][(b * 2 + q // 4) % 4]
+        mk = "!" if q == 0 and n == "はっきり" else ("," if q % 2 else "")
+        track.at(round(b * B + 0.5 * q, 3), f"{nm(v[vi])}:{L}{mk}")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.36 --master -15 --widen 1.15 --side-hpf 200",
+       "ケルト・フルート100曲の028（第3版）。夕方、川から白いもやが立ちのぼり、景色の輪郭が少しずつぼやけていく。スロー・エア（4/4・♩=52）、A ドリア。ピアノの分散和音は8分のまま、音の長さだけが場面ごとに倍（0.5→1→2→4→8拍）になってペダルのように重なり、笛も後半は響きの多い柔らかい笛に持ちかえる。最後は、重なったピアノの響きと遠い笛の1音だけが残る。",
+       harm_scenes=None, tail_scene="響き", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 7.0, "layers": [{"file": "0595", "db": -45, "hp": 180, "lp": 3600, "wide": 0.012, "duck": 0.4, "fade": 8}],
+       "fx": {"far": {"db": -27, "delay": 0.3, "lp": 2800, "rt": 4.0}}}
 json.dump(air, open("/tmp/cel/w/air028.json", "w"), ensure_ascii=False)
