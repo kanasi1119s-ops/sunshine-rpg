@@ -34,6 +34,8 @@ B = S.beats
 G = c.g()
 # 試し書き出し: ギターの和音（3音）は笛より約5dB 大きい → 0.045→0.022（5音になるので少し多めに下げる）。ホイッスルの粒も笛より大きい → 0.025。ボーランは笛と同じくらい
 GU = [S.track(f"ブズーキ風ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.022, pan=0.28 + 0.05 * i, reverb=0.3, barGain=G) for i in range(5)]
+# 1回目（7.62）: きらめきの最初の4秒が -45dB（ほぼ無音）だった → きらめきの和音は別のパート（gainDb 8）で、1拍目から鳴らす
+GUI = [S.track(f"ブズーキ風ギター（きらめき）{i + 1}", "guitar", patch="nylonGuitar", volume=0.03, gainDb=8, pan=0.2 + 0.1 * i, reverb=0.45, barGain=G) for i in range(3)]
 WH = S.track("ティン・ホイッスル（光の粒）", "panflute", patch="tinWhistle", volume=0.025, pan=-0.35, reverb=0.5, barGain=G)
 DR = [S.track(f"ボーラン{j + 1}", "guitar", patch="frameDrum", volume=0.35, gainDb=18, pan=-0.1 + 0.08 * j, reverb=0.3, barGain=G) for j in range(2)]
 
@@ -50,7 +52,7 @@ Bl = ["1:1 7,:0.5 1:0.5 2:0.5 1:0.5 7,:0.5 6,:0.5", "6,:1 7,:0.5 6,:0.5 7,:0.5 1
       "4:0.5 3:0.5 2:0.5 4:0.5 3:0.5 2:0.5 1:0.5 7,:0.5", "1:1 6,:0.5 7,:0.5 1:1 R:1",
       "1:1 7,:0.5 1:0.5 2:0.5 1:0.5 7,:0.5 6,:0.5", "6,:1 7,:0.5 6,:0.5 7,:0.5 1:0.5 2:0.5 3:0.5",
       "4:0.5 6:0.5 5:0.5 3:0.5 2:0.5 4:0.5 3:0.5 1:0.5", "7,:0.5 2:0.5 6,:0.5 7,:0.5 1:2"]
-SPK = ["R:2 5':0.25 6':0.25 5':0.5 R:1", "R:1 3':0.25 4':0.25 3':0.5 R:2", "R:3 2':0.25 3':0.25 2':0.5", "R:0.5 1':0.25 2':0.25 1':0.5 R:2.5"]
+SPK = ["5':0.25 6':0.25 5':0.5 R:3", "R:1 3':0.25 4':0.25 3':0.5 R:2", "R:3 2':0.25 3':0.25 2':0.5", "R:0.5 1':0.25 2':0.25 1':0.5 R:2.5"]
 play_melody(c, "きらめき", SPK, 4, "reel", key=K, density=0.0, seed=2300)
 nb = play_melody(c, "1周目", A + A + Bh + Bh, 4, "reel", key=K, density=0.55, seed=2301)
 for st, L, m, mk in nb:                                       # 1周目：ホイッスルが1オクターブ上で、ところどころ光の粒を
@@ -75,7 +77,7 @@ for b in range(c.NB):
     v = _v2.open_chord(ch, lo, hi)
     trs = GU[:len(v)]
     if n == "きらめき":
-        for q, x in enumerate(v[-3:]): GU[q].at(round(b * B + 0.08 * q, 3), f"{nm(x)}:4,")
+        for q, x in enumerate(v[-3:]): GUI[q].at(round(b * B + 0.08 * q, 3), f"{nm(x)}:4{'' if i == 0 else ','}")
         continue
     if n == "水の中":
         for q, x in enumerate(v[:4]): GU[q].at(round(b * B + 0.12 * q, 3), f"{nm(x)}:4,")      # 水の中：ゆっくり1回だけ鳴らす
