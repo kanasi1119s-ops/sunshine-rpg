@@ -8,8 +8,9 @@
 4. 検査: `python3 tools/celtic100/qc.py <out>/cNNN.final.wav`（音量の段差）と `python3 tools/audio-check/aes-score-lowmem.py <out>/cNNN.final.wav`（音質の点数 PQ。Audiobox Aesthetics）
    - 目標: 静の曲 PQ 7.2 以上、動の曲 7.8 以上。前奏が小さい・急に小さい所がないこと（chk.sh の表示）
 
+点数（Audiobox Aesthetics）は、一度ダウンロードした重みを HF_HOME=/tmp/hf に置き、HF_HUB_OFFLINE=1 で読む（入れ物が替わったあと huggingface への接続が 403 で止まったため）。
 run.sh / q.sh / chk.sh / next.sh はクラウド（Linux）で使っていた手順そのまま。パソコン（Windows）では、同じ流れを PowerShell か Node で書き直して使う。
 同時に何曲書き出すかは CPU の数で決める（1曲あたり CPU 1〜2個・メモリ 3〜4GB が目安）。
 
 ## パソコンへの保存待ち（つながっていない間に完成した曲。SendUserFile の file_uuid）
-- 007_潮の呼び声.mp3 → 1c8bdc13-acc0-4d51-bfa6-e9d99eab20dd
+（いまは無し。007・013 は 2026-11-01 に保存済み）

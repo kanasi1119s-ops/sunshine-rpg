@@ -8,5 +8,5 @@ cd assets-src/ai-songs/_gen && python3 c100_air.py /tmp/cel/out/c$N.wav /tmp/cel
 cd /home/claude/wt-mix
 rm -f /tmp/cel/out/c$N.wav   # 空気を重ねる前の wav は消す（ディスクの節約）
 python3 /tmp/bar/qc.py /tmp/cel/out/c$N.final.wav > /tmp/cel/w/qc$N.log 2>&1
-HF_HOME=/tmp/hf python3 tools/audio-check/aes-score-lowmem.py /tmp/cel/out/c$N.final.wav > /tmp/cel/w/pq$N.log 2>&1
+HF_HOME=/tmp/hf HF_HUB_OFFLINE=1 python3 tools/audio-check/aes-score-lowmem.py /tmp/cel/out/c$N.final.wav > /tmp/cel/w/pq$N.log 2>&1
 touch /tmp/cel/w/done$N
