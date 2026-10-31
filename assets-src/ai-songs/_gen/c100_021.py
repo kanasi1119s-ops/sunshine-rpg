@@ -1,91 +1,97 @@
-# ケルト・フルート100曲「銀の笛と百の夜」021 小川のはじまり Where the Brook Begins — 第3版（2026-10-29: 7.11→ 床・内声・流れ2から笛の和声）
-# イメージ: 森の奥の岩のすき間から、水が一滴、また一滴と落ちる。滴がだんだん増えて、つながり、細い流れになって走り出す。小川の生まれる所。
-# 形（台帳）: リズムから積み上げる。ぽつんとした水滴の音（竪琴・グロッケンの高い1音）が、だんだん連なって流れになる。
-#   笛も、はじめは1音ずつ間をあけて置かれ、2音・3音とつながり、最後はなめらかな旋律として流れる。6/8・付点4分＝44。A ミクソリディア。山なし。
-# 編曲の表:
-#   一滴   : 竪琴とグロッケンの高い1音だけが、ぽつり、ぽつり（約10秒）
-#   滴     : 笛も1音ずつ。滴がふえる。低い弦がごくうすく
-#   連なる : 笛が2〜3音ずつつながる。竪琴は2音ずつ
-#   流れ1  : 笛のなめらかな旋律。竪琴が流れる分散和音（8分）。チェロ
-#   流れ2  : ＋弦の持続＋ピチカート
-#   流れ3  : ＋笛の和声。流れがいちばん豊か
-#   小川   : 笛が抜け、竪琴の流れと小川の音が残る
-import sys, random
+# ケルト・フルート100曲「銀の笛と百の夜」021 小川のはじまり Where the Brook Begins — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 第3章のはじまり。草原を抜けた山すその岩場で、苔から水が一滴ずつ落ちている。滴はだんだん間を詰め、
+#   いつのまにか細い流れになり、流れは小川になって、ひらけた谷へ走りだす。エイラは流れについて歩きだす。
+# 調べ: 喜び。形: 一滴から流れへ（拍のない滴 → リールの流れ）。
+# 拍子・速さ: 4/4・♩=104（滴の場面は拍を感じさせない：音と音の間が 4拍 → 3.5 → … → 0.5拍 と詰まっていき、気づくとリールの8分になっている）。
+# 旋法: D ミクソリディア。
+# 主役は笛（滴では1音ずつ → 流れからはなめらかに）。伴奏の主役: 竪琴（folkHarp）。滴のあいだは高い1音ずつ、流れからは8分の分散和音。
+#   開ける所でだけ、竪琴の低い根音。ギター・ピアノ・弦・パッド・打楽器は使わない。
+# この曲だけ: 滴の間隔がだんだん詰まって、気づくとリールの8分になっている。
+# 始まり: 竪琴の高い1音 → 終わり: 流れたまま遠ざかる（笛が先に遠ざかり、竪琴の8分が細くなっていく）。
+# 山: 平原（落ち着いた流れ）→ 急に開ける（谷が見える）。最初が大きく、だんだん小さくなる形にはしない。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
 
-BPM = 132
-S = Song("C100", "021-where-the-brook-begins", "小川のはじまり", "Where the Brook Begins", BPM, 6, "A", "mixolydian", "ケルト（幻想）")
+S = Song("C100", "021-where-the-brook-begins", "小川のはじまり", "Where the Brook Begins", 104, 4, "D", "mixolydian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
 S.extra.update({"human": 0.4})
-FC = ["A", "D", "G", "A", "D", "G", "D", "A", "A", "G", "D", "A", "D", "G", "E", "A"]
-S.scene("一滴", 4, "intro", ["A"] * 4)
-S.scene("滴", 12, "verse", ["A", "A", "G", "A", "A", "D", "A", "A", "G", "G", "A", "A"])
-S.scene("連なる", 16, "verse", FC)
-S.scene("流れ1", 16, "verse", FC)
-S.scene("流れ2", 16, "chorus", FC)
-S.scene("流れ3", 16, "chorus", FC)
-S.scene("小川", 8, "outro", ["A", "G", "A", "A", "D", "G", "A", "A"])
-NAMES = ["一滴", "滴", "連なる", "流れ1", "流れ2", "流れ3", "小川"]
-
+K = Key("D", "mixolydian", 4)
+CA = ["D", "C", "D", "Am", "D", "C", "G", "D"]
+CB = ["G", "D", "C", "D", "G", "D", "Am", "D"]
+SC = [("滴", 16, "intro", ["D"] * 16), ("流れ", 32, "verse", CA + CA + CB + CB), ("平原", 16, "verse", CA + CB),
+      ("開ける", 32, "chorus", CA + CA + CB + CB), ("遠ざかる", 16, "outro", CA + CB)]
+for n, L, kd, ch in SC: S.scene(n, L, kd, ch)
+NAMES = [x[0] for x in SC]
 c = make(S, NAMES,
-         [("一滴", 0, 0.6), ("滴", 0, 0.6), ("連なる", 0, 0.64), ("流れ1", 0, 0.68), ("流れ2", 0, 0.72), ("流れ3", 0, 0.76), ("流れ3", 15, 0.72),
-          ("小川", 0, 0.64), ("小川", 7, 0.36)],
-         {}, flute_gain={n: 1.2 for n in NAMES}, intro="一滴", passing=True, tension=False)
-DROP = S.track("滴（グロッケン）", "bell", patch="glockenspiel", volume=0.06, pan=0.3, reverb=0.75, barGain=c.g())
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.075, pan=0.15, reverb=0.45, barGain=c.g())
-PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.05, pan=-0.35, reverb=0.4, barGain=c.g())
-
-rg = random.Random(21)
-def drops(n_):   # 1小節に n_ 個の滴（和音の高い音を、ばらばらの場所に）
-    pos = sorted(rg.sample(range(6), min(n_, 6))); out = []; t = 0
-    return pos
+         [("滴", 0, 0.64), ("滴", 15, 0.7), ("流れ", 0, 0.74), ("流れ", 31, 0.78), ("平原", 0, 0.72), ("平原", 15, 0.72),
+          ("開ける", 0, 0.9), ("開ける", 31, 0.88), ("遠ざかる", 0, 0.8), ("遠ざかる", 15, 0.62)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="滴", passing=True, tension=False)
+S.fix_avoid = lambda t: 0
 B = S.beats
-# 滴と、連なる：笛は1音ずつ→2〜3音ずつ
-DRIP = ["R:2 5:1 R:3", "R:4 3:1 R:1", "1':1 R:5", "R:3 6:1 R:2", "R:1 5:1 R:4", "R:4 2:1 R:1", "3:1 R:5", "R:2 1:1 R:3",
-        "R:3 4:1 R:2", "R:1 6:1 R:2 5:1 R:1", "R:2 3:1 R:3", "1:1 R:5"]
-LINK = ["5:1 6:1 R:4", "R:3 1':1 7:1 6:1", "5:2 R:4", "R:3 3:1 4:1 5:1", "4:1 3:1 R:4", "R:3 2:1 3:1 1:1", "7,:2 R:4", "R:3 1:1 2:1 3:1",
-        "5:1 6:1 5:1 R:3", "R:3 4:1 3:1 2:1", "3:2 R:4", "R:2 5:1 6:1 7:1 R:1", "1':2 R:1 6:1 5:1 R:1", "R:3 4:1 5:1 6:1", "5:3 R:3", "1:3 R:3"]
-F1 = ["1:2 2:1 3:2 5:1", "4:2 3:1 2:3", "3:2 4:1 5:2 6:1", "5:3 3:3", "4:2 5:1 6:2 1':1", "7:2 6:1 5:3", "4:2 3:1 2:2 7,:1", "1:6"]
-F2 = ["5:2 6:1 7:2 1':1", "2':2 1':1 7:3", "6:2 7:1 1':2 6:1", "5:6", "4:2 5:1 6:2 4:1", "3:2 2:1 1:3", "2:2 3:1 4:2 2:1", "1:6"]
-play_melody(c, "滴", DRIP, 4, "air", density=0)
-play_melody(c, "連なる", LINK, 4, "air", density=0.3, seed=2101)
-play_melody(c, "流れ1", F1 + F2, 4, "air", density=0.7, seed=2102)
-play_melody(c, "流れ2", F1 + F2, 4, "air", density=0.9, seed=2103)
-play_melody(c, "流れ3", F2 + F1, 4, "air", density=1.0, seed=2104)
-play_melody(c, "小川", ["5:3 3:3", "2:6", "3:2 4:1 5:3", "1:6", "4:3 3:3", "2:6", "1:6", "R:6"], 4, "air", density=0.4, seed=2105)
+G = c.g()
+# 試し書き出し: 滴の1音（高い音・強さ 1.4）は笛より約 8dB 大きい → 0.12→0.06。流れの8分（上）は笛と同じくらい → 0.075→0.055
+DROP = [S.track(f"竪琴（滴{j + 1}）", "harp", patch="folkHarp", volume=0.06, pan=[-0.4, 0.35, -0.1][j], reverb=0.75, sustain=2.4,
+                barGain=[round(x * (1.8 if b < 16 else 1.0), 3) for b, x in enumerate(G)]) for j in range(3)]
+ARP = S.track("竪琴（流れの8分）", "harp", patch="folkHarp", volume=0.055, pan=0.2, reverb=0.45, sustain=1.2, barGain=G)
+ARP2 = S.track("竪琴（流れの8分・低い方）", "harp", patch="folkHarp", volume=0.07, pan=-0.2, reverb=0.45, sustain=1.2, barGain=G)
+LOW = S.track("竪琴（開ける谷の根音）", "harp", patch="folkHarp", volume=0.1, pan=0.0, reverb=0.55, sustain=2.4, barGain=G)
 
-for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    hi = tones(ch, "A5", "A6"); t = tones(ch, "A3", "A5")
-    if n in ("一滴", "滴", "連なる"):
-        cnt = {"一滴": 1 + (i % 2), "滴": 2 + i // 4, "連なる": 4}[n]
-        pos = sorted(rg.sample(range(6), min(cnt, 6)))
-        tr = DROP if n == "一滴" and i % 2 == 0 else c.HARP2
-        s, t0 = [], 0
-        for p in pos:
-            if p > t0: s.append(f"R:{p - t0}")
-            s.append(f"{nm(hi[rg.randrange(len(hi))])}:1"); t0 = p + 1
-        if t0 < 6: s.append(f"R:{6 - t0}")
-        tr.bar(b, " ".join(s))
-        v = voice(ch, 52 if n != "一滴" else 57, 3, spread=True)   # 森の奥の空気（岩のすき間の、ひんやりした響き）
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
-        CELLO.bar(b, f"{nm(r)}:6")
-        if n == "連なる": c.HARP.bar(b, " ".join(f"{nm(t[x % len(t)])}:1" for x in (0, 2)) + " R:1 " + " ".join(f"{nm(t[x % len(t)])}:1" for x in (1, 3)) + " R:1")
-    if n in ("流れ1", "流れ2", "流れ3") or (n == "小川" and i < 7):
-        c.HARP.bar(b, " ".join(f"{nm(t[x % len(t)])}:1" for x in ((0, 2, 4, 5, 4, 2) if i % 2 == 0 else (1, 3, 5, 3, 4, 2))))
-        CELLO.bar(b, f"{nm(r)}:6")
-        if n == "小川":
-            v = voice(ch, 55, 3, spread=True)
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
-    if n in ("流れ2", "流れ3"):
-        v = voice(ch, 57, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
-        if i % 2 == 1: PIZZ.bar(b, f"R:3 {nm(t[1])}:1 {nm(t[2])}:1 R:1")
-    if n in ("流れ3",) and i % 4 == 0: DROP.bar(b, f"{nm(hi[0])}:3 R:3")
-rich(c, choir_scenes=["流れ2", "流れ3"], pulse_scenes=["流れ1", "流れ2", "流れ3"], guitar=False, pizz=False, inner=True)
-sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の021（第2版）。湧き水から小川が生まれる。6/8・付点4分＝44、A ミクソリディア。ぽつんとした水滴の音（竪琴・グロッケン）がだんだん連なり、笛も1音ずつ→2〜3音→なめらかな旋律へ。流れになって走り出す。",
-       harm_scenes=None, tail_scene="小川", fill=False, pads=True, pad_scenes=["滴", "連なる", "流れ1", "流れ2", "流れ3", "小川"], floor=True)
+# ---------- 滴（拍のない1音ずつ。間隔が 4拍 → 0.5拍 へ詰まる） ----------
+# 滴の音（D ミクソリディアの高い所）。竪琴と笛が交互に落とす。後半は笛が多くなり、最後の2小節は8分でリールの頭につながる
+DROP_NOTES = [81, 76, 79, 74, 78, 72, 76, 69, 74, 71, 72, 67, 69, 74, 72, 71, 69, 67, 66, 67, 69, 71, 72, 74, 76, 74, 72, 71, 69, 67, 69, 71]
+t = 0.0; gap = 4.0; k = 0; end_drop = 16 * B
+while t < end_drop - 0.01:
+    m = DROP_NOTES[k % len(DROP_NOTES)]
+    if k % 3 == 2 or gap <= 1.0:                     # 笛の滴（後半ほど多い）
+        if m > 79: m -= 12
+        c.FLUTE.at(round(t, 3), f"{nm(m)}:{round(min(gap, 2.0) * (0.6 if gap > 1 else 0.95), 3)}")
+    else:
+        DROP[k % 3].at(round(t, 3), f"{nm(m)}:{round(min(gap, 3.0), 3)}")
+    t += gap; k += 1
+    gap = max(0.5, gap * 0.86)                        # 間隔がだんだん詰まる（最後は8分＝0.5拍）
+    if t + gap > end_drop: gap = max(0.5, end_drop - t)
+
+# ---------- リール（D ミクソリディア。1=D4。A・B 8小節） ----------
+A = ["1:0.5 3:0.5 5:0.5 3:0.5 1':0.5 5:0.5 3:0.5 5:0.5", "7,:0.5 2:0.5 4:0.5 2:0.5 7:0.5 4:0.5 2:0.5 4:0.5",
+     "1:0.5 3:0.5 5:0.5 6:0.5 5:0.5 3:0.5 2:0.5 3:0.5", "5,:0.5 1:0.5 2:0.5 1:0.5 6,:0.5 1:0.5 5,:1",
+     "1:0.5 3:0.5 5:0.5 3:0.5 1':0.5 2':0.5 1':0.5 6:0.5", "7,:0.5 2:0.5 4:0.5 6:0.5 7:0.5 6:0.5 4:0.5 2:0.5",
+     "4:0.5 6:0.5 1':0.5 6:0.5 5:0.5 3:0.5 2:0.5 7,:0.5", "1:1 5:0.5 3:0.5 1:1 R:1"]
+Bp = ["4:0.5 5:0.5 6:0.5 1':0.5 2':0.5 1':0.5 6:0.5 4:0.5", "1':0.5 6:0.5 5:0.5 3:0.5 1:0.5 3:0.5 5:0.5 1':0.5",
+      "7:0.5 1':0.5 2':0.5 7:0.5 6:0.5 5:0.5 4:0.5 2:0.5", "3:0.5 5:0.5 1':0.5 5:0.5 3:1 1:1",
+      "4:0.5 5:0.5 6:0.5 1':0.5 2':0.5 3':0.5 2':0.5 1':0.5", "6:0.5 1':0.5 5:0.5 1':0.5 4:0.5 1':0.5 3:0.5 1':0.5",
+      "5:0.5 4:0.5 6,:0.5 1:0.5 2:0.5 4:0.5 6:0.5 7:0.5", "1':1 5:0.5 3:0.5 1:1 R:1"]
+play_melody(c, "流れ", A + A + Bp + Bp, 4, "reel", key=K, density=0.3, seed=2101)
+PL = ["1:2 3:2", "7,:2 2:2", "1:1 3:1 5:2", "1:4", "4:2 6:2", "1':2 5:2", "6,:1 1:1 2:2", "1:4",
+      "3:2 5:2", "4:2 2:2", "3:1 5:1 1':2", "5:4", "4:2 6:2", "5:2 3:2", "2:1 1:1 7,:2", "1:4"]
+play_melody(c, "平原", PL, 4, "air", key=K, density=0.25, seed=2102)                 # 平原：流れが広く遅く見える（笛は長い音で）
+play_melody(c, "開ける", A + A + Bp + Bp, 4, "reel", key=K, density=0.5, seed=2103)
+play_melody(c, "遠ざかる", A + Bp[:6] + ["1:4", "R:4"], 4, "reel", key=K, density=0.35, seed=2104)
+
+# ---------- 竪琴の流れ（8分の分散和音。上と下の2本でかみ合わせる） ----------
+ROOT = {"D": 50, "C": 48, "G": 43, "Am": 45}
+def tones(ch):
+    m = re.match(r"^([A-G][#b]?)(m?)", ch); r = PC[m.group(1)]
+    return [r, (r + (3 if m.group(2) else 4)) % 12, (r + 7) % 12]
+for b in range(16, c.NB):
+    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]; r = ROOT[ch]
+    pcs = tones(ch)
+    up = [62 + (p - 62) % 12 for p in pcs] + [74 + (pcs[0] - 74) % 12]
+    up.sort()
+    if n == "平原":                                                # 平原：4分でゆったり
+        ARP.bar(b, " ".join(f"{nm(up[q])}:1{',' if q else ''}" for q in (0, 2, 1, 3)))
+        ARP2.bar(b, f"{nm(r)}:2, {nm(r + 7)}:2,")
+        continue
+    thin = n == "遠ざかる" and i >= 8                            # 遠ざかる：後半は上の8分だけ、だんだん細く
+    ARP.bar(b, " ".join(f"{nm(up[q])}:0.5{',' if q % 2 else ''}" for q in (0, 1, 2, 3, 2, 1, 2, 3)))
+    if not thin:
+        ARP2.bar(b, " ".join(f"{nm(x)}:0.5," for x in (r, r + 7, r + 12, r + 7, r, r + 7, r + 12, r + 7)))
+    if n == "開ける":
+        LOW.bar(b, f"{nm(r - 12 if r - 12 >= 38 else r)}:4")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.3 --master -15 --widen 1.2 --side-hpf 200",
+       "ケルト・フルート100曲の021（第3版）。第3章のはじまり、山すその岩場で苔から水が一滴ずつ落ちる。滴の間隔がだんだん詰まり、気づくとリール（4/4・♩=104）の8分の流れになっている。D ミクソリディア。伴奏は竪琴（滴の高い1音 → 8分の分散和音）。平原で一度ゆったりし、谷が見える所で急に開けて、最後は流れたまま遠ざかる。",
+       harm_scenes=None, tail_scene="遠ざかる", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 5.0, "layers": [{"file": "0595", "db": -45, "hp": 180, "lp": 3800, "wide": 0.012, "duck": 0.4, "fade": 7}],
+       "fx": {"far": {"db": -28, "delay": 0.24, "lp": 3000, "rt": 2.8}}}
+json.dump(air, open("/tmp/cel/w/air021.json", "w"), ensure_ascii=False)

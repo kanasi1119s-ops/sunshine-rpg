@@ -33,6 +33,9 @@ G = c.g()
 BUG = [S.track(f"竪琴（虫の2音・{x}）", "harp", patch="folkHarp", volume=0.07, pan=p, reverb=0.7, sustain=2.0,
                  barGain=[round(x * (2.0 if b < 4 or b >= c.NB - 4 else 1.0), 3) for b, x in enumerate(G)])
        for x, p in (("ファ", 0.4), ("シ♭", 0.25))]
+# 1回目（7.75）: 竪琴だけの始まりが -36〜-42dB と本編より約13dB 小さかった（×2 では足りない。強さは2で頭打ち）→ 始まりと終わりは別のパート（gainDb 8）で
+BUGE = [S.track(f"竪琴（虫の2音・始まりと終わり・{x}）", "harp", patch="folkHarp", volume=0.07, gainDb=8, pan=p, reverb=0.7, sustain=2.0,
+                barGain=[round(x_ * 2.0, 3) for x_ in G]) for x, p in (("ファ", 0.4), ("シ♭", 0.25))]
 LOW = S.track("竪琴（低い根音）", "harp", patch="folkHarp", volume=0.06, pan=-0.15, reverb=0.55, sustain=2.4, barGain=G)
 ARP = S.track("竪琴（流れる分散和音）", "harp", patch="folkHarp", volume=0.06, pan=-0.3, reverb=0.6, sustain=1.6, barGain=G)
 
@@ -61,8 +64,9 @@ for b in range(c.NB):
     # 遠い虫の2音（F5 と B♭4）。少しずつ揺れ方を変える（機械のようにしない）
     pat = [("F5:1, R:2", "R:1 Bb4:1, R:1"), ("F5:1.5, R:1.5", "R:1.5 Bb4:1.5,"), ("F5:1, R:1 F5:1,", "R:1 Bb4:1, R:1"),
            ("R:1 F5:1, R:1", "Bb4:1, R:1 Bb4:1,")][(b * 7) % 4]
-    BUG[0].bar(b, pat[0])
-    BUG[1].bar(b, pat[1])
+    bt = BUGE if (b < 4 or b >= c.NB - 4) else BUG
+    bt[0].bar(b, pat[0])
+    bt[1].bar(b, pat[1])
     r = int(n[0]) if n[0].isdigit() else 0
     root = {"Bb": 46, "Eb": 39, "F": 41, "Ab": 44}[ch]
     if 1 <= r <= 3: LOW.bar(b, f"{nm(root)}:3,")
