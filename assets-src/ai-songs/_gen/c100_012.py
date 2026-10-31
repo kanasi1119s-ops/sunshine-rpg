@@ -30,11 +30,11 @@ S.tempo = [{"bar": 1, "bpm": 92}, {"bar": 1 + n1, "bpm": 100, "ramp": n1}, {"bar
            {"bar": 1 + n1 + n2 + P3 * 2, "bpm": 120, "ramp": P3 * 2}]
 c = make(S, NAMES,
          [("夜明け", 0, 0.66), ("夜明け", n1 - 1, 0.72), ("放牧", 0, 0.74), ("放牧", n2 - 1, 0.82), ("祭り", 0, 0.84), ("祭り", P3 * 2 - 1, 0.95), ("止まる", 0, 0.95)],
-         {}, flute_gain={n: 1.1 for n in NAMES}, intro="夜明け", passing=True, tension=False)
+         {}, flute_gain={"夜明け": 1.4, "放牧": 1.25, "祭り": 1.15, "止まる": 1.15}, intro="夜明け", passing=True, tension=False)
 B = S.beats
-FD = S.track("フィドル（応答）", "strings", patch="violin", volume=0.16, gainDb=4, pan=0.3, reverb=0.4, barGain=[1.35] * c.NB)   # 1回目（c.g()）は夜明けの応答が -44dB、2回目（×2.0）は祭りが大きくなりすぎて夜明けが -40dB に沈んだ。応答はいつも同じ強さ（だんだん大きくなるのは人数・手拍子・速さで）
-FD2 = S.track("2本目のフィドル（1オクターブ下）", "strings", patch="violin", volume=0.13, gainDb=4, pan=0.45, reverb=0.45, barGain=[1.2] * c.NB)
-DRN = [S.track(f"フィドルの重音{j + 1}", "strings", patch="violin", volume=0.08, pan=-0.3 + 0.1 * j, reverb=0.5, barGain=[1.1] * c.NB) for j in range(2)]
+FD = S.track("フィドル（応答）", "strings", patch="violin", volume=0.16, gainDb=4, pan=0.3, reverb=0.4, barGain=[1.4 if b < n1 else 1.0 for b in range(c.NB)])   # 5回目（7.40）: 夜明けの応答（短い音）が -40dB に沈んだので夜明けだけ 1.4。4回目: 試し書き出しで応答が笛より約10dB大きかった → 1.35→1.0。 1回目（c.g()）は夜明けの応答が -44dB、2回目（×2.0）は祭りが大きくなりすぎて夜明けが -40dB に沈んだ。応答はいつも同じ強さ（だんだん大きくなるのは人数・手拍子・速さで）
+FD2 = S.track("2本目のフィドル（1オクターブ下）", "strings", patch="violin", volume=0.13, gainDb=4, pan=0.45, reverb=0.45, barGain=[0.9] * c.NB)
+DRN = [S.track(f"フィドルの重音{j + 1}", "strings", patch="violin", volume=0.08, pan=-0.3 + 0.1 * j, reverb=0.5, barGain=[1.5 if b < n1 else 1.3 for b in range(c.NB)]) for j in range(2)]   # 長い音は立ち上がりが遅く、試し書き出しで笛より約8dB小さかった（0.9→1.5）。3回目（7.33）: 夜明けは笛とフィドルが交互に鳴るだけで、あいだが -46dB まで沈んだ → 夜明けも2つ目の呼びかけから、小屋のフィドルが低く重音を保つ
 CL = S.track("手拍子", "pad", patch="seasonFx", volume=0.15, pan=-0.25, reverb=0.3, barGain=c.g())
 WD = S.track("木の打音", "guitar", patch="surgeWoody", volume=0.07, pan=0.12, reverb=0.3, barGain=c.g())
 
@@ -67,7 +67,10 @@ for ph, units, ln in (("夜明け", P1, 3), ("放牧", P2, 3), ("祭り", P3, 2)
             WD.bar(rb, "A4:1 R:1 A4:1 R:1")
         if ph == "祭り":
             for j in range(2): CL.bar(b0 + j, " ".join(["B4:0.5, B4:0.5"] * 4)); WD.bar(b0 + j, "A4:1! R:1 E4:1 R:1")
-        # 放牧と祭り：呼びかけの下でフィドルの重音（A と E）
+        # 呼びかけの下でフィドルの重音（A と E）。夜明けは2つ目から、応答の小節まで切らずに
+        if ph == "夜明け" and k >= 1:
+            for j in range(len(call) + 1):
+                DRN[0].at((b0 + j) * B, "A3:4,"); DRN[1].at((b0 + j) * B, "E4:4,")
         if ph != "夜明け":
             for j in range(len(call)):
                 DRN[0].at((b0 + j) * B, "A3:4,"); DRN[1].at((b0 + j) * B, "E4:4,")

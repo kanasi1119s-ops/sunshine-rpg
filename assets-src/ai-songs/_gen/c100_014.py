@@ -1,112 +1,148 @@
-# ケルト・フルート100曲「銀の笛と百の夜」014 迷い羊 The Lost Lamb — 第2版（2026-10-28）
-# イメージ: 霧の丘で、はぐれた子羊を探す。少し歩いては立ち止まり、笛で呼んで、じっと耳をすます。
-#   遠くで、かすかな鳴き声。歩くたびに、その声が近くなる（本物の録音を、呼ぶたびに大きく明るく）。見つけた所で小さな山、最後は安心の長い音。
-# 形（台帳）: ストップタイムのある歌。4小節ごとに「歩く2小節 → 呼ぶ（全員が1拍目だけ鳴らして止まる）→ 耳をすます」。4/4・♩=62。A ドリア。
-# 編曲の表:
-#   霧     : ピチカートの足どりだけ
-#   探す1  : 歩く＝笛の歩く節＋ピチカート＋竪琴＋低い弦／呼ぶ＝全員1拍目だけ、笛が上へ呼ぶ／耳をすます＝弦のごく弱い持続と鳴き声
-#   探す2  : 呼ぶ声が高くなる。鳴き声が近づく
-#   探す3  : 足どりが速まる（8分）
-#   見つけた: 全員。竪琴の分散和音・弦・チェロ（小さな山）
-#   安堵   : 笛の長い音、竪琴の根音、弦
-import sys, json
+# ケルト・フルート100曲「銀の笛と百の夜」014 迷い羊 The Stray Lamb — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 放牧小屋の朝のあと、1匹の子羊が群れからはぐれる。エイラが笛で追いかけると、子羊は右へ左へ跳ねて逃げる。
+#   森に入って見失い、また見つけて追いかけ、最後に子羊が立ち止まって、笛と同じ足どりで並んで帰る。
+# 調べ: あいだ（明るくも暗くもない、いたずらっぽい）。形: 追いかけっこ（笛が追うと旋律が逃げる）。
+# 拍子・速さ: 6/8・付点4分＝96。子羊（ピチカート）は 3+3 で跳ね、追う笛は 2+2+2（3拍子の感じ）で走る＝拍がずれる。
+#   見つけた瞬間から、笛も 3+3 になって拍がそろう。旋法: F♯ エオリア。
+# 主役は笛（追う笛。子羊の句を半小節おくれて追う）。伴奏の主役: ピチカート（子羊。左・中・右と跳ぶ場所が変わる）。
+#   脇: コントラバスとチェロのピチカート（地面）。竪琴・ギター・ピアノ・パッド・打楽器・長い弦の和音は使わない。
+# この曲だけ: 逃げる旋律と追う笛がずれた拍子で動き、見つけた瞬間に拍がそろう。
+# 始まり: ピチカートだけ（子羊の足あと）→ 終わり: 見つけて全員がそろい、同じ足どりで1拍。
+# 山: 終盤に1つ（見つけた）。最初が大きく、だんだん小さくなる形にはしない。
+# 書き方: 1拍＝付点4分（♩.=96）、1小節＝2拍。旋律は8分＝1で書き、e2b で 1/3 拍に直す（011 と同じ）。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
+import c100_v2 as _v2
 
-BPM = 62
-S = Song("C100", "014-the-lost-lamb", "迷い羊", "The Lost Lamb", BPM, 4, "A", "dorian", "ケルト（幻想）")
+BPM = 96
+S = Song("C100", "014-the-stray-lamb", "迷い羊", "The Stray Lamb", BPM, 2, "F#", "minor", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
 S.extra.update({"human": 0.4})
-U = ["Am", "D", "Am", "Am"]
-S.scene("霧", 4, "intro", ["Am", "Am", "D", "Am"])
-S.scene("探す1", 16, "verse", U + ["G", "D", "Am", "Am"] + U + ["C", "G", "Am", "Am"])
-S.scene("探す2", 16, "verse", U + ["G", "D", "Am", "Am"] + U + ["C", "G", "Am", "Am"])
-S.scene("探す3", 8, "verse", ["Am", "D", "Am", "Am", "C", "G", "D", "D"])
-S.scene("見つけた", 12, "chorus", ["C", "D", "G", "Em", "C", "D", "Em", "Am", "C", "D", "G", "Am"])
-S.scene("安堵", 12, "outro", ["Am", "D", "Am", "C", "G", "D", "Am", "Am", "Am", "Am", "Am", "Am"])
-NAMES = ["霧", "探す1", "探す2", "探す3", "見つけた", "安堵"]
+K = Key("F#", "minor", 4)
+T3 = 1 / 3
+def e2b(s_):
+    return " ".join(f"{t.split(':')[0]}:{round(float(t.split(':')[1]) / 3, 4)}" for t in s_.split())
 
+CA = ["F#m", "E", "D", "F#m"]; CB = ["D", "E", "C#m", "F#m"]
+LEN = {"足あと": 8, "追いかけ": 48, "森の中": 32, "また見つけた": 56, "並んだ": 40, "帰り道": 8}
+for n, L in LEN.items():
+    S.scene(n, L, {"並んだ": "chorus", "足あと": "intro", "帰り道": "outro"}.get(n, "verse"), ((CA + CB) * 20)[:L])
+NAMES = list(LEN)
 c = make(S, NAMES,
-         [("霧", 0, 0.6), ("探す1", 0, 0.62), ("探す2", 0, 0.66), ("探す3", 0, 0.72), ("見つけた", 0, 0.82), ("見つけた", 5, 0.9), ("見つけた", 11, 0.74),
-          ("安堵", 0, 0.66), ("安堵", 11, 0.38)],
-         {}, flute_gain={n: 1.2 for n in NAMES}, intro="霧", passing=True, tension=False)
-PIZZ = S.track("ピチカート（足どり）", "strings", patch="pizzicato", volume=0.075, pan=-0.25, reverb=0.4, barGain=c.g())
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.08, pan=0.2, reverb=0.45, barGain=c.g())
-
-W = [("1:1 2:1 3:1 5:1", "4:1 3:1 2:2"), ("3:1 4:1 5:1 3:1", "2:1 1:1 7,:2"), ("5:1 4:1 3:1 4:1", "5:1 6:1 5:2"), ("6:1 5:1 4:1 2:1", "3:1 2:1 1:2")]
-CALL = ["R:1 5:1 1':2", "R:1 6:1 2':2", "R:1 1':1 3':2", "R:1 7:1 2':2", "R:1 1':1 3':2", "R:1 2':0.5 3':1.5 1':1"]
-def unitbars(k, call):
-    w = W[k % 4]; return [w[0], w[1], call, "R:4"]
-s1 = sum([unitbars(k, CALL[min(k, 5)]) for k in range(4)], [])
-s2 = sum([unitbars(k + 1, CALL[min(k + 2, 5)]) for k in range(4)], [])
-play_melody(c, "探す1", s1, 4, "air", density=0.6, seed=1401)
-play_melody(c, "探す2", s2, 4, "air", density=0.7, seed=1402)
-play_melody(c, "探す3", ["1:0.5 2:0.5 3:0.5 5:0.5 4:1 3:1", "2:0.5 3:0.5 4:0.5 5:0.5 6:2", "R:1 1':1 3':2", "R:4",
-                         "5:0.5 6:0.5 7:0.5 1':0.5 2':1 1':1", "7:0.5 6:0.5 5:0.5 4:0.5 5:2", "R:1 2':0.5 3':1.5 1':1", "R:4"], 4, "air", density=0.6, seed=1403)
-play_melody(c, "見つけた", ["1':1 2':1 3':2", "2':1 1':1 6:2", "7:1 2':1 1':1 7:1", "6:4", "5:1 6:1 1':2", "2':1 1':1 5:2", "6:1 7:1 6:1 5:1", "3:4",
-                            "5:1 6:1 1':1 3':1", "2':2 1':1 7:1", "1':1 2':1 7:1 5:1", "6:4"], 4, "air", density=1.0, seed=1404)
-play_melody(c, "安堵", ["5:4", "6:2 4:2", "5:4", "3:4", "2:2 3:2", "4:4", "1:4", "1:4", "R:4", "R:4", "R:4", "R:4"], 4, "air", density=0.5, seed=1405)
-
+         [("足あと", 0, 0.62), ("追いかけ", 0, 0.68), ("追いかけ", 47, 0.78), ("森の中", 0, 0.62), ("森の中", 31, 0.68),
+          ("また見つけた", 0, 0.74), ("また見つけた", 55, 0.84), ("並んだ", 0, 0.9), ("並んだ", 39, 0.94), ("帰り道", 0, 0.82), ("帰り道", 7, 0.74)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="足あと", passing=True, tension=False)
 B = S.beats
-for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    t = tones(ch, "E3", "E5"); pz = tones(ch, "A3", "A4")
-    if n == "霧":
-        PIZZ.bar(b, f"{nm(pz[0])}:1 {nm(pz[1])}:1 {nm(pz[2])}:1 R:1" if i % 2 == 0 else f"{nm(pz[2])}:1 R:1 {nm(pz[1])}:1 {nm(pz[0])}:1")
-        v = voice(ch, 55, 3, spread=True)       # 霧そのもの：弦の和音がうすく丘をおおう
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-        CELLO.bar(b, f"{nm(r)}:4")
-        c.HARP2.bar(b, f"R:2 {nm(t[4 % len(t)] + 12)}:2" if i % 2 else "R:4")   # 霧の中の水滴
-        continue
-    if n in ("探す1", "探す2", "探す3"):
-        ph = i % 4
-        if ph in (0, 1):     # 歩く
-            PIZZ.bar(b, " ".join(f"{nm(pz[x % len(pz)])}:{0.5 if n == '探す3' else 1}" for x in ((0, 1, 2, 1, 0, 2, 1, 2) if n == "探す3" else (0, 1, 2, 1))))
-            c.HARP.bar(b, f"{nm(r)}:2 {nm(t[2])}:2")
-            v = voice(ch, 52, 3, spread=True)
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-            CELLO.bar(b, f"{nm(r)}:4")
-        elif ph == 2:        # 呼ぶ：全員が1拍目だけ
-            PIZZ.bar(b, f"{nm(pz[0])}:1 R:3"); c.HARP.bar(b, f"{nm(r)}:1 R:3"); CELLO.bar(b, f"{nm(r)}:1 R:3")
-            v = voice(ch, 52, 3, spread=True)
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:1 R:3" if j else f"{nm(v[j])}:4")
-        else:                # 耳をすます：弦の持続（音は止めず、息をひそめる）
-            v = voice(ch, 57, 3, spread=True)
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-            CELLO.bar(b, f"{nm(r)}:4")
-    if n == "見つけた":
-        c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in (t[0], t[2], t[4 % len(t)], t[2]) * 2))
-        v = voice(ch, 57, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-        CELLO.bar(b, f"{nm(r)}:4"); PIZZ.bar(b, f"{nm(pz[0])}:1 R:1 {nm(pz[2])}:1 R:1")
-    if n == "安堵":
-        if i < 10:
-            v = voice(ch, 55, 3, spread=True)
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-        if i % 2 == 0 and i < 10: c.HARP.bar(b, f"{nm(r)}:4")
-        if i < 8: CELLO.bar(b, f"{nm(r)}:4")
-rich(c, choir_scenes=["見つけた"], pulse_scenes=["探す2", "探す3", "見つけた", "安堵"], guitar=False, pizz=False, inner=True)
-sparkle(c, dense=True)   # 7.15 のあと濃く。 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の014（第2版）。霧の丘ではぐれた子羊を探す。4/4・♩=62、A ドリア。ストップタイム：歩く2小節→全員が1拍目だけ鳴らして止まり笛が呼ぶ→耳をすます。呼ぶたびに本物の鳴き声が近づき、見つけた所で小さな山。",
-       harm_scenes=None, tail_scene="安堵", fill=False, pads=True, pad_scenes=["探す1", "探す2", "探す3", "見つけた", "安堵"], floor=True)
 
-# ---------- 空気：耳をすます小節に、遠くの鳴き声（呼ぶたびに近づく） ----------
-BAR = 4 * 60 / BPM
-SEEK = [4.3, 12.0, 40.4, 61.0, 20.4, 42.1, 5.3, 14.3, 43.2, 61.2]
-ev = []; k = 0
-for n in ("探す1", "探す2", "探す3"):
-    for p in range(3, c.sc_len[n], 4):
-        b = c.s0[n] + p; near = k / 9
-        ev.append({"t": round(b * BAR + 0.4, 2), "file": "0821", "db": round(-36 + 12 * near, 1), "len": 3.0, "pan": round(0.55 - 0.45 * near, 2),
-                   "seek": SEEK[k % len(SEEK)], "hp": 300, "lp": int(2500 + 5000 * near)})
-        k += 1
-ev.append({"t": round((c.s0["見つけた"] + 1) * BAR, 2), "file": "0821", "db": -22, "len": 3.0, "pan": 0.05, "seek": 40.4, "hp": 250, "lp": 8000})
-air = {"pre": 1.5, "tail": 6.0, "layers": [{"file": "0908", "db": -35, "hp": 150, "lp": 5000, "lfo": [40, 0.4], "wide": 0.014, "duck": 0.35, "fade": 10},
-                                           {"file": "0904", "db": -40, "hp": 100, "lp": 3000, "lfo": [53, 0.3], "phase": 1.0, "wide": 0.012, "duck": 0.35, "fade": 10}],
-       "events": ev,
-       "fx": {"glass": {"hz": [440.0, 880.0, 1318.5], "db": -28, "rt": 6.0, "start": 4}, "shimmer": {"db": -27, "rt": 8.0},
-              "far": {"db": -25, "delay": 0.25, "lp": 2600, "rt": 4.5}, "haze": {"db": -27, "rt": 8.0}, "band": {"db": -37, "hz": 6500, "per": 23}}, "intro_db": 8.5}
+# 子羊（ピチカート）：左・中・右の3か所。句ごとに跳ぶ場所を変える
+# 1回目（7.53）: 試し書き出しでピチカートは笛より約10dB小さく、子羊だけの足あとが -45dB に沈んだ → gainDb 6、足あとはさらに ×1.6
+LAMB = [S.track(f"子羊（ピチカート・{nm_}）", "strings", patch="pizzicato", volume=0.12, gainDb=6, pan=p, reverb=0.35,
+                barGain=[round(x * (1.6 if b < 8 else 1.0), 3) for b, x in enumerate(c.g())])
+        for nm_, p in (("左", -0.6), ("中", 0.05), ("右", 0.6))]
+CBP = S.track("コントラバス（ピチカート）", "strings", patch="contrabass", volume=0.08, gainDb=4, pan=0.0, reverb=0.3, sustain=0.5, barGain=c.g())
+VCP = S.track("チェロ（ピチカート）", "strings", patch="pizzicato", volume=0.1, pan=-0.15, reverb=0.35, barGain=c.g())
+
+# ---------- 子羊の旋律（3+3 で跳ねる。8分＝1、1小節＝6） ----------
+SA = ["1:2 3:1 5:2 4:1", "3:1 4:1 5:1 7:3", "6:2 5:1 4:2 3:1", "2:1 3:1 4:1 1:3"]
+SB = ["5:1 6:1 7:1 1':2 7:1", "6:2 4:1 5:3", "3:1 5:1 7:1 6:2 5:1", "4:1 2:1 7,:1 1:3"]
+SC = ["3:1 R:1 3:1 5:1 R:1 5:1", "7:2 R:1 6:2 R:1", "4:1 5:1 6:1 5:1 4:1 3:1", "2:3 R:3"]       # 跳ねて止まる（振り返る）
+LAMB_PH = [SA, SB, SA, SC]
+
+# ---------- 追う笛（2+2+2 で走る。2小節＝12） ----------
+FL = ["1:2 3:2 5:2 4:2 3:2 2:2", "5:2 6:2 7:2 1':2 7:2 5:2", "4:2 5:2 6:2 5:2 4:2 3:2", "2:2 3:2 4:2 3:2 2:4",
+      "3:2 5:2 7:2 6:2 5:2 4:2", "1':4 7:2 6:2 5:4", "6:2 4:2 2:2 3:2 4:2 5:2", "4:2 3:2 2:2 7,:2 1:4"]
+FOREST = ["1:8 2:2 3:2", "5:8 4:2 3:2", "2:8 7,:2 1:2", "3:12",                         # 1回目は句の中の休みで -53dB まで沈んだ → 休みをのばす音に                         # 森：見失って、低く長く呼ぶ
+          "5:4 4:2 3:6", "6:6 5:2 4:4", "3:4 2:4 1:4", "7,:10 1:2"]
+
+def put(track, s_, oct_, start_beat, key=K, orn=None):
+    ev = mel_events(key, e2b(s_), oct_, start_beat)
+    ev = [[round(t, 4), L, m] for t, L, m in ev]
+    if orn is not None:
+        ev = _v2.ornament(ev, key, BPM, "march", B, density=orn[0], seed=orn[1])
+    else:
+        ev = [(t, L, m, "") for t, L, m in ev]
+    play(track, ev)
+
+def lamb_phrase(b0, ph, oct_, hop, dens=None):
+    """子羊の4小節。1小節ごとに左右へ跳ぶ（hop=跳び始めの場所）"""
+    for j, s_ in enumerate(ph):
+        put(LAMB[(hop + j) % 3], s_, oct_, (b0 + j) * B)
+
+# 足あと：子羊だけ（左→中→右と跳ぶ）
+s0 = c.s0["足あと"]
+lamb_phrase(s0, SA, 5, 0); lamb_phrase(s0 + 4, SC, 5, 2)
+
+# 追いかけ：子羊は高い所で 3+3。笛は半小節おくれて 2+2+2 で追う（拍がずれる）
+s0 = c.s0["追いかけ"]
+for q in range(12):
+    lamb_phrase(s0 + 4 * q, LAMB_PH[q % 4], 5, q)
+for q in range(24):
+    st = (s0 + 2 * q) * B + 1          # 半小節（付点4分1つ）おくれて
+    if st + 4 > (s0 + LEN["追いかけ"]) * B: break
+    put(c.FLUTE, FL[q % 8], 4, st, orn=(0.25 + 0.3 * q / 24, 1400 + q))
+
+# 森の中：子羊は時々、遠くで1〜2音だけ（見失う）。笛は低く長く呼ぶ
+s0 = c.s0["森の中"]
+for q in range(8):
+    put(c.FLUTE, FOREST[q], 4, (s0 + 4 * q) * B + (1 if q % 2 else 0) * 0, orn=(0.35, 1500 + q))
+    b = s0 + 4 * q + 2
+    put(LAMB[(q * 2) % 3], ["R:3 5:1 R:2", "R:1 3:1 R:4", "R:4 7:1 R:1", "R:2 1':1 R:3"][q % 4], 5, b * B)
+
+# また見つけた：子羊は低い所へ逃げる。笛は高い所から、もっと近く（1拍＝付点4分の半分＝8分3つおくれ）で追う
+s0 = c.s0["また見つけた"]
+for q in range(14):
+    lamb_phrase(s0 + 4 * q, LAMB_PH[(q + 1) % 4], 4, 2 * q)
+for q in range(28):
+    st = (s0 + 2 * q) * B + 0.5 + (0.5 if q < 14 else 0)           # 後半は差が詰まる（追いつきそう）
+    if st + 4 > (s0 + LEN["また見つけた"]) * B: break
+    put(c.FLUTE, FL[(q + 3) % 8], 5 if q % 8 < 4 else 4, st, orn=(0.45 + 0.3 * q / 28, 1600 + q))
+
+# 並んだ（山）：見つけた瞬間、笛も 3+3 になり、子羊と同じ旋律を1オクターブ上で、同じ拍で
+s0 = c.s0["並んだ"]
+for q in range(10):
+    ph = [SA, SB, SA, SB, SA, SB, SC, SB, SA, SB][q]
+    for j, s_ in enumerate(ph):
+        for i in range(3):                                           # 子羊は真ん中に来る（3か所そろって鳴る）
+            if i == 1 or q >= 2: put(LAMB[i], s_, 4, (s0 + 4 * q + j) * B)
+    for j, s_ in enumerate(ph):
+        put(c.FLUTE, s_, 5, (s0 + 4 * q + j) * B, orn=(0.6, 1700 + 4 * q + j))
+
+# 帰り道：同じ足どりで、ゆっくり主音へ
+s0 = c.s0["帰り道"]
+for j, s_ in enumerate(["5:2 4:1 3:2 2:1", "1:3 3:3", "5:6", "1:6", "R:6", "R:6", "R:6", "R:6"]):
+    put(c.FLUTE, s_, 5, (s0 + j) * B)
+for j, s_ in enumerate(["5:2 4:1 3:2 2:1", "1:3 3:3", "5:3 R:3", "1:3 R:3"]):
+    put(LAMB[1], s_, 4, (s0 + j) * B)
+
+# ---------- 地面：コントラバスとチェロのピチカート（1拍目と2拍目に根音と5度） ----------
+ROOT = {"F#m": 42, "E": 40, "D": 38, "C#m": 37}
+for b in range(c.NB):
+    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]; r = ROOT[ch]
+    if n == "足あと": continue
+    if n == "森の中":
+        if i % 2 == 0: CBP.bar(b, f"{nm(r)}:{round(2 * T3, 4)} R:{round(4 * T3, 4)}")
+        continue
+    if n == "帰り道":
+        if i < 4: CBP.bar(b, f"{nm(r)}:1 {nm(r + 7)}:1")
+        elif i == 4: CBP.bar(b, f"{nm(42)}:2")
+        continue
+    CBP.bar(b, f"{nm(r)}:{round(2 * T3, 4)} R:{round(T3, 4)} {nm(r + 7)}:{round(2 * T3, 4)} R:{round(T3, 4)}")
+    if n == "並んだ" or (n == "また見つけた" and i >= 28):
+        VCP.bar(b, f"{nm(r + 12)}:{round(T3, 4)} R:{round(2 * T3, 4)} {nm(r + 19)}:{round(T3, 4)} R:{round(2 * T3, 4)}")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.26 --master -15 --widen 1.2 --side-hpf 200",
+       "ケルト・フルート100曲の014（第3版）。群れからはぐれた子羊を、エイラの笛が追いかける。6/8・付点4分＝96、F♯ エオリア。子羊（ピチカート）は 3+3 で左右に跳ねて逃げ、追う笛は 2+2+2 で半小節おくれて走るので、拍がずれたまま進む。森で見失い、また見つけて追い、最後に笛も 3+3 になって子羊と同じ旋律を同じ拍で弾き、並んで帰る。",
+       harm_scenes=None, tail_scene="帰り道", double=False, fill=False, pads=False)
+air = {"pre": 0.2, "tail": 4.5, "layers": [{"file": "0595", "db": -46, "hp": 200, "lp": 4000, "wide": 0.012, "duck": 0.4, "fade": 6}],
+       "fx": {"far": {"db": -29, "delay": 0.22, "lp": 3000, "rt": 2.6}}}
 json.dump(air, open("/tmp/cel/w/air014.json", "w"), ensure_ascii=False)
-print("鳴き声:", len(ev))
+
+# 1/3 拍を丸めてできる「R:0」を取りのぞく（010・011 と同じ）
+_p = sys.argv[1] if len(sys.argv) > 1 else None
+if _p:
+    _d = json.load(open(_p))
+    for _pt in _d["parts"]:
+        if isinstance(_pt.get("notes"), str):
+            _pt["notes"] = " ".join(t for t in _pt["notes"].split() if not re.match(r"^R:0(\.0*)?$", t))
+    json.dump(_d, open(_p, "w"), ensure_ascii=False)
