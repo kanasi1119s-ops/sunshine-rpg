@@ -1,95 +1,108 @@
-# ケルト・フルート100曲「銀の笛と百の夜」023 水面の光 Light on the Water — 第3版（明るく速めの曲）（2026-10-29: 7.27→ 前奏にチェロと竪琴、1周目から弦、速い曲なのでパッドと内声を外す、終わりまで弦。7.39→ 前奏にギターのやわらかいストローク、2・3周目に厚い弦とコントラバス）
-# イメージ: 昼の川面に、日の光が細かくきらめく。きらめきは、笛の細かい装飾音（カット・ロール）の雨になって降る。
-#   はじめは高い所でちらちら光り、だんだん深い所へ光がしずんでいって、最後は川底の低い音で終わる。
-# 形（台帳）: リール（装飾音の雨）AABB。4/4・♩=100。E ミクソリディア（D♮）。始め：高い音のきらめき／終わり：低い音。2周目と最後に山。
-# 編曲の表:
-#   きらめき: グロッケンと竪琴の高い音の粒だけ
-#   1周目  : 笛（A は高い所、B は少し低く）＋竪琴の3音オスティナート＋ピチカート
-#   2周目  : ＋弦＋チェロ。笛の装飾がいちばん多い（山）
-#   3周目  : 笛が低い所へ。竪琴も低くなり、光が川底へ沈む（最後の山）
-#   川底   : 低い長い音で終わる
-import sys
+# ケルト・フルート100曲「銀の笛と百の夜」023 水面の光 Light on the Water — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 水車が回りだした昼。小川の水面に日の光がちらちらと跳ねる。エイラが笛を吹きながら川岸を歩くうちに、
+#   日は傾き、光は水面から少しずつ水の中へ、さらに川底の石へと沈んでいく。最後は、川底で揺れる低い光だけが残る。
+# 調べ: 喜び。形: リール AABB を3周（あいだに「水の中」の8小節）。装飾音の雨（ロールとカットが多い）。
+# 拍子・速さ: 4/4・♩=104。旋法: E ミクソリディア。
+# 主役は笛（ロールとカット多め）。伴奏の主役: ブズーキ風の開いた和音のギター（ナイロン弦で、高い所の開放弦の響きをかき鳴らす）と、ボーラン。
+#   脇: 1周目だけ、ティン・ホイッスルが笛の上で短い光の粒を足す。竪琴・ピアノ・弦・パッドは使わない。
+# この曲だけ: 周ごとに全員の音域が下がり、光が川底へ沈む（ギターの和音は 高→中→低、笛は3周目だけ低い所で吹く B 部、ホイッスルは1周目だけ）。
+# 始まり: 高い音のきらめき（ホイッスルと高い和音）→ 終わり: 低い音（ギターの低い E と笛の低い E）。
+# 山: 2周目と最後（3周目の後半）。最初が大きく、だんだん小さくなる形にはしない。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
+import c100_v2 as _v2
 
-S = Song("C100", "023-light-on-the-water", "水面の光", "Light on the Water", 100, 4, "E", "mixolydian", "ケルト（幻想）")
+S = Song("C100", "023-light-on-the-water", "水面の光", "Light on the Water", 104, 4, "E", "mixolydian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.3})
-AC = ["E", "E", "A", "D", "E", "E", "D", "E"]
-BC = ["A", "A", "D", "E", "A", "A", "D", "E"]
-S.scene("きらめき", 4, "intro", ["E", "E", "D", "E"])
-S.scene("1周目", 32, "verse", AC * 2 + BC * 2)
-S.scene("2周目", 32, "chorus", AC * 2 + BC * 2)
-S.scene("3周目", 32, "verse", AC * 2 + BC * 2)
-S.scene("川底", 4, "outro", ["E", "D", "E", "E"])
-NAMES = ["きらめき", "1周目", "2周目", "3周目", "川底"]
-
+S.extra.update({"human": 0.4})
+K = Key("E", "mixolydian", 4)
+CA = ["E", "D", "E", "A", "E", "D", "A", "E"]
+CB = ["A", "E", "D", "E", "A", "E", "D", "E"]
+SC = [("きらめき", 4, "intro", ["E", "D", "A", "E"])]
+for r in (1, 2):
+    SC.append((f"{r}周目", 32, "chorus" if r == 2 else "verse", CA + CA + CB + CB))
+SC += [("水の中", 8, "verse", ["A", "E", "D", "E"] * 2), ("3周目", 32, "chorus", CA + CA + CB + CB), ("川底", 4, "outro", ["E", "D", "E", "E"])]
+for n, L, kd, ch in SC: S.scene(n, L, kd, ch)
+NAMES = [x[0] for x in SC]
 c = make(S, NAMES,
-         [("きらめき", 0, 0.62), ("1周目", 0, 0.68), ("2周目", 0, 0.78), ("2周目", 28, 0.92), ("3周目", 0, 0.78), ("3周目", 28, 0.88), ("川底", 0, 0.7), ("川底", 3, 0.45)],
-         {}, flute_gain={n: 1.1 for n in NAMES}, intro="きらめき", passing=True, tension=False)
-GLOCK = S.track("きらめき（グロッケン）", "bell", patch="glockenspiel", volume=0.05, pan=0.35, reverb=0.7, barGain=c.g())
-PIZZ = S.track("ピチカート", "strings", patch="pizzicato", volume=0.06, pan=-0.35, reverb=0.35, barGain=c.g())
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.4, barGain=c.g())
-
-THICK = [S.track(f"厚い弦{i + 1}", "strings", patch="slowStrings", volume=0.045, pan=[-0.55, 0.55, 0.0][i], reverb=0.55, barGain=c.g()) for i in range(3)]
-CB = S.track("コントラバス", "strings", patch="contrabass", volume=0.07, pan=0.0, reverb=0.4, barGain=c.g())
-DRUM = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.1, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
-GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.05, pan=0.35 + 0.04 * i, reverb=0.35, barGain=c.g()) for i in range(5)]
-REEL_STRUM = [(0, 1, "d", "!"), (1, 0.5, "d", ","), (1.5, 0.5, "u", ","), (2, 1, "d", ""), (3, 0.5, "d", ","), (3.5, 0.5, "u", ",")]
-A = ["5:0.5 1':0.5 2':0.5 1':0.5 7:0.5 5:0.5 6:0.5 7:0.5", "1':0.5 5:0.5 3:0.5 5:0.5 1':0.5 2':0.5 3':1",
-     "2':0.5 1':0.5 7:0.5 2':0.5 1':0.5 7:0.5 6:0.5 5:0.5", "6:0.5 4:0.5 2:0.5 4:0.5 6:1 5:1",
-     "5:0.5 1':0.5 2':0.5 1':0.5 7:0.5 5:0.5 6:0.5 7:0.5", "1':0.5 5:0.5 3:0.5 5:0.5 6:0.5 7:0.5 1':0.5 2':0.5",
-     "3':0.5 2':0.5 1':0.5 7:0.5 6:0.5 4:0.5 2:0.5 7,:0.5", "1:1 5,:0.5 7,:0.5 1:2"]
-Bp = ["3:0.5 4:0.5 5:0.5 3:0.5 2:0.5 3:0.5 4:0.5 2:0.5", "1:0.5 2:0.5 3:0.5 1:0.5 7,:1 5,:1",
-      "6,:0.5 7,:0.5 1:0.5 2:0.5 3:0.5 4:0.5 5:0.5 6:0.5", "7:0.5 6:0.5 5:0.5 4:0.5 5:1 2:1",
-      "3:0.5 4:0.5 5:0.5 3:0.5 2:0.5 3:0.5 4:0.5 2:0.5", "1:0.5 2:0.5 3:0.5 1:0.5 7,:1 5,:1",
-      "3':0.5 2':0.5 1':0.5 7:0.5 6:0.5 4:0.5 2:0.5 7,:0.5", "1:1 5,:0.5 7,:0.5 1:2"]
-play_melody(c, "1周目", A + A + Bp + Bp, 4, "reel", density=0.7, seed=2301)
-play_melody(c, "2周目", A + A + Bp + Bp, 4, "reel", density=1.3, seed=2302)
-# 3周目：光が沈む＝A を低い所で（1オクターブ下げても笛の低い所に収まる形に）
-Alow = [x.replace("3':", "3:").replace("2':", "2:").replace("1':", "1:") for x in A]
-play_melody(c, "3周目", A[:4] + Alow[4:] + Bp + Bp, 4, "reel", density=1.0, seed=2303)
-play_melody(c, "川底", ["1:4", "7,:2 6,:2", "5,:4", "R:4"], 4, "air", density=0)
-
+         [("きらめき", 0, 0.68), ("1周目", 0, 0.74), ("1周目", 31, 0.78), ("2周目", 0, 0.84), ("2周目", 31, 0.9), ("水の中", 0, 0.7),
+          ("3周目", 0, 0.76), ("3周目", 16, 0.84), ("3周目", 31, 0.92), ("川底", 0, 0.82), ("川底", 3, 0.72)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="きらめき", passing=True, tension=False)
+S.fix_avoid = lambda t: 0
 B = S.beats
+G = c.g()
+# 試し書き出し: ギターの和音（3音）は笛より約5dB 大きい → 0.045→0.022（5音になるので少し多めに下げる）。ホイッスルの粒も笛より大きい → 0.025。ボーランは笛と同じくらい
+GU = [S.track(f"ブズーキ風ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.022, pan=0.28 + 0.05 * i, reverb=0.3, barGain=G) for i in range(5)]
+WH = S.track("ティン・ホイッスル（光の粒）", "panflute", patch="tinWhistle", volume=0.025, pan=-0.35, reverb=0.5, barGain=G)
+DR = [S.track(f"ボーラン{j + 1}", "guitar", patch="frameDrum", volume=0.35, gainDb=18, pan=-0.1 + 0.08 * j, reverb=0.3, barGain=G) for j in range(2)]
+
+# ---------- リール（E ミクソリディア。1=E4） ----------
+A = ["5:0.5 3:0.5 1:0.5 3:0.5 5:1 6:0.5 5:0.5", "4:0.5 2:0.5 7,:0.5 2:0.5 4:1 5:0.5 4:0.5",
+     "3:0.5 4:0.5 5:0.5 6:0.5 7:0.5 6:0.5 5:0.5 3:0.5", "2:0.5 3:0.5 4:0.5 2:0.5 1:1 R:0.5 6,:0.5",
+     "5:0.5 3:0.5 1:0.5 3:0.5 5:1 6:0.5 5:0.5", "6:0.5 4:0.5 2:0.5 4:0.5 6:1 7:0.5 1':0.5",
+     "2':0.5 1':0.5 7:0.5 5:0.5 6:0.5 4:0.5 3:0.5 2:0.5", "1:1 3:0.5 2:0.5 1:1 R:1"]
+Bh = ["1':1 7:0.5 1':0.5 2':0.5 1':0.5 7:0.5 5:0.5", "6:1 5:0.5 6:0.5 7:0.5 6:0.5 5:0.5 3:0.5",
+      "4:0.5 5:0.5 6:0.5 4:0.5 5:0.5 6:0.5 7:0.5 5:0.5", "1':1 5:0.5 3:0.5 5:1 R:1",
+      "1':1 7:0.5 1':0.5 2':0.5 1':0.5 7:0.5 5:0.5", "6:1 5:0.5 6:0.5 7:0.5 6:0.5 5:0.5 3:0.5",
+      "4:0.5 6:0.5 5:0.5 3:0.5 2:0.5 4:0.5 3:0.5 1:0.5", "7,:0.5 2:0.5 6,:0.5 7,:0.5 1:1 R:1"]
+Bl = ["1:1 7,:0.5 1:0.5 2:0.5 1:0.5 7,:0.5 6,:0.5", "6,:1 7,:0.5 6,:0.5 7,:0.5 1:0.5 2:0.5 3:0.5",            # 3周目の B：低い所で（川底）
+      "4:0.5 3:0.5 2:0.5 4:0.5 3:0.5 2:0.5 1:0.5 7,:0.5", "1:1 6,:0.5 7,:0.5 1:1 R:1",
+      "1:1 7,:0.5 1:0.5 2:0.5 1:0.5 7,:0.5 6,:0.5", "6,:1 7,:0.5 6,:0.5 7,:0.5 1:0.5 2:0.5 3:0.5",
+      "4:0.5 6:0.5 5:0.5 3:0.5 2:0.5 4:0.5 3:0.5 1:0.5", "7,:0.5 2:0.5 6,:0.5 7,:0.5 1:2"]
+SPK = ["R:2 5':0.25 6':0.25 5':0.5 R:1", "R:1 3':0.25 4':0.25 3':0.5 R:2", "R:3 2':0.25 3':0.25 2':0.5", "R:0.5 1':0.25 2':0.25 1':0.5 R:2.5"]
+play_melody(c, "きらめき", SPK, 4, "reel", key=K, density=0.0, seed=2300)
+nb = play_melody(c, "1周目", A + A + Bh + Bh, 4, "reel", key=K, density=0.55, seed=2301)
+for st, L, m, mk in nb:                                       # 1周目：ホイッスルが1オクターブ上で、ところどころ光の粒を
+    if L <= 0.6 and int(st * 4) % 7 == 0: WH.at(round(st + 0.01, 3), f"{nm(m + 12 if m + 12 <= 93 else m)}:{round(min(L, 0.4), 3)}")
+play_melody(c, "2周目", A + A + Bh + Bh, 4, "reel", key=K, density=0.65, seed=2302)
+WATER = ["5:2 3:2", "4:2 2:2", "3:1 4:1 5:2", "1:4", "6,:2 1:2", "2:2 7,:2", "1:1 2:1 3:2", "1:4"]       # 水の中：長い音でゆらぐ
+play_melody(c, "水の中", WATER, 4, "air", key=K, density=0.3, seed=2303)
+play_melody(c, "3周目", A + A + Bl + Bl, 4, "reel", key=K, density=0.55, seed=2304)
+play_melody(c, "川底", ["5:1 3:1 2:1 7,:1", "1:4", "1:4", "R:4"], 4, "air", key=K, density=0.1, seed=2305)
+# きらめき：ホイッスルの粒
+s0 = c.s0["きらめき"]
+for j, s_ in enumerate(["R:1 5':0.25 6':0.25 5':0.5 R:2", "R:2.5 3':0.25 4':0.25 3':1", "R:0.5 6':0.25 5':0.25 6':0.5 R:2.5", "R:3 5':0.5 R:0.5"]):
+    for t, L, m in mel_events(K, s_, 5, (s0 + j) * B):
+        if m <= 93: WH.at(round(t, 3), f"{nm(m)}:{L}")
+
+# ---------- ブズーキ風ギター（周ごとに和音の高さが下がる） ----------
+REEL = [(0, 1, "d", "!"), (1, 0.5, "d", ","), (1.5, 0.5, "u", ","), (2, 1, "d", ""), (3, 0.5, "d", ","), (3.5, 0.5, "u", ",")]
+RANGE = {"きらめき": (64, 88), "1周目": (59, 83), "2周目": (52, 76), "水の中": (47, 71), "3周目": (40, 66), "川底": (40, 64)}
 for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
+    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
+    lo, hi = RANGE[n]
+    v = _v2.open_chord(ch, lo, hi)
+    trs = GU[:len(v)]
     if n == "きらめき":
-        hi = tones(ch, "E5", "E7")
-        GLOCK.bar(b, " ".join(f"{nm(hi[(i * 3 + q) % len(hi)])}:0.5" for q in (0, 2, 4)) + " R:2.5")
-        c.HARP2.bar(b, "R:1.5 " + " ".join(f"{nm(hi[(i + q) % len(hi)] - 12)}:0.5" for q in (1, 3, 5)) + " R:1")
-        v = voice(ch, 59, 3, spread=True)       # 昼の光そのもの：高い弦のうすい和音
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-        strum(GTR, b, B, ch, [(0, 2, "d", ","), (2, 2, "d", ",")])
-        CELLO.bar(b, f"{nm(r)}:4"); c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "E3", "E5")[:4]))
-        if i >= 2: DRUM.bar(b, "D3:2, R:1 A3:0.5, A3:0.5," if i == 3 else "D3:2, R:2")
+        for q, x in enumerate(v[-3:]): GU[q].at(round(b * B + 0.08 * q, 3), f"{nm(x)}:4,")
+        continue
+    if n == "水の中":
+        for q, x in enumerate(v[:4]): GU[q].at(round(b * B + 0.12 * q, 3), f"{nm(x)}:4,")      # 水の中：ゆっくり1回だけ鳴らす
         continue
     if n == "川底":
-        c.HARP.bar(b, f"{nm(r)}:4"); CELLO.bar(b, f"{nm(r)}:4")
-        v = voice(ch, 50, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
+        if i == 0:
+            for q, x in enumerate(v[:3]): GU[q].at(round(b * B + 0.1 * q, 3), f"{nm(x)}:4,")
+        elif i == 1: GU[0].at(b * B, "E2:8")                              # 最後は低い E
         continue
-    lowp = (n == "3周目" and i >= 4)
-    base = "E3" if lowp else "E4"
-    harp_ostinato(c.HARP, b, B, tones(ch, base, "E6")[:3])
-    bodhran(DRUM, b, B, "reel", var=1 if i % 8 == 7 else 0)
-    strum(GTR, b, B, ch, REEL_STRUM if n != "1周目" or i >= 16 else [(0, 2, "d", "!"), (2, 2, "d", ",")])
-    if n == "1周目":
-        CELLO.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2")
-        v = voice(ch, 55, 2, spread=True)
-        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:4")
-    PIZZ.bar(b, f"{nm(r + 12)}:0.5 R:0.5 {nm(r + 19)}:0.5 R:0.5 {nm(r + 12)}:0.5 R:0.5 {nm(r + 19)}:0.5 R:0.5")
+    for pos, L, d, mk in REEL:
+        order = list(range(len(v))) if d == "d" else list(reversed(range(len(v))))
+        for j, q in enumerate(order):
+            if q < len(GU): GU[q].at(round(b * B + pos + 0.018 * j, 4), f"{nm(v[q])}:{L}{mk}")
+
+# ---------- ボーラン（2周目から。3周目の後半はいちばん密に） ----------
+for b in range(c.NB):
+    n, i, Lb, k = S.scene_of(b); tr = DR[b % 2]
     if n in ("2周目", "3周目"):
-        v = voice(ch, 52 if lowp else 57, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-        CELLO.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2")
-        w = voice(ch, 50 if lowp else 52, 3, spread=True)
-        for j in range(3): THICK[j].bar(b, f"{nm(w[j])}:4")
-        CB.bar(b, f"{nm(r - 12 if r - 12 >= 28 else r)}:4")
-    if n == "2周目" and i % 4 == 0: GLOCK.bar(b, f"{nm(tones(ch, 'E6', 'E7')[0])}:1 R:3")
-rich(c, choir_scenes=["2周目", "3周目"], pulse_scenes=[], guitar=False, pizz=False, inner=False)
-sparkle(c)   # 2026-10-29: 速い曲にも高いきらめき（厚い弦のあと 7.5〜7.66 で止まったので）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.3 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の023（第2版・明るく速めの曲）。昼の川面のきらめき。リール AABB、4/4・♩=100、E ミクソリディア。笛の細かい装飾音（カット・ロール）が光の雨になり、高い所から川底の低い音へ沈んでいく。",
-       harm_scenes=None, tail_scene="川底", fill=False, pads=False, floor=True)
+        bodhran(tr, b, B, "reel", var=(i % 8 == 7 or (n == "3周目" and i >= 16 and i % 2)), soft=(n == "3周目" and i < 16))
+    elif n == "1周目" and i >= 16:
+        tr.bar(b, "C3:1! R:1 C3:1, R:1")
+    elif n == "川底" and i == 0:
+        tr.bar(b, "C3:1! R:3")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.24 --master -15 --widen 1.2 --side-hpf 200",
+       "ケルト・フルート100曲の023（第3版）。水車が回りだした昼、小川の水面に光が跳ねる。リール（4/4・♩=104）AABB を3周、E ミクソリディア。笛はロールとカットの多い装飾音の雨。伴奏はブズーキ風の開いた和音のギターとボーラン。周ごとに全員の音域が下がり、光が水面から水の中、川底の石へと沈んでいく。始まりは高いきらめき、終わりは低い E。",
+       harm_scenes=None, tail_scene="川底", double=False, fill=False, pads=False)
+air = {"pre": 0.2, "tail": 4.5, "layers": [{"file": "0595", "db": -46, "hp": 200, "lp": 4000, "wide": 0.012, "duck": 0.4, "fade": 6}],
+       "fx": {"far": {"db": -29, "delay": 0.2, "lp": 3000, "rt": 2.4}}}
+json.dump(air, open("/tmp/cel/w/air023.json", "w"), ensure_ascii=False)
