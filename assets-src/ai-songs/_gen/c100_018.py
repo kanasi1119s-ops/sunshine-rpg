@@ -1,90 +1,121 @@
-# ケルト・フルート100曲「銀の笛と百の夜」018 干し草の匂い Scent of Hay — 第3版（2026-10-29: 6.97→ のんびりにも弦とチェロの床・内声・終わりを短く浅く）
-# イメージ: 昼下がりの納屋。干し草の上でうとうとする。外では鳥。笛とギターが、のんびり世間話をするように。
-#   ときどき低いチェロが「うん、うん」と眠そうにあいづちを打つ。だんだんまぶたが重くなり、テンポがゆるんで眠りに近づいていく。
-# 形（台帳）: 2つの楽器のデュエット（笛とギター）。6/8・付点4分＝40（のんびり）。G ミクソリディア。始め：鳥／終わり：眠気（テンポがゆるむ）。山なし。
-# 編曲の表:
-#   鳥      : 鳥の声→ギターの最初の和音
-#   のんびり1: 笛とギター（低音の歩み＋指弾きの分散和音）だけ
-#   のんびり2: ＋チェロの眠そうなあいづち（フレーズの終わりに2音）
-#   のんびり3: 笛が少し高い所で、ギターは低音を休みがちに
-#   昼寝    : 笛の音が長くなる（同じ節を倍の長さで）。ギターは付点4分の和音だけ
-#   夢うつつ: 笛のかけら。テンポがゆるんで止まる
-import sys
+# ケルト・フルート100曲「銀の笛と百の夜」018 干し草の匂い Scent of Hay — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 夕立がやんだあと、干し草を積んだ納屋の軒下。エイラと、ギターを抱えた年寄りの農夫が、雨上がりの昼下がりをのんびり過ごす。
+#   話すことはとりとめがなく、笛が話せばギターが答え、チェロ（納屋の奥で寝そべる大男）が句の終わりに「うん、うん」とあいづちを打つ。
+#   そのうち、みんなうとうとして、話がゆっくりになって止まる。
+# 調べ: 眠り。形: 二人のデュエット（のんびりした世間話）。笛とギターが句を交互に話し、最後は三人とも眠ってしまう。
+# 拍子・速さ: 6/8・付点4分＝44（8分＝132）→ 終わりで付点4分＝34（8分＝102）までゆるむ。1拍＝8分で書く（1小節＝6拍）。旋法: G ミクソリディア。
+# 主役は笛（まどろむ笛。G4〜E5 が中心）。伴奏の主役: ナイロン弦ギターの指弾き（分散和音と、句の答え）。脇: チェロのあいづち（2音だけ）。
+#   竪琴・ピアノ・弦の和音・パッド・打楽器・2本目の笛は使わない。
+# この曲だけ: チェロが句の終わりに2音だけ「うん、うん」と答える（話が進むほど、あいづちが遅れて眠そうになる）。
+# 始まり: 鳥の気配の笛（雨上がりの小鳥）→ 終わり: テンポがゆるんで止まる。
+# 山: なし（平ら。昼寝の所が少しだけ小さい）。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
+from c100_v2 import _dia
+import c100_v2 as _v2
+_oc = _v2.open_chord
+_v2.open_chord = lambda ch, lo=52, hi=76: _oc(ch, lo, hi)
 
-BPM = 116   # 8分音符＝116（付点4分＝約39。2026-10-29 長さを4分以上に）
-S = Song("C100", "018-scent-of-hay", "干し草の匂い", "Scent of Hay", BPM, 6, "G", "mixolydian", "ケルト（幻想）")
+S = Song("C100", "018-scent-of-hay", "干し草の匂い", "Scent of Hay", 132, 6, "G", "mixolydian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.45, "rubato": 0.3, "rit": {"bar": 3 + 16 * 3 + 16 + 6, "bars": 6, "to": 0.7, "aTempo": False}})
-AC = ["G", "F", "C", "G", "Em", "F", "C", "G"]
-BC = ["C", "G", "F", "G", "C", "Am", "F", "G"]
-S.scene("鳥", 3, "intro", ["G", "G", "G"])
-S.scene("のんびり1", 16, "verse", AC + BC)
-S.scene("のんびり2", 16, "verse", AC + BC)
-S.scene("のんびり3", 16, "verse", BC + AC)
-S.scene("昼寝", 16, "verse", ["G", "G", "F", "F", "C", "C", "G", "G", "C", "C", "F", "F", "G", "G", "G", "G"])
-S.scene("夢うつつ", 12, "outro", ["G", "F", "G", "G", "C", "G", "C", "G", "F", "G", "G", "G"])
-NAMES = ["鳥", "のんびり1", "のんびり2", "のんびり3", "昼寝", "夢うつつ"]
-
+S.extra.update({"human": 0.45, "rubato": 0.25})
+K = Key("G", "mixolydian", 4)
+CH = ["G", "F", "C", "G", "G", "Am", "F", "G"]
+SC = [("鳥", 4, "intro"), ("話1", 20, "verse"), ("話2", 20, "verse"), ("昼寝", 12, "verse"), ("話3", 20, "chorus"), ("止まる", 8, "outro")]
+for n, L, kd in SC: S.scene(n, L, kd, (CH * 3)[:L])
+NAMES = [x[0] for x in SC]
 c = make(S, NAMES,
-         [("鳥", 0, 0.6), ("のんびり1", 0, 0.64), ("のんびり2", 0, 0.66), ("のんびり3", 0, 0.68), ("昼寝", 0, 0.62), ("夢うつつ", 0, 0.6), ("夢うつつ", 11, 0.46)],
-         {}, flute_gain={n: 1.2 for n in NAMES}, intro="鳥", passing=True, tension=False)
-GB = S.track("ギター（低音の歩み）", "guitar", patch="nylonGuitar", volume=0.1, pan=0.25, reverb=0.35, barGain=c.g())
-GA = S.track("ギター（指弾き）", "guitar", patch="nylonGuitar", volume=0.085, pan=0.35, reverb=0.35, barGain=c.g())
-CELLO = S.track("チェロ（あいづち）", "strings", patch="cello", volume=0.08, pan=-0.2, reverb=0.45, barGain=c.g())
-
-A = ["1:3 2:1 3:2", "4:2 3:1 2:3", "3:3 5:1 3:2", "2:2 1:1 5,:3", "6,:2 7,:1 1:2 2:1", "3:2 4:1 5:3", "4:2 3:1 2:2 7,:1", "1:6"]
-Bm = ["3:3 4:1 5:2", "6:2 5:1 4:3", "5:3 6:1 7:2", "1':6", "7:2 6:1 5:2 3:1", "4:2 3:1 2:3", "3:2 2:1 1:2 7,:1", "1:6"]
-Bh = ["5:3 6:1 7:2", "1':2 7:1 6:3", "7:3 1':1 2':2", "1':6", "6:2 5:1 4:2 3:1", "4:2 3:1 2:3", "3:2 2:1 1:2 7,:1", "1:6"]
-def slow(bars):   # 同じ節を倍の長さで（2小節に引きのばす）
-    out = []
-    for s in bars:
-        toks = [x.split(":") for x in s.split()]
-        tt = " ".join(f"{d}:{float(L) * 2:g}" for d, L in toks)
-        # 12拍を2小節に分ける
-        acc = 0; a = []; bb = []
-        for d, L in toks:
-            L2 = float(L) * 2
-            if acc + L2 <= 6 + 1e-6: a.append(f"{d}:{L2:g}"); acc += L2
-            else:
-                if acc < 6 - 1e-6: a.append(f"{d}:{6 - acc:g}"); bb.append(f"{d}:{L2 - (6 - acc):g}"); acc = 6
-                else: bb.append(f"{d}:{L2:g}")
-        out += [" ".join(a), " ".join(bb)]
-    return out
-play_melody(c, "のんびり1", A + Bm, 4, "air", density=0.6, seed=1801)
-play_melody(c, "のんびり2", A + Bm, 4, "air", density=0.8, seed=1802)
-play_melody(c, "のんびり3", Bh + A, 4, "air", density=0.8, seed=1803)
-play_melody(c, "昼寝", slow(A), 4, "air", density=0.5, seed=1804)
-play_melody(c, "夢うつつ", ["1:3 2:1 3:2", "4:6", "3:3 2:3", "1:6", "R:3 5,:3", "1:6", "3:3 4:3", "3:6", "R:3 2:3", "1:6", "R:6", "R:6"], 4, "air", density=0.3, seed=1805)
-
+         [("鳥", 0, 0.62), ("話1", 0, 0.68), ("話2", 0, 0.7), ("昼寝", 0, 0.62), ("話3", 0, 0.7), ("止まる", 0, 0.66), ("止まる", 7, 0.58)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="鳥", passing=True, tension=False)
+S.fix_avoid = lambda t: 0
 B = S.beats
-for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    t = tones(ch, "D3", "D5")
-    if n == "鳥":
-        if i == 2: GB.bar(b, f"R:3 {nm(r)}:3"); GA.bar(b, f"R:3 {nm(t[2])}:1 {nm(t[3])}:1 {nm(t[4 % len(t)])}:1")
-        continue
-    if n in ("のんびり1", "のんびり2", "のんびり3"):
-        GB.bar(b, f"{nm(r)}:3 {nm(r + 7)}:3" if not (n == "のんびり3" and i % 2) else f"{nm(r)}:6")
-        GA.bar(b, " ".join(f"{nm(t[x % len(t)])}:1" for x in (2, 3, 4, 2, 3, 4) if True))
-        v = voice(ch, 52 if n == "のんびり1" else 55, 2 if n == "のんびり1" else 3, spread=True)   # 干し草の上の午後の空気（うすい弦）
-        for j in range(len(v)): c.STR[j].bar(b, f"{nm(v[j])}:6")
-        if n == "のんびり3" or (n == "のんびり2" and i % 4 != 3): CELLO.bar(b, f"{nm(r)}:6")
-        if n == "のんびり2" and i % 4 == 3: CELLO.bar(b, f"R:2 {nm(r)}:2 {nm(r - 5 if r - 5 >= 36 else r + 7)}:2")
-    if n == "昼寝":
-        GB.bar(b, f"{nm(r)}:6"); GA.bar(b, f"{nm(t[2])}:3 {nm(t[3])}:3")
-        if i % 8 == 7: CELLO.bar(b, f"R:3 {nm(r)}:3")
-    if n == "夢うつつ" and i < 11:
-        GB.bar(b, f"{nm(r)}:6"); GA.bar(b, f"R:3 {nm(t[2])}:3" if i % 2 == 0 else f"{nm(t[3])}:6")
-    if n in ("昼寝", "夢うつつ"):   # 午後の光にまどろむ：うすい弦の和音
-        v = voice(ch, 55, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:6")
-        CELLO.bar(b, f"{nm(r)}:6") if n == "夢うつつ" or i % 8 != 7 else None
-rich(c, choir_scenes=["のんびり3"], pulse_scenes=["のんびり2", "のんびり3", "昼寝"], guitar=False, pizz=False, inner=True)
-sparkle(c, dense=True)   # 7.12 のあと濃く。 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の018（第2版）。昼下がりの納屋で、干し草の上でうとうと。6/8・付点4分＝40、G ミクソリディア。笛とギターのデュエット（ギターは低音の歩みと指弾き）、チェロが眠そうにあいづち。だんだんテンポがゆるんで眠りへ。",
-       harm_scenes=None, tail_scene="夢うつつ", fill=False, pads=True, pad_scenes=["のんびり1", "のんびり2", "のんびり3", "昼寝", "夢うつつ"], floor=True)
+sz = c.s0["止まる"]
+S.tempo = [{"bar": 1, "bpm": 132}, {"bar": c.s0["昼寝"] + 1, "bpm": 124, "ramp": 3}, {"bar": c.s0["話3"] + 1, "bpm": 130, "ramp": 3},
+           {"bar": sz + 1, "bpm": 102, "ramp": 8}]
+G = c.g()
+# 試し書き出し: 指弾きは笛とほぼ同じ大きさ → 0.08→0.055。チェロの短い2音は笛より 5〜10dB 小さい → gainDb 6
+GT = S.track("ギター（指弾き）", "guitar", patch="nylonGuitar", volume=0.055, pan=-0.25, reverb=0.35, barGain=G)
+GM = S.track("ギター（句の答え）", "guitar", patch="nylonGuitar", volume=0.1, pan=-0.3, reverb=0.35, barGain=G)
+VC = S.track("チェロ（あいづち）", "strings", patch="cello", volume=0.12, gainDb=6, pan=0.3, reverb=0.45, barGain=[round(x * 1.5, 3) for x in G])
 
+def put(track, s_, start, dens=None, seed=1):
+    ev = [[round(t, 4), L, m] for t, L, m in mel_events(K, s_, 4, start)]
+    if dens is None: ev = [(t, L, m, "") for t, L, m in ev]
+    else: ev = ornament(ev, K, 132, "air", B, density=dens, seed=seed)
+    play(track, ev)
+
+# ---------- 笛の句（G ミクソリディア。1=G4。8分＝1、1小節＝6） ----------
+F = [["5:3 4:2 3:1", "2:4 R:2"], ["3:2 4:1 5:2 6:1", "5:5 R:1"], ["1':3 7:2 5:1", "6:4 R:2"], ["4:2 3:1 2:2 7,:1", "1:5 R:1"],
+     ["6:2 5:1 6:2 1':1", "7:3 5:3"], ["5:1 4:1 3:1 2:3", "1:6"]]
+# ギターの答え（1小節。高い弦で）
+ANS = ["5:1 6:1 5:1 3:3", "2:2 3:1 1:3", "6,:1 1:1 2:1 3:3", "5:2 4:1 2:3", "1':1 7:1 6:1 5:3", "3:1 2:1 1:1 5,:3"]
+# チェロの「うん、うん」（G3→D3 と、同じ高さの2回をまぜる）。話が進むほど遅れる
+UN = ["G3:1, R:0.5 D3:1.5", "D3:1, R:0.5 D3:1.5", "C3:1, R:0.5 G2:1.5"]
+
+def unun(b, late, k):
+    VC.at(b * B + 3 + late, UN[k % 3].replace("1.5", str(round(1.5 - min(late, 1.0), 2))))
+
+# 鳥：雨上がりの小鳥（G5〜B5 の高さで短く。休みが多い。D6 より上は硬いので使わない）
+s0 = c.s0["鳥"]
+for j, s_ in enumerate(["R:2 2':0.5 3':0.5 2':1 R:2", "R:3 7:0.5 2':0.5 7:2", "R:1 3':0.5 2':0.5 3':1 R:1 2':2", "7:3 6:1 5:2"]):
+    put(c.FLUTE, s_, (s0 + j) * B, dens=0.25, seed=1800 + j)
+
+# 話1：笛が2小節話し、3小節目は長い音でうなずき、4小節目の前半でギターが答え、後半でチェロが「うん、うん」
+s0 = c.s0["話1"]
+for q in range(5):
+    b0 = s0 + 4 * q; ph = F[q % 6]
+    put(c.FLUTE, ph[0], b0 * B, dens=0.25, seed=1810 + q); put(c.FLUTE, ph[1].replace("R:2", "R:0").replace("R:1", "R:0").replace(" R:0", ""), (b0 + 1) * B, dens=0.2, seed=1820 + q)
+    put(c.FLUTE, ["3:6", "5:6", "2:6", "1:6", "3:6"][q], (b0 + 2) * B, dens=0.1, seed=1830 + q)
+    put(GM, ANS[q % 6], (b0 + 3) * B)
+    unun(b0 + 3, 0.0, q)
+# 話2：役を入れかえる。ギターが2小節話し、笛が2小節で答える（あいづちは少し遅れる）
+s0 = c.s0["話2"]
+for q in range(5):
+    b0 = s0 + 4 * q; ph = F[(q + 2) % 6]
+    put(GM, ANS[(q + 1) % 6], b0 * B); put(GM, ANS[(q + 3) % 6], (b0 + 1) * B)
+    put(c.FLUTE, "R:3 " + ph[0].split()[0].split(":")[0] + ":3", b0 * B + 0, dens=0.1, seed=1840 + q)     # ギターが話すあいだ、笛は相づちのように1音
+    put(c.FLUTE, "R:6", (b0 + 1) * B)
+    put(c.FLUTE, ph[0], (b0 + 2) * B, dens=0.3, seed=1850 + q); put(c.FLUTE, ph[1], (b0 + 3) * B, dens=0.2, seed=1860 + q)
+    unun(b0 + 3, 0.5, q + 1)
+# 昼寝：笛は低く長く。ギターはゆっくりの分散和音。あいづちは8小節に1回、さらに遅れて
+s0 = c.s0["昼寝"]
+for j, s_ in enumerate(["1:6", "1:3 2:3", "3:6", "2:6", "7,:6", "1:6", "5,:3 6,:3", "1:6", "3:6", "2:3 1:3", "7,:6", "1:6"]):
+    put(c.FLUTE, s_, (s0 + j) * B, dens=0.08, seed=1870 + j)
+unun(s0 + 7, 1.0, 0)
+# 話3：また目をさまして、笛とギターが同じ句を3度ちがいで一緒に話す
+s0 = c.s0["話3"]
+for q in range(5):
+    b0 = s0 + 4 * q; ph = F[(q + 4) % 6]
+    put(c.FLUTE, ph[0], b0 * B, dens=0.3, seed=1880 + q); put(c.FLUTE, ph[1], (b0 + 1) * B, dens=0.2, seed=1890 + q)
+    put(c.FLUTE, F[(q + 1) % 6][0], (b0 + 2) * B, dens=0.25, seed=1900 + q); put(c.FLUTE, "1:6" if q % 2 else "3:6", (b0 + 3) * B, dens=0.1, seed=1910 + q)
+    for j, s_ in enumerate([ph[0], ph[1]]):                      # ギターは3度下で（句の前半だけ）
+        ev = [[round(t, 4), L, _dia(K, m, -2)] for t, L, m in mel_events(K, s_, 4, (b0 + j) * B)]
+        play(GM, [(t, L, m, ",") for t, L, m in ev])
+    unun(b0 + 3, 0.3, q)
+# 止まる：句のかけらがゆっくりになり、最後のあいづちで止まる
+s0 = c.s0["止まる"]
+for j, s_ in enumerate(["5:1 4:1 3:1 2:3", "1:6", "3:2 2:1 1:3", "2:6", "1:6", "R:6", "R:6", "R:6"]):
+    put(c.FLUTE, s_, (s0 + j) * B, dens=0.1, seed=1920 + j)
+unun(s0 + 4, 0.8, 2)
+
+# ---------- ギターの指弾き（6/8 の分散和音。1小節に6つ） ----------
+for b in range(c.NB):
+    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
+    v = _v2.open_chord(ch)
+    if n == "鳥" and i < 2: continue
+    if n == "止まる":
+        if i < 4: GT.bar(b, " ".join(f"{nm(v[q % len(v)])}:1{',' if q % 3 else ''}" for q in (0, 2, 3, 1, 2, 4)))
+        elif i == 4: GT.bar(b, " ".join(f"{nm(x)}:6," for x in v[:1]))
+        continue
+    if n == "昼寝":
+        GT.bar(b, " ".join(f"{nm(v[q % len(v)])}:2," for q in (0, 3, 2)))
+        continue
+    GT.bar(b, " ".join(f"{nm(v[q % len(v)])}:1{',' if q % 3 else ''}" for q in (0, 2, 3, 1, 2, 4)))
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.28 --master -15 --widen 1.15 --side-hpf 200",
+       "ケルト・フルート100曲の018（第3版）。夕立のあと、干し草の納屋の軒下で。二人のデュエット（のんびりした世間話）、6/8・付点4分＝44 → 34、G ミクソリディア。笛とナイロン弦ギターが句を交互に話し、納屋の奥のチェロが句の終わりに2音だけ「うん、うん」とあいづちを打つ（話が進むほど遅れて眠そうになる）。始まりは雨上がりの小鳥、最後はみんなうとうとして止まる。",
+       harm_scenes=None, tail_scene="止まる", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 6.0, "layers": [{"file": "0595", "db": -45, "hp": 180, "lp": 3800, "wide": 0.012, "duck": 0.4, "fade": 7}],
+       "fx": {"far": {"db": -28, "delay": 0.26, "lp": 2800, "rt": 3.0}}}
+json.dump(air, open("/tmp/cel/w/air018.json", "w"), ensure_ascii=False)

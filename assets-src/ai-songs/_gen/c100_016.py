@@ -34,6 +34,8 @@ B = S.beats
 G = c.g()
 pg = [round(x * 1.0, 3) for x in G]                 # 試し書き出し: 左手1音・右手1音で笛とほぼ同じ大きさ（×1.4 のとき）→ 笛が主役なので ×1.0、右手は3音重なるので volume 0.08
 LH = S.track("ピアノ（左手の歩く低音）", "piano", volume=0.3, pan=-0.15, reverb=0.35, sustain=1.0, barGain=pg)
+# 1回目（7.73）: 左手だけの前奏が -42dB と本編より約20dB 小さかった。barGain は強さ2で頭打ちなので、前奏は別のパート（gainDb 10・×2）で
+LHI = S.track("ピアノ（前奏の左手）", "piano", volume=0.3, gainDb=10, pan=-0.15, reverb=0.35, sustain=1.0, barGain=[round(x * 2.0, 3) for x in G])
 LH8 = S.track("ピアノ（左手のオクターブ）", "piano", volume=0.2, pan=-0.18, reverb=0.35, sustain=1.0, barGain=pg)
 RH = [S.track(f"ピアノ（右手の裏拍{j + 1}）", "piano", volume=0.08, pan=0.05 + 0.06 * j, reverb=0.35, sustain=0.8, barGain=pg) for j in range(3)]
 FT = S.track("足拍子", "guitar", patch="frameDrum", volume=0.35, gainDb=18, pan=0.1, reverb=0.25, barGain=[round(x * 1.3, 3) for x in G])   # 足拍子は笛より約8dB小さい（止まった角で足音だけになる所なので少し上げる）
@@ -82,7 +84,7 @@ for b in range(c.NB):
         LH.bar(b, f"{nm(r)}:1 {nm(r + 7)}:1 {nm(r)}:1 R:1")
         if rd in (3, 5): FT.bar(b, "C#3:1! C#3:1! C#3:1! R:1")
     else:
-        LH.bar(b, f"{nm(r)}:1 {nm(r + 7)}:1 {nm(r + 12)}:1 {nm(nxt - 1 if nxt > r else nxt + 1)}:1")
+        (LHI if n == "左手" else LH).bar(b, f"{nm(r)}:1 {nm(r + 7)}:1 {nm(r + 12)}:1 {nm(nxt - 1 if nxt > r else nxt + 1)}:1")
     if rd == 3 and not tan:
         LH8.bar(b, f"{nm(r - 12)}:1 R:1 {nm(r - 12)}:1 R:1")
     # 右手：裏拍の和音。1周目は2・4拍目の裏だけ、4周目の A は休む
