@@ -1,91 +1,100 @@
-# ケルト・フルート100曲「銀の笛と百の夜」016 石垣の道 The Stone Wall Path — 第2版（明るく速めの曲）（2026-10-28）
-# イメージ: 古い石垣に沿って、はずむ足どりで歩く。石垣の上を猫が走り、風が気持ちいい。道の曲がり角では、ふっと立ち止まって景色を見る。
-#   ＝はねるホーンパイプ。1周ごとに、曲がり角で一瞬止まる。最後の曲がり角で、ほんとうに止まって終わる。
-# 形（台帳）: ホーンパイプ（付点ではねる）AABB。4/4・♩=96。D ミクソリディア→3周目は E へ上がる。始め：足取り（打楽器）／終わり：曲がり角で止まる。終盤に山。
-# 編曲の表:
-#   足取り : ボーラン（ホーンパイプの「下（休）上」）だけ
-#   1周目  : 笛＋ボーラン＋ギターのストローク
-#   曲がり角: 全員が止まり、足音が1つ
-#   2周目  : ＋竪琴の3音オスティナート＋チェロ。笛の装飾が増える
-#   曲がり角: もう一度
-#   3周目  : E へ上がる。＋弦。山
-#   終わり : 「4分・4分・4分」で止まって、足音が1つ
-import sys
+# ケルト・フルート100曲「銀の笛と百の夜」016 石垣の道 The Stone-Wall Lane — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 翌朝、エイラは石垣にはさまれた細い道を、村の市場へ歩く。道は何度も直角に曲がり、角ごとに石垣の上で
+#   村の子どもたちが足を踏み鳴らして遊んでいる。曲がるたびに足音だけが聞こえ、また笛とピアノが戻ってくる。
+# 調べ: 喜び。形: ホーンパイプ（A 8小節・B 8小節。各部の最後を「タン・タン・タン」の3つの4分音符で決める）を5周。
+# 拍子・速さ: 4/4・♩=80（8分は付点のはずみ）。旋法: C イオニア。
+# 主役は笛（重心の低い笛。C4〜E5 が中心、装飾は少なめ）。
+# 伴奏の主役: ピアノ（ケープブレトン式：左手が4分で歩く低音、右手が裏拍の和音）。打楽器なし（足音は曲がり角とタン・タン・タンだけ）。
+# この曲だけ: 曲がり角（2周目B・3周目A・4周目B の4小節目）で1小節だけ全員が止まり、足拍子だけが鳴る。
+# 始まり: ピアノの左手だけ → 終わり: 全員と足で「タン・タン・タン」。
+# 山: 3周目（ピアノの左手がオクターブになり、右手もすべての裏拍に。タン・タン・タンに足が入る）。4周目は一度静かに（右手が A で休む）。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
 
-S = Song("C100", "016-stone-wall-path", "石垣の道", "The Stone Wall Path", 96, 4, "D", "mixolydian", "ケルト（幻想）")
+S = Song("C100", "016-the-stone-wall-lane", "石垣の道", "The Stone-Wall Lane", 80, 4, "C", "major", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.3})
-AC = ["D", "D", "G", "A", "D", "D", "C", "D"]
-BC = ["G", "G", "C", "D", "G", "G", "C", "D"]
-S.scene("足取り", 4, "intro", ["D"] * 4)
-S.scene("1周目", 32, "verse", AC * 2 + BC * 2)
-S.scene("角1", 1, "break", ["D"])
-S.scene("2周目", 32, "verse", AC * 2 + BC * 2)
-S.scene("角2", 1, "break", ["D"])
-S.scene("3周目", 32, "chorus", ["E", "E", "A", "B", "E", "E", "D", "E"] * 2 + ["A", "A", "D", "E", "A", "A", "D", "E"] * 2)   # 全音上（E）
-S.scene("終わり", 3, "outro", ["E", "E", "E"])
-NAMES = ["足取り", "1周目", "角1", "2周目", "角2", "3周目", "終わり"]
-
-c = make(S, NAMES,
-         [("足取り", 0, 0.64), ("1周目", 0, 0.68), ("1周目", 31, 0.72), ("角1", 0, 0.6), ("2周目", 0, 0.74), ("2周目", 31, 0.8), ("角2", 0, 0.62),
-          ("3周目", 0, 0.84), ("3周目", 24, 0.94), ("3周目", 31, 0.9), ("終わり", 0, 0.88), ("終わり", 2, 0.5)],
-         {}, flute_gain={n: 1.1 for n in NAMES}, intro="足取り", passing=True, tension=False)
-DRUM = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.1, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
-GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.05, pan=0.35 + 0.04 * i, reverb=0.35, barGain=c.g()) for i in range(5)]
-THICK = [S.track(f"厚い弦{i + 1}", "strings", patch="slowStrings", volume=0.045, pan=[-0.55, 0.55, 0.0][i], reverb=0.5, barGain=c.g()) for i in range(3)]   # 2026-10-29: 023 で 7.27→7.53
-CB = S.track("コントラバス", "strings", patch="contrabass", volume=0.07, pan=0.0, reverb=0.4, barGain=c.g())
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.4, barGain=c.g())
-
-A = ["1:0.5 3:0.5 5:0.5 3:0.5 4:0.5 6:0.5 5:0.5 4:0.5", "3:0.5 5:0.5 1':0.5 5:0.5 6:1 5:1",
-     "4:0.5 6:0.5 5:0.5 4:0.5 3:0.5 5:0.5 4:0.5 3:0.5", "2:0.5 3:0.5 4:0.5 2:0.5 7,:1 5,:1",
-     "1:0.5 3:0.5 5:0.5 3:0.5 4:0.5 6:0.5 5:0.5 4:0.5", "3:0.5 5:0.5 1':0.5 5:0.5 6:0.5 7:0.5 1':1",
-     "7:0.5 5:0.5 6:0.5 4:0.5 5:0.5 3:0.5 2:0.5 7,:0.5", "1:1 1:1 1:1 R:1"]
-Bm = ["5:0.5 1':0.5 2':0.5 1':0.5 7:0.5 1':0.5 2':0.5 3':0.5", "4':1 3':0.5 2':0.5 1':1 5:1",
-      "6:0.5 1':0.5 7:0.5 6:0.5 5:0.5 7:0.5 6:0.5 5:0.5", "4:0.5 5:0.5 6:0.5 4:0.5 5:1 2:1",
-      "5:0.5 1':0.5 2':0.5 1':0.5 7:0.5 1':0.5 2':0.5 3':0.5", "4':1 3':0.5 2':0.5 1':0.5 7:0.5 1':1",
-      "7:0.5 5:0.5 6:0.5 4:0.5 5:0.5 3:0.5 2:0.5 7,:0.5", "1:1 1:1 1:1 R:1"]
-play_melody(c, "1周目", A + A + Bm + Bm, 4, "hornpipe", density=0.5, seed=1601)
-play_melody(c, "2周目", A + A + Bm + Bm, 4, "hornpipe", density=0.9, seed=1602)
-play_melody(c, "3周目", A + A + Bm + Bm, 4, "hornpipe", density=1.0, seed=1603, lift=2)
-play_melody(c, "終わり", ["1:1 1:1 1:1 R:1", "R:4", "R:4"], 4, "air", density=0, lift=2)
-
+S.extra.update({"human": 0.4})
+K = Key("C", "major", 4)
+CA = ["C", "F", "Dm", "G", "C", "F", "G", "C"]
+CB = ["G", "Am", "G", "C", "Am", "F", "G", "C"]
+S.scene("左手", 4, "intro", ["C", "F", "G", "C"])
+for r in range(1, 6):
+    S.scene(f"{r}周目A", 8, "chorus" if r == 3 else "verse", CA)
+    S.scene(f"{r}周目B", 8, "chorus" if r == 3 else "verse", CB)
+S.scene("おわり", 2, "outro", ["C", "C"])
+NAMES = ["左手"] + [f"{r}周目{p}" for r in range(1, 6) for p in "AB"] + ["おわり"]
+DYN = {1: 0.66, 2: 0.74, 3: 0.88, 4: 0.7, 5: 0.82}
+pts = [("左手", 0, 0.62)]
+for r in range(1, 6):
+    pts += [(f"{r}周目A", 0, DYN[r]), (f"{r}周目B", 7, DYN[r] + 0.02)]
+pts += [("おわり", 0, 0.86), ("おわり", 1, 0.8)]
+c = make(S, NAMES, pts, {}, flute_gain={n: 1.15 for n in NAMES}, intro="左手", passing=True, tension=False)
 B = S.beats
-HP = [(0, 1, "d", "!"), (1, 0.5, "d", ","), (1.5, 0.5, "u", ","), (2, 1, "d", ""), (3, 0.5, "d", ","), (3.5, 0.5, "u", ",")]
+G = c.g()
+pg = [round(x * 1.0, 3) for x in G]                 # 試し書き出し: 左手1音・右手1音で笛とほぼ同じ大きさ（×1.4 のとき）→ 笛が主役なので ×1.0、右手は3音重なるので volume 0.08
+LH = S.track("ピアノ（左手の歩く低音）", "piano", volume=0.3, pan=-0.15, reverb=0.35, sustain=1.0, barGain=pg)
+LH8 = S.track("ピアノ（左手のオクターブ）", "piano", volume=0.2, pan=-0.18, reverb=0.35, sustain=1.0, barGain=pg)
+RH = [S.track(f"ピアノ（右手の裏拍{j + 1}）", "piano", volume=0.08, pan=0.05 + 0.06 * j, reverb=0.35, sustain=0.8, barGain=pg) for j in range(3)]
+FT = S.track("足拍子", "guitar", patch="frameDrum", volume=0.35, gainDb=18, pan=0.1, reverb=0.25, barGain=[round(x * 1.3, 3) for x in G])   # 足拍子は笛より約8dB小さい（止まった角で足音だけになる所なので少し上げる）
+
+# ---------- 旋律（C イオニア。1=C4。各部の最後はタン・タン・タン） ----------
+A = ["1:0.5 3:0.5 5:0.5 1':0.5 7:0.5 5:0.5 3:0.5 5:0.5", "4:0.5 6:0.5 1':0.5 6:0.5 5:0.5 3:0.5 1:0.5 3:0.5",
+     "2:0.5 4:0.5 6:0.5 4:0.5 3:0.5 5:0.5 1':0.5 5:0.5", "4:0.5 3:0.5 2:0.5 1:0.5 7,:0.5 2:0.5 5,:1",
+     "1:0.5 3:0.5 5:0.5 1':0.5 7:0.5 5:0.5 3:0.5 5:0.5", "6:0.5 5:0.5 4:0.5 6:0.5 5:0.5 4:0.5 3:0.5 2:0.5",
+     "3:0.5 5:0.5 4:0.5 2:0.5 7,:0.5 2:0.5 4:0.5 2:0.5", "1:1 3:1 1:1 R:1"]
+Bm = ["5:0.5 6:0.5 7:0.5 1':0.5 2':0.5 1':0.5 7:0.5 5:0.5", "6:0.5 1':0.5 3':0.5 1':0.5 6:0.5 4:0.5 2:0.5 4:0.5",
+      "5:0.5 7:0.5 2':0.5 7:0.5 5:0.5 4:0.5 3:0.5 2:0.5", "3:0.5 5:0.5 1':0.5 5:0.5 3:1 5,:1",
+      "6,:0.5 1:0.5 3:0.5 6:0.5 5:0.5 3:0.5 1:0.5 3:0.5", "4:0.5 6:0.5 1':0.5 6:0.5 5:0.5 7:0.5 2':0.5 7:0.5",
+      "1':0.5 7:0.5 6:0.5 5:0.5 4:0.5 3:0.5 2:0.5 7,:0.5", "1:1 5:1 1':1 R:1"]
+CORNER = {("2周目B", 3), ("3周目A", 3), ("4周目B", 3)}      # 曲がり角：1小節だけ全員が止まる
+def with_corner(name, bars):
+    return [("R:4" if (name, j) in CORNER else s_) for j, s_ in enumerate(bars)]
+DENS = {1: 0.15, 2: 0.2, 3: 0.32, 4: 0.12, 5: 0.25}
+for r in range(1, 6):
+    play_melody(c, f"{r}周目A", with_corner(f"{r}周目A", A), 4, "hornpipe", key=K, density=DENS[r], seed=1600 + r)
+    play_melody(c, f"{r}周目B", with_corner(f"{r}周目B", Bm), 4, "hornpipe", key=K, density=DENS[r], seed=1650 + r)
+play_melody(c, "おわり", ["1:1 3:1 1:1 R:1", "R:4"], 4, "hornpipe", key=K, density=0.0)
+
+# ---------- ピアノ（ケープブレトン式） ----------
+ROOT = {"C": 36, "F": 41, "Dm": 38, "G": 43, "Am": 45}
+def tri(ch):
+    m = re.match(r"^([A-G][#b]?)(m?)", ch); r = PC[m.group(1)]
+    pcs = [r, (r + (3 if m.group(2) else 4)) % 12, (r + 7) % 12]
+    return sorted(60 + (p - 60) % 12 for p in pcs)                # C4〜B4
 for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    r = [x for x in range(36, 48) if x % 12 == PC[ch[0] if len(ch) == 1 or ch[1] not in "#b" else ch[:2]]][0]
-    w = voice(ch, 50, 3, spread=True)   # 厚い弦（低めの3声）：曲がり角でも小さく残す（落ちない）
-    for j in range(3): THICK[j].bar(b, f"{nm(w[j])}:4")
-    if n not in ("足取り",): CB.bar(b, f"{nm(r)}:4")
-    if n == "足取り":   # 足取り：ボーランと、チェロの低い D が「歩き出す前の地面」、ギターの小さな刻み
-        bodhran(DRUM, b, B, "hornpipe")
-        CELLO.bar(b, f"{nm(r + 12)}:1.5 R:0.5 {nm(r + 12)}:1.5 R:0.5")
-        if i >= 2: strum(GTR, b, B, ch, [(0, 1, "d", ","), (2, 1, "d", ",")])
+    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]; r = ROOT[ch]
+    corner = (n, i) in CORNER
+    nxt = ROOT.get(S.chords[b + 1], 36) if b + 1 < c.NB else 36
+    tan = n != "左手" and n != "おわり" and i == 7                  # 各部の最後の小節（タン・タン・タン）
+    rd = int(n[0]) if n[0].isdigit() else 0
+    if corner:                                                    # 曲がり角：足拍子だけ
+        FT.bar(b, "C#3:1! C#3:1, C#3:0.5 C#3:0.5 C#3:1!")
         continue
-    if n in ("角1", "角2"):
-        DRUM.bar(b, "R:2 D3:1, R:1"); continue          # 曲がり角：全員止まって、足音が1つ
-    if n == "終わり":
+    if n == "おわり":
         if i == 0:
-            strum(GTR, b, B, ch, [(0, 1, "d", "!"), (1, 1, "d", "!"), (2, 1.5, "d", "!")])
-            DRUM.bar(b, "D3:1! D3:1! D3:1! R:1"); CELLO.bar(b, f"{nm(r + 12)}:1 {nm(r + 12)}:1 {nm(r + 12)}:2")
-        if i == 1: DRUM.bar(b, "R:2 D3:1, R:1")
+            LH.bar(b, f"{nm(r)}:1 {nm(r + 4)}:1 {nm(r)}:1 R:1"); LH8.bar(b, f"{nm(r - 12)}:1 {nm(r - 8)}:1 {nm(r - 12)}:2")
+            for j, t in enumerate(tri(ch)): RH[j].bar(b, f"{nm(t)}:1 {nm(t)}:1 {nm(t)}:2")
+            FT.bar(b, "C#3:1! C#3:1! C#3:1! R:1")
         continue
-    bodhran(DRUM, b, B, "hornpipe")
-    strum(GTR, b, B, ch, HP if n != "1周目" else [(0, 1, "d", "!"), (2, 1, "d", ",")])
-    if n == "1周目": CELLO.bar(b, f"{nm(r + 12)}:2 {nm(r + 19)}:2")
-    if n == "2周目":
-        v = voice(ch, 50, 2, spread=True)
-        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:4")
-    if n in ("2周目", "3周目"):
-        harp_ostinato(c.HARP, b, B, tones(ch, "D4", "D5")[:3])
-        CELLO.bar(b, f"{nm(r + 12)}:1.5 R:0.5 {nm(r + 19)}:1.5 R:0.5")
-    if n == "3周目":
-        v = voice(ch, 57, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-rich(c, choir_scenes=["3周目"], pulse_scenes=[], guitar=False, pizz=False, inner=False)   # 2026-10-29: ピチカート・内声・パッドを足したら 7.48→7.25 に下がったので戻す（速い曲は重ねすぎると点が下がる）
-sparkle(c)   # 2026-10-29: 速い曲にも高いきらめき（厚い弦のあと 7.5〜7.66 で止まったので）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.28 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の016（第2版・明るく速めの曲）。古い石垣に沿ってはずむ足どり。ホーンパイプ（付点ではねる）AABB、4/4・♩=96、D ミクソリディア→E。1周ごとに曲がり角で一瞬止まり、最後の曲がり角でほんとうに止まる。",
-       harm_scenes=None, tail_scene="終わり", fill=False, pads=False)
+    # 左手：4分で歩く（根音・5度・オクターブ・次の根音の半音下）。タン・タン・タンの小節は旋律と同じ3つ
+    if tan:
+        LH.bar(b, f"{nm(r)}:1 {nm(r + 7)}:1 {nm(r)}:1 R:1")
+        if rd in (3, 5): FT.bar(b, "C#3:1! C#3:1! C#3:1! R:1")
+    else:
+        LH.bar(b, f"{nm(r)}:1 {nm(r + 7)}:1 {nm(r + 12)}:1 {nm(nxt - 1 if nxt > r else nxt + 1)}:1")
+    if rd == 3 and not tan:
+        LH8.bar(b, f"{nm(r - 12)}:1 R:1 {nm(r - 12)}:1 R:1")
+    # 右手：裏拍の和音。1周目は2・4拍目の裏だけ、4周目の A は休む
+    if n == "左手" or (rd == 4 and n.endswith("A")): continue
+    pat = "R:1 R:0.5 X:0.5 R:1 R:0.5 X:0.5" if rd == 1 else "R:0.5 X:0.5 R:0.5 X:0.5 R:0.5 X:0.5 R:0.5 X:0.5"
+    if tan: pat = "X:1 X:1 X:1 R:1"
+    for j, t in enumerate(tri(ch)):
+        RH[j].bar(b, pat.replace("X", nm(t)))
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.2 --master -15 --widen 1.15 --side-hpf 200",
+       "ケルト・フルート100曲の016（第3版）。石垣にはさまれた細い道を、村の市場へ。ホーンパイプ（4/4・♩=80・付点のはずみ）、C イオニア。各部の最後を「タン・タン・タン」で決める。ピアノはケープブレトン式（左手が4分で歩き、右手が裏拍の和音）。曲がり角では1小節だけ全員が止まって、子どもたちの足拍子だけが鳴る。山は3周目、終わりは全員と足でタン・タン・タン。",
+       harm_scenes=None, tail_scene="おわり", double=False, fill=False, pads=False)
+air = {"pre": 0.2, "tail": 4.0, "layers": [{"file": "0595", "db": -46, "hp": 200, "lp": 4000, "wide": 0.012, "duck": 0.4, "fade": 6}],
+       "fx": {"far": {"db": -29, "delay": 0.2, "lp": 3000, "rt": 2.4}}}
+json.dump(air, open("/tmp/cel/w/air016.json", "w"), ensure_ascii=False)

@@ -36,9 +36,9 @@ c = make(S, NAMES,
 B = S.beats
 
 # 子羊（ピチカート）：左・中・右の3か所。句ごとに跳ぶ場所を変える
-# 1回目（7.53）: 試し書き出しでピチカートは笛より約10dB小さく、子羊だけの足あとが -45dB に沈んだ → gainDb 6、足あとはさらに ×1.6
+# 1回目（7.53）: 試し書き出しでピチカートは笛より約10dB小さく、子羊だけの足あとが -45dB に沈んだ → gainDb 6、足あとはさらに ×1.6。2回目（7.59）も足あとが -34dB と本編より 12dB 小さかったので ×2.5
 LAMB = [S.track(f"子羊（ピチカート・{nm_}）", "strings", patch="pizzicato", volume=0.12, gainDb=6, pan=p, reverb=0.35,
-                barGain=[round(x * (1.6 if b < 8 else 1.0), 3) for b, x in enumerate(c.g())])
+                barGain=[round(x * (2.5 if b < 8 else 1.0), 3) for b, x in enumerate(c.g())])
         for nm_, p in (("左", -0.6), ("中", 0.05), ("右", 0.6))]
 CBP = S.track("コントラバス（ピチカート）", "strings", patch="contrabass", volume=0.08, gainDb=4, pan=0.0, reverb=0.3, sustain=0.5, barGain=c.g())
 VCP = S.track("チェロ（ピチカート）", "strings", patch="pizzicato", volume=0.1, pan=-0.15, reverb=0.35, barGain=c.g())
@@ -85,7 +85,9 @@ for q in range(24):
 # 森の中：子羊は時々、遠くで1〜2音だけ（見失う）。笛は低く長く呼ぶ
 s0 = c.s0["森の中"]
 for q in range(8):
-    put(c.FLUTE, FOREST[q], 4, (s0 + 4 * q) * B + (1 if q % 2 else 0) * 0, orn=(0.35, 1500 + q))
+    # 2回目まで、句（2小節）を4小節ごとに置いていたので2小節ずつ笛が消えて -50dB に沈んだ → 長さを倍にして4小節を埋める（低く長く呼ぶ）
+    slow = " ".join(f"{t.split(':')[0]}:{float(t.split(':')[1]) * 2:g}" for t in FOREST[q].split())
+    put(c.FLUTE, slow, 4, (s0 + 4 * q) * B, orn=(0.35, 1500 + q))
     b = s0 + 4 * q + 2
     put(LAMB[(q * 2) % 3], ["R:3 5:1 R:2", "R:1 3:1 R:4", "R:4 7:1 R:1", "R:2 1':1 R:3"][q % 4], 5, b * B)
 

@@ -1,80 +1,94 @@
-# ケルト・フルート100曲「銀の笛と百の夜」017 夕立の予感 A Hint of Rain — 第3版（2026-10-29: 7.05→ 前奏の床・ピアノ2倍・晴れ2から弦・最後まで弦）
-# イメージ: 明るい午後の草原。ふと西の空が暗くなる。同じ景色なのに、雲がかかると色が変わって見える。
-#   ＝同じ旋律が、明るい長調から、くもったミクソリディア、影の短調へと移っていく。夕立の直前に短い影の山（遠い雷のようなティンパニ）、
-#   そして雨の最初の粒が落ちはじめる所で、影の中に入って終わる。
-# 形（台帳）: 主題と変奏（同じ旋律が長調→短調へ）。4/4・♩=56。D イオニア→D ミクソリディア→B エオリア→B（C♮の暗い影）。
-#   始め：明るい笛ひとり／終わり：影に入る（短調のドローン）。終盤に短い影の山。
-# 編曲の表:
-#   晴れ1  : 笛ひとり（主題）
-#   晴れ2  : ＋ピアノ（明るい和音）＋竪琴
-#   雲     : ミクソリディア（C♮）。弦が入り、ピアノは低く
-#   影     : 同じ音の並びを B の短調の和音で（同じ旋律なのに暗く聞こえる）。チェロ
-#   夕立前 : 短い影の山。弦の刻み、低いチェロ、遠いティンパニのロール
-#   影に入る: 短調のドローンだけ、笛のかけら、雨が降りはじめる
-import sys
+# ケルト・フルート100曲「銀の笛と百の夜」017 夕立の予感 Before the Evening Rain — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 市場からの帰り道。晴れた午後の草原で、エイラはいつもの節を吹きながら歩く。けれど西の空に雲が出て、
+#   吹くたびに光が少しずつかげっていく。同じ節なのに、1回ごとに1つずつ音が暗くなり、最後は雨の前の低い空だけが残る。
+# 調べ: あいだ。形: 主題と変奏（同じ旋律を5回。変奏ごとに旋法の影が濃くなる）。
+# 拍子・速さ: 4/4・♩=64。旋法: D イオニア（主題・変奏1）→ D ミクソリディア（変奏2: C♯→C）→ D ドリア寄り（変奏3: F♯→F も）
+#   → D エオリア（変奏4: B→B♭ も）→ D エオリアのドローン。
+# 主役は笛（中音域。D4〜D5 が中心）。伴奏の主役: クラリネットとファゴット（木管の色づけ。長い音と、句の終わりのあいづち）。
+#   竪琴・ギター・ピアノ・弦・パッド・打楽器は使わない。
+# この曲だけ: 同じ旋律が、変奏ごとに1音ずつ暗い音に置きかわる（C♯ → F♯ → B の順に半音下がる）。
+# 始まり: 明るい笛ひとり → 終わり: 短調のドローン（ファゴットの D とクラリネットの A）。
+# 山: 終盤の短い影（変奏4。クラリネットとファゴットが厚くなり、笛が1オクターブ上がる。短く）。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
 
-S = Song("C100", "017-a-hint-of-rain", "夕立の予感", "A Hint of Rain", 56, 4, "D", "major", "ケルト（幻想）")
+S = Song("C100", "017-before-the-evening-rain", "夕立の予感", "Before the Evening Rain", 64, 4, "D", "major", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.4, "rubato": 0.25})
-TC = ["D", "G", "D", "A", "G", "D", "Em", "D"]
-S.scene("晴れ1", 8, "intro", TC)
-S.scene("晴れ2", 8, "verse", TC)
-S.scene("雲", 16, "verse", ["D", "C", "D", "A", "G", "C", "Em", "D"] * 2)
-S.scene("影", 16, "verse", ["Bm", "Em", "Bm", "F#m", "G", "D", "Em", "Bm"] * 2)
-S.scene("夕立前", 8, "chorus", ["Bm", "C", "Bm", "F#m", "G", "C", "Em", "Bm"])
-S.scene("影に入る", 8, "outro", ["Bm"] * 8)
-NAMES = ["晴れ1", "晴れ2", "雲", "影", "夕立前", "影に入る"]
-
+S.extra.update({"human": 0.4, "rubato": 0.15})
+K = Key("D", "major", 4)
+CH = ["D", "G", "D", "A", "D", "G", "Em", "A", "G", "D", "A", "D"]
+SC = [("主題", 12, "verse"), ("変奏1", 12, "verse"), ("変奏2", 12, "verse"), ("変奏3", 12, "verse"),
+      ("雲", 4, "verse"), ("変奏4", 12, "chorus"), ("ドローン", 8, "outro")]
+for n, L, kd in SC: S.scene(n, L, kd, (CH * 2)[:L])
+NAMES = [x[0] for x in SC]
 c = make(S, NAMES,
-         [("晴れ1", 0, 0.62), ("晴れ2", 0, 0.66), ("雲", 0, 0.66), ("影", 0, 0.66), ("影", 15, 0.72), ("夕立前", 0, 0.78), ("夕立前", 5, 0.9),
-          ("夕立前", 7, 0.74), ("影に入る", 0, 0.62), ("影に入る", 7, 0.36)],
-         {}, flute_gain={n: 1.2 for n in NAMES}, intro=None, passing=True, tension=False)
-PR = S.track("ピアノ（右手）", "piano", volume=0.85, pan=-0.15, reverb=0.45, barGain=c.g())
-PR2 = S.track("ピアノ（右手2）", "piano", volume=0.7, pan=-0.12, reverb=0.45, barGain=c.g())
-PL = S.track("ピアノ（左手）", "piano", volume=0.85, pan=-0.2, reverb=0.45, barGain=c.g())
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.45, barGain=c.g())
-TIMP = S.track("遠いティンパニ", "strings", patch="timpani", volume=0.06, pan=0.3, reverb=0.7, gainDb=-6, barGain=c.g())
-
-TH = ["3:1 5:1 6:1 5:1", "1':2 6:2", "5:1 3:1 2:1 3:1", "5:4", "6:1 5:1 3:1 2:1", "1:2 2:1 3:1", "2:1.5 1:0.5 6,:1 2:1", "1:4"]
-THm = ["3:1 5:1 6:1 5:1", "1':2 6:2", "5:1 3:1 2:1 3:1", "5:4", "6:1 5:1 7:1 6:1", "5:2 4:1 3:1", "2:1.5 1:0.5 7,:1 2:1", "1:4"]   # ミクソリディア（C♮）
-# B の短調：同じ音の並び（D 長調の音＝B 短調の音）で、終わりだけ B に落ちる
-KB = S.key.__class__("B", "minor", 4)
-TB = ["5:1 7:1 1':1 7:1", "3':2 1':2", "7:1 5:1 4:1 5:1", "7:4", "1':1 7:1 5:1 4:1", "3:2 4:1 5:1", "4:1.5 3:0.5 2:1 7,:1", "1:4"]
-TP = ["5:1 7:1 1':1 7:1", "b2':2 1':2", "7:1 5:1 4:1 5:1", "7:4", "1':1 7:1 5:1 4:1", "3:2 b2:1 3:1", "4:1.5 3:0.5 b2:1 7,:1", "1:4"]
-play_melody(c, "晴れ1", TH, 4, "air", density=0.6, seed=1701)
-play_melody(c, "晴れ2", TH, 4, "air", density=0.9, seed=1702)
-play_melody(c, "雲", THm + THm, 4, "air", key=S.key.__class__("D", "mixolydian", 4), density=0.8, seed=1703)
-play_melody(c, "影", TB + TB, 4, "air", key=KB, density=0.8, seed=1704)
-play_melody(c, "夕立前", TP, 4, "air", key=KB, density=1.0, seed=1705)
-play_melody(c, "影に入る", ["5:2 4:2", "3:4", "R:4", "b2:2 1:2", "1:4", "R:4", "R:4", "R:4"], 4, "air", key=KB, density=0.4, seed=1706)
-
+         [("主題", 0, 0.66), ("変奏1", 0, 0.7), ("変奏2", 0, 0.72), ("変奏3", 0, 0.74), ("雲", 0, 0.7), ("変奏4", 0, 0.8),
+          ("変奏4", 6, 0.88), ("変奏4", 11, 0.8), ("ドローン", 0, 0.7), ("ドローン", 7, 0.62)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="主題", passing=True, tension=False)
+S.fix_avoid = lambda t: 0          # 半音下げた音を「直さない」
 B = S.beats
+G = c.g()
+# 試し書き出し: クラリネット1音は笛とほぼ同じ大きさ、ファゴット（D2）は約3dB小さい → 笛が主役なので 0.16→0.09、0.18→0.12
+CL = [S.track(f"クラリネット{j + 1}", "panflute", patch="clarinet", volume=0.09, pan=0.25 + 0.1 * j, reverb=0.45, breath=True,
+              attack=0.08, release=0.5, bright=-0.2, barGain=G) for j in range(2)]
+BN = S.track("ファゴット", "strings", patch="bassoon", volume=0.12, pan=-0.2, reverb=0.45, barGain=G)
+
+# どの音を半音下げるか（変奏ごとに1つずつ増える）。PC: C♯=1, F♯=6, B=11
+DARK = {"主題": set(), "変奏1": set(), "変奏2": {1}, "変奏3": {1, 6}, "雲": {1, 6}, "変奏4": {1, 6, 11}, "ドローン": {1, 6, 11}}
+def darken(m, sc): return m - 1 if m % 12 in DARK[sc] else m
+
+# ---------- 主題（D イオニア。1=D4。12小節：4+4+4） ----------
+TH = ["3:1 2:0.5 1:0.5 3:1 5:1", "6:1.5 5:0.5 4:1 3:1", "2:1 3:1 4:1 7,:1", "1:4",
+      "5:1 6:0.5 7:0.5 1':1 7:1", "6:1 4:1 5:2", "3:1 4:0.5 3:0.5 2:1 6,:1", "7,:3 R:1",
+      "4:1 6:1 1':1.5 7:0.5", "6:1 5:1 3:2", "2:1 7,:1 4:1 3:1", "1:4"]
+def place(sc, bars, oct_, dens, seed):
+    """旋律を置き、その場面の暗い音を半音下げてから鳴らす"""
+    ev = section_events(c, sc, bars, oct_, key=K)
+    ev = [[t, L, darken(m, sc)] for t, L, m in ev]
+    notes = ornament(ev, K, S.bpm, "air", B, density=dens, seed=seed)
+    play(c.FLUTE, [(t, L, darken(m, sc) if m % 12 in DARK[sc] else m, mk) for t, L, m, mk in notes])
+
+place("主題", TH, 4, 0.15, 1701)
+place("変奏1", TH, 4, 0.3, 1702)
+place("変奏2", TH, 4, 0.3, 1703)
+place("変奏3", TH, 4, 0.35, 1704)
+TH_UP = ["3':1 2':0.5 1':0.5 3':1 5':1", "6':1.5 5':0.5 4':1 3':1", "2':1 3':1 4':1 7:1", "1':4"]   # 影：最初の4小節だけ1オクターブ上（D6 は硬いので越えない）
+place("変奏4", TH_UP + TH[4:], 4, 0.4, 1705)
+place("ドローン", ["3:2 2:1 1:1", "6,:4", "7,:2 1:2", "1:4", "R:4", "1:4", "R:4", "R:4"], 4, 0.1, 1706)
+
+# ---------- 木管の色づけ ----------
+ROOT = {"D": 38, "G": 43, "A": 45, "Em": 40}
+def chord3(ch, sc):
+    m = re.match(r"^([A-G][#b]?)(m?)", ch); r = PC[m.group(1)]
+    pcs = [r, (r + (3 if m.group(2) else 4)) % 12, (r + 7) % 12]
+    return [darken(55 + (p - 55) % 12, sc) for p in pcs]
 for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    hi = [x for x in range(60, 76) if x % 12 in chord_pcs(ch)]
-    t = tones(ch, "D3", "D5")
-    if n == "晴れ1":   # 明るい午後の空気（竪琴の分散和音を小さく）
-        if i >= 2: c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[2])))
+    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]; r = ROOT[ch]
+    if n == "主題": continue
+    if n == "ドローン":
+        if i < 6:
+            BN.bar(b, f"{nm(38)}:4"); CL[0].bar(b, f"{nm(57)}:4")       # 短調のドローン（D と A）
         continue
-    if n in ("晴れ2", "雲", "影"):
-        PL.at(b * B, f"{nm(r if n != '晴れ2' else r + 12)}:2"); PL.at(b * B + 2, f"{nm(r + 7)}:2")
-        PR.at(b * B, f"{nm(hi[1])}:2"); PR.at(b * B + 2, f"{nm(hi[2 % len(hi)])}:2"); PR2.at(b * B, f"{nm(hi[0])}:4")
-    if n == "晴れ2": c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[2])))
-    if n in ("晴れ2", "雲", "影", "夕立前"):
-        v = voice(ch, 55 if n == "雲" else 52, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4" if n != "夕立前" else " ".join(f"{nm(v[j])}:0.5" for _ in range(8)))
-    if n == "雲": CELLO.bar(b, f"{nm(r)}:4")
-    if n in ("影", "夕立前"): CELLO.bar(b, f"{nm(r)}:4" if n == "影" else f"{nm(r - 12 if r - 12 >= 36 else r)}:4")
-    if n == "夕立前" and i in (3, 6): TIMP.bar(b, "R:2 " + " ".join(f"{nm(r)}:0.25" for _ in range(8)))
-    if n == "影に入る":
-        v = voice("Bm", 50, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4" if i < 7 else f"{nm(v[j])}:3 R:1")
-        CELLO.bar(b, "B2:4")
-rich(c, choir_scenes=["晴れ2", "雲", "影", "夕立前"], pulse_scenes=["雲", "影"], guitar=False, pizz=False, inner=True)
-sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の017（第2版）。西の空が暗くなる午後。4/4・♩=56。主題と変奏：同じ旋律が D 長調→ミクソリディア→B 短調→C♮の影へ。夕立の前に短い影の山（遠いティンパニ）、雨が降りはじめる所で影の中に入って終わる。",
-       harm_scenes=None, tail_scene="影に入る", fill=False, pads=True, floor=True, pad_scenes=["晴れ1", "晴れ2", "雲", "影", "夕立前", "影に入る"])
+    tones = chord3(ch, n)
+    if n == "変奏1":                                                   # クラリネット1本が、句の終わり（4小節目ごと）に3度下であいづち
+        if i % 4 == 3: CL[0].bar(b, f"R:1 {nm(tones[1])}:1 {nm(tones[0])}:2")
+        continue
+    if n == "変奏2":                                                   # ファゴットが入る：低い根音を長く
+        BN.bar(b, f"{nm(darken(r, n))}:4")
+        if i % 4 == 3: CL[0].bar(b, f"R:1 {nm(tones[1])}:1 {nm(tones[0])}:2")
+        continue
+    if n in ("変奏3", "雲"):                                           # クラリネット2本が和音を長く
+        BN.bar(b, f"{nm(darken(r, n))}:2 {nm(darken(r + 7, n))}:2")
+        CL[0].bar(b, f"{nm(tones[1])}:4"); CL[1].bar(b, f"{nm(tones[2])}:4,")
+        continue
+    if n == "変奏4":                                                   # 影：厚く、2拍ずつ動く
+        BN.bar(b, f"{nm(darken(r, n))}:2 {nm(darken(r - 5 + 12, n) - 12)}:2")
+        CL[0].bar(b, f"{nm(tones[1])}:2 {nm(tones[2])}:2"); CL[1].bar(b, f"{nm(tones[0] + 12)}:4")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.3 --master -15 --widen 1.15 --side-hpf 200",
+       "ケルト・フルート100曲の017（第3版）。市場からの帰り道、西の空に雲が出る。主題と変奏（4/4・♩=64）。同じ旋律を5回吹くたびに1つずつ音が半音下がり、D イオニア → ミクソリディア → ドリア寄り → エオリアと、光が少しずつかげっていく。伴奏はクラリネットとファゴット。終盤に短い影（笛が1オクターブ上がる）、最後は雨の前の短調のドローン。",
+       harm_scenes=None, tail_scene="ドローン", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 5.0, "layers": [{"file": "0595", "db": -45, "hp": 180, "lp": 3800, "wide": 0.012, "duck": 0.4, "fade": 6}],
+       "fx": {"far": {"db": -28, "delay": 0.26, "lp": 2800, "rt": 3.2}}}
+json.dump(air, open("/tmp/cel/w/air017.json", "w"), ensure_ascii=False)

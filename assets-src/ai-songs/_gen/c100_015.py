@@ -43,6 +43,9 @@ def breath(b):
 G = c.g()
 ORG = [S.track(f"足踏みオルガン{j + 1}", "pad", patch="reedOrgan", volume=0.035, pan=-0.2 + 0.2 * j, reverb=0.5,
                barGain=[round(G[b] * breath(b), 3) for b in range(c.NB)]) for j in range(3)]
+# 1回目（7.51）: オルガンだけの前奏が -40dB と、本編より約18dB 小さかった。barGain は強さ2で頭打ちなので、前奏は別のパート（volume 0.1）で鳴らす
+ORGI = [S.track(f"足踏みオルガン（前奏）{j + 1}", "pad", patch="reedOrgan", volume=0.1, pan=-0.2 + 0.2 * j, reverb=0.5,
+                barGain=[round(G[b] * breath(b), 3) for b in range(c.NB)]) for j in range(3)]
 PED = S.track("オルガンの足（低い音）", "pad", patch="reedOrgan", volume=0.04, pan=0.0, reverb=0.45,
               barGain=[round(G[b] * breath(b), 3) for b in range(c.NB)])
 
@@ -64,7 +67,7 @@ for b in range(c.NB):
             PED.at(b * B, f"{nm(root)}:6,")
         continue
     for j, t in enumerate(tones):
-        ORG[j].at(round(b * B + 0.03 * j, 3), f"{nm(t)}:{B}")
+        (ORGI if n == "オルガン" else ORG)[j].at(round(b * B + 0.03 * j, 3), f"{nm(t)}:{B}")
     if n not in ("オルガン", "1番", "ルーラ1"):
         PED.at(b * B, f"{nm(root)}:{B}")
 
