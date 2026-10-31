@@ -41,12 +41,13 @@ def breath(b):
         return [0.8, 1.05, 1.3, 1.05][i % 4]          # 深くゆっくり（2小節吸って2小節吐く）
     return [1.25, 0.82][i % 2]                       # 1小節吸って、1小節吐く
 G = c.g()
-ORG = [S.track(f"足踏みオルガン{j + 1}", "pad", patch="reedOrgan", volume=0.035, pan=-0.2 + 0.2 * j, reverb=0.5,
+ORG = [S.track(f"足踏みオルガン{j + 1}", "pad", patch="reedOrgan", volume=0.035, gainDb=6, pan=-0.2 + 0.2 * j, reverb=0.5,
                barGain=[round(G[b] * breath(b), 3) for b in range(c.NB)]) for j in range(3)]
+# 2回目: 前奏用のパートにしても -40dB のまま。笛と並べて測り直すと、和音（強さ 0.6）は笛より約14dB 小さかった（1回目の試し書き出しは読み違い）→ 前奏 gainDb 12、本編のオルガンと足 gainDb 6。
 # 1回目（7.51）: オルガンだけの前奏が -40dB と、本編より約18dB 小さかった。barGain は強さ2で頭打ちなので、前奏は別のパート（volume 0.1）で鳴らす
-ORGI = [S.track(f"足踏みオルガン（前奏）{j + 1}", "pad", patch="reedOrgan", volume=0.1, pan=-0.2 + 0.2 * j, reverb=0.5,
+ORGI = [S.track(f"足踏みオルガン（前奏）{j + 1}", "pad", patch="reedOrgan", volume=0.1, gainDb=12, pan=-0.2 + 0.2 * j, reverb=0.5,
                 barGain=[round(G[b] * breath(b), 3) for b in range(c.NB)]) for j in range(3)]
-PED = S.track("オルガンの足（低い音）", "pad", patch="reedOrgan", volume=0.04, pan=0.0, reverb=0.45,
+PED = S.track("オルガンの足（低い音）", "pad", patch="reedOrgan", volume=0.04, gainDb=6, pan=0.0, reverb=0.45,
               barGain=[round(G[b] * breath(b), 3) for b in range(c.NB)])
 
 def triad(ch):

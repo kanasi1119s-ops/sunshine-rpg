@@ -95,9 +95,9 @@ for q in range(5):
     unun(b0 + 3, 0.3, q)
 # 止まる：句のかけらがゆっくりになり、最後のあいづちで止まる
 s0 = c.s0["止まる"]
-for j, s_ in enumerate(["5:1 4:1 3:1 2:3", "1:6", "3:2 2:1 1:3", "2:6", "1:6", "R:6", "R:6", "R:6"]):
+for j, s_ in enumerate(["5:1 4:1 3:1 2:3", "1:6", "3:2 2:1 1:3", "2:6", "1:6", "3:3 2:3", "1:6", "R:6"]):   # 1回目（7.63）は最後の3小節がほぼ無音（-70dB）だった
     put(c.FLUTE, s_, (s0 + j) * B, dens=0.1, seed=1920 + j)
-unun(s0 + 4, 0.8, 2)
+unun(s0 + 4, 0.8, 2); unun(s0 + 6, 1.0, 0)
 
 # ---------- ギターの指弾き（6/8 の分散和音。1小節に6つ） ----------
 for b in range(c.NB):
@@ -106,7 +106,9 @@ for b in range(c.NB):
     if n == "鳥" and i < 2: continue
     if n == "止まる":
         if i < 4: GT.bar(b, " ".join(f"{nm(v[q % len(v)])}:1{',' if q % 3 else ''}" for q in (0, 2, 3, 1, 2, 4)))
-        elif i == 4: GT.bar(b, " ".join(f"{nm(x)}:6," for x in v[:1]))
+        elif i in (4, 6): GT.at(b * B, " ".join(f"{nm(x)}:12," for x in v[:1]))
+        if i in (4, 6):
+            GM.at(round(b * B + 0.5, 3), f"{nm(v[2])}:11.5,")      # 最後の和音を、根音と上の音の2つでゆっくり鳴らしてのばす（同時の音は別のパートに）
         continue
     if n == "昼寝":
         GT.bar(b, " ".join(f"{nm(v[q % len(v)])}:2," for q in (0, 3, 2)))
