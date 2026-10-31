@@ -36,6 +36,11 @@ VP = S.track("チェロ（蛙の拍・ピチカート）", "strings", patch="piz
 CB = S.track("コントラバス（ピチカート）", "strings", patch="contrabass", volume=0.08, gainDb=0, pan=0.05, reverb=0.3, sustain=0.5, barGain=G)
 MR = S.track("マリンバ（小さな蛙）", "strings", patch="marimba", volume=0.1, pan=0.25, reverb=0.4, barGain=G)
 
+# 1回目（7.71）: 蛙だけの始まり（16秒）が -40〜-46dB と本編より約20dB 小さかった → 蛙だけの所は別のパート（gainDb +10）で
+VPI = S.track("チェロ（蛙の拍・始まりと終わり）", "strings", patch="pizzicato", volume=0.12, gainDb=16, pan=-0.1, reverb=0.4, barGain=[round(x * 1.5, 3) for x in G])
+CBI = S.track("コントラバス（始まりと終わり）", "strings", patch="contrabass", volume=0.08, gainDb=10, pan=0.05, reverb=0.35, sustain=0.5, barGain=[round(x * 1.5, 3) for x in G])
+MRI = S.track("マリンバ（始まりと終わり）", "strings", patch="marimba", volume=0.1, gainDb=10, pan=0.25, reverb=0.45, barGain=[round(x * 1.5, 3) for x in G])
+
 # ---------- 輪唱の歌（G ドリア。1=G4。12小節＝4小節×3。どの4小節も Gm・C・F・Gm の上） ----------
 P1 = ["1:1 2:0.5 3:0.5 4:1 5:1", "6:1.5 5:0.5 4:1 3:1", "2:1 4:1 6:1 4:1", "5:2 1:2"]
 P2 = ["5:1 7:1 1':2", "1':1 7:1 6:1 5:1", "4:2 6:1 4:1", "5:4"]
@@ -63,10 +68,11 @@ ROOT = {"Gm": 43, "C": 36, "F": 41}
 for b in range(c.NB):
     n, i, Lb, k = S.scene_of(b); ch = S.chords[b]; r = ROOT[ch]
     th = r + (3 if ch.endswith("m") else 4); fi = r + 7
-    CB.bar(b, f"{nm(r)}:1 R:1 {nm(r)}:1, R:1")
-    VP.bar(b, f"R:0.5 {nm(fi)}:0.5, R:1 R:0.5 {nm(fi)}:0.5, {nm(th)}:0.5, R:0.5")
+    solo = n in ("蛙の拍", "蛙だけ")
+    (CBI if solo else CB).bar(b, f"{nm(r)}:1 R:1 {nm(r)}:1, R:1")
+    (VPI if solo else VP).bar(b, f"R:0.5 {nm(fi)}:0.5, R:1 R:0.5 {nm(fi)}:0.5, {nm(th)}:0.5, R:0.5")
     if n in ("蛙の拍", "蛙だけ"):
-        if i % 2 == 1: MR.bar(b, f"R:3 {nm(fi + 24)}:0.25 {nm(fi + 24)}:0.25 R:0.5")
+        if i % 2 == 1: MRI.bar(b, f"R:3 {nm(fi + 24)}:0.25 {nm(fi + 24)}:0.25 R:0.5")
     elif n == "3周目":                                            # 山：マリンバが細かく
         MR.bar(b, " ".join(f"{nm(x)}:0.5{',' if q % 2 else ''}" for q, x in enumerate((r + 24, th + 24, fi + 24, th + 24, r + 36, fi + 24, th + 24, fi + 24))))
     else:
