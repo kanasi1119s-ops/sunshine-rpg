@@ -1,77 +1,80 @@
-# ケルト・フルート100曲「銀の笛と百の夜」024 川辺の蛙たち The Frogs at Dusk — 第3版（2026-10-29: 7.12→ チェロの持続の根音、最後まで弦、床）
-# イメージ: 夕方の水辺。一匹の蛙が鳴きはじめると、あちこちから仲間が加わり、いつのまにか大合唱。
-#   笛も蛙に調子を合わせて、同じ節を、1本・2本・3本と、4小節ずつ遅れて歌い出す（輪唱）。夜になると、笛は一本ずつ帰っていき、蛙の声が残る。
-# 形（台帳）: 輪唱（蛙の合唱に、3本の笛が加わる）。4/4・♩=58。G ドリア（i と ♭VII が2小節ずつ）。始め：蛙の声／終わり：蛙の声。山なし。
-# 編曲の表:
-#   蛙     : 蛙の声（録音）＋チェロのピチカート（蛙の拍）
-#   一匹   : 笛1（中央）が節を歌う
-#   二匹   : 笛2（右）が4小節遅れて加わる
-#   合唱   : 笛3（左・低め）が加わり、3本の輪唱。竪琴
-#   もっと : 弦がうすく、ピチカートが細かく
-#   夜へ   : 笛が1本ずつ抜け、蛙の声が残る
-import sys, json
+# ケルト・フルート100曲「銀の笛と百の夜」024 川辺の蛙たち The Frogs by the Brook — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 夕方の川辺。蛙たちが低い声で拍をきざみはじめる。エイラが笛で歌いだすと、水車小屋の子どもが2人、
+#   木の笛を持って走ってきて、同じ歌を4小節ずつおくれて追いかける（輪唱）。3人で何周も回ったあと、
+#   夕飯に呼ばれて1人ずつ帰っていき、最後は蛙の拍だけが残る。
+# 調べ: 喜び（のどか）。形: 輪唱（3本の笛が同じ12小節の歌を、4小節ずつおくれて入る）。
+# 拍子・速さ: 4/4・♩=58。旋法: G ドリア（4小節の和音 Gm・C・F・Gm を何度も回す。どの4小節も、ほかの4小節と重ねて響くように書いた）。
+# 主役は笛（1本目＝エイラ）。脇: 2本目・3本目の笛（子どもたち。左右に。少し小さく）。
+# 伴奏の主役: 低い弦のピチカート（蛙の拍）とマリンバ（小さな蛙の声）。竪琴・ギター・ピアノ・長い弦・パッド・打楽器は使わない。
+# この曲だけ: 3本の笛が同じ節を追いかける輪唱。最後は入った順に1本ずつ帰る。
+# 始まり: 蛙の拍 → 終わり: 笛が1本ずつ帰り、蛙の拍だけ。
+# 山: 中盤に1つ（3周目。3本とも装飾が増え、マリンバが細かくなる）。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
 
-BPM = 58
-S = Song("C100", "024-the-frogs-at-dusk", "川辺の蛙たち", "The Frogs at Dusk", BPM, 4, "G", "dorian", "ケルト（幻想）")
+S = Song("C100", "024-the-frogs-by-the-brook", "川辺の蛙たち", "The Frogs by the Brook", 58, 4, "G", "dorian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
 S.extra.update({"human": 0.4})
-CC = ["Gm", "Gm", "F", "F"]
-S.scene("蛙", 4, "intro", CC)
-S.scene("一匹", 8, "verse", CC * 2)
-S.scene("二匹", 8, "verse", CC * 2)
-S.scene("合唱", 16, "verse", CC * 4)
-S.scene("もっと", 16, "chorus", CC * 4)
-S.scene("夜へ", 8, "outro", CC * 2)
-NAMES = ["蛙", "一匹", "二匹", "合唱", "もっと", "夜へ"]
-
+K = Key("G", "dorian", 4)
+CH4 = ["Gm", "C", "F", "Gm"]
+SC = [("蛙の拍", 4, "intro"), ("1周目", 12, "verse"), ("2周目", 12, "verse"), ("3周目", 12, "chorus"), ("4周目", 12, "verse"),
+      ("帰る", 8, "verse"), ("蛙だけ", 2, "outro")]
+for n, L, kd in SC: S.scene(n, L, kd, (CH4 * 4)[:L])
+NAMES = [x[0] for x in SC]
 c = make(S, NAMES,
-         [("蛙", 0, 0.6), ("一匹", 0, 0.62), ("二匹", 0, 0.64), ("合唱", 0, 0.68), ("もっと", 0, 0.74), ("夜へ", 0, 0.64), ("夜へ", 7, 0.4)],
-         {}, flute_gain={n: 1.15 for n in NAMES}, intro="蛙", passing=True, tension=False)
-F2 = S.track("笛2", "panflute", patch="flute", volume=0.32, bright=-0.6, pan=0.4, reverb=0.55, breath=True, noRestrike=True, mono=True, sustain=1.1, phrase=16, gainDb=2, barGain=c.g())
-F3 = S.track("笛3", "panflute", patch="flute", volume=0.3, bright=-0.75, pan=-0.4, reverb=0.6, breath=True, noRestrike=True, mono=True, sustain=1.1, phrase=16, gainDb=2, barGain=c.g())
-PZ = S.track("チェロのピチカート（蛙の拍）", "strings", patch="pizzicato", volume=0.11, pan=0.1, reverb=0.35, barGain=c.g())
-
-K = ["1:1 R:0.5 3:0.5 5:1 3:1", "4:1.5 3:0.5 2:2", "3:1 5:1 7:1 5:1", "6:2 5:2",
-     "4:1 R:0.5 5:0.5 6:1 4:1", "5:1.5 4:0.5 3:2", "2:1 3:1 4:1 2:1", "1:4"]
-END = c.s0["夜へ"]
-def canon(track, start, oct_, stop, key=None, orn=0.6, seed=1):
-    key = key or S.key; B = S.beats; b = start; j = 0; ev = []
-    while b < stop:
-        ev += mel_events(key, K[j % 8], oct_, b * B); b += 1; j += 1
-    notes = ornament(ev, key, S.bpm, "air", B, density=orn, seed=seed)
-    for t, L, m, mk in notes: track.at(round(t, 4), f"{nm(m)}:{round(L, 4)}{mk}")
-a = c.s0["一匹"]
-canon(c.FLUTE, a, 4, END + 6, orn=0.8, seed=2401)          # 笛1：夜への6小節目まで
-canon(F2, a + 8, 4, END + 4, orn=0.6, seed=2402)            # 笛2：4小節目まで
-canon(F3, a + 12, 4, END + 2, orn=0.5, seed=2403)           # 笛3（左・やわらかい音色）：2小節目まで（笛の低音は鳴りにくいので同じ高さ）
-
+         [("蛙の拍", 0, 0.64), ("1周目", 0, 0.68), ("2周目", 0, 0.76), ("3周目", 0, 0.84), ("3周目", 8, 0.9), ("4周目", 0, 0.8),
+          ("帰る", 0, 0.72), ("蛙だけ", 0, 0.66), ("蛙だけ", 1, 0.62)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="蛙の拍", passing=True, tension=False)
+S.fix_avoid = lambda t: 0
 B = S.beats
+G = c.g()
+# 試し書き出し: 2本目の笛（0.16）はエイラの笛より約3dB 大きい → 0.11・0.1（子どもの笛は少し小さく）。ピチカートとマリンバは笛より少し小さい（丁度よい）
+F2 = S.track("2本目の笛（子ども・左）", "panflute", patch="flute", volume=0.11, bright=-0.3, pan=-0.4, reverb=0.45, breath=False, barGain=G)
+F3 = S.track("3本目の笛（子ども・右）", "panflute", patch="flute", volume=0.1, bright=-0.4, pan=0.45, reverb=0.5, breath=False, barGain=G)
+VP = S.track("チェロ（蛙の拍・ピチカート）", "strings", patch="pizzicato", volume=0.12, gainDb=6, pan=-0.1, reverb=0.35, barGain=G)
+CB = S.track("コントラバス（ピチカート）", "strings", patch="contrabass", volume=0.08, gainDb=0, pan=0.05, reverb=0.3, sustain=0.5, barGain=G)
+MR = S.track("マリンバ（小さな蛙）", "strings", patch="marimba", volume=0.1, pan=0.25, reverb=0.4, barGain=G)
+
+# ---------- 輪唱の歌（G ドリア。1=G4。12小節＝4小節×3。どの4小節も Gm・C・F・Gm の上） ----------
+P1 = ["1:1 2:0.5 3:0.5 4:1 5:1", "6:1.5 5:0.5 4:1 3:1", "2:1 4:1 6:1 4:1", "5:2 1:2"]
+P2 = ["5:1 7:1 1':2", "1':1 7:1 6:1 5:1", "4:2 6:1 4:1", "5:4"]
+P3 = ["3:0.5 3:0.5 3:1 1:2", "6,:0.5 6,:0.5 6,:1 1:2", "2:0.5 2:0.5 2:1 4:1 2:1", "1:2 5,:2"]      # ゲコ・ゲコ・ゲー（蛙のまね）
+TUNE = P1 + P2 + P3
+
+def sing(track, start_bar, cycles, dens_of, seed, last_bars=None):
+    """start_bar から TUNE を cycles 周。dens_of(周) で装飾の量。last_bars があれば、最後の周はそこまで"""
+    for cy in range(cycles):
+        bars = TUNE if (cy < cycles - 1 or last_bars is None) else TUNE[:last_bars]
+        ev = []
+        for j, s_ in enumerate(bars):
+            ev += mel_events(K, s_, 4, (start_bar + 12 * cy + j) * B)
+        ev = [[round(t, 4), L, m] for t, L, m in ev]
+        play(track, ornament(ev, K, 58, "air", B, density=dens_of(cy), seed=seed + cy))
+
+s1 = c.s0["1周目"]
+DENS = lambda cy: [0.15, 0.25, 0.45, 0.3][min(cy, 3)]
+sing(c.FLUTE, s1, 4, DENS, 2401)                                  # エイラ：4周（帰るの手前まで）
+sing(F2, s1 + 4, 4, DENS, 2411)                                   # 子ども1：4小節おくれて入り、4小節おくれて帰る
+sing(F3, s1 + 8, 4, DENS, 2421)                                   # 子ども2：8小節おくれて入り、最後に帰る（入った順に1本ずつ帰る）
+
+# ---------- 蛙の拍（ピチカート）とマリンバ ----------
+ROOT = {"Gm": 43, "C": 36, "F": 41}
 for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    t = tones(ch, "D3", "D5")
-    PZ.bar(b, f"{nm(r)}:1 R:1 {nm(r + 7)}:1 R:1" if n != "もっと" else f"{nm(r)}:0.5 R:0.5 {nm(r + 7)}:0.5 {nm(r + 12)}:0.5 R:1 {nm(r + 7)}:1")
-    if n in ("合唱", "もっと") or (n == "夜へ" and i < 6): c.HARP.bar(b, f"{nm(t[0])}:2 {nm(t[2])}:2")
-    elif n in ("蛙", "一匹", "二匹"): c.HARP.bar(b, f"{nm(t[0])}:1 {nm(t[2])}:1 {nm(t[4 % len(t)])}:2")   # 水面の輪
-    if n in ("蛙", "一匹", "二匹", "合唱"):   # 夕方の水辺の空気：うすい弦
-        v = voice(ch, 50 if n in ("蛙", "一匹") else 53, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-    c.LOW.bar(b, f"{nm(r)}:4")   # 水辺の低い響き（チェロの持続）
-    if n in ("もっと", "夜へ"):
-        v = voice(ch, 55, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-rich(c, choir_scenes=[], pulse_scenes=["合唱", "もっと"], guitar=True, pizz=False, inner=True)
-sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.34 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の024（第2版）。夕方の水辺の蛙の大合唱。4/4・♩=58、G ドリア。蛙の声（録音）とチェロのピチカートの拍に、3本の笛が4小節ずつ遅れて加わる輪唱。夜になると笛が1本ずつ帰り、蛙の声が残る。",
-       harm_scenes=None, tail_scene="夜へ", fill=False, pads=True, pad_scenes=["一匹", "二匹", "合唱", "もっと", "夜へ"], double=False, floor=True)
-BEAT = 60 / BPM
-ev = [{"t": round((b * 4 + q) * BEAT + 0.05, 2), "file": "0819", "db": -24 - (3 if q else 0), "len": 0.6, "pan": [-0.3, 0.35][(b + q) % 2], "seek": 0.0, "hp": 200, "lp": 7000}
-      for b in range(0, 6) for q in (0, 2)]
-air = {"pre": 2.5, "tail": 9.0, "layers": [{"file": "0997", "db": -29, "hp": 150, "lp": 7000, "wide": 0.014, "duck": 0.25, "fade": 6}],
-       "events": ev,
-       "fx": {"glass": {"hz": [392.0, 784.0, 1174.7], "db": -29, "rt": 6.0, "start": 4}, "shimmer": {"db": -28, "rt": 8.0},
-              "far": {"db": -25, "delay": 0.25, "lp": 2600, "rt": 4.5}, "haze": {"db": -27, "rt": 8.0}, "band": {"db": -38, "hz": 6500, "per": 23}}, "intro_db": 8.5}
+    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]; r = ROOT[ch]
+    th = r + (3 if ch.endswith("m") else 4); fi = r + 7
+    CB.bar(b, f"{nm(r)}:1 R:1 {nm(r)}:1, R:1")
+    VP.bar(b, f"R:0.5 {nm(fi)}:0.5, R:1 R:0.5 {nm(fi)}:0.5, {nm(th)}:0.5, R:0.5")
+    if n in ("蛙の拍", "蛙だけ"):
+        if i % 2 == 1: MR.bar(b, f"R:3 {nm(fi + 24)}:0.25 {nm(fi + 24)}:0.25 R:0.5")
+    elif n == "3周目":                                            # 山：マリンバが細かく
+        MR.bar(b, " ".join(f"{nm(x)}:0.5{',' if q % 2 else ''}" for q, x in enumerate((r + 24, th + 24, fi + 24, th + 24, r + 36, fi + 24, th + 24, fi + 24))))
+    else:
+        MR.bar(b, f"R:1 {nm(fi + 24)}:0.25 {nm(fi + 24)}:0.25 R:0.5 R:1 {nm(th + 24)}:0.5 R:0.5")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.26 --master -15 --widen 1.2 --side-hpf 200",
+       "ケルト・フルート100曲の024（第3版）。夕方の川辺で蛙が拍をきざむ。エイラの笛と、水車小屋の子どもたちの2本の笛が、同じ12小節の歌を4小節ずつおくれて追いかける輪唱。4/4・♩=58、G ドリア。伴奏は低い弦のピチカート（蛙の拍）とマリンバ（小さな蛙）。山は3周目、最後は1本ずつ帰って、蛙の拍だけが残る。",
+       harm_scenes=None, tail_scene="蛙だけ", double=False, fill=False, pads=False)
+air = {"pre": 0.2, "tail": 4.5, "layers": [{"file": "0595", "db": -45, "hp": 180, "lp": 3800, "wide": 0.012, "duck": 0.4, "fade": 6}],
+       "fx": {"far": {"db": -28, "delay": 0.24, "lp": 3000, "rt": 2.8}}}
 json.dump(air, open("/tmp/cel/w/air024.json", "w"), ensure_ascii=False)
