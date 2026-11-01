@@ -30,7 +30,8 @@ S.fix_avoid = lambda t: 0
 B = S.beats
 G = c.g()
 # ティンパニは E2 より上で（071: D3・A2 の 0.12 で笛とほぼ同じ）→ 足取りなので 0.09
-TP = S.track("ティンパニ（足取り）", "strings", patch="timpani", volume=0.09, pan=0, reverb=0.45, barGain=[round(x * (1.4 if b < 2 else 1.0), 3) for b, x in enumerate(G)])
+# ティンパニ（timpani）は鳴らない（071 で分かった）→ 録音のタム（inchTom）。0.12・gainDb 12 で（071）
+TP = S.track("大太鼓（足取り）", "strings", patch="inchTom", volume=0.1, gainDb=12, pan=0, reverb=0.45, barGain=[round(x * (1.4 if b < 2 else 1.0), 3) for b, x in enumerate(G)])
 GT = [S.track(f"ブズーキ風ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.008, pan=0.25 - 0.1 * i, reverb=0.3, barGain=G) for i in range(5)]
 VC = S.track("チェロ", "strings", patch="cello", volume=0.02, gainDb=2, pan=-0.25, reverb=0.65, release=0.7, barGain=G)
 VA = S.track("ビオラ", "strings", patch="viola", volume=0.017, pan=0.05, reverb=0.65, release=0.7, barGain=G)
@@ -58,7 +59,7 @@ MARCH = [(0, 1, "d", "!"), (1, 0.5, "d", ","), (1.5, 0.5, "u", ","), (2, 1, "d",
 for b in range(c.NB):
     n, i, Lb, k = S.scene_of(b); ch = S.chords[b]; r, th, fi = tri(ch)
     if n == "太鼓" or n.startswith("登り"):
-        TP.bar(b, "D3:1! A2:1, D3:1 A2:1," if ch != "A" else "A2:1! E2:1, A2:1 E2:1,")
+        TP.bar(b, "F2:1! A2:1, F2:1 A2:1," if ch != "A" else "G2:1! C3:1, G2:1 C3:1,")
     if n.startswith("登り"):
         lvl = int(n[-1])
         if lvl >= 2: strum(GT, b, B, ch, MARCH)
@@ -68,7 +69,7 @@ for b in range(c.NB):
             if lvl >= 3: VN.at(round(b * B + 0.1, 3), f"{nm(near(fi, 64))}:{2 * B + 0.1},")
     elif n in ("頂", "白い世界"):                                       # 頂：ギターと太鼓は止まり、弦だけがさびしく
         if n == "頂" and i == 0:
-            TP.at(b * B, "B2:4!")                                       # 着いた瞬間の1打
+            TP.at(b * B, "F2:4!")                                       # 着いた瞬間の1打
         if i % 2 == 0:
             L = 2 * B + 0.2 if n == "頂" else 4 * B
             VC.at(b * B, f"{nm(near(r, 35))}:{L}"); VA.at(round(b * B + 0.05, 3), f"{nm(near(th, 54))}:{L - 0.05},")

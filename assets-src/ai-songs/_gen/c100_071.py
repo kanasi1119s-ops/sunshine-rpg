@@ -3,7 +3,7 @@
 #   坂が急になるほど、足取りは遅く重くなる。登りきると、足音だけが残る。
 # 調べ: あいだ。形: 行進（重い足取りの 6/8 マーチ。16小節の節 AB を4回。4回目は急な坂でテンポが落ちる）。
 # 拍子・速さ: 6/8・付点4分＝88 → 70（急な坂）。旋法: D エオリア。
-# 主役は笛（進む笛）。伴奏の主役: ティンパニ（足取り。1拍目が重い）とコントラバス（1拍目に重く）。脇: ホルン（2回目から、長い支え）。
+# 主役は笛（進む笛）。伴奏の主役: 大太鼓（録音のタム。足取り。1拍目が重い）とコントラバス（1拍目に重く）。脇: ホルン（2回目から、長い支え）。
 #   竪琴・ギター・ピアノ・パッド・2本目の笛は使わない。
 # この曲だけ: 一歩ごとに1拍目が重く、坂が急になるとテンポが落ちる（♩.=88 → 70）。
 # 始まり: 太鼓の足取り → 終わり: 足取りだけ。
@@ -32,7 +32,8 @@ s = c.s0
 S.tempo = [{"bar": 1, "bpm": 88}, {"bar": s["急な坂"] + 1, "bpm": 70, "ramp": 16}]
 B = S.beats
 G = c.g()
-TP = S.track("ティンパニ（足取り）", "strings", patch="timpani", volume=0.12, pan=0, reverb=0.4, barGain=[round(x * (1.3 if S.scene_of(b)[0].startswith("足取り") else 1.0), 3) for b, x in enumerate(G)])
+# 1回目: ティンパニ（timpani）はこの書き出しでは鳴らなかった（試し書き出しでも無音）→ 録音のタム（inchTom）を低く。0.12 で笛より約18dB 小さい → gainDb 12
+TP = S.track("大太鼓（足取り）", "strings", patch="inchTom", volume=0.12, gainDb=12, pan=0, reverb=0.4, barGain=[round(x * (1.3 if S.scene_of(b)[0].startswith("足取り") else 1.0), 3) for b, x in enumerate(G)])
 CB_ = S.track("コントラバス（1拍目）", "strings", patch="contrabass", volume=0.03, gainDb=3, pan=-0.15, reverb=0.45, release=0.3, barGain=G)
 HN = S.track("ホルン（長い支え）", "brass", patch="horn", volume=0.11, gainDb=6, pan=0.25, reverb=0.6, barGain=G)
 
@@ -52,7 +53,7 @@ def near(pc, lo):
 for b in range(c.NB):
     n, i, Lb, k = S.scene_of(b); ch = S.chords[b]; r, th, fi = tri(ch)
     last = (n == "足取りだけ" and i >= 6)
-    TP.bar(b, "D3:1! A2:1," if not last else ("D3:1, R:1" if i == 6 else "A2:1, R:1"))      # 試し書き出し: D2・A1 はティンパニの音域の外で鳴らなかった
+    TP.bar(b, "F2:1! A2:1," if not last else ("F2:1, R:1" if i == 6 else "A2:1, R:1"))      # 試し書き出し: D2・A1 はティンパニの音域の外で鳴らなかった
     if n.startswith("足取り"): continue
     CB_.bar(b, f"{nm(near(r, 38))}:0.6! R:0.4 {nm(near(r, 38))}:0.3, R:0.7")
     if n != "道1" and i % 2 == 0:
