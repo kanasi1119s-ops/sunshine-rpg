@@ -31,7 +31,8 @@ S.fix_avoid = lambda t: 0
 B = S.beats
 G = c.g()
 # 試し書き出し: 梟（ファゴット 0.15）は笛と同じくらい（問答の相手として丁度よい）。チェロは笛より約7dB、コントラバスは約10dB 小さい（低い持続として丁度よい）
-OWL = S.track("ファゴット（梟の声）", "strings", patch="bassoon", volume=0.15, pan=-0.3, reverb=0.7, barGain=[round(x * 1.3, 3) for x in G])
+OWL = S.track("ファゴット（梟の声）", "strings", patch="bassoon", volume=0.15, gainDb=7,   # 1回目（7.33）: 梟だけの小節が -36dB と本編より約11dB 小さかった
+            pan=-0.3, reverb=0.7, barGain=[round(x * 1.3, 3) for x in G])
 VC = [S.track(f"チェロ（低い持続{j + 1}）", "strings", patch="cello", volume=0.014, gainDb=1, pan=0.2, reverb=0.65, release=0.5, barGain=[round(x * 1.4, 3) for x in G]) for j in range(2)]
 CB = S.track("コントラバス（低い持続）", "strings", patch="contrabass", volume=0.05, pan=0.05, reverb=0.6, release=0.6, barGain=G)
 
