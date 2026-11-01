@@ -32,7 +32,7 @@ s = c.s0
 S.tempo = [{"bar": 1, "bpm": 56}, {"bar": s["喜び"] + 1, "bpm": 150}, {"bar": s["眠り"] + 1, "bpm": 56}, {"bar": s["目覚め"] + 1, "bpm": 96, "ramp": 2}]
 B = S.beats
 G = c.g()
-ORG = [S.track(f"鐘（パイプオルガン{j + 1}）", "pad", patch="churchOrgan", volume=0.05, gainDb=6, pan=-0.15 + 0.15 * j, reverb=0.75, barGain=G)      # 試し書き出し: 0.05 の3音で笛より約13dB 小さい → gainDb 6 for j in range(3)]
+ORG = [S.track(f"鐘（パイプオルガン{j + 1}）", "pad", patch="churchOrgan", volume=0.05, gainDb=6, pan=-0.15 + 0.15 * j, reverb=0.75, barGain=G) for j in range(3)]      # 試し書き出し: 0.05 の3音で笛より約13dB 小さい → gainDb 6
 BELL = S.track("鐘", "bell", volume=0.12, pan=0.1, reverb=0.9, barGain=[1.1] * c.NB)
 VC = S.track("チェロ", "strings", patch="cello", volume=0.02, gainDb=2, pan=-0.25, reverb=0.65, release=0.7, barGain=G)
 VA = S.track("ビオラ", "strings", patch="viola", volume=0.017, pan=0.1, reverb=0.65, release=0.7, barGain=G)
