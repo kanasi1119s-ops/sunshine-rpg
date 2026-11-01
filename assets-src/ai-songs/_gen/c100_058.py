@@ -1,85 +1,97 @@
-# ケルト・フルート100曲「銀の笛と百の夜」058 霧が晴れる前 Before the Mist Lifts（2026-10-29。第6章 霧の湖）
-# イメージ: 夜明け前。湖はまだ白い霧の中。舟を止めて、エイラは待つ。霧は少しずつうすくなり、輪郭がひとつ、またひとつ見えてくる。
-#   最後に、霧が晴れきる直前の、すんだ空気だけが残る。
-# 形: ギター → 待つ1 → 待つ2（中盤の山）→ 白む → 澄む。4/4・♩=50・F リディア。長い音がゆるく上がっていく旋律。
-# ただひとつ: 弦の和音に、となりあう音（にごり＝霧）を混ぜておき、場面が進むたびに一つずつ外していく
-#   （ギター・待つ1＝3つ、待つ2＝2つ、白む＝1つ、澄む＝0）。最後は、3度もなくなり、5度とオクターブだけの澄んだ響きになる。
-# 編曲の表:
-#   ギター: ナイロンギターのゆっくりした分散和音と、にごった弦（霧）
-#   待つ1 : 笛の長い音。ピアノの左手、にごりの弦
-#   待つ2 : ピアノの右手も。弦3声・内声。山（中盤）
-#   白む  : 笛が高い音域へ。にごりは1つだけ。竪琴の高い音が光りはじめる
-#   澄む  : 弦は5度とオクターブだけ。笛は長い C で止まる
-import sys, json
+# ケルト・フルート100曲「銀の笛と百の夜」058 霧が晴れる前 Before the Mist Lifts — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 二つの笛が重なったあと、湖の霧はまだ厚い。けれど、ゆっくりと、少しずつ薄くなっていく。
+#   にごった空気が澄んでいき、最後は、遠くの岸まで見通せる澄んだ響きになる。
+# 調べ: あいだ。形: にごった響きが澄んでいく（弦の和音に、となりあう音のにごりを3つ → 2つ → 1つ → 0 と、場面ごとに1つずつ外す）。
+# 拍子・速さ: 4/4・♩=50。旋法: F リディア（B♮ が明るく浮く）。
+# 主役は笛（長い音で、場面ごとにゆるく上がる）。伴奏の主役: 弦の和音（にごりの音つき）とナイロン弦ギターの分散和音。
+#   竪琴・ピアノ・パッド・打楽器・2本目の笛は使わない。
+# この曲だけ: にごりの音が場面ごとに1つずつ外れていき、最後は5度とオクターブだけの澄んだ響きになる。
+# 始まり: ギターとにごった弦 → 終わり: 澄んだ5度とオクターブ。
+# 山: 中盤に1つ（薄霧）。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
 
-BPM = 50
-S = Song("C100", "058-before-the-mist-lifts", "霧が晴れる前", "Before the Mist Lifts", BPM, 4, "F", "lydian", "ケルト（幻想）")
+S = Song("C100", "058-before-the-mist-lifts", "霧が晴れる前", "Before the Mist Lifts", 50, 4, "F", "lydian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.4, "rubato": 0.22})
-P = ["F", "G", "Am", "F", "Dm", "C", "G", "F", "F", "G", "Em", "Am", "Dm", "G", "C", "F"]
-S.scene("ギター", 4, "intro", ["F", "G", "F", "G"])
-S.scene("待つ1", 16, "verse", P)
-S.scene("待つ2", 16, "chorus", P)
-S.scene("白む", 12, "verse", ["F", "G", "F", "G", "Dm", "Am", "G", "C", "F", "G", "F", "F"])
-S.scene("澄む", 4, "outro", ["F", "F", "F", "F"])
-NAMES = ["ギター", "待つ1", "待つ2", "白む", "澄む"]
-
+S.extra.update({"human": 0.3, "rubato": 0.15})
+K = Key("F", "lydian", 4)
+CH8 = ["F", "G", "Am", "F", "Dm", "G", "Em", "F"]
+SC = [("にごり", 4, "intro", ["F", "G", "F", "F"]), ("霧1", 12, "verse", CH8 + CH8[:4]), ("霧2", 12, "verse", CH8[4:] + CH8), ("薄霧", 12, "chorus", CH8 + CH8[:4]),
+      ("澄む", 12, "verse", CH8[4:] + CH8), ("晴れ", 4, "outro", ["F"] * 4)]
+for n, L, kd, ch in SC: S.scene(n, L, kd, ch)
+NAMES = [x[0] for x in SC]
 c = make(S, NAMES,
-         [("ギター", 0, 0.6), ("待つ1", 0, 0.64), ("待つ2", 0, 0.72), ("待つ2", 8, 0.84), ("待つ2", 15, 0.72), ("白む", 0, 0.7), ("白む", 11, 0.72),
-          ("澄む", 0, 0.66), ("澄む", 3, 0.52)],
-         {}, flute_gain={n: 1.2 for n in NAMES}, intro="ギター", passing=True, tension=False)
-GTR = S.track("ナイロンギター", "guitar", patch="nylonGuitar", volume=0.075, pan=0.3, reverb=0.45, barGain=c.g())
-PL = S.track("ピアノ（左手）", "piano", volume=0.85, pan=-0.2, reverb=0.5, barGain=c.g())
-PR = S.track("ピアノ（右手）", "piano", volume=0.7, pan=-0.1, reverb=0.5, barGain=c.g())
-FOG = [S.track(f"霧のにごり（弦）{i + 1}", "strings", patch="slowStrings", volume=0.022, pan=[-0.5, 0.5, 0.1][i], reverb=0.7, barGain=c.g()) for i in range(3)]
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.08, pan=0.12, reverb=0.5, barGain=c.g())
-
-M = ["3:3 5:1", "4:4", "3:2 5:2", "1':4", "6:3 5:1", "5:2 3:2", "2:2 4:2", "3:4",
-     "5:3 6:1", "7:2 6:2", "7:4", "5:2 7:2", "1':3 2':1", "2':4", "3':2 2':2", "1':4"]
-W = ["3':4", "4':4", "3':2 2':2", "2':4", "1':3 6:1", "1':2 3':2", "2':4", "3':2 5:2", "1':4", "2':2 4':2", "3':4", "3':4"]
-play_melody(c, "待つ1", M, 4, "air", density=0.4, seed=5801)
-play_melody(c, "待つ2", M, 4, "air", density=0.6, seed=5802)
-play_melody(c, "白む", W, 4, "air", density=0.45, seed=5803)
-play_melody(c, "澄む", ["5:4", "5:4", "R:4", "R:4"], 4, "air", density=0.0)
-
+         [("にごり", 0, 0.68), ("霧1", 0, 0.68), ("霧2", 0, 0.72), ("薄霧", 0, 0.8), ("薄霧", 8, 0.86), ("澄む", 0, 0.76), ("晴れ", 0, 0.72), ("晴れ", 3, 0.66)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="にごり", passing=True, tension=False)
+S.fix_avoid = lambda t: 0
 B = S.beats
-FOGN = {"ギター": 3, "待つ1": 3, "待つ2": 2, "白む": 1, "澄む": 0}
-SC = [(S.key.t + x) % 12 for x in S.key.steps]
-def neighbors(ch, lo):
-    """和音の音のすぐ上の音階の音（にごり）。2度でぶつかる音を、和音の中ほどの音域に"""
-    pcs = chord_pcs(ch); out = []
-    for m in range(lo, lo + 14):
-        if m % 12 in SC and m % 12 not in pcs and (m - 1) % 12 in pcs or (m - 2) % 12 in pcs and m % 12 in SC and m % 12 not in pcs:
-            out.append(m)
-    return out
-for b in range(c.NB):
-    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    t = tones(ch, "F3", "F5")
-    CELLO.bar(b, f"{nm(r)}:4")
-    if n == "澄む":   # 5度とオクターブだけ
-        for j, m in enumerate((53, 60, 65)): c.STR[j].bar(b, f"{nm(m)}:4")
-        GTR.bar(b, f"{nm(41)}:2 {nm(48)}:2" if i < 3 else f"{nm(53)}:4")
-        if i < 3: c.HARP2.bar(b, f"{nm(72)}:2 {nm(77)}:2")
+G = c.g()
+# 弦は声が多い（3〜6声）ので、1声ずつは 004 の値より小さめ。始まり（ギターとにごった弦だけ）は ×1.6
+IG = [round(x * (1.6 if b < 4 else 1.0), 3) for b, x in enumerate(G)]
+VC = S.track("チェロ（根音）", "strings", patch="cello", volume=0.018, gainDb=2, pan=-0.2, reverb=0.7, release=0.7, barGain=IG)
+VA = S.track("ビオラ（5度）", "strings", patch="viola", volume=0.014, pan=0.05, reverb=0.7, release=0.7, barGain=IG)
+VN = S.track("バイオリン（3度）", "strings", patch="violin", volume=0.02, gainDb=3, pan=0.25, reverb=0.7, release=0.7, barGain=IG)
+CL = [S.track(f"にごりの音{j + 1}", "strings", patch=("viola" if j % 2 else "violin"), volume=(0.013 if j % 2 else 0.018), gainDb=(0 if j % 2 else 3),
+              pan=-0.1 + 0.2 * j, reverb=0.7, release=0.7, barGain=IG) for j in range(3)]
+OCT = S.track("バイオリン（オクターブ）", "strings", patch="violin", volume=0.02, gainDb=3, pan=0.35, reverb=0.7, release=0.7, barGain=G)
+GT = [S.track(f"ギター（分散和音{j + 1}）", "guitar", patch="nylonGuitar", volume=0.011, pan=-0.3 + 0.1 * j, reverb=0.4, barGain=IG) for j in range(2)]
+
+def tri(ch):
+    m = re.match(r"^([A-G][#b]?)(m?)", ch); r = PC[m.group(1)]
+    return r, (r + (3 if m.group(2) else 4)) % 12, (r + 7) % 12
+def near(pc, lo):
+    return lo + (pc - lo) % 12
+SCALE = [(5 + x) % 12 for x in (0, 2, 4, 6, 7, 9, 11)]          # F リディア
+def step_up(m):
+    x = m + 1
+    while x % 12 not in SCALE: x += 1
+    return x
+
+# ---------- 弦の和音（2小節ごとに弓を返す。にごりの音は、和音の音の1つ上の隣の音） ----------
+MUD = {"にごり": 3, "霧1": 3, "霧2": 2, "薄霧": 1, "澄む": 0}
+for b in range(0, c.s0["晴れ"], 2):
+    n = S.scene_of(b)[0]; ch = S.chords[b]; r, th, fi = tri(ch)
+    L = f"{2 * B + 0.25}"
+    v_r, v_f, v_t = near(r, 41), near(fi, 53), near(th, 60)
+    mk = "," if b % 4 else ""
+    if n == "澄む":                                            # 澄む：5度とオクターブだけ
+        VC.at(b * B, f"{nm(v_r)}:{L}{mk}"); VA.at(round(b * B + 0.05, 3), f"{nm(v_r + 7)}:{L},")
+        VN.at(round(b * B + 0.1, 3), f"{nm(v_r + 12 if v_r + 12 >= 53 else v_r + 24)}:{L},"); OCT.at(round(b * B + 0.15, 3), f"{nm(v_r + 19 if v_r + 19 >= 60 else v_r + 31)}:{L},")
         continue
-    nv = 3 if n in ("待つ2", "白む") else 2
-    v = voice(ch, 55, nv, spread=True)
-    for j in range(nv): c.STR[j].bar(b, f"{nm(v[j])}:4")
-    nb = neighbors(ch, 57)[:FOGN[n]]
-    for j, m in enumerate(nb): FOG[j].bar(b, f"{nm(m)}:4")
-    GTR.bar(b, " ".join(f"{nm(t[q % len(t)])}:1" for q in (0, 2, 4, 2)) if n == "ギター" else " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 2, 4, 5, 4, 2, 3, 2)))
-    if n != "ギター": PL.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2")
-    if n in ("待つ2", "白む"):
-        hi = tones(ch, "A4", "A5"); PR.bar(b, f"{nm(hi[0])}:2 {nm(hi[1])}:2")
-    if n == "白む" and i >= 4:
-        hh = tones(ch, "C6", "C7"); c.HARP2.bar(b, f"{nm(hh[0])}:1 {nm(hh[1])}:1 {nm(hh[2 % len(hh)])}:2")
-rich(c, choir_scenes=["待つ2"], pulse_scenes=["待つ2", "白む"], guitar=False, pizz=False, inner=True)
-sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の058。夜明け前、湖の霧が少しずつうすくなる。4/4・♩=50、F リディア。弦の和音に混ぜた「となりあう音（にごり＝霧）」が、場面ごとに一つずつ外れていき、最後は5度とオクターブだけの澄んだ響きになる。笛は長い音でゆるく上がっていく。",
-       harm_scenes=None, tail_scene="澄む", fill=False, pads=True, pad_scenes=["待つ1", "待つ2", "白む"], floor=True)
-air = {"pre": 0.8, "tail": 8.0, "layers": [{"file": "0621", "db": -39, "hp": 150, "lp": 5000, "wide": 0.014, "duck": 0.35, "fade": 8}],
-       "fx": {"shimmer": {"db": -28, "rt": 8.0}, "far": {"db": -25, "delay": 0.3, "lp": 2800, "rt": 5.0}}, "intro_db": 6.0}
+    VC.at(b * B, f"{nm(v_r)}:{L}{mk}"); VA.at(round(b * B + 0.05, 3), f"{nm(v_f)}:{L},"); VN.at(round(b * B + 0.1, 3), f"{nm(v_t)}:{L},")
+    for j, base in enumerate((v_f, v_t, v_r + 12)[:MUD[n]]):
+        CL[j].at(round(b * B + 0.15 + 0.05 * j, 3), f"{nm(step_up(base))}:{L},")
+
+# ---------- ギター（8分の分散和音。にごりの所は和音の上の隣の音もつまむ） ----------
+for b in range(c.s0["晴れ"]):
+    n = S.scene_of(b)[0]; ch = S.chords[b]; r, th, fi = tri(ch)
+    lo = near(r, 40)
+    if n == "澄む":
+        seq = [lo, lo + 7, lo + 12, lo + 19, lo + 24, lo + 19, lo + 12, lo + 7]
+    else:
+        t2 = near(th, lo + 12); f2 = near(fi, lo + 12)
+        seq = [lo, f2, t2, step_up(t2) if MUD[n] >= 2 else lo + 12, near(r, t2 + 1), t2, f2, step_up(f2) if MUD[n] >= 1 else t2]
+    for q, m in enumerate(seq):
+        GT[q % 2].at(round(b * B + q * 0.5, 3), f"{nm(m)}:{1.0 if q % 2 == 0 else 0.5}{'' if q == 0 else ','}")
+
+# ---------- 笛（長い音で、場面ごとにゆるく上がる。1=F4。C6 より上には行かない） ----------
+MEL = {
+    "霧1": ["3:4", "2:2 3:2", "4:4", "3:4", "5:4", "4:2 3:2", "2:4", "3:4", "3:2 5:2", "4:4", "3:2 2:2", "3:4"],
+    "霧2": ["5:4", "6:2 5:2", "7:4", "5:4", "6:4", "5:2 4:2", "5:2 6:2", "7:4", "1':4", "7:2 6:2", "5:4", "6:4"],
+    "薄霧": ["1':4", "7:2 1':2", "2':4", "1':4", "3':2 2':2", "1':4", "7:2 6:2", "7:4", "1':2 2':2", "3':4", "2':2 1':2", "2':4"],
+    "澄む": ["3':4", "4':2 3':2", "5':4", "3':4", "2':2 3':2", "4':4", "5':4", "4':2 3':2", "2':4", "3':2 4':2", "5':4", "5':4"],
+}
+for k, (sc, bars) in enumerate(MEL.items()):
+    play_melody(c, sc, bars, 4, "air", key=K, density=(0.1, 0.15, 0.2, 0.12)[k], seed=5800 + k)
+s0 = c.s0["晴れ"]
+c.FLUTE.at(s0 * B, "C6:13")
+VC.at(s0 * B, "F2:15.5"); VA.at(round(s0 * B + 0.05, 3), "C3:15.4,"); VN.at(round(s0 * B + 0.1, 3), "F4:15.3,"); OCT.at(round(s0 * B + 0.15, 3), "C5:15.2,")
+GT[0].at(s0 * B, "F2:6,"); GT[1].at(round(s0 * B + 0.5, 3), "C3:5.5,"); GT[0].at(round(s0 * B + 1.0, 3), "F3:5,"); GT[1].at(round(s0 * B + 1.5, 3), "C4:4.5,")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.34 --master -15 --widen 1.15 --side-hpf 200",
+       "ケルト・フルート100曲の058（第3版）。湖の厚い霧が、ゆっくり薄くなっていく。4/4・♩=50、F リディア。弦の和音に、和音の音のとなりの音（にごり）を3つ重ね、場面ごとに1つずつ外していく。ギターの分散和音も同じように、にごりの音が外れていく。笛は長い音で、場面ごとにゆるく上がり、中盤の薄霧が山。最後は5度とオクターブだけの澄んだ響きの上で、笛が高い C を長く吹く。",
+       harm_scenes=None, tail_scene="晴れ", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 5.0, "layers": [{"file": "0595", "db": -45, "hp": 160, "lp": 3600, "wide": 0.012, "duck": 0.4, "fade": 7}],
+       "fx": {"far": {"db": -27, "delay": 0.3, "lp": 2800, "rt": 4.0}}}
 json.dump(air, open("/tmp/cel/w/air058.json", "w"), ensure_ascii=False)

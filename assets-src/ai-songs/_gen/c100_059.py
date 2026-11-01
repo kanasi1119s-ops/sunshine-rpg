@@ -1,95 +1,89 @@
-# ケルト・フルート100曲「銀の笛と百の夜」059 睡蓮 Water Lilies（2026-10-29。第6章 霧の湖）
-# イメージ: 霧がうすれ、湖の入り江が見えてくる。白みはじめた水の上に、睡蓮がいくつも浮かんでいる。
-#   風がないので、水面は鏡のよう。花と、さかさまに映った花が、上と下で同じようにゆれている。
-# 形: 池 → 浮かぶ → 映る → 開く（終盤の山）→ 閉じる（和音のロール）。12/8（付点4分×4 のゆれる子守歌）・8分＝150・E♭ イオニア。
-# ただひとつ: 「映る」から、ピアノの高い音が、笛の旋律を上下さかさまにした形（鏡の旋律。B♭ を軸に、上がる所は下がり、下がる所は上がる）で
-#   同時に弾く。花と水に映った花が、いっしょにゆれる。
-# 編曲の表:
-#   池    : 竪琴の低い音のゆれと、うすい弦とチェロ
-#   浮かぶ: 笛。ピアノの左手（付点4分のゆれ）、竪琴
-#   映る  : ＋ピアノの鏡の旋律（高い音）。弦3声
-#   開く  : 笛の2つ目の節（上の音域）＋鏡。笛の和声。内声の動き。山
-#   閉じる: 竪琴の和音のロールで閉じる
-import sys, json
+# ケルト・フルート100曲「銀の笛と百の夜」059 睡蓮 Water Lilies — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 霧が晴れかけた湖の入り江に、睡蓮が一面に咲いている。花は水に映って、上と下に二つずつ咲いて見える。
+#   舟はゆっくり揺れ、エイラは揺れに合わせて笛を吹く。水に映る花のように、ピアノが笛の旋律を上下さかさまにして、同時に弾く。
+# 調べ: 眠り。形: 鏡の旋律（笛の旋律を、ピアノが B♭ を軸に上下さかさまにして、1オクターブ上で同時に弾く）。
+# 拍子・速さ: 12/8・付点4分＝50（1拍＝付点4分、1小節＝4拍。8分は 1/3 拍）。旋法: E♭ イオニア。
+# 主役は笛（揺れる笛。付点のゆれ）。伴奏の主役: ピアノの高い音（鏡の旋律）。脇: 竪琴の低い分散和音。
+#   ギター・パッド・弦・打楽器・2本目の笛は使わない。
+# この曲だけ: ピアノが笛の旋律を上下さかさまにして同時に弾く（笛が上がるとピアノは下がる。リズムは同じ）。
+# 始まり: 竪琴の低い音 → 終わり: 和音のロール（竪琴が低い所から高い所まで、ゆっくり和音を広げる）。
+# 山: 終盤に1つ（花ひらく）。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
-from c100_common import _dia
 
-BPM = 150   # 8分音符＝150（付点4分＝50）
-S = Song("C100", "059-water-lilies", "睡蓮", "Water Lilies", BPM, 12, "Eb", "major", "ケルト（幻想）")
+S = Song("C100", "059-water-lilies", "睡蓮", "Water Lilies", 50, 4, "Eb", "major", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.4, "rubato": 0.2})
-P = ["Eb", "Ab", "Cm", "Bb", "Eb", "Ab", "Fm", "Bb", "Cm", "Ab", "Bb", "Eb", "Ab", "Gm", "Fm", "Eb"]
-S.scene("池", 4, "intro", ["Eb", "Ab", "Eb", "Bb"])
-S.scene("浮かぶ", 16, "verse", P)
-S.scene("映る", 16, "verse", P)
-S.scene("開く", 12, "chorus", ["Ab", "Bb", "Gm", "Cm", "Ab", "Bb", "Eb", "Eb", "Ab", "Fm", "Bb", "Eb"])
-S.scene("閉じる", 4, "outro", ["Ab", "Eb", "Eb", "Eb"])
-NAMES = ["池", "浮かぶ", "映る", "開く", "閉じる"]
-
+S.extra.update({"human": 0.3, "rubato": 0.15})
+K = Key("Eb", "major", 4)
+T3 = 1 / 3
+def e2b(bars):
+    return [" ".join(f"{t.split(':')[0]}:{round(float(t.split(':')[1]) / 3, 4)}" for t in s_.split()) for s_ in bars]
+CA = ["Eb", "Bb", "Eb", "Ab", "Cm", "Ab", "Bb", "Eb"]
+CB = ["Eb", "Cm", "Bb", "Bb", "Ab", "Eb", "Bb", "Eb"]
+SC = [("竪琴の低い音", 2, "intro", ["Eb", "Eb"]), ("水面1", 16, "verse", CA + CB), ("水面2", 16, "verse", CA + CB), ("花ひらく", 16, "chorus", CB + CA),
+      ("和音のロール", 3, "outro", ["Eb"] * 3)]
+for n, L, kd, ch in SC: S.scene(n, L, kd, ch)
+NAMES = [x[0] for x in SC]
 c = make(S, NAMES,
-         [("池", 0, 0.6), ("浮かぶ", 0, 0.64), ("映る", 0, 0.68), ("開く", 0, 0.74), ("開く", 8, 0.86), ("開く", 11, 0.76),
-          ("閉じる", 0, 0.66), ("閉じる", 3, 0.5)],
-         {}, flute_gain={n: 1.2 for n in NAMES}, intro="池", passing=True, tension=False)
-MIR = S.track("ピアノ（水に映る旋律）", "piano", volume=0.55, pan=0.3, reverb=0.65, barGain=c.g())
-PL = S.track("ピアノ（左手）", "piano", volume=0.85, pan=-0.2, reverb=0.5, barGain=c.g())
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.08, pan=0.12, reverb=0.5, barGain=c.g())
-
-M = ["3:3 2:2 1:1 5:6", "6:3 5:2 4:1 3:6", "5:3 6:2 5:1 3:3 1:3", "2:6 4:3 5:3",
-     "3:3 2:2 1:1 5:6", "1':3 7:2 6:1 5:6", "4:3 5:2 6:1 1':6", "7:6 2':6",
-     "1':3 7:2 6:1 5:6", "6:3 5:2 4:1 3:6", "2:3 3:2 4:1 5:6", "1:12",
-     "6:6 1':6", "7:3 6:2 5:1 2':6", "1':3 7:2 6:1 4:6", "5:12"]
-O = ["1':3 2':2 3':1 1':6", "2':6 4':6", "5':12", "3':3 2':2 1':1 5:6",
-     "6:3 1':2 3':1 1':6", "2':3 1':2 7:1 5:6", "3':6 2':3 1':3", "5:6 3:6",
-     "1':3 2':2 3':1 4':6", "3':3 2':2 1':1 6:6", "2':6 5:6", "1:12"]
-play_melody(c, "浮かぶ", M, 4, "air", density=0.45, seed=5901)
-a = play_melody(c, "映る", M, 4, "air", density=0.55, seed=5902)
-a += play_melody(c, "開く", O, 4, "air", density=0.6, seed=5903)
-play_melody(c, "閉じる", ["3:6 2:6", "1:12", "R:12", "R:12"], 4, "air", density=0.2, seed=5904)
-
-# ---------- 鏡の旋律（B♭4 を軸に、音階の上で上下をさかさまに。1オクターブ上で） ----------
+         [("竪琴の低い音", 0, 0.66), ("水面1", 0, 0.66), ("水面2", 0, 0.7), ("花ひらく", 0, 0.78), ("花ひらく", 12, 0.86), ("和音のロール", 0, 0.72), ("和音のロール", 2, 0.66)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="竪琴の低い音", passing=True, tension=False)
+S.fix_avoid = lambda t: 0
 B = S.beats
-SC = [(S.key.t + x) % 12 for x in S.key.steps]
-AX = 70
-def steps(a_, m):
-    k = 0; x = a_; s = 1 if m > a_ else -1
-    while x != m:
-        x += s
-        if x % 12 in SC: k += s
-    return k
-for t, L, m, mk in a:
-    if L < 0.9: continue
-    k = steps(AX, m)
-    q = (_dia(S, AX, -k) if k else AX) + 12
-    pcs = chord_pcs(S.chords[int(t // B)].split("|")[0])
-    if L >= 3 and q % 12 not in pcs:   # 長い音は和音の音に寄せる
-        q = min((x for x in range(q - 2, q + 3) if x % 12 in pcs), key=lambda x: abs(x - q), default=q)
-    while q > 89: q -= 12
-    MIR.at(round(t, 3), f"{nm(q)}:{round(L, 3)}{mk or ','}")
+G = c.g()
+# ピアノ1音は ×1.4 で笛とほぼ同じ（016）→ 鏡は少し小さく 0.13。竪琴の低い音だけの始まりは別のパートで大きく
+PM = S.track("ピアノ（鏡の旋律）", "piano", volume=0.13, pan=0.25, reverb=0.6, sustain=1.3, barGain=G)
+HP = [S.track(f"竪琴（低い分散和音{j + 1}）", "harp", patch="folkHarp", volume=0.075, pan=-0.3 + 0.12 * j, reverb=0.6, sustain=1.6, barGain=G) for j in range(2)]
+HPI = S.track("竪琴（始まりの低い音）", "harp", patch="folkHarp", volume=0.2, pan=-0.25, reverb=0.6, sustain=2.0)
 
-for b in range(c.NB):
-    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    t = tones(ch, "Eb3", "Eb5")
-    CELLO.bar(b, f"{nm(r)}:12")
-    if n == "閉じる":
-        v = voice(ch, 55, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:12")
-        if i == 1: c.HARP.bar(b, " ".join(f"{nm(x)}:0.25" for x in tones(ch, "Eb3", "Eb6")[:10]) + " R:9.5")
-        if i >= 2: c.HARP2.bar(b, f"{nm(tones(ch, 'G5', 'G6')[i - 2])}:12")
-        continue
-    nv = 2 if n in ("池", "浮かぶ") else 3
-    v = voice(ch, 52 if nv == 2 else 56, nv, spread=True)
-    for j in range(nv): c.STR[j].bar(b, f"{nm(v[j])}:12")
-    if n == "池": c.HARP.bar(b, f"{nm(t[0])}:6 {nm(t[2])}:6")
-    else:
-        c.HARP.bar(b, " ".join(f"{nm(t[q % len(t)])}:1" for q in (0, 2, 4, 2, 4, 5, 4, 2, 4, 2, 1, 2)))
-        PL.bar(b, f"{nm(r)}:3 {nm(r + 7)}:3 {nm(r + 12)}:3 {nm(r + 7)}:3")
-rich(c, choir_scenes=["開く"], pulse_scenes=["映る", "開く"], guitar=False, pizz=False, inner=True)
-sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の059。白みはじめた入り江に浮かぶ睡蓮。12/8・8分＝150、E♭ イオニア。「映る」から、ピアノの高い音が笛の旋律を上下さかさまにした鏡の旋律を同時に弾き、花と水に映った花がいっしょにゆれる。最後は竪琴の和音のロールで閉じる。",
-       harm_scenes=None, tail_scene="閉じる", fill=False, pads=True, pad_scenes=["浮かぶ", "映る", "開く", "閉じる"], floor=True)
-air = {"pre": 0.6, "tail": 7.0, "layers": [{"file": "0691", "db": -39, "hp": 150, "lp": 5000, "wide": 0.014, "duck": 0.35, "fade": 8}],
-       "fx": {"shimmer": {"db": -28, "rt": 8.0}, "far": {"db": -25, "delay": 0.28, "lp": 2800, "rt": 4.8}}, "intro_db": 6.0}
+# ---------- 笛の旋律（8分＝1、1小節＝12。1=E♭4） ----------
+A = ["5:2 6:1 5:2 3:1 4:2 5:1 3:3", "2:2 3:1 4:2 2:1 1:6", "3:2 4:1 5:2 6:1 7:2 6:1 5:3", "6:6 5:6",
+     "5:2 6:1 1':2 6:1 5:2 4:1 3:3", "4:2 5:1 6:2 4:1 3:6", "2:2 3:1 4:2 5:1 3:2 2:1 7,:3", "1:12"]
+Bm = ["1':3 7:2 6:1 5:6", "6:2 7:1 1':2 2':1 1':6", "7:3 6:2 5:1 4:6", "5:2 6:1 7:2 5:1 6:6",
+      "1':3 2':2 1':1 7:3 6:3", "5:2 4:1 3:2 4:1 5:6", "4:2 3:1 2:2 3:1 7,:3 2:3", "1:12"]
+SCL = sorted({(3 + x) % 12 for x in (0, 2, 4, 5, 7, 9, 11)})          # E♭ の長調
+LADDER = [m for m in range(36, 100) if m % 12 in SCL]
+AXIS = LADDER.index(70)                                               # B♭4 が鏡の軸
+def mirror(m):
+    i = LADDER.index(m) if m in LADDER else min(range(len(LADDER)), key=lambda j: abs(LADDER[j] - m))
+    return LADDER[2 * AXIS - i + 7]                                   # さかさまにして、1オクターブ上
+for k, (sc, bars) in enumerate((("水面1", A + Bm), ("水面2", A + Bm), ("花ひらく", Bm + A))):
+    s0 = c.s0[sc]; ev = []
+    for j, s_ in enumerate(e2b(bars)): ev += mel_events(K, s_, 4, (s0 + j) * B)
+    ev = [[round(t, 4), L, m] for t, L, m in ev]
+    play(c.FLUTE, ornament(ev, K, 50, "air", B, density=(0.12, 0.18, 0.25)[k], seed=5900 + k))
+    play(PM, [(t, L, mirror(m), "" if L >= 1 else ",") for t, L, m in ev])          # 鏡の旋律：同じリズム、さかさまの高さ
+s0 = c.s0["和音のロール"]
+c.FLUTE.at(s0 * B, "G5:8"); PM.at(s0 * B, "Bb5:8,")
+
+# ---------- 竪琴の低い分散和音（1拍に8分3つ：根音・5度・10度。花ひらくでは上へ6音） ----------
+ROOT = {"Eb": 39, "Bb": 46, "Ab": 44, "Cm": 48}
+HPI.at(0, "Eb2:2"); HPI.at(1.0, "Bb2:2,"); HPI.at(2.0, "Eb3:2,"); HPI.at(3.0, "G3:3,"); HPI.at(4.0, "Eb2:2"); HPI.at(5.0, "Bb2:2,"); HPI.at(6.0, "G3:2,")
+for b in range(c.s0["水面1"], c.s0["和音のロール"]):
+    n = S.scene_of(b)[0]; ch = S.chords[b]; r = ROOT[ch]; th = r + (3 if ch.endswith("m") else 4)
+    for q in range(4):
+        t0 = b * B + q
+        if n == "花ひらく" and q % 2 == 1:
+            notes = (r + 12, r + 19, th + 24)
+        else:
+            notes = (r, r + 7, th + 12)
+        for k2, m in enumerate(notes):
+            HP[k2 % 2].at(round(t0 + k2 * T3, 4), f"{nm(m)}:{round(T3 * 2, 4)}{'' if (q == 0 and k2 == 0) else ','}")
+# 和音のロール：低い E♭ から高い G まで、ゆっくり広げる
+for k2, m in enumerate((39, 46, 51, 55, 58, 63, 67, 70, 75, 79)):
+    HP[k2 % 2].at(round(s0 * B + k2 * 0.4, 3), f"{nm(m)}:{round(10 - k2 * 0.4, 2)}{'' if k2 == 0 else ','}")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.34 --master -15 --widen 1.15 --side-hpf 200",
+       "ケルト・フルート100曲の059（第3版）。霧が晴れかけた入り江に、睡蓮が一面に咲き、水に映っている。12/8・付点4分＝50、E♭ の長調。舟の揺れに合わせて笛が付点のゆれで歌い、ピアノがその旋律を B♭ を軸に上下さかさまにして、1オクターブ上で同時に弾く（水に映る花）。下では竪琴の低い分散和音。終盤の花ひらく所が山で、最後は竪琴が低い所から高い所まで和音をゆっくり広げる。",
+       harm_scenes=None, tail_scene="和音のロール", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 5.0, "layers": [{"file": "0595", "db": -45, "hp": 180, "lp": 3800, "wide": 0.012, "duck": 0.4, "fade": 7}],
+       "fx": {"far": {"db": -27, "delay": 0.3, "lp": 2800, "rt": 3.8}}}
 json.dump(air, open("/tmp/cel/w/air059.json", "w"), ensure_ascii=False)
+
+_p = sys.argv[1] if len(sys.argv) > 1 else None
+if _p:
+    _d = json.load(open(_p))
+    for _pt in _d["parts"]:
+        if isinstance(_pt.get("notes"), str):
+            _pt["notes"] = " ".join(t for t in _pt["notes"].split() if not re.match(r"^R:0(\.0*)?$", t))
+    json.dump(_d, open(_p, "w"), ensure_ascii=False)

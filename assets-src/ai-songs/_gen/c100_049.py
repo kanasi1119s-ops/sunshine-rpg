@@ -35,6 +35,8 @@ VA = S.track("ビオラ（影）", "strings", patch="viola", volume=0.017, pan=0
 VCI = S.track("チェロ（始まりの影）", "strings", patch="cello", volume=0.05, gainDb=6, pan=-0.2, reverb=0.65, release=0.6)
 VAI = S.track("ビオラ（始まりの影）", "strings", patch="viola", volume=0.04, gainDb=4, pan=0.15, reverb=0.65, release=0.6)
 MR = [S.track(f"マリンバ（光の3音{j + 1}）", "strings", patch="marimba", volume=0.05, pan=-0.2 + 0.4 * j, reverb=0.55, barGain=G) for j in range(2)]
+# 2回目（7.56）: 始まりの弦を大きくしても影は −35dB のまま → 影の8小節は、マリンバも始まり用の大きいパートで
+MRI = [S.track(f"マリンバ（始まりの3音{j + 1}）", "strings", patch="marimba", volume=0.12, pan=-0.2 + 0.4 * j, reverb=0.55) for j in range(2)]
 
 # ---------- 笛（A リディア。1=A4。場面ごとに高さが上がる。E5 より上には行かない、最後だけ A5） ----------
 LOW = ["5,:3", "6,:2 7,:1", "1:3", "7,:2 6,:1", "5,:3", "6,:1 7,:1 1:1", "2:3", "1:3"]          # 足もと：E4〜B4
@@ -49,7 +51,7 @@ c.FLUTE.at((c.s0["一筋"] + 3) * B, "A5:18")                 # 一番高い A5 
 # ---------- マリンバの3音（C♯5・E5・D♯5 のくり返し）と、低い弦の影 ----------
 for b in range(c.NB):
     n, i, Lb, k = S.scene_of(b)
-    MR[b % 2].bar(b, "C#5:1, E5:1, D#5:1," if n != "一筋" else "C#6:1, E6:1, D#6:1,")
+    (MRI if b < 8 else MR)[b % 2].bar(b, "C#5:1, E5:1, D#5:1," if n != "一筋" else "C#6:1, E6:1, D#6:1,")
 ROOT = {"A": 45, "B": 47, "E": 40, "F#m": 42}
 for b in range(0, c.NB, 2):
     ch = S.chords[b]; r = ROOT[ch]

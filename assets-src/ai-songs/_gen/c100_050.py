@@ -5,6 +5,7 @@
 # 拍子・速さ: 4/4・♩=96。旋法: G エオリア。
 # 主役は笛（刻む笛）。伴奏の主役: 枠太鼓の縁の打音（石をたたく音。カホンのような乾いた音）。音がついてから、チェロのピチカートの低音、全員の歌で竪琴。
 #   ギター・ピアノ・パッド・2本目の笛は使わない。
+# 2回目（7.82）: B の打音だけの所は、長い音（大きい太鼓）が多く、本編より約8dB 大きかった → B の律動の強さは ×1.0（A は ×2.0）。
 # この曲だけ: 旋律のリズムを、音のない打音が先に刻む（打音のリズムと笛のリズムが、1音残らず同じ）。
 # 始まり: 石をたたく律動だけ → 終わり: 全員の歌で止まる。
 # 山: 終盤に1つ（全員の歌）。
@@ -30,7 +31,7 @@ S.fix_avoid = lambda t: 0
 B = S.beats
 G = c.g()
 ST = [S.track(f"石の打音{j + 1}", "guitar", patch="frameDrum", volume=0.35, gainDb=18, pan=-0.12 + 0.24 * j, reverb=0.3,
-              barGain=[round(x * (2.0 if S.scene_of(b)[0].endswith("律動") else 1.0), 3) for b, x in enumerate(G)]) for j in range(2)]
+              barGain=[round(x * ({"Aの律動": 2.0, "Bの律動": 1.0}.get(S.scene_of(b)[0], 1.0)), 3) for b, x in enumerate(G)]) for j in range(2)]
 VP = S.track("チェロ（ピチカートの低音）", "strings", patch="pizzicato", volume=0.12, gainDb=5, pan=-0.2, reverb=0.35, barGain=G)
 HP = S.track("竪琴（全員の歌）", "harp", patch="folkHarp", volume=0.06, pan=0.3, reverb=0.5, sustain=1.6, barGain=G)
 
