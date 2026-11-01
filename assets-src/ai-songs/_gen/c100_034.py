@@ -1,61 +1,78 @@
-# ケルト・フルート100曲「銀の笛と百の夜」034 苔の絨毯 Carpet of Moss — 第2版（2026-10-28）
-# イメージ: 倒れた古木をおおう、厚い苔の絨毯。座りこむと、体がゆっくり沈んでいくように柔らかい。音も、ゆっくりと低い方へ沈んでいく。
-#   最後は、笛のいちばん低い音と、コントラバスのいちばん低い音が、苔の下の土のように鳴る。
-# 形（台帳）: スロー・エア（いちばん低い音域まで沈む）。3/4・♩=42。F♯ エオリア。始め：低音／終わり：低音。山なし。
-# 編曲の表:
-#   低音   : コントラバスとチェロの低い F♯
-#   沈む1  : 笛（中くらいの高さ）＋チェロ＋低い弦
-#   沈む2  : 笛がだんだん低く。竪琴の低い分散和音
-#   苔     : 笛は低い所だけ。弦の暗い和音、パッド
-#   土     : 笛のいちばん低い音、コントラバス
-import sys, json
+# ケルト・フルート100曲「銀の笛と百の夜」034 苔の絨毯 The Moss Carpet — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 梟と別れた夜ふけ。森の奥に、ふかふかの苔が一面に広がる場所がある。エイラは横になり、笛で子守歌を吹く。
+#   吹くたびに体は苔に沈みこみ、歌も1回ごとに低く沈んでいく。最後は、笛とコントラバスのいちばん低い音で眠りに落ちる。
+# 調べ: 眠り。形: 沈みこむ子守歌（16小節の歌を4回。1回ごとに全体が3度ずつ下がる）。
+# 拍子・速さ: 3/4・♩=54 → 最後で 48。調: E♭ → C → A♭ → F（3度ずつ下がる）。
+# 主役は笛（低い所へ沈む。1回目 B♭4〜B♭5 → 4回目 C4〜C5）。伴奏の主役: チェロ（ゆりかごの根音と5度）。3回目からコントラバス。
+#   竪琴・ギター・ピアノ・パッド・打楽器・2本目の笛は使わない。
+# この曲だけ: 1周ごとに全体が3度ずつ下がっていく（つなぎの2小節で、チェロが先に3度下へ沈む）。
+# 始まり: 低い音（チェロのゆりかご）→ 終わり: 笛とコントラバスのいちばん低い音（笛 C4・コントラバス F1）。
+# 山: 前半に1つ（2回目）。最初が大きく、だんだん小さくなる形にはしない（始まりはチェロ1本）。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
 
-S = Song("C100", "034-carpet-of-moss", "苔の絨毯", "Carpet of Moss", 42, 3, "F#", "minor", "ケルト（幻想）")
+S = Song("C100", "034-the-moss-carpet", "苔の絨毯", "The Moss Carpet", 54, 3, "Eb", "major", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.4, "rubato": 0.35})
-C8 = ["F#m", "D", "Bm", "C#m", "F#m", "A", "E", "F#m"]
-S.scene("低音", 2, "intro", ["F#m", "F#m"])
-S.scene("沈む1", 16, "verse", C8 * 2)
-S.scene("沈む2", 24, "verse", C8 * 3)
-S.scene("苔", 16, "verse", ["F#m", "D", "F#m", "C#m", "D", "Bm", "C#m", "F#m"] * 2)
-S.scene("土", 4, "outro", ["F#m"] * 4)
-NAMES = ["低音", "沈む1", "沈む2", "苔", "土"]
-
+S.extra.update({"human": 0.35, "rubato": 0.2})
+KEYS = [("Eb", 5), ("C", 5), ("Ab", 4), ("F", 4)]              # 調と、笛の1度のオクターブ
+DEG = ["I", "I", "IV", "V", "I", "I", "V", "I", "I", "IV", "IV", "I", "V", "I", "V", "I"]
+def chord_names(root):
+    r = PC[root]; nmz = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
+    return [nmz[(r + {"I": 0, "IV": 5, "V": 7}[d]) % 12] for d in DEG]
+SC = [("ゆりかご", 2, "intro", ["Eb", "Eb"])]
+for k, (rt, o) in enumerate(KEYS):
+    SC.append((f"{k + 1}回目", 16, "chorus" if k == 1 else "verse", chord_names(rt)))
+    if k < 3: SC.append((f"沈む{k + 1}", 2, "verse", [KEYS[k + 1][0]] * 2))
+SC.append(("眠り", 4, "outro", ["F"] * 4))
+for n, L, kd, ch in SC: S.scene(n, L, kd, ch)
+NAMES = [x[0] for x in SC]
 c = make(S, NAMES,
-         [("低音", 0, 0.62), ("沈む1", 0, 0.64), ("沈む2", 0, 0.66), ("苔", 0, 0.66), ("土", 0, 0.6), ("土", 3, 0.38)],
-         {}, flute_gain={n: 1.25 for n in NAMES}, intro="低音", passing=True, tension=False)
-CB = S.track("コントラバス", "strings", patch="contrabass", volume=0.11, pan=0.0, reverb=0.45, barGain=c.g())
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.09, pan=0.15, reverb=0.45, barGain=c.g())
-
-H = ["5:2 4:1", "3:1.5 2:0.5 1:1", "2:2 3:1", "4:3", "5:2 6:1", "5:1.5 4:0.5 3:1", "2:2 1:1", "1:3"]          # F♯4〜C♯5 あたり
-M = ["3:2 2:1", "1:1.5 7,:0.5 6,:1", "7,:2 1:1", "2:3", "3:2 1:1", "7,:1.5 6,:0.5 5,:1", "6,:2 7,:1", "1:3"]   # 低く
-L_ = ["1:2 7,:1", "6,:3", "5,:2 6,:1", "7,:3", "1:2 6,:1", "5,:3", "6,:2 7,:1", "5,:3"]                         # いちばん低い所（C♯4 まで）
-play_melody(c, "沈む1", H + H[:7] + ["1:3"], 4, "air", density=0.5, seed=3401)
-play_melody(c, "沈む2", M + H[:4] + M[4:] + M, 4, "air", density=0.6, seed=3402)
-play_melody(c, "苔", L_ + L_, 4, "air", density=0.4, seed=3403)
-play_melody(c, "土", ["5,:3", "5,:3", "R:3", "R:3"], 4, "air", density=0)
-
+         [("ゆりかご", 0, 0.66), ("1回目", 0, 0.72), ("2回目", 0, 0.8), ("2回目", 8, 0.86), ("3回目", 0, 0.74), ("4回目", 0, 0.7),
+          ("眠り", 0, 0.66), ("眠り", 3, 0.62)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="ゆりかご", passing=True, tension=False)
+S.fix_avoid = lambda t: 0
+S.tempo = [{"bar": 1, "bpm": 54}, {"bar": c.s0["4回目"] + 1, "bpm": 51, "ramp": 8}, {"bar": c.s0["眠り"] + 1, "bpm": 48, "ramp": 4}]
 B = S.beats
+G = c.g()
+# 試し書き出し: チェロ E♭3 は笛より約3dB 小さく、F2（強さ 1.1）は笛と同じくらい → gainDb 3→1。コントラバス F1 は笛より約5dB 小さい
+# チェロは D3 より下で小さくなる（007 で測った）→ 沈むほど強く
+SINK = {"ゆりかご": 1.0, "1回目": 1.0, "沈む1": 1.1, "2回目": 1.15, "沈む2": 1.25, "3回目": 1.35, "沈む3": 1.45, "4回目": 1.55, "眠り": 1.6}
+VC = [S.track(f"チェロ（ゆりかご{j + 1}）", "strings", patch="cello", volume=0.03, gainDb=1, pan=-0.15, reverb=0.6, release=0.5,
+              barGain=[round(x * SINK[S.scene_of(b)[0]], 3) for b, x in enumerate(G)]) for j in range(2)]
+CB = S.track("コントラバス（3回目から）", "strings", patch="contrabass", volume=0.06, gainDb=2, pan=0.1, reverb=0.55, release=0.6,
+             barGain=[round(x * 1.4, 3) for x in G])
+
+# ---------- 歌（16小節。調ごとに同じ度数で） ----------
+T = ["3:2 2:1", "1:2 5,:1", "6,:1 7,:1 1:1", "2:3", "3:2 4:1", "5:2 3:1", "2:1 3:1 2:1", "1:3",
+     "5:2 6:1", "5:1 4:1 3:1", "4:2 2:1", "3:3", "2:1 3:1 4:1", "3:1 2:1 1:1", "7,:2 2:1", "1:3"]
+for k, (rt, o) in enumerate(KEYS):
+    K = Key(rt, "major", o)
+    play_melody(c, f"{k + 1}回目", T, o, "air", key=K, density=[0.25, 0.4, 0.2, 0.1][k], seed=3400 + k)
+    if k < 3: play_melody(c, f"沈む{k + 1}", ["1:3", "1:2 R:1"], o, "air", key=K, density=0.0)
+play_melody(c, "眠り", ["5,:3", "5,:3", "5,:3", "R:3"], 4, "air", key=Key("F", "major", 4), density=0.0)    # 最後：笛のいちばん低い C4
+
+# ---------- チェロのゆりかご（根音2拍・5度1拍）とコントラバス ----------
+LOWROOT = {"Eb": 51, "Ab": 44, "Bb": 46, "C": 48, "F": 41, "G": 43, "Db": 49}
 for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2")
-    CB.bar(b, f"{nm(r if r >= 28 else r + 12)}:3" if not (n == "土" and i == 3) else "R:3")
-    if n == "低音" or (n == "土" and i < 3):   # 苔の下の土の温かさ：低い弦の和音（前奏・終わりが小さすぎないように）
-        v = voice(ch, 50, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3")
-    if not (n == "土" and i >= 3): CELLO.bar(b, f"{nm(r + 12)}:3")
-    if n in ("沈む1", "沈む2", "苔"):
-        v = voice(ch, 52 if n != "苔" else 48, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3")
-    if n == "沈む1" and i % 2 == 0: c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "F#3", "F#5")[:3]))
-    if n in ("沈む2", "苔"): c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "F#2", "F#4")[:3]))
-rich(c, choir_scenes=["沈む1"], pulse_scenes=["沈む1", "沈む2", "苔"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
-sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の034（第2版）。倒木をおおう苔の絨毯。3/4・♩=42、F♯ エオリア。スロー・エアの旋律が、ゆっくり低い方へ沈んでいき、最後は笛のいちばん低い音とコントラバスが苔の下の土のように鳴る。",
-       harm_scenes=None, tail_scene="土", fill=False, pads=True, pad_scenes=["沈む1", "沈む2", "苔", "土"], floor=True)
-json.dump({"pre": 1.0, "tail": 8.0, "layers": [{"file": "0136", "db": -34, "hp": 80, "lp": 4000, "wide": 0.016, "duck": 0.3, "fade": 8}],
-           "fx": {"glass": {"hz": [185.0, 370.0, 554.4], "db": -29, "rt": 7.0, "start": 4}, "shimmer": {"db": -28, "rt": 9.0}, "far": {"db": -24, "delay": 0.3, "lp": 2000, "rt": 5.0},
-                  "haze": {"db": -25, "rt": 9.0}, "band": {"db": -38, "hz": 5000, "per": 31}}, "intro_db": 8.5}, open("/tmp/cel/w/air034.json", "w"))
+    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
+    r = LOWROOT.get(ch, 48)
+    if n.endswith("回目") and n[0] in "34": r = r if r < 46 else r - 12
+    if r < 36: r += 12                                            # チェロの最低音 C2 より下にしない
+    if n == "眠り":
+        if i == 0: VC[0].at(b * B, f"{nm(41)}:{3 * B},"); CB.at(b * B, "F1:9")
+        continue
+    if n.startswith("沈む"):                                        # つなぎ：チェロが先に3度下へ沈む
+        nxt = LOWROOT[S.chords[b]]
+        VC[b % 2].bar(b, f"{nm(r)}:3,")
+        continue
+    VC[b % 2].bar(b, f"{nm(r)}:2 {nm(r + 7)}:1,")
+    if n in ("3回目", "4回目") and i % 2 == 0:
+        CB.at(b * B, f"{nm(r - 12 if r - 12 >= 28 else r)}:{2 * B},")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.32 --master -15 --widen 1.1 --side-hpf 200",
+       "ケルト・フルート100曲の034（第3版）。森の奥の苔の上で眠りにつく子守歌。3/4・♩=54 → 48。同じ16小節の歌を4回、1回ごとに全体が3度ずつ下がる（E♭ → C → A♭ → F）。伴奏はチェロのゆりかご（根音と5度）、3回目からコントラバス。山は2回目、最後は笛とコントラバスのいちばん低い音で眠りに落ちる。",
+       harm_scenes=None, tail_scene="眠り", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 6.0, "layers": [{"file": "0595", "db": -45, "hp": 160, "lp": 3400, "wide": 0.012, "duck": 0.4, "fade": 8}],
+       "fx": {"far": {"db": -27, "delay": 0.3, "lp": 2600, "rt": 3.8}}}
+json.dump(air, open("/tmp/cel/w/air034.json", "w"), ensure_ascii=False)
