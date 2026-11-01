@@ -14,4 +14,3 @@ run.sh / q.sh / chk.sh / next.sh はクラウド（Linux）で使っていた手
 
 ## パソコンへの保存待ち（つながっていない間に完成した曲。SendUserFile の file_uuid）
 （1回に送れるのは合計 100MB まで。保存したら行を消す）
-- 052_舟を押す.mp3 3b29325e-9b24-4a57-b24c-8e0b888b8bf4
