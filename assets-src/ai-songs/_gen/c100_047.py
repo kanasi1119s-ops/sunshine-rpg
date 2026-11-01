@@ -54,7 +54,10 @@ play(FAR, [(round(t, 4), L, _dia(K, m, -2), "") for t, L, m in ev])
 s0 = c.s0["夜明け前"]
 c.FLUTE.at(s0 * B, "D5:6"); FAR.at(s0 * B, "B4:6,")
 # コントラバス：B と F♯ を4小節ずつ
-for b in range(0, c.NB - 1, 4):
+# 1回目（7.35）: コントラバスだけの始まり（約10秒）が本編より約20dB 小さかった → 始まり用の低い弦を別に（大きく）
+CBI = [S.track(f"コントラバス（始まり{j + 1}）", "strings", patch=("contrabass" if j == 0 else "cello"), volume=(0.07 if j == 0 else 0.03), gainDb=8, pan=-0.1 + 0.2 * j, reverb=0.65, release=1.2) for j in range(2)]
+CBI[0].at(0, "B1:8.5"); CBI[1].at(0.05, "F#2:8.4,")
+for b in range(2, c.NB - 1, 4):
     CB[(b // 4) % 2].at(b * B, f"{'B1' if (b // 4) % 2 == 0 else 'F#2'}:{min(16, (c.NB - b) * B)},")
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.36 --master -15 --widen 1.2 --side-hpf 200",
