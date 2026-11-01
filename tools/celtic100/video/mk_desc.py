@@ -9,10 +9,10 @@ songs = [l.split("|") for l in open(os.path.join(HERE, "songs.txt"), encoding="u
 st = [float(x) for x in open(starts_file, encoding="utf-8").read().split()]
 assert len(st) == len(songs) == 100
 def ts(s):
-    s = int(s); return f"{s // 3600}:{s // 60 % 60:02d}:{s % 60:02d}"
+    s = int(s); return f"{s // 3600}:{s // 60 % 60:02d}:{s % 60:02d}" if s >= 3600 else f"{s // 60}:{s % 60:02d}"
 h, m = int(total_s // 3600), int(total_s // 60 % 60)
 total_ja = f"約{h}時間{m}分"
-title = f"Silver Flute – A Hundred Nights of Celtic Fantasy Flute | 銀の笛と百の夜 ケルト幻想の笛 全100曲・{total_ja} | 作業用BGM・睡眠・読書"
+title = f"Silver Flute – Celtic Fantasy Flute Music | 銀の笛と百の夜 ケルト幻想の笛 全100曲・{total_ja} | 作業用BGM・睡眠"     # YouTube のタイトルは100文字まで
 ja = ("雲の海に浮かぶ島々。崖の上の古い鐘のそばで、ひとりの少女が銀の笛を吹く――。\n"
       "灯台の島を旅立った笛吹きの少女エイラが、百の夜をめぐって、止まった鐘を目覚めさせるまでの物語を、笛を主役にしたケルト音楽100曲でつづりました。\n"
       "ジグ・リール・ホーンパイプ・スロー・エアー・子守歌まで、1曲ずつ形も楽器も変えています。静かな曲から踊りたくなる曲まで、長く流しても飽きにくいので、作業や勉強、読書、眠る前のひとときにどうぞ。")
@@ -22,13 +22,14 @@ en = ("Islands floating on a sea of clouds. Beside an old bell on a cliff, a gir
       "Gentle to lively, for working, studying, reading and drifting off to sleep.")
 inst = ("フルート（全曲の主役）・竪琴・ナイロン弦ギター・フィドル・ビオラ・チェロ・コントラバス・アコーディオン・ティン・ホイッスル・ボーラン・ホルン・マリンバ・木琴・グロッケン・リードオルガン ほか\n"
         "Flute (lead on every track), harp, nylon guitar, fiddle, viola, cello, double bass, accordion, tin whistle, bodhrán, horn, marimba, xylophone, glockenspiel, reed organ and more")
+# 説明文は5000文字まで。曲目に曲番号は入れない
 txt = f"""{title}
 
 {ja}
 {en}
 
 ■ 曲目 / Tracklist
-""" + "\n".join(f"{ts(t)} {n} {j} - {e}" for t, (n, j, e) in zip(st, songs)) + f"""
+""" + "\n".join(f"{ts(t)} {j} - {e}" for t, (n, j, e) in zip(st, songs)) + f"""
 
 ■ 楽器 / Instruments
 {inst}
