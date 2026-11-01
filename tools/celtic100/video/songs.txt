@@ -1,0 +1,100 @@
+001|銀の笛|The Silver Flute
+002|灯室への階段|Stairway to the Lamp
+003|祖父の手紙|Grandfather's Letter
+004|嵐の前の凪|Calm Before the Gale
+005|小舟の鈴|The Little Boat Bell
+006|夜の灯台守|The Keeper of the Night Light
+007|潮の呼び声|Call of the Tide
+008|港の別れ|Parting at the Pier
+009|星を数える|Counting the Stars
+010|出航|Setting Sail
+011|草を渡る風|Wind Through the Grass
+012|羊飼いの朝|Shepherd's Morning
+013|丘の上の孤独|Alone on the Hill
+014|迷い羊|The Stray Lamb
+015|麦のゆりかご|Cradle of Barley
+016|石垣の道|The Stone-Wall Lane
+017|夕立の予感|Before the Evening Rain
+018|干し草の匂い|Scent of Hay
+019|夕べの笛吹き|The Evening Pipers
+020|星の草原|The Starlit Meadow
+021|小川のはじまり|Where the Brook Begins
+022|止まった水車|The Stilled Mill-Wheel
+023|水面の光|Light on the Water
+024|川辺の蛙たち|The Frogs by the Brook
+025|飛び石|Stepping Stones
+026|小さな滝の祈り|Prayer at the Little Falls
+027|鴨の親子|The Duck and Her Ducklings
+028|夕もやの川|The River in Evening Mist
+029|水が教える道|The Way the Water Teaches
+030|水車の夜明け|Dawn at the Mill
+031|森の入口|The Edge of the Old Wood
+032|木漏れ日|Dappled Light
+033|梟の問い|The Owl's Question
+034|苔の絨毯|The Moss Carpet
+035|光る茸|Foxfire
+036|迷いの道|The Wandering Path
+037|森の主|The Lord of the Wood
+038|夜露|Night Dew
+039|妖精の輪|The Fairy Ring
+040|暁の森|Dawn in the Old Wood
+041|立つ石|The Standing Stones
+042|風の刻んだ文字|Letters Carved by the Wind
+043|塔の鐘守|The Bell-Keeper of the Tower
+044|若き日の祖父|Grandfather in His Youth
+045|石段の読み聞かせ|The Reading on the Tower Stair
+046|朽ちた礼拝堂|The Ruined Chapel
+047|夜の見張り台|The Night Watchtower
+048|鐘の秘密|The Secret of the Bell
+049|蔦の窓|The Ivy Window
+050|石に眠る歌|The Song Asleep in the Stone
+051|湖への道|The Road Down to the Lake
+052|舟を押す|Pushing Off
+053|霧の中の灯|A Lamp in the Mist
+054|水面を叩く雨|Rain on the Water
+055|湖底の鐘|The Bell Beneath the Lake
+056|祖父の幻|The Grandfather's Phantom
+057|二つの笛|Two Flutes
+058|霧が晴れる前|Before the Mist Lifts
+059|睡蓮|Water Lilies
+060|対岸|The Far Shore
+061|煙突の煙|Chimney Smoke
+062|炉辺の灯|By the Hearth
+063|麦酒の泡|Ale Foam
+064|子らの輪唱|The Children's Round
+065|老いた羊飼いの話|The Old Shepherd's Tale
+066|山羊の乳搾り|Milking the Goats
+067|祭りの前夜|The Eve of the Festival
+068|笛を聴く夜|The Night They Listened
+069|寝息|Sleeping Breath
+070|納屋の月明かり|Moonlight in the Barn
+071|岬への道|The Road to the Cape
+072|雨の始まり|When the Rain Began
+073|荒れる海|The Raging Sea
+074|真相|The Truth
+075|迷いの雨|Rain of Doubt
+076|岬の灯台|The Lighthouse on the Cape
+077|涙の雨|Rain of Tears
+078|雨宿り|Shelter from the Rain
+079|嵐の去った後|After the Storm
+080|朝の水たまり|Morning Puddles
+081|雪の峠|The Snowy Pass
+082|足跡|Footprints
+083|氷の吐息|Breath of Ice
+084|孤独の稜線|The Lonely Ridge
+085|星の降る夜|A Night of Falling Stars
+086|雪洞の炎|The Fire in the Snow Cave
+087|祖父の最後の曲|Grandfather's Last Tune
+088|氷柱|Icicles
+089|吹雪を越えて|Through the Blizzard
+090|山頂の静寂|The Silence of the Summit
+091|下山|Down the Mountain
+092|帰り道の花|Flowers on the Way Home
+093|村人たちの待つ朝|The Morning the Village Waited
+094|鐘楼への階段|The Stairs to the Belfry
+095|眠りを壊さない鐘|The Bell That Does Not Wake
+096|夜明けの前奏|Prelude to Dawn
+097|朝の鐘|The Morning Bell
+098|島の目覚め|The Island Awakes
+099|灯台に戻る|Back to the Lighthouse
+100|百の夜のおわり|The End of a Hundred Nights

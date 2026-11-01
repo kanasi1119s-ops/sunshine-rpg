@@ -32,7 +32,8 @@ s = c.s0
 S.tempo = [{"bar": 1, "bpm": 126}, {"bar": s["晴れ間"] + 1, "bpm": 60}]
 B = S.beats
 G = c.g()
-OS = [S.track(f"弦の刻み（{x}）", "strings", patch=p, volume=v, pan=pn, reverb=0.3, barGain=[round(y * (1.4 if b < 4 else 1.0), 3) for b, y in enumerate(G)])
+# 1回目（7.83）: 刻みだけの始まり（約4秒）が −55dB でほとんど聞こえず、平原も崖より約15dB 小さかった → 刻みを gainDb 8、始まりは ×2
+OS = [S.track(f"弦の刻み（{x}）", "strings", patch=p, volume=v, gainDb=8, pan=pn, reverb=0.3, barGain=[round(y * (2.0 if b < 4 else 1.0), 3) for b, y in enumerate(G)])
       for x, p, v, pn in (("バイオリン", "violin", 0.012, 0.35), ("ビオラ", "viola", 0.01, -0.35), ("チェロ", "cello", 0.016, -0.15))]
 DR = [S.track(f"ボーラン{j + 1}", "guitar", patch="frameDrum", volume=0.35, gainDb=18, pan=-0.05 + 0.1 * j, reverb=0.25, barGain=G) for j in range(2)]
 BD = S.track("大太鼓（崖）", "strings", patch="inchTom", volume=0.12, gainDb=12, pan=0, reverb=0.4, barGain=G)       # ティンパニは鳴らないので録音のタム（071）
