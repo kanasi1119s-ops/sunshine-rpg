@@ -39,7 +39,7 @@ B = S.beats
 G = c.g()
 # 長い弦（004 で笛と並べて測った値。笛の約5dB 下）。踊る娘の所は少し前に
 DV = [S.track(f"ドローン（{nm_}）", "strings", patch=pt, volume=v, gainDb=gd, pan=p, reverb=0.6, release=0.15,
-              barGain=[round(x * (1.6 if S.scene_of(b)[0] == "踊る娘" else 1.4), 3) for b, x in enumerate(G)])
+              barGain=[round(x * {"踊る娘": 1.6, "石": 2.0}.get(S.scene_of(b)[0], 1.4), 3) for b, x in enumerate(G)])   # 1回目（7.41）は石の所（約18秒）が -38dB だった
       for nm_, pt, v, gd, p in [("チェロ G3", "cello", 0.02, 2, -0.2), ("ビオラ D4", "viola", 0.017, 0, 0.22),
                                 ("チェロ G3・弓返し", "cello", 0.02, 2, -0.2), ("ビオラ D4・弓返し", "viola", 0.017, 0, 0.22)]]
 ST = [S.track(f"石の打音{j + 1}", "guitar", patch="frameDrum", volume=0.35, gainDb=18, pan=-0.15 + 0.3 * j, reverb=0.35, barGain=G) for j in range(2)]

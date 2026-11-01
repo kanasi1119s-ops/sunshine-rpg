@@ -1,100 +1,90 @@
-# ケルト・フルート100曲「銀の笛と百の夜」043 塔の鐘守 The Bell Tower Keeper（2026-10-29）
-# イメージ: 石の輪の向こうに、崩れかけた塔。昔ここに、年老いた鐘守が住んでいた。エイラが笛で問いかけると、
-#   塔の石に残った鐘守の記憶が、低い声（チェロ）で答える。問いと答えはだんだん近づき、ふたりで一緒に歌う思い出の山。
-#   そして鐘守の声は、静かに石の中へ帰っていく。
-# 形: 笛（エイラ）とチェロ（鐘守の声）の対話。2小節ずつ→1小節ずつ→ふたりで一緒に→チェロが静かに去る。6/8・付点4分＝43。A エオリア。前半〜中盤に山→静けさ。
-# ただひとつ: 笛以外で旋律を歌うのは、この曲のチェロだけ（低い音域なので笛の主役はゆずらない）。遠い鐘の録音ではじまり、鐘の余韻で終わる。
-# 編曲の表:
-#   遠い鐘  : 鐘の録音（遠く）＋弦の和音＋竪琴（はじまりから厚く）
-#   対話1   : 笛が2小節問い、チェロが2小節答える。竪琴の分散和音・コントラバス
-#   対話2   : 1小節ずつ、問いと答えが近づく。弦が3声に
-#   思い出  : 笛とチェロが一緒に（チェロは対旋律）。弦の全和音・ホルン（山）
-#   石へ    : 山のあと。チェロの声がだんだん低く、短くなっていく。笛はやさしく見送る
-#   鐘の余韻: 鐘の録音と、弦の和音
-import sys, json
+# ケルト・フルート100曲「銀の笛と百の夜」043 塔の鐘守 The Bell-Keeper of the Tower — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 石の輪の先に、古い塔が立っている。塔のてっぺんには鐘があり、年老いた鐘守がひとりで住んでいる。
+#   鐘守は若い日の祖父を知っていた。エイラが笛で問いかけると、鐘守は低い声（チェロ）で、ゆっくりと昔の話を返す。
+#   ふたりの話は、ときに重なり、最後に鐘守が鐘をひとつ鳴らす。その余韻の中で、エイラは祖父の秘密の入口を知る。
+# 調べ: 悲しみ。形: 対話（笛とチェロ＝鐘守の声。4小節ずつ交互に話し、回想ではチェロが長く語り、最後は3度で寄りそう）。
+# 拍子・速さ: 6/8・付点4分＝46（1拍＝付点4分、1小節＝2拍。8分は 1/3 拍）。旋法: A エオリア。
+# 主役は笛（エイラの笛）。伴奏の主役: チェロ（人の声として旋律で答える）。脇: 遠い鐘（始まりと終わりの1音ずつ）と、ごく小さいコントラバスの持続。
+#   竪琴・ギター・ピアノ・パッド・打楽器・2本目の笛は使わない。
+# この曲だけ: 100曲の中で、笛以外が旋律を歌うのは、この曲のチェロだけ。
+# 始まり: 遠い鐘の1音 → 終わり: 鐘の余韻。
+# 山: 前半に1つ（対話1の終わり）。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
 
-BPM = 129   # 8分音符＝129（付点4分＝43）
-S = Song("C100", "043-the-bell-tower-keeper", "塔の鐘守", "The Bell Tower Keeper", BPM, 6, "A", "minor", "ケルト（幻想）")
+BPM = 46
+S = Song("C100", "043-the-bell-keeper", "塔の鐘守", "The Bell-Keeper of the Tower", BPM, 2, "A", "minor", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.4, "rubato": 0.2})
-Q8 = ["Am", "Am", "G", "G", "F", "F", "E", "E"]
-R8 = ["Am", "Dm", "G", "C", "F", "Dm", "E", "Am"]
-S.scene("遠い鐘", 4, "intro", ["Am", "Am", "Am", "Am"])
-S.scene("対話1", 24, "verse", Q8 * 3)
-S.scene("対話2", 16, "verse", R8 * 2)
-S.scene("思い出", 16, "chorus", ["F", "G", "Am", "Am", "Dm", "G", "C", "E", "F", "G", "Am", "F", "Dm", "E", "Am", "Am"])
-S.scene("石へ", 24, "verse", Q8 * 3)
-S.scene("鐘の余韻", 6, "outro", ["Am", "F", "Am", "Am", "Am", "Am"])
-NAMES = ["遠い鐘", "対話1", "対話2", "思い出", "石へ", "鐘の余韻"]
-
+S.extra.update({"human": 0.4, "rubato": 0.25})
+K = Key("A", "minor", 4); KL = Key("A", "minor", 3)
+T3 = 1 / 3
+def e2b(bars):
+    return [" ".join(f"{t.split(':')[0]}:{round(float(t.split(':')[1]) / 3, 4)}" for t in s_.split()) for s_ in bars]
+CH8 = ["Am", "Em", "F", "C", "Dm", "Am", "E", "Am"]
+SC = [("鐘", 2, "intro", ["Am", "Am"]), ("対話1", 32, "chorus", CH8 * 4), ("対話2", 32, "verse", CH8 * 4), ("回想", 16, "verse", CH8 * 2),
+      ("寄りそう", 16, "verse", CH8 * 2), ("鐘の余韻", 4, "outro", ["Am"] * 4)]
+for n, L, kd, ch in SC: S.scene(n, L, kd, ch)
+NAMES = [x[0] for x in SC]
 c = make(S, NAMES,
-         [("遠い鐘", 0, 0.62), ("対話1", 0, 0.64), ("対話2", 0, 0.7), ("思い出", 0, 0.8), ("思い出", 10, 0.92), ("思い出", 15, 0.8),
-          ("石へ", 0, 0.7), ("石へ", 23, 0.6), ("鐘の余韻", 0, 0.62), ("鐘の余韻", 5, 0.45)],
-         {}, flute_gain={n: 1.2 for n in NAMES}, intro="遠い鐘", passing=True, tension=False)
-KEEP = S.track("鐘守の声（チェロ）", "strings", patch="cello", volume=0.15, pan=0.22, reverb=0.5, barGain=c.g())
-CB = S.track("コントラバス", "strings", patch="contrabass", volume=0.09, pan=0.0, reverb=0.45, barGain=c.g())
-HORN = [S.track(f"ホルン{i + 1}", "brass", patch="horn", volume=[0.05, 0.042][i], pan=[-0.3, -0.12][i], reverb=0.6, breath=False,
-                attack=0.35, release=1.0, bright=-0.5, barGain=c.g()) for i in range(2)]
-
-# 笛の問い（2小節）とチェロの答え（2小節）。6/8 は8分音符が1拍
-ASK = [["5:3 4:2 3:1", "2:6"], ["3:2 4:1 5:3", "7:3 6:3"], ["1':3 7:2 6:1", "5:6"], ["4:2 5:1 6:3", "5:3 3:3"],
-       ["5:3 6:2 7:1", "1':6"], ["7:2 6:1 5:3", "4:3 2:3"]]
-ANS = [["1:3 2:2 3:1", "5,:6"], ["3:2 2:1 1:3", "7,:6"], ["6,:3 7,:2 1:1", "2:6"], ["3:2 2:1 1:3", "1:6"],
-       ["5:3 4:2 3:1", "2:6"], ["1:2 7,:1 6,:3", "5,:6"]]
-fl1, ce1 = [], []
-for k in range(6): fl1 += ASK[k] + ["R:6", "R:6"]; ce1 += ["R:6", "R:6"] + ANS[k]
-# 対話2：1小節ずつ
-A1 = ["5:2 6:1 7:3", "1':3 7:3", "6:2 5:1 4:3", "5:6", "3:2 4:1 5:3", "6:3 5:3", "4:2 3:1 2:3", "1:6"]
-C1 = ["3:3 2:3", "1:6", "4,:3 5,:3", "1:6", "1:3 7,:3", "6,:6", "5,:3 6,:3", "5,:6"]
-fl2, ce2 = [], []
-for k in range(16): fl2.append(A1[k % 8] if k % 2 == 0 else "R:6"); ce2.append("R:6" if k % 2 == 0 else C1[k % 8])
-# 思い出：ふたりで一緒に（チェロは対旋律）
-MEM = ["1':3 7:2 6:1", "5:6", "3:2 4:1 5:3", "6:3 5:3", "4:2 5:1 6:3", "7:6", "1':3 2':3", "7:6",
-       "1':3 7:2 6:1", "5:3 6:3", "7:2 1':1 2':3", "1':6", "6:3 5:2 4:1", "3:3 2:3", "1:3 2:3", "1:6"]
-MEMC = ["1:6", "7,:6", "1:3 2:3", "3:6", "2:6", "5,:6", "3:3 4:3", "5:6", "1:6", "7,:6", "1:3 5,:3", "1:6", "2:6", "7,:3 5,:3", "1:6", "1:6"]
-# 石へ：笛はやさしく見送り、チェロの声は低く・短くなっていく
-GO = ["5:6", "4:3 3:3", "2:6", "1:6", "3:6", "2:3 1:3", "7,:6", "1:6"]
-GOC = [["1:3 7,:3", "6,:6"], ["5,:3", "R:3"], ["4,:3", "R:3"]]
-fl4, ce4 = [], []
-for k in range(24):
-    fl4.append(GO[k % 8] if k % 4 != 3 else "R:6")
-    blk = GOC[min(2, k // 8)]
-    ce4.append(blk[k % 2] if k % 4 in (1, 2) else "R:6")
-play_melody(c, "対話1", fl1, 4, "air", density=0.6, seed=4301)
-play_melody(c, "対話1", ce1, 3, "air", density=0.0, track=KEEP)
-play_melody(c, "対話2", fl2, 4, "air", density=0.7, seed=4302)
-play_melody(c, "対話2", ce2, 3, "air", density=0.0, track=KEEP)
-play_melody(c, "思い出", MEM, 4, "air", density=0.9, seed=4303)
-play_melody(c, "思い出", MEMC, 3, "air", density=0.0, track=KEEP)
-play_melody(c, "石へ", fl4, 4, "air", density=0.5, seed=4304)
-play_melody(c, "石へ", ce4, 3, "air", density=0.0, track=KEEP)
-
+         [("鐘", 0, 0.66), ("対話1", 0, 0.72), ("対話1", 24, 0.84), ("対話1", 31, 0.78), ("対話2", 0, 0.72), ("回想", 0, 0.68), ("寄りそう", 0, 0.72),
+          ("鐘の余韻", 0, 0.66)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="鐘", passing=True, tension=False)
+S.fix_avoid = lambda t: 0
 B = S.beats
-for b in range(c.NB):
-    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    t = tones(ch, "A3", "A5")
-    if not (n == "鐘の余韻" and i >= 5): CB.bar(b, f"{nm(r - 12 if r - 12 >= 28 else r)}:6")
-    nv = 2 if n in ("遠い鐘", "対話1") else 3
-    if not (n == "鐘の余韻" and i >= 5):
-        v = voice(ch, 57 if n != "思い出" else 60, nv, spread=True)
-        for j in range(nv): c.STR[j].bar(b, f"{nm(v[j])}:6")
-    if n in ("遠い鐘", "対話1", "対話2", "石へ") or (n == "鐘の余韻" and i < 4):
-        c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in (t[0], t[2], t[4 % len(t)], t[3 % len(t)], t[2], t[1])))
-    if n == "思い出":
-        c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in (t[0], t[2], t[4 % len(t)], t[5 % len(t)], t[4 % len(t)], t[2]) * 2))
-        hv = voice(ch, 52, 2, spread=False)
-        for j in range(2): HORN[j].bar(b, f"{nm(hv[j])}:6")
-rich(c, choir_scenes=["思い出"], pulse_scenes=["対話2", "思い出"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
-sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.35 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の043。崩れた塔の、年老いた鐘守の記憶。6/8・付点4分＝43、A エオリア。笛（エイラ）が問い、チェロ（鐘守の声）が答える対話。2小節ずつ→1小節ずつ→ふたりで一緒に歌う思い出の山→鐘守の声が静かに石の中へ帰っていく。遠い鐘ではじまり、鐘の余韻で終わる。",
-       harm_scenes=None, tail_scene="鐘の余韻", fill=False, pads=True, pad_scenes=["対話1", "対話2", "思い出", "石へ", "鐘の余韻"], floor=True)
-BAR = 6 * 60 / BPM
-ev = [{"t": 0.3, "file": "0135", "db": -24, "len": 9.0, "pan": 0.35, "seek": 0.0, "hp": 200, "lp": 5000},
-      {"t": round(c.s0["鐘の余韻"] * BAR + 0.5, 2), "file": "0135", "db": -25, "len": 10.0, "pan": 0.3, "seek": 0.0, "hp": 200, "lp": 5000}]
-air = {"pre": 1.0, "tail": 8.0, "layers": [{"file": "0595", "db": -36, "hp": 150, "lp": 6000, "wide": 0.014, "duck": 0.35, "fade": 8}], "events": ev,
-       "fx": {"shimmer": {"db": -28, "rt": 8.0}, "far": {"db": -24, "delay": 0.3, "lp": 2600, "rt": 5.0}}, "intro_db": 6.0}
+G = c.g()
+# 試し書き出し: チェロ（0.025・gainDb 2）は笛と同じくらい（声として丁度よい）。鐘は打った所で笛より少し小さく、長く減衰する
+VC = S.track("チェロ（鐘守の声）", "strings", patch="cello", volume=0.025, gainDb=2, pan=-0.2, reverb=0.6, release=0.4, barGain=[round(x * 1.4, 3) for x in G])
+BELL = S.track("遠い鐘", "bell", volume=0.12, pan=0.3, reverb=0.9, barGain=[1.2] * c.NB)
+CB = S.track("コントラバス（ごく小さい持続）", "strings", patch="contrabass", volume=0.02, pan=0.05, reverb=0.6, release=0.6, barGain=G)
+
+F = [["5:3 4:2 3:1", "2:3 1:3", "3:2 4:1 5:2 6:1", "5:6"], ["1':3 7:2 6:1", "5:3 3:3", "4:2 3:1 2:2 1:1", "2:6"],
+     ["3:2 5:1 1':3", "7:2 6:1 5:3", "6:2 5:1 4:2 2:1", "3:6"], ["5:2 4:1 3:2 2:1", "1:3 7,:3", "1:2 2:1 3:2 4:1", "1:6"]]
+C = [["1:3 2:2 3:1", "4:3 3:3", "2:2 1:1 7,:2 6,:1", "7,:6"], ["3:3 4:2 5:1", "6:3 5:3", "4:2 3:1 2:3", "1:6"],
+     ["5:2 4:1 3:3", "2:2 3:1 4:3", "3:2 2:1 1:2 7,:1", "1:6"], ["6:3 5:3", "4:2 3:1 2:3", "3:2 4:1 2:2 7,:1", "1:6"]]
+def say(track, bars, b0, key, oct_, dens, seed, mk=""):
+    ev = []
+    for j, s_ in enumerate(e2b(bars)):
+        ev += mel_events(key, s_, oct_, (b0 + j) * B)
+    ev = [[round(t, 4), L, m] for t, L, m in ev]
+    if track is c.FLUTE: play(track, ornament(ev, key, BPM, "air", B, density=dens, seed=seed))
+    else: play(track, [(t, L, m, mk) for t, L, m in ev])
+
+# 対話1・2：笛4小節 → チェロ4小節（チェロの答えは、笛の最後の小節に半分重なって入る）
+for sc, d in (("対話1", 0.3), ("対話2", 0.2)):
+    s0 = c.s0[sc]
+    for q in range(4):
+        say(c.FLUTE, F[(q + (sc == "対話2")) % 4], s0 + 8 * q, K, 4, d, 4300 + q + len(sc))
+        say(VC, C[(q + (sc == "対話2")) % 4], s0 + 8 * q + 4, KL, 3, 0, 0)
+# 回想：鐘守（チェロ）が長く語り、笛は長い音で聞く
+s0 = c.s0["回想"]
+say(VC, C[1] + C[2] + C[3] + C[0], s0, KL, 3, 0, 0)
+say(c.FLUTE, ["5:6", "4:6", "3:6", "2:6", "1:6", "7,:6", "1:6", "3:6", "4:6", "3:6", "2:6", "1:6", "2:6", "3:6", "2:6", "1:6"], s0, K, 4, 0.0, 4310)
+# 寄りそう：同じ節を、笛とチェロが3度（10度）で一緒に
+s0 = c.s0["寄りそう"]
+for q in range(2):
+    say(c.FLUTE, F[3] + F[0], s0 + 8 * q, K, 4, 0.2, 4320 + q)
+    ev = []
+    for j, s_ in enumerate(e2b(F[3] + F[0])):
+        ev += mel_events(K, s_, 4, (s0 + 8 * q + j) * B)
+    play(VC, [(round(t, 4), L, (m - 15 if m - 15 >= 45 else m - 3), "") for t, L, m in ev])     # 10度下（チェロの声で）
+# 鐘：始まりと終わりに1音ずつ（遠く、長い余韻）
+BELL.at(0.0, "A4:4"); BELL.at(c.s0["鐘の余韻"] * B, "A4:8")
+# コントラバス：ごく小さく、A と E（2小節ずつ）
+for b in range(2, c.s0["鐘の余韻"], 2):
+    CB.at(b * B, f"{'A1' if S.chords[b] in ('Am', 'F', 'Dm') else 'E2'}:4,")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.34 --master -15 --widen 1.1 --side-hpf 200",
+       "ケルト・フルート100曲の043（第3版）。古い塔の鐘守と、エイラの対話。6/8・付点4分＝46、A エオリア。エイラの笛が問いかけ、鐘守はチェロの低い声で、ゆっくりと若い日の祖父の話を返す（100曲の中で、笛以外が旋律を歌うのはこの曲のチェロだけ）。回想ではチェロが長く語り、最後は笛とチェロが同じ節で寄りそう。始まりと終わりは、遠い鐘の1音と、その余韻。",
+       harm_scenes=None, tail_scene="鐘の余韻", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 7.0, "layers": [{"file": "0595", "db": -45, "hp": 160, "lp": 3400, "wide": 0.012, "duck": 0.4, "fade": 8}],
+       "fx": {"far": {"db": -27, "delay": 0.32, "lp": 2600, "rt": 4.2}}}
 json.dump(air, open("/tmp/cel/w/air043.json", "w"), ensure_ascii=False)
+
+_p = sys.argv[1] if len(sys.argv) > 1 else None
+if _p:
+    _d = json.load(open(_p))
+    for _pt in _d["parts"]:
+        if isinstance(_pt.get("notes"), str):
+            _pt["notes"] = " ".join(t for t in _pt["notes"].split() if not re.match(r"^R:0(\.0*)?$", t))
+    json.dump(_d, open(_p, "w"), ensure_ascii=False)
