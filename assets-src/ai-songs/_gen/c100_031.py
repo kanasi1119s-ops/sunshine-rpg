@@ -1,93 +1,67 @@
-# ケルト・フルート100曲「銀の笛と百の夜」031 森の入口 At the Edge of the Wood — 第2版（2026-10-28）
-# イメージ: 古い森の手前で立ち止まる。中は暗く、何がいるのか分からない。笛で「入ってもいい？」と短く問いかけると、
-#   森が低い声（チェロと低い弦の暗い和音）で答える。問いかけるたびに、空気は少しずつ暗く、狭くなる（答えの和音が低く、暗くなる）。
-#   ためらったあと、意を決して一歩ずつ進み、最後に森の中へ足を踏み入れる。
-# 形（台帳）: 問いと森の答え。4/4・♩=54。E ドリア。始め：風／終わり：足を踏み入れる（足音1つと暗い和音）。山なし。
-# 編曲の表:
-#   風      : 風の音と、ごく弱い低い弦
-#   問い1   : 笛が2小節問い、森（低い弦とチェロ）が2小節答える。答えは回ごとに低く
-#   問い2   : 問いが少し大胆に（上へ）。チェロが動く
-#   ためらい: 笛の長い音と、低いドローンだけ
-#   一歩    : 笛がつながった節で歩き出す。ピチカートの足どり、竪琴の低い音
-#   森へ    : 足音1つと、暗い和音
-import sys, json
+# ケルト・フルート100曲「銀の笛と百の夜」031 森の入口 The Edge of the Old Wood — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 第4章のはじまり。山の上の泉をめざすエイラは、古い森の入口に立つ。ここは「薄い場所」（この世とあの世の境が薄い所）。
+#   風がやみ、鳥も鳴かない。一歩ふみこむごとに、足もとの低い響きが一段ずつ沈み、木々の上では高い響きがずっと鳴っている。
+# 調べ: あいだ。形: 薄い場所の静けさ（ほとんど動かない旋律）。8小節の段を7つ。
+# 拍子・速さ: 4/4・♩=54。旋法: C リディア（F♯ が浮いた感じ）。
+# 主役は笛（長い音。2〜3音のあいだをゆっくり行き来するだけ）。
+# 伴奏の主役: ビオラの高い持続（G5。木々の上の響き）と、チェロの低い持続（段ごとに全音ずつ下がる。6小節鳴らして2小節あける）。
+#   始まりだけ、弦合奏の風のようなふくらみ。竪琴・ギター・ピアノ・パッド・打楽器・2本目の笛は使わない。
+# この曲だけ: 森に入る一歩（段）ごとに、低い弦が半音でなく全音ずつ下がる（C → B♭ → A♭ → F♯ → E → D → C の全音音階）。
+# 始まり: 風のような弦 → 終わり: 弦だけが残る（笛は最後の段の途中で止まる）。
+# 山: なし。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
 
-BPM = 54
-S = Song("C100", "031-at-the-edge-of-the-wood", "森の入口", "At the Edge of the Wood", BPM, 4, "E", "dorian", "ケルト（幻想）")
+S = Song("C100", "031-the-edge-of-the-old-wood", "森の入口", "The Edge of the Old Wood", 54, 4, "C", "lydian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.4, "rubato": 0.3})
-QC = ["Em", "Em", "C", "Am", "Em", "D", "Bm", "Em", "Em", "Em", "C", "Am", "D", "D", "Bm", "Em"]
-S.scene("風", 3, "intro", ["Em", "Em", "Em"])
-S.scene("問い1", 16, "verse", QC)
-S.scene("問い2", 16, "verse", QC)
-S.scene("ためらい", 8, "break", ["Em", "C", "Em", "Am", "Em", "C", "Bm", "Em"])
-S.scene("一歩", 16, "verse", ["Em", "D", "C", "D", "Em", "Am", "Bm", "Em", "C", "D", "Em", "Am", "C", "Bm", "Em", "Em"])
-S.scene("森へ", 4, "outro", ["Em", "C", "Em", "Em"])
-NAMES = ["風", "問い1", "問い2", "ためらい", "一歩", "森へ"]
-
-c = make(S, NAMES,
-         [("風", 0, 0.58), ("問い1", 0, 0.62), ("問い2", 0, 0.66), ("ためらい", 0, 0.6), ("一歩", 0, 0.66), ("一歩", 15, 0.72), ("森へ", 0, 0.66), ("森へ", 3, 0.4)],
-         {}, flute_gain={n: 1.2 for n in NAMES}, intro="風", passing=True, tension=False)
-CELLO = S.track("チェロ（森の声）", "strings", patch="cello", volume=0.1, pan=0.1, reverb=0.5, barGain=c.g())
-PIZZ = S.track("ピチカート（足どり）", "strings", patch="pizzicato", volume=0.07, pan=-0.25, reverb=0.4, barGain=c.g())
-STEP = S.track("足音", "guitar", patch="frameDrum", volume=0.07, pan=-0.1, reverb=0.5, modulate=False, barGain=c.g())
-
-Q1 = [("R:1 1:1 2:1 3:1", "5:3 R:1"), ("R:1 3:1 4:1 5:1", "7:2 6:1 5:1"), ("R:1 5:1 4:1 3:1", "2:3 R:1"), ("R:1 1:1 3:1 5:1", "6:3 R:1")]
-Q2 = [("R:1 6:1 5:1 4:1", "3:2 4:2"), ("R:1 1':1 7:1 6:1", "5:3 R:1"), ("R:1 4:1 3:1 2:1", "1:3 R:1"), ("R:1 2:1 3:1 5:1", "4:3 R:1")]
-def qa(qs): return sum([[a, b, "R:4", "R:4"] for a, b in qs], [])
-play_melody(c, "問い1", qa(Q1), 4, "air", density=0.5, seed=3101)
-play_melody(c, "問い2", qa(Q2), 4, "air", density=0.7, seed=3102)
-play_melody(c, "ためらい", ["5:4", "R:4", "4:2 3:2", "R:4", "2:4", "R:4", "1:4", "R:4"], 4, "air", density=0.4, seed=3103)
-play_melody(c, "一歩", ["1:1 2:1 3:1 5:1", "4:2 3:1 2:1", "3:1 4:1 5:2", "6:2 5:2", "5:1 4:1 3:1 2:1", "3:2 1:2", "2:1 3:1 4:1 2:1", "1:4",
-                        "3:1 4:1 5:1 7:1", "6:2 5:1 4:1", "5:1 6:1 7:2", "1':4", "7:1 6:1 5:1 3:1", "4:2 2:2", "3:1 2:1 7,:1 2:1", "1:4"], 4, "air", density=0.8, seed=3104)
-play_melody(c, "森へ", ["R:4", "R:4", "R:4", "R:4"], 4, "air", density=0)
-
+S.extra.update({"human": 0.35, "rubato": 0.25})
+K = Key("C", "lydian", 4)
+STEP = [60, 58, 56, 54, 52, 50, 48]                         # C4 B♭3 A♭3 F♯3 E3 D3 C3（全音ずつ下がる）
+CHN = {60: "C", 58: "Bb", 56: "Ab", 54: "F#", 52: "E", 50: "D", 48: "C"}
+SC = [("風", 4, "intro", ["C"] * 4)] + [(f"{k + 1}歩目", 8, "verse", [CHN[STEP[k]]] * 8) for k in range(7)]
+for n, L, kd, ch in SC: S.scene(n, L, kd, ch)
+NAMES = [x[0] for x in SC]
+c = make(S, NAMES, [("風", 0, 0.66)] + [(f"{k + 1}歩目", 0, 0.7) for k in range(7)] + [("7歩目", 7, 0.66)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="風", passing=False, tension=False)
+S.fix_avoid = lambda t: 0
 B = S.beats
-for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    if n == "風":
-        if i >= 1:
-            v = voice(ch, 50, 2, spread=True)
-            for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:4")
-        continue
-    if n in ("問い1", "問い2"):
-        unit = i // 4; ph = i % 4
-        k_ = unit + (4 if n == "問い2" else 0)            # 何回目の答えか（0〜7）
-        if ph in (0, 1):   # 問い：うすい弦だけ
-            v = voice(ch, 55, 2, spread=True)
-            for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:4")
-        else:              # 答え：森の声。回ごとに低く、暗く
-            v = voice(ch, 55 - 2 * k_, 3, spread=True)
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-            CELLO.bar(b, f"{nm(r)}:4" if ph == 2 else f"{nm(r)}:2 {nm(r - 2 if r - 2 >= 36 else r + 10)}:2")
-            if k_ < 3: c.HARP2.bar(b, f"R:2 {nm(tones(ch, 'E5', 'E6')[0])}:2") if ph == 2 else None
-    if n == "ためらい":
-        CELLO.bar(b, "E2:4")
-        v = voice(ch, 47, 2, spread=True)
-        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:4")
-    if n == "一歩":
-        PIZZ.bar(b, f"{nm(r)}:1 R:1 {nm(r + 7)}:1 R:1")
-        c.HARP.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2")
-        CELLO.bar(b, f"{nm(r)}:4")
-        v = voice(ch, 50, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-        if i % 2 == 0: STEP.bar(b, "D3:1, R:3")
-    if n == "森へ":
-        if i == 1: STEP.bar(b, "D3:1 R:3")
-        if i >= 1:
-            v = voice(ch, 45, 3, spread=True)
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4" if i < 3 else "R:4")
-            CELLO.bar(b, f"{nm(r)}:4" if i < 3 else "R:4")
-sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の031（第2版）。古い森の入口で立ち止まる。4/4・♩=54、E ドリア。笛が短く問いかけ、森（低い弦とチェロ）が答える。答えは回ごとに低く暗くなる。ためらったあと一歩ずつ進み、森の中へ足を踏み入れる。",
-       harm_scenes=None, tail_scene="森へ", fill=False, pads=True, pad_scenes=["問い2", "ためらい", "一歩"])
-air = {"pre": 1.5, "tail": 8.0, "layers": [{"file": "0595", "db": -33, "hp": 80, "lp": 4000, "lfo": [37, 0.4], "wide": 0.012, "duck": 0.3, "fade": 6, "end": 140},
-                                           {"file": "0905", "db": -35, "hp": 100, "lp": 5000, "wide": 0.016, "duck": 0.3, "start": 60, "fade": 30},
-                                           {"file": "0136", "db": -34, "hp": 80, "lp": 3500, "wide": 0.018, "duck": 0.25, "start": 200, "fade": 30}],
-       "fx": {"glass": {"hz": [329.6, 659.3, 987.8], "db": -29, "rt": 6.0, "start": 4}, "shimmer": {"db": -28, "rt": 8.0}, "far": {"db": -24, "delay": 0.3, "lp": 2200, "rt": 5.0},
-              "haze": {"db": -26, "rt": 9.0}, "band": {"db": -37, "hz": 5500, "per": 23}, "ramp": [0.6, 1.8]}, "intro_db": 8.5}
+G = c.g()
+# 試し書き出し: ビオラ（0.022）は笛と同じくらい。チェロ（0.022・gainDb 3）は笛より約8dB 大きい → 0.011・gainDb 0。弦合奏も大きい → 0.025
+# 長い弦（004 で笛と並べて測った値）：チェロ 0.02・gainDb 2、ビオラ 0.017 で笛の約5dB 下。ここではビオラが主役なので少し大きく
+VA = [S.track(f"ビオラ（高い持続{j + 1}）", "strings", patch="viola", volume=0.022, pan=0.25, reverb=0.75, release=0.4, barGain=[round(x * 1.4, 3) for x in G]) for j in range(2)]
+VC = [S.track(f"チェロ（低い持続{j + 1}）", "strings", patch="cello", volume=0.011, gainDb=0, pan=-0.2, reverb=0.7, release=0.6, barGain=[round(x * 1.4, 3) for x in G]) for j in range(2)]
+WIND = [S.track(f"弦合奏（風{j + 1}）", "strings", patch="stringEnsemble", volume=0.025, pan=-0.3 + 0.6 * j, reverb=0.8, release=1.0,
+                barGain=[0.5, 0.8, 1.1, 0.9] + [0.0] * (c.NB - 4)) for j in range(2)]
+
+# 風：弦合奏が C と G をふくらませる
+for j, m in enumerate((60, 67)):
+    WIND[j].at(0.0, f"{nm(m)}:16,")
+# ビオラの高い G5：2小節ごとに2本で交互に弓を返す（最後まで切らない）
+st, k = 0.0, 0
+while st < c.NB * B - 0.01:
+    en = min(c.NB * B, st + 8.3)
+    VA[k % 2].at(round(st, 3), f"G5:{round(en - st, 3)}{',' if st else ''}")
+    st += 8; k += 1
+# チェロの低い持続：段ごとに全音下がる。6小節鳴らして2小節あける（森の静けさ）
+for kk in range(7):
+    b0 = c.s0[f"{kk + 1}歩目"]
+    VC[kk % 2].at(b0 * B, f"{nm(STEP[kk])}:{6 * B}")
+
+# ---------- 笛（C リディア。1=C5 にすると高いので 1=C4・オクターブ4。2〜3音のあいだをゆっくり） ----------
+P = [["R:2 5:2", "5:4", "4:2 5:2", "5:4", "3:4", "3:2 4:2", "5:4", "R:4"],
+     ["R:2 3:2", "3:4", "4:4", "3:4", "2:4", "2:2 3:2", "3:4", "R:4"],
+     ["R:2 6:2", "6:4", "5:4", "4:4", "5:4", "5:2 4:2", "3:4", "R:4"],
+     ["R:2 3:2", "4:4", "4:4", "3:4", "2:4", "3:4", "2:4", "R:4"],
+     ["R:2 5:2", "4:4", "3:4", "4:4", "5:4", "6:4", "5:4", "R:4"],
+     ["R:2 3:2", "2:4", "1:4", "2:4", "3:4", "2:4", "1:4", "R:4"],
+     ["R:2 5:2", "6:4", "7:4", "1':4", "1':4", "R:4", "R:4", "R:4"]]          # 最後の段：上の C へ登って、笛は止まる。弦だけが残る
+for kk in range(7):
+    play_melody(c, f"{kk + 1}歩目", P[kk], 4 if kk != 6 else 4, "air", key=K, density=0.15, seed=3100 + kk)
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.36 --master -15 --widen 1.15 --side-hpf 200",
+       "ケルト・フルート100曲の031（第3版）。第4章のはじまり、古い森の入口の「薄い場所」。4/4・♩=54、C リディア。風のような弦のふくらみのあと、ビオラの高い G がずっと鳴り続け、笛は2〜3音のあいだをゆっくり行き来するだけ。森に一歩ふみこむごとに、チェロの低い持続が全音ずつ（C → B♭ → A♭ → F♯ → E → D → C）沈んでいく。最後は笛が止まり、弦だけが残る。",
+       harm_scenes=None, tail_scene="7歩目", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 6.0, "layers": [{"file": "0595", "db": -46, "hp": 180, "lp": 3400, "wide": 0.012, "duck": 0.4, "fade": 8}],
+       "fx": {"far": {"db": -27, "delay": 0.32, "lp": 2600, "rt": 4.2}}}
 json.dump(air, open("/tmp/cel/w/air031.json", "w"), ensure_ascii=False)
