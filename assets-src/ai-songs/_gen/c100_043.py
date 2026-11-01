@@ -23,7 +23,7 @@ def e2b(bars):
     return [" ".join(f"{t.split(':')[0]}:{round(float(t.split(':')[1]) / 3, 4)}" for t in s_.split()) for s_ in bars]
 CH8 = ["Am", "Em", "F", "C", "Dm", "Am", "E", "Am"]
 SC = [("鐘", 2, "intro", ["Am", "Am"]), ("対話1", 32, "chorus", CH8 * 4), ("対話2", 32, "verse", CH8 * 4), ("回想", 16, "verse", CH8 * 2),
-      ("寄りそう", 16, "verse", CH8 * 2), ("鐘の余韻", 4, "outro", ["Am"] * 4)]
+      ("寄りそう", 16, "verse", CH8 * 2), ("鐘の余韻", 2, "outro", ["Am"] * 2)]
 for n, L, kd, ch in SC: S.scene(n, L, kd, ch)
 NAMES = [x[0] for x in SC]
 c = make(S, NAMES,
@@ -34,7 +34,8 @@ S.fix_avoid = lambda t: 0
 B = S.beats
 G = c.g()
 # 試し書き出し: チェロ（0.025・gainDb 2）は笛と同じくらい（声として丁度よい）。鐘は打った所で笛より少し小さく、長く減衰する
-VC = S.track("チェロ（鐘守の声）", "strings", patch="cello", volume=0.025, gainDb=2, pan=-0.2, reverb=0.6, release=0.4, barGain=[round(x * 1.4, 3) for x in G])
+VC = S.track("チェロ（鐘守の声）", "strings", patch="cello", volume=0.025, gainDb=4,   # 1回目（7.35）はチェロだけの答えが -32dB に沈んだ
+            pan=-0.2, reverb=0.6, release=0.4, barGain=[round(x * 1.4, 3) for x in G])
 BELL = S.track("遠い鐘", "bell", volume=0.12, pan=0.3, reverb=0.9, barGain=[1.2] * c.NB)
 CB = S.track("コントラバス（ごく小さい持続）", "strings", patch="contrabass", volume=0.02, pan=0.05, reverb=0.6, release=0.6, barGain=G)
 
@@ -69,7 +70,7 @@ for q in range(2):
         ev += mel_events(K, s_, 4, (s0 + 8 * q + j) * B)
     play(VC, [(round(t, 4), L, (m - 15 if m - 15 >= 45 else m - 3), "") for t, L, m in ev])     # 10度下（チェロの声で）
 # 鐘：始まりと終わりに1音ずつ（遠く、長い余韻）
-BELL.at(0.0, "A4:4"); BELL.at(c.s0["鐘の余韻"] * B, "A4:8")
+BELL.at(0.0, "A4:4"); BELL.at(c.s0["鐘の余韻"] * B, "A4:4")   # 1回目は余韻のあとに約16秒ほぼ無音だった → 2小節に
 # コントラバス：ごく小さく、A と E（2小節ずつ）
 for b in range(2, c.s0["鐘の余韻"], 2):
     CB.at(b * B, f"{'A1' if S.chords[b] in ('Am', 'F', 'Dm') else 'E2'}:4,")
@@ -77,7 +78,7 @@ for b in range(2, c.s0["鐘の余韻"], 2):
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.34 --master -15 --widen 1.1 --side-hpf 200",
        "ケルト・フルート100曲の043（第3版）。古い塔の鐘守と、エイラの対話。6/8・付点4分＝46、A エオリア。エイラの笛が問いかけ、鐘守はチェロの低い声で、ゆっくりと若い日の祖父の話を返す（100曲の中で、笛以外が旋律を歌うのはこの曲のチェロだけ）。回想ではチェロが長く語り、最後は笛とチェロが同じ節で寄りそう。始まりと終わりは、遠い鐘の1音と、その余韻。",
        harm_scenes=None, tail_scene="鐘の余韻", double=False, fill=False, pads=False)
-air = {"pre": 0.3, "tail": 7.0, "layers": [{"file": "0595", "db": -45, "hp": 160, "lp": 3400, "wide": 0.012, "duck": 0.4, "fade": 8}],
+air = {"pre": 0.3, "tail": 4.5, "layers": [{"file": "0595", "db": -45, "hp": 160, "lp": 3400, "wide": 0.012, "duck": 0.4, "fade": 8}],
        "fx": {"far": {"db": -27, "delay": 0.32, "lp": 2600, "rt": 4.2}}}
 json.dump(air, open("/tmp/cel/w/air043.json", "w"), ensure_ascii=False)
 
