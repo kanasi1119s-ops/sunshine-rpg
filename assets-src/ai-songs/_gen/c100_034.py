@@ -28,7 +28,7 @@ SC.append(("眠り", 4, "outro", ["F"] * 4))
 for n, L, kd, ch in SC: S.scene(n, L, kd, ch)
 NAMES = [x[0] for x in SC]
 c = make(S, NAMES,
-         [("ゆりかご", 0, 0.66), ("1回目", 0, 0.72), ("2回目", 0, 0.8), ("2回目", 8, 0.86), ("3回目", 0, 0.74), ("4回目", 0, 0.7),
+         [("ゆりかご", 0, 0.66), ("1回目", 0, 0.72), ("2回目", 0, 0.8), ("2回目", 8, 0.86), ("3回目", 0, 0.68), ("4回目", 0, 0.62),
           ("眠り", 0, 0.66), ("眠り", 3, 0.62)],
          {}, flute_gain={n: 1.15 for n in NAMES}, intro="ゆりかご", passing=True, tension=False)
 S.fix_avoid = lambda t: 0
@@ -40,7 +40,8 @@ G = c.g()
 SINK = {"ゆりかご": 1.9, "1回目": 1.0, "沈む1": 1.05, "2回目": 1.05, "沈む2": 1.1, "3回目": 1.1, "沈む3": 1.15, "4回目": 1.15, "眠り": 1.2}   # 1回目（7.22）: 前奏が -46dB と小さく、後半ほど大きくなって（-30→-17dB）沈む感じが出なかった → 前奏を大きく、沈むほどの持ち上げを弱く
 VC = [S.track(f"チェロ（ゆりかご{j + 1}）", "strings", patch="cello", volume=0.03, gainDb=1, pan=-0.15, reverb=0.6, release=0.5,
               barGain=[round(x * SINK[S.scene_of(b)[0]], 3) for b, x in enumerate(G)]) for j in range(2)]
-CB = S.track("コントラバス（3回目から）", "strings", patch="contrabass", volume=0.04, gainDb=0, pan=0.1, reverb=0.55, release=0.6,
+CB = S.track("コントラバス（3回目から）", "strings", patch="contrabass", volume=0.025, gainDb=0,   # 2回目（7.16）も 3・4回目が前半より約8dB 大きかった → 弱く
+             pan=0.1, reverb=0.55, release=0.6,
              barGain=[round(x * 1.4, 3) for x in G])
 
 # ---------- 歌（16小節。調ごとに同じ度数で） ----------

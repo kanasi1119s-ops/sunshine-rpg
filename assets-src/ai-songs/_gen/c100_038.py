@@ -1,76 +1,75 @@
-# ケルト・フルート100曲「銀の笛と百の夜」038 夜露 Night Dew — 第2版（2026-10-28）
-# イメージ: 夜の森。葉の先にたまった雫が、ぽとん、ぽとんと落ちる。その間隔が、そのまま曲の拍になる。
-#   笛は雫の拍の上で、ゆっくり歌う。雫は増えも減りもせず、ただ同じ間隔で落ち続け、最後の一滴で終わる。
-# 形（台帳）: 雫が拍を刻むスロー・エア（雫の間隔＝拍。雫の音は竪琴の高いハーモニクスとピチカートの「ぽとん」で作る）。
-#   4/4・♩=60。E ミクソリディア。始め：一滴／終わり：一滴。山なし。
-# 編曲の表:
-#   一滴   : 雫の音1つ
-#   雫     : 雫が1拍ごとに（高い竪琴とピチカートが交互）。弦のごく弱い持続
-#   歌1    : 笛のスロー・エア A A'
-#   歌2    : 笛 B A'。チェロ、パッド
-#   静けさ : 笛が休み、雫と弦だけ
-#   一滴   : 雫が1つずつ間をあけて、最後の一滴
-import sys, json
+# ケルト・フルート100曲「銀の笛と百の夜」038 夜露 Night Dew — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 森の主に認められた夜。エイラは大きな羊歯の下で休む。葉の先から夜露が1粒、また1粒と落ちる。
+#   落ちる間合いはばらばらで、ときどき2粒つづけて落ちる。笛はささやくように子守歌を吹き、最後の1粒が落ちて夜が明ける。
+# 調べ: 眠り。形: エア（16小節の歌を3回。あいだに「夜更け」）。
+# 拍子・速さ: 3/4・♩=50。旋法: G イオニアの5音（G・A・B・D・E）。
+# 主役は笛（ささやく。G4〜E5 が中心、装飾はごく少し）。伴奏の主役: カリンバ（指ピアノ）の点（夜露）。
+#   脇: 2小節ごとに、カリンバの低い1音（葉の下の水たまり）。竪琴・ギター・ピアノ・弦・パッド・打楽器・2本目の笛は使わない。
+# この曲だけ: カリンバの粒が、拍に合わせず、葉の先から落ちるように不規則な間合いで落ちる（ときどき2粒つづけて）。
+# 始まり: カリンバの1音 → 終わり: 最後の1粒。
+# 山: なし。
+import sys, json, re, random
 from c100_common import *
 from c100_v2 import *
 
-S = Song("C100", "038-night-dew", "夜露", "Night Dew", 57, 4, "E", "mixolydian", "ケルト（幻想）")
+S = Song("C100", "038-night-dew", "夜露", "Night Dew", 50, 3, "G", "major", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.25})
-AC = ["E", "D", "A", "E", "E", "D", "B", "E"]; BC = ["A", "E", "D", "A", "C#m", "D", "B", "E"]
-S.scene("一滴", 2, "intro", ["E", "E"])
-S.scene("雫", 4, "intro", ["E", "E", "D", "E"])
-S.scene("歌1", 16, "verse", AC * 2)
-S.scene("歌2", 16, "verse", BC + AC)
-S.scene("静けさ", 8, "break", AC)
-S.scene("歌3", 8, "verse", AC)
-S.scene("最後の一滴", 4, "outro", ["A", "E", "E", "E"])
-NAMES = ["一滴", "雫", "歌1", "歌2", "静けさ", "歌3", "最後の一滴"]
-
-c = make(S, NAMES, [("一滴", 0, 0.62), ("歌1", 0, 0.62), ("歌2", 0, 0.66), ("静けさ", 0, 0.6), ("歌3", 0, 0.62), ("最後の一滴", 0, 0.56), ("最後の一滴", 3, 0.45)],
-         {}, flute_gain={n: 1.2 for n in NAMES}, intro=None, passing=True, tension=False)
-DROPH = S.track("雫（竪琴の高い音）", "harp", patch="folkHarp", volume=0.08, pan=0.3, reverb=0.75, barGain=c.g())
-DROPP = S.track("雫（ピチカート）", "strings", patch="pizzicato", volume=0.06, pan=-0.3, reverb=0.7, barGain=c.g())
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.075, pan=0.1, reverb=0.5, barGain=c.g())
-
-A1 = ["R:2 5:2", "6:3 5:1", "4:2 3:2", "2:4", "R:2 3:2", "4:2 5:1 6:1", "5:3 4:1", "3:4"]
-A2 = ["R:2 5:2", "6:3 5:1", "4:2 3:2", "2:4", "R:2 3:2", "2:2 7,:1 2:1", "1:3 7,:1", "1:4"]
-B1 = ["R:2 1':2", "7:3 6:1", "5:2 6:2", "4:4", "R:2 3:2", "4:2 6:2", "5:3 4:1", "5:4"]
-play_melody(c, "歌1", A1 + A2, 4, "air", density=0.6, seed=3801)
-play_melody(c, "歌2", B1 + A2, 4, "air", density=0.8, seed=3802)
-play_melody(c, "歌3", A2, 4, "air", density=0.6, seed=3803)
-
+S.extra.update({"human": 0.35, "rubato": 0.2})
+K = Key("G", "major", 4)
+VA = ["G", "Em", "D", "G", "C", "G", "Em", "D", "G", "C", "G", "D", "Em", "C", "D", "G"]
+SC = [("一粒", 4, "intro", ["G"] * 4), ("歌1", 16, "verse", VA), ("歌2", 16, "verse", VA), ("夜更け", 8, "verse", ["Em", "D", "C", "G"] * 2),
+      ("歌3", 16, "verse", VA), ("歌4", 16, "verse", VA), ("最後の一粒", 4, "outro", ["G"] * 4)]
+for n, L, kd, ch in SC: S.scene(n, L, kd, ch)
+NAMES = [x[0] for x in SC]
+c = make(S, NAMES,
+         [("一粒", 0, 0.64), ("歌1", 0, 0.66), ("歌2", 0, 0.68), ("夜更け", 0, 0.64), ("歌3", 0, 0.68), ("歌4", 0, 0.66), ("最後の一粒", 0, 0.62)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="一粒", passing=True, tension=False)
 B = S.beats
-for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    hi = tones(ch, "E5", "E6")
-    if n == "一滴":
-        if i == 0: DROPH.bar(b, f"R:2 {nm(hi[0])}:2")
-        if i == 1: DROPH.bar(b, f"R:1 {nm(hi[1])}:1 R:1 {nm(hi[2])}:1")
-        v = voice(ch, 52, 3, spread=True)        # 夜の森の空気：低い弦とチェロ（はじまりが小さすぎないように）
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-        CELLO.bar(b, f"{nm(r)}:4")
-        continue
-    if n == "最後の一滴":
-        if i in (0, 1, 3): DROPH.bar(b, f"{nm(hi[i % len(hi)])}:2 R:2")
-        if i < 3:
-            v = voice(ch, 55, 3, spread=True)
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-            CELLO.bar(b, f"{nm(r)}:4")
-        continue
-    # 雫：1拍ごとに、竪琴とピチカートが交互（雫の間隔＝拍）
-    DROPH.bar(b, f"{nm(hi[(b) % len(hi)])}:1 R:1 {nm(hi[(b + 1) % len(hi)])}:1 R:1")
-    DROPP.bar(b, f"R:1 {nm(hi[(b + 2) % len(hi)] - 12)}:1 R:1 {nm(hi[(b + 1) % len(hi)] - 12)}:1")
-    v = voice(ch, 55, 3 if n in ("歌2", "歌3") else 2, spread=True)
-    for j in range(len(v)): c.STR[j].bar(b, f"{nm(v[j])}:4")
-    if n in ("雫", "歌1", "歌2", "静けさ", "歌3"): CELLO.bar(b, f"{nm(r)}:4")
-play_melody(c, "最後の一滴", ["3:2 2:2", "1:4", "R:4", "R:4"], 4, "air", density=0.2, seed=3804)
-rich(c, choir_scenes=["歌2"], pulse_scenes=["歌2", "静けさ", "歌3"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
-sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.4 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の038（第2版）。夜の森の葉先の雫。4/4・♩=57、E ミクソリディア。雫の音（高い竪琴とピチカートが交互）が1拍ごとに落ち、その間隔がそのまま曲の拍になる。笛はその上でゆっくり歌い、最後の一滴で終わる。",
-       harm_scenes=None, tail_scene="最後の一滴", fill=False, pads=True, pad_scenes=["雫", "歌1", "歌2", "静けさ", "歌3", "最後の一滴"], floor=True)
-json.dump({"pre": 1.5, "tail": 8.0, "layers": [{"file": "0621", "db": -33, "hp": 120, "lp": 6000, "wide": 0.014, "duck": 0.3, "fade": 6}],
-           "fx": {"glass": {"hz": [329.6, 659.3, 987.8], "db": -28, "rt": 7.0, "start": 4}, "shimmer": {"db": -26, "rt": 9.0}, "far": {"db": -24, "delay": 0.3, "lp": 2400, "rt": 5.0},
-                  "haze": {"db": -26, "rt": 9.0}, "band": {"db": -38, "hz": 6500, "per": 29}}, "intro_db": 8.5}, open("/tmp/cel/w/air038.json", "w"))
+G = c.g()
+# 試し書き出し: 夜露の粒（0.09）は笛より 5〜15dB 小さい → 0.14。水たまりの低い1音は笛と同じくらいで、すぐ減衰する
+DEW = [S.track(f"カリンバ（夜露{j + 1}）", "kalimba", volume=0.14, pan=p, reverb=0.6, sustain=2.4, barGain=G) for j, p in enumerate((-0.5, -0.1, 0.3, 0.6))]
+POOL = S.track("カリンバ（葉の下の水たまり）", "kalimba", volume=0.1, pan=0.0, reverb=0.5, sustain=2.6, barGain=G)
+
+# ---------- 歌（G の5音。1=G4） ----------
+SONG = ["3:2 2:1", "1:2 6,:1", "5,:2 6,:1", "1:3", "2:1 3:1 5:1", "3:2 2:1", "1:1 2:1 3:1", "2:3",
+        "3:2 5:1", "6:2 5:1", "3:1 2:1 1:1", "2:3", "3:1 2:1 1:1", "6,:2 5,:1", "6,:1 1:1 2:1", "1:3"]
+SONG2 = ["5:2 6:1", "1':2 6:1", "5:2 3:1", "2:3", "3:1 5:1 6:1", "5:2 3:1", "2:1 1:1 2:1", "3:3",
+         "5:2 3:1", "2:2 1:1", "6,:1 1:1 2:1", "3:3", "2:1 1:1 6,:1", "5,:2 6,:1", "1:1 2:1 6,:1", "1:3"]
+play_melody(c, "歌1", SONG, 4, "air", key=K, density=0.1, seed=3801)
+play_melody(c, "歌2", SONG2, 4, "air", key=K, density=0.15, seed=3802)
+play_melody(c, "夜更け", ["3:3", "2:3", "1:3", "R:3", "5,:3", "6,:3", "1:3", "R:3"], 4, "air", key=K, density=0.0)
+play_melody(c, "歌3", SONG2, 4, "air", key=K, density=0.15, seed=3803)
+play_melody(c, "歌4", SONG, 4, "air", key=K, density=0.1, seed=3804)
+play_melody(c, "最後の一粒", ["3:3", "1:3", "R:3", "R:3"], 4, "air", key=K, density=0.0)
+
+# ---------- 夜露（拍に合わせない、ばらばらの間合い） ----------
+DROPS = [79, 81, 83, 86, 88, 91]                     # G5〜G6（5音）
+rng = random.Random(3838)
+t = 0.0
+end = (c.s0["最後の一粒"] + 2) * B
+used = {i: -9.0 for i in range(4)}
+while t < end:
+    n = S.scene_of(int(t // B))[0]
+    gap = rng.expovariate(1 / (2.4 if n in ("歌1", "歌2", "歌3", "歌4") else 1.6))
+    t += max(0.45, gap)
+    if t >= end: break
+    j = rng.randrange(4)
+    if t - used[j] < 0.5: continue
+    m = rng.choice(DROPS)
+    DEW[j].at(round(t, 3), f"{nm(m)}:1{',' if rng.random() < 0.5 else ''}"); used[j] = t + 1
+    if rng.random() < 0.18:                         # ときどき2粒つづけて
+        j2 = (j + 1) % 4
+        if t + 0.22 - used[j2] >= 0.5:
+            DEW[j2].at(round(t + 0.22, 3), f"{nm(rng.choice(DROPS))}:1,"); used[j2] = t + 1.22
+DEW[1].at(round((c.NB - 2) * B + 1.3, 3), "D6:2")                   # 最後の1粒
+# 葉の下の水たまり：2小節ごとに低い1音
+ROOT = {"G": 55, "Em": 52, "D": 50, "C": 48}
+for b in range(4, c.NB - 2, 2):
+    POOL.at(b * B, f"{nm(ROOT[S.chords[b]] + 12 if ROOT[S.chords[b]] < 60 else ROOT[S.chords[b]])}:{2 * B},")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.34 --master -15 --widen 1.15 --side-hpf 200",
+       "ケルト・フルート100曲の038（第3版）。大きな羊歯の下で休む夜、葉の先から夜露が落ちる。エア（3/4・♩=50）、G の5音。カリンバの粒が、拍に合わせずばらばらの間合いで（ときどき2粒つづけて）落ち、笛はささやくように子守歌を吹く。始まりはカリンバの1音、最後の1粒が落ちて夜が明ける。",
+       harm_scenes=None, tail_scene="最後の一粒", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 5.0, "layers": [{"file": "0595", "db": -45, "hp": 180, "lp": 3600, "wide": 0.012, "duck": 0.4, "fade": 7}],
+       "fx": {"far": {"db": -27, "delay": 0.3, "lp": 2800, "rt": 3.8}}}
+json.dump(air, open("/tmp/cel/w/air038.json", "w"), ensure_ascii=False)
