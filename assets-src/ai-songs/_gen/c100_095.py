@@ -49,9 +49,14 @@ PART = [("C6", 0.0), ("F6", 0.35), ("A6", 0.8)]                             # �
 for b in range(c.s0["子守歌"], c.s0["倍音だけ"], 4):
     for j, (m, dt) in enumerate(PART):
         BELL[j].at(round(b * B + dt, 3), f"{m}:6{',' if j else ''}")
+# 1回目（7.75）: 終わりの4小節（約20秒）が −70dB で、ほとんど無音だった。グロッケン 0.022 は単独で −34dB、5秒で −66dB まで減る
+#   → 終わりの鐘は専用のトラック（gainDb 10）にして、3回、だんだん弱く鳴らしなおす（遠ざかる鐘）。始まりの竪琴も1音足す（4〜6秒が −53dB だった）
+BE = S.track("鐘の倍音（終わり）", "bell", patch="glockenspiel", volume=0.022, gainDb=10, pan=0.1, reverb=0.95)
 s0 = c.s0["倍音だけ"]
-for j, (m, dt) in enumerate(PART + [("C7", 1.4)]):
-    BELL[j % 3].at(round(s0 * B + dt, 3), f"{m}:9{',' if j else ''}")
+for k, (dbar, notes, vel) in enumerate(((0, PART + [("C7", 1.4)], ""), (1.5, [("F6", 0.0), ("A6", 0.5)], ","), (3, [("C6", 0.0)], ","))):
+    for j, (m, dt) in enumerate(notes):
+        BE.at(round((s0 + dbar) * B + dt, 3), f"{m}:{9 - 2 * k}{vel if (j == 0) else ','}")
+HPI.at(3, "C4:3,")
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.36 --master -15 --widen 1.15 --side-hpf 200",
        "ケルト・フルート100曲の095（第3版）。真夜中の鐘楼。眠りを壊さずに鐘を目覚めさせる。3/4・♩=50、F の長調の5音。竪琴の1音で始まり、竪琴の低くやわらかな分散和音の上で、とても小さな笛が16小節の子守歌を4回。4小節ごとに、鐘の高い倍音（C6・F6・A6）だけがグロッケンでそっと響く。鐘の基音は一度も鳴らさない。山はなく、最後は鐘の倍音だけが残る。",

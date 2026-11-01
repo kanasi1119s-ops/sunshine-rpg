@@ -23,16 +23,17 @@ SC = [("先唱", 2, "intro", ["G", "G"]), ("詩篇", 10, "verse", ["G"] * 10), (
 for n, L, kd, ch in SC: S.scene(n, L, kd, ch)
 NAMES = [x[0] for x in SC]
 c = make(S, NAMES,
-         [("先唱", 0, 0.72), ("詩篇", 0, 0.76), ("詩篇", 9, 0.8), ("そろう", 0, 0.8), ("リール1", 0, 0.84), ("リール2", 0, 0.88), ("リール3", 0, 0.92), ("リール3", 15, 0.98),
+         [("先唱", 0, 0.86), ("詩篇", 0, 0.9), ("詩篇", 9, 0.9), ("そろう", 0, 0.86), ("リール1", 0, 0.84), ("リール2", 0, 0.88), ("リール3", 0, 0.92), ("リール3", 15, 0.98),
           ("切る", 0, 0.98)],
-         {}, flute_gain={n: 1.15 for n in NAMES}, intro="先唱", passing=True, tension=False)
+         {}, flute_gain={n: (1.5 if n in ("先唱", "詩篇") else 1.3 if n == "そろう" else 1.15) for n in NAMES}, intro="先唱", passing=True, tension=False)
 S.fix_avoid = lambda t: 0
+# 1回目（7.64）: 詩篇の所（はじめの約78秒）が −31dB で、リール（−17dB）より14dB 小さかった → 詩篇の場面の大きさ・笛・アコーディオンを上げる
 s = c.s0
 S.tempo = [{"bar": 1, "bpm": 44}, {"bar": s["そろう"] + 1, "bpm": 112, "ramp": 4}]
 B = S.beats
 G = c.g()
 FD = S.track("フィドル", "strings", patch="violin", volume=0.03, gainDb=3, pan=0.3, reverb=0.4, barGain=G)
-ACG = {"先唱": 0.45, "詩篇": 0.45, "そろう": 0.6}
+ACG = {"先唱": 0.65, "詩篇": 0.65, "そろう": 0.7}
 AC = [S.track(f"アコーディオン{j + 1}", "accordion", volume=0.05, pan=0.15 + 0.07 * j, reverb=0.35,
               barGain=[round(x * ACG.get(S.scene_of(b)[0], 1.0), 3) for b, x in enumerate(G)]) for j in range(3)]
 GT = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.008, pan=-0.3 - 0.05 * i, reverb=0.3, barGain=G) for i in range(5)]

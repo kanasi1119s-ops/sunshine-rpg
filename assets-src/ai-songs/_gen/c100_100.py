@@ -6,7 +6,7 @@
 # 拍子・速さ: 4/4。独奏は ♩=52（ゆれを大きく）→ ♩=60。旋法: D イオニア。
 # 主役は笛（独奏の笛）。伴奏: これまでの章で使った楽器が一つずつ（竪琴・ギター・チェロ・フィドル・アコーディオン・ティン・ホイッスル・マリンバ・ホルン・
 #   コントラバス・グロッケン・ビオラ・リードオルガン・ピチカート・木琴・枠太鼓）。どの楽器も、自分の一音（D の和音の音）だけを鳴らす。
-# この曲だけ: これまでの章で使った楽器が、一音ずつ加わって一つの和音（D・A・F♯・E）になる。
+# この曲だけ: これまでの章で使った楽器が、一音ずつ加わって一つの和音（D・A・F♯・E）になる。ティン・ホイッスルは自然な音域の中の E5（E6 は音域の外）。
 # 始まり: 笛ひとり → 終わり: 笛の息が消える。
 # 山: 終盤（全員の和音）。
 import sys, json, re
@@ -43,7 +43,7 @@ JOIN = [("竪琴（第1章）", "harp", "folkHarp", 0.09, 0, "D3", True),
         ("チェロ（第2章）", "strings", "cello", 0.02, 2, "D2", False),
         ("フィドル（第4章）", "strings", "violin", 0.022, 3, "F#4", False),
         ("アコーディオン（第6章）", "accordion", None, 0.03, 0, "A4", False),
-        ("ティン・ホイッスル（第7章）", "panflute", "tinWhistle", 0.008, 0, "E6", False),
+        ("ティン・ホイッスル（第7章）", "panflute", "tinWhistle", 0.008, 0, "E5", False),
         ("マリンバ（第5章）", "strings", "marimba", 0.045, 0, "D5", True),
         ("ホルン（第5章）", "brass", "horn", 0.09, 6, "A3", False),
         ("コントラバス（第6章）", "strings", "contrabass", 0.025, 3, "D2", False),
@@ -68,8 +68,11 @@ for k, (name, inst, patch, vol, gd, note, decay) in enumerate(JOIN):
             L = 8 if note != "C3" else 1
             tr.at(round(t, 3), f"{note}:{min(L, round(stop - t, 2))}{'' if first else ','}")
             t += 8; first = False
-    else:
-        tr.at(round(t0, 3), f"{note}:{round(stop - t0, 2)}")
+    else:                                                                 # のばす楽器は16拍ずつ、そっと弾きなおす（1つの音は長すぎると読めない。1回目の書き出しで失敗）
+        t = t0; first = True
+        while t < stop - 0.5:
+            tr.at(round(t, 3), f"{note}:{min(16, round(stop - t, 2))}{'' if first else ','}")
+            t += 16; first = False
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.34 --master -15 --widen 1.25 --side-hpf 200",
        "ケルト・フルート100曲の100（第3版）。最後の夜、灯台の上。笛ひとりが、ゆっくりした「地」の節（♩=52、ゆれを大きく）を吹く。同じ地を2回くり返すあいだに、これまでの章で使った15の楽器（竪琴・ギター・チェロ・フィドル・アコーディオン・ティン・ホイッスル・マリンバ・ホルン・コントラバス・グロッケン・ビオラ・リードオルガン・ピチカート・木琴・枠太鼓）が、2小節ごとに一つずつ、自分の一音だけを足していき、D・A・F♯・E の一つの和音になる（山）。最後は楽器がひとつずつ抜けて、笛の長い D の息が夜空に消える。",

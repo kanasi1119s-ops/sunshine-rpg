@@ -30,8 +30,11 @@ s = c.s0
 S.tempo = [{"bar": 1, "bpm": 50}, {"bar": s["歌A"] + 1, "bpm": 60, "ramp": 2}]
 B = S.beats
 G = c.g()
-HR = S.track("竪琴（響かせる）", "harp", patch="folkHarp", volume=0.13, pan=-0.18, reverb=0.55, sustain=2.6, barGain=G)
-HD = S.track("竪琴（止める）", "harp", patch="folkHarp", volume=0.11, pan=-0.05, reverb=0.4, sustain=0.45, barGain=G)
+# 1回目（7.33）: 竪琴だけの前奏（約14秒）が −35dB、最後の問いの3音のあと約10秒が −69dB だった
+#   → 前奏と最後の4小節だけ、竪琴を ×1.9。最後の笛の「ラ」を2小節のばす
+HG = [round(x * (1.9 if (b < 4 or b >= c.NB - 4) else 1.0), 3) for b, x in enumerate(G)]
+HR = S.track("竪琴（響かせる）", "harp", patch="folkHarp", volume=0.13, pan=-0.18, reverb=0.55, sustain=2.6, barGain=HG)
+HD = S.track("竪琴（止める）", "harp", patch="folkHarp", volume=0.11, pan=-0.05, reverb=0.4, sustain=0.45, barGain=HG)
 HB = S.track("竪琴（高い鐘）", "harp", patch="folkHarp", volume=0.06, pan=0.35, reverb=0.7, sustain=3.0, barGain=G)
 VC = S.track("チェロ", "strings", patch="cello", volume=0.022, gainDb=3, pan=-0.3, reverb=0.65, release=0.6, barGain=G)
 def roll(tr, b, notes, start=0.0, step=0.22, L=3.0, soft=True):
@@ -56,7 +59,7 @@ play_melody(c, "歌A", A, 4, "air", key=K, density=0.3, seed=9901)              
 play_melody(c, "歌B", Bm_, 4, "air", key=K, density=0.35, seed=9902)
 play_melody(c, "旅の思い出", MEM, 4, "air", key=K, density=0.15, seed=9903)
 play_melody(c, "語り", A2, 4, "air", key=K, density=0.2, seed=9904)
-play_melody(c, "問いの3音", [Q, "5:3", "R:3", "R:3"], 4, "air", key=K, density=0.0)    # 最後は、001 の最初の3音
+play_melody(c, "問いの3音", [Q, "5:6", "R:3"], 4, "air", key=K, density=0.0)    # 最後は、001 の最初の3音
 
 # ---------- 竪琴（001 と同じ弾き方。3度を抜いた和音） ----------
 D2, A2_, D3, E3, A3, G2, B2, G3 = 38, 45, 50, 52, 57, 43, 47, 55
