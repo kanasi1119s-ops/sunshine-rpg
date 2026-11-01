@@ -41,7 +41,7 @@ B = S.beats
 G = c.g()
 # 試し書き出し: こもった竪琴（0.09）は笛より約10dB 大きい → 0.035。ギター1本（0.03）も笛より大きい（5本重なる）→ 0.015。ボーランは笛と同じくらい
 MUF = [{"type": "eq", "low": -2, "mid": -4, "midHz": 1800, "high": -15}]           # 塚の中：高い音を削る
-FARG = [round(x * (2.0 if b < 32 else 1.0), 3) for b, x in enumerate(G)]           # 壁の向こうだけの所は大きめに（前奏が小さくならないよう）
+FARG = [round(x * (2.0 if b < 64 else 1.0), 3) for b, x in enumerate(G)]           # 壁の向こうと聞き覚えは大きめに。1回目（7.71）は聞き覚えで -40dB に沈んだ
 FH = S.track("こもった竪琴（塚の中）", "harp", patch="folkHarp", volume=0.035, pan=-0.35, reverb=0.85, sustain=1.6, fx=MUF, barGain=FARG)
 FW = S.track("こもったホイッスル（塚の中）", "panflute", patch="tinWhistle", volume=0.03, pan=0.35, reverb=0.85, fx=MUF, barGain=FARG)
 GT = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.015, pan=0.3 + 0.05 * i, reverb=0.3, barGain=G) for i in range(5)]
@@ -75,9 +75,9 @@ for t, L, m in events(FAIRY, KD, c.s0["壁の向こう"], 4):
 # 聞き覚え：妖精の節はつづき（小さく）、エイラが句の頭だけ追う → 後半は全部
 s0 = c.s0["聞き覚え"]
 for t, L, m in events(FAIRY, KD, s0, 4):
-    FH.at(t, f"{nm(m)}:{round(L, 4)},")
+    FH.at(t, f"{nm(m)}:{round(L, 4)}")
 ev = smooth(events(FAIRY, KD, s0, 4))
-ev = [e for e in ev if (int(e[0] // B) - s0) % 8 < 3 or int(e[0] // B) - s0 >= 16]
+ev = [e for e in ev if (int(e[0] // B) - s0) % 8 < 5 or int(e[0] // B) - s0 >= 16]
 play(c.FLUTE, ornament(ev, KD, BPM, "march", B, density=0.25, seed=3901))
 # 吹き直す：エイラのなめらかな節（2回）。遠い層は少しずつ遠ざかる（頭の小節だけ）
 s0 = c.s0["吹き直す"]

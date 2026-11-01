@@ -28,6 +28,8 @@ B = S.beats
 G = c.g()
 # 試し書き出し: 夜露の粒（0.09）は笛より 5〜15dB 小さい → 0.14。水たまりの低い1音は笛と同じくらいで、すぐ減衰する
 DEW = [S.track(f"カリンバ（夜露{j + 1}）", "kalimba", volume=0.14, pan=p, reverb=0.6, sustain=2.4, barGain=G) for j, p in enumerate((-0.5, -0.1, 0.3, 0.6))]
+# 1回目（7.38）: カリンバだけの始まり（約14秒）が -56〜-72dB とほぼ無音だった → 始まりは別のパート（gainDb 14）で、粒を多めに
+DEWI = [S.track(f"カリンバ（始まりの夜露{j + 1}）", "kalimba", volume=0.14, gainDb=14, pan=p, reverb=0.6, sustain=2.4, barGain=G) for j, p in enumerate((-0.4, 0.4))]
 POOL = S.track("カリンバ（葉の下の水たまり）", "kalimba", volume=0.1, pan=0.0, reverb=0.5, sustain=2.6, barGain=G)
 
 # ---------- 歌（G の5音。1=G4） ----------
@@ -54,6 +56,10 @@ while t < end:
     t += max(0.45, gap)
     if t >= end: break
     j = rng.randrange(4)
+    if t < 4 * B:                                     # 始まり：大きいパートで
+        if t - used.get(10 + j % 2, -9) >= 0.5:
+            DEWI[j % 2].at(round(t, 3), f"{nm(rng.choice(DROPS))}:1"); used[10 + j % 2] = t + 1
+        continue
     if t - used[j] < 0.5: continue
     m = rng.choice(DROPS)
     DEW[j].at(round(t, 3), f"{nm(m)}:1{',' if rng.random() < 0.5 else ''}"); used[j] = t + 1
@@ -64,7 +70,7 @@ while t < end:
 DEW[1].at(round((c.NB - 2) * B + 1.3, 3), "D6:2")                   # 最後の1粒
 # 葉の下の水たまり：2小節ごとに低い1音
 ROOT = {"G": 55, "Em": 52, "D": 50, "C": 48}
-for b in range(4, c.NB - 2, 2):
+for b in range(0, c.NB - 2, 2):
     POOL.at(b * B, f"{nm(ROOT[S.chords[b]] + 12 if ROOT[S.chords[b]] < 60 else ROOT[S.chords[b]])}:{2 * B},")
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.34 --master -15 --widen 1.15 --side-hpf 200",
