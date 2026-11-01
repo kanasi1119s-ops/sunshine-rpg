@@ -35,7 +35,8 @@ s = c.s0
 S.tempo = [{"bar": 1, "bpm": 48}, {"bar": s["4小節ずつ"] + 1, "bpm": 56, "ramp": 2}]
 B = S.beats
 G = c.g()
-FD = S.track("フィドル（老婆の嘆き）", "strings", patch="violin", volume=0.035, gainDb=3, pan=0.3, reverb=0.55, release=0.5, barGain=G)
+# 1回目（7.49）: フィドルだけの答えが本編より約22dB 小さく、穴があいた → gainDb 3 → 13、強さ ×1.4
+FD = S.track("フィドル（老婆の嘆き）", "strings", patch="violin", volume=0.035, gainDb=13, pan=0.3, reverb=0.55, release=0.5, barGain=[round(x * (0.8 if S.scene_of(b)[0] in ("重なる", "叫び", "終わり") else 1.4), 3) for b, x in enumerate(G)])
 HP = [S.track(f"竪琴（弱奏{j + 1}）", "harp", patch="folkHarp", volume=0.05, pan=-0.25 + 0.15 * j, reverb=0.65, sustain=1.6, barGain=G) for j in range(2)]
 
 # ---------- 2つの嘆き（8分＝1、1小節＝6。1=D4） ----------
