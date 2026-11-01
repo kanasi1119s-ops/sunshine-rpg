@@ -30,7 +30,7 @@ S.fix_avoid = lambda t: 0
 B = S.beats
 G = c.g()
 ST = [S.track(f"石の打音{j + 1}", "guitar", patch="frameDrum", volume=0.35, gainDb=18, pan=-0.12 + 0.24 * j, reverb=0.3,
-              barGain=[round(x * (1.3 if S.scene_of(b)[0].endswith("律動") else 1.0), 3) for b, x in enumerate(G)]) for j in range(2)]
+              barGain=[round(x * (2.0 if S.scene_of(b)[0].endswith("律動") else 1.0), 3) for b, x in enumerate(G)]) for j in range(2)]
 VP = S.track("チェロ（ピチカートの低音）", "strings", patch="pizzicato", volume=0.12, gainDb=5, pan=-0.2, reverb=0.35, barGain=G)
 HP = S.track("竪琴（全員の歌）", "harp", patch="folkHarp", volume=0.06, pan=0.3, reverb=0.5, sustain=1.6, barGain=G)
 
@@ -39,25 +39,26 @@ A = ["1:0.5 1:0.5 3:1 1:0.5 5:1.5", "4:0.5 3:0.5 2:1 1:1 7,:1", "1:0.5 1:0.5 3:1
 Bm = ["5:1 5:0.5 6:0.5 7:1 5:1", "1':1.5 7:0.5 6:2", "4:1 4:0.5 5:0.5 6:1 4:1", "5:1.5 4:0.5 3:2",
       "5:1 5:0.5 6:0.5 7:1 1':1", "2':1.5 1':0.5 7:1 5:1", "6:0.5 5:0.5 4:0.5 3:0.5 2:1 7,:1", "1:2 R:2"]
 
-def knock(bars, b0):
-    """旋律のリズムを、音のない打音で（長い音は大きい太鼓の消音 C#3、短い音は小さい太鼓 E3・F#3）"""
+def knock(bars, b0, both=False):
+    """旋律のリズムを、音のない打音で（長い音は大きい太鼓 C3、短い音は小さい太鼓 E3）"""
     for j, s_ in enumerate(bars):
         t = (b0 + j) * B; q = 0
         for tok in s_.split():
             d, L = tok.split(":"); L = float(L)
             if d != "R":
-                x = "C#3" if L >= 1.5 else ("E3" if q % 2 == 0 else "F#3")
+                x = "C3" if L >= 1 else "E3"                     # 1回目（7.74）: C#3・F#3 はほとんど鳴らず、打音だけの所が -44dB だった → C3・E3 に
                 mk = "!" if abs(t % 2) < 1e-6 else ("" if L >= 1 else ",")
                 ST[(b0 + j) % 2].at(round(t, 3), f"{x}:{min(L, 1.0)}{mk}")
+                if both: ST[(b0 + j + 1) % 2].at(round(t + 0.012, 3), f"{x}:{min(L, 1.0)}{mk}")     # 打音だけの所は2つ重ねる（試し書き出しで笛より約18dB 小さかった）
             t += L; q += 1
 for sc, mel in (("Aの律動", A), ("Aの歌", A + A), ("Bの律動", Bm), ("Bの歌", Bm + Bm), ("Aの歌2", A + A), ("全員の歌", A + Bm + A + Bm)):
-    knock(mel, c.s0[sc])
+    knock(mel, c.s0[sc], both=sc.endswith("律動"))
 play_melody(c, "Aの歌", A + A, 4, "march", key=K, density=0.25, seed=5001)
 play_melody(c, "Bの歌", Bm + Bm, 4, "march", key=K, density=0.3, seed=5002)
 play_melody(c, "Aの歌2", A + A, 4, "march", key=K, density=0.35, seed=5003)
 play_melody(c, "全員の歌", A + Bm + A + Bm, 4, "march", key=K, density=0.45, seed=5004)
 s0 = c.s0["止まる"]
-c.FLUTE.at(s0 * B, "G5:2!"); ST[0].at(s0 * B, "C#3:1!"); VP.at(s0 * B, "G2:1!"); HP.at(s0 * B, "G3:3!")
+c.FLUTE.at(s0 * B, "G5:2!"); ST[0].at(s0 * B, "C3:1!"); VP.at(s0 * B, "G2:1!"); HP.at(s0 * B, "G3:3!")
 
 # ---------- チェロのピチカート（音がついてから）と竪琴（全員の歌） ----------
 ROOT = {"Gm": 43, "Cm": 48, "D": 50, "Bb": 46, "Eb": 51, "F": 41}
