@@ -31,6 +31,9 @@ G = c.g()
 SHADE = {"影": 2.0, "足もと": 1.4, "壁": 1.1, "天井": 0.8, "一筋": 0.6}            # 低い弦の影は、光が上がるほど薄く
 VC = S.track("チェロ（影）", "strings", patch="cello", volume=0.02, gainDb=2, pan=-0.2, reverb=0.65, release=0.6, barGain=[round(x * SHADE[S.scene_of(b)[0]], 3) for b, x in enumerate(G)])
 VA = S.track("ビオラ（影）", "strings", patch="viola", volume=0.017, pan=0.15, reverb=0.65, release=0.6, barGain=[round(x * SHADE[S.scene_of(b)[0]], 3) for b, x in enumerate(G)])
+# 1回目（7.52）: 影（約24秒）が本編より約12dB 小さかった → 影の8小節だけ、別の弦のパートを大きく
+VCI = S.track("チェロ（始まりの影）", "strings", patch="cello", volume=0.05, gainDb=6, pan=-0.2, reverb=0.65, release=0.6)
+VAI = S.track("ビオラ（始まりの影）", "strings", patch="viola", volume=0.04, gainDb=4, pan=0.15, reverb=0.65, release=0.6)
 MR = [S.track(f"マリンバ（光の3音{j + 1}）", "strings", patch="marimba", volume=0.05, pan=-0.2 + 0.4 * j, reverb=0.55, barGain=G) for j in range(2)]
 
 # ---------- 笛（A リディア。1=A4。場面ごとに高さが上がる。E5 より上には行かない、最後だけ A5） ----------
@@ -50,7 +53,8 @@ for b in range(c.NB):
 ROOT = {"A": 45, "B": 47, "E": 40, "F#m": 42}
 for b in range(0, c.NB, 2):
     ch = S.chords[b]; r = ROOT[ch]
-    VC.at(b * B, f"{nm(r + 12 if r + 12 <= 52 else r)}:6,"); VA.at(round(b * B + 0.05, 3), f"{nm(r + 19 if r + 19 <= 64 else r + 7)}:5.95,")
+    vc, va = (VCI, VAI) if b < 8 else (VC, VA)
+    vc.at(b * B, f"{nm(r + 12 if r + 12 <= 52 else r)}:6,"); va.at(round(b * B + 0.05, 3), f"{nm(r + 19 if r + 19 <= 64 else r + 7)}:5.95,")
 
 finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.34 --master -15 --widen 1.15 --side-hpf 200",
        "ケルト・フルート100曲の049（第3版）。蔦におおわれた暗い部屋で、蔦を払うと光が射しこむ。3/4・♩=60、A リディア。マリンバの柔らかい3音（C♯・E・D♯）がくり返し、低い弦の影は光が上がるほど薄くなる。笛の旋律は、足もと → 壁 → 天井と場面ごとに高くなるが E5 より上には行かず、最後にいちばん高い A5 の長い音が、一筋の光として1本だけ射しこむ。",
