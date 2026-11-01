@@ -37,10 +37,10 @@ B = S.beats
 G = c.g()
 # 試し書き出し: チェロ E♭3 は笛より約3dB 小さく、F2（強さ 1.1）は笛と同じくらい → gainDb 3→1。コントラバス F1 は笛より約5dB 小さい
 # チェロは D3 より下で小さくなる（007 で測った）→ 沈むほど強く
-SINK = {"ゆりかご": 1.0, "1回目": 1.0, "沈む1": 1.1, "2回目": 1.15, "沈む2": 1.25, "3回目": 1.35, "沈む3": 1.45, "4回目": 1.55, "眠り": 1.6}
+SINK = {"ゆりかご": 1.9, "1回目": 1.0, "沈む1": 1.05, "2回目": 1.05, "沈む2": 1.1, "3回目": 1.1, "沈む3": 1.15, "4回目": 1.15, "眠り": 1.2}   # 1回目（7.22）: 前奏が -46dB と小さく、後半ほど大きくなって（-30→-17dB）沈む感じが出なかった → 前奏を大きく、沈むほどの持ち上げを弱く
 VC = [S.track(f"チェロ（ゆりかご{j + 1}）", "strings", patch="cello", volume=0.03, gainDb=1, pan=-0.15, reverb=0.6, release=0.5,
               barGain=[round(x * SINK[S.scene_of(b)[0]], 3) for b, x in enumerate(G)]) for j in range(2)]
-CB = S.track("コントラバス（3回目から）", "strings", patch="contrabass", volume=0.06, gainDb=2, pan=0.1, reverb=0.55, release=0.6,
+CB = S.track("コントラバス（3回目から）", "strings", patch="contrabass", volume=0.04, gainDb=0, pan=0.1, reverb=0.55, release=0.6,
              barGain=[round(x * 1.4, 3) for x in G])
 
 # ---------- 歌（16小節。調ごとに同じ度数で） ----------
