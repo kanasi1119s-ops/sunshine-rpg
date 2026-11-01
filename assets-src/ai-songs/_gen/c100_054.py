@@ -68,7 +68,7 @@ for t, m in onsets:
     while x > 93: x -= 12
     (HP if k % 2 == 0 else GL)[(k // 2) % 2].at(t, f"{nm(x)}:0.5{',' if k % 3 else ''}")
     taken.add(round(t * 4)); k += 1
-DENS = {"雨粒": 0.16, "歌1": 0.07, "歌2": 0.11, "強い雨": 0.26, "小雨": 0.05}
+DENS = {"雨粒": 0.4, "歌1": 0.07, "歌2": 0.11, "強い雨": 0.26, "小雨": 0.05}
 for b in range(c.s0["最後の一粒"]):
     n = S.scene_of(b)[0]; pcs = tri(S.chords[b])
     for q in range(16):
@@ -81,7 +81,9 @@ s0 = c.s0["最後の一粒"]
 GL[0].at(round((s0 + 1) * B + 1.5, 3), "B6:2")                    # 最後の一粒
 
 # ---------- ピアノの低い和音（2拍ごと、そっと） ----------
-PBI.at(0, "E2:16"); PC2[0].at(0.05, "B2:15.9,")
+# 1回目（8.05）: 雨粒だけの始まりが −46〜−69dB（ピアノの E2 は数秒で消え、雨粒もまばら）→ 雨粒を増やし、ピアノを小節ごとに打ちなおす
+for b in range(4):
+    PBI.at(b * B, f"E2:4{'' if b == 0 else ','}"); PC2[b % 2].at(round(b * B + 0.05, 3), "B2:3.9,")
 for b in range(c.s0["歌1"], c.NB):
     ch = S.chords[b]; r, th, fi = tri(ch)
     if S.scene_of(b)[0] == "最後の一粒":
