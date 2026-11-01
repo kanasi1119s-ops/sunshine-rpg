@@ -1,65 +1,60 @@
-# ケルト・フルート100曲「銀の笛と百の夜」049 蔦の窓 Window of Ivy（2026-10-29）
-# イメージ: 秘密の入口の先の、薄暗い小部屋。壁いっぱいの蔦の間に、小さな窓がある。日が昇るにつれて、葉のすき間から光がもれ、
-#   光の帯がだんだん部屋の奥まで届く。最後に、窓からまっすぐ一筋の光が射しこむ。
-# 形: 影から光へ、ゆっくり上がっていく（旋律の音域も、竪琴の音域も、場面ごとに上へ）。3/4・♩=54。A リディア（D♯の光）。山なし。
-# ただひとつ: 最後に、笛のいちばん高い長い音が4小節のびて、光の筋になる（その下で竪琴とグロッケンの粒が光る）。
-# 編曲の表:
-#   影        : 低い弦とチェロ、竪琴の低い3音のオスティナート（はじまりから厚く）
-#   影から    : 笛が低い所で
-#   葉のすき間: 笛が中ほどへ。グロッケンが葉のすき間の光の粒
-#   光の帯    : 笛が高い所へ。竪琴のオスティナートも1オクターブ上へ。弦が上の音域へ。内声
-#   一筋      : 笛のいちばん高い長い音。高い弦、グロッケン
-import sys, json
+# ケルト・フルート100曲「銀の笛と百の夜」049 蔦の窓 The Ivy Window — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 扉の奥は、蔦におおわれた小さな部屋だった。窓は蔦でふさがれて暗い。エイラが笛を吹きながら、蔦を少しずつ払っていくと、
+#   光が足もとから壁へ、壁から天井へと上がっていき、最後に窓のいちばん上から、一筋の光がまっすぐ射しこむ。
+# 調べ: 眠り（静かな驚き）。形: 一筋の光が射しこむ（旋律の高さが、場面ごとにゆっくり上がる）。
+# 拍子・速さ: 3/4・♩=60。旋法: A リディア（D♯ がやわらかく浮く）。
+# 主役は笛（最後に一番高い長い音）。伴奏の主役: マリンバの柔らかい3音のくり返し（C♯・E・D♯）。脇: 低い弦の影（チェロとビオラ。光が上がるほど薄くなる）。
+#   竪琴・ギター・ピアノ・パッド・打楽器・2本目の笛は使わない。
+# この曲だけ: 笛のいちばん高い長い音（A5）が、最後に1本だけ（それまで笛は E5 より上に行かない）。
+# 始まり: 低い弦の影 → 終わり: 高い一筋の光（笛の A5 を長く）。
+# 山: 最後だけ。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
 
-BPM = 54
-S = Song("C100", "049-window-of-ivy", "蔦の窓", "Window of Ivy", BPM, 3, "A", "lydian", "ケルト（幻想）")
+S = Song("C100", "049-the-ivy-window", "蔦の窓", "The Ivy Window", 60, 3, "A", "lydian", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.4, "rubato": 0.2})
-LC = ["A", "B", "C#m", "B", "A", "F#m", "E", "A"]
-S.scene("影", 4, "intro", ["F#m", "E", "F#m", "E"])
-S.scene("影から", 16, "verse", ["F#m", "E", "D", "E", "F#m", "B", "E", "A"] * 2)
-S.scene("葉のすき間", 16, "verse", LC * 2)
-S.scene("光の帯", 24, "verse", LC * 3)
-S.scene("一筋", 12, "chorus", ["A", "B", "A", "B", "A", "B", "C#m", "B", "A", "A", "A", "A"])
-NAMES = ["影", "影から", "葉のすき間", "光の帯", "一筋"]
-LEVEL = {"影": 0, "影から": 0, "葉のすき間": 1, "光の帯": 2, "一筋": 3}
-
+S.extra.update({"human": 0.3, "rubato": 0.2})
+K = Key("A", "lydian", 4)
+CH8 = ["A", "B", "A", "E", "F#m", "B", "E", "A"]
+SC = [("影", 8, "intro", ["A"] * 8), ("足もと", 24, "verse", CH8 * 3), ("壁", 24, "verse", CH8 * 3), ("天井", 24, "verse", CH8 * 3),
+      ("一筋", 10, "chorus", ["A"] * 10)]
+for n, L, kd, ch in SC: S.scene(n, L, kd, ch)
+NAMES = [x[0] for x in SC]
 c = make(S, NAMES,
-         [("影", 0, 0.6), ("影から", 0, 0.62), ("葉のすき間", 0, 0.66), ("光の帯", 0, 0.72), ("光の帯", 23, 0.78), ("一筋", 0, 0.8), ("一筋", 8, 0.74), ("一筋", 11, 0.5)],
-         {}, flute_gain={n: 1.2 for n in NAMES}, intro="影", passing=True, tension=False)
-GLOCK = S.track("光の粒（グロッケン）", "bell", patch="glockenspiel", volume=0.04, pan=0.4, reverb=0.7, barGain=c.g())
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.08, pan=0.12, reverb=0.45, barGain=c.g())
-
-M0 = ["1:2 2:1", "3:3", "2:2 1:1", "7,:3", "1:2 3:1", "4:3", "3:2 2:1", "1:3"]
-M1 = ["3:2 4:1", "5:3", "4:2 3:1", "2:3", "3:2 5:1", "6:3", "5:2 4:1", "3:3"]
-M2 = ["5:2 6:1", "7:3", "6:2 5:1", "4:3", "5:2 7:1", "1':3", "7:2 6:1", "5:3"]
-play_melody(c, "影から", M0 * 2, 4, "air", density=0.4, seed=4901)
-play_melody(c, "葉のすき間", M1 * 2, 4, "air", density=0.6, seed=4902)
-play_melody(c, "光の帯", M2 * 3, 4, "air", density=0.7, seed=4903)
-play_melody(c, "一筋", ["5:2 6:1", "7:2 1':1", "2':3", "2':3", "2':3", "2':3", "1':2 7:1", "6:3", "5:3", "5:3", "R:3", "R:3"], 4, "air", density=0.2, seed=4904)
-
+         [("影", 0, 0.66), ("足もと", 0, 0.66), ("壁", 0, 0.68), ("天井", 0, 0.7), ("天井", 23, 0.72), ("一筋", 0, 0.8), ("一筋", 9, 0.74)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="影", passing=True, tension=False)
+S.fix_avoid = lambda t: 0
 B = S.beats
+G = c.g()
+# 試し書き出し: マリンバ（0.05）は笛より約5dB 小さい。チェロ・ビオラ（強さ 1.4）は笛と同じくらい（影は場面ごとに弱める）
+SHADE = {"影": 2.0, "足もと": 1.4, "壁": 1.1, "天井": 0.8, "一筋": 0.6}            # 低い弦の影は、光が上がるほど薄く
+VC = S.track("チェロ（影）", "strings", patch="cello", volume=0.02, gainDb=2, pan=-0.2, reverb=0.65, release=0.6, barGain=[round(x * SHADE[S.scene_of(b)[0]], 3) for b, x in enumerate(G)])
+VA = S.track("ビオラ（影）", "strings", patch="viola", volume=0.017, pan=0.15, reverb=0.65, release=0.6, barGain=[round(x * SHADE[S.scene_of(b)[0]], 3) for b, x in enumerate(G)])
+MR = [S.track(f"マリンバ（光の3音{j + 1}）", "strings", patch="marimba", volume=0.05, pan=-0.2 + 0.4 * j, reverb=0.55, barGain=G) for j in range(2)]
+
+# ---------- 笛（A リディア。1=A4。場面ごとに高さが上がる。E5 より上には行かない、最後だけ A5） ----------
+LOW = ["5,:3", "6,:2 7,:1", "1:3", "7,:2 6,:1", "5,:3", "6,:1 7,:1 1:1", "2:3", "1:3"]          # 足もと：E4〜B4
+MID = ["1:2 2:1", "3:3", "4:2 3:1", "2:3", "3:2 4:1", "5:3", "4:1 3:1 2:1", "3:3"]               # 壁：A4〜E5
+HIGH = ["3:2 4:1", "5:3", "4:2 5:1", "5:3", "3:1 4:1 5:1", "5:2 4:1", "3:2 4:1", "5:3"]          # 天井：C♯5〜E5（E5 にとどまる）
+play_melody(c, "足もと", LOW * 3, 4, "air", key=K, density=0.15, seed=4901)
+play_melody(c, "壁", MID * 3, 4, "air", key=K, density=0.2, seed=4902)
+play_melody(c, "天井", HIGH * 3, 4, "air", key=K, density=0.2, seed=4903)
+play_melody(c, "一筋", ["5:3", "6:3", "7:3"], 4, "air", key=K, density=0.0)
+c.FLUTE.at((c.s0["一筋"] + 3) * B, "A5:18")                 # 一番高い A5 を、切らずに1本だけ
+
+# ---------- マリンバの3音（C♯5・E5・D♯5 のくり返し）と、低い弦の影 ----------
 for b in range(c.NB):
-    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    lv = LEVEL[n]
-    if n == "一筋" and i >= 11: continue
-    base = ["A2", "A3", "A4", "A4"][lv]
-    harp_ostinato(c.HARP, b, B, tones(ch, base, "A6")[:3])          # 竪琴の3音のオスティナート（場面ごとに上へ）
-    CELLO.bar(b, f"{nm(r)}:3")
-    v = voice(ch, [50, 53, 57, 62][lv], 3, spread=True)
-    for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:3")
-    if lv >= 1 and (i % 2 == 1 or lv >= 3):                          # 葉のすき間の光の粒
-        hi = tones(ch, "A5", "A7")
-        GLOCK.bar(b, f"R:{1 + (i % 2)} {nm(hi[(i + lv) % len(hi)])}:{2 - (i % 2)}")
-rich(c, choir_scenes=["光の帯"], pulse_scenes=["葉のすき間", "光の帯", "一筋"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
-sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.36 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の049。蔦におおわれた窓から、光が射しこむ。3/4・♩=54、A リディア。影から光へ、旋律も竪琴の3音のオスティナートも場面ごとに上へ上がっていく。最後に、笛のいちばん高い長い音が4小節のびて、光の筋になる。",
-       harm_scenes=None, tail_scene="一筋", fill=False, pads=True, pad_scenes=["影から", "葉のすき間", "光の帯", "一筋"], floor=True)
-air = {"pre": 0.8, "tail": 7.0, "layers": [{"file": "0904", "db": -38, "hp": 150, "lp": 6000, "wide": 0.014, "duck": 0.35, "fade": 8},
-                                           {"file": "0222", "db": -41, "hp": 400, "lp": 9000, "wide": 0.012, "pan": 0.3, "duck": 0.35, "start": 90, "fade": 25}],
-       "fx": {"shimmer": {"db": -27, "rt": 8.0}, "far": {"db": -25, "delay": 0.25, "lp": 2600, "rt": 4.5}}, "intro_db": 6.0}
+    n, i, Lb, k = S.scene_of(b)
+    MR[b % 2].bar(b, "C#5:1, E5:1, D#5:1," if n != "一筋" else "C#6:1, E6:1, D#6:1,")
+ROOT = {"A": 45, "B": 47, "E": 40, "F#m": 42}
+for b in range(0, c.NB, 2):
+    ch = S.chords[b]; r = ROOT[ch]
+    VC.at(b * B, f"{nm(r + 12 if r + 12 <= 52 else r)}:6,"); VA.at(round(b * B + 0.05, 3), f"{nm(r + 19 if r + 19 <= 64 else r + 7)}:5.95,")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.34 --master -15 --widen 1.15 --side-hpf 200",
+       "ケルト・フルート100曲の049（第3版）。蔦におおわれた暗い部屋で、蔦を払うと光が射しこむ。3/4・♩=60、A リディア。マリンバの柔らかい3音（C♯・E・D♯）がくり返し、低い弦の影は光が上がるほど薄くなる。笛の旋律は、足もと → 壁 → 天井と場面ごとに高くなるが E5 より上には行かず、最後にいちばん高い A5 の長い音が、一筋の光として1本だけ射しこむ。",
+       harm_scenes=None, tail_scene="一筋", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 5.0, "layers": [{"file": "0595", "db": -45, "hp": 180, "lp": 3800, "wide": 0.012, "duck": 0.4, "fade": 7}],
+       "fx": {"far": {"db": -27, "delay": 0.3, "lp": 2800, "rt": 3.6}}}
 json.dump(air, open("/tmp/cel/w/air049.json", "w"), ensure_ascii=False)

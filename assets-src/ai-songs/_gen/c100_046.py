@@ -29,12 +29,13 @@ c = make(S, NAMES,
 S.fix_avoid = lambda t: 0
 B = S.beats
 G = c.g()
+# 1回目（7.69）: 弦だけの聖歌隊（約19秒）が本編より約12dB 小さかった → 始まりの4小節だけ強く。
 # 試し書き出し: バイオリン（0.03・gainDb 4）は笛より約4dB 小さい。ビオラとチェロは2声で笛より約4dB 大きい → 0.013。コントラバスは約8dB 小さい → 0.04
 V = {
-    "S": [S.track(f"バイオリン（ソプラノ{j + 1}）", "strings", patch="violin", volume=0.03, gainDb=4, pan=0.3, reverb=0.7, release=0.5, barGain=[round(x * 1.4, 3) for x in G]) for j in range(2)],
-    "A": [S.track(f"ビオラ（アルト{j + 1}）", "strings", patch="viola", volume=0.013, gainDb=1, pan=0.1, reverb=0.7, release=0.5, barGain=[round(x * 1.4, 3) for x in G]) for j in range(2)],
-    "T": [S.track(f"チェロ（テノール{j + 1}）", "strings", patch="cello", volume=0.013, gainDb=2, pan=-0.1, reverb=0.7, release=0.5, barGain=[round(x * 1.4, 3) for x in G]) for j in range(2)],
-    "B": [S.track(f"コントラバス（バス{j + 1}）", "strings", patch="contrabass", volume=0.04, pan=-0.3, reverb=0.7, release=0.6, barGain=[round(x * 1.2, 3) for x in G]) for j in range(2)],
+    "S": [S.track(f"バイオリン（ソプラノ{j + 1}）", "strings", patch="violin", volume=0.03, gainDb=4, pan=0.3, reverb=0.7, release=0.5, barGain=[round(x * (2.0 if b < 4 else 1.4), 3) for b, x in enumerate(G)]) for j in range(2)],
+    "A": [S.track(f"ビオラ（アルト{j + 1}）", "strings", patch="viola", volume=0.013, gainDb=1, pan=0.1, reverb=0.7, release=0.5, barGain=[round(x * (2.0 if b < 4 else 1.4), 3) for b, x in enumerate(G)]) for j in range(2)],
+    "T": [S.track(f"チェロ（テノール{j + 1}）", "strings", patch="cello", volume=0.013, gainDb=2, pan=-0.1, reverb=0.7, release=0.5, barGain=[round(x * (2.0 if b < 4 else 1.4), 3) for b, x in enumerate(G)]) for j in range(2)],
+    "B": [S.track(f"コントラバス（バス{j + 1}）", "strings", patch="contrabass", volume=0.04, pan=-0.3, reverb=0.7, release=0.6, barGain=[round(x * (1.8 if b < 4 else 1.2), 3) for b, x in enumerate(G)]) for j in range(2)],
 }
 
 # ---------- 4声のコラール（狭い → 広い） ----------
