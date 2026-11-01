@@ -1,80 +1,86 @@
-# ケルト・フルート100曲「銀の笛と百の夜」033 梟の問い The Owl's Question — 第2版（2026-10-28）
-# イメージ: 夜の森。高い枝の梟が「ほう」と問いかける。エイラは笛で、梟と同じ高さの音（F♯）から答える。
-#   やがて笛が問い、梟が答える。言葉は通じないのに、二人の問答は少しずつ打ちとけていく。最後は梟の声だけが残る。
-# 形（台帳）: 掛け合い（笛と本物の梟の録音 0936。梟の声の高さ＝約370Hz＝F♯4。だから B エオリアにして、梟の声を属音 F♯ にした）。
-#   4/4・♩=48。始め：梟／終わり：梟。山なし。
-# 編曲の表:
-#   夜     : 夜の森の空気、低い弦のドローン
-#   問答1  : 4小節ごとに、1小節目で梟が問い、2〜4小節目で笛が F♯ から答える
-#   問答2  : 笛が3小節問い、4小節目で梟が答える
-#   二人   : 笛の長い節。梟が2小節ごとに寄りそう。竪琴の倍音
-#   梟     : 梟の声とドローンだけ
-import sys, json
+# ケルト・フルート100曲「銀の笛と百の夜」033 梟の問い The Owl's Question — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 日が暮れて、森の古い樫の木の上から、大きな梟が問いかける。「ホウ、ホウ、ホー？」（おまえはだれだ）。
+#   エイラは笛で答えるが、梟は毎回同じ問いをくり返す。エイラは答え方を変え、高さを変え、何度も答える。
+#   問答がいちばん熱くなったあと、エイラの答えは静かになり、最後は梟の問いだけが森に残る（答えは自分で見つけなさい）。
+# 調べ: あいだ。形: 問いと答え（梟の1小節の問い → エイラの3小節の答え）を何度も。
+# 拍子・速さ: 4/4・♩=60。旋法: F♯ エオリア。
+# 主役は笛（問う・答える笛）。伴奏の主役: ファゴット（梟の声）と低い弦（チェロとコントラバスの持続）。
+#   竪琴・ギター・ピアノ・パッド・打楽器・2本目の笛は使わない。
+# この曲だけ: 梟の問いはいつも同じ高さ（同じ3音）。エイラの答えは、毎回ちがう高さから始まる。
+# 始まり: 梟（ファゴット）の問い → 終わり: 梟の声だけが残る。
+# 山: 中盤に1つ（問答2。梟が答えを待たずに問いを重ね、エイラの答えが高く速くなる）。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
 
-BPM = 48
-S = Song("C100", "033-the-owls-question", "梟の問い", "The Owl's Question", BPM, 4, "B", "minor", "ケルト（幻想）")
+S = Song("C100", "033-the-owls-question", "梟の問い", "The Owl's Question", 60, 4, "F#", "minor", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.4, "rubato": 0.25})
-QC = ["Bm", "Em", "Bm", "F#m", "G", "D", "Em", "Bm", "Bm", "G", "A", "Bm", "Em", "G", "F#m", "Bm"]
-S.scene("夜", 2, "intro", ["Bm", "Bm"])
-S.scene("問答1", 16, "verse", QC)
-S.scene("問答2", 16, "verse", QC)
-S.scene("二人", 16, "chorus", QC)
-S.scene("梟", 4, "outro", ["Bm"] * 4)
-NAMES = ["夜", "問答1", "問答2", "二人", "梟"]
-
+S.extra.update({"human": 0.4, "rubato": 0.2})
+K = Key("F#", "minor", 4)
+U = ["F#m", "D", "Bm", "C#m", "F#m", "A", "D", "C#m"]
+SC = [("問答1", 24, "verse"), ("問答2", 16, "chorus"), ("問答3", 20, "verse"), ("梟だけ", 6, "outro")]
+CH = []
+for n, L, kd in SC:
+    ch = [U[(len(CH) + q) // 4 % 8] for q in range(L)]
+    S.scene(n, L, kd, ch); CH += ch
+NAMES = [x[0] for x in SC]
 c = make(S, NAMES,
-         [("夜", 0, 0.6), ("問答1", 0, 0.62), ("問答2", 0, 0.66), ("二人", 0, 0.7), ("二人", 15, 0.66), ("梟", 0, 0.56), ("梟", 3, 0.36)],
-         {}, flute_gain={n: 1.2 for n in NAMES}, intro="夜", passing=True, tension=False)
-DR = [S.track(f"ドローン{i + 1}", "strings", patch="slowStrings", volume=0.1, pan=[-0.4, 0.4][i], reverb=0.6, barGain=c.g()) for i in range(2)]
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.08, pan=0.1, reverb=0.5, barGain=c.g())
-
-# 笛の答え：梟の高さ（F♯＝5度）から始める
-ANS = [["5:1.5 4:0.5 3:2", "2:1 3:1 1:2", "7,:3 R:1"], ["5:2 6:1 5:1", "4:1 3:1 2:2", "3:3 R:1"],
-       ["5:1 6:1 7:2", "6:1 5:1 4:2", "5:3 R:1"], ["5:1.5 3:0.5 2:2", "1:1 7,:1 1:2", "1:3 R:1"]]
-ASK = [["3:1 4:1 5:2", "6:2 5:2", "4:3 R:1"], ["1':1 7:1 6:2", "5:2 4:1 3:1", "2:3 R:1"],
-       ["3:1 5:1 7:2", "1':2 7:1 6:1", "5:3 R:1"], ["4:1 3:1 2:2", "3:1 2:1 7,:2", "1:3 R:1"]]
-play_melody(c, "問答1", sum([["R:4"] + a for a in ANS], []), 4, "air", density=0.6, seed=3301)
-play_melody(c, "問答2", sum([a + ["R:4"] for a in ASK], []), 4, "air", density=0.7, seed=3302)
-play_melody(c, "二人", ["5:2 6:1 7:1", "1':3 7:1", "6:2 5:2", "4:4", "5:1 4:1 3:2", "4:2 6:2", "5:4", "R:4",
-                       "5:2 7:1 6:1", "5:2 4:1 3:1", "2:2 3:2", "4:4", "3:1 2:1 1:2", "7,:2 2:2", "1:4", "R:4"], 4, "air", density=0.9, seed=3303)
-
+         [("問答1", 0, 0.7), ("問答1", 23, 0.74), ("問答2", 0, 0.82), ("問答2", 12, 0.9), ("問答3", 0, 0.72), ("問答3", 19, 0.68), ("梟だけ", 0, 0.66)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="問答1", passing=False, tension=False)
+S.fix_avoid = lambda t: 0
 B = S.beats
-for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    drone(DR, b, B, 47)
-    if n in ("夜", "問答1", "問答2", "二人") or (n == "梟" and i < 3):
-        CELLO.bar(b, f"{nm(r)}:4")
-        v = voice(ch, 55 if n != "夜" else 50, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-    # 梟が鳴く小節（笛が休む）：竪琴がそっと和音をなでて、森の奥行きを残す
-    if (n == "問答1" and i % 4 == 0) or (n == "問答2" and i % 4 == 3):
-        t = tones(ch, "B3", "B5"); c.HARP.bar(b, "R:1.5 " + " ".join(f"{nm(x)}:{0.25 if j < 3 else 1.75}" for j, x in enumerate(t[:4])))
-    if n == "二人" and i % 2 == 1: c.HARP2.bar(b, f"R:2 {nm(tones(ch, 'B5', 'B6')[0])}:2")
-    if n == "梟" and i == 3: DR[0].bar(b, "R:4"); DR[1].bar(b, "R:4")
-rich(c, choir_scenes=["二人"], pulse_scenes=["問答2", "二人"], guitar=False, pizz=False, inner=True, choir_vol=0.1)
-sparkle(c)   # 2026-10-29: 高いきらめきの層（017 で 7.05→7.27。合格した静かな曲には、どれもこの層がある）
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.38 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の033（第2版）。夜の森で、梟と笛の問答。4/4・♩=48、B エオリア。本物の梟の声（約370Hz＝F♯）に、笛が同じ高さから答える。やがて笛が問い、梟が答え、打ちとけていく。最後は梟の声だけ。",
-       harm_scenes=None, tail_scene="梟", fill=False, pads=True, pad_scenes=["問答1", "問答2", "二人", "梟"])
-BAR = 4 * 60 / BPM
-SEEK = [0.3, 3.4, 6.2, 8.8, 11.5, 14.2, 17.1, 19.7, 22.6]
-ev = []; q = 0
-def owl(b, beat=0.0, db=-20, pan=0.35):
-    global q
-    ev.append({"t": round(b * BAR + beat * 60 / BPM, 2), "file": "0936", "db": db, "len": 1.2, "pan": pan, "seek": SEEK[q % len(SEEK)], "hp": 200, "lp": 3000}); q += 1
-owl(c.s0["夜"] + 1, 0)
-for j in range(0, 16, 4): owl(c.s0["問答1"] + j, 0.5)
-for j in range(3, 16, 4): owl(c.s0["問答2"] + j, 0.5, -21, 0.4)
-for j in range(1, 16, 2): owl(c.s0["二人"] + j, 2.5, -24, 0.45)
-owl(c.s0["梟"], 0.5, -20, 0.35); owl(c.s0["梟"] + 2, 0.5, -23, 0.5)
-air = {"pre": 1.5, "tail": 8.0, "layers": [{"file": "0621", "db": -33, "hp": 120, "lp": 6000, "wide": 0.014, "duck": 0.3, "fade": 6},
-                                           {"file": "0425", "db": -40, "hp": 1500, "lp": 9000, "wide": 0.012, "pan": -0.25, "duck": 0.3, "fade": 8}],
-       "events": ev,
-       "fx": {"glass": {"hz": [370.0, 740.0, 1109.7], "db": -28, "rt": 7.0, "start": 4}, "shimmer": {"db": -27, "rt": 9.0}, "far": {"db": -24, "delay": 0.3, "lp": 2400, "rt": 5.0},
-              "haze": {"db": -26, "rt": 9.0}, "band": {"db": -38, "hz": 6000, "per": 29}}, "intro_db": 8.5}
+G = c.g()
+# 試し書き出し: 梟（ファゴット 0.15）は笛と同じくらい（問答の相手として丁度よい）。チェロは笛より約7dB、コントラバスは約10dB 小さい（低い持続として丁度よい）
+OWL = S.track("ファゴット（梟の声）", "strings", patch="bassoon", volume=0.15, pan=-0.3, reverb=0.7, barGain=[round(x * 1.3, 3) for x in G])
+VC = [S.track(f"チェロ（低い持続{j + 1}）", "strings", patch="cello", volume=0.014, gainDb=1, pan=0.2, reverb=0.65, release=0.5, barGain=[round(x * 1.4, 3) for x in G]) for j in range(2)]
+CB = S.track("コントラバス（低い持続）", "strings", patch="contrabass", volume=0.05, pan=0.05, reverb=0.6, release=0.6, barGain=G)
+
+QUESTION = "F#3:1 F#3:0.5 A3:2 R:0.5"                   # ホウ、ホウ、ホー？（いつも同じ高さ）
+def ask(b, late=0.0):
+    OWL.at(round(b * B + late, 3), QUESTION.replace("R:0.5", f"R:{round(0.5 - late, 3)}") if late else QUESTION)
+
+# エイラの答え（3小節）。始まりの音を毎回変える（度数）
+ANS = {1: ["1:1 3:1 2:1 1:1", "7,:2 1:1 3:1", "2:4"], 3: ["3:1.5 4:0.5 5:1 3:1", "2:1 1:1 7,:2", "1:4"],
+       5: ["5:2 4:1 3:1", "4:1 6:1 5:2", "3:4"], 2: ["2:1 4:1 3:1 2:1", "1:1 3:1 5:2", "4:2 3:2"],
+       4: ["4:1 3:1 4:1 6:1", "5:2 3:2", "2:4"], 7: ["7:2 6:1 5:1", "4:1 5:1 6:2", "5:4"],
+       6: ["6:1.5 5:0.5 4:1 3:1", "4:1 2:1 7,:2", "1:4"], 8: ["1':2 7:1 6:1", "5:1 7:1 1':2", "2':2 1':2"]}
+def answer(b, deg, dens, seed, up=0):
+    ev = []
+    for j, s_ in enumerate(ANS[deg]):
+        ev += mel_events(K, s_, 4 + up, (b + j) * B)
+    ev = [[round(t, 4), L, m] for t, L, m in ev]
+    play(c.FLUTE, ornament(ev, K, 60, "air", B, density=dens, seed=seed))
+
+# 問答1：梟が問い、エイラが答える（答えの始まり：1・3・5・2・4・7）
+s0 = c.s0["問答1"]
+for q, d in enumerate((1, 3, 5, 2, 4, 7)):
+    ask(s0 + 4 * q); answer(s0 + 4 * q + 1, d, 0.25, 3300 + q)
+# 問答2（山）：梟は答えの途中で問いを重ねる（2小節ごと）。エイラの答えは高く、装飾が多く
+s0 = c.s0["問答2"]
+for q, d in enumerate((6, 8, 7, 8)):
+    ask(s0 + 4 * q); ask(s0 + 4 * q + 2, late=0.5)
+    answer(s0 + 4 * q + 1, d, 0.5, 3310 + q)
+# 問答3：エイラの答えは低く静かに（最後は答えずに、問いを聞くだけ）
+s0 = c.s0["問答3"]
+for q, d in enumerate((5, 3, 2, 1, None)):
+    ask(s0 + 4 * q)
+    if d: answer(s0 + 4 * q + 1, d, 0.15, 3320 + q)
+s0 = c.s0["梟だけ"]
+ask(s0); ask(s0 + 2); ask(s0 + 4)
+
+# 低い弦：4小節ごとに和音の根音（コントラバス）と3度（チェロ）。梟だけの所では止める
+ROOT = {"F#m": 42, "D": 38, "Bm": 47, "C#m": 49, "A": 45}
+for b in range(0, c.NB, 4):
+    n = S.scene_of(b)[0]; ch = S.chords[b]; r = ROOT[ch]
+    if n == "梟だけ":
+        CB.at(b * B, f"{nm(42 - 12 if 42 - 12 >= 28 else 42)}:{2 * B}"); break
+    th = r + (3 if ch.endswith("m") else 4)
+    CB.at(b * B, f"{nm(r - 12 if r - 12 >= 28 else r)}:{4 * B},")
+    VC[(b // 4) % 2].at(round(b * B + 0.1, 3), f"{nm(th + 12 if th + 12 <= 62 else th)}:{4 * B - 0.1},")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.34 --master -15 --widen 1.15 --side-hpf 200",
+       "ケルト・フルート100曲の033（第3版）。日暮れの森で、古い樫の木の上の梟が問いかける。問いと答え（4/4・♩=60）、F♯ エオリア。梟（ファゴット）の問いはいつも同じ3音の高さで、エイラの笛の答えは毎回ちがう高さから始まる。中盤で梟が答えを待たずに問いを重ねて問答が熱くなり、そのあとエイラの答えは静かになって、最後は梟の問いだけが森に残る。",
+       harm_scenes=None, tail_scene="梟だけ", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 5.0, "layers": [{"file": "0595", "db": -45, "hp": 180, "lp": 3600, "wide": 0.012, "duck": 0.4, "fade": 7}],
+       "fx": {"far": {"db": -27, "delay": 0.3, "lp": 2800, "rt": 3.8}}}
 json.dump(air, open("/tmp/cel/w/air033.json", "w"), ensure_ascii=False)
-print("梟:", len(ev))

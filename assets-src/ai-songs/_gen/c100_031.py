@@ -31,8 +31,8 @@ G = c.g()
 # 長い弦（004 で笛と並べて測った値）：チェロ 0.02・gainDb 2、ビオラ 0.017 で笛の約5dB 下。ここではビオラが主役なので少し大きく
 VA = [S.track(f"ビオラ（高い持続{j + 1}）", "strings", patch="viola", volume=0.022, pan=0.25, reverb=0.75, release=0.4, barGain=[round(x * 1.4, 3) for x in G]) for j in range(2)]
 VC = [S.track(f"チェロ（低い持続{j + 1}）", "strings", patch="cello", volume=0.011, gainDb=0, pan=-0.2, reverb=0.7, release=0.6, barGain=[round(x * 1.4, 3) for x in G]) for j in range(2)]
-WIND = [S.track(f"弦合奏（風{j + 1}）", "strings", patch="stringEnsemble", volume=0.025, pan=-0.3 + 0.6 * j, reverb=0.8, release=1.0,
-                barGain=[0.5, 0.8, 1.1, 0.9] + [0.0] * (c.NB - 4)) for j in range(2)]
+WIND = [S.track(f"弦合奏（風{j + 1}）", "strings", patch="stringEnsemble", volume=0.04, pan=-0.3 + 0.6 * j, reverb=0.8, release=1.0,
+                barGain=[0.9, 1.4, 1.9, 1.6] + [0.0] * (c.NB - 4)) for j in range(2)]   # 1回目（7.77）は風が -35〜-41dB と本編より約12dB 小さかった
 
 # 風：弦合奏が C と G をふくらませる
 for j, m in enumerate((60, 67)):
