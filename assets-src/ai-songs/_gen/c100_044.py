@@ -66,10 +66,14 @@ for s_ in A:
 play_melody(c, "今の祖父", SLOW, 4, "air", key=K, density=0.1, seed=4404)
 
 # ---------- フィドル：旋律を一緒に（1オクターブ下で少し小さく）、長い音に3連の弓の飾り ----------
+# 1回目（7.17）はフィドルが3周ずっと笛に重なって、単調で濁った → 1周目は A だけ、2周目は全部、3周目は B だけ
+PART = {"1周目": (0, 16), "2周目": (0, 32), "3周目": (16, 32)}
 for sc in ("1周目", "2周目", "3周目"):
     ev = section_events(c, sc, TUNE, 4, key=K)
     out = []
+    lo, hi = PART[sc]
     for t, L, m in ev:
+        if not (lo <= int(t // B) - c.s0[sc] < hi): continue
         mm = m - 12 if m >= 71 else m
         if L >= 1 - 1e-6:                                       # 3連の弓（その音・上・その音）
             up = mm + 2
