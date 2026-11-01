@@ -68,9 +68,11 @@ for b in range(c.NB):
     if n == "一斉に止める":
         lo.bar(b, "G2:1! R:2"); hi.bar(b, "D3:1! R:2"); HP.bar(b, "G3:1! R:2"); continue
     lo.bar(b, f"{nm(r)}:1{'!' if i % 4 == 0 else ''} R:2")
-    if n == "同時":
+    if n == "1小節遅れ" and i % 2 == 0:                       # 1回目（7.17）: 前半が薄かった → 竪琴を少しずつ足す（1小節遅れは2小節に1回、1拍遅れは毎小節）
+        HP.bar(b, f"{nm(r + 19)}:1, {nm(r + 24)}:1, {nm(r + 26)}:1,")
+    if n == "同時" or n == "1拍遅れ":
         hi.bar(b, f"R:1 {nm(r + 7)}:0.5 {nm(r + 12)}:0.5, {nm(r + 7)}:0.5 {nm(r + 14)}:0.5,")
-        HP.bar(b, " ".join(f"{nm(x)}:0.5{',' if q % 2 else ''}" for q, x in enumerate((r + 19, r + 24, r + 26, r + 24, r + 19, r + 14))))
+        HP.bar(b, " ".join(f"{nm(x)}:0.5{',' if (q % 2 or n == '1拍遅れ') else ''}" for q, x in enumerate((r + 19, r + 24, r + 26, r + 24, r + 19, r + 14))))
     else:
         hi.bar(b, f"R:1 {nm(r + 7)}:1, {nm(r + 12)}:1,")
 
