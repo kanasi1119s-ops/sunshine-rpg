@@ -45,7 +45,7 @@ play_melody(c, "はっきり", M, 4, "air", key=K, density=0.35, seed=2801)
 play_melody(c, "もや1", M, 4, "air", key=K, density=0.25, seed=2802)
 play_melody(c, "もや2", M, 4, "air", key=K, density=0.12, seed=2803, track=FS)
 play_melody(c, "もや3", M, 4, "air", key=K, density=0.05, seed=2804, track=FS)
-play_melody(c, "響き", ["5:4", "3:4", "1:4", "R:4", "R:4", "R:4"], 4, "air", key=K, density=0.0, track=FS)
+play_melody(c, "響き", ["5:4", "3:4", "1:4", "3:4", "1:4", "R:4"], 4, "air", key=K, density=0.0, track=FS)
 
 # ---------- ピアノの分散和音（8分のまま。音の長さだけが倍になっていく） ----------
 ROOT = {"Am": 45, "D": 50, "G": 43, "Em": 40, "C": 48}
@@ -56,7 +56,7 @@ def voicing(ch):
 for b in range(c.NB):
     n, i, Lb, k = S.scene_of(b); ch = S.chords[b]
     v = voicing(ch); L = LEN[n]
-    if n == "響き" and i >= 3:                                         # 響きの最後：もう鳴らさず、重なった響きだけ
+    if n == "響き" and i >= 5:                                         # 響きの最後の小節：もう鳴らさず、重なった響きだけ（1回目 7.39 は最後の3小節を休んで約20秒ほぼ無音だった）
         continue
     for q in range(8):                                                  # 8分で、根音 → 5度 → 3度 → 5度 と上がっていく（同じ音は2拍ごと）
         vi = q % 4
