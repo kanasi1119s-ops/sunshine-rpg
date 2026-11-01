@@ -18,3 +18,4 @@ run.sh / q.sh / chk.sh / next.sh はクラウド（Linux）で使っていた手
 - 024_川辺の蛙たち.mp3 → 39f5fcc5-690d-4b13-ba41-f3d17b3856a7
 - 023_水面の光.mp3 → d5479b65-ed7d-4663-8bcc-14e512d0b4a3
 - 029_水が教える道.mp3 → 575b7c32-3dbe-458d-ac00-33cb5d121063
+- 028_夕もやの川.mp3 → 563b2fed-215f-4511-8b86-324a3aaedd7b

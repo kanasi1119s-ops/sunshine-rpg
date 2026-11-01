@@ -31,7 +31,8 @@ B = S.beats
 G = c.g()
 # ピアノの音源は小さい（×1.4 で笛とほぼ同じ。016 で測った）。前奏（ピアノだけ）は別のパートで大きく（016・015 の教え）
 LH = S.track("ピアノ（低い歯車＝3拍の音型）", "piano", volume=0.3, pan=-0.15, reverb=0.35, sustain=1.0, barGain=G)
-LHI = S.track("ピアノ（前奏の歯車）", "piano", volume=0.3, gainDb=10, pan=-0.15, reverb=0.4, sustain=1.0, barGain=[round(x * 2.0, 3) for x in G])
+LHI = S.track("ピアノ（前奏の歯車）", "piano", volume=0.3, gainDb=1,   # 1回目（7.80）は gainDb 10 で前奏が本編より約10dB 大きかった
+            pan=-0.15, reverb=0.4, sustain=1.0, barGain=[round(x * 2.0, 3) for x in G])
 RH = [S.track(f"ピアノ（右手の裏拍{j + 1}）", "piano", volume=0.08, pan=0.08 + 0.06 * j, reverb=0.35, sustain=0.8, barGain=G) for j in range(3)]
 LH8 = S.track("ピアノ（かみ合う・右手の音型）", "piano", volume=0.18, pan=0.15, reverb=0.35, sustain=0.9, barGain=G)
 DR = [S.track(f"ボーラン（トップエンド{j + 1}）", "guitar", patch="frameDrum", volume=0.35, gainDb=18, pan=0.1 + 0.08 * j, reverb=0.3, barGain=G) for j in range(2)]
