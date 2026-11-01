@@ -1,98 +1,98 @@
-# ケルト・フルート100曲「銀の笛と百の夜」040 暁の森 Dawn in the Forest — 第2版（明るく速めの曲）（2026-10-28）
-# イメージ: 長い夜が明ける森。はじめは、夜の名残の静かな節（梟との問答の節を思い出すように）。一羽、また一羽と鳥が目を覚まし、
-#   そのたびに楽器が1つずつ加わって、リールの拍が立ち上がる。最後は鳥の大合唱と、明るい朝の和音。
-# 形（台帳）: リズムから積み上げるリール（鳥の声が増えるのと一緒に楽器が増える）・夜の旋律の明るい返し。4/4・♩=100。A イオニア。
-#   始め：静か（笛ひとり、夜の旋律）／終わり：鳥の合唱。終盤に明るい山。
-# 編曲の表:
-#   夜の名残 : 笛ひとり（夜の節をゆっくり。長調に返して）
-#   目覚め   : ボーランがやわらかくリールの拍を刻みはじめる
-#   1周目    : ＋ギターのストローク。笛のリール
-#   2周目    : ＋竪琴の3音オスティナート＋チェロ
-#   3周目    : ＋弦＋笛の和声（明るい山）
-#   鳥の合唱 : 明るい和音、鳥の声がいっぱいに
-import sys, json
+# ケルト・フルート100曲「銀の笛と百の夜」040 暁の森 Dawn in the Old Wood — 第3版（2026-11-01。docs/sound/celtic-study/E-100-plan.md）
+# 物語: 第4章の終わり。森の主に認められたエイラは、夜明けの森を出ていく。暗い森で低く吹いていた夜の節が、
+#   日が差すと同じ音のまま、拍の中で細かく踊りだし、朝のジグになる。森の木々（弦）が目覚め、村のギターが迎え、
+#   最後は急な崖の上に出て、ひらけた景色の前で全員が「ジャン」と鳴らす。
+# 調べ: 喜び。形: 夜の旋律 → 朝の踊り（エアからジグへ）。
+# 拍子・速さ: 6/8。夜は付点4分＝40（拍を感じさせない）→ 目覚めで 60 → 朝は 110。1拍＝付点4分、1小節＝2拍で書く。旋法: F イオニア。
+# 主役は笛（夜は低く、朝は明るく）。伴奏の主役: 弦（ビオラとチェロ。森の目覚め）→ ナイロン弦ギター。竪琴・ピアノ・パッド・打楽器は使わない。
+# この曲だけ: 拍の中の音の数だけを変えて（1拍に1音 → 1拍に3音）、夜の節がそのまま朝の踊りになる。
+# 始まり: 笛ひとりの夜の節 → 終わり: 全員でジャン。
+# 山: 平原（朝の踊りがしばらく同じ強さで続く）→ 急な崖（最後の16小節で一気に）。
+import sys, json, re
 from c100_common import *
 from c100_v2 import *
+from c100_v2 import _dia
+import c100_v2 as _v2
+_oc = _v2.open_chord
+_v2.open_chord = lambda ch, lo=52, hi=76: _oc(ch, lo, hi)
 
-S = Song("C100", "040-dawn-in-the-forest", "暁の森", "Dawn in the Forest", 100, 4, "A", "major", "ケルト（幻想）")
+S = Song("C100", "040-dawn-in-the-old-wood", "暁の森", "Dawn in the Old Wood", 110, 2, "F", "major", "ケルト（幻想）")
 S.kit = "naked"; S.keep_old_synth = True
-S.extra.update({"human": 0.3})
-AC = ["A", "D", "A", "E", "A", "D", "E", "A"]; BC = ["D", "A", "D", "E", "D", "Bm", "E", "A"]
-S.scene("夜の名残", 8, "intro", ["A", "D", "A", "E", "D", "A", "E", "A"])
-S.scene("目覚め", 4, "intro", ["A", "A", "D", "E"])
-for k in range(1, 4): S.scene(f"{k}周目", 32, "verse" if k < 3 else "chorus", AC * 2 + BC * 2)
-S.scene("鳥の合唱", 8, "outro", ["A", "D", "A", "A", "A", "A", "A", "A"])
-NAMES = ["夜の名残", "目覚め", "1周目", "2周目", "3周目", "鳥の合唱"]
-
-c = make(S, NAMES, [("夜の名残", 0, 0.6), ("目覚め", 0, 0.64), ("1周目", 0, 0.68), ("2周目", 0, 0.76), ("3周目", 0, 0.86), ("3周目", 28, 0.96), ("鳥の合唱", 0, 0.86), ("鳥の合唱", 7, 0.5)],
-         {}, flute_gain={n: 1.1 for n in NAMES}, intro="夜の名残", passing=True, tension=False)
-DRUM = S.track("ボーラン", "guitar", patch="frameDrum", volume=0.1, pan=-0.15, reverb=0.3, modulate=False, barGain=c.g())
-GTR = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.05, pan=0.3 + 0.04 * i, reverb=0.3, barGain=c.g()) for i in range(5)]
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.085, pan=0.2, reverb=0.4, barGain=c.g())
-
-NIGHT = ["3:1 4:1 5:2", "6:2 5:2", "4:3 R:1", "5:4", "1':1 7:1 6:2", "5:2 4:1 3:1", "2:3 R:1", "1:4"]
-A = ["1:0.5 3:0.5 5:0.5 3:0.5 1':0.5 5:0.5 3:0.5 5:0.5", "6:0.5 4:0.5 2:0.5 4:0.5 6:1 5:1",
-     "4:0.5 3:0.5 2:0.5 3:0.5 4:0.5 5:0.5 6:0.5 7:0.5", "1':1 7:0.5 6:0.5 5:2",
-     "1:0.5 3:0.5 5:0.5 3:0.5 1':0.5 5:0.5 3:0.5 5:0.5", "6:0.5 1':0.5 7:0.5 6:0.5 5:0.5 4:0.5 3:0.5 2:0.5",
-     "3:0.5 5:0.5 4:0.5 2:0.5 7,:0.5 2:0.5 5,:0.5 7,:0.5", "1:2 1:1 5,:1"]
-Bm = ["1':0.5 7:0.5 6:0.5 7:0.5 1':1 5:1", "2':0.5 1':0.5 7:0.5 1':0.5 2':1 7:1",
-      "1':0.5 7:0.5 6:0.5 7:0.5 1':0.5 2':0.5 1':0.5 6:0.5", "7:1 6:0.5 5:0.5 6:2",
-      "1':0.5 7:0.5 6:0.5 7:0.5 1':1 5:1", "2':0.5 1':0.5 7:0.5 6:0.5 5:0.5 4:0.5 3:0.5 2:0.5",
-      "3:0.5 5:0.5 4:0.5 2:0.5 7,:0.5 2:0.5 5,:0.5 7,:0.5", "1:2 1:1 5,:1"]
-T = A + A + Bm + Bm
-play_melody(c, "夜の名残", NIGHT, 4, "air", density=0.5, seed=4001)
-play_melody(c, "目覚め", ["R:4", "R:4", "R:4", "R:2 5,:1 7,:1"], 4, "air", density=0)
-for k in range(1, 4): play_melody(c, f"{k}周目", T, 4, "reel", density=0.4 + 0.3 * k, seed=4001 + k)
-play_melody(c, "鳥の合唱", ["1':4", "2':2 1':2", "1':4", "R:4", "R:4", "R:4", "R:4", "R:4"], 4, "air", density=0)
-
+S.extra.update({"human": 0.4})
+K = Key("F", "major", 4)
+T3 = 1 / 3
+CH16 = ["F", "Bb", "F", "C", "Dm", "Bb", "C", "F", "Bb", "F", "Bb", "C", "F", "Dm", "C", "F"]
+SC = [("夜", 16, "intro", CH16), ("目覚め", 16, "verse", CH16), ("朝1", 32, "verse", CH16 * 2), ("朝2", 32, "verse", CH16 * 2),
+      ("平原", 48, "verse", CH16 * 3), ("崖", 48, "chorus", CH16 * 3), ("ジャン", 2, "outro", ["F", "F"])]
+for n, L, kd, ch in SC: S.scene(n, L, kd, ch)
+NAMES = [x[0] for x in SC]
+c = make(S, NAMES,
+         [("夜", 0, 0.66), ("目覚め", 0, 0.7), ("朝1", 0, 0.76), ("朝2", 0, 0.78), ("平原", 0, 0.78), ("平原", 47, 0.78),
+          ("崖", 0, 0.9), ("崖", 47, 0.96), ("ジャン", 0, 0.96)],
+         {}, flute_gain={n: 1.15 for n in NAMES}, intro="夜", passing=True, tension=False)
+S.fix_avoid = lambda t: 0
+S.tempo = [{"bar": 1, "bpm": 40}, {"bar": c.s0["目覚め"] + 1, "bpm": 60, "ramp": 16}, {"bar": c.s0["朝1"] + 1, "bpm": 110}]
+S.extra.update({"rubato": 0.3})
 B = S.beats
-REEL = [(0, 0.5, "d", "!"), (0.5, 0.5, "u", ","), (1, 0.5, "d", ""), (1.5, 0.5, "u", "!"), (2, 0.5, "d", "!"), (2.5, 0.5, "u", ","), (3, 0.5, "d", ""), (3.5, 0.5, "u", "!")]
+G = c.g()
+# 試し書き出し: ギター1本（0.016）でも笛より約8dB 大きい（5本重なる）→ 0.008。ビオラは笛と同じくらい
+VA = S.track("ビオラ（森の目覚め）", "strings", patch="viola", volume=0.022, pan=0.25, reverb=0.65, release=0.4, barGain=[round(x * 1.4, 3) for x in G])
+VC = S.track("チェロ（森の目覚め）", "strings", patch="cello", volume=0.014, gainDb=1, pan=-0.2, reverb=0.65, release=0.5, barGain=[round(x * 1.4, 3) for x in G])
+GT = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.008, pan=0.3 + 0.05 * i, reverb=0.3, barGain=G) for i in range(5)]
+
+# ---------- 夜の節（1拍に1音。F イオニア。1=F4） ----------
+NIGHT = ["5:1 3:1", "2:1 1:1", "3:1 4:1", "5:2", "6:1 5:1", "4:1 3:1", "2:1 3:1", "1:2",
+         "1':1 7:1", "6:1 5:1", "4:1 6:1", "5:2", "3:1 4:1", "5:1 3:1", "2:1 7,:1", "1:2"]
+def dance(ev, key):
+    """1拍に1音 → 1拍に3音（その音・上の隣・その音）。2拍の音は（その音・上・その音／下・その音・その音）"""
+    out = []
+    for t, L, m in ev:
+        for k in range(int(round(L))):
+            tt = t + k
+            if k == 0: seq = [m, _dia(key, m, 1), m]
+            else: seq = [_dia(key, m, -1), m, m]
+            for q, x in enumerate(seq): out.append([round(tt + q * T3, 4), round(T3 * (1 if q < 2 else 1), 4), x])
+    return out
+def night_ev(sc, oct_=4, rep=1):
+    ev = []
+    for r in range(rep):
+        for j, s_ in enumerate(NIGHT):
+            ev += mel_events(K, s_, oct_, (c.s0[sc] + 16 * r + j) * B)
+    return [[round(t, 4), L, m] for t, L, m in ev]
+play(c.FLUTE, ornament(night_ev("夜", 4), K, 40, "air", B, density=0.25, seed=4001))          # 夜：1拍に1音、低く
+play(c.FLUTE, ornament(night_ev("目覚め", 4), K, 50, "air", B, density=0.3, seed=4002))       # 目覚め：同じ節、少しずつ速く
+for sc, rep, d in (("朝1", 2, 0.25), ("朝2", 2, 0.35), ("平原", 3, 0.35), ("崖", 3, 0.5)):    # 朝：同じ節が、1拍に3音のジグに
+    ev = dance(night_ev(sc, 5 if sc in ("朝2", "崖") else 4, rep), K)
+    ev = [[t, L, m if m <= 84 else m - 12] for t, L, m in ev]
+    play(c.FLUTE, ornament(ev, K, 110, "jig", B, density=d, seed=4003 + len(sc)))
+s0 = c.s0["ジャン"]
+c.FLUTE.at(s0 * B, "F5:1!")
+
+# ---------- 森の目覚め（弦）とギター ----------
+ROOT = {"F": 41, "Bb": 46, "C": 48, "Dm": 50}
+JIG = [(0, 2 * T3, "d", "!"), (2 * T3, T3, "u", ","), (1, 2 * T3, "d", ""), (1 + 2 * T3, T3, "u", ",")]
 for b in range(c.NB):
-    n, i, L, k = S.scene_of(b); ch = S.chords[b]
-    r = low(ch, "C2"); r = r + 12 if r < 40 else r
-    if n == "夜の名残":
-        v = voice(ch, 52, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-        CELLO.bar(b, f"{nm(r)}:4")
-        if i % 2 == 1: c.HARP.bar(b, " ".join(f"{nm(x)}:1" for x in tones(ch, "A3", "A5")[:4]))
-        continue
-    if n == "目覚め":   # 夜明けの空気は残したまま、ボーランが拍を刻みはじめる
-        bodhran(DRUM, b, B, "reel", soft=True)
-        v = voice(ch, 55, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-        CELLO.bar(b, f"{nm(r)}:4"); harp_ostinato(c.HARP2, b, B, tones(ch, "A4", "A5")[:3])
-        continue
-    if n == "鳥の合唱":
-        if i == 0: strum(GTR, b, B, ch, [(0, 4, "d", "!")]); DRUM.bar(b, "D3:1! R:3")
-        if i < 6:
-            v = voice(ch, 60, 3, spread=True)
-            for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-            if i < 3: c.HARP.bar(b, " ".join(f"{nm(x)}:0.5" for x in tones(ch, "A3", "A6")[i * 3:i * 3 + 8]))
-        continue
-    bodhran(DRUM, b, B, "reel", var=i % 2)
-    strum(GTR, b, B, ch, REEL if n != "1周目" else [(0, 1, "d", "!"), (2, 1, "d", "")])
-    if n == "1周目":
-        CELLO.bar(b, f"{nm(r)}:4")
-        v = voice(ch, 52, 2, spread=True)
-        for j in range(2): c.STR[j].bar(b, f"{nm(v[j])}:4")
-    if n == "2周目":
-        v = voice(ch, 55, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-    if n in ("2周目", "3周目"):
-        harp_ostinato(c.HARP, b, B, tones(ch, "E4", "E5")[:3])
-        CELLO.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2")
-    if n == "3周目":
-        v = voice(ch, 57, 3, spread=True)
-        for j in range(3): c.STR[j].bar(b, f"{nm(v[j])}:4")
-rich(c, choir_scenes=["2周目", "3周目"], pulse_scenes=["2周目", "3周目"], guitar=False, pizz=False, inner=True)
-thick(c); sparkle(c)   # 2026-10-29: 速い曲の厚さ（023 7.27→7.53・025 7.26→7.66）＋高いきらめき
-finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space dome --space-wet 0.28 --master -15 --widen 1.32 --side-hpf 200",
-       "ケルト・フルート100曲の040（第2版・明るく速めの曲）。長い夜が明ける森。リズムから積み上げるリール（4/4・♩=100）、A イオニア。夜の名残の静かな節→鳥が目を覚ますたびに楽器が1つずつ加わり、最後は鳥の大合唱と明るい朝の和音。",
-       harm_scenes=None, tail_scene="鳥の合唱", fill=False, pads=True, pad_scenes=["1周目", "2周目", "3周目"], floor=True)
-BAR = 4 * 60 / 100
-json.dump({"pre": 1.0, "tail": 8.0, "layers": [{"file": "0621", "db": -36, "hp": 120, "lp": 6000, "wide": 0.014, "duck": 0.3, "fade": 6, "end": round(14 * BAR, 1)},
-                                               {"file": "0935", "db": -35, "hp": 400, "lp": 9500, "wide": 0.014, "duck": 0.35, "start": round(8 * BAR, 1), "fade": 20},
-                                               {"file": "0999", "db": -33, "hp": 400, "lp": 9500, "wide": 0.016, "pan": 0.2, "duck": 0.3, "start": round(44 * BAR, 1), "fade": 30},
-                                               {"file": "0222", "db": -31, "hp": 400, "lp": 9500, "wide": 0.016, "pan": -0.2, "duck": 0.2, "start": round(76 * BAR, 1), "fade": 30}],
-           "fx": {"glass": {"hz": [440.0, 880.0, 1318.5], "db": -30, "rt": 5.0, "start": 4}, "shimmer": {"db": -28, "rt": 6.5}, "far": {"db": -26, "delay": 0.2, "lp": 3000, "rt": 3.5},
-                  "haze": {"db": -29, "rt": 6.0}}, "intro_db": 8.5}, open("/tmp/cel/w/air040.json", "w"))
+    n, i, Lb, k = S.scene_of(b); ch = S.chords[b]; r = ROOT[ch]
+    th = r + (3 if ch.endswith("m") else 4)
+    if n == "目覚め" or (n in ("朝1", "崖") and i % 2 == 0):
+        VC.at(b * B, f"{nm(r + 12 if r + 12 <= 55 else r)}:{2 if n == '目覚め' else 4},")
+        VA.at(round(b * B + 0.05, 3), f"{nm(th + 12 if th + 12 <= 69 else th)}:{2 if n == '目覚め' else 4},")
+    if n in ("朝1", "朝2", "平原", "崖"):
+        strum(GT, b, B, ch, JIG if not (n == "朝1" and i < 8) else [(0, 2, "d", ",")])
+    if n == "ジャン" and i == 0:
+        strum(GT, b, B, ch, [(0, 1, "d", "!")]); VC.at(b * B, "F3:1!"); VA.at(b * B, "A4:1!")
+
+finish(c, "--sound celtic-fantasy --orchestra vsco --piano salamander --space vale --space-wet 0.24 --master -15 --widen 1.2 --side-hpf 200",
+       "ケルト・フルート100曲の040（第3版）。第4章の終わり、夜明けの森を出ていく。笛ひとりの夜の節（1拍に1音、付点4分＝40）が、日が差すと同じ音のまま1拍に3音になり、朝のジグ（6/8・付点4分＝110）に変わる。F イオニア。弦（ビオラとチェロ）の森が目覚め、ナイロン弦ギターが迎える。朝の踊りがしばらく同じ強さで続いたあと、最後の崖で一気に強くなり、全員で「ジャン」と鳴らす。",
+       harm_scenes=None, tail_scene="ジャン", double=False, fill=False, pads=False)
+air = {"pre": 0.3, "tail": 4.0, "layers": [{"file": "0595", "db": -46, "hp": 200, "lp": 4000, "wide": 0.012, "duck": 0.4, "fade": 6}],
+       "fx": {"far": {"db": -29, "delay": 0.22, "lp": 3000, "rt": 2.6}}}
+json.dump(air, open("/tmp/cel/w/air040.json", "w"), ensure_ascii=False)
+
+_p = sys.argv[1] if len(sys.argv) > 1 else None
+if _p:
+    _d = json.load(open(_p))
+    for _pt in _d["parts"]:
+        if isinstance(_pt.get("notes"), str):
+            _pt["notes"] = " ".join(t for t in _pt["notes"].split() if not re.match(r"^R:0(\.0*)?$", t))
+    json.dump(_d, open(_p, "w"), ensure_ascii=False)
