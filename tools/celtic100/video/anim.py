@@ -31,7 +31,7 @@ def add_sprite(acc, spr, cx, cy, gain=1.0):
 
 TIP = P(628, 290)                                    # 笛の先
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-NOTE_COLORS = [np.array([1.0, 0.72, 0.18], np.float32), np.array([1.0, 0.42, 0.72], np.float32), np.array([0.45, 0.85, 1.0], np.float32)]   # 金・桃・水色（明るい桃色の空でも見えるよう、色を濃く）
+NOTE_COLORS = [np.array([1.0, 1.0, 1.0], np.float32)] * 3   # 2026-11-02 人間「音符色白だけでいいよ」: 白だけ
 def note_sprite(ch, size, col):
     pad = size; im = Image.new("L", (size * 2 + pad, size * 2 + pad), 0)
     ImageDraw.Draw(im).text((pad // 2 + size // 4, pad // 2), ch, font=ImageFont.truetype(FONT, int(size * 1.5)), fill=255)
@@ -39,9 +39,9 @@ def note_sprite(ch, size, col):
     g1 = np.asarray(im.filter(ImageFilter.GaussianBlur(size * 0.12)), np.float32) / 255.0
     g2 = np.asarray(im.filter(ImageFilter.GaussianBlur(size * 0.35)), np.float32) / 255.0
     core = np.clip(a, 0, 1)
-    halo = np.clip(g1 * 2.2 + g2 * 1.8, 0, 1) * 0.85
+    halo = np.clip(g1 * 1.6 + g2 * 1.2, 0, 1) * 0.55
     alpha = np.clip(np.maximum(core, halo), 0, 1)
-    rgb = core[..., None] * np.array([1.0, 0.99, 0.95], np.float32) * 0.35 + (1 - core[..., None] * 0.35) * col * 0.92
+    rgb = np.ones_like(core)[..., None] * col
     glow = (g2 * 0.8)[..., None] * col
     return rgb.astype(np.float32), alpha.astype(np.float32), glow.astype(np.float32)
 GLYPHS = ["♪", "♫", "♩", "♬"]
