@@ -39,7 +39,7 @@ SONG2 = ["5:2 6:1", "1':2 6:1", "5:2 3:1", "2:3", "3:1 5:1 6:1", "5:2 3:1", "2:1
          "5:2 3:1", "2:2 1:1", "6,:1 1:1 2:1", "3:3", "2:1 1:1 6,:1", "5,:2 6,:1", "1:1 2:1 6,:1", "1:3"]
 play_melody(c, "歌1", SONG, 4, "air", key=K, density=0.1, seed=3801)
 play_melody(c, "歌2", SONG2, 4, "air", key=K, density=0.15, seed=3802)
-play_melody(c, "夜更け", ["3:3", "2:3", "1:3", "R:3", "5,:3", "6,:3", "1:3", "R:3"], 4, "air", key=K, density=0.0)
+play_melody(c, "夜更け", ["3:3", "2:3", "1:3", "2:3", "5,:3", "6,:3", "1:3", "1:3"], 4, "air", key=K, density=0.0)
 play_melody(c, "歌3", SONG2, 4, "air", key=K, density=0.15, seed=3803)
 play_melody(c, "歌4", SONG, 4, "air", key=K, density=0.1, seed=3804)
 play_melody(c, "最後の一粒", ["3:3", "1:3", "R:3", "R:3"], 4, "air", key=K, density=0.0)
@@ -56,9 +56,7 @@ while t < end:
     t += max(0.45, gap)
     if t >= end: break
     j = rng.randrange(4)
-    if t < 4 * B:                                     # 始まり：大きいパートで
-        if t - used.get(10 + j % 2, -9) >= 0.5:
-            DEWI[j % 2].at(round(t, 3), f"{nm(rng.choice(DROPS))}:1"); used[10 + j % 2] = t + 1
+    if t < 4 * B:                                     # 始まり：決まった間合いで、大きいパートに（下で置く）
         continue
     if t - used[j] < 0.5: continue
     m = rng.choice(DROPS)
@@ -67,7 +65,10 @@ while t < end:
         j2 = (j + 1) % 4
         if t + 0.22 - used[j2] >= 0.5:
             DEW[j2].at(round(t + 0.22, 3), f"{nm(rng.choice(DROPS))}:1,"); used[j2] = t + 1.22
-DEW[1].at(round((c.NB - 2) * B + 1.3, 3), "D6:2")                   # 最後の1粒
+DEW[1].at(round((c.NB - 2) * B + 1.3, 3), "D6:2")
+# 始まり（2回目 7.32 でも、ばらばらに置くと粒のない時間が -70dB になった）：少しずつ詰まる間合いで、2つのパートに交互に
+for q, tt in enumerate((0.0, 1.9, 3.4, 4.6, 5.9, 7.0, 8.2, 9.1, 10.3, 11.2)):
+    DEWI[q % 2].at(round(tt, 3), f"{nm(DROPS[(q * 3) % len(DROPS)])}:1")                   # 最後の1粒
 # 葉の下の水たまり：2小節ごとに低い1音
 ROOT = {"G": 55, "Em": 52, "D": 50, "C": 48}
 for b in range(0, c.NB - 2, 2):

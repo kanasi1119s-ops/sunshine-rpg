@@ -44,14 +44,19 @@ GT = [S.track(f"ギター{i + 1}", "guitar", patch="nylonGuitar", volume=0.008, 
 NIGHT = ["5:1 3:1", "2:1 1:1", "3:1 4:1", "5:2", "6:1 5:1", "4:1 3:1", "2:1 3:1", "1:2",
          "1':1 7:1", "6:1 5:1", "4:1 6:1", "5:2", "3:1 4:1", "5:1 3:1", "2:1 7,:1", "1:2"]
 def dance(ev, key):
-    """1拍に1音 → 1拍に3音（その音・上の隣・その音）。2拍の音は（その音・上・その音／下・その音・その音）"""
+    """1拍に1音 → 1拍に3音。1回目（6.96）はどの拍も「その音・上・その音」で機械的だったので、拍ごとに形を変える：
+    1拍目＝その音・上・その音／2拍目以降＝長短（その音 2/3・下 1/3）／句の終わり（2拍の音）＝その音を付点4分でのばす"""
     out = []
     for t, L, m in ev:
-        for k in range(int(round(L))):
+        n = int(round(L))
+        for k in range(n):
             tt = t + k
-            if k == 0: seq = [m, _dia(key, m, 1), m]
-            else: seq = [_dia(key, m, -1), m, m]
-            for q, x in enumerate(seq): out.append([round(tt + q * T3, 4), round(T3 * (1 if q < 2 else 1), 4), x])
+            if n >= 2 and k == n - 1: seq = [(m, 1.0)]
+            elif k == 0: seq = [(m, T3), (_dia(key, m, 1), T3), (m, T3)]
+            else: seq = [(m, 2 * T3), (_dia(key, m, -1), T3)]
+            q0 = 0.0
+            for x, Lq in seq:
+                out.append([round(tt + q0, 4), round(Lq, 4), x]); q0 += Lq
     return out
 def night_ev(sc, oct_=4, rep=1):
     ev = []
@@ -61,7 +66,7 @@ def night_ev(sc, oct_=4, rep=1):
     return [[round(t, 4), L, m] for t, L, m in ev]
 play(c.FLUTE, ornament(night_ev("夜", 4), K, 40, "air", B, density=0.25, seed=4001))          # 夜：1拍に1音、低く
 play(c.FLUTE, ornament(night_ev("目覚め", 4), K, 50, "air", B, density=0.3, seed=4002))       # 目覚め：同じ節、少しずつ速く
-for sc, rep, d in (("朝1", 2, 0.25), ("朝2", 2, 0.35), ("平原", 3, 0.35), ("崖", 3, 0.5)):    # 朝：同じ節が、1拍に3音のジグに
+for sc, rep, d in (("朝1", 2, 0.1), ("朝2", 2, 0.15), ("平原", 3, 0.15), ("崖", 3, 0.22)):    # 朝：同じ節が、1拍に3音のジグに
     ev = dance(night_ev(sc, 5 if sc in ("朝2", "崖") else 4, rep), K)
     ev = [[t, L, m if m <= 84 else m - 12] for t, L, m in ev]
     play(c.FLUTE, ornament(ev, K, 110, "jig", B, density=d, seed=4003 + len(sc)))
