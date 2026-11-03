@@ -125,7 +125,8 @@ for b in range(S.nb):
     elif n in ("サビ1", "サビ2", "最後のサビ", "間奏"):
         # 疾走ピアノ: 右手は16分の分散和音、左手はオクターブの8分
         PL.bar(b, " ".join(f"{nm(r if q % 2 == 0 else r + 12)}:0.5" for q in range(8)))
-        PR.bar(b, piano_arp16(ch, "Ab4", "Ab6", pat=(0, 2, 1, 3, 2, 4, 3, 1)))
+        # v3: 16分の分散和音がサビ・間奏の点数を下げていた（サビ2 6.4・間奏 7.13、8分の Aメロは 7.95）→ 8分の分散和音に（半分の細かさ）
+        PR.bar(b, " ".join(f"{nm(v4[q])}:0.5" for q in (0, 2, 1, 3, 2, 3, 1, 2)))
         if i % 2 == 0: PR2.bar(b, f"{nm(v4[3])}:1.5 {nm(v4[2])}:1 {nm(v4[3])}:1.5")
     elif n == "間奏2":
         # ピアノのソロ: サビの旋律を右手で（16分の飾り）、左手は10度の分散
@@ -154,7 +155,7 @@ for b in range(S.nb):
         for j in range(3): STR[j].bar(b, f"{nm(v[j])}:4")
     elif n in ("サビ1", "サビ2", "最後のサビ", "間奏2", "後奏"):
         for j in range(3): STR[j].bar(b, f"{nm(v[j])}:2 {nm(v[j])}:2" if n != "後奏" or i < 6 else f"{nm(v[j])}:8")
-    if n in ("サビ2", "最後のサビ", "後奏"):
+    if n in ("最後のサビ", "後奏"):          # v3: サビ2 からはゆっくりした弦をはずす（重なりすぎ）
         cv = voice(ch, 66, 3)
         for j in range(3): CHO[j].bar(b, f"{nm(cv[j])}:4" if n != "後奏" or i < 6 else (f"{nm(cv[j])}:8" if i == 6 else "R:4"))
     if n == "サビ1" and i >= 8:
@@ -165,7 +166,6 @@ for b in range(S.nb):
         t = tones(ch, "C6", "C7")
         GLK.bar(b, f"R:2.5 {nm(t[0])}:0.5 {nm(t[1])}:0.5 {nm(t[2 % len(t)])}:0.5")
 VLM = ["Eb6:2 F6:1 G6:1", "Ab6:3 G6:1", "F6:2 Eb6:1 C6:1", "Db6:3 F6:1", "Eb6:2 Db6:1 C6:1", "Bb5:2 G5:2", "Ab5:2 C6:1 Eb6:1", "Eb6:4"]
-for i, b in enumerate(S.sc("サビ2")[16:]): VLN.bar(b, VLM[i])
 for i, b in enumerate(S.sc("最後のサビ")[16:]): VLN.bar(b, " ".join(f"{nm(midi(t.split(':')[0]) + 2)}:{t.split(':')[1]}" for t in VLM[i].split()))   # +2 の調で
 
 # ================= ベース =================
