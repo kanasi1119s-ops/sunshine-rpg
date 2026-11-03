@@ -116,7 +116,7 @@ for b in range(S.nb):
         PR.bar(b, f"{nm(v4[0])}:2 {nm(v4[1])}:2")
         PR2.bar(b, f"{nm(v4[3])}:2 {nm(v4[2])}:2")
     elif n in ("Aメロ1", "Aメロ2"):
-        # v5（BGM の版だけ）: 前奏の後半より Aメロ1 が 3.2dB 小さかった → 前奏と同じ上の和音（右手の上の音）を Aメロ1 の前半にも残して、つなぐ
+        # v5（BGM の版だけ）: 前奏と同じ上の和音（右手の上の音）を Aメロ1 の前半にも残して、つなぐ
         if not VOCAL and n == "Aメロ1" and i < 8: PR2.bar(b, f"{nm(v4[3])}:2 {nm(v4[2])}:2")
         PL.bar(b, f"{nm(r)}:1.5 {nm(r + 7)}:0.5 {nm(r + 12)}:2" if i % 2 == 0 else f"{nm(r)}:1 {nm(r + 7)}:1 {nm(r + 12)}:1 {nm(r + 7)}:1")
         PR.bar(b, f"R:0.5 {nm(v4[0])}:0.5 R:0.5 {nm(v4[1])}:0.5 R:0.5 {nm(v4[2])}:0.5 R:0.5 {nm(v4[3])}:0.5")
@@ -188,9 +188,10 @@ for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     last = i == L - 1
     if n == "音楽室":
-        if i == 7: put_fill(D, b, "lift")
+        # v6（BGM の版だけ）: 前奏の最後の「持ち上げるフィル」が大きく、Aメロ1 の頭（キックとハットだけ）が 3.2dB 小さく聞こえていた → 小さいフィルに
+        if i == 7: put_fill(D, b, "lift" if VOCAL else "small")
     elif n in ("Aメロ1", "Aメロ2"):
-        if n == "Aメロ1" and i < 8: D.set(b, "X.......X.......", "................", "x.x.x.x.x.x.x.x.")
+        if n == "Aメロ1" and i < 8: D.set(b, "X.......X.......", "................" if VOCAL else "....o.......o...", "x.x.x.x.x.x.x.x.")
         else: vgroove(D, b, "beat8", ghosts=0.3, seed=b)
         if i == 0 and n == "Aメロ2": crash(D, b)
         if i % 8 == 7: put_fill(D, b, "small" if not last else "snare16")
