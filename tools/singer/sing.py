@@ -764,6 +764,27 @@ def main():
             gd = np.convolve(np.pad(gd, 3, mode="edge"), np.ones(7) / 7, mode="valid")
             curve = np.interp(np.arange(n), np.arange(len(gd)) * hop, gd)
             v = v * (10 ** (curve / 20))[:, None]
+        # 2026-11-04 人間（無料のエフェクト「Vocal Doubler」を見せて「使える？」）: 同じ働きを作った。
+        #   "vocalDouble": [{"from": 拍, "to": 拍, "amount": 0〜1}] の所だけ、歌の写しを2本、左右に重ねる。
+        #   写しは 14ms と 23ms のおくれを、ゆっくり（0.31Hz・0.43Hz）±3ms ゆらす（音程が数セントだけ揺れて「別の人」に聞こえる）。
+        #   低い所（180Hz 以下）と高い所（7kHz 以上）は写さない（子音が二重になってザラつかないように）
+        dbl = song.get("vocalDouble")
+        if dbl:
+            b2s_ = tempo_clock(float(song["bpm"]), song.get("tempo"), int(song.get("beats", 4)))
+            envd = np.zeros(n)
+            for seg in dbl:
+                s0, s1 = int(b2s_(seg["from"]) * sr), int(b2s_(seg["to"]) * sr)
+                envd[max(0, s0):min(n, s1)] = float(seg.get("amount", 0.5))
+            envd = np.convolve(envd, np.ones(int(0.3 * sr)) / int(0.3 * sr), mode="same")
+            if envd.max() > 0:
+                bb, ab = signal.butter(2, [180 / (sr / 2), 7000 / (sr / 2)], "band")
+                src = signal.lfilter(bb, ab, v.mean(1))
+                tt = np.arange(n) / sr
+                for d0, rate, pan_, ph in ((0.014, 0.31, -0.75, 0.0), (0.023, 0.43, 0.75, 1.7)):
+                    dly = (d0 + 0.003 * np.sin(2 * np.pi * rate * tt + ph)) * sr
+                    idx = np.arange(n) - dly; i0 = np.clip(np.floor(idx).astype(int), 0, n - 1); fr = idx - np.floor(idx)
+                    cp = (src[i0] * (1 - fr) + src[np.clip(i0 + 1, 0, n - 1)] * fr) * (idx >= 0) * envd * 0.55
+                    v = v + np.stack([cp * (1 - pan_) / 2 * 1.4, cp * (1 + pan_) / 2 * 1.4], 1)
         # 歌のすき間を空ける: 歌っている間だけ、伴奏の 1.5〜4kHz（言葉が聞こえる帯域）を少し下げる（最大 -3dB）
         b1, a1 = signal.butter(2, [1500 / (sr / 2), 4000 / (sr / 2)], "band")
         mid = signal.lfilter(b1, a1, acc, axis=0)
