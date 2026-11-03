@@ -116,7 +116,9 @@ for name in ("イントロ", "間奏"):
 TPH = ["R:2.5 {a}:0.25 {a}:0.75 ", "{a}:0.5 R:0.5 {a}:0.5 R:2.5", "R:1.5 {a}:0.5 R:1 {a}:0.25 {a}:0.75", "R:3 {a}:0.5 {a}:0.5"]
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
-    if n == "間奏" or n.startswith(("サビ", "最後")) and i % 2 == 1:
+    # v2: v1 は BGM 7.50・歌 7.45。サビだけが 6.9〜7.2 と低かった（前奏・間奏・Cメロは 7.6〜7.8）→ サビを軽く:
+    #   トランペットの合いの手は間奏と最後のサビの後半だけ、ハットは 16分の4つ打ちをやめて8分、弦はサビ2と最後のサビだけ
+    if n == "間奏" or (n == "最後のサビ" and i >= 16 and i % 2 == 1):
         tv = voice(S.chords[b], 72, 2)
         for j in range(2): TP[j].bar(b, TPH[i % 4].format(a=nm(tv[j])).strip())
 
@@ -158,7 +160,7 @@ for b in range(S.nb):
         PIZ2.bar(b, f"{nm(r + 24)}:1 R:1 {nm(r + 31)}:1 R:1")
     elif chorus:
         PIZZ.bar(b, " ".join(f"R:0.5 {nm(t[(q + 2) % len(t)])}:0.5" for q in range(4)))
-    if n in ("サビ2", "最後のサビ") or (n == "サビ1" and i >= 8):
+    if n in ("サビ2", "最後のサビ"):
         sv = voice(ch, 67, 3)
         for j in range(3): STR[j].bar(b, f"{nm(sv[j])}:4")
     if chorus and i % 4 == 3:
@@ -188,7 +190,7 @@ for b in range(S.nb):
     elif n.startswith("Bメロ"):
         vgroove(D, b, "beat8", ghosts=0.2, seed=b, k="X.....x.X.......", h="x.x.x.x.x.x.x.x.")
     else:
-        vgroove(D, b, "four16" if chorus else "beat8", ghosts=0.25, seed=b, k="X...X...X...X..." if chorus else None)
+        vgroove(D, b, "beat8", ghosts=0.25, seed=b, k="X...X...X...X..." if chorus else None, h="x.x.x.x.x.x.x.x." if chorus else None)
     if i == 0 or (chorus and i % 8 == 0): crash(D, b, "C2", 4)
     if last and n not in ("Bメロ2",): put_fill(D, b, "snare16")
     elif chorus and i % 4 == 3: put_fill(D, b, "small")
