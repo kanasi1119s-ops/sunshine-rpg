@@ -48,7 +48,7 @@ PAD = [S.track(f"パッド{i + 1}", "pad", **pad_spec("surgePadVerbPad", vol=0.0
 B808 = S.track("808", "sub808", volume=0.17, pan=0, sustain=1.0, fx=[{"type": "filter", "kind": "highpass", "freq": 30, "q": 0.7},
                                                                      {"type": "eq", "low": -1, "mid": 2.5, "midHz": 900, "high": 0}])
 GT = S.track("ギター（R&B の合いの手）", "guitar", **clean_gtr_spec(0.075, 0.45))
-PL = S.track("プラック（合いことば）", "pluck", **pluck_spec(vol=0.08, pan=-0.3))
+PL = S.track("プラック（合いことば）", "pad", **pluck_spec("surgeNicePluck", vol=0.08, pan=-0.3))
 STR = [S.track(f"ストリングス{i + 1}", "strings", patch="stringEnsemble", volume=0.05, pan=-0.35 + 0.35 * i, reverb=0.45, sustain=1.5) for i in range(3)]
 BELL = S.track("ベル", "pad", patch="surgeFantasyBell", volume=0.045, pan=0.35, reverb=0.45, sustain=1.0)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.05, pan=0, modulate=False)
