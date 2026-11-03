@@ -45,7 +45,9 @@ S.scene("落ちサビ", 8, "bridge", C_CH[:7] + ["Db7"])          # 最後の小
 S.scene("最後のサビ", 32, "chorus", LAST)
 S.scene("閉店", 10, "outro", [tr_chord(c, 1) for c in RIFF_CH] + ["Ebm", "Ebm"])
 
-V = Voice(S, vol=0.22, delay=0.75, bright=0.8, patch="modernLead", low=True)
+# 2026-11-04 v2: BGM の v1 は 7.47。サビだけが低かった（サビ1 6.43・最後のサビ 6.56、ほかは 7.4〜8.3）→ サビのオルガン（3声の持続）をやめて Cメロだけに、
+#   歌の役の音色を modernLead → popLeadClear（01 で 8.0 をこえた音）に、サビのピアノの和音を少し高く（66 → 70。こもりを減らす）
+V = Voice(S, vol=0.22, delay=0.75, bright=0.8, patch="popLeadClear", low=True)
 GT = [S.track(f"ギター1（{['根音', '5度', 'オクターブ'][i]}）", "distGuitar", **rock_gtr_spec(0.07, -0.45 + 0.45 * i)) for i in range(3)]
 LG = S.track("ギター2（リフ）", "leadGuitar", **lead_gtr_spec(0.11, 0.2))
 LGS = S.track("ギター2（ソロ）", "leadGuitar", **lead_gtr_spec(0.15, 0.0))
@@ -135,9 +137,8 @@ for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     ch = S.chords[b]; v = voice(ch, 66, 3); t = tones(ch, "C5", "C7")
     if n in ("サビ1", "サビ2", "最後のサビ"):
-        for j in range(3): PC[j].bar(b, f"{nm(v[j])}:0.75 {nm(v[j])}:0.75 {nm(v[j])}:0.5 {nm(v[j])}:2")
-        ov = voice(ch, 60, 3)
-        for j in range(3): ORG[j].bar(b, f"{nm(ov[j])}:4")
+        vh = voice(ch, 70, 3)
+        for j in range(3): PC[j].bar(b, f"{nm(vh[j])}:0.75 {nm(vh[j])}:0.75 {nm(vh[j])}:0.5 {nm(vh[j])}:2")
         if i % 4 == 1: PM.bar(b, "R:2 " + " ".join(f"{nm(x)}:0.25" for x in sorted(t[:8], reverse=True)))      # 16分の駆け下り
     elif n in ("Bメロ1", "Bメロ2"):
         for j in range(3): PC[j].bar(b, f"{nm(v[j])}:1 {nm(v[j])}:1 {nm(v[j])}:1 {nm(v[j])}:1")
