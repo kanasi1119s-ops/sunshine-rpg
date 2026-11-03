@@ -77,6 +77,14 @@ for f in fx:
         envn = np.ones(L_); envn[cut:] = np.linspace(1, 0, L_ - cut) ** 3; envn[:int(0.6 * sr)] = np.linspace(0, 1, int(0.6 * sr))
         x[a:b] += w * envn[:, None]
         continue
+    if t == "reverse":
+        # 07: 場面の中の小節（bars: [はじめ, おわり)）を逆再生にする（宇宙語）。小節の長さは bpm と拍子から
+        s_ = [s for s in secs if s["name"] == f["scene"]][0]; bl = 60.0 / float(f["bpm"]) * int(f.get("beats", 4))
+        a = int((s_["t"] + f["bars"][0] * bl) * sr); b = int((s_["t"] + f["bars"][1] * bl) * sr)
+        seg = x[a:b][::-1].copy(); fl = int(0.02 * sr)
+        seg[:fl] *= np.linspace(0, 1, fl)[:, None]; seg[-fl:] *= np.linspace(1, 0, fl)[:, None]
+        x[a:b] = seg
+        continue
     if t == "tapestop":
         dur = float(f.get("dur", 1.5)); L = int(dur * sr); st = n - L if f.get("at", "end") == "end" else int(float(f["at"]) * sr)
         st = max(0, st); seg = x[st:]

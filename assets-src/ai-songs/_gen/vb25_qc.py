@@ -12,7 +12,7 @@ import sys, json, os, re, subprocess
 import numpy as np
 from scipy.signal import butter, sosfilt
 
-OUT = "/mnt/user-data/outputs/vb25"; Q = "/mnt/user-data/outputs/vbq"; SR = 22050
+OUT = os.environ.get("VB_OUT", "/mnt/user-data/outputs/vb25"); Q = "/mnt/user-data/outputs/vbq"; SR = 22050
 
 
 def load(mp3):
