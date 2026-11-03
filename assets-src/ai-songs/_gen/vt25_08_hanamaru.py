@@ -18,7 +18,10 @@ S.keep_old_synth = True
 S.no_depth = True
 S.live_bass = True
 S.open_hat_vol = 0.55
-S.keepers = {"Aメロ1": "closed", "Aメロ2": "ride", "サビ2": "open"}
+# 2026-11-04 v2: v1 は BGM 7.33。場面ごとに測ると、サビ2（6.0）・Cメロ・最後のサビ・Bメロ2 が低かった。
+#   サビ2 だけオープンハイハットを鳴らしっぱなしにしていた → ライドに。サビの右手の 16分の刻みを8分の和音に（02 で効いた直し）、
+#   サビにやわらかい弦の和音を足す（すき間を温かく埋める）
+S.keepers = {"Aメロ1": "closed", "Aメロ2": "ride", "サビ2": "ride"}
 K = Key("D", "major")           # oct 3 で 1 = D3。歌うのは A3〜E5
 
 A_CH = ["D", "A/C#", "Bm7", "F#m7", "Gmaj7", "D/F#", "Em7", "A7sus4"]
@@ -47,7 +50,7 @@ TOY = S.track("おもちゃのピアノ（子どものころ）", "pad", patch="
 BRS = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.075, pan=-0.3 + 0.3 * i, reverb=0.25, sustain=0.8) for i in range(3)]
 TPT = S.track("トランペット（ブラスのリフの上）", "brass", patch="trumpet", volume=0.08, pan=0.2, reverb=0.28)
 BASS = S.track("ベース", "bass", **finger_bass_spec(vol=0.21))
-STR = [S.track(f"ストリングス{i + 1}（最後のサビ）", "strings", patch="stringEnsemble", volume=0.06, pan=-0.3 + 0.3 * i, reverb=0.4, sustain=1.4) for i in range(3)]
+STR = [S.track(f"ストリングス{i + 1}（サビ）", "strings", patch="stringEnsemble", volume=0.05, pan=-0.3 + 0.3 * i, reverb=0.4, sustain=1.4) for i in range(3)]
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 D = S.drumkit()
 SIL = Silence(S)
@@ -118,7 +121,7 @@ for b in range(S.nb):
     elif n in ("サビ1", "サビ2", "最後のサビ", "間奏"):
         # ピアノポップの16分の刻み（右手の和音を 16分の裏で）
         PL.bar(b, f"{nm(r)}:0.75 {nm(r + 12)}:0.75 {nm(r)}:0.5 {nm(r + 7)}:0.75 {nm(r + 12)}:0.75 {nm(r + 7)}:0.5")
-        PR.bar(b, f"{nm(v4[0])}:0.5 {nm(v4[1])}:0.25 {nm(v4[2])}:0.25 R:0.5 {nm(v4[3])}:0.5 {nm(v4[2])}:0.5 {nm(v4[1])}:0.25 {nm(v4[0])}:0.25 R:0.5 {nm(v4[3])}:0.5")
+        PR.bar(b, " ".join(f"{nm(v4[q])}:0.5" for q in ((0, 2, 1, 3, 2, 3, 1, 2) if i % 2 == 0 else (3, 1, 2, 0, 2, 1, 3, 2))))
         if i % 2 == 0: PR2.bar(b, f"{nm(v4[3] + 12)}:1.5 {nm(v4[2] + 12)}:1 {nm(v4[3] + 12)}:1.5")
     elif n == "帰り道":
         PL.bar(b, f"{nm(r)}:4")
@@ -141,6 +144,9 @@ for b in range(S.nb):
     elif n in ("サビ1", "サビ2", "最後のサビ"):
         if i % 2 == 1:
             for j in range(3): BRS[j].bar(b, f"R:2 {nm(bv[j])}:0.25 R:0.25 {nm(bv[j])}:0.5 R:1")
+        if n != "最後のサビ" or i < 8:
+            sv = voice(ch, 62, 3)
+            for j in range(3): STR[j].bar(b, f"{nm(sv[j])}:4")
         if n == "最後のサビ" and i >= 8:
             sv = voice(ch, 62, 3)
             for j in range(3): STR[j].bar(b, f"{nm(sv[j])}:4")
