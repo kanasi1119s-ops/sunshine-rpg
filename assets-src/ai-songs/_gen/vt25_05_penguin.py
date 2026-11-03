@@ -42,8 +42,11 @@ S.scene("サビ3", 16, "chorus", C_CH * 2)
 S.scene("足音", 8, "outro", A_CH + ["Gm7", "Cm7", "Gm7", "Gm7"])
 
 V = Voice(S, vol=0.22, delay=0.75, bright=0.0, patch="clarinet", low=False)
-TUBA = S.track("チューバ（よちよちのベース）", "brass", patch="tuba", volume=0.2, pan=0.0, reverb=0.18, gainDb=3)
-BASS = S.track("ベース（チューバの下の支え）", "bass", **finger_bass_spec(vol=0.13))
+# 2026-11-04 v2: BGM の v1 は 7.27（どの場面も 6.9〜7.5。チューバとマリンバが主の Aメロとソロが低い）→ チューバを小さく（主役の色は残す）、
+#   指弾きのベースで根音を支え、やわらかいパッドとピアノの和音で響きを足す。ドラムのブレイクは開いたハイハットの少ない形に
+TUBA = S.track("チューバ（よちよちのベース）", "brass", patch="tuba", volume=0.13, pan=0.1, reverb=0.2, gainDb=2)
+BASS = S.track("ベース（チューバの下の支え）", "bass", **finger_bass_spec(vol=0.19))
+PAD = [S.track(f"やわらかいパッド{i + 1}", "pad", **pad_spec("surgePadVerbPad", vol=0.035, pan=-0.35 + 0.35 * i, duck=0.35, sustain=1.5)) for i in range(3)]
 MAR = S.track("マリンバ", "strings", patch="marimba", volume=0.12, pan=-0.3, reverb=0.25)
 MAR2 = S.track("マリンバ（和音）", "strings", patch="marimba", volume=0.08, pan=0.3, reverb=0.25)
 PIC = S.track("ピッコロ（氷の上の口笛）", "panflute", patch="piccolo", volume=0.07, pan=0.35, reverb=0.35)
@@ -108,7 +111,9 @@ for b in range(S.nb):
     if n in ("Bメロ1", "Bメロ2", "Bメロ3"):
         TUBA.bar(b, f"{nm(r)}:1 {nm(r)}:1 {nm(f5)}:1 {nm(r + 12)}:1"); continue
     TUBA.bar(b, waddle(r, f5))
-    BASS.bar(b, f"{nm(r)}:0.75 R:0.75 {nm(r)}:1 R:0.75 {nm(r)}:0.75" if n.startswith("サビ") else f"{nm(r)}:2 R:2")
+    BASS.bar(b, f"{nm(r)}:1.5 {nm(r)}:0.5 R:0.5 {nm(r + 7)}:1 R:0.5" if n.startswith("サビ") else f"{nm(r)}:2 {nm(r + 7)}:1.5 R:0.5")
+    pv = voice(S.chords[b], 60, 3)
+    for j in range(3): PAD[j].bar(b, f"{nm(pv[j])}:4")
 
 # ================= マリンバ・ピアノ・弦 =================
 HOOK = ["G5:0.75 Bb5:0.75 D6:1 C6:0.75 Bb5:0.75", "A5:0.75 C6:0.75 F6:1 Eb6:0.75 D6:0.75", "Eb6:0.75 D6:0.75 C6:1 Bb5:0.75 A5:0.75", "Bb5:1.5 A5:0.5 G5:2"]
@@ -123,8 +128,9 @@ for b in range(S.nb):
         MAR.bar(b, HOOK[i % 4]); PIC.bar(b, shift_oct(HOOK[i % 4], 0) if i >= 2 else "R:4")
     elif n == "ペンギンのソロ":
         MAR.bar(b, SOLO[i]); PIC.bar(b, "R:4" if i < 4 else SOLO[i])
-    elif n in ("Aメロ1", "Aメロ2"):
-        MAR2.bar(b, f"R:0.75 {nm(t[1])}:0.75 R:1 {nm(t[2])}:0.75 {nm(t[3 % len(t)])}:0.75")
+    elif n in ("Aメロ1", "Aメロ2", "ペンギンのソロ", "ブレイク", "よちよち1", "よちよち2"):
+        if n in ("Aメロ1", "Aメロ2"): MAR2.bar(b, f"R:0.75 {nm(t[1])}:0.75 R:1 {nm(t[2])}:0.75 {nm(t[3 % len(t)])}:0.75")
+        for j in range(3): PN[j].bar(b, f"{nm(v[j])}:1.5 R:0.5 {nm(v[j])}:1 R:1" if not (n == "ブレイク" and i < 4) else "R:4")
     if n in ("サビ1", "サビ2", "サビ3"):
         for j in range(3): PN[j].bar(b, f"{nm(v[j])}:0.75 {nm(v[j])}:0.75 R:0.5 {nm(v[j])}:1 R:1")
         for j in range(3): STAB[j].bar(b, f"R:1 {nm(v[j] + 12)}:0.25 R:0.75 R:1 {nm(v[j] + 12)}:0.25 R:0.75")
@@ -146,7 +152,7 @@ for b in range(S.nb):
         STEP.bar(b, "A2:0.75 R:0.75 B2:0.75 R:1 A2:0.75" if i < 4 else ("A2:0.75 R:1.25 B2:0.75 R:1.25" if i < 6 else ("A2:0.75 R:3.25" if i == 6 else "R:3 B2:1")))
 
 # ================= ドラム（ブレイクビーツ。サビはハットが倍） =================
-BRK_H2 = "xxxxxxxxxxxxxxxO"
+BRK_H2 = "x.xxx.xxx.xxx.xx"
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     last = i == L - 1
@@ -154,7 +160,7 @@ for b in range(S.nb):
         vgroove(D, b, "break1" if i % 2 == 0 else "break2", ghosts=0.35, seed=b)
         if i == 3: put_fill(D, b, "small")
     elif n in ("Aメロ1", "Aメロ2"):
-        vgroove(D, b, "break1" if i % 2 == 0 else "break2", ghosts=0.3, seed=b)
+        vgroove(D, b, "boombap", ghosts=0.3, seed=b, h="x.x.x.x.x.x.x.x.")
         if i == 0: crash(D, b, "C2", 3)
     elif n in ("Bメロ1", "Bメロ2", "Bメロ3"):
         vgroove(D, b, "boombap", ghosts=0.3, seed=b)
