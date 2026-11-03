@@ -20,7 +20,10 @@ S.open_hat_vol = 0.6
 # 2026-11-04 v3: 人間「04はドラム音がデカすぎかな。他の音が小さく聞こえてる。というより他の音がはっきり聞こえないのかも」
 #   → ドラム全体を 0.8 倍に。サビの「wash」（シンバルを鳴らしっぱなしで刻む）が中高域を埋めて、ギター・ピアノ・歌を隠していたので、
 #   サビはライドとハイハットの刻みに（シンバルは区切りだけ）
-S.drum_scale = 0.7
+S.drum_scale = 0.8
+# v5: v4 は前半の偏りは直ったが、点数が 6.81 に下がった（どの場面も 0.6〜0.8 下がる）。ステムで見ると、強弱を切ったぶんベースとピアノが
+#   ドラムと同じ大きさ（差 0〜1dB）まで上がっていた。v3 で点数がよかった後半の釣り合い（ドラム − ギター 1.5dB・ドラム − ベース 4dB・
+#   ドラム − ピアノなど 3〜8dB）に合わせる: ドラム 0.7 → 0.8 倍、ベース 0.24 → 0.17、ピアノ 0.8 倍。ギターはそのまま
 # v4: 人間「やっぱりドラム以外が極端に小さい」→ 楽器ごとに分けて測った（v3 のステム・LUFS）:
 #   前奏 ドラム -20.3／ギター -34.3、Aメロ1 ドラム -19.4／ギター -32.5／ピアノなど -35.8、サビ1 ドラム -19.4／ギター -23.3
 #   原因は「人が弾いたような強弱（dynamics: natural）」: 出だしを小さく 7割あたりを山にする設定が、ドラムには半分しかかからないので、
@@ -91,10 +94,10 @@ def gchord(ch, low_side):
     return [r] + up
 LG = S.track("ギター2（リフ）", "leadGuitar", **lead_gtr_spec(0.11, 0.2))
 LGS = S.track("ギター2（ソロ）", "leadGuitar", **lead_gtr_spec(0.15, 0.0))
-BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.24))
+BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.17))
 PNFX = [{"type": "eq", "low": -3, "mid": -1, "midHz": 400, "high": 3}]
-PM = S.track("ピアノ（合いの手）", "piano", volume=0.16, pan=-0.15, reverb=0.22, fx=PNFX)
-PC = [S.track(f"ピアノ（和音{i + 1}）", "piano", volume=0.1, pan=-0.15, reverb=0.22, fx=PNFX) for i in range(3)]
+PM = S.track("ピアノ（合いの手）", "piano", volume=0.13, pan=-0.15, reverb=0.22, fx=PNFX)
+PC = [S.track(f"ピアノ（和音{i + 1}）", "piano", volume=0.08, pan=-0.15, reverb=0.22, fx=PNFX) for i in range(3)]
 ORG = [S.track(f"オルガン{i + 1}", "drawbarOrgan", volume=0.05, pan=0.3, reverb=0.25, sustain=1.0) for i in range(3)]
 REG = S.track("レジの鈴（チーン）", "pad", patch="surgeBell1", volume=0.07, pan=0.35, reverb=0.4, sustain=1.5)
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.07, pan=0, reverb=0.3)
