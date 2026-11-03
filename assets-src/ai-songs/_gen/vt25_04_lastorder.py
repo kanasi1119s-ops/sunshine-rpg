@@ -53,6 +53,37 @@ S.scene("閉店", 10, "outro", [tr_chord(c, 1) for c in RIFF_CH] + ["Ebm", "Ebm"
 #   歌の役の音色を modernLead → popLeadClear（01 で 8.0 をこえた音）に、サビのピアノの和音を少し高く（66 → 70。こもりを減らす）
 V = Voice(S, vol=0.22, delay=0.75, bright=0.8, patch="popLeadClear", low=True)
 GT = [S.track(f"ギター1（{['根音', '5度', 'オクターブ'][i]}）", "distGuitar", **rock_gtr_spec(0.07, -0.45 + 0.45 * i)) for i in range(3)]
+# 2026-11-04 v3: 人間「ギターの弾き方がなんか単調だから、なにかコード弾きで刻む様な感じにして欲しい」
+#   → Aメロ・Bメロ・サビ・ソロは、パワーコード（根音・5度・オクターブ）の同じ刻みをやめて、3度も入ったコードで刻む左右2本に。
+#   左（L）は低めの押さえ方、右（R）は高めの押さえ方。刻みの形は小節ごとに変え、左右で1つずらして、かけ合うように。歪みは少し浅く（和音がにごらないように）
+GL = [S.track(f"Lギター（コード{i + 1}）", "distGuitar", **rock_gtr_spec(0.045, -0.55, drive=0.5)) for i in range(4)]
+GR = [S.track(f"Rギター（コード{i + 1}）", "distGuitar", **rock_gtr_spec(0.042, 0.55, drive=0.5)) for i in range(4)]
+CUT = {
+    "verse": ["x..x..x.x.......", "x.....x...x.x...", "x..x....x..x..x.", "x.x...x...x....."],
+    "pre": ["x.x.x.xxx.x.x.xx", "x.xx.x.xx.x.x.x.", "x.x.xx.x.x.xx.x.", "xx.x.x.xx.x.x.xx"],
+    "chorus": ["x.x.xx.xx.x.xx.x", "x.xx.x.xx.xx.x.x", "x.x.x.xxx.x.x.x.", "x..x..x.x.x.xxxx"],
+}
+
+
+def cut(track, b, pat, note, accent=(0, 8)):
+    """16分の刻みの形（x＝弾く）で和音の1音を刻む。音は次に弾くまで、ただし最長 3/4拍（すぐ止めない、のばしすぎない）"""
+    hits = [q for q, c in enumerate(pat) if c == "x"]; toks = []; t = 0
+    for k, q in enumerate(hits):
+        if q > t: toks.append(f"R:{(q - t) * 0.25:g}")
+        nxt = hits[k + 1] if k + 1 < len(hits) else 16
+        L = min(nxt - q, 3); toks.append(f"{note}:{L * 0.25:g}{'!' if q in accent else ''}"); t = q + L
+    if t < 16: toks.append(f"R:{(16 - t) * 0.25:g}")
+    track.bar(b, " ".join(toks))
+
+
+def gchord(ch, low_side):
+    if low_side:                    # 低い所で3度を重ねるとにごるので、根音・5度・オクターブの上に3度（10度）を置く
+        r = low(ch, "E2"); third = [x for x in tones(ch, nm(r + 13), nm(r + 17))]
+        return [r, r + 7, r + 12, third[0] if third else r + 19]
+    r = low(ch, "G3")
+    up = [x for x in tones(ch, nm(r + 1), nm(r + 16))][:3]
+    while len(up) < 3: up.append(up[-1] + 12 if up else r + 12)
+    return [r] + up
 LG = S.track("ギター2（リフ）", "leadGuitar", **lead_gtr_spec(0.11, 0.2))
 LGS = S.track("ギター2（ソロ）", "leadGuitar", **lead_gtr_spec(0.15, 0.0))
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.24))
@@ -121,13 +152,15 @@ for b in range(S.nb):
     if n in ("開店のリフ", "リフ", "閉店"):
         LG.bar(b, RIFF[0] if i % 4 in (0, 1) else (RIFF[1] if i % 4 == 2 else RIFF_L[1]))
         for j in range(3): GT[j].bar(b, " ".join(f"{nm(pw[j])}:0.25{'!' if q % 4 == 0 else ''}" if q % 8 != 7 else "R:0.25" for q in range(16)))
-    elif n in ("Aメロ1", "Aメロ2"):
-        # Aメロ: ブリッジミュートを使わず、2拍ずつ鳴らして（あいだは歌のすき間）
-        for j in range(3): GT[j].bar(b, f"{nm(pw[j])}:1.5 R:0.5 {nm(pw[j])}:0.5 {nm(pw[j])}:1.5" if i % 2 == 0 else f"{nm(pw[j])}:2 R:1 {nm(pw[j])}:0.5 {nm(pw[j])}:0.5")
-    elif n in ("Bメロ1", "Bメロ2"):
-        for j in range(3): GT[j].bar(b, " ".join(f"{nm(pw[j])}:0.5" for _ in range(8)))
-    elif n in ("サビ1", "サビ2", "最後のサビ", "ギターソロ"):
-        for j in range(3): GT[j].bar(b, f"{nm(pw[j])}:0.75! {nm(pw[j])}:0.75 {nm(pw[j])}:0.5 {nm(pw[j])}:1 {nm(pw[j])}:0.5 {nm(pw[j])}:0.5")
+    elif n in ("Aメロ1", "Aメロ2", "Bメロ1", "Bメロ2", "サビ1", "サビ2", "最後のサビ", "ギターソロ"):
+        kind = "verse" if n.startswith("Aメロ") else ("pre" if n.startswith("Bメロ") else "chorus")
+        pats = CUT[kind]; gl = gchord(ch, True); gr = gchord(ch, False)
+        if kind == "verse" and n == "Aメロ1" and i < 4:          # 1番の頭は、右だけで静かに
+            for j in range(4): cut(GR[j], b, pats[i % 4], nm(gr[j]))
+            continue
+        for j in range(4):
+            cut(GL[j], b, pats[i % 4], nm(gl[j]))
+            cut(GR[j], b, pats[(i + 1) % 4], nm(gr[j]), accent=(0, 6, 12))
     elif n == "Cメロ":
         for j in range(3): GT[j].bar(b, f"{nm(pw[j])}:4" if i < 8 else f"{nm(pw[j])}:2 {nm(pw[j])}:2")
 SOLO = ["R:0.5 A5:0.5 D6:1^ C6:0.5 A5:0.5 G5:1", "F5:0.5 G5:0.5 A5:2~ R:1", "R:0.5 Bb5:0.5 D6:0.5 F6:0.5 E6:1 D6:1", "C6:1.5 A5:0.5 E5:2~",
