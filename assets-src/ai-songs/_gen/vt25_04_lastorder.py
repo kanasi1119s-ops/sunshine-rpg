@@ -17,7 +17,11 @@ S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags + " --piano salam
 S.keep_old_synth = True
 S.no_depth = True
 S.open_hat_vol = 0.6
-S.keepers = {"Aメロ1": "closed", "Aメロ2": "ride", "サビ1": "wash", "サビ2": "open", "最後のサビ": "wash", "ギターソロ": "bell"}
+# 2026-11-04 v3: 人間「04はドラム音がデカすぎかな。他の音が小さく聞こえてる。というより他の音がはっきり聞こえないのかも」
+#   → ドラム全体を 0.8 倍に。サビの「wash」（シンバルを鳴らしっぱなしで刻む）が中高域を埋めて、ギター・ピアノ・歌を隠していたので、
+#   サビはライドとハイハットの刻みに（シンバルは区切りだけ）
+S.drum_scale = 0.8
+S.keepers = {"Aメロ1": "closed", "Aメロ2": "ride", "サビ1": "ride", "サビ2": "open", "最後のサビ": "ride", "ギターソロ": "bell"}
 K = Key("D", "minor")          # oct 4 で 1 = D4
 KF = Key("F", "major")         # Bメロ・サビ（oct 4 で 1 = F4）
 KL = Key("Gb", "major")        # 最後のサビ（+1）
