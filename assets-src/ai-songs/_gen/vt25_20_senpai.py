@@ -13,7 +13,8 @@ from vt25_lib import *
 
 S = Song("20", "senpai", "となりのセンパイ・ブルース（仮）", "Senpai Next Door Blues", 120, 4, "E", "major", "ロック（ブルースロック・シャッフル・ボカロ）")
 S.kit = "jpop"
-S.flags = S.flags + " --piano salamander --space room --space-wet 0.16"
+# v3: 人間「04と同じギターの音トライデントに変えようか」→ 歪みギターの音を TRiDENT の音（参考の音 glossy-jrock）に
+S.flags = "--ref-tone glossy-jrock " + S.flags + " --piano salamander --space room --space-wet 0.16"
 S.no_spice = True        # 遊びの16分（まっすぐ）を足さない（シャッフルがくずれるため）
 K = Key("E", "mixolydian")      # 歌（oct 4 で 1 = E4。歌うのは B3〜F#5）
 KL = Key("F", "major")          # 最後のサビ（oct 4 で 1 = F4）
@@ -240,7 +241,6 @@ S.fade_out = 0
 S.desc = ("仮: 重音テトのボカロ曲25曲・第2弾の20。ブルースロック（8分のシャッフル）。E・120、最後のサビは F。"
           "となりの席のセンパイの「まあいいか」を、いつのまにか受けつぐ話。12小節のブルースで「歌う → ギターが答える」かけ合い、"
           "3連で跳ねるブギのギターと歩くベース、サチュレーターで温かく歪ませたギターソロ、小節の頭だけ鳴らすストップタイム。自作")
-# v2: v1 は BGM 7.48・歌 7.24。場面ごとに比べると、歌の入った所（Bメロ・サビ・最後のサビ）だけが歌なしより 0.9〜1.4 下がっていた。
-#   サビは E5〜F#5（最後のサビは F5）の高い所に歌が長くいる → 曲全体を 2半音下げて（D・最後のサビは E♭）、歌の高さを楽にする。最後のサビの持ち上げも少し弱く
-finish(S, LY, V, -2, fx=[{"type": "sat", "scenes": ["ギターソロ"], "drive": 0.4}, {"type": "sat", "scenes": ["最後のサビ"], "drive": 0.2}],
-       level={"verse": -0.2}, special={"ストップタイム": -0.3, "落ちサビ": -0.5, "最後のサビ": 0.35})
+# v2 で試した「曲全体を2半音下げる」は点数が変わらなかった（歌 7.22）ので、元の調（E）に戻した（完成に選んだのは v1）
+finish(S, LY, V, 0, fx=[{"type": "sat", "scenes": ["ギターソロ"], "drive": 0.4}, {"type": "sat", "scenes": ["最後のサビ"], "drive": 0.2}],
+       level={"verse": -0.2}, special={"ストップタイム": -0.3, "落ちサビ": -0.5, "最後のサビ": 0.5})

@@ -12,7 +12,8 @@ from vt25_lib import *
 
 S = Song("25", "finale", "フィナーレは君の声で（仮）", "Finale in Your Voice", 93, 4, "A", "major", "ロック（アンセム・ストリングス・ボカロ）")
 S.kit = "jpop"
-S.flags = S.flags + " --piano salamander --space hall --space-wet 0.18"
+# v3: 人間「04と同じギターの音トライデントに変えようか」→ 歪みギターの音を TRiDENT の音（参考の音 glossy-jrock）に
+S.flags = "--ref-tone glossy-jrock " + S.flags + " --piano salamander --space hall --space-wet 0.18"
 S.no_depth = True              # アカペラの所に深いパッドを足さない
 K = Key("A", "major")           # oct 3 で 1 = A3（歌うのは A3〜E5）
 KL = Key("Bb", "major")         # 最後のサビ（oct 3）
@@ -121,9 +122,8 @@ for b in range(S.nb):
         continue
     # ピアノ: 8分で和音を刻むアンセム（サビ）、Aメロは2分音符でのばす
     if chorus or n.startswith("Bメロ"):
-        # v2: v1 は歌の版 7.46。歌の入った所（Aメロ〜サビ）が 6.5 前後と低く、8分のギターと8分のピアノが同じ刻みで重なって混み合っていた
-        #   → ピアノはサビでも4分（2拍目を少しのばす）にして、ギターの8分と分ける
-        for j in range(4): PN[j].bar(b, f"{nm(v[j])}:1 {nm(v[j])}:1.5 {nm(v[j])}:0.5 {nm(v[j])}:1" if chorus else f"{nm(v[j])}:1 {nm(v[j])}:1 {nm(v[j])}:1 {nm(v[j])}:1")
+        # v2 で試した「サビのピアノを4分に」は点数が変わらなかった（歌 7.43）ので、v1 の8分に戻した（完成に選んだのは v1）
+        for j in range(4): PN[j].bar(b, " ".join(f"{nm(v[j])}:0.5" for _ in range(8)) if chorus else f"{nm(v[j])}:1 {nm(v[j])}:1 {nm(v[j])}:1 {nm(v[j])}:1")
         PNL.bar(b, f"{nm(r + 12)}:1 {nm(r + 24)}:1 {nm(r + 12)}:1 {nm(r + 24)}:1")
     else:
         for j in range(4): PN[j].bar(b, f"{nm(v[j])}:2 {nm(v[j])}:2")
