@@ -63,7 +63,7 @@ GT = [S.track(f"ギター1（{['根音', '5度', 'オクターブ'][i]}）", "di
 GL = [S.track(f"Lギター（コード{i + 1}）", "distGuitar", **rock_gtr_spec(0.04, -0.55, drive=0.5)) for i in range(4)]
 GR = [S.track(f"Rギター（コード{i + 1}）", "distGuitar", **rock_gtr_spec(0.036, 0.55, drive=0.5)) for i in range(4)]
 CUT = {
-    "verse": ["x..x..x.x.......", "x.....x...x.x...", "x..x....x..x..x.", "x.x...x...x....."],
+    "verse": ["x.x.x.x.x.x.x.x.", "x.x.x.xxx.x.x.x.", "x.x.x.x.x.xxx.x.", "x.x.xx.x.x.x.x.x"],   # v8: ジャン、ジャン → 8分で刻む
     "pre": ["x.x.x.xxx.x.x.xx", "x.xx.x.xx.x.x.x.", "x.x.xx.x.x.xx.x.", "xx.x.x.xx.x.x.xx"],
     "chorus": ["x.x.xx.xx.x.xx.x", "x.xx.x.xx.xx.x.x", "x.x.x.xxx.x.x.x.", "x..x..x.x.x.xxxx"],
 }
@@ -168,7 +168,8 @@ for b in range(S.nb):
             cut(GL[j], b, pats[i % 4], nm(gl[j]))
             cut(GR[j], b, pats[(i + 1) % 4], nm(gr[j]), accent=(0, 6, 12))
     elif n == "Cメロ":
-        for j in range(3): GT[j].bar(b, f"{nm(pw[j])}:4" if i < 8 else f"{nm(pw[j])}:2 {nm(pw[j])}:2")
+        # 2026-11-04: 人間「ギター、ジャン、ジャン、という感じで弾くところを、ジャジャジャジャジャジャ…と弾いて欲しい」→ のばす所を8分の刻みに
+        for j in range(3): GT[j].bar(b, " ".join(f"{nm(pw[j])}:0.5{'!' if (q == 0 and i >= 8) else ''}" for q in range(8)))
 SOLO = ["R:0.5 A4:0.5 D5:1^ C5:0.5 A4:0.5 G4:1", "F4:0.5 G4:0.5 A4:2~ R:1", "R:0.5 Bb4:0.5 D5:0.5 F5:0.5 E5:1 D5:1", "C5:1.5 A4:0.5 E4:2~",
         "D4:0.25 F4:0.25 A4:0.25 D5:0.25 F5:1^ E5:0.5 D5:0.5 C5:1", "A4:3~ R:1", "Bb4:0.5 C5:0.5 D5:0.5 E5:0.5 F5:1 G5:1", "E5:2 C#5:2~",
         "D5:0.25 C5:0.25 A4:0.25 G4:0.25 F4:0.25 G4:0.25 A4:0.5 D5:2", "R:1 F5:1 E5:1 D5:1", "C5:1 A4:1 G4:1 F4:1", "E4:2 G4:2",

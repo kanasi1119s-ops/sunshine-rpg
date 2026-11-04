@@ -157,7 +157,8 @@ for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     ch = S.chords[b]; pw = power(ch, "E2"); sv = voice(ch, 62, 3)
     if n in ("サビ1", "サビ2", "最後のサビ") or (n == "ピアノソロ" and i >= 8):
-        for j in range(2): GT[j].bar(b, f"{nm(pw[j])}:0.75! {nm(pw[j])}:0.75 {nm(pw[j])}:0.5 {nm(pw[j])}:2")
+        # 2026-11-04: 人間「ギター、ジャン、ジャン、という感じで弾くところを、ジャジャジャジャジャジャ…と弾いて欲しい」→ のばす所を8分の刻みに
+        for j in range(2): GT[j].bar(b, f"{nm(pw[j])}:0.75! {nm(pw[j])}:0.75 {nm(pw[j])}:0.5 " + " ".join(f"{nm(pw[j])}:0.5" for _ in range(4)))
     if n in ("Bメロ2", "サビ2", "人形が踊る", "最後のサビ", "Cメロ"):
         for j in range(3): STR[j].bar(b, f"{nm(sv[j])}:4")
     if n == "時計の鐘" and i == 6:

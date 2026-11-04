@@ -132,9 +132,10 @@ for b in range(S.nb):
     if chorus:
         for j in range(3): GT[j].bar(b, " ".join(f"{nm(gr + [0, 7, 12][j])}:0.5" for _ in range(8)))
     elif n.startswith("Bメロ"):
-        for j in range(3): GT[j].bar(b, " ".join(f"{nm(gr + [0, 7, 12][j])}:1" for _ in range(4)))
+        # 2026-11-04: 人間「ギター、ジャン、ジャン、という感じで弾くところを、ジャジャジャジャジャジャ…と弾いて欲しい」→ のばす所を8分の刻みに
+        for j in range(3): GT[j].bar(b, " ".join(f"{nm(gr + [0, 7, 12][j])}:0.5{'!' if q % 4 == 0 else ''}" for q in range(8)))
     elif n == "Aメロ2":
-        for j in range(3): GT[j].bar(b, f"{nm(gr + [0, 7, 12][j])}:1.5 R:2.5")
+        for j in range(3): GT[j].bar(b, " ".join(f"{nm(gr + [0, 7, 12][j])}:0.5" for _ in range(8)))
     # ベース
     if chorus: BASS.bar(b, " ".join(f"{nm(r)}:0.5" for _ in range(8)))
     elif n.startswith("Bメロ"): BASS.bar(b, f"{nm(r)}:1 {nm(r)}:1 {nm(r)}:1 {nm(r + 7)}:1")

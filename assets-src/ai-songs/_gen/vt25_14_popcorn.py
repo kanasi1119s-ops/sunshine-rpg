@@ -106,9 +106,10 @@ for b in range(S.nb):
     if n in ("イントロ", "間奏", "はじける") or (n == "アウトロ" and i < 12):
         LG.bar(b, RIFF[i % 4] if n != "アウトロ" else " ".join(f"{nm(midi(x.split(':')[0]) + 2)}:{x.split(':')[1]}" for x in RIFF[i % 4].split()))
     if n == "足音":
-        for j in range(3): GT[j].bar(b, f"{nm(pw[j])}:4" if i % 2 == 0 else f"{nm(pw[j])}:2 R:2")
+        # 2026-11-04: 人間「ギター、ジャン、ジャン、という感じで弾くところを、ジャジャジャジャジャジャ…と弾いて欲しい」→ のばす所を8分の刻みに
+        for j in range(3): GT[j].bar(b, " ".join(f"{nm(pw[j])}:0.5" for q in range(8)))
     elif n in ("Aメロ1", "Aメロ2") and i < 8:
-        for j in range(3): GT[j].bar(b, f"{nm(pw[j])}:1 R:1 {nm(pw[j])}:0.5 {nm(pw[j])}:0.5 R:1")
+        for j in range(3): GT[j].bar(b, " ".join(f"{nm(pw[j])}:0.5{'!' if q == 0 else ''}" for q in range(8)))
     elif n == "アウトロ" and i >= 12:
         if i == 12:
             for j in range(3): GT[j].bar(b, f"{nm(pw[j])}:0.5! R:3.5")

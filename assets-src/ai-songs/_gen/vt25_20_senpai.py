@@ -179,7 +179,8 @@ for b in range(S.nb):
             LG.bar(b, swing("R:1 F5:0.5 Ab5:0.5 A5:0.5 C6:0.5 F5:1"))
         continue
     if n in ("Bメロ1", "Bメロ2"):                       # 跳ねるのを少し休んで、のばす
-        GR.bar(b, f"{nm(low(ch, 'E2'))}:2 {nm(low(ch, 'E2'))}:2"); GU.bar(b, f"{nm(low(ch, 'E2') + 7)}:2 {nm(low(ch, 'E2') + 7)}:2")
+        # 2026-11-04: 人間「ギター、ジャン、ジャン、という感じで弾くところを、ジャジャジャジャジャジャ…と弾いて欲しい」→ のばす所を8分の刻みに
+        GR.bar(b, swing(" ".join(f"{nm(low(ch, 'E2'))}:0.5" for _ in range(8)))); GU.bar(b, swing(" ".join(f"{nm(low(ch, 'E2') + 7)}:0.5" for _ in range(8))))
         BASS.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2")
         for j in range(3): EP[j].bar(b, f"{nm(ev[j])}:4")
         continue
