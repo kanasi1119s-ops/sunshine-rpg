@@ -46,10 +46,11 @@ S.tempo = [{"bar": S.sc("最後のサビ")[0] + 1, "bpm": 156}, {"bar": S.sc("�
            {"bar": S.sc("スタンプ連打")[0] + 1, "bpm": 172, "ramp": 4}]
 
 V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="horn", low=False)
-ACC = [S.track(f"アコーディオン{i + 1}", "accordion", volume=0.075, pan=-0.3, reverb=0.25, sustain=0.5) for i in range(3)]
+ACC = [S.track(f"アコーディオン{i + 1}", "accordion", volume=0.065, pan=-0.3, reverb=0.25, sustain=0.5) for i in range(3)]
 ACCM = S.track("アコーディオン（旋律）", "accordion", volume=0.11, pan=-0.15, reverb=0.28)
 CLA = S.track("クラリネット", "lead", patch="clarinet", volume=0.11, pan=0.2, reverb=0.3)
 TUBA = S.track("チューバ", "brass", patch="tuba", volume=0.13, pan=0, reverb=0.2)
+FID = S.track("フィドル（のばす対旋律）", "fiddle", volume=0.07, pan=0.3, reverb=0.4)   # v2
 GLK = S.track("通知音（グロッケン）", "glockenspiel", volume=0.06, pan=0.3, reverb=0.35)
 D = S.drumkit()
 SIL = Silence(S)
@@ -120,6 +121,10 @@ for b in range(S.nb):
     elif n in ("Aメロ1", "Aメロ2", "Bメロ1", "Bメロ2", "サビ1", "サビ2", "最後のサビ"):
         if n in ("Bメロ1", "Bメロ2") and i == 7: continue
         oompah(b, ch); tuba(b, ch)
+        # v2: 全体が 6.6〜7.3（アコーディオンの刻みとチューバだけで薄く、くり返しに聞こえる）
+        #     → Aメロ2・サビでフィドルが長い対旋律（和音の上の音を2分でのばす）を弾き、音に広がりを足す
+        if n in ("Aメロ2", "サビ1", "サビ2", "最後のサビ") or (n == "Aメロ1" and i >= 8):
+            t = tones(ch, "A4", "A5"); FID.bar(b, f"{nm(t[-1])}:2 {nm(t[-2])}:2" if i % 2 == 0 else f"{nm(t[-2])}:4")
         if n in ("サビ1", "サビ2", "最後のサビ") and i % 4 == 3: CLA.bar(b, "R:2 " + " ".join(f"{nm(x)}:0.5" for x in tones(ch, "A4", "A5")[:4]))
     elif n == "間奏":
         oompah(b, ch); tuba(b, ch)
@@ -153,7 +158,7 @@ for b in range(S.nb):
         if i == 0: D.set(b, "X...............", "X...............", "................"); crash(D, b, "C2", 6)
         continue
     if n in ("Bメロ1", "Bメロ2") and i == 7: continue
-    hh = "x.x.x.x.x.x.x.x." if n in ("サビ1", "サビ2", "最後のサビ", "スタンプ連打") else "................"
+    hh = "x.x.x.x.x.x.x.x." if n in ("サビ1", "サビ2", "最後のサビ", "スタンプ連打") else "x...x...x...x..."   # v2: Aメロにも4分のハイハット
     vgroove(D, b, "beat8", ghosts=0.15, seed=b, k="X.......X.......", s="....X.......X...", h=hh)
     if n in ("サビ1", "サビ2", "最後のサビ", "間奏", "スタンプ連打") and i % 8 == 0: crash(D, b)
     if i % 8 == 7 and not last: put_fill(D, b, "small")
