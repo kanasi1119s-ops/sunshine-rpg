@@ -18,7 +18,7 @@ S.flags = "--bass rubner " + S.flags + " --piano salamander --space hall --space
 S.keep_old_synth = True
 S.no_depth = True
 S.open_hat_vol = 0.45
-S.keepers = {"Aメロ1": "ride", "Aメロ2": "ride", "サビ2": "open", "最後のサビ": "open"}
+S.keepers = {"Aメロ1": "ride", "Aメロ2": "ride"}   # v2: サビ2・最後のサビの「open」（裏のオープンハイハット）が 6.5〜6.8 の元 → やめる（07 と同じ）
 K = Key("C", "major")          # oct 4 で 1 = C4
 K2 = Key("D", "major")
 K3 = Key("Eb", "major")
@@ -213,4 +213,4 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の08（7時）。ブ�
           "朝7時の満員電車が、あの鼻歌をきっかけにミュージカルの舞台になる。ブラス・ストリングス・ピアノ・ウッドベースの2ビート、タップの止め。"
           "合いことばの節は間奏の車掌の笛（ピッコロ）。自作")
 finish(S, LY, V, 0,
-       level={"verse": -0.2}, special={"アナウンス": -0.7, "最後のサビ": 0.4, "フィナーレ": 0.2})
+       level={"verse": -0.2}, special={"アナウンス": -0.7, "最後のサビ": 0.25, "フィナーレ": 0.2})
