@@ -41,6 +41,8 @@ def finish(S, LY, V, transpose=0, fx=None, double=None, flat=False, **kw):
     teto(S, LY, V, transpose=transpose, **kw)
     path = _vsys.argv[1]
     if flat: flatten_arc(path, S)
+    if VOCAL:   # 動画の歌詞の表示のため、「っ」を消す前のかなを拍ごとに書き残す（2026-11-05）
+        _vjson.dump(sorted(LY.full), open(path + ".kana", "w"), ensure_ascii=False)
     if fx:
         open(path + ".fx", "w").write(_vjson.dumps(fx, ensure_ascii=False))
     if double and VOCAL:

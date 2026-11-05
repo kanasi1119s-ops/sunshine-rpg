@@ -22,6 +22,8 @@ sp = importlib.util.spec_from_file_location("sing", os.path.join(HERE, "../singe
 FONT_J = os.path.join(HERE, "fonts/DotGothic16-Regular.ttf"); FONT_E = os.path.join(HERE, "fonts/Orbitron.ttf")
 W, H, FPS = 1920, 1080, int(os.environ.get("MV_FPS", "24"))   # 2026-10-29: なめらかにするため 48 コマ/秒も（MV_SMOOTH=1 と一緒に）
 ALBUM_J, ALBUM_E, KIND_J, KIND_E = "スカーレット・フリークエンシー", "SCARLET FREQUENCY", "ボカロ曲", "Vocaloid Songs"   # 人間が選んだアルバム名（2026-10-26）
+# 2026-11-05 第2弾『SECOND SIGNAL（セカンド・シグナル）』のため、アルバム名を環境変数でも渡せるように
+ALBUM_J = os.environ.get("MV_ALBUM_J", ALBUM_J); ALBUM_E = os.environ.get("MV_ALBUM_E", ALBUM_E)
 rows = {r[0]: r for r in (l.rstrip("\n").split("\t") for l in open(TSV, encoding="utf-8")) if r and r[0]}
 _, TJ, TE, GJ, GE = rows[NO]; TOTAL = len(rows)
 PINK, PINK2, WHITE, GRAY = (255, 70, 120), (255, 150, 180), (245, 240, 245), (170, 160, 170)
@@ -61,6 +63,10 @@ for i in range(N):
 song = json.load(open(SONG)); b2s = SG.tempo_clock(song["bpm"], song.get("tempo"), song.get("beats", 4))
 notes = [(b2s(b), b2s(b + L), LM.kata2hira(ly.strip().lstrip("+-~")), b) for b, L, ly in LM.read_ust(UST)]
 notes = [n for n in notes if n[2] and n[2] not in ("R", "r", "息", "br")]
+# 2026-11-05: 歌う音（UST）では「っ」が消えている（前の音を短く切るだけ）ので、台本の歌詞（*.json.kana）から「っ」つきのかなを戻して表示する
+if os.environ.get("MV_KANA") and os.path.exists(os.environ["MV_KANA"]):
+    _K = {round(t, 3): LM.kata2hira(v) for t, v in json.load(open(os.environ["MV_KANA"], encoding="utf-8"))}
+    notes = [(a, b_, _K.get(round(bt, 3), ly), bt) for a, b_, ly, bt in notes]
 # のばしの母音（「しまう」のあとの「う」「う」…）は「〜」1つにまとめる（表示だけ）
 VOW = {}
 for row, v in (("あかさたなはまやらわがざだばぱゃぁ", "あ"), ("いきしちにひみりぎじぢびぴぃ", "い"), ("うくすつぬふむゆるぐずづぶぷゅぅ", "う"),
@@ -123,6 +129,9 @@ while k < len(notes):
     if best is None: best = min(j, len(notes) - 1)
     lines.append(notes[k:best + 1]); k = best + 1
 LS = [l[0][0] for l in lines]; LE = [l[-1][1] for l in lines]
+if os.environ.get("MV_LINES"):   # 2026-11-05: 英訳を頼むため、画面の行だけを書き出す（MV_LINES_ONLY=1 ならここで終わる）
+    open(os.environ["MV_LINES"], "w", encoding="utf-8").write("".join("".join(n[2] for n in l) + "\n" for l in lines))
+    if os.environ.get("MV_LINES_ONLY"): sys.exit(0)
 # 英訳（人間「歌詞も英訳を載せよう」2026-10-26）: 行と同じ数・同じ順の JSON（MV_EN）。いま歌っている行の下に出す
 EN = None
 if os.environ.get("MV_EN") and os.path.exists(os.environ["MV_EN"]):

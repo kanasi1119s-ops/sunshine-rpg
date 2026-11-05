@@ -705,7 +705,7 @@ def morae(txt):
 
 class Lyrics:
     """歌詞と旋律を小節ごとに合わせて記録する（音の数＝歌詞の拍の数。ー は前の音をのばす）"""
-    def __init__(self, S): self.S = S; self.ev = []; self.bad = 0
+    def __init__(self, S): self.S = S; self.ev = []; self.bad = 0; self.full = []   # full: 「っ」を消す前のかな（動画の歌詞の表示のため）
 
     def bar(self, b, line, words):
         ks = morae(words); t = b * self.S.beats; k = 0
@@ -713,7 +713,7 @@ class Lyrics:
             L = tok_beats(x)
             if not x.startswith("R"):
                 kk = ks[k] if k < len(ks) else "ー"
-                self.ev.append((t, L * 0.6 if kk.endswith("っ") else L, _re.sub(r"[!?/~\\]+$", "", x.split(":")[0]), kk.rstrip("っ") or "ー")); k += 1
+                self.ev.append((t, L * 0.6 if kk.endswith("っ") else L, _re.sub(r"[!?/~\\]+$", "", x.split(":")[0]), kk.rstrip("っ") or "ー")); self.full.append((t, kk)); k += 1
             t += L
         if ks and k != len(ks):
             self.bad += 1; print(f"  注意: {b + 1}小節目の歌詞の数が合いません（音 {k}・歌詞 {len(ks)}「{words}」）")
@@ -733,7 +733,7 @@ class Lyrics:
             for kana in ph:
                 if k >= len(notes): break
                 st, L, nn = notes[k]
-                self.ev.append((st, L * 0.6 if kana.endswith("っ") else L, nn, kana.rstrip("っ") or "ー")); k += 1   # 「っ」は前の音を短く切る
+                self.ev.append((st, L * 0.6 if kana.endswith("っ") else L, nn, kana.rstrip("っ") or "ー")); self.full.append((st, kana)); k += 1   # 「っ」は前の音を短く切る
             if 0 < k < len(notes):
                 gap = notes[k][0] - (notes[k - 1][0] + notes[k - 1][1])
                 if gap < 0.45: self.bad += 1; print(f"  注意: {tag} {pi + 1}つ目の句「{''.join(ph)}」の終わりが息つぎと合いません（{int(notes[k - 1][0] // self.S.beats) + 1}小節目）")
