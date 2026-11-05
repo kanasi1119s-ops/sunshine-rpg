@@ -19,7 +19,7 @@ S.keep_old_synth = True
 S.no_depth = True
 S.open_hat_vol = 0.55
 S.drum_scale = 0.85
-S.keepers = {"Aメロ2": "ride", "サビ2": "open", "最後のサビ": "open"}
+S.keepers = {"Aメロ2": "ride"}   # v2: サビの裏のオープンハイハットをやめる（07・08 で点が上がった）
 K = Key("D", "minor")          # oct 4 で 1 = D4
 
 RIFF_CH = ["Dm", "Dm", "Bb", "C"]
@@ -127,8 +127,10 @@ for b in range(S.nb):
         if i >= 4: chug8(b, ch)
         if i >= 8: wall(b, ch)
     elif n in ("Aメロ1", "Aメロ2"):
-        RIFF.bar(b, RIFFS[i % 4] if ch in ("Dm",) or i % 4 < 2 else RIFFS[2 + (i % 2)])
-        if n == "Aメロ2" or i >= 8: chug8(b, ch, 2)
+        # v2: Aメロが 6.7〜7.2（低いリフが毎小節つづき、8分の刻みも重なって歌のまわりが埋まっていた）
+        #     → リフは2小節に1回（あいだは のばすパワーコード）、刻みは2分の和音に
+        RIFF.bar(b, (RIFFS[i % 4] if ch in ("Dm",) or i % 4 < 2 else RIFFS[2 + (i % 2)]) if i % 2 == 0 else f"{nm(power(ch, 'D2')[0])}:4")
+        if n == "Aメロ2" or i >= 8: chug8(b, ch, 2, "x:2! x:2")
     elif n in ("Bメロ1", "Bメロ2"):
         chug8(b, ch, 3, "x:2! x:2"); wall(b, ch)
     elif n in ("サビ1", "サビ2", "最後のサビ"):
