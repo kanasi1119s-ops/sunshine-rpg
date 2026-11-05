@@ -42,7 +42,7 @@ S.scene("ドアベル", 4, "outro", ["F#m9", "Dmaj9", "Amaj9", "Amaj9"])
 
 V = Voice(S, vol=0.2, delay=0.75, bright=0.0, patch="surgeTropics", low=False)
 NYL = [S.track(f"ナイロンギター{i + 1}", "guitar", patch="nylonGuitar", amp="crystal", volume=0.07, pan=-0.35, reverb=0.25, chorus=0, sustain=1.0) for i in range(4)]
-PN = [S.track(f"ハウスのピアノ{i + 1}", "piano", volume=0.07, pan=0.3, reverb=0.25, fx=[{"type": "eq", "low": -4, "mid": -1, "midHz": 400, "high": 3}]) for i in range(4)]
+PN = [S.track(f"ハウスのピアノ{i + 1}", "piano", volume=0.07, pan=0.3, reverb=0.25, fx=[{"type": "eq", "low": -4, "mid": -1, "midHz": 400, "high": 0}]) for i in range(3)]
 FL = S.track("フルート", "lead", patch="flute", volume=0.12, pan=0.1, reverb=0.35)
 PAD = [S.track(f"パッド{i + 1}", "pad", **pad_spec("surgePadPad2Mw", vol=0.035, pan=-0.5 + 0.5 * i, duck=0.4, sustain=1.5)) for i in range(3)]
 BASS = S.track("ベース（指弾き）", "bass", **finger_bass_spec(vol=0.22))
@@ -98,8 +98,10 @@ def bossa(b, ch):
 
 
 def house_piano(b, ch):
-    v = voice(ch, 66, 4)
-    for j in range(4): PN[j].bar(b, f"R:0.5 {nm(v[j])}:0.5 R:0.5 {nm(v[j])}:0.5 R:0.5 {nm(v[j])}:0.75 {nm(v[j])}:0.25 {nm(v[j])}:0.5")
+    # v2: ハウスの区間が 6.0〜6.4（ピアノ4声の細かい刻み＋パッド＋ボサノバのギターが同時に鳴り、高い音も強すぎた）
+    #     → ピアノは3声で刻みを少なく、高い音を持ち上げない
+    v = voice(ch, 64, 3)
+    for j in range(3): PN[j].bar(b, f"R:0.5 {nm(v[j])}:0.5 R:0.5 {nm(v[j])}:1 R:0.5 {nm(v[j])}:0.5 R:0.5")
 
 
 def pad(b, ch, c=62):
@@ -118,8 +120,8 @@ for b in range(S.nb):
         if n in ("Bメロ1", "Bメロ2"): pad(b, ch)
         if n == "イントロ" and i >= 4: FL.bar(b, ["R:1 E5:1 C#5:1 B4:1", "A4:3 R:1", "R:1 F#5:1 E5:1 C#5:1", "B4:3 R:1"][i - 4])
     elif n in ("サビ1", "サビ2", "最後のサビ", "間奏2"):
-        house_piano(b, ch); pad(b, ch, 64)
-        if n == "最後のサビ" or i % 4 >= 2: bossa(b, ch)
+        house_piano(b, ch)
+        if n == "最後のサビ" and i >= 8: pad(b, ch, 64); bossa(b, ch)      # v2: パッドとギターは最後のサビの後半だけ
         if n == "間奏2":
             SOLO = ["R:0.5 A5:0.5 F#5:0.5 E5:0.5 C#5:1 E5:1", "F#5:2 E5:1 R:1", "R:0.5 B5:0.5 A5:0.5 F#5:0.5 E5:1 C#5:1", "B4:3 R:1",
                     "R:0.5 C#6:0.5 B5:0.5 A5:0.5 F#5:1 E5:1", "D5:2 F#5:1 R:1", "R:0.5 E5:0.5 F#5:0.5 G#5:0.5 A5:1 B5:1", "B5:3 R:1"]
