@@ -18,7 +18,6 @@ S.keep_old_synth = True
 S.no_depth = True
 S.live_bass = True
 S.open_hat_vol = 0.55
-S.keepers = {"サビ2": "open", "最後のサビ": "open"}
 K = Key("A", "major")          # oct 3 で 1 = A3
 
 INTRO = ["Amaj7", "Dmaj7", "Amaj7", "Dmaj7"]
@@ -148,7 +147,8 @@ for b in range(S.nb):
     ch = S.chords[b]; r = low(ch, "E1")
     if n in ("Aメロ1", "Aメロ2", "Bメロ1", "Bメロ2", "間奏") or (n == "イントロ" and i >= 4):
         BASS.bar(b, f"{nm(r)}:1.5 {nm(r + 7)}:0.5 {nm(r + 7)}:1.5 {nm(r)}:0.5")
-    elif n in ("サビ1", "サビ2", "最後のサビ", "間奏2"): BASS.bar(b, bass_line(S, b, "house" if i % 4 != 3 else "push", lo="E1"))
+    elif n in ("サビ1", "サビ2", "最後のサビ", "間奏2"):      # v3: 裏のオクターブ跳び（house）をやめ、根音と5度で歩く
+        BASS.bar(b, f"{nm(r)}:1 {nm(r)}:0.5 {nm(r + 7)}:1 {nm(r + 7)}:0.5 {nm(r + 12 if i % 2 else r)}:1")
     elif n == "寝かせる" and i >= 4: BASS.bar(b, f"{nm(r)}:4")
     elif n == "ドアベル" and i < 3: BASS.bar(b, f"{nm(r)}:4")
 
@@ -166,7 +166,9 @@ for b in range(S.nb):
         if n in ("Bメロ1", "Bメロ2") and i == 6: put_fill(D, b, "build")
         if n in ("Bメロ1", "Bメロ2") and last: halt(D, b, 1)
     elif n in ("サビ1", "サビ2", "最後のサビ", "間奏2"):
-        vgroove(D, b, "four", ghosts=0.2, seed=b)
+        # v3: ピアノを薄くしても 6.3 のまま → 生ドラムでの4つ打ち＋裏のオープンハイハットが固く聞こえていた。
+        #     キックは4つ打ちのまま、スネアは軽いクロススティック、ハイハットは閉じた8分（ボサノバの手ざわりを残す）
+        vgroove(D, b, "beat8", ghosts=0.1, seed=b, k="X...X...X...X...", s="....x.......x..x", h="x.x.x.x.x.x.x.x.")
         if i % 8 == 0: crash(D, b, "C2", 6 if (n == "最後のサビ" and i == 0) else 4)
         if i % 8 == 7 and not last: put_fill(D, b, "small")
         if last and n not in ("最後のサビ",): put_fill(D, b, "snare16" if n != "間奏2" else "lift")
