@@ -142,3 +142,17 @@
 | `lyrics_en/NN.json` | 英訳（25曲） |
 | `fonts/` | DotGothic16・Orbitron と、その使用許諾書 |
 | `fireworks_sfx.py` / `mix_fireworks.py` | 花火の効果音（02 で使用。ヒューは高い所から下がる音） |
+
+## 第2弾 SECOND SIGNAL で使った仕上げの手順（2026-11-05）
+
+1. 書き出し: `tools/mv/yt2_render_all.sh`（1曲ずつ。できた曲は `.done` で飛ばす。2時間で止まったら、書きかけの曲を消して再開）
+2. パソコンへ: 1曲を `ffmpeg -c copy -f segment -segment_time 70 -reset_timestamps 1` で 30MB 未満に分けて送る。
+   **`-reset_timestamps 1` を必ず付ける**（付けないと、つないだ長さが倍になる）。
+   パソコンの `~/fm/addss.sh NN [start]`（`fmp4_join.py`）で1曲ずつ書き足す。
+3. 長さを直す: つないだ動画は全体の長さが 0 のままで、目次の箱（mfra）が残る。
+   `python3 tools/mv/fmp4_fix_len.py <動画> <映像の秒数> <音の秒数>` で、mfra→free と長さの書きこみだけ行う（映像と音には手をつけない）。
+4. 説明文: 曲目の時間は、`addss.sh` が出す「ここまでの長さ」（実際の長さ）で書く。曲の切れ目の静止画で確かめる。
+5. サムネイル: `tools/mv/yt_thumbnail_second_signal.py`（テトが欠けていないか確かめる）
+6. インスタ用（前回と同じ形）: `tools/mv/ig_second_signal.sh NN …` … 各曲の 0:50 から60秒・縦1080×1920・24コマ。
+   上に歌詞ボード全体、下に舞台のテト、後ろはぼかした画面。キャプションは `tools/mv/ig_caption_second_signal.py`
+   （前回と同じ形。ハッシュタグは #VOCALOID を使わず #UTAU）。
