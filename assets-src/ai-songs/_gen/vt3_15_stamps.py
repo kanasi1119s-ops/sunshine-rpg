@@ -45,7 +45,7 @@ S.scene("通知", 2, "outro", ["Eb", "Eb"])
 S.tempo = [{"bar": S.sc("最後のサビ")[0] + 1, "bpm": 156}, {"bar": S.sc("最後のサビ")[8] + 1, "bpm": 162, "ramp": 8},
            {"bar": S.sc("スタンプ連打")[0] + 1, "bpm": 172, "ramp": 4}]
 
-V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="horn", low=False)
+V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="clarinet", low=False)   # v3: BGM の旋律をホルンからクラリネットに（歌の版 7.62 に対し BGM 7.45。旋律の音色がこもっていた）
 ACC = [S.track(f"アコーディオン{i + 1}", "accordion", volume=0.065, pan=-0.3, reverb=0.25, sustain=0.5) for i in range(3)]
 ACCM = S.track("アコーディオン（旋律）", "accordion", volume=0.11, pan=-0.15, reverb=0.28)
 CLA = S.track("クラリネット", "lead", patch="clarinet", volume=0.11, pan=0.2, reverb=0.3)
