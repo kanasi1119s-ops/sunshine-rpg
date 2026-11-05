@@ -94,9 +94,11 @@ def wall(b, ch, amount):
     r = low(ch, "C3"); up = [x for x in tones(ch, nm(r + 1), nm(r + 12))][:2]
     while len(up) < 2: up.append(r + 12)
     rv = [r] + up
+    # v2: サビの点数が 6.8〜7.0（壁が3本ずつ8分で重なり、パッドとアルペジオまで同時に鳴って濃すぎ）
+    #     → 8分で弾くのは左の1本だけ。左の2本目からは2分、右は全音符で「洗い流すように」のばす
     for j in range(amount):
-        WL[j].bar(b, " ".join(f"{nm(pw[j])}:0.5" for _ in range(8)))
-        WR[j].bar(b, " ".join(f"{nm(rv[j])}:0.5" for _ in range(8)))
+        WL[j].bar(b, " ".join(f"{nm(pw[j])}:0.5" for _ in range(8)) if j == 0 else f"{nm(pw[j])}:2 {nm(pw[j])}:2")
+        WR[j].bar(b, f"{nm(rv[j])}:4")
 
 
 def arp(b, ch, lo="D4", hi="D6"):
@@ -130,7 +132,7 @@ for b in range(S.nb):
         arp(b, ch); wall(b, ch, 1 if n == "Aメロ2" else 2)
         if n == "Bメロ2": pad(b, ch)
     elif n == "サビ2":
-        arp(b, ch, "D5", "D6"); wall(b, ch, 3); pad(b, ch)
+        arp(b, ch, "D5", "D6"); wall(b, ch, 3)
     elif n == "間奏2":
         wall(b, ch, 3); pad(b, ch, SWL, 66)
         SOLO = ["R:1 F#5:1 A5:2", "G5:2 F#5:1 E5:1", "D5:3 R:1", "E5:1 F#5:1 A5:2", "B5:2 A5:1 F#5:1", "G5:3 R:1", "F#5:1 E5:1 D5:1 B4:1", "C#5:3 R:1"]
@@ -138,8 +140,8 @@ for b in range(S.nb):
     elif n == "ブリッジ":
         pad(b, ch, SWL, 62)
     elif n == "最後のサビ":
-        arp(b, ch, "D5", "D6"); wall(b, ch, 3); pad(b, ch, PAD, 64)
-        if i >= 8: pad(b, ch, SWL, 69)
+        arp(b, ch, "D5", "D6"); wall(b, ch, 3)
+        pad(b, ch, PAD, 64) if i < 8 else pad(b, ch, SWL, 69)      # v2: パッドは2種を同時に鳴らさない
     elif n == "アウトロ":
         if i < 4: wall(b, ch, 3 - i // 2); pad(b, ch, SWL, 66); arp(b, ch, "D5", "D6")
         else: pad(b, ch, SWL, 66)
