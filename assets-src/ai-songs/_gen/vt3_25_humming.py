@@ -40,7 +40,8 @@ S.scene("合唱", 8, "chorus", LAST)
 S.scene("秒針", 4, "outro", ["Bb", "Bb", "Bb", "Bb"])
 
 V = Voice(S, vol=0.21, delay=0.75, bright=0.4, patch="brightLead", low=True)
-LEAD = S.track("シンセのリード", "lead", patch="modernLead", volume=0.08, pan=0.0, reverb=0.3)
+LEAD = S.track("シンセのリード", "lead", patch="surgeFriendly", volume=0.09,   # v3: modernLead → やわらかい音（イントロ・間奏が 6.8）
+                pan=0.0, reverb=0.3)
 PNL = S.track("ピアノ（左手）", "piano", volume=0.09, pan=-0.15, reverb=0.3, fx=[{"type": "eq", "low": -2, "mid": -1, "midHz": 400, "high": -1}])   # v2
 PNR = [S.track(f"ピアノ（右手{i + 1}）", "piano", volume=0.06, pan=0.1, reverb=0.3, fx=[{"type": "eq", "low": -3, "mid": -1, "midHz": 400, "high": -1}]) for i in range(3)]
 SAW = [S.track(f"シンセの和音{i + 1}", "pad", patch="surgePadNeverending", volume=0.035, pan=-0.4 + 0.4 * i, reverb=0.3, duck=0.35) for i in range(3)]
@@ -163,8 +164,7 @@ for b in range(S.nb):
         saw(b, ch, "x:4", 64); strings(b, ch, 67)
         for j, t in enumerate(CHOIR): t.bar(b, shift_oct(MOTIF_B[i % 2], -1) if j == 0 else MOTIF_B[i % 2] if j == 1 else f"{nm(voice(ch, 60, 3)[2])}:4")
         LEAD.bar(b, MOTIF_B[i % 2]); GL.bar(b, shift_oct(MOTIF_B[i % 2], 1))
-        WH.bar(b, shift_oct(MOTIF_B[i % 2], 1) if i >= 4 else "R:4")
-        chord3(EPD, b, ch, "R:0.5 x:0.5 R:0.5 x:0.5 R:0.5 x:0.5 R:0.5 x:0.5", 62)
+        WH.bar(b, shift_oct(MOTIF_B[i % 2], 1) if i >= 4 else "R:4")      # v3: 合唱のエレピの裏打ちはやめる（音が多すぎた）
     elif n == "秒針":
         if i < 2: chord3(STR, b, ch, "x:4", 62)
         if i == 0: chord3(CHOIR, b, ch, "x:4", 62)
@@ -208,7 +208,7 @@ for b in range(S.nb):
     if n in ("Aメロ1", "Aメロ2") and i < 8:
         vgroove(D, b, "beat8", ghosts=0.15, seed=b)
     else:
-        vgroove(D, b, "four" if n == "合唱" else "beat8", ghosts=0.2, seed=b)     # v2: 4つ打ちは合唱だけ
+        vgroove(D, b, "beat8", ghosts=0.2, seed=b)     # v3: 合唱の4つ打ちもやめる（6.7）
     if n in ("サビ1", "サビ2", "最後のサビ", "合唱", "イントロ") and i % 8 == 0: crash(D, b, "C2", 7 if n == "最後のサビ" and i == 0 else 5)
     if i % 8 == 7 and not last: put_fill(D, b, "small")
     if last and n in ("Bメロ1", "Bメロ2", "間奏", "イントロ", "サビ2"): put_fill(D, b, "snare16")
