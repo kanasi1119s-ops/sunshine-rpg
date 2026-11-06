@@ -12,12 +12,11 @@
 from vt25_lib import *
 
 S = Song("25", "humming", "25時のハミング（仮）", "Humming at 25 O'Clock", 148, 4, "A", "major", "シンセポップ・アンセム（ボカロ）")
-S.kit = "electro"
+S.kit = "jpop"      # v2: electro → jpop（生に近い太鼓。シンセの区間がどこも 6.4〜7.1 だった）
 S.flags = S.flags + " --piano salamander --space room --space-wet 0.14"
 S.keep_old_synth = True
 S.no_depth = True
 S.open_hat_vol = 0.5
-S.keepers = {"最後のサビ": "open"}
 K = Key("A", "major")          # oct 3 で 1 = A3
 KL = Key("Bb", "major")        # 最後のサビと合唱（+1）
 
@@ -41,8 +40,10 @@ S.scene("合唱", 8, "chorus", LAST)
 S.scene("秒針", 4, "outro", ["Bb", "Bb", "Bb", "Bb"])
 
 V = Voice(S, vol=0.21, delay=0.75, bright=0.4, patch="brightLead", low=True)
-LEAD = S.track("シンセのリード", "lead", patch="modernLead", volume=0.1, pan=0.0, reverb=0.3)
-SAW = [S.track(f"シンセの和音{i + 1}", "pad", patch="modernSupersaw", volume=0.04, pan=-0.4 + 0.4 * i, reverb=0.3, duck=0.35) for i in range(3)]
+LEAD = S.track("シンセのリード", "lead", patch="modernLead", volume=0.08, pan=0.0, reverb=0.3)
+PNL = S.track("ピアノ（左手）", "piano", volume=0.09, pan=-0.15, reverb=0.3, fx=[{"type": "eq", "low": -2, "mid": -1, "midHz": 400, "high": -1}])   # v2
+PNR = [S.track(f"ピアノ（右手{i + 1}）", "piano", volume=0.06, pan=0.1, reverb=0.3, fx=[{"type": "eq", "low": -3, "mid": -1, "midHz": 400, "high": -1}]) for i in range(3)]
+SAW = [S.track(f"シンセの和音{i + 1}", "pad", patch="surgePadNeverending", volume=0.035, pan=-0.4 + 0.4 * i, reverb=0.3, duck=0.35) for i in range(3)]
 STR = [S.track(f"ストリングス{i + 1}", "strings", patch="stringEnsemble", volume=0.05, pan=-0.4 + 0.4 * i, reverb=0.4, sustain=1.2) for i in range(3)]
 CHOIR = [S.track(f"合唱{i + 1}", "pad", patch="choir", volume=0.06, pan=-0.3 + 0.3 * i, reverb=0.45) for i in range(3)]
 PLK = S.track("プラック", "pad", patch="modernPluck", volume=0.06, pan=0.3, reverb=0.3, sustain=0.5)
@@ -168,6 +169,16 @@ for b in range(S.nb):
         if i < 2: chord3(STR, b, ch, "x:4", 62)
         if i == 0: chord3(CHOIR, b, ch, "x:4", 62)
 
+# ================= ピアノ（v2: 左手と右手で和音を弾き、シンセだけの音を生の手ざわりで支える）=================
+for b in range(S.nb):
+    n, i, L, k = S.scene_of(b)
+    if n not in ("イントロ", "Aメロ1", "Aメロ2", "Bメロ1", "Bメロ2", "サビ1", "サビ2", "最後のサビ", "間奏"): continue
+    if n == "イントロ" and i < 8: continue
+    ch = S.chords[b]; r = low(ch, "E2"); v = voice(ch, 64, 3)
+    big = n in ("サビ1", "サビ2", "最後のサビ")
+    PNL.bar(b, f"{nm(r)}:1.5 {nm(r + 12)}:0.5 {nm(r + 7)}:2" if big else f"{nm(r)}:2 {nm(r + 7)}:2")
+    for j in range(3): PNR[j].bar(b, f"{nm(v[j])}:1 {nm(v[j])}:0.5 {nm(v[j])}:1 {nm(v[j])}:0.5 {nm(v[j])}:1" if big else f"R:0.5 {nm(v[j])}:1.5 R:0.5 {nm(v[j])}:1.5")
+
 # ================= 秒針（1曲目と同じカホンの縁「カチ」）=================
 for b in S.sc("秒読み")[:3]: TICK.bar(b, "E3:1 E3:1 E3:1 E3:1")
 TICK.bar(S.sc("秒読み")[3], "E3:1 E3:1 E3:1 R:1")                 # 0時ちょうど（1拍の無音）
@@ -197,7 +208,7 @@ for b in range(S.nb):
     if n in ("Aメロ1", "Aメロ2") and i < 8:
         vgroove(D, b, "beat8", ghosts=0.15, seed=b)
     else:
-        vgroove(D, b, "four" if n in ("サビ1", "サビ2", "最後のサビ", "合唱", "イントロ") else "beat8", ghosts=0.2, seed=b)
+        vgroove(D, b, "four" if n == "合唱" else "beat8", ghosts=0.2, seed=b)     # v2: 4つ打ちは合唱だけ
     if n in ("サビ1", "サビ2", "最後のサビ", "合唱", "イントロ") and i % 8 == 0: crash(D, b, "C2", 7 if n == "最後のサビ" and i == 0 else 5)
     if i % 8 == 7 and not last: put_fill(D, b, "small")
     if last and n in ("Bメロ1", "Bメロ2", "間奏", "イントロ", "サビ2"): put_fill(D, b, "snare16")
