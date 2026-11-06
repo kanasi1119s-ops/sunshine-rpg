@@ -98,7 +98,10 @@ for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     ch = S.chords[b]
     if n == "回る音":
-        if i >= 2: strings(b, ch, 58)
+        # v2: 「回る音」の4小節が 5.66（乾燥機の低い音と雨の音だけで、音楽がなかった）
+        #     → 1小節目からストリングス、3小節目からビブラフォンの節とピアノ
+        strings(b, ch, 58)
+        if i >= 2: VIB.bar(b, MOTIF[i % 2]); piano(b, ch)
     elif n == "イントロ":
         piano(b, ch); VIB.bar(b, MOTIF[i % 2])
         if i >= 4: strings(b, ch, 58)
@@ -120,7 +123,6 @@ for b in range(S.nb):
         strings(b, ch, 58) if i == 0 else None
 
 BUZ.bar(S.sc("ブザー")[1], "C5:1.5 R:2.5")
-season(S, S.sc("回る音")[0], "雨", beats=16, vol=0.03, every=4)            # 針の音のかわり（小さな雨の音）
 season(S, S.sc("機械の音だけ")[0], "雨", beats=16, vol=0.03, every=4)
 
 # ================= ベースと回る音 =================
