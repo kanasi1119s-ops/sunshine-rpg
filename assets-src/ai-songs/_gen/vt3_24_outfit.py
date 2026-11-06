@@ -38,7 +38,7 @@ S.scene("ベッドに倒れこむ", 8, "bridge", ["Cmaj7", "Bm7", "Am7", "Gmaj7"
 S.scene("最後のサビ", 24, "chorus", LAST)
 S.scene("目覚まし", 4, "outro", ["Abmaj7", "Fm7", "Bbm7", "Abmaj7"])
 
-V = Voice(S, vol=0.2, delay=0.5, bright=0.1, patch="surgeNicePluck", low=False)
+V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="flute", low=False)   # v2: BGM の旋律をシンセのはじく音からフルートに（生楽器の曲なのに1つだけ電子の音だった）
 HL = S.track("チェンバロ（左手）", "harpsichord", volume=0.12, pan=-0.2, reverb=0.3)
 HR = [S.track(f"チェンバロ（右手{j + 1}）", "harpsichord", volume=0.055, pan=0.15 + 0.05 * j, reverb=0.3) for j in range(3)]
 STR = [S.track(f"ストリングス{i + 1}", "strings", patch="stringEnsemble", volume=0.05, pan=-0.4 + 0.4 * i, reverb=0.4, sustain=1.2) for i in range(3)]
@@ -90,8 +90,10 @@ put("最後のサビ", KL, VC + VC + VC, C3)
 # ================= チェンバロ・ストリングス・口笛 =================
 def harpsi(b, ch, busy=True):
     r = low(ch, "G2"); v = voice(ch, 64, 3)
-    HL.bar(b, f"{nm(r)}:1 {nm(r + 7)}:1 {nm(r + 12)}:1 {nm(r + 7)}:1" if busy else f"{nm(r)}:2 {nm(r + 7)}:2")
-    pat = "R:0.5 {0}:0.5 R:0.5 {0}:0.5 R:0.5 {0}:0.5 {0}:0.5 R:0.5" if busy else "{0}:2 R:2"
+    # v2: 全体が 7.2〜7.5 で平ら（チェンバロが左手4分・右手3声の裏8分を全場面で鳴らし、シャリシャリが続いていた）
+    #     → 左手は根音と5度の2分、右手は「チャッ・チャー」と2回だけ
+    HL.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2")
+    pat = "R:0.5 {0}:0.5 R:1 R:0.5 {0}:1 R:0.5" if busy else "{0}:2 R:2"
     for j in range(3): HR[j].bar(b, pat.format(nm(v[j])))
 
 
