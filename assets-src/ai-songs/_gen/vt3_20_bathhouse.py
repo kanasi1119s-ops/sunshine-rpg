@@ -56,7 +56,7 @@ S.scene("湯船に沈む", 8, "bridge", ["Ebmaj7", "Ebm6", "Bb/D", "G7", "Cm7", 
 S.scene("シャウトコーラス", 16, "chorus", C_CH)
 S.scene("エンディング", 10, "outro", ["Ebmaj7", "Ab7", "Dm7", "G7", "Cm7", "F7", "Bb6", "Bb6", "Bb6", "Bb6"])
 
-V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="altoSax", low=False)
+V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="clarinet", low=False)   # v2: BGM の旋律はクラリネット（サックスの伴奏と同じ音色でぶつかっていた）
 TPS = [S.track(f"トランペット{i + 1}", "brass", patch="trumpet", volume=0.055, pan=0.35, reverb=0.3) for i in range(3)]
 TBS = [S.track(f"トロンボーン{i + 1}", "brass", patch="trombone", volume=0.055, pan=-0.35, reverb=0.3) for i in range(3)]
 TBL = S.track("トロンボーン（ソロ）", "brass", patch="trombone", volume=0.11, pan=-0.1, reverb=0.3)
@@ -135,9 +135,11 @@ for b in range(S.nb):
         comp(b, ch); sec(AS + [BS], b, ch, "x:2 x:2", 60)
     elif n in ("サビ1", "サビ2"):
         comp(b, ch)
-        sec(TPS, b, ch, "R:2.5 x:0.5! x:1" if i % 2 == 1 else "R:4", 72)
-        sec(TBS, b, ch, "x:1.5 x:0.5 R:2" if i % 2 == 0 else "R:4", 56)
-        sec(AS + [BS], b, ch, "R:1 x:1 R:1 x:1", 62)
+        # v2: サビが 7.0〜7.2（サックスが毎小節2拍4拍に刻み、ブラスのかけ合いも毎小節で、歌のまわりが埋まっていた）
+        #     → サックスはのばす和音（下じき）、トランペットのかけ合いは4小節に1回、トロンボーンは2小節に1回
+        sec(TPS, b, ch, "R:2.5 x:0.5! x:1" if i % 4 == 3 else "R:4", 72)
+        sec(TBS, b, ch, "x:1.5 x:0.5 R:2" if i % 4 == 1 else "R:4", 56)
+        sec(AS + [BS], b, ch, "x:4", 58)
     elif n == "サックスのソリ":
         comp(b, ch)
         AS[0].bar(b, swing(SOLI[i % 8]))
