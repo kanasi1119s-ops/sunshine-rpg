@@ -147,6 +147,12 @@ for b in range(S.nb):
         BS.bar(b, swing(shift_oct(SOLI[i % 8], -2)))
         if i >= 8: sec(TBS, b, ch, "x:4", 56)
     elif n == "ドラムソロ":
+        # v3: ドラムだけの8小節が 6.9（いちばん低い）→ 2小節ずつ「ブラス全員 ⇄ ドラム」のかけ合い（トレード）にする
+        if i % 4 < 2:
+            comp(b, ch)
+            sec(TPS, b, ch, ["x:1.5! x:0.5 R:0.5 x:0.5 x:1", "R:1 x:0.5 x:0.5! R:1 x:1"][i % 2], 72)
+            sec(TBS, b, ch, ["x:1.5 x:0.5 R:0.5 x:0.5 x:1", "R:1 x:0.5 x:0.5 R:1 x:1"][i % 2], 58)
+            sec(AS + [BS], b, ch, "x:2 x:2", 62)
         if i == 7: sec(TPS + TBS, b, ch, "R:3 x:1!", 64)
     elif n == "トロンボーンのソロ":
         comp(b, ch)
@@ -176,7 +182,7 @@ OKE.bar(S.sc("桶")[0], "A2:2 R:2"); OKE.bar(S.sc("湯船に沈む")[0], "A2:2 R
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     ch = S.chords[b]; r = low(ch, "E1")
-    if n in ("桶", "ドラムソロ"): continue
+    if n == "桶" or (n == "ドラムソロ" and i % 4 >= 2): continue
     if n == "湯船に沈む": BASS.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2"); continue
     if n == "エンディング":
         if i < 6: BASS.bar(b, bass_line(S, b, "walk", lo="E1"))
@@ -193,6 +199,10 @@ for b in range(S.nb):
     if n == "桶": continue
     if n == "湯船に沈む":
         D.set(b, "................", "..o...o...o...o.", "....x.......x..."); continue
+    if n == "ドラムソロ" and i % 4 < 2:
+        D.set(b, "X.........X.....", "......o.....o...", "....x.......x..."); D.R.bar(b, RIDE)
+        if i % 4 == 0: crash(D, b, "C2", 6)
+        continue
     if n == "ドラムソロ":
         D.set(b, "X..X..X.X..X....", "....X.xX.X..XxXx" if i % 2 == 0 else "X.x.X.xxX.x.XXXX", "................")
         if i % 4 == 0: crash(D, b, "C2", 6)
