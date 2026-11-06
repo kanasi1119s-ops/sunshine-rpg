@@ -103,7 +103,7 @@ for no, jp, en, *_ in rows:
 作詞・作曲・編曲・映像: Sunshine Pixel Sound
 すべてオリジナル曲です。 / All songs are original.
 
-#重音テト #KasaneTeto #オリジナル曲 #UTAU #SECONDSIGNAL
+#重音テト #KasaneTeto #オリジナル曲 #VOCALOID #ボカロ
 """)
 open("/tmp/ig/SECOND SIGNAL Instagramキャプション.txt", "w", encoding="utf-8").write("\n".join(out))
 print("\n".join(out[:2])); print(out[11]); print(out[24])
