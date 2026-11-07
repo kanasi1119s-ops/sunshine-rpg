@@ -360,6 +360,14 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
     if br > 0:
         wgt = np.clip((freqs - 1500) / 4000, 0, 1) * br
         ap2 = ap2 + (1 - ap2) * wgt[None, :] * 0.6
+    # 2026-11-07 人間「テトの歌にもノイズあったし」: 母音の間ずっと、倍音と倍音のすきま（5kHz より上）に「サー」というかすれ（雑音の成分）が
+    #   入っていて、明るくする EQ（高い音を +10dB）で持ち上がり、ノイズに聞こえていた。"hiClean": 0〜1 で、声が出ている所（有声）の
+    #   4kHz より上の雑音の成分だけを減らす（倍音＝声の明るさはそのまま。子音の「サ」「シ」などは有声でないので変わらない）
+    hc = float(o.get("hiClean", 0.0))
+    if hc > 0:
+        vmask = (f0 > 0).astype(float)[:, None]
+        wgt = np.clip((freqs - 3000) / 2500, 0, 1)[None, :] * hc
+        ap2 = ap2 * (1 - vmask * wgt * 0.85)
     # 子音の強さ: 子音（伸ばさない部分）だけ大きく。「ぶ」「ば」などが埋もれないように
     cg = float(o.get("consonant", 1.0))
     if is_unvoiced_cons(o.get("_lyric", "")): cg = 1.0   # カ・サ・タ・ハ・パ行は強めない（破裂の「プチッ」になる）
@@ -612,6 +620,21 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1, tempo=None, bea
     amp *= 1 + 0.35 * vp
     ampS = np.interp(np.arange(len(out)) / sr_out, t[: len(amp)], amp)
     out = out * ampS
+    # 2026-11-07 人間「このボカロ曲プロ仕様にして欲しい」: プロの調声では、句の前に「息を吸う音」を置いて人が歌っている感じを出す。
+    #   "breaths": 0〜1（使う曲だけ）。句の頭（前に 0.45 秒以上の休み）の直前に、休みの長さに合わせた吸う音を、歌の平均の大きさ × 量 × 0.35 で
+    br = float(vdef.get("breaths", 0.0))
+    if br > 0:
+        act = np.abs(out) > 1e-4
+        ref = np.sqrt(np.mean(out[act] ** 2)) if act.any() else 0.05
+        prev_end = -9.0
+        for k, pc in enumerate(pieces):
+            gap = pc["start"] - prev_end
+            if pc["head"] and gap >= 0.45:
+                L = min(0.34, max(0.16, gap * 0.45))
+                b_ = breath_in(sr_out, L, seed=seed * 100 + k) * ref * br * 0.35 * (1.6 if gap > 1.5 else 1.0)
+                n1 = int((pc["start"] - 0.04) * sr_out); n0 = n1 - len(b_)
+                if n0 >= 0 and n1 <= len(out): out[n0:n1] += b_
+            prev_end = pc["end"]
     return out[: int(total * sr_out)]
 
 # ---------- 声の仕上げ（EQ・コンプ・残響） ----------
