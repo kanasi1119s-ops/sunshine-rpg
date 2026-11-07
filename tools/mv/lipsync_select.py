@@ -61,19 +61,47 @@ while i < N:
         if i > 0 and j < N and (j - i) < 0.5 * FPS: want[i:j] = BR
         i = j
     else: i += 1
+# 長い休み（間奏・前奏など 2 秒より長い）は、口はやわらかく閉じぎみならよい（MV_FORWARD のとき。長く同じコマの輪を回さないように）
+FREE = -2
+if os.environ.get("MV_FORWARD", "0") == "1":
+    i = 0
+    while i < N:
+        if want[i] == 0:
+            j = i
+            while j < N and want[j] == 0: j += 1
+            if (j - i) > 2 * FPS: want[i + 6:max(i + 6, j - 6)] = FREE
+            i = j
+        else: i += 1
 C = np.array([[0, 2.5, 1.6, 1.2], [1.4, 0, 0.5, 0.7], [1.2, 0.5, 0, 0.8], [1.2, 0.8, 0.8, 0]])   # [ほしい][コマ]
 def cost_of(c):
     if c == BR: return np.where(cls_src == 1, 0.5, 0.0)
+    if c == FREE: return np.where(cls_src == 0, 0.0, np.where(cls_src == 1, 0.5, 0.2))
     return C[c][cls_src]
 # コマの並び（状態 = コマ × 向き）
 S = 2 * K; kk = np.arange(S) % K; dd = np.arange(S) // K
 T = np.full((S, S), np.inf)
+# 2026-11-08 人間「雪は降り続けるものだから戻るのはおかしいよ」: 背景の雪が逆に上っていかないよう、MV_FORWARD=1 では
+#   コマは前へ進むだけにする（戻らない）。止まるのも雪が止まるので強く避ける。口を合わせるために離れたコマへ飛ぶときは、
+#   姿勢が近いコマだけにし、映像の側（mv_compose.py）で 4 コマかけて重ねて切りかえる（雪がいきなり飛ばないように）
+FWD = os.environ.get("MV_FORWARD", "0") == "1"
+def fwd_ok(j, n=5): return j + n < K and ok[j + n] == ok[j] + n
 for a in range(S):
     k, d = kk[a], dd[a]
+    if FWD:
+        if d == 1: continue
+        if k + 1 < K and ok[k + 1] == ok[k] + 1: T[a, k + 1] = 0.0
+        T[a, a] = 3.0
+        if fwd_ok(k, 1):
+            for j in np.where((Dn[k] < float(os.environ.get("MV_JNEAR", "3.5"))) & (np.abs(np.arange(K) - k) > 6))[0]:
+                if fwd_ok(j): T[a, j] = min(T[a, j], float(os.environ.get("MV_JCOST", "12")) + 0.5 * Dn[k, j])
+        else:                                                                     # 使えるコマの終わり: 近い姿勢のコマへ飛ぶしかない
+            for j in np.argsort(Dn[k])[:20]:                                       # 近すぎる所へ戻ると短い輪になるので、離れた所を選ぶ
+                if fwd_ok(j): T[a, j] = min(T[a, j], 4.0 + 0.5 * Dn[k, j] + (6.0 if abs(ok[j] - ok[k]) < 40 else 0.0))
+        continue
     for nxt, d2, c in ((k + (1 if d == 0 else -1), d, 0.0), (k + (-1 if d == 0 else 1), 1 - d, 1.2)):
         if 0 <= nxt < K and abs(ok[nxt] - ok[k]) == 1: T[a, nxt + K * d2] = c
     T[a, a] = 0.5
-    for j in np.where((Dn[k] < float(os.environ.get('MV_JNEAR', '2.6'))) & (np.abs(np.arange(K) - k) > 2))[0]:
+    for j in np.where((Dn[k] < float(os.environ.get("MV_JNEAR", "2.6"))) & (np.abs(np.arange(K) - k) > 2))[0]:
         for d2 in (0, 1): T[a, j + K * d2] = min(T[a, j + K * d2], 2.5 + 0.8 * Dn[k, j])
 # 同じあたりのコマばかり使うと単調なので、4秒ごとに解き、最近よく使ったコマを少し重くする（teto_mv.py と同じ）
 USE_W = float(os.environ.get("MV_USEW", "0.012")); CH = 96
@@ -81,6 +109,7 @@ usage = np.zeros(K); p = np.zeros(N, int); start = None; diag = np.arange(S)
 for c0 in range(0, N, CH):
     c1 = min(N, c0 + CH + 48); extra = USE_W * usage[kk]
     cost = cost_of(want[c0])[kk].astype(float) + extra
+    if FWD: cost = np.where(dd == 0, cost, np.inf)
     if start is not None: cost = np.where(diag == start, 0.0, np.inf)
     back = np.zeros((c1 - c0, S), np.int16); hold = np.zeros(S)
     for i in range(c0 + 1, c1):
@@ -94,7 +123,7 @@ for c0 in range(0, N, CH):
     usage *= 0.7; np.add.at(usage, kk[q[:e]], 1.0)
 seq = [ok[kk[x]] for x in p]
 sc = cls_src[kk[p]]
-m = want >= 0
+m = want >= 0  # （息つぎ・長い休みは数えない）
 print(f"口の形が合っている {np.mean(sc[m] == want[m]):.0%}（歌っていない所で閉じている {np.mean(sc[want == 0] == 0):.0%}）"
       f"・飛び {int(np.sum(np.abs(np.diff(seq)) > 1))} 回・止まり {int(np.sum(np.diff(seq) == 0))} コマ / {N}")
 json.dump(seq, open(OUT, "w"))

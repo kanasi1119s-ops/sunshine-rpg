@@ -125,8 +125,6 @@ def info_block():
         L.append((text_img(D["title_en"], F(S["en_font"], 44), (255, 206, 60), (150, 40, 110), 3, max_w=MW), x + 4, 410))
         L.append((text_img(D["vocal_jp"], sans(28), (255, 255, 255), (150, 40, 110), 3, max_w=MW), x + 4, 500))
         L.append((text_img(D["vocal_en"], F(S["en_font"], 22), (255, 245, 230), (150, 40, 110), 2, max_w=MW), x + 4, 550))
-        L.append((text_img(D["genre_jp"], sans(22), (255, 240, 250), (150, 40, 110), 2, max_w=MW), x + 4, 610))
-        L.append((text_img(D["genre_en"], F(S["en_font"], 20), (255, 240, 250), (150, 40, 110), 2, max_w=MW), x + 4, 650))
         L.append((text_img(LD.CREDIT_JP, sans(20), (255, 240, 250), (150, 40, 110), 2, max_w=MW), x + 4, 900))
         L.append((text_img(LD.CREDIT_EN, F(S["en_font"], 16), (255, 240, 250), (150, 40, 110), 2, max_w=MW), x + 4, 940))
         xx = 1330
@@ -143,8 +141,8 @@ INFO = info_block()
 # 白い息の YouTube: 前奏と後奏で、作者とジャンルのカード（ゆっくり出て消える）
 CARD = []
 if FORM == "yt" and NAME == "whitebreath":
-    for im, y in ((text_img(f"{D['genre_jp']}  /  {D['genre_en']}", sans(24), (230, 236, 248), (20, 20, 40), 2), 900),
-                  (text_img(LD.CREDIT_JP, sans(26), (240, 244, 252), (20, 20, 40), 2), 945),
+    # 2026-11-08 人間「曲のジャンルはいらないよ」: ジャンルは出さない
+    for im, y in ((text_img(LD.CREDIT_JP, sans(26), (240, 244, 252), (20, 20, 40), 2), 945),
                   (text_img(LD.CREDIT_EN, F(S["en_font"], 24), (220, 228, 244), (20, 20, 40), 2), 990)):
         CARD.append((im, (W - im.size[0]) // 2, y))
 def card_alpha(t):
@@ -155,11 +153,25 @@ def card_alpha(t):
 
 # ---------- 映像 ----------
 def frames_wb():
+    """2026-11-08 人間「雪は降り続けるものだから戻るのはおかしいよ」: コマは前へ進むだけ（lipsync_select.py の MV_FORWARD=1）。
+    離れたコマへ飛ぶ所は、元の続きのコマと飛んだ先のコマを 4 コマかけて重ねて切りかえる（雪がいきなり別の場所へ飛ばないように）"""
     seq = json.load(open(S["seq"])); cache = {}
+    okset = set(range(0, 15)) | set(range(112, 240))                          # 生成AIの文字が映っているコマ（15〜111）は使わない
+    def get(k):
+        if k not in cache: cache[k] = cv2.imread(f"{S['frames']}/{k + 1:03d}.png").astype(np.float32)
+        return cache[k]
+    i0 = int(round(T0 * FPS)); fade = []                                       # 重ねる元のコマ（続き）の予定
     for i in range(N):
-        k = seq[min(len(seq) - 1, int((T0 + i / FPS) * FPS))]
-        if k not in cache: cache[k] = cv2.imread(f"{S['frames']}/{k + 1:03d}.png")
-        yield cache[k]
+        g = min(len(seq) - 1, i0 + i); k = seq[g]
+        if g > 0 and seq[g] != seq[g - 1] + 1:
+            fade = [seq[g - 1] + 1 + m for m in range(4) if seq[g - 1] + 1 + m in okset]
+            if len(fade) < 4: fade = []
+            fade = list(enumerate(fade))
+        img = get(k)
+        if fade:
+            m, kold = fade.pop(0); a = (m + 1) / 5.0
+            img = get(kold) * (1 - a) + img * a
+        yield img.astype(np.uint8)
 def frames_video():
     p = subprocess.Popen(["ffmpeg", "-v", "error", "-ss", str(T0), "-i", S["video"], "-t", str(LEN), "-f", "rawvideo", "-pix_fmt", "bgr24", "-r", str(FPS), "-"],
                          stdout=subprocess.PIPE)
