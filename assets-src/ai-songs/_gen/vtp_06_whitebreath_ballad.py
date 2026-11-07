@@ -32,7 +32,7 @@ OCH = CHB[:8]
 LASTCH = [tr_chord(c, 2) for c in CH2]
 OUTCH = ["A", "Fmaj7", "G", "A"]
 
-S.scene("前奏", 4, "intro", INTRO)
+S.scene("前奏", 8, "intro", INTRO + ["Cmaj7", "Cm6", "G/B", "D7sus4"])   # 2026-11-07 人間「前奏もう少し長くてもいいかな」: 4→8小節
 S.scene("Aメロ1", 8, "verse", VCH)
 S.scene("Bメロ1", 4, "pre", BCH)
 S.scene("サビ1", 16, "chorus", CH1)
@@ -119,7 +119,8 @@ put("落ちサビ", K, Q1 + Q2 + Q3 + Q4, OC)
 put("最後のサビ", KL, CHM + Q7 + Q8, C3)
 
 # ================= リード（単音: 前奏・間奏の旋律、合いの手、ソロ） =================
-INTRO_L = ["G5:2 F5:1 D5:1", "C5:1.5 D5:0.5 F5:1 E5:0.5 D5:0.5", "D5:3~. B4:1", "B4:2 A4:1 G4:1"]
+INTRO_L = ["G5:2 F5:1 D5:1", "C5:1.5 D5:0.5 F5:1 E5:0.5 D5:0.5", "D5:3~. B4:1", "B4:2 A4:1 G4:1",
+           "E5:1.5 D5:0.5 B4:1 G4:1", "D#5:2 D5:1 C5:1", "B4:1 D5:1 G5:1.5 F#5:0.5", "E5:2 D5:1 A4:1"]
 INTER_L = ["D5:1 D#5:1 G5:2", "F5:1 D5:1 C5:1 A4:1", "B4:2^@0.3 A4:1 G4:1", "G4:4~."]
 SOLO = ["E5:1.5 D5:0.5 B4:1 G4:1", "A4:1 B4:0.5 D5:0.5 F#5:2~.", "F#5:0.5 E5:0.5 D5:0.5 B4:0.5 D5:2^^@0.3",
         "G#4:1 B4:1 D5:1 E5:1", "C5:1.5 B4:0.5 A4:1 E5:1", "D5:2!~. F#5:1 A5:1", "G5:1 F#5:0.5 E5:0.5 D5:1 B4:1", "A4:2^^@0.4 G4:1 D5:1"]
@@ -146,7 +147,7 @@ def bass_root(ch):
     return low(bs, "E1")
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]; r = bass_root(ch)
-    if n == "前奏": BASS.bar(b, "R:4" if i < 2 else f"{nm(r)}:3 {nm(r)}:0.5 {nm(r + 12)}:0.5"); continue
+    if n == "前奏": BASS.bar(b, "R:4" if i < 4 else f"{nm(r)}:3 {nm(r)}:0.5 {nm(r + 12)}:0.5"); continue
     if n in ("Aメロ1", "Aメロ2"): BASS.bar(b, f"{nm(r)}:2.5 {nm(r)}:1 {nm(r + 7)}:0.5" if n == "Aメロ1" else f"{nm(r)}:1.5 {nm(r)}:0.5 R:0.5 {nm(r)}:1 {nm(r + 12)}:0.5"); continue
     if n in ("Bメロ1", "Bメロ2"): BASS.bar(b, " ".join([f"{nm(r)}:1"] * 4) if i < 3 else f"{nm(r)}:0.5 {nm(r)}:0.5 {nm(r)}:0.5 {nm(r)}:0.5 {nm(r)}:0.5 {nm(r)}:0.5 {nm(r + 12)}:0.5 {nm(r + 12)}:0.5"); continue
     if n == "サビ1" and i >= 14: BASS.bar(b, f"{nm(r)}:4" if i == 14 else "R:4"); continue
@@ -167,7 +168,7 @@ for b in range(S.nb):
     t = tones(ch.split("/")[0], "G4", "D6")
     if n == "前奏":
         PNL.bar(b, f"{nm(r)}:4"); [PNR[j].bar(b, f"{nm(v[j])}:4") for j in range(3)]
-        PNA.bar(b, " ".join(f"{nm(t[q % len(t)] + 12 if q >= 4 else t[q % len(t)])}:0.5" for q in (0, 1, 2, 3, 4, 3, 2, 1)) if i < 2 else "R:4")
+        PNA.bar(b, " ".join(f"{nm(t[q % len(t)] + 12 if q >= 4 else t[q % len(t)])}:0.5" for q in (0, 1, 2, 3, 4, 3, 2, 1)) if i < 4 else "R:4")
     elif n in ("Aメロ1", "Aメロ2"):
         PNL.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2")
         if n == "Aメロ1": PNA.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 2, 1, 3, 2, 1, 3, 2)))      # 単音の分散和音
@@ -346,7 +347,7 @@ def dseg(f, b0, n):
     for k in dn: dn[k].append(r.get(k) or f'R:{n * 4}')
 def dcus(n, **kw):
     for k in dn: dn[k].append(kw.get(k, f'R:{n * 4}'))
-dcus(2); dseg(PS, 2, 2)                                  # 前奏: 2小節はギターだけ
+dcus(4); dseg(PS, 0, 4)                                  # 前奏: 4小節はピアノ・シンセ・雪の鈴だけ → 4小節でドラムが入る
 dseg(PS, 8, 8)                                           # Aメロ1
 dseg(R88B, 5, 4)                                         # Bメロ1（最後にフィル）
 dseg(R86, 1, 8); dseg(R86, 13, 6); dcus(2, crash='C2:8%112', kick='x:8%105')   # サビ1（「ごめんね」で止まる）
