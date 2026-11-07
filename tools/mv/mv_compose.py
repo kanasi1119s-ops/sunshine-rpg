@@ -17,7 +17,7 @@ NF = "/usr/share/fonts/opentype/noto/"
 GF = "/usr/share/fonts/truetype/google-fonts/"
 SONGS = {
     "whitebreath": dict(data=LD.WHITEBREATH, audio="/tmp/ab/wb9.mp3", song="/mnt/user-data/outputs/vbq/vtp-06-whitebreath-ballad-v9vo.json", lead=[0],
-                        frames="/tmp/ab/wbmv/fr", seq="/tmp/ab/wbmv/seq.json", ig_start=237.0,
+                        frames="/tmp/ab/wbmv/fr2", seq="/tmp/ab/wbmv/nat.json", ig_start=237.0,
                         jp_font=(NF + "NotoSerifCJK-SemiBold.ttc", 0), en_font=(GF + "Lora-Italic-Variable.ttf", 0),
                         sans=(NF + "NotoSansCJK-Medium.ttc", 0), fill=(222, 230, 245), sung=(255, 228, 180), stroke=(16, 24, 52),
                         en_fill=(205, 218, 238), accent=(255, 196, 130)),
@@ -162,24 +162,18 @@ def morph(A, B, a):
     wb = cv2.remap(B, gx + (1 - a) * fab[..., 0], gy + (1 - a) * fab[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
     return wa * (1 - a) + wb * a
 def frames_wb():
-    """2026-11-08 人間「雪は降り続けるものだから戻るのはおかしいよ」: コマは前へ進むだけ（lipsync_select.py の MV_FORWARD=1）。
-    離れたコマへ飛ぶ所は、元の続きのコマと飛んだ先のコマを 4 コマかけて重ねて切りかえる（雪がいきなり別の場所へ飛ばないように）"""
+    """2026-11-08 人間「雪とか、息とか自然じゃないね。なんか途中止まって急に動いたりするし」:
+    元の動画をいつも 1 倍の速さで前へ流す（natural_select.py の並び）。切りかえは歌いはじめ・歌い終わりなどだけで、0.5 秒かけて
+    動きの流れでつなぐ。生成AIが入れた文字は、文字のないコマの同じ所で埋めた（fr2）"""
     seq = json.load(open(S["seq"])); cache = {}
-    okset = set(range(0, 15)) | set(range(112, 240))                          # 生成AIの文字が映っているコマ（15〜111）は使わない
     def get(k):
         if k not in cache: cache[k] = cv2.imread(f"{S['frames']}/{k + 1:03d}.png").astype(np.float32)
         return cache[k]
-    i0 = int(round(T0 * FPS)); fade = []                                       # 重ねる元のコマ（続き）の予定
+    i0 = int(round(T0 * FPS))
     for i in range(N):
-        g = min(len(seq) - 1, i0 + i); k = seq[g]
-        if g > 0 and seq[g] != seq[g - 1] + 1:
-            fade = [seq[g - 1] + 1 + m for m in range(4) if seq[g - 1] + 1 + m in okset]
-            if len(fade) < 4: fade = []
-            fade = list(enumerate(fade))
+        k, kold, a = seq[min(len(seq) - 1, i0 + i)]
         img = get(k)
-        if fade:
-            m, kold = fade.pop(0); a = (m + 1) / 5.0
-            img = morph(get(kold), img, a)
+        if kold >= 0: img = morph(get(kold), img, 1 - a)
         yield img.astype(np.uint8)
 def frames_video():
     p = subprocess.Popen(["ffmpeg", "-v", "error", "-ss", str(T0), "-i", S["video"], "-t", str(LEN), "-f", "rawvideo", "-pix_fmt", "bgr24", "-r", str(FPS), "-"],
