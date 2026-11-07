@@ -632,10 +632,12 @@ export function parseNotes(text: string, drum: boolean, errors: string[], where:
     // 長さのあとに付けられる奏法の記号: ! アクセント（強く）, 「,」 弱く, ' スタッカート（短く）, _ レガート（次の音につなげる）
     // ^. / /. \. は「半分」（1/4 音。中東・インドの微分音の近似に）。^. ＝ベンド 0.5 半音
     // 2026-10-11: ~. ＝弱いビブラート、~~~ ＝最大、< > ＝スウェル、^^@0.25 ＝ベンドの形、>D5 ＝スライドの行き先（guitar-tech.ts）
-    const m = /^(\d+(?:\.\d+)?)((?:~\.|[!,'_~*<]|>(?![A-G])|[\^/\\]\.?(?:@\d+(?:\.\d+)?)?)*)(?:>([A-G][#b]?-?\d))?$/.exec(rawDur);
+    // 2026-11-07: %数字 ＝ 強さを数で（100＝ふつう、130＝アクセントと同じ。1〜200）。人がたたいた演奏（Groove MIDI の強さ 0〜127）をそのまま写すため
+    const m = /^(\d+(?:\.\d+)?)((?:~\.|[!,'_~*<]|>(?![A-G])|[\^/\\]\.?(?:@\d+(?:\.\d+)?)?)*)(?:%(\d{1,3}))?(?:>([A-G][#b]?-?\d))?$/.exec(rawDur);
     const dur = m ? m[1] : rawDur;
     const marks = m ? m[2] : "";
-    const slideTo = m ? m[3] : undefined;
+    const pct = m && m[3] ? Math.max(1, Math.min(200, Number(m[3]))) / 100 : undefined;
+    const slideTo = m ? m[4] : undefined;
     const prm = markParams(marks);
     const art: Partial<NoteEvent> = {
       ...(marks.includes("!") ? { velocity: 1.3 } : marks.includes(",,") ? { velocity: 0.45 } : marks.includes(",") ? { velocity: 0.7 } : {}),
@@ -650,6 +652,7 @@ export function parseNotes(text: string, drum: boolean, errors: string[], where:
       ...(prm["/"] !== undefined && prm["/"] > 0 && prm["/"] <= 2 ? { scoopT: prm["/"] } : {}),
       ...(prm["\\"] !== undefined && prm["\\"] >= 0.05 && prm["\\"] <= 0.95 ? { fallAt: prm["\\"] } : {}),
       ...(marks.includes("<") ? { swell: 1 as const } : marks.includes(">") ? { swell: -1 as const } : {}),
+      ...(pct !== undefined ? { velocity: pct } : {}),
     };
     const beats = Number(dur);
     if (!dur || !DUR_RULE.test(dur) || !(beats > 0) || beats > 64) {
