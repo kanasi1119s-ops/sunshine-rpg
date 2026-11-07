@@ -66,7 +66,9 @@ class Groove:
             elif c == 'd' and ns <= 3 and len(strs) > 4 and self.rnd.random() < 0.5:
                 strs = strs[1:]
             t = max(0.0, t0 + dev)
-            stop(t)
+            # 2026-11-07 人間「弾き方、音の伸ばし方に問題あるかも」: 前は打つたびに全部の弦を止めていた（アップで高い弦だけ弾いても、低い弦が切れる）。
+            #   本物は、弾いた弦だけが鳴り直し、弾かなかった弦は鳴り続ける。全部止めるのはミュート（x）と、コードが変わる先取り（P）だけ
+            if c in 'xP': stop(t)
             for k, st in enumerate(strs):
                 tt = t + k * spd / sp
                 e = [tt, 0.0, voc[st], int(max(35, min(140, v * (0.94 if k and not up else 1.0))))]
@@ -80,23 +82,21 @@ class Groove:
 
 class Lanes:
     """弦ごとの事件をためて、小節をまたいでのばす（次の打ちか「.」まで鳴らす）"""
-    def __init__(self):
-        self.ev = [[] for _ in range(6)]; self.held = {}
+    def __init__(self, cap=8.0):
+        self.ev = [[] for _ in range(6)]; self.held = {}; self.cap = cap
 
-    def add(self, res):
+    def add(self, res, chord_change=True):
         out, held = res
-        # 前の小節からのばしていた弦は、この小節の最初の打ち（どの弦でも）で止める
-        if out:
+        # 前の小節からのばしていた弦は、コードが変わるときだけ、この小節の最初の打ちで止める（左手が離れる）。
+        # 同じコードのままなら、弾かなかった弦は鳴り続ける
+        if out and chord_change:
             first = min(e[0] for _, e in out)
             for st, e in list(self.held.items()):
                 e[1] = max(0.05, min(first - e[0] - 0.01, 8.0))   # 間が空いたときは、のばすのは最大2小節
             self.held = {}
         for st, e in out: self.ev[st].append(e)
         for st, e in held.items():
-            self.held[st] = e
-        # 小節の終わりまでの長さを仮に入れておく（次の小節で上書き）
-        for st, e in held.items():
-            if e[1] <= 0: e[1] = max(0.05, (math.floor(e[0] / 4) + 1) * 4 - e[0] - 0.01)
+            self.held[st] = e      # 長さ 0 のまま＝次にその弦が鳴るまで（notes で、最大 cap 拍）
 
     def stop_at(self, t):
         for st, e in list(self.held.items()):
@@ -110,7 +110,7 @@ class Lanes:
             for i, (t, d, n, v) in enumerate(lane):
                 if t < cur - 1e-6: continue
                 nxt = lane[i + 1][0] if i + 1 < len(lane) else total
-                d = max(0.04, min(d if d > 0 else min(3.0, nxt - t), nxt - t - 0.01, total - t))   # 長さ未定（単音の分散和音）は、次の音まで（最大3拍）
+                d = max(0.04, min(d if d > 0 else min(self.cap, nxt - t), nxt - t - 0.01, total - t))   # 長さ未定（単音の分散和音）は、次の音まで（最大3拍）
                 if t > cur + 1e-4:
                     r = t - cur
                     while r > 16 + 1e-6: toks.append('R:16'); r -= 16

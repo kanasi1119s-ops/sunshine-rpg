@@ -266,7 +266,10 @@ def vo(b): return VO[S.chords[b]]
 def vo_next(b): return VO[S.chords[min(NB - 1, b + 1)]]
 
 gL, gR = Groove(seed=11, amount=0.8), Groove(seed=12, amount=0.8, takes=["00_Rock3-148-C_comp", "03_Rock3-148-C_comp", "02_Rock3-117-Bb_comp"])
-LS, LL, RR = Lanes(), Lanes(), Lanes()   # 左（軽い歪み）・左（歪み）・右（歪み・高い押さえ方）
+LS, LL, RR = Lanes(), Lanes(), Lanes()
+def addc(lanes, b, res):
+    """コードが前の小節と同じなら、弾かなかった弦は鳴らし続ける"""
+    lanes.add(res, chord_change=(b == 0 or S.chords[b] != S.chords[b - 1]))   # 左（軽い歪み）・左（歪み）・右（歪み・高い押さえ方）
 P = {"ring": "D---------------", "ring2": "D-------d-------",
      "verse": "D-----u-d-u-d-u-", "verse_end": "D-----u-d---.---",
      "pre": "D---D---D---D-d-", "pre_last": "D---D-d-D-dUD-dU",
@@ -275,31 +278,31 @@ P = {"ring": "D---------------", "ring2": "D-------d-------",
 for b in range(NB):
     n, i, L, k = S.scene_of(b)
     if n in ("前奏", "間奏"):
-        LL.add(gL.bar(b, P["ring"] if i < 2 else P["ring2"], vo(b), vo_next(b), BPM, 1.0))
-        if i >= 2 or n == "間奏": RR.add(gR.bar(b, P["ring"], HI4(vo(b)), HI4(vo_next(b)), BPM, 0.95))
+        addc(LL, b, gL.bar(b, P["ring"] if i < 2 else P["ring2"], vo(b), vo_next(b), BPM, 1.0))
+        if i >= 2 or n == "間奏": addc(RR, b, gR.bar(b, P["ring"], HI4(vo(b)), HI4(vo_next(b)), BPM, 0.95))
     elif n in ("Aメロ1", "Aメロ2"):
-        LS.add(gL.bar(b, P["verse_end"] if i == 7 else P["verse"], vo(b), vo_next(b), BPM, 0.85))
-        if n == "Aメロ2": RR.add(gR.bar(b, P["ring"], HI4(vo(b)), HI4(vo_next(b)), BPM, 0.75))
+        addc(LS, b, gL.bar(b, P["verse_end"] if i == 7 else P["verse"], vo(b), vo_next(b), BPM, 0.85))
+        if n == "Aメロ2": addc(RR, b, gR.bar(b, P["ring"], HI4(vo(b)), HI4(vo_next(b)), BPM, 0.75))
     elif n in ("Bメロ1", "Bメロ2"):
-        LL.add(gL.bar(b, P["pre_last"] if i == 3 else P["pre"], vo(b), vo_next(b), BPM, 0.88 + 0.04 * i))
-        RR.add(gR.bar(b, P["ring2"], HI4(vo(b)), HI4(vo_next(b)), BPM, 0.85))
+        addc(LL, b, gL.bar(b, P["pre_last"] if i == 3 else P["pre"], vo(b), vo_next(b), BPM, 0.88 + 0.04 * i))
+        addc(RR, b, gR.bar(b, P["ring2"], HI4(vo(b)), HI4(vo_next(b)), BPM, 0.85))
     elif n in ("サビ1", "サビ2", "最後のサビ"):
         if n == "サビ1" and i >= 14:
-            if i == 14: LL.add(gL.bar(b, P["ring"], vo(b), vo(b), BPM, 0.9)); RR.stop_at(b * 4)
+            if i == 14: addc(LL, b, gL.bar(b, P["ring"], vo(b), vo(b), BPM, 0.9)); RR.stop_at(b * 4)
             continue
         vv = 1.08 if n == "最後のサビ" else 1.0
-        LL.add(gL.bar(b, P["ch_l_push"] if i % 4 == 3 else P["ch_l"], vo(b), vo_next(b), BPM, vv))
-        RR.add(gR.bar(b, P["last_r"] if n == "最後のサビ" else P["ch_r"], HI4(vo(b)), HI4(vo_next(b)), BPM, vv * 0.92))
+        addc(LL, b, gL.bar(b, P["ch_l_push"] if i % 4 == 3 else P["ch_l"], vo(b), vo_next(b), BPM, vv))
+        addc(RR, b, gR.bar(b, P["last_r"] if n == "最後のサビ" else P["ch_r"], HI4(vo(b)), HI4(vo_next(b)), BPM, vv * 0.92))
     elif n == "ソロ":
-        LL.add(gL.bar(b, P["solo_l"], vo(b), vo_next(b), BPM, 0.95))
-        RR.add(gR.bar(b, P["ring2"], HI4(vo(b)), HI4(vo_next(b)), BPM, 0.85))
+        addc(LL, b, gL.bar(b, P["solo_l"], vo(b), vo_next(b), BPM, 0.95))
+        addc(RR, b, gR.bar(b, P["ring2"], HI4(vo(b)), HI4(vo_next(b)), BPM, 0.85))
     elif n == "Cメロ":
         LL.stop_at(b * 4); RR.stop_at(b * 4)
-        LS.add(gL.bar(b, P["ring"], vo(b), vo(b), BPM, 0.8))
+        addc(LS, b, gL.bar(b, P["ring"], vo(b), vo(b), BPM, 0.8))
     elif n == "落ちサビ":
-        LS.add(gL.bar(b, P["ring"], vo(b), vo(b), BPM, 0.72 if i < 4 else 0.82))
+        addc(LS, b, gL.bar(b, P["ring"], vo(b), vo(b), BPM, 0.72 if i < 4 else 0.82))
     elif n == "後奏":
-        LL.add(gL.bar(b, P["ring"], vo(b), vo(b), BPM, 1.05)); RR.add(gR.bar(b, P["ring"], HI4(vo(b)), HI4(vo(b)), BPM, 1.0))
+        addc(LL, b, gL.bar(b, P["ring"], vo(b), vo(b), BPM, 1.05)); addc(RR, b, gR.bar(b, P["ring"], HI4(vo(b)), HI4(vo(b)), BPM, 1.0))
 for l in (LS, LL, RR): l.stop_at(TOTAL)
 
 src = json.load(open('/tmp/ab/i1_nodr.json'))
