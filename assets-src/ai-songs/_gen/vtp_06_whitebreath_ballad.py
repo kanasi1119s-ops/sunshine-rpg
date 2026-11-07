@@ -14,7 +14,7 @@ from gmd_to_parts import parts_from_gmd
 BPM = 88
 S = Song("06", "whitebreath-ballad", "白い息のリテイク（バラード・仮）", "White Breath Retake (Ballad)", BPM, 4, "G", "major", "バラードロック（冬）")
 S.kit = "crocell-punch"
-S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags
+S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags + " --piano salamander"
 S.keep_old_synth = True
 S.no_depth = True
 K = Key("G", "major")
@@ -47,7 +47,10 @@ S.scene("最後のサビ", 16, "chorus", LASTCH)
 S.scene("後奏", 4, "outro", OUTCH)
 
 V = Voice(S, vol=0.2, delay=0.5, bright=0.2, patch="brightLead", low=False)
-LEAD = S.track("リードギター（単音）", "leadGuitar", guitarTone="warm-lead-a", volume=0.075, pan=0.1)
+# 2026-11-07 人間「リードギターシンセサイザーに変更」: 単音の旋律・合いの手・ソロを、あたたかいノコギリ波の重ね（Surge XT のプリセットを録った音）に。
+#   冬のバラードなので、少し長めの残響と、2拍ずつ遠くで返るやまびこで空間を作る
+LEAD = S.track("リード（シンセ・単音）", "lead", patch="surgeHappySaws", volume=0.085, pan=0.1, reverb=0.28, mono=True, breath=True,
+               fx=[{"type": "filter", "kind": "lowpass", "freq": 7000, "q": 0.6}, {"type": "pingpong", "time": 0.5, "feedback": 0.25, "mix": 0.18}])
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.23))
 LY = Lyrics(S)
 
@@ -133,6 +136,58 @@ for b in range(S.nb):
     if n == "落ちサビ": BASS.bar(b, "R:4" if i < 4 else f"{nm(r)}:4"); continue
     if n == "後奏": BASS.bar(b, f"{nm(r)}:4"); continue
     BASS.bar(b, f"{nm(r)}:1 {nm(r)}:0.5 {nm(r)}:0.5 {nm(r)}:1 {nm(r)}:0.5 {nm(r + 12)}:0.5")
+
+
+# ================= ピアノ（2026-11-07 人間「ピアノも追加」）: 左手＝低い音、右手＝和音と単音を場面で使い分ける =================
+PNL = S.track("ピアノ（左手）", "piano", volume=0.09, pan=-0.2, reverb=0.3, fx=[{"type": "eq", "low": -3, "mid": -1, "midHz": 400, "high": -1}])
+PNR = [S.track(f"ピアノ（右手{j + 1}）", "piano", volume=0.06, pan=-0.12, reverb=0.3, fx=[{"type": "eq", "low": -3, "mid": -2, "midHz": 2600, "high": 0}]) for j in range(3)]
+PNA = S.track("ピアノ（右手の単音）", "piano", volume=0.07, pan=0.15, reverb=0.32, fx=[{"type": "eq", "low": -4, "mid": -1, "midHz": 2600, "high": 0}])
+prev = None
+for b in range(S.nb):
+    n, i, L, k = S.scene_of(b); ch = S.chords[b]; r = bass_root(ch) + 12
+    v = voice(ch.split("/")[0], 67 if n != "最後のサビ" else 69, 3, prev); prev = v
+    t = tones(ch.split("/")[0], "G4", "D6")
+    if n == "前奏":
+        PNL.bar(b, f"{nm(r)}:4"); [PNR[j].bar(b, f"{nm(v[j])}:4") for j in range(3)]
+        PNA.bar(b, " ".join(f"{nm(t[q % len(t)] + 12 if q >= 4 else t[q % len(t)])}:0.5" for q in (0, 1, 2, 3, 4, 3, 2, 1)) if i < 2 else "R:4")
+    elif n in ("Aメロ1", "Aメロ2"):
+        PNL.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2")
+        if n == "Aメロ1": PNA.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 2, 1, 3, 2, 1, 3, 2)))      # 単音の分散和音
+        else: [PNR[j].bar(b, f"R:1 {nm(v[j])}:1 R:1 {nm(v[j])}:1") for j in range(3)]                        # 2番は裏で和音
+    elif n in ("Bメロ1", "Bメロ2"):
+        PNL.bar(b, f"{nm(r)}:4"); [PNR[j].bar(b, f"{nm(v[j])}:1 {nm(v[j])}:1 {nm(v[j])}:1 {nm(v[j])}:1") for j in range(3)]
+    elif n in ("サビ1", "サビ2", "最後のサビ"):
+        if n == "サビ1" and i >= 14:
+            if i == 14: PNL.bar(b, f"{nm(r)}:8"); [PNR[j].bar(b, f"{nm(v[j])}:8") for j in range(3)]
+            if i == 15: PNA.bar(b, f"R:2 {nm(t[2])}:1 {nm(t[1])}:1")        # 「ごめんね」のあとに単音が2つだけ残る
+            continue
+        PNL.bar(b, f"{nm(r)}:1.5 {nm(r)}:0.5 {nm(r + 12)}:1 {nm(r)}:1")
+        [PNR[j].bar(b, f"{nm(v[j])}:1.5 {nm(v[j])}:0.5 R:0.5 {nm(v[j])}:1.5") for j in range(3)]
+        if n == "最後のサビ" and i % 2 == 1: PNA.bar(b, f"R:2 {nm(t[-1])}:0.5 {nm(t[-2])}:0.5 {nm(t[-3])}:1")
+    elif n in ("間奏", "ソロ"):
+        PNL.bar(b, f"{nm(r)}:2 {nm(r)}:2"); [PNR[j].bar(b, f"{nm(v[j])}:2 {nm(v[j])}:2") for j in range(3)]
+    elif n == "Cメロ":
+        PNL.bar(b, f"{nm(r)}:4")
+        PNA.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.5" for q in (0, 1, 2, 3, 2, 1, 2, 3)))
+    elif n == "落ちサビ":                                   # 落ちサビの前半はピアノが主役（歌と、ギターののばす和音だけ）
+        PNL.bar(b, f"{nm(r)}:2 {nm(r + 7)}:2"); [PNR[j].bar(b, f"R:0.5 {nm(v[j])}:1.5 R:0.5 {nm(v[j])}:1.5") for j in range(3)]
+        PNA.bar(b, " ".join(f"{nm(t[q % len(t)] + 12)}:0.5" for q in (0, 2, 1, 3, 2, 1, 3, 2)) if i < 4 else "R:4")
+    elif n == "後奏":
+        PNL.bar(b, f"{nm(r)}:4"); [PNR[j].bar(b, f"{nm(v[j])}:4") for j in range(3)]
+        if i == 3: PNA.bar(b, f"{nm(t[0] + 12)}:1 {nm(t[1] + 12)}:1 {nm(t[2] + 12)}:2")
+
+# ================= FX（2026-11-07 人間「FXも追加」）: 場面の変わり目に、本物のシンバルの効果音とライザーを重ねる =================
+CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.07, pan=0, modulate=False)
+RISE = S.track("ライザー・サブドロップ", "lead", patch="fxRiser", volume=0.05, pan=0, reverb=0.3)
+SNOW = S.track("雪の鈴", "lead", patch="seasonFx", volume=0.035, pan=0.3, reverb=0.4)
+for name in ("サビ1", "サビ2"): cym_swell(CYM, S.sc(name)[0], 2, "C4")          # サビの手前: 逆再生のクラッシュ
+cym_swell(CYM, S.sc("最後のサビ")[0], 4, "E4")                                   # 最後のサビの手前: スウェル（盛り上がるロール）
+RISE.at(S.bar_beat(S.sc("最後のサビ")[0]) - 8, "C4:8")                           # 最後のサビへ: 2小節のライザー
+RISE.at(S.bar_beat(S.sc("最後のサビ")[0]), "G4:4")                              # 入った所に低いサブドロップ
+RISE.at(S.bar_beat(S.sc("落ちサビ")[0]) - 1, "E4:2")                            # 落ちサビへ: 下がっていく音
+CYM.at(S.bar_beat(S.sc("後奏")[-1]), "B4:16")                                   # 最後: ロールのディミヌエンドで消えていく
+for name in ("前奏", "落ちサビ"):
+    SNOW.at(S.bar_beat(S.sc(name)[0]), "G#4:8")                                  # 雪の鈴（冬の夜の空気。音楽と重ねる）
 
 S.fade_out = 0
 S.desc = ("仮: 白い息のリテイク・バラード版（重音テト）。ミドルテンポのバラードロック・G・88、最後のサビは +2（A）。"
