@@ -314,10 +314,14 @@ if VOCAL:   # 歌のノイズ対策（白い息のリテイクで決めたもの
         for i in ph: t_notes[i] = accent(t_notes[i], i, top) if not t_notes[i].startswith("R:") else t_notes[i]; m_notes[i] = accent(m_notes[i], i, top) if not m_notes[i].startswith("R:") else m_notes[i]
     dyn = [[float(a_), float(np.clip(b_, -0.6, 0.75))] for a_, b_ in sorted(dyn)]
     main.update(notes=" ".join(t_notes), dynamics=dyn, auto=0.7, scoop=0.75, vibrato=38, legato=0.012)
-    man = dict(main); man.update({"notes": " ".join(m_notes), "transpose": -12, "formant": 0.84, "volume": 0.95, "pan": 0.0,
-                                  "blend": {"voice": "teto-soft", "amount": 0.12}, "vibrato": 26, "vibratoRate": 5.0, "scoop": 0.6, "air": 2.0,
-                                  "eq": [["peak", 160, 0.8, 2], ["peak", 350, 1.0, -2.5], ["peak", 1800, 1.4, 3], ["peak", 3200, 2.0, 4], ["hshelf", 6500, 0.7, 5]],
-                                  "reverb": 0.17})
+    # 2026-11-08 人間「男性の声少し鋭く、伸びるような声にしよう」:
+    #   鋭く … のどの響きを 0.84→0.875 に少し上げ（こもりを減らす）、弱音源（息まじり）を混ぜない。2.5〜4kHz の張りを上げ、300Hz のこもりを削る。子音を少し強く
+    #   伸びる … 音と音のつなぎを長く重ねて（legato）、長い音は終わりまで力を保ち、ゆっくり深めのビブラートで余韻をのばす
+    man = dict(main); man.update({"notes": " ".join(m_notes), "transpose": -12, "formant": 0.875, "volume": 0.95, "pan": 0.0,
+                                  "blend": {"voice": "teto-soft", "amount": 0.0}, "vibrato": 32, "vibratoRate": 5.1, "scoop": 0.5, "air": 3.0,
+                                  "legato": 0.03, "consonant": 1.8,
+                                  "eq": [["peak", 150, 0.8, 1.5], ["peak", 320, 1.0, -3.5], ["peak", 2600, 1.2, 4.5], ["peak", 3800, 2.0, 3.5], ["hshelf", 6500, 0.7, 6]],
+                                  "reverb": 0.2})
     # ふたりで歌う所は、男声を少し下げて（オクターブのユニゾンが太く聞こえすぎないように）、句ごとに音量を変える
     js["vocals"].append(man)
 
