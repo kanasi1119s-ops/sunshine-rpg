@@ -138,4 +138,5 @@ subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i
                + (["-vf", f"subtitles={ASS}"] if ASS else []) + [
                 "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-c:a", "aac", "-b:a", "256k", "-shortest",
                 "-movflags", "+faststart", OUT], check=True)
+import shutil; shutil.rmtree(TMP, ignore_errors=True)   # 途中のカットを消す（作業場所の容量を使い切らないように）
 print(f"できた: {OUT}（{len(segs)} カット・{T:.1f}秒）")
