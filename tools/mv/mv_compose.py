@@ -152,6 +152,15 @@ def card_alpha(t):
     return 0
 
 # ---------- 映像 ----------
+_dis = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
+def morph(A, B, a):
+    """2枚の絵のあいだを、動きの流れ（オプティカルフロー）で動かしながら重ねる（ただ重ねると、頭が二重に見える。2026-11-08）"""
+    ga = cv2.cvtColor(A.astype(np.uint8), cv2.COLOR_BGR2GRAY); gb = cv2.cvtColor(B.astype(np.uint8), cv2.COLOR_BGR2GRAY)
+    fab = _dis.calc(ga, gb, None); fba = _dis.calc(gb, ga, None)
+    h, w = ga.shape; gx, gy = np.meshgrid(np.arange(w, dtype=np.float32), np.arange(h, dtype=np.float32))
+    wa = cv2.remap(A, gx + a * fba[..., 0], gy + a * fba[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    wb = cv2.remap(B, gx + (1 - a) * fab[..., 0], gy + (1 - a) * fab[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    return wa * (1 - a) + wb * a
 def frames_wb():
     """2026-11-08 人間「雪は降り続けるものだから戻るのはおかしいよ」: コマは前へ進むだけ（lipsync_select.py の MV_FORWARD=1）。
     離れたコマへ飛ぶ所は、元の続きのコマと飛んだ先のコマを 4 コマかけて重ねて切りかえる（雪がいきなり別の場所へ飛ばないように）"""
@@ -170,7 +179,7 @@ def frames_wb():
         img = get(k)
         if fade:
             m, kold = fade.pop(0); a = (m + 1) / 5.0
-            img = get(kold) * (1 - a) + img * a
+            img = morph(get(kold), img, a)
         yield img.astype(np.uint8)
 def frames_video():
     p = subprocess.Popen(["ffmpeg", "-v", "error", "-ss", str(T0), "-i", S["video"], "-t", str(LEN), "-f", "rawvideo", "-pix_fmt", "bgr24", "-r", str(FPS), "-"],
