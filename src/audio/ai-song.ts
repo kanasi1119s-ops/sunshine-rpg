@@ -89,6 +89,8 @@ const NAM_AMPS = {
   namA: "builtin:highgain-a", namB: "builtin:highgain-b", namDD: "builtin:darkdays-ss",
   // 2026-10-21 マーシャル JVM410H（OD1・ゲイン4・トーン5）の録音データ（CC BY 4.0）から、この作曲ソフトで学習したモデル。アンプだけなので ampCabIr を通す
   namJVM: "builtin:jvm-g4",
+  // 2026-11-07 人間「ジャンって歪ませた時の音が、綺麗な歪みじゃない」: 同じ JVM410H（OD1）のゲイン2の録音から学習した、浅めの歪み（和音のかき鳴らし向け）
+  namJVM2: "builtin:jvm-g2",
   // 2026-10-23 人間「リードギターの音が気になってしょうがない。prs の音源とかないかな」: PRS Archon の NAM（TONE3000、T3K 規約）。
   //   手元だけに置く（assets-src/nam-local/。再配布できないので git に入れない）。無い環境では namJVM の代わりに鳴る（下の NAM_FALLBACK）
   namArchonL1: "local:archon-lead1", namArchonL2: "local:archon-lead2", namArchonL3: "local:archon-lead3",
@@ -875,7 +877,7 @@ export function aiSongToScore(input: unknown): { score: Score; song: AiSong; war
   // 2026-10-21 人間「歪強くて少し割れてるような感じに聞こえた部分があるかも」「1と2両方試そう」:
   //   和音（ストローク・カッティング）を歪みに通すと、音どうしがぶつかって割れたように聞こえる。本物のギタリストと同じく、和音のパートはアンプへの入力を下げる。聞き比べ（直す前・6割・4割）で人間「4割だね」→ 標準 0.4。
   //   パートに chordGain（0.2〜1）を書けばその値、chordGain: 1 で下げない
-  const DIST_AMPS = new Set(["namA", "namB", "namDD", "namJVM", "overdrive", "distortion", "metal", "prs", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "loudmetal", "loudrock", "lead", "modernHigh"]);
+  const DIST_AMPS = new Set(["namA", "namB", "namDD", "namJVM", "namJVM2", "overdrive", "distortion", "metal", "prs", "crunch", "hardrock", "punk", "fuzz", "shoegaze", "loudmetal", "loudrock", "lead", "modernHigh"]);
   if (Array.isArray(song.parts)) song.parts = song.parts.map((p) => {
     if (!p || !p.strum || typeof p.amp !== "string" || !DIST_AMPS.has(p.amp)) return p;
     const k = Number.isFinite(Number(p.chordGain)) && p.chordGain !== undefined ? Math.max(0.2, Math.min(1, Number(p.chordGain))) : 0.4;
