@@ -14,6 +14,7 @@
 import sys, os, subprocess, tempfile
 
 SRC, AUD, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
+ASS = sys.argv[4] if len(sys.argv) > 4 else None   # 歌詞の字幕（tools/mv/honeysour_lyrics.py で作る）
 BPM = 122.0; BEAT = 60 / BPM; BAR = 4 * BEAT
 W, H, FPS = 720, 1280, 24
 SC = {"A": (0.0, 0.96), "B": (1.0, 3.5), "Bt": (1.0, 2.0), "Br": (2.0, 3.5), "C": (3.55, 4.95), "D": (5.0, 6.15),
@@ -32,7 +33,10 @@ def bars(n): return n * BAR
 
 
 # ---------------- 前奏（8小節）----------------
-add(bars(4), "A", speed=0.13, rev=True, zoom=1.15, col="dream")            # 逆再生でびんに吸い込まれる（夢のようにぼんやり）
+# 2026-11-08 人間「ゆっくりしすぎてぼやけてみえる」: 前は、びんの1秒を8倍のスローにして、コマを混ぜてつないでいたので、ぼやけて見えた。
+#   → 4小節で、ほかの場面が1小節ずつ逆再生で巻きもどり、最後にびんへ吸い込まれる（どれも 0.8〜1倍。ぼかしもやめた）
+for sc, z in (("G", 1.0), ("C", 1.05), ("Bt", 1.1), ("A", 1.0)):
+    add(bars(1), sc, speed=0.85 if sc != "A" else 0.6, rev=True, zoom=z, col="dream")
 for k, (sc, z, f) in enumerate([("C", 1.0, False), ("D", 1.1, False), ("E", 1.0, True), ("D", 1.25, True), ("C", 1.2, False), ("E", 1.15, False)]):
     add(beats(2), sc, speed=1.0, zoom=z, flip=f)                           # ドロップ: 2拍ごとに切りかえ
 add(beats(2), "C", speed=0.35, zoom=1.05, freeze_end=True, col="stop")    # テープストップ: 遅くなって止まる
@@ -78,7 +82,7 @@ post()
 add(bars(3), "G", speed=0.45, zoom=1.0, pan=0)
 add(None, "Gend", speed=0.5, zoom=1.15, freeze_end=True)                  # ウインクして止まる（曲の最後まで）
 
-COL = {None: "", "dream": ",gblur=sigma=6,eq=brightness=0.05:saturation=1.25",
+COL = {None: "", "dream": ",eq=brightness=0.04:saturation=1.2",
        "stop": ",eq=saturation=0.7", "cool": ",colorbalance=bs=0.12:rs=-0.06",
        "sepia": ",eq=saturation=0.55:brightness=0.02,colorbalance=rs=0.08:gs=0.03:bs=-0.08:rm=0.06:bm=-0.05"}
 
@@ -93,11 +97,13 @@ for s in segs:
     if s["dur"] is None: s["dur"] = T - used
 files = []
 for i, s in enumerate(segs):
-    a, b = SC[s["sc"]]; L = b - a; sp = s["speed"]
+    a, b = SC[s["sc"]]; L = b - a
+    # スローは 0.6 倍まで（それより遅いと、コマがとびとびに見えるか、混ぜるとぼやける）。足りない長さは行って戻る（ブーメラン）でうめる
+    sp = max(0.6, s["speed"])
     z = s["zoom"]; cw, ch = int(W / z) // 2 * 2, int(H / z) // 2 * 2
     px = f"({W}-{cw})/2*(1+{s['pan']}*(t/{s['dur']:.3f}*2-1)*0.9)" if s["pan"] else f"({W}-{cw})/2"
     base = f"trim={a}:{b},setpts=PTS-STARTPTS"
-    slow = f",setpts=PTS/{sp},minterpolate=fps={FPS}:mi_mode=blend" if sp < 0.999 else (f",setpts=PTS/{sp},fps={FPS}" if sp > 1.001 else f",fps={FPS}")
+    slow = f",setpts=PTS/{sp},fps={FPS}" if abs(sp - 1) > 1e-3 else f",fps={FPS}"   # コマは混ぜない（ぼやけるため）
     one = L / sp
     fwd = base + slow
     # ブーメラン: 行って戻るをくり返して長さを満たす（止めて終わる所は、最後のコマで止める）
@@ -128,7 +134,8 @@ for i, s in enumerate(segs):
     if r.returncode: print(i, s, r.stderr[-800:]); sys.exit(1)
 lst = os.path.join(TMP, "list.txt")
 open(lst, "w").write("".join(f"file '{f}'\n" for f in files))
-subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-i", AUD, "-map", "0:v", "-map", "1:a",
+subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-i", AUD, "-map", "0:v", "-map", "1:a"]
+               + (["-vf", f"subtitles={ASS}"] if ASS else []) + [
                 "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-c:a", "aac", "-b:a", "256k", "-shortest",
                 "-movflags", "+faststart", OUT], check=True)
 print(f"できた: {OUT}（{len(segs)} カット・{T:.1f}秒）")
