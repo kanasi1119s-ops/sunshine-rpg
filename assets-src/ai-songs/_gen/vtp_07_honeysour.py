@@ -135,15 +135,26 @@ for b in range(S.nb):
     r = root(ch)
     arp16 = " ".join(f"{nm(t[q % len(t)])}:0.25" for q in (0, 2, 4, 2, 1, 3, 5, 3, 0, 2, 4, 2, 1, 3, 5, 3))
     if n == "前奏":
+        # 2026-11-08 人間「前奏の演奏変えよう。ピロピロ始まり聞き飽きた」: きらきらのアルペジオで始めるのをやめた。
+        #   びんの「プシュッ」→ 古いピアノの和音（はちみつの懐かしさ）だけ → 2小節目からうねる和音が下から立ち上がり、指パッチンと808のすべり
+        #   → 4小節目の頭で止めて、5小節目からキックの跳ねる型と、声のシンセの合いことば。アルペジオは前奏では鳴らさない
         if i == 0: FX.bar(b, "A4:2")                                    # びんを開ける「プシュッ」
-        ARP.bar(b, arp16)
-        if i >= 2: CHOP.bar(b, hook[i % 2])
+        if i < 4:
+            PN[0].bar(b, f"{nm(root(ch, 'E2'))}:1.5 {nm(root(ch, 'E2') + 12)}:2.5")
+            [PN[j + 1].bar(b, f"{nm(v3[j])}:1.5 R:0.5 {nm(v3[j])}:0.5 {nm(v3[j])}:1.5") for j in range(3)]
+        if 1 <= i < 4:
+            fbw(b, v3, [4] if i < 3 else [2, 1, -1])                   # うねる和音を長くのばして、少しずつ立ち上がる
+            PERC.bar(b, "R:1 C#5:1 R:1 C#5:1")
+        if i == 2: SUB.bar(b, f"R:2 {nm(r + 12)}:1 {nm(r)}:1/")       # 808 が下にすべり込む
+        if i == 3: FX.at(S.bar_beat(b), "C4:3"); D.set(b, "................", "........X.X.XXXX", "................")
         if i >= 4:
-            SUB.bar(b, f"{nm(r)}:2 {nm(r)}:1.5 {nm(r + 12)}:0.5")
-            fbw(b, v3, [1.5, 1, 1.5])
-            D.set(b, "X.....X...X.....", "....X.......X...", "x.x.x.x.x.x.xxxx")
-        if i == 3: FX.at(S.bar_beat(b + 1) - 4, "C4:4")
-        if i == 7: D.set(b, "X.....X.........", "....X...........", "x.x.x.x........."); CHIP.bar(b, "E6:0.25 R:0.25 B5:0.25 R:0.25 E6:0.5 R:2.5")
+            SUB.bar(b, f"{nm(r)}:1.5 {nm(r)}:1 R:1 {nm(r + 12)}:0.5")
+            fbw(b, v3, [0.75, 0.75, 0.5, -0.5, 0.75, 0.75])
+            CHOP.bar(b, hook[i % 2])
+            BELL.bar(b, "R:2 " + f"{nm(t[-1])}:1 {nm(t[-2])}:1" if i % 2 == 1 else "R:4")
+            D.set(b, "X..X......X.....", "....X.......X...", "x...x.x.x...x.x.")
+        if i == 4: D.cym(b, "C2:4")
+        if i == 7: D.set(b, "X..X......X.....", "....X...X.X.XXXX", "x...x.x........."); CHIP.bar(b, "E6:0.25 R:0.25 B5:0.25 R:0.25 E6:0.5 R:2.5")
     elif n in ("Aメロ1", "Aメロ2"):
         SB.bar(b, f"{nm(r)}:0.25 R:0.5 {nm(r)}:0.25 R:0.5 {nm(r + 7)}:0.25 R:0.25 {nm(r)}:0.5 R:0.5 {nm(r)}:0.25 R:0.75")
         [PLK[j].bar(b, f"R:0.5 {nm(v3[j])}:0.25 R:1.25 {nm(v3[j])}:0.25 R:0.75 {nm(v3[j])}:0.25 R:0.75") for j in range(3)]
@@ -241,9 +252,8 @@ if VOCAL:   # 歌のノイズ対策（白い息のリテイクで決めたもの
     # ===== 2026-11-08 人間「テトの声ももっと抑揚と、コーラスをつけよ。あと男性っぽい声のテトも入れてデュエットしよう」 =====
     # 男声のテト: 同じテトの音源を1オクターブ下げ、のどの響き（フォルマント）を 0.84 に下げて、太く低い男の人の声にする。
     # デュエットの分け方（句ごと。句のまん中の時刻で決める）:
-    #   前奏の「はにさわ」… ふたり ／ Aメロ1・Bメロ1 … テト ／ サビ1 … テト（後半4小節は男声が1オクターブ下で重なる）
-    #   ポストサビ … 掛け合い（テト→男声→テト→ふたり）／ Aメロ2 … 男声 ／ Bメロ2 … 男声→後半はふたり
-    #   サビ2・最後のサビ … ふたり（オクターブのユニゾン）／ ブリッジ … 男声→テト→ふたり
+    #   前奏の「はにさわ」… ふたり ／ Aメロ … テト（女声）／ Bメロ … 男声 ／ サビ … ふたり（オクターブのユニゾン）
+    #   ポストサビ … 掛け合い（テト→男声→テト→ふたり）／ ブリッジ … 男声→テト→ふたり
     BT = S.beats
     def sec(nm_): bs = S.sc(nm_); return bs[0] * BT, (bs[-1] + 1) * BT
     toks = main["notes"].split(); tt = []; t = 0.0
@@ -261,13 +271,13 @@ if VOCAL:   # 歌のノイズ対策（白い息のリテイクで決めたもの
             if a0 <= mid < a1: break
         else: return "both"
         r = (mid - a0) / (a1 - a0)
+        # 2026-11-08 人間「Aメロは女性、Bメロ男性、サビ2人にしよう」
         if nm_ == "前奏": return "both"
-        if nm_ in ("Aメロ1", "Bメロ1"): return "teto"
-        if nm_ == "サビ1": return "teto" if r < 0.5 else "both"
+        if nm_.startswith("Aメロ"): return "teto"
+        if nm_.startswith("Bメロ"): return "man"
+        if "サビ" in nm_ and "ポスト" not in nm_: return "both"
         if nm_.startswith("ポストサビ") or nm_ == "最後のポストサビ":
             return ["teto", "man", "teto", "both"][min(3, int(r * 4))]
-        if nm_ == "Aメロ2": return "man"
-        if nm_ == "Bメロ2": return "man" if r < 0.5 else "both"
         if nm_ == "ブリッジ": return ["man", "teto", "both", "both"][min(3, int(r * 4))]
         return "both"
     role = {}
@@ -317,7 +327,7 @@ if VOCAL:   # 歌のノイズ対策（白い息のリテイクで決めたもの
     t = 0.0
     for b in range(S.nb):
         n_, i_, _, _ = S.scene_of(b)
-        if n_ in ("サビ1", "サビ2", "最後のサビ") and not (n_ == "サビ1" and i_ < 4):
+        if n_ in ("サビ1", "サビ2", "最後のサビ"):
             ch = S.chords[b].split("/")[0]; v = voice(ch, 67 + (1 if n_.startswith("最後") else 0), 3)
             for j in range(2): bk[j].append(f"{nm(v[j + 1])}:3.5:あ R:0.5")
         elif n_ in ("ポストサビ2", "最後のポストサビ") and i_ % 2 == 1:
