@@ -657,7 +657,7 @@ def declick(x, sr, amount=1.0):
     if amount <= 0: return x
     b, a = signal.butter(2, 3000 / (sr / 2), "high"); hp = signal.lfilter(b, a, x)
     hd = np.abs(np.diff(hp, prepend=hp[0])); loc = np.convolve(hd, np.ones(int(0.01 * sr)) / int(0.01 * sr), mode="same") + 1e-7
-    idx = np.where((hd > 0.004) & (hd > 7 * loc))[0]
+    idx = np.where(((hd > 0.012) & (hd > 6 * loc)) | ((hd > 0.08) & (hd > 3 * loc)))[0]
     bl, al = signal.butter(4, 5000 / (sr / 2)); lp = signal.filtfilt(bl, al, x)
     w = int(0.0015 * sr); win = np.hanning(2 * w + 1) * min(1.0, amount)
     y = x.copy(); last = -10 ** 9
@@ -666,6 +666,17 @@ def declick(x, sr, amount=1.0):
         a0, a1 = max(0, i - w), min(len(x), i + w + 1)
         ww = win[(a0 - (i - w)):(a0 - (i - w)) + (a1 - a0)]
         y[a0:a1] = y[a0:a1] * (1 - ww) + lp[a0:a1] * ww; last = i
+    # 破裂の「パッ」「プッ」（ぱ行・た行の頭）が、まわりの声の 3.5 倍をこえてとがる所は、そこだけ大きさを抑える（とがりを丸める）
+    w20 = int(0.02 * sr)
+    rms20 = np.sqrt(np.convolve(y * y, np.ones(w20) / w20, mode="same") + 1e-12)
+    lim = 3.5 * rms20 + 0.01
+    over = np.abs(y) > lim
+    if over.any():
+        gg = np.where(over, lim / (np.abs(y) + 1e-12), 1.0)
+        from scipy.ndimage import minimum_filter1d
+        gg = minimum_filter1d(gg, 2 * int(0.0007 * sr) + 1)   # 前後 0.7ms も一緒に
+        gg = np.convolve(gg, np.hanning(int(0.001 * sr) + 1) / np.hanning(int(0.001 * sr) + 1).sum(), mode="same")
+        y = y * (1 - (1 - gg) * min(1.0, amount))
     # パチパチ: 20ms ごとに 6kHz より上のとがり具合（尖度）を見て、とがった所だけ高い音を少し下げる
     b6, a6 = signal.butter(4, 6000 / (sr / 2), "high"); h6 = signal.filtfilt(b6, a6, y)
     n = int(0.02 * sr); g = np.ones(len(y))
@@ -707,8 +718,6 @@ def polish(x, sr, vdef):
         g = tgt + (g - tgt) * c; gs[j] = g
     sm = np.interp(np.arange(len(gr)), idx, gs)
     x = x * 10 ** (sm / 20)
-    # デクリックは最後に（EQ で高い音を持ち上げたあとの「プチッ」「パチパチ」を取る）
-    x = declick(x, sr, float(vdef.get("declick", 0.0)))
     return x
 
 def reverb(x, sr, wet, seed=3):
@@ -742,6 +751,9 @@ def render_song(song, sr_out, total_sec=None, dry=False):
         rms = np.sqrt(np.mean(v[act] ** 2)) + 1e-12 if act.any() else 1.0
         v = v * (10 ** (-20 / 20) / rms)
         v = np.tanh(v / 0.9) * 0.9                       # とがった所だけをやわらかく抑える
+        # デクリックは、大きさをそろえたあと（最後の音）にかける（EQ・大きさの調整で、とがりの大きさが変わるため）
+        v = declick(v, sr_out, float(vd.get("declick", 0.0)))
+        if float(vd.get("declick", 0.0)) > 0: v = declick(v, sr_out, float(vd.get("declick", 0.0)))   # 2回目（1回目で丸めたあとに残った、となり合うとがりを取る）
         st = reverb(v, sr_out, 0 if dry else float(vd.get("reverb", 0.22)), seed=5 + i)
         pan = float(vd.get("pan", 0)); g = float(vd.get("volume", 1.0))
         st[:, 0] *= g * math.cos((pan + 1) * math.pi / 4) * math.sqrt(2)
