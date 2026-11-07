@@ -547,7 +547,10 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1, tempo=None, bea
             po = {**vdef, "_dyn": float(np.clip(dyn, -1, 1)), "_lyric": p["lyric"], "_params": True}
             pr = render_piece(p["oto"], (k1 - k0) * FP / 1000, ft, vel, sr_out, po)
             n = len(pr["f0"]); env = np.ones(n)
-            fi = max(1, int(round(((p["ovl"] + LG) if not p["head"] else 0.02) * 1000 / FP)))
+            # 2026-11-08 人間「白い息のリテイクですが、歌い始めにノイズがあります」: 母音から始まる句（「え」など）は、無音から 14ms で
+            #   一気に立ち上がり「プツッ」と聞こえた。"headFade"（秒。既定 0.02＝これまでどおり）で、句の頭の入りをやわらかくできる。使う曲だけ
+            hf_ = float(vdef.get("headFade", 0.02)) if p["lyric"] in VOWEL_HEADS else 0.02
+            fi = max(1, int(round(((p["ovl"] + LG) if not p["head"] else hf_) * 1000 / FP)))
             fi = min(fi, n); env[:fi] = np.sin(np.linspace(0, np.pi / 2, fi + 1)[1:]) ** 2
             fo = max(1, int(round(((nxt["ovl"] + LG) if joined else 0.20) * 1000 / FP))); fo = min(fo, n)
             env[n - fo:] *= np.cos(np.linspace(0, np.pi / 2, fo + 1)[:-1]) ** 2
@@ -734,6 +737,9 @@ def reverb(x, sr, wet, seed=3):
         out.append(signal.fftconvolve(x, ir)[: len(x)])
     w = np.stack(out, 1) * wet
     return np.stack([x, x], 1) * (1 - 0.35 * wet) + w
+
+VOWEL_HEADS = set("あいうえおんアイウエオン") | {"あ弱", "い弱", "う弱", "え弱", "お弱", "ん弱"}
+
 
 def render_song(song, sr_out, total_sec=None, dry=False):
     bpm = float(song["bpm"])
