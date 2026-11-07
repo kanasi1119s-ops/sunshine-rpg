@@ -7,7 +7,7 @@
 つなぎ方:
   ・切りかえは、曲の小節・拍の頭（122 BPM）にそろえる
   ・長くのばす所は、スロー（前のコマと次のコマを混ぜてなめらかに）＋行って戻る（ブーメラン）で、止まって見えないようにする
-  ・同じ場面でも、寄り（ズーム）・ゆっくり横に動く・左右反転・色味を変えて、くり返しに見えにくくする
+  ・同じ場面でも、寄り（ズーム）・ゆっくり横に動く・色味を変えて、くり返しに見えにくくする
   ・前奏は逆再生（びんに吸い込まれる）、8小節目はテープが止まるように遅くして止める（曲の前奏と同じ）
   ・元の動画についていた音は使わず、曲の音にする
 """
@@ -23,7 +23,8 @@ segs = []   # (長さ秒, 場面, 速さ, 逆再生, 寄り, 横の動き(-1〜1
 
 
 def add(dur, sc, speed=1.0, rev=False, zoom=1.0, pan=0.0, flip=False, col=None, freeze_end=False):
-    segs.append(dict(dur=dur, sc=sc, speed=speed, rev=rev, zoom=zoom, pan=pan, flip=flip, col=col, freeze=freeze_end))
+    # 左右反転は使わない（腕の「04」の数字が鏡文字になる。試作1で見つけた）
+    segs.append(dict(dur=dur, sc=sc, speed=speed, rev=rev, zoom=zoom, pan=pan, flip=False, col=col, freeze=freeze_end))
 
 
 def beats(n): return n * BEAT
@@ -79,7 +80,7 @@ add(None, "Gend", speed=0.5, zoom=1.15, freeze_end=True)                  # ウ�
 
 COL = {None: "", "dream": ",gblur=sigma=6,eq=brightness=0.05:saturation=1.25",
        "stop": ",eq=saturation=0.7", "cool": ",colorbalance=bs=0.12:rs=-0.06",
-       "sepia": ",colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131,eq=saturation=1.0:brightness=0.03"}
+       "sepia": ",eq=saturation=0.55:brightness=0.02,colorbalance=rs=0.08:gs=0.03:bs=-0.08:rm=0.06:bm=-0.05"}
 
 
 def dur_total():
@@ -128,6 +129,6 @@ for i, s in enumerate(segs):
 lst = os.path.join(TMP, "list.txt")
 open(lst, "w").write("".join(f"file '{f}'\n" for f in files))
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-i", AUD, "-map", "0:v", "-map", "1:a",
-                "-c:v", "libx264", "-preset", "veryfast", "-crf", "19", "-c:a", "aac", "-b:a", "256k", "-shortest",
+                "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-c:a", "aac", "-b:a", "256k", "-shortest",
                 "-movflags", "+faststart", OUT], check=True)
 print(f"できた: {OUT}（{len(segs)} カット・{T:.1f}秒）")
