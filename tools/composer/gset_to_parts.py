@@ -14,6 +14,8 @@
   notes6 = string_parts(segments, chords, voicings, bpm)
   segments = [("00_Rock3-148-C_comp", 源の小節, 何小節), ...]（並べた順に、曲の小節を埋める）
   返り値は、低い弦から 6 本ぶんの notes 文字列（"R:0.31 F#2:0.42%96 ..."）。
+  注意（2026-11-07）: distGuitar のパートにするときは、必ず "powerChord": false を付ける。付けないと 1 音ごとに5度と1オクターブ上が足され、
+  6 本の和音が 18 音になって、歪ませたときに汚く割れる（聞き比べD〜I1 はこの状態だった）。左右を分けるときは "double": false も付ける。
 
 データ: /tmp/gset/ann（注釈）・/tmp/gset/mic（マイク録音）。入手元 https://zenodo.org/records/3371780
 """
