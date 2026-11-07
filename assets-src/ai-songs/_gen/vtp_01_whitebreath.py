@@ -282,11 +282,12 @@ S.fade_out = 0
 S.desc = ("仮: プロ仕様のボカロ曲（重音テト）01。冬のバラードロック。A長調・148、最後のサビは +2（B長調）。"
           "冬に告白してふられる。1年かけて自分を変えて、次の冬にもう一度告白する。0サビ・冬の鈴のリフ・ピアノとバンドとストリングス・"
           "Cメロの借りた和音・ギターソロ・落ちサビ。サビは3度下のハモリ、最後のサビは歌の重ね。自作")
-finish(S, LY, V, 0, double=[("最後のサビ", 0.5)],
+HARM = _os2.environ.get("VTP_HARM", "1") == "1"; DBL = _os2.environ.get("VTP_DBL", "1") == "1"
+finish(S, LY, V, 0, double=[("最後のサビ", 0.5)] if DBL else None,
        level={"verse": -0.25}, special={"0サビ": -0.2, "落ちサビ": -0.3, "最後のサビ": 0.4, "サビ1": 0.3})
 
 # ================= サビの3度下のハモリ（プロのやり方: ビブラートを本線と変えて、声が混ざらないように）=================
-if VOCAL:
+if VOCAL and HARM:
     path = sys.argv[1]; js = _json2.load(open(path))
     main = js["vocals"][0]
     rng = []
@@ -308,11 +309,11 @@ if VOCAL:
                 q -= 1
                 if q % 12 in pcs: steps += 1
             mk = m.group(2).replace("/", "").replace("!", "")
-            out.append(f"{nm(q)}{mk}:{m.group(3)}:{m.group(4)}" if q >= 55 else f"R:{m.group(3)}")
+            out.append(f"{nm(q)}{mk}:{m.group(3)}:{m.group(4)}" if q >= 57 else f"R:{m.group(3)}")
         else:
             out.append(f"R:{L_:g}")
         t += L_
-    harm = dict(main); harm.update({"notes": " ".join(out), "volume": 0.42, "pan": 0, "vibrato": 22, "vibratoRate": 5.9, "vibratoMap": [],
+    harm = dict(main); harm.update({"notes": " ".join(out), "volume": float(_os2.environ.get("VTP_HVOL", "0.42")), "pan": 0, "vibrato": 22, "vibratoRate": 5.9, "vibratoMap": [],
                                     "blend": {"voice": "teto-soft", "amount": 0.45}, "reverb": 0.24, "dynamics": [], "consonant": 1.2})
     js["vocals"].append(harm)
     _json2.dump(js, open(path, "w"), ensure_ascii=False)
