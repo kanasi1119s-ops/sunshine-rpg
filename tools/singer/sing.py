@@ -650,6 +650,33 @@ def biquad(kind, f, sr, q=0.707, db=0.0):
         a = [(A + 1) - (A - 1) * c + sq, 2 * ((A - 1) - (A + 1) * c), (A + 1) - (A - 1) * c - sq]
     return np.array(b) / a[0], np.array(a) / a[0]
 
+def declick(x, sr, amount=1.0):
+    """2026-11-07 人間「ノイズは曲全部チェックしないとダメだよ？」: 子音の頭（き・つ・ぜ など）や句の出だしで、合成の切りかわりが
+    1〜2ms の「プチッ」になる所と、6kHz より上が一瞬だけとがる「パチパチ」を、その瞬間だけなめらかにする（プロのデクリックと同じ考え）。
+    子音そのもの（サ行の息など）は残す: とがりが周りの 7 倍をこえる所だけ、前後 1.5ms を 5kHz より下の音と入れかえる"""
+    if amount <= 0: return x
+    b, a = signal.butter(2, 3000 / (sr / 2), "high"); hp = signal.lfilter(b, a, x)
+    hd = np.abs(np.diff(hp, prepend=hp[0])); loc = np.convolve(hd, np.ones(int(0.01 * sr)) / int(0.01 * sr), mode="same") + 1e-7
+    idx = np.where((hd > 0.004) & (hd > 7 * loc))[0]
+    bl, al = signal.butter(4, 5000 / (sr / 2)); lp = signal.filtfilt(bl, al, x)
+    w = int(0.0015 * sr); win = np.hanning(2 * w + 1) * min(1.0, amount)
+    y = x.copy(); last = -10 ** 9
+    for i in idx:
+        if i - last < w: continue
+        a0, a1 = max(0, i - w), min(len(x), i + w + 1)
+        ww = win[(a0 - (i - w)):(a0 - (i - w)) + (a1 - a0)]
+        y[a0:a1] = y[a0:a1] * (1 - ww) + lp[a0:a1] * ww; last = i
+    # パチパチ: 20ms ごとに 6kHz より上のとがり具合（尖度）を見て、とがった所だけ高い音を少し下げる
+    b6, a6 = signal.butter(4, 6000 / (sr / 2), "high"); h6 = signal.filtfilt(b6, a6, y)
+    n = int(0.02 * sr); g = np.ones(len(y))
+    for s0 in range(0, len(y) - n, n):
+        blk = h6[s0:s0 + n]; e2 = np.mean(blk ** 2)
+        if e2 < 1e-10: continue
+        k = np.mean(blk ** 4) / (e2 ** 2)
+        if k > 20: g[s0:s0 + n] = 10 ** (-min(9.0, (k - 20) * 0.25) * amount / 20)
+    g = np.convolve(g, np.ones(int(0.004 * sr)) / int(0.004 * sr), mode="same")
+    return (y - h6) + h6 * g
+
 def polish(x, sr, vdef):
     air = float(vdef.get("air", 1.5))
     for kind, f, q, db in [("hp", 110, 0.7, 0), ("peak", 280, 1.0, -2.5 - 0.5 * air), ("peak", 3000, 0.9, 2.0), ("peak", 7200, 3.0, -2.5), ("hshelf", 10500, 0.7, air)]:
@@ -680,6 +707,8 @@ def polish(x, sr, vdef):
         g = tgt + (g - tgt) * c; gs[j] = g
     sm = np.interp(np.arange(len(gr)), idx, gs)
     x = x * 10 ** (sm / 20)
+    # デクリックは最後に（EQ で高い音を持ち上げたあとの「プチッ」「パチパチ」を取る）
+    x = declick(x, sr, float(vdef.get("declick", 0.0)))
     return x
 
 def reverb(x, sr, wet, seed=3):
