@@ -302,3 +302,15 @@ js["parts"] = [p for p in js["parts"] if p["instrument"] not in ("kick", "snare"
 json.dump(js, open(path, "w"), ensure_ascii=False)
 flatten_arc(path, S)   # 曲全体の山（出だしを小さく）だけを打ち消す。足したパートにも効かせるため、足したあとで
 print("ギター・ドラムを足した:", len(add), "パート")
+
+# v1 を測ると、サビ（-18.9・-18.0 dB）が間奏・ソロ（-16.0・-15.4）や2番のAメロ（-16.8）より小さかった。
+# サビがいちばん大きく聞こえるよう、場面ごとの強さ（barGain）を伴奏にかける（歌は変えない）
+SCENE_GAIN = {"間奏1": 0.8, "ソロ": 0.8, "Aメロ2": 0.86, "Bメロ2": 0.92, "サビ1": 1.08, "サビ2": 1.1, "最後のサビ": 1.12}
+js = json.load(open(path))
+for p in js["parts"]:
+    g = p.get("barGain", [1] * NB)
+    for b in range(NB):
+        n_, i_, L_, k_ = S.scene_of(b)
+        g[b] = round(min(2.0, g[b] * SCENE_GAIN.get(n_, 1.0)), 4)
+    p["barGain"] = g
+json.dump(js, open(path, "w"), ensure_ascii=False)
