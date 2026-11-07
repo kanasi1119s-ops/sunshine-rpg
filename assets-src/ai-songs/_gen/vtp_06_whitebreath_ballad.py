@@ -239,7 +239,8 @@ assert all(abs(x - TOTAL) < 0.05 for x in tot.values()), (tot, TOTAL)
 js["parts"] = [p for p in js["parts"] if p["instrument"] not in ("kick", "snare", "hihat", "tom", "crash", "ride")] + add
 json.dump(js, open(path, "w"), ensure_ascii=False)
 flatten_arc(path, S)
-SCENE_GAIN = {"前奏": 0.95, "Aメロ1": 0.92, "間奏": 0.85, "ソロ": 0.85, "Aメロ2": 0.9, "サビ1": 1.08, "サビ2": 1.1, "最後のサビ": 1.12}
+# v1 の測定: Bメロ（-16.2）・ソロ（-15.7）がサビ1（-18.1）より大きかった → サビがいちばん大きくなるように
+SCENE_GAIN = {"前奏": 0.95, "Aメロ1": 0.92, "Bメロ1": 0.85, "Bメロ2": 0.82, "間奏": 0.75, "ソロ": 0.72, "Aメロ2": 0.82, "サビ1": 1.18, "サビ2": 1.14, "最後のサビ": 1.15}
 js = json.load(open(path))
 for p in js["parts"]:
     g = p.get("barGain", [1] * NB)
