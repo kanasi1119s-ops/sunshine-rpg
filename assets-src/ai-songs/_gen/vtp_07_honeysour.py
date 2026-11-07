@@ -6,6 +6,7 @@
 # コード進行: 王道・カノン・丸サは使わない。G#7（Ⅲ7）・Cmaj7（♭Ⅵ）・Am6（Ⅳm6）・D/E（♭Ⅶ の上の音を E の上で）・Dmaj7 で「甘い・酸っぱい・懐かしい」。
 # この曲だけの音: 炭酸のびんを開ける「プシュッ」で始まり、「プシュッ」で終わる。
 import sys, os, json, re
+import numpy as np
 from vt25_lib import *
 
 S = Song("07", "honeysour", "ハニー・サワー（仮）", "Honey Sour", 122, 4, "E", "major", "K-POP（ボカロ）")
@@ -89,21 +90,23 @@ put("ブリッジ", K, VBR, BRL)
 put("最後のサビ", KL, VC, CHL)
 put("最後のポストサビ", KL, VPO, POL)
 
-# ================= 楽器 =================
-CHOP = S.track("声のようなシンセ（合いことば）", "lead", patch="vocalChop", volume=0.085, pan=0.0, reverb=0.18, mono=True)
-ARP = S.track("きらきらのアルペジオ", "lead", patch="kawaiiArp", volume=0.045, pan=0.35, reverb=0.25)
-BELL = S.track("ベルの合いの手", "lead", patch="popBell", volume=0.04, pan=-0.35, reverb=0.3)
-PLK = [S.track(f"はじくシンセの和音{j + 1}", "lead", patch="surgePopcorn", volume=0.045, pan=-0.25 + 0.25 * j, reverb=0.15) for j in range(3)]
-SAW = [S.track(f"厚いシンセの和音{j + 1}", "lead", patch="modernSupersaw", volume=0.032, pan=-0.5 + 0.5 * j, reverb=0.2) for j in range(3)]
-BRS = [S.track(f"金管のキメ{j + 1}", "brass", patch="brassSection", volume=0.06, pan=-0.3 + 0.3 * j, reverb=0.15) for j in range(3)]
+# ================= 楽器（2026-11-07 人間「Kawaii_future_bass系の音源を主体で使って」）=================
+# カワイイ・フューチャーベースの音を主役に: うねる和音（fbChord・キックに合わせて凹む＋音の頭を下からすくい上げる）、
+#   声を切り刻んだようなシンセ（vocalChop）、きらきらのアルペジオ（kawaiiArp）、ベル（popBell）、ファミコン風の小さなパルス（chipPulse25）、
+#   はじけるプラック（surgePopcorn）、808。金管は使わない。
+# MIDI のチャンネルは（ドラム以外）15まで: 同じ楽器の和音のパートは pan・reverb をそろえて1つのチャンネルを共有させる（v1 は足りずに、
+#   ブリッジのピアノや弦などが別の楽器の音で鳴っていた）
+CHOP = S.track("声のようなシンセ（合いことば）", "lead", patch="vocalChop", volume=0.09, pan=0.0, reverb=0.2, mono=True)
+ARP = S.track("きらきらのアルペジオ", "lead", patch="kawaiiArp", volume=0.045, pan=0.3, reverb=0.25)
+BELL = S.track("ベル（合いの手・オルゴール）", "lead", patch="popBell", volume=0.045, pan=-0.3, reverb=0.3)
+FB = [S.track(f"うねる和音{j + 1}", "lead", patch="fbChord", volume=0.036, pan=0.0, reverb=0.22, duck=0.55) for j in range(3)]
+PLK = [S.track(f"はじくプラックの和音{j + 1}", "lead", patch="surgePopcorn", volume=0.045, pan=0.0, reverb=0.15) for j in range(3)]
+CHIP = S.track("小さなパルス（ファミコン風）", "lead", patch="chipPulse25", volume=0.03, pan=0.2, reverb=0.2, mono=True)
 SUB = S.track("808", "sub808", volume=0.17, pan=0)
 SB = S.track("はずむシンセベース", "bass", patch="surgeBassPop", volume=0.15, pan=0)
-PNL = S.track("ピアノ（左手）", "piano", volume=0.085, pan=-0.15, reverb=0.3)
-PNR = [S.track(f"ピアノ（右手{j + 1}）", "piano", volume=0.055, pan=-0.05, reverb=0.3) for j in range(3)]
-STR = [S.track(f"ストリングス{j + 1}", "strings", patch="stringEnsemble", volume=0.04, pan=-0.4 + 0.4 * j, reverb=0.35, sustain=1.4) for j in range(3)]
-GLK = S.track("オルゴールのような鉄琴", "glockenspiel", volume=0.06, pan=0.25, reverb=0.4)
-SNAP = S.track("指パッチン", "lead", patch="seasonFx", volume=0.05, pan=0.15, modulate=False)
-CLAP = S.track("手拍子", "lead", patch="seasonFx", volume=0.06, pan=-0.1, modulate=False)
+PN = [S.track(f"ピアノ{j + 1}", "piano", volume=0.06, pan=-0.1, reverb=0.3) for j in range(4)]
+STR = [S.track(f"ストリングス{j + 1}", "strings", patch="stringEnsemble", volume=0.04, pan=0.0, reverb=0.35, sustain=1.4) for j in range(3)]
+PERC = S.track("手拍子・指パッチン", "lead", patch="seasonFx", volume=0.055, pan=0.0, reverb=0.12, modulate=False)
 FX = S.track("炭酸の音・ライザー・ドロップ", "lead", patch="fxRiser", volume=0.055, pan=0, reverb=0.25)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 D = S.drumkit()
@@ -114,87 +117,94 @@ def root(ch, lo="E1"):
     return low(bs, lo)
 
 
-HOOK = ["E5:0.5 E5:0.5 B4:0.5 E5:0.5 F#5:1 E5:1", "R:0.5 B4:0.5 C#5:0.5 B4:0.5 G#4:1 E4:1"]   # 合いことばの節（声のようなシンセ）
+HOOK = ["E5:0.5 E5:0.5 B4:0.5 E5:0.5 F#5:1 E5:1", "R:0.5 B4:0.5 C#5:0.5 B4:0.5 G#4:1 E4:1"]   # 合いことばの節
+DROP = ["E5:0.25 E5:0.25 R:0.25 B4:0.25 E5:0.5 F#5:0.25 E5:0.25 R:0.5 G#5:0.5 F#5:0.5 E5:0.5",
+        "C#5:0.25 C#5:0.25 R:0.25 B4:0.25 C#5:0.5 E5:0.25 C#5:0.25 R:0.5 B4:0.5 G#4:0.5 B4:0.5"]   # ドロップの声のシンセ（切り刻んだ節）
+def shift(line, up):
+    return " ".join((lambda m: nm(midi(m.group(1)) + up) + m.group(2))(re.match(r"([A-G]#?\d)(.*)", t)) if not t.startswith("R") else t for t in line.split())
+def fbw(b, v3, pat):
+    """うねる和音: 音の頭を下からすくい上げ（/）、キックに合わせて凹ませる"""
+    for j in range(3): FB[j].bar(b, " ".join((f"{nm(v3[j])}:{d}/" if k == 0 else f"{nm(v3[j])}:{d}") if d > 0 else f"R:{-d}" for k, d in enumerate(pat)))
 prev = None
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]
     up = 1 if n.startswith("最後") or n == "後奏" else 0
-    hook = [" ".join((lambda m: nm(midi(m.group(1)) + up) + m.group(2))(re.match(r"([A-G]#?\d)(.*)", t)) if not t.startswith("R") else t for t in h.split()) for h in HOOK]
+    hook = [shift(h, up) for h in HOOK]; drop = [shift(h, up) for h in DROP]
     v3 = voice(ch.split("/")[0], 67 + up, 3, prev); prev = v3
     t = tones(ch.split("/")[0], "E4", "E6")
     r = root(ch)
+    arp16 = " ".join(f"{nm(t[q % len(t)])}:0.25" for q in (0, 2, 4, 2, 1, 3, 5, 3, 0, 2, 4, 2, 1, 3, 5, 3))
     if n == "前奏":
-        if i == 0: FX.bar(b, "A4:2")                                    # びんを開ける「プシュッ」（白い雑音のシュッ）
-        ARP.bar(b, " ".join(f"{nm(t[q % len(t)])}:0.25" for q in (0, 2, 4, 2, 1, 3, 5, 3, 0, 2, 4, 2, 1, 3, 5, 3)))
+        if i == 0: FX.bar(b, "A4:2")                                    # びんを開ける「プシュッ」
+        ARP.bar(b, arp16)
         if i >= 2: CHOP.bar(b, hook[i % 2])
         if i >= 4:
             SUB.bar(b, f"{nm(r)}:2 {nm(r)}:1.5 {nm(r + 12)}:0.5")
-            [SAW[j].bar(b, f"{nm(v3[j])}:4") for j in range(3)]
-            D.set(b, "X.......X..x....", "....X.......X...", "x.x.x.x.x.x.x.x.")
+            fbw(b, v3, [1.5, 1, 1.5])
+            D.set(b, "X.....X...X.....", "....X.......X...", "x.x.x.x.x.x.xxxx")
         if i == 3: FX.at(S.bar_beat(b + 1) - 4, "C4:4")
-        if i == 7: D.set(b, "X.......X.......", "....X...........", "x.x.x.x........."); [BRS[j].bar(b, f"{nm(v3[j])}:0.5 R:1 {nm(v3[j])}:0.5 R:2") for j in range(3)]
+        if i == 7: D.set(b, "X.....X.........", "....X...........", "x.x.x.x........."); CHIP.bar(b, "E6:0.25 R:0.25 B5:0.25 R:0.25 E6:0.5 R:2.5")
     elif n in ("Aメロ1", "Aメロ2"):
         SB.bar(b, f"{nm(r)}:0.25 R:0.5 {nm(r)}:0.25 R:0.5 {nm(r + 7)}:0.25 R:0.25 {nm(r)}:0.5 R:0.5 {nm(r)}:0.25 R:0.75")
         [PLK[j].bar(b, f"R:0.5 {nm(v3[j])}:0.25 R:1.25 {nm(v3[j])}:0.25 R:0.75 {nm(v3[j])}:0.25 R:0.75") for j in range(3)]
         if n == "Aメロ1":
             D.set(b, "X......xX.......", "................", "..x...x...x...x.")
-            SNAP.bar(b, "R:1 C#5:1 R:1 C#5:1")
+            PERC.bar(b, "R:1 C#5:1 R:1 C#5:1")                         # 指パッチン
         else:                                                           # 2番: ラテン系の跳ねる型（デンボウ）にビートスイッチ
             D.set(b, "X...X...X...X...", "...x..x....x..x.", "x.x.x.x.x.x.x.x.")
             BELL.bar(b, "R:3 " + f"{nm(t[-2])}:0.5 {nm(t[-3])}:0.5" if i % 2 == 1 else "R:4")
         if i == 7: CYM.at(S.bar_beat(b + 1) - 2, "C4:2")
     elif n in ("Bメロ1", "Bメロ2"):
         SB.bar(b, f"{nm(r)}:1 {nm(r)}:1 {nm(r)}:1 {nm(r)}:1" if i < 7 else f"{nm(r)}:1 R:3")
-        [SAW[j].bar(b, f"{nm(v3[j])}:4" if i < 7 else f"{nm(v3[j])}:2 R:2") for j in range(3)]
+        fbw(b, v3, [2, 2] if i < 4 else ([1, 1, 1, 1] if i < 6 else ([0.5] * 8 if i == 6 else [1, -3])))
+        ARP.bar(b, arp16 if i >= 4 and i < 7 else "R:4")
         if i < 4: D.set(b, "X.......X.......", "....X.......X...", "xxxxxxxxxxxxxxxx" if i >= 2 else "x.x.x.x.x.x.x.x.")
-        elif i < 7: D.set(b, "X...X...X...X...", "x.x.x.x.x.x.x.x.", "x.x.x.x.x.x.x.x."); CLAP.bar(b, "B4:0.5 B4:0.5 B4:0.5 B4:0.5 B4:0.5 B4:0.5 B4:0.5 B4:0.5")
+        elif i < 7: D.set(b, "X...X...X...X...", "x.x.x.x.x.x.x.x.", "x.x.x.x.x.x.x.x."); PERC.bar(b, "B4:0.5 " * 8)
         else: D.set(b, "X...X...........", "xxxxXXXX........", "................")   # 最後の2拍は全部止まる（ため）
         if i == 5: FX.at(S.bar_beat(b), "D4:8")
     elif n in ("サビ1", "サビ2", "最後のサビ"):
         if i == 0: D.cym(b, "C2:4"); FX.bar(b, "G4:2")
         SUB.bar(b, f"{nm(r)}:1.5 {nm(r)}:1 {nm(r)}:1 {nm(r + 12)}:0.5")
-        [SAW[j].bar(b, f"{nm(v3[j])}:1.5 {nm(v3[j])}:1 {nm(v3[j])}:1.5") for j in range(3)]
-        [BRS[j].bar(b, f"R:1.5 {nm(v3[j] + 12)}:0.5 R:1.5 {nm(v3[j] + 12)}:0.5" if i % 2 == 0 else f"{nm(v3[j] + 12)}:0.25 R:3.75") for j in range(3)]
-        D.set(b, "X...X...X...X...", "....X.......X...", "..O...O...O...O.")
-        CLAP.bar(b, "R:1 B4:1 R:1 B4:1")
-        if i in (1, 5): CHOP.bar(b, hook[(i // 4) % 2])                  # 歌の休みの小節に合いことばで答える
-        ARP.bar(b, " ".join(f"{nm(t[q % len(t)] + 12)}:0.25" for q in (0, 1, 2, 1) * 4) if i % 2 == 1 else "R:4")
-        if i == 7: D.set(b, "X...X...X...X...", "....X...X.X.XXXX", "..O...O........."); D.tom(b, "R:3 C4:0.25 A3:0.25 F3:0.25 F3:0.25")
-    elif n in ("ポストサビ1", "ポストサビ2", "最後のポストサビ"):
+        fbw(b, v3, [1.5, 1, 1, 0.5])
+        D.set(b, "X.....X...X.....", "....X.......X...", "x.x.x.x.x.x.xxxx")
+        PERC.bar(b, "R:1 B4:1 R:1 B4:1")
+        if i in (1, 5): CHOP.bar(b, hook[(i // 4) % 2]); CHIP.bar(b, shift(hook[(i // 4) % 2], 12))   # 歌の休みに合いことばで答える
+        ARP.bar(b, " ".join(f"{nm(t[q % len(t)] + 12)}:0.25" for q in (0, 1, 2, 1) * 4))
+        if i == 7: D.set(b, "X.....X...X.....", "....X...X.X.XXXX", "x.x.x.x........."); D.tom(b, "R:3 C4:0.25 A3:0.25 F3:0.25 F3:0.25")
+    elif n in ("ポストサビ1", "ポストサビ2", "最後のポストサビ"):     # ドロップ: 声のシンセが主役、和音は8分でうねる
         if i == 0: D.cym(b, "C2:4")
         SUB.bar(b, f"{nm(r)}:1.5 {nm(r)}:1 {nm(r)}:1.5")
-        if i % 2 == 1: CHOP.bar(b, hook[(i // 2) % 2])
-        [BRS[j].bar(b, f"{nm(v3[j])}:0.5 R:1 {nm(v3[j])}:0.5 R:2" if i % 2 == 1 else "R:4") for j in range(3)]
+        fbw(b, v3, [0.75, 0.75, 0.5, 0.75, 0.75, 0.5])
+        if i % 2 == 1: CHOP.bar(b, drop[(i // 2) % 2])
         D.set(b, "X.....X...X.....", "........X.......", "x.x.xxx.x.x.xxxx")
-        CLAP.bar(b, "R:2 B4:2")
+        PERC.bar(b, "R:2 B4:2")
+        BELL.bar(b, "R:2 " + f"{nm(t[-1])}:0.5 {nm(t[-2])}:0.5 {nm(t[-3])}:1" if i % 2 == 0 else "R:4")
         if i == 7 and n == "ポストサビ1": CYM.at(S.bar_beat(b + 1) - 2, "C4:2"); D.set(b, "X.....X...X.....", "........X...XXXX", "x.x.xxx.........")
         if i == 7 and n == "ポストサビ2": D.set(b, "X.....X...X.....", "........X.X.XXXX", "x.x.xxx.........")
-    elif n == "ダンスブレイク":                                         # 跳ねるキック（ジャージークラブ風）と金管のリフ
+    elif n == "ダンスブレイク":                                         # 2つ目のドロップ: 声のシンセのリフと、16分でうねる和音
         if i == 0: D.cym(b, "C2:4"); FX.bar(b, "G4:2")
         D.set(b, "X..X..X.X..X..X.", "....X.......X...", "x.x.x.x.x.x.x.x.")
         SUB.bar(b, f"{nm(r)}:0.75 {nm(r)}:0.75 {nm(r)}:0.5 {nm(r + 12)}:0.75 {nm(r)}:0.75 {nm(r)}:0.5")
-        rf = ["C#5:0.5 R:0.25 C#5:0.25 E5:0.5 F#5:0.5 R:0.5 E5:0.5 C#5:1", "B4:0.5 R:0.25 B4:0.25 C#5:0.5 E5:0.5 R:0.5 C#5:0.5 B4:1",
-              "A4:0.5 R:0.25 A4:0.25 C#5:0.5 E5:0.5 R:0.5 G#5:0.5 F#5:1", "F#5:0.75 E5:0.75 D#5:0.5 B4:1 F#4:1"][i % 4]
-        BRS[0].bar(b, rf)
-        BRS[1].bar(b, " ".join((nm(midi(x.split(':')[0]) - 4) + ':' + x.split(':', 1)[1]) if not x.startswith("R") else x for x in rf.split()))
-        CLAP.bar(b, "R:1 B4:1 R:1 B4:1")
+        fbw(b, v3, [0.5, 0.25, 0.25, 0.5, 0.5, 0.25, 0.25, 0.5, 0.5, 0.5])
+        CHOP.bar(b, drop[i % 2]); CHIP.bar(b, shift(drop[i % 2], 12) if i >= 4 else "R:4")
+        PERC.bar(b, "R:1 B4:1 R:1 B4:1")
         if i == 7: D.set(b, "X..X..X.X.......", "....X...XXXXXXXX", "x.x.x.x........."); FX.at(S.bar_beat(b + 1) - 1, "E4:2")
-    elif n == "ブリッジ":                                              # 懐かしい: ピアノ・弦・鉄琴。後半から少しずつドラム
-        PNL.bar(b, f"{nm(root(ch, 'E2'))}:2 {nm(root(ch, 'E2') + 7)}:2")
-        [PNR[j].bar(b, f"R:0.5 {nm(v3[j])}:1.5 R:0.5 {nm(v3[j])}:1.5") for j in range(3)]
-        [STR[j].bar(b, f"{nm(v3[j] - 12)}:4") for j in range(3)] if i >= 2 else None
-        GLK.bar(b, " ".join(f"{nm(t[q % len(t)] + 12)}:0.5" for q in (0, 2, 1, 3, 2, 1, 3, 2)) if i < 4 else "R:4")
+    elif n == "ブリッジ":                                              # 懐かしい: ピアノ・弦・オルゴールのようなベル。後半から少しずつドラム
+        PN[0].bar(b, f"{nm(root(ch, 'E2'))}:2 {nm(root(ch, 'E2') + 7)}:2")
+        [PN[j + 1].bar(b, f"R:0.5 {nm(v3[j])}:1.5 R:0.5 {nm(v3[j])}:1.5") for j in range(3)]
+        if i >= 2: [STR[j].bar(b, f"{nm(v3[j] - 12)}:4") for j in range(3)]
+        BELL.bar(b, " ".join(f"{nm(t[q % len(t)] + 12)}:0.5" for q in (0, 2, 1, 3, 2, 1, 3, 2)) if i < 4 else "R:4")
         SB.bar(b, f"{nm(r)}:4" if i >= 4 else "R:4")
         if i >= 4: D.set(b, "X.......X.......", "....x.......x...", "x...x...x...x...")
         if i == 7: D.set(b, "X...X...X...X...", "x.x.x.x.xxxxXXXX", "x.x.x.x.x.x.x.x."); CYM.at(S.bar_beat(b + 1) - 4, "E4:4"); FX.at(S.bar_beat(b + 1) - 4, "C4:4")
     elif n == "後奏":
         if i < 3:
             D.set(b, "X.......X.......", "X.......X.......", "................"); D.cym(b, "C2:2 C2:2")
-            [BRS[j].bar(b, f"{nm(v3[j] + 12)}:0.5 R:1.5 {nm(v3[j] + 12)}:0.5 R:1.5") for j in range(3)]
-            SUB.bar(b, f"{nm(r)}:2 {nm(r)}:2")
+            fbw(b, v3, [0.5, -1.5, 0.5, -1.5]); SUB.bar(b, f"{nm(r)}:2 {nm(r)}:2")
+            CHOP.bar(b, drop[i % 2])
         else:
             D.set(b, "X...............", "X...............", "................"); D.cym(b, "C2:4")
-            [BRS[j].bar(b, f"{nm(v3[j] + 12)}:1 R:3") for j in range(3)]
+            fbw(b, v3, [1, -3])
             FX.at(S.bar_beat(b) + 2, "A4:2")                           # 最後にまた「プシュッ」
 
 S.fade_out = 0
@@ -227,5 +237,96 @@ if VOCAL:   # 歌のノイズ対策（白い息のリテイクで決めたもの
     harm = dict(main); harm.update({"notes": " ".join(out), "volume": 0.4, "pan": 0, "vibrato": 20, "vibratoRate": 5.9, "vibratoMap": [],
                                     "blend": {"voice": "teto-soft", "amount": 0.45}, "reverb": 0.24, "dynamics": [], "consonant": 1.2})
     js["vocals"].append(harm)
+
+    # ===== 2026-11-08 人間「テトの声ももっと抑揚と、コーラスをつけよ。あと男性っぽい声のテトも入れてデュエットしよう」 =====
+    # 男声のテト: 同じテトの音源を1オクターブ下げ、のどの響き（フォルマント）を 0.84 に下げて、太く低い男の人の声にする。
+    # デュエットの分け方（句ごと。句のまん中の時刻で決める）:
+    #   前奏の「はにさわ」… ふたり ／ Aメロ1・Bメロ1 … テト ／ サビ1 … テト（後半4小節は男声が1オクターブ下で重なる）
+    #   ポストサビ … 掛け合い（テト→男声→テト→ふたり）／ Aメロ2 … 男声 ／ Bメロ2 … 男声→後半はふたり
+    #   サビ2・最後のサビ … ふたり（オクターブのユニゾン）／ ブリッジ … 男声→テト→ふたり
+    BT = S.beats
+    def sec(nm_): bs = S.sc(nm_); return bs[0] * BT, (bs[-1] + 1) * BT
+    toks = main["notes"].split(); tt = []; t = 0.0
+    for tok in toks: tt.append(t); t += float(tok.split(":")[1])
+    phr = []; cur = []
+    for i, tok in enumerate(toks):
+        if tok.startswith("R:"):
+            if cur: phr.append(cur); cur = []
+        else: cur.append(i)
+    if cur: phr.append(cur)
+    def who(i0, i1, k):
+        mid = (tt[i0] + tt[i1] + float(toks[i1].split(":")[1])) / 2
+        for nm_ in [x[0] for x in S.scenes]:
+            a0, a1 = sec(nm_)
+            if a0 <= mid < a1: break
+        else: return "both"
+        r = (mid - a0) / (a1 - a0)
+        if nm_ == "前奏": return "both"
+        if nm_ in ("Aメロ1", "Bメロ1"): return "teto"
+        if nm_ == "サビ1": return "teto" if r < 0.5 else "both"
+        if nm_.startswith("ポストサビ") or nm_ == "最後のポストサビ":
+            return ["teto", "man", "teto", "both"][min(3, int(r * 4))]
+        if nm_ == "Aメロ2": return "man"
+        if nm_ == "Bメロ2": return "man" if r < 0.5 else "both"
+        if nm_ == "ブリッジ": return ["man", "teto", "both", "both"][min(3, int(r * 4))]
+        return "both"
+    role = {}
+    for k, ph in enumerate(phr):
+        w = who(ph[0], ph[-1], k)
+        for i in ph: role[i] = w
+    def rest_of(tok): return "R:" + tok.split(":")[1]
+    t_notes = [tok if tok.startswith("R:") or role.get(i) in ("teto", "both") else rest_of(tok) for i, tok in enumerate(toks)]
+    m_notes = [rest_of(tok) if tok.startswith("R:") or role.get(i) not in ("man", "both") else tok for i, tok in enumerate(toks)]
+    hm = harm["notes"].split()
+    harm["notes"] = " ".join(h if (h.startswith("R:") or role.get(i) in ("teto", "both")) else rest_of(h) for i, h in enumerate(hm)) if len(hm) == len(toks) else harm["notes"]
+
+    # 抑揚: 句ごとに「入りは少し抑えて、まん中から高い音・長い音に向かってふくらみ、句の終わりで力を抜く」山を、場面の強さに足す。
+    #   強い拍の高い音には「!」（強く）、裏の短い音には「?」（弱く）。サビの入り・ブリッジの最後の句は大きく。
+    base = {"verse": -0.3, "pre": 0.0, "chorus": 0.45, "intro": 0.2, "bridge": -0.25, "solo": 0.3, "outro": 0.1}
+    kind = {x[0]: x[3] for x in S.scenes}
+    dyn = []
+    def accent(tok, i, top):
+        mm = re.match(r"^([A-G][b#]?-?\d)([^:]*):([0-9.]+):(.+)$", tok)
+        if not mm or "!" in mm.group(2) or "?" in mm.group(2): return tok
+        on = abs((tt[i] * 2) % 2) < 1e-6 and abs(tt[i] % 1) < 1e-6; L_ = float(mm.group(3))
+        if on and midi(mm.group(1)) >= top - 1 and L_ >= 0.5: return f"{mm.group(1)}!{mm.group(2)}:{mm.group(3)}:{mm.group(4)}"
+        if not on and L_ <= 0.25 and midi(mm.group(1)) < top - 3: return f"{mm.group(1)}?{mm.group(2)}:{mm.group(3)}:{mm.group(4)}"
+        return tok
+    for ph in phr:
+        t0 = tt[ph[0]]; t1 = tt[ph[-1]] + float(toks[ph[-1]].split(":")[1])
+        nm_ = next((x for x in [y[0] for y in S.scenes] if sec(x)[0] <= (t0 + t1) / 2 < sec(x)[1]), S.scenes[-1][0])
+        b0 = base.get(kind.get(nm_, "verse"), 0.0) + (0.12 if nm_.startswith("最後") else 0.0)
+        ms_ = [midi(re.match(r"([A-G][b#]?-?\d)", toks[i]).group(1)) for i in ph if re.match(r"[A-G]", toks[i])]
+        top = max(ms_) if ms_ else 0
+        ipk = max(ph, key=lambda i: (midi(re.match(r"([A-G][b#]?-?\d)", toks[i]).group(1)) if re.match(r"[A-G]", toks[i]) else 0) + float(toks[i].split(":")[1]))
+        tp = tt[ipk]
+        dyn += [[round(t0, 3), round(b0 - 0.15, 3)], [round(tp, 3), round(b0 + 0.22, 3)], [round(max(tp + 0.01, t1 - 0.3), 3), round(b0 + 0.05, 3)], [round(t1, 3), round(b0 - 0.2, 3)]]
+        for i in ph: t_notes[i] = accent(t_notes[i], i, top) if not t_notes[i].startswith("R:") else t_notes[i]; m_notes[i] = accent(m_notes[i], i, top) if not m_notes[i].startswith("R:") else m_notes[i]
+    dyn = [[float(a_), float(np.clip(b_, -0.6, 0.75))] for a_, b_ in sorted(dyn)]
+    main.update(notes=" ".join(t_notes), dynamics=dyn, auto=0.7, scoop=0.75, vibrato=38, legato=0.012)
+    man = dict(main); man.update({"notes": " ".join(m_notes), "transpose": -12, "formant": 0.84, "volume": 0.95, "pan": 0.0,
+                                  "blend": {"voice": "teto-soft", "amount": 0.12}, "vibrato": 26, "vibratoRate": 5.0, "scoop": 0.6, "air": 2.0,
+                                  "eq": [["peak", 160, 0.8, 2], ["peak", 350, 1.0, -2.5], ["peak", 1800, 1.4, 3], ["peak", 3200, 2.0, 4], ["hshelf", 6500, 0.7, 5]],
+                                  "reverb": 0.17})
+    # ふたりで歌う所は、男声を少し下げて（オクターブのユニゾンが太く聞こえすぎないように）、句ごとに音量を変える
+    js["vocals"].append(man)
+
+    # コーラス（バックの声）: サビ・最後のサビで、和音の音を「あー」で長くのばす2声（左右）。ポストサビは掛け声「へい」を16分の裏で。
+    bk = [[], []]
+    def pad(L, rest=True): return f"R:{L:g}"
+    t = 0.0
+    for b in range(S.nb):
+        n_, i_, _, _ = S.scene_of(b)
+        if n_ in ("サビ1", "サビ2", "最後のサビ") and not (n_ == "サビ1" and i_ < 4):
+            ch = S.chords[b].split("/")[0]; v = voice(ch, 67 + (1 if n_.startswith("最後") else 0), 3)
+            for j in range(2): bk[j].append(f"{nm(v[j + 1])}:3.5:あ R:0.5")
+        elif n_ in ("ポストサビ2", "最後のポストサビ") and i_ % 2 == 1:
+            bk[0].append(f"R:3 {nm(76 + (1 if n_.startswith('最後') else 0))}!:0.5:へ {nm(73 + (1 if n_.startswith('最後') else 0))}:0.5:ー"); bk[1].append("R:4")
+        else:
+            for j in range(2): bk[j].append("R:4")
+    for j, pn in enumerate((-0.55, 0.55)):
+        c = dict(harm); c.update({"notes": " ".join(bk[j]), "volume": 0.22, "pan": pn, "reverb": 0.34, "vibrato": 12, "dynamics": [],
+                                  "blend": {"voice": "teto-soft", "amount": 0.6}, "auto": 0.0, "formant": 1.05 if j == 0 else 0.9})
+        js["vocals"].append(c)
     json.dump(js, open(path, "w"), ensure_ascii=False)
-    print("  サビとポストサビに3度下のハモリを入れた")
+    print("  デュエット（男声のテト）・抑揚・バックのコーラスを入れた: 歌", len(js["vocals"]), "本")
