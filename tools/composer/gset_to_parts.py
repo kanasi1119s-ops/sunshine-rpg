@@ -102,6 +102,18 @@ def string_parts(segments, chords, voicings, bpm, vel_scale=1.0, vel_floor=40, s
         if base is None:
             tb += nbars * beats_per_bar
             continue
+        if base == "HIT":
+            # 1小節に1回、ダウンで和音を弾いてのばす（Bメロの頭・Cメロ・最後の音など）。bar0 は強さ（100＝ふつう）
+            for k in range(nbars):
+                ci = int(tb // beats_per_bar) + k
+                if ci >= len(chords) or chords[ci] == "-": continue
+                vo = voicings[chords[ci]]
+                for st in range(6):
+                    if vo[st] is None: continue
+                    bt = tb + k * beats_per_bar + st * 0.018 / sp_t
+                    ev[st].append([bt, beats_per_bar - st * 0.018 / sp_t - 0.03, vo[st], bar0 * vel_scale])
+            tb += nbars * beats_per_bar
+            continue
         strums, _ = load(base)
         lo, hi = bar0 * beats_per_bar - 0.15, (bar0 + nbars) * beats_per_bar - 0.15
         # 源の小節ごとの「いちばん低く使った弦」（コードの根音の弦）
