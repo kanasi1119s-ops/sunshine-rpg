@@ -20,6 +20,19 @@ LINES = {
     "おばあちゃんのいれてくれた": "おばあちゃんの入れてくれた", "はちみつれもんのあじがする": "はちみつレモンの味がする",
     "あまいだけじゃない": "甘いだけじゃない", "それがこいでしょ": "それが恋でしょ",
 }
+# 2026-11-08 人間「英訳も入れましょう」: 日本語の下に小さく英語。直訳より、意味と気持ちが伝わる自然な英語に
+EN = {
+    "ハニサワ！": "Honey sour!", "ガラスの瓶にしまった夏": "Summer, tucked away in a glass jar", "はちみつみたいにとろけてる": "melting like honey",
+    "君のとなりは酸っぱくて": "Being next to you tastes so sour", "言葉がのどに引っかかる": "my words get stuck in my throat",
+    "古いアルバムのすみっこで": "In the corner of an old photo album", "笑うふたりは同じ顔で": "the two of us smile the very same way",
+    "今も変わらず好きなの": "I still love you, just the same", "甘いだけじゃつまらない": "just sweet would be too boring",
+    "少し酸っぱい": "A little sour", "その気持ちごと": "feelings and all", "まぜて飲みほして": "stir them in and drink it down", "さあ行くよ": "here we go!",
+    "泡がはじけ": "The bubbles pop", "夏のにおいが": "and the scent of summer rises", "今なら言えるよ": "now I can say it", "聞いてよね": "so listen, okay?",
+    "ハニハニサワー": "Honey honey sour", "甘くて酸っぱいこの恋を": "this sweet and sour love", "一気に飲みほしてはじけたい": "I want to gulp it down and burst",
+    "ハニハニハニ": "Honey honey honey", "酸っぱいサワー": "sour, sour", "もっとちょうだい": "give me more!",
+    "おばあちゃんの入れてくれた": "Just like the one Grandma made me", "はちみつレモンの味がする": "it tastes like honey lemon",
+    "甘いだけじゃない": "It's not only sweet", "それが恋でしょ": "that's what love is, right?",
+}
 kana = json.load(open(SONG + ".kana"))
 js = json.load(open(SONG))
 
@@ -78,7 +91,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 rows = []
 for a, b, txt, who in ev:
     fs = 54 if len(txt) <= 11 else max(38, int(54 * 11 / len(txt)))
-    rows.append(f"Dialogue: 0,{ts(a)},{ts(b)},L,,0,0,0,,{{\\3c{COL[who]}\\fs{fs}\\fad(120,180)}}{txt}")
+    rows.append(f"Dialogue: 0,{ts(a)},{ts(b)},L,,0,0,0,,{{\\3c{COL[who]}\\fs{fs}\\fad(120,180)}}{txt}\\N{{\\fs28\\bord3\\shad2\\fnNoto Sans CJK JP Bold}}{EN[txt]}")
 open(OUT, "w").write(head + "\n".join(rows) + "\n")
 print(f"字幕 {len(ev)} 行 → {OUT}")
 for e in ev[:6]: print(f"  {e[0]:6.2f}〜{e[1]:6.2f} {e[3]:4s} {e[2]}")

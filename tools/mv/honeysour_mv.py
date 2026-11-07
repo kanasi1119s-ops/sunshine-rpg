@@ -134,9 +134,12 @@ for i, s in enumerate(segs):
     if r.returncode: print(i, s, r.stderr[-800:]); sys.exit(1)
 lst = os.path.join(TMP, "list.txt")
 open(lst, "w").write("".join(f"file '{f}'\n" for f in files))
-subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-i", AUD, "-map", "0:v", "-map", "1:a"]
-               + (["-vf", f"subtitles={ASS}"] if ASS else []) + [
-                "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-c:a", "aac", "-b:a", "256k", "-shortest",
-                "-movflags", "+faststart", OUT], check=True)
+# 字幕なしの元の映像も残す（字幕だけ直すときに、カットを作り直さなくてよいように）
+BASE = os.path.splitext(OUT)[0] + "（字幕なし）.mp4"
+subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-i", AUD, "-map", "0:v", "-map", "1:a",
+                "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-c:a", "aac", "-b:a", "256k", "-shortest", "-movflags", "+faststart", BASE], check=True)
+if ASS:
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", BASE, "-vf", f"subtitles={ASS}", "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+                    "-c:a", "copy", "-movflags", "+faststart", OUT], check=True)
 import shutil; shutil.rmtree(TMP, ignore_errors=True)   # 途中のカットを消す（作業場所の容量を使い切らないように）
 print(f"できた: {OUT}（{len(segs)} カット・{T:.1f}秒）")
