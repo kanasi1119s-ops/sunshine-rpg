@@ -1665,13 +1665,14 @@ let lastStemRate = 44100;
   },
   async setSoundfont(id: string): Promise<void> { await applySoundfont(id === "gu" ? "gu" : "game"); soundfontSel.value = soundfontId; },
   /** `raw: true`: ピークをそろえずに書き出す（ゲーム内の実際の大きさを測るとき。`tools/audio-check/render-catalog.mjs --raw`）。 */
-  async renderWav(score: Score, edition: State["edition"], opts?: { raw?: boolean }): Promise<string> {
+  async renderWav(score: Score, edition: State["edition"], opts?: { raw?: boolean; sampleRate?: number }): Promise<string> {
     if (!soundfontCopy) throw new Error("録音音源を読み込めていません");
     // 同梱のNAMモデルは、曲のファイルには入れず、書き出すときにだけ渡す（effectiveScore と同じ）
     const usedNam = new Set(localNamFallback(score).tracks.map((t) => t.amp?.model).filter((m): m is string => !!m && m in BUILTIN_NAM));
     if (usedNam.size) score = { ...score, namModels: { ...(score.namModels ?? {}), ...Object.fromEntries([...usedNam].map((k) => [k, BUILTIN_NAM[k].json])) } };
     const edited = edition === "ps2" ? ps2Edition(score) : edition === "real" ? realEdition(score) : score;
-    const buffer = await renderScoreOffline({ ...edited, loop: false }, { soundfont: soundfontCopy, overlays: overlayBuffers(edited), processorUrl, edition, nam: namHost });
+    // 2026-11-07: 同梱の NAM モデルは 48kHz で学習されている。44.1kHz で動かすとアンプの特性がずれるので、試しに 48kHz で書き出せるようにする（既定は今までどおり 44.1kHz）
+    const buffer = await renderScoreOffline({ ...edited, loop: false }, { soundfont: soundfontCopy, overlays: overlayBuffers(edited), processorUrl, edition, nam: namHost, ...(opts?.sampleRate ? { sampleRate: opts.sampleRate } : {}) });
     const channels = [buffer.getChannelData(0), buffer.getChannelData(1)];
     if (!opts?.raw) normalizeLoudness(channels, buffer.sampleRate);
     const bytes = encodeWav(channels, buffer.sampleRate);

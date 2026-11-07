@@ -315,7 +315,7 @@ export async function renderWav(score, edition, file, soundfont = "game", bass =
     if (soundfont === "gu") await page.evaluate(() => window.__composer.setSoundfont("gu"));
     // SUNSHINE_RAW=1: ピークをそろえずに書き出す（音の段ごとの点検用。2026-10-20）
     const raw = process.env.SUNSHINE_RAW === "1";
-    const b64 = await page.evaluate(([s, e, r]) => window.__composer.renderWav(s, e, { raw: r }), [score, edition, raw]);
+    const b64 = await page.evaluate(([s, e, r, sr]) => window.__composer.renderWav(s, e, { raw: r, ...(sr ? { sampleRate: sr } : {}) }), [score, edition, raw, Number(process.env.SUNSHINE_RENDER_SR) || 0]);
     fs.writeFileSync(file, Buffer.from(b64, "base64"));
   } finally {
     await browser.close();
