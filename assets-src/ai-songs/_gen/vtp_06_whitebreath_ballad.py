@@ -239,6 +239,10 @@ if VOCAL:
         else:
             out.append(f"R:{L_:g}")
         t += L_
+    # 2026-11-07 人間「テトの歌にもノイズあったし」「ノイズは曲全部チェックしないとダメだよ？」: 声だけを全部調べて直した設定
+    #   hiClean＝母音の高い帯域の「サー」を減らす（5〜12kHz の倍音とすきまの差 9.4→14.4dB）、breathy＝0（息まじりの雑音を足さない）、
+    #   declick＝子音の頭の「プチッ」を取る（全曲で 7か所→0）
+    main.update(hiClean=0.8, breathy=0.0, declick=1.0)
     harm = dict(main); harm.update({"notes": " ".join(out), "volume": 0.42, "pan": 0, "vibrato": 22, "vibratoRate": 5.9, "vibratoMap": [],
                                     "blend": {"voice": "teto-soft", "amount": 0.45}, "reverb": 0.26, "dynamics": [], "consonant": 1.2})
     js["vocals"].append(harm)
