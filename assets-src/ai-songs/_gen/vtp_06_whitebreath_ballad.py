@@ -49,8 +49,15 @@ S.scene("後奏", 4, "outro", OUTCH)
 V = Voice(S, vol=0.2, delay=0.5, bright=0.2, patch="brightLead", low=False)
 # 2026-11-07 人間「リードギターシンセサイザーに変更」: 単音の旋律・合いの手・ソロを、あたたかいノコギリ波の重ね（Surge XT のプリセットを録った音）に。
 #   冬のバラードなので、少し長めの残響と、2拍ずつ遠くで返るやまびこで空間を作る
-LEAD = S.track("リード（シンセ・単音）", "lead", patch="surgeHappySaws", volume=0.085, pan=0.1, reverb=0.28, mono=True, breath=True,
-               fx=[{"type": "filter", "kind": "lowpass", "freq": 7000, "q": 0.6}, {"type": "pingpong", "time": 0.5, "feedback": 0.25, "mix": 0.18}])
+# 2026-11-07 人間「シンセも冬っぽさとノスタルジックな感じがあるといいかも」: 主の音は息づかいのある柔らかいリード（calliope）にして、
+#   高い音をなだらかに丸め（5kHzから下げる）、ゆっくり深めのビブラートで少し昔のシンセのような揺れ。
+#   1オクターブ上に澄んだベル（surgeBell1）を薄く重ねて、雪のきらめき。残響は長め、やまびこは遠くで2回返る
+LEAD = S.track("リード（シンセ・単音）", "lead", patch="calliope", volume=0.1, pan=0.1, reverb=0.36, mono=True, breath=True,
+               vibrato={"rate": 4.6, "depth": 16, "delay": 0.35},
+               fx=[{"type": "filter", "kind": "highpass", "freq": 220, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 5000, "q": 0.6},
+                   {"type": "pingpong", "time": 0.75, "feedback": 0.3, "mix": 0.2}])
+BELL = S.track("リードの上の雪のベル", "lead", patch="surgeBell1", volume=0.032, pan=-0.15, reverb=0.45, mono=True,
+               fx=[{"type": "filter", "kind": "lowpass", "freq": 9000, "q": 0.6}])
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.23))
 LY = Lyrics(S)
 
@@ -118,6 +125,17 @@ SOLO = ["E5:1.5 D5:0.5 B4:1 G4:1", "A4:1 B4:0.5 D5:0.5 F#5:2~.", "F#5:0.5 E5:0.5
         "G#4:1 B4:1 D5:1 E5:1", "C5:1.5 B4:0.5 A4:1 E5:1", "D5:2!~. F#5:1 A5:1", "G5:1 F#5:0.5 E5:0.5 D5:1 B4:1", "A4:2^^@0.4 G4:1 D5:1"]
 for name, ph in (("前奏", INTRO_L), ("間奏", INTER_L), ("ソロ", SOLO)):
     for i, b in enumerate(S.sc(name)): LEAD.bar(b, ph[i])
+def oct_up_line(line):
+    def f(m):
+        g = re.match(r"([A-G][#b]?)(-?\d)", m.group(1)); return g[1] + str(int(g[2]) + 1)
+    toks = []
+    for tk in line.split():
+        if tk.startswith("R"): toks.append(tk); continue
+        n_, d_ = tk.split(":", 1); d_ = re.sub(r"[\^~!_]+(@[\d.]+)?|\.$", "", d_).split(">")[0]
+        toks.append(f(re.match(r"(.+)", n_)) + ":" + re.match(r"[\d.]+", d_).group(0))
+    return " ".join(toks)
+for name, ph in (("前奏", INTRO_L), ("間奏", INTER_L), ("ソロ", SOLO)):
+    for i, b in enumerate(S.sc(name)): BELL.bar(b, oct_up_line(ph[i]))
 for name, obb in (("サビ2", "R:3 B4:0.5 D5:0.5"), ("最後のサビ", "R:3 C#5:0.5 E5:0.5")):
     for i, b in enumerate(S.sc(name)):
         if i % 4 == 1 and i < 14: LEAD.bar(b, obb)
@@ -289,8 +307,10 @@ gt = [p for p in src['parts'] if p['instrument'] == 'distGuitar'][0]
 gtmpl = {k: v for k, v in gt.items() if k not in ('notes', 'role', 'pan', 'volume', 'double')}
 gtmpl.update(double=False, powerChord=False, humanTiming=0, release=0.15)
 add = []
-for side, lanes, pan, vol, over in (("L（軽い歪み）", LS, -0.8, 0.06, {"ampDrive": 0.14, "fx": gtmpl["fx"] + [{"type": "room", "mix": 0.12}]}),
-                                     ("L", LL, -0.8, 0.045, {}), ("R", RR, 0.8, 0.045, {"ampCabIr": "jd-greenback-4x12-01"})):
+# 2026-11-07 人間「リフギターもクリーンすぎるかな」: 歪みを一段深く（Aメロの左 0.14→0.26、サビなどの左右 0.3→0.44）。
+#   深くした分だけ出てくる音が大きくなるので、音量は少し下げる
+for side, lanes, pan, vol, over in (("L（軽い歪み）", LS, -0.8, 0.05, {"ampDrive": 0.26, "fx": gtmpl["fx"] + [{"type": "room", "mix": 0.12}]}),
+                                     ("L", LL, -0.8, 0.04, {"ampDrive": 0.44}), ("R", RR, 0.8, 0.04, {"ampDrive": 0.44, "ampCabIr": "jd-greenback-4x12-01"})):
     for st, n_ in enumerate(lanes.notes(TOTAL)):
         if not n_: continue
         p = copy.deepcopy(gtmpl); p.update(role=f"{side}ギター（和音）・弦{st + 1}", pan=pan, volume=vol, notes=n_, **over); add.append(p)
