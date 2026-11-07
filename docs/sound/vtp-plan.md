@@ -34,3 +34,29 @@ A長調・148（Aメロ1は半分のノリ）→ 最後のサビは +2（B長調
 | 落ちサビ「もう一度、言わせて」 | ピアノ・ストリングス・声（中弱、急に落とさない） | サビの節 |
 | 最後のサビ（+2） | いちばん厚い。歌の重ねとハモリ（最強） | 答えは言わない |
 | アウトロ | 鈴（明るい和音の上）→ 高い鈴の1音 | — |
+
+## プロがよく使う音源の種類（2026-11-07 調べた）と、こちらで代わりに使うもの
+人間「出来ればプロがよく使う音源の種類も学んで来て」。現役のボカロP・作曲家の記事に名前がよく出るもの（有料が多い）。
+有料の音源は 1-2 のとおり人間の承認なしに入れない。こちらは、同じ種類の無料の音源（規約を確認ずみ）で同じ役をさせる。
+
+| 種類 | プロがよく使う（記事に出てくる名前） | こちらで使うもの（docs/assets-credits.md） |
+|---|---|---|
+| シンセ（メイン） | Serum 2・Nexus 5・Omnisphere 3・Vital（無料）・Sylenth1・Massive | Surge XT の音色（surgePad…・surgeKeys… など）・自作のアナログ風シンセ |
+| サブベース・808 | SubLab XL | sub808（自作の合成） |
+| 生ドラム | Superior Drummer 3・BFD3・Addictive Drums 2・EZdrummer | Naked Drums（人間が気に入り）・crocell-punch・Muldjord Kit |
+| 打ちこみドラム | XO・Beatmaker・Robot Dog Drums | drums-electro（FreePats） |
+| ベース | Trilian・MODO BASS 2・EZbass | FreePats Clean Electric Bass YR（bnb 系）・Growlybass・Rubner のウッドベース |
+| ギター | Shreddage 3・Session Guitarist・Ample Guitar。アンプは Kemper・Neural DSP・EZmix | FSBS・Shinyguitar などの録音 ＋ NAM のアンプ（TRiDENT の音 glossy-jrock） |
+| ピアノ・鍵盤 | Keyscape・Ivory 3・Pianoteq 8 | Salamander Grand Piano・YDP Grand・Greg Sullivan のエレピ |
+| ストリングス | Spitfire Chamber Strings・Vienna Chamber Strings・LASS3 | VSCO 2 CE（stringEnsemble など） |
+| 歌声 | Synthesizer V Studio 2 Pro・VOCALOID | 重音テト（UTAU 音源 ＋ こちらの歌声エンジン） |
+| ミックス・仕上げ | Pro-Q4・Neutron・Ozone・OTT（無料）・Pro-R2（リバーブ）・RAUM（無料）・Kickstart（ダッキング）・Melodyne（音程） | 作曲ソフトのEQ・コンプ・ダッキング・リバーブ・OTT と同じ働きのエフェクト（vt25_fx） |
+
+わかったこと:
+- 「総合シンセ1つ（Serum か Nexus か Omnisphere）＋生ドラム1つ＋ベース1つ＋ピアノ1つ＋弦1つ」が定番の組み合わせ。何十種類もは使わない。
+- シンセはプリセットを選んで使う人が多い（音作りより選ぶ速さ）。ギターは音源よりアンプ（Kemper・Neural DSP）にこだわる。
+- 仕上げは EQ（Pro-Q）・コンプ・マスタリング（Ozone）。不要な共鳴を抑えて「抜け」をよくする道具（M-Clarity など）もよく使う。
+- 足りないもの: ストリングスは VSCO 2 CE のみで、プロの弦（Spitfire・Vienna）より種類が少ない。歌声は Synthesizer V のような自動の歌い回しがない。
+
+出典: https://1102music.com/must-have-dtm-plugins/ ／ https://note.com/give_uper/n/n790d3d54214e ／ https://note.com/ozashin/n/nb3e4e819ed02 ／
+https://www.shimamura.co.jp/update/dtm-recording/2026/06/dl-150869/
