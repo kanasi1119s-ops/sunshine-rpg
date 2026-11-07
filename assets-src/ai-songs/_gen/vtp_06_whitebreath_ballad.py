@@ -193,7 +193,39 @@ S.fade_out = 0
 S.desc = ("仮: 白い息のリテイク・バラード版（重音テト）。ミドルテンポのバラードロック・G・88、最後のサビは +2（A）。"
           "ギターは左右とも和音が主役（曲の句に合わせた型＋本物のギタリストの揺れ方）、単音はリードの旋律・合いの手・ソロ。ドラムは人の演奏データ。"
           "王道・カノン進行を使わず、借りた和音（Dm7/F・Cm6）、G→Gaug→G6→G7、♭Ⅵ→♭Ⅶ、解決しない「ごめんね」。自作")
-finish(S, LY, V, 0, hi=81, level={"verse": -0.25}, special={"最後のサビ": 0.4, "サビ1": 0.15, "落ちサビ": -0.3})
+finish(S, LY, V, 0, hi=81, double=[("サビ2", 0.35), ("最後のサビ", 0.5)], level={"verse": -0.25}, special={"最後のサビ": 0.4, "サビ1": 0.15, "落ちサビ": -0.3})
+
+# ================= テトのコーラス（2026-11-07 人間「テトの声にコーラス入れよう」）=================
+# サビは3度下のハモリ（ビブラートの深さと速さを本線と変え、やわらかい声を混ぜて、2つの声が溶けすぎないように）。
+# 「ごめんね」の4小節はひとりで歌う。サビ2と最後のサビは、本線を重ねて（ダブル）厚くする。
+if VOCAL:
+    path = sys.argv[1]; js = json.load(open(path))
+    main = js["vocals"][0]; rng = []
+    for nm_ in ("サビ1", "サビ2", "最後のサビ"):
+        bs = S.sc(nm_); end = bs[-1] + 1
+        if nm_ == "サビ1": end = bs[0] + 12
+        rng.append((bs[0] * S.beats, end * S.beats, KL if nm_ == "最後のサビ" else K))
+    SC = {id(kk): sorted({(midi(kk.mel(f"{d}:1", oct=4).split(":")[0]) % 12) for d in range(1, 8)}) for kk in (K, KL)}
+    out = []; t = 0.0
+    for tok in main["notes"].split():
+        m = re.match(r"^([A-G][b#]?-?\d)([^:]*):([0-9.]+):(.+)$", tok)
+        L_ = float(tok.split(":")[1])
+        hit = [x for x in rng if x[0] - 1e-6 <= t < x[1]] if m else []
+        if m and hit:
+            pcs = SC[id(hit[0][2])]; q = midi(m.group(1)); steps = 0
+            while steps < 2:
+                q -= 1
+                if q % 12 in pcs: steps += 1
+            mk = m.group(2).replace("/", "").replace("!", "")
+            out.append(f"{nm(q)}{mk}:{m.group(3)}:{m.group(4)}" if q >= 55 else f"R:{m.group(3)}")
+        else:
+            out.append(f"R:{L_:g}")
+        t += L_
+    harm = dict(main); harm.update({"notes": " ".join(out), "volume": 0.42, "pan": 0, "vibrato": 22, "vibratoRate": 5.9, "vibratoMap": [],
+                                    "blend": {"voice": "teto-soft", "amount": 0.45}, "reverb": 0.26, "dynamics": [], "consonant": 1.2})
+    js["vocals"].append(harm)
+    json.dump(js, open(path, "w"), ensure_ascii=False)
+    print("  サビに3度下のハモリを入れた")
 
 # ================= 書き出したあとで、ギター（左右）とドラムを足す =================
 path = sys.argv[1]
