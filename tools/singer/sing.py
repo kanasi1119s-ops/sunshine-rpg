@@ -13,6 +13,7 @@
   - 「R:拍」は休み。休みのあとは息つぎとして、歌い出しの音（単独音）から入る。
   - 「音名:拍:ー」は、前の音の母音のまま音程だけ変える（こぶし・メリスマ）。
   - 音名のあとに「!」で強く、「?」で弱く（例 "A4!:1:な"）。
+  - "auto": 0〜1（2026-11-07）… 自動の歌い回し（音の移りの前の準備・出だしの小さなずれ・句の終わりの力の抜け）。使う曲だけ。
 音源は配布できない（重音テトの規約で、音源の再配布は禁止）。リポジトリには入れず、
 環境変数 SUNSHINE_VOICEBANKS（既定は assets-src/voicebanks と ~/voicebanks）に置く。
 """
@@ -211,6 +212,31 @@ def pitch_curve(events, total, rng, vdef):
             rate = float(vdef.get("vibratoRate", 5.4)) + 0.3 * np.sin(2 * np.pi * 0.6 * tt + m)
             vv = (vb / 100.0) * ramp * np.sin(2 * np.pi * np.cumsum(rate) * FP / 1000)
             out[sel] += vv; vibarr[sel] += vv
+    # 2026-11-07 プロの歌声合成（Synthesizer V の「自動の歌い回し」）にならった、人の歌い方の細かい揺れ（"auto": 0〜1。使う曲だけ）
+    #   ・準備: 上へ動く前にほんの少し下がり、下へ動く前にほんの少し上がる（音の移りの直前 0.08 秒）
+    #   ・出だしのずれ: 音の頭が −15〜+8 セントずれて、0.12 秒で正しい高さに落ちつく（音ごとに違う）
+    #   ・句の終わり: フォールのない句の最後の音は、終わり 0.12 秒で 25 セントだけ力が抜けて下がる
+    #   ・ビブラート: 深さを音ごとに ±20%（上で vb に掛ける代わりに、ここで足し引きする）
+    au = float(vdef.get("auto", 0.0))
+    if au > 0:
+        for i, ev in enumerate(events):
+            s, e, m = ev["s"], ev["e"], ev["m"]; d = e - s
+            if i > 0:
+                pv = events[i - 1]
+                if s - pv["e"] <= 0.25 and pv["m"] != m:
+                    sgn = 1 if m > pv["m"] else -1
+                    sel = (t >= s - 0.13) & (t < s - 0.03)
+                    x = np.clip((t[sel] - (s - 0.13)) / 0.1, 0, 1)
+                    out[sel] -= au * sgn * 0.12 * np.sin(np.pi * x)
+            dev = au * rng.uniform(-0.15, 0.08)
+            sel = (t >= s) & (t < s + 0.12)
+            out[sel] += dev * (1 - np.clip((t[sel] - s) / 0.12, 0, 1)) ** 2
+            nxt = events[i + 1] if i + 1 < len(events) else None
+            if (nxt is None or nxt["s"] - e > 0.25) and "\\" not in ev["fl"] and d >= 0.3:
+                sel = (t >= e - 0.12) & (t < e)
+                out[sel] -= au * 0.25 * np.clip((t[sel] - (e - 0.12)) / 0.12, 0, 1) ** 2
+        k = rng.uniform(0.8, 1.2)
+        out += (k - 1) * vibarr * au
     drift = np.convolve(rng.standard_normal(n), np.ones(80) / 80, mode="same") * 0.35
     pitch_curve.vibpart = vibarr
     return t, out + drift
