@@ -277,7 +277,9 @@ P = {"ring": "D---------------", "ring2": "D-------d-------",
      "last_r": "D-d-D-d-D-d-D-d-", "solo_l": "D---d-u-D---d-u-"}
 for b in range(NB):
     n, i, L, k = S.scene_of(b)
-    if n in ("前奏", "間奏"):
+    if n == "前奏":
+        continue      # 2026-11-07 人間「前奏のギターいらないかな」: 前奏はピアノ・シンセ・雪の鈴だけ（ギターはAメロから）
+    if n == "間奏":
         addc(LL, b, gL.bar(b, P["ring"] if i < 2 else P["ring2"], vo(b), vo_next(b), BPM, 1.0))
         if i >= 2 or n == "間奏": addc(RR, b, gR.bar(b, P["ring"], HI4(vo(b)), HI4(vo_next(b)), BPM, 0.95))
     elif n in ("Aメロ1", "Aメロ2"):
@@ -309,6 +311,19 @@ src = json.load(open('/tmp/ab/i1_nodr.json'))
 gt = [p for p in src['parts'] if p['instrument'] == 'distGuitar'][0]
 gtmpl = {k: v for k, v in gt.items() if k not in ('notes', 'role', 'pan', 'volume', 'double')}
 gtmpl.update(double=False, powerChord=False, humanTiming=0, release=0.15)
+# 2026-11-07 人間「ギターの音曲にあってないんだよなー」: これまでの音（J-POP のギターロックの歪み）は、1.5kHz・3.5kHz を持ち上げた
+#   明るく前に出るロックの音で、冬のバラードには硬すぎた。バラードのロックの和音は、こもらせずに角を丸め、空間に溶かす:
+#   ・300〜400Hz のこもりを少し引き、2.8kHz 付近の刺さりと高い音をなだらかに落とす（6.5kHz から上を丸める）
+#   ・プレートの残響と、付点8分のやまびこを薄く（和音の伸びが空間に残る）
+#   ・ゲート（小さい音を切る）は外す（のばした和音の消え際が途中で切れないように）
+gtmpl.update(guitarTone=None, di="emily", ampCabIr="dd-v30-2x12-mix-balanced", ampGate=0, ampTight=0.4, ampTightHz=110, fx=[
+    {"type": "filter", "kind": "highpass", "freq": 90, "q": 0.7},
+    {"type": "eq", "low": 0, "mid": -2.0, "midHz": 380, "high": 0},
+    {"type": "eq", "low": 0, "mid": -2.5, "midHz": 2800, "high": -2.0},
+    {"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6},
+    {"type": "plate", "mix": 0.16},
+    {"type": "pingpong", "time": 0.75, "feedback": 0.22, "mix": 0.1}])
+gtmpl = {k: v for k, v in gtmpl.items() if v is not None}
 add = []
 # 2026-11-07 人間「リフギターもクリーンすぎるかな」: 歪みを一段深く（Aメロの左 0.14→0.26、サビなどの左右 0.3→0.44）。
 #   深くした分だけ出てくる音が大きくなるので、音量は少し下げる
