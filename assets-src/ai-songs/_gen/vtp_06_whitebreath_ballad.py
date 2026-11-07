@@ -357,7 +357,7 @@ dseg(R86, 41, 8); dseg(R86, 49, 8)                       # 最後のサビ
 dcus(4, kick='x:4%110 x:4%105 x:4%110 x:4%122', crash='C2:4%115 C2:4%110 C2:4%115 C2:4%126')   # 後奏
 ref = {p['instrument']: p for p in json.load(open('/tmp/ab/gd.json'))['parts'] if p['instrument'] in dn}
 for k, lst in dn.items():
-    p = copy.deepcopy(ref[k]); p['notes'] = ' '.join(lst); add.append(p)
+    p = copy.deepcopy(ref[k]); p['notes'] = ' '.join(lst); p['volume'] = round(p['volume'] * 0.95, 4); add.append(p)   # 2026-11-07 人間「ドラムの音、今が100だとしたら5落とそうか」
 tot = {k: sum(float(re.match(r'[\d.]+', t.split(':', 1)[1]).group()) for t in ' '.join(v).split()) for k, v in dn.items()}
 assert all(abs(x - TOTAL) < 0.05 for x in tot.values()), (tot, TOTAL)
 
