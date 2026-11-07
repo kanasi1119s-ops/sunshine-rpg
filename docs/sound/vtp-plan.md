@@ -60,3 +60,23 @@ A長調・148（Aメロ1は半分のノリ）→ 最後のサビは +2（B長調
 
 出典: https://1102music.com/must-have-dtm-plugins/ ／ https://note.com/give_uper/n/n790d3d54214e ／ https://note.com/ozashin/n/nb3e4e819ed02 ／
 https://www.shimamura.co.jp/update/dtm-recording/2026/06/dl-150869/
+
+## 完成: 「白い息のリテイク」バラード版（2026-11-07 人間「完成にしましょう」）
+
+- 台本: `assets-src/ai-songs/_gen/vtp_06_whitebreath_ballad.py`（v7 で完成）。G長調・88・約4分57秒、最後のサビは +2（A）。点数 8.04
+- 書き出し: `VB_VOCAL=1 python3 vtp_06_whitebreath_ballad.py <出力.json>` → `.flags` の `--drums crocell-punch` を `--drums naked` に → `SUNSHINE_RENDER_SR=48000` で build → `v3_finish.sh` → `alimiter=limit=0.89`（v3_render.sh の歌の版と同じ最後の処理）
+- 仕上がりの検査: `tools/audio-check/noise_scan.py`（プチッ・途切れ・音割れ・無音の雑音・パチパチ・母音のかすれ）で、声2本・楽器6つ・仕上がった曲を最初から最後まで調べた
+
+### この曲で人間に言われて直したこと（次の曲でも気をつける）
+| 言われたこと | 原因 | 直し方 |
+|---|---|---|
+| 弾き方が機械的（「ジャンジャン弾いて」） | 型から毎回同じ本数・ずれ・強さで鳴らしていた | 弾く場所は曲の句に合わせて型で決め、揺れ方だけ本物のギタリスト（GuitarSet）から借りる（`tools/composer/strum_groove.py`） |
+| 「ジャン」の歪みが汚い | 弦ごとのパートに 5度とオクターブが自動で足され、6本の和音が18音になっていた | 弦ごとの distGuitar には必ず `powerChord: false`。左右を分けるときは `double: false` |
+| 割れて聞こえる | NAM モデル（48kHz で学習）を 44.1kHz で動かしていた／ハイゲインのアンプだった | `SUNSHINE_RENDER_SR=48000`、和音のかき鳴らしはゲインの低いマーシャル（`namJVM2`） |
+| 曲として成立していない | 演奏データをそのまま場面に当てはめた・旋律のない時間が長い | 型を曲に合わせる・歌を入れる・ドラムは場面に合う所（フィルの位置）を選ぶ |
+| 音ののばし方がおかしい | 打つたびに6本全部を止めていた | 弾いた弦だけ鳴り直す。全部止めるのはミュートとコードの変わり目だけ |
+| ギターの音が曲に合わない（バラード） | 1.5k・3.5kHz を持ち上げたロックの音 | 380Hz と 2.8kHz を少し引き、6.5kHz から丸め、プレートと付点8分のやまびこ。ゲートは外す |
+| テトの歌にノイズ | 母音の 5〜12kHz のかすれを高音の EQ（+10dB）が持ち上げていた／子音の頭のプチッ | 歌の設定 `hiClean: 0.8`・`breathy: 0`・`declick: 1.0`（tools/singer/sing.py） |
+| ノイズは曲全部チェック | 一部だけ調べていた | 声・楽器・仕上がりを noise_scan.py で最初から最後まで |
+| リード→シンセ、冬・ノスタルジック | — | calliope（息づかいのある柔らかいリード）＋1オクターブ上に surgeBell1 を薄く |
+| 動画のテトの目が欠ける | 白い背景の切り抜きで白目の一部が透明に | `tools/mv/fix_cutout_eyes.py`（白の上に重ねた元の色で埋める）。素材も直した |
