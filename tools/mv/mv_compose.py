@@ -17,7 +17,7 @@ NF = "/usr/share/fonts/opentype/noto/"
 GF = "/usr/share/fonts/truetype/google-fonts/"
 SONGS = {
     "whitebreath": dict(data=LD.WHITEBREATH, audio="/tmp/ab/wb9.mp3", song="/mnt/user-data/outputs/vbq/vtp-06-whitebreath-ballad-v9vo.json", lead=[0],
-                        frames="/tmp/ab/wbmv/fr4", seq="/tmp/ab/wbmv/tex.json", ig_start=237.0,
+                        frames="/tmp/ab/wbmv/fr4", seq="/tmp/ab/wbmv/lw.json", ig_start=237.0,
                         jp_font=(NF + "NotoSerifCJK-SemiBold.ttc", 0), en_font=(GF + "Lora-Italic-Variable.ttf", 0),
                         sans=(NF + "NotoSansCJK-Medium.ttc", 0), fill=(222, 230, 245), sung=(255, 228, 180), stroke=(16, 24, 52),
                         en_fill=(205, 218, 238), accent=(255, 196, 130)),
@@ -169,11 +169,19 @@ def frames_wb():
     def get(k):
         if k not in cache: cache[k] = cv2.imread(f"{S['frames']}/{k + 1:03d}.png").astype(np.float32)
         return cache[k]
+    # 2026-11-08 人間「今度は歌詞と口の動きが一致しないね」: lipwarp_select.py は速さを 0.625〜1.375 倍で変えるので、
+    #   位置が半端（例 52.375 コマ目）になる。となりの 2 コマのあいだを、動きの流れで作る（ただ重ねると雪が二重になる）
+    def at(p):
+        k = int(np.floor(p)); f = p - k
+        if f < 0.03 or k + 1 >= len(cache_n): return get(min(k, len(cache_n) - 1))
+        if f > 0.97: return get(k + 1)
+        return morph(get(k), get(k + 1), f)
+    cache_n = range(len(os.listdir(S["frames"])))
     i0 = int(round(T0 * FPS))
     for i in range(N):
         k, kold, a = seq[min(len(seq) - 1, i0 + i)]
-        img = get(k)
-        if kold >= 0: img = morph(get(kold), img, 1 - a)
+        img = at(float(k))
+        if kold >= 0: img = morph(at(float(kold)), img, 1 - a)
         yield img.astype(np.uint8)
 def frames_video():
     p = subprocess.Popen(["ffmpeg", "-v", "error", "-ss", str(T0), "-i", S["video"], "-t", str(LEN), "-f", "rawvideo", "-pix_fmt", "bgr24", "-r", str(FPS), "-"],
