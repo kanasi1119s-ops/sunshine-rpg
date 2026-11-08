@@ -29,6 +29,13 @@ J = np.full((K, K), np.inf)                         # J[k, j]: k を出したあ
 for k in range(K - XF):                             # 重ねているあいだ、前のコマも前へ進めるよう、終わりの手前で飛ぶ
     for j in range(K - MINGAP):
         if abs(j - k) > 24 and R[k, j] <= RMAX: J[k, j] = JC + WJ * R[k, j]
+# 2026-11-08 人間「瞬き…が変かな」: 目を閉じたコマと開いたコマを重ねると、半分透けた目が二重に見える。
+#   重ねる 1 秒のあいだ、前のコマ（k+1…）と次のコマ（j…）の目の開き方がそろう組だけにする（TX_EYE: コマごとの目の開き 0〜1）
+if os.environ.get("TX_EYE"):
+    E = np.load(os.environ["TX_EYE"])
+    for k in range(K - XF):
+        for j in np.where(np.isfinite(J[k]))[0]:
+            if j + XF > K or np.max(np.abs(E[k + 1:k + 1 + XF] - E[j:j + XF])) > 0.3: J[k, j] = np.inf
 print("飛べる組 %d・いちばん近い組 %.2f（となりの何倍か）" % (np.isfinite(J).sum(), R[np.isfinite(J)].min()))
 # 歌っている所（0.8 秒より短い休みは歌っている扱い）・3 秒より長い休みは口を問わない
 js = json.load(open(SONG)); kana = json.load(open(SONG + ".kana")); spb = 60 / BPM

@@ -189,12 +189,17 @@ def cover(img, w, h):
 def blur_bg(img, w, h, dark=0.55):
     s = cover(cv2.resize(img, (img.shape[1] // 8, img.shape[0] // 8), interpolation=cv2.INTER_AREA), w // 8, h // 8)
     s = cv2.GaussianBlur(s, (0, 0), 3); return (cv2.resize(s, (w, h), interpolation=cv2.INTER_LINEAR) * dark).astype(np.uint8)
+def sharpen(c, amt=0.35):
+    b = cv2.GaussianBlur(c, (0, 0), 1.6); return cv2.addWeighted(c, 1 + amt, b, -amt, 0)
 def base(img):
+    # 2026-11-08 人間「瞬き、スカートが変かな」: スカートの所（元の動画の下から 1/6）は、生成AIが入れた文字を消して
+    #   別のコマから埋めた所で、体の動きとずれて見える。そこは映さず、腰から上を大きく映す（少しだけ輪郭をはっきりさせる）
     if NAME == "whitebreath" and FORM == "yt":
-        return cv2.resize(img, (W, H), interpolation=cv2.INTER_LANCZOS4)
-    if NAME == "whitebreath":                       # 3:4 に切り出して（テトが中心）、上下はぼかした背景
-        c = img[:, 370:910]; c = cv2.resize(c, (1080, 1440), interpolation=cv2.INTER_LANCZOS4)
-        bg = blur_bg(img, W, H); bg[240:1680] = c; return bg
+        c = img[:608, 99:1180]; c = cv2.resize(c, (W, H), interpolation=cv2.INTER_LANCZOS4)
+        return sharpen(c)
+    if NAME == "whitebreath":                       # 腰から上を切り出して（テトが中心）、上下はぼかした背景
+        c = img[:608, 370:910]; c = sharpen(cv2.resize(c, (1080, 1216), interpolation=cv2.INTER_LANCZOS4))
+        bg = blur_bg(img[:608], W, H); bg[240:1456] = c; return bg
     if FORM == "yt":                                # 縦の映像を中央に。左右はぼかした背景
         bg = blur_bg(img, W, H, 0.5); v = cv2.resize(img, (608, 1080), interpolation=cv2.INTER_AREA); bg[:, 656:1264] = v; return bg
     return cv2.resize(img, (W, H), interpolation=cv2.INTER_LANCZOS4)
