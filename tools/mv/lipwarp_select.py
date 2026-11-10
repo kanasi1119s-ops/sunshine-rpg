@@ -19,6 +19,7 @@ XF = 24; Q = 8                                    # 位置は 1/8 コマきざ�
 DV = int(os.environ.get("LW_DV", "2")); VS = np.arange(8 - DV, 9 + DV); VC = DV   # 1 コマで進む量（既定 0.75〜1.25 倍）
 JC = float(os.environ.get("LW_JC", "60")); WJ = 8.0; RMAX = float(os.environ.get("LW_RMAX", "5.0"))
 WM = float(os.environ.get("LW_WM", "2.0"))        # 口が合わない重さ
+UW = float(os.environ.get("LW_USE", "0.03"))    # 最近使ったコマを重くする（同じ所ばかり使わない）
 WV = float(os.environ.get("LW_WV", "0.15"))       # 速さを変える重さ（ふつうの速さからはなれる重さ）
 trk = json.load(open(TRK)); K = len(trk)
 area = np.array([t[6] for t in trk], float); op = np.clip((area - 60) / 300, 0, 1)
@@ -28,12 +29,18 @@ NQ = (K - 1) * Q + 1
 qk = np.arange(NQ) / Q
 op_q = np.interp(qk, np.arange(K), op); av_q = np.interp(qk, np.arange(K), AV)
 # 姿勢の近さ・飛べる組
-S = np.array([cv2.GaussianBlur(cv2.resize(cv2.imread(f"{FR}/{k + 1:03d}.png"), (160, 90), interpolation=cv2.INTER_AREA), (0, 0), 2).astype(np.float32).ravel() for k in range(K)])
+# 2026-11-11: 映像を層に分けた（wb_layers.py）ので、背景・雪はつなぎ目に関係しない。姿勢の近さは人物だけで測る（LW_MASK: 人物の形 npy）
+PMASK = np.load(os.environ["LW_MASK"]) if os.environ.get("LW_MASK") else None
+def small(k):
+    im = cv2.imread(f"{FR}/{k + 1:03d}.png").astype(np.float32)
+    if PMASK is not None: im = im * (PMASK[k][..., None] / 255.0)
+    return cv2.GaussianBlur(cv2.resize(im, (160, 90), interpolation=cv2.INTER_AREA), (0, 0), 2).ravel()
+S = np.array([small(k) for k in range(K)])
 n2 = (S ** 2).sum(1); D = np.sqrt(np.maximum(n2[:, None] + n2[None] - 2 * S @ S.T, 0) / S.shape[1])
 R = D / np.median([D[i, i + 1] for i in range(K - 1)])
 J = np.full((K, K), np.inf)
 for k in range(K - XF - 1):
-    for j in range(K - 60):
+    for j in range(K - 30):
         if abs(j - k) > 24 and R[k, j] <= RMAX and np.max(np.abs(E[k + 1:k + 1 + XF] - E[j:j + XF])) <= 0.3:
             J[k, j] = JC + WJ * R[k, j]
 # ほしい口
@@ -81,7 +88,7 @@ usage = np.zeros(K); out_q = []; start = None
 for c0 in range(0, N, CH):
     c1 = min(N, c0 + CH + EXTRA); T = c1 - c0
     cost = np.full((NQ, NV), np.inf)
-    if start is None: cost[::Q, VC] = mcost(c0)[::Q] + 0.03 * usage
+    if start is None: cost[::Q, VC] = mcost(c0)[::Q] + UW * usage
     else: cost[start[0], start[1]] = 0.0
     bk = np.zeros((T, NQ, NV), np.int32)
     vpen = WV * np.abs(VS - 8) / 2.0
@@ -99,7 +106,7 @@ for c0 in range(0, N, CH):
         tgt = np.arange(K) * Q; better = jb < new[tgt, VC]
         new[tgt, VC] = np.where(better, jb, new[tgt, VC]); arg[tgt, VC] = np.where(better, kb * Q * NV + ckarg[kb], arg[tgt, VC])
         uq = np.interp(qk, np.arange(K), usage)
-        new += (mcost(c0 + q) + 0.03 * uq)[:, None] + vpen[None]
+        new += (mcost(c0 + q) + UW * uq)[:, None] + vpen[None]
         m = new[np.isfinite(new)].min(); cost = new - m; bk[q] = arg
     st = int(np.argmin(cost)); path = [st]
     for q in range(T - 1, 0, -1): st = int(bk[q].ravel()[st]); path.append(st)
@@ -116,11 +123,13 @@ for i in range(N):
     if fade and fade[1] > 0:
         a = fade[1] / (XF + 1); out.append([float(pos[i]), float(min(K - 1, fade[0])), round(a, 3)]); fade[0] += 1; fade[1] -= 1
     else: out.append([float(pos[i]), -1, 0.0])
-json.dump(out, open(OUT, "w"))
+json.dump(out, open(OUT, "w")); np.save(OUT + ".sing.npy", sing)
 jumps = [i for i in range(1, N) if not (VS[0] <= out_q[i] - out_q[i - 1] <= VS[-1])]
 spd = np.diff(out_q) / 8.0; spd = spd[(spd >= VS[0] / 8) & (spd <= VS[-1] / 8)]
 o_got = np.interp(pos, np.arange(K), op); m = wgt > 0
 corr = np.corrcoef(o_got[m & sing], want[m & sing])[0, 1]
+rj = [R[int(out_q[i - 1] // Q), int(out_q[i] // Q)] for i in jumps]
+print("飛べる組", int(np.isfinite(J).sum()), "・飛んだ所の姿勢のちがい 平均 %.2f 最大 %.2f" % (np.mean(rj), np.max(rj)))
 print(f"飛び {len(jumps)} 回（平均 {N / FPS / max(1, len(jumps)):.1f} 秒に1回・いちばん短い間 {np.diff([0] + jumps).min() / FPS:.1f} 秒）"
       f"・速さ 平均 {spd.mean():.2f}（1倍のコマ {np.mean(np.abs(spd - 1) < 0.01):.0%}）"
       f"・口の開きのずれ 平均 {np.mean(np.abs(o_got - want)[m]):.2f}・歌の所の口の開きと歌詞の一致（相関）{corr:.2f}")

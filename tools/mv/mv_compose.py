@@ -17,7 +17,7 @@ NF = "/usr/share/fonts/opentype/noto/"
 GF = "/usr/share/fonts/truetype/google-fonts/"
 SONGS = {
     "whitebreath": dict(data=LD.WHITEBREATH, audio="/tmp/ab/wb9.mp3", song="/mnt/user-data/outputs/vbq/vtp-06-whitebreath-ballad-v9vo.json", lead=[0],
-                        frames="/tmp/ab/wbmv/fr4", seq="/tmp/ab/wbmv/lw.json", ig_start=237.0,
+                        frames="/tmp/ab/wbmv/fr5", seq="/tmp/ab/wbmv/lw.json", person="/tmp/ab/wbmv/person.npy", plate="/tmp/ab/wbmv/plate.png", track="/tmp/ab/wbmv/track_wb.json", ig_start=237.0,
                         jp_font=(NF + "NotoSerifCJK-SemiBold.ttc", 0), en_font=(GF + "Lora-Italic-Variable.ttf", 0),
                         sans=(NF + "NotoSansCJK-Medium.ttc", 0), fill=(222, 230, 245), sung=(255, 228, 180), stroke=(16, 24, 52),
                         en_fill=(205, 218, 238), accent=(255, 196, 130)),
@@ -162,27 +162,51 @@ def morph(A, B, a):
     wb = cv2.remap(B, gx + (1 - a) * fab[..., 0], gy + (1 - a) * fab[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
     return wa * (1 - a) + wb * a
 def frames_wb():
-    """2026-11-08 人間「雪とか、息とか自然じゃないね。なんか途中止まって急に動いたりするし」:
-    元の動画をいつも 1 倍の速さで前へ流す（natural_select.py の並び）。切りかえは歌いはじめ・歌い終わりなどだけで、0.5 秒かけて
-    動きの流れでつなぐ。生成AIが入れた文字は、文字のないコマの同じ所で埋めた（fr2）"""
-    seq = json.load(open(S["seq"])); cache = {}
-    def get(k):
-        if k not in cache: cache[k] = cv2.imread(f"{S['frames']}/{k + 1:03d}.png").astype(np.float32)
+    """2026-11-11 人間「動画色々細かく調整してスムーズにして。背景も、雪も、他のエフェクト、口の動きも」:
+    絵を層に分けて作る（wb_layers.py）。背景は動かない 1 枚、雪と白い息は時間から描く、人物だけを元の動画から切り抜いて使う。
+    口を歌詞に合わせるための速さの変化（lipwarp_select.py）・つなぎ目は人物だけにかかるので、雪や背景は止まらず、重ならない"""
+    import wb_layers as WL
+    seq = json.load(open(S["seq"])); sing = np.load(S["seq"] + ".sing.npy")
+    PM = np.load(S["person"]); K = len(PM); trk = json.load(open(S["track"]))
+    plate = cv2.imread(S["plate"]).astype(np.float32)
+    snow = WL.Snow(); breath = WL.Breath(WL.breath_events(sing, FPS))
+    cache = {}
+    def get(k):                                     # 人物（BGR ＋ 形）。形のふちは少しだけやわらかく
+        if k not in cache:
+            if len(cache) > 60: cache.clear()
+            al = cv2.GaussianBlur(PM[k].astype(np.float32), (0, 0), 0.8)
+            cache[k] = np.dstack([cv2.imread(f"{S['frames']}/{k + 1:03d}.png").astype(np.float32), al])
         return cache[k]
-    # 2026-11-08 人間「今度は歌詞と口の動きが一致しないね」: lipwarp_select.py は速さを 0.625〜1.375 倍で変えるので、
-    #   位置が半端（例 52.375 コマ目）になる。となりの 2 コマのあいだを、動きの流れで作る（ただ重ねると雪が二重になる）
+    def morph4(A, B, a):                            # 動きの流れで間を作る（形も一緒に動かす）
+        ga = cv2.cvtColor(A[..., :3].astype(np.uint8), cv2.COLOR_BGR2GRAY); gb = cv2.cvtColor(B[..., :3].astype(np.uint8), cv2.COLOR_BGR2GRAY)
+        fab = _dis.calc(ga, gb, None); fba = _dis.calc(gb, ga, None)
+        h, w = ga.shape; gx, gy = np.meshgrid(np.arange(w, dtype=np.float32), np.arange(h, dtype=np.float32))
+        wa = cv2.remap(A, gx + a * fba[..., 0], gy + a * fba[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        wb = cv2.remap(B, gx + (1 - a) * fab[..., 0], gy + (1 - a) * fab[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        return wa * (1 - a) + wb * a
     def at(p):
         k = int(np.floor(p)); f = p - k
-        if f < 0.03 or k + 1 >= len(cache_n): return get(min(k, len(cache_n) - 1))
+        if f < 0.03 or k + 1 >= K: return get(min(k, K - 1))
         if f > 0.97: return get(k + 1)
-        return morph(get(k), get(k + 1), f)
-    cache_n = range(len(os.listdir(S["frames"])))
+        return morph4(get(k), get(k + 1), f)
+    dx = np.array([t[1] for t in trk], float); dy = np.array([t[2] for t in trk], float)
+    pos = np.array([q[0] for q in seq], float)
+    def mouth_at(t):                                # その時刻に出ているコマの口の位置（カメラを止めたときの 2.2% の寄りぶんを直す）
+        p = pos[min(len(pos) - 1, max(0, int(round(t * FPS))))]
+        x = 638 + np.interp(p, np.arange(K), dx); y = 307 + np.interp(p, np.arange(K), dy)
+        return 640 + 1.022 * (x - 640), 360 + 1.022 * (y - 360)
     i0 = int(round(T0 * FPS))
     for i in range(N):
-        k, kold, a = seq[min(len(seq) - 1, i0 + i)]
-        img = at(float(k))
-        if kold >= 0: img = morph(at(float(kold)), img, 1 - a)
-        yield img.astype(np.uint8)
+        n = min(len(seq) - 1, i0 + i); t = n / FPS
+        k, kold, a = seq[n]
+        per = at(float(k))
+        if kold >= 0: per = morph4(at(float(kold)), per, 1 - a)
+        al = (per[..., 3:4] / 255.0)
+        img = WL.screen(plate, snow.layer("far", t))                    # 奥の雪は人物の後ろ
+        img = img * (1 - al) + per[..., :3] * al
+        img = WL.screen(img, breath.draw(t, mouth_at), (250, 244, 238))  # 白い息（少し青白い）
+        img = WL.screen(img, np.clip(snow.layer("mid", t) + snow.layer("near", t), 0, 1))
+        yield np.clip(img, 0, 255).astype(np.uint8)
 def frames_video():
     p = subprocess.Popen(["ffmpeg", "-v", "error", "-ss", str(T0), "-i", S["video"], "-t", str(LEN), "-f", "rawvideo", "-pix_fmt", "bgr24", "-r", str(FPS), "-"],
                          stdout=subprocess.PIPE)
