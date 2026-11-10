@@ -42,6 +42,7 @@ J = np.full((K, K), np.inf)
 for k in range(K - XF - 1):
     for j in range(K - 30):
         if abs(j - k) > 24 and R[k, j] <= RMAX and np.max(np.abs(E[k + 1:k + 1 + XF] - E[j:j + XF])) <= 0.3:
+            if AV[k + 1:k + 1 + XF].max() >= 3: continue          # 重ねているあいだ前のコマも映るので、使わないと決めたコマ（重さ 3 以上）へ入る手前では飛ばない
             J[k, j] = JC + WJ * R[k, j]
 # ほしい口
 js = json.load(open(SONG)); kana = json.load(open(SONG + ".kana")); spb = 60 / BPM

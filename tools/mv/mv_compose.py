@@ -17,7 +17,7 @@ NF = "/usr/share/fonts/opentype/noto/"
 GF = "/usr/share/fonts/truetype/google-fonts/"
 SONGS = {
     "whitebreath": dict(data=LD.WHITEBREATH, audio="/tmp/ab/wb9.mp3", song="/mnt/user-data/outputs/vbq/vtp-06-whitebreath-ballad-v9vo.json", lead=[0],
-                        frames="/tmp/ab/wbmv/fr5", seq="/tmp/ab/wbmv/lw.json", person="/tmp/ab/wbmv/person2.npy", plate="/tmp/ab/wbmv/plate5.png", track="/tmp/ab/wbmv/track_wb.json", ig_start=237.0,
+                        frames="/tmp/ab/wbmv/fr8", seq="/tmp/ab/wbmv/lw3.json", person="/tmp/ab/wbmv/person4.npy", plate="/tmp/ab/wbmv/plate5.png", track="/tmp/ab/wbmv/track_wb.json", ig_start=237.0,
                         jp_font=(NF + "NotoSerifCJK-SemiBold.ttc", 0), en_font=(GF + "Lora-Italic-Variable.ttf", 0),
                         sans=(NF + "NotoSansCJK-Medium.ttc", 0), fill=(222, 230, 245), sung=(255, 228, 180), stroke=(16, 24, 52),
                         en_fill=(205, 218, 238), accent=(255, 196, 130)),
@@ -178,13 +178,23 @@ def frames_wb():
             al = np.clip((al - 64) / 191.0, 0, 1) * 255          # ふちを半ピクセルほど内へ（元の動画の背景の色が、輪郭ににじんで残らないように）
             cache[k] = np.dstack([cv2.imread(f"{S['frames']}/{k + 1:03d}.png").astype(np.float32), al])
         return cache[k]
-    def morph4(A, B, a):                            # 動きの流れで間を作る（形も一緒に動かす）
-        ga = cv2.cvtColor(A[..., :3].astype(np.uint8), cv2.COLOR_BGR2GRAY); gb = cv2.cvtColor(B[..., :3].astype(np.uint8), cv2.COLOR_BGR2GRAY)
-        fab = _dis.calc(ga, gb, None); fba = _dis.calc(gb, ga, None)
+    # 2026-11-11 人間「変な違和感あるぼやけ方をしない用にして」: つなぎ目で、巻き髪などが二重に重なって ぼけて見えていた。
+    #   ・動きの流れは、背景を同じ絵（背景の 1 枚）にそろえてから、細かい設定で測る（雪や元の背景にまどわされない）
+    #   ・形は 1 秒かけて少しずつ動かすが、色を入れかえるのは まん中の短いあいだだけ（sharp=True）。二重に見える時間を短くする
+    _fine = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
+    _fine.setFinestScale(0); _fine.setPatchSize(12); _fine.setPatchStride(3); _fine.setGradientDescentIterations(40)
+    def gray_on_plate(X):
+        al = X[..., 3:4] / 255.0
+        return cv2.cvtColor(np.clip(plate * (1 - al) + X[..., :3] * al, 0, 255).astype(np.uint8), cv2.COLOR_BGR2GRAY)
+    def morph4(A, B, a, sharp=False):                # 動きの流れで間を作る（形も一緒に動かす）
+        ga = gray_on_plate(A); gb = gray_on_plate(B); dis = _fine if sharp else _dis
+        fab = dis.calc(ga, gb, None); fba = dis.calc(gb, ga, None)
         h, w = ga.shape; gx, gy = np.meshgrid(np.arange(w, dtype=np.float32), np.arange(h, dtype=np.float32))
         wa = cv2.remap(A, gx + a * fba[..., 0], gy + a * fba[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
         wb = cv2.remap(B, gx + (1 - a) * fab[..., 0], gy + (1 - a) * fab[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
-        return wa * (1 - a) + wb * a
+        c = a
+        if sharp: c = float(np.clip((a - 0.36) / 0.28, 0, 1)); c = c * c * (3 - 2 * c)
+        return wa * (1 - c) + wb * c
     def at(p):
         k = int(np.floor(p)); f = p - k
         if f < 0.03 or k + 1 >= K: return get(min(k, K - 1))
@@ -201,7 +211,7 @@ def frames_wb():
         n = min(len(seq) - 1, i0 + i); t = n / FPS
         k, kold, a = seq[n]
         per = at(float(k))
-        if kold >= 0: per = morph4(at(float(kold)), per, 1 - a)
+        if kold >= 0: per = morph4(at(float(kold)), per, 1 - a, sharp=True)
         al = (per[..., 3:4] / 255.0)
         img = WL.screen(plate, snow.layer("far", t))                    # 奥の雪は人物の後ろ
         img = img * (1 - al) + per[..., :3] * al
