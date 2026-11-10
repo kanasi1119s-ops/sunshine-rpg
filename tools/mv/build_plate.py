@@ -19,9 +19,18 @@ vis = np.stack([cv2.dilate(P[k], EL(DIL)) < 20 for k in ks])
 cnt = vis.sum(0); plate = np.zeros((H, W, 3), np.float32)
 for y0 in range(0, H, 40):
     f = fr[:, y0:y0 + 40].astype(np.float32); f[~vis[:, y0:y0 + 40]] = np.nan
-    with np.errstate(all="ignore"): plate[y0:y0 + 40] = np.nan_to_num(np.nanpercentile(f, 30, axis=0))
+    with np.errstate(all="ignore"):
+        p30 = np.nan_to_num(np.nanpercentile(f, 30, axis=0)); p15 = np.nan_to_num(np.nanpercentile(f, 15, axis=0))
+    few = (cnt[y0:y0 + 40] < len(ks) * 0.5)[..., None]             # 見えているコマが少ない所（人物の際）は、もやが残りやすいので、もっと暗いほうの値
+    plate[y0:y0 + 40] = np.where(few, p15, p30)
+# 2026-11-11 人間「もっと際まで完全に」: 人物の際は見えているコマが少なく、白い点（もや・髪の先）が線のように残っていた。
+#   際の帯だけ、小さな点を取りのぞく（5px の中央値）。ほかの所はそのまま（ぼかさない）
+band = ((cnt >= MINC) & (cnt < len(ks) * 0.5))
+md = cv2.medianBlur(np.clip(plate, 0, 255).astype(np.uint8), 5).astype(np.float32)
+plate = np.where(band[..., None], md, plate)
 good = cnt >= MINC
 hole = ~good
+cv2.imwrite(OUT + ".raw.png", np.clip(plate, 0, 255).astype(np.uint8)); cv2.imwrite(OUT + ".hole.png", hole.astype(np.uint8) * 255)   # lama_fill.py 用
 # 横につないでうめる（行ごとに、穴の左右の信用できる色を直線でつなぐ。端の色は 9px の平均）
 out = plate.copy()
 for y in range(H):
@@ -37,7 +46,7 @@ for y in range(H):
         t = t * t * (3 - 2 * t)                                    # なめらかに
         out[y, a:b + 1] = cl * (1 - t) + cr * t
 # 穴の中だけ、縦に少しぼかして行ごとのすじを消す。境目もなじませる
-hm = cv2.GaussianBlur(hole.astype(np.float32), (0, 0), 4)[..., None]
+hm = (cv2.GaussianBlur(hole.astype(np.float32), (0, 0), 4) * hole)[..., None]      # 穴の外（本物の背景）はぼかさない
 bl = cv2.GaussianBlur(out, (0, 0), sigmaX=2, sigmaY=5)
 out = out * (1 - hm) + bl * hm
 # 2026-11-11 人間「肩周りの背景がぼやけてる」: 横につないだだけだと、うめた所だけ のっぺりして、となりの本物の背景（窓・柱・屋根の線）と

@@ -17,7 +17,7 @@ NF = "/usr/share/fonts/opentype/noto/"
 GF = "/usr/share/fonts/truetype/google-fonts/"
 SONGS = {
     "whitebreath": dict(data=LD.WHITEBREATH, audio="/tmp/ab/wb9.mp3", song="/mnt/user-data/outputs/vbq/vtp-06-whitebreath-ballad-v9vo.json", lead=[0],
-                        frames="/tmp/ab/wbmv/fr5", seq="/tmp/ab/wbmv/lw.json", person="/tmp/ab/wbmv/person2.npy", plate="/tmp/ab/wbmv/plate3.png", track="/tmp/ab/wbmv/track_wb.json", ig_start=237.0,
+                        frames="/tmp/ab/wbmv/fr5", seq="/tmp/ab/wbmv/lw.json", person="/tmp/ab/wbmv/person2.npy", plate="/tmp/ab/wbmv/plate5.png", track="/tmp/ab/wbmv/track_wb.json", ig_start=237.0,
                         jp_font=(NF + "NotoSerifCJK-SemiBold.ttc", 0), en_font=(GF + "Lora-Italic-Variable.ttf", 0),
                         sans=(NF + "NotoSansCJK-Medium.ttc", 0), fill=(222, 230, 245), sung=(255, 228, 180), stroke=(16, 24, 52),
                         en_fill=(205, 218, 238), accent=(255, 196, 130)),
@@ -175,6 +175,7 @@ def frames_wb():
         if k not in cache:
             if len(cache) > 60: cache.clear()
             al = cv2.GaussianBlur(PM[k].astype(np.float32), (0, 0), 0.8)
+            al = np.clip((al - 64) / 191.0, 0, 1) * 255          # ふちを半ピクセルほど内へ（元の動画の背景の色が、輪郭ににじんで残らないように）
             cache[k] = np.dstack([cv2.imread(f"{S['frames']}/{k + 1:03d}.png").astype(np.float32), al])
         return cache[k]
     def morph4(A, B, a):                            # 動きの流れで間を作る（形も一緒に動かす）
