@@ -39,25 +39,25 @@ S.scene("最後のサビ", 24, "chorus", LAST)
 S.scene("合唱", 8, "chorus", LAST)
 S.scene("秒針", 4, "outro", ["Bb", "Bb", "Bb", "Bb"])
 
-V = Voice(S, vol=0.21, delay=0.75, bright=0.4, patch="brightLead", low=True)
-LEAD = S.track("シンセのリード", "lead", patch="surgeFriendly", volume=0.09,   # v3: modernLead → やわらかい音（イントロ・間奏が 6.8）
+V = Voice(S, vol=0.21, delay=0.75, bright=0.4, patch="kfbSineLead", low=True)   # v2: 歌をなぞるシンセは、高さの揺れない音に
+LEAD = S.track("シンセのリード", "lead", patch="kfbFutureSax", volume=0.07,   # v2: カワイイ・フューチャーベース系の電子のリードに   # v3: modernLead → やわらかい音（イントロ・間奏が 6.8）
                 pan=0.0, reverb=0.3)
 PNL = S.track("ピアノ（左手）", "piano", volume=0.09, pan=-0.15, reverb=0.3, fx=[{"type": "eq", "low": -2, "mid": -1, "midHz": 400, "high": -1}])   # v2
 PNR = [S.track(f"ピアノ（右手{i + 1}）", "piano", volume=0.06, pan=0.1, reverb=0.3, fx=[{"type": "eq", "low": -3, "mid": -1, "midHz": 400, "high": -1}]) for i in range(3)]
-SAW = [S.track(f"シンセの和音{i + 1}", "pad", patch="surgePadNeverending", volume=0.035, pan=-0.4 + 0.4 * i, reverb=0.3, duck=0.35) for i in range(3)]
+SAW = [S.track(f"シンセの和音{i + 1}", "pad", patch="kfbSupersaw", volume=0.03, pan=-0.4 + 0.4 * i, reverb=0.3, duck=0.35) for i in range(3)]
 STR = [S.track(f"ストリングス{i + 1}", "strings", patch="stringEnsemble", volume=0.05, pan=-0.4 + 0.4 * i, reverb=0.4, sustain=1.2) for i in range(3)]
 CHOIR = [S.track(f"合唱{i + 1}", "pad", patch="choir", volume=0.06, pan=-0.3 + 0.3 * i, reverb=0.45) for i in range(3)]
-PLK = S.track("プラック", "pad", patch="modernPluck", volume=0.06, pan=0.3, reverb=0.3, sustain=0.5)
-BASS = S.track("シンセベース", "bass", **synth_bass_spec("modernBass", vol=0.2, duck=0.35))
+PLK = S.track("プラック", "pad", patch="kfbSquarePluck", volume=0.05, pan=0.3, reverb=0.3, sustain=0.5)
+BASS = S.track("シンセベース", "bass", **synth_bass_spec("kfbFmBass", vol=0.14, duck=0.35))
 # ダイヤルで流れる前の曲たちの楽器（最後の合唱でもまた出てくる）
-EPD = [S.track(f"ラジオ: エレピ{i + 1}", "keys", patch="surgeKeysDxEp", volume=0.05, pan=-0.2, reverb=0.3, sustain=0.6) for i in range(3)]
+EPD = [S.track(f"ラジオ: エレピ{i + 1}", "keys", patch="kfbGlassEp", volume=0.05, pan=-0.2, reverb=0.3, sustain=0.6) for i in range(3)]
 SKA = [S.track(f"ラジオ: 裏打ちのギター{i + 1}", "guitar", amp="jpopClean", volume=0.045, pan=0.35, reverb=0.2, chorus=0, sustain=0.3) for i in range(3)]
 NYL = [S.track(f"ラジオ: ナイロンギター{i + 1}", "guitar", patch="nylonGuitar", amp="crystal", volume=0.06, pan=-0.35, reverb=0.25, chorus=0, sustain=0.8) for i in range(3)]
 BR = [S.track(f"ラジオ: ブラス{i + 1}", "brass", patch="trumpet", volume=0.05, pan=0.2, reverb=0.3) for i in range(3)]
 VIB = S.track("ラジオ: ビブラフォン", "harp", patch="vibraphone", volume=0.08, pan=0.35, reverb=0.4, sustain=1.5, bright=-0.2)
 GL = S.track("グロッケン", "glockenspiel", volume=0.07, pan=0.15, reverb=0.45)
 HC = [S.track(f"ラジオ: チェンバロ{i + 1}", "harpsichord", volume=0.06, pan=0.15, reverb=0.3) for i in range(3)]
-WH = S.track("口笛（高い縦笛）", "lead", patch="tinWhistle", volume=0.08, pan=0.1, reverb=0.35)
+WH = S.track("口笛（高い縦笛）", "lead", patch="kfbSineLead", volume=0.06, pan=0.1, reverb=0.35)
 TICK = S.track("秒針（カホンの縁）", "cajon", volume=0.08, pan=0.15, reverb=0.1)
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.05, pan=0, reverb=0.3)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
@@ -224,3 +224,29 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の25（24時・アル
           "0時の秒読みと1拍の無音のあと最後のサビ、全員で合いことばの節を歌う合唱。1曲目の秒針の音に戻って終わる。自作")
 finish(S, LY, V, 1,
        level={"verse": -0.2}, special={"秒読み": -0.45, "最後のサビ": 0.4, "合唱": 0.35, "秒針": -0.4, "ダイヤル": -0.15})
+
+# ================= v2（2026-11-12 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（25時・1日の全部の節が集まる・シンセポップのアンセム）で直すこと:
+#   電子の音を全部カワイイ・フューチャーベース系に: リード＝電子のサックス、和音＝スーパーソー（キックで凹む）、プラック＝短い矩形波、ベース＝はじく FM、ラジオのエレピ＝ガラスのエレピ。
+#   最後のサビと合唱に丸いサブベース、合唱の 2・4拍に電子のクラップ（みんなの手拍子）。サビの前に上がる音、サビの頭にインパクト、合唱の頭にきらきら
+#   口笛（高い縦笛）は電子の笛に（人間「フルートの仲間の音は指定しない限り使わない」）
+#   歌: Aメロはウィスパー（真夜中のひとり）、Bメロはクリア、サビはキュート、合唱はクリア（みんなの声）。ハモリは サビ2 の後半・最後のサビ・合唱＝声が増えていく（アルバムのしめくくり）
+from vt3x_lib import *
+path = sys.argv[1]
+fx, sub, clap = {}, {}, {}
+for name in ("サビ1", "サビ2", "最後のサビ"):
+    b0 = S.sc(name)[0]; fx[b0] = "G5:2 R:2"; fx[b0 - 1] = "R:2 F#4:2"
+fx[S.sc("合唱")[0]] = "D4:2 R:2"
+for name in ("最後のサビ", "合唱"):
+    for b in S.sc(name): sub[b] = f"{nm(low(S.chords[b].split('|')[0], 'C1') + 1)}:3.5 R:0.5"      # +1: 書き出しで全体が半音上がる
+for b in S.sc("合唱"): clap[b] = "R:1 B4:1 R:1 B4:1"
+add_parts(path, [pad_part(S, "カワイイ効果音", "kawaiiFx", fx, 0.06, pan=0.1, reverb=0.15, modulate=False, instrument="guitar"),
+                 pad_part(S, "サブベース", "kfbSub", sub, 0.028, instrument="bass", reverb=0, duck=0.5),
+                 pad_part(S, "電子のクラップ", "kawaiiFx", clap, 0.07, reverb=0.1, modulate=False, instrument="guitar")])
+humanize(path, "ピアノ（右手", mid=82, down=12, up=10, seed=4)
+set_parts(path, "シンセベース", sustain=1.1)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5))
+    vocal_polish(path, S, {"verse": 6, "pre": 14, "chorus": 22, "最後のサビ": 28, "合唱": 16, "bridge": 0, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.45, auto=0.6, breaths=0.5)
+    harmony(path, S, [("サビ2", 8, None, K), ("最後のサビ", 0, None, KL), ("合唱", 0, None, KL)], vol=0.38, shift=1)
+    voice_by_scene(path, S, {"verse": "whisper", "pre": "clear", "chorus": "cute", "合唱": "clear", "bridge": "whisper"}, default="clear")

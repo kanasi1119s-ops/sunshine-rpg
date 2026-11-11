@@ -38,12 +38,12 @@ S.scene("ベッドに倒れこむ", 8, "bridge", ["Cmaj7", "Bm7", "Am7", "Gmaj7"
 S.scene("最後のサビ", 24, "chorus", LAST)
 S.scene("目覚まし", 4, "outro", ["Abmaj7", "Fm7", "Bbm7", "Abmaj7"])
 
-V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="flute", low=False)   # v2: BGM の旋律をシンセのはじく音からフルートに（生楽器の曲なのに1つだけ電子の音だった）
+V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="kfbSineLead", low=False)   # v2: フルートの音は使わない（人間・2026-11-11）→ 高さの揺れない電子の音に   # v2: BGM の旋律をシンセのはじく音からフルートに（生楽器の曲なのに1つだけ電子の音だった）
 HL = S.track("チェンバロ（左手）", "harpsichord", volume=0.12, pan=-0.2, reverb=0.3)
 HR = [S.track(f"チェンバロ（右手{j + 1}）", "harpsichord", volume=0.055, pan=0.15 + 0.05 * j, reverb=0.3) for j in range(3)]
 STR = [S.track(f"ストリングス{i + 1}", "strings", patch="stringEnsemble", volume=0.05, pan=-0.4 + 0.4 * i, reverb=0.4, sustain=1.2) for i in range(3)]
 PIZ = S.track("ピチカート", "strings", patch="pizzicatoStrings", volume=0.06, pan=0.35, reverb=0.3)
-WH = S.track("口笛（高い縦笛）", "lead", patch="tinWhistle", volume=0.09, pan=0.1, reverb=0.35)
+WH = S.track("口笛（高い縦笛）", "lead", patch="kfbSineLead", volume=0.07, pan=0.1, reverb=0.35)
 BASS = S.track("ウッドベース", "bass", **finger_bass_spec(vol=0.24))
 ALM = S.track("目覚まし", "glockenspiel", volume=0.05, pan=0.25, reverb=0.25)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.05, pan=0, modulate=False)
@@ -182,3 +182,18 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の24（23時）。フ
           "合いことばの節は口笛。目覚ましをかける音で終わる。自作")
 finish(S, LY, V, 1,
        level={"verse": -0.25}, special={"ベッドに倒れこむ": -0.45, "最後のサビ": 0.35, "目覚まし": -0.2})
+
+# ================= v2（2026-11-12 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午後11時・明日の服がきまらない・フレンチポップ）で直すこと:
+#   口笛（高い縦笛）とフルートの音をやめ、電子の笛（kfbSineLead）に（人間「フルートの音は指定しない限り使わない」「そこら辺の音は電子って感じの音に」）
+#   チェンバロは1音ずつ強さを揺らす。ウッドベースは同じ音を続ける所の穴をなくす
+#   歌: Aメロ・Bメロはクリア（鏡の前のひとりごと）、サビはキュート（フレンチポップのかわいさ）、ベッドに倒れこむ所はウィスパー。ハモリは サビ2 の後半と最後のサビ
+from vt3x_lib import *
+path = sys.argv[1]
+humanize(path, "チェンバロ", mid=84, down=10, up=8, seed=4)
+set_parts(path, "ウッドベース", sustain=1.12)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5))
+    vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 18, "最後のサビ": 22, "bridge": 0, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.6)
+    harmony(path, S, [("サビ2", 8, None, K), ("最後のサビ", 0, None, KL)], vol=0.36, shift=1)
+    voice_by_scene(path, S, {"verse": "clear", "pre": "clear", "chorus": "cute", "bridge": "whisper"}, default="clear")

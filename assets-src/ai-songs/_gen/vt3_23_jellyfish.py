@@ -35,7 +35,7 @@ S.scene("光りはじめる", 12, "bridge", ["Gmaj7", "Aadd9", "Bm7", "Bm7", "Gm
 S.scene("クライマックス", 16, "chorus", C_CH)
 S.scene("グロッケン", 4, "outro", ["Gmaj7", "Aadd9", "Dadd9", "Dadd9"])
 
-V = Voice(S, vol=0.2, delay=0.75, bright=-0.1, patch="surgePadBowed", low=False)
+V = Voice(S, vol=0.2, delay=0.75, bright=-0.1, patch="kfbSineLead", low=False)   # v2: 歌をなぞるシンセは、高さの揺れない音に
 GA = S.track("クリーンギター（アルペジオ）", "guitar", amp="crystal", volume=0.08, pan=-0.35, reverb=0.35, chorus=0, sustain=0.9)
 GB = S.track("クリーンギター（うしろ）", "guitar", amp="jpopClean", volume=0.065, pan=0.4, reverb=0.4, chorus=0, sustain=0.9)
 GD = [S.track(f"歪みのギター{i + 1}", "distGuitar", **rock_gtr_spec(0.035, 0.6 if i % 2 else -0.6, drive=0.4)) for i in range(3)]
@@ -195,3 +195,20 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の23（22時）。ポ
           "合いことばの節はグロッケン。水の泡の音で始まり、グロッケンの1音で終わる。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.2}, special={"ギターだけ": -0.3, "クライマックス": 0.45, "光りはじめる": 0.15})
+
+# ================= v2（2026-11-12 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午後10時・水族館のくらげ・ポストロック）で直すこと:
+#   ギター: アルペジオと、うしろのクリーンギターを DI ギターに（音を伸ばして重ねる。左は明るく、右は丸く）。歪みのギターは、静かな所は8分のかき鳴らし、
+#          クライマックスは16分を弾きつづける（ポストロックのトレモロ弾き）。コーラスなし
+#   歌: Aメロ・Bメロはウィスパー（水の中のように）、サビとクライマックスはクリア。ハモリはクライマックス
+from vt3x_lib import *
+path = sys.argv[1]
+to_di(path, S, "クリーンギター（アルペジオ）", "clean_arp", vol=0.075, seed=4)
+to_di(path, S, "クリーンギター（うしろ）", "clean_arp", vol=0.06, seed=9, di="gretsch")
+pd = restrum(path, S, "歪みのギター", 0.0, lambda n, i, end, b: "D.u.d.u.D-------" if end else ("DuDuDuDuDuDuDuDu" if n == "クライマックス" else ("D.u.d.u.D.u.d.u." if i % 2 == 0 else "D...d.u.D.u.d.u.")), seed=6, lag=0.016)
+add_parts(path, pd, drop=lambda p: p.get("role", "").startswith("歪みのギター"))
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5, minlen=1.5))
+    vocal_polish(path, S, {"verse": 0, "pre": 8, "chorus": 18, "クライマックス": 24, "bridge": 0, "outro": 0}, scoop=0.2, slash=0.6, vib_min_beats=2.0, vib_start=0.55, auto=0.7, breaths=0.7)
+    harmony(path, S, [("クライマックス", 0, None, K)], vol=0.36)
+    voice_by_scene(path, S, {"verse": "whisper", "pre": "whisper", "chorus": "clear", "bridge": "whisper"}, default="whisper")

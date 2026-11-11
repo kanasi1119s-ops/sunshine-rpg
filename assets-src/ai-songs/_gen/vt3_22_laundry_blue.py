@@ -36,7 +36,7 @@ S.scene("機械の音だけ", 4, "break", ["Cm9", "Abmaj7", "Fm9", "G7#9"])
 S.scene("最後のサビ", 16, "chorus", C_CH)
 S.scene("ブザー", 2, "outro", ["Cm9", "Cm9"])
 
-V = Voice(S, vol=0.21, delay=0.5, bright=-0.2, patch="surgeKeysFmPiano1", low=True)
+V = Voice(S, vol=0.21, delay=0.5, bright=-0.2, patch="kfbSineLead", low=True)   # v2: 歌をなぞるシンセは、高さの揺れない音に
 VIB = S.track("ビブラフォン", "harp", patch="vibraphone", volume=0.08, pan=0.35, reverb=0.4, sustain=1.5, bright=-0.2)
 STR = [S.track(f"ストリングス（サンプル風）{i + 1}", "strings", patch="stringEnsemble", volume=0.05, pan=-0.4 + 0.4 * i, reverb=0.5, sustain=1.6) for i in range(3)]
 PN = [S.track(f"ピアノ{i + 1}", "piano", volume=0.06, pan=-0.2, reverb=0.35, fx=[{"type": "eq", "low": -3, "mid": -1, "midHz": 500, "high": -4}]) for i in range(3)]
@@ -164,3 +164,20 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の22（21時）。ト
           "合いことばの節はビブラフォン。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.25}, special={"機械の音だけ": -0.4, "最後のサビ": 0.3, "回る音": -0.2})
+
+# ================= v2（2026-11-12 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午後9時・コインランドリーの青い光・トリップホップ）で直すこと:
+#   電子の音（少しだけ）: 始まり・機械の音だけの所・終わりに、レコードのパチパチ（トリップホップの古いサンプルの空気）。ほかは生の楽器のまま
+#   ピアノは1音ずつ強さを揺らす。ベースは同じ音を続ける所の穴をなくす
+#   歌: ほぼ全部ウィスパー（ひとりごと）。サビだけクリアを少し。揺れはほとんどなし、最後のサビの長い音だけ。ハモリは最後のサビの後半だけ
+from vt3x_lib import *
+path = sys.argv[1]
+crk = {S.sc("回る音")[0]: "A#5:12 R:4", S.sc("機械の音だけ")[0]: "A#5:12 R:4", S.sc("ブザー")[0]: "A#5:8"}
+add_parts(path, [pad_part(S, "レコードのパチパチ", "kawaiiFx", crk, 0.04, reverb=0.05, modulate=False, instrument="guitar")])
+humanize(path, "ピアノ", mid=78, down=14, up=10, seed=4)
+set_parts(path, "ベース", sustain=1.15)
+if VOCAL:
+    remark(path, S, std_mark(("最後のサビ",), jump=5, minlen=1.0))
+    vocal_polish(path, S, {"verse": 0, "pre": 6, "chorus": 12, "最後のサビ": 18, "outro": 0}, scoop=0.2, slash=0.5, vib_min_beats=2.0, vib_start=0.6, auto=0.8, breaths=0.8)
+    harmony(path, S, [("最後のサビ", 8, None, K)], vol=0.32)
+    voice_by_scene(path, S, {"verse": "whisper", "pre": "whisper", "chorus": "clear"}, default="whisper", tweak={"clear": {"blend": {"voice": "teto-soft", "amount": 0.45}}})
