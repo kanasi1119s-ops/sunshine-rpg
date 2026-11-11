@@ -26,8 +26,8 @@
    試聴の点数: かわいい日常（エレピ・フルート・ぽこぽこ・オルガン・鉄琴）8.2／激しい電子（ハードなキック・うなるベース・ハードコアのリード）6.7。
    気づいたこと: kfbSub は bass のパートだと とても大きい（音量 0.03〜0.05 で足りる）。kfbFormantLead・kfbBrightBells は 6kHz より上が強いので、ローパス（5〜9kHz）をかけて使う。
    3回目（同日「他にも可愛い日常系の音源ない？あったら追加して」）: 録音の楽器（VCSL・CC0）。ocarina（オカリナ）・harmonica（ハーモニカ）・tubeGlock（筒の鉄琴。A6 より上がきれい）・wineGlass（グラスハープ。伸ばす音・パッド向き）・balafon（木琴の仲間。ぽこぽこ）・strumstick（小さな3弦の弦楽器。ウクレレのように軽い。D3〜A5）・toysFx（おもちゃと小物。鍵盤ごとに別の音・`modulate: false`。C4〜D4 おもちゃの汽笛・D#4/E4 玉の笛・F4/F#4 サイレン笛・G4/G#4 フレクサトーン・A4/A#4 ラチェット・B4 スラップスティック・C5 ビブラスラップ・C#5/D5 ウインドチャイム・D#5 フィンガーシンバル・E5/F5/F#5 トライアングル）。試聴 8.27。作り方は `tools/soundfont/build-vcsl-daily.py`
-   **使わない音（2026-11-11 人間）: kfbFlute（シンセのフルート）は、指定されないかぎり使わない**（「普通のフルートの音にしか聞こえない」）
-   **kfbHardcoreLead は作り直した（2026-11-11 人間「こもる感じでキレがない。もう少し繊細で透き通るような感じも入れた方がいい」）**: 前の音（Rozzer「He Never Lost His Hardcore」）は 5〜10kHz が −29dB でこもっていた。芯＝Giana Brotherz「Cut Through」（するどいノコギリ波）に、Inigo Kennedy「Glitter 2」「Delicate」（細くて透き通った音・1オクターブ上）を小さく重ねた（5〜10kHz −14dB）。作り方は `tools/surge/layer.py`（プリセットを重ねて1つの音源にする）
+   **使わない音（2026-11-11 人間）: kfbFlute（シンセのフルート）と ocarina（オカリナ）は、指定されないかぎり使わない**（「普通のフルートの音にしか聞こえない」「オカリナもフルートと同じ感じで使う時にいいます。そこら辺の音、電子って感じの音にして」）。やわらかいメロディは電子のリードで: kfbDreamLead（サイン波＋透き通った高い音＋オルゴールの立ち上がり）・kfbWobbleLead（ゆれる中空の音）・kfbFutureSax（電子のサックス）・kfbSineLead・kfbSquareLead。試聴 8.28
+   **kfbHardcoreLead は作り直した（2026-11-11 人間「こもる感じでキレがない。もう少し繊細で透き通るような感じも入れた方がいい」）**: 前の音（Rozzer「He Never Lost His Hardcore」）は 5〜10kHz が −29dB でこもっていた。芯＝Giana Brotherz「Cut Through」（するどいノコギリ波）に、Inigo Kennedy「Glitter 2」「Delicate」（細くて透き通った音・1オクターブ上）を小さく重ねた（5〜10kHz −14dB）。さらに同日「鋭さがもう少し欲しい。音の粒もはっきりすると」→ プリセットのリバーブ・ディレイを切り（--strip-space）、余韻を 0.12 秒に短くし、鳴り始めを 4dB 持ち上げ（--punch）、Giana Brotherz「Crisp Cross」（とても明るい）と Cybersoda「Music Box Lead」（鳴り始めだけの硬い粒）を重ねた（続けて弾いた音の間の谷 −28dB）。作り方は `tools/surge/layer.py`（プリセットを重ねて1つの音源にする）
    **ブルーアーカイブの曲でよく使われる要素（2026-11-11 人間が調べて教えてくれた。電子の曲の編曲はこれを軸にする）**:
    - 和音・リード: 厚いスーパーソー（デチューン）＋ キックに合わせて大きくうねるサイドチェイン（kfbSupersaw・fbChord・`duck`）
    - プラック・ベル: ぽこぽこした木琴・マリンバの質感、クリスタルのようなベル・オルゴール。アクセントと、裏で細かく刻むアルペジオ（kfbSquarePluck・kfbGlocken・kfbMusicBox・kfbBrightBells・balafon・tubeGlock）

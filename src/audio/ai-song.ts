@@ -84,6 +84,9 @@ export const SYNTH_PATCHES: Record<string, number> = {
   // 2026-11-11 人間「他にも可愛い日常系の音源ない？あったら追加して」: かわいい日常の曲の録音の楽器（VCSL・CC0。tools/soundfont/build-vcsl-daily.py）:
   //   ocarina＝オカリナ（A4〜C#6 の録音）・harmonica＝ハーモニカ・tubeGlock＝筒の鉄琴（高い。G6〜A7 の録音）・wineGlass＝グラスハープ・balafon＝バラフォン（木琴の仲間）・
   //   strumstick＝小さな3弦の弦楽器（ウクレレのように軽い）・toysFx＝おもちゃと小物の音（鍵盤ごとに別の音。汽笛・笛・フレクサトーン・ラチェット・ウインドチャイム・トライアングルなど）
+  // 2026-11-11 人間「オカリナもフルートと同じで使う時に言います。そこら辺の音、電子って感じの音にして」→ やわらかいメロディ用の電子のリード（Surge XT を重ねて作る tools/surge/layer.py）:
+  //   kfbDreamLead＝サイン波＋透き通った高い音＋オルゴールの立ち上がり・kfbWobbleLead＝ゆれる中空の音・kfbFutureSax＝電子のサックス
+  kfbDreamLead: 224, kfbWobbleLead: 225, kfbFutureSax: 227,
   ocarina: 217, harmonica: 218, tubeGlock: 219, wineGlass: 220, balafon: 221, strumstick: 222, toysFx: 223,
   surgeBassPasty: 182, surgeBassAnalogBassImaged: 183, surgeBassCatBass: 184, surgeBassWarmSquare: 185, surgeBassEmulation: 186, surgeBassPop: 187, surgeBassModernDirtyFat: 188,
   // Surge XT のプラック（128 以上＝バンク 1。surgePopcorn＝ポップコーンのようにはじける・surgeBell1＝澄んだベル・surgeGuzheng＝箏（こと）のような弦・surgeRetroWave＝80年代風のきらめき・surgeConvex＝丸く太い・surgeWoody＝木をたたいたような・surgeFantasyBell＝幻想的なベル・surgeNicePluck＝素直で明るい・surgeWaveguide＝弦をはじいたような・surgeFriendly＝やさしい・surgeMixedFeelings＝少し切ない）
