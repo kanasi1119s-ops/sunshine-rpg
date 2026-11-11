@@ -46,7 +46,7 @@ V = Voice(S, vol=0.21, delay=0.5, bright=0.0, patch="kfbSineLead", low=False)   
 GL = [S.track(f"Lギター（刻み{i + 1}）", "distGuitar", **rock_gtr_spec(0.05, -0.6, drive=0.55)) for i in range(3)]
 GR = [S.track(f"Rギター（刻み{i + 1}）", "distGuitar", **rock_gtr_spec(0.047, 0.6, drive=0.55)) for i in range(3)]
 RIFF = S.track("ギター（リフ）", "distGuitar", **rock_gtr_spec(0.07, -0.2, drive=0.55))
-LGS = S.track("リードギター（ソロ）", "leadGuitar", **lead_gtr_spec(0.13, 0.05))
+LGS = S.track("リードギター（ソロ）", "leadGuitar", **lead_gtr_spec(0.085, 0.05))
 CLN = S.track("クリーンのギター", "guitar", amp="crystal", volume=0.08, pan=0.3, reverb=0.35, chorus=0, sustain=1.0)
 WALL = [S.track(f"厚いシンセ{i + 1}", "pad", **pad_spec("kfbSupersaw", vol=0.03, pan=-0.6 + 0.6 * i, duck=0.4, sustain=1.0)) for i in range(3)]
 BASS = S.track("ベース（指弾き・ゴリッと）", "bass", **rock_bass_spec(0.27))
@@ -242,6 +242,9 @@ pl = restrum(path, S, "Lギター（刻み", -0.6, lambda n, i, end, b: "D.d.d.D
 pr = restrum(path, S, "Rギター（刻み", 0.6, lambda n, i, end, b: "D.ddD.d.D.d.D---" if end else ("DuDuD.ddDuDuD.D." if i % 4 == 3 else ("D.ddD.d.D.ddD.d." if i % 2 == 0 else "D.d.D.ddD.d.D.dd")), seed=9)
 add_parts(path, pl + pr, drop=lambda p: p.get("role", "").startswith("Lギター（刻み") or p.get("role", "").startswith("Rギター（刻み"))
 to_di(path, S, "クリーンのギター", "clean_arp", vol=0.07, seed=4)
+# v4: v3 はギターソロが −15dB、サビが −19dB と、ソロだけ飛び出していた（BGM 7.06）→ ソロのリードを下げ、ソロとブレイクダウンの伴奏も少し下げる
+scene_gain(path, S, {"ギターソロ": 0.8, "ブレイクダウン": 0.9})
+final_gain(path, {"冷蔵庫": 12, "イントロ": 3, "ギターソロ": -1.0, "最後のサビ": 2.0})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5))
     vocal_polish(path, S, {"verse": 8, "pre": 14, "chorus": 22, "最後のサビ": 26, "break": 0, "bridge": 6, "outro": 0}, scoop=0.35, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.5)

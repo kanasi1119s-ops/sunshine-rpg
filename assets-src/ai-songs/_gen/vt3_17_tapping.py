@@ -202,6 +202,7 @@ MP = ["D..d.u.dD.u.d.u.", "D.u..d.uD..d.u.d", "D..d.uD..d.u.D.u", "D.u.d..D.u.d.
 pc = restrum(path, S, "ギター（和音", 0.45, lambda n, i, end, b: "D..d.u.dD.D-----" if end else MP[i % 4], seed=5, lag=0.014)
 pd = restrum(path, S, "歪みのギター", 0.0, lambda n, i, end, b: "D.d.D.d.D.D-----" if end else ("D.d.d.D.d.d.D.d." if i % 2 == 0 else "D.ddD.d.D.d.D.dd"), seed=8)
 add_parts(path, pc + pd, drop=lambda p: p.get("role", "").startswith("ギター（和音") or p.get("role", "").startswith("歪みのギター"))
+final_gain(path, {"タッピング": 5, "最後のサビ": 1.6})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5))
     vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 20, "最後のサビ": 24, "bridge": 0, "outro": 0}, scoop=0.3, slash=0.7, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.6)

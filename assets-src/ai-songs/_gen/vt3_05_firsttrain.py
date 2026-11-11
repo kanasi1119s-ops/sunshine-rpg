@@ -235,7 +235,7 @@ parts = strum_parts(S, "音の壁 L", specL, -0.75, specL["volume"], bl, seed=3,
 add_parts(path, parts, drop=lambda p: p.get("role", "").startswith("音の壁"))
 set_parts(path, "ベース（指", sustain=1.15)
 # v3: 測ると、チャイム −44・イントロ −29・Aメロ1 −29・ブリッジ −26dB と、サビ（−17）にくらべて小さすぎた（人間: 前奏が小さすぎる曲がある）
-final_gain(path, {"チャイム": 15, "イントロ": 8, "Aメロ1": 8, "ブリッジ": 6, "最後のサビ": 0.8} if VOCAL else {"チャイム": 16, "イントロ": 10, "Aメロ1": 13, "ブリッジ": 10, "最後のサビ": 0.8})   # BGM は歌がないぶん、静かな場面がさらに小さい
+final_gain(path, {"チャイム": 15, "イントロ": 8, "Aメロ1": 8, "ブリッジ": 6, "最後のサビ": 0.8} if VOCAL else {"チャイム": 18, "イントロ": 12, "Aメロ1": 18, "ブリッジ": 13, "最後のサビ": 0.8})   # BGM は歌がないぶん、静かな場面がさらに小さい
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5, minlen=1.5))
     vocal_polish(path, S, {"verse": 6, "pre": 10, "chorus": 18, "最後のサビ": 22, "bridge": 0, "outro": 0}, scoop=0.2, slash=0.5, vib_min_beats=2.0, vib_start=0.55, auto=0.7, breaths=0.7)

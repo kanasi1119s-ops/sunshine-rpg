@@ -213,6 +213,7 @@ for p in js["parts"]:
 save(path, js)
 humanize(path, "カヴァキーニョ", mid=84, down=12, up=10, seed=3); humanize(path, "ピアノ", mid=82, down=12, up=10, seed=4)
 set_parts(path, "ベース（指", sustain=1.12)
+final_gain(path, {"ホイッスル": 12, "最後のサビ": 1.8, "シャッター": 3})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5))
     vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 18, "最後のサビ": 22, "bridge": 6, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.5)
