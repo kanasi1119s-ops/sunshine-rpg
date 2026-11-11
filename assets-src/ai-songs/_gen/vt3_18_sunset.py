@@ -39,7 +39,7 @@ S.scene("手拍子", 4, "break", ["A", "B", "G#m7", "C7"])                  # �
 S.scene("最後のサビ", 12, "chorus", [tr_chord(c, 2) for c in C_CH + C_CH[:4]])
 S.scene("アーメン", 4, "outro", ["Bb", "F", "Bb", "F"])
 
-V = Voice(S, vol=0.2, delay=0.75, bright=-0.1, patch="surgePadBowed", low=False)
+V = Voice(S, vol=0.2, delay=0.75, bright=-0.1, patch="kfbSineLead", low=False)   # v2: 歌をなぞるシンセは、高さの揺れない音に
 ORG = [S.track(f"ハモンドオルガン{i + 1}", "drawbarOrgan", volume=0.055, pan=-0.35, reverb=0.35, sustain=1.0) for i in range(3)]
 PL = S.track("ピアノ（左手）", "piano", volume=0.11, pan=0.15, reverb=0.3, fx=[{"type": "eq", "low": -2, "mid": -1, "midHz": 400, "high": 1}])
 PR = [S.track(f"ピアノ（右手{i + 1}）", "piano", volume=0.075, pan=0.15, reverb=0.3, fx=[{"type": "eq", "low": -3, "mid": -1, "midHz": 400, "high": 2}]) for i in range(3)]
@@ -158,3 +158,18 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の18（17時）。ゴ
           "合いことばの節は聖歌隊のハミング。「アーメン」の和音で終わる。自作")
 finish(S, LY, V, -2,
        level={"verse": -0.25}, special={"オルガンだけ": -0.5, "最後のサビ": 0.4, "アーメン": 0.1})
+
+# ================= v2（2026-11-12 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午後5時・夕焼けの交代式・ゴスペル）で直すこと:
+#   生の楽器と聖歌隊の曲なので、電子の音は足さない。ピアノは1音ずつ強さを揺らす（ゴスペルのピアノは抑揚が大きい）
+#   歌: Aメロはウィスパー（一日の終わりのひとりごと）、Bメロからクリア、サビはクリアで揺れを深く・句の頭をすくう（ゴスペルの歌い方）、オルガンだけの所はウィスパー。
+#       ハモリは サビ2（転調後）の頭から、最後のサビ（もう一度転調）も頭から＝声が増えていく
+from vt3x_lib import *
+path = sys.argv[1]
+humanize(path, "ピアノ（右手", mid=82, down=16, up=12, seed=4); humanize(path, "ピアノ（左手", mid=88, down=10, up=8, seed=5)
+set_parts(path, "ベース（指", sustain=1.12)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=4, minlen=0.75))
+    vocal_polish(path, S, {"verse": 8, "pre": 16, "chorus": 30, "最後のサビ": 36, "bridge": 8, "outro": 20}, scoop=0.45, slash=1.0, vib_min_beats=1.5, vib_start=0.4, auto=0.7, breaths=0.7)
+    harmony(path, S, [("サビ2", 0, None, K2), ("最後のサビ", 0, None, K3)], vol=0.4, shift=-2)
+    voice_by_scene(path, S, {"verse": "whisper", "pre": "clear", "chorus": "clear", "bridge": "whisper"}, default="clear")

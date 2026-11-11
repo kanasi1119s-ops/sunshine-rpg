@@ -229,3 +229,17 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の20（19時）。ジ
           "合いことばの節はトロンボーンのソロの頭。桶の「カコーン」で始まる。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.25}, special={"湯船に沈む": -0.6, "シャウトコーラス": 0.4, "ドラムソロ": 0.1})
+
+# ================= v2（2026-11-12 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午後7時・銭湯・ジャズのビッグバンド）で直すこと:
+#   ジャズの決まり（電子の音は使わない・録音の楽器だけ）なので、音は足さない。ピアノは1音ずつ強さを揺らす。ウッドベースは同じ音を続ける所の穴をなくす
+#   歌: Aメロ・Bメロはクリア、サビはキュート（湯けむりではしゃぐ）、湯船に沈む所はウィスパー、シャウトコーラスはクリア（力いっぱい）。ハモリはシャウトコーラス
+from vt3x_lib import *
+path = sys.argv[1]
+humanize(path, "ピアノ（右手", mid=80, down=14, up=10, seed=4); humanize(path, "ピアノ（左手", mid=86, down=8, up=8, seed=5)
+set_parts(path, "ウッドベース", sustain=1.12)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5))
+    vocal_polish(path, S, {"verse": 8, "pre": 14, "chorus": 22, "シャウトコーラス": 28, "bridge": 6, "outro": 0}, scoop=0.35, slash=0.9, vib_min_beats=1.5, vib_start=0.5, auto=0.6, breaths=0.5)
+    harmony(path, S, [("シャウトコーラス", 0, None, K)], vol=0.38)
+    voice_by_scene(path, S, {"verse": "clear", "pre": "clear", "chorus": "cute", "bridge": "whisper", "シャウトコーラス": "clear"}, default="clear")

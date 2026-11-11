@@ -36,12 +36,12 @@ S.scene("つながりなおす", 8, "bridge", ["Dbmaj9", "Eb9", "Cm7", "Fm9", "B
 S.scene("最後のサビ", 16, "chorus", C_CH)
 S.scene("またね", 6, "outro", ["Fm9", "Dbmaj9", "Bbm9", "Eb9", "Fm9", "Fm9"])
 
-V = Voice(S, vol=0.21, delay=0.75, bright=0.2, patch="surgeFriendly", low=False)
+V = Voice(S, vol=0.21, delay=0.75, bright=0.2, patch="kfbSineLead", low=False)   # v2: 歌をなぞるシンセは、高さの揺れない音に
 HARM = S.track("重なる声（下の3度）", "pad", patch="choir", volume=0.05, pan=-0.2, reverb=0.4)
-EP = [S.track(f"エレピの和音{i + 1}", "keys", patch="surgeKeysLightEp", volume=0.06, pan=-0.3 + 0.2 * i, reverb=0.3, sustain=0.5) for i in range(4)]
-PAD = [S.track(f"パッド{i + 1}", "pad", **pad_spec("surgePadNeverending", vol=0.035, pan=-0.4 + 0.4 * i, duck=0.45, sustain=1.6)) for i in range(3)]
+EP = [S.track(f"エレピの和音{i + 1}", "keys", patch="kfbGlassEp", volume=0.055, pan=-0.3 + 0.2 * i, reverb=0.3, sustain=0.5) for i in range(4)]
+PAD = [S.track(f"パッド{i + 1}", "pad", **pad_spec("kfbSparklePad", vol=0.03, pan=-0.4 + 0.4 * i, duck=0.45, sustain=1.6)) for i in range(3)]
 CHOP = S.track("声のチョップ", "pad", patch="vocalChop", volume=0.08, pan=0.3, reverb=0.3)
-BASS = S.track("ディープなベース", "bass", **synth_bass_spec("synthBass1", vol=0.19, duck=0.4))
+BASS = S.track("ディープなベース", "bass", **synth_bass_spec("kfbFmBass", vol=0.13, duck=0.4))
 SUB = S.track("サブベース", "sub808", volume=0.11, pan=0, sustain=0.8, fx=[{"type": "filter", "kind": "highpass", "freq": 28, "q": 0.7}])
 BEEP = S.track("呼び出し音", "glockenspiel", volume=0.05, pan=0.2, reverb=0.35)
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.05, pan=0, reverb=0.3)
@@ -194,3 +194,31 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の21（20時）。デ
           "合いことばの節は声のチョップ。呼び出し音で始まる。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.25}, special={"とぎれる": -0.4, "最後のサビ": 0.35, "またね": -0.2})
+
+# ================= v2（2026-11-12 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午後8時・画面越しの通話でいっしょに歌う・ディープハウス）で直すこと:
+#   電子の音: エレピをガラスのエレピ、パッドをきらきらのパッド、ベースをはじく FM のベースに。「とぎれる」所に、通信がとぎれるグリッチの音とレコードのパチパチ（この曲だけの音）。
+#            サビの前に上がる音、サビの頭にきらきら
+#   ボーカルチョップ: シンセの「声のチョップ」が鳴る小節に、歌入りの版ではテトの声の短い「や・は」を重ねる（画面の向こうの声）
+#   歌: Aメロはウィスパー（夜、画面に向かって小声）、Bメロとサビはクリア、つながりなおす所と「またね」はウィスパー。ハモリは サビ2 の頭から（2人で歌う）と最後のサビ
+from vt3x_lib import *
+path = sys.argv[1]
+fx = {}
+tg = S.sc("とぎれる"); fx[tg[0]] = "D#6:2 R:2"
+if len(tg) > 2: fx[tg[2]] = "R:1 D#6:1 R:2"
+for name in ("サビ1", "サビ2", "最後のサビ"):
+    b0 = S.sc(name)[0]; fx[b0] = "D4:2 R:2"; fx[b0 - 1] = "R:2 F#4:2"
+add_parts(path, [pad_part(S, "カワイイ効果音", "kawaiiFx", fx, 0.06, pan=0.1, reverb=0.15, modulate=False, instrument="guitar"),
+                 pad_part(S, "レコードのパチパチ", "kawaiiFx", {tg[0]: "A#5:12 R:4"}, 0.035, reverb=0.05, modulate=False, instrument="guitar")])
+set_parts(path, "ディープなベース", sustain=1.1)
+if VOCAL:
+    cb = [b for b in active_bars(path, "声のチョップ") if S.scene_of(b)[3] not in ("verse", "pre", "chorus")]; ch_ = {}     # 歌っていない場面だけ（歌とぶつけない）
+    for q, b in enumerate(cb):
+        t = tones(S.chords[b].split("|")[0].split("/")[0], "C4", "A4")
+        if len(t) >= 3: ch_[b] = (f"{nm(t[1])}:0.5:や R:0.5 {nm(t[2])}:0.5:は R:0.5 {nm(t[1])}:0.5:や R:1.5" if q % 2 == 0 else f"R:1 {nm(t[2])}:0.5:は R:0.25 {nm(t[2])}:0.25:は {nm(t[0])}:1:や R:1")
+    set_parts(path, "声のチョップ", volume=0.035)
+    remark(path, S, std_mark(("chorus",), jump=5))
+    vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 18, "最後のサビ": 22, "bridge": 6, "break": 0, "outro": 0}, scoop=0.25, slash=0.6, vib_min_beats=1.5, vib_start=0.5, auto=0.6, breaths=0.6)
+    harmony(path, S, [("サビ2", 0, None, K), ("最後のサビ", 0, None, K)], vol=0.38)
+    if ch_: chops(path, S, ch_, vol=0.3, pan=0.3)
+    voice_by_scene(path, S, {"verse": "whisper", "pre": "clear", "chorus": "clear", "bridge": "whisper", "outro": "whisper"}, default="clear")

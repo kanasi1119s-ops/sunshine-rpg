@@ -39,7 +39,7 @@ S.scene("シャッターの前", 4, "bridge", ["Fmaj7", "Em7", "Dm7", "Ab7"])   
 S.scene("最後のサビ", 16, "chorus", [tr_chord(c, 1) for c in C_CH])
 S.scene("シャッター", 2, "outro", ["Db", "Db"])
 
-V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="surgeTropics", low=False)
+V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="kfbSineLead", low=False)   # v2: 歌をなぞるシンセは、高さの揺れない音に
 BRS = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.06, pan=0.25, reverb=0.25, sustain=0.5) for i in range(3)]
 TP = S.track("トランペット", "brass", patch="trumpet", volume=0.1, pan=0.1, reverb=0.25)
 CAV = [S.track(f"カヴァキーニョのかわり（バンジョー）{i + 1}", "banjo", volume=0.06, pan=-0.4, reverb=0.2) for i in range(3)]
@@ -197,3 +197,24 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の19（18時）。サ
           "合いことばの節は間奏のトランペット。シャッターが下りる音で終わる。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.15}, special={"シャッターの前": -0.6, "最後のサビ": 0.35, "バトゥカーダ": 0.1})
+
+# ================= v2（2026-11-12 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午後6時・商店街のラストセール・サンバ）で直すこと:
+#   ホイッスル: フルートの仲間（ピッコロ）をやめ、本物の「玉の入った笛」の録音（toysFx）に（サンバの笛そのもの）。長い音は長い笛、短い音は短い笛
+#   カヴァキーニョ（バンジョー）とピアノは、1音ずつ強さを揺らす
+#   歌: Aメロ・Bメロはクリア（呼びこみ）、サビはキュート、シャッターの前はウィスパー。ハモリは サビ2 の後半と最後のサビ
+from vt3x_lib import *
+path = sys.argv[1]
+js = load(path)
+for p in js["parts"]:
+    if p.get("role", "").startswith("ホイッスル"):
+        p["patch"] = "toysFx"; p["modulate"] = False; p["role"] = "ホイッスル（玉の入った笛）"; p["volume"] = 0.05
+        p["notes"] = " ".join(t if t.startswith("R") else ("E4:" if float(re.match(r"[0-9.]+", t.split(":")[1]).group(0)) >= 1 else "D#4:") + t.split(":")[1] for t in p["notes"].split())
+save(path, js)
+humanize(path, "カヴァキーニョ", mid=84, down=12, up=10, seed=3); humanize(path, "ピアノ", mid=82, down=12, up=10, seed=4)
+set_parts(path, "ベース（指", sustain=1.12)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5))
+    vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 18, "最後のサビ": 22, "bridge": 6, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.5)
+    harmony(path, S, [("サビ2", 8, None, K), ("最後のサビ", 0, None, KL)], vol=0.36)
+    voice_by_scene(path, S, {"verse": "clear", "pre": "clear", "chorus": "cute", "bridge": "whisper"}, default="clear")
