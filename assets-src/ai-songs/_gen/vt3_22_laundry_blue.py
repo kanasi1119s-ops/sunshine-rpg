@@ -176,6 +176,7 @@ crk = {S.sc("回る音")[0]: "A#5:12 R:4", S.sc("機械の音だけ")[0]: "A#5:1
 add_parts(path, [pad_part(S, "レコードのパチパチ", "kawaiiFx", crk, 0.04, reverb=0.05, modulate=False, instrument="guitar")])
 humanize(path, "ピアノ", mid=78, down=14, up=10, seed=4)
 set_parts(path, "ベース", sustain=1.15)
+final_gain(path, {"回る音": 8, "サビ1": -0.4, "最後のサビ": 1.8, "ブザー": 4})
 if VOCAL:
     remark(path, S, std_mark(("最後のサビ",), jump=5, minlen=1.0))
     vocal_polish(path, S, {"verse": 0, "pre": 6, "chorus": 12, "最後のサビ": 18, "outro": 0}, scoop=0.2, slash=0.5, vib_min_beats=2.0, vib_start=0.6, auto=0.8, breaths=0.8)

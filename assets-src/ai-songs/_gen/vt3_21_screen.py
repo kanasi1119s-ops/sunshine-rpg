@@ -211,6 +211,7 @@ for name in ("サビ1", "サビ2", "最後のサビ"):
 add_parts(path, [pad_part(S, "カワイイ効果音", "kawaiiFx", fx, 0.06, pan=0.1, reverb=0.15, modulate=False, instrument="guitar"),
                  pad_part(S, "レコードのパチパチ", "kawaiiFx", {tg[0]: "A#5:12 R:4"}, 0.035, reverb=0.05, modulate=False, instrument="guitar")])
 set_parts(path, "ディープなベース", sustain=1.1)
+final_gain(path, {"呼び出し音": 4, "サビ1": -0.3, "最後のサビ": 2.2})
 if VOCAL:
     cb = [b for b in active_bars(path, "声のチョップ") if S.scene_of(b)[3] not in ("verse", "pre", "chorus")]; ch_ = {}     # 歌っていない場面だけ（歌とぶつけない）
     for q, b in enumerate(cb):

@@ -207,6 +207,7 @@ to_di(path, S, "クリーンギター（アルペジオ）", "clean_arp", vol=0.
 to_di(path, S, "クリーンギター（うしろ）", "clean_arp", vol=0.06, seed=9, di="gretsch")
 pd = restrum(path, S, "歪みのギター", 0.0, lambda n, i, end, b: "D.u.d.u.D-------" if end else ("DuDuDuDuDuDuDuDu" if n == "クライマックス" else ("D.u.d.u.D.u.d.u." if i % 2 == 0 else "D...d.u.D.u.d.u.")), seed=6, lag=0.016)
 add_parts(path, pd, drop=lambda p: p.get("role", "").startswith("歪みのギター"))
+final_gain(path, {"泡": 10, "ギターだけ": 7, "光りはじめる": 0.5, "クライマックス": 2.0})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5, minlen=1.5))
     vocal_polish(path, S, {"verse": 0, "pre": 8, "chorus": 18, "クライマックス": 24, "bridge": 0, "outro": 0}, scoop=0.2, slash=0.6, vib_min_beats=2.0, vib_start=0.55, auto=0.7, breaths=0.7)

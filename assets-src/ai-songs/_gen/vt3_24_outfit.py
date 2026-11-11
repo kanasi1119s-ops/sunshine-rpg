@@ -192,6 +192,7 @@ from vt3x_lib import *
 path = sys.argv[1]
 humanize(path, "チェンバロ", mid=84, down=10, up=8, seed=4)
 set_parts(path, "ウッドベース", sustain=1.12)
+final_gain(path, {"チェンバロの前奏": 8, "サビ2": -0.3, "最後のサビ": 1.8})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5))
     vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 18, "最後のサビ": 22, "bridge": 0, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.6)
