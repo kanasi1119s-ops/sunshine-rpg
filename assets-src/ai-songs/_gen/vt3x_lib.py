@@ -136,6 +136,33 @@ def teto_voice(path, name, which=None, **more):
     save(path, js); print(f"  テトの声: {TETO_VOICE_NAMES[name]}")
 
 
+def voice_by_scene(path, S, plan, default="clear", which=0, tweak=None):
+    """場面ごとにテトの声の種類を変える（2026-11-11 人間「1.3.4 を主体に曲に反映しましょう」＝クリア・ウィスパー・キュートを主体に）。
+    plan: {場面の名前 か 種類(verse/pre/chorus…): 声の名前}。歌を声の種類ごとの歌に分け、ほかの場面は休みにする（声ごとに別々に合成される）。
+    tweak: {声の名前: {上書きする設定}}。ハモリ・チョップ（2番目より後ろの歌）はそのまま"""
+    js = load(path); main = js["vocals"][which]; per = {}
+    t = 0.0
+    for tok in main["notes"].split():
+        L_ = float(tok.split(":")[1]); b = min(S.nb - 1, int((t + 1e-6) // S.beats)); n, i, L, k = S.scene_of(b)
+        name = plan.get(n, plan.get(k, default))
+        for nm_ in set(list(per.keys()) + [name]): per.setdefault(nm_, [])
+        for nm_, lst in per.items():
+            while sum(x[1] for x in lst) < t - 1e-6: lst.append(("R", t - sum(x[1] for x in lst)))     # あとから出てきた声は、そこまで休み
+            lst.append((tok, L_) if nm_ == name or tok.startswith("R:") else ("R", L_))
+        t += L_
+    outs = []
+    for nm_, lst in per.items():
+        toks = []; acc = 0.0
+        for tok, L_ in lst:
+            if tok == "R" or tok.startswith("R:"): acc += L_; continue
+            if acc > 1e-6: toks.extend(rests(acc)); acc = 0.0
+            toks.append(tok)
+        if acc > 1e-6: toks.extend(rests(acc))
+        v = copy.deepcopy(main); v.update(copy.deepcopy(TETO_VOICES[nm_])); v.update((tweak or {}).get(nm_, {})); v["notes"] = " ".join(toks); outs.append(v)
+        print(f"  テトの声 {TETO_VOICE_NAMES[nm_]}: {sum(1 for x in lst if x[0] != 'R' and not x[0].startswith('R:'))} 音")
+    js["vocals"] = js["vocals"][:which] + outs + js["vocals"][which + 1:]; save(path, js)
+
+
 def chops(path, S, bars, vol=0.3, pan=0.25, shift=0, **more):
     """ボーカルチョップ（2026-11-11 人間が調べた「ブルーアーカイブの曲でよく使われる要素」）: テトの声で、短い音を切って音程をつけて鳴らす（歌詞の意味はない「や・は・あ・ら」など）。
     bars: {小節の番号: "E4:0.5:や R:0.25 E4:0.25:や ..."}（その小節の拍の合計ぶん書く。足りないぶんは休み）。音源は配らないので、音源（SF3）にはせず歌の声としてその場で合成する。
