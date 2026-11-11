@@ -103,6 +103,24 @@ def harmony(path, S, spans, steps=2, vol=0.4, lowest=55, shift=0, **more):
     print(f"  ハモリ（{steps} 段下）: {cnt} 音")
 
 
+def chops(path, S, bars, vol=0.3, pan=0.25, shift=0, **more):
+    """ボーカルチョップ（2026-11-11 人間が調べた「ブルーアーカイブの曲でよく使われる要素」）: テトの声で、短い音を切って音程をつけて鳴らす（歌詞の意味はない「や・は・あ・ら」など）。
+    bars: {小節の番号: "E4:0.5:や R:0.25 E4:0.25:や ..."}（その小節の拍の合計ぶん書く。足りないぶんは休み）。音源は配らないので、音源（SF3）にはせず歌の声としてその場で合成する。
+    揺らさない・息つぎなし・子音を強め。shift: 書き出しで全体を移す半音"""
+    js = load(path); main = js["vocals"][0]; out = []; cnt = 0
+    for b in range(S.nb):
+        t = 0.0
+        for tok in bars.get(b, "").split():
+            q = tok.split(":"); L_ = float(q[1]); t += L_
+            if q[0] == "R": out.append(f"R:{L_:g}")
+            else: out.append(f"{nm(midi(q[0]) + shift)}:{L_:g}:{q[2]}"); cnt += 1
+        if S.beats - t > 1e-6: out.extend(rests(S.beats - t))
+    ch = dict(main)
+    ch.update({"notes": " ".join(out), "volume": vol, "pan": pan, "vibrato": 0, "vibratoMap": [], "reverb": 0.3, "dynamics": [], "consonant": 1.3, "breaths": 0.0, "auto": 0, "scoop": 0})
+    ch.update(more); js["vocals"].append(ch); save(path, js)
+    print(f"  ボーカルチョップ: {cnt} 音")
+
+
 # ---------------------------------------------------------------- ギター
 GT_BASE = {"instrument": "distGuitar", "di": "emily", "sustain": 1.3, "release": 0.12, "chorus": 0, "humanPitch": 0, "noScoop": True, "stringNoise": True,
            "humanTiming": 0, "double": False, "powerChord": False}
