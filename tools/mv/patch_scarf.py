@@ -9,6 +9,8 @@
   python3 patch_scarf.py <コマのフォルダ> <人物の形 npy> <元のコマ（消す前）のフォルダ> <出力コマのフォルダ> <出力の形 npy>
 """
 import sys, os, cv2, numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import patch_util as PU
 SRC, PM, RAW, DST, PMOUT = sys.argv[1:6]; os.makedirs(DST, exist_ok=True)
 P = np.load(PM); K = len(P); H, W = P.shape[1:]
 EL = lambda n: cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (n, n))
@@ -36,6 +38,7 @@ for k in range(K):
     M = np.float32([[1, 0, dx], [0, 1, dy]])
     rf = cv2.warpAffine(F[r], M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE).astype(np.float32)
     ra = cv2.warpAffine(P[r], M, (W, H), flags=cv2.INTER_LINEAR).astype(np.float32)
+    sl = (slice(230, 470), slice(560, 850)); rfc, rac = PU.fit(F[k][sl], rf[sl].astype(np.uint8), ra[sl], sigma=6.0); rf[sl] = rfc; ra[sl] = rac          # 2026-11-11「肩とか…変だよ？」: 肩の線が二重にならないよう、細かい動きを測って曲げて合わせる
     z = win * float(d[k]); w = z[..., None]
     cv2.imwrite(f"{DST}/{k + 1:03d}.png", np.clip(F[k] * (1 - w) + rf * w, 0, 255).astype(np.uint8))
     out_P[k] = np.clip(P[k] * (1 - z) + ra * z, 0, 255).astype(np.uint8); n += 1

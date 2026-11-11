@@ -17,7 +17,7 @@ NF = "/usr/share/fonts/opentype/noto/"
 GF = "/usr/share/fonts/truetype/google-fonts/"
 SONGS = {
     "whitebreath": dict(data=LD.WHITEBREATH, audio="/tmp/ab/wb9.mp3", song="/mnt/user-data/outputs/vbq/vtp-06-whitebreath-ballad-v9vo.json", lead=[0],
-                        frames="/tmp/ab/wbmv/fr8", seq="/tmp/ab/wbmv/lw3.json", person="/tmp/ab/wbmv/person4.npy", plate="/tmp/ab/wbmv/plate5.png", track="/tmp/ab/wbmv/track_wb.json", ig_start=237.0,
+                        frames="/tmp/ab/wbmv/fr9", seq="/tmp/ab/wbmv/lw3.json", person="/tmp/ab/wbmv/person5.npy", plate="/tmp/ab/wbmv/plate5.png", track="/tmp/ab/wbmv/track_wb.json", ig_start=237.0,
                         jp_font=(NF + "NotoSerifCJK-SemiBold.ttc", 0), en_font=(GF + "Lora-Italic-Variable.ttf", 0),
                         sans=(NF + "NotoSansCJK-Medium.ttc", 0), fill=(222, 230, 245), sung=(255, 228, 180), stroke=(16, 24, 52),
                         en_fill=(205, 218, 238), accent=(255, 196, 130)),
