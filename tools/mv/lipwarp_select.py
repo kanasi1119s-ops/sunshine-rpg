@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lyric_mouth as LM
 FR, TRK, SONG, BPM, DUR, OUT = sys.argv[1:7]
 BPM = float(BPM); DUR = float(DUR); FPS = 24
-XF = 24; Q = 8                                    # 位置は 1/8 コマきざみ
+XF = int(os.environ.get("LW_XF", "24")); Q = 8                                    # 位置は 1/8 コマきざみ
 DV = int(os.environ.get("LW_DV", "2")); VS = np.arange(8 - DV, 9 + DV); VC = DV   # 1 コマで進む量（既定 0.75〜1.25 倍）
 JC = float(os.environ.get("LW_JC", "60")); WJ = 8.0; RMAX = float(os.environ.get("LW_RMAX", "5.0"))
 WM = float(os.environ.get("LW_WM", "2.0"))        # 口が合わない重さ

@@ -17,7 +17,7 @@ NF = "/usr/share/fonts/opentype/noto/"
 GF = "/usr/share/fonts/truetype/google-fonts/"
 SONGS = {
     "whitebreath": dict(data=LD.WHITEBREATH, audio="/tmp/ab/wb9.mp3", song="/mnt/user-data/outputs/vbq/vtp-06-whitebreath-ballad-v9vo.json", lead=[0],
-                        frames="/tmp/ab/wbmv/fr9", seq="/tmp/ab/wbmv/lw3.json", person="/tmp/ab/wbmv/person5.npy", plate="/tmp/ab/wbmv/plate5.png", track="/tmp/ab/wbmv/track_wb.json", ig_start=237.0,
+                        frames="/tmp/ab/wbmv/frD", bg="/tmp/ab/wbmv/frB", region="/tmp/ab/wbmv/region.npy", seq="/tmp/ab/wbmv/d2.json", person="/tmp/ab/wbmv/person.npy", plate="/tmp/ab/wbmv/plate5.png", track="/tmp/ab/wbmv/track_wb.json", ig_start=237.0,
                         jp_font=(NF + "NotoSerifCJK-SemiBold.ttc", 0), en_font=(GF + "Lora-Italic-Variable.ttf", 0),
                         sans=(NF + "NotoSansCJK-Medium.ttc", 0), fill=(222, 230, 245), sung=(255, 228, 180), stroke=(16, 24, 52),
                         en_fill=(205, 218, 238), accent=(255, 196, 130)),
@@ -218,6 +218,63 @@ def frames_wb():
         img = WL.screen(img, breath.draw(t, mouth_at), (250, 244, 238))  # 白い息（少し青白い）
         img = WL.screen(img, np.clip(snow.layer("mid", t) + snow.layer("near", t), 0, 1))
         yield np.clip(img, 0, 255).astype(np.uint8)
+def frames_wb2():
+    """2026-11-11 人間「ダメだこのままじゃ使えない。。。1番最初の動画で最初から調整し直した方がいいかも」（テトの絵・背景・動き・全体が元とちがう）:
+    元の動画の絵をできるだけそのまま使う作り方に作り直す。人物を切り抜かない・背景を作らない・雪と白い息を描かない。
+      ・画面のほとんど（背景・雪）: 元の動画を、いつもふつうの速さで前へ流す（10 秒でひとまわり。つなぎ目は 1 秒かけて重ねる）
+      ・テトと白い息のまわりだけ: 口を歌詞に合わせたコマ（lipwarp_select.py。7 割はふつうの速さ）に入れかえる
+      ・入れかえる場所のふちは、人物の輪郭から 20px ほど外の、動かない背景の上（wb2_region.py）。切り抜きのまちがいが絵に出ない
+    手を入れるのは 2 つだけ: ぐるっと回る光の帯（背景は remove_sparkle.py、人物の上の点は dot_clean.py）"""
+    seq = json.load(open(S["seq"])); RG = np.load(S["region"]); K = len(RG)
+    PM = np.load(S["person"]); plate_g = cv2.cvtColor(cv2.imread(S["plate"]), cv2.COLOR_BGR2GRAY).astype(np.float32)
+    cache = {}
+    def rd(d, k):
+        key = (d, k)
+        if key not in cache:
+            if len(cache) > 80: cache.clear()
+            cache[key] = cv2.imread(f"{d}/{k + 1:03d}.png").astype(np.float32)
+        return cache[key]
+    gcache = {}
+    def gray(k):                                    # 動きの流れを測るための絵: 人物だけ（まわりは背景の 1 枚）。雪や白い息にまどわされない
+        if k not in gcache:
+            if len(gcache) > 80: gcache.clear()
+            al = cv2.GaussianBlur(PM[k].astype(np.float32), (0, 0), 1.5) / 255.0
+            gcache[k] = np.clip(plate_g * (1 - al) + cv2.cvtColor(rd(S["frames"], k).astype(np.uint8), cv2.COLOR_BGR2GRAY) * al, 0, 255).astype(np.uint8)
+        return gcache[k]
+    _fine = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
+    _fine.setFinestScale(0); _fine.setPatchSize(12); _fine.setPatchStride(3); _fine.setGradientDescentIterations(40)
+    h, w = plate_g.shape; gx, gy = np.meshgrid(np.arange(w, dtype=np.float32), np.arange(h, dtype=np.float32))
+    def morph2(A, ga, B, gb, a, sharp=False):
+        fab = _fine.calc(ga, gb, None); fba = _fine.calc(gb, ga, None)
+        wa = cv2.remap(A, gx + a * fba[..., 0], gy + a * fba[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        wb = cv2.remap(B, gx + (1 - a) * fab[..., 0], gy + (1 - a) * fab[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        wga = cv2.remap(ga, gx + a * fba[..., 0], gy + a * fba[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        wgb = cv2.remap(gb, gx + (1 - a) * fab[..., 0], gy + (1 - a) * fab[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        c = a
+        if sharp: c = float(np.clip((a - 0.36) / 0.28, 0, 1)); c = c * c * (3 - 2 * c)
+        return wa * (1 - c) + wb * c, (wga * (1 - c) + wgb * c).astype(np.uint8)
+    def at(p):                                      # → (絵, 流れ用の絵, 使ったコマ)
+        k = int(np.floor(p)); f = p - k
+        if f < 0.03 or k + 1 >= K: k = min(k, K - 1); return rd(S["frames"], k), gray(k), [k]
+        if f > 0.97: return rd(S["frames"], k + 1), gray(k + 1), [k + 1]
+        im, g = morph2(rd(S["frames"], k), gray(k), rd(S["frames"], k + 1), gray(k + 1), f)
+        return im, g, [k, k + 1]
+    XB = 24; LOOP = K - XB
+    i0 = int(round(T0 * FPS))
+    for i in range(N):
+        n = min(len(seq) - 1, i0 + i)
+        k, kold, a = seq[n]
+        fg, g, used = at(float(k))
+        if kold >= 0:
+            fo, go, uo = at(float(kold)); fg, g = morph2(fo, go, fg, g, 1 - a, sharp=True); used = used + uo
+        m = n % LOOP                                # 背景・雪: 元の動画をふつうの速さで
+        if m < XB:
+            b = m / XB; bg = rd(S["bg"], LOOP + m) * (1 - b) + rd(S["bg"], m) * b; used = used + [LOOP + m, m]
+        else: bg = rd(S["bg"], m); used = used + [m]
+        reg = RG[used[0]]
+        for u in used[1:]: reg = np.maximum(reg, RG[u])
+        al = cv2.GaussianBlur(cv2.resize(reg, (w, h), interpolation=cv2.INTER_LINEAR).astype(np.float32) / 255.0, (0, 0), 7)[..., None]
+        yield np.clip(fg * al + bg * (1 - al), 0, 255).astype(np.uint8)
 def frames_video():
     p = subprocess.Popen(["ffmpeg", "-v", "error", "-ss", str(T0), "-i", S["video"], "-t", str(LEN), "-f", "rawvideo", "-pix_fmt", "bgr24", "-r", str(FPS), "-"],
                          stdout=subprocess.PIPE)
@@ -239,7 +296,7 @@ def base(img):
     #   別のコマから埋めた所で、体の動きとずれて見える。そこは映さず、腰から上を大きく映す（少しだけ輪郭をはっきりさせる）
     if NAME == "whitebreath" and FORM == "yt":
         c = img[:608, 99:1180]; c = cv2.resize(c, (W, H), interpolation=cv2.INTER_LANCZOS4)
-        return sharpen(c)
+        return sharpen(c, 0.2)
     if NAME == "whitebreath":                       # 腰から上を切り出して（テトが中心）、上下はぼかした背景
         c = img[:608, 370:910]; c = sharpen(cv2.resize(c, (1080, 1216), interpolation=cv2.INTER_LANCZOS4))
         bg = blur_bg(img[:608], W, H); bg[240:1456] = c; return bg
@@ -255,7 +312,7 @@ elif FORM == "ig":
     y = np.arange(H); shade[:] = (np.clip((y - 1520) / 300, 0, 1) * 0.6 + np.clip((300 - y) / 300, 0, 1) * 0.45)[:, None]
 shade = np.clip(shade, 0, 0.75)[..., None]
 
-src = frames_wb() if NAME == "whitebreath" else frames_video()
+src = frames_wb2() if NAME == "whitebreath" else frames_video()
 proc = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
                          "-ss", str(T0), "-t", str(LEN), "-i", S["audio"], "-map", "0:v", "-map", "1:a",
                          "-af", f"afade=t=in:d={0.5 if FORM == 'ig' else 0.01},afade=t=out:st={LEN - 1.5:.2f}:d=1.5" if FORM == "ig" else "anull",
