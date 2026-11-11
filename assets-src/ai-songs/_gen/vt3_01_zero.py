@@ -318,7 +318,7 @@ parts = GL.parts()
 rr = _rnd.Random(7); toks = []; cur = [0.0]
 def ev(t, note, dur, vel):
     t += rr.uniform(-0.012, 0.012)
-    if t > cur[0] + 1e-4: toks.append(f"R:{t - cur[0]:.4f}")
+    if t > cur[0] + 1e-4: toks.extend(rests(t - cur[0]))
     toks.append(f"{note}:{dur:.4f}%{int(vel + rr.uniform(-6, 6))}"); cur[0] = t + dur
 LINE = [(0.5, 0, 96), (0.75, 1, 80), (1.25, 2, 100), (1.75, 1, 78), (2.5, 3, 98), (2.75, 2, 82), (3.25, 1, 92), (3.5, 0, 84)]   # (拍, 何番目の音, 強さ)
 LINE2 = [(0.25, 1, 84), (0.75, 2, 98), (1.5, 3, 100), (1.75, 2, 80), (2.25, 1, 90), (3.0, 0, 96), (3.5, 2, 86), (3.75, 3, 94)]
@@ -330,7 +330,7 @@ for b in range(S.nb):
     if len(tn) < 4: continue
     for (t, q, vl) in (LINE if i % 2 == 0 else LINE2): ev(b * S.beats + t, nm(tn[min(q + 1, len(tn) - 1)] + TR), 0.17, vl)
 tot = S.nb * S.beats
-if tot > cur[0] + 1e-4: toks.append(f"R:{tot - cur[0]:.4f}")
+if tot > cur[0] + 1e-4: toks.extend(rests(tot - cur[0]))
 pr = copy.deepcopy(GT_BASE); pr.update(RIGS["funk_line"]); pr.update(role="Rギター（単音の線）", pan=0.6, volume=0.05, notes=" ".join(toks)); parts.append(pr)
 add_parts(path, parts)
 

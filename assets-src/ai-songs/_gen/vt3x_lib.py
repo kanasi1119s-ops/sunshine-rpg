@@ -15,6 +15,14 @@ TAKES = {   # GuitarSet（本物のギタリストの伴奏の録音データ）
 }
 
 
+def rests(r):
+    """長い休みは 16 拍ずつに分ける（1つの休みは 16 拍まで）"""
+    out = []
+    while r > 16 + 1e-6: out.append("R:16"); r -= 16
+    if r > 1e-4: out.append(f"R:{r:.4f}")
+    return out
+
+
 def load(path): return json.load(open(path))
 def save(path, js): json.dump(js, open(path, "w"), ensure_ascii=False)
 
