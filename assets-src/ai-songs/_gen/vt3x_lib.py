@@ -194,6 +194,20 @@ RIGS = {
         {"type": "filter", "kind": "lowpass", "freq": 7000, "q": 0.6},
         {"type": "room", "mix": 0.1}]},
     # ファンクの単音（「チキチキ」と歩く1本の線）: 少しだけ太く、やまびこなし
+    # シティポップ・ネオソウルのカッティング（セミアコ寄りの丸いクリーン）: ゆるいコンプ → J-POP のクリーン → 6.5kHz から丸める → 部屋と短い板の残響
+    "city_cut": {"di": "gretsch", "amp": "jpopClean", "ampDrive": 0.1, "fx": [
+        {"type": "compressor", "threshold": -20, "ratio": 3, "attack": 0.012, "release": 0.15},
+        {"type": "filter", "kind": "highpass", "freq": 170, "q": 0.7},
+        {"type": "eq", "low": -1.5, "mid": 1.5, "midHz": 2000, "high": 0},
+        {"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6},
+        {"type": "room", "mix": 0.12}]},
+    # クリーンのアルペジオ（音を伸ばして重ねる）: コンプは弱く、明るさを少し残し、板の残響を長めに
+    "clean_arp": {"di": "shiny", "amp": "jpopClean", "ampDrive": 0.06, "sustain": 1.8, "release": 0.3, "fx": [
+        {"type": "compressor", "threshold": -18, "ratio": 2.5, "attack": 0.02, "release": 0.2},
+        {"type": "filter", "kind": "highpass", "freq": 150, "q": 0.7},
+        {"type": "eq", "low": -1, "mid": 0, "midHz": 1200, "high": 1.5},
+        {"type": "filter", "kind": "lowpass", "freq": 8000, "q": 0.6},
+        {"type": "plate", "mix": 0.18}]},
     "funk_line": {"amp": "funk", "ampDrive": 0.18, "fx": [
         {"type": "compressor", "threshold": -24, "ratio": 5, "attack": 0.006, "release": 0.1},
         {"type": "filter", "kind": "highpass", "freq": 220, "q": 0.7},
@@ -227,6 +241,46 @@ def top4(ch, center=64, prev=None):
     """高い4本の弦（4〜1弦）で押さえる和音。低い2本は弾かない（ファンク・シティポップのカッティングの押さえ方）"""
     v = sorted(voice(ch.split("|")[0].split("/")[0], center, 4, prev))
     return [None, None] + [nm(x) for x in v]
+
+
+def line_part(S, role, rig, pan, vol, bars, shift=0, seed=5, jitter=0.01, **over):
+    """DI ギターで弾く1本の線（アルペジオ・単音のリフ・リード）。bars: {小節の番号: "A3:0.5 C4:0.5 R:1 ..."}（その小節ぶん。足りなければ休み）。
+    出だしを少し揺らし（jitter 拍）、強さも少し揺らす。音名のうしろに %強さ を書けばそれを使う"""
+    import random as _r
+    rr = _r.Random(seed); toks = []; cur = 0.0
+    for b in sorted(bars):
+        t = b * S.beats
+        for tok in bars[b].split():
+            q = tok.split(":"); L_ = float(q[1].split("%")[0])
+            if q[0] != "R":
+                st = max(cur, t + rr.uniform(-jitter, jitter)); vel = int(q[1].split("%")[1]) if "%" in q[1] else int(86 + rr.uniform(-8, 8))
+                if st > cur + 1e-4: toks.extend(rests(st - cur))
+                d = max(0.08, t + L_ - st); toks.append(f"{nm(midi(q[0]) + shift)}:{d:.4f}%{vel}"); cur = st + d
+            t += L_
+    tot = S.nb * S.beats
+    if tot > cur + 1e-4: toks.extend(rests(tot - cur))
+    p = copy.deepcopy(GT_BASE); p.update(RIGS[rig]); p.update(over); p.update(role=role, pan=pan, volume=vol, notes=" ".join(toks)); return p
+
+
+def std_mark(scoop_kinds=("chorus",), jump=5, minlen=0.75, plain=()):
+    """歌の印の決まり（remark に渡す）。scoop_kinds の場面では、2小節ごとの句の頭と、大きく跳んで伸ばす音を下からすくう。plain の場面は揺らさない"""
+    def fn(x):
+        mk = x["mark"].replace("/", "")
+        if x["kind"] in scoop_kinds or x["scene"] in scoop_kinds:
+            if x["head"] and x["pos"] < 1.01 and x["bar"] % 2 == 0: mk += "/"
+            elif x["prev"] is not None and x["midi"] - x["prev"] >= jump and x["len"] >= minlen: mk += "/"
+        elif x["prev"] is not None and x["midi"] - x["prev"] >= jump + 2 and x["len"] >= 1.0: mk += "/"
+        if x["scene"] in plain or x["kind"] in plain: mk = mk.replace("~", "").replace("/", "")
+        return mk
+    return fn
+
+
+def set_parts(path, match, **kw):
+    """役の名前に match を含むパートの設定を書きかえる（例: ベースに sustain=1.15）"""
+    js = load(path); n = 0
+    for p in js["parts"]:
+        if match in p.get("role", ""): p.update(kw); n += 1
+    save(path, js); print(f"  設定を変えた（{match}）: {n}")
 
 
 def add_parts(path, parts, drop=None):

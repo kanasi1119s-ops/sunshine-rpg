@@ -40,8 +40,8 @@ S.scene("Cメロ", 8, "bridge", ["Cm9", "Abmaj7", "Fm9", "Gm7", "Cm9", "Abmaj7",
 S.scene("最後のサビ", 16, "chorus", C_CH[:15] + ["Bb7"])
 S.scene("鼻歌", 6, "outro", ["Ebmaj9", "Abmaj9", "Ebmaj9", "Abmaj9", "Ebmaj9", "Ebmaj9"])
 
-V = Voice(S, vol=0.21, delay=0.75, bright=0.0, patch="surgeFormantPulse", low=False)
-EP = [S.track(f"エレピ{i + 1}", "keys", patch="surgeKeysDxEp", volume=0.07, pan=-0.3, reverb=0.28, sustain=0.9,
+V = Voice(S, vol=0.21, delay=0.75, bright=0.0, patch="kfbSineLead", low=False)   # v2: 歌をなぞるシンセは、高さの揺れない音に
+EP = [S.track(f"エレピ{i + 1}", "keys", patch="kfbGlassEp", volume=0.075, pan=-0.3, reverb=0.28, sustain=0.9,
               fx=[{"type": "eq", "low": -2, "mid": 0, "midHz": 800, "high": 1}]) for i in range(4)]
 CUT = [S.track(f"カッティングギター{i + 1}", "guitar", amp="jpopClean", volume=0.05, pan=0.55, reverb=0.18, chorus=0, sustain=0.3) for i in range(3)]
 ARPG = S.track("ギター（アルペジオ）", "guitar", amp="crystal", volume=0.06, pan=-0.55, reverb=0.3, chorus=0, sustain=0.9)
@@ -237,3 +237,57 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の02（1時）。シ�
           "DJ が口ずさむ5つの音の鼻歌（合いことばの節）が、ここで生まれる。エレピ・カッティングギター・指弾きのベース・アルトサックス・ホーン。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.25}, special={"CM": -0.7, "Cメロ": -0.6, "最後のサビ": 0.4, "鼻歌": -0.35})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# 人間「他24曲もとことん作りこんでください」。この曲（午前1時・ふとんの中のラジオ・シティポップ）で直すこと:
+#   ギター: 右＝セミアコ寄りの丸いクリーンのカッティング（高い4本の弦・9th と maj7 の押さえ方・消す音入り。Aメロは間をあけ、サビで細かく）、
+#           左＝クリーンのアルペジオ（音を伸ばして重ねる）。どちらも DI を弦ごとに弾く。コーラスなし
+#   電子の音: エレピを kfbGlassEp（ガラスのような FM のエレピ）に。Cメロと鼻歌に、うすいきらきらのパッド（kfbSparklePad）で夜の空気を足す
+#   歌: Aメロはふとんの中の小声（ウィスパー）、Bメロとサビはクリア、Cメロ（DJ の言葉）と鼻歌はウィスパー。ハモリは サビ2 の後半と最後のサビ
+#   ベース: 同じ音を続ける所の穴をなくす（sustain 1.15）
+from vt3x_lib import *
+path = sys.argv[1]
+GR = GuitarRig(S, "Rギター（カッティング）", "city_cut", 0.55, 0.055, style="funk_slow", seed=11)
+PAT2 = {"verse": "....D.....x.d..U", "verse_b": "....D..U..x.d.xU", "pre": "..d.x.dU..d.x.dU", "pre_b": "d.xU..dUx.dUD.DU", "cho": "d..Ux.dU.xd.x.dU", "cho_b": "d.xUx.dUd.xUD.dU",
+        "solo": "....d..U....d.x.", "jingle": "D.......x.d..U.."}
+prev = None; arp = {}
+for b in range(S.nb):
+    n, i, L, k = S.scene_of(b); last = i == L - 1
+    ch = S.chords[b].split("|")[0].split("/")[0]
+    v = sorted(voice(ch, 67, 4, prev)); prev = v; vo = [None, None] + [nm(x) for x in v]
+    if n == "ジングル": GR.bar(b, PAT2["jingle"], vo, vel=0.9)
+    elif n == "Aメロ1":
+        if i >= 8: GR.bar(b, PAT2["verse_b"] if i % 4 == 3 else PAT2["verse"], vo, vel=0.78)
+        else: GR.stop(b)
+    elif n == "Aメロ2": GR.bar(b, PAT2["verse_b"] if i % 4 == 3 else PAT2["verse"], vo, vel=0.82)
+    elif n in ("Bメロ1", "Bメロ2"): GR.bar(b, PAT2["pre_b"] if i >= 6 else PAT2["pre"], vo, vel=0.84 + 0.02 * i)
+    elif n in ("サビ1", "サビ2", "最後のサビ"): GR.bar(b, PAT2["cho_b"] if i % 4 == 3 else PAT2["cho"], vo, vel=0.96 if n != "最後のサビ" else 1.04)
+    elif n == "サックスのソロ": GR.bar(b, PAT2["solo"], vo, vel=0.85)
+    else: GR.stop(b)
+    # 左のアルペジオ: Aメロは4小節ごと、Bメロは毎小節（下から上へ、上で折り返す）、Cメロは1小節に4つの音を長く
+    tn = tones(ch, "Bb2", "G4")
+    if len(tn) >= 4:
+        up8 = [tn[q % len(tn)] for q in (0, 2, 3, 4, 5, 4, 3, 2)]
+        if n in ("Aメロ1", "Aメロ2") and i % 4 == 3: arp[b] = " ".join(f"{nm(x)}:0.5" for x in up8)
+        elif n in ("Bメロ1", "Bメロ2"): arp[b] = " ".join(f"{nm(x)}:0.5" for x in (up8 if i % 2 == 0 else up8[::-1]))
+        elif n == "Cメロ": arp[b] = " ".join(f"{nm(tn[q % len(tn)])}:1" for q in (0, 2, 4, 3))
+        elif n == "鼻歌" and i < 5: arp[b] = f"{nm(tn[0])}:1 {nm(tn[2])}:1 {nm(tn[3])}:2"
+parts = GR.parts() + [line_part(S, "Lギター（アルペジオ）", "clean_arp", -0.55, 0.06, arp, seed=4)]
+# 夜の空気: Cメロと鼻歌に、うすいきらきらのパッド（和音の上2つの音）
+sp = {}
+for b in S.sc("Cメロ") + S.sc("鼻歌")[:5]:
+    v = voice(S.chords[b].split("|")[0].split("/")[0], 72, 3); sp[b] = v
+for j in range(2):
+    toks = []; cur = 0
+    for b in sorted(sp):
+        if b * S.beats > cur: toks.extend(rests(b * S.beats - cur))
+        toks.append(f"{nm(sp[b][j + 1])}:4"); cur = (b + 1) * S.beats
+    toks.extend(rests(S.nb * S.beats - cur))
+    parts.append({"role": f"きらきらのパッド{j + 1}", "instrument": "lead", "patch": "kfbSparklePad", "notes": " ".join(toks), "volume": 0.022, "pan": -0.3 + 0.6 * j, "reverb": 0.4})
+add_parts(path, parts, drop=lambda p: p.get("role", "").startswith("カッティングギター") or p.get("role", "").startswith("ギター（アルペジオ）"))
+set_parts(path, "ベース", sustain=1.15)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), plain=("鼻歌",)))
+    vocal_polish(path, S, {"verse": 8, "pre": 16, "chorus": 24, "最後のサビ": 28, "bridge": 10, "outro": 6}, scoop=0.3, slash=0.7, vib_min_beats=1.5, vib_start=0.5, auto=0.6, breaths=0.6)
+    harmony(path, S, [("サビ2", 8, None, K), ("最後のサビ", 0, None, K)], vol=0.36)
+    voice_by_scene(path, S, {"verse": "whisper", "pre": "clear", "chorus": "clear", "bridge": "whisper", "outro": "whisper"}, default="clear")
