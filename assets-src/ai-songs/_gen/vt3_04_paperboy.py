@@ -46,7 +46,7 @@ S.scene("最後のサビ", 24, "chorus", LAST + LAST[:8])
 S.scene("掛け声3", 8, "break", [tr_chord(c, 1) for c in CHANT])
 S.scene("ベル", 6, "outro", ["E", "F#", "G#m7", "E", "B", "B"])
 
-V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="trumpet", low=False)
+V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="kfbSineLead", low=False)   # v2: 歌をなぞるシンセは、高さの揺れない音に
 SKA = [S.track(f"スカのギター{i + 1}", "guitar", amp="jpopClean", volume=0.05, pan=-0.5, reverb=0.12, chorus=0, sustain=0.25) for i in range(3)]
 ORG = [S.track(f"オルガン{i + 1}", "drawbarOrgan", volume=0.045, pan=0.5, reverb=0.2, sustain=0.3) for i in range(3)]
 GL = [S.track(f"Lギター（刻み{i + 1}）", "distGuitar", **rock_gtr_spec(0.045, -0.55, drive=0.5)) for i in range(3)]
@@ -227,3 +227,39 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の04（3時）。ス�
           "Aメロはスカの裏打ち（ギター・オルガン）、サビはパンクの8分の刻み。トランペット・トロンボーン。合いことばの節は間奏のホーン隊。自転車のベルで終わる。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.15}, special={"Cメロ": -0.5, "最後のサビ": 0.4, "ベル": 0.0})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午前3時・新聞配達の自転車・スカパンク）で直すこと:
+#   スカのギター: 3つの声部を機械的に裏で鳴らすのをやめ、DI ギターを弦ごとに弾く。「ンチャ」＝表で弦を消す音（チャッ）→ 裏で上向きに和音。2番は消す音を減らして軽く
+#   パンクのギター: 全部同じ強さの8分をやめ、左＝下ろしだけで押す（1・3拍を強く、4小節ごとに後半を全部強く）、右＝下ろしと上げを交互（高い弦の上げが混じる）。
+#                 刻みが終わる小節は最後を伸ばして止める。音色（TRiDENT の音）はそのまま
+#   歌: Aメロ・Bメロはクリア、サビと掛け声はキュート（元気）、Cメロ（信号待ち）はウィスパー。速い曲なので揺れは浅く。ハモリは サビ2 の後半と最後のサビ
+from vt3x_lib import *
+path = sys.argv[1]
+js0 = load(path)
+specL = next(dict((k, v) for k, v in p.items() if k != "notes") for p in js0["parts"] if p.get("role", "").startswith("Lギター（刻み"))
+specR = next(dict((k, v) for k, v in p.items() if k != "notes") for p in js0["parts"] if p.get("role", "").startswith("Rギター（刻み"))
+pb = active_bars(path, "Lギター（刻み"); sb = active_bars(path, "スカのギター")
+bl, br = {}, {}
+for b in pb:
+    n, i, L, k = S.scene_of(b); ch = S.chords[b].split("|")[0]
+    pw = power(ch, "E2"); r = low(ch, "C3"); upv = [x for x in tones(ch.split("/")[0], nm(r + 1), nm(r + 12))][:2]
+    while len(upv) < 2: upv.append(r + 12)
+    end = (b + 1) not in pb
+    bl[b] = (list(pw), "D.d.d.d.D.d.D---" if end else ("D.d.d.d.D.D.D.D." if i % 4 == 3 else "D.d.d.d.D.d.d.d."))
+    br[b] = ([r] + upv, "D.u.d.u.D.d.D---" if end else ("D.u.d.u.D.u.D.D." if i % 4 == 3 else ("D.u.d.u.D.u.d.u." if i % 2 == 0 else "D.d.d.u.D.u.d.u.")))
+parts = strum_parts(S, "Lギター（刻み", specL, -0.55, specL["volume"], bl, seed=2) + strum_parts(S, "Rギター（刻み", specR, 0.55, specR["volume"], br, seed=9)
+GS = GuitarRig(S, "スカのギター（裏打ち）", "ska_up", -0.5, 0.055, style="funk", seed=5, amount=0.5)
+prev = None
+for b in range(S.nb):
+    if b not in sb: GS.stop(b); continue
+    n, i, L, k = S.scene_of(b); ch = S.chords[b].split("|")[0].split("/")[0]
+    v = sorted(voice(ch, 66, 4, prev)); prev = v; vo = [None, None] + [nm(x) for x in v]
+    GS.bar(b, ("..U.x.U...U.x.U." if n == "Aメロ2" else "x.U.x.U.x.U.x.U.") if i % 4 != 3 else "x.U.x.U.x.UUx.U.", vo, vel=0.9)
+parts += GS.parts()
+add_parts(path, parts, drop=lambda p: any(p.get("role", "").startswith(x) for x in ("Lギター（刻み", "Rギター（刻み", "スカのギター")))
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5, minlen=1.0))
+    vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 16, "最後のサビ": 20, "bridge": 10, "break": 0, "outro": 0}, scoop=0.3, slash=0.7, vib_min_beats=2.0, vib_start=0.5, auto=0.5, breaths=0.5)
+    harmony(path, S, [("サビ2", 8, None, K), ("最後のサビ", 0, None, KL)], vol=0.36)
+    voice_by_scene(path, S, {"verse": "clear", "pre": "clear", "chorus": "cute", "break": "cute", "bridge": "whisper"}, default="clear")

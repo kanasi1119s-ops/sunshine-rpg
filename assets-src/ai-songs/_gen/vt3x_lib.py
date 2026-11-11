@@ -208,6 +208,20 @@ RIGS = {
         {"type": "eq", "low": -1, "mid": 0, "midHz": 1200, "high": 1.5},
         {"type": "filter", "kind": "lowpass", "freq": 8000, "q": 0.6},
         {"type": "plate", "mix": 0.18}]},
+    # ネオソウル・R&B の合いの手（ハムバッカーのフロントの丸い音）: コンプ → クリーン → 900Hz を少し出し、5.2kHz から丸める → 板の残響
+    "soul_clean": {"di": "hofner", "amp": "jpopClean", "ampDrive": 0.08, "sustain": 1.5, "release": 0.25, "fx": [
+        {"type": "compressor", "threshold": -20, "ratio": 3.5, "attack": 0.01, "release": 0.18},
+        {"type": "filter", "kind": "highpass", "freq": 160, "q": 0.7},
+        {"type": "eq", "low": -1, "mid": 1.2, "midHz": 900, "high": -1},
+        {"type": "filter", "kind": "lowpass", "freq": 5200, "q": 0.6},
+        {"type": "plate", "mix": 0.16}]},
+    # スカの裏打ち（「ンチャ」の上向きの短い音）: 明るいクリーン・短く切る・低い所は切る・小さな部屋
+    "ska_up": {"di": "emily", "amp": "funk", "ampDrive": 0.14, "sustain": 0.6, "release": 0.06, "fx": [
+        {"type": "compressor", "threshold": -22, "ratio": 4, "attack": 0.005, "release": 0.08},
+        {"type": "filter", "kind": "highpass", "freq": 240, "q": 0.7},
+        {"type": "eq", "low": -3, "mid": 2.5, "midHz": 2800, "high": 1},
+        {"type": "filter", "kind": "lowpass", "freq": 7500, "q": 0.6},
+        {"type": "room", "mix": 0.1}]},
     "funk_line": {"amp": "funk", "ampDrive": 0.18, "fx": [
         {"type": "compressor", "threshold": -24, "ratio": 5, "attack": 0.006, "release": 0.1},
         {"type": "filter", "kind": "highpass", "freq": 220, "q": 0.7},
@@ -260,6 +274,63 @@ def line_part(S, role, rig, pan, vol, bars, shift=0, seed=5, jitter=0.01, **over
     tot = S.nb * S.beats
     if tot > cur + 1e-4: toks.extend(rests(tot - cur))
     p = copy.deepcopy(GT_BASE); p.update(RIGS[rig]); p.update(over); p.update(role=role, pan=pan, volume=vol, notes=" ".join(toks)); return p
+
+
+def active_bars(path, prefix):
+    """役の名前が prefix で始まるパートが鳴っている小節の番号（元の曲がどこでそのギターを弾いていたか）"""
+    js = load(path); B = js.get("beats", 4); out = set()
+    for p in js["parts"]:
+        if not p.get("role", "").startswith(prefix): continue
+        t = 0.0
+        for tok in p["notes"].split():
+            L_ = float(re.match(r"[0-9.]+", tok.split(":")[1]).group(0))
+            if not tok.startswith("R"): out.update(range(int((t + 1e-6) // B), int((t + L_ - 1e-6) // B) + 1))
+            t += L_
+    return sorted(out)
+
+
+def strum_parts(S, role, spec, pan, vol, bars, shift=0, seed=2, lag=0.012, human=0.008):
+    """和音をかき鳴らすパート（歪みのギター・アコギなど、DI でない楽器）。bars: {小節: (音の番号のリスト（低い順・MIDI）, 型)}。
+    型は16分×16文字: D＝強い下ろし・d＝下ろし・u＝上げ（弱く・高い弦から）・m＝短く切る・. と -＝前の音を伸ばす（次に弾くまで鳴る）・_＝音を止める。
+    声部ごとのパートのリストを返す（下ろしは低い弦から、上げは高い弦から、少しずつずらして鳴らす）"""
+    import random as _r
+    rr = _r.Random(seed); nv = max(len(v[0]) for v in bars.values()); ev = [[] for _ in range(nv)]
+    for b in sorted(bars):
+        notes, pat = bars[b]; pat = (pat + "." * 16)[:16]; n = len(notes)
+        for q, c in enumerate(pat):
+            if c in ".-_": continue
+            e = q + 1
+            while e < 16 and pat[e] in ".-": e += 1          # 次に弾くまで鳴らしつづける（止めたい所は _）
+            dur = (e - q) * 0.25 * (0.5 if c == "m" else 0.96); t0 = b * S.beats + q * 0.25 + rr.uniform(-human, human)
+            vel = {"D": 104, "d": 88, "u": 72, "m": 80}[c] + rr.uniform(-5, 5)
+            for j in range(n):
+                if c == "u" and j < n - 2 and n > 2: continue                       # 上げは高い2本だけ
+                k = (n - 1 - j) if c == "u" else j
+                ev[j].append((max(0.0, t0 + lag * k), notes[j] + shift, max(0.08, dur - lag * k), int(vel - (0 if c != "u" else 4))))
+    out = []
+    for j in range(nv):
+        toks = []; cur = 0.0
+        for t, m_, d, v in sorted(ev[j]):
+            if t < cur: d -= (cur - t); t = cur
+            if d < 0.05: continue
+            if t > cur + 1e-4: toks.extend(rests(t - cur))
+            toks.append(f"{nm(m_)}:{d:.4f}%{v}"); cur = t + d
+        tot = S.nb * S.beats
+        if tot > cur + 1e-4: toks.extend(rests(tot - cur))
+        p = copy.deepcopy(spec); p.update(role=f"{role}{j + 1}", pan=pan, volume=vol, notes=" ".join(toks)); out.append(p)
+    return out
+
+
+def pad_part(S, role, patch, bars, vol, pan=0, reverb=0.3, instrument="lead", **more):
+    """シンセ・効果音のパートを1つ足す。bars: {小節の番号: "音:拍 ..."}"""
+    toks = []; cur = 0.0
+    for b in sorted(bars):
+        t0 = b * S.beats
+        if t0 > cur + 1e-6: toks.extend(rests(t0 - cur)); cur = t0
+        L_ = sum(float(t.split(":")[1].split("%")[0]) for t in bars[b].split()); toks.append(bars[b]); cur += L_
+    tot = S.nb * S.beats
+    if tot > cur + 1e-6: toks.extend(rests(tot - cur))
+    p = {"role": role, "instrument": instrument, "patch": patch, "notes": " ".join(toks), "volume": vol, "pan": pan, "reverb": reverb}; p.update(more); return p
 
 
 def std_mark(scoop_kinds=("chorus",), jump=5, minlen=0.75, plain=()):

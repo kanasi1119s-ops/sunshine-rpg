@@ -39,7 +39,7 @@ S.scene("間奏2", 4, "solo", INTRO)
 S.scene("最後のサビ", 12, "chorus", C_CH + C_CH[4:8])
 S.scene("アウトロ", 6, "outro", ["Dm9", "Bbmaj7", "Gm9", "Bbmaj7", "Dm9", "Dm9"])
 
-V = Voice(S, vol=0.2, delay=0.75, bright=-0.2, patch="surgeKeysNanowave2Oscs", low=False)
+V = Voice(S, vol=0.2, delay=0.75, bright=-0.2, patch="kfbSineLead", low=False)   # v2: 歌をなぞるシンセは、高さの揺れない音に
 RH = [S.track(f"ローズ（和音{i + 1}）", "keys", volume=0.075, pan=-0.2, reverb=0.25, sustain=0.9,
               fx=[{"type": "eq", "low": -2, "mid": 1, "midHz": 600, "high": -1}]) for i in range(4)]
 RL = S.track("ローズ（左手）", "keys", volume=0.08, pan=-0.2, reverb=0.25, sustain=0.9, fx=[{"type": "eq", "low": -3, "mid": 1, "midHz": 600, "high": -1}])
@@ -189,3 +189,48 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の03（2時）。ネ�
 finish(S, LY, V, 0,
        fx=[{"type": "sat", "scenes": "*", "drive": 0.18}],
        level={"verse": -0.2}, special={"ブリッジ": -0.6, "最後のサビ": 0.35, "アウトロ": -0.3})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午前2時・病院の休けい室・ネオソウル）で直すこと:
+#   ギター: 右に、ネオソウルの合いの手（2本の弦の重音。下の音から半音・全音すべり上がって入る）。Aメロ1 の前半は弾かない → 後半は2小節に1回 → 2番は毎小節の終わり
+#           → サビは裏拍に重音を置く → 最後のサビは句の終わりに駆け下りる。ブリッジとローズのソロは弾かない。DI ギター（丸いフロントの音）・コーラスなし
+#   電子の音（少しだけ）: 最後のサビの低い所に丸いサブベース、2小節に1回ガラスのエレピのきらめき。始まりと終わりにレコードのパチパチ（休けい室のラジオ）
+#   歌: Aメロとブリッジはウィスパー（ささやく）、Bメロとサビはクリア。揺れは浅く。ハモリは最後のサビだけ
+#   ベース: 同じ音を続ける所の穴をなくす
+from vt3x_lib import *
+path = sys.argv[1]
+up_, lo_ = {}, {}
+for b in range(S.nb):
+    n, i, L, k = S.scene_of(b); ch = S.chords[b].split("|")[0].split("/")[0]
+    tn = tones(ch, "F4", "A5")
+    if len(tn) < 4: continue
+    a, c, e = tn[-1], tn[-2], tn[-3]; lowof = lambda x: max([y for y in tones(ch, "C4", "A5") if y < x - 2] or [x - 4])
+    def dy(x, d, g=True, v=84):      # 重音1つ: 下からすべり上がって（装飾音）入る
+        u = (f"{nm(x - 1)}:0.12%{v - 14} {nm(x)}:{d - 0.12:g}%{v}" if g else f"{nm(x)}:{d:g}%{v}"); l = (f"{nm(lowof(x) - 2)}:0.12%{v - 18} {nm(lowof(x))}:{d - 0.12:g}%{v - 6}" if g else f"{nm(lowof(x))}:{d:g}%{v - 6}")
+        return u, l
+    def put(seq):
+        us, ls = [], []
+        for it in seq:
+            if isinstance(it, (int, float)): us.append(f"R:{it:g}"); ls.append(f"R:{it:g}")
+            else: us.append(it[0]); ls.append(it[1])
+        up_[b] = " ".join(us); lo_[b] = " ".join(ls)
+    if n == "Aメロ1" and i >= 8 and i % 2 == 1: put([2.5, dy(c, 0.5, v=74), dy(a, 1.0, False, 70)])
+    elif n == "Aメロ2": put([2.5, dy(c, 0.5, v=78), dy(a, 1.0, False, 74)] if i % 2 == 1 else [3.0, dy(e, 1.0, v=72)])
+    elif n in ("Bメロ1", "Bメロ2"): put([1.5, dy(e, 1.0, v=76), 0.5, dy(c, 1.0, v=80)])
+    elif n in ("サビ1", "サビ2"): put([1.5, dy(c, 0.5, v=84), 1.0, dy(a if i % 2 == 0 else e, 1.0, v=86)] if i % 4 != 3 else [2.0, dy(a, 0.5, v=88), dy(c, 0.5, False, 82), dy(e, 1.0, False, 80)])
+    elif n == "最後のサビ": put([0.5, dy(e, 0.5, v=84), 0.5, dy(c, 0.5, v=88), 1.0, dy(a, 1.0, v=90)] if i % 4 != 3 else [2.0, dy(a, 0.5, v=92), dy(c, 0.5, False, 86), dy(e, 0.5, False, 82), dy(lowof(e), 0.5, False, 78)])
+parts = [line_part(S, "Rギター（合いの手・上）", "soul_clean", 0.5, 0.06, up_, seed=3, jitter=0.015), line_part(S, "Rギター（合いの手・下）", "soul_clean", 0.5, 0.05, lo_, seed=8, jitter=0.015)]
+sub, spk = {}, {}
+for q, b in enumerate(S.sc("最後のサビ")):
+    ch = S.chords[b].split("|")[0]; sub[b] = f"{nm(low(ch, 'C1'))}:3.5 R:0.5"
+    if q % 2 == 0: t = tones(ch.split("/")[0], "A5", "A6"); spk[b] = f"{nm(t[-1])}:1 R:0.5 {nm(t[-2])}:0.5 R:2" if len(t) >= 2 else "R:4"
+parts += [pad_part(S, "サブベース", "kfbSub", sub, 0.028, instrument="bass", reverb=0),
+          pad_part(S, "ガラスのエレピ（きらめき）", "kfbGlassEp", spk, 0.045, pan=0.3, reverb=0.4),
+          pad_part(S, "レコードのパチパチ", "kawaiiFx", {S.sc("紙コップ")[0]: "A#5:12 R:4", S.sc("アウトロ")[0]: "A#5:12 A#5:12"}, 0.035, reverb=0.05, modulate=False, instrument="guitar")]
+add_parts(path, parts, drop=lambda p: p.get("role", "").startswith("ギター（オブリ）"))
+set_parts(path, "ベース", sustain=1.15)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=4))
+    vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 20, "最後のサビ": 24, "bridge": 6, "outro": 0}, scoop=0.25, slash=0.6, vib_min_beats=1.5, vib_start=0.5, auto=0.7, breaths=0.7)
+    harmony(path, S, [("最後のサビ", 0, None, K)], vol=0.34)
+    voice_by_scene(path, S, {"verse": "whisper", "pre": "clear", "chorus": "clear", "bridge": "whisper", "outro": "whisper"}, default="clear")
