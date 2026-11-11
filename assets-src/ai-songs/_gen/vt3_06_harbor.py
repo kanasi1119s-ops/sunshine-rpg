@@ -45,7 +45,7 @@ S.scene("波", 8, "bridge", ["Em", "C", "G", "D", "Em", "C", "Am7", "C#7"])    #
 S.scene("最後のサビ", 24, "chorus", LAST + LAST[:8])
 S.scene("汽笛", 10, "outro", ["F#m", "E", "D", "E", "F#m", "E", "D", "C#7", "F#m", "F#m"])
 
-V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="flute", low=False)
+V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="kfbSineLead", low=False)   # v2: 歌をなぞる音は、フルートの音をやめて高さの揺れない電子の音に
 SHAM = S.track("三味線（リフ）", "shamisen", volume=0.13, pan=0.25, reverb=0.2)
 SHK = S.track("尺八", "shakuhachi", volume=0.12, pan=-0.1, reverb=0.45)
 KOTO = S.track("琴（アルペジオ）", "koto", volume=0.08, pan=-0.45, reverb=0.3)
@@ -221,3 +221,19 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の06（5時）。和�
           "朝焼けの港で、じいちゃんの漁船にはじめて乗る孫。和太鼓・三味線・尺八・琴とバンド。合いことばの節は「波」の尺八。汽笛で終わる。自作")
 finish(S, LY, V, -2,
        level={"verse": -0.15}, special={"波": -0.6, "最後のサビ": 0.4, "太鼓のソロ": 0.1})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午前5時・朝焼けの漁港・和ロック）で直すこと:
+#   ギター: 全部同じ強さの8分をやめる。左＝下ろしで押す（1・3拍を強く、4小節ごとに後半をたたみかける）、右＝祭りばやしのような「タン・タタ」（8分＋16分2つ）の刻み。
+#          刻みが終わる小節は最後を伸ばして止める。音色（TRiDENT の音）はそのまま
+#   歌: Aメロ・Bメロ・サビはクリア（力強く）、掛け声はキュート、波（静かな所）はウィスパー。サビは句の頭をすくい、のばす音の後ろを揺らす（こぶしのかわり）。ハモリは サビ2 の後半と最後のサビ
+from vt3x_lib import *
+path = sys.argv[1]
+pl = restrum(path, S, "Lギター（刻み", -0.55, lambda n, i, end, b: "D.d.d.d.D.d.D---" if end else ("D.d.d.d.D.D.DDD." if i % 4 == 3 else "D.d.d.d.D.d.d.d."), seed=2)
+pr = restrum(path, S, "Rギター（刻み", 0.55, lambda n, i, end, b: "D.ddD.d.D.d.D---" if end else ("D.ddD.ddD.D.DuDu" if i % 4 == 3 else ("D.ddD.ddD.ddD.d." if i % 2 == 0 else "D.d.D.ddD.d.D.dd")), seed=9)
+add_parts(path, pl + pr, drop=lambda p: p.get("role", "").startswith("Lギター（刻み") and not p.get("notes", "").count("%") or p.get("role", "").startswith("Rギター（刻み") and not p.get("notes", "").count("%"))
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=4, minlen=0.75))
+    vocal_polish(path, S, {"verse": 10, "pre": 16, "chorus": 26, "最後のサビ": 30, "bridge": 8, "break": 0, "outro": 0}, scoop=0.4, slash=0.9, vib_min_beats=1.5, vib_start=0.45, auto=0.5, breaths=0.5)
+    harmony(path, S, [("サビ2", 8, None, K), ("最後のサビ", 0, None, KL)], vol=0.36, shift=-2)
+    voice_by_scene(path, S, {"verse": "clear", "pre": "clear", "chorus": "clear", "break": "cute", "bridge": "whisper"}, default="clear")

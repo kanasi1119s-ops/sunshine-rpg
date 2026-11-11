@@ -39,11 +39,11 @@ S.scene("間奏2", 8, "solo", C_CH)
 S.scene("最後のサビ", 16, "chorus", C_CH)
 S.scene("ドアベル", 4, "outro", ["F#m9", "Dmaj9", "Amaj9", "Amaj9"])
 
-V = Voice(S, vol=0.2, delay=0.75, bright=0.0, patch="surgeTropics", low=False)
+V = Voice(S, vol=0.2, delay=0.75, bright=0.0, patch="kfbSineLead", low=False)   # v2: 歌をなぞるシンセは、高さの揺れない音に
 NYL = [S.track(f"ナイロンギター{i + 1}", "guitar", patch="nylonGuitar", amp="crystal", volume=0.07, pan=-0.35, reverb=0.25, chorus=0, sustain=1.0) for i in range(4)]
 PN = [S.track(f"ハウスのピアノ{i + 1}", "piano", volume=0.07, pan=0.3, reverb=0.25, fx=[{"type": "eq", "low": -4, "mid": -1, "midHz": 400, "high": 0}]) for i in range(3)]
-FL = S.track("フルート", "lead", patch="flute", volume=0.12, pan=0.1, reverb=0.35)
-PAD = [S.track(f"パッド{i + 1}", "pad", **pad_spec("surgePadPad2Mw", vol=0.035, pan=-0.5 + 0.5 * i, duck=0.4, sustain=1.5)) for i in range(3)]
+FL = S.track("電子のサックス（旋律）", "lead", patch="kfbFutureSax", volume=0.085, pan=0.1, reverb=0.3, mono=True)   # v2: フルートの音は使わない（人間・2026-11-11）→ 電子のリードに
+PAD = [S.track(f"パッド{i + 1}", "pad", **pad_spec("fbChord", vol=0.034, pan=-0.5 + 0.5 * i, duck=0.4, sustain=1.5)) for i in range(3)]
 BASS = S.track("ベース（指弾き）", "bass", **finger_bass_spec(vol=0.22))
 BELL = S.track("オーブンとドアベル", "glockenspiel", volume=0.06, pan=0.3, reverb=0.4)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
@@ -93,7 +93,8 @@ def bossa(b, ch):
     """ボサノバの刻み（親指は根音と5度、ほかの指は少し前に食う和音）"""
     v = voice(ch, 62, 3); r = low(ch, "E2")
     NYL[0].bar(b, f"{nm(r)}:1.5 {nm(r + 7)}:1 {nm(r)}:1.5")
-    for j in range(3): NYL[j + 1].bar(b, f"{nm(v[j])}:0.5 R:0.5 {nm(v[j])}:0.75 {nm(v[j])}:0.75 R:0.5 {nm(v[j])}:1")
+    # v2: 毎小節同じ型をやめ、2小節でひとまとまりのボサノバの型にする（2小節目は裏から入る）
+    for j in range(3): NYL[j + 1].bar(b, f"{nm(v[j])}:0.5 R:0.5 {nm(v[j])}:0.75 {nm(v[j])}:0.75 R:0.5 {nm(v[j])}:1" if b % 2 == 0 else f"R:0.5 {nm(v[j])}:0.5 R:0.5 {nm(v[j])}:0.75 R:0.25 {nm(v[j])}:0.5 {nm(v[j])}:1")
 
 
 def house_piano(b, ch):
@@ -187,3 +188,33 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の07（6時）。ボ�
           "Aメロはナイロンギターのボサノバ、サビは4つ打ちのハウスとピアノ。合いことばの節は間奏のフルート。オーブンの「チン」で始まり、ドアベルで終わる。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.3}, special={"寝かせる": -0.6, "最後のサビ": 0.35, "ドアベル": -0.2})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午前6時・パン屋のオーブン・ボサノバ・ハウス）で直すこと:
+#   電子の音: フルートの旋律を電子のサックス（kfbFutureSax）に、パッドをキックで凹むうねる和音（fbChord）に。最後のサビだけ、4小節ごとに短い矩形波のプラックが駆け下りる
+#            （01 の駆け上がりとは逆向き・1オクターブ下から）。サビ2 から、低い所に丸いサブベース
+#   ギター: ナイロンギターのボサノバの型を、2小節でひとまとまりに（2小節目は裏から入る）。強さを1音ずつ少し揺らす
+#   歌: Aメロはウィスパー（まだ暗い店・小声）、Bメロはクリア、サビはキュート（焼きたて・明るい）、寝かせる（ブリッジ）はウィスパー。ハモリは サビ2 の後半と最後のサビ
+from vt3x_lib import *
+import random as _rnd
+path = sys.argv[1]
+run, sub = {}, {}
+for q, b in enumerate(S.sc("最後のサビ")):
+    ch = S.chords[b].split("|")[0].split("/")[0]; t = tones(ch, "E4", "A5")
+    if q % 4 == 3 and len(t) >= 5: run[b] = "R:2 " + " ".join(f"{nm(t[-1 - (z % len(t))])}:0.25" for z in (0, 1, 2, 3, 2, 3, 4, 5))
+for name in ("サビ2", "最後のサビ"):
+    for b in S.sc(name): sub[b] = f"{nm(low(S.chords[b].split('|')[0], 'C1'))}:3.5 R:0.5"
+parts = [pad_part(S, "プラック（駆け下りる）", "kfbSquarePluck", run, 0.045, pan=-0.3, reverb=0.25, fx=[{"type": "pingpong", "beats": 0.5, "mix": 0.18, "feedback": 0.3}]),
+         pad_part(S, "サブベース", "kfbSub", sub, 0.028, instrument="bass", reverb=0, duck=0.5)]
+add_parts(path, parts)
+js = load(path); rr = _rnd.Random(6)        # ナイロンギター: 強さを1音ずつ揺らす（指で弾く人の、音ごとの強さのちがい）
+for p in js["parts"]:
+    if p.get("role", "").startswith("ナイロンギター"):
+        p["notes"] = " ".join(t if t.startswith("R") or "%" in t else f"{t}%{int(84 + rr.uniform(-12, 10))}" for t in p["notes"].split())
+save(path, js)
+set_parts(path, "ベース（指", sustain=1.15)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5))
+    vocal_polish(path, S, {"verse": 6, "pre": 14, "chorus": 20, "最後のサビ": 24, "bridge": 6, "outro": 0}, scoop=0.3, slash=0.7, vib_min_beats=1.5, vib_start=0.5, auto=0.6, breaths=0.6)
+    harmony(path, S, [("サビ2", 8, None, K), ("最後のサビ", 0, None, K)], vol=0.36)
+    voice_by_scene(path, S, {"verse": "whisper", "pre": "clear", "chorus": "cute", "bridge": "whisper"}, default="clear")

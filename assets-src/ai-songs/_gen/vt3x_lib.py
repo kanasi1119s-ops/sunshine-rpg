@@ -289,6 +289,32 @@ def active_bars(path, prefix):
     return sorted(out)
 
 
+def bar_voicing(js, prefix, b, beats=4):
+    """元の曲で、役の名前が prefix で始まるパートたちが、その小節の頭で鳴らしていた音（MIDI・低い順）。かき鳴らしに作り直すときの押さえ方に使う"""
+    out = []
+    for p in js["parts"]:
+        if not p.get("role", "").startswith(prefix): continue
+        t = 0.0
+        for tok in p["notes"].split():
+            L_ = float(re.match(r"[0-9.]+", tok.split(":")[1]).group(0))
+            if not tok.startswith("R") and t < (b + 1) * beats - 1e-6 and t + L_ > b * beats + 1e-6:
+                out.append(midi(re.match(r"[A-G][b#]?-?\d", tok).group(0))); break
+            t += L_
+    return sorted(set(out))
+
+
+def restrum(path, S, prefix, pan, pat_fn, seed=2, lag=0.012):
+    """元の曲の、役の名前が prefix で始まる和音のパート（歪みのギターなど）を、同じ小節・同じ押さえ方のまま、型 pat_fn(場面, 場面の中の番号, 終わりの小節か, 小節) でかき鳴らし直す。
+    音色（元のパートの設定）はそのまま。作ったパートを返す（add_parts の drop で元のパートを消すこと）"""
+    js = load(path); spec = next(dict((k, v) for k, v in p.items() if k != "notes") for p in js["parts"] if p.get("role", "").startswith(prefix))
+    ab = active_bars(path, prefix); bars = {}
+    for b in ab:
+        v = bar_voicing(js, prefix, b, S.beats)
+        if not v: continue
+        n, i, L, k = S.scene_of(b); bars[b] = (v, pat_fn(n, i, (b + 1) not in ab, b))
+    return strum_parts(S, prefix, spec, pan, spec["volume"], bars, seed=seed, lag=lag)
+
+
 def strum_parts(S, role, spec, pan, vol, bars, shift=0, seed=2, lag=0.012, human=0.008):
     """和音をかき鳴らすパート（歪みのギター・アコギなど、DI でない楽器）。bars: {小節: (音の番号のリスト（低い順・MIDI）, 型)}。
     型は16分×16文字: D＝強い下ろし・d＝下ろし・u＝上げ（弱く・高い弦から）・m＝短く切る・. と -＝前の音を伸ばす（次に弾くまで鳴る）・_＝音を止める。
