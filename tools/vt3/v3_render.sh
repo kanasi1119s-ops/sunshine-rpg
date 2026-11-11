@@ -9,5 +9,6 @@ if grep -q "^×" /tmp/vp25/cl-$f.log || [ ! -f /tmp/vp25/cl/$f.wav ]; then echo 
 bash /tmp/vp25/tools/v3_finish.sh /tmp/vp25/cl/$f.wav 2>&1 | tail -1
 case "$f" in *vo) af="highshelf=f=5000:g=2:t=s:w=0.6,alimiter=limit=0.89:level=false";; *) af="highshelf=f=5000:g=3.5:t=s:w=0.6,highshelf=f=11000:g=1.5:t=s:w=0.6,alimiter=limit=0.89:level=false";; esac
 ffmpeg -v error -y -i /mnt/user-data/outputs/vt3/all/$f.mp3 -af "$af" -c:a libmp3lame -b:a 256k "/mnt/user-data/outputs/vt3/all/$name.mp3"
+mkdir -p /tmp/vp25/raw; ffmpeg -v error -y -i /tmp/vp25/cl/$f.wav -c:a flac /tmp/vp25/raw/$f.flac   # 2026-11-12: 仕上げ前の音を残す（場面の大きさだけ直すとき、書き出し直さなくてよい → v3_refinish.sh）
 rm -f /tmp/vp25/cl/$f.wav /tmp/vp25/out/$f.wav
 echo "書き出し: $name"
