@@ -203,8 +203,11 @@ def pitch_curve(events, total, rng, vdef):
             out[sel] -= 1.6 * x ** 2
         # ビブラート: 長い音の後ろに。深さ（セント）は音ごと
         vb = ev.get("vib", 0.0)
-        if vb > 0 and d >= 0.42:
-            st = s + max(0.2, 0.33 * d)
+        # 2026-11-11（HUMMING RELAY の作り直し）人間「しゃくり、ビブラート。とにかく細部まで細かく」: プロの調声は
+        #   「1拍以上の長い音の後ろ 1/3〜1/2 だけ」にかける。"vibMinSec"（かける音の最短の長さ。既定 0.42 秒＝これまでどおり）と
+        #   "vibStart"（音の長さの何割から始めるか。既定 0.33）を曲ごとに決められるようにした。"~" のついた音は短くてもかける
+        if vb > 0 and d >= (0.42 if "~" in ev["fl"] else float(vdef.get("vibMinSec", 0.42))):
+            st = s + max(0.2, float(vdef.get("vibStart", 0.33)) * d)
             sel = (t >= st) & (t < e)
             if not sel.any(): continue
             tt = t[sel] - st
@@ -513,7 +516,7 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1, tempo=None, bea
         for k, (s, e, m, v, fl, bt) in enumerate(p["events"]):
             vb = interp_map(vdef.get("vibratoMap"), bt, vib0) * (1.6 if "~" in fl else 1.0)
             sc = 0.0
-            if "/" in fl: sc = 1.4
+            if "/" in fl: sc = float(vdef.get("slashScoop", 1.4))   # "/" のしゃくりの深さ（半音。既定 1.4＝これまでどおり。プロの目安は 0.5〜1.0）
             elif scoop0 > 0 and k == 0 and (p["head"] or (prevm is not None and m - prevm >= 4 and e - s >= 0.35)): sc = scoop0
             events.append({"s": s, "e": e, "m": m, "fl": fl, "vib": vb, "scoop": sc})
             prevm = m

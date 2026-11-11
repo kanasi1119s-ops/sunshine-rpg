@@ -66,11 +66,19 @@ def load(base):
     if cur:
         strums.append(cur)
     # 強さ: マイク録音の、打ちの頭 60ms の音量（dB）。曲ごとの中央値を 100% とする
-    y, sr = sf.read(f"{MIC}/{base}_mic.wav")
-    if y.ndim > 1:
+    # 2026-11-11: マイク録音が手元に無い演奏（Funk・Bossa・Jazz・SS は注釈だけ取ってある）は、強さを「鳴らした弦の数」から決める
+    #   （本数の多い打ち＝強い打ち。時刻・向き・弦から弦へのずれ・本数は注釈からそのまま取れる）
+    mic = f"{MIC}/{base}_mic.wav"
+    if os.path.exists(mic):
+        y, sr = sf.read(mic)
+    else:
+        y, sr = None, 0
+    if y is not None and y.ndim > 1:
         y = y.mean(1)
     dbs = []
     for s in strums:
+        if y is None:
+            dbs.append(-30.0 + 1.6 * min(6, len(s))); continue
         i0 = int(s[0][0] * sr); seg = y[i0:i0 + int(0.06 * sr)]
         pre = y[max(0, i0 - int(0.03 * sr)):i0]
         e = math.sqrt(max(1e-12, float(np.mean(seg ** 2)) - 0.5 * float(np.mean(pre ** 2)) if len(pre) else float(np.mean(seg ** 2))))

@@ -43,7 +43,9 @@ S.scene("秒読み", 4, "bridge", ["Dmaj9", "C#m7", "Bm9", "F7sus4"])     # 最�
 S.scene("最後のサビ", 24, "chorus", LAST + LAST[:8])
 S.scene("ろうそく", 4, "outro", ["Ebmaj9", "F6", "Dm7", "Bbmaj9"])
 
-V = Voice(S, vol=0.21, delay=0.75, bright=0.0, patch="surgeDnaSeq", low=False)
+# v5（2026-11-11 作り直し）人間「電子系音源は Kawaii future bass 系に」: BGM の旋律は brightLead、うねるパッドは fbChord（キックで凹む和音）、
+#   きらきらのアルペジオ（kawaiiArp）とベル（popBell）を足す。ギターは CUT（録音の和音を型で鳴らす）をやめ、下で DI ギターを弦ごとに弾く
+V = Voice(S, vol=0.2, delay=0.75, bright=0.1, patch="brightLead", low=False)
 # v3: v1 7.16・v2 7.21（サビを薄くしても変わらない）→ 音色を変える。FM のエレピ → エレピ（DX）、スラップ → 指弾き
 EP = [S.track(f"エレピ{i + 1}", "keys", patch="surgeKeysDxEp", volume=0.07, pan=-0.35, reverb=0.25, sustain=0.8,
               fx=[{"type": "eq", "low": -3, "mid": 0, "midHz": 700, "high": 1}]) for i in range(4)]
@@ -52,7 +54,11 @@ STRL = S.track("ストリングス（上がる節）", "strings", patch="stringE
 BR = [S.track(f"ブラスのスタブ{i + 1}", "brass", patch="brassSection", volume=0.055, pan=0.2, reverb=0.25, sustain=0.4) for i in range(3)]
 CUT = [S.track(f"カッティングギター{i + 1}", "guitar", amp="jpopClean", volume=0.05, pan=-0.6, reverb=0.15, chorus=0, sustain=0.3) for i in range(3)]
 BASS = S.track("ベース（指弾き）", "bass", **finger_bass_spec(vol=0.22))
-PAD = [S.track(f"うねるパッド{i + 1}", "pad", **pad_spec("surgePadHineVertigo", vol=0.035, pan=-0.5 + 0.5 * i, duck=0.45, sustain=1.4)) for i in range(3)]
+PAD = [S.track(f"うねる和音{i + 1}", "lead", patch="fbChord", volume=0.034, pan=-0.4 + 0.4 * i, reverb=0.22, duck=0.55) for i in range(3)]
+ARP = S.track("きらきらのアルペジオ", "lead", patch="kawaiiArp", volume=0.04, pan=0.35, reverb=0.25)
+BELL = S.track("ベル（合いの手）", "lead", patch="popBell", volume=0.042, pan=-0.3, reverb=0.3)
+STRH = S.track("ストリングス（1オクターブ上の線）", "strings", patch="stringEnsemble", volume=0.045, pan=0.3, reverb=0.4, sustain=0.9)
+CELLO = S.track("チェロ（低い線）", "strings", patch="cello", volume=0.06, pan=-0.15, reverb=0.3, sustain=0.9)
 CHOP = S.track("声のチョップ風", "pad", patch="vocalChop", volume=0.06, pan=0.3, reverb=0.3, sustain=0.5,
                fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.2, "feedback": 0.3}])
 TICK = S.track("秒針（カホンの縁）", "cajon", volume=0.08, pan=0.15, reverb=0.1)
@@ -119,6 +125,7 @@ def ep_comp(b, ch, style):
 
 
 def strum16(b, ch, pat="..x...x...x.x.x."):
+    return   # v5: ギターは下の GuitarRig（DI ギター・弦ごと・本物の揺れ方）で弾く
     v = voice(ch, 62, 3)
     hits = [q for q, c in enumerate(pat) if c == "x"]
     for j in range(3):
@@ -154,6 +161,8 @@ for b in range(S.nb):
     elif n in ("Aメロ1", "Aメロ2"):
         ep_comp(b, ch, "push" if i % 4 != 3 else "bounce")
         if n == "Aメロ2" or i >= 8: strum16(b, ch, "..x...x...x...x.")
+        if n == "Aメロ2" and i % 2 == 1:      # v5: 2番は、歌の句の終わり（小節の後半）にベルが答える
+            tb = tones(ch, "C#5", "C#6"); BELL.bar(b, f"R:2.5 {nm(tb[-1])}:0.5 {nm(tb[-2])}:0.5 {nm(tb[-3])}:0.5")
     elif n in ("Bメロ1", "Bメロ2"):
         ep_comp(b, ch, "bounce"); strum16(b, ch, "..x.x.x...x.x.x.")
         strings_long(b, ch, 70)
@@ -162,6 +171,18 @@ for b in range(S.nb):
         # v2: サビの点数が 6.7〜7.1。楽器が重なりすぎ（パッド・エレピの刻み・ギター・弦・ブラス）→ パッドを外し、エレピは押しだけ、ブラスは2小節に1回
         ep_comp(b, ch, "push"); strum16(b, ch, "..x...x...x...x.")
         strings_long(b, ch, 70)
+        # v5: サビの厚みは、キックで凹むうねる和音（カワイイ・フューチャーベースの「ポンプ」）で作る。エレピの押しは小さく残す
+        vv = voice(ch, 62, 3)
+        for j in range(3): PAD[j].bar(b, f"{nm(vv[j])}:4")
+        if n == "最後のサビ":
+            # スケール: 弦の1オクターブ上の線（和音のいちばん上の音を2分で動かす）と、チェロの低い線（根音→5度）で上下を広げる
+            top = voice(ch, 76, 3)[-1]; t2 = tones(ch, nm(top - 5), nm(top + 4))
+            STRH.bar(b, f"{nm(top)}:2 {nm(t2[-1] if t2 else top)}:2")
+            r_ = low(ch, "C2"); CELLO.bar(b, f"{nm(r_)}:3 {nm(r_ + 7)}:1")
+            ta = tones(ch, "A4", "E6")
+            if i % 2 == 0: ARP.bar(b, " ".join(f"{nm(ta[q % len(ta)])}:0.25" for q in (0, 2, 4, 2, 5, 4, 2, 4, 0, 2, 4, 2, 5, 4, 6, 4)))
+        elif n == "サビ2" and i % 4 == 3:
+            ta = tones(ch, "A4", "E6"); ARP.bar(b, "R:2 " + " ".join(f"{nm(ta[q % len(ta)])}:0.25" for q in (0, 2, 4, 5, 4, 2, 4, 6)))
         if i % 2 == 1: stabs(b, ch, "R:3.5 x:0.25 R:0.25")
         if i % 8 == 7:   # 句の終わりに、ストリングスが1オクターブ駆け上がる
             t = tones(ch, "C5", "C6"); STRL.bar(b, "R:2 " + " ".join(f"{nm(x)}:0.25" for x in (t * 3)[:8]))
@@ -201,7 +222,16 @@ for b in range(S.nb):
     if n == "イントロ": BASS.bar(b, bass_line(S, b, "long" if i < 4 else "oct8", lo="E1"))
     elif n in ("Aメロ1", "Aメロ2"): BASS.bar(b, bass_line(S, b, "push" if i % 4 != 3 else "oct8", lo="E1"))
     elif n in ("Bメロ1", "Bメロ2"): BASS.bar(b, bass_line(S, b, "oct8", lo="E1"))
-    elif n in ("サビ1", "サビ2", "最後のサビ", "間奏", "間奏2"): BASS.bar(b, bass_line(S, b, "oct8" if i % 4 != 3 else "push", lo="E1"))   # v4: 16分のオクターブ → 8分
+    elif n in ("サビ1", "サビ2", "最後のサビ", "間奏", "間奏2"):
+        # v5: 8分のオクターブの型をやめ、手で書いたファンクの線に（1拍目の頭を長く・16分の裏で跳ねる・最後は次の根音へ半音で寄る）
+        ch_ = S.chords[b].split("|")[0]; r_ = low(ch_, "E1"); o_ = r_ + 12; f_ = r_ + 7
+        nx_ = low(S.chords[b + 1].split("|")[0], "E1") if b + 1 < S.nb else r_
+        ap_ = nx_ - 1 if nx_ >= r_ else nx_ + 1
+        pats = [f"{nm(r_)}:0.75 {nm(r_)}:0.25 R:0.5 {nm(o_)}:0.5 {nm(r_)}:0.25 R:0.25 {nm(f_)}:0.5 {nm(o_)}:0.25 R:0.25 {nm(ap_)}:0.5",
+                f"{nm(r_)}:1 R:0.25 {nm(o_)}:0.25 {nm(o_)}:0.5 {nm(r_)}:0.5 {nm(f_)}:0.25 {nm(o_)}:0.25 R:0.5 {nm(f_)}:0.25 {nm(ap_)}:0.25",
+                f"{nm(r_)}:0.75 {nm(o_)}:0.25 R:0.5 {nm(r_)}:0.5 R:0.25 {nm(r_)}:0.25 {nm(o_)}:0.5 {nm(f_)}:0.5 {nm(ap_)}:0.5",
+                f"{nm(r_)}:1.5 {nm(f_)}:0.25 {nm(o_)}:0.25 R:0.5 {nm(o_)}:0.25 {nm(f_)}:0.25 {nm(r_)}:0.5 {nm(ap_)}:0.5"]
+        BASS.bar(b, pats[i % 4])
     elif n == "ろうそく" and i < 3: BASS.bar(b, bass_line(S, b, "long", lo="E1"))
 
 # ================= 効果音 =================
@@ -253,5 +283,70 @@ S.fade_out = 0
 S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の01（0時）。フューチャーファンク。F#m（サビは A）・118、最後のサビは +1（B♭）。"
           "親友の誕生日の前の夜、0時ちょうどに「おめでとう」を送る。秒針の音から始まり、秒読みと1拍の無音（0時）のあと最後のサビ。"
           "ろうそくを吹き消す息で終わる。FMエレピ・ディスコのストリングス・ブラスのスタブ・カッティングギター・スラップベース。自作")
-finish(S, LY, V, -1,
+finish(S, LY, V, -1, double=[("最後のサビ", 0.4)],
        level={"verse": -0.2}, special={"秒読み": -0.8, "最後のサビ": 0.4, "ろうそく": -0.2})
+
+# ================= v5（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+from vt3x_lib import *
+import random as _rnd
+path = sys.argv[1]
+TR = -1
+# ---- ギター（プロの弾き方・音作り）: 左＝高い4本の弦の和音のカッティング（9th・maj7 の押さえ方、消す音「チャッ」入り）、
+#      右＝単音の「チキチキ」の線（サビと間奏2だけ）。揺れ方は本物のファンクのギタリスト（GuitarSet の Funk）から借りる
+GL = GuitarRig(S, "Lギター（カッティング）", "funk_cut", -0.55, 0.05, style="funk", seed=3)
+PAT = {"intro": "x.xUx.dU.xxUd.xU", "verse": "..x.d..U.x..d.xU", "verse_b": "..x.d..U.x.xd.dU", "pre": "D...x.dU....d.xU", "pre_b": "d.xUd.xUd.xUD.DU",
+       "cho": "d.xUx.dUx.xUd.xU", "cho_b": "d.xUx.dUx.dUd.DU", "solo": "x.dUx.xUd.xUx.dU"}
+prev = None
+for b in range(S.nb):
+    n, i, L, k = S.scene_of(b); last = i == L - 1
+    v = sorted(voice(S.chords[b].split("|")[0].split("/")[0], 66, 4, prev)); prev = v
+    vo = [None, None] + [nm(x + TR) for x in v]
+    if n == "イントロ": GL.bar(b, PAT["intro"], vo, vel=0.85 if i < 4 else 0.95)
+    elif n == "Aメロ1":
+        if i >= 8: GL.bar(b, PAT["verse_b"] if i % 4 == 3 else PAT["verse"], vo, vel=0.8)     # 1番の前半はギターなし（エレピと歌）
+        else: GL.stop(b)
+    elif n == "Aメロ2": GL.bar(b, PAT["verse_b"] if i % 4 == 3 else PAT["verse"], vo, vel=0.85)
+    elif n in ("Bメロ1", "Bメロ2"):
+        if last: GL.stop(b)                                                                     # 止めの小節
+        else: GL.bar(b, PAT["pre_b"] if i >= 4 else PAT["pre"], vo, vel=0.85 + 0.03 * i)
+    elif n in ("サビ1", "サビ2", "最後のサビ"): GL.bar(b, PAT["cho_b"] if i % 4 == 3 else PAT["cho"], vo, vel=1.0 if n != "最後のサビ" else 1.06)
+    elif n == "間奏": GL.bar(b, PAT["intro"], vo, vel=0.95)
+    elif n == "間奏2": GL.bar(b, PAT["solo"], vo, vel=1.0)
+    else: GL.stop(b)
+parts = GL.parts()
+# 右の単音の線: 和音の音を16分で短く切って歩く。2小節でひとまとまり、強さと時刻を少し揺らす
+rr = _rnd.Random(7); toks = []; cur = [0.0]
+def ev(t, note, dur, vel):
+    t += rr.uniform(-0.012, 0.012)
+    if t > cur[0] + 1e-4: toks.append(f"R:{t - cur[0]:.4f}")
+    toks.append(f"{note}:{dur:.4f}%{int(vel + rr.uniform(-6, 6))}"); cur[0] = t + dur
+LINE = [(0.5, 0, 96), (0.75, 1, 80), (1.25, 2, 100), (1.75, 1, 78), (2.5, 3, 98), (2.75, 2, 82), (3.25, 1, 92), (3.5, 0, 84)]   # (拍, 何番目の音, 強さ)
+LINE2 = [(0.25, 1, 84), (0.75, 2, 98), (1.5, 3, 100), (1.75, 2, 80), (2.25, 1, 90), (3.0, 0, 96), (3.5, 2, 86), (3.75, 3, 94)]
+for b in range(S.nb):
+    n, i, L, k = S.scene_of(b)
+    if n not in ("サビ1", "サビ2", "最後のサビ", "間奏2"): continue
+    if n == "サビ1" and i < 8: continue                       # 1回目のサビは後半から入る（2回目・最後は頭から）
+    tn = tones(S.chords[b].split("|")[0].split("/")[0], "A3", "B4")[:6]
+    if len(tn) < 4: continue
+    for (t, q, vl) in (LINE if i % 2 == 0 else LINE2): ev(b * S.beats + t, nm(tn[min(q + 1, len(tn) - 1)] + TR), 0.17, vl)
+tot = S.nb * S.beats
+if tot > cur[0] + 1e-4: toks.append(f"R:{tot - cur[0]:.4f}")
+pr = copy.deepcopy(GT_BASE); pr.update(RIGS["funk_line"]); pr.update(role="Rギター（単音の線）", pan=0.6, volume=0.05, notes=" ".join(toks)); parts.append(pr)
+add_parts(path, parts)
+
+if VOCAL:
+    # ---- 歌い方: Aメロは話すように（しゃくりなし・ビブラートごく浅く）、Bメロでだんだん、サビは句の頭を下からすくい、長い音の後ろ半分だけ揺らす。
+    #      秒読みは数を数えるだけ（揺らさない）。最後のサビがいちばん深い
+    def mark(x):
+        mk = x["mark"].replace("/", "")
+        if x["kind"] == "chorus":
+            if x["head"] and x["pos"] < 1.01 and x["bar"] % 2 == 0: mk += "/"                   # 「はっぴー…」の入り（2小節ごとの句の頭）
+            elif x["prev"] is not None and x["midi"] - x["prev"] >= 5 and x["len"] >= 0.75: mk += "/"   # 大きく跳んで伸ばす音
+        elif x["kind"] == "pre" and x["prev"] is not None and x["midi"] - x["prev"] >= 5 and x["len"] >= 1.0: mk += "/"
+        if x["scene"] == "秒読み": mk = mk.replace("~", "")
+        return mk
+    remark(path, S, mark)
+    vocal_polish(path, S, {"verse": 12, "pre": 20, "chorus": 28, "最後のサビ": 34, "秒読み": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.45, auto=0.6, breaths=0.5)
+    # ---- ハモリ: サビ1 は一人。サビ2 の後半から3度下が入り、最後のサビは頭から（人が増えていく）
+    harmony(path, S, [("サビ2", 8, None, K), ("最後のサビ", 0, None, KL)], vol=0.38, shift=TR)
+
