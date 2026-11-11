@@ -277,6 +277,13 @@ Naked Drums（Wilkinson Audio、CC BY 4.0、1.3GB）、DRS Kit（CC BY 4.0）、
 - 雲: `/opt/surge-xt` に Linux 版を展開、`/usr/share/surge-xt` にリンク。pip の pedalboard（Spotify・GPL3）で VST3 を読みこんで鳴らす。
 - パソコン: Windows 版のインストーラーを `ダウンロード\surge-xt\` に置いた（入れるのは人間）。
 - 作曲ソフトに入れるのは、プリセットを 3半音ごとに録った SF3（`tools/surge/sample.py`）。
+- 2026-11-11 カワイイ・フューチャーベースの音（人間「電子系音源は Kawaii future bass 系に」「足しましょう」）: Surge XT 1.3.4 を公式の配布元から入れ直し（md5 を照合）、同梱のプリセット 11 個を録った。
+  `kfb-supersaw`（Luna／96 Osc Supersaw）・`kfb-supersaw-swell`（Luna／JP8K Supersaw）・`kfb-saw-stab`（Vincent Zauhar／Viva La Trance）・`kfb-square-pluck`（Plucks／Pure Square）・
+  `kfb-glocken`（Giana Brotherz／Glockenmorph）・`kfb-music-box`（Plucks／Magic Music Box）・`kfb-bright-bells`（Luna／Big Bright Bells）・`kfb-square-lead`（Rozzer／Delicious Square）・
+  `kfb-sine-lead`（Altenberg／Sine Lead）・`kfb-formant-lead`（Giana Brotherz／Formant Tables）・`kfb-sub`（Basses／Sub 3）。規約は上と同じ（鳴らした音は利用者のもの）。クレジット不要。
+  1オクターブずれて鳴るプリセット（sub・formant-lead は下、sine-lead・music-box は上）は、鍵盤の割り当てを直して書いた高さで鳴るようにした。
+  「Music Toy」は音程がはっきりしない音だったので使わない。
+- 2026-11-11 `kawaii-fx.sf3`（かわいい効果音 9 種と電子ドラム 9 種）: `tools/soundfont/build-kawaii-fx.py` が自分で合成する（録音は使わない。CC0 扱い・クレジット不要）。
 
 ## 動画用の文字フォント（2026-10-26 追加。YouTube 用の歌の動画『SCARLET FREQUENCY』）
 | 素材 | 入手元 | 規約の要点 | クレジット |

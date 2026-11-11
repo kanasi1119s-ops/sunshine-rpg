@@ -71,6 +71,11 @@ export const SYNTH_PATCHES: Record<string, number> = {
   // Surge XT のベース（バンク 1。surgeBassPasty＝ねばりのある太い（メイン）・surgeBassAnalogBassImaged＝アナログ風の広がるベース（メイン）・surgeBassCatBass＝うなる・surgeBassWarmSquare＝あたたかい矩形波・surgeBassEmulation＝本物のシンセベースのような・surgeBassPop＝はずむポップなベース・surgeBassModernDirtyFat＝現代的に汚れて太い）
   // 2026-11-07 プロの弦の奏法（VSCO 2 CE の録音・CC0。チェロ／ヴィオラ／ヴァイオリンの合奏を高さで受けもち）: stringsSpiccato＝短くはずむ刻み（ラウンドロビン2・強さ2層）、stringsTremolo＝細かくふるわせる長い音
   stringsSpiccato: 189, stringsTremolo: 190,
+  // 2026-11-11 カワイイ・フューチャーベースの音（人間「電子系音源は Kawaii future bass 系に」「足しましょう」）。Surge XT のプリセットを録った音（バンク 1）:
+  //   kfbSupersaw＝厚いスーパーソウ（和音の主役）・kfbSupersawSwell＝ゆっくり立ち上がるスーパーソウ・kfbSawStab＝短く切れるノコギリ波の和音・kfbSquarePluck＝明るい矩形波のプラック・
+  //   kfbGlocken＝鉄琴・kfbMusicBox＝オルゴール・kfbBrightBells＝きらきらのベル・kfbSquareLead＝矩形波のリード・kfbSineLead＝丸い正弦波のリード・
+  //   kfbFormantLead＝声のようなリード・kfbSub＝低い正弦波のベース。kawaiiFx＝かわいい効果音と電子ドラム（鍵盤ごとに別の音。tools/soundfont/build-kawaii-fx.py）
+  kfbSupersaw: 191, kfbSupersawSwell: 192, kfbSawStab: 193, kfbSquarePluck: 194, kfbGlocken: 196, kfbMusicBox: 197, kfbBrightBells: 198, kfbSquareLead: 199, kfbSineLead: 200, kfbFormantLead: 201, kfbSub: 202, kawaiiFx: 203,
   surgeBassPasty: 182, surgeBassAnalogBassImaged: 183, surgeBassCatBass: 184, surgeBassWarmSquare: 185, surgeBassEmulation: 186, surgeBassPop: 187, surgeBassModernDirtyFat: 188,
   // Surge XT のプラック（128 以上＝バンク 1。surgePopcorn＝ポップコーンのようにはじける・surgeBell1＝澄んだベル・surgeGuzheng＝箏（こと）のような弦・surgeRetroWave＝80年代風のきらめき・surgeConvex＝丸く太い・surgeWoody＝木をたたいたような・surgeFantasyBell＝幻想的なベル・surgeNicePluck＝素直で明るい・surgeWaveguide＝弦をはじいたような・surgeFriendly＝やさしい・surgeMixedFeelings＝少し切ない）
   surgePopcorn: 128, surgeBell1: 129, surgeGuzheng: 130, surgeRetroWave: 131, surgeConvex: 132, surgeWoody: 133, surgeFantasyBell: 134, surgeNicePluck: 135, surgeWaveguide: 136, surgeFriendly: 137, surgeMixedFeelings: 138,

@@ -19,6 +19,9 @@
      コーラスの「きゅいん」・crunch の「ピロピロ」・すぐ止めるミュートは使わない（`banned-sounds.md`）。左・右・リードの3本。
 3. **深み・スケール・空間**: 場面ごとの強さ、低い音から高い音までの広さ、残響の長さ・手前の間、うすい層（聞こえるか聞こえないかのパッド）、効果音は音楽と重ねる。
 4. **電子の音**: これまでよく使っていた音（picoLead・surgePad…・modernBass など）ではなく、カワイイ・フューチャーベース系（fbChord＝キックで凹むうねる和音・vocalChop・kawaiiArp・popBell・surgePopcorn・surgeBassPop）に替える。ゲームの音（チップ音）は使わない。
+   2026-11-11 に足した音（`docs/assets-credits.md`）: kfbSupersaw・kfbSupersawSwell・kfbSawStab・kfbSquarePluck・kfbGlocken・kfbMusicBox・kfbBrightBells・kfbSquareLead・kfbSineLead・kfbFormantLead・kfbSub、
+   kawaiiFx（効果音: C4 泡・C#4 水滴・D4/D#4 きらきら・E4 きゅっ・F4 ぴょん・F#4 上がる音・G4 下がる音・G#4 逆再生シンバル風／電子ドラム: A4 キック・A#4 スネア・B4 クラップ・C5 指パッチン・C#5/D5 ハイハット・D#5 リム・E5/F5 タム。`modulate: false`）。
+   気づいたこと: kfbSub は bass のパートだと とても大きい（音量 0.03〜0.05 で足りる）。kfbFormantLead・kfbBrightBells は 6kHz より上が強いので、ローパス（5〜9kHz）をかけて使う。
 5. **似た曲にしない**: 始まり方・山の作り方・伴奏の型を25曲で並べて、重なりを直す。
 6. **確かめ**: 点数（最低 7.5・目標 8）、場面ごとの大きさ（サビがいちばん大きい）、雑音（noise_scan.py で声・楽器・仕上がりを最初から最後まで）。最後は人間の耳。
 

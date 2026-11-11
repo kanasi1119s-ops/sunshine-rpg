@@ -761,7 +761,7 @@ def _tr_chord(c, T):
 
 
 _NOPITCH = {"kick", "snare", "hihat", "tom", "crash"}
-_NOPITCH_PATCH = {"cymbalFx", "seasonFx", "fxRiser"}
+_NOPITCH_PATCH = {"cymbalFx", "seasonFx", "fxRiser", "kawaiiFx"}
 
 
 def teto(S, LY, V, transpose=0, level=None, special=None, vib=None, lead_vol=0.12, vocal_level=0.6, lo=57, hi=78, settings=None):
