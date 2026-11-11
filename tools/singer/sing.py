@@ -33,6 +33,9 @@ VOICES = {
     "teto": {"dir": "teto/重音テト音声ライブラリー", "vcv": "重音テト連続音", "cv": "重音テト単独音", "extra": "重音テトエクストラ", "suffix": ""},
     # 弱音源（通常とささやきの中間。やわらかく息まじり）。歌詞のうしろに「弱」がついた名前で入っている
     "teto-soft": {"dir": "teto/重音テト音声ライブラリー", "vcv": "重音テト弱連続音", "cv": "重音テト弱単独音", "suffix": "弱"},
+    # 滑らか音源（2026-11-11 人間「滑らか音源も使える用にしようか」）。音と音のつながりがなめらかな連続音（歌詞のうしろに「滑」）。
+    # 入っているのは 72 種類のかな（「きゃ」「しゅ」「ふぁ」などの小さい字つき・休みのあとの子音の歌い出し・語尾の息はない）→ ない音は通常の音源（fallback）で歌う
+    "teto-smooth": {"dir": "teto/重音テト音声ライブラリー", "vcv": "重音テト滑らか音源", "cv": "重音テト滑らか音源", "suffix": "滑", "fallback": "teto"},
 }
 
 def bank_roots():
@@ -68,6 +71,7 @@ class Bank:
         self.vcv = self.read_oto(os.path.join(base, conf["vcv"])) if conf.get("vcv") else {}
         self.cv = self.read_oto(os.path.join(base, conf["cv"])) if conf.get("cv") else {}
         self.extra = self.read_oto(os.path.join(base, conf["extra"])) if conf.get("extra") else {}
+        self.fb = Bank(conf["fallback"]) if conf.get("fallback") else None   # この音源にない音を歌う音源
 
     @staticmethod
     def read_oto(d):
@@ -100,6 +104,7 @@ class Bank:
             if a: return a, "cv"
         a = self.vcv.get(f"- {lyric}{s}")
         if a: return a, "vcv"
+        if self.fb: return self.fb.pick(lyric, prev_vowel)
         return None, None
 
     def tail(self, vowel):
@@ -107,7 +112,7 @@ class Bank:
         for k in (f"{vowel} R{s}", f"{vowel} -{s}", f"{vowel} R", f"{vowel} -"):
             a = self.vcv.get(k)
             if a: return a
-        return None
+        return self.fb.tail(vowel) if self.fb else None
 
 # ---------- WORLD の分析（キャッシュ） ----------
 _ANA = {}

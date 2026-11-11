@@ -1,3 +1,4 @@
+import copy
 # HUMMING RELAY（vt3）の作り直しで使う部品（2026-11-11）。決まりは docs/sound/vt3-remake-plan.md。
 # 人間「全部完成度高めて。同じ感じにならないように。音の深み、スケール、空間、しゃくり、ビブラート。細部まで細かく。
 #   特にギターは音の作り方も演奏の仕方もプロ仕様に」「電子系音源は Kawaii future bass 系に」
@@ -101,6 +102,38 @@ def harmony(path, S, spans, steps=2, vol=0.4, lowest=55, shift=0, **more):
     harm.update(more)
     js["vocals"].append(harm); save(path, js)
     print(f"  ハモリ（{steps} 段下）: {cnt} 音")
+
+
+# ---------------------------------------------------------------- テトの声の種類（2026-11-11 人間「テトボイス5種類ぐらい用意して欲しい」）
+# 曲や場面に合わせて選ぶ。teto_voice(path, "smooth") で、その曲の歌（とハモリ）の声を切りかえる。数字は細かく直してよい（出発点）。
+_EQ_CLEAR = [["peak", 220, 0.8, 3], ["peak", 1600, 1.2, 2], ["peak", 2000, 2.0, 9], ["hshelf", 6500, 0.7, 10]]
+TETO_VOICES = {
+    # 1 クリア: これまでの標準。透き通って少しアニメ声寄り・一字一字はっきり。ポップス・ロック全般
+    "clear": {"voice": "teto", "blend": {"voice": "teto-soft", "amount": 0.22}, "formant": 1.075, "breathy": 0.0, "consonant": 1.6, "air": 4.0, "eq": _EQ_CLEAR, "deess": -3.0,
+              "vibratoRate": 5.3, "glide": 1.0, "legato": 0.0},
+    # 2 なめらか: 滑らか音源。音と音がつながる・子音はやわらかめ。バラード・シティポップ・R&B
+    "smooth": {"voice": "teto-smooth", "blend": {"voice": "teto-soft", "amount": 0.15}, "formant": 1.05, "breathy": 0.05, "consonant": 1.25, "air": 3.5,
+               "eq": [["peak", 220, 0.8, 2], ["peak", 1600, 1.2, 2], ["peak", 2000, 2.0, 6], ["hshelf", 6500, 0.7, 8]], "deess": -3.0, "vibratoRate": 5.0, "glide": 1.5, "legato": 0.03},
+    # 3 ウィスパー: 弱音源を多く・息まじり・近くでそっと歌う。静かな Aメロ・夜の曲・チル
+    "whisper": {"voice": "teto", "blend": {"voice": "teto-soft", "amount": 0.75}, "formant": 1.04, "breathy": 0.35, "consonant": 1.2, "air": 5.0,
+                "eq": [["peak", 220, 0.8, 1], ["peak", 2000, 2.0, 5], ["hshelf", 6500, 0.7, 9]], "deess": -4.0, "vibratoRate": 4.9, "glide": 1.3, "legato": 0.02},
+    # 4 キュート: 幼く明るい・子音くっきり・揺れは浅く速い。カワイイ・フューチャーベース、アイドルポップ、元気な曲
+    "cute": {"voice": "teto", "blend": {"voice": "teto-soft", "amount": 0.12}, "formant": 1.13, "breathy": 0.0, "consonant": 1.85, "air": 4.5,
+             "eq": [["peak", 220, 0.8, 1], ["peak", 1600, 1.2, 2], ["peak", 2600, 2.0, 8], ["hshelf", 6500, 0.7, 10]], "deess": -3.0, "vibratoRate": 6.0, "glide": 0.9, "legato": 0.0},
+    # 5 クール: 少し大人っぽく落ち着いた声・滑らか音源を半分・高い成分は控えめ。ジャズ、トリップホップ、ロックの低い Aメロ
+    "cool": {"voice": "teto", "blend": {"voice": "teto-smooth", "amount": 0.5}, "formant": 0.975, "breathy": 0.08, "consonant": 1.35, "air": 2.5,
+             "eq": [["peak", 250, 0.8, 3], ["peak", 1400, 1.2, 2], ["peak", 2000, 2.0, 5], ["hshelf", 6500, 0.7, 6]], "deess": -3.0, "vibratoRate": 5.0, "glide": 1.2, "legato": 0.015},
+}
+TETO_VOICE_NAMES = {"clear": "クリア", "smooth": "なめらか", "whisper": "ウィスパー", "cute": "キュート", "cool": "クール"}
+
+
+def teto_voice(path, name, which=None, **more):
+    """曲の歌の声を、TETO_VOICES の種類に切りかえる。which: 何番目の歌か（None＝全部。0＝本線だけ）。more で個別に上書き"""
+    js = load(path)
+    for i, v in enumerate(js.get("vocals", [])):
+        if which is not None and i != which: continue
+        v.update(copy.deepcopy(TETO_VOICES[name])); v.update(more)
+    save(path, js); print(f"  テトの声: {TETO_VOICE_NAMES[name]}")
 
 
 def chops(path, S, bars, vol=0.3, pan=0.25, shift=0, **more):
