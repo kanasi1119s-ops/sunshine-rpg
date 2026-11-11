@@ -39,7 +39,7 @@ S.scene("ソロ回し2", 16, "solo", TUNE)
 S.scene("最後のサビ", 24, "chorus", C_CH + C_CH[:8])
 S.scene("チャイム", 8, "outro", ["C", "G", "D", "G", "C", "D", "G", "G"])
 
-V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="oboe", low=False)
+V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="kfbSineLead", low=False)   # v2: 歌をなぞる音は、高さの揺れない電子の音に
 BJ = S.track("バンジョー（ロール）", "banjo", volume=0.1, pan=0.3, reverb=0.2)
 FID = S.track("フィドル", "fiddle", volume=0.12, pan=-0.2, reverb=0.3)
 GT = [S.track(f"ナイロンギター{i + 1}", "guitar", patch="nylonGuitar", amp="crystal", volume=0.07, pan=-0.45, reverb=0.2, chorus=0, sustain=0.6) for i in range(4)]
@@ -100,7 +100,8 @@ def boomchuck(b, ch):
     """ギターのブン・チャッ（1・3拍は低音、2・4拍は和音）"""
     r = low(ch, "E2"); v = voice(ch, 60, 3)
     GT[0].bar(b, f"{nm(r)}:1 R:1 {nm(r + 7)}:1 R:1")
-    for j in range(3): GT[j + 1].bar(b, f"R:1 {nm(v[j])}:0.5 R:0.5 R:1 {nm(v[j])}:0.5 R:0.5")
+    # v2: 「ブン・チャ」だけをくり返さず、2小節目は2つめの「チャ」を16分2つ（チャカ）にする
+    for j in range(3): GT[j + 1].bar(b, f"R:1 {nm(v[j])}:0.5 R:0.5 R:1 {nm(v[j])}:0.5 R:0.5" if b % 2 == 0 else f"R:1 {nm(v[j])}:0.5 R:0.5 R:1 {nm(v[j])}:0.25 {nm(v[j])}:0.25 R:0.5")
 
 
 FTUNE = ["D5:0.5 B4:0.5 G4:0.5 B4:0.5 D5:1 E5:1", "G5:1 E5:0.5 D5:0.5 C5:1 E5:1", "D5:0.5 B4:0.5 A4:0.5 G4:0.5 B4:1 D5:1", "A4:2 F#4:1 R:1",
@@ -184,3 +185,17 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の10（9時）。ブ�
           "合いことばの節はソロ回し1のフィドル。授業の終わりのチャイムで終わる。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.15}, special={"先生がふりむく": -0.8, "最後のサビ": 0.35})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午前9時・教科書の落書きが動きだす・ブルーグラス）で直すこと:
+#   生の楽器だけの曲なので、電子の音は足さない。ギターの「ブン・チャ」を2小節ひとまとまりにし、1音ずつ強さを揺らす（バンジョーも）
+#   歌: Aメロ・Bメロはクリア、サビはキュート（落書きたちがはしゃぐ）、先生がふりむく所はウィスパー。ブルーグラスらしく、サビのハモリは サビ2 の頭から
+from vt3x_lib import *
+path = sys.argv[1]
+humanize(path, "ナイロンギター", mid=84, down=12, up=10, seed=3); humanize(path, "バンジョー", mid=86, down=10, up=8, seed=8)
+set_parts(path, "ウッドベース", sustain=1.12)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5))
+    vocal_polish(path, S, {"verse": 8, "pre": 12, "chorus": 18, "最後のサビ": 22, "bridge": 0, "outro": 0}, scoop=0.3, slash=0.7, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.5)
+    harmony(path, S, [("サビ2", 0, None, K), ("最後のサビ", 0, None, K)], vol=0.38)
+    voice_by_scene(path, S, {"verse": "clear", "pre": "clear", "chorus": "cute", "bridge": "whisper"}, default="clear")

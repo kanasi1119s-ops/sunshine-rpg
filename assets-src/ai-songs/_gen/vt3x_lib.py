@@ -372,6 +372,16 @@ def std_mark(scoop_kinds=("chorus",), jump=5, minlen=0.75, plain=()):
     return fn
 
 
+def humanize(path, match, mid=84, down=12, up=10, seed=6):
+    """役の名前に match を含むパートの音の強さを、1音ずつ少し揺らす（指で弾く・たたく人の、音ごとの強さのちがい）。もう強さが書いてある音はそのまま"""
+    import random as _r
+    js = load(path); rr = _r.Random(seed); n = 0
+    for p in js["parts"]:
+        if match in p.get("role", ""):
+            p["notes"] = " ".join(t if t.startswith("R") or "%" in t else f"{t}%{int(mid + rr.uniform(-down, up))}" for t in p["notes"].split()); n += 1
+    save(path, js); print(f"  強さを揺らした（{match}）: {n}")
+
+
 def set_parts(path, match, **kw):
     """役の名前に match を含むパートの設定を書きかえる（例: ベースに sustain=1.15）"""
     js = load(path); n = 0

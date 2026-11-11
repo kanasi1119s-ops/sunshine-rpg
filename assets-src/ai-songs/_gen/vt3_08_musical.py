@@ -42,7 +42,7 @@ S.scene("間奏", 8, "solo", ["Eb", "Cm7", "Fm7", "Bb7", "Eb", "Cm7", "Fm7", "Bb
 S.scene("最後のサビ", 24, "chorus", [tr_chord(c, 3) for c in C_CH + C_CH[:8]])
 S.scene("フィナーレ", 8, "outro", ["Ab", "Bb", "Gm7", "Cm7", "Ab", "Bb7", "Eb", "Eb"])
 
-V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="clarinet", low=False)
+V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="kfbSineLead", low=False)   # v2: 歌をなぞる音は、高さの揺れない電子の音に
 BR = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.065, pan=0.3, reverb=0.3, sustain=0.6) for i in range(3)]
 TP = S.track("トランペット（ファンファーレ）", "brass", patch="trumpet", volume=0.1, pan=0.15, reverb=0.3)
 TB = S.track("トロンボーン", "brass", patch="trombone", volume=0.09, pan=-0.2, reverb=0.3)
@@ -50,7 +50,7 @@ STR = [S.track(f"ストリングス{i + 1}", "strings", patch="stringEnsemble", 
 STRL = S.track("ストリングス（駆け上がり）", "strings", patch="stringEnsemble", volume=0.07, pan=-0.3, reverb=0.4, sustain=0.6)
 PL = S.track("ピアノ（左手）", "piano", volume=0.11, pan=-0.15, reverb=0.25, fx=[{"type": "eq", "low": -2, "mid": -1, "midHz": 400, "high": 2}])
 PR = [S.track(f"ピアノ（右手{i + 1}）", "piano", volume=0.08, pan=-0.15, reverb=0.25, fx=[{"type": "eq", "low": -3, "mid": -1, "midHz": 400, "high": 3}]) for i in range(3)]
-PIC = S.track("車掌の笛（ピッコロ）", "lead", patch="piccolo", volume=0.09, pan=0.2, reverb=0.4)
+PIC = S.track("車掌の笛（電子の笛）", "lead", patch="kfbSineLead", volume=0.07, pan=0.2, reverb=0.4)
 BASS = S.track("ウッドベース", "bass", **finger_bass_spec(vol=0.24))
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 D = S.drumkit()
@@ -214,3 +214,19 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の08（7時）。ブ�
           "合いことばの節は間奏の車掌の笛（ピッコロ）。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.2}, special={"アナウンス": -0.7, "最後のサビ": 0.25, "フィナーレ": 0.2})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午前7時・満員電車がミュージカルの舞台に・ショーチューン）で直すこと:
+#   生の楽団の曲なので、電子の音は足さない。車掌の笛はフルートの仲間（ピッコロ）をやめて電子の笛に（人間「フルートの音は指定しない限り使わない」）
+#   ピアノ: 1音ずつ強さを揺らす（左手は重め、右手は軽め）。ウッドベース: 同じ音を続ける所の穴をなくす
+#   歌: ミュージカルらしく場面で声を変える。Aメロ・Bメロはクリア（語る）、サビはキュート（舞台の真ん中で明るく）、アナウンスはウィスパー。
+#       揺れは深め（舞台の歌い方）で、サビの句の頭はすくう。ハモリは サビ2（転調後）の後半から、最後のサビは頭から
+from vt3x_lib import *
+path = sys.argv[1]
+humanize(path, "ピアノ（右手", mid=82, down=12, up=10, seed=4); humanize(path, "ピアノ（左手", mid=90, down=8, up=8, seed=5)
+set_parts(path, "ウッドベース", sustain=1.12)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=4, minlen=0.75))
+    vocal_polish(path, S, {"verse": 12, "pre": 18, "chorus": 28, "最後のサビ": 32, "bridge": 6, "outro": 20}, scoop=0.4, slash=0.9, vib_min_beats=1.5, vib_start=0.4, auto=0.6, breaths=0.6)
+    harmony(path, S, [("サビ2", 8, None, K2), ("最後のサビ", 0, None, K3)], vol=0.36)
+    voice_by_scene(path, S, {"verse": "clear", "pre": "clear", "chorus": "cute", "bridge": "whisper"}, default="clear")

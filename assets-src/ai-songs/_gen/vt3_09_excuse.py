@@ -38,10 +38,10 @@ S.scene("ブレイク2", 8, "bridge", ["E9", "E9", "A9", "E9", "E9", "E9", "A9",
 S.scene("最後のサビ", 16, "chorus", C_CH)
 S.scene("すみません", 2, "outro", ["E9", "E9"])
 
-V = Voice(S, vol=0.2, delay=0.5, bright=0.1, patch="surgeParaphonic", low=False)
+V = Voice(S, vol=0.2, delay=0.5, bright=0.1, patch="kfbSineLead", low=False)   # v2: 歌をなぞるシンセは、高さの揺れない音に
 CUTL = [S.track(f"カッティング L{i + 1}", "guitar", amp="jpopClean", volume=0.05, pan=-0.6, reverb=0.12, chorus=0, sustain=0.25) for i in range(3)]
 CUTR = S.track("カッティング R（単音）", "guitar", amp="jpopClean", volume=0.06, pan=0.6, reverb=0.12, chorus=0, sustain=0.25)
-CLV = [S.track(f"クラビネット風の鍵盤{i + 1}", "keys", patch="surgeKeysDxTonez", volume=0.05, pan=0.25, reverb=0.15, sustain=0.3) for i in range(3)]
+CLV = [S.track(f"クラビネット風の鍵盤{i + 1}", "keys", patch="kfbSquarePluck", volume=0.045, pan=0.25, reverb=0.15, sustain=0.3) for i in range(3)]
 TP = S.track("トランペット", "brass", patch="trumpet", volume=0.09, pan=0.2, reverb=0.22)
 SX = S.track("アルトサックス", "brass", patch="altoSax", volume=0.09, pan=-0.1, reverb=0.22)
 TB = S.track("トロンボーン", "brass", patch="trombone", volume=0.08, pan=-0.25, reverb=0.22)
@@ -201,3 +201,41 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の09（8時）。フ�
           "16分のカッティングギター・ゴーストノートのドラム・指弾きのベース・ホーン。合いことばの節は間奏のベース。最後は「すみません」だけで止める。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.15}, special={"ブレイク2": -0.4, "最後のサビ": 0.4})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午前8時・遅刻の言いわけ・ファンク）で直すこと:
+#   ギター: 左＝高い4本の弦のカッティング（消す音「チャッ」を多めに、和音は裏で短く。言いわけをまくしたてる感じ）、右＝単音の線（低めの音で、歌の合間に答える）。
+#          01 のファンク（押して流す型）とはちがい、こちらは「つっかえながら早口」の型: Aメロは消す音ばかりで和音は1小節に2回、サビで和音が増える
+#   電子の音: クラビネット風の鍵盤を、短い矩形波のプラック（kfbSquarePluck）に
+#   歌: Aメロ・Bメロはクリア（早口の言いわけ）、サビはキュート（開き直り）、ブレイク2 と「すみません」はウィスパー。ハモリは サビ2 の後半と最後のサビ
+from vt3x_lib import *
+import random as _rnd
+path = sys.argv[1]
+ab = active_bars(path, "カッティング L"); rb = active_bars(path, "カッティング R")
+GL = GuitarRig(S, "Lギター（カッティング）", "funk_cut", -0.6, 0.052, style="funk", seed=21)
+P9 = {"verse": "x.x.x.xUx.x.d.x.", "verse_b": "x.xUx.x.x.dUx.xU", "pre": "d.x.x.dUx.x.d.xU", "cho": "d.xUx.dUx.xUd.dU", "cho_b": "d.dUx.dUd.xUD.DU", "other": "x.xUx.d.x.xUx.d."}
+prev = None
+for b in range(S.nb):
+    if b not in ab: GL.stop(b); continue
+    n, i, L, k = S.scene_of(b); v = sorted(voice(S.chords[b].split("|")[0].split("/")[0], 66, 4, prev)); prev = v; vo = [None, None] + [nm(x) for x in v]
+    key = {"verse": "verse", "pre": "pre", "chorus": "cho"}.get(k, "other")
+    if key in ("verse", "cho") and i % 4 == 3: key += "_b"
+    GL.bar(b, P9[key], vo, vel={"verse": 0.82, "pre": 0.9, "chorus": 1.0}.get(k, 0.9))
+rr = _rnd.Random(17); line = {}
+for b in rb:
+    n, i, L, k = S.scene_of(b); tn = tones(S.chords[b].split("|")[0].split("/")[0], "E3", "B4")[:5]
+    if len(tn) < 3: continue
+    seq = [(0.25, 0, 0.2), (0.75, 1, 0.2), (1.5, 0, 0.2), (2.25, 2, 0.2), (2.75, 1, 0.2), (3.5, 0, 0.4)] if i % 2 == 0 else [(0.5, 1, 0.2), (1.0, 2, 0.2), (1.75, 1, 0.2), (2.5, 0, 0.2), (3.0, 1, 0.2), (3.25, 2, 0.2), (3.75, 0, 0.2)]
+    toks = []; t = 0.0
+    for (pos, q, d) in seq:
+        if pos > t: toks.append(f"R:{pos - t:g}")
+        toks.append(f"{nm(tn[q % len(tn)])}:{d:g}%{int(88 + rr.uniform(-10, 10))}"); t = pos + d
+    line[b] = " ".join(toks)
+parts = GL.parts() + [line_part(S, "Rギター（単音の線）", "funk_line", 0.6, 0.052, line, seed=3, jitter=0.012)]
+add_parts(path, parts, drop=lambda p: p.get("role", "").startswith("カッティング "))
+set_parts(path, "ベース（指", sustain=1.15)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5))
+    vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 20, "最後のサビ": 24, "bridge": 0, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.5)
+    harmony(path, S, [("サビ2", 4, None, K), ("最後のサビ", 0, None, K)], vol=0.36)
+    voice_by_scene(path, S, {"verse": "clear", "pre": "clear", "chorus": "cute", "bridge": "whisper", "outro": "whisper"}, default="clear")
