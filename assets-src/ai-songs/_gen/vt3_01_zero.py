@@ -49,7 +49,10 @@ S.scene("ろうそく", 4, "outro", ["Ebmaj9", "F6", "Dm7", "Bbmaj9"])
 #   旋律 brightLead → kfbSquareLead／エレピ surgeKeysDxEp → kfbGlassEp／アルペジオ kawaiiArp → kfbSquarePluck／ベル popBell → kfbGlocken／
 #   サビに丸いサブベース（kfbSub）／最後のサビにスーパーソー（kfbSupersaw・キックで凹む）／効果音は kawaiiFx（上がる音・インパクト・きらきら・泡）。
 #   構成: 間奏2 の前半4小節を「ドロップ」にする（ハーフテンポ・スーパーソーの和音の刻み・声のチョップ・サブベース）。後半4小節で4つ打ちに戻り、ストリングスが歌う
-V = Voice(S, vol=0.2, delay=0.75, bright=0.1, patch="kfbSquareLead", low=False)
+# v12（2026-11-11 人間「ピヨピヨ消えてないな」「3分24秒からあるね」）: 原因は、歌と同じ旋律をなぞるシンセ（kfbSquareLead）。この音色は音の高さが ±70 セントも揺れる
+#   （測った値。矩形波＋深いビブラート＝ヒヨコの声に聞こえる）。最後のサビは高い音が続くので目立った。
+#   → 歌入りの版は揺れない kfbSineLead（±10 セント）で小さく支えるだけ、BGM の版の旋律は kfbFutureSax（電子のサックス）にする
+V = Voice(S, vol=0.2, delay=0.75, bright=0.1, patch="kfbSineLead" if VOCAL else "kfbFutureSax", low=False)
 # v3: v1 7.16・v2 7.21（サビを薄くしても変わらない）→ 音色を変える。FM のエレピ → エレピ（DX）、スラップ → 指弾き
 EP = [S.track(f"エレピ{i + 1}", "keys", patch="kfbGlassEp", volume=0.075, pan=-0.35, reverb=0.25, sustain=0.8,
               fx=[{"type": "eq", "low": -3, "mid": 0, "midHz": 700, "high": 1}]) for i in range(4)]
