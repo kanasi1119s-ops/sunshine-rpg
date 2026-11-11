@@ -35,12 +35,12 @@ S.scene("洗濯機が止まる", 4, "bridge", ["Dm7", "Em7", "Fmaj7", "F7"])    
 S.scene("最後のサビ", 16, "chorus", [tr_chord(c, 1) for c in C_CH])
 S.scene("パチン", 2, "outro", ["Bbm", "Bbm"])
 
-V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="surgeFriendly", low=False)
+V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="kfbSineLead", low=False)   # v2: 歌をなぞるシンセは、高さの揺れない音に
 GS = [S.track(f"スパニッシュギター{i + 1}", "guitar", patch="nylonGuitar", amp="crystal", volume=0.07, pan=-0.35, reverb=0.25, chorus=0, sustain=0.5) for i in range(4)]
 GSL = S.track("スパニッシュギター（旋律）", "guitar", patch="nylonGuitar", amp="crystal", volume=0.11, pan=-0.15, reverb=0.3, chorus=0, sustain=0.8)
 MAR = S.track("マリンバ（分散和音）", "strings", patch="marimba", volume=0.09, pan=0.35, reverb=0.25)
 BRS = [S.track(f"シンセのブラス{i + 1}", "brass", patch="brassSection", volume=0.05, pan=0.3, reverb=0.25, sustain=0.4) for i in range(3)]
-PAD = [S.track(f"パッド{i + 1}", "pad", **pad_spec("surgePadBright", vol=0.03, pan=-0.5 + 0.5 * i, duck=0.45, sustain=1.2)) for i in range(3)]
+PAD = [S.track(f"パッド{i + 1}", "pad", **pad_spec("fbChord", vol=0.03, pan=-0.5 + 0.5 * i, duck=0.45, sustain=1.2)) for i in range(3)]
 SUB = S.track("808", "sub808", volume=0.16, pan=0, sustain=0.9, fx=[{"type": "filter", "kind": "highpass", "freq": 30, "q": 0.7}])
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.06, pan=0, reverb=0.3)
 WASH = S.track("洗濯機の回る音", "pad", patch="surgePadMwPulsating", volume=0.04, pan=0, reverb=0.2, sustain=1.0,
@@ -188,3 +188,30 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の11（10時）。レ
           "デンボウのリズム・スパニッシュギターのかき鳴らし・マリンバ・808。合いことばの節は間奏のスパニッシュギター。洗濯機の音で始まり、洗濯ばさみの「パチン」で終わる。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.2}, special={"洗濯機が止まる": -0.6, "最後のサビ": 0.4})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午前10時・屋上の洗濯物・レゲトン）で直すこと:
+#   電子の音: パッドをキックで凹むうねる和音（fbChord）に。洗濯の「泡」と「水滴」の効果音（kawaiiFx）を、洗濯機の場面と間奏、サビの頭に置く（この曲だけの音）。
+#            サビ2 と最後のサビの句の終わりに、短い矩形波のプラックが「上がって下がる」山の形で入る（ほかの曲とは形を変える）
+#   ギター: スパニッシュギターの1音ずつの強さを揺らす
+#   歌: Aメロ・Bメロはクリア、サビはキュート（晴れた屋上）、洗濯機が止まる所はウィスパー。ハモリは サビ2 の後半と最後のサビ
+from vt3x_lib import *
+path = sys.argv[1]
+fx, run = {}, {}
+w = S.sc("洗濯機"); fx[w[0]] = "C4:1 R:1 C#4:0.5 R:1.5"; fx[w[-1]] = "R:2 C4:0.5 C4:0.5 C#4:1"
+for q, b in enumerate(S.sc("間奏")):
+    if q % 2 == 0: fx[b] = "R:3 C4:0.5 C#4:0.5"
+for name in ("サビ1", "サビ2", "最後のサビ"): fx[S.sc(name)[0]] = "D4:2 R:2"
+for name in ("サビ2", "最後のサビ"):
+    for q, b in enumerate(S.sc(name)):
+        t = tones(S.chords[b].split("|")[0].split("/")[0], "A4", "E6")
+        if q % 4 == 3 and len(t) >= 5: run[b] = "R:2 " + " ".join(f"{nm(t[z])}:0.25" for z in (0, 2, 3, 4, 4, 3, 2, 0))
+parts = [pad_part(S, "泡と水滴", "kawaiiFx", fx, 0.06, pan=0.2, reverb=0.2, modulate=False, instrument="guitar"),
+         pad_part(S, "プラック（山の形）", "kfbSquarePluck", run, 0.042, pan=0.35, reverb=0.25, fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.15, "feedback": 0.25}])]
+add_parts(path, parts)
+humanize(path, "スパニッシュギター", mid=84, down=12, up=10, seed=7)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5))
+    vocal_polish(path, S, {"verse": 8, "pre": 14, "chorus": 20, "最後のサビ": 24, "bridge": 0, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.6, breaths=0.5)
+    harmony(path, S, [("サビ2", 8, None, K), ("最後のサビ", 0, None, KL)], vol=0.36)
+    voice_by_scene(path, S, {"verse": "clear", "pre": "clear", "chorus": "cute", "bridge": "whisper"}, default="clear")

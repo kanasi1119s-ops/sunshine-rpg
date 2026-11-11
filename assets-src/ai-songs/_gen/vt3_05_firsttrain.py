@@ -45,7 +45,7 @@ WR = [S.track(f"音の壁 R{i + 1}", "distGuitar", amp="shoegaze", volume=0.03, 
 ARP = S.track("エコーのギター（アルペジオ）", "echoGuitar", amp="crystal", volume=0.07, pan=0.25, reverb=0.5, chorus=0, sustain=1.0,
               fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.25, "feedback": 0.35}])
 SWL = [S.track(f"逆再生のふくらみ{i + 1}", "pad", **pad_spec("kfbSupersawSwell", vol=0.03, pan=-0.4 + 0.4 * i, duck=0.0, sustain=2.5)) for i in range(3)]
-PAD = [S.track(f"響くパッド{i + 1}", "pad", **pad_spec("kfbSparklePad", vol=0.035, pan=-0.5 + 0.5 * i, duck=0.2, sustain=2.0)) for i in range(3)]
+PAD = [S.track(f"響くパッド{i + 1}", "pad", **pad_spec("kfbSparklePad", vol=0.018, pan=-0.5 + 0.5 * i, duck=0.2, sustain=2.0)) for i in range(3)]
 BASS = S.track("ベース（指弾き）", "bass", **finger_bass_spec(vol=0.2))
 CHIME = S.track("駅のチャイム（グロッケン）", "glockenspiel", volume=0.06, pan=0.0, reverb=0.6)
 TRAIN = S.track("始発の音（低い一撃）", "impactHit", volume=0.08, pan=0, reverb=0.4)

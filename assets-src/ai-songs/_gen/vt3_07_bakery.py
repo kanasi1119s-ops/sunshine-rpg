@@ -43,7 +43,7 @@ V = Voice(S, vol=0.2, delay=0.75, bright=0.0, patch="kfbSineLead", low=False)   
 NYL = [S.track(f"ナイロンギター{i + 1}", "guitar", patch="nylonGuitar", amp="crystal", volume=0.07, pan=-0.35, reverb=0.25, chorus=0, sustain=1.0) for i in range(4)]
 PN = [S.track(f"ハウスのピアノ{i + 1}", "piano", volume=0.07, pan=0.3, reverb=0.25, fx=[{"type": "eq", "low": -4, "mid": -1, "midHz": 400, "high": 0}]) for i in range(3)]
 FL = S.track("電子のサックス（旋律）", "lead", patch="kfbFutureSax", volume=0.085, pan=0.1, reverb=0.3, mono=True)   # v2: フルートの音は使わない（人間・2026-11-11）→ 電子のリードに
-PAD = [S.track(f"パッド{i + 1}", "pad", **pad_spec("fbChord", vol=0.034, pan=-0.5 + 0.5 * i, duck=0.4, sustain=1.5)) for i in range(3)]
+PAD = [S.track(f"パッド{i + 1}", "pad", **pad_spec("fbChord", vol=0.014, pan=-0.5 + 0.5 * i, duck=0.4, sustain=1.5)) for i in range(3)]
 BASS = S.track("ベース（指弾き）", "bass", **finger_bass_spec(vol=0.22))
 BELL = S.track("オーブンとドアベル", "glockenspiel", volume=0.06, pan=0.3, reverb=0.4)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)

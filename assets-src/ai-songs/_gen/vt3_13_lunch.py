@@ -37,11 +37,11 @@ S.scene("からあげ", 4, "bridge", ["Cm9", "D7#9", "Ebmaj7", "F#7"])      # �
 S.scene("最後のサビ", 16, "chorus", [tr_chord(c, 1) for c in C_CH])
 S.scene("ごちそうさま", 2, "outro", ["Bmaj7", "Bmaj7"])
 
-V = Voice(S, vol=0.2, delay=0.5, bright=0.1, patch="brightLead", low=False)
-KEY = [S.track(f"FMの鍵盤{i + 1}", "keys", patch="surgeKeysFmPiano1", volume=0.06, pan=-0.35, reverb=0.2, sustain=0.6) for i in range(3)]
+V = Voice(S, vol=0.2, delay=0.5, bright=0.1, patch="kfbSineLead", low=False)   # v2: 歌をなぞるシンセは、高さの揺れない音に
+KEY = [S.track(f"FMの鍵盤{i + 1}", "keys", patch="kfbGlassEp", volume=0.055, pan=-0.35, reverb=0.2, sustain=0.6) for i in range(3)]
 ORG = [S.track(f"オルガンのヒット{i + 1}", "drawbarOrgan", volume=0.05, pan=0.35, reverb=0.2, sustain=0.3) for i in range(3)]
 BRS = [S.track(f"ブラスのヒット{i + 1}", "brass", patch="brassSection", volume=0.055, pan=0.15, reverb=0.25, sustain=0.35) for i in range(3)]
-BASS = S.track("シンセベース", "bass", **synth_bass_spec("surgeBassPop", vol=0.22, duck=0.2))
+BASS = S.track("シンセベース", "bass", **synth_bass_spec("kfbFmBass", vol=0.15, duck=0.2))
 CLAP = S.track("手拍子", "pad", patch="seasonFx", volume=0.08, pan=0, reverb=0.15, modulate=False)
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.05, pan=0, reverb=0.3)
 D = S.drumkit()
@@ -169,3 +169,26 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の13（12時）。ニ
           "跳ねるドラム・オルガンとブラスのヒット・FMの鍵盤・シンセベース。合いことばの節は間奏のブラスのヒット。「いただきます」で始まり「ごちそうさま」で終わる。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.15}, special={"からあげ": -0.3, "最後のサビ": 0.4})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（正午・お弁当のおかず交換・ニュージャックスウィング）で直すこと:
+#   電子の音: FM の鍵盤をガラスのエレピ（kfbGlassEp）、シンセベースをはじく FM のベース（kfbFmBass）に。サビの頭に上がる音とインパクト、
+#            Aメロ2 の句の合間に「きゅっ」「ぴょん」（おかずをつまむ・kawaiiFx）。からあげ（ブリッジ）はレコードのパチパチだけを足して静かに
+#   歌: Aメロ・Bメロはクリア（交渉）、サビはキュート、からあげはウィスパー（ひそひそ取引）。ハモリは サビ2 の後半と最後のサビ
+from vt3x_lib import *
+path = sys.argv[1]
+fx = {}
+for name in ("サビ1", "サビ2", "最後のサビ"):
+    b0 = S.sc(name)[0]; fx[b0] = "G5:2 R:2"; fx[b0 - 1] = "R:2 F#4:2"
+for q, b in enumerate(S.sc("Aメロ2")):
+    if q % 4 == 1: fx[b] = "R:3.5 E4:0.5"
+    elif q % 4 == 3: fx[b] = "R:3 F4:1"
+bk = S.sc("からあげ"); crk = {bk[0]: "A#5:12 R:4"}
+add_parts(path, [pad_part(S, "カワイイ効果音", "kawaiiFx", fx, 0.06, pan=0.15, reverb=0.15, modulate=False, instrument="guitar"),
+                 pad_part(S, "レコードのパチパチ", "kawaiiFx", crk, 0.035, reverb=0.05, modulate=False, instrument="guitar")])
+set_parts(path, "シンセベース", sustain=1.1)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5))
+    vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 18, "最後のサビ": 22, "bridge": 0, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.5)
+    harmony(path, S, [("サビ2", 8, None, K), ("最後のサビ", 0, None, KL)], vol=0.36)
+    voice_by_scene(path, S, {"verse": "clear", "pre": "clear", "chorus": "cute", "bridge": "whisper"}, default="clear")

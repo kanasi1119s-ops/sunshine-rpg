@@ -172,3 +172,17 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の12（11時）。ジ
           "山は歌ではなくピアノソロ。合いことばの節はピアノソロの頭。ページをめくる音で始まり、本を閉じる音で終わる。自作")
 finish(S, LY, V, -2,
        level={"verse": -0.4, "chorus": 0.1}, special={"ピアノソロ": 0.2, "エンディング": -0.3})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午前11時・図書館・ジャズのピアノトリオ）で直すこと:
+#   ジャズの決まり（電子の音は使わない・録音の楽器だけ）なので、音は足さない。ピアノは1音ずつ強さを揺らす（左手は重く、右手は軽く、ソロは抑揚を大きく）。
+#   ウッドベースは同じ音を続ける所の穴をなくす
+#   歌: 図書館なので、Aメロはウィスパー（ひそひそ声）、Bメロとサビはクリア。揺れは浅く、長い音の後ろだけ。ハモリなし（トリオの静けさを残す）
+from vt3x_lib import *
+path = sys.argv[1]
+humanize(path, "ピアノ（右手", mid=78, down=14, up=10, seed=4); humanize(path, "ピアノ（左手", mid=84, down=8, up=8, seed=5); humanize(path, "ピアノ（ソロ", mid=84, down=16, up=14, seed=6)
+set_parts(path, "ウッドベース", sustain=1.12)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5, minlen=1.0))
+    vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 20, "outro": 8}, scoop=0.3, slash=0.7, vib_min_beats=1.5, vib_start=0.55, auto=0.7, breaths=0.7)
+    voice_by_scene(path, S, {"verse": "whisper", "pre": "clear", "chorus": "clear", "outro": "whisper"}, default="clear")
