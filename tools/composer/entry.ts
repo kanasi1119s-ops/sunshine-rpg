@@ -141,6 +141,13 @@ import kfbSineLeadUrl from "../../assets-src/soundfont/extra/kfb-sine-lead.sf3?u
 import kfbFormantLeadUrl from "../../assets-src/soundfont/extra/kfb-formant-lead.sf3?url";
 import kfbSubUrl from "../../assets-src/soundfont/extra/kfb-sub.sf3?url";
 import kawaiiFxUrl from "../../assets-src/soundfont/extra/kawaii-fx.sf3?url";
+import ocarinaVcslUrl from "../../assets-src/soundfont/extra/ocarina-vcsl.sf3?url";
+import harmonicaVcslUrl from "../../assets-src/soundfont/extra/harmonica-vcsl.sf3?url";
+import tubeGlockVcslUrl from "../../assets-src/soundfont/extra/tubeglock-vcsl.sf3?url";
+import wineGlassVcslUrl from "../../assets-src/soundfont/extra/wineglass-vcsl.sf3?url";
+import balafonVcslUrl from "../../assets-src/soundfont/extra/balafon-vcsl.sf3?url";
+import strumstickVcslUrl from "../../assets-src/soundfont/extra/strumstick-vcsl.sf3?url";
+import toysFxVcslUrl from "../../assets-src/soundfont/extra/toys-vcsl.sf3?url";
 import kfbGrowlBassUrl from "../../assets-src/soundfont/extra/kfb-growl-bass.sf3?url";
 import kfbNeuroBassUrl from "../../assets-src/soundfont/extra/kfb-neuro-bass.sf3?url";
 import kfbFmBassUrl from "../../assets-src/soundfont/extra/kfb-fm-bass.sf3?url";
@@ -564,6 +571,7 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   stringsSpiccato: { programs: [189], url: stringsSpiccatoUrl }, stringsTremolo: { programs: [190], url: stringsTremoloUrl },
   // 2026-11-11 カワイイ・フューチャーベースの音（バンク 1）
   kfbSupersaw: { programs: [191], url: kfbSupersawUrl }, kfbSupersawSwell: { programs: [192], url: kfbSupersawSwellUrl }, kfbSawStab: { programs: [193], url: kfbSawStabUrl }, kfbSquarePluck: { programs: [194], url: kfbSquarePluckUrl }, kfbGlocken: { programs: [196], url: kfbGlockenUrl }, kfbMusicBox: { programs: [197], url: kfbMusicBoxUrl }, kfbBrightBells: { programs: [198], url: kfbBrightBellsUrl }, kfbSquareLead: { programs: [199], url: kfbSquareLeadUrl }, kfbSineLead: { programs: [200], url: kfbSineLeadUrl }, kfbFormantLead: { programs: [201], url: kfbFormantLeadUrl }, kfbSub: { programs: [202], url: kfbSubUrl }, kawaiiFx: { programs: [203], url: kawaiiFxUrl },
+  ocarina: { programs: [217], url: ocarinaVcslUrl }, harmonica: { programs: [218], url: harmonicaVcslUrl }, tubeGlock: { programs: [219], url: tubeGlockVcslUrl }, wineGlass: { programs: [220], url: wineGlassVcslUrl }, balafon: { programs: [221], url: balafonVcslUrl }, strumstick: { programs: [222], url: strumstickVcslUrl }, toysFx: { programs: [223], url: toysFxVcslUrl },
   kfbGrowlBass: { programs: [204], url: kfbGrowlBassUrl }, kfbNeuroBass: { programs: [205], url: kfbNeuroBassUrl }, kfbFmBass: { programs: [206], url: kfbFmBassUrl }, kfbHoover: { programs: [207], url: kfbHooverUrl }, kfbHardcoreLead: { programs: [208], url: kfbHardcoreLeadUrl }, kfbRaveStab: { programs: [209], url: kfbRaveStabUrl }, kfbChipLead: { programs: [210], url: kfbChipLeadUrl }, kfbTranceLead: { programs: [211], url: kfbTranceLeadUrl }, kfbGlassEp: { programs: [212], url: kfbGlassEpUrl }, kfbBoops: { programs: [213], url: kfbBoopsUrl }, kfbCharmOrgan: { programs: [214], url: kfbCharmOrganUrl }, kfbFlute: { programs: [215], url: kfbFluteUrl }, kfbSparklePad: { programs: [216], url: kfbSparklePadUrl },
   // 2026-10-25 Surge XT のプラック（バンク 1）
   surgePopcorn: { programs: [128], url: surgePopcornUrl }, surgeBell1: { programs: [129], url: surgeBell1Url }, surgeGuzheng: { programs: [130], url: surgeGuzhengUrl }, surgeRetroWave: { programs: [131], url: surgeRetroWaveUrl }, surgeConvex: { programs: [132], url: surgeConvexUrl }, surgeWoody: { programs: [133], url: surgeWoodyUrl }, surgeFantasyBell: { programs: [134], url: surgeFantasyBellUrl }, surgeNicePluck: { programs: [135], url: surgeNicePluckUrl }, surgeWaveguide: { programs: [136], url: surgeWaveguideUrl }, surgeFriendly: { programs: [137], url: surgeFriendlyUrl }, surgeMixedFeelings: { programs: [138], url: surgeMixedFeelingsUrl },

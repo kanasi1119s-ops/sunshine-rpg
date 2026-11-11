@@ -81,6 +81,10 @@ export const SYNTH_PATCHES: Record<string, number> = {
   //   kfbRaveStab＝短いレイヴの和音・kfbChipLead＝矩形波のチップ風リード・kfbTranceLead＝はじくトランスのリード・kfbGlassEp＝ガラスのようなエレピ・kfbBoops＝ぽこぽこ鳴る FM の鍵盤・
   //   kfbCharmOrgan＝かわいいオルガン・kfbFlute＝シンセのフルート・kfbSparklePad＝きらめくパッド
   kfbGrowlBass: 204, kfbNeuroBass: 205, kfbFmBass: 206, kfbHoover: 207, kfbHardcoreLead: 208, kfbRaveStab: 209, kfbChipLead: 210, kfbTranceLead: 211, kfbGlassEp: 212, kfbBoops: 213, kfbCharmOrgan: 214, kfbFlute: 215, kfbSparklePad: 216,
+  // 2026-11-11 人間「他にも可愛い日常系の音源ない？あったら追加して」: かわいい日常の曲の録音の楽器（VCSL・CC0。tools/soundfont/build-vcsl-daily.py）:
+  //   ocarina＝オカリナ（A4〜C#6 の録音）・harmonica＝ハーモニカ・tubeGlock＝筒の鉄琴（高い。G6〜A7 の録音）・wineGlass＝グラスハープ・balafon＝バラフォン（木琴の仲間）・
+  //   strumstick＝小さな3弦の弦楽器（ウクレレのように軽い）・toysFx＝おもちゃと小物の音（鍵盤ごとに別の音。汽笛・笛・フレクサトーン・ラチェット・ウインドチャイム・トライアングルなど）
+  ocarina: 217, harmonica: 218, tubeGlock: 219, wineGlass: 220, balafon: 221, strumstick: 222, toysFx: 223,
   surgeBassPasty: 182, surgeBassAnalogBassImaged: 183, surgeBassCatBass: 184, surgeBassWarmSquare: 185, surgeBassEmulation: 186, surgeBassPop: 187, surgeBassModernDirtyFat: 188,
   // Surge XT のプラック（128 以上＝バンク 1。surgePopcorn＝ポップコーンのようにはじける・surgeBell1＝澄んだベル・surgeGuzheng＝箏（こと）のような弦・surgeRetroWave＝80年代風のきらめき・surgeConvex＝丸く太い・surgeWoody＝木をたたいたような・surgeFantasyBell＝幻想的なベル・surgeNicePluck＝素直で明るい・surgeWaveguide＝弦をはじいたような・surgeFriendly＝やさしい・surgeMixedFeelings＝少し切ない）
   surgePopcorn: 128, surgeBell1: 129, surgeGuzheng: 130, surgeRetroWave: 131, surgeConvex: 132, surgeWoody: 133, surgeFantasyBell: 134, surgeNicePluck: 135, surgeWaveguide: 136, surgeFriendly: 137, surgeMixedFeelings: 138,
