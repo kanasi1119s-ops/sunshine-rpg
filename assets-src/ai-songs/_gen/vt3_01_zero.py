@@ -196,7 +196,9 @@ for b in range(S.nb):
             STRH.bar(b, f"{nm(top)}:2 {nm(t2[-1] if t2 else top)}:2")
             r_ = low(ch, "C2"); CELLO.bar(b, f"{nm(r_)}:3 {nm(r_ + 7)}:1")
             ta = tones(ch, "A4", "E6")
-            if i % 2 == 0: ARP.bar(b, " ".join(f"{nm(ta[q % len(ta)])}:0.25" for q in (0, 2, 4, 2, 5, 4, 2, 4, 0, 2, 4, 2, 5, 4, 6, 4)))
+            # v10（2026-11-11 人間「最後のサビのヒヨコがピヨピヨ鳴いているみたいな音はいらないかも」）: 2小節に1回、16分で行ったり来たりしつづけるアルペジオをやめる。
+            #   気に入ってもらえた サビ2 の形（4小節ごとの最後の小節の後半に、8つ駆け上がる）にする。最後の8小節は 2小節ごと
+            if i % 4 == 3 or (i >= 16 and i % 2 == 1): ARP.bar(b, "R:2 " + " ".join(f"{nm(ta[q % len(ta)])}:0.25" for q in ((0, 2, 4, 5, 4, 2, 4, 6) if i % 8 == 3 else (0, 1, 2, 4, 5, 6, 5, 7))))
         elif n == "サビ2" and i % 4 == 3:
             ta = tones(ch, "A4", "E6"); ARP.bar(b, "R:2 " + " ".join(f"{nm(ta[q % len(ta)])}:0.25" for q in (0, 2, 4, 5, 4, 2, 4, 6)))
         if i % 2 == 1 and n != "最後のサビ": stabs(b, ch, "R:3.5 x:0.25 R:0.25")
