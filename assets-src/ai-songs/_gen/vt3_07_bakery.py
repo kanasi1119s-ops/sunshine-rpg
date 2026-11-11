@@ -213,6 +213,8 @@ for p in js["parts"]:
         p["notes"] = " ".join(t if t.startswith("R") or "%" in t else f"{t}%{int(84 + rr.uniform(-12, 10))}" for t in p["notes"].split())
 save(path, js)
 set_parts(path, "ベース（指", sustain=1.15)
+# 測ると、サビ1 が Aメロと同じ大きさ、2番の Aメロ・Bメロが サビ2 と同じ、最後のサビがいちばん小さかった。出だしのタイマーは −30dB → 仕上げで場面ごとに直す
+final_gain(path, {"タイマー": 8, "イントロ": 2, "サビ1": 1.0, "間奏": -0.5, "Aメロ2": -1.2, "Bメロ2": -0.8, "サビ2": 0.6, "最後のサビ": 2.0})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5))
     vocal_polish(path, S, {"verse": 6, "pre": 14, "chorus": 20, "最後のサビ": 24, "bridge": 6, "outro": 0}, scoop=0.3, slash=0.7, vib_min_beats=1.5, vib_start=0.5, auto=0.6, breaths=0.6)

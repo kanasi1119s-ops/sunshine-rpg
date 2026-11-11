@@ -5,9 +5,9 @@ sc = {l.split("\t")[4].strip(): l.split("\t")[2] for l in open("/mnt/user-data/o
 for tag, suf, nm in (("歌", "vo", f"（歌：重音テト・仮）{ver}"), ("BGM", "", f"（BGM・仮）{ver}")):
     f = f"/mnt/user-data/outputs/vt3/all/{title}{nm}.mp3"
     if not os.path.exists(f): print(tag, "なし"); continue
-    w = f"/tmp/kfb/chk{suf}.wav"; subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", f, w]); x, sr = sf.read(w); m = x.mean(1)
+    w = f"/tmp/kfb/chk-{slug}-{ver}{suf}.wav"; subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", f, w]); x, sr = sf.read(w); m = x.mean(1)
     secs = json.load(open(f"/mnt/user-data/outputs/vbq/{slug}-{ver}{suf}.json.secs"))
     print(tag, "点", sc.get(f"{slug}-{ver}{suf}"), "|", " ".join(f'{a["name"]}{20 * np.log10(np.sqrt((m[int(a["t"] * sr):int(b["t"] * sr)] ** 2).mean()) + 1e-9):.1f}' for a, b in zip(secs, secs[1:])))
     bpm = json.load(open(f"/mnt/user-data/outputs/vbq/{slug}-{ver}{suf}.json"))["bpm"]
     o = subprocess.run(["python3", "tools/audio-check/noise_scan.py", w, "--bpm", str(bpm)], capture_output=True, text=True, cwd="/home/claude/wt-mix").stdout
-    print("   雑音:", " ".join(l.strip() for l in o.splitlines() if "か所" in l or "■" in l)[:200])
+    os.remove(w); print("   雑音:", " ".join(l.strip() for l in o.splitlines() if "か所" in l or "■" in l)[:200])

@@ -232,6 +232,8 @@ path = sys.argv[1]
 pl = restrum(path, S, "Lギター（刻み", -0.55, lambda n, i, end, b: "D.d.d.d.D.d.D---" if end else ("D.d.d.d.D.D.DDD." if i % 4 == 3 else "D.d.d.d.D.d.d.d."), seed=2)
 pr = restrum(path, S, "Rギター（刻み", 0.55, lambda n, i, end, b: "D.ddD.d.D.d.D---" if end else ("D.ddD.ddD.D.DuDu" if i % 4 == 3 else ("D.ddD.ddD.ddD.d." if i % 2 == 0 else "D.d.D.ddD.d.D.dd")), seed=9)
 add_parts(path, pl + pr, drop=lambda p: p.get("role", "").startswith("Lギター（刻み") and not p.get("notes", "").count("%") or p.get("role", "").startswith("Rギター（刻み") and not p.get("notes", "").count("%"))
+# 測ると、出だしの太鼓が −27dB と小さく、最後のサビ（−15.9）が サビ2（−15.4）と太鼓のソロ（−14.8）より小さかった → 仕上げで場面ごとに直す
+final_gain(path, {"太鼓": 5, "イントロ": 1.5, "サビ1": 0.8, "太鼓のソロ": -1.0, "最後のサビ": 1.6})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=4, minlen=0.75))
     vocal_polish(path, S, {"verse": 10, "pre": 16, "chorus": 26, "最後のサビ": 30, "bridge": 8, "break": 0, "outro": 0}, scoop=0.4, slash=0.9, vib_min_beats=1.5, vib_start=0.45, auto=0.5, breaths=0.5)
