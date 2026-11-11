@@ -234,6 +234,7 @@ for b in rb:
 parts = GL.parts() + [line_part(S, "Rギター（単音の線）", "funk_line", 0.6, 0.052, line, seed=3, jitter=0.012)]
 add_parts(path, parts, drop=lambda p: p.get("role", "").startswith("カッティング "))
 set_parts(path, "ベース（指", sustain=1.15)
+final_gain(path, {"最後のサビ": 1.4})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5))
     vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 20, "最後のサビ": 24, "bridge": 0, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.5)

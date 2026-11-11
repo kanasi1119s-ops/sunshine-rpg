@@ -210,6 +210,7 @@ parts = [pad_part(S, "泡と水滴", "kawaiiFx", fx, 0.06, pan=0.2, reverb=0.2, 
          pad_part(S, "プラック（山の形）", "kfbSquarePluck", run, 0.042, pan=0.35, reverb=0.25, fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.15, "feedback": 0.25}])]
 add_parts(path, parts)
 humanize(path, "スパニッシュギター", mid=84, down=12, up=10, seed=7)
+final_gain(path, {"洗濯機": 4, "サビ2": -0.4, "最後のサビ": 1.6})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5))
     vocal_polish(path, S, {"verse": 8, "pre": 14, "chorus": 20, "最後のサビ": 24, "bridge": 0, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.6, breaths=0.5)

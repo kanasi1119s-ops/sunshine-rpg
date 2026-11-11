@@ -44,8 +44,8 @@ WL = [S.track(f"音の壁 L{i + 1}", "distGuitar", amp="shoegaze", volume=0.032,
 WR = [S.track(f"音の壁 R{i + 1}", "distGuitar", amp="shoegaze", volume=0.03, pan=0.75, reverb=0.6, chorus=0, sustain=0.9) for i in range(3)]
 ARP = S.track("エコーのギター（アルペジオ）", "echoGuitar", amp="crystal", volume=0.07, pan=0.25, reverb=0.5, chorus=0, sustain=1.0,
               fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.25, "feedback": 0.35}])
-SWL = [S.track(f"逆再生のふくらみ{i + 1}", "pad", **pad_spec("kfbSupersawSwell", vol=0.03, pan=-0.4 + 0.4 * i, duck=0.0, sustain=2.5)) for i in range(3)]
-PAD = [S.track(f"響くパッド{i + 1}", "pad", **pad_spec("kfbSparklePad", vol=0.018, pan=-0.5 + 0.5 * i, duck=0.2, sustain=2.0)) for i in range(3)]
+SWL = [S.track(f"逆再生のふくらみ{i + 1}", "pad", **pad_spec("surgePadNeverending", vol=0.04, pan=-0.4 + 0.4 * i, duck=0.0, sustain=2.5)) for i in range(3)]
+PAD = [S.track(f"響くパッド{i + 1}", "pad", **pad_spec("surgePadVerbPad", vol=0.035, pan=-0.5 + 0.5 * i, duck=0.2, sustain=2.0)) for i in range(3)]
 BASS = S.track("ベース（指弾き）", "bass", **finger_bass_spec(vol=0.2))
 CHIME = S.track("駅のチャイム（グロッケン）", "glockenspiel", volume=0.06, pan=0.0, reverb=0.6)
 TRAIN = S.track("始発の音（低い一撃）", "impactHit", volume=0.08, pan=0, reverb=0.4)
@@ -206,6 +206,7 @@ finish(S, LY, V, 0,
 #                 サビ1 は8分だけ（壁が半分）→ サビ2 から右が16分 → 最後のサビは左右とも細かく。音色（明るい歪み＋深い残響）はそのまま
 #   電子の音: 逆再生のふくらみを kfbSupersawSwell（ふくらむスーパーソー）、響くパッドを kfbSparklePad（きらきらのパッド）に
 #   歌: 遠くでつぶやく曲なので、Aメロ・Bメロ・ブリッジはウィスパー、サビはクリア（のばす音の後ろだけ浅く揺らす）。ハモリは最後のサビ
+# v5: v2〜v4 はどれも 7.3 前後。ギターの弾き方を変えても戻らないので、入れかえたパッド（kfbSupersawSwell・kfbSparklePad）を元の音（surgePadNeverending・surgePadVerbPad）に戻す。シューゲイザーの「にじむ」音には元のほうが合う
 from vt3x_lib import *
 path = sys.argv[1]
 js0 = load(path)
