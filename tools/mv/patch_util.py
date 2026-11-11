@@ -20,3 +20,9 @@ def fit(cur, ref, ref_alpha, conf=None, sigma=10.0):
     mx, my = gx + fl[..., 0], gy + fl[..., 1]
     return (cv2.remap(ref.astype(np.float32), mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE),
             cv2.remap(ref_alpha.astype(np.float32), mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE))
+
+def blobs(m, max_area=80, max_side=14):
+    """0/1 の形 m から、小さな「点」だけを残す（細長い線＝動いたふち、大きなかたまりは外す）"""
+    n, lab, st, _ = cv2.connectedComponentsWithStats(m.astype(np.uint8), connectivity=8)
+    ok = (st[:, cv2.CC_STAT_AREA] <= max_area) & (np.maximum(st[:, cv2.CC_STAT_WIDTH], st[:, cv2.CC_STAT_HEIGHT]) <= max_side); ok[0] = False
+    return ok[lab].astype(np.uint8)

@@ -6,6 +6,8 @@
   python3 dot_clean.py <コマのフォルダ> <人物の形 npy> <追跡 json> <出力フォルダ> <点の数 npy>
 """
 import sys, os, json, cv2, numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import patch_util as PU
 SRC, PM, TRK, DST, OUT = sys.argv[1:6]; os.makedirs(DST, exist_ok=True)
 P = np.load(PM); K = len(P); trk = json.load(open(TRK))
 dx = np.array([t[1] for t in trk], float); dy = np.array([t[2] for t in trk], float)
@@ -20,12 +22,14 @@ for k in range(K):
         M = np.float32([[1, 0, dx[k] - dx[j]], [0, 1, dy[k] - dy[j]]])
         nb.append(cv2.warpAffine(F[j], M, (F[j].shape[1], F[j].shape[0]), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE))
     ref = np.median(np.stack(nb), 0).astype(np.float32); f = F[k].astype(np.float32)
-    d = (f - ref).max(2)                                                   # 明るくなったぶん
+    dd = f - ref; d = dd.max(2)                                            # 明るくなったぶん
+    dmin = dd.min(2)                                                       # 光・雪は白〜金色なので、赤・緑・青のどれも明るくなる（腕の「04」・目・服のふちの動きは、どれかの色が変わらない）
     # ふちの動きで出る細い線ではなく「点」: 少しぼかした差も大きい所
     d = np.minimum(d, cv2.GaussianBlur(d, (0, 0), 1.0) * 1.6)
     near = cv2.dilate(P[k], cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (int(os.environ.get("DC_NEAR", "91")),) * 2)) > 100
-    m = (d > T) & near
+    m = (d > T) & (dmin > T * 0.4) & near
     m = cv2.morphologyEx(m.astype(np.uint8), cv2.MORPH_OPEN, np.ones((2, 2), np.uint8))
+    m = PU.blobs(m)                                                        # 小さな点だけ。体や手が動いてできる細長い差（ふち）は直さない（直すと ふちが遅れて見える）
     stat[k, 1] = int(m[FACE].sum()); m[FACE] = 0
     stat[k, 0] = int(m.sum())
     a = cv2.GaussianBlur(cv2.dilate(m, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))).astype(np.float32), (0, 0), 1.2)[..., None]

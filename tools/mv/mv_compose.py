@@ -226,6 +226,14 @@ def frames_wb2():
       ・入れかえる場所のふちは、人物の輪郭から 20px ほど外の、動かない背景の上（wb2_region.py）。切り抜きのまちがいが絵に出ない
     手を入れるのは 2 つだけ: ぐるっと回る光の帯（背景は remove_sparkle.py、人物の上の点は dot_clean.py）"""
     seq = json.load(open(S["seq"])); RG = np.load(S["region"]); K = len(RG)
+    # つなぎ目で「前のコマ」は 1 倍で先へ進んでいたが、その先（180 コマ目〜）には こい光の帯がマフラーにかかったコマがあり、つなぐあいだに光が見えた。
+    # つなぐあいだ、前のコマは 0.2 倍でゆっくり進める（形は新しいコマへ動かしていくので、止まっては見えない）
+    s0 = None
+    for q in seq:
+        if q[1] >= 0:
+            if s0 is None: s0 = q[1]
+            q[1] = s0 + 0.2 * (q[1] - s0)
+        else: s0 = None
     PM = np.load(S["person"]); plate_g = cv2.cvtColor(cv2.imread(S["plate"]), cv2.COLOR_BGR2GRAY).astype(np.float32)
     cache = {}
     def rd(d, k):
@@ -244,15 +252,19 @@ def frames_wb2():
     _fine = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
     _fine.setFinestScale(0); _fine.setPatchSize(12); _fine.setPatchStride(3); _fine.setGradientDescentIterations(40)
     h, w = plate_g.shape; gx, gy = np.meshgrid(np.arange(w, dtype=np.float32), np.arange(h, dtype=np.float32))
+    RY, RX = slice(40, 720), slice(360, 920)        # 動きの流れを測る所（テトと白い息のある所だけ。ほかは入れかえないので測らない）
+    gxr, gyr = gx[RY, RX] - RX.start, gy[RY, RX] - RY.start
     def morph2(A, ga, B, gb, a, sharp=False):
-        fab = _fine.calc(ga, gb, None); fba = _fine.calc(gb, ga, None)
-        wa = cv2.remap(A, gx + a * fba[..., 0], gy + a * fba[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
-        wb = cv2.remap(B, gx + (1 - a) * fab[..., 0], gy + (1 - a) * fab[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
-        wga = cv2.remap(ga, gx + a * fba[..., 0], gy + a * fba[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
-        wgb = cv2.remap(gb, gx + (1 - a) * fab[..., 0], gy + (1 - a) * fab[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        """2 枚のあいだの絵。流れは なめらかにして使う（巻き髪のような くり返しの模様で、流れがばらばらになって髪がちぎれて見えたため）"""
+        Ar, Br, gar, gbr = A[RY, RX], B[RY, RX], np.ascontiguousarray(ga[RY, RX]), np.ascontiguousarray(gb[RY, RX])
+        fab = cv2.GaussianBlur(_fine.calc(gar, gbr, None), (0, 0), 5); fba = cv2.GaussianBlur(_fine.calc(gbr, gar, None), (0, 0), 5)
+        ma = (gxr + a * fba[..., 0], gyr + a * fba[..., 1]); mb = (gxr + (1 - a) * fab[..., 0], gyr + (1 - a) * fab[..., 1])
+        R_ = lambda X, m: cv2.remap(X, m[0], m[1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
         c = a
         if sharp: c = float(np.clip((a - 0.36) / 0.28, 0, 1)); c = c * c * (3 - 2 * c)
-        return wa * (1 - c) + wb * c, (wga * (1 - c) + wgb * c).astype(np.uint8)
+        out = B.copy(); out[RY, RX] = R_(Ar, ma) * (1 - c) + R_(Br, mb) * c
+        g = gb.copy(); g[RY, RX] = (R_(gar, ma).astype(np.float32) * (1 - c) + R_(gbr, mb) * c).astype(np.uint8)
+        return out, g
     def at(p):                                      # → (絵, 流れ用の絵, 使ったコマ)
         k = int(np.floor(p)); f = p - k
         if f < 0.03 or k + 1 >= K: k = min(k, K - 1); return rd(S["frames"], k), gray(k), [k]
