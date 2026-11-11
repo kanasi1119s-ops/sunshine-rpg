@@ -222,6 +222,13 @@ RIGS = {
         {"type": "eq", "low": -3, "mid": 2.5, "midHz": 2800, "high": 1},
         {"type": "filter", "kind": "lowpass", "freq": 7500, "q": 0.6},
         {"type": "room", "mix": 0.1}]},
+    # 明るい単音の線（ハイライフ・タッピング・マスロックのクリーン）: 粒をそろえるコンプ → 明るいクリーン → 2.5kHz を出す → 小さな部屋
+    "bright_line": {"di": "emily", "amp": "jpopClean", "ampDrive": 0.1, "sustain": 1.0, "release": 0.15, "fx": [
+        {"type": "compressor", "threshold": -22, "ratio": 4, "attack": 0.006, "release": 0.1},
+        {"type": "filter", "kind": "highpass", "freq": 200, "q": 0.7},
+        {"type": "eq", "low": -2, "mid": 2.0, "midHz": 2500, "high": 1},
+        {"type": "filter", "kind": "lowpass", "freq": 8000, "q": 0.6},
+        {"type": "room", "mix": 0.1}]},
     "funk_line": {"amp": "funk", "ampDrive": 0.18, "fx": [
         {"type": "compressor", "threshold": -24, "ratio": 5, "attack": 0.006, "release": 0.1},
         {"type": "filter", "kind": "highpass", "freq": 220, "q": 0.7},
@@ -370,6 +377,21 @@ def std_mark(scoop_kinds=("chorus",), jump=5, minlen=0.75, plain=()):
         if x["scene"] in plain or x["kind"] in plain: mk = mk.replace("~", "").replace("/", "")
         return mk
     return fn
+
+
+def to_di(path, S, prefix, rig, pan=None, vol=None, role=None, mid=86, spread=9, seed=5, **over):
+    """元の曲の、1本の線のギター（役の名前が prefix で始まる・標準音源）を、同じ音のまま DI ギター（録音のギターをアンプとエフェクターに通す音）に替える。
+    1音ずつ強さを揺らす。元のパートは消す"""
+    import random as _r
+    js = load(path); rr = _r.Random(seed); out = []; keep = []
+    for p in js["parts"]:
+        if not p.get("role", "").startswith(prefix): keep.append(p); continue
+        q = copy.deepcopy(GT_BASE); q.update(RIGS[rig]); q.update(over)
+        q.update(role=role or p["role"], pan=p.get("pan", 0) if pan is None else pan, volume=p.get("volume", 0.06) if vol is None else vol,
+                 notes=" ".join(t if t.startswith("R") or "%" in t else f"{t}%{int(mid + rr.uniform(-spread, spread))}" for t in p["notes"].split()))
+        if "barGain" in p: q["barGain"] = p["barGain"]
+        out.append(q)
+    js["parts"] = keep + out; save(path, js); print(f"  DI ギターに替えた（{prefix}）: {len(out)}")
 
 
 def humanize(path, match, mid=84, down=12, up=10, seed=6):

@@ -42,13 +42,13 @@ S.scene("静けさ", 4, "bridge", ["Dm9", "Bbmaj7", "Gm9", "A7sus4"])
 S.scene("最後のサビ", 24, "chorus", C_CH + C_CH[:8])
 S.scene("スプーン", 4, "outro", ["Bb", "C", "Dm", "Dm"])
 
-V = Voice(S, vol=0.21, delay=0.5, bright=0.0, patch="surgeResofest", low=False)
+V = Voice(S, vol=0.21, delay=0.5, bright=0.0, patch="kfbSineLead", low=False)   # v2: 歌をなぞるシンセは、高さの揺れない音に
 GL = [S.track(f"Lギター（刻み{i + 1}）", "distGuitar", **rock_gtr_spec(0.05, -0.6, drive=0.55)) for i in range(3)]
 GR = [S.track(f"Rギター（刻み{i + 1}）", "distGuitar", **rock_gtr_spec(0.047, 0.6, drive=0.55)) for i in range(3)]
 RIFF = S.track("ギター（リフ）", "distGuitar", **rock_gtr_spec(0.07, -0.2, drive=0.55))
 LGS = S.track("リードギター（ソロ）", "leadGuitar", **lead_gtr_spec(0.13, 0.05))
 CLN = S.track("クリーンのギター", "guitar", amp="crystal", volume=0.08, pan=0.3, reverb=0.35, chorus=0, sustain=1.0)
-WALL = [S.track(f"厚いシンセ{i + 1}", "pad", **pad_spec("modernSupersaw", vol=0.03, pan=-0.6 + 0.6 * i, duck=0.4, sustain=1.0)) for i in range(3)]
+WALL = [S.track(f"厚いシンセ{i + 1}", "pad", **pad_spec("kfbSupersaw", vol=0.03, pan=-0.6 + 0.6 * i, duck=0.4, sustain=1.0)) for i in range(3)]
 BASS = S.track("ベース（指弾き・ゴリッと）", "bass", **rock_bass_spec(0.27))
 KT = S.track("キックのトリガー", "kickTrigger", volume=0.09, pan=0)
 FRIDGE = S.track("冷蔵庫（カホン）", "cajon", volume=0.08, pan=0.2, reverb=0.2)
@@ -229,3 +229,21 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の16（15時）。ラ
           "合いことばの節はリフの場面のギター。スプーンを置く「カチ」で終わる。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.1}, special={"静けさ": -0.6, "最後のサビ": 0.35, "ブレイクダウン": 0.2})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午後3時・冷蔵庫のプリンをめぐる戦い・ラウドロック）で直すこと:
+#   ギター: 全部同じ強さの刻みをやめ、左＝強い下ろしをずらして置く（1拍目・2拍目の裏・4拍目）、右＝「ジャッ・ジャジャ」の16分まじり。4小節ごとにたたみかける。
+#          刻みが終わる小節は最後を伸ばす。ブリッジミュートの短い音は使わない（人間: 聞きにくい）。クリーンのギターは DI ギターに。音色（歪み）はそのまま
+#   電子の音: 厚いシンセをスーパーソー（kfbSupersaw）に
+#   歌: Aメロ・Bメロはクリア、サビとブレイクダウン（いただきます）はキュート（まじめに戦うほどかわいい）、静けさはウィスパー。ハモリは サビ2 の後半と最後のサビ
+from vt3x_lib import *
+path = sys.argv[1]
+pl = restrum(path, S, "Lギター（刻み", -0.6, lambda n, i, end, b: "D.d.d.D.d.d.D---" if end else ("D.d.D.d.D.D.DDDD" if i % 4 == 3 else "D.d.d.D.d.d.D.d."), seed=2)
+pr = restrum(path, S, "Rギター（刻み", 0.6, lambda n, i, end, b: "D.ddD.d.D.d.D---" if end else ("DuDuD.ddDuDuD.D." if i % 4 == 3 else ("D.ddD.d.D.ddD.d." if i % 2 == 0 else "D.d.D.ddD.d.D.dd")), seed=9)
+add_parts(path, pl + pr, drop=lambda p: p.get("role", "").startswith("Lギター（刻み") or p.get("role", "").startswith("Rギター（刻み"))
+to_di(path, S, "クリーンのギター", "clean_arp", vol=0.07, seed=4)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5))
+    vocal_polish(path, S, {"verse": 8, "pre": 14, "chorus": 22, "最後のサビ": 26, "break": 0, "bridge": 6, "outro": 0}, scoop=0.35, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.5)
+    harmony(path, S, [("サビ2", 8, None, K), ("最後のサビ", 0, None, K)], vol=0.36)
+    voice_by_scene(path, S, {"verse": "clear", "pre": "clear", "chorus": "cute", "break": "cute", "bridge": "whisper"}, default="clear")

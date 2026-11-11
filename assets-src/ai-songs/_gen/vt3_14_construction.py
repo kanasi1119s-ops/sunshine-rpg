@@ -35,11 +35,11 @@ S.scene("打楽器", 8, "solo", LOOP)
 S.scene("最後のサビ", 16, "chorus", C_CH)
 S.scene("クレーン", 4, "outro", ["Ebmaj7", "F", "Gm9", "Gm9"])
 
-V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="surgeWoody", low=False)
+V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="kfbSineLead", low=False)   # v2: 歌をなぞるシンセは、高さの揺れない音に
 MAR = S.track("マリンバ", "strings", patch="marimba", volume=0.11, pan=-0.3, reverb=0.25)
 GT = S.track("ギター（ハイライフの単音）", "guitar", amp="crystal", volume=0.07, pan=0.45, reverb=0.25, chorus=0, sustain=0.5)
-PAD = [S.track(f"パッド{i + 1}", "pad", **pad_spec("surgePadStringPad", vol=0.035, pan=-0.5 + 0.5 * i, duck=0.35, sustain=1.5)) for i in range(3)]
-BASS = S.track("ベース", "bass", **synth_bass_spec("surgeBassWarmSquare", vol=0.21, duck=0.25))
+PAD = [S.track(f"パッド{i + 1}", "pad", **pad_spec("kfbSparklePad", vol=0.02, pan=-0.5 + 0.5 * i, duck=0.35, sustain=1.5)) for i in range(3)]
+BASS = S.track("ベース", "bass", **synth_bass_spec("kfbFmBass", vol=0.15, duck=0.25))
 HELM = S.track("ヘルメットとかなづち（カホン）", "cajon", volume=0.09, pan=0.25, reverb=0.12)
 CONGA = S.track("太鼓（コンガのかわり）", "inchTom", volume=0.08, pan=-0.35, reverb=0.15)
 BELLS = S.track("カウベル", "pad", patch="seasonFx", volume=0.05, pan=0.4, reverb=0.1, modulate=False)
@@ -170,3 +170,18 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の14（13時）。ア
           "マリンバ・ハイライフのギター・コンガのかわりの太鼓・カウベル。合いことばの節はサイレンのあとのマリンバ。クレーンが止まって終わる。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.2}, special={"サイレン": -0.6, "最後のサビ": 0.35, "打楽器": 0.1})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午後1時・工事現場の音がリズムになる・アフロビーツ）で直すこと:
+#   ギター: ハイライフの単音の線を、DI ギター（明るいクリーン・粒をそろえる）に。1音ずつ強さを揺らす
+#   電子の音: パッドをきらきらのパッド、ベースをはじく FM のベースに
+#   歌: Aメロ・Bメロはクリア、サビはキュート（現場のかけ声のように明るく）。ハモリは サビ2 の後半と最後のサビ
+from vt3x_lib import *
+path = sys.argv[1]
+to_di(path, S, "ギター（ハイライフ", "bright_line", role="ギター（ハイライフの単音・DI）", vol=0.06, seed=4)
+set_parts(path, "ベース", sustain=1.1)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5))
+    vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 18, "最後のサビ": 22, "break": 0, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.5)
+    harmony(path, S, [("サビ2", 8, None, K), ("最後のサビ", 0, None, K)], vol=0.36)
+    voice_by_scene(path, S, {"verse": "clear", "pre": "clear", "chorus": "cute"}, default="clear")

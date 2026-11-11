@@ -38,7 +38,7 @@ S.scene("窓の外", 8, "bridge", ["Dmaj7", "C#m7", "Bm7", "Aadd9", "Dmaj7", "C#
 S.scene("最後のサビ", 24, "chorus", C_CH + C_CH[:8])
 S.scene("ユニゾン", 6, "outro", ["Dmaj7", "E", "C#m7", "F#m7", "Aadd9", "Aadd9"])
 
-V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="popLeadClear", low=False)
+V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="kfbSineLead", low=False)   # v2: 歌をなぞるシンセは、高さの揺れない音に
 TAP = S.track("タッピングのギター", "guitar", amp="crystal", volume=0.075, pan=-0.35, reverb=0.25, chorus=0, sustain=0.5)
 GC = [S.track(f"ギター（和音{i + 1}）", "guitar", amp="jpopClean", volume=0.05, pan=0.45, reverb=0.2, chorus=0, sustain=0.6) for i in range(3)]
 GD = [S.track(f"歪みのギター{i + 1}", "distGuitar", **rock_gtr_spec(0.04, 0.6 if i % 2 else -0.6, drive=0.45)) for i in range(3)]
@@ -189,3 +189,21 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の17（16時）。マ
           "16分5つでくり返すタッピングとキックが、4拍子の小節線をまたいでずれていく。合いことばの節は最初と間奏のタッピング。全員のユニゾンで切って終わる。自作")
 finish(S, LY, V, 0,
        level={"verse": -0.15}, special={"窓の外": -0.6, "最後のサビ": 0.35})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午後4時・放課後の机のタッピング・マスロック）で直すこと:
+#   ギター: タッピングの線を DI ギター（明るいクリーン・粒をそろえる）に。和音のギターは、のばすだけでなく「下ろし・上げ」のまじったかき鳴らしに（小節ごとに型をずらす＝マスロックのずれ）。
+#          歪みのギターも、左右でちがう型のかき鳴らしに
+#   歌: Aメロはウィスパー（ひとりで机をたたく）、Bメロとサビはクリア、窓の外（ブリッジ）はウィスパー。最後のサビだけキュート（みんなでユニゾン）。ハモリは最後のサビ
+from vt3x_lib import *
+path = sys.argv[1]
+to_di(path, S, "タッピングのギター", "bright_line", vol=0.07, seed=6)
+MP = ["D..d.u.dD.u.d.u.", "D.u..d.uD..d.u.d", "D..d.uD..d.u.D.u", "D.u.d..D.u.d.DuD"]
+pc = restrum(path, S, "ギター（和音", 0.45, lambda n, i, end, b: "D..d.u.dD.D-----" if end else MP[i % 4], seed=5, lag=0.014)
+pd = restrum(path, S, "歪みのギター", 0.0, lambda n, i, end, b: "D.d.D.d.D.D-----" if end else ("D.d.d.D.d.d.D.d." if i % 2 == 0 else "D.ddD.d.D.d.D.dd"), seed=8)
+add_parts(path, pc + pd, drop=lambda p: p.get("role", "").startswith("ギター（和音") or p.get("role", "").startswith("歪みのギター"))
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5))
+    vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 20, "最後のサビ": 24, "bridge": 0, "outro": 0}, scoop=0.3, slash=0.7, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.6)
+    harmony(path, S, [("最後のサビ", 0, None, K)], vol=0.36)
+    voice_by_scene(path, S, {"verse": "whisper", "pre": "clear", "chorus": "clear", "bridge": "whisper", "最後のサビ": "cute"}, default="clear")

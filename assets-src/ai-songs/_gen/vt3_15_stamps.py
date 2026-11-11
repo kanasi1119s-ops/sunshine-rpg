@@ -45,7 +45,7 @@ S.scene("通知", 2, "outro", ["Eb", "Eb"])
 S.tempo = [{"bar": S.sc("最後のサビ")[0] + 1, "bpm": 156}, {"bar": S.sc("最後のサビ")[8] + 1, "bpm": 162, "ramp": 8},
            {"bar": S.sc("スタンプ連打")[0] + 1, "bpm": 172, "ramp": 4}]
 
-V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="clarinet", low=False)   # v3: BGM の旋律をホルンからクラリネットに（歌の版 7.62 に対し BGM 7.45。旋律の音色がこもっていた）
+V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="kfbSineLead" if VOCAL else "clarinet", low=False)   # v3: BGM の旋律をホルンからクラリネットに（歌の版 7.62 に対し BGM 7.45。旋律の音色がこもっていた）
 ACC = [S.track(f"アコーディオン{i + 1}", "accordion", volume=0.065, pan=-0.3, reverb=0.25, sustain=0.5) for i in range(3)]
 ACCM = S.track("アコーディオン（旋律）", "accordion", volume=0.11, pan=-0.15, reverb=0.28)
 CLA = S.track("クラリネット", "lead", patch="clarinet", volume=0.11, pan=0.2, reverb=0.3)
@@ -173,3 +173,16 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の15（14時）。ポ
           "合いことばの節は間奏のクラリネット（ばあちゃんの鼻歌）。通知音「ぴこん」で終わる。自作")
 finish(S, LY, V, -1,
        level={"verse": -0.15}, special={"げんき": -0.7, "最後のサビ": 0.4, "スタンプ連打": 0.2})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午後2時・おばあちゃんから届くスタンプ・ポルカ）で直すこと:
+#   生の楽器の曲なので、電子の音は足さない（歌をなぞる音だけ、高さの揺れない音に）。アコーディオンの伴奏は1音ずつ強さを揺らす
+#   歌: Aメロ・Bメロはクリア、サビはキュート（スタンプのにぎやかさ）、「げんき」の所はウィスパー（ひとことの重さ）。ハモリは サビ2 の頭から（合唱のように）と最後のサビ
+from vt3x_lib import *
+path = sys.argv[1]
+humanize(path, "アコーディオン", mid=84, down=10, up=8, seed=5)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5))
+    vocal_polish(path, S, {"verse": 8, "pre": 12, "chorus": 20, "最後のサビ": 24, "bridge": 6, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.5)
+    harmony(path, S, [("サビ2", 0, None, K), ("最後のサビ", 0, None, KL)], vol=0.36, shift=-1)
+    voice_by_scene(path, S, {"verse": "clear", "pre": "clear", "chorus": "cute", "bridge": "whisper"}, default="clear")
