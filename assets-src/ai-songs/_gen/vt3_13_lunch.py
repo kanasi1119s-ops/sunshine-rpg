@@ -187,6 +187,7 @@ bk = S.sc("からあげ"); crk = {bk[0]: "A#5:12 R:4"}
 add_parts(path, [pad_part(S, "カワイイ効果音", "kawaiiFx", fx, 0.06, pan=0.15, reverb=0.15, modulate=False, instrument="guitar"),
                  pad_part(S, "レコードのパチパチ", "kawaiiFx", crk, 0.035, reverb=0.05, modulate=False, instrument="guitar")])
 set_parts(path, "シンセベース", sustain=1.1)
+final_gain(path, {"いただきます": 4, "最後のサビ": 2.0})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5))
     vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 18, "最後のサビ": 22, "bridge": 0, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.5)

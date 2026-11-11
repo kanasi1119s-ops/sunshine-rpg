@@ -180,6 +180,7 @@ from vt3x_lib import *
 path = sys.argv[1]
 to_di(path, S, "ギター（ハイライフ", "bright_line", role="ギター（ハイライフの単音・DI）", vol=0.06, seed=4)
 set_parts(path, "ベース", sustain=1.1)
+final_gain(path, {"ヘルメット": 6, "イントロ": 1.5, "最後のサビ": 2.2})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5))
     vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 18, "最後のサビ": 22, "break": 0, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.5)

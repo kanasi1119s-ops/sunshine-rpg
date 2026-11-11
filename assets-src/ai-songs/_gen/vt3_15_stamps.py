@@ -181,6 +181,7 @@ finish(S, LY, V, -1,
 from vt3x_lib import *
 path = sys.argv[1]
 humanize(path, "アコーディオン", mid=84, down=10, up=8, seed=5)
+final_gain(path, {"アコーディオン": 4, "サビ1": -0.5, "サビ2": 0.3, "最後のサビ": 1.5})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5))
     vocal_polish(path, S, {"verse": 8, "pre": 12, "chorus": 20, "最後のサビ": 24, "bridge": 6, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.5)
