@@ -1,3 +1,4 @@
+import json
 import copy
 # HUMMING RELAY（vt3）の作り直しで使う部品（2026-11-11）。決まりは docs/sound/vt3-remake-plan.md。
 # 人間「全部完成度高めて。同じ感じにならないように。音の深み、スケール、空間、しゃくり、ビブラート。細部まで細かく。
@@ -402,6 +403,12 @@ def humanize(path, match, mid=84, down=12, up=10, seed=6):
         if match in p.get("role", ""):
             p["notes"] = " ".join(t if t.startswith("R") or "%" in t else f"{t}%{int(mid + rr.uniform(-down, up))}" for t in p["notes"].split()); n += 1
     save(path, js); print(f"  強さを揺らした（{match}）: {n}")
+
+
+def final_gain(path, gains):
+    """場面ごとの仕上げの大きさ（dB）。仕上げのいちばん最後に、歌も伴奏もいっしょに上げ下げする（v3_finish.sh が .gain を読む）。
+    測ってから決める: サビ1 < サビ2 < 最後のサビ、Aメロ・Bメロ・間奏はサビより下、前奏は小さすぎない（最初の Aメロより 4dB 以上小さくしない）"""
+    json.dump(gains, open(path + ".gain", "w"), ensure_ascii=False); print("  仕上げの大きさ:", gains)
 
 
 def set_parts(path, match, **kw):

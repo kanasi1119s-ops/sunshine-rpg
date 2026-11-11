@@ -258,6 +258,8 @@ for b in range(S.nb):
     GS.bar(b, ("..U.x.U...U.x.U." if n == "Aメロ2" else "x.U.x.U.x.U.x.U.") if i % 4 != 3 else "x.U.x.U.x.UUx.U.", vo, vel=0.9)
 parts += GS.parts()
 add_parts(path, parts, drop=lambda p: any(p.get("role", "").startswith(x) for x in ("Lギター（刻み", "Rギター（刻み", "スカのギター")))
+# v3: 測ると、最後のサビ（−15.4）が サビ2（−15.0）より小さく、サビ1（−16.7）と Aメロ2（−17.2）の差が小さかった
+final_gain(path, {"サビ1": 0.6, "最後のサビ": 1.0})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5, minlen=1.0))
     vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 16, "最後のサビ": 20, "bridge": 10, "break": 0, "outro": 0}, scoop=0.3, slash=0.7, vib_min_beats=2.0, vib_start=0.5, auto=0.5, breaths=0.5)

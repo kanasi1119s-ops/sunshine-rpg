@@ -26,6 +26,8 @@ P
   if [ -f "/mnt/user-data/outputs/vbq/$base.json.secs" ]; then python3 assets-src/ai-songs/_gen/vb25_intro.py $tmp "/mnt/user-data/outputs/vbq/$base.json.secs"; else python3 assets-src/ai-songs/_gen/lm25_intro_lift.py $tmp; fi
   [ -f "/mnt/user-data/outputs/vbq/$base.json.secs" ] && python3 assets-src/ai-songs/_gen/vb25_level.py $tmp "/mnt/user-data/outputs/vbq/$base.json.secs"
   [ -f "/mnt/user-data/outputs/vbq/$base.json.secs" ] && python3 assets-src/ai-songs/_gen/vb25_tone.py $tmp   # 2026-10-26: 最後に全体の音の高さのバランスを整える
+  # 2026-11-12: 曲が書いた「場面ごとの仕上げの大きさ」（.gain。vt3x_lib.final_gain）を、いちばん最後にかける（歌も伴奏もいっしょに動く。サビを山にする・小さすぎる前奏を上げる）
+  [ -f "/mnt/user-data/outputs/vbq/$base.json.gain" ] && python3 assets-src/ai-songs/_gen/vt3_final_gain.py $tmp "/mnt/user-data/outputs/vbq/$base.json.secs" "/mnt/user-data/outputs/vbq/$base.json.gain"
   pq=$(HF_HOME=/tmp/hf python3 tools/audio-check/aes-score-lowmem.py $tmp 2>/dev/null | tail -1 | python3 -c "import sys,ast;l=sys.stdin.read();print(ast.literal_eval(l[l.index('{'):])['PQ'])" 2>/dev/null)
   ffmpeg -v error -y -i $tmp -b:a 256k "$OUT/all/$base.mp3"
   best=$(awk -F'\t' -v n="$no" '$1==n{if($3>m)m=$3}END{print m+0}' "$OUT/scores.tsv" 2>/dev/null)

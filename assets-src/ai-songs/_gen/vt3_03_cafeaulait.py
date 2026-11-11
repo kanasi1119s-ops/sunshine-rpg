@@ -229,6 +229,8 @@ parts += [pad_part(S, "サブベース", "kfbSub", sub, 0.028, instrument="bass"
           pad_part(S, "レコードのパチパチ", "kawaiiFx", {S.sc("紙コップ")[0]: "A#5:12 R:4", S.sc("アウトロ")[0]: "A#5:12 A#5:12"}, 0.035, reverb=0.05, modulate=False, instrument="guitar")]
 add_parts(path, parts, drop=lambda p: p.get("role", "").startswith("ギター（オブリ）"))
 set_parts(path, "ベース", sustain=1.15)
+# v3: 測ると、紙コップ（出だし）が −23dB と小さく、最後のサビ（−15.5）が サビ2（−14.9）より小さかった
+final_gain(path, {"紙コップ": 3.5, "最後のサビ": 1.0, "アウトロ": 1.0})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=4))
     vocal_polish(path, S, {"verse": 6, "pre": 12, "chorus": 20, "最後のサビ": 24, "bridge": 6, "outro": 0}, scoop=0.25, slash=0.6, vib_min_beats=1.5, vib_start=0.5, auto=0.7, breaths=0.7)

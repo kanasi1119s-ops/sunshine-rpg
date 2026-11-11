@@ -288,6 +288,8 @@ add_parts(path, parts, drop=lambda p: p.get("role", "").startswith("カッティ
 set_parts(path, "ベース", sustain=1.15)
 # v3: 測ると、ジングルがとても小さく（−23.6dB。Aメロ1 は −16.8）、2番の Aメロ・Bメロが サビ1 より大きく、最後のサビが サビ2 より小さかった → 伴奏を場面ごとに上げ下げする
 scene_gain(path, S, {"ジングル": 1.8, "サビ1": 1.06, "Aメロ2": 0.86, "Bメロ2": 0.88, "サックスのソロ": 0.94, "最後のサビ": 1.13})
+# v3: 仕上げでも、ジングルを上げ、最後のサビを山にする
+final_gain(path, {"ジングル": 3.0, "最後のサビ": 0.8})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), plain=("鼻歌",)))
     vocal_polish(path, S, {"verse": 8, "pre": 16, "chorus": 24, "最後のサビ": 28, "bridge": 10, "outro": 6}, scoop=0.3, slash=0.7, vib_min_beats=1.5, vib_start=0.5, auto=0.6, breaths=0.6)
