@@ -76,6 +76,11 @@ export const SYNTH_PATCHES: Record<string, number> = {
   //   kfbGlocken＝鉄琴・kfbMusicBox＝オルゴール・kfbBrightBells＝きらきらのベル・kfbSquareLead＝矩形波のリード・kfbSineLead＝丸い正弦波のリード・
   //   kfbFormantLead＝声のようなリード・kfbSub＝低い正弦波のベース。kawaiiFx＝かわいい効果音と電子ドラム（鍵盤ごとに別の音。tools/soundfont/build-kawaii-fx.py）
   kfbSupersaw: 191, kfbSupersawSwell: 192, kfbSawStab: 193, kfbSquarePluck: 194, kfbGlocken: 196, kfbMusicBox: 197, kfbBrightBells: 198, kfbSquareLead: 199, kfbSineLead: 200, kfbFormantLead: 201, kfbSub: 202, kawaiiFx: 203,
+  // 2026-11-11 人間「ブルーアーカイブで使われてそうなの追加して」: 学園もののゲームに多い「かわいい日常の曲」と「激しい電子の戦いの曲」に使う音の種類を足した（曲そのものは まねない。Surge XT のプリセットの録音）:
+  //   kfbGrowlBass＝うなるベース・kfbNeuroBass＝ねじれる暗いベース・kfbFmBass＝はじく FM のベース・kfbHoover＝うなり上がる太い音（レイヴ）・kfbHardcoreLead＝ハードコアの鋭い和音のリード・
+  //   kfbRaveStab＝短いレイヴの和音・kfbChipLead＝矩形波のチップ風リード・kfbTranceLead＝はじくトランスのリード・kfbGlassEp＝ガラスのようなエレピ・kfbBoops＝ぽこぽこ鳴る FM の鍵盤・
+  //   kfbCharmOrgan＝かわいいオルガン・kfbFlute＝シンセのフルート・kfbSparklePad＝きらめくパッド
+  kfbGrowlBass: 204, kfbNeuroBass: 205, kfbFmBass: 206, kfbHoover: 207, kfbHardcoreLead: 208, kfbRaveStab: 209, kfbChipLead: 210, kfbTranceLead: 211, kfbGlassEp: 212, kfbBoops: 213, kfbCharmOrgan: 214, kfbFlute: 215, kfbSparklePad: 216,
   surgeBassPasty: 182, surgeBassAnalogBassImaged: 183, surgeBassCatBass: 184, surgeBassWarmSquare: 185, surgeBassEmulation: 186, surgeBassPop: 187, surgeBassModernDirtyFat: 188,
   // Surge XT のプラック（128 以上＝バンク 1。surgePopcorn＝ポップコーンのようにはじける・surgeBell1＝澄んだベル・surgeGuzheng＝箏（こと）のような弦・surgeRetroWave＝80年代風のきらめき・surgeConvex＝丸く太い・surgeWoody＝木をたたいたような・surgeFantasyBell＝幻想的なベル・surgeNicePluck＝素直で明るい・surgeWaveguide＝弦をはじいたような・surgeFriendly＝やさしい・surgeMixedFeelings＝少し切ない）
   surgePopcorn: 128, surgeBell1: 129, surgeGuzheng: 130, surgeRetroWave: 131, surgeConvex: 132, surgeWoody: 133, surgeFantasyBell: 134, surgeNicePluck: 135, surgeWaveguide: 136, surgeFriendly: 137, surgeMixedFeelings: 138,

@@ -6,6 +6,9 @@
 #           F#4 白いノイズの上がる音（2秒）  G4 下がる音（2秒）  G#4 逆再生のシンバル風（1秒）
 #   ドラム:  A4 キック（短く はじけて、低い尾）  A#4 スネア（明るい）  B4 クラップ（重ねた手拍子）  C5 指パッチン
 #           C#5 閉じたハイハット  D5 開いたハイハット  D#5 リム（カチ）  E5 高いタム（ぽん）  F5 低いタム
+#   2026-11-11 追加（人間「ブルーアーカイブで使われてそうなの追加して」＝学園もののゲームに多い、かわいい日常の曲と、激しい電子の戦いの曲の音）:
+#           F#5 ハードなキック（歪ませた長い尾）  G5 インパクト（ドーン）  G#5 サブドロップ（低い音が落ちる）  A5 レーザー（ピュン）
+#           A#5 レコードのパチパチ（3秒）  B5 タンバリン  C6 シェイカー  C#6 ウッドブロック（高い）  D6 ウッドブロック（低い）  D#6 グリッチ（細かく刻む）
 import os, sys, subprocess
 import numpy as np
 import soundfile as sf
@@ -115,10 +118,54 @@ def tom(f0):
     return f
 
 
+def hardkick(side):               # ハードなキック: 頭ははじけ、歪ませた低い尾が長くのびる（激しい電子の曲用）
+    t = t_(0.6); body = sweep(260, 52, t, 0.2) * np.exp(-t / 0.3)
+    return np.tanh(5.0 * body) * 0.8 + hp(noise(len(t)), 3000) * np.exp(-t / 0.003) * 0.4
+
+def impact(side):                 # インパクト: 低い「ドーン」と、広がるノイズ
+    t = t_(2.5); n = len(t)
+    return sweep(90, 34, t, 0.3) * np.exp(-t / 0.7) * 1.2 + lp(noise(n), 2500 - 800 * side) * np.exp(-t / 0.5) * 0.5 + hp(noise(n), 4000) * np.exp(-t / 0.08) * 0.4
+
+def subdrop(side):                # サブドロップ: 低い正弦波が、ゆっくり落ちていく
+    t = t_(1.6); return sweep(110, 30, t, 0.8) * np.exp(-t / 0.9) * (1 - np.exp(-t / 0.01))
+
+def laser(side):                  # レーザー: 高い所からすばやく落ちる「ピュン」
+    t = t_(0.25); return np.tanh(2 * sweep(5200 - 200 * side, 380, t, 0.35)) * np.exp(-t / 0.09)
+
+def vinyl(side):                  # レコードのパチパチ: 小さな粒のノイズと、うすいサー
+    t = t_(3.0); n = len(t); x = np.zeros(n)
+    for _i in range(150):
+        s0 = int(rng.uniform(0, 2.95) * SR); L = int(rng.uniform(0.0004, 0.002) * SR)
+        x[s0:s0 + L] += rng.uniform(0.2, 1.0) * rng.choice([-1, 1]) * np.hanning(L)
+    return hp(x, 1200) + bp(noise(n), 300, 6000) * 0.02
+
+def tamb(side):                   # タンバリン: 金属のじゃらっとした短い音
+    t = t_(0.25); n = len(t); x = hp(noise(n), 5500) * (np.exp(-t / 0.05) + 0.5 * np.exp(-((t - 0.03) / 0.012) ** 2))
+    return x + 0.25 * sum(np.sin(2 * np.pi * f * t) for f in (6200, 7400, 8900, 10300)) * np.exp(-t / 0.06)
+
+def shaker(side):                 # シェイカー
+    t = t_(0.12); return bp(noise(len(t)), 4000, 12000) * np.exp(-((t - 0.035) / 0.03) ** 2)
+
+def wood(f0):
+    def f(side):                  # ウッドブロック: 「コッ」
+        t = t_(0.12); return (np.sin(2 * np.pi * f0 * t) + 0.4 * np.sin(2 * np.pi * f0 * 2.4 * t)) * np.exp(-t / 0.018) + hp(noise(len(t)), 4000) * np.exp(-t / 0.002) * 0.2
+    return f
+
+def glitch(side):                 # グリッチ: 同じ短い音を、だんだん細かく刻む
+    t = t_(0.5); n = len(t); x = np.zeros(n); pos = 0.0; gap = 0.06
+    while pos < 0.48:
+        s0 = int(pos * SR); L = int(min(gap * 0.6, 0.03) * SR); tt = np.arange(L) / SR
+        x[s0:s0 + L] += np.tanh(2 * np.sin(2 * np.pi * (880 + 220 * side) * tt)) * np.hanning(L)
+        pos += gap; gap = max(0.014, gap * 0.84)
+    return x
+
+
 SOUNDS = [(60, "bubble", bubble), (61, "drop", drop), (62, "sparkle-up", sparkle(True)), (63, "sparkle-down", sparkle(False)), (64, "squeak", squeak),
           (65, "boing", boing), (66, "riser", riser), (67, "downer", downer), (68, "revcym", revcym),
           (69, "kick", kick), (70, "snare", snare), (71, "clap", clap), (72, "snap", snap), (73, "hat-closed", hat_c), (74, "hat-open", hat_o),
-          (75, "rim", rim), (76, "tom-hi", tom(330)), (77, "tom-lo", tom(170))]
+          (75, "rim", rim), (76, "tom-hi", tom(330)), (77, "tom-lo", tom(170)),
+          (78, "hardkick", hardkick), (79, "impact", impact), (80, "subdrop", subdrop), (81, "laser", laser), (82, "vinyl", vinyl), (83, "tamb", tamb),
+          (84, "shaker", shaker), (85, "wood-hi", wood(1250)), (86, "wood-lo", wood(820)), (87, "glitch", glitch)]
 lines = []; longest = 0
 for key, name, fn in SOUNDS:
     x = stereo(fn); x -= x.mean(0)

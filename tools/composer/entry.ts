@@ -141,6 +141,19 @@ import kfbSineLeadUrl from "../../assets-src/soundfont/extra/kfb-sine-lead.sf3?u
 import kfbFormantLeadUrl from "../../assets-src/soundfont/extra/kfb-formant-lead.sf3?url";
 import kfbSubUrl from "../../assets-src/soundfont/extra/kfb-sub.sf3?url";
 import kawaiiFxUrl from "../../assets-src/soundfont/extra/kawaii-fx.sf3?url";
+import kfbGrowlBassUrl from "../../assets-src/soundfont/extra/kfb-growl-bass.sf3?url";
+import kfbNeuroBassUrl from "../../assets-src/soundfont/extra/kfb-neuro-bass.sf3?url";
+import kfbFmBassUrl from "../../assets-src/soundfont/extra/kfb-fm-bass.sf3?url";
+import kfbHooverUrl from "../../assets-src/soundfont/extra/kfb-hoover.sf3?url";
+import kfbHardcoreLeadUrl from "../../assets-src/soundfont/extra/kfb-hardcore-lead.sf3?url";
+import kfbRaveStabUrl from "../../assets-src/soundfont/extra/kfb-rave-stab.sf3?url";
+import kfbChipLeadUrl from "../../assets-src/soundfont/extra/kfb-chip-lead.sf3?url";
+import kfbTranceLeadUrl from "../../assets-src/soundfont/extra/kfb-trance-lead.sf3?url";
+import kfbGlassEpUrl from "../../assets-src/soundfont/extra/kfb-glass-ep.sf3?url";
+import kfbBoopsUrl from "../../assets-src/soundfont/extra/kfb-boops.sf3?url";
+import kfbCharmOrganUrl from "../../assets-src/soundfont/extra/kfb-charm-organ.sf3?url";
+import kfbFluteUrl from "../../assets-src/soundfont/extra/kfb-flute.sf3?url";
+import kfbSparklePadUrl from "../../assets-src/soundfont/extra/kfb-sparkle-pad.sf3?url";
 import stringsTremoloUrl from "../../assets-src/soundfont/extra/strings-tremolo-vsco.sf3?url";
 // 2026-10-25 Surge XT の和音の刻み（人間「和音は全部入れよう」。バンク 1）
 import surgeChordPluckCharacterUrl from "../../assets-src/soundfont/extra/surge-chord-pluck-character.sf3?url";
@@ -551,6 +564,7 @@ const EXTRA_FONTS: Record<string, { programs: number[]; url: string }> = {
   stringsSpiccato: { programs: [189], url: stringsSpiccatoUrl }, stringsTremolo: { programs: [190], url: stringsTremoloUrl },
   // 2026-11-11 カワイイ・フューチャーベースの音（バンク 1）
   kfbSupersaw: { programs: [191], url: kfbSupersawUrl }, kfbSupersawSwell: { programs: [192], url: kfbSupersawSwellUrl }, kfbSawStab: { programs: [193], url: kfbSawStabUrl }, kfbSquarePluck: { programs: [194], url: kfbSquarePluckUrl }, kfbGlocken: { programs: [196], url: kfbGlockenUrl }, kfbMusicBox: { programs: [197], url: kfbMusicBoxUrl }, kfbBrightBells: { programs: [198], url: kfbBrightBellsUrl }, kfbSquareLead: { programs: [199], url: kfbSquareLeadUrl }, kfbSineLead: { programs: [200], url: kfbSineLeadUrl }, kfbFormantLead: { programs: [201], url: kfbFormantLeadUrl }, kfbSub: { programs: [202], url: kfbSubUrl }, kawaiiFx: { programs: [203], url: kawaiiFxUrl },
+  kfbGrowlBass: { programs: [204], url: kfbGrowlBassUrl }, kfbNeuroBass: { programs: [205], url: kfbNeuroBassUrl }, kfbFmBass: { programs: [206], url: kfbFmBassUrl }, kfbHoover: { programs: [207], url: kfbHooverUrl }, kfbHardcoreLead: { programs: [208], url: kfbHardcoreLeadUrl }, kfbRaveStab: { programs: [209], url: kfbRaveStabUrl }, kfbChipLead: { programs: [210], url: kfbChipLeadUrl }, kfbTranceLead: { programs: [211], url: kfbTranceLeadUrl }, kfbGlassEp: { programs: [212], url: kfbGlassEpUrl }, kfbBoops: { programs: [213], url: kfbBoopsUrl }, kfbCharmOrgan: { programs: [214], url: kfbCharmOrganUrl }, kfbFlute: { programs: [215], url: kfbFluteUrl }, kfbSparklePad: { programs: [216], url: kfbSparklePadUrl },
   // 2026-10-25 Surge XT のプラック（バンク 1）
   surgePopcorn: { programs: [128], url: surgePopcornUrl }, surgeBell1: { programs: [129], url: surgeBell1Url }, surgeGuzheng: { programs: [130], url: surgeGuzhengUrl }, surgeRetroWave: { programs: [131], url: surgeRetroWaveUrl }, surgeConvex: { programs: [132], url: surgeConvexUrl }, surgeWoody: { programs: [133], url: surgeWoodyUrl }, surgeFantasyBell: { programs: [134], url: surgeFantasyBellUrl }, surgeNicePluck: { programs: [135], url: surgeNicePluckUrl }, surgeWaveguide: { programs: [136], url: surgeWaveguideUrl }, surgeFriendly: { programs: [137], url: surgeFriendlyUrl }, surgeMixedFeelings: { programs: [138], url: surgeMixedFeelingsUrl },
   pluckSynth: { programs: [85], url: pluckEdmUrl }, chipPulse25: { programs: [124], url: chip25Url }, chipPulse12: { programs: [125], url: chip12Url }, reeseBass: { programs: [34], url: reeseUrl }, fxElectro: { programs: [126], url: fxElectroUrl },

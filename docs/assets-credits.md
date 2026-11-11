@@ -283,7 +283,12 @@ Naked Drums（Wilkinson Audio、CC BY 4.0、1.3GB）、DRS Kit（CC BY 4.0）、
   `kfb-sine-lead`（Altenberg／Sine Lead）・`kfb-formant-lead`（Giana Brotherz／Formant Tables）・`kfb-sub`（Basses／Sub 3）。規約は上と同じ（鳴らした音は利用者のもの）。クレジット不要。
   1オクターブずれて鳴るプリセット（sub・formant-lead は下、sine-lead・music-box は上）は、鍵盤の割り当てを直して書いた高さで鳴るようにした。
   「Music Toy」は音程がはっきりしない音だったので使わない。
-- 2026-11-11 `kawaii-fx.sf3`（かわいい効果音 9 種と電子ドラム 9 種）: `tools/soundfont/build-kawaii-fx.py` が自分で合成する（録音は使わない。CC0 扱い・クレジット不要）。
+- 2026-11-11 人間「ブルーアーカイブで使われてそうなの追加して」: 学園もののゲームに多い「かわいい日常の曲」「激しい電子の戦いの曲」で使われる音の**種類**を足した（特定の曲の旋律・音そのものは まねていない。CLAUDE.md 1-1）。同じく Surge XT 同梱のプリセットの録音 13 個:
+  `kfb-growl-bass`（Zoozither／Growl）・`kfb-neuro-bass`（Psiome Send Sound／Neuro Mini）・`kfb-fm-bass`（Luna／Better FM Bass）・`kfb-hoover`（Kuniklo／Hoover）・`kfb-hardcore-lead`（Rozzer／He Never Lost His Hardcore）・
+  `kfb-rave-stab`（Giana Brotherz／Ravin' Stalker）・`kfb-chip-lead`（Luna／Gameboy）・`kfb-trance-lead`（Argitoth／Trance Lead 2）・`kfb-glass-ep`（Giana Brotherz／Glassy E-Piano）・`kfb-boops`（John Valentine／FM Square Glassy Boops）・
+  `kfb-charm-organ`（Giana Brotherz／Charmy Organ）・`kfb-flute`（Winds／Flute 1）・`kfb-sparkle-pad`（Pads／Sparkly）。1〜2オクターブずれて鳴るものは、鍵盤の割り当てを直した（`/tmp/kfb/sample2.py` と同じやり方: 録った音の基音を測る）。
+  kfbChipLead はチップ風の音。ゲームの曲と言われていない曲では使わない（人間の決まり 2026-10-25）。
+- 2026-11-11 `kawaii-fx.sf3`（かわいい効果音 19 種と電子ドラム 9 種。2回目に ハードなキック・インパクト・サブドロップ・レーザー・レコードのパチパチ・タンバリン・シェイカー・ウッドブロック・グリッチ を足した）: `tools/soundfont/build-kawaii-fx.py` が自分で合成する（録音は使わない。CC0 扱い・クレジット不要）。
 
 ## 動画用の文字フォント（2026-10-26 追加。YouTube 用の歌の動画『SCARLET FREQUENCY』）
 | 素材 | 入手元 | 規約の要点 | クレジット |

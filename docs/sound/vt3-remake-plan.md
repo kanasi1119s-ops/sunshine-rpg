@@ -21,6 +21,9 @@
 4. **電子の音**: これまでよく使っていた音（picoLead・surgePad…・modernBass など）ではなく、カワイイ・フューチャーベース系（fbChord＝キックで凹むうねる和音・vocalChop・kawaiiArp・popBell・surgePopcorn・surgeBassPop）に替える。ゲームの音（チップ音）は使わない。
    2026-11-11 に足した音（`docs/assets-credits.md`）: kfbSupersaw・kfbSupersawSwell・kfbSawStab・kfbSquarePluck・kfbGlocken・kfbMusicBox・kfbBrightBells・kfbSquareLead・kfbSineLead・kfbFormantLead・kfbSub、
    kawaiiFx（効果音: C4 泡・C#4 水滴・D4/D#4 きらきら・E4 きゅっ・F4 ぴょん・F#4 上がる音・G4 下がる音・G#4 逆再生シンバル風／電子ドラム: A4 キック・A#4 スネア・B4 クラップ・C5 指パッチン・C#5/D5 ハイハット・D#5 リム・E5/F5 タム。`modulate: false`）。
+   2回目（同日「ブルーアーカイブで使われてそうなの追加して」）: kfbGrowlBass・kfbNeuroBass・kfbFmBass・kfbHoover・kfbHardcoreLead・kfbRaveStab・kfbChipLead（ゲームの曲だけ）・kfbTranceLead・kfbGlassEp・kfbBoops・kfbCharmOrgan・kfbFlute・kfbSparklePad、
+   kawaiiFx に F#5 ハードなキック・G5 インパクト・G#5 サブドロップ・A5 レーザー・A#5 レコードのパチパチ・B5 タンバリン・C6 シェイカー・C#6/D6 ウッドブロック・D#6 グリッチ。
+   試聴の点数: かわいい日常（エレピ・フルート・ぽこぽこ・オルガン・鉄琴）8.2／激しい電子（ハードなキック・うなるベース・ハードコアのリード）6.7。
    気づいたこと: kfbSub は bass のパートだと とても大きい（音量 0.03〜0.05 で足りる）。kfbFormantLead・kfbBrightBells は 6kHz より上が強いので、ローパス（5〜9kHz）をかけて使う。
 5. **似た曲にしない**: 始まり方・山の作り方・伴奏の型を25曲で並べて、重なりを直す。
 6. **確かめ**: 点数（最低 7.5・目標 8）、場面ごとの大きさ（サビがいちばん大きい）、雑音（noise_scan.py で声・楽器・仕上がりを最初から最後まで）。最後は人間の耳。
