@@ -22,8 +22,13 @@ for k in range(K):
     for j in range(max(0, k - RR), min(K, k + RR + 1)):
         if j == k: continue
         M = np.float32([[1, 0, dx[k] - dx[j]], [0, 1, dy[k] - dy[j]]])
-        nb.append(cv2.warpAffine(F[j], M, (F[j].shape[1], F[j].shape[0]), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE))
-    ref = np.median(np.stack(nb), 0).astype(np.float32); f = F[k].astype(np.float32)
+        nb.append((abs(j - k), cv2.warpAffine(F[j], M, (F[j].shape[1], F[j].shape[0]), flags=cv2.INTER_NEAREST, borderMode=cv2.BORDER_REPLICATE)))
+    ref = np.median(np.stack([x[1] for x in nb]), 0).astype(np.float32); f = F[k].astype(np.float32)
+    # うめる色: 中央値そのもの（何コマも まぜた色）は ぼけるので、「中央値に近い色をしている、いちばん近いコマ」の色をそのまま使う
+    fill = ref.copy(); done = np.zeros(ref.shape[:2], bool)
+    for _, im in sorted(nb, key=lambda x: x[0]):
+        ok = (np.abs(im.astype(np.float32) - ref).max(2) < T * 0.5) & ~done
+        fill[ok] = im[ok]; done |= ok
     dd = f - ref; d = dd.max(2)                                            # 明るくなったぶん
     dmin = dd.min(2)                                                       # 光・雪は白〜金色なので、赤・緑・青のどれも明るくなる（腕の「04」・目・服のふちの動きは、どれかの色が変わらない）
     # ふちの動きで出る細い線ではなく「点」: 少しぼかした差も大きい所
@@ -43,8 +48,9 @@ for k in range(K):
     else:
         m = PU.blobs(m)                                                    # 小さな点だけ。体や手が動いてできる細長い差（ふち）は直さない（直すと ふちが遅れて見える）
     m[FACE] = 0
+    m[396:486, 724:822] = 0                                                # 腕の「04」のまわりは直さない（腕は頭とちがう動きをするので、前後のコマの文字がずれて重なり、にじむ）
     stat[k, 0] = int(m.sum())
     a = cv2.GaussianBlur(cv2.dilate(m, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))).astype(np.float32), (0, 0), 1.2)[..., None]
-    cv2.imwrite(f"{DST}/{k + 1:03d}.png", np.clip(f * (1 - a) + ref * a, 0, 255).astype(np.uint8))
+    cv2.imwrite(f"{DST}/{k + 1:03d}.png", np.clip(f * (1 - a) + fill * a, 0, 255).astype(np.uint8))
 np.save(OUT, stat)
 for a in range(0, K, 24): print(a, stat[a:a + 24:2, 0].tolist(), "金色", stat[a:a + 24:2, 1].tolist())

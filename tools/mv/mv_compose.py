@@ -261,16 +261,26 @@ def frames_wb2():
         ma = (gxr + a * fba[..., 0], gyr + a * fba[..., 1]); mb = (gxr + (1 - a) * fab[..., 0], gyr + (1 - a) * fab[..., 1])
         R_ = lambda X, m: cv2.remap(X, m[0], m[1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
         c = a
-        if sharp: c = float(np.clip((a - 0.36) / 0.28, 0, 1)); c = c * c * (3 - 2 * c)
+        if sharp: c = float(np.clip((a - 0.42) / 0.16, 0, 1)); c = c * c * (3 - 2 * c)   # 色を入れかえる（2 枚がまざる）のは まん中の 2〜3 コマだけ
         out = B.copy(); out[RY, RX] = R_(Ar, ma) * (1 - c) + R_(Br, mb) * c
         g = gb.copy(); g[RY, RX] = (R_(gar, ma).astype(np.float32) * (1 - c) + R_(gbr, mb) * c).astype(np.uint8)
         return out, g
+    def warp1(A, ga, gb, a):
+        """A を、となりのコマ（流れ用の絵 gb）のほうへ a（0〜0.5）だけ動かした絵。2 枚をまぜないので ぼけない"""
+        gar, gbr = np.ascontiguousarray(ga[RY, RX]), np.ascontiguousarray(gb[RY, RX])
+        fba = cv2.GaussianBlur(_fine.calc(gbr, gar, None), (0, 0), 5)
+        m = (gxr + a * fba[..., 0], gyr + a * fba[..., 1])
+        out = A.copy(); out[RY, RX] = cv2.remap(A[RY, RX], m[0], m[1], cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+        g = ga.copy(); g[RY, RX] = cv2.remap(gar, m[0], m[1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        return out, g
     def at(p):                                      # → (絵, 流れ用の絵, 使ったコマ)
-        k = int(np.floor(p)); f = p - k
-        if f < 0.03 or k + 1 >= K: k = min(k, K - 1); return rd(S["frames"], k), gray(k), [k]
-        if f > 0.97: return rd(S["frames"], k + 1), gray(k + 1), [k + 1]
-        im, g = morph2(rd(S["frames"], k), gray(k), rd(S["frames"], k + 1), gray(k + 1), f)
-        return im, g, [k, k + 1]
+        # 2026-11-11 人間「違和感あるね。ぼやけたり、ズレたり」: 半端な位置では となりの 2 コマをまぜていたので、ふつうの速さでない所だけ ぼけて見えた。
+        #   いちばん近い 1 コマだけを、動きの流れで少し動かして使う（まぜない）
+        k = int(np.clip(round(p), 0, K - 1)); f = p - k
+        if abs(f) < 0.03: return rd(S["frames"], k), gray(k), [k]
+        nbk = int(np.clip(k + (1 if f > 0 else -1), 0, K - 1))
+        im, g = warp1(rd(S["frames"], k), gray(k), gray(nbk), abs(f))
+        return im, g, [k, nbk]
     XB = 24; LOOP = K - XB
     i0 = int(round(T0 * FPS))
     for i in range(N):
@@ -308,7 +318,7 @@ def base(img):
     #   別のコマから埋めた所で、体の動きとずれて見える。そこは映さず、腰から上を大きく映す（少しだけ輪郭をはっきりさせる）
     if NAME == "whitebreath" and FORM == "yt":
         c = img[:608, 99:1180]; c = cv2.resize(c, (W, H), interpolation=cv2.INTER_LANCZOS4)
-        return sharpen(c, 0.2)
+        return sharpen(c, 0.3)
     if NAME == "whitebreath":                       # 腰から上を切り出して（テトが中心）、上下はぼかした背景
         c = img[:608, 370:910]; c = sharpen(cv2.resize(c, (1080, 1216), interpolation=cv2.INTER_LANCZOS4))
         bg = blur_bg(img[:608], W, H); bg[240:1456] = c; return bg
