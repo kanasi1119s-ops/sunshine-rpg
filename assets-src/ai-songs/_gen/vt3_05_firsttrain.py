@@ -227,12 +227,14 @@ for b in wb:
     if not vl or not vr: continue
     fine = n in ("サビ2", "最後のサビ", "間奏2"); end = (b + 1) not in wb
     bl[b] = (vl, "D.u.d.u.D.u.D---" if end else ("D.u.dud.D.u.dudu" if n == "最後のサビ" else "D.u.d.u.D.u.d.u."))
-    br[b] = (vr, "D.d.u.d.D.u.D---" if end else ("Dudud.duDudud.du" if fine else "D...d.u.D...d.u."))
+    # v4: v2・v3 は 7.3 前後（前は 7.45〜7.6）。左右とも細かくかき鳴らすと、音の壁がざらついて聞こえる → 右は1小節のばす（壁の「面」）、左だけ8分でかき鳴らす（壁の「動き」）
+    br[b] = (vr, "D...............")
+    bl[b] = (vl, "D.u.d.u.D.u.D---" if end else "D.u.d.u.D.u.d.u.")
 parts = strum_parts(S, "音の壁 L", specL, -0.75, specL["volume"], bl, seed=3, lag=0.02) + strum_parts(S, "音の壁 R", specR, 0.75, specR["volume"], br, seed=7, lag=0.02)
 add_parts(path, parts, drop=lambda p: p.get("role", "").startswith("音の壁"))
 set_parts(path, "ベース（指", sustain=1.15)
 # v3: 測ると、チャイム −44・イントロ −29・Aメロ1 −29・ブリッジ −26dB と、サビ（−17）にくらべて小さすぎた（人間: 前奏が小さすぎる曲がある）
-final_gain(path, {"チャイム": 14, "イントロ": 7, "Aメロ1": 7, "ブリッジ": 5, "最後のサビ": 0.8})
+final_gain(path, {"チャイム": 15, "イントロ": 8, "Aメロ1": 8, "ブリッジ": 6, "最後のサビ": 0.8} if VOCAL else {"チャイム": 16, "イントロ": 10, "Aメロ1": 13, "ブリッジ": 10, "最後のサビ": 0.8})   # BGM は歌がないぶん、静かな場面がさらに小さい
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5, minlen=1.5))
     vocal_polish(path, S, {"verse": 6, "pre": 10, "chorus": 18, "最後のサビ": 22, "bridge": 0, "outro": 0}, scoop=0.2, slash=0.5, vib_min_beats=2.0, vib_start=0.55, auto=0.7, breaths=0.7)
