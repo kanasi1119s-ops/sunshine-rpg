@@ -28,7 +28,7 @@ gs=[[] for _ in range(4)]
 for bar,(c,pt) in enumerate(zip(CH,PAT)):
     for (b,d,v,dirn) in GP[pt]:
         for j in range(4):
-            jj=j if dirn>0 else 3-j; lag={1:0.022,-1:0.016,2:0.5,3:0.09}[dirn]*jj
+            jj=j if dirn>0 else 3-j; per={1:0.012,-1:0.009,2:0.5,3:0.06}[dirn]; lag=per*jj-(per*1.5 if dirn in (1,-1) and bar*4+b>0 else 0)   # ストロークの最後の弦が拍の頭に来る（遅れて聞こえない）
             gs[j].append((bar*4+b+lag, V[c][j], max(0.12,min(d-lag,(bar+1)*4-(bar*4+b+lag))), max(30,v-(3-j)*3 if dirn>0 else v-j*4)))
 GT={"instrument":"distGuitar","di":"gretsch","sustain":1.6,"release":0.25,"chorus":0,"humanPitch":0,"noScoop":True,"stringNoise":True,"humanTiming":0,"double":False,"powerChord":False,"amp":"jpopClean","ampDrive":0.08,
     "fx":[{"type":"compressor","threshold":-20,"ratio":3,"attack":0.012,"release":0.15},{"type":"filter","kind":"highpass","freq":140,"q":0.7},{"type":"eq","low":-1,"mid":1.5,"midHz":1800,"high":-1},{"type":"filter","kind":"lowpass","freq":6200,"q":0.6},{"type":"room","mix":0.14}]}
@@ -63,7 +63,7 @@ for bar in range(2,14):
     if bar>=8:
         for i in range(16): SH.append((o+i*0.25,'C6',0.2,[60,34,48,38][i%4]))
 S.append((7.5,'C5',0.25,70)); S.append((7.75,'C5',0.25,84))
-dr=lambda r,ev,vol,pan,rev,sw: dict(role=r,instrument="lead",patch="kawaiiFx",modulate=False,volume=vol,pan=pan,reverb=rev,notes=toks(ev),swing=sw)
+dr=lambda r,ev,vol,pan,rev,sw: dict(swing=0,role=r,instrument="lead",patch="kawaiiFx",modulate=False,volume=vol,pan=pan,reverb=rev,notes=toks(ev))
 parts+=[dr("キック",K,0.11,0,0.03,0),dr("スネア・スナップ・リム",S,0.085,0.05,0.1,0.35),dr("リム",RM,0.06,-0.1,0.1,0.35),dr("ハイハット",H,0.045,0.25,0.06,0.45),dr("シェイカー",SH,0.028,-0.35,0.08,0.3)]
 # ---- メロディ（ゆれる電子のリード）と、電子のサックス・バラフォン・筒の鉄琴のやりとり
 R4="R:4"
@@ -77,5 +77,5 @@ parts+=[mk("ゆれる電子のリード","kfbWobbleLead",lead,0.1,0.05,0.22,mono
 # ---- 効果音: レコードのパチパチ（最初から）、小物（フレクサトーン・ラチェット・ウインドチャイム・フィンガーシンバル）
 parts.append(dict(role="レコードのパチパチ",instrument="lead",patch="kawaiiFx",modulate=False,volume=0.05,pan=0,reverb=0.05,notes="A#5:12 A#5:12 A#5:12 A#5:12 A#5:12 R:4",swing=0))
 parts.append(dict(role="おもちゃと小物",instrument="lead",patch="toysFx",modulate=False,volume=0.06,pan=0.2,reverb=0.2,notes=toks([(6.5,'G4',1.5,80),(29.5,'A#4',1.0,80),(45.5,'G#4',1.0,76),(56,'C#5',4,80),(60,'D#5',4,84)]),swing=0))
-song={"title":"かわいい日常の音の試聴（ヒップホップ風）","bpm":86,"beats":4,"key":"G#","scale":"major","swing":0.35,"chords":" ".join(['C#maj7','C7','Fm7','A#7','D#m7','G#7','C#maj7','F#7','Fm7','E7','D#m7','D7','C#maj7','C7','Bmaj7','A#m7']),"barsPerChord":1,"repeats":1,"autoAccompaniment":False,"parts":parts}
+song={"title":"かわいい日常の音の試聴（ヒップホップ風）","bpm":86,"beats":4,"key":"G#","scale":"major","swing":0,"chords":" ".join(['C#maj7','C7','Fm7','A#7','D#m7','G#7','C#maj7','F#7','Fm7','E7','D#m7','D7','C#maj7','C7','Bmaj7','A#m7']),"barsPerChord":1,"repeats":1,"autoAccompaniment":False,"parts":parts}
 json.dump(song,open('/tmp/kfb/demo4/hip.json','w'),ensure_ascii=False)

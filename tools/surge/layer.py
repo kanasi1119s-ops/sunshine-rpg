@@ -37,6 +37,8 @@ def main():
     ap.add_argument("--lo", type=int, default=36); ap.add_argument("--hi", type=int, default=96); ap.add_argument("--step", type=int, default=3); ap.add_argument("--air", type=float, default=0); ap.add_argument("--air-freq", type=float, default=8000)
     ap.add_argument("--strip-space", action="store_true")   # プリセットの中のリバーブ・ディレイを切る（音の粒がはっきりする）
     ap.add_argument("--punch", type=float, default=0)       # 鳴り始めの 60ms を何dB持ち上げるか（音の粒・アタック）
+    ap.add_argument("--retune", action="store_true")         # 鍵盤の音から外れているプリセット（少し低い・高い）を、測って合わせる
+    ap.add_argument("--trim", type=float, default=0.003)     # 鳴り始めをどこから使うか（最大の何倍をこえた所。立ち上がりがおそい音は 0.1〜0.15 にすると、拍におくれて聞こえない）
     ap.add_argument("--release", default="0.3")                # 鍵盤を離したあとの余韻（秒）。短いほど音の粒がはっきりする
     ap.add_argument("--work", default="/tmp/surge-sample"); a = ap.parse_args()
     L = []
@@ -56,8 +58,19 @@ def main():
                 V = np.fft.rfft(v, axis=0); f = np.fft.rfftfreq(len(v), 1 / SR); v = np.fft.irfft(V * (1 / (1 + (hp / np.maximum(f, 1)) ** 6))[:, None], n=len(v), axis=0)
             x = x + v   # 重ねる前に、それぞれの大きさをそろえる
         x = shelf(x, a.air, a.air_freq)
+        if a.retune:
+            m = x.mean(1)[int(0.3 * SR):int(4.5 * SR)]; sp = np.abs(np.fft.rfft(m * np.hanning(len(m)), n=1 << 19)); f = np.fft.rfftfreq(1 << 19, 1 / SR)
+            f0 = 440 * 2 ** ((k - 69) / 12); sel = (f > f0 * 0.955) & (f < f0 * 1.045)
+            if sel.any() and sp[sel].max() > sp.max() * 0.1:
+                fr = float((f[sel] * sp[sel] ** 2).sum() / (sp[sel] ** 2).sum()); r = fr / f0   # その音のまわりの成分の重心（ゆれる音は真ん中）
+                if abs(r - 1) > 0.0015:
+                    n = int(len(x) * r); t = np.linspace(0, len(x) - 1, n); x = np.stack([np.interp(t, np.arange(len(x)), x[:, c]) for c in range(2)], 1)
+                    if len(x) < int(5.0 * SR): x = np.vstack([x, np.zeros((int(5.0 * SR) - len(x), 2))])
+                print(k, f"高さのずれ {1200 * np.log2(r):+.0f} セント → 合わせた", flush=True)
         ls, le, c = SM.find_loop(x, int(2.0 * SR), int(4.8 * SR), int(1.2 * SR)); x = SM.crossfade_loop(x, ls, le, int(0.45 * SR)); y = x[:le + 2205]
-        on = np.where(np.abs(y).max(1) > np.abs(y).max() * 0.003)[0]; s0 = max(0, (on[0] if len(on) else 0) - 44); y = y[s0:]; ls -= s0; le -= s0
+        env = np.sqrt(np.convolve(np.abs(y).max(1) ** 2, np.ones(132) / 132, 'same')) if a.trim > 0.01 else np.abs(y).max(1)
+        on = np.where(env > env.max() * a.trim)[0]; s0 = max(0, (on[0] if len(on) else 0) - 44); y = y[s0:].copy(); ls -= s0; le -= s0
+        if a.trim > 0.01: y[:132] *= np.linspace(0, 1, 132)[:, None]
         if a.punch:
             n = int(0.06 * SR); y[:n] *= (1 + (10 ** (a.punch / 20) - 1) * np.exp(-np.arange(n) / (0.018 * SR)))[:, None]
         y = y / (np.abs(y).max() + 1e-12) * 0.8
