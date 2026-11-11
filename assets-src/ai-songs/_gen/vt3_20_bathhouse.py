@@ -238,6 +238,7 @@ from vt3x_lib import *
 path = sys.argv[1]
 humanize(path, "ピアノ（右手", mid=80, down=14, up=10, seed=4); humanize(path, "ピアノ（左手", mid=86, down=8, up=8, seed=5)
 set_parts(path, "ウッドベース", sustain=1.12)
+final_gain(path, {"桶": 18, "ドラムソロ": -0.5, "シャウトコーラス": 2.2})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5))
     vocal_polish(path, S, {"verse": 8, "pre": 14, "chorus": 22, "シャウトコーラス": 28, "bridge": 6, "outro": 0}, scoop=0.35, slash=0.9, vib_min_beats=1.5, vib_start=0.5, auto=0.6, breaths=0.5)
