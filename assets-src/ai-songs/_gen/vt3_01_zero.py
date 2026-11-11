@@ -57,7 +57,9 @@ STR = [S.track(f"ディスコのストリングス{i + 1}", "strings", patch="st
 STRL = S.track("ストリングス（上がる節）", "strings", patch="stringEnsemble", volume=0.075, pan=-0.2, reverb=0.35, sustain=0.8)
 BR = [S.track(f"ブラスのスタブ{i + 1}", "brass", patch="brassSection", volume=0.055, pan=0.2, reverb=0.25, sustain=0.4) for i in range(3)]
 CUT = [S.track(f"カッティングギター{i + 1}", "guitar", amp="jpopClean", volume=0.05, pan=-0.6, reverb=0.15, chorus=0, sustain=0.3) for i in range(3)]
-BASS = S.track("ベース（指弾き）", "bass", **finger_bass_spec(vol=0.22))
+# v9（2026-11-11 人間「ベースラインで音連打で出している部分が、次の音出す時に引っかかる感じがする」）: 測ると、同じ音を続けて弾く所で、前の音が切れてから
+#   次の音が立ち上がるまでに 6〜12ms の穴（−24dB）があいていた → 音を 15% 長くして次の音に重ねる（穴は −11〜−13dB に。休みの所はちゃんと止まる）
+BASS = S.track("ベース（指弾き）", "bass", sustain=1.15, **finger_bass_spec(vol=0.22))
 PAD = [S.track(f"うねる和音{i + 1}", "lead", patch="fbChord", volume=0.034, pan=-0.4 + 0.4 * i, reverb=0.22, duck=0.55) for i in range(3)]
 ARP = S.track("きらきらのアルペジオ", "lead", patch="kfbSquarePluck", volume=0.045, pan=0.35, reverb=0.25, fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.16, "feedback": 0.25}])
 SAW = [S.track(f"スーパーソー{i + 1}", "lead", patch="kfbSupersaw", volume=0.05, pan=-0.5 + 0.5 * i, reverb=0.18, duck=0.6,
