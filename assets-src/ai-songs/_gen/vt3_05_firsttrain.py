@@ -39,13 +39,13 @@ S.scene("ブリッジ", 4, "bridge", ["Em9", "Gmaj7", "Em9", "Asus4"])
 S.scene("最後のサビ", 16, "chorus", C_CH + C_CH)
 S.scene("アウトロ", 6, "outro", ["Dmaj7", "Gmaj7#11", "Dmaj7", "Gmaj7#11", "Dmaj7", "Dmaj7"])
 
-V = Voice(S, vol=0.2, delay=0.75, bright=-0.2, patch="chiff", low=False)
+V = Voice(S, vol=0.2, delay=0.75, bright=-0.2, patch="kfbSineLead", low=False)   # v2: 歌をなぞるシンセは、高さの揺れない音に
 WL = [S.track(f"音の壁 L{i + 1}", "distGuitar", amp="shoegaze", volume=0.032, pan=-0.75, reverb=0.6, chorus=0, sustain=0.9) for i in range(3)]
 WR = [S.track(f"音の壁 R{i + 1}", "distGuitar", amp="shoegaze", volume=0.03, pan=0.75, reverb=0.6, chorus=0, sustain=0.9) for i in range(3)]
 ARP = S.track("エコーのギター（アルペジオ）", "echoGuitar", amp="crystal", volume=0.07, pan=0.25, reverb=0.5, chorus=0, sustain=1.0,
               fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.25, "feedback": 0.35}])
-SWL = [S.track(f"逆再生のふくらみ{i + 1}", "pad", **pad_spec("surgePadNeverending", vol=0.04, pan=-0.4 + 0.4 * i, duck=0.0, sustain=2.5)) for i in range(3)]
-PAD = [S.track(f"響くパッド{i + 1}", "pad", **pad_spec("surgePadVerbPad", vol=0.035, pan=-0.5 + 0.5 * i, duck=0.2, sustain=2.0)) for i in range(3)]
+SWL = [S.track(f"逆再生のふくらみ{i + 1}", "pad", **pad_spec("kfbSupersawSwell", vol=0.03, pan=-0.4 + 0.4 * i, duck=0.0, sustain=2.5)) for i in range(3)]
+PAD = [S.track(f"響くパッド{i + 1}", "pad", **pad_spec("kfbSparklePad", vol=0.035, pan=-0.5 + 0.5 * i, duck=0.2, sustain=2.0)) for i in range(3)]
 BASS = S.track("ベース（指弾き）", "bass", **finger_bass_spec(vol=0.2))
 CHIME = S.track("駅のチャイム（グロッケン）", "glockenspiel", volume=0.06, pan=0.0, reverb=0.6)
 TRAIN = S.track("始発の音（低い一撃）", "impactHit", volume=0.08, pan=0, reverb=0.4)
@@ -199,3 +199,40 @@ S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の05（4時）。シ�
 finish(S, LY, V, 0,
        fx=[{"type": "width", "scenes": ["サビ2", "最後のサビ", "間奏2"], "mode": "wide", "amount": 0.4}],
        level={"verse": -0.3}, special={"Aメロ1": -0.5, "ブリッジ": -0.6, "最後のサビ": 0.4, "アウトロ": -0.2})
+
+# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
+# この曲（午前4時・始発を待つ駅のベンチ・シューゲイザー）で直すこと:
+#   音の壁のギター: 和音を1小節のばすだけ（「ジャー」）をやめ、かき鳴らしつづける（シューゲイザーの弾き方）。左＝8分の下ろしと上げ、右＝16分が混じる別の型。
+#                 サビ1 は8分だけ（壁が半分）→ サビ2 から右が16分 → 最後のサビは左右とも細かく。音色（明るい歪み＋深い残響）はそのまま
+#   電子の音: 逆再生のふくらみを kfbSupersawSwell（ふくらむスーパーソー）、響くパッドを kfbSparklePad（きらきらのパッド）に
+#   歌: 遠くでつぶやく曲なので、Aメロ・Bメロ・ブリッジはウィスパー、サビはクリア（のばす音の後ろだけ浅く揺らす）。ハモリは最後のサビ
+from vt3x_lib import *
+path = sys.argv[1]
+js0 = load(path)
+specL = next(dict((k, v) for k, v in p.items() if k != "notes") for p in js0["parts"] if p.get("role", "").startswith("音の壁 L"))
+specR = next(dict((k, v) for k, v in p.items() if k != "notes") for p in js0["parts"] if p.get("role", "").startswith("音の壁 R"))
+wb = active_bars(path, "音の壁 L"); bl, br = {}, {}
+def notes_of(prefix, b):
+    out = []
+    for p in js0["parts"]:
+        if not p.get("role", "").startswith(prefix): continue
+        t = 0.0
+        for tok in p["notes"].split():
+            L_ = float(re.match(r"[0-9.]+", tok.split(":")[1]).group(0))
+            if not tok.startswith("R") and t - 1e-6 <= b * S.beats < t + L_ - 1e-6 or (not tok.startswith("R") and b * S.beats <= t < (b + 1) * S.beats): out.append(midi(re.match(r"[A-G][b#]?-?\d", tok).group(0))); break
+            t += L_
+    return sorted(set(out))
+for b in wb:
+    n, i, L, k = S.scene_of(b); vl = notes_of("音の壁 L", b); vr = notes_of("音の壁 R", b)
+    if not vl or not vr: continue
+    fine = n in ("サビ2", "最後のサビ", "間奏2"); end = (b + 1) not in wb
+    bl[b] = (vl, "D.u.d.u.D.u.D---" if end else ("D.u.dud.D.u.dudu" if n == "最後のサビ" else "D.u.d.u.D.u.d.u."))
+    br[b] = (vr, "D.d.u.d.D.u.D---" if end else ("Dudud.duDudud.du" if fine else "D...d.u.D...d.u."))
+parts = strum_parts(S, "音の壁 L", specL, -0.75, specL["volume"], bl, seed=3, lag=0.02) + strum_parts(S, "音の壁 R", specR, 0.75, specR["volume"], br, seed=7, lag=0.02)
+add_parts(path, parts, drop=lambda p: p.get("role", "").startswith("音の壁"))
+set_parts(path, "ベース（指", sustain=1.15)
+if VOCAL:
+    remark(path, S, std_mark(("chorus",), jump=5, minlen=1.5))
+    vocal_polish(path, S, {"verse": 6, "pre": 10, "chorus": 18, "最後のサビ": 22, "bridge": 0, "outro": 0}, scoop=0.2, slash=0.5, vib_min_beats=2.0, vib_start=0.55, auto=0.7, breaths=0.7)
+    harmony(path, S, [("最後のサビ", 0, None, K)], vol=0.36)
+    voice_by_scene(path, S, {"verse": "whisper", "pre": "whisper", "chorus": "clear", "bridge": "whisper", "outro": "whisper"}, default="whisper")
