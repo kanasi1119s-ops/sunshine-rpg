@@ -371,6 +371,9 @@ tot = S.nb * S.beats
 if tot > cur[0] + 1e-4: toks.extend(rests(tot - cur[0]))
 pr = copy.deepcopy(GT_BASE); pr.update(RIGS["funk_line"]); pr.update(role="Rギター（単音の線）", pan=0.6, volume=0.05, notes=" ".join(toks)); parts.append(pr)
 add_parts(path, parts)
+# v8: 場面ごとの大きさを測ったら、2番の Aメロ・間奏が サビ1 より大きく、最後のサビも山になっていなかった（サビ1 −16.0・Aメロ2 −15.1・サビ2 −15.0・最後 −15.4）
+#     → 伴奏のパートを場面ごとに上げ下げする（サビ1 < サビ2 < 最後のサビ。Aメロ・Bメロ・間奏はサビより下）
+scene_gain(path, S, {"サビ1": 1.08, "間奏": 0.9, "Aメロ2": 0.86, "Bメロ2": 0.9, "サビ2": 1.06, "間奏2": 0.97, "最後のサビ": 1.14})
 
 if VOCAL:
     # ---- 歌い方: Aメロは話すように（しゃくりなし・ビブラートごく浅く）、Bメロでだんだん、サビは句の頭を下からすくい、長い音の後ろ半分だけ揺らす。
