@@ -245,6 +245,7 @@ add_parts(path, [pad_part(S, "カワイイ効果音", "kawaiiFx", fx, 0.06, pan=
                  pad_part(S, "電子のクラップ", "kawaiiFx", clap, 0.07, reverb=0.1, modulate=False, instrument="guitar")])
 humanize(path, "ピアノ（右手", mid=82, down=12, up=10, seed=4)
 set_parts(path, "シンセベース", sustain=1.1)
+final_gain(path, {"ダイヤル": 4, "最後のサビ": 1.6, "合唱": 1.5})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5))
     vocal_polish(path, S, {"verse": 6, "pre": 14, "chorus": 22, "最後のサビ": 28, "合唱": 16, "bridge": 0, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.45, auto=0.6, breaths=0.5)
