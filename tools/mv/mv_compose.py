@@ -228,6 +228,16 @@ def frames_wb2():
     seq = json.load(open(S["seq"])); RG = np.load(S["region"]); K = len(RG)
     # つなぎ目で「前のコマ」は 1 倍で先へ進んでいたが、その先（180 コマ目〜）には こい光の帯がマフラーにかかったコマがあり、つなぐあいだに光が見えた。
     # つなぐあいだ、前のコマは 0.2 倍でゆっくり進める（形は新しいコマへ動かしていくので、止まっては見えない）
+    # ふつうの速さ（1 コマずつ）で進んでいる所は、半端な位置（例 130.375, 131.375…）を いちばん近いコマちょうど（130, 131…）にそろえる。
+    # 元のコマをそのまま出せる（動かして作った絵にしない）。ずれるのは 0.5 コマ（0.02 秒）まで
+    i = 0
+    while i < len(seq):
+        j = i
+        while j + 1 < len(seq) and abs((seq[j + 1][0] - seq[j][0]) - 1.0) < 1e-6: j += 1
+        if j > i:
+            off = round(seq[i][0]) - seq[i][0]
+            for t in range(i, j + 1): seq[t][0] = float(round(seq[t][0] + off))
+        i = j + 1
     s0 = None
     for q in seq:
         if q[1] >= 0:
@@ -259,7 +269,7 @@ def frames_wb2():
         Ar, Br, gar, gbr = A[RY, RX], B[RY, RX], np.ascontiguousarray(ga[RY, RX]), np.ascontiguousarray(gb[RY, RX])
         fab = cv2.GaussianBlur(_fine.calc(gar, gbr, None), (0, 0), 5); fba = cv2.GaussianBlur(_fine.calc(gbr, gar, None), (0, 0), 5)
         ma = (gxr + a * fba[..., 0], gyr + a * fba[..., 1]); mb = (gxr + (1 - a) * fab[..., 0], gyr + (1 - a) * fab[..., 1])
-        R_ = lambda X, m: cv2.remap(X, m[0], m[1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        R_ = lambda X, m: cv2.remap(X, m[0], m[1], cv2.INTER_LANCZOS4 if X.ndim == 3 else cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)   # 絵は するどい補間で（つなぎ目の 16 コマだけ ぼけて見えた）
         c = a
         if sharp: c = float(np.clip((a - 0.42) / 0.16, 0, 1)); c = c * c * (3 - 2 * c)   # 色を入れかえる（2 枚がまざる）のは まん中の 2〜3 コマだけ
         out = B.copy(); out[RY, RX] = R_(Ar, ma) * (1 - c) + R_(Br, mb) * c
@@ -270,7 +280,7 @@ def frames_wb2():
         gar, gbr = np.ascontiguousarray(ga[RY, RX]), np.ascontiguousarray(gb[RY, RX])
         fba = cv2.GaussianBlur(_fine.calc(gbr, gar, None), (0, 0), 5)
         m = (gxr + a * fba[..., 0], gyr + a * fba[..., 1])
-        out = A.copy(); out[RY, RX] = cv2.remap(A[RY, RX], m[0], m[1], cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+        out = A.copy(); out[RY, RX] = cv2.remap(A[RY, RX], m[0], m[1], cv2.INTER_LANCZOS4, borderMode=cv2.BORDER_REPLICATE)
         g = ga.copy(); g[RY, RX] = cv2.remap(gar, m[0], m[1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
         return out, g
     def at(p):                                      # → (絵, 流れ用の絵, 使ったコマ)
@@ -338,7 +348,8 @@ src = frames_wb2() if NAME == "whitebreath" else frames_video()
 proc = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
                          "-ss", str(T0), "-t", str(LEN), "-i", S["audio"], "-map", "0:v", "-map", "1:a",
                          "-af", f"afade=t=in:d={0.5 if FORM == 'ig' else 0.01},afade=t=out:st={LEN - 1.5:.2f}:d=1.5" if FORM == "ig" else "anull",
-                         "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "256k",
+                         "-c:v", "libx264", "-preset", "medium", "-crf", "16", "-x264-params", "pbratio=1.0:ipratio=1.0:aq-mode=3", "-pix_fmt", "yuv420p",   # 2026-11-11: B コマだけ粗くなって 4 コマごとに ぼけが行き来していたので、どのコマも同じ細かさで
+                         "-c:a", "aac", "-b:a", "256k",
                          "-shortest", "-movflags", "+faststart", OUT], stdin=subprocess.PIPE)
 static = Image.new("RGBA", (W, H), (0, 0, 0, 0))
 for im, x, y in INFO: static.alpha_composite(im, (max(0, x), max(0, y)))
