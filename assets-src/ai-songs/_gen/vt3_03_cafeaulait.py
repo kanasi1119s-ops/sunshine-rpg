@@ -58,8 +58,8 @@ S.scene("アウトロ", 6, "outro", ["Fmaj9", "Bbmaj9", "Fmaj9", "Bbmaj9", "Fmaj
 
 FELT = [{"type": "eq", "low": -2, "mid": -1, "midHz": 500, "high": -2}, {"type": "filter", "kind": "lowpass", "freq": 5200, "q": 0.6}]   # フェルトをはさんだような丸いピアノ
 V = Voice(S, vol=0.2, delay=1.5, bright=-0.1, patch="kfbSineLead", low=False)
-PR = S.track("ピアノ（右手の分散和音）", "piano", volume=0.115, pan=-0.15, reverb=0.3, sustain=1.6, fx=FELT)
-PL = S.track("ピアノ（左手）", "piano", volume=0.12, pan=-0.15, reverb=0.3, sustain=1.6, fx=FELT)
+PR = S.track("ピアノ（右手の分散和音）", "piano", volume=0.16, pan=-0.15, reverb=0.3, sustain=1.6, fx=FELT)
+PL = S.track("ピアノ（左手）", "piano", volume=0.165, pan=-0.15, reverb=0.3, sustain=1.6, fx=FELT)
 PC = [S.track(f"ピアノ（和音{i + 1}）", "piano", volume=0.085, pan=-0.15, reverb=0.3, sustain=1.4, fx=FELT) for i in range(3)]
 PM = S.track("ピアノ（間奏の旋律）", "piano", volume=0.16, pan=-0.05, reverb=0.32, sustain=1.5)
 WG = [S.track(f"グラスハープ{i + 1}", "lead", patch="wineGlass", volume=0.05, pan=-0.35 + 0.7 * i, reverb=0.5) for i in range(2)]
@@ -315,7 +315,11 @@ from vt3x_lib import *
 path = sys.argv[1]
 humanize(path, "ピアノ（右手", mid=80, down=12, up=8, seed=3); humanize(path, "ピアノ（和音", mid=82, down=8, up=8, seed=5); humanize(path, "チェロ", mid=80, down=6, up=8, seed=7)
 # 測ると、紙コップ（−30／BGM −43）が小さすぎ、2番の Aメロ・Bメロ（−14.9）が サビ1（−15.3）より大きく、最後のサビ（−14.7）が サビ2（−13.9）より小さかった → 仕上げで直す
-final_gain(path, {"紙コップ": 10, "Aメロ1": 2.5, "Aメロ2": -1.0, "Bメロ2": -0.8, "サビ1": 0.3, "サビ2": 0.5, "最後のサビ": 2.2, "アウトロ": 1.5} if VOCAL else {"紙コップ": 16, "Aメロ1": 2.5, "Aメロ2": -1.3, "Bメロ2": -1.3, "間奏2": -1.0, "最後のサビ": 2.0, "アウトロ": 1.5})   # v5: 測って決めた
+# v7（2026-11-12 人間「歌詞入るとたんに不自然な音量下げやめよう。違和感しかない」）: 測ると、出だしのピアノ（−23dB）が、歌が入ったとたん −38〜−42dB まで下がっていた。
+#   原因は自分の仕上げ: ピアノだけの場面がもともと小さすぎ（−43dB）、出だしだけを仕上げで +10〜+16dB 持ち上げたので、Aメロ に入る所で段がついた。
+#   → 仕上げで出だしだけを持ち上げない。ピアノだけの場面は、伴奏そのものを大きく弾かせる（出だし・Aメロ1・ブリッジ・アウトロ）。となりの場面との仕上げの差は 2dB までにする
+scene_gain(path, S, {"紙コップ": 2.0, "Aメロ1": 2.0, "間奏": 1.3, "ブリッジ": 1.8, "アウトロ": 2.0})   # 上限は2倍（+6dB）。足りない分はピアノの音量そのものを上げた
+final_gain(path, {"Aメロ2": -0.5, "Bメロ2": -0.5})   # 測り直してから決める（となりの場面との差は 2dB まで）
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=7, minlen=2.5))
     # 息つぎの音は入れない（2026-11-12 人間「吐息みたいなノイズ、こう言うのいらない」）。ウィスパーは息の成分を減らして使う
