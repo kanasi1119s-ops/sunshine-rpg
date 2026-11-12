@@ -326,7 +326,7 @@ path = sys.argv[1]
 set_parts(path, "ハイハット", swing16=0.3); set_parts(path, "ライド", swing16=0.3); set_parts(path, "指パッチン", swing16=0.22)
 humanize(path, "ガラスのエレピ"); humanize(path, "弦", mid=78, down=8, up=8, seed=9)
 # 測ると、最後のサビ（−14.2）が サビ2（−13.9）より小さかった → 仕上げで山を最後にする
-final_gain(path, {"チューニング": 1.5, "サビ2": -0.3, "間奏": -0.6, "最後のサビ": 1.3})
+final_gain(path, {"チューニング": 1.5, "CM": 1.5, "Aメロ2": -0.6, "Bメロ2": -0.9, "サビ2": 0.4, "間奏": -0.4, "最後のサビ": 1.3})   # v7: ギターを外してサビが少し軽くなったぶん、2番の Aメロ・Bメロを下げる
 if VOCAL:
     remark(path, S, std_mark(("chorus",), plain=("鼻歌",)))
     vocal_polish(path, S, {"verse": 8, "pre": 16, "chorus": 24, "最後のサビ": 28, "bridge": 8, "outro": 6}, scoop=0.3, slash=0.7, vib_min_beats=1.5, vib_start=0.5, auto=0.6, breaths=0.0)   # v6: 人間「吐息みたいなノイズかな。こう言うのいらない」→ 句の間に入れていた息つぎの音をやめる
