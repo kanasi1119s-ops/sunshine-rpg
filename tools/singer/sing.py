@@ -375,7 +375,7 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
     if hc > 0:
         vmask = (f0 > 0).astype(float)[:, None]
         wgt = np.clip((freqs - 3000) / 2500, 0, 1)[None, :] * hc
-        ap2 = ap2 * (1 - vmask * wgt * 0.85)
+        ap2 = ap2 * np.clip(1 - vmask * wgt * 0.85, 0.02, 1)   # hiClean は 1 より大きくしてもよい（1.15 で、高い所のかすれをほぼ全部とる）
     # 子音の強さ: 子音（伸ばさない部分）だけ大きく。「ぶ」「ば」などが埋もれないように
     cg = float(o.get("consonant", 1.0))
     if is_unvoiced_cons(o.get("_lyric", "")): cg = 1.0   # カ・サ・タ・ハ・パ行は強めない（破裂の「プチッ」になる）
