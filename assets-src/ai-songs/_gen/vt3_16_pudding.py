@@ -245,7 +245,7 @@ to_di(path, S, "クリーンのギター", "clean_arp", vol=0.07, seed=4)
 # v4: v3 はギターソロが −15dB、サビが −19dB と、ソロだけ飛び出していた（BGM 7.06）→ ソロのリードを下げ、ソロとブレイクダウンの伴奏も少し下げる
 # v5: 厚いシンセを kfbSupersaw にした版は BGM 6.98。元の modernSupersaw に戻すと 7.29（試し t1）→ 戻す（05 と同じで、のばしつづける壁に kfb のパッドを使うと点が下がる）
 scene_gain(path, S, {"ギターソロ": 0.8, "ブレイクダウン": 0.9})
-final_gain(path, {"冷蔵庫": 12, "イントロ": 3, "ギターソロ": -1.0, "最後のサビ": 2.0})
+final_gain(path, {"冷蔵庫": 12, "イントロ": 3, "ギターソロ": -1.0, "最後のサビ": 2.6} if VOCAL else {"冷蔵庫": 12, "イントロ": 3, "ギターソロ": -2.5, "最後のサビ": 3.2})   # BGM はソロが出やすい
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=5))
     vocal_polish(path, S, {"verse": 8, "pre": 14, "chorus": 22, "最後のサビ": 26, "break": 0, "bridge": 6, "outro": 0}, scoop=0.35, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.5)
