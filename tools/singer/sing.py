@@ -749,6 +749,30 @@ def reverb(x, sr, wet, seed=3):
 VOWEL_HEADS = set("あいうえおんアイウエオン") | {"あ弱", "い弱", "う弱", "え弱", "お弱", "ん弱"}
 
 
+def debreath(x, sr, amount=1.0):
+    """息のような音（音程のない、ザーッ・ハーッという部分）を小さくする。2026-11-12 人間「吐息のノイズあるね」「あかりって歌詞のとこで全部ノイズ入ってる」。
+    調べると、「り」の中の 0.06 秒ほどの音程のない部分と、次の「ひ」の子音（0.11 秒の息の音）が、母音と同じくらいの大きさで鳴っていた。
+    音程のある所（母音）はそのまま。音程のない所だけ、amount 1.0 で 高い息の音 −10dB・そのほか −6dB（10ミリ秒でなめらかに）。言葉が聞き取れる分は残す。"""
+    if amount <= 0 or len(x) < 2048: return x
+    N, H = 1024, int(sr * 0.005)
+    n = 1 + (len(x) - N) // H
+    idx = np.arange(N)[None, :] + (np.arange(n) * H)[:, None]
+    g = np.ones(n); lo, hi = int(sr / 700), int(sr / 150)
+    freqs = np.fft.rfftfreq(N, 1 / sr); hfm = freqs >= 4000
+    peak = 1e-12
+    for a in range(0, n, 4000):
+        fr = x[idx[a:a + 4000]]; fr = fr - fr.mean(1, keepdims=True)
+        X = np.abs(np.fft.rfft(fr, axis=1)) ** 2
+        ac = np.fft.irfft(X, axis=1); ac = ac / (ac[:, :1] + 1e-12)
+        per = ac[:, lo:hi].max(1); tot = X.sum(1) + 1e-15; hf = X[:, hfm].sum(1) / tot
+        peak = max(peak, tot.max())
+        g[a:a + 4000] = np.where(per < 0.5, np.where(hf > 0.5, 10.0, 6.0), 0.0)
+        g[a:a + 4000][tot < 1e-9] = 0.0
+    k = np.ones(3) / 3; g = np.convolve(g, k, "same")                     # 15ミリ秒でならす
+    gs = np.interp(np.arange(len(x)), np.arange(n) * H + N // 2, g)
+    return x * 10 ** (-amount * gs / 20)
+
+
 def render_song(song, sr_out, total_sec=None, dry=False):
     bpm = float(song["bpm"])
     mix = None
@@ -768,6 +792,7 @@ def render_song(song, sr_out, total_sec=None, dry=False):
         # デクリックは、大きさをそろえたあと（最後の音）にかける（EQ・大きさの調整で、とがりの大きさが変わるため）
         v = declick(v, sr_out, float(vd.get("declick", 0.0)))
         if float(vd.get("declick", 0.0)) > 0: v = declick(v, sr_out, float(vd.get("declick", 0.0)))   # 2回目（1回目で丸めたあとに残った、となり合うとがりを取る）
+        v = debreath(v, sr_out, float(vd.get("debreath", 0.0)))
         st = reverb(v, sr_out, 0 if dry else float(vd.get("reverb", 0.22)), seed=5 + i)
         pan = float(vd.get("pan", 0)); g = float(vd.get("volume", 1.0))
         st[:, 0] *= g * math.cos((pan + 1) * math.pi / 4) * math.sqrt(2)
