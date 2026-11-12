@@ -35,7 +35,7 @@ def pick(js):
     if mel is None:
         for p in js.get("parts", []):
             r = p.get("role", "")
-            if "歌の役" in r or "メロディ" in r or "旋律" in r: mel = p["notes"]; break
+            if any(w in r for w in ("歌の役", "メロディ", "主旋律", "旋律", "笛", "フルート", "ホイッスル", "フィドル", "リード", "ソロ")) and "対旋律" not in r and len(p.get("notes", "")) > 300: mel = p["notes"]; break
     if mel is None:
         for p in js.get("parts", []):
             if p.get("instrument") == "lead" and len(p.get("notes", "")) > 400: mel = p["notes"]; break
