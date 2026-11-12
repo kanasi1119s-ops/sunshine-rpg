@@ -172,6 +172,8 @@ for b in range(S.nb):
         ep(b, "x:4" if i < 6 else ("x:2 x:2" if i == 6 else "x:1 x:1 x:1 R:1"), 63 + i)
         tn = tones(root(b), "G4", "G6"); a_ = min(tn, key=lambda m: abs(m - (70 + 1.6 * i + (12 if n == "Bメロ2" else 0)))); b_ = next((m for m in tn if m > a_), a_)
         STRL.bar(b, f"{nm(a_)}:3 {nm(b_)}:1" if i < 7 else f"{nm(a_)}:2 {nm(b_)}:1 R:1")
+        if i == 7:                                            # v6: サビへのつなぎは効果音ではなく、和音の音でベルが16分で駆け上がる（調とテンポに合った音）
+            tb = tones(root(b), "Bb4", "Bb6"); BELL.bar(b, "R:1.5 " + " ".join(f"{nm(tb[q])}:0.25" for q in range(6)) + " R:1")
     elif n in ("サビ1", "サビ2", "最後のサビ"):
         ep(b, "x:0.75 x:0.75 R:0.5 x:0.5 R:0.5 x:1" if i % 4 != 3 else "x:0.75 x:0.75 R:0.5 x:0.5 x:0.5 x:1", 65)
         if n != "サビ1": stab(b, "R:0.5 x:0.5 R:1 x:0.5 R:0.5 x:0.5 R:0.5" if i % 2 == 0 else "R:1 x:0.5 R:0.5 x:0.75 x:0.75 R:0.5")   # のこぎり波は サビ2 から
@@ -199,6 +201,8 @@ for b in range(S.nb):
         v = voice(root(b), 72, 3)
         for j in range(2): PADS[j].bar(b, f"{nm(v[j + 1])}:4")
         if i % 2 == 0: BELL.bar(b, f"R:2 {top(b, 'C6', 'G6')}:2")
+        if i == 7:
+            tb = tones(root(b), "Bb4", "Bb6"); BELL.bar(b, "R:2 " + " ".join(f"{nm(tb[q])}:0.25" for q in range(8)))
     elif n == "鼻歌":
         if i < 5:
             ep(b, "x:4"); v = voice(root(b), 72, 3)
@@ -259,24 +263,24 @@ for b in range(S.nb):
         if last: put_fill(D, b, "small")
     elif n == "Aメロ2":                                         # 2番は2ステップのまま（スネアは縁、ハイハットは細かく）
         vgroove(D, b, "beat8", ghosts=0.3, seed=b, k="X.....x...X....." if i % 2 == 0 else "X..x......X..x..", s="....x.......x...", h="x.x.x.xxx.x.x.x.")
-        KDR.bar(b, "R:1 C5:1 R:1 C5:1" if i < 8 else "R:1 C5:0.75 C#6:0.25 R:1 C5:1")      # 後半は縁をたたく音が16分の裏に
+        KDR.bar(b, "R:1 C5:1 R:1 C5:1")      # 後半は縁をたたく音が16分の裏に
         if last: put_fill(D, b, "snare16")
     elif n in ("Bメロ1", "Bメロ2"):                               # 4つ打ちでのぼる → 最後の1拍は全員止まる
         D.set(b, "X...X...X...X...", "................" if i < 4 else ("........X......." if i < 6 else ("....X.......X..." if i == 6 else "X.X.X.X.XXXX....")),
               "..x...x...x...x." if i < 4 else "x.x.x.x.x.x.x.x.")
-        KDR.bar(b, "R:1 B4:1 R:1 B4:1" if i < 6 else ("R:1 B4:1 R:1 B4:0.5 B4:0.5" if i == 6 else "B4:0.5 B4:0.5 B4:0.5 B4:0.5 D5:0.25 D5:0.25 D5:0.25 D5:0.25 R:1"))
+        KDR.bar(b, "R:1 B4:1 R:1 B4:1" if i < 6 else ("R:1 B4:1 R:1 B4:0.5 B4:0.5" if i == 6 else "B4:0.5 B4:0.5 B4:0.5 B4:0.5 B4:0.5 B4:0.5 R:1"))
     elif n in ("サビ1", "サビ2", "最後のサビ"):
         kp = ["X.....x...X.....", "X..x......X..x..", "X.....x...X...x.", "X..x..x...X....."][i % 4]
         vgroove(D, b, "beat8", ghosts=0.3 if n != "最後のサビ" else 0.4, seed=b, k=kp, s="....X.......X..." if i % 4 != 3 else "....X.......X..x", h="x.x.x.xxx.x.x.xx" if i % 2 == 0 else "x.xxx.x.x.x.xxx.")
         if i % 8 == 0: crash(D, b, "C2", 6 if (n == "最後のサビ" and i == 0) else 4)
         if i % 8 == 7 and not last: put_fill(D, b, "small" if n == "サビ1" else "tomtrip")
         if last and n != "最後のサビ": put_fill(D, b, "snare16")
-        if n != "サビ1" or i >= 8: KDR.bar(b, ("R:1 B4:0.75 C#6:0.25 R:1 B4:1" if i % 4 == 1 else "R:1 B4:1 R:1 B4:1") if i % 4 != 3 else "R:1 B4:1 R:1 B4:0.5 D5:0.25 D5:0.25")    # 電子のクラップを重ねる
+        if n != "サビ1" or i >= 8: KDR.bar(b, "R:1 B4:1 R:1 B4:1")    # 電子のクラップを重ねる
     elif n == "間奏":
         kp = ["X.....x...X.....", "X..x......X..x..", "X.....x...X...x.", "X..x..x...X....."][i % 4]
         vgroove(D, b, "beat8", ghosts=0.35, seed=b, k=kp, s="....X.......X...", h="x.x.x.xxx.x.x.xx" if i % 2 == 0 else "x.xxx.x.x.x.xxx.")
         if i == 0: crash(D, b)
-        KDR.bar(b, "R:1 B4:1 R:1 B4:1" if i % 4 != 3 else "R:1 B4:1 R:0.5 D5:0.25 D5:0.25 B4:0.5 D5:0.25 D5:0.25")
+        KDR.bar(b, "R:1 B4:1 R:1 B4:1")
         if last: halt(D, b, 1)
     elif n == "CM":
         D.set(b, "................", "................", "x.x.x.x.x.x.x.x.")
@@ -293,12 +297,11 @@ for b in range(S.nb):
 
 # 効果音: 電波の雑音（チューニング・CM・終わり）、上がる音、インパクト、きらきら、サブドロップ、スイッチを切る音
 for b in S.sc("チューニング")[:4] + S.sc("CM"): KFX.bar(b, "A#5:4")
-KFX.bar(S.sc("チューニング")[3], "A#5:2 F#4:2"); KFX.bar(S.sc("チューニング")[4], "G5:2 R:2"); KFX.bar(S.sc("間奏")[0], "D4:2 R:2")
-for nme in ("Bメロ1", "Bメロ2"): KFX.bar(S.sc(nme)[-2], "R:2 F#4:2")
-KFX.bar(S.sc("サビ1")[0], "D4:2 R:2"); KFX.bar(S.sc("サビ2")[0], "G5:2 R:2"); KFX.bar(S.sc("最後のサビ")[0], "G5:2 D#4:2")
-KFX.bar(S.sc("DJの声")[0], "G#5:3 R:1"); KFX.bar(S.sc("DJの声")[-1], "R:2 F#4:2")
-KFX.bar(S.sc("鼻歌")[4], "A#5:4"); KFX.bar(S.sc("鼻歌")[5], "A#5:2 E4:0.5 R:1.5")
-cym_swell(CYM, S.sc("サビ1")[0], 2, "C4"); cym_swell(CYM, S.sc("最後のサビ")[0], 4, "E4")
+# v6（2026-11-12 人間「サビ終わりにある効果音的なやつもいらない」「効果音的なやつの入れ方が曲にあってない。最初のじーって感じのノイズとかはいい」）:
+#   上がる音・インパクト・きらきら・サブドロップ・スイッチの音・電子のハイハットの連打・縁の音を全部やめる。残すのは電波の雑音（チューニング・CM・終わり）だけ。
+#   場面のつなぎは、ドラムのフィルとシンバルのふくらみ（楽器の音）でする
+KFX.bar(S.sc("鼻歌")[4], "A#5:4"); KFX.bar(S.sc("鼻歌")[5], "A#5:2 R:2")
+cym_swell(CYM, S.sc("サビ1")[0], 2, "C4"); cym_swell(CYM, S.sc("サビ2")[0], 2, "C4"); cym_swell(CYM, S.sc("最後のサビ")[0], 4, "E4")
 
 # 止め: Bメロ の最後の1拍だけ全員休み（サビの頭を大きく聞かせる）
 for nme in ("Bメロ1", "Bメロ2", "チューニング"): SIL.add(S.sc(nme)[-1], 3, 4)
@@ -331,7 +334,7 @@ humanize(path, "ガラスのエレピ"); humanize(path, "弦", mid=78, down=8, u
 final_gain(path, {"チューニング": 1.5, "サビ2": -0.3, "間奏": -0.6, "最後のサビ": 1.3})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), plain=("鼻歌",)))
-    vocal_polish(path, S, {"verse": 8, "pre": 16, "chorus": 24, "最後のサビ": 28, "bridge": 8, "outro": 6}, scoop=0.3, slash=0.7, vib_min_beats=1.5, vib_start=0.5, auto=0.6, breaths=0.6)
+    vocal_polish(path, S, {"verse": 8, "pre": 16, "chorus": 24, "最後のサビ": 28, "bridge": 8, "outro": 6}, scoop=0.3, slash=0.7, vib_min_beats=1.5, vib_start=0.5, auto=0.6, breaths=0.0)   # v6: 人間「吐息みたいなノイズかな。こう言うのいらない」→ 句の間に入れていた息つぎの音をやめる
     harmony(path, S, [("サビ2", 8, None, K), ("最後のサビ", 0, None, K)], vol=0.36)
     # 声のチョップ: チューニングで、ラジオのジングルのようにテトの声を短く切って鳴らす。Aメロ2 では歌の合間に答える
     t0 = S.sc("チューニング")[0]; a2 = S.sc("Aメロ2")
@@ -339,4 +342,5 @@ if VOCAL:
     chops(path, S, {t0 + 4: "G4:0.5:ら R:0.5 Bb4:0.5:ら R:0.5 Eb5:1:ら R:1", t0 + 6: "C5:0.5:ら R:0.25 C5:0.25:ら Ab4:1:ら R:2",
                     im[1]: "R:3 Bb4:0.5:や D5:0.5:や", im[3]: "R:3 F4:0.25:は F4:0.25:は Bb4:0.5:や", im[5]: "R:3 D5:0.5:や Bb4:0.5:や", im[7]: "R:1 Bb4:0.5:ら Eb5:0.5:ら F5:1:や R:1",
                     a2[1]: "R:3 F4:0.5:は Ab4:0.5:は", a2[5]: "R:3 Ab4:0.5:は Eb5:0.5:や"}, vol=0.3, pan=0.25)
-    voice_by_scene(path, S, {"verse": "whisper", "pre": "clear", "chorus": "clear", "bridge": "whisper", "outro": "whisper"}, default="clear")
+    # v6: ウィスパーの声そのものの息の成分も減らす（息まじり 0.35 → 0.12、高い所の空気 5 → 3.5）。ささやきの小ささは残し、ザーッという息の音を出さない
+    voice_by_scene(path, S, {"verse": "whisper", "pre": "clear", "chorus": "clear", "bridge": "whisper", "outro": "whisper"}, default="clear", tweak={"whisper": {"breathy": 0.12, "air": 3.5}})
