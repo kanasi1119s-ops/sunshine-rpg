@@ -752,7 +752,7 @@ VOWEL_HEADS = set("あいうえおんアイウエオン") | {"あ弱", "い弱",
 def debreath(x, sr, amount=1.0):
     """息のような音（音程のない、ザーッ・ハーッという部分）を小さくする。2026-11-12 人間「吐息のノイズあるね」「あかりって歌詞のとこで全部ノイズ入ってる」。
     調べると、「り」の中の 0.06 秒ほどの音程のない部分と、次の「ひ」の子音（0.11 秒の息の音）が、母音と同じくらいの大きさで鳴っていた。
-    音程のある所（母音）はそのまま。音程のない所だけ、amount 1.0 で 高い息の音 −10dB・そのほか −6dB（10ミリ秒でなめらかに）。言葉が聞き取れる分は残す。"""
+    音程のある所（母音）はそのまま。音程のない所だけ、amount 1.0 で 高い息の音 −10dB・そのほか −8.5dB（15ミリ秒でなめらかに）。言葉が聞き取れる分は残す。"""
     if amount <= 0 or len(x) < 2048: return x
     N, H = 1024, int(sr * 0.005)
     n = 1 + (len(x) - N) // H
@@ -766,7 +766,7 @@ def debreath(x, sr, amount=1.0):
         ac = np.fft.irfft(X, axis=1); ac = ac / (ac[:, :1] + 1e-12)
         per = ac[:, lo:hi].max(1); tot = X.sum(1) + 1e-15; hf = X[:, hfm].sum(1) / tot
         peak = max(peak, tot.max())
-        g[a:a + 4000] = np.where(per < 0.5, np.where(hf > 0.5, 10.0, 6.0), 0.0)
+        g[a:a + 4000] = np.where(per < 0.5, np.where(hf > 0.5, 10.0, 8.5), 0.0)
         g[a:a + 4000][tot < 1e-9] = 0.0
     k = np.ones(3) / 3; g = np.convolve(g, k, "same")                     # 15ミリ秒でならす
     gs = np.interp(np.arange(len(x)), np.arange(n) * H + N // 2, g)
