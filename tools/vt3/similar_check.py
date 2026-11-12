@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+# 似た曲を作らないための確かめ（2026-11-12 人間「絶対条件でここで作った曲で似た曲を作らない。過去の物も含めて」）。
+# 使い方: python3 tools/vt3/similar_check.py <曲の JSON（歌入りの版がよい）> [ほかの JSON を探すフォルダ ...]
+#   歌（旋律）とベースを、これまでに作った全部の曲（既定: /mnt/user-data/outputs/vbq と assets-src/ai-songs）とくらべる。
+#   くらべ方: ①小節ごとのリズムの形 ②「音程の動き＋長さ」の4つ続き（調がちがっても同じ動きなら同じとみなす）
+#   ベースは、小節の最初の音からの音程で見る（和音がちがっても同じ型なら同じ）。
+#   目安: 旋律の動きの重なり 25% 以上、リズムの重なり 60% 以上、ベースの型の重なり 50% 以上は「似ている」→ 作る前に直す。
+import sys, os, re, json, glob, collections
+
+NOTE = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
+
+
+def midi(n):
+    m = re.match(r"([A-G])([b#]?)(-?\d)", n)
+    return NOTE[m.group(1)] + {"b": -1, "#": 1, "": 0}[m.group(2)] + 12 * (int(m.group(3)) + 1)
+
+
+def events(notes):
+    """[(始まりの拍, 長さ, 高さ か None)]"""
+    out, t = [], 0.0
+    for tok in notes.split():
+        a = tok.split(":")
+        if len(a) < 2: continue
+        m = re.match(r"[0-9.]+", a[1])
+        if not m: continue
+        L = float(m.group(0)); p = re.match(r"[A-G][b#]?-?\d", a[0])
+        out.append((t, L, midi(p.group(0)) if p else None)); t += L
+    return out
+
+
+def pick(js):
+    mel = None
+    v = js.get("vocals") or []
+    if v and v[0].get("notes"): mel = v[0]["notes"]
+    if mel is None:
+        for p in js.get("parts", []):
+            r = p.get("role", "")
+            if "歌の役" in r or "メロディ" in r or "旋律" in r: mel = p["notes"]; break
+    if mel is None:
+        for p in js.get("parts", []):
+            if p.get("instrument") == "lead" and len(p.get("notes", "")) > 400: mel = p["notes"]; break
+    bass = None
+    for p in js.get("parts", []):
+        if p.get("instrument") == "bass" and "サブ" not in p.get("role", "") and len(p.get("notes", "")) > 200: bass = p["notes"]; break
+    return mel, bass
+
+
+def q(x): return round(x * 4) / 4
+
+
+def feats(notes, beats, rel_root=False):
+    ev = events(notes); bars = collections.defaultdict(list)
+    for t, L, p in ev:
+        if p is None: continue
+        bars[int(t // beats + 1e-6)].append((q(t % beats), q(L), p))
+    rh, shape = [], []
+    for b in sorted(bars):
+        x = bars[b]
+        if len(x) < 2: continue
+        rh.append(" ".join(f"{t:g}/{L:g}" for t, L, p in x))
+        if rel_root: shape.append(" ".join(f"{t:g}/{p - x[0][2]}" for t, L, p in x))
+    seq = [(p, q(L)) for t, L, p in ev if p is not None]
+    sh = set()
+    for i in range(len(seq) - 4):
+        w = seq[i:i + 5]
+        sh.add(tuple((w[k + 1][0] - w[k][0], w[k][1]) for k in range(4)))
+    return rh, sh, shape
+
+
+def share(a, b):
+    if not a: return 0.0
+    sb = set(b); return sum(1 for x in a if x in sb) / len(a)
+
+
+def load_all(dirs, skip):
+    best = {}
+    for d in dirs:
+        for f in glob.glob(os.path.join(d, "*.json")):
+            base = os.path.basename(f)
+            slug = re.sub(r"-(v|t)\d+(vo)?\.json$|\.sunshine-song\.json$|\.json$", "", base)
+            if slug == skip: continue
+            key = (("vo.json" in base), os.path.getmtime(f))
+            if slug not in best or key > best[slug][0]: best[slug] = (key, f)
+    return {s: f for s, (k, f) in best.items()}
+
+
+def main():
+    target = sys.argv[1]; dirs = sys.argv[2:] or ["/mnt/user-data/outputs/vbq", "assets-src/ai-songs"]
+    js = json.load(open(target)); beats = js.get("beats", 4); mel, bass = pick(js)
+    slug = re.sub(r"-(v|t)\d+(vo)?\.json$|\.json$", "", os.path.basename(target))
+    mr, ms, _ = feats(mel, beats) if mel else ([], set(), [])
+    br, _, bshape = feats(bass, beats, True) if bass else ([], set(), [])
+    rows = []
+    for s, f in load_all(dirs, slug).items():
+        try: j2 = json.load(open(f))
+        except Exception: continue
+        if not isinstance(j2, dict) or "parts" not in j2: continue
+        m2, b2 = pick(j2); bt = j2.get("beats", 4)
+        r2, s2, _ = feats(m2, bt) if m2 else ([], set(), [])
+        _, _, bs2 = feats(b2, bt, True) if b2 else ([], set(), [])
+        rows.append((s, share(mr, r2), (len(ms & s2) / len(ms)) if ms else 0.0, share(bshape, bs2)))
+    print(f"■ {js.get('title', slug)}: 旋律 {len(mr)} 小節・ベース {len(bshape)} 小節を、これまでの {len(rows)} 曲とくらべた")
+    bad = 0
+    for name, idx, lim in (("旋律の動き（音程＋長さの4つ続き）", 2, 0.25), ("旋律のリズム（小節の形）", 1, 0.60), ("ベースの型（小節の形）", 3, 0.50)):
+        top = sorted(rows, key=lambda r: -r[idx])[:5]
+        print(f"  {name}: 目安 {int(lim * 100)}% 未満")
+        for r in top:
+            flag = "  ← 似ている" if r[idx] >= lim else ""
+            bad += bool(flag); print(f"    {r[idx] * 100:5.1f}%  {r[0]}{flag}")
+    print("  →", "似ている曲があります。作る前に直す" if bad else "目安をこえる曲はありません（最後は耳で確かめる）")
+    return 1 if bad else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
