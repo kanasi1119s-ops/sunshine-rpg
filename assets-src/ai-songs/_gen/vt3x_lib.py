@@ -196,6 +196,7 @@ RIGS = {
         {"type": "room", "mix": 0.1}]},
     # ファンクの単音（「チキチキ」と歩く1本の線）: 少しだけ太く、やまびこなし
     # シティポップ・ネオソウルのカッティング（セミアコ寄りの丸いクリーン）: ゆるいコンプ → J-POP のクリーン → 6.5kHz から丸める → 部屋と短い板の残響
+    # ★ 使わない（2026-11-12 人間「ポコポコ」「ファンファファファーン」「ギターっぽい音ではなかった」「他の曲にもやって欲しくない」。docs/sound/banned-sounds.md）
     "city_cut": {"di": "gretsch", "amp": "jpopClean", "ampDrive": 0.1, "fx": [
         {"type": "compressor", "threshold": -20, "ratio": 3, "attack": 0.012, "release": 0.15},
         {"type": "filter", "kind": "highpass", "freq": 170, "q": 0.7},
