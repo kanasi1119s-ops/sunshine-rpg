@@ -294,6 +294,8 @@ finish(S, LY, V, 0,
 from vt3x_lib import *
 path = sys.argv[1]
 humanize(path, "ピアノ（右手", mid=80, down=12, up=8, seed=3); humanize(path, "ピアノ（和音", mid=82, down=8, up=8, seed=5); humanize(path, "チェロ", mid=80, down=6, up=8, seed=7)
+# 測ると、紙コップ（−30／BGM −43）が小さすぎ、2番の Aメロ・Bメロ（−14.9）が サビ1（−15.3）より大きく、最後のサビ（−14.7）が サビ2（−13.9）より小さかった → 仕上げで直す
+final_gain(path, {"紙コップ": 10 if VOCAL else 18, "Aメロ1": 2.0, "Aメロ2": -1.2, "Bメロ2": -1.0, "サビ2": -0.3, "最後のサビ": 1.8, "アウトロ": 2.0})
 if VOCAL:
     remark(path, S, std_mark(("chorus",), jump=7, minlen=2.5))
     # 息つぎの音は入れない（2026-11-12 人間「吐息みたいなノイズ、こう言うのいらない」）。ウィスパーは息の成分を減らして使う
