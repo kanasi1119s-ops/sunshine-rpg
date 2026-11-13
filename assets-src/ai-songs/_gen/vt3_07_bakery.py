@@ -246,6 +246,8 @@ from vt3x_lib import *
 path = sys.argv[1]
 humanize(path, "ピアノ（右手", mid=82, down=10, up=8, seed=3); humanize(path, "マリンバ", mid=84, down=8, up=8, seed=5); humanize(path, "カリンバ", mid=82, down=8, up=8, seed=7)
 set_parts(path, "ハイハット", swing16=0.12)
+# v5 を測ると、出だし −25.8（Aメロ1 −17.9）で小さく、最後のサビ（−14.3）が サビ2（−14.0）より小さかった → 仕上げで直す（出だしは Aメロ1 より大きくしない）
+final_gain(path, {"チン": 4.0, "サビ2": -0.2, "最後のサビ": 1.2})
 if VOCAL:
     backing(path, 0.9)   # 2026-11-13 人間「声以外のバック音量0.9ぐらいにしようか」
     remark(path, S, std_mark(("chorus",)))

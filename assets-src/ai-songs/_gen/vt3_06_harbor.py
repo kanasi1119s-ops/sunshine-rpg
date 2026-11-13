@@ -53,7 +53,7 @@ S.scene("最後のサビ", 32, "chorus", C_CH + C_CH)
 S.scene("朝", 6, "outro", ["C", "D", "E", "E", "E", "E"])
 
 V = Voice(S, vol=0.2, delay=0.4, bright=0.0, patch="kfbSineLead", low=False)
-SHAM = S.track("三味線", "shamisen", volume=0.16, pan=0.25, reverb=0.2)
+SHAM = S.track("三味線", "shamisen", volume=0.2, pan=0.25, reverb=0.2)
 KOTO = S.track("琴（分散和音）", "koto", volume=0.13, pan=-0.4, reverb=0.3, sustain=1.6)
 KOTO2 = S.track("琴（上の線）", "koto", volume=0.09, pan=0.4, reverb=0.35, sustain=1.6)
 TLO = S.track("和太鼓（地打ち・低い太鼓）", "inchTom", volume=0.3, pan=-0.1, reverb=0.3)
@@ -152,7 +152,8 @@ for b in range(S.nb):
     if n == "太鼓":
         if i == 3: SHAM.bar(b, "R:2 B3:0.25 D4:0.25 E4:0.5 G4:0.25 A4:0.25 B4:0.5")       # 三味線がかけ上がってリフへ
     elif n in ("リフ", "かけ声"):
-        SHAM.bar(b, RIFF[i % 4]); koto_arp(b) if i >= 4 else None
+        SHAM.bar(b, RIFF[i % 4])       # v8（2026-11-13 人間「三味線の音が前奏ちょっとしたら小さくなる」）: 前奏の後半で琴・ベース・キックが入ると三味線がうもれた → 前奏は琴なし、ベースは軽い型、三味線を大きく
+        if n == "かけ声" and i >= 4: koto_arp(b)
         if n == "かけ声": saw(b, "x:0.5 R:1 x:0.5 R:2" if i % 2 == 0 else "R:4")
     elif n == "Aメロ1":
         koto_arp(b, (0, 2, 3, 4, 3, 2, 3, 4) if i % 2 == 0 else (0, 2, 3, 4, 5, 4, 3, 2))
@@ -246,7 +247,8 @@ def bl(b, style):
 
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
-    if n in ("リフ", "かけ声"): BASS.bar(b, bl(b, "push_run" if i % 4 == 3 else "push")) if (n == "かけ声" or i >= 4) else None
+    if n == "かけ声": BASS.bar(b, bl(b, "push_run" if i % 4 == 3 else "push"))
+    elif n == "リフ" and i >= 4: BASS.bar(b, bl(b, "don"))
     elif n == "Aメロ2": BASS.bar(b, bl(b, "step" if i % 2 == 0 else "don"))
     elif n == "Aメロ1": BASS.bar(b, bl(b, "long" if i < 8 else "don"))
     elif n in ("Bメロ1", "Bメロ2"): BASS.bar(b, bl(b, "don" if i < 6 else ("push" if i == 6 else "hit")))
@@ -294,7 +296,9 @@ path = sys.argv[1]
 humanize(path, "琴", mid=82, down=10, up=8, seed=3); humanize(path, "三味線", mid=86, down=8, up=8, seed=5); humanize(path, "和太鼓", mid=88, down=10, up=10, seed=7)
 # v5 を測ると 太鼓 −34・リフ −21〜−25・Aメロ1 −22〜−24・波 −24〜−35（サビは −14）で、和楽器だけの場面が小さすぎた。サビ2（−13.6）が最後のサビ（−14.1）より大きかった。
 #   → 和太鼓を2倍、三味線と琴を大きくして、和楽器だけの場面は伴奏そのものを大きく弾かせる。山は最後のサビに
-scene_gain(path, S, {"太鼓": 2.0, "リフ": 1.5, "Aメロ1": 1.7, "波": 1.5})
+scene_gain(path, S, {"太鼓": 2.0, "リフ": 1.5, "Aメロ1": 1.7, "波": 1.5}, only=lambda p: "三味線" not in p.get("role", ""))
+# v8: 三味線は、出だしのかけ上がり（×2.0）からリフ（×1.5）に入る所で 2.5dB 下がっていた（人間「三味線の音が前奏ちょっとしたら小さくなる」）→ 出だしからリフの終わりまで同じ大きさ
+scene_gain(path, S, {"太鼓": 2.0, "リフ": 2.0, "Aメロ1": 1.7}, only=lambda p: "三味線" in p.get("role", ""))
 final_gain(path, {"Aメロ1": -0.8, "サビ1": 1.0, "サビ2": 0.3, "最後のサビ": 1.3})   # v7 を測ると サビ1（−15.5）が Aメロ1（−15.3）より小さかった → サビを山に
 if VOCAL:
     backing(path, 0.9)   # 2026-11-13 人間「声以外のバック音量0.9ぐらいにしようか」
