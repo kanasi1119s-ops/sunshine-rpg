@@ -321,7 +321,11 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
     mid = (fq1 > 1000) & (fq1 < 4000)
     apm = ap2[:, mid].mean(1)
     vfix = bool((opts or {}).get("voicingFix", True))
-    if vfix and is_unvoiced_cons((opts or {}).get("_lyric", "")): voiced = voiced & (apm < 0.5)   # 息の子音のときだけ
+    # 2026-11-13（人間「吐息のノイズ」→ 調べた原因1。docs/sound/composer-preferences.md）: この見直しを「前の母音の部分」にもかけていたので、
+    #   「い→ひ」などで、きれいに声が出ている前の母音を 100ms も息だけの音に作り変えていた（母音と同じ大きさのささやきになる）。
+    #   → 見直すのは子音のあたりだけ。前の母音の部分（重なり＋40ms まで、または先行発声の 60ms 前まで）は、もとの録音の「声あり」をそのまま使う。今後ここを外さない
+    prev_vowel = tau < min(oto["ovl"] + 40, max(P_out - 60, 0))
+    if vfix and is_unvoiced_cons((opts or {}).get("_lyric", "")): voiced = voiced & ((apm < 0.5) | prev_vowel)   # 息の子音のときだけ・子音のあたりだけ
     # 母音（先行発声の少しあと〜）は、歌なので必ず声にする。日本語の「き」「く」「し」などは、録音で母音が
     #   ささやき声（無声化）になっていて、そのままだと「フーッ」と息を吹きかけるような音になる（2026-10-18、人間「息を吹きかけるようなノイズ」）
     force = (tau >= (P_out + 45)) if vfix else np.zeros(k, bool)
@@ -613,6 +617,8 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1, tempo=None, bea
             tt = np.arange(len(y)) / srp
             gdb = np.interp(tt, cx, cg)
             k = max(1, int(float(vdef.get("gainSmooth", 0.03)) * srp)); gdb = np.convolve(np.pad(gdb, k, mode="edge"), np.ones(2 * k + 1) / (2 * k + 1), mode="valid")
+            vm_ = voiced_mask(y, srp)                                   # 音量そろえで持ち上げるのは声の所だけ（息・子音は持ち上げない。下げるのは同じ）
+            gdb = np.where(gdb > 0, gdb * vm_, gdb)
             y = y * 10 ** (gdb / 20)
         if srp != sr_out: y = signal.resample_poly(y, sr_out, srp)
         n0 = int(round(K0 * FP / 1000 * sr_out))
@@ -699,13 +705,44 @@ def declick(x, sr, amount=1.0):
     g = np.convolve(g, np.ones(int(0.004 * sr)) / int(0.004 * sr), mode="same")
     return (y - h6) + h6 * g
 
+def voiced_mask(x, sr):
+    """声が出ている所（音程のある所）は 1、息・子音（音程のない所）は 0 の、なめらかな目印（サンプルごと）"""
+    N, H = 1024, int(sr * 0.005)
+    if len(x) < N + H: return np.ones(len(x))
+    n = 1 + (len(x) - N) // H
+    idx = np.arange(N)[None, :] + (np.arange(n) * H)[:, None]
+    m = np.ones(n); lo, hi = int(sr / 700), int(sr / 150)
+    for a in range(0, n, 4000):
+        fr = x[idx[a:a + 4000]]; fr = fr - fr.mean(1, keepdims=True)
+        X = np.abs(np.fft.rfft(fr, axis=1)) ** 2
+        ac = np.fft.irfft(X, axis=1); ac = ac / (ac[:, :1] + 1e-12)
+        m[a:a + 4000] = np.clip((ac[:, lo:hi].max(1) - 0.4) / 0.2, 0, 1)        # 周期のはっきりさ 0.4 以下＝息、0.6 以上＝声
+    m = np.convolve(m, np.ones(3) / 3, "same")
+    return np.interp(np.arange(len(x)), np.arange(n) * H + N // 2, m)
+
+
 def polish(x, sr, vdef):
     air = float(vdef.get("air", 1.5))
-    for kind, f, q, db in [("hp", 110, 0.7, 0), ("peak", 280, 1.0, -2.5 - 0.5 * air), ("peak", 3000, 0.9, 2.0), ("peak", 7200, 3.0, -2.5), ("hshelf", 10500, 0.7, air)]:
-        b, a = biquad(kind, f, sr, q, db); x = signal.lfilter(b, a, x)
-    # 追加の EQ（2026-10-25 人間「この声に近づけられるかな？」→ 参考の声を測った差を埋めるため）: [["peak", Hz, Q, dB], ["hshelf", Hz, Q, dB], ...]
-    for kind, f, q, db in vdef.get("eq", []):
-        b, a = biquad(kind, float(f), sr, float(q), float(db)); x = signal.lfilter(b, a, x)
+    # 2026-11-13（人間「吐息のノイズ」→ 調べた原因3）: 声を明るくする EQ（2kHz +9dB・6.5kHz から上 +10dB など）は、息の音・子音を母音より 3.6dB 多く持ち上げ、
+    #   母音と同じくらい大きい息の音を 10 → 23 か所に増やしていた。→ 明るくする分（air と、この声の eq）は、声が出ている所にだけかける。
+    #   音程のない所（息・子音）は、もとの録音どおりの大きさのまま。"eqVoicedOnly": false で前のとおり（使わない）
+    def chain(y, a_, extra):
+        for kind, f, q, db in [("hp", 110, 0.7, 0), ("peak", 280, 1.0, -2.5 - 0.5 * a_), ("peak", 3000, 0.9, 2.0), ("peak", 7200, 3.0, -2.5), ("hshelf", 10500, 0.7, a_)]:
+            b, a = biquad(kind, f, sr, q, db); y = signal.lfilter(b, a, y)
+        # 追加の EQ（2026-10-25 人間「この声に近づけられるかな？」→ 参考の声を測った差を埋めるため）: [["peak", Hz, Q, dB], ["hshelf", Hz, Q, dB], ...]
+        for kind, f, q, db in (vdef.get("eq", []) if extra else []):
+            b, a = biquad(kind, float(f), sr, float(q), float(db)); y = signal.lfilter(b, a, y)
+        return y
+    if vdef.get("eqVoicedOnly", True) and (vdef.get("eq") or air > 0):
+        m = voiced_mask(x, sr)
+        # 息・子音の側: 明るくする分はかけない。ただし低い所の持ち上げ（1kHz より下の eq）だけは同じにして、声とのつながりを保つ
+        low_eq = [e for e in vdef.get("eq", []) if float(e[1]) < 1000]
+        y0 = chain(x, 0.0, False)
+        for kind, f, q, db in low_eq:
+            b, a = biquad(kind, float(f), sr, float(q), float(db)); y0 = signal.lfilter(b, a, y0)
+        x = chain(x, air, True) * m + y0 * (1 - m)
+    else:
+        x = chain(x, air, True)
     # ディエッサー: サ行・シ・ツの「シー」が強すぎる所だけ、4.5kHz より上を下げる（最大 -9dB）
     b, a = signal.butter(4, 4500 / (sr / 2), "high"); hi = signal.lfilter(b, a, x); lo = x - hi
     w5 = int(0.005 * sr)
