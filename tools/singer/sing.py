@@ -383,6 +383,12 @@ def render_piece(oto, out_len, f0_target, vel, sr_out, opts=None):
     # 子音の強さ: 子音（伸ばさない部分）だけ大きく。「ぶ」「ば」などが埋もれないように
     cg = float(o.get("consonant", 1.0))
     if is_unvoiced_cons(o.get("_lyric", "")): cg = 1.0   # カ・サ・タ・ハ・パ行は強めない（破裂の「プチッ」になる）
+    # 息の子音（か・さ・た・は行、「ち」「つ」など）のやわらかさ（2026-11-13）: "softCons": 0〜1。子音の部分だけを小さくする（0.5 で 約 −6dB）。
+    #   速い曲で「ち」「し」が続くと、子音が母音と同じくらいの大きさで並んで、息のノイズに聞こえるため。母音は変えない
+    sc_ = float(o.get("softCons", 0.0))
+    if sc_ > 0 and is_unvoiced_cons(o.get("_lyric", "")):
+        cm2 = (tau < min(C_out, L)).astype(float); cm2 = np.convolve(cm2, np.ones(5) / 5, mode="same")
+        sp2 = sp2 * (1 - (1 - (1 - sc_) ** 2) * cm2[:, None])
     if abs(cg - 1.0) > 1e-3:
         cmask = (tau < min(C, L)).astype(float)
         cmask = np.convolve(cmask, np.ones(5) / 5, mode="same")

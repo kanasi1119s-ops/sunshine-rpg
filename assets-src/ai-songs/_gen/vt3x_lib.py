@@ -437,3 +437,10 @@ def scene_gain(path, S, gains, only=None):
         for b in range(S.nb): g[b] = round(min(2.0, g[b] * gains.get(S.scene_of(b)[0], 1.0)), 4)
         p["barGain"] = g
     save(path, js)
+
+
+def backing(path, ratio=0.9):
+    """歌入りの版で、声以外（伴奏・ドラム全部）の音量を ratio 倍にする（2026-11-13 人間「声以外のバック音量0.9ぐらいにしようか」）。歌の大きさは変えない"""
+    js = load(path)
+    for p in js["parts"]: p["volume"] = round(p.get("volume", 0.1) * ratio, 4)
+    save(path, js); print(f"  伴奏の音量を {ratio} 倍にした: {len(js['parts'])} パート")
