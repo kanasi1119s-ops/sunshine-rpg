@@ -219,7 +219,7 @@ for b in range(S.nb):
     one = f"{nm(r)}:1 R:0.5 {nm(t5)}:0.5 {nm(t3 + 12)}:1" if i % 4 == 0 else f"{nm(r)}:1 R:1 {nm(t3)}:0.5 {nm(t5)}:0.5"          # ズン・（ン）ズ・ター: 1拍目のあと、2拍目の裏から5度へ
     walk = f"{nm(r)}:1.5 {nm(t3)}:0.5 {nm(ap)}:1"                # 句の終わりは歩いて次の和音へ
     alt = f"{nm(t5)}:1 R:1 {nm(r)}:0.5 {nm(t3)}:0.5"
-    if n == "Aメロ2" or (n == "Aメロ1" and i >= 8): BASS.bar(b, walk if i % 4 == 3 else one)
+    if n in ("Aメロ1", "Aメロ2"): BASS.bar(b, walk if i % 4 == 3 else one)       # v5: 歌が入る所で 3.1dB 下がっていた → Aメロ1 の頭からベースと軽いドラム
     elif n in ("Bメロ1", "Bメロ2"): BASS.bar(b, f"{nm(r)}:2 {nm(t5)}:1" if i < 7 else f"{nm(r)}:1 R:2")
     elif n in ("サビ1", "サビ2", "最後のサビ", "ダンス", "間奏"): BASS.bar(b, walk if i % 4 == 3 else (one if i % 2 == 0 else alt))
     elif n == "発車" and i >= 8: BASS.bar(b, one)
@@ -236,7 +236,7 @@ for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     last = i == L - 1
     if n == "発車" and i >= 4: D.set(b, *(W_SOFT if i < 11 else W_FILL))
-    elif n == "Aメロ1": D.set(b, *(("............", "....x...x...", "............") if i < 8 else W_SOFT))
+    elif n == "Aメロ1": D.set(b, *W_SOFT)
     elif n in ("Aメロ2", "間奏"): D.set(b, *(W_FILL if (last and n == "間奏") else W_MID))
     elif n in ("Bメロ1", "Bメロ2"):
         if i < 6: D.set(b, "X...........", "............", "x...x...x...")
@@ -264,7 +264,8 @@ from vt3x_lib import *
 path = sys.argv[1]
 humanize(path, "ピアノ（右手", mid=82, down=10, up=8, seed=3); humanize(path, "ピチカート", mid=84, down=8, up=8, seed=5); humanize(path, "クラリネット", mid=86, down=8, up=8, seed=7)
 # v4 を測ると、最後のサビ（−14.6）が サビ2（−14.3）より小さかった → 山を最後に
-final_gain(path, {"サビ2": -0.2, "最後のサビ": 1.4, "カーテンコール": 0.8})
+final_gain(path, {"Aメロ1": -1.0, "サビ1": 0.8, "サビ2": 0.2, "最後のサビ": 1.4, "カーテンコール": 0.8})
+scene_gain(path, S, {"Aメロ1": 1.25})
 if VOCAL:
     backing(path, 0.9)   # 2026-11-13 人間「声以外のバック音量0.9ぐらいにしようか」
     remark(path, S, std_mark(("chorus",)))
