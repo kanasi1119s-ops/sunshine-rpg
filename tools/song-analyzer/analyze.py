@@ -9,6 +9,7 @@
 当たりやすさ: テンポは「2倍・半分」をまちがえることがある（--bpm で直せる）。小節の頭と場面の区切りは「たぶん」。細かい楽器名は分からない（6つの分類まで）。"""
 import sys, os, json, subprocess, argparse
 import numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 SR = 44100
 JP = {"vocals": "歌", "drums": "ドラム", "bass": "ベース", "chordal": "和音の楽器", "guitar": "ギター", "piano": "ピアノ", "other": "シンセ・弦など"}
@@ -70,7 +71,7 @@ def analyze(path, bpm=None, name=None, keep_stems=None):
     lb = np.array([lenv[max(0, f - 3):f + 4].max() for f in bf]); lb = lb / (lb.max() + 1e-9); nov = nov / (nov.max() + 1e-9)
     sc = [float(lb[p::4].mean() + nov[p::4][:len(lb[p::4])].mean()) for p in range(4)]; phase = int(np.argmax(sc)); conf = float((sorted(sc)[-1] - sorted(sc)[-2]) / (sorted(sc)[-1] + 1e-9))
     bar_t = beats[phase::4]; spb = float(np.median(np.diff(beats)))
-    if bar_t[0] - 4 * spb > -0.5 * spb and bar_t[0] > 2 * spb: bar_t = np.r_[bar_t[0] - 4 * spb, bar_t]
+    while bar_t[0] - 4 * spb > -1.0 * spb: bar_t = np.r_[bar_t[0] - 4 * spb, bar_t]      # 曲の頭まで小節をさかのぼる（前奏にドラムがなくて拍が取れなかった所）
     bar_t = np.r_[bar_t, bar_t[-1] + 4 * spb]; bar_t = bar_t[bar_t < dur + 0.5]; nb = len(bar_t) - 1
     idx = lambda t: int(max(0, min(wav.shape[1], round(t * SR))))
     # ---- 小節ごとの強弱・帯域・広がり ----
@@ -161,13 +162,17 @@ def analyze(path, bpm=None, name=None, keep_stems=None):
     for p, s in zip([None] + segs, segs):
         if p is None: s["enter"] = [k for k in ORDER if s["active"].get(k, 0) > 0.5]; s["leave"] = []
         else: s["enter"] = [k for k in ORDER if s["active"].get(k, 0) > 0.5 and p["active"].get(k, 0) < 0.25]; s["leave"] = [k for k in ORDER if s["active"].get(k, 0) < 0.25 and p["active"].get(k, 0) > 0.5]
+    import stage2
+    s2, raw2 = stage2.run(sm, beats, bar_t, spb, present, librosa)
+    if os.environ.get("SA_RAW"):      # 答え合わせ用（自分の曲だけ）: 書き起こしそのものを別のファイルに出す
+        import pickle; rp = os.environ["SA_RAW"]; pickle.dump(dict(bar_t=bar_t, raw=raw2), open(os.path.join(rp, (name or "x") + ".raw.pkl") if os.path.isdir(rp) else rp, "wb"))
     res = dict(name=name or os.path.splitext(os.path.basename(path))[0], seconds=round(dur, 1), tempo=round(60 / spb, 1), tempo_guess=round(tempo, 1), tempo_given=bool(bpm),
                bars=nb, downbeat_confidence=round(conf, 2), stems_present={k: present[k] for k in ORDER}, stem_level_db={k: round(level[k], 1) for k in ORDER},
                loudness=dict(max_db=round(float(loud.max()), 1), range_db=round(float(np.percentile(loud, 95) - np.percentile(loud, 10)), 1),
                              low=round(float(np.mean([x["low"] for x in bars])), 3), mid=round(float(np.mean([x["mid"] for x in bars])), 3), high=round(float(np.mean([x["high"] for x in bars])), 3),
                              width=round(float(np.mean([x["width"] for x in bars])), 3)),
                rests={k: (round(v, 3) if v is not None else None) for k, v in rests.items()}, layers=dict(mean=round(float(layers.mean()), 2), min=int(layers.min()), max=int(layers.max()), changes_per_8bars=round(float((np.diff(layers) != 0).sum() / max(1, nb) * 8), 2)),
-               drums_hits_per_beat={k: round(float(np.mean(v)), 2) for k, v in drum.items()}, sections=segs,
+               drums_hits_per_beat={k: round(float(np.mean(v)), 2) for k, v in drum.items()}, stage2=s2, sections=segs,
                per_bar=dict(time=[round(float(t), 2) for t in bar_t[:-1]], db=[round(float(x), 1) for x in loud], low=[round(x["low"], 3) for x in bars], high=[round(x["high"], 3) for x in bars], width=[round(x["width"], 3) for x in bars],
                             layers=[int(x) for x in layers], chordal_mix_maybe={k: [round(float(x), 2) for x in sub_share[k]] for k in SUB}, active={k: [round(x, 2) for x in act_bar[k]] for k in ORDER}, drums={k: [round(x, 2) for x in v] for k, v in drum.items()}))
     return res
