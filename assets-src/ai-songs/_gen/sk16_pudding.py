@@ -9,7 +9,7 @@
 #   プリン＝金色の月（つき・満月）／けんか＝三時の乱世／スプーン＝銀のつるぎ／兄＝となりの王さま／じゃんけん＝グー・チョキ・パーのうらない／
 #   あいこ＝かがみ合わせのにらめっこ／半分こ＝満月を割る／母＝女神の手／なかなおり＝雪どけ。「プリン」「兄」「けんか」とは一度も言わない。
 from vocalo_lib import *
-SK = os.environ.get("SK", "A")
+SK = os.environ.get("SK", "A"); DR = os.environ.get("DR", "0")     # DR: スケッチ C のドラムの案（0＝もとの8分、1＝4分で大きく、2＝4ビート、3＝半分の速さ、4＝4つ打ちと手びょうし）
 def M(pat, degs): return mel16(pat, degs.split())
 
 
@@ -46,6 +46,7 @@ else:
     VC = [x for a, b in zip(A_, B_) for x in (M(P1, a), M(P2, b))]
     TXT = "さんじのらんせ/つきはひとつぶ/ぎんのつるぎが/ぐーちょきぱーの/かがみあわせの/まんげつをわる/めがみのてから/ふたつめのつき"
 S.keep_old_synth = True; S.no_depth = True; S.open_hat_vol = 0.4; S.keepers = {}
+if SK == "C" and DR != "0": S.slug = f"sk-c-d{DR}"
 
 V = Voice(S, vol=0.2, delay=0.3, bright=0.0, patch="kfbSineLead", low=False)
 D = S.drumkit(); LY = Lyrics(S)
@@ -105,6 +106,8 @@ else:
     GR = [S.track(f"Rギター{i + 1}", "distGuitar", **rock_gtr_spec(0.043, 0.6, drive=0.4)) for i in range(3)]
     BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.24))
     PLK = S.track("きらきらのプラック", "lead", patch="kfbSquarePluck", volume=0.06, pan=0.3, reverb=0.2, fx=rack_pluck())
+    CLAP = S.track("手びょうし", "guitar", patch="kawaiiFx", volume=0.085, pan=0.05, reverb=0.2, modulate=False)
+    if DR == "2": S.keepers = {"サビ": "ride"}
     SAW = [S.track(f"スーパーソウの和音{i + 1}", "lead", patch="kfbSupersawWide", volume=0.022, pan=(0, 0.2, -0.45, 0.45, -0.2)[i], reverb=0.2, duck=0.5, fx=rack_supersaw()) for i in range(5)]
 
     def gt(b, pat):
@@ -120,8 +123,20 @@ else:
         elif n == "サビ":
             if i == 7:      # 8小節目: 頭の1発だけで全員止まり、歌の長い音がひとり残る
                 gt(b, "x-.............."); D.set(b, "X...............", "X...............", "................")
-            else:
+            elif DR == "0":
                 gt(b, "x-x-x-x-x-x-x-x-"); D.set(b, "X...X.X.X...X.X." if i % 2 == 0 else "X...X.X.X..XX.X.", "....X.......X...", "x.x.x.x.x.x.x.x.")
+            elif DR == "1":      # 4分で大きく: キックは1・3拍目、スネアは2・4拍目、刻みは4分
+                gt(b, "x-x-x-x-x-x-x-x-"); D.set(b, "X.......X......." if i % 2 == 0 else "X.....X...X.....", "....X.......X...", "x...x...x...x...")
+            elif DR == "2":      # 4ビート: ライドを4分で刻み、スネアは軽く2・4拍目。ベースは4分で歩く。ギターは2・4拍目に短く
+                r = low(ch, "F1"); t = tones(ch, nm(r + 1), nm(r + 12)); nx = low(S.chords[b + 1], "F1") if b + 1 < S.nb else r
+                BASS.bar(b, steps("x---x---x---x---", [N(r), N(t[0]), N(t[1] if len(t) > 1 else r + 7), N(nx - 1 if nx > r else nx + 1)]))
+                rr = low(ch, "C3"); up = tones(ch, nm(rr + 1), nm(rr + 12))[:2]
+                for j in range(3): GR[j].bar(b, steps("....x-......x-..", [N(([rr] + up + [rr + 12])[j])], short=0.5))
+                D.set(b, "X..............." if i % 4 == 0 else "................", "....x.......x...", "x...x...x...x..." if i % 2 == 0 else "x...x.x.x...x.x.")
+            elif DR == "3":      # 半分の速さ: キックは1拍目（と3拍目のウラ）、スネアは3拍目だけ
+                gt(b, "x-x-x-x-x-x-x-x-"); D.set(b, "X.........X....." if i % 2 == 0 else "X.....X.........", "........X.......", "x...x...x...x...")
+            else:                # 4つ打ちと手びょうし: キックを4分で踏み、スネアのかわりに手びょうし。シンバルなし
+                gt(b, "x-x-x-x-x-x-x-x-"); D.set(b, "X...X...X...X...", "................", "................"); CLAP.bar(b, "R:1 B4:1 R:1 B4:1")
                 v = wide9(ch); [SAW[j].bar(b, steps("x-------------..", [N(v[j])])) for j in range(5)]
                 if i % 2 == 1: PLK.bar(b, "R:2 " + arp16(ch, "xxxxxxxx", (0, 1, 2, 3, 4, 5, 6, 7), lo="F5", hi="F7"))      # 歌が伸ばしている後ろで「ピロピロピロピーン」
             if i % 8 == 0: crash(D, b, "C2", 4)
