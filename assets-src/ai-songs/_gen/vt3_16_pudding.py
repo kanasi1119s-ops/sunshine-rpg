@@ -213,37 +213,41 @@ for b in range(S.nb):
         if i == 3: SPOON.bar(b, "R:1 F#7:0.25 R:2.75")                          # スプーンを置く「カチ」
 
 # ================= ドラム =================
+# v8（2026-11-15）人間「テンポ200だけどドラムをテンポ200に合わせて手数多く入れる必要性はないよ。そういうのも勉強してきて。」
+#   プロのドラマーの演奏（Groove MIDI）を測ると、1秒あたりの打数はテンポが変わってもほぼ同じ（7〜10打）。＝速い曲ほど、1拍あたりは少なく叩く。
+#   テンポ 175〜215 では、キックは1拍に 0.57（2拍に1回）、刻みは 0.9（4分）、全部で 3.1。v7 のサビはキック 1.25・刻み 1.66 で、倍ちかく叩いていた。
+#   → 刻みは4分。キックは1拍目と3拍目（＋歌が食う所の1発）。スネアは2・4拍目。Aメロ・Bメロは半分の速さ（スネアは3拍目だけ）。
+#     ギターは8分で走りつづけ、ドラムは大きくとる（速さはギターが出す。ドラムは広さを出す）。8分の刻みに上げるのは、最後の8小節だけ。
+Q4 = "x...x...x...x..."
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b); odd = i % 2 == 1; last = i == L - 1
     if n == "前奏":
         if i >= 4:
-            vgroove(D, b, "beat8", ghosts=0.15, seed=b, k="X...X.X.X...X.X.", s="....X.......X...", h="x.x.x.x.x.x.x.x.", vary=False)
+            vgroove(D, b, "beat8", ghosts=0.0, seed=b, k="X.......X.......", s="....X.......X...", h=Q4, vary=False)
             if i == 4: crash(D, b, "C2", 4)
-            if last: put_fill(D, b, "snare16")
-        elif i == 3: put_fill(D, b, "build")
+            if last: put_fill(D, b, "small")
     elif n in ("Aメロ", "Aメロ2"):
-        if not odd: vgroove(D, b, "beat8", ghosts=0.2, seed=b, k="X.....X.X.....X.", s="....X.......X...", h="x.x.x.x.x.x.x.x." if n == "Aメロ" else "x.xxx.x.x.xxx.x.", vary=False)
-        else: D.set(b, "X.X...X.........", "....X.X.........", "x.x.x.x.........")          # 2拍目のウラでいっしょに打って、あとは休む
+        # 半分の速さ: スネアは3拍目だけ。歌が食う小節は、2拍目のウラの1発でいっしょに打って、あとは休む
+        if not odd: vgroove(D, b, "beat8", ghosts=0.1, seed=b, k="X.........X....." if n == "Aメロ" else "X.....X...X.....", s="........X.......", h=Q4, vary=False)
+        else: D.set(b, "X.....X.........", "......X.........", "x...x...........")
         if i == 0: crash(D, b, "C2", 4)
-        if last: put_fill(D, b, "small")
     elif n in ("Bメロ", "Bメロ2"):
-        if i < 6: vgroove(D, b, "half", ghosts=0.2, seed=b)
-        elif i == 6: put_fill(D, b, "build")
+        if i < 6: vgroove(D, b, "beat8", ghosts=0.1, seed=b, k="X.........X....." if not odd else "X...............", s="........X.......", h=Q4, vary=False)
+        elif i == 6: D.set(b, "X.......X.......", "........X...X.X.", Q4)
         else: D.set(b, "X...X...X.X.....", "X...X...X.X.....", "................")
     elif n in ("サビ1", "サビ2", "最後のサビ", "ギターソロ", "間奏"):
         j = i % 8
         if j == 7 and n in ("サビ1", "サビ2"): D.set(b, "X...............", "X...............", "................")
         else:
-            hh = "x.x.x.x.x.x.x.x." if not (n == "最後のサビ" and i >= 16) else "x.xxx.xxx.xxx.xx"
-            if not odd: vgroove(D, b, "beat8", ghosts=0.15, seed=b, k="X...X.X.X...X.X.", s="....X.......X...", h=hh, vary=False)
-            else: vgroove(D, b, "beat8", ghosts=0.1, seed=b, k="X...X.X...X.X...", s="....X.X.....X...", h=hh, vary=False)      # 2拍目のウラで、スネアとキックも食う
+            hh = Q4 if not (n == "最後のサビ" and i >= 16) else "x.x.x.x.x.x.x.x."
+            if not odd: vgroove(D, b, "beat8", ghosts=0.0, seed=b, k="X.......X.......", s="....X.......X...", h=hh, vary=False)
+            else: vgroove(D, b, "beat8", ghosts=0.0, seed=b, k="X.....X...X.....", s="....X.......X...", h=hh, vary=False)      # 2拍目のウラで、キックも食う
         if i % 8 == 0: crash(D, b, "C2", 6 if (n == "最後のサビ" and i == 0) else 4)
-        if j == 3 and not last: put_fill(D, b, "small")
-        if last and n in ("間奏", "ギターソロ"): put_fill(D, b, "snare16")
+        if last and n in ("間奏", "ギターソロ", "サビ2"): put_fill(D, b, "small")
         if last and n == "最後のサビ": D.set(b, *KIME_END)
     elif n == "雪どけ":
         if i >= 12:
-            D.set(b, "X.........X.....", "........X.......", "x...x...x...x...")
+            D.set(b, "X.........X.....", "........X.......", Q4)
             if last: put_fill(D, b, "build")
     elif n == "おわり":
         if i in (0, 2): D.set(b, "X...............", "X...............", "................"); crash(D, b, "C2", 4)
