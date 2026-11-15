@@ -244,11 +244,11 @@ def gtr_strum(tracks, S, b, pat, ch, rng, drive=True, lag_ms=8, bpm=None, string
         while e < len(pat) and pat[e] == "-": e += 1
         L = (e - i) * 0.25; q = i % 4
         if q == 0:
-            k = rng.choice([n, n, max(4, n - 1), 4, 3] if drive else [n, 4, 4, 3]); idx = list(range(0, k)); mark = "!"
+            k = min(n, rng.choice([n, n, max(4, n - 1), 4, 3] if drive else [n, 4, 4, 3])); idx = list(range(0, k)); mark = "!"
         elif q == 2:
             k = rng.choice([4, 3, 3, 4]); idx = list(range(1, min(n, 1 + k))); mark = ""
         else:
-            k = rng.choice([3, 2, 2]); idx = list(range(n - 1, n - 1 - k, -1)); mark = ","
+            k = min(n, rng.choice([3, 2, 2])); idx = list(range(n - 1, n - 1 - k, -1)); mark = ","
         for order, j in enumerate(idx):
             d = order * lag; tracks[j].at(S.bar_beat(b) + i * 0.25 + d, f"{nm(v[j])}:{max(0.12, L - d):.3f}{mark}")
 
