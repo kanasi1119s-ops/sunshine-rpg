@@ -87,6 +87,8 @@ export const SYNTH_PATCHES: Record<string, number> = {
   // 2026-11-11 人間「オカリナもフルートと同じで使う時に言います。そこら辺の音、電子って感じの音にして」→ やわらかいメロディ用の電子のリード（Surge XT を重ねて作る tools/surge/layer.py）:
   //   kfbDreamLead＝サイン波＋透き通った高い音＋オルゴールの立ち上がり・kfbWobbleLead＝ゆれる中空の音・kfbFutureSax＝電子のサックス
   kfbDreamLead: 224, kfbWobbleLead: 225, kfbFutureSax: 227,
+  // 2026-11-15 人間「音の作り方も学んでプロ仕様に」: kfbSupersawWide＝厚いスーパーソウ（96本）に、1オクターブ上の JP8K スーパーソウ（500Hz より上だけ）を重ねて空気感を足した和音用
+  kfbSupersawWide: 228,
   ocarina: 217, harmonica: 218, tubeGlock: 219, wineGlass: 220, balafon: 221, strumstick: 222, toysFx: 223,
   surgeBassPasty: 182, surgeBassAnalogBassImaged: 183, surgeBassCatBass: 184, surgeBassWarmSquare: 185, surgeBassEmulation: 186, surgeBassPop: 187, surgeBassModernDirtyFat: 188,
   // Surge XT のプラック（128 以上＝バンク 1。surgePopcorn＝ポップコーンのようにはじける・surgeBell1＝澄んだベル・surgeGuzheng＝箏（こと）のような弦・surgeRetroWave＝80年代風のきらめき・surgeConvex＝丸く太い・surgeWoody＝木をたたいたような・surgeFantasyBell＝幻想的なベル・surgeNicePluck＝素直で明るい・surgeWaveguide＝弦をはじいたような・surgeFriendly＝やさしい・surgeMixedFeelings＝少し切ない）

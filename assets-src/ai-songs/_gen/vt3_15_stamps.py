@@ -55,7 +55,7 @@ PNL = [S.track(f"ピアノ（のばす{i + 1}）", "piano", volume=0.1, pan=-0.1
 FMB = S.track("FM のベース", "bass", patch="kfbFmBass", volume=0.095, pan=0, duck=0.25, fx=rack_bass())
 SUB = S.track("サブベース", "bass", patch="kfbSub", volume=0.036, pan=0, duck=0.4)
 # スーパーソウの和音は5声（根音・5度は真ん中寄り、3度・7度・9度は高く広く）。2拍で1往復するフィルターでうねらせ、キックで凹ませる
-SAW = [S.track(f"スーパーソウの和音{i + 1}", "lead", patch="kfbSupersaw", volume=0.026, pan=(0, 0.15, -0.45, 0.45, -0.2)[i], reverb=0.2, duck=0.6,
+SAW = [S.track(f"スーパーソウの和音{i + 1}", "lead", patch="kfbSupersawWide", volume=0.026, pan=(0, 0.15, -0.45, 0.45, -0.2)[i], reverb=0.2, duck=0.6,
                fx=rack_supersaw(hp=180 if i < 2 else 260, pump_ms=round(60000 / 172 * 2), wide=0.2 if i < 2 else 0.4)) for i in range(5)]
 PLK = S.track("プラックのリフ", "lead", patch="kfbSquarePluck", volume=0.062, pan=0.3, reverb=0.2, fx=rack_pluck())
 LEAD = S.track("電子のリード（ソロ）", "lead", patch="kfbSineLead", volume=0.085, pan=-0.1, reverb=0.25, fx=rack_lead())
@@ -167,79 +167,118 @@ def plk(b, pat, order, lo="A4", hi="A6"):
 def pik(b, hi="C7", lo_="G6", at="..........x-x---"): PIK.bar(b, steps(at, [lo_, hi]))
 
 
-RIFF = [("x.xx.x.xx.x.x-x-", (2, 0, 2, 3, 2, 3, 4, 3, 2)), ("x.xx.x.xx.xxx-..", (3, 1, 3, 4, 3, 4, 5, 4, 3)),
-        ("x.xx.x.xx.x.x-x-", (2, 0, 2, 3, 2, 3, 4, 5, 4)), ("xxxxxxxxx-x-x---", (0, 1, 2, 3, 4, 3, 2, 1, 2, 3, 4))]
-SOLO = ["x-xxx-x-xx..x-x-|C6 A5 C6 E6 C6 A5 G5 A5 C6", "x-x-xxxx..x-x---|B5 G#5 B5 D6 E6 D6 B5 E6", "xxxx.xxx.x-x-x--|A5 C6 E6 A6 G6 E6 C6 E6 G6 E6", "x-x-x-x-xxxxxxxx|G6 E6 C6 Bb5 C6 C6 C6 C6 E6 E6 E6 E6",
-        "x-xxx-x-xx..x-x-|F6 C6 F6 A6 F6 C6 A5 C6 F6", "xx.xx.xx.x-x-x--|E6 B5 E6 B5 G#5 B5 D6 E6 G#6", "x---x-x-xxxxx-x-|A6 E6 C6 A5 C6 E6 A6 G6 E6", "xxxxxxxxxxxxx---|G5 B5 D6 F6 G6 F6 D6 B5 D6 F6 G6 B6 D7"]
+
+def bp(b, pat, kinds, short=None):
+    """ベースを16分のマスで書く。kinds: r＝根音・o＝1オクターブ上・5＝5度・a＝次の和音へ近づく音"""
+    ch = S.chords[b]; r = low(ch, "F1"); nx = S.chords[b + 1] if b + 1 < S.nb else ch; rn = low(nx, "F1")
+    up = tones(root(b), nm(r + 1), nm(r + 12)); t5 = next((m for m in up if (m - r) in (6, 7, 8)), r + 7)
+    ap = t5 if rn == r else (rn - 1 if rn > r else rn + 1); mp = {"r": r, "o": r + 12, "5": t5, "a": ap}
+    FMB.bar(b, steps(pat, [nm(mp[c]) for c in kinds], short=short))
+
+
+def stab(b, pat, c=53):
+    v = wide9(S.chords[b], c, 5)
+    for j in range(5): SAW[j].bar(b, steps(pat, [nm(v[j])]))
+
+
+# v7（2026-11-15）人間「曲調が今までと変わってないなー。休符とかもしっかり使ってみて。」
+#   今までの曲は、どの場面も全員が鳴りっぱなしだった。この版は「鳴らさない所」を先に決める:
+#   ・Aメロ: 歌っている小節は、頭のベース1発と指パッチンだけ。歌が休む半小節に、ピアノが答える（かけ合い）
+#   ・サビ1・サビ2: 半分の速さ。和音は短い「ジャッ・ジャッ」だけで、間は空ける。4小節ごとに最後の1拍を全員休む
+#   ・リフ: 全員が同じリズムで打って、2拍まるごと休む
+#   ・最後のサビだけ、4つ打ちで全員が鳴りつづける（ここまで空けてきたぶん、いちばん大きく聞こえる）
+RIFF = [("x.xx....x.xx....", (2, 0, 2, 3, 2, 4)), ("x.xx....x.x.x-..", (3, 1, 3, 4, 5, 4)),
+        ("x.xx....x.xx....", (2, 0, 2, 4, 3, 5)), ("x-x-x-x-........", (4, 3, 2, 0))]
+SOLO = ["x-xxx-x-xx......|C6 A5 C6 E6 C6 A5 G5", "........x-x-xxxx|B5 D6 E6 D6 B5 E6", "xxxx.xxx........|A5 C6 E6 A6 G6 E6 C6", "....x-x-x-..x-x-|G6 E6 C6 E6 G6",
+        "x-xxx-x-xx......|F6 C6 F6 A6 F6 C6 A5", "........xx.xx.xx|E6 B5 E6 G#5 B5 D6", "x---x-x-........|A6 E6 C6", "xxxxxxxxxxxx....|G5 B5 D6 F6 G6 F6 D6 B5 D6 F6 G6 B6"]
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     if n == "ぴこん":
         pik(b, at="x-x-....x-x-....")
-        long3(PNL, b, 67, "x-------x-------"); long3(PAD, b, 72); saw(b, "x---------------", 51); bass(b, "long")
-        if i == 1: PLK.bar(b, "R:2 " + glitch("G5", 2, (4, 4, 8))); FXT.bar(b, fx_bar((0, "kira", 1), (2, "up", 2)))
-    elif n in ("頭のサビ", "サビ1", "サビ2", "最後のサビ", "しめ"):
-        j = i % 8; first = n == "頭のサビ"; lastc = n in ("最後のサビ", "しめ")
-        rc(b, RC_C[(i + (i // 4)) % 4], 67)                                   # 4小節ごとに1つずらして、同じ並びにしない
-        bass(b, "c1" if (j % 2 == 0 or first) else "c2")
-        if not first: saw(b, "x-----x-----x---" if j % 2 == 0 else "x---x-----x-----", 51); SUB.bar(b, steps("x-------x-------", [nm(low(S.chords[b], "F1"))] * 2))
-        # 「ぴこん」（通知の音）: 歌の句が終わる小節（2・4・6・8小節目）の3拍目に答える
-        if j % 2 == 1 and n != "しめ": pik(b, "C7" if not lastc else "C#7", "G6" if not lastc else "G#6")
-        if n == "サビ2" and j in (2, 6): plk(b, "..xx..xx..xx..xx", (2, 3, 3, 4, 4, 5, 5, 6))
-        if lastc and n != "しめ" and j % 2 == 0: PLK.bar(b, arp16(S.chords[b], "x.xxx.xxx.xxx.xx", (0, 2, 4, 3, 5, 4, 6, 5, 7, 6, 4, 2), short=0.25))   # 最後のサビだけ: 16分のアルペジオ
-        if i == 0 and not first: FXT.bar(b, fx_bar((0, "impact", 2), (0, "sub", 2)) if lastc and n != "しめ" else fx_bar((0, "impact", 2)))
-        if lastc and i % 4 == 0: long3(PAD, b, 72)
-        elif lastc: long3(PAD, b, 72)
+        long3(PNL, b, 67, "x-------........"); long3(PAD, b, 72); stab(b, "x-------........", 51); bp(b, "x-------........", "r")
+        if i == 1: PLK.bar(b, "R:2 " + glitch("G5", 1, (4,)) + " R:1"); FXT.bar(b, fx_bar((0, "kira", 1), (2, "up", 1)))   # 最後の1拍は全員休み → サビ
+    elif n in ("頭のサビ", "サビ1", "サビ2", "ソロ"):
+        j = i % 8; first = n == "頭のサビ"; odd = j % 2 == 1
+        # 和音は短く打って、間を空ける。歌が休む後半（奇数の小節）に答える
+        if not odd: stab(b, "x-.....x-......." if j % 4 == 0 else "x-....x-..x-....")
+        else: stab(b, "........x-.x-..." if j != 7 else "........x-......")
+        if not odd: bp(b, "x-....x-....x...", "rr5", short=0.5)
+        else: bp(b, "x-......x..x.x..", "rroa", short=0.5) if j != 7 else bp(b, "x-......x-......", "ro", short=0.5)
+        if not first: SUB.bar(b, steps("x-------........", [nm(low(S.chords[b], "F1"))]))
+        if odd and n != "ソロ": pik(b, at="..........x-x-.." if j != 7 else "........x-x-....")
+        if n == "サビ2" and not odd: rc(b, "..x...x...x.x...", 67)                                  # 2回目は、ピアノがすき間に少し入る
+        if n == "サビ2" and j in (3,): plk(b, "........xxxxxx..", (2, 3, 4, 5, 6, 7))
+        if n == "ソロ": pat, nts = SOLO[i].split("|"); LEAD.bar(b, steps(pat, nts.split()))
+        if n == "ソロ" and odd is False and i > 0: rc(b, "........x.xx.x..", 64)                       # リードが休む後半に、ピアノが答える
+        if i == 0 and not first: FXT.bar(b, fx_bar((0, "impact", 2)))
+    elif n in ("最後のサビ", "しめ"):
+        j = i % 8
+        rc(b, ["x.xx.x.xx.x.x.x.", "x..x.xx.x..x.xx.", "x.xx.x.xx.x.xx.x", "x.x..x.x.x..x..."][(i + (i // 4)) % 4], 68)
+        bp(b, "x.x.x.x.x.x.x.x.", "rororo5a") if j % 2 == 0 else bp(b, "x.xxx.x.x.xxx.x.", "rroroorr5a"[:10])
+        stab(b, "x-----x-----x---" if j % 2 == 0 else "x---x-----x-----", 51); SUB.bar(b, steps("x-------x-------", [nm(low(S.chords[b], "F1"))] * 2))
+        if j % 2 == 1 and n != "しめ": pik(b, "C#7", "G#6")
+        if n != "しめ" and j % 2 == 0: PLK.bar(b, arp16(S.chords[b], "x.xxx.xxx.xxx.xx", (0, 2, 4, 3, 5, 4, 6, 5, 7, 6, 4, 2), short=0.25))
+        long3(PAD, b, 72)
+        if i == 0: FXT.bar(b, fx_bar((0, "impact", 2), (0, "sub", 2)) if n != "しめ" else fx_bar((0, "impact", 2)))
     elif n in ("リフ", "リフ2"):
-        rc(b, RC_R[i], 64); bass(b, "v2" if i % 2 == 0 else "c2"); plk(b, RIFF[i][0], RIFF[i][1])
-        if n == "リフ2" and i == 3:                                                  # 語りの前: テープが止まるようにベースが落ちる＋下がる音
-            FMB.bar(b, steps("x.x...x.", [nm(low(S.chords[b], "F1"))] * 3) + " " + tape_stop(nm(low(S.chords[b], "F1") + 12), 2)); FXT.bar(b, fx_bar((2, "down", 2)))
+        pat, order = RIFF[i]
+        rc(b, pat, 64, short=0.25); bp(b, pat, "rrorro"[:onsets(pat)] if i < 3 else "ro5a", short=0.5 if i == 3 else 0.25); plk(b, pat, order)
+        if n == "リフ2" and i == 3: FXT.bar(b, fx_bar((2, "down", 2)))
     elif n in ("Aメロ", "Aメロ2"):
-        if i < 6:
-            rc(b, RC_V[(i + (1 if n == "Aメロ2" else 0)) % 4], 62)
-            if n == "Aメロ2" or i >= 4: bass(b, "v1" if i % 2 == 0 else "v2")       # 1番の前半はピアノと声とキックだけ
-            if n == "Aメロ2" and i % 2 == 1: plk(b, "..........xx.x-.", (3, 4, 2))
-        elif i == 6: rc(b, "x.x.x.x.x.x.x.x.", 67); bass(b, "kime8")                # キメ: 8分で全員いっしょ
-        else: rc(b, "x...............", 69); bass(b, "hit")                          # 1拍だけ鳴らして止める
+        two = n == "Aメロ2"
+        if i < 6 and i % 2 == 0:                                                     # 歌っている小節: ほとんど鳴らさない
+            bp(b, "x-.............." if not two else "x-....x-........", "r" if not two else "rr", short=0.5)
+        elif i < 6:                                                                  # 歌が休む後半に、ピアノ（2番はプラックも）が答える
+            rc(b, ["........x.xx.x..", "........xx.x.x..", "........x..x.xx."][i // 2], 64); bp(b, "x-......x..x....", "rr5", short=0.5)
+            if two: plk(b, "..........x.xx-.", (3, 4, 2))
+        elif i == 6: rc(b, "x.x.x.x.x.x.x.x.", 67); bp(b, "x.x.x.x.x.x.x.x.", "rrrrrrrr")   # キメ: 8分で全員いっしょ
+        else: rc(b, "x...............", 69); bp(b, "x---............", "r")                # 1拍だけ鳴らして止める
     elif n in ("Bメロ", "Bメロ2"):
         q = i if n == "Bメロ" else i + 4
         if q < 6:
-            long3(PNL, b, 62 + q); long3(PAD, b, 66 + q); bass(b, "half")
-            if q >= 4: saw(b, "x---------------", 50)
-        elif q == 6: saw(b, "x-x-x-x-x-x-x-x-", 52); bass(b, "kime8")
-        else: FXT.bar(b, fx_bar((0, "rev", 4)) if n == "Bメロ" else fx_bar((0, "up", 2), (2, "glitch", 1), (3, "laser", 1)))
-        if q == 7 and n == "Bメロ2": PLK.bar(b, glitch("D6", 4, (4, 8, 16)))            # 2回目はプラックのグリッチも足す
+            long3(PNL, b, 62 + q, "x-----------...."); long3(PAD, b, 66 + q); bp(b, "x-------..x-x---", "r5o")
+            if q >= 4: stab(b, "x-----------....", 50)
+        elif q == 6: stab(b, "x-x-x-x-x-x-x-x-", 52); bp(b, "x.x.x.x.x.x.x.x.", "rrrrrrrr")
+        else: FXT.bar(b, fx_bar((0, "rev", 3)) if n == "Bメロ" else fx_bar((0, "up", 2), (2, "glitch", 1)))   # 全員休み（歌の切り貼りだけ）。最後の1拍は無音
     elif n == "語り":
-        long3(PNL, b, 64); bass(b, "half")
+        long3(PNL, b, 64, "x-----------...." if i % 2 == 0 else "....x-------...."); bp(b, "x-------........", "r")
         if i % 2 == 1: pik(b, "E7", "B6", "............x-x-")
         if i >= 4: long3(PAD, b, 69)
-    elif n == "ソロ":
-        rc(b, RC_C[i % 4], 64); bass(b, "c1" if i % 2 == 0 else "c2"); saw(b, "x-----x-----x---", 50)
-        pat, nts = SOLO[i].split("|"); LEAD.bar(b, steps(pat, nts.split()))
     elif n == "落ちサビ":
-        long3(PNL, b, 64, "x-------x-------" if i % 2 == 0 else "x---------------")
+        long3(PNL, b, 64, "x-------x-----.." if i % 2 == 0 else "x-----------....")
         if i >= 4: long3(PAD, b, 69)
-        if i == 7: saw(b, "x-----------....", 52); FXT.bar(b, fx_bar((0, "rev", 2), (2, "up", 2)))
         if i == 0: FXT.bar(b, fx_bar((0, "down", 2), (2, "kira2", 1)))
+        if i == 7: stab(b, "x-------........", 52); FXT.bar(b, fx_bar((0, "rev", 2), (2, "up", 1)))        # 最後の1拍は無音 → 最後のサビ
     elif n == "おわり":
         if i == 0: pik(b, "C#7", "G#6", "x-x-............"); long3(PNL, b, 68)
 
-# ================= ドラム（16ビートの4つ打ち・半分の速さ・キメ・止め）=================
+# ================= ドラム（半分の速さとすき間 → 最後だけ4つ打ち）=================
+SNAP = "R:1 C5:1 R:1 C5:1"       # 指パッチン（2拍目と4拍目）
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     last = i == L - 1
-    if n in ("頭のサビ", "サビ1", "サビ2", "最後のサビ", "しめ", "リフ", "リフ2", "ソロ"):
+    if n in ("頭のサビ", "サビ1", "サビ2", "ソロ"):
+        j = i % 8
+        if j == 7: D.set(b, "X..X....X.......", "........X.X.....", "x.x.x.x.x.x.....")            # 最後の1拍は休み
+        elif j == 3: D.set(b, "X..X......X.....", "........X.....XX", "x.x.x.x.x.x.x...")
+        elif j % 2 == 0: D.set(b, "X.........X.X...", "........X.......", "x.x.x.xxx.x.x.x." if n != "頭のサビ" else "x...x...x...x...")
+        else: D.set(b, "X..X......X.....", "........X.......", "x.x.x.x.....x.x.")
+        KDR.bar(b, "R:2 B4:1 R:1")
+        if i % 8 == 0: crash(D, b, "C2", 4)
+    elif n in ("最後のサビ", "しめ"):
         kk, ss, hh = BEAT16 if i % 4 != 3 else BEAT16B
-        if n == "頭のサビ": hh = "x.x.x.x.x.x.x.x."
         vgroove(D, b, "beat8", ghosts=0.15, seed=b, k=kk, s=ss, h=hh, vary=False)
         KDR.bar(b, "R:1 B4:1 R:1 B4:1")
-        if i % 8 == 0: crash(D, b, "C2", 6 if n == "最後のサビ" else 4)
-        if last and n in ("頭のサビ", "サビ1", "サビ2", "ソロ"): put_fill(D, b, "snare16")
-        elif last and n == "しめ": D.set(b, *KIME_END)
+        if i % 8 == 0: crash(D, b, "C2", 6)
+        if last and n == "しめ": D.set(b, *KIME_END)
         elif i % 8 == 7: put_fill(D, b, "small")
+    elif n in ("リフ", "リフ2"):
+        if i < 3: D.set(b, "X..X....X..X....", "....X.......X...", "................")
+        else: D.set(b, "X.X.X.X.........", "X.X.X.X.........", "................")
     elif n in ("Aメロ", "Aメロ2"):
-        if i < 6:
-            if n == "Aメロ" and i < 4: D.set(b, "X...X...X...X...", "................", "................")
-            else: D.set(b, "X...X...X...X...", "....X.......X...", "x.x.x.x.x.x.x.x." if n == "Aメロ" else "x.xxx.xxx.xxx.xx")
+        two = n == "Aメロ2"
+        if i < 6 and i % 2 == 0: D.set(b, "X..............." if not two else "X.....X.........", "................", "................" if not two else "..x...x...x...x."); KDR.bar(b, SNAP)
+        elif i < 6: D.set(b, "X.......X..X....", "............X...", "................" if not two else "..x...x.x.x.x.x."); KDR.bar(b, "R:1 C5:1 R:2")
         elif i == 6: D.set(b, *KIME8)
         else: D.set(b, "X...............", "X...............", "................")
     elif n in ("Bメロ", "Bメロ2"):
@@ -247,10 +286,9 @@ for b in range(S.nb):
         if q < 6: D.set(b, *HALF)
         elif q == 6: D.set(b, "X...X...X...X...", "X.X.X.X.XXXXXXXX", "................")
     elif n == "語り":
-        D.set(b, "X.........x.....", "........x.......", "x...x...x...x..." if i < 4 else "x.x.x.x.x.x.x.x.")
-        if last: put_fill(D, b, "small")
+        D.set(b, "X.........x.....", "........x.......", "x...x...x...x..." if i < 4 else "x.x.x.x.x.x.....")
     elif n == "落ちサビ":
-        if i == 7: D.set(b, "X...X...X.X.X.X.", "....X...X.X.XXXX", "................")
+        if i == 7: D.set(b, "X...X...X.X.....", "....X...X.X.....", "................")
 
 cym_swell(CYM, S.sc("サビ1")[0], 2, "C4"); cym_swell(CYM, S.sc("サビ2")[0], 2, "C4"); cym_swell(CYM, S.sc("最後のサビ")[0], 4, "E4")
 
@@ -275,9 +313,12 @@ if VOCAL:
     for nme in ("Bメロ", "Bメロ2"): cb[S.sc(nme)[-1]] = stutter_chop("G4", "ぴ", 4, 0.5) + " " + stutter_chop("B4", "ぴ", 4, 0.25) + " " + stutter_chop("D5", "ぴ", 8, 0.125)
     chops(path, S, cb, vol=0.34, pan=-0.15)
     harmony(path, S, [("最後のサビ", 0, None, KD)], steps=7, vol=0.2, lowest=50)      # 最後のサビだけ: 1オクターブ下も重ねて厚く
+    # ダブリング（同じ旋律を、左右に、ほんの少し高さをずらして重ねる）: サビ2 と最後のサビだけ。歌ごとに合成のゆらぎが変わるので、ぴったり同じ音にはならない
+    for sgn in (-1, 1): harmony(path, S, [("サビ2", 0, None, KC), ("最後のサビ", 0, None, KD), ("しめ", 0, None, KD)], steps=0, vol=0.2, pan=0.6 * sgn, transpose=0.07 * sgn)
     voice_by_scene(path, S, {"語り": "cute"}, default="clear")
     js = load(path)
     kero(js, 1)                                                                      # 語り（ばあちゃんの音声メッセージ）だけ、ケロケロ声
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.4
     save(path, js)
+js = load(path); drum_punch(js); save(path, js)
 final_gain(path, {"ぴこん": 3.0, "最後のサビ": 0.9, "しめ": 0.7})

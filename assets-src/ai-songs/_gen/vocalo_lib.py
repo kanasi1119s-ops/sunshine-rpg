@@ -154,3 +154,14 @@ def rack_lead():
 def kero(js, idx):
     """ケロケロ声（音程を階段のように動かす調声）: 音の移りを一気に・しゃくりなし・ビブラートなし・自動の歌い回しなし。js["vocals"][idx] に効く"""
     js["vocals"][idx].update(glide=0.12, auto=0, scoop=0, slashScoop=0, vibratoMap=[], vibrato=0)
+
+
+def drum_punch(js, mix=0.3, room=0.06):
+    """ドラムのパラレルコンプ（つぶした音を元の音に混ぜて、太さと前に出る感じを足す）。キックとスネアだけ。スネアには短い部屋の残響も"""
+    n = 0
+    for p in js["parts"]:
+        if p.get("instrument") in ("kick", "snare"):
+            fx = [{"type": "pcomp", "threshold": -30, "ratio": 12, "attack": 0.004, "release": 0.2, "mix": mix}]
+            if p["instrument"] == "snare" and room: fx.append({"type": "room", "mix": room})
+            p["fx"] = fx; n += 1
+    print(f"  ドラムのパラレルコンプ: {n} パート")
