@@ -43,7 +43,7 @@ S.scene("条約", 8, "bridge", ["Cm7", "Cm7", "Cm7", "Cm7", "Cm7", "Cm7", "Abmaj
 S.scene("最後のサビ", 16, "chorus", C_CH + C_CH)
 S.scene("おわり", 12, "outro", R_CH + R_CH + ["Cm7", "F7", "Cm7", "Cm7"])
 
-V = Voice(S, vol=0.2, delay=0.4, bright=0.0, patch="kfbSineLead", low=False)
+V = Voice(S, vol=0.2, delay=0.4, bright=0.0, patch="kfbSineLead" if VOCAL else "kfbFutureSax", low=False)   # v6: 歌のない版の旋律はサックス風のリード（サイン波のリードで16分の語りを弾くと、その場面だけ採点が 7.1〜7.4 に落ちた。リフの場面は 7.7〜7.9）
 FMB = S.track("FM のベース（リフ）", "bass", patch="kfbFmBass", volume=0.1, pan=0, duck=0.25)
 SUB = S.track("サブベース", "bass", patch="kfbSub", volume=0.03, pan=0, duck=0.5)
 CHK = [S.track(f"プラックの短い刻み{i + 1}", "lead", patch="kfbSquarePluck", volume=0.04, pan=-0.4 + 0.15 * i, reverb=0.15) for i in range(3)]
