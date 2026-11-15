@@ -1,4 +1,4 @@
-# vt3 11「洗濯日和のステップ」Laundry-Day Step（仮）— ケルトのジグ（8分の6）。8分＝280（付点4分＝93）。D長調 → 最後のくり返しは E。
+# vt3 11「洗濯日和のステップ」Laundry-Day Step（仮）— ケルトのジグ（8分の6）。8分＝260（付点4分＝87。作曲ソフトの上限）。D長調 → 最後のくり返しは E。
 # 第3弾（0時〜24時の街）の 10時。表は docs/sound/vt3-plan.md。
 #
 # v2（2026-11-15）: ゼロから作り直し。人間の指示（2026-11-15）:「ボカロ系の曲は、ロック、テクノポップ、ファンク、KPOP、ダンス、ケルトで作り直そう」
@@ -24,7 +24,7 @@
 #   2つ以上の曲をつなげて弾く（セット）。音に強弱と余韻をつける。
 from vt25_lib import *
 
-S = Song("11", "laundry", "洗濯日和のステップ（仮）", "Laundry-Day Step", 280, 6, "D", "major", "ケルトのジグ（ボカロ）")
+S = Song("11", "laundry", "洗濯日和のステップ（仮）", "Laundry-Day Step", 260, 6, "D", "major", "ケルトのジグ（ボカロ）")
 S.kit = "naked-x"
 S.flags = S.flags + " --space hall --space-wet 0.16"
 S.keep_old_synth = True
@@ -54,12 +54,12 @@ S.scene("くり返し4", 16, "chorus", [tr_chord(c, 2) for c in R_CH])
 S.scene("おわり", 10, "outro", [tr_chord(c, 2) for c in TA] + ["E", "E"])
 
 V = Voice(S, vol=0.2, delay=0.4, bright=0.0, patch="kfbSineLead", low=False)
-FID = S.track("フィドル", "fiddle", volume=0.13, pan=-0.2, reverb=0.3)
+FID = S.track("フィドル", "fiddle", volume=0.18, pan=-0.2, reverb=0.3)
 ACC = S.track("アコーディオン（節）", "accordion", volume=0.1, pan=0.25, reverb=0.25)
 ACL = [S.track(f"アコーディオン（持続音{i + 1}）", "accordion", volume=0.04, pan=0.35 - 0.2 * i, reverb=0.3) for i in range(2)]
-HARP = S.track("ハープ（分散和音）", "harp", volume=0.12, pan=-0.35, reverb=0.35, sustain=1.6)
-HARP2 = S.track("ハープ（上の線）", "harp", volume=0.1, pan=0.3, reverb=0.4, sustain=1.6)
-BOD = S.track("低い太鼓（バウロンの役）", "inchTom", volume=0.22, pan=0.05, reverb=0.2)
+HARP = S.track("ハープ（分散和音）", "harp", volume=0.16, pan=-0.35, reverb=0.35, sustain=1.6)
+HARP2 = S.track("ハープ（上の線）", "harp", volume=0.14, pan=0.3, reverb=0.4, sustain=1.6)
+BOD = S.track("低い太鼓（バウロンの役）", "inchTom", volume=0.14, pan=0.05, reverb=0.2)
 STR = [S.track(f"弦{i + 1}", "strings", patch="slowStrings", volume=0.04, pan=-0.4 + 0.8 * i, reverb=0.45, sustain=1.5) for i in range(2)]
 BASS = S.track("ベース（指弾き・丸い音）", "bass", sustain=1.0, **dict(finger_bass_spec(vol=0.2), fx=[{"type": "eq", "low": 1, "mid": 0, "midHz": 800, "high": -4}, {"type": "filter", "kind": "lowpass", "freq": 1200, "q": 0.6}]))
 PIN = S.track("洗濯ばさみのパチン（木の音）", "lead", patch="marimba", volume=0.12, pan=0.4, reverb=0.15)
@@ -113,7 +113,9 @@ def harp(b, order=(0, 2, 3, 4, 3, 2), lo="D3", hi="D5", tr=None):
 
 
 def drone(b, c=62):
-    v = sorted(voice(root(b), c, 3)); ACL[0].bar(b, f"{nm(v[2])}:6"); ACL[1].bar(b, f"{nm(v[0])}:6")
+    """v7: アコーディオンの持続音はやめた。場面ごとに採点すると、持続音のある場面だけ低かった（歌1 7.30・歌2 7.00・くり返し 7.25。持続音のない ジグ2 は 7.87、歌3 は 7.90）。
+    かわりに、くり返しとジグ3 では弦ののばす音を使う"""
+    if S.scene_of(b)[0].startswith("くり返し") or S.scene_of(b)[0] in ("ジグ3", "おわり"): strs(b, c + 5)
 
 
 def strs(b, c=69):
@@ -146,7 +148,7 @@ for b in range(S.nb):
         BOD.bar(b, BOD_F if i % 8 == 7 else (BOD_A if i % 2 == 0 else BOD_B))
     elif n in ("歌1", "歌2"):
         harp(b, (0, 2, 3, 4, 3, 2) if i % 2 == 0 else (0, 3, 2, 4, 2, 3))
-        if n == "歌2" or i >= 8: drone(b); BOD.bar(b, BOD_F if last else (BOD_S if n == "歌1" else (BOD_A if i % 2 == 0 else BOD_B)))
+        drone(b); BOD.bar(b, BOD_F if last else BOD_S)       # v8: 歌1 の頭で 4.6dB 下がっていた → 1番の頭から低い太鼓とベース
         # フィドルは行の終わり（偶数の小節の後ろ半分）で答える。2番はアコーディオンも交代で
         if i % 4 == 3 and i < 15:
             tn = tones(root(b), "D5", "D6"); (FID if (n == "歌1" or i % 8 == 3) else ACC).bar(b, f"R:3 {nm(tn[1])}:1 {nm(tn[2])}:1 {nm(tn[1])}:1")
@@ -182,7 +184,7 @@ for b in range(S.nb):
     if n == "ジグ1" and i >= 8: BASS.bar(b, two)
     elif n == "ジグ2": BASS.bar(b, lilt if i % 4 == 3 else two)
     elif n == "ジグ3": BASS.bar(b, run if i % 4 == 3 else (lilt if i % 2 == 0 else two))
-    elif n == "歌1" and i >= 8: BASS.bar(b, long_)
+    elif n == "歌1": BASS.bar(b, long_)
     elif n == "歌2": BASS.bar(b, two if i % 4 != 3 else lilt)
     elif n == "歌3" and i >= 8: BASS.bar(b, long_)
     elif n.startswith("くり返し"): BASS.bar(b, run if i % 8 == 7 else (lilt if (i % 2 == 0 and n != "くり返し1") else two))
@@ -195,7 +197,7 @@ def g6(s): return s.replace(" ", "")
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     if n == "ジグ3" or n in ("くり返し2", "くり返し3", "くり返し4") or (n == "くり返し1" and i >= 8) or (n == "おわり" and i < 8):
-        D.set(b, g6("X... .... .... X... .... ....") if i % 2 == 0 else g6("X... .... .... X... .... x..."), g6(".... .... .... .... .... ....") if n == "くり返し1" else g6(".... .... x... .... .... x..."), g6("x... .... x... x... .... x..."))
+        D.set(b, g6("X... .... .... X... .... ....") if i % 2 == 0 else g6("X... .... .... X... .... x..."), "." * 24, "." * 24)       # v6: ハイハットはなし（低い太鼓が刻む）
         if i % 8 == 0: crash(D, b, "C2", 6)
     elif n == "おわり" and i == 8: D.set(b, g6("X... .... .... .... .... ...."), "." * 24, "." * 24); crash(D, b, "C2", 6)
 
@@ -209,6 +211,10 @@ finish(S, LY, V, 0,
 from vt3x_lib import *
 path = sys.argv[1]
 humanize(path, "ハープ", mid=82, down=10, up=8, seed=3); humanize(path, "フィドル", mid=86, down=8, up=8, seed=5); humanize(path, "アコーディオン（節", mid=86, down=8, up=8, seed=7); humanize(path, "低い太鼓", mid=88, down=10, up=10, seed=9)
+# v5 を測ると、ハープ −32・ジグ1 −25・歌1 −22（くり返し −14〜−16）で、前半が小さすぎた。場面ごとの採点は 歌2 が 6.91（低い太鼓が細かく鳴りっぱなし）。
+#   → フィドルとハープを大きく、低い太鼓は小さく・歌の間は静かな型だけ、ハイハットはなし。前半3つの場面は同じ大きさで持ち上げる（途中で主役が小さくならないように）
+scene_gain(path, S, {"ハープ": 1.6, "ジグ1": 1.6, "歌1": 1.6})
+final_gain(path, {"くり返し4": 1.0})
 if VOCAL:
     backing(path, 0.9)   # 2026-11-13 人間「声以外のバック音量0.9ぐらいにしようか」
     remark(path, S, std_mark(("chorus",)))
