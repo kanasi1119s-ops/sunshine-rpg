@@ -18,12 +18,15 @@ BASE = {"sustain": 1.3, "release": 0.12, "chorus": 0, "humanPitch": 0, "noScoop"
 SPEC = {"A": None,
         "B": dict(BASE, di="emily", stringNoise=True, amp="namJVM2", ampDrive=0.55, ampGate=12, ampTight=0.4, ampTightHz=120, ampCabIr="dd-v30-2x12-mix-balanced"),
         "C": dict(BASE, di="emily", stringNoise=True, amp="namJVM", ampDrive=0.8, ampGate=14, ampTight=0.5, ampTightHz=130, ampCabIr="dd-v30-2x12-mix-balanced"),
-        "D": dict(BASE, di="emily", stringNoise=True, amp="jpopClean", ampDrive=0.12)}[GV]
+        "D": dict(BASE, di="emily", stringNoise=True, amp="jpopClean", ampDrive=0.12),
+        "E": dict(BASE, di="emily", stringNoise=True, amp="namJVM2", ampDrive=0.55, ampGate=12, ampTight=0.4, ampTightHz=120, ampCabIr="dd-v30-2x12-mix-balanced"),
+        "F": None}[GV]
 FX = [{"type": "filter", "kind": "highpass", "freq": 90, "q": 0.7}, {"type": "eq", "low": 0, "mid": -2, "midHz": 300, "high": 0}, {"type": "eq", "low": 0, "mid": 2, "midHz": 1500, "high": 0.5}, {"type": "room", "mix": 0.08}]
 def mk(name, vol, pan, i):
-    if GV == "A": return S.track(f"{name}{i + 1}", "distGuitar", **rock_gtr_spec(vol, pan, drive=0.4))
+    if GV in "AF": return S.track(f"{name}{i + 1}", "distGuitar", **rock_gtr_spec(vol, pan, drive=0.4))
     return S.track(f"{name}{i + 1}", "distGuitar", volume=vol, pan=pan, fx=FX, **SPEC)
-GL = [mk("Lギター", 0.05, -0.6, i) for i in range(4)]; GR = [mk("Rギター", 0.047, 0.6, i) for i in range(4)]
+NG = 6 if GV in "EF" else 4
+GL = [mk("Lギター", 0.05, -0.6, i) for i in range(NG)]; GR = [mk("Rギター", 0.047, 0.6, i) for i in range(NG)]
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.22)); D = S.drumkit(); N = lambda m: nm(m); rr = _r.Random(7)
 LAG = 0.014 * 200 / 60        # 弦から弦へ 14ミリ秒（拍に直す）
 
@@ -49,7 +52,17 @@ def strum(tracks, b, pat, notes):
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b); ch = S.chords[b]; pw = power(ch, "F2"); r = low(ch, "C3"); up = tones(ch, nm(r + 1), nm(r + 16))[:3]
     lv = [N(x) for x in (pw + [pw[0] + 12])[:4]]; rv = [N(x) for x in ([r] + up)[:4]]
-    if n == "サビ":
+    if GV in "EF":      # 学んだ弾き方: ギターの押さえ方の形・毎回ちがう弦の数・8分はぜんぶダウン・16分ウラだけアップ・次のストロークまで鳴らす
+        if n == "サビ":
+            gtr_strum(GL, S, b, "x-x-x-x-x-x-x-x-" if i % 2 == 0 else "x-x-x-x---x-x-x-", ch, rr, strings=4)      # L: 低い4本（根音・5度・オクターブ・3度）を8分で
+            gtr_strum(GR, S, b, "x-.xx-x-x-.xx-x-" if i % 2 == 0 else "x-.xx-x---x-.xx-", ch, rr)                # R: 6本の形で、16分のアップをまぜる
+            BASS.bar(b, steps("x-x-x-x-x-x-x-x-", [N(low(ch, "F1"))]))
+            feel(D, b, "quarter", k="X.......X......." if i % 2 == 0 else "X.....X...X.....")
+            if i == 0: crash(D, b, "C2", 4)
+            if i == 7: fill_cresc(D, b, 1, toms=False)
+        else:
+            gtr_strum(GL, S, b, "x---------------", ch, rr, strings=4); gtr_strum(GR, S, b, "x---------------", ch, rr, lag_ms=14); BASS.bar(b, steps("x-----------....", [N(low(ch, "F1"))])); D.set(b, "X...............", "X...............", "................"); crash(D, b, "C2", 4)
+    elif n == "サビ":
         strum(GL, b, "x-x-x-x-x-x-x-x-" if i % 2 == 0 else "x-x-x-x---x-x-x-", lv)
         strum(GR, b, "x-.x-.x-x-.x-.x-" if i % 2 == 0 else "x-.x-.x---x-.x-.", rv)
         BASS.bar(b, steps("x-x-x-x-x-x-x-x-", [N(low(ch, "F1"))]))
@@ -62,5 +75,7 @@ S.fade_out = 0; S.desc = f"仮: ギターの音の聞きくらべ{GV}"
 finish(S, LY, V, 0)
 from vt3x_lib import *
 path = sys.argv[1]
-if GV != "A": humanize(path, "Lギター", mid=86, down=12, up=8, seed=3); humanize(path, "Rギター", mid=82, down=14, up=10, seed=4)      # 1音ずつ強さをゆらす
-js = load(path); drum_punch(js); save(path, js)
+if GV in "BCD": humanize(path, "Lギター", mid=86, down=12, up=8, seed=3); humanize(path, "Rギター", mid=82, down=14, up=10, seed=4)      # 1音ずつ強さをゆらす
+js = load(path); drum_punch(js)
+if GV in "EF": gtr_velocity(js, "Lギター", 3); gtr_velocity(js, "Rギター", 4)
+save(path, js)

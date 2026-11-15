@@ -210,3 +210,58 @@ def fill_cresc(D, b, beats=2, toms=True):
 def hat_roll(track, b, beats=1, key="C#5"):
     """ハイハットのロール（16分 → 32分）を小節の終わりに。track は kawaiiFx のパート（C#5・D5 がハイハット）"""
     n32 = int(beats * 8); track.bar(b, f"R:{4 - beats:g} " + " ".join(f"{key}:0.125" for _ in range(n32)))
+
+
+# ===================== 2026-11-15 ギターの和音の弾き方（人間「ギターは和音の弾き方を学んだ方がいい。」）=====================
+# プロのギタリストの伴奏（GuitarSet・弦ごとの記録）を測って分かったこと（docs/sound/reference-guitar-chords.md）:
+#   ・ロックの和音の形は「根音・5度・オクターブ・その上に3度」（0 7 12 16）と「根音・5度・オクターブ」（0 7 12）が中心。根音のすぐ上に3度を置く形（0 4 7）は 2.5% しかない
+#   ・1回に鳴らす弦の数は毎回ちがう（1本 21%・2本 23%・3本 19%・4本 22%・5本 10%・6本 5%）
+#   ・ロックとファンクは、拍の頭も8分のウラもダウン（上から下へ）。アップは16分のウラだけ
+#   ・弦から弦へのずれは1本あたり約8ミリ秒（最初から最後まで 16〜33ミリ秒）
+#   ・音は次のストロークまで鳴らしつづける（97%）。切らない
+import random as _vr
+
+
+def gtr_shape(ch):
+    """ギターの押さえ方に近い和音の形（低い弦から。MIDI 番号）。根音が6弦にあれば6本、5弦にあれば5本"""
+    name = ch.split("|")[0].split("/")[0]; r = low(name, "E2")
+    while r > 51: r -= 12
+    pcs = {(m - r) % 12 for m in tones(name, nm(r), nm(r + 12))}
+    third = 5 if (5 in pcs and 3 not in pcs and 4 not in pcs) else (2 if (2 in pcs and 3 not in pcs and 4 not in pcs) else (3 if 3 in pcs else 4))
+    sev = 10 if 10 in pcs else (11 if 11 in pcs else None)
+    if r <= 45:      # 6弦が根音（Eの形）: 根音・5度・（7度かオクターブ）・3度・5度・根音
+        return [r, r + 7, r + (sev if sev else 12), r + 12 + third, r + 19, r + 24]
+    return [r, r + 7, r + (sev if sev else 12), r + 12 + third, r + 19]      # 5弦が根音（Aの形）
+
+
+def gtr_strum(tracks, S, b, pat, ch, rng, drive=True, lag_ms=8, bpm=None, strings=None):
+    """ギターの和音を、人が弾くようにかき鳴らす。tracks は同じ設定のパートを6本（弦1本ずつ）。pat は16分のマス（x＝ストローク、-＝のばす、.＝休み）
+    ・拍の頭: ダウン。低い弦から 4〜6本（たまに低い2〜3本だけ）・強く    ・8分のウラ: ダウン。いちばん低い弦は飛ばして 3〜4本・少し弱く
+    ・16分のウラ: アップ。高い弦から 2〜3本・弱く                       ・音は次のストロークまで鳴らす"""
+    v = gtr_shape(ch)[:strings] if strings else gtr_shape(ch); n = len(v); lag = lag_ms / 1000 * (bpm or S.bpm) / 60; pat = pat.replace(" ", ""); hits = [i for i, c in enumerate(pat) if c == "x"]
+    for hi, i in enumerate(hits):
+        e = i + 1
+        while e < len(pat) and pat[e] == "-": e += 1
+        L = (e - i) * 0.25; q = i % 4
+        if q == 0:
+            k = rng.choice([n, n, max(4, n - 1), 4, 3] if drive else [n, 4, 4, 3]); idx = list(range(0, k)); mark = "!"
+        elif q == 2:
+            k = rng.choice([4, 3, 3, 4]); idx = list(range(1, min(n, 1 + k))); mark = ""
+        else:
+            k = rng.choice([3, 2, 2]); idx = list(range(n - 1, n - 1 - k, -1)); mark = ","
+        for order, j in enumerate(idx):
+            d = order * lag; tracks[j].at(S.bar_beat(b) + i * 0.25 + d, f"{nm(v[j])}:{max(0.12, L - d):.3f}{mark}")
+
+
+def gtr_velocity(js, match, seed=3, strong=(94, 106), mid=(76, 88), weak=(56, 68)):
+    """gtr_strum で書いたギターのパートに、1音ずつの強さを付ける（! ＝強い＝拍の頭、印なし＝8分のウラ、, ＝弱い＝16分のアップ）。js は曲の JSON、match は役の名前の一部"""
+    rng = _vr.Random(seed); n = 0
+    for p in js["parts"]:
+        if match not in p.get("role", ""): continue
+        out = []
+        for t in p["notes"].split():
+            if t.startswith("R") or "%" in t: out.append(t); continue
+            lo, hi = strong if t.endswith("!") else (weak if t.endswith(",") else mid)
+            out.append(f"{t.rstrip('!,')}%{int(rng.uniform(lo, hi))}"); n += 1
+        p["notes"] = " ".join(out)
+    print(f"  ギターの強さを付けた（{match}）: {n} 音")
