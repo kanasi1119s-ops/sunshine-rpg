@@ -271,3 +271,4 @@ if VOCAL:
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.4
     save(path, js)
 js = load(path); drum_punch(js); save(path, js)
+final_gain(path, {"前奏": 2.2, "ギターソロ": -2.6, "サビ2": 0.4, "最後のサビ": 1.0})   # v7: ソロが最後のサビより大きく飛び出していた・前奏が小さかったのを直す
