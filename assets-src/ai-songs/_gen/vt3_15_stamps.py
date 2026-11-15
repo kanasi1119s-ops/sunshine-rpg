@@ -1,189 +1,270 @@
-# vt3 15「おばあちゃんのスタンプ」Grandma's Stamps（仮）— ポルカ。152・4/4（2拍子のノリ）。D長調 → 最後のサビは +1（E♭）・テンポが上がる。
-# 書き出しは全体を半音下げる（テトの声に入れるため・D♭長調 → 最後は D）。
+# vt3 15「おばあちゃんのスタンプ」Grandma's Stamps（仮）— 今のボカロ曲の作り方で作る1曲目。テクノポップ（Kawaii future bass の音＋リリースカットピアノ）。172・4/4。
+#   Aメロは A短調、サビは短3度上の C短調（サビで転調）、最後のサビはさらに半音上（C♯短調）。2分53秒。
 # 第3弾（0時〜24時の街）の 14時。表は docs/sound/vt3-plan.md。
-# 物語: 山のむこうに住むおばあちゃんの、はじめてのメッセージ「げんきですか」。指いっぽんで、何分かけて打ったのかな。
-#   返事をしたら、すぐにスタンプ。おじぎするねこ、花をくれるくま、ハートが3つ。教えたのは孫のわたしなのに、こんなに押すなんて。
-#   電車の中でも、ぴこんぴこん。言葉より、たくさんの気持ちがつまっている。届いた音声メッセージには、ばあちゃんの鼻歌。
-#   こんど会いに行くから。そのときは、スタンプよりも、ぎゅっとして。
-# 場面と強さ: アコーディオン（ひと息・弱）→ イントロ（ポルカの節）→ Aメロ1（はずむ・中）→ Bメロ1（ぴこんぴこん）→ サビ1（強）
-#   → 間奏（クラリネット・節）→ Aメロ2 → Bメロ2 → サビ2 → 間奏2（アコーディオンのソロ）→ げんき（アコーディオンと声だけ・とても弱い）
-#   → 最後のサビ（+1・テンポが上がる・いちばん強い）→ スタンプ連打（速い）→ 通知音1つ
-# 旋律の性格: 軽やかにはねる8分の2拍子、同じ音のくり返しから跳ぶ。サビは「ばあちゃんのすたんぷ」で上がっていく。
-# この曲だけの音: アコーディオンの「ブン・チャッ」とチューバの低音（ポルカ）。最後のサビでテンポがだんだん上がる。
-#   合いことばの節（3・5・6・5・2）は、間奏のクラリネット（ばあちゃんの音声メッセージの鼻歌）。
-from vt25_lib import *
+#
+# v4（2026-11-15）: ゼロから作り直し。人間（2026-11-15）:「曲の作り方単調なんだよね」「現代的な感じのボカロっぽさないよね。ボカロ曲の作り方徹底的に学んで、必要な要素を作曲ソフトに入れようか」
+#   調べたこと（docs/sound/vocaloid-study.md）を、部品（vocalo_lib.py）にして、この曲で初めて使う:
+#   ① 速いテンポ（172）と、16分の早口の歌 ② 跳ぶ旋律（5度の行き来・6度上がる）③ 丸サ進行（IV△7 → III7 → VIm7 → I7）とサビでの転調（短3度上）
+#   ④ リリースカットピアノ（短く切ってすき間を空けて刻む。小節ごとにリズムを変える）⑤ 16ビートの4つ打ち・半分の速さ・キメ・1小節の止め
+#   ⑥ 切り貼り（歌の「ぴ・ぴ・ぴ・ぴ」）⑦ 短い曲（3分以内）で、4〜8小節ごとに場面が変わる。前奏は2小節だけで、すぐサビ
+#
+# 構成: ぴこん（2小節）→ 頭のサビ（8）→ リフ（4）→ Aメロ（8・最後はキメと止め）→ Aメロ'（8）→ Bメロ（8・半分の速さ → 止めと切り貼り）→ サビ1（16）
+#       → リフ（4）→ 語り（8・ばあちゃんの音声メッセージ。半分の速さ・キュートの声）→ Bメロ'（4）→ サビ2（16）→ ソロ（8・電子のリード）
+#       → 落ちサビ（8・ピアノと声だけ。鼻歌＝合いことばの節）→ 最後のサビ（16・半音上）→ しめ（4）→ ぴこん（2）
+#
+# 物語: 山のむこうに住むおばあちゃんの、はじめてのメッセージ「げんきですか」。たった6文字に、何分かけたのかな。返事をしたら、すぐスタンプ。
+#   おじぎするねこ、花のくま、ハートが3つ。電車でも、寝る前も、ぴこん、ぴこん。届いた音声メッセージには、ばあちゃんの鼻歌。
+#   アルバムの考え「幸せで美しい物語に書き換えて行く」は、言葉でなく景色で表す: はなれて暮らすさびしさが、「ぴこん」の音で、言葉よりずっとたくさんの「だいすき」に変わる。
+from vocalo_lib import *
 
-S = Song("15", "stamps", "おばあちゃんのスタンプ（仮）", "Grandma's Stamps", 152, 4, "D", "major", "ポルカ（ボカロ）")
+S = Song("15", "stamps", "おばあちゃんのスタンプ（仮）", "Grandma's Stamps", 172, 4, "A", "minor", "テクノポップ（今のボカロ曲の作り方・ボカロ）")
 S.kit = "naked-x"
-S.flags = S.flags + " --space room --space-wet 0.14"
+S.flags = S.flags + " --piano salamander --space room --space-wet 0.1"
 S.keep_old_synth = True
 S.no_depth = True
 S.open_hat_vol = 0.4
-S.drum_scale = 0.85
-K = Key("D", "major")          # oct 4 で 1 = D4
-KL = Key("Eb", "major")        # 最後のサビ（+1）
+S.keepers = {}
+KA = Key("A", "minor")         # Aメロ・Bメロ・語り（oct 3 で 1 = A3）
+KC = Key("C", "minor")         # サビ（oct 4 で 1 = C4）
+KD = Key("C#", "minor")        # 最後のサビ
 
-A_CH = ["D", "A7", "A7", "D", "D", "A7", "A7", "D"]
-B_CH = ["G", "D", "A7", "D", "G", "D", "E7", "A7"]
-C_CH = ["D", "D", "G", "D", "A7", "A7", "D", "D", "G", "G", "D", "Bm", "Em", "A7", "D", "D"]
-TUNE = ["D", "A7", "D", "A7", "G", "D", "A7", "D"]
+MA, MC, MD = marusa(0), marusa(3), marusa(4)
+A_CH = ["Am7", "Am7", "Am7", "Am7", "Fmaj7", "E7", "Am7", "E7"]
+S.scene("ぴこん", 2, "intro", ["Cm7", "Cm7"])
+S.scene("頭のサビ", 8, "chorus", MC + marusa(3, last="E7"))
+S.scene("リフ", 4, "break", MA)
+S.scene("Aメロ", 8, "verse", A_CH)
+S.scene("Aメロ2", 8, "verse", A_CH)
+S.scene("Bメロ", 8, "pre", ["Dm7", "E7", "Am7", "A7", "Dm7", "G7", "G7", "G7"])
+S.scene("サビ1", 16, "chorus", MC * 4)
+S.scene("リフ2", 4, "break", MA)
+S.scene("語り", 8, "bridge", MA + MA)
+S.scene("Bメロ2", 4, "pre", ["Dm7", "G7", "G7", "G7"])
+S.scene("サビ2", 16, "chorus", MC * 4)
+S.scene("ソロ", 8, "solo", MA + marusa(0, last="G7"))
+S.scene("落ちサビ", 8, "bridge", MC + marusa(3, last="G#7"))
+S.scene("最後のサビ", 16, "chorus", MD * 4)
+S.scene("しめ", 4, "chorus", MD)
+S.scene("おわり", 2, "outro", ["C#m7", "C#m7"])
 
-S.scene("アコーディオン", 4, "intro", ["D", "D", "A7", "A7"])
-S.scene("イントロ", 12, "intro", TUNE + TUNE[:4])
-S.scene("Aメロ1", 16, "verse", A_CH)
-S.scene("Bメロ1", 8, "pre", B_CH)
-S.scene("サビ1", 16, "chorus", C_CH)
-S.scene("間奏", 8, "break", TUNE)
-S.scene("Aメロ2", 16, "verse", A_CH)
-S.scene("Bメロ2", 8, "pre", B_CH)
-S.scene("サビ2", 16, "chorus", C_CH)
-S.scene("間奏2", 8, "solo", TUNE)
-S.scene("げんき", 8, "bridge", ["G", "D", "Em", "A7", "G", "D", "Em", "Bb7"])        # 最後は E♭ への入り口
-S.scene("最後のサビ", 24, "chorus", [tr_chord(c, 1) for c in C_CH + C_CH[:8]])
-S.scene("スタンプ連打", 8, "outro", [tr_chord(c, 1) for c in TUNE])
-S.scene("通知", 2, "outro", ["Eb", "Eb"])
-S.tempo = [{"bar": S.sc("最後のサビ")[0] + 1, "bpm": 156}, {"bar": S.sc("最後のサビ")[8] + 1, "bpm": 162, "ramp": 8},
-           {"bar": S.sc("スタンプ連打")[0] + 1, "bpm": 172, "ramp": 4}]
-
-V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="kfbSineLead" if VOCAL else "clarinet", low=False)   # v3: BGM の旋律をホルンからクラリネットに（歌の版 7.62 に対し BGM 7.45。旋律の音色がこもっていた）
-ACC = [S.track(f"アコーディオン{i + 1}", "accordion", volume=0.065, pan=-0.3, reverb=0.25, sustain=0.5) for i in range(3)]
-ACCM = S.track("アコーディオン（旋律）", "accordion", volume=0.11, pan=-0.15, reverb=0.28)
-CLA = S.track("クラリネット", "lead", patch="clarinet", volume=0.11, pan=0.2, reverb=0.3)
-TUBA = S.track("チューバ", "brass", patch="tuba", volume=0.13, pan=0, reverb=0.2)
-FID = S.track("フィドル（のばす対旋律）", "fiddle", volume=0.07, pan=0.3, reverb=0.4)   # v2
-GLK = S.track("通知音（グロッケン）", "glockenspiel", volume=0.06, pan=0.3, reverb=0.35)
+V = Voice(S, vol=0.2, delay=0.3, bright=0.0, patch="kfbSineLead", low=False)
+PN = [S.track(f"リリースカットピアノ{i + 1}", "piano", volume=0.11, pan=-0.25 + 0.1 * i, reverb=0.12, sustain=0.25,
+              fx=[{"type": "eq", "low": -3, "mid": 1, "midHz": 1500, "high": 2}]) for i in range(3)]
+PNL = [S.track(f"ピアノ（のばす{i + 1}）", "piano", volume=0.1, pan=-0.15, reverb=0.3, sustain=1.6) for i in range(3)]
+FMB = S.track("FM のベース", "bass", patch="kfbFmBass", volume=0.095, pan=0, duck=0.25)
+SUB = S.track("サブベース", "bass", patch="kfbSub", volume=0.036, pan=0, duck=0.4)
+SAW = [S.track(f"スーパーソウの和音{i + 1}", "lead", patch="kfbSupersaw", volume=0.03, pan=-0.5 + 0.5 * i, reverb=0.22, duck=0.6,
+               fx=[{"type": "filter", "kind": "highpass", "freq": 260, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6}]) for i in range(3)]
+PLK = S.track("プラックのリフ", "lead", patch="kfbSquarePluck", volume=0.062, pan=0.3, reverb=0.25, fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.18, "feedback": 0.3}])
+LEAD = S.track("電子のリード（ソロ）", "lead", patch="kfbSineLead", volume=0.085, pan=-0.1, reverb=0.3, fx=[{"type": "pingpong", "beats": 0.5, "mix": 0.15, "feedback": 0.25}])
+PAD = [S.track(f"きらめくパッド{i + 1}", "lead", patch="kfbSparklePad", volume=0.032, pan=-0.4 + 0.4 * i, reverb=0.45) for i in range(3)]
+PIK = S.track("通知の音（ぴこん）", "lead", patch="kfbGlocken", volume=0.09, pan=0.3, reverb=0.3)
+KDR = S.track("電子のクラップ", "guitar", patch="kawaiiFx", volume=0.055, pan=-0.05, reverb=0.1, modulate=False)
+CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.045, pan=0, modulate=False)
 D = S.drumkit()
 SIL = Silence(S)
 
-# ================= 歌 =================
-VA = ["R:1 3:0.5 3:0.5 3:0.5 2:0.5 3:0.5 4:0.5", "5:1 3:1 1:1 R:1", "R:1 2:0.5 2:0.5 2:0.5 1:0.5 2:0.5 3:0.5", "4:1 2:1 7,:1 R:1",
-      "R:1 3:0.5 3:0.5 3:0.5 2:0.5 3:0.5 4:0.5", "5:1 6:1 5:1 R:1", "R:1 4:0.5 3:0.5 2:0.5 3:0.5 4:0.5 2:0.5", "1:2 R:2"]
-A1 = ("やまのむこうにすむ/おばあちゃんのすまほ/はじめてのめっせーじ/げんきですかと/"
-      "ゆびいっぽんでゆっくり/なんぷんかけたかな/へんじしたらすぐに/すたんぷがきた")
-A2 = ("ねこがおじぎをする/くまがはなをくれる/はーとがみっつならぶ/おばあちゃんたら/"
-      "おしえたのはまごの/わたしなんだけどね/こんなにおすなんて/おもわなかったよ")
-VB = ["R:1 4:1 4:1 4:1", "6:2 4:1 R:1", "R:1 3:1 3:1 3:1", "5:2 3:1 R:1",
-      "R:1 4:1 4:1 6:1", "1':2 6:1 R:1", "R:0.5 5:0.5 #4:0.5 5:0.5 6:0.5 7:0.5 1':1", "R:4"]
-B1 = "ぴこんぴこ/とまらない/でんしゃでも/ふきだしたよ"
-B2 = "ことばより/たくさんの/きもちがね/つまってるんだ"
-VC = ["5:0.5 5:0.5 1':1 7:0.5 6:0.5 5:1", "3:1 4:1 5:1 R:1", "6:0.5 6:0.5 1':1 7:0.5 6:0.5 5:1", "3:2 R:2",
-      "4:0.5 4:0.5 6:1 5:0.5 4:0.5 3:1", "2:1 3:1 4:1 R:1", "5:0.5 5:0.5 3':1 2':0.5 1':0.5 7:1", "1':2 R:2",
-      "6:0.5 6:0.5 2':1 1':0.5 6:0.5 5:1", "4:1 5:1 6:1 R:1", "5:0.5 5:0.5 1':1 7:0.5 6:0.5 5:1", "6:2 R:2",
-      "4:0.5 4:0.5 2':1 1':0.5 6:0.5 5:1", "5:1 3:1 2:1 R:1", "R:0.5 3:0.5 4:0.5 5:0.5 6:0.5 7:0.5 1':1", "1':3 R:1"]
-HOOK = "ばあちゃんのすたんぷ"
-C1 = f"{HOOK}/ぽんぽんとどく/えがおのねこがまた/おじぎしてるよ/{HOOK}/とおいまちから/がめんいっぱいのはな/さいてるみたい"
-C2 = f"{HOOK}/ぽんぽんとどく/まちがえたうさぎも/かわいいからね/{HOOK}/いっこじゃたりない/わたしもおかえしに/たくさんおくった"
-C3 = (f"{HOOK}/あいにいくから/でんしゃとばすをのり/やまをこえてね/{HOOK}/ほんものにあう/そのときはぎゅっとして/すたんぷよりも/"
-      f"{HOOK}/またとどいたよ/おやすみのねこがね/ねむそうにふる")
-GEN = ["R:4", "R:1 3:1 2:1 3:1", "R:4", "R:0.5 5:0.5 5:0.5 3:0.5 2:1 1:1", "R:4", "R:1 3:0.5 3:0.5 4:0.5 5:0.5 6:1", "R:4", "5:1 4:1 3:1 2:1"]
+# ================= 歌（16分のマスで書く。x＝音の頭、-＝のばす、.＝休み）=================
+def M(pat, degs): return mel16(pat, degs.split())
+
+
+HOOK = "x-xx..x-xx..x-x-"            # ぴ・こん　ぴ・こん　＋2音（長・短短 の形を2回）
+RUN = "xxxx..xxxx..x-x-"             # 16分4つ・休み・16分4つ・8分2つ（早口）
+END3 = "x-x-x-----......"            # 8分3つで着地 → 休み
+VC = [M(HOOK, "3' 1' 1' 3' 1' 1' 5 1'"), M("x-x-x---........", "2' #7 5"),
+      M(RUN, "5 5 1' 1' 5 5 3' 3' 2' 1'"), M(END3, "7 5 3"),
+      M(HOOK, "3' 1' 1' 3' 1' 1' 7 2'"), M("x-x-x---........", "4' 2' #7"),
+      M(RUN, "3 3 5 5 7 7 1' 1' 3' 1'"), M(END3, "7 1' 7"),
+      M(HOOK, "3' 1' 1' 3' 1' 1' 5 1'"), M("x-x-x---........", "2' #7 5"),
+      M(RUN, "1' 1' 5 5 1' 1' 3' 3' 4' 3'"), M(END3, "1' 7 5"),
+      M(HOOK, "3' 1' 1' 3' 1' 1' 7 2'"), M("x-x-x---........", "4' 2' #7"),
+      M("x-x-x-x-x-x-x---", "5 7 1' 3' 2' 1' 7"), M("x-----------....", "1'")]
+C1 = ("ぴこんぴこんとどいたよ/おじぎのねこにはなのくまね/ぴこんぴこんまたきたよ/はーとがみっつもならんでるよ/"
+      "ぴこんぴこんやまこえて/ことばよりもずっとたくさんの/ぴこんぴこんおやゆびで/だいすきがとどく")
+C0 = "ぴこんぴこんとどいたよ/おじぎのねこにはなのくまね/ぴこんぴこんまたきたよ/はーとがみっつもならんでるよ"
+C2 = ("ぴこんぴこんでんしゃでも/となりのひとまでわらってるよ/ぴこんぴこんねるまえも/おやすみのくまがてをふるよ/"
+      "ぴこんぴこんおしえたの/わたしなのにまけそうだよね/ぴこんぴこんおやゆびで/あいにいくからね")
+C3 = ("ぴこんぴこんとどいたよ/こんどはほんものとどけるね/ぴこんぴこんまっていてね/すたんぷよりもつよくぎゅっとね/"
+      "ぴこんぴこんやまこえて/ことばよりもずっとたくさんの/ぴこんぴこんおやゆびで/だいすきがとどく")
+PAT = "..xxxxx-xxxxx-.."            # Aメロ: 半拍おいて、16分5つ・16分5つ（早口で語る）
+VA = [M(PAT, "5 5 5 7 1' 1' 7 5 5 3"), M(END3, "3 5 5"), M(PAT, "5 5 7 7 1' 2' 1' 7 7 5"), M(END3, "7 1' 7"),
+      M(PAT, "3 3 5 5 1' 1' 5 5 3 3"), M(END3, "2' #7 5"), M("x-x-x-x-x-x-x-x-", "1' 1' 7 5 7 1' 2' 3'"), "R:4"]
+A1 = "やまのむこうのばあちゃんから/はじめてのめっせーじがきたよ/げんきですかのむもじだけで/なんぷんかけたの"
+A2 = "へんじをしたらすぐすたんぷ/おじぎするねこがとんできた/おしえたのはまごのわたしで/こんなにおすとは"
+VB = [M("x---x---x-x-x---", "4 6 1' 6 1'"), M("x-------x---....", "2' #7"), M("x---x---x-x-x---", "5 1' 3' 1' 3'"), M("x-------x---....", "2' #3'"),
+      M("x-x-x-x-x---x---", "4 6 1' 2' 4' 2'"), M("x-x-x-x-x-------", "2' 4' 2' 7 2'"), "R:4", "R:4"]
+B1 = "ゆびいっぽんでね/うってくれたんだ/めがねずらしてのぞいて"
+B2 = "ことばにできないきもち"
+VT = [M("x-x-x-x-x-x-x-x-", "3 3 5 5 3 3 1 3"), M("x-x-----........", "5 #7"), M("x-x-x-x-x-x-x-x-", "5 5 7 7 5 5 3 5"), M("x-x-----........", "7 5"),
+      M("x-x-x-x-x-x-x-x-", "3 5 5 1' 1' 5 5 3"), M("x-x-----........", "2' #7"), M("x-x-x-x-x-x-x-x-", "1' 1' 7 7 5 5 7 1'"), M("x-x-----........", "7 3'")]
+TT = "もしもしきこえるかい/こちらはげんきですよ/すたんぷたのしいねえ/またすぐおくるからね"
+VO = [M("........x-x-x---", "5 7 1'"), M("x-x-----........", "7 4"), M("x-x-x-x-x-x-x---", "3 3 5 5 7 5 3"), M("x-------........", "5"),
+      M("........x-x-x---", "5 7 1'"), M("x-x-----........", "7 4"), M("x-x-x-x-x-x-x---", "5 5 7 7 1' 7 5"), M("x-------........", "1'")]
+OT = "ららららら/ばあちゃんのうただ/ららららら/あいにいくからね"
+VG = [VC[0], VC[1], M("x-x-x-x-x-x-....", "1' 7 5 7 1' 1'"), "R:4"]
+GT = "ぴこんぴこんとどいたよ/げんきですよ"
 LY = Lyrics(S)
 
 
-def put(name, key, lines, text, o=4):
+def put(name, key, lines, text, o):
     bars = S.sc(name); mel = [key.mel(x, oct=o) for x in lines]
     for b, m in zip(bars, mel): V.bar(b, m)
     LY.flow(bars, mel, text, name)
 
 
-put("Aメロ1", K, VA + VA, A1)
-put("Bメロ1", K, VB, B1)
-put("サビ1", K, VC, C1)
-put("Aメロ2", K, VA + VA, A2)
-put("Bメロ2", K, VB, B2)
-put("サビ2", K, VC, C2)
-if VOCAL: put("げんき", K, GEN, "げんき/げんきだよ/あいたいね/こんどね")
-else:
-    for b, l in zip(S.sc("げんき"), GEN): ACCM.bar(b, K.mel(l, oct=4))
-put("最後のサビ", KL, VC + VC[:8], C3)
+put("頭のサビ", KC, VC[:8], C0, 4)
+put("Aメロ", KA, VA, A1, 3)
+put("Aメロ2", KA, VA, A2, 3)
+put("Bメロ", KA, VB, B1, 3)
+put("サビ1", KC, VC, C1, 4)
+put("語り", KA, VT, TT, 3)
+put("Bメロ2", KA, VB[4:], B2, 3)
+put("サビ2", KC, VC, C2, 4)
+put("落ちサビ", KC, VO, OT, 4)
+put("最後のサビ", KD, VC, C3, 4)
+put("しめ", KD, VG, GT, 4)
 
-# ================= アコーディオン（ブン・チャッ）・チューバ =================
-def oompah(b, ch, center=62):
-    v = voice(ch, center, 3)
-    for j in range(3): ACC[j].bar(b, f"R:0.5 {nm(v[j])}:0.5 R:0.5 {nm(v[j])}:0.5 R:0.5 {nm(v[j])}:0.5 R:0.5 {nm(v[j])}:0.5")
-
-
-def tuba(b, ch):
-    r = low(ch, "A1")
-    TUBA.bar(b, f"{nm(r)}:0.5 R:0.5 {nm(r + 7 if r + 7 < 48 else r - 5)}:0.5 R:0.5 {nm(r)}:0.5 R:0.5 {nm(r + 7 if r + 7 < 48 else r - 5)}:0.5 R:0.5")
+# ================= 伴奏（小節ごとにリズムを変える。同じ型を続けない）=================
+root = lambda b: S.chords[b].split("|")[0].split("/")[0]
+RC_V = ["x..x..x.x..x.x..", "x.x..x..x.x..x.x", "x..x..x.x..x..x.", "..x.x..x..x.x..x"]       # Aメロのリリースカットピアノ（4小節で1まわり・毎小節ちがう）
+RC_C = ["x.xx.x.xx.x.x.x.", "x..x.xx.x..x.xx.", "x.xx.x.xx.x.xx.x", "x.x..x.x.x..x..."]       # サビ
+RC_R = ["x.xx..x.xx..x.x.", "x..x..x..x..x.x.", "x.xx..x.xx..x.x.", "x.x.x.x.xxxxxxxx"]       # リフ
 
 
-PTUNE = ["F#5:0.5 A5:0.5 F#5:0.5 D5:0.5 A4:1 D5:1", "E5:0.5 G5:0.5 E5:0.5 C#5:0.5 A4:1 R:1", "F#5:0.5 A5:0.5 D6:0.5 A5:0.5 F#5:1 D5:1", "E5:1 C#5:1 A4:1 R:1",
-         "G5:0.5 B5:0.5 G5:0.5 D5:0.5 B4:1 D5:1", "F#5:0.5 A5:0.5 F#5:0.5 D5:0.5 A4:1 D5:1", "E5:0.5 F#5:0.5 G5:0.5 E5:0.5 C#5:1 E5:1", "D5:3 R:1"]
-MOTIF = ["R:1 F#5:0.5 A5:0.5 B5:1 A5:0.5 E5:0.5", "D5:3 R:1"]      # 合いことばの節（3・5・6・5・2）
+def rc(b, pat, c=64, short=0.25):
+    for tr, line in zip(PN, relcut(PN, S.chords[b], pat, c, short)): tr.bar(b, line)
+
+
+def long3(tracks, b, c=64, pat="x---------------"):
+    v = sorted(voice(root(b), c, 3))
+    for j in range(3): tracks[j].bar(b, steps(pat, [nm(v[j])]))
+
+
+def bass(b, style):
+    ch = S.chords[b]; r = low(ch, "F1"); nx = S.chords[b + 1] if b + 1 < S.nb else ch; rn = low(nx, "F1")
+    up = tones(root(b), nm(r + 1), nm(r + 12)); t5 = next((m for m in up if (m - r) in (6, 7, 8)), r + 7); o = r + 12
+    ap = t5 if rn == r else (rn - 1 if rn > r else rn + 1); N = nm
+    FMB.bar(b, {"v1": steps("x..x..x...x.x...", [N(r), N(r), N(o), N(r), N(t5)]),
+                "v2": steps("x.x...x..x..x.x.", [N(r), N(o), N(r), N(t5), N(o), N(ap)]),
+                "c1": steps("x.x.x.x.x.x.x.x.", [N(r), N(o), N(r), N(o), N(r), N(o), N(t5), N(ap)]),
+                "c2": steps("x.xxx.x.x.xxx.x.", [N(r), N(r), N(o), N(r), N(o), N(r), N(r), N(o), N(t5), N(ap)]),
+                "half": steps("x-------..x-x---", [N(r), N(t5), N(o)]),
+                "kime8": steps("x.x.x.x.x.x.x.x.", [N(r)] * 8), "hit": steps("x---............", [N(r)]), "long": steps("x-------------..", [N(r)])}[style])
+
+
+def saw(b, pat, c=65):
+    v = sorted(voice(root(b), c, 3))
+    for j in range(3): SAW[j].bar(b, steps(pat, [nm(v[j])]))
+
+
+def plk(b, pat, order, lo="A4", hi="A6"):
+    tn = tones(root(b), lo, hi); PLK.bar(b, steps(pat, [nm(tn[q % len(tn)]) for q in order]))
+
+
+def pik(b, hi="C7", lo_="G6", at="..........x-x---"): PIK.bar(b, steps(at, [lo_, hi]))
+
+
+RIFF = [("x.xx.x.xx.x.x-x-", (2, 0, 2, 3, 2, 3, 4, 3, 2)), ("x.xx.x.xx.xxx-..", (3, 1, 3, 4, 3, 4, 5, 4, 3)),
+        ("x.xx.x.xx.x.x-x-", (2, 0, 2, 3, 2, 3, 4, 5, 4)), ("xxxxxxxxx-x-x---", (0, 1, 2, 3, 4, 3, 2, 1, 2, 3, 4))]
+SOLO = ["x-xxx-x-xx..x-x-|C6 A5 C6 E6 C6 A5 G5 A5 C6", "x-x-xxxx..x-x---|B5 G#5 B5 D6 E6 D6 B5 E6", "xxxx.xxx.x-x-x--|A5 C6 E6 A6 G6 E6 C6 E6 G6 E6", "x-x-x-x-xxxxxxxx|G6 E6 C6 Bb5 C6 C6 C6 C6 E6 E6 E6 E6",
+        "x-xxx-x-xx..x-x-|F6 C6 F6 A6 F6 C6 A5 C6 F6", "xx.xx.xx.x-x-x--|E6 B5 E6 B5 G#5 B5 D6 E6 G#6", "x---x-x-xxxxx-x-|A6 E6 C6 A5 C6 E6 A6 G6 E6", "xxxxxxxxxxxxx---|G5 B5 D6 F6 G6 F6 D6 B5 D6 F6 G6 B6 D7"]
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
-    ch = S.chords[b]
-    if n == "アコーディオン":
-        v = voice(ch, 62, 3)
-        for j in range(3): ACC[j].bar(b, f"{nm(v[j])}:4" if i % 2 == 0 else f"{nm(v[j])}:3 R:1")
-    elif n == "イントロ":
-        oompah(b, ch); tuba(b, ch); CLA.bar(b, PTUNE[i % 8])
-    elif n in ("Aメロ1", "Aメロ2", "Bメロ1", "Bメロ2", "サビ1", "サビ2", "最後のサビ"):
-        if n in ("Bメロ1", "Bメロ2") and i == 7: continue
-        oompah(b, ch); tuba(b, ch)
-        # v2: 全体が 6.6〜7.3（アコーディオンの刻みとチューバだけで薄く、くり返しに聞こえる）
-        #     → Aメロ2・サビでフィドルが長い対旋律（和音の上の音を2分でのばす）を弾き、音に広がりを足す
-        if n in ("Aメロ2", "サビ1", "サビ2", "最後のサビ") or (n == "Aメロ1" and i >= 8):
-            t = tones(ch, "A4", "A5"); FID.bar(b, f"{nm(t[-1])}:2 {nm(t[-2])}:2" if i % 2 == 0 else f"{nm(t[-2])}:4")
-        if n in ("サビ1", "サビ2", "最後のサビ") and i % 4 == 3: CLA.bar(b, "R:2 " + " ".join(f"{nm(x)}:0.5" for x in tones(ch, "A4", "A5")[:4]))
-    elif n == "間奏":
-        oompah(b, ch); tuba(b, ch)
-        CLA.bar(b, MOTIF[i] if i < 2 else PTUNE[i])
-    elif n == "間奏2":
-        oompah(b, ch, 58); tuba(b, ch); ACCM.bar(b, PTUNE[i])
-    elif n == "げんき":
-        v = voice(ch, 62, 3)
-        for j in range(3): ACC[j].bar(b, f"{nm(v[j])}:4")
-    elif n == "スタンプ連打":
-        oompah(b, ch); tuba(b, ch); CLA.bar(b, shift_oct(PTUNE[i], 0)); ACCM.bar(b, shift_oct(PTUNE[i], -1))
-    elif n == "通知":
-        if i == 0:
-            v = voice(ch, 62, 3)
-            for j in range(3): ACC[j].bar(b, f"{nm(v[j])}:0.5 R:3.5")
-            TUBA.bar(b, f"{nm(low(ch, 'A1'))}:0.5 R:3.5")
+    if n == "ぴこん":
+        pik(b, at="x-x-............" if i == 0 else "x-x-....x-x-....")
+        if i == 1: long3(PAD, b, 67)
+    elif n in ("頭のサビ", "サビ1", "サビ2", "最後のサビ", "しめ"):
+        j = i % 8; first = n == "頭のサビ"; lastc = n in ("最後のサビ", "しめ")
+        rc(b, RC_C[(i + (i // 4)) % 4], 67)                                   # 4小節ごとに1つずらして、同じ並びにしない
+        bass(b, "c1" if (j % 2 == 0 or first) else "c2")
+        if not first: saw(b, "x-----x-----x---" if j % 2 == 0 else "x---x-----x-----", 65 if not lastc else 68); SUB.bar(b, steps("x-------x-------", [nm(low(S.chords[b], "F1"))] * 2))
+        # 「ぴこん」（通知の音）: 歌の句が終わる小節（2・4・6・8小節目）の3拍目に答える
+        if j % 2 == 1 and n != "しめ": pik(b, "C7" if not lastc else "C#7", "G6" if not lastc else "G#6")
+        if (n in ("サビ2", "最後のサビ")) and j in (2, 6): plk(b, "..xx..xx..xx..xx", (2, 3, 3, 4, 4, 5, 5, 6))
+        if lastc and i % 4 == 0: long3(PAD, b, 72)
+        elif lastc: long3(PAD, b, 72)
+    elif n in ("リフ", "リフ2"):
+        rc(b, RC_R[i], 64); bass(b, "v2" if i % 2 == 0 else "c2"); plk(b, RIFF[i][0], RIFF[i][1])
+    elif n in ("Aメロ", "Aメロ2"):
+        if i < 6:
+            rc(b, RC_V[(i + (1 if n == "Aメロ2" else 0)) % 4], 62)
+            if n == "Aメロ2" or i >= 4: bass(b, "v1" if i % 2 == 0 else "v2")       # 1番の前半はピアノと声とキックだけ
+            if n == "Aメロ2" and i % 2 == 1: plk(b, "..........xx.x-.", (3, 4, 2))
+        elif i == 6: rc(b, "x.x.x.x.x.x.x.x.", 67); bass(b, "kime8")                # キメ: 8分で全員いっしょ
+        else: rc(b, "x...............", 69); bass(b, "hit")                          # 1拍だけ鳴らして止める
+    elif n in ("Bメロ", "Bメロ2"):
+        q = i if n == "Bメロ" else i + 4
+        if q < 6:
+            long3(PNL, b, 62 + q); long3(PAD, b, 66 + q); bass(b, "half")
+            if q >= 4: saw(b, "x---------------", 60 + q)
+        elif q == 6: saw(b, "x-x-x-x-x-x-x-x-", 67); bass(b, "kime8")
+        else: pass                                                                   # 最後の小節は全員止め（歌の切り貼りだけ）
+    elif n == "語り":
+        long3(PNL, b, 64); bass(b, "half")
+        if i % 2 == 1: pik(b, "E7", "B6", "............x-x-")
+        if i >= 4: long3(PAD, b, 69)
+    elif n == "ソロ":
+        rc(b, RC_C[i % 4], 64); bass(b, "c1" if i % 2 == 0 else "c2"); saw(b, "x-----x-----x---", 62)
+        pat, nts = SOLO[i].split("|"); LEAD.bar(b, steps(pat, nts.split()))
+    elif n == "落ちサビ":
+        long3(PNL, b, 64, "x-------x-------" if i % 2 == 0 else "x---------------")
+        if i >= 4: long3(PAD, b, 69)
+        if i == 7: saw(b, "x-----------....", 68)
+    elif n == "おわり":
+        if i == 0: pik(b, "C#7", "G#6", "x-x-............"); long3(PNL, b, 68)
 
-# 通知音（ぴこん）
-for name in ("Bメロ1", "Bメロ2"):
-    for i, b in enumerate(S.sc(name)[:4]): GLK.bar(b, "R:3 E6:0.25 A6:0.75")
-GLK.bar(S.sc("通知")[1], "R:1 E6:0.25 A6:1.75 R:1")
-
-# ================= ドラム（ポルカの2ビート）=================
+# ================= ドラム（16ビートの4つ打ち・半分の速さ・キメ・止め）=================
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     last = i == L - 1
-    if n in ("アコーディオン", "げんき"):
-        if n == "げんき" and i == 7: put_fill(D, b, "build")
-        continue
-    if n == "通知":
-        if i == 0: D.set(b, "X...............", "X...............", "................"); crash(D, b, "C2", 6)
-        continue
-    if n in ("Bメロ1", "Bメロ2") and i == 7: continue
-    hh = "x.x.x.x.x.x.x.x." if n in ("サビ1", "サビ2", "最後のサビ", "スタンプ連打") else "x...x...x...x..."   # v2: Aメロにも4分のハイハット
-    vgroove(D, b, "beat8", ghosts=0.15, seed=b, k="X.......X.......", s="....X.......X...", h=hh)
-    if n in ("サビ1", "サビ2", "最後のサビ", "間奏", "スタンプ連打") and i % 8 == 0: crash(D, b)
-    if i % 8 == 7 and not last: put_fill(D, b, "small")
-    if last and n in ("Aメロ1", "Aメロ2", "サビ1", "サビ2", "間奏", "間奏2"): put_fill(D, b, "snare16")
+    if n in ("頭のサビ", "サビ1", "サビ2", "最後のサビ", "しめ", "リフ", "リフ2", "ソロ"):
+        kk, ss, hh = BEAT16 if i % 4 != 3 else BEAT16B
+        if n == "頭のサビ": hh = "x.x.x.x.x.x.x.x."
+        vgroove(D, b, "beat8", ghosts=0.15, seed=b, k=kk, s=ss, h=hh, vary=False)
+        KDR.bar(b, "R:1 B4:1 R:1 B4:1")
+        if i % 8 == 0: crash(D, b, "C2", 6 if n == "最後のサビ" else 4)
+        if last and n in ("頭のサビ", "サビ1", "サビ2", "ソロ"): put_fill(D, b, "snare16")
+        elif last and n == "しめ": D.set(b, *KIME_END)
+        elif i % 8 == 7: put_fill(D, b, "small")
+    elif n in ("Aメロ", "Aメロ2"):
+        if i < 6:
+            if n == "Aメロ" and i < 4: D.set(b, "X...X...X...X...", "................", "................")
+            else: D.set(b, "X...X...X...X...", "....X.......X...", "x.x.x.x.x.x.x.x." if n == "Aメロ" else "x.xxx.xxx.xxx.xx")
+        elif i == 6: D.set(b, *KIME8)
+        else: D.set(b, "X...............", "X...............", "................")
+    elif n in ("Bメロ", "Bメロ2"):
+        q = i if n == "Bメロ" else i + 4
+        if q < 6: D.set(b, *HALF)
+        elif q == 6: D.set(b, "X...X...X...X...", "X.X.X.X.XXXXXXXX", "................")
+    elif n == "語り":
+        D.set(b, "X.........x.....", "........x.......", "x...x...x...x..." if i < 4 else "x.x.x.x.x.x.x.x.")
+        if last: put_fill(D, b, "small")
+    elif n == "落ちサビ":
+        if i == 7: D.set(b, "X...X...X.X.X.X.", "....X...X.X.XXXX", "................")
 
-for name in ("Bメロ1", "Bメロ2"): SIL.add(S.sc(name)[-1], 0, 4)
-SIL.apply()
+cym_swell(CYM, S.sc("サビ1")[0], 2, "C4"); cym_swell(CYM, S.sc("サビ2")[0], 2, "C4"); cym_swell(CYM, S.sc("最後のサビ")[0], 4, "E4")
 
 S.fade_out = 0
-S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の15（14時）。ポルカ。D長調・152、最後のサビは +1 でテンポが上がる。書き出しは全体を半音下げる。"
-          "山のむこうのおばあちゃんが、はじめてスタンプを送ってくる。アコーディオンのブン・チャッ・チューバ・クラリネット。"
-          "合いことばの節は間奏のクラリネット（ばあちゃんの鼻歌）。通知音「ぴこん」で終わる。自作")
-finish(S, LY, V, -1,
-       level={"verse": -0.15}, special={"げんき": -0.7, "最後のサビ": 0.4, "スタンプ連打": 0.2})
+S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の15（14時）。今のボカロ曲の作り方で作る1曲目。テクノポップ・172。Aメロは A短調、サビは短3度上の C短調、最後は半音上。"
+          "16分の早口の歌、跳ぶ旋律、丸サ進行、リリースカットピアノ、16ビートの4つ打ち、キメと止め、歌の切り貼り。2分53秒。自作")
+finish(S, LY, V, 0,
+       level={"verse": -0.15}, special={"落ちサビ": -0.5, "語り": -0.3, "最後のサビ": 0.5})
 
-# ================= v2（2026-11-11 作り直し。docs/sound/vt3-remake-plan.md）=================
-# この曲（午後2時・おばあちゃんから届くスタンプ・ポルカ）で直すこと:
-#   生の楽器の曲なので、電子の音は足さない（歌をなぞる音だけ、高さの揺れない音に）。アコーディオンの伴奏は1音ずつ強さを揺らす
-#   歌: Aメロ・Bメロはクリア、サビはキュート（スタンプのにぎやかさ）、「げんき」の所はウィスパー（ひとことの重さ）。ハモリは サビ2 の頭から（合唱のように）と最後のサビ
+# ================= 仕上げのあとに足すもの =================
 from vt3x_lib import *
 path = sys.argv[1]
-humanize(path, "アコーディオン", mid=84, down=10, up=8, seed=5)
-final_gain(path, {"アコーディオン": 4, "サビ1": -0.5, "サビ2": 0.3, "最後のサビ": 1.5})
+humanize(path, "リリースカットピアノ", mid=84, down=12, up=10, seed=3); humanize(path, "プラックのリフ", mid=82, down=10, up=8, seed=5)
 if VOCAL:
-    remark(path, S, std_mark(("chorus",), jump=5))
-    vocal_polish(path, S, {"verse": 8, "pre": 12, "chorus": 20, "最後のサビ": 24, "bridge": 6, "outro": 0}, scoop=0.3, slash=0.8, vib_min_beats=1.5, vib_start=0.5, auto=0.5, breaths=0.5)
-    harmony(path, S, [("サビ2", 0, None, K), ("最後のサビ", 0, None, KL)], vol=0.36, shift=-1)
-    voice_by_scene(path, S, {"verse": "clear", "pre": "clear", "chorus": "cute", "bridge": "whisper"}, default="clear")
+    backing(path, 0.9)   # 2026-11-13 人間「声以外のバック音量0.9ぐらいにしようか」
+    remark(path, S, std_mark(("chorus",)))
+    vocal_polish(path, S, {"verse": 4, "pre": 12, "chorus": 18, "最後のサビ": 22, "bridge": 6}, scoop=0.25, slash=0.6, vib_min_beats=2.0, vib_start=0.5, auto=0.6, breaths=0.0)
+    harmony(path, S, [("サビ1", 8, None, KC), ("サビ2", 0, None, KC), ("最後のサビ", 0, None, KD), ("しめ", 0, None, KD)], vol=0.36)
+    # 歌の切り貼り: ぴこん の場面・Aメロの止め・Bメロの最後の小節（サビへ「ぴ・ぴ・ぴ・ぴ」とかけ上がる）
+    cb = {S.sc("ぴこん")[1]: "R:2 " + stutter_chop("G4", "ぴ", 4, 0.25) + " " + stutter_chop("C5", "ぴ", 4, 0.25)}
+    for nme in ("Aメロ", "Aメロ2"): cb[S.sc(nme)[7]] = "R:2 " + stutter_chop("E4", "ぴ", 2, 0.25) + " " + stutter_chop("A4", "ぴ", 2, 0.25) + " " + stutter_chop("E5", "ぴ", 4, 0.125) + " R:0.5"
+    for nme in ("Bメロ", "Bメロ2"): cb[S.sc(nme)[-1]] = stutter_chop("G4", "ぴ", 4, 0.5) + " " + stutter_chop("B4", "ぴ", 4, 0.25) + " " + stutter_chop("D5", "ぴ", 8, 0.125)
+    chops(path, S, cb, vol=0.34, pan=-0.15)
+    voice_by_scene(path, S, {"語り": "cute", "落ちサビ": "cute"}, default="clear")
+    js = load(path)
+    for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.4
+    save(path, js)
