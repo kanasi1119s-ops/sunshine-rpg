@@ -285,6 +285,7 @@ Naked Drums（Wilkinson Audio、CC BY 4.0、1.3GB）、DRS Kit（CC BY 4.0）、
   1オクターブずれて鳴るプリセット（sub・formant-lead は下、sine-lead・music-box は上）は、鍵盤の割り当てを直して書いた高さで鳴るようにした。
   「Music Toy」は音程がはっきりしない音だったので使わない。
 - 2026-11-11 人間「ブルーアーカイブで使われてそうなの追加して」: 学園もののゲームに多い「かわいい日常の曲」「激しい電子の戦いの曲」で使われる音の**種類**を足した（特定の曲の旋律・音そのものは まねていない。CLAUDE.md 1-1）。同じく Surge XT 同梱のプリセットの録音 13 個:
+  `kfb-supersaw-wide`（2026-11-15 追加: Luna／96 Osc Supersaw に、1オクターブ上の Luna／JP8K Supersaw（500Hz より上だけ・0.4倍）を `tools/surge/layer.py` で重ね、8kHz から上を 2dB 持ち上げた和音用。Surge XT の同梱プリセット。規約は上と同じ・クレジット不要）
   `kfb-growl-bass`（Zoozither／Growl）・`kfb-neuro-bass`（Psiome Send Sound／Neuro Mini）・`kfb-fm-bass`（Luna／Better FM Bass）・`kfb-hoover`（Kuniklo／Hoover）・`kfb-hardcore-lead`（2026-11-11 作り直し: Giana Brotherz／Cut Through・Crisp Cross ＋ John Valentine／Distorted Electric Guitar（根音と5度上）＋ Inigo Kennedy／Glitter 2 を `tools/surge/layer.py` で重ねた。前は Rozzer／He Never Lost His Hardcore）・
   `kfb-rave-stab`（Giana Brotherz／Ravin' Stalker）・`kfb-chip-lead`（Luna／Gameboy）・`kfb-trance-lead`（Argitoth／Trance Lead 2）・`kfb-glass-ep`（Giana Brotherz／Glassy E-Piano）・`kfb-boops`（John Valentine／FM Square Glassy Boops）・
   `kfb-dream-lead`（2026-11-11。Cybersoda／Funky Sine・Music Box Lead ＋ Inigo Kennedy／Delicate を重ねた）・`kfb-wobble-lead`（Inigo Kennedy／Wobbly）・`kfb-future-sax`（Giana Brotherz／Future Sax）・
