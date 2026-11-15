@@ -2,7 +2,6 @@
 """カルテの差分: お手本の曲と自分の曲のカルテを並べて、違いを出す（学習用）。
 使い方: python3 tools/song-analyzer/compare.py <お手本.karte.json> <自分.karte.json>"""
 import sys, json, numpy as np
-a, b = (json.load(open(p)) for p in sys.argv[1:3])
 JP = {"vocals": "歌", "drums": "ドラム", "bass": "ベース", "chordal": "和音の楽器"}
 def feats(k):
     pb = k["per_bar"]; nb = k["bars"]; act = pb["active"]; f = {}
@@ -19,11 +18,13 @@ def feats(k):
     for d, v in k["drums_hits_per_beat"].items(): f[f"ドラム: {d}（1秒あたり）"] = v / spb_
     f["低い音の割合（%）"] = k["loudness"]["low"] * 100; f["高い音の割合（%）"] = k["loudness"]["high"] * 100; f["左右の広がり"] = k["loudness"]["width"]
     return f
-fa, fb = feats(a), feats(b); rows = []
-SCALE = {"（%）": 10, "（dB）": 3, "": 1}
-for key in fa:
-    if key not in fb: continue
-    x, y = fa[key], fb[key]; sc = 10 if "%" in key else (3 if "dB" in key else max(0.3, abs(x) * 0.3)); rows.append((abs(x - y) / sc, key, x, y))
-print(f"お手本: {a['name']}（テンポ {a['tempo']}・{a['seconds']}秒）   自分: {b['name']}（テンポ {b['tempo']}・{b['seconds']}秒）\n違いが大きい順:")
-for d, key, x, y in sorted(rows, reverse=True):
-    print(f"  {'★' if d >= 1 else '・'} {key}: お手本 {x:.1f} ／ 自分 {y:.1f}")
+if __name__ == "__main__":
+    a, b = (json.load(open(p)) for p in sys.argv[1:3])
+    fa, fb = feats(a), feats(b); rows = []
+    SCALE = {"（%）": 10, "（dB）": 3, "": 1}
+    for key in fa:
+        if key not in fb: continue
+        x, y = fa[key], fb[key]; sc = 10 if "%" in key else (3 if "dB" in key else max(0.3, abs(x) * 0.3)); rows.append((abs(x - y) / sc, key, x, y))
+    print(f"お手本: {a['name']}（テンポ {a['tempo']}・{a['seconds']}秒）   自分: {b['name']}（テンポ {b['tempo']}・{b['seconds']}秒）\n違いが大きい順:")
+    for d, key, x, y in sorted(rows, reverse=True):
+        print(f"  {'★' if d >= 1 else '・'} {key}: お手本 {x:.1f} ／ 自分 {y:.1f}")
