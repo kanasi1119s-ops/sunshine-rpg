@@ -166,13 +166,15 @@ def analyze(path, bpm=None, name=None, keep_stems=None):
     s2, raw2 = stage2.run(sm, beats, bar_t, spb, present, librosa)
     if os.environ.get("SA_RAW"):      # 答え合わせ用（自分の曲だけ）: 書き起こしそのものを別のファイルに出す
         import pickle; rp = os.environ["SA_RAW"]; pickle.dump(dict(bar_t=bar_t, raw=raw2), open(os.path.join(rp, (name or "x") + ".raw.pkl") if os.path.isdir(rp) else rp, "wb"))
+    import stage3
+    st2 = dict(stems); st2["chordal"] = stems["guitar"] + stems["piano"] + stems["other"]; s3 = stage3.run(st2, beats, bar_t, raw2, present, librosa)
     res = dict(name=name or os.path.splitext(os.path.basename(path))[0], seconds=round(dur, 1), tempo=round(60 / spb, 1), tempo_guess=round(tempo, 1), tempo_given=bool(bpm),
                bars=nb, downbeat_confidence=round(conf, 2), stems_present={k: present[k] for k in ORDER}, stem_level_db={k: round(level[k], 1) for k in ORDER},
                loudness=dict(max_db=round(float(loud.max()), 1), range_db=round(float(np.percentile(loud, 95) - np.percentile(loud, 10)), 1),
                              low=round(float(np.mean([x["low"] for x in bars])), 3), mid=round(float(np.mean([x["mid"] for x in bars])), 3), high=round(float(np.mean([x["high"] for x in bars])), 3),
                              width=round(float(np.mean([x["width"] for x in bars])), 3)),
                rests={k: (round(v, 3) if v is not None else None) for k, v in rests.items()}, layers=dict(mean=round(float(layers.mean()), 2), min=int(layers.min()), max=int(layers.max()), changes_per_8bars=round(float((np.diff(layers) != 0).sum() / max(1, nb) * 8), 2)),
-               drums_hits_per_beat={k: round(float(np.mean(v)), 2) for k, v in drum.items()}, stage2=s2, sections=segs,
+               drums_hits_per_beat={k: round(float(np.mean(v)), 2) for k, v in drum.items()}, stage2=s2, stage3=s3, sections=segs,
                per_bar=dict(time=[round(float(t), 2) for t in bar_t[:-1]], db=[round(float(x), 1) for x in loud], low=[round(x["low"], 3) for x in bars], high=[round(x["high"], 3) for x in bars], width=[round(x["width"], 3) for x in bars],
                             layers=[int(x) for x in layers], chordal_mix_maybe={k: [round(float(x), 2) for x in sub_share[k]] for k in SUB}, active={k: [round(x, 2) for x in act_bar[k]] for k in ORDER}, drums={k: [round(x, 2) for x in v] for k, v in drum.items()}))
     return res

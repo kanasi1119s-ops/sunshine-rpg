@@ -265,3 +265,77 @@ def gtr_velocity(js, match, seed=3, strong=(94, 106), mid=(76, 88), weak=(56, 68
             out.append(f"{t.rstrip('!,')}%{int(rng.uniform(lo, hi))}"); n += 1
         p["notes"] = " ".join(out)
     print(f"  ギターの強さを付けた（{match}）: {n} 音")
+
+
+# ===== 2026-11-16: 分析ソフト（段2）で分かった弱い所を直す部品 =====
+# お手本とくらべて: ベースが根音ばかり（78%）で音が少なく、4度5度で跳ぶ → 歩くベース。歌のリズムが2小節の型のくり返し → 小節ごとに型と言葉を書く。
+_SMALL = "ゃゅょぁぃぅぇぉっャュョァィゥェォッ"
+def mora(s): return sum(1 for c in s if c not in _SMALL and c not in " 　")
+
+
+def song_lines(spec):
+    """歌を1小節ずつ書く。spec: (16分の型, 度数の並び, その小節の言葉) のリスト。音の頭の数・度数の数・言葉の音の数が合っているか確かめる。
+    返すのは (Key.mel に渡す行のリスト, Lyrics.flow に渡す文字)。小節の終わりに休み（8分以上）が無ければ、句は次の小節へつづく。型を小節ごとに変えて書くためのもの（同じ型の2小節くり返しをやめる）"""
+    lines, words = [], []
+    for i, (pat, degs, txt) in enumerate(spec):
+        d = degs.split(); assert onsets(pat) == len(d) == mora(txt), (i, pat, onsets(pat), len(d), txt, mora(txt))
+        lines.append(steps(pat, d)); nx = spec[i + 1][0] if i + 1 < len(spec) else "...."
+        gap = (len(pat) - len(pat.rstrip("."))) + (len(nx) - len(nx.lstrip(".")))      # 次の小節の頭までの休み（16分の数）。2つ以上あれば句の切れ目
+        words.append(txt + ("/" if gap >= 2 else ""))
+    return lines, "".join(words)
+
+
+def _root_pc(ch): return {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}[ch[0]] + (1 if ch[1:2] == "#" else -1 if ch[1:2] == "b" else 0)
+def _is_minor(ch): q = ch[2:] if ch[1:2] in ("#", "b") else ch[1:]; return q.startswith("m") and not q.startswith("maj")
+
+
+def walk_bass(pat, kinds, c1, c2, nxt, scale_pcs, lo=28):
+    """歩くベースの1小節。pat: 16分の型。kinds: 音の頭ごとに1文字。
+    1〜8＝その和音の音階の何番目か（長い和音はミクソリディアン、短い和音はドリアン。1＝根音、3＝3度、5＝5度、7＝7度、8＝オクターブ）、l＝根音の1つ下、
+    d＝次の和音の根音のとなりの音（調の音階で）、w＝そのもう1つ手前、a＝次の根音の半音となり。小節の後半で和音が変わるときは、後半の音は後ろの和音で数える。
+    返すのは、音名の並び（steps の結果）"""
+    def root(ch):
+        r = _root_pc(ch) % 12 + 24
+        while r < lo: r += 12
+        return r
+    r1, r2 = root(c1), root(c2); rn = root(nxt); cur = r2
+    rn = min((rn - 12, rn, rn + 12), key=lambda x: (abs(x - cur), x)) if rn - 12 >= lo - 2 else min((rn, rn + 12), key=lambda x: abs(x - cur))
+    up = rn > cur; sc = sorted(p for p in range(lo - 12, lo + 40) if p % 12 in scale_pcs)
+    side = [p for p in sc if (p < rn if up else p > rn)]; side = side[::-1] if up else side      # 次の根音に近い順
+    if rn == cur: side = [p for p in sc if p < rn][::-1]
+    out = []; pos = [i for i, c in enumerate(pat.replace(" ", "")) if c == "x"]; assert len(pos) == len(kinds), (pat, kinds)
+    for p, k in zip(pos, kinds):
+        ch, r = (c2, r2) if p >= 8 else (c1, r1); iv = [0, 2, 3, 5, 7, 9, 10, 12] if _is_minor(ch) else [0, 2, 4, 5, 7, 9, 10, 12]
+        if k in "12345678": n = r + iv[int(k) - 1]
+        elif k == "l": n = r - 2
+        elif k == "d": n = side[0]
+        elif k == "w": n = side[1]
+        elif k == "a": n = rn - 1 if up or rn == cur else rn + 1
+        else: raise ValueError(k)
+        out.append(nm(n))
+    return steps(pat, out)
+
+
+def split_mora(text, counts):
+    """ひとつづきの言葉を、小節ごとの音の数（counts）で切り分ける（小さい「ゃ」「っ」などは前の字につける）"""
+    units = []
+    for c in text:
+        if c in _SMALL and units: units[-1] += c
+        elif c not in " 　": units.append(c)
+    assert len(units) == sum(counts), (text, len(units), counts); out = []; k = 0
+    for n in counts: out.append("".join(units[k:k + n])); k += n
+    return out
+
+
+def song_phrases(pats, degs, phrases):
+    """歌を「句」で書く。pats・degs は小節ごと、phrases は句ごとの言葉（句は、小節の終わりに8分以上の休みがある所で切れる）。song_lines に渡す形にして返す"""
+    spec = []; k = 0
+    for ph in phrases:
+        j = k
+        while True:
+            nx = pats[j + 1] if j + 1 < len(pats) else "...."
+            if (len(pats[j]) - len(pats[j].rstrip("."))) + (len(nx) - len(nx.lstrip("."))) >= 2: break
+            j += 1
+        for p, d, w in zip(pats[k:j + 1], degs[k:j + 1], split_mora(ph, [onsets(p) for p in pats[k:j + 1]])): spec.append((p, d, w))
+        k = j + 1
+    assert k == len(pats), (k, len(pats)); return song_lines(spec)
