@@ -2,6 +2,8 @@
 #   Aメロは A短調、サビは短3度上の C短調（サビで転調）、最後のサビはさらに半音上（C♯短調）。2分53秒。
 # 第3弾（0時〜24時の街）の 14時。表は docs/sound/vt3-plan.md。
 #
+# v6（2026-11-15）: 人間「今の作り方に足りていないもの全て足して。音の作り方も学んでプロ仕様に」→ 5声に広げたスーパーソウ（9度入り・うねるフィルター）、
+#   音作りのまとまり（rack_*）、上がる音・インパクト・サブドロップ、グリッチ、テープストップ、16分のアルペジオ、ケロケロ声（語り）、1オクターブ下のハモリ。前奏を厚く、最後のサビを一番強く。
 # v4（2026-11-15）: ゼロから作り直し。人間（2026-11-15）:「曲の作り方単調なんだよね」「現代的な感じのボカロっぽさないよね。ボカロ曲の作り方徹底的に学んで、必要な要素を作曲ソフトに入れようか」
 #   調べたこと（docs/sound/vocaloid-study.md）を、部品（vocalo_lib.py）にして、この曲で初めて使う:
 #   ① 速いテンポ（172）と、16分の早口の歌 ② 跳ぶ旋律（5度の行き来・6度上がる）③ 丸サ進行（IV△7 → III7 → VIm7 → I7）とサビでの転調（短3度上）
@@ -48,18 +50,19 @@ S.scene("しめ", 4, "chorus", MD)
 S.scene("おわり", 2, "outro", ["C#m7", "C#m7"])
 
 V = Voice(S, vol=0.2, delay=0.3, bright=0.0, patch="kfbSineLead", low=False)
-PN = [S.track(f"リリースカットピアノ{i + 1}", "piano", volume=0.11, pan=-0.25 + 0.1 * i, reverb=0.12, sustain=0.25,
-              fx=[{"type": "eq", "low": -3, "mid": 1, "midHz": 1500, "high": 2}]) for i in range(3)]
+PN = [S.track(f"リリースカットピアノ{i + 1}", "piano", volume=0.11, pan=-0.25 + 0.1 * i, reverb=0.12, sustain=0.25, fx=rack_piano()) for i in range(3)]
 PNL = [S.track(f"ピアノ（のばす{i + 1}）", "piano", volume=0.1, pan=-0.15, reverb=0.3, sustain=1.6) for i in range(3)]
-FMB = S.track("FM のベース", "bass", patch="kfbFmBass", volume=0.095, pan=0, duck=0.25)
+FMB = S.track("FM のベース", "bass", patch="kfbFmBass", volume=0.095, pan=0, duck=0.25, fx=rack_bass())
 SUB = S.track("サブベース", "bass", patch="kfbSub", volume=0.036, pan=0, duck=0.4)
-SAW = [S.track(f"スーパーソウの和音{i + 1}", "lead", patch="kfbSupersaw", volume=0.03, pan=-0.5 + 0.5 * i, reverb=0.22, duck=0.6,
-               fx=[{"type": "filter", "kind": "highpass", "freq": 260, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6}]) for i in range(3)]
-PLK = S.track("プラックのリフ", "lead", patch="kfbSquarePluck", volume=0.062, pan=0.3, reverb=0.25, fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.18, "feedback": 0.3}])
-LEAD = S.track("電子のリード（ソロ）", "lead", patch="kfbSineLead", volume=0.085, pan=-0.1, reverb=0.3, fx=[{"type": "pingpong", "beats": 0.5, "mix": 0.15, "feedback": 0.25}])
+# スーパーソウの和音は5声（根音・5度は真ん中寄り、3度・7度・9度は高く広く）。2拍で1往復するフィルターでうねらせ、キックで凹ませる
+SAW = [S.track(f"スーパーソウの和音{i + 1}", "lead", patch="kfbSupersaw", volume=0.026, pan=(0, 0.15, -0.45, 0.45, -0.2)[i], reverb=0.2, duck=0.6,
+               fx=rack_supersaw(hp=180 if i < 2 else 260, pump_ms=round(60000 / 172 * 2), wide=0.2 if i < 2 else 0.4)) for i in range(5)]
+PLK = S.track("プラックのリフ", "lead", patch="kfbSquarePluck", volume=0.062, pan=0.3, reverb=0.2, fx=rack_pluck())
+LEAD = S.track("電子のリード（ソロ）", "lead", patch="kfbSineLead", volume=0.085, pan=-0.1, reverb=0.25, fx=rack_lead())
 PAD = [S.track(f"きらめくパッド{i + 1}", "lead", patch="kfbSparklePad", volume=0.032, pan=-0.4 + 0.4 * i, reverb=0.45) for i in range(3)]
 PIK = S.track("通知の音（ぴこん）", "lead", patch="kfbGlocken", volume=0.09, pan=0.3, reverb=0.3)
 KDR = S.track("電子のクラップ", "guitar", patch="kawaiiFx", volume=0.055, pan=-0.05, reverb=0.1, modulate=False)
+FXT = S.track("かわいい効果音（上がる音・インパクト）", "guitar", patch="kawaiiFx", volume=0.06, pan=0.1, reverb=0.2, modulate=False)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.045, pan=0, modulate=False)
 D = S.drumkit()
 SIL = Silence(S)
@@ -152,9 +155,9 @@ def bass(b, style):
                 "kime8": steps("x.x.x.x.x.x.x.x.", [N(r)] * 8), "hit": steps("x---............", [N(r)]), "long": steps("x-------------..", [N(r)])}[style])
 
 
-def saw(b, pat, c=65):
-    v = sorted(voice(root(b), c, 3))
-    for j in range(3): SAW[j].bar(b, steps(pat, [nm(v[j])]))
+def saw(b, pat, c=53):
+    v = wide9(S.chords[b], c, 5)
+    for j in range(5): SAW[j].bar(b, steps(pat, [nm(v[j])]))
 
 
 def plk(b, pat, order, lo="A4", hi="A6"):
@@ -171,20 +174,25 @@ SOLO = ["x-xxx-x-xx..x-x-|C6 A5 C6 E6 C6 A5 G5 A5 C6", "x-x-xxxx..x-x---|B5 G#5 
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     if n == "ぴこん":
-        pik(b, at="x-x-............" if i == 0 else "x-x-....x-x-....")
-        if i == 1: long3(PAD, b, 67)
+        pik(b, at="x-x-....x-x-....")
+        long3(PNL, b, 67, "x-------x-------"); long3(PAD, b, 72); saw(b, "x---------------", 51); bass(b, "long")
+        if i == 1: PLK.bar(b, "R:2 " + glitch("G5", 2, (4, 4, 8))); FXT.bar(b, fx_bar((0, "kira", 1), (2, "up", 2)))
     elif n in ("頭のサビ", "サビ1", "サビ2", "最後のサビ", "しめ"):
         j = i % 8; first = n == "頭のサビ"; lastc = n in ("最後のサビ", "しめ")
         rc(b, RC_C[(i + (i // 4)) % 4], 67)                                   # 4小節ごとに1つずらして、同じ並びにしない
         bass(b, "c1" if (j % 2 == 0 or first) else "c2")
-        if not first: saw(b, "x-----x-----x---" if j % 2 == 0 else "x---x-----x-----", 65 if not lastc else 68); SUB.bar(b, steps("x-------x-------", [nm(low(S.chords[b], "F1"))] * 2))
+        if not first: saw(b, "x-----x-----x---" if j % 2 == 0 else "x---x-----x-----", 51); SUB.bar(b, steps("x-------x-------", [nm(low(S.chords[b], "F1"))] * 2))
         # 「ぴこん」（通知の音）: 歌の句が終わる小節（2・4・6・8小節目）の3拍目に答える
         if j % 2 == 1 and n != "しめ": pik(b, "C7" if not lastc else "C#7", "G6" if not lastc else "G#6")
-        if (n in ("サビ2", "最後のサビ")) and j in (2, 6): plk(b, "..xx..xx..xx..xx", (2, 3, 3, 4, 4, 5, 5, 6))
+        if n == "サビ2" and j in (2, 6): plk(b, "..xx..xx..xx..xx", (2, 3, 3, 4, 4, 5, 5, 6))
+        if lastc and n != "しめ" and j % 2 == 0: PLK.bar(b, arp16(S.chords[b], "x.xxx.xxx.xxx.xx", (0, 2, 4, 3, 5, 4, 6, 5, 7, 6, 4, 2), short=0.25))   # 最後のサビだけ: 16分のアルペジオ
+        if i == 0 and not first: FXT.bar(b, fx_bar((0, "impact", 2), (0, "sub", 2)) if lastc and n != "しめ" else fx_bar((0, "impact", 2)))
         if lastc and i % 4 == 0: long3(PAD, b, 72)
         elif lastc: long3(PAD, b, 72)
     elif n in ("リフ", "リフ2"):
         rc(b, RC_R[i], 64); bass(b, "v2" if i % 2 == 0 else "c2"); plk(b, RIFF[i][0], RIFF[i][1])
+        if n == "リフ2" and i == 3:                                                  # 語りの前: テープが止まるようにベースが落ちる＋下がる音
+            FMB.bar(b, steps("x.x...x.", [nm(low(S.chords[b], "F1"))] * 3) + " " + tape_stop(nm(low(S.chords[b], "F1") + 12), 2)); FXT.bar(b, fx_bar((2, "down", 2)))
     elif n in ("Aメロ", "Aメロ2"):
         if i < 6:
             rc(b, RC_V[(i + (1 if n == "Aメロ2" else 0)) % 4], 62)
@@ -196,20 +204,22 @@ for b in range(S.nb):
         q = i if n == "Bメロ" else i + 4
         if q < 6:
             long3(PNL, b, 62 + q); long3(PAD, b, 66 + q); bass(b, "half")
-            if q >= 4: saw(b, "x---------------", 60 + q)
-        elif q == 6: saw(b, "x-x-x-x-x-x-x-x-", 67); bass(b, "kime8")
-        else: pass                                                                   # 最後の小節は全員止め（歌の切り貼りだけ）
+            if q >= 4: saw(b, "x---------------", 50)
+        elif q == 6: saw(b, "x-x-x-x-x-x-x-x-", 52); bass(b, "kime8")
+        else: FXT.bar(b, fx_bar((0, "rev", 4)) if n == "Bメロ" else fx_bar((0, "up", 2), (2, "glitch", 1), (3, "laser", 1)))
+        if q == 7 and n == "Bメロ2": PLK.bar(b, glitch("D6", 4, (4, 8, 16)))            # 2回目はプラックのグリッチも足す
     elif n == "語り":
         long3(PNL, b, 64); bass(b, "half")
         if i % 2 == 1: pik(b, "E7", "B6", "............x-x-")
         if i >= 4: long3(PAD, b, 69)
     elif n == "ソロ":
-        rc(b, RC_C[i % 4], 64); bass(b, "c1" if i % 2 == 0 else "c2"); saw(b, "x-----x-----x---", 62)
+        rc(b, RC_C[i % 4], 64); bass(b, "c1" if i % 2 == 0 else "c2"); saw(b, "x-----x-----x---", 50)
         pat, nts = SOLO[i].split("|"); LEAD.bar(b, steps(pat, nts.split()))
     elif n == "落ちサビ":
         long3(PNL, b, 64, "x-------x-------" if i % 2 == 0 else "x---------------")
         if i >= 4: long3(PAD, b, 69)
-        if i == 7: saw(b, "x-----------....", 68)
+        if i == 7: saw(b, "x-----------....", 52); FXT.bar(b, fx_bar((0, "rev", 2), (2, "up", 2)))
+        if i == 0: FXT.bar(b, fx_bar((0, "down", 2), (2, "kira2", 1)))
     elif n == "おわり":
         if i == 0: pik(b, "C#7", "G#6", "x-x-............"); long3(PNL, b, 68)
 
@@ -264,7 +274,10 @@ if VOCAL:
     for nme in ("Aメロ", "Aメロ2"): cb[S.sc(nme)[7]] = "R:2 " + stutter_chop("E4", "ぴ", 2, 0.25) + " " + stutter_chop("A4", "ぴ", 2, 0.25) + " " + stutter_chop("E5", "ぴ", 4, 0.125) + " R:0.5"
     for nme in ("Bメロ", "Bメロ2"): cb[S.sc(nme)[-1]] = stutter_chop("G4", "ぴ", 4, 0.5) + " " + stutter_chop("B4", "ぴ", 4, 0.25) + " " + stutter_chop("D5", "ぴ", 8, 0.125)
     chops(path, S, cb, vol=0.34, pan=-0.15)
-    voice_by_scene(path, S, {"語り": "cute", "落ちサビ": "cute"}, default="clear")
+    harmony(path, S, [("最後のサビ", 0, None, KD)], steps=7, vol=0.2, lowest=50)      # 最後のサビだけ: 1オクターブ下も重ねて厚く
+    voice_by_scene(path, S, {"語り": "cute"}, default="clear")
     js = load(path)
+    kero(js, 1)                                                                      # 語り（ばあちゃんの音声メッセージ）だけ、ケロケロ声
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.4
     save(path, js)
+final_gain(path, {"ぴこん": 3.0, "最後のサビ": 0.9, "しめ": 0.7})
