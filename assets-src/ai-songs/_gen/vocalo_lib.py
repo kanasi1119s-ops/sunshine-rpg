@@ -74,15 +74,15 @@ KIME_END = ("X..X..X.X.X.....", "X..X..X.X.X.....", "................")        #
 #   ・広がりは高い音ほど広く。低い音は真ん中
 #   ・すき間を空ける（全部を埋めない）。うねりは、和音を変えるのでなく、音量とフィルターの動きで作る
 
-def wide9(ch, lo=53, n=5):
-    """フューチャーベースの和音の積み方: 根音を低く、5度、その上に 3度・7度・9度を広げて置く（n 声。返すのは MIDI 番号）"""
+def wide9(ch, lo=60, n=5):
+    """フューチャーベースの和音の積み方: 根音を下に、5度・7度・9度・その上に3度（n 声。返すのは MIDI 番号）。
+    lead の楽器は C4 より下が鳴らないので、根音は C4 以上に置く（2026-11-15: 低い声が鳴っていなかったのを直した）"""
     name = ch.split("|")[0].split("/")[0]
     r = low(name, "C1")
-    while r < lo: r += 12
+    while r < max(lo, 60): r += 12
     pcs = sorted({(m - r) % 12 for m in tones(name, nm(r), nm(r + 12))})
     third = next((x for x in pcs if x in (3, 4)), 4); sev = next((x for x in pcs if x in (10, 11)), 10)
-    v = [r, r + 7, r + 12 + third, r + 12 + sev, r + 26]
-    return v[:n]
+    return [r, r + 7, r + sev, r + 14, r + 12 + third][:n]
 
 
 def arp16(ch, pat, order, lo="A4", hi="A6", short=None):
