@@ -123,7 +123,16 @@ BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.25))
 SAW = [S.track(f"スーパーソウの和音{i + 1}", "lead", patch="kfbSupersawWide", volume=0.024, pan=(0, 0.2, -0.45, 0.45, -0.2)[i], reverb=0.2, duck=0.6, fx=rack_supersaw()) for i in range(5)]
 PLK = S.track("駆け上がるプラック", "lead", patch="kfbSquarePluck", volume=0.05, pan=0.3, reverb=0.25, fx=rack_pluck())
 SQ = S.track("リフのシンセ", "lead", patch="kfbSquareLead", volume=0.05, pan=0.25, reverb=0.15)
+# v13（2026-11-17 人間「もっと寄せようか」＝Kawaii future bass に）: 間奏の後半を Kawaii future bass のドロップに・Bメロに「ポワン」とふくらむ和音・サビにきらきらとハイハットのロール・声のチョップ
+SWELL = [S.track(f"ふくらむスーパーソウ{i + 1}", "lead", patch="kfbSupersawSwell", volume=0.035, pan=-0.4 + 0.4 * i, reverb=0.3) for i in range(3)]
+HATR = S.track("ハイハットのロール", "guitar", patch="kawaiiFx", volume=0.04, pan=-0.2, reverb=0.1, modulate=False)
+KGATE = ["x-----x-x-..x-x-", "x-x-x-..x-x-.x-.", "x-x-..x-..x-x-x-", "x-.x-.x-x-.x-.x-", "x-----x-----x-x-", "x-x-x-..x-x-.x-.", "x-.x-.x-....x-x-", "x-x-x-x-........"]
 CLAP = S.track("クラップ", "guitar", patch="kawaiiFx", volume=0.07, pan=0.05, reverb=0.15, modulate=False)
+
+
+def swell(b, pat="x-------------.."):
+    v = sorted(voice(halves(b)[0], 66, 3))
+    for j in range(3): SWELL[j].bar(b, steps(pat, [N(v[j])]))
 FXT = S.track("効果音", "guitar", patch="kawaiiFx", volume=0.06, pan=0.1, reverb=0.2, modulate=False)
 
 RIFF = ["A4:0.5 E5:0.5 A4:0.25 C5:0.25 E5:0.5 D5:0.5 C5:0.25 A4:0.25 G4:0.5 A4:0.5", "A4:0.5 E5:0.5 A4:0.25 C5:0.25 E5:0.5 G5:0.75 E5:0.25 D5:0.5 C5:0.5"]      # ラとミの5度の行き来
@@ -150,7 +159,8 @@ def chorus(b, i, n):
     saw(b, GATE[(i + (2 if n == "サビ2" else 0)) % 4]); bass(b, *WB[(i + (3 if n == "サビ2" else 0)) % 8]); piano(b, PCUT[i % 4])
     strum(GL, b, "x-------x-------" if i % 2 == 0 else "x-----x---------", strings=3); strum(GR, b, "x---------------" if i % 2 == 0 else "x-----x---x-----", strings=4)
     feel(D, b, "four" if j % 4 != 3 else "upbeat8"); CLAP.bar(b, "R:1 B4:1 R:1 B4:1")
-    if CP[j] in (Cb2, Cd2): PLK.bar(b, "R:2 " + arp16(halves(b)[1], "xxxxxxxx", (0, 1, 2, 3, 4, 5, 6, 7), lo="C5", hi="C7"))      # 歌が伸ばしている後ろで、プラックが駆け上がる
+    if CP[j] in (Cb2, Cd2): PLK.bar(b, "R:2 " + arp16(halves(b)[1], "xxxxxxxx", (0, 1, 2, 3, 4, 5, 6, 7), lo="C5", hi="C7")); FXT.bar(b, fx_bar((1, "kira", 1)))      # 歌が伸ばしている後ろで、プラックが駆け上がる
+    if j % 8 == 3: hat_roll(HATR, b, 0.5)
     if j % 8 == 0: crash(D, b, "C2", 4); FXT.bar(b, fx_bar((0, "impact", 2)))
     if j % 4 == 3: fill_cresc(D, b, 1)
     if big and i == 31: saw(b, "x---------------"); D.set(b, "X.........X.X...", "........X...X.XX", "X.x.X.x.........")
@@ -192,7 +202,8 @@ for b in range(S.nb):
     elif n in ("Bメロ", "Bメロ2"):                                                   # 半分の速さ。和音がのびる。最後は全員止まって、歌だけ「な・い」
         if last:
             saw(b, "x.x---.........."); bass(b, "x.x---..........", "11"); strum(GL, b, "x.x---..........", strings=3); strum(GR, b, "x.x---..........", strings=4); D.set(b, "X.X.............", "X.X.............", "................"); continue
-        saw(b, "x---------------" if i < 4 else "x-------x-------"); bass(b, "x-------x---x-x-" if i < 4 else "x---x---x-x-x-x-", "115d" if i < 4 else "1135wd"); piano(b, "x.......x......." if i < 4 else "x.x.x.x.x.x.x.x.", center=67)
+        swell(b, "x-------------.." if i < 6 else "x-----x-------.."); bass(b, "x-------x---x-x-" if i < 4 else "x---x---x-x-x-x-", "115d" if i < 4 else "1135wd"); piano(b, "x.......x......." if i < 4 else "x.x.x.x.x.x.x.x.", center=67)
+        if i == 5: hat_roll(HATR, b, 1)
         if i >= 4: strum(GL, b, "x---------------", strings=3); strum(GR, b, "x-------x-------", strings=4)
         D.set(b, "X.......X......." if i < 4 else "X...X...X...X...", "........X......." if i < 4 else ("....X.......X..." if i < 6 else "X...X...X.X.X.X."), "X...x...X...x..." if i < 6 else "................")
         if i == 6: FXT.bar(b, fx_bar((0, "up", 4)))
@@ -203,10 +214,15 @@ for b in range(S.nb):
             if i in (0, 4): crash(D, b, "C2", 4)
             if i == 3: fill_cresc(D, b, 1)
         else:
-            saw(b, GATE[i % 4]); bass(b, *WB[i % 8]); piano(b, PCUT[i % 4]); PLK.bar(b, arp16(halves(b)[0], "xxxxxxxxxxxx....", (0, 2, 1, 3, 2, 4, 3, 5, 4, 6, 5, 7), lo="A4", hi="A6")); feel(D, b, "four"); CLAP.bar(b, "R:1 B4:1 R:1 B4:1")
-            strum(GL, b, "x-------x-------", strings=3); strum(GR, b, "x-----x---x-----" if odd else "x---------------", strings=4)
-            if i == 8: crash(D, b, "C2", 4)
-            if last: saw(b, "x-------........"); D.set(b, "X...X...X...X...", "........x.x.XXXX", "x.x.x.x........."); FXT.bar(b, fx_bar((0, "down", 4)))
+            # Kawaii future bass のドロップ: 半分の速さ／スーパーソウが小節ごとに違う型で切れてポンプ／ベースも同じ型／3拍目にクラップ／偶数小節はシンセのリード、奇数小節は声のチョップとプラック（かけ合い）
+            q = i - 8; g = KGATE[q]; saw(b, g); c1, c2 = halves(b); r = low(c1, "E1"); BASS.bar(b, steps(g, [N(r + (12 if x % 5 == 4 else 0)) for x in range(onsets(g))]))
+            t = [N(m) for m in tones(c1, "A5", "A6")]
+            if not odd: SQ.bar(b, steps("x-x-x---........", [t[-1], t[1 % len(t)], t[0]]))
+            else: PLK.bar(b, "R:2 " + arp16(c1, "xxxxxxxx", (0, 1, 2, 3, 4, 5, 6, 7), lo="A4", hi="A6")); FXT.bar(b, fx_bar((3, "kira" if q % 4 == 1 else "pyon", 1)))
+            strum(GL, b, "x---------------", strings=3); feel(D, b, "half" if q % 4 != 3 else "halfopen"); CLAP.bar(b, "R:2 B4:1 R:1")
+            if q == 0: FXT.bar(b, fx_bar((0, "impact", 2), (0, "sub", 2))); crash(D, b, "C2", 4)
+            if q in (3,): hat_roll(HATR, b, 0.5)
+            if last: saw(b, "x-------........"); BASS.bar(b, steps("x-------........", [N(r)])); D.set(b, "X.........x.....", "........X...x.XX", "X.x.X.x........."); hat_roll(HATR, b, 1); FXT.bar(b, fx_bar((0, "down", 4)))
     elif n == "Cメロ":                                                             # 半分の速さ。前半はピアノとベースだけ、後半でドラムと弦のかわりのスーパーソウ
         late = i >= 8; c1 = halves(b)[0]; v = sorted(voice(c1, 62, 3))
         PR.bar(b, steps(["x---x---x---x---", "x---x-x-x---x---"][i % 2], [N(v[q]) for q in ((0, 1, 2, 1) if not odd else (0, 1, 2, 1, 2))])); PR2.bar(b, steps("x-------x-------", [N(low(c1, "E1") + 12)] * 2))
@@ -235,9 +251,14 @@ if VOCAL:
     vocal_polish(path, S, {"verse": 6, "pre": 16, "chorus": 26, "最後のサビ": 30, "bridge": 14}, scoop=0.25, slash=0.6, vib_min_beats=1.5, vib_start=0.45, auto=0.6, breaths=0.0)
     harmony(path, S, [("サビ1", 8, None, KC), ("サビ2", 0, None, KC), ("最後のサビ", 0, None, KD)], vol=0.36)
     for sgn in (-1, 1): harmony(path, S, [("最後のサビ", 0, None, KD)], steps=0, vol=0.2, pan=0.6 * sgn, transpose=0.07 * sgn)
+    cb = {}                                                                         # 間奏の後半: 声のチョップ「つ・き」（奇数小節。シンセのリードとかけ合う）
+    for q, b in enumerate(S.sc("間奏")[8:15]):
+        t = tones(S.chords[b].split("|")[0], "A4", "F5"); a, c = nm(t[0]), nm(t[-1])
+        if q % 2 == 1: cb[b] = [f"{a}:0.5:つ {a}:0.25:き {c}:0.25:つ R:0.5 {c}:0.5:き {a}:0.5:つ R:1.5", "R:0.5 " + stutter_chop(c, "つ", 4, 0.25) + f" {a}:0.5:き {c}:0.5:つ {a}:0.5:き R:1"][(q // 2) % 2]
+    chops(path, S, cb, vol=0.36, pan=-0.15)
     voice_by_scene(path, S, {"Bメロ": "cute", "Bメロ2": "cute", "Cメロ": "whisper", "落ちサビ": "whisper"}, default="clear")
     js = load(path)
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.4
     save(path, js)
 js = load(path); drum_punch(js); save(path, js)
-final_gain(path, {"前奏": 3.2, "リフ": 1.0, "サビ1": 0.5, "サビ2": 0.8, "Cメロ": -4.5, "落ちサビ": -5.0, "最後のサビ": 2.2, "おわり": 2.5})   # v11: ピアノだけの Cメロ・落ちサビがサビより大きかった・前奏が小さかった・最後のサビを山に
+final_gain(path, {"前奏": 4.2, "リフ": 2.0, "間奏": 1.3, "サビ1": 0.5, "サビ2": 0.8, "Cメロ": -4.5, "落ちサビ": -5.0, "最後のサビ": 2.2, "おわり": 2.5})   # v11: ピアノだけの Cメロ・落ちサビがサビより大きかった・前奏が小さかった・最後のサビを山に
