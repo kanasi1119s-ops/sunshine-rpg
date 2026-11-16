@@ -202,14 +202,14 @@ def run(stems, beats, bar_t, raw2, present, librosa):
     if present.get("bass"):
         m = stems["bass"].mean(0); r = tone(stems["bass"])
         if r:
-            y = librosa.resample(m, orig_sr=SR, target_sr=11025); f0, vo, _ = librosa.pyin(y, fmin=30, fmax=330, sr=11025, frame_length=2048, hop_length=256); f0 = np.where(vo, f0, np.nan); tf = np.arange(len(f0)) * 256 / 11025
+            y = librosa.resample(m, orig_sr=SR, target_sr=11025); f0, vo, _ = librosa.pyin(y, fmin=30, fmax=330, sr=11025, frame_length=2048, hop_length=512); f0 = np.where(vo, f0, np.nan); tf = np.arange(len(f0)) * 512 / 11025
             r["倍音の形"] = harmonics(m, f0, tf); r["立ち上がりと余韻"] = envelope(m, onset_times(m)); r["拍に合わせたへこみ"] = pump(m, beats); out["ベース"] = r
     r = tone(stems["chordal"])
     if r: m = stems["chordal"].mean(0); r["立ち上がりと余韻"] = envelope(m, onset_times(m)); r["拍に合わせたへこみ"] = pump(m, beats); out["和音の楽器"] = r
     if present.get("vocals"):
         m = stems["vocals"].mean(0); r = tone(stems["vocals"])
         if r:
-            y = librosa.resample(m, orig_sr=SR, target_sr=22050); f0, vo, _ = librosa.pyin(y, fmin=130, fmax=1050, sr=22050, frame_length=2048, hop_length=128); f0 = np.where(vo, f0, np.nan); tf = np.arange(len(f0)) * 128 / 22050
+            y = librosa.resample(m, orig_sr=SR, target_sr=22050); f0, vo, _ = librosa.pyin(y, fmin=130, fmax=1050, sr=22050, frame_length=2048, hop_length=256); f0 = np.where(vo, f0, np.nan); tf = np.arange(len(f0)) * 256 / 22050
             r["倍音の形"] = harmonics(m, f0, tf); r["ビブラート"] = vibrato(f0, tf); out["歌"] = r
     if present.get("drums"):
         r = tone(stems["drums"])
