@@ -120,22 +120,38 @@ def bass_st(r):
             "音域（半音）": int(np.ptp(seq)) if seq else 0, "休みのマスの割合": round(float(np.mean(notes < 0)), 3)}
 
 
+CHANGE_COST = 0.12      # 自分の3曲で答え合わせして決めた（根音の当たり 64・61・88%）
+
+
 def chords_tr(harm, bs_notes, bar_t, librosa):
-    y = librosa.resample(harm, orig_sr=SR, target_sr=22050); hop = 1024; ch = librosa.feature.chroma_cqt(y=y, sr=22050, hop_length=hop, n_chroma=12); tfr = np.arange(ch.shape[1]) * hop / 22050
+    y = librosa.resample(harm, orig_sr=SR, target_sr=22050); hop = 1024
+    tun = float(librosa.estimate_tuning(y=y, sr=22050))                              # 調律のずれ（A=440 からのずれ）を先に測る。ずれたままだと、となりの半音にゆれる
+    ch = librosa.feature.chroma_cqt(y=y, sr=22050, hop_length=hop, n_chroma=12, tuning=tun); tfr = np.arange(ch.shape[1]) * hop / 22050
     nb = len(bar_t) - 1; ht = np.concatenate([[bar_t[i], (bar_t[i] + bar_t[i + 1]) / 2] for i in range(nb)] + [[bar_t[-1]]]); T = {}
     for q, iv in QUAL.items():
         for r in range(12):
             v = np.zeros(12); v[[(r + i) % 12 for i in iv]] = 1; v[r] = 1.3; T[(r, q)] = v / np.linalg.norm(v)
-    seq = []; allc = np.zeros(12)
+    keys = list(T); TM = np.array([T[k] for k in keys]); PEN = np.array([{"": 0, "m": 0, "5": 0.03, "sus4": 0.06, "sus2": 0.08, "7": 0.08, "maj7": 0.1, "m7": 0.07}[k[1]] for k in keys]); KR = np.array([k[0] for k in keys])
+    allc = np.zeros(12); SCO = np.full((nb * 2, len(keys)), np.nan)
     for h in range(nb * 2):
         a, b = np.searchsorted(tfr, ht[h]), np.searchsorted(tfr, ht[h + 1])
-        if b <= a: seq.append(None); continue
+        if b <= a: continue
         c = ch[:, a:b].mean(1); e = float(np.linalg.norm(c))
-        if e < 1e-6: seq.append(None); continue
-        c = c / e; allc += c; bn = bs_notes[h * 8:h * 8 + 4]; bn = [int(n) % 12 for n in bn if n >= 0]; br = collections.Counter(bn).most_common(1)[0][0] if bn else None
-        best = max(T, key=lambda k: float(T[k] @ c) + (0.2 if br is not None and k[0] == br else 0) - {"": 0, "m": 0, "5": 0.03, "sus4": 0.06, "sus2": 0.08, "7": 0.08, "maj7": 0.1, "m7": 0.07}[k[1]])
-        seq.append(best)
-    return {"seq": seq, "allc": allc}
+        if e < 1e-6: continue
+        c = c / e; allc += c; bn = [int(n) % 12 for n in bs_notes[h * 8:h * 8 + 3] if n >= 0]      # ベースは、その2拍の頭の音だけを手がかりにする（終わりの方は、次の和音へのつなぎの音が多い）
+        sc = TM @ c - PEN
+        if bn: sc = sc + 0.2 * (KR == bn[0])
+        SCO[h] = sc
+    # 和音を変えるたびに少し点を引いて、いちばん点の高い並びを選ぶ（2拍だけ別の和音にゆれるのをおさえる）
+    CH = CHANGE_COST; ok = ~np.isnan(SCO[:, 0]); seq = [None] * (nb * 2); idx = np.where(ok)[0]
+    if len(idx):
+        dp = SCO[idx[0]].copy(); back = []
+        for h in idx[1:]:
+            m = int(np.argmax(dp)); stay = dp; move = dp[m] - CH; frm = np.where(stay >= move, np.arange(len(keys)), m); dp = np.maximum(stay, move) + SCO[h]; back.append(frm)
+        k = int(np.argmax(dp)); path = [k]
+        for frm in back[::-1]: k = int(frm[k]); path.append(k)
+        for h, k in zip(idx, path[::-1]): seq[h] = keys[k]
+    return {"seq": seq, "allc": allc, "tuning": tun}
 
 
 def chords_st(r):
@@ -220,6 +236,9 @@ def melody_st(r):
     return m
 
 
+BASS_MIX = 0.0      # 和音を聞くときは、ベースの音をまぜない（歩くベースやすべるベースにつられる）。ベースは「2拍の頭の音」だけを手がかりにする
+
+
 def stats(raw):
     """書き起こし（raw）から、カルテに保存する数字を作る。物差しを直したとき、音を取り直さずに計算し直せる"""
     out = {}; d, b, c, m = raw.get("drums"), raw.get("bass"), raw.get("chords"), raw.get("melody")
@@ -241,7 +260,7 @@ def stats(raw):
 def run(sm, beats, bar_t, spb, present, librosa):
     d = drums_tr(sm["drums"], bar_t, librosa) if present.get("drums") else None
     b = bass_tr(sm["bass"], bar_t, librosa) if present.get("bass") else None
-    c = chords_tr(sm["chordal"] + sm["bass"], b["notes"] if b else np.full((len(bar_t) - 1) * 16, -1), bar_t, librosa)
+    c = chords_tr(sm["chordal"] + BASS_MIX * sm["bass"], b["notes"] if b else np.full((len(bar_t) - 1) * 16, -1), bar_t, librosa)
     m = melody_tr(sm["vocals"], bar_t, librosa) if present.get("vocals") else None
     raw = {"drums": d, "bass": b, "chords": c, "melody": m, "spb": spb}      # 書き起こしそのもの（カルテには入れない）
     return stats(raw), raw

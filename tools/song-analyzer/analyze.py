@@ -41,15 +41,19 @@ def rms_frames(mono, hop):
     n = len(mono) // hop; return np.sqrt((mono[:n * hop].reshape(n, hop) ** 2).mean(1) + 1e-12)
 
 
-def analyze(path, bpm=None, name=None, keep_stems=None):
+_MEM = {}
+
+
+def analyze(path, bpm=None, name=None, keep_stems=None, _retry=False):
     import librosa
     wav = load_audio(path); dur = wav.shape[1] / SR; mono = wav.mean(0)
     cache = os.environ.get("SA_CACHE"); cf = os.path.join(cache, (name or "x") + ".stems.npz") if cache else None
-    if cf and os.path.exists(cf): stems = dict(np.load(cf))
+    if path in _MEM: stems = _MEM[path]
+    elif cf and os.path.exists(cf): stems = dict(np.load(cf))
     else:
         stems = separate(wav)
         if cf: np.savez(cf, **{k: v.astype(np.float16) for k, v in stems.items()})
-    stems = {k: v.astype(np.float32) for k, v in stems.items()}
+    stems = {k: v.astype(np.float32) for k, v in stems.items()}; _MEM.clear(); _MEM[path] = stems
     if keep_stems:
         import soundfile as sf
         os.makedirs(keep_stems, exist_ok=True)
@@ -164,6 +168,10 @@ def analyze(path, bpm=None, name=None, keep_stems=None):
         else: s["enter"] = [k for k in ORDER if s["active"].get(k, 0) > 0.5 and p["active"].get(k, 0) < 0.25]; s["leave"] = [k for k in ORDER if s["active"].get(k, 0) < 0.25 and p["active"].get(k, 0) > 0.5]
     import stage2
     s2, raw2 = stage2.run(sm, beats, bar_t, spb, present, librosa)
+    # テンポを半分に聞きまちがえていないか: スネアが「毎拍」鳴っていたら、ほんとうは倍のテンポで2・4拍目に鳴っているとみて、倍のテンポでやり直す（速い曲で起きる。172 を 86、200 を 99 と聞いた）
+    sp = ((s2.get("ドラム") or {}).get("位置ごとの割合") or {}).get("スネア")
+    if not bpm and not _retry and sp and min(sp[0], sp[4], sp[8], sp[12]) >= 0.3 and np.mean([sp[0], sp[4], sp[8], sp[12]]) >= 0.5 and tempo * 2 <= 230:
+        return analyze(path, bpm=round(tempo * 2, 1), name=name, keep_stems=keep_stems, _retry=True)
     if os.environ.get("SA_RAW"):      # 答え合わせ用（自分の曲だけ）: 書き起こしそのものを別のファイルに出す
         import pickle; rp = os.environ["SA_RAW"]; pickle.dump(dict(bar_t=bar_t, raw=raw2), open(os.path.join(rp, (name or "x") + ".raw.pkl") if os.path.isdir(rp) else rp, "wb"))
     import stage3
