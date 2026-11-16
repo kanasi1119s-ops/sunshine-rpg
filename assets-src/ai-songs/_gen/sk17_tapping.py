@@ -68,7 +68,7 @@ def tap(b, pat, order, lo, hi, second=False):
 GL = [S.track(f"Lギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.042, -0.6, drive=0.4)) for i in range(6)]
 GR = [S.track(f"Rギター{i + 1}弦め（クリーン）", "distGuitar", volume=0.07, pan=0.55, fx=GFX, **CLEAN) for i in range(6)] if SK != "H" else [S.track(f"Rギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.04, 0.6, drive=0.35)) for i in range(6)]
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.25))
-TAP = S.track("タッピングのギター（クリーン）", "distGuitar", volume=0.12, pan=-0.25, fx=GFX + [{"type": "pingpong", "beats": 0.75, "mix": 0.18 if SK != "I" else 0.32, "feedback": 0.3}], **CLEAN)
+TAP = S.track("タッピングのギター（クリーン）", "distGuitar", volume=0.12, pan=-0.25, fx=GFX + [{"type": "pingpong", "beats": 0.75, "mix": 0.18 if SK != "I" else 0.32, "feedback": 0.3}], legato=(SK == "G"), **CLEAN)      # G: 16分の3音以上を、ハンマリング・プリングのようにつなぐ
 CLAP = S.track("手びょうし", "guitar", patch="kawaiiFx", volume=0.075, pan=0.05, reverb=0.15, modulate=False)
 
 for b in range(S.nb):
@@ -76,8 +76,9 @@ for b in range(S.nb):
     if SK == "G":
         if n == "おわり": tap(b, "x-x-x-x-x-------", (0, 1, 2, 3, 4), "E4", "E6"); bass(b, "x---------------", "1"); strum(GR, b, "x---------------", drive=False, lag_ms=14); D.set(b, "X...............", "X...............", "................"); crash(D, b, "C2", 4); continue
         vocal_long = n == "サビ" and odd                                             # 歌が伸ばしている小節で、タッピングが答える。歌が細かい小節では、タッピングは休む
-        if n == "前奏": tap(b, ["x-x-xx-x-x-xx-x-", "x-x-xx-x-x-x-x--", "xx-x-x-xx-x-x-x-", "x-x-x-x-x-x-...."][i], [(0, 2, 1, 3, 2, 4, 3, 5, 4, 2), (0, 2, 1, 3, 2, 4, 3, 2), (5, 4, 3, 4, 2, 3, 1, 2, 0, 1), (0, 1, 2, 3, 4, 5)][i], "E4", "E6", second=i in (1, 3))
-        elif vocal_long: tap(b, ["....x-xx-x-xx-x-", "..x-xx-x-x-x-x--", "......xx-x-xx-x-", "....x-x-x-x-...."][i // 2], [(0, 2, 1, 3, 2, 4, 3), (2, 3, 1, 2, 0, 1, 2, 3), (4, 3, 2, 3, 1, 2), (0, 1, 2, 3)][i // 2], "E4", "E6", second=True)
+        # v2（2026-11-16）: タッピングを、学んだ形に（たたく → はなす → 左手でたたく の3つ組。3つ組が4拍子の上をずれていく。つなげて弾く）
+        if n == "前奏": TAP.bar(b, tap3(halves(b)[1 if i in (1, 3) else 0], ["xxxxxxxxxxxxxxxx", "xxxxxxxxxxxx....", "xxxxxxxxxxxxxxxx", "xxxxxxxxx-......"][i], order=["TPH", "THP", "TPH", "TPH"][i], start=[0, 1, 2, 1][i]))
+        elif vocal_long: TAP.bar(b, tap3(halves(b)[1], ["....xxxxxxxxxxxx", "......xxxxxxxxx-", "....xxxxxxxxxxxx", "....xxxxxx......"][i // 2], order=["TPH", "THP", "TPH", "TPH"][i // 2], start=[1, 2, 0, 1][i // 2]))
         stop = (n == "前奏" and last) or (n == "サビ" and i == 3)                      # 4小節目の後ろ1拍半は、伴奏が休む
         bass(b, *[("x-----x-x---x-x-", "1135d"), ("x---x-----x-x-x-", "15wda"[:5]), ("x-----x-x-x---x-", "1123d"), ("x---x-x-x-......", "1351")][i % 4] if not stop else ("x---x-x-x-......", "1351"))
         strum(GR, b, ["x-----x---x-----", "x---x-----x-x---", "x-----x-x-------", "x---x---x-......"][i % 4] if not stop else "x---x---x-......", drive=False)

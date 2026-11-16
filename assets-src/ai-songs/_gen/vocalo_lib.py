@@ -339,3 +339,18 @@ def song_phrases(pats, degs, phrases):
         for p, d, w in zip(pats[k:j + 1], degs[k:j + 1], split_mora(ph, [onsets(p) for p in pats[k:j + 1]])): spec.append((p, d, w))
         k = j + 1
     assert k == len(pats), (k, len(pats)); return song_lines(spec)
+
+
+# ===== 2026-11-16: タッピング（両手で指板をたたいてつなぐ弾き方）=====
+# 学んだこと（docs/sound/reference-lead-guitar.md）: たたく（T）→ はなして左手の音を鳴らす（P）→ 左手でたたく（H）の3つでひと組。3つ組が4拍子の上をずれていく。
+# 左手の2音は近く（2〜5半音）、右手の音は遠く（7半音以上）。どの音も同じ大きさ。クリーンの音で、和音（9度入り）を分けて弾く。弦を変えるのは組の変わり目。
+def tap3(ch, pat, lo="E4", order="TPH", start=0, add9=True, step=1):
+    """タッピングの1小節。pat: 16分の型（x の数だけ音を出す）。order: 3つ組の順（T＝右手でたたく高い音、P＝左手の低い音、H＝左手のもう1つの音）。
+    start: どの高さの組から始めるか。step: 組が変わるたびに何段上（下）へ移るか。返すのは steps に渡せる音名の並び（パートには legato=True を付ける）"""
+    c = ch.split("|")[0]; pcs = set(chord_pcs(c))
+    if add9: pcs.add((_root_pc(c) + 2) % 12)
+    lo_m = midi(lo); t = [m for m in range(lo_m, lo_m + 29) if m % 12 in pcs]; n = onsets(pat); out = []
+    for i in range(n):
+        g = start + (i // len(order)) * step; a = t[g % max(1, len(t) - 6)]; b = next(m for m in t if m > a + 1); T = next(m for m in t if m >= a + 7)
+        out.append(nm({"T": T, "P": a, "H": b}[order[i % len(order)]]))
+    return steps(pat, out)
