@@ -6,7 +6,7 @@ import sys, os, json, glob, numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from compare import feats
 d = sys.argv[1]; md = sys.argv[sys.argv.index("--md") + 1] if "--md" in sys.argv else None
-GJ = {"rock": "ロック", "metal": "メタル", "funk": "ファンク", "dance": "ダンス", "electronic": "エレクトロニクス", "vocaloid": "ボカロ", "jpop": "J-POP", "kpop": "K-POP", "other": "そのほか"}
+GJ = {"pop": "ポップ", "rock": "ロック", "metal": "メタル", "funk": "ファンク", "dance": "ダンス", "electronic": "エレクトロニクス", "vocaloid": "ボカロ", "jpop": "J-POP", "kpop": "K-POP", "other": "そのほか"}
 ref, own, frag = {}, {}, {}
 def addfrag(g, k):
     c = (k.get("stage2") or {}).get("和音") or {}
