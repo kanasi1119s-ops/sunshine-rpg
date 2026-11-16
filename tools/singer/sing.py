@@ -836,6 +836,14 @@ def render_song(song, sr_out, total_sec=None, dry=False):
         v = declick(v, sr_out, float(vd.get("declick", 0.0)))
         if float(vd.get("declick", 0.0)) > 0: v = declick(v, sr_out, float(vd.get("declick", 0.0)))   # 2回目（1回目で丸めたあとに残った、となり合うとがりを取る）
         v = debreath(v, sr_out, float(vd.get("debreath", 0.0)))
+        # その場所だけ息の音を小さくする（2026-11-17）: "debreathAt": [[秒, 強さ], …]。全体の debreath は 0.5 までの決まり（声が変わるため）なので、
+        #   息の点検（tools/vt3/breath_check.py）が言った所の前後 0.12 秒だけ、音程のない部分を追加で下げる。母音とほかの言葉は変えない
+        if vd.get("debreathAt"):
+            w = np.zeros(len(v)); amt = max(float(a) for _, a in vd["debreathAt"])
+            for t_, a_ in vd["debreathAt"]:
+                c = int(float(t_) * sr_out); h = int(0.12 * sr_out); a0, a1 = max(0, c - h), min(len(v), c + h)
+                if a1 > a0: w[a0:a1] = np.maximum(w[a0:a1], np.hanning(a1 - a0) ** 0.5 * float(a_) / amt)
+            v = v * (1 - w) + debreath(v, sr_out, amt) * w
         st = reverb(v, sr_out, 0 if dry else float(vd.get("reverb", 0.22)), seed=5 + i)
         pan = float(vd.get("pan", 0)); g = float(vd.get("volume", 1.0))
         st[:, 0] *= g * math.cos((pan + 1) * math.pi / 4) * math.sqrt(2)
