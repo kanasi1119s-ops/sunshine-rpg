@@ -260,7 +260,7 @@ if VOCAL:
             t = tones(S.chords[b].split("|")[0], "A4", "F5"); a, c = nm(t[0]), nm(t[-1])
             if i % 2 == 1: cb[b] = [f"{a}:0.5:た {a}:0.25:ぴ {c}:0.25:ん R:0.5 {c}:0.5:ぐ {a}:0.5:た R:1.5", "R:0.5 " + stutter_chop(c, "た", 4, 0.25) + f" {a}:0.5:ぴ {c}:0.5:ん {a}:0.5:ぐ R:1"][(i // 2) % 2]
     chops(path, S, cb, vol=0.36, pan=-0.15)
-    voice_by_scene(path, S, {"Bメロ": "cute", "Bメロ2": "cute", "Cメロ": "whisper", "落ちサビ": "whisper"}, default="clear")
+    voice_by_scene(path, S, {}, default="whisper")
     js = load(path)
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.4
     save(path, js)
