@@ -26,7 +26,7 @@ rows = []
 for k in keys:
     if not all(k in x for x in own.values()): continue
     if not own or sum(k in x for x in allref) < 4: continue
-    o = med([x[k] for x in own.values()]); r = [x[k] for x in allref if k in x]; lo, hi = float(np.percentile(r, 20)), float(np.percentile(r, 80)); m = med(r)
+    o = med([x[k] for x in own.values()]); r = [x[k] for x in allref if k in x and not ((k.startswith("歌:") or k.startswith("音色・歌")) and x.get("歌が休んでいる時間（%）", 100) > 60)]; lo, hi = float(np.percentile(r, 20)), float(np.percentile(r, 80)); m = med(r)
     sc = max(hi - lo, 0.15 * abs(m), 1e-6); dist = 0 if lo <= o <= hi else min(abs(o - lo), abs(o - hi)) / sc; rows.append((dist, k, o, m, lo, hi))
 for dist, k, o, m, lo, hi in sorted(rows, reverse=True): L.append(f"| {k} | {o:.1f} | {m:.1f} | {lo:.1f}〜{hi:.1f} | {'★ 幅の外' if dist > 0 else ''} |")
 L += ["", "## ジャンルごとの中央値", "", "| 項目 | " + " | ".join(f"{g}（{len(v)}）" for g, v in ref.items()) + " | 自分 |", "|---|" + "---|" * (len(ref) + 1)]
