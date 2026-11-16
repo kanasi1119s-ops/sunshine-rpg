@@ -659,6 +659,10 @@ export function scoreToMidiInfo(score: Score): { midi: Uint8Array; programs: Rec
   }
 
   const out: number[] = [0x4d, 0x54, 0x68, 0x64, ...u32(6), ...u16(1), ...u16(tracksBytes.length), ...u16(PPQ)];
-  for (const t of tracksBytes) out.push(0x4d, 0x54, 0x72, 0x6b, ...u32(t.length), ...t);
+  // 2026-11-17: 1つのトラックが長いと（4分半の曲で、歌をなぞるパートが12万バイトをこえた）、...t で広げる所で「Maximum call stack size exceeded」になる。1つずつ足す
+  for (const t of tracksBytes) {
+    out.push(0x4d, 0x54, 0x72, 0x6b, ...u32(t.length));
+    for (let i = 0; i < t.length; i++) out.push(t[i]);
+  }
   return { midi: Uint8Array.from(out), programs, amps, fx, stemChannels, trackChannels: score.tracks.map((t) => trackChannelOf.get(t) ?? -1) };
 }
