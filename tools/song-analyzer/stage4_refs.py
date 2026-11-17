@@ -31,7 +31,36 @@ def vec_stems(path, which=("drums", "guitar", "other")):
         if w.sum() < 1: out[k] = {}; continue
         m = (P * w[:, None]).sum(0) / w.sum(); out[k] = {en: round(float(m[lab.index(en)]), 4) for en in NAMES if en in lab}
     return out
-if sys.argv[1] == "stems":   # stems <集めた JSON（曲全体）> <出力 JSON> <ジャンルごとの曲数>
+if sys.argv[1] == "stems-eval":   # stems-eval <曲全体の JSON> <分けた音の JSON>: 同じ曲で「曲全体だけ」と「曲全体＋分けた音」のジャンルの当たり具合をくらべる
+    base = json.load(open(sys.argv[2])); st = json.load(open(sys.argv[3])); ids = [k for k in st if k in base]; y = [st[k]["genre"] for k in ids]
+    BIG = {"dance": "電子・ダンス", "electronic": "電子・ダンス", "rock": "ロック・メタル", "metal": "ロック・メタル", "pop": "ポップ・ファンク", "funk": "ポップ・ファンク"}
+    def lv(p): return np.log(np.array([p.get(en, 0) for en in NAMES]) + 0.005)
+    def feats(k, use):
+        v = [lv(base[k]["p"])] if "mix" in use else []
+        for sname in ("drums", "guitar", "other"):
+            if sname in use: v.append(lv(st[k]["stems"].get(sname) or {}))
+        return np.concatenate(v)
+    def loo(use):
+        X = np.array([feats(k, use) for k in ids]); hit = hb = 0
+        for i in range(len(ids)):
+            gs = sorted({g for j, g in enumerate(y) if j != i}); cen = {g: np.mean([X[j] for j in range(len(ids)) if j != i and y[j] == g], axis=0) for g in gs}; am = np.mean(list(cen.values()), axis=0); a = X[i] - am
+            best = max(gs, key=lambda g: np.dot(a, cen[g] - am) / (np.linalg.norm(a) * np.linalg.norm(cen[g] - am) + 1e-9)); hit += best == y[i]; hb += BIG.get(best) == BIG.get(y[i])
+        return hit, hb
+    from collections import Counter
+    print(f"分けた音まで聞かせたお手本: {len(ids)} 曲（{dict(Counter(y))}）")
+    for label, use in (("曲全体だけ", ("mix",)), ("曲全体＋ドラム", ("mix", "drums")), ("曲全体＋ギター", ("mix", "guitar")), ("曲全体＋そのほか", ("mix", "other")), ("曲全体＋ドラム＋ギター＋そのほか", ("mix", "drums", "guitar", "other")), ("分けた音だけ（ドラム＋ギター＋そのほか）", ("drums", "guitar", "other"))):
+        h, hb = loo(use); print(f"  {label}: 6 種類 {h}/{len(ids)}（{100 * h / len(ids):.0f}%）・大きく 3 つ {hb}/{len(ids)}（{100 * hb / len(ids):.0f}%）")
+    # 分けた音で、ジャンルごとによく出る名前
+    for sname, ja in (("drums", "ドラム"), ("guitar", "ギター")):
+        print(f"  分けた音「{ja}」でよく出る名前（度合い 0.03 以上の曲の数）:")
+        for g in sorted(set(y)):
+            c = Counter()
+            for k in ids:
+                if st[k]["genre"] == g:
+                    for en, v in (st[k]["stems"].get(sname) or {}).items():
+                        if v >= 0.03 and en not in ("Music", "Musical instrument"): c[en] += 1
+            print(f"    {GJ.get(g, g)}: " + "・".join(f"{en} {n}" for en, n in c.most_common(5)))
+elif sys.argv[1] == "stems":   # stems <集めた JSON（曲全体）> <出力 JSON> <ジャンルごとの曲数>
     base = json.load(open(sys.argv[2])); outp = sys.argv[3]; per = int(sys.argv[4]); res = json.load(open(outp)) if os.path.exists(outp) else {}; os.makedirs("/tmp/sa/ref", exist_ok=True)
     pick = []
     for g in ("pop", "rock", "metal", "funk", "dance", "electronic"): pick += sorted(k for k, r in base.items() if r["genre"] == g)[:per]
