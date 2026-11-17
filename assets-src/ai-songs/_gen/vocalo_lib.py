@@ -354,3 +354,13 @@ def tap3(ch, pat, lo="E4", order="TPH", start=0, add9=True, step=1):
         g = start + (i // len(order)) * step; a = t[g % max(1, len(t) - 6)]; b = next(m for m in t if m > a + 1); T = next(m for m in t if m >= a + 7)
         out.append(nm({"T": T, "P": a, "H": b}[order[i % len(order)]]))
     return steps(pat, out)
+
+
+def shift_deg(line, n):
+    """度数の行を、音階の中で n 段ずらす（例: n=-3 で 4 度下）。臨時記号つきの音（#7, など）は和音のための音なので、そのまま残す。
+    2026-11-17: 基本の学びなおし「サビのためにいちばん高い音をとっておく」→ Aメロ・Bメロを下げるために作った"""
+    out = []
+    for t in line.split():
+        if t[0] in "#b" or not t[0].isdigit(): out.append(t); continue
+        d = int(t[0]); o = t.count("'") - t.count(","); i = (d - 1) + 7 * o + n; o2 = i // 7; out.append(str(i % 7 + 1) + ("'" * o2 if o2 > 0 else "," * (-o2)))
+    return " ".join(out)

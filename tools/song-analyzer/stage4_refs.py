@@ -22,7 +22,30 @@ def vec(path):
     y, sr = librosa.load(path, sr=16000, mono=True); ts, P, lab, L = S.listen(y, 16000, hop=20.0)
     w = (L > L.max() - 25).astype(float); m = (P * w[:, None]).sum(0) / max(1.0, w.sum())
     return {en: round(float(m[lab.index(en)]), 4) for en in NAMES if en in lab}
-if sys.argv[1] == "own":     # 自分の曲を同じやり方で聞かせる: own <曲のファイル> <名前> <出力 JSON>
+def vec_stems(path, which=("drums", "guitar", "other")):
+    """曲を分けて、分けた音ごとに聞かせる（20 秒おきに 10 秒ずつ。その音が鳴っている窓だけ）"""
+    import gc, librosa, analyze as A
+    st = A.separate(A.load_audio(path)); mono = {k: librosa.resample(np.asarray(st[k], dtype=np.float32).mean(0), orig_sr=A.SR, target_sr=16000) for k in which}; ref = max(float(np.sqrt(np.mean(v ** 2))) for v in st.values()); del st; gc.collect(); out = {}
+    for k, y in mono.items():
+        ts, P, lab, L = S.listen(y, 16000, hop=20.0); w = (L > 20 * np.log10(ref + 1e-9) - 30).astype(float)
+        if w.sum() < 1: out[k] = {}; continue
+        m = (P * w[:, None]).sum(0) / w.sum(); out[k] = {en: round(float(m[lab.index(en)]), 4) for en in NAMES if en in lab}
+    return out
+if sys.argv[1] == "stems":   # stems <集めた JSON（曲全体）> <出力 JSON> <ジャンルごとの曲数>
+    base = json.load(open(sys.argv[2])); outp = sys.argv[3]; per = int(sys.argv[4]); res = json.load(open(outp)) if os.path.exists(outp) else {}; os.makedirs("/tmp/sa/ref", exist_ok=True)
+    pick = []
+    for g in ("pop", "rock", "metal", "funk", "dance", "electronic"): pick += sorted(k for k, r in base.items() if r["genre"] == g)[:per]
+    for ident in pick:
+        if ident in res: continue
+        try:
+            d = json.load(urllib.request.urlopen(f"https://archive.org/metadata/{ident}", timeout=60)); m = d["metadata"]; lic = str(m.get("licenseurl", "")); col = m.get("collection", []); col = [col] if isinstance(col, str) else col
+            if not any(o in lic for o in OK) or "netlabels" not in col: continue
+            c = [x for x in d["files"] if x["name"].lower().endswith(".mp3") and "_64kb" not in x["name"] and 110 <= secs(x.get("length", 0)) <= 400]; x = c[min(1, len(c) - 1)] if len(c) > 2 else c[0]; path = f"/tmp/sa/ref/{ident}.mp3"
+            urllib.request.urlretrieve(f"https://archive.org/download/{ident}/" + urllib.parse.quote(x["name"]), path); v = vec_stems(path); os.remove(path)
+            res[ident] = {"genre": base[ident]["genre"], "stems": v}; json.dump(res, open(outp, "w"), ensure_ascii=False); print(f"○ {base[ident]['genre']} {ident}"); sys.stdout.flush()
+        except Exception as e: print(f"× {ident}: {type(e).__name__} {str(e)[:80]}"); sys.stdout.flush()
+    print("STEMSDONE", len(res))
+elif sys.argv[1] == "own":     # 自分の曲を同じやり方で聞かせる: own <曲のファイル> <名前> <出力 JSON>
     json.dump({"name": sys.argv[3], "p": vec(sys.argv[2])}, open(sys.argv[4], "w"), ensure_ascii=False); print("ok", sys.argv[3])
 elif sys.argv[1] == "collect":
     outp = sys.argv[2]; lim = int(sys.argv[3]) if len(sys.argv) > 3 else 9999; res = json.load(open(outp)) if os.path.exists(outp) else {}; os.makedirs("/tmp/sa/ref", exist_ok=True); n = 0

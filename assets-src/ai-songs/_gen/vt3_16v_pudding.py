@@ -75,6 +75,10 @@ def put(name, pats, degs, phrases, key=K, o=4):
     LY.flow(bars, mel, text, name)
 
 
+# v18（2026-11-17 基本の学びなおし）: サビのためにいちばん高い音をとっておく。Aメロは音階で 3 段（4度）下げ、Bメロは 2 段下げた
+#   直す前: Aメロ 最高 77（ファ5）・中央値 72 ／ サビ 最高 77・中央値 73 で、サビが上がって聞こえなかった
+AD = [shift_deg(x, -3) for x in AD]; BD = [shift_deg(x, -2) for x in BD]
+AD[7] = "1 7, 5, 7, 5,"; AD[9] = "1 5, #7, 5, #7,"; AD[13] = "1 5, #7,"; AD[15] = "1 7, 5, 7, 5,"      # 下げたあと和音に合わなくなった音（ミ7 の上のファ、ラm7 の上のソ#、ソm7 の上のファ#）を直した
 put("Aメロ", AP, AD, A1); put("Bメロ", BP_, BD, B1); put("サビ1", CP, CD, C1, key=KC); put("Aメロ2", AP, AD, A2); put("Bメロ2", BP_, BD, B2); put("サビ2", CP, CD, C2, key=KC)
 put("Cメロ", MP, MD, M1); put("落ちサビ", CP[:8], CD[:8], C3[:4], key=KC); put("最後のサビ", CP + CP, CD + CD, C3 + C4, key=KD)
 
@@ -117,8 +121,15 @@ def saw(b, pat):
 PN = [S.track(f"ピアノ（短く切る{i + 1}）", "piano", volume=0.085, pan=-0.2 + 0.2 * i, reverb=0.15, sustain=0.5) for i in range(3)]
 PR = S.track("ピアノ（リフ）", "piano", volume=0.15, pan=-0.1, reverb=0.2, sustain=0.9)
 PR2 = S.track("ピアノ（リフの下）", "piano", volume=0.1, pan=0.1, reverb=0.2, sustain=0.9)
-GL = [S.track(f"Lギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.042, -0.6, drive=0.4)) for i in range(6)]
-GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.04, 0.6, drive=0.35)) for i in range(6)]
+import os as _os
+# v18（2026-11-17）: 左右のギターの音を marshall-mid に替え、音量を 1.6 倍にした。聞き分けモデル（AST）に前奏〜Aメロを聞かせると、これまでの jpop-rock-drive は
+#   全員で鳴らしたとき「ギター」の度合いが 0.019（ロックのお手本の 72% は 0.03 以上）で、音量を 2 倍・3 倍にしても 0.020・0.028 だった（音量ではなく音色の問題）。
+#   marshall-mid の 2 倍は 0.070・ロックへの近さ +0.18（メタル +0.13）。loud-mid-b はロック +0.35・メタル +0.32 でメタル寄りすぎるので見送り。耳での確認は人間にお願いする
+GT_TONE = _os.environ.get("GT_TONE", "marshall-mid"); GT_DRIVE = _os.environ.get("GT_DRIVE", "")      # 環境変数は音の聞きくらべ用。ふだんは使わない
+_gd = (lambda d: float(GT_DRIVE) if GT_DRIVE else (None if GT_TONE != "jpop-rock-drive" else d))
+GT_VOL = float(_os.environ.get("GT_VOL", "1.6"))
+GL = [S.track(f"Lギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.042 * GT_VOL, -0.6, tone=GT_TONE, drive=_gd(0.4))) for i in range(6)]
+GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.04 * GT_VOL, 0.6, tone=GT_TONE, drive=_gd(0.35))) for i in range(6)]
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.25))
 SAW = [S.track(f"スーパーソウの和音{i + 1}", "lead", patch="kfbSupersawWide", volume=0.024, pan=(0, 0.2, -0.45, 0.45, -0.2)[i], reverb=0.2, duck=0.6, fx=rack_supersaw()) for i in range(5)]
 PLK = S.track("駆け上がるプラック", "lead", patch="kfbSquarePluck", volume=0.05, pan=0.3, reverb=0.25, fx=rack_pluck())
@@ -261,7 +272,7 @@ if VOCAL:
     sing_ends(path, S)   # 2026-11-17 人間「歌の余韻とか音程が素人っぽく」: 句の最後の音をのばす・消え方・音程の動きを人の歌に近づける
     js = load(path)
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.4
-    for v in js.get("vocals", []): v["debreathAt"] = [[t + 0.03, 1.2] for t in [188.29, 17.24, 62.19, 210.11, 177.4, 46.47, 57.35, 111.93, 11.07, 176.57]]   # 息の点検が言った所だけ、追加で息の音を下げる（2026-11-17。全体の debreath は 0.5 のまま）
+    for v in js.get("vocals", []): v["debreathAt"] = [[t + 0.03, 1.2] for t in [188.29, 17.24, 62.19, 210.11, 177.4, 46.47, 57.35, 111.93, 11.07, 176.57, 79.43, 76.51, 79.54, 76.68, 22.30]]   # 息の点検が言った所だけ、追加で息の音を下げる（2026-11-17。全体の debreath は 0.5 のまま）
     save(path, js)
 js = load(path); drum_punch(js); save(path, js)
 final_gain(path, {"前奏": 1.5, "リフ": 1.5, "間奏": 1.0, "サビ1": 0.5, "サビ2": 0.8, "Cメロ": -3.5, "落ちサビ": -5.0, "最後のサビ": 2.2, "おわり": 2.5})   # v11: ピアノだけの Cメロ・落ちサビがサビより大きかった・前奏が小さかった・最後のサビを山に

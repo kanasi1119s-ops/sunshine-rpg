@@ -22,13 +22,16 @@ TYPES = {
  "プラック（はじいて減る音）": "pluckSynth glassPluck modernPluck kawaiiArp surgePopcorn surgeNicePluck surgeWaveguide surgeGuzheng surgeRetroWave surgeConvex surgeWoody surgeFriendly surgeMixedFeelings surgeChordPluckCharacter pizzicato folkHarp surgeTropics surgeDnaSeq",
  "パッド（ゆっくり広がる音）": "warmPad newAge halo sweep metalPad bowedGlass modernPad kfbSparklePad surgePadHineVertigo surgePadNeverending surgePadSparkly surgePadVerbPad surgePadCrystals surgePadNewtonWasEvil surgePadStringPad surgePadMwPulsating surgePadBellPad surgePadBright surgePadFifths6 surgePadClassicStrings surgePadBowed surgePadPad2Mw atmosphere synthStrings1 synthStrings2 slowStrings soundtrack goblin echoDrops",
  "シンセベース": "synthBass1 synthBass2 reeseBass modernBass kfbGrowlBass kfbNeuroBass kfbFmBass surgeBassPasty surgeBassAnalogBassImaged surgeBassCatBass surgeBassWarmSquare surgeBassEmulation surgeBassPop surgeBassModernDirtyFat bassLead",
- "生のベース": "acousticBass fretlessBass slapBass",
+ "生のベース": "acousticBass fretlessBass slapBass inst:bass",
  "ギター（録音の音）": "nylonGuitar steelGuitar jazzGuitar cleanGuitar mutedGuitar strumstick",
- "弦（バイオリンなど）": "violin viola cello contrabass stringEnsemble stringsSpiccato stringsTremolo",
+ "弦（バイオリンなど）": "violin viola cello contrabass stringEnsemble stringsSpiccato stringsTremolo inst:strings",
  "金管": "trumpet trombone tuba horn brassSection mutedTrumpet synthBrass1 synthBrass2",
  "木管・サックス・笛": "oboe bassoon clarinet piccolo flute tinWhistle tenorSax altoSax bariSax kfbFutureSax",
  "オルガン・リード楽器": "churchOrgan reedOrgan percussiveOrgan rockOrgan kfbCharmOrgan accordion harmonica",
  "声に似せたシンセ": "vocalChop voiceLeadModern kfbFormantLead",
+ "ピアノ": "inst:piano inst:keys",
+ "エレキギター（クリーン）": "inst:egClean inst:guitar",
+ "エレキギター（歪み）": "inst:egJpopDrive inst:egLoudMid inst:egMarshall inst:egElectroRock inst:egWarmLead inst:leadGuitar",
 }
 TYPE_OF = {p: t for t, s in TYPES.items() for p in s.split()}
 
@@ -93,7 +96,7 @@ class Table:
         self.tb = tb; self.names = list(tb["patches"])
         def mat(key, keys): return np.array([[tb["patches"][n][key].get(k, 0.0) for k in keys] for n in self.names])
         self.F = mat("c4", KEYS_F); self.mu = self.F.mean(0); self.sd = self.F.std(0) + 1e-6
-        self.H = {k: mat(k, KEYS_H) for k in ("c4", "c3", "c5")}; self.muH = self.H["c4"].mean(0); self.sdH = self.H["c4"].std(0) + 1e-6
+        self.H = {k: mat(k, KEYS_H) for k in (("c4s", "c3", "c5", "g3", "g4") if tb.get("layout") == 2 else ("c4", "c3", "c5"))}; self.H.setdefault("c4", self.H.get("c4s")); self.muH = self.H["c4"].mean(0); self.sdH = self.H["c4"].std(0) + 1e-6
         E = tb.get("emb", {}); self.en = [n for n in self.names if n in E]
         if self.en:
             X = np.array([E[n] for n in self.en]); self.emu = X.mean(0); self.esd = X.std(0) + 1e-6; X = (X - self.emu) / self.esd; self.EX = X / np.linalg.norm(X, axis=1, keepdims=True)
@@ -105,7 +108,7 @@ class Table:
         keys = KEYS_F if full else KEYS_H; w = np.array([WEIGHT[q] for q in keys]); v = np.array([fp.get(q, 0.0) for q in keys])
         if full: D = np.sqrt((((self.F - v) / self.sd) ** 2 * w).sum(1) / w.sum())
         else:
-            regs = [reg] if reg else ["c3", "c4", "c5"]; D = np.min([np.sqrt((((self.H[r] - v) / self.sdH) ** 2 * w).sum(1) / w.sum()) for r in regs], axis=0)
+            regs = [reg] if reg else list(self.H); D = np.min([np.sqrt((((self.H[r] - v) / self.sdH) ** 2 * w).sum(1) / w.sum()) for r in regs], axis=0)
         order = [i for i in np.argsort(D) if self.names[i] != skip][:k]
         return [(self.names[i], float(D[i]), TYPE_OF.get(self.names[i], "そのほか")) for i in order]
     def vote(self, nn):
@@ -115,7 +118,8 @@ class Table:
 
 COARSE = {"プラック（はじいて減る音）": "打って減る音", "ベル・鉄琴・オルゴール": "打って減る音", "エレピ・FM の鍵盤": "打って減る音", "ギター（録音の音）": "打って減る音",
           "のこぎり波のシンセ（リード・スーパーソウ）": "のびるシンセ", "矩形波・パルス波のシンセ": "のびるシンセ", "サイン波に近い丸い音": "のびるシンセ", "声に似せたシンセ": "のびるシンセ",
-          "パッド（ゆっくり広がる音）": "パッド", "シンセベース": "ベース", "生のベース": "ベース", "弦（バイオリンなど）": "生楽器ののびる音", "金管": "生楽器ののびる音", "木管・サックス・笛": "生楽器ののびる音", "オルガン・リード楽器": "生楽器ののびる音"}
+          "パッド（ゆっくり広がる音）": "パッド", "シンセベース": "ベース", "生のベース": "ベース", "弦（バイオリンなど）": "生楽器ののびる音", "金管": "生楽器ののびる音", "木管・サックス・笛": "生楽器ののびる音", "オルガン・リード楽器": "生楽器ののびる音",
+          "ピアノ": "打って減る音", "エレキギター（クリーン）": "打って減る音", "エレキギター（歪み）": "歪んだギター"}
 
 def describe(fp):
     """指紋を言葉にする（決まりで言い切れる分だけ。聞き分けの表は使わない）"""
@@ -133,6 +137,63 @@ def describe(fp):
         if fp["width"] >= -10: d.append("左右に広い")
     if fp["noise"] >= -4: d.append("倍音からはずれた音が多い（金属っぽい・ざらついた・重ねた音）")
     return d
+
+PITCH2 = {"g3": (196.00, 2.5, 3.0), "c3": (130.81, 3.0, 3.5), "g4": (392.00, 3.5, 4.0), "c5": (523.25, 4.0, 4.5)}     # 見本 2 の 1 こま: ド4 を 2 秒 → ソ3・ド3・ソ4・ド5 → ド4 短い音 → ド4 弱く → ド4 強く
+SEMI = {"c3": 48, "g3": 55, "c4": 60, "g4": 67, "c5": 72}
+
+def cmd_learn2(folder, outp):
+    """見本 2（高さ 5 つ・強さ 3 つ）から表を作る"""
+    tb = {"layout": 2, "patches": {}}
+    for nf in sorted(glob.glob(os.path.join(folder, "pt*.names"))):
+        wav = nf[:-6] + ".wav"
+        if not os.path.exists(wav): continue
+        x, sr = sf.read(wav); names = json.load(open(nf))
+        for i, n in enumerate(names):
+            o = i * SLOT; seg = x[int(o * sr):int((o + SLOT) * sr)]
+            if len(seg) < sr * 3 or np.abs(seg).max() < 1e-4: print("  音が出ていない:", n); continue
+            c4 = fingerprint(seg, sr, 261.63, 0.0, 2.0)
+            if c4 is None: continue
+            e = {"c4": c4, "type": TYPE_OF.get(n, "そのほか"), "c4s": fingerprint(seg, sr, 261.63, 0.0, 0.5, False) or c4}    # c4s: ド4 のはじめ 0.5 秒だけ（短い音どうしでくらべるため）
+            for k, (f0, a, b) in PITCH2.items(): e[k] = fingerprint(seg, sr, f0, a, b, False) or c4
+            for k, a, b in (("soft", 5.0, 5.5), ("hard", 5.5, 6.0)):
+                fp = fingerprint(seg, sr, 261.63, a, b, False) or c4; m = seg[int(a * sr):int(b * sr)].mean(1) if seg.ndim > 1 else seg[int(a * sr):int(b * sr)]; fp["level"] = float(20 * np.log10(np.sqrt(np.mean(m ** 2)) + 1e-9)); e[k] = fp
+            tb["patches"][n] = e
+    old = json.load(open(outp)).get("emb", {}) if os.path.exists(outp) and json.load(open(outp)).get("layout") == 2 else {}
+    tb["emb"] = {n: old[n] for n in tb["patches"] if n in old}; todo = [n for n in tb["patches"] if n not in tb["emb"]]
+    if todo:
+        import librosa
+        for nf in sorted(glob.glob(os.path.join(folder, "pt*.names"))):
+            names = json.load(open(nf))
+            if not any(n in todo for n in names): continue
+            x, sr = sf.read(nf[:-6] + ".wav"); mono = librosa.resample(x.mean(1).astype(np.float32), orig_sr=sr, target_sr=16000)
+            for i, n in enumerate(names):
+                if n in todo: tb["emb"][n] = [round(float(v), 3) for v in embed(mono[int(i * SLOT * 16000):int((i * SLOT + 6.5) * 16000)])]
+            json.dump(tb, open(outp, "w"), ensure_ascii=False)
+    json.dump(tb, open(outp, "w"), ensure_ascii=False); print("指紋を取った音色:", len(tb["patches"]), "・埋め込み:", len(tb["emb"]))
+
+def cmd_eval2(tp):
+    """見本 2 の当たり具合: ①種類（1 つ抜き）②高さを変えて（その高さを表から抜いて、ほかの高さの指紋に当てる）③強さを変えて"""
+    T = Table(json.load(open(tp))); P = T.tb["patches"]; names = T.names; w = np.array([WEIGHT[q] for q in KEYS_H])
+    cmd_eval(tp)
+    def vecH(fp): return np.array([fp.get(q, 0.0) for q in KEYS_H])
+    allp = ["c3", "g3", "c4", "g4", "c5"]; M = {k: np.array([vecH(P[n]["c4s" if k == "c4" else k]) for n in names]) for k in allp}; sd = M["c4"].std(0) + 1e-6
+    def test(q, use):
+        hit = t3 = ty = 0
+        for i, n in enumerate(names):
+            v = vecH(P[n][q] if q in allp else P[n][q]); D = np.min([np.sqrt((((M[u] - v) / sd) ** 2 * w).sum(1) / w.sum()) for u in use], axis=0); o = np.argsort(D)[:5]
+            hit += names[o[0]] == n; t3 += n in [names[j] for j in o[:3]]; sc = {}
+            for r, j in enumerate(o):
+                tj = TYPE_OF.get(names[j]);
+                if tj: sc[tj] = sc.get(tj, 0) + 1 / (r + 1)
+            ty += bool(sc) and max(sc, key=sc.get) == TYPE_OF.get(n)
+        return 100 * hit / len(names), 100 * t3 / len(names), 100 * ty / len(names)
+    print("■ 高さを変えて確かめる（倍音の形だけ。答える音の高さは表から抜く）")
+    for q in ("c3", "g3", "g4", "c5"):
+        near2 = sorted([u for u in allp if u != q], key=lambda u: abs(SEMI[u] - SEMI[q]))[:2]; a = test(q, ["c4"]); b = test(q, near2)
+        print(f"    {q}: ド4 の指紋だけに当てる → 同じ音色が 1 位 {a[0]:.0f}%・3 位まで {a[1]:.0f}%・種類 {a[2]:.0f}% ／ 近い高さ 2 つ（{'・'.join(near2)}）に当てる → 1 位 {b[0]:.0f}%・3 位まで {b[1]:.0f}%・種類 {b[2]:.0f}%")
+    print("■ 強さを変えて確かめる（弱く・強くひいたド4 を、ふつうのド4 の指紋に当てる）")
+    for q in ("soft", "hard"):
+        a = test(q, ["c4"]); print(f"    {'弱く' if q == 'soft' else '強く'}: 同じ音色が 1 位 {a[0]:.0f}%・3 位まで {a[1]:.0f}%・種類 {a[2]:.0f}%")
 
 def cmd_learn(folder, outp):
     tb = {"patches": {}}
@@ -239,6 +300,8 @@ def cmd_what(tp, path, stem=None):
 if __name__ == "__main__":
     c = sys.argv[1]
     if c == "learn": cmd_learn(sys.argv[2], sys.argv[3])
+    elif c == "learn2": cmd_learn2(sys.argv[2], sys.argv[3])
+    elif c == "eval2": cmd_eval2(sys.argv[2])
     elif c == "eval": cmd_eval(sys.argv[2])
     elif c == "what":
         if len(sys.argv) > 4 and "," in sys.argv[4]:      # 分けた音をいくつも: 1 回だけ分けて、順に答える
