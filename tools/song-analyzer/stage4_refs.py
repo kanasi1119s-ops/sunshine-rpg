@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+"""お手本の曲に 4 段階目（聞き分け）をかけて、ジャンルごとの「楽器・声・音の種類・ふんいき」の出方を集める（2026-11-17）。
+使い方: python3 tools/song-analyzer/stage4_refs.py collect <出力 JSON> [最大の曲数]   … カルテのあるお手本を 1 曲ずつ取ってきて聞かせ、音は消す（途中からやり直せる）
+        python3 tools/song-analyzer/stage4_refs.py table <集めた JSON> [自分の曲の stage4 の結果 JSON …]   … ジャンルごとの表と、自分の曲がどのジャンルに近いか
+決まりは collect_ia.py と同じ（CC BY・CC BY-SA・CC0、netlabels の集まり、音は聞かせたら消す）。保存するのは 527 種類のうち表に出す名前の「度合い」だけ。
+速さのため、曲全体だけを 20 秒おきに 10 秒ずつ聞かせる（分けた音ごとの中身は stage4.py で 1 曲ずつ）。"""
+import sys, os, json, glob, urllib.request, urllib.parse, warnings
+warnings.filterwarnings("ignore")
+import numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import stage4 as S
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."); KD = os.path.join(ROOT, "docs/sound/karte")
+OK = ("creativecommons.org/licenses/by/", "creativecommons.org/licenses/by-sa/", "creativecommons.org/publicdomain/zero/")
+NAMES = sorted({en for tb in S.GROUPS.values() for en in tb} | {"Music", "Musical instrument", "Music for children", "Song"})
+GJ = {"pop": "ポップ", "rock": "ロック", "metal": "メタル", "funk": "ファンク", "dance": "ダンス", "electronic": "エレクトロニクス", "vocaloid": "ボカロ", "other": "そのほか"}
+def secs(x):
+    try:
+        if ":" in str(x): p = [float(q) for q in str(x).split(":")]; return sum(v * 60 ** i for i, v in enumerate(reversed(p)))
+        return float(x)
+    except Exception: return 0
+def vec(path):
+    import librosa
+    y, sr = librosa.load(path, sr=16000, mono=True); ts, P, lab, L = S.listen(y, 16000, hop=20.0)
+    w = (L > L.max() - 25).astype(float); m = (P * w[:, None]).sum(0) / max(1.0, w.sum())
+    return {en: round(float(m[lab.index(en)]), 4) for en in NAMES if en in lab}
+if sys.argv[1] == "collect":
+    outp = sys.argv[2]; lim = int(sys.argv[3]) if len(sys.argv) > 3 else 9999; res = json.load(open(outp)) if os.path.exists(outp) else {}; os.makedirs("/tmp/sa/ref", exist_ok=True); n = 0
+    for f in sorted(glob.glob(os.path.join(KD, "ref-*.karte.json"))):
+        src = json.load(open(f)).get("source")
+        if not src: continue
+        ident = src["url"].split("/")[-1]
+        if ident in res: continue
+        if n >= lim: break
+        n += 1
+        try:
+            d = json.load(urllib.request.urlopen(f"https://archive.org/metadata/{ident}", timeout=60)); m = d["metadata"]; lic = str(m.get("licenseurl", "")); col = m.get("collection", []); col = [col] if isinstance(col, str) else col
+            if not any(o in lic for o in OK) or "netlabels" not in col: print(f"× {ident}: 条件に合わない"); continue
+            c = [x for x in d["files"] if x["name"].lower().endswith(".mp3") and "_64kb" not in x["name"] and 110 <= secs(x.get("length", 0)) <= 400]
+            if not c: print(f"× {ident}: 曲がない"); continue
+            x = c[min(1, len(c) - 1)] if len(c) > 2 else c[0]; path = f"/tmp/sa/ref/{ident}.mp3"
+            urllib.request.urlretrieve(f"https://archive.org/download/{ident}/" + urllib.parse.quote(x["name"]), path)
+            v = vec(path); os.remove(path)
+            res[ident] = {"genre": src["genre"], "license": lic, "url": src["url"], "p": v}; json.dump(res, open(outp, "w"), ensure_ascii=False)
+            print(f"○ {src['genre']} {ident}"); sys.stdout.flush()
+        except Exception as e: print(f"× {ident}: {type(e).__name__} {str(e)[:80]}"); sys.stdout.flush()
+    print("COLLECTDONE", len(res))
+else:
+    res = json.load(open(sys.argv[2])); gen = sorted({r["genre"] for r in res.values()}, key=lambda g: list(GJ).index(g) if g in GJ else 99)
+    def med(g, en): return float(np.median([r["p"].get(en, 0) for r in res.values() if r["genre"] == g]))
+    print(f"# お手本 {len(res)} 曲に聞き分けモデル（AST）を聞かせた結果\n")
+    print("度合いは 0〜1。全体に小さく出るので、順番と、ジャンルどうしのくらべで読む。数字はジャンルの中央値。\n")
+    for gname, tb in S.GROUPS.items():
+        rows = [(ja, [med(g, en) for g in gen]) for en, ja in tb.items()]; rows = [r for r in rows if max(r[1]) >= 0.02]; rows.sort(key=lambda r: -max(r[1]))
+        print(f"## {gname}\n\n| 名前 | " + " | ".join(f"{GJ.get(g, g)}（{sum(1 for r in res.values() if r['genre'] == g)}）" for g in gen) + " |\n|---|" + "---|" * len(gen))
+        for ja, v in rows[:22]: print(f"| {ja} | " + " | ".join(("**%.2f**" % x) if x == max(v) and x >= 0.03 else "%.2f" % x for x in v) + " |")
+        print()
+    # 自分の曲: どのジャンルのお手本に近いか（度合いの対数で、まん中の形とのコサインの近さ）
+    def lv(p): return np.log(np.array([p.get(en, 0) for en in NAMES]) + 0.005)
+    cen = {g: np.median([lv(r["p"]) for r in res.values() if r["genre"] == g], axis=0) for g in gen}; allm = np.mean(list(cen.values()), axis=0)
+    def near(p):
+        a = lv(p) - allm; return sorted(((float(np.dot(a, cen[g] - allm) / (np.linalg.norm(a) * np.linalg.norm(cen[g] - allm) + 1e-9)), g) for g in gen), reverse=True)
+    # 当たり具合: お手本の 1 曲を抜いて、残りで作ったまん中に当てる
+    hit = 0; tot = 0
+    for k, r in res.items():
+        c2 = {g: np.median([lv(q["p"]) for kk, q in res.items() if q["genre"] == g and kk != k], axis=0) for g in gen if sum(1 for kk, q in res.items() if q["genre"] == g and kk != k) >= 3}
+        if r["genre"] not in c2: continue
+        am = np.mean(list(c2.values()), axis=0); a = lv(r["p"]) - am
+        best = max(c2, key=lambda g: np.dot(a, c2[g] - am) / (np.linalg.norm(a) * np.linalg.norm(c2[g] - am) + 1e-9)); hit += best == r["genre"]; tot += 1
+    print(f"## ジャンルの当たり具合（お手本を 1 曲ずつ抜いて確かめた）\n\n{tot} 曲のうち {hit} 曲（{100 * hit / max(1, tot):.0f}%）で、つけてあるジャンルと同じ答えになった。\n")
+    for jp in sys.argv[3:]:
+        o = json.load(open(jp)); p = o.get("p") or {}
+        if not p: continue
+        print(f"## 自分の曲: {o.get('name', os.path.basename(jp))}\n\n近いジャンル: " + "・".join(f"{GJ.get(g, g)} {s:+.2f}" for s, g in near(p)[:4]) + "\n")
