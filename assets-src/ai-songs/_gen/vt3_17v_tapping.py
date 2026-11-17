@@ -116,7 +116,7 @@ def riff(b, i, ch=None):
 
 CLEAN = dict(di="emily", stringNoise=True, amp="jpopClean", ampDrive=0.12, chorus=0, humanPitch=0, noScoop=True, powerChord=False, sustain=1.3, release=0.5)
 GFX = [{"type": "filter", "kind": "highpass", "freq": 110, "q": 0.7}, {"type": "eq", "low": -1, "mid": 1.5, "midHz": 1800, "high": 1}, {"type": "room", "mix": 0.1}]
-TAP = S.track("タッピングのギター（クリーン）", "distGuitar", volume=0.135, pan=-0.2, fx=GFX + [{"type": "pingpong", "beats": 0.75, "mix": 0.14, "feedback": 0.25}], legato=True, **CLEAN)
+TAP = S.track("タッピングのギター（クリーン）", "distGuitar", volume=0.8, pan=-0.2, fx=GFX + [{"type": "pingpong", "beats": 0.75, "mix": 0.14, "feedback": 0.25}], legato=True, **CLEAN)
 LEAD = S.track("リードギター", "distGuitar", **lead_gtr_spec(0.12, 0.15))
 PN = [S.track(f"エレピ（短く切る{i + 1}）", "keys", patch="kfbGlassEp", volume=0.075, pan=0.1 + 0.15 * i, reverb=0.15, sustain=0.5) for i in range(3)]
 PL = S.track("エレピ（のばす）", "keys", patch="kfbGlassEp", volume=0.11, pan=0.0, reverb=0.25, sustain=1.5)
@@ -268,4 +268,4 @@ if VOCAL:
     for v in js.get("vocals", []): v["debreathAt"] = [[t + 0.03, 1.2] for t in [60.89, 252.1, 206.34, 249.98, 102.02, 133.61, 106.24, 21.79]]   # 息の点検が言った所だけ、追加で息の音を下げる（2026-11-17。全体の debreath は 0.5 のまま）
     save(path, js)
 js = load(path); drum_punch(js); save(path, js)
-final_gain(path, {"前奏": 3.5, "ドロップ": 1.5, "ドロップ2": 1.5, "Aメロ2": -1.0, "Bメロ2": -0.8, "Cメロ": -2.5, "ギターの番": -0.5, "落ちサビ": -1.5, "最後のサビ": 1.8, "おわり": 1.0})   # v4: タッピングひとりの出だしが小さかった・Aメロ2 がサビ1 より大きかった・最後のサビを山に
+final_gain(path, {"ドロップ": 0.5, "ドロップ2": 1.0, "Aメロ2": -1.0, "Bメロ2": -0.8, "Cメロ": -2.0, "ギターの番": -0.5, "落ちサビ": -1.5, "最後のサビ": 1.8, "おわり": 1.0})   # v4: タッピングひとりの出だしが小さかった・Aメロ2 がサビ1 より大きかった・最後のサビを山に

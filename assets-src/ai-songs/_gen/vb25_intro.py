@@ -39,6 +39,17 @@ gdb[E > hi_] = -(E[E > hi_] - hi_)
 gdb[E < lo_] = np.minimum(MAX, lo_ - E[E < lo_])
 gdb[E < ref - 45] = 0.0                           # 無音（曲の頭の空白など）は上げない
 gdb = np.clip(gdb, -CUT, MAX)
+# 2026-11-17 人間（17 v8）「前奏のタッピングが急激に小さい音になるのって不自然」「こういうの以前からあった」「今後絶対にやらないように」:
+#   ひとりで始まる楽器を +15dB まで持ち上げ、ほかの楽器が入った所で持ち上げをやめていた（17 では 3 秒のあいだに 13.7dB 下げていた）。
+#   鳴りつづけている楽器は、その分だけ急に小さく聞こえる。→ 仕上げの持ち上げは LIFT_MAX dB まで、しかも「あとで下げることになる持ち上げ」はしない
+#   （前奏の中で、うしろの持ち上げより大きくは上げない）。下げるほうも、1 秒に 0.6dB より速くは下げない（手前から少しずつ）。
+#   小さすぎる前奏は、仕上げではなく、その楽器そのものの音量（パートの volume）で直す。たしかめ: tools/vt3/gain_step_check.py
+LIFT_MAX = 1.5
+lift = np.minimum(np.maximum(gdb, 0), LIFT_MAX); lift = np.minimum.accumulate(lift[::-1])[::-1]
+cut = np.minimum(gdb, 0)
+for i in range(len(cut) - 2, -1, -1): cut[i] = min(cut[i], cut[i + 1] + 0.06)
+cut = np.maximum(cut, -CUT)
+gdb = lift + cut
 s = 8
 gdb = np.convolve(np.pad(gdb, (s, s), mode="edge"), np.ones(s) / s, mode="same")[s:-s]   # 1.5秒でなめらかに
 r = min(nI, 4)   # 2026-10-26: 1.2秒かけて戻すと、前奏の最後の山がそのまま残った → 0.4秒

@@ -5,7 +5,10 @@
 # 場面の頭は 0.6 秒、終わりは 0.8 秒でなめらかに戻す（ミックスの人がフェーダーを動かすのと同じ）
 import sys, json, numpy as np, soundfile as sf
 from scipy.signal import butter, sosfilt
-DROP, KEEP, MAX = 3.5, 2.0, 8.0
+DROP, KEEP, MAX = 3.5, 2.0, 1.5
+# 2026-11-17 人間（17）「急激に小さい音になるのって不自然」「今後絶対にやらないように」: これまで MAX は 8.0 で、静かな場面（落ちサビなど）の頭を最大 +8dB 持ち上げ、
+#   4 秒かけて戻していた（17 v9 の落ちサビでは、歌っている最中に 8dB 下がっていた）。持ち上げて、あとで下げるのは、鳴りつづけている音が急に小さく聞こえる原因。
+#   → 持ち上げは 1.5dB まで。小さすぎる場面は、仕上げではなく編曲（パートの音量・楽器の数）で直す。たしかめ: tools/vt3/gain_step_check.py
 LIFT = ("verse", "pre", "chorus", "solo", "interlude", "build", "drop")
 p, sp = sys.argv[1], sys.argv[2]
 x, sr = sf.read(p, always_2d=True)

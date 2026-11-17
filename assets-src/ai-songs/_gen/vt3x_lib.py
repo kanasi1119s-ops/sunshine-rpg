@@ -410,6 +410,14 @@ def final_gain(path, gains):
     """場面ごとの仕上げの大きさ（dB）。仕上げのいちばん最後に、歌も伴奏もいっしょに上げ下げする（v3_finish.sh が .gain を読む）。
     測ってから決める: サビ1 < サビ2 < 最後のサビ、Aメロ・Bメロ・間奏はサビより下、前奏は小さすぎない（最初の Aメロより 4dB 以上小さくしない）"""
     json.dump(gains, open(path + ".gain", "w"), ensure_ascii=False); print("  仕上げの大きさ:", gains)
+    # 2026-11-17 人間「前奏のタッピングが急激に小さい音になる」「今後絶対にやらないように」: 場面の変わり目で全体を 1.5dB より大きく下げると、
+    #   鳴りつづけている楽器が急に小さく聞こえる。下がる変わり目を知らせる（楽器が入れかわる場面でなければ、パートの音量で作り直す）
+    try:
+        secs = json.load(open(path + ".secs")); nm_ = [s_["name"] for s_ in secs]
+        for a_, b_ in zip(nm_, nm_[1:]):
+            d_ = gains.get(b_, 0.0) - gains.get(a_, 0.0)
+            if d_ < -1.5 and not b_.startswith("_"): print(f"  ★ 仕上げの大きさが下がる変わり目: {a_} → {b_}  {d_:+.1f}dB（鳴りつづける楽器があるなら、パートの音量で作る）")
+    except Exception: pass
 
 
 def set_parts(path, match, **kw):
