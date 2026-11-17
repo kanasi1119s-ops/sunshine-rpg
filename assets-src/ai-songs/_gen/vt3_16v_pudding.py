@@ -258,8 +258,10 @@ if VOCAL:
     chops(path, S, cb, vol=0.36, pan=-0.15)
     voice_by_scene(path, S, {}, default="cute")
     js = load(path)
+    sing_ends(path, S)   # 2026-11-17 人間「歌の余韻とか音程が素人っぽく」: 句の最後の音をのばす・消え方・音程の動きを人の歌に近づける
+    js = load(path)
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.4
-    for v in js.get("vocals", []): v["debreathAt"] = [[t + 0.03, 1.2] for t in [188.29, 17.24, 62.19, 210.11, 177.4, 46.47, 57.35, 111.93]]   # 息の点検が言った所だけ、追加で息の音を下げる（2026-11-17。全体の debreath は 0.5 のまま）
+    for v in js.get("vocals", []): v["debreathAt"] = [[t + 0.03, 1.2] for t in [188.29, 17.24, 62.19, 210.11, 177.4, 46.47, 57.35, 111.93, 11.07, 176.57]]   # 息の点検が言った所だけ、追加で息の音を下げる（2026-11-17。全体の debreath は 0.5 のまま）
     save(path, js)
 js = load(path); drum_punch(js); save(path, js)
 final_gain(path, {"前奏": 4.2, "リフ": 2.0, "間奏": 1.3, "サビ1": 0.5, "サビ2": 0.8, "Cメロ": -4.5, "落ちサビ": -5.0, "最後のサビ": 2.2, "おわり": 2.5})   # v11: ピアノだけの Cメロ・落ちサビがサビより大きかった・前奏が小さかった・最後のサビを山に

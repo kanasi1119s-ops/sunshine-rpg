@@ -184,12 +184,20 @@ def pitch_curve(events, total, rng, vdef):
         ps, pe, pm = pv["s"], pv["e"], pv["m"]; s, e, m = ev["s"], ev["e"], ev["m"]
         if s - pe > 0.25 or pm == m: continue
         g = min(0.13, 0.45 * (e - s), 0.45 * (pe - ps)) * (1.0 + 0.04 * min(abs(m - pm), 7))
+        GF = float(vdef.get("glideFloor", 0.0))   # 2026-11-17 人間「音程が素人っぽく」: 短い音でも、音程の移りにこれだけの時間はかける（秒。前後の音の長さの 6 割まで）
+        if GF > 0: g = max(g, min(GF, 0.6 * (e - s), 0.6 * (pe - ps)))
         g *= float(vdef.get("glide", 1.0))   # 2026-10-26 人間「歌がもっと滑らかだといい」: 音と音の間の高さの移り方をゆっくりにする（1＝そのまま）
         a, b = s - 0.45 * g, s + 0.55 * g
         sel = (t >= a) & (t < b + 0.12)
         x = np.clip((t[sel] - a) / (b - a), 0, 1)
         sm = x * x * (3 - 2 * x)
-        over = 0.06 * (m - pm) * np.exp(-np.clip((t[sel] - b), 0, None) / 0.05) * (t[sel] > b)
+        # 2026-11-17 人間「音程が素人っぽく」: お手本の人の歌（曲から歌を分けて測った 5 曲）は、音が変わったあと 25〜36% 行きすぎてから戻る。
+        #   これまでは 6% で、機械のように「カクッ」と止まっていた。"humanPitch": 0〜1 で 6% → 最大 24%（1 半音まで）。使う曲だけ
+        HP = float(vdef.get("humanPitch", 0.0)); ovk = 0.06 + 0.18 * HP
+        ln_ = np.clip(((e - s) - 0.12) / 0.3, 0.25, 1.0) if HP > 0 else 1.0     # 短い音では行きすぎを小さく（短い音で大きく行きすぎると、音程が外れて聞こえる）
+        ovv = np.sign(m - pm) * min(abs(ovk * (m - pm)), 0.06 * abs(m - pm) + 0.45 * HP) * (ln_ if HP > 0 else 1.0)
+        ovv = np.sign(m - pm) * max(abs(ovv), 0.06 * abs(m - pm))
+        over = ovv * np.exp(-np.clip((t[sel] - b), 0, None) / (0.05 + 0.02 * HP * ln_)) * (t[sel] > b)
         out[sel] = pm + (m - pm) * sm + over
     vibfree = None; vibarr = np.zeros(n)
     for ev in events:
@@ -247,6 +255,25 @@ def pitch_curve(events, total, rng, vdef):
         out += (k - 1) * vibarr * au
     drift = np.convolve(rng.standard_normal(n), np.ones(80) / 80, mode="same") * 0.35
     pitch_curve.vibpart = vibarr
+    HP = float(vdef.get("humanPitch", 0.0))
+    if HP > 0:
+        # 音の中のこまかいゆれ（2026-11-17）: お手本の人の歌は、音の中で 17〜34 セントゆれている（自分の歌は 7〜10 セントで、まっすぐすぎた）。
+        #   ・ゆっくりしたふらつき（1〜3Hz）・のどのふるえ（5〜6Hz のごく浅いゆれ。音ごとに大きさが違う）・こまかいざらつき（8Hz より上）
+        r2 = np.random.default_rng(int(rng.integers(1 << 30)))
+        def band(lo, hi):
+            w = r2.standard_normal(n); sos = signal.butter(2, [lo * 2 * FP / 1000, hi * 2 * FP / 1000], "band", output="sos"); y = signal.sosfiltfilt(sos, w); return y / (np.std(y) + 1e-9)
+        slow = band(0.8, 3.0) * 0.09; fine = band(8.0, 20.0) * 0.04
+        mv = np.zeros(n)
+        for ev in events:
+            d = ev["e"] - ev["s"]
+            if d < 0.18: continue
+            sel = (t >= ev["s"]) & (t < ev["e"]); tt_ = t[sel] - ev["s"]
+            a_ = r2.uniform(0.06, 0.17) * min(1.0, d / 0.4); f_ = r2.uniform(5.0, 6.3); ph_ = r2.uniform(0, 6.28)
+            mv[sel] += a_ * np.clip(tt_ / 0.12, 0, 1) * np.sin(2 * np.pi * f_ * tt_ + ph_)
+        lw = np.ones(n)                                    # 短い音（0.3 秒より短い）ではゆれを半分に
+        for ev in events:
+            if ev["e"] - ev["s"] < 0.3: lw[(t >= ev["s"]) & (t < ev["e"])] = 0.5
+        out = out + HP * ((slow + fine) * lw + mv)
     return t, out + drift
 
 def interp_map(mp, x, default):
@@ -547,6 +574,7 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1, tempo=None, bea
         if p["head"] and cur: phrases.append(cur); cur = []
         cur.append(i)
     if cur: phrases.append(cur)
+    rel_rng = np.random.default_rng(seed + 7717)
     for ph in phrases:
         items = []   # (k0, params, env)
         for i in ph:
@@ -556,7 +584,14 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1, tempo=None, bea
             joined = nxt is not None and not nxt["head"]
             LG = float(vdef.get("legato", 0.0))   # 2026-10-26: つなぎ目の重ね（秒）を足して、前の音の母音から次の音へなめらかに移る
             if joined: b = nxt["start"] - nxt["pre"] + nxt["ovl"] + LG
-            else: b = p["end"] + 0.12          # フレーズの終わりは、母音をそのまま自然に消す（息の音を足すと「ふっ」と引っかかるため）
+            ER = float(vdef.get("endRelease", 0.0)); ext_ = 0.12
+            if not joined and ER > 0:
+                # 2026-11-17 人間「歌の余韻が素人っぽく」: 句の終わりが、どの音も同じ 0.1 秒で切れていた（測ると 97〜100 ミリ秒で全部同じ）。
+                #   のばした音ほど長く、句ごとに少しずつ違う長さで消えるようにする（"endRelease": 0〜1。使う曲だけ）
+                dl_ = min((p["end"] - p["start"]) / 0.8, 1.0)
+                ext_ = 0.12 + ER * (0.06 + 0.20 * dl_) * rel_rng.uniform(0.75, 1.3)
+            if joined: pass
+            else: b = p["end"] + ext_          # フレーズの終わりは、母音をそのまま自然に消す（息の音を足すと「ふっ」と引っかかるため）
             b = max(b, a + 0.05)
             k0 = int(round(a * 1000 / FP)); k1 = int(round(b * 1000 / FP))
             ft = hz[np.clip(np.arange(k0, k1), 0, NF - 1)]
@@ -570,7 +605,7 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1, tempo=None, bea
             hf_ = float(vdef.get("headFade", 0.02)) if p["lyric"] in VOWEL_HEADS else 0.02
             fi = max(1, int(round(((p["ovl"] + LG) if not p["head"] else hf_) * 1000 / FP)))
             fi = min(fi, n); env[:fi] = np.sin(np.linspace(0, np.pi / 2, fi + 1)[1:]) ** 2
-            fo = max(1, int(round(((nxt["ovl"] + LG) if joined else 0.20) * 1000 / FP))); fo = min(fo, n)
+            fo = max(1, int(round(((nxt["ovl"] + LG) if joined else (0.20 + (ext_ - 0.12) * 1.6)) * 1000 / FP))); fo = min(fo, n)
             env[n - fo:] *= np.cos(np.linspace(0, np.pi / 2, fo + 1)[:-1]) ** 2
             items.append((k0, pr, env))
             if not joined and vdef.get("tails", False):
@@ -633,6 +668,17 @@ def build_vocal(vdef, bpm, bank, sr_out, total_sec=None, seed=1, tempo=None, bea
         out[n0:n0 + m] += y[:m]
     # 人間らしい音量のゆれ: 長い音は少しふくらんでから引く。ビブラートに合わせてわずかに大きさもゆれる
     amp = np.ones(len(t))
+    ED = float(vdef.get("endDecay", 0.0))   # 句の最後の音を、後ろ半分でだんだん小さく（dB。2026-11-17。使う曲だけ）
+    ends_ = []
+    for i_, ev in enumerate(events):
+        nx_ = events[i_ + 1] if i_ + 1 < len(events) else None
+        if nx_ is None or nx_["s"] - ev["e"] > 0.2:
+            ends_.append((ev["s"], ev["e"], (nx_["s"] - ev["e"]) if nx_ else 9.0))
+            d_ = ev["e"] - ev["s"]
+            if ED > 0 and d_ >= 0.3:
+                sel = (t >= ev["s"]) & (t < ev["e"] + 0.4); x = (t[sel] - ev["s"]) / d_
+                amp[sel] *= 10 ** (-ED * min(d_ / 0.8, 1.0) * np.clip((x - 0.5) / 0.5, 0, 1.3) ** 1.6 / 20)
+    build_vocal.ends = ends_
     for ev in events:
         d = ev["e"] - ev["s"]
         if d < 0.6: continue
@@ -845,6 +891,26 @@ def render_song(song, sr_out, total_sec=None, dry=False):
                 if a1 > a0: w[a0:a1] = np.maximum(w[a0:a1], np.hanning(a1 - a0) ** 0.5 * float(a_) / amt)
             v = v * (1 - w) + debreath(v, sr_out, amt) * w
         st = reverb(v, sr_out, 0 if dry else float(vd.get("reverb", 0.22)), seed=5 + i)
+        # 2026-11-17 人間「歌の余韻が素人っぽく」: 句の最後の音だけを、テンポに合わせたやまびこ（ディレイ）に送る（ミックスで言う「ディレイを投げる」）。
+        #   "throw": 0〜1（大きさ。使う曲だけ）。あとに休みがある句だけ。やまびこは 500〜3500Hz だけにして、左右に交互に置く。歌っている間は鳴らない
+        th_ = float(vd.get("throw", 0.0))
+        if th_ > 0 and not dry and not str(vd.get("voice", "")).startswith("ds:"):
+            beat_ = 60.0 / bpm; dt_ = beat_ if bpm >= 150 else 0.75 * beat_
+            send = np.zeros(len(v))
+            for (s_, e_, gap_) in getattr(build_vocal, "ends", []):
+                if gap_ < 1.6 * dt_ or e_ - s_ < 0.2: continue
+                a0 = int(max(s_, e_ - 0.4) * sr_out); a1 = min(len(v), int((e_ + 0.15) * sr_out))
+                if a1 - a0 < 400: continue
+                w_ = np.ones(a1 - a0); f_ = int(0.04 * sr_out); w_[:f_] = np.linspace(0, 1, f_); w_[-f_:] = np.linspace(1, 0, f_)
+                send[a0:a1] += v[a0:a1] * w_ * min(1.0, gap_ / (3 * dt_))
+            bq, aq = signal.butter(2, [500 / (sr_out / 2), 3500 / (sr_out / 2)], "band"); send = signal.lfilter(bq, aq, send)
+            nd = int(dt_ * sr_out)
+            for k_ in range(1, 5):
+                g_ = th_ * 0.55 * (0.5 ** (k_ - 1)); sh = np.zeros(len(v)); 
+                if k_ * nd >= len(v): break
+                sh[k_ * nd:] = send[:len(v) - k_ * nd]
+                L_, R_ = (0.75, 0.3) if k_ % 2 else (0.3, 0.75)
+                st[:, 0] += sh * g_ * L_; st[:, 1] += sh * g_ * R_
         pan = float(vd.get("pan", 0)); g = float(vd.get("volume", 1.0))
         st[:, 0] *= g * math.cos((pan + 1) * math.pi / 4) * math.sqrt(2)
         st[:, 1] *= g * math.sin((pan + 1) * math.pi / 4) * math.sqrt(2)

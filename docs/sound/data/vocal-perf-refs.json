@@ -1,0 +1,1042 @@
+{
+ "609_1": {
+  "voiced_share": 0.1760698362431768,
+  "notes": 243,
+  "note_sec_median": 0.07,
+  "note_ge_0.5s_pct": 4.11522633744856,
+  "note_ge_1s_pct": 0.411522633744856,
+  "phrases": 31,
+  "release_ms_-20dB": [
+   65.0,
+   470.0,
+   1500.0
+  ],
+  "end_fade_db": [
+   -1.1267213964455518,
+   -0.44044384991757823,
+   0.3994822343165252
+  ],
+  "last_note_sec": [
+   0.08,
+   0.1375,
+   0.23375
+  ],
+  "end_pitch_cents": [
+   -13.206834530830669,
+   -4.045949895318657,
+   5.876281323055466
+  ],
+  "last_note_ge_0.5s_pct": 9.090909090909092,
+  "transition_ms_20_80": [
+   15.0,
+   15.0,
+   17.5
+  ],
+  "overshoot_pct": [
+   9.911578836958535,
+   25.53274411577542,
+   43.93706177250613
+  ],
+  "transitions": 15,
+  "wobble_cents": [
+   10.132401912880212,
+   18.23388393935834,
+   32.06057229795886
+  ],
+  "drift_cents": [
+   -21.28635146048765,
+   -9.117280239933478,
+   9.131860849748108
+  ],
+  "scoop_cents": [
+   -75.34715782106834,
+   -47.81857286830622,
+   -10.977459144107193
+  ],
+  "long_notes": 10,
+  "vibrato_share_pct": 0.0,
+  "vibrato_depth_cents": null,
+  "vibrato_rate_hz": null,
+  "vibrato_onset_sec": null,
+  "source": {
+   "title": "609.mp3",
+   "creator": "Deadman & Digi Hartatak",
+   "license": "http://creativecommons.org/licenses/by/3.0/",
+   "url": "https://archive.org/details/609_1"
+  }
+ },
+ "BatardTronique-VieilleCatin-NksProd69": {
+  "voiced_share": 0.20102187450103784,
+  "notes": 220,
+  "note_sec_median": 0.055,
+  "note_ge_0.5s_pct": 1.3636363636363635,
+  "note_ge_1s_pct": 0.45454545454545453,
+  "phrases": 27,
+  "release_ms_-20dB": [
+   1500.0,
+   1500.0,
+   1500.0
+  ],
+  "end_fade_db": [
+   -1.1211526720152598,
+   -0.5588499720175122,
+   -0.11338446115894207
+  ],
+  "last_note_sec": [
+   0.057499999999999996,
+   0.075,
+   0.20750000000000002
+  ],
+  "end_pitch_cents": [
+   -3.060724451315977,
+   -1.5651999119299376,
+   -0.0696753725438981
+  ],
+  "last_note_ge_0.5s_pct": 6.666666666666667,
+  "transition_ms_20_80": [
+   11.25,
+   20.0,
+   25.0
+  ],
+  "overshoot_pct": [
+   25.8572593559482,
+   40.676414021888085,
+   69.05941638758473
+  ],
+  "transitions": 6,
+  "wobble_cents": [
+   30.47475308274975,
+   44.65938851436067,
+   70.4732284292769
+  ],
+  "drift_cents": [
+   -34.1208291466538,
+   -13.748461536858404,
+   8.852244914535401
+  ],
+  "scoop_cents": [
+   -3.467558310337715,
+   2.331081379147193,
+   35.11885096804441
+  ],
+  "long_notes": 3,
+  "vibrato_share_pct": 0.0,
+  "vibrato_depth_cents": null,
+  "vibrato_rate_hz": null,
+  "vibrato_onset_sec": null,
+  "source": {
+   "title": "03_batard_tronique-ele_tent_on_boutik_pad_zos_s_cindri-NKSintl.mp3",
+   "creator": "None",
+   "license": "http://creativecommons.org/licenses/by-sa/3.0/",
+   "url": "https://archive.org/details/BatardTronique-VieilleCatin-NksProd69"
+  }
+ },
+ "Freeq021-FunkyMonkee-RiseEp": {
+  "voiced_share": 0.07362006493812055,
+  "too_few": true,
+  "source": {
+   "title": "Kali Ma",
+   "creator": "Funky Monkee",
+   "license": "http://creativecommons.org/licenses/by-sa/3.0/",
+   "url": "https://archive.org/details/Freeq021-FunkyMonkee-RiseEp"
+  }
+ },
+ "Knowsur-NanaWodori": {
+  "voiced_share": 0.053703505198842316,
+  "too_few": true,
+  "source": {
+   "title": "02 knowsur - HIKARU",
+   "creator": "knowsur",
+   "license": "http://creativecommons.org/licenses/by/3.0/",
+   "url": "https://archive.org/details/Knowsur-NanaWodori"
+  }
+ },
+ "nya4-pixel-nya-feat-sonika-am-i-a-robot": {
+  "voiced_share": 0.42772154832728115,
+  "notes": 509,
+  "note_sec_median": 0.07,
+  "note_ge_0.5s_pct": 6.286836935166994,
+  "note_ge_1s_pct": 0.5893909626719057,
+  "phrases": 31,
+  "release_ms_-20dB": [
+   -30.0,
+   1500.0,
+   1500.0
+  ],
+  "end_fade_db": [
+   -22.072746763853672,
+   -7.510172197483528,
+   -0.5393510983632233
+  ],
+  "last_note_sec": [
+   0.08125,
+   0.4925,
+   0.6175
+  ],
+  "end_pitch_cents": [
+   -14.879086095668725,
+   3.731258093021239,
+   6.9864717437695845
+  ],
+  "last_note_ge_0.5s_pct": 45.45454545454545,
+  "transition_ms_20_80": [
+   15.0,
+   20.0,
+   40.0
+  ],
+  "overshoot_pct": [
+   3.1152866058757,
+   12.177706519703136,
+   45.63621093358206
+  ],
+  "transitions": 67,
+  "wobble_cents": [
+   6.877516021763082,
+   11.81988835079387,
+   21.77409857264273
+  ],
+  "drift_cents": [
+   -4.96240726173145,
+   5.749294043942399,
+   11.289011776088032
+  ],
+  "scoop_cents": [
+   -12.46967704556372,
+   6.577595075188114,
+   19.477263550735913
+  ],
+  "long_notes": 32,
+  "vibrato_share_pct": 18.75,
+  "vibrato_depth_cents": [
+   12.369988204826154,
+   28.075842108735515,
+   67.18118065709483
+  ],
+  "vibrato_rate_hz": [
+   4.248046875,
+   4.443359375,
+   4.8583984375
+  ],
+  "vibrato_onset_sec": [
+   0.03,
+   0.1275,
+   0.34500000000000003
+  ],
+  "source": {
+   "title": "Am I a Robot?",
+   "creator": "Pixel Nya feat. Sonika",
+   "license": "http://creativecommons.org/licenses/by/4.0/",
+   "url": "https://archive.org/details/nya4-pixel-nya-feat-sonika-am-i-a-robot"
+  }
+ },
+ "nya5-pixel-nya-hindi-poofodeibohr": {
+  "voiced_share": 0.5983654281586268,
+  "notes": 497,
+  "note_sec_median": 0.215,
+  "note_ge_0.5s_pct": 22.736418511066397,
+  "note_ge_1s_pct": 3.2193158953722336,
+  "phrases": 42,
+  "release_ms_-20dB": [
+   -30.0,
+   -30.0,
+   -9.999999999999998
+  ],
+  "end_fade_db": [
+   -20.220716407695654,
+   -18.79964385994861,
+   -9.964625377974583
+  ],
+  "last_note_sec": [
+   0.58,
+   0.87,
+   1.1500000000000001
+  ],
+  "end_pitch_cents": [
+   -18.72569338431589,
+   -8.333497263899403,
+   2.7217556081545524
+  ],
+  "last_note_ge_0.5s_pct": 84.0,
+  "transition_ms_20_80": [
+   15.0,
+   40.0,
+   55.0
+  ],
+  "overshoot_pct": [
+   3.074847730805458,
+   7.221085656147263,
+   20.468228882533694
+  ],
+  "transitions": 114,
+  "wobble_cents": [
+   7.942079764713884,
+   11.122643920239542,
+   18.61225311721403
+  ],
+  "drift_cents": [
+   -1.28160314737773,
+   7.159127540110433,
+   14.966589415774934
+  ],
+  "scoop_cents": [
+   -62.232283075434935,
+   -20.25107900053804,
+   1.4790719146127174
+  ],
+  "long_notes": 113,
+  "vibrato_share_pct": 58.4070796460177,
+  "vibrato_depth_cents": [
+   15.30786619434623,
+   19.671773454810463,
+   25.592358415610164
+  ],
+  "vibrato_rate_hz": [
+   4.2236328125,
+   4.736328125,
+   5.2001953125
+  ],
+  "vibrato_onset_sec": [
+   0.03,
+   0.03,
+   0.03
+  ],
+  "source": {
+   "title": "Hindi",
+   "creator": "SONiKA",
+   "license": "http://creativecommons.org/licenses/by/4.0/",
+   "url": "https://archive.org/details/nya5-pixel-nya-hindi-poofodeibohr"
+  }
+ },
+ "ConcordantOpposition": {
+  "voiced_share": 0.1575350887979342,
+  "notes": 196,
+  "note_sec_median": 0.08,
+  "note_ge_0.5s_pct": 1.530612244897959,
+  "note_ge_1s_pct": 0.0,
+  "phrases": 30,
+  "release_ms_-20dB": [
+   1500.0,
+   1500.0,
+   1500.0
+  ],
+  "end_fade_db": [
+   -0.2693526989192945,
+   -0.00045778242895266885,
+   0.0022824673373378346
+  ],
+  "last_note_sec": [
+   0.095,
+   0.14,
+   0.20500000000000002
+  ],
+  "end_pitch_cents": [
+   14.54876179633473,
+   14.56485614261993,
+   14.580950488905131
+  ],
+  "last_note_ge_0.5s_pct": 0.0,
+  "transition_ms_20_80": [
+   15.0,
+   15.0,
+   22.5
+  ],
+  "overshoot_pct": [
+   8.72767075044545,
+   14.97930942744854,
+   70.36689028475023
+  ],
+  "transitions": 23,
+  "wobble_cents": [
+   13.049641363715814,
+   23.090263321184178,
+   55.66044122088199
+  ],
+  "drift_cents": [
+   -27.643424990839094,
+   -17.087527760913936,
+   -3.2035957008133664
+  ],
+  "scoop_cents": [
+   -5.070917442276368,
+   -2.2088309476441026,
+   44.09241223469067
+  ],
+  "long_notes": 3,
+  "vibrato_share_pct": 0.0,
+  "vibrato_depth_cents": null,
+  "vibrato_rate_hz": null,
+  "vibrato_onset_sec": null,
+  "source": {
+   "title": "CO2FeatValdo",
+   "creator": "NoiseCollector",
+   "license": "http://creativecommons.org/licenses/by-sa/3.0/",
+   "url": "https://archive.org/details/ConcordantOpposition"
+  }
+ },
+ "Icaria_-_Icaria_-_EP": {
+  "voiced_share": 0.49219478098788444,
+  "notes": 580,
+  "note_sec_median": 0.08,
+  "note_ge_0.5s_pct": 5.517241379310345,
+  "note_ge_1s_pct": 1.0344827586206897,
+  "phrases": 49,
+  "release_ms_-20dB": [
+   1500.0,
+   1500.0,
+   1500.0
+  ],
+  "end_fade_db": [
+   -0.09918000290039419,
+   -0.0036725879736643208,
+   0.10909676988508021
+  ],
+  "last_note_sec": [
+   0.08,
+   0.1575,
+   0.3125
+  ],
+  "end_pitch_cents": [
+   -7.1088703493991545,
+   5.886270403015459,
+   19.491275309485445
+  ],
+  "last_note_ge_0.5s_pct": 3.571428571428571,
+  "transition_ms_20_80": [
+   15.0,
+   20.0,
+   50.0
+  ],
+  "overshoot_pct": [
+   12.850204631830142,
+   25.4004696811408,
+   49.62849232115501
+  ],
+  "transitions": 83,
+  "wobble_cents": [
+   13.833638714215,
+   18.793332401109836,
+   31.06378874355098
+  ],
+  "drift_cents": [
+   -9.826298622798202,
+   3.4787444687459868,
+   33.47148930060122
+  ],
+  "scoop_cents": [
+   -23.961408356064595,
+   -8.194044017598756,
+   14.665518515759768
+  ],
+  "long_notes": 32,
+  "vibrato_share_pct": 50.0,
+  "vibrato_depth_cents": [
+   16.092217685242485,
+   20.81588604110287,
+   32.0286124303035
+  ],
+  "vibrato_rate_hz": [
+   4.736328125,
+   5.712890625,
+   6.3720703125
+  ],
+  "vibrato_onset_sec": [
+   0.03,
+   0.03,
+   0.04375
+  ],
+  "source": {
+   "title": "Stalked Pt. 2",
+   "creator": "Icaria",
+   "license": "http://creativecommons.org/licenses/by-sa/3.0/",
+   "url": "https://archive.org/details/Icaria_-_Icaria_-_EP"
+  }
+ },
+ "GT410_613": {
+  "voiced_share": 0.3403874368985154,
+  "notes": 569,
+  "note_sec_median": 0.07,
+  "note_ge_0.5s_pct": 1.054481546572935,
+  "note_ge_1s_pct": 0.35149384885764495,
+  "phrases": 42,
+  "release_ms_-20dB": [
+   1500.0,
+   1500.0,
+   1500.0
+  ],
+  "end_fade_db": [
+   -0.4462683092614692,
+   0.0021641803079539557,
+   0.5456072619910879
+  ],
+  "last_note_sec": [
+   0.07625,
+   0.1075,
+   0.19375
+  ],
+  "end_pitch_cents": [
+   -10.910774339264862,
+   -6.50431288212161,
+   -2.062517089608562
+  ],
+  "last_note_ge_0.5s_pct": 6.666666666666667,
+  "transition_ms_20_80": [
+   15.0,
+   22.5,
+   45.0
+  ],
+  "overshoot_pct": [
+   18.68723802216918,
+   29.333474272925773,
+   59.57304207226554
+  ],
+  "transitions": 46,
+  "wobble_cents": [
+   15.184174230014154,
+   24.76602791401959,
+   38.21308544481569
+  ],
+  "drift_cents": [
+   -26.26813378576381,
+   0.5193078754174962,
+   33.41917988162031
+  ],
+  "scoop_cents": [
+   -39.78958516184665,
+   3.004076117246157,
+   33.91739217991103
+  ],
+  "long_notes": 6,
+  "vibrato_share_pct": 0.0,
+  "vibrato_depth_cents": null,
+  "vibrato_rate_hz": null,
+  "vibrato_onset_sec": null,
+  "source": {
+   "title": "Лесные Твари - будь или не будь",
+   "creator": "Лесные Твари",
+   "license": "http://creativecommons.org/publicdomain/zero/1.0/",
+   "url": "https://archive.org/details/GT410_613"
+  }
+ },
+ "SCL120": {
+  "voiced_share": 0.5845097463465317,
+  "notes": 731,
+  "note_sec_median": 0.075,
+  "note_ge_0.5s_pct": 9.986320109439124,
+  "note_ge_1s_pct": 1.5047879616963065,
+  "phrases": 64,
+  "release_ms_-20dB": [
+   70.0,
+   230.0,
+   1500.0
+  ],
+  "end_fade_db": [
+   -10.675485334989329,
+   -2.1650313916754733,
+   -0.21045382646262567
+  ],
+  "last_note_sec": [
+   0.145,
+   0.255,
+   0.535
+  ],
+  "end_pitch_cents": [
+   -12.304764978471994,
+   -0.8873416576946624,
+   7.53063576687012
+  ],
+  "last_note_ge_0.5s_pct": 27.27272727272727,
+  "transition_ms_20_80": [
+   15.0,
+   20.0,
+   30.0
+  ],
+  "overshoot_pct": [
+   18.75313804919816,
+   35.90575361453896,
+   67.46149615600261
+  ],
+  "transitions": 77,
+  "wobble_cents": [
+   16.300242555090037,
+   28.082868582433047,
+   41.37653862894397
+  ],
+  "drift_cents": [
+   -18.829427968346124,
+   0.8467510320089584,
+   14.143196039280781
+  ],
+  "scoop_cents": [
+   -4.647859846306623,
+   13.287023092046013,
+   28.373000600400466
+  ],
+  "long_notes": 73,
+  "vibrato_share_pct": 19.17808219178082,
+  "vibrato_depth_cents": [
+   21.27744600971045,
+   38.78194101571576,
+   50.09042234091416
+  ],
+  "vibrato_rate_hz": [
+   6.005859375,
+   6.787109375,
+   7.51953125
+  ],
+  "vibrato_onset_sec": [
+   0.03,
+   0.03,
+   0.03
+  ],
+  "source": {
+   "title": "Unconscious Bliss",
+   "creator": "Sans Nom",
+   "license": "http://creativecommons.org/licenses/by/4.0/",
+   "url": "https://archive.org/details/SCL120"
+  }
+ },
+ "Wuerfel34-ForExJohn-Johnnyverse": {
+  "voiced_share": 0.4652224759146851,
+  "notes": 737,
+  "note_sec_median": 0.07,
+  "note_ge_0.5s_pct": 1.8995929443690638,
+  "note_ge_1s_pct": 0.0,
+  "phrases": 10,
+  "release_ms_-20dB": [
+   70.0,
+   75.0,
+   165.0
+  ],
+  "end_fade_db": [
+   -1.2844351158559135,
+   0.09392927642284121,
+   1.4399310979036102
+  ],
+  "last_note_sec": [
+   0.05,
+   0.055,
+   0.095
+  ],
+  "end_pitch_cents": null,
+  "last_note_ge_0.5s_pct": 0.0,
+  "transition_ms_20_80": [
+   10.0,
+   15.0,
+   30.0
+  ],
+  "overshoot_pct": [
+   19.564014417942182,
+   44.77859034212179,
+   79.00445652466789
+  ],
+  "transitions": 74,
+  "wobble_cents": [
+   25.55148532700757,
+   36.27819419056799,
+   52.39715351571818
+  ],
+  "drift_cents": [
+   -31.993643574744635,
+   -6.539887436570169,
+   19.159582223517813
+  ],
+  "scoop_cents": null,
+  "long_notes": 14,
+  "vibrato_share_pct": 14.285714285714286,
+  "vibrato_depth_cents": [
+   49.10095685569016,
+   58.696535299364434,
+   68.29211374303871
+  ],
+  "vibrato_rate_hz": [
+   7.03125,
+   7.32421875,
+   7.6171875
+  ],
+  "vibrato_onset_sec": [
+   0.03,
+   0.03,
+   0.03
+  ],
+  "source": {
+   "title": "Brot und Spiele",
+   "creator": "For Example John",
+   "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "url": "https://archive.org/details/Wuerfel34-ForExJohn-Johnnyverse"
+  }
+ },
+ "OrquestaDePerros-RolesYOficios": {
+  "voiced_share": 0.32643336190812366,
+  "notes": 378,
+  "note_sec_median": 0.08,
+  "note_ge_0.5s_pct": 6.878306878306878,
+  "note_ge_1s_pct": 0.7936507936507936,
+  "phrases": 35,
+  "release_ms_-20dB": [
+   -4.999999999999997,
+   70.0,
+   265.0
+  ],
+  "end_fade_db": [
+   -11.781551438824497,
+   -2.909641414849421,
+   -0.26731168405596417
+  ],
+  "last_note_sec": [
+   0.18,
+   0.3275,
+   0.5375000000000001
+  ],
+  "end_pitch_cents": [
+   -18.677508333211712,
+   6.194569599607291,
+   17.037568782994228
+  ],
+  "last_note_ge_0.5s_pct": 26.923076923076923,
+  "transition_ms_20_80": [
+   15.0,
+   35.0,
+   75.0
+  ],
+  "overshoot_pct": [
+   15.15616077656512,
+   35.268085330587425,
+   56.68569609978229
+  ],
+  "transitions": 57,
+  "wobble_cents": [
+   12.186516853135966,
+   17.424329226362644,
+   28.839691722323597
+  ],
+  "drift_cents": [
+   -35.34549777203404,
+   -10.018473466062972,
+   16.01216580049396
+  ],
+  "scoop_cents": [
+   80.13824718858152,
+   102.93080474570182,
+   122.15216610333037
+  ],
+  "long_notes": 26,
+  "vibrato_share_pct": 53.84615384615385,
+  "vibrato_depth_cents": [
+   17.168418088400003,
+   29.455103466453764,
+   50.439714617653166
+  ],
+  "vibrato_rate_hz": [
+   5.17578125,
+   6.0546875,
+   7.080078125
+  ],
+  "vibrato_onset_sec": [
+   0.03,
+   0.03,
+   0.03
+  ],
+  "source": {
+   "title": "02 Las inÃ©ditas ventajas del puerta",
+   "creator": "Orquesta de Perros",
+   "license": "http://creativecommons.org/licenses/by/3.0/",
+   "url": "https://archive.org/details/OrquestaDePerros-RolesYOficios"
+  }
+ },
+ "backyardfeverwalk": {
+  "voiced_share": 0.09330386259873905,
+  "notes": 36,
+  "note_sec_median": 0.115,
+  "note_ge_0.5s_pct": 8.333333333333332,
+  "note_ge_1s_pct": 2.7777777777777777,
+  "phrases": 10,
+  "release_ms_-20dB": [
+   1500.0,
+   1500.0,
+   1500.0
+  ],
+  "end_fade_db": [
+   -1.9175087155165578,
+   -1.7807867878711363,
+   -0.796052972607697
+  ],
+  "last_note_sec": [
+   0.28500000000000003,
+   0.47500000000000003,
+   0.555
+  ],
+  "end_pitch_cents": [
+   0.0710677529475845,
+   3.620160934006833,
+   7.169254115066082
+  ],
+  "last_note_ge_0.5s_pct": 40.0,
+  "transition_ms_20_80": [
+   10.0,
+   12.5,
+   15.0
+  ],
+  "overshoot_pct": [
+   13.386030202433485,
+   38.375367338786226,
+   65.46130288720346
+  ],
+  "transitions": 4,
+  "wobble_cents": [
+   18.317118629172477,
+   22.30012895802985,
+   37.22455970348006
+  ],
+  "drift_cents": [
+   -12.085023700157649,
+   0.03529519039346951,
+   7.141207291860496
+  ],
+  "scoop_cents": [
+   3.012943318299577,
+   3.6230647476884315,
+   8.265467067371368
+  ],
+  "long_notes": 3,
+  "vibrato_share_pct": 33.333333333333336,
+  "vibrato_depth_cents": [
+   10.861692292776102,
+   10.861692292776102,
+   10.861692292776102
+  ],
+  "vibrato_rate_hz": [
+   7.2265625,
+   7.2265625,
+   7.2265625
+  ],
+  "vibrato_onset_sec": [
+   0.03,
+   0.03,
+   0.03
+  ],
+  "source": {
+   "title": "Walk.mp3",
+   "creator": "Hot Sauce Record",
+   "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "url": "https://archive.org/details/backyardfeverwalk"
+  }
+ },
+ "SCL114": {
+  "voiced_share": 0.1372605640581384,
+  "notes": 116,
+  "note_sec_median": 0.0475,
+  "note_ge_0.5s_pct": 3.4482758620689653,
+  "note_ge_1s_pct": 0.0,
+  "phrases": 19,
+  "release_ms_-20dB": [
+   1500.0,
+   1500.0,
+   1500.0
+  ],
+  "end_fade_db": [
+   -1.0675831095033423,
+   0.05217798343007374,
+   0.2877290748130594
+  ],
+  "last_note_sec": [
+   0.085,
+   0.105,
+   0.125
+  ],
+  "end_pitch_cents": [
+   -34.89750188182512,
+   -23.006497292479366,
+   -11.115492703133611
+  ],
+  "last_note_ge_0.5s_pct": 7.6923076923076925,
+  "transition_ms_20_80": [
+   18.75,
+   22.5,
+   27.500000000000004
+  ],
+  "overshoot_pct": [
+   48.779969775023915,
+   71.15146538748023,
+   101.28850997463793
+  ],
+  "transitions": 4,
+  "wobble_cents": [
+   22.50015564287161,
+   39.270029850062215,
+   48.5413492595611
+  ],
+  "drift_cents": [
+   -14.328090681942918,
+   0.4452115822825675,
+   25.367985532002635
+  ],
+  "scoop_cents": [
+   0.7577171162775898,
+   10.982568853922281,
+   37.380942422982066
+  ],
+  "long_notes": 4,
+  "vibrato_share_pct": 0.0,
+  "vibrato_depth_cents": null,
+  "vibrato_rate_hz": null,
+  "vibrato_onset_sec": null,
+  "source": {
+   "title": "We Wanna Rock",
+   "creator": "Чокнутый Пропеллер",
+   "license": "http://creativecommons.org/licenses/by/4.0/",
+   "url": "https://archive.org/details/SCL114"
+  }
+ },
+ "enrmp439_yumenoma_-_instant_0_in_the_universe": {
+  "voiced_share": 0.23931666376977132,
+  "notes": 133,
+  "note_sec_median": 0.145,
+  "note_ge_0.5s_pct": 21.804511278195488,
+  "note_ge_1s_pct": 6.7669172932330826,
+  "phrases": 37,
+  "release_ms_-20dB": [
+   195.0,
+   1245.0,
+   1500.0
+  ],
+  "end_fade_db": [
+   -6.7707187757409315,
+   -0.20031913735498819,
+   0.7778233641447763
+  ],
+  "last_note_sec": [
+   0.085,
+   0.385,
+   0.63
+  ],
+  "end_pitch_cents": [
+   -5.898522294624264,
+   -2.7233496545520097,
+   7.400258353328226
+  ],
+  "last_note_ge_0.5s_pct": 41.37931034482759,
+  "transition_ms_20_80": [
+   15.0,
+   25.0,
+   60.0
+  ],
+  "overshoot_pct": [
+   12.287710251029615,
+   23.526161584485507,
+   26.524594631124245
+  ],
+  "transitions": 17,
+  "wobble_cents": [
+   10.404254099598743,
+   14.17281662541106,
+   17.005394062943328
+  ],
+  "drift_cents": [
+   -14.52578156659925,
+   0.7444340590147647,
+   12.817547484486624
+  ],
+  "scoop_cents": [
+   -21.573338592371627,
+   -0.0026155641378977634,
+   12.92320543175336
+  ],
+  "long_notes": 29,
+  "vibrato_share_pct": 44.827586206896555,
+  "vibrato_depth_cents": [
+   20.454546469164733,
+   23.259791671961448,
+   28.877395155707354
+  ],
+  "vibrato_rate_hz": [
+   4.58984375,
+   6.25,
+   6.54296875
+  ],
+  "vibrato_onset_sec": [
+   0.03,
+   0.03,
+   0.03
+  ],
+  "source": {
+   "title": "インスタント ゼロ イン ザ ユニバース - instant 0 in the universe -",
+   "creator": "ユメノマ(yumenoma)",
+   "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "url": "https://archive.org/details/enrmp439_yumenoma_-_instant_0_in_the_universe"
+  }
+ },
+ "SCL124": {
+  "voiced_share": 0.4858063217233743,
+  "notes": 745,
+  "note_sec_median": 0.06,
+  "note_ge_0.5s_pct": 1.342281879194631,
+  "note_ge_1s_pct": 0.9395973154362416,
+  "phrases": 59,
+  "release_ms_-20dB": [
+   285.00000000000006,
+   1500.0,
+   1500.0
+  ],
+  "end_fade_db": [
+   -1.1610863620927936,
+   -0.1293701804171663,
+   0.37092890410347223
+  ],
+  "last_note_sec": [
+   0.06875,
+   0.0825,
+   0.11625
+  ],
+  "end_pitch_cents": null,
+  "last_note_ge_0.5s_pct": 0.0,
+  "transition_ms_20_80": [
+   15.0,
+   15.0,
+   31.25
+  ],
+  "overshoot_pct": [
+   15.952743905565232,
+   30.508475930927293,
+   55.147805623107274
+  ],
+  "transitions": 40,
+  "wobble_cents": [
+   20.348942432327135,
+   34.17398307680811,
+   46.1883526120143
+  ],
+  "drift_cents": [
+   -21.105397290226406,
+   4.4836999111808495,
+   28.887714259983888
+  ],
+  "scoop_cents": [
+   -71.1299822003241,
+   -13.639951449374621,
+   -7.094470874022107
+  ],
+  "long_notes": 10,
+  "vibrato_share_pct": 30.0,
+  "vibrato_depth_cents": [
+   17.104249302624076,
+   20.65234774158038,
+   39.188634081413014
+  ],
+  "vibrato_rate_hz": [
+   5.029296875,
+   5.95703125,
+   6.93359375
+  ],
+  "vibrato_onset_sec": [
+   0.03,
+   0.03,
+   0.03
+  ],
+  "source": {
+   "title": "Хей, Детка",
+   "creator": "Чокнутый Пропеллер",
+   "license": "http://creativecommons.org/licenses/by/4.0/",
+   "url": "https://archive.org/details/SCL124"
+  }
+ }
+}

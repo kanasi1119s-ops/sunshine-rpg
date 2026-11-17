@@ -444,3 +444,36 @@ def backing(path, ratio=0.9):
     js = load(path)
     for p in js["parts"]: p["volume"] = round(p.get("volume", 0.1) * ratio, 4)
     save(path, js); print(f"  伴奏の音量を {ratio} 倍にした: {len(js['parts'])} パート")
+
+
+def sing_ends(path, S, min_rest=1.0, keep=0.5, max_len=2.0, human=0.8, release=1.0, decay=4.0, throw=0.35):
+    """歌の「余韻」と「音程の動き」を人の歌に近づける（2026-11-17 人間「歌の余韻とか音程が素人っぽく」）。使う曲だけ。
+    測ってわかったこと（tools/vt3/vocal_shape.py・tools/song-analyzer/vocal_perf.py）:
+      ・句の終わりが、どの音も同じ 0.1 秒で切れていた ・句の最後の音が短い（16 は中央値 0.34 秒）
+      ・音程がまっすぐすぎる（音の中のゆれ 7〜10 セント。お手本の人の歌は 17〜34）・音が変わったあとの行きすぎが 7〜10%（お手本は 25〜36%）
+    やること:
+      1. 句の最後の音のあとに min_rest 拍以上の休みがあれば、休みを keep 拍だけ残して、最後の音を max_len 拍までのばす（主旋律とハモリ。声のチョップはそのまま）
+      2. 歌声の設定: endRelease（のばした音ほど長く、句ごとに違う長さで消える）・endDecay（最後の音の後ろ半分をだんだん小さく）・
+         humanPitch（行きすぎと、音の中のこまかいゆれ）・throw（主旋律だけ。句の最後の音にテンポに合ったやまびこ）
+    返すもの: のばした音の数"""
+    js = load(path); cnt = 0
+    import math
+    keep = max(keep, round(0.26 / (60.0 / float(js["bpm"])) * 4) / 4)     # 息をつぐ間として、0.26 秒くらいの休みは残す（速い曲では拍にすると長くなる）
+    min_rest = max(min_rest, keep + 0.25)
+    for vi, v in enumerate(js.get("vocals", [])):
+        if float(v.get("auto", 0) or 0) == 0 and float(v.get("vibrato", 0) or 0) == 0: continue      # 声のチョップ
+        tk = v["notes"].split(); i = 0
+        while i < len(tk):
+            q = tk[i].split(":")
+            if q[0] != "R" and float(q[1]) < max_len:
+                j = i + 1; rs = 0.0
+                while j < len(tk) and tk[j].startswith("R:"): rs += float(tk[j].split(":")[1]); j += 1
+                if j > i + 1 and rs >= min_rest - 1e-6:
+                    add = min(rs - keep, max_len - float(q[1]))
+                    if add > 1e-6:
+                        q[1] = f"{float(q[1]) + add:g}"; tk[i] = ":".join(q); tk[i + 1:j] = [f"R:{rs - add:g}"]; cnt += 1 if vi == 0 else 0
+            i += 1
+        v["notes"] = " ".join(tk)
+        v["endRelease"] = release; v["endDecay"] = decay; v["humanPitch"] = human if vi == 0 else human * 0.5
+        if vi == 0 and throw > 0: v["throw"] = throw
+    save(path, js); return cnt
