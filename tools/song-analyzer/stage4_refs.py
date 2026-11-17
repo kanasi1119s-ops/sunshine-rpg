@@ -22,7 +22,9 @@ def vec(path):
     y, sr = librosa.load(path, sr=16000, mono=True); ts, P, lab, L = S.listen(y, 16000, hop=20.0)
     w = (L > L.max() - 25).astype(float); m = (P * w[:, None]).sum(0) / max(1.0, w.sum())
     return {en: round(float(m[lab.index(en)]), 4) for en in NAMES if en in lab}
-if sys.argv[1] == "collect":
+if sys.argv[1] == "own":     # 自分の曲を同じやり方で聞かせる: own <曲のファイル> <名前> <出力 JSON>
+    json.dump({"name": sys.argv[3], "p": vec(sys.argv[2])}, open(sys.argv[4], "w"), ensure_ascii=False); print("ok", sys.argv[3])
+elif sys.argv[1] == "collect":
     outp = sys.argv[2]; lim = int(sys.argv[3]) if len(sys.argv) > 3 else 9999; res = json.load(open(outp)) if os.path.exists(outp) else {}; os.makedirs("/tmp/sa/ref", exist_ok=True); n = 0
     for f in sorted(glob.glob(os.path.join(KD, "ref-*.karte.json"))):
         src = json.load(open(f)).get("source")
@@ -45,13 +47,13 @@ if sys.argv[1] == "collect":
     print("COLLECTDONE", len(res))
 else:
     res = json.load(open(sys.argv[2])); gen = sorted({r["genre"] for r in res.values()}, key=lambda g: list(GJ).index(g) if g in GJ else 99)
-    def med(g, en): return float(np.median([r["p"].get(en, 0) for r in res.values() if r["genre"] == g]))
+    def med(g, en): return float(100 * np.mean([r["p"].get(en, 0) >= 0.03 for r in res.values() if r["genre"] == g]))   # その名前が出た曲の割合（度合い 0.03 以上）
     print(f"# お手本 {len(res)} 曲に聞き分けモデル（AST）を聞かせた結果\n")
-    print("度合いは 0〜1。全体に小さく出るので、順番と、ジャンルどうしのくらべで読む。数字はジャンルの中央値。\n")
+    print("数字は「その名前が出た曲の割合（%）」。モデルの度合い（0〜1）は全体に小さく出るので、0.03 以上を「出た」と数えた。太字はいちばん多いジャンル。\n")
     for gname, tb in S.GROUPS.items():
-        rows = [(ja, [med(g, en) for g in gen]) for en, ja in tb.items()]; rows = [r for r in rows if max(r[1]) >= 0.02]; rows.sort(key=lambda r: -max(r[1]))
+        rows = [(ja, [med(g, en) for g in gen]) for en, ja in tb.items()]; rows = [r for r in rows if max(r[1]) >= 15]; rows.sort(key=lambda r: -max(r[1]))
         print(f"## {gname}\n\n| 名前 | " + " | ".join(f"{GJ.get(g, g)}（{sum(1 for r in res.values() if r['genre'] == g)}）" for g in gen) + " |\n|---|" + "---|" * len(gen))
-        for ja, v in rows[:22]: print(f"| {ja} | " + " | ".join(("**%.2f**" % x) if x == max(v) and x >= 0.03 else "%.2f" % x for x in v) + " |")
+        for ja, v in rows[:22]: print(f"| {ja} | " + " | ".join(("**%d**" % round(x)) if x == max(v) else "%d" % round(x) for x in v) + " |")
         print()
     # 自分の曲: どのジャンルのお手本に近いか（度合いの対数で、まん中の形とのコサインの近さ）
     def lv(p): return np.log(np.array([p.get(en, 0) for en in NAMES]) + 0.005)
@@ -59,13 +61,15 @@ else:
     def near(p):
         a = lv(p) - allm; return sorted(((float(np.dot(a, cen[g] - allm) / (np.linalg.norm(a) * np.linalg.norm(cen[g] - allm) + 1e-9)), g) for g in gen), reverse=True)
     # 当たり具合: お手本の 1 曲を抜いて、残りで作ったまん中に当てる
-    hit = 0; tot = 0
+    BIG = {"dance": "電子・ダンス", "electronic": "電子・ダンス", "rock": "ロック・メタル", "metal": "ロック・メタル", "pop": "ポップ・ファンク", "funk": "ポップ・ファンク"}
+    hit = 0; tot = 0; hb = 0; tb_ = 0
     for k, r in res.items():
         c2 = {g: np.median([lv(q["p"]) for kk, q in res.items() if q["genre"] == g and kk != k], axis=0) for g in gen if sum(1 for kk, q in res.items() if q["genre"] == g and kk != k) >= 3}
         if r["genre"] not in c2: continue
         am = np.mean(list(c2.values()), axis=0); a = lv(r["p"]) - am
         best = max(c2, key=lambda g: np.dot(a, c2[g] - am) / (np.linalg.norm(a) * np.linalg.norm(c2[g] - am) + 1e-9)); hit += best == r["genre"]; tot += 1
-    print(f"## ジャンルの当たり具合（お手本を 1 曲ずつ抜いて確かめた）\n\n{tot} 曲のうち {hit} 曲（{100 * hit / max(1, tot):.0f}%）で、つけてあるジャンルと同じ答えになった。\n")
+        if r["genre"] in BIG: tb_ += 1; hb += BIG.get(best) == BIG[r["genre"]]
+    print(f"## ジャンルの当たり具合（お手本を 1 曲ずつ抜いて確かめた）\n\n{tot} 曲のうち {hit} 曲（{100 * hit / max(1, tot):.0f}%）で、つけてあるジャンルと同じ答えになった（でたらめに答えると 15% くらい）。\n\n大きく 3 つ（電子・ダンス／ロック・メタル／ポップ・ファンク）に分けると、{tb_} 曲のうち {hb} 曲（{100 * hb / max(1, tb_):.0f}%。でたらめだと 33%）。\n\nつけてあるジャンルは、ネットレーベルの分け方をそのまま使ったもので、曲ごとに確かめたものではない。\n")
     for jp in sys.argv[3:]:
         o = json.load(open(jp)); p = o.get("p") or {}
         if not p: continue
