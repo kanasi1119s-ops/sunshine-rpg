@@ -96,7 +96,8 @@ class Table:
         self.tb = tb; self.names = list(tb["patches"])
         def mat(key, keys): return np.array([[tb["patches"][n][key].get(k, 0.0) for k in keys] for n in self.names])
         self.F = mat("c4", KEYS_F); self.mu = self.F.mean(0); self.sd = self.F.std(0) + 1e-6
-        self.H = {k: mat(k, KEYS_H) for k in (("c4s", "c3", "c5", "g3", "g4") if tb.get("layout") == 2 else ("c4", "c3", "c5"))}; self.H.setdefault("c4", self.H.get("c4s")); self.muH = self.H["c4"].mean(0); self.sdH = self.H["c4"].std(0) + 1e-6
+        self.semi = {"c4": 60, "c3": 48, "c5": 72, "g3": 55, "g4": 67, "e3": 52, "a3": 57, "e4": 64, "a4": 69}
+        self.H = {k: mat(k, KEYS_H) for k in (("c4s", "c3", "e3", "g3", "a3", "e4", "g4", "a4", "c5") if tb.get("layout") == 3 else ("c4s", "c3", "c5", "g3", "g4") if tb.get("layout") == 2 else ("c4", "c3", "c5"))}; self.H.setdefault("c4", self.H.get("c4s")); self.muH = self.H["c4"].mean(0); self.sdH = self.H["c4"].std(0) + 1e-6
         E = tb.get("emb", {}); self.en = [n for n in self.names if n in E]
         if self.en:
             X = np.array([E[n] for n in self.en]); self.emu = X.mean(0); self.esd = X.std(0) + 1e-6; X = (X - self.emu) / self.esd; self.EX = X / np.linalg.norm(X, axis=1, keepdims=True)
@@ -104,11 +105,12 @@ class Table:
         v = (np.asarray(e) - self.emu) / self.esd; v = v / (np.linalg.norm(v) + 1e-9); sim = self.EX @ v
         order = [i for i in np.argsort(-sim) if self.en[i] != skip][:k]
         return [(self.en[i], float(1 - sim[i]), TYPE_OF.get(self.en[i], "そのほか")) for i in order]
-    def near(self, fp, full=True, skip=None, k=5, reg=None):
+    def near(self, fp, full=True, skip=None, k=5, reg=None, semi=None):
         keys = KEYS_F if full else KEYS_H; w = np.array([WEIGHT[q] for q in keys]); v = np.array([fp.get(q, 0.0) for q in keys])
         if full: D = np.sqrt((((self.F - v) / self.sd) ** 2 * w).sum(1) / w.sum())
         else:
-            regs = [reg] if reg else list(self.H); D = np.min([np.sqrt((((self.H[r] - v) / self.sdH) ** 2 * w).sum(1) / w.sum()) for r in regs], axis=0)
+            regs = [reg] if reg else list(self.H)
+            if semi is not None and not reg: regs = sorted([r for r in self.H if r != "c4s"], key=lambda r: abs(self.semi.get(r, 60) - semi))[:2]      # 音の高さにいちばん近い見本 2 つ（高さが離れると音色が変わるため） D = np.min([np.sqrt((((self.H[r] - v) / self.sdH) ** 2 * w).sum(1) / w.sum()) for r in regs], axis=0)
         order = [i for i in np.argsort(D) if self.names[i] != skip][:k]
         return [(self.names[i], float(D[i]), TYPE_OF.get(self.names[i], "そのほか")) for i in order]
     def vote(self, nn):
@@ -195,6 +197,73 @@ def cmd_eval2(tp):
     for q in ("soft", "hard"):
         a = test(q, ["c4"]); print(f"    {'弱く' if q == 'soft' else '強く'}: 同じ音色が 1 位 {a[0]:.0f}%・3 位まで {a[1]:.0f}%・種類 {a[2]:.0f}%")
 
+# 見本 3（2026-11-18）: 高さを 3〜4 半音おきに 9 つ。1 こま＝ド4 を 2 秒 → ド3 ミ3 ソ3 ラ3 ミ4 ソ4 ラ4 ド5（0.5 秒ずつ）。和音（ド4＋ミ4＋ソ4）は、取った音を足して作る
+PITCH3 = {"c3": (130.81, 2.0, 48), "e3": (164.81, 2.5, 52), "g3": (196.00, 3.0, 55), "a3": (220.00, 3.5, 57), "e4": (329.63, 4.0, 64), "g4": (392.00, 4.5, 67), "a4": (440.00, 5.0, 69), "c5": (523.25, 5.5, 72)}
+
+def cmd_learn3(folder, outp):
+    import librosa
+    old = json.load(open(outp)) if os.path.exists(outp) else {}
+    tb = {"layout": 3, "patches": {}, "emb": dict(old.get("emb", {})), "embc": dict(old.get("embc", {}))}
+    for nf in sorted(glob.glob(os.path.join(folder, "pt*.names"))):
+        wav = nf[:-6] + ".wav"
+        if not os.path.exists(wav): continue
+        x, sr = sf.read(wav); names = json.load(open(nf)); mono16 = None
+        for i, n in enumerate(names):
+            o = i * SLOT; seg = x[int(o * sr):int((o + SLOT) * sr)]
+            if len(seg) < sr * 3 or np.abs(seg).max() < 1e-4: print("  音が出ていない:", n); continue
+            c4 = fingerprint(seg, sr, 261.63, 0.0, 2.0)
+            if c4 is None: continue
+            e = {"c4": c4, "type": TYPE_OF.get(n, "そのほか"), "c4s": fingerprint(seg, sr, 261.63, 0.0, 0.5, False) or c4}
+            for k, (f0, a, _) in PITCH3.items(): e[k] = fingerprint(seg, sr, f0, a, a + 0.5, False) or c4
+            tb["patches"][n] = e
+            if n not in tb["emb"] or n not in tb["embc"]:
+                m = seg.mean(1) if seg.ndim > 1 else seg; m16 = librosa.resample(m.astype(np.float32), orig_sr=sr, target_sr=16000)
+                tb["emb"][n] = [round(float(v), 3) for v in embed(m16[:int(6.5 * 16000)])]
+                h = 8000; ch = m16[0:h] + m16[int(4.0 * 16000):int(4.0 * 16000) + h] + m16[int(4.5 * 16000):int(4.5 * 16000) + h]     # ド4＋ミ4＋ソ4 のはじめ 0.5 秒を足す
+                clip = np.concatenate([np.concatenate([ch, np.zeros(2000, dtype=np.float32)]) for _ in range(6)]); tb["embc"][n] = [round(float(v), 3) for v in embed(clip)]
+        json.dump(tb, open(outp, "w"), ensure_ascii=False)
+    json.dump(tb, open(outp, "w"), ensure_ascii=False); print("指紋を取った音色:", len(tb["patches"]), "・埋め込み:", len(tb["emb"]), "・和音の埋め込み:", len(tb["embc"]))
+
+def cmd_eval3(tp):
+    tb = json.load(open(tp)); P = tb["patches"]; names = list(P); w = np.array([WEIGHT[q] for q in KEYS_H])
+    semi = {"c4": 60, **{k: v[2] for k, v in PITCH3.items()}}; allp = list(semi)
+    def vecH(fp): return np.array([fp.get(q, 0.0) for q in KEYS_H])
+    M = {k: np.array([vecH(P[n]["c4s" if k == "c4" else k]) for n in names]) for k in allp}; sd = M["c4"].std(0) + 1e-6
+    def test(q, use):
+        hit = t3 = ty = 0
+        for i, n in enumerate(names):
+            v = M[q][i]; D = np.min([np.sqrt((((M[u] - v) / sd) ** 2 * w).sum(1) / w.sum()) for u in use], axis=0); o = np.argsort(D)[:5]
+            hit += names[o[0]] == n; t3 += n in [names[j] for j in o[:3]]; sc = {}
+            for r, j in enumerate(o):
+                tj = TYPE_OF.get(names[j])
+                if tj: sc[tj] = sc.get(tj, 0) + 1 / (r + 1)
+            ty += bool(sc) and max(sc, key=sc.get) == TYPE_OF.get(n)
+        return 100 * hit / len(names), 100 * t3 / len(names), 100 * ty / len(names)
+    print(f"■ 高さを変えて確かめる（{len(names)} 音色。倍音の形だけ。答える音の高さは表から抜き、いちばん近い高さ 2 つの指紋に当てる）")
+    tot = np.zeros(3)
+    for q in allp:
+        near2 = sorted([u for u in allp if u != q], key=lambda u: abs(semi[u] - semi[q]))[:2]; r = np.array(test(q, near2)); tot += r
+        print(f"    {q}（となりは {'・'.join(near2)}。{abs(semi[near2[0]] - semi[q])} 半音）: 同じ音色が 1 位 {r[0]:.0f}%・3 位まで {r[1]:.0f}%・種類 {r[2]:.0f}%")
+    tot /= len(allp); print(f"    平均: 1 位 {tot[0]:.0f}%・3 位まで {tot[1]:.0f}%・種類 {tot[2]:.0f}%")
+    E = tb.get("emb", {}); C = tb.get("embc", {}); en = [n for n in names if n in E and n in C]
+    if en:
+        X = np.array([E[n] for n in en]); Y = np.array([C[n] for n in en]); mu, sd2 = X.mean(0), X.std(0) + 1e-6
+        Xn = (X - mu) / sd2; Xn /= np.linalg.norm(Xn, axis=1, keepdims=True)
+        def run(Q, T, skip_self, label):
+            hit = t3 = ty = n_ = 0
+            for i, n in enumerate(en):
+                sim = T @ Q[i]
+                if skip_self: sim[i] = -9
+                o = np.argsort(-sim)[:5]; hit += en[o[0]] == n; t3 += n in [en[j] for j in o[:3]]; sc = {}
+                for r, j in enumerate(o):
+                    tj = TYPE_OF.get(en[j])
+                    if tj: sc[tj] = sc.get(tj, 0) + 1 / (r + 1)
+                if TYPE_OF.get(n): n_ += 1; ty += bool(sc) and max(sc, key=sc.get) == TYPE_OF.get(n)
+            print(f"    {label}: " + ("" if skip_self else f"同じ音色が 1 位 {100 * hit / len(en):.0f}%・3 位まで {100 * t3 / len(en):.0f}%・") + f"種類 {100 * ty / max(1, n_):.0f}%")
+        Yn = (Y - mu) / sd2; Yn /= np.linalg.norm(Yn, axis=1, keepdims=True); mu2, sd3 = Y.mean(0), Y.std(0) + 1e-6; Yc = (Y - mu2) / sd3; Yc /= np.linalg.norm(Yc, axis=1, keepdims=True)
+        print("■ 和音で確かめる（ド4＋ミ4＋ソ4 を足した音を、聞き分けモデルの埋め込みで）")
+        run(Yn, Xn, False, "和音 → 1 音ずつの見本の表に当てる"); run(Yc, Yc.copy(), True, "和音どうしで、その音色を抜いて種類を答える"); run(Xn, Xn.copy(), True, "（くらべる用）1 音ずつの見本どうしで、その音色を抜いて種類を答える")
+
 def cmd_learn(folder, outp):
     tb = {"patches": {}}
     for nf in sorted(glob.glob(os.path.join(folder, "pt*.names"))):
@@ -273,7 +342,7 @@ def cmd_what(tp, path, stem=None):
     for a, b, s in runs[:40]:
         fp = fingerprint(x, sr, 440 * 2 ** ((s - 69) / 12), a, b, full=False)
         if fp is None: continue
-        nn = T.near(fp, False); used += 1
+        nn = T.near(fp, False, semi=s); used += 1
         for ty, sc in T.vote(nn)[:2]: votes[ty] = votes.get(ty, 0) + sc
         for n, d, ty in nn[:3]: pv[n] = pv.get(n, 0) + 1 / (d + 0.15)
     if T.en:                                   # 聞き分けモデルの埋め込みで（10 秒ずつ。重なった音でも使える）
@@ -302,6 +371,8 @@ if __name__ == "__main__":
     if c == "learn": cmd_learn(sys.argv[2], sys.argv[3])
     elif c == "learn2": cmd_learn2(sys.argv[2], sys.argv[3])
     elif c == "eval2": cmd_eval2(sys.argv[2])
+    elif c == "learn3": cmd_learn3(sys.argv[2], sys.argv[3])
+    elif c == "eval3": cmd_eval3(sys.argv[2])
     elif c == "eval": cmd_eval(sys.argv[2])
     elif c == "what":
         if len(sys.argv) > 4 and "," in sys.argv[4]:      # 分けた音をいくつも: 1 回だけ分けて、順に答える

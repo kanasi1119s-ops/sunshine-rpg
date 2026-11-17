@@ -274,5 +274,5 @@ if VOCAL:
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.4
     for v in js.get("vocals", []): v["debreathAt"] = [[t + 0.03, 1.2] for t in [188.29, 17.24, 62.19, 210.11, 177.4, 46.47, 57.35, 111.93, 11.07, 176.57, 79.43, 76.51, 79.54, 76.68, 22.30]]   # 息の点検が言った所だけ、追加で息の音を下げる（2026-11-17。全体の debreath は 0.5 のまま）
     save(path, js)
-js = load(path); drum_punch(js); save(path, js)
+js = load(path); drum_punch(js); drum_center(js); save(path, js)   # drum_center: 2026-11-18 ドラムを真ん中に寄せる（次の書き出しから効く）
 final_gain(path, {"前奏": 1.5, "リフ": 1.0, "Aメロ2": -0.5, "間奏": 1.0, "サビ1": 1.2, "サビ2": 0.8, "Cメロ": -3.5, "落ちサビ": -5.0, "最後のサビ": 2.2, "おわり": 2.5})   # v11: ピアノだけの Cメロ・落ちサビがサビより大きかった・前奏が小さかった・最後のサビを山に

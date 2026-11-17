@@ -9,7 +9,7 @@ import { EXTRA_FX_INFO, EXTRA_FX_TYPES, buildExtraFx } from "./fx-extra";
 export const FX_TYPES = [
   "delay", "pingpong", "reverb", "plate", "spring", "room",
   "chorus", "flanger", "phaser", "tremolo", "vibrato", "wah", "autowah",
-  "compressor", "eq", "boost", "tubescreamer", "fuzz", "bitcrusher", "ringmod", "filter", "widen",
+  "compressor", "eq", "boost", "tubescreamer", "fuzz", "bitcrusher", "ringmod", "filter", "widen", "narrow",
   // 2026-10-14 追加（fx-extra.ts）
   ...EXTRA_FX_TYPES,
 ] as const;
@@ -86,6 +86,7 @@ export const FX_INFO: Record<FxType, { label: string; use: string; mix: number }
   ringmod: { label: "リングモジュレーター", use: "金属的な変な音（効果音向け）", mix: 0.4 },
   filter: { label: "フィルター", use: "高音や低音を削る", mix: 1 },
   widen: { label: "ステレオ広げ", use: "左右に少しずらして広げる", mix: 0.5 },
+  narrow: { label: "ステレオせばめ", use: "左右の広がりをせばめて真ん中に寄せる（mix＝寄せる量。1 でモノラル）。ドラムの芯を真ん中に置くときに", mix: 0.5 },
   ...EXTRA_FX_INFO,
 };
 
@@ -404,6 +405,21 @@ export function buildFx(ctx: BaseAudioContext, spec: FxSpec): BuiltFx {
       d.connect(p);
       p.connect(m.wet);
       return { input: m.input, output: m.output, nodes };
+    }
+    case "narrow": {
+      // 2026-11-18: 左右の広がりをせばめる（基本の学びなおし「キックとベースは真ん中に芯」。自分の曲のドラムは左右の広がり 0.6 で、お手本は 0.1〜0.4）
+      //   左' = 左×(1−a/2) + 右×(a/2)、右' = 右×(1−a/2) + 左×(a/2)。a＝mix（0 でそのまま・1 でモノラル）
+      const inp = gain(1);
+      inp.channelCount = 2;
+      inp.channelCountMode = "explicit";
+      const sp = ctx.createChannelSplitter(2);
+      const mg = ctx.createChannelMerger(2);
+      const ll = gain(1 - mix / 2), rr = gain(1 - mix / 2), lr = gain(mix / 2), rl = gain(mix / 2);
+      nodes.push(sp, mg);
+      inp.connect(sp);
+      sp.connect(ll, 0); sp.connect(lr, 0); sp.connect(rr, 1); sp.connect(rl, 1);
+      ll.connect(mg, 0, 0); rl.connect(mg, 0, 0); rr.connect(mg, 0, 1); lr.connect(mg, 0, 1);
+      return { input: inp, output: mg, nodes };
     }
     default: {
       const extra = buildExtraFx(ctx, spec, FX_INFO[spec.type]?.mix ?? 0.3);

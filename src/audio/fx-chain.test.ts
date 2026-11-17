@@ -10,8 +10,8 @@ const base = {
 const mk = (fx: unknown) => aiSongToScore({ ...base, parts: [{ instrument: "leadGuitar", role: "メロディ", volume: 0.3, notes: "C4:4 D4:4 E4:4 G4:4", fx }] });
 
 describe("エフェクター（fx）", () => {
-  it("全33種類（基本22＋fx-extra の11）すべてに、日本語の名前と使いどころがある", () => {
-    expect(FX_TYPES.length).toBe(33);
+  it("全34種類（基本23＋fx-extra の11）すべてに、日本語の名前と使いどころがある", () => {
+    expect(FX_TYPES.length).toBe(34);
     for (const t of FX_TYPES) {
       expect(FX_INFO[t].label.length).toBeGreaterThan(0);
       expect(FX_INFO[t].use.length).toBeGreaterThan(0);

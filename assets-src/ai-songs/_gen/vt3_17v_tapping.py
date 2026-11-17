@@ -267,5 +267,5 @@ if VOCAL:
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.4
     for v in js.get("vocals", []): v["debreathAt"] = [[t + 0.03, 1.2] for t in [60.89, 252.1, 206.34, 249.98, 102.02, 133.61, 106.24, 21.79]]   # 息の点検が言った所だけ、追加で息の音を下げる（2026-11-17。全体の debreath は 0.5 のまま）
     save(path, js)
-js = load(path); drum_punch(js); save(path, js)
+js = load(path); drum_punch(js); drum_center(js); save(path, js)   # drum_center: 2026-11-18 ドラムを真ん中に寄せる（次の書き出しから効く）
 final_gain(path, {"ドロップ": 0.5, "ドロップ2": 1.0, "Aメロ2": -1.0, "Bメロ2": -0.8, "Cメロ": -2.0, "ギターの番": -0.5, "落ちサビ": -1.5, "最後のサビ": 1.8, "おわり": 1.0})   # v4: タッピングひとりの出だしが小さかった・Aメロ2 がサビ1 より大きかった・最後のサビを山に

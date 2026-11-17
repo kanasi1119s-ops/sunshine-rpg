@@ -364,3 +364,14 @@ def shift_deg(line, n):
         if t[0] in "#b" or not t[0].isdigit(): out.append(t); continue
         d = int(t[0]); o = t.count("'") - t.count(","); i = (d - 1) + 7 * o + n; o2 = i // 7; out.append(str(i % 7 + 1) + ("'" * o2 if o2 > 0 else "," * (-o2)))
     return " ".join(out)
+
+
+def drum_center(js, core=0.7, cym=0.4):
+    """ドラムを真ん中に寄せる（2026-11-18 基本の学びなおし「真ん中に芯」）。ドラムの音源は左右に広い録音で、自分の曲のドラムは左右の広がりが 0.6（お手本は 0.1〜0.4）だった。
+    キック・スネア・タムは core、ハイハット・シンバルは cym だけ寄せる（fx の narrow。1 でモノラル）。ドラムだけ鳴らして測ると、中域 0.39 → 0.26・高域 0.66 → 0.30（core=cym=0.7 のとき）"""
+    n = 0
+    for p in js["parts"]:
+        ins = p.get("instrument")
+        if ins in ("kick", "snare", "tom"): p["fx"] = (p.get("fx") or []) + [{"type": "narrow", "mix": core}]; n += 1
+        elif ins in ("hihat", "crash", "ride"): p["fx"] = (p.get("fx") or []) + [{"type": "narrow", "mix": cym}]; n += 1
+    print(f"  ドラムを真ん中に寄せる: {n} パート")
