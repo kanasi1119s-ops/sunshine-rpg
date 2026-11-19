@@ -15,6 +15,8 @@
 #   5. かき鳴らしは、手がずっと下・上に振れている。16分の 1・3 番めはダウン、2・4 番めはアップ。型は D/d（ダウン）と U/u（アップ）で書く
 #   6. ダウンは低い弦から、アップは高い弦から。アップは高い側の弦だけ当たる。1回のストロークが弦をわたる時間は 12〜28 ミリ秒（強いほど速い）
 #   7. 弦ごとに鳴りつづける: その弦が次に弾かれるか、和音が変わるか、手で止める（.）まで
+#   8. （2026-11-19 追加。人間「和音をそんな単純にジャン、、、ジャンみたいな弾き方普通しないでしょ」）手は止まらない。型は、小節のほとんどの8分（または16分）を弾いて、
+#      強い・弱いと、弾かずに空振りする所（-）でノリを作る。「ジャン……ジャン」とまばらに置く型は、キメ（全員で止まる所）と曲の終わりだけ。strokes_per_bar() で数えて確かめる
 from vp25_lib import parse_chord, QUAL, PC, nm, midi
 import random as _r
 
@@ -126,8 +128,10 @@ class Strummer:
             t0, m, v = self.ring.pop(s); L = max(0.1, t - t0)
             self.tr[s].ev.append((t0, L, f"{nm(m)}:{L:.3f}")); self.vel[s].append(v); self.count["notes"] += 1
 
-    def bar(self, b, pat, shape, shape2=None, up_strings=None):
-        """b 小節めに、型 pat で shape（[(弦, MIDI), …]）を弾く。shape2 があれば、小節の後半（3拍めから）はその形。up_strings: アップで当たる弦の数（既定は 高い側の 2〜3本）"""
+    def bar(self, b, pat, shape, shape2=None, up_strings=None, feel=8, switch=8):
+        """b 小節めに、型 pat で shape（[(弦, MIDI), …]）を弾く。shape2 があれば、switch マスめ（既定は 3拍め）からその形（14 にすると、次の和音を8分早く弾く「食い」）。
+        feel: 手の振り方。8＝8分で振る（拍の頭がダウン、「と」がアップ）／16＝16分で振る（0・2 番めがダウン、1・3 番めがアップ）／"down"＝8分をぜんぶダウン（歪んだギターの刻まない8分）
+        up_strings: アップで当たる弦の数（既定は 高い側の 2〜3本）"""
         S = self.S; pat = pat.replace(" ", ""); assert len(pat) == 16, pat; t0 = S.bar_beat(b); spb = 60.0 / S.bpm
         if self.last is not None and self.last != b - 1:                 # 弾かない小節をはさんだ: 前に弾いた小節の終わりで止まっている
             for s in list(self.ring): self._stop(s, S.bar_beat(self.last + 1))
@@ -141,13 +145,15 @@ class Strummer:
         strings, pitch = change(shape, t0)
         for i, c in enumerate(pat):
             t = t0 + i * 0.25
-            if i == 8 and shape2 is not None: strings, pitch = change(shape2, t)
+            if i == switch and shape2 is not None: strings, pitch = change(shape2, t)
             if c == "-": continue
             if c == ".":
                 for s in list(self.ring): self._stop(s, t)
                 continue
             down = c in "Dd"; assert c in "DdUu", c
-            assert down == (i % 2 == 0), f"{b + 1}小節め {i} マスめ: {'ダウン' if down else 'アップ'}は、このマスでは手の向きが合わない（{pat}）"
+            want_down = (i % 2 == 0) if feel == 16 else (i % 4 == 0) if feel == 8 else True
+            assert feel == 16 or i % 2 == 0, f"{b + 1}小節め {i} マスめ: 8分で振る型に、16分のウラの音がある（{pat}）"
+            assert down == want_down, f"{b + 1}小節め {i} マスめ: {'ダウン' if down else 'アップ'}は、このマスでは手の向きが合わない（{pat}・feel={feel}）"
             strong = c in "DU"
             if down: hit = strings if strong or len(strings) <= 3 else (strings if self.rng.random() < 0.6 else strings[:-1] if self.rng.random() < 0.5 else strings[1:])
             else:
@@ -181,3 +187,8 @@ class Strummer:
                 assert k == len(want), (tr.role, k, len(want))
                 p["notes"] = " ".join(out)
         return n
+
+
+def strokes(pat):
+    """型の中の、弾く回数（D d U u の数）"""
+    return sum(1 for c in pat if c in "DdUu")
