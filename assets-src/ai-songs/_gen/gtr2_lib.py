@@ -150,6 +150,15 @@ class Strummer:
             if c == ".":
                 for s in list(self.ring): self._stop(s, t)
                 continue
+            if c in "Xx":                                                 # ブラッシング: 左手を浮かせて、音程のない「チャッ」を弾く（鳴っていた弦は止まる）
+                bdown = (i % 2 == 0) if feel == 16 else (i % 4 == 0) if feel == 8 else True
+                hit = strings if bdown else strings[-min(3, len(strings)):][::-1]
+                for s in list(self.ring): self._stop(s, t - 0.01)
+                for k_, s in enumerate(hit):
+                    tt = t + 0.012 * k_ / spb / max(1, len(hit) - 1) * (len(hit) - 1) / max(1, len(hit) - 1) if len(hit) > 1 else t
+                    self.tr[s].ev.append((max(t0, tt), 0.14, "x:0.14")); self.vel[s].append(int(self.rng.uniform(58, 70) if c == "X" else self.rng.uniform(44, 56))); self.count["notes"] += 1
+                self.count["brush"] = self.count.get("brush", 0) + 1
+                continue
             down = c in "Dd"; assert c in "DdUu", c
             want_down = (i % 2 == 0) if feel == 16 else (i % 4 == 0) if feel == 8 else True
             assert feel == 16 or i % 2 == 0, f"{b + 1}小節め {i} マスめ: 8分で振る型に、16分のウラの音がある（{pat}）"
@@ -192,3 +201,50 @@ class Strummer:
 def strokes(pat):
     """型の中の、弾く回数（D d U u の数）"""
     return sum(1 for c in pat if c in "DdUu")
+
+
+def arp(self, b, pat, shape):
+    """アルペジオ: 和音を押さえたまま、1本ずつ弾く。pat は16分のマスに、弾く弦の番号（shape の中で 0＝いちばん低い弦）。-＝鳴らしたまま、.＝止める。弾いた弦は、次にその弦を弾くまで鳴りつづける"""
+    S = self.S; pat = pat.replace(" ", ""); assert len(pat) == 16, pat; t0 = S.bar_beat(b); spb = 60.0 / S.bpm
+    if self.last is not None and self.last != b - 1:
+        for s in list(self.ring): self._stop(s, S.bar_beat(self.last + 1))
+    self.last = b; p = dict(shape); strings = [s for s, _ in shape]
+    for s in list(self.ring):
+        if s not in p or p[s] != self.ring[s][1]: self._stop(s, t0 - 0.04)
+    for i, c in enumerate(pat):
+        t = t0 + i * 0.25
+        if c == "-": continue
+        if c == ".":
+            for s in list(self.ring): self._stop(s, t)
+            continue
+        s = strings[min(int(c), len(strings) - 1)]; tt = t + self.rng.uniform(-0.004, 0.005) / spb
+        v = (self.rng.uniform(88, 98) if i % 4 == 0 else self.rng.uniform(72, 84)) * self.bright
+        self._stop(s, tt - 0.005); self.ring[s] = (max(t0, tt), p[s], int(v)); self.count["pick"] = self.count.get("pick", 0) + 1
+
+def hammer(self, b, slot, sidx, midi_new):
+    """コードの飾り: 鳴っている和音の1本だけ、指を足して（または はなして）音を変える（sus4 → 3度、9度 → 根音 など）。弾き直さないので弱い"""
+    t = self.S.bar_beat(b) + slot * 0.25
+    s = sorted(self.ring)[min(sidx, len(self.ring) - 1)] if self.ring else None
+    if s is None: return
+    v = self.ring[s][2]; self._stop(s, t - 0.003); self.ring[s] = (t, midi_new, int(v * 0.72)); self.count["hammer"] = self.count.get("hammer", 0) + 1
+
+
+Strummer.arp = arp; Strummer.hammer = hammer
+
+
+def palm(tracks, S, b, pat, shape, rng):
+    """ブリッジミュートの刻み（歪んだ低い弦の「ズンズン」）。tracks は palmMute を入れたパート（弦1本ずつ）。pat: M＝強め、m＝ふつう、-＝のばさない休み。shape は低い2〜3本だけ使う"""
+    pat = pat.replace(" ", ""); assert len(pat) == 16, pat
+    for i, c in enumerate(pat):
+        if c not in "Mm": continue
+        for k, (s, m) in enumerate(shape[:2 if c == "m" else 3]):
+            tracks[k].at(S.bar_beat(b) + i * 0.25 + 0.004 * k, f"{nm(m)}:0.22{'!' if c == 'M' else ''}")
+
+
+def octaves(tr_lo, tr_hi, S, b, line):
+    """オクターブ奏法: 同じ旋律を、1オクターブはなれた2本の弦で同時に弾く。line は「音名:拍」の並び（低い方の音）"""
+    t = S.bar_beat(b)
+    for x in line.split():
+        n, L = x.split(":")[0], float(x.split(":")[1].rstrip("!,"))
+        if n != "R": tr_lo.at(t, x); tr_hi.at(t + 0.006, f"{nm(midi(n) + 12)}:{x.split(':')[1]}")
+        t += L
