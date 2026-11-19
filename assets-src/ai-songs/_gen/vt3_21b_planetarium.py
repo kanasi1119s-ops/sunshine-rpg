@@ -1,6 +1,7 @@
 # vt3 21「屋上プラネタリウム」Rooftop Planetarium（仮）— エレクトロロック（4分の4・146）。ロ短調（サビはニ長調に聞こえる明るい側）。転調なし。
 # 第3弾（0時〜24時の街）の 20時。表は docs/sound/vt3-plan.md。
 #
+# v4（2026-11-19）: 人間「音は悪くない。前奏が今までの曲と変わりがなく、曲調は単調」→ 歌から始まる形にし、Aメロの和音・Aメロ2 の旋律・サビの行ごとのリズム・リフ2・Bメロの終わり方を作り変えた。
 # v3（2026-11-19）: ゼロから作り直し。v1・v2 は電子のドラムのポップス。
 #   人間の指示: 「18からは1曲ずつコンセプトとかジャンルをしっかり決めて作って行こうか。つまり作り直そう」「エレクトロロックの曲に変えよう」（21 のこと）「音源リンキン・パークも入れて欲しいな」
 #   「トライデントの音源と一緒に作ったよ」＝ 2026-10-23 に参考録音を測って作った音（参考の音 bright-nu-wall・ギター nu-metal-wall。vb25 09 で使った組み合わせ）。表を見せて「良い」をもらってから作った。
@@ -13,7 +14,7 @@
 # 音の地図の場所: バンドと電子のまん中で、重い側（16・17 より強い歪み）。
 #
 # 曲を決める表:
-#   形: 前奏（シンセの分散和音とピアノのフック＝街の明かり → キックだけ先に入る）→ リフ（バンドが入る。ピアノとリードギターのフック）→ Aメロ（電子のビート → 生のドラム）→ Bメロ（半分の速さ）
+#   形（v4）: サビ頭（歌から始まる。4小節は声とピアノとシンセ → バンドが入る）→ リフ（バンドが入る。ピアノとリードギターのフック）→ Aメロ（電子のビート → 生のドラム）→ Bメロ（半分の速さ）
 #       → サビ（半分の速さで大きく）→ リフ → Aメロ2 → Bメロ2 → サビ2 → 停電（アコースティックギターと声と手拍子だけ）→ 星が出る（分散和音が1音ずつ増える）
 #       → 最後のサビ（後半は倍の速さ）→ おわり（リフ → 分散和音が減って、1音だけ残る）
 #   場面と強さ: 前奏 中 → リフ 強 → Aメロ 中弱 → Bメロ 中 → サビ1 強 → Aメロ2 中 → サビ2 強＋ → 停電 弱（いちばん静か）→ 星が出る 弱→中 → 最後のサビ 最強 → おわり 強 → 1音
@@ -32,17 +33,17 @@ S = Song("21", "planetarium", "屋上プラネタリウム（仮）", "Rooftop P
 S.kit = "naked-x"; S.flags = "--bass bnb-loud --ref-tone bright-nu-wall --piano salamander " + S.flags
 K = Key("B", "minor"); SC = {11, 1, 2, 4, 6, 7, 9}
 R_CH = ["Bm", "Bm", "G", "G", "Em7", "Em7", "A", "A"]
-A_CH = R_CH + ["Bm", "Bm", "G", "G", "Em7", "F#m", "G", "A"]
+A_CH = ["Bm", "Bm", "D", "D", "G", "G", "F#m", "F#m", "Em7", "Em7", "G", "G", "Bm", "A", "G", "A"]      # v4: リフ（Bm・G・Em7・A）と同じ和音が40小節つづいていたので、Aメロは別の進行に
 B_CH = ["Em7", "Em7", "G", "G", "Asus4", "A", "Asus4", "A"]
 C_CH = ["D", "F#m", "Bm", "G", "D", "F#m", "Em7", "A", "D", "F#m", "Bm", "G", "Em7", "G|A", "Bm", "Bm"]
 C_END = C_CH[:14] + ["D", "D"]
 T_CH = ["D", "A", "Bm", "G", "D", "A", "G", "G"]
-S.scene("前奏", 8, "intro", R_CH)
+S.scene("サビ頭", 8, "intro", C_CH[:8])
 S.scene("リフ", 8, "break", R_CH)
 S.scene("Aメロ", 16, "verse", A_CH)
 S.scene("Bメロ", 8, "pre", B_CH)
 S.scene("サビ1", 16, "chorus", C_CH)
-S.scene("リフ2", 8, "break", R_CH)
+S.scene("かけ合い", 8, "break", R_CH)
 S.scene("Aメロ2", 16, "verse", A_CH)
 S.scene("Bメロ2", 8, "pre", B_CH)
 S.scene("サビ2", 16, "chorus", C_CH)
@@ -59,9 +60,15 @@ D = S.drumkit(); LY = Lyrics(S); N = lambda m: nm(m); RNG = _r.Random(2119)
 P1, P2 = "x-x-x-x---x-x---", "x---x-------...."
 Q1, Q2 = "..x-x-x-x-x-x---", "x-x---------...."
 R1, R2 = "x---x-x-x---x-x-", "x---x-------...."
-AP = [P1, P2, Q1, Q2, R1, R2, Q1, Q2] * 2
-AD = ["3 3 2 3 5 4", "3 2", "2 3 4 3 2 3", "4 3", "4 4 5 6 5 4", "3 4", "4 5 4 2 4 5", "4 2",
-      "3 5 5 4 5 7", "5 3", "6 5 3 5 6 5", "5 3", "4 4 6 6 5 4", "5 7", "6 6 7 6 5 6", "7 7"]
+AP = AP1 = [P1, P2, Q1, Q2, R1, R2, Q1, Q2] * 2
+AD = ["3 3 2 3 5 4", "5 3", "3 4 5 4 3 4", "5 3", "6 6 5 3 5 6", "5 3", "5 4 5 7 5 4", "5 2",
+      "4 4 6 6 5 4", "3 4", "6 5 3 5 6 7", "7 6", "5 5 7 5 3 5", "4 4", "6 6 7 6 5 6", "7 7"]
+# v4: Aメロ2 は、リズムの形も高さも Aメロ1 と変える（つめて歌う行 W と、おくれて入る行 Z）
+W1, W2 = "x-x-x-x-x-x-x---", "x-----------...."
+Z1, Z2 = "....x-x-x-x-x-x-", "x---x-------...."
+AP2 = [W1, W2, Z1, Z2, W1, W2, Z1, Z2, R1, R2, Q1, Q2, W1, W2, Z1, Z2]
+AD2 = ["5 5 5 7 5 3 5", "5", "7 7 5 7 1' 7", "5 3", "6 6 6 1' 7 6 5", "3", "7 7 5 4 5 7", "5 2",
+       "4 4 6 6 5 4", "3 4", "6 5 3 5 6 7", "7 6", "1' 1' 7 5 7 1' 7", "7", "6 6 7 6 7 1'", "2' 2'"]
 A1 = ["まちじゅうのあかり", "いちどにきえたよ", "れいぞうこもねた", "しずかすぎるよる", "かいだんをのぼる", "てさぐりのままで", "おくじょうのどあを", "おしたらそこには"]
 A2 = ["となりのやねにも", "だれかがてをふる", "なまえもしらない", "おなじそらみてる", "あかるすぎたから", "みえずにいたもの", "くらやみのおくで", "まちつづけていた"]
 B1p, B2p = "x---x---x-x-x---", "x-------x---...."
@@ -72,7 +79,9 @@ B2 = ["みあげてごらん", "かぞえきれない", "ひとつふたつと",
 E1, E2 = "x---x-x-x-x-x---", "x-x-x-x-x---...."
 F1, F2 = "x---x---x-x-x---", "x-x-x-x-----...."
 G1, G2 = "x---x---x-x-x---", "x-x-x-------...."
-CP = [E1, E2, E1, E2, E1, E2, F1, F2, E1, E2, E1, E2, E1, E2, G1, G2]
+X1, X2 = "..x-x-x-x---x-x-", "x---x-x-x-x-...."          # v4: サビは行ごとにリズムを変える（頭から・おくれて・長くのばしてから）
+Y1, Y2 = "x-----x-x-x-x-x-", "x---x---x-x-x-.."
+CP = [E1, E2, X1, X2, Y1, Y2, F1, F2, E1, E2, X1, X2, Y1, Y2, G1, G2]
 CD = ["5 5 7 7 3' 2'", "2' 2' 1' 7 2'", "1' 1' 3' 3' 4' 3'", "3' 3' 1' 7 1'", "5 5 7 7 3' 4'", "5' 4' 2' 1' 2'", "4' 4' 3' 1' 3'", "2' 2' 4' 4'",
       "5 5 7 7 3' 2'", "2' 2' 1' 7 2'", "1' 1' 3' 3' 4' 5'", "4' 3' 1' 7 1'", "4' 4' 3' 3' 1' 3'", "3' 3' 2' 2' 4'", "3' 3' 2' 1' 2'", "1' 7 1'"]
 CDE = CD[:15] + ["2' 3' 3'"]                                                      # 最後だけ、上（レ）で終わる
@@ -91,7 +100,7 @@ def put(name, pats, degs, phrases):
     LY.flow(bars, mel, text, name)
 
 
-put("Aメロ", AP, AD, A1); put("Bメロ", BP_, BD, B1); put("サビ1", CP, CD, C1); put("Aメロ2", AP, AD, A2); put("Bメロ2", BP_, BD, B2); put("サビ2", CP, CD, C2)
+put("サビ頭", CP[:8], CD[:8], C1[:4]); put("Aメロ", AP, AD, A1); put("Bメロ", BP_, BD, B1); put("サビ1", CP, CD, C1); put("Aメロ2", AP2, AD2, A2); put("Bメロ2", BP_, BD, B2); put("サビ2", CP, CD, C2)
 put("停電", TP_, TD, T1); put("最後のサビ", CP + CP, CD + CDE, C1 + C2)
 
 # ================= 伴奏 =================
@@ -128,17 +137,20 @@ def arp(b, pat="x-x-x-x-x-x-x-x-", order=(0, 2, 1, 3, 2, 4, 3, 1), lo="D5", hi="
 GL = [S.track(f"Lギター{i + 1}弦め（ニューメタルの壁）", "distGuitar", **rock_gtr_spec(0.085, -0.6, tone="nu-metal-wall")) for i in range(6)]
 GR = [S.track(f"Rギター{i + 1}弦め（ニューメタルの壁）", "distGuitar", **rock_gtr_spec(0.08, 0.6, tone="nu-metal-wall")) for i in range(6)]
 LG = S.track("リードギター（フック・合いの手）", "leadGuitar", **lead_gtr_spec(0.055, -0.08))
-AG = [S.track(f"アコースティックギター{i + 1}弦め", "guitar", patch="nylonGuitar", amp="clean", volume=0.06, pan=-0.1 + 0.04 * i, reverb=0.25, chorus=0) for i in range(6)]
+AG = [S.track(f"アコースティックギター{i + 1}弦め", "guitar", patch="nylonGuitar", amp="clean", volume=0.09, pan=0.0, reverb=0.25, chorus=0) for i in range(6)]
 BASS = S.track("ベース（指弾き）", "bass", **rock_bass_spec(0.25))
 SUB = S.track("サブベース", "bass", patch="kfbSub", volume=0.02, pan=0, duck=0.4)
-PNO = S.track("ピアノ（フック）", "piano", volume=0.3, pan=-0.1, reverb=0.3, sustain=0.9, fx=[{"type": "eq", "low": -3, "mid": -1.5, "midHz": 400, "high": 1}])
+PNO = S.track("ピアノ（フック）", "piano", volume=0.2, pan=-0.1, reverb=0.3, sustain=0.9, fx=[{"type": "eq", "low": -3, "mid": -1.5, "midHz": 400, "high": 1}])
+# ★ v3 の大きなまちがい: パートの設定（pan など）がちがうと MIDI のチャンネルを1つずつ使い、16 をこえた分は「前のパートの楽器の音」で鳴る。
+#   v3 では ピアノ・パッド3本・プラック・アコースティックギター3本 が同じチャンネルに入り、パッドもプラックもピアノの音で鳴っていた（だからシンセの音量を変えても変わらなかった）。
+#   build の「MIDI のチャンネルが足りません」という注意を見落としていた。v4 では pan をそろえてチャンネルを 15 以内に収めた（広がりは widen でつける）
 # 作る前の確認で、16 と音色の重なりが 64%（目安 60% 未満）と出た → スーパーソウと矩形波のプラックをやめ、暗いシンセのパッドと別のプラックにした（リンキン・パーク寄りの音の組み合わせ＝vb25 09 と同じパッド）
-SAW = [S.track(f"暗いシンセのパッド{i + 1}", "pad", patch="surgePadNewtonWasEvil", volume=0.4, pan=(-0.4, 0.0, 0.4)[i], reverb=0.3, sustain=2.0, duck=0.4,
-               fx=[{"type": "filter", "kind": "highpass", "freq": 200, "q": 0.7}, {"type": "boost", "gain": 9}]) for i in range(3)]
-ARP = S.track("分散和音（街の明かり・星）", "lead", patch="surgeNicePluck", volume=0.5, pan=0.25, reverb=0.3, fx=[{"type": "boost", "gain": 12}, {"type": "pingpong", "beats": 0.75, "mix": 0.2, "feedback": 0.3}])
+SAW = [S.track(f"暗いシンセのパッド{i + 1}", "pad", patch="surgePadNewtonWasEvil", volume=0.12, pan=0.0, reverb=0.3, sustain=2.0, duck=0.4,
+               fx=[{"type": "filter", "kind": "highpass", "freq": 200, "q": 0.7}, {"type": "widen", "amount": 1.4}]) for i in range(3)]
+ARP = S.track("分散和音（街の明かり・星）", "lead", patch="surgeNicePluck", volume=0.12, pan=0.25, reverb=0.3, fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.2, "feedback": 0.3}])
 HATR = S.track("電子のハイハット", "guitar", patch="kawaiiFx", volume=0.045, pan=-0.2, reverb=0.08, modulate=False)
-CLAP = S.track("クラップ・手拍子", "guitar", patch="kawaiiFx", volume=0.075, pan=0.05, reverb=0.15, modulate=False)
-FXT = S.track("効果音", "guitar", patch="kawaiiFx", volume=0.06, pan=0.1, reverb=0.25, modulate=False)
+CLAP = S.track("クラップ・手拍子", "guitar", patch="kawaiiFx", volume=0.07, pan=0.05, reverb=0.2, modulate=False)
+FXT = S.track("効果音", "guitar", patch="kawaiiFx", volume=0.07, pan=0.05, reverb=0.2, modulate=False)
 
 # ピアノのフック（2小節ひと組。和音ごとに形を移す）
 HOOK = ["F#5:0.75 D5:0.75 B4:0.5 C#5:0.5 D5:0.5 F#5:1", "E5:0.75 D5:0.75 B4:2.5", "G5:0.75 D5:0.75 B4:0.5 C#5:0.5 D5:0.5 G5:1", "F#5:0.75 D5:0.75 B4:2.5",
@@ -157,6 +169,7 @@ BV = [("x-x-x-x-x-x-x-x-", "11118151"), ("x-----x-x---x-x-", "1185d"), ("x---x-x
 BC = [("x-----x-x-------", "118"), ("x-----x-x---x-x-", "1185d"), ("x---------x-x-x-", "15wd"), ("x-----x-----x-x-", "115a")]                # サビ（半分の速さ）
 EH = ["C#5:0.5 C#5:0.25 C#5:0.25 " * 4, "C#5:0.5 C#5:0.25 C#5:0.25 " * 3 + "C#5:0.5 D5:0.5"]                                                 # 電子のハイハット
 STAR = ["x...............", "x.......x.......", "x.....x.....x...", "x...x...x...x...", "x.x.x...x.x.x...", "x.x.x.x.x.x.x...", "x-x-x-x-x-x-x-x-", "x-x-x-x-x-x-x-x-"]
+LGS = ["R:0.5 B4:0.5 D5:0.5 E5:0.5 F#5:1 E5:0.5 D5:0.5", "R:0.5 D5:0.5 E5:0.5 G5:1 F#5:0.5 D5:0.5 B4:0.5", "R:0.5 E5:0.5 G5:0.5 B5:1 A5:0.5 G5:0.5 E5:0.5", "R:0.5 A5:0.5 G5:0.5 E5:0.5 C#5:0.5 E5:0.5 A5:1"]      # かけ合いのリードギター
 LANS = {7: "R:3 E5:0.5 F#5:0.5", 15: "R:1.5 B4:0.5 D5:0.5 F#5:0.5 E5:1"}      # サビの歌の休みに、リードギター
 
 
@@ -168,6 +181,7 @@ def chorus(b, i, n):
     if lv >= 2: CLAP.bar(b, "R:2 B4:1 R:1" if not fast else "R:1 B4:1 R:1 B4:1")
     if lv >= 2 or j >= 8: arp(b, "x-x-x-x-x-x-x-x-" if j % 2 == 1 or fast else "x---x---x---x---")
     if j in LANS and not end: LG.bar(b, LANS[j])
+    elif fast and not end: t = sorted(voice(halves(b)[0], 74, 3))[-1]; LG.bar(b, f"{N(t)}:4" if i % 2 == 0 else f"R:2 {N(t)}:1 {N(t + 2)}:1")       # v4: 後半は、リードギターが上で長い音を重ねる
     if j % 8 == 0: crash(D, b, "C2", 4); FXT.bar(b, fx_bar((0, "impact", 2)))
     if j % 8 == 7 and not end: fill_cresc(D, b, 1 if j == 7 else 2)
     if end: D.set(b, "X.........X.....", "........X.......", "X.x.X.x........."); strum(GL, b, "x---------------", strings=3); strum(GR, b, "x---------------", strings=4)
@@ -175,36 +189,50 @@ def chorus(b, i, n):
 
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b); odd = i % 2 == 1; last = i == L - 1
-    if n == "前奏":                                                    # シンセの分散和音だけ（街の明かり）→ 5小節めからキックだけ先に入り、ピアノのフックとサブベース
-        # 3 回め: シンセの boost を 4 → 12 にしても、測った大きさが変わらなかった（原因は未確認）。前奏が −24.5 と小さいままなので、ピアノのフックを頭から入れ、5小節めからリードギターとベースも足した
-        arp(b); saw(b); hook(b, i, lead=i >= 4)
-        if i >= 4: D.set(b, "X...X...X...X...", "................", "................"); sub(b); bass(b, "x-x-x-x-x-x-x-x-", "11111111")
-        if last: FXT.bar(b, fx_bar((0, "up", 4)))
-    elif n in ("リフ", "リフ2"):                                        # バンドが入る（フィルなし・クラッシュ）。ピアノとリードギターのフック
-        two = n == "リフ2"
+    if n == "サビ頭":                                                  # v4: 歌から始まる（今までの曲は「1つの音から始めてだんだん増やす」ばかりだった）。4小節は声とピアノとシンセ、5小節めにバンドが入る
+        saw(b); sub(b); arp(b, "x---x---x---x---"); r = low(halves(b)[0], "E2"); PNO.bar(b, " ".join(f"{N(r + d)}:0.5" for d in (0, 7, 12, 7, 16, 12, 7, 12)))
+        if i >= 4:
+            feel(D, b, "half" if not odd else "halfopen"); bass(b, *BC[i % 4]); strum(GL, b, "x-------x-------", strings=3); strum(GR, b, "x-----x---x-----", strings=4)
+            if i == 4: crash(D, b, "C2", 4); FXT.bar(b, fx_bar((0, "impact", 2)))
+        if last: fill_cresc(D, b, 2)
+    elif n == "リフ":                                                   # ピアノとリードギターのフック
         hook(b, i); bass(b, *BV[i % 4]); sub(b); strum(GL, b, "x-----x-----x---", strings=3); strum(GR, b, "x---------x-----" if not odd else "x-----x---x-----", strings=4)
-        feel(D, b, ("rock8" if not odd else "rock8b") if not two else ("break" if not odd else "break2")); arp(b, "x---x---x---x---")
+        feel(D, b, "rock8" if not odd else "rock8b"); arp(b, "x---x---x---x---")
         if i in (0, 4): crash(D, b, "C2", 4)
-        if i == 0: FXT.bar(b, fx_bar((0, "impact", 2)))
-        if last: fill_cresc(D, b, 1, toms=two)
+        if last: fill_cresc(D, b, 1, toms=False)
+    elif n == "かけ合い":                                               # v4: リフのくり返しをやめた。リードギターの1小節（バンドは頭の1発で止まる）→ プラックの速い返事とバンド、を交互に
+        if not odd:
+            LG.bar(b, LGS[i // 2]); D.set(b, "X...............", "................", "X...x...x...x..."); strum(GL, b, "x---............", strings=3); strum(GR, b, "x---............", strings=4)
+            BASS.bar(b, f"{N(low(halves(b)[0], 'E1'))}:1 R:3"); crash(D, b, "C2", 4)
+        else:
+            feel(D, b, "break" if i % 4 == 1 else "break2"); bass(b, *BV[(i // 2) % 4]); sub(b); strum(GL, b, "x-----x-----x---", strings=3); strum(GR, b, "x-----x---x-----", strings=4)
+            arp(b, "xxxxxxxxxxxxxxxx", order=(0, 1, 2, 3, 4, 3, 2, 1, 2, 3, 4, 5, 4, 3, 2, 3) if i % 4 == 1 else (5, 4, 3, 2, 1, 2, 3, 4, 3, 2, 1, 0, 1, 2, 3, 4))
+        if last: fill_cresc(D, b, 2)
     elif n in ("Aメロ", "Aメロ2"):
-        two = n == "Aメロ2"; first = i < 8
+        two = n == "Aメロ2"; first = i < 8; AP = AP2 if two else AP1
         if first and not two:                                          # Aメロ1 の前半: 電子のビート（キックとクラップと16分のハイハット）。ギターなし
             D.set(b, "X.....x.X.......", "................", "................"); CLAP.bar(b, "R:1 B4:1 R:1 B4:1"); HATR.bar(b, EH[i % 2]); bass(b, "x-x-x-x-x-x-x-x-", "11111111"); sub(b)
-            if AP[i] in (P2, Q2, R2): PNO.bar(b, "R:2 " + ["F#5:0.5 D5:0.5 B4:1", "E5:0.5 D5:0.5 B4:1", "G5:0.5 E5:0.5 B4:1", "E5:0.5 C#5:0.5 A4:1"][(i // 2) % 4])      # 句の終わりに、フックのかけら
+            if i % 2 == 1: PNO.bar(b, "R:2 " + ["F#5:0.5 D5:0.5 B4:1", "E5:0.5 D5:0.5 B4:1", "G5:0.5 E5:0.5 B4:1", "E5:0.5 C#5:0.5 A4:1"][(i // 2) % 4])      # 句の終わりに、フックのかけら
         else:                                                          # 生のドラムとギター
             feel(D, b, ("rock8" if not odd else "rock8b") if not two or not first else ("break" if not odd else "break2")); bass(b, *BV[(i + (2 if two else 0)) % 4])
             strum(GR, b, "x---------------" if not odd else "x-----x---------", strings=3)
             if two: HATR.bar(b, EH[i % 2]) if first else strum(GL, b, "x-------x-------", strings=3)
-            if two and AP[i] in (P2, Q2, R2) and first: PNO.bar(b, "R:2 " + ["F#5:0.5 D5:0.5 B4:1", "E5:0.5 D5:0.5 B4:1", "G5:0.5 E5:0.5 B4:1", "E5:0.5 C#5:0.5 A4:1"][(i // 2) % 4])
+            if two and i % 2 == 1 and first: PNO.bar(b, "R:2 " + ["F#5:0.5 D5:0.5 B4:1", "E5:0.5 D5:0.5 B4:1", "G5:0.5 E5:0.5 B4:1", "E5:0.5 C#5:0.5 A4:1"][(i // 2) % 4])
             if i == 8: crash(D, b, "C2", 4)
         if i == 7: fill_cresc(D, b, 1, toms=False)
         if last: fill_cresc(D, b, 1)
-    elif n in ("Bメロ", "Bメロ2"):                                      # 半分の速さ。のびる和音。最後の2小節でスネアが細かくなる
-        saw(b); sub(b); bass(b, "x-------x---x-x-" if i < 4 else "x---x---x-x-x-x-", "115d" if i < 4 else "1158wd"[:6] + "")
-        if i >= 4: strum(GL, b, "x---------------", strings=3); strum(GR, b, "x-------x-------", strings=4)
-        D.set(b, "X.......X......." if i < 6 else "X...X...X...X...", "........X......." if i < 6 else ("x.x.x.x.x.x.x.x." if i == 6 else "x.x.x.x.xxxxXXXX"), "X...x...X...x..." if i < 6 else "................")
-        arp(b, "x---x---x---x---")
+    elif n in ("Bメロ", "Bメロ2"):                                      # 半分の速さ。v4: 1回めは最後の小節で全員が止まって声だけ、2回めはタムとギターの4分で押す
+        two = n == "Bメロ2"; stop = last and not two
+        if stop:
+            for j, v in enumerate(sorted(voice(halves(b)[0], 62, 3))): SAW[j].bar(b, f"{N(v)}:1.5 R:2.5")
+            BASS.bar(b, f"{N(low(halves(b)[0], 'E1'))}:1.5 R:2.5"); strum(GL, b, "x-----..........", strings=3); strum(GR, b, "x-----..........", strings=4); D.set(b, "X.....X.........", "......X.........", "X...............")
+        else:
+            saw(b); sub(b); bass(b, "x-------x---x-x-" if i < 4 else "x---x---x-x-x-x-", "115d" if i < 4 else "115w5d")
+            if two: strum(GL, b, "x---x---x---x---", strings=3); strum(GR, b, "x-------x-------", strings=4)
+            elif i >= 4: strum(GL, b, "x---------------", strings=3); strum(GR, b, "x-------x-------", strings=4)
+            if two: D.set(b, "X..X..X...X.X..." if i < 6 else "X...X...X...X...", "........X......." if i < 6 else ("x.x.x.x.x.x.x.x." if i == 6 else "x.x.x.x.xxxxXXXX"), "................" if i < 6 else "................")
+            else: D.set(b, "X.......X.......", "........X.......", "X...x...X...x...")
+            arp(b, "x---x---x---x---")
         if i == 6: FXT.bar(b, fx_bar((0, "up", 4)))
     elif n in ("サビ1", "サビ2", "最後のサビ"): chorus(b, i, n)
     elif n == "停電":                                                   # 電気の音がぜんぶ消える。アコースティックギターと声。後半から手拍子
