@@ -318,6 +318,7 @@ if VOCAL:
     js = load(path)
     # v6: 人間「21の歌、一音一音はっきりと聞こえるようにした方がいいな」→ 子音をやわらげる設定（softCons 0.3）を外し、子音を少し強く、音程の移りを速く、しゃくりを小さくした
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.0; v["consonant"] = 1.25; v["glide"] = 0.75
+    for v in js.get("vocals", []): v["debreathAt"] = [[t + 0.02, 1.2] for t in [61.82, 154.08, 149.57, 202.17, 29.74, 187.78, 193.33, 42.92, 115.66, 39.39, 229.49, 150.58]]      # 子音をはっきりさせたら、音の途中の息の音が 8か所で大きくなった → そこだけ下げる
     js["vocalLevel"] = 0.66      # 決まりの 0.6 より 0.8dB だけ大きく（歪んだギターの中で言葉が聞こえるように）
     save(path, js)
 js = load(path); drum_punch(js); drum_center(js); save(path, js)
