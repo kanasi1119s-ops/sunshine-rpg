@@ -173,10 +173,13 @@ LANS = {7: "R:3 E5:0.5 F#5:0.5", 15: "R:1.5 B4:0.5 D5:0.5 F#5:0.5 E5:1"}      # 
 COUNT = ["B5:2 G5:1 D5:1", "B5:1.5 A5:0.5 G5:2", "A5:2 F#5:1 D5:1", "A5:1.5 G5:0.5 F#5:2", "G5:2 E5:1 B4:1", "G5:1.5 F#5:0.5 E5:2", "E5:1 A5:1 C#6:2", "C#6:1 B5:1 A5:2"]      # 星をかぞえるピアノ
 
 
+AGP = S.track("ナイロン弦のギター（1本の指で）", "guitar", patch="nylonGuitar", amp="clean", volume=0.32, pan=0.0, reverb=0.3, chorus=0)      # 1 回め: かき鳴らす用の音量（0.09）のままだと −37dB で、歌より 7dB 小さかった
+
+
 def pick(b, fast=False):
     """ナイロン弦のギターを1本の指で（和音をばらして）"""
     v = sorted(voice(halves(b)[0], 62, 3))
-    AG[0].bar(b, " ".join(f"{N(x)}:0.5" for x in (v[0], v[1], v[2], v[1], v[2], v[1], v[0], v[1])) if fast else f"{N(v[0])}:1 {N(v[1])}:1 {N(v[2])}:1 {N(v[1])}:1")
+    AGP.bar(b, " ".join(f"{N(x)}:0.5" for x in (v[0], v[1], v[2], v[1], v[2], v[1], v[0], v[1])) if fast else f"{N(v[0])}:1 {N(v[1])}:1 {N(v[2])}:1 {N(v[1])}:1")
 
 
 def astrum(b, pat): gtr_strum(AG, S, b, pat, halves(b)[0], RNG, drive=False)
@@ -186,7 +189,7 @@ def electric(b, i, hookon=True, busy=True):
     """電気の音がぜんぶ鳴る（歪んだギター・シンセ・サブベース）"""
     odd = i % 2 == 1
     if hookon: hook(b, i)
-    bass(b, *BV[i % 4]); sub(b); saw(b); strum(GL, b, "x-x-x-x-x-x-x-x-" if busy else "x-----x-----x---", strings=3); strum(GR, b, "x---x-x-x---x-x-" if busy else ("x---------x-----" if not odd else "x-----x---x-----"), strings=4)
+    bass(b, *BV[i % 4]); sub(b); saw(b); strum(GL, b, "x-x-x-x-x-x-x-x-" if busy else "x-----x-----x---", strings=4 if busy else 3); strum(GR, b, "x---x-x-x---x-x-" if busy else ("x---------x-----" if not odd else "x-----x---x-----"), strings=5 if busy else 4)
     feel(D, b, "rock8" if not odd else "rock8b"); HATR.bar(b, EH[i % 2]); arp(b, "xxxxxxxxxxxxxxxx" if busy else "x-x-x-x-x-x-x-x-", order=(0, 2, 1, 3, 2, 4, 3, 1) * 2 if busy else (0, 2, 1, 3, 2, 4, 3, 1))
 
 
@@ -284,3 +287,4 @@ if VOCAL:
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.3
     save(path, js)
 js = load(path); drum_punch(js); drum_center(js); save(path, js)
+final_gain(path, {"最後のサビ": 1.0})      # 1 回め: 電気がもどる −14.0 が 最後のサビ −14.3 より少し大きかった
