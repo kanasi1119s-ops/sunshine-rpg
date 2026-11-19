@@ -31,11 +31,11 @@ for b in range(S.nb):
         G2.palm(GM, S, b, "m-m-----m-m-m---" if i % 2 == 0 else "m-m-m-----m-----", low_, RNG); SL.bar(b, "------D-------D-" if i % 2 == 0 else "--------D-----D-", low_, feel="down"); SR.bar(b, "D-------D-------", tri)
     elif s == "4":    # 右＝オクターブ奏法の旋律、左＝8分のパワーコード
         SL.bar(b, "D-d-d-D-d-d-D-d-", G2.low_shape(ch, with_third=False), feel="down")
-        G2.octaves(GR[2], GR[4], S, b, ["F#3:1.5 D3:0.5 E3:1 F#3:1", "G3:1.5 B3:0.5 A3:1 G3:1", "F#3:1 A3:1 D4:1.5 C#4:0.5", "E3:1.5 C#3:0.5 E3:2"][i])
+        G2.octaves(SR, 2, 4, S, b, ["F#3:1.5 D3:0.5 E3:1 F#3:1", "G3:1.5 B3:0.5 A3:1 G3:1", "F#3:1 A3:1 D4:1.5 C#4:0.5", "E3:1.5 C#3:0.5 E3:2"][i])
     elif s == "5":    # 左右で同じ単音リフ（ユニゾン）→ 4小節めは和音のキメ
         if i < 3:
             line = ["B2:0.5 B2:0.5 D3:0.5 B2:0.5 E3:0.5 D3:0.5 B2:0.5 A2:0.5", "G2:0.5 G2:0.5 B2:0.5 G2:0.5 D3:0.5 B2:0.5 G2:0.5 A2:0.5", "D3:0.5 D3:0.5 F#3:0.5 D3:0.5 A3:0.5 F#3:0.5 E3:0.5 D3:0.5"][i]
-            GL[0].bar(b, line); GR[0].bar(b, line)
+            SL.line(0, S.bar_beat(b), line); SR.line(0, S.bar_beat(b), line)
         else: SL.bar(b, "D-----D---D-....", low_, feel="down"); SR.bar(b, "D-----D---D-....", tri, feel="down")
     elif s == "6":    # 右＝クリーンのアルペジオ（弦ごとに鳴りつづける）、左＝白玉
         SL.bar(b, "D---------------", G2.low_shape(ch, with_third=False), feel="down"); SC.arp(b, ("0-2-3-2-4-2-3-2-", "0-3-2-4-3-2-4-3-")[i % 2], G2.open_shape(ch))
@@ -45,7 +45,7 @@ for b in range(S.nb):
         SL.bar(b, "D-------D-------", low_, feel="down")
     elif s == "8":    # 右＝裏打ち（「と」だけ短く）、左＝8分。4小節めに2本の弦の合いの手
         SL.bar(b, "D-d-d-d-D-d-d-d-", low_, feel="down"); SR.bar(b, "--U.--U.--U.--U.", tri)
-        if i == 3: GR[4].at(S.bar_beat(b) + 2, "C#4:0.5 E4:0.5 C#4:0.5 A3:0.5"); GR[5].at(S.bar_beat(b) + 2, "E4:0.5 A4:0.5 E4:0.5 C#4:0.5")
+        if i == 3: SR.line(4, S.bar_beat(b) + 2, "C#4:0.5 E4:0.5 C#4:0.5 A3:0.5"); SR.line(5, S.bar_beat(b) + 2, "E4:0.5 A4:0.5 E4:0.5 C#4:0.5")
 for st in (SL, SR, SC, SA): st.end(S.nb)
 S.desc = "ギターの弾き方の見本（弾き方ごとに4小節）"; finish(S, LY, V, 0)
 from vt3x_lib import *

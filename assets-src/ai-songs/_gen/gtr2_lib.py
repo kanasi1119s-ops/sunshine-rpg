@@ -126,7 +126,7 @@ class Strummer:
     def _stop(self, s, t):
         if s in self.ring:
             t0, m, v = self.ring.pop(s); L = max(0.1, t - t0)
-            self.tr[s].ev.append((t0, L, f"{nm(m)}:{L:.3f}")); self.vel[s].append(v); self.count["notes"] += 1
+            self.tr[s].ev.append((t0, L, f"{nm(m)}:{L:.3f}")); self.vel[s].append((t0, v)); self.count["notes"] += 1
 
     def bar(self, b, pat, shape, shape2=None, up_strings=None, feel=8, switch=8):
         """b 小節めに、型 pat で shape（[(弦, MIDI), …]）を弾く。shape2 があれば、switch マスめ（既定は 3拍め）からその形（14 にすると、次の和音を8分早く弾く「食い」）。
@@ -156,7 +156,7 @@ class Strummer:
                 for s in list(self.ring): self._stop(s, t - 0.01)
                 for k_, s in enumerate(hit):
                     tt = t + 0.012 * k_ / spb / max(1, len(hit) - 1) * (len(hit) - 1) / max(1, len(hit) - 1) if len(hit) > 1 else t
-                    self.tr[s].ev.append((max(t0, tt), 0.14, "x:0.14")); self.vel[s].append(int(self.rng.uniform(58, 70) if c == "X" else self.rng.uniform(44, 56))); self.count["notes"] += 1
+                    self.tr[s].ev.append((max(t0, tt), 0.14, "x:0.14")); self.vel[s].append((max(t0, tt), int(self.rng.uniform(58, 70) if c == "X" else self.rng.uniform(44, 56)))); self.count["notes"] += 1
                 self.count["brush"] = self.count.get("brush", 0) + 1
                 continue
             down = c in "Dd"; assert c in "DdUu", c
@@ -176,6 +176,20 @@ class Strummer:
                 self._stop(s, tt - 0.005); self.ring[s] = (max(t0, tt), pitch[s], int(max(40, min(120, v * self.bright))))
             self.count["down" if down else "up"] += 1
 
+    def note(self, s, t, L, name, v):
+        """弦 s のパートに、音を1つ直接置く（単音リフ・オクターブ奏法など）。強さは velocity() でまとめて付く"""
+        self._stop(s, t - 0.005) if s in self.ring else None
+        self.tr[s].ev.append((t, L, f"{name}:{L:g}")); self.vel[s].append((t, int(v))); self.count["line"] = self.count.get("line", 0) + 1
+
+    def line(self, s, beat, text, strong=106, mid=92):
+        """弦 s のパートに、「音名:拍!」の並びを置く（! ＝強い）"""
+        t = float(beat)
+        for x in text.split():
+            L = float(x.split(":")[1].rstrip("!,'"))
+            if not x.startswith("R"): self.note(s, t, L, x.split(":")[0], (strong if x.endswith("!") else mid) + self.rng.randint(-4, 4))
+            t += L
+        return t
+
     def end(self, b_end):
         """曲の終わり（または長い休みの前）で、鳴っている弦を止める"""
         for s in list(self.ring): self._stop(s, self.S.bar_beat(b_end))
@@ -185,7 +199,7 @@ class Strummer:
         """JSON にしたあとで、弦ごとの音に強さ（%数字）を付ける"""
         n = 0
         for s, tr in enumerate(self.tr):
-            want = self.vel[s]
+            want = [v for _, v in sorted(self.vel[s], key=lambda x: x[0])]          # 音の頭の時間の順（パートの中の並びと同じ）
             if not want: continue
             for p in js["parts"]:
                 if p.get("role") != tr.role: continue
@@ -241,10 +255,64 @@ def palm(tracks, S, b, pat, shape, rng):
             tracks[k].at(S.bar_beat(b) + i * 0.25 + 0.004 * k, f"{nm(m)}:0.22{'!' if c == 'M' else ''}")
 
 
-def octaves(tr_lo, tr_hi, S, b, line):
-    """オクターブ奏法: 同じ旋律を、1オクターブはなれた2本の弦で同時に弾く。line は「音名:拍」の並び（低い方の音）"""
+def octaves(st, s_lo, s_hi, S, b, line):
+    """オクターブ奏法: 同じ旋律を、1オクターブはなれた2本の弦で同時に弾く。st は Strummer、s_lo・s_hi は弦の番号。line は「音名:拍」の並び（低い方の音）"""
     t = S.bar_beat(b)
     for x in line.split():
         n, L = x.split(":")[0], float(x.split(":")[1].rstrip("!,"))
-        if n != "R": tr_lo.at(t, x); tr_hi.at(t + 0.006, f"{nm(midi(n) + 12)}:{x.split(':')[1]}")
+        if n != "R":
+            v = 104 if x.endswith("!") else 90
+            st.note(s_lo, t, L, n, v); st.note(s_hi, t + 0.006, L, nm(midi(n) + 12), v - 4)
         t += L
+
+
+# ===== 2026-11-19 夜: 間（ま）を作って弾く・リズムに乗る旋律を弾く（人間「間を作って弾いたり、リズムに乗るようにメロディも弾けるようになるといいね」） =====
+def sung_slots(V, S, b):
+    """b 小節めで、歌が鳴っている16分のマスの集まり（歌のパート V の音から）"""
+    t0 = S.bar_beat(b); out = set()
+    for t, L, x in (V.main.ev if hasattr(V, "main") else V.ev):
+        if x.startswith("R") or t + L <= t0 or t >= t0 + S.beats: continue
+        for i in range(16):
+            if t < t0 + (i + 1) * 0.25 - 1e-6 and t + L > t0 + i * 0.25 + 1e-6: out.add(i)
+    return out
+
+
+def gap_beats(V, S, b):
+    """b 小節めの終わりに、歌が休んでいる長さ（拍）。合いの手を入れる場所をさがす"""
+    s = sung_slots(V, S, b); last = max(s) + 1 if s else 0
+    return (16 - last) * 0.25
+
+
+def with_space(pat, sung, keep=(0,)):
+    """間を作る: 歌が鳴っているマスでは、強い音を弱くし、アップは空振りにする（keep のマスはそのまま）。歌が休んでいるマスはそのまま弾く ＝ 歌のすき間でギターが前に出る"""
+    out = []
+    for i, c in enumerate(pat):
+        if i in keep or i not in sung or c in "-.": out.append(c)
+        elif c == "D": out.append("d")
+        elif c in "Uu": out.append("-")
+        elif c in "Xx": out.append("-")
+        else: out.append(c)
+    return "".join(out)
+
+
+def groove_line(ch, pat, start, moves, scale_pcs, lo=40, hi=76):
+    """リズムに乗る旋律: 16分の型 pat（x＝音の頭、-＝のばす、.＝休み）に、音を1つずつ当てる。
+    start の高さ（MIDI）から、moves（音階の中で何段動くか。+1＝1つ上、-2＝2つ下…）の順に動き、拍の頭（強いマス）に来た音は、いちばん近い和音の音に寄せる。
+    返すのは「音名:拍」の並び（1小節ぶん）と、最後の音の高さ"""
+    root, third, fifth, sev, _ = chord_info(ch); tones = {root, fifth} | ({third} if third is not None else set()) | ({sev} if sev is not None else set())
+    scale = sorted(m for m in range(lo, hi + 1) if m % 12 in scale_pcs); cur = min(scale, key=lambda m: abs(m - start)); out = []; k = 0; pat = pat.replace(" ", ""); i = 0; first = True
+    while i < 16:
+        c = pat[i]; j = i + 1
+        while j < 16 and pat[j] == "-": j += 1
+        L = (j - i) * 0.25
+        if c == "x":
+            if not first:
+                idx = scale.index(cur) + moves[k % len(moves)]; k += 1; cur = scale[max(0, min(len(scale) - 1, idx))]
+            first = False
+            if i % 4 == 0 and cur % 12 not in tones:                    # 拍の頭は和音の音に
+                cand = [m for m in scale if m % 12 in tones]; cur = min(cand, key=lambda m: (abs(m - cur), m))
+            out.append(f"{nm(cur)}:{L:g}{'!' if i % 8 == 0 else ''}")
+        else: out.append(f"R:{L:g}")
+        i = j
+    return " ".join(out), cur
+

@@ -1,6 +1,8 @@
 # vt3 21「屋上プラネタリウム」Rooftop Planetarium（仮）— エレクトロロック（4分の4・146）。ロ短調。転調なし。
 # 第3弾（0時〜24時の街）の 20時。
 #
+# v8（2026-11-19 深夜）: 人間「どれもいいね。これら上手く使えるようにするのと、間を作って弾いたり、リズムに乗るようにメロディも弾けるようになるといいね」
+#   → 場面ごとに弾き方を使い分け（単音リフ・オクターブ・ミュートの刻み・カッティング・アルペジオ・コードの飾り）、歌のあいだは間を空け、歌のすき間に合いの手を入れた。
 # v7（2026-11-19）: 人間「ギターってそんな単純な弾き方でいいの？」「アルペジオとかではなく、和音をそんな単純にジャン、、、ジャンみたいな弾き方普通しないでしょ」「全体の音チェックして、小さかったり大きかったりして違和感感じるよ」
 #   → かき鳴らしの型を作り直した（手を止めない）。場面とパートの大きさを測り直してそろえた。
 # v6（2026-11-19）: 人間「21の歌、一音一音はっきりと聞こえるようにした方がいいな。あと、ギター和音で弾いてないよね？弾くとしたら今までの和音の弾き方を忘れて、一から作り直して欲しい」
@@ -233,25 +235,71 @@ def pick(b, fast=False):
 
 
 
-def electric(b, i, hookon=True, busy=True, riff=False):
-    """電気の音がぜんぶ鳴る（歪んだギター・シンセ・サブベース）"""
-    odd = i % 2 == 1
-    if hookon: hook(b, i)
-    bass(b, *BV[i % 4]); sub(b); saw(b); gL(b, (EL if busy or riff else EL_SOFT)[i % (4 if busy or riff else 2)]); gR(b, ER16[odd], feel=16) if busy else gR(b, ER[i % 4], push=riff and odd)
-    feel(D, b, "rock8" if not odd else "rock8b"); HATR.bar(b, EH[i % 2]); arp(b, "xxxxxxxxxxxxxxxx" if busy else "x-x-x-x-x-x-x-x-", order=(0, 2, 1, 3, 2, 4, 3, 1) * 2 if busy else (0, 2, 1, 3, 2, 4, 3, 1))
+# ===== v8: 弾き方を場面ごとに使い分ける・間を作る・リズムに乗る旋律を弾く（人間「どれもいいね。これら上手く使えるようにするのと、間を作って弾いたり、リズムに乗るようにメロディも弾けるようになるといいね」） =====
+GM = [S.track(f"Lギター（ミュートの刻み）{i + 1}", "distGuitar", **{**rock_gtr_spec(0.16, -0.6, tone="nu-metal-wall"), "palmMute": "light"}) for i in range(3)]
+RP = ("x--x--x-x-x--x--", "x--x--x-xx-x-x--")                                   # 街のリフのリズム（3・3・2 の食いこみ。キックと同じ所を打つ）
+MV = ((2, 1, 1, -1, -2, 1), (2, 2, -1, -1, -1, 2, -2), (1, 2, 1, -2, 1, -1), (2, 1, -1, 2, -2, -1, -1))
+CUT = ("D.xUd.xUD.xxdUx.", "D.xxdUx.D.xUd.xU")                                   # 16分のカッティング（切る音とブラッシング）
+CHUG = ("M-m-m-m-M-m-m-m-", "M-m-m-m-m-m-M-m-")                                  # ミュートの刻み（やわらかめ）
+
+
+def riff(b, i, right=True):
+    """街のリフ: 左右で同じ単音の線（リズムに乗る旋律）。和音ごとに、根音から同じリズムで動く"""
+    line, _ = G2.groove_line(halves(b)[0], RP[i % 2], low(halves(b)[0], "E2"), MV[i % 4], SC, lo=40, hi=59)
+    SL.line(0, S.bar_beat(b), line)
+    if right: SR.line(0, S.bar_beat(b), line)
+
+
+def oct_hook(b, i):
+    """右のギターが、フックの旋律をオクターブ奏法で弾く"""
+    G2.octaves(SR, 2, 4, S, b, shift(HOOK[i % 8], -24))
+
+
+def deco(b):
+    """生のギターの飾り: 3度を押さえている弦に指を足して sus4 にし、すぐもどす"""
+    sh = G2.open_shape(halves(b)[0]); root_, third, _, _, _ = G2.chord_info(halves(b)[0])
+    for k, (s_, m) in enumerate(sh):
+        if third is not None and m % 12 == third and k >= len(sh) - 3:
+            up_ = 1 if (third - root_) % 12 == 4 else 2
+            SA.hammer(b, 4, k, m + up_); SA.hammer(b, 8, k, m); return
+
+
+def fill(b, slot):
+    """歌のすき間に、右のギターがオクターブで合いの手（slot マスめから）"""
+    pat = "." * slot + "x-" * ((16 - slot) // 2); line, _ = G2.groove_line(nxt(b), pat, 57, (1, 2, 1), SC, lo=50, hi=64)
+    G2.octaves(SR, 2, 4, S, b, line)
+
+
+def electric(b, i, mode):
+    """電気の音がぜんぶ鳴る場面。mode: "riff"＝左右で単音リフ ／ "riff+oct"＝左がリフ、右がオクターブのフック ／ "verse"＝左がミュートの刻み、右がカッティング（歌のあいだは間を空ける）"""
+    odd = i % 2 == 1; sung = G2.sung_slots(V, S, b)
+    bass(b, *BV[i % 4]); sub(b); saw(b); feel(D, b, "rock8" if not odd else "rock8b"); HATR.bar(b, EH[i % 2])
+    if mode == "riff": riff(b, i); hook(b, i); arp(b, "xxxxxxxxxxxxxxxx", order=(0, 2, 1, 3, 2, 4, 3, 1) * 2)
+    elif mode == "riff+oct": riff(b, i, right=False); oct_hook(b, i); PNO.bar(b, HOOK[i % 8]); arp(b, "xxxxxxxxxxxxxxxx", order=(0, 2, 1, 3, 2, 4, 3, 1) * 2)
+    else:
+        G2.palm(GM, S, b, CHUG[odd], G2.low_shape(halves(b)[0], with_third=False), RNG)
+        if G2.gap_beats(V, S, b) >= 1: gL(b, "------------D-d-")                        # 歌が休む所で、左が和音を開いて鳴らす
+        gR(b, G2.with_space(CUT[odd], sung, keep=(0, 8)), feel=16); arp(b, "x-x-x-x-x-x-x-x-")
 
 
 def chorus(b, i, n):
     lv = {"サビ1": 1, "サビ2": 2, "最後のサビ": 3}[n]; j = i % 16; fast = lv == 3 and i >= 16; end = lv == 3 and i == 31
+    sung = G2.sung_slots(V, S, b); gap = G2.gap_beats(V, S, b)
     sub(b) if lv == 3 else None; bass(b, *(BC[i % 4] if not fast else BV[i % 4]))
-    gA(b, AC[i % 4])                                   # 生のギターは、どのサビでも鳴る（屋上にいる人）
+    if lv < 3 and j in (7, 15): gA(b, "D---D-U-D-......")                                  # 間: 行の終わりで生のギターが止まり、ドラムのおかずと歌の出だしだけになる
+    else:
+        gA(b, AC[i % 4])                                                                    # 生のギターは、どのサビでも鳴る（屋上にいる人）
+        if j % 4 == 2: deco(b)
     arp(b, "x-x-x-x-x-x-x-x-" if lv == 1 else "xxxxxxxxxxxxxxxx", order=(0, 2, 1, 3, 2, 4, 3, 1) * 2)       # 星の音
     feel(D, b, ("half" if i % 2 == 0 else "halfopen") if not fast else "four")
     if lv >= 2: CLAP.bar(b, "R:1 B4:1 R:1 B4:1")
     if lv <= 2 and j % 2 == 1: PNO.bar(b, "R:2 " + ["F#5:0.5 D5:0.5 B4:1", "E5:0.5 D5:0.5 B4:1", "G5:0.5 E5:0.5 B4:1", "E5:0.5 C#5:0.5 A4:1"][(j // 2) % 4])
     if lv == 3:                                                                                           # 電気がもどったあと: 歪んだギターの壁とシンセ
         saw(b)
-        if not end: gL(b, EL[i % 4]); gR(b, ER[(i + 1) % 4], push=i % 4 == 1)
+        if not end:
+            gL(b, EL[i % 4]); pr = G2.with_space(ER[(i + 1) % 4], sung, keep=(0, 8))                       # 右は、歌のあいだは間を空ける
+            if gap >= 1 and j not in LANS and j % 2 == 1: gR(b, pr[:12] + ".---"); fill(b, 12)             # 歌のすき間: かき鳴らしを止めて、オクターブの合いの手
+            else: gR(b, pr, push=i % 4 == 1 and gap < 1)
         if j in LANS and not end: LG.bar(b, LANS[j])
         elif fast and not end: t = sorted(voice(halves(b)[0], 74, 3))[-1]; LG.bar(b, f"{N(t)}:4" if i % 2 == 0 else f"R:2 {N(t)}:1 {N(t + 2)}:1")
     if j % 8 == 0: crash(D, b, "C2", 4)
@@ -263,12 +311,12 @@ def chorus(b, i, n):
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b); odd = i % 2 == 1; last = i == L - 1
     if n == "まぶしい街":                                               # 明るすぎる街: 1拍めから全部鳴る。すき間がない
-        electric(b, i); CLAP.bar(b, "R:1 B4:1 R:1 B4:1")
+        electric(b, i, "riff" if i < 4 else "riff+oct"); CLAP.bar(b, "R:1 B4:1 R:1 B4:1")      # 4小節は左右で同じ単音リフ、あと4小節は右がオクターブでフックを弾く
         if i in (0, 4): crash(D, b, "C2", 4)
         if last: fill_cresc(D, b, 1, toms=False)
     elif n == "ねむらない窓":                                           # 歌が入る。まだ全部鳴っている。最後の小節「まち」で、電気の音がぜんぶ止まる
         if not last:
-            electric(b, i, hookon=False, busy=False)
+            electric(b, i, "verse")
             if odd: PNO.bar(b, "R:2 " + ["F#5:0.5 D5:0.5 B4:1", "G5:0.5 D5:0.5 B4:1", "G5:0.5 E5:0.5 B4:1"][(i // 2) % 3])
             if i == 0: crash(D, b, "C2", 4)
         else:
@@ -277,13 +325,17 @@ for b in range(S.nb):
     elif n == "まっくら":                                               # 声とナイロン弦のギター1本だけ
         pick(b)
     elif n == "階段":                                                   # ベースが1小節に1段ずつ上がる。足音のキック。ギターは細かくなる
-        pick(b, fast=True); BASS.bar(b, f"{N(low(halves(b)[0], 'B1'))}:3.5 R:0.5"); D.set(b, "X.......X.......", "................" if i < 6 else ("....x.......x.x." if i == 6 else "x.x.x.x.xxxxXXXX"), "................")
+        SA.arp(b, ("0-1-2-3-2-3-4-3-", "0-2-1-3-2-4-3-4-")[odd], G2.open_shape(halves(b)[0])); BASS.bar(b, f"{N(low(halves(b)[0], 'B1'))}:3.5 R:0.5"); D.set(b, "X.......X.......", "................" if i < 6 else ("....x.......x.x." if i == 6 else "x.x.x.x.xxxxXXXX"), "................")
     elif n in ("サビ1", "サビ2", "最後のサビ"): chorus(b, i, n)
     elif n == "星をかぞえる":                                           # 星の音が1小節に1つずつ増える。ピアノが星をかぞえる
-        pick(b, fast=i >= 4); BASS.bar(b, f"{N(low(halves(b)[0], 'E1'))}:4"); arp(b, STAR[i], order=(4, 2, 3, 1, 4, 2, 5, 3)); PNO.bar(b, COUNT[i])
+        SA.arp(b, ("0---2---3---2---", "0---2-3-4---3-2-", "0-2-3-2-4-2-3-2-", "0-2-3-4-3-2-4-3-")[min(3, i // 2)], G2.open_shape(halves(b)[0])); BASS.bar(b, f"{N(low(halves(b)[0], 'E1'))}:4")      # v8: アルペジオが2小節ごとに細かくなる（最初から鳴らして、小さすぎないように）; arp(b, STAR[i], order=(4, 2, 3, 1, 4, 2, 5, 3)); PNO.bar(b, COUNT[i])
         if i >= 4: D.set(b, "X.......X.......", "................", "................")
     elif n == "となりの屋根":                                           # 人が増える: 4小節ごとに 手拍子 → ドラム → ピアノ → 星の音
-        gA(b, AC_SOFT[odd] if i < 8 else AC[i % 4]); bass(b, *BV[(i + 1) % 4])
+        if i < 8: gA(b, G2.with_space(AC_SOFT[odd], G2.sung_slots(V, S, b), keep=(0,)))                                # 間: 歌のあいだは弾かず、歌のすき間で弾く
+        else:
+            gA(b, AC[i % 4])
+            if i % 4 == 2: deco(b)
+        bass(b, *BV[(i + 1) % 4])
         if i < 4: D.set(b, "X.......X.......", "................", "................"); CLAP.bar(b, "R:1 B4:1 R:1 B4:1")
         else: feel(D, b, "break" if not odd else "break2")
         if i >= 8 and odd: PNO.bar(b, "R:2 " + ["F#5:0.5 D5:0.5 B4:1", "E5:0.5 D5:0.5 B4:1", "G5:0.5 E5:0.5 B4:1", "E5:0.5 C#5:0.5 A4:1"][(i // 2) % 4])
@@ -296,7 +348,7 @@ for b in range(S.nb):
         D.set(b, "X...X...X...X...", "................" if i < 6 else ("x.x.x.x.x.x.x.x." if i == 6 else "x.x.x.x.xxxxXXXX"), "................")
     elif n == "電気がもどる":                                           # 歪んだギターとシンセがもどる。星の音は消えない。後半はリードギターとプラックのかけ合い
         if i < 8:
-            electric(b, i, busy=False, riff=True)
+            electric(b, i, "riff" if i < 4 else "riff+oct")                                    # 街のリフがもどる
             if i == 0: crash(D, b, "C2", 4); FXT.bar(b, fx_bar((0, "impact", 2)))
         else:
             j = i - 8
@@ -304,12 +356,14 @@ for b in range(S.nb):
                 LG.bar(b, LGS[j // 2]); D.set(b, "X...............", "................", "X...x...x...x..."); gL(b, HIT); gR(b, HIT)
                 BASS.bar(b, f"{N(low(halves(b)[0], 'E1'))}:1 R:3"); crash(D, b, "C2", 4); arp(b, "x---x---x---x---")
             else:
-                feel(D, b, "break" if j % 4 == 1 else "break2"); bass(b, *BV[(j // 2) % 4]); sub(b); saw(b); gL(b, EL[(j // 2) % 4]); gR(b, ER[(j // 2 + 2) % 4])
+                feel(D, b, "break" if j % 4 == 1 else "break2"); bass(b, *BV[(j // 2) % 4]); sub(b); saw(b); G2.palm(GM, S, b, CHUG[(j // 2) % 2], G2.low_shape(halves(b)[0], with_third=False), RNG); gR(b, CUT[(j // 2) % 2], feel=16)
                 arp(b, "xxxxxxxxxxxxxxxx", order=(0, 1, 2, 3, 4, 3, 2, 1, 2, 3, 4, 5, 4, 3, 2, 3) if j % 4 == 1 else (5, 4, 3, 2, 1, 2, 3, 4, 3, 2, 1, 0, 1, 2, 3, 4))
             if last: fill_cresc(D, b, 2)
     elif n == "おわり":                                                 # 電気の音が先に消えて、星の音が1つだけ残る
         if i < 4:
-            hook(b, i, lead=i < 2); bass(b, *BV[i % 4]); gL(b, EL[i % 4] if i < 3 else LONG); gR(b, ER[i % 4] if i < 3 else LONG)
+            hook(b, i, lead=i < 2); bass(b, *BV[i % 4])
+            if i < 3: riff(b, i)
+            else: gL(b, LONG); gR(b, LONG)
             feel(D, b, "rock8" if not odd else "rock8b"); arp(b)
             if i == 0: crash(D, b, "C2", 4)
             if i == 3: D.set(b, "X.......X.......", "....X...........", "X.x.X.x.........")
