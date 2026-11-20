@@ -1,6 +1,7 @@
 # vt3 21「屋上プラネタリウム」Rooftop Planetarium（仮）— エレクトロロック（4分の4・146）。ロ短調。転調なし。
 # 第3弾（0時〜24時の街）の 20時。
 #
+# v9（2026-11-20）: 人間「前奏のギターの弾き方違うかなー」→ 3案の聞きくらべ（tools/vt3/intro21_demo.py）で「cかな」。前奏は 左＝和音を8分、右＝フックの旋律をオクターブ奏法
 # v8（2026-11-19 深夜）: 人間「どれもいいね。これら上手く使えるようにするのと、間を作って弾いたり、リズムに乗るようにメロディも弾けるようになるといいね」
 #   → 場面ごとに弾き方を使い分け（単音リフ・オクターブ・ミュートの刻み・カッティング・アルペジオ・コードの飾り）、歌のあいだは間を空け、歌のすき間に合いの手を入れた。
 # v7（2026-11-19）: 人間「ギターってそんな単純な弾き方でいいの？」「アルペジオとかではなく、和音をそんな単純にジャン、、、ジャンみたいな弾き方普通しないでしょ」「全体の音チェックして、小さかったり大きかったりして違和感感じるよ」
@@ -276,6 +277,7 @@ def electric(b, i, mode):
     bass(b, *BV[i % 4]); sub(b); saw(b); feel(D, b, "rock8" if not odd else "rock8b"); HATR.bar(b, EH[i % 2])
     if mode == "riff": riff(b, i); hook(b, i); arp(b, "xxxxxxxxxxxxxxxx", order=(0, 2, 1, 3, 2, 4, 3, 1) * 2)
     elif mode == "riff+oct": riff(b, i, right=False); oct_hook(b, i); PNO.bar(b, HOOK[i % 8]); arp(b, "xxxxxxxxxxxxxxxx", order=(0, 2, 1, 3, 2, 4, 3, 1) * 2)
+    elif mode == "chord+oct": gL(b, EL[i % 2]); oct_hook(b, i); PNO.bar(b, HOOK[i % 8]); arp(b, "xxxxxxxxxxxxxxxx", order=(0, 2, 1, 3, 2, 4, 3, 1) * 2)      # v9: 左＝低い和音を8分でダウン、右＝フックをオクターブ奏法（聞きくらべの C）
     else:
         G2.palm(GM, S, b, CHUG[odd], G2.low_shape(halves(b)[0], with_third=False), RNG)
         if G2.gap_beats(V, S, b) >= 1: gL(b, "------------D-d-")                        # 歌が休む所で、左が和音を開いて鳴らす
@@ -311,7 +313,7 @@ def chorus(b, i, n):
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b); odd = i % 2 == 1; last = i == L - 1
     if n == "まぶしい街":                                               # 明るすぎる街: 1拍めから全部鳴る。すき間がない
-        electric(b, i, "riff" if i < 4 else "riff+oct"); CLAP.bar(b, "R:1 B4:1 R:1 B4:1")      # 4小節は左右で同じ単音リフ、あと4小節は右がオクターブでフックを弾く
+        electric(b, i, "chord+oct"); CLAP.bar(b, "R:1 B4:1 R:1 B4:1")      # 4小節は左右で同じ単音リフ、あと4小節は右がオクターブでフックを弾く
         if i in (0, 4): crash(D, b, "C2", 4)
         if last: fill_cresc(D, b, 1, toms=False)
     elif n == "ねむらない窓":                                           # 歌が入る。まだ全部鳴っている。最後の小節「まち」で、電気の音がぜんぶ止まる
