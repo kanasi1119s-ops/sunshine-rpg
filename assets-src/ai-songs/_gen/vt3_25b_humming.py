@@ -7,16 +7,16 @@
 #
 # コンセプト: 日付が変わっても眠れない。ひとりで口ずさんだ鼻歌が、街じゅうで起きている誰かの鼻歌とつながっていく。ひとりの夜を「みんな起きている夜」に書きかえる。
 # この曲だけの物: リレー。18〜24 の曲の楽器が、1つずつ、合いことばの節（3・5・6・5・2）をそれぞれの弾き方で鳴らして加わる。
-#   フィドル（18）→ チューバ（19）→ クラリネット（20）→ 歪みのギター（21）→ エレピ（22）→ 矩形波のプラック（23）→ カッティングのギター（24）。
+#   アコギ → FM のシンセベース → サイン波のリード → 歪みのギター（21）→ エレピ（22）→ 矩形波のプラック（23）→ カッティングのギター（24）（v7: オーケストラの楽器は使わない）。
 #   最後の鼻歌では全員が同じ節を同時に鳴らし、「おやすみ」で来た順の逆に1つずつ抜けて、声だけの節で終わる。
 #
 # 物語の出来事 → その時の音:
 #   ひとりの鼻歌（眠れずに口ずさむ）     → 1小節めから、ピアノの分散和音と鼻歌（合いことばの節）がいっしょに始まる。5小節めに足ぶみ
-#   リレー1（夕方と商店街の人）          → 1小節めにフィドル、9小節めにチューバが、節を鳴らして加わる
+#   リレー1（夕方と商店街の人）          → 1小節めにアコギ、9小節めに FM のシンセベースが、節を鳴らして加わる
 #   窓の灯（ほかにも起きている人がいる） → 足ぶみと手拍子がそろう。和音が1段ずつ上がる
 #   みんなの鼻歌1（声が重なる）          → 歌詞なしの鼻歌と手拍子。指弾きのベースが入る
-#   節を回す（間奏）                     → フィドル → チューバ → ピアノ → 全員、と2小節ずつ節をわたす
-#   リレー2（銭湯・屋上・丸い窓の前の人）→ クラリネット、歪みのギター、エレピが4小節ごとに加わる
+#   節を回す（間奏）                     → アコギ → シンセベース → ピアノ → 全員、と2小節ずつ節をわたす
+#   リレー2（銭湯・屋上・丸い窓の前の人）→ サイン波のリード、歪みのギター、エレピが4小節ごとに加わる
 #   窓の灯2・みんなの鼻歌2               → 鼻歌の返事に言葉が入る。ハモリ。足ぶみが増える
 #   リレー3（浮かぶ人、鏡の前の人）      → プラック、カッティングのギター。ここで全員そろう。最後の小節の後ろ半分は無音
 #   最後の鼻歌（街じゅうが同じ節）       → 全音上がる。合唱と全楽器が、同じ節をそれぞれの弾き方で同時に鳴らす
@@ -69,9 +69,10 @@ V = Voice(S, vol=0.16, delay=0.5, bright=0.0, patch="surgeFormantPulse", low=Fal
 D = S.drumkit(); LY = Lyrics(S); N = lambda m: nm(m); RNG = _r.Random(2525)
 PNO = [S.track(f"ピアノ{i + 1}", "piano", volume=0.2, pan=-0.05, reverb=0.25, sustain=1.2, fx=BST(10 if i in (0, 4) else 5)) for i in range(5)]      # 2回め: 分散和音（1本）は −32、和音（4本）は −21 と 10dB ちがった → 和音の3本は +5dB に
 BASS = S.track("ベース（指弾き）", "bass", volume=0.2, pan=0, duck=0.08, fx=[{"type": "filter", "kind": "highpass", "freq": 30, "q": 0.7}] + BST(6))
-FID = S.track("フィドル（18 から）", "strings", patch="violin", recipe="celtic-fiddle", volume=0.12, pan=0.25, reverb=0.4, sustain=1.0, fx=BST(11))
-TU = S.track("チューバ（19 から）", "bass", patch="tuba", volume=0.5, pan=-0.1, reverb=0.12, sustain=0.9, fx=BST(12))
-CLA = S.track("クラリネット（20 から）", "brass", patch="clarinet", volume=0.5, pan=-0.25, reverb=0.25, fx=BST(6))
+# v7（2026-11-21）: 人間「オーケストラで使う様な楽器は使うのやめようか」→ フィドル・チューバ・クラリネットをやめ、アコギ・FM のシンセベース・サイン波のリードに。変数名（FID・TU・CLA）は v6 のまま
+FID = S.track("アコースティックギター", "guitar", patch="nylonGuitar", amp="clean", volume=0.2, pan=0.25, reverb=0.3, chorus=0, fx=BST(6))
+TU = S.track("FM のシンセベース", "bass", patch="kfbFmBass", volume=0.085, pan=-0.1, duck=0.3)
+CLA = S.track("サイン波のリード", "lead", patch="kfbSineLead", volume=0.06, pan=-0.25, reverb=0.35)
 GD = [S.track(f"歪みのギター{i + 1}弦め（21 から）", "distGuitar", **rock_gtr_spec(0.045, -0.5, tone="nu-metal-wall")) for i in range(4)]
 EP = [S.track(f"エレピ{i + 1}（22 から）", "keys", volume=0.2, pan=0.15, reverb=0.18, sustain=1.2, fx=BST(5)) for i in range(3)]
 PLK = S.track("矩形波のプラック（23 から）", "lead", patch="kfbSquarePluck", volume=0.05, pan=0.4, reverb=0.3, fx=[{"type": "pingpong", "beats": 1.5, "mix": 0.2, "feedback": 0.3}])
@@ -116,7 +117,7 @@ OY = S.sc("おやすみ")
 put("おやすみ", HUM + ANS2 + HUM, f"{LA}/るるるるる/{LA}", bars=OY[0:2] + OY[4:6] + OY[10:12])
 
 # ================= リレー: 楽器ごとの「節」の弾き方（2小節。度数:長さ、オクターブ）=================
-MF = {"fid": (["3:3 5:1 6:1 5:1", "2:6"], 5), "tuba": (["3:1 R:1 5:1 6:1 R:1 5:1", "2:2 R:4"], 2), "cla": (["R:1 3:1 5:1 6:2 5:1", "2:3 R:3"], 4),
+MF = {"fid": (["3:3 5:1 6:1 5:1", "2:6"], 4), "tuba": (["3:1 R:1 5:1 6:1 R:1 5:1", "2:2 R:4"], 2), "cla": (["R:1 3:1 5:1 6:2 5:1", "2:3 R:3"], 4),
       "gd": (["3:2 5:1 6:2 5:1", "2:6"], 3), "ep": (["3:2 5:1 6:2 5:1", "2:4 R:2"], 4), "plk": (["3:1 3':1 5:1 6:1 6':1 5:1", "2:1 2':1 2:1 2':1 2:2"], 5),
       "pno": (["3:2 5:1 6:2 5:1", "2:4 R:2"], 5), "gc": (["3:2 5:1 6:2 5:1", "2:4 R:2"], 4)}
 
@@ -169,8 +170,10 @@ def bass(b, fill=False):
 
 
 def tuba(b): r = low(root_of(b), "C2"); TU.bar(b, f"{N(r)}:1 R:2 {N(r + 7 if r + 7 <= 50 else r - 5)}:1 R:2")
-def fid(b, two=False): v = sorted(voice(chord_of(b), 78, 2)); FID.bar(b, f"{N(v[1])}:6" if not two else f"{N(v[1])}:3 {N(v[0])}:3")
-def cla(b): v = sorted(voice(chord_of(b), 68, 2)); CLA.bar(b, f"{N(v[0])}:4 R:2")
+def fid(b, two=False):
+    """アコギ: 上の方で分散和音（ピアノと逆の向き）。two＝付点4分の刻みに1音はさむ"""
+    v = sorted(voice(chord_of(b), 72, 3)); FID.bar(b, " ".join(f"{N(m)}:1" for m in ((v[2], v[1], v[0], v[1], v[2], v[1]) if not two else (v[2], v[0], v[1], v[2], v[0], v[1]))))
+def cla(b): v = sorted(voice(chord_of(b), 72, 2)); CLA.bar(b, f"{N(v[0])}:4 R:2")
 def gd(b, pat="D--D-U"): strum6(SD, b, pat, G2.low_shape(chord_of(b), with_third=False)[:3], strong=100, mid=88)
 def epc(b): v = sorted(voice(chord_of(b), 64, 3)); [EP[j].bar(b, f"{N(v[j])}:3 {N(v[j])}:2 R:1") for j in range(3)]
 def plk(b): v = sorted(voice(chord_of(b), 76, 3)); PLK.bar(b, " ".join(f"{N(m)}:1" for m in (v[0], v[1], v[2], v[0] + 12, v[2], v[1])))
@@ -243,7 +246,7 @@ for b in range(S.nb):
             r = low(root_of(b), "E1"); v = sorted(voice(chord_of(b), 62, 3))
             D.set(b, g6("X... .... X... .... .... ...."), g6("X... .... X... .... .... ...."), "." * 24); BASS.bar(b, f"{N(r)}:2 {N(r)}:1 R:3"); TU.bar(b, f"{N(r + 12)}:2 {N(r + 12)}:1 R:3")
             for j in range(3): PNO[j + 1].bar(b, f"{N(v[j])}:2 {N(v[j])}:1 R:3"); EP[j].bar(b, f"{N(v[j])}:2 {N(v[j])}:1 R:3")
-            strum6(SD, b, "D-D...", G2.low_shape(chord_of(b), with_third=False)[:3]); strum6(SC, b, "D-D...", G2.triad(chord_of(b), TRI[0])); FID.bar(b, f"{N(v[2] + 12)}:3 R:3"); CLA.bar(b, f"{N(v[1])}:3 R:3")
+            strum6(SD, b, "D-D...", G2.low_shape(chord_of(b), with_third=False)[:3]); strum6(SC, b, "D-D...", G2.triad(chord_of(b), TRI[0])); FID.bar(b, f"{N(v[2] + 12)}:3 R:3"); CLA.bar(b, f"{N(v[1] + 12)}:3 R:3")
             continue
         pno(b, "chord2"); stomp(b, STOMP4); bass(b, fill=odd); fid(b, two=True); tuba(b); cla(b); gd(b); epc(b)
         for w, start in (("plk", 0), ("gc", 2)):
@@ -265,7 +268,7 @@ for b in range(S.nb):
 
 S.fade_out = 0
 S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の25（24時・アルバムの最後）。8分の6拍子のアンセム（付点4分＝64）。ニ長調 → ホ長調。眠れない夜の鼻歌が、街じゅうの鼻歌とつながる話。"
-          "ピアノと鼻歌がいっしょに始まる → 18〜24 の曲の楽器（フィドル・チューバ・クラリネット・歪みのギター・エレピ・プラック・カッティングのギター）が、"
+          "ピアノと鼻歌がいっしょに始まる → バンドと電子の楽器（アコギ・FM のシンセベース・サイン波のリード・歪みのギター・エレピ・プラック・カッティングのギター）が、"
           "1つずつ合いことばの節を鳴らして加わる → 無音 → 全員が同じ節を鳴らす → 来た順の逆に抜けて、声だけの節で終わる。自作")
 SD.end(S.nb); SC.end(S.nb)
 finish(S, LY, V, 0)
