@@ -1,4 +1,6 @@
-# vt3 10「自動ドアのランウェイ」Sliding-Door Runway（仮）— K-POP（場面ごとにビートが切りかわるダンスポップ）。4分の4・120。ト短調 → 最後のサビから全音上のイ短調。
+# vt3 10「自動ドアのランウェイ」Sliding-Door Runway（仮）— 明るい K-POP（場面ごとにビートが切りかわるダンスポップ）。4分の4・124。ト長調 → 最後のサビから全音上のイ長調。
+# v3（2026-11-21）: 人間「10はもっと明るくした曲調に変えよう」。短調 → 長調、歪んだギター → 左右のピアノの和音、テンポ 120 → 124、和音の進み方も長調で書き直した。
+#   v1・v2（短調・歪んだギター）は、歌の入るサビだけ点が低かった（場面ごとに測ると 5.7〜6.3。Aメロは 7.8〜8.0）。
 # 第3弾（0時〜24時の街）の 9時。
 #
 # v1（2026-11-21）: 曲名も物語も新しくして、ゼロから作った。前の 10 は「教科書の落書きたち」（ブルーグラス `vt3_10_doodles.py`、K-POP の試し書き `vt3_10c_doodles.py`）。
@@ -13,7 +15,7 @@
 #   くつ音             → 右足・左足の「コツ、コツ」（高さのちがう2音）がそのままビートになる
 #   歩道               → くつ音とキック、休みの多いシンセベースのリフだけ。音は真ん中に集める
 #   ドアの前           → キックが消えて和音が上がる。ドアのチャイム（上がる2音）→ 1拍の無音
-#   ドアが開く（サビ） → 音が一気に左右に広がる。4つ打ち、ウラで鳴るベース、左右の歪んだギター、短いシンセの和音
+#   ドアが開く（サビ） → 音が一気に左右に広がる。4つ打ち、ウラで鳴るベース、左右のピアノ、短いシンセの和音
 #   床がひかる         → 歌なしのフック（プラックと声のチョップ「あ・る・け」）
 #   鏡の柱             → はねるビートに切りかわり、プラックが合いの手
 #   ターン             → 歌なし。ベースの旋律とドラム。プラックが合いことばの節を2回
@@ -24,20 +26,19 @@
 # 合いことばの節（3・5・6・5・2）: ターンで、プラックが2回鳴らす（アルバムの決まり）。
 # 歌詞: 曲名は歌わない。「じどうドア」「ランウェイ」も使わない。声: クリア 1 種類。
 from vocalo_lib import *
-import gtr2_lib as G2
 
-S = Song("10", "runway", "自動ドアのランウェイ（仮）", "Sliding-Door Runway", 120, 4, "G", "minor", "K-POP（ボカロ）")
-S.kit = "electro"; S.flags = S.flags + " --space room --space-wet 0.08"
-K1, K2 = Key("G", "minor"), Key("A", "minor")
+S = Song("10", "runway", "自動ドアのランウェイ（仮）", "Sliding-Door Runway", 124, 4, "G", "major", "明るい K-POP（ボカロ）")
+S.kit = "electro"; S.flags = S.flags + " --piano salamander --space room --space-wet 0.08"
+K1, K2 = Key("G", "major"), Key("A", "major")
 
 
 def up2(chs): return [tr_chord(c, 2) for c in chs]
 
 
-VCH = ["Gm7", "Bb", "Ebmaj7", "D7"]
-PCH = ["Cm7", "Dm7", "Ebmaj7", "F", "Cm7", "Dm7", "D7sus4", "D7"]
-CCH = ["Ebmaj7", "F", "Gm7", "Bb", "Ebmaj7", "F", "Dm7", "D7"]
-S.scene("くつ音", 4, "intro", ["Gm7", "Gm7", "Gm7", "D7"])
+VCH = ["G", "Bm7", "Cmaj7", "D"]
+PCH = ["Am7", "Bm7", "Cmaj7", "D", "Am7", "Bm7", "D7sus4", "D7"]
+CCH = ["G", "D", "Em7", "Cmaj7", "G", "D", "Am7", "D"]
+S.scene("くつ音", 4, "intro", ["G", "G", "Cmaj7", "D"])
 S.scene("歩道", 8, "verse", VCH * 2)
 S.scene("ガラスの向こう", 8, "verse", VCH * 2)
 S.scene("ドアの前", 8, "pre", PCH)
@@ -46,10 +47,10 @@ S.scene("床がひかる", 8, "break", CCH)
 S.scene("鏡の柱", 8, "verse", VCH * 2)
 S.scene("ドアの前2", 8, "pre", PCH)
 S.scene("ドアが開く2", 8, "chorus", CCH)
-S.scene("ターン", 8, "break", ["Gm7", "Gm7", "Ebmaj7", "Ebmaj7", "Cm7", "Cm7", "D7", "D7"])
-S.scene("立ち止まる", 4, "bridge", ["Gm7", "Ebmaj7", "F", "E7"])
-S.scene("最後のサビ", 16, "chorus", up2(CCH + CCH[:7] + ["Gm"]))
-S.scene("ドアが閉まる", 6, "outro", up2(["Gm7"] * 6))
+S.scene("ターン", 8, "break", ["G", "G", "Cmaj7", "Cmaj7", "Am7", "Am7", "D", "D"])
+S.scene("立ち止まる", 4, "bridge", ["Em7", "Cmaj7", "D", "E7"])
+S.scene("最後のサビ", 16, "chorus", up2(CCH + CCH[:7] + ["G"]))
+S.scene("ドアが閉まる", 6, "outro", up2(["G", "Cmaj7", "G", "Cmaj7", "G", "G"]))
 S.keep_old_synth = True; S.no_depth = True; S.keepers = {}; S.open_hat_vol = 0.35
 MOD = S.sc("最後のサビ")[0]
 
@@ -62,15 +63,14 @@ V = Voice(S, vol=0.16, delay=0.4, bright=0.0, patch="kfbSineLead", low=False)
 HEEL = S.track("くつ音（カホンの縁）", "cajon", volume=0.2, pan=0.0, reverb=0.12, fx=[{"type": "boost", "gain": 14}])
 SUB = S.track("サブベース（のばす）", "bass", patch="kfbSub", volume=0.05, pan=0, duck=0.4, fx=[{"type": "filter", "kind": "highpass", "freq": 32, "q": 0.7}])
 RB = S.track("シンセベースのリフ", "bass", patch="kfbFmBass", volume=0.085, pan=0, duck=0.3, fx=rack_bass())
-STAB = [S.track(f"短いシンセの和音{i + 1}", "lead", patch="surgeHappySaws", volume=0.1, pan=0.0, reverb=0.2, duck=0.3, fx=[{"type": "widen", "amount": 1.6}]) for i in range(3)]
+STAB = [S.track(f"短いシンセの和音{i + 1}", "lead", patch="surgeChordReset", volume=0.1, pan=0.0, reverb=0.2, duck=0.3, fx=[{"type": "widen", "amount": 1.6}]) for i in range(3)]
 PAD = [S.track(f"上がっていく和音{i + 1}", "pad", patch="surgePadBright", volume=0.12, pan=0.0, reverb=0.35, fx=[{"type": "boost", "gain": 2}, {"type": "widen", "amount": 1.4}]) for i in range(3)]
 PLK = S.track("プラック（フック）", "lead", patch="surgeNicePluck", volume=0.09, pan=0.3, reverb=0.25, fx=PING)
 BELL = S.track("ドアのチャイム", "lead", patch="kfbBrightBells", volume=0.1, pan=-0.2, reverb=0.35)
-GLT = [S.track(f"左の歪みのギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.06, -0.6, tone="nu-metal-wall")) for i in range(6)]
-GRT = [S.track(f"右の歪みのギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.06, 0.6, tone="nu-metal-wall")) for i in range(6)]
+PNL = [S.track(f"左のピアノ{i + 1}", "piano", volume=0.06, pan=-0.55, reverb=0.2, sustain=0.9, fx=rack_piano()) for i in range(3)]
+PNR = [S.track(f"右のピアノ{i + 1}", "piano", volume=0.06, pan=0.55, reverb=0.2, sustain=0.9, fx=rack_piano()) for i in range(3)]
 CLP = S.track("電子のクラップ", "guitar", patch="kawaiiFx", volume=0.06, pan=-0.05, reverb=0.1, modulate=False)
 D = S.drumkit(); LY = Lyrics(S); N = lambda m: nm(m)
-SL, SR = G2.Strummer(GLT, S, 20), G2.Strummer(GRT, S, 21); TR = [None]
 
 # ================= 歌（度数:長さ。oct 4 で 1 = G4。最後のサビからは 1 = A4）=================
 VA = ["1:0.5 1:0.5 R:0.5 3:0.5 1:1 7,:1", "5,:0.5 7,:0.5 1:2 R:1", "1:0.5 1:0.5 R:0.5 3:0.5 4:1 3:1", "2:0.5 4:0.5 2:2 R:1",
@@ -109,7 +109,7 @@ def seq(b, pat):
     while i < 16:
         c = pat[i]; L = 1
         while i + L < 16 and pat[i + L] == "-": L += 1
-        out.append(f"R:{L * 0.25:g}" if c == "." else f"{N(r + {'r': 0, 'R': 12, '5': 7, '7': 10}[c])}:{L * 0.25:g}"); i += L
+        out.append(f"R:{L * 0.25:g}" if c == "." else f"{N(r + {'r': 0, 'R': 12, '5': 7, '7': 9}[c])}:{L * 0.25:g}"); i += L
     RB.bar(b, " ".join(out))
 
 
@@ -124,8 +124,10 @@ def pad(b, lift=0, pat=None):
 
 
 def hook(b, k=0): PLK.bar(b, KEY(b).mel(("5:0.75 5:0.75 3:1.5 R:1", "R:1 7:0.5 5:0.5 3:1 5:1")[k], oct=5))        # フックの音型（歌のフックと同じ 5・5・3）と、その答え
-def gtr(b, patL="D-d-D-d-D-d-D-d-", patR="D--U--D---D-D--U"):
-    c = S.chords[b]; TR[0] = G2.triad(c, TR[0]); SL.bar(b, patL, G2.low_shape(c, with_third=False)[:3], feel="down" if "U" not in patL else 16); SR.bar(b, patR, TR[0], feel=16)
+def gtr(b, patL="x..x..x...x.x...", patR="..x..x..x..x..x."):
+    """ドアが開いたあとの、左右のピアノの和音（左は低め、右は高め。リズムをずらして左右でかけ合う）"""
+    lo = sorted(voice(S.chords[b], 60, 3)); hi = sorted(voice(S.chords[b], 72, 3))
+    for j in range(3): PNL[j].bar(b, steps(patL, [N(lo[j])] * patL.count("x"), short=0.5)); PNR[j].bar(b, steps(patR, [N(hi[j])] * patR.count("x"), short=0.5))
 
 
 def clap(b, pat="R:1 B4:1 R:1 B4:1"): CLP.bar(b, pat)
@@ -138,8 +140,8 @@ WALK2 = [("X.........X.....", "............X...", "x.x.x.x.x.x.x.x."), ("X......
 TURN = [("X.....X..X......", "....X.......X...", ""), ("X..X.....X..X...", "....X..x....X...", "")]
 BOUNCE = [("X.....X...X..X..", "....X.......X...", "x.x.x.x.x.x.x.x."), ("X..X......X...X.", "....X.......X..x", "x.xxx.x.x.xxx.x.")]
 FOUR = [(K4, "....X.......X...", "..x...x...x...x."), (K4, "....X.......X..x", "..x...x...x..xx.")]
-BRK = ["G1:1 R:0.5 G2:0.5 F2:0.5 D2:0.5 Bb1:1", "G1:0.5 Bb1:0.5 C2:0.5 D2:1 F2:0.5 G2:1", "Eb2:1 R:0.5 Eb2:0.5 D2:0.5 Bb1:0.5 G1:1", "Eb1:0.5 G1:0.5 Bb1:0.5 D2:1 Eb2:0.5 G2:1",
-       "C2:1 R:0.5 C2:0.5 Bb1:0.5 G1:0.5 Eb2:1", "C2:0.5 Eb2:0.5 F2:0.5 G2:1 Bb2:0.5 C3:1", "D2:1 R:0.5 D2:0.5 C2:0.5 A1:0.5 F#1:1", "D1:0.5 F#1:0.5 A1:0.5 C2:0.5 D2:2"]
+BRK = ["G1:1 R:0.5 G2:0.5 E2:0.5 D2:0.5 B1:1", "G1:0.5 A1:0.5 B1:0.5 D2:1 E2:0.5 G2:1", "C2:1 R:0.5 C2:0.5 B1:0.5 G1:0.5 E2:1", "C2:0.5 E2:0.5 G2:0.5 A2:1 G2:0.5 E2:1",
+       "A1:1 R:0.5 A1:0.5 G1:0.5 E1:0.5 C2:1", "A1:0.5 C2:0.5 D2:0.5 E2:1 G2:0.5 A2:1", "D2:1 R:0.5 D2:0.5 C2:0.5 A1:0.5 F#1:1", "D1:0.5 F#1:0.5 A1:0.5 C2:0.5 D2:2"]
 MOT = ["3:1 5:0.5 6:1 5:0.5 R:1", "2:2 R:2"]                               # 合いことばの節（3・5・6・5・2）
 
 for b in range(S.nb):
@@ -164,7 +166,7 @@ for b in range(S.nb):
         pad(b, i * 2); heel(b); D.set(b, "................", "................" if i < 4 else ("....x.......x..." if i < 6 else "x...x...x.x.x.x."), "x...x...x...x...")
         if i >= 4: SUB.bar(b, f"{N(rlow(b))}:4")
         if n == "ドアの前2" and not odd: hook(b, 1)
-    elif n in ("ドアが開く1", "床がひかる", "ドアが開く2", "最後のサビ"):  # 音が左右に広がる。4つ打ち、ウラで鳴るベース、左右のギター
+    elif n in ("ドアが開く1", "床がひかる", "ドアが開く2", "最後のサビ"):  # 音が左右に広がる。4つ打ち、ウラで鳴るベース、左右のピアノ
         fin = n == "最後のサビ"; two = n == "ドアが開く2"; post = n == "床がひかる"
         g = FOUR[i % 2]; D.set(b, g[0], g[1] if i % 8 != 7 else "....X.......X.XX", g[2] if not (two or fin) else "x.x.x.x.x.x.x.x."); clap(b)
         if i % 8 == 0: crash(D, b, "C2", 4)
@@ -175,7 +177,7 @@ for b in range(S.nb):
         g = TURN[i % 2]; D.set(b, g[0], g[1] if not last else "....X...X...XXXX", "x.xxx.x.x.xxx.xx"); RB.bar(b, BRK[i]); clap(b); SUB.bar(b, f"{N(rlow(b))}:4")
         stab(b, "x.....x...x.....")
         if i in (0, 1, 4, 5): PLK.bar(b, K1.mel(MOT[i % 2], oct=5))
-        gtr(b, "D--U--D---D--U--", "D--U--D---D--U--")
+        gtr(b, "x.....x...x.....", "...x.....x...x..")
     elif n == "立ち止まる":                                              # 1小節の無音 → 小さな声 → スネアが細かくなる
         if i in (1, 2): pad(b)
         if i == 3: D.set(b, "X...X...X.X.X.X.", "x...x...x.x.xxxx", "................"); pad(b, 4); seq(b, "r-r-r-r-rrrrRRRR")
@@ -185,16 +187,14 @@ for b in range(S.nb):
         if i == 4: heel(b, "E3:1 G3:1 R:2"); BELL.bar(b, KEY(b).mel("R:2 1':1 5:1", oct=5))
 
 S.fade_out = 0
-S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の10（9時）。K-POP（120・ト短調 → イ短調）。ビルの入口を、モデルのように胸を張って歩いて入る話。"
+S.desc = ("仮: 重音テトのボカロ曲25曲・第3弾の10（9時）。明るい K-POP（124・ト長調 → イ長調）。ビルの入口を、モデルのように胸を張って歩いて入る話。"
           "くつ音で始まる → くつ音とリフだけの Aメロ → 和音が上がってチャイムと無音 → 音が左右に広がる4つ打ちのサビと3音のフック → はねるビート → "
           "ダンスブレイク → 1小節の無音 → 全音上がって最後のサビ → チャイムとくつ音で終わる。自作")
-SL.end(S.nb); SR.end(S.nb)
 finish(S, LY, V, 0, flat=True)                                           # どのサビも同じ強さで鳴らす（曲全体の山を打ち消す）
 
 from vt3x_lib import *
 path = sys.argv[1]
 humanize(path, "シンセベースのリフ", mid=92, down=12, up=10, seed=10); humanize(path, "プラック（フック）", mid=86, down=10, up=12, seed=5)
-js = load(path); print("  ギターの強さ:", SL.velocity(js) + SR.velocity(js)); save(path, js)
 if VOCAL:
     backing(path, 0.9)
     remark(path, S, std_mark(("chorus",)))
@@ -203,11 +203,11 @@ if VOCAL:
     bars = {}
     for name in ("床がひかる",):                                          # サビのあと: 声のチョップで「あ・る・け」
         sc = S.sc(name)
-        for i in range(8): bars[sc[i]] = "D5:0.75:あ D5:0.75:る Bb4:1.5:け R:1" if i % 2 == 0 else "R:2 D5:0.5:あ D5:0.5:る Bb4:1:け"
+        for i in range(8): bars[sc[i]] = "D5:0.75:あ D5:0.75:る B4:1.5:け R:1" if i % 2 == 0 else "R:2 D5:0.5:あ D5:0.5:る B4:1:け"
     chops(path, S, bars, vol=0.3, pan=-0.25)
     voice_by_scene(path, S, {}, default="clear")                          # 1 曲 1 種類の声
     sing_ends(path, S, human=0.5)
     js = load(path)
-    for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.0; v["debreathAt"] = [[t + 0.02, 1.2] for t in [7.97, 100.72, 115.89, 97.87, 27.93, 134.46]]   # v2: 測って息の音が大きかった 6 か所
+    for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.0
     save(path, js)
 js = load(path); drum_center(js); save(path, js)
