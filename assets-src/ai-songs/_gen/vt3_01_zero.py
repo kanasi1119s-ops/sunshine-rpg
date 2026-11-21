@@ -56,9 +56,10 @@ V = Voice(S, vol=0.2, delay=0.75, bright=0.1, patch="kfbSineLead" if VOCAL else 
 # v3: v1 7.16・v2 7.21（サビを薄くしても変わらない）→ 音色を変える。FM のエレピ → エレピ（DX）、スラップ → 指弾き
 EP = [S.track(f"エレピ{i + 1}", "keys", patch="kfbGlassEp", volume=0.075, pan=-0.35, reverb=0.25, sustain=0.8,
               fx=[{"type": "eq", "low": -3, "mid": 0, "midHz": 700, "high": 1}]) for i in range(4)]
-STR = [S.track(f"ディスコのストリングス{i + 1}", "strings", patch="stringEnsemble", volume=0.06, pan=0.45, reverb=0.35, sustain=0.9) for i in range(3)]
-STRL = S.track("ストリングス（上がる節）", "strings", patch="stringEnsemble", volume=0.075, pan=-0.2, reverb=0.35, sustain=0.8)
-BR = [S.track(f"ブラスのスタブ{i + 1}", "brass", patch="brassSection", volume=0.055, pan=0.2, reverb=0.25, sustain=0.4) for i in range(3)]
+# v14（2026-11-21）: 人間「16までの曲達オーケストラ系の楽器全部変更」→ ストリングス・ブラス・チェロを、のこぎり波のシンセ・サイン波のリード・エレピに（音の並びはそのまま）
+STR = [S.track(f"のこぎり波の和音{i + 1}", "pad", patch="kfbSupersaw", volume=0.03, pan=0.45, reverb=0.3, sustain=0.9) for i in range(3)]
+STRL = S.track("サイン波のリード（上がる節）", "lead", patch="kfbSineLead", volume=0.055, pan=-0.2, reverb=0.3, sustain=0.8)
+BR = [S.track(f"シンセのスタブ{i + 1}", "pad", patch="kfbSawStab", volume=0.04, pan=0.2, reverb=0.2, sustain=0.4) for i in range(3)]
 CUT = [S.track(f"カッティングギター{i + 1}", "guitar", amp="jpopClean", volume=0.05, pan=-0.6, reverb=0.15, chorus=0, sustain=0.3) for i in range(3)]
 # v9（2026-11-11 人間「ベースラインで音連打で出している部分が、次の音出す時に引っかかる感じがする」）: 測ると、同じ音を続けて弾く所で、前の音が切れてから
 #   次の音が立ち上がるまでに 6〜12ms の穴（−24dB）があいていた → 音を 15% 長くして次の音に重ねる（穴は −11〜−13dB に。休みの所はちゃんと止まる）
@@ -71,8 +72,8 @@ SUB = S.track("サブベース", "bass", patch="kfbSub", volume=0.035, pan=0, du
 KFX = S.track("カワイイ効果音", "guitar", patch="kawaiiFx", volume=0.06, pan=0.1, reverb=0.15, modulate=False)
 KDR = S.track("電子のクラップ・ハット", "guitar", patch="kawaiiFx", volume=0.07, pan=-0.05, reverb=0.08, modulate=False)
 BELL = S.track("ベル（合いの手）", "lead", patch="kfbGlocken", volume=0.05, pan=-0.3, reverb=0.3)
-STRH = S.track("ストリングス（1オクターブ上の線）", "strings", patch="stringEnsemble", volume=0.045, pan=0.3, reverb=0.4, sustain=0.9)
-CELLO = S.track("チェロ（低い線）", "strings", patch="cello", volume=0.06, pan=-0.15, reverb=0.3, sustain=0.9)
+STRH = S.track("サイン波のリード（1オクターブ上の線）", "lead", patch="kfbSineLead", volume=0.04, pan=0.3, reverb=0.35, sustain=0.9)
+CELLO = S.track("エレピ（低い線）", "keys", volume=0.2, pan=-0.15, reverb=0.25, sustain=1.0, fx=[{"type": "boost", "gain": 3}])
 CHOP = S.track("声のチョップ風", "pad", patch="vocalChop", volume=0.06, pan=0.3, reverb=0.3, sustain=0.5,
                fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.2, "feedback": 0.3}])
 TICK = S.track("秒針（カホンの縁）", "cajon", volume=0.08, pan=0.15, reverb=0.1)
@@ -405,3 +406,7 @@ if VOCAL:
                     d0 + 3: "R:0.5 E4:0.5:は G#4:0.5:や B4:0.5:あ R:2"}, vol=0.34, pan=0.25, shift=TR)
     # ---- 声の種類（v9）: Aメロは打っては消す夜のひとりごと＝ウィスパー、Bメロはクリア、サビはキュート（明るく幼く）、秒読みはウィスパー
     voice_by_scene(path, S, {"verse": "whisper", "pre": "clear", "chorus": "cute", "秒読み": "whisper"}, default="clear")
+    # v14（2026-11-21）: 02 と同じく、01 にも debreath（音程のない所だけ小さくする）が入っていなかった → 全部の声に 0.5（人間「声に入る吐息みたいなノイズはいらない」）
+    js = load(path)
+    for v in js.get("vocals", []): v["debreath"] = 0.5
+    save(path, js)

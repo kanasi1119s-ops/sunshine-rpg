@@ -63,16 +63,17 @@ PL = S.track("ピアノ（左手）", "piano", volume=0.165, pan=-0.15, reverb=0
 PC = [S.track(f"ピアノ（和音{i + 1}）", "piano", volume=0.085, pan=-0.15, reverb=0.3, sustain=1.4, fx=FELT) for i in range(3)]
 PM = S.track("ピアノ（間奏の旋律）", "piano", volume=0.16, pan=-0.05, reverb=0.32, sustain=1.5)
 WG = [S.track(f"グラスハープ{i + 1}", "lead", patch="wineGlass", volume=0.05, pan=-0.35 + 0.7 * i, reverb=0.5) for i in range(2)]
-TG = S.track("筒の鉄琴（星）", "lead", patch="tubeGlock", volume=0.06, pan=0.35, reverb=0.5)
+# v10（2026-11-21）: 人間「16までの曲達オーケストラ系の楽器全部変更」→ 筒の鉄琴・チェロ・弦を、シンセの鈴・エレピ・シンセのパッド・サイン波のリードに（音の並びはそのまま）
+TG = S.track("シンセの鈴（星）", "lead", patch="kfbBrightBells", volume=0.04, pan=0.35, reverb=0.5)
 MB = S.track("オルゴール", "lead", patch="kfbMusicBox", volume=0.04, pan=0.4, reverb=0.4,
              fx=[{"type": "pingpong", "beats": 1.5, "mix": 0.14, "feedback": 0.25}])
-CELLO = S.track("チェロ", "strings", patch="cello", volume=0.075, pan=0.2, reverb=0.35, sustain=1.2)
-STRL = S.track("弦の線", "strings", patch="stringEnsemble", volume=0.05, pan=-0.3, reverb=0.42, sustain=1.2)
-STRH = S.track("弦の高い線（最後のサビ）", "strings", patch="stringEnsemble", volume=0.035, pan=0.3, reverb=0.45, sustain=1.3)
+CELLO = S.track("エレピの低い旋律", "keys", volume=0.2, pan=0.2, reverb=0.3, sustain=1.3, fx=[{"type": "boost", "gain": 4}])
+STRL = S.track("パッドの線", "pad", patch="surgePadPad2Mw", volume=0.09, pan=-0.3, reverb=0.42, sustain=1.2)
+STRH = S.track("サイン波の高い線（最後のサビ）", "lead", patch="kfbSineLead", volume=0.04, pan=0.3, reverb=0.45, sustain=1.3)
 # v5（人間「3 少しうるさい」）: のこぎり波は音量を半分近くに・高い所を丸く（8.5k→4.5k）・すき間のあるリズムをやめて、のばしてキックでゆっくり引っこむ形に。サビ2 の後半と最後のサビだけ
 SAW = [S.track(f"のこぎり波の和音{i + 1}", "lead", patch="kfbSupersaw", volume=0.022, pan=-0.5 + 0.5 * i, reverb=0.25, duck=0.6,
                fx=[{"type": "filter", "kind": "highpass", "freq": 220, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 4500, "q": 0.6}]) for i in range(3)]
-STP = [S.track(f"弦の低い和音{i + 1}", "strings", patch="stringEnsemble", volume=0.03, pan=-0.4 + 0.8 * i, reverb=0.4, sustain=1.5) for i in range(2)]
+STP = [S.track(f"パッドの低い和音{i + 1}", "pad", patch="surgePadPad2Mw", volume=0.06, pan=-0.4 + 0.8 * i, reverb=0.4, sustain=1.5) for i in range(2)]
 # v5（人間「ベースラインを少し丸くして。中に収める様な感じ」）: 指弾きのベースの、弦をはじく高い成分（1k・2.2k の持ち上げ）をやめて 900Hz から上を丸める。
 #   動きも、オクターブ上へ跳ばず、根音と5度のあいだに収める
 BASS = S.track("ベース（指弾き）", "bass", sustain=1.25, **dict(finger_bass_spec(vol=0.2), fx=[{"type": "eq", "low": 1, "mid": -1, "midHz": 1000, "high": -4}, {"type": "filter", "kind": "lowpass", "freq": 900, "q": 0.6}]))
@@ -313,7 +314,7 @@ finish(S, LY, V, 0,
 # ================= 仕上げのあとに足すもの =================
 from vt3x_lib import *
 path = sys.argv[1]
-humanize(path, "ピアノ（右手", mid=80, down=12, up=8, seed=3); humanize(path, "ピアノ（和音", mid=82, down=8, up=8, seed=5); humanize(path, "チェロ", mid=80, down=6, up=8, seed=7)
+humanize(path, "ピアノ（右手", mid=80, down=12, up=8, seed=3); humanize(path, "ピアノ（和音", mid=82, down=8, up=8, seed=5); humanize(path, "エレピの低い旋律", mid=80, down=6, up=8, seed=7)
 # 測ると、紙コップ（−30／BGM −43）が小さすぎ、2番の Aメロ・Bメロ（−14.9）が サビ1（−15.3）より大きく、最後のサビ（−14.7）が サビ2（−13.9）より小さかった → 仕上げで直す
 # v7（2026-11-12 人間「歌詞入るとたんに不自然な音量下げやめよう。違和感しかない」）: 測ると、出だしのピアノ（−23dB）が、歌が入ったとたん −38〜−42dB まで下がっていた。
 #   原因は自分の仕上げ: ピアノだけの場面がもともと小さすぎ（−43dB）、出だしだけを仕上げで +10〜+16dB 持ち上げたので、Aメロ に入る所で段がついた。
@@ -321,7 +322,7 @@ humanize(path, "ピアノ（右手", mid=80, down=12, up=8, seed=3); humanize(pa
 scene_gain(path, S, {"紙コップ": 2.0, "Aメロ1": 2.0, "間奏": 1.3, "ブリッジ": 1.8, "アウトロ": 2.0})   # 上限は2倍（+6dB）。足りない分はピアノの音量そのものを上げた
 # v7: ピアノだけの場面を大きくしたら、今度は Aメロ1（−17.9）が サビ1（−18.3）より大きくなった → 仕上げで山を作り直す。
 #   出だしと Aメロ1 は同じ値（歌が入る所に段を作らない）。サビへ向かって少しずつ上げる
-final_gain(path, {"紙コップ": -1.0, "Aメロ1": -1.0, "サビ1": 2.5, "間奏": 1.0, "Aメロ2": 1.0, "Bメロ2": 1.5, "サビ2": 2.7, "ブリッジ": -0.5, "間奏2": 2.0, "最後のサビ": 4.2, "アウトロ": -0.7} if VOCAL else
+final_gain(path, {"紙コップ": 1.5, "Aメロ1": 0.5, "Bメロ1": 1.0, "サビ1": 2.5, "間奏": 1.0, "Aメロ2": 1.0, "Bメロ2": 1.5, "サビ2": 2.7, "ブリッジ": 1.2, "間奏2": 2.0, "最後のサビ": 4.2, "アウトロ": 2.7} if VOCAL else
            {"紙コップ": -1.0, "Aメロ1": -1.0, "Bメロ1": -0.5, "サビ1": 2.3, "間奏": 0.3, "Aメロ2": 0.8, "Bメロ2": 1.5, "サビ2": 2.3, "ブリッジ": 3.0, "間奏2": 1.5, "最後のサビ": 4.0, "アウトロ": -1.5})
 if VOCAL:
     backing(path, 0.9)   # 2026-11-13 人間「声以外のバック音量0.9ぐらいにしようか」
@@ -339,5 +340,5 @@ if VOCAL:
     #   声だけ取り出して全部の音を調べると、音程のない息の音（は行・さ行・か行・た行の子音や、母音から子音へ移る所）が 58 か所あり、うち 48 か所が母音と 12dB も変わらない大きさだった。
     #   → 歌声の仕組みに足した debreath（音程のない所だけ小さくする）を、主旋律・ハモリ・チョップの全部にかける
     js = load(path)
-    for v in js.get("vocals", []): v["debreath"] = 0.5   # 2026-11-13 原因を元から直したので 1.6→0.5（声の変わりすぎを戻す）
+    for v in js.get("vocals", []): v["debreath"] = 0.5; v["debreathAt"] = [[t + 0.02, 1.2] for t in [145.15, 172.35, 14.44, 129.55, 78.86, 21.01, 38.86, 11.34]]   # v10: 人間「02 03ボイスにノイズあり」→ 大きい順の8か所はそこだけ下げる（2:25「く」の出だしが −3.6dB だった）。2026-11-13 原因を元から直したので 1.6→0.5（声の変わりすぎを戻す）
     save(path, js)
