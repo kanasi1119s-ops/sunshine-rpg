@@ -54,7 +54,8 @@ S.scene("おわり", 6, "outro", ["Dmaj7", "Gmaj7", "Dmaj7", "Gmaj7", "Dmaj7", "
 
 PING = [{"type": "pingpong", "beats": 0.75, "mix": 0.22, "feedback": 0.35}]
 V = Voice(S, vol=0.2, delay=0.75, bright=0.0, patch="kfbSineLead", low=False)
-CHM = S.track("駅のチャイム（ビブラフォン）", "lead", patch="vibraphone", volume=0.16, pan=0.25, reverb=0.5)
+# v8（2026-11-21）: 人間「16までの曲達オーケストラ系の楽器全部変更」→ ビブラフォンと弦を、シンセの鈴とサイン波のリードに（音の並びはそのまま）
+CHM = S.track("駅のチャイム（シンセの鈴）", "lead", patch="kfbBrightBells", volume=0.14, pan=0.25, reverb=0.5)
 ARP = S.track("はじく音の分散和音", "lead", patch="glassPluck", volume=0.11, pan=-0.3, reverb=0.4, fx=PING)
 ARP2 = S.track("はじく音の分散和音（上）", "lead", patch="glassPluck", volume=0.04, pan=0.35, reverb=0.45, fx=PING)
 DRN = [S.track(f"オルガンの持続音{i + 1}", "lead", patch="reedOrgan", volume=0.055, pan=-0.2 + 0.4 * i, reverb=0.45,
@@ -62,7 +63,9 @@ DRN = [S.track(f"オルガンの持続音{i + 1}", "lead", patch="reedOrgan", vo
 PADA = [S.track(f"やわらかい壁{i + 1}", "lead", patch="kfbSparklePad", volume=0.03, pan=-0.45 + 0.45 * i, reverb=0.5) for i in range(3)]
 PADB = [S.track(f"厚い壁{i + 1}", "pad", patch="supersawPad", volume=0.024, pan=0.5 - 0.5 * i, reverb=0.45, duck=0.4,
                 fx=[{"type": "filter", "kind": "highpass", "freq": 220, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 5200, "q": 0.6}]) for i in range(3)]
-STR = S.track("弦の高い線", "strings", patch="slowStrings", volume=0.05, pan=0.3, reverb=0.5, sustain=1.5)
+# v8: 仕上げの「前奏の持ち上げ」（+8dB → Aメロで戻す）をやめた。かわりに、出だしの駅のチャイムだけを別のパートにして大きく鳴らす（歌の合いの手のチャイムは元の大きさのまま）
+CHM0 = S.track("駅のチャイム（出だし）", "lead", patch="kfbBrightBells", volume=0.4, pan=0.25, reverb=0.5, fx=[{"type": "boost", "gain": 8}])
+STR = S.track("サイン波の高い線", "lead", patch="kfbSineLead", volume=0.04, pan=0.3, reverb=0.5, sustain=1.5)
 LEAD = S.track("すべる音のリード", "lead", patch="kfbSineLead", volume=0.085, pan=-0.1, reverb=0.45, fx=[{"type": "pingpong", "beats": 1.5, "mix": 0.18, "feedback": 0.3}])
 BASS = S.track("ベース（指弾き・丸い音）", "bass", sustain=1.3, **dict(finger_bass_spec(vol=0.19), fx=[{"type": "eq", "low": 1, "mid": 0, "midHz": 800, "high": -4}, {"type": "filter", "kind": "lowpass", "freq": 1100, "q": 0.6}]))
 SUB = S.track("サブベース", "bass", patch="kfbSub", volume=0.03, pan=0, duck=0.5)
@@ -143,7 +146,7 @@ CHIME = "F#5:2 D5:2"                   # 駅のチャイム（2つの音）
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     if n == "チャイム":
-        if i in (0, 2): CHM.bar(b, CHIME if i == 0 else "G5:2 D5:2")
+        if i in (0, 2): CHM0.bar(b, CHIME if i == 0 else "G5:2 D5:2")
         drone(b); pad(PADA[:2], b, 69)                              # v5: 出だしが小さすぎた（BGM −30dB）→ 持続音にやわらかい壁を足し、チャイムを大きく
         if i >= 2: arp(b, UP)
         elif i == 1: arp4(b)
@@ -280,7 +283,7 @@ humanize(path, "はじく音", mid=80, down=10, up=8, seed=3)
 #   → 分散和音と持続音そのものを大きくし、Aメロ1 を持ち上げ、ブリッジを下げる。出だしは Aメロ1 より大きくしない
 scene_gain(path, S, {"チャイム": 1.2, "Aメロ1": 1.6, "ブリッジ": 0.5})
 # v6 を測ると、出だし −29（歌入り）・−36（BGM）で小さすぎ、最後のサビ（−15.3）が サビ2（−15.1）より小さかった → 仕上げで直す（出だしは Aメロ1 より大きくしない）
-final_gain(path, {"チャイム": 8.0, "サビ1": 1.2, "サビ2": -0.3, "最後のサビ": 1.3, "ブリッジ": 2.0} if VOCAL else {"チャイム": 11.0, "サビ1": 1.2, "サビ2": -0.3, "最後のサビ": 1.5, "ブリッジ": 3.0})
+final_gain(path, {"チャイム": 1.5, "Aメロ1": 1.0, "Bメロ1": 0.5, "サビ1": 1.2, "サビ2": -0.3, "最後のサビ": 1.3, "ブリッジ": 2.0} if VOCAL else {"チャイム": 1.5, "Aメロ1": 1.0, "Bメロ1": 0.5, "サビ1": 1.2, "サビ2": -0.3, "最後のサビ": 1.5, "ブリッジ": 3.0})
 if VOCAL:
     backing(path, 0.9)   # 2026-11-13 人間「声以外のバック音量0.9ぐらいにしようか」
     remark(path, S, std_mark(("chorus",), jump=7, minlen=2.0))

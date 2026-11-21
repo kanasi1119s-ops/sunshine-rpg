@@ -56,10 +56,11 @@ V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="kfbSineLead", low=False)
 PL = S.track("ピアノ（左手の低い音）", "piano", volume=0.13, pan=-0.1, reverb=0.2, sustain=0.9)
 PR = [S.track(f"ピアノ（右手の和音{i + 1}）", "piano", volume=0.085, pan=-0.1, reverb=0.22, sustain=0.6,
               fx=[{"type": "eq", "low": -2, "mid": 0, "midHz": 900, "high": 1}]) for i in range(3)]
-MAR = S.track("マリンバ", "lead", patch="marimba", volume=0.1, pan=0.35, reverb=0.3)
+# v6（2026-11-21）: 人間「16までの曲達オーケストラ系の楽器全部変更」→ マリンバ・鉄琴・弦を、木のようなシンセ・シンセの鈴・シンセのパッドに（音の並びはそのまま）
+MAR = S.track("マリンバ（木のようなシンセ）", "lead", patch="surgeWoody", volume=0.1, pan=0.35, reverb=0.3)
 KAL = S.track("カリンバ", "lead", patch="kalimbaReal", volume=0.085, pan=-0.4, reverb=0.4, fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.15, "feedback": 0.25}])
-GLK = S.track("オーブンのチン・ドアベル（鉄琴）", "glockenspiel", volume=0.1, pan=0.15, reverb=0.4)
-STR = [S.track(f"弦{i + 1}", "strings", patch="stringEnsemble", volume=0.04, pan=-0.4 + 0.8 * i, reverb=0.4, sustain=1.4) for i in range(2)]
+GLK = S.track("オーブンのチン・ドアベル（シンセの鈴）", "lead", patch="kfbGlocken", volume=0.06, pan=0.15, reverb=0.4)
+STR = [S.track(f"シンセのパッド{i + 1}", "pad", patch="surgePadPad2Mw", volume=0.08, pan=-0.4 + 0.8 * i, reverb=0.4, sustain=1.4) for i in range(2)]
 BASS = S.track("ベース（指弾き・丸い音）", "bass", sustain=0.8, **dict(finger_bass_spec(vol=0.2), fx=[{"type": "eq", "low": 1, "mid": 1, "midHz": 800, "high": -3}, {"type": "filter", "kind": "lowpass", "freq": 1500, "q": 0.6}]))
 SUB = S.track("サブベース", "bass", patch="kfbSub", volume=0.03, pan=0, duck=0.5)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.045, pan=0, modulate=False)
@@ -247,7 +248,7 @@ path = sys.argv[1]
 humanize(path, "ピアノ（右手", mid=82, down=10, up=8, seed=3); humanize(path, "マリンバ", mid=84, down=8, up=8, seed=5); humanize(path, "カリンバ", mid=82, down=8, up=8, seed=7)
 set_parts(path, "ハイハット", swing16=0.12)
 # v5 を測ると、出だし −25.8（Aメロ1 −17.9）で小さく、最後のサビ（−14.3）が サビ2（−14.0）より小さかった → 仕上げで直す（出だしは Aメロ1 より大きくしない）
-final_gain(path, {"チン": 4.0, "サビ2": -0.2, "最後のサビ": 1.2})
+final_gain(path, {"チン": 1.5, "Aメロ1": 0.8, "Bメロ1": 0.3, "サビ2": -0.2, "最後のサビ": 1.2})      # v6（2026-11-21）: 出だしの +4 が、Aメロに入る所の −4dB の段になっていた（人間「前奏で急に音小さくなるのやめて」）→ 1.5 → 0.8 → 0.3 の段に
 if VOCAL:
     backing(path, 0.9)   # 2026-11-13 人間「声以外のバック音量0.9ぐらいにしようか」
     remark(path, S, std_mark(("chorus",)))

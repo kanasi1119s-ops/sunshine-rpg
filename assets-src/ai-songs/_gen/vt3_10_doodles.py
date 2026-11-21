@@ -54,11 +54,12 @@ S.scene("チャイム", 4, "outro", ["G", "C", "G", "G"])
 V = Voice(S, vol=0.2, delay=0.4, bright=0.0, patch="kfbSineLead", low=False)
 BJ = S.track("バンジョー（ロール）", "banjo", volume=0.17, pan=0.3, reverb=0.15)
 BJC = [S.track(f"バンジョー（裏打ち{i + 1}）", "banjo", volume=0.06, pan=-0.35, reverb=0.15, sustain=0.3) for i in range(2)]
-FID = S.track("フィドル", "fiddle", volume=0.11, pan=-0.15, reverb=0.3)
-FID2 = S.track("フィドル（下の音）", "fiddle", volume=0.07, pan=-0.3, reverb=0.3)
+# v6（2026-11-21）: 人間「16までの曲達オーケストラ系の楽器全部変更」→ フィドル2本・マリンバ・鉄琴を、アコギ2本・木のようなシンセ・シンセの鈴に（音の並びはそのまま。バンジョーはそのまま）
+FID = S.track("フィドル（アコギ）", "guitar", patch="nylonGuitar", amp="clean", volume=0.2, pan=-0.15, reverb=0.3, chorus=0, fx=[{"type": "boost", "gain": 6}])
+FID2 = S.track("フィドル（アコギの下の音）", "guitar", patch="nylonGuitar", amp="clean", volume=0.2, pan=-0.3, reverb=0.3, chorus=0, fx=[{"type": "boost", "gain": 2}])
 BASS = S.track("ベース（指弾き・丸い音）", "bass", sustain=0.8, **dict(finger_bass_spec(vol=0.21), fx=[{"type": "eq", "low": 1, "mid": 0, "midHz": 800, "high": -4}, {"type": "filter", "kind": "lowpass", "freq": 1300, "q": 0.6}]))
-WB = S.track("木の音（時計）", "lead", patch="marimba", volume=0.08, pan=0.1, reverb=0.2)
-GLK = S.track("チャイム（鉄琴）", "glockenspiel", volume=0.09, pan=0.2, reverb=0.4)
+WB = S.track("木の音（時計・木のようなシンセ）", "lead", patch="surgeWoody", volume=0.08, pan=0.1, reverb=0.2)
+GLK = S.track("チャイム（シンセの鈴）", "lead", patch="kfbGlocken", volume=0.055, pan=0.2, reverb=0.4)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.04, pan=0, modulate=False)
 D = S.drumkit()
 SIL = Silence(S)
@@ -240,7 +241,7 @@ from vt3x_lib import *
 path = sys.argv[1]
 humanize(path, "バンジョー（ロール", mid=84, down=12, up=8, seed=3); humanize(path, "フィドル", mid=86, down=8, up=8, seed=5)
 # v4 を測ると、最後のサビ（−14.9）が サビ2（−14.1）より小さかった → 山を最後に
-final_gain(path, {"バンジョー": 2.0, "サビ2": -0.2, "最後のサビ": 1.6, "チャイム": 0.8})
+final_gain(path, {"バンジョー": 1.5, "フィドル": 1.0, "Aメロ1": 0.5, "サビ2": -0.2, "最後のサビ": 1.6, "チャイム": 0.8})
 if VOCAL:
     backing(path, 0.9)   # 2026-11-13 人間「声以外のバック音量0.9ぐらいにしようか」
     remark(path, S, std_mark(("chorus",)))

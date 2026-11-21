@@ -57,9 +57,9 @@ V = Voice(S, vol=0.2, delay=0.75, bright=0.1, patch="kfbSineLead" if VOCAL else 
 EP = [S.track(f"エレピ{i + 1}", "keys", patch="kfbGlassEp", volume=0.075, pan=-0.35, reverb=0.25, sustain=0.8,
               fx=[{"type": "eq", "low": -3, "mid": 0, "midHz": 700, "high": 1}]) for i in range(4)]
 # v14（2026-11-21）: 人間「16までの曲達オーケストラ系の楽器全部変更」→ ストリングス・ブラス・チェロを、のこぎり波のシンセ・サイン波のリード・エレピに（音の並びはそのまま）
-STR = [S.track(f"のこぎり波の和音{i + 1}", "pad", patch="kfbSupersaw", volume=0.03, pan=0.45, reverb=0.3, sustain=0.9) for i in range(3)]
+STR = [S.track(f"やわらかいパッドの和音{i + 1}", "pad", patch="surgePadPad2Mw", volume=0.07, pan=0.45, reverb=0.3, sustain=0.9)      # 1回め（のこぎり波）は点が 7.59 → 7.38 に下がり、音割れが1か所出た → やわらかいパッドに for i in range(3)]
 STRL = S.track("サイン波のリード（上がる節）", "lead", patch="kfbSineLead", volume=0.055, pan=-0.2, reverb=0.3, sustain=0.8)
-BR = [S.track(f"シンセのスタブ{i + 1}", "pad", patch="kfbSawStab", volume=0.04, pan=0.2, reverb=0.2, sustain=0.4) for i in range(3)]
+BR = [S.track(f"シンセのスタブ{i + 1}", "pad", patch="surgeChordReset", volume=0.08, pan=0.2, reverb=0.2, sustain=0.4) for i in range(3)]
 CUT = [S.track(f"カッティングギター{i + 1}", "guitar", amp="jpopClean", volume=0.05, pan=-0.6, reverb=0.15, chorus=0, sustain=0.3) for i in range(3)]
 # v9（2026-11-11 人間「ベースラインで音連打で出している部分が、次の音出す時に引っかかる感じがする」）: 測ると、同じ音を続けて弾く所で、前の音が切れてから
 #   次の音が立ち上がるまでに 6〜12ms の穴（−24dB）があいていた → 音を 15% 長くして次の音に重ねる（穴は −11〜−13dB に。休みの所はちゃんと止まる）
@@ -76,7 +76,7 @@ STRH = S.track("サイン波のリード（1オクターブ上の線）", "lead"
 CELLO = S.track("エレピ（低い線）", "keys", volume=0.2, pan=-0.15, reverb=0.25, sustain=1.0, fx=[{"type": "boost", "gain": 3}])
 CHOP = S.track("声のチョップ風", "pad", patch="vocalChop", volume=0.06, pan=0.3, reverb=0.3, sustain=0.5,
                fx=[{"type": "pingpong", "beats": 0.75, "mix": 0.2, "feedback": 0.3}])
-TICK = S.track("秒針（カホンの縁）", "cajon", volume=0.08, pan=0.15, reverb=0.1)
+TICK = S.track("秒針（カホンの縁）", "cajon", volume=0.2, pan=0.15, reverb=0.1, fx=[{"type": "boost", "gain": 13}])      # v14: 今の作曲ソフトで書き出すと、出だしの秒針が −42dB（v13 の mp3 は −28dB）と小さく出た（v13 の JSON を今そのまま書き出しても同じ）→ 秒針そのものを大きくする
 FX = S.track("効果音", "pad", patch="fxRiser", volume=0.06, pan=0, reverb=0.3)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.06, pan=0, modulate=False)
 D = S.drumkit()

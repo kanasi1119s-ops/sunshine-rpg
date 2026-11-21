@@ -322,4 +322,4 @@ if VOCAL:
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.4
     save(path, js)
 js = load(path); drum_punch(js); save(path, js)
-final_gain(path, {"ぴこん": 3.0, "最後のサビ": 0.9, "しめ": 0.7})
+final_gain(path, {"ぴこん": 1.5, "頭のサビ": 0.5, "リフ": 1.2, "Aメロ": 1.2, "Aメロ2": 0.6, "最後のサビ": 0.9, "しめ": 0.7})      # v11（2026-11-21）: 人間「前奏で急に音小さくなるのやめて」。頭のサビ → リフ → Aメロ で 4.6dB ずつ下がっていた → リフと Aメロを持ち上げ、出だしの +3 を +1.5 に

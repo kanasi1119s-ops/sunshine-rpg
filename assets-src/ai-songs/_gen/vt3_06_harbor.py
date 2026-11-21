@@ -53,14 +53,17 @@ S.scene("最後のサビ", 32, "chorus", C_CH + C_CH)
 S.scene("朝", 6, "outro", ["C", "D", "E", "E", "E", "E"])
 
 V = Voice(S, vol=0.2, delay=0.4, bright=0.0, patch="kfbSineLead", low=False)
-SHAM = S.track("三味線", "shamisen", volume=0.2, pan=0.25, reverb=0.2)
+SHAM = S.track("三味線", "shamisen", volume=0.2, pan=0.25, reverb=0.2, fx=[{"type": "boost", "gain": 3}])      # v10: 下の説明
 KOTO = S.track("琴（分散和音）", "koto", volume=0.13, pan=-0.4, reverb=0.3, sustain=1.6)
 KOTO2 = S.track("琴（上の線）", "koto", volume=0.09, pan=0.4, reverb=0.35, sustain=1.6)
-TLO = S.track("和太鼓（地打ち・低い太鼓）", "inchTom", volume=0.3, pan=-0.1, reverb=0.3)
-THI = S.track("和太鼓（表打ち・高い太鼓）", "inchTom", volume=0.2, pan=0.2, reverb=0.3)
+# v10（2026-11-21）: 仕上げの「前奏の持ち上げ → 戻し」は 11-17 に止めてある（鳴りつづける楽器が急に小さくなる原因）。そのため今の書き出しでは、太鼓だけの出だしが −35（v9 は持ち上げて −19）と小さく出た
+#   → 持ち上げにたよらず、太鼓と三味線そのものを大きくする（曲のあいだずっと同じ大きさ。場面で上げ下げしない）
+TLO = S.track("和太鼓（地打ち・低い太鼓）", "inchTom", volume=0.3, pan=-0.1, reverb=0.3, fx=[{"type": "boost", "gain": 6}])
+THI = S.track("和太鼓（表打ち・高い太鼓）", "inchTom", volume=0.2, pan=0.2, reverb=0.3, fx=[{"type": "boost", "gain": 6}])
 SAW = [S.track(f"電子の和音{i + 1}", "lead", patch="kfbSupersaw", volume=0.026, pan=-0.5 + 0.5 * i, reverb=0.25, duck=0.5,
                fx=[{"type": "filter", "kind": "highpass", "freq": 250, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 6000, "q": 0.6}]) for i in range(3)]
-STR = [S.track(f"弦{i + 1}", "strings", patch="stringEnsemble", volume=0.04, pan=-0.4 + 0.8 * i, reverb=0.4, sustain=1.4) for i in range(2)]
+# v10（2026-11-21）: 人間「16までの曲達オーケストラ系の楽器全部変更」→ 弦をシンセのパッドに（琴・三味線・和太鼓は和楽器なので、そのまま）
+STR = [S.track(f"シンセのパッド{i + 1}", "pad", patch="surgePadPad2Mw", volume=0.08, pan=-0.4 + 0.8 * i, reverb=0.4, sustain=1.4) for i in range(2)]
 BASS = S.track("ベース（指弾き）", "bass", sustain=0.9, **finger_bass_spec(vol=0.2))
 SUB = S.track("サブベース", "bass", patch="kfbSub", volume=0.03, pan=0, duck=0.5)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.05, pan=0, modulate=False)

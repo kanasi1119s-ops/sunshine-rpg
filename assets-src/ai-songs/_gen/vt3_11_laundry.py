@@ -54,15 +54,16 @@ S.scene("くり返し4", 16, "chorus", [tr_chord(c, 2) for c in R_CH])
 S.scene("おわり", 10, "outro", [tr_chord(c, 2) for c in TA] + ["E", "E"])
 
 V = Voice(S, vol=0.2, delay=0.4, bright=0.0, patch="kfbSineLead", low=False)
-FID = S.track("フィドル", "fiddle", volume=0.18, pan=-0.2, reverb=0.3)
+# v9（2026-11-21）: 人間「16までの曲達オーケストラ系の楽器全部変更」→ フィドル・ハープ2本・弦・マリンバを、アコギ・アコギの分散和音・シンセのパッド・木のようなシンセに（音の並びはそのまま。アコーディオンはそのまま）
+FID = S.track("フィドル（アコギの節）", "guitar", patch="nylonGuitar", amp="clean", volume=0.2, pan=-0.2, reverb=0.3, chorus=0, fx=[{"type": "boost", "gain": 8}])
 ACC = S.track("アコーディオン（節）", "accordion", volume=0.1, pan=0.25, reverb=0.25)
 ACL = [S.track(f"アコーディオン（持続音{i + 1}）", "accordion", volume=0.04, pan=0.35 - 0.2 * i, reverb=0.3) for i in range(2)]
-HARP = S.track("ハープ（分散和音）", "harp", volume=0.16, pan=-0.35, reverb=0.35, sustain=1.6)
-HARP2 = S.track("ハープ（上の線）", "harp", volume=0.14, pan=0.3, reverb=0.4, sustain=1.6)
+HARP = S.track("ハープ（エレピの分散和音）", "keys", volume=0.2, pan=-0.35, reverb=0.35, sustain=1.6, fx=[{"type": "boost", "gain": 3}])
+HARP2 = S.track("ハープ（エレピの上の線）", "keys", volume=0.2, pan=0.3, reverb=0.4, sustain=1.6)
 BOD = S.track("低い太鼓（バウロンの役）", "inchTom", volume=0.14, pan=0.05, reverb=0.2)
-STR = [S.track(f"弦{i + 1}", "strings", patch="slowStrings", volume=0.04, pan=-0.4 + 0.8 * i, reverb=0.45, sustain=1.5) for i in range(2)]
+STR = [S.track(f"シンセのパッド{i + 1}", "pad", patch="surgePadPad2Mw", volume=0.08, pan=-0.4 + 0.8 * i, reverb=0.45, sustain=1.5) for i in range(2)]
 BASS = S.track("ベース（指弾き・丸い音）", "bass", sustain=1.0, **dict(finger_bass_spec(vol=0.2), fx=[{"type": "eq", "low": 1, "mid": 0, "midHz": 800, "high": -4}, {"type": "filter", "kind": "lowpass", "freq": 1200, "q": 0.6}]))
-PIN = S.track("洗濯ばさみのパチン（木の音）", "lead", patch="marimba", volume=0.12, pan=0.4, reverb=0.15)
+PIN = S.track("洗濯ばさみのパチン（木のようなシンセ）", "lead", patch="surgeWoody", volume=0.1, pan=0.4, reverb=0.15)
 D = S.drumkit()
 
 # ================= 歌（拍は8分。1小節＝6。4分＝2、8分＝1）=================

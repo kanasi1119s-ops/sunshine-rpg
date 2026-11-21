@@ -57,12 +57,13 @@ S.scene("カーテンコール", 8, "outro", ["D", "Bm", "Em7", "A7", "D", "D", 
 V = Voice(S, vol=0.2, delay=0.4, bright=0.0, patch="kfbSineLead" if VOCAL else "clarinet", low=False)
 PL = S.track("ピアノ（左手・ズン）", "piano", volume=0.13, pan=-0.1, reverb=0.2, sustain=0.9)
 PR = [S.track(f"ピアノ（右手・チャッチャッ{i + 1}）", "piano", volume=0.08, pan=-0.1, reverb=0.22, sustain=0.5) for i in range(3)]
-PZ = [S.track(f"ピチカートの弦{i + 1}", "strings", patch="pizzicato", volume=0.07, pan=0.3 - 0.3 * i, reverb=0.3) for i in range(2)]
-CL = S.track("クラリネット（合いの手）", "lead", patch="clarinet", volume=0.1, pan=0.25, reverb=0.3)
-GLK = S.track("発車のチャイム（鉄琴）", "glockenspiel", volume=0.085, pan=0.3, reverb=0.4)
-STR = [S.track(f"弦{i + 1}", "strings", patch="stringEnsemble", volume=0.045, pan=-0.45 + 0.45 * i, reverb=0.4, sustain=1.4) for i in range(3)]
-BR = [S.track(f"ブラス{i + 1}", "brass", patch="brassSection", volume=0.05, pan=0.4 - 0.4 * i, reverb=0.3) for i in range(2)]
-TIMP = S.track("ティンパニ", "lead", patch="timpani", volume=0.1, pan=-0.2, reverb=0.4)
+# v6（2026-11-21）: 人間「16までの曲達オーケストラ系の楽器全部変更」→ ピチカート・クラリネット・鉄琴・弦・ブラス・ティンパニを、シンセのプラック・サイン波のリード・シンセの鈴・のこぎり波・フロアタムの代わりの FM ベースに（音の並びはそのまま）
+PZ = [S.track(f"ピチカート（シンセのプラック{i + 1}）", "pad", patch="surgeNicePluck", volume=0.1, pan=0.3 - 0.3 * i, reverb=0.3) for i in range(2)]
+CL = S.track("クラリネット（サイン波のリード）", "lead", patch="kfbSineLead", volume=0.06, pan=0.25, reverb=0.3)
+GLK = S.track("発車のチャイム（シンセの鈴）", "lead", patch="kfbGlocken", volume=0.055, pan=0.3, reverb=0.4)
+STR = [S.track(f"シンセのパッド{i + 1}", "pad", patch="surgePadPad2Mw", volume=0.085, pan=-0.45 + 0.45 * i, reverb=0.4, sustain=1.4) for i in range(3)]
+BR = [S.track(f"のこぎり波のシンセ{i + 1}", "pad", patch="surgeHappySaws", volume=0.07, pan=0.4 - 0.4 * i, reverb=0.25) for i in range(2)]
+TIMP = S.track("低い打つ音（FM のベース）", "bass", patch="kfbFmBass", volume=0.085, pan=-0.2, reverb=0.3)
 BASS = S.track("ベース（指弾き・丸い音）", "bass", sustain=0.9, **dict(finger_bass_spec(vol=0.2), fx=[{"type": "eq", "low": 1, "mid": 0, "midHz": 800, "high": -4}, {"type": "filter", "kind": "lowpass", "freq": 1200, "q": 0.6}]))
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.045, pan=0, modulate=False)
 D = S.drumkit()

@@ -66,11 +66,12 @@ PN = [S.track(f"ピアノ（裏打ち{i + 1}）", "piano", volume=0.085, pan=-0.
 PLG = [S.track(f"ピアノ（のばす和音{i + 1}）", "piano", volume=0.08, pan=-0.2, reverb=0.25, sustain=1.4) for i in range(3)]
 ORG = [S.track(f"オルガン{i + 1}", "drawbarOrgan", volume=0.036, pan=0.35, reverb=0.2, sustain=0.35) for i in range(3)]
 ORL = [S.track(f"オルガン（のばす{i + 1}）", "drawbarOrgan", volume=0.026, pan=0.3, reverb=0.25, sustain=1.2) for i in range(3)]
-TP = S.track("トランペット", "brass", patch="trumpet", volume=0.085, pan=0.2, reverb=0.25)
-SX = S.track("テナーサックス", "brass", patch="tenorSax", volume=0.08, pan=0.0, reverb=0.25)
-TB = S.track("トロンボーン", "brass", patch="trombone", volume=0.085, pan=-0.2, reverb=0.25)
+# v7（2026-11-21）: 人間「16までの曲達オーケストラ系の楽器全部変更」→ ホーン3本（トランペット・テナーサックス・トロンボーン）を、リードギター＋のこぎり波のシンセ2本に。自転車のベル（筒の鉄琴）はシンセの鈴に（音の並びはそのまま）
+TP = S.track("リードギター（ホーンの節）", "leadGuitar", **lead_gtr_spec(0.055, 0.2))
+SX = S.track("のこぎり波のシンセ（中）", "pad", patch="surgeHappySaws", volume=0.08, pan=0.0, reverb=0.2)
+TB = S.track("のこぎり波のシンセ（下）", "pad", patch="surgeHappySaws", volume=0.08, pan=-0.2, reverb=0.2)
 BASS = S.track("ベース（指弾き・丸い音）", "bass", sustain=0.75, **dict(finger_bass_spec(vol=0.215), fx=[{"type": "eq", "low": 1, "mid": 1, "midHz": 700, "high": -3}, {"type": "filter", "kind": "lowpass", "freq": 1400, "q": 0.6}]))
-BELL = S.track("自転車のベル", "lead", patch="tubeGlock", volume=0.075, pan=0.3, reverb=0.3)
+BELL = S.track("自転車のベル（シンセの鈴）", "lead", patch="kfbBrightBells", volume=0.05, pan=0.3, reverb=0.3)
 HUMT = S.track("窓からの鼻歌", "lead", patch="kfbSineLead", volume=0.06, pan=-0.45, reverb=0.45)
 CYM = S.track("シンバルの効果音", "guitar", patch="cymbalFx", volume=0.05, pan=0, modulate=False)
 D = S.drumkit()
@@ -410,5 +411,6 @@ if VOCAL:
     harmony(path, S, [("サビ2", 8, None, K), ("最後のサビ", 16, None, KC)], vol=0.36)
     voice_by_scene(path, S, {}, default="clear")
     js = load(path)
+    for v in js.get("vocals", []): v["debreathAt"] = [[t + 0.02, 1.2] for t in [61.44, 197.81, 191.52, 68.11, 202.43, 59.93, 224.24, 232.43, 115.15, 227.03, 114.47, 51.74]]   # v7（2026-11-21）: 測ると −6dB より大きい息の音が 7 か所（「ち」「さ」「ひ」の出だし）→ 大きい順の 12 か所はそこだけ下げる
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.5   # softCons: 息の子音だけ 約 −6dB。 この曲は「ち」（ちりんちりん）が多く、0.5 だと「ち」の出だしが母音と 2〜3dB 差で 51 か所あった
     save(path, js)
