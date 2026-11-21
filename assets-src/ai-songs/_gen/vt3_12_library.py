@@ -47,7 +47,7 @@ S.scene("おしずかに", 9, "outro", ["F", "C/E", "Dm", "Bb", "F", "F", "F", "
 
 PING = [{"type": "pingpong", "beats": 0.75, "mix": 0.2, "feedback": 0.3}]
 V = Voice(S, vol=0.2, delay=0.5, bright=0.0, patch="kfbSineLead", low=False)
-TICK = S.track("時計の刻み（鉄琴の高い音）", "lead", patch="kfbGlocken", volume=0.05, pan=0.35, reverb=0.2)
+TICK = S.track("時計の刻み（鉄琴の高い音）", "lead", patch="kfbGlocken", volume=0.075, pan=0.35, reverb=0.2)
 FMB = S.track("FM のベース", "bass", patch="kfbFmBass", volume=0.085, pan=0, duck=0.3)
 SUB = S.track("サブベース", "bass", patch="kfbSub", volume=0.034, pan=0, duck=0.5)
 PLK = S.track("プラックの分散和音", "lead", patch="kfbSquarePluck", volume=0.05, pan=-0.35, reverb=0.3, fx=PING)
@@ -146,9 +146,9 @@ EP_B = "x:1 R:0.5 x:0.5 R:1 x:0.5 R:0.5"
 for b in range(S.nb):
     n, i, L, k = S.scene_of(b)
     if n == "ページ":
-        tick(b)
-        if i >= 4: fmb(b, "one")
-        if i >= 6: pad(b, 1)
+        tick(b)                                                         # v7（2026-11-21）: 仕上げの持ち上げ（+8dB → 次の場面で戻す）をやめた。出だしが −33 と小さすぎるので、ベースとパッドを2小節ずつ早く入れ、時計の刻みを少し大きくする
+        if i >= 2: fmb(b, "one" if i < 6 else "two")
+        if i >= 4: pad(b, 1)
     elif n == "こごえ":
         tick(b); fmb(b, "two"); pad(b, 1)
     elif n.startswith("鼻歌"):
