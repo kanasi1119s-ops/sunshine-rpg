@@ -58,8 +58,9 @@ STAB = [S.track(f"のこぎり波の短い和音{i + 1}", "lead", patch="kfbSawS
 BELL = S.track("ダイヤルの光（明るいベル）", "lead", patch="kfbBrightBells", volume=0.04, pan=0.4, reverb=0.45,
                fx=[{"type": "filter", "kind": "lowpass", "freq": 7000, "q": 0.6}, {"type": "pingpong", "beats": 0.75, "mix": 0.14, "feedback": 0.25}])
 SAX = S.track("電子のサックス（合いの手）", "lead", patch="kfbFutureSax", volume=0.085, pan=0.15, reverb=0.3)
-STRL = S.track("弦の線", "strings", patch="stringEnsemble", volume=0.05, pan=0.3, reverb=0.4, sustain=1.2)
-STRH = S.track("弦の高い線（最後のサビ）", "strings", patch="stringEnsemble", volume=0.035, pan=-0.3, reverb=0.45, sustain=1.3)
+# v8（2026-11-21）: 人間「16までの曲達オーケストラ系の楽器全部変更」→ 弦の2本を、やわらかいシンセのパッドとサイン波のリードに変える（音の並びはそのまま）
+STRL = S.track("パッドの線", "pad", patch="surgePadPad2Mw", volume=0.09, pan=0.3, reverb=0.4, sustain=1.2)
+STRH = S.track("サイン波の高い線（最後のサビ）", "lead", patch="kfbSineLead", volume=0.04, pan=-0.3, reverb=0.45, sustain=1.3)
 PADS = [S.track(f"夜の空気{i + 1}", "lead", patch="kfbSparklePad", volume=0.022, pan=-0.3 + 0.6 * i, reverb=0.4) for i in range(2)]
 BASS = S.track("ベース（指弾き）", "bass", sustain=1.15, **finger_bass_spec(vol=0.21))
 SUB = S.track("サブベース", "bass", patch="kfbSub", volume=0.032, pan=0, duck=0.5)
@@ -156,7 +157,7 @@ for b in range(S.nb):
             v = voice(root(b), 66, 3)
             for j in range(3): RAD[j].bar(b, f"R:0.5 {nm(v[j])}:0.5 R:0.5 {nm(v[j])}:0.5 R:1 {nm(v[j])}:1")
         else:                                                 # 電波が合う → 本物の音に切りかわる（3・3・2 の和音）
-            ep(b, "x:0.75 x:0.75 R:0.5 x:0.5 R:0.5 x:1" if i < 7 else "x:1 x:1 x:1 R:1"); SUB.bar(b, f"{nm(low(S.chords[b], 'E1'))}:3.5 R:0.5")
+            ep(b, "x:0.75 x:0.75 R:0.5 x:0.5 R:0.5 x:1" if i < 7 else "x:1 x:1 x:1 x:1")      # v8: 前奏の終わりで止めない（人間「前奏で急に音小さくなるのやめて」）; SUB.bar(b, f"{nm(low(S.chords[b], 'E1'))}:3.5 R:0.5")
         BELL.bar(b, ["R:3 G5:1", "R:4", "R:2 Bb5:1 C6:1", "R:4", "R:3 Bb5:0.5 Eb6:0.5", "R:4", "R:2 C6:0.5 Ab5:0.5 F5:1", "R:4"][i])
     elif n == "Aメロ1":
         if i < 8:                                             # 前半: 2拍目の裏に1回だけ。4小節ごとに下からそっと分散
@@ -304,7 +305,7 @@ KFX.bar(S.sc("鼻歌")[4], "A#5:4"); KFX.bar(S.sc("鼻歌")[5], "A#5:2 R:2")
 cym_swell(CYM, S.sc("サビ1")[0], 2, "C4"); cym_swell(CYM, S.sc("サビ2")[0], 2, "C4"); cym_swell(CYM, S.sc("最後のサビ")[0], 4, "E4")
 
 # 止め: Bメロ の最後の1拍だけ全員休み（サビの頭を大きく聞かせる）
-for nme in ("Bメロ1", "Bメロ2", "チューニング"): SIL.add(S.sc(nme)[-1], 3, 4)
+for nme in ("Bメロ1", "Bメロ2"): SIL.add(S.sc(nme)[-1], 3, 4)
 SIL.apply()
 
 S.fade_out = 0
@@ -324,9 +325,9 @@ path = sys.argv[1]
 #   クラップは2・4拍、ハイハットは裏拍で16分をはねさせる（キックはまっすぐ、ハットだけ揺らす）、ベースはキックのあいた所に答える、声のチョップを裏拍に置く。
 #   → テンポを 122 から 128 に、ハイハットと指パッチン・クラップだけ16分をはねさせる（キック・ベースはまっすぐ）
 set_parts(path, "ハイハット", swing16=0.3); set_parts(path, "ライド", swing16=0.3); set_parts(path, "指パッチン", swing16=0.22)
-humanize(path, "ガラスのエレピ"); humanize(path, "弦", mid=78, down=8, up=8, seed=9)
+humanize(path, "ガラスのエレピ"); humanize(path, "パッドの線", mid=78, down=8, up=8, seed=9)
 # 測ると、最後のサビ（−14.2）が サビ2（−13.9）より小さかった → 仕上げで山を最後にする
-final_gain(path, {"チューニング": 1.5, "CM": 1.5, "Aメロ2": -0.6, "Bメロ2": -0.9, "サビ2": 0.4, "間奏": -0.4, "最後のサビ": 1.3})   # v7: ギターを外してサビが少し軽くなったぶん、2番の Aメロ・Bメロを下げる
+final_gain(path, {"チューニング": 1.0, "Aメロ1": 0.7, "Bメロ1": 0.3, "CM": 0.8, "Aメロ2": -0.6, "Bメロ2": -0.9, "サビ2": 0.4, "間奏": -0.4, "最後のサビ": 1.3})   # v7: ギターを外してサビが少し軽くなったぶん、2番の Aメロ・Bメロを下げる
 if VOCAL:
     remark(path, S, std_mark(("chorus",), plain=("鼻歌",)))
     vocal_polish(path, S, {"verse": 8, "pre": 16, "chorus": 24, "最後のサビ": 28, "bridge": 8, "outro": 6}, scoop=0.3, slash=0.7, vib_min_beats=1.5, vib_start=0.5, auto=0.6, breaths=0.0)   # v6: 人間「吐息みたいなノイズかな。こう言うのいらない」→ 句の間に入れていた息つぎの音をやめる
@@ -339,3 +340,10 @@ if VOCAL:
                     a2[1]: "R:3 F4:0.5:は Ab4:0.5:は", a2[5]: "R:3 Ab4:0.5:は Eb5:0.5:や"}, vol=0.3, pan=0.25)
     # v6: ウィスパーの声そのものの息の成分も減らす（息まじり 0.35 → 0.12、高い所の空気 5 → 3.5）。ささやきの小ささは残し、ザーッという息の音を出さない
     voice_by_scene(path, S, {"verse": "whisper", "pre": "clear", "chorus": "clear", "bridge": "whisper", "outro": "whisper"}, default="clear", tweak={"whisper": {"breathy": 0.12, "air": 3.5}})
+    # v8（2026-11-21）: 人間「02 03ボイスにノイズあり」。v7 には debreath（音程のない所だけ小さくする）が入っていなかった。
+    #   tools/vt3/breath_check.py で測ると、母音との差 −6dB より大きい所 1（1:18.90「ち」の出だし −3.6dB）・−6〜−12dB 17 か所 → 全部の声に debreath 0.5、大きい順の 8 か所はそこだけ下げる
+    js = load(path)
+    for v in js.get("vocals", []):
+        v["debreath"] = 0.5; v["debreathAt"] = [[t + 0.02, 1.2] for t in [78.90, 222.63, 56.93, 225.33, 158.08, 165.91, 166.74, 162.39]]
+        if v.get("breathy", 0) > 0.05: v["breathy"] = 0.05
+    save(path, js)
