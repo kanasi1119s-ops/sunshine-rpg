@@ -57,7 +57,7 @@ V = Voice(S, vol=0.2, delay=0.75, bright=0.1, patch="kfbSineLead" if VOCAL else 
 EP = [S.track(f"エレピ{i + 1}", "keys", patch="kfbGlassEp", volume=0.075, pan=-0.35, reverb=0.25, sustain=0.8,
               fx=[{"type": "eq", "low": -3, "mid": 0, "midHz": 700, "high": 1}]) for i in range(4)]
 # v14（2026-11-21）: 人間「16までの曲達オーケストラ系の楽器全部変更」→ ストリングス・ブラス・チェロを、のこぎり波のシンセ・サイン波のリード・エレピに（音の並びはそのまま）
-STR = [S.track(f"やわらかいパッドの和音{i + 1}", "pad", patch="surgePadPad2Mw", volume=0.07, pan=0.45, reverb=0.3, sustain=0.9)      # 1回め（のこぎり波）は点が 7.59 → 7.38 に下がり、音割れが1か所出た → やわらかいパッドに for i in range(3)]
+STR = [S.track(f"やわらかいパッドの和音{i + 1}", "pad", patch="surgePadPad2Mw", volume=0.07, pan=0.45, reverb=0.3, sustain=0.9) for i in range(3)]      # 1回め（のこぎり波）は点が 7.59 → 7.38 に下がり、音割れが1か所出た → やわらかいパッドに
 STRL = S.track("サイン波のリード（上がる節）", "lead", patch="kfbSineLead", volume=0.055, pan=-0.2, reverb=0.3, sustain=0.8)
 BR = [S.track(f"シンセのスタブ{i + 1}", "pad", patch="surgeChordReset", volume=0.08, pan=0.2, reverb=0.2, sustain=0.4) for i in range(3)]
 CUT = [S.track(f"カッティングギター{i + 1}", "guitar", amp="jpopClean", volume=0.05, pan=-0.6, reverb=0.15, chorus=0, sustain=0.3) for i in range(3)]
