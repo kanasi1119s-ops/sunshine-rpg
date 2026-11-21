@@ -52,8 +52,9 @@ S.scene("最後のサビ", 16, "chorus", C_CH)
 S.scene("チャイム", 4, "outro", ["G", "C", "G", "G"])
 
 V = Voice(S, vol=0.2, delay=0.4, bright=0.0, patch="kfbSineLead", low=False)
-BJ = S.track("バンジョー（ロール）", "banjo", volume=0.17, pan=0.3, reverb=0.15)
-BJC = [S.track(f"バンジョー（裏打ち{i + 1}）", "banjo", volume=0.06, pan=-0.35, reverb=0.15, sustain=0.3) for i in range(2)]
+# v7（2026-11-21）: 人間「アコーディオン、バンジョーもやめよう」→ バンジョーをクリーンのエレキギターに（音の並びはそのまま。コーラスなし）
+BJ = S.track("バンジョー（ロール）のかわりのクリーンのギター", "guitar", amp="clean", volume=0.17, pan=0.3, reverb=0.15, chorus=0)
+BJC = [S.track(f"クリーンのギター（裏打ち{i + 1}）", "guitar", amp="clean", volume=0.07, pan=-0.35, reverb=0.15, sustain=0.3, chorus=0) for i in range(2)]
 # v6（2026-11-21）: 人間「16までの曲達オーケストラ系の楽器全部変更」→ フィドル2本・マリンバ・鉄琴を、アコギ2本・木のようなシンセ・シンセの鈴に（音の並びはそのまま。バンジョーはそのまま）
 FID = S.track("フィドル（アコギ）", "guitar", patch="nylonGuitar", amp="clean", volume=0.2, pan=-0.15, reverb=0.3, chorus=0, fx=[{"type": "boost", "gain": 6}])
 FID2 = S.track("フィドル（アコギの下の音）", "guitar", patch="nylonGuitar", amp="clean", volume=0.2, pan=-0.3, reverb=0.3, chorus=0, fx=[{"type": "boost", "gain": 2}])

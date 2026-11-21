@@ -56,8 +56,9 @@ S.scene("おわり", 10, "outro", [tr_chord(c, 2) for c in TA] + ["E", "E"])
 V = Voice(S, vol=0.2, delay=0.4, bright=0.0, patch="kfbSineLead", low=False)
 # v9（2026-11-21）: 人間「16までの曲達オーケストラ系の楽器全部変更」→ フィドル・ハープ2本・弦・マリンバを、アコギ・アコギの分散和音・シンセのパッド・木のようなシンセに（音の並びはそのまま。アコーディオンはそのまま）
 FID = S.track("フィドル（アコギの節）", "guitar", patch="nylonGuitar", amp="clean", volume=0.2, pan=-0.2, reverb=0.3, chorus=0, fx=[{"type": "boost", "gain": 8}])
-ACC = S.track("アコーディオン（節）", "accordion", volume=0.1, pan=0.25, reverb=0.25)
-ACL = [S.track(f"アコーディオン（持続音{i + 1}）", "accordion", volume=0.04, pan=0.35 - 0.2 * i, reverb=0.3) for i in range(2)]
+# v10（2026-11-21）: 人間「アコーディオン、バンジョーもやめよう」→ アコーディオンの節をサイン波のリードに、持続音をシンセのパッドに（音の並びはそのまま）
+ACC = S.track("アコーディオン（節）のかわりのサイン波のリード", "lead", patch="kfbSineLead", volume=0.06, pan=0.25, reverb=0.25)
+ACL = [S.track(f"シンセのパッド（持続音{i + 1}）", "pad", patch="surgePadPad2Mw", volume=0.06, pan=0.35 - 0.2 * i, reverb=0.3) for i in range(2)]
 HARP = S.track("ハープ（エレピの分散和音）", "keys", volume=0.2, pan=-0.35, reverb=0.35, sustain=1.6, fx=[{"type": "boost", "gain": 3}])
 HARP2 = S.track("ハープ（エレピの上の線）", "keys", volume=0.2, pan=0.3, reverb=0.4, sustain=1.6)
 BOD = S.track("低い太鼓（バウロンの役）", "inchTom", volume=0.14, pan=0.05, reverb=0.2)
