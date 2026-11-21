@@ -37,12 +37,20 @@ def split(t):
         if sep in t:
             i = t.index(sep) + len(sep); return [t[:i].rstrip("、"), t[i:]]
     return [t[:len(t) // 2], t[len(t) // 2:]]
-ls = split(TJ); size = min(110, min(fitf(FJ, l, 110, 740).size for l in ls)); y = 250 if len(ls) == 2 else 320
+import os
+ls = os.environ["TITLE_SPLIT"].split("|") if os.environ.get("TITLE_SPLIT") else split(TJ); size = min(110, min(fitf(FJ, l, 110, 740).size for l in ls)); y = 250 if len(ls) == 2 else 320
 for k, l in enumerate(ls):
     bg = txt(bg, (X - 2, y), l, ImageFont.truetype(FJ, size), (255, 255, 255, 255) if k == 0 else (255, 120, 160, 255), glow=(255, 40, 110, 230), stroke=3); y += size + 26
 y += 14
 bg = txt(bg, (X, y), TE, fitf(FE, TE, 44, 740), (240, 230, 240, 255), stroke=2); y += 86
-bg = txt(bg, (X, y), TAG, fitf(FJ, TAG, 36, 740), (255, 200, 215, 255), stroke=2)
+def wrap(t, f, maxw):
+    out, cur = [], ""
+    for ch in t:
+        if f.getbbox(cur + ch)[2] > maxw and cur: out.append(cur); cur = ch
+        else: cur += ch
+    return out + [cur]
+tf = ImageFont.truetype(FJ, 32)
+for l in wrap(TAG, tf, 740)[:3]: bg = txt(bg, (X, y), l, tf, (255, 200, 215, 255), stroke=2); y += 44
 bg = txt(bg, (X, 778), "歌：重音テト  /  Vocal: Kasane Teto", ImageFont.truetype(FJ, 38), (255, 150, 180, 255), stroke=3)
 bg = txt(bg, (X, 840), "歌詞つき（日本語・英語） / JP & EN Lyrics", fitf(FJ, "歌詞つき（日本語・英語） / JP & EN Lyrics", 34, 740), (240, 230, 240, 255), stroke=3)
 t = cv2.imread("/tmp/yt2/tm/052.png", cv2.IMREAD_UNCHANGED); t = cv2.cvtColor(t, cv2.COLOR_BGRA2RGBA)
