@@ -18,5 +18,5 @@ for i in range(n):
     f = Image.new("RGBA", (W * 12, H * 12), BG); f.alpha_composite(img(i, 12)); fs.append(f.convert("P", palette=Image.ADAPTIVE))
 sheet.save(f"{OUT}/{name}_確認用（{n}コマ）.png"); raw.save(f"{OUT}/{name}_シート（等倍・透明）.png")
 mouth = [0, 1, 0, 3, 5, 1, 2, 4, 1, 0, 6, 0, 5, 3, 1, 0]
-seq = [(t % rows) * cols + mouth[(t // 2) % len(mouth)] if rows > 1 else mouth[t % len(mouth)] for t in range(rows * 4 if rows > 1 else 16)]
-fs[seq[0]].save(f"{OUT}/{name}_歌っている見本.gif", save_all=True, append_images=[fs[i] for i in seq[1:]], duration=(130 if rows > 1 else 170), loop=0)
+seq = [(t % rows) * cols + mouth[(t // (4 if rows > 8 else 2)) % len(mouth)] if rows > 1 else mouth[t % len(mouth)] for t in range(rows * 4 if rows > 1 else 16)]
+fs[seq[0]].save(f"{OUT}/{name}_歌っている見本.gif", save_all=True, append_images=[fs[i] for i in seq[1:]], duration=(90 if rows > 8 else 130 if rows > 1 else 170), loop=0)
