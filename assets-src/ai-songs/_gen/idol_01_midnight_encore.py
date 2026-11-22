@@ -1,5 +1,7 @@
 # アイドル曲 01「午前0時のアンコール」Encore at Midnight（仮）— アイドルポップ。4分の4・164。イ長調 → 最後のサビから半音上の変ロ長調。約4分。
 #
+# v4（2026-11-23）: 人間「テトの声をキュートにして一音一音聞こえやすくしてください」→ 声を幼く明るく（フォルマント 1.13→1.16）、子音を強く（1.85→2.2）、音の移り変わりを速く（0.9→0.7）、
+#   しゃくりを半分に（0.12→0.06）、声のやまびこを半分に（0.4→0.2）、声を少し大きく（0.16→0.175）、ハモリを小さく（0.26→0.2）。
 # v3（2026-11-23）: 1番A・2番Aではないが同じ型のベースで、短く弾き直す所にパチッという音（尖度 57）が出ていたので、弾き直しをやめた。
 # v2（2026-11-23）: 歌入りの点が 7.33（サビが 6.2〜6.5）。サビで歌の後ろの音を減らした（ギター 0.11→0.08、ピアノの右手は2・4拍だけ、短いシンセの和音は1小節おき）、サビの歌の強さ 20→15、ハモリ 0.34→0.26。
 # v1（2026-11-23）: 人間「テトでアイドルっぽい曲作ろうか cメロも2番に入れよう。ストーリーを入れて。コンセプトはシンデレラにしよう。」→ 物語の案から「Aで」。
@@ -60,7 +62,7 @@ MOD = S.sc("最後のサビ")[0]
 def KEY(b): return K2 if b >= MOD else K1
 
 
-V = Voice(S, vol=0.16, delay=0.4, bright=0.0, patch="kfbSineLead", low=False)
+V = Voice(S, vol=0.175, delay=0.2, bright=0.0, patch="kfbSineLead", low=False)
 SUB = S.track("サブベース（のばす）", "bass", patch="kfbSub", volume=0.05, pan=0, duck=0.4, fx=[{"type": "filter", "kind": "highpass", "freq": 32, "q": 0.7}])
 RB = S.track("指弾きのベース", "bass", volume=0.13, pan=0, duck=0.2)
 STAB = [S.track(f"短いシンセの和音{i + 1}", "lead", patch="kfbSawStab", volume=0.07, pan=0.0, reverb=0.2, duck=0.3, fx=[{"type": "widen", "amount": 1.6}]) for i in range(3)]
@@ -255,9 +257,9 @@ js = load(path); print("  ギターの強さ:", SL.velocity(js) + SR.velocity(js
 if VOCAL:
     backing(path, 0.9)
     remark(path, S, std_mark(("chorus",)))
-    vocal_polish(path, S, {"intro": 8, "verse": 8, "pre": 14, "chorus": 15, "bridge": 6, "outro": 6}, scoop=0.12, slash=0.4, vib_min_beats=1.5, vib_start=0.45, auto=0.6, breaths=0.0)
-    harmony(path, S, [("サビ2", 0, None, K1), ("最後のサビ", 0, None, K2), ("最後のサビ2", 0, None, K2)], vol=0.26)
-    voice_by_scene(path, S, {}, default="cute")                           # 1 曲 1 種類の声
+    vocal_polish(path, S, {"intro": 8, "verse": 8, "pre": 14, "chorus": 15, "bridge": 6, "outro": 6}, scoop=0.06, slash=0.25, vib_min_beats=1.5, vib_start=0.45, auto=0.6, breaths=0.0)
+    harmony(path, S, [("サビ2", 0, None, K1), ("最後のサビ", 0, None, K2), ("最後のサビ2", 0, None, K2)], vol=0.2)
+    voice_by_scene(path, S, {}, default="cute", tweak={"cute": {"formant": 1.16, "consonant": 2.2, "glide": 0.7, "legato": 0.0}})   # v4: もっとキュートに、一音一音はっきり                           # 1 曲 1 種類の声
     sing_ends(path, S, human=0.5)
     js = load(path)
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.0
