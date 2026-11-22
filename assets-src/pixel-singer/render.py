@@ -10,11 +10,13 @@ def img(fi, z):
             for x, ch in enumerate(r):
                 if ch in col: im.putpixel((x, y), col[ch])
     return im.resize((W * z, H * z), Image.NEAREST)
-n = len(d["frames"]); z = 12; BG = (104, 100, 92, 255)
-sheet = Image.new("RGBA", (W * z * n, H * z), BG); raw = Image.new("RGBA", (W * n, H), (0, 0, 0, 0)); fs = []
+n = len(d["frames"]); z = 8; BG = (104, 100, 92, 255); cols = int(sys.argv[4]) if len(sys.argv) > 4 else n; rows = n // cols
+sheet = Image.new("RGBA", (W * z * cols, H * z * rows), BG); raw = Image.new("RGBA", (W * cols, H * rows), (0, 0, 0, 0)); fs = []
 for i in range(n):
-    sheet.alpha_composite(img(i, z), (i * W * z, 0)); raw.alpha_composite(img(i, 1), (i * W, 0))
-    f = Image.new("RGBA", (W * z, H * z), BG); f.alpha_composite(img(i, z)); fs.append(f.convert("P", palette=Image.ADAPTIVE))
-sheet.save(f"{OUT}/{name}_確認用（口の形{n}コマ）.png"); raw.save(f"{OUT}/{name}_シート（等倍・透明）.png")
-seq = [0, 1, 0, 3, 5, 1, 2, 4, 1, 0, 6, 0, 5, 3, 1, 0]
-fs[0].save(f"{OUT}/{name}_歌っている見本.gif", save_all=True, append_images=[fs[i] for i in seq[1:]], duration=[120 if i == 6 else 180 for i in seq], loop=0)
+    cx, cy = i % cols, i // cols
+    sheet.alpha_composite(img(i, z), (cx * W * z, cy * H * z)); raw.alpha_composite(img(i, 1), (cx * W, cy * H))
+    f = Image.new("RGBA", (W * 12, H * 12), BG); f.alpha_composite(img(i, 12)); fs.append(f.convert("P", palette=Image.ADAPTIVE))
+sheet.save(f"{OUT}/{name}_確認用（{n}コマ）.png"); raw.save(f"{OUT}/{name}_シート（等倍・透明）.png")
+mouth = [0, 1, 0, 3, 5, 1, 2, 4, 1, 0, 6, 0, 5, 3, 1, 0]
+seq = [((t // 2) % rows) * cols + mouth[t % len(mouth)] if rows > 1 else mouth[t % len(mouth)] for t in range(32 if rows > 1 else 16)]
+fs[seq[0]].save(f"{OUT}/{name}_歌っている見本.gif", save_all=True, append_images=[fs[i] for i in seq[1:]], duration=170, loop=0)

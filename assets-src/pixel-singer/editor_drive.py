@@ -17,9 +17,9 @@ with sync_playwright() as p:
     cur = [None]
     def pick(sym):
         if cur[0] != sym:
-            i = pg.evaluate("s => [...document.querySelectorAll('#symbolList .sym')].findIndex(e => e.textContent === s)", sym)
+            i = 0 if sym == "." else pg.evaluate("s => [...document.querySelectorAll('#symbolList .sym')].findIndex(e => e.textContent === s)", sym)   # 0番は消しゴム
             el = pg.locator("#symbolList .sym").nth(i); el.scroll_into_view_if_needed(); el.click(); cur[0] = sym
-    def paint(cells):          # cells: {(x, y): 色}。色ごとにまとめて打つ
+    def paint(cells):          # cells: {(x, y): 色}。色ごとにまとめて打つ。"." は消しゴム
         by = {}
         for (x, y), s in cells.items(): by.setdefault(s, []).append((x, y))
         for s, pts in by.items():
@@ -28,20 +28,23 @@ with sync_playwright() as p:
                 cx, cy = r[0] + (x + .5) * r[2] / W, r[1] + (y + .5) * r[3] / H
                 assert pg.evaluate("([x, y]) => document.elementFromPoint(x, y) && document.elementFromPoint(x, y).id === 'gridCanvas'", [cx, cy]), ("キャンバスの外", x, y)
                 pg.mouse.click(cx, cy)
-    g = art.base(); cells = {(x, y): g[y][x] for y in range(H) for x in range(W) if g[y][x] != "."}; cells.update(art.FRAMES[0][2]); paint(cells)
-    for i, (nm, dur, fc) in enumerate(art.FRAMES):
-        if i: pg.click("#frameDup"); pg.wait_for_timeout(100); paint(fc)
-        pg.fill("#frameDur", str(dur)); pg.dispatch_event("#frameDur", "change")
+    # コマの設計: FRAME_GRIDS（コマごとの全体の表）があればそれを、なければ 土台＋顔 から作る
+    if hasattr(art, "FRAME_GRIDS"): grids = art.FRAME_GRIDS
+    else:
+        g0 = art.base(); grids = []
+        for nm, dur, fc in art.FRAMES:
+            g = [r[:] for r in g0]
+            for (x, y), s in {**art.FRAMES[0][2], **fc}.items(): g[y][x] = s
+            grids.append((nm, dur, g))
+    prev = [["."] * W for _ in range(H)]
+    for i, (nm, dur, g) in enumerate(grids):      # 1コマ目はぜんぶ打つ。2コマ目からは前のコマを複製して、ちがうマスだけ打ち直す
+        if i: pg.click("#frameDup"); pg.wait_for_timeout(60)
+        paint({(x, y): g[y][x] for y in range(H) for x in range(W) if g[y][x] != prev[y][x]})
+        pg.fill("#frameDur", str(dur)); pg.dispatch_event("#frameDur", "change"); prev = g
     pg.screenshot(path=f"{OUT}/{NAME}_エディタの画面.png")
     pg.locator("#menubar").get_by_text("ファイル").click(); pg.locator("#menuPop").get_by_text("作品を保存").click(); pg.wait_for_timeout(200); js = pg.input_value("#projJson"); b.close()
 open(f"{OUT}/{NAME}.sunshine-pixel.json", "w", encoding="utf-8").write(js)
-d = json.loads(js); print("フレーム", len(d["frames"]), [f["dur"] for f in d["frames"]], "色", len(d["symbols"]))
+d = json.loads(js); print("フレーム", len(d["frames"]), "色", len(d["symbols"]))
 # エディタが返した作品が設計どおりかを照らし合わせる
-bad = 0
-for i, (nm, dur, fc) in enumerate(art.FRAMES):
-    want = [r[:] for r in g]
-    for (x, y), s in {**art.FRAMES[0][2], **fc}.items(): want[y][x] = s
-    for y in range(H):
-        for x in range(W):
-            if d["cels"][0][i][y][x] != want[y][x]: bad += 1
+bad = sum(1 for i, (nm, dur, g) in enumerate(grids) for y in range(H) for x in range(W) if d["cels"][0][i][y][x] != g[y][x])
 print("設計とちがうマス", bad)
