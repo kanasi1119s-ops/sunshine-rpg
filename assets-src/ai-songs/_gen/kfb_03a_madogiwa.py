@@ -6,7 +6,7 @@
 # 物語（高嶺の花＝見えていても手が届かない、あこがれの人）: 教室でいちばん遠い席の、みんながあこがれる人。見ているだけの恋だった。落とした消しゴムを拾ってもらった日から、
 #   あいさつ → 名前を呼ぶ → 雨の帰り道、と少しずつ近づく。近くで知ったのは、完ぺきに見えるその人が、だれにも誘われずひとりで帰ること。「話しかけてくれた人は初めて」。
 #   遠い人だと決めていたのは自分のほうだった、と気づいて「好きです」を言う。最後は「おはよう」をあしたも言わせてね。
-# 音: サビのたびに調が半音上がる（気持ちが高まる）。前奏はのばす和音とシンセの旋律がつながって鳴る。ドラムは4つ打ちとハイハット主体の16ビート、形のちがうフィル4種。
+# 音: サビのたびに調が半音上がる（気持ちが高まる）。前奏なし（フィル1小節 → いきなりサビ）。ドラムは4つ打ちとハイハット主体の16ビート、形のちがうフィル4種。
 #   効果音（当たる音・逆回しのシンバル・きらめき・上がっていく音・ふくらむ和音・ハイハットのロール）。和音を小節の途中で止める形は使わない。
 # 歌詞: 曲名の言葉（窓ぎわ・シャンデリア）は歌わない。声: キュート 1 種類。歌をなぞるリードは入れない。オーケストラの楽器・アコーディオン・バンジョーは使わない。
 from vocalo_lib import *
@@ -35,7 +35,11 @@ def scene(name, n, kind, chs, sh=0, lastch=None):
 
 
 QCH = ["Ebmaj7", "F/Eb", "Dm7", "Gm7", "Cm7", "Dm7", "Ebmaj7", "F7sus4", "Ebmaj7", "F/Eb", "Dm7", "G7", "Cm7", "Dm7", "Ebmaj7", "F7sus4"]
-scene("前奏", 8, "intro", VCH)
+# v2: 人間「前奏の感じ今まで使いすぎてもう飽きた」「どの曲も始まりが同じすぎて、オリジナリティがまったくない」
+#   → これまでの曲は全部「静かに始まって音が増える」形だった。この曲は前奏なし: ドラムのフィル1小節 → いきなり全員でサビを歌う → フック4小節 → Aメロ。
+scene("合図", 1, "intro", ["F7sus4"])
+scene("いきなりサビ", 8, "chorus", CCH[:8])
+scene("フック", 4, "break", VCH[:4])
 scene("1番A", 16, "verse", VCH * 2)
 scene("1番B", 8, "pre", PCH)
 scene("サビ1", 16, "chorus", CCH)
@@ -43,7 +47,7 @@ scene("ドロップ1", 8, "break", VCH)
 scene("2番A", 16, "verse", VCH * 2)
 scene("2番B", 8, "pre", PCH, 0, "F7sus4")                                         # 最後の和音が、半音上の調の V
 scene("サビ2", 16, "chorus", CCH, 1)
-scene("ドロップ2", 16, "break", VCH * 2, 1)
+scene("ドロップ2", 8, "break", VCH, 1)
 scene("ギターソロ", 8, "break", PCH, 1)
 scene("静かな場面", 16, "bridge", QCH, 1)
 scene("落ちサビ", 8, "bridge", CCH[:8], 1)                                        # 和音と歌だけ
@@ -62,8 +66,9 @@ V = Voice(S, vol=0.17, delay=0.2, bright=0.0, patch="kfbSineLead", low=False)
 BASS = S.track("指弾きのベース", "bass", **rock_bass_spec(0.15))
 CLEAN = dict(di="emily", stringNoise=True, amp="jpopClean", ampDrive=0.12, chorus=0, humanPitch=0, noScoop=True, powerChord=False, sustain=1.3, release=0.5)
 GFX = [{"type": "filter", "kind": "highpass", "freq": 110, "q": 0.7}, {"type": "eq", "low": -1, "mid": 1.5, "midHz": 1800, "high": 0}, {"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6}, {"type": "room", "mix": 0.1}]
-GL = [S.track(f"Lギター{i + 1}弦め", "distGuitar", volume=0.06, pan=-0.6, fx=GFX, **CLEAN) for i in range(6)]
-GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", volume=0.06, pan=0.6, fx=GFX, **CLEAN) for i in range(6)]
+# v2（2026-11-23）: 人間「6秒ぐらいから入ってくるギター…このクリーン系の和音が微妙」→ クリーンをやめ、マーシャルの浅い歪み（明るいロックの音）に
+GL = [S.track(f"Lギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.04, -0.6, tone="marshall-mid", drive=0.4)) for i in range(6)]
+GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.038, 0.6, tone="marshall-mid", drive=0.35)) for i in range(6)]
 LEAD = S.track("リードギター", "distGuitar", **lead_gtr_spec(0.095, 0.1))
 SL, SR = G2.Strummer(GL, S, 29), G2.Strummer(GR, S, 47)
 PF = {"type": "pluckfilter", "freq": 2000, "depth": 0.6, "rate": 30, "hold": 4}
@@ -100,7 +105,7 @@ PA = ("5 5 6 5 3 5", "6 5 3", "4 4 5 6", "5 6 5 3 2", "3 3 5 6 6 1'", "2' 1' 6",
 PB = ("1' 1' 2' 1' 6 1'", "3' 2' 1'", "6 6 1' 2'", "2' 3' 2' 1' 7", "1' 1' 2' 3' 3' 2'", "2' 2' 6", "6 1' 2' 3'", "3' 2' 1' 2' 2'")
 VA = [f((Va, Vb, Vc, Vd)[k % 4], p) for k, p in enumerate(PA)]; VA2 = [f((Va, Vb, Vc, Vd)[k % 4], p) for k, p in enumerate(PB)]
 VA4, VA3 = VA2, VA                                                               # 2番: 高い方の形から入る
-Pa, Pb, Pc = "R:0.5 x:0.5 x:1 x:1 x:1", "x:1.5 x:1.5 x:1", "x:1 x:0.5 x:0.5 x:1 x:1"
+Pa, Pb, Pc = "R:0.5 x:0.5 x:1 x:1 x:1", "x:1.5 x:1 x:1 R:0.5", "x:1 x:0.5 x:0.5 x:1 x:1"
 VB = [f(Pa, "4 4 5 6"), f(Pb, "5 5 3"), f(Pa, "5 5 6 1'"), f(Pb, "7 7 5"), f(Pa, "6 6 1' 2'"), f(Pb, "2' 2' 1'"), f(Pc, "1' 2' 3' 2' 3'"), "R:4"]
 Ka, Kb, Kc, Kd, Ke = "x:1.5 x:0.5 x:0.5 x:0.5 x:0.5 x:0.5", "x:1 x:1 x:1.5 R:0.5", "x:0.5 x:0.5 x:0.5 x:0.5 x:0.5 x:0.5 x:1", "x:1 x:2 R:1", "x:3 R:1"
 VC = [f(Ka, "1' 1' 2' 3' 3' 2'"), f(Kb, "2' 3' 2'"), f(Kc, "5 7 2' 3' 2' 7 2'"), f(Kd, "3' 1'"), f(Ka, "1' 1' 2' 3' 4' 3'"), f(Kb, "2' 2' 3'"), f(Kc, "6 1' 2' 3' 2' 1' 2'"), f(Ke, "4'"),
@@ -120,6 +125,7 @@ def put(name, lines, text, bars=None):
     LY.flow(bars, mel, text, name)
 
 
+put("いきなりサビ", VC[:8], "てがとどかなくても/すきでいてもいいの/" + OTO)
 put("1番A", VA + VA2, "いちばんとおいせき/ひかりのなかのひと/みんながふりむいて/わたしはうつむいた/つりあわないよねと/じぶんにいいきかせ/それでもめがおうの/きらきらするほうを")
 put("1番B", VB, "おちたけしゴム/ひろうゆびさき/ありがとのこえ/はじまりだ")
 put("サビ1", VC, "てがとどかなくても/すきでいてもいいの/みているだけのこい/きょうでやめにする/おはようのひとこと/それだけでふるえる/" + OTO)
@@ -212,25 +218,17 @@ def fill(b, kind):
 
 for b in range(S.nb):
     n, i, L, kind = S.scene_of(b); odd = i % 2 == 1; last = i == L - 1; sung = G2.sung_slots(V, S, b)
-    head = (i == 0 and (kind in ("chorus", "break") or n == "静かな場面")) or (i == 8 and n in ("2番A", "最後のドロップ", "1番A")) or (i == 4 and n == "前奏")
-    if head: fxh(b, 0, "down" if n == "静かな場面" else "impact", 2); (b > 0 and fxh(b - 1, 2, "rev", 2))      # 場面の頭に当たる音、その前に逆回しのシンバル
+    head = (i == 0 and (kind in ("chorus", "break") or n == "静かな場面")) or (i == 8 and n in ("2番A", "最後のドロップ", "1番A"))
+    if head: fxh(b, 0, "down" if n == "静かな場面" else "impact", 2); (b > 1 and fxh(b - 1, 2, "rev", 2))      # 場面の頭に当たる音、その前に逆回しのシンバル
     if (kind == "pre" and i >= 4) or (n == "静かな場面" and i >= 4): swell(b)
-    if (n == "前奏" and i in (0, 2)) or (n == "静かな場面" and i % 2 == 0) or (kind == "chorus" and i in (4, 12)): fxh(b, 1 if kind == "chorus" else 0, "kira", 1)
+    if (n == "静かな場面" and i % 2 == 0) or (kind == "chorus" and i in (4, 12)): fxh(b, 1 if kind == "chorus" else 0, "kira", 1)
     if last and kind in ("pre", "chorus"): hat_roll(HATR, b, 1)
-    if n == "前奏":                                                      # のばす和音とフックがつながって鳴る → タムのフィル → 全員（16ビート）
-        if i < 4:
-            saw(b, "x---------------"); bass(b, "r---------------"); hook(b, i); D.set(b, "................", "................", "................")
-            if i >= 2: arp(b, 0)
-            if odd: bell(b, i // 2)
-            if i == 3: fill(b, 0)
-        else:
-            D.set(b, K16[i % 4], SN, H16o if odd else H16); bass(b, ("r-------r-----5-", "r-----R---r-----")[i % 2]); gtr(b, GA[i % 4], GB[i % 4]); saw(b, "x-------x-------"); hook(b, i, True)
-            if i == 4: crash(D, b, "C2", 4)
-            if last: fill(b, 2)
+    if n == "合図":                                                      # ドラムのフィルだけ1小節（スネア → タム）。逆回しのシンバル
+        D.set(b, "X.......X.......", "x.x.xxx.x.x.....", "................"); D.tom(b, "R:3 C4:0.25 A3:0.25 F3:0.25! D3:0.25!"); fxh(b, 2, "rev", 2)
     elif n == "1番A":                                                    # 前半: ベースとシンセの細かい音、ギターは裏だけ。後半: 16ビート
         first = i < 8
         if first:
-            D.set(b, HALFT[0], HALFT[1], "x.x.x.x.x.x.x.x."); gtr(b, None, "..U...U...U...U.", feel=8); arp(b, 4)
+            D.set(b, FOUR[0], HALFT[1], "x.x.x.x.x.x.x.x."); gtr(b, None, "..U...U...U...U.", feel=8); arp(b, 4); saw(b, "x---------------", 62)      # いきなりサビのあとなので、小さくしすぎない
             if i == 7: fill(b, 1)
         else:
             D.set(b, K16[i % 4], SNg, H16o if i % 4 == 3 else H16); gtr(b, GA[i % 4], GB[(i + 2) % 4], sung=sung); arp(b, 2 + i % 2); CLP.bar(b, "R:1 B4:1 R:1 B4:1")
@@ -266,16 +264,16 @@ for b in range(S.nb):
         saw(b, "x---------------", 65); swell(b); D.set(b, "................", "................", "................")
         if i >= 4: bass(b, "r---------------"); arp(b, 4)
         if i % 4 == 0: fxh(b, 0, "kira", 1)
-    elif n in ("サビ1", "サビ2", "最後のサビ", "大サビ"):                          # 前半: 4つ打ちと裏のハイハット（ダンス）。後半: 16ビート
+    elif n in ("いきなりサビ", "サビ1", "サビ2", "最後のサビ", "大サビ"):                          # 前半: 4つ打ちと裏のハイハット（ダンス）。後半: 16ビート
         D.set(b, OFFH[0], OFFH[1] if i % 8 != 6 else "....X.......X.X.", OFFH[2] if i < 8 else (H16o if odd else H16)); CLP.bar(b, "R:1 B4:1 R:1 B4:1")
         if i % 8 == 0: crash(D, b, "C2", 4)
         bass(b, ("r-------r-----5-", "r-----R---r-----", "r---------r---r-", "r---5---r---R---")[i % 4]); saw(b, SAWC[i % 4])
         gtr(b, GA[i % 4], GB[(i + 1) % 4], sung=sung); arp(b, i)
         if odd and i not in (7, 15): HOOK.bar(b, KEY(b).mel(("R:2.5 3':0.5 5':1", "R:3 2':0.5 3':0.5", "R:2.5 5':0.5 6':1", "R:3 3':0.5 5':0.5")[(i // 2) % 4], oct=3))   # フックのシンセが、句の終わりに短く返事
-        if i == 7: fill(b, 3)
+        if i == 7 and L > 8: fill(b, 3)
         if last: FX.bar(b, "C5:4"); fill(b, 0)
-    elif n in ("ドロップ1", "ドロップ2", "最後のドロップ"):              # 歌なし。フックを、シンセとリードギターがいっしょに弾く
-        k8 = i % 8; h16 = n == "最後のドロップ" and i >= 8 or n == "ドロップ2"
+    elif n in ("フック", "ドロップ1", "ドロップ2", "最後のドロップ"):              # 歌なし。フックを、シンセとリードギターがいっしょに弾く
+        k8 = i % 8; h16 = n == "最後のドロップ" and i >= 8 or n in ("ドロップ2", "フック")
         D.set(b, OFFH[0], OFFH[1], (H16o if odd else H16) if h16 else OFFH[2]); CLP.bar(b, "R:1 B4:1 R:1 B4:1")
         if k8 == 0: crash(D, b, "C2", 4)
         bass(b, ("r--r--r---------", "r-------r-----5-", "r--r------r-----", "r-----r-----R---")[i % 4]); saw(b, SAWD[i % 4]); gtr(b, GA[(i + 2) % 4], GB[i % 4])
@@ -327,7 +325,7 @@ if VOCAL:
 js = load(path); drum_center(js)
 for p_ in js["parts"]:
     g = list(p_.get("barGain", [1] * S.nb)) + [1] * S.nb
-    for name, k in (("1番A", 0.85),):
+    for name, k in ():
         for b in S.sc(name): g[b] = round(g[b] * k, 4)
     p_["barGain"] = g[:S.nb]
 if VOCAL:
