@@ -53,8 +53,8 @@ function fakeCtx() {
 }
 
 describe("追加のエフェクター（fx-extra）", () => {
-  it("11種類すべてが FX_TYPES・FX_INFO にあり、日本語の名前がある（2026-10-21 transgate・syncfilter を追加）", () => {
-    expect(EXTRA_FX_TYPES.length).toBe(11);
+  it("12種類すべてが FX_TYPES・FX_INFO にあり、日本語の名前がある（2026-11-23 pluckfilter を足した。2026-10-21 transgate・syncfilter を追加）", () => {
+    expect(EXTRA_FX_TYPES.length).toBe(12);
     for (const t of EXTRA_FX_TYPES) {
       expect(FX_TYPES).toContain(t);
       expect(FX_INFO[t].label.length).toBeGreaterThan(0);
