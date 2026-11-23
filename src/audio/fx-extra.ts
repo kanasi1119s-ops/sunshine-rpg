@@ -13,7 +13,7 @@
 import { cabApproxSpec, type CabKind, type MicPos } from "./amp-cab";
 import type { BuiltFx, FxSpec } from "./fx-chain";
 
-export const EXTRA_FX_TYPES = ["tape", "rotary", "doubler", "pcomp", "harmtrem", "octup", "cabir", "springx", "envwah", "transgate", "syncfilter"] as const;
+export const EXTRA_FX_TYPES = ["tape", "rotary", "doubler", "pcomp", "harmtrem", "octup", "cabir", "springx", "envwah", "transgate", "syncfilter", "pluckfilter"] as const;
 export type ExtraFxType = (typeof EXTRA_FX_TYPES)[number];
 
 /** 日本語の呼び名と、向く場面と、標準の混ぜ具合（fx-chain.ts の FX_INFO に足される）。 */
@@ -29,6 +29,8 @@ export const EXTRA_FX_INFO: Record<ExtraFxType, { label: string; use: string; mi
   envwah: { label: "エンベロープ・フィルター", use: "強く弾くほどフィルターが開く「ニャウ」（ファンクのカッティング・ベース）。コンプより前に置く", mix: 1 },
   // 2026-10-21 ロックとエレクトロの混ざった音（ギターを拍で刻む・拍に合わせてフィルターを動かす）
   transgate: { label: "トランスゲート（拍で刻む）", use: "音を拍に合わせて切る（pattern の x＝鳴る・.＝切る、1文字＝beats 拍。例 beats 0.25・pattern \"x.xx.x.x\"）。depth＝切る深さ 0〜1。閉じ方は数msなめらか。曲の頭からの拍にそろう", mix: 1 },
+  // 2026-11-23 Kawaii future bass の見本を1音ずつ測ると、和音は「頭が明るく、すぐ少し暗くなる」形だった（docs/sound/kfb-study-user-refs.md の 10）
+  pluckfilter: { label: "音の頭で開くフィルター", use: "音が立ち上がるたびにフィルターが開き、すぐ閉じる（のばす和音でも、1音ごとに「頭が明るく、すぐ暗く」なる）。freq＝閉じた時の境目、depth＝開く幅 0〜1、rate＝開く速さ、hold＝閉じる速さ（小さいほどゆっくり）", mix: 1 },
   syncfilter: { label: "拍に合わせて動くフィルター", use: "beats 拍で1往復する。kind＝lowpass／bandpass、freq＝中心、depth＝動く幅 0〜1。ゆっくり開く・閉じる、ワウのような揺れ", mix: 1 },
 };
 
@@ -494,6 +496,39 @@ export function buildExtraFx(ctx: BaseAudioContext, spec: FxSpec, mixDefault: nu
       nodes.push(conv);
       f.input.connect(conv);
       conv.connect(f.wet);
+      return { input: f.input, output: f.output, nodes };
+    }
+    case "pluckfilter": {
+      // 音の大きさを「速く追う」と「ゆっくり追う」の2つで追いかけ、その差（＝立ち上がりの時だけ正になる）でローパスの境目を上げる。音がのびている間は差が 0 にもどり、フィルターが閉じる
+      const f = frame(0);
+      const base = clamp(num(spec.freq, 1800), 200, 8000);
+      const lp = filt("lowpass", base, 0, clamp(num(spec.q, 0.8), 0.5, 4));
+      const rect = ctx.createWaveShaper();
+      rect.curve = rectifierCurve(2048, 1);
+      const fast = filt("lowpass", clamp(num(spec.rate, 30), 5, 80), 0, 0.5);
+      const slow = filt("lowpass", clamp(num(spec.hold, 4), 0.5, 15), 0, 0.5);
+      const neg = gain(-1);
+      const pos = ctx.createWaveShaper();
+      const pc = new Float32Array(2048);
+      for (let i = 0; i < 2048; i++) { const x = (i / 2047) * 2 - 1; pc[i] = x > 0 ? x : 0; }
+      pos.curve = pc;
+      const sum = gain(4);
+      nodes.push(rect, pos);
+      const range = gain(clamp(num(spec.depth, 0.6), 0, 1) * 30000);
+      f.input.connect(rect);
+      rect.connect(fast);
+      rect.connect(slow);
+      fast.connect(sum);
+      slow.connect(neg);
+      neg.connect(sum);
+      sum.connect(pos);
+      pos.connect(range);
+      range.connect(lp.frequency);
+      f.input.connect(lp);
+      const out = gain(mix);
+      lp.connect(out);
+      out.connect(f.output);
+      f.dry.gain.value = 1 - mix;
       return { input: f.input, output: f.output, nodes };
     }
     case "envwah": {
