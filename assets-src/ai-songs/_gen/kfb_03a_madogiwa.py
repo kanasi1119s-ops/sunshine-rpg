@@ -63,7 +63,9 @@ def KEY(b): return KS[SHIFT.get(b, 0)]
 
 
 V = Voice(S, vol=0.17, delay=0.2, bright=0.0, patch="kfbSineLead", low=False)
-BASS = S.track("指弾きのベース", "bass", **rock_bass_spec(0.15))
+BSPEC = rock_bass_spec(0.165); BSPEC["ampDrive"] = 0.25      # v3: 人間「ベースの歪みがちょっと強いかも」→ 歪み 0.55 → 0.25、2.2kHz の持ち上げを半分に
+BSPEC["fx"] = [{"type": "eq", "low": 0, "mid": 4, "midHz": 900, "high": 0}, {"type": "eq", "low": 0, "mid": 1.5, "midHz": 2200, "high": 1}]
+BASS = S.track("指弾きのベース", "bass", **BSPEC)
 CLEAN = dict(di="emily", stringNoise=True, amp="jpopClean", ampDrive=0.12, chorus=0, humanPitch=0, noScoop=True, powerChord=False, sustain=1.3, release=0.5)
 GFX = [{"type": "filter", "kind": "highpass", "freq": 110, "q": 0.7}, {"type": "eq", "low": -1, "mid": 1.5, "midHz": 1800, "high": 0}, {"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6}, {"type": "room", "mix": 0.1}]
 # v2（2026-11-23）: 人間「6秒ぐらいから入ってくるギター…このクリーン系の和音が微妙」→ クリーンをやめ、マーシャルの浅い歪み（明るいロックの音）に
