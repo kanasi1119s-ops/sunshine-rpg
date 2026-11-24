@@ -13,7 +13,7 @@
 from vocalo_lib import *
 import gtr2_lib as G2
 from groove_lib import Groove
-import re as _re
+import re as _re, os
 
 S = Song("33", "lasttrain", "終電バイバイ（仮）", "Last Train, Bye-Bye", 176, 4, "D", "major", "ポップパンク（ボカロ）")
 S.kit = "crocell-punch"; S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags + " --space room --space-wet 0.08"
@@ -52,9 +52,13 @@ V = Voice(S, vol=0.17, delay=0.2, bright=0.0, patch="kfbSineLead", low=False)
 BSPEC = rock_bass_spec(0.17); BSPEC["ampDrive"] = 0.3
 BSPEC["fx"] = [{"type": "eq", "low": 0, "mid": 4, "midHz": 900, "high": 0}, {"type": "eq", "low": 0, "mid": 2, "midHz": 2200, "high": 1}]
 BASS = S.track("指弾きのベース", "bass", **BSPEC)
-GL = [S.track(f"Lギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.09, -0.6, tone="marshall-mid", drive=0.5)) for i in range(6)]
-GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.085, 0.6, tone="marshall-mid", drive=0.45)) for i in range(6)]
-LEAD = S.track("リードギター", "distGuitar", **lead_gtr_spec(0.14, 0.1))
+GL = [S.track(f"Lギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.09, -0.6, tone="marshall-mid", drive=float(os.environ.get("LD", "0.35")))) for i in range(6)]
+# v3: サビだけ切り出して（tools/vt3/excerpt_vocal.py）くらべた。v2 のサビ「走る」= 6.9。ギターを全部ぬくと 7.8、右ギターだけぬくと 7.47 ＝ 歌と同じ高さで歪んだ三和音をかき鳴らす右ギターが元。
+#   右を「B で OK が出た音」（アンプの型なし・浅い歪み・高い所の三和音）にして 7.43、サビの上げ幅を小さくして 7.47、左の入力を 0.5 → 0.35 にして 7.66。r1＝左右とも根音と5度（7.08）、r2＝右の入力を下げる（7.05）は効かなかった
+RV = os.environ.get("RV", "r3")                                                      # 右ギターの試し（サビの点数が低い元を探した。記録は docs/sound/punk-guide.md §10）
+GSPB = lambda v, p: {**{k: x for k, x in rock_gtr_spec(v, p).items() if k != "guitarTone"}, "release": 0.9}
+GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **(GSPB(0.12, 0.6) if RV == "r3" else rock_gtr_spec(0.085, 0.6, tone="marshall-mid", drive=0.25 if RV == "r2" else 0.45))) for i in range(6)]
+LEAD = S.track("リードギター", "distGuitar", **lead_gtr_spec(0.1, 0.1))                 # v2: 0.14 → 0.1（リードのある場面だけ 3〜4dB 大きかった）
 SL, SR = G2.Strummer(GL, S, 33), G2.Strummer(GR, S, 71); SL.gap = SR.gap = 0.0
 D = S.drumkit(); LY = Lyrics(S); N = lambda m: nm(m)
 mel = lambda s, up=0: KD.mel(s, oct=4 + up)                                          # 1＝D4。歌は 5,（A3）〜 2'（E5）
@@ -134,7 +138,9 @@ def strum(b, i, L=DN, R=UD, space=False):
     """ギター左右: 左は根音と5度（低い側・ダウン）、右は三和音（まん中の弦）。space: 歌が鳴っている所では少し引く"""
     c = simple(S.chords[b]); sung = G2.sung_slots(V, S, b) if space else None
     if L: p = L[i % 4]; SL.bar(b, G2.with_space(p, sung, keep=(0, 8)) if sung else p, G2.low_shape(c, with_third=False), feel="down")
-    if R: p = R[i % 4]; TR[0] = G2.triad(c, TR[0]); SR.bar(b, G2.with_space(p, sung, keep=(0, 8)) if sung else p, TR[0], feel="down" if R is DN or R is HALF else 8)
+    if R:
+        p = R[i % 4]; TR[0] = G2.triad(c, TR[0], top_lo=64, top_hi=71, groups=((2, 3, 4), (3, 4, 5))) if RV == "r3" else G2.triad(c, TR[0])
+        SR.bar(b, G2.with_space(p, sung, keep=(0, 8)) if sung else p, G2.low_shape(c, with_third=False) if RV == "r1" else TR[0], feel="down" if R is DN or R is HALF else 8)
 
 
 def arp_r(b, i):
@@ -217,7 +223,7 @@ for b in range(S.nb):
         if i == 3: fill(b, 4)
         if last: fill(b, 3)
     elif n == "ホーム":                                                  # だれもいないホーム: 右ギターの分散和音とベースと「ガタン・ゴトン」
-        arp_r(b, i); bass(b, "r---------------")
+        arp_r(b, i); bass(b, "r-------r-------"); c_ = simple(S.chords[b]); SL.bar(b, "D---------------", G2.low_shape(c_, with_third=False), feel="down")   # v2: 左ギターも和音を1回鳴らしてのばす（v1 は -31dB まで落ちて、急に小さくなりすぎた）
         if i >= 2: D.tom(b, TRAIN)
         if last: D.set(b, NO, NO, NO); fill_cresc(D, b, 2, True)
     elif n in ("サビ1", "サビ2", "サビ3"):
@@ -300,13 +306,17 @@ if VOCAL:
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.0
     save(path, js)
 js = load(path); drum_center(js)
-QUIET = {"ホーム": 0.6, "A4": 0.7, "止まる": 0.6}                                    # 静かな場面は伴奏を下げる（歌は下げない）
+QUIET = {"ホーム": 0.95, "A4": 0.95}                                                 # v2: 静かな場面は、鳴らす楽器を減らすだけで十分静か（v1 はさらに下げて -31dB・-23dB まで落ちた）
+LK = float(os.environ.get("LK", "0.85"))
+LOUD = {"サビ1": 1.35 * LK, "サビ2": 1.35 * LK, "サビ3": 1.35 * LK, "走る": 1.25 * LK, "最後": 1.3 * LK, "A1": 0.92, "A2": 0.9, "ドロップ": 1.2}   # v2: v1 はサビ（-19dB）が A（-17〜-18dB）より小さかった → サビを上げ、A を少し下げる
 for p_ in js["parts"]:
     g = list(p_.get("barGain", [1] * S.nb)) + [1] * S.nb
     for name, k in QUIET.items():
-        for j, b in enumerate(S.sc(name)): g[b] = round(min(g[b], 1.0) * (k if not (name == "A4" and j >= 4) else 0.85), 4)
+        for j, b in enumerate(S.sc(name)): g[b] = round(min(g[b], 1.0) * k, 4)
+    for name, k in LOUD.items():
+        for b in S.sc(name): g[b] = round(g[b] * k, 4)
     for name in ("ベル", "タクシー"):
-        for b in S.sc(name)[-2:]: g[b] = round(min(g[b], 1.0) * 0.6, 4)
+        for b in S.sc(name)[-2:]: g[b] = round(min(g[b], 1.0) * 0.85, 4)
     p_["barGain"] = g[:S.nb]
 js["diGuitar"] = "emily"; js["guitarWobble"] = False
 GM.apply(js)                                                                         # ノリ: ぴったり（パンクは正確さ）。キックとベースは同じだけずらす
