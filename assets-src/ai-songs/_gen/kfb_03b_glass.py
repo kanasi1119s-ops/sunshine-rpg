@@ -55,8 +55,8 @@ GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **{**rock_gtr_spec(0.23,
 LEAD = S.track("リードギター", "distGuitar", **lead_gtr_spec(0.14, 0.1))
 # v4（2026-11-24）: 聞きくらべ（tools/vt3/gtr_tone_ab.py）で、人間が「1 と 3 が使える」と選んだ。1＝浅い歪みで和音と同じリズム、3＝つやのあるロックの音（glossy-jrock）で8分のかき鳴らし。
 #   浅い歪みは同じ音量設定でも約 13dB 小さく出ると分かったので、1 の音量を上げた（0.095 → 0.24）。3 はサビとドロップ、1 はそのほかのバンドの場面。
-GL3 = [S.track(f"Lギター（かき鳴らし）{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.125, -0.6, tone="glossy-jrock")) for i in range(6)]
-GR3 = [S.track(f"Rギター（かき鳴らし）{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.12, 0.6, tone="glossy-jrock")) for i in range(6)]
+GL3 = [S.track(f"Lギター（かき鳴らし）{i + 1}弦め", "distGuitar", **{k: v for k, v in rock_gtr_spec(0.125, -0.6).items() if k != "guitarTone"}) for i in range(6)]      # 音色プリセットなし（内蔵の歪み）＋録音ギター。聞きくらべで合っていた音
+GR3 = [S.track(f"Rギター（かき鳴らし）{i + 1}弦め", "distGuitar", **{k: v for k, v in rock_gtr_spec(0.12, 0.6).items() if k != "guitarTone"}) for i in range(6)]
 SL, SR = G2.Strummer(GL, S, 30), G2.Strummer(GR, S, 51); SL3, SR3 = G2.Strummer(GL3, S, 31), G2.Strummer(GR3, S, 52)
 # v5（2026-11-24）: 聞きくらべを聞いた人間「音が切れて和音がにごるかな」。
 #   切れる → 和音が変わる時に弦を少し前で止めていたのをやめ（gap 0）、音の消え方を長く（release 0.5 → 0.9）。
@@ -236,14 +236,14 @@ def hook(b, line, gtr_too=False):
 def band(b, i, sung=None, hat=None, kick=None, k=0, sawp="x-------x-------", clap=True, st=False):
     """サビの土台: 食いこむキック、16分のハイハット、低いベース、広い和音、左右のギター"""
     D.set(b, kick or K2[(i + k) % 4], SNg if i % 2 else SN, hat or (H16o if i % 2 else H16)); sub(b, ("r-------..r-..r-", "r--r--r-........", "r-----..r--r----", "r-..r-....r--R--")[(i + k) % 4]); saw(b, sawp)
-    strum(b, i + k) if st else gtr(b, sawp)
+    if st: strum(b, i + k)      # v6: ギターは「全員が鳴っている場面」だけ（聞きくらべで、人間が「③＝全部そろった時だけ合っている」）。うすい場面では弾かない
     if clap: CLP.bar(b, "R:1 B4:1 R:1 B4:1")
 
 
 for b in range(S.nb):
     n, i, L, kind = S.scene_of(b); odd = i % 2 == 1; last = i == L - 1; sung = G2.sung_slots(V, S, b)
     if n == "合図":                                                      # 始まり: 歌なしのフックを全員で（2小節）
-        band(b, i, kick=FOURK, sawp="x--x--x---x--x--" if i == 0 else "x-----------....", st=i == 0); hook(b, (HK[0], "2':3 R:1")[i], True)
+        band(b, i, kick=FOURK, sawp="x--x--x---x--x--" if i == 0 else "x-----------....", st=i == 0); (i == 0 and arp(b, 0)); hook(b, (HK[0], "2':3 R:1")[i], True)
         if i == 0: crash(D, b, "C2", 4); fxh(b, 0, "impact", 2)
         else: fill(b, 3)
     elif n == "高い棚":                                                  # 静か: パッドとピアノ。ガラスをたたく音
@@ -286,7 +286,7 @@ for b in range(S.nb):
         if last: fill(b, 1)
     elif n in ("立ち上げ1", "立ち上げ2"):                                # IV → V → ♭VI → ♭VII と上がる。スネアが細かくなる
         two = n == "立ち上げ2"
-        saw(b, "x-------x-------" if i < 4 else "x---x---x---x---", 62 + i); sub(b, "r-----r-r-------" if i < 4 else "r--r--r-r--r--r-"); (i >= (0 if two else 2)) and gtr(b, "x-------x-------" if i < 4 else "x---x---x---x---")
+        saw(b, "x-------x-------" if i < 4 else "x---x---x---x---", 62 + i); sub(b, "r-----r-r-------" if i < 4 else "r--r--r-r--r--r-"); None
         D.set(b, "X.......X......." if i < 2 else FOURK, NO if i < 2 else ("....x.......x..." if i < 4 else "x...x...x...x..." if i < 6 else "x.x.x.x.x.x.x.x."), H8 if i < 4 else H16)
         if two: hook(b, ("1':1 2':1 3':2", "2':1 3':1 5':2")[i % 2])
         elif i >= 4: arp(b, i % 2)
@@ -300,7 +300,6 @@ for b in range(S.nb):
         if last: fill(b, 2)
     elif n == "声":                                                      # A: 3小節の句。ピアノが前、ギターは右だけ
         D.set(b, K2[i % 4], SN, H8 if i < 6 else H16); sub(b, ("r----r----------", "r---------r-----", "r--r------------")[i % 3]); piano(b, ("x--x--x---x-----", "x-----x---x--x--", "x---------------")[i % 3])
-        gtr(b, ("x--x--x---x-----", "x-----x---x--x--", "x---------------")[i % 3])      # ピアノと同じリズム
         if i >= 6: arp(b, 4)
         if i == 0: crash(D, b, "C2", 4)
         if i % 3 == 2: boo(b, i // 3)
@@ -312,16 +311,16 @@ for b in range(S.nb):
         if i >= 6: swell(b); D.set(b, "X.........X.....", NO, NO)
         if last: FX.bar(b, "C5:4"); D.set(b, NO, NO, NO); fill(b, 1)
     elif n == "この手":                                                  # A: 全員。ギターは歌のあいだに間を作る
-        band(b, i, sung=sung, k=2, sawp="x---------------", hat=H8 if i < 4 else None)
+        band(b, i, sung=sung, k=2, sawp="x---------------", hat=H8 if i < 4 else None, st=i >= 4)
         if i == 0: crash(D, b, "C2", 4)
         if i >= 4: arp(b, i % 2)
         if last: fill(b, 0)
     elif n == "サビ3":                                                   # 別の和音のサビ: 今度は全員で。キックは半分の速さ
-        band(b, i, sung=sung, kick="X.........X.....", k=3, sawp="x-----x---x-----"); arp(b, 3)
+        band(b, i, sung=sung, kick="X.........X.....", k=3, sawp="x-----x---x-----", st=True); arp(b, 3)
         if i == 0: crash(D, b, "C2", 4); fxh(b, 0, "impact", 2)
         if last: fill(b, 3)
     elif n == "ソロ":
-        band(b, i, k=1, st=True); LEAD.bar(b, mel(b, SOLO[i], -1))
+        band(b, i, k=1, st=True); arp(b, i % 2); LEAD.bar(b, mel(b, SOLO[i], -1))
         if i == 0: crash(D, b, "C2", 4)
         if last: fill(b, 2)
     elif n == "ドロップ2":                                               # 前半: フック（4つ打ち）。後半: 別の和音・別のフック・食いこむキックにもどる
@@ -329,12 +328,12 @@ for b in range(S.nb):
             band(b, i, kick=FOURK, hat="..x...x...x...x.", sawp=("x--x--x---x--x--", "x-----x---x-----")[i % 2], st=True); hook(b, HK[i], True)
             if i == 7: fill(b, 3)
         else:
-            band(b, i, k=2, sawp=("x-----x--x------", "x--x------x-----")[i % 2]); hook(b, HK2[i - 8], True); arp(b, i % 2); boo(b, i)
+            band(b, i, k=2, sawp=("x-----x--x------", "x--x------x-----")[i % 2], st=True); hook(b, HK2[i - 8], True); arp(b, i % 2); boo(b, i)
             if last: D.set(b, "X...............", NO, NO)
         if i in (0, 8): crash(D, b, "C2", 4); fxh(b, 0, "impact", 2)
     elif n == "にせの立ち上げ":                                          # もう一度上がって…落とす（最後の2小節はパッドだけ）
         if i < 8:
-            saw(b, "x---x---x---x---", 62 + i); sub(b, "r--r--r-r--r--r-"); gtr(b, "x---x---x---x---"); arp(b, i % 2); FX.bar(b, "C5:4")
+            saw(b, "x---x---x---x---", 62 + i); sub(b, "r--r--r-r--r--r-"); arp(b, i % 2); FX.bar(b, "C5:4")
             D.set(b, FOURK, "x...x...x...x..." if i < 4 else ("x.x.x.x.x.x.x.x." if i < 7 else "xxxxxxxxXXXXXXXX"), H16 if i < 7 else NO)
             if i == 0: crash(D, b, "C2", 4)
             if i == 7: hat_roll(HATR, b, 1)
@@ -374,7 +373,13 @@ if VOCAL:
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.0
     save(path, js)
 js = load(path); drum_center(js)
-QUIET = {"目が合う": 0.9, "またあした": 0.9}      # v1 は静かな場面が -26〜-31dB で小さすぎた（パッドとガラスのピアノの音が小さい）→ v2 で音を約2倍にし、下げ幅をほぼ無くした。もとは      # 静かな場面は伴奏だけ下げる（歌は下げない）
+# v7: ギターを全員の場面だけにしたら、ギターの無い場面が 4〜6dB 小さくなり（-22〜-27dB）、点数も 6.5 に落ちた。ギターの無い場面の伴奏を持ち上げて、段差を小さくする
+QUIET = {"見るだけ": 1.2, "言いわけ": 1.2, "目が合う": 1.3, "立ち上げ1": 1.15, "立ち上げ2": 1.15, "声": 1.2, "にせの立ち上げ": 1.2}
+# v8（2026-11-25）: 見つけたまちがい。「glossy-jrock」はギターの音色の名前ではなかった（仕上げの参考の音の名前）。作曲ソフトは知らない名前を無視し、
+#   ほかに録音ギター（DI）を使う音色のパートが1つでもあれば曲全体を録音ギターで鳴らし、無ければ合成のギターで鳴らす。
+#   人間が「合っている」と言った聞きくらべは録音ギターで鳴っていて、v6・v7 は浅い歪みのパートを消したせいで合成のギター（1〜6kHz ばかりの細い音）に変わっていた（点数 6.5）。
+#   → 曲に「録音ギター（emily）を使う」と書いて、どの場面でも同じ音で鳴るようにする。
+js["diGuitar"] = "emily"; js["guitarWobble"] = False
 for p_ in js["parts"]:
     g = list(p_.get("barGain", [1] * S.nb)) + [1] * S.nb
     for name, k in QUIET.items():
