@@ -50,8 +50,8 @@ KEYOF = dict(SC)
 
 V = Voice(S, vol=0.17, delay=0.2, bright=0.0, patch="kfbSineLead", low=False)
 SUB = S.track("シンセの低いベース", "bass", patch="kfbSub", volume=0.066, pan=0, duck=0.12)
-GL = [S.track(f"Lギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.085, -0.6, tone="marshall-mid", drive=0.4)) for i in range(6)]
-GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.08, 0.6, tone="marshall-mid", drive=0.35)) for i in range(6)]
+GL = [S.track(f"Lギター{i + 1}弦め", "distGuitar", **{**rock_gtr_spec(0.095, -0.6, tone="marshall-mid", drive=0.18), "sustain": 3.0, "release": 0.8}) for i in range(6)]      # v3: 歪みを浅く（0.4 → 0.18）、音が次の一打まで残るように（のび 1.3 → 3.0 秒）
+GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **{**rock_gtr_spec(0.09, 0.6, tone="marshall-mid", drive=0.15), "sustain": 3.0, "release": 0.8}) for i in range(6)]
 LEAD = S.track("リードギター", "distGuitar", **lead_gtr_spec(0.14, 0.1))
 SL, SR = G2.Strummer(GL, S, 30), G2.Strummer(GR, S, 51)
 PF = {"type": "pluckfilter", "freq": 2000, "depth": 0.6, "rate": 30, "hold": 4}
@@ -174,15 +174,14 @@ def boo(b, k=0):
 TR = [None]
 
 
-def gtr(b, patL=None, patR=None, sung=None):
-    """ギターは8分のかき鳴らし（見本の1）。左＝低い側の形をぜんぶダウン、右＝三和音を下・上。- は鳴らしたまま"""
-    c = S.chords[b]
-    if patL: SL.bar(b, G2.with_space(patL, sung, keep=(0, 8)) if sung else patL, G2.low_shape(c), feel="down")
-    if patR: TR[0] = G2.triad(c, TR[0]); SR.bar(b, G2.with_space(patR, sung, keep=(0, 8)) if sung else patR, TR[0], feel=8)
+def gtr(b, pat):
+    """v3（2026-11-24 人間「弾き方が曲にあってないというか交わってない」「途切れる感じが自然じゃない」）:
+    ギターは、シンセの和音（またはピアノ）と同じリズムで弾く。8分をずっと刻むのをやめ、和音が鳴る所でいっしょに鳴らして、次の一打まで鳴らしたままにする。
+    pat は和音の型（x＝鳴らす、-＝のばす、.＝止める）。表のマスはダウン、ウラのマスはアップにする。歌のあいだも止めない"""
+    g = "".join(("D" if i == 0 else "d" if i % 2 == 0 else "U") if c == "x" else c for i, c in enumerate(pat)); c = S.chords[b]
+    SL.bar(b, g, G2.low_shape(c), feel=16); TR[0] = G2.triad(c, TR[0]); SR.bar(b, g, TR[0], feel=16)
 
 
-G8 = ("D-d-d-D-d-d-D-d-", "D-d-D-d-d-D-d-d-", "D-d-d-D-d-D-d-d-", "D-D-d-d-D-d-d-d-")
-G8b = ("D-U-D-U---U-D-U-", "D---D-U-D-U-D-U-", "D-U---U-D-U-D-U-", "D---D-U---U-D-U-")
 HK = ("3':1 1':0.5 7:0.5 5:1 7:0.5 1':0.5", "#4:0.5 6:0.5 1':1 2':1 1':1", "3':1 1':0.5 6:0.5 5:1 6:0.5 1':0.5", "2':1 1':1 2':2", "7:0.5 2':0.5 3':1 5':1 3':1", "3':1 2':1 6:2", "#4:0.5 6:0.5 1':0.5 3':0.5 2':1 #4:1", "2':3 R:1")
 HK2 = ("1':1.5 7:0.5 5:2", "#4:1 6:1 3':2", "3':1.5 1':0.5 6:2", "3':1 2':1 3':2", "1':1.5 7:0.5 3':2", "6:1 #4:1 3':2", "6:0.5 1':0.5 3':1 5':2", "2':3 R:1")
 SOLO = ("3':1.5 2':0.5 1':1 6:1", "6:0.5 1':0.5 3':1 1':2", "5':1 3':0.5 1':0.5 7:2", "2':3 R:1")
@@ -207,7 +206,7 @@ def hook(b, line, gtr_too=False):
 def band(b, i, sung=None, hat=None, kick=None, k=0, sawp="x-------x-------", clap=True):
     """サビの土台: 食いこむキック、16分のハイハット、低いベース、広い和音、左右のギター"""
     D.set(b, kick or K2[(i + k) % 4], SNg if i % 2 else SN, hat or (H16o if i % 2 else H16)); sub(b, ("r-------..r-..r-", "r--r--r-........", "r-----..r--r----", "r-..r-....r--R--")[(i + k) % 4]); saw(b, sawp)
-    gtr(b, G8[(i + k) % 4], G8b[(i + k) % 4], sung=sung)
+    gtr(b, sawp)
     if clap: CLP.bar(b, "R:1 B4:1 R:1 B4:1")
 
 
@@ -257,7 +256,7 @@ for b in range(S.nb):
         if last: fill(b, 1)
     elif n in ("立ち上げ1", "立ち上げ2"):                                # IV → V → ♭VI → ♭VII と上がる。スネアが細かくなる
         two = n == "立ち上げ2"
-        saw(b, "x-------x-------" if i < 4 else "x---x---x---x---", 62 + i); sub(b, "r-----r-r-------" if i < 4 else "r--r--r-r--r--r-"); gtr(b, G8[i % 4] if i >= (0 if two else 2) else None, G8b[i % 4] if i >= 4 else None)
+        saw(b, "x-------x-------" if i < 4 else "x---x---x---x---", 62 + i); sub(b, "r-----r-r-------" if i < 4 else "r--r--r-r--r--r-"); (i >= (0 if two else 2)) and gtr(b, "x-------x-------" if i < 4 else "x---x---x---x---")
         D.set(b, "X.......X......." if i < 2 else FOURK, NO if i < 2 else ("....x.......x..." if i < 4 else "x...x...x...x..." if i < 6 else "x.x.x.x.x.x.x.x."), H8 if i < 4 else H16)
         if two: hook(b, ("1':1 2':1 3':2", "2':1 3':1 5':2")[i % 2])
         elif i >= 4: arp(b, i % 2)
@@ -271,7 +270,7 @@ for b in range(S.nb):
         if last: fill(b, 2)
     elif n == "声":                                                      # A: 3小節の句。ピアノが前、ギターは右だけ
         D.set(b, K2[i % 4], SN, H8 if i < 6 else H16); sub(b, ("r----r----------", "r---------r-----", "r--r------------")[i % 3]); piano(b, ("x--x--x---x-----", "x-----x---x--x--", "x---------------")[i % 3])
-        gtr(b, None, G8b[i % 4], sung=sung)
+        gtr(b, ("x--x--x---x-----", "x-----x---x--x--", "x---------------")[i % 3])      # ピアノと同じリズム
         if i >= 6: arp(b, 4)
         if i == 0: crash(D, b, "C2", 4)
         if i % 3 == 2: boo(b, i // 3)
@@ -305,7 +304,7 @@ for b in range(S.nb):
         if i in (0, 8): crash(D, b, "C2", 4); fxh(b, 0, "impact", 2)
     elif n == "にせの立ち上げ":                                          # もう一度上がって…落とす（最後の2小節はパッドだけ）
         if i < 8:
-            saw(b, "x---x---x---x---", 62 + i); sub(b, "r--r--r-r--r--r-"); gtr(b, G8[i % 4], G8b[i % 4]); arp(b, i % 2); FX.bar(b, "C5:4")
+            saw(b, "x---x---x---x---", 62 + i); sub(b, "r--r--r-r--r--r-"); gtr(b, "x---x---x---x---"); arp(b, i % 2); FX.bar(b, "C5:4")
             D.set(b, FOURK, "x...x...x...x..." if i < 4 else ("x.x.x.x.x.x.x.x." if i < 7 else "xxxxxxxxXXXXXXXX"), H16 if i < 7 else NO)
             if i == 0: crash(D, b, "C2", 4)
             if i == 7: hat_roll(HATR, b, 1)
