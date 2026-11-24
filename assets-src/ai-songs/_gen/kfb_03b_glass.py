@@ -1,4 +1,4 @@
-# KFB 03B「ガラスごしブーケ」Bouquet Behind the Glass（仮）— Kawaii future bass × ダンス × ロック。4分の4・144・ホ長調（1場面だけト長調）。173小節・約4分48秒。
+# KFB 03B「ガラスごしブーケ」Bouquet Behind the Glass（仮）— Kawaii future bass × ダンス × ロック。4分の4・144・ホ長調（1場面だけト長調）。177小節・約4分55秒。
 #
 # 2026-11-24 人間「次作ろうか」→ 高嶺の花の恋の歌 3曲のうち B（ショーケースの花）。A（kfb_03a_madogiwa.py）とは別の曲として、旋律・和音・ノリ・音色を新しく書いた。
 #   骨組みはくじ（tools/vt3/form_dice.py --skeleton 11672 285・1回めをそのまま）: 始まり方・場面の並び・小節数・旋律の句の形・終わり方・テンポ 144。
@@ -25,7 +25,7 @@ def scene(name, n, kind, chs, key=KE):
     assert len(chs) == n, (name, n, len(chs)); SC.append((name, key)); S.scene(name, n, kind, chs)
 
 
-scene("合図", 2, "break", ["E", "B7sus4"])
+scene("合図", 6, "break", ["E", "F#/E", "Amaj7", "Am6", "E", "B7sus4"])      # v9: 人間「前奏の長さ3倍にしよう」→ 2 → 6小節
 scene("高い棚", 10, "bridge", ["Amaj7", "Amaj7", "G#m7", "G#m7", "F#m7", "F#m7", "Emaj7", "Emaj7", "A/B", "A/B"])
 scene("見るだけ", 6, "verse", ["C#m7", "C#m7/B", "A#m7b5", "A", "G#m7", "B7sus4"])
 scene("言いわけ", 12, "verse", ["C#m7", "B", "A", "G#7"] * 2 + ["C#m7", "B", "A", "B7sus4"])
@@ -242,10 +242,13 @@ def band(b, i, sung=None, hat=None, kick=None, k=0, sawp="x-------x-------", cla
 
 for b in range(S.nb):
     n, i, L, kind = S.scene_of(b); odd = i % 2 == 1; last = i == L - 1; sung = G2.sung_slots(V, S, b)
-    if n == "合図":                                                      # 始まり: 歌なしのフックを全員で（2小節）
-        band(b, i, kick=FOURK, sawp="x--x--x---x--x--" if i == 0 else "x-----------....", st=i == 0); (i == 0 and arp(b, 0)); hook(b, (HK[0], "2':3 R:1")[i], True)
+    if n == "合図":                                                      # 始まり: 歌なしのフックを全員で（6小節）
+        band(b, i, kick=FOURK, sawp=("x--x--x---x--x--", "x-----x---x-----")[i % 2] if not last else "x-----------....", st=not last)
+        hook(b, (HK[0], HK[1], HK[2], HK[3], HK[0], "2':3 R:1")[i], True)
+        if not last: arp(b, i % 2)
         if i == 0: crash(D, b, "C2", 4); fxh(b, 0, "impact", 2)
-        else: fill(b, 3)
+        if i == 3: fill(b, 4)
+        if last: fill(b, 3)
     elif n == "高い棚":                                                  # 静か: パッドとピアノ。ガラスをたたく音
         pad(b); piano(b, "x---------------" if i < 8 else "x-------x-------")
         if i % 2 == 0: knock(b)
@@ -353,7 +356,7 @@ for b in range(S.nb):
 for b_, hs in FXH.items(): FXT.bar(b_, fx_bar(*hs))
 SL.end(S.nb); SR.end(S.nb); SL3.end(S.nb); SR3.end(S.nb)
 S.fade_out = 0
-S.desc = ("仮: 重音テトのカワイイ・フューチャーベース×ダンス×ロックの恋の歌（144・ホ長調・約4分48秒）。高嶺の花（見えていても手が届かない、あこがれの人）がコンセプト。お店のいちばん高い棚の花のような人に、見るだけと決めて通う話。"
+S.desc = ("仮: 重音テトのカワイイ・フューチャーベース×ダンス×ロックの恋の歌（144・ホ長調・約4分55秒）。高嶺の花（見えていても手が届かない、あこがれの人）がコンセプト。お店のいちばん高い棚の花のような人に、見るだけと決めて通う話。"
           "場面の並び・長さ・旋律の句の形・始まり方・終わり方は、くじ（form_dice.py・種 11672）で決めた。ガラスをたたくベルの2音が、その人が声をかけた所で消える。言いかけたまま終わる。自作")
 finish(S, LY, V, 0, flat=True)
 
