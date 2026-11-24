@@ -111,3 +111,16 @@
 
 ### 9-4 見本曲の扱い（2026-10-11）
 人間の判断で、見本曲 `melodic-punk-run` は採用しない（`assets-src/ai-songs/` から削除。履歴には残っている）。分析ツール・パンク用アンプ・サウンドセット `punk-run`・`--master` は、曲に関係なく使えるのでそのまま残す。曲を作り直すときは、§9 の数字（ギターの重心 約1400Hz、中域の厚み、左右の広がり）を目標にする。
+
+## 10. ポップパンクの曲「終電バイバイ」（仮）で使ったこと（2026-11-25）
+
+人間「パンクロックの曲作ろうか」→ タイプ＝ポップパンク／約4分／物語＝終電を見送る夜。台本は `assets-src/ai-songs/_gen/pop_01_lasttrain.py`。
+
+- この日に調べ直したこと（公開されている解説。曲そのものは写していない）: 和音は2〜4個を場面ごとに、根音と5度（パワーコード）が土台。I–IV–V のほか I–♭VII–IV、I–♭VI–♭VII–I も定番。ドラムは土台の型を変えず、すき間に打つ数を足して変化をつける。サビは全員の声（かけ声・オクターブの重ね）。ソロを入れるなら短く、歌える旋律で。
+  - 出典: [melodigging「Punk rock」](https://www.melodigging.com/genre/punk-rock)／[zZounds「Foundational Beats: Punk Drums」](https://blog.zzounds.com/2017/12/01/foundational-beats-punk-drums/)／[Drumeo「A Drummer's Guide To Punk」](https://www.drumeo.com/beat/a-drummers-guide-to-punk/)／[Riffhard「How to Write a Punk Rock Song」](https://www.riffhard.com/how-to-write-a-punk-rock-song/)
+- 使ったもの: ギター左右（左＝根音と5度のダウン、右＝まん中の弦の三和音）／ベースは8分の根音でキックと同じ所／場面の頭にクラッシュ、4・8小節の切れ目にフィル／サビに声の重ね（ハモリ）と「へい」のかけ声／リードギターの短い旋律。
+- なぞらなかったもの: 進行（サビは I → III7 → IV → iv、終わりは ♭VI → ♭VII）／サビ3回が「半分の速さ」（くじ）／ブリッジミュートの刻みは入れない（人間が聞きにくいと言った音）。
+- 音: ドラム `crocell-punch`、ベース `bnb-loud`（指弾き）、参考の音 `glossy-jrock`、ギター `marshall-mid`（左 0.09・入力 0.5／右 0.085・入力 0.45）＋録音のギター `emily`。
+- リズムの取り方: くじ用に `twobeat`（2ビート）と `pogo`（4分キックのたてノリ・開いたハイハット）を `tools/vt3/grooves.json` に足した。くじは `--grooves drive,twobeat,pogo,laid,tresillo` でジャンルに合う型だけから引く。
+- 歌のリズム: 4分を並べるだけの形は、これまでの曲と 83% 似てしまった → 8分早く食う・付点でのばす形に書き直して 34%。
+- くじの直し: 引き直しで曲が短くなった時は、場面を引き足す（`form_dice.py`）。

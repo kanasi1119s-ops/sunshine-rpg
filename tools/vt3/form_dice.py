@@ -14,17 +14,18 @@ sys.argv = [a for a in sys.argv if a not in ("--skeleton", "--no-fit")]
 _pos = []; _skip = False
 for _a in sys.argv[1:]:
     if _skip: _skip = False; continue
-    if _a in ("--min-chorus", "--not-start", "--not-groove"): _skip = True; continue
+    if _a in ("--min-chorus", "--not-start", "--not-groove", "--grooves"): _skip = True; continue
     _pos.append(_a)
 _opts = sys.argv[1:]; sys.argv = sys.argv[:1] + _pos + ["--"] + _opts
 seed = int(_pos[0]) if len(_pos) > 0 else int(time.time() * 1000) % 100000
 sec = float(_pos[1]) if len(_pos) > 1 else 270
 bpm = int(_pos[2]) if len(_pos) > 2 else None
-MINCH = 0; EXS = []; EXG = []                                                              # --min-chorus N: サビが N 回より少ない形は引き直す ／ --not-start 言葉: その言葉が入る始まり方は引き直す（直前の曲と同じ始まり方をさける）
+MINCH = 0; EXS = []; EXG = []; ONLYG = None                                                              # --min-chorus N: サビが N 回より少ない形は引き直す ／ --not-start 言葉: その言葉が入る始まり方は引き直す（直前の曲と同じ始まり方をさける）
 for _i, _a in enumerate(list(sys.argv)):
     if _a == "--min-chorus": MINCH = int(sys.argv[_i + 1])
     if _a == "--not-start": EXS.append(sys.argv[_i + 1])
     if _a == "--not-groove": EXG.append(sys.argv[_i + 1])
+    if _a == "--grooves": ONLYG = sys.argv[_i + 1].split(",")                      # --grooves a,b,c: そのジャンルに合う型だけから引く
 _bpm_arg = bpm
 while True:
     bpm = _bpm_arg
@@ -96,22 +97,33 @@ if not NOFIT:
         if i and form[i - 1][0] in SUNG and form[i - 1][6] == ph: return f"前の場面と同じ句の形（{ph}）"
         return None
 
-    # 引き直しでサビを増やしすぎない（サビがもう4回あれば、引き直しではサビを引かない。引き直しが次の引き直しを呼ばないように）
-    for _pass in range(40):
-        hit = False
-        for i in range(len(form)):
-            for kind, why, draw in (("場面", why_part, lambda: R2.choices(PARTS, [0 if (q.startswith("サビ") and sum(1 for x in form if x[0].startswith("サビ")) >= 4) else w_ for q, w_ in zip(PARTS, W)])[0]), ("長さ", why_len, lambda: R2.choice(LENS)), ("句", why_phrase, lambda: R2.choice(PHRASE))):
-                w = why(i)
-                if not w: continue
-                col = {"場面": 0, "長さ": 1, "句": 6}[kind]; old = form[i][col]
-                for _try in range(60):
-                    form[i][col] = draw()
-                    if kind == "場面" and form[i][0] == STOP and form[i][1] > 2: form[i][1] = R2.choice([1, 2])
-                    if kind == "場面" and form[i][0] != STOP and form[i][1] < 4: form[i][1] = R2.choice(LENS)
-                    if kind == "場面" and form[i][0].startswith("サビ") and form[i][1] < 8: form[i][1] = 8
-                    if form[i][col] != old and not why(i): break
-                FIXED.append(f"{i + 1}番め の{kind}: 「{old}」→「{form[i][col]}」 ／ 理由: {w}"); hit = True
-        if not hit: break
+    def fit_pass():
+        # 引き直しでサビを増やしすぎない（サビがもう4回あれば、引き直しではサビを引かない。引き直しが次の引き直しを呼ばないように）
+        for _pass in range(40):
+            hit = False
+            for i in range(len(form)):
+                for kind, why, draw in (("場面", why_part, lambda: R2.choices(PARTS, [0 if (q.startswith("サビ") and sum(1 for x in form if x[0].startswith("サビ")) >= 4) else w_ for q, w_ in zip(PARTS, W)])[0]), ("長さ", why_len, lambda: R2.choice(LENS)), ("句", why_phrase, lambda: R2.choice(PHRASE))):
+                    w = why(i)
+                    if not w: continue
+                    col = {"場面": 0, "長さ": 1, "句": 6}[kind]; old = form[i][col]
+                    for _try in range(60):
+                        form[i][col] = draw()
+                        if kind == "場面" and form[i][0] == STOP and form[i][1] > 2: form[i][1] = R2.choice([1, 2])
+                        if kind == "場面" and form[i][0] != STOP and form[i][1] < 4: form[i][1] = R2.choice(LENS)
+                        if kind == "場面" and form[i][0].startswith("サビ") and form[i][1] < 8: form[i][1] = 8
+                        if form[i][col] != old and not why(i): break
+                    FIXED.append(f"{i + 1}番め の{kind}: 「{old}」→「{form[i][col]}」 ／ 理由: {w}"); hit = True
+            if not hit: break
+
+    fit_pass()
+    for _grow in range(12):                                                # 引き直しで短くなって、長さが足りなくなった時は、場面を引き足す（最後の場面の前に入れる）
+        if sum(x[1] for x in form) >= bars_total - 6: break
+        p_ = R2.choices(PARTS, W)[0]; L_ = R2.choice(LENS if p_ != STOP else [1, 2])
+        if p_.startswith("サビ") and L_ < 8: L_ = 8
+        L_ = min(L_, bars_total - sum(x[1] for x in form))
+        if L_ < 4 and p_ != STOP: continue
+        form.insert(len(form) - 1, [p_, L_, R2.choice(KEYMOVE), R2.choice(FEEL), R2.choice(DRUM), R2.choice(DENS), R2.choice(PHRASE), R2.randint(1, 10)])
+        FIXED.append(f"{len(form) - 1}番め に場面を足した: 「{p_}」{L_}小節 ／ 理由: 引き直しで短くなり、曲の長さが足りない"); fit_pass()
     used = sum(x[1] for x in form); form = [tuple(x) for x in form]
     first, lastp = form[0][0], form[-1][0]
     def why_start(st):
@@ -142,7 +154,7 @@ print(f"終わり方: {_end or R.choice(ENDS)}")
 # ---- リズムの取り方（グルーブ）のくじ ----
 import json, os
 _G = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "grooves.json"), encoding="utf-8")); R3 = random.Random(seed * 104729 + 7)
-_ok = [k for k, v in _G.items() if not k.startswith("_") and v["bpm"][0] <= bpm <= v["bpm"][1] and k not in EXG]
+_ok = [k for k, v in _G.items() if not k.startswith("_") and v["bpm"][0] <= bpm <= v["bpm"][1] and k not in EXG and (ONLYG is None or k in ONLYG)]
 if _ok:
     g1 = R3.choice(_ok); _rest = [k for k in _ok if k != g1 and (_G[k]["swing16"] > 0) == (_G[g1]["swing16"] > 0)] or [k for k in _ok if k != g1] or [g1]; g2 = R3.choice(_rest)   # 静かな場面用は、はね方が同じ型から（1曲の中で、はねる・はねないを混ぜない）
     print(f"リズムの取り方（主）: {g1}「{_G[g1]['name']}」 ／ はね {_G[g1]['swing16']}・ノリ {_G[g1]['feel']}")
