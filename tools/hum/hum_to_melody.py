@@ -56,16 +56,17 @@ def segment(midi, ok, dt, rms=None, min_len=0.09):
             cur = [i, i, [v]]
     if cur: notes.append(cur)
     if rms is not None:                                                   # 同じ高さを続けて歌った所（ん・ん）: 声の大きさの谷で切る
-        cut = []
+        cut = []; ecut = set()
         for a, b, vs in notes:
             e = rms[a:b + 1]; i0 = 0; w = max(2, int(0.05 / dt))
             if len(e) > 4 * w:
                 for i in range(w, len(e) - w):
                     if e[i] == e[max(0, i - w):i + w + 1].min() and e[i] < 0.45 * min(e[max(0, i - 3 * w):i].max(), e[i + 1:i + 3 * w + 1].max()) and (i - i0) * dt >= min_len:
-                        cut.append([a + i0, a + i - 1, vs[i0:i]]); i0 = i
+                        cut.append([a + i0, a + i - 1, vs[i0:i]]); i0 = i; ecut.add(a + i)
             cut.append([a + i0, b, vs[i0:]])
         notes = [c for c in cut if len(c[2])]
-    out = [[a * dt, (b - a + 1) * dt, float(np.median(vs))] for a, b, vs in notes]; split_at = {round(n[0], 3) for n in out}
+    else: ecut = set()
+    out = [[a * dt, (b - a + 1) * dt, float(np.median(vs)), a in ecut] for a, b, vs in notes]
     # 短すぎる音（しゃくり・ゆれ）は、となりの音にまとめる
     merged = []
     for n in out:
@@ -74,7 +75,7 @@ def segment(midi, ok, dt, rms=None, min_len=0.09):
     merged = [n for n in merged if n[1] >= min_len]
     for a, b in zip(merged, merged[1:]):                                   # 前の音の頭のしゃくり（短い低い音 → 本当の音）をまとめる
         if a[1] < 0.12 and 0 < b[2] - a[2] <= 2.2 and b[0] - (a[0] + a[1]) < 0.04: b[1] += b[0] - a[0]; b[0] = a[0]; a[1] = 0
-    return [(s, L, int(round(m))) for s, L, m in merged if L > 0]
+    return [(n[0], n[1], float(n[2]), bool(n[3])) for n in merged if n[1] > 0]
 
 
 def find_bpm(notes, grid, lo=60, hi=200):
@@ -89,13 +90,35 @@ def find_bpm(notes, grid, lo=60, hi=200):
 
 def find_key(notes):
     h = np.zeros(12)
-    for s, L, m in notes: h[m % 12] += L
+    for s, L, m in notes: h[int(round(m)) % 12] += L
     best = None
     for k in range(12):
         for mode, prof in (("major", MAJ), ("minor", MIN)):
             c = np.corrcoef(np.roll(prof, k), h)[0, 1]
             if best is None or c > best[0]: best = (c, k, mode)
     return NAMES[best[1]], best[2], float(best[0])
+
+
+def fit_scale(notes):
+    """鼻歌は音程があいまいなので、「全体のずれ」と「調」をいっしょに探し、音を調の音階に寄せる。
+    返すのは (ずれ（半音）, 調の主音の番号, 長調か短調か, 合い具合)。合い具合＝音の長さで重みを付けた、音階の音への近さ"""
+    best = None; ps = np.array([n[2] for n in notes]); ws = np.array([min(n[1], 1.0) for n in notes])
+    for off in np.arange(-0.5, 0.5, 0.05):
+        q = ps - off; h = np.zeros(12)
+        for x, w in zip(q, ws): h[int(round(x)) % 12] += w
+        for k in range(12):
+            for mode, sc, prof in (("major", (0, 2, 4, 5, 7, 9, 11), MAJ), ("minor", (0, 2, 3, 5, 7, 8, 10), MIN)):
+                tones = np.array([(k + t) % 12 for t in sc]); d = np.min(np.abs(((q[:, None] - tones[None, :] + 6) % 12) - 6), axis=1)
+                fit = float(np.sum(ws * np.exp(-(d / 0.4) ** 2)) / ws.sum()); c = np.corrcoef(np.roll(prof, k), h)[0, 1]; sc_ = fit + 0.25 * c
+                if best is None or sc_ > best[0]: best = (sc_, off, k, mode, fit)
+    return float(best[1]), best[2], best[3], float(best[4])
+
+
+def snap(m, k, mode):
+    """高さ（小数）を、調の音階のいちばん近い音へ。音階の音から遠く、半音にとても近い時だけ、音階の外の音を残す"""
+    sc = (0, 2, 4, 5, 7, 9, 11) if mode == "major" else (0, 2, 3, 5, 7, 8, 10); r = int(round(m)); cand = [x for x in range(r - 2, r + 3) if (x - k) % 12 in sc]
+    near = min(cand, key=lambda x: abs(x - m))
+    return r if (abs(near - m) > 0.6 and abs(r - m) < 0.15) else near
 
 
 def degree(m, key, mode):
@@ -126,12 +149,19 @@ def chords_for(bars, key, mode):
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("audio"); ap.add_argument("--bpm", type=float); ap.add_argument("--out", default="."); ap.add_argument("--grid", type=float, default=0.5)
-    ap.add_argument("--title"); ap.add_argument("--beats", type=int, default=4); a = ap.parse_args()
+    ap.add_argument("--title"); ap.add_argument("--beats", type=int, default=4); ap.add_argument("--bpm-lo", dest="bpm_lo", type=float, default=70); ap.add_argument("--bpm-hi", dest="bpm_hi", type=float, default=150); a = ap.parse_args()
     x, sr = load(a.audio); midi, ok, dt, rms = track(x, sr)
     if ok.sum() < 20: sys.exit("声が読み取れませんでした（小さすぎる・雑音が大きい・短すぎる）")
-    off = tuning(midi, ok); notes = segment(midi - off, ok, dt, rms)
+    notes = segment(midi, ok, dt, rms)
     if len(notes) < 3: sys.exit("音が3つより少ないです。もう少し長く、はっきり歌ってください")
-    bpm, err = (a.bpm, 0.0) if a.bpm else find_bpm(notes, a.grid); key, mode, kc = find_key(notes)
+    off, kroot_, mode, kc = fit_scale(notes); key = NAMES[kroot_]
+    sn = []
+    for s_, L_, m_, cut_ in notes:                                           # 音階に寄せる。寄せたら同じ高さになった となりの音は、1つにまとめる（声の大きさの谷で切った所は、まとめない）
+        m2 = snap(m_ - off, kroot_, mode)
+        if sn and sn[-1][2] == m2 and not cut_ and s_ - (sn[-1][0] + sn[-1][1]) < 0.08: sn[-1][1] = s_ + L_ - sn[-1][0]
+        else: sn.append([s_, L_, m2])
+    notes = [tuple(n) for n in sn]
+    bpm, err = (a.bpm, 0.0) if a.bpm else find_bpm(notes, a.grid, a.bpm_lo, a.bpm_hi)
     beat = 60 / bpm; t0 = notes[0][0]; g = a.grid; q = []
     for s, L, m in notes:
         qs = round((s - t0) / beat / g) * g; qe = max(qs + g, round((s + L - t0) / beat / g) * g)
@@ -165,7 +195,7 @@ def main():
     json.dump(prev, open(f"{a.out}/{name}.preview.json", "w"), ensure_ascii=False)
     print(f"■ 鼻歌の読み取り: {os.path.basename(a.audio)}（{len(x) / sr:.1f}秒）")
     print(f"  テンポ {bpm:g}{'（指定）' if a.bpm else f'（自動。マス目とのずれ {err:.2f}。0.15 より大きいと、あやしい）'}・{a.beats}拍子・{len(bars)}小節・マス目 {g}拍")
-    print(f"  調 {key} {'長調' if mode == 'major' else '短調'}（確からしさ {kc:.2f}。0.6 より小さいと、あやしい）・音域 {nm(lo)}〜{nm(hi)}・音 {len(q)}こ・全体の音程のずれ {off * 100:+.0f} セント（直して読んだ）")
+    print(f"  調 {key} {'長調' if mode == 'major' else '短調'}（音階への合い具合 {kc:.2f}。0.6 より小さいと、あやしい）・音域 {nm(lo)}〜{nm(hi)}・音 {len(q)}こ・全体の音程のずれ {off * 100:+.0f} セント（直して読んだ）")
     for i, b in enumerate(res["bars"]): print(f"  {i + 1:>3}小節め [{b['chord']:>4}] {b['notes']}    （度数: {b['degrees']}）")
     print(f"  → {a.out}/{name}.melody.json ／ 下書き {a.out}/{name}.preview.json")
 
