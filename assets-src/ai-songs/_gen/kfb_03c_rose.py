@@ -60,7 +60,9 @@ BSPEC["fx"] = [{"type": "eq", "low": 0, "mid": 4, "midHz": 900, "high": 0}, {"ty
 BASS = S.track("指弾きのベース", "bass", **BSPEC)
 GSP = lambda v, p: {**{k: x for k, x in rock_gtr_spec(v, p).items() if k != "guitarTone"}, "release": 0.9}      # B で OK が出た音: 音色プリセットなし（内蔵の歪み）＋録音ギター
 GL = [S.track(f"Lギター{i + 1}弦め", "distGuitar", **GSP(0.125, -0.6)) for i in range(6)]
-GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **GSP(0.12, 0.6)) for i in range(6)]
+import os as _os
+CUT = int(_os.environ.get("KFB_CUT", "1"))      # v2: 聞きくらべで人間が選んだのは 1（「最初のカッティング以外は使えない」）                                         # ギターの弾き方の切りかえ（聞きくらべ用）: 0＝8分のかき鳴らし、1＝ファンクのカッティング、2＝同じ弾き方でクリーンの音、3＝間の多いカッティング（左は弾かない）・クリーン
+GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **({**GSP(0.2, 0.6), "amp": "jpopClean", "ampDrive": 0.12} if CUT >= 2 else GSP(0.12, 0.6))) for i in range(6)]
 LEAD = S.track("リードギター", "distGuitar", **lead_gtr_spec(0.14, 0.1))
 SL, SR = G2.Strummer(GL, S, 32), G2.Strummer(GR, S, 53); SL.gap = SR.gap = 0.0
 PF = {"type": "pluckfilter", "freq": 2000, "depth": 0.6, "rate": 30, "hold": 4}
@@ -181,6 +183,10 @@ G8 = ("D-d-d-D-d-d-D-d-", "D-d-D-d-d-D-d-d-", "D-d-d-D-d-D-d-d-", "D-D-d-d-D-d-d
 G8b = ("D-U-D-U---U-D-U-", "D---D-U-D-U-D-U-", "D-U---U-D-U-D-U-", "D---D-U---U-D-U-")
 
 
+CUTA = ("D.x.x.U.x.U.x.x.", "x.U.x.U.D.x.x.U.", "D.x.x.U.x.x.D.x.", "x.U.x.x.D.x.x.U.")
+CUTB = ("D---x.U.....x.U.", "x.U---x.D...x.x.", "D...x.U.x...D---", "..U...x.D.x...U.")
+
+
 def simple(ch):
     m = _re.match(r"([A-G][#b]?)(.*)", ch.split("/")[0]); root, rest = m[1], m[2]
     return root + ("sus4" if "sus4" in rest else "dim" if ("m7b5" in rest or "dim" in rest) else "m" if (rest.startswith("m") and not rest.startswith("maj")) else "")
@@ -188,7 +194,11 @@ def simple(ch):
 
 def strum(b, i):
     """ギター（B で OK が出た弾き方）: 8分のかき鳴らし。左は根音と5度、右は高い所の三和音。全員が鳴る場面だけ"""
-    c = simple(S.chords[b]); SL.bar(b, G8[i % 4], G2.low_shape(c, with_third=False), feel="down"); TR[0] = G2.triad(c, TR[0], top_lo=64, top_hi=71, groups=((2, 3, 4), (3, 4, 5))); SR.bar(b, G8b[i % 4], TR[0])
+    c = simple(S.chords[b])
+    if CUT == 0: SL.bar(b, G8[i % 4], G2.low_shape(c, with_third=False), feel="down"); TR[0] = G2.triad(c, TR[0], top_lo=64, top_hi=71, groups=((2, 3, 4), (3, 4, 5))); SR.bar(b, G8b[i % 4], TR[0]); return
+    # ファンクのカッティング（188 の8分＝94 の16分で手を振る。x＝左手を浮かせた「チャッ」、和音は弾いてすぐ止める）。右のギターが高い3本の弦で、7 の音も入れる
+    TR[0] = G2.triad(S.chords[b].split("/")[0], TR[0], top_lo=66, top_hi=74, groups=((3, 4, 5),)); SR.bar(b, (CUTA if CUT < 3 else CUTB)[i % 4], TR[0], feel=8)
+    if CUT < 3: SL.bar(b, "D-----d---------" if i % 2 == 0 else "D---------d-----", G2.low_shape(c, with_third=False), feel="down")
 
 
 HK = ("1':1 5:0.5 3:0.5 5:1 1':1", "1':1 5:0.5 b3:0.5 5:1 1':1", "2':1 5:0.5 4:0.5 5:1 2':1", "1':0.5 6:0.5 4:1 6:2", "3':1 1':0.5 6:0.5 1':1 3':1", "2':1 6:0.5 #4:0.5 6:1 2':1", "1':0.5 6:0.5 4:1 6:1 1':1", "2':3 R:1")
