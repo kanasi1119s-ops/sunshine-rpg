@@ -122,6 +122,7 @@ class Strummer:
         self.last = None                    # さいごに弾いた小節
         self.vel = {i: [] for i in range(len(tracks))}      # 弦ごとの、音の強さの並び（JSON にしたあと velocity() で付ける）
         self.count = {"down": 0, "up": 0, "notes": 0}
+        self.gap = 0.04                     # 和音が変わる時、音が変わる弦を何拍前に止めるか（0 にすると、次の一打まで鳴らしたまま。2026-11-24 追加。既定はこれまでどおり）
 
     def _stop(self, s, t):
         if s in self.ring:
@@ -140,7 +141,7 @@ class Strummer:
         def change(sh, t):                                               # 和音が変わる: 形に無い弦と、音が変わる弦は、指をはなすので少し前で止まる
             p = dict(sh)
             for s in list(self.ring):
-                if s not in p or p[s] != self.ring[s][1]: self._stop(s, t - 0.04)
+                if s not in p or p[s] != self.ring[s][1]: self._stop(s, t - self.gap)
             return [s for s, _ in sh], p
         strings, pitch = change(shape, t0)
         for i, c in enumerate(pat):

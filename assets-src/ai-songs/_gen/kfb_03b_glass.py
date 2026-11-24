@@ -50,10 +50,30 @@ KEYOF = dict(SC)
 
 V = Voice(S, vol=0.17, delay=0.2, bright=0.0, patch="kfbSineLead", low=False)
 SUB = S.track("シンセの低いベース", "bass", patch="kfbSub", volume=0.066, pan=0, duck=0.12)
-GL = [S.track(f"Lギター{i + 1}弦め", "distGuitar", **{**rock_gtr_spec(0.095, -0.6, tone="marshall-mid", drive=0.18), "sustain": 3.0, "release": 0.8}) for i in range(6)]      # v3: 歪みを浅く（0.4 → 0.18）、音が次の一打まで残るように（のび 1.3 → 3.0 秒）
-GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **{**rock_gtr_spec(0.09, 0.6, tone="marshall-mid", drive=0.15), "sustain": 3.0, "release": 0.8}) for i in range(6)]
+GL = [S.track(f"Lギター{i + 1}弦め", "distGuitar", **{**rock_gtr_spec(0.24, -0.6, tone="marshall-mid", drive=0.18), "sustain": 3.0, "release": 0.8}) for i in range(6)]      # v3: 歪みを浅く（0.4 → 0.18）、音が次の一打まで残るように（のび 1.3 → 3.0 秒）
+GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **{**rock_gtr_spec(0.23, 0.6, tone="marshall-mid", drive=0.15), "sustain": 3.0, "release": 0.8}) for i in range(6)]
 LEAD = S.track("リードギター", "distGuitar", **lead_gtr_spec(0.14, 0.1))
-SL, SR = G2.Strummer(GL, S, 30), G2.Strummer(GR, S, 51)
+# v4（2026-11-24）: 聞きくらべ（tools/vt3/gtr_tone_ab.py）で、人間が「1 と 3 が使える」と選んだ。1＝浅い歪みで和音と同じリズム、3＝つやのあるロックの音（glossy-jrock）で8分のかき鳴らし。
+#   浅い歪みは同じ音量設定でも約 13dB 小さく出ると分かったので、1 の音量を上げた（0.095 → 0.24）。3 はサビとドロップ、1 はそのほかのバンドの場面。
+GL3 = [S.track(f"Lギター（かき鳴らし）{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.125, -0.6, tone="glossy-jrock")) for i in range(6)]
+GR3 = [S.track(f"Rギター（かき鳴らし）{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.12, 0.6, tone="glossy-jrock")) for i in range(6)]
+SL, SR = G2.Strummer(GL, S, 30), G2.Strummer(GR, S, 51); SL3, SR3 = G2.Strummer(GL3, S, 31), G2.Strummer(GR3, S, 52)
+# v5（2026-11-24）: 聞きくらべを聞いた人間「音が切れて和音がにごるかな」。
+#   切れる → 和音が変わる時に弦を少し前で止めていたのをやめ（gap 0）、音の消え方を長く（release 0.5 → 0.9）。
+#   にごる → 歪んだギターで 7 や 6 の音まで弾き、左右とも低い所（E3〜C#4）で鳴らしていた。左は根音と5度だけ（パワーコード）、右は三和音だけを高い所（G3〜B4）で弾く。
+import re as _re
+for _st in (SL, SR, SL3, SR3): _st.gap = 0.0
+for _t in GL + GR + GL3 + GR3: _t.spec["release"] = 0.9
+
+
+def simple(ch):
+    """歪んだギター用に、和音を三和音にする（7・6・9 を落とす。sus4 と dim は残す）"""
+    m = _re.match(r"([A-G][#b]?)(.*)", ch.split("/")[0]); root, rest = m[1], m[2]
+    return root + ("sus4" if "sus4" in rest else "dim" if ("m7b5" in rest or "dim" in rest) else "m" if (rest.startswith("m") and not rest.startswith("maj")) else "")
+
+
+def shapes(b, prev):
+    c = S.chords[b]; return G2.low_shape(simple(c), with_third=False), G2.triad(simple(c), prev, top_lo=64, top_hi=71, groups=((2, 3, 4), (3, 4, 5)))
 PF = {"type": "pluckfilter", "freq": 2000, "depth": 0.6, "rate": 30, "hold": 4}
 SAW = [S.track(f"広い和音{i + 1}", "lead", patch="kfbSupersawWide", volume=0.055, pan=(0, 0.25, -0.5, 0.5, -0.25)[i], reverb=0.2, duck=0.15, fx=[PF] + rack_supersaw(lp=4000, wide=0.5)) for i in range(5)]
 PAD = [S.track(f"水晶のパッド{i + 1}", "pad", patch="surgePadCrystals", volume=0.11, pan=(-0.2, 0.2, 0)[i], reverb=0.3) for i in range(3)]
@@ -178,8 +198,18 @@ def gtr(b, pat):
     """v3（2026-11-24 人間「弾き方が曲にあってないというか交わってない」「途切れる感じが自然じゃない」）:
     ギターは、シンセの和音（またはピアノ）と同じリズムで弾く。8分をずっと刻むのをやめ、和音が鳴る所でいっしょに鳴らして、次の一打まで鳴らしたままにする。
     pat は和音の型（x＝鳴らす、-＝のばす、.＝止める）。表のマスはダウン、ウラのマスはアップにする。歌のあいだも止めない"""
-    g = "".join(("D" if i == 0 else "d" if i % 2 == 0 else "U") if c == "x" else c for i, c in enumerate(pat)); c = S.chords[b]
-    SL.bar(b, g, G2.low_shape(c), feel=16); TR[0] = G2.triad(c, TR[0]); SR.bar(b, g, TR[0], feel=16)
+    g = "".join(("D" if i == 0 else "d" if i % 2 == 0 else "U") if c == "x" else c for i, c in enumerate(pat)); lo, TR[0] = shapes(b, TR[0])
+    SL.bar(b, g, lo, feel=16); SR.bar(b, g, TR[0], feel=16)
+
+
+TR3 = [None]
+G8 = ("D-d-d-D-d-d-D-d-", "D-d-D-d-d-D-d-d-", "D-d-d-D-d-D-d-d-", "D-D-d-d-D-d-d-d-")
+G8b = ("D-U-D-U---U-D-U-", "D---D-U-D-U-D-U-", "D-U---U-D-U-D-U-", "D---D-U---U-D-U-")
+
+
+def strum(b, i):
+    """聞きくらべの 3: つやのあるロックの音で、8分のかき鳴らし（左はぜんぶダウン、右は下・上）"""
+    lo, TR3[0] = shapes(b, TR3[0]); SL3.bar(b, G8[i % 4], lo, feel="down"); SR3.bar(b, G8b[i % 4], TR3[0])
 
 
 HK = ("3':1 1':0.5 7:0.5 5:1 7:0.5 1':0.5", "#4:0.5 6:0.5 1':1 2':1 1':1", "3':1 1':0.5 6:0.5 5:1 6:0.5 1':0.5", "2':1 1':1 2':2", "7:0.5 2':0.5 3':1 5':1 3':1", "3':1 2':1 6:2", "#4:0.5 6:0.5 1':0.5 3':0.5 2':1 #4:1", "2':3 R:1")
@@ -203,17 +233,17 @@ def hook(b, line, gtr_too=False):
     if gtr_too: LEAD.bar(b, mel(b, line, -1))
 
 
-def band(b, i, sung=None, hat=None, kick=None, k=0, sawp="x-------x-------", clap=True):
+def band(b, i, sung=None, hat=None, kick=None, k=0, sawp="x-------x-------", clap=True, st=False):
     """サビの土台: 食いこむキック、16分のハイハット、低いベース、広い和音、左右のギター"""
     D.set(b, kick or K2[(i + k) % 4], SNg if i % 2 else SN, hat or (H16o if i % 2 else H16)); sub(b, ("r-------..r-..r-", "r--r--r-........", "r-----..r--r----", "r-..r-....r--R--")[(i + k) % 4]); saw(b, sawp)
-    gtr(b, sawp)
+    strum(b, i + k) if st else gtr(b, sawp)
     if clap: CLP.bar(b, "R:1 B4:1 R:1 B4:1")
 
 
 for b in range(S.nb):
     n, i, L, kind = S.scene_of(b); odd = i % 2 == 1; last = i == L - 1; sung = G2.sung_slots(V, S, b)
     if n == "合図":                                                      # 始まり: 歌なしのフックを全員で（2小節）
-        band(b, i, kick=FOURK, sawp="x--x--x---x--x--" if i == 0 else "x-----------...."); hook(b, (HK[0], "2':3 R:1")[i], True)
+        band(b, i, kick=FOURK, sawp="x--x--x---x--x--" if i == 0 else "x-----------....", st=i == 0); hook(b, (HK[0], "2':3 R:1")[i], True)
         if i == 0: crash(D, b, "C2", 4); fxh(b, 0, "impact", 2)
         else: fill(b, 3)
     elif n == "高い棚":                                                  # 静か: パッドとピアノ。ガラスをたたく音
@@ -238,7 +268,7 @@ for b in range(S.nb):
         if last: D.set(b, NO, NO, NO); fill(b, 0); fxh(b, 2, "rev", 2)
     elif n == "ドロップ1":                                               # フックをシンセとリードギターで。4つ打ち
         if i < 8:
-            band(b, i, kick=FOURK, hat="..x...x...x...x.", sawp=("x--x--x---x--x--", "x-----x---x-----")[i % 2]); hook(b, HK[i], True)
+            band(b, i, kick=FOURK, hat="..x...x...x...x.", sawp=("x--x--x---x--x--", "x-----x---x-----")[i % 2], st=True); hook(b, HK[i], True)
             if i == 0: crash(D, b, "C2", 4); fxh(b, 0, "impact", 2)
             if i == 7: fill(b, 2)
         else: pad(b); sub(b, "r---------..r---"); D.set(b, "X.........X.....", NO, H8); knock(b)       # 最後の2小節は落として、歌が食って入る
@@ -249,7 +279,7 @@ for b in range(S.nb):
         if i >= 6: FX.bar(b, "C5:4"); swell(b)
         if last: fill(b, 0); fxh(b, 2, "rev", 2)
     elif n == "サビ1":
-        band(b, i, sung=sung, k=0); arp(b, i % 2)
+        band(b, i, sung=sung, k=0, st=True); arp(b, i % 2)
         if i % 8 == 0: crash(D, b, "C2", 4); fxh(b, 0, "impact", 2)
         if i >= 8 and i % 2 == 0: boo(b, i // 2)
         if i == 7: fill(b, 3)
@@ -265,7 +295,7 @@ for b in range(S.nb):
             hat_roll(HATR, b, 1); fxh(b, 2, "rev", 2)
             if not two: D.set(b, "X.X.X.X.X.......", "x.x.x.x.X.......", NO); saw(b, "x---x---x---....", 69); sub(b, "r---r---r---....")      # 最後の1拍は歌だけ
     elif n == "サビ2":                                                   # ガラスが割れる。ここから「コン、コン」は鳴らない
-        band(b, i, sung=sung, k=1); arp(b, 2 + i % 2); boo(b, i)
+        band(b, i, sung=sung, k=1, st=True); arp(b, 2 + i % 2); boo(b, i)
         if i == 0: crash(D, b, "C2", 4); fxh(b, 0, "impact", 2); fxh(b, 2, "kira", 1); fxh(b, 3, "kira", 1)
         if last: fill(b, 2)
     elif n == "声":                                                      # A: 3小節の句。ピアノが前、ギターは右だけ
@@ -291,12 +321,12 @@ for b in range(S.nb):
         if i == 0: crash(D, b, "C2", 4); fxh(b, 0, "impact", 2)
         if last: fill(b, 3)
     elif n == "ソロ":
-        band(b, i, k=1); LEAD.bar(b, mel(b, SOLO[i], -1))
+        band(b, i, k=1, st=True); LEAD.bar(b, mel(b, SOLO[i], -1))
         if i == 0: crash(D, b, "C2", 4)
         if last: fill(b, 2)
     elif n == "ドロップ2":                                               # 前半: フック（4つ打ち）。後半: 別の和音・別のフック・食いこむキックにもどる
         if i < 8:
-            band(b, i, kick=FOURK, hat="..x...x...x...x.", sawp=("x--x--x---x--x--", "x-----x---x-----")[i % 2]); hook(b, HK[i], True)
+            band(b, i, kick=FOURK, hat="..x...x...x...x.", sawp=("x--x--x---x--x--", "x-----x---x-----")[i % 2], st=True); hook(b, HK[i], True)
             if i == 7: fill(b, 3)
         else:
             band(b, i, k=2, sawp=("x-----x--x------", "x--x------x-----")[i % 2]); hook(b, HK2[i - 8], True); arp(b, i % 2); boo(b, i)
@@ -313,7 +343,7 @@ for b in range(S.nb):
             if i == 8: fxh(b, 0, "down", 2)
             if last: D.set(b, NO, NO, NO); fill(b, 0); fxh(b, 2, "rev", 2)
     elif n == "サビ4":
-        band(b, i, sung=sung, kick=FOURK if odd else K2[i % 4]); arp(b, i % 2); boo(b, i)
+        band(b, i, sung=sung, kick=FOURK if odd else K2[i % 4], st=True); arp(b, i % 2); boo(b, i)
         if i == 0: crash(D, b, "C2", 4); fxh(b, 0, "impact", 2)
         if last: fill(b, 1)
     elif n == "またあした":                                              # 静か: パッドとピアノ。最後は言いかけて、全部いっしょに切れる
@@ -322,7 +352,7 @@ for b in range(S.nb):
         if i == 0: fxh(b, 0, "down", 2)
 
 for b_, hs in FXH.items(): FXT.bar(b_, fx_bar(*hs))
-SL.end(S.nb); SR.end(S.nb)
+SL.end(S.nb); SR.end(S.nb); SL3.end(S.nb); SR3.end(S.nb)
 S.fade_out = 0
 S.desc = ("仮: 重音テトのカワイイ・フューチャーベース×ダンス×ロックの恋の歌（144・ホ長調・約4分48秒）。高嶺の花（見えていても手が届かない、あこがれの人）がコンセプト。お店のいちばん高い棚の花のような人に、見るだけと決めて通う話。"
           "場面の並び・長さ・旋律の句の形・始まり方・終わり方は、くじ（form_dice.py・種 11672）で決めた。ガラスをたたくベルの2音が、その人が声をかけた所で消える。言いかけたまま終わる。自作")
@@ -331,7 +361,7 @@ finish(S, LY, V, 0, flat=True)
 from vt3x_lib import *
 path = sys.argv[1]
 humanize(path, "シンセのかけ上がり（矩形波のプラック）", mid=90, down=12, up=10, seed=30); humanize(path, "リードギター", mid=98, down=10, up=12, seed=4)
-js = load(path); print("  ギターの強さ:", SL.velocity(js) + SR.velocity(js)); save(path, js)
+js = load(path); print("  ギターの強さ:", SL.velocity(js) + SR.velocity(js) + SL3.velocity(js) + SR3.velocity(js)); save(path, js)
 if VOCAL:
     backing(path, 0.9)
     remark(path, S, std_mark(("chorus",)))
