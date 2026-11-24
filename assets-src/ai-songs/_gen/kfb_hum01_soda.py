@@ -1,4 +1,10 @@
-# HUM 01「はんぶんこサイダー」Half-and-Half Soda（仮）— Kawaii future bass のアニソン。4分の4・150・ヘ長調。158小節・約4分13秒。
+# HUM 01「はんぶんこサイダー」Half-and-Half Soda（仮）— Kawaii future bass のアニソン。4分の4・150・ヘ長調。152小節・約4分3秒。
+# v2（2026-11-25）人間「ランダムだけど合わない部分は合うように引き直すようにしようか。あとリズムの取り方も変えれるようにしよう。なんか、グルーブがのっぺりしていて感じられないんだよね」
+#   1) 形: くじ（form_dice.py）が、合わない所だけ引き直すようになった。この曲では5か所:
+#        最初の「止まる」→「楽器のソロ」8／「にせの立ち上げ」6 →「B」6／「立ち上げ」16 →「ドロップ」4（上げたのに山へ行かず、22小節も歌が出なかった）／2つめの「にせの立ち上げ」8 →「立ち上げ」8（次がフックなので、落とさずに上げる）
+#   2) リズムの取り方: くじで「主＝はねる16分（bounce）」「静かな場面＝2ステップ（twostep）」。型は groove_lib.py（中身は tools/vt3/grooves.json）。
+#        v1 がのっぺりだった元: サビがずっと「4つ打ち＋2・4拍のスネア＋強さ2段のハイハット」で、キック・ベース・和音が毎小節同じ所。ずれ（はね・あと乗り）も書いていなかった。
+#        v2: キックは食いこむ形を4小節で1まわり、ハイハットは強さ3段＋開く音、スネアにゴースト、ベースはキックと同じ所で打つ、16分のウラを少し後ろへ（はね 0.5）、スネアとベースはあと乗り。
 #
 # 2026-11-25 人間が鼻歌（スマホの録音・78秒）を送ってきた。「これをただ大元にするだけで、あとはアレンジして変えて、曲として成り立つようにしてください。声が低いので2オクターブあげて。
 #   曲は4分ぐらいで kawaiiFutureベースのアニソンに。コンセプトは高校生の甘酸っぱい記憶」
@@ -12,6 +18,7 @@
 # 歌詞: 曲名の言葉（はんぶんこ・サイダー）は歌わない。声: キュート 1 種類。歌をなぞるリードは入れない。オーケストラの楽器・アコーディオン・バンジョーは使わない。
 from vocalo_lib import *
 import gtr2_lib as G2
+from groove_lib import Groove
 import re as _re
 
 S = Song("32", "soda", "はんぶんこサイダー（仮）", "Half-and-Half Soda", 150, 4, "F", "major", "カワイイ・フューチャーベースのアニソン（ボカロ）")
@@ -26,20 +33,20 @@ def scene(name, n, kind, chs, key=KFm):
 
 
 scene("始まり", 4, "break", ["Bb", "Bb", "C", "C"])
-scene("止まる1", 2, "bridge", ["F", "F"])
+scene("ソロ", 8, "intro", CH[:8])
 scene("サビ1", 12, "chorus", CH)
 scene("語り", 16, "verse", ["F", "Am7", "Bb", "Dm7", "C", "Bb", "Gm7", "C7", "F", "Dm7", "Bb", "C", "Bb", "C", "Dm7", "C7sus4"])
 scene("サビ2", 12, "chorus", CH)
 scene("鐘", 6, "bridge", ["Dm7", "C", "Bb", "Gm7", "C7sus4", "C7"])
 scene("止まる2", 2, "bridge", ["F", "F"])
-scene("にせ1", 6, "pre", ["Bb", "Bb", "C", "C", "Dm7", "Dm7"])
-scene("立ち上げ", 16, "pre", ["Bb", "Bb", "C", "C", "Dm7", "Dm7", "C", "C", "Bb", "Bb", "C", "C", "Db", "Db", "Eb", "Eb"])
+scene("B0", 6, "pre", ["Gm7", "Am7", "Bb", "Dm7", "Gm7", "C7sus4"])
+scene("ドロップ", 4, "break", CH[:4])
 scene("早口", 8, "verse", ["Gm7", "C7", "Am7", "Dm7", "Gm7", "C7", "Dbmaj7", "Eb"])
 scene("フック1", 4, "break", CH[:4])
 scene("B1", 6, "pre", ["Gm7", "Gm7", "Am7", "Am7", "Bb", "C7sus4"])
 scene("サビ3", 8, "chorus", CH[:8])
 scene("B2", 4, "pre", ["Gm7", "Am7", "Bb", "C7sus4"])
-scene("にせ2", 8, "pre", ["Bb", "Bb", "C", "C", "Db", "Db", "Eb", "Eb"])
+scene("立ち上げ", 8, "pre", ["Bb", "Bb", "C", "C", "Db", "Db", "Eb", "Eb"])
 scene("フック2", 10, "break", CH[:4] * 2 + ["Gm7", "C7sus4"])
 scene("サビ4", 8, "chorus", CH[:8])
 scene("A", 10, "verse", ["F", "Am7", "Bb", "Dm7", "C", "Bb", "Gm7", "Am7", "Bb", "C7sus4"])
@@ -102,6 +109,7 @@ put("語り", " | ".join([G3("6, 7, 1 1 2", "2 1 6, 7, 1", "1"), G3("1 2 3 3 4",
     ["じてんしゃおきばのかげで", "ひとつのかんをふたりで", "かわりばんこにのんだね", "くちがふれたところだけ", "みないふりしてわらうの"])
 put("サビ2", C8 + " | " + C4, ["ゆうだちの", "にじをみたね", "そばにいたのに", "とおいまま", "たんさんよりもはかないね"])
 put("鐘", "6:1.5 5:0.5 4:1 3:1 | 2:0.5 1:1.5 2:2 | 3:3 R:1 | 5:1.5 4:0.5 3:1 2:1 | 1:0.5 7,:1.5 1:2 | 1:3 R:1", ["かねがなるまえに", "いおうとしていた"])                       # 高い音から下りてくる
+put("B0", "R:3 2:0.5 3:0.5 | 4:1.5 3:0.5 2:1 4:1 | 5:3 R:1 | R:3 4:0.5 5:0.5 | 6:1.5 5:0.5 4:1 3:1 | 2:3 R:1 | R:4", ["のどのおくまで", "しみてくことば"], pre=1)        # 1拍早く食って入る（言えなかった言葉を飲みこむ）
 SH = lambda p: "{}:0.5 {}:1 {}:1.5 R:1".format(*p.split())                          # 1小節の短い句をたたみかける
 put("早口", " | ".join(SH(p) for p in ("2 2 4", "5 5 7", "3 3 5", "6 5 3", "2 4 6", "5 7 5", "5 5 b3", "4 4 2")), ["いまだ", "いえる", "いえよ", "だめだ", "あとで", "あした", "つぎの", "なつに"])
 put("B1", "R:2 5,:1 3:1 | 5:2 4:1 3:1 | 2:3 R:1 | R:2 6,:1 4:1 | 6:2 5:1 4:1 | 5:3 R:1", ["かんのなかで", "ゆれていたの"])                                             # 低い音から6度跳ぶ
@@ -121,22 +129,23 @@ def sub(b, pat="r---------------"):
     while i < 16:
         L = 1
         while i + L < 16 and pat[i + L] == "-": L += 1
-        out.append(f"R:{L * 0.25:g}" if pat[i] == "." else f"{N(r + {'r': 0, '5': 7, 'R': 12}[pat[i]])}:{L * 0.25:g}"); i += L
+        out.append(f"R:{L * 0.25:g}" if pat[i] == "." else f"{N(r + {'r': 0, '5': 7, '7': 10, 'R': 12}[pat[i]])}:{L * 0.25:g}"); i += L
     SUB.bar(b, " ".join(out))
 
 
-def _ch(tracks, b, pat, center, n):
+def _ch(tracks, b, pat, center, n, acc=False):
+    """acc: 拍の頭でない所（食いこむ所）で打つ和音を、少し強く（強さの山を作る）"""
     v = sorted(voice(S.chords[b], center, n))
     for j in range(n):
         out = []; i = 0
         while i < 16:
             L = 1
             while i + L < 16 and pat[i + L] == "-": L += 1
-            out.append(f"R:{L * 0.25:g}" if pat[i] == "." else f"{N(v[j])}:{L * 0.25:g}"); i += L
+            out.append(f"R:{L * 0.25:g}" if pat[i] == "." else f"{N(v[j])}:{L * 0.25:g}" + ("!" if acc and i % 4 else "")); i += L
         tracks[j].bar(b, " ".join(out))
 
 
-def saw(b, pat="x---------------", center=66): _ch(SAW, b, pat, center, 5)
+def saw(b, pat="x---------------", center=66): _ch(SAW, b, pat, center, 5, acc=True)
 def pad(b, center=64): _ch(PAD, b, "x---------------", center, 3)
 def ep(b, pat="x-------x-------", center=65): _ch(EP, b, pat, center, 4)
 
@@ -189,7 +198,10 @@ def bell(b, k=0):
 
 HK = ("3:0.5 4:0.5 5:0.5 6:1.5 5:0.5 6:0.5", "6:0.5 4:0.5 2:0.5 5,:0.5 7,:0.5 1:1.5", "3:0.5 4:0.5 5:0.5 6:1 1':0.5 6:0.5 5:0.5", "4:0.5 3:0.5 2:0.5 1:2.5")      # フック: 鼻歌の種4・種5・種2 を、2オクターブ上で
 K4, SN, SNg, NO = "X...X...X...X...", "....X.......X...", "....X..o.o..X...", "................"
-HOF, H16, H16o, H8 = "..x...x...x...O.", "XxxxXxxxXxxxXxxx", "XxxxXxxxXxxxXxO.", "x.x.x.x.x.x.x.x."
+HOF, H16, H16o, H8 = "..x...x...x...O.", "XoxoXoxoXoxoXoxo", "XoxoXoxoXoxoXxO.", "X.o.x.o.X.o.x.o."        # ハイハットは強さ3段（強・ふつう・弱）
+GM, GQ = Groove("bounce"), Groove("twostep")                                        # リズムの取り方: 主＝はねる16分／静かな場面＝2ステップ（くじ）
+SOLO = ("R:0.5 6,:0.5 7,:0.5 1:1.5 R:1", "2:0.25 2:0.25 2:0.5 3:1 2:0.5 7,:0.5 5,:1", "R:0.5 3:0.5 4:0.5 5:0.5 6:2", "5:0.75 3:0.75 2:0.5 1:2",
+        "R:0.5 6,:0.5 7,:0.5 1:1 3:0.5 5:1", "4:0.75 3:0.75 2:0.5 1:1 R:1", "2:0.5 2:0.5 3:1 5:2", "1:2 R:2")                    # 最初のソロ: 鼻歌の種1・種3・種4 を、はねるリズムで
 KB = ("X.....X...X.....", "X..X......X.....", "X.....X..X......", "X.........X..X..")
 STAB = ("x-----x---x-----", "x--x------x-----", "x-----x--x------", "x---------x--x--")           # 広い和音は、キックと同じ所で打ってのばす
 
@@ -198,8 +210,8 @@ def hook(b, line): HOOK.bar(b, mel(b, line, 1))                                 
 
 
 def full(b, i, k=0, gtr=True, hat=None):
-    """全員の場面（サビ・フック）: 4つ打ち、裏のハイハット、手びょうし、低いベース、広い和音、ピアノ、ギター"""
-    D.set(b, K4, SNg if i % 2 else SN, hat or (H16o if i % 2 else HOF)); sub(b, ("r---..r---..r---", "r-----..r-r-..R-")[(i + k) % 2]); saw(b, STAB[(i + k) % 4]); ep(b, "x-------x-------"); CLP.bar(b, "R:1 B4:1 R:1 B4:1")
+    """全員の場面（サビ・フック・ドロップ）: はねる16分の型（食いこむキック・ゴーストのスネア・強さ3段のハイハット）、キックと同じ所で打つ低いベース、食いこむ広い和音、ピアノ、手びょうし、ギター"""
+    GM.drums(D, b, i + k, hat=hat); sub(b, GM.B[(i + k) % 4]); saw(b, GM.C[(i + k) % 4]); ep(b, ("x-------x-------", "x-----x---x-----")[i % 2]); CLP.bar(b, "R:1 B4:1 R:1 B4:1")
     if gtr: strum(b, i + k)
 
 
@@ -212,6 +224,13 @@ for b in range(S.nb):
         FX.bar(b, "C5:4"); saw(b, "x-------x-------" if i < 2 else "x---x---x---x---", 62 + 2 * i); D.set(b, NO, "x...x...x...x..." if i < 2 else ("x.x.x.x.x.x.x.x." if i == 2 else "xxxxxxxxXXXXXXXX"), NO)
         if i >= 2: swell(b)
         if i == 3 or (n == "もどる" and i == 1): hat_roll(HATR, b, 1)
+    elif n == "ソロ":                                                    # いきなり落として、フックのシンセのソロ（2ステップ。はじめの2小節は泡とパッドだけ）
+        hook(b, SOLO[i]); pad(b)
+        if i < 2: fxh(b, 0, "awa", 2); (i == 0 and fxh(b, 2, "kira", 1))
+        else: GQ.drums(D, b, i, snare=None if i >= 4 else NO); sub(b, GQ.B[i % 4]); ep(b, GQ.C[i % 4])
+        if i >= 4: CLP.bar(b, "R:1 B4:1 R:1 B4:1")
+        if i % 4 == 3: bell(b, i // 4)
+        if last: fill(b, 1); fxh(b, 2, "rev", 2)
     elif n in ("止まる1", "止まる2"):                                    # 止まる: 泡の音とオルゴールだけ
         fxh(b, 0, "awa", 2); fxh(b, 2, "kira" if i == 0 else "awa", 1); bell(b, i)
         if last: D.set(b, NO, NO, NO); fill(b, 1 if n == "止まる1" else 4); fxh(b, 3, "rev", 1)
@@ -221,7 +240,7 @@ for b in range(S.nb):
         if i == 7: fill(b, 4 if L > 8 else 0)
         if last: fill(b, 3 if n == "サビ1" else 2); (n != "サビ4" and fxh(b, 2, "awa", 2))
     elif n == "語り":                                                    # 語り: ピアノと低いベース、食いこむキック。後半で広い和音
-        D.set(b, KB[i % 4], SNg if i >= 6 else "............X...", H8 if i < 6 else H16); sub(b, ("r----r----------", "r-------..r-----", "r--r---------r--")[i % 3]); ep(b, ("x--x--x---x-----", "x-----x---x--x--", "x---------------")[i % 3])
+        GQ.drums(D, b, i, snare=None if i >= 6 else "............X...", hat=H8 if i < 6 else None); sub(b, GQ.B[i % 4]); ep(b, GQ.C[i % 4] if i % 4 != 3 else "x---------------")
         if i >= 9: saw(b, "x---------------", 62); CLP.bar(b, "R:1 B4:1 R:1 B4:1")
         if i % 3 == 2: bell(b, i // 3)
         if i == 0: fxh(b, 0, "down", 2)
@@ -230,18 +249,12 @@ for b in range(S.nb):
         pad(b); ep(b, "x-------x-------"); sub(b, "r---------------")
         if i % 3 == 2: bell(b, i)
         if i == 0: fxh(b, 0, "down", 2)
-    elif n in ("にせ1", "にせ2"):                                        # 盛り上げて…落とす（言おうとして、言えない）
-        fall = i >= L - 2
-        if not fall:
-            saw(b, "x---x---x---x---", 62 + i); sub(b, "r---r---r---r---"); arp(b, i % 2); FX.bar(b, "C5:4")
-            D.set(b, K4, "x...x...x...x..." if i < L - 4 else "x.x.x.x.x.x.x.x.", NO)
-            if i == L - 3: D.set(b, K4, "xxxxxxxxXXXXXXXX", NO); hat_roll(HATR, b, 1)
-        else:
-            pad(b); bell(b, i)
-            if i == L - 2: fxh(b, 0, "awa", 2)
-            if last and n == "にせ2": D.set(b, NO, NO, NO); fill(b, 0); fxh(b, 2, "rev", 2)
-    elif n == "立ち上げ":                                                # 長い立ち上げ: 4小節ごとに音が増える。最後は ♭VI → ♭VII
-        j = i // 4; saw(b, ("x---------------", "x-------x-------", "x---x---x---x---", "x-x-x-x-x-x-x-x-")[j], 60 + i // 2); sub(b, ("r---------------", "r-------r-------", "r---r---r---r---", "r-r-r-r-r-r-r-r-")[j])
+    elif n == "ドロップ":                                                # ドロップ: 全員で、はねる型をいちばん強く。歌もフックもなし
+        full(b, i, k=2); arp(b, (0, 2, 1, 3)[i]); swell(b)
+        if i == 0: crash(D, b, "C2", 4); fxh(b, 0, "impact", 2); fxh(b, 2, "awa", 2)
+        if last: fill(b, 2)
+    elif n == "立ち上げ":                                                # 立ち上げ: 2小節ごとに音が増える。♭VI → ♭VII でフックへ
+        j = i // 2; saw(b, ("x---------------", "x-------x-------", "x---x---x---x---", "x-x-x-x-x-x-x-x-")[j], 60 + i); sub(b, ("r---------------", "r-------r-------", "r---r---r---r---", "r-r-r-r-r-r-r-r-")[j])
         D.set(b, "X.......X......." if j == 0 else K4, NO if j == 0 else ("....x.......x..." if j == 1 else "x...x...x...x..." if j == 2 else "x.x.x.x.x.x.x.x."), NO if j < 2 else H16)
         if j >= 1: arp(b, i % 2); ep(b, "x-------x-------")
         if j >= 2: FX.bar(b, "C5:4")
@@ -257,15 +270,16 @@ for b in range(S.nb):
         else: hook(b, ("3:0.5 4:0.5 5:0.5 6:2.5", "5:3 R:1")[i - 8])
         if i % 4 == 0: crash(D, b, "C2", 4); (i == 0 and fxh(b, 0, "impact", 2))
         if last: fill(b, 3 if n == "フック1" else 0); (n == "フック2" and fxh(b, 2, "rev", 2))
-    elif n in ("B1", "B2"):                                              # B: 半分の速さ。パッドとピアノ
-        pad(b); ep(b, ("x-----x---------", "x---------x-----")[i % 2]); sub(b, "r---------------"); D.set(b, "X.........X.....", "........X.......", H8)
+    elif n in ("B0", "B1", "B2"):                                        # B: 半分の速さ。パッドとピアノ。キックは2小節で1まわり、スネアの前にゴースト
+        pad(b); ep(b, ("x-----x---------", "x---------x-----")[i % 2]); sub(b, ("r---------r-----", "r------r--r-----")[i % 2]); D.set(b, ("X.........X.....", "X......X..X.....")[i % 2], ("........X.......", "......o.X....o..")[i % 2], H8)
+        if n == "B0" and i == 0: fxh(b, 0, "down", 2)
         if last: fill(b, 0); FX.bar(b, "C5:4"); fxh(b, 2, "rev", 2)
     elif n == "サビ3":                                                   # サビを、ギターなしで軽く（まん中から入る）
         full(b, i, k=1, gtr=False, hat=HOF); arp(b, 2 + i % 3)
         if i == 0: crash(D, b, "C2", 4); fxh(b, 0, "impact", 2)
         if last: fill(b, 1)
     elif n == "A":                                                       # A: ピアノと低いベースとオルゴール。ドラムは小さく
-        ep(b, ("x---x---x-------", "x-------x---x---")[i % 2]); sub(b, "r---------------"); pad(b); D.set(b, "X.........X.....", NO, H8 if i >= 3 else NO)
+        ep(b, ("x---x---x-------", "x-------x---x---")[i % 2]); sub(b, GQ.B[i % 4] if i >= 3 else "r---------------"); pad(b); D.set(b, GQ.K[i % 4] if i >= 3 else "X.........X.....", NO, H8 if i >= 3 else NO)
         if i == 0: fxh(b, 0, "down", 2)
         if i % 3 == 2: bell(b, i // 3)
         if last: fill(b, 0); FX.bar(b, "C5:4"); fxh(b, 2, "rev", 2)
@@ -278,8 +292,8 @@ for b in range(S.nb):
 for b_, hs in FXH.items(): FXT.bar(b_, fx_bar(*hs))
 SL.end(S.nb); SR.end(S.nb)
 S.fade_out = 0
-S.desc = ("仮: 重音テトのカワイイ・フューチャーベースのアニソン（150・ヘ長調・約4分13秒）。人間の鼻歌の録音から読み取った動きを種にして、アレンジした曲。高校生の甘酸っぱい記憶がコンセプト。"
-          "場面の並び・長さは、くじ（form_dice.py・種 51433）で決めた。上がっていく音で始まり、同じ音にもどって終わる。自作")
+S.desc = ("仮: 重音テトのカワイイ・フューチャーベースのアニソン（150・ヘ長調・約4分3秒）。人間の鼻歌の録音から読み取った動きを種にして、アレンジした曲。高校生の甘酸っぱい記憶がコンセプト。"
+          "場面の並び・長さは、くじ（form_dice.py・種 51433。合わない5か所は引き直し）、リズムの取り方もくじ（はねる16分＋2ステップ）。上がっていく音で始まり、同じ音にもどって終わる。自作")
 finish(S, LY, V, 0, flat=True)
 
 from vt3x_lib import *
@@ -306,6 +320,7 @@ if VOCAL:                                                                       
                 for b in S.sc(name): g[b] = round(g[b] * 0.8, 4)
             p_["barGain"] = g[:S.nb]
 js["diGuitar"] = "emily"; js["guitarWobble"] = False
+GM.apply(js); js["swing16"] = 0.5                                                   # はね: 16分のウラを 0.5÷12 拍（150 で約17ミリ秒）後ろへ。ノリ: あと乗り（スネア・ベースを少し後ろ）。キックとベースは同じだけずらす
 if VOCAL:
     n0 = len(js["parts"]); js["parts"] = [p_ for p_ in js["parts"] if p_.get("patch") != "kfbSineLead"]; print("  歌をなぞるリードを消した:", n0 - len(js["parts"]), "パート")
 save(path, js)
