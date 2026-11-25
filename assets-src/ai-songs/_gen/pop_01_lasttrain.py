@@ -54,7 +54,7 @@ V = Voice(S, vol=0.17, delay=0.2, bright=0.0, patch="kfbSineLead", low=False)
 BSPEC = rock_bass_spec(0.17); BSPEC["ampDrive"] = 0.3
 BSPEC["fx"] = [{"type": "eq", "low": 0, "mid": 4, "midHz": 900, "high": 0}, {"type": "eq", "low": 0, "mid": 2, "midHz": 2200, "high": 1}]
 BASS = S.track("指弾きのベース", "bass", **BSPEC)
-GT = os.environ.get("GT", "cur")                                                     # ギターの音の聞きくらべ（2026-11-26 人間「ギターの音違うかなー」）: cur＝v4／tri＝TRiDENT の音の標準（jpop-rock-drive・右は三和音）／tri5＝同じ音で左右とも根音と5度／mar5＝マーシャルで左右とも根音と5度
+GT = os.environ.get("GT", "tri5")                                                     # ギターの音の聞きくらべ（2026-11-26 人間「ギターの音違うかなー」）: cur＝v4／tri＝TRiDENT の音の標準（jpop-rock-drive・右は三和音）／tri5＝同じ音で左右とも根音と5度／mar5＝マーシャルで左右とも根音と5度
 GL = [S.track(f"Lギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.09, -0.6, tone="marshall-mid", drive=float(os.environ.get("LD", "0.35")))) for i in range(6)]
 # v3: サビだけ切り出して（tools/vt3/excerpt_vocal.py）くらべた。v2 のサビ「走る」= 6.9。ギターを全部ぬくと 7.8、右ギターだけぬくと 7.47 ＝ 歌と同じ高さで歪んだ三和音をかき鳴らす右ギターが元。
 #   右を「B で OK が出た音」（アンプの型なし・浅い歪み・高い所の三和音）にして 7.43、サビの上げ幅を小さくして 7.47、左の入力を 0.5 → 0.35 にして 7.66。r1＝左右とも根音と5度（7.08）、r2＝右の入力を下げる（7.05）は効かなかった
@@ -64,21 +64,23 @@ GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **(GSPB(0.12, 0.6) if RV
 if GT != "cur":
     _sp = (lambda v, pn: rock_gtr_spec(v, pn)) if GT in ("tri", "tri5") else (lambda v, pn: rock_gtr_spec(v, pn, tone="marshall-mid", drive=0.5))
     for i_ in range(6): GL[i_].spec.clear(); GL[i_].spec.update(_sp(0.085, -0.6)); GR[i_].spec.clear(); GR[i_].spec.update(_sp(0.08, 0.6))
-LEAD = S.track("リードギター", "distGuitar", **lead_gtr_spec(0.1, 0.1))                 # v2: 0.14 → 0.1（リードのある場面だけ 3〜4dB 大きかった）
+# v5: 人間「ソロ1は音が使えないかな」（ソロ1＝1本のパートで、音をつないで弾くリードの音）→ リードは全部、ソロ2と同じ鳴らし方（弦1本ずつのパート・1音ずつ弾き直す）にする
+LEADV = os.environ.get("LEADV", "strings")
+LEAD = S.track("リードギター", "distGuitar", **lead_gtr_spec(0.1, 0.1)) if LEADV == "mono" else None                 # v2: 0.14 → 0.1（リードのある場面だけ 3〜4dB 大きかった）
 # v5（2026-11-26）人間「ギターの音ちゃんと出てるかチェックして」→ ギターだけを書き出して小節ごとに測ったら、出ていなかった（記録は docs/sound/punk-guide.md §12）:
 #   1) アンプの型（guitarTone）についているノイズゲートが、弦1本ずつの小さい音を「雑音」と見なして閉じていた。休みのあとの最初の2〜3拍が 20dB 小さく、音符が24個あるのに -42〜-65dB の小節が6つあった → ゲートをほぼ切る（ampGate 0.5）
 #   2) リードギターが伴奏のギターより 25dB 小さく（-45dB）、ほとんど聞こえていなかった。最初の4小節でだんだん大きくなる動きもあった → volume 0.2・gainDb 10（1本で伴奏のギター1本と同じ -21dB）
 for t_ in GL + GR:
     if "guitarTone" in t_.spec: t_.spec["ampGate"] = 0.5
-LEAD.spec.update(volume=0.2, gainDb=10)
+if LEAD: LEAD.spec.update(volume=0.2, gainDb=10)
 SL, SR = G2.Strummer(GL, S, 33), G2.Strummer(GR, S, 71); SL.gap = SR.gap = 0.0
 # ギターの弾き方の聞きくらべ（2026-11-26 人間「ギターの弾き方も違和感あるんよな」）。調べ直したこと（docs/sound/punk-guide.md §11）:
 #   根音と5度は「1本の太い弦」のように同時に弾く／8分は全部ダウンで、形を変えない／Aメロは頭だけ開いてあとはミュート、サビは開いて弾く／2本のギターは同じことをせず、片方はオクターブなど
 #   cur＝v4（歌の所で手を抜く・右は分散和音やアップダウン）／p1＝左右とも8分のダウンをまっすぐ（Aメロは左だけ、右はのばす）／p2＝p1＋Aメロの左は「頭だけ開いて、あとはやわらかいミュート」／p3＝p1＋右はオクターブ奏法
-SOLOV = os.environ.get("SOLOV", "hand")                                             # まん中のソロ: hand＝手で書いた旋律／ph＝外から入れた「単音まじりの型」6つ（リズム・のばし方・上がり下がり・強さは型、音の高さはこの曲の和音と音階）
-LS = G2.Strummer([S.track(f"ソロのギター（型）{i + 1}弦め", "distGuitar", **{**lead_gtr_spec(0.2, 0.1), "gainDb": 10}) for i in range(6)], S, 9) if SOLOV == "ph" else None
+SOLOV = os.environ.get("SOLOV", "ph")                                             # まん中のソロ: hand＝手で書いた旋律／ph＝外から入れた「単音まじりの型」6つ（リズム・のばし方・上がり下がり・強さは型、音の高さはこの曲の和音と音階）
+LS = G2.Strummer([S.track(f"ソロのギター（型）{i + 1}弦め", "distGuitar", **{**lead_gtr_spec(0.2, 0.1), "gainDb": 10}) for i in range(6)], S, 9) if (SOLOV == "ph" or LEADV == "strings") else None
 SOLO_PH = ("ph-090", "ph-072", "ph-006", "ph-029", "ph-083", "ph-065"); _last = [None]
-GP = os.environ.get("GP", "cur")
+GP = os.environ.get("GP", "p4")
 if GP != "cur": SL.tight = SR.tight = 5
 PML = [S.track(f"Lギター（やわらかいミュート）{i + 1}", "distGuitar", **{**dict(GL[0].spec), "palmMute": "light"}) for i in range(2)] if GP == "p2" else None
 P8 = ("D-d-d-d-D-d-d-d-", "D-d-d-d-D-d-d-d-", "D-d-d-d-D-d-d-d-", "D-d-d-d-D-d-D-d-")           # 8分のダウンをまっすぐ（強いのは1拍めと3拍め。4小節めだけ4拍めも強く）
@@ -206,7 +208,19 @@ def ring(b, both=True):
     if both: TR[0] = G2.triad(c, TR[0]); SR.bar(b, "D---------------", TR[0], feel="down")
 
 
-def lead(b, line, up=0): LEAD.bar(b, mel(line, up))
+_ls = [None]
+
+
+def lead(b, line, up=0):
+    """リードの旋律。LEADV=strings: 音ごとに弦を選んで、弦1本ずつのパートに1音ずつ置く（拍の頭は強く。次の音の少し手前で止める）"""
+    if LEADV == "mono": return LEAD.bar(b, mel(line, up))
+    t = S.bar_beat(b)
+    for x in mel(line, up).split():
+        n, L = x.split(":")[0], float(x.split(":")[1].rstrip("!,"))
+        if n != "R":
+            m = midi(n); c = [s_ for s_ in range(6) if 0 <= m - G2.TUNING[s_] <= 17]; s_ = min(c, key=lambda q: abs((m - G2.TUNING[q]) - 7) + (0 if _ls[0] is None else 0.8 * abs(q - _ls[0]))); _ls[0] = s_
+            on = (t - S.bar_beat(b)) % 1 < 0.01; LS.note(s_, t, max(0.1, L - 0.012), n, (104 if on else 90) + LS.rng.randint(-4, 4))
+        t += L
 
 
 BELL = ("5:0.5 1':0.5 3':0.5 1':0.5 2':1 1':1", "#5:0.5 7:0.5 3':0.5 7:0.5 2':1 7:1", "6:0.5 1':0.5 4':0.5 1':0.5 3':1 2':1", "b6:0.5 1':0.5 4':0.5 1':0.5 2':1 1':1")   # 発車メロディのような旋律（自作）
@@ -346,7 +360,7 @@ finish(S, LY, V, 0, flat=True)
 
 from vt3x_lib import *
 path = sys.argv[1]
-humanize(path, "リードギター", mid=98, down=10, up=12, seed=33)
+if LEADV == "mono": humanize(path, "リードギター", mid=98, down=10, up=12, seed=33)
 js = load(path); print("  ギターの強さ:", SL.velocity(js) + SR.velocity(js) + (LS.velocity(js) if LS else 0)); save(path, js)
 if VOCAL:
     backing(path, 0.9)
