@@ -372,3 +372,62 @@ def play(st, b, pat, shape, shape2=None, human=1.0, tight=None, single=True, all
         if x["len"] < nxt - 0.12:                                                    # 元の演奏で、次の打の前に音を止めていた（切って弾く）
             for s, _ in hit: st._stop(s, t + max(0.12, x["len"]))
         st.count["down" if down else "up"] += 1
+
+
+# ===== 2026-11-26: 単音まじりの弾き方の型（人間「色々な弾き方をダウンロードしよう」） =====
+# 型は assets-src/guitar-patterns/guitar-phrases.json（GuitarSet のソロ・EGSet12・Guitar-TECHS。どれも CC BY 4.0。作り方は tools/guitar/phrase_patterns.py）。
+# 入っているのは、いつ・単音か和音か・のばし方・上がるか下がるか（となり／1つとばし／とぶ）・強さ。音の高さは、こちらの曲の和音と音階から選ぶ。
+_PHR = None
+
+
+def phrases(data=None, style=None, offbeat16=None, min_single=0):
+    """型の一覧。data: GuitarSet・EGSet12・Guitar-TECHS。style は「ロックのソロ」「エレキのソロ」など（部分一致）"""
+    global _PHR
+    if _PHR is None: _PHR = _json.load(open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "..", "guitar-patterns", "guitar-phrases.json"), encoding="utf-8"))["patterns"]
+    return [p for p in _PHR if (data is None or p["データ"] == data) and (style is None or style in p["様式"]) and (offbeat16 is None or p["16分のウラ"] <= offbeat16) and p["単音"] >= min_single]
+
+
+def phrase(pid): return next(p for p in phrases() if p["id"] == pid)
+
+
+def play_phrase(st, b, pat, chords, scale_pcs, start=None, lo=55, hi=79, human=0.6, half=None, vel_scale=1.0):
+    """Strummer st で、b（・b+1）小節めに、単音まじりの型を弾く。chords＝[b 小節めの和音, b+1 小節めの和音]、scale_pcs＝音階の音（0〜11）。
+    音の高さの決め方: 型の「動き」（同じ／となり／1つとばし／とぶ・上か下か）どおりに音階の上を動き、拍の頭（2拍ごと）は和音の音に寄せる。lo〜hi からはみ出す時は向きを返す。
+    start: 最初の音（MIDI。無ければ、和音の音でまん中に近い音）。返すのは最後の音（次の型の start にわたすと、旋律がつながる）"""
+    S = st.S; spb = 60.0 / S.bpm; pt = pat if isinstance(pat, dict) else phrase(pat); sk = pt["strokes"]; end = 32
+    if half is not None: sk = [{**x, "slot": x["slot"] - 16 * half} for x in sk if x["slot"] // 16 == half]; end = 16
+    scale = sorted(m for m in range(lo - 12, hi + 13) if m % 12 in scale_pcs)
+    def tones(ch):
+        root, third, fifth, sev, _ = chord_info(ch); pcs = {root, fifth} | ({third} if third is not None else set()); return sorted(m for m in range(lo - 12, hi + 13) if m % 12 in pcs)
+    def near(arr, m): return min(arr, key=lambda x: (abs(x - m), x))
+    def string_for(m, prev_s=None):
+        c = [s for s in range(6) if 0 <= m - TUNING[s] <= 17]
+        return min(c, key=lambda s: (abs((m - TUNING[s]) - 7) + (0 if prev_s is None else 0.8 * abs(s - prev_s)))) if c else (0 if m < TUNING[0] else 5)
+    p = start; prev_s = None
+    T = [max(S.bar_beat(b), S.bar_beat(b) + x["slot"] / 4 + max(-0.03, min(0.03, x["off"] / 1000 * human)) / spb) for x in sk] + [S.bar_beat(b) + end / 4]
+    for i, x in enumerate(sk):
+        bar = x["slot"] // 16; ch = chords[min(bar, len(chords) - 1)] if half is None else chords[0]; ct = [m for m in tones(ch) if lo <= m <= hi]
+        t = T[i]
+        if T[i + 1] - t < 0.1: continue                                                        # 次の打とほぼ同時（元の演奏の、同じ打の取りこぼし）は弾かない
+        if p is None: p = near(ct, (lo + hi) // 2)
+        mv = x["move"]; d = 0 if mv == "0" else (1 if mv[0] == "+" else -1); size = 0 if mv == "0" else int(mv[1])
+        if d:
+            if not (lo <= p + d * (1 if size == 1 else 3 if size == 2 else 5) <= hi): d = -d
+            if size < 3:
+                idx = scale.index(near(scale, p)); p = scale[max(0, min(len(scale) - 1, idx + d * size))]
+            else:
+                c = [m for m in ct if (m - p) * d >= 5]; p = min(c, key=lambda m: abs(m - p)) if c else near(ct, p + d * 7)
+        if x["slot"] % 8 == 0 and p not in ct: q = near(ct, p); p = q if abs(q - p) <= 2 else p        # 拍の頭（2拍ごと）は、和音の音に寄せる
+        p = max(lo, min(hi, p))
+        nxt = max(0.1, T[i + 1] - t - 0.012)                                                   # 次の打まで（同じ弦で音が重ならないように、ほんの少し手前まで）
+        L = nxt if x["art"] == "つなぐ" else max(0.1, min(x["len"], nxt)) if x["art"] == "切る" else min(max(x["len"], nxt * 0.8), nxt)
+        on = "拍" if x["slot"] % 4 == 0 else "8" if x["slot"] % 2 == 0 else "16"
+        v = (60 + 0.42 * x["vel"]) if "vel" in x else {"拍": 104, "8": 92, "16": 84}[on]; v = max(50, min(120, v * vel_scale + st.rng.uniform(-3, 3)))
+        if x["dir"] == "s":
+            s = string_for(p, prev_s); st.note(s, t, L, nm(p), v); prev_s = s
+        else:                                                                                   # 和音の打: いまの音をいちばん上にして、その下の和音の音を、となりの弦で
+            below = [m for m in tones(ch) if m < p][-(min(x["n"], 3) - 1):] or []; ns = below + [p]; s_top = max(string_for(p, prev_s), len(ns) - 1); prev_s = s_top
+            for k_, m in enumerate(ns):
+                s = s_top - (len(ns) - 1 - k_); kk = k_ if x["dir"] == "d" else len(ns) - 1 - k_
+                st.note(s, t + 0.006 * kk, L, nm(m), v - 2 * kk)
+    return p

@@ -337,3 +337,12 @@ Naked Drums（Wilkinson Audio、CC BY 4.0、1.3GB）、DRS Kit（CC BY 4.0）、
 - 元ファイル: `assets-src/guitar-patterns/guitarset/annotation.zip`。
 - 使い方: 伴奏の演奏 180本から、**手の動きだけ**（いつ・どの向きに・何本の弦を・形のどのあたりを・何ミリ秒かけて・どれだけのばして）を 110種類の型にした（`assets-src/guitar-patterns/guitarset-strums.json`。作り方 `tools/guitar/guitarset_patterns.py`）。**音の高さ・和音・旋律は取り出していない**（元の演奏の曲は写さない。1-1）。
 - 記録に無いもの: 音の強さ（強さは、拍の位置と向きからこちらで付けている）。楽器はアコースティックギター（ピックアップつき）で、歪んだエレキの演奏ではない。
+
+### 追加（2026-11-26、人間「色々な弾き方をダウンロードしよう」→ 候補から2つを選んで承認）
+| 素材 | 入手元 | 規約の要点 | クレジット |
+|---|---|---|---|
+| EGSet12 の譜面と注釈（`01`〜`12` の `.gp` と `.jams`、24ファイル・約1.0MB。md5 を Zenodo の値と照合済み。プロが作曲して弾いたエレキのオリジナル 12曲。音声は入れていない） | https://zenodo.org/records/11406378 | CC BY 4.0: 商用利用・加工・再配布・組みこみ可。出典の表記が必要 | **必要**: "EGSet12: twelve real & original solo electric guitar performances with diverse playing styles to evaluate guitar tablature transcription"（Zenodo 11406378, CC BY 4.0） |
+| Guitar-TECHS の曲の演奏の MIDI（`P3_music.zip` 129.5MB を落とし、md5 071ba80aecf00f4a31fbd167b3f22198 を照合 → 中の `midi_01`〜`12.mid` だけ残して、**音声と zip は消した**。P3 のオリジナルのソロ 12本。弦ごとの MIDI・強さつき） | https://zenodo.org/records/14963133 | CC BY 4.0: 同上。論文に「original musical passages in the form of guitar solos」とあり、既存曲の演奏ではない | **必要**: H. Pedroza, W. Abreu, R. M. Corey, I. R. Roman, "Guitar-TECHS: An Electric Guitar Dataset Covering Techniques, Musical Excerpts, Chords and Scales Using a Diverse Array of Hardware", ICASSP 2025（CC BY 4.0） |
+- 元ファイル: `assets-src/guitar-patterns/egset12/`・`assets-src/guitar-patterns/guitar-techs/`。
+- 使い方: GuitarSet のソロ 180本と合わせて、**単音まじりの弾き方の型 120種類**にした（`assets-src/guitar-patterns/guitar-phrases.json`。作り方 `tools/guitar/phrase_patterns.py`）。入れたのは、いつ・単音か和音か・のばし方・前の音から上がるか下がるか（となり／1つとばし／とぶ、の3段階）・強さ（Guitar-TECHS だけ）。**音の高さ・音程の数は入れていない**（元の旋律は再現できない）。
+- 候補から外したもの: ToqueFlamenco（CC BY だが、実在の奏者・既存曲の採譜なので使わない）／GAPS（非営利のみ）／IDMT-SMT-Guitar（非営利・改変不可）／配布に会員登録やメールが要るもの。

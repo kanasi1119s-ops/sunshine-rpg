@@ -69,6 +69,9 @@ SL, SR = G2.Strummer(GL, S, 33), G2.Strummer(GR, S, 71); SL.gap = SR.gap = 0.0
 # ギターの弾き方の聞きくらべ（2026-11-26 人間「ギターの弾き方も違和感あるんよな」）。調べ直したこと（docs/sound/punk-guide.md §11）:
 #   根音と5度は「1本の太い弦」のように同時に弾く／8分は全部ダウンで、形を変えない／Aメロは頭だけ開いてあとはミュート、サビは開いて弾く／2本のギターは同じことをせず、片方はオクターブなど
 #   cur＝v4（歌の所で手を抜く・右は分散和音やアップダウン）／p1＝左右とも8分のダウンをまっすぐ（Aメロは左だけ、右はのばす）／p2＝p1＋Aメロの左は「頭だけ開いて、あとはやわらかいミュート」／p3＝p1＋右はオクターブ奏法
+SOLOV = os.environ.get("SOLOV", "hand")                                             # まん中のソロ: hand＝手で書いた旋律／ph＝外から入れた「単音まじりの型」6つ（リズム・のばし方・上がり下がり・強さは型、音の高さはこの曲の和音と音階）
+LS = G2.Strummer([S.track(f"ソロのギター（型）{i + 1}弦め", "distGuitar", **lead_gtr_spec(0.1, 0.1)) for i in range(6)], S, 9) if SOLOV == "ph" else None
+SOLO_PH = ("ph-090", "ph-072", "ph-006", "ph-029", "ph-083", "ph-065"); _last = [None]
 GP = os.environ.get("GP", "cur")
 if GP != "cur": SL.tight = SR.tight = 5
 PML = [S.track(f"Lギター（やわらかいミュート）{i + 1}", "distGuitar", **{**dict(GL[0].spec), "palmMute": "light"}) for i in range(2)] if GP == "p2" else None
@@ -299,7 +302,9 @@ for b in range(S.nb):
         if n == "最後" and last: D.set(b, "X...............", NO, NO); crash(D, b, "C2", 4); ring(b); bass(b, "r---------------"); D.tom(b, "R:2 C4:0.25 C4:0.25 A3:0.25 A3:0.25 F3:0.25! F3:0.25! D3:0.25! D3:0.25!")   # 15小節め: 1打してタムだけ → フックへ
         elif last: fill(b, 3)
     elif n == "ソロ2":                                                   # リードギターのソロ: 前半は前のめりの8ビート、後半はたてノリ
-        band(b, i, GQ if i < 8 else GM, L=DN, R=UD); lead(b, SOLO[i])
+        band(b, i, GQ if i < 8 else GM, L=DN, R=UD)
+        if SOLOV != "ph": lead(b, SOLO[i])
+        elif i % 2 == 0: _last[0] = G2.play_phrase(LS, b, SOLO_PH[i // 2], [simple(S.chords[b]), simple(S.chords[b + 1])], {2, 4, 6, 7, 9, 11, 1}, start=_last[0], lo=59, hi=78)
         if i in (0, 4, 8): crash(D, b, "C2", 4)
         if i == 7: fill(b, 2)
         if last: fill(b, 0)
@@ -336,7 +341,7 @@ finish(S, LY, V, 0, flat=True)
 from vt3x_lib import *
 path = sys.argv[1]
 humanize(path, "リードギター", mid=98, down=10, up=12, seed=33)
-js = load(path); print("  ギターの強さ:", SL.velocity(js) + SR.velocity(js)); save(path, js)
+js = load(path); print("  ギターの強さ:", SL.velocity(js) + SR.velocity(js) + (LS.velocity(js) if LS else 0)); save(path, js)
 if VOCAL:
     backing(path, 0.9)
     remark(path, S, std_mark(("chorus",)))

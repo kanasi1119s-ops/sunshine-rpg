@@ -1,0 +1,1588 @@
+{
+    "annotations": [
+        {
+            "annotation_metadata": {
+                "curator": {
+                    "name": "",
+                    "email": ""
+                },
+                "annotator": {},
+                "version": "",
+                "corpus": "",
+                "annotation_tools": "",
+                "annotation_rules": "",
+                "validation": "",
+                "data_source": "0"
+            },
+            "namespace": "pitch_contour",
+            "data": {
+                "time": [
+                    8.526,
+                    10.098,
+                    11.682,
+                    12.942,
+                    15.168,
+                    16.74,
+                    17.994,
+                    20.196,
+                    21.786,
+                    23.046,
+                    25.266,
+                    26.844,
+                    28.734
+                ],
+                "duration": [
+                    1.26,
+                    0.306,
+                    0.27,
+                    0.198,
+                    0.324,
+                    0.288,
+                    0.228,
+                    0.39,
+                    0.324,
+                    0.222,
+                    0.306,
+                    0.306,
+                    0.432
+                ],
+                "value": [
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 164.81377845643496
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 207.65234878997256
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 207.65234878997256
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 110.0
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 207.65234878997256
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 207.65234878997256
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 110.0
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 207.65234878997256
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 207.65234878997256
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 110.0
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 207.65234878997256
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 207.65234878997256
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 87.30705785825097
+                    }
+                ],
+                "confidence": [
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                ]
+            },
+            "sandbox": {},
+            "time": 28.8,
+            "duration": 28.8
+        },
+        {
+            "annotation_metadata": {
+                "curator": {
+                    "name": "",
+                    "email": ""
+                },
+                "annotator": {},
+                "version": "",
+                "corpus": "",
+                "annotation_tools": "",
+                "annotation_rules": "",
+                "validation": "",
+                "data_source": "0"
+            },
+            "namespace": "note_midi",
+            "data": [
+                {
+                    "time": 8.526,
+                    "duration": 1.26,
+                    "value": 52,
+                    "confidence": null
+                },
+                {
+                    "time": 10.098,
+                    "duration": 0.306,
+                    "value": 56,
+                    "confidence": null
+                },
+                {
+                    "time": 11.682,
+                    "duration": 0.27,
+                    "value": 56,
+                    "confidence": null
+                },
+                {
+                    "time": 12.942,
+                    "duration": 0.198,
+                    "value": 45,
+                    "confidence": null
+                },
+                {
+                    "time": 15.168,
+                    "duration": 0.324,
+                    "value": 56,
+                    "confidence": null
+                },
+                {
+                    "time": 16.74,
+                    "duration": 0.288,
+                    "value": 56,
+                    "confidence": null
+                },
+                {
+                    "time": 17.994,
+                    "duration": 0.228,
+                    "value": 45,
+                    "confidence": null
+                },
+                {
+                    "time": 20.196,
+                    "duration": 0.39,
+                    "value": 56,
+                    "confidence": null
+                },
+                {
+                    "time": 21.786,
+                    "duration": 0.324,
+                    "value": 56,
+                    "confidence": null
+                },
+                {
+                    "time": 23.046,
+                    "duration": 0.222,
+                    "value": 45,
+                    "confidence": null
+                },
+                {
+                    "time": 25.266,
+                    "duration": 0.306,
+                    "value": 56,
+                    "confidence": null
+                },
+                {
+                    "time": 26.844,
+                    "duration": 0.306,
+                    "value": 56,
+                    "confidence": null
+                },
+                {
+                    "time": 28.734,
+                    "duration": 0.432,
+                    "value": 41,
+                    "confidence": null
+                }
+            ],
+            "sandbox": {},
+            "time": 28.8,
+            "duration": 28.8
+        },
+        {
+            "annotation_metadata": {
+                "curator": {
+                    "name": "",
+                    "email": ""
+                },
+                "annotator": {},
+                "version": "",
+                "corpus": "",
+                "annotation_tools": "",
+                "annotation_rules": "",
+                "validation": "",
+                "data_source": "1"
+            },
+            "namespace": "pitch_contour",
+            "data": {
+                "time": [
+                    5.052,
+                    5.676,
+                    6.636,
+                    7.26,
+                    13.272,
+                    14.22,
+                    14.52,
+                    18.306,
+                    19.26,
+                    19.56,
+                    23.364,
+                    24.312,
+                    24.636,
+                    24.948
+                ],
+                "duration": [
+                    0.444,
+                    0.702,
+                    0.342,
+                    0.402,
+                    0.144,
+                    0.168,
+                    0.24,
+                    0.198,
+                    0.18,
+                    0.27,
+                    0.192,
+                    0.21,
+                    0.234,
+                    0.162
+                ],
+                "value": [
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 138.59131548843604
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 138.59131548843604
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 138.59131548843604
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 138.59131548843604
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 146.8323839587038
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 110.0
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 220.0
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 146.8323839587038
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 110.0
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 220.0
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 146.8323839587038
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 110.0
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 220.0
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 220.0
+                    }
+                ],
+                "confidence": [
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                ]
+            },
+            "sandbox": {},
+            "time": 28.8,
+            "duration": 28.8
+        },
+        {
+            "annotation_metadata": {
+                "curator": {
+                    "name": "",
+                    "email": ""
+                },
+                "annotator": {},
+                "version": "",
+                "corpus": "",
+                "annotation_tools": "",
+                "annotation_rules": "",
+                "validation": "",
+                "data_source": "1"
+            },
+            "namespace": "note_midi",
+            "data": [
+                {
+                    "time": 5.052,
+                    "duration": 0.444,
+                    "value": 49,
+                    "confidence": null
+                },
+                {
+                    "time": 5.676,
+                    "duration": 0.702,
+                    "value": 49,
+                    "confidence": null
+                },
+                {
+                    "time": 6.636,
+                    "duration": 0.342,
+                    "value": 49,
+                    "confidence": null
+                },
+                {
+                    "time": 7.26,
+                    "duration": 0.402,
+                    "value": 49,
+                    "confidence": null
+                },
+                {
+                    "time": 13.272,
+                    "duration": 0.144,
+                    "value": 50,
+                    "confidence": null
+                },
+                {
+                    "time": 14.22,
+                    "duration": 0.168,
+                    "value": 45,
+                    "confidence": null
+                },
+                {
+                    "time": 14.52,
+                    "duration": 0.24,
+                    "value": 57,
+                    "confidence": null
+                },
+                {
+                    "time": 18.306,
+                    "duration": 0.198,
+                    "value": 50,
+                    "confidence": null
+                },
+                {
+                    "time": 19.26,
+                    "duration": 0.18,
+                    "value": 45,
+                    "confidence": null
+                },
+                {
+                    "time": 19.56,
+                    "duration": 0.27,
+                    "value": 57,
+                    "confidence": null
+                },
+                {
+                    "time": 23.364,
+                    "duration": 0.192,
+                    "value": 50,
+                    "confidence": null
+                },
+                {
+                    "time": 24.312,
+                    "duration": 0.21,
+                    "value": 45,
+                    "confidence": null
+                },
+                {
+                    "time": 24.636,
+                    "duration": 0.234,
+                    "value": 57,
+                    "confidence": null
+                },
+                {
+                    "time": 24.948,
+                    "duration": 0.162,
+                    "value": 57,
+                    "confidence": null
+                }
+            ],
+            "sandbox": {},
+            "time": 28.8,
+            "duration": 28.8
+        },
+        {
+            "annotation_metadata": {
+                "curator": {
+                    "name": "",
+                    "email": ""
+                },
+                "annotator": {},
+                "version": "",
+                "corpus": "",
+                "annotation_tools": "",
+                "annotation_rules": "",
+                "validation": "",
+                "data_source": "2"
+            },
+            "namespace": "pitch_contour",
+            "data": {
+                "time": [
+                    0.0,
+                    0.636,
+                    1.578,
+                    2.214,
+                    2.844,
+                    10.728,
+                    12.324,
+                    13.584,
+                    13.896,
+                    15.792,
+                    17.37,
+                    18.63,
+                    18.942,
+                    20.82,
+                    22.422,
+                    23.688,
+                    24.0,
+                    25.89
+                ],
+                "duration": [
+                    0.396,
+                    0.474,
+                    0.318,
+                    0.372,
+                    0.234,
+                    0.306,
+                    0.3,
+                    0.198,
+                    0.168,
+                    0.498,
+                    0.312,
+                    0.186,
+                    0.198,
+                    0.39,
+                    0.36,
+                    0.18,
+                    0.21,
+                    0.516
+                ],
+                "value": [
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 329.6275569128699
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 164.81377845643496
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 311.1269837220809
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 155.56349186104046
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 293.6647679174076
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 293.6647679174076
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 293.6647679174076
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 233.08188075904496
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 246.94165062806206
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 293.6647679174076
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 293.6647679174076
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 233.08188075904496
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 246.94165062806206
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 293.6647679174076
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 293.6647679174076
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 233.08188075904496
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 246.94165062806206
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 293.6647679174076
+                    }
+                ],
+                "confidence": [
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                ]
+            },
+            "sandbox": {},
+            "time": 28.8,
+            "duration": 28.8
+        },
+        {
+            "annotation_metadata": {
+                "curator": {
+                    "name": "",
+                    "email": ""
+                },
+                "annotator": {},
+                "version": "",
+                "corpus": "",
+                "annotation_tools": "",
+                "annotation_rules": "",
+                "validation": "",
+                "data_source": "2"
+            },
+            "namespace": "note_midi",
+            "data": [
+                {
+                    "time": 0.0,
+                    "duration": 0.396,
+                    "value": 64,
+                    "confidence": null
+                },
+                {
+                    "time": 0.636,
+                    "duration": 0.474,
+                    "value": 52,
+                    "confidence": null
+                },
+                {
+                    "time": 1.578,
+                    "duration": 0.318,
+                    "value": 63,
+                    "confidence": null
+                },
+                {
+                    "time": 2.214,
+                    "duration": 0.372,
+                    "value": 51,
+                    "confidence": null
+                },
+                {
+                    "time": 2.844,
+                    "duration": 0.234,
+                    "value": 62,
+                    "confidence": null
+                },
+                {
+                    "time": 10.728,
+                    "duration": 0.306,
+                    "value": 62,
+                    "confidence": null
+                },
+                {
+                    "time": 12.324,
+                    "duration": 0.3,
+                    "value": 62,
+                    "confidence": null
+                },
+                {
+                    "time": 13.584,
+                    "duration": 0.198,
+                    "value": 58,
+                    "confidence": null
+                },
+                {
+                    "time": 13.896,
+                    "duration": 0.168,
+                    "value": 59,
+                    "confidence": null
+                },
+                {
+                    "time": 15.792,
+                    "duration": 0.498,
+                    "value": 62,
+                    "confidence": null
+                },
+                {
+                    "time": 17.37,
+                    "duration": 0.312,
+                    "value": 62,
+                    "confidence": null
+                },
+                {
+                    "time": 18.63,
+                    "duration": 0.186,
+                    "value": 58,
+                    "confidence": null
+                },
+                {
+                    "time": 18.942,
+                    "duration": 0.198,
+                    "value": 59,
+                    "confidence": null
+                },
+                {
+                    "time": 20.82,
+                    "duration": 0.39,
+                    "value": 62,
+                    "confidence": null
+                },
+                {
+                    "time": 22.422,
+                    "duration": 0.36,
+                    "value": 62,
+                    "confidence": null
+                },
+                {
+                    "time": 23.688,
+                    "duration": 0.18,
+                    "value": 58,
+                    "confidence": null
+                },
+                {
+                    "time": 24.0,
+                    "duration": 0.21,
+                    "value": 59,
+                    "confidence": null
+                },
+                {
+                    "time": 25.89,
+                    "duration": 0.516,
+                    "value": 62,
+                    "confidence": null
+                }
+            ],
+            "sandbox": {},
+            "time": 28.8,
+            "duration": 28.8
+        },
+        {
+            "annotation_metadata": {
+                "curator": {
+                    "name": "",
+                    "email": ""
+                },
+                "annotator": {},
+                "version": "",
+                "corpus": "",
+                "annotation_tools": "",
+                "annotation_rules": "",
+                "validation": "",
+                "data_source": "3"
+            },
+            "namespace": "pitch_contour",
+            "data": {
+                "time": [
+                    0.0,
+                    0.636,
+                    1.578,
+                    2.214,
+                    3.786,
+                    4.104,
+                    5.052,
+                    5.676,
+                    6.636,
+                    7.26,
+                    10.098,
+                    11.682,
+                    15.168,
+                    16.74,
+                    19.896,
+                    20.196,
+                    21.786,
+                    25.266,
+                    26.844,
+                    27.468
+                ],
+                "duration": [
+                    0.396,
+                    0.474,
+                    0.318,
+                    0.372,
+                    0.204,
+                    0.696,
+                    0.444,
+                    0.702,
+                    0.342,
+                    0.402,
+                    0.306,
+                    0.27,
+                    0.324,
+                    0.288,
+                    0.168,
+                    0.39,
+                    0.324,
+                    0.306,
+                    0.306,
+                    0.324
+                ],
+                "value": [
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 415.3046975799451
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 207.65234878997256
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 440.0
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 220.0
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 493.8833012561241
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 493.8833012561241
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 293.6647679174076
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 293.6647679174076
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 293.6647679174076
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 293.6647679174076
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 466.1637615180899
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 466.1637615180899
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 466.1637615180899
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 466.1637615180899
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 440.0
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 466.1637615180899
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 466.1637615180899
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 466.1637615180899
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 466.1637615180899
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 415.3046975799451
+                    }
+                ],
+                "confidence": [
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                ]
+            },
+            "sandbox": {},
+            "time": 28.8,
+            "duration": 28.8
+        },
+        {
+            "annotation_metadata": {
+                "curator": {
+                    "name": "",
+                    "email": ""
+                },
+                "annotator": {},
+                "version": "",
+                "corpus": "",
+                "annotation_tools": "",
+                "annotation_rules": "",
+                "validation": "",
+                "data_source": "3"
+            },
+            "namespace": "note_midi",
+            "data": [
+                {
+                    "time": 0.0,
+                    "duration": 0.396,
+                    "value": 68,
+                    "confidence": null
+                },
+                {
+                    "time": 0.636,
+                    "duration": 0.474,
+                    "value": 56,
+                    "confidence": null
+                },
+                {
+                    "time": 1.578,
+                    "duration": 0.318,
+                    "value": 69,
+                    "confidence": null
+                },
+                {
+                    "time": 2.214,
+                    "duration": 0.372,
+                    "value": 57,
+                    "confidence": null
+                },
+                {
+                    "time": 3.786,
+                    "duration": 0.204,
+                    "value": 71,
+                    "confidence": null
+                },
+                {
+                    "time": 4.104,
+                    "duration": 0.696,
+                    "value": 71,
+                    "confidence": null
+                },
+                {
+                    "time": 5.052,
+                    "duration": 0.444,
+                    "value": 62,
+                    "confidence": null
+                },
+                {
+                    "time": 5.676,
+                    "duration": 0.702,
+                    "value": 62,
+                    "confidence": null
+                },
+                {
+                    "time": 6.636,
+                    "duration": 0.342,
+                    "value": 62,
+                    "confidence": null
+                },
+                {
+                    "time": 7.26,
+                    "duration": 0.402,
+                    "value": 62,
+                    "confidence": null
+                },
+                {
+                    "time": 10.098,
+                    "duration": 0.306,
+                    "value": 70,
+                    "confidence": null
+                },
+                {
+                    "time": 11.682,
+                    "duration": 0.27,
+                    "value": 70,
+                    "confidence": null
+                },
+                {
+                    "time": 15.168,
+                    "duration": 0.324,
+                    "value": 70,
+                    "confidence": null
+                },
+                {
+                    "time": 16.74,
+                    "duration": 0.288,
+                    "value": 70,
+                    "confidence": null
+                },
+                {
+                    "time": 19.896,
+                    "duration": 0.168,
+                    "value": 69,
+                    "confidence": null
+                },
+                {
+                    "time": 20.196,
+                    "duration": 0.39,
+                    "value": 70,
+                    "confidence": null
+                },
+                {
+                    "time": 21.786,
+                    "duration": 0.324,
+                    "value": 70,
+                    "confidence": null
+                },
+                {
+                    "time": 25.266,
+                    "duration": 0.306,
+                    "value": 70,
+                    "confidence": null
+                },
+                {
+                    "time": 26.844,
+                    "duration": 0.306,
+                    "value": 70,
+                    "confidence": null
+                },
+                {
+                    "time": 27.468,
+                    "duration": 0.324,
+                    "value": 68,
+                    "confidence": null
+                }
+            ],
+            "sandbox": {},
+            "time": 28.8,
+            "duration": 28.8
+        },
+        {
+            "annotation_metadata": {
+                "curator": {
+                    "name": "",
+                    "email": ""
+                },
+                "annotator": {},
+                "version": "",
+                "corpus": "",
+                "annotation_tools": "",
+                "annotation_rules": "",
+                "validation": "",
+                "data_source": "4"
+            },
+            "namespace": "pitch_contour",
+            "data": {
+                "time": [
+                    3.162,
+                    3.786,
+                    4.104,
+                    5.052,
+                    5.676,
+                    6.636,
+                    7.26,
+                    10.728,
+                    12.324,
+                    15.792,
+                    17.37,
+                    20.82,
+                    22.422,
+                    25.89,
+                    27.468
+                ],
+                "duration": [
+                    0.3,
+                    0.204,
+                    0.696,
+                    0.444,
+                    0.702,
+                    0.342,
+                    0.402,
+                    0.306,
+                    0.3,
+                    0.498,
+                    0.312,
+                    0.39,
+                    0.36,
+                    0.516,
+                    0.324
+                ],
+                "value": [
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 466.1637615180899
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 523.2511306011972
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 523.2511306011972
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 311.1269837220809
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 311.1269837220809
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 311.1269837220809
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 311.1269837220809
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 493.8833012561241
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 493.8833012561241
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 493.8833012561241
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 493.8833012561241
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 493.8833012561241
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 493.8833012561241
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 493.8833012561241
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 493.8833012561241
+                    }
+                ],
+                "confidence": [
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                ]
+            },
+            "sandbox": {},
+            "time": 28.8,
+            "duration": 28.8
+        },
+        {
+            "annotation_metadata": {
+                "curator": {
+                    "name": "",
+                    "email": ""
+                },
+                "annotator": {},
+                "version": "",
+                "corpus": "",
+                "annotation_tools": "",
+                "annotation_rules": "",
+                "validation": "",
+                "data_source": "4"
+            },
+            "namespace": "note_midi",
+            "data": [
+                {
+                    "time": 3.162,
+                    "duration": 0.3,
+                    "value": 70,
+                    "confidence": null
+                },
+                {
+                    "time": 3.786,
+                    "duration": 0.204,
+                    "value": 72,
+                    "confidence": null
+                },
+                {
+                    "time": 4.104,
+                    "duration": 0.696,
+                    "value": 72,
+                    "confidence": null
+                },
+                {
+                    "time": 5.052,
+                    "duration": 0.444,
+                    "value": 63,
+                    "confidence": null
+                },
+                {
+                    "time": 5.676,
+                    "duration": 0.702,
+                    "value": 63,
+                    "confidence": null
+                },
+                {
+                    "time": 6.636,
+                    "duration": 0.342,
+                    "value": 63,
+                    "confidence": null
+                },
+                {
+                    "time": 7.26,
+                    "duration": 0.402,
+                    "value": 63,
+                    "confidence": null
+                },
+                {
+                    "time": 10.728,
+                    "duration": 0.306,
+                    "value": 71,
+                    "confidence": null
+                },
+                {
+                    "time": 12.324,
+                    "duration": 0.3,
+                    "value": 71,
+                    "confidence": null
+                },
+                {
+                    "time": 15.792,
+                    "duration": 0.498,
+                    "value": 71,
+                    "confidence": null
+                },
+                {
+                    "time": 17.37,
+                    "duration": 0.312,
+                    "value": 71,
+                    "confidence": null
+                },
+                {
+                    "time": 20.82,
+                    "duration": 0.39,
+                    "value": 71,
+                    "confidence": null
+                },
+                {
+                    "time": 22.422,
+                    "duration": 0.36,
+                    "value": 71,
+                    "confidence": null
+                },
+                {
+                    "time": 25.89,
+                    "duration": 0.516,
+                    "value": 71,
+                    "confidence": null
+                },
+                {
+                    "time": 27.468,
+                    "duration": 0.324,
+                    "value": 71,
+                    "confidence": null
+                }
+            ],
+            "sandbox": {},
+            "time": 28.8,
+            "duration": 28.8
+        },
+        {
+            "annotation_metadata": {
+                "curator": {
+                    "name": "",
+                    "email": ""
+                },
+                "annotator": {},
+                "version": "",
+                "corpus": "",
+                "annotation_tools": "",
+                "annotation_rules": "",
+                "validation": "",
+                "data_source": "5"
+            },
+            "namespace": "pitch_contour",
+            "data": {
+                "time": [
+                    0.0,
+                    0.636,
+                    1.578,
+                    2.214,
+                    3.462,
+                    3.786,
+                    4.104,
+                    8.208,
+                    14.838,
+                    28.416
+                ],
+                "duration": [
+                    0.396,
+                    0.474,
+                    0.318,
+                    0.372,
+                    0.168,
+                    0.204,
+                    0.696,
+                    0.3,
+                    0.24,
+                    0.192
+                ],
+                "value": [
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 739.9888454232688
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 369.9944227116344
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 698.4564628660078
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 349.2282314330039
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 739.9888454232688
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 698.4564628660078
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 698.4564628660078
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 659.2551138257398
+                    },
+                    {
+                        "voiced": true,
+                        "index": 0,
+                        "frequency": 880.0
+                    }
+                ],
+                "confidence": [
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                ]
+            },
+            "sandbox": {},
+            "time": 28.8,
+            "duration": 28.8
+        },
+        {
+            "annotation_metadata": {
+                "curator": {
+                    "name": "",
+                    "email": ""
+                },
+                "annotator": {},
+                "version": "",
+                "corpus": "",
+                "annotation_tools": "",
+                "annotation_rules": "",
+                "validation": "",
+                "data_source": "5"
+            },
+            "namespace": "note_midi",
+            "data": [
+                {
+                    "time": 0.0,
+                    "duration": 0.396,
+                    "value": 78,
+                    "confidence": null
+                },
+                {
+                    "time": 0.636,
+                    "duration": 0.474,
+                    "value": 66,
+                    "confidence": null
+                },
+                {
+                    "time": 1.578,
+                    "duration": 0.318,
+                    "value": 77,
+                    "confidence": null
+                },
+                {
+                    "time": 2.214,
+                    "duration": 0.372,
+                    "value": 65,
+                    "confidence": null
+                },
+                {
+                    "time": 3.462,
+                    "duration": 0.168,
+                    "value": 78,
+                    "confidence": null
+                },
+                {
+                    "time": 3.786,
+                    "duration": 0.204,
+                    "value": 77,
+                    "confidence": null
+                },
+                {
+                    "time": 4.104,
+                    "duration": 0.696,
+                    "value": 77,
+                    "confidence": null
+                },
+                {
+                    "time": 8.208,
+                    "duration": 0.3,
+                    "value": 76,
+                    "confidence": null
+                },
+                {
+                    "time": 14.838,
+                    "duration": 0.24,
+                    "value": 81,
+                    "confidence": null
+                }
+            ],
+            "sandbox": {},
+            "time": 28.8,
+            "duration": 28.8
+        },
+        {
+            "annotation_metadata": {
+                "curator": {
+                    "name": "",
+                    "email": ""
+                },
+                "annotator": {},
+                "version": "",
+                "corpus": "",
+                "annotation_tools": "",
+                "annotation_rules": "",
+                "validation": "",
+                "data_source": ""
+            },
+            "namespace": "tempo",
+            "data": [
+                {
+                    "time": 0.0,
+                    "duration": 28.8,
+                    "value": 100,
+                    "confidence": 1.0
+                }
+            ],
+            "sandbox": {},
+            "time": 28.8,
+            "duration": 28.8
+        }
+    ],
+    "file_metadata": {
+        "title": "example",
+        "artist": "",
+        "release": "",
+        "duration": 28.8,
+        "identifiers": {},
+        "jams_version": "0.3.1"
+    },
+    "sandbox": {}
+}
