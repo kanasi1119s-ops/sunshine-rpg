@@ -16,7 +16,9 @@ from groove_lib import Groove
 import re as _re, os
 
 S = Song("33", "lasttrain", "終電バイバイ（仮）", "Last Train, Bye-Bye", 176, 4, "D", "major", "ポップパンク（ボカロ）")
-S.kit = "crocell-punch"; S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags + " --space room --space-wet 0.08"
+# v4（2026-11-26）人間「今回はドラムの音、トライデントにしよう」: 音源は v1 から crocell-punch（TRiDENT を目標に作った音源）だったが、Kawaii future bass の曲から持ちこんだ3つの設定で、その音から離れていた
+#   → 部屋の響き（--space room）をやめる／ドラムを真ん中に寄せる処理（narrow）をやめる／開いたハイハットを 0.3 倍 → 0.55 倍（TRiDENT の音で作ったバンド曲 vb25 と同じ）
+S.kit = "crocell-punch"; S.flags = "--bass bnb-loud --ref-tone glossy-jrock " + S.flags
 KD = Key("D", "major")
 CHH = ["D", "D", "F#7", "F#7", "G", "G", "Gm", "Gm", "D", "D", "F#7", "F#7", "G", "A", "Bb", "C"]          # サビ（半分の速さ・16小節）
 CHN = ["D", "F#7", "G", "Gm", "D", "F#7", "Bb", "C"]                                                      # サビ（ふつうの速さ・8小節）
@@ -46,7 +48,7 @@ scene("A4", 8, "verse", ["D", "D", "Bm", "Bm", "G", "Gm", "A", "A"])
 scene("立ち上げ", 4, "pre", ["G", "A", "Bb", "C"])
 scene("最後", 15, "chorus", ["D", "F#7", "G", "Gm"] * 2 + ["D", "F#7", "G", "A", "Bb", "C", "D"])
 scene("フック", 8, "outro", ["D", "F#7", "G", "Gm", "D", "F#7", "C", "D"])
-S.keep_old_synth = True; S.no_depth = True; S.keepers = {}; S.open_hat_vol = 0.3
+S.keep_old_synth = True; S.no_depth = True; S.keepers = {}; S.open_hat_vol = 0.55
 
 V = Voice(S, vol=0.17, delay=0.2, bright=0.0, patch="kfbSineLead", low=False)
 BSPEC = rock_bass_spec(0.17); BSPEC["ampDrive"] = 0.3
@@ -305,7 +307,7 @@ if VOCAL:
     js = load(path)
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.0
     save(path, js)
-js = load(path); drum_center(js)
+js = load(path)
 QUIET = {"ホーム": 0.95, "A4": 0.95}                                                 # v2: 静かな場面は、鳴らす楽器を減らすだけで十分静か（v1 はさらに下げて -31dB・-23dB まで落ちた）
 LK = float(os.environ.get("LK", "0.85"))
 LOUD = {"サビ1": 1.35 * LK, "サビ2": 1.35 * LK, "サビ3": 1.35 * LK, "走る": 1.25 * LK, "最後": 1.3 * LK, "A1": 0.92, "A2": 0.9, "ドロップ": 1.2}   # v2: v1 はサビ（-19dB）が A（-17〜-18dB）より小さかった → サビを上げ、A を少し下げる
