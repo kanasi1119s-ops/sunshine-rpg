@@ -54,14 +54,45 @@ V = Voice(S, vol=0.17, delay=0.2, bright=0.0, patch="kfbSineLead", low=False)
 BSPEC = rock_bass_spec(0.17); BSPEC["ampDrive"] = 0.3
 BSPEC["fx"] = [{"type": "eq", "low": 0, "mid": 4, "midHz": 900, "high": 0}, {"type": "eq", "low": 0, "mid": 2, "midHz": 2200, "high": 1}]
 BASS = S.track("指弾きのベース", "bass", **BSPEC)
+GT = os.environ.get("GT", "cur")                                                     # ギターの音の聞きくらべ（2026-11-26 人間「ギターの音違うかなー」）: cur＝v4／tri＝TRiDENT の音の標準（jpop-rock-drive・右は三和音）／tri5＝同じ音で左右とも根音と5度／mar5＝マーシャルで左右とも根音と5度
 GL = [S.track(f"Lギター{i + 1}弦め", "distGuitar", **rock_gtr_spec(0.09, -0.6, tone="marshall-mid", drive=float(os.environ.get("LD", "0.35")))) for i in range(6)]
 # v3: サビだけ切り出して（tools/vt3/excerpt_vocal.py）くらべた。v2 のサビ「走る」= 6.9。ギターを全部ぬくと 7.8、右ギターだけぬくと 7.47 ＝ 歌と同じ高さで歪んだ三和音をかき鳴らす右ギターが元。
 #   右を「B で OK が出た音」（アンプの型なし・浅い歪み・高い所の三和音）にして 7.43、サビの上げ幅を小さくして 7.47、左の入力を 0.5 → 0.35 にして 7.66。r1＝左右とも根音と5度（7.08）、r2＝右の入力を下げる（7.05）は効かなかった
-RV = os.environ.get("RV", "r3")                                                      # 右ギターの試し（サビの点数が低い元を探した。記録は docs/sound/punk-guide.md §10）
+RV = os.environ.get("RV", {"cur": "r3", "tri": "r0", "tri5": "r1", "mar5": "r1"}[GT])                                                      # 右ギターの試し（サビの点数が低い元を探した。記録は docs/sound/punk-guide.md §10）
 GSPB = lambda v, p: {**{k: x for k, x in rock_gtr_spec(v, p).items() if k != "guitarTone"}, "release": 0.9}
 GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **(GSPB(0.12, 0.6) if RV == "r3" else rock_gtr_spec(0.085, 0.6, tone="marshall-mid", drive=0.25 if RV == "r2" else 0.45))) for i in range(6)]
+if GT != "cur":
+    _sp = (lambda v, pn: rock_gtr_spec(v, pn)) if GT in ("tri", "tri5") else (lambda v, pn: rock_gtr_spec(v, pn, tone="marshall-mid", drive=0.5))
+    for i_ in range(6): GL[i_].spec.clear(); GL[i_].spec.update(_sp(0.085, -0.6)); GR[i_].spec.clear(); GR[i_].spec.update(_sp(0.08, 0.6))
 LEAD = S.track("リードギター", "distGuitar", **lead_gtr_spec(0.1, 0.1))                 # v2: 0.14 → 0.1（リードのある場面だけ 3〜4dB 大きかった）
 SL, SR = G2.Strummer(GL, S, 33), G2.Strummer(GR, S, 71); SL.gap = SR.gap = 0.0
+# ギターの弾き方の聞きくらべ（2026-11-26 人間「ギターの弾き方も違和感あるんよな」）。調べ直したこと（docs/sound/punk-guide.md §11）:
+#   根音と5度は「1本の太い弦」のように同時に弾く／8分は全部ダウンで、形を変えない／Aメロは頭だけ開いてあとはミュート、サビは開いて弾く／2本のギターは同じことをせず、片方はオクターブなど
+#   cur＝v4（歌の所で手を抜く・右は分散和音やアップダウン）／p1＝左右とも8分のダウンをまっすぐ（Aメロは左だけ、右はのばす）／p2＝p1＋Aメロの左は「頭だけ開いて、あとはやわらかいミュート」／p3＝p1＋右はオクターブ奏法
+GP = os.environ.get("GP", "cur")
+if GP != "cur": SL.tight = SR.tight = 5
+PML = [S.track(f"Lギター（やわらかいミュート）{i + 1}", "distGuitar", **{**dict(GL[0].spec), "palmMute": "light"}) for i in range(2)] if GP == "p2" else None
+P8 = ("D-d-d-d-D-d-d-d-", "D-d-d-d-D-d-d-d-", "D-d-d-d-D-d-d-d-", "D-d-d-d-D-d-D-d-")           # 8分のダウンをまっすぐ（強いのは1拍めと3拍め。4小節めだけ4拍めも強く）
+import random as _rnd
+_PR = _rnd.Random(5)
+
+
+def r_oct(b):
+    """右ギターのオクターブ奏法: 和音の3度（3度のない和音は根音）を、8分で"""
+    root, third, fifth, sev, _ = G2.chord_info(simple(S.chords[b])); pc = third if third is not None else root; m = 52 + (pc - 52) % 12
+    G2.octaves(SR, 2, 4, S, b, " ".join(f"{nm(m)}:0.5" + ("!" if k % 4 == 0 else "") for k in range(8)))
+
+
+def strum2(b, i, L, R, space):
+    c = simple(S.chords[b]); low = G2.low_shape(c, with_third=False); verse = space and S.scene_of(b)[0].startswith("A")
+    if L:
+        if GP == "p2" and verse: SL.bar(b, "D---............", low, feel="down"); G2.palm(PML, S, b, "....m.m.M.m.m.m.", low, _PR)
+        else: SL.bar(b, P8[i % 4], low, feel="down")
+    if R:
+        if verse: SR.bar(b, "D---------------", low, feel="down")
+        elif GP == "p3": r_oct(b)
+        else: SR.bar(b, P8[i % 4], low, feel="down")
+
 D = S.drumkit(); LY = Lyrics(S); N = lambda m: nm(m)
 mel = lambda s, up=0: KD.mel(s, oct=4 + up)                                          # 1＝D4。歌は 5,（A3）〜 2'（E5）
 
@@ -138,6 +169,7 @@ ARP = ("0---1---2---1---", "0---2---1---2---", "0-1-2---1---2---", "2---1---0---
 
 def strum(b, i, L=DN, R=UD, space=False):
     """ギター左右: 左は根音と5度（低い側・ダウン）、右は三和音（まん中の弦）。space: 歌が鳴っている所では少し引く"""
+    if GP != "cur": return strum2(b, i, L, R, space)
     c = simple(S.chords[b]); sung = G2.sung_slots(V, S, b) if space else None
     if L: p = L[i % 4]; SL.bar(b, G2.with_space(p, sung, keep=(0, 8)) if sung else p, G2.low_shape(c, with_third=False), feel="down")
     if R:
@@ -146,6 +178,7 @@ def strum(b, i, L=DN, R=UD, space=False):
 
 
 def arp_r(b, i):
+    if GP != "cur": return SR.bar(b, "D---------------", G2.low_shape(simple(S.chords[b]), with_third=False), feel="down") if GP != "p3" else r_oct(b)
     TR[0] = G2.triad(simple(S.chords[b]), TR[0]); G2.arp(SR, b, ARP[i % 4], TR[0])
 
 

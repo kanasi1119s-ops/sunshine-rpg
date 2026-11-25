@@ -122,6 +122,7 @@ class Strummer:
         self.last = None                    # さいごに弾いた小節
         self.vel = {i: [] for i in range(len(tracks))}      # 弦ごとの、音の強さの並び（JSON にしたあと velocity() で付ける）
         self.count = {"down": 0, "up": 0, "notes": 0}
+        self.tight = None                   # 弦をわたる時間（ミリ秒）。None＝ふつうのかき鳴らし（12〜28）。根音と5度を「1本の太い弦」のように弾く時は 4〜6（2026-11-26 追加）
         self.gap = 0.04                     # 和音が変わる時、音が変わる弦を何拍前に止めるか（0 にすると、次の一打まで鳴らしたまま。2026-11-24 追加。既定はこれまでどおり）
 
     def _stop(self, s, t):
@@ -168,7 +169,7 @@ class Strummer:
             if down: hit = strings if strong or len(strings) <= 3 else (strings if self.rng.random() < 0.6 else strings[:-1] if self.rng.random() < 0.5 else strings[1:])
             else:
                 k = up_strings or (3 if strong else 2); hit = strings[-min(k, len(strings)):][::-1]
-            spread = (self.rng.uniform(12, 18) if strong else self.rng.uniform(18, 28)) / 1000 / spb          # 弦をわたる時間（拍）
+            spread = (self.tight * self.rng.uniform(0.8, 1.2) if self.tight else self.rng.uniform(12, 18) if strong else self.rng.uniform(18, 28)) / 1000 / spb          # 弦をわたる時間（拍）
             late = self.rng.uniform(-0.004, 0.006) / spb + (0.003 / spb if not down else 0)                    # 手のゆれ。アップはほんの少しおくれる
             base = (self.rng.uniform(100, 110) if c == "D" else self.rng.uniform(84, 94) if c == "d" else self.rng.uniform(86, 96) if c == "U" else self.rng.uniform(66, 78))
             for k_, s in enumerate(hit):
