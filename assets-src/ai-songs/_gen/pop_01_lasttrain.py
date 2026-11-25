@@ -65,12 +65,18 @@ if GT != "cur":
     _sp = (lambda v, pn: rock_gtr_spec(v, pn)) if GT in ("tri", "tri5") else (lambda v, pn: rock_gtr_spec(v, pn, tone="marshall-mid", drive=0.5))
     for i_ in range(6): GL[i_].spec.clear(); GL[i_].spec.update(_sp(0.085, -0.6)); GR[i_].spec.clear(); GR[i_].spec.update(_sp(0.08, 0.6))
 LEAD = S.track("リードギター", "distGuitar", **lead_gtr_spec(0.1, 0.1))                 # v2: 0.14 → 0.1（リードのある場面だけ 3〜4dB 大きかった）
+# v5（2026-11-26）人間「ギターの音ちゃんと出てるかチェックして」→ ギターだけを書き出して小節ごとに測ったら、出ていなかった（記録は docs/sound/punk-guide.md §12）:
+#   1) アンプの型（guitarTone）についているノイズゲートが、弦1本ずつの小さい音を「雑音」と見なして閉じていた。休みのあとの最初の2〜3拍が 20dB 小さく、音符が24個あるのに -42〜-65dB の小節が6つあった → ゲートをほぼ切る（ampGate 0.5）
+#   2) リードギターが伴奏のギターより 25dB 小さく（-45dB）、ほとんど聞こえていなかった。最初の4小節でだんだん大きくなる動きもあった → volume 0.2・gainDb 10（1本で伴奏のギター1本と同じ -21dB）
+for t_ in GL + GR:
+    if "guitarTone" in t_.spec: t_.spec["ampGate"] = 0.5
+LEAD.spec.update(volume=0.2, gainDb=10)
 SL, SR = G2.Strummer(GL, S, 33), G2.Strummer(GR, S, 71); SL.gap = SR.gap = 0.0
 # ギターの弾き方の聞きくらべ（2026-11-26 人間「ギターの弾き方も違和感あるんよな」）。調べ直したこと（docs/sound/punk-guide.md §11）:
 #   根音と5度は「1本の太い弦」のように同時に弾く／8分は全部ダウンで、形を変えない／Aメロは頭だけ開いてあとはミュート、サビは開いて弾く／2本のギターは同じことをせず、片方はオクターブなど
 #   cur＝v4（歌の所で手を抜く・右は分散和音やアップダウン）／p1＝左右とも8分のダウンをまっすぐ（Aメロは左だけ、右はのばす）／p2＝p1＋Aメロの左は「頭だけ開いて、あとはやわらかいミュート」／p3＝p1＋右はオクターブ奏法
 SOLOV = os.environ.get("SOLOV", "hand")                                             # まん中のソロ: hand＝手で書いた旋律／ph＝外から入れた「単音まじりの型」6つ（リズム・のばし方・上がり下がり・強さは型、音の高さはこの曲の和音と音階）
-LS = G2.Strummer([S.track(f"ソロのギター（型）{i + 1}弦め", "distGuitar", **lead_gtr_spec(0.1, 0.1)) for i in range(6)], S, 9) if SOLOV == "ph" else None
+LS = G2.Strummer([S.track(f"ソロのギター（型）{i + 1}弦め", "distGuitar", **{**lead_gtr_spec(0.2, 0.1), "gainDb": 10}) for i in range(6)], S, 9) if SOLOV == "ph" else None
 SOLO_PH = ("ph-090", "ph-072", "ph-006", "ph-029", "ph-083", "ph-065"); _last = [None]
 GP = os.environ.get("GP", "cur")
 if GP != "cur": SL.tight = SR.tight = 5
