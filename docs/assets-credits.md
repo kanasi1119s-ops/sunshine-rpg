@@ -329,3 +329,11 @@ Naked Drums（Wilkinson Audio、CC BY 4.0、1.3GB）、DRS Kit（CC BY 4.0）、
 - **学習に使わないサイト**（規約で AI の学習に使うことを禁じている）: 日本一フリーBGM（2026-09-30 までに測った数字だけは使ってよい、と人間が確認）・魔王魂・**DOVA-SYNDROME（2026-11-16 に確認。AI の学習への利用を禁止）**。
 - J-POP・K-POP は、ライセンスを確かめられる音が見つからなかったので、音からは学んでいない。
 
+
+## ギターの演奏データ GuitarSet（2026-11-26 追加。人間「ギターの打ち込みデータを外部から100種類ぐらい導入してみようか」→ ダウンロードを承認。作曲ソフト専用で、ゲーム本体 `dist/` には入れていない）
+| 素材 | 入手元 | 規約の要点 | クレジット |
+|---|---|---|---|
+| GuitarSet v1.1.0 の注釈だけ（`annotation.zip` 39.1MB・md5 b39b78e63d3446f2e54ddb7a54df9b10。6人のギタリストが弾いた 360本の演奏を、弦ごとに記録した JAMS。音声は入れていない） | https://zenodo.org/records/3371780 （Zenodo の記録の license 欄＝cc-by-4.0 を API で確認） | CC BY 4.0: 商用利用・加工・再配布・組みこみ可。出典の表記が必要 | **必要**: Q. Xi, R. Bittner, J. Pauwels, X. Ye, J. P. Bello, "GuitarSet: A Dataset for Guitar Transcription", ISMIR 2018（CC BY 4.0）。この型を使った曲を公開する時は、説明欄かクレジットに書く |
+- 元ファイル: `assets-src/guitar-patterns/guitarset/annotation.zip`。
+- 使い方: 伴奏の演奏 180本から、**手の動きだけ**（いつ・どの向きに・何本の弦を・形のどのあたりを・何ミリ秒かけて・どれだけのばして）を 110種類の型にした（`assets-src/guitar-patterns/guitarset-strums.json`。作り方 `tools/guitar/guitarset_patterns.py`）。**音の高さ・和音・旋律は取り出していない**（元の演奏の曲は写さない。1-1）。
+- 記録に無いもの: 音の強さ（強さは、拍の位置と向きからこちらで付けている）。楽器はアコースティックギター（ピックアップつき）で、歪んだエレキの演奏ではない。

@@ -132,3 +132,13 @@
   - 残っていること: リードギターのある場面（ベル・タクシー・ソロ・フック）が −15〜−16dB で、サビ（−17〜−18dB）より 2〜3dB 大きい。パチパチ 30か所（場所は未特定）。BGM の版には歌の旋律を弾く楽器がない。
   - v4（2026-11-26）人間「今回はドラムの音、トライデントにしよう」: 音源は v1 から `crocell-punch` だったが、Kawaii future bass の曲から持ちこんだ設定で音が離れていた → 部屋の響き（`--space room`）なし・真ん中に寄せる処理（`drum_center`）なし・開いたハイハット 0.3 → 0.55 倍（vb25 のバンド曲と同じ）。歌 7.85／BGM 7.73。耳では未確認。
   - 覚えておくこと: **バンドの曲を作る時は、Kawaii future bass の台本の設定（部屋の響き・`drum_center`・`open_hat_vol` 0.3）を持ちこまない**。
+
+## 11. ギターの音と弾き方の直し（2026-11-26。人間「ギターの音違うかなー」「ギターの弾き方も違和感あるんよな」「ギターの打ち込みデータを外部から100種類ぐらい導入してみようか」）
+
+- 調べ直したこと（公開されている解説）: 根音と5度の2本は「1本の太い弦」のつもりで同時に弾く／8分はダウンで弾きつづける／Aメロは「頭だけ開いて、あとはミュート」、サビは開いて弾く／2本のギターは同じことをしない（片方がミュートなら、もう片方は別のこと。オクターブ奏法など）。
+  - 出典: [Premier Guitar「Double Trouble」](https://www.premierguitar.com/double-trouble-make-rhythm-guitar-parts-great-again)／[Guitar Girl Magazine（ポップパンクの練習）](https://guitargirlmag.com/?p=34403)／[Lick Library「Holiday」の解説](https://licklibrary.com/learn/lessons/green-day/holiday)／[リットーミュージック 地獄のドリル（パワーコードのダウン）](https://www.rittor-music.co.jp/jigoku/drill/gt/04/18.pdf)
+- v4 までの弾き方で、ふつうはしないこと（自分で見つけた分）: 歌の所で手を抜いて穴だらけになる（`with_space`）／歪んだ音で分散和音／歪んだ三和音をアップダウンでかき鳴らす／根音と5度を 12〜28ミリ秒かけて「ジャラン」と弾く。
+- 台本の切りかえ（`pop_01_lasttrain.py`）: 音 `GT=cur|tri|tri5|mar5`、弾き方 `GP=cur|p1|p2|p3|p4`。p1＝左右とも8分のダウンをまっすぐ（弦をわたる時間 5ミリ秒）／p3＝右はオクターブ奏法／**p4＝外から入れた型（GuitarSet）で弾く**。
+- 外から入れた型: `assets-src/guitar-patterns/guitarset-strums.json`（110種類。ロック・ファンク・弾き語り風・ボサノバ・ジャズが 22ずつ）。使い方は `gtr2_lib.py` の `G2.patterns(style, offbeat16)`・`G2.play(st, b, 型, shape, half=…, human=…, tight=…, all_down=…)`。規約と出典は `docs/assets-credits.md`。
+  - 分かったこと: 速いテンポ（130〜148）のロックの伴奏は、6人とも **ほぼ8分のダウンだけ**で、1〜2か所だけ抜く・1打だけ16分を足す、という小さな変化しかしていない（gs-064・084・094・099・109 など）。遅いテンポ（85〜90）では16分のアップダウンになる。
+  - 14小節の聞きくらべの点数（TRiDENT の音）: p1 7.82／p3 7.88／p4 7.87（v4 の弾き方は同じ場所で 7.70）。耳では未確認。

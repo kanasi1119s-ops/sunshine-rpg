@@ -83,8 +83,17 @@ def r_oct(b):
     G2.octaves(SR, 2, 4, S, b, " ".join(f"{nm(m)}:0.5" + ("!" if k % 4 == 0 else "") for k in range(8)))
 
 
+PL = {"サビ": ("gs-064", "gs-084"), "A": ("gs-044", "gs-089")}                     # 左ギターの型（GuitarSet のロックの伴奏。速いテンポで弾かれた、8分のダウン中心の型）
+PRT = {"サビ": ("gs-099", "gs-109"), "A": ("gs-084", "gs-094")}                    # 右ギターの型（左と別の奏者の型。すき間の位置がちがう）
+
+
 def strum2(b, i, L, R, space):
     c = simple(S.chords[b]); low = G2.low_shape(c, with_third=False); verse = space and S.scene_of(b)[0].startswith("A")
+    if GP == "p4":                                                                   # 外から入れた型で弾く。4小節ごとに2つの型を交代。ずれ（元の演奏のゆれ）は半分残す
+        k = "A" if verse else "サビ"
+        if L: G2.play(SL, b, PL[k][(i // 2) % 2], low, half=i % 2, human=0.5, tight=5, single=False, all_down=True)
+        if R: G2.play(SR, b, PRT[k][(i // 2) % 2], low, half=i % 2, human=0.5, tight=6, single=False, all_down=True)
+        return
     if L:
         if GP == "p2" and verse: SL.bar(b, "D---............", low, feel="down"); G2.palm(PML, S, b, "....m.m.M.m.m.m.", low, _PR)
         else: SL.bar(b, P8[i % 4], low, feel="down")

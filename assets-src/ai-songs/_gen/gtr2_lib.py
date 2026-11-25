@@ -318,3 +318,57 @@ def groove_line(ch, pat, start, moves, scale_pcs, lo=40, hi=76):
         i = j
     return " ".join(out), cur
 
+
+
+# ===== 2026-11-26: 外から入れた弾き方の型（人間「ギターの打ち込みデータを外部から100種類ぐらい導入してみようか」） =====
+# 型は assets-src/guitar-patterns/guitarset-strums.json（GuitarSet・CC BY 4.0 の伴奏の演奏から、手の動きだけを取り出したもの。作り方は tools/guitar/guitarset_patterns.py）。
+# 入っているのは「いつ・どの向きに・何本・形のどのあたりを・何ミリ秒かけて・どれだけのばして」だけ。音の高さは、こちらの曲の和音の形（shape）を使う。
+import json as _json, os as _os
+_PATS = None
+
+
+def patterns(style=None, offbeat16=None, min_strokes=0):
+    """型の一覧。style: ロック・ファンク・弾き語り風・ボサノバ・ジャズ。offbeat16=0 で「16分のウラを弾かない型」だけ（速い曲用）"""
+    global _PATS
+    if _PATS is None: _PATS = _json.load(open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "..", "guitar-patterns", "guitarset-strums.json"), encoding="utf-8"))["patterns"]
+    return [p for p in _PATS if (style is None or p["様式"] == style) and (offbeat16 is None or p["16分のウラ"] <= offbeat16) and p["打数"] >= min_strokes]
+
+
+def pattern(pid): return next(p for p in patterns() if p["id"] == pid)
+
+
+def play(st, b, pat, shape, shape2=None, human=1.0, tight=None, single=True, all_down=False, half=None):
+    """Strummer st で、b・b+1 小節めに、型 pat（2小節）を弾く。shape は b 小節めの形、shape2 は b+1 小節めの形（無ければ同じ）。
+    human: マスからのずれ（元の演奏のゆれ）をどれだけ残すか（0〜1。ずれは ±25ミリ秒まで）／tight: 弦をわたる時間をこのミリ秒にそろえる（歪んだ根音と5度は 4〜6）／
+    single=False: 単音の打は弾かない／all_down=True: アップの打もダウンで弾く（歪んだギターの8分）／half=0 か 1: 型の前半（後半）の1小節だけを、b 小節めに弾く"""
+    S = st.S; spb = 60.0 / S.bpm; sk = pat["strokes"] if isinstance(pat, dict) else pattern(pat)["strokes"]
+    if st.last is not None and st.last != b - 1:
+        for s in list(st.ring): st._stop(s, S.bar_beat(st.last + 1))
+    st.last = b + (1 if half is None else 0); cur = None
+    if half is not None: sk = [{**x, "slot": x["slot"] - 16 * half} for x in sk if x["slot"] // 16 == half]
+    ev = [x for x in sk if single or x["dir"] != "s"]; end = 32 if half is None else 16
+    for i, x in enumerate(ev):
+        bar = x["slot"] // 16; sh = shape if bar == 0 or shape2 is None else shape2; t = S.bar_beat(b) + x["slot"] / 4 + max(-0.025, min(0.025, x["off"] / 1000 * human)) / spb
+        t = max(S.bar_beat(b), t)
+        if cur is not sh:                                                            # 和音が変わる: 形に無い弦と、音が変わる弦を止める
+            p = dict(sh)
+            for s in list(st.ring):
+                if s not in p or p[s] != st.ring[s][1]: st._stop(s, S.bar_beat(b + bar) - st.gap if bar else t - st.gap)
+            cur = sh
+        ss = sorted(sh); n = len(ss); a, z = round(x["lo"] * (n - 1)), round(x["hi"] * (n - 1))
+        if x["dir"] == "s": hit = [ss[a]]
+        else:
+            if z - a < 1: a, z = max(0, a - 1), min(n - 1, z + (1 if a == 0 else 0))    # 和音の打は、最低2本
+            hit = ss[a:z + 1]
+        down = all_down or x["dir"] != "u"
+        if not down: hit = hit[::-1]
+        spread = ((tight * st.rng.uniform(0.8, 1.2)) if tight else max(4, min(32, x["spread"]))) / 1000 / spb
+        on_beat = x["slot"] % 4 == 0
+        base = st.rng.uniform(100, 108) if (on_beat and x["dir"] != "u") else st.rng.uniform(86, 94) if x["dir"] == "d" else st.rng.uniform(80, 90) if x["dir"] == "u" else st.rng.uniform(84, 92)
+        nxt = (ev[i + 1]["slot"] - x["slot"]) / 4 if i + 1 < len(ev) else (end - x["slot"]) / 4
+        for k_, (s, m) in enumerate(hit):
+            tt = t + (spread * k_ / max(1, len(hit) - 1) if len(hit) > 1 else 0); v = base - 1.5 * k_ + st.rng.uniform(-3, 3)
+            st._stop(s, tt - 0.005); st.ring[s] = (tt, m, int(max(40, min(120, v * st.bright))))
+        if x["len"] < nxt - 0.12:                                                    # 元の演奏で、次の打の前に音を止めていた（切って弾く）
+            for s, _ in hit: st._stop(s, t + max(0.12, x["len"]))
+        st.count["down" if down else "up"] += 1
