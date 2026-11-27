@@ -128,7 +128,7 @@ if not NOFIT:
     first, lastp = form[0][0], form[-1][0]
     def why_start(st):
         if "いきなり歌" in st and first not in SUNG: return f"最初の場面が「{first}」（歌がない）のに、歌から始める"
-        if "いきなり全員でサビ" in st and first in (STOP, "静かな場面", FAKE): return f"最初の場面が「{first}」なのに、全員のサビから始める"
+        if "いきなり全員でサビ" in st and not first.startswith("サビ"): return f"最初の場面が「{first}」なのに、全員のサビから始める"
         if "立ち上げ" in st and first in (UP, FAKE): return "始まり方も最初の場面も「立ち上げ」で、同じことが続く"
         if "いちばん静かな場面" in st and first in ("ドロップ", "サビ", "歌なしのフック"): return f"最初の場面が「{first}」（大きい）のに、いちばん静かな場面から始める"
         return None

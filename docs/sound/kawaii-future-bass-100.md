@@ -176,3 +176,12 @@ Kawaii future bass の「作り方・鳴らし方・重ね方」を 100 個、10
 7. Future bass の要素（808・スネアロール・3連・アルペジオ・フィルターと音量の動き）: https://futureaudioworkshop.com/?p=1763
 8. Wikipedia「Future bass」（Kawaii future bass の音色: チップ音・やわらかい矩形波・打楽器・きしむ音）: https://Wikipedia.com/wiki/Future_bass
 9. Kawaii EDM の2つのノリ（半分の速さ／4つ打ち）: https://www.melodigging.com/genre/kawaii-edm
+
+## KFB04「透過率100%」（2026-11-27）
+
+- 依頼: 空が透き通るような Kawaii future bass。ギターは見本の39番（crystal・コーラスなし）、ベースは見本の22番（fretlessBass）、FX は4種類（しずく・きらめき・逆回しのシンバル・ウインドチャイム）、テンポ130、物語仕立て。
+- 台本: `assets-src/ai-songs/_gen/kfb_04_sky.py`（イ長調・130小節・約4分3秒。形はサイコロ 2403 の骨組み。リズムは break と tresillo）。
+- 点数: v1 歌 7.45 / BGM 7.62 → v2 歌 7.55 / BGM 7.73。
+- v1→v2 で直したこと: ベースが目印の音にくらべて +20dB と、ギター（+18）やドラム（+12）より大きかった。区間ごとに採点すると「走る」7.17・「風」7.26 が低く、切り出しで試すと、ベースを 4dB 下げ、ピアノとパッドを上げると上がった。そこで gainDb 5→2、ベルのピアノ 0.04→0.055、パッド 0.05→0.065。
+- 分かったこと: fretlessBass は volume を変えても大きさがほとんど変わらない。gainDb で動かす。
+- 残っていること: 「パチパチ 30か所」の表示（場所は未特定）。耳では未確認。
