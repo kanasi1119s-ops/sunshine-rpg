@@ -12,11 +12,14 @@ DR = ("kick", "snare", "hihat", "tom", "crash", "ride", "openhat", "clap", "perc
 def group(p):
     r, i = p["role"], p["instrument"]
     if i in DR or p["notes"].startswith("g:"): return "ドラム"
+    if i in ("slap", "sub808"): return "ベース"
     if i == "bass": return "ベース"
     if "Lギター" in r: return "左ギター"
     if "Rギター" in r: return "右ギター"
     if "ギター" in r: return "旋律のギター"
     if "ピアノ" in r: return "ピアノ"
+    if "効果音（硬いキック）" in r or "手びょうし" in r or "指パッチン" in r or "グリッチ" in r: return "効果音の打楽器"
+    if "パッド" in r: return "パッド"
     return "そのほか"
 for p in js["parts"]:
     p["_g"] = group(p); p["notes"] = p["notes"] + ("." * 16 if p["notes"].startswith("g:") else f" R:{beats}")

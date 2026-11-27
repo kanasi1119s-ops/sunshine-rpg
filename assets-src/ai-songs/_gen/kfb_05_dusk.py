@@ -201,7 +201,7 @@ for b in range(S.nb):
     if n == "立ち上げ":                                                  # 針の音と上がっていく音だけ → 2小節めの最後を空けて、いきなり落とす
         fxh(b, 0, "vinyl", 4) if i == 0 else fxh(b, 0, "riser", 3)
         pad(b, 62 + 4 * i)
-        if i == 1: D.set(b, NO, "x.x.x.x.xxxxX...", NO)
+        # v2: ここにあったスネアの連打は消した（2026-11-27 人間「最初のドラムいらないかなー」）
     elif n == "夕暮れ":                                                  # 静か: アルペジオとパッドだけ → 9小節めからベースとドラム
         pad(b, 64); garp(b, i, quiet=True)
         if i == 0: star(b)
