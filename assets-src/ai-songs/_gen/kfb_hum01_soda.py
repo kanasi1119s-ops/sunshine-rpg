@@ -68,7 +68,7 @@ for _trs, _pn, _v in ((GL, -0.6, 0.19), (GR, 0.6, 0.17)):      # 大きさ: ベ�
     for _t in _trs: _t.inst = "guitar"; _t.spec.clear(); _t.spec.update(C39(_v, _pn))
 SL, SR = G2.Strummer(GL, S, 34), G2.Strummer(GR, S, 55); SL.gap = SR.gap = 0.0
 PF = {"type": "pluckfilter", "freq": 2000, "depth": 0.6, "rate": 30, "hold": 4}
-SAW = [S.track(f"広い和音{i + 1}", "lead", patch="kfbSupersawWide", volume=0.07, pan=(0, 0.25, -0.5, 0.5, -0.25)[i], reverb=0.2, duck=0.15, fx=[PF] + rack_supersaw(lp=4000, wide=0.5)) for i in range(5)]
+SAW = [S.track(f"広い和音{i + 1}", "lead", patch="fbChord", volume=0.07, pan=(0, 0.25, -0.5, 0.5, -0.25)[i], reverb=0.2, duck=0.15, fx=[{"type": "filter", "kind": "highpass", "freq": 180, "q": 0.7}, {"type": "filter", "kind": "lowpass", "freq": 6000, "q": 0.6}]) for i in range(5)]   # v4: スーパーソウをやめて fbChord に（2026-11-27、聞きくらべの2番を人間が選んだ）
 PAD = [S.track(f"やわらかいパッド{i + 1}", "pad", patch="surgePadPad2Mw", volume=0.06, pan=(-0.2, 0.2, 0)[i], reverb=0.3) for i in range(3)]
 EP = [S.track(f"ピアノ{i + 1}", "piano", volume=0.036, pan=(-0.25, 0, 0.25, 0.1)[i], reverb=0.2, sustain=0.9, fx=rack_piano()) for i in range(4)]
 ARP = S.track("シンセのかけ上がり（矩形波のプラック）", "lead", patch="kfbSquarePluck", volume=0.068, pan=0.2, reverb=0.2, fx=[{"type": "filter", "kind": "lowpass", "freq": 5500, "q": 0.6}, {"type": "pingpong", "beats": 0.75, "mix": 0.2, "feedback": 0.3}])
