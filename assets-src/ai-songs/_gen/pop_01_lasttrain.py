@@ -69,7 +69,7 @@ GSPB = lambda v, p: {**{k: x for k, x in rock_gtr_spec(v, p).items() if k != "gu
 GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **(GSPB(0.12, 0.6) if RV == "r3" else rock_gtr_spec(0.085, 0.6, tone="marshall-mid", drive=0.25 if RV == "r2" else 0.45))) for i in range(6)]
 C39 = lambda v, pn, **k: {"volume": v, "pan": pn, "amp": "crystal", "chorus": 0, "humanPitch": 0, "noScoop": True, **k}    # 見本の39番
 if GT == "c39":
-    for i_ in range(6): GL[i_].inst = GR[i_].inst = "guitar"; GL[i_].spec.clear(); GL[i_].spec.update(C39(0.1, -0.55)); GR[i_].spec.clear(); GR[i_].spec.update(C39(0.095, 0.55))
+    for i_ in range(6): GL[i_].inst = GR[i_].inst = "guitar"; GL[i_].spec.clear(); GL[i_].spec.update(C39(0.125, -0.55)); GR[i_].spec.clear(); GR[i_].spec.update(C39(0.152, 0.55))   # v7: 目印の音を入れて測り直した（tools/vt3/balance_check.py）。v6 のサビは ピアノ +17.5／左ギター +14.2／右ギター +10.5（目印を 0dB として）で、選んでもらったギターがピアノにうもれていた → ピアノを半分に（+12.7）、左を 1.25倍（+15.6）、右を 1.6倍（+13.7）
 elif GT != "cur":
     _sp = (lambda v, pn: rock_gtr_spec(v, pn)) if GT in ("tri", "tri5") else (lambda v, pn: rock_gtr_spec(v, pn, tone="marshall-mid", drive=0.5))
     for i_ in range(6): GL[i_].spec.clear(); GL[i_].spec.update(_sp(0.085, -0.6)); GR[i_].spec.clear(); GR[i_].spec.update(_sp(0.08, 0.6))
@@ -89,7 +89,7 @@ SL, SR = G2.Strummer(GL, S, 33), G2.Strummer(GR, S, 71); SL.gap = SR.gap = 0.0
 SOLOV = os.environ.get("SOLOV", "ph")                                             # まん中のソロ: hand＝手で書いた旋律／ph＝外から入れた「単音まじりの型」6つ（リズム・のばし方・上がり下がり・強さは型、音の高さはこの曲の和音と音階）
 LS = G2.Strummer([S.track(f"ソロのギター（型）{i + 1}弦め", "distGuitar", **{**lead_gtr_spec(0.2, 0.1), "gainDb": 10}) for i in range(6)], S, 9) if (SOLOV == "ph" or LEADV == "strings") else None
 if GT == "c39" and LS:
-    for t_ in LS.tr: t_.inst = "guitar"; t_.spec.clear(); t_.spec.update(C39(0.2, 0.1, reverb=0.15))
+    for t_ in LS.tr: t_.inst = "guitar"; t_.spec.clear(); t_.spec.update(C39(0.3, 0.1, reverb=0.15))    # v7: 旋律のギターは、前奏の最後で +13.0（ピアノ +12.9・左ギター +13.8 と同じでうもれる）→ 1.5倍
 SOLO_PH = ("ph-090", "ph-072", "ph-006", "ph-029", "ph-083", "ph-065"); _last = [None]
 GP = os.environ.get("GP", "p4")
 if GP != "cur": SL.tight = SR.tight = 5
@@ -228,8 +228,8 @@ def ring(b, both=True):
 _ls = [None]
 # ---- ピアノ（v6）: 右手＝和音4声、左手＝根音のオクターブ、旋律＝右手の単音。高い音がとがらないよう 6.5kHz から上を落とす ----
 PFX = [{"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6}]
-PR = [S.track(f"ピアノ右手{i + 1}", "piano", volume=0.085, pan=0.18, reverb=0.16, fx=PFX) for i in range(4)]
-PLH = [S.track(f"ピアノ左手{i + 1}", "piano", volume=0.1, pan=-0.12, reverb=0.12, fx=PFX) for i in range(2)]
+PR = [S.track(f"ピアノ右手{i + 1}", "piano", volume=0.04, pan=0.18, reverb=0.16, fx=PFX) for i in range(4)]
+PLH = [S.track(f"ピアノ左手{i + 1}", "piano", volume=0.055, pan=-0.12, reverb=0.12, fx=PFX) for i in range(2)]
 PM = S.track("ピアノの旋律", "piano", volume=0.2, pan=0.1, reverb=0.2, fx=PFX)
 _pv = [None]
 

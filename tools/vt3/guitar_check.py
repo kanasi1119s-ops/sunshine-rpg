@@ -21,8 +21,8 @@ def rms(t0, t1):
     i, j = max(0, int(t0 * sr)), max(1, int(t1 * sr)); return 20 * np.log10(max(1e-9, float(np.sqrt(np.mean(m[i:j] ** 2))))) if i < len(m) else -180
 e = np.array([1.0 if rms(i * bar / 8, (i + 1) * bar / 8) > -38 else 0.0 for i in range(nb * 8)])
 def miss(k):
-    aa, ee = a[max(0, k):len(a) + min(0, k)], e[max(0, -k):len(e) - max(0, k)]; n = min(len(aa), len(ee)); return float(np.sum(np.abs(aa[:n] - ee[:n])))
-k = min(range(0, 65), key=miss); shift = k / 8
+    aa, ee = a[max(0, k):len(a) + min(0, k)], e[max(0, -k):len(e) - max(0, k)]; n = min(len(aa), len(ee)); return float(np.sum(np.abs(aa[:n] - ee[:n])) + np.sum(a[:k]) + np.sum(e[n:]))   # 切りすてた分に音符や音があれば、それも合わない数に入れる
+k = min(range(0, min(len(a) - 8, 400)), key=miss); shift = k / 8                    # 頭の弾かない小節が長い時（ソロのギターなど）も合わせられるように、50小節まで見る
 print(f"■ {key}: 音符 {sum(cnt)}個。書き出しのずれ {shift:g}小節（音が早い分をもどして合わせた。合わない8分 {int(miss(k))}/{int(a.sum())}）。全体 {rms(0, len(m) / sr):.1f}dB")
 i = 0; bad = []; late = []
 for s in (secs or [{"name": "全体", "bars": nb}]):
