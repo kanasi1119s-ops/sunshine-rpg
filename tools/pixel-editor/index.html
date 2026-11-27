@@ -1298,8 +1298,11 @@
     });
   }
 
-  function drawAll() {
-    fitAllCels();
+  // 2026-11-27: キャンバス・プレビュー・書き出しの文字・フレームの一覧・情報は、次に画面を描くときにまとめて1回だけ描き直す
+  //   （フレームが数百あると、1筆ごとに一覧を作り直して、とても遅くなっていたため）
+  var restPending = false;
+  function drawRest() {
+    restPending = false;
     drawGrid();
     drawPreview($("previewOverworld"), 3);
     drawPreview($("previewDialogue"), 6);
@@ -1307,6 +1310,10 @@
     updateExport();
     if (state.playing) updateTimelineActive(); else if (!drag.active) renderTimeline();
     updateInfo();
+  }
+  function drawAll() {
+    fitAllCels();
+    if (!restPending) { restPending = true; requestAnimationFrame(drawRest); }
   }
 
   /* ---------- 履歴（元に戻す／やり直す）: 作品まるごと（大きさ・色・レイヤー・フレーム） ---------- */
