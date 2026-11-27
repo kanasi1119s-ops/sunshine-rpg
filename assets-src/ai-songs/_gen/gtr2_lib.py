@@ -346,10 +346,12 @@ def play(st, b, pat, shape, shape2=None, human=1.0, tight=None, single=True, all
         for s in list(st.ring): st._stop(s, S.bar_beat(st.last + 1))
     st.last = b + (1 if half is None else 0); cur = None
     if half is not None: sk = [{**x, "slot": x["slot"] - 16 * half} for x in sk if x["slot"] // 16 == half]
-    ev = [x for x in sk if single or x["dir"] != "s"]; end = 32 if half is None else 16
+    ev = [x for x in sk if single or x["dir"] != "s"]; end = 32 if half is None else 16; _pt = None
     for i, x in enumerate(ev):
         bar = x["slot"] // 16; sh = shape if bar == 0 or shape2 is None else shape2; t = S.bar_beat(b) + x["slot"] / 4 + max(-0.025, min(0.025, x["off"] / 1000 * human)) / spb
         t = max(S.bar_beat(b), t)
+        if _pt is not None and t - _pt < 0.12: continue                                # 前の打とほぼ同時（元の演奏の、同じ打の取りこぼし）は弾かない。同じ弦で音が重ならないように
+        _pt = t
         if cur is not sh:                                                            # 和音が変わる: 形に無い弦と、音が変わる弦を止める
             p = dict(sh)
             for s in list(st.ring):
