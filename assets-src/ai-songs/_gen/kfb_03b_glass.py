@@ -57,6 +57,12 @@ LEAD = S.track("リードギター", "distGuitar", **lead_gtr_spec(0.14, 0.1))
 #   浅い歪みは同じ音量設定でも約 13dB 小さく出ると分かったので、1 の音量を上げた（0.095 → 0.24）。3 はサビとドロップ、1 はそのほかのバンドの場面。
 GL3 = [S.track(f"Lギター（かき鳴らし）{i + 1}弦め", "distGuitar", **{k: v for k, v in rock_gtr_spec(0.125, -0.6).items() if k != "guitarTone"}) for i in range(6)]      # 音色プリセットなし（内蔵の歪み）＋録音ギター。聞きくらべで合っていた音
 GR3 = [S.track(f"Rギター（かき鳴らし）{i + 1}弦め", "distGuitar", **{k: v for k, v in rock_gtr_spec(0.12, 0.6).items() if k != "guitarTone"}) for i in range(6)]
+# v10（2026-11-27）人間「1と3も39で」→ ギターを全部、見本の39番（instrument guitar・amp crystal＝透き通るクリーン・コーラスなし）に。録音のギター（diGuitar）は掛けない（掛けると高い音が減って39番の音でなくなる）。
+#   大きさは、前の版のギターと同じ位置になるよう、目印の音で測って合わせた（tools/vt3/balance_check.py）
+import os as _os
+C39 = lambda v, pn, **k: {"volume": v, "pan": pn, "amp": "crystal", "chorus": 0, "humanPitch": 0, "noScoop": True, **k}
+for _trs, _pn, _v in ((GL, -0.6, 0.158), (GR, 0.6, 0.19), (GL3, -0.6, 0.158), (GR3, 0.6, 0.19), ([LEAD], 0.1, 0.2)):      # 大きさ: ベースとの差が前の版と同じになるように（0.125 のままだと、前の版より 2〜4dB 小さかった）
+    for _t in _trs: _t.inst = "guitar"; _t.spec.clear(); _t.spec.update(C39(_v, _pn))
 SL, SR = G2.Strummer(GL, S, 30), G2.Strummer(GR, S, 51); SL3, SR3 = G2.Strummer(GL3, S, 31), G2.Strummer(GR3, S, 52)
 # v5（2026-11-24）: 聞きくらべを聞いた人間「音が切れて和音がにごるかな」。
 #   切れる → 和音が変わる時に弦を少し前で止めていたのをやめ（gap 0）、音の消え方を長く（release 0.5 → 0.9）。
@@ -382,7 +388,7 @@ QUIET = {"見るだけ": 1.2, "言いわけ": 1.2, "目が合う": 1.3, "立ち�
 #   ほかに録音ギター（DI）を使う音色のパートが1つでもあれば曲全体を録音ギターで鳴らし、無ければ合成のギターで鳴らす。
 #   人間が「合っている」と言った聞きくらべは録音ギターで鳴っていて、v6・v7 は浅い歪みのパートを消したせいで合成のギター（1〜6kHz ばかりの細い音）に変わっていた（点数 6.5）。
 #   → 曲に「録音ギター（emily）を使う」と書いて、どの場面でも同じ音で鳴るようにする。
-js["diGuitar"] = "emily"; js["guitarWobble"] = False
+js["guitarWobble"] = False                                                       # 39番のギターには diGuitar を掛けない
 for p_ in js["parts"]:
     g = list(p_.get("barGain", [1] * S.nb)) + [1] * S.nb
     for name, k in QUIET.items():

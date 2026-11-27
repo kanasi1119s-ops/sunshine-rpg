@@ -60,6 +60,12 @@ SUB = S.track("シンセの低いベース", "bass", patch="kfbSub", volume=0.06
 GSP = lambda v, p: {**{k: x for k, x in rock_gtr_spec(v, p).items() if k != "guitarTone"}, "release": 0.9}
 GL = [S.track(f"Lギター{i + 1}弦め", "distGuitar", **GSP(0.125, -0.6)) for i in range(6)]
 GR = [S.track(f"Rギター{i + 1}弦め", "distGuitar", **GSP(0.12, 0.6)) for i in range(6)]
+# v3（2026-11-27）人間「1と3も39で」→ ギターを全部、見本の39番（instrument guitar・amp crystal＝透き通るクリーン・コーラスなし）に。録音のギター（diGuitar）は掛けない（掛けると高い音が減って39番の音でなくなる）。
+#   大きさは、前の版のギターと同じ位置になるよう、目印の音で測って合わせた（tools/vt3/balance_check.py）
+import os as _os
+C39 = lambda v, pn, **k: {"volume": v, "pan": pn, "amp": "crystal", "chorus": 0, "humanPitch": 0, "noScoop": True, **k}
+for _trs, _pn, _v in ((GL, -0.6, 0.19), (GR, 0.6, 0.17)):      # 大きさ: ベースとの差が前の版と同じになるように（0.125 のままだと、前の版より 2〜4dB 小さかった）
+    for _t in _trs: _t.inst = "guitar"; _t.spec.clear(); _t.spec.update(C39(_v, _pn))
 SL, SR = G2.Strummer(GL, S, 34), G2.Strummer(GR, S, 55); SL.gap = SR.gap = 0.0
 PF = {"type": "pluckfilter", "freq": 2000, "depth": 0.6, "rate": 30, "hold": 4}
 SAW = [S.track(f"広い和音{i + 1}", "lead", patch="kfbSupersawWide", volume=0.07, pan=(0, 0.25, -0.5, 0.5, -0.25)[i], reverb=0.2, duck=0.15, fx=[PF] + rack_supersaw(lp=4000, wide=0.5)) for i in range(5)]
@@ -319,7 +325,7 @@ if VOCAL:                                                                       
             for name in ("サビ1", "サビ2", "サビ3", "サビ4", "サビ別"):
                 for b in S.sc(name): g[b] = round(g[b] * 0.8, 4)
             p_["barGain"] = g[:S.nb]
-js["diGuitar"] = "emily"; js["guitarWobble"] = False
+js["guitarWobble"] = False                                                       # 39番のギターには diGuitar を掛けない
 GM.apply(js); js["swing16"] = 0.5                                                   # はね: 16分のウラを 0.5÷12 拍（150 で約17ミリ秒）後ろへ。ノリ: あと乗り（スネア・ベースを少し後ろ）。キックとベースは同じだけずらす
 if VOCAL:
     n0 = len(js["parts"]); js["parts"] = [p_ for p_ in js["parts"] if p_.get("patch") != "kfbSineLead"]; print("  歌をなぞるリードを消した:", n0 - len(js["parts"]), "パート")
