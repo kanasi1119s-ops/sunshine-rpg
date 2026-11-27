@@ -1,4 +1,4 @@
-# KFB 05「閉店五分前」Five Minutes to Closing（仮）— Kawaii future bass（ボカロ）。4分の4・120・ト長調（短調寄りの和音）。122小節・約4分。
+# KFB 05「夕方の背伸び」Tiptoe at Dusk（仮）— Kawaii future bass（ボカロ）。4分の4・120・ト長調（短調寄りの和音）。122小節・約4分。
 #
 # 2026-11-27 人間「次秋の夕暮れの寂しさを感じながら恋する物語。kawaiifutureベースで、ベースは18ギターは11で、FXは種類入れて。テンポは120で。ギターソロ、アルペジオ、入れてください」
 #   ギター＝見本の11番（distGuitar・guitarTone electro-rock・ampGate 0.5・diGuitar emily）／ベース＝見本の18番（--bass finger ＋ bassSplit アンプ 歪み 0.3）
@@ -9,13 +9,13 @@
 # 物語: 日が短くなった秋の夕方。商店街のパン屋で働く人に恋をしている。閉店の6時に間に合うよう早足で歩くと、長くのびた影だけが先に店先へ着く。自分は角の手前で息を止めるだけ。
 #   鏡の前で練習した言葉は、店の明かりの下で口が閉じる。最後の日、日が落ちる前に踏み出して、影より先に自分の足で着き、「こんばんは」だけが言えた。
 # この曲だけのもの: 落ち葉のように「下りながら遅くなる」ガラスのプラック（KFB04 のかけ上がりの逆）／サビは vi → ♭VImaj7 → V（Em7 → E♭maj7 → D）で、最後は V/vi で解決しないまま止まる／一番星＝ギターのハーモニクス。
-# 歌詞: 曲名の言葉（へいてん・ごふんまえ）は歌わない。声: クリア1種類。歌をなぞるリードは入れない。オーケストラの楽器は使わない。スーパーソウは使わない。
+# 歌詞: 曲名の言葉（ゆうがた・せのび）は歌わない。声: クリア1種類。歌をなぞるリードは入れない。オーケストラの楽器は使わない。スーパーソウは使わない。
 from vocalo_lib import *
 import gtr2_lib as G2
 from groove_lib import Groove
 import re as _re
 
-S = Song("35", "dusk", "閉店五分前（仮）", "Five Minutes to Closing", 120, 4, "G", "major", "カワイイ・フューチャーベース（ボカロ）")
+S = Song("35", "dusk", "夕方の背伸び（仮）", "Tiptoe at Dusk", 120, 4, "G", "major", "カワイイ・フューチャーベース（ボカロ）")
 S.kit = "crocell-punch"; S.flags = S.flags + " --space room --space-wet 0.08 --bass finger"
 KA = Key("G", "major")
 CX = ["Em7", "Ebmaj7", "D", "Bm7", "Cmaj7", "Em7", "Ebmaj7", "D", "F", "Cmaj7", "Am7", "B7"]          # サビ（5小節の句×2＋2小節）: vi → ♭VImaj7 → V → iii → IV ／ … → ♭VII → IV ／ ii → V/vi（解決しない）
