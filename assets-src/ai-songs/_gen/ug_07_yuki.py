@@ -51,6 +51,7 @@ FX = lambda name, v, pn=0.0, rv=0.08: S.track(name, "guitar", patch="kawaiiFx", 
 FK, FSN, FCL, FH, FOH = FX("効果音（キック）", 0.13), FX("効果音（スネア）", 0.08, 0.04), FX("効果音（手びょうし）", 0.055, -0.06), FX("効果音（ハイハット）", 0.035, 0.22), FX("効果音（開いたハイハット）", 0.03, -0.22)
 DJ = FX("DJ（スクラッチ・テープストップ・巻きもどし）", 0.06, 0.0, 0.05)
 BELL = FX("そりの鈴", 0.04, 0.3, 0.2); SNOW = FX("雪のきらめき", 0.05, -0.25, 0.4); VIN = FX("レコードのパチパチ", 0.04, 0.0, 0.0)
+V = Voice(S, vol=0.17 if VOCAL else 0.0, delay=0.2 if VOCAL else 0.0, bright=0.0, patch="kfbSineLead", low=False); LY = Lyrics(S)
 FXT = S.track("効果音（上がる音・下がる音・逆回しのシンバル・当たる音）", "guitar", patch="kawaiiFx", volume=0.06, pan=0.1, reverb=0.3, modulate=False)
 N = lambda m: nm(m); FXH = {}
 FXK = {"riser": "F#4", "down": "G4", "rev": "G#4", "impact": "G5", "subdrop": "G#5", "spark": "D4"}
@@ -175,7 +176,44 @@ NEW = ["R:1 5:0.5 7:0.5 2':2", "1':1 7:1 R:2", "R:1 3:0.5 5:0.5 1':2",
 AL = ["R:2 3':1 5':1", "7':4", "R:2 1':1 3':1", "5':4", "R:2 3':1 5':1", "b6':4", "R:2 1':1 3':1", "2':4"]
 B2L = ["R:1 3':1 5':2", "b6':4", "R:1 3':1 2':2", "5:4", "R:1 1':1 3':2", "4':4", "R:1 3':1 2':2", "1':4"]
 
-duet("サビ別", SBE); duet("フック1", HOOK); duet("B1", B1L); duet("サビ", CHO); duet("新", NEW); duet("フック2", HOOK); duet("A", AL); duet("B2", B2L, both=True)
+# ---- 歌（2026-11-28 人間「この曲テトに歌わせて」）。VB_VOCAL=1 のときだけ。1＝G3（テトが歌いやすい G3〜D5）。歌の旋律をなぞる楽器は鳴らさない ----
+#   歌詞: 雪の夜、ふたりで歩く。曲名の言葉はそのまま使わない。言葉は少し比喩で（息がほどける・指切り・リボンをほどく など）
+VS = {
+ "サビ別": (["x-x-x-x-x-------", "..x-x-x-x-x-x---", "x-x-x-x-x-x-----", "x-x-x-x-----....", "x-x-x-x-x-x-----", "x-x-x-x-x-------", "..x-x-x-x-x-x---", "x-x-x-x-----...."],
+          ["3' 2' 1' 7 6", "1' 7 6 5 6 3", "6 1' 2' 1' 6 5", "5 6 5 4", "3' 2' 1' 7 6 5", "4 b6 1' 2' 1'", "3 5 7 1' 7 5", "5 6 7 5"],
+          ["ゆきがふる", "まちのあかり", "てぶくろごし", "ぬくもり", "しろいいきが", "ほどけてく", "きみのとなり", "うたうよ"]),
+ "B1": (["x-x-x-x-x-x-....", "x-x-x-x-x-......", "x-x-x-x-x-......", "x-x-x-x-x-......"],
+        ["3 5 1' 5 4 3", "2 3 5 3 2", "3 2 3 5 3", "5 6 1' 6 5"],
+        ["ねえきこえる", "すずのおと", "ゆきのおと", "きみのこえ"]),
+ "サビ": (["..x-x-x-x-x-x-x-", "x---------------", "..x-x-x-x-x-x---", "x-------x-------", "..x-x-x-x-x-x---", "x-------x-------", "..x-x-x-x-x-----", "x---------------"],
+         ["3 3 5 6 5 3 5", "b6", "5 5 3 2 3 5", "5 3", "1' 1' 7 6 7 1'", "2' 1'", "5 3 2 3 5", "1'"],
+         ["あしあとならべ", "て", "しろいみちを", "ゆく", "そらがひかる", "まで", "いつまでも", "ね"]),
+ "新": (["x-x-x-x-x-x-....", "x-x-x-x-x-......", "x-x-x-----......", "x-x-x-x-x-x-....", "x-x-x-x-x-x-....", "x-x-x-----......",
+        "x-x-x-x-x-x-....", "x-x-x-x-x-x-....", "x-x-x-----......", "x-x-x-x-x-x-....", "x-x-x-x-x-x-....", "x-x-x-----......"],
+       ["3 2 3 5 3 2", "3 5 6 5 3", "5 3 3", "4 b6 1' b6 4 5", "3 5 7 5 3 2", "5 3 3", "6 1' 2' 1' 6 5", "5 6 1' 6 5 4", "5 3 2", "3' 2' 1' 7 6 5", "3 5 6 5 3 5", "2 3 5"],
+       ["まどのそとで", "ろうそくが", "ゆれた", "ちいさなはこ", "あけるまえに", "わらう", "あかいりぼん", "きみのゆびが", "ほどく", "ゆきのおとが", "ふたりだけの", "よるに"]),
+ "A": (["........x-x-x-x-", "x---x-----------", "......x-x-x-x-x-", "x---------------", "......x-x-x-x-x-", "x-------x-------", "......x-x-x-x-x-", "x---------------"],
+       ["3 5 6 5", "3 2", "3 5 6 5 3", "6", "5 3 5 6 5", "b6 4", "6 1' 2' 1' 6", "5"],
+       ["ことしの", "ゆき", "きみがいる", "の", "ゆびきりを", "した", "あしたまで", "ね"]),
+ "B2": (["..x-x-x-x-x-x-x-", "x---------------", "..x-x-x-x-x-x---", "x-------x-------", "..x-x-x-x-x-x---", "x-------x-------"],
+        ["3 3 5 6 5 3 5", "b6", "5 5 3 2 3 5", "5 3", "1' 1' 7 6 7 1'", "2' 1'"],
+        ["おなじそらをみ", "て", "あるいてゆく", "よる", "ゆきがとける", "まで"]),
+}
+
+
+def put(name):
+    pats, degs, words = VS[name]
+    lines, text = song_lines(list(zip(pats, degs, words))); bars = S.sc(name); ml = [KG.mel(x, oct=3) for x in lines]
+    for b, m in zip(bars, ml):
+        if m.replace("R:4", "").strip(): V.bar(b, m)
+    LY.flow(bars[:len(ml)], ml, text, name)
+
+
+if VOCAL:
+    for nm_ in VS: put(nm_)
+    duet("フック1", HOOK); duet("フック2", HOOK)                                     # フックは楽器だけ（歌はない）
+else:
+    duet("サビ別", SBE); duet("フック1", HOOK); duet("B1", B1L); duet("サビ", CHO); duet("新", NEW); duet("フック2", HOOK); duet("A", AL); duet("B2", B2L, both=True)
 
 for b in range(S.nb):
     n, i, L, kind = S.scene_of(b); last = i == L - 1
@@ -226,11 +264,23 @@ for b, hits in FXH.items():
 S.fade_out = 0
 S.desc = ("仮: ヒップホップ × Kawaii future bass のインスト（110・ト長調・約2分55秒）。雪の降るクリスマスの夜、「あなた」（エレピ）と「私」（夢のようなリード）が1小節ずつかけ合いながら歩き、"
           "最後のサビでだけ3度で重なる。DJ のスクラッチ・巻きもどし・テープストップ、そりの鈴と雪のきらめき。いきなり緩急のあるサビから始まり、テープストップで止まって終わる。自作")
-V = Voice(S, vol=0.0, delay=0.0, bright=0.0, patch="kfbSineLead", low=False); LY = Lyrics(S)
 finish(S, LY, V, 0, flat=True)
 
 from vt3x_lib import *
 path = sys.argv[1]
-js = load(path); js["parts"] = [p_ for p_ in js["parts"] if p_.get("patch") != "kfbSineLead" and p_.get("notes", "").replace("R:", "").strip()]
+if VOCAL:
+    backing(path, 0.9)
+    remark(path, S, std_mark(("chorus",)))
+    remark(path, S, lambda x: x["mark"].replace("!", "").replace("?", ""))
+    vocal_polish(path, S, {"verse": 8, "bridge": 6, "chorus": 14, "outro": 10}, scoop=0.06, slash=0.25, vib_min_beats=1.5, vib_start=0.45, auto=0.6, breaths=0.0)
+    harmony(path, S, [("B2", 0, None, KG)], vol=0.25)                                 # 最後の場面だけ、ふたりの声（下の3度）が重なる
+    voice_by_scene(path, S, {}, default="cute")                                        # 1曲1種類の声: キュート
+    sing_ends(path, S, human=0.3)
+    js = load(path)
+    for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.0
+    save(path, js)
+js = load(path)
+keep = (lambda p_: p_.get("patch") != "kfbSineLead") if not VOCAL else (lambda p_: True)
+js["parts"] = [p_ for p_ in js["parts"] if keep(p_) and p_.get("notes", "").replace("R:", "").strip()]
 js["grooveFeel"] = "laidback"; js["human"] = 0.35; js["swing16"] = 0.62
 save(path, js)
