@@ -9,6 +9,9 @@
 #   2026-11-11 追加（人間「ブルーアーカイブで使われてそうなの追加して」＝学園もののゲームに多い、かわいい日常の曲と、激しい電子の戦いの曲の音）:
 #           F#5 ハードなキック（歪ませた長い尾）  G5 インパクト（ドーン）  G#5 サブドロップ（低い音が落ちる）  A5 レーザー（ピュン）
 #           A#5 レコードのパチパチ（3秒）  B5 タンバリン  C6 シェイカー  C#6 ウッドブロック（高い）  D6 ウッドブロック（低い）  D#6 グリッチ（細かく刻む）
+#   2026-11-28 追加（人間「キーボード、シンセ、DJ、FX」「雪とクリスマスとあなたと私」）。DJ の音と冬の音:
+#           E6 スクラッチ（前・後ろの2回こする「ベイビー」）  F6 スクラッチ（短く3回「チャープ」）  F#6 テープストップ（回転が止まって音が下がる）
+#           G6 巻きもどし（逆回しで速く戻る）  G#6 そりの鈴（じゃらん）  A6 雪のきらめき（やわらかく高い粒・3秒）
 import os, sys, subprocess
 import numpy as np
 import soundfile as sf
@@ -160,12 +163,63 @@ def glitch(side):                 # グリッチ: 同じ短い音を、だんだ
     return x
 
 
+def _src(side):
+    """スクラッチでこする元の音: 和音のノコギリ波に、声のような山（formant）をつけた短い「アッ」"""
+    t = t_(0.6); x = sum(np.sign(np.sin(2 * np.pi * f * t)) * 0.3 for f in (220, 277, 330)) + 0.3 * noise(len(t))
+    x = bp(x, 600, 1400) * 0.7 + bp(x, 2200, 3200) * 0.4
+    return x * np.minimum(1, t / 0.01) * np.exp(-t / 0.5)
+
+
+def _scratch(strokes, side):
+    """レコードを手で動かす: 速さ v(t) を前・後ろに振り、元の音のその位置を読む（＋こすれるノイズ）"""
+    src = _src(side); T = sum(d for d, _ in strokes); t = t_(T); n = len(t); v = np.zeros(n); pos0 = 0
+    for d, amp in strokes:
+        L = int(d * SR); seg = np.sin(np.pi * np.arange(L) / L); v[pos0:pos0 + L] = amp * seg; pos0 += L
+    pos = np.clip(np.cumsum(v) / SR * SR * 0.35 + 0.02 * SR, 0, len(src) - 2)
+    i0 = pos.astype(int); fr = pos - i0; y = src[i0] * (1 - fr) + src[i0 + 1] * fr
+    hiss = bp(noise(n), 1500, 7000) * np.abs(v) * 0.08
+    return (y * np.minimum(1, np.abs(v) * 1.5) + hiss) * (1 - np.exp(-t / 0.003))
+
+
+def scratch_baby(side): return _scratch([(0.12, 1.0), (0.12, -1.0), (0.1, 1.2), (0.14, -0.9)], side)
+def scratch_chirp(side): return _scratch([(0.06, 1.6), (0.04, 0.0), (0.06, 1.6), (0.04, 0.0), (0.08, 1.8)], side)
+
+
+def tapestop(side):              # テープストップ: 回転がだんだん遅くなり、音が下がって止まる
+    t = t_(0.9); src = _src(side); spd = np.maximum(0, 1 - t / 0.85) ** 1.5
+    pos = np.clip(np.cumsum(spd) * 0.7, 0, len(src) - 2); i0 = pos.astype(int); fr = pos - i0
+    return (src[i0] * (1 - fr) + src[i0 + 1] * fr) * np.minimum(1, spd * 3)
+
+
+def rewind(side):                # 巻きもどし: 逆向きに速く、細かくちらつく
+    t = t_(0.9); n = len(t); x = bp(noise(n), 800, 6000) * (0.4 + 0.6 * (np.sin(2 * np.pi * (14 + 30 * t / 0.9) * t) > 0))
+    return (x * 0.5 + 0.5 * sweep(300, 2600, t, 1.4) * np.sin(2 * np.pi * 22 * t) ** 2) * np.minimum(1, t / 0.05) * np.minimum(1, (0.9 - t) / 0.08)
+
+
+def sleigh(side):                # そりの鈴: 高い金属の粒を何度か「じゃらん」
+    t = t_(0.7); n = len(t); x = np.zeros(n)
+    for k in range(5):
+        s0 = int((0.02 + 0.07 * k + rng.uniform(0, 0.012)) * SR); L = int(0.35 * SR); tt = np.arange(min(L, n - s0)) / SR
+        b = sum(np.sin(2 * np.pi * f * tt + rng.uniform(0, 6)) for f in (3100, 4270, 5650, 7020)) * np.exp(-tt / 0.07) * (0.9 ** k)
+        x[s0:s0 + len(tt)] += b + hp(noise(len(tt)), 6000) * np.exp(-tt / 0.02) * 0.6
+    return x
+
+
+def snowfall(side):              # 雪のきらめき: やわらかく高い粒が、ぽつぽつ落ちる
+    t = t_(3.0); n = len(t); x = np.zeros(n)
+    for _i in range(40):
+        s0 = int(rng.uniform(0, 2.7) * SR); f = rng.choice([1568, 1760, 2093, 2349, 2637, 3136]) * (1 + 0.003 * side); L = int(0.25 * SR); tt = np.arange(L) / SR
+        x[s0:s0 + L] += np.sin(2 * np.pi * f * tt) * np.exp(-tt / 0.08) * rng.uniform(0.3, 1.0)
+    return x + lp(bp(noise(n), 3000, 9000), 8000) * 0.02
+
+
 SOUNDS = [(60, "bubble", bubble), (61, "drop", drop), (62, "sparkle-up", sparkle(True)), (63, "sparkle-down", sparkle(False)), (64, "squeak", squeak),
           (65, "boing", boing), (66, "riser", riser), (67, "downer", downer), (68, "revcym", revcym),
           (69, "kick", kick), (70, "snare", snare), (71, "clap", clap), (72, "snap", snap), (73, "hat-closed", hat_c), (74, "hat-open", hat_o),
           (75, "rim", rim), (76, "tom-hi", tom(330)), (77, "tom-lo", tom(170)),
           (78, "hardkick", hardkick), (79, "impact", impact), (80, "subdrop", subdrop), (81, "laser", laser), (82, "vinyl", vinyl), (83, "tamb", tamb),
-          (84, "shaker", shaker), (85, "wood-hi", wood(1250)), (86, "wood-lo", wood(820)), (87, "glitch", glitch)]
+          (84, "shaker", shaker), (85, "wood-hi", wood(1250)), (86, "wood-lo", wood(820)), (87, "glitch", glitch),
+          (88, "scratch-baby", scratch_baby), (89, "scratch-chirp", scratch_chirp), (90, "tapestop", tapestop), (91, "rewind", rewind), (92, "sleigh", sleigh), (93, "snowfall", snowfall)]
 lines = []; longest = 0
 for key, name, fn in SOUNDS:
     x = stereo(fn); x -= x.mean(0)
