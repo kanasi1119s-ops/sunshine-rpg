@@ -147,6 +147,27 @@ def trade(b, k):
     _ch(KB, b, E, 64, 4, short=0.25); one(PLK, b, P, 76, k); one(MB, b, M, 84, k + 1)
 
 
+def fast(b, k=0, half=False):
+    """v2（人間「どこかで交互の高速刻みを入れて」）: 32分（1拍に8つ）で、エレピ → プラック → オルゴール → リード を1音ずつ回す。
+    和音の音を上へ下へ。half なら前半2拍だけ（後半は休んで間）"""
+    t = sorted(voice(S.chords[b], 72, 4)); seq = t + [x + 12 for x in t]; seq = seq + seq[::-1]
+    lanes = [KM, PLK, MB, LEAD]; outs = [[] for _ in lanes]; n = 16 if half else 32
+    for j in range(32):
+        for li in range(4):
+            if j < n and j % 4 == li: outs[li].append(f"{N(seq[(j + k) % len(seq)] + (12 if li == 2 else 0))}:0.125")
+            else: outs[li].append("R:0.125")
+    for tr, o in zip(lanes, outs):
+        # となりの休みをまとめる
+        merged = []; acc = 0.0
+        for x in o:
+            if x.startswith("R:"): acc += 0.125
+            else:
+                if acc: merged.append(f"R:{acc:g}"); acc = 0.0
+                merged.append(x)
+        if acc: merged.append(f"R:{acc:g}")
+        tr.bar(b, " ".join(merged))
+
+
 DARE = "R:2 5:0.5 1':1.5"                                                             # 「だれ？」の動機: 短い音 → 4度上の長い音（語尾が上がる）
 def dare(tr, b, up=1): tr.bar(b, KA.mel(DARE, oct=3 + up))
 
@@ -203,7 +224,9 @@ for b in range(S.nb):
         hop(b, i, sparse=n != "早口1"); bass(b, BK[i % 4]); trade(b, i)
         if last: fxh(b, 0, "riser", 4)
     elif n in ("ソロ1", "ソロ3"):
-        hop(b, i, clap=True); bass(b, BK[i % 4]); keys(b, i); ct(KM, b, SOLO[i % 4], 74)
+        hop(b, i, clap=True); bass(b, BK[i % 4]); keys(b, i)
+        if n == "ソロ3" and i >= 4: fast(b, i, half=i % 2 == 0)                    # ソロ3の後半も交互の高速刻み
+        else: ct(KM, b, SOLO[i % 4], 74)
         if last: fxh(b, 0, "rev", 4)
     elif n == "ソロ2":                                                   # シンセ（リード）とエレピのかけ合い: 1小節ずつ交代
         hop(b, i, clap=True); bass(b, BK[i % 4]); saw(b, "x.......x.......", short=1.0)
@@ -215,7 +238,7 @@ for b in range(S.nb):
         SWL.bar(b, f"{N(low(S.chords[b], 'E3') + 12)}:4"); keys(b, i, pat="x.........x.....")
         if last: fxh(b, 0, "riser", 4)
     elif n == "ドロップ":
-        hop(b, i, clap=True); bass(b, "r.rr.rr.r.rr.R.R"); saw(b, ("xxxxxxxx........", "x..x..x...x..x..")[i % 2], short=0.25); one(PLK, b, "x.x.x.x.x.x.x.x.", 76, i)
+        hop(b, i, clap=True); bass(b, "r.rr.rr.r.rr.R.R"); saw(b, ("x...............", "x.......x.......")[i % 2], short=0.25); fast(b, i, half=i % 2 == 1)   # 交互の高速刻み
         if i == 0: fxh(b, 0, "subdrop", 4)
         if last: fxh(b, 0, "down", 4)
     elif n == "静か":                                                    # エレピとオルゴールだけ
