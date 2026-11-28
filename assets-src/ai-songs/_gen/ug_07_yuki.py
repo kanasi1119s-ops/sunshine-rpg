@@ -40,7 +40,8 @@ S.keep_old_synth = True; S.no_depth = True; S.keepers = {}
 EPC = [S.track(f"エレピ（和音）{i + 1}", "keys", patch="kfbGlassEp", volume=0.1, pan=(-0.22, 0.0, 0.18, -0.08)[i], reverb=0.18,
                fx=[{"type": "filter", "kind": "lowpass", "freq": 6000, "q": 0.6}]) for i in range(4)]
 YOU = S.track("エレピ（あなたの旋律）", "keys", patch="kfbGlassEp", volume=0.22, pan=-0.15, reverb=0.2, fx=[{"type": "filter", "kind": "lowpass", "freq": 6000, "q": 0.6}])
-ME = S.track("夢のようなリード（私の旋律）", "lead", patch="kfbDreamLead", volume=0.13, mono=True, pan=0.15, reverb=0.28, fx=[{"type": "filter", "kind": "lowpass", "freq": 4500, "q": 0.6}, {"type": "delay", "beats": 0.75, "mix": 0.14, "feedback": 0.28}])
+ME = S.track("電子のサックス（私の旋律）", "lead", patch="kfbFutureSax",  # v7（人間「まだヒョイある」）: kfbDreamLead は音の頭が下から持ち上がる（測って確かめた）ので替えた
+           volume=0.13, mono=True, pan=0.15, reverb=0.28, fx=[{"type": "filter", "kind": "lowpass", "freq": 4500, "q": 0.6}, {"type": "delay", "beats": 0.75, "mix": 0.14, "feedback": 0.28}])
 PNO = S.track("ピアノ（低い和音）", "piano", volume=0.12, pan=-0.05, reverb=0.16)
 MB = S.track("オルゴール（雪）", "keys", patch="kfbMusicBox", volume=0.05, pan=0.3, reverb=0.35, fx=[{"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6}])
 SUB = S.track("シンセのベース（低い正弦波）", "bass", patch="kfbSub", volume=0.21, pan=0, gainDb=-5)
