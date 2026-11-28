@@ -72,7 +72,7 @@ def grid(tr, b, pat, key):
 
 def dj(b, at, kind, L=1.0):
     """DJ の音を at 拍めから（L 拍）"""
-    if kind in ("baby", "chirp"):  # v4（人間「ヒョイヒョイ聞こえる。これいらない」）: スクラッチ2種は鳴らさない
+    if kind in ("baby", "chirp", "rewind"):  # v4: スクラッチ2種をなくす／v6（人間「まだヒョイあるぞ、わりと序盤から」）: 上がっていく巻きもどしもなくす
         return
     out = ([f"R:{at:g}"] if at else []) + [f"{DJK[kind]}:{L:g}"] + ([f"R:{4 - at - L:g}"] if 4 - at - L > 1e-6 else [])
     DJ.bar(b, " ".join(out))
