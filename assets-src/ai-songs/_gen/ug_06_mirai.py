@@ -5,7 +5,7 @@
 #   コンセプトは挑戦する先に未来が待っている。テンポ170」「手数多めの部分や少なめの部分あり」
 #   楽器: キーボード（ピアノ・オルゴール）／シンセ（低い正弦波のベース・スーパーソウ・ふくらむスーパーソウ・矩形波のリード・ベル・矩形波のプラック）／効果音（kawaiiFx）。
 #   v4: 重ね3（グロッケン）は、サビ3だけに（ほかで重ねると点が 6.9 に下がった）。
-#   シンセの重ねがけ: 旋律を「矩形波のリード＋ピアノ＋1オクターブ上の小さなグロッケン」で重ね、場面が進むほど重ねる数を増やす（layer 1〜3）。
+#   シンセの重ねがけ: 旋律を「声のようなリード＋ピアノ＋1オクターブ上の小さなグロッケン」で重ね、場面が進むほど重ねる数を増やす（layer 1〜3）。
 #   kfbSawStab は使わない。歌の指定がないのでインスト。
 # 形: くじ（tools/vt3/form_dice.py --skeleton 8417 215 170 --min-chorus 3 --not-start ベース/ピアノ/静か/ドラム/フック --not-groove tresillo/twobeat）。
 #   始まり＝最後のサビの旋律を別の楽器（オルゴールとピアノ）で先に聞かせる／終わり＝全員で1打して止まる／リズム＝ブレイクビート（疾走）・あと乗りのハーフ（ゆっくり）
@@ -57,10 +57,11 @@ SUB = S.track("シンセのベース（低い正弦波）", "bass", patch="kfbSu
 SAW = [S.track(f"スーパーソウの和音{i + 1}", "pad", patch="kfbSupersaw", volume=0.065, pan=(-0.4, 0.4, -0.15, 0.15)[i], reverb=0.2, duck=0.4,
                fx=[{"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6}]) for i in range(4)]
 SWL = S.track("ふくらむスーパーソウ", "pad", patch="kfbSupersawSwell", volume=0.06, pan=0, reverb=0.35, fx=[{"type": "filter", "kind": "lowpass", "freq": 7000, "q": 0.6}])
-LEAD = S.track("矩形波のリード（重ね1）", "lead", patch="kfbSquareLead", volume=0.1, mono=True, pan=0.05, reverb=0.24, fx=[{"type": "filter", "kind": "lowpass", "freq": 3800, "q": 0.6}, {"type": "delay", "beats": 0.75, "mix": 0.12, "feedback": 0.25}])
+# v6（人間「このピコ系の音別のにしよう」）: 矩形波のリードとプラックをやめ、声のようなリードと、やわらかいデジタルのプラックに
+LEAD = S.track("声のようなリード（重ね1）", "lead", patch="kfbFormantLead", volume=0.13, mono=True, pan=0.05, reverb=0.24, fx=[{"type": "filter", "kind": "lowpass", "freq": 3800, "q": 0.6}, {"type": "delay", "beats": 0.75, "mix": 0.12, "feedback": 0.25}])
 BEL = S.track("グロッケン（重ね3）", "keys", patch="kfbGlocken", volume=0.025, pan=-0.2, reverb=0.3, fx=[{"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6}])
 SAWL = S.track("オルゴール（重ね3・1オクターブ上）", "keys", patch="kfbMusicBox", volume=0.045, pan=0.2, reverb=0.3, fx=[{"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6}])   # v2: kfbBrightBells とモノのスーパーソウは、入れるだけで点が 7.4 → 6.9 に下がった
-PLK = S.track("矩形波のプラック", "lead", patch="kfbSquarePluck", volume=0.08, pan=0.28, reverb=0.25, fx=[{"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6}, {"type": "pingpong", "beats": 0.75, "mix": 0.2, "feedback": 0.3}])
+PLK = S.track("デジタルのプラック", "lead", patch="modernPluck", volume=0.085, pan=0.28, reverb=0.25, fx=[{"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6}, {"type": "pingpong", "beats": 0.75, "mix": 0.2, "feedback": 0.3}])
 FX = lambda name, v, pn=0.0: S.track(name, "guitar", patch="kawaiiFx", volume=v, pan=pn, reverb=0.08, modulate=False)
 FK, FSN, FCL, FH, FOH = FX("効果音（キック）", 0.13), FX("効果音（スネア）", 0.07, 0.04), FX("効果音（手びょうし）", 0.06, -0.06), FX("効果音（ハイハット）", 0.03, 0.22), FX("効果音（開いたハイハット）", 0.035, -0.22)
 FKW = FX("効果音（かわいい音: あわ・きらめき・レーザー）", 0.045, 0.3)
