@@ -52,7 +52,8 @@ FX = lambda name, v, pn=0.0, rv=0.08: S.track(name, "guitar", patch="kawaiiFx", 
 FK, FSN, FCL, FH, FOH = FX("効果音（キック）", 0.13), FX("効果音（スネア）", 0.08, 0.04), FX("効果音（手びょうし）", 0.055, -0.06), FX("効果音（ハイハット）", 0.035, 0.22), FX("効果音（開いたハイハット）", 0.03, -0.22)
 DJ = FX("DJ（スクラッチ・テープストップ・巻きもどし）", 0.06, 0.0, 0.05)
 BELL = FX("そりの鈴", 0.04, 0.3, 0.2); SNOW = FX("雪のきらめき", 0.05, -0.25, 0.4); VIN = FX("レコードのパチパチ", 0.04, 0.0, 0.0)
-V = Voice(S, vol=0.17 if VOCAL else 0.0, delay=0.2 if VOCAL else 0.0, bright=0.0, patch="kfbSineLead", low=False); LY = Lyrics(S)
+V = Voice(S, vol=0.0, delay=0.0,  # v8（人間「歌ありにある、最初からある。ヒョイ」）: 歌をなぞる正弦波のシンセ（しゃくりで持ち上がる）を鳴らさない
+           bright=0.0, patch="kfbSineLead", low=False); LY = Lyrics(S)
 FXT = S.track("効果音（上がる音・下がる音・逆回しのシンバル・当たる音）", "guitar", patch="kawaiiFx", volume=0.06, pan=0.1, reverb=0.3, modulate=False)
 N = lambda m: nm(m); FXH = {}
 FXK = {"riser": "F#4", "down": "G4", "rev": "G#4", "impact": "G5", "subdrop": "G#5", "spark": "D4"}
@@ -267,7 +268,7 @@ for b, hits in FXH.items():
 S.fade_out = 0
 S.desc = ("仮: ヒップホップ × Kawaii future bass のインスト（110・ト長調・約2分55秒）。雪の降るクリスマスの夜、「あなた」（エレピ）と「私」（夢のようなリード）が1小節ずつかけ合いながら歩き、"
           "最後のサビでだけ3度で重なる。DJ のスクラッチ・巻きもどし・テープストップ、そりの鈴と雪のきらめき。いきなり緩急のあるサビから始まり、テープストップで止まって終わる。自作")
-finish(S, LY, V, 0, flat=True)
+finish(S, LY, V, 0, flat=True, lead_vol=0.0)  # v8: 歌の版でも歌をなぞるシンセは鳴らさない（「ヒョイ」の音）
 
 from vt3x_lib import *
 path = sys.argv[1]
