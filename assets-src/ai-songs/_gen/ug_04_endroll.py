@@ -112,10 +112,36 @@ def _ch(tracks, b, pat, center, n, short=None):
 
 
 HP = ("x..x..x...x..x..", "x..x..x...x.x...", "x..x..x...x..x..", "..x..x..x...x...")              # ハウスのピアノの刻み
-def piano(b, k, center=64, root=True):
-    _ch(PN, b, HP[k % 4], center, 4, short=0.25)
+def piano(b, k, center=64, root=True, pat=None):
+    _ch(PN, b, pat or HP[k % 4], center, 4, short=0.25)
     if root: PL.bar(b, f"{N(low(S.chords[b], 'E2') + 12)}:0.5 R:1.5 {N(low(S.chords[b], 'E2') + 12)}:0.5 R:1.5")
-def saw(b, pat="x...x...x...x...", center=67): _ch(SAW, b, pat, center, 4, short=0.75)            # キックでへこむ（ポンプ）
+def saw(b, pat="x...x...x...x...", center=67, short=0.75): _ch(SAW, b, pat, center, 4, short=short)   # キックでへこむ（ポンプ）
+
+
+def cutp(pat, stop):
+    """16マスの型を stop 拍から休みにする"""
+    k = int(stop * 4); return pat[:k] + "." * (16 - k)
+
+
+def band(b, i, n, center=64):
+    """v3（人間「もっと緩急に刻みが欲しい」）: 4小節ごとに 速さの感じと刻みを変える
+      0: ふつうの4つ打ち ／ 1: 16分で細かく刻む（スーパーソウとピアノ）／ 2: 半分の速さで間をあける ／ 3: 2拍半で止めて、手びょうしとスネアのフィル
+      8小節ごとの最後は、2拍めで全部止めて2拍休む（かわいい「きゅっ」だけ）"""
+    ph = i % 4; full_stop = i % 8 == 7
+    if ph == 0:
+        four(b, i); bass(b, BH[i % 4]); piano(b, i, center=center); saw(b)
+    elif ph == 1:
+        four(b, i); grid(FOH, b, "x.x.x.x.x.x.x.x.", "C#5"); bass(b, "r.rr.r.rr.r.R.R."); piano(b, i, center=center, pat="x.xxx.x.xx.x.x..")
+        saw(b, "xxxxxxxxx.x.x.x.", short=0.25)
+    elif ph == 2:
+        grid(FK, b, "X.......X..X....", "A4"); grid(FCL, b, "........X.......", "B4"); grid(FSH, b, "x...x...x...x...", "C6")
+        bass(b, "r.......r..r...."); piano(b, i, center=center, pat="x.......x.....x."); saw(b, "x.......x.......", short=1.0)
+    else:
+        st = 2.0 if full_stop else 2.5
+        grid(FK, b, cutp("X...X...X...X...", st), "A4"); grid(FCL, b, cutp("....X.......X...", st), "B4"); grid(FOH, b, cutp("..x...x...x...x.", st), "D5")
+        bass(b, cutp(BH[i % 4], st)); piano(b, i, center=center, pat=cutp("x..x..x...x..x..", st)); saw(b, cutp("x...x...x...x...", st))
+        if full_stop: kawaii(b, "............x...", "E4")
+        else: grid(FSN, b, "..........x.xxXX", "A#4")
 def glk(b): GLK.bar(b, " ".join(f"{N(x)}:0.5" for x in sorted(voice(S.chords[b], 86, 4)) * 2))
 def arp(b, k=0):
     t = sorted(voice(S.chords[b], 76, 4)); up = [t[0], t[1], t[2], t[3], t[0] + 12, t[1] + 12, t[2] + 12, t[3] + 12]
@@ -154,7 +180,7 @@ for b in range(S.nb):
         four(b, i, clap=i >= 2, oh=i >= 1, sh=i >= 3)
         if i == 3: kawaii(b, "............x.x.", "D4"); fxh(b, 2, "rev", 2)
     elif n == "新1":
-        four(b, i, sh=i >= 4); bass(b, BH[i % 4]); piano(b, i)
+        four(b, i, sh=i >= 4); bass(b, BH[i % 4]); piano(b, i, pat="x.xxx.x.xx.x.x.." if i % 4 == 3 else None)   # 4小節めごとに16分で刻む
         if i >= 8: arp(b, i)
         if last: fxh(b, 0, "riser", 4)
     elif n in ("立ち上げ1", "立ち上げ2"):                                # 上がっていく: スネアの連打が細かくなり、ふくらむスーパーソウ
@@ -164,14 +190,14 @@ for b in range(S.nb):
         if i == 4: fxh(b, 0, "riser", 4)
         if last: kawaii(b, "x.x.x.x.xxxxxxxx", "D4")
     elif n in ("フック1", "ドロップ1"):
-        four(b, i); bass(b, BH[i % 4]); piano(b, i, center=60); saw(b, "x..x..x...x..x..")
+        band(b, i, n, center=60)
         if n == "ドロップ1": arp(b, i)
         if i == 0: fxh(b, 0, "impact" if n == "フック1" else "subdrop", 2 if n == "フック1" else 4)
         if last: fxh(b, 0, "down", 4)
     elif n in ("サビ別", "サビ1"):
-        four(b, i); bass(b, BH[i % 4]); piano(b, i); saw(b)
+        band(b, i, n)
         if i % 2 == 1: glk(b)
-        if n == "サビ1" and i >= 8: arp(b, i)
+        if n == "サビ1" and i >= 8 and i % 4 != 3: arp(b, i)
         if i == 0: fxh(b, 0, "impact", 2)
         if i % 4 == 3: kawaii(b, "..............x.", "C4")
         if last and n == "サビ別": fxh(b, 0, "down", 4)
@@ -186,7 +212,8 @@ for b in range(S.nb):
         _ch(PN, b, "x---------------", 62, 4); SWL.bar(b, f"{N(low(S.chords[b], 'E3') + 12)}:4")
         if last: fxh(b, 0, "riser", 4)
     elif n == "ドロップ2":                                               # ハッピーエンド: 1音上がって、全員
-        four(b, i); bass(b, BH[i % 4]); piano(b, i); saw(b); arp(b, i)
+        band(b, i, n)
+        if i % 4 != 3: arp(b, i)
         if i % 2 == 1: glk(b)
         if i in (0, 6): fxh(b, 0, "impact", 2); kawaii(b, "x...............", "D4")
     elif n == "語り":                                                    # 新しい旋律を1回だけ。最後の小節で全員1打して、きらめきだけ残る
