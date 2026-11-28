@@ -284,7 +284,7 @@ if VOCAL:
     for v in js.get("vocals", []): v["debreath"] = 0.5; v["softCons"] = 0.0
     save(path, js)
 js = load(path)
-keep = (lambda p_: p_.get("patch") != "kfbSineLead") if not VOCAL else (lambda p_: True)
+keep = lambda p_: p_.get("patch") != "kfbSineLead"   # v9: 歌の版でも、歌をなぞる正弦波のシンセ（しゃくりで「ヒョイ」と鳴る）をパートごと外す。音量0は作曲ソフトで0.2に直されて大きく鳴るため
 js["parts"] = [p_ for p_ in js["parts"] if keep(p_) and p_.get("notes", "").replace("R:", "").strip()]
 js["grooveFeel"] = "laidback"; js["human"] = 0.35; js["swing16"] = 0.62
 save(path, js)
