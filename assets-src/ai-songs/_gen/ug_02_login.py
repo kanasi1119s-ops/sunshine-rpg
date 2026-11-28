@@ -1,4 +1,4 @@
-# UG 02「ログインの春」（仮）Login Spring — インスト。ピアノとシンセと効果音だけ。4分の4・210・ホ長調。196小節・約3分44秒。
+# UG 02「ログインの春」（仮）Login Spring — インスト。ピアノとシンセと効果音だけ。4分の4・200・ホ長調（はじめ210、人間の指示で200に）。196小節・約3分55秒。
 #
 # 2026-11-28 人間「ピアノとシンセとFXでインスト曲。テンポ210。コンセプトはデジタルワールドで新しい恋」
 #   楽器: ピアノ（右手の旋律・左手の和音）／シンセ（ベース2種・パッド・矩形波のプラック・声のようなリード・グロッケン）／効果音（kawaiiFx）。ドラムセット・ギター・エレキベースは使わない。
@@ -12,7 +12,7 @@ from vocalo_lib import *
 import gtr2_lib as G2
 import re as _re
 
-S = Song("38", "login", "ログインの春（仮）", "Login Spring", 210, 4, "E", "major", "インスト（ピアノとシンセ）")
+S = Song("38", "login", "ログインの春（仮）", "Login Spring", 200, 4, "E", "major", "インスト（ピアノとシンセ）")
 S.flags = S.flags + " --space room --space-wet 0.1"
 KA = Key("E", "major")
 CH = ["Amaj7", "B/A", "G#m7", "C#m7", "F#m9", "D", "Esus4", "E"]                        # サビ: IV → V/IV → iii → vi ／ ii → ♭VII → Isus4 → I
@@ -45,9 +45,11 @@ scene("ソロ", 8, "break", ["C#m7", "Amaj7", "E", "B", "C#m7", "Amaj7", "Cmaj7"
 scene("B", 16, "outro", CHB + ["Amaj7", "B/A", "G#m7", "C#m7", "Cmaj7", "D", "Esus4", "E"])
 S.keep_old_synth = True; S.no_depth = True; S.keepers = {}
 
-PR = S.track("ピアノ（右手・旋律）", "piano", volume=0.4, pan=-0.12, reverb=0.2)
-PR2 = S.track("ピアノ（右手・速弾き）", "piano", volume=0.22, pan=0.1, reverb=0.2)
-PL = [S.track(f"ピアノ（左手・和音）{i + 1}", "piano", volume=0.15, pan=(-0.2, -0.08, -0.14)[i], reverb=0.16) for i in range(3)]
+# v10（人間「テンポ200にしましょう。あとピアノにデジタルエフェクトかけましょう」）: ピアノに、ビットを落とした音（bitcrusher）と左右に跳ねるやまびこ（pingpong・3/4拍）をかける
+DFX = lambda bits, mix: [{"type": "bitcrusher", "bits": bits}, {"type": "pingpong", "beats": 0.75, "mix": mix, "feedback": 0.3}, {"type": "filter", "kind": "lowpass", "freq": 7500, "q": 0.6}]
+PR = S.track("ピアノ（右手・旋律）", "piano", volume=0.4, pan=-0.12, reverb=0.16, fx=DFX(8, 0.18))
+PR2 = S.track("ピアノ（右手・速弾き）", "piano", volume=0.22, pan=0.1, reverb=0.16, fx=DFX(7, 0.22))
+PL = [S.track(f"ピアノ（左手・和音）{i + 1}", "piano", volume=0.15, pan=(-0.2, -0.08, -0.14)[i], reverb=0.16, fx=[{"type": "bitcrusher", "bits": 9}]) for i in range(3)]
 SUB = S.track("シンセのベース（低い正弦波）", "bass", patch="kfbSub", volume=0.2, pan=0, gainDb=-6)
 GRW = S.track("シンセのベース（うなる）", "bass", patch="kfbGrowlBass", volume=0.1, pan=0, gainDb=-8, fx=[{"type": "filter", "kind": "lowpass", "freq": 3000, "q": 0.6}])
 BT = [SUB]
@@ -70,7 +72,7 @@ INTRO = dict(FK=FX("効果音（やわらかいキック・はじまり）", 0.1
              SUB=S.track("シンセのベース（低い正弦波・はじまり）", "bass", patch="kfbSub", volume=0.2, pan=0, gainDb=-6),
              PAD=[S.track(f"パッド（結晶・はじまり）{i + 1}", "pad", patch="surgePadCrystals", volume=0.12, pan=(-0.35, 0.35, 0)[i], reverb=0.35, fx=[{"type": "filter", "kind": "lowpass", "freq": 6000, "q": 0.6}]) for i in range(3)],
              ARP=S.track("矩形波のプラック（はじまり）", "lead", patch="kfbSquarePluck", volume=0.1, pan=0.25, reverb=0.25, fx=[{"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6}, {"type": "pingpong", "beats": 0.75, "mix": 0.25, "feedback": 0.35}]),
-             PR=S.track("ピアノ（右手・旋律・はじまり）", "piano", volume=0.4, pan=-0.12, reverb=0.07),
+             PR=S.track("ピアノ（右手・旋律・はじまり）", "piano", volume=0.4, pan=-0.12, reverb=0.07, fx=DFX(8, 0.15)),
              LEADF=S.track("声のようなリード（遅れてまねする影・はじまり）", "lead", patch="kfbFormantLead", volume=0.075, mono=True, pan=0.3, reverb=0.4, fx=[{"type": "filter", "kind": "lowpass", "freq": 3400, "q": 0.6}]),
              FXT=S.track("効果音（はじまりの上がる音・当たる音・きらめき）", "guitar", patch="kawaiiFx", volume=0.065, pan=0.1, reverb=0.3, modulate=False))
 MAIN = {}
@@ -175,7 +177,14 @@ def _ch(tracks, b, pat, center, n):
 
 
 def pad(b, center=64): _ch(PAD, b, "x---------------", center, 3)
-def lh(b, pat="x-------x-------", center=55): _ch(PL, b, pat, center, 3)
+def crisp(pat):
+    """左手の和音を歯切れよく: 1つの音は8分（2マス）まで、残りは休み"""
+    out = list(pat)
+    for i, c in enumerate(pat):
+        if c == "-" and not (i >= 1 and pat[i - 1] in "xX"): out[i] = "."
+    return "".join(out)
+def lh(b, pat="x-------x-------", center=55):
+    _ch(PL, b, pat if S.scene_of(b)[0] == "静か" else crisp(pat), center, 3)        # v10（人間「ピアノは歯切れよく」）: 静かな場面のほかは短く
 
 
 def ct(tr, b, cell, center=66, up=0):
@@ -221,6 +230,7 @@ def shift(bars_lines, d):
 def theme(name, lines, follow=None, up=0, lead_up=1, start=0, tr=None):
     """lines を場面の start 小節めから。follow＝リードがまねする遅れ（拍）。0 ならぴったり重なる。None ならまねしない"""
     bars = S.sc(name)[start:]; ls = [x.strip() for x in " | ".join(lines).split("|")]; assert len(ls) <= len(bars), (name, len(ls), len(bars))
+    if name not in ("静か", "起動", "出会い"): ls = stac(ls, 0.5)                    # v10: ピアノの旋律は、1拍以下の音を半分にして歯切れよく（起動・出会いはもう短い）
     for b, l in zip(bars, ls):
         assert abs(sum(float(y.split(":")[1]) for y in l.split()) - 4) < 1e-6, (name, l)
         if l != "R:4": (tr or PR).bar(b, mel(l, up))
@@ -380,7 +390,7 @@ for b, hits in FXH.items():
     if 4 - t > 1e-6: out.append(f"R:{4 - t:g}")
     if hits: FXT_.bar(b, " ".join(out))
 S.fade_out = 0
-S.desc = ("仮: ピアノとシンセと効果音だけのインスト（210・ホ長調・約3分44秒）。デジタルの世界で、ピアノの子と声のようなシンセの子が出会う。はじめはリードが1拍おくれてまねし、"
+S.desc = ("仮: ピアノとシンセと効果音だけのインスト（200・ホ長調・約3分55秒）。デジタルの世界で、ピアノの子と声のようなシンセの子が出会う。はじめはリードが1拍おくれてまねし、"
           "遅れが半拍になり、最後の場面でぴったり重なる。形は、くじ（form_dice.py・種 4127）で決めた。ピアノだけで始まり、テンポを落として終わる。自作")
 V = Voice(S, vol=0.0, delay=0.0, bright=0.0, patch="kfbSineLead", low=False); LY = Lyrics(S)
 finish(S, LY, V, 0, flat=True)
