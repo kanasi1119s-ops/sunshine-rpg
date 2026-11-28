@@ -131,7 +131,7 @@ def ep(b, pat="x..x......x.....", center=64, short=0.75): _ch(EPC, b, pat, cente
 def saw(b, pat="x..x..x...x..x..", center=66, short=0.5): _ch(SAW, b, pat, center, 4, short=short)
 def swell(b): SWL.bar(b, f"{N(low(S.chords[b], 'E3') + 12)}:4")
 def low_pn(b): PNO.bar(b, f"{N(low(S.chords[b], 'E2') + 12)}:2 R:2")
-def snow(b): pass                                                       # v3（人間「それなしにしよう」）: 雪のきらめき（A6）は鳴らさない
+def snow(b): SNOW.bar(b, "A6:4")  # v5（人間「きらめきは戻そうか」）: v3で消した雪のきらめきを戻す（ヒョイヒョイはスクラッチだった）
 def mbox(b, pat="x...x...x...x..."):
     t = sorted(voice(S.chords[b], 86, 4)); out = []; i = 0; c = b
     while i < 16:
