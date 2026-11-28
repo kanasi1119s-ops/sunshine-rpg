@@ -55,9 +55,34 @@ PAD = [S.track(f"パッド（結晶）{i + 1}", "pad", patch="surgePadCrystals",
 ARP = S.track("矩形波のプラック（駆け上がり）", "lead", patch="kfbSquarePluck", volume=0.1, pan=0.25, reverb=0.25, fx=[{"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6}, {"type": "pingpong", "beats": 0.75, "mix": 0.25, "feedback": 0.35}])
 LEAD = S.track("声のようなリード", "lead", patch="kfbFormantLead", volume=0.17, mono=True, pan=0.12, reverb=0.28, fx=[{"type": "filter", "kind": "lowpass", "freq": 5200, "q": 0.6}, {"type": "delay", "beats": 0.5, "mix": 0.12, "feedback": 0.25}])
 LEADF = S.track("声のようなリード（遅れてまねする影）", "lead", patch="kfbFormantLead", volume=0.075, mono=True, pan=0.3, reverb=0.4, fx=[{"type": "filter", "kind": "lowpass", "freq": 3400, "q": 0.6}])   # 遅れてまねする所は、影のように小さく・やわらかく（1拍ずれの重なりで濁らないように）
+# ---- v4（2026-11-28 人間「もっと歯切れをよく。地下の曲みたいなデジタル感で、テクノポップみたいな感じ。高音を入れて、浮き沈みと緩急、休符も」「始まりの部分が主に」）----
+DIRT = S.track("シンセのベース（汚れて太い・はじまり）", "bass", patch="surgeBassModernDirtyFat", volume=0.11, pan=0, gainDb=-7, fx=[{"type": "filter", "kind": "lowpass", "freq": 2600, "q": 0.6}])
+# kfbSawStab は、入れるだけで曲全体の音が明るく・低音が細くなり点が 7.6 → 6.4 に下がった（使わない）
+STAB = [S.track(f"短い和音（デジタルのプラック）{i + 1}", "keys", patch="modernPluck", volume=0.055, pan=(-0.3, 0.3, 0)[i], reverb=0.15, fx=[{"type": "filter", "kind": "lowpass", "freq": 5200, "q": 0.6}]) for i in range(3)]
+DPLK = S.track("デジタルのプラック（はじまり）", "lead", patch="modernPluck", volume=0.1, pan=-0.3, reverb=0.2, fx=[{"type": "filter", "kind": "lowpass", "freq": 6000, "q": 0.6}, {"type": "pingpong", "beats": 0.75, "mix": 0.22, "feedback": 0.3}])
+HI = S.track("高いきらめきのリード", "lead", patch="kfbSquareLead", volume=0.05, mono=True, pan=0.2, reverb=0.35, fx=[{"type": "filter", "kind": "lowpass", "freq": 6800, "q": 0.6}, {"type": "pingpong", "beats": 0.5, "mix": 0.2, "feedback": 0.25}])
 GLK = S.track("グロッケン（きらめき）", "keys", patch="kfbGlocken", volume=0.06, pan=0.35, reverb=0.4, fx=[{"type": "filter", "kind": "lowpass", "freq": 7000, "q": 0.6}])
 FX = lambda name, v, pn=0.0: S.track(name, "guitar", patch="kawaiiFx", volume=v, pan=pn, reverb=0.08, modulate=False)
 FK, FSN, FH, FR, FL = FX("効果音（やわらかいキック）", 0.13), FX("効果音（スネア）", 0.08, 0.04), FX("効果音（ハイハット）", 0.045, 0.22), FX("効果音（リム）", 0.05, -0.2), FX("効果音（レーザーとグリッチ）", 0.035, -0.3)
+FCL, FHC, FGL = FX("効果音（手びょうし）", 0.075, 0.06), FX("効果音（閉じたハイハット）", 0.035, -0.22), FX("効果音（グリッチ）", 0.045, 0.3)
+# 始まりの2場面は、別のトラックで鳴らす（同じトラックに足すと、トラックごとの大きさの自動調整が曲全体で変わり、後ろの場面まで音が明るく・低音が細くなった。v4・v5 で 7.63 → 6.38）
+INTRO = dict(FK=FX("効果音（やわらかいキック・はじまり）", 0.13), FSN=FX("効果音（スネア・はじまり）", 0.08, 0.04), FH=FX("効果音（ハイハット・はじまり）", 0.045, 0.22),
+             SUB=S.track("シンセのベース（低い正弦波・はじまり）", "bass", patch="kfbSub", volume=0.2, pan=0, gainDb=-6),
+             PAD=[S.track(f"パッド（結晶・はじまり）{i + 1}", "pad", patch="surgePadCrystals", volume=0.12, pan=(-0.35, 0.35, 0)[i], reverb=0.35, fx=[{"type": "filter", "kind": "lowpass", "freq": 6000, "q": 0.6}]) for i in range(3)],
+             ARP=S.track("矩形波のプラック（はじまり）", "lead", patch="kfbSquarePluck", volume=0.1, pan=0.25, reverb=0.25, fx=[{"type": "filter", "kind": "lowpass", "freq": 6500, "q": 0.6}, {"type": "pingpong", "beats": 0.75, "mix": 0.25, "feedback": 0.35}]),
+             PR=S.track("ピアノ（右手・旋律・はじまり）", "piano", volume=0.4, pan=-0.12, reverb=0.2),
+             LEADF=S.track("声のようなリード（遅れてまねする影・はじまり）", "lead", patch="kfbFormantLead", volume=0.075, mono=True, pan=0.3, reverb=0.4, fx=[{"type": "filter", "kind": "lowpass", "freq": 3400, "q": 0.6}]),
+             FXT=S.track("効果音（はじまりの上がる音・当たる音・きらめき）", "guitar", patch="kawaiiFx", volume=0.065, pan=0.1, reverb=0.3, modulate=False))
+MAIN = {}
+def use(intro):
+    """始まりの場面を書くときだけ、トラックを差しかえる"""
+    global FK, FSN, FH, SUB, PAD, ARP, PR, LEADF, FXT
+    if intro:
+        if not MAIN: MAIN.update(FK=FK, FSN=FSN, FH=FH, SUB=SUB, PAD=PAD, ARP=ARP, PR=PR, LEADF=LEADF, FXT=FXT)
+        FK, FSN, FH, SUB, PAD, ARP, PR, LEADF, FXT = (INTRO[k] for k in ("FK", "FSN", "FH", "SUB", "PAD", "ARP", "PR", "LEADF", "FXT"))
+    elif MAIN:
+        FK, FSN, FH, SUB, PAD, ARP, PR, LEADF, FXT = (MAIN[k] for k in ("FK", "FSN", "FH", "SUB", "PAD", "ARP", "PR", "LEADF", "FXT"))
+    BT[0] = SUB
 FXT = S.track("効果音（上がる音・下がる音・逆回しのシンバル・当たる音・低く落ちる音・きらめき）", "guitar", patch="kawaiiFx", volume=0.065, pan=0.1, reverb=0.3, modulate=False)
 N = lambda m: nm(m); FXH = {}
 FXK = {"riser": "F#4", "down": "G4", "rev": "G#4", "impact": "G5", "subdrop": "G#5", "spark": "D4", "drop": "C#4"}
@@ -90,6 +115,34 @@ def two(b, i, hat=True, ghost=False):
     k = ("X.......X.......", "X.......X.......", "X.......X.......", "X.....X.X.......")[i % 4]
     s = ("....X.......X...", "....X.......X..x" if ghost else "....X.......X...")[i % 2]
     perc(b, k, s, "..x...x...x...x." if hat else None, oh=(i % 8 == 7))
+def tp(b, i, stop=None):
+    """テクノポップの4つ打ち: キック4分・手びょうし2と4・開いたハイハットは裏・閉じたハイハットは16分の弱い所。stop＝その拍から休む（休符のブレイク）"""
+    k = ("X...X...X...X...", "X...X...X...X..x", "X...X...X...X...", "X...X...X.x.X...")[i % 4]
+    c = "....X.......X..."; oh = "..x...x...x...x."; ch = ".x...x...x...x.x"
+    if stop is not None:
+        cut = int(stop * 4); k, c, oh, ch = (x[:cut] + "." * (16 - cut) for x in (k, c, oh, ch))
+    grid(FK, b, k, "A4"); grid(FCL, b, c, "B4"); grid(FH, b, oh, "D5"); grid(FHC, b, ch, "C#5")
+def glitch(b, pat): grid(FGL, b, pat, "D#6")
+def octb(b, i, stop=None, dirt=True):
+    """オクターブを8分で行き来する短いベース（テクノポップ）。stop＝その拍から休む"""
+    p = ("r.R.r.R.r.R.r.R.", "r.R.r.R.5.R.r.R.", "r.R.r.R.r.R.7.R.", "r.R.r.RRr.R.5.R.")[i % 4]
+    if stop is not None: p = p[:int(stop * 4)] + "." * (16 - int(stop * 4))
+    bass(b, p)
+    if dirt: BT[0] = DIRT; bass(b, p); BT[0] = SUB
+def stab(b, pat="..x...x...x...x.", center=70): _ch(STAB, b, pat, center, 3)
+def gpad(b, pat="x-.x-.x-.x-.x-.."): _ch(PAD, b, pat, 64, 3)                       # 切りきざんだパッド（ゲート）
+def hi(b, cell): ct(HI, b, cell, center=88)
+def stac(lines, f=0.5):
+    """1拍以下の音を短く切って、あとを休符にする（歯切れ）"""
+    out = []
+    for l in lines:
+        toks = []
+        for x in l.split():
+            a, L = x.split(":"); L = float(L)
+            if a != "R" and L <= 1.0 + 1e-6: toks += [f"{a}:{L * f:g}", f"R:{L * (1 - f):g}"]
+            else: toks.append(x)
+        out.append(" ".join(toks))
+    return out
 def half(b, i):                                                         # 静かな場面: キックとリムだけ（半分の速さ）
     perc(b, "X...............", None, None, "........x.......")
 
@@ -214,8 +267,11 @@ def full(b, i, k=0, growl=False, ar=True, ghost=False):
     if ar: arp(b, i + k)
 
 
-theme("起動", CALL)
-theme("出会い", SEL * 2, follow=1.0)                                                   # リードは1拍おくれてまねする
+use(True)
+theme("起動", stac(CALL[:2], 0.45), up=1)                                             # 高い所で短く「呼びかけ」
+theme("起動", stac(CALL[2:], 0.45), up=1, start=4)
+theme("出会い", stac(SEL[:6] + ["R:4", "R:4"] + SEL[:6] + SEL[6:], 0.5), follow=1.0, up=1)   # 1オクターブ上で歯切れよく。8小節めは休む
+use(False)                                                   # リードは1拍おくれてまねする
 theme("ネットの中", NET)
 theme("A1", A1L)
 theme("サビ1", SB, follow=1.0, lead_up=0)
@@ -231,17 +287,28 @@ PIC = {}
 
 for b in range(S.nb):
     n, i, L, kind = S.scene_of(b); last = i == L - 1
-    if n == "起動":                                                      # 2小節はピアノだけ → 左手 → パッド → 4小節めからキックとベース
-        if i >= 2: lh(b, "x-------x-------")
-        if i >= 4: pad(b); two(b, i, hat=i >= 6); bass(b, BQT[i % 4])
-        if i >= 6: GLK.bar(b, " ".join(f"{N(x)}:1" for x in sorted(voice(S.chords[b], 84, 4))))
+    use(n in ("起動", "出会い"))
+    if n == "起動":
+        # 浮き沈み: 0-1 ピアノだけ（高い・短い）＋グリッチ → 2-3 オクターブのベースと短い和音 → 4 半分で休む → 5-7 4つ打ち・プラック → 8 ブレイク（グリッチだけ）→ 9 立ち上げ
+        if i < 2: glitch(b, ("..........x.x...", "......x.....xxxx")[i])
+        elif i < 4: octb(b, i); stab(b); glitch(b, "............x...")
+        elif i == 4: octb(b, 0, stop=2); stab(b, "..x...x........."); perc(b, "X...X..........."); glitch(b, "..........x.xxxx")
+        elif i < 8: tp(b, i); octb(b, i); stab(b); ct(DPLK, b, ("0+:0.25 R:0.25 2:0.25 R:0.25 1+:0.25 R:0.75 3:0.25 R:0.25 0+:0.25 R:0.25 2+:0.5 R:0.5", "R:0.5 2:0.25 R:0.25 0+:0.25 R:0.25 3:0.25 R:0.75 1+:0.25 R:0.25 2+:0.5 R:0.5")[i % 2], center=74); hi(b, ("R:3 3:0.5 R:0.5", "R:2 2:0.25 R:0.25 3:0.5 R:1", "R:3 0+:0.5 R:0.5")[i - 5])
+        elif i == 8: glitch(b, "x.x.x.x.xxxxxxxx"); fxh(b, 0, "rev", 4)
+        else: perc(b, "X..............."); bass(b, "r..............."); fxh(b, 0, "riser", 4); glitch(b, "........x.x.xxxx")
         if i == 0: fxh(b, 0, "spark", 2)
-        if last: fxh(b, 0, "riser", 4)
     elif n == "出会い":
-        full(b, i, k=0, ar=i >= 8); lh(b, "x-----x---x-----" if i % 2 == 0 else "x---x-----x---x-"); pad(b)
+        # テクノポップ: 4つ打ち・オクターブのベース・裏の短い和音・ゲートのパッド。7小節めは2拍めで止めて休む／10-11小節めは沈む（キックだけ）／最後は3拍めで止める
+        if i == 7: tp(b, i, stop=1); octb(b, i, stop=1); stab(b, "x..............."); glitch(b, "........x.x.xxxx")
+        elif i in (10, 11): perc(b, "X.......X......."); bass(b, "r-------........"); gpad(b, "x---------------")
+        elif last: tp(b, i, stop=2); octb(b, i, stop=2); stab(b, "..x...x........."); fxh(b, 2, "rev", 2)
+        else:
+            tp(b, i); octb(b, i, dirt=i >= 4); stab(b); gpad(b)
+            if i >= 12: arp(b, i)
+            if i in (2, 5, 13): glitch(b, "..............xx")
+        if i not in (10, 11): hi(b, ("R:3 3:0.5 R:0.5", "R:1 2:0.25 R:0.25 3:0.5 R:2", "R:3 0+:0.25 R:0.25 1+:0.5", "R:4")[i % 4]) if i >= 4 else None
         if i == 0: fxh(b, 0, "impact", 2)
-        if i % 4 == 0 and i: fxh(b, 0, "spark", 2)
-        if last: fxh(b, 2, "rev", 2)
+        if i == 12: fxh(b, 0, "impact", 2)
     elif n in ("ネットの中", "A2", "A3"):
         two(b, i, hat=i >= 4 or n != "ネットの中", ghost=n == "A3"); bass(b, BPT[i % 4] if n != "ネットの中" or i >= 8 else BQT[i % 4]); lh(b, "x-------..x-----" if i % 2 == 0 else "..x-------x-----")
         if i >= 8: pad(b)
@@ -300,13 +367,16 @@ for b in range(S.nb):
             if i == 12: fxh(b, 0, "spark", 2)
             if last: GLK.bar(b, f"{N(76)}:0.5 {N(80)}:0.5 {N(83)}:0.5 {N(88)}:2.5")
 
+use(False)
+FXHI = {b: h for b, h in FXH.items() if S.scene_of(b)[0] in ("起動", "出会い")}
 for b, hits in FXH.items():
+    FXT_ = INTRO["FXT"] if b in FXHI else FXT
     out, t = [], 0.0
     for at, name, L_ in sorted(hits):
         if at - t > 1e-6: out.append(f"R:{at - t:g}")
         out.append(f"{FXK[name]}:{L_:g}"); t = at + L_
     if 4 - t > 1e-6: out.append(f"R:{4 - t:g}")
-    if hits: FXT.bar(b, " ".join(out))
+    if hits: FXT_.bar(b, " ".join(out))
 S.fade_out = 0
 S.desc = ("仮: ピアノとシンセと効果音だけのインスト（210・ホ長調・約3分44秒）。デジタルの世界で、ピアノの子と声のようなシンセの子が出会う。はじめはリードが1拍おくれてまねし、"
           "遅れが半拍になり、最後の場面でぴったり重なる。形は、くじ（form_dice.py・種 4127）で決めた。ピアノだけで始まり、テンポを落として終わる。自作")
